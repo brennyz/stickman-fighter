@@ -55,9 +55,9 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.10.2';
+const APP_VERSION = '1.10.3';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 51;
+const SW_CACHE_REV = 52;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -68,15 +68,136 @@ const MAX_LEVEL = 50;
 let save = loadSave();
 function fighterJutsuKind(f) {
   if (!f) return 'rasengan';
+  if (f.vsSpecial === 'rinnegan') return 'rinnegan';
   if (f.isRobot || f.vsSpecial === 'chidori') return 'chidori';
   return 'rasengan';
 }
 function jutsuHudLabel(kind) {
-  return kind === 'chidori' ? '⚡ CHIDORI!' : '🌀 RASENGAN!';
+  if (kind === 'chidori') return '⚡ CHIDORI!';
+  if (kind === 'rinnegan') return '👁 RINNEGAN!';
+  return '🌀 RASENGAN!';
 }
 function jutsuBtnIcon(kind, pct) {
-  if (pct >= 1) return kind === 'chidori' ? '⚡' : '🌀';
-  return kind === 'chidori' ? '⚡' : '◉';
+  if (pct >= 1) {
+    if (kind === 'chidori') return '⚡';
+    if (kind === 'rinnegan') return '👁';
+    return '🌀';
+  }
+  if (kind === 'chidori') return '⚡';
+  if (kind === 'rinnegan') return '◉';
+  return '◉';
+}
+
+function jutsuAccentColor(kind, p2Slot) {
+  if (kind === 'chidori') return p2Slot ? '#ffb0b8' : '#a8e0ff';
+  if (kind === 'rinnegan') return p2Slot ? '#ffb0b8' : '#c47aff';
+  return p2Slot ? '#ffb0b8' : '#7cf5ff';
+}
+
+const SIG_MODS = {
+  balanced: {},
+  shuriken: { weaponDmg: 1.08, weaponCrit: 0.11, weaponCritMul: 1.55 },
+  assassin: { kickDmg: 1.18, kickCrit: 0.16, kickCritMul: 1.6 },
+  heavy: { weaponDmg: 1.14, weaponCrit: 0.1, weaponCritMul: 2.05 },
+  combo: { kickDmg: 1.24, kickCrit: 0.2, kickCritMul: 1.5 },
+  kenjutsu: { weaponDmg: 1.16, weaponCrit: 0.14, weaponCritMul: 1.72 },
+  hitrun: { kickDmg: 1.12, kickCrit: 0.22, kickCritMul: 1.58 },
+  quak: { punchDmg: 1.28, critAdd: -0.02 },
+  rinne: { jutsuCrit: 0.07, jutsuDmg: 1.06 },
+  boss: { critAdd: 0.05, critMul: 1.72 },
+  storm: { kickDmg: 1.14, kickCrit: 0.08 },
+  tank: { punchDmg: 1.2, punchCrit: 0.04, kbMul: 1.15 },
+  reach: { weaponDmg: 1.06, weaponRange: 1.08, weaponCrit: 0.06 },
+};
+
+function combatEntryFor(f) {
+  if (f && f.rosterId) {
+    const e = vsRosterEntry(f.rosterId);
+    return {
+      crit: e.crit != null ? e.crit : 0.08,
+      critMul: e.critMul != null ? e.critMul : 1.5,
+      sig: e.sig || 'balanced',
+    };
+  }
+  const lv = typeof save !== 'undefined' ? (save.lvl || 1) : 1;
+  return { crit: 0.06 + Math.min(0.05, lv * 0.002), critMul: 1.48, sig: 'balanced' };
+}
+
+function applySignatureToSpec(f, spec) {
+  const prof = combatEntryFor(f);
+  const sig = SIG_MODS[prof.sig] || {};
+  if (spec.kind === 'punch' && sig.punchDmg) spec.dmg *= sig.punchDmg;
+  if (spec.kind === 'kick' && sig.kickDmg) spec.dmg *= sig.kickDmg;
+  if (spec.kind === 'weapon') {
+    if (sig.weaponDmg) spec.dmg *= sig.weaponDmg;
+    if (sig.weaponRange) spec.range *= sig.weaponRange;
+  }
+  if (spec.kind === 'special' && sig.jutsuDmg) spec.dmg *= sig.jutsuDmg;
+  if (sig.kbMul && spec.kb) spec.kb *= sig.kbMul;
+  return spec;
+}
+
+function rollHitDamage(attacker, spec, mult) {
+  mult = mult || 1;
+  const prof = combatEntryFor(attacker);
+  const sig = SIG_MODS[prof.sig] || {};
+  let critChance = prof.crit + (sig.critAdd || 0);
+  let critMul = prof.critMul;
+  const k = spec.kind;
+  if (k === 'kick') {
+    critChance += sig.kickCrit || 0;
+    if (sig.kickCritMul) critMul = sig.kickCritMul;
+  }
+  if (k === 'weapon') {
+    critChance += sig.weaponCrit || 0;
+    if (sig.weaponCritMul) critMul = sig.weaponCritMul;
+  }
+  if (k === 'punch') critChance += sig.punchCrit || 0;
+  if (k === 'special' || spec.jutsu) {
+    critChance += sig.jutsuCrit || 0;
+    if (spec.jutsu === 'rinnegan') critChance += 0.05;
+  }
+  critChance = clamp(critChance, 0, 0.42);
+  let dmg = spec.dmg * rand(0.9, 1.15) * mult;
+  const crit = Math.random() < critChance;
+  if (crit) dmg *= critMul;
+  return { dmg: Math.max(1, Math.round(dmg)), crit };
+}
+
+function projCritMeta(f) {
+  const prof = combatEntryFor(f);
+  const sig = SIG_MODS[prof.sig] || {};
+  let critChance = prof.crit + (sig.critAdd || 0) + (sig.jutsuCrit || 0);
+  if (fighterJutsuKind(f) === 'rinnegan') critChance += 0.05;
+  return { critChance: clamp(critChance, 0, 0.42), critMul: prof.critMul };
+}
+
+function applyCritFx(game, x, y) {
+  if (!game) return;
+  game.floater(x, y - 132, 'CRIT!', '#ffd75e', 18);
+  try { AudioSys.sfx('crit'); } catch (_) {}
+  if (save.haptics !== false) haptic(10);
+}
+
+function resolveProjHit(p) {
+  let dmg = p.dmg * rand(0.9, 1.15);
+  const crit = Math.random() < (p.critChance != null ? p.critChance : 0.08);
+  if (crit) dmg *= (p.critMul != null ? p.critMul : 1.5);
+  return { dmg: Math.max(1, Math.round(dmg)), crit };
+}
+
+function projStrikeFighter(game, p, tgt, col) {
+  if (!tgt || !tgt.alive) return;
+  const hit = resolveProjHit(p);
+  const kb = Math.sign(p.vx || 1) * (p.kind === 'rinnegan' ? 300 : 260);
+  const dealt = tgt.takeDamage(hit.dmg, kb, game);
+  game.floater(tgt.x, tgt.y - 115, '-' + dealt, col, 16);
+  if (hit.crit) applyCritFx(game, tgt.x, tgt.y);
+  if (p.kind === 'rinnegan' && p.pull) tgt.vx += Math.sign(p.vx || 1) * 160;
+  if (p.kind === 'chidori') game.burst(p.x, p.y, '#a8e0ff', 14);
+  else if (p.kind === 'rinnegan') game.burst(p.x, p.y, '#c47aff', 12);
+  if (p.hitSet) p.hitSet.add(tgt);
+  else if (!p.pierce) p.life = 0;
 }
 
 function loadSave() {
@@ -629,9 +750,11 @@ function vsFighterStats(entry) {
   const spd = Math.round(100 * entry.spdMul);
   const dmg = Math.round(100 * entry.dmgMul);
   let special = 'Rasengan';
-  if (entry.isRobot) special = 'Robot-AI';
+  if (entry.isRobot) special = 'Robot · Chidori';
   else if (entry.special === 'chidori') special = 'Chidori';
-  return { hp, spd, dmg, wpn: weaponById(entry.weapon).name, special };
+  else if (entry.special === 'rinnegan') special = 'Rinnegan';
+  const critPct = Math.round((entry.crit != null ? entry.crit : 0.08) * 100);
+  return { hp, spd, dmg, wpn: weaponById(entry.weapon).name, special, critPct };
 }
 function vsStatBar(label, pct, color) {
   const p = Math.min(100, Math.max(6, pct));
@@ -643,7 +766,7 @@ function vsStatPreviewHtml(e1, e2) {
   const s2 = vsFighterStats(e2);
   const col = (name, s, accent) =>
     `<div class="vs-preview-col" style="--accent:${accent}"><div class="vs-preview-name">${name}</div>` +
-    `<div class="vs-preview-wpn">${s.wpn} · ${s.special}</div>` +
+    `<div class="vs-preview-wpn">${s.wpn} · ${s.special} · ${s.critPct}% crit</div>` +
     `${vsStatBar('HP', s.hp, '#6ee06e')}${vsStatBar('SPD', s.spd, '#7cf5ff')}` +
     `${vsStatBar('DMG', s.dmg, '#ff7a4d')}</div>`;
   return `<div class="vs-preview-duo">${col(e1.name, s1, '#7cf5ff')}` +
@@ -888,42 +1011,49 @@ function applyPlayerStyle(fighter) {
 /* ========================== VERSUS / 2 SPELERS ========================== */
 const VS_ROSTER = [
   { id: 'hero', name: 'Stick Ninja', tag: 'Balanced', styleId: 'classic', weapon: 'kunai',
-    hpMul: 1, spdMul: 1, dmgMul: 1, unlock: () => true },
+    hpMul: 1, spdMul: 1, dmgMul: 1, crit: 0.08, critMul: 1.5, sig: 'balanced', unlock: () => true },
   { id: 'konoha', name: 'Konoha', tag: 'Snel', styleId: 'konoha', weapon: 'shuriken',
-    hpMul: 0.95, spdMul: 1.08, dmgMul: 0.95, unlock: () => styleUnlocked(STYLES.find(s => s.id === 'konoha')) },
+    hpMul: 0.95, spdMul: 1.08, dmgMul: 0.95, crit: 0.07, critMul: 1.48, sig: 'shuriken',
+    unlock: () => styleUnlocked(STYLES.find(s => s.id === 'konoha')) },
   { id: 'shadow', name: 'Schaduw', tag: 'Chidori', styleId: 'shadow', weapon: 'zwaard',
-    hpMul: 1, spdMul: 1, dmgMul: 1.05, special: 'chidori', unlock: () => save.lvl >= 15 },
+    hpMul: 1, spdMul: 1, dmgMul: 1.05, special: 'chidori', crit: 0.1, critMul: 1.55, sig: 'assassin',
+    unlock: () => save.lvl >= 15 },
   { id: 'gold', name: 'Legende', tag: 'Zwaar', styleId: 'gold', weapon: 'hamer',
-    hpMul: 1.15, spdMul: 0.92, dmgMul: 1.12, unlock: () => save.lvl >= 25 },
-  { id: 'chakra', name: 'Chakra', tag: 'Special spam', styleId: 'chakra', weapon: 'laser',
-    hpMul: 0.9, spdMul: 1, dmgMul: 0.92, unlock: () => save.trainWins >= 3 },
+    hpMul: 1.15, spdMul: 0.92, dmgMul: 1.12, crit: 0.05, critMul: 2.0, sig: 'heavy', unlock: () => save.lvl >= 25 },
+  { id: 'chakra', name: 'Chakra', tag: 'Rinnegan', styleId: 'chakra', weapon: 'laser',
+    hpMul: 0.9, spdMul: 1, dmgMul: 0.92, special: 'rinnegan', crit: 0.09, critMul: 1.52, sig: 'rinne',
+    unlock: () => save.trainWins >= 3 },
   { id: 'guvve', name: 'Guvvedukkie', tag: 'Quak', styleId: 'guvve', weapon: 'guvve',
-    hpMul: 1.08, spdMul: 0.98, dmgMul: 1.15, unlock: () => dexCount() >= 8 },
+    hpMul: 1.08, spdMul: 0.98, dmgMul: 1.15, crit: 0.05, critMul: 1.55, sig: 'quak', unlock: () => dexCount() >= 8 },
   { id: 'rabbit', name: 'RabbitRobot', tag: 'CPU-killer', styleId: null, weapon: 'vuist',
-    hpMul: 1.05, spdMul: 1.05, dmgMul: 1.08, isRobot: true, special: 'chidori',
+    hpMul: 1.05, spdMul: 1.05, dmgMul: 1.08, isRobot: true, special: 'chidori', crit: 0.06, critMul: 1.45,
     unlock: () => save.trainWins >= 1 },
-  { id: 'akatsuki', name: 'Akatsuki', tag: 'Mantel', styleId: 'akatsuki', weapon: 'ketting',
-    hpMul: 1.1, spdMul: 0.96, dmgMul: 1.1, unlock: () => save.lvl >= 12 },
+  { id: 'akatsuki', name: 'Akatsuki', tag: 'Rinne', styleId: 'akatsuki', weapon: 'ketting',
+    hpMul: 1.1, spdMul: 0.96, dmgMul: 1.1, special: 'rinnegan', crit: 0.1, critMul: 1.55, sig: 'rinne',
+    unlock: () => save.lvl >= 12 },
   { id: 'brawler', name: 'Barve', tag: 'Tank', styleId: 'classic', weapon: 'knuppel',
-    hpMul: 1.2, spdMul: 0.88, dmgMul: 1.08, unlock: () => true },
+    hpMul: 1.2, spdMul: 0.88, dmgMul: 1.08, crit: 0.06, critMul: 1.48, sig: 'tank', unlock: () => true },
   { id: 'sand', name: 'Woestijn', tag: 'Bereik', styleId: 'sand', weapon: 'speer',
-    hpMul: 1, spdMul: 1.02, dmgMul: 1, unlock: () => save.lvl >= 8 },
+    hpMul: 1, spdMul: 1.02, dmgMul: 1, crit: 0.08, critMul: 1.5, sig: 'reach', unlock: () => save.lvl >= 8 },
   { id: 'speedster', name: 'Speedster', tag: 'Combo', styleId: 'konoha', weapon: 'nunchaku',
-    hpMul: 0.9, spdMul: 1.12, dmgMul: 0.95, unlock: () => save.lvl >= 13 },
+    hpMul: 0.9, spdMul: 1.12, dmgMul: 0.95, crit: 0.08, critMul: 1.45, sig: 'combo', unlock: () => save.lvl >= 13 },
   { id: 'samurai', name: 'Samurai', tag: 'Kenjutsu', styleId: 'samurai', weapon: 'zwaard',
-    hpMul: 1.05, spdMul: 0.98, dmgMul: 1.08, unlock: () => save.lvl >= 20 },
+    hpMul: 1.05, spdMul: 0.98, dmgMul: 1.08, crit: 0.08, critMul: 1.5, sig: 'kenjutsu', unlock: () => save.lvl >= 20 },
   { id: 'golem', name: 'Rotsbonk', tag: 'Muur', styleId: null, bodyColor: '#9a917f', weapon: 'hamer',
-    hpMul: 1.32, spdMul: 0.78, dmgMul: 1.06, unlock: () => save.lvl >= 22 },
+    hpMul: 1.32, spdMul: 0.78, dmgMul: 1.06, crit: 0.04, critMul: 1.65, sig: 'tank', unlock: () => save.lvl >= 22 },
   { id: 'cyber', name: 'Cyber', tag: 'Laser', styleId: 'cyber', weapon: 'laser',
-    hpMul: 0.92, spdMul: 1.06, dmgMul: 1.05, special: 'chidori', unlock: () => save.lvl >= 18 },
+    hpMul: 0.92, spdMul: 1.06, dmgMul: 1.05, special: 'chidori', crit: 0.09, critMul: 1.52, sig: 'shuriken',
+    unlock: () => save.lvl >= 18 },
   { id: 'storm', name: 'Storm', tag: 'Bliksem', styleId: 'storm', weapon: 'donder',
-    hpMul: 1, spdMul: 1.1, dmgMul: 0.98, special: 'chidori', unlock: () => save.trainWins >= 5 },
+    hpMul: 1, spdMul: 1.1, dmgMul: 0.98, special: 'chidori', crit: 0.1, critMul: 1.5, sig: 'storm',
+    unlock: () => save.trainWins >= 5 },
   { id: 'fox', name: 'Vlamvos', tag: 'Hit & run', styleId: 'fox', weapon: 'boemerang',
-    hpMul: 0.88, spdMul: 1.14, dmgMul: 0.9, unlock: () => dexCount() >= 12 },
-  { id: 'void', name: 'Void', tag: 'Mythic', styleId: 'void', weapon: 'void',
-    hpMul: 1.12, spdMul: 1.04, dmgMul: 1.15, unlock: () => save.lvl >= 40 },
+    hpMul: 0.88, spdMul: 1.14, dmgMul: 0.9, crit: 0.06, critMul: 1.5, sig: 'hitrun', unlock: () => dexCount() >= 12 },
+  { id: 'void', name: 'Void', tag: 'Rinnegan', styleId: 'void', weapon: 'void',
+    hpMul: 1.12, spdMul: 1.04, dmgMul: 1.15, special: 'rinnegan', crit: 0.12, critMul: 1.65, sig: 'rinne',
+    unlock: () => save.lvl >= 40 },
   { id: 'dragon', name: 'Kristallo', tag: 'Baas', styleId: 'gold', weapon: 'donder',
-    hpMul: 1.08, spdMul: 0.94, dmgMul: 1.18, unlock: () => save.unlocked >= 45 },
+    hpMul: 1.08, spdMul: 0.94, dmgMul: 1.18, crit: 0.11, critMul: 1.75, sig: 'boss', unlock: () => save.unlocked >= 45 },
 ];
 const vsRosterEntry = id => VS_ROSTER.find(r => r.id === id) || VS_ROSTER[0];
 function vsUnlocked(r) { return !r.unlock || r.unlock(); }
@@ -981,6 +1111,7 @@ function buildVsFighter(entry, x, slot) {
     style: st,
     isRobot: !!entry.isRobot,
     vsSpecial: entry.special || 'rasengan',
+    rosterId: entry.id,
   });
   if (entry.isRobot) f.isRobot = true;
   f.energy = 35;
@@ -1260,6 +1391,10 @@ const AudioSys = {
       case 'brick':   N(0.13, 0.42, 1400, false); T(480, 190, 0.09, 'triangle', 0.22); break;
       case 'crack':   N(0.06, 0.22, 2000, false); break;
       case 'block':   T(880, 660, 0.09, 'square', 0.2); N(0.05, 0.2, 4500, true); break;
+      case 'crit':
+        T(880, 1320, 0.06, 'square', 0.22, now);
+        T(1320, 1760, 0.08, 'triangle', 0.18, now + 0.04);
+        break;
       case 'special':
       case 'rasengan':
         T(180, 880, 0.45, 'sawtooth', 0.18);
@@ -1269,6 +1404,12 @@ const AudioSys = {
       case 'chidori':
         T(900, 1600, 0.35, 'sawtooth', 0.22);
         N(0.3, 0.2, 5000, true);
+        break;
+      case 'rinnegan':
+        T(220, 880, 0.2, 'sine', 0.2, now);
+        T(660, 440, 0.28, 'triangle', 0.16, now + 0.06);
+        T(990, 1320, 0.12, 'square', 0.14, now + 0.14);
+        N(0.12, 0.16, 1800, false, now + 0.02);
         break;
       case 'subst':
         N(0.12, 0.35, 900, false); T(300, 120, 0.1, 'triangle', 0.15); break;
@@ -1337,6 +1478,10 @@ const AudioSys = {
           T(880, 1560, 0.22, 'sawtooth', 0.24, now);
           N(0.14, 0.2, 5200, true, now);
           T(1200, 900, 0.08, 'square', 0.12, now + 0.12);
+        } else if (kind === 'rinnegan') {
+          T(330, 660, 0.18, 'sine', 0.22, now);
+          T(880, 1320, 0.14, 'triangle', 0.16, now + 0.08);
+          T(110, 55, 0.22, 'square', 0.12, now + 0.04);
         } else {
           T(660, 1320, 0.16, 'square', 0.2, now);
           T(990, 1760, 0.14, 'triangle', 0.16, now + 0.07);
@@ -1852,6 +1997,29 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
       c.lineTo(Math.cos(a + 0.4) * r * 1.3, Math.sin(a + 0.4) * r * 1.3);
       c.stroke();
     }
+  } else if (kind === 'rinnegan') {
+    c.shadowColor = '#c47aff'; c.shadowBlur = lite ? 10 : 24;
+    const grd = c.createRadialGradient(0, 0, 0, 0, 0, r);
+    grd.addColorStop(0, 'rgba(40,10,60,.95)');
+    grd.addColorStop(0.35, 'rgba(120,40,180,.85)');
+    grd.addColorStop(0.7, 'rgba(200,80,255,.45)');
+    grd.addColorStop(1, 'rgba(80,20,120,.1)');
+    c.fillStyle = grd;
+    c.beginPath(); c.arc(0, 0, r, 0, TAU); c.fill();
+    c.strokeStyle = 'rgba(255,120,160,.85)'; c.lineWidth = 2;
+    for (let ring = 0; ring < (lite ? 2 : 4); ring++) {
+      c.beginPath();
+      c.arc(0, 0, r * (0.35 + ring * 0.18), spin * (1 + ring * 0.2), spin * (1 + ring * 0.2) + Math.PI * 1.35);
+      c.stroke();
+    }
+    c.fillStyle = 'rgba(255,90,120,.9)';
+    const tomoe = lite ? 3 : 6;
+    for (let i = 0; i < tomoe; i++) {
+      const a = spin * 2 + i * (TAU / tomoe);
+      c.beginPath();
+      c.arc(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55, r * 0.12, 0, TAU);
+      c.fill();
+    }
   } else {
     // Rasengan: chakra-bol + draaiende buitenringen
     c.shadowColor = '#3db8ff'; c.shadowBlur = lite ? 8 : 22;
@@ -1913,16 +2081,31 @@ class Fighter {
 
   attackSpec(kind) {
     const w = this.weapon;
+    let spec;
     switch (kind) {
-      case 'punch':   return { kind, windup: 0.07, active: 0.09, recover: 0.12, range: 40, r: 24, dmg: this.baseDmg * 0.7, kb: 160 };
-      case 'kick':    return { kind, windup: 0.11, active: 0.11, recover: 0.2,  range: 50, r: 26, dmg: this.baseDmg * 1.1, kb: 340 };
-      case 'weapon':  return { kind, windup: 0.13 / w.speed, active: 0.1 / w.speed, recover: 0.2 / w.speed,
-                               range: w.range + 14, r: 26 + w.range * 0.22, dmg: this.baseDmg * w.dmg, kb: 260 };
-      case 'special': return {
-        kind, windup: 0.48, active: 0.12, recover: 0.28, range: 55, r: 36,
-        dmg: this.baseDmg * (this.isRobot ? 2.4 : 2.8), kb: 520, jutsu: (this.vsSpecial === 'chidori' || this.isRobot) ? 'chidori' : 'rasengan',
-      };
+      case 'punch':
+        spec = { kind, windup: 0.07, active: 0.09, recover: 0.12, range: 40, r: 24, dmg: this.baseDmg * 0.7, kb: 160 };
+        break;
+      case 'kick':
+        spec = { kind, windup: 0.11, active: 0.11, recover: 0.2,  range: 50, r: 26, dmg: this.baseDmg * 1.1, kb: 340 };
+        break;
+      case 'weapon':
+        spec = { kind, windup: 0.13 / w.speed, active: 0.1 / w.speed, recover: 0.2 / w.speed,
+                 range: w.range + 14, r: 26 + w.range * 0.22, dmg: this.baseDmg * w.dmg, kb: 260 };
+        break;
+      case 'special': {
+        const j = fighterJutsuKind(this);
+        const jMul = j === 'rinnegan' ? 2.55 : j === 'chidori' ? (this.isRobot ? 2.35 : 2.72) : 2.85;
+        spec = {
+          kind, windup: j === 'rinnegan' ? 0.52 : 0.48, active: 0.12, recover: 0.28, range: 55, r: 36,
+          dmg: this.baseDmg * jMul, kb: j === 'rinnegan' ? 460 : 520, jutsu: j,
+        };
+        break;
+      }
+      default:
+        return null;
     }
+    return applySignatureToSpec(this, spec);
   }
 
   startAttack(kind, game) {
@@ -1933,10 +2116,12 @@ class Fighter {
         return;
       }
       this.energy = 0;
-      AudioSys.sfx(this.isRobot || this.vsSpecial === 'chidori' ? 'chidori' : 'rasengan');
-      if (this.isPlayer) {
-        const lbl = (this.vsSpecial === 'chidori' || this.isRobot) ? 'CHIDORI!' : 'RASENGAN!';
-        game.banner(lbl, 0.7, this.vsSpecial === 'chidori' ? '#a8e0ff' : '#7cf5ff', 40);
+      const jKind = fighterJutsuKind(this);
+      AudioSys.sfx(jKind === 'chidori' ? 'chidori' : jKind === 'rinnegan' ? 'rinnegan' : 'rasengan');
+      if (this.isPlayer || this.playerSlot) {
+        const lbl = jKind === 'chidori' ? 'CHIDORI!' : jKind === 'rinnegan' ? 'RINNEGAN!' : 'RASENGAN!';
+        const col = jKind === 'chidori' ? '#a8e0ff' : jKind === 'rinnegan' ? '#c47aff' : '#7cf5ff';
+        game.banner(lbl, 0.7, col, 40);
       }
     } else {
       AudioSys.sfx(this.weapon.id === 'shuriken' ? 'shuriken' : 'swing');
@@ -2344,6 +2529,21 @@ class Fighter {
           c.moveTo(hx + 10, hy - 4);
           c.lineTo(hx + 10 + Math.cos(a) * (18 + g * 22), hy - 4 + Math.sin(a) * 8);
           c.stroke();
+        }
+      } else if (kind === 'rinnegan') {
+        c.strokeStyle = `rgba(196,122,255,${0.4 + g * 0.45})`;
+        c.lineWidth = 2;
+        for (let ring = 0; ring < 3; ring++) {
+          c.beginPath();
+          c.arc(hx + 14, hy, 10 + g * 16 + ring * 4, this.animT * (6 + ring), this.animT * (6 + ring) + Math.PI * 1.1);
+          c.stroke();
+        }
+        c.fillStyle = `rgba(255,100,140,${0.35 + g * 0.4})`;
+        for (let i = 0; i < 3; i++) {
+          const a = this.animT * 8 + i * (TAU / 3);
+          c.beginPath();
+          c.arc(hx + 14 + Math.cos(a) * (8 + g * 12), hy + Math.sin(a) * (8 + g * 10), 2.5 + g * 2, 0, TAU);
+          c.fill();
         }
       } else {
         c.fillStyle = `rgba(124,245,255,${0.25 + g * 0.35})`;
@@ -2948,6 +3148,7 @@ class Game {
         isPlayer: true, x: W * 0.25, y: this.ground,
         hp: st.maxhp, maxhp: st.maxhp, baseDmg: st.dmg,
         weapon: weaponById(save.weapon), color: '#f2f5ff',
+        rosterId: 'hero',
       });
       applyPlayerStyle(this.player);
     }
@@ -3433,26 +3634,40 @@ class Game {
   }
 
   spawnJutsu(f, atk) {
-    const jutsu = (atk && atk.jutsu) || (f.vsSpecial === 'chidori' || f.isRobot ? 'chidori' : 'rasengan');
+    const jutsu = (atk && atk.jutsu) || fighterJutsuKind(f);
     const dmg = atk ? atk.dmg : f.baseDmg * 2.8;
     const from = this.projFrom(f);
+    const critMeta = projCritMeta(f);
     if (jutsu === 'chidori') {
-      this.spawnProjectile({
+      this.spawnProjectile(Object.assign({
         x: f.x + f.face * 36, y: f.y - 48,
         vx: f.face * 620, vy: 0, r: 22, dmg, life: 0.35,
         from, kind: 'chidori', pierce: false, hitSet: new Set(),
-      });
+      }, critMeta));
       f.vx = f.face * 380;
       this.shake(7, 0.2);
       AudioSys.sfx('chidori');
+    } else if (jutsu === 'rinnegan') {
+      this.spawnProjectile(Object.assign({
+        x: f.x + f.face * 38, y: f.y - 50,
+        vx: f.face * 320, vy: 0, r: 30, dmg,
+        from, kind: 'rinnegan', pierce: true, hitSet: new Set(), life: 1.05,
+        spin: 0, pull: true,
+      }, critMeta));
+      this.burst(f.x + f.face * 28, f.y - 50, '#c47aff', 22);
+      this.burst(f.x + f.face * 28, f.y - 50, '#ff6b9d', 10);
+      this.shake(8, 0.24);
+      this.freezeT = Math.max(this.freezeT, 0.05);
+      AudioSys.sfx('rinnegan');
+      if (f.isPlayer || f.playerSlot) haptic(20);
     } else {
       // Rasengan: zware draaiende chakra-bol
-      this.spawnProjectile({
+      this.spawnProjectile(Object.assign({
         x: f.x + f.face * 40, y: f.y - 50,
         vx: f.face * 400, vy: 0, r: 26, dmg,
         from, kind: 'rasengan', pierce: true, hitSet: new Set(), life: 1.4,
         spin: 0,
-      });
+      }, critMeta));
       this.burst(f.x + f.face * 30, f.y - 50, '#7cf5ff', 18);
       this.shake(9, 0.28);
       this.freezeT = Math.max(this.freezeT, 0.06);
@@ -3466,12 +3681,13 @@ class Game {
     f._shurikenCd = 0.28;
     AudioSys.sfx('shuriken');
     const w = f.weapon;
-    this.spawnProjectile({
+    const critMeta = projCritMeta(f);
+    this.spawnProjectile(Object.assign({
       x: f.x + f.face * 24, y: f.y - 52,
       vx: f.face * 520, vy: rand(-40, 40), r: 10,
       dmg: f.baseDmg * w.dmg * 0.85,
       from: this.projFrom(f), kind: 'shuriken', life: 1.2, spin: 0,
-    });
+    }, critMeta));
   }
 
   spawnWave(f) { this.spawnJutsu(f, f.attackSpec('special')); }
@@ -3498,7 +3714,9 @@ class Game {
         const cx = clamp(hx, b.x, b.x + b.w), cy = clamp(hy, b.y, b.y + b.h);
         if ((hx - cx) ** 2 + (hy - cy) ** 2 < r * r) {
           hits++;
-          const dmg = Math.round(spec.dmg * (1 + this.combo * 0.04) * rand(0.9, 1.15));
+          const hitRoll = rollHitDamage(f, spec, 1 + this.combo * 0.04);
+          const dmg = hitRoll.dmg;
+          if (hitRoll.crit) applyCritFx(this, cx, cy);
           b.hp -= dmg;
           this.burst(cx, cy, `hsl(${b.hue},45%,55%)`, 5);
           if (b.hp <= 0) {
@@ -3547,8 +3765,9 @@ class Game {
           }
         }
         const buff = f.isPlayer ? (this.dmgBuffMul || 1) : 1;
-        const dmg = Math.round(spec.dmg * rand(0.9, 1.15) * comboMul * buff);
-        m.takeDamage(dmg, f.face * spec.kb, this);
+        const hitRoll = rollHitDamage(f, spec, comboMul * buff);
+        if (hitRoll.crit) applyCritFx(this, m.x, m.y);
+        m.takeDamage(hitRoll.dmg, f.face * spec.kb, this);
         applyHitStop(this, spec);
         if (spec.dmg >= 18) this.shake(3, 0.11);
         this.player.energy = clamp(this.player.energy + 8, 0, 100);
@@ -3567,7 +3786,9 @@ class Game {
     for (const tgt of targets) {
       if (!tgt.alive) continue;
       if ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2) {
-        const dmg = tgt.takeDamage(spec.dmg * rand(0.9, 1.15), f.face * spec.kb, this);
+        const hitRoll = rollHitDamage(f, spec, 1);
+        const dmg = tgt.takeDamage(hitRoll.dmg, f.face * spec.kb, this);
+        if (hitRoll.crit) applyCritFx(this, tgt.x, tgt.y);
         const col = tgt.playerSlot === 2 ? '#ffb0b8' : (tgt.isPlayer ? '#ff8080' : '#ffe680');
         this.floater(tgt.x, tgt.y - 115, '-' + dmg, col, 16);
         this.burst(tgt.bodyX, tgt.bodyY, col, 7);
@@ -3602,7 +3823,7 @@ class Game {
     // projectielen
     for (const p of this.projectiles) {
       p.life -= dt;
-      p.spin = (p.spin || 0) + dt * (p.kind === 'rasengan' ? 22 : p.kind === 'shuriken' ? 28 : 12);
+      p.spin = (p.spin || 0) + dt * (p.kind === 'rasengan' ? 22 : p.kind === 'rinnegan' ? 16 : p.kind === 'shuriken' ? 28 : 12);
       p.vy += (p.grav || 0) * dt;
       p.x += p.vx * dt; p.y += p.vy * dt;
       if (p.kind === 'rasengan') {
@@ -3619,11 +3840,23 @@ class Game {
           }
         }
       }
+      if (p.kind === 'rinnegan') {
+        p.r = Math.min(36, (p.r || 30) + dt * 2.5);
+        if (!motionReduced() && !fxLite()) {
+          p._trailAcc = (p._trailAcc || 0) + dt;
+          if (p._trailAcc >= 0.055) {
+            p._trailAcc = 0;
+            this.burst(p.x, p.y, '#c47aff', 1, { kind: 'spark', size: 2.2 });
+          }
+        }
+      }
       if (p.from === 'enemy') {
         const pl = this.player;
         if (pl && pl.alive && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
-          pl.takeDamage(p.dmg, Math.sign(p.vx) * 260, this);
-          this.floater(pl.x, pl.y - 115, '-' + Math.round(p.dmg), '#ff8080', 16);
+          const hit = resolveProjHit(p);
+          pl.takeDamage(hit.dmg, Math.sign(p.vx) * 260, this);
+          this.floater(pl.x, pl.y - 115, '-' + hit.dmg, '#ff8080', 16);
+          if (hit.crit) applyCritFx(this, pl.x, pl.y);
           if (p.kind === 'chidori') this.burst(p.x, p.y, '#a8e0ff', 16);
           p.life = 0;
           this.burst(p.x, p.y, p.kind === 'chidori' ? '#a8e0ff' : '#ff9a3d', 8);
@@ -3631,31 +3864,32 @@ class Game {
       } else if (p.from === 'p2' && this.p2) {
         const pl = this.player;
         if (pl && pl.alive && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
-          pl.takeDamage(p.dmg, Math.sign(p.vx) * 260, this);
-          this.floater(pl.x, pl.y - 115, '-' + Math.round(p.dmg), '#ff8080', 16);
-          p.life = 0;
+          projStrikeFighter(this, p, pl, '#ff8080');
         }
       } else if (p.from === 'p1' && this.p2) {
         const pl = this.p2;
         if (pl.alive && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
-          pl.takeDamage(p.dmg, Math.sign(p.vx) * 260, this);
-          this.floater(pl.x, pl.y - 115, '-' + Math.round(p.dmg), '#ffb0b8', 16);
-          p.life = 0;
+          projStrikeFighter(this, p, pl, '#ffb0b8');
         }
       } else {
         for (const m of this.monsters) {
           if (!m.alive || (p.hitSet && p.hitSet.has(m))) continue;
           if ((p.x - m.x) ** 2 + (p.y - m.y) ** 2 < (p.r + m.size) ** 2) {
-            m.takeDamage(Math.round(p.dmg), Math.sign(p.vx) * 300, this);
+            const hit = resolveProjHit(p);
+            m.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this);
+            if (hit.crit) applyCritFx(this, m.x, m.y);
             if (p.kind === 'rasengan') this.burst(p.x, p.y, '#7cf5ff', 12);
+            if (p.kind === 'rinnegan') this.burst(p.x, p.y, '#c47aff', 10);
             if (p.hitSet) p.hitSet.add(m); else p.life = 0;
           }
         }
         if (this.robot && this.robot.alive && !(p.hitSet && p.hitSet.has(this.robot))) {
           const rb = this.robot;
           if ((p.x - rb.bodyX) ** 2 + (p.y - rb.bodyY) ** 2 < (p.r + rb.bodyR) ** 2) {
-            const d = rb.takeDamage(p.dmg, Math.sign(p.vx) * 300, this);
+            const hit = resolveProjHit(p);
+            const d = rb.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this);
             this.floater(rb.x, rb.y - 115, '-' + d, '#ffe680', 16);
+            if (hit.crit) applyCritFx(this, rb.x, rb.y);
             if (p.hitSet) p.hitSet.add(rb); else p.life = 0;
           }
         }
@@ -3790,6 +4024,8 @@ class Game {
         drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'rasengan', 1);
       } else if (p.kind === 'chidori') {
         drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'chidori', 1);
+      } else if (p.kind === 'rinnegan') {
+        drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'rinnegan', 1);
       } else if (p.kind === 'shuriken') {
         c.translate(p.x, p.y); c.rotate(p.spin || 0);
         c.fillStyle = '#c9d6e8';
@@ -3936,6 +4172,25 @@ class Game {
         this.rr(c, x + i * segW + 1, y + 1, Math.max(1, segW * fill - 2), h - 2, 2);
         c.fill();
       }
+    } else if (kind === 'rinnegan') {
+      const rings = 6;
+      for (let i = 0; i < rings; i++) {
+        const segStart = i / rings;
+        if (pct <= segStart) continue;
+        const fill = Math.min(1, (pct - segStart) * rings);
+        const pulse = 0.55 + Math.sin(t * 9 + i * 1.1) * 0.25;
+        c.fillStyle = ready ? `rgba(196,122,255,${pulse})` : `rgba(100,40,160,${0.35 + fill * 0.45})`;
+        const rw = w / rings;
+        this.rr(c, x + i * rw + 1, y + 1, Math.max(1, rw * fill - 2), h - 2, 3);
+        c.fill();
+      }
+      if (pct > 0.2 && !fxLite()) {
+        c.strokeStyle = `rgba(255,120,160,${0.25 + Math.sin(t * 6) * 0.12})`;
+        c.lineWidth = 1;
+        c.beginPath();
+        c.arc(x + w * pct * 0.5, y + h * 0.5, h * 1.4, t * 3, t * 3 + Math.PI);
+        c.stroke();
+      }
     } else {
       const fw = w * pct;
       if (fw > 1) {
@@ -3987,6 +4242,21 @@ class Game {
           c.lineTo(f.x + 28, f.y - 52 + i * 10);
           c.stroke();
         }
+      } else if (kind === 'rinnegan') {
+        c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : '#c47aff';
+        c.lineWidth = 3;
+        for (let ring = 0; ring < 3; ring++) {
+          c.beginPath();
+          c.arc(f.x, f.y - 55, 34 + ring * 8 + Math.sin(this.t * 8 + ring) * 3, this.t * (1.5 + ring * 0.3), this.t * (1.5 + ring * 0.3) + Math.PI * 1.25);
+          c.stroke();
+        }
+        c.fillStyle = '#ff6b9d';
+        for (let i = 0; i < 3; i++) {
+          const a = this.t * 5 + i * (TAU / 3);
+          c.beginPath();
+          c.arc(f.x + Math.cos(a) * 28, f.y - 55 + Math.sin(a) * 10, 4, 0, TAU);
+          c.fill();
+        }
       } else {
         c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : '#7cf5ff';
         c.lineWidth = 3;
@@ -4026,14 +4296,14 @@ class Game {
       this.drawSuperMeterFill(c, bx, by + 20, bw, 11, p.energy / 100, jKind, this.t);
       c.font = '800 10px -apple-system, sans-serif';
       c.fillStyle = 'rgba(255,255,255,.85)'; c.textAlign = 'left';
-      c.fillText(jKind === 'chidori' ? 'SUPER ⚡' : 'SUPER ◉', bx + 6, by + 29);
+      c.fillText(jKind === 'chidori' ? 'SUPER ⚡' : jKind === 'rinnegan' ? 'SUPER 👁' : 'SUPER ◉', bx + 6, by + 29);
       c.font = '800 13px -apple-system, sans-serif';
       c.fillStyle = '#fff';
       c.fillText(`Lv ${save.lvl}`, bx + bw + 12, by + 13);
       if (p.energy >= 100) {
-        c.fillStyle = jKind === 'chidori' ? '#a8e0ff' : '#7cf5ff';
+        c.fillStyle = jKind === 'chidori' ? '#a8e0ff' : jKind === 'rinnegan' ? '#c47aff' : '#7cf5ff';
         c.fillText(jutsuHudLabel(jKind), bx + bw + 12, by + 32);
-        c.strokeStyle = jKind === 'chidori' ? 'rgba(168,224,255,.55)' : 'rgba(124,245,255,.55)';
+        c.strokeStyle = jKind === 'chidori' ? 'rgba(168,224,255,.55)' : jKind === 'rinnegan' ? 'rgba(196,122,255,.55)' : 'rgba(124,245,255,.55)';
         c.lineWidth = 2;
         c.beginPath();
         c.arc(bx + bw * 0.5, by + 25, 18 + Math.sin(this.t * 8) * 3, 0, TAU);
@@ -4223,14 +4493,16 @@ class Game {
         c.beginPath(); c.arc(W / 2 + 40 + i * 16, 72, mp2 && i === 1 ? 6 : 5, 0, TAU); c.fill();
       }
       if (p.energy >= 100) {
-        c.font = '800 10px sans-serif'; c.fillStyle = fighterJutsuKind(p) === 'chidori' ? '#a8e0ff' : '#7cf5ff';
+        const k1 = fighterJutsuKind(p);
+        c.font = '800 10px sans-serif'; c.fillStyle = jutsuAccentColor(k1, false);
         c.textAlign = 'left';
-        c.fillText(jutsuBtnIcon(fighterJutsuKind(p), 1), bx + half - 14, by + 12);
+        c.fillText(jutsuBtnIcon(k1, 1), bx + half - 14, by + 12);
       }
       if (p2.energy >= 100) {
-        c.font = '800 10px sans-serif'; c.fillStyle = fighterJutsuKind(p2) === 'chidori' ? '#a8e0ff' : '#7cf5ff';
+        const k2 = fighterJutsuKind(p2);
+        c.font = '800 10px sans-serif'; c.fillStyle = jutsuAccentColor(k2, true);
         c.textAlign = 'right';
-        c.fillText(jutsuBtnIcon(fighterJutsuKind(p2), 1), W - 20, by + 12);
+        c.fillText(jutsuBtnIcon(k2, 1), W - 20, by + 12);
         c.textAlign = 'center';
       }
     }
@@ -4259,7 +4531,7 @@ class Game {
     c.beginPath(); c.arc(b.x, b.y, ring, 0, TAU); c.stroke();
     if (pct > 0.02) {
       c.globalAlpha = kind === 'chidori' ? 0.75 + Math.sin(this.t * 18) * 0.12 : 0.82;
-      c.strokeStyle = kind === 'chidori' ? '#7ec8ff' : accent || '#3db8ff';
+      c.strokeStyle = kind === 'chidori' ? '#7ec8ff' : kind === 'rinnegan' ? '#b06ae0' : accent || '#3db8ff';
       c.lineWidth = 5;
       c.lineCap = 'round';
       c.beginPath();
@@ -4268,7 +4540,7 @@ class Game {
     }
     if (pct >= 1) {
       c.globalAlpha = 0.9;
-      c.strokeStyle = kind === 'chidori' ? '#a8e0ff' : '#7cf5ff';
+      c.strokeStyle = kind === 'chidori' ? '#a8e0ff' : kind === 'rinnegan' ? '#c47aff' : '#7cf5ff';
       c.lineWidth = 3;
       c.beginPath();
       c.arc(b.x, b.y, ring + 5 + Math.sin(this.t * 8) * 2, 0, TAU);
