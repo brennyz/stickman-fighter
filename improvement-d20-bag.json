@@ -1,14 +1,12 @@
 {
   "version": 3,
   "cyclesCompleted": 0,
-  "remaining": [
-    14
-  ],
+  "remaining": [],
   "lastRoll": {
-    "face": 20,
-    "category": "Code health \u2014 kleine refactors, geen gameplay-break",
-    "rolledAt": "2026-07-23T15:01:51Z",
-    "remainingCount": 1,
+    "face": 14,
+    "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
+    "rolledAt": "2026-07-23T15:04:37Z",
+    "remainingCount": 0,
     "cycle": 0
   },
   "implemented": [
@@ -66,6 +64,13 @@
       "note": "dead code/no-ops/shared joy onMove \u2014 zero behavior",
       "version": "1.9.7",
       "doneAt": "2026-07-23T15:04:20Z",
+      "cycle": 0
+    },
+    {
+      "face": 14,
+      "note": "Rasengan rings+trail, combo ring, banner glow",
+      "version": "1.9.8",
+      "doneAt": "2026-07-23T15:05:43Z",
       "cycle": 0
     }
   ],
@@ -208,6 +213,13 @@
       "category": "Code health \u2014 kleine refactors, geen gameplay-break",
       "rolledAt": "2026-07-23T15:01:51Z",
       "remainingCount": 1,
+      "cycle": 0
+    },
+    {
+      "face": 14,
+      "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
+      "rolledAt": "2026-07-23T15:04:37Z",
+      "remainingCount": 0,
       "cycle": 0
     }
   ],

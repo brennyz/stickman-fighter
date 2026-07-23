@@ -55,7 +55,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.9.7';
+const APP_VERSION = '1.9.8';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1725,25 +1725,31 @@ function drawWeaponShape(c, id, spin) {
   }
 }
 
+function fxLite() {
+  return !!(save.liteFx || Perf.tier >= 2 || (typeof motionReduced === 'function' && motionReduced()));
+}
+
 function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
+  const lite = fxLite();
   c.save();
   c.translate(x, y);
   c.globalAlpha = alpha == null ? 1 : alpha;
   if (kind === 'chidori') {
-    c.shadowColor = '#a8e0ff'; c.shadowBlur = 18;
+    c.shadowColor = '#a8e0ff'; c.shadowBlur = lite ? 8 : 18;
     c.fillStyle = 'rgba(200,240,255,.55)';
     c.beginPath(); c.arc(0, 0, r * 0.9, 0, TAU); c.fill();
     c.strokeStyle = '#e8f7ff'; c.lineWidth = 2;
-    for (let i = 0; i < 7; i++) {
-      const a = spin + i * (TAU / 7);
+    const bolts = lite ? 4 : 7;
+    for (let i = 0; i < bolts; i++) {
+      const a = spin + i * (TAU / bolts);
       c.beginPath();
       c.moveTo(Math.cos(a) * r * 0.2, Math.sin(a) * r * 0.2);
       c.lineTo(Math.cos(a + 0.4) * r * 1.3, Math.sin(a + 0.4) * r * 1.3);
       c.stroke();
     }
   } else {
-    // Rasengan: draaiende chakra-bol
-    c.shadowColor = '#3db8ff'; c.shadowBlur = 20;
+    // Rasengan: chakra-bol + draaiende buitenringen
+    c.shadowColor = '#3db8ff'; c.shadowBlur = lite ? 8 : 22;
     const grd = c.createRadialGradient(0, 0, 0, 0, 0, r);
     grd.addColorStop(0, 'rgba(220,250,255,.95)');
     grd.addColorStop(0.45, 'rgba(80,190,255,.75)');
@@ -1751,10 +1757,25 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
     c.fillStyle = grd;
     c.beginPath(); c.arc(0, 0, r, 0, TAU); c.fill();
     c.strokeStyle = 'rgba(180,235,255,.9)'; c.lineWidth = 2;
-    for (let i = 0; i < 5; i++) {
+    const ellipses = lite ? 2 : 5;
+    for (let i = 0; i < ellipses; i++) {
       const a0 = spin + i * 1.1;
       c.beginPath();
       c.ellipse(0, 0, r * 0.95, r * (0.35 + (i % 3) * 0.12), a0, 0, TAU);
+      c.stroke();
+    }
+    // Outer chakra arcs (juice) — één boog in Lite FX
+    c.strokeStyle = 'rgba(124,245,255,.8)';
+    c.lineWidth = lite ? 2 : 2.6;
+    c.lineCap = 'round';
+    c.beginPath();
+    c.arc(0, 0, r * 1.14, spin, spin + Math.PI * 1.35);
+    c.stroke();
+    if (!lite) {
+      c.strokeStyle = 'rgba(160,230,255,.55)';
+      c.lineWidth = 1.8;
+      c.beginPath();
+      c.arc(0, 0, r * 1.28, -spin * 1.35, -spin * 1.35 + Math.PI * 1.05);
       c.stroke();
     }
     c.fillStyle = 'rgba(255,255,255,.85)';
@@ -3425,7 +3446,20 @@ class Game {
       p.spin = (p.spin || 0) + dt * (p.kind === 'rasengan' ? 22 : p.kind === 'shuriken' ? 28 : 12);
       p.vy += (p.grav || 0) * dt;
       p.x += p.vx * dt; p.y += p.vy * dt;
-      if (p.kind === 'rasengan') p.r = Math.min(34, (p.r || 26) + dt * 4);
+      if (p.kind === 'rasengan') {
+        p.r = Math.min(34, (p.r || 26) + dt * 4);
+        // Capte chakra-trail — minder frequent bij Lite FX / lag
+        if (!motionReduced()) {
+          p._trailAcc = (p._trailAcc || 0) + dt;
+          const interval = (save.liteFx || Perf.tier >= 1) ? 0.07 : 0.032;
+          if (p._trailAcc >= interval) {
+            p._trailAcc = 0;
+            const n = (save.liteFx || Perf.tier >= 1) ? 1 : 2;
+            const back = Math.sign(p.vx || 1) * 10;
+            this.burst(p.x - back, p.y + rand(-4, 4), '#7cf5ff', n, { kind: 'spark', size: 2.4 });
+          }
+        }
+      }
       if (p.from === 'enemy') {
         const pl = this.player;
         if (pl && pl.alive && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
@@ -3520,17 +3554,30 @@ class Game {
     if (save.shake === false || motionReduced()) return;
     this.shakeMag = mag; this.shakeT = Math.max(this.shakeT, dur);
   }
-  burst(x, y, color, n) {
-    if (motionReduced()) n = Math.max(2, Math.floor(n * 0.45));
-    else if (save.liteFx || Perf.tier >= 1) n = Math.max(3, Math.floor(n * 0.65));
-    if (Perf.tier >= 2) n = Math.max(2, Math.floor(n * 0.55));
+  burst(x, y, color, n, opts) {
+    opts = opts || {};
+    const kind = opts.kind || 'square';
+    const floorN = kind === 'spark' ? 1 : 2;
+    if (motionReduced()) n = Math.max(floorN, Math.floor(n * 0.45));
+    else if (save.liteFx || Perf.tier >= 1) n = Math.max(kind === 'spark' ? 1 : 3, Math.floor(n * 0.65));
+    if (Perf.tier >= 2) n = Math.max(floorN, Math.floor(n * 0.55));
     const cap = fxCaps();
     const room = cap.particles - this.particles.length;
     n = Math.min(n, Math.max(0, room));
+    const baseSize = opts.size || 0;
     for (let i = 0; i < n; i++) {
-      const a = rand(0, TAU), sp = rand(60, 320);
-      this.particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 120,
-        life: rand(0.3, 0.7), color, size: rand(2, 5) });
+      const a = rand(0, TAU);
+      const sp = kind === 'spark' ? rand(20, 90) : rand(60, 320);
+      this.particles.push({
+        x, y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp - (kind === 'spark' ? 40 : 120),
+        life: kind === 'spark' ? rand(0.12, 0.28) : rand(0.3, 0.7),
+        color,
+        size: baseSize || rand(2, 5),
+        kind,
+        grav: kind === 'spark' ? 200 : 900,
+      });
     }
   }
   floater(x, y, txt, color, size) {
@@ -3614,7 +3661,13 @@ class Game {
     for (const pt of this.particles) {
       c.globalAlpha = clamp(pt.life * 2, 0, 1);
       c.fillStyle = pt.color;
-      c.fillRect(pt.x - pt.size / 2, pt.y - pt.size / 2, pt.size, pt.size);
+      if (pt.kind === 'spark') {
+        c.beginPath();
+        c.arc(pt.x, pt.y, pt.size, 0, TAU);
+        c.fill();
+      } else {
+        c.fillRect(pt.x - pt.size / 2, pt.y - pt.size / 2, pt.size, pt.size);
+      }
     }
     c.globalAlpha = 1;
 
@@ -3642,6 +3695,10 @@ class Game {
       c.globalAlpha = fade;
       c.translate(W / 2, H * 0.34);
       c.scale(0.6 + pop * 0.4, 0.6 + pop * 0.4);
+      if (!fxLite()) {
+        c.shadowColor = b.color;
+        c.shadowBlur = 14;
+      }
       c.font = `900 ${b.size}px -apple-system, sans-serif`;
       c.textAlign = 'center';
       c.lineWidth = 8; c.strokeStyle = 'rgba(0,0,0,.55)';
@@ -3784,12 +3841,22 @@ class Game {
       }
       if (save.comboHud !== false && this.combo > 1) {
         const pulse = 1 + Math.sin(this.t * 10) * 0.08;
+        const col = this.combo >= 8 ? '#ff7a4d' : '#ffd75e';
         c.save();
         c.translate(W / 2, 92);
         c.scale(pulse, pulse);
+        if (!fxLite()) {
+          c.globalAlpha = 0.35 + Math.sin(this.t * 12) * 0.1;
+          c.strokeStyle = col;
+          c.lineWidth = 2;
+          c.beginPath();
+          c.arc(0, -4, 30 + Math.min(12, this.combo) + Math.sin(this.t * 14) * 3, 0, TAU);
+          c.stroke();
+          c.globalAlpha = 1;
+        }
         c.font = '900 20px sans-serif';
-        c.fillStyle = this.combo >= 8 ? '#ff7a4d' : '#ffd75e';
-        c.shadowColor = this.combo >= 8 ? '#ff7a4d' : '#ffd75e';
+        c.fillStyle = col;
+        c.shadowColor = col;
         c.shadowBlur = motionReduced() ? 0 : 12;
         c.fillText(`COMBO ×${this.combo}`, 0, 0);
         c.restore();

@@ -44,7 +44,7 @@ Staat: `improvement-d20-bag.json` (commit na roll + na afronden).
 | **18** Char select | Goed — UI/stats; geen roster balance. |
 | **12** Content | Goed — dex/cosmetic; geen loop-slop. |
 
-**Conclusie:** ja, goede weg — blijf **één thema**, checklist, SW bump. Open: **deploy push** (403), zak **d14**.
+**Conclusie:** cyclus 0 bijna klaar (d14 in dit commit). Open: **deploy push** (403).
 
 | d# | Categorie | Voorbeelden (klein & veilig) |
 |----|-----------|------------------------------|
@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | **14** | FX: Rasengan buitenringen + capte spark-trail, combo-ring, banner glow; Lite FX respect. v1.9.8 / SW v47. |
 | 2026-07-23 | **20** | Code health: dead helpers/no-ops weg, joystick onMove gedeeld, header comment — zero gedrag. v1.9.7 / SW v46. |
 | 2026-07-23 | **6** | Audio: BGM duck pause/result, music≠SFX mute, pause houdt battle-song, soft gains, setPaused. v1.9.6 / SW v45. |
 | 2026-07-23 | — | **Harden v1.9.5/SW v43:** safe boot/loop/startGame/recover, persist guards, SW per-asset precache, overlay always nuked. |
