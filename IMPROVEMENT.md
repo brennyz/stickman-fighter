@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | **17** | Stabiliteit: userToast, sfReportError met context, update/draw try/catch, persist/import/backup toasts, bindPress/goMenu fouten. v1.12.14 / SW v77. |
 | 2026-07-23 | **3** | Versus: halve-arena bounds, fair spawn + ronde-invuln, resize respawn, intro countdown, HUD safe-top, pauze herstart 0-0. v1.12.13 / SW v76. |
 | 2026-07-23 | **8** | PWA: SW v75, manifest network-first, offline HTML-fallback, netStatus in play/standalone + cache-hint. v1.12.12 / SW v75. |
 | 2026-07-23 | **16** | Hosting: LIVE-LINK + stableHint → GitHub Pages primair; instellingen toont Pages-link + tunnel als dev; bundle negeert tunnel als canonical. v1.12.10 / SW v73. |

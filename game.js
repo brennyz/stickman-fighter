@@ -60,9 +60,9 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.12.13';
+const APP_VERSION = '1.12.14';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 76;
+const SW_CACHE_REV = 77;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -236,6 +236,14 @@ function readSaveJson(raw) {
   }
 }
 
+function userToast(msg, ms) {
+  try {
+    if (typeof UI !== 'undefined' && UI.toast) UI.toast(msg, ms || 3200);
+  } catch (err) {
+    console.warn('[Stickman] toast', msg, err);
+  }
+}
+
 function persist() {
   try {
     if (!save || typeof save !== 'object') return false;
@@ -250,35 +258,46 @@ function persist() {
     try { localStorage.setItem(SAVE_BACKUP_KEY, json); } catch (_) {}
     return true;
   } catch (e) {
-    try { localStorage.setItem(SAVE_BACKUP_KEY, JSON.stringify(save)); } catch (_) {}
+    let backupSaved = false;
+    try {
+      localStorage.setItem(SAVE_BACKUP_KEY, JSON.stringify(save));
+      backupSaved = true;
+    } catch (_) {}
     if (!window.__sfPersistWarn) {
       window.__sfPersistWarn = true;
-      try {
-        if (typeof UI !== 'undefined' && UI.toast) {
-          UI.toast('Opslaan mislukt — export save in Instellingen', 5200);
-        }
-      } catch (_) {}
+      userToast(backupSaved
+        ? 'Hoofd-save mislukt — backup wel bijgewerkt (export in Instellingen)'
+        : 'Opslaan mislukt — export save in Instellingen', 5200);
     }
     return false;
   }
 }
 
-function safeCall(fn, label) {
+function safeCall(fn, label, toastOnFail) {
   try { return fn(); } catch (err) {
     console.error('[Stickman]', label || 'safeCall', err);
+    if (toastOnFail) userToast(toastOnFail);
     return undefined;
   }
 }
 
 function restoreSaveFromBackup() {
-  const backup = readSaveJson(localStorage.getItem(SAVE_BACKUP_KEY));
-  if (!backup) return false;
-  save = sanitizeSave(backup);
-  persist();
-  checkAchievements();
-  UI.renderMenu();
-  if (UI.renderMissions) UI.renderMissions();
-  return true;
+  try {
+    const backup = readSaveJson(localStorage.getItem(SAVE_BACKUP_KEY));
+    if (!backup) return false;
+    save = sanitizeSave(backup);
+    if (!persist()) {
+      userToast('Backup geladen maar opslaan mislukt — export save', 4200);
+      return false;
+    }
+    checkAchievements();
+    UI.renderMenu();
+    if (UI.renderMissions) UI.renderMissions();
+    return true;
+  } catch (err) {
+    sfReportError('restoreBackup', err, 'Backup herstellen mislukt');
+    return false;
+  }
 }
 
 /** Corrupte / gemanipuleerde saves veilig maken (localStorage + import). */
@@ -720,12 +739,12 @@ function previewImportSave(text) {
   const final = sanitizeSave(clean);
   return { save: final, meta };
 }
-function sfReportError(where, err) {
+function sfReportError(where, err, userMsg) {
   console.error('[Stickman]', where, err);
   const now = Date.now();
   if (!window.__sfErrToastT || now - window.__sfErrToastT > 4500) {
     window.__sfErrToastT = now;
-    try { UI.toast('Er ging iets mis — terug naar menu', 4500); } catch (_) {}
+    userToast(userMsg || 'Er ging iets mis — terug naar menu');
   }
 }
 function syncPlayLayer() {
@@ -787,12 +806,12 @@ function recoverToMenu() {
 function importSaveJson(text) {
   const { save: next } = previewImportSave(text);
   save = next;
-  persist();
+  if (!persist()) throw new Error('Import gelukt maar opslaan mislukt — probeer opnieuw');
   checkAchievements();
   UI.renderMenu();
   if (UI.renderMissions) UI.renderMissions();
   if (UI.renderSettings) UI.renderSettings();
-  UI.toast(`Save geïmporteerd · Lv ${save.lvl} · level ${save.unlocked}`, 3200);
+  userToast(`Save geïmporteerd · Lv ${save.lvl} · level ${save.unlocked}`, 3200);
 }
 
 function recordLastPlay(mode, opts) {
@@ -5663,23 +5682,28 @@ const UI = {
   },
 
   goBack() {
-    AudioSys.sfx('select');
-    const active = this.screens.find(sid => document.getElementById(sid)?.classList.contains('active'));
-    if (active === 'charSelectScreen' && this.charPickStep === 2) {
-      this.charPickStep = 1;
-      this.renderCharSelect();
-      return;
-    }
-    if (active === 'pauseScreen' && game) {
-      state = 'play';
-      this.show(null);
-      return;
-    }
-    if (active === 'resultScreen') {
+    try {
+      AudioSys.sfx('select');
+      const active = this.screens.find(sid => document.getElementById(sid)?.classList.contains('active'));
+      if (active === 'charSelectScreen' && this.charPickStep === 2) {
+        this.charPickStep = 1;
+        this.renderCharSelect();
+        return;
+      }
+      if (active === 'pauseScreen' && game) {
+        state = 'play';
+        this.show(null);
+        return;
+      }
+      if (active === 'resultScreen') {
+        this.goMenu();
+        return;
+      }
       this.goMenu();
-      return;
+    } catch (err) {
+      sfReportError('goBack', err, 'Menu-navigatie mislukt — terug naar hoofdmenu');
+      this.goMenu();
     }
-    this.goMenu();
   },
 
   toast(msg, ms) {
@@ -5693,18 +5717,26 @@ const UI = {
   },
 
   goMenu() {
-    game = null;
-    state = 'menu';
-    window.__sfLoopErr = false;
-    Input.dualMode = false;
-    Input.layout(W, H);
-    this.charPickStep = 1;
-    this.syncTouchClass();
-    this.renderMenu();
-    this.show('menuScreen');
-    AudioSys.setPaused(false);
-    AudioSys.play('menu');
-    if (window.StickInstall) window.StickInstall.refreshMenuButton();
+    try {
+      game = null;
+      state = 'menu';
+      window.__sfLoopErr = false;
+      Input.dualMode = false;
+      Input.layout(W, H);
+      this.charPickStep = 1;
+      this.syncTouchClass();
+      this.renderMenu();
+      this.show('menuScreen');
+      AudioSys.setPaused(false);
+      AudioSys.play('menu');
+      if (window.StickInstall) window.StickInstall.refreshMenuButton();
+    } catch (err) {
+      sfReportError('goMenu', err, 'Kon menu niet openen — herlaad de pagina');
+      game = null;
+      state = 'menu';
+      window.__sfLoopErr = false;
+      syncPlayLayer();
+    }
   },
 
   renderCharSelect() {
@@ -6450,7 +6482,9 @@ function bindPress(el, handler) {
     const now = Date.now();
     if (now - last < 320) return;
     last = now;
-    try { handler(e); } catch (err) { console.error(err); }
+    try { handler(e); } catch (err) {
+      sfReportError('ui/' + (el.id || 'press'), err, 'Actie mislukt — probeer opnieuw');
+    }
   };
   el.addEventListener('click', run);
   el.addEventListener('touchend', (e) => {
@@ -6652,7 +6686,7 @@ if (btnClearSave) btnClearSave.addEventListener('click', () => {
   window.__sfClearConfirm = false;
   try { localStorage.removeItem(SAVE_KEY); } catch (_) {}
   save = sanitizeSave(Object.assign({}, DEFAULT_SAVE));
-  persist();
+  if (!persist()) userToast('Nieuwe start — maar opslaan mislukt, export save', 4500);
   AudioSys.sfx('lose');
   UI.renderMenu();
   UI.toast('Nieuwe start — backup staat nog in Instellingen', 4000);
@@ -6934,8 +6968,20 @@ function loop(now) {
     Perf.tick(dt * 1000);
     lastTime = now;
     if (state === 'play' && game) {
-      game.update(dt);
-      try { Input.endFrame(); } catch (_) {}
+      try {
+        game.update(dt);
+      } catch (updateErr) {
+        if (!window.__sfLoopErr) {
+          window.__sfLoopErr = true;
+          sfReportError('update', updateErr, 'Gevecht onderbroken — terug naar menu');
+          recoverToMenu();
+          setTimeout(() => { window.__sfLoopErr = false; }, 2000);
+        }
+        return;
+      }
+      try { Input.endFrame(); } catch (frameErr) {
+        sfReportError('input', frameErr);
+      }
     } else {
       menuAnimT += dt;
       if (state === 'menu') {
@@ -6950,7 +6996,17 @@ function loop(now) {
       }
     }
     if (game && typeof game.draw === 'function') {
-      game.draw(ctx);
+      try {
+        game.draw(ctx);
+      } catch (drawErr) {
+        if (!window.__sfLoopErr) {
+          window.__sfLoopErr = true;
+          sfReportError('draw', drawErr, 'Tekenen mislukt — terug naar menu');
+          recoverToMenu();
+          setTimeout(() => { window.__sfLoopErr = false; }, 2000);
+        }
+        return;
+      }
     } else {
       drawMenuBackdrop(ctx, menuAnimT);
     }
