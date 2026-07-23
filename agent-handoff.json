@@ -13,12 +13,15 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.12.2",
+    "appVersion": "1.12.3",
     "swCache": "stickfighter-app-v65",
     "gameJsQuery": "game.js?v=215",
     "featureBranch": "cursor/android-share-b75e",
     "pushBlocked": "Cloud-agent git push → 403; merge/push lokaal of fix repo-koppeling in Cursor Dashboard (zie AGENTS.md).",
-    "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html"
+    "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
+    "localMainHead": "bb1b40c+",
+    "remoteMainHead": "60423e4",
+    "note": "Nieuwe gekoppelde agent: git clone = alleen remote (oud). Push moet vanaf run met deze commits of handmatig."
   },
   "userWishlist": [
     {
@@ -51,6 +54,10 @@
     "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md."
   ],
   "sessionLog": [
+    {
+      "at": "2026-07-23T17:50:56Z",
+      "summary": "Commit dist/gitignore + handoff: local main voor GitHub push, niet merge op verse clone."
+    },
     {
       "at": "2026-07-23T17:32:49Z",
       "summary": "v1.12.2 speel.html share landing + agent-status/log scripts"
