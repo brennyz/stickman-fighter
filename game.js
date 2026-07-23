@@ -55,7 +55,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.9.9';
+const APP_VERSION = '1.10.0';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -4416,7 +4416,7 @@ const UI = {
     document.getElementById('togSfx').classList.toggle('off', !save.sfx);
     ensureDaily();
     const verLine = document.getElementById('menuVerLine');
-    if (verLine) verLine.textContent = 'v' + APP_VERSION + ' · iPad-tap fix · SW actief';
+    if (verLine) verLine.textContent = 'v' + APP_VERSION + ' · arcade title';
     const missEl = document.getElementById('menuDailyHint');
     if (missEl) missEl.textContent = dailyStatusLine();
     const tipEl = document.getElementById('menuTipLine');
@@ -5184,10 +5184,25 @@ function drawMenuBackdrop(c, t) {
   c.fillStyle = '#0b0e1a';
   c.fillRect(0, 0, W, H);
   const g = c.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, '#151b33');
+  g.addColorStop(0, '#1a1038');
+  g.addColorStop(0.45, '#151b33');
   g.addColorStop(1, '#0a0d18');
   c.fillStyle = g;
   c.fillRect(0, 0, W, H);
+  // Arcade sun stripes
+  c.save();
+  c.translate(W * 0.5, H * 0.28);
+  for (let i = 0; i < 10; i++) {
+    c.rotate(Math.PI / 10);
+    c.fillStyle = i % 2 ? 'rgba(255,90,50,.06)' : 'rgba(255,200,60,.05)';
+    c.beginPath();
+    c.moveTo(0, 0);
+    c.lineTo(W * 0.6, -H * 0.02);
+    c.lineTo(W * 0.6, H * 0.02);
+    c.closePath();
+    c.fill();
+  }
+  c.restore();
   const lite = save.liteFx || motionReduced() || Perf.tier >= 1;
   const starN = lite ? 14 : 28;
   for (let i = 0; i < starN; i++) {
@@ -5218,6 +5233,87 @@ function drawMenuBackdrop(c, t) {
   c.globalAlpha = 1;
 }
 
+function paintMenuHeroCanvas(t) {
+  const cv = document.getElementById('menuHeroCanvas');
+  if (!cv) return;
+  const c = cv.getContext('2d');
+  if (!c) return;
+  const Ws = cv.width;
+  const Hs = cv.height;
+  c.clearRect(0, 0, Ws, Hs);
+  const sky = c.createLinearGradient(0, 0, 0, Hs);
+  sky.addColorStop(0, '#2a1848');
+  sky.addColorStop(0.55, '#120c20');
+  sky.addColorStop(1, '#08060c');
+  c.fillStyle = sky;
+  c.fillRect(0, 0, Ws, Hs);
+  const cx = Ws * 0.5;
+  const cy = Hs * 0.38;
+  const pulse = 0.92 + Math.sin(t * 2.2) * 0.06;
+  c.save();
+  c.translate(cx, cy);
+  c.scale(pulse, pulse);
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * TAU + t * 0.15;
+    c.strokeStyle = i % 2 ? 'rgba(255,100,60,.25)' : 'rgba(255,220,80,.18)';
+    c.lineWidth = 3;
+    c.beginPath();
+    c.moveTo(0, 0);
+    c.lineTo(Math.cos(a) * Ws * 0.55, Math.sin(a) * Hs * 0.9);
+    c.stroke();
+  }
+  const grd = c.createRadialGradient(0, 0, 0, 0, 0, 72);
+  grd.addColorStop(0, '#ffe259');
+  grd.addColorStop(1, 'rgba(255,120,40,.15)');
+  c.fillStyle = grd;
+  c.beginPath();
+  c.arc(0, 0, 72, 0, TAU);
+  c.fill();
+  c.restore();
+  c.fillStyle = 'rgba(30,25,45,.9)';
+  c.fillRect(0, Hs * 0.72, Ws, Hs * 0.28);
+  const bounce = Math.sin(t * 3.5) * 4;
+  const drawMenuStick = (x, face, col) => {
+    c.save();
+    c.translate(x, Hs * 0.78 + bounce * (face > 0 ? 1 : -1));
+    c.scale(face, 1);
+    c.strokeStyle = col;
+    c.lineWidth = 5;
+    c.lineCap = 'round';
+    c.beginPath();
+    c.moveTo(0, 0);
+    c.lineTo(0, -52);
+    c.stroke();
+    c.beginPath();
+    c.moveTo(0, -52);
+    c.lineTo(28, -78);
+    c.stroke();
+    c.fillStyle = col;
+    c.beginPath();
+    c.arc(0, -88, 14, 0, TAU);
+    c.fill();
+    c.fillStyle = '#ffd75e';
+    c.beginPath();
+    c.arc(32, -72, 10, 0, TAU);
+    c.fill();
+    c.restore();
+  };
+  drawMenuStick(Ws * 0.28, 1, '#eef5ff');
+  drawMenuStick(Ws * 0.72, -1, '#ff8a9a');
+  const vx = Ws * 0.5;
+  const vy = Hs * 0.58;
+  c.fillStyle = '#c01828';
+  c.strokeStyle = '#ffd75e';
+  c.lineWidth = 3;
+  c.fillRect(vx - 38, vy - 22, 76, 44);
+  c.strokeRect(vx - 38, vy - 22, 76, 44);
+  c.font = '900 26px "Black Ops One", Bangers, sans-serif';
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillStyle = '#fff';
+  c.fillText('VS', vx, vy + 1);
+}
+
 function loop(now) {
   requestAnimationFrame(loop);
   try {
@@ -5231,7 +5327,10 @@ function loop(now) {
       try { Input.endFrame(); } catch (_) {}
     } else {
       menuAnimT += dt;
-      if (state === 'menu') ensureMenuScreenActive();
+      if (state === 'menu') {
+        ensureMenuScreenActive();
+        try { paintMenuHeroCanvas(menuAnimT); } catch (_) {}
+      }
     }
     if (game && typeof game.draw === 'function') {
       game.draw(ctx);
