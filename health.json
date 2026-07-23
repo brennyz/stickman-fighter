@@ -1,8 +1,9 @@
 {
   "ok": true,
   "url": "https://brennyz.github.io/stickman-fighter/",
-  "ts": "2026-07-23T13:28:30Z",
+  "ts": "2026-07-23T16:00:00Z",
   "provider": "github-pages",
-  "fallbackTunnel": "https://stickfighter-ipad-b75e.loca.lt",
-  "note": "Use githubPages when tunnel returns 503"
+  "fallbackTunnel": "https://stickfighter-ipad-b75e.loca.lt/ipad.html",
+  "bookmarkTunnel": "https://stickfighter-ipad-b75e.loca.lt/ipad.html",
+  "note": "Repo default = Pages. Lokaal: keep-tunnel.sh zet health op loca.lt — bookmark URL wijzigt niet."
 }

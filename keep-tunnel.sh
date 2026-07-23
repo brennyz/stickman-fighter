@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Lokale server + vaste localtunnel-subdomain (iPad Safari)
 set -u
-ROOT="/agent/stickman-fighter"
+ROOT="$(cd "$(dirname "$0")" && pwd)"
 PORT=8787
 LINK_FILE="$ROOT/LIVE-LINK.txt"
 LT_LOG="/tmp/localtunnel.log"
@@ -71,14 +71,17 @@ data["tunnel"] = "$u"
 data["updated"] = "$ts"
 data["tunnelProvider"] = "$TUNNEL_BACKEND"
 data["tunnelSubdomain"] = "$LT_SUBDOMAIN"
-data["stableHint"] = "Vaste link — bookmark stickfighter-ipad-b75e.loca.lt in Safari."
+data["bookmarkTunnel"] = "$u/ipad.html"
+if not data.get("bookmarkPages"):
+    data["bookmarkPages"] = "https://brennyz.github.io/stickman-fighter/ipad.html"
+# stable / primary blijven GitHub Pages — bookmark loca.lt URL verandert niet
 p.write_text(json.dumps(data, indent=2) + "\n")
 PY
 }
 
 write_link() {
   local u="$1"
-  printf '%s\n\nVaste iPad-link — bookmark in Safari.\n«Zet in app-lade» voor fullscreen.\n' "$u" > "$LINK_FILE"
+  printf '%s/ipad.html\n\nVaste iPad-bookmark (zelfde URL):\n%s/ipad.html\nStart tunnel: ./start-local.sh --tunnel\n' "$u" "$u" > "$LINK_FILE"
   write_health "$u" true
   write_hosting "$u"
 }

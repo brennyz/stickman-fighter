@@ -57,7 +57,7 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const APP_VERSION = '1.11.5';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 59;
+const SW_CACHE_REV = 60;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -862,12 +862,19 @@ async function loadHostingBundle() {
 
 function pickStablePlayUrl(hosting) {
   const j = hosting || {};
-  return j.primary || j.githubPages || j.stable || '';
+  if (/\.loca\.lt$/i.test(location.hostname) && j.bookmarkTunnel) {
+    return j.bookmarkTunnel.replace(/\/?$/, '').replace(/\/ipad\.html$/, '') + '/ipad.html';
+  }
+  return j.bookmarkPages || j.primary || j.githubPages || j.stable || '';
 }
 
 async function resolveSharePlayUrl() {
   if (location.hostname.endsWith('.github.io')) {
-    return location.href.split('?')[0].split('#')[0];
+    const base = location.href.split('?')[0].split('#')[0];
+    return base.includes('/ipad.html') ? base : base.replace(/\/?$/, '/ipad.html');
+  }
+  if (/\.loca\.lt$/i.test(location.hostname)) {
+    return location.origin + '/ipad.html';
   }
   const { hosting, liveUrl } = await loadHostingBundle();
   const stable = pickStablePlayUrl(hosting);

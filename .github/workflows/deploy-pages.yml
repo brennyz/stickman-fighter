@@ -27,8 +27,8 @@ jobs:
 
       - name: Static health (geen tunnel op Pages)
         run: |
-          printf '%s\n' '{"ok":true,"static":true,"host":"github-pages"}' > health.json
-          printf '%s\n' 'GitHub Pages — bookmark deze link voor je iPad.' > LIVE-LINK.txt
+          printf '%s\n' '{"ok":true,"static":true,"host":"github-pages","bookmarkPages":"https://brennyz.github.io/stickman-fighter/ipad.html","fallbackTunnel":"https://stickfighter-ipad-b75e.loca.lt/ipad.html"}' > health.json
+          printf '%s\n' 'https://brennyz.github.io/stickman-fighter/ipad.html' > LIVE-LINK.txt
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
