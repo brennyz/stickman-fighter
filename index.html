@@ -18,10 +18,16 @@
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent;
       -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
-  html, body { width:100%; height:100%; overflow:hidden; background:#0a0d18;
+  html, body { width:100%; height:100%; height:100dvh; overflow:hidden; background:#0a0d18;
       font-family: 'Nunito', -apple-system, Helvetica, sans-serif; touch-action:manipulation; }
+  :root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+  }
   /* Canvas achter UI; geen hits in menu (anders vangt iPad alle tikken) */
-  #game { position:fixed; inset:0; width:100%; height:100%; display:block; touch-action:none;
+  #game { position:fixed; left:0; top:0; width:100%; height:100%; height:100dvh; display:block; touch-action:none;
       z-index:0; pointer-events:none !important; }
   body.is-playing #game { pointer-events:auto !important; z-index:1; visibility:visible !important; }
 
@@ -700,7 +706,7 @@
 </script>
 
 <script src="tunnel-check.js?v=202"></script>
-<script src="game.js?v=223"></script>
+<script src="game.js?v=224"></script>
 <script src="install.js?v=201"></script>
 <script>
 (function () {

@@ -60,9 +60,9 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.12.10';
+const APP_VERSION = '1.12.11';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 73;
+const SW_CACHE_REV = 74;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1893,6 +1893,52 @@ const JOY_MAX_PX = 55;
 const JOY_STALE_MS = 160;
 const btnHitSlop = () => (typeof save !== 'undefined' && save.bigTouch !== false ? 14 : 10);
 
+function readSafeInsets() {
+  try {
+    const cs = getComputedStyle(document.documentElement);
+    const px = (k) => parseFloat(cs.getPropertyValue(k)) || 0;
+    return {
+      top: px('--safe-top'),
+      bottom: px('--safe-bottom'),
+      left: px('--safe-left'),
+      right: px('--safe-right'),
+    };
+  } catch (_) {
+    return { top: 0, bottom: 0, left: 0, right: 0 };
+  }
+}
+
+function viewportGameSize() {
+  const vv = typeof window !== 'undefined' ? window.visualViewport : null;
+  if (vv && vv.width > 0 && vv.height > 0) {
+    return {
+      w: Math.max(1, Math.round(vv.width)),
+      h: Math.max(1, Math.round(vv.height)),
+      offsetX: Math.round(vv.offsetLeft || 0),
+      offsetY: Math.round(vv.offsetTop || 0),
+    };
+  }
+  return { w: Math.max(1, innerWidth), h: Math.max(1, innerHeight), offsetX: 0, offsetY: 0 };
+}
+
+function touchUiScale(W, H) {
+  const base = (typeof save !== 'undefined' && save.bigTouch !== false) ? 1.1 : 1;
+  const fit = Math.min(W / 400, H / 740);
+  return clamp(fit * base, 0.7, 1.16);
+}
+
+function playfieldGroundY(H, W) {
+  const portrait = H > W * 1.02;
+  if (portrait && H < 520) return H * 0.7;
+  if (portrait) return H * 0.73;
+  return H * 0.78;
+}
+
+function pointerGameCoords(clientX, clientY) {
+  const vp = viewportGameSize();
+  return { x: clientX - vp.offsetX, y: clientY - vp.offsetY };
+}
+
 function applyJoyDelta(pad, x, y, id) {
   if (!pad.joy.active || pad.joy.id !== id) return;
   let dx = x - pad.joy.ox;
@@ -1983,28 +2029,32 @@ function makePad(side) {
     press(action) { this.pressed[action] = true; },
     take(action) { const v = this.pressed[action]; this.pressed[action] = false; return !!v; },
     layout(W, H) {
-      const r = 38, rs = 30;
-      const scale = (typeof save !== 'undefined' && save.bigTouch !== false) ? 1.16 : 1;
-      const R = Math.round(r * scale), Rs = Math.round(rs * scale);
+      const ui = touchUiScale(W, H);
+      const safe = readSafeInsets();
+      const r = Math.round(38 * ui), rs = Math.round(30 * ui);
+      const bottomY = H - safe.bottom - Math.max(10, H * 0.02);
+      const joyInset = Math.max(56 + safe.left, W * 0.11);
       if (this.side === 'p1') {
-        this.joyHome = { x: Math.min(120, W * 0.14), y: H - 105 };
+        this.joyHome = { x: joyInset, y: bottomY - 6 };
+        const ax = W * 0.5 - Math.max(8, W * 0.02);
         this.buttons = [
-          { id: 'punch', x: W * 0.38, y: H - 82, r: R, label: '\u{1F44A}', color: '#e0533f' },
-          { id: 'kick', x: W * 0.48, y: H - 108, r: R, label: '\u{1F9B6}', color: '#3f8fe0' },
-          { id: 'weapon', x: W * 0.34, y: H - 168, r: R, label: '\u{1F52A}', color: '#9b59d0' },
-          { id: 'special', x: W * 0.46, y: H - 188, r: R, label: '\u{1F300}', color: '#3db8ff' },
-          { id: 'subst', x: W * 0.28, y: H - 148, r: Rs, label: '\u{1F4A8}', color: '#c9a66b' },
-          { id: 'jump', x: W * 0.26, y: H - 68, r: Rs, label: '\u2B06\uFE0F', color: '#43b25b' },
+          { id: 'punch', x: ax - r * 0.55, y: bottomY - r * 0.15, r, label: '\u{1F44A}', color: '#e0533f' },
+          { id: 'kick', x: ax - r * 1.45, y: bottomY - r * 0.45, r, label: '\u{1F9B6}', color: '#3f8fe0' },
+          { id: 'weapon', x: ax - r * 0.25, y: bottomY - r * 1.35, r, label: '\u{1F52A}', color: '#9b59d0' },
+          { id: 'special', x: ax - r * 1.15, y: bottomY - r * 1.55, r, label: '\u{1F300}', color: '#3db8ff' },
+          { id: 'subst', x: ax + r * 0.35, y: bottomY - r * 1.05, r: rs, label: '\u{1F4A8}', color: '#c9a66b' },
+          { id: 'jump', x: ax + r * 0.45, y: bottomY + r * 0.05, r: rs, label: '\u2B06\uFE0F', color: '#43b25b' },
         ];
       } else {
-        this.joyHome = { x: W - Math.min(120, W * 0.14), y: H - 105 };
+        this.joyHome = { x: W - joyInset, y: bottomY - 6 };
+        const ax = W * 0.5 + Math.max(8, W * 0.02);
         this.buttons = [
-          { id: 'punch', x: W - W * 0.38, y: H - 82, r: R, label: '\u{1F44A}', color: '#e0533f' },
-          { id: 'kick', x: W - W * 0.48, y: H - 108, r: R, label: '\u{1F9B6}', color: '#3f8fe0' },
-          { id: 'weapon', x: W - W * 0.34, y: H - 168, r: R, label: '\u{1F52A}', color: '#9b59d0' },
-          { id: 'special', x: W - W * 0.46, y: H - 188, r: R, label: '\u{1F300}', color: '#3db8ff' },
-          { id: 'subst', x: W - W * 0.28, y: H - 148, r: Rs, label: '\u{1F4A8}', color: '#c9a66b' },
-          { id: 'jump', x: W - W * 0.26, y: H - 68, r: Rs, label: '\u2B06\uFE0F', color: '#43b25b' },
+          { id: 'punch', x: ax + r * 0.55, y: bottomY - r * 0.15, r, label: '\u{1F44A}', color: '#e0533f' },
+          { id: 'kick', x: ax + r * 1.45, y: bottomY - r * 0.45, r, label: '\u{1F9B6}', color: '#3f8fe0' },
+          { id: 'weapon', x: ax + r * 0.25, y: bottomY - r * 1.35, r, label: '\u{1F52A}', color: '#9b59d0' },
+          { id: 'special', x: ax + r * 1.15, y: bottomY - r * 1.55, r, label: '\u{1F300}', color: '#3db8ff' },
+          { id: 'subst', x: ax - r * 0.35, y: bottomY - r * 1.05, r: rs, label: '\u{1F4A8}', color: '#c9a66b' },
+          { id: 'jump', x: ax - r * 0.45, y: bottomY + r * 0.05, r: rs, label: '\u2B06\uFE0F', color: '#43b25b' },
         ];
       }
     },
@@ -2017,8 +2067,7 @@ function makePad(side) {
     },
     ownsTouch(x, y, dual) {
       if (!dual) return this.side === 'p1';
-      const w = innerWidth;
-      return this.side === 'p1' ? x < w * 0.5 : x >= w * 0.5;
+      return this.side === 'p1' ? x < W * 0.5 : x >= W * 0.5;
     },
     onDown(x, y, id, dual) {
       if (!this.ownsTouch(x, y, dual)) return false;
@@ -2098,7 +2147,7 @@ const Input = Object.assign(makePad('p1'), {
         return;
       }
     }
-    const joyZone = x < innerWidth * 0.52;
+    const joyZone = x < W * 0.52;
     if (!joyZone) {
       if (this.joy.active) this.releaseJoy();
       this.activePointers.delete(id);
@@ -2170,16 +2219,21 @@ Input.layout = function (W, H) {
     InputP2.layout(W, H);
     return;
   }
-  const scale = save.bigTouch !== false ? 1.14 : 1;
-  const r = Math.round(42 * scale), rs = Math.round(34 * scale);
-  Input.joyHome = { x: 110, y: H - 110 };
+  const ui = touchUiScale(W, H);
+  const safe = readSafeInsets();
+  const r = Math.round(42 * ui), rs = Math.round(34 * ui);
+  const bottomY = H - safe.bottom - Math.max(10, H * 0.02);
+  const joyInset = Math.max(64 + safe.left, W * 0.12);
+  const marginR = Math.max(10 + safe.right, W * 0.035);
+  const ax = W - marginR;
+  Input.joyHome = { x: joyInset, y: bottomY - 8 };
   Input.buttons = [
-    { id: 'punch', x: W - 178, y: H - 88, r, label: '\u{1F44A}', color: '#e0533f' },
-    { id: 'kick', x: W - 82, y: H - 118, r, label: '\u{1F9B6}', color: '#3f8fe0' },
-    { id: 'weapon', x: W - 200, y: H - 186, r, label: '\u{1F52A}', color: '#9b59d0' },
-    { id: 'special', x: W - 104, y: H - 216, r, label: '\u{1F300}', color: '#3db8ff' },
-    { id: 'subst', x: W - 286, y: H - 168, r: rs, label: '\u{1F4A8}', color: '#c9a66b' },
-    { id: 'jump', x: W - 296, y: H - 70, r: rs, label: '\u2B06\uFE0F', color: '#43b25b' },
+    { id: 'punch', x: ax - r * 2.05, y: bottomY - r * 0.15, r, label: '\u{1F44A}', color: '#e0533f' },
+    { id: 'kick', x: ax - r * 0.55, y: bottomY - r * 0.82, r, label: '\u{1F9B6}', color: '#3f8fe0' },
+    { id: 'weapon', x: ax - r * 2.38, y: bottomY - r * 1.62, r, label: '\u{1F52A}', color: '#9b59d0' },
+    { id: 'special', x: ax - r * 1.12, y: bottomY - r * 1.92, r, label: '\u{1F300}', color: '#3db8ff' },
+    { id: 'subst', x: ax - r * 3.15, y: bottomY - r * 1.28, r: rs, label: '\u{1F4A8}', color: '#c9a66b' },
+    { id: 'jump', x: ax - r * 3.28, y: bottomY - r * 0.02, r: rs, label: '\u2B06\uFE0F', color: '#43b25b' },
   ];
 };
 
@@ -2241,16 +2295,23 @@ let W = innerWidth, H = innerHeight, DPR = 1;
 let resizeDebounce = null;
 
 function resize() {
+  const vp = viewportGameSize();
   DPR = Math.min(devicePixelRatio || 1, maxCanvasDpr());
-  W = innerWidth; H = innerHeight;
-  canvas.width = W * DPR; canvas.height = H * DPR;
+  W = vp.w;
+  H = vp.h;
+  canvas.width = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.left = vp.offsetX + 'px';
+  canvas.style.top = vp.offsetY + 'px';
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   Input.layout(W, H);
   if (game) game.onResize();
 }
 function scheduleResize() {
   if (resizeDebounce) clearTimeout(resizeDebounce);
-  const delay = IS_TOUCH ? 220 : 140;
+  const delay = IS_TOUCH ? 120 : 100;
   resizeDebounce = setTimeout(() => {
     resizeDebounce = null;
     if (window.__sfResizeT) cancelAnimationFrame(window.__sfResizeT);
@@ -2258,18 +2319,27 @@ function scheduleResize() {
   }, delay);
 }
 addEventListener('resize', scheduleResize);
-addEventListener('orientationchange', scheduleResize);
+addEventListener('orientationchange', () => {
+  setTimeout(resize, 60);
+  scheduleResize();
+});
+if (typeof window !== 'undefined' && window.visualViewport) {
+  window.visualViewport.addEventListener('resize', scheduleResize);
+  window.visualViewport.addEventListener('scroll', scheduleResize);
+}
 
 canvas.addEventListener('pointerdown', e => {
   if (state !== 'play' || !game) return;
   e.preventDefault();
   try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
-  Input.onDown(e.clientX, e.clientY, e.pointerId);
+  const p = pointerGameCoords(e.clientX, e.clientY);
+  Input.onDown(p.x, p.y, e.pointerId);
 });
 canvas.addEventListener('pointermove', e => {
   if (state !== 'play' || !game) return;
   e.preventDefault();
-  Input.onMove(e.clientX, e.clientY, e.pointerId);
+  const p = pointerGameCoords(e.clientX, e.clientY);
+  Input.onMove(p.x, p.y, e.pointerId);
 });
 canvas.addEventListener('pointerup', e => {
   if (state !== 'play' || !game) return;
@@ -3557,7 +3627,7 @@ class Game {
     opts = opts || {};
     this.mode = mode;
     this.t = 0;
-    this.ground = H * 0.78;
+    this.ground = playfieldGroundY(H, W);
     this.minX = 40; this.maxX = W - 40;
     this.shakeT = 0; this.shakeMag = 0; this.freezeT = 0;
     this.particles = []; this.floaters = []; this.projectiles = []; this.banners = [];
@@ -3593,7 +3663,7 @@ class Game {
   }
 
   onResize() {
-    this.ground = H * 0.78;
+    this.ground = playfieldGroundY(H, W);
     this.maxX = W - 40;
     if (this.mode === 'wall') this.layoutWall(false);
   }
@@ -5295,6 +5365,9 @@ class Game {
   }
 
   drawTouchControls(c) {
+    const ui = touchUiScale(W, H);
+    const joyOuter = Math.round(52 * ui);
+    const joyInner = Math.round(26 * ui);
     if (Input.dualMode) {
       this.drawPad(c, Input, this.player, 'P1', '#7cf5ff');
       this.drawPad(c, InputP2, this.p2 || this.player, 'P2', '#ffb0b8');
@@ -5305,10 +5378,10 @@ class Game {
     const jx = j.active ? j.ox : (Input.joyHome?.x || 110), jy = j.active ? j.oy : (Input.joyHome?.y || H - 110);
     c.globalAlpha = j.active ? 0.5 : 0.22;
     c.strokeStyle = '#fff'; c.lineWidth = 3;
-    c.beginPath(); c.arc(jx, jy, 52, 0, TAU); c.stroke();
+    c.beginPath(); c.arc(jx, jy, joyOuter, 0, TAU); c.stroke();
     c.globalAlpha = j.active ? 0.65 : 0.3;
     c.fillStyle = '#fff';
-    c.beginPath(); c.arc(jx + (j.active ? j.dx : 0), jy + (j.active ? j.dy * 0.3 : 0), 26, 0, TAU); c.fill();
+    c.beginPath(); c.arc(jx + (j.active ? j.dx : 0), jy + (j.active ? j.dy * 0.3 : 0), joyInner, 0, TAU); c.fill();
     if (this.player && this.player.weapon && this.player.weapon.id === 'shuriken' && j.active) {
       const aim = projAimVelocity(this.player, 90);
       c.globalAlpha = 0.5;
@@ -5343,15 +5416,18 @@ class Game {
 
   drawPad(c, pad, fighter, label, accent) {
     c.save();
+    const ui = touchUiScale(W, H);
+    const joyOuter = Math.round(48 * ui);
+    const joyInner = Math.round(22 * ui);
     const j = pad.joy;
     const jx = j.active ? j.ox : pad.joyHome.x, jy = j.active ? j.oy : pad.joyHome.y;
     c.globalAlpha = 0.35;
     c.strokeStyle = accent;
     c.lineWidth = 3;
-    c.beginPath(); c.arc(jx, jy, 48, 0, TAU); c.stroke();
+    c.beginPath(); c.arc(jx, jy, joyOuter, 0, TAU); c.stroke();
     c.globalAlpha = j.active ? 0.55 : 0.25;
     c.fillStyle = accent;
-    c.beginPath(); c.arc(jx + (j.active ? j.dx : 0), jy + (j.active ? j.dy * 0.25 : 0), 22, 0, TAU); c.fill();
+    c.beginPath(); c.arc(jx + (j.active ? j.dx : 0), jy + (j.active ? j.dy * 0.25 : 0), joyInner, 0, TAU); c.fill();
     c.font = '900 11px sans-serif'; c.fillStyle = accent; c.textAlign = 'center';
     c.fillText(label, jx, jy - 58);
     for (const b of pad.buttons) {
