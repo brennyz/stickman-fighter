@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 1;
-const APP_VERSION = '1.14.0';
+const APP_VERSION = '1.14.1';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 98;
+const SW_CACHE_REV = 99;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -4453,7 +4453,7 @@ const THEMES = {
   sloop:   { sky1: '#8fb6d0', sky2: '#d8e8f0', hill: '#7a8794', hill2: '#5f6b78', ground: '#6f7684', gtop: '#848b99', deco: 'kraan' },
 };
 
-function drawBackground(c, themeName, t, ground, scroll) {
+function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   scroll = scroll || 0;
   const th = THEMES[themeName] || THEMES.veld;
   const g = c.createLinearGradient(0, 0, 0, ground);
@@ -4568,6 +4568,56 @@ function drawBackground(c, themeName, t, ground, scroll) {
   for (let x = off - span; x < W + span; x += span) {
     c.fillRect(x, ground + 10, 36, 4);
     c.fillRect(x + 52, ground + 26, 20, 3);
+  }
+
+  // Stage-delen (avontuur): decor evolueert per deel — schemer + rotsen + arena-fakkels
+  if (stageFx && stageFx.pr > 0.02) {
+    const pr = clamp(stageFx.pr, 0, 1);
+    const part = stageFx.part || 1;
+    // 1) lucht kleurt langzaam naar schemer richting het einde
+    const dusk = c.createLinearGradient(0, 0, 0, ground);
+    dusk.addColorStop(0, `rgba(30,14,60,${(pr * 0.30).toFixed(3)})`);
+    dusk.addColorStop(1, `rgba(90,30,50,${(pr * 0.16).toFixed(3)})`);
+    c.fillStyle = dusk;
+    c.fillRect(0, 0, W, ground);
+    // 2) vanaf deel 2: rotsblokken op de grondlijn
+    if (part >= 2) {
+      const rSpan = W + 260;
+      for (let i = 0; i < 5; i++) {
+        const x = wrap((i * 0.21 + 0.12) * rSpan - scroll * 0.85, rSpan) - 130;
+        const s = 10 + (i % 3) * 7;
+        c.fillStyle = 'rgba(20,16,34,.55)';
+        c.beginPath();
+        c.moveTo(x - s, ground);
+        c.lineTo(x - s * 0.3, ground - s);
+        c.lineTo(x + s * 0.5, ground - s * 0.7);
+        c.lineTo(x + s, ground);
+        c.closePath(); c.fill();
+      }
+    }
+    // 3) deel 3: arena-fakkels (extra fel bij baas-level)
+    if (part >= 3) {
+      const fSpan = W + 300;
+      const n = stageFx.boss ? 4 : 3;
+      for (let i = 0; i < n; i++) {
+        const x = wrap((i * 0.27 + 0.08) * fSpan - scroll * 0.9, fSpan) - 150;
+        c.strokeStyle = '#3a2a1a'; c.lineWidth = 5;
+        c.beginPath(); c.moveTo(x, ground); c.lineTo(x, ground - 64); c.stroke();
+        const fl = Math.sin(t * 9 + i * 2.1) * 3;
+        c.fillStyle = stageFx.boss ? '#ff6b3f' : '#ffb347';
+        c.beginPath();
+        c.ellipse(x, ground - 72 + fl * 0.4, 7 + fl * 0.5, 13 + fl, 0, 0, TAU);
+        c.fill();
+        c.fillStyle = '#ffe9a8';
+        c.beginPath();
+        c.ellipse(x, ground - 68 + fl * 0.3, 3.5, 6, 0, 0, TAU);
+        c.fill();
+      }
+      if (stageFx.boss) {
+        c.fillStyle = `rgba(150,20,40,${(0.05 + Math.sin(t * 2.2) * 0.02).toFixed(3)})`;
+        c.fillRect(0, 0, W, ground);
+      }
+    }
   }
 }
 
@@ -4788,6 +4838,7 @@ class Game {
       if (!this.wavePause) {
         const nextIsBoss = isBossWave(this.level, this.waveIdx + 1);
         this.wavePause = nextIsBoss ? 2.15 : 1.55;
+        this.wavePauseTotal = this.wavePause;
         if (this.stageHealBetween > 0 && this.player && this.player.alive) {
           const heal = Math.max(8, Math.round(this.player.maxhp * this.stageHealBetween));
           this.player.hp = Math.min(this.player.maxhp, this.player.hp + heal);
@@ -5764,7 +5815,12 @@ class Game {
     if (this.shakeT > 0) {
       c.translate(rand(-1, 1) * this.shakeMag, rand(-1, 1) * this.shakeMag);
     }
-    drawBackground(c, this.theme, this.t, this.ground, this.worldX || 0);
+    drawBackground(c, this.theme, this.t, this.ground, this.worldX || 0,
+      this.mode === 'adventure' && this.level ? {
+        pr: this.progressSmooth || 0,
+        part: this.stagePart || 1,
+        boss: !!this.level.boss,
+      } : null);
 
     if (this.mode === 'versus' && this.vsMid) {
       c.save();
@@ -5807,6 +5863,7 @@ class Game {
     if (this.mode === 'wall') this.drawWall(c);
     if (this.mode === 'coinrun') this.drawCoinRunLayer(c);
 
+    if (this.mode === 'adventure') this.drawApproachingWave(c);
     for (const m of this.monsters) m.draw(c);
     if (this.robot) this.robot.draw(c);
     if (this.p2) this.p2.draw(c);
@@ -6104,6 +6161,44 @@ class Game {
       }
       c.restore();
     }
+  }
+
+  /** Deel 2: volgende golf komt als silhouetten aanlopen tijdens de reis. */
+  drawApproachingWave(c) {
+    if (!(this.wavePause > 0) || !this.level) return;
+    const nextIdx = this.waveIdx + 1;
+    const next = this.level.waves[nextIdx];
+    if (!next || !next.length) return;
+    const totalPause = this.wavePauseTotal || 1.55;
+    const f = clamp(1 - this.wavePause / totalPause, 0, 1);
+    const count = Math.min(4, next.length);
+    c.save();
+    for (let i = 0; i < count; i++) {
+      const def = next[i];
+      const sp = SPECIES[def.sp];
+      if (!sp) continue;
+      const size = (sp.size || 24) * (def.elite ? 1.4 : 1) * (def.superBoss ? 1.32 : 1);
+      const flying = sp.type === 'fly' || sp.type === 'dragon';
+      const bob = Math.sin(this.t * 6 + i * 1.7) * (flying ? 8 : 2.5);
+      // van ver (klein, rechts) naar dichtbij
+      const x = W + 60 - f * (140 + i * 12) + i * 44;
+      if (x > W + 50) continue;
+      const y = flying ? this.ground - 120 + bob : this.ground - size * (0.55 + f * 0.45) + bob;
+      const scale = 0.45 + f * 0.55;
+      c.globalAlpha = 0.2 + f * 0.35;
+      c.fillStyle = def.superBoss ? 'rgba(255,215,94,.9)' : (def.elite ? 'rgba(255,138,154,.85)' : (sp.c2 || '#20263f'));
+      c.beginPath();
+      c.ellipse(x, y, size * scale, size * scale * 0.88, 0, 0, TAU);
+      c.fill();
+      // ogen-glimp zodat het "iets levends" is
+      c.globalAlpha = 0.35 + f * 0.5;
+      c.fillStyle = '#fff';
+      const eye = Math.max(1.6, size * scale * 0.13);
+      c.beginPath(); c.arc(x - size * scale * 0.28, y - size * scale * 0.2, eye, 0, TAU); c.fill();
+      c.beginPath(); c.arc(x + size * scale * 0.02, y - size * scale * 0.22, eye, 0, TAU); c.fill();
+    }
+    c.restore();
+    c.globalAlpha = 1;
   }
 
   /** Stage-voortgang: balk in 3 delen + lopend bolletje (vervangt wave-pips). */
