@@ -422,9 +422,9 @@
         "1.14.0"
       ],
       "commits": [],
-      "code": "worldX scroll, traveling, drawBackground parallax, drawStageProgress 3 segmenten, stagePart",
-      "status": "deel 2/3 done",
-      "note": "deel 2 (v1.14.1): stageFx dusk/rotsen/fakkels + drawApproachingWave silhouetten; deel 3: polish/checkpoint-flits/baas-aankomst"
+      "code": "worldX scroll, traveling, drawBackground parallax, drawStageProgress 3 segmenten, stagePart, drawTravelSpeedLines, drawStageBeatFx",
+      "status": "done (3/3)",
+      "note": "deel 2 (v1.14.1): stageFx dusk/rotsen/fakkels + silhouetten; deel 3 (v1.14.5): checkpoint-flits + diamantjes, camera-punch bij vertrek, speed-lines, baas-hartslag + roar + aankomst-flits"
     },
     {
       "id": "gamble-dice-stage",

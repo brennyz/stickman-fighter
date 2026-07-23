@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 1;
-const APP_VERSION = '1.14.4';
+const APP_VERSION = '1.14.5';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 102;
+const SW_CACHE_REV = 103;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -4775,6 +4775,10 @@ class Game {
     this.traveling = false;
     this.progressSmooth = 0;
     this.stagePart = 1;
+    this.partFlashT = 0;
+    this.bossArriveT = 0;
+    this.travelWasOn = false;
+    this.bossBeatPlayed = false;
     this.waveTotal = 0;
     this.gambleRoll = gamble || null;
     applyGambleToStage(this, gamble);
@@ -4849,17 +4853,41 @@ class Game {
     // Bewegend decor: tussen golven "loopt" de wereld door (à la beat 'em up)
     const travelPhase = this.wavePause > 0 || (this.betweenT > 0 && this.waveIdx < 0);
     this.traveling = travelPhase && !!(this.player && this.player.alive) && !this.over;
-    if (this.traveling) {
-      const spd = motionReduced() ? 150 : 250;
-      this.worldX = (this.worldX || 0) + spd * dt;
-      for (const m of this.monsters) if (!m.alive) m.x -= spd * dt;
-      for (const pk of this.pickups) pk.x -= spd * dt;
+    // Deel 3: camera-punch bij vertrek, zwaardere beat bij aankomst op de baas
+    if (this.traveling && !this.travelWasOn) {
+      this.shake(motionReduced() ? 2 : 5, 0.22);
+      this.bossBeatPlayed = false;
+      if (!fxLite() && !motionReduced() && this.player) {
+        this.burst(this.player.x - 18, this.player.y - 8, '#c9b691', 9, { kind: 'spark', size: 2.2 });
+      }
+    } else if (!this.traveling && this.travelWasOn) {
+      if (isBossWave(this.level, this.waveIdx)) {
+        this.shake(motionReduced() ? 3 : 9, 0.35);
+        this.freezeT = Math.max(this.freezeT, 0.06);
+        this.bossArriveT = motionReduced() ? 0.3 : 0.7;
+        haptic(24);
+      }
     }
+    this.travelWasOn = this.traveling;
+    // Baas-aankomst-beat: halverwege de reis naar de baas-golf één roar
+    if (this.wavePause > 0 && isBossWave(this.level, this.waveIdx + 1) && !this.bossBeatPlayed) {
+      const f = 1 - this.wavePause / (this.wavePauseTotal || 1);
+      if (f > 0.45) {
+        this.bossBeatPlayed = true;
+        try { AudioSys.sfx('roar'); } catch (_) {}
+        this.floater(W / 2, 120, 'DE BAAS WACHT…', '#ff8a9a', 15);
+      }
+    }
+    if (this.partFlashT > 0) this.partFlashT -= dt;
+    if (this.bossArriveT > 0) this.bossArriveT -= dt;
     const pr = this.stageProgress();
     const part = Math.min(3, 1 + Math.floor(pr * 3));
     if (part > (this.stagePart || 1)) {
       this.stagePart = part;
-      this.floater(W / 2, 96, `DEEL ${part}/3`, '#7cf5ff', 17);
+      this.partFlashT = motionReduced() ? 0.22 : 0.5;
+      this.floater(W / 2, 96, `CHECKPOINT — DEEL ${part}/3`, '#7cf5ff', 17);
+      const orbX = W / 2 - Math.min(320, W * 0.5) / 2 + clamp(this.progressSmooth || 0, 0, 1) * Math.min(320, W * 0.5);
+      if (!fxLite()) this.burst(orbX, 44, '#7cf5ff', motionReduced() ? 6 : 14, { kind: 'spark', size: 2.4 });
       try { AudioSys.sfx('bonus'); } catch (_) {}
       haptic(10);
     }
@@ -5974,6 +6002,7 @@ class Game {
     if (this.mode === 'coinrun') this.drawCoinRunLayer(c);
 
     if (this.mode === 'adventure') this.drawApproachingWave(c);
+    if (this.mode === 'adventure') this.drawTravelSpeedLines(c);
     for (const m of this.monsters) m.draw(c);
     if (this.robot) this.robot.draw(c);
     if (this.p2) this.p2.draw(c);
@@ -6311,6 +6340,60 @@ class Game {
     c.globalAlpha = 1;
   }
 
+  /** Deel 3: speed-lines tijdens de reis — geeft vaart zonder echte camera. */
+  drawTravelSpeedLines(c) {
+    if (!this.traveling || fxLite() || motionReduced()) return;
+    c.save();
+    c.strokeStyle = 'rgba(255,255,255,.16)';
+    c.lineWidth = 2;
+    c.lineCap = 'round';
+    const scroll = this.worldX || 0;
+    for (let i = 0; i < 7; i++) {
+      const y = this.ground - 30 - ((i * 97) % Math.max(80, this.ground - 120));
+      const len = 46 + (i * 31) % 60;
+      const x = W - (((scroll * (2.4 + (i % 3) * 0.8)) + i * 240) % (W + len)) ;
+      c.globalAlpha = 0.1 + (i % 3) * 0.05;
+      c.beginPath();
+      c.moveTo(x, y);
+      c.lineTo(x + len, y);
+      c.stroke();
+    }
+    c.restore();
+    c.globalAlpha = 1;
+  }
+
+  /** Deel 3: checkpoint-flits + baas-aankomst overlays (boven de wereld, onder HUD-tekst). */
+  drawStageBeatFx(c) {
+    if (this.partFlashT > 0) {
+      const f = clamp(this.partFlashT / 0.5, 0, 1);
+      const g = c.createRadialGradient(W / 2, 44, 10, W / 2, 44, H * 0.9);
+      g.addColorStop(0, `rgba(124,245,255,${0.26 * f})`);
+      g.addColorStop(0.4, `rgba(124,245,255,${0.09 * f})`);
+      g.addColorStop(1, 'rgba(124,245,255,0)');
+      c.fillStyle = g;
+      c.fillRect(0, 0, W, H);
+    }
+    // Rustige rode hartslag terwijl je naar de baas-golf reist
+    if (this.wavePause > 0 && isBossWave(this.level, this.waveIdx + 1) && !motionReduced()) {
+      const f = clamp(1 - this.wavePause / (this.wavePauseTotal || 1), 0, 1);
+      const beat = Math.max(0, Math.sin(this.t * 6.5));
+      const a = 0.05 * f + beat * beat * 0.06 * f;
+      const g = c.createRadialGradient(W / 2, H / 2, H * 0.25, W / 2, H / 2, H * 0.9);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(1, `rgba(200,30,50,${a})`);
+      c.fillStyle = g;
+      c.fillRect(0, 0, W, H);
+    }
+    if (this.bossArriveT > 0) {
+      const f = clamp(this.bossArriveT / 0.7, 0, 1);
+      const g = c.createRadialGradient(W / 2, H / 2, H * 0.15, W / 2, H / 2, H * 0.95);
+      g.addColorStop(0, `rgba(255,90,90,${0.1 * f})`);
+      g.addColorStop(1, `rgba(160,10,30,${0.28 * f})`);
+      c.fillStyle = g;
+      c.fillRect(0, 0, W, H);
+    }
+  }
+
   /** Stage-voortgang: balk in 3 delen + lopend bolletje (vervangt wave-pips). */
   drawStageProgress(c) {
     if (!this.level || !this.level.waves) return;
@@ -6345,6 +6428,19 @@ class Game {
       const tx = x0 + (i / total) * tw;
       c.fillRect(tx - 1, y - 3, 2, 6);
     }
+    // checkpoint-diamantjes op de deel-grenzen (deel 3-polish)
+    for (let s = 1; s <= 2; s++) {
+      const cx = x0 + s * (segW + segGap) - segGap / 2;
+      const passed = pr * 3 >= s;
+      const justFlash = passed && this.partFlashT > 0 && Math.min(3, 1 + Math.floor(pr * 3)) === s + 1;
+      const r = justFlash ? 5.5 + Math.sin(this.t * 18) * 1.2 : 4;
+      c.save();
+      c.translate(cx, y);
+      c.rotate(Math.PI / 4);
+      c.fillStyle = passed ? (justFlash ? '#bffaff' : '#7cf5ff') : 'rgba(255,255,255,.25)';
+      c.fillRect(-r / 2, -r / 2, r, r);
+      c.restore();
+    }
     // baas-vlag aan het einde
     if (this.level.boss) {
       c.font = '900 12px sans-serif';
@@ -6370,6 +6466,7 @@ class Game {
   }
 
   drawHUD(c) {
+    if (this.mode === 'adventure') this.drawStageBeatFx(c);
     const p = this.player;
     if (p && p.alive && p.maxhp > 0 && p.hp / p.maxhp < 0.28 && !motionReduced()) {
       const a = 0.07 + Math.sin(this.t * 7) * 0.04;
