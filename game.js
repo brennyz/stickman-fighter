@@ -56,7 +56,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.9.4';
+const APP_VERSION = '1.9.5';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -95,9 +95,17 @@ function readSaveJson(raw) {
 
 function persist() {
   try {
+    if (!save || typeof save !== 'object') return false;
     const json = JSON.stringify(save);
+    if (json.length > 180000) {
+      if (!window.__sfPersistWarn) {
+        window.__sfPersistWarn = true;
+        try { UI.toast('Save bijna te groot — export in Instellingen', 4800); } catch (_) {}
+      }
+    }
     localStorage.setItem(SAVE_KEY, json);
-    localStorage.setItem(SAVE_BACKUP_KEY, json);
+    try { localStorage.setItem(SAVE_BACKUP_KEY, json); } catch (_) {}
+    return true;
   } catch (e) {
     try { localStorage.setItem(SAVE_BACKUP_KEY, JSON.stringify(save)); } catch (_) {}
     if (!window.__sfPersistWarn) {
@@ -108,6 +116,14 @@ function persist() {
         }
       } catch (_) {}
     }
+    return false;
+  }
+}
+
+function safeCall(fn, label) {
+  try { return fn(); } catch (err) {
+    console.error('[Stickman]', label || 'safeCall', err);
+    return undefined;
   }
 }
 
@@ -522,29 +538,36 @@ function ensureMenuScreenActive() {
 }
 
 function dismissTunnelOverlayIfStatic() {
-  const h = location.hostname;
-  const staticHost = h.endsWith('.github.io') || h.endsWith('.netlify.app')
-    || h === 'localhost' || h === '127.0.0.1' || location.protocol === 'file:';
-  if (!staticHost) return;
   const o = document.getElementById('tunnelBootOverlay');
   if (!o) return;
   o.hidden = true;
   o.setAttribute('hidden', '');
-  o.style.pointerEvents = 'none';
+  o.style.cssText = 'display:none!important;pointer-events:none!important;visibility:hidden!important';
+  try { o.remove(); } catch (_) {}
 }
 
 function recoverToMenu() {
-  window.__sfLoopErr = false;
-  try { UI.goMenu(); } catch (_) {
+  try {
     game = null;
     state = 'menu';
+    window.__sfLoopErr = false;
     Input.dualMode = false;
-    Input.layout(W, H);
+    try { Input.layout(W, H); } catch (_) {}
+    try { if (InputP2) InputP2.layout(W, H); } catch (_) {}
+    document.body.classList.remove('is-playing');
     syncPlayLayer();
-    try {
+    try { UI.goMenu(); } catch (_) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById('menuScreen')?.classList.add('active');
-    } catch (_) {}
+      const pb = document.getElementById('pauseBtn');
+      if (pb) pb.classList.remove('show');
+    }
+    try { AudioSys.play('menu'); } catch (_) {}
+  } catch (err) {
+    console.error('[Stickman] recoverToMenu', err);
+    state = 'menu';
+    game = null;
+    syncPlayLayer();
   }
 }
 function importSaveJson(text) {
@@ -877,8 +900,13 @@ function trackVsRosterUse(p1, p2) {
   checkAchievements();
 }
 
-save = sanitizeSave(save);
-persist();
+try {
+  save = sanitizeSave(save);
+  persist();
+} catch (err) {
+  console.error('[Stickman] boot sanitize', err);
+  try { save = Object.assign({}, DEFAULT_SAVE); persist(); } catch (_) {}
+}
 
 function systemPrefersReducedMotion() {
   try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (_) { return false; }
@@ -1062,19 +1090,29 @@ const AudioSys = {
   song: null, step: 0, bar: 0, nextTime: 0,
 
   init() {
-    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    this.ctx = new AC();
-    this.master = this.ctx.createGain(); this.master.gain.value = 0.9;
-    this.master.connect(this.ctx.destination);
-    this.musicGain = this.ctx.createGain(); this.musicGain.gain.value = 0.28;
-    this.musicGain.connect(this.master);
-    this.sfxGain = this.ctx.createGain(); this.sfxGain.gain.value = 0.82;
-    this.sfxGain.connect(this.master);
-    setInterval(() => this.tick(), 40);
-    if (this.desiredSong && save.music) this.play(this.desiredSong);
-    this.applyVolumes();
+    try {
+      if (this.ctx) {
+        if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+        return;
+      }
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      this.ctx = new AC();
+      this.master = this.ctx.createGain(); this.master.gain.value = 0.9;
+      this.master.connect(this.ctx.destination);
+      this.musicGain = this.ctx.createGain(); this.musicGain.gain.value = 0.28;
+      this.musicGain.connect(this.master);
+      this.sfxGain = this.ctx.createGain(); this.sfxGain.gain.value = 0.82;
+      this.sfxGain.connect(this.master);
+      if (!this._tickTimer) this._tickTimer = setInterval(() => {
+        try { this.tick(); } catch (_) {}
+      }, 40);
+      if (this.desiredSong && save.music) this.play(this.desiredSong);
+      this.applyVolumes();
+    } catch (err) {
+      console.warn('[Stickman] AudioSys.init', err);
+      this.ctx = null;
+    }
   },
 
   applyVolumes() {
@@ -3987,18 +4025,26 @@ const UI = {
   },
 
   show(id) {
-    for (const s of this.screens) document.getElementById(s).classList.remove('active');
-    if (id) {
-      const el = document.getElementById(id);
-      if (el) {
-        el.classList.add('active');
-        requestAnimationFrame(() => { el.scrollTop = 0; });
+    try {
+      for (const s of this.screens) {
+        const scr = document.getElementById(s);
+        if (scr) scr.classList.remove('active');
       }
-      if (id === 'pauseScreen') this.refreshPauseSubtitle();
-    } else if (game?.mode === 'versus') {
-      this.refreshPauseSubtitle();
+      if (id) {
+        const el = document.getElementById(id);
+        if (el) {
+          el.classList.add('active');
+          requestAnimationFrame(() => { try { el.scrollTop = 0; } catch (_) {} });
+        }
+        if (id === 'pauseScreen') this.refreshPauseSubtitle();
+      } else if (game?.mode === 'versus') {
+        this.refreshPauseSubtitle();
+      }
+      const pauseBtn = document.getElementById('pauseBtn');
+      if (pauseBtn) pauseBtn.classList.toggle('show', !id && !!game && state !== 'result');
+    } catch (err) {
+      console.error('[Stickman] UI.show', err);
     }
-    document.getElementById('pauseBtn').classList.toggle('show', !id && !!game && state !== 'result');
     syncPlayLayer();
   },
 
@@ -4614,12 +4660,18 @@ function startGame(mode, opts) {
   opts = opts || {};
   const allowed = { adventure: 1, training: 1, wall: 1, versus: 1 };
   if (!allowed[mode]) {
-    UI.toast('Onbekende modus', 2200);
+    try { UI.toast('Onbekende modus', 2200); } catch (_) {}
     return;
   }
+  window.__sfLoopErr = false;
+  try { dismissTunnelOverlayIfStatic(); } catch (_) {}
   if (mode === 'versus') {
-    opts.p1 = normalizeVsPick(opts.p1 || vsSelect.p1, 'hero');
-    opts.p2 = normalizeVsPick(opts.p2 || vsSelect.p2, 'rabbit');
+    try {
+      opts.p1 = normalizeVsPick(opts.p1 || vsSelect.p1, 'hero');
+      opts.p2 = normalizeVsPick(opts.p2 || vsSelect.p2, 'rabbit');
+    } catch (_) {
+      opts.p1 = 'hero'; opts.p2 = 'rabbit';
+    }
   }
   try {
     game = new Game(mode, opts);
@@ -4628,14 +4680,22 @@ function startGame(mode, opts) {
     recoverToMenu();
     return;
   }
+  if (!game || !game.player) {
+    sfReportError('start/' + mode, new Error('game incomplete'));
+    recoverToMenu();
+    return;
+  }
   state = 'play';
-  recordLastPlay(mode, opts);
-  showModeOnboarding(mode);
-  playModeHint(game, mode);
-  UI.show(null);
-  if (mode === 'training') AudioSys.play('boss');
-  else if (mode === 'adventure') AudioSys.play(game.level.boss ? 'boss' : 'battle');
-  else AudioSys.play('battle');
+  try { recordLastPlay(mode, opts); } catch (_) {}
+  try { showModeOnboarding(mode); } catch (_) {}
+  try { playModeHint(game, mode); } catch (_) {}
+  try { UI.show(null); } catch (_) { syncPlayLayer(); }
+  try {
+    if (mode === 'training') AudioSys.play('boss');
+    else if (mode === 'adventure') AudioSys.play(game.level && game.level.boss ? 'boss' : 'battle');
+    else if (mode === 'versus') AudioSys.play('boss');
+    else AudioSys.play('battle');
+  } catch (_) {}
 }
 
 /** iPad: touchend + click zonder dubbel-vuur (preventDefault stopt ghost-click). */
@@ -4989,17 +5049,22 @@ function drawMenuBackdrop(c, t) {
 function loop(now) {
   requestAnimationFrame(loop);
   try {
+    if (!ctx || !canvas) return;
     const dt = Math.min((now - lastTime) / 1000, 0.05);
+    if (!(dt >= 0) || dt > 1) { lastTime = now; return; }
     Perf.tick(dt * 1000);
     lastTime = now;
     if (state === 'play' && game) {
       game.update(dt);
-      Input.endFrame();
+      try { Input.endFrame(); } catch (_) {}
+      if (InputP2 && typeof InputP2.endFrame === 'function') {
+        try { InputP2.endFrame(); } catch (_) {}
+      }
     } else {
       menuAnimT += dt;
       if (state === 'menu') ensureMenuScreenActive();
     }
-    if (game) {
+    if (game && typeof game.draw === 'function') {
       game.draw(ctx);
     } else {
       drawMenuBackdrop(ctx, menuAnimT);
@@ -5010,6 +5075,7 @@ function loop(now) {
       window.__sfLoopErr = true;
       sfReportError('loop', err);
       recoverToMenu();
+      setTimeout(() => { window.__sfLoopErr = false; }, 2000);
     }
   }
 }
@@ -5064,27 +5130,32 @@ function bootGame() {
   if (window.__sfBooted) return;
   window.__sfBooted = true;
   try {
-    save = sanitizeSave(save);
+    save = sanitizeSave(save || Object.assign({}, DEFAULT_SAVE));
     persist();
   } catch (err) {
     console.error('[Stickman] save sanitize', err);
     save = Object.assign({}, DEFAULT_SAVE);
+    try { persist(); } catch (_) {}
   }
-  dismissTunnelOverlayIfStatic();
-  syncPlayLayer();
-  resize();
-  UI.renderMenu();
-  ensureDaily();
-  checkAchievements();
-  updateNetStatus();
-  UI.syncTouchClass();
-  maybeWelcomeToast();
+  safeCall(() => dismissTunnelOverlayIfStatic(), 'overlay');
+  safeCall(() => { if (typeof window.sfTunnelNukeOverlay === 'function') window.sfTunnelNukeOverlay(); }, 'nuke');
+  safeCall(syncPlayLayer, 'syncPlay');
+  safeCall(resize, 'resize');
+  safeCall(() => UI.renderMenu(), 'menu');
+  safeCall(ensureDaily, 'daily');
+  safeCall(checkAchievements, 'ach');
+  safeCall(updateNetStatus, 'net');
+  safeCall(() => UI.syncTouchClass(), 'touch');
+  safeCall(maybeWelcomeToast, 'welcome');
   if (!window.__sfGlobalErr) {
     window.__sfGlobalErr = true;
     window.addEventListener('unhandledrejection', (ev) => {
-      if (state !== 'play' || window.__sfLoopErr) return;
+      if (window.__sfLoopErr) return;
       const r = ev.reason;
       if (r instanceof Error) sfReportError('async', r);
+      if (state === 'play') {
+        try { recoverToMenu(); } catch (_) {}
+      }
     });
   }
   try {
@@ -5095,35 +5166,45 @@ function bootGame() {
   } catch (_) {}
   if (window.__sfRecoveredBackup) {
     window.__sfRecoveredBackup = false;
-    UI.toast('Save hersteld uit backup — je voortgang is veilig', 4200);
+    safeCall(() => UI.toast('Save hersteld uit backup — je voortgang is veilig', 4200), 'toast');
   }
   AudioSys.desiredSong = 'menu';
-  if (typeof AudioSys.applyVolumes === 'function') AudioSys.applyVolumes();
+  safeCall(() => { if (typeof AudioSys.applyVolumes === 'function') AudioSys.applyVolumes(); }, 'vol');
   requestAnimationFrame(loop);
-  if (state === 'menu') UI.show('menuScreen');
+  if (state === 'menu') safeCall(() => UI.show('menuScreen'), 'showMenu');
   if (!window.__sfTipTimer) {
     window.__sfTipTimer = setInterval(() => {
-      if (state === 'menu') UI.renderMenu();
+      if (state === 'menu') safeCall(() => UI.renderMenu(), 'menuTick');
     }, 8000);
   }
-  window.__sf = { get game() { return game; }, startGame, save, Game, UI };
+  window.__sf = {
+    get game() { return game; },
+    get version() { return APP_VERSION; },
+    startGame, save, Game, UI, recoverToMenu, syncPlayLayer,
+  };
 
   (function handleLaunchShortcut() {
-    const mode = new URLSearchParams(location.search).get('mode');
-    if (!mode) return;
-    AudioSys.init();
-    setTimeout(() => {
-      if (mode === 'adventure') {
-        UI.renderLevels();
-        UI.show('levelScreen');
-      } else if (mode === 'training') startGame('training');
-      else if (mode === 'versus') {
-        UI.charPickStep = 1;
-        UI.renderCharSelect();
-        UI.show('charSelectScreen');
-      }
-      else if (mode === 'wall') startGame('wall');
-    }, 120);
+    try {
+      const mode = new URLSearchParams(location.search).get('mode');
+      if (!mode) return;
+      AudioSys.init();
+      setTimeout(() => {
+        try {
+          if (mode === 'adventure') {
+            UI.renderLevels();
+            UI.show('levelScreen');
+          } else if (mode === 'training') startGame('training');
+          else if (mode === 'versus') {
+            UI.charPickStep = 1;
+            UI.renderCharSelect();
+            UI.show('charSelectScreen');
+          } else if (mode === 'wall') startGame('wall');
+        } catch (err) {
+          sfReportError('shortcut/' + mode, err);
+          recoverToMenu();
+        }
+      }, 120);
+    } catch (_) {}
   })();
 }
 

@@ -1,8 +1,9 @@
-/* Stickman Fighter — offline cache voor PWA / “app op beginscherm” */
-const CACHE = 'stickfighter-app-v42';
+/* Stickman Fighter — hardened offline cache (PWA) */
+const CACHE = 'stickfighter-app-v43';
 const ASSETS = [
   './',
   './index.html',
+  './ipad.html',
   './game.js',
   './tunnel-check.js',
   './install.js',
@@ -12,7 +13,6 @@ const ASSETS = [
   './icons/icon-512.png',
 ];
 
-/** Altijd eerst netwerk (verse Pages), offline → cache. */
 function isNetworkFirstPath(pathname) {
   const p = pathname.replace(/\/+$/, '') || '/';
   return (
@@ -20,6 +20,7 @@ function isNetworkFirstPath(pathname) {
     p.endsWith('/LIVE-LINK.txt') ||
     p.endsWith('/hosting.json') ||
     p.endsWith('/index.html') ||
+    p.endsWith('/ipad.html') ||
     p.endsWith('/game.js') ||
     p.endsWith('/tunnel-check.js') ||
     p.endsWith('/install.js') ||
@@ -30,10 +31,19 @@ function isNetworkFirstPath(pathname) {
   );
 }
 
+async function precache() {
+  const cache = await caches.open(CACHE);
+  // Per-asset: één mislukte icon mag install niet breken
+  await Promise.all(ASSETS.map(async (url) => {
+    try {
+      const res = await fetch(url, { cache: 'no-cache' });
+      if (res && res.ok) await cache.put(url, res.clone());
+    } catch (_) {}
+  }));
+}
+
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
-  );
+  event.waitUntil(precache().then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
@@ -42,15 +52,22 @@ self.addEventListener('activate', (event) => {
       Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
     ).then(() => self.clients.claim()).then(() =>
       self.clients.matchAll({ type: 'window' }).then((clients) => {
-        for (const c of clients) c.postMessage({ type: 'SF_SW_ACTIVATED', cache: CACHE });
+        for (const c of clients) {
+          try { c.postMessage({ type: 'SF_SW_ACTIVATED', cache: CACHE }); } catch (_) {}
+        }
       })
     )
   );
 });
 
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SF_SKIP_WAITING') self.skipWaiting();
+});
+
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  const url = new URL(event.request.url);
+  let url;
+  try { url = new URL(event.request.url); } catch (_) { return; }
   if (url.origin !== self.location.origin) return;
 
   const isDoc = event.request.mode === 'navigate'
@@ -75,7 +92,7 @@ self.addEventListener('fetch', (event) => {
             || await caches.match('./');
           if (shell) return shell;
         }
-        return new Response('Offline — open opnieuw als je net hebt, of speel uit de app-cache.', {
+        return new Response('Offline — open opnieuw als je net hebt.', {
           status: 503,
           statusText: 'Offline',
           headers: { 'Content-Type': 'text/plain; charset=utf-8' },
@@ -83,9 +100,9 @@ self.addEventListener('fetch', (event) => {
       }
     }
 
-    const cached = await caches.match(event.request);
-    if (cached) return cached;
     try {
+      const cached = await caches.match(event.request);
+      if (cached) return cached;
       const res = await fetch(event.request);
       if (res && res.status === 200) {
         const copy = res.clone();
