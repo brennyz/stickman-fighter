@@ -5120,37 +5120,33 @@ function reportAppError(label) {
 window.addEventListener('error', (e) => reportAppError(e.message || 'error'));
 window.addEventListener('unhandledrejection', (e) => reportAppError(String(e.reason || 'promise')));
 
-/** iPad Safari: synthetische click alleen als echte click uitblijft (niet op desktop Chrome). */
-function bindIosUiTapFix() {
-  const needsTouchFix = /iPad|iPhone|iPod/.test(navigator.userAgent)
-    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  if (!needsTouchFix) return;
-  document.addEventListener('touchend', (e) => {
-    syncPlayLayer();
-    ensureMenuScreenActive();
+/** Touch/UI: synthetische click als browser geen click afvuurt (iPad/Chrome). */
+function bindUiTapFix() {
+  const onTapEnd = (e) => {
+    try { syncPlayLayer(); ensureMenuScreenActive(); } catch (_) {}
     const t = e.target;
     if (!t || !t.closest) return;
-    const hit = t.closest('button, .lvl, .char-card:not(.locked), .card:not(.locked), .style-card:not(.locked)');
+    if (t.id === 'sfForceFresh' || (t.closest && t.closest('#sfForceFresh'))) return;
+    const hit = t.closest('button, .lvl, .char-card:not(.locked), .style-card:not(.locked)');
     if (!hit || hit.disabled) return;
+    if (hit.id === 'pauseBtn' && state === 'play') return;
     const scr = hit.closest('.screen');
     if (scr && !scr.classList.contains('active')) return;
-    if (hit.id === 'pauseBtn' && state === 'play') return;
-    const tag = hit.tagName;
-    if (tag !== 'BUTTON' && !hit.classList.contains('lvl') && !hit.classList.contains('char-card')
-        && !hit.classList.contains('card') && !hit.classList.contains('style-card')) return;
     hit.dataset.sfTouchAt = String(Date.now());
     setTimeout(() => {
       const ts = Number(hit.dataset.sfTouchAt || 0);
-      if (Date.now() - ts > 450) return;
+      if (Date.now() - ts > 500) return;
       if (hit.dataset.sfClickOk === '1') return;
       try { hit.click(); } catch (_) {}
-    }, 50);
-  }, { passive: true, capture: true });
+    }, 40);
+  };
+  document.addEventListener('pointerup', onTapEnd, { passive: true, capture: true });
+  document.addEventListener('touchend', onTapEnd, { passive: true, capture: true });
   document.addEventListener('click', (e) => {
     const hit = e.target && e.target.closest
-      ? e.target.closest('button, .lvl, .char-card, .card, .style-card') : null;
+      ? e.target.closest('button, .lvl, .char-card, .style-card') : null;
     if (hit) hit.dataset.sfClickOk = '1';
-    setTimeout(() => { if (hit) delete hit.dataset.sfClickOk; }, 120);
+    setTimeout(() => { if (hit) delete hit.dataset.sfClickOk; }, 150);
   }, true);
 }
-bindIosUiTapFix();
+bindUiTapFix();
