@@ -2,7 +2,6 @@
   "version": 1,
   "cyclesCompleted": 0,
   "remaining": [
-    1,
     2,
     3,
     6,
@@ -15,10 +14,10 @@
     20
   ],
   "lastRoll": {
-    "face": 4,
-    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
-    "rolledAt": "2026-07-23T13:31:40Z",
-    "remainingCount": 11,
+    "face": 1,
+    "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
+    "rolledAt": "2026-07-23T13:32:25Z",
+    "remainingCount": 10,
     "cycle": 0
   },
   "history": [
@@ -83,6 +82,13 @@
       "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
       "rolledAt": "2026-07-23T13:31:40Z",
       "remainingCount": 11,
+      "cycle": 0
+    },
+    {
+      "face": 1,
+      "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
+      "rolledAt": "2026-07-23T13:32:25Z",
+      "remainingCount": 10,
       "cycle": 0
     }
   ]

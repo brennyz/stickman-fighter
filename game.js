@@ -56,7 +56,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.8.1';
+const APP_VERSION = '1.8.2';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -760,6 +760,11 @@ function starsFromHpPct(hpPct) {
 function starHintLine() {
   return `3★ >${Math.round(STAR_HP.three * 100)}% HP · 2★ >${Math.round(STAR_HP.two * 100)}% · 1★ = win`;
 }
+function applyHitStop(game, spec) {
+  if (!game || motionReduced()) return;
+  const base = spec.kind === 'special' ? 0.052 : spec.kind === 'kick' ? 0.038 : 0.026;
+  game.freezeT = Math.max(game.freezeT, base);
+}
 function isBossWave(level, waveIdx) {
   return !!(level && level.boss && waveIdx === level.waves.length - 1);
 }
@@ -1432,7 +1437,7 @@ class Fighter {
       weapon: weaponById('vuist'), speed: 260, jumpV: 620,
       ai: null, aiTimer: 0, aiMove: 0, aiCd: 2,
       name: 'Stickman',
-      substCd: 0, invulnT: 0, afterimages: [], dashCd: 0,
+      substCd: 0, invulnT: 0, hitFlashT: 0, afterimages: [], dashCd: 0,
       style: null, playerSlot: 0, vsSpecial: 'rasengan',
     }, opts);
   }
@@ -1608,6 +1613,7 @@ class Fighter {
     if (this.substCd > 0) this.substCd -= dt;
     if (this.dashCd > 0) this.dashCd -= dt;
     if (this.invulnT > 0) this.invulnT -= dt;
+    if (this.hitFlashT > 0) this.hitFlashT -= dt;
     if (this._shurikenCd > 0) this._shurikenCd -= dt;
     for (const a of this.afterimages) a.life -= dt;
     this.afterimages = this.afterimages.filter(a => a.life > 0);
@@ -1683,9 +1689,11 @@ class Fighter {
     dmg = Math.round(dmg);
     this.hp -= dmg;
     this.hurtT = 0.24;
+    this.hitFlashT = 0.14;
     this.attack = null;
     this.vx = kbx;
     this.vy = Math.min(this.vy, -120);
+    if (this.isPlayer || this.playerSlot) this.invulnT = Math.max(this.invulnT, 0.22);
     if (this.isPlayer) this.energy = clamp(this.energy + 4, 0, 100);
     AudioSys.sfx(this.isPlayer ? 'hurt' : 'hit');
     if (this.isPlayer && game) {
@@ -1778,6 +1786,14 @@ class Fighter {
     const s = this.scale;
     c.save();
     c.translate(this.x, this.y);
+    if (this.hitFlashT > 0) {
+      c.globalAlpha = Math.min(0.4, this.hitFlashT * 2.5);
+      c.fillStyle = this.isPlayer ? '#ff8080' : '#ffe680';
+      c.beginPath();
+      c.ellipse(0, -44 * s, 34 * s, 48 * s, 0, 0, TAU);
+      c.fill();
+      c.globalAlpha = 1;
+    }
     // schaduw
     c.fillStyle = 'rgba(0,0,0,.3)';
     c.beginPath(); c.ellipse(0, 2, 26 * s, 6 * s, 0, 0, TAU); c.fill();
@@ -3011,7 +3027,7 @@ class Game {
         let comboMul = 1;
         if (this.mode === 'adventure' && f.isPlayer) {
           this.combo = Math.min(12, this.combo + 1);
-          this.comboT = 1.55;
+          this.comboT = 1.62;
           this.noteCombo();
           comboMul = 1 + Math.min(this.combo, 8) * 0.07;
           trackCombo(this.combo);
@@ -3023,6 +3039,8 @@ class Game {
         const buff = f.isPlayer ? (this.dmgBuffMul || 1) : 1;
         const dmg = Math.round(spec.dmg * rand(0.9, 1.15) * comboMul * buff);
         m.takeDamage(dmg, f.face * spec.kb, this);
+        applyHitStop(this, spec);
+        if (spec.dmg >= 18) this.shake(3, 0.11);
         this.player.energy = clamp(this.player.energy + 8, 0, 100);
         hit = true;
       }
@@ -3044,8 +3062,9 @@ class Game {
         this.floater(tgt.x, tgt.y - 115, '-' + dmg, col, 16);
         this.burst(tgt.bodyX, tgt.bodyY, col, 7);
         f.energy = clamp(f.energy + 9, 0, 100);
-        this.freezeT = Math.max(this.freezeT, 0.03);
-        this.shake(3, 0.12);
+        applyHitStop(this, spec);
+        this.freezeT = Math.max(this.freezeT, motionReduced() ? 0.015 : 0.034);
+        this.shake(spec.dmg > 20 ? 4 : 3, 0.12);
         if ((f.isPlayer || f.playerSlot) && save.haptics !== false) haptic(5);
         hit = true;
       }
