@@ -18,27 +18,97 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true,
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0 },
-  achievements: {}, daily: null };
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0 },
+  achievements: {}, daily: null, vsPlayedIds: [] };
 let save = loadSave();
 
 function loadSave() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      const merged = Object.assign({}, DEFAULT_SAVE, parsed);
-      merged.stats = Object.assign({}, DEFAULT_SAVE.stats, parsed.stats || {});
-      merged.achievements = Object.assign({}, parsed.achievements || {});
-      merged.stars = Object.assign({}, parsed.stars || {});
-      merged.dex = Object.assign({}, parsed.dex || {});
-      return merged;
+    if (!raw || raw.length > 200000) return Object.assign({}, DEFAULT_SAVE);
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return Object.assign({}, DEFAULT_SAVE);
     }
+    const merged = Object.assign({}, DEFAULT_SAVE, parsed);
+    merged.stats = Object.assign({}, DEFAULT_SAVE.stats, parsed.stats || {});
+    merged.achievements = Object.assign({}, parsed.achievements || {});
+    merged.stars = Object.assign({}, parsed.stars || {});
+    merged.dex = Object.assign({}, parsed.dex || {});
+    return merged;
   } catch (e) {}
   return Object.assign({}, DEFAULT_SAVE);
 }
 function persist() {
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {}
+}
+
+/** Corrupte / gemanipuleerde saves veilig maken (localStorage + import). */
+function sanitizeSave(s) {
+  const out = Object.assign({}, DEFAULT_SAVE, s);
+  out.lvl = clamp(Math.floor(Number(out.lvl) || 1), 1, 500);
+  out.xp = clamp(Math.floor(Number(out.xp) || 0), 0, 999999);
+  out.unlocked = clamp(Math.floor(Number(out.unlocked) || 1), 1, MAX_LEVEL);
+  out.trainWins = clamp(Math.floor(Number(out.trainWins) || 0), 0, 9999);
+  out.bestWall = clamp(Math.floor(Number(out.bestWall) || 0), 0, 999999);
+  out.musicVol = clamp(Number(out.musicVol), 0, 1);
+  out.sfxVol = clamp(Number(out.sfxVol), 0, 1);
+  out.music = out.music !== false;
+  out.sfx = out.sfx !== false;
+  out.shake = out.shake !== false;
+  out.haptics = out.haptics !== false;
+  out.comboHud = out.comboHud !== false;
+  if (!WEAPONS.some(w => w.id === out.weapon)) out.weapon = 'vuist';
+  const stPick = STYLES.find(st => st.id === out.style) || STYLES[0];
+  let styleOk = stPick.id === 'classic';
+  if (stPick.needLvl && out.lvl >= stPick.needLvl) styleOk = true;
+  if (stPick.needTrain && out.trainWins >= stPick.needTrain) styleOk = true;
+  if (stPick.needDex && Object.keys(out.dex).length >= stPick.needDex) styleOk = true;
+  if (!styleOk) out.style = 'classic';
+
+  const cleanStars = {};
+  for (const [k, v] of Object.entries(out.stars || {})) {
+    const n = parseInt(k, 10);
+    if (n >= 1 && n <= MAX_LEVEL) cleanStars[n] = clamp(Math.floor(Number(v) || 0), 0, 3);
+  }
+  out.stars = cleanStars;
+
+  const cleanDex = {};
+  for (const [k, v] of Object.entries(out.dex || {})) {
+    if (SPECIES[k] && v) cleanDex[k] = 1;
+  }
+  out.dex = cleanDex;
+
+  out.stats = Object.assign({}, DEFAULT_SAVE.stats, out.stats || {});
+  for (const key of Object.keys(DEFAULT_SAVE.stats)) {
+    out.stats[key] = clamp(Math.floor(Number(out.stats[key]) || 0), 0, 9999999);
+  }
+
+  const cleanAch = {};
+  for (const [k, v] of Object.entries(out.achievements || {})) {
+    if (ACHIEVEMENTS.some(a => a.id === k) && typeof v === 'string') cleanAch[k] = v.slice(0, 32);
+  }
+  out.achievements = cleanAch;
+
+  if (out.daily && typeof out.daily === 'object') {
+    const dk = typeof out.daily.date === 'string' ? out.daily.date.slice(0, 10) : todayKey();
+    const tasks = Array.isArray(out.daily.tasks) ? out.daily.tasks : [];
+    out.daily = {
+      date: dk,
+      tasks: tasks.filter(t => t && dailyDef(t.id)).map(t => ({
+        id: t.id,
+        progress: clamp(Math.floor(Number(t.progress) || 0), 0, 99999),
+        done: !!t.done,
+        claimed: !!t.claimed,
+      })).slice(0, 5),
+      dayBonusClaimed: !!out.daily.dayBonusClaimed,
+    };
+  } else {
+    out.daily = null;
+  }
+  if (!Array.isArray(out.vsPlayedIds)) out.vsPlayedIds = [];
+  out.vsPlayedIds = out.vsPlayedIds.filter(id => typeof id === 'string' && VS_ROSTER.some(r => r.id === id)).slice(0, 32);
+  return out;
 }
 function haptic(ms) {
   if (!save.haptics) return;
@@ -80,6 +150,10 @@ const ACHIEVEMENTS = [
     test: s => s.unlocked >= 50 },
   { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd', icon: '📅',
     test: s => (s.stats.dailyBonusCount || 0) >= 7 },
+  { id: 'vs5', name: 'Duelist', desc: '5× 2-speler duel gespeeld', icon: '🥊',
+    test: s => (s.stats.vsMatches || 0) >= 5 },
+  { id: 'vs_roster', name: 'Vol roster', desc: 'Speel met 10+ verschillende vechters (2P)', icon: '🎭',
+    test: s => (s.vsPlayedIds || []).length >= 10 },
 ];
 
 function todayKey() {
@@ -197,12 +271,15 @@ function exportSaveJson() {
   return JSON.stringify(save, null, 2);
 }
 function importSaveJson(text) {
+  if (typeof text !== 'string' || text.length > 120000) throw new Error('invalid');
   const parsed = JSON.parse(text);
-  save = Object.assign({}, DEFAULT_SAVE, parsed);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('invalid');
+  save = sanitizeSave(Object.assign({}, DEFAULT_SAVE, parsed));
   save.stats = Object.assign({}, DEFAULT_SAVE.stats, parsed.stats || {});
   save.achievements = Object.assign({}, parsed.achievements || {});
   save.stars = Object.assign({}, parsed.stars || {});
   save.dex = Object.assign({}, parsed.dex || {});
+  save = sanitizeSave(save);
   persist();
   checkAchievements();
   UI.renderMenu();
@@ -279,6 +356,18 @@ const STYLES = [
     needDex: 8, hint: '8 monsters in boek' },
   { id: 'gold', name: 'Legendarisch', body: '#ffd75e', accent: '#c97a20', bandana: '#ffb830', glow: true,
     needLvl: 25, hint: 'Unlock op Lv 25' },
+  { id: 'sand', name: 'Woestijn', body: '#e8c98a', accent: '#c97a20', bandana: '#8a6030',
+    needLvl: 8, hint: 'Unlock op Lv 8' },
+  { id: 'samurai', name: 'Samurai', body: '#2a2a35', accent: '#e04f4f', bandana: '#1a1a22', topknot: true,
+    needLvl: 20, hint: 'Unlock op Lv 20' },
+  { id: 'cyber', name: 'Cyber-ninja', body: '#1a2040', accent: '#7cf5ff', bandana: '#4ecf6a', visor: true,
+    needLvl: 18, hint: 'Unlock op Lv 18' },
+  { id: 'fox', name: 'Vossen-ninja', body: '#ff8c42', accent: '#ffe259', bandana: '#d05a1e', fox: true,
+    needDex: 12, hint: '12 monsters in boek' },
+  { id: 'storm', name: 'Stormgeest', body: '#dfe8ff', accent: '#6fd7ff', bandana: '#2a7fc0', glow: true,
+    needTrain: 5, hint: 'Win 5× training' },
+  { id: 'void', name: 'Void-waker', body: '#2a1840', accent: '#ff6b9d', bandana: '#5a1040', coat: true,
+    needLvl: 40, hint: 'Unlock op Lv 40' },
 ];
 const styleById = id => STYLES.find(s => s.id === id) || STYLES[0];
 function styleUnlocked(st) {
@@ -315,9 +404,49 @@ const VS_ROSTER = [
     unlock: () => save.trainWins >= 1 },
   { id: 'akatsuki', name: 'Akatsuki', tag: 'Mantel', styleId: 'akatsuki', weapon: 'ketting',
     hpMul: 1.1, spdMul: 0.96, dmgMul: 1.1, unlock: () => save.lvl >= 12 },
+  { id: 'brawler', name: 'Barve', tag: 'Tank', styleId: 'classic', weapon: 'knuppel',
+    hpMul: 1.2, spdMul: 0.88, dmgMul: 1.08, unlock: () => true },
+  { id: 'sand', name: 'Woestijn', tag: 'Bereik', styleId: 'sand', weapon: 'speer',
+    hpMul: 1, spdMul: 1.02, dmgMul: 1, unlock: () => save.lvl >= 8 },
+  { id: 'speedster', name: 'Speedster', tag: 'Combo', styleId: 'konoha', weapon: 'nunchaku',
+    hpMul: 0.9, spdMul: 1.12, dmgMul: 0.95, unlock: () => save.lvl >= 13 },
+  { id: 'samurai', name: 'Samurai', tag: 'Kenjutsu', styleId: 'samurai', weapon: 'zwaard',
+    hpMul: 1.05, spdMul: 0.98, dmgMul: 1.08, unlock: () => save.lvl >= 20 },
+  { id: 'golem', name: 'Rotsbonk', tag: 'Muur', styleId: null, bodyColor: '#9a917f', weapon: 'hamer',
+    hpMul: 1.32, spdMul: 0.78, dmgMul: 1.06, unlock: () => save.lvl >= 22 },
+  { id: 'cyber', name: 'Cyber', tag: 'Laser', styleId: 'cyber', weapon: 'laser',
+    hpMul: 0.92, spdMul: 1.06, dmgMul: 1.05, special: 'chidori', unlock: () => save.lvl >= 18 },
+  { id: 'storm', name: 'Storm', tag: 'Bliksem', styleId: 'storm', weapon: 'donder',
+    hpMul: 1, spdMul: 1.1, dmgMul: 0.98, special: 'chidori', unlock: () => save.trainWins >= 5 },
+  { id: 'fox', name: 'Vlamvos', tag: 'Hit & run', styleId: 'fox', weapon: 'boemerang',
+    hpMul: 0.88, spdMul: 1.14, dmgMul: 0.9, unlock: () => dexCount() >= 12 },
+  { id: 'void', name: 'Void', tag: 'Mythic', styleId: 'void', weapon: 'void',
+    hpMul: 1.12, spdMul: 1.04, dmgMul: 1.15, unlock: () => save.lvl >= 40 },
+  { id: 'dragon', name: 'Kristallo', tag: 'Baas', styleId: 'gold', weapon: 'donder',
+    hpMul: 1.08, spdMul: 0.94, dmgMul: 1.18, unlock: () => save.unlocked >= 45 },
 ];
 const vsRosterEntry = id => VS_ROSTER.find(r => r.id === id) || VS_ROSTER[0];
 function vsUnlocked(r) { return !r.unlock || r.unlock(); }
+function normalizeVsPick(id, fallback) {
+  const r = vsRosterEntry(id);
+  if (r.id === id && vsUnlocked(r)) return id;
+  const fb = vsRosterEntry(fallback);
+  return vsUnlocked(fb) ? fallback : 'hero';
+}
+function trackVsRosterUse(p1, p2) {
+  if (!Array.isArray(save.vsPlayedIds)) save.vsPlayedIds = [];
+  for (const id of [p1, p2]) {
+    if (VS_ROSTER.some(r => r.id === id) && !save.vsPlayedIds.includes(id)) {
+      save.vsPlayedIds.push(id);
+    }
+  }
+  if (save.vsPlayedIds.length > 32) save.vsPlayedIds = save.vsPlayedIds.slice(-32);
+  persist();
+  checkAchievements();
+}
+
+save = sanitizeSave(save);
+persist();
 
 function buildVsFighter(entry, x, slot) {
   const st = entry.styleId ? styleById(entry.styleId) : null;
@@ -332,7 +461,7 @@ function buildVsFighter(entry, x, slot) {
     baseDmg: Math.round(12 * entry.dmgMul),
     speed: Math.round(260 * entry.spdMul),
     weapon: weaponById(entry.weapon),
-    color: st ? st.body : '#b8c4d8',
+    color: entry.bodyColor || (st ? st.body : '#b8c4d8'),
     style: st,
     isRobot: !!entry.isRobot,
     vsSpecial: entry.special || 'rasengan',
@@ -1101,7 +1230,8 @@ class Fighter {
     game.burst(this.x, this.y - 50, '#eee', 8);
     this.afterimages.push({ x: this.x, y: this.y, face: this.face, life: 0.35 });
     const dir = this.face || 1;
-    const dashDir = Math.abs(Input.move) > 0.2 ? Math.sign(Input.move) : dir;
+    const pad = this.playerSlot === 2 ? InputP2 : Input;
+    const dashDir = Math.abs(pad.move) > 0.2 ? Math.sign(pad.move) : dir;
     this.x = clamp(this.x + dashDir * 140, game.minX, game.maxX);
     this.vx = dashDir * 420;
     game.floater(this.x, this.y - 100, 'Substitutie!', '#c9a66b', 14);
@@ -1450,7 +1580,7 @@ class Fighter {
     // Rasengan / Chidori oplaad in de hand
     if (this.attack && this.attack.kind === 'special' && !this.attack.fired) {
       const g = clamp(this.attack.t / this.attack.windup, 0, 1);
-      const isChi = this.isRobot;
+      const isChi = this.isRobot || this.vsSpecial === 'chidori';
       drawJutsuOrb(c, hx + 14, hy, 8 + g * 16, this.animT * (8 + g * 20), isChi ? 'chidori' : 'rasengan', 0.55 + g * 0.45);
     }
     c.restore();
@@ -1508,6 +1638,23 @@ class Fighter {
     if (st.duck) {
       c.fillStyle = '#ffe259';
       c.beginPath(); c.moveTo(hx + 8, hy + 2); c.lineTo(hx + 16, hy + 4); c.lineTo(hx + 8, hy + 6); c.closePath(); c.fill();
+    }
+    if (st.fox) {
+      c.fillStyle = st.accent;
+      c.beginPath(); c.moveTo(hx - 10, hy - 16); c.lineTo(hx - 14, hy - 26); c.lineTo(hx - 6, hy - 18); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(hx + 4, hy - 16); c.lineTo(hx + 8, hy - 26); c.lineTo(hx + 2, hy - 18); c.closePath(); c.fill();
+    }
+    if (st.visor) {
+      c.fillStyle = '#7cf5ff';
+      c.globalAlpha = 0.85;
+      c.fillRect(hx - 9, hy - 5, 18, 6);
+      c.globalAlpha = 1;
+    }
+    if (st.topknot) {
+      c.strokeStyle = st.accent; c.lineWidth = 3;
+      c.beginPath(); c.moveTo(hx, hy - 18); c.lineTo(hx, hy - 30); c.stroke();
+      c.fillStyle = st.accent;
+      c.beginPath(); c.arc(hx, hy - 32, 4.5, 0, TAU); c.fill();
     }
   }
 
@@ -2286,14 +2433,18 @@ class Game {
   }
 
   initVersus(opts) {
+    opts = opts || {};
     Input.dualMode = true;
     Input.layout(W, H);
     this.theme = 'dojo';
     this.roundsP1 = 0;
     this.roundsP2 = 0;
     this.round = 0;
-    this.p1Pick = opts.p1 || 'hero';
-    this.p2Pick = opts.p2 || 'rabbit';
+    this.p1Pick = normalizeVsPick(opts.p1 || vsSelect.p1, 'hero');
+    this.p2Pick = normalizeVsPick(opts.p2 || vsSelect.p2, 'rabbit');
+    vsSelect.p1 = this.p1Pick;
+    vsSelect.p2 = this.p2Pick;
+    trackVsRosterUse(this.p1Pick, this.p2Pick);
     this.player = buildVsFighter(vsRosterEntry(this.p1Pick), W * 0.28, 1);
     this.p2 = buildVsFighter(vsRosterEntry(this.p2Pick), W * 0.72, 2);
     this.startVsRound();
@@ -2367,6 +2518,8 @@ class Game {
     this.inputLocked = true;
     Input.dualMode = false;
     Input.layout(W, H);
+    bumpStat('vsMatches', 1);
+    if (p1Win) bumpStat('vsWins', 1);
     this.grantXP(p1Win ? 35 : 20);
     setTimeout(() => UI.showResult(p1Win, {
       title: p1Win ? 'SPELER 1 WINT!' : 'SPELER 2 WINT!',
@@ -3155,6 +3308,23 @@ const UI = {
     }
     const backP = document.getElementById('charPickBackP1');
     if (backP) backP.style.display = this.charPickStep === 2 ? 'inline-flex' : 'none';
+    const rnd = document.getElementById('btnCharRandom');
+    if (rnd && !rnd.dataset.bound) {
+      rnd.dataset.bound = '1';
+      rnd.addEventListener('click', () => {
+        AudioSys.sfx('select');
+        const pool = VS_ROSTER.filter(vsUnlocked);
+        if (pool.length < 2) return;
+        const a = choice(pool);
+        let b = choice(pool);
+        for (let i = 0; i < 8 && b.id === a.id; i++) b = choice(pool);
+        vsSelect.p1 = a.id;
+        vsSelect.p2 = b.id;
+        this.charPickStep = 2;
+        this.renderCharSelect();
+        UI.toast(`${a.name} vs ${b.name}!`, 2400);
+      });
+    }
   },
 
   renderMenu() {
@@ -3411,6 +3581,11 @@ const UI = {
 let state = 'menu';
 
 function startGame(mode, opts) {
+  opts = opts || {};
+  if (mode === 'versus') {
+    opts.p1 = normalizeVsPick(opts.p1 || vsSelect.p1, 'hero');
+    opts.p2 = normalizeVsPick(opts.p2 || vsSelect.p2, 'rabbit');
+  }
   game = new Game(mode, opts);
   state = 'play';
   UI.show(null);
@@ -3576,18 +3751,26 @@ document.getElementById('resMenu').addEventListener('click', () => { UI.goMenu()
 let lastTime = performance.now();
 function loop(now) {
   requestAnimationFrame(loop);
-  const dt = Math.min((now - lastTime) / 1000, 0.05);
-  lastTime = now;
-  if (state === 'play' && game) {
-    game.update(dt);
-    Input.endFrame();
-  }
-  if (game) {
-    game.draw(ctx);
-  } else {
-    // menu-achtergrond
-    ctx.fillStyle = '#0b0e1a';
-    ctx.fillRect(0, 0, W, H);
+  try {
+    const dt = Math.min((now - lastTime) / 1000, 0.05);
+    lastTime = now;
+    if (state === 'play' && game) {
+      game.update(dt);
+      Input.endFrame();
+    }
+    if (game) {
+      game.draw(ctx);
+    } else {
+      ctx.fillStyle = '#0b0e1a';
+      ctx.fillRect(0, 0, W, H);
+    }
+  } catch (err) {
+    console.error(err);
+    if (!window.__sfLoopErr) {
+      window.__sfLoopErr = true;
+      try { UI.toast('Fout hersteld — terug naar menu', 4500); } catch (_) {}
+      try { UI.goMenu(); } catch (_) { game = null; state = 'menu'; }
+    }
   }
 }
 
@@ -3627,5 +3810,16 @@ function bootGame() {
 }
 
 const tunnelReady = window.sfTunnelBoot || Promise.resolve();
-tunnelReady.then(bootGame).catch(() => {});
+tunnelReady.then(bootGame).catch(() => { try { bootGame(); } catch (_) {} });
 window.addEventListener('sf:tunnel-ready', bootGame);
+
+function reportAppError(label) {
+  if (window.__sfReportedErr) return;
+  window.__sfReportedErr = true;
+  console.error(label);
+  try {
+    if (typeof UI !== 'undefined' && UI.toast) UI.toast('Er ging iets mis — opgeslagen voortgang is veilig', 4000);
+  } catch (_) {}
+}
+window.addEventListener('error', (e) => reportAppError(e.message || 'error'));
+window.addEventListener('unhandledrejection', (e) => reportAppError(String(e.reason || 'promise')));
