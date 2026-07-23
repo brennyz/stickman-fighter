@@ -17,10 +17,11 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.5.0';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
-  musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true,
+  musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
+  lastPlay: null,
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0 },
   achievements: {}, daily: null, vsPlayedIds: [] };
 let save = loadSave();
@@ -88,6 +89,19 @@ function sanitizeSave(s) {
   out.shake = out.shake !== false;
   out.haptics = out.haptics !== false;
   out.comboHud = out.comboHud !== false;
+  out.bigTouch = out.bigTouch !== false;
+  if (out.lastPlay && typeof out.lastPlay === 'object') {
+    const lp = out.lastPlay;
+    if (!['adventure', 'training', 'wall', 'versus'].includes(lp.mode)) out.lastPlay = null;
+    else {
+      out.lastPlay = {
+        mode: lp.mode,
+        level: clamp(Math.floor(Number(lp.level) || 1), 1, MAX_LEVEL),
+        p1: typeof lp.p1 === 'string' ? lp.p1.slice(0, 24) : undefined,
+        p2: typeof lp.p2 === 'string' ? lp.p2.slice(0, 24) : undefined,
+      };
+    }
+  } else out.lastPlay = null;
   if (!WEAPONS.some(w => w.id === out.weapon)) out.weapon = 'vuist';
   const stPick = STYLES.find(st => st.id === out.style) || STYLES[0];
   let styleOk = stPick.id === 'classic';
@@ -317,9 +331,35 @@ function importSaveJson(text) {
   UI.toast('Voortgang hersteld!', 2800);
 }
 
+function recordLastPlay(mode, opts) {
+  opts = opts || {};
+  const lp = { mode };
+  if (mode === 'adventure') lp.level = opts.level || (game && game.level && game.level.n) || save.unlocked;
+  if (mode === 'versus') { lp.p1 = opts.p1 || vsSelect.p1; lp.p2 = opts.p2 || vsSelect.p2; }
+  save.lastPlay = lp;
+  persist();
+}
+
+function resumeLastPlay() {
+  const lp = save.lastPlay;
+  if (!lp || !lp.mode) return false;
+  if (lp.mode === 'adventure') startGame('adventure', { level: lp.level || 1 });
+  else if (lp.mode === 'versus') startGame('versus', { p1: lp.p1, p2: lp.p2 });
+  else startGame(lp.mode);
+  return true;
+}
+
+function vsStatLine(entry) {
+  const hp = Math.round(100 * entry.hpMul);
+  const spd = Math.round(100 * entry.spdMul);
+  const dmg = Math.round(100 * entry.dmgMul);
+  const sp = entry.special === 'chidori' ? 'Chidori' : 'Rasengan';
+  return `HP ${hp} · Snel ${spd}% · Kracht ${dmg}% · ${sp}`;
+}
+
 function headLiveFromPage() {
   if (location.protocol === 'file:') return '';
-  return location.origin;
+  return location.origin + location.pathname.replace(/\/[^/]*$/, '/');
 }
 
 const xpNeed = lvl => 60 + (lvl - 1) * 40;
@@ -833,25 +873,27 @@ function makePad(side) {
     take(action) { const v = this.pressed[action]; this.pressed[action] = false; return !!v; },
     layout(W, H) {
       const r = 38, rs = 30;
+      const scale = (typeof save !== 'undefined' && save.bigTouch !== false) ? 1.16 : 1;
+      const R = Math.round(r * scale), Rs = Math.round(rs * scale);
       if (this.side === 'p1') {
         this.joyHome = { x: Math.min(120, W * 0.14), y: H - 105 };
         this.buttons = [
-          { id: 'punch', x: W * 0.38, y: H - 82, r, label: '\u{1F44A}', color: '#e0533f' },
-          { id: 'kick', x: W * 0.48, y: H - 108, r, label: '\u{1F9B6}', color: '#3f8fe0' },
-          { id: 'weapon', x: W * 0.34, y: H - 168, r, label: '\u{1F52A}', color: '#9b59d0' },
-          { id: 'special', x: W * 0.46, y: H - 188, r, label: '\u{1F300}', color: '#3db8ff' },
-          { id: 'subst', x: W * 0.28, y: H - 148, r: rs, label: '\u{1F4A8}', color: '#c9a66b' },
-          { id: 'jump', x: W * 0.26, y: H - 68, r: rs, label: '\u2B06\uFE0F', color: '#43b25b' },
+          { id: 'punch', x: W * 0.38, y: H - 82, r: R, label: '\u{1F44A}', color: '#e0533f' },
+          { id: 'kick', x: W * 0.48, y: H - 108, r: R, label: '\u{1F9B6}', color: '#3f8fe0' },
+          { id: 'weapon', x: W * 0.34, y: H - 168, r: R, label: '\u{1F52A}', color: '#9b59d0' },
+          { id: 'special', x: W * 0.46, y: H - 188, r: R, label: '\u{1F300}', color: '#3db8ff' },
+          { id: 'subst', x: W * 0.28, y: H - 148, r: Rs, label: '\u{1F4A8}', color: '#c9a66b' },
+          { id: 'jump', x: W * 0.26, y: H - 68, r: Rs, label: '\u2B06\uFE0F', color: '#43b25b' },
         ];
       } else {
         this.joyHome = { x: W - Math.min(120, W * 0.14), y: H - 105 };
         this.buttons = [
-          { id: 'punch', x: W - W * 0.38, y: H - 82, r, label: '\u{1F44A}', color: '#e0533f' },
-          { id: 'kick', x: W - W * 0.48, y: H - 108, r, label: '\u{1F9B6}', color: '#3f8fe0' },
-          { id: 'weapon', x: W - W * 0.34, y: H - 168, r, label: '\u{1F52A}', color: '#9b59d0' },
-          { id: 'special', x: W - W * 0.46, y: H - 188, r, label: '\u{1F300}', color: '#3db8ff' },
-          { id: 'subst', x: W - W * 0.28, y: H - 148, r: rs, label: '\u{1F4A8}', color: '#c9a66b' },
-          { id: 'jump', x: W - W * 0.26, y: H - 68, r: rs, label: '\u2B06\uFE0F', color: '#43b25b' },
+          { id: 'punch', x: W - W * 0.38, y: H - 82, r: R, label: '\u{1F44A}', color: '#e0533f' },
+          { id: 'kick', x: W - W * 0.48, y: H - 108, r: R, label: '\u{1F9B6}', color: '#3f8fe0' },
+          { id: 'weapon', x: W - W * 0.34, y: H - 168, r: R, label: '\u{1F52A}', color: '#9b59d0' },
+          { id: 'special', x: W - W * 0.46, y: H - 188, r: R, label: '\u{1F300}', color: '#3db8ff' },
+          { id: 'subst', x: W - W * 0.28, y: H - 148, r: Rs, label: '\u{1F4A8}', color: '#c9a66b' },
+          { id: 'jump', x: W - W * 0.26, y: H - 68, r: Rs, label: '\u2B06\uFE0F', color: '#43b25b' },
         ];
       }
     },
@@ -1471,6 +1513,9 @@ class Fighter {
     AudioSys.sfx(this.isPlayer ? 'hurt' : 'hit');
     if (this.isPlayer && game) {
       game.floater(this.x, this.y - 118, '-' + dmg, '#ff8080', 15);
+    }
+    if ((this.isPlayer || this.playerSlot) && game && save.haptics !== false) {
+      haptic(dmg >= 18 ? 16 : 8);
     }
     if (this.hp <= 0) {
       this.hp = 0; this.deadT = 0; this.vy = -260;
@@ -2786,6 +2831,7 @@ class Game {
         f.energy = clamp(f.energy + 9, 0, 100);
         this.freezeT = Math.max(this.freezeT, 0.03);
         this.shake(3, 0.12);
+        if ((f.isPlayer || f.playerSlot) && save.haptics !== false) haptic(5);
         hit = true;
       }
     }
@@ -3313,6 +3359,12 @@ const UI = {
     const p2Lbl = document.getElementById('charP2Label');
     if (p1Lbl) p1Lbl.textContent = 'P1: ' + vsRosterEntry(vsSelect.p1).name;
     if (p2Lbl) p2Lbl.textContent = 'P2: ' + vsRosterEntry(vsSelect.p2).name;
+    const statEl = document.getElementById('charStatPreview');
+    if (statEl) {
+      const e1 = vsRosterEntry(vsSelect.p1);
+      const e2 = vsRosterEntry(vsSelect.p2);
+      statEl.textContent = `${e1.name}: ${vsStatLine(e1)}  |  ${e2.name}: ${vsStatLine(e2)}`;
+    }
     grid.innerHTML = '';
     for (const r of VS_ROSTER) {
       const ok = vsUnlocked(r);
@@ -3390,6 +3442,16 @@ const UI = {
       `Monsterboek: <b>${dexCount()}/${SPECIES_ORDER.length}</b> &nbsp;·&nbsp; Muur: <b>${save.bestWall}</b>` +
       `<div class="xpline"><div style="width:${Math.round(save.xp / need * 100)}%"></div></div>` +
       `<div style="font-size:12px;margin-top:4px;opacity:.85">${save.xp}/${need} XP · ${save.trainWins} train-wins</div>`;
+    const cont = document.getElementById('btnContinue');
+    const lp = save.lastPlay;
+    if (cont) {
+      if (lp && lp.mode) {
+        const labels = { adventure: `Avontuur Lv ${lp.level || 1}`, training: 'Training', wall: 'Muur', versus: '2 spelers' };
+        cont.style.display = 'flex';
+        cont.querySelector('div').innerHTML =
+          `Verder spelen<small>${labels[lp.mode] || lp.mode} — direct verder</small>`;
+      } else cont.style.display = 'none';
+    }
     document.getElementById('togMusic').classList.toggle('off', !save.music);
     document.getElementById('togSfx').classList.toggle('off', !save.sfx);
     ensureDaily();
@@ -3609,10 +3671,10 @@ const UI = {
     const lblS = document.getElementById('setSfxVolLbl');
     if (lblM) lblM.textContent = pct(save.musicVol, 0.85) + '%';
     if (lblS) lblS.textContent = pct(save.sfxVol, 1) + '%';
-    ['setShake', 'setHaptics', 'setComboHud'].forEach((id, i) => {
+    ['setShake', 'setHaptics', 'setComboHud', 'setBigTouch'].forEach((id, i) => {
       const el = document.getElementById(id);
       if (!el) return;
-      const keys = ['shake', 'haptics', 'comboHud'];
+      const keys = ['shake', 'haptics', 'comboHud', 'bigTouch'];
       el.classList.toggle('off', save[keys[i]] === false);
     });
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
@@ -3658,6 +3720,7 @@ function startGame(mode, opts) {
   }
   game = new Game(mode, opts);
   state = 'play';
+  recordLastPlay(mode, opts);
   UI.show(null);
   if (mode === 'training') AudioSys.play('boss');
   else if (mode === 'adventure') AudioSys.play(game.level.boss ? 'boss' : 'battle');
@@ -3745,6 +3808,7 @@ function bindSettingsControls() {
   onVol('setSfxVol', 'setSfxVolLbl', 'sfxVol');
   const toggles = [
     ['setShake', 'shake'], ['setHaptics', 'haptics'], ['setComboHud', 'comboHud'],
+    ['setBigTouch', 'bigTouch'],
   ];
   for (const [id, key] of toggles) {
     const el = document.getElementById(id);
@@ -3755,6 +3819,7 @@ function bindSettingsControls() {
       else save[key] = true;
       persist();
       UI.renderSettings();
+      Input.layout(W, H);
       AudioSys.sfx('select');
       haptic(8);
     });
