@@ -6,17 +6,22 @@
     6,
     7,
     9,
-    14,
-    20
+    14
   ],
   "lastRoll": {
-    "face": 15,
-    "category": "Onboarding \u2014 tips, eerste speelminuut, help",
-    "rolledAt": "2026-07-23T18:30:15Z",
-    "remainingCount": 5,
+    "face": 20,
+    "category": "Code health \u2014 kleine refactors, geen gameplay-break",
+    "rolledAt": "2026-07-23T18:31:34Z",
+    "remainingCount": 4,
     "cycle": 1
   },
-  "pending": null,
+  "pending": {
+    "face": 20,
+    "category": "Code health \u2014 kleine refactors, geen gameplay-break",
+    "rolledAt": "2026-07-23T18:31:34Z",
+    "remainingCount": 4,
+    "cycle": 1
+  },
   "implemented": [
     {
       "face": 2,
@@ -530,6 +535,13 @@
       "category": "Onboarding \u2014 tips, eerste speelminuut, help",
       "rolledAt": "2026-07-23T18:30:15Z",
       "remainingCount": 5,
+      "cycle": 1
+    },
+    {
+      "face": 20,
+      "category": "Code health \u2014 kleine refactors, geen gameplay-break",
+      "rolledAt": "2026-07-23T18:31:34Z",
+      "remainingCount": 4,
       "cycle": 1
     }
   ]

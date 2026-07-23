@@ -2,7 +2,7 @@
 /* =========================================================================
    STICKMAN FIGHTER — Monster Arena
    Stickman-vechtgame voor iPad (touch) en desktop (toetsenbord).
-   Modi: Avontuur (50 levels), Training vs RabbitRobot, Versus 2P, Muur.
+   Modi: Avontuur, Training, Versus 2P, Muur, Mats (coinrun).
    Audio (sfx + bgm) is procedureel via Web Audio — rechtenvrij.
    ========================================================================= */
 
@@ -60,9 +60,9 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.12.15';
+const APP_VERSION = '1.12.16';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 78;
+const SW_CACHE_REV = 79;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1014,16 +1014,6 @@ function applyModeOnboarding(mode, g) {
   };
   g.modeHintLine = lines[mode] || lines.adventure;
   g.hint = 8;
-}
-
-function showModeOnboarding(mode) {
-  /* legacy no-op — gebruik applyModeOnboarding(game, mode) */
-  ensureTipsSeen();
-  if (!save.tipsSeen['mode_' + mode]) save.tipsSeen['mode_' + mode] = 1;
-}
-
-function playModeHint(g, mode) {
-  applyModeOnboarding(mode, g);
 }
 
 function maybeWelcomeToast() {
@@ -2302,10 +2292,6 @@ addEventListener('keydown', e => {
     Input.lastMoveTap = now; Input.lastMoveDir = -1;
   }
   if (k === 'd' || (!Input.dualMode && k === 'arrowright')) {
-    if (now - Input.lastMoveTap < 300 && Input.lastMoveDir === 1) Input.press('dash');
-    Input.lastMoveTap = now; Input.lastMoveDir = 1;
-  }
-  if (k === 'd' || k === 'arrowright') {
     if (now - Input.lastMoveTap < 300 && Input.lastMoveDir === 1) Input.press('dash');
     Input.lastMoveTap = now; Input.lastMoveDir = 1;
   }
