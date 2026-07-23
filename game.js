@@ -56,9 +56,9 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.12.5';
+const APP_VERSION = '1.12.6';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 68;
+const SW_CACHE_REV = 69;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -2609,12 +2609,12 @@ class Fighter {
       this.aiTimer = rand(0.22, 0.55) / diff;
       if (dist > 240) {
         this.aiMove = dir;
-        if (this.aiCd <= 0 && Math.random() < 0.35) { out.special = true; this.aiCd = rand(2.4, 4) / diff; }
+        if (this.aiCd <= 0 && dist > 105 && Math.random() < 0.3) { out.special = true; this.aiCd = rand(2.6, 4.2) / diff; }
         if (Math.random() < 0.12) out.jump = true;
       } else if (dist > 110) {
         const r = Math.random();
         if (r < 0.55) this.aiMove = dir;
-        else if (r < 0.75 && this.aiCd <= 0) { out.special = true; this.aiCd = rand(2.4, 4) / diff; }
+        else if (r < 0.72 && this.aiCd <= 0 && dist > 120) { out.special = true; this.aiCd = rand(2.6, 4.2) / diff; }
         else this.aiMove = -dir * 0.6;
       } else {
         const r = Math.random();
@@ -3794,6 +3794,8 @@ class Game {
     this.robot.aiDiff = diff;
     this.robotMaxHp = Math.round(110 + save.lvl * 9 + save.trainWins * 14);
     this.trainTelegraphT = 0;
+    this.trainLaserCd = rand(5, 8);
+    this.trainLaserTelegraph = 0;
     this.startRound();
     AudioSys.play('boss');
   }
@@ -3810,8 +3812,44 @@ class Game {
     this.robot.attack = null; this.robot.hurtT = 0; this.robot.deadT = 0;
     this.phase = 'intro'; this.phaseT = 0;
     this.inputLocked = true;
+    this.trainLaserCd = rand(4, 7);
+    this.trainLaserTelegraph = 0;
     this.banner(`RONDE ${this.round}`, 1.1, '#ffd75e', 52);
     AudioSys.sfx('bell');
+  }
+
+  updateTrainingLasers(dt) {
+    if (this.phase !== 'fight' || !this.robot?.alive || !this.player?.alive) return;
+    if (this.trainLaserTelegraph > 0) {
+      this.trainLaserTelegraph -= dt;
+      this.trainTelegraphT = Math.max(this.trainTelegraphT || 0, this.trainLaserTelegraph);
+      if (this.trainLaserTelegraph <= 0) this.fireTrainingLaser();
+      return;
+    }
+    if ((this.trainLaserCd || 0) > 0) {
+      this.trainLaserCd -= dt;
+      return;
+    }
+    const diff = Math.min(1.5, this.robot.aiDiff || 1);
+    this.trainLaserTelegraph = 0.95;
+    this.trainLaserCd = rand(8, 12) / diff;
+    this.floater(this.robot.x, this.robot.y - 148, '🔴 Oor-laser — spring!', '#ff9a9a', 15);
+    haptic(8);
+  }
+
+  fireTrainingLaser() {
+    const r = this.robot;
+    if (!r || !r.alive) return;
+    const dir = Math.sign(this.player.x - r.x) || -1;
+    const y = r.y - 52;
+    const dmg = Math.min(20, Math.round(8 + save.lvl * 0.35 + save.trainWins * 0.35));
+    this.spawnProjectile({
+      x: r.x + dir * 30, y,
+      vx: dir * 480, vy: 0, r: 13, dmg,
+      from: 'enemy', kind: 'robolaser', life: 0.6, grav: 0,
+    });
+    AudioSys.sfx('laser');
+    this.shake(3, 0.1);
   }
 
   updateTraining(dt) {
@@ -3821,6 +3859,7 @@ class Game {
       if (this.phaseT > 1.6) { this.phase = 'fight'; this.inputLocked = false; }
     } else if (this.phase === 'fight') {
       if (this.trainTelegraphT > 0) this.trainTelegraphT -= dt;
+      this.updateTrainingLasers(dt);
       this.roundTimer -= dt;
       const pDead = !this.player.alive, rDead = !this.robot.alive;
       if (pDead || rDead || this.roundTimer <= 0) {
@@ -4947,6 +4986,24 @@ class Game {
         c.beginPath();
         c.arc(r.x, r.y - 48, 42 + Math.sin(this.t * 14) * 6, 0, TAU);
         c.stroke();
+        c.restore();
+      }
+      if (this.trainLaserTelegraph > 0 && r.alive) {
+        const ly = r.y - 52;
+        c.save();
+        c.globalAlpha = 0.25 + (this.trainLaserTelegraph / 0.95) * 0.45;
+        c.strokeStyle = '#ff5d5d';
+        c.lineWidth = 6;
+        c.setLineDash([14, 10]);
+        c.beginPath();
+        c.moveTo(24, ly);
+        c.lineTo(W - 24, ly);
+        c.stroke();
+        c.setLineDash([]);
+        c.font = '800 13px sans-serif';
+        c.textAlign = 'center';
+        c.fillStyle = '#ffb0b8';
+        c.fillText('OOR-LASER', W / 2, ly - 10);
         c.restore();
       }
       // robotbalk rechtsboven
