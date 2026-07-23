@@ -60,9 +60,11 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.12.20';
+const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
+const SAVE_EXPORT_SCHEMA = 1;
+const APP_VERSION = '1.12.21';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 83;
+const SW_CACHE_REV = 84;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -256,6 +258,13 @@ function persist() {
     }
     localStorage.setItem(SAVE_KEY, json);
     try { localStorage.setItem(SAVE_BACKUP_KEY, json); } catch (_) {}
+    try {
+      localStorage.setItem(SAVE_STAMP_KEY, JSON.stringify({
+        at: new Date().toISOString(),
+        bytes: json.length,
+        app: APP_VERSION,
+      }));
+    } catch (_) {}
     return true;
   } catch (e) {
     let backupSaved = false;
@@ -311,8 +320,14 @@ function sanitizeSave(s) {
   out.unlocked = clamp(Math.floor(Number(out.unlocked) || 1), 1, maxLevel);
   out.trainWins = clamp(Math.floor(Number(out.trainWins) || 0), 0, 9999);
   out.bestWall = clamp(Math.floor(Number(out.bestWall) || 0), 0, 999999);
-  out.musicVol = clamp(Number(out.musicVol), 0, 1);
-  out.sfxVol = clamp(Number(out.sfxVol), 0, 1);
+  out.musicVol = (() => {
+    const v = Number(out.musicVol);
+    return Number.isFinite(v) ? clamp(v, 0, 1) : DEFAULT_SAVE.musicVol;
+  })();
+  out.sfxVol = (() => {
+    const v = Number(out.sfxVol);
+    return Number.isFinite(v) ? clamp(v, 0, 1) : DEFAULT_SAVE.sfxVol;
+  })();
   out.music = out.music !== false;
   out.sfx = out.sfx !== false;
   out.shake = out.shake !== false;
@@ -388,6 +403,11 @@ function sanitizeSave(s) {
   }
   if (!Array.isArray(out.vsPlayedIds)) out.vsPlayedIds = [];
   out.vsPlayedIds = out.vsPlayedIds.filter(id => typeof id === 'string' && VS_ROSTER.some(r => r.id === id)).slice(0, 32);
+
+  const allowedKeys = new Set(Object.keys(DEFAULT_SAVE));
+  for (const k of Object.keys(out)) {
+    if (!allowedKeys.has(k)) delete out[k];
+  }
   return out;
 }
 function haptic(ms) {
@@ -684,9 +704,52 @@ function trackCombo(n) {
   bumpDaily('comboReach', n);
 }
 
+function formatSaveBytes(n) {
+  const b = Math.max(0, Math.floor(Number(n) || 0));
+  if (b < 1024) return b + ' B';
+  return (b / 1024).toFixed(b < 10240 ? 1 : 0) + ' KB';
+}
+
+function saveStorageDiagnostics() {
+  let primaryRaw = null;
+  let backupRaw = null;
+  try { primaryRaw = localStorage.getItem(SAVE_KEY); } catch (_) {}
+  try { backupRaw = localStorage.getItem(SAVE_BACKUP_KEY); } catch (_) {}
+  const primaryBytes = primaryRaw ? primaryRaw.length : 0;
+  const backupBytes = backupRaw ? backupRaw.length : 0;
+  const primaryParsed = readSaveJson(primaryRaw);
+  const backupParsed = readSaveJson(backupRaw);
+  let stampAt = null;
+  let stampBytes = null;
+  try {
+    const st = JSON.parse(localStorage.getItem(SAVE_STAMP_KEY) || 'null');
+    if (st && typeof st === 'object') {
+      stampAt = typeof st.at === 'string' ? st.at : null;
+      stampBytes = Number(st.bytes) || null;
+    }
+  } catch (_) {}
+  let drift = false;
+  if (primaryParsed && backupParsed) {
+    drift = (primaryParsed.lvl !== backupParsed.lvl)
+      || (primaryParsed.unlocked !== backupParsed.unlocked);
+  }
+  const primaryCorrupt = !!(primaryRaw && primaryRaw.length > 0 && !primaryParsed);
+  return {
+    primaryBytes,
+    backupBytes,
+    primaryValid: !!primaryParsed,
+    backupValid: !!backupParsed,
+    primaryCorrupt,
+    drift,
+    stampAt,
+    stampBytes,
+  };
+}
+
 function exportSaveJson() {
   const payload = Object.assign({}, sanitizeSave(save), {
     _exportMeta: {
+      schema: SAVE_EXPORT_SCHEMA,
       app: APP_VERSION,
       exportedAt: new Date().toISOString(),
       key: SAVE_KEY,
@@ -697,6 +760,7 @@ function exportSaveJson() {
 }
 
 function saveHealthSummary() {
+  const diag = saveStorageDiagnostics();
   let backupOk = false;
   let backupLvl = null;
   try {
@@ -716,7 +780,35 @@ function saveHealthSummary() {
     unlocked: save.unlocked,
     dex: dexCount(),
     kills: dexTotalKills(),
+    primaryBytes: diag.primaryBytes,
+    backupBytes: diag.backupBytes,
+    primaryValid: diag.primaryValid,
+    primaryCorrupt: diag.primaryCorrupt,
+    drift: diag.drift,
+    stampAt: diag.stampAt,
   };
+}
+
+function importPreviewWarnings(next, meta) {
+  const lines = [];
+  if (meta && meta.key && meta.key !== SAVE_KEY) {
+    lines.push('Andere save-key in export — controleer of dit Stickman Fighter is');
+  }
+  if (meta && meta.exportedAt) {
+    try {
+      const d = new Date(meta.exportedAt);
+      if (!Number.isNaN(d.getTime())) {
+        lines.push('Export: ' + d.toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' }));
+      }
+    } catch (_) {}
+  }
+  if (meta && meta.app) lines.push('App-versie export: v' + meta.app);
+  if (next.lvl < save.lvl || next.unlocked < save.unlocked) {
+    lines.push('Lager niveau/unlock dan huidige save op dit apparaat');
+  } else if (next.lvl > save.lvl || next.unlocked > save.unlocked) {
+    lines.push('Hogere voortgang dan huidige save — goed voor overzet');
+  }
+  return lines;
 }
 
 function previewImportSave(text) {
@@ -737,7 +829,8 @@ function previewImportSave(text) {
   clean.stars = Object.assign({}, parsed.stars || {});
   clean.dex = Object.assign({}, parsed.dex || {});
   const final = sanitizeSave(clean);
-  return { save: final, meta };
+  const warnings = importPreviewWarnings(final, meta);
+  return { save: final, meta, warnings };
 }
 function sfReportError(where, err, userMsg) {
   console.error('[Stickman]', where, err);
@@ -1051,6 +1144,11 @@ const dexTotalKills = () => {
   for (const id of Object.keys(save.dex)) n += save.dex[id] || 0;
   return n;
 };
+function dexTotalKillsFromSave(s) {
+  let n = 0;
+  for (const id of Object.keys((s && s.dex) || {})) n += s.dex[id] || 0;
+  return n;
+}
 const MONSTER_TYPE_LABEL = {
   hop: 'Hups', fly: 'Vlieg', charge: 'Charge', shoot: 'Schiet', tank: 'Tank', dragon: 'Draak',
 };
@@ -6502,11 +6600,19 @@ const UI = {
     const healthEl = document.getElementById('saveHealthLine');
     if (healthEl) {
       const h = saveHealthSummary();
+      const sizeLine = (h.primaryBytes || h.backupBytes)
+        ? ` · ~${formatSaveBytes(h.primaryBytes || h.backupBytes)}`
+        : '';
+      let statusPrimary = h.primaryCorrupt
+        ? '⚠ Hoofd-save corrupt'
+        : (h.primaryValid ? '✔ Save OK' : (h.primaryOk ? '⚠ Save onleesbaar' : '⚠ Geen primary save'));
+      if (h.drift && h.backupOk) statusPrimary += ' · hoofd/backup verschillen';
       healthEl.innerHTML =
-        `<b>Lv ${h.lvl}</b> · unlock ${h.unlocked} · boek ${h.dex} · kills ${h.kills}<br>` +
-        (h.primaryOk ? '✔ Save OK' : '⚠ Geen primary save') +
+        `<b>Lv ${h.lvl}</b> · unlock ${h.unlocked} · boek ${h.dex} · kills ${h.kills}${sizeLine}<br>` +
+        statusPrimary +
         (h.backupOk ? ` · ✔ Backup (Lv ${h.backupLvl})` : ' · ⚠ Geen backup') +
-        `<br><span style="opacity:.75">Export/import = veiligste overzet · key: ${SAVE_KEY}</span>`;
+        (h.stampAt ? `<br><span style="opacity:.7">Laatst opgeslagen: ${new Date(h.stampAt).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' })}</span>` : '') +
+        `<br><span style="opacity:.75">Export/import = veiligste overzet · key: ${SAVE_KEY} (niet wijzigen)</span>`;
     }
     const pct = (v, d) => Math.round((Number(v ?? d)) * 100);
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
@@ -6751,8 +6857,8 @@ if (btnExportSave) btnExportSave.addEventListener('click', async () => {
   } catch (_) {}
   AudioSys.sfx('select');
   UI.toast(clipped
-    ? 'Save in klembord + vak — bewaar veilig'
-    : 'Save in vak — selecteer & kopieer handmatig', 3400);
+    ? `Save in klembord + vak (~${formatSaveBytes(json.length)})`
+    : `Save in vak (~${formatSaveBytes(json.length)}) — kopieer handmatig`, 3400);
   UI.renderSettings();
 });
 const btnImportSave = document.getElementById('btnImportSave');
@@ -6764,14 +6870,15 @@ if (btnImportSave) btnImportSave.addEventListener('click', () => {
     return;
   }
   try {
-    const { save: next, meta } = previewImportSave(ta.value);
+    const { save: next, meta, warnings } = previewImportSave(ta.value);
     if (!window.__sfImportConfirm) {
       window.__sfImportConfirm = true;
       const metaLine = meta && meta.app ? ` · export v${meta.app}` : '';
+      const warnLine = warnings && warnings.length ? '\n' + warnings.join(' · ') : '';
       if (previewEl) {
         previewEl.style.display = 'block';
         previewEl.textContent =
-          `Preview: Lv ${next.lvl} · unlock ${next.unlocked} · boek ${Object.keys(next.dex || {}).length}${metaLine}. Tik Import nogmaals om te toepassen.`;
+          `Preview: Lv ${next.lvl} · unlock ${next.unlocked} · boek ${Object.keys(next.dex || {}).length} · kills ${dexTotalKillsFromSave(next)}${metaLine}.${warnLine} Tik Import nogmaals om te toepassen.`;
       }
       UI.toast('Import-preview — tik Import nogmaals om te laden', 3600);
       setTimeout(() => { window.__sfImportConfirm = false; }, 8000);

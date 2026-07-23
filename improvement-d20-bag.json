@@ -2,14 +2,12 @@
   "version": 3,
   "cyclesCompleted": 1,
   "rollFirst": [],
-  "remaining": [
-    7
-  ],
+  "remaining": [],
   "lastRoll": {
-    "face": 9,
-    "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
-    "rolledAt": "2026-07-23T19:00:49Z",
-    "remainingCount": 1,
+    "face": 7,
+    "category": "Save & backup \u2014 import/export, corruptie, migratie",
+    "rolledAt": "2026-07-23T19:02:17Z",
+    "remainingCount": 0,
     "cycle": 1
   },
   "pending": null,
@@ -222,6 +220,13 @@
       "note": "2P neutraal strip, slop, touchend guard, pauze hit",
       "version": "1.12.20",
       "doneAt": "2026-07-23T19:02:04Z",
+      "cycle": 1
+    },
+    {
+      "face": 7,
+      "note": "sanitize strip, diagnostics, import warnings, export schema",
+      "version": "1.12.21",
+      "doneAt": "2026-07-23T19:03:26Z",
       "cycle": 1
     }
   ],
@@ -582,6 +587,13 @@
       "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
       "rolledAt": "2026-07-23T19:00:49Z",
       "remainingCount": 1,
+      "cycle": 1
+    },
+    {
+      "face": 7,
+      "category": "Save & backup \u2014 import/export, corruptie, migratie",
+      "rolledAt": "2026-07-23T19:02:17Z",
+      "remainingCount": 0,
       "cycle": 1
     }
   ]
