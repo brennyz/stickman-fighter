@@ -15,13 +15,7 @@
     "remainingCount": 4,
     "cycle": 1
   },
-  "pending": {
-    "face": 20,
-    "category": "Code health \u2014 kleine refactors, geen gameplay-break",
-    "rolledAt": "2026-07-23T18:31:34Z",
-    "remainingCount": 4,
-    "cycle": 1
-  },
+  "pending": null,
   "implemented": [
     {
       "face": 2,
@@ -203,6 +197,13 @@
       "note": "1 hint/modus geen toast-stack + help chips",
       "version": "1.12.15",
       "doneAt": "2026-07-23T18:31:07Z",
+      "cycle": 1
+    },
+    {
+      "face": 20,
+      "note": "dead onboarding wrappers + dup keydown dash",
+      "version": "1.12.16",
+      "doneAt": "2026-07-23T18:32:04Z",
       "cycle": 1
     }
   ],

@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | **20** | Code health: header sync, verwijderd dubbele P1-dash keydown + legacy onboarding wrappers. v1.12.16 / SW v79. |
 | 2026-07-23 | **15** | Onboarding: één in-gevecht hint per modus (geen dubbele toast); welcome uitgesteld; Mats-banner alleen eerste keer; help-modus chips. v1.12.15 / SW v78. |
 | 2026-07-23 | **17** | Stabiliteit: userToast, sfReportError met context, update/draw try/catch, persist/import/backup toasts, bindPress/goMenu fouten. v1.12.14 / SW v77. |
 | 2026-07-23 | **3** | Versus: halve-arena bounds, fair spawn + ronde-invuln, resize respawn, intro countdown, HUD safe-top, pauze herstart 0-0. v1.12.13 / SW v76. |
