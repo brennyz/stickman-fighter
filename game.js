@@ -17,7 +17,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.7.6';
+const APP_VERSION = '1.7.7';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -359,12 +359,34 @@ function resumeLastPlay() {
   return true;
 }
 
-function vsStatLine(entry) {
+function vsFighterStats(entry) {
   const hp = Math.round(100 * entry.hpMul);
   const spd = Math.round(100 * entry.spdMul);
   const dmg = Math.round(100 * entry.dmgMul);
-  const sp = entry.special === 'chidori' ? 'Chidori' : 'Rasengan';
-  return `HP ${hp} · Snel ${spd}% · Kracht ${dmg}% · ${sp}`;
+  let special = 'Rasengan';
+  if (entry.isRobot) special = 'Robot-AI';
+  else if (entry.special === 'chidori') special = 'Chidori';
+  return { hp, spd, dmg, wpn: weaponById(entry.weapon).name, special };
+}
+function vsStatLine(entry) {
+  const s = vsFighterStats(entry);
+  return `HP ${s.hp} · Snel ${s.spd}% · Kracht ${s.dmg}% · ${s.special}`;
+}
+function vsStatBar(label, pct, color) {
+  const p = Math.min(100, Math.max(6, pct));
+  return `<div class="vs-stat-col"><span class="vs-stat-l">${label}</span>` +
+    `<span class="vs-stat-track"><i style="width:${p}%;background:${color}"></i></span></div>`;
+}
+function vsStatPreviewHtml(e1, e2) {
+  const s1 = vsFighterStats(e1);
+  const s2 = vsFighterStats(e2);
+  const col = (name, s, accent) =>
+    `<div class="vs-preview-col" style="--accent:${accent}"><div class="vs-preview-name">${name}</div>` +
+    `<div class="vs-preview-wpn">${s.wpn} · ${s.special}</div>` +
+    `${vsStatBar('HP', s.hp, '#6ee06e')}${vsStatBar('SPD', s.spd, '#7cf5ff')}` +
+    `${vsStatBar('DMG', s.dmg, '#ff7a4d')}</div>`;
+  return `<div class="vs-preview-duo">${col(e1.name, s1, '#7cf5ff')}` +
+    `<div class="vs-preview-vs">VS</div>${col(e2.name, s2, '#ffb0b8')}</div>`;
 }
 
 function copyPlayLink() {
@@ -3555,28 +3577,34 @@ const UI = {
     const stepEl = document.getElementById('charPickStep');
     if (stepEl) {
       stepEl.textContent = this.charPickStep === 1
-        ? 'Speler 1 — kies je vechter (links)'
-        : 'Speler 2 — kies je vechter (rechts)';
+        ? 'Speler 1 — tik een vechter (linker joystick-zone)'
+        : 'Speler 2 — tik een vechter (rechter joystick-zone)';
     }
     const grid = document.getElementById('charGrid');
     if (!grid) return;
     const p1Lbl = document.getElementById('charP1Label');
     const p2Lbl = document.getElementById('charP2Label');
-    if (p1Lbl) p1Lbl.textContent = 'P1: ' + vsRosterEntry(vsSelect.p1).name;
-    if (p2Lbl) p2Lbl.textContent = 'P2: ' + vsRosterEntry(vsSelect.p2).name;
-    const statEl = document.getElementById('charStatPreview');
-    if (statEl) {
-      const e1 = vsRosterEntry(vsSelect.p1);
-      const e2 = vsRosterEntry(vsSelect.p2);
-      statEl.textContent = `${e1.name}: ${vsStatLine(e1)}  |  ${e2.name}: ${vsStatLine(e2)}`;
+    const e1 = vsRosterEntry(vsSelect.p1);
+    const e2 = vsRosterEntry(vsSelect.p2);
+    if (p1Lbl) {
+      p1Lbl.textContent = 'P1: ' + e1.name;
+      p1Lbl.classList.toggle('active', this.charPickStep === 1);
     }
+    if (p2Lbl) {
+      p2Lbl.textContent = 'P2: ' + e2.name;
+      p2Lbl.classList.toggle('active', this.charPickStep === 2);
+    }
+    const statEl = document.getElementById('charStatPreview');
+    if (statEl) statEl.innerHTML = vsStatPreviewHtml(e1, e2);
     grid.innerHTML = '';
     for (const r of VS_ROSTER) {
       const ok = vsUnlocked(r);
       const el = document.createElement('div');
       const sel1 = vsSelect.p1 === r.id;
       const sel2 = vsSelect.p2 === r.id;
-      el.className = 'char-card' + (ok ? '' : ' locked') + (sel1 ? ' p1sel' : '') + (sel2 ? ' p2sel' : '');
+      const focus = ok && ((this.charPickStep === 1 && !sel1) || (this.charPickStep === 2 && !sel2));
+      el.className = 'char-card' + (ok ? '' : ' locked') + (sel1 ? ' p1sel' : '') + (sel2 ? ' p2sel' : '') +
+        (focus ? ' pick-hint' : '');
       const cv = document.createElement('canvas');
       cv.width = 80; cv.height = 80;
       const cc = cv.getContext('2d');
@@ -3593,6 +3621,11 @@ const UI = {
       tag.textContent = ok ? r.tag : r.hint || 'Locked';
       el.appendChild(tag);
       if (ok) {
+        const mini = document.createElement('div');
+        mini.className = 'char-mini-stat';
+        const st = vsFighterStats(r);
+        mini.textContent = `HP ${st.hp} · ${st.dmg}% dmg`;
+        el.appendChild(mini);
         el.addEventListener('click', () => {
           AudioSys.sfx('select');
           if (this.charPickStep === 1) {
@@ -3607,6 +3640,12 @@ const UI = {
       }
       grid.appendChild(el);
     }
+    requestAnimationFrame(() => {
+      const pick = grid.querySelector(
+        this.charPickStep === 1 ? '.char-card.p1sel' : '.char-card.p2sel'
+      );
+      if (pick) pick.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
     const fightBtn = document.getElementById('btnCharFight');
     if (fightBtn) {
       fightBtn.disabled = !(vsSelect.p1 && vsSelect.p2);
@@ -3621,7 +3660,41 @@ const UI = {
       backBtn.textContent = this.charPickStep === 2 ? '\u2190 Andere P1' : '\u2190 Menu';
     }
     const backP = document.getElementById('charPickBackP1');
-    if (backP) backP.style.display = 'none';
+    if (backP) {
+      backP.style.display = this.charPickStep === 2 ? 'flex' : 'none';
+      if (!backP.dataset.bound) {
+        backP.dataset.bound = '1';
+        backP.addEventListener('click', () => {
+          AudioSys.sfx('select');
+          this.charPickStep = 1;
+          this.renderCharSelect();
+        });
+      }
+    }
+    const bindPickPill = (id, step) => {
+      const pill = document.getElementById(id);
+      if (!pill || pill.dataset.bound) return;
+      pill.dataset.bound = '1';
+      pill.addEventListener('click', () => {
+        AudioSys.sfx('select');
+        this.charPickStep = step;
+        this.renderCharSelect();
+      });
+    };
+    bindPickPill('charP1Label', 1);
+    bindPickPill('charP2Label', 2);
+    const swapBtn = document.getElementById('btnCharSwap');
+    if (swapBtn && !swapBtn.dataset.bound) {
+      swapBtn.dataset.bound = '1';
+      swapBtn.addEventListener('click', () => {
+        AudioSys.sfx('select');
+        const t = vsSelect.p1;
+        vsSelect.p1 = vsSelect.p2;
+        vsSelect.p2 = t;
+        this.renderCharSelect();
+        UI.toast('P1 ↔ P2 omgewisseld', 1800);
+      });
+    }
     const rnd = document.getElementById('btnCharRandom');
     if (rnd && !rnd.dataset.bound) {
       rnd.dataset.bound = '1';
