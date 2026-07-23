@@ -378,6 +378,16 @@
       "note": "off-d20 user feature; d1 blijft PENDING"
     },
     {
+      "id": "more-weapons",
+      "d20Face": null,
+      "userWords": "Meer wapens",
+      "versions": ["1.13.7"],
+      "commits": [],
+      "code": "WEAPONS +12, drawWeaponShape cases, isThrowWeapon fuuma",
+      "status": "done",
+      "note": "off-d20; d13 missions blijft PENDING"
+    },
+    {
       "id": "gamble-dice-stage",
       "d20Face": null,
       "userWords": "super bosses on random, super allies based on Gamble dice games, buff for that Stage",

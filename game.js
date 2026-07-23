@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 1;
-const APP_VERSION = '1.13.6';
+const APP_VERSION = '1.13.7';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 96;
+const SW_CACHE_REV = 97;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1225,20 +1225,32 @@ const rarityHpBonus = r => ({ common: 3, uncommon: 5, rare: 8, epic: 12, legenda
 
 /* ============================== WAPENS ================================= */
 const WEAPONS = [
-  { id: 'vuist',     name: 'Vuisten',         dmg: 1.0, range: 38, speed: 1.0,  unlock: 1,  rarity: 'common',    desc: 'Taijutsu basics' },
+  { id: 'vuist',     name: 'Vuisten',         dmg: 1.0,  range: 38, speed: 1.0,  unlock: 1,  rarity: 'common',    desc: 'Taijutsu basics' },
   { id: 'kunai',     name: 'Kunai',           dmg: 1.35, range: 52, speed: 1.15, unlock: 2,  rarity: 'common',    desc: 'Klassieke ninja-mes' },
   { id: 'shuriken',  name: 'Shuriken',        dmg: 1.25, range: 64, speed: 1.35, unlock: 3,  rarity: 'common',    desc: 'Gooit scherpe sterren' },
+  { id: 'tanto',     name: 'Tanto',           dmg: 1.22, range: 44, speed: 1.28, unlock: 4,  rarity: 'common',    desc: 'Korte blade · snel' },
   { id: 'zwaard',    name: 'Ninja-zwaard',    dmg: 1.55, range: 58, speed: 0.95, unlock: 5,  rarity: 'uncommon',  desc: 'Kenjutsu alleskunner' },
-  { id: 'knuppel',   name: 'Knuppel',         dmg: 1.8, range: 50, speed: 0.72, unlock: 7,  rarity: 'uncommon',  desc: 'Rauwe slagkracht' },
-  { id: 'speer',     name: 'Speer',           dmg: 1.6, range: 78, speed: 0.8,  unlock: 10, rarity: 'uncommon',  desc: 'Enorm bereik' },
-  { id: 'nunchaku',  name: 'Nunchaku',        dmg: 1.3, range: 48, speed: 1.4,  unlock: 13, rarity: 'rare',      desc: 'Bliksemsnel' },
-  { id: 'boemerang', name: 'Boemerang',       dmg: 1.7, range: 70, speed: 1.05, unlock: 16, rarity: 'rare',      desc: 'Komt terug' },
-  { id: 'hamer',     name: 'Mokerhamer',      dmg: 2.6, range: 52, speed: 0.55, unlock: 20, rarity: 'epic',      desc: 'Sloopt alles' },
-  { id: 'ketting',   name: 'Kettingzwaard',   dmg: 2.1, range: 68, speed: 0.95, unlock: 24, rarity: 'epic',      desc: 'Bereik + druk' },
-  { id: 'laser',     name: 'Chakra-kling',    dmg: 2.3, range: 62, speed: 1.15, unlock: 28, rarity: 'legendary', desc: 'Blauw brandende kling' },
-  { id: 'donder',    name: 'Bliksem-bijl',    dmg: 2.8, range: 58, speed: 0.7,  unlock: 34, rarity: 'legendary', desc: 'Als Chidori, maar een bijl' },
-  { id: 'void',      name: 'Voidklaauw',      dmg: 2.5, range: 64, speed: 1.25, unlock: 40, rarity: 'mythic',    desc: 'Mythische klauw' },
-  { id: 'guvve',     name: 'Guvvedukkie-stok', dmg: 3.1, range: 66, speed: 1.0, unlock: 48, rarity: 'mythic',  desc: 'Quak. Bitte. Boom.' },
+  { id: 'sai',       name: 'Sai',             dmg: 1.42, range: 46, speed: 1.22, unlock: 6,  rarity: 'uncommon',  desc: 'Driepuntig · pareren' },
+  { id: 'knuppel',   name: 'Knuppel',         dmg: 1.8,  range: 50, speed: 0.72, unlock: 7,  rarity: 'uncommon',  desc: 'Rauwe slagkracht' },
+  { id: 'waaier',    name: 'Strijdwaaier',    dmg: 1.48, range: 56, speed: 1.12, unlock: 9,  rarity: 'uncommon',  desc: 'Waaier-snede · stijlvol' },
+  { id: 'speer',     name: 'Speer',           dmg: 1.6,  range: 78, speed: 0.8,  unlock: 10, rarity: 'uncommon',  desc: 'Enorm bereik' },
+  { id: 'tonfa',     name: 'Tonfa',           dmg: 1.52, range: 50, speed: 1.28, unlock: 12, rarity: 'rare',      desc: 'Zijhandvat · flurry' },
+  { id: 'nunchaku',  name: 'Nunchaku',        dmg: 1.3,  range: 48, speed: 1.4,  unlock: 13, rarity: 'rare',      desc: 'Bliksemsnel' },
+  { id: 'kama',      name: 'Kama',            dmg: 1.68, range: 54, speed: 1.14, unlock: 15, rarity: 'rare',      desc: 'Sikkel · haak-slagen' },
+  { id: 'boemerang', name: 'Boemerang',       dmg: 1.7,  range: 70, speed: 1.05, unlock: 16, rarity: 'rare',      desc: 'Komt terug' },
+  { id: 'zeis',      name: 'Schaduwzeis',     dmg: 1.95, range: 74, speed: 0.82, unlock: 18, rarity: 'rare',      desc: 'Lange boog · duister' },
+  { id: 'hamer',     name: 'Mokerhamer',      dmg: 2.6,  range: 52, speed: 0.55, unlock: 20, rarity: 'epic',      desc: 'Sloopt alles' },
+  { id: 'drietand',  name: 'Drietand',        dmg: 2.05, range: 76, speed: 0.88, unlock: 22, rarity: 'epic',      desc: 'Drie punten · prikken' },
+  { id: 'ketting',   name: 'Kettingzwaard',   dmg: 2.1,  range: 68, speed: 0.95, unlock: 24, rarity: 'epic',      desc: 'Bereik + druk' },
+  { id: 'bostaf',    name: 'Bo-staf',         dmg: 1.9,  range: 72, speed: 1.08, unlock: 26, rarity: 'epic',      desc: 'Lange staf · tempo' },
+  { id: 'laser',     name: 'Chakra-kling',    dmg: 2.3,  range: 62, speed: 1.15, unlock: 28, rarity: 'legendary', desc: 'Blauw brandende kling' },
+  { id: 'fuuma',     name: 'Fūma-shuriken',   dmg: 1.95, range: 72, speed: 1.18, unlock: 30, rarity: 'legendary', desc: 'Grote werpster' },
+  { id: 'kristal',   name: 'Kristalkling',    dmg: 2.45, range: 60, speed: 1.05, unlock: 32, rarity: 'legendary', desc: 'Scherven-snede' },
+  { id: 'donder',    name: 'Bliksem-bijl',    dmg: 2.8,  range: 58, speed: 0.7,  unlock: 34, rarity: 'legendary', desc: 'Als Chidori, maar een bijl' },
+  { id: 'vlamzweep', name: 'Vlamzweep',       dmg: 2.55, range: 78, speed: 1.0,  unlock: 36, rarity: 'legendary', desc: 'Vuurlijn · lang bereik' },
+  { id: 'void',      name: 'Voidklaauw',      dmg: 2.5,  range: 64, speed: 1.25, unlock: 40, rarity: 'mythic',    desc: 'Mythische klauw' },
+  { id: 'sterkling', name: 'Sterkling',       dmg: 2.75, range: 66, speed: 1.12, unlock: 44, rarity: 'mythic',    desc: 'Hemelmetaal · krits' },
+  { id: 'guvve',     name: 'Guvvedukkie-stok', dmg: 3.1,  range: 66, speed: 1.0,  unlock: 48, rarity: 'mythic',    desc: 'Quak. Bitte. Boom.' },
 ];
 const weaponById = id => WEAPONS.find(w => w.id === id) || WEAPONS[0];
 
@@ -1247,16 +1259,28 @@ const WEAPON_SWING_SFX = {
   vuist: 'punch',
   kunai: 'wKunai',
   shuriken: 'shuriken',
+  tanto: 'wKunai',
   zwaard: 'wZwaard',
+  sai: 'wKunai',
   knuppel: 'wKnuppel',
+  waaier: 'wBoemerang',
   speer: 'wSpeer',
+  tonfa: 'wNunchaku',
   nunchaku: 'wNunchaku',
+  kama: 'wKunai',
   boemerang: 'wBoemerang',
+  zeis: 'wZwaard',
   hamer: 'wHamer',
+  drietand: 'wSpeer',
   ketting: 'wKetting',
+  bostaf: 'wKnuppel',
   laser: 'wLaser',
+  fuuma: 'shuriken',
+  kristal: 'wLaser',
   donder: 'wDonder',
+  vlamzweep: 'wLaser',
   void: 'wVoid',
+  sterkling: 'wZwaard',
   guvve: 'wGuvve',
 };
 
@@ -1269,11 +1293,15 @@ function weaponSwingSfx(weaponOrId, attackKind) {
 
 function weaponHitSfx(weaponOrId, dmg) {
   const id = typeof weaponOrId === 'string' ? weaponOrId : (weaponOrId && weaponOrId.id);
-  if (id === 'laser' || id === 'void' || id === 'donder') return 'hitEnergy';
-  if (id === 'hamer' || id === 'knuppel' || id === 'guvve') return 'hitHeavy';
-  if (id === 'zwaard' || id === 'ketting' || id === 'kunai') return 'hitMetal';
+  if (id === 'laser' || id === 'void' || id === 'donder' || id === 'kristal' || id === 'vlamzweep' || id === 'sterkling') return 'hitEnergy';
+  if (id === 'hamer' || id === 'knuppel' || id === 'guvve' || id === 'bostaf') return 'hitHeavy';
+  if (id === 'zwaard' || id === 'ketting' || id === 'kunai' || id === 'tanto' || id === 'sai' || id === 'kama' || id === 'zeis' || id === 'drietand') return 'hitMetal';
   if (dmg > 22) return 'hit2';
   return 'hit';
+}
+
+function isThrowWeapon(id) {
+  return id === 'shuriken' || id === 'fuuma';
 }
 
 /* ============================== STIJLEN ================================ */
@@ -3208,6 +3236,118 @@ function drawWeaponShape(c, id, spin) {
       c.fillStyle = '#222'; c.beginPath(); c.arc(52, -2, 2, 0, TAU); c.fill();
       c.strokeStyle = '#ff8c42'; c.lineWidth = 2; c.beginPath(); c.moveTo(58, 0); c.lineTo(68, 2); c.stroke();
       break;
+    case 'tanto':
+      c.strokeStyle = '#6a7484'; c.lineWidth = 3.2; c.beginPath(); c.moveTo(0, 0); c.lineTo(28, 0); c.stroke();
+      c.fillStyle = '#dce4f0';
+      c.beginPath(); c.moveTo(28, -5); c.lineTo(44, 0); c.lineTo(28, 5); c.closePath(); c.fill();
+      c.strokeStyle = '#8a6030'; c.lineWidth = 3; c.beginPath(); c.moveTo(4, -5); c.lineTo(4, 5); c.stroke();
+      break;
+    case 'sai':
+      c.strokeStyle = '#a8b4c4'; c.lineWidth = 3.5; c.beginPath(); c.moveTo(0, 0); c.lineTo(40, 0); c.stroke();
+      c.beginPath(); c.moveTo(10, 0); c.lineTo(22, -10); c.stroke();
+      c.beginPath(); c.moveTo(10, 0); c.lineTo(22, 10); c.stroke();
+      c.fillStyle = '#c9d6e8'; c.beginPath(); c.moveTo(40, -4); c.lineTo(50, 0); c.lineTo(40, 4); c.closePath(); c.fill();
+      break;
+    case 'waaier': {
+      c.save();
+      const open = 0.55 + Math.sin(spin * 6) * 0.12;
+      for (let i = -3; i <= 3; i++) {
+        const a = i * 0.22 * open;
+        c.strokeStyle = i === 0 ? '#e8c98a' : '#c97a20';
+        c.lineWidth = i === 0 ? 3 : 2;
+        c.beginPath(); c.moveTo(4, 0); c.lineTo(4 + Math.cos(a) * 38, Math.sin(a) * 38); c.stroke();
+      }
+      c.fillStyle = 'rgba(255,215,94,.25)';
+      c.beginPath(); c.moveTo(4, 0);
+      c.arc(4, 0, 36, -0.7 * open, 0.7 * open);
+      c.closePath(); c.fill();
+      c.restore();
+      break;
+    }
+    case 'tonfa':
+      c.strokeStyle = '#5a4030'; c.lineWidth = 6; c.beginPath(); c.moveTo(0, 0); c.lineTo(42, 0); c.stroke();
+      c.lineWidth = 5; c.beginPath(); c.moveTo(12, 0); c.lineTo(12, 14); c.stroke();
+      break;
+    case 'kama':
+      c.strokeStyle = '#6a5030'; c.lineWidth = 4; c.beginPath(); c.moveTo(0, 0); c.lineTo(34, 0); c.stroke();
+      c.strokeStyle = '#c9d6e8'; c.lineWidth = 3.5;
+      c.beginPath(); c.arc(34, -2, 14, -0.2, 2.4); c.stroke();
+      break;
+    case 'zeis':
+      c.strokeStyle = '#3a3048'; c.lineWidth = 4; c.beginPath(); c.moveTo(-8, 0); c.lineTo(48, 0); c.stroke();
+      c.strokeStyle = '#b06ae0'; c.lineWidth = 4;
+      c.beginPath(); c.arc(48, -6, 18, -0.4, 2.6); c.stroke();
+      c.strokeStyle = '#e0c0ff'; c.lineWidth = 1.5;
+      c.beginPath(); c.arc(48, -6, 14, -0.2, 2.4); c.stroke();
+      break;
+    case 'drietand':
+      c.strokeStyle = '#7a8494'; c.lineWidth = 4; c.beginPath(); c.moveTo(-6, 0); c.lineTo(50, 0); c.stroke();
+      c.strokeStyle = '#c9d6e8'; c.lineWidth = 3;
+      c.beginPath(); c.moveTo(50, 0); c.lineTo(66, 0); c.stroke();
+      c.beginPath(); c.moveTo(50, 0); c.lineTo(62, -10); c.stroke();
+      c.beginPath(); c.moveTo(50, 0); c.lineTo(62, 10); c.stroke();
+      break;
+    case 'bostaf':
+      c.strokeStyle = '#8a6030'; c.lineWidth = 5; c.beginPath(); c.moveTo(-20, 0); c.lineTo(58, 0); c.stroke();
+      c.strokeStyle = '#c9a66b'; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(-16, -4); c.lineTo(-16, 4); c.stroke();
+      c.beginPath(); c.moveTo(54, -4); c.lineTo(54, 4); c.stroke();
+      break;
+    case 'fuuma': {
+      const rot = spin * 14;
+      c.save(); c.translate(30, 0); c.rotate(rot);
+      c.fillStyle = '#9aa8bc';
+      for (let i = 0; i < 4; i++) {
+        c.rotate(Math.PI / 2);
+        c.beginPath(); c.moveTo(0, 0); c.lineTo(6, -7); c.lineTo(22, 0); c.lineTo(6, 7); c.closePath(); c.fill();
+      }
+      c.fillStyle = '#3a4560'; c.beginPath(); c.arc(0, 0, 5, 0, TAU); c.fill();
+      c.restore();
+      break;
+    }
+    case 'kristal':
+      c.save(); c.shadowColor = '#7cf5ff'; c.shadowBlur = 10;
+      c.fillStyle = 'rgba(124,245,255,.55)';
+      c.beginPath(); c.moveTo(8, 0); c.lineTo(28, -10); c.lineTo(52, 0); c.lineTo(28, 10); c.closePath(); c.fill();
+      c.strokeStyle = '#e8ffff'; c.lineWidth = 2; c.stroke();
+      c.restore();
+      c.strokeStyle = '#5a6784'; c.lineWidth = 5; c.beginPath(); c.moveTo(-2, 0); c.lineTo(8, 0); c.stroke();
+      break;
+    case 'vlamzweep': {
+      c.strokeStyle = '#5a3020'; c.lineWidth = 3; c.beginPath(); c.moveTo(0, 0); c.lineTo(14, 0); c.stroke();
+      c.save(); c.shadowColor = '#ff8c42'; c.shadowBlur = 10;
+      c.strokeStyle = '#ff6b3f'; c.lineWidth = 3.5;
+      c.beginPath();
+      c.moveTo(14, 0);
+      for (let i = 1; i <= 6; i++) {
+        c.lineTo(14 + i * 8, Math.sin(spin * 10 + i) * 6);
+      }
+      c.stroke();
+      c.strokeStyle = '#ffd75e'; c.lineWidth = 1.5;
+      c.beginPath();
+      c.moveTo(14, 0);
+      for (let i = 1; i <= 6; i++) {
+        c.lineTo(14 + i * 8, Math.sin(spin * 10 + i + 0.4) * 3);
+      }
+      c.stroke();
+      c.restore();
+      break;
+    }
+    case 'sterkling':
+      c.save(); c.shadowColor = '#ffd75e'; c.shadowBlur = 12;
+      c.strokeStyle = '#ffd75e'; c.lineWidth = 5; c.beginPath(); c.moveTo(4, 0); c.lineTo(50, 0); c.stroke();
+      c.strokeStyle = '#fff8d0'; c.lineWidth = 2; c.beginPath(); c.moveTo(8, -1); c.lineTo(46, -1); c.stroke();
+      c.restore();
+      c.fillStyle = '#c97a20';
+      c.beginPath();
+      for (let i = 0; i < 5; i++) {
+        const a = -Math.PI / 2 + i * TAU / 5;
+        const r = i % 2 === 0 ? 7 : 3;
+        const x = 10 + Math.cos(a) * r, y = Math.sin(a) * r;
+        if (i === 0) c.moveTo(x, y); else c.lineTo(x, y);
+      }
+      c.closePath(); c.fill();
+      break;
   }
 }
 
@@ -3544,7 +3684,7 @@ class Fighter {
       if (it.punch) this.startAttack('punch', game);
       else if (it.kick) this.startAttack('kick', game);
       else if (it.weapon) {
-        if (this.weapon.id === 'shuriken') game.throwShuriken(this);
+        if (isThrowWeapon(this.weapon.id)) game.throwShuriken(this);
         else this.startAttack(this.weapon.id === 'vuist' ? 'punch' : 'weapon', game);
       }
       else if (it.special) this.startAttack('special', game);
@@ -5222,7 +5362,7 @@ class Game {
       if (!this._shurikenWarnT || this.t - this._shurikenWarnT > 0.9) {
         this._shurikenWarnT = this.t;
         try {
-          UI.toast(f._shurikenCd > 0 ? 'Shuriken even wachten…' : 'Niet spammen — max 3 snel achter elkaar', 1600);
+          UI.toast(f._shurikenCd > 0 ? 'Werpwapen even wachten…' : 'Niet spammen — max 3 snel achter elkaar', 1600);
         } catch (_) {}
       }
       return;
@@ -5230,14 +5370,16 @@ class Game {
     noteShurikenThrow(f, this);
     AudioSys.sfx('shuriken');
     const w = f.weapon;
+    const big = w.id === 'fuuma';
     const critMeta = projCritMeta(f);
-    const aim = projAimVelocity(f, 560);
+    const aim = projAimVelocity(f, big ? 500 : 560);
     this.spawnProjectile(Object.assign({
       x: f.x + (f.face || 1) * 24,
       y: f.y - 52 + clamp(aim.ny, -1, 0.5) * 30,
-      vx: aim.vx, vy: aim.vy, r: 10,
-      dmg: f.baseDmg * w.dmg * 0.85,
-      from: this.projFrom(f), kind: 'shuriken', life: 1.4, spin: 0,
+      vx: aim.vx, vy: aim.vy, r: big ? 14 : 10,
+      dmg: f.baseDmg * w.dmg * (big ? 1.05 : 0.85),
+      from: this.projFrom(f), kind: 'shuriken', life: big ? 1.55 : 1.4, spin: 0,
+      throwId: w.id,
     }, critMeta));
   }
 
@@ -5647,10 +5789,15 @@ class Game {
         drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'rinnegan', 1);
       } else if (p.kind === 'shuriken') {
         c.translate(p.x, p.y); c.rotate(p.spin || 0);
-        c.fillStyle = '#c9d6e8';
+        const big = p.throwId === 'fuuma';
+        c.fillStyle = big ? '#9aa8bc' : '#c9d6e8';
+        const tip = big ? 18 : 12;
         for (let i = 0; i < 4; i++) {
           c.rotate(Math.PI / 2);
-          c.beginPath(); c.moveTo(0, 0); c.lineTo(3, -3); c.lineTo(12, 0); c.lineTo(3, 3); c.closePath(); c.fill();
+          c.beginPath(); c.moveTo(0, 0); c.lineTo(big ? 5 : 3, big ? -5 : -3); c.lineTo(tip, 0); c.lineTo(big ? 5 : 3, big ? 5 : 3); c.closePath(); c.fill();
+        }
+        if (big) {
+          c.fillStyle = '#3a4560'; c.beginPath(); c.arc(0, 0, 4, 0, TAU); c.fill();
         }
       } else if (p.kind === 'wave') {
         c.shadowColor = '#ffd75e'; c.shadowBlur = 16;
