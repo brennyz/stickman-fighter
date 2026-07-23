@@ -25,13 +25,7 @@
     "remainingCount": 14,
     "cycle": 2
   },
-  "pending": {
-    "face": 7,
-    "category": "Save & backup \u2014 import/export, corruptie, migratie",
-    "rolledAt": "2026-07-23T21:23:37Z",
-    "remainingCount": 14,
-    "cycle": 2
-  },
+  "pending": null,
   "implemented": [
     {
       "face": 2,
@@ -283,6 +277,13 @@
       "note": "Pages-only share; tunnel UI hidden off-host; LIVE-LINK clean",
       "version": "1.14.2",
       "doneAt": "2026-07-23T21:06:26Z",
+      "cycle": 2
+    },
+    {
+      "face": 7,
+      "note": "export schema v2, import key/summon warnings, corrupt primary repair",
+      "version": "1.14.6",
+      "doneAt": "2026-07-23T21:24:49Z",
       "cycle": 2
     }
   ],
