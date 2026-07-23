@@ -55,9 +55,9 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.10.4';
+const APP_VERSION = '1.11.0';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 53;
+const SW_CACHE_REV = 54;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -765,13 +765,16 @@ function vsStatBar(label, pct, color) {
 function vsStatPreviewHtml(e1, e2) {
   const s1 = vsFighterStats(e1);
   const s2 = vsFighterStats(e2);
-  const col = (name, s, accent) =>
+  const g1 = vsSagaMeta(e1.saga || 'scroll');
+  const g2 = vsSagaMeta(e2.saga || 'scroll');
+  const col = (name, s, accent, saga, flair) =>
     `<div class="vs-preview-col" style="--accent:${accent}"><div class="vs-preview-name">${name}</div>` +
-    `<div class="vs-preview-wpn">${s.wpn} · ${s.special} · ${s.critPct}% crit</div>` +
+    `<div class="vs-preview-wpn">${saga.emoji} ${saga.label} · ${s.wpn} · ${s.special} · ${s.critPct}% crit</div>` +
+    `<div class="vs-preview-flair">${flair}</div>` +
     `${vsStatBar('HP', s.hp, '#6ee06e')}${vsStatBar('SPD', s.spd, '#7cf5ff')}` +
     `${vsStatBar('DMG', s.dmg, '#ff7a4d')}</div>`;
-  return `<div class="vs-preview-duo">${col(e1.name, s1, '#7cf5ff')}` +
-    `<div class="vs-preview-vs">VS</div>${col(e2.name, s2, '#ffb0b8')}</div>`;
+  return `<div class="vs-preview-duo">${col(e1.name, s1, '#7cf5ff', g1, rosterFlair(e1))}` +
+    `<div class="vs-preview-vs">VS</div>${col(e2.name, s2, '#ffb0b8', g2, rosterFlair(e2))}</div>`;
 }
 
 function copyPlayLink() {
@@ -1010,51 +1013,96 @@ function applyPlayerStyle(fighter) {
 }
 
 /* ========================== VERSUS / 2 SPELERS ========================== */
+/** Saga-hints: parodie-vibes, geen officiële manga/IP-namen. */
+const VS_SAGAS = {
+  all: { id: 'all', label: 'Alle', emoji: '⭐', blurb: 'Hele roster — kies P1, dan P2.' },
+  ki: { id: 'ki', label: 'Ki-saga', emoji: '🔥', blurb: 'Ki-golven & power spikes — classic shōnen-energy (eigen sticks).' },
+  scroll: { id: 'scroll', label: 'Scroll-saga', emoji: '📜', blurb: 'Ninja-steps & jutsu — headband-hints, geen echte IP.' },
+  tide: { id: 'tide', label: 'Tide-saga', emoji: '🌊', blurb: 'Rekkende reach & crew-slagen — zee-legends parodie.' },
+  cape: { id: 'cape', label: 'Cape-saga', emoji: '🦸', blurb: 'Serious streak & blink-rushes — one-serious-hit humor.' },
+  dawn: { id: 'dawn', label: 'Dawn-saga', emoji: '☀️', blurb: 'Holy tilt & zware aura — sin-at-dawn vibes.' },
+};
+function vsSagaMeta(id) { return VS_SAGAS[id] || VS_SAGAS.scroll; }
+function rosterFlair(r) { return r.flair || r.tag; }
+
 const VS_ROSTER = [
-  { id: 'hero', name: 'Stick Ninja', tag: 'Balanced', styleId: 'classic', weapon: 'kunai',
+  { id: 'hero', name: 'Stick Ninja', tag: 'Balanced', saga: 'scroll', flair: 'Headband rookie · balanced kunai',
+    styleId: 'classic', weapon: 'kunai',
     hpMul: 1, spdMul: 1, dmgMul: 1, crit: 0.08, critMul: 1.5, sig: 'balanced', unlock: () => true },
-  { id: 'konoha', name: 'Konoha', tag: 'Snel', styleId: 'konoha', weapon: 'shuriken',
+  { id: 'konoha', name: 'Konoha', tag: 'Snel', saga: 'scroll', flair: 'Leaf sprint · shuriken flurry',
+    styleId: 'konoha', weapon: 'shuriken',
     hpMul: 0.95, spdMul: 1.08, dmgMul: 0.95, crit: 0.07, critMul: 1.48, sig: 'shuriken',
     unlock: () => styleUnlocked(STYLES.find(s => s.id === 'konoha')) },
-  { id: 'shadow', name: 'Schaduw', tag: 'Chidori', styleId: 'shadow', weapon: 'zwaard',
+  { id: 'shadow', name: 'Schaduw', tag: 'Chidori', saga: 'scroll', flair: 'Lightning step · chidori charge',
+    styleId: 'shadow', weapon: 'zwaard',
     hpMul: 1, spdMul: 1, dmgMul: 1.05, special: 'chidori', crit: 0.1, critMul: 1.55, sig: 'assassin',
     unlock: () => save.lvl >= 15 },
-  { id: 'gold', name: 'Legende', tag: 'Zwaar', styleId: 'gold', weapon: 'hamer',
+  { id: 'gold', name: 'Legende', tag: 'Zwaar', saga: 'ki', flair: 'Golden aura · hammer ki-break',
+    styleId: 'gold', weapon: 'hamer',
     hpMul: 1.15, spdMul: 0.92, dmgMul: 1.12, crit: 0.05, critMul: 2.0, sig: 'heavy', unlock: () => save.lvl >= 25 },
-  { id: 'chakra', name: 'Chakra', tag: 'Rinnegan', styleId: 'chakra', weapon: 'laser',
+  { id: 'chakra', name: 'Chakra', tag: 'Rinnegan', saga: 'scroll', flair: 'Glow pupil · rinne ripples',
+    styleId: 'chakra', weapon: 'laser',
     hpMul: 0.9, spdMul: 1, dmgMul: 0.92, special: 'rinnegan', crit: 0.09, critMul: 1.52, sig: 'rinne',
     unlock: () => save.trainWins >= 3 },
-  { id: 'guvve', name: 'Guvvedukkie', tag: 'Quak', styleId: 'guvve', weapon: 'guvve',
+  { id: 'guvve', name: 'Guvvedukkie', tag: 'Quak', saga: 'tide', flair: 'Quack crew · bonk stick',
+    styleId: 'guvve', weapon: 'guvve',
     hpMul: 1.08, spdMul: 0.98, dmgMul: 1.15, crit: 0.05, critMul: 1.55, sig: 'quak', unlock: () => dexCount() >= 8 },
-  { id: 'rabbit', name: 'RabbitRobot', tag: 'CPU-killer', styleId: null, weapon: 'vuist',
+  { id: 'rabbit', name: 'RabbitRobot', tag: 'CPU-killer', saga: 'cape', flair: 'Serious bot · training rival',
+    styleId: null, weapon: 'vuist',
     hpMul: 1.05, spdMul: 1.05, dmgMul: 1.08, isRobot: true, special: 'chidori', crit: 0.06, critMul: 1.45,
     unlock: () => save.trainWins >= 1 },
-  { id: 'akatsuki', name: 'Akatsuki', tag: 'Rinne', styleId: 'akatsuki', weapon: 'ketting',
+  { id: 'akatsuki', name: 'Akatsuki', tag: 'Rinne', saga: 'dawn', flair: 'Crimson cloak · rinne pressure',
+    styleId: 'akatsuki', weapon: 'ketting',
     hpMul: 1.1, spdMul: 0.96, dmgMul: 1.1, special: 'rinnegan', crit: 0.1, critMul: 1.55, sig: 'rinne',
     unlock: () => save.lvl >= 12 },
-  { id: 'brawler', name: 'Barve', tag: 'Tank', styleId: 'classic', weapon: 'knuppel',
+  { id: 'brawler', name: 'Barve', tag: 'Tank', saga: 'tide', flair: 'Deck brawler · wide swings',
+    styleId: 'classic', weapon: 'knuppel',
     hpMul: 1.2, spdMul: 0.88, dmgMul: 1.08, crit: 0.06, critMul: 1.48, sig: 'tank', unlock: () => true },
-  { id: 'sand', name: 'Woestijn', tag: 'Bereik', styleId: 'sand', weapon: 'speer',
+  { id: 'sand', name: 'Woestijn', tag: 'Bereik', saga: 'tide', flair: 'Desert reach · spear tide',
+    styleId: 'sand', weapon: 'speer',
     hpMul: 1, spdMul: 1.02, dmgMul: 1, crit: 0.08, critMul: 1.5, sig: 'reach', unlock: () => save.lvl >= 8 },
-  { id: 'speedster', name: 'Speedster', tag: 'Combo', styleId: 'konoha', weapon: 'nunchaku',
+  { id: 'speedster', name: 'Speedster', tag: 'Combo', saga: 'cape', flair: 'Blink combo · serious speed',
+    styleId: 'konoha', weapon: 'nunchaku',
     hpMul: 0.9, spdMul: 1.12, dmgMul: 0.95, crit: 0.08, critMul: 1.45, sig: 'combo', unlock: () => save.lvl >= 13 },
-  { id: 'samurai', name: 'Samurai', tag: 'Kenjutsu', styleId: 'samurai', weapon: 'zwaard',
+  { id: 'samurai', name: 'Samurai', tag: 'Kenjutsu', saga: 'dawn', flair: 'Blade oath · crit cuts',
+    styleId: 'samurai', weapon: 'zwaard',
     hpMul: 1.05, spdMul: 0.98, dmgMul: 1.08, crit: 0.08, critMul: 1.5, sig: 'kenjutsu', unlock: () => save.lvl >= 20 },
-  { id: 'golem', name: 'Rotsbonk', tag: 'Muur', styleId: null, bodyColor: '#9a917f', weapon: 'hamer',
+  { id: 'golem', name: 'Rotsbonk', tag: 'Muur', saga: 'ki', flair: 'Stone tank · ki-proof hide',
+    styleId: null, bodyColor: '#9a917f', weapon: 'hamer',
     hpMul: 1.32, spdMul: 0.78, dmgMul: 1.06, crit: 0.04, critMul: 1.65, sig: 'tank', unlock: () => save.lvl >= 22 },
-  { id: 'cyber', name: 'Cyber', tag: 'Laser', styleId: 'cyber', weapon: 'laser',
+  { id: 'cyber', name: 'Cyber', tag: 'Laser', saga: 'scroll', flair: 'Visor ninja · laser kunai',
+    styleId: 'cyber', weapon: 'laser',
     hpMul: 0.92, spdMul: 1.06, dmgMul: 1.05, special: 'chidori', crit: 0.09, critMul: 1.52, sig: 'shuriken',
     unlock: () => save.lvl >= 18 },
-  { id: 'storm', name: 'Storm', tag: 'Bliksem', styleId: 'storm', weapon: 'donder',
+  { id: 'storm', name: 'Storm', tag: 'Bliksem', saga: 'ki', flair: 'Thunder charge · ki bolt',
+    styleId: 'storm', weapon: 'donder',
     hpMul: 1, spdMul: 1.1, dmgMul: 0.98, special: 'chidori', crit: 0.1, critMul: 1.5, sig: 'storm',
     unlock: () => save.trainWins >= 5 },
-  { id: 'fox', name: 'Vlamvos', tag: 'Hit & run', styleId: 'fox', weapon: 'boemerang',
+  { id: 'fox', name: 'Vlamvos', tag: 'Hit & run', saga: 'tide', flair: 'Fox run · boomerang tide',
+    styleId: 'fox', weapon: 'boemerang',
     hpMul: 0.88, spdMul: 1.14, dmgMul: 0.9, crit: 0.06, critMul: 1.5, sig: 'hitrun', unlock: () => dexCount() >= 12 },
-  { id: 'void', name: 'Void', tag: 'Rinnegan', styleId: 'void', weapon: 'void',
+  { id: 'void', name: 'Void', tag: 'Rinnegan', saga: 'dawn', flair: 'Void sin · gravity rip',
+    styleId: 'void', weapon: 'void',
     hpMul: 1.12, spdMul: 1.04, dmgMul: 1.15, special: 'rinnegan', crit: 0.12, critMul: 1.65, sig: 'rinne',
     unlock: () => save.lvl >= 40 },
-  { id: 'dragon', name: 'Kristallo', tag: 'Baas', styleId: 'gold', weapon: 'donder',
+  { id: 'dragon', name: 'Kristallo', tag: 'Baas', saga: 'ki', flair: 'Crystal ki · boss spike',
+    styleId: 'gold', weapon: 'donder',
     hpMul: 1.08, spdMul: 0.94, dmgMul: 1.18, crit: 0.11, critMul: 1.75, sig: 'boss', unlock: () => save.unlocked >= 45 },
+  { id: 'kiball', name: 'Ki-Ball Stick', tag: 'Ki icon', saga: 'ki', flair: 'Orange trainee · ki-ball spam',
+    styleId: 'gold', bodyColor: '#ff9a42', weapon: 'donder', special: 'rasengan',
+    hpMul: 1.02, spdMul: 1.04, dmgMul: 1.06, crit: 0.1, critMul: 1.52, sig: 'storm', unlock: () => save.lvl >= 6 },
+  { id: 'scrollkid', name: 'Scroll Kid', tag: 'Ninja icon', saga: 'scroll', flair: 'Scroll dash · clone feint',
+    styleId: 'konoha', weapon: 'kunai', special: 'rasengan',
+    hpMul: 0.92, spdMul: 1.1, dmgMul: 0.96, crit: 0.12, critMul: 1.48, sig: 'assassin', unlock: () => true },
+  { id: 'tidecrew', name: 'Tide Crew', tag: 'Crew icon', saga: 'tide', flair: 'Crew hat energy · stretch hits',
+    styleId: 'sand', weapon: 'boemerang',
+    hpMul: 1.06, spdMul: 1.02, dmgMul: 1.04, crit: 0.08, critMul: 1.5, sig: 'reach', unlock: () => save.lvl >= 10 },
+  { id: 'zipcape', name: 'Zip Cape', tag: 'Hero icon', saga: 'cape', flair: 'Serious zip · one-blink rush',
+    styleId: 'classic', bodyColor: '#ffe259', weapon: 'nunchaku', special: 'chidori',
+    hpMul: 0.82, spdMul: 1.18, dmgMul: 0.92, crit: 0.14, critMul: 1.62, sig: 'combo', unlock: () => save.trainWins >= 2 },
+  { id: 'dawnlance', name: 'Dawn Lance', tag: 'Sin icon', saga: 'dawn', flair: 'Holy lance · dawn rinne',
+    styleId: 'samurai', weapon: 'speer', special: 'rinnegan',
+    hpMul: 1.08, spdMul: 1.02, dmgMul: 1.1, crit: 0.11, critMul: 1.58, sig: 'rinne', unlock: () => save.lvl >= 30 },
 ];
 const vsRosterEntry = id => VS_ROSTER.find(r => r.id === id) || VS_ROSTER[0];
 function vsUnlocked(r) { return !r.unlock || r.unlock(); }
@@ -4706,9 +4754,59 @@ class Game {
 }
 
 /* ================================= UI ================================== */
+function pickVsRosterId(id) {
+  const r = vsRosterEntry(id);
+  if (!vsUnlocked(r)) return;
+  AudioSys.sfx('select');
+  if (UI.charPickStep === 1) {
+    vsSelect.p1 = id;
+    UI.charPickStep = 2;
+  } else {
+    vsSelect.p2 = id;
+  }
+  UI.renderCharSelect();
+}
+
+function initCharSelectChrome() {
+  if (window.__sfCharChrome) return;
+  window.__sfCharChrome = true;
+  UI.charSagaFilter = 'all';
+  const grid = document.getElementById('charGrid');
+  const runPick = (card) => {
+    if (!card || card.classList.contains('locked') || !card.dataset.id) return;
+    pickVsRosterId(card.dataset.id);
+  };
+  if (grid) {
+    grid.addEventListener('click', (e) => { runPick(e.target.closest('.char-card')); });
+    grid.addEventListener('touchend', (e) => {
+      const card = e.target.closest('.char-card');
+      if (!card || card.classList.contains('locked')) return;
+      if (e.cancelable) e.preventDefault();
+      runPick(card);
+    }, { passive: false });
+  }
+  const sagaBar = document.getElementById('charSagaBar');
+  if (sagaBar) {
+    sagaBar.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-saga]');
+      if (!btn) return;
+      AudioSys.sfx('select');
+      UI.charSagaFilter = btn.dataset.saga || 'all';
+      UI.renderCharSelect();
+    });
+  }
+  const fightBtn = document.getElementById('btnCharFight');
+  bindPress(fightBtn, () => {
+    if (!vsSelect.p1 || !vsSelect.p2) return;
+    AudioSys.sfx('bell');
+    startGame('versus', { p1: vsSelect.p1, p2: vsSelect.p2 });
+  });
+}
+
 const UI = {
   screens: ['menuScreen', 'levelScreen', 'weaponScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   charPickStep: 1,
+  charSagaFilter: 'all',
   lastResult: null,
   pauseSubDefault: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
 
@@ -4798,12 +4896,25 @@ const UI = {
   },
 
   renderCharSelect() {
+    initCharSelectChrome();
     this.charPickStep = this.charPickStep || 1;
+    const filter = this.charSagaFilter || 'all';
+    const sagaMeta = vsSagaMeta(filter);
     const stepEl = document.getElementById('charPickStep');
     if (stepEl) {
       stepEl.textContent = this.charPickStep === 1
-        ? 'Speler 1 — tik een vechter (linker joystick-zone)'
-        : 'Speler 2 — tik een vechter (rechter joystick-zone)';
+        ? 'Speler 1 — tik een vechter (linker helft in gevecht)'
+        : 'Speler 2 — tik een vechter (rechter helft in gevecht)';
+    }
+    const blurbEl = document.getElementById('charSagaBlurb');
+    if (blurbEl) blurbEl.textContent = filter === 'all'
+      ? 'Choose fighter · 5 saga-hints (parodie, geen officiële namen) · tik kaart = kiezen'
+      : sagaMeta.emoji + ' ' + sagaMeta.blurb;
+    const sagaBar = document.getElementById('charSagaBar');
+    if (sagaBar) {
+      sagaBar.querySelectorAll('[data-saga]').forEach((btn) => {
+        btn.classList.toggle('active', (btn.dataset.saga || 'all') === filter);
+      });
     }
     const grid = document.getElementById('charGrid');
     if (!grid) return;
@@ -4822,7 +4933,10 @@ const UI = {
     const statEl = document.getElementById('charStatPreview');
     if (statEl) statEl.innerHTML = vsStatPreviewHtml(e1, e2);
     grid.innerHTML = '';
-    for (const r of VS_ROSTER) {
+    const roster = filter === 'all'
+      ? VS_ROSTER
+      : VS_ROSTER.filter(r => (r.saga || 'scroll') === filter);
+    for (const r of roster) {
       const ok = vsUnlocked(r);
       const el = document.createElement('div');
       const sel1 = vsSelect.p1 === r.id;
@@ -4830,6 +4944,7 @@ const UI = {
       const focus = ok && ((this.charPickStep === 1 && !sel1) || (this.charPickStep === 2 && !sel2));
       el.className = 'char-card' + (ok ? '' : ' locked') + (sel1 ? ' p1sel' : '') + (sel2 ? ' p2sel' : '') +
         (focus ? ' pick-hint' : '');
+      el.dataset.id = r.id;
       const cv = document.createElement('canvas');
       cv.width = 80; cv.height = 80;
       const cc = cv.getContext('2d');
@@ -4837,31 +4952,29 @@ const UI = {
       const prev = buildVsFighter(r, 0, 1);
       prev.draw(cc);
       el.appendChild(cv);
+      const saga = vsSagaMeta(r.saga || 'scroll');
+      const badge = document.createElement('div');
+      badge.className = 'char-saga';
+      badge.textContent = saga.emoji + ' ' + saga.label.replace('-saga', '');
+      el.appendChild(badge);
       const cap = document.createElement('div');
       cap.className = 'char-name';
       cap.textContent = r.name;
       el.appendChild(cap);
       const tag = document.createElement('div');
       tag.className = 'char-tag';
-      tag.textContent = ok ? r.tag : r.hint || 'Locked';
+      tag.textContent = ok ? r.tag : (r.unlock ? 'Locked' : r.tag);
       el.appendChild(tag);
+      const flair = document.createElement('div');
+      flair.className = 'char-flair';
+      flair.textContent = ok ? rosterFlair(r) : (r.hint || 'Speel verder om te unlocken');
+      el.appendChild(flair);
       if (ok) {
         const mini = document.createElement('div');
         mini.className = 'char-mini-stat';
         const st = vsFighterStats(r);
-        mini.textContent = `HP ${st.hp} · ${st.dmg}% dmg`;
+        mini.textContent = `HP ${st.hp} · ${st.dmg}% dmg · ${st.critPct}% crit`;
         el.appendChild(mini);
-        el.addEventListener('click', () => {
-          AudioSys.sfx('select');
-          if (this.charPickStep === 1) {
-            vsSelect.p1 = r.id;
-            this.charPickStep = 2;
-            this.renderCharSelect();
-          } else {
-            vsSelect.p2 = r.id;
-            this.renderCharSelect();
-          }
-        });
       }
       grid.appendChild(el);
     }
@@ -4872,14 +4985,7 @@ const UI = {
       if (pick) pick.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     });
     const fightBtn = document.getElementById('btnCharFight');
-    if (fightBtn) {
-      fightBtn.disabled = !(vsSelect.p1 && vsSelect.p2);
-      fightBtn.onclick = () => {
-        if (!vsSelect.p1 || !vsSelect.p2) return;
-        AudioSys.sfx('bell');
-        startGame('versus', { p1: vsSelect.p1, p2: vsSelect.p2 });
-      };
-    }
+    if (fightBtn) fightBtn.disabled = !(vsSelect.p1 && vsSelect.p2);
     const backBtn = document.getElementById('charSelectBack');
     if (backBtn) {
       backBtn.textContent = this.charPickStep === 2 ? '\u2190 Andere P1' : '\u2190 Menu';
@@ -4889,7 +4995,7 @@ const UI = {
       backP.style.display = this.charPickStep === 2 ? 'flex' : 'none';
       if (!backP.dataset.bound) {
         backP.dataset.bound = '1';
-        backP.addEventListener('click', () => {
+        bindPress(backP, () => {
           AudioSys.sfx('select');
           this.charPickStep = 1;
           this.renderCharSelect();
@@ -4900,7 +5006,7 @@ const UI = {
       const pill = document.getElementById(id);
       if (!pill || pill.dataset.bound) return;
       pill.dataset.bound = '1';
-      pill.addEventListener('click', () => {
+      bindPress(pill, () => {
         AudioSys.sfx('select');
         this.charPickStep = step;
         this.renderCharSelect();
@@ -4911,7 +5017,7 @@ const UI = {
     const swapBtn = document.getElementById('btnCharSwap');
     if (swapBtn && !swapBtn.dataset.bound) {
       swapBtn.dataset.bound = '1';
-      swapBtn.addEventListener('click', () => {
+      bindPress(swapBtn, () => {
         AudioSys.sfx('select');
         const t = vsSelect.p1;
         vsSelect.p1 = vsSelect.p2;
@@ -4923,7 +5029,7 @@ const UI = {
     const rnd = document.getElementById('btnCharRandom');
     if (rnd && !rnd.dataset.bound) {
       rnd.dataset.bound = '1';
-      rnd.addEventListener('click', () => {
+      bindPress(rnd, () => {
         AudioSys.sfx('select');
         const pool = VS_ROSTER.filter(vsUnlocked);
         if (pool.length < 2) return;

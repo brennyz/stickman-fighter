@@ -270,7 +270,15 @@ if not rem:
     bag["remaining"] = rem
     print("Nieuwe cyclus — alle 20 thema's opnieuw in de zak.", file=sys.stderr)
 
-face = rem.pop(random.randrange(len(rem)))
+roll_first = [int(x) for x in bag.get("rollFirst") or []]
+face = None
+for rf in roll_first:
+    if rf in rem:
+        face = rf
+        rem.remove(rf)
+        break
+if face is None:
+    face = rem.pop(random.randrange(len(rem)))
 bag["remaining"] = rem
 roll = {
     "face": face,

@@ -65,7 +65,7 @@ Staat: `improvement-d20-bag.json` (commit na roll + na afronden).
 | **15** | Onboarding | Eén toast per modus, help tekst |
 | **16** | Hosting | hosting.json, LIVE-LINK, geen tunnel op Pages |
 | **17** | Stabiliteit | try/catch loop, toast bij error |
-| **18** | Character select | Stat preview, random duo, scroll |
+| **18** | Character select | Saga-filters + parodie-hints; 5 saga-icon sticks; touch-delegatie |
 | **19** | Muur | Combo feedback, bonus bricks |
 | **20** | Code health | Rename/comments — **zero** gedrag wijzigen |
 
@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | **18** | Char select 2-delig: saga-filters (Ki/Scroll/Tide/Cape/Dawn parodie-hints), touch-delegatie, preview; +5 icon-sticks (Ki-Ball, Scroll Kid, Tide Crew, Zip Cape, Dawn Lance). `rollFirst` in d20-bag. v1.11.0 / SW v54. |
 | 2026-07-23 | — | **Merge main:** arcade title + SVG icons + v1.10.1/SW v50; hero canvas alleen op menu; docs sync. |
 | 2026-07-23 | **12** | Content: dex rariteit-chips, Kristallijn + Boekmeester looks, 3 dex-prestaties. v1.9.9 / SW v48. |
 | 2026-07-23 | **14** | FX: Rasengan buitenringen + capte spark-trail, combo-ring, banner glow; Lite FX respect. v1.9.8 / SW v47. |

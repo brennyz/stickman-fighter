@@ -285,6 +285,7 @@
       background:rgba(0,0,0,.22); border:1px solid rgba(255,255,255,.1); border-top:3px solid var(--accent,#7cf5ff); }
   .vs-preview-name { font-weight:900; font-size:14px; color:#fff; }
   .vs-preview-wpn { font-size:11px; color:#9db1e3; margin:4px 0 8px; }
+  .vs-preview-flair { font-size:10px; font-weight:700; color:#cfe0ff; margin:-4px 0 8px; line-height:1.35; opacity:.92; }
   .vs-preview-vs { align-self:center; font-weight:900; font-size:13px; color:#ffd75e; opacity:.85; }
   .vs-stat-col { margin:5px 0; }
   .vs-stat-l { display:block; font-size:10px; font-weight:800; color:#9db1e3; margin-bottom:2px; }
@@ -302,6 +303,14 @@
   .char-card canvas { display:block; margin:0 auto 6px; border-radius:12px; background:rgba(0,0,0,.28); }
   .char-card .char-name { font-weight:900; font-size:14px; color:#fff; }
   .char-card .char-tag { font-size:11px; font-weight:700; color:#9db1e3; margin-top:3px; }
+  .char-card .char-saga { font-size:10px; font-weight:800; color:#ffd75e; margin:0 0 4px; letter-spacing:.02em; }
+  .char-card .char-flair { font-size:10px; font-weight:700; color:#b8c8e8; margin-top:4px; line-height:1.25; min-height:2.4em; }
+  .char-saga-bar { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:min(94vw,720px); margin:8px 0 4px; }
+  .char-saga-bar button { font-size:12px; font-weight:800; padding:8px 12px; border-radius:999px; border:2px solid rgba(255,255,255,.15);
+    background:rgba(0,0,0,.25); color:#cfe0ff; cursor:pointer; box-shadow:0 3px 0 rgba(0,0,0,.35); }
+  .char-saga-bar button.active { border-color:#ffd75e; background:rgba(255,215,94,.15); color:#fff; }
+  .char-saga-bar button:active { transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.35); }
+  #charSagaBlurb { font-size:11px; color:#9db1e3; max-width:min(94vw,720px); margin:0 auto 8px; line-height:1.4; min-height:2.8em; }
   .char-card.p1sel { border-color:#7cf5ff; background:rgba(124,245,255,.12);
       box-shadow:0 0 0 1px rgba(124,245,255,.35), 0 5px 0 rgba(0,0,0,.3); }
   .char-card.p2sel { border-color:#ffb0b8; background:rgba(255,176,184,.12);
@@ -385,7 +394,7 @@
       <div class="arcade-pre">MONSTER ARENA · INSERT COIN</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine">▶ KIES JE MODUS ▶</p>
-      <div class="subtitle" id="menuVerLine" style="color:#ffb0a8;font-size:11px;margin:6px 0 0;opacity:.95">v1.10.4 · arcade</div>
+      <div class="subtitle" id="menuVerLine" style="color:#ffb0a8;font-size:11px;margin:6px 0 0;opacity:.95">v1.11.0 · arcade</div>
     </div>
   </div>
   <div class="arcade-menu-body">
@@ -431,13 +440,22 @@
 
 <div id="charSelectScreen" class="screen">
   <button class="btn back-btn" data-back id="charSelectBack">&#8592; Terug</button>
-  <h2 class="head">Kies je vechter</h2>
+  <h2 class="head">Kies je vechter · Choose fighter</h2>
   <div class="subtitle" id="charPickStep">Speler 1 — kies je vechter (links)</div>
-  <div class="subtitle" style="margin-top:-6px;font-size:12px">18 vechters · unieke stats, wapens &amp; specials</div>
+  <div class="subtitle" style="margin-top:-6px;font-size:12px">23 sticks · 5 saga-hints (parodie, geen officiële manga)</div>
   <div class="char-duel-bar">
     <button type="button" class="p1pill pick-pill big-touch" id="charP1Label">P1: Stick Ninja</button>
     <button type="button" class="p2pill pick-pill big-touch" id="charP2Label">P2: RabbitRobot</button>
   </div>
+  <div class="char-saga-bar" id="charSagaBar" role="tablist" aria-label="Saga filter">
+    <button type="button" data-saga="all" class="active">⭐ Alle</button>
+    <button type="button" data-saga="ki">🔥 Ki</button>
+    <button type="button" data-saga="scroll">📜 Scroll</button>
+    <button type="button" data-saga="tide">🌊 Tide</button>
+    <button type="button" data-saga="cape">🦸 Cape</button>
+    <button type="button" data-saga="dawn">☀️ Dawn</button>
+  </div>
+  <div id="charSagaBlurb" class="subtitle" style="margin-top:0"></div>
   <div class="step-card" id="charStatPreview" style="width:min(94vw,720px);font-size:12px;padding:10px 14px;margin:0 0 10px;text-align:center;color:#cfe0ff"></div>
   <div class="char-grid-scroll" id="charGridScroll">
     <div class="char-grid" id="charGrid"></div>
@@ -636,7 +654,7 @@
 </script>
 
 <script src="tunnel-check.js?v=201"></script>
-<script src="game.js?v=204"></script>
+<script src="game.js?v=205"></script>
 <script src="install.js?v=201"></script>
 <script>
 (function () {

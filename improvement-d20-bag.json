@@ -1,11 +1,11 @@
 {
   "version": 3,
   "cyclesCompleted": 1,
+  "rollFirst": [],
   "remaining": [
     11,
     15,
     14,
-    18,
     16,
     3,
     2,
@@ -23,12 +23,13 @@
     9
   ],
   "lastRoll": {
-    "face": 12,
-    "category": "Content \u2014 monsters, wapens, rariteit, dex",
-    "rolledAt": "2026-07-23T15:06:05Z",
-    "remainingCount": 19,
+    "face": 18,
+    "category": "Character select \u2014 saga UI + 5 hint sticks (2-delig)",
+    "rolledAt": "2026-07-23T15:44:00Z",
+    "remainingCount": 18,
     "cycle": 1
   },
+  "pending": null,
   "implemented": [
     {
       "face": 2,
@@ -98,6 +99,13 @@
       "note": "dex rariteit-chips + Kristallijn/Boekmeester + 3 prestaties",
       "version": "1.9.9",
       "doneAt": "2026-07-23T15:07:21Z",
+      "cycle": 1
+    },
+    {
+      "face": 18,
+      "note": "Deel 1: saga filters/UI/touch \u00b7 Deel 2: 5 saga-icon sticks (Ki/Scroll/Tide/Cape/Dawn parodie)",
+      "version": "1.11.0",
+      "doneAt": "2026-07-23T15:44:00Z",
       "cycle": 1
     }
   ],
@@ -255,7 +263,13 @@
       "rolledAt": "2026-07-23T15:06:05Z",
       "remainingCount": 19,
       "cycle": 1
+    },
+    {
+      "face": 18,
+      "category": "Character select \u2014 saga UI (deel 1) + 5 saga sticks (deel 2)",
+      "rolledAt": "2026-07-23T15:44:00Z",
+      "remainingCount": 18,
+      "cycle": 1
     }
-  ],
-  "pending": null
+  ]
 }
