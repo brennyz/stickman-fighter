@@ -27,9 +27,15 @@ run_preflight() {
     return 1
   fi
   echo "OK  smoke-load-game.mjs"
-  local ver sw
+  local ver sw gsw
   ver="$(rg -o "APP_VERSION = '[^']+'" "$ROOT/game.js" | head -1 || true)"
   sw="$(rg -o "stickfighter-app-v[0-9]+" "$ROOT/sw.js" | head -1 || true)"
+  gsw="$(rg -o "SW_CACHE_REV = [0-9]+" "$ROOT/game.js" | head -1 | rg -o "[0-9]+" || true)"
+  sw_n="$(echo "$sw" | rg -o "[0-9]+$" || true)"
+  if [[ -n "$gsw" && -n "$sw_n" && "$gsw" != "$sw_n" ]]; then
+    echo "FAIL: SW mismatch game.js SW_CACHE_REV=$gsw vs sw.js $sw"
+    return 1
+  fi
   echo "App: ${ver:-?} · SW: ${sw:-?}"
   echo ""
 }

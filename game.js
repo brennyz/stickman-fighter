@@ -55,7 +55,9 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.10.0';
+const APP_VERSION = '1.10.1';
+/** Keep in sync with sw.js CACHE suffix */
+const SW_CACHE_REV = 50;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -4416,7 +4418,7 @@ const UI = {
     document.getElementById('togSfx').classList.toggle('off', !save.sfx);
     ensureDaily();
     const verLine = document.getElementById('menuVerLine');
-    if (verLine) verLine.textContent = 'v' + APP_VERSION + ' · arcade title';
+    if (verLine) verLine.textContent = 'v' + APP_VERSION + ' · arcade · SW v' + SW_CACHE_REV;
     const missEl = document.getElementById('menuDailyHint');
     if (missEl) missEl.textContent = dailyStatusLine();
     const tipEl = document.getElementById('menuTipLine');
@@ -5329,7 +5331,10 @@ function loop(now) {
       menuAnimT += dt;
       if (state === 'menu') {
         ensureMenuScreenActive();
-        try { paintMenuHeroCanvas(menuAnimT); } catch (_) {}
+        const ms = document.getElementById('menuScreen');
+        if (ms && ms.classList.contains('active')) {
+          try { paintMenuHeroCanvas(menuAnimT); } catch (_) {}
+        }
       }
     }
     if (game && typeof game.draw === 'function') {

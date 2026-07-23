@@ -1,7 +1,7 @@
-STICKMAN FIGHTER — PUSH NAAR GITHUB (v1.9.9+)
+STICKMAN FIGHTER — PUSH NAAR GITHUB (v1.10.1+)
 ==============================================
 
-Lokaal staat alles klaar op branch `main` (tap-fix, v1.9.9, SW v48).
+Lokaal staat alles klaar op branch `main` (tap-fix, arcade title, v1.10.1, SW v50).
 De cloud-agent krijgt nog 403 — jij met gelinkte git kunt dit in één push fixen.
 
 1) Open een terminal IN de map stickman-fighter (jouw machine of Cursor terminal met repo-write).
@@ -22,7 +22,7 @@ De cloud-agent krijgt nog 403 — jij met gelinkte git kunt dit in één push fi
 
    https://brennyz.github.io/stickman-fighter/ipad.html
 
-   Menu moet tonen: v1.9.9 · dex content
+   Menu moet tonen: v1.10.1 · arcade · SW v50
    Oude PWA-cache? Tik «Verse versie» in het menu.
 
 Tot Pages live is — cloud tunnel (agent):
