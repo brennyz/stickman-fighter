@@ -56,7 +56,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.8.3';
+const APP_VERSION = '1.8.4';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -467,11 +467,6 @@ async function resolveSharePlayUrl() {
   if (liveUrl && !liveUrl.includes('loca.lt')) return liveUrl;
   if (location.protocol !== 'file:') return location.href.split('?')[0].split('#')[0];
   return liveUrl || headLiveFromPage();
-}
-
-function headLiveFromPage() {
-  if (location.protocol === 'file:') return '';
-  return location.origin + location.pathname.replace(/\/[^/]*$/, '/');
 }
 
 function headLiveFromPage() {
@@ -1540,6 +1535,7 @@ class Fighter {
       AudioSys.sfx(this.weapon.id === 'shuriken' ? 'shuriken' : 'swing');
     }
     this.attack = Object.assign({ t: 0, hasHit: false, fired: false }, this.attackSpec(kind));
+    if (this.isRobot && kind === 'special') this.attack.windup = 0.58;
     this.blocking = false;
   }
 
@@ -1710,6 +1706,14 @@ class Fighter {
       if (a.kind === 'special' && !a.fired && a.t >= a.windup) {
         a.fired = true;
         game.spawnJutsu(this, a);
+      }
+      if (this.isRobot && a.kind === 'special' && !a.fired && !a._telegraphed && a.t >= a.windup * 0.32) {
+        a._telegraphed = true;
+        if (game.mode === 'training') {
+          game.trainTelegraphT = 0.7;
+          game.floater(this.x, this.y - 138, '⚡ CHIDORI — dash/spring!', '#7cf5ff', 16);
+          haptic(10);
+        }
       }
       if (a.kind !== 'special' && !a.hasHit && a.t >= a.windup && a.t <= a.windup + a.active) {
         if (game.tryMelee(this, a)) a.hasHit = true;
@@ -2723,6 +2727,7 @@ class Game {
     });
     this.robot.aiDiff = diff;
     this.robotMaxHp = Math.round(110 + save.lvl * 9 + save.trainWins * 14);
+    this.trainTelegraphT = 0;
     this.startRound();
     AudioSys.play('boss');
   }
@@ -2749,6 +2754,7 @@ class Game {
       if (this.phaseT > 1.2 && this.phaseT - dt <= 1.2) this.banner('VECHT!', 0.8, '#ff6b6b', 60);
       if (this.phaseT > 1.6) { this.phase = 'fight'; this.inputLocked = false; }
     } else if (this.phase === 'fight') {
+      if (this.trainTelegraphT > 0) this.trainTelegraphT -= dt;
       this.roundTimer -= dt;
       const pDead = !this.player.alive, rDead = !this.robot.alive;
       if (pDead || rDead || this.roundTimer <= 0) {
@@ -3536,6 +3542,16 @@ class Game {
     } else if (this.mode === 'training') {
       const r = this.robot;
       const half = Math.min(300, W * 0.36);
+      if (this.trainTelegraphT > 0 && r.alive) {
+        c.save();
+        c.globalAlpha = 0.35 + Math.sin(this.t * 18) * 0.2;
+        c.strokeStyle = '#7cf5ff';
+        c.lineWidth = 4;
+        c.beginPath();
+        c.arc(r.x, r.y - 48, 42 + Math.sin(this.t * 14) * 6, 0, TAU);
+        c.stroke();
+        c.restore();
+      }
       // robotbalk rechtsboven
       c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, W - half - 20, by - 4, half + 8, 30, 10); c.fill();
       c.fillStyle = '#333c55'; this.rr(c, W - half - 16, by, half, 15, 6); c.fill();
@@ -3546,13 +3562,27 @@ class Game {
       c.fillText('RABBITROBOT', W - 20, by + 30);
       // timer + rondepunten
       c.textAlign = 'center';
-      c.font = '900 26px sans-serif'; c.fillStyle = '#fff';
-      c.fillText(Math.ceil(Math.max(0, this.roundTimer)), W / 2, 40);
+      c.font = '800 12px sans-serif';
+      c.fillStyle = 'rgba(255,255,255,.65)';
+      c.fillText(`Ronde ${this.round} · eerst 2 wint · ${this.roundsP}-${this.roundsR}`, W / 2, 68);
+      const tLeft = Math.ceil(Math.max(0, this.roundTimer));
+      const urgent = this.roundTimer < 15 && this.phase === 'fight';
+      c.font = urgent ? '900 28px sans-serif' : '900 26px sans-serif';
+      c.fillStyle = urgent ? '#ff9a9a' : '#fff';
+      if (urgent && !motionReduced()) {
+        c.save();
+        c.translate(W / 2, 40);
+        c.scale(1 + Math.sin(this.t * 10) * 0.05, 1 + Math.sin(this.t * 10) * 0.05);
+        c.fillText(String(tLeft), 0, 0);
+        c.restore();
+      } else {
+        c.fillText(String(tLeft), W / 2, 40);
+      }
       for (let i = 0; i < 2; i++) {
         c.fillStyle = i < this.roundsP ? '#7cfc8a' : 'rgba(255,255,255,.25)';
-        c.beginPath(); c.arc(W / 2 - 34 - i * 18, 54, 6, 0, TAU); c.fill();
+        c.beginPath(); c.arc(W / 2 - 34 - i * 18, 82, 6, 0, TAU); c.fill();
         c.fillStyle = i < this.roundsR ? '#ff6b6b' : 'rgba(255,255,255,.25)';
-        c.beginPath(); c.arc(W / 2 + 34 + i * 18, 54, 6, 0, TAU); c.fill();
+        c.beginPath(); c.arc(W / 2 + 34 + i * 18, 82, 6, 0, TAU); c.fill();
       }
     } else if (this.mode === 'wall') {
       const tLeft = Math.ceil(Math.max(0, this.wallTimer));

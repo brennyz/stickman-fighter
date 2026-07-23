@@ -17,6 +17,23 @@ chmod +x scripts/roll-improvement-d20.sh
 
 Staat van de zak: `improvement-d20-bag.json` (commit na elke roll + na elke afgeronde verbetering).
 
+**d20 v2:** `./scripts/roll-improvement-d20.sh status` · per roll een **Focus**-regel · optioneel `./scripts/mark-d20-done.sh 6 "Audio mute pauze" 1.8.4` na commit.
+
+### Review — laatste 8 rolls (2026-07-23)
+
+| d# | Oordeel |
+|----|---------|
+| **15** Onboarding | Goed — 1 toast/modus, geen stack; past bij iPad. |
+| **1** Combat | Goed — feel-only (hit-stop, i-frames), geen dmg×. |
+| **4** Avontuur | Goed — stars/pacing zichtbaar, geen grind. |
+| **10** A11y | Goed — OS reduced-motion + contrast. |
+| **16** Hosting | Goed — Pages primair; tunnel fallback. |
+| **5** Perf | Goed — caps/DPR; Lite FX opt-in. |
+| **18** Char select | Goed — UI/stats; geen roster balance. |
+| **12** Content | Goed — dex/cosmetic; geen loop-slop. |
+
+**Conclusie:** ja, goede weg — blijf **één thema**, checklist, SW bump. Open gaten: **deploy push** (403), resterende zak **d2,d3,d6,d7,d8,d13,d14,d17,d20**.
+
 | d# | Categorie | Voorbeelden (klein & veilig) |
 |----|-----------|------------------------------|
 | **1** | Combat feel | Hit-stop, i-frames, combo window — **geen** dmg-formule wijzigen zonder test |
@@ -61,7 +78,7 @@ Voordat je merge/commit:
 | Bucket | Prioriteit | Opmerking |
 |--------|------------|-----------|
 | **iPad UX** | Hoog | Pages live; oude PWA-cache kan oude JS tonen → SW v19+ |
-| **GitHub deploy** | Hoog | v1.7.1 click-fix nog pushen (token `repo`) |
+| **GitHub deploy** | Hoog | Push `main` met PAT `repo` — lokaal v1.8.3 / SW v31 |
 | **Tunnel** | Laag | Alleen fallback; Pages is primair |
 | **Versus balance** | Medium | Per-char tuning in kleine stappen (d3) |
 | **Content** | Medium | Meer achievements, geen 50 nieuwe levels in één PR |
@@ -75,6 +92,8 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | **2** | Training: Chidori-telegraph + ring, langere windup robot, ronde-HUD. v1.8.4 / SW v32. |
+| 2026-07-23 | — | **d20 v2:** focus per roll, `status`, `mark-d20-done.sh`, review laatste 8. |
 | 2026-07-23 | **15** | Onboarding: welkom-toast, 1 toast/modus, eerste-minuut HUD-hint, help-blok. v1.8.3 / SW v31. |
 | 2026-07-23 | **1** | Combat feel: hit-stop per attack, korte i-frames speler, hit-flash, combo 1.62s. v1.8.2 / SW v30. |
 | 2026-07-23 | **4** | Avontuur: ster-drempels zichtbaar, baas-golf pacing, adempauze vóór baas. v1.8.1 / SW v29. |

@@ -1,8 +1,7 @@
 {
-  "version": 1,
+  "version": 2,
   "cyclesCompleted": 0,
   "remaining": [
-    2,
     3,
     6,
     7,
@@ -13,12 +12,21 @@
     20
   ],
   "lastRoll": {
-    "face": 15,
-    "category": "Onboarding \u2014 tips, eerste speelminuut, help",
-    "rolledAt": "2026-07-23T13:33:23Z",
-    "remainingCount": 9,
+    "face": 2,
+    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
+    "rolledAt": "2026-07-23T13:34:50Z",
+    "remainingCount": 8,
     "cycle": 0
   },
+  "implemented": [
+    {
+      "face": 2,
+      "note": "Chidori telegraph + ronde HUD",
+      "version": "1.8.4",
+      "doneAt": "2026-07-23T13:35:30Z",
+      "cycle": 0
+    }
+  ],
   "history": [
     {
       "face": 9,
@@ -95,6 +103,13 @@
       "category": "Onboarding \u2014 tips, eerste speelminuut, help",
       "rolledAt": "2026-07-23T13:33:23Z",
       "remainingCount": 9,
+      "cycle": 0
+    },
+    {
+      "face": 2,
+      "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
+      "rolledAt": "2026-07-23T13:34:50Z",
+      "remainingCount": 7,
       "cycle": 0
     }
   ]
