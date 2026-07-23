@@ -48,6 +48,7 @@
   ],
   "agentRules": [
     "Lees AGENTS.md + IMPROVEMENT.md + dit bestand vóór grote wijzigingen.",
+    "Als git log origin/main..main leeg is maar GitHub nog v1.7.0: werk zit in andere agent-VM — vraag patch via tunnel dist/push-naar-github.patch of push vanaf oude run.",
     "Voeg nieuwe iPad/Mac-wensen toe aan userWishlist (max 12 open items; archiveer done).",
     "Eén thema per sessie waar mogelijk; d20 via scripts/roll-improvement-d20.sh.",
     "Commit niet health.json / hosting.json / LIVE-LINK.txt tenzij bewust deploy-doc.",
