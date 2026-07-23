@@ -62,9 +62,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 1;
-const APP_VERSION = '1.12.21';
+const APP_VERSION = '1.12.22';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 84;
+const SW_CACHE_REV = 85;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1415,14 +1415,6 @@ function trackVsRosterUse(p1, p2) {
   if (save.vsPlayedIds.length > 32) save.vsPlayedIds = save.vsPlayedIds.slice(-32);
   persist();
   checkAchievements();
-}
-
-try {
-  save = sanitizeSave(save);
-  persist();
-} catch (err) {
-  console.error('[Stickman] boot sanitize', err);
-  try { save = Object.assign({}, DEFAULT_SAVE); persist(); } catch (_) {}
 }
 
 function systemPrefersReducedMotion() {
@@ -6607,11 +6599,23 @@ const UI = {
         ? '⚠ Hoofd-save corrupt'
         : (h.primaryValid ? '✔ Save OK' : (h.primaryOk ? '⚠ Save onleesbaar' : '⚠ Geen primary save'));
       if (h.drift && h.backupOk) statusPrimary += ' · hoofd/backup verschillen';
-      healthEl.innerHTML =
+      let healthHtml =
         `<b>Lv ${h.lvl}</b> · unlock ${h.unlocked} · boek ${h.dex} · kills ${h.kills}${sizeLine}<br>` +
         statusPrimary +
-        (h.backupOk ? ` · ✔ Backup (Lv ${h.backupLvl})` : ' · ⚠ Geen backup') +
-        (h.stampAt ? `<br><span style="opacity:.7">Laatst opgeslagen: ${new Date(h.stampAt).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' })}</span>` : '') +
+        (h.backupOk ? ` · ✔ Backup (Lv ${h.backupLvl})` : ' · ⚠ Geen backup');
+      if (h.stampAt) {
+        let stampLabel = '';
+        try {
+          const d = new Date(h.stampAt);
+          if (!Number.isNaN(d.getTime())) {
+            stampLabel = d.toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
+          }
+        } catch (_) {}
+        if (stampLabel) {
+          healthHtml += `<br><span style="opacity:.7">Laatst opgeslagen: ${stampLabel}</span>`;
+        }
+      }
+      healthEl.innerHTML = healthHtml +
         `<br><span style="opacity:.75">Export/import = veiligste overzet · key: ${SAVE_KEY} (niet wijzigen)</span>`;
     }
     const pct = (v, d) => Math.round((Number(v ?? d)) * 100);

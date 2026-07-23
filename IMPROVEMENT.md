@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | — | **Fix:** vroege `sanitizeSave` vóór `SPECIES` (TDZ) kon save crashen zodra dex-data bestond — alleen bootGame sanitize. v1.12.22 / SW v85. |
 | 2026-07-23 | **7** | Save (cyclus 1): strip onbekende keys, NaN-volumes fix, storage diagnostics + stamp, import-warnings, export schema. v1.12.21 / SW v84. **Cyclus 1 compleet.** |
 | 2026-07-23 | **9** | iPad touch: 2P midden-neutraal, slop schaal, touchend op knop/kaart, grotere pauze-hit. v1.12.20 / SW v83. |
 | 2026-07-23 | **6** | Audio (cyclus 1): pauze-volume sliders (sync instellingen), Lite FX zachter BGM/SFX, `syncContextPower` bij volledig mute. v1.12.19 / SW v82. |
