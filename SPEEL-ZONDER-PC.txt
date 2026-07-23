@@ -1,0 +1,68 @@
+STICKMAN — SPELEN ZONDER PC (alleen telefoon/tablet)
+====================================================
+
+Je hebt GEEN Mac/terminal nodig om te SPELEN met de nieuwste versie.
+GitHub push is geblokkeerd voor de cloud-agent; dit zijn je opties.
+
+─── OPTIE A — NU SPELEN (nieuwste v1.12.x via tunnel) ───
+
+Zolang deze cloud-agent draait, staat het spel op:
+
+  https://stickfighter-ipad-b75e.loca.lt/speel.html
+
+  (of direct: …/index.html)
+
+  Android: Chrome → link → tik SPELEN.
+  Eerste keer loca.lt: gele knop “Click to Continue”.
+
+  Let op: tunnel = tijdelijk (agent uit = link stopt).
+  Voor altijd: optie B of C.
+
+─── OPTIE B — GITHUB PAGES FIXEN (geen terminal, wel browser) ───
+
+1) Op telefoon: Safari of Chrome → inloggen op github.com
+
+2) Open: github.com/brennyz/stickman-fighter
+
+3) Tik op map stickman-fighter-bestanden NIET nodig als repo root is al game.
+
+4) Tik **Add file** → **Upload files**
+
+5) Upload minimaal deze bestanden uit een zip die iemand je stuurt,
+   OF vraag in Cursor: “maak deploy-zip voor GitHub upload”.
+
+   Minimaal voor speel-link:
+   - speel.html
+   - 404.html
+   - index.html
+   - game.js
+   - sw.js
+   - tunnel-check.js
+   - install.js
+   - manifest.webmanifest
+   - map icons/
+
+6) Onderaan: commit message → **Commit changes**
+
+7) Wacht 2 min → test:
+   https://brennyz.github.io/stickman-fighter/speel.html
+
+─── OPTIE C — CURSOR OP TELEFOON (push voor jou) ───
+
+1) cursor.com/dashboard → Cloud Agents → Environment
+2) Koppel repo **brennyz/stickman-fighter** (read/write)
+3) Nieuwe agent: “push main naar GitHub”
+4) Dan werkt github.io zonder tunnel
+
+─── OPTIE D — NETLIFY (als credits terug zijn) ───
+
+  stickfighter.netlify.app — nu geblokkeerd: “credits exceeded”
+
+─── WAT NIET WERKT ───
+
+  speel.html op github.io = 404 tot main is geüpdatet (nu nog v1.7.0).
+
+─── DEEL MET VRIENDEN (Android) ───
+
+  Tunnel aan: stickfighter-ipad-b75e.loca.lt/speel.html
+  Na Pages-push: brennyz.github.io/stickman-fighter/speel.html
