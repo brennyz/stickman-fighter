@@ -24,13 +24,7 @@
     "remainingCount": 13,
     "cycle": 2
   },
-  "pending": {
-    "face": 6,
-    "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
-    "rolledAt": "2026-07-23T21:25:09Z",
-    "remainingCount": 13,
-    "cycle": 2
-  },
+  "pending": null,
   "implemented": [
     {
       "face": 2,
@@ -289,6 +283,13 @@
       "note": "export schema v2, import key/summon warnings, corrupt primary repair",
       "version": "1.14.6",
       "doneAt": "2026-07-23T21:24:49Z",
+      "cycle": 2
+    },
+    {
+      "face": 6,
+      "note": "pause duck/status, audio resume paths, 2P restart in pause",
+      "version": "1.14.7",
+      "doneAt": "2026-07-23T21:26:05Z",
       "cycle": 2
     }
   ],
