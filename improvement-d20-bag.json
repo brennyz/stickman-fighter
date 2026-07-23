@@ -7,7 +7,6 @@
     2,
     3,
     5,
-    6,
     8,
     9,
     11,
@@ -19,13 +18,19 @@
     19
   ],
   "lastRoll": {
-    "face": 7,
-    "category": "Save & backup \u2014 import/export, corruptie, migratie",
-    "rolledAt": "2026-07-23T21:23:37Z",
-    "remainingCount": 14,
+    "face": 6,
+    "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+    "rolledAt": "2026-07-23T21:25:09Z",
+    "remainingCount": 13,
     "cycle": 2
   },
-  "pending": null,
+  "pending": {
+    "face": 6,
+    "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+    "rolledAt": "2026-07-23T21:25:09Z",
+    "remainingCount": 13,
+    "cycle": 2
+  },
   "implemented": [
     {
       "face": 2,
@@ -789,6 +794,13 @@
       "category": "Save & backup \u2014 import/export, corruptie, migratie",
       "rolledAt": "2026-07-23T21:23:37Z",
       "remainingCount": 14,
+      "cycle": 2
+    },
+    {
+      "face": 6,
+      "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+      "rolledAt": "2026-07-23T21:25:09Z",
+      "remainingCount": 13,
       "cycle": 2
     }
   ]
