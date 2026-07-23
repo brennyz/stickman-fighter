@@ -56,7 +56,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.8.6';
+const APP_VERSION = '1.8.7';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -381,13 +381,38 @@ function sfReportError(where, err) {
     try { UI.toast('Er ging iets mis — terug naar menu', 4500); } catch (_) {}
   }
 }
+function syncPlayLayer() {
+  const el = document.getElementById('game');
+  if (!el) return;
+  const canvasHits = state === 'play' && !!game;
+  el.style.pointerEvents = canvasHits ? 'auto' : 'none';
+  document.body.classList.toggle('is-playing', canvasHits);
+}
+
+function dismissTunnelOverlayIfStatic() {
+  const h = location.hostname;
+  const staticHost = h.endsWith('.github.io') || h.endsWith('.netlify.app')
+    || h === 'localhost' || h === '127.0.0.1' || location.protocol === 'file:';
+  if (!staticHost) return;
+  const o = document.getElementById('tunnelBootOverlay');
+  if (!o) return;
+  o.hidden = true;
+  o.setAttribute('hidden', '');
+  o.style.pointerEvents = 'none';
+}
+
 function recoverToMenu() {
   window.__sfLoopErr = false;
   try { UI.goMenu(); } catch (_) {
     game = null;
     state = 'menu';
-    document.body.classList.remove('is-playing');
     Input.dualMode = false;
+    Input.layout(W, H);
+    syncPlayLayer();
+    try {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('menuScreen')?.classList.add('active');
+    } catch (_) {}
   }
 }
 function importSaveJson(text) {
@@ -3842,8 +3867,7 @@ const UI = {
       this.refreshPauseSubtitle();
     }
     document.getElementById('pauseBtn').classList.toggle('show', !id && !!game && state !== 'result');
-    const playing = !id && !!game && state === 'play';
-    document.body.classList.toggle('is-playing', !!playing);
+    syncPlayLayer();
   },
 
   syncTouchClass() {
@@ -3885,7 +3909,6 @@ const UI = {
     game = null;
     state = 'menu';
     window.__sfLoopErr = false;
-    document.body.classList.remove('is-playing');
     Input.dualMode = false;
     Input.layout(W, H);
     this.syncTouchClass();
@@ -4353,7 +4376,6 @@ const UI = {
   showResult(win, data) {
     this.lastResult = data;
     state = 'result';
-    document.body.classList.remove('is-playing');
     document.getElementById('pauseBtn').classList.remove('show');
     const title = document.getElementById('resTitle');
     title.textContent = data.title;
@@ -4407,7 +4429,6 @@ function startGame(mode, opts) {
     return;
   }
   state = 'play';
-  document.body.classList.add('is-playing');
   recordLastPlay(mode, opts);
   showModeOnboarding(mode);
   playModeHint(game, mode);
@@ -4617,7 +4638,8 @@ if (pauseTogSfx) pauseTogSfx.addEventListener('click', () => {
   AudioSys.sfx('select');
 });
 document.getElementById('pauseResume').addEventListener('click', () => {
-  UI.show(null); state = 'play';
+  state = 'play';
+  UI.show(null);
 });
 document.getElementById('pauseQuit').addEventListener('click', () => { UI.goMenu(); });
 document.getElementById('resAgain').addEventListener('click', () => {
@@ -4737,6 +4759,8 @@ window.addEventListener('offline', updateNetStatus);
 function bootGame() {
   if (window.__sfBooted) return;
   window.__sfBooted = true;
+  dismissTunnelOverlayIfStatic();
+  syncPlayLayer();
   resize();
   UI.renderMenu();
   ensureDaily();
@@ -4765,6 +4789,7 @@ function bootGame() {
   AudioSys.desiredSong = 'menu';
   if (typeof AudioSys.applyVolumes === 'function') AudioSys.applyVolumes();
   requestAnimationFrame(loop);
+  if (state === 'menu') UI.show('menuScreen');
   if (!window.__sfTipTimer) {
     window.__sfTipTimer = setInterval(() => {
       if (state === 'menu') UI.renderMenu();

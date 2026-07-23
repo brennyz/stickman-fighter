@@ -22,8 +22,8 @@
       font-family: 'Nunito', -apple-system, Helvetica, sans-serif; }
   /* Canvas achter UI; geen hits in menu (anders vangt iPad alle tikken) */
   #game { position:fixed; inset:0; width:100%; height:100%; display:block; touch-action:none;
-      z-index:1; pointer-events:none; }
-  body.is-playing #game { pointer-events:auto; }
+      z-index:0; pointer-events:none !important; }
+  body.is-playing #game { pointer-events:auto !important; z-index:1; }
 
   .screen { position:fixed; inset:0; display:none; flex-direction:column; align-items:center;
       justify-content:flex-start; overflow-y:auto; -webkit-overflow-scrolling:touch;
@@ -33,7 +33,7 @@
         radial-gradient(ellipse at 80% 0%, rgba(74,125,255,.14), transparent 45%),
         radial-gradient(ellipse at 50% 100%, rgba(67,178,91,.08), transparent 40%),
         linear-gradient(180deg, #151b33 0%, #0a0d18 70%);
-      color:#fff; z-index:10; pointer-events:auto; touch-action:pan-y; }
+      color:#fff; z-index:20; pointer-events:auto; touch-action:pan-y; }
   .screen.active { display:flex; animation: fadeIn .25s ease; }
   @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
   @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.04); } }
@@ -265,6 +265,18 @@
 </head>
 <body>
 <canvas id="game"></canvas>
+<script>
+/* iPad/menu: canvas mag nooit tikken vangen vóór game.js (oude PWA-cache) */
+(function () {
+  var c = document.getElementById('game');
+  if (c) c.style.pointerEvents = 'none';
+  var h = location.hostname;
+  if (h.endsWith('.github.io') || h.endsWith('.netlify.app') || h === 'localhost' || h === '127.0.0.1' || location.protocol === 'file:') {
+    var o = document.getElementById('tunnelBootOverlay');
+    if (o) { o.hidden = true; o.style.pointerEvents = 'none'; }
+  }
+})();
+</script>
 <button id="pauseBtn" aria-label="Pauze">&#10074;&#10074;</button>
 <div id="toastHost"></div>
 <div id="netStatus" hidden aria-live="polite">Offline</div>
