@@ -2,14 +2,13 @@
   "version": 3,
   "cyclesCompleted": 0,
   "remaining": [
-    14,
-    20
+    14
   ],
   "lastRoll": {
-    "face": 6,
-    "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
-    "rolledAt": "2026-07-23T15:00:11Z",
-    "remainingCount": 2,
+    "face": 20,
+    "category": "Code health \u2014 kleine refactors, geen gameplay-break",
+    "rolledAt": "2026-07-23T15:01:51Z",
+    "remainingCount": 1,
     "cycle": 0
   },
   "implemented": [
@@ -60,6 +59,13 @@
       "note": "BGM duck pause/result + mute paths + pause song keep",
       "version": "1.9.6",
       "doneAt": "2026-07-23T15:01:40Z",
+      "cycle": 0
+    },
+    {
+      "face": 20,
+      "note": "dead code/no-ops/shared joy onMove \u2014 zero behavior",
+      "version": "1.9.7",
+      "doneAt": "2026-07-23T15:04:20Z",
       "cycle": 0
     }
   ],
@@ -195,6 +201,13 @@
       "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
       "rolledAt": "2026-07-23T15:00:11Z",
       "remainingCount": 2,
+      "cycle": 0
+    },
+    {
+      "face": 20,
+      "category": "Code health \u2014 kleine refactors, geen gameplay-break",
+      "rolledAt": "2026-07-23T15:01:51Z",
+      "remainingCount": 1,
       "cycle": 0
     }
   ],

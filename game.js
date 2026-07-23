@@ -1,10 +1,9 @@
 'use strict';
 /* =========================================================================
    STICKMAN FIGHTER — Monster Arena
-   Een stickman-vechtgame voor iPad (touch) en desktop (toetsenbord).
-   Modi: Avontuur (15 levels), Training vs RabbitRobot, Muur Slopen.
-   Alle audio (sfx + bgm) wordt procedureel gegenereerd met Web Audio,
-   dus 100% gratis en rechtenvrij.
+   Stickman-vechtgame voor iPad (touch) en desktop (toetsenbord).
+   Modi: Avontuur (50 levels), Training vs RabbitRobot, Versus 2P, Muur.
+   Audio (sfx + bgm) is procedureel via Web Audio — rechtenvrij.
    ========================================================================= */
 
 const TAU = Math.PI * 2;
@@ -56,7 +55,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.9.6';
+const APP_VERSION = '1.9.7';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -607,10 +606,6 @@ function vsFighterStats(entry) {
   if (entry.isRobot) special = 'Robot-AI';
   else if (entry.special === 'chidori') special = 'Chidori';
   return { hp, spd, dmg, wpn: weaponById(entry.weapon).name, special };
-}
-function vsStatLine(entry) {
-  const s = vsFighterStats(entry);
-  return `HP ${s.hp} · Snel ${s.spd}% · Kracht ${s.dmg}% · ${s.special}`;
 }
 function vsStatBar(label, pct, color) {
   const p = Math.min(100, Math.max(6, pct));
@@ -1495,19 +1490,8 @@ const Input = Object.assign(makePad('p1'), {
     }
   },
   onMove(x, y, id) {
-    if (this.dualMode) {
-      InputP2.onMove(x, y, id);
-      makePad('p1').onMove.call(this, x, y, id);
-      return;
-    }
-    if (this.joy.active && this.joy.id === id) {
-      let dx = clamp(x - this.joy.ox, -55, 55);
-      let dy = clamp(y - this.joy.oy, -55, 55);
-      if (Math.abs(dx) < JOY_DEAD_PX) dx = 0;
-      if (Math.abs(dy) < JOY_DEAD_PX) dy = 0;
-      this.joy.dx = dx;
-      this.joy.dy = dy;
-    }
+    if (this.dualMode) InputP2.onMove(x, y, id);
+    makePad('p1').onMove.call(this, x, y, id);
   },
   onUp(id) {
     if (this.dualMode) {
@@ -3072,10 +3056,6 @@ class Game {
       }
     }
     this.robot.update(dt, this);
-    // robot speciale aanval: oorlaser
-    if (this.robot.attack && this.robot.attack.kind === 'special' && this.robot.attack.fired && !this.robot.attack.laserDone) {
-      this.robot.attack.laserDone = true;
-    }
   }
 
   finishTraining(win) {
@@ -3202,9 +3182,8 @@ class Game {
     const hpBase = 26 + this.wallGen * 10;
     for (let cRow = 0; cRow < rows; cRow++) {
       for (let col = 0; col < cols; col++) {
-        const off = (cRow % 2) * (bw / 2) * 0; // strak metselwerk
         this.bricks.push({
-          x: this.wallX + col * bw + off, y: this.ground - (cRow + 1) * bh,
+          x: this.wallX + col * bw, y: this.ground - (cRow + 1) * bh,
           w: bw - 3, h: bh - 3,
           hp: hpBase, maxhp: hpBase,
           hue: 18 + (((cRow * 7 + col * 13) % 5) - 2) * 4,
@@ -3313,7 +3292,6 @@ class Game {
       dmg: f.baseDmg * w.dmg * 0.85,
       from: this.projFrom(f), kind: 'shuriken', life: 1.2, spin: 0,
     });
-    f.face = f.face; // keep facing
   }
 
   spawnWave(f) { this.spawnJutsu(f, f.attackSpec('special')); }
@@ -5109,9 +5087,6 @@ function loop(now) {
     if (state === 'play' && game) {
       game.update(dt);
       try { Input.endFrame(); } catch (_) {}
-      if (InputP2 && typeof InputP2.endFrame === 'function') {
-        try { InputP2.endFrame(); } catch (_) {}
-      }
     } else {
       menuAnimT += dt;
       if (state === 'menu') ensureMenuScreenActive();
