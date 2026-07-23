@@ -56,7 +56,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.9.3';
+const APP_VERSION = '1.9.4';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1561,7 +1561,9 @@ canvas.addEventListener('pointercancel', e => {
   if (state !== 'play' || !game) return;
   Input.onUp(e.pointerId);
 });
-document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('gesturestart', e => {
+  if (state === 'play') e.preventDefault();
+});
 document.addEventListener('pointerdown', () => AudioSys.init(), { once: false });
 
 /* ============================ TEKENHULPEN ============================== */
@@ -4214,6 +4216,8 @@ const UI = {
     document.getElementById('togMusic').classList.toggle('off', !save.music);
     document.getElementById('togSfx').classList.toggle('off', !save.sfx);
     ensureDaily();
+    const verLine = document.getElementById('menuVerLine');
+    if (verLine) verLine.textContent = 'v' + APP_VERSION + ' · iPad-tap fix · SW actief';
     const missEl = document.getElementById('menuDailyHint');
     if (missEl) missEl.textContent = dailyStatusLine();
     const tipEl = document.getElementById('menuTipLine');
@@ -4634,49 +4638,67 @@ function startGame(mode, opts) {
   else AudioSys.play('battle');
 }
 
-document.getElementById('btnAdventure').addEventListener('click', () => {
+/** iPad: touchend + click zonder dubbel-vuur (preventDefault stopt ghost-click). */
+function bindPress(el, handler) {
+  if (!el || el.dataset.sfPressBound) return;
+  el.dataset.sfPressBound = '1';
+  let last = 0;
+  const run = (e) => {
+    const now = Date.now();
+    if (now - last < 320) return;
+    last = now;
+    try { handler(e); } catch (err) { console.error(err); }
+  };
+  el.addEventListener('click', run);
+  el.addEventListener('touchend', (e) => {
+    if (e.cancelable) e.preventDefault();
+    run(e);
+  }, { passive: false });
+}
+
+bindPress(document.getElementById('btnAdventure'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderLevels(); UI.show('levelScreen');
 });
 const btnContinue = document.getElementById('btnContinue');
-if (btnContinue) btnContinue.addEventListener('click', () => {
+bindPress(btnContinue, () => {
   AudioSys.init(); AudioSys.sfx('select');
   if (!resumeLastPlay()) UI.toast('Nog geen sessie — kies een modus', 2400);
 });
-document.getElementById('btnTraining').addEventListener('click', () => {
+bindPress(document.getElementById('btnTraining'), () => {
   AudioSys.init(); AudioSys.sfx('select'); startGame('training');
 });
 const btnVersus = document.getElementById('btnVersus');
-if (btnVersus) btnVersus.addEventListener('click', () => {
+bindPress(btnVersus, () => {
   AudioSys.init(); AudioSys.sfx('select');
   UI.charPickStep = 1;
   UI.renderCharSelect();
   UI.show('charSelectScreen');
 });
 const charPickBackP1 = document.getElementById('charPickBackP1');
-if (charPickBackP1) charPickBackP1.addEventListener('click', () => {
+bindPress(charPickBackP1, () => {
   AudioSys.sfx('select');
   UI.charPickStep = 1;
   UI.renderCharSelect();
 });
-document.getElementById('btnWall').addEventListener('click', () => {
+bindPress(document.getElementById('btnWall'), () => {
   AudioSys.init(); AudioSys.sfx('select'); startGame('wall');
 });
-document.getElementById('btnWeapons').addEventListener('click', () => {
+bindPress(document.getElementById('btnWeapons'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderWeapons(); UI.show('weaponScreen');
 });
-document.getElementById('btnDex').addEventListener('click', () => {
+bindPress(document.getElementById('btnDex'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderDex(); UI.show('dexScreen');
 });
 const btnStyle = document.getElementById('btnStyle');
-if (btnStyle) btnStyle.addEventListener('click', () => {
+bindPress(btnStyle, () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderStyle(); UI.show('styleScreen');
 });
 const btnSettings = document.getElementById('btnSettings');
-if (btnSettings) btnSettings.addEventListener('click', () => {
+bindPress(btnSettings, () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderSettings(); UI.renderHosting(); UI.show('settingsScreen');
 });
 const btnMissions = document.getElementById('btnMissions');
-if (btnMissions) btnMissions.addEventListener('click', () => {
+bindPress(btnMissions, () => {
   AudioSys.init(); AudioSys.sfx('select');
   UI.renderMissions();
   UI.show('missionsScreen');
@@ -4830,11 +4852,11 @@ if (btnClearSave) btnClearSave.addEventListener('click', () => {
 });
 bindSettingsControls();
 const btnHelp = document.getElementById('btnHelp');
-if (btnHelp) btnHelp.addEventListener('click', () => {
+bindPress(btnHelp, () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.show('helpScreen');
 });
 const helpOk = document.getElementById('helpOk');
-if (helpOk) helpOk.addEventListener('click', () => { AudioSys.sfx('select'); UI.goMenu(); });
+bindPress(helpOk, () => { AudioSys.sfx('select'); UI.goMenu(); });
 const btnGuvve = document.getElementById('btnGuvve');
 if (btnGuvve) {
   const guvveLines = [
@@ -4844,35 +4866,35 @@ if (btnGuvve) {
     'Guvvedukkie: Zet me in je app-lade… oh wacht, ik ben al hier.',
     'Guvvedukkie: QUAK — dat was mijn speciale aanval.',
   ];
-  btnGuvve.addEventListener('click', () => {
+  bindPress(btnGuvve, () => {
     AudioSys.init();
     AudioSys.sfx('bonus');
     UI.toast(choice(guvveLines), 3200);
   });
 }
 for (const b of document.querySelectorAll('[data-back]')) {
-  b.addEventListener('click', () => { UI.goBack(); });
+  bindPress(b, () => { UI.goBack(); });
 }
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   const sub = UI.screens.some(sid => sid !== 'menuScreen' && document.getElementById(sid)?.classList.contains('active'));
   if (sub) { e.preventDefault(); UI.goBack(); }
 });
-document.getElementById('togMusic').addEventListener('click', () => {
+bindPress(document.getElementById('togMusic'), () => {
   AudioSys.init();
   AudioSys.setMusicOn(!save.music);
   if (save.music) AudioSys.play('menu');
   UI.renderMenu();
 });
-document.getElementById('togSfx').addEventListener('click', () => {
+bindPress(document.getElementById('togSfx'), () => {
   AudioSys.init();
   save.sfx = !save.sfx; persist(); AudioSys.sfx('select'); UI.renderMenu();
 });
 const btnSharePlay = document.getElementById('btnSharePlay');
-if (btnSharePlay) btnSharePlay.addEventListener('click', () => {
+bindPress(btnSharePlay, () => {
   AudioSys.init(); AudioSys.sfx('select'); copyPlayLink();
 });
-document.getElementById('pauseBtn').addEventListener('click', () => {
+bindPress(document.getElementById('pauseBtn'), () => {
   if (state === 'play') {
     state = 'pause';
     UI.renderPauseToggles();
@@ -4880,7 +4902,7 @@ document.getElementById('pauseBtn').addEventListener('click', () => {
   }
 });
 const pauseTogMusic = document.getElementById('pauseTogMusic');
-if (pauseTogMusic) pauseTogMusic.addEventListener('click', () => {
+bindPress(pauseTogMusic, () => {
   AudioSys.init();
   AudioSys.setMusicOn(!save.music);
   if (save.music && state !== 'play') AudioSys.play('menu');
@@ -4888,19 +4910,19 @@ if (pauseTogMusic) pauseTogMusic.addEventListener('click', () => {
   AudioSys.sfx('select');
 });
 const pauseTogSfx = document.getElementById('pauseTogSfx');
-if (pauseTogSfx) pauseTogSfx.addEventListener('click', () => {
+bindPress(pauseTogSfx, () => {
   AudioSys.init();
   save.sfx = !save.sfx;
   persist();
   UI.renderPauseToggles();
   AudioSys.sfx('select');
 });
-document.getElementById('pauseResume').addEventListener('click', () => {
+bindPress(document.getElementById('pauseResume'), () => {
   state = 'play';
   UI.show(null);
 });
-document.getElementById('pauseQuit').addEventListener('click', () => { UI.goMenu(); });
-document.getElementById('resAgain').addEventListener('click', () => {
+bindPress(document.getElementById('pauseQuit'), () => { UI.goMenu(); });
+bindPress(document.getElementById('resAgain'), () => {
   const d = UI.lastResult;
   AudioSys.sfx('select');
   if (d.mode === 'adventure') startGame('adventure', { level: d.level });
@@ -4914,13 +4936,13 @@ document.getElementById('resAgain').addEventListener('click', () => {
   }
   else startGame(d.mode);
 });
-document.getElementById('resNext').addEventListener('click', () => {
+bindPress(document.getElementById('resNext'), () => {
   const d = UI.lastResult;
   if (!d || d.mode !== 'adventure' || !d.win) return;
   AudioSys.sfx('select');
   startGame('adventure', { level: Math.min(MAX_LEVEL, d.level + 1) });
 });
-document.getElementById('resMenu').addEventListener('click', () => { UI.goMenu(); });
+bindPress(document.getElementById('resMenu'), () => { UI.goMenu(); });
 
 /* ============================= HOOFDLUS ================================ */
 let lastTime = performance.now();
@@ -5120,33 +5142,17 @@ function reportAppError(label) {
 window.addEventListener('error', (e) => reportAppError(e.message || 'error'));
 window.addEventListener('unhandledrejection', (e) => reportAppError(String(e.reason || 'promise')));
 
-/** Touch/UI: synthetische click als browser geen click afvuurt (iPad/Chrome). */
-function bindUiTapFix() {
-  const onTapEnd = (e) => {
-    try { syncPlayLayer(); ensureMenuScreenActive(); } catch (_) {}
-    const t = e.target;
-    if (!t || !t.closest) return;
-    if (t.id === 'sfForceFresh' || (t.closest && t.closest('#sfForceFresh'))) return;
-    const hit = t.closest('button, .lvl, .char-card:not(.locked), .style-card:not(.locked)');
-    if (!hit || hit.disabled) return;
-    if (hit.id === 'pauseBtn' && state === 'play') return;
-    const scr = hit.closest('.screen');
-    if (scr && !scr.classList.contains('active')) return;
-    hit.dataset.sfTouchAt = String(Date.now());
-    setTimeout(() => {
-      const ts = Number(hit.dataset.sfTouchAt || 0);
-      if (Date.now() - ts > 500) return;
-      if (hit.dataset.sfClickOk === '1') return;
-      try { hit.click(); } catch (_) {}
-    }, 40);
+/** Houd canvas/menu-laag schoon op iPad (geen synthetische clicks — bindPress doet touch). */
+function bindUiLayerWatch() {
+  const tick = () => {
+    try {
+      syncPlayLayer();
+      ensureMenuScreenActive();
+      if (typeof window.sfTunnelNukeOverlay === 'function') window.sfTunnelNukeOverlay();
+    } catch (_) {}
   };
-  document.addEventListener('pointerup', onTapEnd, { passive: true, capture: true });
-  document.addEventListener('touchend', onTapEnd, { passive: true, capture: true });
-  document.addEventListener('click', (e) => {
-    const hit = e.target && e.target.closest
-      ? e.target.closest('button, .lvl, .char-card, .style-card') : null;
-    if (hit) hit.dataset.sfClickOk = '1';
-    setTimeout(() => { if (hit) delete hit.dataset.sfClickOk; }, 150);
-  }, true);
+  document.addEventListener('touchstart', tick, { passive: true, capture: true });
+  document.addEventListener('pointerdown', tick, { passive: true, capture: true });
+  setInterval(tick, 2000);
 }
-bindUiTapFix();
+bindUiLayerWatch();

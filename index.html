@@ -33,7 +33,7 @@
         radial-gradient(ellipse at 80% 0%, rgba(74,125,255,.14), transparent 45%),
         radial-gradient(ellipse at 50% 100%, rgba(67,178,91,.08), transparent 40%),
         linear-gradient(180deg, #151b33 0%, #0a0d18 70%);
-      color:#fff; z-index:20; pointer-events:auto; touch-action:pan-y; }
+      color:#fff; z-index:20; pointer-events:auto; touch-action:manipulation; }
   .screen.active { display:flex; animation: fadeIn .25s ease; }
   @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
   @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.04); } }
@@ -52,7 +52,8 @@
       font-family: inherit;
       box-shadow:0 6px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25);
       transition:transform .06s, filter .15s;
-      touch-action:manipulation; -webkit-touch-callout:none; }
+      touch-action:manipulation; -webkit-touch-callout:none;
+      position:relative; z-index:2; min-height:48px; }
   .btn:active { transform:translateY(4px); box-shadow:0 2px 0 rgba(0,0,0,.35); }
   .mode-btn { width:min(86vw, 480px); padding:16px 20px; font-size:min(5vw,21px); margin:8px 0;
       justify-content:flex-start; }
@@ -301,6 +302,7 @@
 
 <div id="menuScreen" class="screen active">
   <h1 class="title">STICKMAN FIGHTER</h1>
+  <div class="subtitle" id="menuVerLine" style="color:#7cf5ff;font-size:13px;margin-bottom:6px">v1.9.4 · iPad-tap fix</div>
   <div class="subtitle">🌀 Rasengan klaar — moto! &bull; chakra &bull; combo&apos;s &bull; 2 spelers</div>
   <div class="statbar" id="menuStats"></div>
   <div class="subtitle" id="menuDailyHint" style="margin-top:-8px;margin-bottom:4px;font-size:13px"></div>
@@ -546,9 +548,9 @@
 })();
 </script>
 
-<script src="tunnel-check.js?v=193"></script>
-<script src="game.js?v=193"></script>
-<script src="install.js?v=193"></script>
+<script src="tunnel-check.js?v=194"></script>
+<script src="game.js?v=194"></script>
+<script src="install.js?v=194"></script>
 <script>
 (function () {
   function freeUi() {

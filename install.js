@@ -58,18 +58,27 @@
 
   function wireServiceWorker() {
     if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
+    // iPad-entry: geen SW tot taps werken (oude cache doodt knoppen)
+    const skipSw = /[?&]ipad=1\b/.test(location.search) || /[?&]nosw=1\b/.test(location.search);
+    if (skipSw) {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((r) => r.unregister());
+      }).catch(() => {});
+      return;
+    }
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js', { scope: './' }).then((reg) => {
+      navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' }).then((reg) => {
         refreshMenuButton();
+        try { reg.update(); } catch (_) {}
         if (reg.waiting) {
-          toast('Nieuwe versie klaar — herlaad voor updates', 4200);
+          toast('Nieuwe versie klaar — tik «Verse versie»', 4200);
         }
         reg.addEventListener('updatefound', () => {
           const nw = reg.installing;
           if (!nw) return;
           nw.addEventListener('statechange', () => {
             if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-              toast('Update geïnstalleerd — herlaad voor verse game.js', 4500);
+              toast('Update klaar — tik «Verse versie» in menu', 4500);
             }
           });
         });

@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | — | **iPad press:** bindPress(touchend), overlay weg, ipad.html zonder SW, v1.9.4/SW v42. Pages nog 1.7.0 — speel via tunnel `/ipad.html`. |
 | 2026-07-23 | — | **Press-fix:** sanitizeSave TDZ-proof, Verse versie-knop (SW nuke), script ?v=, UI tap-fix alle touch. v1.9.3 / SW v41. Live Pages was nog 1.7.0 (push 403). |
 | 2026-07-23 | **7** | Save: dex kill-counts bewaard, export meta+clipboard, import preview, backup confirm, health-regel. v1.9.2 / SW v40. |
 | 2026-07-23 | **8** | PWA: network-first HTML/JS, offline/online banner, SW update toast, install copy. v1.9.1 / SW v39. |

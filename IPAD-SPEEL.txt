@@ -1,0 +1,18 @@
+STICKMAN FIGHTER — SPEEL OP IPAD (tikken werkt)
+================================================
+
+GitHub Pages (brennyz.github.io) staat VAST op oude v1.7.0 — daar werken knoppen NIET.
+Gebruik één van deze links in Safari:
+
+1) Cloudflare (aanbevolen, geen “click to continue”):
+   https://jacksonville-patrick-builder-feat.trycloudflare.com/ipad.html
+
+2) Localtunnel:
+   https://stickfighter-ipad-b75e.loca.lt/ipad.html
+   (als er een gele waarschuwing is: “Click to Continue”)
+
+Je moet bovenaan zien:  “v1.9.4 · iPad-tap fix”
+Daarna werkt Training / Avontuur / enz.
+
+Als je nog een oud beginscherm-icoon hebt: wis die app, open de link hierboven,
+tik «Verse versie», daarna pas «Zet in app-lade».
