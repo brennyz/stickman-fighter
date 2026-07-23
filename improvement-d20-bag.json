@@ -26,13 +26,7 @@
     "remainingCount": 15,
     "cycle": 2
   },
-  "pending": {
-    "face": 16,
-    "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
-    "rolledAt": "2026-07-23T21:04:22Z",
-    "remainingCount": 15,
-    "cycle": 2
-  },
+  "pending": null,
   "implemented": [
     {
       "face": 2,
@@ -277,6 +271,13 @@
       "note": "fillHudText, calm combo/pips, a11y status",
       "version": "1.12.26",
       "doneAt": "2026-07-23T19:45:10Z",
+      "cycle": 2
+    },
+    {
+      "face": 16,
+      "note": "Pages-only share; tunnel UI hidden off-host; LIVE-LINK clean",
+      "version": "1.14.2",
+      "doneAt": "2026-07-23T21:06:26Z",
       "cycle": 2
     }
   ],
