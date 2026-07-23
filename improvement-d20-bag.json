@@ -309,8 +309,8 @@
       ],
       "commits": [],
       "code": "SceneryArt (cached offscreen pixel tiles), drawSceneryTile, far skyline per thema, pixel wolken/bomen, grond-speckles",
-      "status": "deel 2/4 done",
-      "note": "PLAN 4 delen \u2014 1) scenery pixel-art parallax (v1.15.0, DONE); 2) menu & schermen SVG-iconen (v1.15.1, DONE): alle emoji-knoppen \u2192 inline SVG (home\u00d710, Mats-munt, gamble-dobbel/zwaarden/skip, 7 instellingen-toggles, save/hosting, missies, pauze, result, install, char-random) + SVG_LOCK_ICON ipv \ud83d\udd12 in level/wapen-lijsten; 3) in-game UI: pickups/floaters/banners getekende iconen ipv \u2726\u2605\u2691; 4) final pass: achievements/dex-iconen, weer-per-thema, rest-emoji review. Volgende agent: zeg 'deel 3'"
+      "status": "deel 3/4 done",
+      "note": "PLAN 4 delen \u2014 1) scenery pixel-art parallax (v1.15.0, DONE); 2) menu SVG-iconen (v1.15.1, DONE); 3) in-game canvas-art (v1.15.2, DONE): drawPickupIcon hart/vlam/spiraal/schild, drawStarShape ipv \u2605\u2606 (HUD-rating + bonussteen), getekende baas-vlag ipv \u2691, SUPER-meter bliksem/oog/orb ipv \u26a1\ud83d\udc41\u25c9, drawMiniDie ipv \ud83c\udfb2 in HUD, emoji uit floaters; 4) final pass: achievements/dex-iconen, weer-per-thema, rest-emoji review. Volgende agent: zeg 'deel 4' of '4/4'"
     },
     {
       "id": "summon-weapon-ascend",

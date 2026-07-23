@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.15.1';
+const APP_VERSION = '1.15.2';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 108;
+const SW_CACHE_REV = 109;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -449,6 +449,95 @@ const PICKUP_META = {
   chakra: { color: '#7cf5ff', label: 'CHAKRA' },
   shield: { color: '#9fd8ff', label: 'SCHILD' },
 };
+
+/* ============ IN-GAME ART HELPERS (art-upgrade 3/4) ==================== */
+/** Getekend pickup-icoon (hart/vlam/spiraal/schild) ipv tekstlabel. */
+function drawPickupIcon(c, kind, x, y) {
+  c.save();
+  c.translate(x, y);
+  c.fillStyle = '#0a0d18';
+  if (kind === 'heal') {
+    c.beginPath();
+    c.moveTo(0, 6.5);
+    c.bezierCurveTo(-9.5, -1.5, -5, -9.5, 0, -4);
+    c.bezierCurveTo(5, -9.5, 9.5, -1.5, 0, 6.5);
+    c.fill();
+  } else if (kind === 'rage') {
+    c.beginPath();
+    c.moveTo(0.5, -8);
+    c.quadraticCurveTo(6.5, -1.5, 3.5, 4);
+    c.quadraticCurveTo(2.5, 7, -0.5, 7);
+    c.quadraticCurveTo(-5, 7, -4.5, 2);
+    c.quadraticCurveTo(-6.5, -2, 0.5, -8);
+    c.fill();
+    c.fillStyle = 'rgba(255,255,255,.5)';
+    c.beginPath();
+    c.ellipse(-0.5, 3, 2, 3, 0, 0, TAU);
+    c.fill();
+  } else if (kind === 'chakra') {
+    c.strokeStyle = '#0a0d18';
+    c.lineWidth = 2.4;
+    c.lineCap = 'round';
+    c.beginPath();
+    for (let a = 0; a < TAU * 1.55; a += 0.22) {
+      const rr = 1.2 + a * 1.35;
+      const sx = Math.cos(a) * rr, sy = Math.sin(a) * rr;
+      if (a === 0) c.moveTo(sx, sy); else c.lineTo(sx, sy);
+    }
+    c.stroke();
+  } else {
+    c.beginPath();
+    c.moveTo(0, -8);
+    c.quadraticCurveTo(7, -6.5, 7, -2.5);
+    c.quadraticCurveTo(7, 3.5, 0, 8);
+    c.quadraticCurveTo(-7, 3.5, -7, -2.5);
+    c.quadraticCurveTo(-7, -6.5, 0, -8);
+    c.fill();
+    c.strokeStyle = 'rgba(255,255,255,.55)';
+    c.lineWidth = 1.4;
+    c.beginPath();
+    c.moveTo(0, -5);
+    c.lineTo(0, 4.5);
+    c.stroke();
+  }
+  c.restore();
+}
+
+/** Vijfpuntige ster (gevuld of outline) ipv ★/☆ tekst-glyphs. */
+function drawStarShape(c, x, y, r, color, filled) {
+  c.save();
+  c.translate(x, y);
+  c.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const a = -Math.PI / 2 + i * Math.PI / 5;
+    const rr = i % 2 === 0 ? r : r * 0.45;
+    if (i === 0) c.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
+    else c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
+  }
+  c.closePath();
+  if (filled) { c.fillStyle = color; c.fill(); }
+  else { c.strokeStyle = color; c.lineWidth = 1.6; c.stroke(); }
+  c.restore();
+}
+
+/** Mini-dobbelsteen voor gamble-HUD-regels ipv 🎲. */
+function drawMiniDie(c, x, y, s, color) {
+  c.save();
+  c.fillStyle = color;
+  const half = s / 2;
+  c.beginPath();
+  if (c.roundRect) c.roundRect(x - half, y - half, s, s, s * 0.24);
+  else c.rect(x - half, y - half, s, s);
+  c.fill();
+  c.fillStyle = '#0a0d18';
+  const d = s * 0.22, pr = Math.max(0.8, s * 0.11);
+  for (const [dx, dy] of [[-d, -d], [d, d], [0, 0]]) {
+    c.beginPath();
+    c.arc(x + dx, y + dy, pr, 0, TAU);
+    c.fill();
+  }
+  c.restore();
+}
 
 /* ===================== DAGELIJKSE MISSIES & PRESTATIES ================= */
 const DAILY_DEFS = [
@@ -3802,7 +3891,7 @@ class Fighter {
         a._telegraphed = true;
         if (game.mode === 'training') {
           game.trainTelegraphT = 0.7;
-          game.floater(this.x, this.y - 138, '⚡ CHIDORI — dash/spring!', '#7cf5ff', 16);
+          game.floater(this.x, this.y - 138, 'CHIDORI — dash/spring!', '#7cf5ff', 16);
           haptic(10);
         }
       }
@@ -5484,7 +5573,7 @@ class Game {
     const diff = Math.min(1.5, this.robot.aiDiff || 1);
     this.trainLaserTelegraph = 0.95;
     this.trainLaserCd = rand(8, 12) / diff;
-    this.floater(this.robot.x, this.robot.y - 148, '🔴 Oor-laser — spring!', '#ff9a9a', 15);
+    this.floater(this.robot.x, this.robot.y - 148, 'Oor-laser — spring!', '#ff9a9a', 15);
     haptic(8);
   }
 
@@ -6019,7 +6108,7 @@ class Game {
               AudioSys.sfx('bonus');
               this.score += 5;
               this.burst(b.x + b.w / 2, b.y + b.h / 2, '#ffd75e', 22);
-              this.floater(b.x + b.w / 2, b.y - 22, '★ BONUS +5', '#7cf5ff', 18);
+              this.floater(b.x + b.w / 2, b.y - 22, 'BONUS +5', '#7cf5ff', 18);
             }
           } else {
             AudioSys.sfx('crack');
@@ -6350,8 +6439,7 @@ class Game {
         c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.fill();
         c.strokeStyle = '#fff'; c.lineWidth = 2;
         c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.stroke();
-        c.font = '800 10px sans-serif'; c.textAlign = 'center'; c.fillStyle = '#0a0d18';
-        c.fillText(meta.label, pk.x, y + 4);
+        drawPickupIcon(c, pk.kind, pk.x, y);
         c.restore();
       }
     }
@@ -6513,8 +6601,7 @@ class Game {
       c.fillStyle = 'rgba(0,0,0,.2)';
       c.fillRect(b.x, b.y + b.h - 4, b.w, 4);
       if (b.bonus) {
-        c.fillStyle = '#ffd75e'; c.font = '700 14px sans-serif'; c.textAlign = 'center';
-        c.fillText('★', b.x + b.w / 2, b.y + b.h / 2 + 5);
+        drawStarShape(c, b.x + b.w / 2, b.y + b.h / 2, 7, '#ffd75e', true);
       }
       // barsten
       if (dmg > 0.25) {
@@ -6799,12 +6886,19 @@ class Game {
       c.fillRect(-r / 2, -r / 2, r, r);
       c.restore();
     }
-    // baas-vlag aan het einde
+    // baas-vlag aan het einde (getekend — art-upgrade 3/4)
     if (this.level.boss) {
-      c.font = '900 12px sans-serif';
-      c.textAlign = 'center';
+      const fx0 = x0 + tw + 9;
+      const wave = motionReduced() ? 0 : Math.sin(this.t * 5) * 1.2;
+      c.strokeStyle = '#ff8a9a'; c.lineWidth = 2; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(fx0, y - 8); c.lineTo(fx0, y + 8); c.stroke();
       c.fillStyle = '#ff8a9a';
-      c.fillText('⚑', x0 + tw + 12, y + 4);
+      c.beginPath();
+      c.moveTo(fx0 + 1, y - 8);
+      c.quadraticCurveTo(fx0 + 6, y - 7 + wave, fx0 + 11, y - 5);
+      c.lineTo(fx0 + 1, y - 1);
+      c.closePath();
+      c.fill();
     }
     // bolletje
     const bx = x0 + pr * tw;
@@ -6860,7 +6954,32 @@ class Game {
       this.drawSuperMeterFill(c, bx, by + 20, bw, 11, p.energy / 100, jKind, this.t);
       c.font = '800 10px -apple-system, sans-serif';
       c.fillStyle = 'rgba(255,255,255,.85)'; c.textAlign = 'left';
-      c.fillText(jKind === 'chidori' ? 'SUPER ⚡' : jKind === 'rinnegan' ? 'SUPER 👁' : 'SUPER ◉', bx + 6, by + 29);
+      c.fillText('SUPER', bx + 6, by + 29);
+      // getekend jutsu-icoontje (art-upgrade 3/4): bliksem / oog / orb
+      const ix = bx + 6 + c.measureText('SUPER').width + 9;
+      const iy = by + 25.5;
+      if (jKind === 'chidori') {
+        c.fillStyle = '#a8e0ff';
+        c.beginPath();
+        c.moveTo(ix + 2, iy - 5.5);
+        c.lineTo(ix - 2.5, iy + 1);
+        c.lineTo(ix + 0.3, iy + 1);
+        c.lineTo(ix - 1.5, iy + 5.5);
+        c.lineTo(ix + 3.5, iy - 1);
+        c.lineTo(ix + 0.7, iy - 1);
+        c.closePath();
+        c.fill();
+      } else if (jKind === 'rinnegan') {
+        c.strokeStyle = '#c47aff'; c.lineWidth = 1.4;
+        c.beginPath(); c.ellipse(ix + 1, iy, 5.2, 3.2, 0, 0, TAU); c.stroke();
+        c.fillStyle = '#c47aff';
+        c.beginPath(); c.arc(ix + 1, iy, 1.7, 0, TAU); c.fill();
+      } else {
+        c.strokeStyle = '#7cf5ff'; c.lineWidth = 1.4;
+        c.beginPath(); c.arc(ix + 1, iy, 4.6, 0, TAU); c.stroke();
+        c.fillStyle = '#7cf5ff';
+        c.beginPath(); c.arc(ix + 1, iy, 2, 0, TAU); c.fill();
+      }
       c.font = '800 13px -apple-system, sans-serif';
       c.fillStyle = '#fff';
       c.fillText(`Lv ${save.lvl}`, bx + bw + 12, by + 13);
@@ -6888,21 +7007,25 @@ class Game {
       if (!bossAlive) {
         if (this.stageAlly) {
           c.font = '700 11px sans-serif';
-          c.fillStyle = this.stageAlly.color || '#7cf5ff';
-          c.fillText(`🎲 ${this.stageAlly.name}`, W / 2, 62);
+          const col = this.stageAlly.color || '#7cf5ff';
+          c.fillStyle = col;
+          const txt = this.stageAlly.name;
+          c.fillText(txt, W / 2 + 7, 62);
+          drawMiniDie(c, W / 2 - c.measureText(txt).width / 2 - 3, 58.5, 10, col);
         } else if (this.gambleBossWave > 0) {
           c.font = '700 11px sans-serif';
           c.fillStyle = '#ffb0b8';
-          c.fillText(`🎲 Super-baas mogelijk · golf ${this.gambleBossWave}`, W / 2, 62);
+          const txt = `Super-baas mogelijk · golf ${this.gambleBossWave}`;
+          c.fillText(txt, W / 2 + 7, 62);
+          drawMiniDie(c, W / 2 - c.measureText(txt).width / 2 - 3, 58.5, 10, '#ffb0b8');
         }
       }
       if (p.alive) {
         const hpPct = p.hp / Math.max(1, p.maxhp);
         const proj = starsFromHpPct(hpPct);
-        c.textAlign = 'right';
-        c.font = '800 14px sans-serif';
-        c.fillStyle = '#ffd75e';
-        c.fillText(`${'★'.repeat(proj)}${'☆'.repeat(3 - proj)}`, W - 14, 30);
+        for (let i = 0; i < 3; i++) {
+          drawStarShape(c, W - 52 + i * 19, 26, 8, '#ffd75e', i < proj);
+        }
         c.textAlign = 'center';
         c.font = '700 11px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.7)';
