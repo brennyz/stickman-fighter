@@ -122,21 +122,24 @@ Tunnel-URL staat in `LIVE-LINK.txt` (lokaal, niet in git).
 Geen Play Store nodig: **dezelfde PWA** als op iPad.
 
 1. Zorg dat **GitHub Pages** live is (`git push` → main).
-2. **Deel-link** (voor vrienden):
+2. **Deel-link** (voor vrienden — Android én iPad):
 
-   `https://brennyz.github.io/stickman-fighter/`
+   `https://brennyz.github.io/stickman-fighter/speel.html`
 
-   (In het spel: menu → **Deel link** — gebruikt `bookmarkShare` in `hosting.json`, **niet** `ipad.html`.)
+   Landing met **SPELEN**, QR-code, en installatie-stappen per apparaat.
+   (In het spel: menu → **Deel link** — gebruikt `bookmarkShare`.)
 
-3. Vriend op **Android**: link in **Chrome** → menu **App installeren** / **Toevoegen aan startscherm**, of in-game **Zet in app-lade**.
+3. Vriend op **Android**: speel.html in **Chrome** → SPELEN → **Zet in app-lade** / Chrome ⋮ → **App installeren**.
+   Vriend op **iPad**: speel.html in **Safari** → Delen → **Zet op beginscherm**.
 
 4. Uitgebreide NL-stappen: **[ANDROID-DELEN.txt](./ANDROID-DELEN.txt)**.
 
 | Link | Wanneer |
 |------|---------|
-| `…/stickman-fighter/` | Delen, Android PWA, offline cache |
-| `…/ipad.html` | Optioneel iPad als oude cache problemen geeft (`?ipad=1` zonder SW) |
-| `…/android.html` | Doorverwijzing naar hoofd-build (zelfde als `/`) |
+| `…/speel.html` | **Delen** (QR + stappen Android/iPad) |
+| `…/stickman-fighter/` | Direct spelen (zelfde game) |
+| `…/ipad.html` | Optioneel iPad als oude cache problemen geeft |
+| `…/android.html` | Doorverwijzing naar hoofd-build |
 
 Tunnel (`loca.lt`) **niet** delen met vrienden — alleen thuis/dev.
 

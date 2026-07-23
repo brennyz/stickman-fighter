@@ -55,9 +55,9 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.12.1';
+const APP_VERSION = '1.12.2';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 64;
+const SW_CACHE_REV = 65;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -858,7 +858,7 @@ function sharePlayLink() {
       try {
         await navigator.share({
           title: 'Stickman Fighter',
-          text: 'Gratis stickman vechtspel — Android, iPad & touch',
+          text: 'Gratis stickman vechtspel — open de link, tik SPELEN (Android + iPad + PC)',
           url,
         });
         return;
@@ -902,14 +902,14 @@ function githubPagesRootUrl() {
 async function resolveSharePlayUrl() {
   const { hosting, liveUrl } = await loadHostingBundle();
   const j = hosting || {};
-  if (j.bookmarkShare) return j.bookmarkShare.replace(/\/?$/, '/') ;
-  if (j.primary && String(j.primary).includes('github.io')) return j.primary.replace(/\/?$/, '/') ;
-  if (j.githubPages) return String(j.githubPages).replace(/\/?$/, '/') ;
+  if (j.bookmarkShare) return j.bookmarkShare;
+  if (j.primary && String(j.primary).includes('github.io')) return j.primary.replace(/\/?$/, '/') + 'speel.html';
+  if (j.githubPages) return String(j.githubPages).replace(/\/?$/, '/') + 'speel.html';
   const gh = githubPagesRootUrl();
-  if (gh) return gh;
+  if (gh) return gh + 'speel.html';
   if (location.hostname.endsWith('.github.io')) {
     const base = location.href.split('?')[0].split('#')[0];
-    return base.replace(/\/ipad\.html$/i, '/').replace(/\/index\.html$/i, '/');
+    return base.replace(/\/(ipad|index|speel)\.html$/i, '/') + 'speel.html';
   }
   if (/\.loca\.lt$/i.test(location.hostname)) {
     return j.bookmarkShare || j.githubPages || j.primary || (location.origin + '/');

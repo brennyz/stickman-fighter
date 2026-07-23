@@ -13,18 +13,26 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.12.1",
-    "swCache": "stickfighter-app-v64",
-    "gameJsQuery": "game.js?v=214",
-    "featureBranch": "cursor/mats-coin-aim-b75e",
-    "pushBlocked": "Cloud-agent git push → 403; merge/push lokaal of fix repo-koppeling in Cursor Dashboard (zie AGENTS.md)."
+    "appVersion": "1.12.2",
+    "swCache": "stickfighter-app-v65",
+    "gameJsQuery": "game.js?v=215",
+    "featureBranch": "cursor/android-share-b75e",
+    "pushBlocked": "Cloud-agent git push → 403; merge/push lokaal of fix repo-koppeling in Cursor Dashboard (zie AGENTS.md).",
+    "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html"
   },
   "userWishlist": [
+    {
+      "id": "w-20260723T173249",
+      "from": "user",
+      "text": "Push main zodat Pages speelbaar is voor Android/iPad",
+      "status": "open",
+      "updated": "2026-07-23"
+    },
     {
       "id": "unified-agents",
       "from": "iPad/mobile",
       "text": "Alle agents op dezelfde pagina /zelfde context; iPad Cursor net zoveel kunnen als Mac.",
-      "status": "docs+handoff",
+      "status": "done-in-code",
       "updated": "2026-07-23"
     },
     {
@@ -43,6 +51,10 @@
     "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md."
   ],
   "sessionLog": [
+    {
+      "at": "2026-07-23T17:32:49Z",
+      "summary": "v1.12.2 speel.html share landing + agent-status/log scripts"
+    },
     {
       "at": "2026-07-23T17:10:00Z",
       "summary": "agent-handoff.json + AGENTS.md toegevoegd; uitleg iPad vs één agent-run; env repos:null → push fix in dashboard."

@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | — | **speel.html + agent memory:** deel-landing QR/Android/iPad, agent-status.sh / agent-log.sh. v1.12.2 / SW v65. |
 | 2026-07-23 | — | **Android delen:** bookmarkShare, Deel link → Pages root, Web Share, ANDROID-DELEN.txt, install-stappen. v1.12.1 / SW v64. |
 | 2026-07-23 | — | **Agent handoff:** AGENTS.md, agent-handoff.json, CURSOR-EEN-AGENT.txt — gedeelde context iPad/Mac; dashboard repo-koppeling voor push. |
 | 2026-07-23 | — | **Mats bonus:** muntjes-modus, shuriken anti-spam (3/1,4s + cd), joystick-mik voor shuriken. v1.12.0 / SW v63. |

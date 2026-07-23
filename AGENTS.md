@@ -28,32 +28,37 @@ Stickman Fighter wordt door **meerdere cloud-agent runs** aangepast (iPad-app, M
    Geen Cursor-terminal — zie `IPAD-GEEN-COMMANDO.txt`.  
    Updates: tunnel-bookmark of Pages na `git push` (lokaal: `GITHUB-PUSH.txt`).
 
-## Wat elke agent **altijd** leest
+## Wat elke agent **altijd** doet bij start
+
+```bash
+./scripts/agent-status.sh   # één overzicht: versie, git, wensen, d20, deel-links
+```
 
 | Bestand | Doel |
 |---------|------|
-| **`agent-handoff.json`** | Open wensen, canonical URL, versie waarheid |
+| **`agent-handoff.json`** | Open wensen, canonical URL, versie waarheid, sessielog |
 | **`IMPROVEMENT.md`** | d20-loop, agent log, veilig wijzigen |
 | **`IPAD-GEEN-COMMANDO.txt`** | Wat Mats op iPad wél/niet doet |
 
-## Wat elke agent **bij afloop** bijwerkt
-
-1. `userWishlist` in **`agent-handoff.json`** (status `done-in-code` / `open`).  
-2. Korte regel in **`IMPROVEMENT.md`** agent log.  
-3. `codeTruth` in handoff (versie, branch) na release.
-
-Handmatig wens toevoegen (Mac terminal):
+## Wat elke agent **bij afloop** doet
 
 ```bash
-# Voorbeeld — of gewoon in chat; agent zet het in JSON
-node -e "
-const fs=require('fs');
-const p='agent-handoff.json';
-const j=JSON.parse(fs.readFileSync(p,'utf8'));
-j.userWishlist.unshift({id:'w-'+Date.now(),from:'user',text:'JOUW TEKST',status:'open',updated:new Date().toISOString().slice(0,10)});
-fs.writeFileSync(p, JSON.stringify(j,null,2)+'\n');
-"
+./scripts/agent-log.sh "wat is er gedaan (1 zin)" [--done wish-id] [--wish "nieuwe wens"]
 ```
+
+Dat vult `sessionLog` (max 25) en wishlist-status in `agent-handoff.json`. Daarnaast:
+
+1. Korte regel in **`IMPROVEMENT.md`** agent log.  
+2. `codeTruth` in handoff (versie, branch) na release.
+
+## Deel-link (spelers werven — Android + iPad)
+
+De canonieke deel-URL is **`speel.html`** (landing met SPELEN-knop, QR-code en
+per-platform installatie-stappen — Android/Chrome én iPad/Safari):
+
+- `hosting.json → bookmarkShare` = `https://brennyz.github.io/stickman-fighter/speel.html`
+- In-game **Deel link** en Web Share gebruiken die URL.
+- **Nooit** `ipad.html` of tunnel-links delen met nieuwe spelers.
 
 ## Branch naming (cloud agent)
 

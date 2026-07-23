@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#151b33">
+<title>Speel Stickman Fighter — gratis op Android, iPad & PC</title>
+<meta name="description" content="Gratis stickman vechtspel. Open de link, tik Spelen, en zet het als app op je scherm. Android (Chrome) en iPad (Safari).">
+<meta property="og:title" content="Stickman Fighter — speel gratis">
+<meta property="og:description" content="Rasengan, monsters, 2 spelers op één scherm. Android + iPad + PC.">
+<meta property="og:image" content="./icons/icon-512.png">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="manifest" href="./manifest.webmanifest">
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; background:radial-gradient(circle at 50% 20%, #1a2342 0%, #0a0d18 70%);
+    color:#eef2ff; font-family: system-ui, -apple-system, sans-serif; display:flex; flex-direction:column;
+    align-items:center; padding:28px 18px 40px; text-align:center; }
+  .icon { width:104px; height:104px; border-radius:24px; box-shadow:0 8px 30px rgba(0,0,0,.6); }
+  h1 { font-size:34px; margin:14px 0 4px; color:#ffd75e; letter-spacing:1px; }
+  .sub { color:#a8b8e8; font-size:15px; margin:0 0 22px; max-width:420px; }
+  .play { display:inline-block; padding:20px 56px; border-radius:20px; font-size:26px; font-weight:800;
+    background:linear-gradient(180deg,#ffe259,#c97a20); color:#2a1a00; text-decoration:none;
+    box-shadow:0 6px 24px rgba(255,190,60,.35); }
+  .play:active { transform:scale(.97); }
+  .card { width:min(94vw,460px); background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12);
+    border-radius:16px; padding:16px 18px; margin-top:16px; text-align:left; font-size:14.5px; line-height:1.55; }
+  .card b { color:#ffd75e; }
+  .card .step { display:flex; gap:10px; margin:8px 0; }
+  .card .n { flex:0 0 24px; height:24px; border-radius:50%; background:#223058; color:#7cf5ff;
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; }
+  .qrbox { margin-top:20px; }
+  .qrbox img { width:190px; height:190px; border-radius:12px; background:#fff; padding:8px; }
+  .linkline { margin-top:10px; font-size:13px; color:#7cf5ff; word-break:break-all; }
+  .rowbtns { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; justify-content:center; }
+  .mini { padding:12px 18px; border-radius:12px; border:1px solid rgba(124,245,255,.4);
+    background:rgba(124,245,255,.08); color:#7cf5ff; font-weight:700; font-size:14px; cursor:pointer; }
+  .hide { display:none !important; }
+  footer { margin-top:26px; font-size:12px; color:#5a6a9a; }
+</style>
+</head>
+<body>
+  <img class="icon" src="./icons/icon-192.png" alt="Stickman Fighter">
+  <h1>STICKMAN FIGHTER</h1>
+  <p class="sub">Gratis vechtspel — Rasengan, monsters, 2 spelers op één scherm. Geen download uit een store nodig.</p>
+
+  <a class="play" href="./index.html">▶ SPELEN</a>
+
+  <div class="rowbtns">
+    <button class="mini" id="btnShare" type="button">📤 Deel deze pagina</button>
+    <button class="mini" id="btnCopy" type="button">🔗 Kopieer link</button>
+  </div>
+
+  <div class="card hide" id="stepsAndroid">
+    <b>📱 Android — als app installeren</b>
+    <div class="step"><span class="n">1</span><span>Open deze pagina in <b>Chrome</b> (niet de Instagram/WhatsApp-browser: menu → “Openen in Chrome”).</span></div>
+    <div class="step"><span class="n">2</span><span>Tik <b>SPELEN</b> en daarna in het spelmenu op <b>Zet in app-lade</b>, of Chrome-menu ⋮ → <b>App installeren</b>.</span></div>
+    <div class="step"><span class="n">3</span><span>Open voortaan via het <b>Stickman-icoon</b> — werkt daarna ook offline.</span></div>
+  </div>
+
+  <div class="card hide" id="stepsIos">
+    <b>🍎 iPad / iPhone — op beginscherm</b>
+    <div class="step"><span class="n">1</span><span>Open deze pagina in <b>Safari</b>.</span></div>
+    <div class="step"><span class="n">2</span><span>Tik <b>Delen</b> 📤 (vierkant met pijl) → <b>Zet op beginscherm</b>.</span></div>
+    <div class="step"><span class="n">3</span><span>Open via het icoon — fullscreen, en 2 spelers = iPad liggend (P1 links, P2 rechts).</span></div>
+  </div>
+
+  <div class="card hide" id="stepsDesktop">
+    <b>💻 PC / Mac</b>
+    <div class="step"><span class="n">1</span><span>Klik <b>SPELEN</b> — toetsenbord: A/D lopen, J/K/L aanvallen.</span></div>
+    <div class="step"><span class="n">2</span><span>Chrome/Edge: installatie-icoon in de adresbalk = als app.</span></div>
+    <div class="step"><span class="n">3</span><span>Telefoon of iPad erbij? Scan de QR-code hieronder.</span></div>
+  </div>
+
+  <div class="qrbox" id="qrbox">
+    <div style="font-size:13px;color:#a8b8e8;margin-bottom:8px">Scan met je telefoon of iPad:</div>
+    <img id="qrimg" alt="QR-code naar het spel" loading="lazy">
+    <div class="linkline" id="linkline"></div>
+  </div>
+
+  <footer>PWA · offline na 1× online · save blijft op je eigen apparaat</footer>
+
+<script>
+(function () {
+  var url = location.href.split('?')[0].split('#')[0];
+  var ua = navigator.userAgent;
+  var isAndroid = /Android/i.test(ua);
+  var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  document.getElementById(isAndroid ? 'stepsAndroid' : isIOS ? 'stepsIos' : 'stepsDesktop').classList.remove('hide');
+  if (!isAndroid && !isIOS) {
+    document.getElementById('stepsAndroid').classList.remove('hide');
+    document.getElementById('stepsIos').classList.remove('hide');
+  }
+
+  document.getElementById('linkline').textContent = url.replace(/^https:\/\//, '');
+  var qr = document.getElementById('qrimg');
+  qr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=380x380&margin=2&data=' + encodeURIComponent(url);
+  qr.onerror = function () { document.getElementById('qrbox').classList.add('hide'); };
+  if (location.protocol === 'file:') document.getElementById('qrbox').classList.add('hide');
+
+  document.getElementById('btnShare').addEventListener('click', function () {
+    if (navigator.share) {
+      navigator.share({ title: 'Stickman Fighter', text: 'Gratis stickman vechtspel — speel mee!', url: url }).catch(function () {});
+    } else {
+      copyLink();
+    }
+  });
+  document.getElementById('btnCopy').addEventListener('click', copyLink);
+  function copyLink() {
+    (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(function () {
+      document.getElementById('btnCopy').textContent = '✓ Gekopieerd';
+    }).catch(function () {
+      prompt('Kopieer deze link:', url);
+    });
+  }
+})();
+</script>
+</body>
+</html>

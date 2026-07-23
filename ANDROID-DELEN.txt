@@ -8,13 +8,15 @@ Het is een website + PWA (Progressive Web App): gratis link, installeren als ico
 
 1) Zorg dat de game online staat op een VASTE https-link:
 
-   https://brennyz.github.io/stickman-fighter/
+   https://brennyz.github.io/stickman-fighter/speel.html
 
    (Werkt pas voor iedereen na git push naar main — zie GITHUB-PUSH.txt.
     Tunnel loca.lt is alleen voor thuis/dev, niet delen met vrienden.)
 
-2) In het spel (menu): tik **Deel link** — stuurt WhatsApp / e-mail / etc.
-   Of kopieer handmatig dezelfde URL hierboven.
+─── SNEL DELEN ───
+
+   Deel-link (Android + iPad + PC):
+   https://brennyz.github.io/stickman-fighter/speel.html
 
 ─── WAT JE VRIEND OP ANDROID DOET ───
 
