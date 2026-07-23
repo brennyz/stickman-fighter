@@ -4,15 +4,14 @@
   "remaining": [
     6,
     7,
-    8,
     14,
     20
   ],
   "lastRoll": {
-    "face": 13,
-    "category": "Missies & achievements \u2014 daily loop, beloningen",
-    "rolledAt": "2026-07-23T14:19:46Z",
-    "remainingCount": 5,
+    "face": 8,
+    "category": "PWA & offline \u2014 SW cache, install, standalone",
+    "rolledAt": "2026-07-23T14:21:12Z",
+    "remainingCount": 4,
     "cycle": 0
   },
   "implemented": [
@@ -42,6 +41,13 @@
       "note": "Daily claim UX + claim-all + status copy",
       "version": "1.9.0",
       "doneAt": "2026-07-23T14:20:43Z",
+      "cycle": 0
+    },
+    {
+      "face": 8,
+      "note": "PWA network-first shell + offline banner + SW update toast",
+      "version": "1.9.1",
+      "doneAt": "2026-07-23T14:21:43Z",
       "cycle": 0
     }
   ],
@@ -156,6 +162,13 @@
       "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-07-23T14:19:46Z",
       "remainingCount": 5,
+      "cycle": 0
+    },
+    {
+      "face": 8,
+      "category": "PWA & offline \u2014 SW cache, install, standalone",
+      "rolledAt": "2026-07-23T14:21:12Z",
+      "remainingCount": 4,
       "cycle": 0
     }
   ],

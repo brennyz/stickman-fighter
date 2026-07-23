@@ -56,7 +56,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.9.0';
+const APP_VERSION = '1.9.1';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -4180,6 +4180,7 @@ const UI = {
         'Tip: monsterboek vullen = meer max HP',
         'Tip: “Verder spelen” hervat je laatste modus',
         'Tip: Missies → claim XP (of “Claim alle klaar”)',
+        'Tip: Zet in app-lade → speelt offline na 1× online',
       ];
       const i = Math.floor(Date.now() / 8000) % tips.length;
       tipEl.textContent = tips[i];
@@ -4900,12 +4901,35 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-function updateNetStatus() {
+function updateNetStatus(ev) {
   const el = document.getElementById('netStatus');
   if (!el) return;
   const off = typeof navigator.onLine === 'boolean' && !navigator.onLine;
-  el.hidden = !off;
-  el.textContent = off ? 'Offline — opgeslagen voortgang blijft op dit apparaat' : '';
+  if (off) {
+    el.hidden = false;
+    el.classList.remove('online-flash');
+    el.textContent = 'Offline — save blijft hier · speel uit app-cache';
+    if (ev && ev.type === 'offline') {
+      try { UI.toast('Offline — voortgang blijft op dit apparaat', 3000); } catch (_) {}
+    }
+    return;
+  }
+  if (ev && ev.type === 'online') {
+    el.hidden = false;
+    el.classList.add('online-flash');
+    el.textContent = 'Weer online — verse Pages/SW bij volgende load';
+    try { UI.toast('Weer online', 2200); } catch (_) {}
+    setTimeout(() => {
+      if (navigator.onLine) {
+        el.hidden = true;
+        el.classList.remove('online-flash');
+        el.textContent = '';
+      }
+    }, 3200);
+    return;
+  }
+  el.hidden = true;
+  el.textContent = '';
 }
 window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);

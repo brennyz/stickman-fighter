@@ -17,17 +17,25 @@
   const doneMsg = document.getElementById('installDoneMsg');
 
   let deferredPrompt = null;
+  let refreshing = false;
+
+  function toast(msg, ms) {
+    if (typeof UI !== 'undefined' && UI.toast) UI.toast(msg, ms || 3200);
+  }
 
   function refreshMenuButton() {
     if (!btnMenu || !btnLabel) return;
     if (isStandalone) {
       btnMenu.classList.add('done');
       btnMenu.disabled = true;
-      btnLabel.innerHTML = 'Speelt als app &#10004;<small>Geïnstalleerd vanuit app-lade</small>';
+      const offlineOk = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+      btnLabel.innerHTML = offlineOk
+        ? 'Speelt als app &#10004;<small>Offline-cache actief — save blijft lokaal</small>'
+        : 'Speelt als app &#10004;<small>Geïnstalleerd vanuit app-lade</small>';
     } else {
       btnMenu.classList.remove('done');
       btnMenu.disabled = false;
-      btnLabel.innerHTML = 'Zet in app-lade<small>Één icoon op je beginscherm — tik &amp; speel</small>';
+      btnLabel.innerHTML = 'Zet in app-lade<small>Één icoon · werkt ook offline na 1× online openen</small>';
     }
   }
 
@@ -48,11 +56,45 @@
     else if (screen) screen.classList.remove('active');
   }
 
-  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  function wireServiceWorker() {
+    if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js', { scope: './' }).then((reg) => {
+        refreshMenuButton();
+        if (reg.waiting) {
+          toast('Nieuwe versie klaar — herlaad voor updates', 4200);
+        }
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener('statechange', () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+              toast('Update geïnstalleerd — herlaad voor verse game.js', 4500);
+            }
+          });
+        });
+      }).catch(() => {});
+    });
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      // Eén soft reload na SW-claim zodat Pages/PWA niet op oude shell blijft
+      try { toast('App-cache bijgewerkt', 2200); } catch (_) {}
+    });
+
+    navigator.serviceWorker.addEventListener('message', (ev) => {
+      const data = ev.data || {};
+      if (data.type === 'SF_SW_ACTIVATED' && data.cache) {
+        try {
+          sessionStorage.setItem('sf_sw_cache', data.cache);
+        } catch (_) {}
+        refreshMenuButton();
+      }
     });
   }
+
+  wireServiceWorker();
 
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
@@ -65,6 +107,7 @@
     deferredPrompt = null;
     refreshMenuButton();
     if (doneMsg) doneMsg.style.display = 'block';
+    toast('In app-lade gezet — open via het icoon', 3600);
   });
 
   async function triggerNativeInstall() {

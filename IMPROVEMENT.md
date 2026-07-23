@@ -44,7 +44,7 @@ Staat: `improvement-d20-bag.json` (commit na roll + na afronden).
 | **18** Char select | Goed — UI/stats; geen roster balance. |
 | **12** Content | Goed — dex/cosmetic; geen loop-slop. |
 
-**Conclusie:** ja, goede weg — blijf **één thema**, checklist, SW bump. Open: **deploy push** (403), zak **d6,d7,d8,d14,d20**.
+**Conclusie:** ja, goede weg — blijf **één thema**, checklist, SW bump. Open: **deploy push** (403), zak **d6,d7,d14,d20**.
 
 | d# | Categorie | Voorbeelden (klein & veilig) |
 |----|-----------|------------------------------|
@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | **8** | PWA: network-first HTML/JS, offline/online banner, SW update toast, install copy. v1.9.1 / SW v39. |
 | 2026-07-23 | **13** | Missies: claim-UX, claim-all, statuscopy, dagbonus-hints, geen grind-wijziging. v1.9.0 / SW v38. |
 | 2026-07-23 | — | **d20 v3:** PENDING-lock, unroll, preflight (check+smoke), history/force. Smoke script. Diagnose tap=load-crash. |
 | 2026-07-23 | — | **Chrome tap fix:** `MAX_LEVEL` vóór `sanitizeSave()` — game.js crashte, geen handlers. v1.8.9 / SW v37. |
