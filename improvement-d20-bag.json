@@ -7,14 +7,13 @@
     7,
     9,
     14,
-    15,
     20
   ],
   "lastRoll": {
-    "face": 17,
-    "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
-    "rolledAt": "2026-07-23T18:28:45Z",
-    "remainingCount": 6,
+    "face": 15,
+    "category": "Onboarding \u2014 tips, eerste speelminuut, help",
+    "rolledAt": "2026-07-23T18:30:15Z",
+    "remainingCount": 5,
     "cycle": 1
   },
   "pending": null,
@@ -192,6 +191,13 @@
       "note": "try/catch + toasts persist/import/loop/UI",
       "version": "1.12.14",
       "doneAt": "2026-07-23T18:30:00Z",
+      "cycle": 1
+    },
+    {
+      "face": 15,
+      "note": "1 hint/modus geen toast-stack + help chips",
+      "version": "1.12.15",
+      "doneAt": "2026-07-23T18:31:07Z",
       "cycle": 1
     }
   ],
@@ -517,6 +523,13 @@
       "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
       "rolledAt": "2026-07-23T18:28:45Z",
       "remainingCount": 6,
+      "cycle": 1
+    },
+    {
+      "face": 15,
+      "category": "Onboarding \u2014 tips, eerste speelminuut, help",
+      "rolledAt": "2026-07-23T18:30:15Z",
+      "remainingCount": 5,
       "cycle": 1
     }
   ]

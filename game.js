@@ -60,9 +60,9 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.12.14';
+const APP_VERSION = '1.12.15';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 77;
+const SW_CACHE_REV = 78;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -977,51 +977,53 @@ function ensureTipsSeen() {
   if (!save.tipsSeen || typeof save.tipsSeen !== 'object') save.tipsSeen = {};
 }
 
-function showModeOnboarding(mode) {
+function modeOnboardingSeen(mode) {
   ensureTipsSeen();
-  const key = 'mode_' + mode;
-  if (save.tipsSeen[key]) return;
-  const msgs = {
-    adventure: 'Avontuur: groen=HP · oranje=rage · blauw=chakra/schild · vol chakra → 🌀',
-    training: 'Training: ontwijk lasers · vol chakra → 🌀 · 2 rondes winnen',
-    wall: 'Muur: combo = sneller sloop · beat je record vóór timer 0',
-    versus: '2 spelers: P1 links · P2 rechts · liggend iPad · best-of-3',
-    coinrun: 'Mats bonus: munten pakken · joystick ↑ mikken · shuriken max 3× snel',
-  };
-  if (!msgs[mode]) return;
-  save.tipsSeen[key] = 1;
-  if (mode === 'adventure' || mode === 'training') save.tipsSeen.chakra = 1;
-  persist();
-  setTimeout(() => UI.toast(msgs[mode], 4400), 900);
+  return !!(save.tipsSeen['onboard_' + mode] || save.tipsSeen['mode_' + mode]);
 }
 
-function playModeHint(g, mode) {
-  if (!g) return;
+/** Eén hint per modus: in-gevecht regel, geen extra toast (geen stapel met welcome). */
+function applyModeOnboarding(mode, g) {
+  if (!g || !mode) return;
   ensureTipsSeen();
-  const key = 'hint_' + mode;
+  const key = 'onboard_' + mode;
   if (save.tipsSeen[key]) return;
   save.tipsSeen[key] = 1;
+  save.tipsSeen['mode_' + mode] = 1;
+  save.tipsSeen['hint_' + mode] = 1;
+  if (mode === 'adventure' || mode === 'training') save.tipsSeen.chakra = 1;
+  if (mode === 'coinrun') save.tipsSeen.hint_coinrun = 1;
   persist();
   const touch = IS_TOUCH;
   const lines = {
     adventure: touch
-      ? 'Eerste minuut: links joystick · rechts slaan · pak groene bolletjes'
-      : 'Eerste minuut: A/D lopen · J/K/L slaan · groene bol = HP',
+      ? 'Eerste minuut: links lopen · rechts slaan · groen = HP · vol chakra = 🌀'
+      : 'Eerste minuut: A/D · J/K/L · groen = HP · chakra vol → U',
     training: touch
-      ? 'Eerste minuut: ontwijk · vol chakra-balk → tik 🌀'
-      : 'Eerste minuut: ontwijk · chakra vol → U (speciaal)',
+      ? 'Eerste minuut: ontwijk rode laser · chakra vol → tik 🌀'
+      : 'Eerste minuut: ontwijk lasers · chakra vol → U',
     wall: touch
-      ? 'Eerste minuut: sla snel achter elkaar · combo telt mee'
-      : 'Eerste minuut: combo = meer schade per steen',
+      ? 'Eerste minuut: combo-knop vol houden · meer schade per steen'
+      : 'Eerste minuut: snelle combo = sneller sloop',
     versus: touch
-      ? 'Eerste minuut: P1 linker helft · P2 rechter helft'
-      : 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+123',
+      ? 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best'
+      : 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5',
     coinrun: touch
-      ? 'Mats: pak gouden munten · roze vliegers = +3 met shuriken'
-      : 'Munten + mik met joystick · geen shuriken-spam',
+      ? 'Eerste minuut: munten · joystick ↑ mik · roze vlieger = +3'
+      : 'Munten pakken · mik met joystick · max 3 shuriken snel',
   };
   g.modeHintLine = lines[mode] || lines.adventure;
-  g.hint = 7.5;
+  g.hint = 8;
+}
+
+function showModeOnboarding(mode) {
+  /* legacy no-op — gebruik applyModeOnboarding(game, mode) */
+  ensureTipsSeen();
+  if (!save.tipsSeen['mode_' + mode]) save.tipsSeen['mode_' + mode] = 1;
+}
+
+function playModeHint(g, mode) {
+  applyModeOnboarding(mode, g);
 }
 
 function maybeWelcomeToast() {
@@ -1030,8 +1032,9 @@ function maybeWelcomeToast() {
   save.tipsSeen.welcome = 1;
   persist();
   setTimeout(() => {
-    UI.toast('Welkom! Kies Avontuur of Training · ❓ Tips = volledige uitleg', 4800);
-  }, 1400);
+    if (state === 'play') return;
+    userToast('Welkom! ❓ Tips in het menu · bij eerste keer per modus: één korte hint bovenin', 4200);
+  }, 2400);
 }
 
 const xpNeed = lvl => 60 + (lvl - 1) * 40;
@@ -3735,7 +3738,7 @@ class Game {
     this.pickups = this.pickups || [];
     this.banner(`LEVEL ${n}`, 1.4, '#ffd75e', 54);
     AudioSys.play(this.level.boss ? 'boss' : 'battle');
-    if (n === 1 && save.lvl === 1 && !save.tipsSeen.hint_adventure) this.hint = 6;
+    if (n === 1 && save.lvl === 1 && !modeOnboardingSeen('adventure')) this.hint = 6;
   }
 
   nextWave() {
@@ -4218,14 +4221,12 @@ class Game {
     this.player.face = 1;
     this.inputLocked = false;
     this.banner('MATS · MUNTJES BONUS', 1.5, '#ffd75e', 46);
-    setTimeout(() => {
-      try { this.banner('Joystick ↑ = hoog mikken · vliegers = +3 munten', 1.8, '#7cf5ff', 24); } catch (_) {}
-    }, 900);
-    AudioSys.play('battle');
-    if (!save.tipsSeen.hint_coinrun) {
-      save.tipsSeen.hint_coinrun = 1;
-      persist();
+    if (!modeOnboardingSeen('coinrun')) {
+      setTimeout(() => {
+        try { this.banner('Joystick ↑ = hoog mikken · vliegers = +3 munten', 1.8, '#7cf5ff', 24); } catch (_) {}
+      }, 900);
     }
+    AudioSys.play('battle');
   }
 
   spawnCoinPickup() {
@@ -5665,6 +5666,7 @@ const UI = {
           });
         }
         if (id === 'pauseScreen') this.refreshPauseSubtitle();
+        if (id === 'helpScreen') this.renderHelp();
       } else if (game?.mode === 'versus') {
         this.refreshPauseSubtitle();
       }
@@ -5674,6 +5676,25 @@ const UI = {
       console.error('[Stickman] UI.show', err);
     }
     syncPlayLayer();
+  },
+
+  renderHelp() {
+    const host = document.getElementById('helpModeChips');
+    if (!host) return;
+    const touch = IS_TOUCH ? 'touch' : 'toetsenbord';
+    const modes = [
+      { id: 'adventure', label: 'Avontuur', tip: 'Groen HP · oranje rage · blauw chakra · 🌀 vol' },
+      { id: 'training', label: 'Training', tip: 'Lasers ontwijken · 2 rondes · Robot Chidori' },
+      { id: 'wall', label: 'Muur', tip: '60s · combo = sneller · beat record' },
+      { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
+      { id: 'coinrun', label: 'Mats', tip: 'Munten · mik ↑ · vliegers +3' },
+    ];
+    host.innerHTML = modes.map((m) => {
+      const seen = modeOnboardingSeen(m.id);
+      return `<div class="step-card" style="margin:6px 0;padding:10px 12px">` +
+        `<b>${m.label}</b>${seen ? ' <span style="color:#7cfc8a;font-size:11px">✓ hint gezien</span>' : ''}` +
+        `<div style="opacity:.88;margin-top:4px">${m.tip} · ${touch}</div></div>`;
+    }).join('');
   },
 
   syncTouchClass() {
@@ -6456,8 +6477,7 @@ function startGame(mode, opts) {
   state = 'play';
   try { AudioSys.setPaused(false); } catch (_) {}
   try { recordLastPlay(mode, opts); } catch (_) {}
-  try { showModeOnboarding(mode); } catch (_) {}
-  try { playModeHint(game, mode); } catch (_) {}
+  try { applyModeOnboarding(mode, game); } catch (_) {}
   try { UI.show(null); } catch (_) { syncPlayLayer(); }
   try {
     AudioSys.init();
@@ -6499,7 +6519,11 @@ bindPress(document.getElementById('btnAdventure'), () => {
 const btnContinue = document.getElementById('btnContinue');
 bindPress(btnContinue, () => {
   AudioSys.init(); AudioSys.sfx('select');
-  if (!resumeLastPlay()) UI.toast('Nog geen sessie — kies een modus', 2400);
+  try {
+    if (!resumeLastPlay()) userToast('Nog geen sessie — kies een modus', 2400);
+  } catch (err) {
+    sfReportError('resume', err, 'Verder spelen mislukt — kies een modus');
+  }
 });
 bindPress(document.getElementById('btnTraining'), () => {
   AudioSys.init(); AudioSys.sfx('select'); startGame('training');
@@ -6694,7 +6718,9 @@ if (btnClearSave) btnClearSave.addEventListener('click', () => {
 bindSettingsControls();
 const btnHelp = document.getElementById('btnHelp');
 bindPress(btnHelp, () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.show('helpScreen');
+  AudioSys.init(); AudioSys.sfx('select');
+  UI.renderHelp();
+  UI.show('helpScreen');
 });
 const helpOk = document.getElementById('helpOk');
 bindPress(helpOk, () => { AudioSys.sfx('select'); UI.goMenu(); });
@@ -7136,6 +7162,14 @@ function bootGame() {
   safeCall(maybeWelcomeToast, 'welcome');
   if (!window.__sfGlobalErr) {
     window.__sfGlobalErr = true;
+    window.addEventListener('error', (ev) => {
+      if (window.__sfLoopErr) return;
+      const err = ev.error || new Error(ev.message || 'unknown');
+      sfReportError('window', err);
+      if (state === 'play') {
+        try { recoverToMenu(); } catch (_) {}
+      }
+    });
     window.addEventListener('unhandledrejection', (ev) => {
       if (window.__sfLoopErr) return;
       const r = ev.reason;
