@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Houdt lokale server + één Cloudflare-tunnel levend (zonder elkaar te killen)
+# Lokale server + publieke tunnel (localtunnel — werkt op iPad Safari; trycloudflare DNS faalt hier vaak)
 set -u
 ROOT="/agent/stickman-fighter"
 PORT=8787
-LOG="/tmp/cf-tunnel.log"
 LINK_FILE="$ROOT/LIVE-LINK.txt"
-CF="${CLOUDFLARED_BIN:-/tmp/cloudflared}"
+LT_LOG="/tmp/localtunnel.log"
 TMUX_CONF="/exec-daemon/tmux.portal.conf"
 HTTP_SESSION="sf-http"
-TUNNEL_SESSION="cf-direct"
+LT_SESSION="sf-lt"
+TUNNEL_BACKEND="${TUNNEL_BACKEND:-localtunnel}"
 
 ensure_server() {
   if curl -sf "http://127.0.0.1:$PORT/" >/dev/null; then return 0; fi
@@ -16,26 +16,6 @@ ensure_server() {
     tmux -f "$TMUX_CONF" new-session -d -s "$HTTP_SESSION" -c "$ROOT" -- bash -l
   tmux -f "$TMUX_CONF" send-keys -t "$HTTP_SESSION:0.0" "cd $ROOT && python3 serve.py" C-m
   sleep 1.2
-}
-
-latest_url() {
-  grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$LOG" 2>/dev/null | tail -1 || true
-}
-
-curl_public() {
-  local u="$1"
-  local host="${u#https://}"
-  host="${host%%/*}"
-  local ip code=000 try
-  for try in 1 2 3 4 5; do
-    ip=$(dig +short "$host" @1.1.1.1 2>/dev/null | grep -E '^[0-9.]+$' | head -1 || true)
-    [[ -n "$ip" ]] || ip="104.16.231.132"
-    code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 12 \
-      --resolve "${host}:443:${ip}" "$u/index.html" 2>/dev/null) || code=000
-    [[ "$code" == "200" ]] && break
-    sleep 2
-  done
-  printf '%s' "$code"
 }
 
 url_ok() {
@@ -46,21 +26,22 @@ url_ok() {
   if ! dig +short "$host" @1.1.1.1 2>/dev/null | grep -qE '^[0-9.]'; then
     return 1
   fi
-  [[ "$(curl_public "$u")" == "200" ]]
+  local code
+  code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 18 "$u/index.html" 2>/dev/null) || code=000
+  [[ "$code" == "200" ]]
 }
 
 write_health() {
   local u="$1"
   local ts
   ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-  printf '{"ok":true,"url":"%s","ts":"%s"}\n' "$u" "$ts" > "$ROOT/health.json"
+  printf '{"ok":true,"url":"%s","ts":"%s","provider":"%s"}\n' "$u" "$ts" "$TUNNEL_BACKEND" > "$ROOT/health.json"
 }
 
 write_hosting() {
   local u="$1"
-  local ts stable
+  local ts
   ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-  stable=$(python3 -c "import json;print(json.load(open('$ROOT/hosting.json')).get('stable') or '')" 2>/dev/null || echo "")
   python3 - <<PY
 import json
 from pathlib import Path
@@ -68,100 +49,79 @@ p = Path("$ROOT/hosting.json")
 data = json.loads(p.read_text()) if p.exists() else {}
 data["tunnel"] = "$u"
 data["updated"] = "$ts"
+data["tunnelProvider"] = "$TUNNEL_BACKEND"
 if not data.get("stable"):
-    data["stableHint"] = "Tunnel actief. Bookmark deze link; verandert bij herstart."
+    data["stableHint"] = "Safari-link actief — bookmark deze URL voor je iPad."
 p.write_text(json.dumps(data, indent=2) + "\n")
 PY
 }
 
 write_link() {
   local u="$1"
-  printf '%s\n\nOpen in Safari → «Zet in app-lade».\n' "$u" > "$LINK_FILE"
+  printf '%s\n\nOpen in Safari op iPad → «Zet in app-lade».\n' "$u" > "$LINK_FILE"
   write_health "$u"
   write_hosting "$u"
 }
 
-sync_link_from_health() {
-  local u
-  u=$(python3 -c "import json;print(json.load(open('$ROOT/health.json')).get('url') or '')" 2>/dev/null || true)
-  if [[ -n "$u" && "$u" == *trycloudflare.com* ]]; then
-    local first
-    first=$(head -1 "$LINK_FILE" 2>/dev/null || true)
-    if [[ "$first" != "$u" ]]; then
-      write_link "$u"
-    fi
-  fi
+latest_lt_url() {
+  grep -oE 'https://[a-z0-9-]+\.loca\.lt' "$LT_LOG" 2>/dev/null | tail -1 || true
 }
 
-tunnel_running() {
-  pgrep -f "$CF tunnel --url http://127.0.0.1:$PORT" >/dev/null 2>&1
+lt_running() {
+  pgrep -f "localtunnel.*--port $PORT" >/dev/null 2>&1 || \
+    pgrep -f "node.*localtunnel" >/dev/null 2>&1
 }
 
-start_tunnel() {
+start_localtunnel() {
   ensure_server
-  # Geen globale pkill — alleen cf-direct sessie herstarten
-  tmux -f "$TMUX_CONF" has-session -t "=$TUNNEL_SESSION" 2>/dev/null || \
-    tmux -f "$TMUX_CONF" new-session -d -s "$TUNNEL_SESSION" -c "$ROOT" -- bash -l
-  tmux -f "$TMUX_CONF" send-keys -t "$TUNNEL_SESSION:0.0" C-c
-  sleep 0.8
-  : > "$LOG"
-  tmux -f "$TMUX_CONF" send-keys -t "$TUNNEL_SESSION:0.0" \
-    "$CF tunnel --url http://127.0.0.1:$PORT 2>&1 | tee $LOG" C-m
+  tmux -f "$TMUX_CONF" has-session -t "=$LT_SESSION" 2>/dev/null || \
+    tmux -f "$TMUX_CONF" new-session -d -s "$LT_SESSION" -c "$ROOT" -- bash -l
+  tmux -f "$TMUX_CONF" send-keys -t "$LT_SESSION:0.0" C-c
+  sleep 0.6
+  : > "$LT_LOG"
+  tmux -f "$TMUX_CONF" send-keys -t "$LT_SESSION:0.0" \
+    "npx --yes localtunnel --port $PORT 2>&1 | tee $LT_LOG" C-m
 
-  local url="" code=000
-  for _ in $(seq 1 55); do
+  local url="" i
+  for i in $(seq 1 40); do
     sleep 1
-    url=$(latest_url)
-    if [[ -n "$url" ]]; then
-      code=$(curl_public "$url")
-      [[ "$code" == "200" ]] && break
+    url=$(latest_lt_url)
+    if [[ -n "$url" ]] && url_ok "$url"; then
+      write_link "$url"
+      echo "tunnel up (localtunnel): $url"
+      return 0
     fi
   done
-  if [[ "$code" == "200" && -n "$url" ]]; then
-    write_link "$url"
-    echo "tunnel up: $url"
-    return 0
-  fi
-  echo "tunnel start failed (last $url -> $code)" >&2
+  echo "localtunnel failed (last: $url)" >&2
   return 1
 }
 
 ensure_tunnel() {
-  sync_link_from_health
   local saved
   saved=$(head -1 "$LINK_FILE" 2>/dev/null || true)
-  if url_ok "$saved" && tunnel_running; then
+  if url_ok "$saved" && lt_running; then
     echo "ok: $saved"
     return 0
   fi
   local logurl
-  logurl=$(latest_url)
-  if url_ok "$logurl" && tunnel_running; then
+  logurl=$(latest_lt_url)
+  if [[ -n "$logurl" ]] && url_ok "$logurl" && lt_running; then
     write_link "$logurl"
     echo "ok (log): $logurl"
     return 0
   fi
-  echo "restarting tunnel..."
-  start_tunnel
+  echo "starting localtunnel..."
+  start_localtunnel
 }
 
 if [[ "${1:-}" == "once" ]]; then
   ensure_server
-  if [[ "${FORCE_REDO:-0}" == "1" ]]; then
-    start_tunnel
-  else
-    ensure_tunnel
-  fi
-  exit $?
-fi
-
-if [[ "${FORCE_REDO:-0}" == "1" ]]; then
-  start_tunnel
+  ensure_tunnel
   exit $?
 fi
 
 while true; do
   ensure_server
   ensure_tunnel || true
-  sleep 60
+  sleep 90
 done

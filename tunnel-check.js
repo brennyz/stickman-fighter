@@ -5,6 +5,7 @@
   const titleEl = document.getElementById('tunnelBootTitle');
   const detailEl = document.getElementById('tunnelBootDetail');
   const retryBtn = document.getElementById('tunnelBootRetry');
+  const skipBtn = document.getElementById('tunnelBootSkip');
 
   function show(msg, detail) {
     if (!overlay) return;
@@ -60,7 +61,7 @@
   }
 
   function isTunnelHost(h) {
-    return !!h && (h.endsWith('.trycloudflare.com') || h.endsWith('.cloudflare.com'));
+    return !!h && (h.endsWith('.trycloudflare.com') || h.endsWith('.loca.lt') || h.endsWith('.cloudflare.com'));
   }
 
   function isStaticHost(h) {
@@ -198,18 +199,24 @@
       hint = liveUrl;
     }
     if (isTunnelHost(here)) {
+      try {
+        const probe = await fetch('./index.html?t=' + Date.now(), { cache: 'no-store' });
+        if (probe.ok) {
+          ready();
+          return { ok: true, degraded: true };
+        }
+      } catch (_) {}
       showRetry(
-        'Tunnel herstellen…',
+        'Verbinding traag',
         hint
-          ? 'Als het spel niet start: open de nieuwste link:\n' + hint
-          : 'Server start tunnel opnieuw. Tik Opnieuw over ~10 sec.'
+          ? 'Safari op iPad:\n' + hint + '\n\nOf tik «Toch starten» als de pagina al laadt.'
+          : 'Tik Opnieuw of «Toch starten».'
       );
+      if (skipBtn) skipBtn.style.display = 'inline-block';
     } else {
       showRetry(
         'Geen tunnel-link',
-        hint
-          ? 'Open in Safari:\n' + hint
-          : 'Start lokaal: ./start-local.sh --tunnel-once'
+        hint ? 'Open in Safari:\n' + hint : 'Wacht even en tik Opnieuw.'
       );
     }
     throw new Error('tunnel-unavailable');
@@ -223,8 +230,14 @@
 
   if (retryBtn) {
     retryBtn.addEventListener('click', () => {
+      if (skipBtn) skipBtn.style.display = 'none';
       window.sfTunnelBoot = boot();
       window.sfTunnelBoot.catch(() => {});
+    });
+  }
+  if (skipBtn) {
+    skipBtn.addEventListener('click', () => {
+      ready();
     });
   }
 })();
