@@ -17,7 +17,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.6.1';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -363,8 +363,13 @@ function copyPlayLink() {
   const go = async () => {
     let url = location.href.split('?')[0];
     try {
+      const live = await fetch('./LIVE-LINK.txt?t=' + Date.now(), { cache: 'no-store' }).then(r => r.text());
+      const line = live.split('\n').find(l => l.startsWith('https://'));
+      if (line) url = line.trim();
+    } catch (_) {}
+    try {
       const j = await fetch('./hosting.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.json());
-      url = j.tunnel || j.stable || j.githubPages || url;
+      if (!url || url.includes('loca.lt')) url = j.tunnel || j.stable || j.githubPages || url;
     } catch (_) {}
     try {
       await navigator.clipboard.writeText(url);
@@ -3560,20 +3565,26 @@ const UI = {
     const linkEl = document.getElementById('hostingLink');
     const hintEl = document.getElementById('hostingHint');
     if (!linkEl) return;
-    fetch('./hosting.json?t=' + Date.now(), { cache: 'no-store' })
-      .then(r => r.json())
-      .then(j => {
-        const url = j.stable || j.githubPages || j.netlifyUrl || j.tunnel || headLiveFromPage();
+    Promise.all([
+      fetch('./hosting.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.json()).catch(() => ({})),
+      fetch('./LIVE-LINK.txt?t=' + Date.now(), { cache: 'no-store' }).then(r => r.text()).catch(() => ''),
+    ]).then(([j, liveTxt]) => {
+        const liveLine = (liveTxt || '').split('\n').find(l => l.startsWith('https://'));
+        const liveUrl = liveLine ? liveLine.trim() : '';
+        const url = j.stable || j.githubPages || liveUrl || j.tunnel || j.netlifyUrl || headLiveFromPage();
         linkEl.textContent = url || '—';
         let hint = j.stableHint || '';
         if (!hint) {
           if (j.stable) hint = 'Vaste link — zet in Safari op beginscherm.';
           else if (location.hostname.endsWith('.github.io')) hint = 'GitHub Pages actief.';
           else if (location.hostname.endsWith('.netlify.app')) hint = 'Netlify actief.';
-          else hint = 'Tunnel of tijdelijke link — export save bij URL-wissel.';
+          else hint = 'Tunnel-link wisselt — bij 503: kopieer link hierboven opnieuw.';
         }
-        if (j.netlifyReadyAfter && !j.stable && location.hostname.endsWith('.netlify.app') === false) {
-          hint += ` Netlify deploy vanaf ${j.netlifyReadyAfter}.`;
+        if (j.netlifyUrl && !j.stable) {
+          hint += ' Netlify kan «Forbidden» geven tot credits terug zijn — tunnel of GitHub Pages gebruiken.';
+        }
+        if (j.netlifyReadyAfter && !j.stable) {
+          hint += ` Deploy Netlify vanaf ${j.netlifyReadyAfter}.`;
         }
         if (hintEl) hintEl.textContent = hint;
       })

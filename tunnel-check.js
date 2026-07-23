@@ -6,6 +6,9 @@
   const detailEl = document.getElementById('tunnelBootDetail');
   const retryBtn = document.getElementById('tunnelBootRetry');
   const skipBtn = document.getElementById('tunnelBootSkip');
+  const openLinkBtn = document.getElementById('tunnelBootOpenLink');
+
+  const LT_HEADERS = { 'Bypass-Tunnel-Reminder': 'true' };
 
   function show(msg, detail) {
     if (!overlay) return;
@@ -14,12 +17,18 @@
     if (titleEl) titleEl.textContent = msg;
     if (detailEl) detailEl.textContent = detail || '';
     if (retryBtn) retryBtn.style.display = 'none';
+    if (openLinkBtn) openLinkBtn.style.display = 'none';
   }
 
-  function showRetry(msg, detail) {
+  function showRetry(msg, detail, liveUrl) {
     show(msg, detail);
     if (retryBtn) retryBtn.style.display = 'flex';
     if (overlay) overlay.setAttribute('aria-busy', 'false');
+    if (openLinkBtn && liveUrl) {
+      openLinkBtn.style.display = 'inline-block';
+      openLinkBtn.dataset.href = liveUrl;
+      openLinkBtn.textContent = 'Open nieuwe link';
+    }
   }
 
   function hide() {
@@ -35,19 +44,19 @@
   }
 
   async function fetchLiveUrl() {
-    const r = await fetch('./LIVE-LINK.txt?t=' + Date.now(), { cache: 'no-store' });
+    const r = await fetch('./LIVE-LINK.txt?t=' + Date.now(), { cache: 'no-store', headers: LT_HEADERS });
     if (!r.ok) throw new Error('link');
     return parseLiveUrl(await r.text());
   }
 
   async function fetchHealth() {
-    const r = await fetch('./health.json?t=' + Date.now(), { cache: 'no-store' });
+    const r = await fetch('./health.json?t=' + Date.now(), { cache: 'no-store', headers: LT_HEADERS });
     if (!r.ok) throw new Error('health');
     return r.json();
   }
 
   async function fetchHosting() {
-    const r = await fetch('./hosting.json?t=' + Date.now(), { cache: 'no-store' });
+    const r = await fetch('./hosting.json?t=' + Date.now(), { cache: 'no-store', headers: LT_HEADERS });
     if (!r.ok) throw new Error('hosting');
     return r.json();
   }
@@ -76,23 +85,33 @@
     if (!liveUrl || location.protocol === 'file:') return false;
     const liveHost = hostnameOf(liveUrl);
     if (!liveHost || liveHost === location.hostname) return false;
-    show('Nieuwe tunnel-link…', 'Je wordt doorgestuurd naar de actieve server.');
+    show('Nieuwe tunnel-link…', 'Je oude bookmark gaf 503 — doorsturen naar:\n' + liveUrl);
     const base = liveUrl.replace(/\/$/, '');
     window.location.replace(base + location.pathname + location.search + location.hash);
     return true;
   }
 
-  /** Alleen Cloudflare-tunnel URLs — nooit GitHub/Netlify stable hier. */
   function pickTunnelUrl(hosting, liveUrl, health) {
     const candidates = [
       liveUrl,
-      health && health.url,
+      health && health.ok !== false && health.url,
       hosting && hosting.tunnel,
     ].filter(Boolean);
     for (const u of candidates) {
       if (isTunnelHost(hostnameOf(u))) return u;
     }
     return liveUrl || (health && health.url) || (hosting && hosting.tunnel) || '';
+  }
+
+  async function pageLooksBroken() {
+    try {
+      const r = await fetch('./index.html?t=' + Date.now(), { cache: 'no-store', headers: LT_HEADERS });
+      if (!r.ok) return true;
+      const t = (await r.text()).slice(0, 400);
+      return /503\s*-\s*Tunnel Unavailable/i.test(t);
+    } catch (_) {
+      return true;
+    }
   }
 
   function ready() {
@@ -129,7 +148,6 @@
       return { ok: true, stable: true };
     }
 
-    // Optioneel: vaste GitHub/Netlify URL (alleen als expliciet aan)
     if (hosting && hosting.forceStable && stable && isStaticHost(hostnameOf(stable))) {
       if (redirectIfNewHost(stable)) return new Promise(() => {});
     }
@@ -146,11 +164,13 @@
     } catch (_) {}
 
     const tunnelGo = pickTunnelUrl(hosting, liveUrl, health);
-    if (isTunnelHost(here) && tunnelGo) {
+    if (isTunnelHost(here) && tunnelGo && hostnameOf(tunnelGo) !== here) {
       if (redirectIfNewHost(tunnelGo)) return new Promise(() => {});
     }
 
-    if (health && (health.ok || health.static)) {
+    const broken = isTunnelHost(here) ? await pageLooksBroken() : false;
+
+    if (!broken && health && health.ok === true) {
       const url = pickTunnelUrl(hosting, liveUrl, health);
       if (url) {
         try {
@@ -161,14 +181,14 @@
       return { ok: true, url };
     }
 
-    for (let attempt = 1; attempt <= 8; attempt++) {
+    for (let attempt = 1; attempt <= 10; attempt++) {
       show(
-        'Verbinding controleren…',
-        attempt < 8
-          ? `Tunnel opstarten (${attempt}/8)…`
-          : 'Nog even geduld — server herstelt tunnel…'
+        broken ? 'Tunnel herstarten…' : 'Verbinding controleren…',
+        attempt < 10
+          ? `Server maakt nieuwe link (${attempt}/10)…`
+          : 'Nog even — oude loca.lt-links verlopen soms (503).'
       );
-      await new Promise((r) => setTimeout(r, 900 + attempt * 350));
+      await new Promise((r) => setTimeout(r, 800 + attempt * 400));
       try {
         liveUrl = await fetchLiveUrl();
       } catch (_) {}
@@ -177,11 +197,12 @@
       } catch (_) {}
 
       const go = pickTunnelUrl(hosting, liveUrl, health);
-      if (isTunnelHost(here) && go && redirectIfNewHost(go)) {
-        return new Promise(() => {});
+      if (isTunnelHost(here) && go && hostnameOf(go) !== here) {
+        if (redirectIfNewHost(go)) return new Promise(() => {});
       }
 
-      if (health && (health.ok || health.static)) {
+      const stillBroken = isTunnelHost(here) ? await pageLooksBroken() : false;
+      if (!stillBroken && health && health.ok === true) {
         if (go) {
           try {
             localStorage.setItem('sf_live_url', go);
@@ -192,31 +213,35 @@
       }
     }
 
-    let hint = '';
+    let hint = liveUrl || '';
     try {
-      hint = localStorage.getItem('sf_live_url') || liveUrl || (hosting && hosting.tunnel) || '';
-    } catch (_) {
-      hint = liveUrl;
-    }
+      hint = hint || localStorage.getItem('sf_live_url') || (hosting && hosting.tunnel) || '';
+    } catch (_) {}
+
     if (isTunnelHost(here)) {
       try {
-        const probe = await fetch('./index.html?t=' + Date.now(), { cache: 'no-store' });
+        const probe = await fetch('./game.js?t=' + Date.now(), { cache: 'no-store', headers: LT_HEADERS });
         if (probe.ok) {
           ready();
           return { ok: true, degraded: true };
         }
       } catch (_) {}
       showRetry(
-        'Verbinding traag',
+        '503 — tunnel verlopen',
+        (hint
+          ? 'Oude bookmark werkt niet meer.\n\nNieuwe link:\n' + hint + '\n\nTik «Open nieuwe link» of wacht en tik Opnieuw.'
+          : 'Localtunnel is even weg. Tik Opnieuw over ~1 minuut.') +
+          (hosting && hosting.netlifyUrl
+            ? '\n\nNetlify (' + hosting.netlifyUrl + ') kan Forbidden geven tot credits terug zijn — gebruik tunnel of GitHub Pages.'
+            : ''),
         hint
-          ? 'Safari op iPad:\n' + hint + '\n\nOf tik «Toch starten» als de pagina al laadt.'
-          : 'Tik Opnieuw of «Toch starten».'
       );
       if (skipBtn) skipBtn.style.display = 'inline-block';
     } else {
       showRetry(
         'Geen tunnel-link',
-        hint ? 'Open in Safari:\n' + hint : 'Wacht even en tik Opnieuw.'
+        hint ? 'Open in Safari:\n' + hint : 'Wacht even en tik Opnieuw.',
+        hint
       );
     }
     throw new Error('tunnel-unavailable');
@@ -231,6 +256,7 @@
   if (retryBtn) {
     retryBtn.addEventListener('click', () => {
       if (skipBtn) skipBtn.style.display = 'none';
+      if (openLinkBtn) openLinkBtn.style.display = 'none';
       window.sfTunnelBoot = boot();
       window.sfTunnelBoot.catch(() => {});
     });
@@ -238,6 +264,12 @@
   if (skipBtn) {
     skipBtn.addEventListener('click', () => {
       ready();
+    });
+  }
+  if (openLinkBtn) {
+    openLinkBtn.addEventListener('click', () => {
+      const u = openLinkBtn.dataset.href;
+      if (u) window.location.href = u;
     });
   }
 })();
