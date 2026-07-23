@@ -1,0 +1,32 @@
+ANDROID / SPEEL-LINK WERKT NIET? — LEES DIT
+==========================================
+
+PROBLEEM 1 — speel.html geeft 404 / wit scherm
+  Die pagina staat alleen in de NIEUWE code. GitHub Pages is nog OUD
+  (geen push vanaf cloud-agent). Tot je pusht bestaat speel.html niet.
+
+  NU OP ANDROID GEBRUIKEN:
+    https://brennyz.github.io/stickman-fighter/
+    of
+    https://brennyz.github.io/stickman-fighter/index.html
+
+PROBLEEM 2 — overlay “Geen tunnel-link” / spel start niet
+  Oude live versie (v1.7) blokkeert GitHub Pages ten onrechte.
+  Fix zit in nieuwere tunnel-check.js (v1.8.8+). Ook: git push main.
+
+SNELSTE FIX (Mac, 1 minuut)
+  cd stickman-fighter
+  git checkout main
+  git push origin main
+  Wacht 2 min → open speel.html opnieuw.
+
+ZONDER TERMINAL (telefoon browser)
+  github.com → brennyz/stickman-fighter → Add file → upload:
+    speel.html, 404.html, tunnel-check.js (uit je Mac-map)
+  Of: Actions → re-run “Deploy GitHub Pages” na push vanaf Mac.
+
+NA PUSH — DEEL DEZE LINK
+  https://brennyz.github.io/stickman-fighter/speel.html
+
+TOT DIE TIJD — DEEL DEZE
+  https://brennyz.github.io/stickman-fighter/

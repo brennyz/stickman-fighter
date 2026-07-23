@@ -1,11 +1,12 @@
 /* Stickman Fighter — hardened offline cache (PWA) */
-const CACHE = 'stickfighter-app-v65';
+const CACHE = 'stickfighter-app-v66';
 const ASSETS = [
   './',
   './index.html',
   './ipad.html',
   './android.html',
   './speel.html',
+  './404.html',
   './game.js',
   './tunnel-check.js',
   './install.js',

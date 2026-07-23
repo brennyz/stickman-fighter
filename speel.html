@@ -98,6 +98,8 @@
   qr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=380x380&margin=2&data=' + encodeURIComponent(url);
   qr.onerror = function () { document.getElementById('qrbox').classList.add('hide'); };
   if (location.protocol === 'file:') document.getElementById('qrbox').classList.add('hide');
+  // Geen externe QR nodig op telefoon — SPELEN-knop is genoeg
+  if (isAndroid || isIOS) document.getElementById('qrbox').classList.add('hide');
 
   document.getElementById('btnShare').addEventListener('click', function () {
     if (navigator.share) {

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#151b33">
+<title>Stickman Fighter — speel hier</title>
+<style>
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+    background:#0a0d18;color:#eef2ff;font-family:system-ui,sans-serif;text-align:center}
+  h1{color:#ffd75e;font-size:28px;margin:0 0 8px}
+  p{color:#a8b8e8;max-width:400px;line-height:1.5;margin:0 auto 20px}
+  a.play{display:inline-block;padding:18px 48px;border-radius:18px;font-size:22px;font-weight:800;
+    background:linear-gradient(180deg,#ffe259,#c97a20);color:#2a1a00;text-decoration:none}
+  .note{margin-top:20px;font-size:13px;color:#7cf5ff;max-width:420px}
+</style>
+</head>
+<body>
+  <div>
+    <h1>STICKMAN FIGHTER</h1>
+    <p id="msg">Deze pagina staat nog niet online — tik hieronder om direct te spelen (Android, iPad, PC).</p>
+    <a class="play" id="go" href="./index.html">▶ SPELEN</a>
+    <p class="note" id="androidNote" style="display:none">Android: blijf in <b>Chrome</b>. Zie je een tunnel-scherm? Tik <b>Toch starten</b> of wacht op update — daarna verdwijnt dat.</p>
+  </div>
+<script>
+(function(){
+  var p = (location.pathname || '').toLowerCase();
+  if (p.indexOf('speel') >= 0) {
+    document.getElementById('msg').textContent =
+      'Welkom! Deel-link werkt — tik SPELEN voor het spel.';
+  }
+  if (/Android/i.test(navigator.userAgent)) {
+    document.getElementById('androidNote').style.display = 'block';
+  }
+  var go = document.getElementById('go');
+  go.href = './index.html' + (location.search || '');
+})();
+</script>
+</body>
+</html>
