@@ -405,7 +405,8 @@
   </div>
   <div class="step-card">Tip: zet trillingen uit als je in de trein speelt. Power-ups in avontuur: groen = HP, oranje = rage, blauw = chakra of schild.</div>
   <div class="settings-card">
-    <div id="setAppVersion" style="font-size:13px;opacity:.9;margin-bottom:10px">Versie …</div>
+    <div id="setAppVersion" style="font-size:13px;opacity:.9;margin-bottom:8px">Versie …</div>
+    <div id="saveHealthLine" style="font-size:13px;line-height:1.45;color:#cfe0ff;margin-bottom:12px">Save-status laden…</div>
     <button type="button" class="btn tog" id="btnRestoreBackup">&#128190; Herstel save uit backup</button>
     <button type="button" class="btn tog off" id="btnClearSave">&#128465; Nieuwe start (dubbel tikken)</button>
   </div>
@@ -416,7 +417,12 @@
     <div id="hostingCurrent" style="display:none;font-size:11px;opacity:.75;margin-bottom:10px;word-break:break-all"></div>
     <button type="button" class="btn tog" id="btnCopyLink">&#128279; Kopieer vaste speel-link</button>
     <button type="button" class="btn tog" id="btnOpenPlayLink" style="margin-top:8px">&#8599; Open vaste link</button>
-    <textarea id="savePortText" rows="4" style="width:100%;margin-top:12px;border-radius:12px;padding:10px;font-size:11px;background:#0a0d18;color:#cfe0ff;border:1px solid rgba(255,255,255,.15)" placeholder="Plak save JSON om te importeren…"></textarea>
+    <div style="font-weight:900;color:#ffd75e;margin:14px 0 6px">Save export / import</div>
+    <div style="font-size:12px;opacity:.85;margin-bottom:8px;line-height:1.4">
+      Export kopieert JSON (ook clipboard). Import: 1× = preview, 2× = toepassen. Backup blijft bij “Nieuwe start”.
+    </div>
+    <textarea id="savePortText" rows="4" style="width:100%;margin-top:4px;border-radius:12px;padding:10px;font-size:11px;background:#0a0d18;color:#cfe0ff;border:1px solid rgba(255,255,255,.15)" placeholder="Plak save JSON om te importeren…"></textarea>
+    <div id="saveImportPreview" style="display:none;font-size:12px;color:#ffd75e;margin-top:8px;line-height:1.4"></div>
     <button type="button" class="btn tog" id="btnExportSave" style="margin-top:8px">&#128190; Export save</button>
     <button type="button" class="btn tog" id="btnImportSave">&#128229; Import save</button>
   </div>

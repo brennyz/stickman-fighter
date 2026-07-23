@@ -3,15 +3,14 @@
   "cyclesCompleted": 0,
   "remaining": [
     6,
-    7,
     14,
     20
   ],
   "lastRoll": {
-    "face": 8,
-    "category": "PWA & offline \u2014 SW cache, install, standalone",
-    "rolledAt": "2026-07-23T14:21:12Z",
-    "remainingCount": 4,
+    "face": 7,
+    "category": "Save & backup \u2014 import/export, corruptie, migratie",
+    "rolledAt": "2026-07-23T14:21:52Z",
+    "remainingCount": 3,
     "cycle": 0
   },
   "implemented": [
@@ -48,6 +47,13 @@
       "note": "PWA network-first shell + offline banner + SW update toast",
       "version": "1.9.1",
       "doneAt": "2026-07-23T14:21:43Z",
+      "cycle": 0
+    },
+    {
+      "face": 7,
+      "note": "Save health + dex kills fix + import preview",
+      "version": "1.9.2",
+      "doneAt": "2026-07-23T14:22:36Z",
       "cycle": 0
     }
   ],
@@ -169,6 +175,13 @@
       "category": "PWA & offline \u2014 SW cache, install, standalone",
       "rolledAt": "2026-07-23T14:21:12Z",
       "remainingCount": 4,
+      "cycle": 0
+    },
+    {
+      "face": 7,
+      "category": "Save & backup \u2014 import/export, corruptie, migratie",
+      "rolledAt": "2026-07-23T14:21:52Z",
+      "remainingCount": 3,
       "cycle": 0
     }
   ],

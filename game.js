@@ -56,7 +56,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.9.1';
+const APP_VERSION = '1.9.2';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -125,6 +125,7 @@ function restoreSaveFromBackup() {
 /** Corrupte / gemanipuleerde saves veilig maken (localStorage + import). */
 function sanitizeSave(s) {
   const out = Object.assign({}, DEFAULT_SAVE, s);
+  delete out._exportMeta;
   out.lvl = clamp(Math.floor(Number(out.lvl) || 1), 1, 500);
   out.xp = clamp(Math.floor(Number(out.xp) || 0), 0, 999999);
   out.unlocked = clamp(Math.floor(Number(out.unlocked) || 1), 1, MAX_LEVEL);
@@ -169,9 +170,12 @@ function sanitizeSave(s) {
   }
   out.stars = cleanStars;
 
+  // Bewaar kill-counts (Jager-prestatie); clamp corrupte waarden — nooit hard op 1 zetten
   const cleanDex = {};
   for (const [k, v] of Object.entries(out.dex || {})) {
-    if (SPECIES[k] && v) cleanDex[k] = 1;
+    if (!SPECIES[k]) continue;
+    const n = Math.floor(Number(v) || 0);
+    if (n > 0) cleanDex[k] = clamp(n, 1, 999999);
   }
   out.dex = cleanDex;
 
@@ -432,7 +436,59 @@ function trackCombo(n) {
 }
 
 function exportSaveJson() {
-  return JSON.stringify(save, null, 2);
+  const payload = Object.assign({}, sanitizeSave(save), {
+    _exportMeta: {
+      app: APP_VERSION,
+      exportedAt: new Date().toISOString(),
+      key: SAVE_KEY,
+      note: 'Stickman Fighter save — plak in Instellingen → Import',
+    },
+  });
+  return JSON.stringify(payload, null, 2);
+}
+
+function saveHealthSummary() {
+  let backupOk = false;
+  let backupLvl = null;
+  try {
+    const b = readSaveJson(localStorage.getItem(SAVE_BACKUP_KEY));
+    if (b) {
+      backupOk = true;
+      backupLvl = clamp(Math.floor(Number(b.lvl) || 1), 1, 500);
+    }
+  } catch (_) {}
+  let primaryOk = false;
+  try { primaryOk = !!localStorage.getItem(SAVE_KEY); } catch (_) {}
+  return {
+    primaryOk,
+    backupOk,
+    backupLvl,
+    lvl: save.lvl,
+    unlocked: save.unlocked,
+    dex: dexCount(),
+    kills: dexTotalKills(),
+  };
+}
+
+function previewImportSave(text) {
+  if (typeof text !== 'string' || !text.trim()) throw new Error('Plak eerst save-JSON in het vak');
+  if (text.length > 120000) throw new Error('Save te groot of ongeldig');
+  let parsed;
+  try { parsed = JSON.parse(text); } catch (_) {
+    throw new Error('Geen geldige JSON — controleer plaksel');
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Ongeldige save-structuur');
+  }
+  const meta = parsed._exportMeta;
+  delete parsed._exportMeta;
+  const clean = sanitizeSave(Object.assign({}, DEFAULT_SAVE, parsed));
+  clean.stats = Object.assign({}, DEFAULT_SAVE.stats, parsed.stats || {});
+  clean.achievements = Object.assign({}, parsed.achievements || {});
+  clean.stars = Object.assign({}, parsed.stars || {});
+  clean.dex = Object.assign({}, parsed.dex || {});
+  const final = sanitizeSave(clean);
+  return { save: final, meta };
 }
 function sfReportError(where, err) {
   console.error('[Stickman]', where, err);
@@ -490,27 +546,14 @@ function recoverToMenu() {
   }
 }
 function importSaveJson(text) {
-  if (typeof text !== 'string' || text.length > 120000) {
-    throw new Error('Save te groot of ongeldig');
-  }
-  let parsed;
-  try {
-    parsed = JSON.parse(text);
-  } catch (_) {
-    throw new Error('Geen geldige JSON — controleer plaksel');
-  }
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Ongeldige save-structuur');
-  save = sanitizeSave(Object.assign({}, DEFAULT_SAVE, parsed));
-  save.stats = Object.assign({}, DEFAULT_SAVE.stats, parsed.stats || {});
-  save.achievements = Object.assign({}, parsed.achievements || {});
-  save.stars = Object.assign({}, parsed.stars || {});
-  save.dex = Object.assign({}, parsed.dex || {});
-  save = sanitizeSave(save);
+  const { save: next } = previewImportSave(text);
+  save = next;
   persist();
   checkAchievements();
   UI.renderMenu();
   if (UI.renderMissions) UI.renderMissions();
-  UI.toast('Voortgang hersteld!', 2800);
+  if (UI.renderSettings) UI.renderSettings();
+  UI.toast(`Save geïmporteerd · Lv ${save.lvl} · level ${save.unlocked}`, 3200);
 }
 
 function recordLastPlay(mode, opts) {
@@ -4487,7 +4530,16 @@ const UI = {
 
   renderSettings() {
     const verEl = document.getElementById('setAppVersion');
-    if (verEl) verEl.textContent = 'Versie ' + APP_VERSION + ' · save + backup lokaal';
+    if (verEl) verEl.textContent = 'Versie ' + APP_VERSION + ' · save-key ongewijzigd';
+    const healthEl = document.getElementById('saveHealthLine');
+    if (healthEl) {
+      const h = saveHealthSummary();
+      healthEl.innerHTML =
+        `<b>Lv ${h.lvl}</b> · unlock ${h.unlocked} · boek ${h.dex} · kills ${h.kills}<br>` +
+        (h.primaryOk ? '✔ Save OK' : '⚠ Geen primary save') +
+        (h.backupOk ? ` · ✔ Backup (Lv ${h.backupLvl})` : ' · ⚠ Geen backup') +
+        `<br><span style="opacity:.75">Export/import = veiligste overzet · key: ${SAVE_KEY}</span>`;
+    }
     const pct = (v, d) => Math.round((Number(v ?? d)) * 100);
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
     setVal('setMusicVol', pct(save.musicVol, 0.85));
@@ -4650,16 +4702,52 @@ if (btnOpenPlayLink) btnOpenPlayLink.addEventListener('click', async () => {
   if (url) window.open(url, '_blank', 'noopener');
 });
 const btnExportSave = document.getElementById('btnExportSave');
-if (btnExportSave) btnExportSave.addEventListener('click', () => {
+if (btnExportSave) btnExportSave.addEventListener('click', async () => {
   const ta = document.getElementById('savePortText');
-  if (ta) { ta.value = exportSaveJson(); ta.focus(); ta.select(); }
-  UI.toast('Save gekopieerd — bewaar veilig!', 3200);
+  const json = exportSaveJson();
+  if (ta) { ta.value = json; ta.focus(); ta.select(); }
+  let clipped = false;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(json);
+      clipped = true;
+    }
+  } catch (_) {}
+  AudioSys.sfx('select');
+  UI.toast(clipped
+    ? 'Save in klembord + vak — bewaar veilig'
+    : 'Save in vak — selecteer & kopieer handmatig', 3400);
+  UI.renderSettings();
 });
 const btnImportSave = document.getElementById('btnImportSave');
 if (btnImportSave) btnImportSave.addEventListener('click', () => {
   const ta = document.getElementById('savePortText');
-  if (!ta || !ta.value.trim()) return;
-  try { importSaveJson(ta.value); AudioSys.sfx('win'); } catch (e) {
+  const previewEl = document.getElementById('saveImportPreview');
+  if (!ta || !ta.value.trim()) {
+    UI.toast('Plak eerst een save-JSON in het vak', 2600);
+    return;
+  }
+  try {
+    const { save: next, meta } = previewImportSave(ta.value);
+    if (!window.__sfImportConfirm) {
+      window.__sfImportConfirm = true;
+      const metaLine = meta && meta.app ? ` · export v${meta.app}` : '';
+      if (previewEl) {
+        previewEl.style.display = 'block';
+        previewEl.textContent =
+          `Preview: Lv ${next.lvl} · unlock ${next.unlocked} · boek ${Object.keys(next.dex || {}).length}${metaLine}. Tik Import nogmaals om te toepassen.`;
+      }
+      UI.toast('Import-preview — tik Import nogmaals om te laden', 3600);
+      setTimeout(() => { window.__sfImportConfirm = false; }, 8000);
+      return;
+    }
+    window.__sfImportConfirm = false;
+    if (previewEl) { previewEl.style.display = 'none'; previewEl.textContent = ''; }
+    importSaveJson(ta.value);
+    AudioSys.sfx('win');
+  } catch (e) {
+    window.__sfImportConfirm = false;
+    if (previewEl) { previewEl.style.display = 'none'; previewEl.textContent = ''; }
     UI.toast((e && e.message) ? e.message : 'Ongeldige save — controleer JSON', 3200);
   }
 });
@@ -4705,8 +4793,22 @@ function bindSettingsControls() {
 const btnRestoreBackup = document.getElementById('btnRestoreBackup');
 if (btnRestoreBackup) btnRestoreBackup.addEventListener('click', () => {
   AudioSys.sfx('select');
-  if (restoreSaveFromBackup()) UI.toast('Backup teruggezet!', 2800);
-  else UI.toast('Geen backup gevonden op dit apparaat', 3000);
+  if (!window.__sfBackupConfirm) {
+    const h = saveHealthSummary();
+    if (!h.backupOk) {
+      UI.toast('Geen backup gevonden op dit apparaat', 3000);
+      return;
+    }
+    window.__sfBackupConfirm = true;
+    UI.toast(`Backup Lv ${h.backupLvl} — tik nogmaals om te herstellen`, 3600);
+    setTimeout(() => { window.__sfBackupConfirm = false; }, 6000);
+    return;
+  }
+  window.__sfBackupConfirm = false;
+  if (restoreSaveFromBackup()) {
+    UI.toast('Backup teruggezet — save + backup synchroon', 3000);
+    UI.renderSettings();
+  } else UI.toast('Geen backup gevonden op dit apparaat', 3000);
 });
 const btnClearSave = document.getElementById('btnClearSave');
 if (btnClearSave) btnClearSave.addEventListener('click', () => {
