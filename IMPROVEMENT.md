@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | **9** | iPad touch: 2P midden-neutraal, slop schaal, touchend op knop/kaart, grotere pauze-hit. v1.12.20 / SW v83. |
 | 2026-07-23 | **6** | Audio (cyclus 1): pauze-volume sliders (sync instellingen), Lite FX zachter BGM/SFX, `syncContextPower` bij volledig mute. v1.12.19 / SW v82. |
 | 2026-07-23 | **14** | FX: Rasengan halo + impact-ring (cap-aware), minder spawn-burst bij Lite FX. v1.12.18 / SW v81. |
 | 2026-07-23 | **20** | Code health: header sync, verwijderd dubbele P1-dash keydown + legacy onboarding wrappers. v1.12.16 / SW v79. |

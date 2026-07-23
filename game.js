@@ -60,9 +60,9 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.12.19';
+const APP_VERSION = '1.12.20';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 82;
+const SW_CACHE_REV = 83;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1947,8 +1947,39 @@ function noteShurikenThrow(f, game) {
 const JOY_DEAD_PX = 14;
 const JOY_MAX_PX = 55;
 /** Geen pointermove meer → joy los (iPad mist soms pointerup) */
-const JOY_STALE_MS = 160;
-const btnHitSlop = () => (typeof save !== 'undefined' && save.bigTouch !== false ? 14 : 10);
+const JOY_STALE_MS = IS_TOUCH ? 200 : 160;
+
+function btnHitSlop() {
+  const base = (typeof save !== 'undefined' && save.bigTouch !== false) ? 14 : 10;
+  if (IS_TOUCH && typeof W === 'number' && W > 0 && typeof H === 'number' && H > 0) {
+    const ui = touchUiScale(W, H);
+    return Math.round(base + (ui >= 1.02 ? 5 : 2));
+  }
+  return base;
+}
+
+/** 2P touch: middenstrook = geen joystick (minder mis-taps op split). */
+function touchPadZone(x) {
+  if (!Input.dualMode) return 'p1';
+  const w = W || (typeof innerWidth === 'number' ? innerWidth : 800);
+  const lo = w * 0.46;
+  const hi = w * 0.54;
+  if (x >= lo && x <= hi) return 'neutral';
+  return x < lo ? 'p1' : 'p2';
+}
+
+function touchEndedOnSelector(e, selector) {
+  const t = e.changedTouches && e.changedTouches[0];
+  const fromTarget = e.target && e.target.closest ? e.target.closest(selector) : null;
+  if (!fromTarget) return null;
+  if (!t) return fromTarget;
+  try {
+    const top = document.elementFromPoint(t.clientX, t.clientY);
+    const fromPoint = top && top.closest ? top.closest(selector) : null;
+    if (fromPoint && fromPoint !== fromTarget) return null;
+  } catch (_) {}
+  return fromTarget;
+}
 
 function readSafeInsets() {
   try {
@@ -2157,7 +2188,9 @@ function makePad(side) {
     },
     ownsTouch(x, y, dual) {
       if (!dual) return this.side === 'p1';
-      return this.side === 'p1' ? x < W * 0.5 : x >= W * 0.5;
+      const z = touchPadZone(x);
+      if (z === 'neutral') return false;
+      return this.side === 'p1' ? z === 'p1' : z === 'p2';
     },
     onDown(x, y, id, dual) {
       if (!this.ownsTouch(x, y, dual)) return false;
@@ -2221,10 +2254,13 @@ const Input = Object.assign(makePad('p1'), {
   onDown(x, y, id) {
     AudioSys.init();
     if (this.dualMode) {
-      this.activePointers.add(id);
-      if (InputP2.onDown(x, y, id, true)) return;
-      if (makePad('p1').onDown.call(this, x, y, id, true)) return;
-      this.activePointers.delete(id);
+      const z = touchPadZone(x);
+      if (z === 'neutral') return;
+      if (z === 'p2') {
+        InputP2.onDown(x, y, id, true);
+        return;
+      }
+      makePad('p1').onDown.call(this, x, y, id, true);
       return;
     }
     this.activePointers.add(id);
@@ -5648,10 +5684,14 @@ function initCharSelectChrome() {
     pickVsRosterId(card.dataset.id);
   };
   if (grid) {
+    let lastCharPick = 0;
     grid.addEventListener('click', (e) => { runPick(e.target.closest('.char-card')); });
     grid.addEventListener('touchend', (e) => {
-      const card = e.target.closest('.char-card');
+      const card = touchEndedOnSelector(e, '.char-card');
       if (!card || card.classList.contains('locked')) return;
+      const now = Date.now();
+      if (now - lastCharPick < 320) return;
+      lastCharPick = now;
       if (e.cancelable) e.preventDefault();
       runPick(card);
     }, { passive: false });
@@ -5676,14 +5716,18 @@ function initCharSelectChrome() {
   const iconRow = document.getElementById('charIconRow');
   if (iconRow && !iconRow.dataset.sfIconBound) {
     iconRow.dataset.sfIconBound = '1';
+    let lastIconPick = 0;
     iconRow.addEventListener('click', (e) => {
       const chip = e.target.closest('.char-icon-chip:not(.locked)');
       if (!chip || !chip.dataset.id) return;
       pickVsRosterId(chip.dataset.id);
     });
     iconRow.addEventListener('touchend', (e) => {
-      const chip = e.target.closest('.char-icon-chip:not(.locked)');
-      if (!chip || !chip.dataset.id) return;
+      const chip = touchEndedOnSelector(e, '.char-icon-chip');
+      if (!chip || chip.classList.contains('locked') || !chip.dataset.id) return;
+      const now = Date.now();
+      if (now - lastIconPick < 320) return;
+      lastIconPick = now;
       if (e.cancelable) e.preventDefault();
       pickVsRosterId(chip.dataset.id);
     }, { passive: false });
@@ -6604,6 +6648,13 @@ function bindPress(el, handler) {
   };
   el.addEventListener('click', run);
   el.addEventListener('touchend', (e) => {
+    const t = e.changedTouches && e.changedTouches[0];
+    if (t) {
+      try {
+        const top = document.elementFromPoint(t.clientX, t.clientY);
+        if (top && top !== el && !el.contains(top)) return;
+      } catch (_) {}
+    }
     if (e.cancelable) e.preventDefault();
     run(e);
   }, { passive: false });

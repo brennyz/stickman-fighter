@@ -3,14 +3,13 @@
   "cyclesCompleted": 1,
   "rollFirst": [],
   "remaining": [
-    7,
-    9
+    7
   ],
   "lastRoll": {
-    "face": 6,
-    "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
-    "rolledAt": "2026-07-23T18:59:04Z",
-    "remainingCount": 2,
+    "face": 9,
+    "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
+    "rolledAt": "2026-07-23T19:00:49Z",
+    "remainingCount": 1,
     "cycle": 1
   },
   "pending": null,
@@ -216,6 +215,13 @@
       "note": "pauze-volume sliders, Lite mix, syncContextPower mute",
       "version": "1.12.19",
       "doneAt": "2026-07-23T19:00:31Z",
+      "cycle": 1
+    },
+    {
+      "face": 9,
+      "note": "2P neutraal strip, slop, touchend guard, pauze hit",
+      "version": "1.12.20",
+      "doneAt": "2026-07-23T19:02:04Z",
       "cycle": 1
     }
   ],
@@ -569,6 +575,13 @@
       "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
       "rolledAt": "2026-07-23T18:59:04Z",
       "remainingCount": 2,
+      "cycle": 1
+    },
+    {
+      "face": 9,
+      "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
+      "rolledAt": "2026-07-23T19:00:49Z",
+      "remainingCount": 1,
       "cycle": 1
     }
   ]

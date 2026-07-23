@@ -246,10 +246,14 @@
   .tog.off { opacity:.4; }
 
   #pauseBtn { position:fixed; top:max(10px, calc(var(--vv-top, 0px) + env(safe-area-inset-top)));
-      right:max(12px, env(safe-area-inset-right)); z-index:9;
+      right:max(12px, env(safe-area-inset-right)); z-index:11;
       width:48px; height:48px; border-radius:14px; font-size:18px; display:none;
       background:rgba(20,26,48,.8); border:1px solid rgba(255,255,255,.22); color:#fff;
-      box-shadow:0 4px 12px rgba(0,0,0,.35); pointer-events:auto; }
+      box-shadow:0 4px 12px rgba(0,0,0,.35); pointer-events:auto;
+      touch-action:manipulation; cursor:pointer; position:relative; }
+  #pauseBtn::before { content:''; position:absolute; inset:-14px; }
+  body.big-touch #pauseBtn { width:56px; height:56px; font-size:20px; }
+  body.big-touch #pauseBtn::before { inset:-18px; }
   #pauseBtn.show { display:block; }
 
   #resultScreen .bigres { font-family:'Bangers', cursive; font-size:min(14vw,68px); font-weight:400;
@@ -276,6 +280,7 @@
   .style-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
       gap:12px; width:min(92vw,640px); }
   .style-card { border-radius:16px; padding:14px 10px; text-align:center; cursor:pointer;
+      touch-action:manipulation;
       background:rgba(255,255,255,.06); border:2px solid transparent; font-weight:800; }
   .style-card.sel { border-color:#ffd75e; background:rgba(255,215,94,.14); }
   .style-card.locked { opacity:.4; }
@@ -317,6 +322,7 @@
   @keyframes charPickPulse { 0%,100% { box-shadow:0 0 0 0 rgba(255,215,94,.0), 0 5px 0 rgba(0,0,0,.3); }
       50% { box-shadow:0 0 0 2px rgba(255,215,94,.35), 0 5px 0 rgba(0,0,0,.3); } }
   .char-card { border-radius:18px; padding:10px 8px 12px; text-align:center; cursor:pointer;
+      touch-action:manipulation;
       background:rgba(255,255,255,.06); border:3px solid rgba(255,255,255,.12);
       box-shadow:0 5px 0 rgba(0,0,0,.3); transition:border-color .12s, transform .06s; }
   .char-card:active:not(.locked) { transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,.3); }
@@ -739,7 +745,7 @@
 </script>
 
 <script src="tunnel-check.js?v=202"></script>
-<script src="game.js?v=232"></script>
+<script src="game.js?v=233"></script>
 <script src="install.js?v=203"></script>
 <script>
 (function () {
