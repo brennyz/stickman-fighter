@@ -17,7 +17,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.7.3';
+const APP_VERSION = '1.7.4';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1001,8 +1001,8 @@ const Input = Object.assign(makePad('p1'), {
       if (makePad('p1').onDown.call(this, x, y, id, true)) return;
       return;
     }
+    const slop = btnHitSlop();
     for (const b of this.buttons) {
-      const slop = btnHitSlop();
       if ((x - b.x) ** 2 + (y - b.y) ** 2 < (b.r + slop) ** 2) {
         this.btnPointers[id] = b.id;
         b.held = true;
@@ -3432,11 +3432,40 @@ const UI = {
 
   show(id) {
     for (const s of this.screens) document.getElementById(s).classList.remove('active');
-    if (id) document.getElementById(id).classList.add('active');
+    if (id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.add('active');
+        requestAnimationFrame(() => { el.scrollTop = 0; });
+      }
+    }
     document.getElementById('pauseBtn').classList.toggle('show', !id && !!game && state !== 'result');
-    // Canvas vangt tikken alleen tijdens actief gevecht (niet menu/pauze/resultaat)
     const playing = !id && !!game && state === 'play';
     document.body.classList.toggle('is-playing', !!playing);
+  },
+
+  syncTouchClass() {
+    document.body.classList.toggle('big-touch', save.bigTouch !== false);
+  },
+
+  goBack() {
+    AudioSys.sfx('select');
+    const active = this.screens.find(sid => document.getElementById(sid)?.classList.contains('active'));
+    if (active === 'charSelectScreen' && this.charPickStep === 2) {
+      this.charPickStep = 1;
+      this.renderCharSelect();
+      return;
+    }
+    if (active === 'pauseScreen' && game) {
+      state = 'play';
+      this.show(null);
+      return;
+    }
+    if (active === 'resultScreen') {
+      this.goMenu();
+      return;
+    }
+    this.goMenu();
   },
 
   toast(msg, ms) {
@@ -3455,6 +3484,7 @@ const UI = {
     document.body.classList.remove('is-playing');
     Input.dualMode = false;
     Input.layout(W, H);
+    this.syncTouchClass();
     this.renderMenu();
     this.show('menuScreen');
     AudioSys.play('menu');
@@ -3527,8 +3557,12 @@ const UI = {
         startGame('versus', { p1: vsSelect.p1, p2: vsSelect.p2 });
       };
     }
+    const backBtn = document.getElementById('charSelectBack');
+    if (backBtn) {
+      backBtn.textContent = this.charPickStep === 2 ? '\u2190 Andere P1' : '\u2190 Menu';
+    }
     const backP = document.getElementById('charPickBackP1');
-    if (backP) backP.style.display = this.charPickStep === 2 ? 'inline-flex' : 'none';
+    if (backP) backP.style.display = 'none';
     const rnd = document.getElementById('btnCharRandom');
     if (rnd && !rnd.dataset.bound) {
       rnd.dataset.bound = '1';
@@ -3549,6 +3583,7 @@ const UI = {
   },
 
   renderMenu() {
+    this.syncTouchClass();
     const need = xpNeed(save.lvl);
     const w = weaponById(save.weapon);
     const st = styleById(save.style || 'classic');
@@ -3995,6 +4030,7 @@ function bindSettingsControls() {
       if (key === 'reducedMotion' && save.reducedMotion) save.shake = false;
       persist();
       UI.renderSettings();
+      UI.syncTouchClass();
       Input.layout(W, H);
       AudioSys.sfx('select');
       haptic(8);
@@ -4046,8 +4082,13 @@ if (btnGuvve) {
   });
 }
 for (const b of document.querySelectorAll('[data-back]')) {
-  b.addEventListener('click', () => { AudioSys.sfx('select'); UI.goMenu(); });
+  b.addEventListener('click', () => { UI.goBack(); });
 }
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const sub = UI.screens.some(sid => sid !== 'menuScreen' && document.getElementById(sid)?.classList.contains('active'));
+  if (sub) { e.preventDefault(); UI.goBack(); }
+});
 document.getElementById('togMusic').addEventListener('click', () => {
   AudioSys.init();
   AudioSys.setMusicOn(!save.music);
@@ -4197,6 +4238,7 @@ function bootGame() {
   ensureDaily();
   checkAchievements();
   updateNetStatus();
+  UI.syncTouchClass();
   if (window.__sfRecoveredBackup) {
     window.__sfRecoveredBackup = false;
     UI.toast('Save hersteld uit backup — je voortgang is veilig', 4200);

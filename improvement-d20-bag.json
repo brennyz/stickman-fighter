@@ -11,7 +11,6 @@
     7,
     8,
     10,
-    11,
     12,
     13,
     14,
@@ -23,10 +22,10 @@
     20
   ],
   "lastRoll": {
-    "face": 9,
-    "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
-    "rolledAt": "2026-07-23T13:21:57Z",
-    "remainingCount": 19,
+    "face": 11,
+    "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
+    "rolledAt": "2026-07-23T13:23:30Z",
+    "remainingCount": 18,
     "cycle": 0
   },
   "history": [
@@ -35,6 +34,13 @@
       "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
       "rolledAt": "2026-07-23T13:21:57Z",
       "remainingCount": 19,
+      "cycle": 0
+    },
+    {
+      "face": 11,
+      "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
+      "rolledAt": "2026-07-23T13:23:30Z",
+      "remainingCount": 18,
       "cycle": 0
     }
   ]

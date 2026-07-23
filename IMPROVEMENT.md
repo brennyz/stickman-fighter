@@ -75,7 +75,8 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-| 2026-07-23 | **9** | Joystick dode zone (14px), grotere knophits met bigTouch, geen joy naast knoppen, `touch-action: manipulation` op menu. v1.7.3 / SW v21. |
+| 2026-07-23 | **11** | `goBack()` (P2→P1, Esc terug), scherm scroll reset, grotere terug-knoppen bij bigTouch. v1.7.4 / SW v22. |
+| 2026-07-23 | **9** | Joystick dode zone, knophits, touch-action menu. v1.7.3. |
 | 2026-07-23 | — | **IMPROVEMENT.md + Ralph d20** toegevoegd. Gameplay: canvas tikken alleen bij `state==='play'`. v1.7.2 / SW v20. |
 | 2026-07-23 | — | GitHub Pages live `brennyz.github.io/stickman-fighter/`. iPad: menu niet klikbaar → pointer-events fix. |
 | 2026-07-23 | 14 | v1.7 combo pulse, low-HP vignette, result tips. |

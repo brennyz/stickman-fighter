@@ -51,7 +51,8 @@
       border:none; border-radius:18px; color:#fff; font-weight:800; text-align:center;
       font-family: inherit;
       box-shadow:0 6px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25);
-      transition:transform .06s, filter .15s; }
+      transition:transform .06s, filter .15s;
+      touch-action:manipulation; -webkit-touch-callout:none; }
   .btn:active { transform:translateY(4px); box-shadow:0 2px 0 rgba(0,0,0,.35); }
   .mode-btn { width:min(86vw, 480px); padding:16px 20px; font-size:min(5vw,21px); margin:8px 0;
       justify-content:flex-start; }
@@ -100,7 +101,8 @@
 
   .back-btn { position:absolute; top:max(14px, env(safe-area-inset-top)); left:16px;
       background:linear-gradient(180deg,#5a6784,#39445e); padding:10px 20px; font-size:16px;
-      border-radius:14px; z-index:11; }
+      border-radius:14px; z-index:11; touch-action:manipulation; min-height:44px; }
+  body.big-touch .back-btn { padding:14px 22px; font-size:18px; min-height:52px; left:12px; }
 
   .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(96px,1fr));
       gap:12px; width:min(92vw, 640px); }
@@ -275,7 +277,7 @@
 </div>
 
 <div id="charSelectScreen" class="screen">
-  <button class="btn back-btn" data-back>&#8592; Menu</button>
+  <button class="btn back-btn" data-back id="charSelectBack">&#8592; Terug</button>
   <h2 class="head">Kies je vechter</h2>
   <div class="subtitle" id="charPickStep">Speler 1 — kies je vechter (links)</div>
   <div class="subtitle" style="margin-top:-6px;font-size:12px">18 vechters · unieke stats, wapens &amp; specials</div>
