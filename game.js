@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 1;
-const APP_VERSION = '1.12.24';
+const APP_VERSION = '1.12.25';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 87;
+const SW_CACHE_REV = 88;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1620,6 +1620,21 @@ function applyHitStop(game, spec, opts) {
 }
 function isBossWave(level, waveIdx) {
   return !!(level && level.boss && waveIdx === level.waves.length - 1);
+}
+
+function adventureWavePipFilled(game, i) {
+  const idx = Math.max(0, game.waveIdx);
+  if (i < idx) return true;
+  if (i === idx && game.wavePause > 0) return true;
+  return false;
+}
+
+function adventureWavePipActive(game, i) {
+  const idx = Math.max(0, game.waveIdx);
+  if (game.waveIdx < 0) return i === 0 && game.betweenT > 0;
+  if (game.wavePause > 0) return false;
+  if (i !== idx) return false;
+  return game.spawnQueue.length > 0 || game.monsters.some((m) => m.alive);
 }
 function buildLevel(n) {
   const hpMul = 1 + (n - 1) * 0.14;
@@ -5299,6 +5314,36 @@ class Game {
     }
   }
 
+  drawAdventureWavePips(c) {
+    if (!this.level || !this.level.waves) return;
+    const total = this.level.waves.length;
+    const gap = 10;
+    const r = 4;
+    const rowW = total * (r * 2) + (total - 1) * gap;
+    let x = W / 2 - rowW / 2 + r;
+    const y = 42;
+    for (let i = 0; i < total; i++) {
+      const boss = isBossWave(this.level, i);
+      const filled = adventureWavePipFilled(this, i);
+      const active = adventureWavePipActive(this, i);
+      c.beginPath();
+      c.arc(x, y, r + (active ? Math.sin(this.t * 9) * 0.8 : 0), 0, TAU);
+      if (filled) {
+        c.fillStyle = boss ? '#ff8a9a' : '#ffd75e';
+        c.fill();
+      } else {
+        c.strokeStyle = boss ? 'rgba(255,138,154,.75)' : 'rgba(255,255,255,.35)';
+        c.lineWidth = 1.5;
+        c.stroke();
+        if (active) {
+          c.fillStyle = boss ? 'rgba(255,138,154,.45)' : 'rgba(255,215,94,.4)';
+          c.fill();
+        }
+      }
+      x += r * 2 + gap;
+    }
+  }
+
   drawHUD(c) {
     const p = this.player;
     if (p && p.alive && p.maxhp > 0 && p.hp / p.maxhp < 0.28 && !motionReduced()) {
@@ -5356,6 +5401,7 @@ class Game {
       c.fillStyle = 'rgba(255,255,255,.9)';
       const wv = Math.max(1, this.waveIdx + 1);
       c.fillText(`Level ${this.level.n} — Golf ${Math.min(wv, this.level.waves.length)}/${this.level.waves.length}`, W / 2, 30);
+      this.drawAdventureWavePips(c);
       if (p.alive) {
         const hpPct = p.hp / Math.max(1, p.maxhp);
         const proj = starsFromHpPct(hpPct);
@@ -5370,7 +5416,13 @@ class Game {
         let starHint = ' · 3★ zone';
         if (hpPct <= STAR_HP.two) starHint = ` · 2★ bij >${Math.round(STAR_HP.two * 100)}% HP`;
         else if (hpPct <= STAR_HP.three) starHint = ` · 3★ bij >${Math.round(STAR_HP.three * 100)}% HP`;
-        c.fillText(`${pct}% HP${starHint}`, W / 2, 46);
+        c.fillText(`${pct}% HP${starHint}`, W / 2, 52);
+      }
+      if (this.waveIdx >= 0 && (this.spawnQueue.length > 0 || this.monsters.some((m) => m.alive))) {
+        const rem = this.spawnQueue.length + this.monsters.filter((m) => m.alive).length;
+        c.font = '700 11px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.62)';
+        c.fillText(rem === 1 ? 'Nog 1 vijand in deze golf' : `Nog ${rem} vijanden in deze golf`, W / 2, 66);
       }
       if (this.wavePause > 0) {
         const nextBoss = isBossWave(this.level, this.waveIdx + 1);
@@ -6455,7 +6507,8 @@ const UI = {
       const locked = n > save.unlocked;
       const info = buildLevel(n);
       const rar = rarityOf(info.rarityCap);
-      el.className = 'lvl' + (boss ? ' boss' : '') + (locked ? ' locked' : '') + (n < save.unlocked ? ' cleared' : '');
+      el.className = 'lvl' + (boss ? ' boss' : '') + (locked ? ' locked' : '') + (n < save.unlocked ? ' cleared' : '') +
+        (!locked && n === save.unlocked ? ' lvl-current' : '');
       el.style.boxShadow = locked ? 'none' : `0 5px 0 rgba(0,0,0,.35), 0 0 0 2px ${rar.color}55`;
       el.innerHTML = locked
         ? '&#128274;'

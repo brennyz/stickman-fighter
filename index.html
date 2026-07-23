@@ -210,6 +210,7 @@
   .lvl.boss { background:linear-gradient(180deg,#e85a6a,#a82332); }
   .lvl.locked { background:linear-gradient(180deg,#3a4258,#262c3d); color:#6b7690; box-shadow:none; }
   .lvl.cleared { outline:2px solid rgba(255,215,94,.55); }
+  .lvl.lvl-current:not(.locked) { outline:2px solid rgba(124,245,255,.9); box-shadow:0 0 12px rgba(124,245,255,.25), 0 5px 0 rgba(0,0,0,.35); }
   .lvl small { font-size:11px; font-weight:700; opacity:.95; }
   .lvl .stars { font-size:11px; letter-spacing:1px; color:#ffd75e; margin-top:2px; }
   .lvl:active:not(.locked) { transform:translateY(3px); }
@@ -745,7 +746,7 @@
 </script>
 
 <script src="tunnel-check.js?v=202"></script>
-<script src="game.js?v=237"></script>
+<script src="game.js?v=238"></script>
 <script src="install.js?v=203"></script>
 <script>
 (function () {

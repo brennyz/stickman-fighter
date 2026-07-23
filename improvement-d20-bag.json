@@ -13,7 +13,6 @@
     15,
     10,
     6,
-    4,
     7,
     1,
     13,
@@ -23,10 +22,10 @@
     3
   ],
   "lastRoll": {
-    "face": 20,
-    "category": "Code health \u2014 kleine refactors, geen gameplay-break",
-    "rolledAt": "2026-07-23T19:41:09Z",
-    "remainingCount": 18,
+    "face": 4,
+    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
+    "rolledAt": "2026-07-23T19:43:11Z",
+    "remainingCount": 17,
     "cycle": 2
   },
   "pending": null,
@@ -260,6 +259,13 @@
       "note": "pad method refs, hitButton reuse, error toast dedupe",
       "version": "1.12.24",
       "doneAt": "2026-07-23T19:41:53Z",
+      "cycle": 2
+    },
+    {
+      "face": 4,
+      "note": "golf-pips HUD, enemy count, level highlight",
+      "version": "1.12.25",
+      "doneAt": "2026-07-23T19:43:50Z",
       "cycle": 2
     }
   ],
@@ -641,6 +647,13 @@
       "category": "Code health \u2014 kleine refactors, geen gameplay-break",
       "rolledAt": "2026-07-23T19:41:09Z",
       "remainingCount": 18,
+      "cycle": 2
+    },
+    {
+      "face": 4,
+      "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
+      "rolledAt": "2026-07-23T19:43:11Z",
+      "remainingCount": 17,
       "cycle": 2
     }
   ]
