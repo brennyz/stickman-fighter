@@ -1,8 +1,15 @@
 STICKMAN FIGHTER — MERGE + PUSH (main → Pages)
 ==============================================
 
-Cloud-agent krijgt 403 op git push (token mag API lezen,
-maar geen git-write). Jij met repo-write op Mac/PC:
+Cloud-agent krijgt 403 op git push (token: "not accessible by integration").
+Merge op agent-main is KLAAR — jij pusht 1×:
+
+  cd stickman-fighter
+  git checkout main
+  ./scripts/merge-push-main.sh
+
+Verwacht na pull van agent-repo: HEAD ≈ 060ee68 (v1.12.3 + speel + merge-push script).
+GitHub main staat nu nog op 60423e4 (oud) tot push slaagt.
 
 ─── ALS JE DE AGENT-COMMITS AL HEBT (zelfde map) ───
 
