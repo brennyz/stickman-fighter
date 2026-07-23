@@ -1,5 +1,5 @@
 /* Stickman Fighter — offline cache voor PWA / “app op beginscherm” */
-const CACHE = 'stickfighter-app-v9';
+const CACHE = 'stickfighter-app-v10';
 const ASSETS = [
   './',
   './index.html',
@@ -12,7 +12,7 @@ const ASSETS = [
   './icons/icon-512.png',
 ];
 
-const NETWORK_FIRST = ['/health.json', '/LIVE-LINK.txt'];
+const NETWORK_FIRST = ['/health.json', '/LIVE-LINK.txt', '/hosting.json'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -33,7 +33,8 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
-  const netFirst = url.pathname === '/health.json' || url.pathname === '/LIVE-LINK.txt';
+  const netFirst = url.pathname === '/health.json' || url.pathname === '/LIVE-LINK.txt'
+    || url.pathname === '/hosting.json';
 
   event.respondWith(
     caches.match(event.request).then((cached) => {

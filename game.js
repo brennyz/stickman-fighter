@@ -8,6 +8,7 @@
    ========================================================================= */
 
 const TAU = Math.PI * 2;
+const FX_CAP = { particles: 140, floaters: 28, projectiles: 48, banners: 5, afterimages: 12 };
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
 const lerp = (a, b, t) => a + (b - a) * t;
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -15,6 +16,8 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
+const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
+const APP_VERSION = '1.4.0';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true,
@@ -23,24 +26,51 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
 let save = loadSave();
 
 function loadSave() {
+  const parsed = readSaveJson(localStorage.getItem(SAVE_KEY));
+  if (parsed) return parsed;
+  const backup = readSaveJson(localStorage.getItem(SAVE_BACKUP_KEY));
+  if (backup) {
+    window.__sfRecoveredBackup = true;
+    return backup;
+  }
+  return Object.assign({}, DEFAULT_SAVE);
+}
+
+function readSaveJson(raw) {
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw || raw.length > 200000) return Object.assign({}, DEFAULT_SAVE);
+    if (!raw || raw.length > 200000) return null;
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-      return Object.assign({}, DEFAULT_SAVE);
-    }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
     const merged = Object.assign({}, DEFAULT_SAVE, parsed);
     merged.stats = Object.assign({}, DEFAULT_SAVE.stats, parsed.stats || {});
     merged.achievements = Object.assign({}, parsed.achievements || {});
     merged.stars = Object.assign({}, parsed.stars || {});
     merged.dex = Object.assign({}, parsed.dex || {});
     return merged;
-  } catch (e) {}
-  return Object.assign({}, DEFAULT_SAVE);
+  } catch (e) {
+    return null;
+  }
 }
+
 function persist() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {}
+  try {
+    const json = JSON.stringify(save);
+    localStorage.setItem(SAVE_KEY, json);
+    localStorage.setItem(SAVE_BACKUP_KEY, json);
+  } catch (e) {
+    try { localStorage.setItem(SAVE_BACKUP_KEY, JSON.stringify(save)); } catch (_) {}
+  }
+}
+
+function restoreSaveFromBackup() {
+  const backup = readSaveJson(localStorage.getItem(SAVE_BACKUP_KEY));
+  if (!backup) return false;
+  save = sanitizeSave(backup);
+  persist();
+  checkAchievements();
+  UI.renderMenu();
+  if (UI.renderMissions) UI.renderMissions();
+  return true;
 }
 
 /** Corrupte / gemanipuleerde saves veilig maken (localStorage + import). */
@@ -1026,7 +1056,11 @@ addEventListener('resize', () => {
   window.__sfResizeT = requestAnimationFrame(resize);
 });
 
-canvas.addEventListener('pointerdown', e => { e.preventDefault(); Input.onDown(e.clientX, e.clientY, e.pointerId); });
+canvas.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+  Input.onDown(e.clientX, e.clientY, e.pointerId);
+});
 canvas.addEventListener('pointermove', e => { e.preventDefault(); Input.onMove(e.clientX, e.clientY, e.pointerId); });
 canvas.addEventListener('pointerup',   e => { e.preventDefault(); Input.onUp(e.pointerId); });
 canvas.addEventListener('pointercancel', e => Input.onUp(e.pointerId));
@@ -2848,6 +2882,20 @@ class Game {
     this.floaters = this.floaters.filter(f => f.life > 0);
     for (const b of this.banners) b.t += dt;
     this.banners = this.banners.filter(b => b.t < b.dur);
+    this.trimFxCaps();
+  }
+
+  trimFxCaps() {
+    const drop = (arr, max) => {
+      if (arr.length > max) arr.splice(0, arr.length - max);
+    };
+    drop(this.particles, FX_CAP.particles);
+    drop(this.floaters, FX_CAP.floaters);
+    drop(this.projectiles, FX_CAP.projectiles);
+    drop(this.banners, FX_CAP.banners);
+    if (this.player && this.player.afterimages) drop(this.player.afterimages, FX_CAP.afterimages);
+    if (this.p2 && this.p2.afterimages) drop(this.p2.afterimages, FX_CAP.afterimages);
+    if (this.robot && this.robot.afterimages) drop(this.robot.afterimages, FX_CAP.afterimages);
   }
 
   shake(mag, dur) {
@@ -2855,6 +2903,8 @@ class Game {
     this.shakeMag = mag; this.shakeT = Math.max(this.shakeT, dur);
   }
   burst(x, y, color, n) {
+    const room = FX_CAP.particles - this.particles.length;
+    n = Math.min(n, Math.max(0, room));
     for (let i = 0; i < n; i++) {
       const a = rand(0, TAU), sp = rand(60, 320);
       this.particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 120,
@@ -3539,6 +3589,8 @@ const UI = {
   },
 
   renderSettings() {
+    const verEl = document.getElementById('setAppVersion');
+    if (verEl) verEl.textContent = 'Versie ' + APP_VERSION + ' · save + backup lokaal';
     const pct = (v, d) => Math.round((Number(v ?? d)) * 100);
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
     setVal('setMusicVol', pct(save.musicVol, 0.85));
@@ -3585,6 +3637,11 @@ let state = 'menu';
 
 function startGame(mode, opts) {
   opts = opts || {};
+  const allowed = { adventure: 1, training: 1, wall: 1, versus: 1 };
+  if (!allowed[mode]) {
+    UI.toast('Onbekende modus', 2200);
+    return;
+  }
   if (mode === 'versus') {
     opts.p1 = normalizeVsPick(opts.p1 || vsSelect.p1, 'hero');
     opts.p2 = normalizeVsPick(opts.p2 || vsSelect.p2, 'rabbit');
@@ -3693,6 +3750,28 @@ function bindSettingsControls() {
     });
   }
 }
+const btnRestoreBackup = document.getElementById('btnRestoreBackup');
+if (btnRestoreBackup) btnRestoreBackup.addEventListener('click', () => {
+  AudioSys.sfx('select');
+  if (restoreSaveFromBackup()) UI.toast('Backup teruggezet!', 2800);
+  else UI.toast('Geen backup gevonden op dit apparaat', 3000);
+});
+const btnClearSave = document.getElementById('btnClearSave');
+if (btnClearSave) btnClearSave.addEventListener('click', () => {
+  if (!window.__sfClearConfirm) {
+    window.__sfClearConfirm = true;
+    UI.toast('Nogmaals tikken = voortgang wissen (backup blijft)', 3500);
+    setTimeout(() => { window.__sfClearConfirm = false; }, 4000);
+    return;
+  }
+  window.__sfClearConfirm = false;
+  try { localStorage.removeItem(SAVE_KEY); } catch (_) {}
+  save = sanitizeSave(Object.assign({}, DEFAULT_SAVE));
+  persist();
+  AudioSys.sfx('lose');
+  UI.renderMenu();
+  UI.toast('Nieuwe start — backup staat nog in Instellingen', 4000);
+});
 bindSettingsControls();
 const btnHelp = document.getElementById('btnHelp');
 if (btnHelp) btnHelp.addEventListener('click', () => {
@@ -3778,8 +3857,27 @@ function loop(now) {
 }
 
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && state === 'play') { state = 'pause'; UI.show('pauseScreen'); }
+  if (document.hidden) {
+    try {
+      if (AudioSys.ctx && AudioSys.ctx.state === 'running') AudioSys.ctx.suspend();
+    } catch (_) {}
+    if (state === 'play') { state = 'pause'; UI.show('pauseScreen'); }
+  } else {
+    try {
+      if (AudioSys.ctx && AudioSys.ctx.state === 'suspended' && save.music) AudioSys.ctx.resume();
+    } catch (_) {}
+  }
 });
+
+function updateNetStatus() {
+  const el = document.getElementById('netStatus');
+  if (!el) return;
+  const off = typeof navigator.onLine === 'boolean' && !navigator.onLine;
+  el.hidden = !off;
+  el.textContent = off ? 'Offline — opgeslagen voortgang blijft op dit apparaat' : '';
+}
+window.addEventListener('online', updateNetStatus);
+window.addEventListener('offline', updateNetStatus);
 
 function bootGame() {
   if (window.__sfBooted) return;
@@ -3788,6 +3886,11 @@ function bootGame() {
   UI.renderMenu();
   ensureDaily();
   checkAchievements();
+  updateNetStatus();
+  if (window.__sfRecoveredBackup) {
+    window.__sfRecoveredBackup = false;
+    UI.toast('Save hersteld uit backup — je voortgang is veilig', 4200);
+  }
   AudioSys.desiredSong = 'menu';
   if (typeof AudioSys.applyVolumes === 'function') AudioSys.applyVolumes();
   requestAnimationFrame(loop);

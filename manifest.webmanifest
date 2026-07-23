@@ -1,0 +1,49 @@
+{
+  "name": "Stickman Fighter — Monster Arena",
+  "short_name": "Stickman",
+  "description": "Stickman vechtgame met monsters, RabbitRobot training en muur slopen.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "fullscreen", "browser"],
+  "orientation": "landscape",
+  "background_color": "#0a0d18",
+  "theme_color": "#151b33",
+  "lang": "nl",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Avontuur",
+      "short_name": "Avontuur",
+      "description": "Ga meteen vechten in de levels",
+      "url": "./index.html?mode=adventure",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "RabbitRobot",
+      "short_name": "Training",
+      "description": "Train tegen de AI-robot",
+      "url": "./index.html?mode=training",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Muur slopen",
+      "short_name": "Muur",
+      "description": "Sloop zoveel stenen in 60 sec",
+      "url": "./index.html?mode=wall",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "2 spelers",
+      "short_name": "2P",
+      "description": "Character select · duel op één iPad",
+      "url": "./index.html?mode=versus",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

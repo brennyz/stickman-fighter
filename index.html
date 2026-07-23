@@ -206,12 +206,19 @@
   #btnCharFight:disabled { opacity:.35; filter:grayscale(.4); cursor:not-allowed; }
   #charPickBackP1 { margin:8px 0; width:min(86vw,480px); justify-content:center;
       background:linear-gradient(180deg,#5a6784,#39445e); }
+
+  #netStatus { position:fixed; left:50%; bottom:max(12px, env(safe-area-inset-bottom)); transform:translateX(-50%);
+      z-index:35; max-width:92vw; padding:8px 14px; border-radius:999px; font-size:12px; font-weight:800;
+      text-align:center; color:#ffe8a8; background:rgba(40,20,10,.88); border:1px solid rgba(255,120,60,.45);
+      box-shadow:0 6px 20px rgba(0,0,0,.4); pointer-events:none; }
+  #netStatus[hidden] { display:none !important; }
 </style>
 </head>
 <body>
 <canvas id="game"></canvas>
 <button id="pauseBtn" aria-label="Pauze">&#10074;&#10074;</button>
 <div id="toastHost"></div>
+<div id="netStatus" hidden aria-live="polite">Offline</div>
 
 <div id="tunnelBootOverlay" aria-live="polite" aria-busy="true">
   <div class="boot-spinner" aria-hidden="true"></div>
@@ -309,6 +316,11 @@
   </div>
   <div class="step-card">Tip: zet trillingen uit als je in de trein speelt. Power-ups in avontuur: groen = HP, oranje = rage, blauw = chakra of schild.</div>
   <div class="settings-card">
+    <div id="setAppVersion" style="font-size:13px;opacity:.9;margin-bottom:10px">Versie …</div>
+    <button type="button" class="btn tog" id="btnRestoreBackup">&#128190; Herstel save uit backup</button>
+    <button type="button" class="btn tog off" id="btnClearSave">&#128465; Nieuwe start (dubbel tikken)</button>
+  </div>
+  <div class="settings-card">
     <div style="font-weight:900;color:#ffd75e;margin-bottom:8px">Hosting &amp; voortgang</div>
     <div id="hostingHint" style="font-size:13px;opacity:.9;margin-bottom:8px">Link laden…</div>
     <div id="hostingLink" style="word-break:break-all;font-size:12px;background:rgba(0,0,0,.25);padding:10px;border-radius:10px;margin-bottom:10px"></div>
@@ -384,6 +396,8 @@
       <li><b>Muur:</b> bomstenen (rood) ontploffen, staal (grijs) is taai, goud (geel) = XP.</li>
       <li><b>Rariteiten:</b> Gewoon → Ongewoon → Zeldzaam → Episch → Legendarisch → Mythisch. Zeldzamer = meer XP &amp; meer max HP.</li>
       <li><b>50 levels:</b> elke 5 levels een baas. Level 50 = Guvvedrak + Voidkonijn + Schaduwvorst.</li>
+      <li><b>Backup:</b> elke save wordt dubbel opgeslagen — bij problemen: <b>Instellingen → Herstel save uit backup</b>.</li>
+      <li><b>Offline:</b> geïnstalleerde app werkt zonder net; tunnel-link heeft internet nodig.</li>
     </ul>
   </div>
   <button class="btn mode-btn b-adventure" id="helpOk"><span class="ico">&#128076;</span><div>Begrepen!</div></button>
