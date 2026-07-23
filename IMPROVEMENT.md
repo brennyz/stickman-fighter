@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | — | **Mats bonus:** muntjes-modus, shuriken anti-spam (3/1,4s + cd), joystick-mik voor shuriken. v1.12.0 / SW v63. |
 | 2026-07-23 | **6** | Audio: lichte snelle procedurele SFX (Rasengan/Chidori/Rinnegan, hits, stingers); Lite FX extra zacht. v1.11.7 / SW v62. |
 | 2026-07-23 | **13** | Missies (cyclus 1): speel-hints per daily, prestatie-voortgang, menu **Missies · +XP**, claim-all bij 1 klaar, stappen-copy. v1.11.5 / SW v59. |
 | 2026-07-23 | **1** | Combat feel (cyclus 1): hit-stop schaal (crit/zwaar/combo/2P/blok-chip), jutsu-projectielen, langere hurt-flash op big hits — geen dmg×. v1.11.4 / SW v58. |

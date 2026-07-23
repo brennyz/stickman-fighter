@@ -55,14 +55,14 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.11.7';
+const APP_VERSION = '1.12.0';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 62;
+const SW_CACHE_REV = 63;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0 },
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0 },
   achievements: {}, daily: null, vsPlayedIds: [] };
 const MAX_LEVEL = 50;
 let save = loadSave();
@@ -301,7 +301,7 @@ function sanitizeSave(s) {
   out.tipsSeen = (out.tipsSeen && typeof out.tipsSeen === 'object') ? out.tipsSeen : {};
   if (out.lastPlay && typeof out.lastPlay === 'object') {
     const lp = out.lastPlay;
-    if (!['adventure', 'training', 'wall', 'versus'].includes(lp.mode)) out.lastPlay = null;
+    if (!['adventure', 'training', 'wall', 'versus', 'coinrun'].includes(lp.mode)) out.lastPlay = null;
     else {
       out.lastPlay = {
         mode: lp.mode,
@@ -902,6 +902,7 @@ function showModeOnboarding(mode) {
     training: 'Training: ontwijk lasers · vol chakra → 🌀 · 2 rondes winnen',
     wall: 'Muur: combo = sneller sloop · beat je record vóór timer 0',
     versus: '2 spelers: P1 links · P2 rechts · liggend iPad · best-of-3',
+    coinrun: 'Mats bonus: munten pakken · joystick ↑ mikken · shuriken max 3× snel',
   };
   if (!msgs[mode]) return;
   save.tipsSeen[key] = 1;
@@ -931,6 +932,9 @@ function playModeHint(g, mode) {
     versus: touch
       ? 'Eerste minuut: P1 linker helft · P2 rechter helft'
       : 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+123',
+    coinrun: touch
+      ? 'Mats: pak gouden munten · roze vliegers = +3 met shuriken'
+      : 'Munten + mik met joystick · geen shuriken-spam',
   };
   g.modeHintLine = lines[mode] || lines.adventure;
   g.hint = 7.5;
@@ -1767,7 +1771,52 @@ const SONGS = {
 };
 
 /* =============================== INPUT ================================= */
-const IS_TOUCH = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+const SHURIKEN_CD = 0.4;
+const SHURIKEN_BURST_WINDOW = 1.35;
+const SHURIKEN_BURST_MAX = 3;
+
+function inputPadForFighter(f) {
+  if (f && f.playerSlot === 2) return InputP2;
+  return Input;
+}
+
+/** Joystick richting voor shuriken (omhoog = hoog mikken). */
+function projAimVelocity(f, baseSpeed) {
+  baseSpeed = baseSpeed || 520;
+  const pad = inputPadForFighter(f);
+  const face = f.face || 1;
+  let nx = face;
+  let ny = -0.12;
+  if (pad.joy.active) {
+    const jx = pad.joy.dx;
+    const jy = pad.joy.dy;
+    const mag = Math.hypot(jx, jy);
+    if (mag >= JOY_DEAD_PX) {
+      nx = jx / JOY_MAX_PX;
+      ny = jy / JOY_MAX_PX;
+      if (Math.abs(nx) < 0.22) nx = face * 0.35;
+    }
+  }
+  const len = Math.hypot(nx, ny) || 1;
+  nx /= len;
+  ny /= len;
+  return { vx: nx * baseSpeed, vy: ny * baseSpeed * 0.92 };
+}
+
+function canThrowShuriken(f, game) {
+  if (!f || f._shurikenCd > 0) return false;
+  const t = game ? game.t : 0;
+  f._shurikenBurst = (f._shurikenBurst || []).filter(x => t - x < SHURIKEN_BURST_WINDOW);
+  return f._shurikenBurst.length < SHURIKEN_BURST_MAX;
+}
+
+function noteShurikenThrow(f, game) {
+  f._shurikenCd = SHURIKEN_CD;
+  const t = game ? game.t : 0;
+  f._shurikenBurst = f._shurikenBurst || [];
+  f._shurikenBurst.push(t);
+}
+
 const JOY_DEAD_PX = 14;
 const JOY_MAX_PX = 55;
 /** Geen pointermove meer → joy los (iPad mist soms pointerup) */
@@ -3467,6 +3516,7 @@ class Game {
       this.initAdventure(opts.level || 1);
     } else if (mode === 'training') this.initTraining();
     else if (mode === 'wall') this.initWall();
+    else if (mode === 'coinrun') this.initCoinRun();
     else if (mode === 'versus') this.initVersus(opts);
   }
 
@@ -3915,6 +3965,134 @@ class Game {
     }), 1200);
   }
 
+  /* ------------------------ MATS · MUNTJES BONUS ----------------------- */
+  initCoinRun() {
+    this.theme = 'cyber';
+    this.coinTimer = 45;
+    this.coinsCollected = 0;
+    this.coinPickups = [];
+    this.flyers = [];
+    this.coinSpawnAcc = 0;
+    this.flyerSpawnAcc = 0;
+    this.player.weapon = weaponById('shuriken');
+    this.player.x = W * 0.28;
+    this.player.face = 1;
+    this.inputLocked = false;
+    this.banner('MATS · MUNTJES BONUS', 1.5, '#ffd75e', 46);
+    setTimeout(() => {
+      try { this.banner('Joystick ↑ = hoog mikken · vliegers = +3 munten', 1.8, '#7cf5ff', 24); } catch (_) {}
+    }, 900);
+    AudioSys.play('battle');
+    if (!save.tipsSeen.hint_coinrun) {
+      save.tipsSeen.hint_coinrun = 1;
+      persist();
+    }
+  }
+
+  spawnCoinPickup() {
+    this.coinPickups.push({
+      x: rand(W * 0.15, W * 0.88),
+      y: rand(this.ground - 220, this.ground - 60),
+      bob: rand(0, TAU),
+      got: false,
+    });
+  }
+
+  spawnFlyer() {
+    const fromLeft = Math.random() < 0.5;
+    const y = rand(this.ground - 280, this.ground - 90);
+    this.flyers.push({
+      x: fromLeft ? -40 : W + 40,
+      y,
+      vx: (fromLeft ? 1 : -1) * rand(120, 200),
+      vy: rand(-30, 40),
+      r: 22,
+      hp: 1,
+      wobble: rand(0, TAU),
+    });
+  }
+
+  updateCoinRun(dt) {
+    this.coinTimer -= dt;
+    this.coinSpawnAcc += dt;
+    this.flyerSpawnAcc += dt;
+    while (this.coinSpawnAcc >= 0.75) {
+      this.coinSpawnAcc -= 0.75;
+      this.spawnCoinPickup();
+    }
+    while (this.flyerSpawnAcc >= 1.6) {
+      this.flyerSpawnAcc -= 1.6;
+      if (this.flyers.length < 8) this.spawnFlyer();
+    }
+    const pl = this.player;
+    for (const c of this.coinPickups) {
+      if (c.got) continue;
+      c.bob += dt * 5;
+      if ((pl.bodyX - c.x) ** 2 + (pl.bodyY - (c.y + Math.sin(c.bob) * 6)) ** 2 < 42 * 42) {
+        c.got = true;
+        this.coinsCollected++;
+        AudioSys.sfx('pickup');
+        this.floater(c.x, c.y - 20, '+1 munt', '#ffd75e', 15);
+        haptic(8);
+      }
+    }
+    this.coinPickups = this.coinPickups.filter(c => !c.got);
+    for (const fl of this.flyers) {
+      fl.x += fl.vx * dt;
+      fl.y += fl.vy * dt;
+      fl.wobble += dt * 4;
+      fl.vy += Math.sin(fl.wobble) * 40 * dt;
+      if (fl.x < -80 || fl.x > W + 80) fl.hp = 0;
+    }
+    this.flyers = this.flyers.filter(f => f.hp > 0);
+    if (this.coinTimer <= 0 && !this.over) this.finishCoinRun();
+  }
+
+  finishCoinRun() {
+    this.over = true;
+    this.inputLocked = true;
+    const n = this.coinsCollected;
+    const best = Math.max(save.stats.matsCoinBest || 0, n);
+    const isRecord = n > (save.stats.matsCoinBest || 0);
+    save.stats.matsCoinBest = best;
+    persist();
+    const xp = Math.round(n * 4 + 15);
+    this.grantXP(xp);
+    AudioSys.sfx(isRecord ? 'win' : 'bonus');
+    this.banner('BONUS KLAAR!', 1.4, '#7cfc8a', 40);
+    setTimeout(() => UI.showResult(true, {
+      title: isRecord ? 'MATS RECORD!' : 'Goed gedaan, Mats!',
+      detail: `${n} munten · record ${best} · vliegers = +3 per hit`,
+      xp: this.sessionXP,
+      mode: 'coinrun',
+      win: true,
+      tip: 'Joystick omhoog = hoger mikken · shuriken max 3× snel',
+    }), 1200);
+  }
+
+  drawCoinRunLayer(c) {
+    for (const cn of this.coinPickups) {
+      const y = cn.y + Math.sin(cn.bob) * 6;
+      c.save();
+      c.translate(cn.x, y);
+      c.fillStyle = '#ffd75e';
+      c.beginPath(); c.arc(0, 0, 14, 0, TAU); c.fill();
+      c.strokeStyle = '#c97a20'; c.lineWidth = 2; c.stroke();
+      c.fillStyle = '#2a1a00'; c.font = '900 12px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText('$', 0, 1);
+      c.restore();
+    }
+    for (const fl of this.flyers) {
+      c.save();
+      c.translate(fl.x, fl.y + Math.sin(fl.wobble) * 8);
+      c.fillStyle = 'rgba(255,120,160,.85)';
+      c.beginPath(); c.ellipse(0, 0, fl.r, fl.r * 0.65, 0, 0, TAU); c.fill();
+      c.fillStyle = '#fff'; c.font = '900 11px sans-serif'; c.textAlign = 'center';
+      c.fillText('+3', 0, 4);
+      c.restore();
+    }
+  }
+
   /* -------------------------- GEDEELDE LOGICA ------------------------- */
   grantXP(n) {
     this.sessionXP += n;
@@ -3983,16 +4161,25 @@ class Game {
   }
 
   throwShuriken(f) {
-    if (f._shurikenCd > 0) return;
-    f._shurikenCd = 0.28;
+    if (!canThrowShuriken(f, this)) {
+      if (!this._shurikenWarnT || this.t - this._shurikenWarnT > 0.9) {
+        this._shurikenWarnT = this.t;
+        try {
+          UI.toast(f._shurikenCd > 0 ? 'Shuriken even wachten…' : 'Niet spammen — max 3 snel achter elkaar', 1600);
+        } catch (_) {}
+      }
+      return;
+    }
+    noteShurikenThrow(f, this);
     AudioSys.sfx('shuriken');
     const w = f.weapon;
     const critMeta = projCritMeta(f);
+    const aim = projAimVelocity(f, 540);
     this.spawnProjectile(Object.assign({
-      x: f.x + f.face * 24, y: f.y - 52,
-      vx: f.face * 520, vy: rand(-40, 40), r: 10,
+      x: f.x + (f.face || 1) * 24, y: f.y - 52,
+      vx: aim.vx, vy: aim.vy, r: 10,
       dmg: f.baseDmg * w.dmg * 0.85,
-      from: this.projFrom(f), kind: 'shuriken', life: 1.2, spin: 0,
+      from: this.projFrom(f), kind: 'shuriken', life: 1.35, spin: 0,
     }, critMeta));
   }
 
@@ -4121,6 +4308,7 @@ class Game {
     else if (this.mode === 'training') this.updateTraining(dt);
     else if (this.mode === 'versus') this.updateVersus(dt);
     else if (this.mode === 'wall') this.updateWall(dt);
+    else if (this.mode === 'coinrun') this.updateCoinRun(dt);
 
     for (const m of this.monsters) m.update(dt, this);
     this.monsters = this.monsters.filter(m => m.alive || m.deadT < 1);
@@ -4207,6 +4395,21 @@ class Game {
               b.hp -= p.dmg;
               if (b.hp <= 0) { this.score++; AudioSys.sfx('brick'); this.burst(p.x, p.y, `hsl(${b.hue},50%,45%)`, 12); }
               if (!p.pierce) p.life = 0;
+            }
+          }
+        }
+        if (this.mode === 'coinrun' && this.flyers && p.kind === 'shuriken' && p.from === 'player') {
+          for (const fl of this.flyers) {
+            if (fl.hp <= 0) continue;
+            if ((p.x - fl.x) ** 2 + (p.y - fl.y) ** 2 < (p.r + fl.r) ** 2) {
+              fl.hp = 0;
+              this.coinsCollected += 3;
+              this.floater(fl.x, fl.y - 24, '+3 munten', '#ffd75e', 17);
+              this.burst(fl.x, fl.y, '#ffd75e', 12);
+              AudioSys.sfx('bonus');
+              haptic(12);
+              p.life = 0;
+              break;
             }
           }
         }
@@ -4318,6 +4521,7 @@ class Game {
     }
 
     if (this.mode === 'wall') this.drawWall(c);
+    if (this.mode === 'coinrun') this.drawCoinRunLayer(c);
 
     for (const m of this.monsters) m.draw(c);
     if (this.robot) this.robot.draw(c);
@@ -4747,6 +4951,17 @@ class Game {
         c.fillText(`+${Math.min(this.combo, 12) * 4}% sloop`, 0, 18);
         c.restore();
       }
+    } else if (this.mode === 'coinrun') {
+      const tLeft = Math.ceil(Math.max(0, this.coinTimer));
+      c.font = '900 30px sans-serif';
+      c.fillStyle = this.coinTimer < 10 ? '#ff6b6b' : '#fff';
+      c.fillText(String(tLeft), W / 2, 42);
+      c.font = '800 18px sans-serif'; c.fillStyle = '#ffd75e';
+      c.fillText(`Munten: ${this.coinsCollected}`, W / 2, 70);
+      c.font = '700 13px sans-serif'; c.fillStyle = 'rgba(255,255,255,.7)';
+      c.fillText(`Record Mats: ${save.stats.matsCoinBest || 0}`, W / 2, 90);
+      c.fillStyle = 'rgba(124,245,255,.85)';
+      c.fillText('Joystick ↑ mik · shuriken op roze vliegers (+3)', W / 2, 112);
     } else if (this.mode === 'versus' && this.p2) {
       const p2 = this.p2;
       const half = Math.min(280, W * 0.34);
@@ -4871,6 +5086,16 @@ class Game {
     c.globalAlpha = j.active ? 0.65 : 0.3;
     c.fillStyle = '#fff';
     c.beginPath(); c.arc(jx + (j.active ? j.dx : 0), jy + (j.active ? j.dy * 0.3 : 0), 26, 0, TAU); c.fill();
+    if (this.player && this.player.weapon && this.player.weapon.id === 'shuriken' && j.active) {
+      const aim = projAimVelocity(this.player, 90);
+      c.globalAlpha = 0.5;
+      c.strokeStyle = '#7cf5ff';
+      c.lineWidth = 3;
+      c.beginPath();
+      c.moveTo(this.player.x, this.player.y - 52);
+      c.lineTo(this.player.x + aim.vx * 0.42, this.player.y - 52 + aim.vy * 0.42);
+      c.stroke();
+    }
     // knoppen
     for (const b of Input.buttons) {
       if (b.id === 'special') this.drawSpecialBtnMeter(c, b, this.player, '#3db8ff');
@@ -5328,7 +5553,7 @@ const UI = {
     const lp = save.lastPlay;
     if (cont) {
       if (lp && lp.mode) {
-        const labels = { adventure: `Avontuur Lv ${lp.level || 1}`, training: 'Training', wall: 'Muur', versus: '2 spelers' };
+        const labels = { adventure: `Avontuur Lv ${lp.level || 1}`, training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Mats · munten' };
         cont.style.display = 'flex';
         cont.querySelector('div').innerHTML =
           `Verder spelen<small>${labels[lp.mode] || lp.mode} — direct verder</small>`;
@@ -5768,7 +5993,7 @@ let state = 'menu';
 
 function startGame(mode, opts) {
   opts = opts || {};
-  const allowed = { adventure: 1, training: 1, wall: 1, versus: 1 };
+  const allowed = { adventure: 1, training: 1, wall: 1, versus: 1, coinrun: 1 };
   if (!allowed[mode]) {
     try { UI.toast('Onbekende modus', 2200); } catch (_) {}
     return;
@@ -5803,13 +6028,14 @@ function startGame(mode, opts) {
   try { UI.show(null); } catch (_) { syncPlayLayer(); }
   try {
     AudioSys.init();
-    const modeSting = { adventure: 'modeAdventure', training: 'modeTraining', versus: 'modeVersus', wall: 'modeWall' };
+    const modeSting = { adventure: 'modeAdventure', training: 'modeTraining', versus: 'modeVersus', wall: 'modeWall', coinrun: 'modeAdventure' };
     if (modeSting[mode]) AudioSys.sting(modeSting[mode]);
   } catch (_) {}
   try {
     if (mode === 'training') AudioSys.play('boss');
     else if (mode === 'adventure') AudioSys.play(game.level && game.level.boss ? 'boss' : 'battle');
     else if (mode === 'versus') AudioSys.play('boss');
+    else if (mode === 'coinrun') AudioSys.play('battle');
     else AudioSys.play('battle');
   } catch (_) {}
 }
@@ -5858,6 +6084,10 @@ bindPress(charPickBackP1, () => {
 });
 bindPress(document.getElementById('btnWall'), () => {
   AudioSys.init(); AudioSys.sfx('select'); startGame('wall');
+});
+const btnMatsCoins = document.getElementById('btnMatsCoins');
+bindPress(btnMatsCoins, () => {
+  AudioSys.init(); AudioSys.sfx('select'); startGame('coinrun');
 });
 bindPress(document.getElementById('btnWeapons'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderWeapons(); UI.show('weaponScreen');
@@ -6439,6 +6669,7 @@ function bootGame() {
             UI.renderCharSelect();
             UI.show('charSelectScreen');
           } else if (mode === 'wall') startGame('wall');
+          else if (mode === 'coinrun') startGame('coinrun');
         } catch (err) {
           sfReportError('shortcut/' + mode, err);
           recoverToMenu();

@@ -67,7 +67,7 @@ const get = (id) => {
   'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen',
   'resultScreen', 'pauseScreen', 'game', 'toastHost', 'pauseBtn', 'menuStats',
   'menuDailyHint', 'menuTipLine', 'menuPlayLink', 'togMusic', 'togSfx',
-  'btnAdventure', 'btnTraining', 'btnWall', 'btnWeapons', 'btnDex', 'btnVersus',
+  'btnAdventure', 'btnTraining', 'btnWall', 'btnMatsCoins', 'btnWeapons', 'btnDex', 'btnVersus',
   'btnContinue', 'btnStyle', 'btnSettings', 'btnMissions', 'btnMissionsLbl', 'btnHelp', 'helpOk',
   'btnGuvve', 'pauseResume', 'pauseQuit', 'resAgain', 'resNext', 'resMenu',
   'pauseTogMusic', 'pauseTogSfx', 'tunnelBootOverlay', 'charPickStep', 'charGrid',
