@@ -357,11 +357,23 @@
       "id": "special-enemy-intro-song",
       "d20Face": null,
       "userWords": "speciale enemies intro song met special effects",
-      "versions": ["1.13.5"],
+      "versions": [
+        "1.13.5"
+      ],
       "commits": [],
       "code": "triggerSpecialEnemyIntro, SONGS.elite, sting eliteIntro/bossIntro/superBossIntro, introT aura",
       "status": "done",
       "note": "off-d20 user feature"
+    },
+    {
+      "id": "bgm-weapon-sfx",
+      "d20Face": null,
+      "userWords": "Meer bgm difference en goed letten op wapen geluiden",
+      "versions": ["1.13.6"],
+      "commits": [],
+      "code": "SONGS training/versus/wall/mats, WEAPON_SWING_SFX, weaponHitSfx",
+      "status": "done",
+      "note": "off-d20 user feature; d1 blijft PENDING"
     },
     {
       "id": "gamble-dice-stage",

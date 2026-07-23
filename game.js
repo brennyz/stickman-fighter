@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 1;
-const APP_VERSION = '1.13.5';
+const APP_VERSION = '1.13.6';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 95;
+const SW_CACHE_REV = 96;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1242,6 +1242,40 @@ const WEAPONS = [
 ];
 const weaponById = id => WEAPONS.find(w => w.id === id) || WEAPONS[0];
 
+/** Swing-SFX per wapen (procedureel) — geen generieke “swing” voor alles. */
+const WEAPON_SWING_SFX = {
+  vuist: 'punch',
+  kunai: 'wKunai',
+  shuriken: 'shuriken',
+  zwaard: 'wZwaard',
+  knuppel: 'wKnuppel',
+  speer: 'wSpeer',
+  nunchaku: 'wNunchaku',
+  boemerang: 'wBoemerang',
+  hamer: 'wHamer',
+  ketting: 'wKetting',
+  laser: 'wLaser',
+  donder: 'wDonder',
+  void: 'wVoid',
+  guvve: 'wGuvve',
+};
+
+function weaponSwingSfx(weaponOrId, attackKind) {
+  if (attackKind === 'kick') return 'kick';
+  if (attackKind === 'punch') return 'punch';
+  const id = typeof weaponOrId === 'string' ? weaponOrId : (weaponOrId && weaponOrId.id);
+  return WEAPON_SWING_SFX[id] || 'swing';
+}
+
+function weaponHitSfx(weaponOrId, dmg) {
+  const id = typeof weaponOrId === 'string' ? weaponOrId : (weaponOrId && weaponOrId.id);
+  if (id === 'laser' || id === 'void' || id === 'donder') return 'hitEnergy';
+  if (id === 'hamer' || id === 'knuppel' || id === 'guvve') return 'hitHeavy';
+  if (id === 'zwaard' || id === 'ketting' || id === 'kunai') return 'hitMetal';
+  if (dmg > 22) return 'hit2';
+  return 'hit';
+}
+
 /* ============================== STIJLEN ================================ */
 const STYLES = [
   { id: 'classic', name: 'Klassiek', body: '#f2f5ff', accent: '#3db8ff', bandana: null,
@@ -1983,8 +2017,87 @@ const AudioSys = {
     const now = this.ctx.currentTime;
     switch (name) {
       case 'swing':   N(0.05, 0.2, 3200, true); T(380, 180, 0.06, 'sine', 0.1); break;
+      case 'punch':
+        N(0.035, 0.16, 2800, true, now);
+        T(220, 90, 0.06, 'sine', 0.14, now);
+        break;
+      case 'kick':
+        N(0.045, 0.18, 2400, true, now);
+        T(300, 110, 0.08, 'triangle', 0.13, now);
+        break;
+      case 'wKunai':
+        N(0.03, 0.14, 5200, true, now);
+        T(980, 420, 0.07, 'triangle', 0.12, now);
+        break;
+      case 'wZwaard':
+        N(0.055, 0.2, 3800, true, now);
+        T(620, 280, 0.09, 'sawtooth', 0.1, now);
+        T(880, 440, 0.05, 'sine', 0.08, now + 0.02);
+        break;
+      case 'wKnuppel':
+        N(0.07, 0.24, 900, false, now);
+        T(140, 55, 0.1, 'sine', 0.2, now);
+        break;
+      case 'wSpeer':
+        N(0.04, 0.15, 4000, true, now);
+        T(540, 220, 0.1, 'triangle', 0.12, now);
+        break;
+      case 'wNunchaku':
+        N(0.025, 0.12, 5000, true, now);
+        T(760, 520, 0.045, 'sine', 0.1, now);
+        T(520, 760, 0.045, 'sine', 0.09, now + 0.04);
+        break;
+      case 'wBoemerang':
+        T(640, 920, 0.08, 'triangle', 0.11, now);
+        T(920, 480, 0.1, 'sine', 0.1, now + 0.05);
+        N(0.04, 0.1, 3600, true, now);
+        break;
+      case 'wHamer':
+        N(0.1, 0.32, 600, false, now);
+        T(90, 40, 0.14, 'sine', 0.28, now);
+        T(180, 80, 0.06, 'square', 0.1, now + 0.04);
+        break;
+      case 'wKetting':
+        N(0.06, 0.18, 2200, true, now);
+        T(280, 160, 0.08, 'sawtooth', 0.12, now);
+        T(480, 240, 0.05, 'triangle', 0.08, now + 0.03);
+        break;
+      case 'wLaser':
+        T(1200, 480, 0.1, 'sawtooth', 0.14, now);
+        T(1600, 900, 0.06, 'sine', 0.1, now);
+        N(0.04, 0.1, 6000, true, now);
+        break;
+      case 'wDonder':
+        T(180, 70, 0.12, 'sawtooth', 0.2, now);
+        N(0.1, 0.22, 1800, true, now);
+        T(980, 420, 0.08, 'sine', 0.12, now + 0.04);
+        break;
+      case 'wVoid':
+        T(220, 90, 0.12, 'sine', 0.14, now);
+        T(660, 220, 0.1, 'triangle', 0.11, now + 0.03);
+        N(0.08, 0.14, 1400, true, now);
+        break;
+      case 'wGuvve':
+        T(280, 160, 0.08, 'square', 0.16, now);
+        T(420, 240, 0.07, 'triangle', 0.12, now + 0.05);
+        N(0.05, 0.14, 1600, false, now + 0.02);
+        break;
       case 'hit':     T(200, 70, 0.07, 'sine', 0.2); N(0.04, 0.2, 1200, true); break;
       case 'hit2':    T(150, 55, 0.1, 'square', 0.28); N(0.06, 0.28, 700, false); T(240, 100, 0.05, 'triangle', 0.11); break;
+      case 'hitMetal':
+        T(880, 440, 0.05, 'triangle', 0.14, now);
+        N(0.04, 0.16, 2800, true, now);
+        T(220, 90, 0.07, 'sine', 0.12, now);
+        break;
+      case 'hitHeavy':
+        T(120, 45, 0.12, 'sine', 0.26, now);
+        N(0.08, 0.28, 700, false, now);
+        break;
+      case 'hitEnergy':
+        T(720, 320, 0.08, 'sine', 0.14, now);
+        T(1100, 600, 0.06, 'triangle', 0.1, now);
+        N(0.04, 0.12, 4200, true, now);
+        break;
       case 'jump':    T(260, 520, 0.1, 'sine', 0.18); break;
       case 'land':    N(0.04, 0.16, 500, false); break;
       case 'hurt':    T(340, 140, 0.11, 'triangle', 0.2); break;
@@ -2079,6 +2192,10 @@ const AudioSys = {
         break;
       case 'modeWall':
         [196, 247, 330, 392].forEach((f, i) => T(f, f * 0.96, 0.09, 'triangle', 0.15, now + i * 0.04));
+        break;
+      case 'modeMats':
+        [523, 659, 784].forEach((f, i) => T(f, f * 1.02, 0.07, 'sine', 0.12, now + i * 0.05));
+        T(392, 523, 0.1, 'triangle', 0.1, now + 0.16);
         break;
       case 'superReady':
         if (kind === 'chidori') {
@@ -2188,6 +2305,22 @@ const AudioSys = {
         this.noise(0.06, 0.12, 2200, true, mg, t);
       }
     }
+    if (s.id === 'training') {
+      if (i === 0) this.tone(midi(64), midi(57), spb * 2.2, 'triangle', 0.08, mg, t);
+      if (i === 12 && bar % 2 === 0) this.noise(0.05, 0.1, 4800, true, mg, t);
+    }
+    if (s.id === 'versus') {
+      if (i === 0 || i === 8) this.tone(midi(48), midi(36), spb * 1.6, 'square', 0.07, mg, t);
+      if (i === 4 && bar % 2 === 1) this.noise(0.04, 0.11, 1600, false, mg, t);
+    }
+    if (s.id === 'wall') {
+      if (i === 0 && bar % 4 === 0) this.tone(midi(67), midi(62), spb * 3.2, 'sine', 0.07, mg, t);
+      if ([2, 6, 10, 14].includes(i)) this.noise(0.02, 0.08, 7000, true, mg, t);
+    }
+    if (s.id === 'mats') {
+      if (i === 0 || i === 8) this.tone(midi(72), midi(76), spb * 1.4, 'sine', 0.09, mg, t);
+      if (i === 4) this.tone(midi(79), midi(72), spb * 1.1, 'triangle', 0.07, mg, t);
+    }
   },
 };
 
@@ -2226,6 +2359,46 @@ const SONGS = {
     lead: [
       [74,null,75,74, null,70,74,null, 77,null,75,74, null,72,70,null],
       [74,null,77,79, null,77,75,null, 74,null,72,70, 69,null,70,null],
+    ],
+  },
+  /** Training vs RabbitRobot — strak, metallig, minder zwaar dan baas */
+  training: {
+    bpm: 128,
+    kick: [0, 8], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [48,null,48,null, 45,null,43,null, 48,null,50,null, 45,null,43,null],
+    lead: [
+      [71,null,null,74, null,76,null,74, 71,null,69,null, 67,null,69,null],
+      [74,null,76,null, 79,null,76,null, 74,null,71,null, 69,null,71,74],
+    ],
+  },
+  /** 2P versus — syncopisch, duellerend */
+  versus: {
+    bpm: 152,
+    kick: [0, 3, 8, 11], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [36,36,null,38, 36,null,41,null, 38,38,null,36, 33,null,36,null],
+    lead: [
+      [72,null,75,72, null,70,72,null, 67,null,70,67, null,65,67,70],
+      [75,null,77,79, null,77,75,null, 72,null,70,67, 65,null,67,null],
+    ],
+  },
+  /** Muur — snelle arcade-tick */
+  wall: {
+    bpm: 168,
+    kick: [0, 4, 8, 12], snare: [4, 12], hat: [1,3,5,7,9,11,13,15],
+    bass: [43,43,null,43, 45,null,43,null, 47,47,null,45, 43,null,40,null],
+    lead: [
+      [79,79,null,76, 79,null,81,null, 76,76,null,74, 76,null,79,null],
+      [81,null,79,76, null,74,76,null, 79,null,81,84, null,81,79,null],
+    ],
+  },
+  /** Mats munten — speels / vrolijk */
+  mats: {
+    bpm: 118,
+    kick: [0, 8], snare: [4, 12], hat: [2, 6, 10, 14],
+    bass: [48,null,null,48, 52,null,48,null, 50,null,null,50, 47,null,45,null],
+    lead: [
+      [72,null,76,79, null,76,72,null, 74,null,77,81, null,77,74,null],
+      [76,null,79,83, null,79,76,null, 74,null,72,69, 71,null,72,76],
     ],
   },
 };
@@ -3216,7 +3389,7 @@ class Fighter {
         game.banner(lbl, 0.7, col, 40);
       }
     } else {
-      AudioSys.sfx(this.weapon.id === 'shuriken' ? 'shuriken' : 'swing');
+      AudioSys.sfx(weaponSwingSfx(this.weapon, kind));
     }
     this.attack = Object.assign({ t: 0, hasHit: false, fired: false }, this.attackSpec(kind));
     this._aimAtAttack = fighterAimNorm(this);
@@ -4590,7 +4763,7 @@ class Game {
     this.trainLaserCd = rand(5, 8);
     this.trainLaserTelegraph = 0;
     this.startRound();
-    AudioSys.play('boss');
+    AudioSys.play('training');
   }
 
   startRound() {
@@ -4710,7 +4883,7 @@ class Game {
     this.player = buildVsFighter(vsRosterEntry(this.p1Pick), vsSpawnX(1), 1);
     this.p2 = buildVsFighter(vsRosterEntry(this.p2Pick), vsSpawnX(2), 2);
     this.startVsRound();
-    AudioSys.play('boss');
+    AudioSys.play('versus');
   }
 
   startVsRound() {
@@ -4789,7 +4962,7 @@ class Game {
     this.wallRecordToast = false;
     this.layoutWall(true);
     this.banner('SLOOP DE MUUR!', 1.5, '#ffd75e', 46);
-    AudioSys.play('battle');
+    AudioSys.play('wall');
     this.phase = 'fight';
   }
 
@@ -4867,7 +5040,7 @@ class Game {
         try { this.banner('Joystick ↑ = hoog mikken (slag/gooi) · vliegers = +3', 1.8, '#7cf5ff', 24); } catch (_) {}
       }, 900);
     }
-    AudioSys.play('battle');
+    AudioSys.play('mats');
   }
 
   spawnCoinPickup() {
@@ -5122,6 +5295,9 @@ class Game {
           if (hits >= 3) break;
         }
       }
+      if (hits > 0) {
+        try { AudioSys.sfx(weaponHitSfx(f.weapon, spec.dmg)); } catch (_) {}
+      }
       return hits > 0;
     }
 
@@ -5176,7 +5352,7 @@ class Game {
         hit = true;
       }
     }
-    if (hit && this.mode !== 'wall') AudioSys.sfx(spec.dmg > 20 ? 'hit2' : 'hit');
+    if (hit && this.mode !== 'wall') AudioSys.sfx(weaponHitSfx(f.weapon, spec.dmg));
     return hit;
   }
 
@@ -7030,7 +7206,9 @@ const UI = {
       right.innerHTML = locked ? `&#128274; Lv ${w.unlock}` : (save.weapon === w.id ? '&#10004; gekozen' : 'kies');
       el.appendChild(right);
       if (!locked) el.addEventListener('click', () => {
-        save.weapon = w.id; persist(); AudioSys.sfx('select'); this.renderWeapons();
+        save.weapon = w.id; persist(); AudioSys.sfx('select');
+        try { AudioSys.sfx(weaponSwingSfx(w.id)); } catch (_) {}
+        this.renderWeapons();
       });
       list.appendChild(el);
     }
@@ -7301,14 +7479,15 @@ function startGame(mode, opts) {
   try { UI.show(null); } catch (_) { syncPlayLayer(); }
   try {
     AudioSys.init();
-    const modeSting = { adventure: 'modeAdventure', training: 'modeTraining', versus: 'modeVersus', wall: 'modeWall', coinrun: 'modeAdventure' };
+    const modeSting = { adventure: 'modeAdventure', training: 'modeTraining', versus: 'modeVersus', wall: 'modeWall', coinrun: 'modeMats' };
     if (modeSting[mode]) AudioSys.sting(modeSting[mode]);
   } catch (_) {}
   try {
-    if (mode === 'training') AudioSys.play('boss');
+    if (mode === 'training') AudioSys.play('training');
     else if (mode === 'adventure') AudioSys.play(game.level && game.level.boss ? 'boss' : 'battle');
-    else if (mode === 'versus') AudioSys.play('boss');
-    else if (mode === 'coinrun') AudioSys.play('battle');
+    else if (mode === 'versus') AudioSys.play('versus');
+    else if (mode === 'coinrun') AudioSys.play('mats');
+    else if (mode === 'wall') AudioSys.play('wall');
     else AudioSys.play('battle');
   } catch (_) {}
 }
