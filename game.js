@@ -55,9 +55,9 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.10.1';
+const APP_VERSION = '1.10.2';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 50;
+const SW_CACHE_REV = 51;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -66,6 +66,18 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   achievements: {}, daily: null, vsPlayedIds: [] };
 const MAX_LEVEL = 50;
 let save = loadSave();
+function fighterJutsuKind(f) {
+  if (!f) return 'rasengan';
+  if (f.isRobot || f.vsSpecial === 'chidori') return 'chidori';
+  return 'rasengan';
+}
+function jutsuHudLabel(kind) {
+  return kind === 'chidori' ? '⚡ CHIDORI!' : '🌀 RASENGAN!';
+}
+function jutsuBtnIcon(kind, pct) {
+  if (pct >= 1) return kind === 'chidori' ? '⚡' : '🌀';
+  return kind === 'chidori' ? '⚡' : '◉';
+}
 
 function loadSave() {
   const parsed = readSaveJson(localStorage.getItem(SAVE_KEY));
@@ -1291,6 +1303,52 @@ const AudioSys = {
     }
   },
 
+  /** Korte arcade-stingers (intro / modus / super vol) */
+  sting(name, kind) {
+    if (!this.ctx || !save.sfx) return;
+    try { if (this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
+    const now = this.ctx.currentTime;
+    const T = (f0, f1, d, ty, v, w) => this.tone(f0, f1, d, ty, v, null, w);
+    const N = (d, v, ff, hp, w) => this.noise(d, v, ff, hp, null, w);
+    switch (name) {
+      case 'title':
+        [392, 523, 659, 784, 988].forEach((f, i) => T(f, f, 0.11, 'square', 0.17, now + i * 0.065));
+        T(110, 48, 0.28, 'sine', 0.32, now + 0.05);
+        N(0.08, 0.22, 1200, false, now + 0.35);
+        break;
+      case 'modeAdventure':
+        [440, 554, 659, 880].forEach((f, i) => T(f, f, 0.09, 'triangle', 0.15, now + i * 0.055));
+        break;
+      case 'modeTraining':
+        T(180, 920, 0.22, 'sawtooth', 0.14, now);
+        N(0.18, 0.18, 4500, true, now + 0.04);
+        T(660, 880, 0.1, 'square', 0.12, now + 0.2);
+        break;
+      case 'modeVersus':
+        T(130, 880, 0.1, 'square', 0.22, now);
+        T(880, 130, 0.1, 'square', 0.2, now + 0.11);
+        N(0.06, 0.28, 900, false, now + 0.05);
+        break;
+      case 'modeWall':
+        [196, 247, 330, 392].forEach((f, i) => T(f, f * 0.96, 0.12, 'square', 0.19, now + i * 0.05));
+        break;
+      case 'superReady':
+        if (kind === 'chidori') {
+          T(880, 1560, 0.22, 'sawtooth', 0.24, now);
+          N(0.14, 0.2, 5200, true, now);
+          T(1200, 900, 0.08, 'square', 0.12, now + 0.12);
+        } else {
+          T(660, 1320, 0.16, 'square', 0.2, now);
+          T(990, 1760, 0.14, 'triangle', 0.16, now + 0.07);
+          T(1320, 880, 0.1, 'sine', 0.1, now + 0.14);
+        }
+        break;
+      default:
+        T(440, 660, 0.08, 'square', 0.14, now);
+        break;
+    }
+  },
+
   /* --------- Muziek: procedurele chiptune-sequencer (rechtenvrij) ------- */
   play(name) {
     if (!name || !SONGS[name]) return;
@@ -1337,8 +1395,17 @@ const AudioSys = {
     const leadPat = s.lead[bar % s.lead.length];
     const L = leadPat[i];
     if (L != null) this.tone(midi(L), midi(L) * 0.995, spb * 1.6, 'square', 0.12, mg, t);
-    if (s.id === 'menu' && i === 0 && bar % 2 === 0) {
-      this.tone(midi(57), midi(57), spb * 3.8, 'sine', 0.06, mg, t);
+    if (s.id === 'menu') {
+      if (i === 0 && bar % 4 === 0) {
+        this.tone(midi(72), midi(72), spb * 1.8, 'square', 0.13, mg, t);
+        this.tone(midi(76), midi(79), spb * 1.2, 'square', 0.09, mg, t + spb * 0.45);
+      }
+      if (i === 8 && bar % 2 === 0) {
+        this.tone(midi(57), midi(48), spb * 1.4, 'triangle', 0.11, mg, t);
+      }
+      if (i === 0 && bar % 2 === 0) {
+        this.tone(midi(57), midi(57), spb * 3.8, 'sine', 0.06, mg, t);
+      }
     }
   },
 };
@@ -2062,9 +2129,14 @@ class Fighter {
     }
 
     // chakra laadt sneller bij combo-gevoel (in beweging/gevecht)
-    if (this.isPlayer) {
+    if (this.isPlayer || this.playerSlot) {
       const rate = this.attack ? 4.2 : 2.8;
+      const prevE = this._energyPrev == null ? this.energy : this._energyPrev;
       this.energy = clamp(this.energy + dt * rate, 0, 100);
+      if (this.energy >= 100 && prevE < 100) {
+        try { AudioSys.sting('superReady', fighterJutsuKind(this)); } catch (_) {}
+      }
+      this._energyPrev = this.energy;
     }
 
     // state voor animatie
@@ -2261,8 +2333,27 @@ class Fighter {
     // Rasengan / Chidori oplaad in de hand
     if (this.attack && this.attack.kind === 'special' && !this.attack.fired) {
       const g = clamp(this.attack.t / this.attack.windup, 0, 1);
-      const isChi = this.isRobot || this.vsSpecial === 'chidori';
-      drawJutsuOrb(c, hx + 14, hy, 8 + g * 16, this.animT * (8 + g * 20), isChi ? 'chidori' : 'rasengan', 0.55 + g * 0.45);
+      const kind = fighterJutsuKind(this);
+      drawJutsuOrb(c, hx + 14, hy, 8 + g * 16, this.animT * (8 + g * 20), kind, 0.55 + g * 0.45);
+      if (kind === 'chidori') {
+        c.strokeStyle = `rgba(200,240,255,${0.35 + g * 0.45})`;
+        c.lineWidth = 2;
+        for (let i = 0; i < 4; i++) {
+          const a = this.animT * 14 + i * 1.4;
+          c.beginPath();
+          c.moveTo(hx + 10, hy - 4);
+          c.lineTo(hx + 10 + Math.cos(a) * (18 + g * 22), hy - 4 + Math.sin(a) * 8);
+          c.stroke();
+        }
+      } else {
+        c.fillStyle = `rgba(124,245,255,${0.25 + g * 0.35})`;
+        for (let i = 0; i < 5; i++) {
+          const a = this.animT * 10 + i * (TAU / 5);
+          c.beginPath();
+          c.arc(hx + 14 + Math.cos(a) * (10 + g * 14), hy + Math.sin(a) * (6 + g * 8), 2 + g * 2, 0, TAU);
+          c.fill();
+        }
+      }
     }
     c.restore();
 
@@ -3828,19 +3919,85 @@ class Game {
     }
   }
 
+  drawSuperMeterFill(c, x, y, w, h, pct, kind, t) {
+    pct = clamp(pct, 0, 1);
+    const ready = pct >= 1;
+    c.save();
+    if (kind === 'chidori') {
+      const seg = 10;
+      const segW = w / seg;
+      for (let i = 0; i < seg; i++) {
+        const segStart = i / seg;
+        if (pct <= segStart) continue;
+        const fill = Math.min(1, (pct - segStart) * seg);
+        if (fill <= 0.01) continue;
+        const flick = 0.7 + Math.sin(t * 24 + i * 1.9) * 0.3;
+        c.fillStyle = ready ? `rgba(168,224,255,${flick})` : `rgba(80,160,255,${0.45 + fill * 0.45})`;
+        this.rr(c, x + i * segW + 1, y + 1, Math.max(1, segW * fill - 2), h - 2, 2);
+        c.fill();
+      }
+    } else {
+      const fw = w * pct;
+      if (fw > 1) {
+        const g = c.createLinearGradient(x, y, x + fw, y + h);
+        g.addColorStop(0, '#1a5cff');
+        g.addColorStop(0.55, '#3db8ff');
+        g.addColorStop(1, ready ? '#9af5ff' : '#5ad0ff');
+        c.fillStyle = g;
+        this.rr(c, x, y, fw, h, 5);
+        c.fill();
+        if (pct > 0.12 && !fxLite()) {
+          c.strokeStyle = `rgba(230,250,255,${0.28 + Math.sin(t * 7) * 0.12})`;
+          c.lineWidth = 1.2;
+          const cx = x + fw * 0.55;
+          const cy = y + h * 0.5;
+          c.beginPath();
+          for (let a = 0; a <= TAU * 1.6; a += 0.35) {
+            const r = Math.min(fw, h * 2) * 0.22 * (a / (TAU * 1.6));
+            const px = cx + Math.cos(a + t * 5) * r;
+            const py = cy + Math.sin(a + t * 5) * r * 0.55;
+            if (a === 0) c.moveTo(px, py); else c.lineTo(px, py);
+          }
+          c.stroke();
+        }
+      }
+    }
+    c.restore();
+  }
+
   drawChakraReadyFx(c) {
     const fighters = [this.player];
     if (this.p2) fighters.push(this.p2);
     for (const f of fighters) {
       if (!f || !f.alive || f.energy < 100) continue;
+      const kind = fighterJutsuKind(f);
       const pulse = 0.35 + Math.sin(this.t * 7) * 0.15;
       c.save();
       c.globalAlpha = pulse;
-      c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : '#7cf5ff';
-      c.lineWidth = 3;
-      c.beginPath();
-      c.arc(f.x, f.y - 55, 38 + Math.sin(this.t * 9) * 4, 0, TAU);
-      c.stroke();
+      if (kind === 'chidori') {
+        c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : '#a8e0ff';
+        c.lineWidth = 3;
+        c.beginPath();
+        c.arc(f.x, f.y - 55, 38 + Math.sin(this.t * 11) * 5, 0, TAU);
+        c.stroke();
+        c.globalAlpha = pulse * 0.6;
+        for (let i = 0; i < 3; i++) {
+          c.beginPath();
+          c.moveTo(f.x - 20, f.y - 60 + i * 12);
+          c.lineTo(f.x + 28, f.y - 52 + i * 10);
+          c.stroke();
+        }
+      } else {
+        c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : '#7cf5ff';
+        c.lineWidth = 3;
+        c.beginPath();
+        c.arc(f.x, f.y - 55, 38 + Math.sin(this.t * 9) * 4, 0, TAU);
+        c.stroke();
+        c.globalAlpha = pulse * 0.5;
+        c.beginPath();
+        c.arc(f.x, f.y - 55, 48 + Math.sin(this.t * 6) * 3, this.t * 2, this.t * 2 + Math.PI * 1.2);
+        c.stroke();
+      }
       c.restore();
     }
   }
@@ -3865,18 +4022,18 @@ class Game {
       c.fillStyle = p.hp / p.maxhp > 0.35 ? '#6ee06e' : '#ff6b6b';
       this.rr(c, bx, by, bw * clamp(p.hp / p.maxhp, 0, 1), 15, 6); c.fill();
       c.fillStyle = '#333c55'; this.rr(c, bx, by + 20, bw, 11, 5); c.fill();
-      c.fillStyle = p.energy >= 100 ? '#7cf5ff' : '#3db8ff';
-      this.rr(c, bx, by + 20, bw * p.energy / 100, 11, 5); c.fill();
+      const jKind = fighterJutsuKind(p);
+      this.drawSuperMeterFill(c, bx, by + 20, bw, 11, p.energy / 100, jKind, this.t);
       c.font = '800 10px -apple-system, sans-serif';
       c.fillStyle = 'rgba(255,255,255,.85)'; c.textAlign = 'left';
-      c.fillText('CHAKRA', bx + 6, by + 29);
+      c.fillText(jKind === 'chidori' ? 'SUPER ⚡' : 'SUPER ◉', bx + 6, by + 29);
       c.font = '800 13px -apple-system, sans-serif';
       c.fillStyle = '#fff';
       c.fillText(`Lv ${save.lvl}`, bx + bw + 12, by + 13);
       if (p.energy >= 100) {
-        c.fillStyle = '#7cf5ff';
-        c.fillText('🌀 RASENGAN!', bx + bw + 12, by + 32);
-        c.strokeStyle = 'rgba(124,245,255,.55)';
+        c.fillStyle = jKind === 'chidori' ? '#a8e0ff' : '#7cf5ff';
+        c.fillText(jutsuHudLabel(jKind), bx + bw + 12, by + 32);
+        c.strokeStyle = jKind === 'chidori' ? 'rgba(168,224,255,.55)' : 'rgba(124,245,255,.55)';
         c.lineWidth = 2;
         c.beginPath();
         c.arc(bx + bw * 0.5, by + 25, 18 + Math.sin(this.t * 8) * 3, 0, TAU);
@@ -4025,8 +4182,7 @@ class Game {
       c.font = '800 11px sans-serif'; c.textAlign = 'left'; c.fillStyle = '#7cf5ff';
       c.fillText(`P1 · ${name1}`, bx, by + 30);
       c.fillStyle = '#333c55'; this.rr(c, bx, by + 34, half, 5, 3); c.fill();
-      c.fillStyle = p.energy >= 100 ? '#7cf5ff' : '#3db8ff';
-      this.rr(c, bx, by + 34, half * (p.energy / 100), 5, 3); c.fill();
+      this.drawSuperMeterFill(c, bx, by + 34, half, 5, p.energy / 100, fighterJutsuKind(p), this.t);
 
       c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, W - half - 20, by - 4, half + 8, 44, 10); c.fill();
       c.fillStyle = '#333c55'; this.rr(c, W - half - 16, by, half, 14, 6); c.fill();
@@ -4036,8 +4192,7 @@ class Game {
       c.textAlign = 'right'; c.fillStyle = '#ffb0b8';
       c.fillText(`${name2} · P2`, W - 20, by + 30);
       c.fillStyle = '#333c55'; this.rr(c, W - half - 16, by + 34, half, 5, 3); c.fill();
-      c.fillStyle = p2.energy >= 100 ? '#7cf5ff' : '#3db8ff';
-      this.rr(c, W - half - 16, by + 34, half * (p2.energy / 100), 5, 3); c.fill();
+      this.drawSuperMeterFill(c, W - half - 16, by + 34, half, 5, p2.energy / 100, fighterJutsuKind(p2), this.t);
 
       c.textAlign = 'center';
       const tLeft = Math.ceil(Math.max(0, this.roundTimer));
@@ -4068,13 +4223,14 @@ class Game {
         c.beginPath(); c.arc(W / 2 + 40 + i * 16, 72, mp2 && i === 1 ? 6 : 5, 0, TAU); c.fill();
       }
       if (p.energy >= 100) {
-        c.font = '800 10px sans-serif'; c.fillStyle = '#7cf5ff';
-        c.fillText('🌀', bx + half - 8, by + 12);
+        c.font = '800 10px sans-serif'; c.fillStyle = fighterJutsuKind(p) === 'chidori' ? '#a8e0ff' : '#7cf5ff';
+        c.textAlign = 'left';
+        c.fillText(jutsuBtnIcon(fighterJutsuKind(p), 1), bx + half - 14, by + 12);
       }
       if (p2.energy >= 100) {
-        c.font = '800 10px sans-serif'; c.fillStyle = '#7cf5ff';
+        c.font = '800 10px sans-serif'; c.fillStyle = fighterJutsuKind(p2) === 'chidori' ? '#a8e0ff' : '#7cf5ff';
         c.textAlign = 'right';
-        c.fillText('🌀', W - 20, by + 12);
+        c.fillText(jutsuBtnIcon(fighterJutsuKind(p2), 1), W - 20, by + 12);
         c.textAlign = 'center';
       }
     }
@@ -4089,6 +4245,36 @@ class Game {
     c.arcTo(x, y + h, x, y, r);
     c.arcTo(x, y, x + w, y, r);
     c.closePath();
+  }
+
+  drawSpecialBtnMeter(c, b, fighter, accent) {
+    if (!fighter || b.id !== 'special') return;
+    const pct = clamp(fighter.energy / 100, 0, 1);
+    const kind = fighterJutsuKind(fighter);
+    const ring = b.r + 4;
+    c.save();
+    c.globalAlpha = 0.28;
+    c.strokeStyle = '#1a2030';
+    c.lineWidth = 6;
+    c.beginPath(); c.arc(b.x, b.y, ring, 0, TAU); c.stroke();
+    if (pct > 0.02) {
+      c.globalAlpha = kind === 'chidori' ? 0.75 + Math.sin(this.t * 18) * 0.12 : 0.82;
+      c.strokeStyle = kind === 'chidori' ? '#7ec8ff' : accent || '#3db8ff';
+      c.lineWidth = 5;
+      c.lineCap = 'round';
+      c.beginPath();
+      c.arc(b.x, b.y, ring, -Math.PI / 2, -Math.PI / 2 + TAU * pct);
+      c.stroke();
+    }
+    if (pct >= 1) {
+      c.globalAlpha = 0.9;
+      c.strokeStyle = kind === 'chidori' ? '#a8e0ff' : '#7cf5ff';
+      c.lineWidth = 3;
+      c.beginPath();
+      c.arc(b.x, b.y, ring + 5 + Math.sin(this.t * 8) * 2, 0, TAU);
+      c.stroke();
+    }
+    c.restore();
   }
 
   drawTouchControls(c) {
@@ -4108,17 +4294,16 @@ class Game {
     c.beginPath(); c.arc(jx + (j.active ? j.dx : 0), jy + (j.active ? j.dy * 0.3 : 0), 26, 0, TAU); c.fill();
     // knoppen
     for (const b of Input.buttons) {
+      if (b.id === 'special') this.drawSpecialBtnMeter(c, b, this.player, '#3db8ff');
       c.globalAlpha = b.held ? 0.85 : 0.45;
       c.fillStyle = b.color;
       c.beginPath(); c.arc(b.x, b.y, b.r, 0, TAU); c.fill();
       c.globalAlpha = b.held ? 1 : 0.85;
       c.font = `${b.r * 0.85}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.fillText(b.label, b.x, b.y + 2);
-      if (b.id === 'special' && this.player.energy >= 100) {
-        c.globalAlpha = 0.9;
-        c.strokeStyle = '#7cf5ff'; c.lineWidth = 4;
-        c.beginPath(); c.arc(b.x, b.y, b.r + 5 + Math.sin(this.t * 8) * 2, 0, TAU); c.stroke();
-      }
+      const lbl = b.id === 'special'
+        ? jutsuBtnIcon(fighterJutsuKind(this.player), this.player.energy / 100)
+        : b.label;
+      c.fillText(lbl, b.x, b.y + 2);
       if (b.id === 'subst' && this.player.substCd > 0) {
         c.globalAlpha = 0.35;
         c.fillStyle = '#000';
@@ -4143,16 +4328,16 @@ class Game {
     c.font = '900 11px sans-serif'; c.fillStyle = accent; c.textAlign = 'center';
     c.fillText(label, jx, jy - 58);
     for (const b of pad.buttons) {
+      if (b.id === 'special') this.drawSpecialBtnMeter(c, b, fighter, accent);
       c.globalAlpha = b.held ? 0.85 : 0.42;
       c.fillStyle = b.color;
       c.beginPath(); c.arc(b.x, b.y, b.r, 0, TAU); c.fill();
       c.globalAlpha = 0.9;
       c.font = `${b.r * 0.8}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.fillText(b.label, b.x, b.y + 2);
-      if (b.id === 'special' && fighter && fighter.energy >= 100) {
-        c.strokeStyle = accent; c.lineWidth = 3;
-        c.beginPath(); c.arc(b.x, b.y, b.r + 4, 0, TAU); c.stroke();
-      }
+      const lbl = b.id === 'special' && fighter
+        ? jutsuBtnIcon(fighterJutsuKind(fighter), fighter.energy / 100)
+        : b.label;
+      c.fillText(lbl, b.x, b.y + 2);
     }
     c.textBaseline = 'alphabetic';
     c.restore();
@@ -4858,6 +5043,11 @@ function startGame(mode, opts) {
   try { playModeHint(game, mode); } catch (_) {}
   try { UI.show(null); } catch (_) { syncPlayLayer(); }
   try {
+    AudioSys.init();
+    const modeSting = { adventure: 'modeAdventure', training: 'modeTraining', versus: 'modeVersus', wall: 'modeWall' };
+    if (modeSting[mode]) AudioSys.sting(modeSting[mode]);
+  } catch (_) {}
+  try {
     if (mode === 'training') AudioSys.play('boss');
     else if (mode === 'adventure') AudioSys.play(game.level && game.level.boss ? 'boss' : 'battle');
     else if (mode === 'versus') AudioSys.play('boss');
@@ -5452,6 +5642,10 @@ function bootGame() {
   }
   AudioSys.desiredSong = 'menu';
   safeCall(() => { if (typeof AudioSys.applyVolumes === 'function') AudioSys.applyVolumes(); }, 'vol');
+  safeCall(() => {
+    AudioSys.init();
+    setTimeout(() => { try { AudioSys.sting('title'); } catch (_) {} }, 520);
+  }, 'titleSting');
   requestAnimationFrame(loop);
   if (state === 'menu') safeCall(() => UI.show('menuScreen'), 'showMenu');
   if (!window.__sfTipTimer) {
