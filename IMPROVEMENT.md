@@ -168,6 +168,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-23 | — | **IMPROVEMENT.md + Ralph d20** toegevoegd. Gameplay: canvas tikken alleen bij `state==='play'`. v1.7.2 / SW v20. |
 | 2026-07-23 | — | GitHub Pages live `brennyz.github.io/stickman-fighter/`. iPad: menu niet klikbaar → pointer-events fix. |
 | 2026-07-23 | 14 | v1.7 combo pulse, low-HP vignette, result tips. |
+| 2026-07-23 | — | **User (deel 1/3):** Bewegend decor — wereld scrollt tussen golven (parallax heuvels/deco/grondstrepen), speler loopt door; stage-voortgangsbalk in 3 delen met bolletje + baas-vlag. v1.14.0 / SW v98. |
 | 2026-07-23 | — | **User:** +12 wapens (tanto→sterkling) met art, unlocks, SFX; Fūma-shuriken gooit. v1.13.7 / SW v97. |
 | 2026-07-23 | — | **User:** Meer BGM-verschil (training/versus/wall/mats) + per-wapen swing/hit SFX. v1.13.6 / SW v96. |
 | 2026-07-23 | — | **User:** Speciale enemies (elite/baas/super-baas) krijgen intro-stinger + elite/boss-lied + entrance FX/aura. v1.13.5 / SW v95. |

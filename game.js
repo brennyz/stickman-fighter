@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 1;
-const APP_VERSION = '1.13.7';
+const APP_VERSION = '1.14.0';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 97;
+const SW_CACHE_REV = 98;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1727,20 +1727,6 @@ function isBossWave(level, waveIdx) {
   return !!(level && level.boss && waveIdx === level.waves.length - 1);
 }
 
-function adventureWavePipFilled(game, i) {
-  const idx = Math.max(0, game.waveIdx);
-  if (i < idx) return true;
-  if (i === idx && game.wavePause > 0) return true;
-  return false;
-}
-
-function adventureWavePipActive(game, i) {
-  const idx = Math.max(0, game.waveIdx);
-  if (game.waveIdx < 0) return i === 0 && game.betweenT > 0;
-  if (game.wavePause > 0) return false;
-  if (i !== idx) return false;
-  return game.spawnQueue.length > 0 || game.monsters.some((m) => m.alive);
-}
 function buildLevel(n) {
   const hpMul = 1 + (n - 1) * 0.14;
   const dmgMul = 1 + (n - 1) * 0.08;
@@ -3740,6 +3726,11 @@ class Fighter {
     else if (!this.onGround) this.state = 'jump';
     else if (Math.abs(this.vx) > 30) this.state = 'run';
     else this.state = 'idle';
+    // Bewegend decor: speler "loopt" mee tijdens reis tussen golven
+    if (this.isPlayer && this.state === 'idle' && game && game.traveling) {
+      this.state = 'run';
+      this.face = 1;
+    }
   }
 
   takeDamage(dmg, kbx, game) {
@@ -4462,16 +4453,18 @@ const THEMES = {
   sloop:   { sky1: '#8fb6d0', sky2: '#d8e8f0', hill: '#7a8794', hill2: '#5f6b78', ground: '#6f7684', gtop: '#848b99', deco: 'kraan' },
 };
 
-function drawBackground(c, themeName, t, ground) {
+function drawBackground(c, themeName, t, ground, scroll) {
+  scroll = scroll || 0;
   const th = THEMES[themeName] || THEMES.veld;
   const g = c.createLinearGradient(0, 0, 0, ground);
   g.addColorStop(0, th.sky1); g.addColorStop(1, th.sky2);
   c.fillStyle = g; c.fillRect(0, 0, W, ground);
+  const wrap = (x, span) => ((x % span) + span) % span;
 
   if (themeName === 'grot' || themeName === 'cyber') {
     c.fillStyle = 'rgba(255,255,255,.5)';
     for (let i = 0; i < 26; i++) {
-      const x = (i * 137.5) % W, y = (i * 61.3) % (ground * 0.7);
+      const x = wrap(i * 137.5 - scroll * 0.08, W), y = (i * 61.3) % (ground * 0.7);
       const tw = 0.5 + Math.sin(t * 2 + i) * 0.5;
       c.globalAlpha = 0.25 + tw * 0.5;
       c.fillRect(x, y, 2, 2);
@@ -4480,27 +4473,29 @@ function drawBackground(c, themeName, t, ground) {
   } else {
     c.fillStyle = 'rgba(255,255,255,.75)';
     for (let i = 0; i < 4; i++) {
-      const x = ((i * 250 + t * 12) % (W + 200)) - 100;
+      const x = wrap(i * 250 + t * 12 - scroll * 0.15, W + 200) - 100;
       const y = 50 + (i % 3) * 46;
       c.beginPath();
       c.ellipse(x, y, 42, 15, 0, 0, TAU); c.ellipse(x + 26, y - 9, 27, 12, 0, 0, TAU);
       c.fill();
     }
   }
-  // heuvels
+  // heuvels (parallax: verre laag traag, nabije laag sneller)
   c.fillStyle = th.hill;
   c.beginPath(); c.moveTo(0, ground);
-  for (let x = 0; x <= W; x += 40) c.lineTo(x, ground - 60 - Math.sin(x * 0.008 + 1) * 40);
+  for (let x = 0; x <= W; x += 40) c.lineTo(x, ground - 60 - Math.sin((x + scroll * 0.3) * 0.008 + 1) * 40);
   c.lineTo(W, ground); c.closePath(); c.fill();
   c.fillStyle = th.hill2;
   c.beginPath(); c.moveTo(0, ground);
-  for (let x = 0; x <= W; x += 40) c.lineTo(x, ground - 26 - Math.sin(x * 0.013 + 4) * 22);
+  for (let x = 0; x <= W; x += 40) c.lineTo(x, ground - 26 - Math.sin((x + scroll * 0.55) * 0.013 + 4) * 22);
   c.lineTo(W, ground); c.closePath(); c.fill();
 
-  // decoratie
+  // decoratie (scrollt mee — wrap zodat het oneindig doorloopt)
+  const dSpan = W + 220;
+  const dX = (base) => wrap(base - scroll * 0.7, dSpan) - 110;
   if (th.deco === 'boom') {
     for (let i = 0; i < 5; i++) {
-      const x = (i * 0.22 + 0.06) * W;
+      const x = dX((i * 0.22 + 0.06) * dSpan);
       c.fillStyle = '#54381f';
       c.fillRect(x - 5, ground - 90, 10, 90);
       c.fillStyle = th.hill2;
@@ -4511,29 +4506,29 @@ function drawBackground(c, themeName, t, ground) {
   } else if (th.deco === 'stalag') {
     c.fillStyle = '#20263f';
     for (let i = 0; i < 7; i++) {
-      const x = (i * 0.15 + 0.04) * W;
+      const x = dX((i * 0.15 + 0.04) * dSpan);
       c.beginPath(); c.moveTo(x - 20, 0); c.lineTo(x, 70 + (i % 3) * 32); c.lineTo(x + 20, 0); c.closePath(); c.fill();
     }
   } else if (th.deco === 'lava') {
     c.fillStyle = '#ff7a30';
     for (let i = 0; i < 8; i++) {
-      const x = (i * 0.13 + 0.05) * W;
+      const x = dX((i * 0.13 + 0.05) * dSpan);
       const bub = Math.max(0, Math.sin(t * 3 + i * 2.2)) * 5;
       c.beginPath(); c.arc(x, ground - 8, 4 + bub, 0, TAU); c.fill();
     }
   } else if (th.deco === 'neon') {
     for (let i = 0; i < 6; i++) {
-      const x = (i * 0.18 + 0.03) * W, h = 110 + (i % 3) * 60;
+      const x = dX((i * 0.18 + 0.03) * dSpan), h = 110 + (i % 3) * 60;
       c.fillStyle = '#161c3f';
       c.fillRect(x, ground - h, 54, h);
       c.fillStyle = i % 2 ? '#ff4dd2' : '#39d0ff';
       for (let wy = ground - h + 12; wy < ground - 12; wy += 22)
         for (let wx = x + 8; wx < x + 48; wx += 16)
-          if ((wx + wy) % 3 !== 0) c.fillRect(wx, wy, 7, 9);
+          if ((Math.round(wx - x) + wy) % 3 !== 0) c.fillRect(wx, wy, 7, 9);
     }
   } else if (th.deco === 'lampion') {
     for (let i = 0; i < 4; i++) {
-      const x = (i * 0.28 + 0.1) * W;
+      const x = dX((i * 0.28 + 0.1) * dSpan);
       c.strokeStyle = '#2c2018'; c.lineWidth = 2;
       c.beginPath(); c.moveTo(x, 0); c.lineTo(x, 46); c.stroke();
       c.fillStyle = '#e04f4f';
@@ -4541,17 +4536,18 @@ function drawBackground(c, themeName, t, ground) {
       c.fillStyle = '#ffd75e'; c.fillRect(x - 5, 78, 10, 5);
     }
     c.fillStyle = 'rgba(0,0,0,.15)';
-    for (let x = 0; x < W; x += 90) c.fillRect(x, 0, 4, ground);
+    const off = wrap(-scroll * 0.7, 90);
+    for (let x = off - 90; x < W; x += 90) c.fillRect(x, 0, 4, ground);
   } else if (th.deco === 'kraan') {
     c.strokeStyle = '#c9a227'; c.lineWidth = 7;
-    const cx = W * 0.16;
+    const cx = dX(W * 0.16);
     c.beginPath(); c.moveTo(cx, ground); c.lineTo(cx, 60); c.lineTo(cx + 200, 60); c.stroke();
     c.lineWidth = 2;
     c.beginPath(); c.moveTo(cx + 170, 60); c.lineTo(cx + 170, 130); c.stroke();
     c.fillStyle = '#5f6b78'; c.fillRect(cx + 155, 130, 30, 22);
   } else if (th.deco === 'bloem') {
     for (let i = 0; i < 9; i++) {
-      const x = (i * 0.115 + 0.03) * W;
+      const x = dX((i * 0.115 + 0.03) * dSpan);
       c.fillStyle = ['#ff6b8a', '#ffd75e', '#fff'][i % 3];
       c.beginPath(); c.arc(x, ground - 7, 4, 0, TAU); c.fill();
       c.strokeStyle = '#2f7a45'; c.lineWidth = 2;
@@ -4565,6 +4561,14 @@ function drawBackground(c, themeName, t, ground) {
   c.fillStyle = gg; c.fillRect(0, ground, W, H - ground);
   c.fillStyle = 'rgba(255,255,255,.12)';
   c.fillRect(0, ground, W, 3);
+  // grondstrepen — lopen mee met de wereld (loop-gevoel)
+  c.fillStyle = 'rgba(0,0,0,.14)';
+  const span = 92;
+  const off = wrap(-scroll, span);
+  for (let x = off - span; x < W + span; x += span) {
+    c.fillRect(x, ground + 10, 36, 4);
+    c.fillRect(x + 52, ground + 26, 20, 3);
+  }
 }
 
 /* ================================ GAME ================================= */
@@ -4643,6 +4647,11 @@ class Game {
     this.kills = 0;
     this.betweenT = 1.2;
     this.pickups = this.pickups || [];
+    this.worldX = 0;
+    this.traveling = false;
+    this.progressSmooth = 0;
+    this.stagePart = 1;
+    this.waveTotal = 0;
     this.gambleRoll = gamble || null;
     applyGambleToStage(this, gamble);
     this.banner(`LEVEL ${n}`, 1.4, '#ffd75e', 54);
@@ -4670,6 +4679,7 @@ class Game {
     const wave = this.level.waves[this.waveIdx];
     const bossWave = isBossWave(this.level, this.waveIdx);
     this.spawnQueue = wave.slice();
+    this.waveTotal = wave.length;
     this.spawnTimer = bossWave ? 1.0 : 0.45;
     this.wavePause = 0;
     if (this.stageShieldPerWave > 0 && this.player) {
@@ -4694,7 +4704,41 @@ class Game {
     }
   }
 
+  /** 0..1 voortgang door het level (golven + kills binnen golf). */
+  stageProgress() {
+    if (!this.level || !this.level.waves) return 0;
+    const total = this.level.waves.length;
+    if (this.waveIdx < 0) return 0;
+    if (this.waveIdx >= total) return 1;
+    let frac;
+    if (this.wavePause > 0) {
+      frac = 1;
+    } else {
+      const size = Math.max(1, this.waveTotal || 1);
+      const remaining = this.spawnQueue.length + this.monsters.filter((m) => m.alive).length;
+      frac = clamp(1 - remaining / size, 0, 1) * 0.85;
+    }
+    return clamp((this.waveIdx + frac) / total, 0, 1);
+  }
+
   updateAdventure(dt) {
+    // Bewegend decor: tussen golven "loopt" de wereld door (à la beat 'em up)
+    const travelPhase = this.wavePause > 0 || (this.betweenT > 0 && this.waveIdx < 0);
+    this.traveling = travelPhase && !!(this.player && this.player.alive) && !this.over;
+    if (this.traveling) {
+      const spd = motionReduced() ? 150 : 250;
+      this.worldX = (this.worldX || 0) + spd * dt;
+      for (const m of this.monsters) if (!m.alive) m.x -= spd * dt;
+      for (const pk of this.pickups) pk.x -= spd * dt;
+    }
+    const pr = this.stageProgress();
+    const part = Math.min(3, 1 + Math.floor(pr * 3));
+    if (part > (this.stagePart || 1)) {
+      this.stagePart = part;
+      this.floater(W / 2, 96, `DEEL ${part}/3`, '#7cf5ff', 17);
+      try { AudioSys.sfx('bonus'); } catch (_) {}
+      haptic(10);
+    }
     if (this.comboT > 0) {
       this.comboT -= dt;
       if (this.comboT <= 0) this.combo = 0;
@@ -4743,7 +4787,7 @@ class Game {
     } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive)) {
       if (!this.wavePause) {
         const nextIsBoss = isBossWave(this.level, this.waveIdx + 1);
-        this.wavePause = nextIsBoss ? 2.15 : 1.05;
+        this.wavePause = nextIsBoss ? 2.15 : 1.55;
         if (this.stageHealBetween > 0 && this.player && this.player.alive) {
           const heal = Math.max(8, Math.round(this.player.maxhp * this.stageHealBetween));
           this.player.hp = Math.min(this.player.maxhp, this.player.hp + heal);
@@ -5720,7 +5764,7 @@ class Game {
     if (this.shakeT > 0) {
       c.translate(rand(-1, 1) * this.shakeMag, rand(-1, 1) * this.shakeMag);
     }
-    drawBackground(c, this.theme, this.t, this.ground);
+    drawBackground(c, this.theme, this.t, this.ground, this.worldX || 0);
 
     if (this.mode === 'versus' && this.vsMid) {
       c.save();
@@ -6062,36 +6106,62 @@ class Game {
     }
   }
 
-  drawAdventureWavePips(c) {
+  /** Stage-voortgang: balk in 3 delen + lopend bolletje (vervangt wave-pips). */
+  drawStageProgress(c) {
     if (!this.level || !this.level.waves) return;
     const total = this.level.waves.length;
-    const gap = 10;
-    const r = 4;
-    const rowW = total * (r * 2) + (total - 1) * gap;
-    let x = W / 2 - rowW / 2 + r;
-    const y = 42;
-    for (let i = 0; i < total; i++) {
-      const boss = isBossWave(this.level, i);
-      const filled = adventureWavePipFilled(this, i);
-      const active = adventureWavePipActive(this, i);
-      const calm = motionReduced();
-      const rad = r + (active && !calm ? Math.sin(this.t * 9) * 0.8 : 0);
-      c.beginPath();
-      c.arc(x, y, rad, 0, TAU);
-      if (filled) {
-        c.fillStyle = boss ? '#ff8a9a' : '#ffd75e';
-        c.fill();
-      } else {
-        c.strokeStyle = boss ? 'rgba(255,138,154,.75)' : 'rgba(255,255,255,.35)';
-        c.lineWidth = 1.5;
-        c.stroke();
-        if (active) {
-          c.fillStyle = boss ? 'rgba(255,138,154,.45)' : 'rgba(255,215,94,.4)';
-          c.fill();
-        }
+    const tw = Math.min(320, W * 0.5);
+    const x0 = W / 2 - tw / 2;
+    const y = 44;
+    const target = this.stageProgress();
+    if (this.progressSmooth == null) this.progressSmooth = target;
+    this.progressSmooth += (target - this.progressSmooth) * (motionReduced() ? 0.25 : 0.09);
+    if (Math.abs(target - this.progressSmooth) < 0.002) this.progressSmooth = target;
+    const pr = clamp(this.progressSmooth, 0, 1);
+
+    // 3 segmenten
+    const segGap = 6;
+    const segW = (tw - segGap * 2) / 3;
+    for (let s = 0; s < 3; s++) {
+      const sx = x0 + s * (segW + segGap);
+      c.fillStyle = 'rgba(0,0,0,.5)';
+      this.rr(c, sx - 1, y - 5, segW + 2, 10, 5); c.fill();
+      c.fillStyle = 'rgba(255,255,255,.14)';
+      this.rr(c, sx, y - 4, segW, 8, 4); c.fill();
+      const f = clamp(pr * 3 - s, 0, 1);
+      if (f > 0.01) {
+        c.fillStyle = s === 2 && this.level.boss ? '#ff8a9a' : '#ffd75e';
+        this.rr(c, sx, y - 4, segW * f, 8, 4); c.fill();
       }
-      x += r * 2 + gap;
     }
+    // golf-streepjes
+    c.fillStyle = 'rgba(255,255,255,.4)';
+    for (let i = 1; i < total; i++) {
+      const tx = x0 + (i / total) * tw;
+      c.fillRect(tx - 1, y - 3, 2, 6);
+    }
+    // baas-vlag aan het einde
+    if (this.level.boss) {
+      c.font = '900 12px sans-serif';
+      c.textAlign = 'center';
+      c.fillStyle = '#ff8a9a';
+      c.fillText('⚑', x0 + tw + 12, y + 4);
+    }
+    // bolletje
+    const bx = x0 + pr * tw;
+    const pulse = motionReduced() ? 0 : Math.sin(this.t * (this.traveling ? 12 : 6)) * 1.2;
+    c.fillStyle = 'rgba(0,0,0,.4)';
+    c.beginPath(); c.arc(bx, y, 9.5 + pulse * 0.4, 0, TAU); c.fill();
+    c.fillStyle = '#fff';
+    c.beginPath(); c.arc(bx, y, 8 + pulse * 0.4, 0, TAU); c.fill();
+    c.fillStyle = this.traveling ? '#7cf5ff' : '#ffd75e';
+    c.beginPath(); c.arc(bx, y, 5 + pulse * 0.3, 0, TAU); c.fill();
+    // deel-label
+    c.font = '700 10px sans-serif';
+    c.textAlign = 'left';
+    c.fillStyle = 'rgba(255,255,255,.6)';
+    c.fillText(`deel ${Math.min(3, 1 + Math.floor(pr * 3))}/3`, x0 + tw + (this.level.boss ? 24 : 10), y + 3.5);
+    c.textAlign = 'center';
   }
 
   drawHUD(c) {
@@ -6153,16 +6223,19 @@ class Game {
       fillHudText(c, `Level ${this.level.n} — Golf ${Math.min(wv, this.level.waves.length)}/${this.level.waves.length}`, W / 2, 30, {
         fill: a11yHighContrast() ? '#fff' : 'rgba(255,255,255,.9)',
       });
-      if (this.stageAlly) {
-        c.font = '700 11px sans-serif';
-        c.fillStyle = this.stageAlly.color || '#7cf5ff';
-        c.fillText(`🎲 ${this.stageAlly.name}`, W / 2, 44);
-      } else if (this.gambleBossWave > 0) {
-        c.font = '700 11px sans-serif';
-        c.fillStyle = '#ffb0b8';
-        c.fillText(`🎲 Super-baas mogelijk · golf ${this.gambleBossWave}`, W / 2, 44);
+      this.drawStageProgress(c);
+      const bossAlive = this.monsters.find(m => m.elite && m.alive);
+      if (!bossAlive) {
+        if (this.stageAlly) {
+          c.font = '700 11px sans-serif';
+          c.fillStyle = this.stageAlly.color || '#7cf5ff';
+          c.fillText(`🎲 ${this.stageAlly.name}`, W / 2, 62);
+        } else if (this.gambleBossWave > 0) {
+          c.font = '700 11px sans-serif';
+          c.fillStyle = '#ffb0b8';
+          c.fillText(`🎲 Super-baas mogelijk · golf ${this.gambleBossWave}`, W / 2, 62);
+        }
       }
-      this.drawAdventureWavePips(c);
       if (p.alive) {
         const hpPct = p.hp / Math.max(1, p.maxhp);
         const proj = starsFromHpPct(hpPct);
@@ -6177,30 +6250,30 @@ class Game {
         let starHint = ' · 3★ zone';
         if (hpPct <= STAR_HP.two) starHint = ` · 2★ bij >${Math.round(STAR_HP.two * 100)}% HP`;
         else if (hpPct <= STAR_HP.three) starHint = ` · 3★ bij >${Math.round(STAR_HP.three * 100)}% HP`;
-        c.fillText(`${pct}% HP${starHint}`, W / 2, 52);
+        c.fillText(`${pct}% HP${starHint}`, W / 2, 76);
       }
       if (this.waveIdx >= 0 && (this.spawnQueue.length > 0 || this.monsters.some((m) => m.alive))) {
         const rem = this.spawnQueue.length + this.monsters.filter((m) => m.alive).length;
         c.font = '700 11px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.62)';
-        c.fillText(rem === 1 ? 'Nog 1 vijand in deze golf' : `Nog ${rem} vijanden in deze golf`, W / 2, 66);
+        c.fillText(rem === 1 ? 'Nog 1 vijand in deze golf' : `Nog ${rem} vijanden in deze golf`, W / 2, 90);
       }
       if (this.wavePause > 0) {
         const nextBoss = isBossWave(this.level, this.waveIdx + 1);
         const sec = Math.max(0, this.wavePause);
         c.font = '800 15px sans-serif';
-        const pauseMsg = nextBoss ? `Baas-golf over ${sec.toFixed(1)}s — pak pickups!` : `Volgende golf over ${sec.toFixed(1)}s`;
+        const pauseMsg = nextBoss ? `Op weg naar de baas — ${sec.toFixed(1)}s` : `Verder lopen… volgende golf ${sec.toFixed(1)}s`;
         fillHudText(c, pauseMsg, W / 2, H - 78, {
           fill: nextBoss ? '#ffc8d0' : '#d8e8ff',
         });
       }
-      const boss = this.monsters.find(m => m.elite && m.alive);
+      const boss = bossAlive;
       if (boss) {
         const bwid = Math.min(420, W * 0.5);
-        c.fillStyle = 'rgba(0,0,0,.5)'; this.rr(c, W / 2 - bwid / 2 - 3, 43, bwid + 6, 16, 8); c.fill();
-        c.fillStyle = '#e04f5f'; this.rr(c, W / 2 - bwid / 2, 46, bwid * boss.hp / boss.maxhp, 10, 5); c.fill();
+        c.fillStyle = 'rgba(0,0,0,.5)'; this.rr(c, W / 2 - bwid / 2 - 3, 57, bwid + 6, 16, 8); c.fill();
+        c.fillStyle = '#e04f5f'; this.rr(c, W / 2 - bwid / 2, 60, bwid * boss.hp / boss.maxhp, 10, 5); c.fill();
         c.font = '700 12px sans-serif';
-        fillHudText(c, boss.sp.name.toUpperCase(), W / 2, 72, { fill: '#ffc8d0' });
+        fillHudText(c, boss.sp.name.toUpperCase(), W / 2, 106, { fill: '#ffc8d0' });
       }
       if (save.comboHud !== false && this.combo > 1) {
         const calm = motionReduced();

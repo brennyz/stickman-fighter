@@ -388,6 +388,16 @@
       "note": "off-d20; d13 missions blijft PENDING"
     },
     {
+      "id": "moving-stage-progress-p1",
+      "d20Face": null,
+      "userWords": "bewegend decor ala chupacabrago, bolletje bovenaan progress, hak in 3 delen, go op 1",
+      "versions": ["1.14.0"],
+      "commits": [],
+      "code": "worldX scroll, traveling, drawBackground parallax, drawStageProgress 3 segmenten, stagePart",
+      "status": "deel 1/3 done",
+      "note": "deel 2: vijanden lopen binnen tijdens reis + decor-variatie per deel; deel 3: polish/checkpoints"
+    },
+    {
       "id": "gamble-dice-stage",
       "d20Face": null,
       "userWords": "super bosses on random, super allies based on Gamble dice games, buff for that Stage",
