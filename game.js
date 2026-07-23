@@ -3806,6 +3806,7 @@ const UI = {
   showResult(win, data) {
     this.lastResult = data;
     state = 'result';
+    document.body.classList.remove('is-playing');
     document.getElementById('pauseBtn').classList.remove('show');
     const title = document.getElementById('resTitle');
     title.textContent = data.title;
