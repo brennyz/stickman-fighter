@@ -515,12 +515,12 @@
     <button type="button" class="p2pill pick-pill big-touch" id="charP2Label">P2: RabbitRobot</button>
   </div>
   <div class="char-saga-bar" id="charSagaBar" role="tablist" aria-label="Saga filter">
-    <button type="button" data-saga="all" class="active">⭐ Alle</button>
-    <button type="button" data-saga="ki">🔥 Ki</button>
-    <button type="button" data-saga="scroll">📜 Scroll</button>
-    <button type="button" data-saga="tide">🌊 Tide</button>
-    <button type="button" data-saga="cape">🦸 Cape</button>
-    <button type="button" data-saga="dawn">☀️ Dawn</button>
+    <button type="button" data-saga="all" class="active"><svg viewBox="0 0 24 24" style="width:1em;height:1em;vertical-align:-0.15em" fill="currentColor"><path d="M12 3l2 6h6l-5 4 2 6-5-3.6L7 19l2-6-5-4h6z"/></svg> Alle</button>
+    <button type="button" data-saga="ki"><svg viewBox="0 0 24 24" style="width:1em;height:1em;vertical-align:-0.15em" fill="currentColor"><path d="M12 3c3 3.5 5.5 6 5.5 10a5.5 5.5 0 01-11 0c0-2 .8-3.6 2-5.4.4 1.4 1 2.2 2 2.9C10.2 8 10.8 5.5 12 3z"/></svg> Ki</button>
+    <button type="button" data-saga="scroll"><svg viewBox="0 0 24 24" style="width:1em;height:1em;vertical-align:-0.15em" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M7 4h11v14H7z"/><path d="M7 4a2 2 0 00-2 2v12a2 2 0 002 2h11"/><path d="M10 8h5M10 12h5"/></svg> Scroll</button>
+    <button type="button" data-saga="tide"><svg viewBox="0 0 24 24" style="width:1em;height:1em;vertical-align:-0.15em" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 12c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/><path d="M3 17c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/></svg> Tide</button>
+    <button type="button" data-saga="cape"><svg viewBox="0 0 24 24" style="width:1em;height:1em;vertical-align:-0.15em" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3l7 4-2 13-5 2-5-2L5 7z"/><path d="M12 3v19"/></svg> Cape</button>
+    <button type="button" data-saga="dawn"><svg viewBox="0 0 24 24" style="width:1em;height:1em;vertical-align:-0.15em" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="14" r="4.5"/><path d="M12 5.5V3M5.5 8L4 6.5M18.5 8L20 6.5M3 14h2M19 14h2"/></svg> Dawn</button>
   </div>
   <div id="charSagaBlurb" class="subtitle" style="margin-top:0"></div>
   <div class="char-icon-row" id="charIconRow"></div>
@@ -530,7 +530,7 @@
   </div>
   <button type="button" class="btn mode-btn b-gray big-touch" id="charPickBackP1" style="display:none;width:min(86vw,480px)">&#8592; Andere P1 kiezen</button>
   <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:min(94vw,720px)">
-    <button type="button" class="btn tog big-touch" id="btnCharSagaClash" style="flex:1 1 100%;margin:0">🌟 Saga clash (5 icons)</button>
+    <button type="button" class="btn tog big-touch" id="btnCharSagaClash" style="flex:1 1 100%;margin:0"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l2 6h6l-5 4 2 6-5-3.6L7 19l2-6-5-4h6z"/></svg></span>Saga clash (5 icons)</button>
     <button type="button" class="btn tog big-touch" id="btnCharRandom" style="flex:1 1 200px;margin:0"><span class="tog-ico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4" fill="currentColor" opacity=".9"/><circle cx="9" cy="9" r="1.7" fill="#1a2342"/><circle cx="15" cy="15" r="1.7" fill="#1a2342"/><circle cx="12" cy="12" r="1.7" fill="#1a2342"/></svg></span>Willekeurig duo</button>
     <button type="button" class="btn tog big-touch" id="btnCharSwap" style="flex:1 1 160px;margin:0">&#8644; Wissel P1/P2</button>
   </div>
@@ -555,7 +555,7 @@
   <h2 class="head" id="gambleHead">Gok — level …</h2>
   <div class="subtitle">Twee dobbelstenen: pech = super-baas in een willekeurige golf · geluk = sterke bondgenoot (buff alleen dit level)</div>
   <div class="step-card" style="width:min(92vw,420px);text-align:center;padding:18px 16px">
-    <div id="gambleDiceRow" style="font-size:min(14vw,52px);letter-spacing:.12em;margin:8px 0">🎲 🎲</div>
+    <div id="gambleDiceRow" style="font-size:min(14vw,52px);letter-spacing:.12em;margin:8px 0">? ?</div>
     <div id="gambleSumLine" style="font-size:15px;color:#8fa3d9;margin-bottom:10px">Tik op <b style="color:#ffd75e">Gooi dobbelstenen</b></div>
     <div id="gambleOutcome" style="font-size:14px;line-height:1.45;color:#cfe0ff;min-height:3.2em"></div>
   </div>
@@ -702,7 +702,7 @@
   <div id="helpModeChips" style="width:min(92vw,520px);margin-bottom:12px;font-size:13px;line-height:1.5"></div>
   <div class="step-card" style="width:min(92vw,520px);border-color:rgba(255,215,94,.35);margin-bottom:12px">
     <b>Eerste minuut</b> — per modus <b>één</b> korte hint bovenin het gevecht (geen toast-stapel).
-    Avontuur: joystick + knoppen · groen = HP · vol chakra = 🌀.
+    Avontuur: joystick + knoppen · groen = HP · vol chakra = SUPER-knop.
     Training = Robot · Muur = combo · 2 spelers = links/rechts.
   </div>
   <div id="tutBox">
@@ -711,8 +711,8 @@
       <li><b>Bazen:</b> onder half HP worden ze woester (fase 2).</li>
       <li><b>Combo’s:</b> sla snel achter elkaar om ×2 / ×3 schade te stapelen.</li>
       <li><b>Dash:</b> dubbel-tik links/rechts (of toets <b>Shift</b>) om te ontwijken.</li>
-      <li><b>🌀 Rasengan:</b> vul je <b>chakra</b>-balk — dan laad je een draaiende chakra-bol en knal je ‘m erin.</li>
-      <li><b>💨 Substitutie:</b> rookwolk + ontwijk (knop of <b>Shift</b>). Korte onkwetsbaarheid.</li>
+      <li><b>Rasengan:</b> vul je <b>chakra</b>-balk — dan laad je een draaiende chakra-bol en knal je ‘m erin.</li>
+      <li><b>Substitutie:</b> rookwolk + ontwijk (knop of <b>Shift</b>). Korte onkwetsbaarheid.</li>
       <li><b>Kunai / Shuriken:</b> unlock vroeg — shuriken gooi je als projectiel.</li>
       <li><b>2 spelers:</b> roster met <b>5 saga-icons</b> (Ki/Scroll/Tide/Cape/Dawn parodie) + filters · best-of-3.</li>
       <li><b>RabbitRobot:</b> hij gebruikt <b>Chidori</b> (bliksem) — wacht tot hij open is.</li>
@@ -773,7 +773,7 @@
 </script>
 
 <script src="tunnel-check.js?v=203"></script>
-<script src="game.js?v=258"></script>
+<script src="game.js?v=259"></script>
 <script src="install.js?v=203"></script>
 <script>
 (function () {

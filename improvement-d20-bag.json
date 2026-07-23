@@ -309,8 +309,8 @@
       ],
       "commits": [],
       "code": "SceneryArt (cached offscreen pixel tiles), drawSceneryTile, far skyline per thema, pixel wolken/bomen, grond-speckles",
-      "status": "deel 3/4 done",
-      "note": "PLAN 4 delen \u2014 1) scenery pixel-art parallax (v1.15.0, DONE); 2) menu SVG-iconen (v1.15.1, DONE); 3) in-game canvas-art (v1.15.2, DONE): drawPickupIcon hart/vlam/spiraal/schild, drawStarShape ipv \u2605\u2606 (HUD-rating + bonussteen), getekende baas-vlag ipv \u2691, SUPER-meter bliksem/oog/orb ipv \u26a1\ud83d\udc41\u25c9, drawMiniDie ipv \ud83c\udfb2 in HUD, emoji uit floaters; 4) final pass: achievements/dex-iconen, weer-per-thema, rest-emoji review. Volgende agent: zeg 'deel 4' of '4/4'"
+      "status": "done (4/4)",
+      "note": "AF \u2014 1) scenery pixel-art parallax (v1.15.0); 2) menu SVG-iconen (v1.15.1); 3) in-game canvas-art (v1.15.2); 4) final pass (v1.15.3): drawTouchBtnIcon vecht-knoppen (vuist/laars/kling/jutsu/rook/pijl) ipv emoji, drawThemeWeather (blaadjes/bloesem/sintels/neon-regen/stof per thema), ACH_ICON_SVG 16 prestatie-iconen, SAGA_ICON_SVG chips, SVG_CHECK_MINI ipv \u2714, emoji uit hints/toasts/help/gamble. BONUS: versus-crash fix (f.alive setter op getter in resetVsFighterRound \u2014 2P was kapot op live)"
     },
     {
       "id": "summon-weapon-ascend",

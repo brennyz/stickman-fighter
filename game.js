@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.15.2';
+const APP_VERSION = '1.15.3';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 109;
+const SW_CACHE_REV = 110;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -81,19 +81,156 @@ function fighterJutsuKind(f) {
   return 'rasengan';
 }
 function jutsuHudLabel(kind) {
-  if (kind === 'chidori') return '⚡ CHIDORI!';
-  if (kind === 'rinnegan') return '👁 RINNEGAN!';
-  return '🌀 RASENGAN!';
+  if (kind === 'chidori') return 'CHIDORI!';
+  if (kind === 'rinnegan') return 'RINNEGAN!';
+  return 'RASENGAN!';
 }
-function jutsuBtnIcon(kind, pct) {
-  if (pct >= 1) {
-    if (kind === 'chidori') return '⚡';
-    if (kind === 'rinnegan') return '👁';
-    return '🌀';
+
+/** Klein getekend jutsu-icoon (bliksem/oog/orb) voor HUD-markers. */
+function drawJutsuMiniIcon(c, kind, x, y, color) {
+  c.save();
+  c.translate(x, y);
+  c.strokeStyle = color;
+  c.fillStyle = color;
+  c.lineWidth = 1.4;
+  if (kind === 'chidori') {
+    c.beginPath();
+    c.moveTo(2, -5.5);
+    c.lineTo(-2.5, 1);
+    c.lineTo(0.3, 1);
+    c.lineTo(-1.5, 5.5);
+    c.lineTo(3.5, -1);
+    c.lineTo(0.7, -1);
+    c.closePath();
+    c.fill();
+  } else if (kind === 'rinnegan') {
+    c.beginPath(); c.ellipse(0, 0, 5.2, 3.2, 0, 0, TAU); c.stroke();
+    c.beginPath(); c.arc(0, 0, 1.7, 0, TAU); c.fill();
+  } else {
+    c.beginPath(); c.arc(0, 0, 4.6, 0, TAU); c.stroke();
+    c.beginPath(); c.arc(0, 0, 2, 0, TAU); c.fill();
   }
-  if (kind === 'chidori') return '⚡';
-  if (kind === 'rinnegan') return '◉';
-  return '◉';
+  c.restore();
+}
+
+/** Getekend touch-knop-icoon (art-upgrade 4/4) — vervangt emoji-labels. */
+function drawTouchBtnIcon(c, id, x, y, r, jutsuKind) {
+  const s = r * 0.52;
+  c.save();
+  c.translate(x, y);
+  c.strokeStyle = '#fff';
+  c.fillStyle = '#fff';
+  c.lineWidth = Math.max(2, r * 0.13);
+  c.lineCap = 'round';
+  c.lineJoin = 'round';
+  switch (id) {
+    case 'punch': {
+      // vuist: blok + knokkels
+      c.beginPath();
+      if (c.roundRect) c.roundRect(-s * 0.75, -s * 0.55, s * 1.5, s * 1.1, s * 0.3);
+      else c.rect(-s * 0.75, -s * 0.55, s * 1.5, s * 1.1);
+      c.fill();
+      c.strokeStyle = 'rgba(0,0,0,.35)';
+      c.lineWidth = Math.max(1.4, r * 0.08);
+      c.beginPath();
+      for (let i = -1; i <= 1; i++) {
+        c.moveTo(i * s * 0.38, -s * 0.55);
+        c.lineTo(i * s * 0.38, -s * 0.1);
+      }
+      c.stroke();
+      break;
+    }
+    case 'kick': {
+      // laars
+      c.beginPath();
+      c.moveTo(-s * 0.45, -s * 0.9);
+      c.lineTo(s * 0.15, -s * 0.9);
+      c.lineTo(s * 0.15, s * 0.25);
+      c.lineTo(s * 0.95, s * 0.45);
+      c.quadraticCurveTo(s * 1.05, s * 0.9, s * 0.6, s * 0.9);
+      c.lineTo(-s * 0.45, s * 0.9);
+      c.closePath();
+      c.fill();
+      break;
+    }
+    case 'weapon': {
+      // kling + greep
+      c.beginPath();
+      c.moveTo(-s * 0.85, s * 0.85);
+      c.lineTo(s * 0.7, -s * 0.7);
+      c.stroke();
+      c.beginPath();
+      c.moveTo(s * 0.25, -s * 1.0);
+      c.lineTo(s * 1.0, -s * 0.25);
+      c.lineTo(s * 0.7, -s * 0.7);
+      c.closePath();
+      c.fill();
+      c.beginPath();
+      c.moveTo(-s * 0.5, s * 0.2);
+      c.lineTo(-s * 0.05, s * 0.65);
+      c.stroke();
+      break;
+    }
+    case 'special': {
+      if (jutsuKind === 'chidori') {
+        c.beginPath();
+        c.moveTo(s * 0.35, -s);
+        c.lineTo(-s * 0.55, s * 0.15);
+        c.lineTo(s * 0.05, s * 0.15);
+        c.lineTo(-s * 0.3, s);
+        c.lineTo(s * 0.65, -s * 0.2);
+        c.lineTo(s * 0.1, -s * 0.2);
+        c.closePath();
+        c.fill();
+      } else if (jutsuKind === 'rinnegan') {
+        c.beginPath(); c.ellipse(0, 0, s, s * 0.62, 0, 0, TAU); c.stroke();
+        c.beginPath(); c.arc(0, 0, s * 0.3, 0, TAU); c.fill();
+      } else {
+        // rasengan: orb + spiraal
+        c.beginPath(); c.arc(0, 0, s * 0.95, 0, TAU); c.stroke();
+        c.beginPath();
+        for (let a = 0; a < TAU * 1.35; a += 0.3) {
+          const rr = s * 0.12 + a * s * 0.12;
+          const px2 = Math.cos(a) * rr, py2 = Math.sin(a) * rr;
+          if (a === 0) c.moveTo(px2, py2); else c.lineTo(px2, py2);
+        }
+        c.stroke();
+      }
+      break;
+    }
+    case 'subst': {
+      // rookwolk
+      c.beginPath();
+      c.arc(-s * 0.45, s * 0.2, s * 0.42, 0, TAU);
+      c.arc(0, -s * 0.15, s * 0.55, 0, TAU);
+      c.arc(s * 0.5, s * 0.25, s * 0.4, 0, TAU);
+      c.fill();
+      c.strokeStyle = 'rgba(255,255,255,.7)';
+      c.lineWidth = Math.max(1.4, r * 0.08);
+      c.beginPath();
+      c.moveTo(s * 0.85, -s * 0.55); c.lineTo(s * 1.15, -s * 0.65);
+      c.moveTo(s * 0.75, -s * 0.2); c.lineTo(s * 1.2, -s * 0.25);
+      c.stroke();
+      break;
+    }
+    case 'jump': {
+      c.beginPath();
+      c.moveTo(0, s * 0.9);
+      c.lineTo(0, -s * 0.5);
+      c.stroke();
+      c.beginPath();
+      c.moveTo(-s * 0.7, -s * 0.1);
+      c.lineTo(0, -s * 0.95);
+      c.lineTo(s * 0.7, -s * 0.1);
+      c.stroke();
+      break;
+    }
+    default:
+      c.restore();
+      return false;
+  }
+  c.restore();
+  return true;
 }
 
 function jutsuAccentColor(kind, p2Slot) {
@@ -800,7 +937,7 @@ function unlockAchievement(id) {
   const ach = ACHIEVEMENTS.find(a => a.id === id);
   persist();
   AudioSys.sfx('newmonster');
-  UI.toast(`${ach ? ach.icon : '🎖'} Prestatie: ${ach ? ach.name : id}`, 4000);
+  UI.toast(`Prestatie: ${ach ? ach.name : id} — bekijk bij Missies`, 4000);
   if (UI.renderMissions) UI.renderMissions();
 }
 
@@ -1111,7 +1248,7 @@ function vsStatPreviewHtml(e1, e2) {
   const g2 = vsSagaMeta(e2.saga || 'scroll');
   const col = (name, s, accent, saga, flair) =>
     `<div class="vs-preview-col" style="--accent:${accent}"><div class="vs-preview-name">${name}</div>` +
-    `<div class="vs-preview-wpn">${saga.emoji} ${saga.label} · ${s.wpn} · ${s.special} · ${s.critPct}% crit</div>` +
+    `<div class="vs-preview-wpn">${sagaIconSvg(saga.id)} ${saga.label} · ${s.wpn} · ${s.special} · ${s.critPct}% crit</div>` +
     `<div class="vs-preview-flair">${flair}</div>` +
     `${vsStatBar('HP', s.hp, '#6ee06e')}${vsStatBar('SPD', s.spd, '#7cf5ff')}` +
     `${vsStatBar('DMG', s.dmg, '#ff7a4d')}</div>`;
@@ -1274,10 +1411,10 @@ function applyModeOnboarding(mode, g) {
   const touch = IS_TOUCH;
   const lines = {
     adventure: touch
-      ? 'Eerste minuut: links lopen · rechts slaan · groen = HP · vol chakra = 🌀'
+      ? 'Eerste minuut: links lopen · rechts slaan · groen = HP · vol chakra = SUPER-knop'
       : 'Eerste minuut: A/D · J/K/L · groen = HP · chakra vol → U',
     training: touch
-      ? 'Eerste minuut: ontwijk rode laser · chakra vol → tik 🌀'
+      ? 'Eerste minuut: ontwijk rode laser · chakra vol → SUPER-knop'
       : 'Eerste minuut: ontwijk lasers · chakra vol → U',
     wall: touch
       ? '60s timer · combo-balk vol = sneller sloop · record + projectie bovenin'
@@ -1300,7 +1437,7 @@ function maybeWelcomeToast() {
   persist();
   setTimeout(() => {
     if (state === 'play') return;
-    userToast('Welkom! ❓ Tips in het menu · bij eerste keer per modus: één korte hint bovenin', 4200);
+    userToast('Welkom! Tips in het menu · bij eerste keer per modus: één korte hint bovenin', 4200);
   }, 2400);
 }
 
@@ -1558,6 +1695,21 @@ const VS_SAGAS = {
   dawn: { id: 'dawn', label: 'Dawn-saga', emoji: '☀️', blurb: 'Holy tilt & zware aura — sin-at-dawn vibes.' },
 };
 function vsSagaMeta(id) { return VS_SAGAS[id] || VS_SAGAS.scroll; }
+
+/** Saga-iconen als inline SVG (art-upgrade 4/4) — vervangt emoji-chips. */
+const SAGA_ICON_SVG = {
+  all: '<path d="M12 3l2 6h6l-5 4 2 6-5-3.6L7 19l2-6-5-4h6z" fill="currentColor" stroke="none"/>',
+  ki: '<path d="M12 3c3 3.5 5.5 6 5.5 10a5.5 5.5 0 01-11 0c0-2 .8-3.6 2-5.4.4 1.4 1 2.2 2 2.9C10.2 8 10.8 5.5 12 3z" fill="currentColor" stroke="none"/>',
+  scroll: '<path d="M7 4h11v14H7z"/><path d="M7 4a2 2 0 00-2 2v12a2 2 0 002 2h11"/><path d="M10 8h5M10 12h5"/>',
+  tide: '<path d="M3 12c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/><path d="M3 17c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/>',
+  cape: '<path d="M12 3l7 4-2 13-5 2-5-2L5 7z"/><path d="M12 3v19"/>',
+  dawn: '<circle cx="12" cy="14" r="4.5"/><path d="M12 5.5V3M5.5 8L4 6.5M18.5 8L20 6.5M3 14h2M19 14h2"/>',
+};
+function sagaIconSvg(id) {
+  const body = SAGA_ICON_SVG[id] || SAGA_ICON_SVG.all;
+  return '<svg viewBox="0 0 24 24" style="width:1.05em;height:1.05em;vertical-align:-0.16em" ' +
+    'fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg>';
+}
 function rosterFlair(r) { return r.flair || r.tag; }
 
 /** Deel 2 — vijf saga-icon sticks (parodie per saga) */
@@ -1810,7 +1962,7 @@ function resetVsFighterRound(f, entry, ground, slot) {
   f.energy = 40;
   f.substCd = 0;
   f.invulnT = 0.55;
-  f.alive = true;
+  // alive is een getter (hp > 0) — hp is hierboven al gereset
   f.hitFlashT = 0;
   f.afterimages = [];
   f.dashCd = 0;
@@ -4860,6 +5012,78 @@ const SceneryArt = {
   },
 };
 
+/** Weer per thema (art-upgrade 4/4) — stateless deeltjes uit formules. */
+function drawThemeWeather(c, themeName, t, ground, scroll) {
+  if (fxLite() || motionReduced()) return;
+  const wrapW = (v, span) => ((v % span) + span) % span;
+  const n = 11;
+  c.save();
+  for (let i = 0; i < n; i++) {
+    const seed = i * 137.5 + 31;
+    switch (themeName) {
+      case 'bos': {
+        // dwarrelende blaadjes
+        const fall = 26 + (i % 4) * 9;
+        const x = wrapW(seed * 4.1 + Math.sin(t * 0.8 + i * 1.3) * 46 - t * 12 - scroll * 0.3, W + 60) - 30;
+        const y = wrapW(seed * 2.3 + t * fall, ground + 40) - 20;
+        c.fillStyle = i % 2 ? 'rgba(96,168,96,.5)' : 'rgba(150,190,92,.42)';
+        c.save(); c.translate(x, y); c.rotate(t * 2.2 + i); c.fillRect(-3.2, -1.6, 6.4, 3.2); c.restore();
+        break;
+      }
+      case 'veld':
+      case 'dojo': {
+        // bloesem-blaadjes die zijwaarts drijven
+        const drift = 18 + (i % 3) * 8;
+        const x = wrapW(seed * 3.7 - t * drift - scroll * 0.35, W + 40) - 20;
+        const y = wrapW(seed * 1.7 + t * 14 + Math.sin(t * 1.4 + i) * 24, ground + 30) - 15;
+        c.fillStyle = themeName === 'dojo' ? 'rgba(255,170,190,.5)' : 'rgba(255,235,250,.55)';
+        c.save(); c.translate(x, y); c.rotate(t * 1.6 + i * 2); c.fillRect(-2.4, -1.4, 4.8, 2.8); c.restore();
+        break;
+      }
+      case 'vulkaan': {
+        // opstijgende sintels met flikker
+        const rise = 30 + (i % 4) * 12;
+        const x = wrapW(seed * 3.3 + Math.sin(t * 1.7 + i * 2.1) * 18 - scroll * 0.3, W + 30) - 15;
+        const y = ground - wrapW(seed * 1.9 + t * rise, ground + 20);
+        const fl = 0.35 + Math.max(0, Math.sin(t * 6 + i * 1.7)) * 0.4;
+        c.fillStyle = `rgba(255,${120 + (i % 3) * 30},48,${fl.toFixed(2)})`;
+        c.fillRect(x, y, 3, 3);
+        break;
+      }
+      case 'cyber': {
+        // neon-regen strepen
+        const fall = 320 + (i % 3) * 90;
+        const x = wrapW(seed * 4.7 - scroll * 0.4, W + 20) - 10;
+        const y = wrapW(seed * 2.9 + t * fall, ground + 60) - 30;
+        c.strokeStyle = i % 3 ? 'rgba(90,160,255,.30)' : 'rgba(255,77,210,.24)';
+        c.lineWidth = 1.6;
+        c.beginPath(); c.moveTo(x, y); c.lineTo(x - 2, y + 13); c.stroke();
+        break;
+      }
+      case 'grot': {
+        // zwevende stofjes
+        const x = wrapW(seed * 3.9 + Math.sin(t * 0.5 + i) * 30 - scroll * 0.15, W + 20) - 10;
+        const y = wrapW(seed * 2.1 + Math.sin(t * 0.7 + i * 2.3) * 40 + t * 6, ground) ;
+        c.fillStyle = `rgba(200,220,255,${(0.10 + (i % 3) * 0.05).toFixed(2)})`;
+        c.fillRect(x, y, 2, 2);
+        break;
+      }
+      case 'sloop': {
+        // grijze stofvlokken
+        const x = wrapW(seed * 4.3 - t * 22 - scroll * 0.4, W + 30) - 15;
+        const y = wrapW(seed * 1.8 + t * 10 + Math.sin(t + i) * 14, ground * 0.9) + ground * 0.08;
+        c.fillStyle = 'rgba(180,190,200,.22)';
+        c.fillRect(x, y, 3, 2);
+        break;
+      }
+      default:
+        break;
+    }
+  }
+  c.restore();
+  c.globalAlpha = 1;
+}
+
 /** Pixel-art laag tekenen: getild, smoothing uit, parallax-offset. */
 function drawSceneryTile(c, tile, y, scroll, rate, scale) {
   if (!tile) return;
@@ -5029,6 +5253,8 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
     c.fillRect(x, ground + 10, 36, 4);
     c.fillRect(x + 52, ground + 26, 20, 3);
   }
+  // weer per thema (art-upgrade 4/4): blaadjes/bloesem/sintels/regen/stof
+  drawThemeWeather(c, themeName, t, ground, scroll);
   // pixel-speckles op de grond (art-upgrade 1/4) — deterministisch, scroll-vast
   if (!fxLite()) {
     const spSpan = 61;
@@ -5383,7 +5609,7 @@ class Game {
           ? `Level ${this.level.n} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}`
           : `Level ${this.level.n} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}`;
         if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
-          base += ` · 🎲 ${gambleOutcomeLabel(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48)}`;
+          base += ` · gok: ${gambleOutcomeLabel(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48)}`;
         }
         return base;
       })(),
@@ -5636,7 +5862,7 @@ class Game {
       title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
       detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · ${save.trainWins}x gewonnen`,
       xp: this.sessionXP, mode: 'training', win,
-      tip: win ? 'Unlock stijlen door meer train-wins!' : 'Tip: duck lasers · chakra vol → 🌀 Rasengan',
+      tip: win ? 'Unlock stijlen door meer train-wins!' : 'Tip: duck lasers · chakra vol → Rasengan',
     }), 1200);
   }
 
@@ -5740,7 +5966,7 @@ class Game {
     if (!modeOnboardingSeen('wall')) {
       setTimeout(() => {
         try {
-          if (!this.over) this.banner('Tip: 60s · combo-balk = sneller · ★ = bonus steen', 2.0, '#7cf5ff', 22);
+          if (!this.over) this.banner('Tip: 60s · combo-balk = sneller · ster-steen = bonus', 2.0, '#7cf5ff', 22);
         } catch (_) {}
       }, 1200);
     }
@@ -7318,16 +7544,11 @@ class Game {
       }
       if (p.energy >= 100) {
         const k1 = fighterJutsuKind(p);
-        c.font = '800 10px sans-serif'; c.fillStyle = jutsuAccentColor(k1, false);
-        c.textAlign = 'left';
-        c.fillText(jutsuBtnIcon(k1, 1), bx + half - 14, byVs + 12);
+        drawJutsuMiniIcon(c, k1, bx + half - 10, byVs + 9, jutsuAccentColor(k1, false));
       }
       if (p2.energy >= 100) {
         const k2 = fighterJutsuKind(p2);
-        c.font = '800 10px sans-serif'; c.fillStyle = jutsuAccentColor(k2, true);
-        c.textAlign = 'right';
-        c.fillText(jutsuBtnIcon(k2, 1), W - 20, byVs + 12);
-        c.textAlign = 'center';
+        drawJutsuMiniIcon(c, k2, W - 26, byVs + 9, jutsuAccentColor(k2, true));
       }
     }
   }
@@ -7415,11 +7636,11 @@ class Game {
       c.fillStyle = b.color;
       c.beginPath(); c.arc(b.x, b.y, b.r, 0, TAU); c.fill();
       c.globalAlpha = b.held ? 1 : 0.85;
-      c.font = `${b.r * 0.85}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
-      const lbl = b.id === 'special'
-        ? jutsuBtnIcon(fighterJutsuKind(this.player), this.player.energy / 100)
-        : b.label;
-      c.fillText(lbl, b.x, b.y + 2);
+      const jk = b.id === 'special' ? fighterJutsuKind(this.player) : null;
+      if (!drawTouchBtnIcon(c, b.id, b.x, b.y, b.r, jk)) {
+        c.font = `${b.r * 0.85}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillText(b.label, b.x, b.y + 2);
+      }
       if (b.id === 'subst' && this.player.substCd > 0) {
         c.globalAlpha = 0.35;
         c.fillStyle = '#000';
@@ -7452,11 +7673,11 @@ class Game {
       c.fillStyle = b.color;
       c.beginPath(); c.arc(b.x, b.y, b.r, 0, TAU); c.fill();
       c.globalAlpha = 0.9;
-      c.font = `${b.r * 0.8}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
-      const lbl = b.id === 'special' && fighter
-        ? jutsuBtnIcon(fighterJutsuKind(fighter), fighter.energy / 100)
-        : b.label;
-      c.fillText(lbl, b.x, b.y + 2);
+      const jk2 = b.id === 'special' && fighter ? fighterJutsuKind(fighter) : (b.id === 'special' ? 'rasengan' : null);
+      if (!drawTouchBtnIcon(c, b.id, b.x, b.y, b.r, jk2)) {
+        c.font = `${b.r * 0.8}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillText(b.label, b.x, b.y + 2);
+      }
     }
     c.textBaseline = 'alphabetic';
     c.restore();
@@ -7553,6 +7774,36 @@ function initCharSelectChrome() {
   });
 }
 
+/** Prestatie-iconen als inline SVG (art-upgrade 4/4) — vervangt emoji. */
+const ACH_ICON_SVG = {
+  first_win: '<path d="M7 4h10v5a5 5 0 01-10 0z"/><path d="M7 5H4c0 3 1.5 5 3 5M17 5h3c0 3-1.5 5-3 5"/><path d="M12 14v3M8 20h8M10 17h4v3h-4z"/>',
+  lv10: '<path d="M12 20V5"/><path d="M6 11l6-6 6 6"/>',
+  dex10: '<path d="M12 6c-2-1.5-4.5-2-8-2v14c3.5 0 6 .5 8 2 2-1.5 4.5-2 8-2V4c-3.5 0-6 .5-8 2z"/><path d="M12 6v14"/>',
+  dexFull: '<path d="M5 4h11v16H5z"/><path d="M16 6h3v14h-3"/><path d="M8 8h5M8 12h5"/>',
+  dex100: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/>',
+  dexHalf: '<circle cx="12" cy="12" r="9"/><path d="M14.5 9.5l-1.6 4-4 1.6 1.6-4z" fill="currentColor"/>',
+  dexTiers: '<path d="M12 3l6 5-6 13L6 8z"/><path d="M6 8h12M9 8l3 13M15 8l-3 13"/>',
+  dexMythic: '<path d="M12 3l1.8 5.4L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.6z" fill="currentColor"/>',
+  train5: '<rect x="6" y="8" width="12" height="10" rx="2"/><path d="M9 8V5.5M15 8V5.5"/><circle cx="9.5" cy="12.5" r="1.2" fill="currentColor"/><circle cx="14.5" cy="12.5" r="1.2" fill="currentColor"/>',
+  wall100: '<path d="M4 6h16M4 11h16M4 16h16M4 6v14h16V6M9 6v5M15 11v5M9 16v4"/>',
+  combo8: '<path d="M13 3L6 13h5l-2 8 7-10h-5z" fill="currentColor" stroke="none"/>',
+  lv50: '<path d="M4 17l1.5-9L9 12l3-6 3 6 3.5-4L20 17z"/><path d="M5 20h14"/>',
+  daily7: '<rect x="4" y="6" width="16" height="14" rx="2"/><path d="M4 10h16M8 4v4M16 4v4"/><path d="M9 15l2 2 4-4"/>',
+  vs5: '<circle cx="8" cy="12" r="4"/><circle cx="16" cy="12" r="4"/>',
+  vs_roster: '<circle cx="9" cy="9" r="4"/><rect x="12" y="12" width="8" height="8" rx="2"/>',
+  saga_icons: '<path d="M12 3l2 6h6l-5 4 2 6-5-3.6L7 19l2-6-5-4h6z" fill="currentColor" stroke="none"/>',
+};
+function achIconSvg(id) {
+  const body = ACH_ICON_SVG[id] || ACH_ICON_SVG.first_win;
+  return '<svg viewBox="0 0 24 24" style="width:1.2em;height:1.2em;vertical-align:-0.24em;margin-right:2px" ' +
+    'fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg>';
+}
+
+/** Mini SVG-vinkje (art-upgrade 4/4) — vervangt ✔-glyphs in lijsten. */
+const SVG_CHECK_MINI =
+  '<svg viewBox="0 0 24 24" style="width:1em;height:1em;vertical-align:-0.14em" fill="none" ' +
+  'stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13l5 5L20 7"/></svg>';
+
 /** Inline SVG-slotje (art-upgrade 2/4) — vervangt 🔒 in level/wapen-lijsten. */
 const SVG_LOCK_ICON =
   '<svg viewBox="0 0 24 24" style="width:1.15em;height:1.15em;vertical-align:-0.2em" fill="none" stroke="currentColor" stroke-width="2">' +
@@ -7625,7 +7876,7 @@ const UI = {
     if (!host) return;
     const touch = IS_TOUCH ? 'touch' : 'toetsenbord';
     const modes = [
-      { id: 'adventure', label: 'Avontuur', tip: 'Groen HP · oranje rage · blauw chakra · 🌀 vol · vóór elk level: 🎲 gok (super-baas of ally)' },
+      { id: 'adventure', label: 'Avontuur', tip: 'Groen HP · oranje rage · blauw chakra · SUPER bij vol · vóór elk level: dobbel-gok (super-baas of ally)' },
       { id: 'training', label: 'Training', tip: 'Lasers ontwijken · 2 rondes · Robot Chidori' },
       { id: 'wall', label: 'Muur', tip: '60s · combo = sneller · beat record' },
       { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
@@ -7728,7 +7979,7 @@ const UI = {
     const blurbEl = document.getElementById('charSagaBlurb');
     if (blurbEl) blurbEl.textContent = filter === 'all'
       ? 'Choose fighter · 5 saga-hints (parodie, geen officiële namen) · tik kaart = kiezen'
-      : sagaMeta.emoji + ' ' + sagaMeta.blurb;
+      : sagaMeta.blurb;
     const sagaBar = document.getElementById('charSagaBar');
     if (sagaBar) {
       sagaBar.querySelectorAll('[data-saga]').forEach((btn) => {
@@ -7784,7 +8035,7 @@ const UI = {
       const saga = vsSagaMeta(r.saga || 'scroll');
       const badge = document.createElement('div');
       badge.className = 'char-saga';
-      badge.textContent = saga.emoji + ' ' + saga.label.replace('-saga', '');
+      badge.textContent = saga.label.replace('-saga', '');
       el.appendChild(badge);
       const cap = document.createElement('div');
       cap.className = 'char-name';
@@ -7905,7 +8156,7 @@ const UI = {
       chip.appendChild(cv);
       const cap = document.createElement('span');
       cap.className = 'char-icon-name';
-      cap.textContent = saga.emoji + ' ' + r.name.replace(' Stick', '').replace(' Kid', '');
+      cap.textContent = r.name.replace(' Stick', '').replace(' Kid', '');
       chip.appendChild(cap);
       strip.appendChild(chip);
     }
@@ -8015,7 +8266,7 @@ const UI = {
           ? (claimedN === 3
             ? ' · <b style="color:#7cfc8a">dagbonus +80 XP klaar</b>'
             : ` · dagbonus na ${3 - claimedN} claim${3 - claimedN === 1 ? '' : 's'}`)
-          : ' · dagbonus ✔');
+          : ` · dagbonus ${SVG_CHECK_MINI}`);
     }
     const claimAll = document.getElementById('dailyClaimAllBtn');
     if (claimAll) {
@@ -8035,7 +8286,7 @@ const UI = {
       el.className = 'step-card mission-card' + (claimable ? ' claimable' : '') + (t.claimed ? ' claimed' : '');
       const pct = Math.min(100, Math.round(t.progress / def.goal * 100));
       let status;
-      if (t.claimed) status = '<span style="color:#7cfc8a">✔ Geclaimd</span>';
+      if (t.claimed) status = `<span style="color:#7cfc8a">${SVG_CHECK_MINI} Geclaimd</span>`;
       else if (t.done) status = '<span style="color:#ffd75e">Klaar — tik Claim hieronder</span>';
       else status = `<span style="opacity:.85">Bezig ${t.progress}/${def.goal}</span>`;
       const playHint = DAILY_PLAY_HINTS[def.id] || '';
@@ -8085,8 +8336,8 @@ const UI = {
       const isNew = got === today;
       el.className = 'card' + (got ? '' : ' locked') + (isNew ? ' ach-card new' : '');
       el.style.borderColor = got ? (isNew ? '#7cf5ff' : '#ffd75e') : undefined;
-      el.innerHTML = `<div class="cname">${ach.icon} ${ach.name}${isNew ? ' · nieuw' : ''}</div>` +
-        `<div class="cinfo">${ach.desc}${got ? ' · ✔ ' + got : (() => {
+      el.innerHTML = `<div class="cname">${achIconSvg(ach.id)} ${ach.name}${isNew ? ' · nieuw' : ''}</div>` +
+        `<div class="cinfo">${ach.desc}${got ? ` · ${SVG_CHECK_MINI} ` + got : (() => {
           const hint = achievementProgressHint(ach);
           return hint ? ' · ' + hint : ' · nog open';
         })()}</div>`;
@@ -8180,12 +8431,12 @@ const UI = {
     const outEl = document.getElementById('gambleOutcome');
     if (head) head.textContent = `Gok — level ${levelN}`;
     const g = lastGambleRoll;
-    const face = (d) => ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][d - 1] || '🎲';
+    const face = (d) => ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][d - 1] || '?';
     if (g && diceRow) {
       diceRow.textContent = `${face(g.d1)} ${face(g.d2)}`;
       if (sumLine) sumLine.textContent = `Som: ${g.d1} + ${g.d2} = ${g.sum}`;
     } else {
-      if (diceRow) diceRow.textContent = '🎲 🎲';
+      if (diceRow) diceRow.textContent = '? ?';
       if (sumLine) sumLine.textContent = 'Tik op Gooi dobbelstenen — of start zonder gok';
     }
     if (outEl) {
@@ -8361,7 +8612,7 @@ const UI = {
         : '';
       let statusPrimary = h.primaryCorrupt
         ? '⚠ Hoofd-save corrupt'
-        : (h.primaryValid ? '✔ Save OK' : (h.primaryOk ? '⚠ Save onleesbaar' : '⚠ Geen primary save'));
+        : (h.primaryValid ? `${SVG_CHECK_MINI} Save OK` : (h.primaryOk ? '⚠ Save onleesbaar' : '⚠ Geen primary save'));
       if (h.drift && h.backupOk) statusPrimary += ' · hoofd/backup verschillen — tik Herstel backup';
       if (h.backupCorrupt && h.backupOk === false && h.primaryValid) {
         statusPrimary += ' · backup corrupt (hoofd OK)';
@@ -8371,7 +8622,7 @@ const UI = {
         (h.summons ? ` · ✦ ${h.summons} summon` : '') +
         `${sizeLine}<br>` +
         statusPrimary +
-        (h.backupOk ? ` · ✔ Backup (Lv ${h.backupLvl})` : ' · ⚠ Geen backup');
+        (h.backupOk ? ` · ${SVG_CHECK_MINI} Backup (Lv ${h.backupLvl})` : ' · ⚠ Geen backup');
       if (h.stampAt) {
         let stampLabel = '';
         try {
