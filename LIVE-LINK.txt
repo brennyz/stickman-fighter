@@ -1,4 +1,4 @@
-https://stickfighter-ipad-b75e.loca.lt
+https://brennyz.github.io/stickman-fighter/speel.html
 
-Vaste iPad-link — bookmark in Safari.
-«Zet in app-lade» voor fullscreen.
+Primair: GitHub Pages — bookmark op iPad (Safari → Delen → Zet op beginscherm).
+Dev tunnel (optioneel): https://stickfighter-ipad-b75e.loca.lt/ipad.html — alleen als thuis ./start-local.sh --tunnel draait.

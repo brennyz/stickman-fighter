@@ -60,9 +60,9 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.12.9';
+const APP_VERSION = '1.12.10';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 72;
+const SW_CACHE_REV = 73;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -881,13 +881,30 @@ function sharePlayLink() {
   go();
 }
 
+function isTunnelHostUrl(u) {
+  return /\.loca\.lt\b|trycloudflare\.com\b/i.test(String(u || ''));
+}
+
+function canonicalPagesPlayUrl(hosting) {
+  const j = hosting || {};
+  return j.bookmarkShare || j.pagesSpeel || j.primary || j.githubPages || j.stable || '';
+}
+
+function resolveBundleLiveUrl(hosting, liveTxt) {
+  const fromTxt = (liveTxt || '').split('\n').map(l => l.trim()).find(l => /^https:\/\//i.test(l)) || '';
+  const pages = canonicalPagesPlayUrl(hosting);
+  if (pages) return pages;
+  if (fromTxt && !isTunnelHostUrl(fromTxt)) return fromTxt;
+  return fromTxt || pages;
+}
+
 async function loadHostingBundle() {
   const [hosting, liveTxt] = await Promise.all([
     fetch('./hosting.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.json()).catch(() => ({})),
     fetch('./LIVE-LINK.txt?t=' + Date.now(), { cache: 'no-store' }).then(r => r.text()).catch(() => ''),
   ]);
-  const liveLine = (liveTxt || '').split('\n').find(l => l.startsWith('https://'));
-  return { hosting, liveUrl: liveLine ? liveLine.trim() : '' };
+  const liveUrl = resolveBundleLiveUrl(hosting, liveTxt);
+  return { hosting, liveUrl, liveTxt };
 }
 
 function pickStablePlayUrl(hosting) {
@@ -895,7 +912,9 @@ function pickStablePlayUrl(hosting) {
   if (/\.loca\.lt$/i.test(location.hostname) && j.bookmarkTunnel) {
     return j.bookmarkTunnel.replace(/\/?$/, '').replace(/\/ipad\.html$/, '') + '/ipad.html';
   }
-  return j.bookmarkShare || j.primary || j.githubPages || j.bookmarkPages || j.stable || '';
+  const pages = canonicalPagesPlayUrl(j);
+  if (pages) return pages;
+  return j.bookmarkPages || j.stable || '';
 }
 
 function githubPagesRootUrl() {
@@ -5931,22 +5950,40 @@ const UI = {
     if (!linkEl) return;
     loadHostingBundle()
       .then(({ hosting, liveUrl }) => {
-        const stable = pickStablePlayUrl(hosting) || liveUrl || hosting.tunnel || hosting.netlifyUrl || headLiveFromPage();
-        linkEl.textContent = stable || '—';
+        const stable = canonicalPagesPlayUrl(hosting) || liveUrl || headLiveFromPage();
+        const tunnelDev = hosting.tunnel || hosting.bookmarkTunnel || '';
+        const short = (u) => String(u || '').replace(/^https:\/\//, '');
+        if (stable) {
+          linkEl.innerHTML =
+            `<div style="opacity:.8;margin-bottom:4px">Vaste speel-link (GitHub Pages)</div>` +
+            `<a href="${stable}" style="color:#7cf5ff;font-weight:800" rel="noopener">${short(stable)}</a>`;
+        } else {
+          linkEl.textContent = stable || '—';
+        }
         const onTunnel = location.hostname.endsWith('.loca.lt') || location.hostname.includes('trycloudflare');
         if (curEl) {
+          const parts = [];
           if (onTunnel && location.protocol !== 'file:') {
+            parts.push('Huidige sessie (tunnel): ' + location.href.split('?')[0].split('#')[0]);
+          }
+          if (tunnelDev && !onTunnel) {
+            parts.push('Dev tunnel (optioneel): ' + tunnelDev.replace(/\/?$/, '/ipad.html'));
+          }
+          if (parts.length) {
             curEl.style.display = 'block';
-            curEl.textContent = 'Huidige sessie: ' + location.href.split('?')[0].split('#')[0];
+            curEl.textContent = parts.join(' · ');
           } else curEl.style.display = 'none';
         }
         let hint = hosting.stableHint || '';
         if (!hint) {
           if (stable && stable.includes('github.io')) {
-            hint = 'Primair: GitHub Pages — bookmark op iPad (Safari → Delen → Zet op beginscherm).';
-          } else if (location.hostname.endsWith('.github.io')) hint = 'Je speelt via GitHub Pages.';
+            hint = 'Primair: GitHub Pages — bookmark speel.html op iPad (Safari → Delen → Zet op beginscherm).';
+          } else if (location.hostname.endsWith('.github.io')) hint = 'Je speelt via GitHub Pages — deel speel.html met vrienden.';
           else if (location.hostname.endsWith('.netlify.app')) hint = 'Netlify-host — export save bij URL-wissel.';
-          else hint = 'Tunnel is fallback — gebruik de vaste link hierboven voor je iPad.';
+          else hint = 'Gebruik de vaste Pages-link hierboven; tunnel alleen voor lokaal testen.';
+        }
+        if (onTunnel) {
+          hint += ' Op tunnel: bij 503 → open GitHub Pages (extra bookmark).';
         }
         if (hosting.netlifyUrl && hosting.netlifyReadyAfter) {
           hint += ` Netlify (${hosting.netlifyUrl}) kan Forbidden geven tot ~${hosting.netlifyReadyAfter}.`;

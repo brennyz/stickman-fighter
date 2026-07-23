@@ -10,15 +10,14 @@
     9,
     14,
     15,
-    16,
     17,
     20
   ],
   "lastRoll": {
-    "face": 19,
-    "category": "Muur & minigames \u2014 combo, timer, record",
-    "rolledAt": "2026-07-23T18:14:23Z",
-    "remainingCount": 10,
+    "face": 16,
+    "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
+    "rolledAt": "2026-07-23T18:15:53Z",
+    "remainingCount": 9,
     "cycle": 1
   },
   "pending": null,
@@ -168,6 +167,13 @@
       "note": "Muur HUD: timer/combo bars, record chase, tempo/projectie, muur\u00d7",
       "version": "1.12.9",
       "doneAt": "2026-07-23T18:15:38Z",
+      "cycle": 1
+    },
+    {
+      "face": 16,
+      "note": "Pages primair in hosting.json/LIVE-LINK + instellingen UI",
+      "version": "1.12.10",
+      "doneAt": "2026-07-23T18:16:50Z",
       "cycle": 1
     }
   ],
@@ -465,6 +471,13 @@
       "category": "Muur & minigames \u2014 combo, timer, record",
       "rolledAt": "2026-07-23T18:14:23Z",
       "remainingCount": 10,
+      "cycle": 1
+    },
+    {
+      "face": 16,
+      "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
+      "rolledAt": "2026-07-23T18:15:53Z",
+      "remainingCount": 9,
       "cycle": 1
     }
   ]
