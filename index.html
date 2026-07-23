@@ -336,6 +336,7 @@
     <button class="btn tog" id="btnSharePlay">&#128279; Deel speel-link</button>
     <button class="btn tog" id="btnSettings">&#9881; Instellingen</button>
     <button class="btn tog" id="btnHelp">&#10067; Tips</button>
+    <button class="btn tog" id="sfForceFresh" type="button" title="Wis PWA-cache en herlaad">&#128260; Verse versie</button>
   </div>
 </div>
 
@@ -545,19 +546,79 @@
 })();
 </script>
 
-<script src="tunnel-check.js"></script>
-<script src="game.js"></script>
-<script src="install.js"></script>
+<script src="tunnel-check.js?v=193"></script>
+<script src="game.js?v=193"></script>
+<script src="install.js?v=193"></script>
 <script>
-window.addEventListener('load', function () {
-  if (window.__sfBooted) return;
-  var host = document.getElementById('toastHost');
-  if (!host) return;
-  var el = document.createElement('div');
-  el.className = 'toast';
-  el.textContent = 'Spel laadt niet — refresh of wis cache (SW v37).';
-  host.appendChild(el);
-});
+(function () {
+  function freeUi() {
+    var o = document.getElementById('tunnelBootOverlay');
+    if (o) {
+      o.hidden = true;
+      o.setAttribute('hidden', '');
+      o.style.pointerEvents = 'none';
+      o.style.display = 'none';
+    }
+    var c = document.getElementById('game');
+    if (c && !document.body.classList.contains('is-playing')) {
+      c.style.pointerEvents = 'none';
+      c.style.visibility = 'hidden';
+    }
+  }
+  freeUi();
+  setTimeout(freeUi, 0);
+  setTimeout(freeUi, 400);
+  setTimeout(freeUi, 1200);
+
+  // ?fresh=1 of knop: SW weg → echte verse game.js (fix oude Pages-cache)
+  function nukeSwAndReload() {
+    var done = Promise.resolve();
+    if (navigator.serviceWorker) {
+      done = navigator.serviceWorker.getRegistrations().then(function (regs) {
+        return Promise.all(regs.map(function (r) { return r.unregister(); }));
+      }).then(function () {
+        if (window.caches && caches.keys) {
+          return caches.keys().then(function (keys) {
+            return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+          });
+        }
+      });
+    }
+    done.then(function () {
+      var u = new URL(location.href);
+      u.searchParams.set('fresh', String(Date.now()));
+      location.replace(u.toString());
+    }).catch(function () { location.reload(); });
+  }
+  if (/[?&]fresh=1\b/.test(location.search) || /[?&]fresh=\d+/.test(location.search)) {
+    if (!sessionStorage.getItem('sf_fresh_done')) {
+      sessionStorage.setItem('sf_fresh_done', '1');
+      nukeSwAndReload();
+      return;
+    }
+  }
+
+  document.addEventListener('pointerup', function (e) {
+    freeUi();
+    var t = e.target && e.target.closest ? e.target.closest('button, .lvl, .char-card, .style-card') : null;
+    if (!t || t.disabled) return;
+    if (t.id === 'sfForceFresh') { e.preventDefault(); nukeSwAndReload(); return; }
+  }, true);
+
+  window.addEventListener('load', function () {
+    freeUi();
+    if (window.__sfBooted) return;
+    var host = document.getElementById('toastHost');
+    if (!host) return;
+    var el = document.createElement('div');
+    el.className = 'toast';
+    el.style.pointerEvents = 'auto';
+    el.innerHTML = 'Spel-JS laadde niet (oude cache). <button type="button" id="sfForceFresh" style="margin-left:8px;padding:6px 10px;border-radius:10px;border:none;font-weight:800;background:#ffd75e;color:#2a1a00">Forceer verse versie</button>';
+    host.appendChild(el);
+    var b = document.getElementById('sfForceFresh');
+    if (b) b.addEventListener('click', nukeSwAndReload);
+  });
+})();
 </script>
 </body>
 </html>

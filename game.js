@@ -56,7 +56,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.9.2';
+const APP_VERSION = '1.9.3';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -124,11 +124,13 @@ function restoreSaveFromBackup() {
 
 /** Corrupte / gemanipuleerde saves veilig maken (localStorage + import). */
 function sanitizeSave(s) {
+  // Literal max — nooit TDZ op MAX_LEVEL (anders crashen alle click-handlers)
+  const maxLevel = 50;
   const out = Object.assign({}, DEFAULT_SAVE, s);
   delete out._exportMeta;
   out.lvl = clamp(Math.floor(Number(out.lvl) || 1), 1, 500);
   out.xp = clamp(Math.floor(Number(out.xp) || 0), 0, 999999);
-  out.unlocked = clamp(Math.floor(Number(out.unlocked) || 1), 1, MAX_LEVEL);
+  out.unlocked = clamp(Math.floor(Number(out.unlocked) || 1), 1, maxLevel);
   out.trainWins = clamp(Math.floor(Number(out.trainWins) || 0), 0, 9999);
   out.bestWall = clamp(Math.floor(Number(out.bestWall) || 0), 0, 999999);
   out.musicVol = clamp(Number(out.musicVol), 0, 1);
@@ -149,7 +151,7 @@ function sanitizeSave(s) {
     else {
       out.lastPlay = {
         mode: lp.mode,
-        level: clamp(Math.floor(Number(lp.level) || 1), 1, MAX_LEVEL),
+        level: clamp(Math.floor(Number(lp.level) || 1), 1, maxLevel),
         p1: typeof lp.p1 === 'string' ? lp.p1.slice(0, 24) : undefined,
         p2: typeof lp.p2 === 'string' ? lp.p2.slice(0, 24) : undefined,
       };
@@ -166,7 +168,7 @@ function sanitizeSave(s) {
   const cleanStars = {};
   for (const [k, v] of Object.entries(out.stars || {})) {
     const n = parseInt(k, 10);
-    if (n >= 1 && n <= MAX_LEVEL) cleanStars[n] = clamp(Math.floor(Number(v) || 0), 0, 3);
+    if (n >= 1 && n <= maxLevel) cleanStars[n] = clamp(Math.floor(Number(v) || 0), 0, 3);
   }
   out.stars = cleanStars;
 
