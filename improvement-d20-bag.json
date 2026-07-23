@@ -5,7 +5,6 @@
     1,
     2,
     3,
-    4,
     6,
     7,
     8,
@@ -16,10 +15,10 @@
     20
   ],
   "lastRoll": {
-    "face": 10,
-    "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
-    "rolledAt": "2026-07-23T13:30:02Z",
-    "remainingCount": 12,
+    "face": 4,
+    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
+    "rolledAt": "2026-07-23T13:31:40Z",
+    "remainingCount": 11,
     "cycle": 0
   },
   "history": [
@@ -77,6 +76,13 @@
       "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
       "rolledAt": "2026-07-23T13:30:02Z",
       "remainingCount": 12,
+      "cycle": 0
+    },
+    {
+      "face": 4,
+      "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
+      "rolledAt": "2026-07-23T13:31:40Z",
+      "remainingCount": 11,
       "cycle": 0
     }
   ]

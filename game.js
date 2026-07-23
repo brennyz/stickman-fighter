@@ -56,7 +56,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.8.0';
+const APP_VERSION = '1.8.1';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -750,6 +750,18 @@ function weightedPick(pool, n) {
   let r = Math.random() * sum;
   for (let i = 0; i < pool.length; i++) { r -= weights[i]; if (r <= 0) return pool[i]; }
   return pool[pool.length - 1];
+}
+const STAR_HP = { three: 0.72, two: 0.38 };
+function starsFromHpPct(hpPct) {
+  if (hpPct > STAR_HP.three) return 3;
+  if (hpPct > STAR_HP.two) return 2;
+  return 1;
+}
+function starHintLine() {
+  return `3★ >${Math.round(STAR_HP.three * 100)}% HP · 2★ >${Math.round(STAR_HP.two * 100)}% · 1★ = win`;
+}
+function isBossWave(level, waveIdx) {
+  return !!(level && level.boss && waveIdx === level.waves.length - 1);
 }
 function buildLevel(n) {
   const hpMul = 1 + (n - 1) * 0.14;
@@ -2446,10 +2458,16 @@ class Game {
     this.waveIdx++;
     if (this.waveIdx >= this.level.waves.length) { this.finishAdventure(true); return; }
     const wave = this.level.waves[this.waveIdx];
+    const bossWave = isBossWave(this.level, this.waveIdx);
     this.spawnQueue = wave.slice();
-    this.spawnTimer = 0.4;
-    if (this.spawnQueue.some(s => s.elite)) {
-      this.banner('BAAS GEVECHT!', 1.6, '#ff6b6b', 48);
+    this.spawnTimer = bossWave ? 1.0 : 0.45;
+    this.wavePause = 0;
+    if (bossWave) {
+      this.banner('BAAS-GOLF!', 1.8, '#ff6b6b', 50);
+      AudioSys.play('boss');
+      AudioSys.sfx('roar');
+    } else if (wave.some(s => s.elite)) {
+      this.banner('ELITE-GOLF', 1.2, '#ffd75e', 40);
       AudioSys.sfx('roar');
     } else {
       this.banner(`GOLF ${this.waveIdx + 1}/${this.level.waves.length}`, 1.1, '#cfe0ff', 38);
@@ -2483,7 +2501,8 @@ class Game {
     if (this.spawnQueue.length) {
       this.spawnTimer -= dt;
       if (this.spawnTimer <= 0) {
-        this.spawnTimer = 0.7;
+        const bossWave = isBossWave(this.level, this.waveIdx);
+        this.spawnTimer = bossWave ? 1.12 : 0.68;
         const def = this.spawnQueue.shift();
         const side = Math.random() < 0.75 ? 1 : -1;
         const x = side > 0 ? W + 40 : -40;
@@ -2492,7 +2511,10 @@ class Game {
         }));
       }
     } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive)) {
-      if (!this.wavePause) this.wavePause = 1.0;
+      if (!this.wavePause) {
+        const nextIsBoss = isBossWave(this.level, this.waveIdx + 1);
+        this.wavePause = nextIsBoss ? 2.15 : 1.05;
+      }
       this.wavePause -= dt;
       if (this.wavePause <= 0) { this.wavePause = 0; this.nextWave(); }
     }
@@ -2509,7 +2531,7 @@ class Game {
       this.grantXP(bonus);
       if (this.level.n === save.unlocked && save.unlocked < MAX_LEVEL) { save.unlocked++; persist(); }
       const hpPct = this.player.hp / Math.max(1, this.player.maxhp);
-      stars = hpPct > 0.72 ? 3 : hpPct > 0.38 ? 2 : 1;
+      stars = starsFromHpPct(hpPct);
       const prev = save.stars[this.level.n] || 0;
       if (stars > prev) { save.stars[this.level.n] = stars; persist(); }
       bumpStat('advWins', 1);
@@ -2528,7 +2550,7 @@ class Game {
         : `Level ${this.level.n} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}`,
       xp: this.sessionXP,
       mode: 'adventure', level: this.level.n, win, stars,
-      tip: win ? (stars >= 3 ? 'Perfecte run — hou je HP hoog!' : 'Tip: schild/chakra-pickups = meer sterren') : 'Tip: blokkeer meer · vul chakra · Rasengan op baas',
+      tip: win ? (stars >= 3 ? 'Perfecte run — hou je HP hoog!' : `${starHintLine()} — pickups helpen`) : 'Tip: blokkeer meer · vul chakra · Rasengan op baas',
     }), 1400);
   }
 
@@ -3391,6 +3413,15 @@ class Game {
       c.fillStyle = 'rgba(255,255,255,.9)';
       const wv = Math.max(1, this.waveIdx + 1);
       c.fillText(`Level ${this.level.n} — Golf ${Math.min(wv, this.level.waves.length)}/${this.level.waves.length}`, W / 2, 30);
+      if (p.alive) {
+        const hpPct = p.hp / Math.max(1, p.maxhp);
+        const proj = starsFromHpPct(hpPct);
+        c.textAlign = 'right';
+        c.font = '800 14px sans-serif';
+        c.fillStyle = '#ffd75e';
+        c.fillText(`${'★'.repeat(proj)}${'☆'.repeat(3 - proj)}`, W - 14, 30);
+        c.textAlign = 'center';
+      }
       const boss = this.monsters.find(m => m.elite && m.alive);
       if (boss) {
         const bwid = Math.min(420, W * 0.5);
@@ -3949,7 +3980,10 @@ const UI = {
         ? '&#128274;'
         : `${n}${boss ? '<small>BAAS</small>' : `<small style="color:${rar.color}">${rar.name}</small>`}` +
           (save.stars[n] ? `<span class="lvl-stars">${'★'.repeat(save.stars[n])}</span>` : '');
-      if (!locked) el.addEventListener('click', () => { AudioSys.sfx('select'); startGame('adventure', { level: n }); });
+      if (!locked) {
+        el.title = `${info.waves.length} golven · ${starHintLine()}`;
+        el.addEventListener('click', () => { AudioSys.sfx('select'); startGame('adventure', { level: n }); });
+      }
       grid.appendChild(el);
     }
   },
