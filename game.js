@@ -4181,6 +4181,11 @@ function bootGame() {
   AudioSys.desiredSong = 'menu';
   if (typeof AudioSys.applyVolumes === 'function') AudioSys.applyVolumes();
   requestAnimationFrame(loop);
+  if (!window.__sfTipTimer) {
+    window.__sfTipTimer = setInterval(() => {
+      if (state === 'menu') UI.renderMenu();
+    }, 8000);
+  }
   window.__sf = { get game() { return game; }, startGame, save, Game, UI };
 
   (function handleLaunchShortcut() {
