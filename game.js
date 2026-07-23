@@ -18,6 +18,40 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const APP_VERSION = '1.7.0';
+
+/** d20-tabel: menu-tips (roterend) + help-knop — speeltips + roadmap */
+const D20_ROLL = [
+  { text: '2 spelers: character select in twee delen — eerst P1, dan P2 (18 vechters, best-of-3).' },
+  { text: 'Komt eraan: Mat\'s bonus game — korte mini-uitdaging na een sterke run of perfecte ronde.' },
+  { text: 'Komt eraan: mik met je wapen — richt op de vloer voor schokgolven of op vogels voor bonus-XP.' },
+  { text: 'Volle chakra → tik 🌀 voor Rasengan — grote schade en screen-shake.' },
+  { text: '2P op iPad: liggend houden; P1 linker helft, P2 rechter helft (joystick + knoppen).' },
+  { text: 'Muur: combo\'s stapelen schade — bomstenen (rood) ontploffen, goud = extra XP.' },
+  { text: 'Monsterboek vullen = meer max HP via rariteit (gewoon +3 … mythisch +25).' },
+  { text: 'Komt eraan: avontuur-character select vóór elk level — eigen loadout per run.' },
+  { text: 'Training vs RabbitRobot: duck zijn lasers; Chidori open = jouw moment.' },
+  { text: 'Dash / substitutie: dubbel-tik links-rechts of Shift — korte onkwetsbaarheid.' },
+  { text: 'Komt eraan: Mat\'s dojo — timing-minigame met planken en combo-multipliers.' },
+  { text: 'Kunai & shuriken unlocken vroeg — gooi projectielen naast melee.' },
+  { text: 'Bazen fase 2 onder half HP — blokkeer en spaar chakra voor de finish.' },
+  { text: 'Komt eraan: vogels in levels — mik met boog/kunai voor pickups zonder grond te raken.' },
+  { text: 'Dagelijkse missies + dagbonus (+80 XP) — reset om middernacht (UTC).' },
+  { text: 'Verder spelen hervat je laatste modus (avontuur, training, muur of 2P).' },
+  { text: 'Komt eraan: vloer-slag met zware wapens — scheurt tegels in muur-modus.' },
+  { text: 'Willekeurig duo op character select: 🎲 kiest twee verschillende vechters.' },
+  { text: 'Instellingen: grote knoppen, minder schok, combo-HUD — handig op iPad.' },
+  { text: 'Komt eraan: Mat co-op assist — korte buff als je zijn bonus haalt.' },
+];
+
+function rollD20Entry() {
+  const n = 1 + Math.floor(Math.random() * D20_ROLL.length);
+  return { n, text: D20_ROLL[n - 1].text };
+}
+
+function formatD20Line(roll) {
+  return `🎲 ${roll.n}/20 — ${roll.text}`;
+}
+
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -3555,15 +3589,8 @@ const UI = {
     if (missEl) missEl.textContent = `Vandaag: ${done}/3 missies klaar · ${Object.keys(save.achievements).length}/${ACHIEVEMENTS.length} prestaties`;
     const tipEl = document.getElementById('menuTipLine');
     if (tipEl) {
-      const tips = [
-        'Tip: volle chakra → tik 🌀 voor Rasengan',
-        'Tip: 2 spelers = liggend iPad, P1 links / P2 rechts',
-        'Tip: muur-combo’s = sneller sloop & meer XP',
-        'Tip: monsterboek vullen = meer max HP',
-        'Tip: “Verder spelen” hervat je laatste modus',
-      ];
-      const i = Math.floor(Date.now() / 8000) % tips.length;
-      tipEl.textContent = tips[i];
+      const i = Math.floor(Date.now() / 8000) % D20_ROLL.length;
+      tipEl.textContent = formatD20Line({ n: i + 1, text: D20_ROLL[i].text });
     }
   },
 
@@ -4007,6 +4034,20 @@ if (btnHelp) btnHelp.addEventListener('click', () => {
 });
 const helpOk = document.getElementById('helpOk');
 if (helpOk) helpOk.addEventListener('click', () => { AudioSys.sfx('select'); UI.goMenu(); });
+const btnD20Roll = document.getElementById('btnD20Roll');
+if (btnD20Roll) {
+  btnD20Roll.addEventListener('click', () => {
+    AudioSys.init();
+    AudioSys.sfx('bell');
+    const roll = rollD20Entry();
+    const el = document.getElementById('d20RollResult');
+    if (el) {
+      el.style.display = 'block';
+      el.innerHTML = `<b>🎲 ${roll.n} op de d20</b><br><span style="opacity:.92">${roll.text}</span>`;
+    }
+    UI.toast(formatD20Line(roll), 4500);
+  });
+}
 const btnGuvve = document.getElementById('btnGuvve');
 if (btnGuvve) {
   const guvveLines = [
