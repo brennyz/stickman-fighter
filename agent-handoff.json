@@ -19,7 +19,7 @@
     "featureBranch": "cursor/android-share-b75e",
     "pushBlocked": "Deze run (repoUrl null): 403. Nieuwe gekoppelde agent: zie NIEUWE-AGENT-PUSH.md",
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "localMainHead": "6d250c1fa35246277a850f63eb2367dc2c068dfe",
+    "localMainHead": "91ade38340aaf1161304f0f39ac627da0be6f739",
     "remoteMainHead": "60423e4",
     "note": "Nieuwe gekoppelde agent: git clone = alleen remote (oud). Push moet vanaf run met deze commits of handmatig."
   },
@@ -71,6 +71,14 @@
       "at": "2026-07-23T17:10:00Z",
       "summary": "agent-handoff.json + AGENTS.md toegevoegd; uitleg iPad vs één agent-run; env repos:null → push fix in dashboard."
     }
+  ],
+  "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
+  "searchPaths": [
+    "HANDOFF-ZOEKINDEX.md",
+    ".cursor/agent-handoffs/handoff.md",
+    "agent-handoff.json",
+    "improvement-d20-bag.json",
+    "NIEUWE-AGENT-PUSH.md"
   ],
   "nextAgent": {
     "task": "apply patch + git push origin main",
