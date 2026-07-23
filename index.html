@@ -184,6 +184,11 @@
       background:linear-gradient(180deg,#5a6784,#39445e); padding:10px 20px; font-size:16px;
       border-radius:14px; z-index:11; touch-action:manipulation; min-height:44px; }
   body.big-touch .back-btn { padding:14px 22px; font-size:18px; min-height:52px; left:12px; }
+  .sub-home-bar { position:sticky; bottom:0; width:min(94vw,720px); margin-top:18px;
+    padding:8px 0 max(14px, env(safe-area-inset-bottom)); z-index:3; flex-shrink:0;
+    background:linear-gradient(180deg, transparent, rgba(10,13,24,.94) 38%); }
+  .sub-home-bar .sub-home-btn { width:100%; min-height:52px; font-size:16px; font-weight:800; }
+  body.big-touch .sub-home-bar .sub-home-btn { min-height:58px; font-size:18px; }
 
   .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(96px,1fr));
       gap:12px; width:min(92vw, 640px); }
@@ -410,7 +415,7 @@
       <div class="arcade-pre">MONSTER ARENA · INSERT COIN</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine">▶ KIES JE MODUS ▶</p>
-      <div class="subtitle" id="menuVerLine" style="color:#ffb0a8;font-size:11px;margin:6px 0 0;opacity:.95">v1.11.2 · arcade</div>
+      <div class="subtitle" id="menuVerLine" style="color:#ffb0a8;font-size:11px;margin:6px 0 0;opacity:.95">v1.11.3 · arcade</div>
     </div>
   </div>
   <div class="arcade-menu-body">
@@ -475,7 +480,7 @@
   <div id="charSagaBlurb" class="subtitle" style="margin-top:0"></div>
   <div class="char-icon-row" id="charIconRow"></div>
   <div class="step-card" id="charStatPreview" style="width:min(94vw,720px);font-size:12px;padding:10px 14px;margin:0 0 10px;text-align:center;color:#cfe0ff"></div>
-  <div class="char-grid-scroll" id="charGridScroll">
+  <div class="char-grid-scroll" id="charGridScroll" data-scroll-reset>
     <div class="char-grid" id="charGrid"></div>
   </div>
   <button type="button" class="btn mode-btn b-gray big-touch" id="charPickBackP1" style="display:none;width:min(86vw,480px)">&#8592; Andere P1 kiezen</button>
@@ -489,6 +494,7 @@
     <b>iPad:</b> speler 1 gebruikt de <b>linker helft</b> van het scherm (joystick + knoppen),
     speler 2 de <b>rechter helft</b>. Draai je iPad liggend voor het meeste ruimte.
   </div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home>🏠 Terug naar menu</button></div>
 </div>
 
 <div id="levelScreen" class="screen">
@@ -496,12 +502,14 @@
   <h2 class="head">Kies een level</h2>
   <div class="subtitle">50 levels · kleur = hoogste rariteit · rode = baas · 3★ &gt;72% HP · 2★ &gt;38%</div>
   <div class="grid" id="levelGrid"></div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home>🏠 Terug naar menu</button></div>
 </div>
 
 <div id="weaponScreen" class="screen">
   <button class="btn back-btn" data-back>&#8592; Terug</button>
   <h2 class="head">Wapens</h2>
   <div id="weaponList"></div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home>🏠 Terug naar menu</button></div>
 </div>
 
 <div id="styleScreen" class="screen">
@@ -509,6 +517,7 @@
   <h2 class="head">Stijl</h2>
   <div class="subtitle">Unlock door te levelen of RabbitRobot te verslaan</div>
   <div class="style-grid" id="styleGrid"></div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home>🏠 Terug naar menu</button></div>
 </div>
 
 <div id="settingsScreen" class="screen">
@@ -553,6 +562,7 @@
     <button type="button" class="btn tog" id="btnExportSave" style="margin-top:8px">&#128190; Export save</button>
     <button type="button" class="btn tog" id="btnImportSave">&#128229; Import save</button>
   </div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home>🏠 Terug naar menu</button></div>
 </div>
 
 <div id="missionsScreen" class="screen">
@@ -570,6 +580,7 @@
   <h2 class="head" style="margin-top:24px;font-size:min(7vw,34px)">Prestaties</h2>
   <div class="subtitle" id="achSummary" style="margin-top:-8px;margin-bottom:8px;font-size:13px"></div>
   <div id="achList" style="width:min(92vw,520px)"></div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home>🏠 Terug naar menu</button></div>
 </div>
 
 <div id="dexScreen" class="screen">
@@ -578,6 +589,7 @@
   <div class="subtitle">Rariteit = HP-bonus (+3…+25) · 4 rariteiten = Kristallijn · helft boek = Boekmeester · 75 kills = Jagerlook</div>
   <div id="dexSummary" class="statbar" style="display:none"></div>
   <div id="dexList"></div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home>🏠 Terug naar menu</button></div>
 </div>
 
 <div id="installScreen" class="screen">
@@ -607,6 +619,7 @@
     &#10004; Je speelt al als app! Sluit Safari en open het icoon <b>Stickman</b> op je beginscherm.
   </div>
   <div class="subtitle" style="margin-top:12px">Na installatie: lang indrukken op het icoon (Android) voor snelkoppelingen Avontuur / Training / Muur.</div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home>🏠 Terug naar menu</button></div>
 </div>
 
 <div id="helpScreen" class="screen">
@@ -635,6 +648,7 @@
       <li><b>Offline:</b> na 1× online openen cache’t de app HTML+JS — banner onderaan bij geen net. Tunnel-link heeft internet nodig; GitHub Pages + app-lade = stabielst.</li>
     </ul>
   </div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home>🏠 Terug naar menu</button></div>
   <button class="btn mode-btn b-adventure" id="helpOk"><span class="ico">&#128076;</span><div>Begrepen!</div></button>
 </div>
 
@@ -673,7 +687,7 @@
 </script>
 
 <script src="tunnel-check.js?v=201"></script>
-<script src="game.js?v=207"></script>
+<script src="game.js?v=208"></script>
 <script src="install.js?v=201"></script>
 <script>
 (function () {

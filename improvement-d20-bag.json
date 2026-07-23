@@ -13,7 +13,6 @@
     8,
     9,
     10,
-    11,
     13,
     14,
     15,
@@ -23,12 +22,11 @@
     20
   ],
   "lastRoll": {
-    "face": 18,
-    "category": "Character select deel 2 \u2014 saga icons strip, clash, achievement",
-    "rolledAt": "2026-07-23T15:49:32Z",
-    "remainingCount": 18,
-    "cycle": 1,
-    "part": 2
+    "face": 11,
+    "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
+    "rolledAt": "2026-07-23T15:49:57Z",
+    "remainingCount": 17,
+    "cycle": 1
   },
   "pending": null,
   "implemented": [
@@ -121,6 +119,13 @@
       "note": "Deel 2: saga-icon strip, saga clash duo, filter random, prestatie",
       "version": "1.11.2",
       "doneAt": "2026-07-23T15:49:32Z",
+      "cycle": 1
+    },
+    {
+      "face": 11,
+      "note": "sticky menu bar + scroll reset",
+      "version": "1.11.3",
+      "doneAt": "2026-07-23T15:50:58Z",
       "cycle": 1
     }
   ],
@@ -301,6 +306,13 @@
       "remainingCount": 18,
       "cycle": 1,
       "part": 2
+    },
+    {
+      "face": 11,
+      "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
+      "rolledAt": "2026-07-23T15:49:57Z",
+      "remainingCount": 17,
+      "cycle": 1
     }
   ]
 }

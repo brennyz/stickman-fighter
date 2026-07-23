@@ -55,9 +55,9 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.11.2';
+const APP_VERSION = '1.11.3';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 56;
+const SW_CACHE_REV = 57;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -4894,6 +4894,12 @@ const UI = {
   lastResult: null,
   pauseSubDefault: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
 
+  resetInnerScrolls(screenEl) {
+    if (!screenEl) return;
+    const scrollables = screenEl.querySelectorAll('.char-grid-scroll, [data-scroll-reset]');
+    scrollables.forEach((el) => { try { el.scrollTop = 0; } catch (_) {} });
+  },
+
   refreshPauseSubtitle() {
     const sub = document.querySelector('#pauseScreen .subtitle');
     if (!sub) return;
@@ -4916,7 +4922,12 @@ const UI = {
         const el = document.getElementById(id);
         if (el) {
           el.classList.add('active');
-          requestAnimationFrame(() => { try { el.scrollTop = 0; } catch (_) {} });
+          requestAnimationFrame(() => {
+            try {
+              el.scrollTop = 0;
+              this.resetInnerScrolls(el);
+            } catch (_) {}
+          });
         }
         if (id === 'pauseScreen') this.refreshPauseSubtitle();
       } else if (game?.mode === 'versus') {
@@ -4971,6 +4982,7 @@ const UI = {
     window.__sfLoopErr = false;
     Input.dualMode = false;
     Input.layout(W, H);
+    this.charPickStep = 1;
     this.syncTouchClass();
     this.renderMenu();
     this.show('menuScreen');
@@ -5895,6 +5907,9 @@ if (btnGuvve) {
   });
 }
 for (const b of document.querySelectorAll('[data-back]')) {
+  bindPress(b, () => { UI.goBack(); });
+}
+for (const b of document.querySelectorAll('[data-back-home]')) {
   bindPress(b, () => { UI.goBack(); });
 }
 document.addEventListener('keydown', e => {
