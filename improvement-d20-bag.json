@@ -14,17 +14,22 @@
     13,
     15,
     17,
-    18,
-    19
+    18
   ],
   "lastRoll": {
-    "face": 6,
-    "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
-    "rolledAt": "2026-07-23T21:25:09Z",
-    "remainingCount": 13,
+    "face": 19,
+    "category": "Muur & minigames \u2014 combo, timer, record",
+    "rolledAt": "2026-07-23T21:26:27Z",
+    "remainingCount": 12,
     "cycle": 2
   },
-  "pending": null,
+  "pending": {
+    "face": 19,
+    "category": "Muur & minigames \u2014 combo, timer, record",
+    "rolledAt": "2026-07-23T21:26:27Z",
+    "remainingCount": 12,
+    "cycle": 2
+  },
   "implemented": [
     {
       "face": 2,
@@ -802,6 +807,13 @@
       "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
       "rolledAt": "2026-07-23T21:25:09Z",
       "remainingCount": 13,
+      "cycle": 2
+    },
+    {
+      "face": 19,
+      "category": "Muur & minigames \u2014 combo, timer, record",
+      "rolledAt": "2026-07-23T21:26:27Z",
+      "remainingCount": 12,
       "cycle": 2
     }
   ]
