@@ -51,7 +51,9 @@ Dat vult `sessionLog` (max 25) en wishlist-status in `agent-handoff.json`. Daarn
 1. Korte regel in **`IMPROVEMENT.md`** agent log.  
 2. `codeTruth` in handoff (versie, branch) na release.
 
-## Deel-link (spelers werven — Android + iPad)
+## Nieuwe gekoppelde agent (push)
+
+Als `origin/main` nog **60423e4** (v1.7) is: lees **`NIEUWE-AGENT-PUSH.md`** — patch toepassen + `git push` (niet mergen).
 
 De canonieke deel-URL is **`speel.html`** (landing met SPELEN-knop, QR-code en
 per-platform installatie-stappen — Android/Chrome én iPad/Safari):

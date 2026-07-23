@@ -19,7 +19,7 @@
     "featureBranch": "cursor/android-share-b75e",
     "pushBlocked": "Deze run (repoUrl null): 403. Nieuwe gekoppelde agent: zie NIEUWE-AGENT-PUSH.md",
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "localMainHead": "47cea59764d3902b41dee9bde6b419998dc15dda",
+    "localMainHead": "6d250c1fa35246277a850f63eb2367dc2c068dfe",
     "remoteMainHead": "60423e4",
     "note": "Nieuwe gekoppelde agent: git clone = alleen remote (oud). Push moet vanaf run met deze commits of handmatig."
   },
