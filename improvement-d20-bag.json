@@ -8,14 +8,13 @@
     8,
     13,
     14,
-    17,
     20
   ],
   "lastRoll": {
-    "face": 2,
-    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
-    "rolledAt": "2026-07-23T13:34:50Z",
-    "remainingCount": 8,
+    "face": 17,
+    "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
+    "rolledAt": "2026-07-23T13:35:44Z",
+    "remainingCount": 7,
     "cycle": 0
   },
   "implemented": [
@@ -24,6 +23,13 @@
       "note": "Chidori telegraph + ronde HUD",
       "version": "1.8.4",
       "doneAt": "2026-07-23T13:35:30Z",
+      "cycle": 0
+    },
+    {
+      "face": 17,
+      "note": "Error recovery + save import",
+      "version": "1.8.5",
+      "doneAt": "2026-07-23T13:36:46Z",
       "cycle": 0
     }
   ],
@@ -109,6 +115,13 @@
       "face": 2,
       "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
       "rolledAt": "2026-07-23T13:34:50Z",
+      "remainingCount": 7,
+      "cycle": 0
+    },
+    {
+      "face": 17,
+      "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
+      "rolledAt": "2026-07-23T13:35:44Z",
       "remainingCount": 7,
       "cycle": 0
     }

@@ -56,7 +56,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.8.4';
+const APP_VERSION = '1.8.5';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -99,6 +99,10 @@ function persist() {
     localStorage.setItem(SAVE_BACKUP_KEY, json);
   } catch (e) {
     try { localStorage.setItem(SAVE_BACKUP_KEY, JSON.stringify(save)); } catch (_) {}
+    if (!window.__sfPersistWarn) {
+      window.__sfPersistWarn = true;
+      try { UI.toast('Opslaan mislukt — export save in Instellingen', 5200); } catch (_) {}
+    }
   }
 }
 
@@ -365,10 +369,34 @@ function trackCombo(n) {
 function exportSaveJson() {
   return JSON.stringify(save, null, 2);
 }
+function sfReportError(where, err) {
+  console.error('[Stickman]', where, err);
+  const now = Date.now();
+  if (!window.__sfErrToastT || now - window.__sfErrToastT > 4500) {
+    window.__sfErrToastT = now;
+    try { UI.toast('Er ging iets mis — terug naar menu', 4500); } catch (_) {}
+  }
+}
+function recoverToMenu() {
+  window.__sfLoopErr = false;
+  try { UI.goMenu(); } catch (_) {
+    game = null;
+    state = 'menu';
+    document.body.classList.remove('is-playing');
+    Input.dualMode = false;
+  }
+}
 function importSaveJson(text) {
-  if (typeof text !== 'string' || text.length > 120000) throw new Error('invalid');
-  const parsed = JSON.parse(text);
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('invalid');
+  if (typeof text !== 'string' || text.length > 120000) {
+    throw new Error('Save te groot of ongeldig');
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch (_) {
+    throw new Error('Geen geldige JSON — controleer plaksel');
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Ongeldige save-structuur');
   save = sanitizeSave(Object.assign({}, DEFAULT_SAVE, parsed));
   save.stats = Object.assign({}, DEFAULT_SAVE.stats, parsed.stats || {});
   save.achievements = Object.assign({}, parsed.achievements || {});
@@ -3284,6 +3312,7 @@ class Game {
 
   /* ------------------------------ TEKENEN ----------------------------- */
   draw(c) {
+    if (!c || W < 8 || H < 8) return;
     c.save();
     if (this.shakeT > 0) {
       c.translate(rand(-1, 1) * this.shakeMag, rand(-1, 1) * this.shakeMag);
@@ -3792,6 +3821,7 @@ const UI = {
   goMenu() {
     game = null;
     state = 'menu';
+    window.__sfLoopErr = false;
     document.body.classList.remove('is-playing');
     Input.dualMode = false;
     Input.layout(W, H);
@@ -4306,7 +4336,13 @@ function startGame(mode, opts) {
     opts.p1 = normalizeVsPick(opts.p1 || vsSelect.p1, 'hero');
     opts.p2 = normalizeVsPick(opts.p2 || vsSelect.p2, 'rabbit');
   }
-  game = new Game(mode, opts);
+  try {
+    game = new Game(mode, opts);
+  } catch (err) {
+    sfReportError('start/' + mode, err);
+    recoverToMenu();
+    return;
+  }
   state = 'play';
   document.body.classList.add('is-playing');
   recordLastPlay(mode, opts);
@@ -4597,8 +4633,8 @@ function loop(now) {
     console.error(err);
     if (!window.__sfLoopErr) {
       window.__sfLoopErr = true;
-      try { UI.toast('Fout hersteld — terug naar menu', 4500); } catch (_) {}
-      try { UI.goMenu(); } catch (_) { game = null; state = 'menu'; }
+      sfReportError('loop', err);
+      recoverToMenu();
     }
   }
 }
