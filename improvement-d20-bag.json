@@ -12,7 +12,6 @@
     8,
     9,
     10,
-    13,
     14,
     15,
     16,
@@ -21,10 +20,10 @@
     20
   ],
   "lastRoll": {
-    "face": 1,
-    "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
-    "rolledAt": "2026-07-23T15:51:07Z",
-    "remainingCount": 16,
+    "face": 13,
+    "category": "Missies & achievements \u2014 daily loop, beloningen",
+    "rolledAt": "2026-07-23T15:51:54Z",
+    "remainingCount": 15,
     "cycle": 1
   },
   "pending": null,
@@ -132,6 +131,13 @@
       "note": "scaled hit-stop + proj/block feedback",
       "version": "1.11.4",
       "doneAt": "2026-07-23T15:51:45Z",
+      "cycle": 1
+    },
+    {
+      "face": 13,
+      "note": "daily hints + claim UX copy",
+      "version": "1.11.5",
+      "doneAt": "2026-07-23T15:52:37Z",
       "cycle": 1
     }
   ],
@@ -325,6 +331,13 @@
       "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
       "rolledAt": "2026-07-23T15:51:07Z",
       "remainingCount": 16,
+      "cycle": 1
+    },
+    {
+      "face": 13,
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
+      "rolledAt": "2026-07-23T15:51:54Z",
+      "remainingCount": 15,
       "cycle": 1
     }
   ]

@@ -68,7 +68,7 @@ const get = (id) => {
   'resultScreen', 'pauseScreen', 'game', 'toastHost', 'pauseBtn', 'menuStats',
   'menuDailyHint', 'menuTipLine', 'menuPlayLink', 'togMusic', 'togSfx',
   'btnAdventure', 'btnTraining', 'btnWall', 'btnWeapons', 'btnDex', 'btnVersus',
-  'btnContinue', 'btnStyle', 'btnSettings', 'btnMissions', 'btnHelp', 'helpOk',
+  'btnContinue', 'btnStyle', 'btnSettings', 'btnMissions', 'btnMissionsLbl', 'btnHelp', 'helpOk',
   'btnGuvve', 'pauseResume', 'pauseQuit', 'resAgain', 'resNext', 'resMenu',
   'pauseTogMusic', 'pauseTogSfx', 'tunnelBootOverlay', 'charPickStep', 'charGrid',
   'charGridScroll', 'charStatPreview', 'charP1Label', 'charP2Label', 'btnCharFight',

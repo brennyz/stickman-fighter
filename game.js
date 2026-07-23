@@ -55,9 +55,9 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.11.4';
+const APP_VERSION = '1.11.5';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 58;
+const SW_CACHE_REV = 59;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -389,6 +389,15 @@ const DAILY_DEFS = [
   { id: 'pick3', type: 'pickups', goal: 3, xp: 30, text: 'Pak 3 power-ups' },
   { id: 'boss1', type: 'bossKill', goal: 1, xp: 50, text: 'Versla 1 baas-monster' },
 ];
+const DAILY_PLAY_HINTS = {
+  kills12: 'Speel Avontuur of Training',
+  advwin: 'Menu → Avontuur, win het level',
+  wall35: 'Menu → Muur slopen (combo helpt)',
+  trainwin: 'Menu → Training vs RabbitRobot',
+  combo5: 'Avontuur: snelle combo’s op monsters',
+  pick3: 'Avontuur: groen/oranje/blauwe bolletjes',
+  boss1: 'Avontuur: baas aan einde van een level',
+};
 const ACHIEVEMENTS = [
   { id: 'first_win', name: 'Eerste triomf', desc: 'Win je eerste level', icon: '🏆',
     test: s => s.stats.advWins >= 1 },
@@ -564,6 +573,44 @@ function checkDailyAllBonus() {
   }
 }
 
+function dailyUnclaimedXp() {
+  ensureDaily();
+  let xp = claimableDailyTasks().reduce((n, t) => n + (dailyDef(t.id)?.xp || 0), 0);
+  if (save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed) xp += 80;
+  return xp;
+}
+
+function achievementProgressHint(ach) {
+  const s = save;
+  switch (ach.id) {
+    case 'first_win': return `${Math.min(s.stats.advWins || 0, 1)}/1 level-win`;
+    case 'lv10': return `Lv ${Math.min(s.lvl, 10)}/10`;
+    case 'dex10': return `${Object.keys(s.dex || {}).length}/10 soorten`;
+    case 'dexFull': return `${Object.keys(s.dex || {}).length}/${SPECIES_ORDER.length} soorten`;
+    case 'dex100': {
+      let n = 0;
+      for (const v of Object.values(s.dex || {})) n += v || 0;
+      return `${Math.min(n, 100)}/100 kills in boek`;
+    }
+    case 'dexHalf': return `${Object.keys(s.dex || {}).length}/${Math.ceil(SPECIES_ORDER.length / 2)} soorten`;
+    case 'dexTiers': return `${dexRarityTierCount()}/4 rariteiten`;
+    case 'train5': return `${Math.min(s.trainWins, 5)}/5 training-wins`;
+    case 'wall100': return `${Math.min(s.bestWall, 100)}/100 muur-score`;
+    case 'combo8': return `×${Math.min(s.stats.maxCombo || 0, 8)}/8 combo`;
+    case 'lv50': return `Unlock Lv ${Math.min(s.unlocked, 50)}/50`;
+    case 'daily7': return `${Math.min(s.stats.dailyBonusCount || 0, 7)}/7 dagbonussen`;
+    case 'vs5': return `${Math.min(s.stats.vsMatches || 0, 5)}/5 duels`;
+    case 'vs_roster': return `${(s.vsPlayedIds || []).length}/10 vechters gespeeld`;
+    case 'saga_icons': {
+      const need = ['kiball', 'scrollkid', 'tidecrew', 'zipcape', 'dawnlance'];
+      const played = s.vsPlayedIds || [];
+      const n = need.filter(id => played.includes(id)).length;
+      return `${n}/5 saga-icons in 2P`;
+    }
+    default: return '';
+  }
+}
+
 function dailyStatusLine() {
   ensureDaily();
   const tasks = save.daily.tasks;
@@ -574,11 +621,15 @@ function dailyStatusLine() {
   if (save.daily.dayBonusClaimed) {
     return `Vandaag klaar · ${achN}/${ACHIEVEMENTS.length} prestaties · morgen nieuwe missies`;
   }
+  const pendingXp = dailyUnclaimedXp();
   if (ready > 0) {
-    return `Claim klaar: ${ready}× XP · ${done}/3 gedaan · ${achN}/${ACHIEVEMENTS.length} prestaties`;
+    return `+${pendingXp} XP klaar om te claimen · ${done}/3 gedaan · ${achN}/${ACHIEVEMENTS.length} prestaties`;
   }
   if (claimed === 3) {
-    return `3/3 geclaimd — pak dagbonus (+80 XP) · ${achN}/${ACHIEVEMENTS.length} prestaties`;
+    return `Dagbonus +80 XP — open Missies · ${achN}/${ACHIEVEMENTS.length} prestaties`;
+  }
+  if (done > 0 && pendingXp === 0) {
+    return `Vandaag: ${done}/3 klaar · speel verder · ${achN}/${ACHIEVEMENTS.length} prestaties`;
   }
   return `Vandaag: ${done}/3 klaar · ${claimed}/3 geclaimd · ${achN}/${ACHIEVEMENTS.length} prestaties`;
 }
@@ -5255,6 +5306,20 @@ const UI = {
       const i = Math.floor(Date.now() / 8000) % tips.length;
       tipEl.textContent = tips[i];
     }
+    const missBtn = document.getElementById('btnMissions');
+    const missLbl = document.getElementById('btnMissionsLbl');
+    if (missBtn) {
+      ensureDaily();
+      const readyClaim = claimableDailyTasks().length;
+      const bonusReady = save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed;
+      const alert = readyClaim > 0 || bonusReady;
+      missBtn.classList.toggle('tog-alert', alert);
+      if (missLbl) {
+        if (readyClaim > 0) missLbl.textContent = `Missies · +${dailyUnclaimedXp()} XP`;
+        else if (bonusReady) missLbl.textContent = 'Missies · dagbonus';
+        else missLbl.textContent = 'Missies';
+      }
+    }
     const playLinkEl = document.getElementById('menuPlayLink');
     if (playLinkEl) {
       if (location.hostname.endsWith('.github.io')) {
@@ -5283,9 +5348,14 @@ const UI = {
     const doneN = tasks.filter(t => t.done).length;
     const sub = document.getElementById('missionsSub');
     if (sub) {
-      sub.textContent = save.daily.dayBonusClaimed
-        ? 'Dag voltooid — morgen 3 nieuwe lichte missies'
-        : '3 lichte dagmissies · geen grind · claim wanneer klaar';
+      if (save.daily.dayBonusClaimed) {
+        sub.textContent = 'Dag voltooid — morgen 3 nieuwe lichte missies';
+      } else {
+        const pending = dailyUnclaimedXp();
+        sub.textContent = pending > 0
+          ? `Stap 2: claim +${pending} XP · daarna dagbonus (+80) — licht, geen grind`
+          : 'Stap 1 speel · 2 claim XP · 3 dagbonus — licht, geen grind';
+      }
     }
     const sum = document.getElementById('missionsSummary');
     if (sum) {
@@ -5301,7 +5371,7 @@ const UI = {
     }
     const claimAll = document.getElementById('dailyClaimAllBtn');
     if (claimAll) {
-      claimAll.style.display = readyN >= 2 ? 'flex' : 'none';
+      claimAll.style.display = readyN >= 1 ? 'flex' : 'none';
       const lab = claimAll.querySelector('div');
       if (lab) {
         const xpSum = claimableDailyTasks().reduce((n, t) => n + (dailyDef(t.id)?.xp || 0), 0);
@@ -5318,9 +5388,11 @@ const UI = {
       const pct = Math.min(100, Math.round(t.progress / def.goal * 100));
       let status;
       if (t.claimed) status = '<span style="color:#7cfc8a">✔ Geclaimd</span>';
-      else if (t.done) status = '<span style="color:#ffd75e">Klaar — claim je XP</span>';
+      else if (t.done) status = '<span style="color:#ffd75e">Klaar — tik Claim hieronder</span>';
       else status = `<span style="opacity:.85">Bezig ${t.progress}/${def.goal}</span>`;
+      const playHint = DAILY_PLAY_HINTS[def.id] || '';
       el.innerHTML = `<b>${def.text}</b><br>${status}` +
+        (playHint && !t.done ? `<div style="opacity:.75;font-size:12px;margin-top:4px">${playHint}</div>` : '') +
         `<div style="opacity:.8;font-size:13px;margin-top:4px">Beloning +${def.xp} XP</div>` +
         `<div class="xpline" style="margin-top:8px"><div style="width:${pct}%"></div></div>`;
       if (claimable) {
@@ -5356,7 +5428,7 @@ const UI = {
     }
     const achSum = document.getElementById('achSummary');
     const gotN = Object.keys(save.achievements).length;
-    if (achSum) achSum.textContent = `${gotN}/${ACHIEVEMENTS.length} unlocked · blijven staan (geen daily reset)`;
+    if (achSum) achSum.textContent = `${gotN}/${ACHIEVEMENTS.length} prestaties · permanent (niet dagelijks)`;
     achHost.innerHTML = '';
     const today = todayKey();
     for (const ach of ACHIEVEMENTS) {
@@ -5366,7 +5438,10 @@ const UI = {
       el.className = 'card' + (got ? '' : ' locked') + (isNew ? ' ach-card new' : '');
       el.style.borderColor = got ? (isNew ? '#7cf5ff' : '#ffd75e') : undefined;
       el.innerHTML = `<div class="cname">${ach.icon} ${ach.name}${isNew ? ' · nieuw' : ''}</div>` +
-        `<div class="cinfo">${ach.desc}${got ? ' · ✔ ' + got : ' · nog open'}</div>`;
+        `<div class="cinfo">${ach.desc}${got ? ' · ✔ ' + got : (() => {
+          const hint = achievementProgressHint(ach);
+          return hint ? ' · ' + hint : ' · nog open';
+        })()}</div>`;
       achHost.appendChild(el);
     }
   },
