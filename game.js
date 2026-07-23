@@ -56,9 +56,9 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.12.6';
+const APP_VERSION = '1.12.7';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 69;
+const SW_CACHE_REV = 70;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -4902,6 +4902,17 @@ class Game {
       c.fillStyle = '#333c55'; this.rr(c, bx, by, bw, 15, 6); c.fill();
       c.fillStyle = p.hp / p.maxhp > 0.35 ? '#6ee06e' : '#ff6b6b';
       this.rr(c, bx, by, bw * clamp(p.hp / p.maxhp, 0, 1), 15, 6); c.fill();
+      if (this.mode === 'adventure') {
+        c.strokeStyle = 'rgba(255,215,94,.5)';
+        c.lineWidth = 1;
+        for (const frac of [STAR_HP.two, STAR_HP.three]) {
+          const tx = bx + bw * frac;
+          c.beginPath();
+          c.moveTo(tx, by + 1);
+          c.lineTo(tx, by + 14);
+          c.stroke();
+        }
+      }
       c.fillStyle = '#333c55'; this.rr(c, bx, by + 20, bw, 11, 5); c.fill();
       const jKind = fighterJutsuKind(p);
       this.drawSuperMeterFill(c, bx, by + 20, bw, 11, p.energy / 100, jKind, this.t);
@@ -4936,6 +4947,24 @@ class Game {
         c.fillStyle = '#ffd75e';
         c.fillText(`${'★'.repeat(proj)}${'☆'.repeat(3 - proj)}`, W - 14, 30);
         c.textAlign = 'center';
+        c.font = '700 11px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.7)';
+        const pct = Math.round(hpPct * 100);
+        let starHint = ' · 3★ zone';
+        if (hpPct <= STAR_HP.two) starHint = ` · 2★ bij >${Math.round(STAR_HP.two * 100)}% HP`;
+        else if (hpPct <= STAR_HP.three) starHint = ` · 3★ bij >${Math.round(STAR_HP.three * 100)}% HP`;
+        c.fillText(`${pct}% HP${starHint}`, W / 2, 46);
+      }
+      if (this.wavePause > 0) {
+        const nextBoss = isBossWave(this.level, this.waveIdx + 1);
+        const sec = Math.max(0, this.wavePause);
+        c.font = '800 15px sans-serif';
+        c.fillStyle = nextBoss ? '#ffb0b8' : '#b8d4ff';
+        c.fillText(
+          nextBoss ? `Baas-golf over ${sec.toFixed(1)}s — pak pickups!` : `Volgende golf over ${sec.toFixed(1)}s`,
+          W / 2,
+          H - 78,
+        );
       }
       const boss = this.monsters.find(m => m.elite && m.alive);
       if (boss) {
@@ -5889,7 +5918,11 @@ const UI = {
         : `${n}${boss ? '<small>BAAS</small>' : `<small style="color:${rar.color}">${rar.name}</small>`}` +
           (save.stars[n] ? `<span class="lvl-stars">${'★'.repeat(save.stars[n])}</span>` : '');
       if (!locked) {
-        el.title = `${info.waves.length} golven · ${starHintLine()}`;
+        const best = save.stars[n] || 0;
+        let tip = `${info.waves.length} golven · ${starHintLine()}`;
+        if (boss) tip += ' · eindigt met baas';
+        if (best > 0) tip += ` · jouw ${'★'.repeat(best)}${'☆'.repeat(3 - best)}`;
+        el.title = tip;
         el.addEventListener('click', () => { AudioSys.sfx('select'); startGame('adventure', { level: n }); });
       }
       grid.appendChild(el);

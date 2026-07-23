@@ -4,7 +4,6 @@
   "rollFirst": [],
   "remaining": [
     3,
-    4,
     5,
     6,
     7,
@@ -18,13 +17,19 @@
     20
   ],
   "lastRoll": {
-    "face": 2,
-    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
-    "rolledAt": "2026-07-23T18:10:19Z",
-    "remainingCount": 13,
+    "face": 4,
+    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
+    "rolledAt": "2026-07-23T18:12:23Z",
+    "remainingCount": 12,
     "cycle": 1
   },
-  "pending": null,
+  "pending": {
+    "face": 4,
+    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
+    "rolledAt": "2026-07-23T18:12:23Z",
+    "remainingCount": 12,
+    "cycle": 1
+  },
   "implemented": [
     {
       "face": 2,
@@ -426,6 +431,13 @@
       "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
       "rolledAt": "2026-07-23T18:10:19Z",
       "remainingCount": 13,
+      "cycle": 1
+    },
+    {
+      "face": 4,
+      "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
+      "rolledAt": "2026-07-23T18:12:23Z",
+      "remainingCount": 12,
       "cycle": 1
     }
   ]
