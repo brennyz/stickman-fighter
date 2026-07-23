@@ -1,27 +1,52 @@
 {
   "version": 1,
   "cyclesCompleted": 0,
-  "remaining": [1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+  "remaining": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    10,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    20
+  ],
   "lastRoll": {
-    "face": 11,
-    "category": "Menu & navigatie — terug, flow, grote knoppen",
-    "rolledAt": "2026-07-23T13:23:30Z",
-    "remainingCount": 18,
+    "face": 19,
+    "category": "Muur & minigames \u2014 combo, timer, record",
+    "rolledAt": "2026-07-23T13:25:13Z",
+    "remainingCount": 17,
     "cycle": 0
   },
   "history": [
     {
       "face": 9,
-      "category": "iPad touch — knoppen, joystick, geen mis-taps",
+      "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
       "rolledAt": "2026-07-23T13:21:57Z",
       "remainingCount": 19,
       "cycle": 0
     },
     {
       "face": 11,
-      "category": "Menu & navigatie — terug, flow, grote knoppen",
+      "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
       "rolledAt": "2026-07-23T13:23:30Z",
       "remainingCount": 18,
+      "cycle": 0
+    },
+    {
+      "face": 19,
+      "category": "Muur & minigames \u2014 combo, timer, record",
+      "rolledAt": "2026-07-23T13:25:13Z",
+      "remainingCount": 17,
       "cycle": 0
     }
   ]
