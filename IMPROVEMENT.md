@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | **8** | PWA: SW v75, manifest network-first, offline HTML-fallback, netStatus in play/standalone + cache-hint. v1.12.12 / SW v75. |
 | 2026-07-23 | **16** | Hosting: LIVE-LINK + stableHint → GitHub Pages primair; instellingen toont Pages-link + tunnel als dev; bundle negeert tunnel als canonical. v1.12.10 / SW v73. |
 | 2026-07-23 | **19** | Muur: 60s-timerbalk, combo-vensterbalk + milestones, record-chase, tempo/projectie, MUUR×-badge. v1.12.9 / SW v72. |
 | 2026-07-23 | **5** | Perf: menu-hero skip frames, lichtere backdrop bij tier 2, iPad resize debounce, Lite FX-hint, instellingen FPS. v1.12.8 / SW v71. |

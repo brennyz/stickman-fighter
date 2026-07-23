@@ -19,13 +19,7 @@
     "remainingCount": 8,
     "cycle": 1
   },
-  "pending": {
-    "face": 8,
-    "category": "PWA & offline \u2014 SW cache, install, standalone",
-    "rolledAt": "2026-07-23T18:25:32Z",
-    "remainingCount": 8,
-    "cycle": 1
-  },
+  "pending": null,
   "implemented": [
     {
       "face": 2,
@@ -179,6 +173,13 @@
       "note": "Pages primair in hosting.json/LIVE-LINK + instellingen UI",
       "version": "1.12.10",
       "doneAt": "2026-07-23T18:16:50Z",
+      "cycle": 1
+    },
+    {
+      "face": 8,
+      "note": "Offline banner + SW v75 network-first manifest",
+      "version": "1.12.12",
+      "doneAt": "2026-07-23T18:26:30Z",
       "cycle": 1
     }
   ],
