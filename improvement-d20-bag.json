@@ -13,7 +13,6 @@
     15,
     6,
     7,
-    1,
     13,
     9,
     2,
@@ -21,13 +20,19 @@
     3
   ],
   "lastRoll": {
-    "face": 10,
-    "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
-    "rolledAt": "2026-07-23T19:44:04Z",
-    "remainingCount": 16,
+    "face": 1,
+    "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
+    "rolledAt": "2026-07-23T20:38:01Z",
+    "remainingCount": 15,
     "cycle": 2
   },
-  "pending": null,
+  "pending": {
+    "face": 1,
+    "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
+    "rolledAt": "2026-07-23T20:38:01Z",
+    "remainingCount": 15,
+    "cycle": 2
+  },
   "implemented": [
     {
       "face": 2,
@@ -679,6 +684,13 @@
       "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
       "rolledAt": "2026-07-23T19:44:04Z",
       "remainingCount": 16,
+      "cycle": 2
+    },
+    {
+      "face": 1,
+      "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
+      "rolledAt": "2026-07-23T20:38:01Z",
+      "remainingCount": 15,
       "cycle": 2
     }
   ]
