@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stickman Fighter">
+<title>Stickman Fighter — Monster Arena</title>
+<meta name="theme-color" content="#151b33">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent;
+      -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#0a0d18;
+      font-family: 'Nunito', -apple-system, Helvetica, sans-serif; }
+  #game { position:fixed; inset:0; width:100%; height:100%; display:block; touch-action:none; }
+
+  .screen { position:fixed; inset:0; display:none; flex-direction:column; align-items:center;
+      justify-content:flex-start; overflow-y:auto; padding:max(20px, env(safe-area-inset-top)) 20px 40px;
+      background:
+        radial-gradient(ellipse at 20% 10%, rgba(255,167,81,.12), transparent 40%),
+        radial-gradient(ellipse at 80% 0%, rgba(74,125,255,.14), transparent 45%),
+        radial-gradient(ellipse at 50% 100%, rgba(67,178,91,.08), transparent 40%),
+        linear-gradient(180deg, #151b33 0%, #0a0d18 70%);
+      color:#fff; z-index:10; }
+  .screen.active { display:flex; animation: fadeIn .25s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+  @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.04); } }
+  @keyframes shimmer { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+
+  h1.title { font-family: 'Bangers', cursive; font-size:min(12vw, 64px); font-weight:400;
+      letter-spacing:3px; margin:18px 0 4px; color:#ffd75e;
+      text-shadow: 0 4px 0 #c97a20, 0 0 28px rgba(255,180,60,.35); text-align:center;
+      animation: pulse 2.8s ease-in-out infinite; }
+  .subtitle { color:#8fa3d9; font-size:min(4vw,17px); margin-bottom:16px; text-align:center; }
+  h2.head { font-family: 'Bangers', cursive; font-size:min(8vw,40px); font-weight:400;
+      letter-spacing:2px; margin:10px 0 18px; color:#ffd75e; text-shadow:0 3px 0 #a86818; }
+
+  .btn { display:flex; align-items:center; justify-content:center; gap:12px; cursor:pointer;
+      border:none; border-radius:18px; color:#fff; font-weight:800; text-align:center;
+      font-family: inherit;
+      box-shadow:0 6px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25);
+      transition:transform .06s, filter .15s; }
+  .btn:active { transform:translateY(4px); box-shadow:0 2px 0 rgba(0,0,0,.35); }
+  .mode-btn { width:min(86vw, 480px); padding:16px 20px; font-size:min(5vw,21px); margin:8px 0;
+      justify-content:flex-start; }
+  .mode-btn .ico { font-size:1.55em; width:1.6em; text-align:center; }
+  .mode-btn small { display:block; font-weight:600; font-size:.62em; opacity:.88; margin-top:2px; }
+  .mode-btn > div { text-align:left; }
+  .b-adventure { background:linear-gradient(180deg,#4ecf6a,#1f8a38); }
+  .b-training  { background:linear-gradient(180deg,#5a8cff,#2a52c8); }
+  .b-versus    { background:linear-gradient(180deg,#ff5a8a,#a82050); }
+  .b-wall      { background:linear-gradient(180deg,#ff7a4d,#d04028); }
+  .b-weapons   { background:linear-gradient(180deg,#b06ae0,#7438a8); }
+  .b-dex       { background:linear-gradient(180deg,#f0c45a,#b88828); color:#2a1a00; }
+  .b-style     { background:linear-gradient(180deg,#5ad0c8,#2a8a84); }
+  .b-gray      { background:linear-gradient(180deg,#5a6784,#39445e); }
+  .b-install   { background:linear-gradient(180deg,#3dd6c8,#1a9a90); color:#042824;
+      box-shadow:0 6px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.35); }
+  .b-install.done { background:linear-gradient(180deg,#5a6784,#39445e); color:#cfe0ff; }
+
+  .install-hero { width:min(92vw,480px); text-align:center; margin:8px 0 20px; }
+  .install-hero img { width:96px; height:96px; border-radius:22px;
+      box-shadow:0 12px 32px rgba(0,0,0,.45); margin-bottom:12px; }
+  .install-hero .appname { font-family:'Bangers',cursive; font-size:36px; color:#ffd75e;
+      letter-spacing:2px; text-shadow:0 3px 0 #a86818; }
+  .step-card { width:min(92vw,480px); background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
+      border-radius:16px; padding:14px 16px; margin:8px 0; font-size:15px; color:#d5e0ff; line-height:1.45; }
+  .step-card b { color:#ffd75e; }
+  .step-num { display:inline-flex; width:28px; height:28px; border-radius:50%; background:#ffd75e; color:#2a1a00;
+      font-weight:900; align-items:center; justify-content:center; margin-right:10px; }
+  .big-install { width:min(92vw,480px); padding:20px; font-size:22px; margin:16px 0 8px;
+      background:linear-gradient(180deg,#4ef0e0,#1a9a90); color:#042824; }
+
+  #tunnelBootOverlay { position:fixed; inset:0; z-index:9999; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; padding:24px; text-align:center;
+      background:linear-gradient(180deg,#0f1428 0%,#0a0d18 100%); color:#d5e0ff; }
+  #tunnelBootOverlay[hidden] { display:none !important; }
+  #tunnelBootOverlay .boot-spinner { width:48px; height:48px; border:4px solid rgba(255,215,94,.25);
+      border-top-color:#ffd75e; border-radius:50%; animation: spin .9s linear infinite; margin-bottom:20px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  #tunnelBootTitle { font-family:'Bangers',cursive; font-size:min(8vw,36px); color:#ffd75e;
+      letter-spacing:2px; margin-bottom:10px; }
+  #tunnelBootDetail { font-size:15px; line-height:1.5; max-width:420px; white-space:pre-wrap; color:#8fa3d9; }
+  #tunnelBootRetry { margin-top:20px; display:none; width:min(86vw,320px); padding:14px 18px;
+      font-size:18px; background:linear-gradient(180deg,#5a8cff,#2a52c8); border:none; border-radius:16px;
+      color:#fff; font-weight:800; cursor:pointer; box-shadow:0 6px 0 rgba(0,0,0,.35); }
+
+  .back-btn { position:absolute; top:max(14px, env(safe-area-inset-top)); left:16px;
+      background:linear-gradient(180deg,#5a6784,#39445e); padding:10px 20px; font-size:16px;
+      border-radius:14px; z-index:11; }
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(96px,1fr));
+      gap:12px; width:min(92vw, 640px); }
+  .lvl { aspect-ratio:1; border-radius:16px; display:flex; flex-direction:column; align-items:center;
+      justify-content:center; font-size:24px; font-weight:900; cursor:pointer; color:#fff;
+      background:linear-gradient(180deg,#4ecf6a,#1f8a38);
+      box-shadow:0 5px 0 rgba(0,0,0,.35); position:relative; }
+  .lvl.boss { background:linear-gradient(180deg,#e85a6a,#a82332); }
+  .lvl.locked { background:linear-gradient(180deg,#3a4258,#262c3d); color:#6b7690; box-shadow:none; }
+  .lvl.cleared { outline:2px solid rgba(255,215,94,.55); }
+  .lvl small { font-size:11px; font-weight:700; opacity:.95; }
+  .lvl .stars { font-size:11px; letter-spacing:1px; color:#ffd75e; margin-top:2px; }
+  .lvl:active:not(.locked) { transform:translateY(3px); }
+
+  .card { width:min(92vw, 640px); background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+      border-radius:16px; padding:14px 16px; margin:6px 0; display:flex; align-items:center; gap:14px;
+      transition: border-color .15s, background .15s; }
+  .card.sel { border-color:#ffd75e; background:rgba(255,215,94,.14); box-shadow:0 0 0 1px rgba(255,215,94,.2); }
+  .card.locked { opacity:.45; }
+  .card .cname { font-size:18px; font-weight:900; }
+  .card .cinfo { font-size:13px; color:#9db1e3; margin-top:2px; }
+  .card canvas { flex:0 0 auto; border-radius:10px; background:rgba(0,0,0,.25); }
+  .card .right { margin-left:auto; text-align:right; font-size:13px; color:#ffd75e; font-weight:800; }
+
+  .statbar { width:min(86vw,480px); background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.08);
+      border-radius:16px; padding:14px 18px; margin:4px 0 14px; text-align:center; font-size:14px; color:#cdd8f5; }
+  .statbar b { color:#ffd75e; }
+  .xpline { height:9px; border-radius:5px; background:#1a2040; margin-top:9px; overflow:hidden; }
+  .xpline > div { height:100%; background:linear-gradient(90deg,#ffe259,#ffa751,#ff7a4d);
+      background-size:200% 100%; animation: shimmer 2.5s linear infinite; border-radius:5px; }
+  .stat-row { display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin-top:8px; font-size:12px; color:#9db1e3; }
+  .stat-row span { background:rgba(0,0,0,.25); padding:4px 10px; border-radius:999px; }
+  .lvl-stars { display:block; font-size:11px; color:#ffd75e; letter-spacing:1px; margin-top:3px; }
+  #pauseScreen.active { backdrop-filter:blur(8px); background:rgba(10,13,24,.92) !important; }
+
+  .toggles { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; justify-content:center; }
+  .tog { padding:10px 16px; border-radius:14px; font-size:14px; font-weight:800;
+      background:linear-gradient(180deg,#5a6784,#39445e); }
+  .tog.off { opacity:.4; }
+
+  #pauseBtn { position:fixed; top:max(10px, env(safe-area-inset-top)); right:12px; z-index:9;
+      width:48px; height:48px; border-radius:14px; font-size:18px; display:none;
+      background:rgba(20,26,48,.8); border:1px solid rgba(255,255,255,.22); color:#fff;
+      box-shadow:0 4px 12px rgba(0,0,0,.35); }
+  #pauseBtn.show { display:block; }
+
+  #resultScreen .bigres { font-family:'Bangers', cursive; font-size:min(14vw,68px); font-weight:400;
+      letter-spacing:2px; margin:28px 0 6px; }
+  #resultScreen .win  { color:#7CFC8a; text-shadow:0 4px 0 #1f7a35, 0 0 24px rgba(90,255,120,.4); }
+  #resultScreen .lose { color:#ff6b6b; text-shadow:0 4px 0 #8a2020, 0 0 24px rgba(255,80,80,.4); }
+  #resultScreen .detail { font-size:16px; color:#bcd; margin:4px 0; text-align:center; max-width:520px; }
+  #resultScreen .stars-big { font-size:min(10vw,42px); color:#ffd75e; letter-spacing:6px; margin:8px 0 14px;
+      text-shadow:0 3px 0 #a86818; }
+  #resultScreen .btn { margin-top:8px; }
+
+  #toastHost { position:fixed; left:50%; top:max(70px, calc(env(safe-area-inset-top) + 56px));
+      transform:translateX(-50%); z-index:40; pointer-events:none; display:flex; flex-direction:column; gap:8px; align-items:center; }
+  .toast { background:rgba(15,20,40,.92); border:1px solid rgba(255,215,94,.45); color:#fff;
+      padding:10px 18px; border-radius:14px; font-weight:800; font-size:14px;
+      box-shadow:0 8px 24px rgba(0,0,0,.4); animation: toastIn .35s ease; max-width:90vw; text-align:center; }
+  @keyframes toastIn { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:none; } }
+
+  #tutBox { max-width:min(92vw,520px); background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14);
+      border-radius:18px; padding:18px 20px; margin:8px 0 16px; font-size:15px; color:#d5e0ff; line-height:1.45; }
+  #tutBox li { margin:6px 0 6px 18px; }
+  #tutBox b { color:#ffd75e; }
+
+  .style-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
+      gap:12px; width:min(92vw,640px); }
+  .style-card { border-radius:16px; padding:14px 10px; text-align:center; cursor:pointer;
+      background:rgba(255,255,255,.06); border:2px solid transparent; font-weight:800; }
+  .style-card.sel { border-color:#ffd75e; background:rgba(255,215,94,.14); }
+  .style-card.locked { opacity:.4; }
+  .style-card canvas { display:block; margin:0 auto 8px; }
+  .rar-pill { display:inline-block; font-size:11px; font-weight:900; border:1px solid; border-radius:999px;
+      padding:1px 8px; margin-left:6px; vertical-align:middle; letter-spacing:.3px; }
+  .card.rar-legendary { background:rgba(255,215,94,.08); }
+  .card.rar-mythic { background:rgba(255,107,157,.1); }
+  .card.rar-epic { background:rgba(176,106,224,.08); }
+  .settings-card { width:min(92vw,480px); background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
+      border-radius:16px; padding:16px 18px; margin:10px 0; color:#d5e0ff; font-size:15px; }
+  .settings-card label { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:8px 0; flex-wrap:wrap; }
+  .settings-card input[type=range] { flex:1; min-width:120px; accent-color:#ffd75e; }
+  .settings-card .tog { width:100%; margin-top:8px; justify-content:center; }
+
+  .char-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(108px, 1fr));
+      gap:12px; width:min(94vw, 720px); margin:8px 0 16px; }
+  .char-card { border-radius:18px; padding:10px 8px 12px; text-align:center; cursor:pointer;
+      background:rgba(255,255,255,.06); border:3px solid rgba(255,255,255,.12);
+      box-shadow:0 5px 0 rgba(0,0,0,.3); transition:border-color .12s, transform .06s; }
+  .char-card:active:not(.locked) { transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,.3); }
+  .char-card.locked { opacity:.42; cursor:not-allowed; box-shadow:none; }
+  .char-card canvas { display:block; margin:0 auto 6px; border-radius:12px; background:rgba(0,0,0,.28); }
+  .char-card .char-name { font-weight:900; font-size:14px; color:#fff; }
+  .char-card .char-tag { font-size:11px; font-weight:700; color:#9db1e3; margin-top:3px; }
+  .char-card.p1sel { border-color:#7cf5ff; background:rgba(124,245,255,.12);
+      box-shadow:0 0 0 1px rgba(124,245,255,.35), 0 5px 0 rgba(0,0,0,.3); }
+  .char-card.p2sel { border-color:#ffb0b8; background:rgba(255,176,184,.12);
+      box-shadow:0 0 0 1px rgba(255,176,184,.35), 0 5px 0 rgba(0,0,0,.3); }
+  .char-card.p1sel.p2sel { border-image:linear-gradient(135deg,#7cf5ff,#ffb0b8) 1; }
+  .char-duel-bar { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin:6px 0 12px;
+      font-size:13px; font-weight:800; }
+  .char-duel-bar span { padding:6px 14px; border-radius:999px; background:rgba(0,0,0,.28); }
+  .char-duel-bar .p1pill { color:#7cf5ff; border:1px solid rgba(124,245,255,.45); }
+  .char-duel-bar .p2pill { color:#ffb0b8; border:1px solid rgba(255,176,184,.45); }
+  #btnCharFight { width:min(86vw,480px); padding:18px 20px; font-size:22px; margin-top:8px;
+      background:linear-gradient(180deg,#ff5a8a,#a82050); justify-content:center; }
+  #btnCharFight:disabled { opacity:.35; filter:grayscale(.4); cursor:not-allowed; }
+  #charPickBackP1 { margin:8px 0; width:min(86vw,480px); justify-content:center;
+      background:linear-gradient(180deg,#5a6784,#39445e); }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<button id="pauseBtn" aria-label="Pauze">&#10074;&#10074;</button>
+<div id="toastHost"></div>
+
+<div id="tunnelBootOverlay" aria-live="polite" aria-busy="true">
+  <div class="boot-spinner" aria-hidden="true"></div>
+  <div id="tunnelBootTitle">Stickman Fighter</div>
+  <div id="tunnelBootDetail">Verbinding controleren…</div>
+  <button type="button" id="tunnelBootRetry">Opnieuw proberen</button>
+</div>
+
+<div id="menuScreen" class="screen active">
+  <h1 class="title">STICKMAN FIGHTER</h1>
+  <div class="subtitle">Ninja Arena &bull; Rasengan &bull; chakra &bull; word een legende</div>
+  <div class="statbar" id="menuStats"></div>
+  <div class="subtitle" id="menuDailyHint" style="margin-top:-8px;margin-bottom:10px;font-size:13px"></div>
+  <button class="btn mode-btn b-install" id="btnInstallApp" type="button">
+    <span class="ico">&#128229;</span>
+    <div id="btnInstallLabel">Zet in app-lade<small>Één icoon op je beginscherm — tik &amp; speel</small></div>
+  </button>
+  <button class="btn mode-btn b-adventure" id="btnAdventure"><span class="ico">&#9876;&#65039;</span>
+    <div>Avontuur<small>50 levels · 6 rariteiten · 10 bazen</small></div></button>
+  <button class="btn mode-btn b-training" id="btnTraining"><span class="ico">&#129302;</span>
+    <div>Training vs RabbitRobot<small>Street-fighter duel · AI met combo’s &amp; lasers</small></div></button>
+  <button class="btn mode-btn b-versus" id="btnVersus"><span class="ico">&#128101;</span>
+    <div>2 spelers op iPad<small>Kies je vechter · best-of-3 · links vs rechts</small></div></button>
+  <button class="btn mode-btn b-wall" id="btnWall"><span class="ico">&#129521;</span>
+    <div>Muur Slopen<small>Staal · bomstenen · goud · 60 sec chaos</small></div></button>
+  <button class="btn mode-btn b-weapons" id="btnWeapons"><span class="ico">&#128481;&#65039;</span>
+    <div>Wapens<small>12 wapens · gewoon → mythisch</small></div></button>
+  <button class="btn mode-btn b-style" id="btnStyle"><span class="ico">&#127912;</span>
+    <div>Stijl<small>Bandana &amp; outfit unlocks</small></div></button>
+  <button class="btn mode-btn b-dex" id="btnDex"><span class="ico">&#128214;</span>
+    <div>Monsterboek<small>19 soorten · rariteit = meer max HP</small></div></button>
+  <div class="toggles">
+    <button class="btn tog" id="btnGuvve" type="button">&#129414; Guvvedukkie</button>
+    <button class="btn tog" id="togMusic">&#127925; Muziek</button>
+    <button class="btn tog" id="togSfx">&#128266; Geluid</button>
+    <button class="btn tog" id="btnMissions">&#127942; Missies</button>
+    <button class="btn tog" id="btnSettings">&#9881; Instellingen</button>
+    <button class="btn tog" id="btnHelp">&#10067; Tips</button>
+  </div>
+</div>
+
+<div id="charSelectScreen" class="screen">
+  <button class="btn back-btn" data-back>&#8592; Menu</button>
+  <h2 class="head">Kies je vechter</h2>
+  <div class="subtitle" id="charPickStep">Speler 1 — kies je vechter (links)</div>
+  <div class="char-duel-bar">
+    <span class="p1pill" id="charP1Label">P1: Stick Ninja</span>
+    <span class="p2pill" id="charP2Label">P2: RabbitRobot</span>
+  </div>
+  <div class="char-grid" id="charGrid"></div>
+  <button type="button" class="btn mode-btn b-gray" id="charPickBackP1" style="display:none">&#8592; Andere P1</button>
+  <button type="button" class="btn" id="btnCharFight">VECHT! (best-of-3)</button>
+  <div class="step-card" style="width:min(92vw,640px);margin-top:14px">
+    <b>iPad:</b> speler 1 gebruikt de <b>linker helft</b> van het scherm (joystick + knoppen),
+    speler 2 de <b>rechter helft</b>. Draai je iPad liggend voor het meeste ruimte.
+  </div>
+</div>
+
+<div id="levelScreen" class="screen">
+  <button class="btn back-btn" data-back>&#8592; Terug</button>
+  <h2 class="head">Kies een level</h2>
+  <div class="subtitle">50 levels · kleur = hoogste rariteit in dat level · rode = baas</div>
+  <div class="grid" id="levelGrid"></div>
+</div>
+
+<div id="weaponScreen" class="screen">
+  <button class="btn back-btn" data-back>&#8592; Terug</button>
+  <h2 class="head">Wapens</h2>
+  <div id="weaponList"></div>
+</div>
+
+<div id="styleScreen" class="screen">
+  <button class="btn back-btn" data-back>&#8592; Terug</button>
+  <h2 class="head">Stijl</h2>
+  <div class="subtitle">Unlock door te levelen of RabbitRobot te verslaan</div>
+  <div class="style-grid" id="styleGrid"></div>
+</div>
+
+<div id="settingsScreen" class="screen">
+  <button class="btn back-btn" data-back>&#8592; Terug</button>
+  <h2 class="head">Instellingen</h2>
+  <div class="subtitle">Geluid, trilling &amp; HUD — opgeslagen op dit apparaat</div>
+  <div class="settings-card">
+    <label>Muziek <span id="setMusicVolLbl">85%</span>
+      <input type="range" id="setMusicVol" min="0" max="100" value="85">
+    </label>
+    <label>Effecten <span id="setSfxVolLbl">100%</span>
+      <input type="range" id="setSfxVol" min="0" max="100" value="100">
+    </label>
+    <button type="button" class="btn tog" id="setShake">📳 Schermschok</button>
+    <button type="button" class="btn tog" id="setHaptics">📳 Trillen (iPad)</button>
+    <button type="button" class="btn tog" id="setComboHud">⚡ Combo-HUD</button>
+  </div>
+  <div class="step-card">Tip: zet trillingen uit als je in de trein speelt. Power-ups in avontuur: groen = HP, oranje = rage, blauw = chakra of schild.</div>
+  <div class="settings-card">
+    <div style="font-weight:900;color:#ffd75e;margin-bottom:8px">Hosting &amp; voortgang</div>
+    <div id="hostingHint" style="font-size:13px;opacity:.9;margin-bottom:8px">Link laden…</div>
+    <div id="hostingLink" style="word-break:break-all;font-size:12px;background:rgba(0,0,0,.25);padding:10px;border-radius:10px;margin-bottom:10px"></div>
+    <button type="button" class="btn tog" id="btnCopyLink">&#128279; Kopieer speel-link</button>
+    <textarea id="savePortText" rows="4" style="width:100%;margin-top:12px;border-radius:12px;padding:10px;font-size:11px;background:#0a0d18;color:#cfe0ff;border:1px solid rgba(255,255,255,.15)" placeholder="Plak save JSON om te importeren…"></textarea>
+    <button type="button" class="btn tog" id="btnExportSave" style="margin-top:8px">&#128190; Export save</button>
+    <button type="button" class="btn tog" id="btnImportSave">&#128229; Import save</button>
+  </div>
+</div>
+
+<div id="missionsScreen" class="screen">
+  <button class="btn back-btn" data-back>&#8592; Terug</button>
+  <h2 class="head">Missies &amp; prestaties</h2>
+  <div class="subtitle">3 dagelijkse taken · reset om middernacht (UTC)</div>
+  <div id="dailyList" style="width:min(92vw,480px)"></div>
+  <button type="button" class="btn mode-btn b-adventure" id="dailyBonusBtn" style="display:none;width:min(86vw,480px);justify-content:center">
+    <span class="ico">&#127873;</span><div>Dagbonus claimen (+80 XP)</div>
+  </button>
+  <h2 class="head" style="margin-top:24px;font-size:min(7vw,34px)">Prestaties</h2>
+  <div id="achList" style="width:min(92vw,520px)"></div>
+</div>
+
+<div id="dexScreen" class="screen">
+  <button class="btn back-btn" data-back>&#8592; Terug</button>
+  <h2 class="head">Monsterboek</h2>
+  <div class="subtitle">Rariteit bepaalt HP-bonus: gewoon +3 … mythisch +25</div>
+  <div id="dexList"></div>
+</div>
+
+<div id="installScreen" class="screen">
+  <button class="btn back-btn" id="installBack">&#8592; Terug</button>
+  <h2 class="head">In app-lade zetten</h2>
+  <div class="install-hero">
+    <img src="icons/icon-192.png" alt="Stickman Fighter icoon" width="96" height="96">
+    <div class="appname">STICKMAN</div>
+    <div class="subtitle" style="margin-top:6px">Verschijnt als icoon — net als een echte app</div>
+  </div>
+  <div class="step-card" id="installFileNote" style="display:none;color:#ffb0a8">
+    <b>Let op:</b> je opent een lokaal bestand. Upload de game eerst online (Netlify/GitHub), open de link in Safari, en druk dan opnieuw op deze knop.
+  </div>
+  <button class="btn big-install" id="installAndroidBtn" type="button" style="display:none">
+    &#128229; Nu installeren
+  </button>
+  <div id="installIosSteps" style="display:none;width:100%;max-width:480px">
+    <div class="step-card"><span class="step-num">1</span> Zorg dat je in <b>Safari</b> zit (niet in Bestanden-app).</div>
+    <div class="step-card"><span class="step-num">2</span> Tik onderaan op <b>Delen</b> &#x1F4E4; (vierkant met pijl omhoog).</div>
+    <div class="step-card"><span class="step-num">3</span> Scroll en kies <b>Zet op beginscherm</b>.</div>
+    <div class="step-card"><span class="step-num">4</span> Tik <b>Voeg toe</b> — het icoon staat in je app-lade / beginscherm.</div>
+  </div>
+  <div id="installDesktopSteps" style="display:none;width:100%;max-width:480px">
+    <div class="step-card">In Chrome/Edge: klik op het <b>installatie-icoon</b> in de adresbalk, of gebruik de knop hierboven als die verschijnt.</div>
+  </div>
+  <div id="installDoneMsg" class="step-card" style="display:none;border-color:rgba(124,252,138,.5);color:#7cfc8a">
+    &#10004; Je speelt al als app! Sluit Safari en open het icoon <b>Stickman</b> op je beginscherm.
+  </div>
+  <div class="subtitle" style="margin-top:12px">Na installatie: lang indrukken op het icoon (Android) voor snelkoppelingen Avontuur / Training / Muur.</div>
+</div>
+
+<div id="helpScreen" class="screen">
+  <button class="btn back-btn" data-back>&#8592; Terug</button>
+  <h2 class="head">Tips</h2>
+  <div id="tutBox">
+    <ul>
+      <li><b>Power-ups:</b> verslagen monsters laten soms bolletjes vallen — HP, rage, chakra, schild.</li>
+      <li><b>Bazen:</b> onder half HP worden ze woester (fase 2).</li>
+      <li><b>Combo’s:</b> sla snel achter elkaar om ×2 / ×3 schade te stapelen.</li>
+      <li><b>Dash:</b> dubbel-tik links/rechts (of toets <b>Shift</b>) om te ontwijken.</li>
+      <li><b>🌀 Rasengan:</b> vul je <b>chakra</b>-balk — dan laad je een draaiende chakra-bol en knal je ‘m erin.</li>
+      <li><b>💨 Substitutie:</b> rookwolk + ontwijk (knop of <b>Shift</b>). Korte onkwetsbaarheid.</li>
+      <li><b>Kunai / Shuriken:</b> unlock vroeg — shuriken gooi je als projectiel.</li>
+      <li><b>2 spelers:</b> in het menu <b>2 spelers op iPad</b> — Street Fighter-stijl roster, best-of-3 rondes.</li>
+      <li><b>RabbitRobot:</b> hij gebruikt <b>Chidori</b> (bliksem) — wacht tot hij open is.</li>
+      <li><b>Muur:</b> bomstenen (rood) ontploffen, staal (grijs) is taai, goud (geel) = XP.</li>
+      <li><b>Rariteiten:</b> Gewoon → Ongewoon → Zeldzaam → Episch → Legendarisch → Mythisch. Zeldzamer = meer XP &amp; meer max HP.</li>
+      <li><b>50 levels:</b> elke 5 levels een baas. Level 50 = Guvvedrak + Voidkonijn + Schaduwvorst.</li>
+    </ul>
+  </div>
+  <button class="btn mode-btn b-adventure" id="helpOk"><span class="ico">&#128076;</span><div>Begrepen!</div></button>
+</div>
+
+<div id="resultScreen" class="screen">
+  <div class="bigres" id="resTitle">GEWONNEN!</div>
+  <div class="stars-big" id="resStars"></div>
+  <div class="detail" id="resDetail"></div>
+  <div class="detail" id="resXp"></div>
+  <div style="height:14px"></div>
+  <button class="btn mode-btn b-adventure" id="resAgain"><span class="ico">&#128260;</span><div>Opnieuw</div></button>
+  <button class="btn mode-btn b-training" id="resNext" style="display:none"><span class="ico">&#10145;&#65039;</span><div>Volgend level</div></button>
+  <button class="btn mode-btn b-gray" id="resMenu"><span class="ico">&#127968;</span><div>Hoofdmenu</div></button>
+</div>
+
+<div id="pauseScreen" class="screen">
+  <h2 class="head" style="margin-top:60px">Pauze</h2>
+  <button class="btn mode-btn b-adventure" id="pauseResume"><span class="ico">&#9654;&#65039;</span><div>Verder spelen</div></button>
+  <button class="btn mode-btn b-gray" id="pauseQuit"><span class="ico">&#127968;</span><div>Stop &amp; hoofdmenu</div></button>
+</div>
+
+<script src="tunnel-check.js"></script>
+<script src="game.js"></script>
+<script src="install.js"></script>
+</body>
+</html>
