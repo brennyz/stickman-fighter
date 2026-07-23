@@ -56,7 +56,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.8.5';
+const APP_VERSION = '1.8.6';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -101,7 +101,11 @@ function persist() {
     try { localStorage.setItem(SAVE_BACKUP_KEY, JSON.stringify(save)); } catch (_) {}
     if (!window.__sfPersistWarn) {
       window.__sfPersistWarn = true;
-      try { UI.toast('Opslaan mislukt — export save in Instellingen', 5200); } catch (_) {}
+      try {
+        if (typeof UI !== 'undefined' && UI.toast) {
+          UI.toast('Opslaan mislukt — export save in Instellingen', 5200);
+        }
+      } catch (_) {}
     }
   }
 }
@@ -764,6 +768,35 @@ function buildVsFighter(entry, x, slot) {
   if (entry.isRobot) f.isRobot = true;
   f.energy = 35;
   return f;
+}
+
+function vsSpawnX(slot) {
+  return W * (slot === 1 ? 0.28 : 0.72);
+}
+
+function resetVsFighterRound(f, entry, ground, slot) {
+  const hp = Math.round(100 * entry.hpMul);
+  f.hp = f.maxhp = hp;
+  f.baseDmg = Math.round(12 * entry.dmgMul);
+  f.x = vsSpawnX(slot);
+  f.y = ground;
+  f.vx = 0;
+  f.vy = 0;
+  f.onGround = true;
+  f.face = slot === 1 ? 1 : -1;
+  f.state = 'idle';
+  f.animT = 0;
+  f.attack = null;
+  f.hurtT = 0;
+  f.deadT = 0;
+  f.blocking = false;
+  f.blockT = 0;
+  f.energy = 40;
+  f.substCd = 0;
+  f.invulnT = 0;
+  f.hitFlashT = 0;
+  f.afterimages = [];
+  f.dashCd = 0;
 }
 
 let vsSelect = { p1: 'hero', p2: 'rabbit' };
@@ -2840,11 +2873,10 @@ class Game {
     vsSelect.p1 = this.p1Pick;
     vsSelect.p2 = this.p2Pick;
     trackVsRosterUse(this.p1Pick, this.p2Pick);
-    this.player = buildVsFighter(vsRosterEntry(this.p1Pick), W * 0.28, 1);
-    this.p2 = buildVsFighter(vsRosterEntry(this.p2Pick), W * 0.72, 2);
+    this.player = buildVsFighter(vsRosterEntry(this.p1Pick), vsSpawnX(1), 1);
+    this.p2 = buildVsFighter(vsRosterEntry(this.p2Pick), vsSpawnX(2), 2);
     this.startVsRound();
     AudioSys.play('boss');
-    if (!save.tipsSeen.hint_versus) this.hint = 5;
   }
 
   startVsRound() {
@@ -2852,29 +2884,14 @@ class Game {
     this.roundTimer = 99;
     const e1 = vsRosterEntry(this.p1Pick);
     const e2 = vsRosterEntry(this.p2Pick);
-    this.player.hp = this.player.maxhp = Math.round(100 * e1.hpMul);
-    this.player.baseDmg = Math.round(12 * e1.dmgMul);
-    this.player.x = W * 0.28;
-    this.player.y = this.ground;
-    this.player.vx = 0;
-    this.player.face = 1;
-    this.player.attack = null;
-    this.player.hurtT = 0;
-    this.player.energy = 40;
-    this.p2.hp = this.p2.maxhp = Math.round(100 * e2.hpMul);
-    this.p2.baseDmg = Math.round(12 * e2.dmgMul);
-    this.p2.x = W * 0.72;
-    this.p2.y = this.ground;
-    this.p2.vx = 0;
-    this.p2.face = -1;
-    this.p2.attack = null;
-    this.p2.hurtT = 0;
-    this.p2.deadT = 0;
-    this.p2.energy = 40;
+    resetVsFighterRound(this.player, e1, this.ground, 1);
+    resetVsFighterRound(this.p2, e2, this.ground, 2);
     this.phase = 'intro';
     this.phaseT = 0;
     this.inputLocked = true;
-    this.banner(`RONDE ${this.round}`, 1.1, '#ffd75e', 52);
+    const mp = this.roundsP1 === 1 || this.roundsP2 === 1;
+    const sub = mp ? ' · match point' : '';
+    this.banner(`RONDE ${this.round}${sub}`, 1.1, '#ffd75e', 52);
     AudioSys.sfx('bell');
   }
 
@@ -2888,6 +2905,7 @@ class Game {
       const p1d = !this.player.alive, p2d = !this.p2.alive;
       if (p1d || p2d || this.roundTimer <= 0) {
         let p1Win;
+        const timedOut = !p1d && !p2d && this.roundTimer <= 0;
         if (p2d && !p1d) p1Win = true;
         else if (p1d && !p2d) p1Win = false;
         else p1Win = (this.player.hp / this.player.maxhp) >= (this.p2.hp / this.p2.maxhp);
@@ -2895,7 +2913,9 @@ class Game {
         this.phase = 'roundend';
         this.phaseT = 0;
         this.inputLocked = true;
-        this.banner(p1Win ? 'P1 WINT RONDE!' : 'P2 WINT RONDE!', 1.5, p1Win ? '#7cf5ff' : '#ffb0b8', 38);
+        let msg = p1Win ? 'P1 WINT RONDE!' : 'P2 WINT RONDE!';
+        if (timedOut) msg = `TIME! · ${msg}`;
+        this.banner(msg, 1.5, p1Win ? '#7cf5ff' : '#ffb0b8', 38);
         AudioSys.sfx(p1Win ? 'win' : 'lose');
       }
     } else if (this.phase === 'roundend') {
@@ -3671,15 +3691,42 @@ class Game {
       this.rr(c, W - half - 16, by + 34, half * (p2.energy / 100), 5, 3); c.fill();
 
       c.textAlign = 'center';
-      c.font = '900 26px sans-serif'; c.fillStyle = '#fff';
-      c.fillText(Math.ceil(Math.max(0, this.roundTimer)), W / 2, 38);
+      const tLeft = Math.ceil(Math.max(0, this.roundTimer));
+      const urgent = this.roundTimer < 15 && this.phase === 'fight';
+      c.font = urgent ? '900 28px sans-serif' : '900 26px sans-serif';
+      c.fillStyle = urgent ? '#ff9a9a' : '#fff';
+      if (urgent && !motionReduced()) {
+        c.save();
+        c.translate(W / 2, 38);
+        c.scale(1 + Math.sin(this.t * 10) * 0.05, 1 + Math.sin(this.t * 10) * 0.05);
+        c.fillText(String(tLeft), 0, 0);
+        c.restore();
+      } else {
+        c.fillText(String(tLeft), W / 2, 38);
+      }
       c.font = '800 12px sans-serif'; c.fillStyle = 'rgba(255,255,255,.75)';
-      c.fillText(`Ronde ${this.round} · ${this.roundsP1}-${this.roundsP2}`, W / 2, 56);
+      c.fillText(`Ronde ${this.round} · eerst 2 wint · ${this.roundsP1}-${this.roundsP2}`, W / 2, 56);
+      const mp1 = this.roundsP1 === 1 && this.roundsP2 < 2;
+      const mp2 = this.roundsP2 === 1 && this.roundsP1 < 2;
       for (let i = 0; i < 2; i++) {
-        c.fillStyle = i < this.roundsP1 ? '#7cf5ff' : 'rgba(255,255,255,.22)';
-        c.beginPath(); c.arc(W / 2 - 40 - i * 16, 72, 5, 0, TAU); c.fill();
-        c.fillStyle = i < this.roundsP2 ? '#ffb0b8' : 'rgba(255,255,255,.22)';
-        c.beginPath(); c.arc(W / 2 + 40 + i * 16, 72, 5, 0, TAU); c.fill();
+        const litP1 = i < this.roundsP1;
+        c.fillStyle = litP1 ? '#7cf5ff' : 'rgba(255,255,255,.22)';
+        if (mp1 && i === 1) c.fillStyle = '#ffd75e';
+        c.beginPath(); c.arc(W / 2 - 40 - i * 16, 72, mp1 && i === 1 ? 6 : 5, 0, TAU); c.fill();
+        const litP2 = i < this.roundsP2;
+        c.fillStyle = litP2 ? '#ffb0b8' : 'rgba(255,255,255,.22)';
+        if (mp2 && i === 1) c.fillStyle = '#ffd75e';
+        c.beginPath(); c.arc(W / 2 + 40 + i * 16, 72, mp2 && i === 1 ? 6 : 5, 0, TAU); c.fill();
+      }
+      if (p.energy >= 100) {
+        c.font = '800 10px sans-serif'; c.fillStyle = '#7cf5ff';
+        c.fillText('🌀', bx + half - 8, by + 12);
+      }
+      if (p2.energy >= 100) {
+        c.font = '800 10px sans-serif'; c.fillStyle = '#7cf5ff';
+        c.textAlign = 'right';
+        c.fillText('🌀', W - 20, by + 12);
+        c.textAlign = 'center';
       }
     }
   }
@@ -3768,6 +3815,19 @@ const UI = {
   screens: ['menuScreen', 'levelScreen', 'weaponScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   charPickStep: 1,
   lastResult: null,
+  pauseSubDefault: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
+
+  refreshPauseSubtitle() {
+    const sub = document.querySelector('#pauseScreen .subtitle');
+    if (!sub) return;
+    if (game?.mode === 'versus' && game.p2) {
+      const a = vsRosterEntry(game.p1Pick).name;
+      const b = vsRosterEntry(game.p2Pick).name;
+      sub.textContent = `2P ${game.roundsP1}-${game.roundsP2} · ronde ${game.round} · ${a} vs ${b}`;
+    } else {
+      sub.textContent = this.pauseSubDefault;
+    }
+  },
 
   show(id) {
     for (const s of this.screens) document.getElementById(s).classList.remove('active');
@@ -3777,6 +3837,9 @@ const UI = {
         el.classList.add('active');
         requestAnimationFrame(() => { el.scrollTop = 0; });
       }
+      if (id === 'pauseScreen') this.refreshPauseSubtitle();
+    } else if (game?.mode === 'versus') {
+      this.refreshPauseSubtitle();
     }
     document.getElementById('pauseBtn').classList.toggle('show', !id && !!game && state !== 'result');
     const playing = !id && !!game && state === 'play';
@@ -4421,7 +4484,9 @@ const btnImportSave = document.getElementById('btnImportSave');
 if (btnImportSave) btnImportSave.addEventListener('click', () => {
   const ta = document.getElementById('savePortText');
   if (!ta || !ta.value.trim()) return;
-  try { importSaveJson(ta.value); AudioSys.sfx('win'); } catch (_) { UI.toast('Ongeldige save — controleer JSON', 3000); }
+  try { importSaveJson(ta.value); AudioSys.sfx('win'); } catch (e) {
+    UI.toast((e && e.message) ? e.message : 'Ongeldige save — controleer JSON', 3200);
+  }
 });
 function bindSettingsControls() {
   const onVol = (id, lblId, key) => {
@@ -4559,7 +4624,14 @@ document.getElementById('resAgain').addEventListener('click', () => {
   const d = UI.lastResult;
   AudioSys.sfx('select');
   if (d.mode === 'adventure') startGame('adventure', { level: d.level });
-  else if (d.mode === 'versus') startGame('versus', { p1: d.p1 || vsSelect.p1, p2: d.p2 || vsSelect.p2 });
+  else if (d.mode === 'versus') {
+    const p1 = d.p1 || vsSelect.p1;
+    const p2 = d.p2 || vsSelect.p2;
+    vsSelect.p1 = p1;
+    vsSelect.p2 = p2;
+    UI.toast(`Rematch · ${vsRosterEntry(p1).name} vs ${vsRosterEntry(p2).name}`, 2600);
+    startGame('versus', { p1, p2 });
+  }
   else startGame(d.mode);
 });
 document.getElementById('resNext').addEventListener('click', () => {
@@ -4672,6 +4744,14 @@ function bootGame() {
   updateNetStatus();
   UI.syncTouchClass();
   maybeWelcomeToast();
+  if (!window.__sfGlobalErr) {
+    window.__sfGlobalErr = true;
+    window.addEventListener('unhandledrejection', (ev) => {
+      if (state !== 'play' || window.__sfLoopErr) return;
+      const r = ev.reason;
+      if (r instanceof Error) sfReportError('async', r);
+    });
+  }
   try {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     const onMq = () => syncA11yClasses();

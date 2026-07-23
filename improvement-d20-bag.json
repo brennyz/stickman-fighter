@@ -2,7 +2,6 @@
   "version": 2,
   "cyclesCompleted": 0,
   "remaining": [
-    3,
     6,
     7,
     8,
@@ -11,10 +10,10 @@
     20
   ],
   "lastRoll": {
-    "face": 17,
-    "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
-    "rolledAt": "2026-07-23T13:35:44Z",
-    "remainingCount": 7,
+    "face": 3,
+    "category": "Versus 2P \u2014 split controls, rematch, char balance",
+    "rolledAt": "2026-07-23T13:37:18Z",
+    "remainingCount": 5,
     "cycle": 0
   },
   "implemented": [
@@ -30,6 +29,13 @@
       "note": "Error recovery + save import",
       "version": "1.8.5",
       "doneAt": "2026-07-23T13:36:46Z",
+      "cycle": 0
+    },
+    {
+      "face": 3,
+      "note": "Versus HUD timer/rematch/spawn reset",
+      "version": "1.8.6",
+      "doneAt": "2026-07-23T13:38:12Z",
       "cycle": 0
     }
   ],
@@ -123,6 +129,20 @@
       "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
       "rolledAt": "2026-07-23T13:35:44Z",
       "remainingCount": 7,
+      "cycle": 0
+    },
+    {
+      "face": 6,
+      "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+      "rolledAt": "2026-07-23T13:37:00Z",
+      "remainingCount": 6,
+      "cycle": 0
+    },
+    {
+      "face": 3,
+      "category": "Versus 2P \u2014 split controls, rematch, char balance",
+      "rolledAt": "2026-07-23T13:37:18Z",
+      "remainingCount": 5,
       "cycle": 0
     }
   ]

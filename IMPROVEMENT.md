@@ -32,7 +32,7 @@ Staat van de zak: `improvement-d20-bag.json` (commit na elke roll + na elke afge
 | **18** Char select | Goed — UI/stats; geen roster balance. |
 | **12** Content | Goed — dex/cosmetic; geen loop-slop. |
 
-**Conclusie:** ja, goede weg — blijf **één thema**, checklist, SW bump. Open gaten: **deploy push** (403), resterende zak **d2,d3,d6,d7,d8,d13,d14,d17,d20**.
+**Conclusie:** ja, goede weg — blijf **één thema**, checklist, SW bump. Open gaten: **deploy push** (403), resterende zak **d6,d7,d8,d13,d14,d20** (d6 was gerold maar nog niet gebouwd).
 
 | d# | Categorie | Voorbeelden (klein & veilig) |
 |----|-----------|------------------------------|
@@ -92,6 +92,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | **3** | Versus 2P: spawn/round reset, timer-urgency HUD, match-point dots, TIME banner, pauze-score, rematch toast. v1.8.6 / SW v34. |
 | 2026-07-23 | **17** | Stabiliteit: startGame/loop recovery, save-import fouten, persist-waarschuwing. v1.8.5 / SW v33. |
 | 2026-07-23 | **2** | Training: Chidori-telegraph + ring, langere windup robot, ronde-HUD. v1.8.4 / SW v32. |
 | 2026-07-23 | — | **d20 v2:** focus per roll, `status`, `mark-d20-done.sh`, review laatste 8. |
