@@ -168,6 +168,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-23 | — | **IMPROVEMENT.md + Ralph d20** toegevoegd. Gameplay: canvas tikken alleen bij `state==='play'`. v1.7.2 / SW v20. |
 | 2026-07-23 | — | GitHub Pages live `brennyz.github.io/stickman-fighter/`. iPad: menu niet klikbaar → pointer-events fix. |
 | 2026-07-23 | 14 | v1.7 combo pulse, low-HP vignette, result tips. |
+| 2026-07-23 | **19** | Muur (cyclus 2): timer-milestones (30s/15s), combo-decay hints, bijna-record floater, HUD TIJD/COMBO labels, slimmere eindscherm-tips. v1.14.8 / SW v106. |
 | 2026-07-23 | **6** | Audio (cyclus 2): pauze duck + SFX-boost voor UI; context wakker in pauze; statusregel sliders; Escape/terug hervat audio; 2P herstart vanuit pauze. v1.14.7 / SW v105. |
 | 2026-07-23 | **7** | Save (cyclus 2): export schema v2 + backupKey in meta; import-warnings (key/schema/summons); stats-strip; corrupt-primary repair-toast; healthregel drift/backup corrupt. v1.14.6 / SW v104. |
 | 2026-07-23 | — | **User (deel 3/3):** stage-reis polish — checkpoint-flits + diamantjes op deel-grenzen, camera-punch bij vertrek, speed-lines tijdens reizen, baas-hartslag-vignet + roar halverwege + rode aankomst-flits. Reduced motion/Lite FX gerespecteerd. v1.14.5 / SW v103. |

@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.14.7';
+const APP_VERSION = '1.14.8';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 105;
+const SW_CACHE_REV = 106;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1191,8 +1191,8 @@ function applyModeOnboarding(mode, g) {
       ? 'Eerste minuut: ontwijk rode laser · chakra vol → tik 🌀'
       : 'Eerste minuut: ontwijk lasers · chakra vol → U',
     wall: touch
-      ? 'Eerste minuut: combo-knop vol houden · meer schade per steen'
-      : 'Eerste minuut: snelle combo = sneller sloop',
+      ? '60s timer · combo-balk vol = sneller sloop · record + projectie bovenin'
+      : '60s · combo-balk vol houden · record + ~stenen/min in HUD',
     versus: touch
       ? 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best'
       : 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5',
@@ -5363,8 +5363,16 @@ class Game {
     this.score = 0; this.combo = 0; this.comboT = 0; this.wallGen = 0;
     this.maxCombo = 0;
     this.wallRecordToast = false;
+    this.wallHints = { half: false, quarter: false, comboWarn: false, nearRec: false, lostCombo: false };
     this.layoutWall(true);
     this.banner('SLOOP DE MUUR!', 1.5, '#ffd75e', 46);
+    if (!modeOnboardingSeen('wall')) {
+      setTimeout(() => {
+        try {
+          if (!this.over) this.banner('Tip: 60s · combo-balk = sneller · ★ = bonus steen', 2.0, '#7cf5ff', 22);
+        } catch (_) {}
+      }, 1200);
+    }
     AudioSys.play('wall');
     this.phase = 'fight';
   }
@@ -5391,9 +5399,39 @@ class Game {
   }
 
   updateWall(dt) {
+    const prevTimer = this.wallTimer;
     this.wallTimer -= dt;
+    const hints = this.wallHints || (this.wallHints = {});
+    if (!hints.half && prevTimer > 30 && this.wallTimer <= 30) {
+      hints.half = true;
+      this.floater(W / 2, 108, 'Halve tijd — combo vasthouden!', '#7cf5ff', 15);
+    }
+    if (!hints.quarter && prevTimer > 15 && this.wallTimer <= 15) {
+      hints.quarter = true;
+      this.floater(W / 2, 108, 'Laatste 15s — record jagen!', '#ffd75e', 15);
+      if (this.wallTimer < 10) AudioSys.sfx('bonus');
+    }
+    const prevComboT = this.comboT;
     this.comboT -= dt;
-    if (this.comboT <= 0) this.combo = 0;
+    if (this.comboT <= 0) {
+      if (this.combo >= 4 && !hints.lostCombo) {
+        hints.lostCombo = true;
+        this.floater(W / 2, 120, 'Combo weg — snel weer raken!', '#ff9a9a', 14);
+      }
+      this.combo = 0;
+    } else if (!hints.comboWarn && this.combo >= 3 && prevComboT > 0.35 && this.comboT <= 0.35) {
+      hints.comboWarn = true;
+      this.floater(W / 2, 120, 'Combo bijna weg!', '#ff9a9a', 13);
+    }
+    const bestSaved = save.bestWall || 0;
+    if (!hints.nearRec && bestSaved > 0 && this.score > 0) {
+      const gap = bestSaved - this.score;
+      if (gap > 0 && gap <= 5) {
+        hints.nearRec = true;
+        this.floater(W / 2, 94, `Bijna record — nog ${gap}!`, '#7cfc8a', 16);
+        haptic(12);
+      }
+    }
     this.maxX = this.wallX - 16;
     if (this.bricks.every(b => b.hp <= 0)) {
       this.wallGen++;
@@ -5416,11 +5454,18 @@ class Game {
     checkAchievements();
     AudioSys.sfx(isRecord ? 'win' : 'bell');
     this.banner('TIJD!', 1.5, '#ffd75e', 56);
+    let tip = isRecord ? 'Nieuw record — share met een vriend!' : 'Tip: hou combo vast voor snellere sloop';
+    if (!isRecord && best > 0) {
+      const gap = best - this.score;
+      if (gap > 0 && gap <= 15) tip = `Nog ${gap} stenen tot je record — combo helpt!`;
+      else if ((this.maxCombo || 0) < 5) tip = 'Tip: snelle opeenvolgende slagen vullen de combo-balk';
+      else if ((this.maxCombo || 0) >= 8) tip = `Sterke combo (×${this.maxCombo}) — volgende keer record?`;
+    }
     setTimeout(() => UI.showResult(true, {
       title: isRecord ? 'NIEUW RECORD!' : 'TIJD IS OM!',
       detail: `${this.score} stenen · record ${best} · max combo ×${this.maxCombo || 0}`,
       xp: this.sessionXP, mode: 'wall', win: true,
-      tip: isRecord ? 'Nieuw record — share met een vriend!' : 'Tip: hou combo vast voor snellere sloop',
+      tip,
     }), 1200);
   }
 
@@ -5919,9 +5964,10 @@ class Game {
 
   noteCombo() {
     this.maxCombo = Math.max(this.maxCombo || 0, this.combo || 0);
-    if (this.mode === 'wall' && (this.combo === 5 || this.combo === 10)) {
+    if (this.mode === 'wall' && (this.combo === 5 || this.combo === 8 || this.combo === 10)) {
       AudioSys.sfx('combo');
-      this.floater(W * 0.5, 130, `COMBO ×${this.combo}!`, '#7cf5ff', 18);
+      const msg = this.combo === 8 ? 'MUUR-TEMPO!' : `COMBO ×${this.combo}!`;
+      this.floater(W * 0.5, 130, msg, '#7cf5ff', 18);
     }
     if ([5, 10, 15].includes(this.combo) && this.player && !motionReduced()) {
       const col = this.combo >= 10 ? '#ffd75e' : '#7cf5ff';
@@ -6710,6 +6756,11 @@ class Game {
       const barW = Math.min(220, W - 48);
       const barX = (W - barW) / 2;
       const timeFrac = clamp(this.wallTimer / wallDur, 0, 1);
+      c.font = '700 9px sans-serif';
+      c.textAlign = 'left';
+      c.fillStyle = 'rgba(255,255,255,.45)';
+      c.fillText('TIJD', barX, 44);
+      c.textAlign = 'center';
       c.fillStyle = 'rgba(0,0,0,.42)';
       this.rr(c, barX, 48, barW, 7, 4); c.fill();
       c.fillStyle = urgent ? '#ff6b6b' : '#7cf5ff';
@@ -6760,6 +6811,11 @@ class Game {
         const cBarW = Math.min(160, W * 0.42);
         const cBarX = (W - cBarW) / 2;
         const cy = this.combo > 1 ? 148 : 132;
+        c.font = '700 9px sans-serif';
+        c.textAlign = 'left';
+        c.fillStyle = 'rgba(124,245,255,.55)';
+        c.fillText('COMBO', cBarX, cy - 4);
+        c.textAlign = 'center';
         c.fillStyle = 'rgba(0,0,0,.38)';
         this.rr(c, cBarX, cy, cBarW, 5, 3); c.fill();
         c.fillStyle = cFrac < 0.25 ? '#ff9a9a' : '#7cf5ff';
