@@ -13,23 +13,23 @@
     9,
     11,
     12,
+    13,
     15,
-    16,
     17,
     18,
     19
   ],
   "lastRoll": {
-    "face": 13,
-    "category": "Missies & achievements \u2014 daily loop, beloningen",
-    "rolledAt": "2026-07-23T20:48:29Z",
+    "face": 16,
+    "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
+    "rolledAt": "2026-07-23T21:04:22Z",
     "remainingCount": 15,
     "cycle": 2
   },
   "pending": {
-    "face": 13,
-    "category": "Missies & achievements \u2014 daily loop, beloningen",
-    "rolledAt": "2026-07-23T20:48:29Z",
+    "face": 16,
+    "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
+    "rolledAt": "2026-07-23T21:04:22Z",
     "remainingCount": 15,
     "cycle": 2
   },
@@ -381,7 +381,9 @@
       "id": "more-weapons",
       "d20Face": null,
       "userWords": "Meer wapens",
-      "versions": ["1.13.7"],
+      "versions": [
+        "1.13.7"
+      ],
       "commits": [],
       "code": "WEAPONS +12, drawWeaponShape cases, isThrowWeapon fuuma",
       "status": "done",
@@ -391,7 +393,9 @@
       "id": "moving-stage-progress-p1",
       "d20Face": null,
       "userWords": "bewegend decor ala chupacabrago, bolletje bovenaan progress, hak in 3 delen, go op 1",
-      "versions": ["1.14.0"],
+      "versions": [
+        "1.14.0"
+      ],
       "commits": [],
       "code": "worldX scroll, traveling, drawBackground parallax, drawStageProgress 3 segmenten, stagePart",
       "status": "deel 2/3 done",
@@ -743,9 +747,9 @@
       "cycle": 2
     },
     {
-      "face": 13,
-      "category": "Missies & achievements \u2014 daily loop, beloningen",
-      "rolledAt": "2026-07-23T20:48:29Z",
+      "face": 16,
+      "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
+      "rolledAt": "2026-07-23T21:04:22Z",
       "remainingCount": 15,
       "cycle": 2
     }
