@@ -6,7 +6,6 @@
     3,
     6,
     7,
-    8,
     9,
     14,
     15,
@@ -14,13 +13,19 @@
     20
   ],
   "lastRoll": {
-    "face": 16,
-    "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
-    "rolledAt": "2026-07-23T18:15:53Z",
-    "remainingCount": 9,
+    "face": 8,
+    "category": "PWA & offline \u2014 SW cache, install, standalone",
+    "rolledAt": "2026-07-23T18:25:32Z",
+    "remainingCount": 8,
     "cycle": 1
   },
-  "pending": null,
+  "pending": {
+    "face": 8,
+    "category": "PWA & offline \u2014 SW cache, install, standalone",
+    "rolledAt": "2026-07-23T18:25:32Z",
+    "remainingCount": 8,
+    "cycle": 1
+  },
   "implemented": [
     {
       "face": 2,
@@ -478,6 +483,13 @@
       "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
       "rolledAt": "2026-07-23T18:15:53Z",
       "remainingCount": 9,
+      "cycle": 1
+    },
+    {
+      "face": 8,
+      "category": "PWA & offline \u2014 SW cache, install, standalone",
+      "rolledAt": "2026-07-23T18:25:32Z",
+      "remainingCount": 8,
       "cycle": 1
     }
   ]

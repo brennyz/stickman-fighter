@@ -1,5 +1,5 @@
 /* Stickman Fighter — hardened offline cache (PWA) */
-const CACHE = 'stickfighter-app-v74';
+const CACHE = 'stickfighter-app-v75';
 const ASSETS = [
   './',
   './index.html',
@@ -21,6 +21,7 @@ function isNetworkFirstPath(pathname) {
   return (
     p.endsWith('/health.json') ||
     p.endsWith('/LIVE-LINK.txt') ||
+    p.endsWith('/manifest.webmanifest') ||
     p.endsWith('/hosting.json') ||
     p.endsWith('/index.html') ||
     p.endsWith('/ipad.html') ||
@@ -97,10 +98,10 @@ self.addEventListener('fetch', (event) => {
             || await caches.match('./');
           if (shell) return shell;
         }
-        return new Response('Offline — open opnieuw als je net hebt.', {
+        return new Response('<!DOCTYPE html><html lang="nl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline</title><body style="font-family:system-ui;background:#0a0d18;color:#fff;text-align:center;padding:24px"><h1>Offline</h1><p>Geen netwerk — open het spel via je <b>app-icoon</b> (PWA) of probeer opnieuw als je weer online bent.</p></body></html>', {
           status: 503,
           statusText: 'Offline',
-          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+          headers: { 'Content-Type': 'text/html; charset=utf-8' },
         });
       }
     }

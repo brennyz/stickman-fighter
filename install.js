@@ -91,8 +91,8 @@
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (refreshing) return;
       refreshing = true;
-      // Eén soft reload na SW-claim zodat Pages/PWA niet op oude shell blijft
       try { toast('App-cache bijgewerkt', 2200); } catch (_) {}
+      if (typeof window.updateNetStatus === 'function') window.updateNetStatus();
     });
 
     navigator.serviceWorker.addEventListener('message', (ev) => {
@@ -102,6 +102,7 @@
           sessionStorage.setItem('sf_sw_cache', data.cache);
         } catch (_) {}
         refreshMenuButton();
+        if (typeof window.updateNetStatus === 'function') window.updateNetStatus();
       }
     });
   }

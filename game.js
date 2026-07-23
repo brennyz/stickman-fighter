@@ -60,9 +60,9 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.12.11';
+const APP_VERSION = '1.12.12';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 74;
+const SW_CACHE_REV = 75;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -735,6 +735,7 @@ function syncPlayLayer() {
   el.style.pointerEvents = canvasHits ? 'auto' : 'none';
   el.style.visibility = canvasHits ? 'visible' : 'hidden';
   document.body.classList.toggle('is-playing', canvasHits);
+  try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
 }
 
 function ensureMenuScreenActive() {
@@ -6901,14 +6902,37 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+function isStandalonePwa() {
+  try {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  } catch (_) {
+    return false;
+  }
+}
+
 function updateNetStatus(ev) {
   const el = document.getElementById('netStatus');
   if (!el) return;
   const off = typeof navigator.onLine === 'boolean' && !navigator.onLine;
+  const swReady = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+  const standalone = isStandalonePwa();
+  try {
+    document.body.classList.toggle('sf-offline', off);
+    document.body.classList.toggle('sf-sw-ready', swReady);
+  } catch (_) {}
+
   if (off) {
     el.hidden = false;
-    el.classList.remove('online-flash');
-    el.textContent = 'Offline — save blijft hier · speel uit app-cache';
+    el.classList.remove('online-flash', 'sw-pending');
+    if (state === 'play') {
+      el.textContent = standalone
+        ? 'Offline — speelt uit app-cache · save blijft lokaal'
+        : 'Offline — uit cache · «Zet in app-lade» = altijd spelen';
+    } else {
+      el.textContent = swReady
+        ? 'Offline — menu & save uit cache op dit apparaat'
+        : 'Offline — open 1× online voor volledige PWA-cache';
+    }
     if (ev && ev.type === 'offline') {
       try { UI.toast('Offline — voortgang blijft op dit apparaat', 3000); } catch (_) {}
     }
@@ -6916,9 +6940,13 @@ function updateNetStatus(ev) {
   }
   if (ev && ev.type === 'online') {
     el.hidden = false;
+    el.classList.remove('sw-pending');
     el.classList.add('online-flash');
-    el.textContent = 'Weer online — verse Pages/SW bij volgende load';
+    el.textContent = 'Weer online — HTML/game via netwerk bij volgende load';
     try { UI.toast('Weer online', 2200); } catch (_) {}
+    if ('serviceWorker' in navigator) {
+      try { navigator.serviceWorker.ready.then((reg) => reg.update()); } catch (_) {}
+    }
     setTimeout(() => {
       if (navigator.onLine) {
         el.hidden = true;
@@ -6928,11 +6956,20 @@ function updateNetStatus(ev) {
     }, 3200);
     return;
   }
+  if (!swReady && location.protocol !== 'file:' && 'serviceWorker' in navigator && !/[?&](ipad|nosw)=1\b/.test(location.search)) {
+    el.hidden = false;
+    el.classList.add('sw-pending');
+    el.classList.remove('online-flash');
+    el.textContent = 'Cache laden… — daarna ook offline spelen';
+    return;
+  }
   el.hidden = true;
+  el.classList.remove('online-flash', 'sw-pending');
   el.textContent = '';
 }
 window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
+window.updateNetStatus = updateNetStatus;
 
 function bootGame() {
   if (window.__sfBooted) return;

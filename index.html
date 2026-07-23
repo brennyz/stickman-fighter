@@ -360,7 +360,9 @@
       z-index:35; max-width:92vw; padding:8px 14px; border-radius:999px; font-size:12px; font-weight:800;
       text-align:center; color:#ffe8a8; background:rgba(40,20,10,.88); border:1px solid rgba(255,120,60,.45);
       box-shadow:0 6px 20px rgba(0,0,0,.4); pointer-events:none; }
+  body.is-playing.sf-offline #netStatus { bottom:max(108px, calc(env(safe-area-inset-bottom) + 92px)); font-size:11px; }
   #netStatus.online-flash { color:#d8ffe8; background:rgba(12,40,28,.9); border-color:rgba(80,220,140,.5); }
+  #netStatus.sw-pending { color:#cfe0ff; background:rgba(20,28,55,.92); border-color:rgba(124,245,255,.35); }
   #netStatus[hidden] { display:none !important; }
 
   body.reduced-motion h1.title,
@@ -706,8 +708,8 @@
 </script>
 
 <script src="tunnel-check.js?v=202"></script>
-<script src="game.js?v=224"></script>
-<script src="install.js?v=201"></script>
+<script src="game.js?v=225"></script>
+<script src="install.js?v=203"></script>
 <script>
 (function () {
   function freeUi() {
