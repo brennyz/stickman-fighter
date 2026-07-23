@@ -17,7 +17,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.7.2';
+const APP_VERSION = '1.7.3';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -869,6 +869,8 @@ const SONGS = {
 
 /* =============================== INPUT ================================= */
 const IS_TOUCH = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+const JOY_DEAD_PX = 14;
+const btnHitSlop = () => (typeof save !== 'undefined' && save.bigTouch !== false ? 14 : 10);
 
 function makePad(side) {
   return {
@@ -890,7 +892,10 @@ function makePad(side) {
         if (this.keys['arrowleft']) m -= 1;
         if (this.keys['arrowright']) m += 1;
       }
-      if (this.joy.active) m += clamp(this.joy.dx / 45, -1, 1);
+      if (this.joy.active) {
+        const jx = this.joy.dx;
+        if (Math.abs(jx) >= JOY_DEAD_PX) m += clamp(jx / 45, -1, 1);
+      }
       return clamp(m, -1, 1);
     },
     press(action) { this.pressed[action] = true; },
@@ -922,8 +927,9 @@ function makePad(side) {
       }
     },
     hitButton(x, y) {
+      const slop = btnHitSlop();
       for (const b of this.buttons) {
-        if ((x - b.x) ** 2 + (y - b.y) ** 2 < (b.r + 10) ** 2) return b;
+        if ((x - b.x) ** 2 + (y - b.y) ** 2 < (b.r + slop) ** 2) return b;
       }
       return null;
     },
@@ -954,8 +960,12 @@ function makePad(side) {
     },
     onMove(x, y, id) {
       if (this.joy.active && this.joy.id === id) {
-        this.joy.dx = clamp(x - this.joy.ox, -55, 55);
-        this.joy.dy = clamp(y - this.joy.oy, -55, 55);
+        let dx = clamp(x - this.joy.ox, -55, 55);
+        let dy = clamp(y - this.joy.oy, -55, 55);
+        if (Math.abs(dx) < JOY_DEAD_PX) dx = 0;
+        if (Math.abs(dy) < JOY_DEAD_PX) dy = 0;
+        this.joy.dx = dx;
+        this.joy.dy = dy;
       }
     },
     onUp(id) {
@@ -992,7 +1002,8 @@ const Input = Object.assign(makePad('p1'), {
       return;
     }
     for (const b of this.buttons) {
-      if ((x - b.x) ** 2 + (y - b.y) ** 2 < (b.r + 8) ** 2) {
+      const slop = btnHitSlop();
+      if ((x - b.x) ** 2 + (y - b.y) ** 2 < (b.r + slop) ** 2) {
         this.btnPointers[id] = b.id;
         b.held = true;
         this.press(b.id);
@@ -1000,6 +1011,8 @@ const Input = Object.assign(makePad('p1'), {
       }
     }
     if (x < innerWidth * 0.5 && !this.joy.active) {
+      const nearBtn = this.buttons.some(b => (x - b.x) ** 2 + (y - b.y) ** 2 < (b.r + slop + 18) ** 2);
+      if (nearBtn) return;
       this.joy.active = true;
       this.joy.id = id;
       this.joy.ox = x;
@@ -1015,8 +1028,12 @@ const Input = Object.assign(makePad('p1'), {
       return;
     }
     if (this.joy.active && this.joy.id === id) {
-      this.joy.dx = clamp(x - this.joy.ox, -55, 55);
-      this.joy.dy = clamp(y - this.joy.oy, -55, 55);
+      let dx = clamp(x - this.joy.ox, -55, 55);
+      let dy = clamp(y - this.joy.oy, -55, 55);
+      if (Math.abs(dx) < JOY_DEAD_PX) dx = 0;
+      if (Math.abs(dy) < JOY_DEAD_PX) dy = 0;
+      this.joy.dx = dx;
+      this.joy.dy = dy;
     }
   },
   onUp(id) {

@@ -1,7 +1,41 @@
 {
   "version": 1,
   "cyclesCompleted": 0,
-  "remaining": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-  "lastRoll": null,
-  "history": []
+  "remaining": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "lastRoll": {
+    "face": 9,
+    "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
+    "rolledAt": "2026-07-23T13:21:57Z",
+    "remainingCount": 19,
+    "cycle": 0
+  },
+  "history": [
+    {
+      "face": 9,
+      "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
+      "rolledAt": "2026-07-23T13:21:57Z",
+      "remainingCount": 19,
+      "cycle": 0
+    }
+  ]
 }
