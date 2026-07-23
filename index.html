@@ -311,6 +311,10 @@
   .char-saga-bar button.active { border-color:#ffd75e; background:rgba(255,215,94,.15); color:#fff; }
   .char-saga-bar button:active { transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.35); }
   #charSagaBlurb { font-size:11px; color:#9db1e3; max-width:min(94vw,720px); margin:0 auto 8px; line-height:1.4; min-height:2.8em; }
+  .char-pick-step-badge { display:inline-block; font-size:12px; font-weight:900; letter-spacing:.06em;
+    text-transform:uppercase; color:#ffd75e; background:rgba(0,0,0,.35); padding:6px 14px; border-radius:999px;
+    margin:4px 0 8px; border:1px solid rgba(255,215,94,.35); }
+  .char-grid-empty { grid-column:1/-1; padding:28px 16px; text-align:center; font-weight:800; color:#9db1e3; font-size:14px; }
   .char-card.p1sel { border-color:#7cf5ff; background:rgba(124,245,255,.12);
       box-shadow:0 0 0 1px rgba(124,245,255,.35), 0 5px 0 rgba(0,0,0,.3); }
   .char-card.p2sel { border-color:#ffb0b8; background:rgba(255,176,184,.12);
@@ -394,7 +398,7 @@
       <div class="arcade-pre">MONSTER ARENA · INSERT COIN</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine">▶ KIES JE MODUS ▶</p>
-      <div class="subtitle" id="menuVerLine" style="color:#ffb0a8;font-size:11px;margin:6px 0 0;opacity:.95">v1.11.0 · arcade</div>
+      <div class="subtitle" id="menuVerLine" style="color:#ffb0a8;font-size:11px;margin:6px 0 0;opacity:.95">v1.11.1 · arcade</div>
     </div>
   </div>
   <div class="arcade-menu-body">
@@ -442,6 +446,7 @@
   <button class="btn back-btn" data-back id="charSelectBack">&#8592; Terug</button>
   <h2 class="head">Kies je vechter · Choose fighter</h2>
   <div class="subtitle" id="charPickStep">Speler 1 — kies je vechter (links)</div>
+  <div class="char-pick-step-badge" id="charPickStepBadge">Stap 1/2 · Choose P1</div>
   <div class="subtitle" style="margin-top:-6px;font-size:12px">23 sticks · 5 saga-hints (parodie, geen officiële manga)</div>
   <div class="char-duel-bar">
     <button type="button" class="p1pill pick-pill big-touch" id="charP1Label">P1: Stick Ninja</button>
@@ -654,7 +659,7 @@
 </script>
 
 <script src="tunnel-check.js?v=201"></script>
-<script src="game.js?v=205"></script>
+<script src="game.js?v=206"></script>
 <script src="install.js?v=201"></script>
 <script>
 (function () {

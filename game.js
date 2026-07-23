@@ -55,9 +55,9 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.11.0';
+const APP_VERSION = '1.11.1';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 54;
+const SW_CACHE_REV = 55;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1106,6 +1106,32 @@ const VS_ROSTER = [
 ];
 const vsRosterEntry = id => VS_ROSTER.find(r => r.id === id) || VS_ROSTER[0];
 function vsUnlocked(r) { return !r.unlock || r.unlock(); }
+function vsUnlockHint(r) {
+  if (!r || vsUnlocked(r)) return '';
+  const hints = {
+    konoha: 'Unlock Konoha-stijl',
+    shadow: 'Reach Lv 15',
+    gold: 'Reach Lv 25',
+    chakra: 'Win 3× training',
+    guvve: '8 monsters in boek',
+    rabbit: 'Win 1× training',
+    akatsuki: 'Reach Lv 12',
+    sand: 'Reach Lv 8',
+    speedster: 'Reach Lv 13',
+    samurai: 'Reach Lv 20',
+    golem: 'Reach Lv 22',
+    cyber: 'Reach Lv 18',
+    storm: 'Win 5× training',
+    fox: '12 monsters in boek',
+    void: 'Reach Lv 40',
+    dragon: 'Unlock level 45+',
+    kiball: 'Reach Lv 6',
+    tidecrew: 'Reach Lv 10',
+    zipcape: 'Win 2× training',
+    dawnlance: 'Reach Lv 30',
+  };
+  return hints[r.id] || 'Keep playing to unlock';
+}
 function normalizeVsPick(id, fallback) {
   const r = vsRosterEntry(id);
   if (r.id === id && vsUnlocked(r)) return id;
@@ -4761,8 +4787,10 @@ function pickVsRosterId(id) {
   if (UI.charPickStep === 1) {
     vsSelect.p1 = id;
     UI.charPickStep = 2;
+    try { UI.toast('P1: ' + r.name + ' — kies nu P2', 2200); } catch (_) {}
   } else {
     vsSelect.p2 = id;
+    try { UI.toast('P2: ' + r.name + ' — tik VECHT!', 2000); } catch (_) {}
   }
   UI.renderCharSelect();
 }
@@ -4786,13 +4814,14 @@ function initCharSelectChrome() {
     }, { passive: false });
   }
   const sagaBar = document.getElementById('charSagaBar');
-  if (sagaBar) {
-    sagaBar.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-saga]');
-      if (!btn) return;
-      AudioSys.sfx('select');
-      UI.charSagaFilter = btn.dataset.saga || 'all';
-      UI.renderCharSelect();
+  if (sagaBar && !sagaBar.dataset.sfSagaBound) {
+    sagaBar.dataset.sfSagaBound = '1';
+    sagaBar.querySelectorAll('[data-saga]').forEach((btn) => {
+      bindPress(btn, () => {
+        AudioSys.sfx('select');
+        UI.charSagaFilter = btn.dataset.saga || 'all';
+        UI.renderCharSelect();
+      });
     });
   }
   const fightBtn = document.getElementById('btnCharFight');
@@ -4901,10 +4930,16 @@ const UI = {
     const filter = this.charSagaFilter || 'all';
     const sagaMeta = vsSagaMeta(filter);
     const stepEl = document.getElementById('charPickStep');
+    const stepBadge = document.getElementById('charPickStepBadge');
     if (stepEl) {
       stepEl.textContent = this.charPickStep === 1
-        ? 'Speler 1 — tik een vechter (linker helft in gevecht)'
-        : 'Speler 2 — tik een vechter (rechter helft in gevecht)';
+        ? 'Speler 1 — tik een unlocked kaart (linker helft in gevecht)'
+        : 'Speler 2 — tik een andere vechter (rechter helft in gevecht)';
+    }
+    if (stepBadge) {
+      stepBadge.textContent = this.charPickStep === 1
+        ? 'Stap 1/2 · Choose P1'
+        : 'Stap 2/2 · Choose P2';
     }
     const blurbEl = document.getElementById('charSagaBlurb');
     if (blurbEl) blurbEl.textContent = filter === 'all'
@@ -4936,6 +4971,12 @@ const UI = {
     const roster = filter === 'all'
       ? VS_ROSTER
       : VS_ROSTER.filter(r => (r.saga || 'scroll') === filter);
+    if (!roster.length) {
+      const empty = document.createElement('div');
+      empty.className = 'char-grid-empty';
+      empty.textContent = 'Geen vechters in deze saga — tik ⭐ Alle';
+      grid.appendChild(empty);
+    }
     for (const r of roster) {
       const ok = vsUnlocked(r);
       const el = document.createElement('div');
@@ -4945,6 +4986,8 @@ const UI = {
       el.className = 'char-card' + (ok ? '' : ' locked') + (sel1 ? ' p1sel' : '') + (sel2 ? ' p2sel' : '') +
         (focus ? ' pick-hint' : '');
       el.dataset.id = r.id;
+      el.setAttribute('role', 'button');
+      if (ok) el.setAttribute('aria-label', r.name + ', ' + rosterFlair(r));
       const cv = document.createElement('canvas');
       cv.width = 80; cv.height = 80;
       const cc = cv.getContext('2d');
@@ -4963,11 +5006,11 @@ const UI = {
       el.appendChild(cap);
       const tag = document.createElement('div');
       tag.className = 'char-tag';
-      tag.textContent = ok ? r.tag : (r.unlock ? 'Locked' : r.tag);
+      tag.textContent = ok ? r.tag : '🔒 Locked';
       el.appendChild(tag);
       const flair = document.createElement('div');
       flair.className = 'char-flair';
-      flair.textContent = ok ? rosterFlair(r) : (r.hint || 'Speel verder om te unlocken');
+      flair.textContent = ok ? rosterFlair(r) : vsUnlockHint(r);
       el.appendChild(flair);
       if (ok) {
         const mini = document.createElement('div');
@@ -4979,7 +5022,8 @@ const UI = {
       grid.appendChild(el);
     }
     requestAnimationFrame(() => {
-      const pick = grid.querySelector(
+      const hint = grid.querySelector('.char-card.pick-hint:not(.locked)');
+      const pick = hint || grid.querySelector(
         this.charPickStep === 1 ? '.char-card.p1sel' : '.char-card.p2sel'
       );
       if (pick) pick.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
