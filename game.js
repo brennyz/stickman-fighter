@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 1;
-const APP_VERSION = '1.13.1';
+const APP_VERSION = '1.13.2';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 91;
+const SW_CACHE_REV = 92;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -886,6 +886,14 @@ function dismissTunnelOverlayIfStatic() {
 
 function recoverToMenu() {
   try {
+    // Al in menu zonder game? Niet schermen wegslingeren (menu-loop fout
+    // mag navigatie/scroll niet elke frame terugzetten naar hoofdmenu).
+    if (state === 'menu' && !game) {
+      window.__sfLoopErr = false;
+      syncPlayLayer();
+      ensureMenuScreenActive();
+      return;
+    }
     game = null;
     state = 'menu';
     window.__sfLoopErr = false;
@@ -7638,7 +7646,16 @@ function loop(now) {
         return;
       }
     } else {
-      drawMenuBackdrop(ctx, menuAnimT);
+      // Backdrop-fout mag nooit schermen sluiten — alleen vlak vangnet tekenen.
+      try {
+        drawMenuBackdrop(ctx, menuAnimT);
+      } catch (bgErr) {
+        if (!window.__sfBgErrLogged) {
+          window.__sfBgErrLogged = true;
+          console.error('[Stickman] menu-backdrop', bgErr);
+        }
+        try { ctx.fillStyle = '#0b0e1a'; ctx.fillRect(0, 0, W, H); } catch (_) {}
+      }
     }
   } catch (err) {
     console.error(err);
