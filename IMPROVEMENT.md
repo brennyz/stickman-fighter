@@ -44,7 +44,7 @@ Staat: `improvement-d20-bag.json` (commit na roll + na afronden).
 | **18** Char select | Goed — UI/stats; geen roster balance. |
 | **12** Content | Goed — dex/cosmetic; geen loop-slop. |
 
-**Conclusie:** ja, goede weg — blijf **één thema**, checklist, SW bump. Open: **deploy push** (403), zak **d6,d7,d8,d13,d14,d20**.
+**Conclusie:** ja, goede weg — blijf **één thema**, checklist, SW bump. Open: **deploy push** (403), zak **d6,d7,d8,d14,d20**.
 
 | d# | Categorie | Voorbeelden (klein & veilig) |
 |----|-----------|------------------------------|
