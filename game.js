@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 1;
-const APP_VERSION = '1.12.25';
+const APP_VERSION = '1.12.26';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 88;
+const SW_CACHE_REV = 89;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1442,6 +1442,21 @@ function a11yHighContrast() {
 function syncA11yClasses() {
   document.body.classList.toggle('reduced-motion', motionReduced());
   document.body.classList.toggle('high-contrast', a11yHighContrast());
+}
+
+/** Canvas HUD-tekst met optionele stroke bij hoog contrast (geen flits). */
+function fillHudText(c, text, x, y, opts) {
+  opts = opts || {};
+  const align = opts.align || c.textAlign || 'center';
+  c.textAlign = align;
+  const fill = opts.fill || '#fff';
+  if (a11yHighContrast()) {
+    c.lineWidth = opts.strokeW || 3.5;
+    c.strokeStyle = opts.stroke || 'rgba(0,0,0,.88)';
+    c.strokeText(text, x, y);
+  }
+  c.fillStyle = fill;
+  c.fillText(text, x, y);
 }
 
 function buildVsFighter(entry, x, slot) {
@@ -5326,8 +5341,10 @@ class Game {
       const boss = isBossWave(this.level, i);
       const filled = adventureWavePipFilled(this, i);
       const active = adventureWavePipActive(this, i);
+      const calm = motionReduced();
+      const rad = r + (active && !calm ? Math.sin(this.t * 9) * 0.8 : 0);
       c.beginPath();
-      c.arc(x, y, r + (active ? Math.sin(this.t * 9) * 0.8 : 0), 0, TAU);
+      c.arc(x, y, rad, 0, TAU);
       if (filled) {
         c.fillStyle = boss ? '#ff8a9a' : '#ffd75e';
         c.fill();
@@ -5390,17 +5407,19 @@ class Game {
         c.strokeStyle = jKind === 'chidori' ? 'rgba(168,224,255,.55)' : jKind === 'rinnegan' ? 'rgba(196,122,255,.55)' : 'rgba(124,245,255,.55)';
         c.lineWidth = 2;
         c.beginPath();
-        c.arc(bx + bw * 0.5, by + 25, 18 + Math.sin(this.t * 8) * 3, 0, TAU);
+        const joyR = motionReduced() ? 18 : 18 + Math.sin(this.t * 8) * 3;
+        c.arc(bx + bw * 0.5, by + 25, joyR, 0, TAU);
         c.stroke();
       }
     }
 
     c.textAlign = 'center';
     if (this.mode === 'adventure') {
-      c.font = '800 16px -apple-system, sans-serif';
-      c.fillStyle = 'rgba(255,255,255,.9)';
       const wv = Math.max(1, this.waveIdx + 1);
-      c.fillText(`Level ${this.level.n} — Golf ${Math.min(wv, this.level.waves.length)}/${this.level.waves.length}`, W / 2, 30);
+      c.font = '800 16px -apple-system, sans-serif';
+      fillHudText(c, `Level ${this.level.n} — Golf ${Math.min(wv, this.level.waves.length)}/${this.level.waves.length}`, W / 2, 30, {
+        fill: a11yHighContrast() ? '#fff' : 'rgba(255,255,255,.9)',
+      });
       this.drawAdventureWavePips(c);
       if (p.alive) {
         const hpPct = p.hp / Math.max(1, p.maxhp);
@@ -5428,28 +5447,27 @@ class Game {
         const nextBoss = isBossWave(this.level, this.waveIdx + 1);
         const sec = Math.max(0, this.wavePause);
         c.font = '800 15px sans-serif';
-        c.fillStyle = nextBoss ? '#ffb0b8' : '#b8d4ff';
-        c.fillText(
-          nextBoss ? `Baas-golf over ${sec.toFixed(1)}s — pak pickups!` : `Volgende golf over ${sec.toFixed(1)}s`,
-          W / 2,
-          H - 78,
-        );
+        const pauseMsg = nextBoss ? `Baas-golf over ${sec.toFixed(1)}s — pak pickups!` : `Volgende golf over ${sec.toFixed(1)}s`;
+        fillHudText(c, pauseMsg, W / 2, H - 78, {
+          fill: nextBoss ? '#ffc8d0' : '#d8e8ff',
+        });
       }
       const boss = this.monsters.find(m => m.elite && m.alive);
       if (boss) {
         const bwid = Math.min(420, W * 0.5);
         c.fillStyle = 'rgba(0,0,0,.5)'; this.rr(c, W / 2 - bwid / 2 - 3, 43, bwid + 6, 16, 8); c.fill();
         c.fillStyle = '#e04f5f'; this.rr(c, W / 2 - bwid / 2, 46, bwid * boss.hp / boss.maxhp, 10, 5); c.fill();
-        c.font = '700 12px sans-serif'; c.fillStyle = '#ffb0b8';
-        c.fillText(boss.sp.name.toUpperCase(), W / 2, 72);
+        c.font = '700 12px sans-serif';
+        fillHudText(c, boss.sp.name.toUpperCase(), W / 2, 72, { fill: '#ffc8d0' });
       }
       if (save.comboHud !== false && this.combo > 1) {
-        const pulse = 1 + Math.sin(this.t * 10) * 0.08;
+        const calm = motionReduced();
+        const pulse = calm ? 1 : (1 + Math.sin(this.t * 10) * 0.08);
         const col = this.combo >= 8 ? '#ff7a4d' : '#ffd75e';
         c.save();
         c.translate(W / 2, 92);
         c.scale(pulse, pulse);
-        if (!fxLite()) {
+        if (!fxLite() && !calm) {
           c.globalAlpha = 0.35 + Math.sin(this.t * 12) * 0.1;
           c.strokeStyle = col;
           c.lineWidth = 2;
@@ -5460,9 +5478,11 @@ class Game {
         }
         c.font = '900 20px sans-serif';
         c.fillStyle = col;
-        c.shadowColor = col;
-        c.shadowBlur = motionReduced() ? 0 : 12;
-        c.fillText(`COMBO ×${this.combo}`, 0, 0);
+        if (!calm) {
+          c.shadowColor = col;
+          c.shadowBlur = 12;
+        }
+        fillHudText(c, `COMBO ×${this.combo}`, 0, 0, { fill: col, strokeW: calm ? 4 : 3.5 });
         c.restore();
       }
       if (this.dmgBuffT > 0) {
@@ -6719,6 +6739,19 @@ const UI = {
     });
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
+    const a11yEl = document.getElementById('a11yStatusLine');
+    if (a11yEl) {
+      const bits = [];
+      if (motionReduced()) {
+        bits.push(save.reducedMotion ? 'Minder beweging: aan' : 'Minder beweging: via iOS/OS');
+      }
+      if (a11yHighContrast()) {
+        bits.push(save.highContrast ? 'Hoog contrast: aan' : 'Hoog contrast: via iOS/OS');
+      }
+      a11yEl.textContent = bits.length
+        ? bits.join(' · ')
+        : 'Toegankelijkheid: standaard — schakel hierboven of via iOS Weergave';
+    }
   },
 
   renderPauseToggles() {

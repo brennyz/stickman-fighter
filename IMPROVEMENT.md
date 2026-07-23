@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | **10** | A11y (cyclus 2): `fillHudText`, rustige pips/combo/super-ring, instellingen OS-status. v1.12.26 / SW v89. |
 | 2026-07-23 | **4** | Avontuur (cyclus 2): golf-pips HUD, resterende vijanden, huidig level highlight in grid. v1.12.25 / SW v88. |
 | 2026-07-23 | **20** | Code health (cyclus 2): `_padP1Methods`, Input `hitButton` reuse, geen dubbele global error-toast na boot. v1.12.24 / SW v87. |
 | 2026-07-23 | **14** | FX (cyclus 2): crit/combo/jutsu impact rings, `ensureParticleRoom` voor ring-prioriteit. v1.12.23 / SW v86. |

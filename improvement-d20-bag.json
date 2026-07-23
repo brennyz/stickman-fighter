@@ -11,7 +11,6 @@
     16,
     8,
     15,
-    10,
     6,
     7,
     1,
@@ -22,10 +21,10 @@
     3
   ],
   "lastRoll": {
-    "face": 4,
-    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
-    "rolledAt": "2026-07-23T19:43:11Z",
-    "remainingCount": 17,
+    "face": 10,
+    "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
+    "rolledAt": "2026-07-23T19:44:04Z",
+    "remainingCount": 16,
     "cycle": 2
   },
   "pending": null,
@@ -266,6 +265,13 @@
       "note": "golf-pips HUD, enemy count, level highlight",
       "version": "1.12.25",
       "doneAt": "2026-07-23T19:43:50Z",
+      "cycle": 2
+    },
+    {
+      "face": 10,
+      "note": "fillHudText, calm combo/pips, a11y status",
+      "version": "1.12.26",
+      "doneAt": "2026-07-23T19:45:10Z",
       "cycle": 2
     }
   ],
@@ -654,6 +660,13 @@
       "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
       "rolledAt": "2026-07-23T19:43:11Z",
       "remainingCount": 17,
+      "cycle": 2
+    },
+    {
+      "face": 10,
+      "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
+      "rolledAt": "2026-07-23T19:44:04Z",
+      "remainingCount": 16,
       "cycle": 2
     }
   ]
