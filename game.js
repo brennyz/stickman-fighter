@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 1;
-const APP_VERSION = '1.13.3';
+const APP_VERSION = '1.13.4';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 93;
+const SW_CACHE_REV = 94;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1141,7 +1141,7 @@ function applyModeOnboarding(mode, g) {
       : 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5',
     coinrun: touch
       ? 'Eerste minuut: munten · joystick ↑ mik · roze vlieger = +3'
-      : 'Munten pakken · mik met joystick · max 3 shuriken snel',
+      : 'Munten pakken · joy ↑ = hoger mikken · max 3 shuriken snel',
   };
   g.modeHintLine = lines[mode] || lines.adventure;
   g.hint = 8;
@@ -2151,27 +2151,54 @@ function inputPadForFighter(f) {
   return Input;
 }
 
-/** Joystick richting voor shuriken (omhoog = hoog mikken). */
-function projAimVelocity(f, baseSpeed) {
-  baseSpeed = baseSpeed || 520;
+/** Joystick / toetsen → genormaliseerde mikrichting (−y = omhoog). */
+function fighterAimNorm(f) {
   const pad = inputPadForFighter(f);
-  const face = f.face || 1;
+  const face = (f && f.face) || 1;
   let nx = face;
-  let ny = -0.12;
-  if (pad.joy.active) {
+  let ny = -0.1;
+  if (pad && pad.joy && pad.joy.active) {
     const jx = pad.joy.dx;
     const jy = pad.joy.dy;
     const mag = Math.hypot(jx, jy);
     if (mag >= JOY_DEAD_PX) {
       nx = jx / JOY_MAX_PX;
       ny = jy / JOY_MAX_PX;
-      if (Math.abs(nx) < 0.22) nx = face * 0.35;
+      // Omhoog sterker doorgeven — vliegers / hoge enemies raken
+      if (ny < -0.12) ny = clamp(ny * 1.45, -1.15, 0);
+      if (Math.abs(nx) < 0.2) nx = face * 0.42;
     }
   }
+  if (pad && pad.keys) {
+    const up = !!(pad.keys.arrowup || pad.keys.w);
+    const down = !!(pad.keys.arrowdown || pad.keys.s);
+    if (up && !down) ny = Math.min(ny, -0.92);
+    if (down && !up) ny = Math.max(ny, 0.55);
+  }
   const len = Math.hypot(nx, ny) || 1;
-  nx /= len;
-  ny /= len;
-  return { vx: nx * baseSpeed, vy: ny * baseSpeed * 0.92 };
+  return { nx: nx / len, ny: ny / len };
+}
+
+/** Werpers / jutsu: snelheid in de mikrichting (joy ↑ = hoger gooien). */
+function projAimVelocity(f, baseSpeed) {
+  baseSpeed = baseSpeed || 520;
+  const aim = fighterAimNorm(f);
+  return {
+    vx: aim.nx * baseSpeed,
+    vy: aim.ny * baseSpeed * 1.05,
+    nx: aim.nx,
+    ny: aim.ny,
+  };
+}
+
+/** Melee-hitpunt: joy/toets ↑ tilts de slag omhoog (flying + hoge vijanden). */
+function meleeHitPoint(f, spec) {
+  const aim = (f && f._aimAtAttack) || fighterAimNorm(f);
+  const range = (spec && spec.range) || 40;
+  const hx = f.x + f.face * range * (0.72 + Math.abs(aim.nx) * 0.18);
+  // ny −1 → hy lager (hoger op scherm), tot ~+90 px
+  const hy = f.y - 48 + clamp(aim.ny, -1, 0.65) * 88;
+  return { hx, hy, aim };
 }
 
 function canThrowShuriken(f, game) {
@@ -3103,6 +3130,7 @@ class Fighter {
       AudioSys.sfx(this.weapon.id === 'shuriken' ? 'shuriken' : 'swing');
     }
     this.attack = Object.assign({ t: 0, hasHit: false, fired: false }, this.attackSpec(kind));
+    this._aimAtAttack = fighterAimNorm(this);
     if (this.isRobot && kind === 'special') this.attack.windup = 0.58;
     this.blocking = false;
   }
@@ -3487,7 +3515,10 @@ class Fighter {
     c.beginPath(); c.arc(hx, hy, 3.4, 0, TAU); c.fill();
 
     if (this.isPlayer && this.weapon.id !== 'vuist' && !(this.attack && this.attack.kind === 'special')) {
-      const wAng = this.attack && this.attack.kind === 'weapon' ? P.arms[1][1] : -0.5;
+      const aimLift = (this._aimAtAttack && (this.attack?.kind === 'weapon' || this.attack?.kind === 'punch' || this.attack?.kind === 'kick'))
+        ? clamp(this._aimAtAttack.ny, -1, 0.4) * 0.85
+        : 0;
+      const wAng = this.attack && this.attack.kind === 'weapon' ? P.arms[1][1] + aimLift : -0.5 + aimLift * 0.25;
       c.save(); c.translate(hx, hy); c.rotate(wAng);
       drawWeaponShape(c, this.weapon.id, this.animT);
       c.restore();
@@ -4712,7 +4743,7 @@ class Game {
     this.banner('MATS · MUNTJES BONUS', 1.5, '#ffd75e', 46);
     if (!modeOnboardingSeen('coinrun')) {
       setTimeout(() => {
-        try { this.banner('Joystick ↑ = hoog mikken · vliegers = +3 munten', 1.8, '#7cf5ff', 24); } catch (_) {}
+        try { this.banner('Joystick ↑ = hoog mikken (slag/gooi) · vliegers = +3', 1.8, '#7cf5ff', 24); } catch (_) {}
       }, 900);
     }
     AudioSys.play('battle');
@@ -4795,7 +4826,7 @@ class Game {
       xp: this.sessionXP,
       mode: 'coinrun',
       win: true,
-      tip: 'Joystick omhoog = hoger mikken · shuriken max 3× snel',
+      tip: 'Joystick omhoog = hoger mikken (slag + gooi) · shuriken max 3× snel',
     }), 1200);
   }
 
@@ -4851,10 +4882,12 @@ class Game {
     const dmg = atk ? atk.dmg : f.baseDmg * 2.8;
     const from = this.projFrom(f);
     const critMeta = projCritMeta(f);
+    const aim = projAimVelocity(f, jutsu === 'chidori' ? 620 : jutsu === 'rinnegan' ? 340 : 420);
+    const y0 = f.y - 50 + clamp(aim.ny, -1, 0.5) * 36;
     if (jutsu === 'chidori') {
       this.spawnProjectile(Object.assign({
-        x: f.x + f.face * 36, y: f.y - 48,
-        vx: f.face * 620, vy: 0, r: 22, dmg, life: 0.35,
+        x: f.x + f.face * 36, y: y0,
+        vx: aim.vx, vy: aim.vy * 0.85, r: 22, dmg, life: 0.35,
         from, kind: 'chidori', pierce: false, hitSet: new Set(),
       }, critMeta));
       f.vx = f.face * 380;
@@ -4862,13 +4895,13 @@ class Game {
       AudioSys.sfx('chidori');
     } else if (jutsu === 'rinnegan') {
       this.spawnProjectile(Object.assign({
-        x: f.x + f.face * 38, y: f.y - 50,
-        vx: f.face * 320, vy: 0, r: 30, dmg,
+        x: f.x + f.face * 38, y: y0,
+        vx: aim.vx, vy: aim.vy * 0.9, r: 30, dmg,
         from, kind: 'rinnegan', pierce: true, hitSet: new Set(), life: 1.05,
         spin: 0, pull: true,
       }, critMeta));
-      this.burst(f.x + f.face * 28, f.y - 50, '#c47aff', 22);
-      this.burst(f.x + f.face * 28, f.y - 50, '#ff6b9d', 10);
+      this.burst(f.x + f.face * 28, y0, '#c47aff', 22);
+      this.burst(f.x + f.face * 28, y0, '#ff6b9d', 10);
       this.shake(8, 0.24);
       this.freezeT = Math.max(this.freezeT, 0.05);
       AudioSys.sfx('rinnegan');
@@ -4876,13 +4909,13 @@ class Game {
     } else {
       // Rasengan: zware draaiende chakra-bol
       this.spawnProjectile(Object.assign({
-        x: f.x + f.face * 40, y: f.y - 50,
-        vx: f.face * 400, vy: 0, r: 26, dmg,
+        x: f.x + f.face * 40, y: y0,
+        vx: aim.vx, vy: aim.vy * 0.9, r: 26, dmg,
         from, kind: 'rasengan', pierce: true, hitSet: new Set(), life: 1.4,
         spin: 0,
       }, critMeta));
-      this.burst(f.x + f.face * 30, f.y - 50, '#7cf5ff', fxLite() ? 8 : 16);
-      spawnFxRing(this, f.x + f.face * 34, f.y - 50, '#7cf5ff', 10);
+      this.burst(f.x + f.face * 30, y0, '#7cf5ff', fxLite() ? 8 : 16);
+      spawnFxRing(this, f.x + f.face * 34, y0, '#7cf5ff', 10);
       this.shake(9, 0.28);
       this.freezeT = Math.max(this.freezeT, 0.06);
       AudioSys.sfx('rasengan');
@@ -4904,12 +4937,13 @@ class Game {
     AudioSys.sfx('shuriken');
     const w = f.weapon;
     const critMeta = projCritMeta(f);
-    const aim = projAimVelocity(f, 540);
+    const aim = projAimVelocity(f, 560);
     this.spawnProjectile(Object.assign({
-      x: f.x + (f.face || 1) * 24, y: f.y - 52,
+      x: f.x + (f.face || 1) * 24,
+      y: f.y - 52 + clamp(aim.ny, -1, 0.5) * 30,
       vx: aim.vx, vy: aim.vy, r: 10,
       dmg: f.baseDmg * w.dmg * 0.85,
-      from: this.projFrom(f), kind: 'shuriken', life: 1.35, spin: 0,
+      from: this.projFrom(f), kind: 'shuriken', life: 1.4, spin: 0,
     }, critMeta));
   }
 
@@ -4925,8 +4959,7 @@ class Game {
   }
 
   tryMelee(f, spec) {
-    const hx = f.x + f.face * spec.range * 0.8;
-    const hy = f.y - 48;
+    const { hx, hy } = meleeHitPoint(f, spec);
     const r = spec.r;
     let hit = false;
 
@@ -5908,7 +5941,7 @@ class Game {
       c.font = '700 13px sans-serif'; c.fillStyle = 'rgba(255,255,255,.7)';
       c.fillText(`Record Mats: ${save.stats.matsCoinBest || 0}`, W / 2, 90);
       c.fillStyle = 'rgba(124,245,255,.85)';
-      c.fillText('Joystick ↑ mik · shuriken op roze vliegers (+3)', W / 2, 112);
+      c.fillText('Joystick ↑ mik · slag/gooi hoger · shuriken op roze vliegers', W / 2, 112);
     } else if (this.mode === 'versus' && this.p2) {
       const p2 = this.p2;
       const half = Math.min(260, W * 0.38);
@@ -6048,15 +6081,22 @@ class Game {
     c.globalAlpha = j.active ? 0.65 : 0.3;
     c.fillStyle = '#fff';
     c.beginPath(); c.arc(jx + (j.active ? j.dx : 0), jy + (j.active ? j.dy * 0.3 : 0), joyInner, 0, TAU); c.fill();
-    if (this.player && this.player.weapon && this.player.weapon.id === 'shuriken' && j.active) {
-      const aim = projAimVelocity(this.player, 90);
-      c.globalAlpha = 0.5;
+    if (this.player && j.active) {
+      const aim = projAimVelocity(this.player, 100);
+      const ox = this.player.x;
+      const oy = this.player.y - 52 + clamp(aim.ny, -1, 0.5) * 28;
+      c.globalAlpha = 0.55;
       c.strokeStyle = '#7cf5ff';
       c.lineWidth = 3;
       c.beginPath();
-      c.moveTo(this.player.x, this.player.y - 52);
-      c.lineTo(this.player.x + aim.vx * 0.42, this.player.y - 52 + aim.vy * 0.42);
+      c.moveTo(ox, oy);
+      c.lineTo(ox + aim.vx * 0.48, oy + aim.vy * 0.48);
       c.stroke();
+      c.globalAlpha = 0.35;
+      c.fillStyle = '#7cf5ff';
+      c.beginPath();
+      c.arc(ox + aim.vx * 0.48, oy + aim.vy * 0.48, 5, 0, TAU);
+      c.fill();
     }
     // knoppen
     for (const b of Input.buttons) {

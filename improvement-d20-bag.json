@@ -342,6 +342,16 @@
       "note": "user iPad-request, off-d20"
     },
     {
+      "id": "joy-aim-weapon-height",
+      "d20Face": null,
+      "userWords": "joycon omhoog mikken zodat wapen/werper hoger slaat of gooit",
+      "versions": ["1.13.4"],
+      "commits": [],
+      "code": "fighterAimNorm, meleeHitPoint, projAimVelocity, spawnJutsu aim, aim preview",
+      "status": "done",
+      "note": "off-d20 user feature; d1 combat feel blijft PENDING"
+    },
+    {
       "id": "gamble-dice-stage",
       "d20Face": null,
       "userWords": "super bosses on random, super allies based on Gamble dice games, buff for that Stage",
