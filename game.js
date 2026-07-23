@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 1;
-const APP_VERSION = '1.13.2';
+const APP_VERSION = '1.13.3';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 92;
+const SW_CACHE_REV = 93;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -2202,6 +2202,130 @@ function btnHitSlop() {
   return base;
 }
 
+const TOUCH_BTN_META = {
+  punch: { label: '\u{1F44A}', color: '#e0533f' },
+  kick: { label: '\u{1F9B6}', color: '#3f8fe0' },
+  weapon: { label: '\u{1F52A}', color: '#9b59d0' },
+  special: { label: '\u{1F300}', color: '#3db8ff' },
+  subst: { label: '\u{1F4A8}', color: '#c9a66b' },
+  jump: { label: '\u2B06\uFE0F', color: '#43b25b' },
+};
+
+function touchBtn(id, x, y, rad) {
+  const m = TOUCH_BTN_META[id];
+  return { id, x, y, r: rad, label: m.label, color: m.color, held: false };
+}
+
+function shiftTouchButtons(buttons, dx) {
+  if (!dx) return;
+  for (const b of buttons) b.x += dx;
+}
+
+function layoutTouchButtonCluster(W, H, ui, safe, opts) {
+  const side = opts.side || 'p1';
+  const dual = !!opts.dual;
+  const portraitTight = W < 420 && H > W * 1.02;
+  const r = Math.max(20, Math.round((portraitTight ? 34 : 42) * ui));
+  const rs = Math.max(17, Math.round((portraitTight ? 28 : 34) * ui));
+  const bottomY = H - safe.bottom - Math.max(10, H * 0.02);
+  const joyInset = Math.max((dual ? 48 : 64) + (side === 'p1' ? safe.left : safe.right), W * (portraitTight ? 0.09 : 0.12));
+  const joyHome = side === 'p1'
+    ? { x: joyInset, y: bottomY - (dual ? 6 : 8) }
+    : { x: W - joyInset, y: bottomY - 6 };
+
+  let buttons;
+  if (!dual) {
+    const marginR = Math.max(10 + safe.right, W * 0.035);
+    const xR = W - marginR;
+    if (portraitTight) {
+      const rSmall = Math.max(18, Math.round(28 * ui));
+      const rsSmall = Math.max(15, Math.round(24 * ui));
+      const col = rSmall * 1.55 + 12;
+      const gap = 6;
+      const by = bottomY - rsSmall * 0.35;
+      const xJump = xR - rsSmall * 0.15;
+      const xMid = xR - col;
+      const xFar = xR - col * 2.25;
+      buttons = [
+        touchBtn('jump', xJump, by, rsSmall),
+        touchBtn('punch', xJump, by - (rsSmall + rSmall + gap), rSmall),
+        touchBtn('kick', xMid, by - rSmall * 0.35, rSmall),
+        touchBtn('special', xMid, by - (rSmall * 0.35 + rSmall + rSmall + gap), rSmall),
+        touchBtn('subst', xFar, by - rsSmall * 0.4, rsSmall),
+        touchBtn('weapon', xFar, by - (rsSmall * 0.4 + rsSmall + rSmall + gap), rSmall),
+      ];
+      const joyClear = joyHome.x + Math.round(50 * ui) + rSmall * 0.25;
+      const minBx = Math.min(...buttons.map((b) => b.x - b.r));
+      if (minBx < joyClear) shiftTouchButtons(buttons, joyClear - minBx);
+    } else {
+      const ax = xR;
+      buttons = [
+        touchBtn('punch', ax - r * 2.05, bottomY - r * 0.15, r),
+        touchBtn('kick', ax - r * 0.55, bottomY - r * 0.82, r),
+        touchBtn('weapon', ax - r * 2.38, bottomY - r * 1.62, r),
+        touchBtn('special', ax - r * 1.12, bottomY - r * 1.92, r),
+        touchBtn('subst', ax - r * 3.35, bottomY - r * 1.28, rs),
+        touchBtn('jump', ax - r * 2.05, bottomY - rs * 0.35, rs),
+      ];
+    }
+    return { joyHome, buttons };
+  }
+
+  const zoneEdge = portraitTight ? (side === 'p1' ? W * 0.44 : W * 0.56) : (side === 'p1' ? W * 0.48 : W * 0.52);
+  const sign = side === 'p1' ? -1 : 1;
+  if (portraitTight) {
+    const rSmall = Math.max(17, Math.round(26 * ui));
+    const rsSmall = Math.max(14, Math.round(22 * ui));
+    const col = rSmall * 1.5 + 11;
+    const gap = 5;
+    const by = bottomY - rsSmall * 0.32;
+    const edge = zoneEdge;
+    const xNear = edge + sign * rsSmall * 0.2;
+    const xMid = edge + sign * col;
+    const xFar = edge + sign * col * 2.2;
+    buttons = [
+      touchBtn('jump', xNear, by, rsSmall),
+      touchBtn('punch', xNear, by - (rsSmall + rSmall + gap), rSmall),
+      touchBtn('kick', xMid, by - rSmall * 0.32, rSmall),
+      touchBtn('special', xMid, by - (rSmall * 0.32 + rSmall + rSmall + gap), rSmall),
+      touchBtn('subst', xFar, by - rsSmall * 0.38, rsSmall),
+      touchBtn('weapon', xFar, by - (rsSmall * 0.38 + rsSmall + rSmall + gap), rSmall),
+    ];
+    if (side === 'p1') {
+      const joyClear = joyHome.x + Math.round(46 * ui) + rSmall * 0.2;
+      const minBx = Math.min(...buttons.map((b) => b.x - b.r));
+      if (minBx < joyClear) shiftTouchButtons(buttons, joyClear - minBx);
+      const maxBx = Math.max(...buttons.map((b) => b.x + b.r));
+      if (maxBx > W * 0.46 - 6) shiftTouchButtons(buttons, (W * 0.46 - 6) - maxBx);
+    } else {
+      const minBx = Math.min(...buttons.map((b) => b.x - b.r));
+      if (minBx < W * 0.54 + 6) shiftTouchButtons(buttons, (W * 0.54 + 6) - minBx);
+      const maxBx = Math.max(...buttons.map((b) => b.x + b.r));
+      const joyClear = W - joyHome.x + Math.round(46 * ui) + rSmall * 0.2;
+      if (W - minBx < joyClear) shiftTouchButtons(buttons, -(joyClear - (W - minBx)));
+      if (maxBx > W - 6) shiftTouchButtons(buttons, -(maxBx - (W - 6)));
+    }
+  } else {
+    const ax = zoneEdge;
+    buttons = side === 'p1' ? [
+      touchBtn('punch', ax - r * 0.55, bottomY - r * 0.15, r),
+      touchBtn('kick', ax - r * 1.45, bottomY - r * 0.45, r),
+      touchBtn('weapon', ax - r * 0.25, bottomY - r * 1.35, r),
+      touchBtn('special', ax - r * 1.15, bottomY - r * 1.55, r),
+      touchBtn('subst', ax + r * 0.35, bottomY - r * 1.05, rs),
+      touchBtn('jump', ax + r * 0.45, bottomY + r * 0.05, rs),
+    ] : [
+      touchBtn('punch', ax + r * 0.55, bottomY - r * 0.15, r),
+      touchBtn('kick', ax + r * 1.45, bottomY - r * 0.45, r),
+      touchBtn('weapon', ax + r * 0.25, bottomY - r * 1.35, r),
+      touchBtn('special', ax + r * 1.15, bottomY - r * 1.55, r),
+      touchBtn('subst', ax - r * 0.35, bottomY - r * 1.05, rs),
+      touchBtn('jump', ax - r * 0.45, bottomY + r * 0.05, rs),
+    ];
+  }
+  return { joyHome, buttons };
+}
+
 /** 2P touch: middenstrook = geen joystick (minder mis-taps op split). */
 function touchPadZone(x) {
   if (!Input.dualMode) return 'p1';
@@ -2396,32 +2520,9 @@ function makePad(side) {
     layout(W, H) {
       const ui = touchUiScale(W, H);
       const safe = readSafeInsets();
-      const r = Math.round(38 * ui), rs = Math.round(30 * ui);
-      const bottomY = H - safe.bottom - Math.max(10, H * 0.02);
-      const joyInset = Math.max(56 + safe.left, W * 0.11);
-      if (this.side === 'p1') {
-        this.joyHome = { x: joyInset, y: bottomY - 6 };
-        const ax = W * 0.5 - Math.max(8, W * 0.02);
-        this.buttons = [
-          { id: 'punch', x: ax - r * 0.55, y: bottomY - r * 0.15, r, label: '\u{1F44A}', color: '#e0533f' },
-          { id: 'kick', x: ax - r * 1.45, y: bottomY - r * 0.45, r, label: '\u{1F9B6}', color: '#3f8fe0' },
-          { id: 'weapon', x: ax - r * 0.25, y: bottomY - r * 1.35, r, label: '\u{1F52A}', color: '#9b59d0' },
-          { id: 'special', x: ax - r * 1.15, y: bottomY - r * 1.55, r, label: '\u{1F300}', color: '#3db8ff' },
-          { id: 'subst', x: ax + r * 0.35, y: bottomY - r * 1.05, r: rs, label: '\u{1F4A8}', color: '#c9a66b' },
-          { id: 'jump', x: ax + r * 0.45, y: bottomY + r * 0.05, r: rs, label: '\u2B06\uFE0F', color: '#43b25b' },
-        ];
-      } else {
-        this.joyHome = { x: W - joyInset, y: bottomY - 6 };
-        const ax = W * 0.5 + Math.max(8, W * 0.02);
-        this.buttons = [
-          { id: 'punch', x: ax + r * 0.55, y: bottomY - r * 0.15, r, label: '\u{1F44A}', color: '#e0533f' },
-          { id: 'kick', x: ax + r * 1.45, y: bottomY - r * 0.45, r, label: '\u{1F9B6}', color: '#3f8fe0' },
-          { id: 'weapon', x: ax + r * 0.25, y: bottomY - r * 1.35, r, label: '\u{1F52A}', color: '#9b59d0' },
-          { id: 'special', x: ax + r * 1.15, y: bottomY - r * 1.55, r, label: '\u{1F300}', color: '#3db8ff' },
-          { id: 'subst', x: ax - r * 0.35, y: bottomY - r * 1.05, r: rs, label: '\u{1F4A8}', color: '#c9a66b' },
-          { id: 'jump', x: ax - r * 0.45, y: bottomY + r * 0.05, r: rs, label: '\u2B06\uFE0F', color: '#43b25b' },
-        ];
-      }
+      const laid = layoutTouchButtonCluster(W, H, ui, safe, { side: this.side, dual: true });
+      this.joyHome = laid.joyHome;
+      this.buttons = laid.buttons;
     },
     hitButton(x, y) {
       const slop = btnHitSlop();
@@ -2588,22 +2689,9 @@ Input.layout = function (W, H) {
   }
   const ui = touchUiScale(W, H);
   const safe = readSafeInsets();
-  const r = Math.round(42 * ui), rs = Math.round(34 * ui);
-  const bottomY = H - safe.bottom - Math.max(10, H * 0.02);
-  const joyInset = Math.max(64 + safe.left, W * 0.12);
-  const marginR = Math.max(10 + safe.right, W * 0.035);
-  const ax = W - marginR;
-  const stackTight = W < 400 && H > W;
-  const bxOff = stackTight ? 2.35 : 2.05;
-  Input.joyHome = { x: joyInset, y: bottomY - 8 };
-  Input.buttons = [
-    { id: 'punch', x: ax - r * bxOff, y: bottomY - r * 0.15, r, label: '\u{1F44A}', color: '#e0533f' },
-    { id: 'kick', x: ax - r * 0.55, y: bottomY - r * (stackTight ? 0.72 : 0.82), r, label: '\u{1F9B6}', color: '#3f8fe0' },
-    { id: 'weapon', x: ax - r * (stackTight ? 2.65 : 2.38), y: bottomY - r * (stackTight ? 1.48 : 1.62), r, label: '\u{1F52A}', color: '#9b59d0' },
-    { id: 'special', x: ax - r * 1.12, y: bottomY - r * (stackTight ? 1.78 : 1.92), r, label: '\u{1F300}', color: '#3db8ff' },
-    { id: 'subst', x: ax - r * (stackTight ? 2.85 : 3.15), y: bottomY - r * 1.28, r: rs, label: '\u{1F4A8}', color: '#c9a66b' },
-    { id: 'jump', x: ax - r * (stackTight ? 2.95 : 3.28), y: bottomY - r * 0.02, r: rs, label: '\u2B06\uFE0F', color: '#43b25b' },
-  ];
+  const laid = layoutTouchButtonCluster(W, H, ui, safe, { side: 'p1', dual: false });
+  Input.joyHome = laid.joyHome;
+  Input.buttons = laid.buttons;
 };
 
 addEventListener('keydown', e => {
