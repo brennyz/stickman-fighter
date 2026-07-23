@@ -1021,7 +1021,10 @@ function resize() {
   Input.layout(W, H);
   if (game) game.onResize();
 }
-addEventListener('resize', resize);
+addEventListener('resize', () => {
+  if (window.__sfResizeT) cancelAnimationFrame(window.__sfResizeT);
+  window.__sfResizeT = requestAnimationFrame(resize);
+});
 
 canvas.addEventListener('pointerdown', e => { e.preventDefault(); Input.onDown(e.clientX, e.clientY, e.pointerId); });
 canvas.addEventListener('pointermove', e => { e.preventDefault(); Input.onMove(e.clientX, e.clientY, e.pointerId); });
