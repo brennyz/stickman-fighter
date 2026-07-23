@@ -4,7 +4,7 @@ Ja — je kunt dit spel **als app** gebruiken, zonder App Store. Het is een **PW
 
 **Hosting (uitgebreid):** zie **[HOSTING.md](./HOSTING.md)** — GitHub Pages, Netlify (vanaf 28 juli), lokaal + tunnel.
 
-**Verbeteringen (agents):** lees eerst **[IMPROVEMENT.md](./IMPROVEMENT.md)** — Ralph Wiggum d20 + gameplay-safe checklist.
+**Verbeteringen (agents):** lees **[AGENTS.md](./AGENTS.md)** + **[agent-handoff.json](./agent-handoff.json)** + **[IMPROVEMENT.md](./IMPROVEMENT.md)** — één gedeelde context (iPad/Mac). Kort: **[CURSOR-EEN-AGENT.txt](./CURSOR-EEN-AGENT.txt)**.
 
 ## Snelste vaste link (GitHub Pages)
 

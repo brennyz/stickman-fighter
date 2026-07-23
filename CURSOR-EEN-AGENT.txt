@@ -1,0 +1,33 @@
+CURSOR + IPAD — ÉÉN AGENT, ZELFDE REchten
+=========================================
+
+PROBLEEM
+  Meerdere agents = losse chats. Iets op iPad gezegd staat niet automatisch
+  in een andere agent.
+
+OPLOSSING (2 delen)
+
+  A) JIJ: één agent bookmarken, niet steeds "nieuwe agent"
+     https://cursor.com/agents/bc-019f8b30-9e12-7645-8d43-eb8ec5a0b75e
+     (vernieuwd in agent-handoff.json als er een nieuwe canonical run is)
+
+  B) REPO: agent-handoff.json
+     Agents lezen/schrijven open wensen + versie. Staat op GitHub na push.
+
+IPAD PUSH-POPUP
+  = Cursor meldingen (agent klaar). Toestaan helpt; weigeren = geen ping.
+  Heeft niets met git push of Stickman te maken.
+
+IPAD NET ZOVEEL ALS MAC (git push)
+  Niet in het spel instelbaar — in Cursor + GitHub:
+
+  1) cursor.com/dashboard → Cloud Agents → jouw environment
+     → repo stickman-fighter koppelen (read/write)
+  2) github.com → Settings → Applications → Cursor
+     → toegang tot stickman-fighter
+
+  Zolang cloud "repos: null" of 403 push: agent commit lokaal in VM,
+  jij: zie GITHUB-PUSH.txt op Mac.
+
+SPELEN OP IPAD
+  IPAD-GEEN-COMMANDO.txt — Safari bookmark, geen terminal.

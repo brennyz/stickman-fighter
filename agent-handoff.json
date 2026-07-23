@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "purpose": "Eén gedeelde to-do- en contextlaag voor alle Cursor-agents (iPad, Mac, web). Lees dit bestand aan het begin; schrijf user-wensen en afgerond werk terug vóór commit.",
+  "canonicalAgent": {
+    "name": "Stickman vechtspel ipad",
+    "url": "https://cursor.com/agents/bc-019f8b30-9e12-7645-8d43-eb8ec5a0b75e",
+    "note": "Gebruik deze ene run voor vervolgvragen. Nieuwe agent = context kwijt tenzij je hier leest/schrijft."
+  },
+  "repo": {
+    "github": "https://github.com/brennyz/stickman-fighter",
+    "defaultBranch": "main",
+    "pagesUrl": "https://brennyz.github.io/stickman-fighter/ipad.html",
+    "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
+  },
+  "codeTruth": {
+    "appVersion": "1.12.0",
+    "swCache": "stickfighter-app-v63",
+    "gameJsQuery": "game.js?v=213",
+    "featureBranch": "cursor/mats-coin-aim-b75e",
+    "pushBlocked": "Cloud-agent git push → 403; merge/push lokaal of fix repo-koppeling in Cursor Dashboard (zie AGENTS.md)."
+  },
+  "userWishlist": [
+    {
+      "id": "unified-agents",
+      "from": "iPad/mobile",
+      "text": "Alle agents op dezelfde pagina /zelfde context; iPad Cursor net zoveel kunnen als Mac.",
+      "status": "docs+handoff",
+      "updated": "2026-07-23"
+    },
+    {
+      "id": "char-screens",
+      "from": "iPad/mobile",
+      "text": "Character screens — bedoelde 2P char select deel 1+2 (v1.11.1–1.11.2). Bevestig op iPad via menu → 2 spelers.",
+      "status": "done-in-code",
+      "updated": "2026-07-23"
+    }
+  ],
+  "agentRules": [
+    "Lees AGENTS.md + IMPROVEMENT.md + dit bestand vóór grote wijzigingen.",
+    "Voeg nieuwe iPad/Mac-wensen toe aan userWishlist (max 12 open items; archiveer done).",
+    "Eén thema per sessie waar mogelijk; d20 via scripts/roll-improvement-d20.sh.",
+    "Commit niet health.json / hosting.json / LIVE-LINK.txt tenzij bewust deploy-doc.",
+    "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md."
+  ],
+  "sessionLog": [
+    {
+      "at": "2026-07-23T17:10:00Z",
+      "summary": "agent-handoff.json + AGENTS.md toegevoegd; uitleg iPad vs één agent-run; env repos:null → push fix in dashboard."
+    }
+  ]
+}
