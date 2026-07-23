@@ -1,6 +1,9 @@
 # Nieuwe gekoppelde agent — push v1.12 naar GitHub
 
-**Situatie:** GitHub `main` = v1.7.0 (`60423e4`). Alle game-werk (v1.12.3, speel.html, Mats, …) staat **gecommit** in de **oude** agent-VM, maar is **niet** op GitHub. Een verse clone heeft dus *niets te mergen* — je moet de commits **binnenhalen** en **pushen**.
+**Zoek handoff:** `HANDOFF-ZOEKINDEX.md` · `.cursor/agent-handoffs/handoff.md` · `agent-handoff.json`  
+**GitHub toont nu niets** — `git log --grep=handoff` werkt pas **na** onderstaande push/patch.
+
+**Situatie:** GitHub `main` = v1.7.0 (`60423e4`). Alle game-werk (v1.12.3, speel.html, Mats, char select deel 1/2, mikken, …) staat **gecommit** in de **oude** agent-VM, maar is **niet** op GitHub. Een verse clone heeft dus *niets te mergen* — je moet de commits **binnenhalen** en **pushen**.
 
 ## Jouw taak (copy-paste in terminal)
 

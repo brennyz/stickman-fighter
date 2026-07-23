@@ -6,6 +6,7 @@ alwaysApply: true
 # Stickman Fighter — agent handoff
 
 1. Run `./scripts/agent-status.sh` and read `agent-handoff.json` and `AGENTS.md` at session start.
+2. Zoek **handoff**: `HANDOFF-ZOEKINDEX.md` en `.cursor/agent-handoffs/handoff.md`.
 2. Do not start duplicate work listed as `done-in-code` in `userWishlist` unless user asks to change it.
 3. Append new user requests to `userWishlist` in `agent-handoff.json` before implementing.
 4. Prefer continuing the canonical agent run URL in `canonicalAgent.url`; document changes in `IMPROVEMENT.md` agent log.

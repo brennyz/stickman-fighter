@@ -21,7 +21,7 @@ chmod +x scripts/roll-improvement-d20.sh scripts/mark-d20-done.sh
 
 Staat: `improvement-d20-bag.json` (commit na roll + na afronden).
 
-**d20 v3:** open roll = **PENDING** (geen tweede roll tot `mark-d20-done` of `unroll`) · preflight vangt load-crashes · `history` · `force` zet oude pending terug vóór nieuwe roll · **`rollFirst`** in `improvement-d20-bag.json` = volgende roll pakt die d# eerst (bv. `[18]` voor char select).
+**d20 v3:** open roll = **PENDING** · **`userFeatureLog`** in `improvement-d20-bag.json` = user-wensen **zonder** nieuwe roll (Mats, mikken) · zoek **handoff** → `HANDOFF-ZOEKINDEX.md` + `.cursor/agent-handoffs/handoff.md`
 
 ### Diagnose — Chrome “tap feedback, geen actie” (2026-07-23)
 
@@ -104,7 +104,9 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-| 2026-07-23 | — | **speel.html + agent memory:** deel-landing QR/Android/iPad, agent-status.sh / agent-log.sh. v1.12.2 / SW v65. |
+| 2026-07-23 | — | **handoff zoekindex:** `.cursor/agent-handoffs/handoff.md`, HANDOFF-ZOEKINDEX.md, d20 `userFeatureLog` (char deel 1/2, Mats, mikken, anti-spam). |
+| 2026-07-23 | **18** | Char select deel 1+2 (zie userFeatureLog) — v1.11.1–1.11.2. |
+| 2026-07-23 | — | **User off-d20:** Mats coinrun + shuriken mik/vliegers + anti-spam — v1.12.0 / `f6c86bf`. |
 | 2026-07-23 | — | **Android delen:** bookmarkShare, Deel link → Pages root, Web Share, ANDROID-DELEN.txt, install-stappen. v1.12.1 / SW v64. |
 | 2026-07-23 | — | **Agent handoff:** AGENTS.md, agent-handoff.json, CURSOR-EEN-AGENT.txt — gedeelde context iPad/Mac; dashboard repo-koppeling voor push. |
 | 2026-07-23 | — | **Mats bonus:** muntjes-modus, shuriken anti-spam (3/1,4s + cd), joystick-mik voor shuriken. v1.12.0 / SW v63. |

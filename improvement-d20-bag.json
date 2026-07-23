@@ -141,6 +141,48 @@
       "cycle": 1
     }
   ],
+  "userFeatureLog": [
+    {
+      "id": "char-select-deel-1-2",
+      "d20Face": 18,
+      "userWords": "character screens in twee delen, saga icons, 2 spelers",
+      "versions": ["1.11.0", "1.11.1", "1.11.2"],
+      "commits": ["5e3b467", "09b7dc2", "7d236c1"],
+      "code": "charSelectScreen, charIconRow, btnCharSagaClash, vsSelect",
+      "status": "done",
+      "note": "d20 #18 — geen nieuwe roll; zie handoff.md"
+    },
+    {
+      "id": "mats-coin-bonus",
+      "d20Face": null,
+      "userWords": "Mats bonus ronde munten pakken",
+      "versions": ["1.12.0"],
+      "commits": ["f6c86bf"],
+      "code": "mode coinrun, btnMatsCoins, initCoinRun, updateCoinRun",
+      "status": "done",
+      "note": "user iPad-request, off-d20"
+    },
+    {
+      "id": "shuriken-aim-vogels",
+      "d20Face": null,
+      "userWords": "mikken met joycon/wapen hoog, vliegers/vogels schieten",
+      "versions": ["1.12.0"],
+      "commits": ["f6c86bf"],
+      "code": "projAimVelocity, flyers in coinrun, aim preview line",
+      "status": "done",
+      "note": "user iPad-request, off-d20"
+    },
+    {
+      "id": "shuriken-anti-spam",
+      "d20Face": null,
+      "userWords": "shuriken spam bescherming",
+      "versions": ["1.12.0"],
+      "commits": ["f6c86bf"],
+      "code": "canThrowShuriken, SHURIKEN_CD, SHURIKEN_BURST_MAX",
+      "status": "done",
+      "note": "user iPad-request, off-d20"
+    }
+  ],
   "history": [
     {
       "face": 9,
