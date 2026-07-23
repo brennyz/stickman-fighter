@@ -4,7 +4,6 @@
   "rollFirst": [],
   "remaining": [
     3,
-    5,
     6,
     7,
     8,
@@ -17,13 +16,19 @@
     20
   ],
   "lastRoll": {
-    "face": 4,
-    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
-    "rolledAt": "2026-07-23T18:12:23Z",
-    "remainingCount": 12,
+    "face": 5,
+    "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
+    "rolledAt": "2026-07-23T18:13:18Z",
+    "remainingCount": 11,
     "cycle": 1
   },
-  "pending": null,
+  "pending": {
+    "face": 5,
+    "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
+    "rolledAt": "2026-07-23T18:13:18Z",
+    "remainingCount": 11,
+    "cycle": 1
+  },
   "implemented": [
     {
       "face": 2,
@@ -439,6 +444,13 @@
       "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
       "rolledAt": "2026-07-23T18:12:23Z",
       "remainingCount": 12,
+      "cycle": 1
+    },
+    {
+      "face": 5,
+      "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
+      "rolledAt": "2026-07-23T18:13:18Z",
+      "remainingCount": 11,
       "cycle": 1
     }
   ]

@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | **5** | Perf: menu-hero skip frames, lichtere backdrop bij tier 2, iPad resize debounce, Lite FX-hint, instellingen FPS. v1.12.8 / SW v71. |
 | 2026-07-23 | **4** | Avontuur: HP-balk 2★/3★ ticks, live ster-hint, golf-pauze countdown + level-tooltip. v1.12.7 / SW v70. |
 | 2026-07-23 | **2** | Training: oor-laser met 0,95s telegraph (spring) + RabbitRobot minder Chidori op melee-range. v1.12.6 / SW v69. |
 | 2026-07-23 | **10** | A11y: rustige banners/chakra bij reduced motion; zachtere hit-flash; `prefers-contrast: more`; menu-tip contrast. v1.12.5 / SW v68. |

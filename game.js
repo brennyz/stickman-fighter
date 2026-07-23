@@ -24,6 +24,10 @@ const Perf = {
     if (this.emaMs > 24) this.tier = Math.min(2, this.tier + 1);
     else if (this.emaMs < 17.5 && this.tier > 0) this.tier -= 1;
     if (prev !== this.tier) scheduleResize();
+    if (this.tier >= 2 && this.frames > 120 && !save.liteFx && !window.__sfLiteHint) {
+      window.__sfLiteHint = 1;
+      try { UI.toast('Traag op iPad? Instellingen → Lite FX', 4200); } catch (_) {}
+    }
   },
   reset() { this.tier = 0; this.emaMs = 16.7; this.frames = 0; },
 };
@@ -56,9 +60,9 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.12.7';
+const APP_VERSION = '1.12.8';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 70;
+const SW_CACHE_REV = 71;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -2227,11 +2231,12 @@ function resize() {
 }
 function scheduleResize() {
   if (resizeDebounce) clearTimeout(resizeDebounce);
+  const delay = IS_TOUCH ? 220 : 140;
   resizeDebounce = setTimeout(() => {
     resizeDebounce = null;
     if (window.__sfResizeT) cancelAnimationFrame(window.__sfResizeT);
     window.__sfResizeT = requestAnimationFrame(resize);
-  }, 140);
+  }, delay);
 }
 addEventListener('resize', scheduleResize);
 addEventListener('orientationchange', scheduleResize);
@@ -6066,7 +6071,13 @@ const UI = {
 
   renderSettings() {
     const verEl = document.getElementById('setAppVersion');
-    if (verEl) verEl.textContent = 'Versie ' + APP_VERSION + ' · save-key ongewijzigd';
+    if (verEl) {
+      const fps = Perf.emaMs > 0 ? Math.round(1000 / Perf.emaMs) : 0;
+      const perfNote = save.liteFx
+        ? 'Lite FX'
+        : (Perf.tier >= 2 ? `adaptief zwaar · ~${fps} fps` : Perf.tier >= 1 ? `adaptief · ~${fps} fps` : `vloeiend · ~${fps} fps`);
+      verEl.textContent = `v${APP_VERSION} · SW v${SW_CACHE_REV} · ${perfNote}`;
+    }
     const healthEl = document.getElementById('saveHealthLine');
     if (healthEl) {
       const h = saveHealthSummary();
@@ -6515,6 +6526,14 @@ bindPress(document.getElementById('resMenu'), () => { UI.goMenu(); });
 /* ============================= HOOFDLUS ================================ */
 let lastTime = performance.now();
 let menuAnimT = 0;
+let menuHeroFrame = 0;
+
+function menuHeroPaintSkip() {
+  if (save.liteFx) return 2;
+  if (Perf.tier >= 2) return 3;
+  if (Perf.tier >= 1) return 2;
+  return 1;
+}
 
 function drawMenuBackdrop(c, t) {
   c.fillStyle = '#0b0e1a';
@@ -6528,8 +6547,9 @@ function drawMenuBackdrop(c, t) {
   // Arcade sun stripes
   c.save();
   c.translate(W * 0.5, H * 0.28);
-  for (let i = 0; i < 10; i++) {
-    c.rotate(Math.PI / 10);
+  const rays = ultraLite ? 6 : 10;
+  for (let i = 0; i < rays; i++) {
+    c.rotate(Math.PI / rays);
     c.fillStyle = i % 2 ? 'rgba(255,90,50,.06)' : 'rgba(255,200,60,.05)';
     c.beginPath();
     c.moveTo(0, 0);
@@ -6540,7 +6560,8 @@ function drawMenuBackdrop(c, t) {
   }
   c.restore();
   const lite = save.liteFx || motionReduced() || Perf.tier >= 1;
-  const starN = lite ? 14 : 28;
+  const ultraLite = lite || Perf.tier >= 2;
+  const starN = ultraLite ? 10 : (lite ? 14 : 28);
   for (let i = 0; i < starN; i++) {
     const x = (Math.sin(t * 0.4 + i * 1.7) * 0.5 + 0.5) * W;
     const y = ((i * 47 + t * 22) % (H + 40)) - 20;
@@ -6574,6 +6595,7 @@ function paintMenuHeroCanvas(t) {
   if (!cv) return;
   const c = cv.getContext('2d');
   if (!c) return;
+  const lite = save.liteFx || Perf.tier >= 1;
   const Ws = cv.width;
   const Hs = cv.height;
   c.clearRect(0, 0, Ws, Hs);
@@ -6589,8 +6611,9 @@ function paintMenuHeroCanvas(t) {
   c.save();
   c.translate(cx, cy);
   c.scale(pulse, pulse);
-  for (let i = 0; i < 12; i++) {
-    const a = (i / 12) * TAU + t * 0.15;
+  const rays = lite ? (Perf.tier >= 2 ? 6 : 8) : 12;
+  for (let i = 0; i < rays; i++) {
+    const a = (i / rays) * TAU + t * 0.15;
     c.strokeStyle = i % 2 ? 'rgba(255,100,60,.25)' : 'rgba(255,220,80,.18)';
     c.lineWidth = 3;
     c.beginPath();
@@ -6667,7 +6690,10 @@ function loop(now) {
         ensureMenuScreenActive();
         const ms = document.getElementById('menuScreen');
         if (ms && ms.classList.contains('active')) {
-          try { paintMenuHeroCanvas(menuAnimT); } catch (_) {}
+          menuHeroFrame++;
+          if (menuHeroFrame % menuHeroPaintSkip() === 0) {
+            try { paintMenuHeroCanvas(menuAnimT); } catch (_) {}
+          }
         }
       }
     }
