@@ -1,6 +1,28 @@
 # Hosting — GitHub Pages, Netlify & lokaal
 
-Drie manieren om **Stickman Fighter** op je iPad te zetten (PWA / “Zet op beginscherm”).
+## Nu doen (aanbevolen): GitHub Pages
+
+**Ja — Git + GitHub helpt.** Localtunnel (loca.lt) blijft fragiel (503 + IP-check).  
+GitHub Pages geeft een **vaste Safari-URL** die je vanaf hier kunt updaten met `git push`.
+
+### Op je Mac/PC (één keer)
+
+1. Maak een [GitHub-account](https://github.com/signup) (gratis) als je die nog niet hebt.
+2. Installeer [GitHub CLI](https://cli.github.com/) en log in: `gh auth login`
+3. Kopieer deze map of clone/bundle, ga naar `stickman-fighter`, run:
+
+```bash
+chmod +x scripts/*.sh
+./scripts/create-github-pages.sh stickman-fighter public
+```
+
+4. Wacht tot **Actions → Deploy GitHub Pages** groen is.
+5. Open `https://JOUW-USER.github.io/stickman-fighter/` in **Safari** op iPad → **Zet op beginscherm**.
+
+Handmatig (zonder script): zie sectie 1 hieronder.  
+Bundle-export (als je alleen de git-geschiedenis wilt): `stickman-fighter-github.bundle` → `git clone stickman-fighter-github.bundle stickman-fighter`.
+
+---
 
 ## 1. GitHub Pages (nu al — vaste link)
 

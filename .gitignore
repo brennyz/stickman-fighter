@@ -6,3 +6,6 @@
 # Lokaal tunnel (niet nodig op GitHub/Netlify)
 LIVE-LINK.txt
 health.json
+
+# Export voor push vanaf Mac
+*.bundle
