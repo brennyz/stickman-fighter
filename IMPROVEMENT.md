@@ -104,6 +104,8 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | **10** | A11y: rustige banners/chakra bij reduced motion; zachtere hit-flash; `prefers-contrast: more`; menu-tip contrast. v1.12.5 / SW v68. |
+| 2026-07-23 | — | **Fix:** `IS_TOUCH` terug — avontuur-crash v1.12.4. |
 | 2026-07-23 | — | **handoff zoekindex:** `.cursor/agent-handoffs/handoff.md`, HANDOFF-ZOEKINDEX.md, d20 `userFeatureLog` (char deel 1/2, Mats, mikken, anti-spam). |
 | 2026-07-23 | **18** | Char select deel 1+2 (zie userFeatureLog) — v1.11.1–1.11.2. |
 | 2026-07-23 | — | **User off-d20:** Mats coinrun + shuriken mik/vliegers + anti-spam — v1.12.0 / `f6c86bf`. |

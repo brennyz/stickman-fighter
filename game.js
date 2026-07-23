@@ -56,9 +56,9 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.12.4';
+const APP_VERSION = '1.12.5';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 67;
+const SW_CACHE_REV = 68;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1294,12 +1294,18 @@ try {
 function systemPrefersReducedMotion() {
   try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (_) { return false; }
 }
+function systemPrefersMoreContrast() {
+  try { return window.matchMedia('(prefers-contrast: more)').matches; } catch (_) { return false; }
+}
 function motionReduced() {
   return !!save.reducedMotion || systemPrefersReducedMotion();
 }
+function a11yHighContrast() {
+  return !!save.highContrast || systemPrefersMoreContrast() || motionReduced();
+}
 function syncA11yClasses() {
   document.body.classList.toggle('reduced-motion', motionReduced());
-  document.body.classList.toggle('high-contrast', !!save.highContrast || motionReduced());
+  document.body.classList.toggle('high-contrast', a11yHighContrast());
 }
 
 function buildVsFighter(entry, x, slot) {
@@ -2748,7 +2754,7 @@ class Fighter {
     dmg = Math.round(dmg);
     this.hp -= dmg;
     this.hurtT = dmg >= 18 ? 0.28 : 0.24;
-    this.hitFlashT = dmg >= 18 ? 0.18 : 0.14;
+    this.hitFlashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.18 : 0.14);
     this.attack = null;
     this.vx = kbx;
     this.vy = Math.min(this.vy, -120);
@@ -2846,7 +2852,8 @@ class Fighter {
     c.save();
     c.translate(this.x, this.y);
     if (this.hitFlashT > 0) {
-      c.globalAlpha = Math.min(0.4, this.hitFlashT * 2.5);
+      const flashA = motionReduced() ? 0.18 : 0.4;
+      c.globalAlpha = Math.min(flashA, this.hitFlashT * (flashA / 0.14));
       c.fillStyle = this.isPlayer ? '#ff8080' : '#ffe680';
       c.beginPath();
       c.ellipse(0, -44 * s, 34 * s, 48 * s, 0, 0, TAU);
@@ -3197,7 +3204,7 @@ class Monster {
       haptic(28);
     }
     this.hp -= dmg;
-    this.flashT = 0.1;
+    this.flashT = motionReduced() ? 0 : 0.1;
     this.x += Math.sign(kbx) * 8;
     game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
     game.burst(this.x, this.y, this.sp.c1, 6);
@@ -4636,13 +4643,14 @@ class Game {
     // banners
     for (const b of this.banners) {
       const k = b.t / b.dur;
-      const pop = k < 0.15 ? k / 0.15 : 1;
+      const calm = motionReduced();
+      const pop = calm ? 1 : (k < 0.15 ? k / 0.15 : 1);
       const fade = k > 0.75 ? 1 - (k - 0.75) / 0.25 : 1;
       c.save();
       c.globalAlpha = fade;
       c.translate(W / 2, H * 0.34);
-      c.scale(0.6 + pop * 0.4, 0.6 + pop * 0.4);
-      if (!fxLite()) {
+      c.scale(calm ? 1 : (0.6 + pop * 0.4), calm ? 1 : (0.6 + pop * 0.4));
+      if (!fxLite() && !calm) {
         c.shadowColor = b.color;
         c.shadowBlur = 14;
       }
@@ -4775,9 +4783,21 @@ class Game {
   drawChakraReadyFx(c) {
     const fighters = [this.player];
     if (this.p2) fighters.push(this.p2);
+    const calm = motionReduced();
     for (const f of fighters) {
       if (!f || !f.alive || f.energy < 100) continue;
       const kind = fighterJutsuKind(f);
+      if (calm) {
+        c.save();
+        c.globalAlpha = 0.42;
+        c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : (kind === 'chidori' ? '#a8e0ff' : kind === 'rinnegan' ? '#c47aff' : '#7cf5ff');
+        c.lineWidth = 2;
+        c.beginPath();
+        c.arc(f.x, f.y - 55, 36, 0, TAU);
+        c.stroke();
+        c.restore();
+        continue;
+      }
       const pulse = 0.35 + Math.sin(this.t * 7) * 0.15;
       c.save();
       c.globalAlpha = pulse;
@@ -5981,7 +6001,7 @@ const UI = {
       const key = keys[i];
       let off = save[key] === false;
       if (key === 'reducedMotion') off = !save.reducedMotion && !systemPrefersReducedMotion();
-      if (key === 'highContrast') off = !save.highContrast;
+      if (key === 'highContrast') off = !save.highContrast && !systemPrefersMoreContrast();
       el.classList.toggle('off', off);
     });
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
@@ -6670,6 +6690,9 @@ function bootGame() {
     const onMq = () => syncA11yClasses();
     if (mq.addEventListener) mq.addEventListener('change', onMq);
     else if (mq.addListener) mq.addListener(onMq);
+    const mqC = window.matchMedia('(prefers-contrast: more)');
+    if (mqC.addEventListener) mqC.addEventListener('change', onMq);
+    else if (mqC.addListener) mqC.addListener(onMq);
   } catch (_) {}
   if (window.__sfRecoveredBackup) {
     window.__sfRecoveredBackup = false;
