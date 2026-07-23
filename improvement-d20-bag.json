@@ -1,13 +1,33 @@
 {
   "version": 3,
-  "cyclesCompleted": 0,
-  "remaining": [],
+  "cyclesCompleted": 1,
+  "remaining": [
+    11,
+    15,
+    14,
+    18,
+    16,
+    3,
+    2,
+    10,
+    7,
+    19,
+    17,
+    20,
+    5,
+    1,
+    6,
+    13,
+    8,
+    4,
+    9
+  ],
   "lastRoll": {
-    "face": 14,
-    "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
-    "rolledAt": "2026-07-23T15:04:37Z",
-    "remainingCount": 0,
-    "cycle": 0
+    "face": 12,
+    "category": "Content \u2014 monsters, wapens, rariteit, dex",
+    "rolledAt": "2026-07-23T15:06:05Z",
+    "remainingCount": 19,
+    "cycle": 1
   },
   "implemented": [
     {
@@ -72,6 +92,13 @@
       "version": "1.9.8",
       "doneAt": "2026-07-23T15:05:43Z",
       "cycle": 0
+    },
+    {
+      "face": 12,
+      "note": "dex rariteit-chips + Kristallijn/Boekmeester + 3 prestaties",
+      "version": "1.9.9",
+      "doneAt": "2026-07-23T15:07:21Z",
+      "cycle": 1
     }
   ],
   "history": [
@@ -221,6 +248,13 @@
       "rolledAt": "2026-07-23T15:04:37Z",
       "remainingCount": 0,
       "cycle": 0
+    },
+    {
+      "face": 12,
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
+      "rolledAt": "2026-07-23T15:06:05Z",
+      "remainingCount": 19,
+      "cycle": 1
     }
   ],
   "pending": null

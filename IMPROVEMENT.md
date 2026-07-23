@@ -44,7 +44,7 @@ Staat: `improvement-d20-bag.json` (commit na roll + na afronden).
 | **18** Char select | Goed — UI/stats; geen roster balance. |
 | **12** Content | Goed — dex/cosmetic; geen loop-slop. |
 
-**Conclusie:** cyclus 0 bijna klaar (d14 in dit commit). Open: **deploy push** (403).
+**Conclusie:** cyclus 1 bezig (d12 af). Open: **deploy push** (403).
 
 | d# | Categorie | Voorbeelden (klein & veilig) |
 |----|-----------|------------------------------|
@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | **12** | Content: dex rariteit-chips, Kristallijn + Boekmeester looks, 3 dex-prestaties. v1.9.9 / SW v48. |
 | 2026-07-23 | **14** | FX: Rasengan buitenringen + capte spark-trail, combo-ring, banner glow; Lite FX respect. v1.9.8 / SW v47. |
 | 2026-07-23 | **20** | Code health: dead helpers/no-ops weg, joystick onMove gedeeld, header comment — zero gedrag. v1.9.7 / SW v46. |
 | 2026-07-23 | **6** | Audio: BGM duck pause/result, music≠SFX mute, pause houdt battle-song, soft gains, setPaused. v1.9.6 / SW v45. |

@@ -55,7 +55,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.9.8';
+const APP_VERSION = '1.9.9';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -264,6 +264,18 @@ const ACHIEVEMENTS = [
       let n = 0;
       for (const v of Object.values(s.dex || {})) n += v || 0;
       return n >= 100;
+    } },
+  { id: 'dexHalf', name: 'Veldgids', desc: 'Helft van alle soorten ontdekt', icon: '🧭',
+    test: s => Object.keys(s.dex || {}).length >= Math.ceil(SPECIES_ORDER.length / 2) },
+  { id: 'dexTiers', name: 'Rariteitenjager', desc: '4 verschillende rariteiten in boek', icon: '💎',
+    test: () => dexRarityTierCount() >= 4 },
+  { id: 'dexMythic', name: 'Mythe-zoeker', desc: 'Eén mythisch monster ontdekt', icon: '✨',
+    test: s => {
+      for (const id of Object.keys(s.dex || {})) {
+        const sp = SPECIES[id];
+        if (sp && sp.rarity === 'mythic') return true;
+      }
+      return false;
     } },
   { id: 'train5', name: 'Robotbreker', desc: '5× training gewonnen', icon: '🤖',
     test: s => s.trainWins >= 5 },
@@ -727,6 +739,23 @@ function maybeWelcomeToast() {
 
 const xpNeed = lvl => 60 + (lvl - 1) * 40;
 const dexCount = () => Object.keys(save.dex).length;
+function dexRarityTierCount() {
+  const tiers = new Set();
+  for (const id of Object.keys(save.dex || {})) {
+    const sp = SPECIES[id];
+    if (sp && sp.rarity) tiers.add(sp.rarity);
+  }
+  return tiers.size;
+}
+function dexRarityBreakdown() {
+  const counts = {};
+  for (const id of Object.keys(RARITIES)) counts[id] = 0;
+  for (const id of Object.keys(save.dex || {})) {
+    const sp = SPECIES[id];
+    if (sp && counts[sp.rarity] != null) counts[sp.rarity]++;
+  }
+  return counts;
+}
 const dexTotalKills = () => {
   let n = 0;
   for (const id of Object.keys(save.dex)) n += save.dex[id] || 0;
@@ -817,6 +846,10 @@ const STYLES = [
     needLvl: 40, hint: 'Unlock op Lv 40' },
   { id: 'hunter', name: 'Jagerlook', body: '#6b5344', accent: '#5ad06a', bandana: '#3d5c32', hunter: true,
     needDexKills: 75, hint: '75 kills in monsterboek' },
+  { id: 'crystal', name: 'Kristallijn', body: '#e8f7ff', accent: '#6fd7ff', bandana: '#2f7fc0', glow: true, crystal: true,
+    needDexTiers: 4, hint: '4 rariteiten in monsterboek' },
+  { id: 'tome', name: 'Boekmeester', body: '#f5efe6', accent: '#c98850', bandana: '#6b5344', tome: true,
+    needDexHalf: true, hint: 'Helft van het monsterboek' },
 ];
 const styleById = id => STYLES.find(s => s.id === id) || STYLES[0];
 function styleUnlocked(st) {
@@ -825,6 +858,9 @@ function styleUnlocked(st) {
   if (st.needTrain && save.trainWins >= st.needTrain) return true;
   if (st.needDex && dexCount() >= st.needDex) return true;
   if (st.needDexKills && dexTotalKills() >= st.needDexKills) return true;
+  if (st.needDexTiers && dexRarityTierCount() >= st.needDexTiers) return true;
+  if (st.needDexHalf && typeof SPECIES_ORDER !== 'undefined' &&
+      dexCount() >= Math.ceil(SPECIES_ORDER.length / 2)) return true;
   return false;
 }
 function applyPlayerStyle(fighter) {
@@ -2308,6 +2344,23 @@ class Fighter {
       c.fillStyle = st.accent;
       c.beginPath(); c.arc(hx - 14, hy - 8, 3, 0, TAU); c.fill();
     }
+    if (st.crystal) {
+      c.fillStyle = st.accent;
+      c.globalAlpha = 0.9;
+      c.beginPath();
+      c.moveTo(hx + 10, hy - 6); c.lineTo(hx + 16, hy - 12); c.lineTo(hx + 22, hy - 6); c.lineTo(hx + 16, hy); c.closePath();
+      c.fill();
+      c.globalAlpha = 1;
+    }
+    if (st.tome) {
+      c.fillStyle = st.accent;
+      c.fillRect(hx - 18, hy - 2, 7, 10);
+      c.fillStyle = '#fff8e8';
+      c.fillRect(hx - 16.5, hy, 4, 6);
+      c.strokeStyle = st.bandana || '#6b5344';
+      c.lineWidth = 1.2;
+      c.strokeRect(hx - 18, hy - 2, 7, 10);
+    }
   }
 
   drawRobotHead(c, hx, hy) {
@@ -2959,6 +3012,8 @@ class Game {
     this.floater(m.x, m.y - m.size - 30, `+${xp} XP`, rar.color, 16);
     if (rar.order >= 3) this.floater(m.x, m.y - m.size - 50, rar.name.toUpperCase(), rar.color, 13);
     this.player.energy = clamp(this.player.energy + 12 + rar.order * 2, 0, 100);
+    const tiersBefore = dexRarityTierCount();
+    const countBefore = dexCount();
     if (!save.dex[m.spId]) {
       save.dex[m.spId] = 0;
       persist();
@@ -2970,6 +3025,17 @@ class Game {
     }
     save.dex[m.spId]++;
     persist();
+    checkAchievements();
+    // Cosmetics die op dex-drempels unlocken (geen combat-wijziging)
+    if (countBefore < dexCount()) {
+      const half = Math.ceil(SPECIES_ORDER.length / 2);
+      if (countBefore < half && dexCount() >= half) {
+        UI.toast('Nieuwe stijl: Boekmeester!', 3500);
+      }
+      if (tiersBefore < 4 && dexRarityTierCount() >= 4) {
+        UI.toast('Nieuwe stijl: Kristallijn!', 3500);
+      }
+    }
   }
 
   spawnPickup(x, y) {
@@ -4580,11 +4646,20 @@ const UI = {
     if (sumEl) {
       const totalHp = dexHpBonus();
       const kills = dexTotalKills();
+      const br = dexRarityBreakdown();
+      const tierChips = Object.keys(RARITIES).map(rid => {
+        const rar = RARITIES[rid];
+        const n = br[rid] || 0;
+        if (!n) return '';
+        return `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color};margin:2px">${rar.name} ${n}</span>`;
+      }).filter(Boolean).join(' ');
       sumEl.style.display = 'block';
       sumEl.innerHTML =
         `Boek <b>${dexCount()}/${SPECIES_ORDER.length}</b> · kills <b>${kills}</b> · bonus max HP <b>+${totalHp}</b>` +
+        ` · rariteiten <b>${dexRarityTierCount()}/6</b>` +
         `<div class="dex-mini-row">${dexMiniStat('HP', totalHp, SPECIES_ORDER.length * 25, '#6ee06e')}` +
-        `${dexMiniStat('Kills', kills, 150, '#ffd75e')}</div>`;
+        `${dexMiniStat('Kills', kills, 150, '#ffd75e')}</div>` +
+        (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '');
     }
     const list = document.getElementById('dexList');
     list.innerHTML = '';
