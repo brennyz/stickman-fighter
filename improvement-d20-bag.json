@@ -5,17 +5,22 @@
   "remaining": [
     6,
     7,
-    9,
-    14
+    9
   ],
   "lastRoll": {
-    "face": 20,
-    "category": "Code health \u2014 kleine refactors, geen gameplay-break",
-    "rolledAt": "2026-07-23T18:31:34Z",
-    "remainingCount": 4,
+    "face": 14,
+    "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
+    "rolledAt": "2026-07-23T18:57:52Z",
+    "remainingCount": 3,
     "cycle": 1
   },
-  "pending": null,
+  "pending": {
+    "face": 14,
+    "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
+    "rolledAt": "2026-07-23T18:57:52Z",
+    "remainingCount": 3,
+    "cycle": 1
+  },
   "implemented": [
     {
       "face": 2,
@@ -543,6 +548,13 @@
       "category": "Code health \u2014 kleine refactors, geen gameplay-break",
       "rolledAt": "2026-07-23T18:31:34Z",
       "remainingCount": 4,
+      "cycle": 1
+    },
+    {
+      "face": 14,
+      "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
+      "rolledAt": "2026-07-23T18:57:52Z",
+      "remainingCount": 3,
       "cycle": 1
     }
   ]

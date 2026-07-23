@@ -60,9 +60,9 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.12.17';
+const APP_VERSION = '1.12.18';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 80;
+const SW_CACHE_REV = 81;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -2543,6 +2543,20 @@ function fxLite() {
   return !!(save.liteFx || Perf.tier >= 2 || (typeof motionReduced === 'function' && motionReduced()));
 }
 
+function spawnFxRing(game, x, y, color, baseR) {
+  if (!game || motionReduced() || fxLite()) return;
+  const cap = fxCaps();
+  if (game.particles.length >= cap.particles) return;
+  const life = 0.34;
+  game.particles.push({
+    x, y, vx: 0, vy: 0, life, maxLife: life,
+    color: color || '#7cf5ff',
+    size: baseR || 12,
+    kind: 'ring',
+    grav: 0,
+  });
+}
+
 function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
   const lite = fxLite();
   c.save();
@@ -4415,7 +4429,8 @@ class Game {
         from, kind: 'rasengan', pierce: true, hitSet: new Set(), life: 1.4,
         spin: 0,
       }, critMeta));
-      this.burst(f.x + f.face * 30, f.y - 50, '#7cf5ff', 18);
+      this.burst(f.x + f.face * 30, f.y - 50, '#7cf5ff', fxLite() ? 8 : 16);
+      spawnFxRing(this, f.x + f.face * 34, f.y - 50, '#7cf5ff', 10);
       this.shake(9, 0.28);
       this.freezeT = Math.max(this.freezeT, 0.06);
       AudioSys.sfx('rasengan');
@@ -4636,7 +4651,10 @@ class Game {
             const hit = resolveProjHit(p);
             m.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this);
             if (hit.crit) applyCritFx(this, m.x, m.y);
-            if (p.kind === 'rasengan') this.burst(p.x, p.y, '#7cf5ff', 12);
+            if (p.kind === 'rasengan') {
+              this.burst(p.x, p.y, '#7cf5ff', fxLite() ? 5 : 10);
+              spawnFxRing(this, p.x, p.y, '#a8ecff', p.r * 0.55);
+            }
             if (p.kind === 'rinnegan') this.burst(p.x, p.y, '#c47aff', 10);
             if (p.hitSet) p.hitSet.add(m); else p.life = 0;
           }
@@ -4683,9 +4701,12 @@ class Game {
 
     // deeltjes & tekstjes
     for (const pt of this.particles) {
-      pt.life -= dt; pt.vy += (pt.grav || 900) * dt;
-      pt.x += pt.vx * dt; pt.y += pt.vy * dt;
-      if (pt.y > this.ground && pt.vy > 0) { pt.y = this.ground; pt.vy *= -0.4; }
+      pt.life -= dt;
+      if (pt.kind !== 'ring') {
+        pt.vy += (pt.grav || 900) * dt;
+        pt.x += pt.vx * dt; pt.y += pt.vy * dt;
+        if (pt.y > this.ground && pt.vy > 0) { pt.y = this.ground; pt.vy *= -0.4; }
+      }
     }
     this.particles = this.particles.filter(p => p.life > 0);
     for (const fl of this.floaters) { fl.life -= dt; fl.y -= 40 * dt; }
@@ -4734,6 +4755,7 @@ class Game {
     const cap = fxCaps();
     const room = cap.particles - this.particles.length;
     n = Math.min(n, Math.max(0, room));
+    if (n <= 0) return;
     const baseSize = opts.size || 0;
     for (let i = 0; i < n; i++) {
       const a = rand(0, TAU);
@@ -4820,6 +4842,16 @@ class Game {
     for (const p of this.projectiles) {
       c.save();
       if (p.kind === 'rasengan') {
+        if (!fxLite() && !motionReduced()) {
+          c.save();
+          c.globalAlpha = 0.28 + Math.sin((p.spin || 0) * 2.1) * 0.12;
+          c.strokeStyle = '#7cf5ff';
+          c.lineWidth = 2;
+          c.beginPath();
+          c.arc(p.x, p.y, p.r * (1.22 + Math.sin(p.spin * 1.4) * 0.06), 0, TAU);
+          c.stroke();
+          c.restore();
+        }
         drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'rasengan', 1);
       } else if (p.kind === 'chidori') {
         drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'chidori', 1);
@@ -4854,6 +4886,17 @@ class Game {
     // deeltjes
     for (const pt of this.particles) {
       c.globalAlpha = clamp(pt.life * 2, 0, 1);
+      if (pt.kind === 'ring') {
+        const maxL = pt.maxLife || 0.34;
+        const t = 1 - clamp(pt.life / maxL, 0, 1);
+        c.strokeStyle = pt.color;
+        c.lineWidth = 2.2 * (1 - t * 0.45);
+        c.globalAlpha = clamp(pt.life * 3.2, 0, 0.88);
+        c.beginPath();
+        c.arc(pt.x, pt.y, pt.size * (1 + t * 1.1), 0, TAU);
+        c.stroke();
+        continue;
+      }
       c.fillStyle = pt.color;
       if (pt.kind === 'spark') {
         c.beginPath();
@@ -5360,8 +5403,8 @@ class Game {
     } else if (this.mode === 'versus' && this.p2) {
       const p2 = this.p2;
       const half = Math.min(260, W * 0.38);
-      const safeTop = readSafeInsets().top;
-      const byVs = Math.max(by, safeTop + 52);
+      const safeTop = hudInsetTop();
+      const byVs = Math.max(by, safeTop + 42);
       const name1 = vsRosterEntry(this.p1Pick).name;
       const name2 = vsRosterEntry(this.p2Pick).name;
       if (this.phase === 'intro' && this.phaseT < 1.55) {
