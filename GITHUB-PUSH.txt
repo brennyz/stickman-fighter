@@ -1,0 +1,33 @@
+STICKMAN FIGHTER — PUSH NAAR GITHUB (v1.9.9+)
+==============================================
+
+Lokaal staat alles klaar op branch `main` (tap-fix, v1.9.9, SW v48).
+De cloud-agent krijgt nog 403 — jij met gelinkte git kunt dit in één push fixen.
+
+1) Open een terminal IN de map stickman-fighter (jouw machine of Cursor terminal met repo-write).
+
+2) Push main:
+
+   git fetch origin
+   git checkout main
+   git pull origin main
+   git merge origin/cursor/d20-cycle1-b75e   # als main achterloopt; anders overslaan
+   git push origin main
+
+   (Als je alleen lokaal main hebt zonder remote: git remote add origin https://github.com/brennyz/stickman-fighter.git)
+
+3) Wacht ~1–3 min. GitHub Actions “Deploy GitHub Pages” draait automatisch.
+
+4) Speel op iPad (bookmark):
+
+   https://brennyz.github.io/stickman-fighter/ipad.html
+
+   Menu moet tonen: v1.9.9 · dex content
+   Oude PWA-cache? Tik «Verse versie» in het menu.
+
+Tot Pages live is — cloud tunnel (agent):
+
+   https://jacksonville-patrick-builder-feat.trycloudflare.com/ipad.html
+
+Cloud Agent nog 403?
+→ Cursor Dashboard → Cloud Agents → Environment → koppel repo + GitHub met repo-scope opnieuw.
