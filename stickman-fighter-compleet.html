@@ -1,3 +1,290 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stickman Fighter">
+<title>Stickman Fighter — Monster Arena</title>
+<meta name="theme-color" content="#151b33">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent;
+      -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#0a0d18;
+      font-family: 'Nunito', -apple-system, Helvetica, sans-serif; }
+  #game { position:fixed; inset:0; width:100%; height:100%; display:block; touch-action:none; }
+
+  .screen { position:fixed; inset:0; display:none; flex-direction:column; align-items:center;
+      justify-content:flex-start; overflow-y:auto; padding:max(20px, env(safe-area-inset-top)) 20px 40px;
+      background:
+        radial-gradient(ellipse at 20% 10%, rgba(255,167,81,.12), transparent 40%),
+        radial-gradient(ellipse at 80% 0%, rgba(74,125,255,.14), transparent 45%),
+        radial-gradient(ellipse at 50% 100%, rgba(67,178,91,.08), transparent 40%),
+        linear-gradient(180deg, #151b33 0%, #0a0d18 70%);
+      color:#fff; z-index:10; }
+  .screen.active { display:flex; animation: fadeIn .25s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+  @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.04); } }
+  @keyframes shimmer { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+
+  h1.title { font-family: 'Bangers', cursive; font-size:min(12vw, 64px); font-weight:400;
+      letter-spacing:3px; margin:18px 0 4px; color:#ffd75e;
+      text-shadow: 0 4px 0 #c97a20, 0 0 28px rgba(255,180,60,.35); text-align:center;
+      animation: pulse 2.8s ease-in-out infinite; }
+  .subtitle { color:#8fa3d9; font-size:min(4vw,17px); margin-bottom:16px; text-align:center; }
+  h2.head { font-family: 'Bangers', cursive; font-size:min(8vw,40px); font-weight:400;
+      letter-spacing:2px; margin:10px 0 18px; color:#ffd75e; text-shadow:0 3px 0 #a86818; }
+
+  .btn { display:flex; align-items:center; justify-content:center; gap:12px; cursor:pointer;
+      border:none; border-radius:18px; color:#fff; font-weight:800; text-align:center;
+      font-family: inherit;
+      box-shadow:0 6px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25);
+      transition:transform .06s, filter .15s; }
+  .btn:active { transform:translateY(4px); box-shadow:0 2px 0 rgba(0,0,0,.35); }
+  .mode-btn { width:min(86vw, 480px); padding:16px 20px; font-size:min(5vw,21px); margin:8px 0;
+      justify-content:flex-start; }
+  .mode-btn .ico { font-size:1.55em; width:1.6em; text-align:center; }
+  .mode-btn small { display:block; font-weight:600; font-size:.62em; opacity:.88; margin-top:2px; }
+  .mode-btn > div { text-align:left; }
+  .b-adventure { background:linear-gradient(180deg,#4ecf6a,#1f8a38); }
+  .b-training  { background:linear-gradient(180deg,#5a8cff,#2a52c8); }
+  .b-wall      { background:linear-gradient(180deg,#ff7a4d,#d04028); }
+  .b-weapons   { background:linear-gradient(180deg,#b06ae0,#7438a8); }
+  .b-dex       { background:linear-gradient(180deg,#f0c45a,#b88828); color:#2a1a00; }
+  .b-style     { background:linear-gradient(180deg,#5ad0c8,#2a8a84); }
+  .b-gray      { background:linear-gradient(180deg,#5a6784,#39445e); }
+  .b-install   { background:linear-gradient(180deg,#3dd6c8,#1a9a90); color:#042824;
+      box-shadow:0 6px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.35); }
+  .b-install.done { background:linear-gradient(180deg,#5a6784,#39445e); color:#cfe0ff; }
+
+  .install-hero { width:min(92vw,480px); text-align:center; margin:8px 0 20px; }
+  .install-hero img { width:96px; height:96px; border-radius:22px;
+      box-shadow:0 12px 32px rgba(0,0,0,.45); margin-bottom:12px; }
+  .install-hero .appname { font-family:'Bangers',cursive; font-size:36px; color:#ffd75e;
+      letter-spacing:2px; text-shadow:0 3px 0 #a86818; }
+  .step-card { width:min(92vw,480px); background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
+      border-radius:16px; padding:14px 16px; margin:8px 0; font-size:15px; color:#d5e0ff; line-height:1.45; }
+  .step-card b { color:#ffd75e; }
+  .step-num { display:inline-flex; width:28px; height:28px; border-radius:50%; background:#ffd75e; color:#2a1a00;
+      font-weight:900; align-items:center; justify-content:center; margin-right:10px; }
+  .big-install { width:min(92vw,480px); padding:20px; font-size:22px; margin:16px 0 8px;
+      background:linear-gradient(180deg,#4ef0e0,#1a9a90); color:#042824; }
+
+  .back-btn { position:absolute; top:max(14px, env(safe-area-inset-top)); left:16px;
+      background:linear-gradient(180deg,#5a6784,#39445e); padding:10px 20px; font-size:16px;
+      border-radius:14px; z-index:11; }
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(96px,1fr));
+      gap:12px; width:min(92vw, 640px); }
+  .lvl { aspect-ratio:1; border-radius:16px; display:flex; flex-direction:column; align-items:center;
+      justify-content:center; font-size:24px; font-weight:900; cursor:pointer; color:#fff;
+      background:linear-gradient(180deg,#4ecf6a,#1f8a38);
+      box-shadow:0 5px 0 rgba(0,0,0,.35); position:relative; }
+  .lvl.boss { background:linear-gradient(180deg,#e85a6a,#a82332); }
+  .lvl.locked { background:linear-gradient(180deg,#3a4258,#262c3d); color:#6b7690; box-shadow:none; }
+  .lvl.cleared { outline:2px solid rgba(255,215,94,.55); }
+  .lvl small { font-size:11px; font-weight:700; opacity:.95; }
+  .lvl .stars { font-size:11px; letter-spacing:1px; color:#ffd75e; margin-top:2px; }
+  .lvl:active:not(.locked) { transform:translateY(3px); }
+
+  .card { width:min(92vw, 640px); background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+      border-radius:16px; padding:14px 16px; margin:6px 0; display:flex; align-items:center; gap:14px;
+      transition: border-color .15s, background .15s; }
+  .card.sel { border-color:#ffd75e; background:rgba(255,215,94,.14); box-shadow:0 0 0 1px rgba(255,215,94,.2); }
+  .card.locked { opacity:.45; }
+  .card .cname { font-size:18px; font-weight:900; }
+  .card .cinfo { font-size:13px; color:#9db1e3; margin-top:2px; }
+  .card canvas { flex:0 0 auto; border-radius:10px; background:rgba(0,0,0,.25); }
+  .card .right { margin-left:auto; text-align:right; font-size:13px; color:#ffd75e; font-weight:800; }
+
+  .statbar { width:min(86vw,480px); background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.08);
+      border-radius:16px; padding:14px 18px; margin:4px 0 14px; text-align:center; font-size:14px; color:#cdd8f5; }
+  .statbar b { color:#ffd75e; }
+  .xpline { height:9px; border-radius:5px; background:#1a2040; margin-top:9px; overflow:hidden; }
+  .xpline > div { height:100%; background:linear-gradient(90deg,#ffe259,#ffa751,#ff7a4d);
+      background-size:200% 100%; animation: shimmer 2.5s linear infinite; border-radius:5px; }
+  .stat-row { display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin-top:8px; font-size:12px; color:#9db1e3; }
+  .stat-row span { background:rgba(0,0,0,.25); padding:4px 10px; border-radius:999px; }
+
+  .toggles { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; justify-content:center; }
+  .tog { padding:10px 16px; border-radius:14px; font-size:14px; font-weight:800;
+      background:linear-gradient(180deg,#5a6784,#39445e); }
+  .tog.off { opacity:.4; }
+
+  #pauseBtn { position:fixed; top:max(10px, env(safe-area-inset-top)); right:12px; z-index:9;
+      width:48px; height:48px; border-radius:14px; font-size:18px; display:none;
+      background:rgba(20,26,48,.8); border:1px solid rgba(255,255,255,.22); color:#fff;
+      box-shadow:0 4px 12px rgba(0,0,0,.35); }
+  #pauseBtn.show { display:block; }
+
+  #resultScreen .bigres { font-family:'Bangers', cursive; font-size:min(14vw,68px); font-weight:400;
+      letter-spacing:2px; margin:28px 0 6px; }
+  #resultScreen .win  { color:#7CFC8a; text-shadow:0 4px 0 #1f7a35, 0 0 24px rgba(90,255,120,.4); }
+  #resultScreen .lose { color:#ff6b6b; text-shadow:0 4px 0 #8a2020, 0 0 24px rgba(255,80,80,.4); }
+  #resultScreen .detail { font-size:16px; color:#bcd; margin:4px 0; text-align:center; max-width:520px; }
+  #resultScreen .stars-big { font-size:min(10vw,42px); color:#ffd75e; letter-spacing:6px; margin:8px 0 14px;
+      text-shadow:0 3px 0 #a86818; }
+  #resultScreen .btn { margin-top:8px; }
+
+  #toastHost { position:fixed; left:50%; top:max(70px, calc(env(safe-area-inset-top) + 56px));
+      transform:translateX(-50%); z-index:40; pointer-events:none; display:flex; flex-direction:column; gap:8px; align-items:center; }
+  .toast { background:rgba(15,20,40,.92); border:1px solid rgba(255,215,94,.45); color:#fff;
+      padding:10px 18px; border-radius:14px; font-weight:800; font-size:14px;
+      box-shadow:0 8px 24px rgba(0,0,0,.4); animation: toastIn .35s ease; max-width:90vw; text-align:center; }
+  @keyframes toastIn { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:none; } }
+
+  #tutBox { max-width:min(92vw,520px); background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14);
+      border-radius:18px; padding:18px 20px; margin:8px 0 16px; font-size:15px; color:#d5e0ff; line-height:1.45; }
+  #tutBox li { margin:6px 0 6px 18px; }
+  #tutBox b { color:#ffd75e; }
+
+  .style-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
+      gap:12px; width:min(92vw,640px); }
+  .style-card { border-radius:16px; padding:14px 10px; text-align:center; cursor:pointer;
+      background:rgba(255,255,255,.06); border:2px solid transparent; font-weight:800; }
+  .style-card.sel { border-color:#ffd75e; background:rgba(255,215,94,.14); }
+  .style-card.locked { opacity:.4; }
+  .style-card canvas { display:block; margin:0 auto 8px; }
+  .rar-pill { display:inline-block; font-size:11px; font-weight:900; border:1px solid; border-radius:999px;
+      padding:1px 8px; margin-left:6px; vertical-align:middle; letter-spacing:.3px; }
+  .card.rar-legendary { background:rgba(255,215,94,.08); }
+  .card.rar-mythic { background:rgba(255,107,157,.1); }
+  .card.rar-epic { background:rgba(176,106,224,.08); }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<button id="pauseBtn" aria-label="Pauze">&#10074;&#10074;</button>
+<div id="toastHost"></div>
+
+<div id="menuScreen" class="screen active">
+  <h1 class="title">STICKMAN FIGHTER</h1>
+  <div class="subtitle">Monster Arena &bull; combo’s &bull; word een legende</div>
+  <div class="statbar" id="menuStats"></div>
+  <button class="btn mode-btn b-install" id="btnInstallApp" type="button">
+    <span class="ico">&#128229;</span>
+    <div id="btnInstallLabel">Zet in app-lade<small>Één icoon op je beginscherm — tik &amp; speel</small></div>
+  </button>
+  <button class="btn mode-btn b-adventure" id="btnAdventure"><span class="ico">&#9876;&#65039;</span>
+    <div>Avontuur<small>50 levels · 6 rariteiten · 10 bazen</small></div></button>
+  <button class="btn mode-btn b-training" id="btnTraining"><span class="ico">&#129302;</span>
+    <div>Training vs RabbitRobot<small>Street-fighter duel · AI met combo’s &amp; lasers</small></div></button>
+  <button class="btn mode-btn b-wall" id="btnWall"><span class="ico">&#129521;</span>
+    <div>Muur Slopen<small>Staal · bomstenen · goud · 60 sec chaos</small></div></button>
+  <button class="btn mode-btn b-weapons" id="btnWeapons"><span class="ico">&#128481;&#65039;</span>
+    <div>Wapens<small>12 wapens · gewoon → mythisch</small></div></button>
+  <button class="btn mode-btn b-style" id="btnStyle"><span class="ico">&#127912;</span>
+    <div>Stijl<small>Bandana &amp; outfit unlocks</small></div></button>
+  <button class="btn mode-btn b-dex" id="btnDex"><span class="ico">&#128214;</span>
+    <div>Monsterboek<small>19 soorten · rariteit = meer max HP</small></div></button>
+  <div class="toggles">
+    <button class="btn tog" id="btnGuvve" type="button">&#129414; Guvvedukkie</button>
+    <button class="btn tog" id="togMusic">&#127925; Muziek</button>
+    <button class="btn tog" id="togSfx">&#128266; Geluid</button>
+    <button class="btn tog" id="btnHelp">&#10067; Tips</button>
+  </div>
+</div>
+
+<div id="levelScreen" class="screen">
+  <button class="btn back-btn" data-back>&#8592; Terug</button>
+  <h2 class="head">Kies een level</h2>
+  <div class="subtitle">50 levels · kleur = hoogste rariteit in dat level · rode = baas</div>
+  <div class="grid" id="levelGrid"></div>
+</div>
+
+<div id="weaponScreen" class="screen">
+  <button class="btn back-btn" data-back>&#8592; Terug</button>
+  <h2 class="head">Wapens</h2>
+  <div id="weaponList"></div>
+</div>
+
+<div id="styleScreen" class="screen">
+  <button class="btn back-btn" data-back>&#8592; Terug</button>
+  <h2 class="head">Stijl</h2>
+  <div class="subtitle">Unlock door te levelen of RabbitRobot te verslaan</div>
+  <div class="style-grid" id="styleGrid"></div>
+</div>
+
+<div id="dexScreen" class="screen">
+  <button class="btn back-btn" data-back>&#8592; Terug</button>
+  <h2 class="head">Monsterboek</h2>
+  <div class="subtitle">Rariteit bepaalt HP-bonus: gewoon +3 … mythisch +25</div>
+  <div id="dexList"></div>
+</div>
+
+<div id="installScreen" class="screen">
+  <button class="btn back-btn" id="installBack">&#8592; Terug</button>
+  <h2 class="head">In app-lade zetten</h2>
+  <div class="install-hero">
+    <img src="icons/icon-192.png" alt="Stickman Fighter icoon" width="96" height="96">
+    <div class="appname">STICKMAN</div>
+    <div class="subtitle" style="margin-top:6px">Verschijnt als icoon — net als een echte app</div>
+  </div>
+  <div class="step-card" id="installFileNote" style="display:none;color:#ffb0a8">
+    <b>Let op:</b> je opent een lokaal bestand. Upload de game eerst online (Netlify/GitHub), open de link in Safari, en druk dan opnieuw op deze knop.
+  </div>
+  <button class="btn big-install" id="installAndroidBtn" type="button" style="display:none">
+    &#128229; Nu installeren
+  </button>
+  <div id="installIosSteps" style="display:none;width:100%;max-width:480px">
+    <div class="step-card"><span class="step-num">1</span> Zorg dat je in <b>Safari</b> zit (niet in Bestanden-app).</div>
+    <div class="step-card"><span class="step-num">2</span> Tik onderaan op <b>Delen</b> &#x1F4E4; (vierkant met pijl omhoog).</div>
+    <div class="step-card"><span class="step-num">3</span> Scroll en kies <b>Zet op beginscherm</b>.</div>
+    <div class="step-card"><span class="step-num">4</span> Tik <b>Voeg toe</b> — het icoon staat in je app-lade / beginscherm.</div>
+  </div>
+  <div id="installDesktopSteps" style="display:none;width:100%;max-width:480px">
+    <div class="step-card">In Chrome/Edge: klik op het <b>installatie-icoon</b> in de adresbalk, of gebruik de knop hierboven als die verschijnt.</div>
+  </div>
+  <div id="installDoneMsg" class="step-card" style="display:none;border-color:rgba(124,252,138,.5);color:#7cfc8a">
+    &#10004; Je speelt al als app! Sluit Safari en open het icoon <b>Stickman</b> op je beginscherm.
+  </div>
+  <div class="subtitle" style="margin-top:12px">Na installatie: lang indrukken op het icoon (Android) voor snelkoppelingen Avontuur / Training / Muur.</div>
+</div>
+
+<div id="helpScreen" class="screen">
+  <button class="btn back-btn" data-back>&#8592; Terug</button>
+  <h2 class="head">Tips</h2>
+  <div id="tutBox">
+    <ul>
+      <li><b>Combo’s:</b> sla snel achter elkaar om ×2 / ×3 schade te stapelen.</li>
+      <li><b>Dash:</b> dubbel-tik links/rechts (of toets <b>Shift</b>) om te ontwijken.</li>
+      <li><b>⚡ Speciaal:</b> vul energie door te vechten — dan knalt de energiegolf.</li>
+      <li><b>Power-ups:</b> ♥ geneest, ★ schadeboost, ⚡ sneller energie, 💨 sneller lopen.</li>
+      <li><b>RabbitRobot:</b> hij blokkeert en countert — wacht tot hij open is.</li>
+      <li><b>Muur:</b> bomstenen (rood) ontploffen, staal (grijs) is taai, goud (geel) = XP.</li>
+      <li><b>Rariteiten:</b> Gewoon → Ongewoon → Zeldzaam → Episch → Legendarisch → Mythisch. Zeldzamer = meer XP &amp; meer max HP.</li>
+      <li><b>50 levels:</b> elke 5 levels een baas. Level 50 = Guvvedrak + Voidkonijn + Schaduwvorst.</li>
+    </ul>
+  </div>
+  <button class="btn mode-btn b-adventure" id="helpOk"><span class="ico">&#128076;</span><div>Begrepen!</div></button>
+</div>
+
+<div id="resultScreen" class="screen">
+  <div class="bigres" id="resTitle">GEWONNEN!</div>
+  <div class="stars-big" id="resStars"></div>
+  <div class="detail" id="resDetail"></div>
+  <div class="detail" id="resXp"></div>
+  <div style="height:14px"></div>
+  <button class="btn mode-btn b-adventure" id="resAgain"><span class="ico">&#128260;</span><div>Opnieuw</div></button>
+  <button class="btn mode-btn b-training" id="resNext" style="display:none"><span class="ico">&#10145;&#65039;</span><div>Volgend level</div></button>
+  <button class="btn mode-btn b-gray" id="resMenu"><span class="ico">&#127968;</span><div>Hoofdmenu</div></button>
+</div>
+
+<div id="pauseScreen" class="screen">
+  <h2 class="head" style="margin-top:60px">Pauze</h2>
+  <button class="btn mode-btn b-adventure" id="pauseResume"><span class="ico">&#9654;&#65039;</span><div>Verder spelen</div></button>
+  <button class="btn mode-btn b-gray" id="pauseQuit"><span class="ico">&#127968;</span><div>Stop &amp; hoofdmenu</div></button>
+</div>
+
+<script>
 'use strict';
 /* =========================================================================
    STICKMAN FIGHTER — Monster Arena
@@ -8,7 +295,6 @@
    ========================================================================= */
 
 const TAU = Math.PI * 2;
-const FX_CAP = { particles: 140, floaters: 28, projectiles: 48, banners: 5, afterimages: 12 };
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
 const lerp = (a, b, t) => a + (b - a) * t;
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -16,312 +302,20 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
-const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.4.0';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
-  bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
-  musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true,
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0 },
-  achievements: {}, daily: null, vsPlayedIds: [] };
+  bestWall: 0, trainWins: 0, music: true, sfx: true };
 let save = loadSave();
 
 function loadSave() {
-  const parsed = readSaveJson(localStorage.getItem(SAVE_KEY));
-  if (parsed) return parsed;
-  const backup = readSaveJson(localStorage.getItem(SAVE_BACKUP_KEY));
-  if (backup) {
-    window.__sfRecoveredBackup = true;
-    return backup;
-  }
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw) return Object.assign({}, DEFAULT_SAVE, JSON.parse(raw));
+  } catch (e) {}
   return Object.assign({}, DEFAULT_SAVE);
 }
-
-function readSaveJson(raw) {
-  try {
-    if (!raw || raw.length > 200000) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
-    const merged = Object.assign({}, DEFAULT_SAVE, parsed);
-    merged.stats = Object.assign({}, DEFAULT_SAVE.stats, parsed.stats || {});
-    merged.achievements = Object.assign({}, parsed.achievements || {});
-    merged.stars = Object.assign({}, parsed.stars || {});
-    merged.dex = Object.assign({}, parsed.dex || {});
-    return merged;
-  } catch (e) {
-    return null;
-  }
-}
-
 function persist() {
-  try {
-    const json = JSON.stringify(save);
-    localStorage.setItem(SAVE_KEY, json);
-    localStorage.setItem(SAVE_BACKUP_KEY, json);
-  } catch (e) {
-    try { localStorage.setItem(SAVE_BACKUP_KEY, JSON.stringify(save)); } catch (_) {}
-  }
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {}
 }
-
-function restoreSaveFromBackup() {
-  const backup = readSaveJson(localStorage.getItem(SAVE_BACKUP_KEY));
-  if (!backup) return false;
-  save = sanitizeSave(backup);
-  persist();
-  checkAchievements();
-  UI.renderMenu();
-  if (UI.renderMissions) UI.renderMissions();
-  return true;
-}
-
-/** Corrupte / gemanipuleerde saves veilig maken (localStorage + import). */
-function sanitizeSave(s) {
-  const out = Object.assign({}, DEFAULT_SAVE, s);
-  out.lvl = clamp(Math.floor(Number(out.lvl) || 1), 1, 500);
-  out.xp = clamp(Math.floor(Number(out.xp) || 0), 0, 999999);
-  out.unlocked = clamp(Math.floor(Number(out.unlocked) || 1), 1, MAX_LEVEL);
-  out.trainWins = clamp(Math.floor(Number(out.trainWins) || 0), 0, 9999);
-  out.bestWall = clamp(Math.floor(Number(out.bestWall) || 0), 0, 999999);
-  out.musicVol = clamp(Number(out.musicVol), 0, 1);
-  out.sfxVol = clamp(Number(out.sfxVol), 0, 1);
-  out.music = out.music !== false;
-  out.sfx = out.sfx !== false;
-  out.shake = out.shake !== false;
-  out.haptics = out.haptics !== false;
-  out.comboHud = out.comboHud !== false;
-  if (!WEAPONS.some(w => w.id === out.weapon)) out.weapon = 'vuist';
-  const stPick = STYLES.find(st => st.id === out.style) || STYLES[0];
-  let styleOk = stPick.id === 'classic';
-  if (stPick.needLvl && out.lvl >= stPick.needLvl) styleOk = true;
-  if (stPick.needTrain && out.trainWins >= stPick.needTrain) styleOk = true;
-  if (stPick.needDex && Object.keys(out.dex).length >= stPick.needDex) styleOk = true;
-  if (!styleOk) out.style = 'classic';
-
-  const cleanStars = {};
-  for (const [k, v] of Object.entries(out.stars || {})) {
-    const n = parseInt(k, 10);
-    if (n >= 1 && n <= MAX_LEVEL) cleanStars[n] = clamp(Math.floor(Number(v) || 0), 0, 3);
-  }
-  out.stars = cleanStars;
-
-  const cleanDex = {};
-  for (const [k, v] of Object.entries(out.dex || {})) {
-    if (SPECIES[k] && v) cleanDex[k] = 1;
-  }
-  out.dex = cleanDex;
-
-  out.stats = Object.assign({}, DEFAULT_SAVE.stats, out.stats || {});
-  for (const key of Object.keys(DEFAULT_SAVE.stats)) {
-    out.stats[key] = clamp(Math.floor(Number(out.stats[key]) || 0), 0, 9999999);
-  }
-
-  const cleanAch = {};
-  for (const [k, v] of Object.entries(out.achievements || {})) {
-    if (ACHIEVEMENTS.some(a => a.id === k) && typeof v === 'string') cleanAch[k] = v.slice(0, 32);
-  }
-  out.achievements = cleanAch;
-
-  if (out.daily && typeof out.daily === 'object') {
-    const dk = typeof out.daily.date === 'string' ? out.daily.date.slice(0, 10) : todayKey();
-    const tasks = Array.isArray(out.daily.tasks) ? out.daily.tasks : [];
-    out.daily = {
-      date: dk,
-      tasks: tasks.filter(t => t && dailyDef(t.id)).map(t => ({
-        id: t.id,
-        progress: clamp(Math.floor(Number(t.progress) || 0), 0, 99999),
-        done: !!t.done,
-        claimed: !!t.claimed,
-      })).slice(0, 5),
-      dayBonusClaimed: !!out.daily.dayBonusClaimed,
-    };
-  } else {
-    out.daily = null;
-  }
-  if (!Array.isArray(out.vsPlayedIds)) out.vsPlayedIds = [];
-  out.vsPlayedIds = out.vsPlayedIds.filter(id => typeof id === 'string' && VS_ROSTER.some(r => r.id === id)).slice(0, 32);
-  return out;
-}
-function haptic(ms) {
-  if (!save.haptics) return;
-  try { if (navigator.vibrate) navigator.vibrate(ms || 14); } catch (e) {}
-}
-
-const PICKUP_TYPES = ['heal', 'rage', 'chakra', 'shield'];
-const PICKUP_META = {
-  heal:   { color: '#6ee06e', label: '+HP' },
-  rage:   { color: '#ff7a4d', label: 'RAGE' },
-  chakra: { color: '#7cf5ff', label: 'CHAKRA' },
-  shield: { color: '#9fd8ff', label: 'SCHILD' },
-};
-
-/* ===================== DAGELIJKSE MISSIES & PRESTATIES ================= */
-const DAILY_DEFS = [
-  { id: 'kills12', type: 'kills', goal: 12, xp: 45, text: 'Versla 12 monsters' },
-  { id: 'advwin', type: 'advWin', goal: 1, xp: 55, text: 'Win 1 avontuur-level' },
-  { id: 'wall35', type: 'wallBricks', goal: 35, xp: 40, text: 'Sloop 35 muurstenen' },
-  { id: 'trainwin', type: 'trainWin', goal: 1, xp: 60, text: 'Win training vs Robot' },
-  { id: 'combo5', type: 'comboReach', goal: 5, xp: 35, text: 'Bereik combo ×5' },
-  { id: 'pick3', type: 'pickups', goal: 3, xp: 30, text: 'Pak 3 power-ups' },
-  { id: 'boss1', type: 'bossKill', goal: 1, xp: 50, text: 'Versla 1 baas-monster' },
-];
-const ACHIEVEMENTS = [
-  { id: 'first_win', name: 'Eerste triomf', desc: 'Win je eerste level', icon: '🏆',
-    test: s => s.stats.advWins >= 1 },
-  { id: 'lv10', name: 'Groeiende ninja', desc: 'Bereik vechter Lv 10', icon: '⬆️',
-    test: s => s.lvl >= 10 },
-  { id: 'dex10', name: 'Monsterkenner', desc: '10 soorten in monsterboek', icon: '📖',
-    test: s => Object.keys(s.dex).length >= 10 },
-  { id: 'train5', name: 'Robotbreker', desc: '5× training gewonnen', icon: '🤖',
-    test: s => s.trainWins >= 5 },
-  { id: 'wall100', name: 'Sloper', desc: 'Muurrecord 100+', icon: '🧱',
-    test: s => s.bestWall >= 100 },
-  { id: 'combo8', name: 'Combo-koning', desc: 'Combo ×8 bereikt', icon: '⚡',
-    test: s => s.stats.maxCombo >= 8 },
-  { id: 'lv50', name: 'Legende', desc: 'Unlock level 50', icon: '👑',
-    test: s => s.unlocked >= 50 },
-  { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd', icon: '📅',
-    test: s => (s.stats.dailyBonusCount || 0) >= 7 },
-  { id: 'vs5', name: 'Duelist', desc: '5× 2-speler duel gespeeld', icon: '🥊',
-    test: s => (s.stats.vsMatches || 0) >= 5 },
-  { id: 'vs_roster', name: 'Vol roster', desc: 'Speel met 10+ verschillende vechters (2P)', icon: '🎭',
-    test: s => (s.vsPlayedIds || []).length >= 10 },
-];
-
-function todayKey() {
-  return new Date().toISOString().slice(0, 10);
-}
-function ensureDaily() {
-  const dk = todayKey();
-  if (!save.daily || save.daily.date !== dk) {
-    const order = [...DAILY_DEFS].sort((a, b) => {
-      const h = (s) => { let x = 0; for (let i = 0; i < s.length; i++) x = (x * 33 + s.charCodeAt(i)) | 0; return x; };
-      return h(dk + a.id) - h(dk + b.id);
-    });
-    save.daily = {
-      date: dk,
-      tasks: order.slice(0, 3).map(d => ({ id: d.id, progress: 0, done: false, claimed: false })),
-      allClaimed: false,
-      dayBonusClaimed: false,
-    };
-    persist();
-  }
-  return save.daily;
-}
-function dailyDef(id) { return DAILY_DEFS.find(d => d.id === id); }
-
-function bumpDaily(type, amount) {
-  ensureDaily();
-  let changed = false;
-  for (const t of save.daily.tasks) {
-    if (t.done) continue;
-    const def = dailyDef(t.id);
-    if (!def || def.type !== type) continue;
-    if (type === 'comboReach' || type === 'wallBricks') {
-      t.progress = Math.max(t.progress, amount);
-    } else {
-      t.progress += amount;
-    }
-    if (t.progress >= def.goal) { t.progress = def.goal; t.done = true; changed = true; UI.toast(`Missie klaar: ${def.text}`, 2800); }
-    else changed = true;
-  }
-  if (changed) { persist(); checkAchievements(); if (UI.renderMissions) UI.renderMissions(); }
-}
-
-function claimDailyTask(taskId) {
-  ensureDaily();
-  const t = save.daily.tasks.find(x => x.id === taskId);
-  const def = dailyDef(taskId);
-  if (!t || !def || !t.done || t.claimed) return;
-  t.claimed = true;
-  grantMetaXP(def.xp);
-  AudioSys.sfx('bonus');
-  persist();
-  checkDailyAllBonus();
-  UI.renderMissions();
-}
-
-function claimDailyDayBonus() {
-  ensureDaily();
-  if (save.daily.dayBonusClaimed) return;
-  if (!save.daily.tasks.every(t => t.claimed)) return;
-  save.daily.dayBonusClaimed = true;
-  save.stats.dailyBonusCount = (save.stats.dailyBonusCount || 0) + 1;
-  grantMetaXP(80);
-  AudioSys.sfx('win');
-  persist();
-  checkAchievements();
-  UI.renderMissions();
-  UI.toast('Dagbonus +80 XP!', 3200);
-}
-
-function grantMetaXP(n) {
-  save.xp += n;
-  while (save.xp >= xpNeed(save.lvl)) {
-    save.xp -= xpNeed(save.lvl);
-    save.lvl++;
-    AudioSys.sfx('levelup');
-  }
-  persist();
-  UI.renderMenu();
-}
-
-function checkDailyAllBonus() {
-  ensureDaily();
-  if (save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed) {
-    UI.toast('Alle missies geclaimd — pak de dagbonus!', 3500);
-  }
-}
-
-function unlockAchievement(id) {
-  if (save.achievements[id]) return;
-  save.achievements[id] = todayKey();
-  const ach = ACHIEVEMENTS.find(a => a.id === id);
-  persist();
-  AudioSys.sfx('newmonster');
-  UI.toast(`${ach ? ach.icon : '🎖'} Prestatie: ${ach ? ach.name : id}`, 4000);
-  if (UI.renderMissions) UI.renderMissions();
-}
-
-function checkAchievements() {
-  for (const ach of ACHIEVEMENTS) {
-    if (!save.achievements[ach.id] && ach.test(save)) unlockAchievement(ach.id);
-  }
-}
-
-function bumpStat(key, n) {
-  save.stats[key] = (save.stats[key] || 0) + (n || 1);
-  persist();
-}
-
-function trackCombo(n) {
-  if (n > (save.stats.maxCombo || 0)) save.stats.maxCombo = n;
-  bumpDaily('comboReach', n);
-}
-
-function exportSaveJson() {
-  return JSON.stringify(save, null, 2);
-}
-function importSaveJson(text) {
-  if (typeof text !== 'string' || text.length > 120000) throw new Error('invalid');
-  const parsed = JSON.parse(text);
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('invalid');
-  save = sanitizeSave(Object.assign({}, DEFAULT_SAVE, parsed));
-  save.stats = Object.assign({}, DEFAULT_SAVE.stats, parsed.stats || {});
-  save.achievements = Object.assign({}, parsed.achievements || {});
-  save.stars = Object.assign({}, parsed.stars || {});
-  save.dex = Object.assign({}, parsed.dex || {});
-  save = sanitizeSave(save);
-  persist();
-  checkAchievements();
-  UI.renderMenu();
-  if (UI.renderMissions) UI.renderMissions();
-  UI.toast('Voortgang hersteld!', 2800);
-}
-
-function headLiveFromPage() {
-  if (location.protocol === 'file:') return '';
-  return location.origin;
-}
-
 const xpNeed = lvl => 60 + (lvl - 1) * 40;
 const dexCount = () => Object.keys(save.dex).length;
 function dexHpBonus() {
@@ -353,155 +347,20 @@ const rarityHpBonus = r => ({ common: 3, uncommon: 5, rare: 8, epic: 12, legenda
 
 /* ============================== WAPENS ================================= */
 const WEAPONS = [
-  { id: 'vuist',     name: 'Vuisten',         dmg: 1.0, range: 38, speed: 1.0,  unlock: 1,  rarity: 'common',    desc: 'Taijutsu basics' },
-  { id: 'kunai',     name: 'Kunai',           dmg: 1.35, range: 52, speed: 1.15, unlock: 2,  rarity: 'common',    desc: 'Klassieke ninja-mes' },
-  { id: 'shuriken',  name: 'Shuriken',        dmg: 1.25, range: 64, speed: 1.35, unlock: 3,  rarity: 'common',    desc: 'Gooit scherpe sterren' },
-  { id: 'zwaard',    name: 'Ninja-zwaard',    dmg: 1.55, range: 58, speed: 0.95, unlock: 5,  rarity: 'uncommon',  desc: 'Kenjutsu alleskunner' },
-  { id: 'knuppel',   name: 'Knuppel',         dmg: 1.8, range: 50, speed: 0.72, unlock: 7,  rarity: 'uncommon',  desc: 'Rauwe slagkracht' },
-  { id: 'speer',     name: 'Speer',           dmg: 1.6, range: 78, speed: 0.8,  unlock: 10, rarity: 'uncommon',  desc: 'Enorm bereik' },
-  { id: 'nunchaku',  name: 'Nunchaku',        dmg: 1.3, range: 48, speed: 1.4,  unlock: 13, rarity: 'rare',      desc: 'Bliksemsnel' },
-  { id: 'boemerang', name: 'Boemerang',       dmg: 1.7, range: 70, speed: 1.05, unlock: 16, rarity: 'rare',      desc: 'Komt terug' },
-  { id: 'hamer',     name: 'Mokerhamer',      dmg: 2.6, range: 52, speed: 0.55, unlock: 20, rarity: 'epic',      desc: 'Sloopt alles' },
-  { id: 'ketting',   name: 'Kettingzwaard',   dmg: 2.1, range: 68, speed: 0.95, unlock: 24, rarity: 'epic',      desc: 'Bereik + druk' },
-  { id: 'laser',     name: 'Chakra-kling',    dmg: 2.3, range: 62, speed: 1.15, unlock: 28, rarity: 'legendary', desc: 'Blauw brandende kling' },
-  { id: 'donder',    name: 'Bliksem-bijl',    dmg: 2.8, range: 58, speed: 0.7,  unlock: 34, rarity: 'legendary', desc: 'Als Chidori, maar een bijl' },
-  { id: 'void',      name: 'Voidklaauw',      dmg: 2.5, range: 64, speed: 1.25, unlock: 40, rarity: 'mythic',    desc: 'Mythische klauw' },
+  { id: 'vuist',     name: 'Vuisten',        dmg: 1.0, range: 38, speed: 1.0,  unlock: 1,  rarity: 'common',    desc: 'Snel en vertrouwd' },
+  { id: 'zwaard',    name: 'Zwaard',         dmg: 1.5, range: 56, speed: 0.9,  unlock: 2,  rarity: 'common',    desc: 'Scherpe alleskunner' },
+  { id: 'knuppel',   name: 'Knuppel',        dmg: 1.8, range: 50, speed: 0.72, unlock: 4,  rarity: 'uncommon',  desc: 'Rauwe slagkracht' },
+  { id: 'speer',     name: 'Speer',          dmg: 1.6, range: 78, speed: 0.8,  unlock: 6,  rarity: 'uncommon',  desc: 'Enorm bereik' },
+  { id: 'nunchaku',  name: 'Nunchaku',       dmg: 1.3, range: 48, speed: 1.4,  unlock: 8,  rarity: 'rare',      desc: 'Bliksemsnel' },
+  { id: 'boemerang', name: 'Boemerang',      dmg: 1.7, range: 70, speed: 1.05, unlock: 12, rarity: 'rare',      desc: 'Slaat en komt terug' },
+  { id: 'hamer',     name: 'Mokerhamer',     dmg: 2.6, range: 52, speed: 0.55, unlock: 16, rarity: 'epic',      desc: 'Sloopt alles (traag)' },
+  { id: 'ketting',   name: 'Kettingzwaard',  dmg: 2.1, range: 68, speed: 0.95, unlock: 20, rarity: 'epic',      desc: 'Bereik + druk' },
+  { id: 'laser',     name: 'Laserzwaard',    dmg: 2.2, range: 60, speed: 1.1,  unlock: 26, rarity: 'legendary', desc: 'Snel én sterk' },
+  { id: 'donder',    name: 'Donderbijl',     dmg: 2.8, range: 58, speed: 0.7,  unlock: 32, rarity: 'legendary', desc: 'Zware bliksemslag' },
+  { id: 'void',      name: 'Voidklaauw',     dmg: 2.5, range: 64, speed: 1.25, unlock: 40, rarity: 'mythic',    desc: 'Mythische klauw' },
   { id: 'guvve',     name: 'Guvvedukkie-stok', dmg: 3.1, range: 66, speed: 1.0, unlock: 48, rarity: 'mythic',  desc: 'Quak. Bitte. Boom.' },
 ];
 const weaponById = id => WEAPONS.find(w => w.id === id) || WEAPONS[0];
-
-/* ============================== STIJLEN ================================ */
-const STYLES = [
-  { id: 'classic', name: 'Klassiek', body: '#f2f5ff', accent: '#3db8ff', bandana: null,
-    needLvl: 1, hint: 'Standaard ninja' },
-  { id: 'konoha', name: 'Konoha bandana', body: '#f2f5ff', accent: '#43b25b', bandana: '#2d6b36', plate: '#dfe8ff',
-    needLvl: 5, hint: 'Unlock op Lv 5' },
-  { id: 'chakra', name: 'Chakra gloed', body: '#e8f4ff', accent: '#7cf5ff', bandana: '#3db8ff', glow: true,
-    needTrain: 3, hint: 'Win 3× training' },
-  { id: 'akatsuki', name: 'Rode mantel', body: '#1a1424', accent: '#e04f4f', bandana: '#e04f4f', coat: true,
-    needLvl: 12, hint: 'Unlock op Lv 12' },
-  { id: 'shadow', name: 'Schaduw-ninja', body: '#8fa3d9', accent: '#b06ae0', bandana: '#2a1840',
-    needLvl: 15, hint: 'Unlock op Lv 15' },
-  { id: 'guvve', name: 'Guvvedukkie', body: '#43b25b', accent: '#ffe259', bandana: '#2a8a38', duck: true,
-    needDex: 8, hint: '8 monsters in boek' },
-  { id: 'gold', name: 'Legendarisch', body: '#ffd75e', accent: '#c97a20', bandana: '#ffb830', glow: true,
-    needLvl: 25, hint: 'Unlock op Lv 25' },
-  { id: 'sand', name: 'Woestijn', body: '#e8c98a', accent: '#c97a20', bandana: '#8a6030',
-    needLvl: 8, hint: 'Unlock op Lv 8' },
-  { id: 'samurai', name: 'Samurai', body: '#2a2a35', accent: '#e04f4f', bandana: '#1a1a22', topknot: true,
-    needLvl: 20, hint: 'Unlock op Lv 20' },
-  { id: 'cyber', name: 'Cyber-ninja', body: '#1a2040', accent: '#7cf5ff', bandana: '#4ecf6a', visor: true,
-    needLvl: 18, hint: 'Unlock op Lv 18' },
-  { id: 'fox', name: 'Vossen-ninja', body: '#ff8c42', accent: '#ffe259', bandana: '#d05a1e', fox: true,
-    needDex: 12, hint: '12 monsters in boek' },
-  { id: 'storm', name: 'Stormgeest', body: '#dfe8ff', accent: '#6fd7ff', bandana: '#2a7fc0', glow: true,
-    needTrain: 5, hint: 'Win 5× training' },
-  { id: 'void', name: 'Void-waker', body: '#2a1840', accent: '#ff6b9d', bandana: '#5a1040', coat: true,
-    needLvl: 40, hint: 'Unlock op Lv 40' },
-];
-const styleById = id => STYLES.find(s => s.id === id) || STYLES[0];
-function styleUnlocked(st) {
-  if (st.id === 'classic') return true;
-  if (st.needLvl && save.lvl >= st.needLvl) return true;
-  if (st.needTrain && save.trainWins >= st.needTrain) return true;
-  if (st.needDex && dexCount() >= st.needDex) return true;
-  return false;
-}
-function applyPlayerStyle(fighter) {
-  const st = styleById(save.style || 'classic');
-  if (!styleUnlocked(st)) { save.style = 'classic'; persist(); }
-  fighter.color = styleById(save.style).body;
-  fighter.style = styleById(save.style);
-  fighter.lineW = st.id === 'gold' ? 5 : 4.5;
-}
-
-/* ========================== VERSUS / 2 SPELERS ========================== */
-const VS_ROSTER = [
-  { id: 'hero', name: 'Stick Ninja', tag: 'Balanced', styleId: 'classic', weapon: 'kunai',
-    hpMul: 1, spdMul: 1, dmgMul: 1, unlock: () => true },
-  { id: 'konoha', name: 'Konoha', tag: 'Snel', styleId: 'konoha', weapon: 'shuriken',
-    hpMul: 0.95, spdMul: 1.08, dmgMul: 0.95, unlock: () => styleUnlocked(STYLES.find(s => s.id === 'konoha')) },
-  { id: 'shadow', name: 'Schaduw', tag: 'Chidori', styleId: 'shadow', weapon: 'zwaard',
-    hpMul: 1, spdMul: 1, dmgMul: 1.05, special: 'chidori', unlock: () => save.lvl >= 15 },
-  { id: 'gold', name: 'Legende', tag: 'Zwaar', styleId: 'gold', weapon: 'hamer',
-    hpMul: 1.15, spdMul: 0.92, dmgMul: 1.12, unlock: () => save.lvl >= 25 },
-  { id: 'chakra', name: 'Chakra', tag: 'Special spam', styleId: 'chakra', weapon: 'laser',
-    hpMul: 0.9, spdMul: 1, dmgMul: 0.92, unlock: () => save.trainWins >= 3 },
-  { id: 'guvve', name: 'Guvvedukkie', tag: 'Quak', styleId: 'guvve', weapon: 'guvve',
-    hpMul: 1.08, spdMul: 0.98, dmgMul: 1.15, unlock: () => dexCount() >= 8 },
-  { id: 'rabbit', name: 'RabbitRobot', tag: 'CPU-killer', styleId: null, weapon: 'vuist',
-    hpMul: 1.05, spdMul: 1.05, dmgMul: 1.08, isRobot: true, special: 'chidori',
-    unlock: () => save.trainWins >= 1 },
-  { id: 'akatsuki', name: 'Akatsuki', tag: 'Mantel', styleId: 'akatsuki', weapon: 'ketting',
-    hpMul: 1.1, spdMul: 0.96, dmgMul: 1.1, unlock: () => save.lvl >= 12 },
-  { id: 'brawler', name: 'Barve', tag: 'Tank', styleId: 'classic', weapon: 'knuppel',
-    hpMul: 1.2, spdMul: 0.88, dmgMul: 1.08, unlock: () => true },
-  { id: 'sand', name: 'Woestijn', tag: 'Bereik', styleId: 'sand', weapon: 'speer',
-    hpMul: 1, spdMul: 1.02, dmgMul: 1, unlock: () => save.lvl >= 8 },
-  { id: 'speedster', name: 'Speedster', tag: 'Combo', styleId: 'konoha', weapon: 'nunchaku',
-    hpMul: 0.9, spdMul: 1.12, dmgMul: 0.95, unlock: () => save.lvl >= 13 },
-  { id: 'samurai', name: 'Samurai', tag: 'Kenjutsu', styleId: 'samurai', weapon: 'zwaard',
-    hpMul: 1.05, spdMul: 0.98, dmgMul: 1.08, unlock: () => save.lvl >= 20 },
-  { id: 'golem', name: 'Rotsbonk', tag: 'Muur', styleId: null, bodyColor: '#9a917f', weapon: 'hamer',
-    hpMul: 1.32, spdMul: 0.78, dmgMul: 1.06, unlock: () => save.lvl >= 22 },
-  { id: 'cyber', name: 'Cyber', tag: 'Laser', styleId: 'cyber', weapon: 'laser',
-    hpMul: 0.92, spdMul: 1.06, dmgMul: 1.05, special: 'chidori', unlock: () => save.lvl >= 18 },
-  { id: 'storm', name: 'Storm', tag: 'Bliksem', styleId: 'storm', weapon: 'donder',
-    hpMul: 1, spdMul: 1.1, dmgMul: 0.98, special: 'chidori', unlock: () => save.trainWins >= 5 },
-  { id: 'fox', name: 'Vlamvos', tag: 'Hit & run', styleId: 'fox', weapon: 'boemerang',
-    hpMul: 0.88, spdMul: 1.14, dmgMul: 0.9, unlock: () => dexCount() >= 12 },
-  { id: 'void', name: 'Void', tag: 'Mythic', styleId: 'void', weapon: 'void',
-    hpMul: 1.12, spdMul: 1.04, dmgMul: 1.15, unlock: () => save.lvl >= 40 },
-  { id: 'dragon', name: 'Kristallo', tag: 'Baas', styleId: 'gold', weapon: 'donder',
-    hpMul: 1.08, spdMul: 0.94, dmgMul: 1.18, unlock: () => save.unlocked >= 45 },
-];
-const vsRosterEntry = id => VS_ROSTER.find(r => r.id === id) || VS_ROSTER[0];
-function vsUnlocked(r) { return !r.unlock || r.unlock(); }
-function normalizeVsPick(id, fallback) {
-  const r = vsRosterEntry(id);
-  if (r.id === id && vsUnlocked(r)) return id;
-  const fb = vsRosterEntry(fallback);
-  return vsUnlocked(fb) ? fallback : 'hero';
-}
-function trackVsRosterUse(p1, p2) {
-  if (!Array.isArray(save.vsPlayedIds)) save.vsPlayedIds = [];
-  for (const id of [p1, p2]) {
-    if (VS_ROSTER.some(r => r.id === id) && !save.vsPlayedIds.includes(id)) {
-      save.vsPlayedIds.push(id);
-    }
-  }
-  if (save.vsPlayedIds.length > 32) save.vsPlayedIds = save.vsPlayedIds.slice(-32);
-  persist();
-  checkAchievements();
-}
-
-save = sanitizeSave(save);
-persist();
-
-function buildVsFighter(entry, x, slot) {
-  const st = entry.styleId ? styleById(entry.styleId) : null;
-  const hp = Math.round(100 * entry.hpMul);
-  const f = new Fighter({
-    isPlayer: true,
-    playerSlot: slot,
-    name: entry.name,
-    x, y: (typeof H === 'number' && H > 0 ? H : 520) * 0.78,
-    face: slot === 1 ? 1 : -1,
-    hp, maxhp: hp,
-    baseDmg: Math.round(12 * entry.dmgMul),
-    speed: Math.round(260 * entry.spdMul),
-    weapon: weaponById(entry.weapon),
-    color: entry.bodyColor || (st ? st.body : '#b8c4d8'),
-    style: st,
-    isRobot: !!entry.isRobot,
-    vsSpecial: entry.special || 'rasengan',
-  });
-  if (entry.isRobot) f.isRobot = true;
-  f.energy = 35;
-  return f;
-}
-
-let vsSelect = { p1: 'hero', p2: 'rabbit' };
 
 /* ============================ MONSTERS ================================= */
 const SPECIES = {
@@ -610,28 +469,16 @@ const AudioSys = {
     this.ctx = new AC();
     this.master = this.ctx.createGain(); this.master.gain.value = 0.9;
     this.master.connect(this.ctx.destination);
-    this.musicGain = this.ctx.createGain(); this.musicGain.gain.value = 0.28;
+    this.musicGain = this.ctx.createGain(); this.musicGain.gain.value = 0.32;
     this.musicGain.connect(this.master);
-    this.sfxGain = this.ctx.createGain(); this.sfxGain.gain.value = 0.82;
+    this.sfxGain = this.ctx.createGain(); this.sfxGain.gain.value = 0.85;
     this.sfxGain.connect(this.master);
     setInterval(() => this.tick(), 40);
     if (this.desiredSong && save.music) this.play(this.desiredSong);
-    this.applyVolumes();
-  },
-
-  applyVolumes() {
-    if (!this.musicGain || !this.sfxGain) return;
-    const mv = save.music ? clamp(Number(save.musicVol) || 0.85, 0, 1) : 0;
-    const sv = save.sfx ? clamp(Number(save.sfxVol) || 1, 0, 1) : 0;
-    const baseM = (this.song && this.song.id === 'menu') ? 0.24 : 0.32;
-    this.musicGain.gain.value = baseM * mv;
-    this.sfxGain.gain.value = 0.82 * sv;
   },
 
   tone(f0, f1, dur, type, vol, out, when) {
     if (!this.ctx) return;
-    vol *= save.sfx ? clamp(Number(save.sfxVol) || 1, 0, 1) : 0;
-    if (vol <= 0.001) return;
     const t = (when != null ? when : this.ctx.currentTime);
     const o = this.ctx.createOscillator(), g = this.ctx.createGain();
     o.type = type;
@@ -645,8 +492,6 @@ const AudioSys = {
 
   noise(dur, vol, filterFreq, hp, out, when) {
     if (!this.ctx) return;
-    vol *= save.sfx ? clamp(Number(save.sfxVol) || 1, 0, 1) : 0;
-    if (vol <= 0.001) return;
     const t = (when != null ? when : this.ctx.currentTime);
     const len = Math.max(1, Math.floor(this.ctx.sampleRate * dur));
     const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
@@ -669,8 +514,8 @@ const AudioSys = {
     const now = this.ctx.currentTime;
     switch (name) {
       case 'swing':   N(0.07, 0.25, 2800, true); T(340, 150, 0.08, 'sine', 0.12); break;
-      case 'hit':     T(180, 55, 0.1, 'square', 0.28); N(0.05, 0.28, 900, false); T(90, 45, 0.06, 'sine', 0.12); break;
-      case 'hit2':    T(130, 40, 0.16, 'square', 0.38); N(0.1, 0.38, 500, false); T(220, 80, 0.08, 'triangle', 0.15); break;
+      case 'hit':     T(180, 55, 0.1, 'square', 0.3); N(0.05, 0.3, 900, false); break;
+      case 'hit2':    T(130, 40, 0.16, 'square', 0.4); N(0.1, 0.4, 500, false); break;
       case 'jump':    T(230, 540, 0.13, 'sine', 0.22); break;
       case 'land':    N(0.05, 0.2, 400, false); break;
       case 'hurt':    T(320, 110, 0.16, 'sawtooth', 0.25); break;
@@ -681,32 +526,9 @@ const AudioSys = {
       case 'brick':   N(0.13, 0.42, 1400, false); T(480, 190, 0.09, 'triangle', 0.22); break;
       case 'crack':   N(0.06, 0.22, 2000, false); break;
       case 'block':   T(880, 660, 0.09, 'square', 0.2); N(0.05, 0.2, 4500, true); break;
-      case 'special':
-      case 'rasengan':
-        T(180, 880, 0.45, 'sawtooth', 0.18);
-        T(420, 1400, 0.5, 'sine', 0.16);
-        N(0.35, 0.18, 2800, true);
-        break;
-      case 'chidori':
-        T(900, 1600, 0.35, 'sawtooth', 0.22);
-        N(0.3, 0.2, 5000, true);
-        break;
-      case 'subst':
-        N(0.12, 0.35, 900, false); T(300, 120, 0.1, 'triangle', 0.15); break;
-      case 'shuriken':
-        T(880, 440, 0.08, 'square', 0.15); N(0.04, 0.12, 4000, true); break;
+      case 'special': T(190, 950, 0.3, 'sawtooth', 0.22); N(0.25, 0.15, 3200, true); break;
       case 'roar':    T(95, 55, 0.5, 'sawtooth', 0.35); N(0.4, 0.25, 350, false); break;
-      case 'select':  T(660, 880, 0.07, 'square', 0.14); break;
-      case 'combo':
-        T(520, 780, 0.08, 'square', 0.16, now);
-        T(780, 980, 0.1, 'triangle', 0.14, now + 0.04);
-        break;
-      case 'dash':
-        N(0.06, 0.18, 3200, true); T(420, 680, 0.09, 'sine', 0.14); break;
-      case 'pickup':
-        T(660, 990, 0.1, 'square', 0.18, now);
-        T(990, 1320, 0.12, 'triangle', 0.14, now + 0.05);
-        break;
+      case 'select':  T(660, 660, 0.06, 'square', 0.15); break;
       case 'bell':    T(1250, 1180, 0.7, 'triangle', 0.3); break;
       case 'bonus':   T(880, 1320, 0.14, 'square', 0.2); T(1320, 1760, 0.14, 'square', 0.2, now + 0.1); break;
       case 'levelup':
@@ -730,10 +552,6 @@ const AudioSys = {
     if (!this.ctx || !save.music) return;
     if (this.song && this.song.id === name) return;
     this.song = Object.assign({ id: name }, SONGS[name]);
-    if (this.musicGain) {
-      const mv = save.music ? clamp(Number(save.musicVol) || 0.85, 0, 1) : 0;
-      this.musicGain.gain.value = (name === 'menu' ? 0.24 : 0.32) * mv;
-    }
     this.step = 0; this.bar = 0;
     this.nextTime = this.ctx.currentTime + 0.06;
   },
@@ -767,9 +585,6 @@ const AudioSys = {
     const leadPat = s.lead[bar % s.lead.length];
     const L = leadPat[i];
     if (L != null) this.tone(midi(L), midi(L) * 0.995, spb * 1.6, 'square', 0.12, mg, t);
-    if (s.id === 'menu' && i === 0 && bar % 2 === 0) {
-      this.tone(midi(57), midi(57), spb * 3.8, 'sine', 0.06, mg, t);
-    }
   },
 };
 
@@ -806,125 +621,35 @@ const SONGS = {
 /* =============================== INPUT ================================= */
 const IS_TOUCH = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
-function makePad(side) {
-  return {
-    side,
-    keys: {},
-    pressed: {},
-    joy: { active: false, id: null, ox: 0, oy: 0, dx: 0, dy: 0 },
-    buttons: [],
-    btnPointers: {},
-    joyHome: { x: 110, y: 0 },
-    lastMoveTap: 0,
-    lastMoveDir: 0,
-    get move() {
-      let m = 0;
-      if (this.side === 'p1') {
-        if (this.keys['arrowleft'] || this.keys['a']) m -= 1;
-        if (this.keys['arrowright'] || this.keys['d']) m += 1;
-      } else {
-        if (this.keys['arrowleft']) m -= 1;
-        if (this.keys['arrowright']) m += 1;
-      }
-      if (this.joy.active) m += clamp(this.joy.dx / 45, -1, 1);
-      return clamp(m, -1, 1);
-    },
-    press(action) { this.pressed[action] = true; },
-    take(action) { const v = this.pressed[action]; this.pressed[action] = false; return !!v; },
-    layout(W, H) {
-      const r = 38, rs = 30;
-      if (this.side === 'p1') {
-        this.joyHome = { x: Math.min(120, W * 0.14), y: H - 105 };
-        this.buttons = [
-          { id: 'punch', x: W * 0.38, y: H - 82, r, label: '\u{1F44A}', color: '#e0533f' },
-          { id: 'kick', x: W * 0.48, y: H - 108, r, label: '\u{1F9B6}', color: '#3f8fe0' },
-          { id: 'weapon', x: W * 0.34, y: H - 168, r, label: '\u{1F52A}', color: '#9b59d0' },
-          { id: 'special', x: W * 0.46, y: H - 188, r, label: '\u{1F300}', color: '#3db8ff' },
-          { id: 'subst', x: W * 0.28, y: H - 148, r: rs, label: '\u{1F4A8}', color: '#c9a66b' },
-          { id: 'jump', x: W * 0.26, y: H - 68, r: rs, label: '\u2B06\uFE0F', color: '#43b25b' },
-        ];
-      } else {
-        this.joyHome = { x: W - Math.min(120, W * 0.14), y: H - 105 };
-        this.buttons = [
-          { id: 'punch', x: W - W * 0.38, y: H - 82, r, label: '\u{1F44A}', color: '#e0533f' },
-          { id: 'kick', x: W - W * 0.48, y: H - 108, r, label: '\u{1F9B6}', color: '#3f8fe0' },
-          { id: 'weapon', x: W - W * 0.34, y: H - 168, r, label: '\u{1F52A}', color: '#9b59d0' },
-          { id: 'special', x: W - W * 0.46, y: H - 188, r, label: '\u{1F300}', color: '#3db8ff' },
-          { id: 'subst', x: W - W * 0.28, y: H - 148, r: rs, label: '\u{1F4A8}', color: '#c9a66b' },
-          { id: 'jump', x: W - W * 0.26, y: H - 68, r: rs, label: '\u2B06\uFE0F', color: '#43b25b' },
-        ];
-      }
-    },
-    hitButton(x, y) {
-      for (const b of this.buttons) {
-        if ((x - b.x) ** 2 + (y - b.y) ** 2 < (b.r + 10) ** 2) return b;
-      }
-      return null;
-    },
-    ownsTouch(x, y, dual) {
-      if (!dual) return this.side === 'p1';
-      const w = innerWidth;
-      return this.side === 'p1' ? x < w * 0.5 : x >= w * 0.5;
-    },
-    onDown(x, y, id, dual) {
-      if (!this.ownsTouch(x, y, dual)) return false;
-      const b = this.hitButton(x, y);
-      if (b) {
-        this.btnPointers[id] = b.id;
-        b.held = true;
-        this.press(b.id);
-        return true;
-      }
-      if (!this.joy.active) {
-        this.joy.active = true;
-        this.joy.id = id;
-        this.joy.ox = x;
-        this.joy.oy = y;
-        this.joy.dx = 0;
-        this.joy.dy = 0;
-        return true;
-      }
-      return false;
-    },
-    onMove(x, y, id) {
-      if (this.joy.active && this.joy.id === id) {
-        this.joy.dx = clamp(x - this.joy.ox, -55, 55);
-        this.joy.dy = clamp(y - this.joy.oy, -55, 55);
-      }
-    },
-    onUp(id) {
-      if (this.joy.active && this.joy.id === id) {
-        const dx = this.joy.dx;
-        if (Math.abs(dx) > 22) {
-          const now = performance.now();
-          const dir = Math.sign(dx);
-          if (now - this.lastMoveTap < 320 && this.lastMoveDir === dir) this.press('dash');
-          this.lastMoveTap = now;
-          this.lastMoveDir = dir;
-        }
-        this.joy.active = false;
-        this.joy.dx = 0;
-        this.joy.dy = 0;
-      }
-      const bid = this.btnPointers[id];
-      if (bid) {
-        const b = this.buttons.find(q => q.id === bid);
-        if (b) b.held = false;
-        delete this.btnPointers[id];
-      }
-    },
-  };
-}
+const Input = {
+  keys: {}, pressed: {},
+  joy: { active: false, id: null, ox: 0, oy: 0, dx: 0, dy: 0 },
+  buttons: [], btnPointers: {},
 
-const Input = Object.assign(makePad('p1'), {
-  dualMode: false,
+  get move() {
+    let m = 0;
+    if (this.keys['arrowleft'] || this.keys['a']) m -= 1;
+    if (this.keys['arrowright'] || this.keys['d']) m += 1;
+    if (this.joy.active) m += clamp(this.joy.dx / 45, -1, 1);
+    return clamp(m, -1, 1);
+  },
+  press(action) { this.pressed[action] = true; },
+  take(action) { const v = this.pressed[action]; this.pressed[action] = false; return !!v; },
+  endFrame() { this.pressed = {}; },
+
+  layout(W, H) {
+    const r = 42, rs = 34;
+    this.buttons = [
+      { id: 'punch',   x: W - 178, y: H - 88,  r,     label: '\u{1F44A}', color: '#e0533f' },
+      { id: 'kick',    x: W - 82,  y: H - 118, r,     label: '\u{1F9B6}', color: '#3f8fe0' },
+      { id: 'weapon',  x: W - 200, y: H - 186, r,     label: '\u2694\uFE0F', color: '#9b59d0' },
+      { id: 'special', x: W - 104, y: H - 216, r,     label: '\u26A1', color: '#e5b553' },
+      { id: 'jump',    x: W - 296, y: H - 70,  r: rs, label: '\u2B06\uFE0F', color: '#43b25b' },
+    ];
+  },
+
   onDown(x, y, id) {
     AudioSys.init();
-    if (this.dualMode) {
-      if (InputP2.onDown(x, y, id, true)) return;
-      if (makePad('p1').onDown.call(this, x, y, id, true)) return;
-      return;
-    }
     for (const b of this.buttons) {
       if ((x - b.x) ** 2 + (y - b.y) ** 2 < (b.r + 8) ** 2) {
         this.btnPointers[id] = b.id;
@@ -934,109 +659,36 @@ const Input = Object.assign(makePad('p1'), {
       }
     }
     if (x < innerWidth * 0.5 && !this.joy.active) {
-      this.joy.active = true;
-      this.joy.id = id;
-      this.joy.ox = x;
-      this.joy.oy = y;
-      this.joy.dx = 0;
-      this.joy.dy = 0;
+      this.joy.active = true; this.joy.id = id;
+      this.joy.ox = x; this.joy.oy = y; this.joy.dx = 0; this.joy.dy = 0;
     }
   },
   onMove(x, y, id) {
-    if (this.dualMode) {
-      InputP2.onMove(x, y, id);
-      makePad('p1').onMove.call(this, x, y, id);
-      return;
-    }
     if (this.joy.active && this.joy.id === id) {
       this.joy.dx = clamp(x - this.joy.ox, -55, 55);
       this.joy.dy = clamp(y - this.joy.oy, -55, 55);
     }
   },
   onUp(id) {
-    if (this.dualMode) {
-      InputP2.onUp(id);
-      makePad('p1').onUp.call(this, id);
-      return;
-    }
-    makePad('p1').onUp.call(this, id);
+    if (this.joy.active && this.joy.id === id) { this.joy.active = false; this.joy.dx = 0; }
+    const bid = this.btnPointers[id];
+    if (bid) { const b = this.buttons.find(q => q.id === bid); if (b) b.held = false; delete this.btnPointers[id]; }
   },
-  endFrame() {
-    this.pressed = {};
-    if (InputP2) InputP2.pressed = {};
-  },
-});
-
-const InputP2 = makePad('p2');
-
-Input.layout = function (W, H) {
-  if (Input.dualMode) {
-    makePad('p1').layout.call(Input, W, H);
-    InputP2.layout(W, H);
-    return;
-  }
-  const r = 42, rs = 34;
-  Input.joyHome = { x: 110, y: H - 110 };
-  Input.buttons = [
-    { id: 'punch', x: W - 178, y: H - 88, r, label: '\u{1F44A}', color: '#e0533f' },
-    { id: 'kick', x: W - 82, y: H - 118, r, label: '\u{1F9B6}', color: '#3f8fe0' },
-    { id: 'weapon', x: W - 200, y: H - 186, r, label: '\u{1F52A}', color: '#9b59d0' },
-    { id: 'special', x: W - 104, y: H - 216, r, label: '\u{1F300}', color: '#3db8ff' },
-    { id: 'subst', x: W - 286, y: H - 168, r: rs, label: '\u{1F4A8}', color: '#c9a66b' },
-    { id: 'jump', x: W - 296, y: H - 70, r: rs, label: '\u2B06\uFE0F', color: '#43b25b' },
-  ];
 };
 
 addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
-  const now = performance.now();
   if (!Input.keys[k]) {
-    if (k === 'w' || k === ' ' || (!Input.dualMode && k === 'arrowup')) Input.press('jump');
+    if (k === 'w' || k === 'arrowup' || k === ' ') Input.press('jump');
     if (k === 'j') Input.press('punch');
     if (k === 'k') Input.press('kick');
     if (k === 'l') Input.press('weapon');
     if (k === 'u' || k === 'i') Input.press('special');
-    if (k === 'shift') Input.press('subst');
-  }
-  if (k === 'a' || (!Input.dualMode && k === 'arrowleft')) {
-    if (now - Input.lastMoveTap < 300 && Input.lastMoveDir === -1) Input.press('dash');
-    Input.lastMoveTap = now; Input.lastMoveDir = -1;
-  }
-  if (k === 'd' || (!Input.dualMode && k === 'arrowright')) {
-    if (now - Input.lastMoveTap < 300 && Input.lastMoveDir === 1) Input.press('dash');
-    Input.lastMoveTap = now; Input.lastMoveDir = 1;
-  }
-  if (k === 'd' || k === 'arrowright') {
-    if (now - Input.lastMoveTap < 300 && Input.lastMoveDir === 1) Input.press('dash');
-    Input.lastMoveTap = now; Input.lastMoveDir = 1;
-  }
-  if (Input.dualMode) {
-    if (!InputP2.keys[k]) {
-      if (k === 'arrowup') InputP2.press('jump');
-      if (k === '1' || k === 'end') InputP2.press('punch');
-      if (k === '2' || k === 'pagedown') InputP2.press('kick');
-      if (k === '3') InputP2.press('weapon');
-      if (k === '4') InputP2.press('special');
-      if (k === '5') InputP2.press('subst');
-    }
-    if (k === 'arrowleft') {
-      if (now - InputP2.lastMoveTap < 300 && InputP2.lastMoveDir === -1) InputP2.press('dash');
-      InputP2.lastMoveTap = now; InputP2.lastMoveDir = -1;
-    }
-    if (k === 'arrowright') {
-      if (now - InputP2.lastMoveTap < 300 && InputP2.lastMoveDir === 1) InputP2.press('dash');
-      InputP2.lastMoveTap = now; InputP2.lastMoveDir = 1;
-    }
-    InputP2.keys[k] = true;
   }
   Input.keys[k] = true;
   if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) e.preventDefault();
 });
-addEventListener('keyup', e => {
-  const k = e.key.toLowerCase();
-  Input.keys[k] = false;
-  if (InputP2) InputP2.keys[k] = false;
-});
+addEventListener('keyup', e => { Input.keys[e.key.toLowerCase()] = false; });
 
 /* ============================== CANVAS ================================= */
 const canvas = document.getElementById('game');
@@ -1051,16 +703,9 @@ function resize() {
   Input.layout(W, H);
   if (game) game.onResize();
 }
-addEventListener('resize', () => {
-  if (window.__sfResizeT) cancelAnimationFrame(window.__sfResizeT);
-  window.__sfResizeT = requestAnimationFrame(resize);
-});
+addEventListener('resize', resize);
 
-canvas.addEventListener('pointerdown', e => {
-  e.preventDefault();
-  try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
-  Input.onDown(e.clientX, e.clientY, e.pointerId);
-});
+canvas.addEventListener('pointerdown', e => { e.preventDefault(); Input.onDown(e.clientX, e.clientY, e.pointerId); });
 canvas.addEventListener('pointermove', e => { e.preventDefault(); Input.onMove(e.clientX, e.clientY, e.pointerId); });
 canvas.addEventListener('pointerup',   e => { e.preventDefault(); Input.onUp(e.pointerId); });
 canvas.addEventListener('pointercancel', e => Input.onUp(e.pointerId));
@@ -1079,25 +724,6 @@ function drawWeaponShape(c, id, spin) {
       c.strokeStyle = '#fff'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(8, -1); c.lineTo(42, -1); c.stroke();
       c.strokeStyle = '#a67c2e'; c.lineWidth = 5; c.beginPath(); c.moveTo(4, -7); c.lineTo(4, 7); c.stroke();
       break;
-    case 'kunai':
-      c.strokeStyle = '#7a8494'; c.lineWidth = 3; c.beginPath(); c.moveTo(0, 0); c.lineTo(34, 0); c.stroke();
-      c.fillStyle = '#c9d6e8';
-      c.beginPath(); c.moveTo(34, -7); c.lineTo(52, 0); c.lineTo(34, 7); c.closePath(); c.fill();
-      c.strokeStyle = '#a67c2e'; c.lineWidth = 2; c.beginPath(); c.moveTo(8, -5); c.lineTo(8, 5); c.stroke();
-      c.beginPath(); c.arc(2, 0, 3, 0, TAU); c.stroke();
-      break;
-    case 'shuriken': {
-      const rot = spin * 18;
-      c.save(); c.translate(28, 0); c.rotate(rot);
-      c.fillStyle = '#b8c4d4';
-      for (let i = 0; i < 4; i++) {
-        c.rotate(Math.PI / 2);
-        c.beginPath(); c.moveTo(0, 0); c.lineTo(4, -4); c.lineTo(16, 0); c.lineTo(4, 4); c.closePath(); c.fill();
-      }
-      c.fillStyle = '#5a6784'; c.beginPath(); c.arc(0, 0, 3.5, 0, TAU); c.fill();
-      c.restore();
-      break;
-    }
     case 'knuppel':
       c.strokeStyle = '#8a5a30'; c.lineWidth = 6; c.beginPath(); c.moveTo(2, 0); c.lineTo(22, 0); c.stroke();
       c.lineWidth = 11; c.beginPath(); c.moveTo(22, 0); c.lineTo(40, 0); c.stroke();
@@ -1163,44 +789,6 @@ function drawWeaponShape(c, id, spin) {
   }
 }
 
-function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
-  c.save();
-  c.translate(x, y);
-  c.globalAlpha = alpha == null ? 1 : alpha;
-  if (kind === 'chidori') {
-    c.shadowColor = '#a8e0ff'; c.shadowBlur = 18;
-    c.fillStyle = 'rgba(200,240,255,.55)';
-    c.beginPath(); c.arc(0, 0, r * 0.9, 0, TAU); c.fill();
-    c.strokeStyle = '#e8f7ff'; c.lineWidth = 2;
-    for (let i = 0; i < 7; i++) {
-      const a = spin + i * (TAU / 7);
-      c.beginPath();
-      c.moveTo(Math.cos(a) * r * 0.2, Math.sin(a) * r * 0.2);
-      c.lineTo(Math.cos(a + 0.4) * r * 1.3, Math.sin(a + 0.4) * r * 1.3);
-      c.stroke();
-    }
-  } else {
-    // Rasengan: draaiende chakra-bol
-    c.shadowColor = '#3db8ff'; c.shadowBlur = 20;
-    const grd = c.createRadialGradient(0, 0, 0, 0, 0, r);
-    grd.addColorStop(0, 'rgba(220,250,255,.95)');
-    grd.addColorStop(0.45, 'rgba(80,190,255,.75)');
-    grd.addColorStop(1, 'rgba(30,120,255,.15)');
-    c.fillStyle = grd;
-    c.beginPath(); c.arc(0, 0, r, 0, TAU); c.fill();
-    c.strokeStyle = 'rgba(180,235,255,.9)'; c.lineWidth = 2;
-    for (let i = 0; i < 5; i++) {
-      const a0 = spin + i * 1.1;
-      c.beginPath();
-      c.ellipse(0, 0, r * 0.95, r * (0.35 + (i % 3) * 0.12), a0, 0, TAU);
-      c.stroke();
-    }
-    c.fillStyle = 'rgba(255,255,255,.85)';
-    c.beginPath(); c.arc(-r * 0.2, -r * 0.2, r * 0.18, 0, TAU); c.fill();
-  }
-  c.restore();
-}
-
 /* ============================== VECHTER ================================ */
 class Fighter {
   constructor(opts) {
@@ -1213,8 +801,6 @@ class Fighter {
       weapon: weaponById('vuist'), speed: 260, jumpV: 620,
       ai: null, aiTimer: 0, aiMove: 0, aiCd: 2,
       name: 'Stickman',
-      substCd: 0, invulnT: 0, afterimages: [], dashCd: 0,
-      style: null, playerSlot: 0, vsSpecial: 'rasengan',
     }, opts);
   }
 
@@ -1230,88 +816,32 @@ class Fighter {
       case 'kick':    return { kind, windup: 0.11, active: 0.11, recover: 0.2,  range: 50, r: 26, dmg: this.baseDmg * 1.1, kb: 340 };
       case 'weapon':  return { kind, windup: 0.13 / w.speed, active: 0.1 / w.speed, recover: 0.2 / w.speed,
                                range: w.range + 14, r: 26 + w.range * 0.22, dmg: this.baseDmg * w.dmg, kb: 260 };
-      case 'special': return {
-        kind, windup: 0.48, active: 0.12, recover: 0.28, range: 55, r: 36,
-        dmg: this.baseDmg * (this.isRobot ? 2.4 : 2.8), kb: 520, jutsu: (this.vsSpecial === 'chidori' || this.isRobot) ? 'chidori' : 'rasengan',
-      };
+      case 'special': return { kind, windup: 0.32, active: 0.08, recover: 0.3, range: 40, r: 24, dmg: this.baseDmg * 2.2, kb: 420 };
     }
   }
 
   startAttack(kind, game) {
-    if (this.attack || this.state === 'hurt' || !this.alive || this.invulnT > 0 && kind !== 'special') return;
+    if (this.attack || this.state === 'hurt' || !this.alive) return;
     if (kind === 'special') {
-      if (this.energy < 100) {
-        if (this.isPlayer) game.floater(this.x, this.y - 110, 'Chakra niet vol!', '#7cf5ff', 13);
-        return;
-      }
+      if (this.energy < 100) { if (this.isPlayer) game.floater(this.x, this.y - 110, 'Energie niet vol!', '#8fa3d9', 13); return; }
       this.energy = 0;
-      AudioSys.sfx(this.isRobot || this.vsSpecial === 'chidori' ? 'chidori' : 'rasengan');
-      if (this.isPlayer) {
-        const lbl = (this.vsSpecial === 'chidori' || this.isRobot) ? 'CHIDORI!' : 'RASENGAN!';
-        game.banner(lbl, 0.7, this.vsSpecial === 'chidori' ? '#a8e0ff' : '#7cf5ff', 40);
-      }
+      AudioSys.sfx('special');
     } else {
-      AudioSys.sfx(this.weapon.id === 'shuriken' ? 'shuriken' : 'swing');
+      AudioSys.sfx('swing');
     }
     this.attack = Object.assign({ t: 0, hasHit: false, fired: false }, this.attackSpec(kind));
     this.blocking = false;
   }
 
-  doSubstitution(game) {
-    if (!this.alive || this.substCd > 0 || this.attack || this.invulnT > 0) return;
-    this.substCd = 1.35;
-    this.invulnT = 0.28;
-    AudioSys.sfx('subst');
-    // rookwolk + afterimage (substitutie / Kawarimi)
-    game.burst(this.x, this.y - 40, '#c9a66b', 16);
-    game.burst(this.x, this.y - 50, '#eee', 8);
-    this.afterimages.push({ x: this.x, y: this.y, face: this.face, life: 0.35 });
-    const dir = this.face || 1;
-    const pad = this.playerSlot === 2 ? InputP2 : Input;
-    const dashDir = Math.abs(pad.move) > 0.2 ? Math.sign(pad.move) : dir;
-    this.x = clamp(this.x + dashDir * 140, game.minX, game.maxX);
-    this.vx = dashDir * 420;
-    game.floater(this.x, this.y - 100, 'Substitutie!', '#c9a66b', 14);
-    game.shake(2, 0.08);
-  }
-
-  doDash(game, dir) {
-    if (!this.alive || this.dashCd > 0 || this.attack || Math.abs(dir) < 0.1) return;
-    this.dashCd = 0.85;
-    this.invulnT = Math.max(this.invulnT, 0.14);
-    AudioSys.sfx('dash');
-    this.x = clamp(this.x + dir * 98, game.minX, game.maxX);
-    this.vx = dir * 340;
-    game.burst(this.x, this.y - 38, this.style?.accent || '#7cf5ff', 8);
-    game.floater(this.x, this.y - 92, 'Dash!', '#7cf5ff', 12);
-  }
-
   intent(dt, game) {
-    if (this.playerSlot === 1 || (this.isPlayer && !this.playerSlot)) {
-      const I = Input;
+    if (this.isPlayer) {
       return {
-        move: I.move,
-        jump: I.take('jump'),
-        punch: I.take('punch'),
-        kick: I.take('kick'),
-        weapon: I.take('weapon'),
-        special: I.take('special'),
-        subst: I.take('subst'),
-        dash: I.take('dash'),
-        block: false,
-      };
-    }
-    if (this.playerSlot === 2) {
-      const I = InputP2;
-      return {
-        move: I.move,
-        jump: I.take('jump'),
-        punch: I.take('punch'),
-        kick: I.take('kick'),
-        weapon: I.take('weapon'),
-        special: I.take('special'),
-        subst: I.take('subst'),
-        dash: I.take('dash'),
+        move: Input.move,
+        jump: Input.take('jump'),
+        punch: Input.take('punch'),
+        kick: Input.take('kick'),
+        weapon: Input.take('weapon'),
+        special: Input.take('special'),
         block: false,
       };
     }
@@ -1364,11 +894,8 @@ class Fighter {
       if (this.y > game.ground) { this.y = game.ground; this.vy = 0; }
       return;
     }
-    const locked = game.inputLocked && (this.isPlayer || this.playerSlot);
-    const it = locked ? { move: 0 } : this.intent(dt, game);
-    if (game.inputLocked && !this.isPlayer && !this.playerSlot) {
-      it.punch = it.kick = it.weapon = it.special = false; it.move = 0;
-    }
+    const it = game.inputLocked && this.isPlayer ? { move: 0 } : this.intent(dt, game);
+    if (game.inputLocked && !this.isPlayer) { it.punch = it.kick = it.weapon = it.special = false; it.move = 0; }
 
     this.blocking = !!it.block && this.onGround && !this.attack;
 
@@ -1386,23 +913,10 @@ class Fighter {
     if (canAct && it.jump && this.onGround && !this.attack) {
       this.vy = -this.jumpV; this.onGround = false; AudioSys.sfx('jump');
     }
-    if (this.substCd > 0) this.substCd -= dt;
-    if (this.dashCd > 0) this.dashCd -= dt;
-    if (this.invulnT > 0) this.invulnT -= dt;
-    if (this._shurikenCd > 0) this._shurikenCd -= dt;
-    for (const a of this.afterimages) a.life -= dt;
-    this.afterimages = this.afterimages.filter(a => a.life > 0);
-
-    if (canAct && it.subst) this.doSubstitution(game);
-    if (canAct && it.dash) this.doDash(game, it.move || this.face);
-
     if (canAct) {
       if (it.punch) this.startAttack('punch', game);
       else if (it.kick) this.startAttack('kick', game);
-      else if (it.weapon) {
-        if (this.weapon.id === 'shuriken') game.throwShuriken(this);
-        else this.startAttack(this.weapon.id === 'vuist' ? 'punch' : 'weapon', game);
-      }
+      else if (it.weapon) this.startAttack(this.weapon.id === 'vuist' ? 'punch' : 'weapon', game);
       else if (it.special) this.startAttack('special', game);
     }
 
@@ -1422,7 +936,7 @@ class Fighter {
       a.t += dt;
       if (a.kind === 'special' && !a.fired && a.t >= a.windup) {
         a.fired = true;
-        game.spawnJutsu(this, a);
+        game.spawnWave(this);
       }
       if (a.kind !== 'special' && !a.hasHit && a.t >= a.windup && a.t <= a.windup + a.active) {
         if (game.tryMelee(this, a)) a.hasHit = true;
@@ -1430,11 +944,7 @@ class Fighter {
       if (a.t >= a.windup + a.active + a.recover) this.attack = null;
     }
 
-    // chakra laadt sneller bij combo-gevoel (in beweging/gevecht)
-    if (this.isPlayer) {
-      const rate = this.attack ? 4.2 : 2.8;
-      this.energy = clamp(this.energy + dt * rate, 0, 100);
-    }
+    if (this.isPlayer) this.energy = clamp(this.energy + dt * 2.5, 0, 100);
 
     // state voor animatie
     if (this.hurtT > 0) this.state = 'hurt';
@@ -1446,20 +956,12 @@ class Fighter {
 
   takeDamage(dmg, kbx, game) {
     if (!this.alive) return 0;
-    if (this.invulnT > 0) {
-      game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13);
-      return 0;
-    }
     if (this.blocking) {
       dmg = Math.max(1, Math.round(dmg * 0.15));
       AudioSys.sfx('block');
       game.floater(this.x, this.y - 115, 'BLOK!', '#9fd8ff', 14);
       this.hp -= dmg;
       return dmg;
-    }
-    if (this.isPlayer && game && game.playerShieldT > 0) {
-      dmg = Math.max(1, Math.round(dmg * 0.32));
-      game.floater(this.x, this.y - 115, 'Schild!', '#9fd8ff', 13);
     }
     dmg = Math.round(dmg);
     this.hp -= dmg;
@@ -1469,9 +971,6 @@ class Fighter {
     this.vy = Math.min(this.vy, -120);
     if (this.isPlayer) this.energy = clamp(this.energy + 4, 0, 100);
     AudioSys.sfx(this.isPlayer ? 'hurt' : 'hit');
-    if (this.isPlayer && game) {
-      game.floater(this.x, this.y - 118, '-' + dmg, '#ff8080', 15);
-    }
     if (this.hp <= 0) {
       this.hp = 0; this.deadT = 0; this.vy = -260;
       AudioSys.sfx('die');
@@ -1538,11 +1037,9 @@ class Fighter {
           P.lean = 0.1 * ext;
         }
       } else if (a.kind === 'special') {
-        // Rasengan / Chidori houding: hand naar voren
-        const charge = clamp(a.t / a.windup, 0, 1);
-        P.arms = [[2.1, -2.0], [lerp(0.4, 0.05, charge), lerp(-0.2, 0.05, charge)]];
+        P.arms = [[0.35, 0.1], [-0.15, 0.0]];
         P.legs = [[1.95, 1.85], [1.15, 1.4]];
-        P.lean = 0.18 * charge;
+        P.lean = 0.1;
       }
     }
     if (this.blocking) {
@@ -1595,7 +1092,6 @@ class Fighter {
     drawLimb(hipX, hipY, P.legs[1][0], P.legs[1][1], legL, legL);
     // hoofd
     c.beginPath(); c.arc(headX, headY - 9, 10.5, 0, TAU); c.stroke();
-    if (this.isPlayer && this.style) this.drawStyleExtras(c, headX, headY - 9, shX, shY, hipX, hipY);
     if (this.isRobot) this.drawRobotHead(c, headX, headY - 9);
 
     // voorste arm + wapen
@@ -1603,7 +1099,7 @@ class Fighter {
     c.fillStyle = this.color;
     c.beginPath(); c.arc(hx, hy, 3.4, 0, TAU); c.fill();
 
-    if (this.isPlayer && this.weapon.id !== 'vuist' && !(this.attack && this.attack.kind === 'special')) {
+    if (this.isPlayer && this.weapon.id !== 'vuist') {
       const wAng = this.attack && this.attack.kind === 'weapon' ? P.arms[1][1] : -0.5;
       c.save(); c.translate(hx, hy); c.rotate(wAng);
       drawWeaponShape(c, this.weapon.id, this.animT);
@@ -1614,85 +1110,13 @@ class Fighter {
       c.strokeStyle = 'rgba(120,220,255,.8)'; c.lineWidth = 3;
       c.beginPath(); c.arc(22, -50, 26, -1.4, 1.4); c.stroke();
     }
-    // Rasengan / Chidori oplaad in de hand
+    // speciale aanval oplaadgloed
     if (this.attack && this.attack.kind === 'special' && !this.attack.fired) {
-      const g = clamp(this.attack.t / this.attack.windup, 0, 1);
-      const isChi = this.isRobot || this.vsSpecial === 'chidori';
-      drawJutsuOrb(c, hx + 14, hy, 8 + g * 16, this.animT * (8 + g * 20), isChi ? 'chidori' : 'rasengan', 0.55 + g * 0.45);
+      const g = this.attack.t / this.attack.windup;
+      c.fillStyle = `rgba(255,215,80,${0.35 + g * 0.4})`;
+      c.beginPath(); c.arc(hx + 8, hy, 6 + g * 12, 0, TAU); c.fill();
     }
     c.restore();
-
-    // afterimages (substitutie)
-    for (const ai of this.afterimages) {
-      c.save();
-      c.globalAlpha = clamp(ai.life * 2, 0, 0.45);
-      c.translate(ai.x, ai.y);
-      c.scale(ai.face * this.scale, this.scale);
-      c.strokeStyle = '#c9a66b'; c.lineWidth = 3; c.lineCap = 'round';
-      c.beginPath(); c.moveTo(0, -46); c.lineTo(0, -14); c.stroke();
-      c.beginPath(); c.arc(0, -58, 9, 0, TAU); c.stroke();
-      c.restore();
-    }
-    if (this.invulnT > 0) {
-      c.save();
-      c.globalAlpha = 0.35 + Math.sin(this.animT * 40) * 0.15;
-      c.strokeStyle = '#fff'; c.lineWidth = 2;
-      c.beginPath(); c.ellipse(this.x, this.y - 40, 28, 48, 0, 0, TAU); c.stroke();
-      c.restore();
-    }
-  }
-
-  drawStyleExtras(c, hx, hy, shX, shY, hipX, hipY) {
-    const st = this.style;
-    if (st.glow) {
-      c.save();
-      c.shadowColor = st.accent;
-      c.shadowBlur = 10 + Math.sin(this.animT * 5) * 4;
-      c.strokeStyle = st.accent;
-      c.lineWidth = 2;
-      c.beginPath(); c.arc(hx, hy, 12, 0, TAU); c.stroke();
-      c.restore();
-    }
-    if (st.bandana) {
-      c.fillStyle = st.bandana;
-      c.fillRect(hx - 11, hy - 17, 22, 7);
-      if (st.plate) {
-        c.fillStyle = st.plate;
-        c.fillRect(hx - 5, hy - 16, 10, 5);
-      }
-      c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = 1;
-      c.beginPath(); c.moveTo(hx + 9, hy - 14); c.lineTo(hx + 18, hy - 10); c.stroke();
-    }
-    if (st.coat) {
-      c.fillStyle = 'rgba(224,79,79,.32)';
-      c.beginPath();
-      c.moveTo(hipX - 14, hipY - 8); c.lineTo(hipX + 14, hipY - 8);
-      c.lineTo(shX + 18, shY - 4); c.lineTo(shX - 18, shY - 4);
-      c.closePath(); c.fill();
-      c.strokeStyle = st.accent; c.lineWidth = 2;
-      c.beginPath(); c.moveTo(0, shY - 6); c.lineTo(0, hipY + 4); c.stroke();
-    }
-    if (st.duck) {
-      c.fillStyle = '#ffe259';
-      c.beginPath(); c.moveTo(hx + 8, hy + 2); c.lineTo(hx + 16, hy + 4); c.lineTo(hx + 8, hy + 6); c.closePath(); c.fill();
-    }
-    if (st.fox) {
-      c.fillStyle = st.accent;
-      c.beginPath(); c.moveTo(hx - 10, hy - 16); c.lineTo(hx - 14, hy - 26); c.lineTo(hx - 6, hy - 18); c.closePath(); c.fill();
-      c.beginPath(); c.moveTo(hx + 4, hy - 16); c.lineTo(hx + 8, hy - 26); c.lineTo(hx + 2, hy - 18); c.closePath(); c.fill();
-    }
-    if (st.visor) {
-      c.fillStyle = '#7cf5ff';
-      c.globalAlpha = 0.85;
-      c.fillRect(hx - 9, hy - 5, 18, 6);
-      c.globalAlpha = 1;
-    }
-    if (st.topknot) {
-      c.strokeStyle = st.accent; c.lineWidth = 3;
-      c.beginPath(); c.moveTo(hx, hy - 18); c.lineTo(hx, hy - 30); c.stroke();
-      c.fillStyle = st.accent;
-      c.beginPath(); c.arc(hx, hy - 32, 4.5, 0, TAU); c.fill();
-    }
   }
 
   drawRobotHead(c, hx, hy) {
@@ -1731,7 +1155,6 @@ class Monster {
     this.atkCD = rand(0.5, 1.5); this.shootCD = rand(1, 2.5);
     this.dashT = 0; this.telegraphT = 0; this.hopT = rand(0, 0.8);
     this.face = -1;
-    this.enraged = false;
   }
   get alive() { return this.hp > 0; }
 
@@ -1743,13 +1166,12 @@ class Monster {
     const dx = p.x - this.x, dir = Math.sign(dx) || 1, dist = Math.abs(dx);
     this.face = dir;
     this.atkCD -= dt; this.shootCD -= dt;
-    const spdMul = this.enraged ? 1.32 : 1;
     const type = this.sp.type;
 
     if (type === 'hop') {
       this.hopT -= dt;
       if (this.hopT <= 0 && Math.abs(this.y - (game.ground - this.size)) < 2) {
-        this.vy = -rand(240, 380); this.vx = dir * this.speed * spdMul * rand(1.2, 1.8);
+        this.vy = -rand(240, 380); this.vx = dir * this.speed * rand(1.2, 1.8);
         this.hopT = rand(0.7, 1.3);
       }
       this.vy += 1400 * dt;
@@ -1758,25 +1180,22 @@ class Monster {
     } else if (type === 'fly') {
       const ty = game.ground - 110 + Math.sin(this.t * 2.4) * 42;
       this.y += (ty - this.y) * dt * 2.2;
-      this.x += dir * this.speed * spdMul * dt * (dist > 30 ? 1 : 0);
+      this.x += dir * this.speed * dt * (dist > 30 ? 1 : 0);
     } else if (type === 'charge') {
       if (this.dashT > 0) {
         this.dashT -= dt;
         this.x += this.vx * dt;
       } else if (this.telegraphT > 0) {
         this.telegraphT -= dt;
-        if (this.telegraphT <= 0) { this.dashT = 0.5; this.vx = dir * this.speed * spdMul * 3.4; AudioSys.sfx('swing'); }
+        if (this.telegraphT <= 0) { this.dashT = 0.5; this.vx = dir * this.speed * 3.4; AudioSys.sfx('swing'); }
       } else {
-        this.x += dir * this.speed * spdMul * dt * 0.6;
-        if (dist < 240 && this.atkCD <= 0) {
-          this.telegraphT = this.enraged ? 0.28 : 0.45;
-          this.atkCD = rand(1.6, 2.6) / (this.enraged ? 1.25 : 1);
-        }
+        this.x += dir * this.speed * dt * 0.6;
+        if (dist < 240 && this.atkCD <= 0) { this.telegraphT = 0.45; this.atkCD = rand(1.6, 2.6); }
       }
       this.y = game.ground - this.size;
     } else if (type === 'shoot') {
-      if (dist < 190) this.x -= dir * this.speed * spdMul * dt;
-      else if (dist > 330) this.x += dir * this.speed * spdMul * dt;
+      if (dist < 190) this.x -= dir * this.speed * dt;
+      else if (dist > 330) this.x += dir * this.speed * dt;
       if (this.sp.art === 'ghost') this.y = game.ground - this.size - 26 + Math.sin(this.t * 2) * 14;
       else this.y = game.ground - this.size;
       if (this.shootCD <= 0 && dist < 560) {
@@ -1808,7 +1227,7 @@ class Monster {
       if (dist > want + 40) this.x += dir * this.speed * dt;
       else if (dist < want - 60) this.x -= dir * this.speed * dt * 0.7;
       if (this.shootCD <= 0) {
-        this.shootCD = (this.elite ? rand(1.4, 2.0) : rand(1.9, 2.6)) / (this.enraged ? 1.35 : 1);
+        this.shootCD = this.elite ? rand(1.4, 2.0) : rand(1.9, 2.6);
         const a = Math.atan2((p.y - 40) - this.y, p.x - this.x);
         game.spawnProjectile({ x: this.x + Math.cos(a) * this.size, y: this.y + Math.sin(a) * this.size,
           vx: Math.cos(a) * 260, vy: Math.sin(a) * 260, r: 10, dmg: this.dmg, from: 'enemy', kind: 'fire', grav: 60 });
@@ -1830,15 +1249,6 @@ class Monster {
 
   takeDamage(dmg, kbx, game) {
     if (!this.alive) return;
-    if (this.elite && !this.enraged && this.hp - dmg <= this.maxhp * 0.5) {
-      this.enraged = true;
-      this.speed = Math.round(this.speed * 1.28);
-      this.dmg = Math.round(this.dmg * 1.22);
-      game.banner(`${this.sp.name} — FASE 2!`, 1.6, '#ff6b6b', 36);
-      AudioSys.sfx('roar');
-      game.shake(9, 0.28);
-      haptic(28);
-    }
     this.hp -= dmg;
     this.flashT = 0.1;
     this.x += Math.sign(kbx) * 8;
@@ -1883,13 +1293,6 @@ class Monster {
     }
     c.scale(this.face < 0 ? 1 : -1, 1); // art kijkt standaard naar links
     drawMonsterArt(c, this.sp, this.size, this.t, this.flashT > 0, this.telegraphT > 0);
-    if (this.enraged && this.alive) {
-      c.save();
-      c.globalAlpha = 0.35 + Math.sin(this.t * 10) * 0.15;
-      c.strokeStyle = '#ff6b6b'; c.lineWidth = 3;
-      c.beginPath(); c.arc(0, 0, this.size * 1.35, 0, TAU); c.stroke();
-      c.restore();
-    }
     c.restore();
 
     if (this.alive && this.hp < this.maxhp && !this.elite) {
@@ -2179,24 +1582,15 @@ class Game {
     this.over = false;
 
     const st = playerStats();
-    if (mode !== 'versus') {
-      this.player = new Fighter({
-        isPlayer: true, x: W * 0.25, y: this.ground,
-        hp: st.maxhp, maxhp: st.maxhp, baseDmg: st.dmg,
-        weapon: weaponById(save.weapon), color: '#f2f5ff',
-      });
-      applyPlayerStyle(this.player);
-    }
+    this.player = new Fighter({
+      isPlayer: true, x: W * 0.25, y: this.ground,
+      hp: st.maxhp, maxhp: st.maxhp, baseDmg: st.dmg,
+      weapon: weaponById(save.weapon), color: '#f2f5ff',
+    });
 
-    if (mode === 'adventure') {
-      this.combo = 0; this.comboT = 0;
-      this.pickups = [];
-      this.dmgBuffT = 0; this.dmgBuffMul = 1;
-      this.playerShieldT = 0;
-      this.initAdventure(opts.level || 1);
-    } else if (mode === 'training') this.initTraining();
+    if (mode === 'adventure') this.initAdventure(opts.level || 1);
+    else if (mode === 'training') this.initTraining();
     else if (mode === 'wall') this.initWall();
-    else if (mode === 'versus') this.initVersus(opts);
   }
 
   onResize() {
@@ -2214,7 +1608,6 @@ class Game {
     this.spawnTimer = 0;
     this.kills = 0;
     this.betweenT = 1.2;
-    this.pickups = this.pickups || [];
     this.banner(`LEVEL ${n}`, 1.4, '#ffd75e', 54);
     AudioSys.play(this.level.boss ? 'boss' : 'battle');
     if (n === 1 && save.lvl === 1) this.hint = 6;
@@ -2235,25 +1628,6 @@ class Game {
   }
 
   updateAdventure(dt) {
-    if (this.comboT > 0) {
-      this.comboT -= dt;
-      if (this.comboT <= 0) this.combo = 0;
-    }
-    if (this.dmgBuffT > 0) {
-      this.dmgBuffT -= dt;
-      if (this.dmgBuffT <= 0) this.dmgBuffMul = 1;
-    }
-    if (this.playerShieldT > 0) this.playerShieldT -= dt;
-    const p = this.player;
-    for (const pk of this.pickups) {
-      pk.t += dt;
-      pk.bob = Math.sin(pk.t * 5) * 6;
-      pk.life -= dt;
-      if (!p.alive) continue;
-      const dy = (p.y - 48) - pk.y;
-      if ((p.x - pk.x) ** 2 + dy ** 2 < 44 * 44) this.collectPickup(pk);
-    }
-    this.pickups = this.pickups.filter(pk => pk.life > 0);
     if (this.betweenT > 0) {
       this.betweenT -= dt;
       if (this.betweenT <= 0 && this.waveIdx < 0) this.nextWave();
@@ -2281,18 +1655,10 @@ class Game {
     if (this.over) return;
     this.over = true;
     this.inputLocked = true;
-    let stars = 0;
     if (win) {
       const bonus = 30 + this.level.n * 10;
       this.grantXP(bonus);
       if (this.level.n === save.unlocked && save.unlocked < MAX_LEVEL) { save.unlocked++; persist(); }
-      const hpPct = this.player.hp / Math.max(1, this.player.maxhp);
-      stars = hpPct > 0.72 ? 3 : hpPct > 0.38 ? 2 : 1;
-      const prev = save.stars[this.level.n] || 0;
-      if (stars > prev) { save.stars[this.level.n] = stars; persist(); }
-      bumpStat('advWins', 1);
-      bumpDaily('advWin', 1);
-      checkAchievements();
       AudioSys.sfx('win');
       this.banner('GEWONNEN!', 2, '#7cfc8a', 56);
     } else {
@@ -2301,11 +1667,9 @@ class Game {
     }
     setTimeout(() => UI.showResult(win, {
       title: win ? 'GEWONNEN!' : 'VERSLAGEN...',
-      detail: win
-        ? `Level ${this.level.n} · ${this.kills} monsters · ${stars}★`
-        : `Level ${this.level.n} · ${this.kills} monsters verslagen`,
+      detail: `Level ${this.level.n} · ${this.kills} monsters verslagen`,
       xp: this.sessionXP,
-      mode: 'adventure', level: this.level.n, win, stars,
+      mode: 'adventure', level: this.level.n, win,
     }), 1400);
   }
 
@@ -2313,15 +1677,6 @@ class Game {
     this.kills++;
     this.freezeT = Math.max(this.freezeT, 0.045);
     this.shake(5, 0.18);
-    haptic(12);
-    const dropChance = m.elite ? 0.42 : 0.22;
-    if (Math.random() < dropChance) this.spawnPickup(m.x, m.y - m.size * 0.5);
-    bumpStat('kills', 1);
-    bumpDaily('kills', 1);
-    if (m.elite) {
-      bumpStat('bossKills', 1);
-      bumpDaily('bossKill', 1);
-    }
     const rar = rarityOf(m.sp.rarity);
     const lvlScale = 1 + (this.level ? (this.level.n - 1) * 0.1 : 0);
     const rarMul = 1 + rar.order * 0.15;
@@ -2341,44 +1696,6 @@ class Game {
     }
     save.dex[m.spId]++;
     persist();
-  }
-
-  spawnPickup(x, y) {
-    const kind = choice(PICKUP_TYPES);
-    this.pickups.push({ x, y, kind, t: rand(0, TAU), life: 16, bob: 0 });
-  }
-
-  collectPickup(pk) {
-    if (pk._got) return;
-    pk._got = true;
-    const meta = PICKUP_META[pk.kind];
-    const p = this.player;
-    AudioSys.sfx('pickup');
-    haptic(20);
-    switch (pk.kind) {
-      case 'heal':
-        p.hp = Math.min(p.maxhp, p.hp + Math.round(p.maxhp * 0.28));
-        this.floater(p.x, p.y - 100, '+HP', meta.color, 16);
-        break;
-      case 'rage':
-        this.dmgBuffMul = 1.38;
-        this.dmgBuffT = 9;
-        this.floater(p.x, p.y - 100, 'RAGE ×1.4', meta.color, 16);
-        break;
-      case 'chakra':
-        p.energy = 100;
-        this.floater(p.x, p.y - 100, 'Vol chakra!', meta.color, 16);
-        break;
-      case 'shield':
-        this.playerShieldT = 6.5;
-        this.floater(p.x, p.y - 100, 'Schild!', meta.color, 16);
-        break;
-    }
-    this.banner(meta.label, 0.9, meta.color, 28);
-    this.burst(pk.x, pk.y, meta.color, 14);
-    bumpStat('pickups', 1);
-    bumpDaily('pickups', 1);
-    pk.life = 0;
   }
 
   /* --------------------------- TRAINING ------------------------------- */
@@ -2456,112 +1773,12 @@ class Game {
     if (this.over) return;
     this.over = true; this.inputLocked = true;
     let xp = 0;
-    if (win) { save.trainWins++; persist(); xp = 70 + save.trainWins * 20; this.grantXP(xp);
-      bumpDaily('trainWin', 1);
-      checkAchievements();
-      if (save.trainWins === 3) UI.toast('Stijl vrij: Chakra gloed!', 3200);
-    }
+    if (win) { save.trainWins++; persist(); xp = 70 + save.trainWins * 20; this.grantXP(xp); }
     else { xp = 15; this.grantXP(xp); }
     setTimeout(() => UI.showResult(win, {
       title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
       detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · totaal ${save.trainWins}x gewonnen`,
       xp: this.sessionXP, mode: 'training', win,
-    }), 1200);
-  }
-
-  initVersus(opts) {
-    opts = opts || {};
-    Input.dualMode = true;
-    Input.layout(W, H);
-    this.theme = 'dojo';
-    this.roundsP1 = 0;
-    this.roundsP2 = 0;
-    this.round = 0;
-    this.p1Pick = normalizeVsPick(opts.p1 || vsSelect.p1, 'hero');
-    this.p2Pick = normalizeVsPick(opts.p2 || vsSelect.p2, 'rabbit');
-    vsSelect.p1 = this.p1Pick;
-    vsSelect.p2 = this.p2Pick;
-    trackVsRosterUse(this.p1Pick, this.p2Pick);
-    this.player = buildVsFighter(vsRosterEntry(this.p1Pick), W * 0.28, 1);
-    this.p2 = buildVsFighter(vsRosterEntry(this.p2Pick), W * 0.72, 2);
-    this.startVsRound();
-    AudioSys.play('boss');
-    this.hint = 5;
-  }
-
-  startVsRound() {
-    this.round++;
-    this.roundTimer = 99;
-    const e1 = vsRosterEntry(this.p1Pick);
-    const e2 = vsRosterEntry(this.p2Pick);
-    this.player.hp = this.player.maxhp = Math.round(100 * e1.hpMul);
-    this.player.baseDmg = Math.round(12 * e1.dmgMul);
-    this.player.x = W * 0.28;
-    this.player.y = this.ground;
-    this.player.vx = 0;
-    this.player.face = 1;
-    this.player.attack = null;
-    this.player.hurtT = 0;
-    this.player.energy = 40;
-    this.p2.hp = this.p2.maxhp = Math.round(100 * e2.hpMul);
-    this.p2.baseDmg = Math.round(12 * e2.dmgMul);
-    this.p2.x = W * 0.72;
-    this.p2.y = this.ground;
-    this.p2.vx = 0;
-    this.p2.face = -1;
-    this.p2.attack = null;
-    this.p2.hurtT = 0;
-    this.p2.deadT = 0;
-    this.p2.energy = 40;
-    this.phase = 'intro';
-    this.phaseT = 0;
-    this.inputLocked = true;
-    this.banner(`RONDE ${this.round}`, 1.1, '#ffd75e', 52);
-    AudioSys.sfx('bell');
-  }
-
-  updateVersus(dt) {
-    this.phaseT += dt;
-    if (this.phase === 'intro') {
-      if (this.phaseT > 1.2 && this.phaseT - dt <= 1.2) this.banner('FIGHT!', 0.8, '#ff6b6b', 60);
-      if (this.phaseT > 1.6) { this.phase = 'fight'; this.inputLocked = false; }
-    } else if (this.phase === 'fight') {
-      this.roundTimer -= dt;
-      const p1d = !this.player.alive, p2d = !this.p2.alive;
-      if (p1d || p2d || this.roundTimer <= 0) {
-        let p1Win;
-        if (p2d && !p1d) p1Win = true;
-        else if (p1d && !p2d) p1Win = false;
-        else p1Win = (this.player.hp / this.player.maxhp) >= (this.p2.hp / this.p2.maxhp);
-        if (p1Win) this.roundsP1++; else this.roundsP2++;
-        this.phase = 'roundend';
-        this.phaseT = 0;
-        this.inputLocked = true;
-        this.banner(p1Win ? 'P1 WINT RONDE!' : 'P2 WINT RONDE!', 1.5, p1Win ? '#7cf5ff' : '#ffb0b8', 38);
-        AudioSys.sfx(p1Win ? 'win' : 'lose');
-      }
-    } else if (this.phase === 'roundend') {
-      if (this.phaseT > 2.2) {
-        if (this.roundsP1 >= 2 || this.roundsP2 >= 2) this.finishVersus(this.roundsP1 >= 2);
-        else this.startVsRound();
-      }
-    }
-    this.p2.update(dt, this);
-  }
-
-  finishVersus(p1Win) {
-    if (this.over) return;
-    this.over = true;
-    this.inputLocked = true;
-    Input.dualMode = false;
-    Input.layout(W, H);
-    bumpStat('vsMatches', 1);
-    if (p1Win) bumpStat('vsWins', 1);
-    this.grantXP(p1Win ? 35 : 20);
-    setTimeout(() => UI.showResult(p1Win, {
-      title: p1Win ? 'SPELER 1 WINT!' : 'SPELER 2 WINT!',
-      detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}`,
-      xp: this.sessionXP, mode: 'versus', win: p1Win, p1: this.p1Pick, p2: this.p2Pick,
     }), 1200);
   }
 
@@ -2620,8 +1837,6 @@ class Game {
     save.bestWall = best; persist();
     const xp = Math.round(this.score * 0.6);
     this.grantXP(xp);
-    bumpDaily('wallBricks', this.score);
-    checkAchievements();
     AudioSys.sfx(isRecord ? 'win' : 'bell');
     this.banner('TIJD!', 1.5, '#ffd75e', 56);
     setTimeout(() => UI.showResult(true, {
@@ -2649,62 +1864,26 @@ class Game {
         setTimeout(() => this.banner(`Nieuw wapen: ${unlockedW.name}!`, 2, '#c792ff', 32), 900);
         AudioSys.sfx('newmonster');
       }
-      const newStyle = STYLES.find(s => s.needLvl === save.lvl && styleUnlocked(s));
-      if (newStyle) UI.toast(`Nieuwe stijl: ${newStyle.name}!`, 3500);
     }
     persist();
   }
 
-  spawnJutsu(f, atk) {
-    const jutsu = (atk && atk.jutsu) || (f.vsSpecial === 'chidori' || f.isRobot ? 'chidori' : 'rasengan');
-    const dmg = atk ? atk.dmg : f.baseDmg * 2.8;
-    const from = this.projFrom(f);
-    if (jutsu === 'chidori') {
-      this.spawnProjectile({
-        x: f.x + f.face * 36, y: f.y - 48,
-        vx: f.face * 620, vy: 0, r: 22, dmg, life: 0.35,
-        from, kind: 'chidori', pierce: false, hitSet: new Set(),
-      });
-      f.vx = f.face * 380;
-      this.shake(7, 0.2);
-      AudioSys.sfx('chidori');
-    } else {
-      // Rasengan: zware draaiende chakra-bol
-      this.spawnProjectile({
-        x: f.x + f.face * 40, y: f.y - 50,
-        vx: f.face * 400, vy: 0, r: 26, dmg,
-        from, kind: 'rasengan', pierce: true, hitSet: new Set(), life: 1.4,
-        spin: 0,
-      });
-      this.burst(f.x + f.face * 30, f.y - 50, '#7cf5ff', 14);
-      this.shake(6, 0.22);
-      AudioSys.sfx('rasengan');
-    }
-  }
-
-  throwShuriken(f) {
-    if (f._shurikenCd > 0) return;
-    f._shurikenCd = 0.28;
-    AudioSys.sfx('shuriken');
-    const w = f.weapon;
+  spawnWave(f) {
+    // speciale aanval: energiegolf
+    const spec = f.attackSpec('special');
     this.spawnProjectile({
-      x: f.x + f.face * 24, y: f.y - 52,
-      vx: f.face * 520, vy: rand(-40, 40), r: 10,
-      dmg: f.baseDmg * w.dmg * 0.85,
-      from: this.projFrom(f), kind: 'shuriken', life: 1.2, spin: 0,
+      x: f.x + f.face * 30, y: f.y - 48,
+      vx: f.face * 460, vy: 0, r: 20, dmg: spec.dmg,
+      from: f.isPlayer ? 'player' : 'enemy',
+      kind: f.isPlayer ? 'wave' : 'robolaser',
+      pierce: f.isPlayer, hitSet: new Set(),
     });
-    f.face = f.face; // keep facing
+    this.shake(4, 0.15);
+    if (!f.isPlayer) AudioSys.sfx('laser');
   }
-
-  spawnWave(f) { this.spawnJutsu(f, f.attackSpec('special')); }
 
   spawnProjectile(p) {
-    this.projectiles.push(Object.assign({ life: 3, grav: 0, spin: 0 }, p));
-  }
-
-  projFrom(f) {
-    if (this.mode === 'versus') return f.playerSlot === 2 ? 'p2' : 'p1';
-    return f.isPlayer ? 'player' : 'enemy';
+    this.projectiles.push(Object.assign({ life: 3, grav: 0 }, p));
   }
 
   tryMelee(f, spec) {
@@ -2727,13 +1906,12 @@ class Game {
             this.score++;
             this.combo++; this.comboT = 1.4;
             this.burst(b.x + b.w / 2, b.y + b.h / 2, `hsl(${b.hue},50%,45%)`, 14);
-            AudioSys.sfx(b.bonus ? 'explode' : 'brick');
-            this.shake(b.bonus ? 6 : 3, b.bonus ? 0.16 : 0.12);
+            AudioSys.sfx('brick');
+            this.shake(3, 0.12);
             this.floater(b.x + b.w / 2, b.y, this.combo > 1 ? `x${this.combo}!` : '+1', '#ffd75e', 16);
             if (b.bonus) {
               AudioSys.sfx('bonus');
               this.score += 5;
-              this.burst(b.x + b.w / 2, b.y + b.h / 2, '#ffd75e', 22);
               this.floater(b.x + b.w / 2, b.y - 22, '★ BONUS +5', '#7cf5ff', 18);
             }
           } else {
@@ -2749,41 +1927,23 @@ class Game {
     for (const m of this.monsters) {
       if (!m.alive) continue;
       if ((hx - m.x) ** 2 + (hy - m.y) ** 2 < (r + m.size) ** 2) {
-        let comboMul = 1;
-        if (this.mode === 'adventure' && f.isPlayer) {
-          this.combo = Math.min(12, this.combo + 1);
-          this.comboT = 1.55;
-          comboMul = 1 + Math.min(this.combo, 8) * 0.07;
-          trackCombo(this.combo);
-          if (this.combo === 3 || this.combo === 6 || this.combo === 10) {
-            AudioSys.sfx('combo');
-            this.floater(f.x + f.face * 30, f.y - 120, `COMBO ×${this.combo}!`, '#ffd75e', 17);
-          }
-        }
-        const buff = f.isPlayer ? (this.dmgBuffMul || 1) : 1;
-        const dmg = Math.round(spec.dmg * rand(0.9, 1.15) * comboMul * buff);
+        const dmg = Math.round(spec.dmg * rand(0.9, 1.15));
         m.takeDamage(dmg, f.face * spec.kb, this);
         this.player.energy = clamp(this.player.energy + 8, 0, 100);
         hit = true;
       }
     }
-    // vechters (training / versus)
+    // vechters (training)
     const targets = [];
-    if (this.mode === 'versus') {
-      if (f.playerSlot === 1 && this.p2) targets.push(this.p2);
-      if (f.playerSlot === 2 && this.player) targets.push(this.player);
-    } else {
-      if (f.isPlayer && this.robot) targets.push(this.robot);
-      if (!f.isPlayer && f.isRobot) targets.push(this.player);
-    }
+    if (f.isPlayer && this.robot) targets.push(this.robot);
+    if (!f.isPlayer && f.isRobot) targets.push(this.player);
     for (const tgt of targets) {
       if (!tgt.alive) continue;
       if ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2) {
         const dmg = tgt.takeDamage(spec.dmg * rand(0.9, 1.15), f.face * spec.kb, this);
-        const col = tgt.playerSlot === 2 ? '#ffb0b8' : (tgt.isPlayer ? '#ff8080' : '#ffe680');
-        this.floater(tgt.x, tgt.y - 115, '-' + dmg, col, 16);
-        this.burst(tgt.bodyX, tgt.bodyY, col, 7);
-        f.energy = clamp(f.energy + 9, 0, 100);
+        this.floater(tgt.x, tgt.y - 115, '-' + dmg, tgt.isPlayer ? '#ff8080' : '#ffe680', 16);
+        this.burst(tgt.bodyX, tgt.bodyY, tgt.isPlayer ? '#ff8080' : '#9fd8ff', 7);
+        if (f.isPlayer) this.player.energy = clamp(this.player.energy + 9, 0, 100);
         this.freezeT = Math.max(this.freezeT, 0.03);
         this.shake(3, 0.12);
         hit = true;
@@ -2803,7 +1963,6 @@ class Game {
 
     if (this.mode === 'adventure') this.updateAdventure(dt);
     else if (this.mode === 'training') this.updateTraining(dt);
-    else if (this.mode === 'versus') this.updateVersus(dt);
     else if (this.mode === 'wall') this.updateWall(dt);
 
     for (const m of this.monsters) m.update(dt, this);
@@ -2812,39 +1971,21 @@ class Game {
     // projectielen
     for (const p of this.projectiles) {
       p.life -= dt;
-      p.spin = (p.spin || 0) + dt * (p.kind === 'rasengan' ? 22 : p.kind === 'shuriken' ? 28 : 12);
       p.vy += (p.grav || 0) * dt;
       p.x += p.vx * dt; p.y += p.vy * dt;
-      if (p.kind === 'rasengan') p.r = Math.min(34, (p.r || 26) + dt * 4);
       if (p.from === 'enemy') {
         const pl = this.player;
-        if (pl && pl.alive && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
-          pl.takeDamage(p.dmg, Math.sign(p.vx) * 260, this);
-          this.floater(pl.x, pl.y - 115, '-' + Math.round(p.dmg), '#ff8080', 16);
-          if (p.kind === 'chidori') this.burst(p.x, p.y, '#a8e0ff', 16);
-          p.life = 0;
-          this.burst(p.x, p.y, p.kind === 'chidori' ? '#a8e0ff' : '#ff9a3d', 8);
-        }
-      } else if (p.from === 'p2' && this.p2) {
-        const pl = this.player;
-        if (pl && pl.alive && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
-          pl.takeDamage(p.dmg, Math.sign(p.vx) * 260, this);
-          this.floater(pl.x, pl.y - 115, '-' + Math.round(p.dmg), '#ff8080', 16);
-          p.life = 0;
-        }
-      } else if (p.from === 'p1' && this.p2) {
-        const pl = this.p2;
         if (pl.alive && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
           pl.takeDamage(p.dmg, Math.sign(p.vx) * 260, this);
-          this.floater(pl.x, pl.y - 115, '-' + Math.round(p.dmg), '#ffb0b8', 16);
+          this.floater(pl.x, pl.y - 115, '-' + Math.round(p.dmg), '#ff8080', 16);
           p.life = 0;
+          this.burst(p.x, p.y, '#ff9a3d', 8);
         }
       } else {
         for (const m of this.monsters) {
           if (!m.alive || (p.hitSet && p.hitSet.has(m))) continue;
           if ((p.x - m.x) ** 2 + (p.y - m.y) ** 2 < (p.r + m.size) ** 2) {
             m.takeDamage(Math.round(p.dmg), Math.sign(p.vx) * 300, this);
-            if (p.kind === 'rasengan') this.burst(p.x, p.y, '#7cf5ff', 12);
             if (p.hitSet) p.hitSet.add(m); else p.life = 0;
           }
         }
@@ -2882,29 +2023,10 @@ class Game {
     this.floaters = this.floaters.filter(f => f.life > 0);
     for (const b of this.banners) b.t += dt;
     this.banners = this.banners.filter(b => b.t < b.dur);
-    this.trimFxCaps();
   }
 
-  trimFxCaps() {
-    const drop = (arr, max) => {
-      if (arr.length > max) arr.splice(0, arr.length - max);
-    };
-    drop(this.particles, FX_CAP.particles);
-    drop(this.floaters, FX_CAP.floaters);
-    drop(this.projectiles, FX_CAP.projectiles);
-    drop(this.banners, FX_CAP.banners);
-    if (this.player && this.player.afterimages) drop(this.player.afterimages, FX_CAP.afterimages);
-    if (this.p2 && this.p2.afterimages) drop(this.p2.afterimages, FX_CAP.afterimages);
-    if (this.robot && this.robot.afterimages) drop(this.robot.afterimages, FX_CAP.afterimages);
-  }
-
-  shake(mag, dur) {
-    if (save.shake === false) return;
-    this.shakeMag = mag; this.shakeT = Math.max(this.shakeT, dur);
-  }
+  shake(mag, dur) { this.shakeMag = mag; this.shakeT = Math.max(this.shakeT, dur); }
   burst(x, y, color, n) {
-    const room = FX_CAP.particles - this.particles.length;
-    n = Math.min(n, Math.max(0, room));
     for (let i = 0; i < n; i++) {
       const a = rand(0, TAU), sp = rand(60, 320);
       this.particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 120,
@@ -2926,47 +2048,21 @@ class Game {
     }
     drawBackground(c, this.theme, this.t, this.ground);
 
-    if (this.mode === 'adventure' && this.pickups) {
-      for (const pk of this.pickups) {
-        const meta = PICKUP_META[pk.kind];
-        const y = pk.y + (pk.bob || 0);
-        c.save();
-        c.shadowColor = meta.color; c.shadowBlur = 14;
-        c.fillStyle = meta.color;
-        c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.fill();
-        c.strokeStyle = '#fff'; c.lineWidth = 2;
-        c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.stroke();
-        c.font = '800 10px sans-serif'; c.textAlign = 'center'; c.fillStyle = '#0a0d18';
-        c.fillText(meta.label, pk.x, y + 4);
-        c.restore();
-      }
-    }
-
     if (this.mode === 'wall') this.drawWall(c);
 
     for (const m of this.monsters) m.draw(c);
     if (this.robot) this.robot.draw(c);
-    if (this.p2) this.p2.draw(c);
     this.player.draw(c);
 
     // projectielen
     for (const p of this.projectiles) {
       c.save();
-      if (p.kind === 'rasengan') {
-        drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'rasengan', 1);
-      } else if (p.kind === 'chidori') {
-        drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'chidori', 1);
-      } else if (p.kind === 'shuriken') {
-        c.translate(p.x, p.y); c.rotate(p.spin || 0);
-        c.fillStyle = '#c9d6e8';
-        for (let i = 0; i < 4; i++) {
-          c.rotate(Math.PI / 2);
-          c.beginPath(); c.moveTo(0, 0); c.lineTo(3, -3); c.lineTo(12, 0); c.lineTo(3, 3); c.closePath(); c.fill();
-        }
-      } else if (p.kind === 'wave') {
+      if (p.kind === 'wave') {
         c.shadowColor = '#ffd75e'; c.shadowBlur = 16;
         c.fillStyle = 'rgba(255,215,94,.9)';
         c.beginPath(); c.ellipse(p.x, p.y, p.r, p.r * 1.5, 0, 0, TAU); c.fill();
+        c.fillStyle = '#fff';
+        c.beginPath(); c.ellipse(p.x, p.y, p.r * 0.45, p.r * 0.9, 0, 0, TAU); c.fill();
       } else if (p.kind === 'fire') {
         c.fillStyle = '#ff7a30';
         c.beginPath(); c.arc(p.x, p.y, p.r, 0, TAU); c.fill();
@@ -3027,17 +2123,8 @@ class Game {
       c.globalAlpha = clamp(this.hint, 0, 1);
       c.font = '600 15px -apple-system, sans-serif';
       c.fillStyle = '#fff'; c.textAlign = 'center';
-      let hintTxt;
-      if (Input.dualMode && IS_TOUCH) {
-        hintTxt = 'P1 = linker helft · P2 = rechter helft · joystick + aanvalsknoppen';
-      } else if (Input.dualMode) {
-        hintTxt = 'P1: A/D · W · J/K/L/U · Shift  |  P2: pijltjes · 1/2/3/4/5';
-      } else if (IS_TOUCH) {
-        hintTxt = 'Links: joystick om te lopen · Rechts: aanvalsknoppen';
-      } else {
-        hintTxt = 'A/D lopen · W springen · J stomp · K trap · L wapen · U speciaal';
-      }
-      c.fillText(hintTxt, W / 2, H * 0.2);
+      c.fillText(IS_TOUCH ? 'Links: joystick om te lopen · Rechts: aanvalsknoppen'
+        : 'A/D lopen · W springen · J stomp · K trap · L wapen · U speciaal', W / 2, H * 0.2);
       c.globalAlpha = 1;
     }
   }
@@ -3073,28 +2160,23 @@ class Game {
 
   drawHUD(c) {
     const p = this.player;
-    // spelerbalk (niet in 2P — eigen layout)
+    // spelerbalk
     const bw = Math.min(240, W * 0.32);
     const bx = 16, by = 18;
-    if (this.mode !== 'versus') {
-      c.fillStyle = 'rgba(0,0,0,.45)';
-      this.rr(c, bx - 4, by - 4, bw + 8, 52, 10); c.fill();
-      c.fillStyle = '#333c55'; this.rr(c, bx, by, bw, 15, 6); c.fill();
-      c.fillStyle = p.hp / p.maxhp > 0.35 ? '#6ee06e' : '#ff6b6b';
-      this.rr(c, bx, by, bw * clamp(p.hp / p.maxhp, 0, 1), 15, 6); c.fill();
-      c.fillStyle = '#333c55'; this.rr(c, bx, by + 20, bw, 11, 5); c.fill();
-      c.fillStyle = p.energy >= 100 ? '#7cf5ff' : '#3db8ff';
-      this.rr(c, bx, by + 20, bw * p.energy / 100, 11, 5); c.fill();
-      c.font = '800 10px -apple-system, sans-serif';
-      c.fillStyle = 'rgba(255,255,255,.85)'; c.textAlign = 'left';
-      c.fillText('CHAKRA', bx + 6, by + 29);
-      c.font = '800 13px -apple-system, sans-serif';
-      c.fillStyle = '#fff';
-      c.fillText(`Lv ${save.lvl}`, bx + bw + 12, by + 13);
-      if (p.energy >= 100) {
-        c.fillStyle = '#7cf5ff';
-        c.fillText('🌀 RASENGAN!', bx + bw + 12, by + 32);
-      }
+    c.fillStyle = 'rgba(0,0,0,.45)';
+    this.rr(c, bx - 4, by - 4, bw + 8, 46, 10); c.fill();
+    c.fillStyle = '#333c55'; this.rr(c, bx, by, bw, 15, 6); c.fill();
+    c.fillStyle = p.hp / p.maxhp > 0.35 ? '#6ee06e' : '#ff6b6b';
+    this.rr(c, bx, by, bw * clamp(p.hp / p.maxhp, 0, 1), 15, 6); c.fill();
+    c.fillStyle = '#333c55'; this.rr(c, bx, by + 20, bw, 9, 4); c.fill();
+    c.fillStyle = p.energy >= 100 ? '#ffd75e' : '#8fa3d9';
+    this.rr(c, bx, by + 20, bw * p.energy / 100, 9, 4); c.fill();
+    c.font = '800 13px -apple-system, sans-serif';
+    c.fillStyle = '#fff'; c.textAlign = 'left';
+    c.fillText(`Lv ${save.lvl}`, bx + bw + 12, by + 13);
+    if (p.energy >= 100) {
+      c.fillStyle = '#ffd75e';
+      c.fillText('⚡ KLAAR!', bx + bw + 12, by + 30);
     }
 
     c.textAlign = 'center';
@@ -3110,18 +2192,6 @@ class Game {
         c.fillStyle = '#e04f5f'; this.rr(c, W / 2 - bwid / 2, 46, bwid * boss.hp / boss.maxhp, 10, 5); c.fill();
         c.font = '700 12px sans-serif'; c.fillStyle = '#ffb0b8';
         c.fillText(boss.sp.name.toUpperCase(), W / 2, 72);
-      }
-      if (save.comboHud !== false && this.combo > 1) {
-        c.font = '900 18px sans-serif'; c.fillStyle = '#ffd75e';
-        c.fillText(`COMBO ×${this.combo}`, W / 2, 92);
-      }
-      if (this.dmgBuffT > 0) {
-        c.font = '800 13px sans-serif'; c.fillStyle = '#ff7a4d';
-        c.fillText(`RAGE ${Math.ceil(this.dmgBuffT)}s`, W / 2, 108);
-      }
-      if (this.playerShieldT > 0) {
-        c.font = '800 13px sans-serif'; c.fillStyle = '#9fd8ff';
-        c.fillText(`Schild ${Math.ceil(this.playerShieldT)}s`, W / 2, this.dmgBuffT > 0 ? 124 : 108);
       }
     } else if (this.mode === 'training') {
       const r = this.robot;
@@ -3153,37 +2223,6 @@ class Game {
         c.font = '900 22px sans-serif'; c.fillStyle = '#7cf5ff';
         c.fillText(`COMBO x${this.combo}`, W / 2, 94);
       }
-    } else if (this.mode === 'versus' && this.p2) {
-      const p2 = this.p2;
-      const half = Math.min(280, W * 0.34);
-      const name1 = vsRosterEntry(this.p1Pick).name;
-      const name2 = vsRosterEntry(this.p2Pick).name;
-      c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, bx - 4, by - 4, half + 8, 44, 10); c.fill();
-      c.fillStyle = '#333c55'; this.rr(c, bx, by, half, 14, 6); c.fill();
-      c.fillStyle = p.hp / p.maxhp > 0.35 ? '#6ee06e' : '#ff6b6b';
-      this.rr(c, bx, by, half * clamp(p.hp / p.maxhp, 0, 1), 14, 6); c.fill();
-      c.font = '800 11px sans-serif'; c.textAlign = 'left'; c.fillStyle = '#7cf5ff';
-      c.fillText(`P1 · ${name1}`, bx, by + 30);
-
-      c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, W - half - 20, by - 4, half + 8, 44, 10); c.fill();
-      c.fillStyle = '#333c55'; this.rr(c, W - half - 16, by, half, 14, 6); c.fill();
-      c.fillStyle = '#ff8080';
-      const frac2 = clamp(p2.hp / p2.maxhp, 0, 1);
-      this.rr(c, W - 16 - half * frac2, by, half * frac2, 14, 6); c.fill();
-      c.textAlign = 'right'; c.fillStyle = '#ffb0b8';
-      c.fillText(`${name2} · P2`, W - 20, by + 30);
-
-      c.textAlign = 'center';
-      c.font = '900 26px sans-serif'; c.fillStyle = '#fff';
-      c.fillText(Math.ceil(Math.max(0, this.roundTimer)), W / 2, 38);
-      c.font = '800 12px sans-serif'; c.fillStyle = 'rgba(255,255,255,.75)';
-      c.fillText(`Ronde ${this.round} · ${this.roundsP1}-${this.roundsP2}`, W / 2, 56);
-      for (let i = 0; i < 2; i++) {
-        c.fillStyle = i < this.roundsP1 ? '#7cf5ff' : 'rgba(255,255,255,.22)';
-        c.beginPath(); c.arc(W / 2 - 40 - i * 16, 72, 5, 0, TAU); c.fill();
-        c.fillStyle = i < this.roundsP2 ? '#ffb0b8' : 'rgba(255,255,255,.22)';
-        c.beginPath(); c.arc(W / 2 + 40 + i * 16, 72, 5, 0, TAU); c.fill();
-      }
     }
   }
 
@@ -3199,14 +2238,10 @@ class Game {
   }
 
   drawTouchControls(c) {
-    if (Input.dualMode) {
-      this.drawPad(c, Input, this.player, 'P1', '#7cf5ff');
-      this.drawPad(c, InputP2, this.p2 || this.player, 'P2', '#ffb0b8');
-      return;
-    }
     c.save();
+    // joystick
     const j = Input.joy;
-    const jx = j.active ? j.ox : (Input.joyHome?.x || 110), jy = j.active ? j.oy : (Input.joyHome?.y || H - 110);
+    const jx = j.active ? j.ox : 110, jy = j.active ? j.oy : H - 110;
     c.globalAlpha = j.active ? 0.5 : 0.22;
     c.strokeStyle = '#fff'; c.lineWidth = 3;
     c.beginPath(); c.arc(jx, jy, 52, 0, TAU); c.stroke();
@@ -3223,42 +2258,8 @@ class Game {
       c.fillText(b.label, b.x, b.y + 2);
       if (b.id === 'special' && this.player.energy >= 100) {
         c.globalAlpha = 0.9;
-        c.strokeStyle = '#7cf5ff'; c.lineWidth = 4;
-        c.beginPath(); c.arc(b.x, b.y, b.r + 5 + Math.sin(this.t * 8) * 2, 0, TAU); c.stroke();
-      }
-      if (b.id === 'subst' && this.player.substCd > 0) {
-        c.globalAlpha = 0.35;
-        c.fillStyle = '#000';
-        c.beginPath(); c.arc(b.x, b.y, b.r, 0, TAU); c.fill();
-      }
-    }
-    c.textBaseline = 'alphabetic';
-    c.restore();
-  }
-
-  drawPad(c, pad, fighter, label, accent) {
-    c.save();
-    const j = pad.joy;
-    const jx = j.active ? j.ox : pad.joyHome.x, jy = j.active ? j.oy : pad.joyHome.y;
-    c.globalAlpha = 0.35;
-    c.strokeStyle = accent;
-    c.lineWidth = 3;
-    c.beginPath(); c.arc(jx, jy, 48, 0, TAU); c.stroke();
-    c.globalAlpha = j.active ? 0.55 : 0.25;
-    c.fillStyle = accent;
-    c.beginPath(); c.arc(jx + (j.active ? j.dx : 0), jy + (j.active ? j.dy * 0.25 : 0), 22, 0, TAU); c.fill();
-    c.font = '900 11px sans-serif'; c.fillStyle = accent; c.textAlign = 'center';
-    c.fillText(label, jx, jy - 58);
-    for (const b of pad.buttons) {
-      c.globalAlpha = b.held ? 0.85 : 0.42;
-      c.fillStyle = b.color;
-      c.beginPath(); c.arc(b.x, b.y, b.r, 0, TAU); c.fill();
-      c.globalAlpha = 0.9;
-      c.font = `${b.r * 0.8}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.fillText(b.label, b.x, b.y + 2);
-      if (b.id === 'special' && fighter && fighter.energy >= 100) {
-        c.strokeStyle = accent; c.lineWidth = 3;
-        c.beginPath(); c.arc(b.x, b.y, b.r + 4, 0, TAU); c.stroke();
+        c.strokeStyle = '#ffd75e'; c.lineWidth = 4;
+        c.beginPath(); c.arc(b.x, b.y, b.r + 5, 0, TAU); c.stroke();
       }
     }
     c.textBaseline = 'alphabetic';
@@ -3268,8 +2269,7 @@ class Game {
 
 /* ================================= UI ================================== */
 const UI = {
-  screens: ['menuScreen', 'levelScreen', 'weaponScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
-  charPickStep: 1,
+  screens: ['menuScreen', 'levelScreen', 'weaponScreen', 'styleScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   lastResult: null,
 
   show(id) {
@@ -3291,181 +2291,22 @@ const UI = {
   goMenu() {
     game = null;
     state = 'menu';
-    Input.dualMode = false;
-    Input.layout(W, H);
     this.renderMenu();
     this.show('menuScreen');
     AudioSys.play('menu');
     if (window.StickInstall) window.StickInstall.refreshMenuButton();
   },
 
-  renderCharSelect() {
-    this.charPickStep = this.charPickStep || 1;
-    const stepEl = document.getElementById('charPickStep');
-    if (stepEl) {
-      stepEl.textContent = this.charPickStep === 1
-        ? 'Speler 1 — kies je vechter (links)'
-        : 'Speler 2 — kies je vechter (rechts)';
-    }
-    const grid = document.getElementById('charGrid');
-    if (!grid) return;
-    const p1Lbl = document.getElementById('charP1Label');
-    const p2Lbl = document.getElementById('charP2Label');
-    if (p1Lbl) p1Lbl.textContent = 'P1: ' + vsRosterEntry(vsSelect.p1).name;
-    if (p2Lbl) p2Lbl.textContent = 'P2: ' + vsRosterEntry(vsSelect.p2).name;
-    grid.innerHTML = '';
-    for (const r of VS_ROSTER) {
-      const ok = vsUnlocked(r);
-      const el = document.createElement('div');
-      const sel1 = vsSelect.p1 === r.id;
-      const sel2 = vsSelect.p2 === r.id;
-      el.className = 'char-card' + (ok ? '' : ' locked') + (sel1 ? ' p1sel' : '') + (sel2 ? ' p2sel' : '');
-      const cv = document.createElement('canvas');
-      cv.width = 80; cv.height = 80;
-      const cc = cv.getContext('2d');
-      cc.translate(40, 62); cc.scale(0.95, 0.95);
-      const prev = buildVsFighter(r, 0, 1);
-      prev.draw(cc);
-      el.appendChild(cv);
-      const cap = document.createElement('div');
-      cap.className = 'char-name';
-      cap.textContent = r.name;
-      el.appendChild(cap);
-      const tag = document.createElement('div');
-      tag.className = 'char-tag';
-      tag.textContent = ok ? r.tag : r.hint || 'Locked';
-      el.appendChild(tag);
-      if (ok) {
-        el.addEventListener('click', () => {
-          AudioSys.sfx('select');
-          if (this.charPickStep === 1) {
-            vsSelect.p1 = r.id;
-            this.charPickStep = 2;
-            this.renderCharSelect();
-          } else {
-            vsSelect.p2 = r.id;
-            this.renderCharSelect();
-          }
-        });
-      }
-      grid.appendChild(el);
-    }
-    const fightBtn = document.getElementById('btnCharFight');
-    if (fightBtn) {
-      fightBtn.disabled = !(vsSelect.p1 && vsSelect.p2);
-      fightBtn.onclick = () => {
-        if (!vsSelect.p1 || !vsSelect.p2) return;
-        AudioSys.sfx('bell');
-        startGame('versus', { p1: vsSelect.p1, p2: vsSelect.p2 });
-      };
-    }
-    const backP = document.getElementById('charPickBackP1');
-    if (backP) backP.style.display = this.charPickStep === 2 ? 'inline-flex' : 'none';
-    const rnd = document.getElementById('btnCharRandom');
-    if (rnd && !rnd.dataset.bound) {
-      rnd.dataset.bound = '1';
-      rnd.addEventListener('click', () => {
-        AudioSys.sfx('select');
-        const pool = VS_ROSTER.filter(vsUnlocked);
-        if (pool.length < 2) return;
-        const a = choice(pool);
-        let b = choice(pool);
-        for (let i = 0; i < 8 && b.id === a.id; i++) b = choice(pool);
-        vsSelect.p1 = a.id;
-        vsSelect.p2 = b.id;
-        this.charPickStep = 2;
-        this.renderCharSelect();
-        UI.toast(`${a.name} vs ${b.name}!`, 2400);
-      });
-    }
-  },
-
   renderMenu() {
     const need = xpNeed(save.lvl);
     const w = weaponById(save.weapon);
-    const st = styleById(save.style || 'classic');
     document.getElementById('menuStats').innerHTML =
       `Vechter <b>Lv ${save.lvl}</b> &nbsp;·&nbsp; Wapen: <b>${w.name}</b> &nbsp;·&nbsp; ` +
-      `Stijl: <b style="color:${st.accent}">${st.name}</b> &nbsp;·&nbsp; ` +
-      `Monsterboek: <b>${dexCount()}/${SPECIES_ORDER.length}</b> &nbsp;·&nbsp; Muur: <b>${save.bestWall}</b>` +
+      `Monsterboek: <b>${dexCount()}/${SPECIES_ORDER.length}</b> &nbsp;·&nbsp; Muurrecord: <b>${save.bestWall}</b>` +
       `<div class="xpline"><div style="width:${Math.round(save.xp / need * 100)}%"></div></div>` +
-      `<div style="font-size:12px;margin-top:4px;opacity:.85">${save.xp}/${need} XP · ${save.trainWins} train-wins</div>`;
+      `<div style="font-size:12px;margin-top:4px;opacity:.8">${save.xp}/${need} XP naar level ${save.lvl + 1}</div>`;
     document.getElementById('togMusic').classList.toggle('off', !save.music);
     document.getElementById('togSfx').classList.toggle('off', !save.sfx);
-    ensureDaily();
-    const done = save.daily.tasks.filter(t => t.done).length;
-    const missEl = document.getElementById('menuDailyHint');
-    if (missEl) missEl.textContent = `Vandaag: ${done}/3 missies klaar · ${Object.keys(save.achievements).length}/${ACHIEVEMENTS.length} prestaties`;
-  },
-
-  renderMissions() {
-    ensureDaily();
-    const dailyHost = document.getElementById('dailyList');
-    const achHost = document.getElementById('achList');
-    if (!dailyHost || !achHost) return;
-    dailyHost.innerHTML = '';
-    for (const t of save.daily.tasks) {
-      const def = dailyDef(t.id);
-      if (!def) continue;
-      const el = document.createElement('div');
-      el.className = 'step-card';
-      const pct = Math.min(100, Math.round(t.progress / def.goal * 100));
-      el.innerHTML = `<b>${def.text}</b><br><span style="opacity:.85">${t.progress}/${def.goal} · +${def.xp} XP</span>` +
-        `<div class="xpline" style="margin-top:8px"><div style="width:${pct}%"></div></div>`;
-      if (t.done && !t.claimed) {
-        const btn = document.createElement('button');
-        btn.className = 'btn tog';
-        btn.style.marginTop = '10px';
-        btn.textContent = 'Claim XP';
-        btn.addEventListener('click', () => { AudioSys.sfx('select'); claimDailyTask(t.id); });
-        el.appendChild(btn);
-      } else if (t.claimed) {
-        el.innerHTML += `<div style="color:#7cfc8a;margin-top:8px">✔ Geclaimd</div>`;
-      }
-      dailyHost.appendChild(el);
-    }
-    const bonusBtn = document.getElementById('dailyBonusBtn');
-    if (bonusBtn) {
-      const ready = save.daily.tasks.every(x => x.claimed) && !save.daily.dayBonusClaimed;
-      bonusBtn.style.display = ready ? 'flex' : 'none';
-      bonusBtn.disabled = !ready;
-    }
-    achHost.innerHTML = '';
-    for (const ach of ACHIEVEMENTS) {
-      const got = !!save.achievements[ach.id];
-      const el = document.createElement('div');
-      el.className = 'card' + (got ? '' : ' locked');
-      el.style.borderColor = got ? '#ffd75e' : undefined;
-      el.innerHTML = `<div class="cname">${ach.icon} ${ach.name}</div><div class="cinfo">${ach.desc}${got ? ' · ✔' : ''}</div>`;
-      achHost.appendChild(el);
-    }
-  },
-
-  renderHosting() {
-    const linkEl = document.getElementById('hostingLink');
-    const hintEl = document.getElementById('hostingHint');
-    if (!linkEl) return;
-    fetch('./hosting.json?t=' + Date.now(), { cache: 'no-store' })
-      .then(r => r.json())
-      .then(j => {
-        const url = j.stable || j.githubPages || j.netlifyUrl || j.tunnel || headLiveFromPage();
-        linkEl.textContent = url || '—';
-        let hint = j.stableHint || '';
-        if (!hint) {
-          if (j.stable) hint = 'Vaste link — zet in Safari op beginscherm.';
-          else if (location.hostname.endsWith('.github.io')) hint = 'GitHub Pages actief.';
-          else if (location.hostname.endsWith('.netlify.app')) hint = 'Netlify actief.';
-          else hint = 'Tunnel of tijdelijke link — export save bij URL-wissel.';
-        }
-        if (j.netlifyReadyAfter && !j.stable && location.hostname.endsWith('.netlify.app') === false) {
-          hint += ` Netlify deploy vanaf ${j.netlifyReadyAfter}.`;
-        }
-        if (hintEl) hintEl.textContent = hint;
-      })
-      .catch(() => {
-        linkEl.textContent = location.origin;
-        if (hintEl) hintEl.textContent = 'Speel via huidige link; export save bij URL-wissel.';
-      });
   },
 
   renderLevels() {
@@ -3481,8 +2322,7 @@ const UI = {
       el.style.boxShadow = locked ? 'none' : `0 5px 0 rgba(0,0,0,.35), 0 0 0 2px ${rar.color}55`;
       el.innerHTML = locked
         ? '&#128274;'
-        : `${n}${boss ? '<small>BAAS</small>' : `<small style="color:${rar.color}">${rar.name}</small>`}` +
-          (save.stars[n] ? `<span class="lvl-stars">${'★'.repeat(save.stars[n])}</span>` : '');
+        : `${n}${boss ? '<small>BAAS</small>' : `<small style="color:${rar.color}">${rar.name}</small>`}`;
       if (!locked) el.addEventListener('click', () => { AudioSys.sfx('select'); startGame('adventure', { level: n }); });
       grid.appendChild(el);
     }
@@ -3558,67 +2398,6 @@ const UI = {
     }
   },
 
-  renderStyle() {
-    const grid = document.getElementById('styleGrid');
-    if (!grid) return;
-    grid.innerHTML = '';
-    for (const st of STYLES) {
-      const ok = styleUnlocked(st);
-      const el = document.createElement('div');
-      el.className = 'style-card' + (save.style === st.id ? ' sel' : '') + (ok ? '' : ' locked');
-      el.style.borderColor = ok ? st.accent + '88' : '';
-      const cv = document.createElement('canvas');
-      cv.width = 72; cv.height = 72;
-      const cc = cv.getContext('2d');
-      cc.translate(36, 58); cc.scale(0.85, 0.85);
-      const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9 });
-      preview.animT = 0.4;
-      preview.draw(cc);
-      el.appendChild(cv);
-      const cap = document.createElement('div');
-      cap.style.fontSize = '13px';
-      cap.style.color = st.accent;
-      cap.textContent = st.name;
-      el.appendChild(cap);
-      const sub = document.createElement('div');
-      sub.style.fontSize = '11px';
-      sub.style.fontWeight = '600';
-      sub.style.opacity = '0.75';
-      sub.style.marginTop = '4px';
-      sub.textContent = ok ? (save.style === st.id ? 'Actief' : 'Tik om te kiezen') : st.hint;
-      el.appendChild(sub);
-      if (ok) {
-        el.addEventListener('click', () => {
-          save.style = st.id; persist(); AudioSys.sfx('select');
-          this.renderStyle(); this.renderMenu();
-          UI.toast(`${st.name} uitgerust`, 2200);
-        });
-      }
-      grid.appendChild(el);
-    }
-  },
-
-  renderSettings() {
-    const verEl = document.getElementById('setAppVersion');
-    if (verEl) verEl.textContent = 'Versie ' + APP_VERSION + ' · save + backup lokaal';
-    const pct = (v, d) => Math.round((Number(v ?? d)) * 100);
-    const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
-    setVal('setMusicVol', pct(save.musicVol, 0.85));
-    setVal('setSfxVol', pct(save.sfxVol, 1));
-    const lblM = document.getElementById('setMusicVolLbl');
-    const lblS = document.getElementById('setSfxVolLbl');
-    if (lblM) lblM.textContent = pct(save.musicVol, 0.85) + '%';
-    if (lblS) lblS.textContent = pct(save.sfxVol, 1) + '%';
-    ['setShake', 'setHaptics', 'setComboHud'].forEach((id, i) => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      const keys = ['shake', 'haptics', 'comboHud'];
-      el.classList.toggle('off', save[keys[i]] === false);
-    });
-    document.getElementById('togMusic')?.classList.toggle('off', !save.music);
-    document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
-  },
-
   showResult(win, data) {
     this.lastResult = data;
     state = 'result';
@@ -3628,15 +2407,6 @@ const UI = {
     title.className = 'bigres ' + (win ? 'win' : 'lose');
     document.getElementById('resDetail').textContent = data.detail;
     document.getElementById('resXp').textContent = `+${data.xp} XP verdiend · nu Lv ${save.lvl} (${save.xp}/${xpNeed(save.lvl)} XP)`;
-    const starsEl = document.getElementById('resStars');
-    if (starsEl) {
-      const n = win && data.stars ? data.stars : 0;
-      starsEl.textContent = n ? '★'.repeat(n) + '☆'.repeat(3 - n) : '';
-    }
-    const nextBtn = document.getElementById('resNext');
-    if (nextBtn) {
-      nextBtn.style.display = (win && data.mode === 'adventure' && data.level < MAX_LEVEL) ? 'flex' : 'none';
-    }
     this.show('resultScreen');
     AudioSys.play('menu');
   },
@@ -3646,16 +2416,6 @@ const UI = {
 let state = 'menu';
 
 function startGame(mode, opts) {
-  opts = opts || {};
-  const allowed = { adventure: 1, training: 1, wall: 1, versus: 1 };
-  if (!allowed[mode]) {
-    UI.toast('Onbekende modus', 2200);
-    return;
-  }
-  if (mode === 'versus') {
-    opts.p1 = normalizeVsPick(opts.p1 || vsSelect.p1, 'hero');
-    opts.p2 = normalizeVsPick(opts.p2 || vsSelect.p2, 'rabbit');
-  }
   game = new Game(mode, opts);
   state = 'play';
   UI.show(null);
@@ -3670,19 +2430,6 @@ document.getElementById('btnAdventure').addEventListener('click', () => {
 document.getElementById('btnTraining').addEventListener('click', () => {
   AudioSys.init(); AudioSys.sfx('select'); startGame('training');
 });
-const btnVersus = document.getElementById('btnVersus');
-if (btnVersus) btnVersus.addEventListener('click', () => {
-  AudioSys.init(); AudioSys.sfx('select');
-  UI.charPickStep = 1;
-  UI.renderCharSelect();
-  UI.show('charSelectScreen');
-});
-const charPickBackP1 = document.getElementById('charPickBackP1');
-if (charPickBackP1) charPickBackP1.addEventListener('click', () => {
-  AudioSys.sfx('select');
-  UI.charPickStep = 1;
-  UI.renderCharSelect();
-});
 document.getElementById('btnWall').addEventListener('click', () => {
   AudioSys.init(); AudioSys.sfx('select'); startGame('wall');
 });
@@ -3694,95 +2441,8 @@ document.getElementById('btnDex').addEventListener('click', () => {
 });
 const btnStyle = document.getElementById('btnStyle');
 if (btnStyle) btnStyle.addEventListener('click', () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.renderStyle(); UI.show('styleScreen');
+  AudioSys.init(); AudioSys.sfx('select'); UI.show('styleScreen');
 });
-const btnSettings = document.getElementById('btnSettings');
-if (btnSettings) btnSettings.addEventListener('click', () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.renderSettings(); UI.renderHosting(); UI.show('settingsScreen');
-});
-const btnMissions = document.getElementById('btnMissions');
-if (btnMissions) btnMissions.addEventListener('click', () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.renderMissions(); UI.show('missionsScreen');
-});
-const dailyBonusBtn = document.getElementById('dailyBonusBtn');
-if (dailyBonusBtn) dailyBonusBtn.addEventListener('click', () => {
-  AudioSys.sfx('select'); claimDailyDayBonus();
-});
-const btnCopyLink = document.getElementById('btnCopyLink');
-if (btnCopyLink) btnCopyLink.addEventListener('click', async () => {
-  const t = document.getElementById('hostingLink')?.textContent || location.href;
-  try {
-    await navigator.clipboard.writeText(t);
-    UI.toast('Link gekopieerd!', 2200);
-  } catch (_) { UI.toast(t, 4000); }
-});
-const btnExportSave = document.getElementById('btnExportSave');
-if (btnExportSave) btnExportSave.addEventListener('click', () => {
-  const ta = document.getElementById('savePortText');
-  if (ta) { ta.value = exportSaveJson(); ta.focus(); ta.select(); }
-  UI.toast('Save gekopieerd — bewaar veilig!', 3200);
-});
-const btnImportSave = document.getElementById('btnImportSave');
-if (btnImportSave) btnImportSave.addEventListener('click', () => {
-  const ta = document.getElementById('savePortText');
-  if (!ta || !ta.value.trim()) return;
-  try { importSaveJson(ta.value); AudioSys.sfx('win'); } catch (_) { UI.toast('Ongeldige save — controleer JSON', 3000); }
-});
-function bindSettingsControls() {
-  const onVol = (id, lblId, key) => {
-    const el = document.getElementById(id);
-    if (!el || el.dataset.bound) return;
-    el.dataset.bound = '1';
-    el.addEventListener('input', () => {
-      save[key] = clamp(el.value / 100, 0, 1);
-      persist();
-      const lbl = document.getElementById(lblId);
-      if (lbl) lbl.textContent = Math.round(save[key] * 100) + '%';
-      AudioSys.applyVolumes();
-    });
-  };
-  onVol('setMusicVol', 'setMusicVolLbl', 'musicVol');
-  onVol('setSfxVol', 'setSfxVolLbl', 'sfxVol');
-  const toggles = [
-    ['setShake', 'shake'], ['setHaptics', 'haptics'], ['setComboHud', 'comboHud'],
-  ];
-  for (const [id, key] of toggles) {
-    const el = document.getElementById(id);
-    if (!el || el.dataset.bound) continue;
-    el.dataset.bound = '1';
-    el.addEventListener('click', () => {
-      if (save[key] !== false) save[key] = false;
-      else save[key] = true;
-      persist();
-      UI.renderSettings();
-      AudioSys.sfx('select');
-      haptic(8);
-    });
-  }
-}
-const btnRestoreBackup = document.getElementById('btnRestoreBackup');
-if (btnRestoreBackup) btnRestoreBackup.addEventListener('click', () => {
-  AudioSys.sfx('select');
-  if (restoreSaveFromBackup()) UI.toast('Backup teruggezet!', 2800);
-  else UI.toast('Geen backup gevonden op dit apparaat', 3000);
-});
-const btnClearSave = document.getElementById('btnClearSave');
-if (btnClearSave) btnClearSave.addEventListener('click', () => {
-  if (!window.__sfClearConfirm) {
-    window.__sfClearConfirm = true;
-    UI.toast('Nogmaals tikken = voortgang wissen (backup blijft)', 3500);
-    setTimeout(() => { window.__sfClearConfirm = false; }, 4000);
-    return;
-  }
-  window.__sfClearConfirm = false;
-  try { localStorage.removeItem(SAVE_KEY); } catch (_) {}
-  save = sanitizeSave(Object.assign({}, DEFAULT_SAVE));
-  persist();
-  AudioSys.sfx('lose');
-  UI.renderMenu();
-  UI.toast('Nieuwe start — backup staat nog in Instellingen', 4000);
-});
-bindSettingsControls();
 const btnHelp = document.getElementById('btnHelp');
 if (btnHelp) btnHelp.addEventListener('click', () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.show('helpScreen');
@@ -3828,14 +2488,7 @@ document.getElementById('resAgain').addEventListener('click', () => {
   const d = UI.lastResult;
   AudioSys.sfx('select');
   if (d.mode === 'adventure') startGame('adventure', { level: d.level });
-  else if (d.mode === 'versus') startGame('versus', { p1: d.p1 || vsSelect.p1, p2: d.p2 || vsSelect.p2 });
   else startGame(d.mode);
-});
-document.getElementById('resNext').addEventListener('click', () => {
-  const d = UI.lastResult;
-  if (!d || d.mode !== 'adventure' || !d.win) return;
-  AudioSys.sfx('select');
-  startGame('adventure', { level: Math.min(MAX_LEVEL, d.level + 1) });
 });
 document.getElementById('resMenu').addEventListener('click', () => { UI.goMenu(); });
 
@@ -3843,99 +2496,152 @@ document.getElementById('resMenu').addEventListener('click', () => { UI.goMenu()
 let lastTime = performance.now();
 function loop(now) {
   requestAnimationFrame(loop);
-  try {
-    const dt = Math.min((now - lastTime) / 1000, 0.05);
-    lastTime = now;
-    if (state === 'play' && game) {
-      game.update(dt);
-      Input.endFrame();
-    }
-    if (game) {
-      game.draw(ctx);
-    } else {
-      ctx.fillStyle = '#0b0e1a';
-      ctx.fillRect(0, 0, W, H);
-    }
-  } catch (err) {
-    console.error(err);
-    if (!window.__sfLoopErr) {
-      window.__sfLoopErr = true;
-      try { UI.toast('Fout hersteld — terug naar menu', 4500); } catch (_) {}
-      try { UI.goMenu(); } catch (_) { game = null; state = 'menu'; }
-    }
+  const dt = Math.min((now - lastTime) / 1000, 0.05);
+  lastTime = now;
+  if (state === 'play' && game) {
+    game.update(dt);
+    Input.endFrame();
+  }
+  if (game) {
+    game.draw(ctx);
+  } else {
+    // menu-achtergrond
+    ctx.fillStyle = '#0b0e1a';
+    ctx.fillRect(0, 0, W, H);
   }
 }
 
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) {
-    try {
-      if (AudioSys.ctx && AudioSys.ctx.state === 'running') AudioSys.ctx.suspend();
-    } catch (_) {}
-    if (state === 'play') { state = 'pause'; UI.show('pauseScreen'); }
-  } else {
-    try {
-      if (AudioSys.ctx && AudioSys.ctx.state === 'suspended' && save.music) AudioSys.ctx.resume();
-    } catch (_) {}
-  }
+  if (document.hidden && state === 'play') { state = 'pause'; UI.show('pauseScreen'); }
 });
 
-function updateNetStatus() {
-  const el = document.getElementById('netStatus');
-  if (!el) return;
-  const off = typeof navigator.onLine === 'boolean' && !navigator.onLine;
-  el.hidden = !off;
-  el.textContent = off ? 'Offline — opgeslagen voortgang blijft op dit apparaat' : '';
-}
-window.addEventListener('online', updateNetStatus);
-window.addEventListener('offline', updateNetStatus);
+resize();
+UI.renderMenu();
+AudioSys.desiredSong = 'menu';
+requestAnimationFrame(loop);
+window.__sf = { get game() { return game; }, startGame, save, Game, UI };
 
-function bootGame() {
-  if (window.__sfBooted) return;
-  window.__sfBooted = true;
-  resize();
-  UI.renderMenu();
-  ensureDaily();
-  checkAchievements();
-  updateNetStatus();
-  if (window.__sfRecoveredBackup) {
-    window.__sfRecoveredBackup = false;
-    UI.toast('Save hersteld uit backup — je voortgang is veilig', 4200);
+(function handleLaunchShortcut() {
+  const mode = new URLSearchParams(location.search).get('mode');
+  if (!mode) return;
+  AudioSys.init();
+  setTimeout(() => {
+    if (mode === 'adventure') {
+      UI.renderLevels();
+      UI.show('levelScreen');
+    } else if (mode === 'training') startGame('training');
+    else if (mode === 'wall') startGame('wall');
+  }, 120);
+})();
+
+</script>
+<script>
+'use strict';
+
+(function () {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true;
+
+  const btnMenu = document.getElementById('btnInstallApp');
+  const btnLabel = document.getElementById('btnInstallLabel');
+  const screen = document.getElementById('installScreen');
+  const back = document.getElementById('installBack');
+  const androidBtn = document.getElementById('installAndroidBtn');
+  const iosSteps = document.getElementById('installIosSteps');
+  const desktopSteps = document.getElementById('installDesktopSteps');
+  const fileNote = document.getElementById('installFileNote');
+  const doneMsg = document.getElementById('installDoneMsg');
+
+  let deferredPrompt = null;
+
+  function refreshMenuButton() {
+    if (!btnMenu || !btnLabel) return;
+    if (isStandalone) {
+      btnMenu.classList.add('done');
+      btnMenu.disabled = true;
+      btnLabel.innerHTML = 'Speelt als app &#10004;<small>Geïnstalleerd vanuit app-lade</small>';
+    } else {
+      btnMenu.classList.remove('done');
+      btnMenu.disabled = false;
+      btnLabel.innerHTML = 'Zet in app-lade<small>Één icoon op je beginscherm — tik &amp; speel</small>';
+    }
   }
-  AudioSys.desiredSong = 'menu';
-  if (typeof AudioSys.applyVolumes === 'function') AudioSys.applyVolumes();
-  requestAnimationFrame(loop);
-  window.__sf = { get game() { return game; }, startGame, save, Game, UI };
 
-  (function handleLaunchShortcut() {
-    const mode = new URLSearchParams(location.search).get('mode');
-    if (!mode) return;
-    AudioSys.init();
-    setTimeout(() => {
-      if (mode === 'adventure') {
-        UI.renderLevels();
-        UI.show('levelScreen');
-      } else if (mode === 'training') startGame('training');
-      else if (mode === 'versus') {
-        UI.charPickStep = 1;
-        UI.renderCharSelect();
-        UI.show('charSelectScreen');
-      }
-      else if (mode === 'wall') startGame('wall');
-    }, 120);
-  })();
-}
+  function showInstallScreen() {
+    if (!screen) return;
+    if (typeof UI !== 'undefined' && UI.show) UI.show('installScreen');
+    else screen.classList.add('active');
 
-const tunnelReady = window.sfTunnelBoot || Promise.resolve();
-tunnelReady.then(bootGame).catch(() => { try { bootGame(); } catch (_) {} });
-window.addEventListener('sf:tunnel-ready', bootGame);
+    if (doneMsg) doneMsg.style.display = isStandalone ? 'block' : 'none';
+    if (androidBtn) androidBtn.style.display = (!isStandalone && deferredPrompt) ? 'flex' : 'none';
+    if (iosSteps) iosSteps.style.display = (!isStandalone && isIOS) ? 'block' : 'none';
+    if (desktopSteps) desktopSteps.style.display = (!isStandalone && !isIOS && !deferredPrompt) ? 'block' : 'none';
+    if (fileNote) fileNote.style.display = (location.protocol === 'file:') ? 'block' : 'none';
+  }
 
-function reportAppError(label) {
-  if (window.__sfReportedErr) return;
-  window.__sfReportedErr = true;
-  console.error(label);
-  try {
-    if (typeof UI !== 'undefined' && UI.toast) UI.toast('Er ging iets mis — opgeslagen voortgang is veilig', 4000);
-  } catch (_) {}
-}
-window.addEventListener('error', (e) => reportAppError(e.message || 'error'));
-window.addEventListener('unhandledrejection', (e) => reportAppError(String(e.reason || 'promise')));
+  function closeInstallScreen() {
+    if (typeof UI !== 'undefined' && UI.goMenu) UI.goMenu();
+    else if (screen) screen.classList.remove('active');
+  }
+
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+    });
+  }
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (androidBtn) androidBtn.style.display = 'flex';
+    refreshMenuButton();
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    refreshMenuButton();
+    if (doneMsg) doneMsg.style.display = 'block';
+  });
+
+  async function triggerNativeInstall() {
+    if (!deferredPrompt) {
+      showInstallScreen();
+      return;
+    }
+    deferredPrompt.prompt();
+    const choice = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    if (choice.outcome === 'accepted') closeInstallScreen();
+    refreshMenuButton();
+  }
+
+  if (btnMenu) {
+    btnMenu.addEventListener('click', () => {
+      if (isStandalone) return;
+      if (typeof AudioSys !== 'undefined') { AudioSys.init(); AudioSys.sfx('select'); }
+      if (deferredPrompt) triggerNativeInstall();
+      else showInstallScreen();
+    });
+  }
+
+  if (androidBtn) {
+    androidBtn.addEventListener('click', () => {
+      if (typeof AudioSys !== 'undefined') AudioSys.sfx('select');
+      triggerNativeInstall();
+    });
+  }
+
+  if (back) back.addEventListener('click', () => {
+    if (typeof AudioSys !== 'undefined') AudioSys.sfx('select');
+    closeInstallScreen();
+  });
+
+  refreshMenuButton();
+  window.StickInstall = { showInstallScreen, refreshMenuButton, isStandalone };
+})();
+
+</script>
+</body>
+</html>

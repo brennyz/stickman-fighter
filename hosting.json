@@ -1,0 +1,12 @@
+{
+  "tunnel": "",
+  "updated": "",
+  "stable": null,
+  "githubPages": null,
+  "netlifyUrl": "https://stickfighter.netlify.app",
+  "stableHint": "GitHub Pages = push main + Pages via Actions. Netlify: ./deploy-netlify.sh (vanaf 28 juli). Lokaal: ./start-local.sh",
+  "deployScript": "./deploy-netlify.sh",
+  "netlifySiteId": "31915418-e76c-4951-b587-bb7af00aaabd",
+  "netlifyReadyAfter": "2026-07-28",
+  "githubSetup": "./scripts/github-setup.sh"
+}

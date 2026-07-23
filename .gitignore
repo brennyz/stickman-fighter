@@ -1,0 +1,8 @@
+.netlify/
+.DS_Store
+*.log
+/tmp/
+
+# Lokaal tunnel (niet nodig op GitHub/Netlify)
+LIVE-LINK.txt
+health.json
