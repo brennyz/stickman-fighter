@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 1;
-const APP_VERSION = '1.13.0';
+const APP_VERSION = '1.13.1';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 90;
+const SW_CACHE_REV = 91;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -7452,6 +7452,8 @@ function menuHeroPaintSkip() {
 }
 
 function drawMenuBackdrop(c, t) {
+  const lite = save.liteFx || motionReduced() || Perf.tier >= 1;
+  const ultraLite = lite || Perf.tier >= 2;
   c.fillStyle = '#0b0e1a';
   c.fillRect(0, 0, W, H);
   const g = c.createLinearGradient(0, 0, 0, H);
@@ -7475,8 +7477,6 @@ function drawMenuBackdrop(c, t) {
     c.fill();
   }
   c.restore();
-  const lite = save.liteFx || motionReduced() || Perf.tier >= 1;
-  const ultraLite = lite || Perf.tier >= 2;
   const starN = ultraLite ? 10 : (lite ? 14 : 28);
   for (let i = 0; i < starN; i++) {
     const x = (Math.sin(t * 0.4 + i * 1.7) * 0.5 + 0.5) * W;
