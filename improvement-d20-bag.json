@@ -3,7 +3,6 @@
   "cyclesCompleted": 1,
   "rollFirst": [],
   "remaining": [
-    1,
     2,
     3,
     4,
@@ -22,10 +21,10 @@
     20
   ],
   "lastRoll": {
-    "face": 11,
-    "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
-    "rolledAt": "2026-07-23T15:49:57Z",
-    "remainingCount": 17,
+    "face": 1,
+    "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
+    "rolledAt": "2026-07-23T15:51:07Z",
+    "remainingCount": 16,
     "cycle": 1
   },
   "pending": null,
@@ -126,6 +125,13 @@
       "note": "sticky menu bar + scroll reset",
       "version": "1.11.3",
       "doneAt": "2026-07-23T15:50:58Z",
+      "cycle": 1
+    },
+    {
+      "face": 1,
+      "note": "scaled hit-stop + proj/block feedback",
+      "version": "1.11.4",
+      "doneAt": "2026-07-23T15:51:45Z",
       "cycle": 1
     }
   ],
@@ -312,6 +318,13 @@
       "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
       "rolledAt": "2026-07-23T15:49:57Z",
       "remainingCount": 17,
+      "cycle": 1
+    },
+    {
+      "face": 1,
+      "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
+      "rolledAt": "2026-07-23T15:51:07Z",
+      "remainingCount": 16,
       "cycle": 1
     }
   ]

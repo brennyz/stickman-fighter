@@ -55,9 +55,9 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.11.3';
+const APP_VERSION = '1.11.4';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 57;
+const SW_CACHE_REV = 58;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -191,6 +191,10 @@ function projStrikeFighter(game, p, tgt, col) {
   const hit = resolveProjHit(p);
   const kb = Math.sign(p.vx || 1) * (p.kind === 'rinnegan' ? 300 : 260);
   const dealt = tgt.takeDamage(hit.dmg, kb, game);
+  if (dealt > 0) {
+    const kind = p.kind === 'rasengan' || p.kind === 'rinnegan' || p.kind === 'chidori' ? 'special' : 'punch';
+    applyHitStop(game, { kind, dmg: hit.dmg }, { crit: hit.crit, heavy: hit.dmg >= 18 });
+  }
   game.floater(tgt.x, tgt.y - 115, '-' + dealt, col, 16);
   if (hit.crit) applyCritFx(game, tgt.x, tgt.y);
   if (p.kind === 'rinnegan' && p.pull) tgt.vx += Math.sign(p.vx || 1) * 160;
@@ -1326,9 +1330,21 @@ function starsFromHpPct(hpPct) {
 function starHintLine() {
   return `3★ >${Math.round(STAR_HP.three * 100)}% HP · 2★ >${Math.round(STAR_HP.two * 100)}% · 1★ = win`;
 }
-function applyHitStop(game, spec) {
+function applyHitStop(game, spec, opts) {
   if (!game || motionReduced()) return;
-  const base = spec.kind === 'special' ? 0.052 : spec.kind === 'kick' ? 0.038 : 0.026;
+  opts = opts || {};
+  if (opts.chip) {
+    game.freezeT = Math.max(game.freezeT, 0.018);
+    return;
+  }
+  const kind = spec && spec.kind ? spec.kind : 'punch';
+  let base = kind === 'special' ? 0.052 : kind === 'kick' ? 0.038 : 0.026;
+  if (opts.heavy || (spec && spec.dmg >= 18)) base += 0.008;
+  if (opts.crit) base += 0.014;
+  if (opts.combo >= 6) base += 0.006;
+  if (opts.combo >= 10) base += 0.006;
+  if (game.mode === 'versus') base += 0.006;
+  base = Math.min(base, 0.072);
   game.freezeT = Math.max(game.freezeT, base);
 }
 function isBossWave(level, waveIdx) {
@@ -2531,6 +2547,7 @@ class Fighter {
       dmg = Math.max(1, Math.round(dmg * 0.15));
       AudioSys.sfx('block');
       game.floater(this.x, this.y - 115, 'BLOK!', '#9fd8ff', 14);
+      if (game) applyHitStop(game, { kind: 'punch' }, { chip: true });
       this.hp -= dmg;
       return dmg;
     }
@@ -2540,8 +2557,8 @@ class Fighter {
     }
     dmg = Math.round(dmg);
     this.hp -= dmg;
-    this.hurtT = 0.24;
-    this.hitFlashT = 0.14;
+    this.hurtT = dmg >= 18 ? 0.28 : 0.24;
+    this.hitFlashT = dmg >= 18 ? 0.18 : 0.14;
     this.attack = null;
     this.vx = kbx;
     this.vy = Math.min(this.vy, -120);
@@ -3957,7 +3974,7 @@ class Game {
         const hitRoll = rollHitDamage(f, spec, comboMul * buff);
         if (hitRoll.crit) applyCritFx(this, m.x, m.y);
         m.takeDamage(hitRoll.dmg, f.face * spec.kb, this);
-        applyHitStop(this, spec);
+        applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo });
         if (spec.dmg >= 18) this.shake(3, 0.11);
         this.player.energy = clamp(this.player.energy + 8, 0, 100);
         hit = true;
@@ -3982,8 +3999,7 @@ class Game {
         this.floater(tgt.x, tgt.y - 115, '-' + dmg, col, 16);
         this.burst(tgt.bodyX, tgt.bodyY, col, 7);
         f.energy = clamp(f.energy + 9, 0, 100);
-        applyHitStop(this, spec);
-        this.freezeT = Math.max(this.freezeT, motionReduced() ? 0.015 : 0.034);
+        applyHitStop(this, spec, { crit: hitRoll.crit, heavy: hitRoll.dmg >= 18 });
         this.shake(spec.dmg > 20 ? 4 : 3, 0.12);
         if ((f.isPlayer || f.playerSlot) && save.haptics !== false) haptic(5);
         hit = true;
@@ -4044,6 +4060,8 @@ class Game {
         if (pl && pl.alive && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
           const hit = resolveProjHit(p);
           pl.takeDamage(hit.dmg, Math.sign(p.vx) * 260, this);
+          applyHitStop(this, { kind: p.kind === 'chidori' ? 'special' : 'punch', dmg: hit.dmg },
+            { crit: hit.crit, heavy: hit.dmg >= 18 });
           this.floater(pl.x, pl.y - 115, '-' + hit.dmg, '#ff8080', 16);
           if (hit.crit) applyCritFx(this, pl.x, pl.y);
           if (p.kind === 'chidori') this.burst(p.x, p.y, '#a8e0ff', 16);

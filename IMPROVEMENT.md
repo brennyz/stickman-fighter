@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | **1** | Combat feel (cyclus 1): hit-stop schaal (crit/zwaar/combo/2P/blok-chip), jutsu-projectielen, langere hurt-flash op big hits — geen dmg×. v1.11.4 / SW v58. |
 | 2026-07-23 | **11** | Menu-nav (cyclus 1): sticky **Terug naar menu**-balk op subschermen, char-grid scroll reset, charPickStep reset bij menu. v1.11.3 / SW v57. |
 | 2026-07-23 | **18** | Char select **deel 2**: saga-icon strip, Saga clash-knop, filter-random, gouden icon-kaarten, prestatie Saga-legends. v1.11.2 / SW v56. |
 | 2026-07-23 | **18** | Char select **deel 1**: Stap 1/2 badge, unlock-hints, saga bindPress. v1.11.1 / SW v55. |
