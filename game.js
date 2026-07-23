@@ -55,9 +55,9 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.11.5';
+const APP_VERSION = '1.11.6';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 60;
+const SW_CACHE_REV = 61;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1764,6 +1764,8 @@ const SONGS = {
 const IS_TOUCH = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 const JOY_DEAD_PX = 14;
 const JOY_MAX_PX = 55;
+/** Geen pointermove meer → joy los (iPad mist soms pointerup) */
+const JOY_STALE_MS = 160;
 const btnHitSlop = () => (typeof save !== 'undefined' && save.bigTouch !== false ? 14 : 10);
 
 function applyJoyDelta(pad, x, y, id) {
@@ -1783,6 +1785,7 @@ function applyJoyDelta(pad, x, y, id) {
   if (Math.abs(dy) < JOY_DEAD_PX) dy = 0;
   pad.joy.dx = dx;
   pad.joy.dy = dy;
+  pad.joy.lastAt = performance.now();
 }
 
 function makePad(side) {
@@ -1791,7 +1794,7 @@ function makePad(side) {
     keys: {},
     pressed: {},
     activePointers: new Set(),
-    joy: { active: false, id: null, ox: 0, oy: 0, dx: 0, dy: 0 },
+    joy: { active: false, id: null, ox: 0, oy: 0, dx: 0, dy: 0, lastAt: 0 },
     buttons: [],
     btnPointers: {},
     joyHome: { x: 110, y: 0 },
@@ -1802,6 +1805,7 @@ function makePad(side) {
       this.joy.id = null;
       this.joy.dx = 0;
       this.joy.dy = 0;
+      this.joy.lastAt = 0;
     },
     releaseAll() {
       this.releaseJoy();
@@ -1810,8 +1814,20 @@ function makePad(side) {
       this.activePointers.clear();
       this.keys = {};
     },
-    hardenPointers() {
-      if (this.joy.active && this.joy.id != null && !this.activePointers.has(this.joy.id)) {
+    hardenPointers(now) {
+      const t = now || performance.now();
+      if (this.joy.active) {
+        if (this.joy.id == null || !this.activePointers.has(this.joy.id)) {
+          this.releaseJoy();
+        } else if (
+          Math.abs(this.joy.dx) >= JOY_DEAD_PX
+          && this.joy.lastAt
+          && t - this.joy.lastAt > JOY_STALE_MS
+        ) {
+          this.releaseJoy();
+        }
+      }
+      if (this.joy.active && this.activePointers.size === 0) {
         this.releaseJoy();
       }
       for (const pid of Object.keys(this.btnPointers)) {
@@ -1900,11 +1916,17 @@ function makePad(side) {
         this.joy.oy = y;
         this.joy.dx = 0;
         this.joy.dy = 0;
+        this.joy.lastAt = performance.now();
         return true;
       }
       return false;
     },
-    onMove(x, y, id) {
+    onMove(x, y, id, dual) {
+      if (!this.activePointers.has(id)) return;
+      if (dual && !this.ownsTouch(x, y, true)) {
+        if (this.joy.active && this.joy.id === id) this.releaseJoy();
+        return;
+      }
       applyJoyDelta(this, x, y, id);
     },
     onUp(id) {
@@ -1953,6 +1975,7 @@ const Input = Object.assign(makePad('p1'), {
     }
     const joyZone = x < innerWidth * 0.52;
     if (!joyZone) {
+      if (this.joy.active) this.releaseJoy();
       this.activePointers.delete(id);
       return;
     }
@@ -1972,14 +1995,22 @@ const Input = Object.assign(makePad('p1'), {
       this.joy.oy = y;
       this.joy.dx = 0;
       this.joy.dy = 0;
+      this.joy.lastAt = performance.now();
     }
   },
   onMove(x, y, id) {
     if (this.dualMode) {
-      InputP2.onMove(x, y, id);
-      makePad('p1').onMove.call(this, x, y, id);
+      if (InputP2.ownsTouch(x, y, true)) {
+        if (this.joy.active && this.joy.id === id) this.releaseJoy();
+        InputP2.onMove(x, y, id, true);
+      } else {
+        if (InputP2.joy.active && InputP2.joy.id === id) InputP2.releaseJoy();
+        if (!this.activePointers.has(id)) return;
+        makePad('p1').onMove.call(this, x, y, id, true);
+      }
       return;
     }
+    if (!this.activePointers.has(id)) return;
     applyJoyDelta(this, x, y, id);
   },
   onUp(id) {
@@ -1990,16 +2021,17 @@ const Input = Object.assign(makePad('p1'), {
     }
     makePad('p1').onUp.call(this, id);
   },
-  hardenPointers() {
-    makePad('p1').hardenPointers.call(this);
-    if (InputP2 && Input.dualMode) InputP2.hardenPointers();
+  hardenPointers(now) {
+    makePad('p1').hardenPointers.call(this, now);
+    if (InputP2 && Input.dualMode) InputP2.hardenPointers(now);
   },
   releaseAll() {
     makePad('p1').releaseAll.call(this);
     if (InputP2) InputP2.releaseAll();
   },
   endFrame() {
-    this.hardenPointers();
+    const now = performance.now();
+    this.hardenPointers(now);
     this.pressed = {};
     if (InputP2) InputP2.pressed = {};
   },
@@ -2119,6 +2151,10 @@ canvas.addEventListener('pointerup', e => {
   Input.onUp(e.pointerId);
 });
 canvas.addEventListener('pointercancel', e => {
+  if (state !== 'play' || !game) return;
+  Input.onUp(e.pointerId);
+});
+canvas.addEventListener('lostpointercapture', e => {
   if (state !== 'play' || !game) return;
   Input.onUp(e.pointerId);
 });
@@ -6033,6 +6069,7 @@ bindPress(btnSharePlay, () => {
 });
 bindPress(document.getElementById('pauseBtn'), () => {
   if (state === 'play') {
+    try { Input.releaseAll(); } catch (_) {}
     state = 'pause';
     AudioSys.setPaused(true);
     UI.renderPauseToggles();
@@ -6266,6 +6303,7 @@ function loop(now) {
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     if (state === 'play') {
+      try { Input.releaseAll(); } catch (_) {}
       state = 'pause';
       AudioSys.setPaused(true);
       try { UI.renderPauseToggles(); } catch (_) {}
