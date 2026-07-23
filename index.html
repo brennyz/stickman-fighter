@@ -299,6 +299,7 @@
       background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:14px; font-size:14px; color:#c8d4f0; }
   .pause-audio-vol label { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:6px 0; flex-wrap:wrap; }
   .pause-audio-vol input[type=range] { flex:1; min-width:100px; accent-color:#7cf5ff; }
+  .pause-audio-hint { font-size:11px; opacity:.72; line-height:1.4; margin:8px 0 2px; text-align:center; color:#a8b8e8; }
   .settings-card .tog { width:100%; margin-top:8px; justify-content:center; }
 
   .char-grid-scroll { width:min(94vw, 720px); max-height:min(42vh, 340px); overflow-y:auto;
@@ -754,6 +755,7 @@
     <label>Geluid <span id="pauseSfxVolLbl">100%</span>
       <input type="range" id="pauseSfxVol" min="0" max="100" value="100">
     </label>
+    <div id="pauseAudioStatus" class="pause-audio-hint" aria-live="polite">Volume in pauze — sliders sync met Instellingen</div>
   </div>
   <button class="btn mode-btn b-versus" id="pauseVsRestart" type="button" style="display:none;margin-bottom:8px"><span class="ico">&#128260;</span><div>Herstart match<small>0-0 · zelfde vechters</small></div></button>
   <button class="btn mode-btn b-gray" id="pauseQuit"><span class="ico">&#127968;</span><div>Stop &amp; hoofdmenu</div></button>
@@ -771,7 +773,7 @@
 </script>
 
 <script src="tunnel-check.js?v=203"></script>
-<script src="game.js?v=253"></script>
+<script src="game.js?v=254"></script>
 <script src="install.js?v=203"></script>
 <script>
 (function () {

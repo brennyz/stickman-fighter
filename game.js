@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.14.6';
+const APP_VERSION = '1.14.7';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 104;
+const SW_CACHE_REV = 105;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -2040,12 +2040,13 @@ const AudioSys = {
     const sv = save.sfx ? clamp(Number(save.sfxVol) || 1, 0, 1) : 0;
     const id = (this.song && this.song.id) || this.desiredSong;
     const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
+    const inPause = this.paused || state === 'pause';
     let baseM = (id === 'menu') ? 0.24 : 0.32;
     if (lite) baseM *= 0.88;
-    // Duck BGM in pauze / result — SFX blijft hoorbaar voor UI
-    if (this.paused || state === 'pause') baseM *= 0.26;
+    // Duck BGM in pauze / result — SFX blijft hoorbaar (iets harder in pauze voor knoppen)
+    if (inPause) baseM *= 0.26;
     else if (state === 'result') baseM *= 0.5;
-    const sfxMul = lite ? 0.68 : 0.74;
+    const sfxMul = (lite ? 0.68 : 0.74) * (inPause ? 1.1 : 1);
     this._setGain(this.musicGain, baseM * mv);
     this._setGain(this.sfxGain, sfxMul * sv);
     this.syncContextPower();
@@ -2055,11 +2056,11 @@ const AudioSys = {
   syncContextPower() {
     if (!this.ctx) return;
     const needAudio = !!(save.music || save.sfx);
-    const inFight = state === 'play';
+    const keepAwake = state === 'play' || state === 'pause';
     try {
-      if (!needAudio && !inFight && this.ctx.state === 'running') {
+      if (!needAudio && !keepAwake && this.ctx.state === 'running') {
         this.ctx.suspend();
-      } else if (needAudio && !document.hidden && this.ctx.state === 'suspended' && !inFight) {
+      } else if (needAudio && !document.hidden && this.ctx.state === 'suspended') {
         this.ctx.resume().catch(() => {});
       }
     } catch (_) {}
@@ -2067,6 +2068,10 @@ const AudioSys = {
 
   setPaused(on) {
     this.paused = !!on;
+    if (on) {
+      try { this.init(); } catch (_) {}
+      try { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
+    }
     this.applyVolumes();
     if (!on) {
       try { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
@@ -7133,7 +7138,10 @@ const UI = {
             } catch (_) {}
           });
         }
-        if (id === 'pauseScreen') this.refreshPauseSubtitle();
+        if (id === 'pauseScreen') {
+          this.refreshPauseSubtitle();
+          this.renderPauseToggles();
+        }
         if (id === 'helpScreen') this.renderHelp();
       } else if (game?.mode === 'versus') {
         this.refreshPauseSubtitle();
@@ -7181,6 +7189,8 @@ const UI = {
       }
       if (active === 'pauseScreen' && game) {
         state = 'play';
+        AudioSys.setPaused(false);
+        if (save.music && AudioSys.desiredSong) AudioSys.play(AudioSys.desiredSong);
         this.show(null);
         return;
       }
@@ -7960,6 +7970,15 @@ const UI = {
     if (ps && document.activeElement !== ps) ps.value = String(sPct);
     if (pmL) pmL.textContent = mPct + '%';
     if (psL) psL.textContent = sPct + '%';
+    const statusEl = document.getElementById('pauseAudioStatus');
+    if (statusEl) {
+      const bits = [];
+      if (!save.music) bits.push('Muziek uit');
+      else bits.push(`Muziek ${mPct}% · BGM ~75% zachter in pauze`);
+      if (!save.sfx) bits.push('Geluid uit');
+      else bits.push(`SFX ${sPct}%`);
+      statusEl.textContent = bits.join(' · ');
+    }
   },
 
   showResult(win, data) {
@@ -8404,12 +8423,15 @@ bindPress(document.getElementById('pauseQuit'), () => { UI.goMenu(); });
 const pauseVsRestart = document.getElementById('pauseVsRestart');
 if (pauseVsRestart) {
   bindPress(pauseVsRestart, () => {
-    if (!game || game.mode !== 'versus' || state !== 'play') return;
+    if (!game || game.mode !== 'versus') return;
+    if (state !== 'play' && state !== 'pause') return;
     AudioSys.sfx('select');
     const p1 = game.p1Pick || vsSelect.p1;
     const p2 = game.p2Pick || vsSelect.p2;
     vsSelect.p1 = p1;
     vsSelect.p2 = p2;
+    state = 'play';
+    AudioSys.setPaused(false);
     UI.toast(`Herstart · ${vsRosterEntry(p1).name} vs ${vsRosterEntry(p2).name}`, 2400);
     startGame('versus', { p1, p2 });
   });
