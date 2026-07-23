@@ -17,11 +17,11 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.6.0';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
-  lastPlay: null,
+  reducedMotion: false, lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0 },
   achievements: {}, daily: null, vsPlayedIds: [] };
 let save = loadSave();
@@ -90,6 +90,8 @@ function sanitizeSave(s) {
   out.haptics = out.haptics !== false;
   out.comboHud = out.comboHud !== false;
   out.bigTouch = out.bigTouch !== false;
+  out.reducedMotion = !!out.reducedMotion;
+  out.tipsSeen = (out.tipsSeen && typeof out.tipsSeen === 'object') ? out.tipsSeen : {};
   if (out.lastPlay && typeof out.lastPlay === 'object') {
     const lp = out.lastPlay;
     if (!['adventure', 'training', 'wall', 'versus'].includes(lp.mode)) out.lastPlay = null;
@@ -355,6 +357,23 @@ function vsStatLine(entry) {
   const dmg = Math.round(100 * entry.dmgMul);
   const sp = entry.special === 'chidori' ? 'Chidori' : 'Rasengan';
   return `HP ${hp} · Snel ${spd}% · Kracht ${dmg}% · ${sp}`;
+}
+
+function copyPlayLink() {
+  const go = async () => {
+    let url = location.href.split('?')[0];
+    try {
+      const j = await fetch('./hosting.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.json());
+      url = j.tunnel || j.stable || j.githubPages || url;
+    } catch (_) {}
+    try {
+      await navigator.clipboard.writeText(url);
+      UI.toast('Speel-link gekopieerd!', 2800);
+    } catch (_) {
+      UI.toast(url, 4500);
+    }
+  };
+  go();
 }
 
 function headLiveFromPage() {
@@ -1017,7 +1036,8 @@ Input.layout = function (W, H) {
     InputP2.layout(W, H);
     return;
   }
-  const r = 42, rs = 34;
+  const scale = save.bigTouch !== false ? 1.14 : 1;
+  const r = Math.round(42 * scale), rs = Math.round(34 * scale);
   Input.joyHome = { x: 110, y: H - 110 };
   Input.buttons = [
     { id: 'punch', x: W - 178, y: H - 88, r, label: '\u{1F44A}', color: '#e0533f' },
@@ -2721,9 +2741,11 @@ class Game {
         from, kind: 'rasengan', pierce: true, hitSet: new Set(), life: 1.4,
         spin: 0,
       });
-      this.burst(f.x + f.face * 30, f.y - 50, '#7cf5ff', 14);
-      this.shake(6, 0.22);
+      this.burst(f.x + f.face * 30, f.y - 50, '#7cf5ff', 18);
+      this.shake(9, 0.28);
+      this.freezeT = Math.max(this.freezeT, 0.06);
       AudioSys.sfx('rasengan');
+      if (f.isPlayer || f.playerSlot) haptic(22);
     }
   }
 
@@ -2945,10 +2967,11 @@ class Game {
   }
 
   shake(mag, dur) {
-    if (save.shake === false) return;
+    if (save.shake === false || save.reducedMotion) return;
     this.shakeMag = mag; this.shakeT = Math.max(this.shakeT, dur);
   }
   burst(x, y, color, n) {
+    if (save.reducedMotion) n = Math.max(2, Math.floor(n * 0.45));
     const room = FX_CAP.particles - this.particles.length;
     n = Math.min(n, Math.max(0, room));
     for (let i = 0; i < n; i++) {
@@ -3047,6 +3070,8 @@ class Game {
     c.globalAlpha = 1;
     c.restore();
 
+    this.drawChakraReadyFx(c);
+
     this.drawHUD(c);
 
     // banners
@@ -3117,6 +3142,23 @@ class Game {
     }
   }
 
+  drawChakraReadyFx(c) {
+    const fighters = [this.player];
+    if (this.p2) fighters.push(this.p2);
+    for (const f of fighters) {
+      if (!f || !f.alive || f.energy < 100) continue;
+      const pulse = 0.35 + Math.sin(this.t * 7) * 0.15;
+      c.save();
+      c.globalAlpha = pulse;
+      c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : '#7cf5ff';
+      c.lineWidth = 3;
+      c.beginPath();
+      c.arc(f.x, f.y - 55, 38 + Math.sin(this.t * 9) * 4, 0, TAU);
+      c.stroke();
+      c.restore();
+    }
+  }
+
   drawHUD(c) {
     const p = this.player;
     // spelerbalk (niet in 2P — eigen layout)
@@ -3140,6 +3182,11 @@ class Game {
       if (p.energy >= 100) {
         c.fillStyle = '#7cf5ff';
         c.fillText('🌀 RASENGAN!', bx + bw + 12, by + 32);
+        c.strokeStyle = 'rgba(124,245,255,.55)';
+        c.lineWidth = 2;
+        c.beginPath();
+        c.arc(bx + bw * 0.5, by + 25, 18 + Math.sin(this.t * 8) * 3, 0, TAU);
+        c.stroke();
       }
     }
 
@@ -3210,6 +3257,9 @@ class Game {
       this.rr(c, bx, by, half * clamp(p.hp / p.maxhp, 0, 1), 14, 6); c.fill();
       c.font = '800 11px sans-serif'; c.textAlign = 'left'; c.fillStyle = '#7cf5ff';
       c.fillText(`P1 · ${name1}`, bx, by + 30);
+      c.fillStyle = '#333c55'; this.rr(c, bx, by + 34, half, 5, 3); c.fill();
+      c.fillStyle = p.energy >= 100 ? '#7cf5ff' : '#3db8ff';
+      this.rr(c, bx, by + 34, half * (p.energy / 100), 5, 3); c.fill();
 
       c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, W - half - 20, by - 4, half + 8, 44, 10); c.fill();
       c.fillStyle = '#333c55'; this.rr(c, W - half - 16, by, half, 14, 6); c.fill();
@@ -3218,6 +3268,9 @@ class Game {
       this.rr(c, W - 16 - half * frac2, by, half * frac2, 14, 6); c.fill();
       c.textAlign = 'right'; c.fillStyle = '#ffb0b8';
       c.fillText(`${name2} · P2`, W - 20, by + 30);
+      c.fillStyle = '#333c55'; this.rr(c, W - half - 16, by + 34, half, 5, 3); c.fill();
+      c.fillStyle = p2.energy >= 100 ? '#7cf5ff' : '#3db8ff';
+      this.rr(c, W - half - 16, by + 34, half * (p2.energy / 100), 5, 3); c.fill();
 
       c.textAlign = 'center';
       c.font = '900 26px sans-serif'; c.fillStyle = '#fff';
@@ -3671,14 +3724,19 @@ const UI = {
     const lblS = document.getElementById('setSfxVolLbl');
     if (lblM) lblM.textContent = pct(save.musicVol, 0.85) + '%';
     if (lblS) lblS.textContent = pct(save.sfxVol, 1) + '%';
-    ['setShake', 'setHaptics', 'setComboHud', 'setBigTouch'].forEach((id, i) => {
+    ['setShake', 'setHaptics', 'setComboHud', 'setBigTouch', 'setReducedMotion'].forEach((id, i) => {
       const el = document.getElementById(id);
       if (!el) return;
-      const keys = ['shake', 'haptics', 'comboHud', 'bigTouch'];
+      const keys = ['shake', 'haptics', 'comboHud', 'bigTouch', 'reducedMotion'];
       el.classList.toggle('off', save[keys[i]] === false);
     });
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
+  },
+
+  renderPauseToggles() {
+    document.getElementById('pauseTogMusic')?.classList.toggle('off', !save.music);
+    document.getElementById('pauseTogSfx')?.classList.toggle('off', !save.sfx);
   },
 
   showResult(win, data) {
@@ -3721,6 +3779,12 @@ function startGame(mode, opts) {
   game = new Game(mode, opts);
   state = 'play';
   recordLastPlay(mode, opts);
+  if (!save.tipsSeen) save.tipsSeen = {};
+  if (!save.tipsSeen.chakra) {
+    save.tipsSeen.chakra = 1;
+    persist();
+    setTimeout(() => UI.toast('🌀 Rasengan: vecht → chakra vol → tik 🌀 (speciaal)', 4200), 900);
+  }
   UI.show(null);
   if (mode === 'training') AudioSys.play('boss');
   else if (mode === 'adventure') AudioSys.play(game.level.boss ? 'boss' : 'battle');
@@ -3729,6 +3793,11 @@ function startGame(mode, opts) {
 
 document.getElementById('btnAdventure').addEventListener('click', () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderLevels(); UI.show('levelScreen');
+});
+const btnContinue = document.getElementById('btnContinue');
+if (btnContinue) btnContinue.addEventListener('click', () => {
+  AudioSys.init(); AudioSys.sfx('select');
+  if (!resumeLastPlay()) UI.toast('Nog geen sessie — kies een modus', 2400);
 });
 document.getElementById('btnTraining').addEventListener('click', () => {
   AudioSys.init(); AudioSys.sfx('select'); startGame('training');
@@ -3808,7 +3877,7 @@ function bindSettingsControls() {
   onVol('setSfxVol', 'setSfxVolLbl', 'sfxVol');
   const toggles = [
     ['setShake', 'shake'], ['setHaptics', 'haptics'], ['setComboHud', 'comboHud'],
-    ['setBigTouch', 'bigTouch'],
+    ['setBigTouch', 'bigTouch'], ['setReducedMotion', 'reducedMotion'],
   ];
   for (const [id, key] of toggles) {
     const el = document.getElementById(id);
@@ -3817,6 +3886,7 @@ function bindSettingsControls() {
     el.addEventListener('click', () => {
       if (save[key] !== false) save[key] = false;
       else save[key] = true;
+      if (key === 'reducedMotion' && save.reducedMotion) save.shake = false;
       persist();
       UI.renderSettings();
       Input.layout(W, H);
@@ -3882,8 +3952,32 @@ document.getElementById('togSfx').addEventListener('click', () => {
   AudioSys.init();
   save.sfx = !save.sfx; persist(); AudioSys.sfx('select'); UI.renderMenu();
 });
+const btnSharePlay = document.getElementById('btnSharePlay');
+if (btnSharePlay) btnSharePlay.addEventListener('click', () => {
+  AudioSys.init(); AudioSys.sfx('select'); copyPlayLink();
+});
 document.getElementById('pauseBtn').addEventListener('click', () => {
-  if (state === 'play') { state = 'pause'; UI.show('pauseScreen'); }
+  if (state === 'play') {
+    state = 'pause';
+    UI.renderPauseToggles();
+    UI.show('pauseScreen');
+  }
+});
+const pauseTogMusic = document.getElementById('pauseTogMusic');
+if (pauseTogMusic) pauseTogMusic.addEventListener('click', () => {
+  AudioSys.init();
+  AudioSys.setMusicOn(!save.music);
+  if (save.music && state !== 'play') AudioSys.play('menu');
+  UI.renderPauseToggles();
+  AudioSys.sfx('select');
+});
+const pauseTogSfx = document.getElementById('pauseTogSfx');
+if (pauseTogSfx) pauseTogSfx.addEventListener('click', () => {
+  AudioSys.init();
+  save.sfx = !save.sfx;
+  persist();
+  UI.renderPauseToggles();
+  AudioSys.sfx('select');
 });
 document.getElementById('pauseResume').addEventListener('click', () => {
   UI.show(null); state = 'play';
@@ -3906,6 +4000,40 @@ document.getElementById('resMenu').addEventListener('click', () => { UI.goMenu()
 
 /* ============================= HOOFDLUS ================================ */
 let lastTime = performance.now();
+let menuAnimT = 0;
+
+function drawMenuBackdrop(c, t) {
+  c.fillStyle = '#0b0e1a';
+  c.fillRect(0, 0, W, H);
+  const g = c.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#151b33');
+  g.addColorStop(1, '#0a0d18');
+  c.fillStyle = g;
+  c.fillRect(0, 0, W, H);
+  for (let i = 0; i < 28; i++) {
+    const x = (Math.sin(t * 0.4 + i * 1.7) * 0.5 + 0.5) * W;
+    const y = ((i * 47 + t * 22) % (H + 40)) - 20;
+    c.globalAlpha = 0.12 + (i % 5) * 0.04;
+    c.fillStyle = i % 3 === 0 ? '#7cf5ff' : '#ffd75e';
+    c.beginPath();
+    c.arc(x, y, 2 + (i % 4), 0, TAU);
+    c.fill();
+  }
+  c.globalAlpha = 0.08;
+  c.strokeStyle = '#ffd75e';
+  c.lineWidth = 3;
+  c.beginPath();
+  c.arc(W * 0.5, H * 0.42, 90 + Math.sin(t * 0.8) * 8, 0, TAU);
+  c.stroke();
+  c.save();
+  c.translate(W * 0.5, H * 0.42);
+  if (typeof drawJutsuOrb === 'function') {
+    drawJutsuOrb(c, 0, 0, 28 + Math.sin(t * 2) * 4, t * 3, 'rasengan', 0.85);
+  }
+  c.restore();
+  c.globalAlpha = 1;
+}
+
 function loop(now) {
   requestAnimationFrame(loop);
   try {
@@ -3914,12 +4042,13 @@ function loop(now) {
     if (state === 'play' && game) {
       game.update(dt);
       Input.endFrame();
+    } else {
+      menuAnimT += dt;
     }
     if (game) {
       game.draw(ctx);
     } else {
-      ctx.fillStyle = '#0b0e1a';
-      ctx.fillRect(0, 0, W, H);
+      drawMenuBackdrop(ctx, menuAnimT);
     }
   } catch (err) {
     console.error(err);

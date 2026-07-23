@@ -231,9 +231,13 @@
 
 <div id="menuScreen" class="screen active">
   <h1 class="title">STICKMAN FIGHTER</h1>
-  <div class="subtitle">Ninja Arena &bull; Rasengan &bull; chakra &bull; word een legende</div>
+  <div class="subtitle">🌀 Rasengan klaar — moto! &bull; chakra &bull; combo&apos;s &bull; 2 spelers</div>
   <div class="statbar" id="menuStats"></div>
   <div class="subtitle" id="menuDailyHint" style="margin-top:-8px;margin-bottom:10px;font-size:13px"></div>
+  <button class="btn mode-btn b-continue" id="btnContinue" type="button" style="display:none">
+    <span class="ico">&#9654;&#65039;</span>
+    <div>Verder spelen<small>Laatste modus</small></div>
+  </button>
   <button class="btn mode-btn b-install" id="btnInstallApp" type="button">
     <span class="ico">&#128229;</span>
     <div id="btnInstallLabel">Zet in app-lade<small>Één icoon op je beginscherm — tik &amp; speel</small></div>
@@ -257,6 +261,7 @@
     <button class="btn tog" id="togMusic">&#127925; Muziek</button>
     <button class="btn tog" id="togSfx">&#128266; Geluid</button>
     <button class="btn tog" id="btnMissions">&#127942; Missies</button>
+    <button class="btn tog" id="btnSharePlay">&#128279; Deel speel-link</button>
     <button class="btn tog" id="btnSettings">&#9881; Instellingen</button>
     <button class="btn tog" id="btnHelp">&#10067; Tips</button>
   </div>
@@ -271,6 +276,7 @@
     <span class="p1pill" id="charP1Label">P1: Stick Ninja</span>
     <span class="p2pill" id="charP2Label">P2: RabbitRobot</span>
   </div>
+  <div class="step-card" id="charStatPreview" style="width:min(94vw,720px);font-size:12px;padding:10px 14px;margin:0 0 10px;text-align:center;color:#cfe0ff"></div>
   <div class="char-grid" id="charGrid"></div>
   <button type="button" class="btn mode-btn b-gray" id="charPickBackP1" style="display:none">&#8592; Andere P1</button>
   <button type="button" class="btn tog" id="btnCharRandom" style="width:min(86vw,480px);margin:6px 0">&#127922; Willekeurig duo</button>
@@ -315,6 +321,8 @@
     <button type="button" class="btn tog" id="setShake">📳 Schermschok</button>
     <button type="button" class="btn tog" id="setHaptics">📳 Trillen (iPad)</button>
     <button type="button" class="btn tog" id="setComboHud">⚡ Combo-HUD</button>
+    <button type="button" class="btn tog" id="setBigTouch">👆 Grote knoppen (iPad)</button>
+    <button type="button" class="btn tog" id="setReducedMotion">🌙 Minder schok (rustig)</button>
   </div>
   <div class="step-card">Tip: zet trillingen uit als je in de trein speelt. Power-ups in avontuur: groen = HP, oranje = rage, blauw = chakra of schild.</div>
   <div class="settings-card">
@@ -418,7 +426,12 @@
 
 <div id="pauseScreen" class="screen">
   <h2 class="head" style="margin-top:60px">Pauze</h2>
+  <div class="subtitle" style="margin-bottom:12px">Rasengan klaar — moto!</div>
   <button class="btn mode-btn b-adventure" id="pauseResume"><span class="ico">&#9654;&#65039;</span><div>Verder spelen</div></button>
+  <div class="toggles" style="margin:14px 0">
+    <button class="btn tog" id="pauseTogMusic" type="button">&#127925; Muziek</button>
+    <button class="btn tog" id="pauseTogSfx" type="button">&#128266; Geluid</button>
+  </div>
   <button class="btn mode-btn b-gray" id="pauseQuit"><span class="ico">&#127968;</span><div>Stop &amp; hoofdmenu</div></button>
 </div>
 

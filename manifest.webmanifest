@@ -1,7 +1,7 @@
 {
   "name": "Stickman Fighter — Monster Arena",
   "short_name": "Stickman",
-  "description": "Stickman vechtgame met monsters, RabbitRobot training en muur slopen.",
+  "description": "Stickman ninja arena — Rasengan, monsters, 2 spelers op iPad, RabbitRobot training.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
