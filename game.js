@@ -60,9 +60,9 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.12.8';
+const APP_VERSION = '1.12.9';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 71;
+const SW_CACHE_REV = 72;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -3993,6 +3993,8 @@ class Game {
   initWall() {
     this.theme = 'sloop';
     this.wallTimer = 60;
+    this.wallDuration = 60;
+    this.wallComboWindow = 1.4;
     this.score = 0; this.combo = 0; this.comboT = 0; this.wallGen = 0;
     this.maxCombo = 0;
     this.wallRecordToast = false;
@@ -4306,7 +4308,7 @@ class Game {
           this.burst(cx, cy, `hsl(${b.hue},45%,55%)`, 5);
           if (b.hp <= 0) {
             this.score++;
-            this.combo++; this.comboT = 1.4;
+            this.combo++; this.comboT = this.wallComboWindow || 1.4;
             this.noteCombo();
             if (!this.wallRecordToast && this.score > save.bestWall) {
               this.wallRecordToast = true;
@@ -4540,6 +4542,10 @@ class Game {
 
   noteCombo() {
     this.maxCombo = Math.max(this.maxCombo || 0, this.combo || 0);
+    if (this.mode === 'wall' && (this.combo === 5 || this.combo === 10)) {
+      AudioSys.sfx('combo');
+      this.floater(W * 0.5, 130, `COMBO ×${this.combo}!`, '#7cf5ff', 18);
+    }
     if (this.combo === 3 || this.combo === 5 || this.combo === 8 || this.combo === 10) {
       haptic(14 + this.combo);
     }
@@ -5073,35 +5079,81 @@ class Game {
         c.beginPath(); c.arc(W / 2 + 34 + i * 18, 82, 6, 0, TAU); c.fill();
       }
     } else if (this.mode === 'wall') {
+      const wallDur = this.wallDuration || 60;
       const tLeft = Math.ceil(Math.max(0, this.wallTimer));
       const urgent = this.wallTimer < 10;
+      const barW = Math.min(220, W - 48);
+      const barX = (W - barW) / 2;
+      const timeFrac = clamp(this.wallTimer / wallDur, 0, 1);
+      c.fillStyle = 'rgba(0,0,0,.42)';
+      this.rr(c, barX, 48, barW, 7, 4); c.fill();
+      c.fillStyle = urgent ? '#ff6b6b' : '#7cf5ff';
+      this.rr(c, barX, 48, Math.max(4, barW * timeFrac), 7, 4); c.fill();
+
       c.font = '900 30px sans-serif';
       c.fillStyle = urgent ? '#ff6b6b' : '#fff';
       if (urgent && !motionReduced()) {
         c.save();
-        c.translate(W / 2, 42);
+        c.translate(W / 2, 36);
         c.scale(1 + Math.sin(this.t * 12) * 0.06, 1 + Math.sin(this.t * 12) * 0.06);
         c.fillText(String(tLeft), 0, 0);
         c.restore();
       } else {
-        c.fillText(String(tLeft), W / 2, 42);
+        c.fillText(String(tLeft), W / 2, 36);
+      }
+      if (this.wallGen > 0) {
+        c.font = '800 12px sans-serif';
+        c.textAlign = 'left';
+        c.fillStyle = 'rgba(255,215,94,.85)';
+        c.fillText(`MUUR ×${this.wallGen + 1}`, 16, 36);
+        c.textAlign = 'center';
       }
       c.font = '800 17px sans-serif'; c.fillStyle = '#ffd75e';
       c.fillText(`Stenen: ${this.score}`, W / 2, 68);
       c.font = '700 13px sans-serif';
-      const rec = Math.max(save.bestWall, this.score);
-      c.fillStyle = this.score > 0 && this.score >= save.bestWall ? '#7cfc8a' : 'rgba(255,255,255,.5)';
-      c.fillText(`Record: ${rec}`, W / 2, 86);
+      const bestSaved = save.bestWall || 0;
+      const rec = Math.max(bestSaved, this.score);
+      const onPace = this.score > bestSaved;
+      c.fillStyle = onPace ? '#7cfc8a' : 'rgba(255,255,255,.55)';
+      if (bestSaved > 0 && this.score < bestSaved) {
+        const gap = bestSaved - this.score;
+        c.fillText(`Record ${bestSaved} · nog ${gap} te gaan`, W / 2, 86);
+      } else {
+        c.fillText(onPace && bestSaved > 0 ? `Record gebroken · ${rec}` : `Record: ${rec}`, W / 2, 86);
+      }
+      const elapsed = wallDur - this.wallTimer;
+      if (elapsed > 2 && this.score > 0) {
+        const pace = Math.round((this.score / elapsed) * 60);
+        const proj = Math.round(this.score + (this.wallTimer / elapsed) * this.score);
+        c.font = '700 12px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.62)';
+        c.fillText(`~${pace}/min · projectie ~${proj}`, W / 2, 102);
+      }
+      const comboWin = this.wallComboWindow || 1.4;
+      if (this.combo > 0 && this.comboT > 0) {
+        const cFrac = clamp(this.comboT / comboWin, 0, 1);
+        const cBarW = Math.min(160, W * 0.42);
+        const cBarX = (W - cBarW) / 2;
+        const cy = this.combo > 1 ? 148 : 132;
+        c.fillStyle = 'rgba(0,0,0,.38)';
+        this.rr(c, cBarX, cy, cBarW, 5, 3); c.fill();
+        c.fillStyle = cFrac < 0.25 ? '#ff9a9a' : '#7cf5ff';
+        this.rr(c, cBarX, cy, Math.max(3, cBarW * cFrac), 5, 3); c.fill();
+      }
       if (this.combo > 1) {
-        const pulse = 1 + Math.sin(this.t * 10) * 0.1;
+        const pulse = motionReduced() ? 1 : (1 + Math.sin(this.t * 10) * 0.1);
         c.save();
-        c.translate(W / 2, 112);
+        c.translate(W / 2, 128);
         c.scale(pulse, pulse);
         c.font = '900 22px sans-serif'; c.fillStyle = '#7cf5ff';
         c.fillText(`COMBO ×${this.combo}`, 0, 0);
         c.font = '700 12px sans-serif'; c.fillStyle = 'rgba(124,245,255,.85)';
         c.fillText(`+${Math.min(this.combo, 12) * 4}% sloop`, 0, 18);
         c.restore();
+      } else if (this.combo === 1 && this.comboT > 0) {
+        c.font = '700 12px sans-serif';
+        c.fillStyle = 'rgba(124,245,255,.75)';
+        c.fillText('Combo actief — nog een steen!', W / 2, 118);
       }
     } else if (this.mode === 'coinrun') {
       const tLeft = Math.ceil(Math.max(0, this.coinTimer));

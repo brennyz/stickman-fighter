@@ -12,23 +12,16 @@
     15,
     16,
     17,
-    19,
     20
   ],
   "lastRoll": {
-    "face": 5,
-    "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
-    "rolledAt": "2026-07-23T18:13:18Z",
-    "remainingCount": 11,
+    "face": 19,
+    "category": "Muur & minigames \u2014 combo, timer, record",
+    "rolledAt": "2026-07-23T18:14:23Z",
+    "remainingCount": 10,
     "cycle": 1
   },
-  "pending": {
-    "face": 5,
-    "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
-    "rolledAt": "2026-07-23T18:13:18Z",
-    "remainingCount": 11,
-    "cycle": 1
-  },
+  "pending": null,
   "implemented": [
     {
       "face": 2,
@@ -161,6 +154,20 @@
       "note": "star HUD + wave pause countdown",
       "version": "1.12.7",
       "doneAt": "2026-07-23T18:12:54Z",
+      "cycle": 1
+    },
+    {
+      "face": 5,
+      "note": "menu throttle DPR resize perf HUD",
+      "version": "1.12.8",
+      "doneAt": "2026-07-23T18:14:08Z",
+      "cycle": 1
+    },
+    {
+      "face": 19,
+      "note": "Muur HUD: timer/combo bars, record chase, tempo/projectie, muur\u00d7",
+      "version": "1.12.9",
+      "doneAt": "2026-07-23T18:15:38Z",
       "cycle": 1
     }
   ],
@@ -451,6 +458,13 @@
       "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
       "rolledAt": "2026-07-23T18:13:18Z",
       "remainingCount": 11,
+      "cycle": 1
+    },
+    {
+      "face": 19,
+      "category": "Muur & minigames \u2014 combo, timer, record",
+      "rolledAt": "2026-07-23T18:14:23Z",
+      "remainingCount": 10,
       "cycle": 1
     }
   ]
