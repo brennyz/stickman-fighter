@@ -55,9 +55,9 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.10.3';
+const APP_VERSION = '1.10.4';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 52;
+const SW_CACHE_REV = 53;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -698,6 +698,7 @@ function recoverToMenu() {
     state = 'menu';
     window.__sfLoopErr = false;
     Input.dualMode = false;
+    try { Input.releaseAll(); } catch (_) {}
     try { Input.layout(W, H); } catch (_) {}
     try { if (InputP2) InputP2.layout(W, H); } catch (_) {}
     document.body.classList.remove('is-playing');
@@ -1588,19 +1589,67 @@ const SONGS = {
 /* =============================== INPUT ================================= */
 const IS_TOUCH = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 const JOY_DEAD_PX = 14;
+const JOY_MAX_PX = 55;
 const btnHitSlop = () => (typeof save !== 'undefined' && save.bigTouch !== false ? 14 : 10);
+
+function applyJoyDelta(pad, x, y, id) {
+  if (!pad.joy.active || pad.joy.id !== id) return;
+  let dx = x - pad.joy.ox;
+  let dy = y - pad.joy.oy;
+  // Zwevende stick: origin schuift mee aan de rand — makkelijker omkeren links/rechts
+  if (Math.abs(dx) > JOY_MAX_PX) {
+    pad.joy.ox += dx - Math.sign(dx) * JOY_MAX_PX;
+    dx = Math.sign(dx) * JOY_MAX_PX;
+  }
+  if (Math.abs(dy) > JOY_MAX_PX) {
+    pad.joy.oy += dy - Math.sign(dy) * JOY_MAX_PX;
+    dy = Math.sign(dy) * JOY_MAX_PX;
+  }
+  if (Math.abs(dx) < JOY_DEAD_PX) dx = 0;
+  if (Math.abs(dy) < JOY_DEAD_PX) dy = 0;
+  pad.joy.dx = dx;
+  pad.joy.dy = dy;
+}
 
 function makePad(side) {
   return {
     side,
     keys: {},
     pressed: {},
+    activePointers: new Set(),
     joy: { active: false, id: null, ox: 0, oy: 0, dx: 0, dy: 0 },
     buttons: [],
     btnPointers: {},
     joyHome: { x: 110, y: 0 },
     lastMoveTap: 0,
     lastMoveDir: 0,
+    releaseJoy() {
+      this.joy.active = false;
+      this.joy.id = null;
+      this.joy.dx = 0;
+      this.joy.dy = 0;
+    },
+    releaseAll() {
+      this.releaseJoy();
+      for (const b of this.buttons) b.held = false;
+      this.btnPointers = {};
+      this.activePointers.clear();
+      this.keys = {};
+    },
+    hardenPointers() {
+      if (this.joy.active && this.joy.id != null && !this.activePointers.has(this.joy.id)) {
+        this.releaseJoy();
+      }
+      for (const pid of Object.keys(this.btnPointers)) {
+        const n = Number(pid);
+        if (!this.activePointers.has(n) && !this.activePointers.has(pid)) {
+          const bid = this.btnPointers[pid];
+          const b = this.buttons.find(q => q.id === bid);
+          if (b) b.held = false;
+          delete this.btnPointers[pid];
+        }
+      }
+    },
     get move() {
       let m = 0;
       if (this.side === 'p1') {
@@ -1658,6 +1707,7 @@ function makePad(side) {
     },
     onDown(x, y, id, dual) {
       if (!this.ownsTouch(x, y, dual)) return false;
+      this.activePointers.add(id);
       const b = this.hitButton(x, y);
       if (b) {
         this.btnPointers[id] = b.id;
@@ -1665,6 +1715,10 @@ function makePad(side) {
         this.press(b.id);
         return true;
       }
+      if (this.joy.active && this.joy.id !== id && !this.activePointers.has(this.joy.id)) {
+        this.releaseJoy();
+      }
+      if (this.joy.active && this.joy.id !== id) return false;
       if (!this.joy.active) {
         this.joy.active = true;
         this.joy.id = id;
@@ -1677,16 +1731,10 @@ function makePad(side) {
       return false;
     },
     onMove(x, y, id) {
-      if (this.joy.active && this.joy.id === id) {
-        let dx = clamp(x - this.joy.ox, -55, 55);
-        let dy = clamp(y - this.joy.oy, -55, 55);
-        if (Math.abs(dx) < JOY_DEAD_PX) dx = 0;
-        if (Math.abs(dy) < JOY_DEAD_PX) dy = 0;
-        this.joy.dx = dx;
-        this.joy.dy = dy;
-      }
+      applyJoyDelta(this, x, y, id);
     },
     onUp(id) {
+      this.activePointers.delete(id);
       if (this.joy.active && this.joy.id === id) {
         const dx = this.joy.dx;
         if (Math.abs(dx) > 22) {
@@ -1696,9 +1744,7 @@ function makePad(side) {
           this.lastMoveTap = now;
           this.lastMoveDir = dir;
         }
-        this.joy.active = false;
-        this.joy.dx = 0;
-        this.joy.dy = 0;
+        this.releaseJoy();
       }
       const bid = this.btnPointers[id];
       if (bid) {
@@ -1715,10 +1761,13 @@ const Input = Object.assign(makePad('p1'), {
   onDown(x, y, id) {
     AudioSys.init();
     if (this.dualMode) {
+      this.activePointers.add(id);
       if (InputP2.onDown(x, y, id, true)) return;
       if (makePad('p1').onDown.call(this, x, y, id, true)) return;
+      this.activePointers.delete(id);
       return;
     }
+    this.activePointers.add(id);
     const slop = btnHitSlop();
     for (const b of this.buttons) {
       if ((x - b.x) ** 2 + (y - b.y) ** 2 < (b.r + slop) ** 2) {
@@ -1728,9 +1777,21 @@ const Input = Object.assign(makePad('p1'), {
         return;
       }
     }
-    if (x < innerWidth * 0.5 && !this.joy.active) {
-      const nearBtn = this.buttons.some(b => (x - b.x) ** 2 + (y - b.y) ** 2 < (b.r + slop + 18) ** 2);
-      if (nearBtn) return;
+    const joyZone = x < innerWidth * 0.52;
+    if (!joyZone) {
+      this.activePointers.delete(id);
+      return;
+    }
+    const nearBtn = this.buttons.some(b => (x - b.x) ** 2 + (y - b.y) ** 2 < (b.r + slop + 18) ** 2);
+    if (nearBtn) {
+      this.activePointers.delete(id);
+      return;
+    }
+    if (this.joy.active && this.joy.id !== id && !this.activePointers.has(this.joy.id)) {
+      this.releaseJoy();
+    }
+    if (this.joy.active && this.joy.id !== id) return;
+    if (!this.joy.active) {
       this.joy.active = true;
       this.joy.id = id;
       this.joy.ox = x;
@@ -1740,8 +1801,12 @@ const Input = Object.assign(makePad('p1'), {
     }
   },
   onMove(x, y, id) {
-    if (this.dualMode) InputP2.onMove(x, y, id);
-    makePad('p1').onMove.call(this, x, y, id);
+    if (this.dualMode) {
+      InputP2.onMove(x, y, id);
+      makePad('p1').onMove.call(this, x, y, id);
+      return;
+    }
+    applyJoyDelta(this, x, y, id);
   },
   onUp(id) {
     if (this.dualMode) {
@@ -1751,7 +1816,16 @@ const Input = Object.assign(makePad('p1'), {
     }
     makePad('p1').onUp.call(this, id);
   },
+  hardenPointers() {
+    makePad('p1').hardenPointers.call(this);
+    if (InputP2 && Input.dualMode) InputP2.hardenPointers();
+  },
+  releaseAll() {
+    makePad('p1').releaseAll.call(this);
+    if (InputP2) InputP2.releaseAll();
+  },
   endFrame() {
+    this.hardenPointers();
     this.pressed = {};
     if (InputP2) InputP2.pressed = {};
   },
@@ -1873,6 +1947,18 @@ canvas.addEventListener('pointerup', e => {
 canvas.addEventListener('pointercancel', e => {
   if (state !== 'play' || !game) return;
   Input.onUp(e.pointerId);
+});
+function onGlobalPointerEnd(e) {
+  if (state !== 'play' || !game) return;
+  Input.onUp(e.pointerId);
+}
+window.addEventListener('pointerup', onGlobalPointerEnd);
+window.addEventListener('pointercancel', onGlobalPointerEnd);
+window.addEventListener('blur', () => {
+  if (state === 'play') try { Input.releaseAll(); } catch (_) {}
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && state === 'play') try { Input.releaseAll(); } catch (_) {}
 });
 document.addEventListener('gesturestart', e => {
   if (state === 'play') e.preventDefault();
@@ -2255,6 +2341,9 @@ class Fighter {
     // bewegen
     let mv = canAct && !this.attack ? (it.move || 0) : 0;
     this.vx = lerp(this.vx, mv * this.speed, 1 - Math.pow(0.0001, dt));
+    if (canAct && !this.attack && Math.abs(mv) < 0.04 && this.onGround) {
+      this.vx = lerp(this.vx, 0, 1 - Math.pow(0.00002, dt));
+    }
     if (Math.abs(mv) > 0.1) this.face = mv > 0 ? 1 : -1;
 
     if (canAct && it.jump && this.onGround && !this.attack) {
