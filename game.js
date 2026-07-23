@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.14.8';
+const APP_VERSION = '1.15.0';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 106;
+const SW_CACHE_REV = 107;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -4546,6 +4546,246 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
   }
 }
 
+/* ============== SCENERY ART — pixel-art lagen (upgrade 1/4) ============ */
+/* Gecachte offscreen tiles (1× gerenderd per thema), chunky pixel look via
+   imageSmoothingEnabled=false + opschaling. Geen externe assets — offline OK. */
+function sceneryRng(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a += 0x6D2B79F5;
+    let x = Math.imul(a ^ (a >>> 15), 1 | a);
+    x ^= x + Math.imul(x ^ (x >>> 7), 61 | x);
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const SCENERY_SCALE = 3;
+
+const SceneryArt = {
+  cache: {},
+
+  get(themeName, kind) {
+    const key = themeName + ':' + kind;
+    if (key in this.cache) return this.cache[key];
+    let cv = null;
+    try { cv = this.render(themeName, kind); } catch (_) { cv = null; }
+    this.cache[key] = cv;
+    return cv;
+  },
+
+  makeTile(w, h) {
+    const cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    const x = cv.getContext('2d');
+    return { cv, x, px: (px, py, pw, ph, col) => { x.fillStyle = col; x.fillRect(Math.round(px), Math.round(py), Math.max(1, Math.round(pw)), Math.max(1, Math.round(ph))); } };
+  },
+
+  /** Dither-rand: om-en-om pixels boven een silhouetlijn. */
+  dither(px, x0, y, w, col, step) {
+    for (let i = 0; i < w; i += (step || 2)) px(x0 + i, y, 1, 1, col);
+  },
+
+  render(themeName, kind) {
+    if (kind === 'cloud') return this.renderCloud(themeName);
+    if (kind === 'tree') return this.renderTree(themeName);
+    return this.renderFar(themeName);
+  },
+
+  renderCloud() {
+    const { cv, px } = this.makeTile(26, 12);
+    const r = sceneryRng(77);
+    // blokkige cumulus: 3 tinten
+    const rows = [
+      [7, 9, 4], [4, 16, 6], [2, 22, 9],
+    ];
+    for (const [y, w, x0] of rows) {
+      px(x0, y, w, 3, '#f4f9ff');
+    }
+    px(5, 6, 14, 3, '#ffffff');
+    px(8, 3, 8, 3, '#ffffff');
+    for (let i = 0; i < 8; i++) px(3 + r() * 20, 9 + r() * 2, 1, 1, '#d8e8f6');
+    return cv;
+  },
+
+  renderTree(themeName) {
+    const { cv, px } = this.makeTile(22, 34);
+    const dark = themeName === 'bos' ? '#1d4a2c' : '#2e7a3c';
+    const mid = themeName === 'bos' ? '#276238' : '#3f9b4c';
+    const light = themeName === 'bos' ? '#347a46' : '#55b862';
+    // stam
+    px(9, 24, 4, 10, '#54381f');
+    px(9, 24, 2, 10, '#6b4a2a');
+    // gelaagde kruin (3 lagen met dither)
+    const layers = [
+      [3, 14, 16, dark], [5, 8, 14, mid], [7, 3, 10, light],
+    ];
+    for (const [x0, y0, w, col] of layers) {
+      const h = 8;
+      px(x0, y0 + 2, w, h - 2, col);
+      px(x0 + 2, y0, w - 4, 2, col);
+      this.dither(px, x0, y0 + h, w, col, 2);
+    }
+    px(6, 10, 2, 2, '#eaf6d8');
+    px(13, 15, 2, 2, '#eaf6d8');
+    return cv;
+  },
+
+  renderFar(themeName) {
+    const W0 = 160, H0 = 72;
+    const { cv, px } = this.makeTile(W0, H0);
+    const r = sceneryRng(themeName.length * 1337 + 42);
+    const base = H0; // silhouet staat op tile-bodem
+    switch (themeName) {
+      case 'bos': {
+        // twee rijen dennen-silhouetten
+        for (let i = 0; i < 9; i++) {
+          const x = i * 19 + r() * 6;
+          const h = 26 + r() * 14;
+          for (let yy = 0; yy < h; yy += 3) {
+            const w = 2 + (yy / h) * 14;
+            px(x - w / 2, base - h + yy, w, 3, '#1c3f2b');
+          }
+        }
+        for (let i = 0; i < 7; i++) {
+          const x = 8 + i * 24 + r() * 8;
+          const h = 16 + r() * 10;
+          for (let yy = 0; yy < h; yy += 3) {
+            const w = 2 + (yy / h) * 12;
+            px(x - w / 2, base - h + yy, w, 3, '#152f20');
+          }
+        }
+        break;
+      }
+      case 'grot': {
+        // rotswand-skyline + gloeiende kristallen
+        for (let x = 0; x < W0; x += 4) {
+          const h = 18 + Math.sin(x * 0.16) * 8 + r() * 10;
+          px(x, base - h, 4, h, '#1b2140');
+          if (r() < 0.5) px(x, base - h - 1, 2, 1, '#252c4e');
+        }
+        for (let i = 0; i < 8; i++) {
+          const x = r() * W0, y = base - 4 - r() * 16;
+          px(x, y, 2, 3, '#6fd7ff');
+          px(x, y - 1, 1, 1, '#bffaff');
+        }
+        break;
+      }
+      case 'vulkaan': {
+        // vulkaankegels met lava-rand + as-rook
+        const cones = [[30, 44], [95, 56], [140, 36]];
+        for (const [cx, h] of cones) {
+          for (let yy = 0; yy < h; yy += 2) {
+            const w = 4 + (yy / h) * (h * 0.9);
+            px(cx - w / 2, base - h + yy, w, 2, '#241016');
+          }
+          px(cx - 3, base - h, 6, 2, '#ff7a30');
+          px(cx - 1, base - h - 1, 3, 1, '#ffc06b');
+          for (let s = 0; s < 4; s++) px(cx - 2 + r() * 6, base - h - 4 - s * 3, 2, 2, `rgba(120,100,110,${0.5 - s * 0.1})`);
+        }
+        for (let i = 0; i < 10; i++) px(r() * W0, base - 2 - r() * 6, 2, 1, '#3a1a20');
+        break;
+      }
+      case 'cyber': {
+        // skyline met verlichte raampjes + antennes
+        let x = 0;
+        while (x < W0 - 8) {
+          const bw = 10 + Math.floor(r() * 14);
+          const bh = 20 + Math.floor(r() * 34);
+          px(x, base - bh, bw, bh, '#0d1434');
+          px(x, base - bh, bw, 1, '#1c2a5e');
+          for (let wy = base - bh + 3; wy < base - 3; wy += 4) {
+            for (let wx = x + 2; wx < x + bw - 2; wx += 4) {
+              if (r() < 0.35) px(wx, wy, 2, 2, r() < 0.5 ? '#ff4dd2' : '#39d0ff');
+            }
+          }
+          if (r() < 0.4) { px(x + bw / 2, base - bh - 5, 1, 5, '#1c2a5e'); px(x + bw / 2, base - bh - 6, 1, 1, '#ff5d5d'); }
+          x += bw + 2 + Math.floor(r() * 5);
+        }
+        break;
+      }
+      case 'dojo': {
+        // pagode-silhouet + torii-poort
+        const pag = (cx, s) => {
+          for (let tier = 0; tier < 3; tier++) {
+            const w = (34 - tier * 9) * s, y = base - (12 + tier * 11) * s;
+            px(cx - w / 2, y, w, 3 * s, '#241a12');
+            px(cx - w / 2 - 3 * s, y, 3 * s, 2 * s, '#241a12');
+            px(cx + w / 2, y, 3 * s, 2 * s, '#241a12');
+            px(cx - (w * 0.32), y + 3 * s, w * 0.64, 8 * s, '#2f2318');
+          }
+          px(cx - 1, base - 40 * s, 2, 4, '#241a12');
+        };
+        pag(36, 1);
+        pag(120, 0.7);
+        // torii
+        px(70, base - 22, 3, 22, '#4a1f16');
+        px(88, base - 22, 3, 22, '#4a1f16');
+        px(64, base - 24, 33, 3, '#5c2419');
+        px(67, base - 18, 27, 2, '#4a1f16');
+        for (let i = 0; i < 12; i++) px(r() * W0, base - 1 - r() * 3, 2, 1, '#2a2018');
+        break;
+      }
+      case 'sloop': {
+        // stadsblokken met kapotte daken + verre kraan
+        let x = 4;
+        while (x < W0 - 12) {
+          const bw = 14 + Math.floor(r() * 12);
+          const bh = 16 + Math.floor(r() * 22);
+          px(x, base - bh, bw, bh, '#48525e');
+          this.dither(px, x, base - bh - 1, bw, '#48525e', 2);
+          for (let wy = base - bh + 3; wy < base - 3; wy += 5) {
+            for (let wx = x + 2; wx < x + bw - 2; wx += 5) {
+              if (r() < 0.3) px(wx, wy, 2, 2, '#2e353d');
+            }
+          }
+          if (r() < 0.35) px(x + 2 + r() * (bw - 6), base - bh - 3, 3, 3, '#3a434d');
+          x += bw + 3;
+        }
+        px(118, base - 52, 2, 52, '#3a434d');
+        px(118, base - 52, 26, 2, '#3a434d');
+        px(140, base - 50, 1, 8, '#3a434d');
+        px(139, base - 42, 3, 3, '#2e353d');
+        break;
+      }
+      default: {
+        // veld: glooiende verre heuvels + molen + boerderijtje
+        for (let x = 0; x < W0; x += 2) {
+          const h = 14 + Math.sin(x * 0.05 + 2) * 7 + Math.sin(x * 0.11) * 4;
+          px(x, base - h, 2, h, '#69ab5e');
+          if ((x >> 1) % 2 === 0) px(x, base - h - 1, 1, 1, '#7dbd70');
+        }
+        // molen
+        const mx = 118, mh = 26;
+        px(mx - 3, base - mh, 6, mh, '#8a7358');
+        px(mx - 4, base - mh - 2, 8, 3, '#6d5a44');
+        px(mx - 1, base - mh - 8, 2, 8, '#5a4a38');
+        px(mx - 8, base - mh - 3, 16, 2, '#5a4a38');
+        // boerderij
+        px(28, base - 8, 14, 8, '#a8544a');
+        px(26, base - 11, 18, 3, '#6d3a32');
+        px(32, base - 6, 3, 6, '#4a2a24');
+        break;
+      }
+    }
+    return cv;
+  },
+};
+
+/** Pixel-art laag tekenen: getild, smoothing uit, parallax-offset. */
+function drawSceneryTile(c, tile, y, scroll, rate, scale) {
+  if (!tile) return;
+  const s = scale || SCENERY_SCALE;
+  const tw = tile.width * s;
+  const th = tile.height * s;
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  const off = (((-scroll * rate) % tw) + tw) % tw;
+  for (let x = off - tw; x < W + tw; x += tw) {
+    c.drawImage(tile, Math.round(x), Math.round(y), tw, th);
+  }
+  c.imageSmoothingEnabled = prev;
+}
+
 /* ========================== ACHTERGRONDEN ============================== */
 const THEMES = {
   veld:    { sky1: '#7ec8ff', sky2: '#cfeeff', hill: '#5cb85c', hill2: '#3f9b47', ground: '#4c8f3f', gtop: '#66b356', deco: 'bloem' },
@@ -4575,14 +4815,27 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
     }
     c.globalAlpha = 1;
   } else {
-    c.fillStyle = 'rgba(255,255,255,.75)';
-    for (let i = 0; i < 4; i++) {
-      const x = wrap(i * 250 + t * 12 - scroll * 0.15, W + 200) - 100;
-      const y = 50 + (i % 3) * 46;
-      c.beginPath();
-      c.ellipse(x, y, 42, 15, 0, 0, TAU); c.ellipse(x + 26, y - 9, 27, 12, 0, 0, TAU);
-      c.fill();
+    // pixel-art wolken (art-upgrade 1/4) — cached sprite, drijft langzaam mee
+    const cloud = SceneryArt.get(themeName, 'cloud');
+    if (cloud) {
+      const prev = c.imageSmoothingEnabled;
+      c.imageSmoothingEnabled = false;
+      for (let i = 0; i < 4; i++) {
+        const s = (i % 2 ? 2.6 : 3.4);
+        const cw = cloud.width * s, chh = cloud.height * s;
+        const x = wrap(i * 260 + t * 10 - scroll * 0.15, W + 240) - 120;
+        const y = 36 + (i % 3) * 44;
+        c.globalAlpha = 0.75;
+        c.drawImage(cloud, Math.round(x), y, cw, chh);
+      }
+      c.globalAlpha = 1;
+      c.imageSmoothingEnabled = prev;
     }
+  }
+  // pixel-art skyline per thema (art-upgrade 1/4) — traagste parallax-laag
+  const farTile = SceneryArt.get(themeName, 'far');
+  if (farTile) {
+    drawSceneryTile(c, farTile, ground - 52 - farTile.height * SCENERY_SCALE, scroll, 0.18);
   }
   // heuvels (parallax: verre laag traag, nabije laag sneller)
   c.fillStyle = th.hill;
@@ -4598,14 +4851,28 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   const dSpan = W + 220;
   const dX = (base) => wrap(base - scroll * 0.7, dSpan) - 110;
   if (th.deco === 'boom') {
-    for (let i = 0; i < 5; i++) {
-      const x = dX((i * 0.22 + 0.06) * dSpan);
-      c.fillStyle = '#54381f';
-      c.fillRect(x - 5, ground - 90, 10, 90);
-      c.fillStyle = th.hill2;
-      c.beginPath(); c.arc(x, ground - 105, 38, 0, TAU); c.fill();
-      c.beginPath(); c.arc(x - 24, ground - 82, 27, 0, TAU); c.fill();
-      c.beginPath(); c.arc(x + 24, ground - 82, 27, 0, TAU); c.fill();
+    // pixel-art bomen (art-upgrade 1/4) — cached sprite, 2 formaten
+    const tree = SceneryArt.get(themeName, 'tree');
+    if (tree) {
+      const prev = c.imageSmoothingEnabled;
+      c.imageSmoothingEnabled = false;
+      for (let i = 0; i < 5; i++) {
+        const x = dX((i * 0.22 + 0.06) * dSpan);
+        const s = i % 2 ? 3.6 : 4.6;
+        const twd = tree.width * s, thg = tree.height * s;
+        c.drawImage(tree, Math.round(x - twd / 2), Math.round(ground - thg), twd, thg);
+      }
+      c.imageSmoothingEnabled = prev;
+    } else {
+      for (let i = 0; i < 5; i++) {
+        const x = dX((i * 0.22 + 0.06) * dSpan);
+        c.fillStyle = '#54381f';
+        c.fillRect(x - 5, ground - 90, 10, 90);
+        c.fillStyle = th.hill2;
+        c.beginPath(); c.arc(x, ground - 105, 38, 0, TAU); c.fill();
+        c.beginPath(); c.arc(x - 24, ground - 82, 27, 0, TAU); c.fill();
+        c.beginPath(); c.arc(x + 24, ground - 82, 27, 0, TAU); c.fill();
+      }
     }
   } else if (th.deco === 'stalag') {
     c.fillStyle = '#20263f';
@@ -4672,6 +4939,21 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   for (let x = off - span; x < W + span; x += span) {
     c.fillRect(x, ground + 10, 36, 4);
     c.fillRect(x + 52, ground + 26, 20, 3);
+  }
+  // pixel-speckles op de grond (art-upgrade 1/4) — deterministisch, scroll-vast
+  if (!fxLite()) {
+    const spSpan = 61;
+    const spOff = wrap(-scroll, spSpan);
+    c.fillStyle = 'rgba(255,255,255,.08)';
+    for (let x = spOff - spSpan; x < W + spSpan; x += spSpan) {
+      c.fillRect(x + 8, ground + 18, 3, 3);
+      c.fillRect(x + 34, ground + 38, 3, 3);
+    }
+    c.fillStyle = 'rgba(0,0,0,.12)';
+    for (let x = spOff - spSpan; x < W + spSpan; x += spSpan) {
+      c.fillRect(x + 22, ground + 30, 3, 3);
+      c.fillRect(x + 48, ground + 14, 3, 3);
+    }
   }
 
   // Stage-delen (avontuur): decor evolueert per deel — schemer + rotsen + arena-fakkels

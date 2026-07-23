@@ -301,6 +301,18 @@
   ],
   "userFeatureLog": [
     {
+      "id": "art-upgrade-scenery",
+      "d20Face": null,
+      "userWords": "biggest upgrade: scenery and less emoji style, pixel art or free svg, place in all the game, 1/4",
+      "versions": [
+        "1.15.0"
+      ],
+      "commits": [],
+      "code": "SceneryArt (cached offscreen pixel tiles), drawSceneryTile, far skyline per thema, pixel wolken/bomen, grond-speckles",
+      "status": "deel 1/4 done",
+      "note": "PLAN 4 delen \u2014 1) scenery pixel-art parallax (v1.15.0, DONE): skyline/wolken/bomen/grond alle 7 thema's, cached tiles, smoothing-off; 2) menu & schermen: emoji-iconen op knoppen \u2192 inline SVG; 3) in-game UI: pickups/floaters/banners getekende iconen ipv \u2726\u2605\u2691; 4) final pass: achievements/dex-iconen, weer-per-thema, rest-emoji review. Volgende agent: zeg 'deel 2' \u2192 SVG-iconen in index.html knoppen"
+    },
+    {
       "id": "summon-weapon-ascend",
       "d20Face": null,
       "userWords": "Summoning is real, really small chance for a summons, upgrading mediocre lower level items going Epic or Legendary, over the power of higher level weapons",
