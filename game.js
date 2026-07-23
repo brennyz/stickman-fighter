@@ -17,7 +17,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.6.3';
+const APP_VERSION = '1.7.0';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -2247,6 +2247,9 @@ class Game {
     this.inputLocked = false;
     this.sessionXP = 0;
     this.over = false;
+    this.maxCombo = 0;
+    this.combo = 0;
+    this.comboT = 0;
 
     const st = playerStats();
     if (mode !== 'versus') {
@@ -2372,10 +2375,11 @@ class Game {
     setTimeout(() => UI.showResult(win, {
       title: win ? 'GEWONNEN!' : 'VERSLAGEN...',
       detail: win
-        ? `Level ${this.level.n} · ${this.kills} monsters · ${stars}★`
-        : `Level ${this.level.n} · ${this.kills} monsters verslagen`,
+        ? `Level ${this.level.n} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}`
+        : `Level ${this.level.n} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}`,
       xp: this.sessionXP,
       mode: 'adventure', level: this.level.n, win, stars,
+      tip: win ? (stars >= 3 ? 'Perfecte run — hou je HP hoog!' : 'Tip: schild/chakra-pickups = meer sterren') : 'Tip: blokkeer meer · vul chakra · Rasengan op baas',
     }), 1400);
   }
 
@@ -2534,8 +2538,9 @@ class Game {
     else { xp = 15; this.grantXP(xp); }
     setTimeout(() => UI.showResult(win, {
       title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
-      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · totaal ${save.trainWins}x gewonnen`,
+      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · ${save.trainWins}x gewonnen`,
       xp: this.sessionXP, mode: 'training', win,
+      tip: win ? 'Unlock stijlen door meer train-wins!' : 'Tip: duck lasers · chakra vol → 🌀 Rasengan',
     }), 1200);
   }
 
@@ -2632,6 +2637,7 @@ class Game {
       title: p1Win ? 'SPELER 1 WINT!' : 'SPELER 2 WINT!',
       detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}`,
       xp: this.sessionXP, mode: 'versus', win: p1Win, p1: this.p1Pick, p2: this.p2Pick,
+      tip: 'Opnieuw = rematch · Menu = andere vechters kiezen',
     }), 1200);
   }
 
@@ -2696,8 +2702,9 @@ class Game {
     this.banner('TIJD!', 1.5, '#ffd75e', 56);
     setTimeout(() => UI.showResult(true, {
       title: isRecord ? 'NIEUW RECORD!' : 'TIJD IS OM!',
-      detail: `${this.score} stenen gesloopt · record: ${best}`,
+      detail: `${this.score} stenen · record ${best} · max combo ×${this.maxCombo || 0}`,
       xp: this.sessionXP, mode: 'wall', win: true,
+      tip: isRecord ? 'Nieuw record — share met een vriend!' : 'Tip: hou combo vast voor snellere sloop',
     }), 1200);
   }
 
@@ -2798,6 +2805,7 @@ class Game {
           if (b.hp <= 0) {
             this.score++;
             this.combo++; this.comboT = 1.4;
+            this.noteCombo();
             this.burst(b.x + b.w / 2, b.y + b.h / 2, `hsl(${b.hue},50%,45%)`, 14);
             AudioSys.sfx(b.bonus ? 'explode' : 'brick');
             this.shake(b.bonus ? 6 : 3, b.bonus ? 0.16 : 0.12);
@@ -2825,6 +2833,7 @@ class Game {
         if (this.mode === 'adventure' && f.isPlayer) {
           this.combo = Math.min(12, this.combo + 1);
           this.comboT = 1.55;
+          this.noteCombo();
           comboMul = 1 + Math.min(this.combo, 8) * 0.07;
           trackCombo(this.combo);
           if (this.combo === 3 || this.combo === 6 || this.combo === 10) {
@@ -2969,6 +2978,13 @@ class Game {
     if (this.player && this.player.afterimages) drop(this.player.afterimages, FX_CAP.afterimages);
     if (this.p2 && this.p2.afterimages) drop(this.p2.afterimages, FX_CAP.afterimages);
     if (this.robot && this.robot.afterimages) drop(this.robot.afterimages, FX_CAP.afterimages);
+  }
+
+  noteCombo() {
+    this.maxCombo = Math.max(this.maxCombo || 0, this.combo || 0);
+    if (this.combo === 3 || this.combo === 5 || this.combo === 8 || this.combo === 10) {
+      haptic(14 + this.combo);
+    }
   }
 
   shake(mag, dur) {
@@ -3166,6 +3182,14 @@ class Game {
 
   drawHUD(c) {
     const p = this.player;
+    if (p && p.alive && p.maxhp > 0 && p.hp / p.maxhp < 0.28 && !save.reducedMotion) {
+      const a = 0.07 + Math.sin(this.t * 7) * 0.04;
+      const g = c.createRadialGradient(W / 2, H / 2, H * 0.2, W / 2, H / 2, H * 0.85);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(1, `rgba(180,20,40,${a})`);
+      c.fillStyle = g;
+      c.fillRect(0, 0, W, H);
+    }
     // spelerbalk (niet in 2P — eigen layout)
     const bw = Math.min(240, W * 0.32);
     const bx = 16, by = 18;
@@ -3210,8 +3234,16 @@ class Game {
         c.fillText(boss.sp.name.toUpperCase(), W / 2, 72);
       }
       if (save.comboHud !== false && this.combo > 1) {
-        c.font = '900 18px sans-serif'; c.fillStyle = '#ffd75e';
-        c.fillText(`COMBO ×${this.combo}`, W / 2, 92);
+        const pulse = 1 + Math.sin(this.t * 10) * 0.08;
+        c.save();
+        c.translate(W / 2, 92);
+        c.scale(pulse, pulse);
+        c.font = '900 20px sans-serif';
+        c.fillStyle = this.combo >= 8 ? '#ff7a4d' : '#ffd75e';
+        c.shadowColor = this.combo >= 8 ? '#ff7a4d' : '#ffd75e';
+        c.shadowBlur = save.reducedMotion ? 0 : 12;
+        c.fillText(`COMBO ×${this.combo}`, 0, 0);
+        c.restore();
       }
       if (this.dmgBuffT > 0) {
         c.font = '800 13px sans-serif'; c.fillStyle = '#ff7a4d';
@@ -3248,8 +3280,13 @@ class Game {
       c.font = '800 17px sans-serif'; c.fillStyle = '#ffd75e';
       c.fillText(`Stenen: ${this.score}`, W / 2, 68);
       if (this.combo > 1) {
+        const pulse = 1 + Math.sin(this.t * 10) * 0.1;
+        c.save();
+        c.translate(W / 2, 94);
+        c.scale(pulse, pulse);
         c.font = '900 22px sans-serif'; c.fillStyle = '#7cf5ff';
-        c.fillText(`COMBO x${this.combo}`, W / 2, 94);
+        c.fillText(`COMBO ×${this.combo}`, 0, 0);
+        c.restore();
       }
     } else if (this.mode === 'versus' && this.p2) {
       const p2 = this.p2;
@@ -3516,6 +3553,18 @@ const UI = {
     const done = save.daily.tasks.filter(t => t.done).length;
     const missEl = document.getElementById('menuDailyHint');
     if (missEl) missEl.textContent = `Vandaag: ${done}/3 missies klaar · ${Object.keys(save.achievements).length}/${ACHIEVEMENTS.length} prestaties`;
+    const tipEl = document.getElementById('menuTipLine');
+    if (tipEl) {
+      const tips = [
+        'Tip: volle chakra → tik 🌀 voor Rasengan',
+        'Tip: 2 spelers = liggend iPad, P1 links / P2 rechts',
+        'Tip: muur-combo’s = sneller sloop & meer XP',
+        'Tip: monsterboek vullen = meer max HP',
+        'Tip: “Verder spelen” hervat je laatste modus',
+      ];
+      const i = Math.floor(Date.now() / 8000) % tips.length;
+      tipEl.textContent = tips[i];
+    }
   },
 
   renderMissions() {
@@ -3759,6 +3808,8 @@ const UI = {
     title.className = 'bigres ' + (win ? 'win' : 'lose');
     document.getElementById('resDetail').textContent = data.detail;
     document.getElementById('resXp').textContent = `+${data.xp} XP verdiend · nu Lv ${save.lvl} (${save.xp}/${xpNeed(save.lvl)} XP)`;
+    const tipEl = document.getElementById('resTip');
+    if (tipEl) tipEl.textContent = data.tip || '';
     const starsEl = document.getElementById('resStars');
     if (starsEl) {
       const n = win && data.stars ? data.stars : 0;
@@ -3767,6 +3818,15 @@ const UI = {
     const nextBtn = document.getElementById('resNext');
     if (nextBtn) {
       nextBtn.style.display = (win && data.mode === 'adventure' && data.level < MAX_LEVEL) ? 'flex' : 'none';
+    }
+    const again = document.getElementById('resAgain');
+    if (again) {
+      const label = again.querySelector('div');
+      if (label) {
+        if (data.mode === 'versus') label.innerHTML = 'Rematch<small>Zelfde vechters</small>';
+        else if (data.mode === 'training') label.innerHTML = 'Opnieuw<small>vs RabbitRobot</small>';
+        else label.innerHTML = 'Opnieuw';
+      }
     }
     this.show('resultScreen');
     AudioSys.play('menu');
@@ -3795,6 +3855,18 @@ function startGame(mode, opts) {
     save.tipsSeen.chakra = 1;
     persist();
     setTimeout(() => UI.toast('🌀 Rasengan: vecht → chakra vol → tik 🌀 (speciaal)', 4200), 900);
+  }
+  const modeTips = {
+    training: ['tipTraining', 'Training: duck lasers · chakra vol → 🌀 Rasengan'],
+    versus: ['tipVersus', '2P: P1 links · P2 rechts · liggend houden'],
+    wall: ['tipWall', 'Muur: hou je combo vast voor snellere sloop'],
+    adventure: ['tipAdventure', 'Avontuur: groen = HP · oranje = rage · blauw = chakra/schild'],
+  };
+  const tip = modeTips[mode];
+  if (tip && !save.tipsSeen[tip[0]]) {
+    save.tipsSeen[tip[0]] = 1;
+    persist();
+    setTimeout(() => UI.toast(tip[1], 3800), 1400);
   }
   UI.show(null);
   if (mode === 'training') AudioSys.play('boss');

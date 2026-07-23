@@ -156,6 +156,20 @@
       if (redirectIfNewHost(stable)) return new Promise(() => {});
     }
 
+    // Op een werkende tunnel: speel meteen — geen lange wacht
+    if (isTunnelHost(here)) {
+      const quickBroken = await pageLooksBroken();
+      if (!quickBroken) {
+        try {
+          const probe = await fetch('./game.js?t=' + Date.now(), { cache: 'no-store', headers: LT_HEADERS });
+          if (probe.ok) {
+            ready();
+            return { ok: true, fast: true };
+          }
+        } catch (_) {}
+      }
+    }
+
     show('Verbinding controleren…', 'Tunnel en server worden gecontroleerd.');
 
     let liveUrl = '';

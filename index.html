@@ -235,7 +235,8 @@
   <h1 class="title">STICKMAN FIGHTER</h1>
   <div class="subtitle">🌀 Rasengan klaar — moto! &bull; chakra &bull; combo&apos;s &bull; 2 spelers</div>
   <div class="statbar" id="menuStats"></div>
-  <div class="subtitle" id="menuDailyHint" style="margin-top:-8px;margin-bottom:10px;font-size:13px"></div>
+  <div class="subtitle" id="menuDailyHint" style="margin-top:-8px;margin-bottom:4px;font-size:13px"></div>
+  <div class="subtitle" id="menuTipLine" style="margin-top:0;margin-bottom:10px;font-size:12px;color:#7cf5ff;opacity:.9"></div>
   <button class="btn mode-btn b-continue" id="btnContinue" type="button" style="display:none">
     <span class="ico">&#9654;&#65039;</span>
     <div>Verder spelen<small>Laatste modus</small></div>
@@ -420,6 +421,7 @@
   <div class="stars-big" id="resStars"></div>
   <div class="detail" id="resDetail"></div>
   <div class="detail" id="resXp"></div>
+  <div class="detail" id="resTip" style="color:#7cf5ff;opacity:.9;margin-top:6px"></div>
   <div style="height:14px"></div>
   <button class="btn mode-btn b-adventure" id="resAgain"><span class="ico">&#128260;</span><div>Opnieuw</div></button>
   <button class="btn mode-btn b-training" id="resNext" style="display:none"><span class="ico">&#10145;&#65039;</span><div>Volgend level</div></button>
@@ -428,7 +430,7 @@
 
 <div id="pauseScreen" class="screen">
   <h2 class="head" style="margin-top:60px">Pauze</h2>
-  <div class="subtitle" style="margin-bottom:12px">Rasengan klaar — moto!</div>
+  <div class="subtitle" style="margin-bottom:12px">Rasengan klaar — moto! · voortgang blijft op dit apparaat</div>
   <button class="btn mode-btn b-adventure" id="pauseResume"><span class="ico">&#9654;&#65039;</span><div>Verder spelen</div></button>
   <div class="toggles" style="margin:14px 0">
     <button class="btn tog" id="pauseTogMusic" type="button">&#127925; Muziek</button>
