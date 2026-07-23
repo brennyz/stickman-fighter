@@ -60,9 +60,9 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.12.16';
+const APP_VERSION = '1.12.17';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 79;
+const SW_CACHE_REV = 80;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1947,6 +1947,17 @@ function readSafeInsets() {
   }
 }
 
+function syncViewportCssVars(vp) {
+  vp = vp || viewportGameSize();
+  try {
+    const root = document.documentElement;
+    root.style.setProperty('--vv-w', vp.w + 'px');
+    root.style.setProperty('--vv-h', vp.h + 'px');
+    root.style.setProperty('--vv-top', vp.offsetY + 'px');
+    root.style.setProperty('--vv-left', vp.offsetX + 'px');
+  } catch (_) {}
+}
+
 function viewportGameSize() {
   const vv = typeof window !== 'undefined' ? window.visualViewport : null;
   if (vv && vv.width > 0 && vv.height > 0) {
@@ -1962,20 +1973,42 @@ function viewportGameSize() {
 
 function touchUiScale(W, H) {
   const base = (typeof save !== 'undefined' && save.bigTouch !== false) ? 1.1 : 1;
-  const fit = Math.min(W / 400, H / 740);
-  return clamp(fit * base, 0.7, 1.16);
+  const portrait = H > W * 1.04;
+  const fit = portrait
+    ? Math.min(W / 390, H / 660, W / H * 0.95)
+    : Math.min(W / 400, H / 740);
+  return clamp(fit * base, 0.62, 1.16);
+}
+
+function hudInsetTop() {
+  return Math.max(readSafeInsets().top, 6) + 10;
 }
 
 function playfieldGroundY(H, W) {
   const portrait = H > W * 1.02;
+  if (portrait && H < 480) return H * 0.68;
   if (portrait && H < 520) return H * 0.7;
+  if (portrait && H < 640) return H * 0.72;
   if (portrait) return H * 0.73;
   return H * 0.78;
 }
 
 function pointerGameCoords(clientX, clientY) {
+  const el = canvas;
+  if (el && W > 0 && H > 0) {
+    const rect = el.getBoundingClientRect();
+    if (rect.width > 2 && rect.height > 2) {
+      return {
+        x: clamp((clientX - rect.left) * (W / rect.width), 0, W),
+        y: clamp((clientY - rect.top) * (H / rect.height), 0, H),
+      };
+    }
+  }
   const vp = viewportGameSize();
-  return { x: clientX - vp.offsetX, y: clientY - vp.offsetY };
+  return {
+    x: clamp(clientX - vp.offsetX, 0, W || vp.w),
+    y: clamp(clientY - vp.offsetY, 0, H || vp.h),
+  };
 }
 
 function applyJoyDelta(pad, x, y, id) {
@@ -2186,7 +2219,7 @@ const Input = Object.assign(makePad('p1'), {
         return;
       }
     }
-    const joyZone = x < W * 0.52;
+    const joyZone = x < W * (W < 400 ? 0.48 : 0.52);
     if (!joyZone) {
       if (this.joy.active) this.releaseJoy();
       this.activePointers.delete(id);
@@ -2265,14 +2298,16 @@ Input.layout = function (W, H) {
   const joyInset = Math.max(64 + safe.left, W * 0.12);
   const marginR = Math.max(10 + safe.right, W * 0.035);
   const ax = W - marginR;
+  const stackTight = W < 400 && H > W;
+  const bxOff = stackTight ? 2.35 : 2.05;
   Input.joyHome = { x: joyInset, y: bottomY - 8 };
   Input.buttons = [
-    { id: 'punch', x: ax - r * 2.05, y: bottomY - r * 0.15, r, label: '\u{1F44A}', color: '#e0533f' },
-    { id: 'kick', x: ax - r * 0.55, y: bottomY - r * 0.82, r, label: '\u{1F9B6}', color: '#3f8fe0' },
-    { id: 'weapon', x: ax - r * 2.38, y: bottomY - r * 1.62, r, label: '\u{1F52A}', color: '#9b59d0' },
-    { id: 'special', x: ax - r * 1.12, y: bottomY - r * 1.92, r, label: '\u{1F300}', color: '#3db8ff' },
-    { id: 'subst', x: ax - r * 3.15, y: bottomY - r * 1.28, r: rs, label: '\u{1F4A8}', color: '#c9a66b' },
-    { id: 'jump', x: ax - r * 3.28, y: bottomY - r * 0.02, r: rs, label: '\u2B06\uFE0F', color: '#43b25b' },
+    { id: 'punch', x: ax - r * bxOff, y: bottomY - r * 0.15, r, label: '\u{1F44A}', color: '#e0533f' },
+    { id: 'kick', x: ax - r * 0.55, y: bottomY - r * (stackTight ? 0.72 : 0.82), r, label: '\u{1F9B6}', color: '#3f8fe0' },
+    { id: 'weapon', x: ax - r * (stackTight ? 2.65 : 2.38), y: bottomY - r * (stackTight ? 1.48 : 1.62), r, label: '\u{1F52A}', color: '#9b59d0' },
+    { id: 'special', x: ax - r * 1.12, y: bottomY - r * (stackTight ? 1.78 : 1.92), r, label: '\u{1F300}', color: '#3db8ff' },
+    { id: 'subst', x: ax - r * (stackTight ? 2.85 : 3.15), y: bottomY - r * 1.28, r: rs, label: '\u{1F4A8}', color: '#c9a66b' },
+    { id: 'jump', x: ax - r * (stackTight ? 2.95 : 3.28), y: bottomY - r * 0.02, r: rs, label: '\u2B06\uFE0F', color: '#43b25b' },
   ];
 };
 
@@ -2331,6 +2366,7 @@ let resizeDebounce = null;
 
 function resize() {
   const vp = viewportGameSize();
+  syncViewportCssVars(vp);
   DPR = Math.min(devicePixelRatio || 1, maxCanvasDpr());
   W = vp.w;
   H = vp.h;
@@ -2362,6 +2398,7 @@ if (typeof window !== 'undefined' && window.visualViewport) {
   window.visualViewport.addEventListener('resize', scheduleResize);
   window.visualViewport.addEventListener('scroll', scheduleResize);
 }
+window.addEventListener('pageshow', () => scheduleResize());
 
 canvas.addEventListener('pointerdown', e => {
   if (state !== 'play' || !game) return;
@@ -5059,7 +5096,8 @@ class Game {
     }
     // spelerbalk (niet in 2P — eigen layout)
     const bw = Math.min(240, W * 0.32);
-    const bx = 16, by = 18;
+    const bx = Math.max(12, readSafeInsets().left + 8);
+    const by = hudInsetTop();
     if (this.mode !== 'versus') {
       c.fillStyle = 'rgba(0,0,0,.45)';
       this.rr(c, bx - 4, by - 4, bw + 8, 52, 10); c.fill();
