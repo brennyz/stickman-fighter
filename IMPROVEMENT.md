@@ -11,13 +11,25 @@ Live spel (vaste URL): **https://brennyz.github.io/stickman-fighter/**
 Elk gezicht = één thema. **Roll** = kies willekeurig uit wat nog in de zak zit. Pas als alle **20** geweest zijn → nieuwe cyclus (opnieuw shufflen, geen herhaling binnen een cyclus).
 
 ```bash
-chmod +x scripts/roll-improvement-d20.sh
-./scripts/roll-improvement-d20.sh
+chmod +x scripts/roll-improvement-d20.sh scripts/mark-d20-done.sh
+./scripts/roll-improvement-d20.sh status      # zak + PENDING
+./scripts/roll-improvement-d20.sh            # roll (preflight + pending-lock)
+./scripts/roll-improvement-d20.sh unroll     # pending terug in zak
+./scripts/roll-improvement-d20.sh preflight  # node --check + smoke load
+./scripts/mark-d20-done.sh 7 "korte note" 1.8.9
 ```
 
-Staat van de zak: `improvement-d20-bag.json` (commit na elke roll + na elke afgeronde verbetering).
+Staat: `improvement-d20-bag.json` (commit na roll + na afronden).
 
-**d20 v2:** `./scripts/roll-improvement-d20.sh status` · per roll een **Focus**-regel · optioneel `./scripts/mark-d20-done.sh 6 "Audio mute pauze" 1.8.4` na commit.
+**d20 v3:** open roll = **PENDING** (geen tweede roll tot `mark-d20-done` of `unroll`) · preflight vangt load-crashes · `history` · `force` zet oude pending terug vóór nieuwe roll.
+
+### Diagnose — Chrome “tap feedback, geen actie” (2026-07-23)
+
+| Symptoom | Oorzaak | Fix |
+|----------|---------|-----|
+| Knop deukt in (CSS `:active`), geen schermwissel | `game.js` crashte vóór `addEventListener` | `MAX_LEVEL` vóór `sanitizeSave()` (v1.8.9) |
+| Menu dood op iPad/PWA | canvas + tunnel-overlay vingen touches | canvas hidden buiten play; overlay `pointer-events:none` (v1.8.8) |
+| Detectie | `node scripts/smoke-load-game.mjs` | zit in d20 **preflight** |
 
 ### Review — laatste 8 rolls (2026-07-23)
 
@@ -32,7 +44,7 @@ Staat van de zak: `improvement-d20-bag.json` (commit na elke roll + na elke afge
 | **18** Char select | Goed — UI/stats; geen roster balance. |
 | **12** Content | Goed — dex/cosmetic; geen loop-slop. |
 
-**Conclusie:** ja, goede weg — blijf **één thema**, checklist, SW bump. Open gaten: **deploy push** (403), resterende zak **d6,d7,d8,d13,d14,d20** (d6 was gerold maar nog niet gebouwd).
+**Conclusie:** ja, goede weg — blijf **één thema**, checklist, SW bump. Open: **deploy push** (403), zak **d6,d7,d8,d13,d14,d20**.
 
 | d# | Categorie | Voorbeelden (klein & veilig) |
 |----|-----------|------------------------------|
@@ -92,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | — | **d20 v3:** PENDING-lock, unroll, preflight (check+smoke), history/force. Smoke script. Diagnose tap=load-crash. |
 | 2026-07-23 | — | **Chrome tap fix:** `MAX_LEVEL` vóór `sanitizeSave()` — game.js crashte, geen handlers. v1.8.9 / SW v37. |
 | 2026-07-23 | **3** | Versus 2P: spawn/round reset, timer-urgency HUD, match-point dots, TIME banner, pauze-score, rematch toast. v1.8.6 / SW v34. |
 | 2026-07-23 | **17** | Stabiliteit: startGame/loop recovery, save-import fouten, persist-waarschuwing. v1.8.5 / SW v33. |
@@ -118,11 +131,12 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 ## Workflow voor agents
 
 1. Open **IMPROVEMENT.md** (dit bestand).
-2. Run **`./scripts/roll-improvement-d20.sh`** (of user zegt “roll”).
-3. Werk **alleen** het gerolde thema af — kleine diff.
-4. Checklist hierboven afvinken.
-5. Regel in **Agent log** + commit `improvement-d20-bag.json` als die gewijzigd is.
-6. Push naar **main** → Pages update (geen tunnel nodig).
+2. Run **`./scripts/roll-improvement-d20.sh status`** — check PENDING.
+3. Run **`./scripts/roll-improvement-d20.sh`** (of user zegt “roll”) — preflight + één face.
+4. Werk **alleen** dat thema af — kleine diff. Bij vergissing: `unroll`.
+5. Checklist + **`node --check game.js`** + **`node scripts/smoke-load-game.mjs`**.
+6. `./scripts/mark-d20-done.sh <d#> "note" <version>` · Agent log · commit bag.
+7. Push naar **main** → Pages update (geen tunnel nodig).
 
 ---
 

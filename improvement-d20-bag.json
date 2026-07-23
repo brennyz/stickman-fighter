@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "cyclesCompleted": 0,
   "remaining": [
     6,
@@ -145,5 +145,6 @@
       "remainingCount": 5,
       "cycle": 0
     }
-  ]
+  ],
+  "pending": null
 }
