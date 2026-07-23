@@ -56,7 +56,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.8.2';
+const APP_VERSION = '1.8.3';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -472,6 +472,68 @@ async function resolveSharePlayUrl() {
 function headLiveFromPage() {
   if (location.protocol === 'file:') return '';
   return location.origin + location.pathname.replace(/\/[^/]*$/, '/');
+}
+
+function headLiveFromPage() {
+  if (location.protocol === 'file:') return '';
+  return location.origin + location.pathname.replace(/\/[^/]*$/, '/');
+}
+
+function ensureTipsSeen() {
+  if (!save.tipsSeen || typeof save.tipsSeen !== 'object') save.tipsSeen = {};
+}
+
+function showModeOnboarding(mode) {
+  ensureTipsSeen();
+  const key = 'mode_' + mode;
+  if (save.tipsSeen[key]) return;
+  const msgs = {
+    adventure: 'Avontuur: groen=HP · oranje=rage · blauw=chakra/schild · vol chakra → 🌀',
+    training: 'Training: ontwijk lasers · vol chakra → 🌀 · 2 rondes winnen',
+    wall: 'Muur: combo = sneller sloop · beat je record vóór timer 0',
+    versus: '2 spelers: P1 links · P2 rechts · liggend iPad · best-of-3',
+  };
+  if (!msgs[mode]) return;
+  save.tipsSeen[key] = 1;
+  if (mode === 'adventure' || mode === 'training') save.tipsSeen.chakra = 1;
+  persist();
+  setTimeout(() => UI.toast(msgs[mode], 4400), 900);
+}
+
+function playModeHint(g, mode) {
+  if (!g) return;
+  ensureTipsSeen();
+  const key = 'hint_' + mode;
+  if (save.tipsSeen[key]) return;
+  save.tipsSeen[key] = 1;
+  persist();
+  const touch = IS_TOUCH;
+  const lines = {
+    adventure: touch
+      ? 'Eerste minuut: links joystick · rechts slaan · pak groene bolletjes'
+      : 'Eerste minuut: A/D lopen · J/K/L slaan · groene bol = HP',
+    training: touch
+      ? 'Eerste minuut: ontwijk · vol chakra-balk → tik 🌀'
+      : 'Eerste minuut: ontwijk · chakra vol → U (speciaal)',
+    wall: touch
+      ? 'Eerste minuut: sla snel achter elkaar · combo telt mee'
+      : 'Eerste minuut: combo = meer schade per steen',
+    versus: touch
+      ? 'Eerste minuut: P1 linker helft · P2 rechter helft'
+      : 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+123',
+  };
+  g.modeHintLine = lines[mode] || lines.adventure;
+  g.hint = 7.5;
+}
+
+function maybeWelcomeToast() {
+  ensureTipsSeen();
+  if (save.tipsSeen.welcome) return;
+  save.tipsSeen.welcome = 1;
+  persist();
+  setTimeout(() => {
+    UI.toast('Welkom! Kies Avontuur of Training · ❓ Tips = volledige uitleg', 4800);
+  }, 1400);
 }
 
 const xpNeed = lvl => 60 + (lvl - 1) * 40;
@@ -2467,7 +2529,7 @@ class Game {
     this.pickups = this.pickups || [];
     this.banner(`LEVEL ${n}`, 1.4, '#ffd75e', 54);
     AudioSys.play(this.level.boss ? 'boss' : 'battle');
-    if (n === 1 && save.lvl === 1) this.hint = 6;
+    if (n === 1 && save.lvl === 1 && !save.tipsSeen.hint_adventure) this.hint = 6;
   }
 
   nextWave() {
@@ -2748,7 +2810,7 @@ class Game {
     this.p2 = buildVsFighter(vsRosterEntry(this.p2Pick), W * 0.72, 2);
     this.startVsRound();
     AudioSys.play('boss');
-    this.hint = 5;
+    if (!save.tipsSeen.hint_versus) this.hint = 5;
   }
 
   startVsRound() {
@@ -3326,15 +3388,17 @@ class Game {
       c.globalAlpha = clamp(this.hint, 0, 1);
       c.font = '600 15px -apple-system, sans-serif';
       c.fillStyle = '#fff'; c.textAlign = 'center';
-      let hintTxt;
-      if (Input.dualMode && IS_TOUCH) {
-        hintTxt = 'P1 = linker helft · P2 = rechter helft · joystick + aanvalsknoppen';
-      } else if (Input.dualMode) {
-        hintTxt = 'P1: A/D · W · J/K/L/U · Shift  |  P2: pijltjes · 1/2/3/4/5';
-      } else if (IS_TOUCH) {
-        hintTxt = 'Links: joystick om te lopen · Rechts: aanvalsknoppen';
-      } else {
-        hintTxt = 'A/D lopen · W springen · J stomp · K trap · L wapen · U speciaal';
+      let hintTxt = this.modeHintLine;
+      if (!hintTxt) {
+        if (Input.dualMode && IS_TOUCH) {
+          hintTxt = 'P1 = linker helft · P2 = rechter helft · joystick + aanvalsknoppen';
+        } else if (Input.dualMode) {
+          hintTxt = 'P1: A/D · W · J/K/L/U · Shift  |  P2: pijltjes · 1/2/3/4/5';
+        } else if (IS_TOUCH) {
+          hintTxt = 'Links: joystick om te lopen · Rechts: aanvalsknoppen';
+        } else {
+          hintTxt = 'A/D lopen · W springen · J stomp · K trap · L wapen · U speciaal';
+        }
       }
       c.fillText(hintTxt, W / 2, H * 0.2);
       c.globalAlpha = 1;
@@ -4216,24 +4280,8 @@ function startGame(mode, opts) {
   state = 'play';
   document.body.classList.add('is-playing');
   recordLastPlay(mode, opts);
-  if (!save.tipsSeen) save.tipsSeen = {};
-  if (!save.tipsSeen.chakra) {
-    save.tipsSeen.chakra = 1;
-    persist();
-    setTimeout(() => UI.toast('🌀 Rasengan: vecht → chakra vol → tik 🌀 (speciaal)', 4200), 900);
-  }
-  const modeTips = {
-    training: ['tipTraining', 'Training: duck lasers · chakra vol → 🌀 Rasengan'],
-    versus: ['tipVersus', '2P: P1 links · P2 rechts · liggend houden'],
-    wall: ['tipWall', 'Muur: hou je combo vast voor snellere sloop'],
-    adventure: ['tipAdventure', 'Avontuur: groen = HP · oranje = rage · blauw = chakra/schild'],
-  };
-  const tip = modeTips[mode];
-  if (tip && !save.tipsSeen[tip[0]]) {
-    save.tipsSeen[tip[0]] = 1;
-    persist();
-    setTimeout(() => UI.toast(tip[1], 3800), 1400);
-  }
+  showModeOnboarding(mode);
+  playModeHint(game, mode);
   UI.show(null);
   if (mode === 'training') AudioSys.play('boss');
   else if (mode === 'adventure') AudioSys.play(game.level.boss ? 'boss' : 'battle');
@@ -4557,6 +4605,7 @@ function bootGame() {
   checkAchievements();
   updateNetStatus();
   UI.syncTouchClass();
+  maybeWelcomeToast();
   try {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     const onMq = () => syncA11yClasses();

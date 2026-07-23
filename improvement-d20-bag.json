@@ -9,15 +9,14 @@
     8,
     13,
     14,
-    15,
     17,
     20
   ],
   "lastRoll": {
-    "face": 1,
-    "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
-    "rolledAt": "2026-07-23T13:32:25Z",
-    "remainingCount": 10,
+    "face": 15,
+    "category": "Onboarding \u2014 tips, eerste speelminuut, help",
+    "rolledAt": "2026-07-23T13:33:23Z",
+    "remainingCount": 9,
     "cycle": 0
   },
   "history": [
@@ -89,6 +88,13 @@
       "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
       "rolledAt": "2026-07-23T13:32:25Z",
       "remainingCount": 10,
+      "cycle": 0
+    },
+    {
+      "face": 15,
+      "category": "Onboarding \u2014 tips, eerste speelminuut, help",
+      "rolledAt": "2026-07-23T13:33:23Z",
+      "remainingCount": 9,
       "cycle": 0
     }
   ]
