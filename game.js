@@ -60,9 +60,9 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.12.12';
+const APP_VERSION = '1.12.13';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 75;
+const SW_CACHE_REV = 76;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1356,8 +1356,33 @@ function buildVsFighter(entry, x, slot) {
   return f;
 }
 
+function applyVsArenaBounds(game) {
+  const pad = Math.max(28, W * 0.04);
+  const gap = Math.max(32, W * 0.035);
+  game.vsMid = W * 0.5;
+  game.p1MaxX = game.vsMid - gap * 0.5;
+  game.p2MinX = game.vsMid + gap * 0.5;
+  game.minX = pad;
+  game.maxX = W - pad;
+}
+
+function fighterMoveXBounds(f, game) {
+  let min = game.minX ?? 40;
+  let max = game.maxX ?? W - 40;
+  if (game.mode === 'versus' && f.playerSlot === 1) max = Math.min(max, game.p1MaxX ?? max);
+  if (game.mode === 'versus' && f.playerSlot === 2) min = Math.max(min, game.p2MinX ?? min);
+  return { min, max };
+}
+
+function clampFighterX(f, game, x) {
+  const b = fighterMoveXBounds(f, game);
+  return clamp(x, b.min, b.max);
+}
+
 function vsSpawnX(slot) {
-  return W * (slot === 1 ? 0.28 : 0.72);
+  const pad = Math.max(40, W * 0.08);
+  const usable = Math.max(80, W - pad * 2);
+  return slot === 1 ? pad + usable * 0.2 : W - pad - usable * 0.2;
 }
 
 function resetVsFighterRound(f, entry, ground, slot) {
@@ -1379,7 +1404,8 @@ function resetVsFighterRound(f, entry, ground, slot) {
   f.blockT = 0;
   f.energy = 40;
   f.substCd = 0;
-  f.invulnT = 0;
+  f.invulnT = 0.55;
+  f.alive = true;
   f.hitFlashT = 0;
   f.afterimages = [];
   f.dashCd = 0;
@@ -2636,7 +2662,7 @@ class Fighter {
     const dir = this.face || 1;
     const pad = this.playerSlot === 2 ? InputP2 : Input;
     const dashDir = Math.abs(pad.move) > 0.2 ? Math.sign(pad.move) : dir;
-    this.x = clamp(this.x + dashDir * 140, game.minX, game.maxX);
+    this.x = clampFighterX(this, game, this.x + dashDir * 140);
     this.vx = dashDir * 420;
     game.floater(this.x, this.y - 100, 'Substitutie!', '#c9a66b', 14);
     game.shake(2, 0.08);
@@ -2647,7 +2673,7 @@ class Fighter {
     this.dashCd = 0.85;
     this.invulnT = Math.max(this.invulnT, 0.14);
     AudioSys.sfx('dash');
-    this.x = clamp(this.x + dir * 98, game.minX, game.maxX);
+    this.x = clampFighterX(this, game, this.x + dir * 98);
     this.vx = dir * 340;
     game.burst(this.x, this.y - 38, this.style?.accent || '#7cf5ff', 8);
     game.floater(this.x, this.y - 92, 'Dash!', '#7cf5ff', 12);
@@ -2785,7 +2811,7 @@ class Fighter {
       if (!this.onGround && this.vy > 300) AudioSys.sfx('land');
       this.y = game.ground; this.vy = 0; this.onGround = true;
     } else this.onGround = false;
-    this.x = clamp(this.x, game.minX, game.maxX);
+    this.x = clampFighterX(this, game, this.x);
 
     // aanval-timing
     if (this.attack) {
@@ -3666,6 +3692,15 @@ class Game {
   onResize() {
     this.ground = playfieldGroundY(H, W);
     this.maxX = W - 40;
+    if (this.mode === 'versus' && this.p2) {
+      applyVsArenaBounds(this);
+      Input.dualMode = true;
+      Input.layout(W, H);
+      this.player.x = vsSpawnX(1);
+      this.player.y = this.ground;
+      this.p2.x = vsSpawnX(2);
+      this.p2.y = this.ground;
+    }
     if (this.mode === 'wall') this.layoutWall(false);
   }
 
@@ -4008,6 +4043,7 @@ class Game {
     vsSelect.p1 = this.p1Pick;
     vsSelect.p2 = this.p2Pick;
     trackVsRosterUse(this.p1Pick, this.p2Pick);
+    applyVsArenaBounds(this);
     this.player = buildVsFighter(vsRosterEntry(this.p1Pick), vsSpawnX(1), 1);
     this.p2 = buildVsFighter(vsRosterEntry(this.p2Pick), vsSpawnX(2), 2);
     this.startVsRound();
@@ -4075,7 +4111,7 @@ class Game {
       title: p1Win ? 'SPELER 1 WINT!' : 'SPELER 2 WINT!',
       detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}`,
       xp: this.sessionXP, mode: 'versus', win: p1Win, p1: this.p1Pick, p2: this.p2Pick,
-      tip: 'Opnieuw = rematch · Menu = andere vechters kiezen',
+      tip: 'Opnieuw = rematch · Pauze → Herstart match (0-0)',
     }), 1200);
   }
 
@@ -4691,6 +4727,27 @@ class Game {
     }
     drawBackground(c, this.theme, this.t, this.ground);
 
+    if (this.mode === 'versus' && this.vsMid) {
+      c.save();
+      c.strokeStyle = 'rgba(255,255,255,.09)';
+      c.setLineDash([8, 12]);
+      c.lineWidth = 2;
+      c.beginPath();
+      c.moveTo(this.vsMid, this.ground - 100);
+      c.lineTo(this.vsMid, H);
+      c.stroke();
+      c.setLineDash([]);
+      c.font = '800 10px sans-serif';
+      c.fillStyle = 'rgba(124,245,255,.5)';
+      c.textAlign = 'left';
+      c.fillText('P1', Math.max(10, this.minX), this.ground - 6);
+      c.fillStyle = 'rgba(255,176,184,.5)';
+      c.textAlign = 'right';
+      c.fillText('P2', Math.min(W - 10, this.maxX), this.ground - 6);
+      c.textAlign = 'center';
+      c.restore();
+    }
+
     if (this.mode === 'adventure' && this.pickups) {
       for (const pk of this.pickups) {
         const meta = PICKUP_META[pk.kind];
@@ -5258,67 +5315,79 @@ class Game {
       c.fillText('Joystick ↑ mik · shuriken op roze vliegers (+3)', W / 2, 112);
     } else if (this.mode === 'versus' && this.p2) {
       const p2 = this.p2;
-      const half = Math.min(280, W * 0.34);
+      const half = Math.min(260, W * 0.38);
+      const safeTop = readSafeInsets().top;
+      const byVs = Math.max(by, safeTop + 52);
       const name1 = vsRosterEntry(this.p1Pick).name;
       const name2 = vsRosterEntry(this.p2Pick).name;
-      c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, bx - 4, by - 4, half + 8, 44, 10); c.fill();
-      c.fillStyle = '#333c55'; this.rr(c, bx, by, half, 14, 6); c.fill();
+      if (this.phase === 'intro' && this.phaseT < 1.55) {
+        const n = Math.ceil(Math.max(0.35, 1.55 - this.phaseT));
+        c.font = '900 48px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.92)';
+        c.fillText(String(n), W / 2, H * 0.4);
+        c.font = '700 13px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.65)';
+        c.fillText('Spawn · eerlijk start', W / 2, H * 0.4 + 28);
+      }
+      c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, bx - 4, byVs - 4, half + 8, 44, 10); c.fill();
+      c.fillStyle = '#333c55'; this.rr(c, bx, byVs, half, 14, 6); c.fill();
       c.fillStyle = p.hp / p.maxhp > 0.35 ? '#6ee06e' : '#ff6b6b';
-      this.rr(c, bx, by, half * clamp(p.hp / p.maxhp, 0, 1), 14, 6); c.fill();
+      this.rr(c, bx, byVs, half * clamp(p.hp / p.maxhp, 0, 1), 14, 6); c.fill();
       c.font = '800 11px sans-serif'; c.textAlign = 'left'; c.fillStyle = '#7cf5ff';
-      c.fillText(`P1 · ${name1}`, bx, by + 30);
-      c.fillStyle = '#333c55'; this.rr(c, bx, by + 34, half, 5, 3); c.fill();
-      this.drawSuperMeterFill(c, bx, by + 34, half, 5, p.energy / 100, fighterJutsuKind(p), this.t);
+      c.fillText(`P1 · ${name1}`, bx, byVs + 30);
+      c.fillStyle = '#333c55'; this.rr(c, bx, byVs + 34, half, 5, 3); c.fill();
+      this.drawSuperMeterFill(c, bx, byVs + 34, half, 5, p.energy / 100, fighterJutsuKind(p), this.t);
 
-      c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, W - half - 20, by - 4, half + 8, 44, 10); c.fill();
-      c.fillStyle = '#333c55'; this.rr(c, W - half - 16, by, half, 14, 6); c.fill();
+      c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, W - half - 20, byVs - 4, half + 8, 44, 10); c.fill();
+      c.fillStyle = '#333c55'; this.rr(c, W - half - 16, byVs, half, 14, 6); c.fill();
       c.fillStyle = '#ff8080';
       const frac2 = clamp(p2.hp / p2.maxhp, 0, 1);
-      this.rr(c, W - 16 - half * frac2, by, half * frac2, 14, 6); c.fill();
+      this.rr(c, W - 16 - half * frac2, byVs, half * frac2, 14, 6); c.fill();
       c.textAlign = 'right'; c.fillStyle = '#ffb0b8';
-      c.fillText(`${name2} · P2`, W - 20, by + 30);
-      c.fillStyle = '#333c55'; this.rr(c, W - half - 16, by + 34, half, 5, 3); c.fill();
-      this.drawSuperMeterFill(c, W - half - 16, by + 34, half, 5, p2.energy / 100, fighterJutsuKind(p2), this.t);
+      c.fillText(`${name2} · P2`, W - 20, byVs + 30);
+      c.fillStyle = '#333c55'; this.rr(c, W - half - 16, byVs + 34, half, 5, 3); c.fill();
+      this.drawSuperMeterFill(c, W - half - 16, byVs + 34, half, 5, p2.energy / 100, fighterJutsuKind(p2), this.t);
 
       c.textAlign = 'center';
       const tLeft = Math.ceil(Math.max(0, this.roundTimer));
       const urgent = this.roundTimer < 15 && this.phase === 'fight';
       c.font = urgent ? '900 28px sans-serif' : '900 26px sans-serif';
       c.fillStyle = urgent ? '#ff9a9a' : '#fff';
+      const timerY = byVs + 58;
       if (urgent && !motionReduced()) {
         c.save();
-        c.translate(W / 2, 38);
+        c.translate(W / 2, timerY);
         c.scale(1 + Math.sin(this.t * 10) * 0.05, 1 + Math.sin(this.t * 10) * 0.05);
         c.fillText(String(tLeft), 0, 0);
         c.restore();
       } else {
-        c.fillText(String(tLeft), W / 2, 38);
+        c.fillText(String(tLeft), W / 2, timerY);
       }
       c.font = '800 12px sans-serif'; c.fillStyle = 'rgba(255,255,255,.75)';
-      c.fillText(`Ronde ${this.round} · eerst 2 wint · ${this.roundsP1}-${this.roundsP2}`, W / 2, 56);
+      c.fillText(`Ronde ${this.round} · eerst 2 wint · ${this.roundsP1}-${this.roundsP2}`, W / 2, timerY + 18);
       const mp1 = this.roundsP1 === 1 && this.roundsP2 < 2;
       const mp2 = this.roundsP2 === 1 && this.roundsP1 < 2;
       for (let i = 0; i < 2; i++) {
         const litP1 = i < this.roundsP1;
         c.fillStyle = litP1 ? '#7cf5ff' : 'rgba(255,255,255,.22)';
         if (mp1 && i === 1) c.fillStyle = '#ffd75e';
-        c.beginPath(); c.arc(W / 2 - 40 - i * 16, 72, mp1 && i === 1 ? 6 : 5, 0, TAU); c.fill();
+        c.beginPath(); c.arc(W / 2 - 40 - i * 16, timerY + 34, mp1 && i === 1 ? 6 : 5, 0, TAU); c.fill();
         const litP2 = i < this.roundsP2;
         c.fillStyle = litP2 ? '#ffb0b8' : 'rgba(255,255,255,.22)';
         if (mp2 && i === 1) c.fillStyle = '#ffd75e';
-        c.beginPath(); c.arc(W / 2 + 40 + i * 16, 72, mp2 && i === 1 ? 6 : 5, 0, TAU); c.fill();
+        c.beginPath(); c.arc(W / 2 + 40 + i * 16, timerY + 34, mp2 && i === 1 ? 6 : 5, 0, TAU); c.fill();
       }
       if (p.energy >= 100) {
         const k1 = fighterJutsuKind(p);
         c.font = '800 10px sans-serif'; c.fillStyle = jutsuAccentColor(k1, false);
         c.textAlign = 'left';
-        c.fillText(jutsuBtnIcon(k1, 1), bx + half - 14, by + 12);
+        c.fillText(jutsuBtnIcon(k1, 1), bx + half - 14, byVs + 12);
       }
       if (p2.energy >= 100) {
         const k2 = fighterJutsuKind(p2);
         c.font = '800 10px sans-serif'; c.fillStyle = jutsuAccentColor(k2, true);
         c.textAlign = 'right';
-        c.fillText(jutsuBtnIcon(k2, 1), W - 20, by + 12);
+        c.fillText(jutsuBtnIcon(k2, 1), W - 20, byVs + 12);
         c.textAlign = 'center';
       }
     }
@@ -5545,6 +5614,10 @@ const UI = {
 
   refreshPauseSubtitle() {
     const sub = document.querySelector('#pauseScreen .subtitle');
+    const vsRestart = document.getElementById('pauseVsRestart');
+    if (vsRestart) {
+      vsRestart.style.display = (game?.mode === 'versus' && state === 'play') ? 'flex' : 'none';
+    }
     if (!sub) return;
     if (game?.mode === 'versus' && game.p2) {
       const a = vsRosterEntry(game.p1Pick).name;
@@ -6667,6 +6740,19 @@ bindPress(document.getElementById('pauseResume'), () => {
   UI.show(null);
 });
 bindPress(document.getElementById('pauseQuit'), () => { UI.goMenu(); });
+const pauseVsRestart = document.getElementById('pauseVsRestart');
+if (pauseVsRestart) {
+  bindPress(pauseVsRestart, () => {
+    if (!game || game.mode !== 'versus' || state !== 'play') return;
+    AudioSys.sfx('select');
+    const p1 = game.p1Pick || vsSelect.p1;
+    const p2 = game.p2Pick || vsSelect.p2;
+    vsSelect.p1 = p1;
+    vsSelect.p2 = p2;
+    UI.toast(`Herstart · ${vsRosterEntry(p1).name} vs ${vsRosterEntry(p2).name}`, 2400);
+    startGame('versus', { p1, p2 });
+  });
+}
 bindPress(document.getElementById('resAgain'), () => {
   const d = UI.lastResult;
   AudioSys.sfx('select');

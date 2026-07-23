@@ -3,7 +3,6 @@
   "cyclesCompleted": 1,
   "rollFirst": [],
   "remaining": [
-    3,
     6,
     7,
     9,
@@ -13,10 +12,10 @@
     20
   ],
   "lastRoll": {
-    "face": 8,
-    "category": "PWA & offline \u2014 SW cache, install, standalone",
-    "rolledAt": "2026-07-23T18:25:32Z",
-    "remainingCount": 8,
+    "face": 3,
+    "category": "Versus 2P \u2014 split controls, rematch, char balance",
+    "rolledAt": "2026-07-23T18:26:52Z",
+    "remainingCount": 7,
     "cycle": 1
   },
   "pending": null,
@@ -180,6 +179,13 @@
       "note": "Offline banner + SW v75 network-first manifest",
       "version": "1.12.12",
       "doneAt": "2026-07-23T18:26:30Z",
+      "cycle": 1
+    },
+    {
+      "face": 3,
+      "note": "2P arena spawn/HUD/rematch pause herstart",
+      "version": "1.12.13",
+      "doneAt": "2026-07-23T18:28:29Z",
       "cycle": 1
     }
   ],
@@ -491,6 +497,13 @@
       "category": "PWA & offline \u2014 SW cache, install, standalone",
       "rolledAt": "2026-07-23T18:25:32Z",
       "remainingCount": 8,
+      "cycle": 1
+    },
+    {
+      "face": 3,
+      "category": "Versus 2P \u2014 split controls, rematch, char balance",
+      "rolledAt": "2026-07-23T18:26:52Z",
+      "remainingCount": 7,
       "cycle": 1
     }
   ]
