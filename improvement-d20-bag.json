@@ -283,6 +283,18 @@
   ],
   "userFeatureLog": [
     {
+      "id": "level-pace-balancing",
+      "d20Face": null,
+      "userWords": "Balancing please, leveling pace, game needs to take a wee bit more time",
+      "versions": [
+        "1.14.3"
+      ],
+      "commits": [],
+      "code": "xpNeed pace-factor (+15% vroeg tot +50% vanaf ~Lv18), trainWins XP-cap min(trainWins,12)",
+      "status": "done",
+      "note": "off-d20 user feature; alleen XP-curve/cap, geen dmg of rewards-feel aangepast"
+    },
+    {
       "id": "char-select-deel-1-2",
       "d20Face": 18,
       "userWords": "character screens in twee delen, saga icons, 2 spelers",

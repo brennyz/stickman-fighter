@@ -168,6 +168,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-23 | — | **IMPROVEMENT.md + Ralph d20** toegevoegd. Gameplay: canvas tikken alleen bij `state==='play'`. v1.7.2 / SW v20. |
 | 2026-07-23 | — | GitHub Pages live `brennyz.github.io/stickman-fighter/`. iPad: menu niet klikbaar → pointer-events fix. |
 | 2026-07-23 | 14 | v1.7 combo pulse, low-HP vignette, result tips. |
+| 2026-07-23 | — | **User balancing:** level-pacing rustiger — `xpNeed` pace-factor (+15% vroeg → +50% vanaf ~Lv 18, totaal ~45% meer speeltijd Lv 1→31) + training-win XP-cap (×12). Geen dmg/rewards-feel gewijzigd. v1.14.3 / SW v101. |
 | 2026-07-23 | **16** | Hosting (cyclus 2): share/copy altijd Pages `speel.html`; tunnel-URL verstopt in instellingen (alleen zichtbaar op tunnel); LIVE-LINK zonder tunnel-https; tunnel-boot CTA → Pages primair. v1.14.2 / SW v100. |
 | 2026-07-23 | — | **User (deel 2/3):** Decor evolueert per stage-deel — schemer richting einde, rotsen vanaf deel 2, arena-fakkels in deel 3 (+rode gloed bij baas); volgende golf loopt als silhouetten binnen tijdens de reis. v1.14.1 / SW v99. |
 | 2026-07-23 | — | **User (deel 1/3):** Bewegend decor — wereld scrollt tussen golven (parallax heuvels/deco/grondstrepen), speler loopt door; stage-voortgangsbalk in 3 delen met bolletje + baas-vlag. v1.14.0 / SW v98. |

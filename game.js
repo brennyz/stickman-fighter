@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 1;
-const APP_VERSION = '1.14.2';
+const APP_VERSION = '1.14.3';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 100;
+const SW_CACHE_REV = 101;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1179,7 +1179,12 @@ function maybeWelcomeToast() {
   }, 2400);
 }
 
-const xpNeed = lvl => 60 + (lvl - 1) * 40;
+/** Level-pacing v1.14.3: iets rustiger — +15% vroeg, oplopend tot +50% vanaf ~Lv 18. */
+const xpNeed = (lvl) => {
+  const base = 60 + (lvl - 1) * 40;
+  const pace = 1.15 + Math.min(0.35, (lvl - 1) * 0.02);
+  return Math.round(base * pace / 5) * 5;
+};
 const dexCount = () => Object.keys(save.dex).length;
 function dexRarityTierCount() {
   const tiers = new Set();
@@ -5108,7 +5113,7 @@ class Game {
     if (this.over) return;
     this.over = true; this.inputLocked = true;
     let xp = 0;
-    if (win) { save.trainWins++; persist(); xp = 70 + save.trainWins * 20; this.grantXP(xp);
+    if (win) { save.trainWins++; persist(); xp = 70 + Math.min(save.trainWins, 12) * 20; this.grantXP(xp);
       bumpDaily('trainWin', 1);
       checkAchievements();
       if (save.trainWins === 3) UI.toast('Stijl vrij: Chakra gloed!', 3200);
