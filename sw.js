@@ -1,5 +1,5 @@
 /* Stickman Fighter — offline cache voor PWA / “app op beginscherm” */
-const CACHE = 'stickfighter-app-v16';
+const CACHE = 'stickfighter-app-v17';
 const ASSETS = [
   './',
   './index.html',
@@ -37,18 +37,32 @@ self.addEventListener('fetch', (event) => {
     || url.pathname === '/hosting.json';
 
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const net = fetch(event.request)
-        .then((res) => {
+    (async () => {
+      const isDoc = event.request.mode === 'navigate'
+        || (event.request.headers.get('accept') || '').includes('text/html');
+      const netFirstDoc = isDoc || netFirst;
+      if (netFirstDoc) {
+        try {
+          const res = await fetch(event.request);
           if (res && res.status === 200 && !netFirst) {
             const copy = res.clone();
             caches.open(CACHE).then((c) => c.put(event.request, copy));
           }
           return res;
-        })
-        .catch(() => cached);
-      if (netFirst) return net.catch(() => cached);
-      return cached || net;
-    })
+        } catch (e) {
+          const cached = await caches.match(event.request);
+          if (cached) return cached;
+          throw e;
+        }
+      }
+      const cached = await caches.match(event.request);
+      if (cached) return cached;
+      const res = await fetch(event.request);
+      if (res && res.status === 200) {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(event.request, copy));
+      }
+      return res;
+    })()
   );
 });

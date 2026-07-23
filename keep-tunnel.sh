@@ -13,11 +13,12 @@ TUNNEL_BACKEND="${TUNNEL_BACKEND:-localtunnel}"
 LT_SUBDOMAIN="${LT_SUBDOMAIN:-stickfighter-ipad-b75e}"
 CURL_HDR=(-H "Bypass-Tunnel-Reminder: true" -H "User-Agent: StickmanFighter-TunnelCheck/1.6")
 
-exec 9>"$LOCK_FILE"
-if ! flock -n 9; then
-  echo "tunnel busy (another keep-tunnel running)" >&2
-  exit 0
-fi
+with_lock() {
+  (
+    flock -x 9
+    "$@"
+  ) 9>"$LOCK_FILE"
+}
 
 ensure_server() {
   if curl -sf "http://127.0.0.1:$PORT/" >/dev/null; then return 0; fi
@@ -38,8 +39,8 @@ url_ok() {
     return 1
   fi
   local code body
-  body=$(curl -sS "${CURL_HDR[@]}" --max-time 22 "$u/index.html" 2>/dev/null) || body=""
-  code=$(curl -sS -o /dev/null -w "%{http_code}" "${CURL_HDR[@]}" --max-time 22 "$u/index.html" 2>/dev/null) || code=000
+  body=$(curl -sS --max-time 22 "$u/index.html" 2>/dev/null) || body=""
+  code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 22 "$u/index.html" 2>/dev/null) || code=000
   [[ "$code" == "200" ]] || return 1
   echo "$body" | grep -qiE '503 - Tunnel Unavailable' && return 1
   echo "$body" | grep -qi '<!DOCTYPE html'
@@ -70,33 +71,29 @@ data["tunnel"] = "$u"
 data["updated"] = "$ts"
 data["tunnelProvider"] = "$TUNNEL_BACKEND"
 data["tunnelSubdomain"] = "$LT_SUBDOMAIN"
-data["stableHint"] = "Vaste tunnel-URL (bookmark op iPad). Bij problemen: pagina verversen."
+data["stableHint"] = "Vaste link — bookmark stickfighter-ipad-b75e.loca.lt in Safari."
 p.write_text(json.dumps(data, indent=2) + "\n")
 PY
 }
 
 write_link() {
   local u="$1"
-  printf '%s\n\nVaste iPad-link — bookmark in Safari.\n«Zet in app-lade» voor fullscreen.\nWerkt niet? Pagina sluiten, link opnieuw openen, 10 sec wachten.\n' "$u" > "$LINK_FILE"
+  printf '%s\n\nVaste iPad-link — bookmark in Safari.\n«Zet in app-lade» voor fullscreen.\n' "$u" > "$LINK_FILE"
   write_health "$u" true
   write_hosting "$u"
-}
-
-latest_lt_url() {
-  grep -oE 'https://[a-z0-9-]+\.loca\.lt' "$LT_LOG" 2>/dev/null | tail -1 || true
 }
 
 stop_lt() {
   pkill -f "localtunnel.*--port $PORT" 2>/dev/null || true
   pkill -f "\.bin/lt --port $PORT" 2>/dev/null || true
-  sleep 0.8
+  sleep 1
 }
 
 lt_running() {
   pgrep -f "\.bin/lt --port $PORT" >/dev/null 2>&1
 }
 
-start_localtunnel() {
+start_localtunnel_inner() {
   ensure_server
   stop_lt
   local want
@@ -104,24 +101,17 @@ start_localtunnel() {
   tmux -f "$TMUX_CONF" has-session -t "=$LT_SESSION" 2>/dev/null || \
     tmux -f "$TMUX_CONF" new-session -d -s "$LT_SESSION" -c "$ROOT" -- bash -l
   tmux -f "$TMUX_CONF" send-keys -t "$LT_SESSION:0.0" C-c
-  sleep 0.6
+  sleep 0.8
   : > "$LT_LOG"
   tmux -f "$TMUX_CONF" send-keys -t "$LT_SESSION:0.0" \
-    "npx --yes localtunnel --port $PORT --subdomain $LT_SUBDOMAIN 2>&1 | tee $LT_LOG" C-m
+    "npx --yes localtunnel --port $PORT --subdomain $LT_SUBDOMAIN --local-host 127.0.0.1 2>&1 | tee $LT_LOG" C-m
 
   local i
-  for i in $(seq 1 50); do
+  for i in $(seq 1 55); do
     sleep 1
     if url_ok "$want"; then
       write_link "$want"
       echo "tunnel up: $want"
-      return 0
-    fi
-    local logurl
-    logurl=$(latest_lt_url)
-    if [[ -n "$logurl" ]] && url_ok "$logurl"; then
-      write_link "$logurl"
-      echo "tunnel up (log): $logurl"
       return 0
     fi
   done
@@ -130,22 +120,31 @@ start_localtunnel() {
   return 1
 }
 
-ensure_tunnel() {
+start_localtunnel() {
+  with_lock start_localtunnel_inner
+}
+
+ensure_tunnel_inner() {
   local want
   want=$(expected_url)
-  if url_ok "$want" && lt_running; then
-    write_link "$want"
-    echo "ok: $want"
-    return 0
-  fi
   if url_ok "$want"; then
-    write_link "$want"
-    echo "ok (no lt pgrep): $want"
+    if ! lt_running; then
+      echo "public ok but lt down — restarting client"
+      start_localtunnel_inner || return 1
+    else
+      write_link "$want"
+      echo "ok: $want"
+    fi
     return 0
   fi
   write_health "$want" false
+  stop_lt
   echo "starting localtunnel ($LT_SUBDOMAIN)..."
-  start_localtunnel
+  start_localtunnel_inner
+}
+
+ensure_tunnel() {
+  with_lock ensure_tunnel_inner
 }
 
 if [[ "${1:-}" == "once" ]]; then
@@ -159,8 +158,9 @@ while true; do
   want=$(expected_url)
   if ! url_ok "$want"; then
     write_health "$want" false
-    stop_lt
-    ensure_tunnel || true
+    with_lock ensure_tunnel_inner || true
+  else
+    write_link "$want"
   fi
-  sleep 45
+  sleep 25
 done

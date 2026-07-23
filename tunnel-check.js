@@ -188,10 +188,17 @@
     for (let attempt = 1; attempt <= 10; attempt++) {
       show(
         broken ? 'Tunnel herstarten…' : 'Verbinding controleren…',
-        attempt < 10
-          ? `Server maakt nieuwe link (${attempt}/10)…`
-          : 'Nog even — oude loca.lt-links verlopen soms (503).'
+        broken
+          ? 'Even wachten — server herstelt de verbinding…'
+          : attempt < 10
+            ? `Controleren (${attempt}/10)…`
+            : 'Nog even geduld…'
       );
+      if (broken) {
+        try {
+          await fetch('./health.json?heal=' + Date.now(), { cache: 'no-store' });
+        } catch (_) {}
+      }
       await new Promise((r) => setTimeout(r, 800 + attempt * 400));
       try {
         liveUrl = await fetchLiveUrl();
@@ -217,10 +224,12 @@
       }
     }
 
-    let hint = liveUrl || '';
+    let hint = liveUrl || STABLE_TUNNEL;
     try {
-      hint = hint || localStorage.getItem('sf_live_url') || (hosting && hosting.tunnel) || '';
-    } catch (_) {}
+      hint = hint || localStorage.getItem('sf_live_url') || (hosting && hosting.tunnel) || STABLE_TUNNEL;
+    } catch (_) {
+      hint = hint || STABLE_TUNNEL;
+    }
 
     if (isTunnelHost(here)) {
       try {
