@@ -19,7 +19,7 @@ ensure_server() {
 }
 
 latest_url() {
-  rg -o 'https://[a-z0-9-]+\.trycloudflare\.com' "$LOG" 2>/dev/null | tail -1 || true
+  grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$LOG" 2>/dev/null | tail -1 || true
 }
 
 curl_public() {
@@ -41,6 +41,11 @@ curl_public() {
 url_ok() {
   local u="$1"
   [[ -n "$u" ]] || return 1
+  local host="${u#https://}"
+  host="${host%%/*}"
+  if ! dig +short "$host" @1.1.1.1 2>/dev/null | grep -qE '^[0-9.]'; then
+    return 1
+  fi
   [[ "$(curl_public "$u")" == "200" ]]
 }
 
@@ -70,9 +75,22 @@ PY
 }
 
 write_link() {
-  printf '%s\n\nOpen in Safari → «Zet in app-lade».\n' "$1" > "$LINK_FILE"
-  write_health "$1"
-  write_hosting "$1"
+  local u="$1"
+  printf '%s\n\nOpen in Safari → «Zet in app-lade».\n' "$u" > "$LINK_FILE"
+  write_health "$u"
+  write_hosting "$u"
+}
+
+sync_link_from_health() {
+  local u
+  u=$(python3 -c "import json;print(json.load(open('$ROOT/health.json')).get('url') or '')" 2>/dev/null || true)
+  if [[ -n "$u" && "$u" == *trycloudflare.com* ]]; then
+    local first
+    first=$(head -1 "$LINK_FILE" 2>/dev/null || true)
+    if [[ "$first" != "$u" ]]; then
+      write_link "$u"
+    fi
+  fi
 }
 
 tunnel_running() {
@@ -109,6 +127,7 @@ start_tunnel() {
 }
 
 ensure_tunnel() {
+  sync_link_from_health
   local saved
   saved=$(head -1 "$LINK_FILE" 2>/dev/null || true)
   if url_ok "$saved" && tunnel_running; then
@@ -128,7 +147,11 @@ ensure_tunnel() {
 
 if [[ "${1:-}" == "once" ]]; then
   ensure_server
-  ensure_tunnel
+  if [[ "${FORCE_REDO:-0}" == "1" ]]; then
+    start_tunnel
+  else
+    ensure_tunnel
+  fi
   exit $?
 fi
 

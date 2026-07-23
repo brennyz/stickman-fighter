@@ -51,33 +51,52 @@
     return r.json();
   }
 
+  function hostnameOf(url) {
+    try {
+      return new URL(url).hostname;
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function isTunnelHost(h) {
+    return !!h && (h.endsWith('.trycloudflare.com') || h.endsWith('.cloudflare.com'));
+  }
+
+  function isStaticHost(h) {
+    return !!h && (h.endsWith('.github.io') || h.endsWith('.netlify.app'));
+  }
+
+  function isLocalDev(h) {
+    return h === 'localhost' || h === '127.0.0.1' || h.endsWith('.local');
+  }
+
   function redirectIfNewHost(liveUrl) {
     if (!liveUrl || location.protocol === 'file:') return false;
-    let liveHost;
-    try {
-      liveHost = new URL(liveUrl).hostname;
-    } catch (_) {
-      return false;
-    }
-    if (liveHost === location.hostname) return false;
+    const liveHost = hostnameOf(liveUrl);
+    if (!liveHost || liveHost === location.hostname) return false;
     show('Nieuwe tunnel-link…', 'Je wordt doorgestuurd naar de actieve server.');
     const base = liveUrl.replace(/\/$/, '');
     window.location.replace(base + location.pathname + location.search + location.hash);
     return true;
   }
 
-  function isStaticHost() {
-    const h = location.hostname;
-    return h.endsWith('.github.io') || h.endsWith('.netlify.app');
+  /** Alleen Cloudflare-tunnel URLs — nooit GitHub/Netlify stable hier. */
+  function pickTunnelUrl(hosting, liveUrl, health) {
+    const candidates = [
+      liveUrl,
+      health && health.url,
+      hosting && hosting.tunnel,
+    ].filter(Boolean);
+    for (const u of candidates) {
+      if (isTunnelHost(hostnameOf(u))) return u;
+    }
+    return liveUrl || (health && health.url) || (hosting && hosting.tunnel) || '';
   }
 
-  function hostMatchesStable(stableUrl) {
-    if (!stableUrl) return false;
-    try {
-      return new URL(stableUrl).hostname === location.hostname;
-    } catch (_) {
-      return false;
-    }
+  function ready() {
+    hide();
+    window.dispatchEvent(new Event('sf:tunnel-ready'));
   }
 
   async function runCheck() {
@@ -86,71 +105,113 @@
       return { ok: true, offline: true };
     }
 
+    const here = location.hostname;
+
+    if (isLocalDev(here)) {
+      ready();
+      return { ok: true, local: true };
+    }
+
     let hosting = null;
     try {
       hosting = await fetchHosting();
     } catch (_) {}
 
-    if (isStaticHost() || hostMatchesStable(hosting && hosting.stable)) {
-      hide();
-      window.dispatchEvent(new Event('sf:tunnel-ready'));
+    if (isStaticHost(here)) {
+      ready();
       return { ok: true, static: true };
+    }
+
+    const stable = hosting && hosting.stable;
+    if (stable && hostnameOf(stable) === here) {
+      ready();
+      return { ok: true, stable: true };
+    }
+
+    // Optioneel: vaste GitHub/Netlify URL (alleen als expliciet aan)
+    if (hosting && hosting.forceStable && stable && isStaticHost(hostnameOf(stable))) {
+      if (redirectIfNewHost(stable)) return new Promise(() => {});
     }
 
     show('Verbinding controleren…', 'Tunnel en server worden gecontroleerd.');
 
     let liveUrl = '';
+    let health = null;
     try {
       liveUrl = await fetchLiveUrl();
     } catch (_) {}
+    try {
+      health = await fetchHealth();
+    } catch (_) {}
 
-    const preferred = (hosting && hosting.stable) || liveUrl || (hosting && hosting.tunnel) || '';
-    if (redirectIfNewHost(preferred)) {
-      return new Promise(() => {});
+    const tunnelGo = pickTunnelUrl(hosting, liveUrl, health);
+    if (isTunnelHost(here) && tunnelGo) {
+      if (redirectIfNewHost(tunnelGo)) return new Promise(() => {});
     }
-    if (redirectIfNewHost(liveUrl)) {
-      return new Promise(() => {});
+
+    if (health && (health.ok || health.static)) {
+      const url = pickTunnelUrl(hosting, liveUrl, health);
+      if (url) {
+        try {
+          localStorage.setItem('sf_live_url', url);
+        } catch (_) {}
+      }
+      ready();
+      return { ok: true, url };
     }
 
-    for (let attempt = 1; attempt <= 6; attempt++) {
-      try {
-        if (!liveUrl) liveUrl = await fetchLiveUrl();
-        const go = (hosting && hosting.stable) || liveUrl;
-        if (redirectIfNewHost(go)) return new Promise(() => {});
-
-        const health = await fetchHealth();
-        if (health && (health.ok || health.static)) {
-          const url = health.url || liveUrl || (hosting && hosting.tunnel) || '';
-          if (url) {
-            try {
-              localStorage.setItem('sf_live_url', url);
-            } catch (_) {}
-          }
-          hide();
-          window.dispatchEvent(new Event('sf:tunnel-ready'));
-          return { ok: true, url };
-        }
-      } catch (_) {}
-
+    for (let attempt = 1; attempt <= 8; attempt++) {
       show(
         'Verbinding controleren…',
-        attempt < 6 ? `Opnieuw (${attempt}/6)…` : 'Nog even geduld…'
+        attempt < 8
+          ? `Tunnel opstarten (${attempt}/8)…`
+          : 'Nog even geduld — server herstelt tunnel…'
       );
-      await new Promise((r) => setTimeout(r, 1200 + attempt * 400));
+      await new Promise((r) => setTimeout(r, 900 + attempt * 350));
+      try {
+        liveUrl = await fetchLiveUrl();
+      } catch (_) {}
+      try {
+        health = await fetchHealth();
+      } catch (_) {}
+
+      const go = pickTunnelUrl(hosting, liveUrl, health);
+      if (isTunnelHost(here) && go && redirectIfNewHost(go)) {
+        return new Promise(() => {});
+      }
+
+      if (health && (health.ok || health.static)) {
+        if (go) {
+          try {
+            localStorage.setItem('sf_live_url', go);
+          } catch (_) {}
+        }
+        ready();
+        return { ok: true, url: go };
+      }
     }
 
     let hint = '';
     try {
-      hint = localStorage.getItem('sf_live_url') || liveUrl || '';
+      hint = localStorage.getItem('sf_live_url') || liveUrl || (hosting && hosting.tunnel) || '';
     } catch (_) {
       hint = liveUrl;
     }
-    showRetry(
-      'Tunnel nog niet bereikbaar',
-      hint
-        ? 'Open de nieuwste link in Safari:\n' + hint
-        : 'De server herstelt de tunnel. Tik op Opnieuw over een paar seconden.'
-    );
+    if (isTunnelHost(here)) {
+      showRetry(
+        'Tunnel herstellen…',
+        hint
+          ? 'Als het spel niet start: open de nieuwste link:\n' + hint
+          : 'Server start tunnel opnieuw. Tik Opnieuw over ~10 sec.'
+      );
+    } else {
+      showRetry(
+        'Geen tunnel-link',
+        hint
+          ? 'Open in Safari:\n' + hint
+          : 'Start lokaal: ./start-local.sh --tunnel-once'
+      );
+    }
     throw new Error('tunnel-unavailable');
   }
 
