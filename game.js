@@ -60,9 +60,9 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.12.18';
+const APP_VERSION = '1.12.19';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 81;
+const SW_CACHE_REV = 82;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1597,12 +1597,30 @@ const AudioSys = {
     const mv = save.music ? clamp(Number(save.musicVol) || 0.85, 0, 1) : 0;
     const sv = save.sfx ? clamp(Number(save.sfxVol) || 1, 0, 1) : 0;
     const id = (this.song && this.song.id) || this.desiredSong;
+    const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
     let baseM = (id === 'menu') ? 0.24 : 0.32;
+    if (lite) baseM *= 0.88;
     // Duck BGM in pauze / result — SFX blijft hoorbaar voor UI
     if (this.paused || state === 'pause') baseM *= 0.26;
     else if (state === 'result') baseM *= 0.5;
+    const sfxMul = lite ? 0.68 : 0.74;
     this._setGain(this.musicGain, baseM * mv);
-    this._setGain(this.sfxGain, 0.74 * sv);
+    this._setGain(this.sfxGain, sfxMul * sv);
+    this.syncContextPower();
+  },
+
+  /** Suspend Web Audio when fully muted (menu/pause) — saves battery on iPad/PWA */
+  syncContextPower() {
+    if (!this.ctx) return;
+    const needAudio = !!(save.music || save.sfx);
+    const inFight = state === 'play';
+    try {
+      if (!needAudio && !inFight && this.ctx.state === 'running') {
+        this.ctx.suspend();
+      } else if (needAudio && !document.hidden && this.ctx.state === 'suspended' && !inFight) {
+        this.ctx.resume().catch(() => {});
+      }
+    } catch (_) {}
   },
 
   setPaused(on) {
@@ -6471,6 +6489,17 @@ const UI = {
   renderPauseToggles() {
     document.getElementById('pauseTogMusic')?.classList.toggle('off', !save.music);
     document.getElementById('pauseTogSfx')?.classList.toggle('off', !save.sfx);
+    const pct = (v, d) => Math.round((Number(v ?? d)) * 100);
+    const pm = document.getElementById('pauseMusicVol');
+    const ps = document.getElementById('pauseSfxVol');
+    const pmL = document.getElementById('pauseMusicVolLbl');
+    const psL = document.getElementById('pauseSfxVolLbl');
+    const mPct = pct(save.musicVol, 0.85);
+    const sPct = pct(save.sfxVol, 1);
+    if (pm && document.activeElement !== pm) pm.value = String(mPct);
+    if (ps && document.activeElement !== ps) ps.value = String(sPct);
+    if (pmL) pmL.textContent = mPct + '%';
+    if (psL) psL.textContent = sPct + '%';
   },
 
   showResult(win, data) {
@@ -6715,13 +6744,26 @@ function bindSettingsControls() {
     el.addEventListener('input', () => {
       save[key] = clamp(el.value / 100, 0, 1);
       persist();
+      const pctStr = Math.round(save[key] * 100) + '%';
       const lbl = document.getElementById(lblId);
-      if (lbl) lbl.textContent = Math.round(save[key] * 100) + '%';
+      if (lbl) lbl.textContent = pctStr;
+      const pairs = key === 'musicVol'
+        ? [['setMusicVol', 'setMusicVolLbl'], ['pauseMusicVol', 'pauseMusicVolLbl']]
+        : [['setSfxVol', 'setSfxVolLbl'], ['pauseSfxVol', 'pauseSfxVolLbl']];
+      for (const [sid, lid] of pairs) {
+        if (sid === id) continue;
+        const sib = document.getElementById(sid);
+        const sibL = document.getElementById(lid);
+        if (sib && document.activeElement !== sib) sib.value = Math.round(save[key] * 100);
+        if (sibL) sibL.textContent = pctStr;
+      }
       AudioSys.applyVolumes();
     });
   };
   onVol('setMusicVol', 'setMusicVolLbl', 'musicVol');
   onVol('setSfxVol', 'setSfxVolLbl', 'sfxVol');
+  onVol('pauseMusicVol', 'pauseMusicVolLbl', 'musicVol');
+  onVol('pauseSfxVol', 'pauseSfxVolLbl', 'sfxVol');
   const toggles = [
     ['setShake', 'shake'], ['setHaptics', 'haptics'], ['setComboHud', 'comboHud'],
     ['setBigTouch', 'bigTouch'], ['setReducedMotion', 'reducedMotion'],
@@ -6825,7 +6867,9 @@ bindPress(document.getElementById('togMusic'), () => {
 });
 bindPress(document.getElementById('togSfx'), () => {
   AudioSys.init();
-  save.sfx = !save.sfx; persist(); AudioSys.sfx('select'); UI.renderMenu();
+  AudioSys.setSfxOn(!save.sfx);
+  AudioSys.sfx('select');
+  UI.renderMenu();
 });
 const btnSharePlay = document.getElementById('btnSharePlay');
 bindPress(btnSharePlay, () => {

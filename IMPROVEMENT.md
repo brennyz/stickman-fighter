@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-23 | **6** | Audio (cyclus 1): pauze-volume sliders (sync instellingen), Lite FX zachter BGM/SFX, `syncContextPower` bij volledig mute. v1.12.19 / SW v82. |
 | 2026-07-23 | **14** | FX: Rasengan halo + impact-ring (cap-aware), minder spawn-burst bij Lite FX. v1.12.18 / SW v81. |
 | 2026-07-23 | **20** | Code health: header sync, verwijderd dubbele P1-dash keydown + legacy onboarding wrappers. v1.12.16 / SW v79. |
 | 2026-07-23 | **15** | Onboarding: één in-gevecht hint per modus (geen dubbele toast); welcome uitgesteld; Mats-banner alleen eerste keer; help-modus chips. v1.12.15 / SW v78. |

@@ -70,7 +70,7 @@ const get = (id) => {
   'btnAdventure', 'btnTraining', 'btnWall', 'btnMatsCoins', 'btnWeapons', 'btnDex', 'btnVersus',
   'btnContinue', 'btnStyle', 'btnSettings', 'btnMissions', 'btnMissionsLbl', 'btnHelp', 'helpOk',
   'btnGuvve', 'pauseResume', 'pauseQuit', 'resAgain', 'resNext', 'resMenu',
-  'pauseTogMusic', 'pauseTogSfx', 'tunnelBootOverlay', 'charPickStep', 'charGrid',
+  'pauseTogMusic', 'pauseTogSfx', 'pauseMusicVol', 'pauseSfxVol', 'tunnelBootOverlay', 'charPickStep', 'charGrid',
   'charGridScroll', 'charStatPreview', 'charP1Label', 'charP2Label', 'btnCharFight',
   'btnCharRandom', 'btnCharSwap', 'btnCharSagaClash', 'charIconRow', 'charPickBackP1', 'charSelectBack', 'netStatus',
 ].forEach(get);

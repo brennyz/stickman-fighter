@@ -3,15 +3,14 @@
   "cyclesCompleted": 1,
   "rollFirst": [],
   "remaining": [
-    6,
     7,
     9
   ],
   "lastRoll": {
-    "face": 14,
-    "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
-    "rolledAt": "2026-07-23T18:57:52Z",
-    "remainingCount": 3,
+    "face": 6,
+    "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+    "rolledAt": "2026-07-23T18:59:04Z",
+    "remainingCount": 2,
     "cycle": 1
   },
   "pending": null,
@@ -210,6 +209,13 @@
       "note": "Rasengan halo/impact ring + burst cap Lite FX",
       "version": "1.12.18",
       "doneAt": "2026-07-23T18:58:38Z",
+      "cycle": 1
+    },
+    {
+      "face": 6,
+      "note": "pauze-volume sliders, Lite mix, syncContextPower mute",
+      "version": "1.12.19",
+      "doneAt": "2026-07-23T19:00:31Z",
       "cycle": 1
     }
   ],
@@ -556,6 +562,13 @@
       "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
       "rolledAt": "2026-07-23T18:57:52Z",
       "remainingCount": 3,
+      "cycle": 1
+    },
+    {
+      "face": 6,
+      "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+      "rolledAt": "2026-07-23T18:59:04Z",
+      "remainingCount": 2,
       "cycle": 1
     }
   ]
