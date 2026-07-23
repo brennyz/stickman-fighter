@@ -283,6 +283,18 @@
   ],
   "userFeatureLog": [
     {
+      "id": "summon-weapon-ascend",
+      "d20Face": null,
+      "userWords": "Summoning is real, really small chance for a summons, upgrading mediocre lower level items going Epic or Legendary, over the power of higher level weapons",
+      "versions": [
+        "1.14.4"
+      ],
+      "commits": [],
+      "code": "save.summons, SUMMON_BOOST, summonEligibleWeapons, applySummonTier, playerWeapon, maybeSummon (kill-kans ~0.7% + pity), renderWeapons ✦ badge",
+      "status": "done",
+      "note": "off-d20 user feature; epic \u00d71.55 / legendary \u00d71.95 dmg, gem. ~97 kills per summon, getest in echte Chrome"
+    },
+    {
       "id": "level-pace-balancing",
       "d20Face": null,
       "userWords": "Balancing please, leveling pace, game needs to take a wee bit more time",

@@ -63,14 +63,14 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 1;
-const APP_VERSION = '1.14.3';
+const APP_VERSION = '1.14.4';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 101;
-const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
+const SW_CACHE_REV = 102;
+const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0 },
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0 },
   achievements: {}, daily: null, vsPlayedIds: [] };
 const MAX_LEVEL = 50;
 let save = loadSave();
@@ -364,6 +364,17 @@ function sanitizeSave(s) {
     }
   } else out.lastPlay = null;
   if (!WEAPONS.some(w => w.id === out.weapon)) out.weapon = 'vuist';
+
+  // Summons: alleen bekende wapens, geldige tiers, en alleen echte upgrades
+  const cleanSummons = {};
+  for (const [k, v] of Object.entries(out.summons || {})) {
+    const w = WEAPONS.find(x => x.id === k);
+    if (!w || (v !== 'epic' && v !== 'legendary')) continue;
+    const wOrder = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4, mythic: 5 }[w.rarity] || 0;
+    const tOrder = v === 'legendary' ? 4 : 3;
+    if (tOrder > wOrder) cleanSummons[k] = v;
+  }
+  out.summons = cleanSummons;
   const stPick = STYLES.find(st => st.id === out.style) || STYLES[0];
   let styleOk = stPick.id === 'classic';
   if (stPick.needLvl && out.lvl >= stPick.needLvl) styleOk = true;
@@ -1233,7 +1244,7 @@ function dexHpBonus() {
 function playerStats() {
   return {
     maxhp: 100 + (save.lvl - 1) * 12 + dexHpBonus(),
-    dmg: 10 + (save.lvl - 1) * 2 + Math.floor(rarityOf(weaponById(save.weapon).rarity).order * 0.5),
+    dmg: 10 + (save.lvl - 1) * 2 + Math.floor(rarityOf(playerWeapon().rarity).order * 0.5),
   };
 }
 
@@ -1279,6 +1290,43 @@ const WEAPONS = [
   { id: 'guvve',     name: 'Guvvedukkie-stok', dmg: 3.1,  range: 66, speed: 1.0,  unlock: 48, rarity: 'mythic',    desc: 'Quak. Bitte. Boom.' },
 ];
 const weaponById = id => WEAPONS.find(w => w.id === id) || WEAPONS[0];
+
+/* ============================ SUMMONS ================================== */
+/* Hele kleine kans bij een kill: een Summon ascendeert een lager wapen
+   (common/uncommon/rare) naar Episch of Legendarisch — met power boven
+   hogere unlock-wapens. Permanent in save.summons { wapenId: tier }. */
+const SUMMON_BOOST = {
+  epic:      { dmg: 1.55, range: 8,  speed: 1.08 },
+  legendary: { dmg: 1.95, range: 12, speed: 1.12 },
+};
+const summonTierOf = id => (save.summons || {})[id] || null;
+function summonEligibleWeapons() {
+  return WEAPONS.filter(w =>
+    save.lvl >= w.unlock &&
+    rarityOf(w.rarity).order <= 2 &&
+    summonTierOf(w.id) !== 'legendary');
+}
+/** Wapenobject met summon-tier toegepast (alleen speler-arsenaal). */
+function applySummonTier(w) {
+  const tier = summonTierOf(w.id);
+  if (!tier || !SUMMON_BOOST[tier]) return w;
+  if (rarityOf(w.rarity).order >= rarityOf(tier).order) return w;
+  const b = SUMMON_BOOST[tier];
+  return Object.assign({}, w, {
+    rarity: tier,
+    dmg: Math.round(w.dmg * b.dmg * 100) / 100,
+    range: w.range + b.range,
+    speed: Math.round(w.speed * b.speed * 100) / 100,
+    summoned: true,
+  });
+}
+const playerWeapon = () => applySummonTier(weaponById(save.weapon));
+function rollSummonChance(elite) {
+  const since = save.stats.killsSinceSummon || 0;
+  // Basis ~0,7% per kill; zachte pity-ramp (+0,004%/kill, max +2%); elites ×2,5
+  const chance = (0.007 + Math.min(0.02, since * 0.00004)) * (elite ? 2.5 : 1);
+  return Math.random() < chance;
+}
 
 /** Swing-SFX per wapen (procedureel) — geen generieke “swing” voor alles. */
 const WEAPON_SWING_SFX = {
@@ -4672,7 +4720,7 @@ class Game {
       this.player = new Fighter({
         isPlayer: true, x: W * 0.25, y: this.ground,
         hp: st.maxhp, maxhp: st.maxhp, baseDmg: st.dmg,
-        weapon: weaponById(save.weapon), color: '#f2f5ff',
+        weapon: playerWeapon(), color: '#f2f5ff',
         rosterId: 'hero',
       });
       applyPlayerStyle(this.player);
@@ -4961,6 +5009,42 @@ class Game {
         UI.toast('Nieuwe stijl: Kristallijn!', 3500);
       }
     }
+    this.maybeSummon(m);
+  }
+
+  /** Hele kleine kans: Summon ascendeert een lager wapen naar Episch/Legendarisch. */
+  maybeSummon(m) {
+    save.stats.killsSinceSummon = (save.stats.killsSinceSummon || 0) + 1;
+    const eligible = summonEligibleWeapons();
+    if (!eligible.length) { persist(); return; }
+    if (!rollSummonChance(!!(m && m.elite))) { persist(); return; }
+    const pick = eligible[Math.floor(Math.random() * eligible.length)];
+    const wasEpic = summonTierOf(pick.id) === 'epic';
+    const tier = (wasEpic || Math.random() < 0.15) ? 'legendary' : 'epic';
+    if (!save.summons || typeof save.summons !== 'object') save.summons = {};
+    save.summons[pick.id] = tier;
+    save.stats.summonCount = (save.stats.summonCount || 0) + 1;
+    save.stats.killsSinceSummon = 0;
+    persist();
+    const rar = rarityOf(tier);
+    const asc = applySummonTier(weaponById(pick.id));
+    if (this.player && this.player.weapon && this.player.weapon.id === pick.id) {
+      this.player.weapon = playerWeapon();
+      const st = playerStats();
+      this.player.baseDmg = st.dmg;
+    }
+    AudioSys.sfx('levelup');
+    setTimeout(() => { try { AudioSys.sfx('newmonster'); } catch (_) {} }, 350);
+    this.freezeT = Math.max(this.freezeT, 0.1);
+    this.shake(9, 0.35);
+    const px = this.player ? this.player.x : W * 0.5;
+    const py = this.player ? this.player.y : this.ground;
+    this.burst(px, py - 70, rar.color, fxLite() ? 14 : 30);
+    this.burst(px, py - 70, '#fff', fxLite() ? 6 : 12);
+    this.banner('✦ SUMMON! ✦', 2.2, rar.color, 44);
+    setTimeout(() => this.banner(`${pick.name} → ${rar.name}!`, 2.4, rar.color, 30), 1100);
+    this.floater(px, py - 130, `${pick.name} ✦ ${rar.name}`, rar.color, 17);
+    UI.toast(`✦ Summon! ${pick.name} is nu ${rar.name} — schade ×${asc.dmg}`, 4200);
   }
 
   spawnPickup(x, y) {
@@ -5291,7 +5375,7 @@ class Game {
     this.flyers = [];
     this.coinSpawnAcc = 0;
     this.flyerSpawnAcc = 0;
-    this.player.weapon = weaponById('shuriken');
+    this.player.weapon = applySummonTier(weaponById('shuriken'));
     this.player.x = W * 0.28;
     this.player.face = 1;
     this.inputLocked = false;
@@ -7520,12 +7604,14 @@ const UI = {
   renderWeapons() {
     const list = document.getElementById('weaponList');
     list.innerHTML = '';
-    for (const w of WEAPONS) {
-      const locked = save.lvl < w.unlock;
+    for (const base of WEAPONS) {
+      const w = applySummonTier(base);
+      const locked = save.lvl < base.unlock;
       const rar = rarityOf(w.rarity);
       const el = document.createElement('div');
       el.className = 'card rar-' + w.rarity + (save.weapon === w.id ? ' sel' : '') + (locked ? ' locked' : '');
       el.style.borderColor = rar.color + (save.weapon === w.id ? '' : '66');
+      if (w.summoned) el.style.boxShadow = `0 0 14px ${rar.glow}`;
       const cv = document.createElement('canvas');
       cv.width = 64; cv.height = 64;
       const cc = cv.getContext('2d');
@@ -7537,8 +7623,14 @@ const UI = {
       } else drawWeaponShape(cc, w.id, 0.2);
       el.appendChild(cv);
       const info = document.createElement('div');
-      info.innerHTML = `<div class="cname">${w.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span></div>
-        <div class="cinfo">${w.desc} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}</div>`;
+      const summonBadge = w.summoned
+        ? ` <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">✦ Summon</span>`
+        : '';
+      const statLine = w.summoned
+        ? `${w.desc} · schade x${base.dmg} → <b style="color:${rar.color}">x${w.dmg}</b> · bereik ${w.range} · snelheid x${w.speed}`
+        : `${w.desc} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}`;
+      info.innerHTML = `<div class="cname">${w.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>${summonBadge}</div>
+        <div class="cinfo">${statLine}</div>`;
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
