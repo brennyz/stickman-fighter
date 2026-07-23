@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 1;
-const APP_VERSION = '1.12.26';
+const APP_VERSION = '1.13.0';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 89;
+const SW_CACHE_REV = 90;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -165,7 +165,10 @@ function rollHitDamage(attacker, spec, mult) {
     critChance += sig.jutsuCrit || 0;
     if (spec.jutsu === 'rinnegan') critChance += 0.05;
   }
-  critChance = clamp(critChance, 0, 0.42);
+  if (attacker.isPlayer && typeof game !== 'undefined' && game && game.stageCritBonus) {
+    critChance += game.stageCritBonus;
+  }
+  critChance = clamp(critChance, 0, 0.48);
   let dmg = spec.dmg * rand(0.9, 1.15) * mult;
   const crit = Math.random() < critChance;
   if (crit) dmg *= critMul;
@@ -929,10 +932,27 @@ function recordLastPlay(mode, opts) {
 function resumeLastPlay() {
   const lp = save.lastPlay;
   if (!lp || !lp.mode) return false;
-  if (lp.mode === 'adventure') startGame('adventure', { level: lp.level || 1 });
+  if (lp.mode === 'adventure') {
+    openGambleForLevel(lp.level || 1);
+    return true;
+  }
   else if (lp.mode === 'versus') startGame('versus', { p1: lp.p1, p2: lp.p2 });
   else startGame(lp.mode);
   return true;
+}
+
+function openGambleForLevel(n) {
+  pendingAdvLevel = n;
+  lastGambleRoll = null;
+  UI.renderGamble(n);
+  UI.show('gambleScreen');
+}
+
+function startAdventureFromGamble(skipGamble) {
+  const level = pendingAdvLevel || save.unlocked || 1;
+  const gamble = skipGamble ? null : lastGambleRoll;
+  pendingAdvLevel = null;
+  startGame('adventure', { level, gamble });
 }
 
 function vsFighterStats(entry) {
@@ -1676,6 +1696,92 @@ function buildLevel(n) {
   const rarityCap = ['common','uncommon','rare','epic','legendary','mythic'][maxRarity];
   return { n, waves, hpMul, dmgMul, theme, boss: !!BOSS_AT[n], rarityCap };
 }
+
+/** Avontuur: 2× d6 gok vóór level — super-baas of super-bondgenoot (alleen dit level). */
+const GAMBLE_ALLIES = {
+  ki: { id: 'ki', name: 'Ki-sage', dmgMul: 1.2, energyRate: 1.4, color: '#7cf5ff' },
+  scroll: { id: 'scroll', name: 'Scroll-meester', dmgMul: 1.16, maxHpBonus: 32, color: '#ffd75e' },
+  tide: { id: 'tide', name: 'Tide-elite', dmgMul: 1.14, healBetweenWaves: 0.1, color: '#6ee06e' },
+  cape: { id: 'cape', name: 'Cape-held', dmgMul: 1.18, shieldStart: 3.5, color: '#ffb0b8' },
+  dawn: { id: 'dawn', name: 'Dawn-waker', dmgMul: 1.24, critBonus: 0.07, color: '#c47aff' },
+};
+const GAMBLE_ALLY_IDS = Object.keys(GAMBLE_ALLIES);
+
+function pickSuperBossSpecies(levelN) {
+  const pool = SPECIES_ORDER.filter((id) => {
+    const o = rarityOf(SPECIES[id].rarity).order;
+    return o >= 3 && (UNLOCK_AT[id] == null || UNLOCK_AT[id] <= levelN);
+  });
+  if (!pool.length) return 'magmabon';
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function rollStageGamble() {
+  const d1 = 1 + Math.floor(Math.random() * 6);
+  const d2 = 1 + Math.floor(Math.random() * 6);
+  const sum = d1 + d2;
+  let outcome = 'neutral';
+  if (sum <= 3) outcome = 'superBoss';
+  else if (sum <= 5) outcome = 'miniBoss';
+  else if (sum >= 12) outcome = 'superAlly';
+  else if (sum >= 9) outcome = 'ally';
+  const allyId = GAMBLE_ALLY_IDS[Math.floor(Math.random() * GAMBLE_ALLY_IDS.length)];
+  return { d1, d2, sum, outcome, allyId };
+}
+
+function gambleOutcomeLabel(g) {
+  if (!g) return '';
+  if (g.outcome === 'superBoss') return 'Pech! Super-baas in een willekeurige golf';
+  if (g.outcome === 'miniBoss') return 'Risico: extra elite-super in een golf';
+  if (g.outcome === 'superAlly') {
+    const a = GAMBLE_ALLIES[g.allyId];
+    return `Jackpot! Super-bondgenoot: ${a ? a.name : 'Sage'} (sterk buff)`;
+  }
+  if (g.outcome === 'ally') {
+    const a = GAMBLE_ALLIES[g.allyId];
+    return `Geluk! Bondgenoot: ${a ? a.name : 'Sage'} (buff dit level)`;
+  }
+  return 'Neutraal — gewoon level (geen extra gok-effect)';
+}
+
+function applyGambleToStage(game, g) {
+  if (!game || !g || !game.level) return;
+  game.stageDmgMul = 1;
+  game.stageEnergyMul = 1;
+  game.stageAlly = null;
+  game.stageHealBetween = 0;
+  game.stageShieldPerWave = 0;
+  game.stageCritBonus = 0;
+  game.gambleBossWave = 0;
+  const pot = g.outcome === 'superAlly' ? 1.22 : 1;
+  if (g.outcome === 'superBoss' || g.outcome === 'miniBoss') {
+    const wi = Math.floor(Math.random() * game.level.waves.length);
+    const sp = pickSuperBossSpecies(game.level.n);
+    game.level.waves[wi].push({
+      sp,
+      elite: true,
+      superBoss: g.outcome === 'superBoss',
+    });
+    game.gambleBossWave = wi + 1;
+  }
+  if (g.outcome === 'ally' || g.outcome === 'superAlly') {
+    const ally = GAMBLE_ALLIES[g.allyId] || GAMBLE_ALLIES.ki;
+    game.stageAlly = ally;
+    game.stageDmgMul = (ally.dmgMul || 1) * pot;
+    game.stageEnergyMul = (ally.energyRate || 1) * (g.outcome === 'superAlly' ? 1.12 : 1);
+    const hpBonus = Math.round((ally.maxHpBonus || 0) * pot);
+    if (hpBonus > 0 && game.player) {
+      game.player.maxhp += hpBonus;
+      game.player.hp = Math.min(game.player.maxhp, game.player.hp + hpBonus);
+    }
+    game.stageHealBetween = (ally.healBetweenWaves || 0) * pot;
+    game.stageShieldPerWave = (ally.shieldStart || 0) * pot;
+    game.stageCritBonus = (ally.critBonus || 0) * pot;
+  }
+}
+
+let pendingAdvLevel = null;
+let lastGambleRoll = null;
 
 /* =============================== AUDIO ================================= */
 const AudioSys = {
@@ -3092,7 +3198,8 @@ class Fighter {
 
     // chakra laadt sneller bij combo-gevoel (in beweging/gevecht)
     if (this.isPlayer || this.playerSlot) {
-      const rate = this.attack ? 4.2 : 2.8;
+      const stageMul = (typeof game !== 'undefined' && game && game.stageEnergyMul) ? game.stageEnergyMul : 1;
+      const rate = (this.attack ? 4.2 : 2.8) * stageMul;
       const prevE = this._energyPrev == null ? this.energy : this._energyPrev;
       this.energy = clamp(this.energy + dt * rate, 0, 100);
       if (this.energy >= 100 && prevE < 100) {
@@ -3458,10 +3565,18 @@ class Monster {
     const eliteMul = opts.elite ? 1.7 : 1;
     this.spId = spId; this.sp = sp;
     this.elite = !!opts.elite;
+    this.superBoss = !!opts.superBoss;
     this.size = sp.size * (opts.elite ? 1.5 : 1);
     this.maxhp = Math.round(sp.hp * (opts.hpMul || 1) * eliteMul);
     this.hp = this.maxhp;
     this.dmg = Math.round(sp.dmg * (opts.dmgMul || 1) * (opts.elite ? 1.3 : 1));
+    if (this.superBoss) {
+      this.elite = true;
+      this.maxhp = Math.round(this.maxhp * 2.35);
+      this.hp = this.maxhp;
+      this.dmg = Math.round(this.dmg * 1.42);
+      this.size *= 1.32;
+    }
     this.speed = sp.speed;
     this.x = x;
     this.flying = sp.type === 'fly' || sp.type === 'dragon';
@@ -3612,7 +3727,7 @@ class Monster {
     const rar = rarityOf(this.sp.rarity);
     if (rar.order >= 2 && this.alive) {
       c.save();
-      c.strokeStyle = rar.glow; c.lineWidth = 3 + rar.order * 0.4;
+      c.strokeStyle = this.superBoss ? '#ffd75e' : rar.glow; c.lineWidth = 3 + rar.order * 0.4;
       c.beginPath(); c.ellipse(0, 0, this.size * 1.55, this.size * 1.2, 0, 0, TAU); c.stroke();
       if (rar.order >= 4) {
         c.globalAlpha = 0.25 + Math.sin(this.t * 6) * 0.1;
@@ -3937,7 +4052,15 @@ class Game {
       this.pickups = [];
       this.dmgBuffT = 0; this.dmgBuffMul = 1;
       this.playerShieldT = 0;
-      this.initAdventure(opts.level || 1);
+      this.stageDmgMul = 1;
+      this.stageEnergyMul = 1;
+      this.stageAlly = null;
+      this.stageHealBetween = 0;
+      this.stageShieldPerWave = 0;
+      this.stageCritBonus = 0;
+      this.gambleRoll = null;
+      this.gambleBossWave = 0;
+      this.initAdventure(opts.level || 1, opts.gamble);
     } else if (mode === 'training') this.initTraining();
     else if (mode === 'wall') this.initWall();
     else if (mode === 'coinrun') this.initCoinRun();
@@ -3960,7 +4083,7 @@ class Game {
   }
 
   /* --------------------------- AVONTUUR ------------------------------- */
-  initAdventure(n) {
+  initAdventure(n, gamble) {
     this.level = buildLevel(n);
     this.theme = this.level.theme;
     this.waveIdx = -1;
@@ -3969,7 +4092,23 @@ class Game {
     this.kills = 0;
     this.betweenT = 1.2;
     this.pickups = this.pickups || [];
+    this.gambleRoll = gamble || null;
+    applyGambleToStage(this, gamble);
     this.banner(`LEVEL ${n}`, 1.4, '#ffd75e', 54);
+    if (gamble && gamble.outcome !== 'neutral') {
+      setTimeout(() => {
+        try {
+          if (this.over) return;
+          this.banner(gambleOutcomeLabel(gamble).slice(0, 42), 2.2, '#7cf5ff', 34);
+        } catch (_) {}
+      }, 1600);
+    }
+    if (this.gambleBossWave > 0) {
+      this.floater(W * 0.5, 100, `Super-baas mogelijk golf ${this.gambleBossWave}`, '#ffb0b8', 14);
+    }
+    if (this.stageAlly) {
+      this.floater(W * 0.5, 118, `${this.stageAlly.name} helpt je!`, this.stageAlly.color || '#7cf5ff', 15);
+    }
     AudioSys.play(this.level.boss ? 'boss' : 'battle');
     if (n === 1 && save.lvl === 1 && !modeOnboardingSeen('adventure')) this.hint = 6;
   }
@@ -3982,6 +4121,9 @@ class Game {
     this.spawnQueue = wave.slice();
     this.spawnTimer = bossWave ? 1.0 : 0.45;
     this.wavePause = 0;
+    if (this.stageShieldPerWave > 0 && this.player) {
+      this.playerShieldT = Math.max(this.playerShieldT, this.stageShieldPerWave);
+    }
     if (bossWave) {
       this.banner('BAAS-GOLF!', 1.8, '#ff6b6b', 50);
       AudioSys.play('boss');
@@ -4026,14 +4168,26 @@ class Game {
         const def = this.spawnQueue.shift();
         const side = Math.random() < 0.75 ? 1 : -1;
         const x = side > 0 ? W + 40 : -40;
+        if (def.superBoss) {
+          this.banner('SUPER BAAS!', 1.6, '#ffd75e', 46);
+          AudioSys.sfx('roar');
+        }
         this.monsters.push(new Monster(def.sp, x, this, {
-          elite: def.elite, hpMul: this.level.hpMul, dmgMul: this.level.dmgMul,
+          elite: !!(def.elite || def.superBoss),
+          superBoss: !!def.superBoss,
+          hpMul: this.level.hpMul,
+          dmgMul: this.level.dmgMul,
         }));
       }
     } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive)) {
       if (!this.wavePause) {
         const nextIsBoss = isBossWave(this.level, this.waveIdx + 1);
         this.wavePause = nextIsBoss ? 2.15 : 1.05;
+        if (this.stageHealBetween > 0 && this.player && this.player.alive) {
+          const heal = Math.max(8, Math.round(this.player.maxhp * this.stageHealBetween));
+          this.player.hp = Math.min(this.player.maxhp, this.player.hp + heal);
+          this.floater(this.player.x, this.player.y - 90, `+${heal} bondgenoot`, '#6ee06e', 14);
+        }
       }
       this.wavePause -= dt;
       if (this.wavePause <= 0) { this.wavePause = 0; this.nextWave(); }
@@ -4065,9 +4219,15 @@ class Game {
     }
     setTimeout(() => UI.showResult(win, {
       title: win ? 'GEWONNEN!' : 'VERSLAGEN...',
-      detail: win
-        ? `Level ${this.level.n} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}`
-        : `Level ${this.level.n} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}`,
+      detail: (() => {
+        let base = win
+          ? `Level ${this.level.n} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}`
+          : `Level ${this.level.n} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}`;
+        if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
+          base += ` · 🎲 ${gambleOutcomeLabel(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48)}`;
+        }
+        return base;
+      })(),
       xp: this.sessionXP,
       mode: 'adventure', level: this.level.n, win, stars,
       tip: win ? (stars >= 3 ? 'Perfecte run — hou je HP hoog!' : `${starHintLine()} — pickups helpen`) : 'Tip: blokkeer meer · vul chakra · Rasengan op baas',
@@ -4731,7 +4891,7 @@ class Game {
             this.floater(f.x + f.face * 30, f.y - 120, `COMBO ×${this.combo}!`, '#ffd75e', 17);
           }
         }
-        const buff = f.isPlayer ? (this.dmgBuffMul || 1) : 1;
+        const buff = f.isPlayer ? (this.dmgBuffMul || 1) * (this.stageDmgMul || 1) : 1;
         const hitRoll = rollHitDamage(f, spec, comboMul * buff);
         if (hitRoll.crit) applyCritFx(this, m.x, m.y);
         m.takeDamage(hitRoll.dmg, f.face * spec.kb, this);
@@ -5420,6 +5580,15 @@ class Game {
       fillHudText(c, `Level ${this.level.n} — Golf ${Math.min(wv, this.level.waves.length)}/${this.level.waves.length}`, W / 2, 30, {
         fill: a11yHighContrast() ? '#fff' : 'rgba(255,255,255,.9)',
       });
+      if (this.stageAlly) {
+        c.font = '700 11px sans-serif';
+        c.fillStyle = this.stageAlly.color || '#7cf5ff';
+        c.fillText(`🎲 ${this.stageAlly.name}`, W / 2, 44);
+      } else if (this.gambleBossWave > 0) {
+        c.font = '700 11px sans-serif';
+        c.fillStyle = '#ffb0b8';
+        c.fillText(`🎲 Super-baas mogelijk · golf ${this.gambleBossWave}`, W / 2, 44);
+      }
       this.drawAdventureWavePips(c);
       if (p.alive) {
         const hpPct = p.hp / Math.max(1, p.maxhp);
@@ -5939,7 +6108,7 @@ function initCharSelectChrome() {
 }
 
 const UI = {
-  screens: ['menuScreen', 'levelScreen', 'weaponScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
+  screens: ['menuScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   charPickStep: 1,
   charSagaFilter: 'all',
   lastResult: null,
@@ -6002,7 +6171,7 @@ const UI = {
     if (!host) return;
     const touch = IS_TOUCH ? 'touch' : 'toetsenbord';
     const modes = [
-      { id: 'adventure', label: 'Avontuur', tip: 'Groen HP · oranje rage · blauw chakra · 🌀 vol' },
+      { id: 'adventure', label: 'Avontuur', tip: 'Groen HP · oranje rage · blauw chakra · 🌀 vol · vóór elk level: 🎲 gok (super-baas of ally)' },
       { id: 'training', label: 'Training', tip: 'Lasers ontwijken · 2 rondes · Robot Chidori' },
       { id: 'wall', label: 'Muur', tip: '60s · combo = sneller · beat record' },
       { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
@@ -6033,6 +6202,10 @@ const UI = {
       if (active === 'pauseScreen' && game) {
         state = 'play';
         this.show(null);
+        return;
+      }
+      if (active === 'gambleScreen') {
+        this.show('levelScreen');
         return;
       }
       if (active === 'resultScreen') {
@@ -6540,9 +6713,35 @@ const UI = {
         if (boss) tip += ' · eindigt met baas';
         if (best > 0) tip += ` · jouw ${'★'.repeat(best)}${'☆'.repeat(3 - best)}`;
         el.title = tip;
-        el.addEventListener('click', () => { AudioSys.sfx('select'); startGame('adventure', { level: n }); });
+        el.addEventListener('click', () => { AudioSys.sfx('select'); openGambleForLevel(n); });
       }
       grid.appendChild(el);
+    }
+  },
+
+  renderGamble(levelN) {
+    const head = document.getElementById('gambleHead');
+    const diceRow = document.getElementById('gambleDiceRow');
+    const sumLine = document.getElementById('gambleSumLine');
+    const outEl = document.getElementById('gambleOutcome');
+    if (head) head.textContent = `🎲 Gok — level ${levelN}`;
+    const g = lastGambleRoll;
+    const face = (d) => ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][d - 1] || '🎲';
+    if (g && diceRow) {
+      diceRow.textContent = `${face(g.d1)} ${face(g.d2)}`;
+      if (sumLine) sumLine.textContent = `Som: ${g.d1} + ${g.d2} = ${g.sum}`;
+    } else {
+      if (diceRow) diceRow.textContent = '🎲 🎲';
+      if (sumLine) sumLine.textContent = 'Tik op Gooi dobbelstenen — of start zonder gok';
+    }
+    if (outEl) {
+      if (!g) outEl.textContent = 'Super-baas (som ≤5) of super-bondgenoot (som ≥9) kan dit level veranderen.';
+      else {
+        outEl.textContent = gambleOutcomeLabel(g);
+        const col = g.outcome === 'superBoss' || g.outcome === 'miniBoss' ? '#ffb0b8'
+          : (g.outcome === 'superAlly' || g.outcome === 'ally') ? (GAMBLE_ALLIES[g.allyId]?.color || '#7cf5ff') : '#8fa3d9';
+        outEl.style.color = col;
+      }
     }
   },
 
@@ -6887,6 +7086,24 @@ function bindPress(el, handler) {
 bindPress(document.getElementById('btnAdventure'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderLevels(); UI.show('levelScreen');
 });
+bindPress(document.getElementById('btnGambleRoll'), () => {
+  AudioSys.init();
+  AudioSys.sfx('select');
+  lastGambleRoll = rollStageGamble();
+  UI.renderGamble(pendingAdvLevel || save.unlocked || 1);
+  try { AudioSys.sting('modeAdventure'); } catch (_) {}
+});
+bindPress(document.getElementById('btnGambleStart'), () => {
+  AudioSys.sfx('select');
+  startAdventureFromGamble(false);
+});
+bindPress(document.getElementById('btnGambleSkip'), () => {
+  AudioSys.sfx('select');
+  startAdventureFromGamble(true);
+});
+document.querySelectorAll('[data-back-gamble]').forEach((b) => {
+  bindPress(b, () => { AudioSys.sfx('select'); UI.show('levelScreen'); });
+});
 const btnContinue = document.getElementById('btnContinue');
 bindPress(btnContinue, () => {
   AudioSys.init(); AudioSys.sfx('select');
@@ -7203,7 +7420,7 @@ if (pauseVsRestart) {
 bindPress(document.getElementById('resAgain'), () => {
   const d = UI.lastResult;
   AudioSys.sfx('select');
-  if (d.mode === 'adventure') startGame('adventure', { level: d.level });
+  if (d.mode === 'adventure') openGambleForLevel(d.level);
   else if (d.mode === 'versus') {
     const p1 = d.p1 || vsSelect.p1;
     const p2 = d.p2 || vsSelect.p2;
@@ -7218,7 +7435,7 @@ bindPress(document.getElementById('resNext'), () => {
   const d = UI.lastResult;
   if (!d || d.mode !== 'adventure' || !d.win) return;
   AudioSys.sfx('select');
-  startGame('adventure', { level: Math.min(MAX_LEVEL, d.level + 1) });
+  openGambleForLevel(Math.min(MAX_LEVEL, d.level + 1));
 });
 bindPress(document.getElementById('resMenu'), () => { UI.goMenu(); });
 

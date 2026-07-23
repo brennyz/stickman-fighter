@@ -544,8 +544,29 @@
 <div id="levelScreen" class="screen">
   <button class="btn back-btn" data-back>&#8592; Terug</button>
   <h2 class="head">Kies een level</h2>
-  <div class="subtitle">50 levels · kleur = hoogste rariteit · rode = baas · 3★ &gt;72% HP · 2★ &gt;38%</div>
+  <div class="subtitle">50 levels · kleur = hoogste rariteit · rode = baas · 3★ &gt;72% HP · 2★ &gt;38% · daarna 🎲 gok voor super-baas of bondgenoot</div>
   <div class="grid" id="levelGrid"></div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home>🏠 Terug naar menu</button></div>
+</div>
+
+<div id="gambleScreen" class="screen">
+  <button class="btn back-btn" data-back-gamble>&#8592; Terug</button>
+  <h2 class="head" id="gambleHead">🎲 Gok — level …</h2>
+  <div class="subtitle">Twee dobbelstenen: pech = super-baas in een willekeurige golf · geluk = sterke bondgenoot (buff alleen dit level)</div>
+  <div class="step-card" style="width:min(92vw,420px);text-align:center;padding:18px 16px">
+    <div id="gambleDiceRow" style="font-size:min(14vw,52px);letter-spacing:.12em;margin:8px 0">🎲 🎲</div>
+    <div id="gambleSumLine" style="font-size:15px;color:#8fa3d9;margin-bottom:10px">Tik op <b style="color:#ffd75e">Gooi dobbelstenen</b></div>
+    <div id="gambleOutcome" style="font-size:14px;line-height:1.45;color:#cfe0ff;min-height:3.2em"></div>
+  </div>
+  <button type="button" class="btn mode-btn b-adventure big-touch" id="btnGambleRoll" style="width:min(86vw,420px);justify-content:center;margin-top:8px">
+    <span class="ico">🎲</span><div>Gooi dobbelstenen<small>2× d6 — random super-baas of ally</small></div>
+  </button>
+  <button type="button" class="btn mode-btn b-continue big-touch" id="btnGambleStart" style="width:min(86vw,420px);justify-content:center;margin-top:10px">
+    <span class="ico">⚔️</span><div>Start level<small>Met gok-resultaat · nog niet gegooid = gewoon level</small></div>
+  </button>
+  <button type="button" class="btn mode-btn b-gray big-touch" id="btnGambleSkip" style="width:min(86vw,420px);justify-content:center;margin-top:8px">
+    <span class="ico">⏭️</span><div>Overslaan<small>Geen gok — geen extra baas of buff</small></div>
+  </button>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home>🏠 Terug naar menu</button></div>
 </div>
 
@@ -749,7 +770,7 @@
 </script>
 
 <script src="tunnel-check.js?v=202"></script>
-<script src="game.js?v=239"></script>
+<script src="game.js?v=90"></script>
 <script src="install.js?v=203"></script>
 <script>
 (function () {

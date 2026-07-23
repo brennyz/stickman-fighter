@@ -168,11 +168,8 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-23 | — | **IMPROVEMENT.md + Ralph d20** toegevoegd. Gameplay: canvas tikken alleen bij `state==='play'`. v1.7.2 / SW v20. |
 | 2026-07-23 | — | GitHub Pages live `brennyz.github.io/stickman-fighter/`. iPad: menu niet klikbaar → pointer-events fix. |
 | 2026-07-23 | 14 | v1.7 combo pulse, low-HP vignette, result tips. |
-| 2026-07-23 | 9 | v1.7.1 menu klikbaar (canvas niet over UI). |
+| 2026-07-23 | — | **User:** Avontuur 🎲 gok (2× d6) — random super-baas in golf of super-bondgenoot (stage buff). v1.13.0 / SW v90. |
 
----
-
-## Workflow voor agents
 
 1. Open **IMPROVEMENT.md** (dit bestand).
 2. Run **`./scripts/roll-improvement-d20.sh status`** — check PENDING.

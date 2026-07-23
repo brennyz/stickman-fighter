@@ -63,7 +63,7 @@ const get = (id) => {
 };
 
 [
-  'menuScreen', 'levelScreen', 'weaponScreen', 'styleScreen', 'settingsScreen',
+  'menuScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'styleScreen', 'settingsScreen',
   'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen',
   'resultScreen', 'pauseScreen', 'game', 'toastHost', 'pauseBtn', 'menuStats',
   'menuDailyHint', 'menuTipLine', 'menuPlayLink', 'togMusic', 'togSfx',
@@ -73,6 +73,7 @@ const get = (id) => {
   'pauseTogMusic', 'pauseTogSfx', 'pauseMusicVol', 'pauseSfxVol', 'tunnelBootOverlay', 'charPickStep', 'charGrid',
   'charGridScroll', 'charStatPreview', 'charP1Label', 'charP2Label', 'btnCharFight',
   'btnCharRandom', 'btnCharSwap', 'btnCharSagaClash', 'charIconRow', 'charPickBackP1', 'charSelectBack', 'netStatus',
+  'gambleHead', 'gambleDiceRow', 'gambleSumLine', 'gambleOutcome', 'btnGambleRoll', 'btnGambleStart', 'btnGambleSkip',
 ].forEach(get);
 get('menuScreen').classList.add('active');
 
