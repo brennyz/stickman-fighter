@@ -3,33 +3,33 @@
   "cyclesCompleted": 2,
   "rollFirst": [],
   "remaining": [
-    11,
-    17,
-    19,
+    1,
+    2,
+    3,
     5,
-    18,
-    16,
-    8,
-    15,
     6,
     7,
-    13,
+    8,
     9,
-    2,
+    11,
     12,
-    3
+    15,
+    16,
+    17,
+    18,
+    19
   ],
   "lastRoll": {
-    "face": 1,
-    "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
-    "rolledAt": "2026-07-23T20:38:01Z",
+    "face": 13,
+    "category": "Missies & achievements \u2014 daily loop, beloningen",
+    "rolledAt": "2026-07-23T20:48:29Z",
     "remainingCount": 15,
     "cycle": 2
   },
   "pending": {
-    "face": 1,
-    "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
-    "rolledAt": "2026-07-23T20:38:01Z",
+    "face": 13,
+    "category": "Missies & achievements \u2014 daily loop, beloningen",
+    "rolledAt": "2026-07-23T20:48:29Z",
     "remainingCount": 15,
     "cycle": 2
   },
@@ -369,7 +369,9 @@
       "id": "bgm-weapon-sfx",
       "d20Face": null,
       "userWords": "Meer bgm difference en goed letten op wapen geluiden",
-      "versions": ["1.13.6"],
+      "versions": [
+        "1.13.6"
+      ],
       "commits": [],
       "code": "SONGS training/versus/wall/mats, WEAPON_SWING_SFX, weaponHitSfx",
       "status": "done",
@@ -721,9 +723,9 @@
       "cycle": 2
     },
     {
-      "face": 1,
-      "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
-      "rolledAt": "2026-07-23T20:38:01Z",
+      "face": 13,
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
+      "rolledAt": "2026-07-23T20:48:29Z",
       "remainingCount": 15,
       "cycle": 2
     }
