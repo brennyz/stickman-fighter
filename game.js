@@ -56,13 +56,14 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.8.8';
+const APP_VERSION = '1.8.9';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0 },
   achievements: {}, daily: null, vsPlayedIds: [] };
+const MAX_LEVEL = 50;
 let save = loadSave();
 
 function loadSave() {
@@ -865,7 +866,6 @@ const SPECIES_ORDER = Object.keys(SPECIES).sort((a, b) =>
   (rarityOf(SPECIES[a].rarity).order - rarityOf(SPECIES[b].rarity).order) || SPECIES[a].name.localeCompare(SPECIES[b].name)
 );
 
-const MAX_LEVEL = 50;
 const WORLD_THEMES = [
   'veld','veld','veld','bos','bos',
   'bos','grot','grot','grot','vulkaan',
@@ -4785,6 +4785,13 @@ window.addEventListener('offline', updateNetStatus);
 function bootGame() {
   if (window.__sfBooted) return;
   window.__sfBooted = true;
+  try {
+    save = sanitizeSave(save);
+    persist();
+  } catch (err) {
+    console.error('[Stickman] save sanitize', err);
+    save = Object.assign({}, DEFAULT_SAVE);
+  }
   dismissTunnelOverlayIfStatic();
   syncPlayLayer();
   resize();
@@ -4857,8 +4864,11 @@ function reportAppError(label) {
 window.addEventListener('error', (e) => reportAppError(e.message || 'error'));
 window.addEventListener('unhandledrejection', (e) => reportAppError(String(e.reason || 'promise')));
 
-/** iPad Safari: soms geen click na touch — één synthetische click als backup. */
+/** iPad Safari: synthetische click alleen als echte click uitblijft (niet op desktop Chrome). */
 function bindIosUiTapFix() {
+  const needsTouchFix = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (!needsTouchFix) return;
   document.addEventListener('touchend', (e) => {
     syncPlayLayer();
     ensureMenuScreenActive();
