@@ -62,9 +62,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 1;
-const APP_VERSION = '1.12.22';
+const APP_VERSION = '1.12.23';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 85;
+const SW_CACHE_REV = 86;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -184,6 +184,10 @@ function applyCritFx(game, x, y) {
   game.floater(x, y - 132, 'CRIT!', '#ffd75e', 18);
   try { AudioSys.sfx('crit'); } catch (_) {}
   if (save.haptics !== false) haptic(10);
+  spawnFxRing(game, x, y - 42, '#ffd75e', fxLite() ? 9 : 15);
+  if (!motionReduced()) {
+    game.burst(x, y - 40, '#ffe259', fxLite() ? 4 : 8, { kind: 'spark', size: 2.6 });
+  }
 }
 
 function resolveProjHit(p) {
@@ -205,8 +209,13 @@ function projStrikeFighter(game, p, tgt, col) {
   game.floater(tgt.x, tgt.y - 115, '-' + dealt, col, 16);
   if (hit.crit) applyCritFx(game, tgt.x, tgt.y);
   if (p.kind === 'rinnegan' && p.pull) tgt.vx += Math.sign(p.vx || 1) * 160;
-  if (p.kind === 'chidori') game.burst(p.x, p.y, '#a8e0ff', 14);
-  else if (p.kind === 'rinnegan') game.burst(p.x, p.y, '#c47aff', 12);
+  if (p.kind === 'chidori') {
+    game.burst(p.x, p.y, '#a8e0ff', 14);
+    spawnFxRing(game, p.x, p.y, '#c8f0ff', fxLite() ? 8 : 12);
+  } else if (p.kind === 'rinnegan') {
+    game.burst(p.x, p.y, '#c47aff', 12);
+    spawnFxRing(game, p.x, p.y, '#e0a8ff', fxLite() ? 8 : 11);
+  }
   if (p.hitSet) p.hitSet.add(tgt);
   else if (!p.pierce) p.life = 0;
 }
@@ -2687,10 +2696,25 @@ function fxLite() {
   return !!(save.liteFx || Perf.tier >= 2 || (typeof motionReduced === 'function' && motionReduced()));
 }
 
+function ensureParticleRoom(game, slots) {
+  if (!game || slots <= 0) return true;
+  const cap = fxCaps();
+  let room = cap.particles - game.particles.length;
+  if (room >= slots) return true;
+  let need = slots - room;
+  for (let i = 0; i < game.particles.length && need > 0; ) {
+    const p = game.particles[i];
+    if (p.kind === 'ring') { i++; continue; }
+    game.particles.splice(i, 1);
+    need--;
+    room++;
+  }
+  return room >= slots;
+}
+
 function spawnFxRing(game, x, y, color, baseR) {
   if (!game || motionReduced() || fxLite()) return;
-  const cap = fxCaps();
-  if (game.particles.length >= cap.particles) return;
+  if (!ensureParticleRoom(game, 1)) return;
   const life = 0.34;
   game.particles.push({
     x, y, vx: 0, vy: 0, life, maxLife: life,
@@ -4880,6 +4904,11 @@ class Game {
       AudioSys.sfx('combo');
       this.floater(W * 0.5, 130, `COMBO ×${this.combo}!`, '#7cf5ff', 18);
     }
+    if ([5, 10, 15].includes(this.combo) && this.player && !motionReduced()) {
+      const col = this.combo >= 10 ? '#ffd75e' : '#7cf5ff';
+      spawnFxRing(this, this.player.x, this.player.y - 50, col, 9 + this.combo * 0.35);
+      if (this.combo === 5 || this.combo === 10) AudioSys.sfx('combo');
+    }
     if (this.combo === 3 || this.combo === 5 || this.combo === 8 || this.combo === 10) {
       haptic(14 + this.combo);
     }
@@ -4896,6 +4925,7 @@ class Game {
     if (motionReduced()) n = Math.max(floorN, Math.floor(n * 0.45));
     else if (save.liteFx || Perf.tier >= 1) n = Math.max(kind === 'spark' ? 1 : 3, Math.floor(n * 0.65));
     if (Perf.tier >= 2) n = Math.max(floorN, Math.floor(n * 0.55));
+    ensureParticleRoom(this, Math.min(n, 12));
     const cap = fxCaps();
     const room = cap.particles - this.particles.length;
     n = Math.min(n, Math.max(0, room));
