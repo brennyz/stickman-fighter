@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.15.0';
+const APP_VERSION = '1.15.1';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 107;
+const SW_CACHE_REV = 108;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -7430,6 +7430,11 @@ function initCharSelectChrome() {
   });
 }
 
+/** Inline SVG-slotje (art-upgrade 2/4) — vervangt 🔒 in level/wapen-lijsten. */
+const SVG_LOCK_ICON =
+  '<svg viewBox="0 0 24 24" style="width:1.15em;height:1.15em;vertical-align:-0.2em" fill="none" stroke="currentColor" stroke-width="2">' +
+  '<rect x="6" y="11" width="12" height="9" rx="2" fill="rgba(0,0,0,.3)"/><path d="M9 11V8a3 3 0 016 0v3"/></svg>';
+
 const UI = {
   screens: ['menuScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   charPickStep: 1,
@@ -8030,7 +8035,7 @@ const UI = {
         (!locked && n === save.unlocked ? ' lvl-current' : '');
       el.style.boxShadow = locked ? 'none' : `0 5px 0 rgba(0,0,0,.35), 0 0 0 2px ${rar.color}55`;
       el.innerHTML = locked
-        ? '&#128274;'
+        ? SVG_LOCK_ICON
         : `${n}${boss ? '<small>BAAS</small>' : `<small style="color:${rar.color}">${rar.name}</small>`}` +
           (save.stars[n] ? `<span class="lvl-stars">${'★'.repeat(save.stars[n])}</span>` : '');
       if (!locked) {
@@ -8050,7 +8055,7 @@ const UI = {
     const diceRow = document.getElementById('gambleDiceRow');
     const sumLine = document.getElementById('gambleSumLine');
     const outEl = document.getElementById('gambleOutcome');
-    if (head) head.textContent = `🎲 Gok — level ${levelN}`;
+    if (head) head.textContent = `Gok — level ${levelN}`;
     const g = lastGambleRoll;
     const face = (d) => ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][d - 1] || '🎲';
     if (g && diceRow) {
@@ -8104,7 +8109,7 @@ const UI = {
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
-      right.innerHTML = locked ? `&#128274; Lv ${w.unlock}` : (save.weapon === w.id ? '&#10004; gekozen' : 'kies');
+      right.innerHTML = locked ? `${SVG_LOCK_ICON} Lv ${w.unlock}` : (save.weapon === w.id ? '&#10004; gekozen' : 'kies');
       el.appendChild(right);
       if (!locked) el.addEventListener('click', () => {
         save.weapon = w.id; persist(); AudioSys.sfx('select');
