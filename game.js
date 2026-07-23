@@ -17,7 +17,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.7.4';
+const APP_VERSION = '1.7.6';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -186,6 +186,14 @@ const ACHIEVEMENTS = [
     test: s => s.lvl >= 10 },
   { id: 'dex10', name: 'Monsterkenner', desc: '10 soorten in monsterboek', icon: '📖',
     test: s => Object.keys(s.dex).length >= 10 },
+  { id: 'dexFull', name: 'Encyclopedie', desc: 'Alle monster-soorten ontdekt', icon: '📚',
+    test: s => Object.keys(s.dex).length >= SPECIES_ORDER.length },
+  { id: 'dex100', name: 'Jager', desc: '100 monster-kills geregistreerd', icon: '🎯',
+    test: s => {
+      let n = 0;
+      for (const v of Object.values(s.dex || {})) n += v || 0;
+      return n >= 100;
+    } },
   { id: 'train5', name: 'Robotbreker', desc: '5× training gewonnen', icon: '🤖',
     test: s => s.trainWins >= 5 },
   { id: 'wall100', name: 'Sloper', desc: 'Muurrecord 100+', icon: '🧱',
@@ -388,6 +396,20 @@ function headLiveFromPage() {
 
 const xpNeed = lvl => 60 + (lvl - 1) * 40;
 const dexCount = () => Object.keys(save.dex).length;
+const dexTotalKills = () => {
+  let n = 0;
+  for (const id of Object.keys(save.dex)) n += save.dex[id] || 0;
+  return n;
+};
+const MONSTER_TYPE_LABEL = {
+  hop: 'Hups', fly: 'Vlieg', charge: 'Charge', shoot: 'Schiet', tank: 'Tank', dragon: 'Draak',
+};
+const DEX_REF_STATS = { hp: 420, dmg: 28, speed: 150 };
+function dexMiniStat(label, val, max, color) {
+  const pct = Math.min(100, Math.round((val / max) * 100));
+  return `<span class="dex-mini-stat" title="${label} ${val}"><span class="dex-mini-l">${label}</span>` +
+    `<span class="dex-mini-track"><i style="width:${pct}%;background:${color}"></i></span></span>`;
+}
 function dexHpBonus() {
   let bonus = 0;
   for (const id of Object.keys(save.dex)) {
@@ -462,6 +484,8 @@ const STYLES = [
     needTrain: 5, hint: 'Win 5× training' },
   { id: 'void', name: 'Void-waker', body: '#2a1840', accent: '#ff6b9d', bandana: '#5a1040', coat: true,
     needLvl: 40, hint: 'Unlock op Lv 40' },
+  { id: 'hunter', name: 'Jagerlook', body: '#6b5344', accent: '#5ad06a', bandana: '#3d5c32', hunter: true,
+    needDexKills: 75, hint: '75 kills in monsterboek' },
 ];
 const styleById = id => STYLES.find(s => s.id === id) || STYLES[0];
 function styleUnlocked(st) {
@@ -469,6 +493,7 @@ function styleUnlocked(st) {
   if (st.needLvl && save.lvl >= st.needLvl) return true;
   if (st.needTrain && save.trainWins >= st.needTrain) return true;
   if (st.needDex && dexCount() >= st.needDex) return true;
+  if (st.needDexKills && dexTotalKills() >= st.needDexKills) return true;
   return false;
 }
 function applyPlayerStyle(fighter) {
@@ -1780,6 +1805,15 @@ class Fighter {
       c.fillStyle = st.accent;
       c.beginPath(); c.arc(hx, hy - 32, 4.5, 0, TAU); c.fill();
     }
+    if (st.hunter) {
+      c.fillStyle = 'rgba(61,92,50,.55)';
+      c.beginPath();
+      c.moveTo(hipX - 16, hipY - 6); c.lineTo(hipX + 16, hipY - 6);
+      c.lineTo(shX + 20, shY - 2); c.lineTo(shX - 20, shY - 2);
+      c.closePath(); c.fill();
+      c.fillStyle = st.accent;
+      c.beginPath(); c.arc(hx - 14, hy - 8, 3, 0, TAU); c.fill();
+    }
   }
 
   drawRobotHead(c, hx, hy) {
@@ -2663,6 +2697,8 @@ class Game {
     this.theme = 'sloop';
     this.wallTimer = 60;
     this.score = 0; this.combo = 0; this.comboT = 0; this.wallGen = 0;
+    this.maxCombo = 0;
+    this.wallRecordToast = false;
     this.layoutWall(true);
     this.banner('SLOOP DE MUUR!', 1.5, '#ffd75e', 46);
     AudioSys.play('battle');
@@ -2823,6 +2859,12 @@ class Game {
             this.score++;
             this.combo++; this.comboT = 1.4;
             this.noteCombo();
+            if (!this.wallRecordToast && this.score > save.bestWall) {
+              this.wallRecordToast = true;
+              this.floater(W * 0.5, 118, 'NIEUW RECORD!', '#ffd75e', 22);
+              haptic(18);
+              AudioSys.sfx('bonus');
+            }
             this.burst(b.x + b.w / 2, b.y + b.h / 2, `hsl(${b.hue},50%,45%)`, 14);
             AudioSys.sfx(b.bonus ? 'explode' : 'brick');
             this.shake(b.bonus ? 6 : 3, b.bonus ? 0.16 : 0.12);
@@ -3292,17 +3334,34 @@ class Game {
         c.beginPath(); c.arc(W / 2 + 34 + i * 18, 54, 6, 0, TAU); c.fill();
       }
     } else if (this.mode === 'wall') {
-      c.font = '900 30px sans-serif'; c.fillStyle = this.wallTimer < 10 ? '#ff6b6b' : '#fff';
-      c.fillText(Math.ceil(Math.max(0, this.wallTimer)), W / 2, 42);
+      const tLeft = Math.ceil(Math.max(0, this.wallTimer));
+      const urgent = this.wallTimer < 10;
+      c.font = '900 30px sans-serif';
+      c.fillStyle = urgent ? '#ff6b6b' : '#fff';
+      if (urgent && !save.reducedMotion) {
+        c.save();
+        c.translate(W / 2, 42);
+        c.scale(1 + Math.sin(this.t * 12) * 0.06, 1 + Math.sin(this.t * 12) * 0.06);
+        c.fillText(String(tLeft), 0, 0);
+        c.restore();
+      } else {
+        c.fillText(String(tLeft), W / 2, 42);
+      }
       c.font = '800 17px sans-serif'; c.fillStyle = '#ffd75e';
       c.fillText(`Stenen: ${this.score}`, W / 2, 68);
+      c.font = '700 13px sans-serif';
+      const rec = Math.max(save.bestWall, this.score);
+      c.fillStyle = this.score > 0 && this.score >= save.bestWall ? '#7cfc8a' : 'rgba(255,255,255,.5)';
+      c.fillText(`Record: ${rec}`, W / 2, 86);
       if (this.combo > 1) {
         const pulse = 1 + Math.sin(this.t * 10) * 0.1;
         c.save();
-        c.translate(W / 2, 94);
+        c.translate(W / 2, 112);
         c.scale(pulse, pulse);
         c.font = '900 22px sans-serif'; c.fillStyle = '#7cf5ff';
         c.fillText(`COMBO ×${this.combo}`, 0, 0);
+        c.font = '700 12px sans-serif'; c.fillStyle = 'rgba(124,245,255,.85)';
+        c.fillText(`+${Math.min(this.combo, 12) * 4}% sloop`, 0, 18);
         c.restore();
       }
     } else if (this.mode === 'versus' && this.p2) {
@@ -3754,6 +3813,16 @@ const UI = {
   },
 
   renderDex() {
+    const sumEl = document.getElementById('dexSummary');
+    if (sumEl) {
+      const totalHp = dexHpBonus();
+      const kills = dexTotalKills();
+      sumEl.style.display = 'block';
+      sumEl.innerHTML =
+        `Boek <b>${dexCount()}/${SPECIES_ORDER.length}</b> · kills <b>${kills}</b> · bonus max HP <b>+${totalHp}</b>` +
+        `<div class="dex-mini-row">${dexMiniStat('HP', totalHp, SPECIES_ORDER.length * 25, '#6ee06e')}` +
+        `${dexMiniStat('Kills', kills, 150, '#ffd75e')}</div>`;
+    }
     const list = document.getElementById('dexList');
     list.innerHTML = '';
     for (const id of SPECIES_ORDER) {
@@ -3777,8 +3846,14 @@ const UI = {
       el.appendChild(cv);
       const info = document.createElement('div');
       const hpB = rarityHpBonus(sp.rarity);
+      const typeLbl = MONSTER_TYPE_LABEL[sp.type] || sp.type;
+      const statRow = kills
+        ? `<div class="dex-mini-row">${dexMiniStat('HP', sp.hp, DEX_REF_STATS.hp, '#6ee06e')}` +
+          `${dexMiniStat('ATK', sp.dmg, DEX_REF_STATS.dmg, '#ff7a4d')}` +
+          `${dexMiniStat('SPD', sp.speed, DEX_REF_STATS.speed, '#7cf5ff')}</div>`
+        : '';
       info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>` : ''}</div>
-        <div class="cinfo">${kills ? `Type: ${sp.type} · ${sp.xp} XP · unlock Lv ${UNLOCK_AT[id] || '?'}` : 'Nog niet verslagen'}</div>`;
+        <div class="cinfo">${kills ? `${typeLbl} · basis HP ${sp.hp} · dmg ${sp.dmg} · spd ${sp.speed} · ${sp.xp} XP · Lv ${UNLOCK_AT[id] || '?'}` : 'Nog niet verslagen'}</div>${statRow}`;
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
