@@ -56,7 +56,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.8.9';
+const APP_VERSION = '1.9.0';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -300,23 +300,63 @@ function bumpDaily(type, amount) {
   if (changed) { persist(); checkAchievements(); if (UI.renderMissions) UI.renderMissions(); }
 }
 
-function claimDailyTask(taskId) {
+function claimableDailyTasks() {
+  ensureDaily();
+  return save.daily.tasks.filter(t => t.done && !t.claimed && dailyDef(t.id));
+}
+
+function claimDailyTask(taskId, opts) {
+  opts = opts || {};
   ensureDaily();
   const t = save.daily.tasks.find(x => x.id === taskId);
   const def = dailyDef(taskId);
-  if (!t || !def || !t.done || t.claimed) return;
+  if (!t || !def || !t.done || t.claimed) return 0;
   t.claimed = true;
   grantMetaXP(def.xp);
+  if (!opts.silent) {
+    AudioSys.sfx('bonus');
+    UI.toast(`+${def.xp} XP · ${def.text}`, 2600);
+  }
+  persist();
+  if (!opts.skipRefresh) {
+    checkDailyAllBonus();
+    UI.renderMissions();
+  }
+  return def.xp;
+}
+
+function claimAllDailyReady() {
+  ensureDaily();
+  const ready = claimableDailyTasks();
+  if (!ready.length) {
+    UI.toast('Nog geen missie klaar om te claimen', 2400);
+    return;
+  }
+  let total = 0;
+  for (const t of ready) total += claimDailyTask(t.id, { silent: true, skipRefresh: true });
   AudioSys.sfx('bonus');
   persist();
   checkDailyAllBonus();
   UI.renderMissions();
+  UI.renderMenu();
+  UI.toast(ready.length === 1
+    ? `+${total} XP geclaimd`
+    : `${ready.length} missies · +${total} XP`, 3200);
 }
 
 function claimDailyDayBonus() {
   ensureDaily();
-  if (save.daily.dayBonusClaimed) return;
-  if (!save.daily.tasks.every(t => t.claimed)) return;
+  if (save.daily.dayBonusClaimed) {
+    UI.toast('Dagbonus al geclaimd — morgen weer 3 nieuwe', 2800);
+    return;
+  }
+  const left = save.daily.tasks.filter(t => !t.claimed).length;
+  if (left > 0) {
+    UI.toast(left === 1
+      ? 'Nog 1 missie claimen voor de dagbonus'
+      : `Nog ${left} missies claimen voor +80 XP dagbonus`, 3000);
+    return;
+  }
   save.daily.dayBonusClaimed = true;
   save.stats.dailyBonusCount = (save.stats.dailyBonusCount || 0) + 1;
   grantMetaXP(80);
@@ -324,7 +364,8 @@ function claimDailyDayBonus() {
   persist();
   checkAchievements();
   UI.renderMissions();
-  UI.toast('Dagbonus +80 XP!', 3200);
+  UI.renderMenu();
+  UI.toast('Dagbonus! +80 XP · tot morgen', 3400);
 }
 
 function grantMetaXP(n) {
@@ -341,8 +382,27 @@ function grantMetaXP(n) {
 function checkDailyAllBonus() {
   ensureDaily();
   if (save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed) {
-    UI.toast('Alle missies geclaimd — pak de dagbonus!', 3500);
+    UI.toast('Alles geclaimd — tik Dagbonus (+80 XP)', 3500);
   }
+}
+
+function dailyStatusLine() {
+  ensureDaily();
+  const tasks = save.daily.tasks;
+  const done = tasks.filter(t => t.done).length;
+  const claimed = tasks.filter(t => t.claimed).length;
+  const ready = tasks.filter(t => t.done && !t.claimed).length;
+  const achN = Object.keys(save.achievements).length;
+  if (save.daily.dayBonusClaimed) {
+    return `Vandaag klaar · ${achN}/${ACHIEVEMENTS.length} prestaties · morgen nieuwe missies`;
+  }
+  if (ready > 0) {
+    return `Claim klaar: ${ready}× XP · ${done}/3 gedaan · ${achN}/${ACHIEVEMENTS.length} prestaties`;
+  }
+  if (claimed === 3) {
+    return `3/3 geclaimd — pak dagbonus (+80 XP) · ${achN}/${ACHIEVEMENTS.length} prestaties`;
+  }
+  return `Vandaag: ${done}/3 klaar · ${claimed}/3 geclaimd · ${achN}/${ACHIEVEMENTS.length} prestaties`;
 }
 
 function unlockAchievement(id) {
@@ -4109,9 +4169,8 @@ const UI = {
     document.getElementById('togMusic').classList.toggle('off', !save.music);
     document.getElementById('togSfx').classList.toggle('off', !save.sfx);
     ensureDaily();
-    const done = save.daily.tasks.filter(t => t.done).length;
     const missEl = document.getElementById('menuDailyHint');
-    if (missEl) missEl.textContent = `Vandaag: ${done}/3 missies klaar · ${Object.keys(save.achievements).length}/${ACHIEVEMENTS.length} prestaties`;
+    if (missEl) missEl.textContent = dailyStatusLine();
     const tipEl = document.getElementById('menuTipLine');
     if (tipEl) {
       const tips = [
@@ -4120,6 +4179,7 @@ const UI = {
         'Tip: muur-combo’s = sneller sloop & meer XP',
         'Tip: monsterboek vullen = meer max HP',
         'Tip: “Verder spelen” hervat je laatste modus',
+        'Tip: Missies → claim XP (of “Claim alle klaar”)',
       ];
       const i = Math.floor(Date.now() / 8000) % tips.length;
       tipEl.textContent = tips[i];
@@ -4146,40 +4206,96 @@ const UI = {
     const dailyHost = document.getElementById('dailyList');
     const achHost = document.getElementById('achList');
     if (!dailyHost || !achHost) return;
+    const tasks = save.daily.tasks;
+    const readyN = tasks.filter(t => t.done && !t.claimed).length;
+    const claimedN = tasks.filter(t => t.claimed).length;
+    const doneN = tasks.filter(t => t.done).length;
+    const sub = document.getElementById('missionsSub');
+    if (sub) {
+      sub.textContent = save.daily.dayBonusClaimed
+        ? 'Dag voltooid — morgen 3 nieuwe lichte missies'
+        : '3 lichte dagmissies · geen grind · claim wanneer klaar';
+    }
+    const sum = document.getElementById('missionsSummary');
+    if (sum) {
+      sum.style.display = 'block';
+      const bonusLeft = !save.daily.dayBonusClaimed;
+      sum.innerHTML = `<b>${doneN}/3</b> klaar · <b>${claimedN}/3</b> geclaimd` +
+        (readyN ? ` · <b style="color:#ffd75e">${readyN} klaar om te claimen</b>` : '') +
+        (bonusLeft
+          ? (claimedN === 3
+            ? ' · <b style="color:#7cfc8a">dagbonus +80 XP klaar</b>'
+            : ` · dagbonus na ${3 - claimedN} claim${3 - claimedN === 1 ? '' : 's'}`)
+          : ' · dagbonus ✔');
+    }
+    const claimAll = document.getElementById('dailyClaimAllBtn');
+    if (claimAll) {
+      claimAll.style.display = readyN >= 2 ? 'flex' : 'none';
+      const lab = claimAll.querySelector('div');
+      if (lab) {
+        const xpSum = claimableDailyTasks().reduce((n, t) => n + (dailyDef(t.id)?.xp || 0), 0);
+        lab.innerHTML = `Claim alle klaar<small>+${xpSum} XP in één tik</small>`;
+      }
+    }
     dailyHost.innerHTML = '';
-    for (const t of save.daily.tasks) {
+    for (const t of tasks) {
       const def = dailyDef(t.id);
       if (!def) continue;
       const el = document.createElement('div');
-      el.className = 'step-card';
+      const claimable = t.done && !t.claimed;
+      el.className = 'step-card mission-card' + (claimable ? ' claimable' : '') + (t.claimed ? ' claimed' : '');
       const pct = Math.min(100, Math.round(t.progress / def.goal * 100));
-      el.innerHTML = `<b>${def.text}</b><br><span style="opacity:.85">${t.progress}/${def.goal} · +${def.xp} XP</span>` +
+      let status;
+      if (t.claimed) status = '<span style="color:#7cfc8a">✔ Geclaimd</span>';
+      else if (t.done) status = '<span style="color:#ffd75e">Klaar — claim je XP</span>';
+      else status = `<span style="opacity:.85">Bezig ${t.progress}/${def.goal}</span>`;
+      el.innerHTML = `<b>${def.text}</b><br>${status}` +
+        `<div style="opacity:.8;font-size:13px;margin-top:4px">Beloning +${def.xp} XP</div>` +
         `<div class="xpline" style="margin-top:8px"><div style="width:${pct}%"></div></div>`;
-      if (t.done && !t.claimed) {
+      if (claimable) {
         const btn = document.createElement('button');
-        btn.className = 'btn tog';
-        btn.style.marginTop = '10px';
-        btn.textContent = 'Claim XP';
+        btn.type = 'button';
+        btn.className = 'btn claim-btn';
+        btn.textContent = `Claim +${def.xp} XP`;
         btn.addEventListener('click', () => { AudioSys.sfx('select'); claimDailyTask(t.id); });
         el.appendChild(btn);
-      } else if (t.claimed) {
-        el.innerHTML += `<div style="color:#7cfc8a;margin-top:8px">✔ Geclaimd</div>`;
       }
       dailyHost.appendChild(el);
     }
     const bonusBtn = document.getElementById('dailyBonusBtn');
     if (bonusBtn) {
-      const ready = save.daily.tasks.every(x => x.claimed) && !save.daily.dayBonusClaimed;
-      bonusBtn.style.display = ready ? 'flex' : 'none';
-      bonusBtn.disabled = !ready;
+      const ready = claimedN === 3 && !save.daily.dayBonusClaimed;
+      const label = bonusBtn.querySelector('div');
+      if (save.daily.dayBonusClaimed) {
+        bonusBtn.style.display = 'flex';
+        bonusBtn.disabled = true;
+        bonusBtn.classList.add('done');
+        if (label) label.innerHTML = 'Dagbonus geclaimd<small>Morgen weer nieuw</small>';
+      } else {
+        bonusBtn.classList.remove('done');
+        bonusBtn.style.display = 'flex';
+        bonusBtn.disabled = !ready;
+        bonusBtn.style.opacity = ready ? '1' : '0.45';
+        if (label) {
+          label.innerHTML = ready
+            ? 'Dagbonus claimen<small>+80 XP · tik hier</small>'
+            : `Dagbonus<small>Nog ${3 - claimedN} claim${3 - claimedN === 1 ? '' : 's'} nodig</small>`;
+        }
+      }
     }
+    const achSum = document.getElementById('achSummary');
+    const gotN = Object.keys(save.achievements).length;
+    if (achSum) achSum.textContent = `${gotN}/${ACHIEVEMENTS.length} unlocked · blijven staan (geen daily reset)`;
     achHost.innerHTML = '';
+    const today = todayKey();
     for (const ach of ACHIEVEMENTS) {
-      const got = !!save.achievements[ach.id];
+      const got = save.achievements[ach.id];
       const el = document.createElement('div');
-      el.className = 'card' + (got ? '' : ' locked');
-      el.style.borderColor = got ? '#ffd75e' : undefined;
-      el.innerHTML = `<div class="cname">${ach.icon} ${ach.name}</div><div class="cinfo">${ach.desc}${got ? ' · ✔' : ''}</div>`;
+      const isNew = got === today;
+      el.className = 'card' + (got ? '' : ' locked') + (isNew ? ' ach-card new' : '');
+      el.style.borderColor = got ? (isNew ? '#7cf5ff' : '#ffd75e') : undefined;
+      el.innerHTML = `<div class="cname">${ach.icon} ${ach.name}${isNew ? ' · nieuw' : ''}</div>` +
+        `<div class="cinfo">${ach.desc}${got ? ' · ✔ ' + got : ' · nog open'}</div>`;
       achHost.appendChild(el);
     }
   },
@@ -4506,7 +4622,19 @@ if (btnSettings) btnSettings.addEventListener('click', () => {
 });
 const btnMissions = document.getElementById('btnMissions');
 if (btnMissions) btnMissions.addEventListener('click', () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.renderMissions(); UI.show('missionsScreen');
+  AudioSys.init(); AudioSys.sfx('select');
+  UI.renderMissions();
+  UI.show('missionsScreen');
+  const n = claimableDailyTasks().length;
+  if (n > 0) {
+    setTimeout(() => UI.toast(n === 1 ? '1 missie klaar om te claimen' : `${n} missies klaar om te claimen`, 2600), 200);
+  } else if (save.daily && save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed) {
+    setTimeout(() => UI.toast('Dagbonus +80 XP staat klaar', 2600), 200);
+  }
+});
+const dailyClaimAllBtn = document.getElementById('dailyClaimAllBtn');
+if (dailyClaimAllBtn) dailyClaimAllBtn.addEventListener('click', () => {
+  AudioSys.init(); AudioSys.sfx('select'); claimAllDailyReady();
 });
 const dailyBonusBtn = document.getElementById('dailyBonusBtn');
 if (dailyBonusBtn) dailyBonusBtn.addEventListener('click', () => {

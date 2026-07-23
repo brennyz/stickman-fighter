@@ -263,6 +263,15 @@
   body.high-contrast .back-btn:focus-visible { outline: 3px solid #ffd75e; outline-offset: 3px; }
   body.high-contrast .char-card .char-tag,
   body.high-contrast .dex-mini-l { color: #c8d8f8; }
+
+  .mission-card { width:min(92vw,480px); position:relative; }
+  .mission-card.claimable { border-color: rgba(255,215,94,.55); background: rgba(255,215,94,.1);
+      box-shadow: 0 0 0 1px rgba(255,215,94,.2); }
+  .mission-card.claimed { opacity: .78; }
+  .mission-card .claim-btn { width:100%; margin-top:10px; justify-content:center;
+      background:linear-gradient(180deg,#ffe259,#c97a20); color:#2a1a00; min-height:46px; font-size:16px; }
+  body.reduced-motion .mission-card.claimable { box-shadow: none; }
+  .ach-card.new { border-color:#7cf5ff !important; background:rgba(124,245,255,.1); }
 </style>
 </head>
 <body>
@@ -415,12 +424,17 @@
 <div id="missionsScreen" class="screen">
   <button class="btn back-btn" data-back>&#8592; Terug</button>
   <h2 class="head">Missies &amp; prestaties</h2>
-  <div class="subtitle">3 dagelijkse taken · reset om middernacht (UTC)</div>
+  <div class="subtitle" id="missionsSub">3 lichte dagmissies · claim XP wanneer klaar</div>
+  <div class="statbar" id="missionsSummary" style="display:none;margin-bottom:10px"></div>
+  <button type="button" class="btn mode-btn b-continue" id="dailyClaimAllBtn" style="display:none;width:min(86vw,480px);justify-content:center">
+    <span class="ico">&#10004;&#65039;</span><div>Claim alle klaar<small>+XP in één tik</small></div>
+  </button>
   <div id="dailyList" style="width:min(92vw,480px)"></div>
   <button type="button" class="btn mode-btn b-adventure" id="dailyBonusBtn" style="display:none;width:min(86vw,480px);justify-content:center">
-    <span class="ico">&#127873;</span><div>Dagbonus claimen (+80 XP)</div>
+    <span class="ico">&#127873;</span><div>Dagbonus<small>+80 XP · alle 3 geclaimd</small></div>
   </button>
   <h2 class="head" style="margin-top:24px;font-size:min(7vw,34px)">Prestaties</h2>
+  <div class="subtitle" id="achSummary" style="margin-top:-8px;margin-bottom:8px;font-size:13px"></div>
   <div id="achList" style="width:min(92vw,520px)"></div>
 </div>
 

@@ -5,14 +5,13 @@
     6,
     7,
     8,
-    13,
     14,
     20
   ],
   "lastRoll": {
-    "face": 3,
-    "category": "Versus 2P \u2014 split controls, rematch, char balance",
-    "rolledAt": "2026-07-23T13:37:18Z",
+    "face": 13,
+    "category": "Missies & achievements \u2014 daily loop, beloningen",
+    "rolledAt": "2026-07-23T14:19:46Z",
     "remainingCount": 5,
     "cycle": 0
   },
@@ -36,6 +35,13 @@
       "note": "Versus HUD timer/rematch/spawn reset",
       "version": "1.8.6",
       "doneAt": "2026-07-23T13:38:12Z",
+      "cycle": 0
+    },
+    {
+      "face": 13,
+      "note": "Daily claim UX + claim-all + status copy",
+      "version": "1.9.0",
+      "doneAt": "2026-07-23T14:20:43Z",
       "cycle": 0
     }
   ],
@@ -142,6 +148,13 @@
       "face": 3,
       "category": "Versus 2P \u2014 split controls, rematch, char balance",
       "rolledAt": "2026-07-23T13:37:18Z",
+      "remainingCount": 5,
+      "cycle": 0
+    },
+    {
+      "face": 13,
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
+      "rolledAt": "2026-07-23T14:19:46Z",
       "remainingCount": 5,
       "cycle": 0
     }
