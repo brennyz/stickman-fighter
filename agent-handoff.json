@@ -13,9 +13,9 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.12.0",
-    "swCache": "stickfighter-app-v63",
-    "gameJsQuery": "game.js?v=213",
+    "appVersion": "1.12.1",
+    "swCache": "stickfighter-app-v64",
+    "gameJsQuery": "game.js?v=214",
     "featureBranch": "cursor/mats-coin-aim-b75e",
     "pushBlocked": "Cloud-agent git push → 403; merge/push lokaal of fix repo-koppeling in Cursor Dashboard (zie AGENTS.md)."
   },

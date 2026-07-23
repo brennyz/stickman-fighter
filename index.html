@@ -416,7 +416,7 @@
       <div class="arcade-pre">MONSTER ARENA · INSERT COIN</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine">▶ KIES JE MODUS ▶</p>
-      <div class="subtitle" id="menuVerLine" style="color:#ffb0a8;font-size:11px;margin:6px 0 0;opacity:.95">v1.12.0 · arcade</div>
+      <div class="subtitle" id="menuVerLine" style="color:#ffb0a8;font-size:11px;margin:6px 0 0;opacity:.95">v1.12.1 · arcade</div>
     </div>
   </div>
   <div class="arcade-menu-body">
@@ -609,6 +609,12 @@
   <button class="btn big-install" id="installAndroidBtn" type="button" style="display:none">
     &#128229; Nu installeren
   </button>
+  <div id="installAndroidSteps" style="display:none;width:100%;max-width:480px">
+    <div class="step-card"><span class="step-num">1</span> Gebruik <b>Google Chrome</b> (https-link, geen Instagram-browser).</div>
+    <div class="step-card"><span class="step-num">2</span> Tik hierboven op <b>Nu installeren</b> als die knop zichtbaar is.</div>
+    <div class="step-card"><span class="step-num">3</span> Anders: Chrome menu &#8942; → <b>App installeren</b> of <b>Toevoegen aan startscherm</b>.</div>
+    <div class="step-card"><span class="step-num">4</span> Open via het icoon — liggend = meer ruimte · touch = zelfde joystick.</div>
+  </div>
   <div id="installIosSteps" style="display:none;width:100%;max-width:480px">
     <div class="step-card"><span class="step-num">1</span> Zorg dat je in <b>Safari</b> zit (niet in Bestanden-app).</div>
     <div class="step-card"><span class="step-num">2</span> Tik onderaan op <b>Delen</b> &#x1F4E4; (vierkant met pijl omhoog).</div>
@@ -621,7 +627,7 @@
   <div id="installDoneMsg" class="step-card" style="display:none;border-color:rgba(124,252,138,.5);color:#7cfc8a">
     &#10004; Je speelt al als app! Sluit Safari en open het icoon <b>Stickman</b> op je beginscherm.
   </div>
-  <div class="subtitle" style="margin-top:12px">Na installatie: lang indrukken op het icoon (Android) voor snelkoppelingen Avontuur / Training / Muur.</div>
+  <div class="subtitle" style="margin-top:12px">Android: lang indrukken op icoon voor snelkoppelingen. iPad: Safari → Zet op beginscherm (zie stappen hierboven).</div>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home>🏠 Terug naar menu</button></div>
 </div>
 
@@ -648,6 +654,7 @@
       <li><b>Rariteiten:</b> Gewoon → Ongewoon → Zeldzaam → Episch → Legendarisch → Mythisch. Zeldzamer = meer XP &amp; meer max HP.</li>
       <li><b>50 levels:</b> elke 5 levels een baas. Level 50 = Guvvedrak + Voidkonijn + Schaduwvorst.</li>
       <li><b>Backup:</b> elke save wordt dubbel opgeslagen — bij problemen: <b>Instellingen → Herstel save uit backup</b>.</li>
+      <li><b>Delen:</b> menu → <b>Deel link</b> — vrienden op Android openen in Chrome → Zet in app-lade. Zie ANDROID-DELEN.txt op GitHub.</li>
       <li><b>Offline:</b> na 1× online openen cache’t de app HTML+JS — banner onderaan bij geen net. Tunnel-link heeft internet nodig; GitHub Pages + app-lade = stabielst.</li>
     </ul>
   </div>
@@ -690,7 +697,7 @@
 </script>
 
 <script src="tunnel-check.js?v=202"></script>
-<script src="game.js?v=213"></script>
+<script src="game.js?v=214"></script>
 <script src="install.js?v=201"></script>
 <script>
 (function () {

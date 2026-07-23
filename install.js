@@ -1,6 +1,7 @@
 'use strict';
 
 (function () {
+  const isAndroid = /Android/i.test(navigator.userAgent);
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
     || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
@@ -11,6 +12,7 @@
   const screen = document.getElementById('installScreen');
   const back = document.getElementById('installBack');
   const androidBtn = document.getElementById('installAndroidBtn');
+  const androidSteps = document.getElementById('installAndroidSteps');
   const iosSteps = document.getElementById('installIosSteps');
   const desktopSteps = document.getElementById('installDesktopSteps');
   const fileNote = document.getElementById('installFileNote');
@@ -46,8 +48,9 @@
 
     if (doneMsg) doneMsg.style.display = isStandalone ? 'block' : 'none';
     if (androidBtn) androidBtn.style.display = (!isStandalone && deferredPrompt) ? 'flex' : 'none';
+    if (androidSteps) androidSteps.style.display = (!isStandalone && isAndroid && !deferredPrompt) ? 'block' : 'none';
     if (iosSteps) iosSteps.style.display = (!isStandalone && isIOS) ? 'block' : 'none';
-    if (desktopSteps) desktopSteps.style.display = (!isStandalone && !isIOS && !deferredPrompt) ? 'block' : 'none';
+    if (desktopSteps) desktopSteps.style.display = (!isStandalone && !isIOS && !isAndroid && !deferredPrompt) ? 'block' : 'none';
     if (fileNote) fileNote.style.display = (location.protocol === 'file:') ? 'block' : 'none';
   }
 

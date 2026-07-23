@@ -19,7 +19,8 @@ data["updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 host = "$URL"
 if "github.io" in host:
     data["githubPages"] = "$URL"
-    data["stableHint"] = "Vaste GitHub Pages-link — ideaal voor iPad PWA."
+    data["bookmarkShare"] = "$URL"
+    data["stableHint"] = "Vaste GitHub Pages-link — deel voor Android/iPad PWA."
 elif "netlify.app" in host:
     data["netlifyUrl"] = "$URL"
     data["stableHint"] = "Vaste Netlify-link — ideaal voor iPad PWA."

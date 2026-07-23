@@ -1,7 +1,7 @@
 {
   "name": "Stickman Fighter — Monster Arena",
   "short_name": "Stickman",
-  "description": "Stickman ninja arena — Rasengan, monsters, 2 spelers op iPad, RabbitRobot training.",
+  "description": "Stickman ninja arena — Rasengan, monsters, 2 spelers touch, RabbitRobot training. Werkt op Android, iPad en desktop.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -41,7 +41,7 @@
     {
       "name": "2 spelers",
       "short_name": "2P",
-      "description": "Character select · duel op één iPad",
+      "description": "Character select · duel op één scherm (touch)",
       "url": "./index.html?mode=versus",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }

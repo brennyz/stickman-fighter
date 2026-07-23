@@ -1,0 +1,61 @@
+STICKMAN FIGHTER — DELEN MET ANDROID (en iPhone)
+================================================
+
+JA — je kunt het spel aan vrienden geven zonder Play Store.
+Het is een website + PWA (Progressive Web App): gratis link, installeren als icoon.
+
+─── WAT JIJ DOET (EENMALIG) ───
+
+1) Zorg dat de game online staat op een VASTE https-link:
+
+   https://brennyz.github.io/stickman-fighter/
+
+   (Werkt pas voor iedereen na git push naar main — zie GITHUB-PUSH.txt.
+    Tunnel loca.lt is alleen voor thuis/dev, niet delen met vrienden.)
+
+2) In het spel (menu): tik **Deel link** — stuurt WhatsApp / e-mail / etc.
+   Of kopieer handmatig dezelfde URL hierboven.
+
+─── WAT JE VRIEND OP ANDROID DOET ───
+
+1) Open de link in **Google Chrome** (Firefox kan, Chrome is het makkelijkst).
+
+2) Eerste keer: even wachten tot het menu laadt (versie onderaan, bv. v1.12.1).
+
+3) App installeren (kies één):
+
+   A) Menu in het spel → **Zet in app-lade** → knop **Nu installeren**
+      (als Chrome dat aanbiedt)
+
+   B) Chrome menu ⋮ → **App installeren** / **Toevoegen aan startscherm**
+
+4) Open daarna via het **Stickman-icoon** — liggend draaien werkt het best.
+
+5) Optioneel: lang indrukken op icoon → snelkoppelingen Avontuur / Training / Muur.
+
+─── VERSCHIL IPAD vs ANDROID ───
+
+| | iPad (thuis) | Android (vrienden) |
+|---|--------------|---------------------|
+| Beste link delen | github.io/.../ (hoofdlink) | zelfde hoofdlink |
+| Extra iPad-cache fix | .../ipad.html (geen SW) | niet nodig — gewoon index |
+| Browser | Safari | Chrome |
+| 2 spelers | links/rechts op één scherm | zelfde touch-controls |
+
+De **Deel link**-knop gebruikt bewust de hoofd-URL (geen ipad.html),
+zodat Android offline-cache + installatie werkt.
+
+─── GEEN INTERNET? ───
+
+Na 1× online openen cache’t de app (service worker).
+Vriend moet daarna alleen af en toe online voor updates (menu → Verse version).
+
+─── PLAY STORE? ───
+
+Niet nodig voor gratis delen. Play Store = apart account + APK (niet in deze map).
+
+─── PROBLEMEN ───
+
+• Link laadt niet → Pages nog niet gepusht; stuur github.io-link na push.
+• Geen “App installeren” → site moet https zijn; probeer Chrome, niet in-app browser van Instagram.
+• Oude versie → in menu **Verse versie** tikken.

@@ -1,9 +1,10 @@
 /* Stickman Fighter — hardened offline cache (PWA) */
-const CACHE = 'stickfighter-app-v63';
+const CACHE = 'stickfighter-app-v64';
 const ASSETS = [
   './',
   './index.html',
   './ipad.html',
+  './android.html',
   './game.js',
   './tunnel-check.js',
   './install.js',
@@ -21,6 +22,7 @@ function isNetworkFirstPath(pathname) {
     p.endsWith('/hosting.json') ||
     p.endsWith('/index.html') ||
     p.endsWith('/ipad.html') ||
+    p.endsWith('/android.html') ||
     p.endsWith('/game.js') ||
     p.endsWith('/tunnel-check.js') ||
     p.endsWith('/install.js') ||

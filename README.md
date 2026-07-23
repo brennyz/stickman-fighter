@@ -40,7 +40,13 @@ In het hoofdmenu zie je ook de box **“Installeer als app”** met dezelfde sta
 
 ## Android / Chrome
 
-Als de site online staat, verschijnt soms **“App installeren”** in het menu (of via het browsermenu). Dat installeert dezelfde PWA.
+Als de site online staat op **https://** (GitHub Pages):
+
+1. Open de link in **Chrome** op Android.
+2. Menu in het spel → **Zet in app-lade** of Chrome ⋮ → **App installeren**.
+3. **Deel link** in het menu stuurt de vaste Pages-URL naar vrienden (WhatsApp, e-mail).
+
+Stappen voor jou en vrienden: **[ANDROID-DELEN.txt](./ANDROID-DELEN.txt)**.
 
 ## App Store (.ipa)?
 

@@ -55,9 +55,9 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.12.0';
+const APP_VERSION = '1.12.1';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 63;
+const SW_CACHE_REV = 64;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -843,7 +843,32 @@ function copyPlayLink() {
     const url = await resolveSharePlayUrl();
     try {
       await navigator.clipboard.writeText(url);
-      UI.toast('Vaste speel-link gekopieerd!', 2800);
+      UI.toast('Speel-link gekopieerd — Android: Chrome → app installeren', 3600);
+    } catch (_) {
+      UI.toast(url, 4500);
+    }
+  };
+  go();
+}
+
+function sharePlayLink() {
+  const go = async () => {
+    const url = await resolveSharePlayUrl();
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Stickman Fighter',
+          text: 'Gratis stickman vechtspel — Android, iPad & touch',
+          url,
+        });
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      UI.toast('Link gekopieerd — stuur naar vrienden (Chrome op Android)', 3600);
     } catch (_) {
       UI.toast(url, 4500);
     }
@@ -865,22 +890,37 @@ function pickStablePlayUrl(hosting) {
   if (/\.loca\.lt$/i.test(location.hostname) && j.bookmarkTunnel) {
     return j.bookmarkTunnel.replace(/\/?$/, '').replace(/\/ipad\.html$/, '') + '/ipad.html';
   }
-  return j.bookmarkPages || j.primary || j.githubPages || j.stable || '';
+  return j.bookmarkShare || j.primary || j.githubPages || j.bookmarkPages || j.stable || '';
+}
+
+function githubPagesRootUrl() {
+  if (!location.hostname.endsWith('.github.io')) return '';
+  const seg = location.pathname.split('/').filter(Boolean)[0];
+  return seg ? `${location.origin}/${seg}/` : `${location.origin}/`;
 }
 
 async function resolveSharePlayUrl() {
+  const { hosting, liveUrl } = await loadHostingBundle();
+  const j = hosting || {};
+  if (j.bookmarkShare) return j.bookmarkShare.replace(/\/?$/, '/') ;
+  if (j.primary && String(j.primary).includes('github.io')) return j.primary.replace(/\/?$/, '/') ;
+  if (j.githubPages) return String(j.githubPages).replace(/\/?$/, '/') ;
+  const gh = githubPagesRootUrl();
+  if (gh) return gh;
   if (location.hostname.endsWith('.github.io')) {
     const base = location.href.split('?')[0].split('#')[0];
-    return base.includes('/ipad.html') ? base : base.replace(/\/?$/, '/ipad.html');
+    return base.replace(/\/ipad\.html$/i, '/').replace(/\/index\.html$/i, '/');
   }
   if (/\.loca\.lt$/i.test(location.hostname)) {
-    return location.origin + '/ipad.html';
+    return j.bookmarkShare || j.githubPages || j.primary || (location.origin + '/');
   }
-  const { hosting, liveUrl } = await loadHostingBundle();
   const stable = pickStablePlayUrl(hosting);
-  if (stable) return stable;
-  if (liveUrl && !liveUrl.includes('loca.lt')) return liveUrl;
-  if (location.protocol !== 'file:') return location.href.split('?')[0].split('#')[0];
+  if (stable) return stable.replace(/\/ipad\.html$/i, '/');
+  if (liveUrl && !liveUrl.includes('loca.lt')) return liveUrl.replace(/\/ipad\.html$/i, '/');
+  if (location.protocol !== 'file:') {
+    const href = location.href.split('?')[0].split('#')[0];
+    return href.replace(/\/ipad\.html$/i, '/').replace(/\/index\.html$/i, '/');
+  }
   return liveUrl || headLiveFromPage();
 }
 
@@ -5575,7 +5615,7 @@ const UI = {
         'Tip: monsterboek vullen = meer max HP',
         'Tip: “Verder spelen” hervat je laatste modus',
         'Tip: Missies → claim XP (of “Claim alle klaar”)',
-        'Tip: Zet in app-lade → speelt offline na 1× online',
+        'Tip: Deel link → vrienden op Android: Chrome → app installeren',
       ];
       const i = Math.floor(Date.now() / 8000) % tips.length;
       tipEl.textContent = tips[i];
@@ -5597,14 +5637,14 @@ const UI = {
     const playLinkEl = document.getElementById('menuPlayLink');
     if (playLinkEl) {
       if (location.hostname.endsWith('.github.io')) {
-        playLinkEl.textContent = '✓ GitHub Pages — stabiele link (Deel speel-link in menu)';
+        playLinkEl.textContent = '✓ GitHub Pages — Deel link (Android + iPad)';
       } else if (!playLinkEl.dataset.loaded) {
         playLinkEl.dataset.loaded = '1';
         loadHostingBundle().then(({ hosting }) => {
           const u = pickStablePlayUrl(hosting);
           if (u) {
             playLinkEl.innerHTML =
-              `Vaste link (iPad): <a href="${u}" style="color:#7cf5ff;font-weight:800">${u.replace(/^https:\/\//, '')}</a>`;
+              `Deel met vrienden: <a href="${u}" style="color:#7cf5ff;font-weight:800">${u.replace(/^https:\/\//, '')}</a>`;
           }
         }).catch(() => {});
       }
@@ -6301,7 +6341,7 @@ bindPress(document.getElementById('togSfx'), () => {
 });
 const btnSharePlay = document.getElementById('btnSharePlay');
 bindPress(btnSharePlay, () => {
-  AudioSys.init(); AudioSys.sfx('select'); copyPlayLink();
+  AudioSys.init(); AudioSys.sfx('select'); sharePlayLink();
 });
 bindPress(document.getElementById('pauseBtn'), () => {
   if (state === 'play') {
