@@ -14,13 +14,7 @@
     "remainingCount": 3,
     "cycle": 1
   },
-  "pending": {
-    "face": 14,
-    "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
-    "rolledAt": "2026-07-23T18:57:52Z",
-    "remainingCount": 3,
-    "cycle": 1
-  },
+  "pending": null,
   "implemented": [
     {
       "face": 2,
@@ -209,6 +203,13 @@
       "note": "dead onboarding wrappers + dup keydown dash",
       "version": "1.12.16",
       "doneAt": "2026-07-23T18:32:04Z",
+      "cycle": 1
+    },
+    {
+      "face": 14,
+      "note": "Rasengan halo/impact ring + burst cap Lite FX",
+      "version": "1.12.18",
+      "doneAt": "2026-07-23T18:58:38Z",
       "cycle": 1
     }
   ],
