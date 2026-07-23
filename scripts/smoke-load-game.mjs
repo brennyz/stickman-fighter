@@ -72,7 +72,7 @@ const get = (id) => {
   'btnGuvve', 'pauseResume', 'pauseQuit', 'resAgain', 'resNext', 'resMenu',
   'pauseTogMusic', 'pauseTogSfx', 'tunnelBootOverlay', 'charPickStep', 'charGrid',
   'charGridScroll', 'charStatPreview', 'charP1Label', 'charP2Label', 'btnCharFight',
-  'btnCharRandom', 'btnCharSwap', 'charPickBackP1', 'charSelectBack', 'netStatus',
+  'btnCharRandom', 'btnCharSwap', 'btnCharSagaClash', 'charIconRow', 'charPickBackP1', 'charSelectBack', 'netStatus',
 ].forEach(get);
 get('menuScreen').classList.add('active');
 

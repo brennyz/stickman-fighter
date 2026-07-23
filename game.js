@@ -55,9 +55,9 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.11.1';
+const APP_VERSION = '1.11.2';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 55;
+const SW_CACHE_REV = 56;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -426,6 +426,12 @@ const ACHIEVEMENTS = [
     test: s => (s.stats.vsMatches || 0) >= 5 },
   { id: 'vs_roster', name: 'Vol roster', desc: 'Speel met 10+ verschillende vechters (2P)', icon: '🎭',
     test: s => (s.vsPlayedIds || []).length >= 10 },
+  { id: 'saga_icons', name: 'Saga-legends', desc: 'Speel 2P met alle 5 saga-icon sticks', icon: '🌟',
+    test: s => {
+      const need = ['kiball', 'scrollkid', 'tidecrew', 'zipcape', 'dawnlance'];
+      const played = s.vsPlayedIds || [];
+      return need.every(id => played.includes(id));
+    } },
 ];
 
 function todayKey() {
@@ -1024,6 +1030,26 @@ const VS_SAGAS = {
 };
 function vsSagaMeta(id) { return VS_SAGAS[id] || VS_SAGAS.scroll; }
 function rosterFlair(r) { return r.flair || r.tag; }
+
+/** Deel 2 — vijf saga-icon sticks (parodie per saga) */
+const SAGA_ICON_IDS = ['kiball', 'scrollkid', 'tidecrew', 'zipcape', 'dawnlance'];
+function sagaIconEntries() {
+  return SAGA_ICON_IDS.map(id => vsRosterEntry(id)).filter(r => SAGA_ICON_IDS.includes(r.id));
+}
+function pickCharPoolFiltered() {
+  const filter = UI.charSagaFilter || 'all';
+  let pool = VS_ROSTER.filter(vsUnlocked);
+  if (filter !== 'all') pool = pool.filter(r => (r.saga || 'scroll') === filter);
+  return pool;
+}
+function pickSagaIconClash() {
+  const icons = sagaIconEntries().filter(vsUnlocked);
+  if (icons.length < 2) return null;
+  const a = choice(icons);
+  const diff = icons.filter(r => r.id !== a.id && r.saga !== a.saga);
+  const b = diff.length ? choice(diff) : choice(icons.filter(r => r.id !== a.id));
+  return { a, b };
+}
 
 const VS_ROSTER = [
   { id: 'hero', name: 'Stick Ninja', tag: 'Balanced', saga: 'scroll', flair: 'Headband rookie · balanced kunai',
@@ -4830,6 +4856,35 @@ function initCharSelectChrome() {
     AudioSys.sfx('bell');
     startGame('versus', { p1: vsSelect.p1, p2: vsSelect.p2 });
   });
+  const iconRow = document.getElementById('charIconRow');
+  if (iconRow && !iconRow.dataset.sfIconBound) {
+    iconRow.dataset.sfIconBound = '1';
+    iconRow.addEventListener('click', (e) => {
+      const chip = e.target.closest('.char-icon-chip:not(.locked)');
+      if (!chip || !chip.dataset.id) return;
+      pickVsRosterId(chip.dataset.id);
+    });
+    iconRow.addEventListener('touchend', (e) => {
+      const chip = e.target.closest('.char-icon-chip:not(.locked)');
+      if (!chip || !chip.dataset.id) return;
+      if (e.cancelable) e.preventDefault();
+      pickVsRosterId(chip.dataset.id);
+    }, { passive: false });
+  }
+  const clashBtn = document.getElementById('btnCharSagaClash');
+  bindPress(clashBtn, () => {
+    AudioSys.sfx('select');
+    const duo = pickSagaIconClash();
+    if (!duo) {
+      try { UI.toast('Unlock minstens 2 saga-icons (Ki/Scroll/Tide/Cape/Dawn)', 2800); } catch (_) {}
+      return;
+    }
+    vsSelect.p1 = duo.a.id;
+    vsSelect.p2 = duo.b.id;
+    UI.charPickStep = 2;
+    UI.renderCharSelect();
+    UI.toast(`${duo.a.name} vs ${duo.b.name} — saga clash!`, 2600);
+  });
 }
 
 const UI = {
@@ -4967,6 +5022,7 @@ const UI = {
     }
     const statEl = document.getElementById('charStatPreview');
     if (statEl) statEl.innerHTML = vsStatPreviewHtml(e1, e2);
+    this.renderCharIconRow();
     grid.innerHTML = '';
     const roster = filter === 'all'
       ? VS_ROSTER
@@ -4983,7 +5039,8 @@ const UI = {
       const sel1 = vsSelect.p1 === r.id;
       const sel2 = vsSelect.p2 === r.id;
       const focus = ok && ((this.charPickStep === 1 && !sel1) || (this.charPickStep === 2 && !sel2));
-      el.className = 'char-card' + (ok ? '' : ' locked') + (sel1 ? ' p1sel' : '') + (sel2 ? ' p2sel' : '') +
+      const isIcon = SAGA_ICON_IDS.includes(r.id);
+      el.className = 'char-card' + (ok ? '' : ' locked') + (isIcon ? ' saga-icon' : '') + (sel1 ? ' p1sel' : '') + (sel2 ? ' p2sel' : '') +
         (focus ? ' pick-hint' : '');
       el.dataset.id = r.id;
       el.setAttribute('role', 'button');
@@ -5075,8 +5132,11 @@ const UI = {
       rnd.dataset.bound = '1';
       bindPress(rnd, () => {
         AudioSys.sfx('select');
-        const pool = VS_ROSTER.filter(vsUnlocked);
-        if (pool.length < 2) return;
+        const pool = pickCharPoolFiltered();
+        if (pool.length < 2) {
+          UI.toast('Niet genoeg unlocked vechters in deze saga', 2400);
+          return;
+        }
         const a = choice(pool);
         let b = choice(pool);
         for (let i = 0; i < 8 && b.id === a.id; i++) b = choice(pool);
@@ -5087,6 +5147,40 @@ const UI = {
         UI.toast(`${a.name} vs ${b.name}!`, 2400);
       });
     }
+  },
+
+  renderCharIconRow() {
+    const row = document.getElementById('charIconRow');
+    if (!row) return;
+    row.innerHTML = '';
+    const label = document.createElement('div');
+    label.className = 'char-icon-row-title';
+    label.textContent = 'Saga-icons · deel 2 — tik om te kiezen';
+    row.appendChild(label);
+    const strip = document.createElement('div');
+    strip.className = 'char-icon-strip';
+    for (const id of SAGA_ICON_IDS) {
+      const r = vsRosterEntry(id);
+      const ok = vsUnlocked(r);
+      const saga = vsSagaMeta(r.saga || 'scroll');
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'char-icon-chip' + (ok ? '' : ' locked') +
+        (vsSelect.p1 === id ? ' p1sel' : '') + (vsSelect.p2 === id ? ' p2sel' : '');
+      chip.dataset.id = id;
+      const cv = document.createElement('canvas');
+      cv.width = 56; cv.height = 56;
+      const cc = cv.getContext('2d');
+      cc.translate(28, 44); cc.scale(0.82, 0.82);
+      buildVsFighter(r, 0, 1).draw(cc);
+      chip.appendChild(cv);
+      const cap = document.createElement('span');
+      cap.className = 'char-icon-name';
+      cap.textContent = saga.emoji + ' ' + r.name.replace(' Stick', '').replace(' Kid', '');
+      chip.appendChild(cap);
+      strip.appendChild(chip);
+    }
+    row.appendChild(strip);
   },
 
   renderMenu() {

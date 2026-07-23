@@ -320,6 +320,18 @@
   .char-card.p2sel { border-color:#ffb0b8; background:rgba(255,176,184,.12);
       box-shadow:0 0 0 1px rgba(255,176,184,.35), 0 5px 0 rgba(0,0,0,.3); }
   .char-card.p1sel.p2sel { border-image:linear-gradient(135deg,#7cf5ff,#ffb0b8) 1; }
+  .char-card.saga-icon { border-color:rgba(255,215,94,.45); box-shadow:0 0 0 1px rgba(255,215,94,.25), 0 5px 0 rgba(0,0,0,.3); }
+  .char-icon-row { width:min(94vw,720px); margin:0 0 10px; padding:10px 8px 12px; border-radius:16px;
+    background:rgba(255,215,94,.06); border:1px solid rgba(255,215,94,.2); }
+  .char-icon-row-title { font-size:11px; font-weight:900; color:#ffd75e; text-align:center; margin-bottom:8px; letter-spacing:.04em; }
+  .char-icon-strip { display:flex; gap:10px; overflow-x:auto; padding:4px 2px 6px; -webkit-overflow-scrolling:touch; justify-content:flex-start; }
+  .char-icon-chip { flex:0 0 auto; width:76px; padding:6px 4px 8px; border-radius:14px; border:2px solid rgba(255,255,255,.15);
+    background:rgba(0,0,0,.28); cursor:pointer; box-shadow:0 4px 0 rgba(0,0,0,.35); text-align:center; }
+  .char-icon-chip.p1sel { border-color:#7cf5ff; }
+  .char-icon-chip.p2sel { border-color:#ffb0b8; }
+  .char-icon-chip.locked { opacity:.4; cursor:not-allowed; }
+  .char-icon-chip canvas { display:block; margin:0 auto 4px; border-radius:10px; background:rgba(0,0,0,.25); }
+  .char-icon-name { display:block; font-size:9px; font-weight:800; color:#cfe0ff; line-height:1.2; }
   .char-duel-bar { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin:6px 0 12px;
       font-size:13px; font-weight:800; }
   .char-duel-bar span { padding:6px 14px; border-radius:999px; background:rgba(0,0,0,.28); }
@@ -398,7 +410,7 @@
       <div class="arcade-pre">MONSTER ARENA · INSERT COIN</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine">▶ KIES JE MODUS ▶</p>
-      <div class="subtitle" id="menuVerLine" style="color:#ffb0a8;font-size:11px;margin:6px 0 0;opacity:.95">v1.11.1 · arcade</div>
+      <div class="subtitle" id="menuVerLine" style="color:#ffb0a8;font-size:11px;margin:6px 0 0;opacity:.95">v1.11.2 · arcade</div>
     </div>
   </div>
   <div class="arcade-menu-body">
@@ -420,7 +432,7 @@
   <button class="btn mode-btn b-training" id="btnTraining"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="5" y="8" width="14" height="12" rx="2"/><path d="M9 8V6a3 3 0 016 0v2"/><circle cx="9" cy="14" r="1.5" fill="#7cf5ff"/><circle cx="15" cy="14" r="1.5" fill="#ff6b6b"/></svg></span>
     <div>Training vs RabbitRobot<small>Arcade duel · AI combo&apos;s &amp; lasers</small></div></button>
   <button class="btn mode-btn b-versus" id="btnVersus"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="8" cy="12" r="4" fill="rgba(124,245,255,.4)"/><circle cx="16" cy="12" r="4" fill="rgba(255,120,140,.4)"/><path d="M10.5 12h3" stroke="#ffd75e" stroke-width="2.5"/><path d="M11 10.5v3M13 10.5v3" stroke="#ffd75e" stroke-width="1.5"/></svg></span>
-    <div>2 spelers op iPad<small>18 vechters · best-of-3</small></div></button>
+    <div>2 spelers op iPad<small>23 vechters · saga-icons · best-of-3</small></div></button>
   <button class="btn mode-btn b-wall" id="btnWall"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><rect x="3" y="6" width="7" height="4" fill="#c97a20"/><rect x="11" y="6" width="7" height="4" fill="#d04028"/><rect x="7" y="11" width="7" height="4" fill="#ffd75e"/><rect x="3" y="16" width="7" height="4" fill="#c97a20"/><rect x="11" y="16" width="7" height="4" fill="#d04028"/></svg></span>
     <div>Muur Slopen<small>Staal · bomstenen · goud · 60 sec</small></div></button>
   <button class="btn mode-btn b-weapons" id="btnWeapons"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 20L20 4"/><path d="M16 4h4v4"/><circle cx="6" cy="18" r="2" fill="#c792ff"/></svg></span>
@@ -461,12 +473,14 @@
     <button type="button" data-saga="dawn">☀️ Dawn</button>
   </div>
   <div id="charSagaBlurb" class="subtitle" style="margin-top:0"></div>
+  <div class="char-icon-row" id="charIconRow"></div>
   <div class="step-card" id="charStatPreview" style="width:min(94vw,720px);font-size:12px;padding:10px 14px;margin:0 0 10px;text-align:center;color:#cfe0ff"></div>
   <div class="char-grid-scroll" id="charGridScroll">
     <div class="char-grid" id="charGrid"></div>
   </div>
   <button type="button" class="btn mode-btn b-gray big-touch" id="charPickBackP1" style="display:none;width:min(86vw,480px)">&#8592; Andere P1 kiezen</button>
   <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:min(94vw,720px)">
+    <button type="button" class="btn tog big-touch" id="btnCharSagaClash" style="flex:1 1 100%;margin:0">🌟 Saga clash (5 icons)</button>
     <button type="button" class="btn tog big-touch" id="btnCharRandom" style="flex:1 1 200px;margin:0">&#127922; Willekeurig duo</button>
     <button type="button" class="btn tog big-touch" id="btnCharSwap" style="flex:1 1 160px;margin:0">&#8644; Wissel P1/P2</button>
   </div>
@@ -612,7 +626,7 @@
       <li><b>🌀 Rasengan:</b> vul je <b>chakra</b>-balk — dan laad je een draaiende chakra-bol en knal je ‘m erin.</li>
       <li><b>💨 Substitutie:</b> rookwolk + ontwijk (knop of <b>Shift</b>). Korte onkwetsbaarheid.</li>
       <li><b>Kunai / Shuriken:</b> unlock vroeg — shuriken gooi je als projectiel.</li>
-      <li><b>2 spelers:</b> in het menu <b>2 spelers op iPad</b> — Street Fighter-stijl roster, best-of-3 rondes.</li>
+      <li><b>2 spelers:</b> roster met <b>5 saga-icons</b> (Ki/Scroll/Tide/Cape/Dawn parodie) + filters · best-of-3.</li>
       <li><b>RabbitRobot:</b> hij gebruikt <b>Chidori</b> (bliksem) — wacht tot hij open is.</li>
       <li><b>Muur:</b> bomstenen (rood) ontploffen, staal (grijs) is taai, goud (geel) = XP.</li>
       <li><b>Rariteiten:</b> Gewoon → Ongewoon → Zeldzaam → Episch → Legendarisch → Mythisch. Zeldzamer = meer XP &amp; meer max HP.</li>
@@ -659,7 +673,7 @@
 </script>
 
 <script src="tunnel-check.js?v=201"></script>
-<script src="game.js?v=206"></script>
+<script src="game.js?v=207"></script>
 <script src="install.js?v=201"></script>
 <script>
 (function () {

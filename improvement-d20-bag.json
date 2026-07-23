@@ -24,11 +24,11 @@
   ],
   "lastRoll": {
     "face": 18,
-    "category": "Character select deel 1 \u2014 stap UX, unlock hints, saga iPad",
-    "rolledAt": "2026-07-23T15:48:23Z",
+    "category": "Character select deel 2 \u2014 saga icons strip, clash, achievement",
+    "rolledAt": "2026-07-23T15:49:32Z",
     "remainingCount": 18,
     "cycle": 1,
-    "part": 1
+    "part": 2
   },
   "pending": null,
   "implemented": [
@@ -114,6 +114,13 @@
       "note": "Deel 1: step badge, unlock hints, saga bindPress, pick scroll",
       "version": "1.11.1",
       "doneAt": "2026-07-23T15:48:23Z",
+      "cycle": 1
+    },
+    {
+      "face": 18,
+      "note": "Deel 2: saga-icon strip, saga clash duo, filter random, prestatie",
+      "version": "1.11.2",
+      "doneAt": "2026-07-23T15:49:32Z",
       "cycle": 1
     }
   ],
@@ -286,6 +293,14 @@
       "remainingCount": 18,
       "cycle": 1,
       "part": 1
+    },
+    {
+      "face": 18,
+      "category": "Character select deel 2 \u2014 saga icons strip, clash, achievement",
+      "rolledAt": "2026-07-23T15:49:32Z",
+      "remainingCount": 18,
+      "cycle": 1,
+      "part": 2
     }
   ]
 }

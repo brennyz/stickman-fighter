@@ -104,8 +104,8 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-| 2026-07-23 | **18** | Char select **deel 1**: Stap 1/2 badge, unlock-hints op locked kaarten, saga bindPress iPad, pick-scroll + toasts. v1.11.1 / SW v55. |
-| 2026-07-23 | **18** | Char select 2-delig: saga-filters (Ki/Scroll/Tide/Cape/Dawn parodie-hints), touch-delegatie, preview; +5 icon-sticks. v1.11.0 / SW v54. |
+| 2026-07-23 | **18** | Char select **deel 2**: saga-icon strip, Saga clash-knop, filter-random, gouden icon-kaarten, prestatie Saga-legends. v1.11.2 / SW v56. |
+| 2026-07-23 | **18** | Char select **deel 1**: Stap 1/2 badge, unlock-hints, saga bindPress. v1.11.1 / SW v55. |
 | 2026-07-23 | — | **Merge main:** arcade title + SVG icons + v1.10.1/SW v50; hero canvas alleen op menu; docs sync. |
 | 2026-07-23 | **12** | Content: dex rariteit-chips, Kristallijn + Boekmeester looks, 3 dex-prestaties. v1.9.9 / SW v48. |
 | 2026-07-23 | **14** | FX: Rasengan buitenringen + capte spark-trail, combo-ring, banner glow; Lite FX respect. v1.9.8 / SW v47. |
