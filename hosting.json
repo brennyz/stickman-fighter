@@ -1,10 +1,10 @@
 {
   "tunnel": "https://stickfighter-ipad-b75e.loca.lt",
-  "updated": "2026-07-23T10:06:26Z",
+  "updated": "2026-07-23T10:46:21Z",
   "stable": null,
   "githubPages": null,
   "netlifyUrl": "https://stickfighter.netlify.app",
-  "stableHint": "Vaste tunnel-URL (bookmark op iPad). Bij problemen: pagina verversen.",
+  "stableHint": "Vaste link \u2014 bookmark stickfighter-ipad-b75e.loca.lt in Safari.",
   "forceStable": false,
   "deployScript": "./deploy-netlify.sh",
   "netlifySiteId": "31915418-e76c-4951-b587-bb7af00aaabd",
