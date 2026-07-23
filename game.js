@@ -17,7 +17,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.7.0';
+const APP_VERSION = '1.7.1';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -3417,6 +3417,9 @@ const UI = {
     for (const s of this.screens) document.getElementById(s).classList.remove('active');
     if (id) document.getElementById(id).classList.add('active');
     document.getElementById('pauseBtn').classList.toggle('show', !id && !!game);
+    // Alleen tijdens gevecht mag de canvas tikken vangen
+    const playing = !id && !!game && (typeof state === 'undefined' || state === 'play' || state === 'pause');
+    document.body.classList.toggle('is-playing', !!playing);
   },
 
   toast(msg, ms) {
@@ -3432,6 +3435,7 @@ const UI = {
   goMenu() {
     game = null;
     state = 'menu';
+    document.body.classList.remove('is-playing');
     Input.dualMode = false;
     Input.layout(W, H);
     this.renderMenu();
@@ -3849,6 +3853,7 @@ function startGame(mode, opts) {
   }
   game = new Game(mode, opts);
   state = 'play';
+  document.body.classList.add('is-playing');
   recordLastPlay(mode, opts);
   if (!save.tipsSeen) save.tipsSeen = {};
   if (!save.tipsSeen.chakra) {

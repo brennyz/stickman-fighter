@@ -120,31 +120,31 @@
 
   function ready() {
     hide();
+    if (overlay) {
+      overlay.style.pointerEvents = 'none';
+      overlay.setAttribute('hidden', '');
+    }
     window.dispatchEvent(new Event('sf:tunnel-ready'));
   }
 
   async function runCheck() {
     if (location.protocol === 'file:') {
-      hide();
+      ready();
       return { ok: true, offline: true };
     }
 
     const here = location.hostname;
 
-    if (isLocalDev(here)) {
+    // GitHub Pages / Netlify: direct spelen, nooit overlay blokkeren
+    if (isStaticHost(here) || isLocalDev(here)) {
       ready();
-      return { ok: true, local: true };
+      return { ok: true, static: isStaticHost(here), local: isLocalDev(here) };
     }
 
     let hosting = null;
     try {
       hosting = await fetchHosting();
     } catch (_) {}
-
-    if (isStaticHost(here)) {
-      ready();
-      return { ok: true, static: true };
-    }
 
     const stable = hosting && hosting.stable;
     if (stable && hostnameOf(stable) === here) {

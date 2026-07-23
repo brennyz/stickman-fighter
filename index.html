@@ -20,16 +20,20 @@
       -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
   html, body { width:100%; height:100%; overflow:hidden; background:#0a0d18;
       font-family: 'Nunito', -apple-system, Helvetica, sans-serif; }
-  #game { position:fixed; inset:0; width:100%; height:100%; display:block; touch-action:none; }
+  /* Canvas achter UI; geen hits in menu (anders vangt iPad alle tikken) */
+  #game { position:fixed; inset:0; width:100%; height:100%; display:block; touch-action:none;
+      z-index:1; pointer-events:none; }
+  body.is-playing #game { pointer-events:auto; }
 
   .screen { position:fixed; inset:0; display:none; flex-direction:column; align-items:center;
-      justify-content:flex-start; overflow-y:auto; padding:max(20px, env(safe-area-inset-top)) 20px 40px;
+      justify-content:flex-start; overflow-y:auto; -webkit-overflow-scrolling:touch;
+      padding:max(20px, env(safe-area-inset-top)) 20px 40px;
       background:
         radial-gradient(ellipse at 20% 10%, rgba(255,167,81,.12), transparent 40%),
         radial-gradient(ellipse at 80% 0%, rgba(74,125,255,.14), transparent 45%),
         radial-gradient(ellipse at 50% 100%, rgba(67,178,91,.08), transparent 40%),
         linear-gradient(180deg, #151b33 0%, #0a0d18 70%);
-      color:#fff; z-index:10; }
+      color:#fff; z-index:10; pointer-events:auto; }
   .screen.active { display:flex; animation: fadeIn .25s ease; }
   @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
   @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.04); } }
@@ -83,7 +87,7 @@
   #tunnelBootOverlay { position:fixed; inset:0; z-index:9999; display:flex; flex-direction:column;
       align-items:center; justify-content:center; padding:24px; text-align:center;
       background:linear-gradient(180deg,#0f1428 0%,#0a0d18 100%); color:#d5e0ff; }
-  #tunnelBootOverlay[hidden] { display:none !important; }
+  #tunnelBootOverlay[hidden] { display:none !important; pointer-events:none !important; }
   #tunnelBootOverlay .boot-spinner { width:48px; height:48px; border:4px solid rgba(255,215,94,.25);
       border-top-color:#ffd75e; border-radius:50%; animation: spin .9s linear infinite; margin-bottom:20px; }
   @keyframes spin { to { transform:rotate(360deg); } }
@@ -221,7 +225,7 @@
 <div id="toastHost"></div>
 <div id="netStatus" hidden aria-live="polite">Offline</div>
 
-<div id="tunnelBootOverlay" aria-live="polite" aria-busy="true">
+<div id="tunnelBootOverlay" hidden aria-live="polite" aria-busy="false">
   <div class="boot-spinner" aria-hidden="true"></div>
   <div id="tunnelBootTitle">Stickman Fighter</div>
   <div id="tunnelBootDetail">Verbinding controleren…</div>
