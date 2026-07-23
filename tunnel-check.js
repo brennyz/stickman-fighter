@@ -7,6 +7,8 @@
   const retryBtn = document.getElementById('tunnelBootRetry');
   const skipBtn = document.getElementById('tunnelBootSkip');
   const openLinkBtn = document.getElementById('tunnelBootOpenLink');
+  const hintEl = document.getElementById('tunnelBootHint');
+  const STABLE_TUNNEL = 'https://stickfighter-ipad-b75e.loca.lt';
 
   const LT_HEADERS = { 'Bypass-Tunnel-Reminder': 'true' };
 
@@ -16,6 +18,7 @@
     overlay.setAttribute('aria-busy', 'true');
     if (titleEl) titleEl.textContent = msg;
     if (detailEl) detailEl.textContent = detail || '';
+    if (hintEl && location.hostname.endsWith('.loca.lt')) hintEl.style.display = 'block';
     if (retryBtn) retryBtn.style.display = 'none';
     if (openLinkBtn) openLinkBtn.style.display = 'none';
   }
@@ -96,6 +99,7 @@
       liveUrl,
       health && health.ok !== false && health.url,
       hosting && hosting.tunnel,
+      STABLE_TUNNEL,
     ].filter(Boolean);
     for (const u of candidates) {
       if (isTunnelHost(hostnameOf(u))) return u;

@@ -1,5 +1,5 @@
 /* Stickman Fighter — offline cache voor PWA / “app op beginscherm” */
-const CACHE = 'stickfighter-app-v15';
+const CACHE = 'stickfighter-app-v16';
 const ASSETS = [
   './',
   './index.html',

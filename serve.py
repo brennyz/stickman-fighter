@@ -9,8 +9,9 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 KEEP_TUNNEL = os.path.join(ROOT, "keep-tunnel.sh")
-DEBOUNCE_SEC = 45
+DEBOUNCE_SEC = 120
 _last_ensure = 0.0
+_lock_path = os.path.join(os.environ.get("TMPDIR", "/tmp"), "stickman-tunnel-ensure.lock")
 
 
 def maybe_ensure_tunnel() -> None:
@@ -20,12 +21,19 @@ def maybe_ensure_tunnel() -> None:
         return
     _last_ensure = now
     try:
-        subprocess.run(
-            ["bash", KEEP_TUNNEL, "once"],
-            cwd=ROOT,
-            timeout=120,
-            capture_output=True,
-        )
+        with open(_lock_path, "a", encoding="utf-8") as lf:
+            try:
+                import fcntl
+
+                fcntl.flock(lf.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except (OSError, BlockingIOError):
+                return
+            subprocess.run(
+                ["bash", KEEP_TUNNEL, "once"],
+                cwd=ROOT,
+                timeout=120,
+                capture_output=True,
+            )
     except (subprocess.TimeoutExpired, OSError):
         pass
 
