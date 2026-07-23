@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "cyclesCompleted": 0,
+  "remaining": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    17,
+    18,
+    19,
+    20
+  ],
+  "lastRoll": {
+    "face": 7,
+    "category": "Save & backup \u2014 import/export, corruptie, migratie",
+    "rolledAt": "2026-07-23T13:21:41Z",
+    "remainingCount": 18,
+    "cycle": 0
+  },
+  "history": [
+    {
+      "face": 16,
+      "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
+      "rolledAt": "2026-07-23T13:21:41Z",
+      "remainingCount": 19,
+      "cycle": 0
+    },
+    {
+      "face": 7,
+      "category": "Save & backup \u2014 import/export, corruptie, migratie",
+      "rolledAt": "2026-07-23T13:21:41Z",
+      "remainingCount": 18,
+      "cycle": 0
+    }
+  ]
+}
