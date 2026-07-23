@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 1;
-const APP_VERSION = '1.13.4';
+const APP_VERSION = '1.13.5';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 94;
+const SW_CACHE_REV = 95;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1752,6 +1752,57 @@ function gambleOutcomeLabel(g) {
   return 'Neutraal — gewoon level (geen extra gok-effect)';
 }
 
+/** Intro-lied + FX voor elite / baas / super-baas (avontuur). */
+function triggerSpecialEnemyIntro(game, monster, kind) {
+  if (!game || !monster) return;
+  const tier = kind || (monster.superBoss ? 'superBoss' : (monster.elite ? 'elite' : 'boss'));
+  const name = (monster.sp && monster.sp.name) || 'Baas';
+  const rar = rarityOf(monster.sp?.rarity || 'rare');
+  const col = tier === 'superBoss' ? '#ffd75e' : (tier === 'boss' ? '#ff6b6b' : (rar.color || '#ffb0b8'));
+  monster.introT = tier === 'superBoss' ? 2.4 : (tier === 'boss' ? 2.0 : 1.55);
+  monster.introTier = tier;
+  const waveKey = `${game.mode || 'x'}:${game.waveIdx}:${tier === 'superBoss' ? 'super' : 'special'}`;
+  const firstOfWave = tier === 'superBoss' || game._specialIntroKey !== waveKey;
+  if (firstOfWave) game._specialIntroKey = waveKey;
+
+  if (firstOfWave) {
+    try {
+      if (tier === 'superBoss') {
+        AudioSys.sting('superBossIntro');
+        AudioSys.play('boss');
+        game.banner(`SUPER BAAS — ${name}!`, 2.0, col, 44);
+      } else if (tier === 'boss') {
+        AudioSys.sting('bossIntro');
+        AudioSys.play('boss');
+        game.banner(`BAAS — ${name}!`, 1.8, col, 42);
+      } else {
+        AudioSys.sting('eliteIntro');
+        AudioSys.play('elite');
+        game.banner(`ELITE — ${name}!`, 1.5, col, 38);
+      }
+    } catch (_) {}
+    try { AudioSys.sfx('roar'); } catch (_) {}
+  } else {
+    try { game.floater(monster.x, monster.y - monster.size - 20, name, col, 14); } catch (_) {}
+  }
+
+  const x = monster.x, y = monster.y - (monster.size || 40) * 0.4;
+  const burstN = motionReduced() || fxLite()
+    ? 8
+    : (firstOfWave ? (tier === 'superBoss' ? 28 : 18) : 8);
+  try {
+    game.burst(x, y, col, burstN);
+    if (firstOfWave) {
+      game.burst(x, y, '#fff', Math.ceil(burstN * 0.35));
+      spawnFxRing(game, x, y, col, tier === 'superBoss' ? 22 : 14);
+      if (tier !== 'elite') spawnFxRing(game, x, y - 20, '#fff', 10);
+      game.shake(tier === 'superBoss' ? 12 : (tier === 'boss' ? 9 : 6), tier === 'superBoss' ? 0.42 : 0.28);
+      game.freezeT = Math.max(game.freezeT || 0, tier === 'superBoss' ? 0.16 : 0.1);
+      haptic(tier === 'superBoss' ? 28 : 16);
+    }
+  } catch (_) {}
+}
+
 function applyGambleToStage(game, g) {
   if (!game || !g || !game.level) return;
   game.stageDmgMul = 1;
@@ -2044,6 +2095,27 @@ const AudioSys = {
           T(1320, 880, 0.07, 'sine', 0.08, now + 0.1);
         }
         break;
+      case 'eliteIntro':
+        T(98, 55, 0.22, 'sawtooth', 0.22, now);
+        N(0.18, 0.22, 500, false, now);
+        [392, 466, 523, 622].forEach((f, i) => T(f, f * 1.02, 0.09, 'square', 0.13, now + 0.12 + i * 0.07));
+        T(180, 90, 0.28, 'sine', 0.18, now + 0.35);
+        break;
+      case 'bossIntro':
+        T(70, 40, 0.32, 'sawtooth', 0.28, now);
+        N(0.28, 0.28, 380, false, now);
+        T(220, 110, 0.2, 'square', 0.2, now + 0.08);
+        [311, 370, 415, 494, 622].forEach((f, i) => T(f, f * 0.97, 0.1, 'triangle', 0.14, now + 0.18 + i * 0.08));
+        N(0.12, 0.2, 900, true, now + 0.55);
+        break;
+      case 'superBossIntro':
+        T(55, 32, 0.4, 'sawtooth', 0.32, now);
+        N(0.35, 0.32, 320, false, now);
+        T(140, 70, 0.28, 'square', 0.24, now + 0.1);
+        [262, 330, 392, 523, 659, 784].forEach((f, i) => T(f, f * 1.03, 0.11, 'square', 0.15, now + 0.22 + i * 0.09));
+        T(880, 220, 0.35, 'sawtooth', 0.18, now + 0.7);
+        N(0.2, 0.24, 700, true, now + 0.85);
+        break;
       default:
         T(480, 660, 0.06, 'sine', 0.11, now);
         break;
@@ -2108,6 +2180,14 @@ const AudioSys = {
         this.tone(midi(57), midi(57), spb * 3.8, 'sine', 0.06, mg, t);
       }
     }
+    if (s.id === 'elite' || s.id === 'boss') {
+      if (i === 0 && bar % 2 === 0) {
+        this.tone(midi(s.id === 'boss' ? 50 : 55), midi(s.id === 'boss' ? 38 : 43), spb * 2.4, 'sawtooth', 0.07, mg, t);
+      }
+      if (i === 8 && bar % 4 === 1) {
+        this.noise(0.06, 0.12, 2200, true, mg, t);
+      }
+    }
   },
 };
 
@@ -2128,6 +2208,15 @@ const SONGS = {
     lead: [
       [76,null,79,76, null,74,76,null, 71,null,74,71, null,69,71,74],
       [76,null,79,81, null,79,76,null, 74,null,76,74, 71,null,69,null],
+    ],
+  },
+  elite: {
+    bpm: 148,
+    kick: [0, 4, 8, 11, 12], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [41,41,null,41, 44,null,41,null, 46,46,null,44, 41,null,39,null],
+    lead: [
+      [77,null,80,77, null,75,77,null, 72,null,75,72, null,70,72,75],
+      [77,null,80,82, null,80,77,null, 75,null,77,75, 72,null,70,null],
     ],
   },
   boss: {
@@ -3714,11 +3803,14 @@ class Monster {
     this.dashT = 0; this.telegraphT = 0; this.hopT = rand(0, 0.8);
     this.face = -1;
     this.enraged = false;
+    this.introT = 0;
+    this.introTier = null;
   }
   get alive() { return this.hp > 0; }
 
   update(dt, game) {
     this.t += dt;
+    if (this.introT > 0) this.introT -= dt;
     if (this.flashT > 0) this.flashT -= dt;
     if (!this.alive) { this.deadT += dt; return; }
     const p = game.player;
@@ -3852,6 +3944,25 @@ class Monster {
     }
     // rariteit-aura
     const rar = rarityOf(this.sp.rarity);
+    if (this.introT > 0 && this.alive) {
+      c.save();
+      const p = clamp(this.introT / 1.6, 0, 1);
+      const pulse = 1 + Math.sin(this.t * 14) * 0.08;
+      c.globalAlpha = 0.25 + p * 0.45;
+      c.strokeStyle = this.introTier === 'superBoss' ? '#ffd75e' : (this.introTier === 'boss' ? '#ff6b6b' : '#c47aff');
+      c.lineWidth = 4 + p * 4;
+      c.beginPath();
+      c.ellipse(0, 0, this.size * (1.7 + (1 - p) * 0.9) * pulse, this.size * (1.35 + (1 - p) * 0.7) * pulse, 0, 0, TAU);
+      c.stroke();
+      if (!motionReduced()) {
+        c.globalAlpha = 0.15 + p * 0.25;
+        c.fillStyle = c.strokeStyle;
+        c.beginPath();
+        c.ellipse(0, 0, this.size * 1.9 * pulse, this.size * 1.5 * pulse, 0, 0, TAU);
+        c.fill();
+      }
+      c.restore();
+    }
     if (rar.order >= 2 && this.alive) {
       c.save();
       c.strokeStyle = this.superBoss ? '#ffd75e' : rar.glow; c.lineWidth = 3 + rar.order * 0.4;
@@ -4255,8 +4366,15 @@ class Game {
       this.banner('BAAS-GOLF!', 1.8, '#ff6b6b', 50);
       AudioSys.play('boss');
       AudioSys.sfx('roar');
-    } else if (wave.some(s => s.elite)) {
-      this.banner('ELITE-GOLF', 1.2, '#ffd75e', 40);
+      try {
+        this.shake(8, 0.3);
+        this.burst(W * 0.5, this.ground - 80, '#ff6b6b', fxLite() ? 12 : 22);
+        spawnFxRing(this, W * 0.5, this.ground - 80, '#ffd75e', 18);
+      } catch (_) {}
+    } else if (wave.some(s => s.elite || s.superBoss)) {
+      const hasSuper = wave.some(s => s.superBoss);
+      this.banner(hasSuper ? 'SUPER-BAAS GOLF' : 'ELITE-GOLF', 1.35, hasSuper ? '#ffd75e' : '#ffb0b8', 40);
+      AudioSys.play(hasSuper ? 'boss' : 'elite');
       AudioSys.sfx('roar');
     } else {
       this.banner(`GOLF ${this.waveIdx + 1}/${this.level.waves.length}`, 1.1, '#cfe0ff', 38);
@@ -4295,16 +4413,19 @@ class Game {
         const def = this.spawnQueue.shift();
         const side = Math.random() < 0.75 ? 1 : -1;
         const x = side > 0 ? W + 40 : -40;
-        if (def.superBoss) {
-          this.banner('SUPER BAAS!', 1.6, '#ffd75e', 46);
-          AudioSys.sfx('roar');
-        }
-        this.monsters.push(new Monster(def.sp, x, this, {
+        const mon = new Monster(def.sp, x, this, {
           elite: !!(def.elite || def.superBoss),
           superBoss: !!def.superBoss,
           hpMul: this.level.hpMul,
           dmgMul: this.level.dmgMul,
-        }));
+        });
+        this.monsters.push(mon);
+        if (def.superBoss) {
+          triggerSpecialEnemyIntro(this, mon, 'superBoss');
+        } else if (def.elite || bossWave) {
+          // Één intro per elite/baas-spawn (baas-golf speelt al wave-sting; monsters krijgen naam-FX)
+          triggerSpecialEnemyIntro(this, mon, bossWave ? 'boss' : 'elite');
+        }
       }
     } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive)) {
       if (!this.wavePause) {

@@ -345,11 +345,23 @@
       "id": "joy-aim-weapon-height",
       "d20Face": null,
       "userWords": "joycon omhoog mikken zodat wapen/werper hoger slaat of gooit",
-      "versions": ["1.13.4"],
+      "versions": [
+        "1.13.4"
+      ],
       "commits": [],
       "code": "fighterAimNorm, meleeHitPoint, projAimVelocity, spawnJutsu aim, aim preview",
       "status": "done",
       "note": "off-d20 user feature; d1 combat feel blijft PENDING"
+    },
+    {
+      "id": "special-enemy-intro-song",
+      "d20Face": null,
+      "userWords": "speciale enemies intro song met special effects",
+      "versions": ["1.13.5"],
+      "commits": [],
+      "code": "triggerSpecialEnemyIntro, SONGS.elite, sting eliteIntro/bossIntro/superBossIntro, introT aura",
+      "status": "done",
+      "note": "off-d20 user feature"
     },
     {
       "id": "gamble-dice-stage",
