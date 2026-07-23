@@ -9,6 +9,11 @@
   const openLinkBtn = document.getElementById('tunnelBootOpenLink');
   const hintEl = document.getElementById('tunnelBootHint');
   const STABLE_TUNNEL = 'https://stickfighter-ipad-b75e.loca.lt';
+  const STABLE_PAGES = 'https://brennyz.github.io/stickman-fighter/';
+
+  function preferStablePages(hosting) {
+    return (hosting && (hosting.primary || hosting.githubPages || hosting.stable)) || STABLE_PAGES;
+  }
 
   const LT_HEADERS = { 'Bypass-Tunnel-Reminder': 'true' };
 
@@ -30,7 +35,9 @@
     if (openLinkBtn && liveUrl) {
       openLinkBtn.style.display = 'inline-block';
       openLinkBtn.dataset.href = liveUrl;
-      openLinkBtn.textContent = 'Open nieuwe link';
+      openLinkBtn.textContent = liveUrl.includes('github.io')
+        ? 'Open vaste link (GitHub Pages)'
+        : 'Open nieuwe link';
     }
   }
 
@@ -253,15 +260,17 @@
           return { ok: true, degraded: true };
         }
       } catch (_) {}
+      const pagesUrl = preferStablePages(hosting);
       showRetry(
         '503 — tunnel verlopen',
-        (hint
-          ? 'Oude bookmark werkt niet meer.\n\nNieuwe link:\n' + hint + '\n\nTik «Open nieuwe link» of wacht en tik Opnieuw.'
-          : 'Localtunnel is even weg. Tik Opnieuw over ~1 minuut.') +
+        (pagesUrl
+          ? 'Gebruik de vaste GitHub Pages-link op je iPad:\n' + pagesUrl + '\n\nOf tik «Open vaste link».'
+          : 'Localtunnel is even weg.') +
+          (hint && hint !== pagesUrl ? '\n\nTunnel (fallback):\n' + hint : '') +
           (hosting && hosting.netlifyUrl
-            ? '\n\nNetlify (' + hosting.netlifyUrl + ') kan Forbidden geven tot credits terug zijn — gebruik tunnel of GitHub Pages.'
+            ? '\n\nNetlify (' + hosting.netlifyUrl + ') kan Forbidden geven — GitHub Pages is primair.'
             : ''),
-        hint
+        pagesUrl || hint
       );
       if (skipBtn) skipBtn.style.display = 'inline-block';
     } else {

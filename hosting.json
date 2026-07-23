@@ -1,10 +1,11 @@
 {
+  "primary": "https://brennyz.github.io/stickman-fighter/",
   "tunnel": "https://stickfighter-ipad-b75e.loca.lt",
-  "updated": "2026-07-23T13:14:11Z",
+  "updated": "2026-07-23T13:28:30Z",
   "stable": "https://brennyz.github.io/stickman-fighter/",
   "githubPages": "https://brennyz.github.io/stickman-fighter/",
   "netlifyUrl": "https://stickfighter.netlify.app",
-  "stableHint": "Vaste GitHub Pages-link \u2014 ideaal voor iPad PWA (geen loca.lt).",
+  "stableHint": "Primair: GitHub Pages — bookmark op iPad (Safari → Delen → Zet op beginscherm). Tunnel alleen voor dev.",
   "forceStable": false,
   "deployScript": "./deploy-netlify.sh",
   "netlifySiteId": "31915418-e76c-4951-b587-bb7af00aaabd",

@@ -256,7 +256,7 @@
   <div class="boot-spinner" aria-hidden="true"></div>
   <div id="tunnelBootTitle">Stickman Fighter</div>
   <div id="tunnelBootDetail">Verbinding controleren…</div>
-  <p id="tunnelBootHint" style="display:none;margin-top:12px;font-size:13px;color:#a8b8e8;max-width:420px;text-align:center">Vaste link: <strong>stickfighter-ipad-b75e.loca.lt</strong><br>Eerste keer: vul in het IP-vak het <b>zelfde IP</b> als boven (bijv. 184.72.144.40) → doorgaan.</p>
+  <p id="tunnelBootHint" style="display:none;margin-top:12px;font-size:13px;color:#a8b8e8;max-width:420px;text-align:center">Vaste iPad-link: <strong>brennyz.github.io/stickman-fighter/</strong><br>Tunnel (dev): <strong>stickfighter-ipad-b75e.loca.lt</strong> — bij 503 → GitHub Pages gebruiken.</p>
   <button type="button" id="tunnelBootRetry">Opnieuw proberen</button>
   <button type="button" id="tunnelBootOpenLink" style="display:none;margin-top:14px;width:min(86vw,320px);padding:12px 16px;font-size:16px;background:linear-gradient(180deg,#2a8a6a,#1a5c44);border:none;border-radius:14px;color:#fff;font-weight:800">Open nieuwe link</button>
   <button type="button" id="tunnelBootSkip" style="display:none;margin-top:14px;width:min(86vw,320px);padding:12px 16px;font-size:16px;background:linear-gradient(180deg,#5a6784,#39445e);border:none;border-radius:14px;color:#fff;font-weight:800">Toch starten</button>
@@ -267,7 +267,8 @@
   <div class="subtitle">🌀 Rasengan klaar — moto! &bull; chakra &bull; combo&apos;s &bull; 2 spelers</div>
   <div class="statbar" id="menuStats"></div>
   <div class="subtitle" id="menuDailyHint" style="margin-top:-8px;margin-bottom:4px;font-size:13px"></div>
-  <div class="subtitle" id="menuTipLine" style="margin-top:0;margin-bottom:10px;font-size:12px;color:#7cf5ff;opacity:.9"></div>
+  <div class="subtitle" id="menuTipLine" style="margin-top:0;margin-bottom:6px;font-size:12px;color:#7cf5ff;opacity:.9"></div>
+  <div class="subtitle" id="menuPlayLink" style="margin-top:0;margin-bottom:10px;font-size:11px;color:#ffd75e;opacity:.95"></div>
   <button class="btn mode-btn b-continue" id="btnContinue" type="button" style="display:none">
     <span class="ico">&#9654;&#65039;</span>
     <div>Verder spelen<small>Laatste modus</small></div>
@@ -373,8 +374,10 @@
   <div class="settings-card">
     <div style="font-weight:900;color:#ffd75e;margin-bottom:8px">Hosting &amp; voortgang</div>
     <div id="hostingHint" style="font-size:13px;opacity:.9;margin-bottom:8px">Link laden…</div>
-    <div id="hostingLink" style="word-break:break-all;font-size:12px;background:rgba(0,0,0,.25);padding:10px;border-radius:10px;margin-bottom:10px"></div>
-    <button type="button" class="btn tog" id="btnCopyLink">&#128279; Kopieer speel-link</button>
+    <div id="hostingLink" style="word-break:break-all;font-size:12px;background:rgba(0,0,0,.25);padding:10px;border-radius:10px;margin-bottom:6px"></div>
+    <div id="hostingCurrent" style="display:none;font-size:11px;opacity:.75;margin-bottom:10px;word-break:break-all"></div>
+    <button type="button" class="btn tog" id="btnCopyLink">&#128279; Kopieer vaste speel-link</button>
+    <button type="button" class="btn tog" id="btnOpenPlayLink" style="margin-top:8px">&#8599; Open vaste link</button>
     <textarea id="savePortText" rows="4" style="width:100%;margin-top:12px;border-radius:12px;padding:10px;font-size:11px;background:#0a0d18;color:#cfe0ff;border:1px solid rgba(255,255,255,.15)" placeholder="Plak save JSON om te importeren…"></textarea>
     <button type="button" class="btn tog" id="btnExportSave" style="margin-top:8px">&#128190; Export save</button>
     <button type="button" class="btn tog" id="btnImportSave">&#128229; Import save</button>

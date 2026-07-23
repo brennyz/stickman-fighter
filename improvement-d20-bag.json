@@ -13,15 +13,14 @@
     13,
     14,
     15,
-    16,
     17,
     20
   ],
   "lastRoll": {
-    "face": 5,
-    "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
-    "rolledAt": "2026-07-23T13:27:30Z",
-    "remainingCount": 14,
+    "face": 16,
+    "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
+    "rolledAt": "2026-07-23T13:28:14Z",
+    "remainingCount": 13,
     "cycle": 0
   },
   "history": [
@@ -65,6 +64,13 @@
       "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
       "rolledAt": "2026-07-23T13:27:30Z",
       "remainingCount": 14,
+      "cycle": 0
+    },
+    {
+      "face": 16,
+      "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
+      "rolledAt": "2026-07-23T13:28:14Z",
+      "remainingCount": 13,
       "cycle": 0
     }
   ]
