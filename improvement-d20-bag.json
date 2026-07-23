@@ -23,13 +23,7 @@
     "remainingCount": 12,
     "cycle": 2
   },
-  "pending": {
-    "face": 19,
-    "category": "Muur & minigames \u2014 combo, timer, record",
-    "rolledAt": "2026-07-23T21:26:27Z",
-    "remainingCount": 12,
-    "cycle": 2
-  },
+  "pending": null,
   "implemented": [
     {
       "face": 2,
@@ -295,6 +289,13 @@
       "note": "pause duck/status, audio resume paths, 2P restart in pause",
       "version": "1.14.7",
       "doneAt": "2026-07-23T21:26:05Z",
+      "cycle": 2
+    },
+    {
+      "face": 19,
+      "note": "timer/combo/record hints + HUD labels",
+      "version": "1.14.8",
+      "doneAt": "2026-07-23T21:27:27Z",
       "cycle": 2
     }
   ],
