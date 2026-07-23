@@ -19,11 +19,11 @@
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent;
       -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
   html, body { width:100%; height:100%; overflow:hidden; background:#0a0d18;
-      font-family: 'Nunito', -apple-system, Helvetica, sans-serif; }
+      font-family: 'Nunito', -apple-system, Helvetica, sans-serif; touch-action:manipulation; }
   /* Canvas achter UI; geen hits in menu (anders vangt iPad alle tikken) */
   #game { position:fixed; inset:0; width:100%; height:100%; display:block; touch-action:none;
       z-index:0; pointer-events:none !important; }
-  body.is-playing #game { pointer-events:auto !important; z-index:1; }
+  body.is-playing #game { pointer-events:auto !important; z-index:1; visibility:visible !important; }
 
   .screen { position:fixed; inset:0; display:none; flex-direction:column; align-items:center;
       justify-content:flex-start; overflow-y:auto; -webkit-overflow-scrolling:touch;
@@ -87,7 +87,9 @@
 
   #tunnelBootOverlay { position:fixed; inset:0; z-index:9999; display:flex; flex-direction:column;
       align-items:center; justify-content:center; padding:24px; text-align:center;
-      background:linear-gradient(180deg,#0f1428 0%,#0a0d18 100%); color:#d5e0ff; }
+      background:linear-gradient(180deg,rgba(15,20,40,.92) 0%,rgba(10,13,24,.88) 100%); color:#d5e0ff;
+      pointer-events:none; }
+  #tunnelBootOverlay button { pointer-events:auto; touch-action:manipulation; }
   #tunnelBootOverlay[hidden] { display:none !important; pointer-events:none !important; }
   #tunnelBootOverlay .boot-spinner { width:48px; height:48px; border:4px solid rgba(255,215,94,.25);
       border-top-color:#ffd75e; border-radius:50%; animation: spin .9s linear infinite; margin-bottom:20px; }
@@ -264,19 +266,6 @@
 </style>
 </head>
 <body>
-<canvas id="game"></canvas>
-<script>
-/* iPad/menu: canvas mag nooit tikken vangen vóór game.js (oude PWA-cache) */
-(function () {
-  var c = document.getElementById('game');
-  if (c) c.style.pointerEvents = 'none';
-  var h = location.hostname;
-  if (h.endsWith('.github.io') || h.endsWith('.netlify.app') || h === 'localhost' || h === '127.0.0.1' || location.protocol === 'file:') {
-    var o = document.getElementById('tunnelBootOverlay');
-    if (o) { o.hidden = true; o.style.pointerEvents = 'none'; }
-  }
-})();
-</script>
 <button id="pauseBtn" aria-label="Pauze">&#10074;&#10074;</button>
 <div id="toastHost"></div>
 <div id="netStatus" hidden aria-live="polite">Offline</div>
@@ -288,8 +277,17 @@
   <p id="tunnelBootHint" style="display:none;margin-top:12px;font-size:13px;color:#a8b8e8;max-width:420px;text-align:center">Vaste iPad-link: <strong>brennyz.github.io/stickman-fighter/</strong><br>Tunnel (dev): <strong>stickfighter-ipad-b75e.loca.lt</strong> — bij 503 → GitHub Pages gebruiken.</p>
   <button type="button" id="tunnelBootRetry">Opnieuw proberen</button>
   <button type="button" id="tunnelBootOpenLink" style="display:none;margin-top:14px;width:min(86vw,320px);padding:12px 16px;font-size:16px;background:linear-gradient(180deg,#2a8a6a,#1a5c44);border:none;border-radius:14px;color:#fff;font-weight:800">Open nieuwe link</button>
-  <button type="button" id="tunnelBootSkip" style="display:none;margin-top:14px;width:min(86vw,320px);padding:12px 16px;font-size:16px;background:linear-gradient(180deg,#5a6784,#39445e);border:none;border-radius:14px;color:#fff;font-weight:800">Toch starten</button>
+  <button type="button" id="tunnelBootSkip" style="display:inline-block;margin-top:14px;width:min(86vw,320px);padding:12px 16px;font-size:16px;background:linear-gradient(180deg,#5a6784,#39445e);border:none;border-radius:14px;color:#fff;font-weight:800;pointer-events:auto">Toch starten (menu)</button>
 </div>
+<script>
+(function () {
+  var h = location.hostname;
+  if (h.endsWith('.github.io') || h.endsWith('.netlify.app') || h === 'localhost' || h === '127.0.0.1' || location.protocol === 'file:') {
+    var o = document.getElementById('tunnelBootOverlay');
+    if (o) { o.hidden = true; o.style.pointerEvents = 'none'; }
+  }
+})();
+</script>
 
 <div id="menuScreen" class="screen active">
   <h1 class="title">STICKMAN FIGHTER</h1>
@@ -514,6 +512,17 @@
   </div>
   <button class="btn mode-btn b-gray" id="pauseQuit"><span class="ico">&#127968;</span><div>Stop &amp; hoofdmenu</div></button>
 </div>
+
+<canvas id="game" aria-hidden="true"></canvas>
+<script>
+(function () {
+  var c = document.getElementById('game');
+  if (c) {
+    c.style.pointerEvents = 'none';
+    c.style.visibility = 'hidden';
+  }
+})();
+</script>
 
 <script src="tunnel-check.js"></script>
 <script src="game.js"></script>

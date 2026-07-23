@@ -92,7 +92,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-| 2026-07-23 | — | **Menu klikbaar (fix):** canvas pointer-events in HTML+JS, syncPlayLayer, SW v35. v1.8.7. |
+| 2026-07-23 | — | **Tap-fix:** canvas onder UI + hidden in menu, tunnel overlay niet-blokkerend, iOS touchend→click, SW v36. v1.8.8. |
 | 2026-07-23 | **3** | Versus 2P: spawn/round reset, timer-urgency HUD, match-point dots, TIME banner, pauze-score, rematch toast. v1.8.6 / SW v34. |
 | 2026-07-23 | **17** | Stabiliteit: startGame/loop recovery, save-import fouten, persist-waarschuwing. v1.8.5 / SW v33. |
 | 2026-07-23 | **2** | Training: Chidori-telegraph + ring, langere windup robot, ronde-HUD. v1.8.4 / SW v32. |

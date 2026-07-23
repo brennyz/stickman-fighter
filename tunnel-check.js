@@ -26,6 +26,7 @@
     if (hintEl && location.hostname.endsWith('.loca.lt')) hintEl.style.display = 'block';
     if (retryBtn) retryBtn.style.display = 'none';
     if (openLinkBtn) openLinkBtn.style.display = 'none';
+    if (skipBtn) skipBtn.style.display = 'inline-block';
   }
 
   function showRetry(msg, detail, liveUrl) {
@@ -135,8 +136,8 @@
   }
 
   async function runCheck() {
+    ready();
     if (location.protocol === 'file:') {
-      ready();
       return { ok: true, offline: true };
     }
 

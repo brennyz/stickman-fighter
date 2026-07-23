@@ -56,7 +56,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.8.7';
+const APP_VERSION = '1.8.8';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -386,7 +386,20 @@ function syncPlayLayer() {
   if (!el) return;
   const canvasHits = state === 'play' && !!game;
   el.style.pointerEvents = canvasHits ? 'auto' : 'none';
+  el.style.visibility = canvasHits ? 'visible' : 'hidden';
   document.body.classList.toggle('is-playing', canvasHits);
+}
+
+function ensureMenuScreenActive() {
+  if (state !== 'menu') return;
+  const active = document.querySelector('.screen.active');
+  if (!active) {
+    try { UI.show('menuScreen'); } catch (_) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('menuScreen')?.classList.add('active');
+      syncPlayLayer();
+    }
+  }
 }
 
 function dismissTunnelOverlayIfStatic() {
@@ -1424,13 +1437,25 @@ addEventListener('resize', scheduleResize);
 addEventListener('orientationchange', scheduleResize);
 
 canvas.addEventListener('pointerdown', e => {
+  if (state !== 'play' || !game) return;
   e.preventDefault();
   try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
   Input.onDown(e.clientX, e.clientY, e.pointerId);
 });
-canvas.addEventListener('pointermove', e => { e.preventDefault(); Input.onMove(e.clientX, e.clientY, e.pointerId); });
-canvas.addEventListener('pointerup',   e => { e.preventDefault(); Input.onUp(e.pointerId); });
-canvas.addEventListener('pointercancel', e => Input.onUp(e.pointerId));
+canvas.addEventListener('pointermove', e => {
+  if (state !== 'play' || !game) return;
+  e.preventDefault();
+  Input.onMove(e.clientX, e.clientY, e.pointerId);
+});
+canvas.addEventListener('pointerup', e => {
+  if (state !== 'play' || !game) return;
+  e.preventDefault();
+  Input.onUp(e.pointerId);
+});
+canvas.addEventListener('pointercancel', e => {
+  if (state !== 'play' || !game) return;
+  Input.onUp(e.pointerId);
+});
 document.addEventListener('gesturestart', e => e.preventDefault());
 document.addEventListener('pointerdown', () => AudioSys.init(), { once: false });
 
@@ -4717,6 +4742,7 @@ function loop(now) {
       Input.endFrame();
     } else {
       menuAnimT += dt;
+      if (state === 'menu') ensureMenuScreenActive();
     }
     if (game) {
       game.draw(ctx);
@@ -4830,3 +4856,35 @@ function reportAppError(label) {
 }
 window.addEventListener('error', (e) => reportAppError(e.message || 'error'));
 window.addEventListener('unhandledrejection', (e) => reportAppError(String(e.reason || 'promise')));
+
+/** iPad Safari: soms geen click na touch — één synthetische click als backup. */
+function bindIosUiTapFix() {
+  document.addEventListener('touchend', (e) => {
+    syncPlayLayer();
+    ensureMenuScreenActive();
+    const t = e.target;
+    if (!t || !t.closest) return;
+    const hit = t.closest('button, .lvl, .char-card:not(.locked), .card:not(.locked), .style-card:not(.locked)');
+    if (!hit || hit.disabled) return;
+    const scr = hit.closest('.screen');
+    if (scr && !scr.classList.contains('active')) return;
+    if (hit.id === 'pauseBtn' && state === 'play') return;
+    const tag = hit.tagName;
+    if (tag !== 'BUTTON' && !hit.classList.contains('lvl') && !hit.classList.contains('char-card')
+        && !hit.classList.contains('card') && !hit.classList.contains('style-card')) return;
+    hit.dataset.sfTouchAt = String(Date.now());
+    setTimeout(() => {
+      const ts = Number(hit.dataset.sfTouchAt || 0);
+      if (Date.now() - ts > 450) return;
+      if (hit.dataset.sfClickOk === '1') return;
+      try { hit.click(); } catch (_) {}
+    }, 50);
+  }, { passive: true, capture: true });
+  document.addEventListener('click', (e) => {
+    const hit = e.target && e.target.closest
+      ? e.target.closest('button, .lvl, .char-card, .card, .style-card') : null;
+    if (hit) hit.dataset.sfClickOk = '1';
+    setTimeout(() => { if (hit) delete hit.dataset.sfClickOk; }, 120);
+  }, true);
+}
+bindIosUiTapFix();
