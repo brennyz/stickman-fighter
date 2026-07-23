@@ -23,13 +23,7 @@
     "remainingCount": 12,
     "cycle": 1
   },
-  "pending": {
-    "face": 4,
-    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
-    "rolledAt": "2026-07-23T18:12:23Z",
-    "remainingCount": 12,
-    "cycle": 1
-  },
+  "pending": null,
   "implemented": [
     {
       "face": 2,
@@ -155,6 +149,13 @@
       "note": "oor-laser telegraph + AI range",
       "version": "1.12.6",
       "doneAt": "2026-07-23T18:11:23Z",
+      "cycle": 1
+    },
+    {
+      "face": 4,
+      "note": "star HUD + wave pause countdown",
+      "version": "1.12.7",
+      "doneAt": "2026-07-23T18:12:54Z",
       "cycle": 1
     }
   ],
