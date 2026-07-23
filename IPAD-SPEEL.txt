@@ -1,6 +1,8 @@
 STICKMAN FIGHTER — SPEEL OP IPAD (vaste bookmark)
 =================================================
 
+Geen terminal op iPad nodig → lees IPAD-GEEN-COMMANDO.txt
+
 JE BOOKMARK BLIJFT HETZELFDE (geen wisselende Cloudflare-links):
 
   https://stickfighter-ipad-b75e.loca.lt/ipad.html
