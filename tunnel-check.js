@@ -42,16 +42,18 @@
     if (detailEl) detailEl.textContent = msg || 'Tunnel controleren…';
     if (hintEl) {
       hintEl.style.display = 'block';
-      hintEl.innerHTML = 'Je bookmark blijft: <strong>' + location.host + '/ipad.html</strong><br>' +
-        'Thuis: laat <code>./start-local.sh --tunnel</code> draaien. Bij 503: optioneel GitHub Pages (andere bookmark).';
+      hintEl.innerHTML =
+        '<strong>Primair speel:</strong> GitHub Pages (vaste link)<br>' +
+        'Deze tunnel is alleen lokaal-dev. Bookmark blijft: <strong>' + location.host + '/ipad.html</strong><br>' +
+        'Thuis: <code>./start-local.sh --tunnel</code> · bij 503 → Pages openen.';
     }
   }
 
   function showTunnelFail() {
-    showTunnelWait('Tunnel even offline — thuis server + tunnel aan?');
+    showTunnelWait('Tunnel offline — speel via GitHub Pages (vaste link)');
     if (openLinkBtn) {
       openLinkBtn.style.display = 'inline-block';
-      openLinkBtn.textContent = 'Open GitHub Pages (extra bookmark)';
+      openLinkBtn.textContent = 'Open GitHub Pages (primair)';
       openLinkBtn.onclick = () => {
         window.open(pagesFallback, '_blank', 'noopener');
       };
@@ -71,8 +73,11 @@
     return fetch('./hosting.json?t=' + Date.now(), { cache: 'no-store' })
       .then((r) => r.json())
       .then((j) => {
-        if (j && j.bookmarkPages) pagesFallback = j.bookmarkPages;
-        else if (j && j.githubPages) pagesFallback = j.githubPages.replace(/\/?$/, '/ipad.html');
+        // Prefer share/speel (Pages) over tunnel-adjacent ipad bookmark
+        if (j && j.bookmarkShare) pagesFallback = j.bookmarkShare;
+        else if (j && j.pagesSpeel) pagesFallback = j.pagesSpeel;
+        else if (j && j.bookmarkPages) pagesFallback = j.bookmarkPages;
+        else if (j && j.githubPages) pagesFallback = j.githubPages.replace(/\/?$/, '/') + 'speel.html';
         return j;
       })
       .catch(() => null);
