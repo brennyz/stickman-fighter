@@ -168,6 +168,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-23 | — | **IMPROVEMENT.md + Ralph d20** toegevoegd. Gameplay: canvas tikken alleen bij `state==='play'`. v1.7.2 / SW v20. |
 | 2026-07-23 | — | GitHub Pages live `brennyz.github.io/stickman-fighter/`. iPad: menu niet klikbaar → pointer-events fix. |
 | 2026-07-23 | 14 | v1.7 combo pulse, low-HP vignette, result tips. |
+| 2026-07-23 | **7** | Save (cyclus 2): export schema v2 + backupKey in meta; import-warnings (key/schema/summons); stats-strip; corrupt-primary repair-toast; healthregel drift/backup corrupt. v1.14.6 / SW v104. |
 | 2026-07-23 | — | **User (deel 3/3):** stage-reis polish — checkpoint-flits + diamantjes op deel-grenzen, camera-punch bij vertrek, speed-lines tijdens reizen, baas-hartslag-vignet + roar halverwege + rode aankomst-flits. Reduced motion/Lite FX gerespecteerd. v1.14.5 / SW v103. |
 | 2026-07-23 | — | **User summons:** hele kleine kans per avontuur-kill (~0,7% + zachte pity, elites ×2,5) dat een lager wapen (t/m rare) ✦ **Episch** (×1,55 dmg) of **Legendarisch** (×1,95) wordt — boven hogere unlock-wapens. `save.summons` permanent, ✦ badge + boost in wapens-UI, live hot-swap als het je uitgeruste wapen is. v1.14.4 / SW v102. |
 | 2026-07-23 | — | **User balancing:** level-pacing rustiger — `xpNeed` pace-factor (+15% vroeg → +50% vanaf ~Lv 18, totaal ~45% meer speeltijd Lv 1→31) + training-win XP-cap (×12). Geen dmg/rewards-feel gewijzigd. v1.14.3 / SW v101. |

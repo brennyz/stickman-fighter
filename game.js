@@ -62,10 +62,10 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
-const SAVE_EXPORT_SCHEMA = 1;
-const APP_VERSION = '1.14.5';
+const SAVE_EXPORT_SCHEMA = 2;
+const APP_VERSION = '1.14.6';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 103;
+const SW_CACHE_REV = 104;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -245,6 +245,7 @@ function readSaveJson(raw) {
     merged.achievements = Object.assign({}, parsed.achievements || {});
     merged.stars = Object.assign({}, parsed.stars || {});
     merged.dex = Object.assign({}, parsed.dex || {});
+    merged.summons = Object.assign({}, parsed.summons || {});
     return merged;
   } catch (e) {
     return null;
@@ -399,9 +400,11 @@ function sanitizeSave(s) {
   out.dex = cleanDex;
 
   out.stats = Object.assign({}, DEFAULT_SAVE.stats, out.stats || {});
+  const cleanStats = {};
   for (const key of Object.keys(DEFAULT_SAVE.stats)) {
-    out.stats[key] = clamp(Math.floor(Number(out.stats[key]) || 0), 0, 9999999);
+    cleanStats[key] = clamp(Math.floor(Number(out.stats[key]) || 0), 0, 9999999);
   }
+  out.stats = cleanStats;
 
   const cleanAch = {};
   for (const [k, v] of Object.entries(out.achievements || {})) {
@@ -758,16 +761,22 @@ function saveStorageDiagnostics() {
       || (primaryParsed.unlocked !== backupParsed.unlocked);
   }
   const primaryCorrupt = !!(primaryRaw && primaryRaw.length > 0 && !primaryParsed);
+  const backupCorrupt = !!(backupRaw && backupRaw.length > 0 && !backupParsed);
   return {
     primaryBytes,
     backupBytes,
     primaryValid: !!primaryParsed,
     backupValid: !!backupParsed,
     primaryCorrupt,
+    backupCorrupt,
     drift,
     stampAt,
     stampBytes,
   };
+}
+
+function summonCountFromSave(s) {
+  return Object.keys((s && s.summons) || {}).length;
 }
 
 function exportSaveJson() {
@@ -777,7 +786,8 @@ function exportSaveJson() {
       app: APP_VERSION,
       exportedAt: new Date().toISOString(),
       key: SAVE_KEY,
-      note: 'Stickman Fighter save — plak in Instellingen → Import',
+      backupKey: SAVE_BACKUP_KEY,
+      note: 'Stickman Fighter save — plak in Instellingen → Import (2× tikken). Wissel van URL? Export vóór en import ná.',
     },
   });
   return JSON.stringify(payload, null, 2);
@@ -807,16 +817,26 @@ function saveHealthSummary() {
     primaryBytes: diag.primaryBytes,
     backupBytes: diag.backupBytes,
     primaryValid: diag.primaryValid,
+    backupValid: diag.backupValid,
     primaryCorrupt: diag.primaryCorrupt,
+    backupCorrupt: diag.backupCorrupt,
     drift: diag.drift,
     stampAt: diag.stampAt,
+    summons: summonCountFromSave(save),
+    exportSchema: SAVE_EXPORT_SCHEMA,
   };
 }
 
 function importPreviewWarnings(next, meta) {
   const lines = [];
   if (meta && meta.key && meta.key !== SAVE_KEY) {
-    lines.push('Andere save-key in export — controleer of dit Stickman Fighter is');
+    lines.push(`Verkeerde save-key (“${meta.key}”) — verwacht ${SAVE_KEY}`);
+  } else if (!meta || !meta.key) {
+    lines.push(`Geen export-key — wordt gecontroleerd tegen ${SAVE_KEY}`);
+  }
+  const schema = meta && Number(meta.schema);
+  if (!schema || schema < SAVE_EXPORT_SCHEMA) {
+    lines.push(`Oudere export-schema${schema ? ' v' + schema : ''} — wordt gemigreerd naar v${SAVE_EXPORT_SCHEMA}`);
   }
   if (meta && meta.exportedAt) {
     try {
@@ -827,6 +847,10 @@ function importPreviewWarnings(next, meta) {
     } catch (_) {}
   }
   if (meta && meta.app) lines.push('App-versie export: v' + meta.app);
+  const summonN = summonCountFromSave(next);
+  const curSummonN = summonCountFromSave(save);
+  if (summonN > curSummonN) lines.push(`+${summonN - curSummonN} summon-wapen(s) in import`);
+  else if (summonN < curSummonN) lines.push(`Minder summons dan nu (${summonN} vs ${curSummonN})`);
   if (next.lvl < save.lvl || next.unlocked < save.unlocked) {
     lines.push('Lager niveau/unlock dan huidige save op dit apparaat');
   } else if (next.lvl > save.lvl || next.unlocked > save.unlocked) {
@@ -852,6 +876,7 @@ function previewImportSave(text) {
   clean.achievements = Object.assign({}, parsed.achievements || {});
   clean.stars = Object.assign({}, parsed.stars || {});
   clean.dex = Object.assign({}, parsed.dex || {});
+  clean.summons = Object.assign({}, parsed.summons || {});
   const final = sanitizeSave(clean);
   const warnings = importPreviewWarnings(final, meta);
   return { save: final, meta, warnings };
@@ -7861,9 +7886,14 @@ const UI = {
       let statusPrimary = h.primaryCorrupt
         ? '⚠ Hoofd-save corrupt'
         : (h.primaryValid ? '✔ Save OK' : (h.primaryOk ? '⚠ Save onleesbaar' : '⚠ Geen primary save'));
-      if (h.drift && h.backupOk) statusPrimary += ' · hoofd/backup verschillen';
+      if (h.drift && h.backupOk) statusPrimary += ' · hoofd/backup verschillen — tik Herstel backup';
+      if (h.backupCorrupt && h.backupOk === false && h.primaryValid) {
+        statusPrimary += ' · backup corrupt (hoofd OK)';
+      }
       let healthHtml =
-        `<b>Lv ${h.lvl}</b> · unlock ${h.unlocked} · boek ${h.dex} · kills ${h.kills}${sizeLine}<br>` +
+        `<b>Lv ${h.lvl}</b> · unlock ${h.unlocked} · boek ${h.dex} · kills ${h.kills}` +
+        (h.summons ? ` · ✦ ${h.summons} summon` : '') +
+        `${sizeLine}<br>` +
         statusPrimary +
         (h.backupOk ? ` · ✔ Backup (Lv ${h.backupLvl})` : ' · ⚠ Geen backup');
       if (h.stampAt) {
@@ -7879,7 +7909,7 @@ const UI = {
         }
       }
       healthEl.innerHTML = healthHtml +
-        `<br><span style="opacity:.75">Export/import = veiligste overzet · key: ${SAVE_KEY} (niet wijzigen)</span>`;
+        `<br><span style="opacity:.75">Export schema v${h.exportSchema || SAVE_EXPORT_SCHEMA} · keys vast: ${SAVE_KEY} + backup (niet hernoemen)</span>`;
     }
     const pct = (v, d) => Math.round((Number(v ?? d)) * 100);
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
@@ -8177,7 +8207,9 @@ if (btnImportSave) btnImportSave.addEventListener('click', () => {
       if (previewEl) {
         previewEl.style.display = 'block';
         previewEl.textContent =
-          `Preview: Lv ${next.lvl} · unlock ${next.unlocked} · boek ${Object.keys(next.dex || {}).length} · kills ${dexTotalKillsFromSave(next)}${metaLine}.${warnLine} Tik Import nogmaals om te toepassen.`;
+          `Preview: Lv ${next.lvl} · unlock ${next.unlocked} · boek ${Object.keys(next.dex || {}).length} · kills ${dexTotalKillsFromSave(next)}` +
+          (summonCountFromSave(next) ? ` · ✦ ${summonCountFromSave(next)} summon` : '') +
+          `${metaLine}.${warnLine} Tik Import nogmaals om te toepassen.`;
       }
       UI.toast('Import-preview — tik Import nogmaals om te laden', 3600);
       setTimeout(() => { window.__sfImportConfirm = false; }, 8000);
@@ -8255,7 +8287,8 @@ if (btnRestoreBackup) btnRestoreBackup.addEventListener('click', () => {
       return;
     }
     window.__sfBackupConfirm = true;
-    UI.toast(`Backup Lv ${h.backupLvl} — tik nogmaals om te herstellen`, 3600);
+    const driftHint = h.drift ? ' (hoofd en backup verschillen)' : '';
+    UI.toast(`Backup Lv ${h.backupLvl}${driftHint} — tik nogmaals om te herstellen`, 4000);
     setTimeout(() => { window.__sfBackupConfirm = false; }, 6000);
     return;
   }
@@ -8720,8 +8753,12 @@ function bootGame() {
   if (window.__sfBooted) return;
   window.__sfBooted = true;
   try {
+    const hadCorruptPrimary = saveStorageDiagnostics().primaryCorrupt;
     save = sanitizeSave(save || Object.assign({}, DEFAULT_SAVE));
     persist();
+    if (hadCorruptPrimary && !window.__sfRecoveredBackup) {
+      userToast('Corrupte hoofd-save overschreven — export blijft je vangnet bij URL-wissel', 4500);
+    }
   } catch (err) {
     console.error('[Stickman] save sanitize', err);
     save = Object.assign({}, DEFAULT_SAVE);

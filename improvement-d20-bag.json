@@ -8,7 +8,6 @@
     3,
     5,
     6,
-    7,
     8,
     9,
     11,
@@ -20,13 +19,19 @@
     19
   ],
   "lastRoll": {
-    "face": 16,
-    "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
-    "rolledAt": "2026-07-23T21:04:22Z",
-    "remainingCount": 15,
+    "face": 7,
+    "category": "Save & backup \u2014 import/export, corruptie, migratie",
+    "rolledAt": "2026-07-23T21:23:37Z",
+    "remainingCount": 14,
     "cycle": 2
   },
-  "pending": null,
+  "pending": {
+    "face": 7,
+    "category": "Save & backup \u2014 import/export, corruptie, migratie",
+    "rolledAt": "2026-07-23T21:23:37Z",
+    "remainingCount": 14,
+    "cycle": 2
+  },
   "implemented": [
     {
       "face": 2,
@@ -290,7 +295,7 @@
         "1.14.4"
       ],
       "commits": [],
-      "code": "save.summons, SUMMON_BOOST, summonEligibleWeapons, applySummonTier, playerWeapon, maybeSummon (kill-kans ~0.7% + pity), renderWeapons ✦ badge",
+      "code": "save.summons, SUMMON_BOOST, summonEligibleWeapons, applySummonTier, playerWeapon, maybeSummon (kill-kans ~0.7% + pity), renderWeapons \u2726 badge",
       "status": "done",
       "note": "off-d20 user feature; epic \u00d71.55 / legendary \u00d71.95 dmg, gem. ~97 kills per summon, getest in echte Chrome"
     },
@@ -776,6 +781,13 @@
       "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
       "rolledAt": "2026-07-23T21:04:22Z",
       "remainingCount": 15,
+      "cycle": 2
+    },
+    {
+      "face": 7,
+      "category": "Save & backup \u2014 import/export, corruptie, migratie",
+      "rolledAt": "2026-07-23T21:23:37Z",
+      "remainingCount": 14,
       "cycle": 2
     }
   ]
