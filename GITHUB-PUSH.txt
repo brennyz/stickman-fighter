@@ -1,26 +1,45 @@
 STICKMAN FIGHTER — MERGE + PUSH (main → Pages)
 ==============================================
 
-Cloud-agent krijgt 403. Jij met repo-write:
+Cloud-agent krijgt 403 op git push (token mag API lezen,
+maar geen git-write). Jij met repo-write op Mac/PC:
+
+─── ALS JE DE AGENT-COMMITS AL HEBT (zelfde map) ───
 
   cd stickman-fighter
-  git fetch origin
   git checkout main
-  git pull origin main
+  git log -1 --oneline
+  # moet tonen: v1.12.2 speel.html …
   git push origin main
 
-Wacht ~1–3 min (GitHub Actions → Pages).
+─── ALS JE ALLEEN GITHUB HEBT (oude main) ───
 
-VASTE IPAD-BOOKMARKS (URL verandert niet):
+  De commits zitten in de cloud-agent VM tot push lukt.
+  Fix eerst Cursor Dashboard → Cloud Agents → environment
+  → repo stickman-fighter read/write, en GitHub → Cursor app
+  → repository access. Start daarna een NIEUWE agent:
+  «push main naar GitHub».
 
-  Tunnel (dev, tunnel thuis aan):
-    https://stickfighter-ipad-b75e.loca.lt/ipad.html
+─── NA SUCCESVOLLE PUSH ───
 
-  GitHub Pages (na push):
+  Wacht ~1–3 min (Actions → Deploy GitHub Pages).
+  Op iPad/Android: «Verse versie» of open:
+
+    https://brennyz.github.io/stickman-fighter/speel.html
+
+  Bij “Spel-JS laadde niet”: dat is oude cache —
+  tik Forceer verse versie / Verse versie in het menu.
+
+VASTE LINKS
+
+  Deel (Android + iPad + PC):
+    https://brennyz.github.io/stickman-fighter/speel.html
+
+  Direct spelen:
+    https://brennyz.github.io/stickman-fighter/
+
+  iPad cache-fix:
     https://brennyz.github.io/stickman-fighter/ipad.html
 
-Tunnel open houden:
-
-  ./start-local.sh --tunnel
-
-Geen jacksonville-*.trycloudflare.com meer — die link wisselt elke sessie.
+  Tunnel (alleen thuis/dev):
+    https://stickfighter-ipad-b75e.loca.lt/ipad.html
