@@ -6,7 +6,6 @@
     2,
     3,
     4,
-    5,
     6,
     7,
     8,
@@ -19,10 +18,10 @@
     20
   ],
   "lastRoll": {
-    "face": 18,
-    "category": "Character select \u2014 roster UI, stats, random duo",
-    "rolledAt": "2026-07-23T13:26:56Z",
-    "remainingCount": 15,
+    "face": 5,
+    "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
+    "rolledAt": "2026-07-23T13:27:30Z",
+    "remainingCount": 14,
     "cycle": 0
   },
   "history": [
@@ -59,6 +58,13 @@
       "category": "Character select \u2014 roster UI, stats, random duo",
       "rolledAt": "2026-07-23T13:26:56Z",
       "remainingCount": 15,
+      "cycle": 0
+    },
+    {
+      "face": 5,
+      "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
+      "rolledAt": "2026-07-23T13:27:30Z",
+      "remainingCount": 14,
       "cycle": 0
     }
   ]

@@ -9,6 +9,44 @@
 
 const TAU = Math.PI * 2;
 const FX_CAP = { particles: 140, floaters: 28, projectiles: 48, banners: 5, afterimages: 12 };
+const Perf = {
+  tier: 0,
+  emaMs: 16.7,
+  frames: 0,
+  tick(frameMs) {
+    this.emaMs = this.emaMs * 0.9 + frameMs * 0.1;
+    this.frames++;
+    if (save.liteFx) {
+      if (this.tier !== 1) { this.tier = 1; scheduleResize(); }
+      return;
+    }
+    if (this.frames % 40 !== 0) return;
+    const prev = this.tier;
+    if (this.emaMs > 24) this.tier = Math.min(2, this.tier + 1);
+    else if (this.emaMs < 17.5 && this.tier > 0) this.tier -= 1;
+    if (prev !== this.tier) scheduleResize();
+  },
+  reset() { this.tier = 0; this.emaMs = 16.7; this.frames = 0; },
+};
+function fxCaps() {
+  let mul = 1;
+  if (save.liteFx) mul = 0.55;
+  else if (Perf.tier >= 2) mul = 0.42;
+  else if (Perf.tier >= 1) mul = 0.68;
+  if (save.reducedMotion) mul *= 0.62;
+  const floor = { particles: 24, floaters: 8, projectiles: 16, banners: 2, afterimages: 4 };
+  const out = {};
+  for (const k of Object.keys(FX_CAP)) {
+    out[k] = Math.max(floor[k] || 2, Math.floor(FX_CAP[k] * mul));
+  }
+  return out;
+}
+function maxCanvasDpr() {
+  if (save.liteFx || save.reducedMotion) return 1.25;
+  if (Perf.tier >= 2) return 1;
+  if (Perf.tier >= 1) return 1.35;
+  return 2;
+}
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
 const lerp = (a, b, t) => a + (b - a) * t;
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -17,11 +55,11 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.7.7';
+const APP_VERSION = '1.7.8';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
-  reducedMotion: false, lastPlay: null, tipsSeen: {},
+  reducedMotion: false, liteFx: false, lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0 },
   achievements: {}, daily: null, vsPlayedIds: [] };
 let save = loadSave();
@@ -91,6 +129,7 @@ function sanitizeSave(s) {
   out.comboHud = out.comboHud !== false;
   out.bigTouch = out.bigTouch !== false;
   out.reducedMotion = !!out.reducedMotion;
+  out.liteFx = !!out.liteFx;
   out.tipsSeen = (out.tipsSeen && typeof out.tipsSeen === 'object') ? out.tipsSeen : {};
   if (out.lastPlay && typeof out.lastPlay === 'object') {
     const lp = out.lastPlay;
@@ -1173,19 +1212,26 @@ addEventListener('keyup', e => {
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 let W = innerWidth, H = innerHeight, DPR = 1;
+let resizeDebounce = null;
 
 function resize() {
-  DPR = Math.min(devicePixelRatio || 1, 2);
+  DPR = Math.min(devicePixelRatio || 1, maxCanvasDpr());
   W = innerWidth; H = innerHeight;
   canvas.width = W * DPR; canvas.height = H * DPR;
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   Input.layout(W, H);
   if (game) game.onResize();
 }
-addEventListener('resize', () => {
-  if (window.__sfResizeT) cancelAnimationFrame(window.__sfResizeT);
-  window.__sfResizeT = requestAnimationFrame(resize);
-});
+function scheduleResize() {
+  if (resizeDebounce) clearTimeout(resizeDebounce);
+  resizeDebounce = setTimeout(() => {
+    resizeDebounce = null;
+    if (window.__sfResizeT) cancelAnimationFrame(window.__sfResizeT);
+    window.__sfResizeT = requestAnimationFrame(resize);
+  }, 140);
+}
+addEventListener('resize', scheduleResize);
+addEventListener('orientationchange', scheduleResize);
 
 canvas.addEventListener('pointerdown', e => {
   e.preventDefault();
@@ -3049,16 +3095,17 @@ class Game {
   }
 
   trimFxCaps() {
+    const cap = fxCaps();
     const drop = (arr, max) => {
       if (arr.length > max) arr.splice(0, arr.length - max);
     };
-    drop(this.particles, FX_CAP.particles);
-    drop(this.floaters, FX_CAP.floaters);
-    drop(this.projectiles, FX_CAP.projectiles);
-    drop(this.banners, FX_CAP.banners);
-    if (this.player && this.player.afterimages) drop(this.player.afterimages, FX_CAP.afterimages);
-    if (this.p2 && this.p2.afterimages) drop(this.p2.afterimages, FX_CAP.afterimages);
-    if (this.robot && this.robot.afterimages) drop(this.robot.afterimages, FX_CAP.afterimages);
+    drop(this.particles, cap.particles);
+    drop(this.floaters, cap.floaters);
+    drop(this.projectiles, cap.projectiles);
+    drop(this.banners, cap.banners);
+    if (this.player && this.player.afterimages) drop(this.player.afterimages, cap.afterimages);
+    if (this.p2 && this.p2.afterimages) drop(this.p2.afterimages, cap.afterimages);
+    if (this.robot && this.robot.afterimages) drop(this.robot.afterimages, cap.afterimages);
   }
 
   noteCombo() {
@@ -3074,7 +3121,10 @@ class Game {
   }
   burst(x, y, color, n) {
     if (save.reducedMotion) n = Math.max(2, Math.floor(n * 0.45));
-    const room = FX_CAP.particles - this.particles.length;
+    else if (save.liteFx || Perf.tier >= 1) n = Math.max(3, Math.floor(n * 0.65));
+    if (Perf.tier >= 2) n = Math.max(2, Math.floor(n * 0.55));
+    const cap = fxCaps();
+    const room = cap.particles - this.particles.length;
     n = Math.min(n, Math.max(0, room));
     for (let i = 0; i < n; i++) {
       const a = rand(0, TAU), sp = rand(60, 320);
@@ -3083,9 +3133,13 @@ class Game {
     }
   }
   floater(x, y, txt, color, size) {
+    const cap = fxCaps();
+    if (this.floaters.length >= cap.floaters) this.floaters.shift();
     this.floaters.push({ x, y, txt, color, size: size || 15, life: 1.0 });
   }
   banner(txt, dur, color, size) {
+    const cap = fxCaps();
+    if (this.banners.length >= cap.banners) this.banners.shift();
     this.banners.push({ txt, dur, color: color || '#fff', size: size || 40, t: 0 });
   }
 
@@ -3102,7 +3156,8 @@ class Game {
         const meta = PICKUP_META[pk.kind];
         const y = pk.y + (pk.bob || 0);
         c.save();
-        c.shadowColor = meta.color; c.shadowBlur = 14;
+        const pkBlur = (save.liteFx || Perf.tier >= 1) ? 6 : 14;
+        c.shadowColor = meta.color; c.shadowBlur = pkBlur;
         c.fillStyle = meta.color;
         c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.fill();
         c.strokeStyle = '#fff'; c.lineWidth = 2;
@@ -3988,10 +4043,10 @@ const UI = {
     const lblS = document.getElementById('setSfxVolLbl');
     if (lblM) lblM.textContent = pct(save.musicVol, 0.85) + '%';
     if (lblS) lblS.textContent = pct(save.sfxVol, 1) + '%';
-    ['setShake', 'setHaptics', 'setComboHud', 'setBigTouch', 'setReducedMotion'].forEach((id, i) => {
+    ['setShake', 'setHaptics', 'setComboHud', 'setBigTouch', 'setReducedMotion', 'setLiteFx'].forEach((id, i) => {
       const el = document.getElementById(id);
       if (!el) return;
-      const keys = ['shake', 'haptics', 'comboHud', 'bigTouch', 'reducedMotion'];
+      const keys = ['shake', 'haptics', 'comboHud', 'bigTouch', 'reducedMotion', 'liteFx'];
       el.classList.toggle('off', save[keys[i]] === false);
     });
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
@@ -4167,6 +4222,7 @@ function bindSettingsControls() {
   const toggles = [
     ['setShake', 'shake'], ['setHaptics', 'haptics'], ['setComboHud', 'comboHud'],
     ['setBigTouch', 'bigTouch'], ['setReducedMotion', 'reducedMotion'],
+    ['setLiteFx', 'liteFx'],
   ];
   for (const [id, key] of toggles) {
     const el = document.getElementById(id);
@@ -4176,6 +4232,7 @@ function bindSettingsControls() {
       if (save[key] !== false) save[key] = false;
       else save[key] = true;
       if (key === 'reducedMotion' && save.reducedMotion) save.shake = false;
+      if (key === 'liteFx') { Perf.reset(); scheduleResize(); }
       persist();
       UI.renderSettings();
       UI.syncTouchClass();
@@ -4305,7 +4362,9 @@ function drawMenuBackdrop(c, t) {
   g.addColorStop(1, '#0a0d18');
   c.fillStyle = g;
   c.fillRect(0, 0, W, H);
-  for (let i = 0; i < 28; i++) {
+  const lite = save.liteFx || save.reducedMotion || Perf.tier >= 1;
+  const starN = lite ? 14 : 28;
+  for (let i = 0; i < starN; i++) {
     const x = (Math.sin(t * 0.4 + i * 1.7) * 0.5 + 0.5) * W;
     const y = ((i * 47 + t * 22) % (H + 40)) - 20;
     c.globalAlpha = 0.12 + (i % 5) * 0.04;
@@ -4317,13 +4376,17 @@ function drawMenuBackdrop(c, t) {
   c.globalAlpha = 0.08;
   c.strokeStyle = '#ffd75e';
   c.lineWidth = 3;
-  c.beginPath();
-  c.arc(W * 0.5, H * 0.42, 90 + Math.sin(t * 0.8) * 8, 0, TAU);
-  c.stroke();
+  if (!lite) {
+    c.beginPath();
+    c.arc(W * 0.5, H * 0.42, 90 + Math.sin(t * 0.8) * 8, 0, TAU);
+    c.stroke();
+  }
   c.save();
   c.translate(W * 0.5, H * 0.42);
-  if (typeof drawJutsuOrb === 'function') {
+  if (typeof drawJutsuOrb === 'function' && !lite) {
     drawJutsuOrb(c, 0, 0, 28 + Math.sin(t * 2) * 4, t * 3, 'rasengan', 0.85);
+  } else if (typeof drawJutsuOrb === 'function' && lite) {
+    drawJutsuOrb(c, 0, 0, 22, t * 2, 'rasengan', 0.55);
   }
   c.restore();
   c.globalAlpha = 1;
@@ -4333,6 +4396,7 @@ function loop(now) {
   requestAnimationFrame(loop);
   try {
     const dt = Math.min((now - lastTime) / 1000, 0.05);
+    Perf.tick(dt * 1000);
     lastTime = now;
     if (state === 'play' && game) {
       game.update(dt);
