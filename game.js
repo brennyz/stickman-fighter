@@ -4,6 +4,7 @@
    Stickman-vechtgame voor iPad (touch) en desktop (toetsenbord).
    Modi: Avontuur, Training, Versus 2P, Muur, Mats (coinrun).
    Audio (sfx + bgm) is procedureel via Web Audio — rechtenvrij.
+   d20: touch-pad method refs, Input hitButton reuse, minder dubbele error-toast.
    ========================================================================= */
 
 const TAU = Math.PI * 2;
@@ -62,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 1;
-const APP_VERSION = '1.12.23';
+const APP_VERSION = '1.12.24';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 86;
+const SW_CACHE_REV = 87;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -2348,6 +2349,8 @@ function makePad(side) {
   };
 }
 
+const _padP1Methods = makePad('p1');
+
 const Input = Object.assign(makePad('p1'), {
   dualMode: false,
   onDown(x, y, id) {
@@ -2359,19 +2362,18 @@ const Input = Object.assign(makePad('p1'), {
         InputP2.onDown(x, y, id, true);
         return;
       }
-      makePad('p1').onDown.call(this, x, y, id, true);
+      _padP1Methods.onDown.call(this, x, y, id, true);
       return;
     }
     this.activePointers.add(id);
-    const slop = btnHitSlop();
-    for (const b of this.buttons) {
-      if ((x - b.x) ** 2 + (y - b.y) ** 2 < (b.r + slop) ** 2) {
-        this.btnPointers[id] = b.id;
-        b.held = true;
-        this.press(b.id);
-        return;
-      }
+    const b = this.hitButton(x, y);
+    if (b) {
+      this.btnPointers[id] = b.id;
+      b.held = true;
+      this.press(b.id);
+      return;
     }
+    const slop = btnHitSlop();
     const joyZone = x < W * (W < 400 ? 0.48 : 0.52);
     if (!joyZone) {
       if (this.joy.active) this.releaseJoy();
@@ -2405,7 +2407,7 @@ const Input = Object.assign(makePad('p1'), {
       } else {
         if (InputP2.joy.active && InputP2.joy.id === id) InputP2.releaseJoy();
         if (!this.activePointers.has(id)) return;
-        makePad('p1').onMove.call(this, x, y, id, true);
+        _padP1Methods.onMove.call(this, x, y, id, true);
       }
       return;
     }
@@ -2413,19 +2415,15 @@ const Input = Object.assign(makePad('p1'), {
     applyJoyDelta(this, x, y, id);
   },
   onUp(id) {
-    if (this.dualMode) {
-      InputP2.onUp(id);
-      makePad('p1').onUp.call(this, id);
-      return;
-    }
-    makePad('p1').onUp.call(this, id);
+    if (this.dualMode) InputP2.onUp(id);
+    _padP1Methods.onUp.call(this, id);
   },
   hardenPointers(now) {
-    makePad('p1').hardenPointers.call(this, now);
+    _padP1Methods.hardenPointers.call(this, now);
     if (InputP2 && Input.dualMode) InputP2.hardenPointers(now);
   },
   releaseAll() {
-    makePad('p1').releaseAll.call(this);
+    _padP1Methods.releaseAll.call(this);
     if (InputP2) InputP2.releaseAll();
   },
   endFrame() {
@@ -2440,7 +2438,7 @@ const InputP2 = makePad('p2');
 
 Input.layout = function (W, H) {
   if (Input.dualMode) {
-    makePad('p1').layout.call(Input, W, H);
+    _padP1Methods.layout.call(Input, W, H);
     InputP2.layout(W, H);
     return;
   }
@@ -7552,8 +7550,14 @@ function reportAppError(label) {
     if (typeof UI !== 'undefined' && UI.toast) UI.toast('Er ging iets mis — opgeslagen voortgang is veilig', 4000);
   } catch (_) {}
 }
-window.addEventListener('error', (e) => reportAppError(e.message || 'error'));
-window.addEventListener('unhandledrejection', (e) => reportAppError(String(e.reason || 'promise')));
+window.addEventListener('error', (e) => {
+  if (window.__sfGlobalErr) return;
+  reportAppError(e.message || 'error');
+});
+window.addEventListener('unhandledrejection', (e) => {
+  if (window.__sfGlobalErr) return;
+  reportAppError(String(e.reason || 'promise'));
+});
 
 /** Houd canvas/menu-laag schoon op iPad (geen synthetische clicks — bindPress doet touch). */
 function bindUiLayerWatch() {

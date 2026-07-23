@@ -12,7 +12,6 @@
     8,
     15,
     10,
-    20,
     6,
     4,
     7,
@@ -24,10 +23,10 @@
     3
   ],
   "lastRoll": {
-    "face": 14,
-    "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
-    "rolledAt": "2026-07-23T19:40:17Z",
-    "remainingCount": 19,
+    "face": 20,
+    "category": "Code health \u2014 kleine refactors, geen gameplay-break",
+    "rolledAt": "2026-07-23T19:41:09Z",
+    "remainingCount": 18,
     "cycle": 2
   },
   "pending": null,
@@ -254,6 +253,13 @@
       "note": "crit/combo/jutsu rings + particle room",
       "version": "1.12.23",
       "doneAt": "2026-07-23T19:40:55Z",
+      "cycle": 2
+    },
+    {
+      "face": 20,
+      "note": "pad method refs, hitButton reuse, error toast dedupe",
+      "version": "1.12.24",
+      "doneAt": "2026-07-23T19:41:53Z",
       "cycle": 2
     }
   ],
@@ -628,6 +634,13 @@
       "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
       "rolledAt": "2026-07-23T19:40:17Z",
       "remainingCount": 19,
+      "cycle": 2
+    },
+    {
+      "face": 20,
+      "category": "Code health \u2014 kleine refactors, geen gameplay-break",
+      "rolledAt": "2026-07-23T19:41:09Z",
+      "remainingCount": 18,
       "cycle": 2
     }
   ]
