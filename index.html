@@ -244,6 +244,23 @@
       text-align:center; color:#ffe8a8; background:rgba(40,20,10,.88); border:1px solid rgba(255,120,60,.45);
       box-shadow:0 6px 20px rgba(0,0,0,.4); pointer-events:none; }
   #netStatus[hidden] { display:none !important; }
+
+  body.reduced-motion h1.title,
+  body.reduced-motion .char-card.pick-hint { animation: none !important; }
+  body.reduced-motion .screen.active { animation: none; }
+  body.reduced-motion .xpline > div { animation: none; }
+  body.reduced-motion #tunnelBootOverlay .boot-spinner { animation-duration: 1.4s; }
+  body.high-contrast .subtitle { color: #d8e4ff; }
+  body.high-contrast .card .cinfo,
+  body.high-contrast #tunnelBootDetail,
+  body.high-contrast .step-card { color: #eef2ff; }
+  body.high-contrast .card,
+  body.high-contrast .step-card,
+  body.high-contrast .statbar { border-color: rgba(255,255,255,.28); }
+  body.high-contrast .btn:focus-visible,
+  body.high-contrast .back-btn:focus-visible { outline: 3px solid #ffd75e; outline-offset: 3px; }
+  body.high-contrast .char-card .char-tag,
+  body.high-contrast .dex-mini-l { color: #c8d8f8; }
 </style>
 </head>
 <body>
@@ -362,8 +379,9 @@
     <button type="button" class="btn tog" id="setHaptics">📳 Trillen (iPad)</button>
     <button type="button" class="btn tog" id="setComboHud">⚡ Combo-HUD</button>
     <button type="button" class="btn tog" id="setBigTouch">👆 Grote knoppen (iPad)</button>
-    <button type="button" class="btn tog" id="setReducedMotion">🌙 Minder schok (rustig)</button>
+    <button type="button" class="btn tog" id="setReducedMotion">🌙 Minder beweging (FX + iOS)</button>
     <button type="button" class="btn tog off" id="setLiteFx">⚡ Lite FX (iPad sneller)</button>
+    <button type="button" class="btn tog off" id="setHighContrast">👁 Hoog contrast tekst</button>
   </div>
   <div class="step-card">Tip: zet trillingen uit als je in de trein speelt. Power-ups in avontuur: groen = HP, oranje = rage, blauw = chakra of schild.</div>
   <div class="settings-card">

@@ -33,7 +33,7 @@ function fxCaps() {
   if (save.liteFx) mul = 0.55;
   else if (Perf.tier >= 2) mul = 0.42;
   else if (Perf.tier >= 1) mul = 0.68;
-  if (save.reducedMotion) mul *= 0.62;
+  if (typeof motionReduced === 'function' && motionReduced()) mul *= 0.62;
   const floor = { particles: 24, floaters: 8, projectiles: 16, banners: 2, afterimages: 4 };
   const out = {};
   for (const k of Object.keys(FX_CAP)) {
@@ -42,7 +42,8 @@ function fxCaps() {
   return out;
 }
 function maxCanvasDpr() {
-  if (save.liteFx || save.reducedMotion) return 1.25;
+  const rm = typeof motionReduced === 'function' && motionReduced();
+  if (save.liteFx || rm) return 1.25;
   if (Perf.tier >= 2) return 1;
   if (Perf.tier >= 1) return 1.35;
   return 2;
@@ -55,11 +56,11 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.7.9';
+const APP_VERSION = '1.8.0';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
-  reducedMotion: false, liteFx: false, lastPlay: null, tipsSeen: {},
+  reducedMotion: false, liteFx: false, highContrast: false, lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0 },
   achievements: {}, daily: null, vsPlayedIds: [] };
 let save = loadSave();
@@ -130,6 +131,7 @@ function sanitizeSave(s) {
   out.bigTouch = out.bigTouch !== false;
   out.reducedMotion = !!out.reducedMotion;
   out.liteFx = !!out.liteFx;
+  out.highContrast = !!out.highContrast;
   out.tipsSeen = (out.tipsSeen && typeof out.tipsSeen === 'object') ? out.tipsSeen : {};
   if (out.lastPlay && typeof out.lastPlay === 'object') {
     const lp = out.lastPlay;
@@ -644,6 +646,17 @@ function trackVsRosterUse(p1, p2) {
 
 save = sanitizeSave(save);
 persist();
+
+function systemPrefersReducedMotion() {
+  try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (_) { return false; }
+}
+function motionReduced() {
+  return !!save.reducedMotion || systemPrefersReducedMotion();
+}
+function syncA11yClasses() {
+  document.body.classList.toggle('reduced-motion', motionReduced());
+  document.body.classList.toggle('high-contrast', !!save.highContrast || motionReduced());
+}
 
 function buildVsFighter(entry, x, slot) {
   const st = entry.styleId ? styleById(entry.styleId) : null;
@@ -3133,11 +3146,11 @@ class Game {
   }
 
   shake(mag, dur) {
-    if (save.shake === false || save.reducedMotion) return;
+    if (save.shake === false || motionReduced()) return;
     this.shakeMag = mag; this.shakeT = Math.max(this.shakeT, dur);
   }
   burst(x, y, color, n) {
-    if (save.reducedMotion) n = Math.max(2, Math.floor(n * 0.45));
+    if (motionReduced()) n = Math.max(2, Math.floor(n * 0.45));
     else if (save.liteFx || Perf.tier >= 1) n = Math.max(3, Math.floor(n * 0.65));
     if (Perf.tier >= 2) n = Math.max(2, Math.floor(n * 0.55));
     const cap = fxCaps();
@@ -3335,7 +3348,7 @@ class Game {
 
   drawHUD(c) {
     const p = this.player;
-    if (p && p.alive && p.maxhp > 0 && p.hp / p.maxhp < 0.28 && !save.reducedMotion) {
+    if (p && p.alive && p.maxhp > 0 && p.hp / p.maxhp < 0.28 && !motionReduced()) {
       const a = 0.07 + Math.sin(this.t * 7) * 0.04;
       const g = c.createRadialGradient(W / 2, H / 2, H * 0.2, W / 2, H / 2, H * 0.85);
       g.addColorStop(0, 'rgba(0,0,0,0)');
@@ -3394,7 +3407,7 @@ class Game {
         c.font = '900 20px sans-serif';
         c.fillStyle = this.combo >= 8 ? '#ff7a4d' : '#ffd75e';
         c.shadowColor = this.combo >= 8 ? '#ff7a4d' : '#ffd75e';
-        c.shadowBlur = save.reducedMotion ? 0 : 12;
+        c.shadowBlur = motionReduced() ? 0 : 12;
         c.fillText(`COMBO ×${this.combo}`, 0, 0);
         c.restore();
       }
@@ -3432,7 +3445,7 @@ class Game {
       const urgent = this.wallTimer < 10;
       c.font = '900 30px sans-serif';
       c.fillStyle = urgent ? '#ff6b6b' : '#fff';
-      if (urgent && !save.reducedMotion) {
+      if (urgent && !motionReduced()) {
         c.save();
         c.translate(W / 2, 42);
         c.scale(1 + Math.sin(this.t * 12) * 0.06, 1 + Math.sin(this.t * 12) * 0.06);
@@ -3599,6 +3612,7 @@ const UI = {
 
   syncTouchClass() {
     document.body.classList.toggle('big-touch', save.bigTouch !== false);
+    syncA11yClasses();
   },
 
   goBack() {
@@ -4077,11 +4091,15 @@ const UI = {
     const lblS = document.getElementById('setSfxVolLbl');
     if (lblM) lblM.textContent = pct(save.musicVol, 0.85) + '%';
     if (lblS) lblS.textContent = pct(save.sfxVol, 1) + '%';
-    ['setShake', 'setHaptics', 'setComboHud', 'setBigTouch', 'setReducedMotion', 'setLiteFx'].forEach((id, i) => {
+    ['setShake', 'setHaptics', 'setComboHud', 'setBigTouch', 'setReducedMotion', 'setLiteFx', 'setHighContrast'].forEach((id, i) => {
       const el = document.getElementById(id);
       if (!el) return;
-      const keys = ['shake', 'haptics', 'comboHud', 'bigTouch', 'reducedMotion', 'liteFx'];
-      el.classList.toggle('off', save[keys[i]] === false);
+      const keys = ['shake', 'haptics', 'comboHud', 'bigTouch', 'reducedMotion', 'liteFx', 'highContrast'];
+      const key = keys[i];
+      let off = save[key] === false;
+      if (key === 'reducedMotion') off = !save.reducedMotion && !systemPrefersReducedMotion();
+      if (key === 'highContrast') off = !save.highContrast;
+      el.classList.toggle('off', off);
     });
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
@@ -4256,7 +4274,7 @@ function bindSettingsControls() {
   const toggles = [
     ['setShake', 'shake'], ['setHaptics', 'haptics'], ['setComboHud', 'comboHud'],
     ['setBigTouch', 'bigTouch'], ['setReducedMotion', 'reducedMotion'],
-    ['setLiteFx', 'liteFx'],
+    ['setLiteFx', 'liteFx'], ['setHighContrast', 'highContrast'],
   ];
   for (const [id, key] of toggles) {
     const el = document.getElementById(id);
@@ -4267,6 +4285,7 @@ function bindSettingsControls() {
       else save[key] = true;
       if (key === 'reducedMotion' && save.reducedMotion) save.shake = false;
       if (key === 'liteFx') { Perf.reset(); scheduleResize(); }
+      if (key === 'reducedMotion' || key === 'highContrast') syncA11yClasses();
       persist();
       UI.renderSettings();
       UI.syncTouchClass();
@@ -4396,7 +4415,7 @@ function drawMenuBackdrop(c, t) {
   g.addColorStop(1, '#0a0d18');
   c.fillStyle = g;
   c.fillRect(0, 0, W, H);
-  const lite = save.liteFx || save.reducedMotion || Perf.tier >= 1;
+  const lite = save.liteFx || motionReduced() || Perf.tier >= 1;
   const starN = lite ? 14 : 28;
   for (let i = 0; i < starN; i++) {
     const x = (Math.sin(t * 0.4 + i * 1.7) * 0.5 + 0.5) * W;
@@ -4485,6 +4504,12 @@ function bootGame() {
   checkAchievements();
   updateNetStatus();
   UI.syncTouchClass();
+  try {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const onMq = () => syncA11yClasses();
+    if (mq.addEventListener) mq.addEventListener('change', onMq);
+    else if (mq.addListener) mq.addListener(onMq);
+  } catch (_) {}
   if (window.__sfRecoveredBackup) {
     window.__sfRecoveredBackup = false;
     UI.toast('Save hersteld uit backup — je voortgang is veilig', 4200);
