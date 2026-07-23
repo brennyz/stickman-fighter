@@ -56,7 +56,7 @@ const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
-const APP_VERSION = '1.9.5';
+const APP_VERSION = '1.9.6';
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1088,6 +1088,7 @@ const AudioSys = {
   ctx: null, master: null, musicGain: null, sfxGain: null,
   desiredSong: null,
   song: null, step: 0, bar: 0, nextTime: 0,
+  paused: false,
 
   init() {
     try {
@@ -1115,18 +1116,50 @@ const AudioSys = {
     }
   },
 
+  _setGain(g, v) {
+    if (!g) return;
+    try {
+      const t = this.ctx ? this.ctx.currentTime : 0;
+      if (g.gain.cancelScheduledValues) g.gain.cancelScheduledValues(t);
+      if (g.gain.setTargetAtTime) g.gain.setTargetAtTime(v, t, 0.04);
+      else g.gain.value = v;
+    } catch (_) {
+      try { g.gain.value = v; } catch (_) {}
+    }
+  },
+
   applyVolumes() {
     if (!this.musicGain || !this.sfxGain) return;
     const mv = save.music ? clamp(Number(save.musicVol) || 0.85, 0, 1) : 0;
     const sv = save.sfx ? clamp(Number(save.sfxVol) || 1, 0, 1) : 0;
-    const baseM = (this.song && this.song.id === 'menu') ? 0.24 : 0.32;
-    this.musicGain.gain.value = baseM * mv;
-    this.sfxGain.gain.value = 0.82 * sv;
+    const id = (this.song && this.song.id) || this.desiredSong;
+    let baseM = (id === 'menu') ? 0.24 : 0.32;
+    // Duck BGM in pauze / result — SFX blijft hoorbaar voor UI
+    if (this.paused || state === 'pause') baseM *= 0.26;
+    else if (state === 'result') baseM *= 0.5;
+    this._setGain(this.musicGain, baseM * mv);
+    this._setGain(this.sfxGain, 0.82 * sv);
+  },
+
+  setPaused(on) {
+    this.paused = !!on;
+    this.applyVolumes();
+    if (!on) {
+      try { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
+      if (save.music && this.desiredSong) {
+        if (!this.song || this.song.id !== this.desiredSong) this.play(this.desiredSong);
+      }
+    }
   },
 
   tone(f0, f1, dur, type, vol, out, when) {
     if (!this.ctx) return;
-    vol *= save.sfx ? clamp(Number(save.sfxVol) || 1, 0, 1) : 0;
+    const toMusic = out === this.musicGain;
+    if (toMusic) {
+      if (!save.music) return;
+    } else {
+      vol *= save.sfx ? clamp(Number(save.sfxVol) || 1, 0, 1) : 0;
+    }
     if (vol <= 0.001) return;
     const t = (when != null ? when : this.ctx.currentTime);
     const o = this.ctx.createOscillator(), g = this.ctx.createGain();
@@ -1141,7 +1174,12 @@ const AudioSys = {
 
   noise(dur, vol, filterFreq, hp, out, when) {
     if (!this.ctx) return;
-    vol *= save.sfx ? clamp(Number(save.sfxVol) || 1, 0, 1) : 0;
+    const toMusic = out === this.musicGain;
+    if (toMusic) {
+      if (!save.music) return;
+    } else {
+      vol *= save.sfx ? clamp(Number(save.sfxVol) || 1, 0, 1) : 0;
+    }
     if (vol <= 0.001) return;
     const t = (when != null ? when : this.ctx.currentTime);
     const len = Math.max(1, Math.floor(this.ctx.sampleRate * dur));
@@ -1222,22 +1260,25 @@ const AudioSys = {
 
   /* --------- Muziek: procedurele chiptune-sequencer (rechtenvrij) ------- */
   play(name) {
+    if (!name || !SONGS[name]) return;
     this.desiredSong = name;
-    if (!this.ctx || !save.music) return;
-    if (this.song && this.song.id === name) return;
+    if (!this.ctx || !save.music) { this.applyVolumes(); return; }
+    if (this.song && this.song.id === name) { this.applyVolumes(); return; }
     this.song = Object.assign({ id: name }, SONGS[name]);
-    if (this.musicGain) {
-      const mv = save.music ? clamp(Number(save.musicVol) || 0.85, 0, 1) : 0;
-      this.musicGain.gain.value = (name === 'menu' ? 0.24 : 0.32) * mv;
-    }
     this.step = 0; this.bar = 0;
     this.nextTime = this.ctx.currentTime + 0.06;
+    this.applyVolumes();
   },
-  stop() { this.song = null; this.desiredSong = null; },
+  stop() { this.song = null; this.desiredSong = null; this.applyVolumes(); },
   setMusicOn(on) {
-    save.music = on; persist();
+    save.music = !!on; persist();
     if (!on) this.song = null;
-    else if (this.desiredSong) { const d = this.desiredSong; this.desiredSong = null; this.play(d); this.desiredSong = d; }
+    else if (this.desiredSong) this.play(this.desiredSong);
+    this.applyVolumes();
+  },
+  setSfxOn(on) {
+    save.sfx = !!on; persist();
+    this.applyVolumes();
   },
 
   tick() {
@@ -4092,6 +4133,7 @@ const UI = {
     this.syncTouchClass();
     this.renderMenu();
     this.show('menuScreen');
+    AudioSys.setPaused(false);
     AudioSys.play('menu');
     if (window.StickInstall) window.StickInstall.refreshMenuButton();
   },
@@ -4649,7 +4691,9 @@ const UI = {
       }
     }
     this.show('resultScreen');
+    AudioSys.setPaused(false);
     AudioSys.play('menu');
+    AudioSys.applyVolumes();
   },
 };
 
@@ -4686,6 +4730,7 @@ function startGame(mode, opts) {
     return;
   }
   state = 'play';
+  try { AudioSys.setPaused(false); } catch (_) {}
   try { recordLastPlay(mode, opts); } catch (_) {}
   try { showModeOnboarding(mode); } catch (_) {}
   try { playModeHint(game, mode); } catch (_) {}
@@ -4957,6 +5002,7 @@ bindPress(btnSharePlay, () => {
 bindPress(document.getElementById('pauseBtn'), () => {
   if (state === 'play') {
     state = 'pause';
+    AudioSys.setPaused(true);
     UI.renderPauseToggles();
     UI.show('pauseScreen');
   }
@@ -4965,20 +5011,26 @@ const pauseTogMusic = document.getElementById('pauseTogMusic');
 bindPress(pauseTogMusic, () => {
   AudioSys.init();
   AudioSys.setMusicOn(!save.music);
-  if (save.music && state !== 'play') AudioSys.play('menu');
+  // Mid-fight pause: keep battle/boss song — don't force menu BGM
+  if (save.music && state === 'pause' && AudioSys.desiredSong) {
+    AudioSys.play(AudioSys.desiredSong);
+  } else if (save.music && state !== 'play' && state !== 'pause') {
+    AudioSys.play('menu');
+  }
   UI.renderPauseToggles();
   AudioSys.sfx('select');
 });
 const pauseTogSfx = document.getElementById('pauseTogSfx');
 bindPress(pauseTogSfx, () => {
   AudioSys.init();
-  save.sfx = !save.sfx;
-  persist();
+  AudioSys.setSfxOn(!save.sfx);
   UI.renderPauseToggles();
   AudioSys.sfx('select');
 });
 bindPress(document.getElementById('pauseResume'), () => {
   state = 'play';
+  AudioSys.setPaused(false);
+  if (save.music && AudioSys.desiredSong) AudioSys.play(AudioSys.desiredSong);
   UI.show(null);
 });
 bindPress(document.getElementById('pauseQuit'), () => { UI.goMenu(); });
@@ -5082,14 +5134,23 @@ function loop(now) {
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
-    try {
-      if (AudioSys.ctx && AudioSys.ctx.state === 'running') AudioSys.ctx.suspend();
-    } catch (_) {}
-    if (state === 'play') { state = 'pause'; UI.show('pauseScreen'); }
+    if (state === 'play') {
+      state = 'pause';
+      AudioSys.setPaused(true);
+      try { UI.renderPauseToggles(); } catch (_) {}
+      UI.show('pauseScreen');
+    } else {
+      try {
+        if (AudioSys.ctx && AudioSys.ctx.state === 'running') AudioSys.ctx.suspend();
+      } catch (_) {}
+    }
   } else {
     try {
-      if (AudioSys.ctx && AudioSys.ctx.state === 'suspended' && save.music) AudioSys.ctx.resume();
+      if (AudioSys.ctx && AudioSys.ctx.state === 'suspended' && (save.music || save.sfx)) {
+        AudioSys.ctx.resume();
+      }
     } catch (_) {}
+    AudioSys.applyVolumes();
   }
 });
 

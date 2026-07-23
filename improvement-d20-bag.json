@@ -2,15 +2,14 @@
   "version": 3,
   "cyclesCompleted": 0,
   "remaining": [
-    6,
     14,
     20
   ],
   "lastRoll": {
-    "face": 7,
-    "category": "Save & backup \u2014 import/export, corruptie, migratie",
-    "rolledAt": "2026-07-23T14:21:52Z",
-    "remainingCount": 3,
+    "face": 6,
+    "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+    "rolledAt": "2026-07-23T15:00:11Z",
+    "remainingCount": 2,
     "cycle": 0
   },
   "implemented": [
@@ -54,6 +53,13 @@
       "note": "Save health + dex kills fix + import preview",
       "version": "1.9.2",
       "doneAt": "2026-07-23T14:22:36Z",
+      "cycle": 0
+    },
+    {
+      "face": 6,
+      "note": "BGM duck pause/result + mute paths + pause song keep",
+      "version": "1.9.6",
+      "doneAt": "2026-07-23T15:01:40Z",
       "cycle": 0
     }
   ],
@@ -182,6 +188,13 @@
       "category": "Save & backup \u2014 import/export, corruptie, migratie",
       "rolledAt": "2026-07-23T14:21:52Z",
       "remainingCount": 3,
+      "cycle": 0
+    },
+    {
+      "face": 6,
+      "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+      "rolledAt": "2026-07-23T15:00:11Z",
+      "remainingCount": 2,
       "cycle": 0
     }
   ],
