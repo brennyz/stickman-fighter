@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.15.7';
+const APP_VERSION = '1.15.8';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 114;
+const SW_CACHE_REV = 115;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -2090,7 +2090,12 @@ function buildLevel(n) {
     UNLOCK_AT[id] <= n && rarityOf(SPECIES[id].rarity).order <= maxRarity && id !== 'guvvedrak'
   );
   const pool = fightPool.length ? fightPool : ['slymo'];
+  const flyPool = pool.filter((id) => {
+    const t = SPECIES[id] && SPECIES[id].type;
+    return t === 'fly' || t === 'dragon';
+  });
   const waves = [];
+  const waveMeta = [];
   const waveCount = Math.min(2 + Math.floor(n / 5), 5);
   const perWave = Math.min(2 + Math.floor(n / 4), 6);
   for (let w = 0; w < waveCount; w++) {
@@ -2100,13 +2105,38 @@ function buildLevel(n) {
       const rareElite = rarityOf(SPECIES[sp].rarity).order >= 3 && Math.random() < 0.14;
       list.push({ sp, elite: rareElite });
     }
+    const meta = { trait: null, spawnMul: 1, label: '' };
+    const roll = Math.random();
+    if (flyPool.length && n >= 3 && roll < 0.22) {
+      list[Math.floor(Math.random() * list.length)].sp = weightedPick(flyPool, n);
+      meta.trait = 'flyers';
+      meta.label = 'Vliegers — mik omhoog!';
+    } else if (roll < 0.38) {
+      meta.trait = 'rush';
+      meta.spawnMul = 0.76;
+      meta.label = 'Rush-golf';
+    } else if (n >= 7 && roll < 0.52) {
+      list.push({ sp: weightedPick(pool, n), elite: true });
+      meta.trait = 'elite';
+      meta.label = 'Extra elite';
+    }
     waves.push(list);
+    waveMeta.push(meta);
   }
-  if (BOSS_AT[n]) waves.push(BOSS_AT[n].map(x => Object.assign({}, x)));
+  if (BOSS_AT[n]) {
+    waves.push(BOSS_AT[n].map(x => Object.assign({}, x)));
+    waveMeta.push({ trait: 'boss', spawnMul: 1, label: 'Baas-golf' });
+  }
   const theme = WORLD_THEMES[n - 1] || 'cyber';
   const rarityCap = ['common','uncommon','rare','epic','legendary','mythic'][maxRarity];
-  return { n, waves, hpMul, dmgMul, theme, boss: !!BOSS_AT[n], rarityCap };
+  return { n, waves, waveMeta, hpMul, dmgMul, theme, boss: !!BOSS_AT[n], rarityCap };
 }
+
+const WAVE_TRAIT_BANNER = {
+  flyers: { text: 'VLIEGER-GOLF', color: '#c47aff', size: 40 },
+  rush: { text: 'RUSH-GOLF', color: '#ffb06a', size: 40 },
+  elite: { text: 'ELITE-GOLF', color: '#ffb0b8', size: 40 },
+};
 
 /** Avontuur: 2× d6 gok vóór level — super-baas of super-bondgenoot (alleen dit level). */
 const GAMBLE_ALLIES = {
@@ -5515,6 +5545,7 @@ class Game {
     this.travelWasOn = false;
     this.bossBeatPlayed = false;
     this.waveTotal = 0;
+    this.allyAssistT = 0;
     this.gambleRoll = gamble || null;
     applyGambleToStage(this, gamble);
     this.banner(`LEVEL ${n}`, 1.4, '#ffd75e', 54);
@@ -5532,6 +5563,7 @@ class Game {
     if (this.stageAlly) {
       this.floater(W * 0.5, 118, `${this.stageAlly.name} helpt je!`, this.stageAlly.color || '#7cf5ff', 15);
     }
+    this.allyAssistT = this.stageAlly ? 2.2 : 0;
     AudioSys.play(this.level.boss ? 'boss' : 'battle');
     if (n === 1 && save.lvl === 1 && !modeOnboardingSeen('adventure')) this.hint = 6;
   }
@@ -5563,7 +5595,16 @@ class Game {
       AudioSys.play(hasSuper ? 'boss' : 'elite');
       AudioSys.sfx('roar');
     } else {
-      this.banner(`GOLF ${this.waveIdx + 1}/${this.level.waves.length}`, 1.1, '#cfe0ff', 38);
+      const meta = this.level.waveMeta && this.level.waveMeta[this.waveIdx];
+      const trait = meta && meta.trait && WAVE_TRAIT_BANNER[meta.trait];
+      if (trait) {
+        this.banner(trait.text, 1.2, trait.color, trait.size);
+        if (meta.trait === 'flyers') {
+          try { this.floater(W * 0.5, 108, 'Joystick omhoog = hoger mikken', '#c47aff', 13); } catch (_) {}
+        }
+      } else {
+        this.banner(`GOLF ${this.waveIdx + 1}/${this.level.waves.length}`, 1.1, '#cfe0ff', 38);
+      }
     }
   }
 
@@ -5604,6 +5645,9 @@ class Game {
       }
     }
     this.travelWasOn = this.traveling;
+    if (this.traveling) {
+      this.worldX = (this.worldX || 0) + dt * (isBossWave(this.level, this.waveIdx + 1) ? 220 : 165);
+    }
     // Baas-aankomst-beat: halverwege de reis naar de baas-golf één roar
     if (this.wavePause > 0 && isBossWave(this.level, this.waveIdx + 1) && !this.bossBeatPlayed) {
       const f = 1 - this.wavePause / (this.wavePauseTotal || 1);
@@ -5635,6 +5679,23 @@ class Game {
       if (this.dmgBuffT <= 0) this.dmgBuffMul = 1;
     }
     if (this.playerShieldT > 0) this.playerShieldT -= dt;
+    if (this.stageAlly && this.player && this.player.alive && this.monsters.some((m) => m.alive)) {
+      this.allyAssistT = (this.allyAssistT || 0) - dt;
+      if (this.allyAssistT <= 0) {
+        this.allyAssistT = this.stageAlly.id === 'dawn' ? 3.6 : 5;
+        const tgt = this.monsters.reduce((best, m) => {
+          if (!m.alive) return best;
+          const d = Math.abs(m.x - this.player.x);
+          return !best || d < Math.abs(best.x - this.player.x) ? m : best;
+        }, null);
+        if (tgt) {
+          const dmg = Math.round(this.player.baseDmg * 0.38 * (this.stageDmgMul || 1));
+          tgt.takeDamage(dmg, Math.sign(tgt.x - this.player.x) * 140, this);
+          this.floater(tgt.x, tgt.y - tgt.size - 22, `${this.stageAlly.name} −${dmg}`, this.stageAlly.color || '#7cf5ff', 12);
+          if (!fxLite()) this.burst(tgt.x, tgt.y - tgt.size * 0.4, this.stageAlly.color || '#7cf5ff', 6, { kind: 'spark', size: 2 });
+        }
+      }
+    }
     const p = this.player;
     for (const pk of this.pickups) {
       pk.t += dt;
@@ -5653,7 +5714,9 @@ class Game {
       this.spawnTimer -= dt;
       if (this.spawnTimer <= 0) {
         const bossWave = isBossWave(this.level, this.waveIdx);
-        this.spawnTimer = bossWave ? 1.12 : 0.68;
+        const meta = this.level.waveMeta && this.level.waveMeta[this.waveIdx];
+        const spawnMul = (meta && meta.spawnMul) || 1;
+        this.spawnTimer = (bossWave ? 1.12 : 0.68) * spawnMul;
         const def = this.spawnQueue.shift();
         const side = Math.random() < 0.75 ? 1 : -1;
         const x = side > 0 ? W + 40 : -40;
@@ -5676,10 +5739,16 @@ class Game {
         const nextIsBoss = isBossWave(this.level, this.waveIdx + 1);
         this.wavePause = nextIsBoss ? 2.15 : 1.55;
         this.wavePauseTotal = this.wavePause;
+        if (this.player && this.player.alive) {
+          const waveHeal = Math.max(4, Math.round(this.player.maxhp * 0.06));
+          this.player.hp = Math.min(this.player.maxhp, this.player.hp + waveHeal);
+          this.player.energy = clamp(this.player.energy + 8, 0, 100);
+          this.floater(this.player.x, this.player.y - 88, `Golf gewist +${waveHeal} HP`, '#6ee06e', 14);
+        }
         if (this.stageHealBetween > 0 && this.player && this.player.alive) {
           const heal = Math.max(8, Math.round(this.player.maxhp * this.stageHealBetween));
           this.player.hp = Math.min(this.player.maxhp, this.player.hp + heal);
-          this.floater(this.player.x, this.player.y - 90, `+${heal} bondgenoot`, '#6ee06e', 14);
+          this.floater(this.player.x, this.player.y - 108, `+${heal} bondgenoot`, '#6ee06e', 14);
         }
       }
       this.wavePause -= dt;
@@ -5723,7 +5792,12 @@ class Game {
       })(),
       xp: this.sessionXP,
       mode: 'adventure', level: this.level.n, win, stars,
-      tip: win ? (stars >= 3 ? 'Perfecte run — hou je HP hoog!' : `${starHintLine()} — pickups helpen`) : 'Tip: blokkeer meer · vul chakra · Rasengan op baas',
+      tip: win ? (stars >= 3 ? 'Perfecte run — hou je HP hoog!' : `${starHintLine()} — pickups helpen`) : (() => {
+        const prog = this.waveIdx >= 0 ? `${this.waveIdx + 1}/${this.level.waves.length} golven` : 'start';
+        return this.player.hp <= 0
+          ? `Tip: blokkeer · mik omhoog op vliegers · ${prog}`
+          : `Tip: pak groene orbs · vul SUPER vóór baas · ${prog}`;
+      })(),
     }), 1400);
   }
 
@@ -6674,6 +6748,10 @@ class Game {
       const msg = this.combo === 8 ? 'MUUR-TEMPO!' : `COMBO ×${this.combo}!`;
       this.floater(W * 0.5, 130, msg, '#7cf5ff', 18);
     }
+    if (this.mode === 'adventure' && (this.combo === 6 || this.combo === 10)) {
+      AudioSys.sfx('combo');
+      this.floater(W * 0.5, 118, `COMBO ×${this.combo}!`, '#ffd75e', 16);
+    }
     if ([5, 10, 15].includes(this.combo) && this.player && !motionReduced()) {
       const col = this.combo >= 10 ? '#ffd75e' : '#7cf5ff';
       spawnFxRing(this, this.player.x, this.player.y - 50, col, 9 + this.combo * 0.35);
@@ -7119,6 +7197,52 @@ class Game {
     c.globalAlpha = 1;
   }
 
+  /** Preview van volgende golf tijdens reis — kleine silhouet-chips. */
+  drawNextWavePreview(c) {
+    const nextIdx = this.waveIdx + 1;
+    const next = this.level && this.level.waves[nextIdx];
+    if (!next || !next.length) return;
+    const meta = this.level.waveMeta && this.level.waveMeta[nextIdx];
+    const chips = Math.min(5, next.length);
+    const gap = 22;
+    const x0 = W / 2 - ((chips - 1) * gap) / 2;
+    const y = H - 52;
+    c.save();
+    c.font = '700 9px sans-serif';
+    c.fillStyle = 'rgba(255,255,255,.55)';
+    c.textAlign = 'center';
+    c.fillText('Volgende golf', W / 2, y - 14);
+    for (let i = 0; i < chips; i++) {
+      const def = next[i];
+      const sp = SPECIES[def.sp];
+      if (!sp) continue;
+      const cx = x0 + i * gap;
+      const flying = sp.type === 'fly' || sp.type === 'dragon';
+      const col = def.superBoss ? '#ffd75e' : (def.elite ? '#ffb0b8' : (sp.c2 || '#8899bb'));
+      c.fillStyle = col;
+      c.globalAlpha = 0.75;
+      c.beginPath();
+      c.arc(cx, y + (flying ? -5 : 0), 6 + (def.elite ? 1.5 : 0), 0, TAU);
+      c.fill();
+      if (flying) {
+        c.strokeStyle = 'rgba(196,122,255,.7)';
+        c.lineWidth = 1.2;
+        c.beginPath();
+        c.moveTo(cx - 5, y - 2);
+        c.lineTo(cx + 5, y - 2);
+        c.stroke();
+      }
+    }
+    if (meta && meta.label) {
+      c.globalAlpha = 0.85;
+      c.fillStyle = meta.trait === 'flyers' ? '#c47aff' : (meta.trait === 'rush' ? '#ffb06a' : '#ffb0b8');
+      c.fillText(meta.label, W / 2, y + 16);
+    }
+    c.restore();
+    c.globalAlpha = 1;
+    c.textAlign = 'center';
+  }
+
   /** Deel 3: speed-lines tijdens de reis — geeft vaart zonder echte camera. */
   drawTravelSpeedLines(c) {
     if (!this.traveling || fxLite() || motionReduced()) return;
@@ -7383,6 +7507,7 @@ class Game {
         fillHudText(c, pauseMsg, W / 2, H - 78, {
           fill: nextBoss ? '#ffc8d0' : '#d8e8ff',
         });
+        this.drawNextWavePreview(c);
       }
       const boss = bossAlive;
       if (boss) {

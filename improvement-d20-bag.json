@@ -21,13 +21,7 @@
     "remainingCount": 10,
     "cycle": 2
   },
-  "pending": {
-    "face": 9,
-    "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
-    "rolledAt": "2026-07-24T08:28:32Z",
-    "remainingCount": 10,
-    "cycle": 2
-  },
+  "pending": null,
   "implemented": [
     {
       "face": 2,
@@ -308,9 +302,28 @@
       "version": "1.15.6",
       "doneAt": "2026-07-24T08:28:14Z",
       "cycle": 2
+    },
+    {
+      "face": 9,
+      "note": "Closest hit, pointer lock, joy guard, portrait grid",
+      "version": "1.15.7",
+      "doneAt": "2026-07-24T08:30:10Z",
+      "cycle": 2
     }
   ],
   "userFeatureLog": [
+    {
+      "id": "adventure-polish-wave-traits",
+      "d20Face": null,
+      "userWords": "Verbeter adventure verder",
+      "versions": [
+        "1.15.8"
+      ],
+      "commits": [],
+      "code": "waveMeta traits (flyers/rush/elite), worldX parallax travel, wave-clear +6% HP +8 chakra, stageAlly assist dmg, drawNextWavePreview HUD, combo milestones, smarter lose tips",
+      "status": "done",
+      "note": "off-d20 user request; avontuur voelt rijker tussen golven"
+    },
     {
       "id": "touch-btn-overlap-fix",
       "d20Face": null,
