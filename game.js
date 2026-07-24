@@ -1050,7 +1050,6 @@ const ACHIEVEMENTS = [
     test: s => s.bestWall >= 100 },
   { id: 'combo8', name: 'Combo-koning', desc: 'Combo ×8 bereikt', icon: '⚡',
     test: s => s.stats.maxCombo >= 8 },
-<<<<<<< HEAD
   { id: 'finisher10', name: 'Stijl-meester', desc: '10 wapen-finishers geland', icon: '⚔',
     test: s => (s.stats.weaponFinishers || 0) >= 10 },
   { id: 'finisher1', name: 'Eerste stijl', desc: 'Land je eerste wapen-finisher', icon: '🗡',
@@ -1059,12 +1058,10 @@ const ACHIEVEMENTS = [
     test: s => Object.values(s.weaponMastery || {}).some(m => (m.finishers || 0) >= 25) },
   { id: 'finisher50', name: 'Combo-sensei', desc: '50 finishers totaal', icon: '✨',
     test: s => (s.stats.weaponFinishers || 0) >= 50 },
-=======
   { id: 'streak10', name: 'Onstuitbaar', desc: 'Kill streak ×10 in avontuur', icon: '🔥',
     test: s => (s.stats.maxKillStreak || 0) >= 10 },
   { id: 'trainCombo10', name: 'Dummy-meester', desc: 'Training combo ×10', icon: '🎯',
     test: s => (s.stats.trainMaxCombo || 0) >= 10 },
->>>>>>> origin/cursor/feel-killstreak-combotrainer-2125
   { id: 'lv50', name: 'Legende', desc: 'Unlock level 50', icon: '👑',
     test: s => s.unlocked >= 50 },
   { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd', icon: '📅',
@@ -1295,7 +1292,6 @@ function achievementProgressFrac(ach) {
     case 'train5': return Math.min(s.trainWins, 5) / 5;
     case 'wall100': return Math.min(s.bestWall, 100) / 100;
     case 'combo8': return Math.min(s.stats.maxCombo || 0, 8) / 8;
-<<<<<<< HEAD
     case 'finisher10': return Math.min(s.stats.weaponFinishers || 0, 10) / 10;
     case 'finisher1': return Math.min(s.stats.weaponFinishers || 0, 1);
     case 'finisher50': return Math.min(s.stats.weaponFinishers || 0, 50) / 50;
@@ -1304,10 +1300,8 @@ function achievementProgressFrac(ach) {
       for (const m of Object.values(s.weaponMastery || {})) best = Math.max(best, m.finishers || 0);
       return Math.min(best, 25) / 25;
     }
-=======
     case 'streak10': return Math.min(s.stats.maxKillStreak || 0, 10) / 10;
     case 'trainCombo10': return Math.min(s.stats.trainMaxCombo || 0, 10) / 10;
->>>>>>> origin/cursor/feel-killstreak-combotrainer-2125
     case 'lv50': return Math.min(s.unlocked, 50) / 50;
     case 'daily7': return Math.min(s.stats.dailyBonusCount || 0, 7) / 7;
     case 'vs5': return Math.min(s.stats.vsMatches || 0, 5) / 5;
@@ -1338,7 +1332,6 @@ function achievementProgressHint(ach) {
     case 'train5': return `${Math.min(s.trainWins, 5)}/5 training-wins`;
     case 'wall100': return `${Math.min(s.bestWall, 100)}/100 muur-score`;
     case 'combo8': return `×${Math.min(s.stats.maxCombo || 0, 8)}/8 combo`;
-<<<<<<< HEAD
     case 'finisher10': return `${Math.min(s.stats.weaponFinishers || 0, 10)}/10 finishers`;
     case 'finisher1': return `${Math.min(s.stats.weaponFinishers || 0, 1)}/1 finisher`;
     case 'finisher50': return `${Math.min(s.stats.weaponFinishers || 0, 50)}/50 finishers`;
@@ -1347,10 +1340,8 @@ function achievementProgressHint(ach) {
       for (const m of Object.values(s.weaponMastery || {})) best = Math.max(best, m.finishers || 0);
       return `${Math.min(best, 25)}/25 op één wapen`;
     }
-=======
     case 'streak10': return `streak ×${Math.min(s.stats.maxKillStreak || 0, 10)}/10`;
     case 'trainCombo10': return `train ×${Math.min(s.stats.trainMaxCombo || 0, 10)}/10`;
->>>>>>> origin/cursor/feel-killstreak-combotrainer-2125
     case 'lv50': return `Unlock Lv ${Math.min(s.unlocked, 50)}/50`;
     case 'daily7': return `${Math.min(s.stats.dailyBonusCount || 0, 7)}/7 dagbonussen`;
     case 'vs5': return `${Math.min(s.stats.vsMatches || 0, 5)}/5 duels`;
@@ -7095,9 +7086,6 @@ class Fighter {
       dmg = Math.max(1, Math.round(dmg * game.styleDefMul));
     }
     this.hp -= dmg;
-<<<<<<< HEAD
-    this.hurtT = dmg >= 18 ? 0.16 : 0.12;
-=======
     if (this.isPlayer && game) {
       if (game.mode === 'training' || game.mode === 'adventure') {
         game.combo = 0;
@@ -7105,8 +7093,7 @@ class Fighter {
       }
       if (game.mode === 'adventure') game.killStreak = 0;
     }
-    this.hurtT = dmg >= 18 ? 0.28 : 0.24;
->>>>>>> origin/cursor/feel-killstreak-combotrainer-2125
+    this.hurtT = dmg >= 18 ? 0.16 : 0.12;
     this.hitFlashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.18 : 0.14);
     this.attack = null;
     const kbScaled = scaleKnockback(kbx, dmg, { heavy: dmg >= 18 });
@@ -9170,15 +9157,11 @@ class Game {
       detail: (() => {
         let base = win
           ? `Level ${lv} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}` +
-<<<<<<< HEAD
-            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '')
-          : `Level ${lv} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}` +
-            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '');
-=======
+            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '') +
             ((this.sessionBestKillStreak || 0) >= 3 ? ` · streak ×${this.sessionBestKillStreak}` : '')
           : `Level ${lv} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}` +
+            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '') +
             ((this.sessionBestKillStreak || 0) >= 3 ? ` · streak ×${this.sessionBestKillStreak}` : '');
->>>>>>> origin/cursor/feel-killstreak-combotrainer-2125
         if (masterBuffActive(lv) && !win) base += ' · Meester-buff actief';
         if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
           base += ` · gok: ${gambleOutcomeLabel(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48)}`;
@@ -9521,14 +9504,10 @@ class Game {
         || 'Tip: duck lasers · chakra vol → Rasengan';
     setTimeout(() => UI.showResult(win, {
       title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
-<<<<<<< HEAD
-      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · ${save.trainWins}x gewonnen` +
-        (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
-=======
       detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · max combo ×${trainBest}` +
         (win ? ` · ${save.trainWins}x gewonnen` : '') +
-        (rec > 0 ? ` · record ×${rec}` : ''),
->>>>>>> origin/cursor/feel-killstreak-combotrainer-2125
+        (rec > 0 ? ` · record ×${rec}` : '') +
+        (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
     }), 1200);
@@ -10126,11 +10105,6 @@ class Game {
     for (const tgt of targets) {
       if (!tgt.alive) continue;
       if ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2) {
-<<<<<<< HEAD
-        const finisher = spec.kind === 'weapon' && isWeaponFinisher(f, spec);
-        const hitRoll = rollHitDamage(f, spec, finisher ? WEAPON_FINISHER_MUL.dmg : 1);
-        const kbHit = scaleKnockback(f.face * spec.kb * (finisher ? WEAPON_FINISHER_MUL.kb : 1), hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
-=======
         if (this.mode === 'training' && f.isPlayer) {
           this.combo = Math.min(12, this.combo + 1);
           f._chainKind = spec.kind;
@@ -10152,9 +10126,9 @@ class Game {
             haptic(8 + this.combo);
           }
         }
-        const hitRoll = rollHitDamage(f, spec, 1);
-        const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
->>>>>>> origin/cursor/feel-killstreak-combotrainer-2125
+        const finisher = spec.kind === 'weapon' && isWeaponFinisher(f, spec);
+        const hitRoll = rollHitDamage(f, spec, finisher ? WEAPON_FINISHER_MUL.dmg : 1);
+        const kbHit = scaleKnockback(f.face * spec.kb * (finisher ? WEAPON_FINISHER_MUL.kb : 1), hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
         const counter = isCounterHitWindow(tgt);
         const dmg = tgt.takeDamage(hitRoll.dmg, kbHit, this, {
           unblockable: spec.unblockable, attacker: f, kind: spec.kind,

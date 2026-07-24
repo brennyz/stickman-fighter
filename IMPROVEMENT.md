@@ -109,19 +109,11 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-| 2026-07-24 | **16** | Hosting (cyclus 4): share ?v= rev op speel.html, host-badge in instellingen, tunnel→Open Pages CTA, speel og:url canonical. v1.17.46 / SW v172. |
-=======
-| 2026-07-24 | **20** | Code health (cyclus 4): volPct→prelude, settings vol DRY, menuBackdropLiteFlags, drawJutsuOrb branch merge, motionReduced guards — zero gedrag. v1.17.46 / SW v172. |
->>>>>>> origin/cursor/d20-code-health-c4-2125
-=======
-| 2026-07-24 | **8** | PWA (cyclus 4): SW v172 + LIVE-LINK precache, shell-check (JS+HTML+CSS) voor offline-klaar, pauze offline-hint, branded fallback Pages-link. v1.17.46 / SW v172. |
->>>>>>> origin/cursor/d8-pwa-offline-c4-2125
-=======
-| 2026-07-24 | — | **Feel #2+#3:** kill streak (STREAK juice, record, BGM heat, achievements) + combo-trainer (dummy 3s, goals, record, bonus XP). v1.17.46 / SW v172. |
->>>>>>> origin/cursor/feel-killstreak-combotrainer-2125
+| 2026-07-24 | **ship** | Alles live: dex/pets, egg pets, combat styles, save backup, combat harden, weapon combos, char select, hosting, code health, PWA offline, kill streak + combo-trainer. v1.17.56 / SW v182. |
+| 2026-07-24 | — | **Feel #2+#3:** kill streak (STREAK juice, record, BGM heat, achievements) + combo-trainer (dummy 3s, goals, record, bonus XP). |
+| 2026-07-24 | **8** | PWA (cyclus 4): SW + LIVE-LINK precache, shell-check (JS+HTML+CSS) voor offline-klaar, pauze offline-hint, branded fallback Pages-link. |
+| 2026-07-24 | **20** | Code health (cyclus 4): volPct→prelude, settings vol DRY, menuBackdropLiteFlags, drawJutsuOrb branch merge, motionReduced guards — zero gedrag. |
+| 2026-07-24 | **16** | Hosting (cyclus 4): share ?v= rev op speel.html, host-badge in instellingen, tunnel→Open Pages CTA, speel og:url canonical. |
 | 2026-07-24 | **16** | Hosting (cyclus 3): deploy LIVE-LINK→speel.html, speel share via hosting.json, tunnel hint, keep-tunnel Pages-first. v1.17.42 / SW v168. **Cyclus 3 vol.** |
 | 2026-07-24 | **6** | Audio (cyclus 3): slider↔mute sync, Lite FX mix refresh, ctx suspend in mute-pauze, SFX preview, settings status. v1.17.41 / SW v167. |
 | 2026-07-24 | — | **Envelope live:** d4+d9+d20+d10+d11 merged → v1.17.40 / SW v166. |

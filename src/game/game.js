@@ -475,15 +475,11 @@ class Game {
       detail: (() => {
         let base = win
           ? `Level ${lv} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}` +
-<<<<<<< HEAD
-            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '')
-          : `Level ${lv} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}` +
-            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '');
-=======
+            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '') +
             ((this.sessionBestKillStreak || 0) >= 3 ? ` · streak ×${this.sessionBestKillStreak}` : '')
           : `Level ${lv} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}` +
+            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '') +
             ((this.sessionBestKillStreak || 0) >= 3 ? ` · streak ×${this.sessionBestKillStreak}` : '');
->>>>>>> origin/cursor/feel-killstreak-combotrainer-2125
         if (masterBuffActive(lv) && !win) base += ' · Meester-buff actief';
         if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
           base += ` · gok: ${gambleOutcomeLabel(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48)}`;
@@ -826,14 +822,10 @@ class Game {
         || 'Tip: duck lasers · chakra vol → Rasengan';
     setTimeout(() => UI.showResult(win, {
       title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
-<<<<<<< HEAD
-      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · ${save.trainWins}x gewonnen` +
-        (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
-=======
       detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · max combo ×${trainBest}` +
         (win ? ` · ${save.trainWins}x gewonnen` : '') +
-        (rec > 0 ? ` · record ×${rec}` : ''),
->>>>>>> origin/cursor/feel-killstreak-combotrainer-2125
+        (rec > 0 ? ` · record ×${rec}` : '') +
+        (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
     }), 1200);
@@ -1431,11 +1423,6 @@ class Game {
     for (const tgt of targets) {
       if (!tgt.alive) continue;
       if ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2) {
-<<<<<<< HEAD
-        const finisher = spec.kind === 'weapon' && isWeaponFinisher(f, spec);
-        const hitRoll = rollHitDamage(f, spec, finisher ? WEAPON_FINISHER_MUL.dmg : 1);
-        const kbHit = scaleKnockback(f.face * spec.kb * (finisher ? WEAPON_FINISHER_MUL.kb : 1), hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
-=======
         if (this.mode === 'training' && f.isPlayer) {
           this.combo = Math.min(12, this.combo + 1);
           f._chainKind = spec.kind;
@@ -1457,9 +1444,9 @@ class Game {
             haptic(8 + this.combo);
           }
         }
-        const hitRoll = rollHitDamage(f, spec, 1);
-        const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
->>>>>>> origin/cursor/feel-killstreak-combotrainer-2125
+        const finisher = spec.kind === 'weapon' && isWeaponFinisher(f, spec);
+        const hitRoll = rollHitDamage(f, spec, finisher ? WEAPON_FINISHER_MUL.dmg : 1);
+        const kbHit = scaleKnockback(f.face * spec.kb * (finisher ? WEAPON_FINISHER_MUL.kb : 1), hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
         const counter = isCounterHitWindow(tgt);
         const dmg = tgt.takeDamage(hitRoll.dmg, kbHit, this, {
           unblockable: spec.unblockable, attacker: f, kind: spec.kind,
