@@ -132,9 +132,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.43';
+const APP_VERSION = '1.17.44';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 169;
+const SW_CACHE_REV = 170;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -1672,6 +1672,18 @@ function startAdventureFromGamble(skipGamble) {
 
 let gokStartBusy = false;
 
+function playGambleRollSfx(g) {
+  try { AudioSys.sfx('gamble'); } catch (_) {}
+  if (!g) return;
+  const delay = motionReduced() ? 60 : 220;
+  setTimeout(() => {
+    try {
+      if (g.outcome === 'superAlly' || g.outcome === 'ally') AudioSys.sfx('gambleWin');
+      else if (g.outcome === 'superBoss' || g.outcome === 'miniBoss') AudioSys.sfx('gambleBoss');
+    } catch (_) {}
+  }, delay);
+}
+
 /** Instant: level-tik → dobbel + vecht (geen tussen-scherm). */
 function gokGooiStartLevel(n) {
   if (gokStartBusy) return;
@@ -1679,8 +1691,8 @@ function gokGooiStartLevel(n) {
   try {
     pendingAdvLevel = n;
     AudioSys.init();
-    AudioSys.sfx('select');
     lastGambleRoll = rollStageGamble();
+    playGambleRollSfx(lastGambleRoll);
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
     gokStartBusy = false;
     startAdventureFromGamble(false);
@@ -1695,8 +1707,8 @@ function gokGooiStartFromScreen() {
   gokStartBusy = true;
   try {
     AudioSys.init();
-    AudioSys.sfx('select');
     lastGambleRoll = rollStageGamble();
+    playGambleRollSfx(lastGambleRoll);
     UI.renderGamble(pendingAdvLevel || save.unlocked || 1);
     const sumLine = document.getElementById('gambleSumLine');
     if (sumLine) sumLine.textContent = 'START!';
@@ -3394,6 +3406,7 @@ const AudioSys = {
   desiredSong: null,
   song: null, step: 0, bar: 0, nextTime: 0,
   paused: false,
+  _sfxVar: 0,
 
   init() {
     try {
@@ -3531,13 +3544,30 @@ const AudioSys = {
     this.tone(f0 * r, f1 * r, dur * 0.92, type, vol * 0.38, out, (when != null ? when : this.ctx.currentTime) + 0.004);
   },
 
+  /** Micro pitch wobble so rapid SFX don't sound identical */
+  _pitchVar() {
+    this._sfxVar = (this._sfxVar + 1) % 97;
+    return 0.975 + (this._sfxVar % 6) * 0.01;
+  },
+
+  /** Short echo tail — arcade space without reverb node */
+  echoTone(f0, f1, dur, type, vol, delay, decay, out, when) {
+    this.tone(f0, f1, dur, type, vol, out, when);
+    const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
+    if (lite) return;
+    const t = (when != null ? when : this.ctx.currentTime) + (delay || 0.055);
+    this.tone(f0 * 0.996, f1 * 0.996, dur * 0.82, type, vol * (decay || 0.4), out, t);
+  },
+
   sfx(name) {
     if (!this.ctx || !save.sfx) return;
     const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
     const v = (n) => n * (lite ? 0.72 : 0.88);
     const d = (n) => n * (lite ? 0.78 : 0.9);
-    const T = (f0, f1, dur, ty, vol, w) => this.tone(f0, f1, d(dur), ty, v(vol), null, w);
-    const D = (f0, f1, dur, ty, vol, w, c) => this.detuneTone(f0, f1, d(dur), ty, v(vol), c, null, w);
+    const P = () => this._pitchVar();
+    const T = (f0, f1, dur, ty, vol, w) => { const p = P(); this.tone(f0 * p, f1 * p, d(dur), ty, v(vol), null, w); };
+    const D = (f0, f1, dur, ty, vol, w, c) => this.detuneTone(f0 * P(), f1 * P(), d(dur), ty, v(vol), c, null, w);
+    const E = (f0, f1, dur, ty, vol, w, dl, dc) => this.echoTone(f0 * P(), f1 * P(), d(dur), ty, v(vol), dl, dc, null, w);
     const N = (dur, vol, ff, hp, w) => this.noise(d(dur), v(vol), ff, hp, null, w);
     const I = (thump, crack, w) => {
       T(thump, thump * 0.52, 0.08, 'sine', 0.22, w);
@@ -3563,65 +3593,74 @@ const AudioSys = {
         T(520, 880, 0.04, 'triangle', 0.1, now + 0.02);
         break;
       case 'kick':
-        N(0.045, 0.18, 2400, true, now);
-        T(300, 110, 0.08, 'triangle', 0.13, now);
+        I(280, 2600, now);
+        T(420, 140, 0.07, 'triangle', 0.12, now + 0.02);
         break;
       case 'wKunai':
-        N(0.03, 0.14, 5200, true, now);
-        T(980, 420, 0.07, 'triangle', 0.12, now);
+        N(0.035, 0.15, 5400, true, now);
+        T(1020, 380, 0.075, 'triangle', 0.13, now);
+        if (!lite) T(1480, 620, 0.04, 'sine', 0.07, now + 0.025);
         break;
       case 'wZwaard':
-        N(0.055, 0.2, 3800, true, now);
-        T(620, 280, 0.09, 'sawtooth', 0.1, now);
-        T(880, 440, 0.05, 'sine', 0.08, now + 0.02);
+        N(0.06, 0.22, 4000, true, now);
+        D(680, 260, 0.1, 'sawtooth', 0.11, now, 11);
+        E(920, 420, 0.06, 'sine', 0.09, now + 0.02, 0.04, 0.35);
         break;
       case 'wKnuppel':
-        N(0.07, 0.24, 900, false, now);
-        T(140, 55, 0.1, 'sine', 0.2, now);
+        I(120, 800, now);
+        T(160, 48, 0.11, 'sine', 0.18, now);
+        if (!lite) N(0.05, 0.12, 1400, false, now + 0.04);
         break;
       case 'wSpeer':
-        N(0.04, 0.15, 4000, true, now);
-        T(540, 220, 0.1, 'triangle', 0.12, now);
+        N(0.045, 0.16, 4200, true, now);
+        T(580, 180, 0.11, 'triangle', 0.13, now);
+        if (!lite) T(880, 320, 0.05, 'sine', 0.08, now + 0.04);
         break;
       case 'wNunchaku':
-        N(0.025, 0.12, 5000, true, now);
-        T(760, 520, 0.045, 'sine', 0.1, now);
-        T(520, 760, 0.045, 'sine', 0.09, now + 0.04);
+        N(0.03, 0.13, 5200, true, now);
+        T(820, 540, 0.05, 'sine', 0.11, now);
+        T(540, 820, 0.05, 'sine', 0.1, now + 0.038);
+        if (!lite) T(660, 440, 0.04, 'triangle', 0.08, now + 0.07);
         break;
       case 'wBoemerang':
-        T(640, 920, 0.08, 'triangle', 0.11, now);
-        T(920, 480, 0.1, 'sine', 0.1, now + 0.05);
-        N(0.04, 0.1, 3600, true, now);
+        T(680, 980, 0.09, 'triangle', 0.12, now);
+        T(980, 420, 0.11, 'sine', 0.11, now + 0.05);
+        N(0.045, 0.11, 3800, true, now);
+        if (!lite) E(620, 920, 0.07, 'sine', 0.08, now + 0.08, 0.05, 0.38);
         break;
       case 'wHamer':
-        N(0.1, 0.32, 600, false, now);
-        T(90, 40, 0.14, 'sine', 0.28, now);
-        T(180, 80, 0.06, 'square', 0.1, now + 0.04);
+        I(80, 550, now);
+        T(95, 38, 0.15, 'sine', 0.26, now);
+        T(190, 75, 0.07, 'square', 0.11, now + 0.05);
+        if (!lite) N(0.08, 0.14, 900, false, now + 0.03);
         break;
       case 'wKetting':
-        N(0.06, 0.18, 2200, true, now);
-        T(280, 160, 0.08, 'sawtooth', 0.12, now);
-        T(480, 240, 0.05, 'triangle', 0.08, now + 0.03);
+        N(0.065, 0.19, 2400, true, now);
+        T(300, 150, 0.085, 'sawtooth', 0.13, now);
+        T(520, 220, 0.055, 'triangle', 0.09, now + 0.035);
+        if (!lite) T(780, 360, 0.04, 'sine', 0.07, now + 0.06);
         break;
       case 'wLaser':
-        T(1200, 480, 0.1, 'sawtooth', 0.14, now);
-        T(1600, 900, 0.06, 'sine', 0.1, now);
-        N(0.04, 0.1, 6000, true, now);
+        T(1280, 420, 0.11, 'sawtooth', 0.15, now);
+        T(1680, 880, 0.07, 'sine', 0.11, now);
+        N(0.045, 0.11, 6200, true, now);
+        if (!lite) E(980, 520, 0.08, 'triangle', 0.09, now + 0.03, 0.045, 0.42);
         break;
       case 'wDonder':
-        T(180, 70, 0.12, 'sawtooth', 0.2, now);
-        N(0.1, 0.22, 1800, true, now);
-        T(980, 420, 0.08, 'sine', 0.12, now + 0.04);
+        T(160, 55, 0.14, 'sawtooth', 0.22, now);
+        N(0.12, 0.24, 1600, true, now);
+        T(1040, 380, 0.09, 'sine', 0.13, now + 0.05);
+        if (!lite) T(55, 28, 0.2, 'sine', 0.12, now + 0.08);
         break;
       case 'wVoid':
-        T(220, 90, 0.12, 'sine', 0.14, now);
-        T(660, 220, 0.1, 'triangle', 0.11, now + 0.03);
-        N(0.08, 0.14, 1400, true, now);
+        T(200, 75, 0.13, 'sine', 0.15, now);
+        D(680, 200, 0.11, 'triangle', 0.12, now + 0.04, 9);
+        N(0.09, 0.15, 1300, true, now);
         break;
       case 'wGuvve':
-        T(280, 160, 0.08, 'square', 0.16, now);
-        T(420, 240, 0.07, 'triangle', 0.12, now + 0.05);
-        N(0.05, 0.14, 1600, false, now + 0.02);
+        I(220, 1800, now);
+        T(320, 180, 0.09, 'square', 0.15, now + 0.02);
+        if (!lite) T(480, 260, 0.07, 'triangle', 0.11, now + 0.06);
         break;
       case 'hit':
         I(180, 1400, now);
@@ -3634,18 +3673,20 @@ const AudioSys = {
         T(320, 140, 0.06, 'triangle', 0.12, now + 0.025);
         break;
       case 'hitMetal':
-        T(880, 440, 0.05, 'triangle', 0.14, now);
-        N(0.04, 0.16, 2800, true, now);
-        T(220, 90, 0.07, 'sine', 0.12, now);
+        I(520, 3800, now);
+        E(980, 460, 0.06, 'triangle', 0.13, now + 0.01, 0.035, 0.45);
+        T(240, 95, 0.07, 'sine', 0.11, now);
         break;
       case 'hitHeavy':
-        T(120, 45, 0.12, 'sine', 0.26, now);
-        N(0.08, 0.28, 700, false, now);
+        I(110, 650, now);
+        T(130, 42, 0.13, 'sine', 0.24, now);
+        if (!lite) N(0.1, 0.22, 550, false, now + 0.04);
         break;
       case 'hitEnergy':
-        T(720, 320, 0.08, 'sine', 0.14, now);
-        T(1100, 600, 0.06, 'triangle', 0.1, now);
-        N(0.04, 0.12, 4200, true, now);
+        T(760, 280, 0.09, 'sine', 0.15, now);
+        D(1120, 520, 0.07, 'triangle', 0.11, now, 10);
+        N(0.05, 0.13, 4400, true, now);
+        if (!lite) S([880, 1047], now + 0.04);
         break;
       case 'jump':
         T(220, 620, 0.11, 'sine', 0.16, now);
@@ -3722,10 +3763,26 @@ const AudioSys = {
         if (!lite) T(55, 32, 0.18, 'sawtooth', 0.1, now + 0.05);
         break;
       case 'subst':
-        N(0.08, 0.26, 1100, true); T(320, 140, 0.07, 'sine', 0.12); break;
+        N(0.1, 0.24, 1300, true, now);
+        T(520, 120, 0.09, 'sine', 0.14, now);
+        if (!lite) {
+          T(920, 480, 0.06, 'triangle', 0.1, now + 0.04);
+          N(0.05, 0.1, 7000, true, now + 0.02);
+        }
+        break;
       case 'shuriken':
-        T(920, 520, 0.06, 'triangle', 0.12); N(0.03, 0.1, 4500, true); break;
-      case 'roar':    T(110, 65, 0.38, 'sawtooth', 0.28); N(0.28, 0.2, 400, false); break;
+        T(980, 460, 0.075, 'triangle', 0.14, now);
+        N(0.038, 0.12, 4900, true, now);
+        if (!lite) T(1420, 680, 0.045, 'sine', 0.08, now + 0.022);
+        break;
+      case 'roar':
+        T(95, 48, 0.42, 'sawtooth', 0.27, now);
+        N(0.32, 0.26, 360, false, now);
+        if (!lite) {
+          T(52, 28, 0.36, 'sine', 0.17, now + 0.06);
+          N(0.16, 0.15, 1100, true, now + 0.14);
+        }
+        break;
       case 'select':
         T(660, 880, 0.045, 'sine', 0.1, now);
         T(880, 1040, 0.055, 'triangle', 0.09, now + 0.025);
@@ -3774,6 +3831,56 @@ const AudioSys = {
         [392, 330, 262, 196, 147].forEach((f, i) => T(f, f * 0.96, 0.2, 'triangle', 0.13, now + i * 0.11));
         if (!lite) N(0.12, 0.14, 600, false, now + 0.35);
         break;
+      case 'ketsbam':
+        N(0.36, 0.4, 400, false, now);
+        T(52, 20, 0.44, 'sawtooth', 0.34, now);
+        C([196, 247, 294, 392], 'square', 0.14, 0.042, now + 0.08);
+        if (!lite) {
+          S([523, 659, 784, 988], now + 0.18);
+          N(0.16, 0.2, 850, true, now + 0.14);
+        }
+        break;
+      case 'summon':
+        C([659, 784, 988, 1175], 'sine', 0.15, 0.068, now);
+        D(880, 1360, 0.22, 'triangle', 0.13, now + 0.1, 14);
+        if (!lite) {
+          S([1319, 1568, 1760, 2093], now + 0.24);
+          N(0.08, 0.12, 3200, true, now + 0.12);
+        }
+        break;
+      case 'gamble':
+        N(0.05, 0.13, 2600, true, now);
+        [920, 740, 560, 420].forEach((f, i) => T(f, f * 0.82, 0.055, 'square', 0.11, now + i * 0.038));
+        break;
+      case 'gambleWin':
+        C([523, 659, 784, 988, 1175], 'triangle', 0.14, 0.058, now);
+        if (!lite) {
+          S([1568, 1760, 2093], now + 0.3);
+          N(0.06, 0.1, 2400, true, now + 0.35);
+        }
+        break;
+      case 'gambleBoss':
+        T(85, 38, 0.3, 'sawtooth', 0.24, now);
+        N(0.22, 0.26, 480, false, now);
+        C([311, 370, 415, 494], 'square', 0.13, 0.075, now + 0.12);
+        break;
+      case 'comboEpic':
+        C([880, 1047, 1175, 1319], 'square', 0.15, 0.048, now);
+        I(360, 3400, now);
+        if (!lite) S([1568, 1760, 2093], now + 0.1);
+        break;
+      case 'comboMega':
+        C([988, 1175, 1319, 1568, 1760], 'triangle', 0.16, 0.052, now);
+        N(0.14, 0.19, 1100, true, now + 0.05);
+        if (!lite) {
+          T(105, 38, 0.22, 'sine', 0.2, now + 0.22);
+          S([2093, 2349, 2637], now + 0.28);
+        }
+        break;
+      case 'whoosh':
+        N(0.09, 0.15, 4300, true, now);
+        T(260, 1280, 0.13, 'sine', 0.11, now);
+        break;
     }
   },
 
@@ -3787,6 +3894,7 @@ const AudioSys = {
     const now = this.ctx.currentTime;
     const T = (f0, f1, dur, ty, vol, w) => this.tone(f0, f1, d(dur), ty, v(vol), null, w);
     const N = (dur, vol, ff, hp, w) => this.noise(d(dur), v(vol), ff, hp, null, w);
+    const E = (f0, f1, dur, ty, vol, w, dl, dc) => this.echoTone(f0, f1, d(dur), ty, v(vol), dl, dc, null, w);
     const S = (freqs, w) => {
       if (lite) { T(freqs[0], freqs[0] * 1.06, 0.05, 'sine', 0.08, w); return; }
       freqs.forEach((f, i) => T(f, f * 1.1, 0.045, 'sine', 0.075, w + i * 0.02));
@@ -3799,24 +3907,29 @@ const AudioSys = {
         if (!lite) S([1319, 1568], now + 0.22);
         break;
       case 'modeAdventure':
-        [440, 554, 659, 880].forEach((f, i) => T(f, f, 0.07, 'sine', 0.12, now + i * 0.045));
+        [440, 554, 659, 784, 880].forEach((f, i) => E(f, f, 0.075, 'sine', 0.11, now + i * 0.042, 0.05, 0.35));
+        if (!lite) T(220, 880, 0.12, 'triangle', 0.08, now + 0.18);
         break;
       case 'modeTraining':
-        T(220, 880, 0.14, 'sine', 0.11, now);
-        N(0.12, 0.14, 4800, true, now + 0.03);
-        T(660, 880, 0.07, 'triangle', 0.1, now + 0.14);
+        T(220, 920, 0.15, 'sine', 0.12, now);
+        N(0.14, 0.15, 5000, true, now + 0.03);
+        T(660, 920, 0.075, 'triangle', 0.11, now + 0.14);
+        if (!lite) S([988, 1175], now + 0.22);
         break;
       case 'modeVersus':
-        T(160, 880, 0.07, 'square', 0.17, now);
-        T(880, 160, 0.07, 'square', 0.16, now + 0.08);
-        N(0.05, 0.2, 1000, false, now + 0.04);
+        T(140, 920, 0.075, 'square', 0.18, now);
+        T(920, 140, 0.075, 'square', 0.17, now + 0.085);
+        N(0.06, 0.22, 950, false, now + 0.04);
+        if (!lite) I(480, 2800, now + 0.12);
         break;
       case 'modeWall':
-        [196, 247, 330, 392].forEach((f, i) => T(f, f * 0.96, 0.09, 'triangle', 0.15, now + i * 0.04));
+        [196, 247, 330, 392, 440].forEach((f, i) => T(f, f * 0.96, 0.095, 'triangle', 0.14, now + i * 0.038));
+        if (!lite) N(0.05, 0.12, 5200, true, now + 0.18);
         break;
       case 'modeMats':
-        [523, 659, 784].forEach((f, i) => T(f, f * 1.02, 0.07, 'sine', 0.12, now + i * 0.05));
-        T(392, 523, 0.1, 'triangle', 0.1, now + 0.16);
+        [523, 659, 784, 988].forEach((f, i) => T(f, f * 1.02, 0.075, 'sine', 0.12, now + i * 0.048));
+        T(392, 523, 0.11, 'triangle', 0.11, now + 0.18);
+        if (!lite) S([1175, 1319], now + 0.24);
         break;
       case 'superReady':
         if (kind === 'chidori') {
@@ -3834,25 +3947,26 @@ const AudioSys = {
         }
         break;
       case 'eliteIntro':
-        T(98, 55, 0.22, 'sawtooth', 0.22, now);
-        N(0.18, 0.22, 500, false, now);
-        [392, 466, 523, 622].forEach((f, i) => T(f, f * 1.02, 0.09, 'square', 0.13, now + 0.12 + i * 0.07));
-        T(180, 90, 0.28, 'sine', 0.18, now + 0.35);
+        T(95, 50, 0.24, 'sawtooth', 0.23, now);
+        N(0.2, 0.24, 480, false, now);
+        [392, 466, 523, 622, 740].forEach((f, i) => E(f, f * 1.02, 0.095, 'square', 0.12, now + 0.12 + i * 0.065, 0.05, 0.38));
+        T(180, 85, 0.3, 'sine', 0.19, now + 0.38);
         break;
       case 'bossIntro':
-        T(70, 40, 0.32, 'sawtooth', 0.28, now);
-        N(0.28, 0.28, 380, false, now);
-        T(220, 110, 0.2, 'square', 0.2, now + 0.08);
-        [311, 370, 415, 494, 622].forEach((f, i) => T(f, f * 0.97, 0.1, 'triangle', 0.14, now + 0.18 + i * 0.08));
-        N(0.12, 0.2, 900, true, now + 0.55);
+        T(68, 36, 0.34, 'sawtooth', 0.3, now);
+        N(0.3, 0.3, 360, false, now);
+        T(210, 100, 0.22, 'square', 0.21, now + 0.08);
+        [311, 370, 415, 494, 622, 740].forEach((f, i) => T(f, f * 0.97, 0.105, 'triangle', 0.14, now + 0.18 + i * 0.075));
+        N(0.14, 0.22, 850, true, now + 0.58);
+        if (!lite) T(55, 28, 0.25, 'sine', 0.14, now + 0.45);
         break;
       case 'superBossIntro':
-        T(55, 32, 0.4, 'sawtooth', 0.32, now);
-        N(0.35, 0.32, 320, false, now);
-        T(140, 70, 0.28, 'square', 0.24, now + 0.1);
-        [262, 330, 392, 523, 659, 784].forEach((f, i) => T(f, f * 1.03, 0.11, 'square', 0.15, now + 0.22 + i * 0.09));
-        T(880, 220, 0.35, 'sawtooth', 0.18, now + 0.7);
-        N(0.2, 0.24, 700, true, now + 0.85);
+        T(52, 28, 0.42, 'sawtooth', 0.34, now);
+        N(0.38, 0.34, 300, false, now);
+        T(130, 62, 0.3, 'square', 0.26, now + 0.1);
+        [262, 330, 392, 523, 659, 784, 988].forEach((f, i) => E(f, f * 1.03, 0.115, 'square', 0.14, now + 0.22 + i * 0.085, 0.055, 0.4));
+        T(880, 180, 0.38, 'sawtooth', 0.2, now + 0.72);
+        N(0.22, 0.26, 650, true, now + 0.88);
         break;
       default:
         T(480, 660, 0.06, 'sine', 0.11, now);
@@ -3927,12 +4041,22 @@ const AudioSys = {
       if (i === 0 && bar % 4 === 0 && !lite) {
         this.tone(midi(60), midi(60), spb * 3.6, 'sine', 0.05, mg, t);
         this.tone(midi(64), midi(64), spb * 3.4, 'triangle', 0.04, mg, t);
+        this.tone(midi(67), midi(67), spb * 3.2, 'sine', 0.03, mg, t);
       }
       if (i === 12 && bar % 2 === 1 && !lite) {
         this.tone(midi(72), midi(76), spb * 1.3, 'square', 0.07, mg, t);
       }
+      if (i === 15 && bar % 8 === 7 && !lite) {
+        this.noise(0.08, 0.17, 7800, true, mg, t);
+        this.tone(midi(84), midi(67), spb * 0.75, 'square', 0.08, mg, t);
+      }
     }
-    if (s.id === 'menu' || s.id === 'menu2' || s.id === 'menu3' || s.id === 'menuArcade') {
+    const menuIds = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero'];
+    if (menuIds.includes(s.id) && !lite && [3, 7, 11, 15].includes(i) && bar % 2 === 0) {
+      const arp = [72, 76, 79, 84][Math.floor(i / 4)];
+      this.tone(midi(arp), midi(arp + 2), spb * 0.52, 'triangle', 0.042, mg, t);
+    }
+    if (s.id === 'menu' || s.id === 'menu2' || s.id === 'menu3' || s.id === 'menuArcade' || s.id === 'menuHero') {
       if (i === 0 && bar % 4 === 0) {
         this.tone(midi(72), midi(72), spb * 1.8, 'square', 0.13, mg, t);
         this.tone(midi(76), midi(79), spb * 1.2, 'square', 0.09, mg, t + spb * 0.45);
@@ -3955,6 +4079,11 @@ const AudioSys = {
     if (s.id === 'menuArcade') {
       if (i === 0 || i === 8) this.tone(midi(67), midi(60), spb * 1.5, 'square', 0.09, mg, t);
       if (i === 4 && bar % 2 === 0) this.noise(0.03, 0.1, 5200, true, mg, t);
+    }
+    if (s.id === 'menuHero') {
+      if (i === 4 || i === 12) this.tone(midi(79), midi(84), spb * 1.05, 'square', 0.11, mg, t);
+      if (i === 0 && bar % 4 === 2) this.tone(midi(57), midi(64), spb * 2.9, 'triangle', 0.075, mg, t);
+      if (!lite && i === 8 && bar % 2 === 0) this.tone(midi(72), midi(76), spb * 1.25, 'sine', 0.065, mg, t);
     }
     if (s.id === 'elite' || s.id === 'boss') {
       if (i === 0 && bar % 2 === 0) {
@@ -4021,6 +4150,16 @@ const SONGS = {
     lead: [
       [76,null,79,null, 81,null,79,null, 76,null,74,null, 72,null,76,null],
       [79,null,81,null, 84,null,81,null, 79,null,76,null, 74,null,72,null],
+    ],
+  },
+  /** Menu variant — hero fanfare / title energy */
+  menuHero: {
+    bpm: 100,
+    kick: [0, 6, 8, 14], snare: [4, 12], hat: [2, 6, 10, 14],
+    bass: [45,null,null,48, 50,null,null,45, 43,null,40,null, 38,null,43,null],
+    lead: [
+      [69,null,72,76, null,74,72,null, 69,null,67,null, 64,null,67,69],
+      [72,null,76,79, null,77,74,null, 72,null,69,null, 67,null,69,72],
     ],
   },
   battle: {
@@ -4092,7 +4231,7 @@ const SONGS = {
   },
 };
 
-const MENU_BGM_TRACKS = ['menu', 'menu2', 'menu3', 'menuArcade'];
+const MENU_BGM_TRACKS = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero'];
 let menuBgmIdx = 0;
 
 /** Rotate menu BGM when returning from a game; keep current track on boot/toggle. */
@@ -5601,8 +5740,7 @@ class Fighter {
     game.shake(14, 0.38);
     game.freezeT = Math.max(game.freezeT, 0.06);
     game.banner('KETS-BAM!', 0.85, '#ffd75e', 42);
-    AudioSys.sfx('roar');
-    try { AudioSys.sfx('bonus'); } catch (_) {}
+    AudioSys.sfx('ketsbam');
 
     const px = this.x, py = this.y - 42;
     for (const m of game.monsters) {
@@ -7660,8 +7798,8 @@ class Game {
       const st = playerStats();
       this.player.baseDmg = st.dmg;
     }
-    AudioSys.sfx('levelup');
-    setTimeout(() => { try { AudioSys.sfx('newmonster'); } catch (_) {} }, 350);
+    AudioSys.sfx('summon');
+    setTimeout(() => { try { AudioSys.sfx('bonus'); } catch (_) {} }, 280);
     this.freezeT = Math.max(this.freezeT, 0.1);
     this.shake(9, 0.35);
     const px = this.player ? this.player.x : W * 0.5;
@@ -8600,19 +8738,20 @@ class Game {
 
   noteCombo() {
     this.maxCombo = Math.max(this.maxCombo || 0, this.combo || 0);
+    const comboSfx = (n) => (n >= 15 ? 'comboMega' : n >= 10 ? 'comboEpic' : 'combo');
     if (this.mode === 'wall' && (this.combo === 5 || this.combo === 8 || this.combo === 10)) {
-      AudioSys.sfx('combo');
+      AudioSys.sfx(comboSfx(this.combo));
       const msg = this.combo === 8 ? 'MUUR-TEMPO!' : `COMBO ×${this.combo}!`;
       this.floater(W * 0.5, 130, msg, '#7cf5ff', 18);
     }
     if (this.mode === 'adventure' && (this.combo === 6 || this.combo === 10)) {
-      AudioSys.sfx('combo');
+      AudioSys.sfx(comboSfx(this.combo));
       this.floater(W * 0.5, 118, `COMBO ×${this.combo}!`, '#ffd75e', 16);
     }
     if ([5, 10, 15].includes(this.combo) && this.player && !motionReduced()) {
       const col = this.combo >= 10 ? '#ffd75e' : '#7cf5ff';
       spawnFxRing(this, this.player.x, this.player.y - 50, col, 9 + this.combo * 0.35);
-      if (this.combo === 5 || this.combo === 10) AudioSys.sfx('combo');
+      if (this.combo === 5 || this.combo === 10 || this.combo === 15) AudioSys.sfx(comboSfx(this.combo));
     }
     if (this.combo === 3 || this.combo === 5 || this.combo === 8 || this.combo === 10) {
       haptic(14 + this.combo);

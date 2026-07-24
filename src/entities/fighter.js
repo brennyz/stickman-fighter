@@ -160,8 +160,7 @@ class Fighter {
     game.shake(14, 0.38);
     game.freezeT = Math.max(game.freezeT, 0.06);
     game.banner('KETS-BAM!', 0.85, '#ffd75e', 42);
-    AudioSys.sfx('roar');
-    try { AudioSys.sfx('bonus'); } catch (_) {}
+    AudioSys.sfx('ketsbam');
 
     const px = this.x, py = this.y - 42;
     for (const m of game.monsters) {

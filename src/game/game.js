@@ -528,8 +528,8 @@ class Game {
       const st = playerStats();
       this.player.baseDmg = st.dmg;
     }
-    AudioSys.sfx('levelup');
-    setTimeout(() => { try { AudioSys.sfx('newmonster'); } catch (_) {} }, 350);
+    AudioSys.sfx('summon');
+    setTimeout(() => { try { AudioSys.sfx('bonus'); } catch (_) {} }, 280);
     this.freezeT = Math.max(this.freezeT, 0.1);
     this.shake(9, 0.35);
     const px = this.player ? this.player.x : W * 0.5;
@@ -1468,19 +1468,20 @@ class Game {
 
   noteCombo() {
     this.maxCombo = Math.max(this.maxCombo || 0, this.combo || 0);
+    const comboSfx = (n) => (n >= 15 ? 'comboMega' : n >= 10 ? 'comboEpic' : 'combo');
     if (this.mode === 'wall' && (this.combo === 5 || this.combo === 8 || this.combo === 10)) {
-      AudioSys.sfx('combo');
+      AudioSys.sfx(comboSfx(this.combo));
       const msg = this.combo === 8 ? 'MUUR-TEMPO!' : `COMBO ×${this.combo}!`;
       this.floater(W * 0.5, 130, msg, '#7cf5ff', 18);
     }
     if (this.mode === 'adventure' && (this.combo === 6 || this.combo === 10)) {
-      AudioSys.sfx('combo');
+      AudioSys.sfx(comboSfx(this.combo));
       this.floater(W * 0.5, 118, `COMBO ×${this.combo}!`, '#ffd75e', 16);
     }
     if ([5, 10, 15].includes(this.combo) && this.player && !motionReduced()) {
       const col = this.combo >= 10 ? '#ffd75e' : '#7cf5ff';
       spawnFxRing(this, this.player.x, this.player.y - 50, col, 9 + this.combo * 0.35);
-      if (this.combo === 5 || this.combo === 10) AudioSys.sfx('combo');
+      if (this.combo === 5 || this.combo === 10 || this.combo === 15) AudioSys.sfx(comboSfx(this.combo));
     }
     if (this.combo === 3 || this.combo === 5 || this.combo === 8 || this.combo === 10) {
       haptic(14 + this.combo);

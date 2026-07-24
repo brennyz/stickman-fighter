@@ -512,7 +512,17 @@
   ],
   "userFeatureLog": [
     {
-      "id": "amazing-sounds",
+      "id": "sounds-extravaganza",
+      "d20Face": null,
+      "userWords": "Sounds extravanganza please lets go",
+      "versions": [
+        "1.17.44"
+      ],
+      "commits": [],
+      "code": "echoTone + pitchVar; weapon/hit/sting/BGM pass; menuHero track; ketsbam/summon/gamble/comboEpic/comboMega SFX wired",
+      "status": "done",
+      "note": "off-d20 user feature; extravaganza pass on v1.17.43 audio"
+    },
       "d20Face": null,
       "userWords": "Give mor amazing sounds!",
       "versions": [

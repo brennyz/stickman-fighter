@@ -785,6 +785,18 @@ function startAdventureFromGamble(skipGamble) {
 
 let gokStartBusy = false;
 
+function playGambleRollSfx(g) {
+  try { AudioSys.sfx('gamble'); } catch (_) {}
+  if (!g) return;
+  const delay = motionReduced() ? 60 : 220;
+  setTimeout(() => {
+    try {
+      if (g.outcome === 'superAlly' || g.outcome === 'ally') AudioSys.sfx('gambleWin');
+      else if (g.outcome === 'superBoss' || g.outcome === 'miniBoss') AudioSys.sfx('gambleBoss');
+    } catch (_) {}
+  }, delay);
+}
+
 /** Instant: level-tik → dobbel + vecht (geen tussen-scherm). */
 function gokGooiStartLevel(n) {
   if (gokStartBusy) return;
@@ -792,8 +804,8 @@ function gokGooiStartLevel(n) {
   try {
     pendingAdvLevel = n;
     AudioSys.init();
-    AudioSys.sfx('select');
     lastGambleRoll = rollStageGamble();
+    playGambleRollSfx(lastGambleRoll);
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
     gokStartBusy = false;
     startAdventureFromGamble(false);
@@ -808,8 +820,8 @@ function gokGooiStartFromScreen() {
   gokStartBusy = true;
   try {
     AudioSys.init();
-    AudioSys.sfx('select');
     lastGambleRoll = rollStageGamble();
+    playGambleRollSfx(lastGambleRoll);
     UI.renderGamble(pendingAdvLevel || save.unlocked || 1);
     const sumLine = document.getElementById('gambleSumLine');
     if (sumLine) sumLine.textContent = 'START!';
