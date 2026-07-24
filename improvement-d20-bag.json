@@ -336,6 +336,18 @@
   ],
   "userFeatureLog": [
     {
+      "id": "ketsbam-escape-movement",
+      "d20Face": null,
+      "userWords": "stunlock omringd door monsters — midden ketsbam symbool tikken voor explosie; betere links/rechts besturing",
+      "versions": [
+        "1.16.8"
+      ],
+      "commits": [],
+      "code": "KETSBAM_* constants, doKetsbam shockwave + super-armor, midden HUD prompt (tik/E), snappere vx flip/accel",
+      "status": "done",
+      "note": "alleen avontuur; 9s cooldown"
+    },
+    {
       "id": "monster-horde-expansion-p2",
       "d20Face": null,
       "userWords": "deel twee monster boek en monsters",

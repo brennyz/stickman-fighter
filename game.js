@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.16.7';
+const APP_VERSION = '1.16.8';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 124;
+const SW_CACHE_REV = 125;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -2381,6 +2381,13 @@ const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
 const GIANT_DMG_MUL = 1.14;
 const GIANT_XP_MUL = 1.3;
+/** Nood-ontsnapping als je omringd / stunlocked bent — tik midden-KETS! */
+const KETSBAM_DETECT_R = 148;
+const KETSBAM_NEAR_MIN = 4;
+const KETSBAM_BLAST_R = 192;
+const KETSBAM_CD = 9;
+const KETSBAM_INVULN = 1.15;
+const KETSBAM_SUPER_ARMOR = 0.95;
 const BOSS_AT = {
   5:  [{ sp: 'rotsbonk', elite: true }, { sp: 'slymo' }, { sp: 'bubbel' }],
   10: [{ sp: 'vlamdraak', elite: true }, { sp: 'vlamvos' }],
@@ -3730,6 +3737,18 @@ function pointerGameCoords(clientX, clientY) {
   };
 }
 
+function ketsbamPromptCenter() {
+  return { cx: W * 0.5, cy: H * 0.46 };
+}
+
+function ketsbamHitTest(x, y, g) {
+  if (!g || !g.ketsbamShow) return false;
+  const ui = touchUiScale(W, H);
+  const { cx, cy } = ketsbamPromptCenter();
+  const r = 58 * ui;
+  return (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
+}
+
 function applyJoyDelta(pad, x, y, id) {
   if (!pad.joy.active || pad.joy.id !== id) return;
   let dx = x - pad.joy.ox;
@@ -4012,6 +4031,7 @@ addEventListener('keydown', e => {
     if (k === 'l') Input.press('weapon');
     if (k === 'u' || k === 'i') Input.press('special');
     if (k === 'shift') Input.press('subst');
+    if (k === 'e' && state === 'play' && game) game.tryKetsbam();
   }
   if (k === 'a' || (!Input.dualMode && k === 'arrowleft')) {
     if (now - Input.lastMoveTap < 300 && Input.lastMoveDir === -1) Input.press('dash');
@@ -4104,6 +4124,7 @@ canvas.addEventListener('pointerdown', e => {
   e.preventDefault();
   try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
   const p = pointerGameCoords(e.clientX, e.clientY);
+  if (ketsbamHitTest(p.x, p.y, game) && game.tryKetsbam()) return;
   Input.onDown(p.x, p.y, e.pointerId);
 });
 canvas.addEventListener('pointermove', e => {
@@ -4626,6 +4647,49 @@ class Fighter {
     game.floater(this.x, this.y - 92, 'Dash!', '#7cf5ff', 12);
   }
 
+  /** Nood-KETS-BAM: omringd/stunlock → tik midden-symbool of druk E. */
+  doKetsbam(game) {
+    if (!this.isPlayer || !this.alive || !game) return false;
+    if (game.ketsbamCd > 0 || game.inputLocked || game.traveling) return false;
+    const near = game.countNearbyMonsters(KETSBAM_DETECT_R);
+    const stuck = this.hurtT > 0 && near >= 3;
+    const swarmed = near >= KETSBAM_NEAR_MIN;
+    if (!swarmed && !stuck) return false;
+
+    game.ketsbamCd = KETSBAM_CD;
+    game.ketsbamSuperT = KETSBAM_SUPER_ARMOR;
+    game.ketsbamShow = false;
+    this.hurtT = 0;
+    this.attack = null;
+    this.blocking = false;
+    this.invulnT = Math.max(this.invulnT, KETSBAM_INVULN);
+    resetWeaponCombo(this);
+
+    game.shake(14, 0.38);
+    game.freezeT = Math.max(game.freezeT, 0.06);
+    game.banner('KETS-BAM!', 0.85, '#ffd75e', 42);
+    AudioSys.sfx('roar');
+    try { AudioSys.sfx('bonus'); } catch (_) {}
+
+    const px = this.x, py = this.y - 42;
+    for (const m of game.monsters) {
+      if (!m.alive) continue;
+      const dx = m.x - px, dy = m.y - py;
+      const dist = Math.hypot(dx, dy);
+      if (dist > KETSBAM_BLAST_R) continue;
+      const falloff = 1 - dist / KETSBAM_BLAST_R;
+      const dmg = Math.max(10, Math.round(this.baseDmg * (1.65 + falloff * 1.1)));
+      const kb = Math.sign(dx || this.face || 1) * (380 + falloff * 120);
+      m.takeDamage(dmg, kb, game);
+    }
+    game.burst(px, py, '#ffd75e', fxLite() ? 22 : 40, { kind: 'spark', size: 3.2 });
+    game.burst(px, py, '#ff7043', fxLite() ? 14 : 26);
+    spawnFxRing(game, px, py, '#ffe259', fxLite() ? 10 : 18);
+    game.floater(px, py - 80, 'KETS-BAM!', '#ffd75e', 20);
+    if (save.haptics !== false) haptic(32);
+    return true;
+  }
+
   intent(dt, game) {
     if (this.playerSlot === 1 || (this.isPlayer && !this.playerSlot)) {
       const I = Input;
@@ -4729,10 +4793,15 @@ class Fighter {
     }
     const targetVx = mv * this.speed;
     const flip = this.vx !== 0 && mv !== 0 && Math.sign(this.vx) !== Math.sign(mv);
-    const accel = flip ? 0.0008 : 0.0004;
+    let accel = flip ? 0.0034 : 0.00072;
+    if (this.isPlayer) accel *= flip ? 1.25 : 1.12;
+    if (flip && this.onGround && Math.abs(this.vx) > 36) this.vx *= 0.22;
     this.vx = lerp(this.vx, targetVx, 1 - Math.pow(accel, dt));
+    if (flip && canAct && Math.abs(mv) > 0.12 && this.onGround) {
+      this.vx += mv * this.speed * 0.22;
+    }
     if (canAct && Math.abs(mv) < 0.035 && this.onGround) {
-      this.vx = lerp(this.vx, 0, 1 - Math.pow(0.0012, dt));
+      this.vx = lerp(this.vx, 0, 1 - Math.pow(0.0014, dt));
     }
     if (Math.abs(mv) > 0.05) this.face = mv > 0 ? 1 : -1;
 
@@ -4833,6 +4902,7 @@ class Fighter {
   takeDamage(dmg, kbx, game, opts) {
     opts = opts || {};
     if (!this.alive) return 0;
+    if ((this.isPlayer || this.playerSlot) && game && game.ketsbamSuperT > 0) return 0;
     if (this.invulnT > 0) {
       game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13);
       return 0;
@@ -6194,6 +6264,10 @@ class Game {
     this.waveTotal = 0;
     this.allyAssistT = 0;
     this.gambleRoll = gamble || null;
+    this.ketsbamCd = 0;
+    this.ketsbamSuperT = 0;
+    this.ketsbamShow = false;
+    this.ketsbamPulse = 0;
     applyGambleToStage(this, gamble);
     this.banner(`LEVEL ${n}`, 1.4, '#ffd75e', 54);
     if (gamble && gamble.outcome !== 'neutral') {
@@ -7304,6 +7378,7 @@ class Game {
 
   update(dt) {
     if (this.freezeT > 0) { this.freezeT -= dt; return; }
+    if (this.mode === 'adventure') this.updateKetsbam(dt);
     this.t += dt;
     if (this.hint > 0) this.hint -= dt;
     this.shakeT = Math.max(0, this.shakeT - dt);
@@ -7672,6 +7747,7 @@ class Game {
     this.drawChakraReadyFx(c);
 
     this.drawHUD(c);
+    if (this.mode === 'adventure') this.drawKetsbamPrompt(c);
 
     // banners
     for (const b of this.banners) {
@@ -8101,6 +8177,88 @@ class Game {
     c.fillStyle = 'rgba(255,255,255,.6)';
     c.fillText(`deel ${Math.min(3, 1 + Math.floor(pr * 3))}/3`, x0 + tw + (this.level.boss ? 24 : 10), y + 3.5);
     c.textAlign = 'center';
+  }
+
+  countNearbyMonsters(radius) {
+    const p = this.player;
+    if (!p || !p.alive) return 0;
+    let n = 0;
+    const r2 = radius * radius;
+    const py = p.y - 40;
+    for (const m of this.monsters) {
+      if (!m.alive) continue;
+      const dx = m.x - p.x, dy = m.y - py;
+      if (dx * dx + dy * dy <= r2) n++;
+    }
+    return n;
+  }
+
+  updateKetsbam(dt) {
+    if (this.over || !this.player?.alive) {
+      this.ketsbamShow = false;
+      return;
+    }
+    if (this.ketsbamCd > 0) this.ketsbamCd -= dt;
+    if (this.ketsbamSuperT > 0) this.ketsbamSuperT -= dt;
+    const near = this.countNearbyMonsters(KETSBAM_DETECT_R);
+    const stuck = this.player.hurtT > 0 && near >= 3;
+    const swarmed = near >= KETSBAM_NEAR_MIN;
+    this.ketsbamShow = this.ketsbamCd <= 0 && !this.inputLocked && !this.traveling && (swarmed || stuck);
+    if (this.ketsbamShow) this.ketsbamPulse = (this.ketsbamPulse || 0) + dt;
+    else this.ketsbamPulse = 0;
+  }
+
+  tryKetsbam() {
+    if (!this.ketsbamShow || !this.player?.alive || this.over) return false;
+    return this.player.doKetsbam(this);
+  }
+
+  drawKetsbamPrompt(c) {
+    if (!this.ketsbamShow || !this.player?.alive) return;
+    const ui = touchUiScale(W, H);
+    const { cx, cy } = ketsbamPromptCenter();
+    const pulse = 0.9 + Math.sin((this.ketsbamPulse || 0) * 10) * 0.1;
+    const r = 46 * ui * pulse;
+    c.save();
+    c.globalAlpha = 0.92;
+    c.fillStyle = 'rgba(6,10,24,.72)';
+    c.beginPath();
+    c.arc(cx, cy, r + 10 * ui, 0, TAU);
+    c.fill();
+    c.strokeStyle = 'rgba(255,215,94,.55)';
+    c.lineWidth = 3 * ui;
+    c.stroke();
+    // ster/kets-symbool
+    c.translate(cx, cy);
+    c.rotate((this.ketsbamPulse || 0) * 2.2);
+    c.fillStyle = '#ffd75e';
+    c.strokeStyle = '#ff7043';
+    c.lineWidth = 2.5 * ui;
+    c.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * TAU - Math.PI / 2;
+      const rr = i % 2 ? r * 0.42 : r * 0.88;
+      const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
+      if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
+    }
+    c.closePath();
+    c.fill();
+    c.stroke();
+    c.rotate(-(this.ketsbamPulse || 0) * 2.2);
+    c.font = `900 ${Math.round(17 * ui)}px -apple-system,sans-serif`;
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.lineWidth = 5 * ui;
+    c.strokeStyle = 'rgba(0,0,0,.55)';
+    c.strokeText('KETS!', 0, 2);
+    c.fillStyle = '#fff';
+    c.fillText('KETS!', 0, 2);
+    c.restore();
+    c.font = `700 ${Math.round(12 * ui)}px -apple-system,sans-serif`;
+    c.textAlign = 'center';
+    c.fillStyle = 'rgba(255,255,255,.85)';
+    c.fillText(IS_TOUCH ? 'Tik!' : 'E / tik', cx, cy + r + 18 * ui);
+    c.textAlign = 'left';
   }
 
   drawHUD(c) {
