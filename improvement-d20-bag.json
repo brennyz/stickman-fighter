@@ -22,13 +22,7 @@
     "remainingCount": 11,
     "cycle": 3
   },
-  "pending": {
-    "face": 14,
-    "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
-    "rolledAt": "2026-07-24T18:43:18Z",
-    "remainingCount": 11,
-    "cycle": 3
-  },
+  "pending": null,
   "implemented": [
     {
       "face": 2,
@@ -441,6 +435,13 @@
       "note": "Perf c3: FX budget v\u00f3\u00f3r spawn, menu DPR, resize debounce, settings perf line",
       "version": "1.17.17",
       "doneAt": "2026-07-24T17:21:14Z",
+      "cycle": 3
+    },
+    {
+      "face": 14,
+      "note": "Kill rings + banner streak + lite FX rings",
+      "version": "1.17.26",
+      "doneAt": "2026-07-24T18:44:14Z",
       "cycle": 3
     }
   ],
