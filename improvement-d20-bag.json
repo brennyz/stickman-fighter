@@ -17,13 +17,7 @@
     "remainingCount": 6,
     "cycle": 2
   },
-  "pending": {
-    "face": 13,
-    "category": "Missies & achievements \u2014 daily loop, beloningen",
-    "rolledAt": "2026-07-24T15:27:24Z",
-    "remainingCount": 6,
-    "cycle": 2
-  },
+  "pending": null,
   "implemented": [
     {
       "face": 2,
@@ -332,16 +326,23 @@
       "version": "1.16.1",
       "doneAt": "2026-07-24T08:38:05Z",
       "cycle": 2
+    },
+    {
+      "face": 13,
+      "note": "Speel shortcuts + streak + ach bijna-sort",
+      "version": "1.17.1",
+      "doneAt": "2026-07-24T15:32:54Z",
+      "cycle": 2
     }
   ],
   "userFeatureLog": [
     {
       "id": "d20-roll-backlog",
       "d20Face": null,
-      "userWords": "Roll moet nieuw zijn maar ideeën opslaan en later uitwerken",
+      "userWords": "Roll moet nieuw zijn maar idee\u00ebn opslaan en later uitwerken",
       "versions": [],
       "commits": [],
-      "code": "rollBacklog in improvement-d20-bag.json; roll→backlog bij re-roll; backlog + pick d# commands",
+      "code": "rollBacklog in improvement-d20-bag.json; roll\u2192backlog bij re-roll; backlog + pick d# commands",
       "status": "done",
       "note": "history + userFeatureLog blijven; pending = actief werk"
     },

@@ -105,7 +105,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-| 2026-07-24 | — | **d20 backlog:** `rollBacklog` in bag — overgeslagen rolls blijven bewaard; `backlog` + `pick d#` om uit te werken. History + userFeatureLog blijven apart. |
+| 2026-07-24 | **13** | Missies (cyclus 2): Speel→ knop per daily (Avontuur/Muur/Training), volgende-missie highlight, dagbonus-streak, prestaties sorteer op bijna-klaar + intro-toast. v1.17.1 / SW v128. |
 | 2026-07-24 | — | **d20 roll UX:** `./scripts/roll-improvement-d20.sh` blokkeert niet meer op open pending — zet vorige face terug in zak en rolt direct opnieuw. `unroll` = terug zonder roll. |
 | 2026-07-24 | — | **User: harden movement.** `applyFighterMove` — snappy keyboard-turn (2.4× accel), joy curve, air control, lichte beweging tijdens hurt, snellere stop. v1.17.0 / SW v127. |
 | 2026-07-24 | — | **User fix: muur + joystick.** Muur-modus: speler mag langs hele muur lopen (geen onzichtbare muur vóór rechter stenen). Touch-joy: vasthouden werkt — geen stale-release meer bij stil vinger. v1.16.9 / SW v126. |
