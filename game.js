@@ -109,7 +109,7 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.19';
+const APP_VERSION = '1.17.20';
 /** Keep in sync with sw.js CACHE suffix */
 const SW_CACHE_REV = 146;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
@@ -9895,6 +9895,39 @@ const MODE_HUB_META = {
   collect: { badge: 'COLLECTIE', badgeClass: 'badge-meta', title: 'Verzameling', sub: 'Wapens · stijlen · monsterboek · XP & unlocks' },
 };
 
+function hubForPlayMode(mode) {
+  if (mode === 'adventure') return 'adventure';
+  if (mode === 'versus') return 'versus';
+  if (mode === 'training' || mode === 'wall' || mode === 'coinrun') return 'arcade';
+  return null;
+}
+
+function hubTileStatLine(hub) {
+  switch (hub) {
+    case 'adventure': {
+      const cur = currentAdvIsland();
+      return `Eiland ${cur}/5 · unlock Lv ${save.unlocked}/${MAX_LEVEL}`;
+    }
+    case 'arcade': {
+      const bits = [];
+      if (save.trainWins > 0) bits.push(`${save.trainWins} train`);
+      if (save.bestWall > 0) bits.push(`muur ${save.bestWall}`);
+      const mats = save.stats?.matsCoinBest || 0;
+      if (mats > 0) bits.push(`mats ${mats}`);
+      return bits.length ? bits.join(' · ') : '3 snelle modi';
+    }
+    case 'versus': {
+      const w = save.stats?.vsWins || 0;
+      const m = save.stats?.vsMatches || 0;
+      return m > 0 ? `${w}/${m} gewonnen` : '23 vechters · lokaal';
+    }
+    case 'collect':
+      return `${weaponUnlockedCount()}/${WEAPONS.length} wapens · boek ${dexCount()}/${SPECIES_ORDER.length}`;
+    default:
+      return '';
+  }
+}
+
 const UI = {
   screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
@@ -10341,15 +10374,32 @@ const UI = {
     const badge = document.getElementById('modeHubBadge');
     const title = document.getElementById('modeHubTitle');
     const sub = document.getElementById('modeHubSub');
+    const stepEl = document.getElementById('modeHubStep');
     if (badge) {
       badge.textContent = meta.badge;
       badge.className = 'menu-badge ' + meta.badgeClass;
     }
     if (title) title.textContent = meta.title;
     if (sub) sub.textContent = meta.sub;
+    if (stepEl) stepEl.textContent = 'Stap 2 · ' + meta.title;
     document.querySelectorAll('[data-hub-panel]').forEach((panel) => {
       panel.hidden = panel.dataset.hubPanel !== this.modeHubId;
     });
+    const setStat = (id, txt) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = txt || '';
+    };
+    if (this.modeHubId === 'arcade') {
+      setStat('hubStatTraining', save.trainWins > 0 ? `${save.trainWins} overwinningen` : 'Nog niet gespeeld');
+      setStat('hubStatWall', save.bestWall > 0 ? `Record ${save.bestWall}` : 'Nog geen score');
+      const mats = save.stats?.matsCoinBest || 0;
+      setStat('hubStatMats', mats > 0 ? `Best ${mats} munten` : 'Nog niet gespeeld');
+    } else if (this.modeHubId === 'collect') {
+      setStat('hubStatWeapons', `${weaponUnlockedCount()}/${WEAPONS.length} vrij`);
+      const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
+      setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
+      setStat('hubStatDex', `${dexCount()}/${SPECIES_ORDER.length} · +max HP`);
+    }
   },
 
   renderMenu() {
@@ -10358,29 +10408,40 @@ const UI = {
     const w = weaponById(save.weapon);
     const st = styleById(save.style || 'classic');
     const pct = Math.round(save.xp / need * 100);
+    ensureDaily();
+    const readyClaim = claimableDailyTasks().length;
+    const bonusReady = save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed;
+    const missAlert = readyClaim > 0 || bonusReady;
     const profileEl = document.getElementById('menuProfileBar');
     if (profileEl) {
       profileEl.innerHTML =
-        `<b>Lv ${save.lvl}</b> · ${w.name} · ${st.name} · Boek ${dexCount()}/${SPECIES_ORDER.length}` +
-        `<span style="display:block;margin-top:3px;opacity:.88;font-size:11px">${adventureProgressLine()}</span>` +
+        `<span class="prof-row"><b>Lv ${save.lvl}</b><span>${w.name}</span><span style="color:${st.accent}">${st.name}</span></span>` +
+        `<span style="display:block;margin-top:3px;opacity:.82;font-size:11px">${adventureProgressLine()}</span>` +
         `<span class="prof-xp" aria-hidden="true"><span style="width:${pct}%"></span></span>` +
-        `<span style="display:block;margin-top:4px;font-size:10px;opacity:.65">Tik voor missies · ${save.xp}/${need} XP</span>`;
+        `<span class="prof-foot">${save.xp}/${need} XP${missAlert ? ' · missie klaar' : ''}</span>`;
+      profileEl.classList.toggle('has-alert', missAlert);
     }
     const statsEl = document.getElementById('menuStats');
     if (statsEl) statsEl.textContent = '';
     const cont = document.getElementById('btnContinue');
     const lp = save.lastPlay;
+    const featHub = lp?.mode ? hubForPlayMode(lp.mode) : null;
     if (cont) {
       if (lp && lp.mode) {
         const labels = { adventure: `Avontuur Lv ${lp.level || 1}`, training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Mats · munten' };
         cont.style.display = 'flex';
         cont.querySelector('div').innerHTML =
-          `Verder spelen<small>${labels[lp.mode] || lp.mode} — direct verder</small>`;
+          `Verder spelen<small>${labels[lp.mode] || lp.mode}</small>`;
       } else cont.style.display = 'none';
     }
+    document.querySelectorAll('[data-hub]').forEach((el) => {
+      el.classList.toggle('hub-tile-featured', el.dataset.hub === featHub);
+    });
+    document.querySelectorAll('[data-hub-stat]').forEach((el) => {
+      el.textContent = hubTileStatLine(el.dataset.hubStat);
+    });
     document.getElementById('togMusic').classList.toggle('off', !save.music);
     document.getElementById('togSfx').classList.toggle('off', !save.sfx);
-    ensureDaily();
     const verLine = document.getElementById('menuVerLine');
     if (verLine) verLine.textContent = 'v' + APP_VERSION + ' · arcade · SW v' + SW_CACHE_REV;
     const missEl = document.getElementById('menuDailyHint');
@@ -10415,14 +10476,10 @@ const UI = {
     const missBtn = document.getElementById('btnMissions');
     const missLbl = document.getElementById('btnMissionsLbl');
     if (missBtn) {
-      ensureDaily();
-      const readyClaim = claimableDailyTasks().length;
-      const bonusReady = save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed;
-      const alert = readyClaim > 0 || bonusReady;
-      missBtn.classList.toggle('tog-alert', alert);
+      missBtn.classList.toggle('tog-alert', missAlert);
       if (missLbl) {
-        if (readyClaim > 0) missLbl.textContent = `Missies · +${dailyUnclaimedXp()} XP`;
-        else if (bonusReady) missLbl.textContent = 'Missies · dagbonus';
+        if (readyClaim > 0) missLbl.textContent = `+${dailyUnclaimedXp()} XP`;
+        else if (bonusReady) missLbl.textContent = 'Dagbonus';
         else missLbl.textContent = 'Missies';
       }
     }
