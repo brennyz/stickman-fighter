@@ -133,9 +133,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.62';
+const APP_VERSION = '1.17.63';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 188;
+const SW_CACHE_REV = 189;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -533,12 +533,13 @@ function projStrikeFighter(game, p, tgt, col) {
   game.floater(tgt.x, tgt.y - 115, '-' + dealt, col, 16);
   if (hit.crit) applyCritFx(game, tgt.x, tgt.y);
   if (p.kind === 'rinnegan' && p.pull) tgt.vx += Math.sign(p.vx || 1) * 160;
-  if (p.kind === 'chidori') {
-    game.burst(p.x, p.y, '#a8e0ff', 14);
-    spawnFxRing(game, p.x, p.y, '#c8f0ff', fxLite() ? 8 : 12);
+  if (p.kind === 'rasengan') {
+    spawnJutsuImpactFx(game, p.x, p.y, 'rasengan', 'full');
+    if (!fxLite()) game.freezeT = Math.max(game.freezeT || 0, 0.045);
+  } else if (p.kind === 'chidori') {
+    spawnJutsuImpactFx(game, p.x, p.y, 'chidori', 'full');
   } else if (p.kind === 'rinnegan') {
-    game.burst(p.x, p.y, '#c47aff', 12);
-    spawnFxRing(game, p.x, p.y, '#e0a8ff', fxLite() ? 8 : 11);
+    spawnJutsuImpactFx(game, p.x, p.y, 'rinnegan', 'full');
   }
   if (p.hitSet) p.hitSet.add(tgt);
   else if (!p.pierce) p.life = 0;
@@ -8524,6 +8525,25 @@ function spawnFxRing(game, x, y, color, baseR) {
   });
 }
 
+/** Jutsu impact burst — Lite FX capped; scale 'small' for projectile fade-out. */
+function spawnJutsuImpactFx(game, x, y, kind, scale) {
+  if (!game || motionReduced()) return;
+  const lite = fxLite();
+  const small = scale === 'small';
+  if (kind === 'rasengan') {
+    game.burst(x, y, '#7cf5ff', lite ? (small ? 4 : 6) : (small ? 8 : 14), { kind: 'spark', size: small ? 2.2 : 2.8 });
+    spawnFxRing(game, x, y, '#a8ecff', lite ? 6 : (small ? 8 : 14));
+    if (!lite && !small) spawnFxRing(game, x, y, '#5ad0ff', 7);
+  } else if (kind === 'chidori') {
+    game.burst(x, y, '#a8e0ff', lite ? 8 : 14);
+    spawnFxRing(game, x, y, '#c8f0ff', lite ? 7 : 11);
+  } else if (kind === 'rinnegan') {
+    game.burst(x, y, '#c47aff', lite ? 6 : 12);
+    spawnFxRing(game, x, y, '#e0a8ff', lite ? 7 : 10);
+    if (!lite && !small) spawnFxRing(game, x, y, '#ff6b9d', 6);
+  }
+}
+
 function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
   const lite = fxLite();
   c.save();
@@ -12307,8 +12327,7 @@ class Game {
             m.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this);
             if (hit.crit) applyCritFx(this, m.x, m.y);
             if (p.kind === 'rasengan') {
-              this.burst(p.x, p.y, '#7cf5ff', fxLite() ? 5 : 10);
-              spawnFxRing(this, p.x, p.y, '#a8ecff', p.r * 0.55);
+              spawnJutsuImpactFx(this, p.x, p.y, 'rasengan', 'full');
             }
             if (p.kind === 'rinnegan') this.burst(p.x, p.y, '#c47aff', 10);
             if (p.hitSet) p.hitSet.add(m); else p.life = 0;
@@ -12351,6 +12370,12 @@ class Game {
         }
       }
       if (p.y > this.ground + 10 || p.x < -60 || p.x > W + 60) p.life = 0;
+    }
+    for (const p of this.projectiles) {
+      if (p.life <= 0 && !p._impactFx && (p.kind === 'rasengan' || p.kind === 'rinnegan' || p.kind === 'chidori')) {
+        p._impactFx = true;
+        spawnJutsuImpactFx(this, p.x, p.y, p.kind, 'small');
+      }
     }
     this.projectiles = this.projectiles.filter(p => p.life > 0);
 
@@ -12601,6 +12626,13 @@ class Game {
         c.beginPath();
         c.arc(pt.x, pt.y, pt.size * (1 + t * 1.1), 0, TAU);
         c.stroke();
+        if (!fxLite() && t < 0.55) {
+          c.globalAlpha = clamp(pt.life * 1.8, 0, 0.35);
+          c.lineWidth = 1.2;
+          c.beginPath();
+          c.arc(pt.x, pt.y, pt.size * (0.55 + t * 0.65), 0, TAU);
+          c.stroke();
+        }
         continue;
       }
       c.fillStyle = pt.color;
@@ -12665,6 +12697,24 @@ class Game {
         c.moveTo(-tw * 0.52, 10);
         c.lineTo(tw * 0.52, 10);
         c.stroke();
+        // Shine sweep across banner text (d14 cycle 4)
+        const sweep = clamp((k - 0.12) / 0.55, 0, 1);
+        if (sweep > 0 && sweep < 1) {
+          c.save();
+          c.globalAlpha = fade * 0.28 * (1 - Math.abs(sweep - 0.5) * 1.6);
+          c.globalCompositeOperation = 'lighter';
+          c.fillStyle = '#fff';
+          const bandW = Math.max(18, tw * 0.14);
+          const sx = -tw * 0.58 + (tw * 1.16 * sweep);
+          c.beginPath();
+          c.moveTo(sx, -b.size * 0.62);
+          c.lineTo(sx + bandW, -b.size * 0.62);
+          c.lineTo(sx + bandW * 0.55, b.size * 0.55);
+          c.lineTo(sx - bandW * 0.2, b.size * 0.55);
+          c.closePath();
+          c.fill();
+          c.restore();
+        }
       }
       c.restore();
     }

@@ -1615,8 +1615,7 @@ class Game {
             m.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this);
             if (hit.crit) applyCritFx(this, m.x, m.y);
             if (p.kind === 'rasengan') {
-              this.burst(p.x, p.y, '#7cf5ff', fxLite() ? 5 : 10);
-              spawnFxRing(this, p.x, p.y, '#a8ecff', p.r * 0.55);
+              spawnJutsuImpactFx(this, p.x, p.y, 'rasengan', 'full');
             }
             if (p.kind === 'rinnegan') this.burst(p.x, p.y, '#c47aff', 10);
             if (p.hitSet) p.hitSet.add(m); else p.life = 0;
@@ -1659,6 +1658,12 @@ class Game {
         }
       }
       if (p.y > this.ground + 10 || p.x < -60 || p.x > W + 60) p.life = 0;
+    }
+    for (const p of this.projectiles) {
+      if (p.life <= 0 && !p._impactFx && (p.kind === 'rasengan' || p.kind === 'rinnegan' || p.kind === 'chidori')) {
+        p._impactFx = true;
+        spawnJutsuImpactFx(this, p.x, p.y, p.kind, 'small');
+      }
     }
     this.projectiles = this.projectiles.filter(p => p.life > 0);
 
@@ -1909,6 +1914,13 @@ class Game {
         c.beginPath();
         c.arc(pt.x, pt.y, pt.size * (1 + t * 1.1), 0, TAU);
         c.stroke();
+        if (!fxLite() && t < 0.55) {
+          c.globalAlpha = clamp(pt.life * 1.8, 0, 0.35);
+          c.lineWidth = 1.2;
+          c.beginPath();
+          c.arc(pt.x, pt.y, pt.size * (0.55 + t * 0.65), 0, TAU);
+          c.stroke();
+        }
         continue;
       }
       c.fillStyle = pt.color;
@@ -1973,6 +1985,24 @@ class Game {
         c.moveTo(-tw * 0.52, 10);
         c.lineTo(tw * 0.52, 10);
         c.stroke();
+        // Shine sweep across banner text (d14 cycle 4)
+        const sweep = clamp((k - 0.12) / 0.55, 0, 1);
+        if (sweep > 0 && sweep < 1) {
+          c.save();
+          c.globalAlpha = fade * 0.28 * (1 - Math.abs(sweep - 0.5) * 1.6);
+          c.globalCompositeOperation = 'lighter';
+          c.fillStyle = '#fff';
+          const bandW = Math.max(18, tw * 0.14);
+          const sx = -tw * 0.58 + (tw * 1.16 * sweep);
+          c.beginPath();
+          c.moveTo(sx, -b.size * 0.62);
+          c.lineTo(sx + bandW, -b.size * 0.62);
+          c.lineTo(sx + bandW * 0.55, b.size * 0.55);
+          c.lineTo(sx - bandW * 0.2, b.size * 0.55);
+          c.closePath();
+          c.fill();
+          c.restore();
+        }
       }
       c.restore();
     }
