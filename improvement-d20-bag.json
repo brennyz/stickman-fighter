@@ -331,6 +331,18 @@
   ],
   "userFeatureLog": [
     {
+      "id": "monster-horde-expansion-p1",
+      "d20Face": null,
+      "userWords": "6x zoveel monsters, ook grotere dan normaal, monster boek gevuld — deel 1",
+      "versions": [
+        "1.16.6"
+      ],
+      "commits": [],
+      "code": "ADVENTURE_HORDE_MUL 6, GIANT spawn (~15%), batch spawn + alive cap, +40 SPECIES (59 totaal), UNLOCK_AT spread",
+      "status": "done (1/2)",
+      "note": "deel 1/2; doel 6× bestiary (~114 soorten) volgt in deel 2"
+    },
+    {
       "id": "master-sword-easter-egg",
       "d20Face": null,
       "userWords": "2% kans in een level dat je zwaard verandert in de masters sword van Zelda — dubbel damage, niet te blocken, 15 seconden, groot bereik",
