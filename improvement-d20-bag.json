@@ -5,22 +5,22 @@
   "remaining": [
     18,
     17,
-    12,
     11,
     13,
-    3
+    3,
+    2
   ],
   "lastRoll": {
-    "face": 2,
-    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
-    "rolledAt": "2026-07-24T15:25:42Z",
+    "face": 12,
+    "category": "Content \u2014 monsters, wapens, rariteit, dex",
+    "rolledAt": "2026-07-24T15:25:56Z",
     "remainingCount": 6,
     "cycle": 2
   },
   "pending": {
-    "face": 2,
-    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
-    "rolledAt": "2026-07-24T15:25:42Z",
+    "face": 12,
+    "category": "Content \u2014 monsters, wapens, rariteit, dex",
+    "rolledAt": "2026-07-24T15:25:56Z",
     "remainingCount": 6,
     "cycle": 2
   },
@@ -1169,6 +1169,13 @@
       "face": 2,
       "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
       "rolledAt": "2026-07-24T15:25:42Z",
+      "remainingCount": 6,
+      "cycle": 2
+    },
+    {
+      "face": 12,
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
+      "rolledAt": "2026-07-24T15:25:56Z",
       "remainingCount": 6,
       "cycle": 2
     }
