@@ -30,13 +30,7 @@
     "remainingCount": 19,
     "cycle": 4
   },
-  "pending": {
-    "face": 20,
-    "category": "Code health \u2014 kleine refactors, geen gameplay-break",
-    "rolledAt": "2026-07-24T20:43:57Z",
-    "remainingCount": 19,
-    "cycle": 4
-  },
+  "pending": null,
   "implemented": [
     {
       "face": 2,
@@ -534,6 +528,13 @@
       "version": "1.17.42",
       "doneAt": "2026-07-24T19:48:08Z",
       "cycle": 3
+    },
+    {
+      "face": 20,
+      "note": "volPct prelude menuBackdropLiteFlags guards",
+      "version": "1.17.46",
+      "doneAt": "2026-07-24T20:45:57Z",
+      "cycle": 4
     }
   ],
   "userFeatureLog": [
