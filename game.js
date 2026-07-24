@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.16.6';
+const APP_VERSION = '1.16.7';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 123;
+const SW_CACHE_REV = 124;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -2242,7 +2242,7 @@ const SPECIES = {
   schaduwvorst:{ name: 'Schaduwvorst', art: 'dragon', size: 36, hp: 340, dmg: 24, speed: 95, type: 'dragon', xp: 95, rarity: 'mythic', c1: '#2a1840', c2: '#b06ae0' },
   voidkonijn:{ name: 'Voidkonijn', art: 'fox',     size: 20, hp: 220, dmg: 22, speed: 140, type: 'charge', xp: 110, rarity: 'mythic',  c1: '#ff6b9d', c2: '#5a1040' },
   guvvedrak: { name: 'Guvvedrak', art: 'dragon',   size: 38, hp: 420, dmg: 28, speed: 100, type: 'dragon', xp: 140, rarity: 'mythic',  c1: '#ffe259', c2: '#43b25b' },
-  /* --- Deel 1/2 horde-expansie: +38 soorten (doel 6× bestiary) --- */
+  /* --- Deel 1/2 horde-expansie: +40 soorten --- */
   moerasly:    { name: 'Moerasly',    art: 'slime',    size: 16, hp: 32,  dmg: 6,  speed: 58,  type: 'hop',    xp: 8,  rarity: 'common',    c1: '#4a8f52', c2: '#1e4a28' },
   paddensly:   { name: 'Paddensly',   art: 'slime',    size: 18, hp: 36,  dmg: 7,  speed: 52,  type: 'hop',    xp: 10, rarity: 'uncommon',  c1: '#7ad06a', c2: '#3a7a42' },
   giftbub:     { name: 'Giftbub',     art: 'slime',    size: 15, hp: 30,  dmg: 8,  speed: 64,  type: 'hop',    xp: 11, rarity: 'uncommon',  c1: '#b06ae0', c2: '#5a3080' },
@@ -2283,6 +2283,62 @@ const SPECIES = {
   neondrake:   { name: 'Neondrake',   art: 'dragon',   size: 36, hp: 310, dmg: 24, speed: 98,  type: 'dragon', xp: 72, rarity: 'mythic',    c1: '#7cf5ff', c2: '#ff6b9d' },
   etherwyrm:   { name: 'Etherwyrm',   art: 'dragon',   size: 37, hp: 360, dmg: 26, speed: 102, type: 'dragon', xp: 88, rarity: 'mythic',    c1: '#c47aff', c2: '#2a1840' },
   omegadrake:  { name: 'Omegadrake',  art: 'dragon',   size: 39, hp: 400, dmg: 27, speed: 105, type: 'dragon', xp: 120, rarity: 'mythic',   c1: '#ffe259', c2: '#e04f4f' },
+  /* --- Deel 2/2 horde-expansie: +55 soorten (114 totaal = 6× bestiary) --- */
+    kleiply: { name: 'Kleiply', art: 'slime', size: 15, hp: 30, dmg: 5, speed: 56, type: 'hop', xp: 7, rarity: 'common', c1: '#4a8f52', c2: '#1e4a28' },
+    spinbub: { name: 'Spinbub', art: 'slime', size: 15, hp: 32, dmg: 6, speed: 58, type: 'hop', xp: 8, rarity: 'common', c1: '#7ad06a', c2: '#3a7a42' },
+    hongerly: { name: 'Hongerly', art: 'slime', size: 16, hp: 38, dmg: 7, speed: 60, type: 'hop', xp: 10, rarity: 'uncommon', c1: '#b06ae0', c2: '#5a3080' },
+    parelsly: { name: 'Parelsly', art: 'slime', size: 17, hp: 39, dmg: 6, speed: 62, type: 'hop', xp: 10, rarity: 'uncommon', c1: '#a8e0ff', c2: '#3a7fc0' },
+    modderblob: { name: 'Modderblob', art: 'slime', size: 17, hp: 41, dmg: 8, speed: 64, type: 'hop', xp: 12, rarity: 'rare', c1: '#ff7043', c2: '#8a2818' },
+    crystalbub: { name: 'Crystalbub', art: 'slime', size: 15, hp: 48, dmg: 9, speed: 65, type: 'hop', xp: 14, rarity: 'epic', c1: '#6fd7ff', c2: '#2f7fc0' },
+    chaosly: { name: 'Chaosly', art: 'slime', size: 16, hp: 58, dmg: 10, speed: 58, type: 'hop', xp: 19, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+    zwerm: { name: 'Zwerm', art: 'bat', size: 13, hp: 24, dmg: 5, speed: 105, type: 'fly', xp: 8, rarity: 'common', c1: '#6b7690', c2: '#3a4258' },
+    karmijnvleerm: { name: 'Karmijnvleerm', art: 'bat', size: 14, hp: 26, dmg: 6, speed: 108, type: 'fly', xp: 9, rarity: 'common', c1: '#8a6cf0', c2: '#5a3fb0' },
+    echovleerm: { name: 'Echovleerm', art: 'bat', size: 15, hp: 31, dmg: 6, speed: 96, type: 'fly', xp: 11, rarity: 'uncommon', c1: '#2a1840', c2: '#5a3fb0' },
+    spiegelvleerm: { name: 'Spiegelvleerm', art: 'bat', size: 15, hp: 32, dmg: 7, speed: 99, type: 'fly', xp: 12, rarity: 'uncommon', c1: '#ff9ad5', c2: '#c04590' },
+    voidvleerm: { name: 'Voidvleerm', art: 'bat', size: 13, hp: 34, dmg: 8, speed: 102, type: 'fly', xp: 13, rarity: 'rare', c1: '#7cf5ff', c2: '#2a7fc0' },
+    duskwing: { name: 'Duskwing', art: 'bat', size: 14, hp: 46, dmg: 10, speed: 108, type: 'fly', xp: 20, rarity: 'legendary', c1: '#ffd75e', c2: '#c97a20' },
+    glimwing: { name: 'Glimwing', art: 'bat', size: 16, hp: 58, dmg: 13, speed: 111, type: 'fly', xp: 28, rarity: 'mythic', c1: '#b06ae0', c2: '#5a2080' },
+    bronzenstek: { name: 'Bronzenstek', art: 'hedgehog', size: 15, hp: 40, dmg: 9, speed: 68, type: 'charge', xp: 10, rarity: 'common', c1: '#a3763f', c2: '#6b4a28' },
+    koperstek: { name: 'Koperstek', art: 'hedgehog', size: 16, hp: 42, dmg: 8, speed: 70, type: 'charge', xp: 11, rarity: 'common', c1: '#c98850', c2: '#8a5a30' },
+    froststek: { name: 'Froststek', art: 'hedgehog', size: 16, hp: 49, dmg: 10, speed: 72, type: 'charge', xp: 13, rarity: 'uncommon', c1: '#6fd7ff', c2: '#2f7fc0' },
+    kolossstek: { name: 'Kolossstek', art: 'hedgehog', size: 14, hp: 52, dmg: 10, speed: 64, type: 'charge', xp: 14, rarity: 'rare', c1: '#5ad06a', c2: '#2a6030' },
+    thornox: { name: 'Thornox', art: 'hedgehog', size: 15, hp: 62, dmg: 13, speed: 66, type: 'charge', xp: 18, rarity: 'epic', c1: '#9fb2c8', c2: '#4a5568' },
+    spineclaw: { name: 'Spineclaw', art: 'hedgehog', size: 16, hp: 76, dmg: 16, speed: 68, type: 'charge', xp: 24, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+    quillfang: { name: 'Quillfang', art: 'hedgehog', size: 17, hp: 92, dmg: 17, speed: 70, type: 'charge', xp: 34, rarity: 'mythic', c1: '#ff6b9d', c2: '#5a1040' },
+    spookvlam: { name: 'Spookvlam', art: 'ghost', size: 15, hp: 38, dmg: 7, speed: 52, type: 'shoot', xp: 11, rarity: 'uncommon', c1: '#cfe6ff', c2: '#7aa8cf' },
+    koudspook: { name: 'Koudspook', art: 'ghost', size: 16, hp: 44, dmg: 9, speed: 54, type: 'shoot', xp: 14, rarity: 'rare', c1: '#6b5cff', c2: '#2e2266' },
+    spiraalgeest: { name: 'Spiraalgeest', art: 'ghost', size: 17, hp: 46, dmg: 9, speed: 50, type: 'shoot', xp: 15, rarity: 'rare', c1: '#c47aff', c2: '#5a2080' },
+    wispgeest: { name: 'Wispgeest', art: 'ghost', size: 16, hp: 54, dmg: 11, speed: 50, type: 'shoot', xp: 17, rarity: 'epic', c1: '#ffb0b8', c2: '#8a3040' },
+    nexusgeest: { name: 'Nexusgeest', art: 'ghost', size: 17, hp: 68, dmg: 12, speed: 54, type: 'shoot', xp: 22, rarity: 'legendary', c1: '#7cf5ff', c2: '#2a7fc0' },
+    mistwraith: { name: 'Mistwraith', art: 'ghost', size: 18, hp: 72, dmg: 14, speed: 55, type: 'shoot', xp: 26, rarity: 'mythic', c1: '#2a1840', c2: '#b06ae0' },
+    palewraith: { name: 'Palewraith', art: 'ghost', size: 16, hp: 56, dmg: 10, speed: 52, type: 'shoot', xp: 18, rarity: 'epic', c1: '#dfe8ff', c2: '#6a7080' },
+    olieblik: { name: 'Olieblik', art: 'can', size: 15, hp: 44, dmg: 7, speed: 48, type: 'shoot', xp: 9, rarity: 'common', c1: '#c98850', c2: '#7a5030' },
+    batterijkan: { name: 'Batterijkan', art: 'can', size: 16, hp: 46, dmg: 8, speed: 46, type: 'shoot', xp: 10, rarity: 'common', c1: '#9fb2c8', c2: '#5f7189' },
+    schrootblik: { name: 'Schrootblik', art: 'can', size: 16, hp: 52, dmg: 9, speed: 47, type: 'shoot', xp: 12, rarity: 'uncommon', c1: '#b86a4a', c2: '#6a3820' },
+    turboblok: { name: 'Turboblok', art: 'can', size: 17, hp: 58, dmg: 11, speed: 49, type: 'shoot', xp: 15, rarity: 'rare', c1: '#ff6b6b', c2: '#8a2020' },
+    ionkan: { name: 'Ionkan', art: 'can', size: 18, hp: 64, dmg: 13, speed: 51, type: 'shoot', xp: 18, rarity: 'epic', c1: '#7cf5ff', c2: '#2a7fc0' },
+    quantumkan: { name: 'Quantumkan', art: 'can', size: 18, hp: 72, dmg: 14, speed: 50, type: 'shoot', xp: 22, rarity: 'legendary', c1: '#ffd75e', c2: '#c97a20' },
+    omegacan: { name: 'Omegacan', art: 'can', size: 19, hp: 82, dmg: 16, speed: 48, type: 'shoot', xp: 28, rarity: 'mythic', c1: '#c47aff', c2: '#5a2080' },
+    zilvervos: { name: 'Zilvervos', art: 'fox', size: 16, hp: 44, dmg: 10, speed: 125, type: 'charge', xp: 13, rarity: 'uncommon', c1: '#dfe8ff', c2: '#6a7080' },
+    maanvos: { name: 'Maanvos', art: 'fox', size: 16, hp: 50, dmg: 11, speed: 130, type: 'charge', xp: 16, rarity: 'rare', c1: '#ffe259', c2: '#c97a20' },
+    jadevos: { name: 'Jadevos', art: 'fox', size: 17, hp: 52, dmg: 12, speed: 132, type: 'charge', xp: 17, rarity: 'rare', c1: '#43b25b', c2: '#2a6030' },
+    stellarvos: { name: 'Stellarvos', art: 'fox', size: 17, hp: 58, dmg: 14, speed: 138, type: 'charge', xp: 20, rarity: 'epic', c1: '#ff7043', c2: '#a02818' },
+    kosmischvos: { name: 'Kosmischvos', art: 'fox', size: 18, hp: 66, dmg: 15, speed: 142, type: 'charge', xp: 24, rarity: 'legendary', c1: '#7cf5ff', c2: '#2a7fc0' },
+    emberfox: { name: 'Emberfox', art: 'fox', size: 17, hp: 60, dmg: 13, speed: 135, type: 'charge', xp: 21, rarity: 'epic', c1: '#ff8c42', c2: '#d05a1e' },
+    shadowfox: { name: 'Shadowfox', art: 'fox', size: 19, hp: 78, dmg: 18, speed: 145, type: 'charge', xp: 30, rarity: 'mythic', c1: '#5a1040', c2: '#ff6b9d' },
+    leisteen: { name: 'Leisteen', art: 'golem', size: 25, hp: 98, dmg: 14, speed: 31, type: 'tank', xp: 20, rarity: 'uncommon', c1: '#8a8478', c2: '#5a5548' },
+    marmerbonk: { name: 'Marmerbonk', art: 'golem', size: 26, hp: 108, dmg: 15, speed: 30, type: 'tank', xp: 22, rarity: 'rare', c1: '#9a917f', c2: '#6b6355' },
+    koraalbonk: { name: 'Koraalbonk', art: 'golem', size: 27, hp: 115, dmg: 16, speed: 29, type: 'tank', xp: 24, rarity: 'rare', c1: '#e8c98a', c2: '#8a6030' },
+    barnsteen: { name: 'Barnsteen', art: 'golem', size: 28, hp: 132, dmg: 18, speed: 28, type: 'tank', xp: 28, rarity: 'epic', c1: '#ff7043', c2: '#8a2020' },
+    adamantbonk: { name: 'Adamantbonk', art: 'golem', size: 29, hp: 158, dmg: 20, speed: 27, type: 'tank', xp: 34, rarity: 'legendary', c1: '#2a1840', c2: '#6a5080' },
+    basaltbonk: { name: 'Basaltbonk', art: 'golem', size: 28, hp: 138, dmg: 19, speed: 28, type: 'tank', xp: 30, rarity: 'epic', c1: '#9fb2c8', c2: '#4a5568' },
+    titanrock: { name: 'Titanrock', art: 'golem', size: 31, hp: 175, dmg: 22, speed: 26, type: 'tank', xp: 38, rarity: 'mythic', c1: '#ffd75e', c2: '#8a6020' },
+    mistwyrm: { name: 'Mistwyrm', art: 'dragon', size: 28, hp: 165, dmg: 17, speed: 76, type: 'dragon', xp: 26, rarity: 'rare', c1: '#6fd7ff', c2: '#2a5080' },
+    sandwyrm: { name: 'Sandwyrm', art: 'dragon', size: 29, hp: 172, dmg: 18, speed: 78, type: 'dragon', xp: 28, rarity: 'rare', c1: '#e8c98a', c2: '#8a6030' },
+    frostwyrm: { name: 'Frostwyrm', art: 'dragon', size: 30, hp: 188, dmg: 19, speed: 82, type: 'dragon', xp: 32, rarity: 'epic', c1: '#a8e0ff', c2: '#3a7fc0' },
+    chaoswyrm: { name: 'Chaoswyrm', art: 'dragon', size: 32, hp: 225, dmg: 22, speed: 88, type: 'dragon', xp: 42, rarity: 'legendary', c1: '#b06ae0', c2: '#5a2080' },
+    prismewyrm: { name: 'Prismewyrm', art: 'dragon', size: 33, hp: 240, dmg: 23, speed: 90, type: 'dragon', xp: 48, rarity: 'legendary', c1: '#7cf5ff', c2: '#ff6b9d' },
+    apexwyrm: { name: 'Apexwyrm', art: 'dragon', size: 35, hp: 285, dmg: 25, speed: 95, type: 'dragon', xp: 58, rarity: 'mythic', c1: '#ffe259', c2: '#e04f4f' },
 };
 const SPECIES_ORDER = Object.keys(SPECIES).sort((a, b) =>
   (rarityOf(SPECIES[a].rarity).order - rarityOf(SPECIES[b].rarity).order) || SPECIES[a].name.localeCompare(SPECIES[b].name)
@@ -2313,8 +2369,10 @@ const UNLOCK_AT = {
   stormwyrm: 27, schimmervleerm: 29, ijzerklauw: 30, ethergeest: 31, vuurstorm: 32,
   obsidianaut: 33, titanbonk: 34, zeewyrm: 36, voidsly: 38, neondrake: 40,
   etherwyrm: 43, omegadrake: 46,
+  kleiply: 1, spinbub: 2, hongerly: 4, parelsly: 6, modderblob: 4, crystalbub: 6, chaosly: 8, zwerm: 10, karmijnvleerm: 7, echovleerm: 9, spiegelvleerm: 11, voidvleerm: 13, duskwing: 11, glimwing: 13, bronzenstek: 15, koperstek: 17, froststek: 14, kolossstek: 16, thornox: 18, spineclaw: 20, quillfang: 18, spookvlam: 20, koudspook: 22, spiraalgeest: 24, wispgeest: 21, nexusgeest: 23, mistwraith: 25, palewraith: 27, olieblik: 25, batterijkan: 27, schrootblik: 29, turboblok: 30, ionkan: 28, quantumkan: 30, omegacan: 32, zilvervos: 34, maanvos: 32, jadevos: 34, stellarvos: 36, kosmischvos: 37, emberfox: 35, shadowfox: 37, leisteen: 39, marmerbonk: 41, koraalbonk: 39, barnsteen: 41, adamantbonk: 43, basaltbonk: 44, titanrock: 42, mistwyrm: 44, sandwyrm: 46, frostwyrm: 48, chaoswyrm: 46, prismewyrm: 48, apexwyrm: 50,
+
 };
-/** Avontuur horde — deel 1/2: 6× meer spawns + reuzen. */
+/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (114 soorten). */
 const ADVENTURE_HORDE_MUL = 6;
 const ADVENTURE_HORDE_MAX_PER_WAVE = 36;
 const ADVENTURE_MAX_ALIVE = IS_TOUCH ? 54 : 78;
@@ -2444,7 +2502,13 @@ function buildLevel(n) {
     waveMeta.push(meta);
   }
   if (BOSS_AT[n]) {
-    waves.push(BOSS_AT[n].map(x => Object.assign({}, x)));
+    const bossWave = BOSS_AT[n].map(x => Object.assign({}, x));
+    const hordePad = Math.min(3 + Math.floor(n / 8), 10);
+    for (let i = 0; i < hordePad; i++) {
+      const elite = Math.random() < 0.1;
+      bossWave.push({ sp: weightedPick(pool, n), elite, giant: rollWaveGiant(n, elite) });
+    }
+    waves.push(bossWave);
     waveMeta.push({ trait: 'boss', spawnMul: 1, label: 'Baas-golf' });
   }
   const theme = WORLD_THEMES[n - 1] || 'cyber';

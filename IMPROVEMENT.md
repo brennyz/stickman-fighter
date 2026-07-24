@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-24 | — | **User horde deel 2/2:** **+55 nieuwe soorten** in monsterboek (**114 totaal = 6× origineel**), UNLOCK_AT tot level 50; baas-golven krijgen horde-padding (3–10 extra minions). v1.16.7 / SW v124. |
 | 2026-07-24 | — | **User horde deel 1/2:** 6× meer monsters per golf (`ADVENTURE_HORDE_MUL`), reuzen-variant (groter/sterker, ~15%), batch-spawn + alive-cap; **+40 nieuwe soorten** in monsterboek (59 totaal). v1.16.6 / SW v123. |
 | 2026-07-24 | — | **User: Master Sword easter egg.** 2% kans per avontuur-level (slash/energy-zwaard): wapen wordt 15s Master Sword — ×2 dmg, groot bereik, unblockable melee, HUD-timer + Hyrules banner. v1.16.5 / SW v122. |
 | 2026-07-24 | — | **User fix: menu-tegel scroll.** Slepen over tegels (levels, chars, wapens) selecteerde meteen bij loslaten. `initUiTapScrollGuard`: pointer-slop + scroll-delta detectie, blokkeert click/touchend na slide. v1.16.4 / SW v121. |
