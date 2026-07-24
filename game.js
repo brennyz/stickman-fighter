@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.6';
+const APP_VERSION = '1.17.7';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 133;
+const SW_CACHE_REV = 134;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -4925,6 +4925,7 @@ class Fighter {
     this.aiTimer -= dt; this.aiCd -= dt;
     const dx = p.x - this.x, dist = Math.abs(dx), dir = Math.sign(dx) || 1;
     const diff = this.aiDiff || 1;
+    const pAir = !p.onGround;
 
     // reactief blokkeren als de speler aanvalt en dichtbij is
     if (p.attack && p.attack.t < p.attack.windup + p.attack.active && dist < 130 && !this.attack) {
@@ -4936,12 +4937,12 @@ class Fighter {
       this.aiTimer = rand(0.22, 0.55) / diff;
       if (dist > 240) {
         this.aiMove = dir;
-        if (this.aiCd <= 0 && dist > 105 && Math.random() < 0.3) { out.special = true; this.aiCd = rand(2.6, 4.2) / diff; }
+        if (this.aiCd <= 0 && dist > 105 && !pAir && Math.random() < 0.3) { out.special = true; this.aiCd = rand(2.6, 4.2) / diff; }
         if (Math.random() < 0.12) out.jump = true;
       } else if (dist > 110) {
         const r = Math.random();
         if (r < 0.55) this.aiMove = dir;
-        else if (r < 0.72 && this.aiCd <= 0 && dist > 120) { out.special = true; this.aiCd = rand(2.6, 4.2) / diff; }
+        else if (r < 0.72 && this.aiCd <= 0 && dist > 120 && !pAir) { out.special = true; this.aiCd = rand(2.6, 4.2) / diff; }
         else this.aiMove = -dir * 0.6;
       } else {
         const r = Math.random();
@@ -5038,10 +5039,10 @@ class Fighter {
         a.fired = true;
         game.spawnJutsu(this, a);
       }
-      if (this.isRobot && a.kind === 'special' && !a.fired && !a._telegraphed && a.t >= a.windup * 0.32) {
+      if (this.isRobot && a.kind === 'special' && !a.fired && !a._telegraphed && a.t >= a.windup * 0.28) {
         a._telegraphed = true;
         if (game.mode === 'training') {
-          game.trainTelegraphT = 0.7;
+          game.trainTelegraphT = 0.85;
           game.floater(this.x, this.y - 138, 'CHIDORI — dash/spring!', '#7cf5ff', 16);
           haptic(10);
         }
@@ -6948,6 +6949,10 @@ class Game {
       this.trainLaserCd -= dt;
       return;
     }
+    if (!this.player.onGround) {
+      this.trainLaserCd = rand(2.5, 4.5);
+      return;
+    }
     const diff = Math.min(1.5, this.robot.aiDiff || 1);
     this.trainLaserTelegraph = 0.95;
     this.trainLaserCd = rand(8, 12) / diff;
@@ -8660,6 +8665,28 @@ class Game {
     } else if (this.mode === 'training') {
       const r = this.robot;
       const half = Math.min(300, W * 0.36);
+      const tele = this.trainLaserTelegraph > 0
+        ? { label: 'OOR-LASER — spring!', frac: this.trainLaserTelegraph / 0.95, color: '#ff6b6b' }
+        : (this.trainTelegraphT > 0
+          ? { label: 'CHIDORI — dash weg!', frac: this.trainTelegraphT / 0.85, color: '#7cf5ff' }
+          : null);
+      if (tele) {
+        const barW = Math.min(220, W - 48);
+        const bx = (W - barW) / 2;
+        c.fillStyle = 'rgba(0,0,0,.4)';
+        this.rr(c, bx - 4, 88, barW + 8, 22, 8);
+        c.fill();
+        c.font = '800 11px sans-serif';
+        c.textAlign = 'center';
+        c.fillStyle = tele.color;
+        c.fillText(tele.label, W / 2, 102);
+        c.fillStyle = 'rgba(255,255,255,.15)';
+        this.rr(c, bx, 108, barW, 5, 3);
+        c.fill();
+        c.fillStyle = tele.color;
+        this.rr(c, bx, 108, barW * clamp(tele.frac, 0, 1), 5, 3);
+        c.fill();
+      }
       if (this.trainTelegraphT > 0 && r.alive) {
         c.save();
         c.globalAlpha = 0.35 + Math.sin(this.t * 18) * 0.2;
@@ -8668,6 +8695,17 @@ class Game {
         c.beginPath();
         c.arc(r.x, r.y - 48, 42 + Math.sin(this.t * 14) * 6, 0, TAU);
         c.stroke();
+        const dashDir = Math.sign(this.player.x - r.x) || -1;
+        const dashLen = Math.min(200, Math.abs(this.player.x - r.x) + 40);
+        c.globalAlpha = 0.35 + (this.trainTelegraphT / 0.85) * 0.35;
+        c.strokeStyle = '#7cf5ff';
+        c.lineWidth = 3;
+        c.setLineDash([8, 10]);
+        c.beginPath();
+        c.moveTo(r.x, r.y - 22);
+        c.lineTo(r.x + dashDir * dashLen, r.y - 22);
+        c.stroke();
+        c.setLineDash([]);
         c.restore();
       }
       if (this.trainLaserTelegraph > 0 && r.alive) {
@@ -8695,7 +8733,8 @@ class Game {
       const frac = clamp(r.hp / r.maxhp, 0, 1);
       this.rr(c, W - 16 - half * frac, by, half * frac, 15, 6); c.fill();
       c.font = '800 13px sans-serif'; c.textAlign = 'right'; c.fillStyle = '#fff';
-      c.fillText('RABBITROBOT', W - 20, by + 30);
+      const rPct = Math.round(frac * 100);
+      c.fillText(`RABBITROBOT · ${rPct}%`, W - 20, by + 30);
       // timer + rondepunten
       c.textAlign = 'center';
       c.font = '800 12px sans-serif';
@@ -8889,15 +8928,24 @@ class Game {
       }
       const mp1 = this.roundsP1 === 1 && this.roundsP2 < 2;
       const mp2 = this.roundsP2 === 1 && this.roundsP1 < 2;
+      const dotY = (this.roundTimer < 12 && this.phase === 'fight') ? timerY + 48 : timerY + 34;
       for (let i = 0; i < 2; i++) {
         const litP1 = i < this.roundsP1;
         c.fillStyle = litP1 ? '#7cf5ff' : 'rgba(255,255,255,.22)';
         if (mp1 && i === 1) c.fillStyle = '#ffd75e';
-        c.beginPath(); c.arc(W / 2 - 40 - i * 16, timerY + 34, mp1 && i === 1 ? 6 : 5, 0, TAU); c.fill();
+        c.beginPath(); c.arc(W / 2 - 40 - i * 16, dotY, mp1 && i === 1 ? 6 : 5, 0, TAU); c.fill();
         const litP2 = i < this.roundsP2;
         c.fillStyle = litP2 ? '#ffb0b8' : 'rgba(255,255,255,.22)';
         if (mp2 && i === 1) c.fillStyle = '#ffd75e';
-        c.beginPath(); c.arc(W / 2 + 40 + i * 16, timerY + 34, mp2 && i === 1 ? 6 : 5, 0, TAU); c.fill();
+        c.beginPath(); c.arc(W / 2 + 40 + i * 16, dotY, mp2 && i === 1 ? 6 : 5, 0, TAU); c.fill();
+      }
+      if (p.invulnT > 0.05) {
+        c.font = '700 9px sans-serif'; c.fillStyle = 'rgba(124,245,255,.75)'; c.textAlign = 'left';
+        c.fillText('spawn', bx, byVs + 52);
+      }
+      if (p2.invulnT > 0.05) {
+        c.font = '700 9px sans-serif'; c.fillStyle = 'rgba(255,176,184,.75)'; c.textAlign = 'right';
+        c.fillText('spawn', W - 20, byVs + 52);
       }
       if (p.energy >= 100) {
         const k1 = fighterJutsuKind(p);

@@ -105,6 +105,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-24 | **2** | Training (cyclus 2): telegraph HUD-balk, Chidori-dash-lijn, laser wacht tot speler landt, geen Chidori vs lucht — geen one-shots. v1.17.7 / SW v134. |
 | 2026-07-24 | **3** | Versus (cyclus 2): timer-balk + HP% HUD, TIME-toast met %, spawn-markers, ronde-log op result, pauze-herstart zichtbaar, resize clamp. v1.17.6 / SW v133. |
 | 2026-07-24 | **18** | Char select (cyclus 2): stat-delta’s in preview, hover-preview op kaarten, matchup-hints, random duo met HP/dmg-samenvatting — geen dmg-tweak. v1.17.5 / SW v132. |
 | 2026-07-24 | **17** | Stabiliteit (cyclus 2): `safeAsync`, share/copy/resume/daily-claim toasts, save-reset melding, async reject + SW-update fail toast. v1.17.4 / SW v131. |

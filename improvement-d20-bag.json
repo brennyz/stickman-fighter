@@ -2,14 +2,12 @@
   "version": 3,
   "cyclesCompleted": 2,
   "rollFirst": [],
-  "remaining": [
-    2
-  ],
+  "remaining": [],
   "lastRoll": {
-    "face": 3,
-    "category": "Versus 2P \u2014 split controls, rematch, char balance",
-    "rolledAt": "2026-07-24T15:37:52Z",
-    "remainingCount": 1,
+    "face": 2,
+    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
+    "rolledAt": "2026-07-24T15:39:08Z",
+    "remainingCount": 0,
     "cycle": 2
   },
   "pending": null,
@@ -362,6 +360,13 @@
       "note": "vs HUD timer HP% spawn log pause restart",
       "version": "1.17.6",
       "doneAt": "2026-07-24T15:38:47Z",
+      "cycle": 2
+    },
+    {
+      "face": 2,
+      "note": "telegraph HUD + no chidori air + laser on ground",
+      "version": "1.17.7",
+      "doneAt": "2026-07-24T15:40:05Z",
       "cycle": 2
     }
   ],
@@ -1331,17 +1336,14 @@
       "rolledAt": "2026-07-24T15:37:52Z",
       "remainingCount": 1,
       "cycle": 2
-    }
-  ],
-  "rollBacklog": [
+    },
     {
       "face": 2,
       "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
-      "focus": "Telegraphen + 1 AI-tweak \u2014 geen one-shot kills.",
-      "rolledAt": "2026-07-24T15:26:21Z",
-      "queuedAt": "2026-07-24T15:29:21Z",
-      "reason": "backfill",
+      "rolledAt": "2026-07-24T15:39:08Z",
+      "remainingCount": 0,
       "cycle": 2
     }
-  ]
+  ],
+  "rollBacklog": []
 }
