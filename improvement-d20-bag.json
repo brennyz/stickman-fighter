@@ -13,14 +13,14 @@
   "lastRoll": {
     "face": 13,
     "category": "Missies & achievements \u2014 daily loop, beloningen",
-    "rolledAt": "2026-07-24T14:38:31Z",
+    "rolledAt": "2026-07-24T14:38:46Z",
     "remainingCount": 6,
     "cycle": 2
   },
   "pending": {
     "face": 13,
     "category": "Missies & achievements \u2014 daily loop, beloningen",
-    "rolledAt": "2026-07-24T14:38:31Z",
+    "rolledAt": "2026-07-24T14:38:46Z",
     "remainingCount": 6,
     "cycle": 2
   },
@@ -1028,6 +1028,13 @@
       "face": 13,
       "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-07-24T14:38:31Z",
+      "remainingCount": 6,
+      "cycle": 2
+    },
+    {
+      "face": 13,
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
+      "rolledAt": "2026-07-24T14:38:46Z",
       "remainingCount": 6,
       "cycle": 2
     }
