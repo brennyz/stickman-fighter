@@ -132,9 +132,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.32';
+const APP_VERSION = '1.17.33';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 158;
+const SW_CACHE_REV = 159;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -1955,9 +1955,15 @@ function applyIslandOnboarding() {
   if (save.tipsSeen.islands) return;
   save.tipsSeen.islands = 1;
   persist();
-  try {
-    UI.toast('5 eilanden × 10 levels · skill gate per eiland · 5× verlies op één level = Meester-buff +20%', 4400);
-  } catch (_) {}
+}
+
+/** Eén regel op level-scherm — geen toast (eilanden-uitleg). */
+function adventureIslandHintLine() {
+  ensureTipsSeen();
+  if (!save.tipsSeen.islands || save.tipsSeen.islandsHint) return '';
+  save.tipsSeen.islandsHint = 1;
+  persist();
+  return 'Eerste keer avontuur: 5×10 levels · skill gate per eiland · Meester-buff na 5× verlies op één level';
 }
 
 /** Eén hint per modus: in-gevecht regel, geen extra toast (geen stapel met welcome). */
@@ -7799,13 +7805,6 @@ class Game {
     };
     this.layoutWall(true);
     this.banner('SLOOP DE MUUR!', 1.5, '#ffd75e', 46);
-    if (!modeOnboardingSeen('wall')) {
-      setTimeout(() => {
-        try {
-          if (!this.over) this.banner('Tip: 60s · combo-balk = sneller · ster-steen = bonus', 2.0, '#7cf5ff', 22);
-        } catch (_) {}
-      }, 1200);
-    }
     AudioSys.play('wall');
     this.phase = 'fight';
   }
@@ -9889,10 +9888,8 @@ function pickVsRosterId(id) {
     if (UI.charPickStep === 1) {
       vsSelect.p1 = id;
       UI.charPickStep = 2;
-      try { UI.toast('P1: ' + r.name + ' — kies nu P2', 2200); } catch (_) {}
     } else {
       vsSelect.p2 = id;
-      try { UI.toast('P2: ' + r.name + ' — tik VECHT!', 2000); } catch (_) {}
     }
     UI.renderCharSelect();
   } catch (err) {
@@ -10644,10 +10641,14 @@ const UI = {
     const tipEl = document.getElementById('menuTipLine');
     let hintLine = dailyLine;
     if (tipEl) {
+      const prog = onboardingProgress();
       const next = nextUntriedMode();
       if (next) {
-        tipEl.textContent = `Nog niet gespeeld: ${next.label}`;
-        hintLine = `Nog niet gespeeld: ${next.label}`;
+        tipEl.textContent = `Eerste minuut ${prog.seen}/${prog.total} · probeer: ${next.label}`;
+        hintLine = tipEl.textContent;
+      } else if (prog.seen < prog.total) {
+        tipEl.textContent = `Eerste minuut ${prog.seen}/${prog.total} modi — één hint per modus bovenin`;
+        hintLine = tipEl.textContent;
       } else {
         const tips = [
           'Kies een tegel — Avontuur · Arcade · 2P · Collectie',
@@ -10990,9 +10991,6 @@ const UI = {
     const pct = Math.round(prog.cleared / prog.total * 100);
     if (info) {
       const mb = save.advMasterBuff;
-      const mbLine = mb && mb >= range.start && mb <= range.end
-        ? `<span class="island-info-chip master">Meester-buff Lv ${mb} · +20%</span>`
-        : '';
       info.innerHTML =
         `<div class="island-info-head">` +
         `<span class="island-info-ico">${islMeta.icon}</span>` +
@@ -11002,7 +11000,17 @@ const UI = {
         (pick < 5 ? ` · baas Lv ${pick * LEVELS_PER_ISLAND} → volgend eiland` : '') +
         `</div></div></div>` +
         `<div class="island-prog-track island-info-prog"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
-        (mbLine ? `<div class="island-info-chips">${mbLine}</div>` : '');
+        (() => {
+          const onboard = adventureIslandHintLine();
+          const mbLine = mb && mb >= range.start && mb <= range.end
+            ? `<span class="island-info-chip master">Meester-buff Lv ${mb} · +20%</span>`
+            : '';
+          const chips = [
+            onboard ? `<span class="island-info-chip onboard">${onboard}</span>` : '',
+            mbLine,
+          ].filter(Boolean).join('');
+          return chips ? `<div class="island-info-chips">${chips}</div>` : '';
+        })();
     }
     grid.innerHTML = '';
     for (let n = range.start; n <= range.end; n++) {
@@ -11663,6 +11671,7 @@ bindPress(btnMissions, () => {
     save.missionsIntroSeen = true;
     persist();
     setTimeout(() => UI.toast('Missies: Speel → claim XP → dagbonus — licht, geen grind', 4000), 280);
+    return;
   }
   const n = claimableDailyTasks().length;
   if (n > 0) {

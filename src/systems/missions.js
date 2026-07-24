@@ -1068,9 +1068,15 @@ function applyIslandOnboarding() {
   if (save.tipsSeen.islands) return;
   save.tipsSeen.islands = 1;
   persist();
-  try {
-    UI.toast('5 eilanden × 10 levels · skill gate per eiland · 5× verlies op één level = Meester-buff +20%', 4400);
-  } catch (_) {}
+}
+
+/** Eén regel op level-scherm — geen toast (eilanden-uitleg). */
+function adventureIslandHintLine() {
+  ensureTipsSeen();
+  if (!save.tipsSeen.islands || save.tipsSeen.islandsHint) return '';
+  save.tipsSeen.islandsHint = 1;
+  persist();
+  return 'Eerste keer avontuur: 5×10 levels · skill gate per eiland · Meester-buff na 5× verlies op één level';
 }
 
 /** Eén hint per modus: in-gevecht regel, geen extra toast (geen stapel met welcome). */
