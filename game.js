@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.16.4';
+const APP_VERSION = '1.16.5';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 121;
+const SW_CACHE_REV = 122;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1633,6 +1633,28 @@ function applySummonTier(w) {
   });
 }
 const playerWeapon = () => applySummonTier(weaponById(save.weapon));
+
+/** 2% per avontuur-level: zwaard → Master Sword (Zelda) — 15s, ×2 dmg, groot bereik, unblockable. */
+const MASTER_SWORD_DURATION = 15;
+const MASTER_SWORD_CHANCE = 0.02;
+function canMasterSwordRoll(w) {
+  if (!w || w.id === 'vuist' || w.id === 'master_sword' || isThrowWeapon(w.id)) return false;
+  const fam = weaponMoveFamily(w.id);
+  return fam === 'slash' || fam === 'energy';
+}
+function buildMasterSwordWeapon(base) {
+  base = base || weaponById('zwaard');
+  return Object.assign({}, base, {
+    id: 'master_sword',
+    name: 'Master Sword',
+    dmg: Math.round((base.dmg || 1.55) * 2 * 100) / 100,
+    range: Math.max(96, (base.range || 58) + 38),
+    speed: Math.min(1.22, (base.speed || 1) * 1.1),
+    rarity: 'legendary',
+    masterSword: true,
+    desc: 'Hyrules legendarische kling — unblockable',
+  });
+}
 function rollSummonChance(elite) {
   const since = save.stats.killsSinceSummon || 0;
   // Basis ~0,7% per kill; zachte pity-ramp (+0,004%/kill, max +2%); elites ×2,5
@@ -1668,6 +1690,7 @@ const WEAPON_SWING_SFX = {
   void: 'wVoid',
   sterkling: 'wZwaard',
   guvve: 'wGuvve',
+  master_sword: 'wZwaard',
 };
 
 function weaponSwingSfx(weaponOrId, attackKind) {
@@ -1682,6 +1705,7 @@ function weaponHitSfx(weaponOrId, dmg) {
   if (id === 'laser' || id === 'void' || id === 'donder' || id === 'kristal' || id === 'vlamzweep' || id === 'sterkling') return 'hitEnergy';
   if (id === 'hamer' || id === 'knuppel' || id === 'guvve' || id === 'bostaf') return 'hitHeavy';
   if (id === 'zwaard' || id === 'ketting' || id === 'kunai' || id === 'tanto' || id === 'sai' || id === 'kama' || id === 'zeis' || id === 'drietand') return 'hitMetal';
+  if (id === 'master_sword') return 'hitEnergy';
   if (dmg > 22) return 'hit2';
   return 'hit';
 }
@@ -1759,6 +1783,7 @@ const WEAPON_MOVE_FAMILIES = {
 };
 
 function weaponMoveFamily(id) {
+  if (id === 'master_sword') return 'slash';
   if (isThrowWeapon(id) || id === 'vuist') return null;
   if (id === 'speer' || id === 'drietand' || id === 'bostaf') return 'spear';
   if (id === 'knuppel' || id === 'hamer' || id === 'tonfa' || id === 'guvve' || id === 'donder') return 'blunt';
@@ -4006,6 +4031,23 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.strokeStyle = '#fff'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(8, -1); c.lineTo(42, -1); c.stroke();
       c.strokeStyle = '#a67c2e'; c.lineWidth = 5; c.beginPath(); c.moveTo(4, -7); c.lineTo(4, 7); c.stroke();
       break;
+    case 'master_sword':
+      c.save();
+      c.shadowColor = '#6fd7ff'; c.shadowBlur = 16;
+      c.strokeStyle = '#3a9fd4'; c.lineWidth = 6; c.beginPath(); c.moveTo(6, 0); c.lineTo(64, 0); c.stroke();
+      c.strokeStyle = '#e8f8ff'; c.lineWidth = 2.2; c.beginPath(); c.moveTo(12, -1.5); c.lineTo(60, -1.5); c.stroke();
+      c.strokeStyle = 'rgba(180,235,255,.55)'; c.lineWidth = 1.2;
+      c.beginPath(); c.moveTo(12, 1.5); c.lineTo(60, 1.5); c.stroke();
+      c.restore();
+      c.fillStyle = '#ffd75e'; c.fillRect(0, -9, 11, 18);
+      c.strokeStyle = '#c97a20'; c.lineWidth = 2; c.strokeRect(0, -9, 11, 18);
+      c.fillStyle = '#6a4a9a'; c.fillRect(-7, -6, 9, 12);
+      c.fillStyle = '#8a6030';
+      c.beginPath(); c.moveTo(5.5, -3); c.lineTo(3.5, 1); c.lineTo(7.5, 1); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(5.5, 2.5); c.lineTo(2.5, 7); c.lineTo(8.5, 7); c.closePath(); c.fill();
+      c.strokeStyle = '#4db8ff'; c.lineWidth = 4;
+      c.beginPath(); c.moveTo(11, -12); c.lineTo(11, 12); c.stroke();
+      break;
     case 'kunai':
       c.strokeStyle = '#7a8494'; c.lineWidth = 3; c.beginPath(); c.moveTo(0, 0); c.lineTo(34, 0); c.stroke();
       c.fillStyle = '#c9d6e8';
@@ -4380,6 +4422,7 @@ class Fighter {
         return null;
     }
     if (spec && spec.kind === 'weapon') spec = sanitizeWeaponSpec(spec);
+    if (spec && spec.kind === 'weapon' && (w.masterSword || w.id === 'master_sword')) spec.unblockable = true;
     return applySignatureToSpec(this, spec);
   }
 
@@ -4658,13 +4701,14 @@ class Fighter {
     }
   }
 
-  takeDamage(dmg, kbx, game) {
+  takeDamage(dmg, kbx, game, opts) {
+    opts = opts || {};
     if (!this.alive) return 0;
     if (this.invulnT > 0) {
       game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13);
       return 0;
     }
-    if (this.blocking) {
+    if (this.blocking && !opts.unblockable) {
       dmg = Math.max(1, Math.round(dmg * 0.15));
       AudioSys.sfx('block');
       game.floater(this.x, this.y - 115, 'BLOK!', '#9fd8ff', 14);
@@ -4839,6 +4883,10 @@ class Fighter {
         : 0;
       const wAng = this.attack && this.attack.kind === 'weapon' ? P.arms[1][1] + aimLift : -0.5 + aimLift * 0.25;
       c.save(); c.translate(hx, hy); c.rotate(wAng);
+      if (this.weapon.masterSword || this.weapon.id === 'master_sword') {
+        c.shadowColor = '#6fd7ff';
+        c.shadowBlur = fxLite() ? 10 : 18;
+      }
       drawWeaponShape(c, this.weapon.id, this.animT, this.attack && this.attack.moveIdx);
       c.restore();
     }
@@ -5958,6 +6006,8 @@ class Game {
       this.stageCritBonus = 0;
       this.gambleRoll = null;
       this.gambleBossWave = 0;
+      this.masterSwordT = 0;
+      this._savedMasterWeapon = null;
       this.initAdventure(opts.level || 1, opts.gamble);
     } else if (mode === 'training') this.initTraining();
     else if (mode === 'wall') this.initWall();
@@ -6018,7 +6068,49 @@ class Game {
       this.floater(W * 0.5, 118, `${this.stageAlly.name} helpt je!`, this.stageAlly.color || '#7cf5ff', 15);
     }
     this.allyAssistT = this.stageAlly ? 2.2 : 0;
+    setTimeout(() => { try { if (!this.over) this.maybeRollMasterSword(); } catch (_) {} }, 900);
     AudioSys.play(this.level.boss ? 'boss' : 'battle');
+  }
+
+  maybeRollMasterSword() {
+    if (this.mode !== 'adventure' || this.over || !this.player || !this.player.alive) return;
+    if (this.masterSwordT > 0) return;
+    const w = this.player.weapon;
+    if (!canMasterSwordRoll(w)) return;
+    if (Math.random() >= MASTER_SWORD_CHANCE) return;
+    this.activateMasterSword();
+  }
+
+  activateMasterSword() {
+    const p = this.player;
+    if (!p || !canMasterSwordRoll(p.weapon)) return;
+    this._savedMasterWeapon = p.weapon;
+    p.weapon = buildMasterSwordWeapon(p.weapon);
+    this.masterSwordT = MASTER_SWORD_DURATION;
+    resetWeaponCombo(p);
+    this.banner('MASTER SWORD!', 2.4, '#7cf5ff', 52);
+    this.floater(p.x, p.y - 132, 'Hyrules legendarische kling — 15s!', '#ffd75e', 16);
+    if (!fxLite() && !motionReduced()) {
+      this.burst(p.x + p.face * 18, p.y - 52, '#6fd7ff', 14, { kind: 'spark', size: 2.8 });
+      spawnFxRing(this, p.x, p.y - 48, '#7cf5ff', 12);
+    }
+    try { AudioSys.sting('bonus'); AudioSys.sfx('bonus'); } catch (_) {}
+    haptic(26);
+  }
+
+  deactivateMasterSword(silent) {
+    if (!this._savedMasterWeapon || !this.player) {
+      this.masterSwordT = 0;
+      this._savedMasterWeapon = null;
+      return;
+    }
+    this.player.weapon = this._savedMasterWeapon;
+    this._savedMasterWeapon = null;
+    this.masterSwordT = 0;
+    resetWeaponCombo(this.player);
+    if (!silent) {
+      this.floater(this.player.x, this.player.y - 120, 'Master Sword vervaagt…', '#9db1e3', 14);
+    }
   }
 
   nextWave() {
@@ -6132,6 +6224,10 @@ class Game {
       if (this.dmgBuffT <= 0) this.dmgBuffMul = 1;
     }
     if (this.playerShieldT > 0) this.playerShieldT -= dt;
+    if (this.masterSwordT > 0) {
+      this.masterSwordT -= dt;
+      if (this.masterSwordT <= 0) this.deactivateMasterSword(false);
+    }
     if (this.stageAlly && this.player && this.player.alive && this.monsters.some((m) => m.alive)) {
       this.allyAssistT = (this.allyAssistT || 0) - dt;
       if (this.allyAssistT <= 0) {
@@ -6212,6 +6308,7 @@ class Game {
 
   finishAdventure(win) {
     if (this.over) return;
+    this.deactivateMasterSword(true);
     this.over = true;
     this.inputLocked = true;
     let stars = 0;
@@ -7034,7 +7131,7 @@ class Game {
       if ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2) {
         const hitRoll = rollHitDamage(f, spec, 1);
         const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
-        const dmg = tgt.takeDamage(hitRoll.dmg, kbHit, this);
+        const dmg = tgt.takeDamage(hitRoll.dmg, kbHit, this, { unblockable: spec.unblockable });
         if (hitRoll.crit) applyCritFx(this, tgt.x, tgt.y);
         const col = tgt.playerSlot === 2 ? '#ffb0b8' : (tgt.isPlayer ? '#ff8080' : '#ffe680');
         this.floater(tgt.x, tgt.y - 115, '-' + dmg, col, 16);
@@ -8028,6 +8125,13 @@ class Game {
       if (this.playerShieldT > 0) {
         c.font = '800 13px sans-serif'; c.fillStyle = '#9fd8ff';
         c.fillText(`Schild ${Math.ceil(this.playerShieldT)}s`, W / 2, this.dmgBuffT > 0 ? 124 : 108);
+      }
+      if (this.masterSwordT > 0) {
+        c.font = '900 14px sans-serif'; c.fillStyle = '#7cf5ff';
+        if (!motionReduced()) { c.shadowColor = '#7cf5ff'; c.shadowBlur = 8; }
+        const yMs = 108 + (this.dmgBuffT > 0 ? 16 : 0) + (this.playerShieldT > 0 ? 16 : 0);
+        c.fillText(`MASTER SWORD ${Math.ceil(this.masterSwordT)}s`, W / 2, yMs);
+        c.shadowBlur = 0;
       }
     } else if (this.mode === 'training') {
       const r = this.robot;

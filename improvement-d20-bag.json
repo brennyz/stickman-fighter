@@ -331,6 +331,18 @@
   ],
   "userFeatureLog": [
     {
+      "id": "master-sword-easter-egg",
+      "d20Face": null,
+      "userWords": "2% kans in een level dat je zwaard verandert in de masters sword van Zelda — dubbel damage, niet te blocken, 15 seconden, groot bereik",
+      "versions": [
+        "1.16.5"
+      ],
+      "commits": [],
+      "code": "maybeRollMasterSword (2%), buildMasterSwordWeapon, masterSwordT 15s, spec.unblockable, drawWeaponShape master_sword, HUD timer",
+      "status": "done",
+      "note": "off-d20 user feature; alleen avontuur + slash/energy melee-zwaard"
+    },
+    {
       "id": "menu-tile-scroll-tap",
       "d20Face": null,
       "userWords": "Als je over een tegel heen sleept in menu dan gaat hij direct daarheen, slide is dus gelijk kiezen",

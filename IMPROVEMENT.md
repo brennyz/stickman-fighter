@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-24 | — | **User: Master Sword easter egg.** 2% kans per avontuur-level (slash/energy-zwaard): wapen wordt 15s Master Sword — ×2 dmg, groot bereik, unblockable melee, HUD-timer + Hyrules banner. v1.16.5 / SW v122. |
 | 2026-07-24 | — | **User fix: menu-tegel scroll.** Slepen over tegels (levels, chars, wapens) selecteerde meteen bij loslaten. `initUiTapScrollGuard`: pointer-slop + scroll-delta detectie, blokkeert click/touchend na slide. v1.16.4 / SW v121. |
 | 2026-07-24 | — | **User: wapen 3-move styles (hardening).** Primed chain (volgende move pas na vorige), resets bij hurt/death/dash/subst/special, `sanitizeWeaponSpec` clamps, HUD pips versus. v1.16.3 / SW v120. |
 | 2026-07-24 | — | **User: wapen 3-move styles.** `WEAPON_MOVE_FAMILIES` (8 families × 3 moves), weapon-knop chain binnen ~1,38s, shuriken/fuuma throw-only, wapen-scherm toont move-namen. v1.16.2 / SW v119. |
