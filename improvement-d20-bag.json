@@ -485,6 +485,13 @@
       "version": "1.17.40",
       "doneAt": "2026-07-24T19:12:00Z",
       "cycle": 3
+    },
+    {
+      "face": 15,
+      "note": "inline island hint, menu progress, fewer toasts",
+      "version": "1.17.40",
+      "doneAt": "2026-07-24T19:13:00Z",
+      "cycle": 3
     }
   ],
   "userFeatureLog": [

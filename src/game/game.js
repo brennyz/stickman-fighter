@@ -835,13 +835,6 @@ class Game {
     };
     this.layoutWall(true);
     this.banner('SLOOP DE MUUR!', 1.5, '#ffd75e', 46);
-    if (!modeOnboardingSeen('wall')) {
-      setTimeout(() => {
-        try {
-          if (!this.over) this.banner('Tip: 60s · combo-balk = sneller · ster-steen = bonus', 2.0, '#7cf5ff', 22);
-        } catch (_) {}
-      }, 1200);
-    }
     AudioSys.play('wall');
     this.phase = 'fight';
   }

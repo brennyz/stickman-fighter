@@ -121,6 +121,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-24 | **12** | Content (cyclus 3): monsterboek type-filter + sort (boek/rariteit/unlock/kills), rariteit-tellers, volgende-dex-prestatie tracker, Top jager badge; wapens verzamel-strip. v1.17.9 / SW v136. |
 | 2026-07-24 | **1** | Combat feel (cyclus 3): hit-confirm ring/spark per aanvalstype, parry-window op blok (PARRY! + freeze), counter-hit floater + extra freeze in training/versus — geen dmg×. v1.17.8 / SW v135. |
 | 2026-07-24 | **2** | Training (cyclus 2): telegraph HUD-balk, Chidori-dash-lijn, laser wacht tot speler landt, geen Chidori vs lucht — geen one-shots. v1.17.7 / SW v134. |
+| 2026-07-24 | **15** | Onboarding c3: eiland-hint inline (geen toast), menu 2/5 progress, muur dubbele banner weg, missies 1 toast. v1.17.33 / SW v159. |
 | 2026-07-24 | **8** | PWA c3: pageshow/visibility net refresh, cache hint in offline strip, install cache line, speel/menu offline fallback. v1.17.32 / SW v158. |
 | 2026-07-24 | **20** | Code health c3: dead gamble opener, single P1 pad, volPct helper, hitConfirm cache, saga filter noop. v1.17.31 / SW v157. |
 | 2026-07-24 | **3** | Versus c3: beslissende ronde + ronde-log HUD, spawn invuln timer, round-end countdown, pauze match point. v1.17.30 / SW v156. |
