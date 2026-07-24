@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=174">
+<link rel="stylesheet" href="styles/main.css?v=175">
 </head>
 <body>
 <button id="pauseBtn" aria-label="Pauze">&#10074;&#10074;</button>
@@ -258,6 +258,8 @@
     <div id="setPerfLine" style="font-size:12px;opacity:.75;margin-bottom:10px;line-height:1.45">Perf …</div>
     <div id="saveHealthLine" style="font-size:13px;line-height:1.45;color:#cfe0ff;margin-bottom:12px">Save-status laden…</div>
     <button type="button" class="btn tog" id="btnRestoreBackup"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><rect x="8" y="13" width="8" height="5"/></svg></span>Herstel save uit backup</button>
+    <button type="button" class="btn tog" id="btnSyncBackup" style="margin-top:8px"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12a8 8 0 0113.7-5.7M20 12a8 8 0 01-13.7 5.7"/><path d="M16 4h4v4M8 20H4v-4"/></svg></span>Sync backup = hoofd-save</button>
+    <div style="font-size:11px;opacity:.72;margin:6px 0 10px;line-height:1.4">Drift tussen hoofd en backup? Sync overschrijft backup met je huidige voortgang (geen downgrade).</div>
     <button type="button" class="btn tog" id="btnForceFresh" style="margin-top:8px"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5v6h6"/><path d="M20 19v-6h-6"/><path d="M5.5 15a7 7 0 0011.5 2.5M18.5 9A7 7 0 007 6.5"/></svg></span>Verse versie (cache legen)</button>
     <div style="font-size:11px;opacity:.72;margin:6px 0 10px;line-height:1.4">Menu reageert niet? Tik hier — wist oude PWA-cache en laadt de nieuwste game.js.</div>
     <button type="button" class="btn tog off" id="btnClearSave"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v5M14 11v5"/></svg></span>Nieuwe start (dubbel tikken)</button>
@@ -271,7 +273,7 @@
     <button type="button" class="btn tog" id="btnOpenPlayLink" style="margin-top:8px"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6"/><path d="M20 4L11 13"/><path d="M9 6H5v13h13v-4"/></svg></span>Open vaste link</button>
     <div style="font-weight:900;color:#ffd75e;margin:14px 0 6px">Save export / import</div>
     <div style="font-size:12px;opacity:.85;margin-bottom:8px;line-height:1.4">
-      Export kopieert JSON (ook clipboard). Import: 1× = preview, 2× = toepassen. Backup blijft bij “Nieuwe start”.
+      Export kopieert JSON (clipboard + optioneel download). Import: 1× = preview, 2× = toepassen. Schema v3 bevat pets/ei in meta.
     </div>
     <div id="saveExportHint" style="font-size:12px;color:#9db1e3;margin-bottom:6px;line-height:1.4"></div>
     <textarea id="savePortText" rows="4" style="width:100%;margin-top:4px;border-radius:12px;padding:10px;font-size:11px;background:#0a0d18;color:#cfe0ff;border:1px solid rgba(255,255,255,.15)" placeholder="Plak export-JSON — meta.key moet stickfighter_save_v1 zijn · live preview · 2× Import om te laden"></textarea>
@@ -448,7 +450,7 @@
 </script>
 
 <script src="tunnel-check.js?v=204"></script>
-<script src="game.js?v=174"></script>
+<script src="game.js?v=175"></script>
 <script src="install.js?v=204"></script>
 <script>
 (function () {

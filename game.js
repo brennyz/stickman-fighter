@@ -131,10 +131,10 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
-const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.48';
+const SAVE_EXPORT_SCHEMA = 3;
+const APP_VERSION = '1.17.49';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 174;
+const SW_CACHE_REV = 175;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   advIsland: 0, advFails: {}, advMasterBuff: null,
@@ -556,6 +556,11 @@ function readSaveJson(raw) {
     merged.stars = Object.assign({}, parsed.stars || {});
     merged.dex = Object.assign({}, parsed.dex || {});
     merged.summons = Object.assign({}, parsed.summons || {});
+    merged.pets = Object.assign({}, parsed.pets || {});
+    merged.eggPets = Object.assign({}, parsed.eggPets || {});
+    if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
+    if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
+    if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;
     return merged;
   } catch (e) {
     return null;
@@ -654,6 +659,29 @@ function restoreSaveFromBackup() {
     return true;
   } catch (err) {
     sfReportError('restoreBackup', err, 'Backup herstellen mislukt');
+    return false;
+  }
+}
+
+/** Schrijf hoofd-save opnieuw naar backup (fix drift zonder progressie te verliezen). */
+function syncBackupFromPrimary() {
+  try {
+    if (!save || typeof save !== 'object') return false;
+    const clean = sanitizeSave(save);
+    save = clean;
+    const json = JSON.stringify(clean);
+    localStorage.setItem(SAVE_KEY, json);
+    localStorage.setItem(SAVE_BACKUP_KEY, json);
+    try {
+      localStorage.setItem(SAVE_STAMP_KEY, JSON.stringify({
+        at: new Date().toISOString(),
+        bytes: json.length,
+        app: APP_VERSION,
+      }));
+    } catch (_) {}
+    return true;
+  } catch (err) {
+    sfReportError('syncBackup', err, 'Backup sync mislukt');
     return false;
   }
 }
@@ -1353,6 +1381,17 @@ function saveSanitizeNotes(before, after) {
     return !w || (v !== 'epic' && v !== 'legendary');
   }).length;
   if (badSummon) notes.push(`${badSummon} ongeldige summon`);
+  if (typeof PET_BY_ID !== 'undefined') {
+    const badPet = Object.keys(before.pets || {}).filter(k => !PET_BY_ID[k]).length;
+    if (badPet) notes.push(`${badPet} ongeldige pet`);
+    if (before.activePet && before.activePet !== after.activePet) notes.push('actieve pet reset');
+  }
+  if (typeof EGG_BY_ID !== 'undefined') {
+    const badEgg = Object.keys(before.eggPets || {}).filter(k => !EGG_BY_ID[k]).length;
+    if (badEgg) notes.push(`${badEgg} ongeldig ei-pet`);
+    if (before.activeEggPet && before.activeEggPet !== after.activeEggPet) notes.push('actief ei reset');
+  }
+  if (before.eggDaily && !after.eggDaily) notes.push('ei-dag reset');
   if (!Number.isFinite(Number(before.musicVol)) || !Number.isFinite(Number(before.sfxVol))) {
     notes.push('volume gecorrigeerd');
   }
@@ -1370,14 +1409,28 @@ function saveDriftDetail() {
   if (p.unlocked !== b.unlocked) parts.push(`unlock ${p.unlocked} vs ${b.unlocked}`);
   const pd = Object.keys(p.dex || {}).length, bd = Object.keys(b.dex || {}).length;
   if (pd !== bd) parts.push(`boek ${pd} vs ${bd}`);
+  if (typeof PET_BY_ID !== 'undefined') {
+    const pp = petCountFromSave(p), bp = petCountFromSave(b);
+    if (pp !== bp) parts.push(`pets ${pp} vs ${bp}`);
+  }
+  if (typeof EGG_BY_ID !== 'undefined') {
+    const pe = eggCountFromSave(p), be = eggCountFromSave(b);
+    if (pe !== be) parts.push(`ei ${pe} vs ${be}`);
+  }
+  if (p.style !== b.style) parts.push('stijl verschilt');
   return parts.join(' · ');
 }
 
 function saveExportSummaryLine(s) {
   const st = s || save;
   const summons = summonCountFromSave(st);
-  return `Lv ${st.lvl} · unlock ${st.unlocked} · boek ${dexCountFromSave(st)} · kills ${dexTotalKillsFromSave(st)} · ${Object.keys(st.achievements || {}).length} prestaties` +
-    (summons ? ` · ✦ ${summons} summon` : '');
+  const pets = petCountFromSave(st);
+  const eggs = eggCountFromSave(st);
+  let line = `Lv ${st.lvl} · unlock ${st.unlocked} · boek ${dexCountFromSave(st)} · kills ${dexTotalKillsFromSave(st)} · ${Object.keys(st.achievements || {}).length} prestaties`;
+  if (summons) line += ` · ✦ ${summons} summon`;
+  if (pets) line += ` · pet ${pets}`;
+  if (eggs) line += ` · ei ${eggs}`;
+  return line;
 }
 
 function updateSaveImportPreview(text) {
@@ -1463,6 +1516,27 @@ function summonCountFromSave(s) {
   return Object.keys((s && s.summons) || {}).length;
 }
 
+function petCountFromSave(s) {
+  if (!s || !s.pets || typeof PET_BY_ID === 'undefined') return 0;
+  return Object.keys(s.pets).filter(k => PET_BY_ID[k]).length;
+}
+
+function eggCountFromSave(s) {
+  if (!s || !s.eggPets || typeof EGG_BY_ID === 'undefined') return 0;
+  return Object.keys(s.eggPets).filter(k => EGG_BY_ID[k]).length;
+}
+
+function saveAgeDays(stampAt) {
+  if (!stampAt) return null;
+  try {
+    const d = new Date(stampAt);
+    if (Number.isNaN(d.getTime())) return null;
+    return Math.floor((Date.now() - d.getTime()) / 86400000);
+  } catch (_) {
+    return null;
+  }
+}
+
 function exportSaveJson() {
   const clean = sanitizeSave(save);
   const payload = Object.assign({}, clean, {
@@ -1479,6 +1553,9 @@ function exportSaveJson() {
         kills: dexTotalKillsFromSave(clean),
         achievements: Object.keys(clean.achievements || {}).length,
         summons: summonCountFromSave(clean),
+        pets: petCountFromSave(clean),
+        eggs: eggCountFromSave(clean),
+        style: clean.style || 'classic',
       },
       note: 'Stickman Fighter save — plak in Instellingen → Import (2× tikken). Wissel van URL? Export vóór en import ná.',
     },
@@ -1517,7 +1594,10 @@ function saveHealthSummary() {
     driftDetail: saveDriftDetail(),
     stampAt: diag.stampAt,
     summons: summonCountFromSave(save),
+    pets: petCountFromSave(save),
+    eggs: eggCountFromSave(save),
     exportSchema: SAVE_EXPORT_SCHEMA,
+    saveAgeDays: saveAgeDays(diag.stampAt),
   };
 }
 
@@ -1543,12 +1623,28 @@ function importPreviewWarnings(next, meta) {
   if (meta && meta.app) lines.push('App-versie export: v' + meta.app);
   if (meta && meta.summary && typeof meta.summary === 'object') {
     const s = meta.summary;
-    lines.push(`Export-samenvatting: Lv ${s.lvl} · unlock ${s.unlocked} · boek ${s.dex} · ${s.achievements} prestaties`);
+    let sum = `Export-samenvatting: Lv ${s.lvl} · unlock ${s.unlocked} · boek ${s.dex} · ${s.achievements} prestaties`;
+    if (s.summons) sum += ` · ✦ ${s.summons}`;
+    if (s.pets) sum += ` · pet ${s.pets}`;
+    if (s.eggs) sum += ` · ei ${s.eggs}`;
+    if (s.style && s.style !== 'classic') sum += ` · stijl ${s.style}`;
+    lines.push(sum);
   }
   const summonN = summonCountFromSave(next);
   const curSummonN = summonCountFromSave(save);
   if (summonN > curSummonN) lines.push(`+${summonN - curSummonN} summon-wapen(s) in import`);
   else if (summonN < curSummonN) lines.push(`Minder summons dan nu (${summonN} vs ${curSummonN})`);
+  const petN = petCountFromSave(next);
+  const curPetN = petCountFromSave(save);
+  if (petN > curPetN) lines.push(`+${petN - curPetN} dex-pet(s) in import`);
+  else if (petN < curPetN) lines.push(`Minder pets dan nu (${petN} vs ${curPetN})`);
+  const eggN = eggCountFromSave(next);
+  const curEggN = eggCountFromSave(save);
+  if (eggN > curEggN) lines.push(`+${eggN - curEggN} ei-pet(s) in import`);
+  else if (eggN < curEggN) lines.push(`Minder ei-pets dan nu (${eggN} vs ${curEggN})`);
+  if (next.style !== save.style) {
+    lines.push(`Stijl ${save.style || 'classic'} → ${next.style || 'classic'}`);
+  }
   if (next.lvl < save.lvl || next.unlocked < save.unlocked) {
     lines.push('Lager niveau/unlock dan huidige save op dit apparaat');
   } else if (next.lvl > save.lvl || next.unlocked > save.unlocked) {
@@ -1575,6 +1671,11 @@ function previewImportSave(text) {
   clean.stars = Object.assign({}, parsed.stars || {});
   clean.dex = Object.assign({}, parsed.dex || {});
   clean.summons = Object.assign({}, parsed.summons || {});
+  clean.pets = Object.assign({}, parsed.pets || {});
+  clean.eggPets = Object.assign({}, parsed.eggPets || {});
+  if (parsed.eggDaily && typeof parsed.eggDaily === 'object') clean.eggDaily = Object.assign({}, parsed.eggDaily);
+  if (typeof parsed.activePet === 'string') clean.activePet = parsed.activePet;
+  if (typeof parsed.activeEggPet === 'string') clean.activeEggPet = parsed.activeEggPet;
   const final = sanitizeSave(clean);
   const warnings = importPreviewWarnings(final, meta);
   const rawMerged = Object.assign({}, DEFAULT_SAVE, parsed);
@@ -1583,6 +1684,11 @@ function previewImportSave(text) {
   rawMerged.stars = Object.assign({}, parsed.stars || {});
   rawMerged.dex = Object.assign({}, parsed.dex || {});
   rawMerged.summons = Object.assign({}, parsed.summons || {});
+  rawMerged.pets = Object.assign({}, parsed.pets || {});
+  rawMerged.eggPets = Object.assign({}, parsed.eggPets || {});
+  if (parsed.eggDaily && typeof parsed.eggDaily === 'object') rawMerged.eggDaily = Object.assign({}, parsed.eggDaily);
+  if (typeof parsed.activePet === 'string') rawMerged.activePet = parsed.activePet;
+  if (typeof parsed.activeEggPet === 'string') rawMerged.activeEggPet = parsed.activeEggPet;
   const repairNotes = saveSanitizeNotes(rawMerged, final);
   if (repairNotes.length) warnings.push('Reparatie: ' + repairNotes.slice(0, 3).join(' · '));
   return { save: final, meta, warnings };
@@ -1662,14 +1768,21 @@ function recoverToMenu() {
   }
 }
 function importSaveJson(text) {
-  const { save: next } = previewImportSave(text);
+  const { save: next, warnings } = previewImportSave(text);
   save = next;
   if (!persistOrToast('import')) throw new Error('Import gelukt maar opslaan mislukt — probeer opnieuw');
   checkAchievements();
   UI.renderMenu();
   if (UI.renderMissions) UI.renderMissions();
   if (UI.renderSettings) UI.renderSettings();
-  userToast(`Save geïmporteerd · Lv ${save.lvl} · level ${save.unlocked}`, 3200);
+  const repair = (warnings || []).find(w => w.startsWith('Reparatie:'));
+  userToast(repair
+    ? `Save geïmporteerd · Lv ${save.lvl} · ${repair.replace('Reparatie: ', '')}`
+    : `Save geïmporteerd · Lv ${save.lvl} · level ${save.unlocked}`, 3400);
+}
+
+function exportSaveFilename() {
+  return `stickfighter-save-Lv${save.lvl}-unlock${save.unlocked}.json`;
 }
 
 function recordLastPlay(mode, opts) {
@@ -12928,9 +13041,17 @@ const UI = {
       let healthHtml =
         `<b>Lv ${h.lvl}</b> · unlock ${h.unlocked} · boek ${h.dex} · kills ${h.kills}` +
         (h.summons ? ` · ✦ ${h.summons} summon` : '') +
+        (h.pets ? ` · pet ${h.pets}` : '') +
+        (h.eggs ? ` · ei ${h.eggs}` : '') +
         `${sizeLine}<br>` +
         statusPrimary +
         (h.backupOk ? ` · ${SVG_CHECK_MINI} Backup (Lv ${h.backupLvl})` : ' · ⚠ Geen backup');
+      if (h.drift && h.backupOk) {
+        healthHtml += `<br><span style="opacity:.85;color:#ffd75e">Drift: ${h.driftDetail || 'hoofd ≠ backup'} — Herstel backup óf Sync backup</span>`;
+      }
+      if (h.saveAgeDays != null && h.saveAgeDays >= 14) {
+        healthHtml += `<br><span style="opacity:.75;color:#ffb0b8">Laatste save ${h.saveAgeDays} dagen geleden — export als vangnet</span>`;
+      }
       if (h.stampAt) {
         let stampLabel = '';
         try {
@@ -13269,9 +13390,18 @@ if (btnExportSave) btnExportSave.addEventListener('click', () => {
       }
     } catch (_) {}
     AudioSys.sfx('select');
+    try {
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = exportSaveFilename();
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (_) {}
     UI.toast(clipped
-      ? `Save in klembord · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)})`
-      : `Save in vak · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)}) — kopieer handmatig`, 3400);
+      ? `Save gekopieerd + download · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)})`
+      : `Save in vak + download · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)})`, 3600);
     UI.renderSettings();
   })(), 'exportSave', 'Export mislukt — kopieer JSON handmatig uit het vak');
 });
@@ -13397,6 +13527,23 @@ if (btnRestoreBackup) btnRestoreBackup.addEventListener('click', () => {
       UI.renderSettings();
     } else UI.toast('Backup herstellen mislukt — export save als je die hebt', 3200);
   }, 'restoreBackup', 'Backup herstellen mislukt');
+});
+const btnSyncBackup = document.getElementById('btnSyncBackup');
+if (btnSyncBackup) btnSyncBackup.addEventListener('click', () => {
+  safeUiAction(() => {
+    AudioSys.sfx('select');
+    if (!window.__sfSyncBackupConfirm) {
+      window.__sfSyncBackupConfirm = true;
+      UI.toast('Sync overschrijft backup met hoofd-save — tik nogmaals', 3800);
+      setTimeout(() => { window.__sfSyncBackupConfirm = false; }, 5000);
+      return;
+    }
+    window.__sfSyncBackupConfirm = false;
+    if (syncBackupFromPrimary()) {
+      UI.toast('Backup gesynchroniseerd met hoofd-save', 2800);
+      UI.renderSettings();
+    } else UI.toast('Sync mislukt — export save als vangnet', 3200);
+  }, 'syncBackup', 'Backup sync mislukt');
 });
 const btnClearSave = document.getElementById('btnClearSave');
 if (btnClearSave) btnClearSave.addEventListener('click', () => {

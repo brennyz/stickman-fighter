@@ -219,9 +219,18 @@ if (btnExportSave) btnExportSave.addEventListener('click', () => {
       }
     } catch (_) {}
     AudioSys.sfx('select');
+    try {
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = exportSaveFilename();
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (_) {}
     UI.toast(clipped
-      ? `Save in klembord · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)})`
-      : `Save in vak · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)}) — kopieer handmatig`, 3400);
+      ? `Save gekopieerd + download · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)})`
+      : `Save in vak + download · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)})`, 3600);
     UI.renderSettings();
   })(), 'exportSave', 'Export mislukt — kopieer JSON handmatig uit het vak');
 });
@@ -347,6 +356,23 @@ if (btnRestoreBackup) btnRestoreBackup.addEventListener('click', () => {
       UI.renderSettings();
     } else UI.toast('Backup herstellen mislukt — export save als je die hebt', 3200);
   }, 'restoreBackup', 'Backup herstellen mislukt');
+});
+const btnSyncBackup = document.getElementById('btnSyncBackup');
+if (btnSyncBackup) btnSyncBackup.addEventListener('click', () => {
+  safeUiAction(() => {
+    AudioSys.sfx('select');
+    if (!window.__sfSyncBackupConfirm) {
+      window.__sfSyncBackupConfirm = true;
+      UI.toast('Sync overschrijft backup met hoofd-save — tik nogmaals', 3800);
+      setTimeout(() => { window.__sfSyncBackupConfirm = false; }, 5000);
+      return;
+    }
+    window.__sfSyncBackupConfirm = false;
+    if (syncBackupFromPrimary()) {
+      UI.toast('Backup gesynchroniseerd met hoofd-save', 2800);
+      UI.renderSettings();
+    } else UI.toast('Sync mislukt — export save als vangnet', 3200);
+  }, 'syncBackup', 'Backup sync mislukt');
 });
 const btnClearSave = document.getElementById('btnClearSave');
 if (btnClearSave) btnClearSave.addEventListener('click', () => {

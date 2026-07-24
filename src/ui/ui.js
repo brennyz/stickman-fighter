@@ -1766,9 +1766,17 @@ const UI = {
       let healthHtml =
         `<b>Lv ${h.lvl}</b> · unlock ${h.unlocked} · boek ${h.dex} · kills ${h.kills}` +
         (h.summons ? ` · ✦ ${h.summons} summon` : '') +
+        (h.pets ? ` · pet ${h.pets}` : '') +
+        (h.eggs ? ` · ei ${h.eggs}` : '') +
         `${sizeLine}<br>` +
         statusPrimary +
         (h.backupOk ? ` · ${SVG_CHECK_MINI} Backup (Lv ${h.backupLvl})` : ' · ⚠ Geen backup');
+      if (h.drift && h.backupOk) {
+        healthHtml += `<br><span style="opacity:.85;color:#ffd75e">Drift: ${h.driftDetail || 'hoofd ≠ backup'} — Herstel backup óf Sync backup</span>`;
+      }
+      if (h.saveAgeDays != null && h.saveAgeDays >= 14) {
+        healthHtml += `<br><span style="opacity:.75;color:#ffb0b8">Laatste save ${h.saveAgeDays} dagen geleden — export als vangnet</span>`;
+      }
       if (h.stampAt) {
         let stampLabel = '';
         try {

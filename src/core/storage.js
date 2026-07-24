@@ -2,10 +2,10 @@
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
-const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.48';
+const SAVE_EXPORT_SCHEMA = 3;
+const APP_VERSION = '1.17.49';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 174;
+const SW_CACHE_REV = 175;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   advIsland: 0, advFails: {}, advMasterBuff: null,
@@ -427,6 +427,11 @@ function readSaveJson(raw) {
     merged.stars = Object.assign({}, parsed.stars || {});
     merged.dex = Object.assign({}, parsed.dex || {});
     merged.summons = Object.assign({}, parsed.summons || {});
+    merged.pets = Object.assign({}, parsed.pets || {});
+    merged.eggPets = Object.assign({}, parsed.eggPets || {});
+    if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
+    if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
+    if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;
     return merged;
   } catch (e) {
     return null;
@@ -525,6 +530,29 @@ function restoreSaveFromBackup() {
     return true;
   } catch (err) {
     sfReportError('restoreBackup', err, 'Backup herstellen mislukt');
+    return false;
+  }
+}
+
+/** Schrijf hoofd-save opnieuw naar backup (fix drift zonder progressie te verliezen). */
+function syncBackupFromPrimary() {
+  try {
+    if (!save || typeof save !== 'object') return false;
+    const clean = sanitizeSave(save);
+    save = clean;
+    const json = JSON.stringify(clean);
+    localStorage.setItem(SAVE_KEY, json);
+    localStorage.setItem(SAVE_BACKUP_KEY, json);
+    try {
+      localStorage.setItem(SAVE_STAMP_KEY, JSON.stringify({
+        at: new Date().toISOString(),
+        bytes: json.length,
+        app: APP_VERSION,
+      }));
+    } catch (_) {}
+    return true;
+  } catch (err) {
+    sfReportError('syncBackup', err, 'Backup sync mislukt');
     return false;
   }
 }
