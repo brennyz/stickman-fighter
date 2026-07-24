@@ -3,11 +3,12 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.54';
+const APP_VERSION = '1.17.55';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 180;
+const SW_CACHE_REV = 181;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
+
 
 
   advIsland: 0, advFails: {}, advMasterBuff: null,

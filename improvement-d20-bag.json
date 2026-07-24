@@ -8,7 +8,6 @@
     4,
     5,
     6,
-    8,
     9,
     10,
     11,
@@ -558,6 +557,13 @@
       "face": 20,
       "note": "volPct prelude menuBackdropLiteFlags",
       "version": "1.17.54",
+      "doneAt": "2026-07-24T21:00:00Z",
+      "cycle": 4
+    },
+    {
+      "face": 8,
+      "note": "SW shell LIVE-LINK precache",
+      "version": "1.17.55",
       "doneAt": "2026-07-24T21:00:00Z",
       "cycle": 4
     }

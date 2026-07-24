@@ -133,11 +133,12 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.54';
+const APP_VERSION = '1.17.55';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 180;
+const SW_CACHE_REV = 181;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
+
 
 
   advIsland: 0, advFails: {}, advMasterBuff: null,
@@ -13691,7 +13692,13 @@ const UI = {
     if (pmL) pmL.textContent = mPct + '%';
     if (psL) psL.textContent = sPct + '%';
     const statusEl = document.getElementById('pauseAudioStatus');
-    if (statusEl) statusEl.textContent = audioMixStatusLine(true);
+    if (statusEl) {
+      let line = audioMixStatusLine(true);
+      if (typeof navigator.onLine === 'boolean' && !navigator.onLine) {
+        line += ' · Offline — save op dit apparaat';
+      }
+      statusEl.textContent = line;
+    }
   },
 
   showResult(win, data) {
@@ -14643,11 +14650,13 @@ function updateNetStatus(ev) {
     return;
   }
   if (swReady && 'caches' in window && !window.__sfOfflineReadyShown) {
-    caches.match('./game.js', { ignoreSearch: true }).then((js) => {
-      if (!js) return;
-      return caches.match('./index.html', { ignoreSearch: true }).then((html) => {
-        if (!html || window.__sfOfflineReadyShown) return;
-        window.__sfOfflineReadyShown = 1;
+    Promise.all([
+      caches.match('./game.js', { ignoreSearch: true }),
+      caches.match('./index.html', { ignoreSearch: true }),
+      caches.match('./styles/main.css', { ignoreSearch: true }),
+    ]).then(([js, html, css]) => {
+      if (!js || !html || !css || window.__sfOfflineReadyShown) return;
+      window.__sfOfflineReadyShown = 1;
         const el2 = document.getElementById('netStatus');
         if (!el2 || window.__sfSwUpdateReady || !navigator.onLine) return;
         el2.hidden = false;
@@ -14662,7 +14671,6 @@ function updateNetStatus(ev) {
             el2.textContent = '';
           }
         }, 4500);
-      });
     }).catch(() => {});
   }
   el.hidden = true;

@@ -1950,7 +1950,13 @@ const UI = {
     if (pmL) pmL.textContent = mPct + '%';
     if (psL) psL.textContent = sPct + '%';
     const statusEl = document.getElementById('pauseAudioStatus');
-    if (statusEl) statusEl.textContent = audioMixStatusLine(true);
+    if (statusEl) {
+      let line = audioMixStatusLine(true);
+      if (typeof navigator.onLine === 'boolean' && !navigator.onLine) {
+        line += ' · Offline — save op dit apparaat';
+      }
+      statusEl.textContent = line;
+    }
   },
 
   showResult(win, data) {

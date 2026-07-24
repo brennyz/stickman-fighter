@@ -40,11 +40,26 @@
     let line = swOk
       ? 'Offline-cache actief — speel ook zonder netwerk'
       : 'Offline-cache: open 1× online na installatie';
-    try {
-      const c = sessionStorage.getItem('sf_sw_cache');
-      if (c) line += ' · ' + c.replace('stickfighter-app-v', 'SW v');
-    } catch (_) {}
-    cacheStatus.textContent = line;
+    const finish = () => {
+      try {
+        const c = sessionStorage.getItem('sf_sw_cache');
+        if (c) line += ' · ' + c.replace('stickfighter-app-v', 'SW v');
+      } catch (_) {}
+      cacheStatus.textContent = line;
+    };
+    if (swOk && 'caches' in window) {
+      Promise.all([
+        caches.match('./game.js', { ignoreSearch: true }),
+        caches.match('./index.html', { ignoreSearch: true }),
+        caches.match('./styles/main.css', { ignoreSearch: true }),
+      ]).then(([js, html, css]) => {
+        if (js && html && css) line = 'Offline-shell compleet — JS, menu & CSS in cache';
+        else if (swOk) line = 'Cache laden… — even online blijven voor volledige shell';
+        finish();
+      }).catch(finish);
+      return;
+    }
+    finish();
   }
 
   function refreshMenuButton() {

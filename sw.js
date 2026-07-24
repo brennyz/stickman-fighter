@@ -1,5 +1,6 @@
 /* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 2 */
-const CACHE = 'stickfighter-app-v180';
+const CACHE = 'stickfighter-app-v181';
+
 
 
 const ASSETS = [
@@ -16,6 +17,7 @@ const ASSETS = [
   './manifest.webmanifest',
   './hosting.json',
   './health.json',
+  './LIVE-LINK.txt',
   './icons/icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -31,6 +33,7 @@ button{font:inherit;font-weight:800;padding:12px 18px;border-radius:12px;border:
 </style></head><body>
 <h1>Offline</h1>
 <p>Geen netwerk. Open via je <b>app-icoon</b> (PWA) als je het spel al eens online opende — save blijft lokaal.</p>
+<p class="small">Vaste link: brennyz.github.io/stickman-fighter/speel.html</p>
 <button type="button" onclick="location.reload()">Opnieuw proberen</button>
 <p class="small">Cache: ${CACHE}</p>
 </body></html>`;
@@ -43,6 +46,7 @@ function isNetworkFirstPath(pathname) {
     p.endsWith('/LIVE-LINK.txt') ||
     p.endsWith('/manifest.webmanifest') ||
     p.endsWith('/hosting.json') ||
+    p.endsWith('/LIVE-LINK.txt') ||
     p.endsWith('/index.html') ||
     p.endsWith('/ipad.html') ||
     p.endsWith('/android.html') ||
