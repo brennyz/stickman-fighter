@@ -6,7 +6,7 @@
    Stickman-vechtgame voor iPad (touch) en desktop (toetsenbord).
    Modi: Avontuur, Training, Versus 2P, Muur, Mats (coinrun).
    Audio (sfx + bgm) is procedureel via Web Audio — rechtenvrij.
-   d20: dead gamble opener, single P1 pad, volPct, hitConfirm cache.
+   d20 c4: volPct prelude, menuBackdropLiteFlags, motionReduced guards.
    ========================================================================= */
 
 const TAU = Math.PI * 2;
@@ -72,7 +72,7 @@ function fxCaps() {
   if (save.liteFx) mul = 0.55;
   else if (Perf.tier >= 2) mul = 0.42;
   else if (Perf.tier >= 1) mul = 0.68;
-  if (typeof motionReduced === 'function' && motionReduced()) mul *= 0.62;
+  if (motionReduced()) mul *= 0.62;
   const floor = { particles: 24, floaters: 8, projectiles: 16, banners: 2, afterimages: 4 };
   const out = {};
   for (const k of Object.keys(FX_CAP)) {
@@ -113,7 +113,7 @@ function perfFxSummary() {
   return { fps, tier: Perf.tier, dpr, maxDpr: maxCanvasDpr(), caps };
 }
 function maxCanvasDpr() {
-  const rm = typeof motionReduced === 'function' && motionReduced();
+  const rm = motionReduced();
   if (save.liteFx || rm) return 1.25;
   if (typeof state !== 'undefined' && state !== 'play') return IS_TOUCH ? 1.15 : 1.25;
   if (Perf.tier >= 2) return 1;
@@ -123,6 +123,7 @@ function maxCanvasDpr() {
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
 const lerp = (a, b, t) => a + (b - a) * t;
 const rand = (a, b) => a + Math.random() * (b - a);
+const volPct = (v, d) => Math.round((Number(v ?? d)) * 100);
 const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
 
@@ -132,11 +133,12 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.53';
+const APP_VERSION = '1.17.54';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 179;
+const SW_CACHE_REV = 180;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
+
 
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -6487,7 +6489,7 @@ function drawWeaponShape(c, id, spin, moveIdx) {
 }
 
 function fxLite() {
-  return !!(save.liteFx || Perf.tier >= 2 || (typeof motionReduced === 'function' && motionReduced()));
+  return !!(save.liteFx || Perf.tier >= 2 || motionReduced());
 }
 
 function ensureParticleRoom(game, slots) {
@@ -11941,10 +11943,6 @@ function hubTileStatLine(hub) {
   }
 }
 
-function volPct(v, d) {
-  return Math.round((Number(v ?? d)) * 100);
-}
-
 function audioMixStatusLine(inPause) {
   const mPct = volPct(save.musicVol, 0.85);
   const sPct = volPct(save.sfxVol, 1);
@@ -13636,12 +13634,14 @@ const UI = {
     }
     bindSavePortPreview();
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
-    setVal('setMusicVol', volPct(save.musicVol, 0.85));
-    setVal('setSfxVol', volPct(save.sfxVol, 1));
+    const mPct = volPct(save.musicVol, 0.85);
+    const sPct = volPct(save.sfxVol, 1);
+    setVal('setMusicVol', mPct);
+    setVal('setSfxVol', sPct);
     const lblM = document.getElementById('setMusicVolLbl');
     const lblS = document.getElementById('setSfxVolLbl');
-    if (lblM) lblM.textContent = volPct(save.musicVol, 0.85) + '%';
-    if (lblS) lblS.textContent = volPct(save.sfxVol, 1) + '%';
+    if (lblM) lblM.textContent = mPct + '%';
+    if (lblS) lblS.textContent = sPct + '%';
     ['setShake', 'setHaptics', 'setComboHud', 'setBigTouch', 'setReducedMotion', 'setLiteFx', 'setHighContrast'].forEach((id, i) => {
       const el = document.getElementById(id);
       if (!el) return;
@@ -14291,9 +14291,13 @@ function menuBgCacheInvalidate() {
   menuBgCacheKey = '';
 }
 
-function ensureMenuBgCache() {
+function menuBackdropLiteFlags() {
   const lite = save.liteFx || motionReduced() || Perf.tier >= 1;
-  const ultraLite = lite || Perf.tier >= 2;
+  return { lite, ultraLite: lite || Perf.tier >= 2 };
+}
+
+function ensureMenuBgCache() {
+  const { lite, ultraLite } = menuBackdropLiteFlags();
   const key = W + 'x' + H + '@' + DPR + 't' + Perf.tier + (lite ? 'L' : '') + (ultraLite ? 'U' : '');
   if (menuBgCache && menuBgCacheKey === key) return menuBgCache;
   menuBgCacheKey = key;
@@ -14329,8 +14333,7 @@ function ensureMenuBgCache() {
 }
 
 function drawMenuBackdrop(c, t) {
-  const lite = save.liteFx || motionReduced() || Perf.tier >= 1;
-  const ultraLite = lite || Perf.tier >= 2;
+  const { lite, ultraLite } = menuBackdropLiteFlags();
   const cache = ensureMenuBgCache();
   if (cache) {
     c.drawImage(cache, 0, 0, W, H);
@@ -14358,10 +14361,12 @@ function drawMenuBackdrop(c, t) {
   }
   c.save();
   c.translate(W * 0.5, H * 0.42);
-  if (typeof drawJutsuOrb === 'function' && !lite) {
-    drawJutsuOrb(c, 0, 0, 28 + Math.sin(t * 2) * 4, t * 3, 'rasengan', 0.85);
-  } else if (typeof drawJutsuOrb === 'function' && lite) {
-    drawJutsuOrb(c, 0, 0, 22, t * 2, 'rasengan', 0.55);
+  if (typeof drawJutsuOrb === 'function') {
+    drawJutsuOrb(c, 0, 0,
+      lite ? 22 : 28 + Math.sin(t * 2) * 4,
+      lite ? t * 2 : t * 3,
+      'rasengan',
+      lite ? 0.55 : 0.85);
   }
   c.restore();
   c.globalAlpha = 1;

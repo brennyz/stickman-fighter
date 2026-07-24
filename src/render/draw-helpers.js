@@ -231,7 +231,7 @@ function drawWeaponShape(c, id, spin, moveIdx) {
 }
 
 function fxLite() {
-  return !!(save.liteFx || Perf.tier >= 2 || (typeof motionReduced === 'function' && motionReduced()));
+  return !!(save.liteFx || Perf.tier >= 2 || motionReduced());
 }
 
 function ensureParticleRoom(game, slots) {

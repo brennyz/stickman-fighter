@@ -17,8 +17,7 @@
     14,
     15,
     17,
-    19,
-    20
+    19
   ],
   "lastRoll": {
     "face": 1,
@@ -553,6 +552,13 @@
       "note": "share rev host badge speel og:url",
       "version": "1.17.53",
       "doneAt": "2026-07-24T20:43:14Z",
+      "cycle": 4
+    },
+    {
+      "face": 20,
+      "note": "volPct prelude menuBackdropLiteFlags",
+      "version": "1.17.54",
+      "doneAt": "2026-07-24T21:00:00Z",
       "cycle": 4
     }
   ],
