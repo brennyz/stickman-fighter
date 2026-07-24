@@ -3,9 +3,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.58';
+const APP_VERSION = '1.17.59';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 184;
+const SW_CACHE_REV = 185;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -15,7 +15,7 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
-  reducedMotion: false, liteFx: false, highContrast: false, lastPlay: null, tipsSeen: {},
+  reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {} };
 
@@ -50,7 +50,10 @@ function adventureProgressLine() {
   const cur = currentAdvIsland();
   const prog = islandProgress(cur);
   const isl = islandMeta(cur);
-  return `Eiland ${cur}/5 · ${isl.name} · ${prog.cleared}/${prog.total} · unlock Lv ${save.unlocked}/${MAX_LEVEL}`;
+  return t('island.progress', {
+    cur, name: islandLabel(cur, 'name'), cleared: prog.cleared, total: prog.total,
+    unlocked: save.unlocked, max: MAX_LEVEL,
+  });
 }
 function islandFromLevel(n) { return Math.min(5, Math.max(1, Math.ceil(n / LEVELS_PER_ISLAND))); }
 function islandLevelRange(islandId) {
@@ -438,6 +441,7 @@ function readSaveJson(raw) {
     if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
     if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;
+    if (typeof parsed.lang === 'string' && SUPPORTED_LANGS.includes(parsed.lang)) merged.lang = parsed.lang;
     return merged;
   } catch (e) {
     return null;
@@ -697,6 +701,7 @@ function sanitizeSave(s) {
   out.weaponMastery = cleanMastery;
 
   out.petCoins = clamp(Math.floor(Number(out.petCoins) || 0), 0, 999999);
+  if (out.lang != null && !SUPPORTED_LANGS.includes(out.lang)) out.lang = null;
 
   out.stats = Object.assign({}, DEFAULT_SAVE.stats, out.stats || {});
   const cleanStats = {};

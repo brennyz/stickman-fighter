@@ -453,6 +453,7 @@ function bootGame() {
   safeCall(() => { if (typeof window.sfTunnelNukeOverlay === 'function') window.sfTunnelNukeOverlay(); }, 'nuke');
   safeCall(syncPlayLayer, 'syncPlay');
   safeCall(resize, 'resize');
+  safeCall(() => initLang(), 'i18n');
   safeCall(() => UI.renderMenu(), 'menu');
   safeCall(ensureDaily, 'daily');
   safeCall(checkAchievements, 'ach');

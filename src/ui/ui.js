@@ -180,7 +180,11 @@ function hubTileStatLine(hub) {
   switch (hub) {
     case 'adventure': {
       const cur = currentAdvIsland();
-      return `Eiland ${cur}/5 · unlock Lv ${save.unlocked}/${MAX_LEVEL}`;
+      const prog = islandProgress(cur);
+      return t('island.progress', {
+        cur, name: islandLabel(cur, 'name'), cleared: prog.cleared, total: prog.total,
+        unlocked: save.unlocked, max: MAX_LEVEL,
+      });
     }
     case 'arcade': {
       const bits = [];
@@ -190,12 +194,12 @@ function hubTileStatLine(hub) {
       if (mats > 0) bits.push(`mats ${mats}`);
       const pc = petCoinsBalance();
       if (pc > 0) bits.push(`${pc} pet 🪙`);
-      return bits.length ? bits.join(' · ') : '3 snelle modi';
+      return bits.length ? bits.join(' · ') : t('hub.modes3');
     }
     case 'versus': {
       const w = save.stats?.vsWins || 0;
       const m = save.stats?.vsMatches || 0;
-      return m > 0 ? `${w}/${m} gewonnen` : '23 vechters · lokaal';
+      return m > 0 ? t('hub.vsRecord', { w, m }) : t('hub.fightersLocal');
     }
     case 'collect':
       return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ${petCoinsBalance()} pet 🪙`;
@@ -208,10 +212,10 @@ function audioMixStatusLine(inPause) {
   const mPct = volPct(save.musicVol, 0.85);
   const sPct = volPct(save.sfxVol, 1);
   const bits = [];
-  if (!save.music) bits.push('Muziek uit');
-  else bits.push(`Muziek ${mPct}%` + (inPause ? ' · BGM ~75% zachter in pauze' : ''));
-  if (!save.sfx) bits.push('Geluid uit');
-  else bits.push(`SFX ${sPct}%` + (inPause ? ' · iets harder voor knoppen' : ''));
+  if (!save.music) bits.push(t('audio.musicOff'));
+  else bits.push(t('audio.musicPct', { pct: mPct }) + (inPause ? ' · BGM ~75%' : ''));
+  if (!save.sfx) bits.push(t('audio.sfxOff'));
+  else bits.push(t('audio.sfxPct', { pct: sPct }));
   return bits.join(' · ');
 }
 
@@ -233,20 +237,7 @@ const UI = {
     return this.screens.find(sid => document.getElementById(sid)?.classList.contains('active')) || null;
   },
 
-  BACK_LABELS: {
-    modeHubScreen: '\u2190 Menu',
-    levelScreen: '\u2190 Menu',
-    gambleScreen: '\u2190 Levels',
-    weaponScreen: '\u2190 Collectie',
-    petScreen: '\u2190 Collectie',
-    styleScreen: '\u2190 Collectie',
-    dexScreen: '\u2190 Collectie',
-    charSelectScreen: '\u2190 Menu',
-    missionsScreen: '\u2190 Menu',
-    settingsScreen: '\u2190 Menu',
-    helpScreen: '\u2190 Menu',
-    installScreen: '\u2190 Menu',
-  },
+  BACK_LABELS: {},
 
   syncBackLabels() {
     const active = this.activeScreen();
@@ -751,13 +742,14 @@ const UI = {
     const title = document.getElementById('modeHubTitle');
     const sub = document.getElementById('modeHubSub');
     const stepEl = document.getElementById('modeHubStep');
+    const isArcade = this.modeHubId === 'arcade';
     if (badge) {
-      badge.textContent = meta.badge;
+      badge.textContent = t(isArcade ? 'hub.solo' : 'hub.collection');
       badge.className = 'menu-badge ' + meta.badgeClass;
     }
-    if (title) title.textContent = meta.title;
-    if (sub) sub.textContent = meta.sub;
-    if (stepEl) stepEl.textContent = 'Stap 2 · ' + meta.title;
+    if (title) title.textContent = t(isArcade ? 'hub.arcadeTitle' : 'hub.collectTitle');
+    if (sub) sub.textContent = t(isArcade ? 'hub.arcadeSub' : 'hub.collectSub');
+    if (stepEl) stepEl.textContent = t('hub.step');
     document.querySelectorAll('[data-hub-panel]').forEach((panel) => {
       panel.hidden = panel.dataset.hubPanel !== this.modeHubId;
     });
@@ -818,10 +810,13 @@ const UI = {
     const featHub = lp?.mode ? hubForPlayMode(lp.mode) : null;
     if (cont) {
       if (lp && lp.mode) {
-        const labels = { adventure: `Avontuur Lv ${lp.level || 1}`, training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Mats · munten' };
+        const labels = {
+          adventure: t('modes.adventure') + ` Lv ${lp.level || 1}`,
+          training: t('modes.training'), wall: t('modes.wall'), versus: t('modes.versus'), coinrun: t('modes.coinrun'),
+        };
         cont.style.display = 'flex';
         cont.querySelector('div').innerHTML =
-          `Verder spelen<small>${labels[lp.mode] || lp.mode}</small>`;
+          `${t('menu.continue')}<small>${labels[lp.mode] || lp.mode}</small>`;
       } else cont.style.display = 'none';
     }
     document.querySelectorAll('[data-hub]').forEach((el) => {
@@ -873,8 +868,8 @@ const UI = {
       missBtn.classList.toggle('tog-alert', missAlert);
       if (missLbl) {
         if (readyClaim > 0) missLbl.textContent = `+${dailyUnclaimedXp()} XP`;
-        else if (bonusReady) missLbl.textContent = 'Dagbonus';
-        else missLbl.textContent = 'Missies';
+        else if (bonusReady) missLbl.textContent = t('menu.dayBonus');
+        else missLbl.textContent = t('menu.missions');
       }
     }
     const playLinkEl = document.getElementById('menuPlayLink');
@@ -1092,8 +1087,8 @@ const UI = {
       el.style.borderColor = got ? (isNew ? '#7cf5ff' : '#ffd75e') : undefined;
       const pct = Math.min(100, Math.round(frac * 100));
       const progBar = got ? '' : `<div class="xpline" style="margin-top:6px;height:5px"><div style="width:${pct}%"></div></div>`;
-      el.innerHTML = `<div class="cname">${achIconSvg(ach.id)} ${ach.name}${isNew ? ' · nieuw' : ''}${near ? ' · bijna' : ''}</div>` +
-        `<div class="cinfo">${ach.desc}${got ? ` · ${SVG_CHECK_MINI} ` + got : (() => {
+      el.innerHTML = `<div class="cname">${achIconSvg(ach.id)} ${achLabel(ach, 'name')}${isNew ? ' · nieuw' : ''}${near ? ' · bijna' : ''}</div>` +
+        `<div class="cinfo">${achLabel(ach, 'desc')}${got ? ` · ${SVG_CHECK_MINI} ` + got : (() => {
           const hint = achievementProgressHint(ach);
           return hint ? ' · ' + hint : ' · nog open';
         })()}</div>${progBar}`;
@@ -1265,7 +1260,7 @@ const UI = {
       }).join('');
       el.innerHTML = locked
         ? SVG_LOCK_ICON
-        : `${n}${boss ? '<small>BAAS</small>' : `<small style="color:${rar.color}">${rar.name}</small>`}` +
+        : `${n}${boss ? '<small>BAAS</small>' : `<small style="color:${rar.color}">${rarityLabel(sp.rarity)}</small>`}` +
           `<span class="lvl-wave-strip" aria-hidden="true">${waveStrip}</span>` +
           (save.stars[n] ? `<span class="lvl-stars">${'★'.repeat(save.stars[n])}</span>` : '') +
           (fails > 0 && !locked ? `<span class="lvl-fails">${fails}/5</span>` : '') +
@@ -1349,7 +1344,7 @@ const UI = {
         const rar = RARITIES[rid];
         const n = br[rid] || 0;
         if (!n) return '';
-        return `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color};margin:2px">${rar.name} ${n}</span>`;
+        return `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color};margin:2px">${rarityLabel(rid)} ${n}</span>`;
       }).filter(Boolean).join(' ');
       sumEl.style.display = 'block';
       sumEl.innerHTML =
@@ -1416,7 +1411,7 @@ const UI = {
       const moveLine = labels
         ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} finisher${mastLine}`
         : (isThrowWeapon(w.id) ? 'Werp-projectiel — geen melee-combo' : '');
-      info.innerHTML = `<div class="cname">${w.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>${summonBadge}${tierBadge}</div>
+      info.innerHTML = `<div class="cname">${w.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${summonBadge}${tierBadge}</div>
         <div class="cinfo">${statLine}</div>` +
         (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '');
       el.appendChild(info);
@@ -1453,7 +1448,7 @@ const UI = {
         const rar = RARITIES[rid];
         const n = br[rid] || 0;
         if (!n) return '';
-        return `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color};margin:2px">${rar.name} ${n}</span>`;
+        return `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color};margin:2px">${rarityLabel(rid)} ${n}</span>`;
       }).filter(Boolean).join(' ');
       const cosmetic = dexCosmeticProgressLines();
       const cosmeticHtml = cosmetic.length
@@ -1497,7 +1492,7 @@ const UI = {
           const rar = RARITIES[rid];
           const n = (dexRarityBreakdown()[rid] || 0);
           const tot = rarityTotals[rid] || 0;
-          return mk(rid, `${rar.name} ${n}/${tot}`, rar.color);
+          return mk(rid, `${rarityLabel(rid)} ${n}/${tot}`, rar.color);
         }).join('');
     });
     bindFilterBar(document.getElementById('dexTypeFilterBar'), 'data-dex-type-filter', 'dexTypeFilter', () => {
@@ -1564,7 +1559,7 @@ const UI = {
       const petLine = PET_BY_SPECIES[id]
         ? `<div style="font-size:12px;margin-top:4px;color:${isPetTamed(PET_BY_SPECIES[id].id) ? '#7cf5ff' : '#8fa3d9'}">${petProgressLine(id)}</div>`
         : '';
-      info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>` : ''}${id === topKillId ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Top jager</span>' : ''}</div>
+      info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>` : ''}${id === topKillId ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Top jager</span>' : ''}</div>
         <div class="cinfo">${kills ? `${typeLbl} · basis HP ${sp.hp} · dmg ${sp.dmg} · spd ${sp.speed} · ${sp.xp} XP · Lv ${unlockLv || '?'}` : 'Nog niet verslagen'}</div>${lockHint}${petLine}${statRow}`;
       el.appendChild(info);
       const right = document.createElement('div');
@@ -1646,7 +1641,7 @@ const UI = {
       el.appendChild(cv);
       const info = document.createElement('div');
       const badge = active ? ' <span class="rar-pill" style="color:#7cf5ff;border-color:#7cf5ff">ACTIEF</span>' : '';
-      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>${badge}</div>` +
+      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}</div>` +
         `<div class="cinfo">${def.perk}</div>` +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
           ? 'Getemd · assist in avontuur'
@@ -1731,7 +1726,7 @@ const UI = {
             const rar = rarityOf(res.def.rarity);
             UI.toast(res.duplicate
               ? `Dubbel ei: ${res.def.name} (+10 XP)`
-              : `Uitgekomen! ${res.def.name} (${rar.name})`, 3600);
+              : `Uitgekomen! ${res.def.name} (${rarityLabel(def.rarity)})`, 3600);
             this.renderPets();
             this.renderMenu();
           }, 'crackDailyEgg', 'Ei openen mislukt');
@@ -1756,7 +1751,7 @@ const UI = {
       el.appendChild(cv);
       const info = document.createElement('div');
       const badge = active ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">ACTIEF</span>' : '';
-      info.innerHTML = `<div class="cname">${def.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>${badge}</div>` +
+      info.innerHTML = `<div class="cname">${def.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(def.rarity)}</span>${badge}</div>` +
         `<div class="cinfo">${def.perk}</div>` +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${owned ? 'Cosmetisch metgezel' : 'Nog niet uitgekomen'}</div>`;
       el.appendChild(info);
@@ -1862,6 +1857,7 @@ const UI = {
   },
 
   renderSettings() {
+    renderLangSwitch();
     const verEl = document.getElementById('setAppVersion');
     if (verEl) {
       const fps = Perf.emaMs > 0 ? Math.round(1000 / Perf.emaMs) : 0;
@@ -2004,7 +2000,9 @@ const UI = {
     title.textContent = data.title;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
     document.getElementById('resDetail').textContent = data.detail;
-    document.getElementById('resXp').textContent = `+${data.xp} XP verdiend · nu Lv ${save.lvl} (${save.xp}/${xpNeed(save.lvl)} XP)`;
+    document.getElementById('resXp').textContent = t('result.xp', {
+      xp: data.xp, lvl: save.lvl, cur: save.xp, need: xpNeed(save.lvl),
+    });
     const tipEl = document.getElementById('resTip');
     if (tipEl) tipEl.textContent = data.tip || '';
     const starsEl = document.getElementById('resStars');
@@ -2020,9 +2018,9 @@ const UI = {
     if (again) {
       const label = again.querySelector('div');
       if (label) {
-        if (data.mode === 'versus') label.innerHTML = 'Rematch<small>Zelfde vechters</small>';
-        else if (data.mode === 'training') label.innerHTML = 'Opnieuw<small>vs RabbitRobot</small>';
-        else label.innerHTML = 'Opnieuw';
+        if (data.mode === 'versus') label.innerHTML = t('result.rematch') + '<small>' + t('result.rematchSub') + '</small>';
+        else if (data.mode === 'training') label.innerHTML = t('result.again') + '<small>vs RabbitRobot</small>';
+        else label.textContent = t('result.again');
       }
     }
     this.show('resultScreen');

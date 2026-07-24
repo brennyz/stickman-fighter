@@ -1,6 +1,7 @@
 [
   "src/00-prelude.js",
   "src/core/storage.js",
+  "src/i18n/i18n.js",
   "src/render/art-helpers.js",
   "src/systems/missions.js",
   "src/data/rarities.js",
