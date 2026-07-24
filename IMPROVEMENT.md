@@ -105,6 +105,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-24 | **2** | Training (cyclus 3): melee telegraph HUD (SLA/TRAP), Chidori cancel bij spring, laser pauze tijdens robot-aanval, fairere spacing AI — geen one-shots. v1.17.13 / SW v140. |
 | 2026-07-24 | **13** | Missies (cyclus 3): 3-stappen flow-balk (Speel→Claim→Dagbonus), “Nog X” remainder-copy, modus-pill, max-XP vandaag, claim follow-up toasts, prestatie-filter + voortgangsbalk. v1.17.12 / SW v139. |
 | 2026-07-24 | **17** | Stabiliteit (cyclus 3): `safeUiAction` + `persistOrToast`, scherm/submenu handlers (missies/levels/wapens/stijl/gok), UI.show toast, SW-update tap async, install/PWA fail hints — geen silent fail. v1.17.11 / SW v138. |
 | 2026-07-24 | **7** | Save (cyclus 3): sanitize-reparatie hints (boot + import), export meta summary, live import-preview, drift-detail bij backup, stijl-unlock check op dex-prestaties — SAVE_KEY vast. v1.17.10 / SW v137. |

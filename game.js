@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.12';
+const APP_VERSION = '1.17.13';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 139;
+const SW_CACHE_REV = 140;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -5238,10 +5238,11 @@ class Fighter {
         else if (r < 0.72 && this.aiCd <= 0 && dist > 120 && !pAir) { out.special = true; this.aiCd = rand(2.6, 4.2) / diff; }
         else this.aiMove = -dir * 0.6;
       } else {
+        const trainFair = game.mode === 'training';
         const r = Math.random();
-        if (r < 0.42) out.punch = true;
-        else if (r < 0.72) out.kick = true;
-        else if (r < 0.86) { this.aiMove = -dir; }
+        if (r < (trainFair ? 0.34 : 0.42)) out.punch = true;
+        else if (r < (trainFair ? 0.58 : 0.72)) out.kick = true;
+        else if (r < (trainFair ? 0.82 : 0.86)) { this.aiMove = -dir; }
         else { out.jump = true; this.aiMove = dir; }
       }
     }
@@ -5328,16 +5329,36 @@ class Fighter {
     if (this.attack) {
       const a = this.attack;
       a.t += dt;
-      if (a.kind === 'special' && !a.fired && a.t >= a.windup) {
-        a.fired = true;
-        game.spawnJutsu(this, a);
-      }
       if (this.isRobot && a.kind === 'special' && !a.fired && !a._telegraphed && a.t >= a.windup * 0.28) {
         a._telegraphed = true;
         if (game.mode === 'training') {
           game.trainTelegraphT = 0.85;
           game.floater(this.x, this.y - 138, 'CHIDORI — dash/spring!', '#7cf5ff', 16);
           haptic(10);
+        }
+      }
+      if (this.isRobot && a.kind === 'special' && !a.fired && a._telegraphed && game.mode === 'training') {
+        const p = game.player;
+        if (p && !p.onGround) {
+          this.attack = null;
+          game.trainTelegraphT = 0;
+          this.aiCd = rand(2.5, 4.2) / (this.aiDiff || 1);
+          game.floater(this.x, this.y - 128, 'Chidori gemist — spring werkt!', '#7cf5ff', 14);
+        } else if (a.t >= a.windup) {
+          a.fired = true;
+          game.spawnJutsu(this, a);
+        }
+      } else if (a.kind === 'special' && !a.fired && a.t >= a.windup) {
+        a.fired = true;
+        game.spawnJutsu(this, a);
+      }
+      if (this.isRobot && game.mode === 'training' && !a.fired && (a.kind === 'punch' || a.kind === 'kick') && a.t < a.windup) {
+        const p = game.player;
+        if (p && p.alive && Math.abs(p.x - this.x) < a.range + 36) {
+          const maxT = a.kind === 'kick' ? 0.42 : 0.32;
+          game.trainMeleeTelegraphT = Math.max(game.trainMeleeTelegraphT || 0, a.windup - a.t + 0.04);
+          game.trainMeleeTelegraphMax = maxT;
+          game.trainTelegraphKind = a.kind;
         }
       }
       if (a.kind !== 'special' && !a.hasHit && a.t >= a.windup && a.t <= a.windup + a.active) {
@@ -7207,6 +7228,9 @@ class Game {
     this.robot.aiDiff = diff;
     this.robotMaxHp = Math.round(110 + save.lvl * 9 + save.trainWins * 14);
     this.trainTelegraphT = 0;
+    this.trainMeleeTelegraphT = 0;
+    this.trainMeleeTelegraphMax = 0.32;
+    this.trainTelegraphKind = null;
     this.trainLaserCd = rand(5, 8);
     this.trainLaserTelegraph = 0;
     this.startRound();
@@ -7229,12 +7253,18 @@ class Game {
     this.inputLocked = true;
     this.trainLaserCd = rand(4, 7);
     this.trainLaserTelegraph = 0;
+    this.trainMeleeTelegraphT = 0;
+    this.trainTelegraphKind = null;
     this.banner(`RONDE ${this.round}`, 1.1, '#ffd75e', 52);
     AudioSys.sfx('bell');
   }
 
   updateTrainingLasers(dt) {
     if (this.phase !== 'fight' || !this.robot?.alive || !this.player?.alive) return;
+    if (this.robot.attack || this.robot.hurtT > 0) {
+      if ((this.trainLaserCd || 0) <= 0.5) this.trainLaserCd = rand(1.8, 3.2);
+      return;
+    }
     if (this.trainLaserTelegraph > 0) {
       this.trainLaserTelegraph -= dt;
       this.trainTelegraphT = Math.max(this.trainTelegraphT || 0, this.trainLaserTelegraph);
@@ -7278,6 +7308,7 @@ class Game {
       if (this.phaseT > 1.6) { this.phase = 'fight'; this.inputLocked = false; }
     } else if (this.phase === 'fight') {
       if (this.trainTelegraphT > 0) this.trainTelegraphT -= dt;
+      if (this.trainMeleeTelegraphT > 0) this.trainMeleeTelegraphT -= dt;
       this.updateTrainingLasers(dt);
       this.roundTimer -= dt;
       const pDead = !this.player.alive, rDead = !this.robot.alive;
@@ -7312,7 +7343,7 @@ class Game {
     else { xp = 15; this.grantXP(xp); }
     const trainTip = win
       ? (save.trainWins === 3 ? 'Nieuwe stijl vrij: Chakra gloed — Instellingen → Stijl!' : 'Unlock stijlen door meer train-wins!')
-      : onceResultTip('training', 'loss', 'Robot laadt Chidori — spring weg als je “CHIDORI — dash/spring!” ziet')
+      : onceResultTip('training', 'loss', 'Spring tijdens CHIDORI-telegraph — robot mist · duck oor-lasers')
         || 'Tip: duck lasers · chakra vol → Rasengan';
     setTimeout(() => UI.showResult(win, {
       title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
@@ -8968,10 +8999,17 @@ class Game {
       const r = this.robot;
       const half = Math.min(300, W * 0.36);
       const tele = this.trainLaserTelegraph > 0
-        ? { label: 'OOR-LASER — spring!', frac: this.trainLaserTelegraph / 0.95, color: '#ff6b6b' }
+        ? { label: 'OOR-LASER — spring!', frac: this.trainLaserTelegraph / 0.95, color: '#ff6b6b', max: 0.95 }
         : (this.trainTelegraphT > 0
-          ? { label: 'CHIDORI — dash weg!', frac: this.trainTelegraphT / 0.85, color: '#7cf5ff' }
-          : null);
+          ? { label: 'CHIDORI — dash/spring!', frac: this.trainTelegraphT / 0.85, color: '#7cf5ff', max: 0.85 }
+          : (this.trainMeleeTelegraphT > 0
+            ? {
+              label: this.trainTelegraphKind === 'kick' ? 'TRAP — spring/blok!' : 'SLA — blok/weg!',
+              frac: this.trainMeleeTelegraphT / (this.trainMeleeTelegraphMax || 0.32),
+              color: '#ffb347',
+              max: this.trainMeleeTelegraphMax || 0.32,
+            }
+            : null));
       if (tele) {
         const barW = Math.min(220, W - 48);
         const bx = (W - barW) / 2;
@@ -8988,6 +9026,17 @@ class Game {
         c.fillStyle = tele.color;
         this.rr(c, bx, 108, barW * clamp(tele.frac, 0, 1), 5, 3);
         c.fill();
+      }
+      if (this.trainMeleeTelegraphT > 0 && r.alive && !this.trainLaserTelegraph && !this.trainTelegraphT) {
+        const dir = Math.sign(this.player.x - r.x) || -1;
+        c.save();
+        c.globalAlpha = 0.3 + Math.sin(this.t * 22) * 0.15;
+        c.strokeStyle = '#ffb347';
+        c.lineWidth = 3;
+        c.beginPath();
+        c.arc(r.x + dir * 28, r.y - 28, 22, 0, TAU);
+        c.stroke();
+        c.restore();
       }
       if (this.trainTelegraphT > 0 && r.alive) {
         c.save();
