@@ -8,19 +8,19 @@
     12,
     2,
     3,
-    13
+    11
   ],
   "lastRoll": {
-    "face": 11,
-    "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
-    "rolledAt": "2026-07-24T15:24:27Z",
+    "face": 13,
+    "category": "Missies & achievements \u2014 daily loop, beloningen",
+    "rolledAt": "2026-07-24T15:25:08Z",
     "remainingCount": 6,
     "cycle": 2
   },
   "pending": {
-    "face": 11,
-    "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
-    "rolledAt": "2026-07-24T15:24:27Z",
+    "face": 13,
+    "category": "Missies & achievements \u2014 daily loop, beloningen",
+    "rolledAt": "2026-07-24T15:25:08Z",
     "remainingCount": 6,
     "cycle": 2
   },
@@ -1148,6 +1148,13 @@
       "face": 11,
       "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
       "rolledAt": "2026-07-24T15:24:27Z",
+      "remainingCount": 6,
+      "cycle": 2
+    },
+    {
+      "face": 13,
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
+      "rolledAt": "2026-07-24T15:25:08Z",
       "remainingCount": 6,
       "cycle": 2
     }
