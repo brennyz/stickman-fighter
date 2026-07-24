@@ -512,7 +512,17 @@
   ],
   "userFeatureLog": [
     {
-      "id": "sounds-extravaganza",
+      "id": "snd-extravaganza-3",
+      "d20Face": null,
+      "userWords": "Implementeer snd extravaganza 3.0",
+      "versions": [
+        "1.17.45"
+      ],
+      "commits": [],
+      "code": "sfxAt stereo pan; setCombatHeat BGM; travel/step/checkpoint/bossArrive/waveClear/masterSword/wMaster/hitstop/diceRoll; menuDream BGM",
+      "status": "done",
+      "note": "off-d20 user feature; spatial SFX + adventure stage audio pass"
+    },
       "d20Face": null,
       "userWords": "Sounds extravanganza please lets go",
       "versions": [

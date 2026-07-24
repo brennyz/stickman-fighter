@@ -5,6 +5,8 @@ const AudioSys = {
   song: null, step: 0, bar: 0, nextTime: 0,
   paused: false,
   _sfxVar: 0,
+  _sfxPan: 0,
+  _combatHeat: 0,
 
   init() {
     try {
@@ -107,7 +109,7 @@ const AudioSys = {
     o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
     g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(g); g.connect(out || this.sfxGain);
+    o.connect(g); g.connect(out || this._sfxDest());
     o.start(t); o.stop(t + dur + 0.02);
   },
 
@@ -131,8 +133,37 @@ const AudioSys = {
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    src.connect(f); f.connect(g); g.connect(out || this.sfxGain);
+    src.connect(f); f.connect(g); g.connect(out || this._sfxDest());
     src.start(t);
+  },
+
+  /** Route SFX to stereo field — screenX maps left/right on W */
+  _sfxDest(out) {
+    if (out) return out;
+    const pan = this._sfxPan || 0;
+    if (!this.ctx || Math.abs(pan) < 0.04) return this.sfxGain;
+    try {
+      if (!this.ctx.createStereoPanner) return this.sfxGain;
+      const sp = this.ctx.createStereoPanner();
+      sp.pan.value = pan;
+      sp.connect(this.sfxGain);
+      return sp;
+    } catch (_) { return this.sfxGain; }
+  },
+
+  /** Pan SFX by world/screen X (0…W → left…right) */
+  sfxAt(name, screenX) {
+    if (!this.ctx || !save.sfx) return;
+    if (typeof screenX === 'number' && typeof W !== 'undefined' && W > 0) {
+      this._sfxPan = clamp((screenX / W) * 2 - 1, -1, 1) * 0.82;
+    }
+    this.sfx(name);
+    this._sfxPan = 0;
+  },
+
+  /** 0…1 — ramps BGM lead intensity during hot combos */
+  setCombatHeat(v) {
+    this._combatHeat = clamp(Number(v) || 0, 0, 1);
   },
 
   /** Detuned twin layer — fuller body without samples */
@@ -479,6 +510,63 @@ const AudioSys = {
         N(0.09, 0.15, 4300, true, now);
         T(260, 1280, 0.13, 'sine', 0.11, now);
         break;
+      case 'travel':
+        N(0.06, 0.12, 3200, true, now);
+        T(180, 520, 0.14, 'sine', 0.1, now);
+        if (!lite) T(520, 880, 0.08, 'triangle', 0.08, now + 0.06);
+        break;
+      case 'step':
+        N(0.025, 0.08, 900, false, now);
+        T(120, 70, 0.04, 'sine', 0.09, now);
+        break;
+      case 'checkpoint':
+        C([523, 659, 784], 'sine', 0.14, 0.055, now);
+        E(988, 1175, 0.1, 'triangle', 0.11, now + 0.12, 0.06, 0.42);
+        if (!lite) S([1175, 1319], now + 0.18);
+        break;
+      case 'bossArrive':
+        T(70, 28, 0.32, 'sawtooth', 0.26, now);
+        N(0.24, 0.28, 420, false, now);
+        C([311, 370, 415, 494, 622], 'square', 0.13, 0.07, now + 0.1);
+        if (!lite) {
+          T(880, 220, 0.28, 'sawtooth', 0.16, now + 0.38);
+          N(0.12, 0.16, 1100, true, now + 0.45);
+        }
+        break;
+      case 'bossWait':
+        T(110, 55, 0.22, 'sawtooth', 0.14, now);
+        N(0.12, 0.14, 600, false, now);
+        if (!lite) T(220, 110, 0.12, 'sine', 0.1, now + 0.08);
+        break;
+      case 'masterSword':
+        C([784, 988, 1175, 1568], 'sine', 0.15, 0.065, now);
+        D(880, 1760, 0.24, 'triangle', 0.14, now + 0.08, 12);
+        if (!lite) {
+          S([2093, 2349, 2637], now + 0.22);
+          N(0.08, 0.12, 4200, true, now + 0.1);
+        }
+        break;
+      case 'wMaster':
+        N(0.05, 0.18, 4600, true, now);
+        D(720, 1320, 0.11, 'sawtooth', 0.13, now, 14);
+        E(1040, 520, 0.08, 'sine', 0.12, now + 0.03, 0.045, 0.45);
+        if (!lite) S([1568, 1760], now + 0.06);
+        break;
+      case 'waveClear':
+        C([659, 784, 988], 'triangle', 0.13, 0.05, now);
+        T(880, 1040, 0.08, 'sine', 0.11, now + 0.12);
+        if (!lite) S([1175, 1319], now + 0.15);
+        break;
+      case 'hitstop':
+        I(420, 4800, now);
+        T(980, 420, 0.035, 'square', 0.12, now + 0.008);
+        break;
+      case 'diceRoll':
+        [680, 820, 540, 760, 620, 880].forEach((f, i) => {
+          T(f, f * (0.85 + Math.random() * 0.1), 0.045, 'square', 0.09, now + i * 0.032);
+        });
+        N(0.04, 0.1, 3400, true, now);
+        break;
     }
   },
 
@@ -566,6 +654,11 @@ const AudioSys = {
         T(880, 180, 0.38, 'sawtooth', 0.2, now + 0.72);
         N(0.22, 0.26, 650, true, now + 0.88);
         break;
+      case 'masterSword':
+        [523, 659, 784, 988, 1175, 1568].forEach((f, i) => E(f, f * 1.02, 0.09, 'sine', 0.12, now + i * 0.048, 0.055, 0.4));
+        T(880, 1760, 0.28, 'triangle', 0.14, now + 0.12);
+        if (!lite) S([1760, 2093, 2349], now + 0.28);
+        break;
       default:
         T(480, 660, 0.06, 'sine', 0.11, now);
         break;
@@ -583,7 +676,7 @@ const AudioSys = {
     this.nextTime = this.ctx.currentTime + 0.06;
     this.applyVolumes();
   },
-  stop() { this.song = null; this.desiredSong = null; this.applyVolumes(); },
+  stop() { this.song = null; this.desiredSong = null; this.setCombatHeat(0); this.applyVolumes(); },
   setMusicOn(on) {
     save.music = !!on; persist();
     if (!on) this.song = null;
@@ -612,6 +705,7 @@ const AudioSys = {
     const s = this.song, mg = this.musicGain;
     const midi = n => 440 * Math.pow(2, (n - 69) / 12);
     const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
+    const heat = this._combatHeat || 0;
     if (s.kick.includes(i)) {
       this.tone(150, 42, 0.12, 'sine', 0.85, mg, t);
       if (!lite) this.tone(72, 34, 0.16, 'sine', 0.38, mg, t);
@@ -632,8 +726,13 @@ const AudioSys = {
     const leadPat = s.lead[bar % s.lead.length];
     const L = leadPat[i];
     if (L != null) {
-      this.tone(midi(L), midi(L) * 0.995, spb * 1.6, 'square', 0.12, mg, t);
-      if (!lite && i % 2 === 0) this.tone(midi(L + 7), midi(L + 7) * 0.998, spb * 1.1, 'triangle', 0.05, mg, t + spb * 0.12);
+      const heat = this._combatHeat || 0;
+      const lv = 0.12 + heat * 0.055;
+      this.tone(midi(L), midi(L) * 0.995, spb * 1.6, 'square', lv, mg, t);
+      if (!lite && i % 2 === 0) this.tone(midi(L + 7), midi(L + 7) * 0.998, spb * 1.1, 'triangle', 0.05 + heat * 0.03, mg, t + spb * 0.12);
+    }
+    if ((s.id === 'battle' || s.id === 'elite' || s.id === 'boss') && heat > 0.35 && !lite && i === 8 && bar % 2 === 0) {
+      this.tone(midi(84), midi(79), spb * 0.9, 'square', 0.04 + heat * 0.04, mg, t);
     }
     if (s.id === 'battle' || s.id === 'elite' || s.id === 'boss') {
       if (i === 0 && bar % 4 === 0 && !lite) {
@@ -649,12 +748,12 @@ const AudioSys = {
         this.tone(midi(84), midi(67), spb * 0.75, 'square', 0.08, mg, t);
       }
     }
-    const menuIds = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero'];
+    const menuIds = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero', 'menuDream'];
     if (menuIds.includes(s.id) && !lite && [3, 7, 11, 15].includes(i) && bar % 2 === 0) {
       const arp = [72, 76, 79, 84][Math.floor(i / 4)];
       this.tone(midi(arp), midi(arp + 2), spb * 0.52, 'triangle', 0.042, mg, t);
     }
-    if (s.id === 'menu' || s.id === 'menu2' || s.id === 'menu3' || s.id === 'menuArcade' || s.id === 'menuHero') {
+    if (s.id === 'menu' || s.id === 'menu2' || s.id === 'menu3' || s.id === 'menuArcade' || s.id === 'menuHero' || s.id === 'menuDream') {
       if (i === 0 && bar % 4 === 0) {
         this.tone(midi(72), midi(72), spb * 1.8, 'square', 0.13, mg, t);
         this.tone(midi(76), midi(79), spb * 1.2, 'square', 0.09, mg, t + spb * 0.45);
@@ -682,6 +781,17 @@ const AudioSys = {
       if (i === 4 || i === 12) this.tone(midi(79), midi(84), spb * 1.05, 'square', 0.11, mg, t);
       if (i === 0 && bar % 4 === 2) this.tone(midi(57), midi(64), spb * 2.9, 'triangle', 0.075, mg, t);
       if (!lite && i === 8 && bar % 2 === 0) this.tone(midi(72), midi(76), spb * 1.25, 'sine', 0.065, mg, t);
+    }
+    if (s.id === 'menuDream') {
+      if (i === 0 && bar % 4 === 0) this.tone(midi(60), midi(60), spb * 4.2, 'sine', 0.055, mg, t);
+      if (i === 8 && bar % 2 === 0) this.tone(midi(67), midi(64), spb * 2.4, 'triangle', 0.05, mg, t);
+      if (!lite && (i === 4 || i === 12)) this.tone(midi(76), midi(79), spb * 1.6, 'sine', 0.045, mg, t);
+    }
+    if (s.id === 'wall' && !lite && i === 0 && bar % 2 === 0) {
+      this.tone(midi(79), midi(76), spb * 0.85, 'square', 0.05, mg, t);
+    }
+    if (s.id === 'mats' && !lite && i === 12 && bar % 4 === 2) {
+      this.tone(midi(84), midi(79), spb * 1.1, 'triangle', 0.06, mg, t);
     }
     if (s.id === 'elite' || s.id === 'boss') {
       if (i === 0 && bar % 2 === 0) {
@@ -760,6 +870,16 @@ const SONGS = {
       [72,null,76,79, null,77,74,null, 72,null,69,null, 67,null,69,72],
     ],
   },
+  /** Menu variant — dreamy / floaty */
+  menuDream: {
+    bpm: 88,
+    kick: [0], snare: [], hat: [4, 12],
+    bass: [48,null,null,null, 45,null,null,null, 43,null,null,null, 41,null,43,null],
+    lead: [
+      [67,null,71,null, 74,null,71,null, 69,null,67,null, 64,null,62,null],
+      [69,null,72,null, 76,null,72,null, 69,null,67,null, 64,null,67,null],
+    ],
+  },
   battle: {
     bpm: 138,
     kick: [0, 4, 8, 12], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
@@ -829,7 +949,7 @@ const SONGS = {
   },
 };
 
-const MENU_BGM_TRACKS = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero'];
+const MENU_BGM_TRACKS = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero', 'menuDream'];
 let menuBgmIdx = 0;
 
 /** Rotate menu BGM when returning from a game; keep current track on boot/toggle. */

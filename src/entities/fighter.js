@@ -445,7 +445,7 @@ class Fighter {
       if (game) applyHitStop(game, { kind: 'punch', dmg }, { playerHurt: true, heavy: dmg >= 18 });
     }
     if (this.isPlayer) this.energy = clamp(this.energy + 4, 0, 100);
-    AudioSys.sfx(this.isPlayer ? 'hurt' : 'hit');
+    AudioSys.sfxAt(this.isPlayer ? 'hurt' : 'hit', this.x);
     if (this.isPlayer && game) {
       game.floater(this.x, this.y - 118, '-' + dmg, '#ff8080', 15);
     }
@@ -454,7 +454,7 @@ class Fighter {
     }
     if (this.hp <= 0) {
       this.hp = 0; this.deadT = 0; this.vy = -260;
-      AudioSys.sfx('die');
+      AudioSys.sfxAt('die', this.x);
     }
     return dmg;
   }

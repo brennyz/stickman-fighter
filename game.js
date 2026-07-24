@@ -132,9 +132,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.44';
+const APP_VERSION = '1.17.45';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 170;
+const SW_CACHE_REV = 171;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -1673,7 +1673,10 @@ function startAdventureFromGamble(skipGamble) {
 let gokStartBusy = false;
 
 function playGambleRollSfx(g) {
-  try { AudioSys.sfx('gamble'); } catch (_) {}
+  try { AudioSys.sfx('diceRoll'); } catch (_) {}
+  setTimeout(() => {
+    try { AudioSys.sfx('gamble'); } catch (_) {}
+  }, motionReduced() ? 40 : 120);
   if (!g) return;
   const delay = motionReduced() ? 60 : 220;
   setTimeout(() => {
@@ -2356,7 +2359,7 @@ const WEAPON_SWING_SFX = {
   void: 'wVoid',
   sterkling: 'wZwaard',
   guvve: 'wGuvve',
-  master_sword: 'wZwaard',
+  master_sword: 'wMaster',
 };
 
 function weaponSwingSfx(weaponOrId, attackKind) {
@@ -3177,6 +3180,12 @@ function applyHitStop(game, spec, opts) {
     if (opts.heavy) base += 0.006;
     if (game.mode === 'versus') base += 0.004;
     game.freezeT = Math.max(game.freezeT, Math.min(base, 0.048));
+    if (opts.heavy || dmg >= 18) {
+      try {
+        const x = game.player ? game.player.x : (typeof W !== 'undefined' ? W * 0.5 : 0);
+        AudioSys.sfxAt('hitstop', x);
+      } catch (_) {}
+    }
     return;
   }
   const kind = spec && spec.kind ? spec.kind : 'punch';
@@ -3188,6 +3197,12 @@ function applyHitStop(game, spec, opts) {
   if (game.mode === 'versus') base += 0.006;
   base = Math.min(base, 0.072);
   game.freezeT = Math.max(game.freezeT, base);
+  if (opts.crit || opts.heavy || (spec && spec.dmg >= 18)) {
+    try {
+      const x = game.player ? game.player.x : (typeof W !== 'undefined' ? W * 0.5 : 0);
+      AudioSys.sfxAt('hitstop', x);
+    } catch (_) {}
+  }
 }
 function isBossWave(level, waveIdx) {
   return !!(level && level.boss && waveIdx === level.waves.length - 1);
@@ -3407,6 +3422,8 @@ const AudioSys = {
   song: null, step: 0, bar: 0, nextTime: 0,
   paused: false,
   _sfxVar: 0,
+  _sfxPan: 0,
+  _combatHeat: 0,
 
   init() {
     try {
@@ -3509,7 +3526,7 @@ const AudioSys = {
     o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
     g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(g); g.connect(out || this.sfxGain);
+    o.connect(g); g.connect(out || this._sfxDest());
     o.start(t); o.stop(t + dur + 0.02);
   },
 
@@ -3533,8 +3550,37 @@ const AudioSys = {
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    src.connect(f); f.connect(g); g.connect(out || this.sfxGain);
+    src.connect(f); f.connect(g); g.connect(out || this._sfxDest());
     src.start(t);
+  },
+
+  /** Route SFX to stereo field — screenX maps left/right on W */
+  _sfxDest(out) {
+    if (out) return out;
+    const pan = this._sfxPan || 0;
+    if (!this.ctx || Math.abs(pan) < 0.04) return this.sfxGain;
+    try {
+      if (!this.ctx.createStereoPanner) return this.sfxGain;
+      const sp = this.ctx.createStereoPanner();
+      sp.pan.value = pan;
+      sp.connect(this.sfxGain);
+      return sp;
+    } catch (_) { return this.sfxGain; }
+  },
+
+  /** Pan SFX by world/screen X (0…W → left…right) */
+  sfxAt(name, screenX) {
+    if (!this.ctx || !save.sfx) return;
+    if (typeof screenX === 'number' && typeof W !== 'undefined' && W > 0) {
+      this._sfxPan = clamp((screenX / W) * 2 - 1, -1, 1) * 0.82;
+    }
+    this.sfx(name);
+    this._sfxPan = 0;
+  },
+
+  /** 0…1 — ramps BGM lead intensity during hot combos */
+  setCombatHeat(v) {
+    this._combatHeat = clamp(Number(v) || 0, 0, 1);
   },
 
   /** Detuned twin layer — fuller body without samples */
@@ -3881,6 +3927,63 @@ const AudioSys = {
         N(0.09, 0.15, 4300, true, now);
         T(260, 1280, 0.13, 'sine', 0.11, now);
         break;
+      case 'travel':
+        N(0.06, 0.12, 3200, true, now);
+        T(180, 520, 0.14, 'sine', 0.1, now);
+        if (!lite) T(520, 880, 0.08, 'triangle', 0.08, now + 0.06);
+        break;
+      case 'step':
+        N(0.025, 0.08, 900, false, now);
+        T(120, 70, 0.04, 'sine', 0.09, now);
+        break;
+      case 'checkpoint':
+        C([523, 659, 784], 'sine', 0.14, 0.055, now);
+        E(988, 1175, 0.1, 'triangle', 0.11, now + 0.12, 0.06, 0.42);
+        if (!lite) S([1175, 1319], now + 0.18);
+        break;
+      case 'bossArrive':
+        T(70, 28, 0.32, 'sawtooth', 0.26, now);
+        N(0.24, 0.28, 420, false, now);
+        C([311, 370, 415, 494, 622], 'square', 0.13, 0.07, now + 0.1);
+        if (!lite) {
+          T(880, 220, 0.28, 'sawtooth', 0.16, now + 0.38);
+          N(0.12, 0.16, 1100, true, now + 0.45);
+        }
+        break;
+      case 'bossWait':
+        T(110, 55, 0.22, 'sawtooth', 0.14, now);
+        N(0.12, 0.14, 600, false, now);
+        if (!lite) T(220, 110, 0.12, 'sine', 0.1, now + 0.08);
+        break;
+      case 'masterSword':
+        C([784, 988, 1175, 1568], 'sine', 0.15, 0.065, now);
+        D(880, 1760, 0.24, 'triangle', 0.14, now + 0.08, 12);
+        if (!lite) {
+          S([2093, 2349, 2637], now + 0.22);
+          N(0.08, 0.12, 4200, true, now + 0.1);
+        }
+        break;
+      case 'wMaster':
+        N(0.05, 0.18, 4600, true, now);
+        D(720, 1320, 0.11, 'sawtooth', 0.13, now, 14);
+        E(1040, 520, 0.08, 'sine', 0.12, now + 0.03, 0.045, 0.45);
+        if (!lite) S([1568, 1760], now + 0.06);
+        break;
+      case 'waveClear':
+        C([659, 784, 988], 'triangle', 0.13, 0.05, now);
+        T(880, 1040, 0.08, 'sine', 0.11, now + 0.12);
+        if (!lite) S([1175, 1319], now + 0.15);
+        break;
+      case 'hitstop':
+        I(420, 4800, now);
+        T(980, 420, 0.035, 'square', 0.12, now + 0.008);
+        break;
+      case 'diceRoll':
+        [680, 820, 540, 760, 620, 880].forEach((f, i) => {
+          T(f, f * (0.85 + Math.random() * 0.1), 0.045, 'square', 0.09, now + i * 0.032);
+        });
+        N(0.04, 0.1, 3400, true, now);
+        break;
     }
   },
 
@@ -3968,6 +4071,11 @@ const AudioSys = {
         T(880, 180, 0.38, 'sawtooth', 0.2, now + 0.72);
         N(0.22, 0.26, 650, true, now + 0.88);
         break;
+      case 'masterSword':
+        [523, 659, 784, 988, 1175, 1568].forEach((f, i) => E(f, f * 1.02, 0.09, 'sine', 0.12, now + i * 0.048, 0.055, 0.4));
+        T(880, 1760, 0.28, 'triangle', 0.14, now + 0.12);
+        if (!lite) S([1760, 2093, 2349], now + 0.28);
+        break;
       default:
         T(480, 660, 0.06, 'sine', 0.11, now);
         break;
@@ -3985,7 +4093,7 @@ const AudioSys = {
     this.nextTime = this.ctx.currentTime + 0.06;
     this.applyVolumes();
   },
-  stop() { this.song = null; this.desiredSong = null; this.applyVolumes(); },
+  stop() { this.song = null; this.desiredSong = null; this.setCombatHeat(0); this.applyVolumes(); },
   setMusicOn(on) {
     save.music = !!on; persist();
     if (!on) this.song = null;
@@ -4014,6 +4122,7 @@ const AudioSys = {
     const s = this.song, mg = this.musicGain;
     const midi = n => 440 * Math.pow(2, (n - 69) / 12);
     const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
+    const heat = this._combatHeat || 0;
     if (s.kick.includes(i)) {
       this.tone(150, 42, 0.12, 'sine', 0.85, mg, t);
       if (!lite) this.tone(72, 34, 0.16, 'sine', 0.38, mg, t);
@@ -4034,8 +4143,13 @@ const AudioSys = {
     const leadPat = s.lead[bar % s.lead.length];
     const L = leadPat[i];
     if (L != null) {
-      this.tone(midi(L), midi(L) * 0.995, spb * 1.6, 'square', 0.12, mg, t);
-      if (!lite && i % 2 === 0) this.tone(midi(L + 7), midi(L + 7) * 0.998, spb * 1.1, 'triangle', 0.05, mg, t + spb * 0.12);
+      const heat = this._combatHeat || 0;
+      const lv = 0.12 + heat * 0.055;
+      this.tone(midi(L), midi(L) * 0.995, spb * 1.6, 'square', lv, mg, t);
+      if (!lite && i % 2 === 0) this.tone(midi(L + 7), midi(L + 7) * 0.998, spb * 1.1, 'triangle', 0.05 + heat * 0.03, mg, t + spb * 0.12);
+    }
+    if ((s.id === 'battle' || s.id === 'elite' || s.id === 'boss') && heat > 0.35 && !lite && i === 8 && bar % 2 === 0) {
+      this.tone(midi(84), midi(79), spb * 0.9, 'square', 0.04 + heat * 0.04, mg, t);
     }
     if (s.id === 'battle' || s.id === 'elite' || s.id === 'boss') {
       if (i === 0 && bar % 4 === 0 && !lite) {
@@ -4051,12 +4165,12 @@ const AudioSys = {
         this.tone(midi(84), midi(67), spb * 0.75, 'square', 0.08, mg, t);
       }
     }
-    const menuIds = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero'];
+    const menuIds = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero', 'menuDream'];
     if (menuIds.includes(s.id) && !lite && [3, 7, 11, 15].includes(i) && bar % 2 === 0) {
       const arp = [72, 76, 79, 84][Math.floor(i / 4)];
       this.tone(midi(arp), midi(arp + 2), spb * 0.52, 'triangle', 0.042, mg, t);
     }
-    if (s.id === 'menu' || s.id === 'menu2' || s.id === 'menu3' || s.id === 'menuArcade' || s.id === 'menuHero') {
+    if (s.id === 'menu' || s.id === 'menu2' || s.id === 'menu3' || s.id === 'menuArcade' || s.id === 'menuHero' || s.id === 'menuDream') {
       if (i === 0 && bar % 4 === 0) {
         this.tone(midi(72), midi(72), spb * 1.8, 'square', 0.13, mg, t);
         this.tone(midi(76), midi(79), spb * 1.2, 'square', 0.09, mg, t + spb * 0.45);
@@ -4084,6 +4198,17 @@ const AudioSys = {
       if (i === 4 || i === 12) this.tone(midi(79), midi(84), spb * 1.05, 'square', 0.11, mg, t);
       if (i === 0 && bar % 4 === 2) this.tone(midi(57), midi(64), spb * 2.9, 'triangle', 0.075, mg, t);
       if (!lite && i === 8 && bar % 2 === 0) this.tone(midi(72), midi(76), spb * 1.25, 'sine', 0.065, mg, t);
+    }
+    if (s.id === 'menuDream') {
+      if (i === 0 && bar % 4 === 0) this.tone(midi(60), midi(60), spb * 4.2, 'sine', 0.055, mg, t);
+      if (i === 8 && bar % 2 === 0) this.tone(midi(67), midi(64), spb * 2.4, 'triangle', 0.05, mg, t);
+      if (!lite && (i === 4 || i === 12)) this.tone(midi(76), midi(79), spb * 1.6, 'sine', 0.045, mg, t);
+    }
+    if (s.id === 'wall' && !lite && i === 0 && bar % 2 === 0) {
+      this.tone(midi(79), midi(76), spb * 0.85, 'square', 0.05, mg, t);
+    }
+    if (s.id === 'mats' && !lite && i === 12 && bar % 4 === 2) {
+      this.tone(midi(84), midi(79), spb * 1.1, 'triangle', 0.06, mg, t);
     }
     if (s.id === 'elite' || s.id === 'boss') {
       if (i === 0 && bar % 2 === 0) {
@@ -4162,6 +4287,16 @@ const SONGS = {
       [72,null,76,79, null,77,74,null, 72,null,69,null, 67,null,69,72],
     ],
   },
+  /** Menu variant — dreamy / floaty */
+  menuDream: {
+    bpm: 88,
+    kick: [0], snare: [], hat: [4, 12],
+    bass: [48,null,null,null, 45,null,null,null, 43,null,null,null, 41,null,43,null],
+    lead: [
+      [67,null,71,null, 74,null,71,null, 69,null,67,null, 64,null,62,null],
+      [69,null,72,null, 76,null,72,null, 69,null,67,null, 64,null,67,null],
+    ],
+  },
   battle: {
     bpm: 138,
     kick: [0, 4, 8, 12], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
@@ -4231,7 +4366,7 @@ const SONGS = {
   },
 };
 
-const MENU_BGM_TRACKS = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero'];
+const MENU_BGM_TRACKS = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero', 'menuDream'];
 let menuBgmIdx = 0;
 
 /** Rotate menu BGM when returning from a game; keep current track on boot/toggle. */
@@ -6025,7 +6160,7 @@ class Fighter {
       if (game) applyHitStop(game, { kind: 'punch', dmg }, { playerHurt: true, heavy: dmg >= 18 });
     }
     if (this.isPlayer) this.energy = clamp(this.energy + 4, 0, 100);
-    AudioSys.sfx(this.isPlayer ? 'hurt' : 'hit');
+    AudioSys.sfxAt(this.isPlayer ? 'hurt' : 'hit', this.x);
     if (this.isPlayer && game) {
       game.floater(this.x, this.y - 118, '-' + dmg, '#ff8080', 15);
     }
@@ -6034,7 +6169,7 @@ class Fighter {
     }
     if (this.hp <= 0) {
       this.hp = 0; this.deadT = 0; this.vy = -260;
-      AudioSys.sfx('die');
+      AudioSys.sfxAt('die', this.x);
     }
     return dmg;
   }
@@ -6499,12 +6634,12 @@ class Monster {
     if (opts.crit) spawnFxRing(game, this.x, this.y - this.size * 0.4, '#ffd75e', fxLite() ? 5 : 8);
     if (this.hp <= 0) {
       this.hp = 0; this.deadT = 0;
-      AudioSys.sfx('die');
+      AudioSys.sfxAt('die', this.x);
       const burstN = fxLite() ? 6 : (this.superBoss ? 14 : (this.elite ? 12 : 10));
       game.burst(this.x, this.y, this.sp.c1, burstN);
       game.onMonsterKilled(this);
     } else {
-      AudioSys.sfx('hit');
+      AudioSys.sfxAt('hit', this.x);
     }
   }
 
@@ -7427,7 +7562,7 @@ class Game {
       this.burst(p.x + p.face * 18, p.y - 52, '#6fd7ff', 14, { kind: 'spark', size: 2.8 });
       spawnFxRing(this, p.x, p.y - 48, '#7cf5ff', 12);
     }
-    try { AudioSys.sting('bonus'); AudioSys.sfx('bonus'); } catch (_) {}
+    try { AudioSys.sting('masterSword'); AudioSys.sfx('masterSword'); } catch (_) {}
     haptic(26);
   }
 
@@ -7511,6 +7646,8 @@ class Game {
     if (this.traveling && !this.travelWasOn) {
       this.shake(motionReduced() ? 2 : 5, 0.22);
       this.bossBeatPlayed = false;
+      this._travelStepT = 0;
+      try { AudioSys.sfx('travel'); } catch (_) {}
       if (!fxLite() && !motionReduced() && this.player) {
         this.burst(this.player.x - 18, this.player.y - 8, '#c9b691', 9, { kind: 'spark', size: 2.2 });
       }
@@ -7520,18 +7657,24 @@ class Game {
         this.freezeT = Math.max(this.freezeT, 0.06);
         this.bossArriveT = motionReduced() ? 0.3 : 0.7;
         haptic(24);
+        try { AudioSys.sfx('bossArrive'); } catch (_) {}
       }
     }
     this.travelWasOn = this.traveling;
     if (this.traveling) {
       this.worldX = (this.worldX || 0) + dt * (isBossWave(this.level, this.waveIdx + 1) ? 220 : 165);
+      this._travelStepT = (this._travelStepT || 0) + dt;
+      if (this._travelStepT >= 0.38) {
+        this._travelStepT = 0;
+        try { AudioSys.sfx('step'); } catch (_) {}
+      }
     }
     // Baas-aankomst-beat: halverwege de reis naar de baas-golf één roar
     if (this.wavePause > 0 && isBossWave(this.level, this.waveIdx + 1) && !this.bossBeatPlayed) {
       const f = 1 - this.wavePause / (this.wavePauseTotal || 1);
       if (f > 0.45) {
         this.bossBeatPlayed = true;
-        try { AudioSys.sfx('roar'); } catch (_) {}
+        try { AudioSys.sfx('bossWait'); } catch (_) {}
         this.floater(W / 2, 120, 'DE BAAS WACHT…', '#ff8a9a', 15);
       }
     }
@@ -7545,13 +7688,14 @@ class Game {
       this.floater(W / 2, 96, `CHECKPOINT — DEEL ${part}/3`, '#7cf5ff', 17);
       const orbX = W / 2 - Math.min(320, W * 0.5) / 2 + clamp(this.progressSmooth || 0, 0, 1) * Math.min(320, W * 0.5);
       if (!fxLite()) this.burst(orbX, 44, '#7cf5ff', motionReduced() ? 6 : 14, { kind: 'spark', size: 2.4 });
-      try { AudioSys.sfx('bonus'); } catch (_) {}
+      try { AudioSys.sfx('checkpoint'); } catch (_) {}
       haptic(10);
     }
     if (this.comboT > 0) {
       this.comboT -= dt;
       if (this.comboT <= 0) this.combo = 0;
     }
+    try { AudioSys.setCombatHeat(Math.min(1, (this.combo || 0) / 12)); } catch (_) {}
     if (this.dmgBuffT > 0) {
       this.dmgBuffT -= dt;
       if (this.dmgBuffT <= 0) this.dmgBuffMul = 1;
@@ -7642,6 +7786,7 @@ class Game {
           this.player.hp = Math.min(this.player.maxhp, this.player.hp + heal);
           this.floater(this.player.x, this.player.y - 108, `+${heal} bondgenoot`, '#6ee06e', 14);
         }
+        try { AudioSys.sfx('waveClear'); } catch (_) {}
       }
       this.wavePause -= dt;
       if (this.wavePause <= 0) { this.wavePause = 0; this.nextWave(); }
@@ -8133,6 +8278,7 @@ class Game {
   }
 
   updateWall(dt) {
+    try { AudioSys.setCombatHeat(Math.min(1, (this.combo || 0) / 10)); } catch (_) {}
     const prevTimer = this.wallTimer;
     this.wallTimer -= dt;
     const hints = this.wallHints || (this.wallHints = {});
@@ -8487,7 +8633,7 @@ class Game {
               AudioSys.sfx('bonus');
             }
             this.burst(b.x + b.w / 2, b.y + b.h / 2, `hsl(${b.hue},50%,45%)`, 14);
-            AudioSys.sfx(b.bonus ? 'explode' : 'brick');
+            AudioSys.sfxAt(b.bonus ? 'explode' : 'brick', b.x + b.w / 2);
             this.shake(b.bonus ? 6 : 3, b.bonus ? 0.16 : 0.12);
             this.floater(b.x + b.w / 2, b.y, this.combo > 1 ? `x${this.combo}!` : '+1', '#ffd75e', 16);
             if (b.bonus) {
@@ -8497,13 +8643,13 @@ class Game {
               this.floater(b.x + b.w / 2, b.y - 22, 'BONUS +5', '#7cf5ff', 18);
             }
           } else {
-            AudioSys.sfx('crack');
+            AudioSys.sfxAt('crack', cx);
           }
           if (hits >= 3) break;
         }
       }
       if (hits > 0) {
-        try { AudioSys.sfx(weaponHitSfx(f.weapon, spec.dmg)); } catch (_) {}
+        try { AudioSys.sfxAt(weaponHitSfx(f.weapon, spec.dmg), hx); } catch (_) {}
       }
       return hits > 0;
     }
@@ -8540,6 +8686,7 @@ class Game {
           if (labels) this.floater(f.x + f.face * 24, f.y - 128, labels[2], '#ffd75e', 13);
         }
         this.player.energy = clamp(this.player.energy + 8, 0, 100);
+        try { AudioSys.sfxAt(weaponHitSfx(f.weapon, hitRoll.dmg), m.x); } catch (_) {}
         hit = true;
       }
     }
@@ -8572,10 +8719,10 @@ class Game {
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
         this.shake(spec.dmg > 20 ? 4 : 3, 0.12);
         if ((f.isPlayer || f.playerSlot) && save.haptics !== false) haptic(5);
+        try { AudioSys.sfxAt(weaponHitSfx(f.weapon, hitRoll.dmg), tgt.x); } catch (_) {}
         hit = true;
       }
     }
-    if (hit && this.mode !== 'wall') AudioSys.sfx(weaponHitSfx(f.weapon, spec.dmg));
     return hit;
   }
 

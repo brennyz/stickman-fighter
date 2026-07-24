@@ -85,7 +85,7 @@ const WEAPON_SWING_SFX = {
   void: 'wVoid',
   sterkling: 'wZwaard',
   guvve: 'wGuvve',
-  master_sword: 'wZwaard',
+  master_sword: 'wMaster',
 };
 
 function weaponSwingSfx(weaponOrId, attackKind) {

@@ -221,6 +221,12 @@ function applyHitStop(game, spec, opts) {
     if (opts.heavy) base += 0.006;
     if (game.mode === 'versus') base += 0.004;
     game.freezeT = Math.max(game.freezeT, Math.min(base, 0.048));
+    if (opts.heavy || dmg >= 18) {
+      try {
+        const x = game.player ? game.player.x : (typeof W !== 'undefined' ? W * 0.5 : 0);
+        AudioSys.sfxAt('hitstop', x);
+      } catch (_) {}
+    }
     return;
   }
   const kind = spec && spec.kind ? spec.kind : 'punch';
@@ -232,6 +238,12 @@ function applyHitStop(game, spec, opts) {
   if (game.mode === 'versus') base += 0.006;
   base = Math.min(base, 0.072);
   game.freezeT = Math.max(game.freezeT, base);
+  if (opts.crit || opts.heavy || (spec && spec.dmg >= 18)) {
+    try {
+      const x = game.player ? game.player.x : (typeof W !== 'undefined' ? W * 0.5 : 0);
+      AudioSys.sfxAt('hitstop', x);
+    } catch (_) {}
+  }
 }
 function isBossWave(level, waveIdx) {
   return !!(level && level.boss && waveIdx === level.waves.length - 1);

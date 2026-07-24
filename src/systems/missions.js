@@ -786,7 +786,10 @@ function startAdventureFromGamble(skipGamble) {
 let gokStartBusy = false;
 
 function playGambleRollSfx(g) {
-  try { AudioSys.sfx('gamble'); } catch (_) {}
+  try { AudioSys.sfx('diceRoll'); } catch (_) {}
+  setTimeout(() => {
+    try { AudioSys.sfx('gamble'); } catch (_) {}
+  }, motionReduced() ? 40 : 120);
   if (!g) return;
   const delay = motionReduced() ? 60 : 220;
   setTimeout(() => {

@@ -158,12 +158,12 @@ class Monster {
     if (opts.crit) spawnFxRing(game, this.x, this.y - this.size * 0.4, '#ffd75e', fxLite() ? 5 : 8);
     if (this.hp <= 0) {
       this.hp = 0; this.deadT = 0;
-      AudioSys.sfx('die');
+      AudioSys.sfxAt('die', this.x);
       const burstN = fxLite() ? 6 : (this.superBoss ? 14 : (this.elite ? 12 : 10));
       game.burst(this.x, this.y, this.sp.c1, burstN);
       game.onMonsterKilled(this);
     } else {
-      AudioSys.sfx('hit');
+      AudioSys.sfxAt('hit', this.x);
     }
   }
 

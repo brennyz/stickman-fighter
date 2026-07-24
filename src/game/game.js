@@ -157,7 +157,7 @@ class Game {
       this.burst(p.x + p.face * 18, p.y - 52, '#6fd7ff', 14, { kind: 'spark', size: 2.8 });
       spawnFxRing(this, p.x, p.y - 48, '#7cf5ff', 12);
     }
-    try { AudioSys.sting('bonus'); AudioSys.sfx('bonus'); } catch (_) {}
+    try { AudioSys.sting('masterSword'); AudioSys.sfx('masterSword'); } catch (_) {}
     haptic(26);
   }
 
@@ -241,6 +241,8 @@ class Game {
     if (this.traveling && !this.travelWasOn) {
       this.shake(motionReduced() ? 2 : 5, 0.22);
       this.bossBeatPlayed = false;
+      this._travelStepT = 0;
+      try { AudioSys.sfx('travel'); } catch (_) {}
       if (!fxLite() && !motionReduced() && this.player) {
         this.burst(this.player.x - 18, this.player.y - 8, '#c9b691', 9, { kind: 'spark', size: 2.2 });
       }
@@ -250,18 +252,24 @@ class Game {
         this.freezeT = Math.max(this.freezeT, 0.06);
         this.bossArriveT = motionReduced() ? 0.3 : 0.7;
         haptic(24);
+        try { AudioSys.sfx('bossArrive'); } catch (_) {}
       }
     }
     this.travelWasOn = this.traveling;
     if (this.traveling) {
       this.worldX = (this.worldX || 0) + dt * (isBossWave(this.level, this.waveIdx + 1) ? 220 : 165);
+      this._travelStepT = (this._travelStepT || 0) + dt;
+      if (this._travelStepT >= 0.38) {
+        this._travelStepT = 0;
+        try { AudioSys.sfx('step'); } catch (_) {}
+      }
     }
     // Baas-aankomst-beat: halverwege de reis naar de baas-golf één roar
     if (this.wavePause > 0 && isBossWave(this.level, this.waveIdx + 1) && !this.bossBeatPlayed) {
       const f = 1 - this.wavePause / (this.wavePauseTotal || 1);
       if (f > 0.45) {
         this.bossBeatPlayed = true;
-        try { AudioSys.sfx('roar'); } catch (_) {}
+        try { AudioSys.sfx('bossWait'); } catch (_) {}
         this.floater(W / 2, 120, 'DE BAAS WACHT…', '#ff8a9a', 15);
       }
     }
@@ -275,13 +283,14 @@ class Game {
       this.floater(W / 2, 96, `CHECKPOINT — DEEL ${part}/3`, '#7cf5ff', 17);
       const orbX = W / 2 - Math.min(320, W * 0.5) / 2 + clamp(this.progressSmooth || 0, 0, 1) * Math.min(320, W * 0.5);
       if (!fxLite()) this.burst(orbX, 44, '#7cf5ff', motionReduced() ? 6 : 14, { kind: 'spark', size: 2.4 });
-      try { AudioSys.sfx('bonus'); } catch (_) {}
+      try { AudioSys.sfx('checkpoint'); } catch (_) {}
       haptic(10);
     }
     if (this.comboT > 0) {
       this.comboT -= dt;
       if (this.comboT <= 0) this.combo = 0;
     }
+    try { AudioSys.setCombatHeat(Math.min(1, (this.combo || 0) / 12)); } catch (_) {}
     if (this.dmgBuffT > 0) {
       this.dmgBuffT -= dt;
       if (this.dmgBuffT <= 0) this.dmgBuffMul = 1;
@@ -372,6 +381,7 @@ class Game {
           this.player.hp = Math.min(this.player.maxhp, this.player.hp + heal);
           this.floater(this.player.x, this.player.y - 108, `+${heal} bondgenoot`, '#6ee06e', 14);
         }
+        try { AudioSys.sfx('waveClear'); } catch (_) {}
       }
       this.wavePause -= dt;
       if (this.wavePause <= 0) { this.wavePause = 0; this.nextWave(); }
@@ -863,6 +873,7 @@ class Game {
   }
 
   updateWall(dt) {
+    try { AudioSys.setCombatHeat(Math.min(1, (this.combo || 0) / 10)); } catch (_) {}
     const prevTimer = this.wallTimer;
     this.wallTimer -= dt;
     const hints = this.wallHints || (this.wallHints = {});
@@ -1217,7 +1228,7 @@ class Game {
               AudioSys.sfx('bonus');
             }
             this.burst(b.x + b.w / 2, b.y + b.h / 2, `hsl(${b.hue},50%,45%)`, 14);
-            AudioSys.sfx(b.bonus ? 'explode' : 'brick');
+            AudioSys.sfxAt(b.bonus ? 'explode' : 'brick', b.x + b.w / 2);
             this.shake(b.bonus ? 6 : 3, b.bonus ? 0.16 : 0.12);
             this.floater(b.x + b.w / 2, b.y, this.combo > 1 ? `x${this.combo}!` : '+1', '#ffd75e', 16);
             if (b.bonus) {
@@ -1227,13 +1238,13 @@ class Game {
               this.floater(b.x + b.w / 2, b.y - 22, 'BONUS +5', '#7cf5ff', 18);
             }
           } else {
-            AudioSys.sfx('crack');
+            AudioSys.sfxAt('crack', cx);
           }
           if (hits >= 3) break;
         }
       }
       if (hits > 0) {
-        try { AudioSys.sfx(weaponHitSfx(f.weapon, spec.dmg)); } catch (_) {}
+        try { AudioSys.sfxAt(weaponHitSfx(f.weapon, spec.dmg), hx); } catch (_) {}
       }
       return hits > 0;
     }
@@ -1270,6 +1281,7 @@ class Game {
           if (labels) this.floater(f.x + f.face * 24, f.y - 128, labels[2], '#ffd75e', 13);
         }
         this.player.energy = clamp(this.player.energy + 8, 0, 100);
+        try { AudioSys.sfxAt(weaponHitSfx(f.weapon, hitRoll.dmg), m.x); } catch (_) {}
         hit = true;
       }
     }
@@ -1302,10 +1314,10 @@ class Game {
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
         this.shake(spec.dmg > 20 ? 4 : 3, 0.12);
         if ((f.isPlayer || f.playerSlot) && save.haptics !== false) haptic(5);
+        try { AudioSys.sfxAt(weaponHitSfx(f.weapon, hitRoll.dmg), tgt.x); } catch (_) {}
         hit = true;
       }
     }
-    if (hit && this.mode !== 'wall') AudioSys.sfx(weaponHitSfx(f.weapon, spec.dmg));
     return hit;
   }
 
