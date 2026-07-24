@@ -132,9 +132,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.28';
+const APP_VERSION = '1.17.29';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 154;
+const SW_CACHE_REV = 155;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -10058,10 +10058,46 @@ const UI = {
   lastResult: null,
   pauseSubDefault: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
 
+  activeScreen() {
+    return this.screens.find(sid => document.getElementById(sid)?.classList.contains('active')) || null;
+  },
+
+  BACK_LABELS: {
+    modeHubScreen: '\u2190 Menu',
+    levelScreen: '\u2190 Menu',
+    gambleScreen: '\u2190 Levels',
+    weaponScreen: '\u2190 Collectie',
+    styleScreen: '\u2190 Collectie',
+    dexScreen: '\u2190 Collectie',
+    charSelectScreen: '\u2190 Menu',
+    missionsScreen: '\u2190 Menu',
+    settingsScreen: '\u2190 Menu',
+    helpScreen: '\u2190 Menu',
+    installScreen: '\u2190 Menu',
+  },
+
+  syncBackLabels() {
+    const active = this.activeScreen();
+    if (!active || active === 'charSelectScreen') return;
+    const el = document.getElementById(active);
+    if (!el) return;
+    const back = el.querySelector('.back-btn[data-back], .back-btn[data-back-gamble], #installBack');
+    if (!back) return;
+    const label = this.BACK_LABELS[active];
+    if (label) back.textContent = label;
+  },
+
   resetInnerScrolls(screenEl) {
     if (!screenEl) return;
-    const scrollables = screenEl.querySelectorAll('.char-grid-scroll, [data-scroll-reset]');
-    scrollables.forEach((el) => { try { el.scrollTop = 0; } catch (_) {} });
+    const scrollables = screenEl.querySelectorAll(
+      '.char-grid-scroll, .menu-landing-scroll, .mode-hub-body, .island-bar, .grid, #weaponList, [data-scroll-reset]'
+    );
+    scrollables.forEach((el) => {
+      try {
+        el.scrollTop = 0;
+        el.scrollLeft = 0;
+      } catch (_) {}
+    });
   },
 
   refreshPauseSubtitle() {
@@ -10094,6 +10130,7 @@ const UI = {
             try {
               el.scrollTop = 0;
               this.resetInnerScrolls(el);
+              this.syncBackLabels();
             } catch (_) {}
           });
         }
@@ -10183,6 +10220,12 @@ const UI = {
       if (active === 'charSelectScreen' && this.charPickStep === 2) {
         this.charPickStep = 1;
         this.renderCharSelect();
+        requestAnimationFrame(() => {
+          try {
+            this.resetInnerScrolls(document.getElementById('charSelectScreen'));
+            this.syncBackLabels();
+          } catch (_) {}
+        });
         return;
       }
       if (active === 'pauseScreen' && game) {
@@ -10196,7 +10239,11 @@ const UI = {
         this.show('levelScreen');
         return;
       }
-      if (active === 'modeHubScreen' || active === 'levelScreen') {
+      if (active === 'modeHubScreen') {
+        this.show('menuScreen');
+        return;
+      }
+      if (active === 'levelScreen') {
         this.show('menuScreen');
         return;
       }
@@ -10253,6 +10300,9 @@ const UI = {
       this.syncTouchClass();
       this.renderMenu();
       this.show('menuScreen');
+      requestAnimationFrame(() => {
+        try { this.resetInnerScrolls(document.getElementById('menuScreen')); } catch (_) {}
+      });
       AudioSys.setPaused(false);
       playMenuBgm(true);
       scheduleResize();
@@ -10393,6 +10443,9 @@ const UI = {
           AudioSys.sfx('select');
           this.charPickStep = 1;
           this.renderCharSelect();
+          requestAnimationFrame(() => {
+            try { this.resetInnerScrolls(document.getElementById('charSelectScreen')); } catch (_) {}
+          });
         });
       }
     }

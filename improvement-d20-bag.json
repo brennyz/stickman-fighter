@@ -3,22 +3,21 @@
   "cyclesCompleted": 3,
   "rollFirst": [],
   "remaining": [
-    18,
+    3,
     4,
     6,
-    3,
-    16,
-    20,
-    11,
     8,
     10,
-    15
+    15,
+    16,
+    18,
+    20
   ],
   "lastRoll": {
-    "face": 9,
-    "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
-    "rolledAt": "2026-07-24T18:46:11Z",
-    "remainingCount": 10,
+    "face": 11,
+    "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
+    "rolledAt": "2026-07-24T18:48:19Z",
+    "remainingCount": 9,
     "cycle": 3
   },
   "pending": null,
@@ -448,6 +447,13 @@
       "note": "2P neutral strip, joy slop, menu tap guard",
       "version": "1.17.28",
       "doneAt": "2026-07-24T18:47:53Z",
+      "cycle": 3
+    },
+    {
+      "face": 11,
+      "note": "back labels, scroll reset, big-touch hub tiles",
+      "version": "1.17.29",
+      "doneAt": "2026-07-24T18:48:53Z",
       "cycle": 3
     }
   ],
@@ -1494,7 +1500,24 @@
       "rolledAt": "2026-07-24T18:46:11Z",
       "remainingCount": 10,
       "cycle": 3
+    },
+    {
+      "face": 11,
+      "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
+      "rolledAt": "2026-07-24T18:48:19Z",
+      "remainingCount": 9,
+      "cycle": 3
     }
   ],
-  "rollBacklog": []
+  "rollBacklog": [
+    {
+      "face": 8,
+      "category": "PWA & offline \u2014 SW cache, install, standalone",
+      "focus": "SW bump + offline banner \u2014 network-first HTML.",
+      "rolledAt": "2026-07-24T18:48:04Z",
+      "queuedAt": "2026-07-24T18:48:10Z",
+      "reason": "unroll",
+      "cycle": 3
+    }
+  ]
 }
