@@ -6,21 +6,21 @@
     2,
     3,
     11,
-    13,
     18,
-    17
+    17,
+    12
   ],
   "lastRoll": {
-    "face": 12,
-    "category": "Content \u2014 monsters, wapens, rariteit, dex",
-    "rolledAt": "2026-07-24T14:38:18Z",
+    "face": 13,
+    "category": "Missies & achievements \u2014 daily loop, beloningen",
+    "rolledAt": "2026-07-24T14:38:31Z",
     "remainingCount": 6,
     "cycle": 2
   },
   "pending": {
-    "face": 12,
-    "category": "Content \u2014 monsters, wapens, rariteit, dex",
-    "rolledAt": "2026-07-24T14:38:18Z",
+    "face": 13,
+    "category": "Missies & achievements \u2014 daily loop, beloningen",
+    "rolledAt": "2026-07-24T14:38:31Z",
     "remainingCount": 6,
     "cycle": 2
   },
@@ -1021,6 +1021,13 @@
       "face": 12,
       "category": "Content \u2014 monsters, wapens, rariteit, dex",
       "rolledAt": "2026-07-24T14:38:18Z",
+      "remainingCount": 6,
+      "cycle": 2
+    },
+    {
+      "face": 13,
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
+      "rolledAt": "2026-07-24T14:38:31Z",
       "remainingCount": 6,
       "cycle": 2
     }
