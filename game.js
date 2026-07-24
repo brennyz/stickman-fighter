@@ -46,6 +46,26 @@ const Perf = {
   skipHeavyDraw() {
     return state === 'play' && this.tier >= 2 && (this.frames & 1) === 0;
   },
+  /** Hoofdmenu-landing zichtbaar — enige menu-scherm met canvas-animatie. */
+  menuLandingVisible() {
+    if (typeof state === 'undefined' || state !== 'menu') return false;
+    try {
+      const ms = document.getElementById('menuScreen');
+      return !!(ms && ms.classList.contains('active'));
+    } catch (_) {
+      return false;
+    }
+  },
+  /** Canvas mag getekend worden (gevecht of menu-backdrop). */
+  canvasDrawActive() {
+    if (typeof state !== 'undefined' && state === 'play' && typeof game !== 'undefined' && game) return true;
+    return this.menuLandingVisible();
+  },
+  /** Statische submenu's — verlaag rAF-work (~2 Hz i.p.v. 60 Hz). */
+  loopIdleMode() {
+    if (typeof state === 'undefined' || state === 'play') return false;
+    return !this.menuLandingVisible();
+  },
 };
 function fxCaps() {
   let mul = 1;
@@ -112,9 +132,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.21';
+const APP_VERSION = '1.17.22';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 147;
+const SW_CACHE_REV = 148;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -3703,6 +3723,7 @@ const AudioSys = {
 
   tick() {
     if (!this.ctx || !this.song || !save.music) return;
+    if (typeof document !== 'undefined' && document.hidden) return;
     const s = this.song;
     const spb = 60 / s.bpm / 4;
     while (this.nextTime < this.ctx.currentTime + 0.18) {
@@ -4777,6 +4798,7 @@ function resize() {
   const sizeKey = vp.w + 'x' + vp.h + '@' + newDpr + 't' + Perf.tier;
   if (sizeKey === lastResizeKey) return;
   lastResizeKey = sizeKey;
+  try { if (typeof menuBgCacheInvalidate === 'function') menuBgCacheInvalidate(); } catch (_) {}
   DPR = newDpr;
   W = vp.w;
   H = vp.h;
@@ -11794,6 +11816,9 @@ bindPress(document.getElementById('resMenu'), () => { UI.goMenu(); });
 let lastTime = performance.now();
 let menuAnimT = 0;
 let menuHeroFrame = 0;
+let loopIdleFrames = 0;
+let menuBgCache = null;
+let menuBgCacheKey = '';
 
 function menuHeroPaintSkip() {
   if (save.liteFx) return 2;
@@ -11802,9 +11827,22 @@ function menuHeroPaintSkip() {
   return 1;
 }
 
-function drawMenuBackdrop(c, t) {
+function menuBgCacheInvalidate() {
+  menuBgCacheKey = '';
+}
+
+function ensureMenuBgCache() {
   const lite = save.liteFx || motionReduced() || Perf.tier >= 1;
   const ultraLite = lite || Perf.tier >= 2;
+  const key = W + 'x' + H + '@' + DPR + 't' + Perf.tier + (lite ? 'L' : '') + (ultraLite ? 'U' : '');
+  if (menuBgCache && menuBgCacheKey === key) return menuBgCache;
+  menuBgCacheKey = key;
+  if (!menuBgCache) menuBgCache = document.createElement('canvas');
+  menuBgCache.width = Math.max(1, Math.floor(W * DPR));
+  menuBgCache.height = Math.max(1, Math.floor(H * DPR));
+  const c = menuBgCache.getContext('2d');
+  if (!c) return null;
+  c.setTransform(DPR, 0, 0, DPR, 0, 0);
   c.fillStyle = '#0b0e1a';
   c.fillRect(0, 0, W, H);
   const g = c.createLinearGradient(0, 0, 0, H);
@@ -11813,7 +11851,6 @@ function drawMenuBackdrop(c, t) {
   g.addColorStop(1, '#0a0d18');
   c.fillStyle = g;
   c.fillRect(0, 0, W, H);
-  // Arcade sun stripes
   c.save();
   c.translate(W * 0.5, H * 0.28);
   const rays = ultraLite ? 6 : 10;
@@ -11828,6 +11865,19 @@ function drawMenuBackdrop(c, t) {
     c.fill();
   }
   c.restore();
+  return menuBgCache;
+}
+
+function drawMenuBackdrop(c, t) {
+  const lite = save.liteFx || motionReduced() || Perf.tier >= 1;
+  const ultraLite = lite || Perf.tier >= 2;
+  const cache = ensureMenuBgCache();
+  if (cache) {
+    c.drawImage(cache, 0, 0, W, H);
+  } else {
+    c.fillStyle = '#0b0e1a';
+    c.fillRect(0, 0, W, H);
+  }
   const starN = ultraLite ? 10 : (lite ? 14 : 28);
   for (let i = 0; i < starN; i++) {
     const x = (Math.sin(t * 0.4 + i * 1.7) * 0.5 + 0.5) * W;
@@ -11945,9 +11995,17 @@ function loop(now) {
   try {
     if (!ctx || !canvas) return;
     const hidden = typeof document !== 'undefined' && document.hidden;
-    const dt = Math.min((now - lastTime) / 1000, 0.05);
-    if (!(dt >= 0) || dt > 1) { lastTime = now; return; }
     if (hidden) { lastTime = now; return; }
+    const idle = Perf.loopIdleMode();
+    if (idle) {
+      loopIdleFrames++;
+      if (loopIdleFrames % 30 !== 0) return;
+    } else {
+      loopIdleFrames = 0;
+    }
+    const dtRaw = (now - lastTime) / 1000;
+    const dt = idle ? Math.min(dtRaw, 0.25) : Math.min(dtRaw, 0.05);
+    if (!(dt >= 0) || dtRaw > 1) { lastTime = now; return; }
     Perf.tick(dt * 1000);
     lastTime = now;
     if (state === 'play' && game) {
@@ -11965,19 +12023,15 @@ function loop(now) {
       try { Input.endFrame(); } catch (frameErr) {
         sfReportError('input', frameErr);
       }
-    } else {
+    } else if (Perf.menuLandingVisible()) {
       menuAnimT += dt;
-      if (state === 'menu') {
-        ensureMenuScreenActive();
-        const ms = document.getElementById('menuScreen');
-        if (ms && ms.classList.contains('active')) {
-          menuHeroFrame++;
-          if (menuHeroFrame % menuHeroPaintSkip() === 0) {
-            try { paintMenuHeroCanvas(menuAnimT); } catch (_) {}
-          }
-        }
+      ensureMenuScreenActive();
+      menuHeroFrame++;
+      if (menuHeroFrame % menuHeroPaintSkip() === 0) {
+        try { paintMenuHeroCanvas(menuAnimT); } catch (_) {}
       }
     }
+    if (!Perf.canvasDrawActive()) return;
     if (game && typeof game.draw === 'function' && !Perf.skipHeavyDraw()) {
       try {
         game.draw(ctx);
@@ -11991,7 +12045,6 @@ function loop(now) {
         return;
       }
     } else if (!Perf.skipHeavyDraw()) {
-      // Backdrop-fout mag nooit schermen sluiten — alleen vlak vangnet tekenen.
       try {
         drawMenuBackdrop(ctx, menuAnimT);
       } catch (bgErr) {
@@ -12244,8 +12297,10 @@ function bootGame() {
   if (state === 'menu') safeCall(() => UI.show('menuScreen'), 'showMenu');
   if (!window.__sfTipTimer) {
     window.__sfTipTimer = setInterval(() => {
-      if (state === 'menu') safeCall(() => UI.renderMenu(), 'menuTick');
-    }, 8000);
+      if (state !== 'menu') return;
+      if (!Perf.menuLandingVisible()) return;
+      safeCall(() => UI.renderMenu(), 'menuTick');
+    }, 12000);
   }
   window.__sf = {
     get game() { return game; },
@@ -12311,6 +12366,6 @@ function bindUiLayerWatch() {
   };
   document.addEventListener('touchstart', tick, { passive: true, capture: true });
   document.addEventListener('pointerdown', tick, { passive: true, capture: true });
-  setInterval(tick, 2000);
+  setInterval(tick, 8000);
 }
 bindUiLayerWatch();
