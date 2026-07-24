@@ -3851,6 +3851,10 @@ function styleMods(st) {
 }
 
 function styleCombatLine(st) {
+  if (typeof styleLabel === 'function') {
+    const bonus = styleLabel(st, 'bonus');
+    if (bonus) return bonus;
+  }
   return st.bonus || st.hint || '';
 }
 
@@ -5382,7 +5386,9 @@ function seedNlGameStrings() {
     styleSub: 'Outfits met bonus — level, training, monsterboek · hover voor tooltip',
     styleActive: 'Actief',
     stylePick: 'Tik om te kiezen',
-    styleIslandGate: 'Eiland-skill Lv {lvl}',
+    styleIslandGate: 'Avontuur-cap Lv {cap} · stijl unlock Lv {need}',
+    weaponIslandPick: 'Training ✓ · avontuur ≤ Lv {cap}',
+    weaponIslandCapShort: 'Eiland-cap Lv {cap}',
     weaponHead: 'Wapens',
     weaponSub: 'Summons zijn echt · eiland-skill gate: alleen wapens tot je huidige eiland-cap in avontuur',
     helpFirstMinute: 'Eerste minuut — per modus één korte hint bovenin het gevecht (geen toast-stapel). Avontuur: joystick + knoppen · groen = HP · vol chakra = SUPER-knop. Training = Robot · Muur = combo · 2 spelers = links/rechts.',
@@ -5801,7 +5807,9 @@ const CATALOG_EN = {
     styleSub: 'Outfits with bonus — level, training, monster book · hover for tooltip',
     styleActive: 'Active',
     stylePick: 'Tap to equip',
-    styleIslandGate: 'Island skill Lv {lvl}',
+    styleIslandGate: 'Adventure cap Lv {cap} · style unlock Lv {need}',
+    weaponIslandPick: 'Training ✓ · adventure ≤ Lv {cap}',
+    weaponIslandCapShort: 'Island cap Lv {cap}',
     weaponHead: 'Weapons',
     weaponSub: 'Summons are real · island skill gate: adventure weapons up to your island cap',
     helpFirstMinute: 'First minute — one short hint per mode at top (no toast stack). Adventure: joystick + buttons · green = HP · full chakra = SUPER. Training = Robot · Wall = combo · 2P = left/right.',
@@ -15693,16 +15701,20 @@ const UI = {
       const moveLine = labels
         ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} finisher${mastLine}`
         : (isThrowWeapon(w.id) ? 'Werp-projectiel — geen melee-combo' : '');
+      const islandLine = islandLocked && !lvlLocked
+        ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:#ffd75e">${t('ui.weaponIslandPick', { cap: adventureWeaponCap() })}</div>`
+        : '';
       info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${summonBadge}${tierBadge}</div>
         <div class="cinfo">${statLine}</div>` +
-        (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '');
+        (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '') +
+        islandLine;
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
       right.innerHTML = lvlLocked
         ? `${SVG_LOCK_ICON} Lv ${base.unlock}`
         : (islandLocked
-          ? `Avontuur Lv ${base.unlock}`
+          ? t('ui.weaponIslandCapShort', { cap: adventureWeaponCap() })
           : (save.weapon === w.id ? '&#10004; gekozen' : 'kies'));
       el.appendChild(right);
       if (!locked) el.addEventListener('click', () => {
@@ -16119,7 +16131,7 @@ const UI = {
       sub.style.opacity = '0.75';
       sub.style.marginTop = '4px';
       sub.textContent = ok ? (save.style === st.id ? t('ui.styleActive') : t('ui.stylePick'))
-        : (styleSkillGated(st) ? t('ui.styleIslandGate', { lvl: st.needLvl }) : styleLabel(st, 'hint'));
+        : (styleSkillGated(st) ? t('ui.styleIslandGate', { cap: adventureWeaponCap(), need: st.needLvl || '?' }) : styleLabel(st, 'hint'));
       el.appendChild(sub);
       if (ok) {
         el.addEventListener('click', () => {

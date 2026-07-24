@@ -72,6 +72,10 @@ function styleMods(st) {
 }
 
 function styleCombatLine(st) {
+  if (typeof styleLabel === 'function') {
+    const bonus = styleLabel(st, 'bonus');
+    if (bonus) return bonus;
+  }
   return st.bonus || st.hint || '';
 }
 
