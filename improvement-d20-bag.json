@@ -6,21 +6,21 @@
     11,
     18,
     17,
-    2,
     12,
-    3
+    3,
+    13
   ],
   "lastRoll": {
-    "face": 13,
-    "category": "Missies & achievements \u2014 daily loop, beloningen",
-    "rolledAt": "2026-07-24T15:12:54Z",
+    "face": 2,
+    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
+    "rolledAt": "2026-07-24T15:13:09Z",
     "remainingCount": 6,
     "cycle": 2
   },
   "pending": {
-    "face": 13,
-    "category": "Missies & achievements \u2014 daily loop, beloningen",
-    "rolledAt": "2026-07-24T15:12:54Z",
+    "face": 2,
+    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
+    "rolledAt": "2026-07-24T15:13:09Z",
     "remainingCount": 6,
     "cycle": 2
   },
@@ -1113,6 +1113,13 @@
       "face": 13,
       "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-07-24T15:12:54Z",
+      "remainingCount": 6,
+      "cycle": 2
+    },
+    {
+      "face": 2,
+      "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
+      "rolledAt": "2026-07-24T15:13:09Z",
       "remainingCount": 6,
       "cycle": 2
     }
