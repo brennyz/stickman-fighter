@@ -191,7 +191,8 @@
       font-size:18px; background:linear-gradient(180deg,#5a8cff,#2a52c8); border:none; border-radius:16px;
       color:#fff; font-weight:800; cursor:pointer; box-shadow:0 6px 0 rgba(0,0,0,.35); }
 
-  .back-btn { position:absolute; top:max(14px, env(safe-area-inset-top)); left:16px;
+  .back-btn { position:sticky; top:max(8px, env(safe-area-inset-top)); align-self:flex-start;
+      z-index:6; margin:0 0 10px; left:auto;
       background:linear-gradient(180deg,#5a6784,#39445e); padding:10px 20px; font-size:16px;
       border-radius:14px; z-index:11; touch-action:manipulation; min-height:44px; }
   body.big-touch .back-btn { padding:14px 22px; font-size:18px; min-height:52px; left:12px; }
@@ -780,7 +781,7 @@
 </script>
 
 <script src="tunnel-check.js?v=203"></script>
-<script src="game.js?v=277"></script>
+<script src="game.js?v=278"></script>
 <script src="install.js?v=204"></script>
 <script>
 (function () {

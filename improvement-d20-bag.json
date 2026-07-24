@@ -7,14 +7,13 @@
     12,
     18,
     2,
-    11,
     17
   ],
   "lastRoll": {
-    "face": 13,
-    "category": "Missies & achievements \u2014 daily loop, beloningen",
-    "rolledAt": "2026-07-24T15:27:24Z",
-    "remainingCount": 6,
+    "face": 11,
+    "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
+    "rolledAt": "2026-07-24T15:32:58Z",
+    "remainingCount": 5,
     "cycle": 2
   },
   "pending": null,
@@ -332,6 +331,13 @@
       "note": "Speel shortcuts + streak + ach bijna-sort",
       "version": "1.17.1",
       "doneAt": "2026-07-24T15:32:54Z",
+      "cycle": 2
+    },
+    {
+      "face": 11,
+      "note": "sticky back + home always menu",
+      "version": "1.17.2",
+      "doneAt": "2026-07-24T15:33:52Z",
       "cycle": 2
     }
   ],
@@ -1266,6 +1272,13 @@
       "rolledAt": "2026-07-24T15:27:24Z",
       "remainingCount": 6,
       "cycle": 2
+    },
+    {
+      "face": 11,
+      "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
+      "rolledAt": "2026-07-24T15:32:58Z",
+      "remainingCount": 5,
+      "cycle": 2
     }
   ],
   "rollBacklog": [
@@ -1301,15 +1314,6 @@
       "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
       "focus": "Telegraphen + 1 AI-tweak \u2014 geen one-shot kills.",
       "rolledAt": "2026-07-24T15:26:21Z",
-      "queuedAt": "2026-07-24T15:29:21Z",
-      "reason": "backfill",
-      "cycle": 2
-    },
-    {
-      "face": 11,
-      "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
-      "focus": "goBack/scroll/grote knoppen \u2014 \u00e9\u00e9n flow-fix.",
-      "rolledAt": "2026-07-24T15:26:55Z",
       "queuedAt": "2026-07-24T15:29:21Z",
       "reason": "backfill",
       "cycle": 2

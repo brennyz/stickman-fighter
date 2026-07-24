@@ -105,6 +105,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-24 | **11** | Menu-nav (cyclus 2): sticky Terug-knop op lange subschermen; **Terug naar menu** gaat altijd naar hoofdmenu (ook vanaf gok-scherm). v1.17.2 / SW v129. |
 | 2026-07-24 | **13** | Missies (cyclus 2): Speel→ knop per daily (Avontuur/Muur/Training), volgende-missie highlight, dagbonus-streak, prestaties sorteer op bijna-klaar + intro-toast. v1.17.1 / SW v128. |
 | 2026-07-24 | — | **d20 roll UX:** `./scripts/roll-improvement-d20.sh` blokkeert niet meer op open pending — zet vorige face terug in zak en rolt direct opnieuw. `unroll` = terug zonder roll. |
 | 2026-07-24 | — | **User: harden movement.** `applyFighterMove` — snappy keyboard-turn (2.4× accel), joy curve, air control, lichte beweging tijdens hurt, snellere stop. v1.17.0 / SW v127. |
