@@ -157,7 +157,7 @@ const SVG_LOCK_ICON =
 
 const MODE_HUB_META = {
   arcade: { badge: 'SOLO', badgeClass: 'badge-solo', title: 'Arcade', sub: 'Snelle sessies · high scores · geen voortgang verlies' },
-  collect: { badge: 'COLLECTIE', badgeClass: 'badge-meta', title: 'Verzameling', sub: 'Wapens · pets · stijlen · monsterboek · XP & unlocks' },
+  collect: { badge: 'COLLECTIE', badgeClass: 'badge-meta', title: 'Verzameling', sub: 'Wapens · dex & ei-pets · stijlen · monsterboek' },
 };
 
 function hubForPlayMode(mode) {
@@ -187,7 +187,7 @@ function hubTileStatLine(hub) {
       return m > 0 ? `${w}/${m} gewonnen` : '23 vechters · lokaal';
     }
     case 'collect':
-      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · pets ${petTamedCount()}/${PET_ROSTER.length} · boek ${dexCount()}/${SPECIES_ORDER.length}`;
+      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ei ${eggOwnedCount()}/${EGG_ROSTER.length}`;
     default:
       return '';
   }
@@ -217,6 +217,7 @@ const UI = {
   charPreviewHoverId: null,
   dexRarityFilter: 'all',
   achFilter: 'all',
+  petTab: 'dex',
   advIslandPick: 0,
   lastResult: null,
   pauseSubDefault: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
@@ -735,7 +736,10 @@ const UI = {
     } else if (this.modeHubId === 'collect') {
       setStat('hubStatWeapons', `${weaponUnlockedCount()}/${WEAPONS.length} vrij`);
       const petsN = petTamedCount();
-      setStat('hubStatPets', petsN > 0 ? `${petsN}/${PET_ROSTER.length} getemd` : `${PET_ROSTER.length} via dex`);
+      const eggsN = eggOwnedCount();
+      setStat('hubStatPets', eggsN > 0 || petsN > 0
+        ? `dex ${petsN}/${PET_ROSTER.length} · ei ${eggsN}/${EGG_ROSTER.length}`
+        : `${PET_ROSTER.length} dex · ${EGG_ROSTER.length} ei`);
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
       setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
       setStat('hubStatDex', `${dexCount()}/${SPECIES_ORDER.length} · +max HP`);
@@ -1468,6 +1472,35 @@ const UI = {
   },
 
   renderPets() {
+    const tab = this.petTab || 'dex';
+    const bar = document.getElementById('petTabBar');
+    if (bar) {
+      bar.innerHTML =
+        `<button type="button" class="dex-filter-btn${tab === 'dex' ? ' active' : ''}" data-pet-tab="dex">Dex · ${petTamedCount()}/${PET_ROSTER.length}</button>` +
+        `<button type="button" class="dex-filter-btn${tab === 'egg' ? ' active' : ''}" data-pet-tab="egg">Ei arcade · ${eggOwnedCount()}/${EGG_ROSTER.length}</button>`;
+      if (!bar.dataset.bound) {
+        bar.dataset.bound = '1';
+        bar.addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-pet-tab]');
+          if (!btn) return;
+          AudioSys.sfx('select');
+          UI.petTab = btn.getAttribute('data-pet-tab') || 'dex';
+          UI.renderPets();
+        });
+      }
+    }
+    const dexPanel = document.getElementById('petDexPanel');
+    const eggPanel = document.getElementById('petEggPanel');
+    if (dexPanel) dexPanel.style.display = tab === 'dex' ? '' : 'none';
+    if (eggPanel) eggPanel.style.display = tab === 'egg' ? '' : 'none';
+    if (tab === 'egg') {
+      this.renderEggPets();
+      return;
+    }
+    this.renderDexPets();
+  },
+
+  renderDexPets() {
     const sumEl = document.getElementById('petSummary');
     if (sumEl) {
       const tamed = petTamedCount();
@@ -1531,6 +1564,95 @@ const UI = {
             }
             this.renderPets();
           }, 'equipPet/' + def.id, 'Pet kiezen mislukt');
+        });
+      }
+      list.appendChild(el);
+    }
+  },
+
+  renderEggPets() {
+    ensureEggDaily();
+    const sum = eggProgressSummary();
+    const sumEl = document.getElementById('eggSummary');
+    if (sumEl) {
+      sumEl.style.display = 'block';
+      sumEl.innerHTML =
+        `Verzameld <b>${sum.owned}/${sum.total}</b> · actief <b>${sum.activeName}</b> · <b>${sum.daily}</b>` +
+        `<div style="margin-top:6px;font-size:12px;opacity:.85">Cosmetisch — geen combat-boost. 1 dag-ei + bonus-ei na je eerste avontuur-win vandaag.</div>`;
+    }
+    const crackBtn = document.getElementById('eggCrackBtn');
+    if (crackBtn) {
+      const ready = canCrackDailyEgg();
+      crackBtn.style.display = ready ? '' : 'none';
+      crackBtn.innerHTML =
+        `<span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><ellipse cx="12" cy="13" rx="7" ry="9" fill="#ffd75e" opacity=".35"/><path d="M8 10c2-3 6-3 8 0"/></svg></span>` +
+        `<div>Dag-ei openen<small>Gratis arcade-pull · vandaag</small></div>`;
+      if (!crackBtn.dataset.bound) {
+        crackBtn.dataset.bound = '1';
+        crackBtn.addEventListener('click', () => {
+          if (!uiTapAllowed()) return;
+          safeUiAction(() => {
+            const res = crackDailyEgg();
+            if (!res) {
+              UI.toast('Dag-ei al geopend — morgen weer', 2200);
+              return;
+            }
+            try { AudioSys.sfx('diceRoll'); } catch (_) {}
+            const rar = rarityOf(res.def.rarity);
+            UI.toast(res.duplicate
+              ? `Dubbel ei: ${res.def.name} (+10 XP)`
+              : `Uitgekomen! ${res.def.name} (${rar.name})`, 3600);
+            this.renderPets();
+            this.renderMenu();
+          }, 'crackDailyEgg', 'Ei openen mislukt');
+        });
+      }
+    }
+    const list = document.getElementById('eggList');
+    if (!list) return;
+    list.innerHTML = '';
+    for (const def of EGG_ROSTER) {
+      const rar = rarityOf(def.rarity);
+      const owned = isEggOwned(def.id);
+      const active = save.activeEggPet === def.id;
+      const el = document.createElement('div');
+      el.className = 'card' + (owned ? '' : ' locked') + (active ? ' sel' : '');
+      el.style.borderColor = owned ? rar.color : undefined;
+      const cv = document.createElement('canvas');
+      cv.width = 64; cv.height = 64;
+      const cc = cv.getContext('2d');
+      cc.translate(32, 36);
+      drawEggPetArt(cc, def, 18, 1.1, 0, 0, !owned);
+      el.appendChild(cv);
+      const info = document.createElement('div');
+      const badge = active ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">ACTIEF</span>' : '';
+      info.innerHTML = `<div class="cname">${def.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>${badge}</div>` +
+        `<div class="cinfo">${def.perk}</div>` +
+        `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${owned ? 'Cosmetisch metgezel' : 'Nog niet uitgekomen'}</div>`;
+      el.appendChild(info);
+      const right = document.createElement('div');
+      right.className = 'right';
+      if (owned) {
+        right.innerHTML = active ? '&#10004; actief' : 'uitrusten';
+      } else {
+        right.textContent = '???';
+        right.style.opacity = '0.7';
+      }
+      el.appendChild(right);
+      if (owned) {
+        el.addEventListener('click', () => {
+          if (!uiTapAllowed()) return;
+          safeUiAction(() => {
+            if (active) {
+              equipEggPet(null);
+              UI.toast('Geen actief ei-pet', 1400);
+            } else {
+              equipEggPet(def.id);
+              AudioSys.sfx('select');
+              UI.toast(`${def.name} zweeft nu mee!`, 2200);
+            }
+            this.renderPets();
+          }, 'equipEggPet/' + def.id, 'Ei-pet kiezen mislukt');
         });
       }
       list.appendChild(el);

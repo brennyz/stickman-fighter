@@ -132,15 +132,16 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.46';
+const APP_VERSION = '1.17.47';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 172;
+const SW_CACHE_REV = 173;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {}, pets: {}, activePet: null,
+  eggPets: {}, activeEggPet: null, eggDaily: null,
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0 },
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0 },
   achievements: {}, daily: null, vsPlayedIds: [] };
 const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
@@ -732,6 +733,25 @@ function sanitizeSave(s) {
   out.pets = cleanPets;
   if (out.activePet && !cleanPets[out.activePet]) out.activePet = null;
   else if (out.activePet && typeof PET_BY_ID !== 'undefined' && !PET_BY_ID[out.activePet]) out.activePet = null;
+
+  const cleanEggs = {};
+  for (const [k, v] of Object.entries(out.eggPets || {})) {
+    if (typeof EGG_BY_ID !== 'undefined' && !EGG_BY_ID[k]) continue;
+    if (typeof EGG_BY_ID === 'undefined') continue;
+    const entry = (v && typeof v === 'object') ? v : {};
+    cleanEggs[k] = { src: typeof entry.src === 'string' ? entry.src.slice(0, 12) : 'daily' };
+  }
+  out.eggPets = cleanEggs;
+  if (out.activeEggPet && !cleanEggs[out.activeEggPet]) out.activeEggPet = null;
+  else if (out.activeEggPet && typeof EGG_BY_ID !== 'undefined' && !EGG_BY_ID[out.activeEggPet]) out.activeEggPet = null;
+  if (out.eggDaily && typeof out.eggDaily === 'object') {
+    const dk = typeof out.eggDaily.date === 'string' ? out.eggDaily.date.slice(0, 10) : todayKey();
+    out.eggDaily = {
+      date: dk,
+      dailyCracked: !!out.eggDaily.dailyCracked,
+      advBonus: !!out.eggDaily.advBonus,
+    };
+  } else out.eggDaily = null;
 
   const stPick = STYLES.find(st => st.id === out.style) || STYLES[0];
   let styleOk = stPick.id === 'classic';
@@ -3550,6 +3570,147 @@ function petProgressLine(speciesId) {
   const cur = save.dex[speciesId] || 0;
   if (cur <= 0) return `Pet · ${need} kills`;
   return `Pet · ${Math.min(cur, need)}/${need} kills`;
+}
+/* --- src/data/egg-pets.js --- */
+/* ============================== EGG PETS (ARCADE) ===================== */
+/** Cosmetische ei-metgezels — dagelijks + bonus na avontuur-win (deel 3 pets). */
+
+const EGG_WEIGHT = { common: 40, uncommon: 28, rare: 16, epic: 10, legendary: 5, mythic: 1 };
+
+const EGG_ROSTER = [
+  { id: 'egg_pebble', name: 'Kiezel', rarity: 'common', c1: '#b8c4d4', c2: '#6b7a8f', pattern: 'speckle',
+    perk: 'Zachte grijze gloed' },
+  { id: 'egg_moss', name: 'Mosbal', rarity: 'common', c1: '#7ad06a', c2: '#3a8a40', pattern: 'dot',
+    perk: 'Groene sprankels' },
+  { id: 'egg_candy', name: 'Snoep', rarity: 'uncommon', c1: '#ff9ad5', c2: '#c04590', pattern: 'stripe',
+    perk: 'Roze strepen' },
+  { id: 'egg_cloud', name: 'Wolkje', rarity: 'uncommon', c1: '#dfe8ff', c2: '#8fa3d9', pattern: 'swirl',
+    perk: 'Zachte wolk-swirl' },
+  { id: 'egg_star', name: 'Sterretje', rarity: 'rare', c1: '#ffd75e', c2: '#c97a20', pattern: 'star',
+    perk: 'Gouden sterren' },
+  { id: 'egg_flame', name: 'Vlammetje', rarity: 'rare', c1: '#ff8c42', c2: '#d04018', pattern: 'flame',
+    perk: 'Warme vlam-accent' },
+  { id: 'egg_crystal', name: 'Kristal', rarity: 'epic', c1: '#7cf5ff', c2: '#2a7fc0', pattern: 'crystal',
+    perk: 'Blauw kristal-shimmer' },
+  { id: 'egg_moon', name: 'Maanei', rarity: 'epic', c1: '#cfe6ff', c2: '#6b5cff', pattern: 'moon',
+    perk: 'Maansikkel-gloed' },
+  { id: 'egg_gold', name: 'Gouden', rarity: 'legendary', c1: '#ffe259', c2: '#c97a20', pattern: 'gold',
+    perk: 'Legendarische goudglans' },
+  { id: 'egg_neon', name: 'Neon', rarity: 'legendary', c1: '#4ecf6a', c2: '#7cf5ff', pattern: 'neon',
+    perk: 'Neon-rand pulse' },
+  { id: 'egg_rainbow', name: 'Regenboog', rarity: 'mythic', c1: '#ff6b9d', c2: '#7cf5ff', pattern: 'rainbow',
+    perk: 'Mythisch regenboog-ei' },
+  { id: 'egg_prism', name: 'Prisma', rarity: 'mythic', c1: '#b06ae0', c2: '#ffd75e', pattern: 'prism',
+    perk: 'Zeldzaam prisma-flits' },
+];
+
+const EGG_BY_ID = Object.fromEntries(EGG_ROSTER.map(e => [e.id, e]));
+
+function eggDef(id) { return EGG_BY_ID[id] || null; }
+
+function isEggOwned(id) {
+  return !!(save.eggPets && save.eggPets[id]);
+}
+
+function eggOwnedCount() {
+  return Object.keys(save.eggPets || {}).filter(k => EGG_BY_ID[k]).length;
+}
+
+function activeEggPetDef() {
+  const id = save.activeEggPet;
+  if (!id || !isEggOwned(id)) return null;
+  return eggDef(id);
+}
+
+function ensureEggDaily() {
+  const dk = todayKey();
+  if (!save.eggDaily || save.eggDaily.date !== dk) {
+    save.eggDaily = { date: dk, dailyCracked: false, advBonus: false };
+  }
+}
+
+function canCrackDailyEgg() {
+  ensureEggDaily();
+  return !save.eggDaily.dailyCracked;
+}
+
+function canAdvEggBonus() {
+  ensureEggDaily();
+  return !save.eggDaily.advBonus && eggOwnedCount() < EGG_ROSTER.length;
+}
+
+function weightedEggPick() {
+  const unowned = EGG_ROSTER.filter(e => !isEggOwned(e.id));
+  const pool = unowned.length ? unowned : EGG_ROSTER;
+  let total = 0;
+  const wts = pool.map(e => {
+    const w = EGG_WEIGHT[e.rarity] || 10;
+    total += w;
+    return w;
+  });
+  let r = Math.random() * total;
+  for (let i = 0; i < pool.length; i++) {
+    r -= wts[i];
+    if (r <= 0) return pool[i];
+  }
+  return pool[pool.length - 1];
+}
+
+function hatchEggPet(source) {
+  const def = weightedEggPick();
+  const dup = isEggOwned(def.id);
+  if (!dup) {
+    if (!save.eggPets || typeof save.eggPets !== 'object') save.eggPets = {};
+    save.eggPets[def.id] = { at: Date.now(), src: source || 'daily' };
+    if (!save.activeEggPet) save.activeEggPet = def.id;
+    save.stats.eggsHatched = (save.stats.eggsHatched || 0) + 1;
+  } else {
+    grantMetaXP(10);
+  }
+  try { AudioSys.sfx(dup ? 'select' : 'summon'); } catch (_) {}
+  return { def, duplicate: dup, xp: dup ? 10 : 0 };
+}
+
+function crackDailyEgg() {
+  if (!canCrackDailyEgg()) return null;
+  save.eggDaily.dailyCracked = true;
+  const res = hatchEggPet('daily');
+  persist();
+  return res;
+}
+
+function maybeAdvEggBonus() {
+  if (!canAdvEggBonus()) return null;
+  save.eggDaily.advBonus = true;
+  const res = hatchEggPet('adv');
+  persist();
+  return res;
+}
+
+function equipEggPet(id) {
+  if (!id) { save.activeEggPet = null; persist(); return true; }
+  if (!isEggOwned(id)) return false;
+  save.activeEggPet = id;
+  persist();
+  return true;
+}
+
+function eggDailyStatusLine() {
+  ensureEggDaily();
+  if (canCrackDailyEgg()) return 'Dag-ei klaar';
+  if (canAdvEggBonus()) return 'Bonus-ei: win 1× avontuur';
+  return 'Morgen weer ei';
+}
+
+function eggProgressSummary() {
+  const owned = eggOwnedCount();
+  const active = activeEggPetDef();
+  return {
+    owned,
+    total: EGG_ROSTER.length,
+    activeName: active ? active.name : 'geen',
+    daily: eggDailyStatusLine(),
+  };
 }
 /* --- src/systems/audio.js --- */
 /* =============================== AUDIO ================================= */
@@ -7106,6 +7267,185 @@ function applyPetBonusesToPlayer(game, player) {
     player.speed = Math.round(player.speed * pb.speedMul);
   }
 }
+/* --- src/entities/egg-pet.js --- */
+/* ============================== EGG PET FOLLOWER ====================== */
+
+function drawEggPetArt(c, def, size, t, x, y, dim) {
+  if (!def) return;
+  const rar = rarityOf(def.rarity);
+  const bob = Math.sin(t * 4.2) * 1.5;
+  c.save();
+  c.translate(x, y + bob);
+  const s = size;
+  const g = c.createLinearGradient(0, -s, 0, s * 0.9);
+  g.addColorStop(0, def.c1);
+  g.addColorStop(1, def.c2);
+  c.fillStyle = g;
+  c.beginPath();
+  c.ellipse(0, 0, s * 0.72, s, 0, 0, TAU);
+  c.fill();
+  c.strokeStyle = dim ? 'rgba(255,255,255,.12)' : (rar.color + '88');
+  c.lineWidth = 1.4;
+  c.stroke();
+  if (!dim) {
+    c.globalAlpha = 0.35 + Math.sin(t * 3) * 0.08;
+    c.fillStyle = rar.glow || 'rgba(124,245,255,.25)';
+    c.beginPath();
+    c.ellipse(0, 0, s * 0.95, s * 1.15, 0, 0, TAU);
+    c.fill();
+    c.globalAlpha = 1;
+  }
+  c.save();
+  c.globalAlpha = dim ? 0.25 : 0.85;
+  c.fillStyle = '#fff';
+  switch (def.pattern) {
+    case 'stripe':
+      for (let i = -2; i <= 2; i++) {
+        c.fillRect(-s * 0.55, i * s * 0.22 - 2, s * 1.1, 3);
+      }
+      break;
+    case 'dot':
+      for (let i = 0; i < 5; i++) {
+        const a = i * 1.25 + t * 0.4;
+        c.beginPath();
+        c.arc(Math.cos(a) * s * 0.35, Math.sin(a) * s * 0.45 - s * 0.1, 2.2, 0, TAU);
+        c.fill();
+      }
+      break;
+    case 'speckle':
+      for (let i = 0; i < 7; i++) {
+        c.beginPath();
+        c.arc((i * 17 % 11 - 5) * 0.9, (i * 13 % 9 - 4) * 1.1 - 2, 1.6, 0, TAU);
+        c.fill();
+      }
+      break;
+    case 'star':
+      drawStarShape(c, 0, -s * 0.15, s * 0.22, '#fff', true);
+      break;
+    case 'swirl':
+      c.strokeStyle = '#fff';
+      c.lineWidth = 1.6;
+      c.beginPath();
+      c.arc(0, -s * 0.05, s * 0.28, 0.2, TAU - 0.4);
+      c.stroke();
+      break;
+    case 'flame':
+      c.fillStyle = '#ffd75e';
+      c.beginPath();
+      c.moveTo(0, -s * 0.55);
+      c.quadraticCurveTo(s * 0.2, -s * 0.2, 0, s * 0.05);
+      c.quadraticCurveTo(-s * 0.2, -s * 0.2, 0, -s * 0.55);
+      c.fill();
+      break;
+    case 'crystal':
+      c.strokeStyle = '#fff';
+      c.lineWidth = 1.2;
+      c.beginPath();
+      c.moveTo(0, -s * 0.45);
+      c.lineTo(s * 0.22, -s * 0.05);
+      c.lineTo(0, s * 0.2);
+      c.lineTo(-s * 0.22, -s * 0.05);
+      c.closePath();
+      c.stroke();
+      break;
+    case 'moon':
+      c.fillStyle = '#fff';
+      c.beginPath();
+      c.arc(-s * 0.08, -s * 0.12, s * 0.18, 0, TAU);
+      c.fill();
+      c.globalCompositeOperation = 'destination-out';
+      c.beginPath();
+      c.arc(s * 0.04, -s * 0.16, s * 0.14, 0, TAU);
+      c.fill();
+      c.globalCompositeOperation = 'source-over';
+      break;
+    case 'gold':
+      c.strokeStyle = '#ffe259';
+      c.lineWidth = 2;
+      c.beginPath();
+      c.ellipse(0, 0, s * 0.55, s * 0.78, 0, 0, TAU);
+      c.stroke();
+      break;
+    case 'neon':
+      c.strokeStyle = '#4ecf6a';
+      c.shadowColor = '#7cf5ff';
+      c.shadowBlur = 6;
+      c.lineWidth = 1.8;
+      c.beginPath();
+      c.ellipse(0, 0, s * 0.62, s * 0.86, 0, 0, TAU);
+      c.stroke();
+      c.shadowBlur = 0;
+      break;
+    case 'rainbow':
+      ['#ff6b9d', '#ffd75e', '#4ecf6a', '#7cf5ff'].forEach((col, i) => {
+        c.fillStyle = col;
+        c.fillRect(-s * 0.5 + i * s * 0.25, -s * 0.35, s * 0.22, s * 0.7);
+      });
+      break;
+    case 'prism':
+      c.strokeStyle = '#fff';
+      c.lineWidth = 1.3;
+      for (let i = 0; i < 3; i++) {
+        c.save();
+        c.rotate(i * 0.9 + t * 0.5);
+        c.strokeRect(-s * 0.15, -s * 0.35, s * 0.3, s * 0.55);
+        c.restore();
+      }
+      break;
+    default:
+      break;
+  }
+  c.restore();
+  if (!dim) {
+    c.fillStyle = '#fff';
+    c.beginPath();
+    c.arc(-s * 0.18, -s * 0.08, 2.2, 0, TAU);
+    c.arc(s * 0.14, -s * 0.04, 2.6, 0, TAU);
+    c.fill();
+    c.fillStyle = '#1a2040';
+    c.beginPath();
+    c.arc(-s * 0.16, -s * 0.08, 1, 0, TAU);
+    c.arc(s * 0.16, -s * 0.04, 1.1, 0, TAU);
+    c.fill();
+  }
+  c.restore();
+}
+
+class EggPet {
+  constructor(def, game) {
+    this.def = def;
+    this.game = game;
+    this.x = game.player ? game.player.x + 28 : W * 0.25;
+    this.y = game.player ? game.player.y - 48 : game.ground - 48;
+    this.t = Math.random() * 6;
+    this.size = 11;
+  }
+
+  update(dt) {
+    const g = this.game;
+    const p = g.player;
+    if (!p || !p.alive) return;
+    this.t += dt;
+    const bob = Math.sin(this.t * 4.5) * 3;
+    const tx = p.x + p.face * (IS_TOUCH ? 26 : 30);
+    const ty = p.y - 46 + bob;
+    const follow = g.traveling ? 10 : 7;
+    this.x += (tx - this.x) * Math.min(1, dt * follow);
+    this.y += (ty - this.y) * Math.min(1, dt * 9);
+  }
+
+  draw(c) {
+    drawEggPetArt(c, this.def, this.size, this.t, this.x, this.y, false);
+  }
+}
+
+function spawnGameEggPet(game) {
+  if (!game) return;
+  game.eggPet = null;
+  const def = activeEggPetDef();
+  if (!def) return;
+  game.eggPet = new EggPet(def, game);
+}
 /* --- src/render/scenery.js --- */
 /* ============== SCENERY ART — pixel-art lagen (upgrade 1/4) ============ */
 /* Gecachte offscreen tiles (1× gerenderd per thema), chunky pixel look via
@@ -7689,6 +8029,7 @@ class Game {
       this.petShieldWave = 0;
       applyPetBonusesToPlayer(this, this.player);
       spawnGamePet(this);
+      spawnGameEggPet(this);
     }
 
     if (mode === 'adventure') {
@@ -8081,6 +8422,18 @@ class Game {
       if (stars > prev) { save.stars[lv] = stars; persist(); }
       bumpStat('advWins', 1);
       bumpDaily('advWin', 1);
+      const eggBonus = maybeAdvEggBonus();
+      if (eggBonus) {
+        spawnGameEggPet(this);
+        const rar = rarityOf(eggBonus.def.rarity);
+        setTimeout(() => {
+          try {
+            UI.toast(eggBonus.duplicate
+              ? `Bonus-ei dubbel: ${eggBonus.def.name} (+10 XP)`
+              : `Bonus-ei! ${eggBonus.def.name} (${rar.name})`, 3800);
+          } catch (_) {}
+        }, 1200);
+      }
       checkAchievements();
       AudioSys.sfx('win');
       this.banner('GEWONNEN!', 2, '#7cfc8a', 56);
@@ -8998,6 +9351,7 @@ class Game {
 
     this.player.update(dt, this);
     if (this.pet) this.pet.update(dt);
+    if (this.eggPet) this.eggPet.update(dt);
 
     if (this.mode === 'adventure') this.updateAdventure(dt);
     else if (this.mode === 'training') this.updateTraining(dt);
@@ -9297,6 +9651,7 @@ class Game {
     for (const m of this.monsters) m.draw(c);
     if (this.robot) this.robot.draw(c);
     if (this.p2) this.p2.draw(c);
+    if (this.eggPet) this.eggPet.draw(c);
     if (this.pet) this.pet.draw(c);
     this.player.draw(c);
 
@@ -10070,6 +10425,11 @@ class Game {
           const txt = this.stageAlly.name;
           c.fillText(txt, W / 2 + 7, 62);
           drawMiniDie(c, W / 2 - c.measureText(txt).width / 2 - 3, 58.5, 10, col);
+        } else if (this.eggPet && activeEggPetDef()) {
+          c.font = '700 11px sans-serif';
+          c.fillStyle = this.eggPet.def?.c1 || '#ffd75e';
+          const txt = `Ei · ${this.eggPet.def?.name || 'Cosmetisch'}`;
+          c.fillText(txt, W / 2, 62);
         } else if (this.pet && activePetDef()) {
           c.font = '700 11px sans-serif';
           c.fillStyle = this.pet.sp?.c1 || '#7cf5ff';
@@ -10823,7 +11183,7 @@ const SVG_LOCK_ICON =
 
 const MODE_HUB_META = {
   arcade: { badge: 'SOLO', badgeClass: 'badge-solo', title: 'Arcade', sub: 'Snelle sessies · high scores · geen voortgang verlies' },
-  collect: { badge: 'COLLECTIE', badgeClass: 'badge-meta', title: 'Verzameling', sub: 'Wapens · pets · stijlen · monsterboek · XP & unlocks' },
+  collect: { badge: 'COLLECTIE', badgeClass: 'badge-meta', title: 'Verzameling', sub: 'Wapens · dex & ei-pets · stijlen · monsterboek' },
 };
 
 function hubForPlayMode(mode) {
@@ -10853,7 +11213,7 @@ function hubTileStatLine(hub) {
       return m > 0 ? `${w}/${m} gewonnen` : '23 vechters · lokaal';
     }
     case 'collect':
-      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · pets ${petTamedCount()}/${PET_ROSTER.length} · boek ${dexCount()}/${SPECIES_ORDER.length}`;
+      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ei ${eggOwnedCount()}/${EGG_ROSTER.length}`;
     default:
       return '';
   }
@@ -10883,6 +11243,7 @@ const UI = {
   charPreviewHoverId: null,
   dexRarityFilter: 'all',
   achFilter: 'all',
+  petTab: 'dex',
   advIslandPick: 0,
   lastResult: null,
   pauseSubDefault: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
@@ -11401,7 +11762,10 @@ const UI = {
     } else if (this.modeHubId === 'collect') {
       setStat('hubStatWeapons', `${weaponUnlockedCount()}/${WEAPONS.length} vrij`);
       const petsN = petTamedCount();
-      setStat('hubStatPets', petsN > 0 ? `${petsN}/${PET_ROSTER.length} getemd` : `${PET_ROSTER.length} via dex`);
+      const eggsN = eggOwnedCount();
+      setStat('hubStatPets', eggsN > 0 || petsN > 0
+        ? `dex ${petsN}/${PET_ROSTER.length} · ei ${eggsN}/${EGG_ROSTER.length}`
+        : `${PET_ROSTER.length} dex · ${EGG_ROSTER.length} ei`);
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
       setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
       setStat('hubStatDex', `${dexCount()}/${SPECIES_ORDER.length} · +max HP`);
@@ -12134,6 +12498,35 @@ const UI = {
   },
 
   renderPets() {
+    const tab = this.petTab || 'dex';
+    const bar = document.getElementById('petTabBar');
+    if (bar) {
+      bar.innerHTML =
+        `<button type="button" class="dex-filter-btn${tab === 'dex' ? ' active' : ''}" data-pet-tab="dex">Dex · ${petTamedCount()}/${PET_ROSTER.length}</button>` +
+        `<button type="button" class="dex-filter-btn${tab === 'egg' ? ' active' : ''}" data-pet-tab="egg">Ei arcade · ${eggOwnedCount()}/${EGG_ROSTER.length}</button>`;
+      if (!bar.dataset.bound) {
+        bar.dataset.bound = '1';
+        bar.addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-pet-tab]');
+          if (!btn) return;
+          AudioSys.sfx('select');
+          UI.petTab = btn.getAttribute('data-pet-tab') || 'dex';
+          UI.renderPets();
+        });
+      }
+    }
+    const dexPanel = document.getElementById('petDexPanel');
+    const eggPanel = document.getElementById('petEggPanel');
+    if (dexPanel) dexPanel.style.display = tab === 'dex' ? '' : 'none';
+    if (eggPanel) eggPanel.style.display = tab === 'egg' ? '' : 'none';
+    if (tab === 'egg') {
+      this.renderEggPets();
+      return;
+    }
+    this.renderDexPets();
+  },
+
+  renderDexPets() {
     const sumEl = document.getElementById('petSummary');
     if (sumEl) {
       const tamed = petTamedCount();
@@ -12197,6 +12590,95 @@ const UI = {
             }
             this.renderPets();
           }, 'equipPet/' + def.id, 'Pet kiezen mislukt');
+        });
+      }
+      list.appendChild(el);
+    }
+  },
+
+  renderEggPets() {
+    ensureEggDaily();
+    const sum = eggProgressSummary();
+    const sumEl = document.getElementById('eggSummary');
+    if (sumEl) {
+      sumEl.style.display = 'block';
+      sumEl.innerHTML =
+        `Verzameld <b>${sum.owned}/${sum.total}</b> · actief <b>${sum.activeName}</b> · <b>${sum.daily}</b>` +
+        `<div style="margin-top:6px;font-size:12px;opacity:.85">Cosmetisch — geen combat-boost. 1 dag-ei + bonus-ei na je eerste avontuur-win vandaag.</div>`;
+    }
+    const crackBtn = document.getElementById('eggCrackBtn');
+    if (crackBtn) {
+      const ready = canCrackDailyEgg();
+      crackBtn.style.display = ready ? '' : 'none';
+      crackBtn.innerHTML =
+        `<span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><ellipse cx="12" cy="13" rx="7" ry="9" fill="#ffd75e" opacity=".35"/><path d="M8 10c2-3 6-3 8 0"/></svg></span>` +
+        `<div>Dag-ei openen<small>Gratis arcade-pull · vandaag</small></div>`;
+      if (!crackBtn.dataset.bound) {
+        crackBtn.dataset.bound = '1';
+        crackBtn.addEventListener('click', () => {
+          if (!uiTapAllowed()) return;
+          safeUiAction(() => {
+            const res = crackDailyEgg();
+            if (!res) {
+              UI.toast('Dag-ei al geopend — morgen weer', 2200);
+              return;
+            }
+            try { AudioSys.sfx('diceRoll'); } catch (_) {}
+            const rar = rarityOf(res.def.rarity);
+            UI.toast(res.duplicate
+              ? `Dubbel ei: ${res.def.name} (+10 XP)`
+              : `Uitgekomen! ${res.def.name} (${rar.name})`, 3600);
+            this.renderPets();
+            this.renderMenu();
+          }, 'crackDailyEgg', 'Ei openen mislukt');
+        });
+      }
+    }
+    const list = document.getElementById('eggList');
+    if (!list) return;
+    list.innerHTML = '';
+    for (const def of EGG_ROSTER) {
+      const rar = rarityOf(def.rarity);
+      const owned = isEggOwned(def.id);
+      const active = save.activeEggPet === def.id;
+      const el = document.createElement('div');
+      el.className = 'card' + (owned ? '' : ' locked') + (active ? ' sel' : '');
+      el.style.borderColor = owned ? rar.color : undefined;
+      const cv = document.createElement('canvas');
+      cv.width = 64; cv.height = 64;
+      const cc = cv.getContext('2d');
+      cc.translate(32, 36);
+      drawEggPetArt(cc, def, 18, 1.1, 0, 0, !owned);
+      el.appendChild(cv);
+      const info = document.createElement('div');
+      const badge = active ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">ACTIEF</span>' : '';
+      info.innerHTML = `<div class="cname">${def.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>${badge}</div>` +
+        `<div class="cinfo">${def.perk}</div>` +
+        `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${owned ? 'Cosmetisch metgezel' : 'Nog niet uitgekomen'}</div>`;
+      el.appendChild(info);
+      const right = document.createElement('div');
+      right.className = 'right';
+      if (owned) {
+        right.innerHTML = active ? '&#10004; actief' : 'uitrusten';
+      } else {
+        right.textContent = '???';
+        right.style.opacity = '0.7';
+      }
+      el.appendChild(right);
+      if (owned) {
+        el.addEventListener('click', () => {
+          if (!uiTapAllowed()) return;
+          safeUiAction(() => {
+            if (active) {
+              equipEggPet(null);
+              UI.toast('Geen actief ei-pet', 1400);
+            } else {
+              equipEggPet(def.id);
+              AudioSys.sfx('select');
+              UI.toast(`${def.name} zweeft nu mee!`, 2200);
+            }
+            this.renderPets();
+          }, 'equipEggPet/' + def.id, 'Ei-pet kiezen mislukt');
         });
       }
       list.appendChild(el);

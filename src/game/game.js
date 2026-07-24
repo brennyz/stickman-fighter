@@ -38,6 +38,7 @@ class Game {
       this.petShieldWave = 0;
       applyPetBonusesToPlayer(this, this.player);
       spawnGamePet(this);
+      spawnGameEggPet(this);
     }
 
     if (mode === 'adventure') {
@@ -430,6 +431,18 @@ class Game {
       if (stars > prev) { save.stars[lv] = stars; persist(); }
       bumpStat('advWins', 1);
       bumpDaily('advWin', 1);
+      const eggBonus = maybeAdvEggBonus();
+      if (eggBonus) {
+        spawnGameEggPet(this);
+        const rar = rarityOf(eggBonus.def.rarity);
+        setTimeout(() => {
+          try {
+            UI.toast(eggBonus.duplicate
+              ? `Bonus-ei dubbel: ${eggBonus.def.name} (+10 XP)`
+              : `Bonus-ei! ${eggBonus.def.name} (${rar.name})`, 3800);
+          } catch (_) {}
+        }, 1200);
+      }
       checkAchievements();
       AudioSys.sfx('win');
       this.banner('GEWONNEN!', 2, '#7cfc8a', 56);
@@ -1347,6 +1360,7 @@ class Game {
 
     this.player.update(dt, this);
     if (this.pet) this.pet.update(dt);
+    if (this.eggPet) this.eggPet.update(dt);
 
     if (this.mode === 'adventure') this.updateAdventure(dt);
     else if (this.mode === 'training') this.updateTraining(dt);
@@ -1646,6 +1660,7 @@ class Game {
     for (const m of this.monsters) m.draw(c);
     if (this.robot) this.robot.draw(c);
     if (this.p2) this.p2.draw(c);
+    if (this.eggPet) this.eggPet.draw(c);
     if (this.pet) this.pet.draw(c);
     this.player.draw(c);
 
@@ -2419,6 +2434,11 @@ class Game {
           const txt = this.stageAlly.name;
           c.fillText(txt, W / 2 + 7, 62);
           drawMiniDie(c, W / 2 - c.measureText(txt).width / 2 - 3, 58.5, 10, col);
+        } else if (this.eggPet && activeEggPetDef()) {
+          c.font = '700 11px sans-serif';
+          c.fillStyle = this.eggPet.def?.c1 || '#ffd75e';
+          const txt = `Ei · ${this.eggPet.def?.name || 'Cosmetisch'}`;
+          c.fillText(txt, W / 2, 62);
         } else if (this.pet && activePetDef()) {
           c.font = '700 11px sans-serif';
           c.fillStyle = this.pet.sp?.c1 || '#7cf5ff';

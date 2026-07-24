@@ -3,15 +3,16 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.46';
+const APP_VERSION = '1.17.47';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 172;
+const SW_CACHE_REV = 173;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {}, pets: {}, activePet: null,
+  eggPets: {}, activeEggPet: null, eggDaily: null,
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0 },
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0 },
   achievements: {}, daily: null, vsPlayedIds: [] };
 const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
@@ -603,6 +604,25 @@ function sanitizeSave(s) {
   out.pets = cleanPets;
   if (out.activePet && !cleanPets[out.activePet]) out.activePet = null;
   else if (out.activePet && typeof PET_BY_ID !== 'undefined' && !PET_BY_ID[out.activePet]) out.activePet = null;
+
+  const cleanEggs = {};
+  for (const [k, v] of Object.entries(out.eggPets || {})) {
+    if (typeof EGG_BY_ID !== 'undefined' && !EGG_BY_ID[k]) continue;
+    if (typeof EGG_BY_ID === 'undefined') continue;
+    const entry = (v && typeof v === 'object') ? v : {};
+    cleanEggs[k] = { src: typeof entry.src === 'string' ? entry.src.slice(0, 12) : 'daily' };
+  }
+  out.eggPets = cleanEggs;
+  if (out.activeEggPet && !cleanEggs[out.activeEggPet]) out.activeEggPet = null;
+  else if (out.activeEggPet && typeof EGG_BY_ID !== 'undefined' && !EGG_BY_ID[out.activeEggPet]) out.activeEggPet = null;
+  if (out.eggDaily && typeof out.eggDaily === 'object') {
+    const dk = typeof out.eggDaily.date === 'string' ? out.eggDaily.date.slice(0, 10) : todayKey();
+    out.eggDaily = {
+      date: dk,
+      dailyCracked: !!out.eggDaily.dailyCracked,
+      advBonus: !!out.eggDaily.advBonus,
+    };
+  } else out.eggDaily = null;
 
   const stPick = STYLES.find(st => st.id === out.style) || STYLES[0];
   let styleOk = stPick.id === 'classic';

@@ -512,6 +512,18 @@
   ],
   "userFeatureLog": [
     {
+      "id": "egg-pets-deel3",
+      "d20Face": null,
+      "userWords": "Deel drie pets",
+      "versions": [
+        "1.17.47"
+      ],
+      "commits": [],
+      "code": "EGG_ROSTER 12 cosmetic egg-pets; daily crack + adv-win bonus; EggPet follower; Pets tab Ei arcade; dup +10 XP",
+      "status": "done",
+      "note": "off-d20 user feature; proposal C deel 3/3 — arcade collectibles"
+    },
+    {
       "id": "dex-pets-deel2",
       "d20Face": null,
       "userWords": "Pak deel 2 aan pets",
