@@ -5,14 +5,13 @@
   "remaining": [
     4,
     6,
-    16,
-    18
+    16
   ],
   "lastRoll": {
-    "face": 10,
-    "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
-    "rolledAt": "2026-07-24T18:55:49Z",
-    "remainingCount": 4,
+    "face": 18,
+    "category": "Character select \u2014 roster UI, stats, random duo",
+    "rolledAt": "2026-07-24T18:56:53Z",
+    "remainingCount": 3,
     "cycle": 3
   },
   "pending": null,
@@ -484,6 +483,13 @@
       "note": "calm banners/telegraphs, HC HUD text, static low-HP",
       "version": "1.17.34",
       "doneAt": "2026-07-24T18:56:28Z",
+      "cycle": 3
+    },
+    {
+      "face": 18,
+      "note": "sort TOT bar gespeeld chip",
+      "version": "1.17.35",
+      "doneAt": "2026-07-24T18:57:49Z",
       "cycle": 3
     }
   ],
@@ -1571,6 +1577,13 @@
       "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
       "rolledAt": "2026-07-24T18:55:49Z",
       "remainingCount": 4,
+      "cycle": 3
+    },
+    {
+      "face": 18,
+      "category": "Character select \u2014 roster UI, stats, random duo",
+      "rolledAt": "2026-07-24T18:56:53Z",
+      "remainingCount": 3,
       "cycle": 3
     }
   ],
