@@ -108,6 +108,9 @@ class Game {
     this.ketsbamSuperT = 0;
     this.ketsbamShow = false;
     this.ketsbamPulse = 0;
+    this.ketsbamChargeT = 0;
+    this.ketsbamChargeDur = 0;
+    this.ketsbamChargePulse = 0;
     applyGambleToStage(this, gamble);
     this.banner(`LEVEL ${n}`, 1.4, '#ffd75e', 54);
     if (masterBuffActive(n)) {
@@ -1498,6 +1501,32 @@ class Game {
 
   update(dt) {
     if (this.playerHurtCd > 0) this.playerHurtCd -= dt;
+    if (this.ketsbamChargeT > 0) {
+      if (this.ketsbamCd > 0) this.ketsbamCd -= dt;
+      if (this.ketsbamSuperT > 0) this.ketsbamSuperT -= dt;
+      this.ketsbamChargeT -= dt;
+      this.ketsbamChargePulse = (this.ketsbamChargePulse || 0) + dt;
+      this.t += dt;
+      if (this.player?.alive) {
+        this.player.vx = 0;
+        this.player.update(dt, this);
+      }
+      this.ketsbamChargeAcc = (this.ketsbamChargeAcc || 0) + dt;
+      const dur = this.ketsbamChargeDur || KETSBAM_CHARGE_DUR;
+      const prog = 1 - this.ketsbamChargeT / dur;
+      if (this.ketsbamChargeAcc >= 0.07 && !motionReduced()) {
+        this.ketsbamChargeAcc = 0;
+        const px = this.player.x;
+        const py = this.player.y - 50;
+        this.burst(px + rand(-20, 20), py + rand(-30, 10), prog > 0.6 ? '#fff8dc' : '#ffd75e',
+          fxLite() ? 2 : 4, { kind: 'spark', size: 2 + prog * 2 });
+        if (prog > 0.45 && !fxLite()) {
+          this.burst(px, this.player.y + 2, '#ff9a3d', 2, { kind: 'ring' });
+        }
+      }
+      if (this.ketsbamChargeT <= 0 && this.player?.alive) this.player.finishKetsbam(this);
+      return;
+    }
     if (this.freezeT > 0) { this.freezeT -= dt; return; }
     if (this.mode === 'adventure') this.updateKetsbam(dt);
     this.t += dt;
@@ -1898,6 +1927,7 @@ class Game {
     c.restore();
 
     this.drawChakraReadyFx(c);
+    if (this.mode === 'adventure') this.drawKetsbamChargeAura(c);
 
     this.drawHUD(c);
     if (this.mode === 'adventure') this.drawKetsbamPrompt(c);
@@ -2405,6 +2435,10 @@ class Game {
       this.ketsbamShow = false;
       return;
     }
+    if (this.ketsbamChargeT > 0) {
+      this.ketsbamShow = false;
+      return;
+    }
     if (this.ketsbamCd > 0) this.ketsbamCd -= dt;
     if (this.ketsbamSuperT > 0) this.ketsbamSuperT -= dt;
     const near = this.countNearbyMonsters(KETSBAM_DETECT_R);
@@ -2416,8 +2450,72 @@ class Game {
   }
 
   tryKetsbam() {
-    if (!this.ketsbamShow || !this.player?.alive || this.over) return false;
+    if (this.ketsbamChargeT > 0 || !this.ketsbamShow || !this.player?.alive || this.over) return false;
     return this.player.doKetsbam(this);
+  }
+
+  drawKetsbamChargeAura(c) {
+    if (this.ketsbamChargeT <= 0 || !this.player?.alive) return;
+    const f = this.player;
+    const dur = this.ketsbamChargeDur || KETSBAM_CHARGE_DUR;
+    const prog = clamp(1 - this.ketsbamChargeT / dur, 0, 1);
+    const pulse = this.ketsbamChargePulse || 0;
+    const px = f.x, py = f.y - 52;
+    const calm = motionReduced();
+    const lite = fxLite() || calm;
+
+    c.save();
+    const ringR = 28 + prog * 88 + Math.sin(pulse * 11) * 7;
+    c.globalAlpha = 0.22 + prog * 0.38;
+    c.strokeStyle = '#ffd75e';
+    c.lineWidth = 2.5 + prog * 3.5;
+    c.beginPath();
+    c.ellipse(px, f.y + 3, ringR, ringR * 0.26, 0, 0, TAU);
+    c.stroke();
+
+    const h = 70 + prog * 170;
+    const grad = c.createLinearGradient(px, f.y, px, f.y - h);
+    grad.addColorStop(0, `rgba(255,154,61,${0.12 + prog * 0.22})`);
+    grad.addColorStop(0.45, `rgba(255,232,120,${0.18 + prog * 0.32})`);
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    c.fillStyle = grad;
+    c.fillRect(px - 16 - prog * 14, f.y - h, 32 + prog * 28, h);
+
+    const rings = lite ? 2 : 4;
+    for (let i = 0; i < rings; i++) {
+      const r = 34 + i * 13 + prog * 22 + Math.sin(pulse * 10 + i * 1.4) * 5;
+      c.globalAlpha = (0.3 + prog * 0.28) * (1 - i * 0.17);
+      c.strokeStyle = i % 2 ? '#fff8dc' : '#ff9a3d';
+      c.lineWidth = 2 + prog * 2;
+      c.beginPath();
+      c.arc(px, py, r, 0, TAU);
+      c.stroke();
+    }
+
+    if (!lite) {
+      c.globalAlpha = 0.45 + prog * 0.35;
+      c.strokeStyle = '#fff';
+      c.lineWidth = 2;
+      const spikes = calm ? 4 : 7;
+      for (let i = 0; i < spikes; i++) {
+        const a = pulse * 9 + i * (TAU / spikes);
+        const len = 22 + prog * 44;
+        c.beginPath();
+        c.moveTo(px + Math.cos(a) * 18, py + Math.sin(a) * 10);
+        c.lineTo(px + Math.cos(a) * len, py + Math.sin(a) * len * 0.55 - prog * 24);
+        c.stroke();
+      }
+    }
+
+    c.globalAlpha = 0.85;
+    c.font = `900 ${18 + prog * 8}px -apple-system, sans-serif`;
+    c.textAlign = 'center';
+    c.fillStyle = '#ffd75e';
+    c.strokeStyle = 'rgba(0,0,0,.55)';
+    c.lineWidth = 4;
+    c.strokeText('KETS!', px, py - 58 - prog * 24);
+    c.fillText('KETS!', px, py - 58 - prog * 24);
+    c.restore();
   }
 
   drawKetsbamPrompt(c) {

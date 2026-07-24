@@ -460,6 +460,21 @@ const AudioSys = {
         [392, 330, 262, 196, 147].forEach((f, i) => T(f, f * 0.96, 0.2, 'triangle', 0.13, now + i * 0.11));
         if (!lite) N(0.12, 0.14, 600, false, now + 0.35);
         break;
+      case 'ketsbamCharge':
+        T(52, 185, 1.92, 'sawtooth', 0.22, now);
+        T(88, 240, 1.95, 'sine', 0.17, now);
+        N(1.95, 0.15, 720, false, now);
+        if (!lite) {
+          N(1.9, 0.11, 2200, true, now + 0.08);
+          T(165, 440, 1.65, 'triangle', 0.13, now + 0.18);
+          for (let i = 0; i < 8; i++) {
+            N(0.045, 0.075, 2800 + i * 380, true, now + 0.12 + i * 0.22);
+            T(380 + i * 70, 180 + i * 35, 0.055, 'square', 0.065, now + 0.16 + i * 0.22);
+          }
+          C([247, 330, 440, 587], 'sine', 0.085, 0.07, now + 1.35);
+          N(0.2, 0.18, 1400, true, now + 1.55);
+        }
+        break;
       case 'ketsbam':
         N(0.36, 0.4, 400, false, now);
         T(52, 20, 0.44, 'sawtooth', 0.34, now);

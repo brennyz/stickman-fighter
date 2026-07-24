@@ -149,25 +149,43 @@ class Fighter {
   /** Nood-KETS-BAM: omringd/stunlock → tik midden-symbool of druk E. */
   doKetsbam(game) {
     if (!this.isPlayer || !this.alive || !game) return false;
-    if (game.ketsbamCd > 0 || game.inputLocked || game.traveling) return false;
+    if (game.ketsbamCd > 0 || game.ketsbamChargeT > 0 || game.inputLocked || game.traveling) return false;
     const near = game.countNearbyMonsters(KETSBAM_DETECT_R);
     const stuck = this.hurtT > 0 && near >= 2;
     const swarmed = near >= KETSBAM_NEAR_MIN;
     if (!swarmed && !stuck) return false;
 
     game.ketsbamCd = KETSBAM_CD;
-    game.ketsbamSuperT = KETSBAM_SUPER_ARMOR;
+    game.ketsbamSuperT = KETSBAM_SUPER_ARMOR + KETSBAM_CHARGE_DUR;
     game.ketsbamShow = false;
+    game.ketsbamChargeT = KETSBAM_CHARGE_DUR;
+    game.ketsbamChargeDur = KETSBAM_CHARGE_DUR;
+    game.ketsbamChargePulse = 0;
+    game.inputLocked = true;
     this.hurtT = 0;
     this.attack = null;
     this.blocking = false;
-    this.invulnT = Math.max(this.invulnT, KETSBAM_INVULN);
+    this.vx = 0;
+    this.vy = 0;
+    this.invulnT = Math.max(this.invulnT, KETSBAM_INVULN + KETSBAM_CHARGE_DUR);
     resetWeaponCombo(this);
+
+    game.banner('KETS!', KETSBAM_CHARGE_DUR, '#ffd75e', 44);
+    try { AudioSys.sfx('ketsbamCharge'); } catch (_) {}
+    if (save.haptics !== false) haptic(12);
+    return true;
+  }
+
+  finishKetsbam(game) {
+    if (!this.isPlayer || !this.alive || !game) return;
+    game.ketsbamChargeT = 0;
+    game.inputLocked = false;
+    game.ketsbamSuperT = Math.max(game.ketsbamSuperT, KETSBAM_SUPER_ARMOR);
 
     game.shake(14, 0.38);
     game.freezeT = Math.max(game.freezeT, 0.06);
     game.banner('KETS-BAM!', 0.85, '#ffd75e', 42);
-    AudioSys.sfx('ketsbam');
+    try { AudioSys.sfx('ketsbam'); } catch (_) {}
 
     const px = this.x, py = this.y - 42;
     for (const m of game.monsters) {
@@ -185,7 +203,6 @@ class Fighter {
     spawnFxRing(game, px, py, '#ffe259', fxLite() ? 10 : 18);
     game.floater(px, py - 80, 'KETS-BAM!', '#ffd75e', 20);
     if (save.haptics !== false) haptic(32);
-    return true;
   }
 
   intent(dt, game) {
