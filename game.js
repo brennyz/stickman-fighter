@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.14';
+const APP_VERSION = '1.17.15';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 141;
+const SW_CACHE_REV = 142;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -90,12 +90,35 @@ const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
 const ISLAND_WEAPON_CAPS = [10, 20, 30, 40, 48];
 const ADVENTURE_ISLANDS = [
-  { id: 1, name: 'Oost-eiland', sub: 'Lv 1–10', accent: '#5ad06a' },
-  { id: 2, name: 'Vuur-eiland', sub: 'Lv 11–20', accent: '#ff7a4d' },
-  { id: 3, name: 'Neon-eiland', sub: 'Lv 21–30', accent: '#7cf5ff' },
-  { id: 4, name: 'Tempel-eiland', sub: 'Lv 31–40', accent: '#ffd75e' },
-  { id: 5, name: 'Finale-eiland', sub: 'Lv 41–50', accent: '#ff6b9d' },
+  { id: 1, name: 'Oost-eiland', sub: 'Lv 1–10', accent: '#5ad06a', theme: 'veld',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20" stroke="#5ad06a" stroke-width="2" stroke-linecap="round"/><path d="M5 20V13l5-8 5 8v7" fill="#43b25b" stroke="#2d8a3e" stroke-width="1"/><circle cx="18" cy="7" r="2.5" fill="#7cf5ff" opacity=".75"/></svg>' },
+  { id: 2, name: 'Vuur-eiland', sub: 'Lv 11–20', accent: '#ff7a4d', theme: 'vulkaan',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 L12 5 L20 20 Z" fill="#e85a6a" stroke="#ff7a4d" stroke-width="1.2"/><path d="M10 11 L12 7 L14 11 Z" fill="#ffd75e"/><ellipse cx="12" cy="20" rx="8" ry="1.5" fill="#ff7a4d" opacity=".45"/></svg>' },
+  { id: 3, name: 'Neon-eiland', sub: 'Lv 21–30', accent: '#7cf5ff', theme: 'cyber',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="16" width="20" height="5" rx="1" fill="#1a2040" stroke="#7cf5ff" stroke-width="1.2"/><rect x="5" y="10" width="4" height="6" fill="#7cf5ff" opacity=".85"/><rect x="10" y="7" width="4" height="9" fill="#4ecf6a" opacity=".8"/><rect x="15" y="5" width="4" height="11" fill="#c47aff" opacity=".85"/></svg>' },
+  { id: 4, name: 'Tempel-eiland', sub: 'Lv 31–40', accent: '#ffd75e', theme: 'dojo',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 L17 8 H7 Z" fill="#ffd75e"/><rect x="10" y="8" width="4" height="12" fill="#c97a20"/><path d="M6 11 H18 M7 14 H17 M8 17 H16" stroke="#ffd75e" stroke-width="1.4" stroke-linecap="round"/><rect x="4" y="20" width="16" height="2" rx="1" fill="#8a6030"/></svg>' },
+  { id: 5, name: 'Finale-eiland', sub: 'Lv 41–50', accent: '#ff6b9d', theme: 'cyber',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18 L7 10 L12 14 L17 10 L20 18 Z" fill="#ff6b9d" stroke="#ffd75e" stroke-width="1"/><circle cx="12" cy="8" r="2.8" fill="#ffd75e"/><path d="M12 2 v2 M12 20 v2 M2 12 h2 M20 12 h2" stroke="#ffd75e" stroke-width="1.2" opacity=".7"/></svg>' },
 ];
+function islandMeta(id) { return ADVENTURE_ISLANDS.find(i => i.id === id) || ADVENTURE_ISLANDS[0]; }
+function islandProgress(islandId) {
+  const { start, end } = islandLevelRange(islandId);
+  const total = end - start + 1;
+  let cleared = 0;
+  let stars = 0;
+  for (let n = start; n <= end; n++) {
+    if (n < save.unlocked) cleared++;
+    stars += save.stars[n] || 0;
+  }
+  return { cleared, total, stars, maxStars: total * 3 };
+}
+function adventureProgressLine() {
+  const cur = currentAdvIsland();
+  const prog = islandProgress(cur);
+  const isl = islandMeta(cur);
+  return `Eiland ${cur}/5 · ${isl.name} · ${prog.cleared}/${prog.total} · unlock Lv ${save.unlocked}/${MAX_LEVEL}`;
+}
 function islandFromLevel(n) { return Math.min(5, Math.max(1, Math.ceil(n / LEVELS_PER_ISLAND))); }
 function islandLevelRange(islandId) {
   const start = (islandId - 1) * LEVELS_PER_ISLAND + 1;
@@ -1836,6 +1859,16 @@ function applyGambleOnboarding() {
   if (outEl && !lastGambleRoll) {
     outEl.textContent = 'Eerste keer: som ≤5 = super-baas · som ≥9 = bondgenoot voor dit level. Of tik Start zonder gok.';
   }
+}
+
+function applyIslandOnboarding() {
+  ensureTipsSeen();
+  if (save.tipsSeen.islands) return;
+  save.tipsSeen.islands = 1;
+  persist();
+  try {
+    UI.toast('5 eilanden × 10 levels · skill gate per eiland · 5× verlies op één level = Meester-buff +20%', 4400);
+  } catch (_) {}
 }
 
 /** Eén hint per modus: in-gevecht regel, geen extra toast (geen stapel met welcome). */
@@ -7140,6 +7173,13 @@ class Game {
       if (lv % LEVELS_PER_ISLAND === 0) {
         save.advIsland = Math.min(5, lv / LEVELS_PER_ISLAND);
         persist();
+        if (lv < MAX_LEVEL) {
+          const next = islandMeta(islandFromLevel(lv + 1));
+          const nCap = adventureWeaponCapForLevel(lv + 1);
+          setTimeout(() => {
+            try { UI.toast(`${next.name} ontgrendeld! Skill gate: wapens tot Lv ${nCap}`, 4200); } catch (_) {}
+          }, 1700);
+        }
       }
       if (save.advMasterBuff === lv) {
         save.advMasterBuff = null;
@@ -8939,6 +8979,14 @@ class Game {
       c.fillStyle = '#333c55'; this.rr(c, bx, by, bw, 15, 6); c.fill();
       c.fillStyle = p.hp / p.maxhp > 0.35 ? '#6ee06e' : '#ff6b6b';
       this.rr(c, bx, by, bw * clamp(p.hp / p.maxhp, 0, 1), 15, 6); c.fill();
+      if (this.mode === 'adventure' && masterBuffActive(this.level.n)) {
+        c.fillStyle = 'rgba(196,122,255,.28)';
+        this.rr(c, bx - 2, by - 16, bw + 4, 13, 5); c.fill();
+        c.font = '800 9px -apple-system, sans-serif';
+        c.fillStyle = '#c47aff';
+        c.textAlign = 'left';
+        c.fillText('MEESTER +20%', bx + 4, by - 7);
+      }
       if (this.mode === 'adventure') {
         c.strokeStyle = 'rgba(255,215,94,.5)';
         c.lineWidth = 1;
@@ -9000,11 +9048,18 @@ class Game {
 
     c.textAlign = 'center';
     if (this.mode === 'adventure') {
+      const isl = islandMeta(islandFromLevel(this.level.n));
+      const wCap = adventureWeaponCapForLevel(this.level.n);
       const wv = Math.max(1, this.waveIdx + 1);
       c.font = '800 16px -apple-system, sans-serif';
       fillHudText(c, `Level ${this.level.n} — Golf ${Math.min(wv, this.level.waves.length)}/${this.level.waves.length}`, W / 2, 30, {
         fill: a11yHighContrast() ? '#fff' : 'rgba(255,255,255,.9)',
       });
+      c.font = '700 11px -apple-system, sans-serif';
+      c.fillStyle = isl.accent;
+      c.globalAlpha = 0.92;
+      c.fillText(`${isl.name} · wapen ≤ Lv ${wCap}`, W / 2, 48);
+      c.globalAlpha = 1;
       this.drawStageProgress(c);
       const bossAlive = this.monsters.find(m => m.elite && m.alive);
       if (!bossAlive) {
@@ -9736,6 +9791,10 @@ const UI = {
           this.renderPauseToggles();
         }
         if (id === 'helpScreen') this.renderHelp();
+        if (id === 'levelScreen') {
+          if (!this.advIslandPick) this.advIslandPick = currentAdvIsland();
+          applyIslandOnboarding();
+        }
       } else if (game?.mode === 'versus') {
         this.refreshPauseSubtitle();
       }
@@ -9750,12 +9809,36 @@ const UI = {
 
   renderHelp() {
     const host = document.getElementById('helpModeChips');
+    const islHost = document.getElementById('helpIslandBlock');
+    if (islHost) {
+      const cur = currentAdvIsland();
+      const cap = adventureWeaponCap();
+      const rows = ADVENTURE_ISLANDS.map((isl) => {
+        const prog = islandProgress(isl.id);
+        const ok = islandUnlocked(isl.id);
+        const wCap = ISLAND_WEAPON_CAPS[isl.id - 1];
+        const pct = Math.round(prog.cleared / prog.total * 100);
+        return `<div class="help-island-row${cur === isl.id ? ' cur' : ''}${ok ? '' : ' locked'}">` +
+          `<span class="help-island-ico" style="color:${isl.accent}">${isl.icon}</span>` +
+          `<div class="help-island-body"><b>${isl.name}</b> · ${isl.sub}` +
+          `<div class="help-island-sub">${ok ? `${prog.cleared}/${prog.total} levels · ${prog.stars}/${prog.maxStars}★` : `Vergrendeld — versla baas Lv ${isl.id * LEVELS_PER_ISLAND}`}` +
+          ` · skill gate wapens Lv ${wCap}</div>` +
+          `<div class="island-prog-track"><i style="width:${pct}%;background:${isl.accent}"></i></div></div></div>`;
+      }).join('');
+      islHost.innerHTML =
+        `<div class="step-card help-island-card">` +
+        `<b>Eilanden &amp; skill gate</b> — avontuur is <b>5×10 levels</b>. Per eiland geldt een wapen-cap (nu <b>Lv ${cap}</b> op eiland ${cur}).` +
+        `<div class="help-island-grid">${rows}</div>` +
+        `<div style="margin-top:10px;opacity:.88;line-height:1.45">` +
+        `<b>Meester-buff:</b> 5× verlies op hetzelfde level → +20% HP, snelheid &amp; schade tot je wint.` +
+        ` Baas op Lv 10/20/30/40/50 opent het volgende eiland.</div></div>`;
+    }
     if (!host) return;
     const touch = IS_TOUCH ? 'touch' : 'toetsenbord';
     const prog = onboardingProgress();
     const next = nextUntriedMode();
     const modes = [
-      { id: 'adventure', label: 'Avontuur', tip: 'Groen HP · oranje rage · blauw chakra · SUPER bij vol · vóór level: dobbel-gok' },
+      { id: 'adventure', label: 'Avontuur', tip: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok vóór level' },
       { id: 'training', label: 'Training', tip: 'Lasers ontwijken · 2 rondes · Robot Chidori-telegraph' },
       { id: 'wall', label: 'Muur', tip: '60s · combo = sneller · beat record' },
       { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
@@ -10077,6 +10160,7 @@ const UI = {
       `Vechter <b>Lv ${save.lvl}</b> &nbsp;·&nbsp; Wapen: <b>${w.name}</b> &nbsp;·&nbsp; ` +
       `Stijl: <b style="color:${st.accent}">${st.name}</b> &nbsp;·&nbsp; ` +
       `Monsterboek: <b>${dexCount()}/${SPECIES_ORDER.length}</b> &nbsp;·&nbsp; Muur: <b>${save.bestWall}</b>` +
+      `<div style="font-size:12px;margin-top:6px;color:#9db1e3">${adventureProgressLine()}</div>` +
       `<div class="xpline"><div style="width:${Math.round(save.xp / need * 100)}%"></div></div>` +
       `<div style="font-size:12px;margin-top:4px;opacity:.85">${save.xp}/${need} XP · ${save.trainWins} train-wins</div>`;
     const cont = document.getElementById('btnContinue');
@@ -10103,6 +10187,9 @@ const UI = {
         tipEl.textContent = `Nog niet gespeeld: ${next.label} — één hint bovenin, geen toast-stapel`;
       } else {
         const tips = [
+          'Tip: 5 eilanden — baas Lv 10/20/30/40/50 opent volgend eiland',
+          'Tip: skill gate — in avontuur max wapen per eiland (zie Tips → Eilanden)',
+          'Tip: 5× verlies op één level = Meester-buff +20% tot je wint',
           'Tip: volle chakra → tik 🌀 voor Rasengan',
           'Tip: 2 spelers = liggend iPad, P1 links / P2 rechts',
           'Tip: muur-combo’s = sneller sloop & meer XP',
@@ -10419,7 +10506,11 @@ const UI = {
         btn.type = 'button';
         btn.className = 'island-tab' + (pick === isl.id ? ' active' : '') + (ok ? '' : ' locked');
         btn.style.setProperty('--isl-accent', isl.accent);
-        btn.innerHTML = `<span class="island-tab-n">${isl.id}</span><span class="island-tab-name">${isl.name}</span>` +
+        const prog = islandProgress(isl.id);
+        const pct = Math.round(prog.cleared / prog.total * 100);
+        btn.innerHTML = `<span class="island-tab-ico">${isl.icon}</span>` +
+          `<span class="island-tab-n">${isl.id}</span><span class="island-tab-name">${isl.name}</span>` +
+          `<span class="island-prog-track island-tab-prog"><i style="width:${pct}%;background:${isl.accent}"></i></span>` +
           (ok ? '' : `<span class="island-tab-lock">${SVG_LOCK_ICON}</span>`);
         btn.title = ok ? `${isl.name} · ${isl.sub}` : `Versla baas Lv ${isl.id * LEVELS_PER_ISLAND} om te openen`;
         if (ok) {
@@ -10435,16 +10526,23 @@ const UI = {
     const islMeta = ADVENTURE_ISLANDS[pick - 1] || ADVENTURE_ISLANDS[0];
     const range = islandLevelRange(pick);
     const wCap = adventureWeaponCapForLevel(range.start);
+    const prog = islandProgress(pick);
+    const pct = Math.round(prog.cleared / prog.total * 100);
     if (info) {
       const mb = save.advMasterBuff;
       const mbLine = mb && mb >= range.start && mb <= range.end
-        ? ` · Meester-buff op Lv ${mb} (+20%)`
+        ? `<span class="island-info-chip master">Meester-buff Lv ${mb} · +20%</span>`
         : '';
       info.innerHTML =
+        `<div class="island-info-head">` +
+        `<span class="island-info-ico">${islMeta.icon}</span>` +
+        `<div class="island-info-text">` +
         `<b style="color:${islMeta.accent}">${islMeta.name}</b> · ${islMeta.sub}` +
-        ` · skill gate: wapens tot Lv <b>${wCap}</b>` +
-        (pick < 5 ? ` · baas Lv ${pick * LEVELS_PER_ISLAND} opent volgend eiland` : '') +
-        mbLine;
+        `<div class="island-info-sub">Skill gate: wapens tot Lv <b>${wCap}</b> · ${prog.cleared}/${prog.total} levels · ${prog.stars}★` +
+        (pick < 5 ? ` · baas Lv ${pick * LEVELS_PER_ISLAND} → volgend eiland` : '') +
+        `</div></div></div>` +
+        `<div class="island-prog-track island-info-prog"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
+        (mbLine ? `<div class="island-info-chips">${mbLine}</div>` : '');
     }
     grid.innerHTML = '';
     for (let n = range.start; n <= range.end; n++) {
@@ -10485,7 +10583,12 @@ const UI = {
     const diceRow = document.getElementById('gambleDiceRow');
     const sumLine = document.getElementById('gambleSumLine');
     const outEl = document.getElementById('gambleOutcome');
-    if (head) head.textContent = `Gok — level ${levelN}`;
+    if (head) head.textContent = `Gok — ${islandMeta(islandFromLevel(levelN)).name} · Lv ${levelN}`;
+    const ctx = document.getElementById('gambleIslandCtx');
+    if (ctx) {
+      const cap = adventureWeaponCapForLevel(levelN);
+      ctx.textContent = `Skill gate: wapens tot Lv ${cap} · daarna dobbelen voor super-baas of bondgenoot`;
+    }
     const g = lastGambleRoll;
     const face = (d) => ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][d - 1] || '?';
     if (g && diceRow) {
@@ -11240,6 +11343,12 @@ bindSettingsControls();
 const btnHelp = document.getElementById('btnHelp');
 bindPress(btnHelp, () => {
   AudioSys.init(); AudioSys.sfx('select');
+  UI.renderHelp();
+  UI.show('helpScreen');
+});
+const btnIslandHelp = document.getElementById('btnIslandHelp');
+bindPress(btnIslandHelp, () => {
+  AudioSys.sfx('select');
   UI.renderHelp();
   UI.show('helpScreen');
 });

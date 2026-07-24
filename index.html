@@ -254,8 +254,33 @@
   .island-tab-n { font-size:18px; color:var(--isl-accent, #ffd75e); }
   .island-tab-name { font-size:10px; line-height:1.2; text-align:center; opacity:.92; }
   .island-tab-lock { position:absolute; top:6px; right:6px; font-size:12px; opacity:.85; }
-  .island-info { width:min(92vw,640px); text-align:center; font-size:13px; color:#9db1e3; margin:0 0 12px; line-height:1.45; }
+  .island-info { width:min(92vw,640px); text-align:left; font-size:13px; color:#9db1e3; margin:0 0 12px; line-height:1.45;
+      background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:16px; padding:12px 14px; }
+  .island-info-head { display:flex; align-items:center; gap:12px; }
+  .island-info-ico svg { width:36px; height:36px; display:block; }
+  .island-info-sub { font-size:12px; margin-top:4px; opacity:.92; }
+  .island-info-prog { margin-top:10px; height:7px; }
+  .island-info-chips { margin-top:8px; display:flex; flex-wrap:wrap; gap:6px; }
+  .island-info-chip { font-size:11px; font-weight:800; padding:4px 10px; border-radius:999px; background:rgba(196,122,255,.18); color:#c47aff; border:1px solid rgba(196,122,255,.35); }
+  .island-prog-track { display:block; width:100%; height:5px; border-radius:4px; background:#1a2040; overflow:hidden; }
+  .island-prog-track i { display:block; height:100%; border-radius:4px; transition:width .25s ease; }
+  .island-tab-ico { line-height:0; margin-bottom:2px; }
+  .island-tab-ico svg { width:28px; height:28px; display:block; }
+  .island-tab-prog { margin-top:6px; max-width:100%; }
+  .island-help-btn { position:absolute; top:max(12px, env(safe-area-inset-top)); right:max(12px, env(safe-area-inset-right));
+      width:44px; height:44px; min-height:44px; padding:0; border-radius:50%; font-size:20px; font-weight:900;
+      background:linear-gradient(180deg,#5a6784,#39445e); border:2px solid rgba(255,255,255,.15); z-index:2; }
+  #levelScreen { position:relative; }
+  .help-island-card { width:min(92vw,520px); border-color:rgba(124,245,255,.35); margin-bottom:12px; }
+  .help-island-grid { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+  .help-island-row { display:flex; gap:10px; align-items:flex-start; padding:8px 10px; border-radius:12px; background:rgba(0,0,0,.2); }
+  .help-island-row.cur { outline:1px solid rgba(124,245,255,.45); }
+  .help-island-row.locked { opacity:.55; }
+  .help-island-ico svg { width:32px; height:32px; display:block; flex:0 0 auto; }
+  .help-island-body { flex:1; min-width:0; font-size:13px; }
+  .help-island-sub { font-size:11px; opacity:.85; margin-top:3px; margin-bottom:6px; }
   .island-grid { grid-template-columns:repeat(5, minmax(56px, 1fr)); max-width:min(92vw, 520px); }
+  #gambleIslandCtx { width:min(86vw,420px); text-align:center; font-size:12px; color:#9db1e3; margin:-4px auto 10px; line-height:1.4; }
   #pauseScreen.active { backdrop-filter:blur(8px); background:rgba(10,13,24,.92) !important; }
 
   .toggles { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; justify-content:center; }
@@ -598,6 +623,7 @@
 
 <div id="levelScreen" class="screen">
   <button class="btn back-btn" data-back>&#8592; Terug</button>
+  <button type="button" class="btn island-help-btn" id="btnIslandHelp" title="Eilanden &amp; skill gate uitleg">?</button>
   <h2 class="head">Kies een eiland</h2>
   <div class="subtitle">5 eilanden × 10 levels · skill gate per eiland · baas op Lv 10/20/30/40/50 opent volgend eiland · 5× verlies = Meester-buff (+20%)</div>
   <div id="levelIslandBar" class="island-bar"></div>
@@ -609,6 +635,7 @@
 <div id="gambleScreen" class="screen">
   <button class="btn back-btn" data-back-gamble>&#8592; Terug</button>
   <h2 class="head" id="gambleHead">Gok — level …</h2>
+  <div id="gambleIslandCtx"></div>
   <div class="subtitle">Twee dobbelstenen: pech = super-baas in een willekeurige golf · geluk = sterke bondgenoot (buff alleen dit level)</div>
   <div class="step-card" style="width:min(92vw,420px);text-align:center;padding:18px 16px">
     <div id="gambleDiceRow" style="font-size:min(14vw,52px);letter-spacing:.12em;margin:8px 0">? ?</div>
@@ -762,6 +789,7 @@
 <div id="helpScreen" class="screen">
   <button class="btn back-btn" data-back>&#8592; Terug</button>
   <h2 class="head">Tips</h2>
+  <div id="helpIslandBlock" style="width:min(92vw,520px);margin-bottom:12px"></div>
   <div id="helpModeChips" style="width:min(92vw,520px);margin-bottom:12px;font-size:13px;line-height:1.5"></div>
   <div class="step-card" style="width:min(92vw,520px);border-color:rgba(255,215,94,.35);margin-bottom:12px">
     <b>Eerste minuut</b> — per modus <b>één</b> korte hint bovenin het gevecht (geen toast-stapel).
@@ -781,7 +809,7 @@
       <li><b>RabbitRobot:</b> hij gebruikt <b>Chidori</b> (bliksem) — wacht tot hij open is.</li>
       <li><b>Muur:</b> bomstenen (rood) ontploffen, staal (grijs) is taai, goud (geel) = XP.</li>
       <li><b>Rariteiten:</b> Gewoon → Ongewoon → Zeldzaam → Episch → Legendarisch → Mythisch. Zeldzamer = meer XP &amp; meer max HP.</li>
-      <li><b>50 levels:</b> elke 5 levels een baas. Level 50 = Guvvedrak + Voidkonijn + Schaduwvorst.</li>
+      <li><b>50 levels:</b> <b>5 eilanden × 10 levels</b> — skill gate wapens per eiland · baas Lv 10/20/30/40/50 opent volgend eiland · 5× verlies = Meester-buff (+20%).</li>
       <li><b>Backup:</b> elke save wordt dubbel opgeslagen — bij problemen: <b>Instellingen → Herstel save uit backup</b>.</li>
       <li><b>Delen:</b> menu → <b>Deel link</b> — vrienden op Android openen in Chrome → Zet in app-lade. Zie ANDROID-DELEN.txt op GitHub.</li>
       <li><b>Offline:</b> na 1× online openen cache’t de app HTML+JS — banner onderaan bij geen net. Tunnel-link heeft internet nodig; GitHub Pages + app-lade = stabielst.</li>
