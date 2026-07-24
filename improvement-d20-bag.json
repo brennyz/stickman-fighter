@@ -4,7 +4,6 @@
   "rollFirst": [],
   "remaining": [
     18,
-    4,
     9,
     6,
     3,
@@ -16,10 +15,10 @@
     15
   ],
   "lastRoll": {
-    "face": 14,
-    "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
-    "rolledAt": "2026-07-24T18:43:18Z",
-    "remainingCount": 11,
+    "face": 4,
+    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
+    "rolledAt": "2026-07-24T18:57:59Z",
+    "remainingCount": 10,
     "cycle": 3
   },
   "pending": null,
@@ -442,6 +441,13 @@
       "note": "Kill rings + banner streak + lite FX rings",
       "version": "1.17.26",
       "doneAt": "2026-07-24T18:44:14Z",
+      "cycle": 3
+    },
+    {
+      "face": 4,
+      "note": "golf-pips pause ring level wave strip",
+      "version": "1.17.36",
+      "doneAt": "2026-07-24T18:59:24Z",
       "cycle": 3
     }
   ],
@@ -1480,6 +1486,13 @@
       "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
       "rolledAt": "2026-07-24T18:43:18Z",
       "remainingCount": 11,
+      "cycle": 3
+    },
+    {
+      "face": 4,
+      "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
+      "rolledAt": "2026-07-24T18:57:59Z",
+      "remainingCount": 10,
       "cycle": 3
     }
   ],

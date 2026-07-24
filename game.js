@@ -132,9 +132,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.27';
+const APP_VERSION = '1.17.36';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 153;
+const SW_CACHE_REV = 162;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -9110,6 +9110,40 @@ class Game {
     c.textAlign = 'left';
     c.fillStyle = 'rgba(255,255,255,.6)';
     c.fillText(`deel ${Math.min(3, 1 + Math.floor(pr * 3))}/3`, x0 + tw + (this.level.boss ? 24 : 10), y + 3.5);
+    // golf-pips (d4 c3): expliciete golf 1/N onder de balk
+    const pipY = y + 16;
+    const pipGap = Math.min(14, (tw - 8) / Math.max(1, total));
+    const pipStart = W / 2 - ((total - 1) * pipGap) / 2;
+    const cur = Math.max(0, this.waveIdx);
+    for (let i = 0; i < total; i++) {
+      const px = pipStart + i * pipGap;
+      const isBossPip = this.level.boss && i === total - 1;
+      const done = i < cur;
+      const active = i === cur && this.waveIdx >= 0 && this.wavePause <= 0;
+      const nextPause = i === cur + 1 && this.wavePause > 0;
+      const pulseP = (active || nextPause) && !motionReduced() ? 1 + Math.sin(this.t * 8) * 0.12 : 1;
+      const r = (done || active ? 3.5 : 3) * pulseP;
+      c.beginPath();
+      if (done) {
+        c.fillStyle = isBossPip ? '#ff8a9a' : '#ffd75e';
+        c.arc(px, pipY, r, 0, TAU);
+        c.fill();
+      } else {
+        c.strokeStyle = isBossPip ? 'rgba(255,138,154,.85)' : (active || nextPause ? '#7cf5ff' : 'rgba(255,255,255,.35)');
+        c.lineWidth = active || nextPause ? 2 : 1.2;
+        c.arc(px, pipY, r, 0, TAU);
+        c.stroke();
+        if (active || nextPause) {
+          c.fillStyle = 'rgba(124,245,255,.28)';
+          c.fill();
+        }
+      }
+    }
+    c.font = '700 9px sans-serif';
+    c.fillStyle = 'rgba(255,255,255,.5)';
+    c.textAlign = 'center';
+    const waveNum = this.waveIdx >= 0 ? Math.min(total, cur + 1) : 0;
+    c.fillText(waveNum > 0 ? `Golf ${waveNum}/${total}` : `${total} golven`, W / 2, pipY + 11);
     c.textAlign = 'center';
   }
 
@@ -9339,9 +9373,29 @@ class Game {
       if (this.wavePause > 0) {
         const nextBoss = isBossWave(this.level, this.waveIdx + 1);
         const sec = Math.max(0, this.wavePause);
+        const totalPause = this.wavePauseTotal || 1.55;
+        const pauseFrac = clamp(1 - this.wavePause / totalPause, 0, 1);
+        const ringX = W / 2;
+        const ringY = H - 78;
+        const ringR = 24;
+        if (!motionReduced()) {
+          c.save();
+          c.strokeStyle = nextBoss ? 'rgba(255,138,154,.22)' : 'rgba(124,245,255,.18)';
+          c.lineWidth = 3.5;
+          c.beginPath();
+          c.arc(ringX, ringY, ringR, 0, TAU);
+          c.stroke();
+          c.strokeStyle = nextBoss ? '#ffb0b8' : '#7cf5ff';
+          c.lineWidth = 3.5;
+          c.lineCap = 'round';
+          c.beginPath();
+          c.arc(ringX, ringY, ringR, -Math.PI / 2, -Math.PI / 2 + pauseFrac * TAU);
+          c.stroke();
+          c.restore();
+        }
         c.font = '800 15px sans-serif';
         const pauseMsg = nextBoss ? `Op weg naar de baas — ${sec.toFixed(1)}s` : `Verder lopen… volgende golf ${sec.toFixed(1)}s`;
-        fillHudText(c, pauseMsg, W / 2, H - 78, {
+        fillHudText(c, pauseMsg, ringX, ringY, {
           fill: nextBoss ? '#ffc8d0' : '#d8e8ff',
         });
         this.drawNextWavePreview(c);
@@ -10927,9 +10981,14 @@ const UI = {
         (!locked && n === save.unlocked ? ' lvl-current' : '') +
         (save.advMasterBuff === n ? ' master-buff' : '');
       el.style.boxShadow = locked ? 'none' : `0 5px 0 rgba(0,0,0,.35), 0 0 0 2px ${rar.color}55`;
+      const waveStrip = infoLv.waves.map((_, wi) => {
+        const isBossPip = boss && wi === infoLv.waves.length - 1;
+        return `<i class="lvl-wave-dot${isBossPip ? ' boss' : ''}"></i>`;
+      }).join('');
       el.innerHTML = locked
         ? SVG_LOCK_ICON
         : `${n}${boss ? '<small>BAAS</small>' : `<small style="color:${rar.color}">${rar.name}</small>`}` +
+          `<span class="lvl-wave-strip" aria-hidden="true">${waveStrip}</span>` +
           (save.stars[n] ? `<span class="lvl-stars">${'★'.repeat(save.stars[n])}</span>` : '') +
           (fails > 0 && !locked ? `<span class="lvl-fails">${fails}/5</span>` : '') +
           (save.advMasterBuff === n ? '<span class="lvl-master">+20%</span>' : '');

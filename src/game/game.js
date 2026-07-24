@@ -2148,6 +2148,40 @@ class Game {
     c.textAlign = 'left';
     c.fillStyle = 'rgba(255,255,255,.6)';
     c.fillText(`deel ${Math.min(3, 1 + Math.floor(pr * 3))}/3`, x0 + tw + (this.level.boss ? 24 : 10), y + 3.5);
+    // golf-pips (d4 c3): expliciete golf 1/N onder de balk
+    const pipY = y + 16;
+    const pipGap = Math.min(14, (tw - 8) / Math.max(1, total));
+    const pipStart = W / 2 - ((total - 1) * pipGap) / 2;
+    const cur = Math.max(0, this.waveIdx);
+    for (let i = 0; i < total; i++) {
+      const px = pipStart + i * pipGap;
+      const isBossPip = this.level.boss && i === total - 1;
+      const done = i < cur;
+      const active = i === cur && this.waveIdx >= 0 && this.wavePause <= 0;
+      const nextPause = i === cur + 1 && this.wavePause > 0;
+      const pulseP = (active || nextPause) && !motionReduced() ? 1 + Math.sin(this.t * 8) * 0.12 : 1;
+      const r = (done || active ? 3.5 : 3) * pulseP;
+      c.beginPath();
+      if (done) {
+        c.fillStyle = isBossPip ? '#ff8a9a' : '#ffd75e';
+        c.arc(px, pipY, r, 0, TAU);
+        c.fill();
+      } else {
+        c.strokeStyle = isBossPip ? 'rgba(255,138,154,.85)' : (active || nextPause ? '#7cf5ff' : 'rgba(255,255,255,.35)');
+        c.lineWidth = active || nextPause ? 2 : 1.2;
+        c.arc(px, pipY, r, 0, TAU);
+        c.stroke();
+        if (active || nextPause) {
+          c.fillStyle = 'rgba(124,245,255,.28)';
+          c.fill();
+        }
+      }
+    }
+    c.font = '700 9px sans-serif';
+    c.fillStyle = 'rgba(255,255,255,.5)';
+    c.textAlign = 'center';
+    const waveNum = this.waveIdx >= 0 ? Math.min(total, cur + 1) : 0;
+    c.fillText(waveNum > 0 ? `Golf ${waveNum}/${total}` : `${total} golven`, W / 2, pipY + 11);
     c.textAlign = 'center';
   }
 
@@ -2377,9 +2411,29 @@ class Game {
       if (this.wavePause > 0) {
         const nextBoss = isBossWave(this.level, this.waveIdx + 1);
         const sec = Math.max(0, this.wavePause);
+        const totalPause = this.wavePauseTotal || 1.55;
+        const pauseFrac = clamp(1 - this.wavePause / totalPause, 0, 1);
+        const ringX = W / 2;
+        const ringY = H - 78;
+        const ringR = 24;
+        if (!motionReduced()) {
+          c.save();
+          c.strokeStyle = nextBoss ? 'rgba(255,138,154,.22)' : 'rgba(124,245,255,.18)';
+          c.lineWidth = 3.5;
+          c.beginPath();
+          c.arc(ringX, ringY, ringR, 0, TAU);
+          c.stroke();
+          c.strokeStyle = nextBoss ? '#ffb0b8' : '#7cf5ff';
+          c.lineWidth = 3.5;
+          c.lineCap = 'round';
+          c.beginPath();
+          c.arc(ringX, ringY, ringR, -Math.PI / 2, -Math.PI / 2 + pauseFrac * TAU);
+          c.stroke();
+          c.restore();
+        }
         c.font = '800 15px sans-serif';
         const pauseMsg = nextBoss ? `Op weg naar de baas — ${sec.toFixed(1)}s` : `Verder lopen… volgende golf ${sec.toFixed(1)}s`;
-        fillHudText(c, pauseMsg, W / 2, H - 78, {
+        fillHudText(c, pauseMsg, ringX, ringY, {
           fill: nextBoss ? '#ffc8d0' : '#d8e8ff',
         });
         this.drawNextWavePreview(c);

@@ -1076,9 +1076,14 @@ const UI = {
         (!locked && n === save.unlocked ? ' lvl-current' : '') +
         (save.advMasterBuff === n ? ' master-buff' : '');
       el.style.boxShadow = locked ? 'none' : `0 5px 0 rgba(0,0,0,.35), 0 0 0 2px ${rar.color}55`;
+      const waveStrip = infoLv.waves.map((_, wi) => {
+        const isBossPip = boss && wi === infoLv.waves.length - 1;
+        return `<i class="lvl-wave-dot${isBossPip ? ' boss' : ''}"></i>`;
+      }).join('');
       el.innerHTML = locked
         ? SVG_LOCK_ICON
         : `${n}${boss ? '<small>BAAS</small>' : `<small style="color:${rar.color}">${rar.name}</small>`}` +
+          `<span class="lvl-wave-strip" aria-hidden="true">${waveStrip}</span>` +
           (save.stars[n] ? `<span class="lvl-stars">${'★'.repeat(save.stars[n])}</span>` : '') +
           (fails > 0 && !locked ? `<span class="lvl-fails">${fails}/5</span>` : '') +
           (save.advMasterBuff === n ? '<span class="lvl-master">+20%</span>' : '');
