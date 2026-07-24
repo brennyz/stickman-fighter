@@ -3,9 +3,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.63';
+const APP_VERSION = '1.17.64';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 189;
+const SW_CACHE_REV = 190;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -405,7 +405,7 @@ function projStrikeFighter(game, p, tgt, col) {
   if (p.kind === 'rinnegan' && p.pull) tgt.vx += Math.sign(p.vx || 1) * 160;
   if (p.kind === 'rasengan') {
     spawnJutsuImpactFx(game, p.x, p.y, 'rasengan', 'full');
-    if (!fxLite()) game.freezeT = Math.max(game.freezeT || 0, 0.045);
+    if (!fxLite() && !motionReduced()) game.freezeT = Math.max(game.freezeT || 0, 0.045);
   } else if (p.kind === 'chidori') {
     spawnJutsuImpactFx(game, p.x, p.y, 'chidori', 'full');
   } else if (p.kind === 'rinnegan') {

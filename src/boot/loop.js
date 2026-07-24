@@ -483,7 +483,7 @@ function bootGame() {
   }
   try {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const onMq = () => syncA11yClasses();
+    const onMq = () => refreshA11yUi();
     if (mq.addEventListener) mq.addEventListener('change', onMq);
     else if (mq.addListener) mq.addListener(onMq);
     const mqC = window.matchMedia('(prefers-contrast: more)');

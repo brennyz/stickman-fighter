@@ -687,6 +687,32 @@
   .mission-card .mission-play-btn { width:100%; margin-top:10px; justify-content:center;
       background:linear-gradient(180deg,#3a6a9a,#254a72); color:#e8f4ff; min-height:44px; font-size:15px; }
   body.reduced-motion .mission-card.claimable { box-shadow: none; }
+
+  /* OS-level a11y — applies before JS syncA11yClasses */
+  @media (prefers-reduced-motion: reduce) {
+    .screen.active, h1.title, .char-card.pick-hint, .xpline > div, .toast,
+    #netStatus.online-flash, .press-start { animation: none !important; }
+    .char-fight-btn { box-shadow: 0 4px 0 #6b1515; }
+  }
+  @media (prefers-contrast: more) {
+    .subtitle, .char-arena-sub, #menuTipLine, #menuDailyHint { color: #e8f0ff; }
+    .char-arena-head { text-shadow: none; color: #ffe566; }
+    #charSelectScreen.char-select-arena .char-arena-duel,
+    #charSelectScreen.char-select-arena .char-arena-featured,
+    .char-arena-preview { border-width: 2px; border-color: rgba(255,255,255,.35); }
+    #menuLangBar .dex-filter-btn { border-width: 2px; font-weight: 900; }
+    .char-fight-btn { border: 2px solid rgba(255,255,255,.45); }
+  }
+  body.high-contrast .char-arena-head { text-shadow: none; color: #ffe566; }
+  body.high-contrast .char-arena-sub,
+  body.high-contrast .char-arena-pre { color: #e8f0ff; opacity: 1; }
+  body.high-contrast #charSelectScreen.char-select-arena .char-arena-duel,
+  body.high-contrast #charSelectScreen.char-select-arena .char-arena-featured,
+  body.high-contrast .char-arena-preview,
+  body.high-contrast #menuLangBar .dex-filter-btn { border-width: 2px; }
+  body.high-contrast .char-fight-btn { border: 2px solid rgba(255,255,255,.4); box-shadow: 0 4px 0 #6b1515; }
+  body.reduced-motion .char-fight-btn { box-shadow: 0 4px 0 #6b1515; }
+  body.reduced-motion .char-arena-head { text-shadow: 0 2px 0 rgba(0,0,0,.45); }
   .btn.tog.tog-alert { box-shadow: 0 0 0 2px rgba(255,215,94,.7); color: #ffd75e; font-weight: 800; }
   .mission-flow-host { width:min(92vw,480px); margin:0 auto 10px; }
   .mission-flow-bar { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px;
