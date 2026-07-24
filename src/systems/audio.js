@@ -7,11 +7,16 @@ const AudioSys = {
   _sfxVar: 0,
   _sfxPan: 0,
   _combatHeat: 0,
+  _samples: {},
+  _sampleLoadStarted: false,
+  _sampleCount: 0,
+  _samplesReady: false,
 
   init() {
     try {
       if (this.ctx) {
         if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+        this.loadSamples();
         return;
       }
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -26,12 +31,73 @@ const AudioSys = {
       if (!this._tickTimer) this._tickTimer = setInterval(() => {
         try { this.tick(); } catch (_) {}
       }, 40);
+      this.loadSamples();
       if (this.desiredSong && save.music) this.play(this.desiredSong);
       this.applyVolumes();
     } catch (err) {
       console.warn('[Stickman] AudioSys.init', err);
       this.ctx = null;
     }
+  },
+
+  /** Fetch Kenney CC0 samples (jsDelivr) — batched; procedural fallback until ready. */
+  loadSamples() {
+    if (!this.ctx || this._sampleLoadStarted || typeof collectSampleUrls !== 'function') return;
+    this._sampleLoadStarted = true;
+    const urls = collectSampleUrls();
+    if (!urls.length) return;
+    let idx = 0;
+    const batch = 8;
+    const loadOne = async (url) => {
+      try {
+        const res = await fetch(url, { mode: 'cors', cache: 'force-cache' });
+        if (!res.ok) return;
+        const ab = await res.arrayBuffer();
+        const buf = await this.ctx.decodeAudioData(ab);
+        this._samples[url] = buf;
+        this._sampleCount++;
+        if (this._sampleCount >= 12) this._samplesReady = true;
+      } catch (_) {}
+    };
+    const pump = () => {
+      if (!this.ctx) return;
+      const chunk = urls.slice(idx, idx + batch);
+      idx += batch;
+      Promise.all(chunk.map(u => loadOne(u))).then(() => {
+        if (idx < urls.length) setTimeout(pump, 16);
+        else if (this._sampleCount > 0) this._samplesReady = true;
+      });
+    };
+    pump();
+  },
+
+  _playSample(name) {
+    if (!this.ctx || !save.sfx) return false;
+    const cfg = typeof sampleMapForSfx === 'function' ? sampleMapForSfx(name) : null;
+    if (!cfg) return false;
+    const loaded = (cfg.files || []).map(f => sampleUrl(cfg.pack, f)).filter(u => u && this._samples[u]);
+    if (!loaded.length) return false;
+    const url = loaded[Math.floor(Math.random() * loaded.length)];
+    const buf = this._samples[url];
+    if (!buf) return false;
+    const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
+    const sv = clamp(Number(save.sfxVol) || 1, 0, 1);
+    let vol = (cfg.vol != null ? cfg.vol : 0.75) * sv * (lite ? 0.78 : 1);
+    if (vol <= 0.001) return false;
+    const t = this.ctx.currentTime;
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+    const rate = (cfg.rate || 1) * (0.93 + Math.random() * 0.14);
+    src.playbackRate.value = rate;
+    const dur = Math.min(buf.duration / rate, 2.8);
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    src.connect(g);
+    g.connect(this._sfxDest());
+    src.start(t);
+    src.stop(t + dur + 0.02);
+    return true;
   },
 
   _setGain(g, v) {
@@ -190,6 +256,8 @@ const AudioSys = {
 
   sfx(name) {
     if (!this.ctx || !save.sfx) return;
+    try { if (this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
+    if (this._playSample(name)) return;
     const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
     const v = (n) => n * (lite ? 0.72 : 0.88);
     const d = (n) => n * (lite ? 0.78 : 0.9);
