@@ -1101,6 +1101,7 @@ const UI = {
           holdSkip = false;
           holdT = setTimeout(() => {
             holdT = null;
+            if (!uiTapAllowed()) return;
             holdSkip = true;
             safeUiAction(() => {
               AudioSys.sfx('select');
@@ -1116,6 +1117,7 @@ const UI = {
         el.addEventListener('pointercancel', cancelHold);
         el.addEventListener('click', () => {
           if (holdSkip) { holdSkip = false; return; }
+          if (!uiTapAllowed()) return;
           safeUiAction(() => gokGooiStartLevel(n), 'gokStart/' + n, 'Level starten mislukt');
         });
       }
@@ -1219,14 +1221,17 @@ const UI = {
           ? `Avontuur Lv ${base.unlock}`
           : (save.weapon === w.id ? '&#10004; gekozen' : 'kies'));
       el.appendChild(right);
-      if (!locked) el.addEventListener('click', () => safeUiAction(() => {
-        save.weapon = w.id;
-        if (!persistOrToast('wapen')) return;
-        AudioSys.sfx('select');
-        try { AudioSys.sfx(weaponSwingSfx(w.id)); } catch (_) {}
-        if (islandLocked) UI.toast(`Klaar voor training — in avontuur max Lv ${adventureWeaponCap()}`, 2800);
-        this.renderWeapons();
-      }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt'));
+      if (!locked) el.addEventListener('click', () => {
+        if (!uiTapAllowed()) return;
+        safeUiAction(() => {
+          save.weapon = w.id;
+          if (!persistOrToast('wapen')) return;
+          AudioSys.sfx('select');
+          try { AudioSys.sfx(weaponSwingSfx(w.id)); } catch (_) {}
+          if (islandLocked) UI.toast(`Klaar voor training — in avontuur max Lv ${adventureWeaponCap()}`, 2800);
+          this.renderWeapons();
+        }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt');
+      });
       list.appendChild(el);
     }
   },
@@ -1392,14 +1397,17 @@ const UI = {
         : (styleSkillGated(st) ? `Eiland-skill Lv ${st.needLvl}` : st.hint);
       el.appendChild(sub);
       if (ok) {
-        el.addEventListener('click', () => safeUiAction(() => {
-          save.style = st.id;
-          if (!persistOrToast('stijl')) return;
-          AudioSys.sfx('select');
-          this.renderStyle();
-          this.renderMenu();
-          UI.toast(`${st.name} uitgerust`, 2200);
-        }, 'pickStyle/' + st.id, 'Stijl kiezen mislukt'));
+        el.addEventListener('click', () => {
+          if (!uiTapAllowed()) return;
+          safeUiAction(() => {
+            save.style = st.id;
+            if (!persistOrToast('stijl')) return;
+            AudioSys.sfx('select');
+            this.renderStyle();
+            this.renderMenu();
+            UI.toast(`${st.name} uitgerust`, 2200);
+          }, 'pickStyle/' + st.id, 'Stijl kiezen mislukt');
+        });
       }
       grid.appendChild(el);
     }

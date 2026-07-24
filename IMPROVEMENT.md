@@ -109,6 +109,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-24 | **9** | Touch (cyclus 3): bredere 2P neutraal-strip, dual joy-guard, uiTap op level/wapen/stijl, pan-y scroll + bigTouch slop. v1.17.37 / SW v163. |
 | 2026-07-24 | **4** | Avontuur (cyclus 3): golf-pips rij + Golf N/M label, reis-pauze countdown-ring, level-grid wave-strip (baas-pip) — geen xp/hp×. v1.17.36 / SW v162. |
 | 2026-07-24 | **2** | Training (cyclus 3): melee telegraph HUD (SLA/TRAP), Chidori cancel bij spring, laser pauze tijdens robot-aanval, fairere spacing AI — geen one-shots. v1.17.13 / SW v140. |
 | 2026-07-24 | **13** | Missies (cyclus 3): 3-stappen flow-balk (Speel→Claim→Dagbonus), “Nog X” remainder-copy, modus-pill, max-XP vandaag, claim follow-up toasts, prestatie-filter + voortgangsbalk. v1.17.12 / SW v139. |

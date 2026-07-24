@@ -4,7 +4,6 @@
   "rollFirst": [],
   "remaining": [
     18,
-    9,
     6,
     3,
     16,
@@ -15,10 +14,10 @@
     15
   ],
   "lastRoll": {
-    "face": 4,
-    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
-    "rolledAt": "2026-07-24T18:57:59Z",
-    "remainingCount": 10,
+    "face": 9,
+    "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
+    "rolledAt": "2026-07-24T18:59:57Z",
+    "remainingCount": 9,
     "cycle": 3
   },
   "pending": null,
@@ -448,6 +447,13 @@
       "note": "golf-pips pause ring level wave strip",
       "version": "1.17.36",
       "doneAt": "2026-07-24T18:59:24Z",
+      "cycle": 3
+    },
+    {
+      "face": 9,
+      "note": "dual joy-guard uiTap pan-y slop",
+      "version": "1.17.37",
+      "doneAt": "2026-07-24T19:02:13Z",
       "cycle": 3
     }
   ],
@@ -1493,6 +1499,13 @@
       "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
       "rolledAt": "2026-07-24T18:57:59Z",
       "remainingCount": 10,
+      "cycle": 3
+    },
+    {
+      "face": 9,
+      "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
+      "rolledAt": "2026-07-24T18:59:57Z",
+      "remainingCount": 9,
       "cycle": 3
     }
   ],
