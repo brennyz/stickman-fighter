@@ -109,9 +109,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.18';
+const APP_VERSION = '1.17.20';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 145;
+const SW_CACHE_REV = 146;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -9890,8 +9890,47 @@ const SVG_LOCK_ICON =
   '<svg viewBox="0 0 24 24" style="width:1.15em;height:1.15em;vertical-align:-0.2em" fill="none" stroke="currentColor" stroke-width="2">' +
   '<rect x="6" y="11" width="12" height="9" rx="2" fill="rgba(0,0,0,.3)"/><path d="M9 11V8a3 3 0 016 0v3"/></svg>';
 
+const MODE_HUB_META = {
+  arcade: { badge: 'SOLO', badgeClass: 'badge-solo', title: 'Arcade', sub: 'Snelle sessies · high scores · geen voortgang verlies' },
+  collect: { badge: 'COLLECTIE', badgeClass: 'badge-meta', title: 'Verzameling', sub: 'Wapens · stijlen · monsterboek · XP & unlocks' },
+};
+
+function hubForPlayMode(mode) {
+  if (mode === 'adventure') return 'adventure';
+  if (mode === 'versus') return 'versus';
+  if (mode === 'training' || mode === 'wall' || mode === 'coinrun') return 'arcade';
+  return null;
+}
+
+function hubTileStatLine(hub) {
+  switch (hub) {
+    case 'adventure': {
+      const cur = currentAdvIsland();
+      return `Eiland ${cur}/5 · unlock Lv ${save.unlocked}/${MAX_LEVEL}`;
+    }
+    case 'arcade': {
+      const bits = [];
+      if (save.trainWins > 0) bits.push(`${save.trainWins} train`);
+      if (save.bestWall > 0) bits.push(`muur ${save.bestWall}`);
+      const mats = save.stats?.matsCoinBest || 0;
+      if (mats > 0) bits.push(`mats ${mats}`);
+      return bits.length ? bits.join(' · ') : '3 snelle modi';
+    }
+    case 'versus': {
+      const w = save.stats?.vsWins || 0;
+      const m = save.stats?.vsMatches || 0;
+      return m > 0 ? `${w}/${m} gewonnen` : '23 vechters · lokaal';
+    }
+    case 'collect':
+      return `${weaponUnlockedCount()}/${WEAPONS.length} wapens · boek ${dexCount()}/${SPECIES_ORDER.length}`;
+    default:
+      return '';
+  }
+}
+
 const UI = {
-  screens: ['menuScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
+  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
+  modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
   charPreviewHoverId: null,
@@ -10037,6 +10076,22 @@ const UI = {
       }
       if (active === 'gambleScreen') {
         this.show('levelScreen');
+        return;
+      }
+      if (active === 'modeHubScreen' || active === 'levelScreen') {
+        this.show('menuScreen');
+        return;
+      }
+      if (active === 'charSelectScreen') {
+        this.show('menuScreen');
+        return;
+      }
+      if (active === 'weaponScreen' || active === 'styleScreen' || active === 'dexScreen') {
+        this.openModeHub('collect');
+        return;
+      }
+      if (active === 'missionsScreen' || active === 'settingsScreen' || active === 'helpScreen' || active === 'installScreen') {
+        this.show('menuScreen');
         return;
       }
       if (active === 'resultScreen') {
@@ -10306,70 +10361,125 @@ const UI = {
     row.appendChild(strip);
   },
 
+  openModeHub(id) {
+    if (!MODE_HUB_META[id]) return;
+    this.modeHubId = id;
+    this.renderModeHub();
+    this.show('modeHubScreen');
+  },
+
+  renderModeHub() {
+    const meta = MODE_HUB_META[this.modeHubId];
+    if (!meta) return;
+    const badge = document.getElementById('modeHubBadge');
+    const title = document.getElementById('modeHubTitle');
+    const sub = document.getElementById('modeHubSub');
+    const stepEl = document.getElementById('modeHubStep');
+    if (badge) {
+      badge.textContent = meta.badge;
+      badge.className = 'menu-badge ' + meta.badgeClass;
+    }
+    if (title) title.textContent = meta.title;
+    if (sub) sub.textContent = meta.sub;
+    if (stepEl) stepEl.textContent = 'Stap 2 · ' + meta.title;
+    document.querySelectorAll('[data-hub-panel]').forEach((panel) => {
+      panel.hidden = panel.dataset.hubPanel !== this.modeHubId;
+    });
+    const setStat = (id, txt) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = txt || '';
+    };
+    if (this.modeHubId === 'arcade') {
+      setStat('hubStatTraining', save.trainWins > 0 ? `${save.trainWins} overwinningen` : 'Nog niet gespeeld');
+      setStat('hubStatWall', save.bestWall > 0 ? `Record ${save.bestWall}` : 'Nog geen score');
+      const mats = save.stats?.matsCoinBest || 0;
+      setStat('hubStatMats', mats > 0 ? `Best ${mats} munten` : 'Nog niet gespeeld');
+    } else if (this.modeHubId === 'collect') {
+      setStat('hubStatWeapons', `${weaponUnlockedCount()}/${WEAPONS.length} vrij`);
+      const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
+      setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
+      setStat('hubStatDex', `${dexCount()}/${SPECIES_ORDER.length} · +max HP`);
+    }
+  },
+
   renderMenu() {
     this.syncTouchClass();
     const need = xpNeed(save.lvl);
     const w = weaponById(save.weapon);
     const st = styleById(save.style || 'classic');
-    document.getElementById('menuStats').innerHTML =
-      `Vechter <b>Lv ${save.lvl}</b> &nbsp;·&nbsp; Wapen: <b>${w.name}</b> &nbsp;·&nbsp; ` +
-      `Stijl: <b style="color:${st.accent}">${st.name}</b> &nbsp;·&nbsp; ` +
-      `Monsterboek: <b>${dexCount()}/${SPECIES_ORDER.length}</b> &nbsp;·&nbsp; Muur: <b>${save.bestWall}</b>` +
-      (save.bestWall > 0 ? ` <span style="opacity:.75">· combo = sneller sloop</span>` : '') +
-      `<div style="font-size:12px;margin-top:6px;color:#9db1e3">${adventureProgressLine()}</div>` +
-      `<div class="xpline"><div style="width:${Math.round(save.xp / need * 100)}%"></div></div>` +
-      `<div style="font-size:12px;margin-top:4px;opacity:.85">${save.xp}/${need} XP · ${save.trainWins} train-wins</div>`;
+    const pct = Math.round(save.xp / need * 100);
+    ensureDaily();
+    const readyClaim = claimableDailyTasks().length;
+    const bonusReady = save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed;
+    const missAlert = readyClaim > 0 || bonusReady;
+    const profileEl = document.getElementById('menuProfileBar');
+    if (profileEl) {
+      profileEl.innerHTML =
+        `<span class="prof-row"><b>Lv ${save.lvl}</b><span>${w.name}</span><span style="color:${st.accent}">${st.name}</span></span>` +
+        `<span style="display:block;margin-top:3px;opacity:.82;font-size:11px">${adventureProgressLine()}</span>` +
+        `<span class="prof-xp" aria-hidden="true"><span style="width:${pct}%"></span></span>` +
+        `<span class="prof-foot">${save.xp}/${need} XP${missAlert ? ' · missie klaar' : ''}</span>`;
+      profileEl.classList.toggle('has-alert', missAlert);
+    }
+    const statsEl = document.getElementById('menuStats');
+    if (statsEl) statsEl.textContent = '';
     const cont = document.getElementById('btnContinue');
     const lp = save.lastPlay;
+    const featHub = lp?.mode ? hubForPlayMode(lp.mode) : null;
     if (cont) {
       if (lp && lp.mode) {
         const labels = { adventure: `Avontuur Lv ${lp.level || 1}`, training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Mats · munten' };
         cont.style.display = 'flex';
         cont.querySelector('div').innerHTML =
-          `Verder spelen<small>${labels[lp.mode] || lp.mode} — direct verder</small>`;
+          `Verder spelen<small>${labels[lp.mode] || lp.mode}</small>`;
       } else cont.style.display = 'none';
     }
+    document.querySelectorAll('[data-hub]').forEach((el) => {
+      el.classList.toggle('hub-tile-featured', el.dataset.hub === featHub);
+    });
+    document.querySelectorAll('[data-hub-stat]').forEach((el) => {
+      el.textContent = hubTileStatLine(el.dataset.hubStat);
+    });
     document.getElementById('togMusic').classList.toggle('off', !save.music);
     document.getElementById('togSfx').classList.toggle('off', !save.sfx);
-    ensureDaily();
     const verLine = document.getElementById('menuVerLine');
     if (verLine) verLine.textContent = 'v' + APP_VERSION + ' · arcade · SW v' + SW_CACHE_REV;
     const missEl = document.getElementById('menuDailyHint');
-    if (missEl) missEl.textContent = dailyStatusLine();
+    const hubHintEl = document.getElementById('menuHubHint');
+    const dailyLine = dailyStatusLine();
+    if (missEl) missEl.textContent = dailyLine;
     const tipEl = document.getElementById('menuTipLine');
+    let hintLine = dailyLine;
     if (tipEl) {
       const next = nextUntriedMode();
       if (next) {
-        tipEl.textContent = `Nog niet gespeeld: ${next.label} — één hint bovenin, geen toast-stapel`;
+        tipEl.textContent = `Nog niet gespeeld: ${next.label}`;
+        hintLine = `Nog niet gespeeld: ${next.label}`;
       } else {
         const tips = [
-          'Tip: menu = Avontuur · Arcade · 2P · Collectie — kies je modus',
-          'Tip: 5 eilanden — baas Lv 10/20/30/40/50 opent volgend eiland',
-          'Tip: skill gate — in avontuur max wapen per eiland (zie Tips → Eilanden)',
-          'Tip: 5× verlies op één level = Meester-buff +20% tot je wint',
-          'Tip: Training = solo oefenen · Versus = 2P lokaal op iPad',
-          'Tip: volle chakra → tik 🌀 voor Rasengan',
-          'Tip: muur-combo’s = sneller sloop & meer XP',
-          'Tip: monsterboek vullen = meer max HP',
-          'Tip: “Verder spelen” hervat je laatste modus',
-          'Tip: menu-muziek wisselt telkens als je terugkeert vanuit een modus',
-          'Tip: Missies → claim XP (knop pulseert als klaar)',
+          'Kies een tegel — Avontuur · Arcade · 2P · Collectie',
+          '5 eilanden — baas Lv 10/20/30/40/50 opent volgend eiland',
+          'Skill gate — max wapen per eiland in avontuur',
+          '5× verlies op één level = Meester-buff +20%',
+          'Training = solo · Versus = 2P lokaal op iPad',
+          'Muur-combo’s = sneller sloop & meer XP',
+          'Monsterboek vullen = meer max HP',
+          'Verder spelen hervat je laatste modus',
+          'Menu-muziek wisselt als je terugkeert uit een modus',
         ];
         const i = Math.floor(Date.now() / 8000) % tips.length;
         tipEl.textContent = tips[i];
+        hintLine = tips[i];
       }
     }
+    if (hubHintEl) hubHintEl.textContent = hintLine;
     const missBtn = document.getElementById('btnMissions');
     const missLbl = document.getElementById('btnMissionsLbl');
     if (missBtn) {
-      ensureDaily();
-      const readyClaim = claimableDailyTasks().length;
-      const bonusReady = save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed;
-      const alert = readyClaim > 0 || bonusReady;
-      missBtn.classList.toggle('tog-alert', alert);
+      missBtn.classList.toggle('tog-alert', missAlert);
       if (missLbl) {
-        if (readyClaim > 0) missLbl.textContent = `Missies · +${dailyUnclaimedXp()} XP`;
-        else if (bonusReady) missLbl.textContent = 'Missies · dagbonus';
+        if (readyClaim > 0) missLbl.textContent = `+${dailyUnclaimedXp()} XP`;
+        else if (bonusReady) missLbl.textContent = 'Dagbonus';
         else missLbl.textContent = 'Missies';
       }
     }
@@ -11256,6 +11366,27 @@ function bindPress(el, handler) {
 
 bindPress(document.getElementById('btnAdventure'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderLevels(); UI.show('levelScreen');
+});
+document.querySelectorAll('[data-hub]').forEach((el) => {
+  bindPress(el, () => {
+    AudioSys.init(); AudioSys.sfx('select');
+    const hub = el.dataset.hub;
+    if (hub === 'adventure') {
+      UI.renderLevels();
+      UI.show('levelScreen');
+    } else if (hub === 'versus') {
+      UI.charPickStep = 1;
+      UI.renderCharSelect();
+      UI.show('charSelectScreen');
+    } else {
+      UI.openModeHub(hub);
+    }
+  });
+});
+bindPress(document.getElementById('menuProfileBar'), () => {
+  AudioSys.init(); AudioSys.sfx('select');
+  UI.renderMissions();
+  UI.show('missionsScreen');
 });
 bindPress(document.getElementById('btnGambleRoll'), () => {
   AudioSys.init();
