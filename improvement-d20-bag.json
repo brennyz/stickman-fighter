@@ -3,32 +3,32 @@
   "cyclesCompleted": 4,
   "rollFirst": [],
   "remaining": [
-    8,
-    10,
-    6,
-    1,
-    16,
-    20,
     2,
-    4,
-    15,
-    11,
-    14,
-    13,
-    5,
-    18,
-    17,
     3,
-    19,
+    4,
+    5,
+    6,
+    8,
     9,
-    12
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
   ],
   "lastRoll": {
-    "face": 7,
-    "category": "Save & backup \u2014 import/export, corruptie, migratie",
-    "rolledAt": "2026-07-24T20:29:50Z",
-    "remainingCount": 19,
-    "cycle": 4
+    "face": 1,
+    "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
+    "rolledAt": "2026-07-24T20:32:15Z",
+    "remainingCount": 18,
+    "cycle": 4,
+    "userPick": "harden combat"
   },
   "pending": null,
   "implemented": [
@@ -534,6 +534,13 @@
       "note": "schema v3 pets/ei sync backup export download",
       "version": "1.17.49",
       "doneAt": "2026-07-24T20:31:04Z",
+      "cycle": 4
+    },
+    {
+      "face": 1,
+      "note": "harden combat anti-stunlock chain cd",
+      "version": "1.17.50",
+      "doneAt": "2026-07-24T20:32:38Z",
       "cycle": 4
     }
   ],
@@ -1696,5 +1703,15 @@
       "cycle": 4
     }
   ],
-  "rollBacklog": []
+  "rollBacklog": [
+    {
+      "face": 10,
+      "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
+      "focus": "prefers-reduced-motion + contrast \u2014 geen flits-FX.",
+      "rolledAt": "2026-07-24T20:31:39Z",
+      "queuedAt": "2026-07-24T20:32:02Z",
+      "reason": "unroll",
+      "cycle": 4
+    }
+  ]
 }

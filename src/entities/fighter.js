@@ -147,7 +147,7 @@ class Fighter {
     if (!this.isPlayer || !this.alive || !game) return false;
     if (game.ketsbamCd > 0 || game.inputLocked || game.traveling) return false;
     const near = game.countNearbyMonsters(KETSBAM_DETECT_R);
-    const stuck = this.hurtT > 0 && near >= 3;
+    const stuck = this.hurtT > 0 && near >= 2;
     const swarmed = near >= KETSBAM_NEAR_MIN;
     if (!swarmed && !stuck) return false;
 
@@ -295,6 +295,13 @@ class Fighter {
 
     if (canAct && it.jump && this.onGround && !this.attack) {
       this.vy = -this.jumpV; this.onGround = false; AudioSys.sfx('jump');
+    } else if ((this.isPlayer || this.playerSlot) && this.hurtT > 0 && this.hurtT <= 0.14
+        && this.onGround && !this.attack && it.jump) {
+      this.vy = -this.jumpV * 0.92;
+      this.onGround = false;
+      this.hurtT = 0;
+      this.state = 'idle';
+      AudioSys.sfx('jump');
     }
     if (this.substCd > 0) this.substCd -= dt;
     if (this.dashCd > 0) this.dashCd -= dt;
@@ -450,7 +457,8 @@ class Fighter {
     this.vx = kbScaled;
     this.vy = Math.min(this.vy, -120);
     if (this.isPlayer || this.playerSlot) {
-      this.invulnT = Math.max(this.invulnT, dmg >= 18 ? 0.48 : 0.40);
+      this.invulnT = Math.max(this.invulnT, dmg >= 18 ? 0.54 : 0.46);
+      if (game) game.playerHurtCd = PLAYER_HURT_CHAIN_CD;
       resetWeaponCombo(this);
       if (game) applyHitStop(game, { kind: 'punch', dmg }, { playerHurt: true, heavy: dmg >= 18 });
     }

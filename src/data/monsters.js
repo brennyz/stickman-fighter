@@ -165,6 +165,8 @@ const KETSBAM_BLAST_R = 192;
 const KETSBAM_CD = 9;
 const KETSBAM_INVULN = 1.15;
 const KETSBAM_SUPER_ARMOR = 0.95;
+/** Min. gap tussen speler-hits door contact/projectiles — anti stunlock-keten */
+const PLAYER_HURT_CHAIN_CD = 0.42;
 const BOSS_AT = {
   5:  [{ sp: 'rotsbonk', elite: true }, { sp: 'slymo' }, { sp: 'bubbel' }],
   10: [{ sp: 'vlamdraak', elite: true }, { sp: 'vlamvos' }],
@@ -216,6 +218,9 @@ function applyHitStop(game, spec, opts) {
     return;
   }
   if (opts.playerHurt) {
+    if (game.mode === 'adventure' || game.mode === 'training' || game.mode === 'wall') {
+      return;
+    }
     const dmg = spec && spec.dmg != null ? spec.dmg : 8;
     let base = dmg >= 18 ? 0.018 : 0.01;
     if (opts.heavy) base += 0.004;

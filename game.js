@@ -132,9 +132,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.49';
+const APP_VERSION = '1.17.50';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 175;
+const SW_CACHE_REV = 176;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   advIsland: 0, advFails: {}, advMasterBuff: null,
@@ -2367,6 +2367,7 @@ function dexHpBonus() {
     const sp = SPECIES[id];
     if (sp) bonus += rarityHpBonus(sp.rarity);
   }
+  if (save.style === 'tome') bonus += dexCount();
   return bonus;
 }
 function playerStats(opts) {
@@ -3107,7 +3108,7 @@ const MOVE_DIGITAL_ACCEL_MUL = 2.4;
 const MOVE_STOP_DECAY = 0.0018;
 const MOVE_AIR_MUL = 0.78;
 const MOVE_ATTACK_RECOVER_MUL = 0.76;
-const MOVE_HURT_MUL = 0.78;
+const MOVE_HURT_MUL = 0.88;
 
 function padDigitalMove(pad) {
   if (!pad) return 0;
@@ -3360,6 +3361,8 @@ const KETSBAM_BLAST_R = 192;
 const KETSBAM_CD = 9;
 const KETSBAM_INVULN = 1.15;
 const KETSBAM_SUPER_ARMOR = 0.95;
+/** Min. gap tussen speler-hits door contact/projectiles — anti stunlock-keten */
+const PLAYER_HURT_CHAIN_CD = 0.42;
 const BOSS_AT = {
   5:  [{ sp: 'rotsbonk', elite: true }, { sp: 'slymo' }, { sp: 'bubbel' }],
   10: [{ sp: 'vlamdraak', elite: true }, { sp: 'vlamvos' }],
@@ -3411,6 +3414,9 @@ function applyHitStop(game, spec, opts) {
     return;
   }
   if (opts.playerHurt) {
+    if (game.mode === 'adventure' || game.mode === 'training' || game.mode === 'wall') {
+      return;
+    }
     const dmg = spec && spec.dmg != null ? spec.dmg : 8;
     let base = dmg >= 18 ? 0.018 : 0.01;
     if (opts.heavy) base += 0.004;
@@ -6359,7 +6365,7 @@ class Fighter {
     if (!this.isPlayer || !this.alive || !game) return false;
     if (game.ketsbamCd > 0 || game.inputLocked || game.traveling) return false;
     const near = game.countNearbyMonsters(KETSBAM_DETECT_R);
-    const stuck = this.hurtT > 0 && near >= 3;
+    const stuck = this.hurtT > 0 && near >= 2;
     const swarmed = near >= KETSBAM_NEAR_MIN;
     if (!swarmed && !stuck) return false;
 
@@ -6507,6 +6513,13 @@ class Fighter {
 
     if (canAct && it.jump && this.onGround && !this.attack) {
       this.vy = -this.jumpV; this.onGround = false; AudioSys.sfx('jump');
+    } else if ((this.isPlayer || this.playerSlot) && this.hurtT > 0 && this.hurtT <= 0.14
+        && this.onGround && !this.attack && it.jump) {
+      this.vy = -this.jumpV * 0.92;
+      this.onGround = false;
+      this.hurtT = 0;
+      this.state = 'idle';
+      AudioSys.sfx('jump');
     }
     if (this.substCd > 0) this.substCd -= dt;
     if (this.dashCd > 0) this.dashCd -= dt;
@@ -6662,7 +6675,8 @@ class Fighter {
     this.vx = kbScaled;
     this.vy = Math.min(this.vy, -120);
     if (this.isPlayer || this.playerSlot) {
-      this.invulnT = Math.max(this.invulnT, dmg >= 18 ? 0.48 : 0.40);
+      this.invulnT = Math.max(this.invulnT, dmg >= 18 ? 0.54 : 0.46);
+      if (game) game.playerHurtCd = PLAYER_HURT_CHAIN_CD;
       resetWeaponCombo(this);
       if (game) applyHitStop(game, { kind: 'punch', dmg }, { playerHurt: true, heavy: dmg >= 18 });
     }
@@ -7135,6 +7149,8 @@ class Monster {
 
     // contactschade
     if (this.atkCD <= 0 || this.dashT > 0) {
+      if (game.playerHurtCd > 0) { /* stunlock-guard */ }
+      else {
       const rr = (this.size + p.bodyR) * 0.82;
       if ((p.x - this.x) ** 2 + (p.bodyY - this.y) ** 2 < rr * rr) {
         const d = this.dashT > 0 ? this.dmg * 1.3 : this.dmg;
@@ -7143,6 +7159,7 @@ class Monster {
           applyHitStop(game, { kind: 'punch', dmg: d }, { playerHurt: true, heavy: d >= 18 });
         }
         this.atkCD = Math.max(this.atkCD, 1.55);
+      }
       }
     }
   }
@@ -8238,6 +8255,7 @@ class Game {
     this.particles = []; this.floaters = []; this.projectiles = []; this.banners = [];
     this.monsters = [];
     this.inputLocked = false;
+    this.playerHurtCd = 0;
     this.sessionXP = 0;
     this.over = false;
     this.maxCombo = 0;
@@ -9592,6 +9610,7 @@ class Game {
   }
 
   update(dt) {
+    if (this.playerHurtCd > 0) this.playerHurtCd -= dt;
     if (this.freezeT > 0) { this.freezeT -= dt; return; }
     if (this.mode === 'adventure') this.updateKetsbam(dt);
     this.t += dt;
@@ -9643,7 +9662,8 @@ class Game {
       }
       if (p.from === 'enemy') {
         const pl = this.player;
-        if (pl && pl.alive && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
+        if (pl && pl.alive && this.playerHurtCd <= 0
+            && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
           const hit = resolveProjHit(p);
           pl.takeDamage(hit.dmg, Math.sign(p.vx) * 260, this);
           applyHitStop(this, { kind: p.kind === 'chidori' ? 'special' : 'punch', dmg: hit.dmg },
@@ -10501,7 +10521,7 @@ class Game {
     if (this.ketsbamCd > 0) this.ketsbamCd -= dt;
     if (this.ketsbamSuperT > 0) this.ketsbamSuperT -= dt;
     const near = this.countNearbyMonsters(KETSBAM_DETECT_R);
-    const stuck = this.player.hurtT > 0 && near >= 3;
+    const stuck = this.player.hurtT > 0 && near >= 2;
     const swarmed = near >= KETSBAM_NEAR_MIN;
     this.ketsbamShow = this.ketsbamCd <= 0 && !this.inputLocked && !this.traveling && (swarmed || stuck);
     if (this.ketsbamShow) this.ketsbamPulse = (this.ketsbamPulse || 0) + dt;
@@ -12971,7 +12991,8 @@ const UI = {
       bonus.style.fontWeight = '800';
       bonus.style.color = ok ? '#7cf5ff' : '#8fa3d9';
       bonus.style.marginTop = '3px';
-      bonus.textContent = ok ? styleCombatLine(st) : '';
+      bonus.textContent = styleCombatLine(st);
+      bonus.style.opacity = ok ? '1' : '0.55';
       el.appendChild(bonus);
       const tip = document.createElement('div');
       tip.style.fontSize = '10px';

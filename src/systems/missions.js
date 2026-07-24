@@ -1412,6 +1412,7 @@ function dexHpBonus() {
     const sp = SPECIES[id];
     if (sp) bonus += rarityHpBonus(sp.rarity);
   }
+  if (save.style === 'tome') bonus += dexCount();
   return bonus;
 }
 function playerStats(opts) {

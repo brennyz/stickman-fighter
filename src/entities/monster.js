@@ -125,6 +125,8 @@ class Monster {
 
     // contactschade
     if (this.atkCD <= 0 || this.dashT > 0) {
+      if (game.playerHurtCd > 0) { /* stunlock-guard */ }
+      else {
       const rr = (this.size + p.bodyR) * 0.82;
       if ((p.x - this.x) ** 2 + (p.bodyY - this.y) ** 2 < rr * rr) {
         const d = this.dashT > 0 ? this.dmg * 1.3 : this.dmg;
@@ -133,6 +135,7 @@ class Monster {
           applyHitStop(game, { kind: 'punch', dmg: d }, { playerHurt: true, heavy: d >= 18 });
         }
         this.atkCD = Math.max(this.atkCD, 1.55);
+      }
       }
     }
   }

@@ -12,6 +12,7 @@ class Game {
     this.particles = []; this.floaters = []; this.projectiles = []; this.banners = [];
     this.monsters = [];
     this.inputLocked = false;
+    this.playerHurtCd = 0;
     this.sessionXP = 0;
     this.over = false;
     this.maxCombo = 0;
@@ -1366,6 +1367,7 @@ class Game {
   }
 
   update(dt) {
+    if (this.playerHurtCd > 0) this.playerHurtCd -= dt;
     if (this.freezeT > 0) { this.freezeT -= dt; return; }
     if (this.mode === 'adventure') this.updateKetsbam(dt);
     this.t += dt;
@@ -1417,7 +1419,8 @@ class Game {
       }
       if (p.from === 'enemy') {
         const pl = this.player;
-        if (pl && pl.alive && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
+        if (pl && pl.alive && this.playerHurtCd <= 0
+            && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
           const hit = resolveProjHit(p);
           pl.takeDamage(hit.dmg, Math.sign(p.vx) * 260, this);
           applyHitStop(this, { kind: p.kind === 'chidori' ? 'special' : 'punch', dmg: hit.dmg },
@@ -2275,7 +2278,7 @@ class Game {
     if (this.ketsbamCd > 0) this.ketsbamCd -= dt;
     if (this.ketsbamSuperT > 0) this.ketsbamSuperT -= dt;
     const near = this.countNearbyMonsters(KETSBAM_DETECT_R);
-    const stuck = this.player.hurtT > 0 && near >= 3;
+    const stuck = this.player.hurtT > 0 && near >= 2;
     const swarmed = near >= KETSBAM_NEAR_MIN;
     this.ketsbamShow = this.ketsbamCd <= 0 && !this.inputLocked && !this.traveling && (swarmed || stuck);
     if (this.ketsbamShow) this.ketsbamPulse = (this.ketsbamPulse || 0) + dt;

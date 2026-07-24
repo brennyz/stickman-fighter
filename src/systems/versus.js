@@ -263,7 +263,7 @@ const MOVE_DIGITAL_ACCEL_MUL = 2.4;
 const MOVE_STOP_DECAY = 0.0018;
 const MOVE_AIR_MUL = 0.78;
 const MOVE_ATTACK_RECOVER_MUL = 0.76;
-const MOVE_HURT_MUL = 0.78;
+const MOVE_HURT_MUL = 0.88;
 
 function padDigitalMove(pad) {
   if (!pad) return 0;

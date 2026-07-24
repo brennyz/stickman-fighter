@@ -1696,7 +1696,8 @@ const UI = {
       bonus.style.fontWeight = '800';
       bonus.style.color = ok ? '#7cf5ff' : '#8fa3d9';
       bonus.style.marginTop = '3px';
-      bonus.textContent = ok ? styleCombatLine(st) : '';
+      bonus.textContent = styleCombatLine(st);
+      bonus.style.opacity = ok ? '1' : '0.55';
       el.appendChild(bonus);
       const tip = document.createElement('div');
       tip.style.fontSize = '10px';
