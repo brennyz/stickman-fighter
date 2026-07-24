@@ -132,9 +132,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.27';
+const APP_VERSION = '1.17.28';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 153;
+const SW_CACHE_REV = 154;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -4324,10 +4324,19 @@ function layoutTouchButtonCluster(W, H, ui, safe, opts) {
 function touchPadZone(x) {
   if (!Input.dualMode) return 'p1';
   const w = W || (typeof innerWidth === 'number' ? innerWidth : 800);
-  const lo = w * 0.46;
-  const hi = w * 0.54;
+  const margin = IS_TOUCH ? (w < 420 ? 0.08 : 0.06) : 0.04;
+  const lo = w * (0.5 - margin);
+  const hi = w * (0.5 + margin);
   if (x >= lo && x <= hi) return 'neutral';
   return x < lo ? 'p1' : 'p2';
+}
+
+function relayoutTouchPads() {
+  if (typeof W === 'undefined' || typeof H === 'undefined') return;
+  try {
+    Input.layout(W, H);
+    if (typeof InputP2 !== 'undefined') InputP2.layout(W, H);
+  } catch (_) {}
 }
 
 /** Voorkom dat scroll/slide over menu-tegels meteen selecteert (iPad). */
@@ -4348,9 +4357,14 @@ function uiTapScrollParents(fromEl) {
   return out;
 }
 
+function uiTapSlopPx() {
+  if (IS_TOUCH && typeof save !== 'undefined' && save.bigTouch !== false) return 16;
+  return TAP_SLOP_PX;
+}
+
 function uiTapGuardMove(x, y) {
   if (_uiTap.id == null) return;
-  if (Math.hypot(x - _uiTap.x, y - _uiTap.y) > TAP_SLOP_PX) _uiTap.moved = true;
+  if (Math.hypot(x - _uiTap.x, y - _uiTap.y) > uiTapSlopPx()) _uiTap.moved = true;
   if (_uiTap.moved) return;
   for (const s of _uiTap.scrolls) {
     if (Math.abs(s.el.scrollTop - s.top) > 1 || Math.abs(s.el.scrollLeft - s.left) > 1) {
@@ -4504,7 +4518,7 @@ function ketsbamHitTest(x, y, g) {
   if (!g || !g.ketsbamShow) return false;
   const ui = touchUiScale(W, H);
   const { cx, cy } = ketsbamPromptCenter();
-  const r = 58 * ui;
+  const r = 58 * ui + btnHitSlop();
   return (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
 }
 
@@ -4699,7 +4713,7 @@ const Input = Object.assign(makePad('p1'), {
       this.activePointers.delete(id);
       return;
     }
-    if (nearAnyTouchButton(this.buttons, x, y, 12)) {
+    if (nearAnyTouchButton(this.buttons, x, y, btnHitSlop())) {
       this.activePointers.delete(id);
       return;
     }
@@ -11704,7 +11718,8 @@ function bindSettingsControls() {
       persist();
       UI.renderSettings();
       UI.syncTouchClass();
-      Input.layout(W, H);
+      relayoutTouchPads();
+      if (key === 'bigTouch') scheduleResize();
       AudioSys.sfx('select');
       haptic(8);
     });

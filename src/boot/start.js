@@ -294,7 +294,8 @@ function bindSettingsControls() {
       persist();
       UI.renderSettings();
       UI.syncTouchClass();
-      Input.layout(W, H);
+      relayoutTouchPads();
+      if (key === 'bigTouch') scheduleResize();
       AudioSys.sfx('select');
       haptic(8);
     });

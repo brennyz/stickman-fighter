@@ -5,7 +5,6 @@
   "remaining": [
     18,
     4,
-    9,
     6,
     3,
     16,
@@ -16,13 +15,19 @@
     15
   ],
   "lastRoll": {
-    "face": 14,
-    "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
-    "rolledAt": "2026-07-24T18:43:18Z",
-    "remainingCount": 11,
+    "face": 9,
+    "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
+    "rolledAt": "2026-07-24T18:46:11Z",
+    "remainingCount": 10,
     "cycle": 3
   },
-  "pending": null,
+  "pending": {
+    "face": 9,
+    "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
+    "rolledAt": "2026-07-24T18:46:11Z",
+    "remainingCount": 10,
+    "cycle": 3
+  },
   "implemented": [
     {
       "face": 2,
@@ -1480,6 +1485,13 @@
       "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
       "rolledAt": "2026-07-24T18:43:18Z",
       "remainingCount": 11,
+      "cycle": 3
+    },
+    {
+      "face": 9,
+      "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
+      "rolledAt": "2026-07-24T18:46:11Z",
+      "remainingCount": 10,
       "cycle": 3
     }
   ],
