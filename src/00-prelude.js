@@ -4,7 +4,7 @@
    Stickman-vechtgame voor iPad (touch) en desktop (toetsenbord).
    Modi: Avontuur, Training, Versus 2P, Muur, Mats (coinrun).
    Audio (sfx + bgm) is procedureel via Web Audio — rechtenvrij.
-   d20: dead gamble opener, single P1 pad, volPct, hitConfirm cache.
+   d20 c4: volPct prelude, menuBackdropLiteFlags, motionReduced guards.
    ========================================================================= */
 
 const TAU = Math.PI * 2;
@@ -70,7 +70,7 @@ function fxCaps() {
   if (save.liteFx) mul = 0.55;
   else if (Perf.tier >= 2) mul = 0.42;
   else if (Perf.tier >= 1) mul = 0.68;
-  if (typeof motionReduced === 'function' && motionReduced()) mul *= 0.62;
+  if (motionReduced()) mul *= 0.62;
   const floor = { particles: 24, floaters: 8, projectiles: 16, banners: 2, afterimages: 4 };
   const out = {};
   for (const k of Object.keys(FX_CAP)) {
@@ -111,7 +111,7 @@ function perfFxSummary() {
   return { fps, tier: Perf.tier, dpr, maxDpr: maxCanvasDpr(), caps };
 }
 function maxCanvasDpr() {
-  const rm = typeof motionReduced === 'function' && motionReduced();
+  const rm = motionReduced();
   if (save.liteFx || rm) return 1.25;
   if (typeof state !== 'undefined' && state !== 'play') return IS_TOUCH ? 1.15 : 1.25;
   if (Perf.tier >= 2) return 1;
@@ -121,6 +121,7 @@ function maxCanvasDpr() {
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
 const lerp = (a, b, t) => a + (b - a) * t;
 const rand = (a, b) => a + Math.random() * (b - a);
+const volPct = (v, d) => Math.round((Number(v ?? d)) * 100);
 const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
 

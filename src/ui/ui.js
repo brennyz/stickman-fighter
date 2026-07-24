@@ -193,10 +193,6 @@ function hubTileStatLine(hub) {
   }
 }
 
-function volPct(v, d) {
-  return Math.round((Number(v ?? d)) * 100);
-}
-
 function audioMixStatusLine(inPause) {
   const mPct = volPct(save.musicVol, 0.85);
   const sPct = volPct(save.sfxVol, 1);
@@ -1568,12 +1564,14 @@ const UI = {
     }
     bindSavePortPreview();
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
-    setVal('setMusicVol', volPct(save.musicVol, 0.85));
-    setVal('setSfxVol', volPct(save.sfxVol, 1));
+    const mPct = volPct(save.musicVol, 0.85);
+    const sPct = volPct(save.sfxVol, 1);
+    setVal('setMusicVol', mPct);
+    setVal('setSfxVol', sPct);
     const lblM = document.getElementById('setMusicVolLbl');
     const lblS = document.getElementById('setSfxVolLbl');
-    if (lblM) lblM.textContent = volPct(save.musicVol, 0.85) + '%';
-    if (lblS) lblS.textContent = volPct(save.sfxVol, 1) + '%';
+    if (lblM) lblM.textContent = mPct + '%';
+    if (lblS) lblS.textContent = sPct + '%';
     ['setShake', 'setHaptics', 'setComboHud', 'setBigTouch', 'setReducedMotion', 'setLiteFx', 'setHighContrast'].forEach((id, i) => {
       const el = document.getElementById(id);
       if (!el) return;

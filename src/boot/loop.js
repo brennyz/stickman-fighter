@@ -17,9 +17,13 @@ function menuBgCacheInvalidate() {
   menuBgCacheKey = '';
 }
 
-function ensureMenuBgCache() {
+function menuBackdropLiteFlags() {
   const lite = save.liteFx || motionReduced() || Perf.tier >= 1;
-  const ultraLite = lite || Perf.tier >= 2;
+  return { lite, ultraLite: lite || Perf.tier >= 2 };
+}
+
+function ensureMenuBgCache() {
+  const { lite, ultraLite } = menuBackdropLiteFlags();
   const key = W + 'x' + H + '@' + DPR + 't' + Perf.tier + (lite ? 'L' : '') + (ultraLite ? 'U' : '');
   if (menuBgCache && menuBgCacheKey === key) return menuBgCache;
   menuBgCacheKey = key;
@@ -55,8 +59,7 @@ function ensureMenuBgCache() {
 }
 
 function drawMenuBackdrop(c, t) {
-  const lite = save.liteFx || motionReduced() || Perf.tier >= 1;
-  const ultraLite = lite || Perf.tier >= 2;
+  const { lite, ultraLite } = menuBackdropLiteFlags();
   const cache = ensureMenuBgCache();
   if (cache) {
     c.drawImage(cache, 0, 0, W, H);
@@ -84,10 +87,12 @@ function drawMenuBackdrop(c, t) {
   }
   c.save();
   c.translate(W * 0.5, H * 0.42);
-  if (typeof drawJutsuOrb === 'function' && !lite) {
-    drawJutsuOrb(c, 0, 0, 28 + Math.sin(t * 2) * 4, t * 3, 'rasengan', 0.85);
-  } else if (typeof drawJutsuOrb === 'function' && lite) {
-    drawJutsuOrb(c, 0, 0, 22, t * 2, 'rasengan', 0.55);
+  if (typeof drawJutsuOrb === 'function') {
+    drawJutsuOrb(c, 0, 0,
+      lite ? 22 : 28 + Math.sin(t * 2) * 4,
+      lite ? t * 2 : t * 3,
+      'rasengan',
+      lite ? 0.55 : 0.85);
   }
   c.restore();
   c.globalAlpha = 1;

@@ -1,16 +1,42 @@
 {
   "version": 3,
-  "cyclesCompleted": 3,
+  "cyclesCompleted": 4,
   "rollFirst": [],
-  "remaining": [],
+  "remaining": [
+    15,
+    2,
+    14,
+    6,
+    8,
+    10,
+    4,
+    9,
+    18,
+    1,
+    17,
+    11,
+    7,
+    12,
+    19,
+    13,
+    5,
+    16,
+    3
+  ],
   "lastRoll": {
-    "face": 16,
-    "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
-    "rolledAt": "2026-07-24T19:46:39Z",
-    "remainingCount": 0,
-    "cycle": 3
+    "face": 20,
+    "category": "Code health \u2014 kleine refactors, geen gameplay-break",
+    "rolledAt": "2026-07-24T20:43:57Z",
+    "remainingCount": 19,
+    "cycle": 4
   },
-  "pending": null,
+  "pending": {
+    "face": 20,
+    "category": "Code health \u2014 kleine refactors, geen gameplay-break",
+    "rolledAt": "2026-07-24T20:43:57Z",
+    "remainingCount": 19,
+    "cycle": 4
+  },
   "implemented": [
     {
       "face": 2,
@@ -523,6 +549,8 @@
       "status": "done",
       "note": "off-d20 user feature; spatial SFX + adventure stage audio pass"
     },
+    {
+      "id": "snd-extravaganza-2",
       "d20Face": null,
       "userWords": "Sounds extravanganza please lets go",
       "versions": [
@@ -533,6 +561,8 @@
       "status": "done",
       "note": "off-d20 user feature; extravaganza pass on v1.17.43 audio"
     },
+    {
+      "id": "snd-extravaganza-1",
       "d20Face": null,
       "userWords": "Give mor amazing sounds!",
       "versions": [
@@ -1620,6 +1650,13 @@
       "rolledAt": "2026-07-24T19:46:39Z",
       "remainingCount": 0,
       "cycle": 3
+    },
+    {
+      "face": 20,
+      "category": "Code health \u2014 kleine refactors, geen gameplay-break",
+      "rolledAt": "2026-07-24T20:43:57Z",
+      "remainingCount": 19,
+      "cycle": 4
     }
   ],
   "rollBacklog": []
