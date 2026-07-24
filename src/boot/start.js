@@ -103,17 +103,7 @@ bindPress(document.getElementById('menuProfileBar'), () => {
   UI.renderMissions();
   UI.show('missionsScreen');
 });
-bindPress(document.getElementById('btnGambleRoll'), () => {
-  AudioSys.init();
-  AudioSys.sfx('select');
-  lastGambleRoll = rollStageGamble();
-  UI.renderGamble(pendingAdvLevel || save.unlocked || 1);
-  try { AudioSys.sting('modeAdventure'); } catch (_) {}
-});
-bindPress(document.getElementById('btnGambleStart'), () => {
-  AudioSys.sfx('select');
-  startAdventureFromGamble(false);
-});
+bindPress(document.getElementById('btnGambleRollGo'), () => rollAndGoAdventure());
 bindPress(document.getElementById('btnGambleSkip'), () => {
   AudioSys.sfx('select');
   startAdventureFromGamble(true);

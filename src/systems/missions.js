@@ -797,6 +797,28 @@ function startAdventureFromGamble(skipGamble) {
   }
 }
 
+let gambleRollGoBusy = false;
+
+function rollAndGoAdventure() {
+  if (gambleRollGoBusy) return;
+  gambleRollGoBusy = true;
+  try {
+    AudioSys.init();
+    AudioSys.sfx('select');
+    lastGambleRoll = rollStageGamble();
+    UI.renderGamble(pendingAdvLevel || save.unlocked || 1);
+    try { AudioSys.sting('modeAdventure'); } catch (_) {}
+    const delay = (save.reducedMotion || (typeof motionReduced === 'function' && motionReduced())) ? 100 : 380;
+    setTimeout(() => {
+      gambleRollGoBusy = false;
+      startAdventureFromGamble(false);
+    }, delay);
+  } catch (err) {
+    gambleRollGoBusy = false;
+    sfReportError('rollGo', err, 'Roll & go mislukt — probeer opnieuw');
+  }
+}
+
 function vsFighterStats(entry) {
   const hp = Math.round(100 * entry.hpMul);
   const spd = Math.round(100 * entry.spdMul);
@@ -1039,7 +1061,7 @@ function applyGambleOnboarding() {
   persist();
   const outEl = document.getElementById('gambleOutcome');
   if (outEl && !lastGambleRoll) {
-    outEl.textContent = 'Eerste keer: som ≤5 = super-baas · som ≥9 = bondgenoot voor dit level. Of tik Start zonder gok.';
+    outEl.textContent = 'Eerste keer: som ≤5 = super-baas · som ≥9 = bondgenoot. Tik Gooi & start — of overslaan.';
   }
 }
 
