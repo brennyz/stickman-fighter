@@ -100,9 +100,9 @@ const ACHIEVEMENTS = [
     test: s => (s.stats.vsMatches || 0) >= 5 },
   { id: 'vs_roster', name: 'Vol roster', desc: 'Speel met 10+ verschillende vechters (2P)', icon: '🎭',
     test: s => (s.vsPlayedIds || []).length >= 10 },
-  { id: 'saga_icons', name: 'Saga-legends', desc: 'Speel 2P met alle 5 saga-icon sticks', icon: '🌟',
+  { id: 'saga_icons', name: 'Saga-legends', desc: 'Speel 2P met alle 7 legend picks', icon: '🌟',
     test: s => {
-      const need = ['kiball', 'scrollkid', 'tidecrew', 'zipcape', 'dawnlance'];
+      const need = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
       const played = s.vsPlayedIds || [];
       return need.every(id => played.includes(id));
     } },
@@ -337,7 +337,7 @@ function achievementProgressFrac(ach) {
     case 'vs5': return Math.min(s.stats.vsMatches || 0, 5) / 5;
     case 'vs_roster': return Math.min((s.vsPlayedIds || []).length, 10) / 10;
     case 'saga_icons': {
-      const need = ['kiball', 'scrollkid', 'tidecrew', 'zipcape', 'dawnlance'];
+      const need = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
       const played = s.vsPlayedIds || [];
       return need.filter(id => played.includes(id)).length / need.length;
     }
@@ -377,10 +377,10 @@ function achievementProgressHint(ach) {
     case 'vs5': return `${Math.min(s.stats.vsMatches || 0, 5)}/5 duels`;
     case 'vs_roster': return `${(s.vsPlayedIds || []).length}/10 vechters gespeeld`;
     case 'saga_icons': {
-      const need = ['kiball', 'scrollkid', 'tidecrew', 'zipcape', 'dawnlance'];
+      const need = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
       const played = s.vsPlayedIds || [];
       const n = need.filter(id => played.includes(id)).length;
-      return `${n}/5 saga-icons in 2P`;
+      return `${n}/7 legends in 2P`;
     }
     default: return '';
   }

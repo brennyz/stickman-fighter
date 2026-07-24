@@ -1,12 +1,13 @@
 /* ========================== VERSUS / 2 SPELERS ========================== */
 /** Saga-hints: parodie-vibes, geen officiële manga/IP-namen. */
 const VS_SAGAS = {
-  all: { id: 'all', label: 'Alle', emoji: '⭐', blurb: 'Hele roster — kies P1, dan P2.' },
-  ki: { id: 'ki', label: 'Ki-saga', emoji: '🔥', blurb: 'Ki-golven & power spikes — classic shōnen-energy (eigen sticks).' },
-  scroll: { id: 'scroll', label: 'Scroll-saga', emoji: '📜', blurb: 'Ninja-steps & jutsu — headband-hints, geen echte IP.' },
-  tide: { id: 'tide', label: 'Tide-saga', emoji: '🌊', blurb: 'Rekkende reach & crew-slagen — zee-legends parodie.' },
-  cape: { id: 'cape', label: 'Cape-saga', emoji: '🦸', blurb: 'Serious streak & blink-rushes — one-serious-hit humor.' },
-  dawn: { id: 'dawn', label: 'Dawn-saga', emoji: '☀️', blurb: 'Holy tilt & zware aura — sin-at-dawn vibes.' },
+  all: { id: 'all', label: 'Alle', emoji: '⭐', blurb: 'Alle 20 vechters — kies P1, dan P2.' },
+  fighter: { id: 'fighter', label: 'Street', emoji: '🥋', blurb: 'Ryu & Ken — classic white/red gi duel.' },
+  ki: { id: 'ki', label: 'Ki', emoji: '🔥', blurb: 'Ki-golven & power spikes — Goku vibes.' },
+  scroll: { id: 'scroll', label: 'Scroll', emoji: '📜', blurb: 'Ninja & demon fox — headband hints.' },
+  tide: { id: 'tide', label: 'Tide', emoji: '🌊', blurb: 'Reach & crew — rubber stretch slagen.' },
+  cape: { id: 'cape', label: 'Cape', emoji: '🦸', blurb: 'Serious hero — bald one-punch blink.' },
+  dawn: { id: 'dawn', label: 'Dawn', emoji: '☀️', blurb: 'Holy lance & void sin aura.' },
 };
 function vsSagaMeta(id) { return VS_SAGAS[id] || VS_SAGAS.scroll; }
 
@@ -17,6 +18,7 @@ const SAGA_ICON_SVG = {
   scroll: '<path d="M7 4h11v14H7z"/><path d="M7 4a2 2 0 00-2 2v12a2 2 0 002 2h11"/><path d="M10 8h5M10 12h5"/>',
   tide: '<path d="M3 12c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/><path d="M3 17c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/>',
   cape: '<path d="M12 3l7 4-2 13-5 2-5-2L5 7z"/><path d="M12 3v19"/>',
+  fighter: '<path d="M8 4h8v4H8zM6 8h12v12H6z"/><path d="M9 12h6M9 16h6"/>',
   dawn: '<circle cx="12" cy="14" r="4.5"/><path d="M12 5.5V3M5.5 8L4 6.5M18.5 8L20 6.5M3 14h2M19 14h2"/>',
 };
 function sagaIconSvg(id) {
@@ -26,18 +28,20 @@ function sagaIconSvg(id) {
 }
 function rosterFlair(r) { return r.flair || r.tag; }
 
-/** Big 5 saga picks — één icon per parodie-saga (Ki / Scroll / Tide / Cape / Dawn). */
-const SAGA_ICON_IDS = ['kiball', 'scrollkid', 'tidecrew', 'zipcape', 'dawnlance'];
-const VS_BIG5 = {
-  kiball: { saga: 'ki', label: 'Ki-saga', hint: 'Ki-spikes · power trainee (DBZ-vibes)' },
-  scrollkid: { saga: 'scroll', label: 'Scroll-saga', hint: 'Headband ninja · clone dash (Naruto-vibes)' },
-  tidecrew: { saga: 'tide', label: 'Tide-saga', hint: 'Rubber reach · crew stretch (One Piece-vibes)' },
-  zipcape: { saga: 'cape', label: 'Cape-saga', hint: 'Serious zip · blink hero (OPM-vibes)' },
-  dawnlance: { saga: 'dawn', label: 'Dawn-saga', hint: 'Holy lance · sin aura (SDS-vibes)' },
+/** Featured legends — snel kiezen bovenaan character select. */
+const VS_FEATURED_IDS = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
+const SAGA_ICON_IDS = VS_FEATURED_IDS;
+const VS_ROSTER_MAX = 20;
+const VS_ROSTER_MIGRATE = {
+  kiball: 'goku', scrollkid: 'aruskankou', zipcape: 'onepunchman', tidecrew: 'rubber',
+  dawnlance: 'lance', spikyki: 'goku', bandana: 'aruskankou', hero: 'stick',
 };
-function vsBig5Meta(id) { return VS_BIG5[id] || null; }
+function migrateVsRosterId(id) {
+  if (!id || typeof id !== 'string') return 'ryu';
+  return VS_ROSTER_MIGRATE[id] || id;
+}
 function sagaIconEntries() {
-  return SAGA_ICON_IDS.map(id => vsRosterEntry(id));
+  return VS_FEATURED_IDS.map(id => vsRosterEntry(id));
 }
 function pickCharPoolFiltered() {
   const filter = UI.charSagaFilter || 'all';
@@ -104,117 +108,83 @@ function pickBalancedRandomDuo() {
 }
 
 const VS_ROSTER = [
-  { id: 'hero', name: 'Stick Ninja', tag: 'Balanced', saga: 'scroll', flair: 'Headband rookie · balanced kunai',
+  { id: 'ryu', name: 'Ryu', tag: 'Street · balanced', saga: 'fighter', flair: 'White gi · hadou stance · all-round',
+    styleId: 'classic', weapon: 'vuist', bodyColor: '#f0f0f8', gi: 'white',
+    hpMul: 1, spdMul: 1, dmgMul: 1.02, crit: 0.09, critMul: 1.5, sig: 'balanced', unlock: () => true, featured: true },
+  { id: 'ken', name: 'Ken', tag: 'Street · fire kicks', saga: 'fighter', flair: 'Red gi · blazing shoryu · combo rush',
+    styleId: 'konoha', weapon: 'nunchaku', bodyColor: '#ff5555', gi: 'red',
+    hpMul: 0.94, spdMul: 1.1, dmgMul: 1.06, crit: 0.11, critMul: 1.52, sig: 'combo', unlock: () => true, featured: true },
+  { id: 'goku', name: 'Goku', tag: 'Ki · melee DPS', saga: 'ki', flair: 'Orange trainee · ki-ball rush · high STR',
+    styleId: 'gold', bodyColor: '#ff9a42', weapon: 'donder', special: 'rasengan',
+    hpMul: 1.02, spdMul: 1.08, dmgMul: 1.14, crit: 0.09, critMul: 1.55, sig: 'heavy', unlock: () => true, featured: true },
+  { id: 'xavi', name: 'Xavi', tag: 'Tide · control', saga: 'tide', flair: 'Midfield maestro · spear reach · tempo passes',
+    styleId: 'sand', weapon: 'speer', bodyColor: '#5a8fd4',
+    hpMul: 1.04, spdMul: 1.04, dmgMul: 0.98, crit: 0.08, critMul: 1.48, sig: 'reach', unlock: () => true, featured: true },
+  { id: 'aruskankou', name: 'Aruskankou', tag: 'Scroll · electric', saga: 'scroll', flair: 'Trainer spark · shuriken storm · crit chain',
+    styleId: 'konoha', weapon: 'shuriken', bodyColor: '#ffe259',
+    hpMul: 0.92, spdMul: 1.1, dmgMul: 1.0, crit: 0.13, critMul: 1.55, sig: 'shuriken', unlock: () => true, featured: true },
+  { id: 'kutjankorio', name: 'Kutjankorio', tag: 'Scroll · fox demon', saga: 'scroll', flair: 'Red chakra fox · void claw · rinne burst',
+    styleId: 'fox', weapon: 'void', special: 'rinnegan', bodyColor: '#e84848',
+    hpMul: 1.06, spdMul: 1.06, dmgMul: 1.12, crit: 0.11, critMul: 1.6, sig: 'rinne', unlock: () => true, featured: true },
+  { id: 'onepunchman', name: 'One Punch Man', tag: 'Cape · bald', saga: 'cape', flair: 'Bald hero · serious punch · one-hit blur',
+    styleId: 'classic', weapon: 'vuist', bodyColor: '#ffe8c8', bald: true, gi: 'hero',
+    hpMul: 0.82, spdMul: 1.2, dmgMul: 1.18, crit: 0.06, critMul: 2.0, sig: 'heavy', unlock: () => true, featured: true },
+  { id: 'stick', name: 'Stick Ninja', tag: 'Balanced', saga: 'scroll', flair: 'Headband rookie · balanced kunai',
     styleId: 'classic', weapon: 'kunai',
     hpMul: 1, spdMul: 1, dmgMul: 1, crit: 0.08, critMul: 1.5, sig: 'balanced', unlock: () => true },
+  { id: 'rabbit', name: 'RabbitRobot', tag: 'CPU rival', saga: 'cape', flair: 'Serious bot · training rival · ear lasers',
+    styleId: null, weapon: 'vuist', isRobot: true, special: 'chidori',
+    hpMul: 1.05, spdMul: 1.05, dmgMul: 1.08, crit: 0.06, critMul: 1.45, unlock: () => true },
+  { id: 'rubber', name: 'Rubber Crew', tag: 'Tide · range', saga: 'tide', flair: 'Stretch captain · boomerang reach · range DPS',
+    styleId: 'sand', weapon: 'boemerang',
+    hpMul: 1.08, spdMul: 0.98, dmgMul: 1.04, crit: 0.07, critMul: 1.48, sig: 'reach', unlock: () => true },
+  { id: 'shadow', name: 'Schaduw', tag: 'Chidori', saga: 'scroll', flair: 'Lightning step · chidori charge',
+    styleId: 'shadow', weapon: 'zwaard', special: 'chidori',
+    hpMul: 1, spdMul: 1.02, dmgMul: 1.06, crit: 0.1, critMul: 1.55, sig: 'assassin', unlock: () => true },
+  { id: 'lance', name: 'Holy Lance', tag: 'Dawn · lancer', saga: 'dawn', flair: 'Sin lance · spear reach · holy thrust',
+    styleId: 'samurai', weapon: 'speer', special: 'rinnegan',
+    hpMul: 1.1, spdMul: 0.96, dmgMul: 1.1, crit: 0.1, critMul: 1.58, sig: 'kenjutsu', unlock: () => true },
+  { id: 'barve', name: 'Barve', tag: 'Tank', saga: 'tide', flair: 'Deck brawler · wide club swings',
+    styleId: 'classic', weapon: 'knuppel',
+    hpMul: 1.22, spdMul: 0.86, dmgMul: 1.1, crit: 0.06, critMul: 1.48, sig: 'tank', unlock: () => true },
   { id: 'konoha', name: 'Konoha', tag: 'Snel', saga: 'scroll', flair: 'Leaf sprint · shuriken flurry',
     styleId: 'konoha', weapon: 'shuriken',
-    hpMul: 0.95, spdMul: 1.08, dmgMul: 0.95, crit: 0.07, critMul: 1.48, sig: 'shuriken',
-    unlock: () => styleUnlocked(STYLES.find(s => s.id === 'konoha')) },
-  { id: 'shadow', name: 'Schaduw', tag: 'Chidori', saga: 'scroll', flair: 'Lightning step · chidori charge',
-    styleId: 'shadow', weapon: 'zwaard',
-    hpMul: 1, spdMul: 1, dmgMul: 1.05, special: 'chidori', crit: 0.1, critMul: 1.55, sig: 'assassin',
-    unlock: () => save.lvl >= 15 },
-  { id: 'gold', name: 'Legende', tag: 'Zwaar', saga: 'ki', flair: 'Golden aura · hammer ki-break',
-    styleId: 'gold', weapon: 'hamer',
-    hpMul: 1.15, spdMul: 0.92, dmgMul: 1.12, crit: 0.05, critMul: 2.0, sig: 'heavy', unlock: () => save.lvl >= 25 },
-  { id: 'chakra', name: 'Chakra', tag: 'Rinnegan', saga: 'scroll', flair: 'Glow pupil · rinne ripples',
-    styleId: 'chakra', weapon: 'laser',
-    hpMul: 0.9, spdMul: 1, dmgMul: 0.92, special: 'rinnegan', crit: 0.09, critMul: 1.52, sig: 'rinne',
-    unlock: () => save.trainWins >= 3 },
+    hpMul: 0.95, spdMul: 1.08, dmgMul: 0.96, crit: 0.08, critMul: 1.48, sig: 'shuriken', unlock: () => true },
+  { id: 'storm', name: 'Storm', tag: 'Bliksem', saga: 'ki', flair: 'Thunder charge · ki bolt axe',
+    styleId: 'storm', weapon: 'donder', special: 'chidori',
+    hpMul: 1, spdMul: 1.1, dmgMul: 1.0, crit: 0.1, critMul: 1.5, sig: 'storm', unlock: () => true },
   { id: 'guvve', name: 'Guvvedukkie', tag: 'Quak', saga: 'tide', flair: 'Quack crew · bonk stick',
     styleId: 'guvve', weapon: 'guvve',
-    hpMul: 1.08, spdMul: 0.98, dmgMul: 1.15, crit: 0.05, critMul: 1.55, sig: 'quak', unlock: () => dexCount() >= 8 },
-  { id: 'rabbit', name: 'RabbitRobot', tag: 'CPU-killer', saga: 'cape', flair: 'Serious bot · training rival',
-    styleId: null, weapon: 'vuist',
-    hpMul: 1.05, spdMul: 1.05, dmgMul: 1.08, isRobot: true, special: 'chidori', crit: 0.06, critMul: 1.45,
-    unlock: () => save.trainWins >= 1 },
-  { id: 'akatsuki', name: 'Akatsuki', tag: 'Rinne', saga: 'dawn', flair: 'Crimson cloak · rinne pressure',
-    styleId: 'akatsuki', weapon: 'ketting',
-    hpMul: 1.1, spdMul: 0.96, dmgMul: 1.1, special: 'rinnegan', crit: 0.1, critMul: 1.55, sig: 'rinne',
-    unlock: () => save.lvl >= 12 },
-  { id: 'brawler', name: 'Barve', tag: 'Tank', saga: 'tide', flair: 'Deck brawler · wide swings',
-    styleId: 'classic', weapon: 'knuppel',
-    hpMul: 1.2, spdMul: 0.88, dmgMul: 1.08, crit: 0.06, critMul: 1.48, sig: 'tank', unlock: () => true },
-  { id: 'sand', name: 'Woestijn', tag: 'Bereik', saga: 'tide', flair: 'Desert reach · spear tide',
-    styleId: 'sand', weapon: 'speer',
-    hpMul: 1, spdMul: 1.02, dmgMul: 1, crit: 0.08, critMul: 1.5, sig: 'reach', unlock: () => save.lvl >= 8 },
-  { id: 'speedster', name: 'Speedster', tag: 'Combo', saga: 'cape', flair: 'Blink combo · serious speed',
-    styleId: 'konoha', weapon: 'nunchaku',
-    hpMul: 0.9, spdMul: 1.12, dmgMul: 0.95, crit: 0.08, critMul: 1.45, sig: 'combo', unlock: () => save.lvl >= 13 },
+    hpMul: 1.08, spdMul: 0.98, dmgMul: 1.14, crit: 0.05, critMul: 1.55, sig: 'quak', unlock: () => true },
   { id: 'samurai', name: 'Samurai', tag: 'Kenjutsu', saga: 'dawn', flair: 'Blade oath · crit cuts',
     styleId: 'samurai', weapon: 'zwaard',
-    hpMul: 1.05, spdMul: 0.98, dmgMul: 1.08, crit: 0.08, critMul: 1.5, sig: 'kenjutsu', unlock: () => save.lvl >= 20 },
-  { id: 'golem', name: 'Rotsbonk', tag: 'Muur', saga: 'ki', flair: 'Stone tank · ki-proof hide',
-    styleId: null, bodyColor: '#9a917f', weapon: 'hamer',
-    hpMul: 1.32, spdMul: 0.78, dmgMul: 1.06, crit: 0.04, critMul: 1.65, sig: 'tank', unlock: () => save.lvl >= 22 },
+    hpMul: 1.05, spdMul: 0.98, dmgMul: 1.08, crit: 0.09, critMul: 1.52, sig: 'kenjutsu', unlock: () => true },
+  { id: 'akatsuki', name: 'Akatsuki', tag: 'Rinne', saga: 'dawn', flair: 'Crimson cloak · rinne pressure',
+    styleId: 'akatsuki', weapon: 'ketting', special: 'rinnegan',
+    hpMul: 1.1, spdMul: 0.96, dmgMul: 1.1, crit: 0.1, critMul: 1.55, sig: 'rinne', unlock: () => true },
   { id: 'cyber', name: 'Cyber', tag: 'Laser', saga: 'scroll', flair: 'Visor ninja · laser kunai',
-    styleId: 'cyber', weapon: 'laser',
-    hpMul: 0.92, spdMul: 1.06, dmgMul: 1.05, special: 'chidori', crit: 0.09, critMul: 1.52, sig: 'shuriken',
-    unlock: () => save.lvl >= 18 },
-  { id: 'storm', name: 'Storm', tag: 'Bliksem', saga: 'ki', flair: 'Thunder charge · ki bolt',
-    styleId: 'storm', weapon: 'donder',
-    hpMul: 1, spdMul: 1.1, dmgMul: 0.98, special: 'chidori', crit: 0.1, critMul: 1.5, sig: 'storm',
-    unlock: () => save.trainWins >= 5 },
-  { id: 'fox', name: 'Vlamvos', tag: 'Hit & run', saga: 'tide', flair: 'Fox run · boomerang tide',
-    styleId: 'fox', weapon: 'boemerang',
-    hpMul: 0.88, spdMul: 1.14, dmgMul: 0.9, crit: 0.06, critMul: 1.5, sig: 'hitrun', unlock: () => dexCount() >= 12 },
+    styleId: 'cyber', weapon: 'laser', special: 'chidori',
+    hpMul: 0.92, spdMul: 1.06, dmgMul: 1.05, crit: 0.09, critMul: 1.52, sig: 'shuriken', unlock: () => true },
   { id: 'void', name: 'Void', tag: 'Rinnegan', saga: 'dawn', flair: 'Void sin · gravity rip',
-    styleId: 'void', weapon: 'void',
-    hpMul: 1.12, spdMul: 1.04, dmgMul: 1.15, special: 'rinnegan', crit: 0.12, critMul: 1.65, sig: 'rinne',
-    unlock: () => save.lvl >= 40 },
-  { id: 'dragon', name: 'Kristallo', tag: 'Baas', saga: 'ki', flair: 'Crystal ki · boss spike',
-    styleId: 'gold', weapon: 'donder',
-    hpMul: 1.08, spdMul: 0.94, dmgMul: 1.18, crit: 0.11, critMul: 1.75, sig: 'boss', unlock: () => save.unlocked >= 45 },
-  { id: 'kiball', name: 'Spiky Ki', tag: 'Ki · melee DPS', saga: 'ki', flair: 'Orange trainee · ki-ball rush · high STR',
-    styleId: 'gold', bodyColor: '#ff9a42', weapon: 'donder', special: 'rasengan',
-    hpMul: 1.0, spdMul: 1.1, dmgMul: 1.14, crit: 0.09, critMul: 1.55, sig: 'heavy', unlock: () => save.lvl >= 6 },
-  { id: 'scrollkid', name: 'Bandana Kid', tag: 'Scroll · crit', saga: 'scroll', flair: 'Clone dash · kunai flurry · crit assassin',
-    styleId: 'konoha', weapon: 'kunai', special: 'rasengan',
-    hpMul: 0.9, spdMul: 1.12, dmgMul: 1.0, crit: 0.14, critMul: 1.55, sig: 'assassin', unlock: () => true },
-  { id: 'tidecrew', name: 'Rubber Crew', tag: 'Tide · range', saga: 'tide', flair: 'Stretch captain · boomerang reach · range DPS',
-    styleId: 'sand', weapon: 'boemerang',
-    hpMul: 1.08, spdMul: 0.98, dmgMul: 1.02, crit: 0.07, critMul: 1.48, sig: 'reach', unlock: () => save.lvl >= 10 },
-  { id: 'zipcape', name: 'Serious Cape', tag: 'Cape · speed', saga: 'cape', flair: 'Hero zip · nunchaku blur · glass cannon SPD',
-    styleId: 'classic', bodyColor: '#ffe259', weapon: 'nunchaku', special: 'chidori',
-    hpMul: 0.78, spdMul: 1.24, dmgMul: 0.94, crit: 0.15, critMul: 1.65, sig: 'combo', unlock: () => save.trainWins >= 2 },
-  { id: 'dawnlance', name: 'Holy Lance', tag: 'Dawn · lancer', saga: 'dawn', flair: 'Sin lance · spear reach · balanced STR+RNG',
-    styleId: 'samurai', weapon: 'speer', special: 'rinnegan',
-    hpMul: 1.12, spdMul: 0.96, dmgMul: 1.12, crit: 0.1, critMul: 1.58, sig: 'kenjutsu', unlock: () => save.lvl >= 30 },
+    styleId: 'void', weapon: 'void', special: 'rinnegan',
+    hpMul: 1.12, spdMul: 1.04, dmgMul: 1.14, crit: 0.12, critMul: 1.65, sig: 'rinne', unlock: () => true },
 ];
-const vsRosterEntry = id => VS_ROSTER.find(r => r.id === id) || VS_ROSTER[0];
+const vsRosterEntry = id => {
+  id = migrateVsRosterId(id);
+  return VS_ROSTER.find(r => r.id === id) || VS_ROSTER[0];
+};
 function vsUnlocked(r) { return !r.unlock || r.unlock(); }
 function vsUnlockHint(r) {
   if (!r || vsUnlocked(r)) return '';
-  const hints = {
-    konoha: 'Unlock Konoha-stijl',
-    shadow: 'Reach Lv 15',
-    gold: 'Reach Lv 25',
-    chakra: 'Win 3× training',
-    guvve: '8 monsters in boek',
-    rabbit: 'Win 1× training',
-    akatsuki: 'Reach Lv 12',
-    sand: 'Reach Lv 8',
-    speedster: 'Reach Lv 13',
-    samurai: 'Reach Lv 20',
-    golem: 'Reach Lv 22',
-    cyber: 'Reach Lv 18',
-    storm: 'Win 5× training',
-    fox: '12 monsters in boek',
-    void: 'Reach Lv 40',
-    dragon: 'Unlock level 45+',
-    kiball: 'Reach Lv 6',
-    tidecrew: 'Reach Lv 10',
-    zipcape: 'Win 2× training',
-    dawnlance: 'Reach Lv 30',
-  };
-  return hints[r.id] || 'Keep playing to unlock';
+  return 'Keep playing to unlock';
 }
 function normalizeVsPick(id, fallback) {
+  id = migrateVsRosterId(id);
+  fallback = migrateVsRosterId(fallback);
   const r = vsRosterEntry(id);
   if (r.id === id && vsUnlocked(r)) return id;
   const fb = vsRosterEntry(fallback);
-  return vsUnlocked(fb) ? fallback : 'hero';
+  return vsUnlocked(fb) ? fallback : 'ryu';
 }
 function trackVsRosterUse(p1, p2) {
   if (!Array.isArray(save.vsPlayedIds)) save.vsPlayedIds = [];
@@ -278,6 +248,8 @@ function buildVsFighter(entry, x, slot) {
     isRobot: !!entry.isRobot,
     vsSpecial: entry.special || 'rasengan',
     rosterId: entry.id,
+    bald: !!entry.bald,
+    gi: entry.gi || null,
   });
   if (entry.isRobot) f.isRobot = true;
   f.energy = 35;
@@ -403,5 +375,5 @@ function resetVsFighterRound(f, entry, ground, slot) {
   resetWeaponCombo(f);
 }
 
-let vsSelect = { p1: 'hero', p2: 'rabbit' };
+let vsSelect = { p1: 'ryu', p2: 'ken' };
 
