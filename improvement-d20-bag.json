@@ -6,21 +6,21 @@
     18,
     17,
     12,
-    2,
     11,
-    13
+    13,
+    3
   ],
   "lastRoll": {
-    "face": 3,
-    "category": "Versus 2P \u2014 split controls, rematch, char balance",
-    "rolledAt": "2026-07-24T15:25:28Z",
+    "face": 2,
+    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
+    "rolledAt": "2026-07-24T15:25:42Z",
     "remainingCount": 6,
     "cycle": 2
   },
   "pending": {
-    "face": 3,
-    "category": "Versus 2P \u2014 split controls, rematch, char balance",
-    "rolledAt": "2026-07-24T15:25:28Z",
+    "face": 2,
+    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
+    "rolledAt": "2026-07-24T15:25:42Z",
     "remainingCount": 6,
     "cycle": 2
   },
@@ -1162,6 +1162,13 @@
       "face": 3,
       "category": "Versus 2P \u2014 split controls, rematch, char balance",
       "rolledAt": "2026-07-24T15:25:28Z",
+      "remainingCount": 6,
+      "cycle": 2
+    },
+    {
+      "face": 2,
+      "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
+      "rolledAt": "2026-07-24T15:25:42Z",
       "remainingCount": 6,
       "cycle": 2
     }
