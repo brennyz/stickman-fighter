@@ -8,19 +8,19 @@
     11,
     13,
     17,
-    18
+    12
   ],
   "lastRoll": {
-    "face": 12,
-    "category": "Content \u2014 monsters, wapens, rariteit, dex",
-    "rolledAt": "2026-07-24T12:26:16Z",
+    "face": 18,
+    "category": "Character select \u2014 roster UI, stats, random duo",
+    "rolledAt": "2026-07-24T12:26:51Z",
     "remainingCount": 6,
     "cycle": 2
   },
   "pending": {
-    "face": 12,
-    "category": "Content \u2014 monsters, wapens, rariteit, dex",
-    "rolledAt": "2026-07-24T12:26:16Z",
+    "face": 18,
+    "category": "Character select \u2014 roster UI, stats, random duo",
+    "rolledAt": "2026-07-24T12:26:51Z",
     "remainingCount": 6,
     "cycle": 2
   },
@@ -1000,6 +1000,13 @@
       "face": 12,
       "category": "Content \u2014 monsters, wapens, rariteit, dex",
       "rolledAt": "2026-07-24T12:26:16Z",
+      "remainingCount": 6,
+      "cycle": 2
+    },
+    {
+      "face": 18,
+      "category": "Character select \u2014 roster UI, stats, random duo",
+      "rolledAt": "2026-07-24T12:26:51Z",
       "remainingCount": 6,
       "cycle": 2
     }
