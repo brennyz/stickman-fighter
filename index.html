@@ -446,6 +446,21 @@
       background:linear-gradient(180deg,#3a6a9a,#254a72); color:#e8f4ff; min-height:44px; font-size:15px; }
   body.reduced-motion .mission-card.claimable { box-shadow: none; }
   .btn.tog.tog-alert { box-shadow: 0 0 0 2px rgba(255,215,94,.7); color: #ffd75e; font-weight: 800; }
+  .mission-flow-host { width:min(92vw,480px); margin:0 auto 10px; }
+  .mission-flow-bar { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px;
+    padding:8px 10px; border-radius:14px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); }
+  .mission-flow-bar.mission-flow-done { font-size:12px; font-weight:800; color:#7cfc8a; text-align:center; }
+  .mission-flow-pill { display:inline-flex; flex-direction:column; align-items:center; min-width:72px; padding:6px 10px;
+    border-radius:12px; font-size:11px; font-weight:700; color:#9db1e3; border:1px solid rgba(255,255,255,.12); }
+  .mission-flow-pill b { font-size:13px; color:#cfe0ff; margin-bottom:2px; }
+  .mission-flow-pill small { font-size:10px; opacity:.75; font-weight:600; }
+  .mission-flow-pill.active { border-color:#7cf5ff; color:#fff; background:rgba(124,245,255,.08); }
+  .mission-flow-pill.active b { color:#7cf5ff; }
+  .mission-flow-pill.done { opacity:.55; }
+  .mission-flow-pill.done b { color:#7cfc8a; }
+  .mission-flow-arrow { color:#5a6a8a; font-weight:800; font-size:12px; }
+  .mission-mode-pill { display:inline-block; font-size:10px; font-weight:800; padding:2px 8px; border-radius:999px;
+    color:#7cf5ff; border:1px solid rgba(124,245,255,.35); margin-right:4px; vertical-align:middle; }
   .ach-card.new { border-color:#7cf5ff !important; background:rgba(124,245,255,.1); }
   .ach-card.ach-near { border-color:rgba(255,215,94,.5) !important; background:rgba(255,215,94,.06); }
 </style>
@@ -662,6 +677,7 @@
   <button class="btn back-btn" data-back>&#8592; Terug</button>
   <h2 class="head">Missies &amp; prestaties</h2>
   <div class="subtitle" id="missionsSub">3 lichte dagmissies · claim XP wanneer klaar</div>
+  <div id="missionsFlowBar" class="mission-flow-host"></div>
   <div class="statbar" id="missionsSummary" style="display:none;margin-bottom:10px"></div>
   <button type="button" class="btn mode-btn b-continue" id="dailyClaimAllBtn" style="display:none;width:min(86vw,480px);justify-content:center">
     <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M4 13l5 5L20 7"/></svg></span><div>Claim alle klaar<small>+XP in één tik</small></div>
@@ -672,6 +688,7 @@
   </button>
   <h2 class="head" style="margin-top:24px;font-size:min(7vw,34px)">Prestaties</h2>
   <div class="subtitle" id="achSummary" style="margin-top:-8px;margin-bottom:8px;font-size:13px"></div>
+  <div id="achFilterBar" class="dex-filter-bar" style="margin-bottom:10px"></div>
   <div id="achList" style="width:min(92vw,520px)"></div>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
 </div>
@@ -801,7 +818,7 @@
 </script>
 
 <script src="tunnel-check.js?v=203"></script>
-<script src="game.js?v=287"></script>
+<script src="game.js?v=288"></script>
 <script src="install.js?v=204"></script>
 <script>
 (function () {

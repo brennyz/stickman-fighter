@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.11';
+const APP_VERSION = '1.17.12';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 138;
+const SW_CACHE_REV = 139;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -893,6 +893,9 @@ function claimDailyTask(taskId, opts) {
   if (!opts.skipRefresh) {
     checkDailyAllBonus();
     UI.renderMissions();
+    if (!opts.silent && !opts.skipFollowUp) {
+      setTimeout(() => dailyClaimFollowUpToast(), 420);
+    }
   }
   return def.xp;
 }
@@ -914,6 +917,7 @@ function claimAllDailyReady() {
   UI.toast(ready.length === 1
     ? `+${total} XP geclaimd`
     : `${ready.length} missies · +${total} XP`, 3200);
+  setTimeout(() => dailyClaimFollowUpToast(), 450);
 }
 
 function claimDailyDayBonus() {
@@ -963,6 +967,59 @@ function dailyUnclaimedXp() {
   let xp = claimableDailyTasks().reduce((n, t) => n + (dailyDef(t.id)?.xp || 0), 0);
   if (save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed) xp += 80;
   return xp;
+}
+
+function dailyPotentialXp() {
+  ensureDaily();
+  return save.daily.tasks.reduce((n, t) => n + (dailyDef(t.id)?.xp || 0), 0) + 80;
+}
+
+function dailyFlowStep() {
+  ensureDaily();
+  if (save.daily.dayBonusClaimed) return 0;
+  if (claimableDailyTasks().length > 0) return 2;
+  if (save.daily.tasks.every(t => t.claimed)) return 3;
+  return 1;
+}
+
+function dailyFlowBarHtml(step) {
+  if (step === 0) {
+    return '<div class="mission-flow-bar mission-flow-done">✓ Dag afgerond — morgen 3 nieuwe missies (middernacht)</div>';
+  }
+  const mk = (n, label, sub) => {
+    const active = step === n ? ' active' : '';
+    const done = step > n ? ' done' : '';
+    return `<span class="mission-flow-pill${active}${done}"><b>${n}</b> ${label}<small>${sub}</small></span>`;
+  };
+  return `<div class="mission-flow-bar">${mk(1, 'Speel', 'doe missies')}` +
+    `<span class="mission-flow-arrow">→</span>${mk(2, 'Claim', '+XP')}` +
+    `<span class="mission-flow-arrow">→</span>${mk(3, 'Dagbonus', '+80 XP')}</div>`;
+}
+
+function dailyTaskRemainderText(t, def) {
+  if (t.done || t.claimed) return '';
+  const left = def.goal - t.progress;
+  if (left <= 0) return '';
+  if (def.type === 'kills') return `Nog ${left} kill${left === 1 ? '' : 's'}`;
+  if (def.type === 'wallBricks') return `Nog ${left} steen${left === 1 ? '' : 'en'}`;
+  if (def.type === 'comboReach') return `Nog combo ×${left}`;
+  if (def.type === 'pickups') return `Nog ${left} pickup${left === 1 ? '' : 's'}`;
+  if (def.type === 'advWin' || def.type === 'trainWin' || def.type === 'bossKill') return 'Nog 1 run';
+  return `Nog ${left}`;
+}
+
+function dailyClaimFollowUpToast() {
+  const left = claimableDailyTasks();
+  if (left.length > 0) {
+    const xp = left.reduce((n, t) => n + (dailyDef(t.id)?.xp || 0), 0);
+    UI.toast(left.length === 1
+      ? `Nog 1 missie klaar om te claimen (+${xp} XP)`
+      : `Nog ${left.length} missies klaar · +${xp} XP`, 2600);
+    return;
+  }
+  if (save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed) {
+    UI.toast('Stap 3: tik Dagbonus (+80 XP)', 2800);
+  }
 }
 
 function achievementProgressFrac(ach) {
@@ -1051,17 +1108,20 @@ function dailyStatusLine() {
   if (save.daily.dayBonusClaimed) {
     return `Vandaag klaar${streakBit} · ${achN}/${ACHIEVEMENTS.length} prestaties · morgen nieuwe missies`;
   }
+  const step = dailyFlowStep();
+  const stepHint = step === 2 ? 'Stap 2: claim XP'
+    : (step === 3 ? 'Stap 3: dagbonus +80 XP' : 'Stap 1: speel missies');
   const pendingXp = dailyUnclaimedXp();
   if (ready > 0) {
-    return `+${pendingXp} XP klaar om te claimen · ${done}/3 gedaan${streakBit} · ${achN}/${ACHIEVEMENTS.length} prestaties`;
+    return `${stepHint} · +${pendingXp} XP klaar · ${done}/3 gedaan${streakBit}`;
   }
   if (claimed === 3) {
-    return `Dagbonus +80 XP — open Missies${streakBit} · ${achN}/${ACHIEVEMENTS.length} prestaties`;
+    return `${stepHint} — open Missies${streakBit} · ${achN}/${ACHIEVEMENTS.length} prestaties`;
   }
   if (done > 0 && pendingXp === 0) {
-    return `Vandaag: ${done}/3 klaar · speel verder${streakBit} · ${achN}/${ACHIEVEMENTS.length} prestaties`;
+    return `${stepHint} · ${done}/3 klaar · max +${dailyPotentialXp()} XP vandaag${streakBit}`;
   }
-  return `Vandaag: ${done}/3 klaar · ${claimed}/3 geclaimd${streakBit} · ${achN}/${ACHIEVEMENTS.length} prestaties`;
+  return `${stepHint} · ${done}/3 klaar · max +${dailyPotentialXp()} XP vandaag${streakBit}`;
 }
 
 function unlockAchievement(id) {
@@ -9471,6 +9531,7 @@ const UI = {
   charSagaFilter: 'all',
   charPreviewHoverId: null,
   dexRarityFilter: 'all',
+  achFilter: 'all',
   lastResult: null,
   pauseSubDefault: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
 
@@ -9949,17 +10010,24 @@ const UI = {
     const sub = document.getElementById('missionsSub');
     if (sub) {
       const streak = dailyStreakLine();
-      if (save.daily.dayBonusClaimed) {
+      const step = dailyFlowStep();
+      if (step === 0) {
         sub.textContent = streak
-          ? `Dag voltooid · ${streak} — morgen 3 nieuwe lichte missies`
-          : 'Dag voltooid — morgen 3 nieuwe lichte missies';
+          ? `Dag voltooid · ${streak} — morgen 3 nieuwe lichte missies (middernacht)`
+          : 'Dag voltooid — morgen 3 nieuwe lichte missies (middernacht)';
       } else {
         const pending = dailyUnclaimedXp();
-        const base = pending > 0
+        const base = step === 2
           ? `Stap 2: claim +${pending} XP · daarna dagbonus (+80) — licht, geen grind`
-          : 'Stap 1 speel · 2 claim XP · 3 dagbonus — licht, geen grind';
+          : (step === 3
+            ? 'Stap 3: tik Dagbonus (+80 XP) — licht, geen grind'
+            : `Stap 1: speel missies · max +${dailyPotentialXp()} XP vandaag — licht, geen grind`);
         sub.textContent = streak ? `${base} · ${streak}` : base;
       }
+    }
+    const flowHost = document.getElementById('missionsFlowBar');
+    if (flowHost) {
+      flowHost.innerHTML = dailyFlowBarHtml(dailyFlowStep());
     }
     const sum = document.getElementById('missionsSummary');
     if (sum) {
@@ -9973,7 +10041,8 @@ const UI = {
             ? ' · <b style="color:#7cfc8a">dagbonus +80 XP klaar</b>'
             : ` · dagbonus na ${3 - claimedN} claim${3 - claimedN === 1 ? '' : 's'}`)
           : ` · dagbonus ${SVG_CHECK_MINI}`) +
-        (streak ? ` · <b style="color:#7cf5ff">${streak}</b>` : '');
+        (streak ? ` · <b style="color:#7cf5ff">${streak}</b>` : '') +
+        ` · max vandaag <b>+${dailyPotentialXp()} XP</b>`;
     }
     const claimAll = document.getElementById('dailyClaimAllBtn');
     if (claimAll) {
@@ -9981,7 +10050,12 @@ const UI = {
       const lab = claimAll.querySelector('div');
       if (lab) {
         const xpSum = claimableDailyTasks().reduce((n, t) => n + (dailyDef(t.id)?.xp || 0), 0);
-        lab.innerHTML = `Claim alle klaar<small>+${xpSum} XP in één tik</small>`;
+        const afterClaim = 3 - claimedN - readyN;
+        lab.innerHTML = `Claim alle klaar<small>+${xpSum} XP` +
+          (afterClaim > 0
+            ? ` · nog ${afterClaim} claim${afterClaim === 1 ? '' : 's'} voor dagbonus +80`
+            : ' · daarna dagbonus +80') +
+          '</small>';
       }
     }
     dailyHost.innerHTML = '';
@@ -10002,7 +10076,12 @@ const UI = {
       else status = `<span style="opacity:.85">Bezig ${t.progress}/${def.goal}</span>`;
       const playHint = DAILY_PLAY_HINTS[def.id] || '';
       const playTarget = DAILY_PLAY_TARGETS[def.id];
-      el.innerHTML = `<b>${def.text}</b>${isNextUp ? ' <span class="next-up-tag">volgende</span>' : ''}<br>${status}` +
+      const remainder = dailyTaskRemainderText(t, def);
+      const modePill = playTarget
+        ? `<span class="mission-mode-pill">${playTarget.label}</span> `
+        : '';
+      el.innerHTML = `${modePill}<b>${def.text}</b>${isNextUp ? ' <span class="next-up-tag">volgende</span>' : ''}<br>${status}` +
+        (remainder && !t.done ? `<div style="color:#7cf5ff;font-size:12px;margin-top:4px;font-weight:700">${remainder}</div>` : '') +
         (playHint && !t.done ? `<div style="opacity:.75;font-size:12px;margin-top:4px">${playHint}</div>` : '') +
         `<div style="opacity:.8;font-size:13px;margin-top:4px">Beloning +${def.xp} XP</div>` +
         `<div class="xpline" style="margin-top:8px"><div style="width:${pct}%"></div></div>`;
@@ -10049,7 +10128,29 @@ const UI = {
     }
     const achSum = document.getElementById('achSummary');
     const gotN = Object.keys(save.achievements).length;
-    if (achSum) achSum.textContent = `${gotN}/${ACHIEVEMENTS.length} prestaties · permanent (niet dagelijks)`;
+    const nearN = ACHIEVEMENTS.filter(a => !save.achievements[a.id] && achievementProgressFrac(a) >= 0.5).length;
+    if (achSum) {
+      achSum.textContent = `${gotN}/${ACHIEVEMENTS.length} prestaties · permanent (niet dagelijks)` +
+        (nearN ? ` · ${nearN} bijna klaar` : '');
+    }
+    const achFilterHost = document.getElementById('achFilterBar');
+    if (achFilterHost) {
+      const cur = this.achFilter || 'all';
+      const mk = (id, label) =>
+        `<button type="button" class="dex-filter-btn${cur === id ? ' active' : ''}" data-ach-filter="${id}">${label}</button>`;
+      achFilterHost.innerHTML =
+        mk('all', 'Alle') + mk('near', 'Bijna') + mk('open', 'Open') + mk('done', 'Behaald');
+      if (!achFilterHost.dataset.bound) {
+        achFilterHost.dataset.bound = '1';
+        achFilterHost.addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-ach-filter]');
+          if (!btn) return;
+          AudioSys.sfx('select');
+          UI.achFilter = btn.dataset.achFilter || 'all';
+          UI.renderMissions();
+        });
+      }
+    }
     achHost.innerHTML = '';
     const today = todayKey();
     const achSortKey = (ach) => {
@@ -10074,16 +10175,23 @@ const UI = {
     });
     for (const ach of sortedAch) {
       const got = save.achievements[ach.id];
+      const frac = achievementProgressFrac(ach);
+      const filter = this.achFilter || 'all';
+      if (filter === 'near' && (got || frac < 0.5)) continue;
+      if (filter === 'open' && got) continue;
+      if (filter === 'done' && !got) continue;
       const el = document.createElement('div');
       const isNew = got === today;
-      const near = !got && achievementProgressFrac(ach) >= 0.5;
+      const near = !got && frac >= 0.5;
       el.className = 'card' + (got ? '' : ' locked') + (isNew ? ' ach-card new' : '') + (near ? ' ach-near' : '');
       el.style.borderColor = got ? (isNew ? '#7cf5ff' : '#ffd75e') : undefined;
+      const pct = Math.min(100, Math.round(frac * 100));
+      const progBar = got ? '' : `<div class="xpline" style="margin-top:6px;height:5px"><div style="width:${pct}%"></div></div>`;
       el.innerHTML = `<div class="cname">${achIconSvg(ach.id)} ${ach.name}${isNew ? ' · nieuw' : ''}${near ? ' · bijna' : ''}</div>` +
         `<div class="cinfo">${ach.desc}${got ? ` · ${SVG_CHECK_MINI} ` + got : (() => {
           const hint = achievementProgressHint(ach);
           return hint ? ' · ' + hint : ' · nog open';
-        })()}</div>`;
+        })()}</div>${progBar}`;
       achHost.appendChild(el);
     }
   },
