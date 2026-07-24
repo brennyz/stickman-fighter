@@ -3,24 +3,24 @@
   "cyclesCompleted": 2,
   "rollFirst": [],
   "remaining": [
-    3,
     11,
     18,
     17,
     2,
-    12
+    12,
+    13
   ],
   "lastRoll": {
-    "face": 13,
-    "category": "Missies & achievements \u2014 daily loop, beloningen",
-    "rolledAt": "2026-07-24T15:11:33Z",
+    "face": 3,
+    "category": "Versus 2P \u2014 split controls, rematch, char balance",
+    "rolledAt": "2026-07-24T15:12:38Z",
     "remainingCount": 6,
     "cycle": 2
   },
   "pending": {
-    "face": 13,
-    "category": "Missies & achievements \u2014 daily loop, beloningen",
-    "rolledAt": "2026-07-24T15:11:33Z",
+    "face": 3,
+    "category": "Versus 2P \u2014 split controls, rematch, char balance",
+    "rolledAt": "2026-07-24T15:12:38Z",
     "remainingCount": 6,
     "cycle": 2
   },
@@ -1099,6 +1099,13 @@
       "face": 13,
       "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-07-24T15:11:33Z",
+      "remainingCount": 6,
+      "cycle": 2
+    },
+    {
+      "face": 3,
+      "category": "Versus 2P \u2014 split controls, rematch, char balance",
+      "rolledAt": "2026-07-24T15:12:38Z",
       "remainingCount": 6,
       "cycle": 2
     }
