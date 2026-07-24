@@ -13,6 +13,7 @@
   "src/data/pets.js",
   "src/data/egg-pets.js",
   "src/i18n/catalog.js",
+  "src/systems/audio-samples.js",
   "src/systems/audio.js",
   "src/systems/input.js",
   "src/core/canvas.js",

@@ -1949,7 +1949,13 @@ const UI = {
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const audioEl = document.getElementById('settingsAudioStatus');
-    if (audioEl) audioEl.textContent = audioMixStatusLine(state === 'pause');
+    if (audioEl) {
+      const base = audioMixStatusLine(state === 'pause');
+      let sampleLine = t('settings.sfxSamplesLoad');
+      if (AudioSys._samplesReady) sampleLine = t('settings.sfxSamplesOn') + ` (${AudioSys._sampleCount})`;
+      else if (AudioSys._sampleLoadStarted && !AudioSys._sampleCount) sampleLine = t('settings.sfxSamplesOff');
+      audioEl.textContent = base + ' · ' + sampleLine;
+    }
     const a11yEl = document.getElementById('a11yStatusLine');
     if (a11yEl) a11yEl.textContent = a11yStatusText();
   },
