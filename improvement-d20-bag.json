@@ -1,14 +1,34 @@
 {
   "version": 3,
-  "cyclesCompleted": 2,
+  "cyclesCompleted": 3,
   "rollFirst": [],
-  "remaining": [],
+  "remaining": [
+    18,
+    4,
+    14,
+    9,
+    6,
+    3,
+    16,
+    20,
+    19,
+    11,
+    5,
+    7,
+    17,
+    8,
+    10,
+    15,
+    2,
+    13,
+    12
+  ],
   "lastRoll": {
-    "face": 2,
-    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
-    "rolledAt": "2026-07-24T15:39:08Z",
-    "remainingCount": 0,
-    "cycle": 2
+    "face": 1,
+    "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
+    "rolledAt": "2026-07-24T15:40:37Z",
+    "remainingCount": 19,
+    "cycle": 3
   },
   "pending": null,
   "implemented": [
@@ -368,6 +388,13 @@
       "version": "1.17.7",
       "doneAt": "2026-07-24T15:40:05Z",
       "cycle": 2
+    },
+    {
+      "face": 1,
+      "note": "Hit-confirm FX, parry window, counter-hit feedback",
+      "version": "1.17.8",
+      "doneAt": "2026-07-24T15:42:33Z",
+      "cycle": 3
     }
   ],
   "userFeatureLog": [
@@ -1343,6 +1370,13 @@
       "rolledAt": "2026-07-24T15:39:08Z",
       "remainingCount": 0,
       "cycle": 2
+    },
+    {
+      "face": 1,
+      "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
+      "rolledAt": "2026-07-24T15:40:37Z",
+      "remainingCount": 19,
+      "cycle": 3
     }
   ],
   "rollBacklog": []

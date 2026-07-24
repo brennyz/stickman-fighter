@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.7';
+const APP_VERSION = '1.17.8';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 134;
+const SW_CACHE_REV = 135;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -342,6 +342,25 @@ function applyCritFx(game, x, y) {
   if (!motionReduced()) {
     game.burst(x, y - 40, '#ffe259', fxLite() ? 4 : 8, { kind: 'spark', size: 2.6 });
   }
+}
+
+function hitConfirmColor(kind) {
+  if (kind === 'kick') return '#ff9a6a';
+  if (kind === 'weapon') return '#ffd75e';
+  if (kind === 'special') return '#7cf5ff';
+  return '#e8f0ff';
+}
+
+function applyHitConfirmFx(game, x, y, spec) {
+  if (!game || motionReduced()) return;
+  const kind = spec && spec.kind ? spec.kind : 'punch';
+  spawnFxRing(game, x, y, hitConfirmColor(kind), fxLite() ? 6 : 9);
+  if (!fxLite()) game.burst(x, y, hitConfirmColor(kind), 3, { kind: 'spark', size: 2 });
+}
+
+function isCounterHitWindow(target) {
+  const a = target && target.attack;
+  return !!(a && a.t < a.windup * 0.92);
 }
 
 function resolveProjHit(p) {
@@ -5098,12 +5117,15 @@ class Fighter {
     if (this.blocking && !opts.unblockable) {
       dmg = Math.max(1, Math.round(dmg * 0.15));
       AudioSys.sfx('block');
-      game.floater(this.x, this.y - 115, 'BLOK!', '#9fd8ff', 14);
+      const atk = opts.attacker && opts.attacker.attack;
+      const parry = atk && atk.t >= atk.windup && atk.t <= atk.windup + 0.16;
+      game.floater(this.x, this.y - 115, parry ? 'PARRY!' : 'BLOK!', parry ? '#ffd75e' : '#9fd8ff', 14);
       if (game) {
         applyHitStop(game, { kind: 'punch' }, { chip: true });
-        spawnFxRing(game, this.x, this.y - 42, '#9fd8ff', fxLite() ? 6 : 10);
+        if (parry) game.freezeT = Math.max(game.freezeT, 0.032);
+        spawnFxRing(game, this.x, this.y - 42, parry ? '#ffd75e' : '#9fd8ff', fxLite() ? 6 : 10);
       }
-      if (save.haptics !== false) haptic(4);
+      if (save.haptics !== false) haptic(parry ? 9 : 4);
       this.hp -= dmg;
       return dmg;
     }
@@ -7536,6 +7558,7 @@ class Game {
         const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
+        applyHitConfirmFx(this, hx, hy, spec);
         if (spec.dmg >= 18) this.shake(3, 0.11);
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.12);
         if ((f.isPlayer || f.playerSlot) && spec.kind === 'weapon' && spec.moveIdx === 2 && !isThrowWeapon(f.weapon.id)) {
@@ -7560,13 +7583,18 @@ class Game {
       if ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2) {
         const hitRoll = rollHitDamage(f, spec, 1);
         const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
-        const dmg = tgt.takeDamage(hitRoll.dmg, kbHit, this, { unblockable: spec.unblockable });
+        const counter = isCounterHitWindow(tgt);
+        const dmg = tgt.takeDamage(hitRoll.dmg, kbHit, this, {
+          unblockable: spec.unblockable, attacker: f, kind: spec.kind,
+        });
         if (hitRoll.crit) applyCritFx(this, tgt.x, tgt.y);
         const col = tgt.playerSlot === 2 ? '#ffb0b8' : (tgt.isPlayer ? '#ff8080' : '#ffe680');
-        this.floater(tgt.x, tgt.y - 115, '-' + dmg, col, 16);
+        this.floater(tgt.x, tgt.y - 115, (counter ? 'COUNTER! ' : '') + '-' + dmg, col, 16);
         this.burst(tgt.bodyX, tgt.bodyY, col, 7);
+        applyHitConfirmFx(this, hx, hy, spec);
         f.energy = clamp(f.energy + 9, 0, 100);
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
+        if (counter) this.freezeT = Math.max(this.freezeT, 0.014);
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
         this.shake(spec.dmg > 20 ? 4 : 3, 0.12);
         if ((f.isPlayer || f.playerSlot) && save.haptics !== false) haptic(5);
