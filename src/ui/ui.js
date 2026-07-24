@@ -1088,11 +1088,31 @@ const UI = {
         if (boss) tip += pick * LEVELS_PER_ISLAND === n ? ' · eiland-baas — opent volgend eiland' : ' · tussendoor-baas';
         if (best > 0) tip += ` · jouw ${'★'.repeat(best)}${'☆'.repeat(3 - best)}`;
         if (fails > 0) tip += ` · ${fails}× verloren${fails >= 5 ? ' · Meester-buff actief' : ''}`;
+        tip += ' · Tik = Roll & gogo · Lang = zonder gok';
         el.title = tip;
-        el.addEventListener('click', () => safeUiAction(() => {
-          AudioSys.sfx('select');
-          openGambleForLevel(n);
-        }, 'openLevel/' + n, 'Level openen mislukt'));
+        let holdT = null;
+        let holdSkip = false;
+        el.addEventListener('pointerdown', () => {
+          holdSkip = false;
+          holdT = setTimeout(() => {
+            holdT = null;
+            holdSkip = true;
+            safeUiAction(() => {
+              AudioSys.sfx('select');
+              pendingAdvLevel = n;
+              lastGambleRoll = null;
+              startAdventureFromGamble(true);
+              try { UI.toast('Zonder gok', 1400); } catch (_) {}
+            }, 'skipGamble/' + n, 'Start mislukt');
+          }, 520);
+        }, { passive: true });
+        const cancelHold = () => { if (holdT) { clearTimeout(holdT); holdT = null; } };
+        el.addEventListener('pointerup', cancelHold);
+        el.addEventListener('pointercancel', cancelHold);
+        el.addEventListener('click', () => {
+          if (holdSkip) { holdSkip = false; return; }
+          safeUiAction(() => rollGogoForLevel(n), 'rollGogo/' + n, 'Level starten mislukt');
+        });
       }
       grid.appendChild(el);
     }
@@ -1116,7 +1136,7 @@ const UI = {
       if (sumLine) sumLine.textContent = `Som: ${g.d1} + ${g.d2} = ${g.sum}`;
     } else {
       if (diceRow) diceRow.textContent = '? ?';
-      if (sumLine) sumLine.textContent = 'Tik Gooi & start — of overslaan zonder gok';
+      if (sumLine) sumLine.textContent = 'Tik Gooi & gogo! — of overslaan zonder gok';
     }
     if (outEl) {
       if (!g) outEl.textContent = 'Super-baas (som ≤5) of super-bondgenoot (som ≥9) kan dit level veranderen.';
