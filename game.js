@@ -133,9 +133,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.66';
+const APP_VERSION = '1.17.67';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 192;
+const SW_CACHE_REV = 193;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -15272,7 +15272,7 @@ const UI = {
         btn.type = 'button';
         btn.className = 'btn claim-btn';
         btn.textContent = t('missionsUi.dailyClaimBtn', { xp: def.xp });
-        btn.addEventListener('click', () => safeUiAction(() => {
+        bindPress(btn, () => safeUiAction(() => {
           AudioSys.sfx('select');
           claimDailyTask(task.id);
         }, 'claimDaily/' + task.id, 'Claim mislukt — probeer opnieuw'));
@@ -15282,7 +15282,7 @@ const UI = {
         btn.type = 'button';
         btn.className = 'btn mission-play-btn';
         btn.textContent = t('missionsUi.dailyPlayBtn', { mode: dailyModeLabel(playTarget.mode) });
-        btn.addEventListener('click', () => safeUiAction(() => goDailyPlayTarget(task.id), 'dailyPlay/' + task.id, 'Kon modus niet openen'));
+        bindPress(btn, () => safeUiAction(() => goDailyPlayTarget(task.id), 'dailyPlay/' + task.id, 'Kon modus niet openen'));
         el.appendChild(btn);
       }
       dailyHost.appendChild(el);
@@ -15323,16 +15323,13 @@ const UI = {
       achFilterHost.innerHTML =
         mk('all', t('missionsUi.filterAll')) + mk('near', t('missionsUi.filterNear')) +
         mk('open', t('missionsUi.filterOpen')) + mk('done', t('missionsUi.filterDone'));
-      if (!achFilterHost.dataset.bound) {
-        achFilterHost.dataset.bound = '1';
-        achFilterHost.addEventListener('click', (e) => {
-          const btn = e.target.closest('[data-ach-filter]');
-          if (!btn) return;
+      achFilterHost.querySelectorAll('[data-ach-filter]').forEach((btn) => {
+        bindPress(btn, () => {
           AudioSys.sfx('select');
           UI.achFilter = btn.dataset.achFilter || 'all';
           UI.renderMissions();
         });
-      }
+      });
     }
     achHost.innerHTML = '';
     const today = todayKey();
@@ -15488,7 +15485,7 @@ const UI = {
           (ok ? '' : `<span class="island-tab-lock">${SVG_LOCK_ICON}</span>`);
         btn.title = ok ? `${isl.name} · ${isl.sub}` : `Versla baas Lv ${isl.id * LEVELS_PER_ISLAND} om te openen`;
         if (ok) {
-          btn.addEventListener('click', () => safeUiAction(() => {
+          bindPress(btn, () => safeUiAction(() => {
             AudioSys.sfx('select');
             UI.advIslandPick = isl.id;
             UI.renderLevels();
@@ -15706,8 +15703,7 @@ const UI = {
           ? `Avontuur Lv ${base.unlock}`
           : (save.weapon === w.id ? '&#10004; gekozen' : 'kies'));
       el.appendChild(right);
-      if (!locked) el.addEventListener('click', () => {
-        if (!uiTapAllowed()) return;
+      if (!locked) bindPress(el, () => {
         safeUiAction(() => {
           save.weapon = w.id;
           if (!persistOrToast('wapen')) return;
@@ -15751,17 +15747,15 @@ const UI = {
         cosmeticHtml +
         dexNextAchievementHtml();
     }
-    const bindFilterBar = (host, attr, stateKey, mkButtons) => {
+    const bindFilterBar = (host, attr, stateKey, mkButtons, renderFn) => {
       if (!host) return;
       host.innerHTML = mkButtons();
-      if (host.dataset.bound) return;
-      host.dataset.bound = '1';
-      host.addEventListener('click', (e) => {
-        const btn = e.target.closest(`[${attr}]`);
-        if (!btn) return;
-        AudioSys.sfx('select');
-        UI[stateKey] = btn.getAttribute(attr) || 'all';
-        UI.renderDex();
+      host.querySelectorAll(`[${attr}]`).forEach((btn) => {
+        bindPress(btn, () => {
+          AudioSys.sfx('select');
+          UI[stateKey] = btn.getAttribute(attr) || 'all';
+          (renderFn || (() => UI.renderDex())).call(UI);
+        });
       });
     };
     const rarityTotals = dexRarityTotals();
@@ -15861,16 +15855,13 @@ const UI = {
       bar.innerHTML =
         `<button type="button" class="dex-filter-btn${tab === 'dex' ? ' active' : ''}" data-pet-tab="dex">Dex · ${petTamedCount()}/${PET_ROSTER.length}</button>` +
         `<button type="button" class="dex-filter-btn${tab === 'egg' ? ' active' : ''}" data-pet-tab="egg">Ei arcade · ${eggOwnedCount()}/${EGG_ROSTER.length}</button>`;
-      if (!bar.dataset.bound) {
-        bar.dataset.bound = '1';
-        bar.addEventListener('click', (e) => {
-          const btn = e.target.closest('[data-pet-tab]');
-          if (!btn) return;
+      bar.querySelectorAll('[data-pet-tab]').forEach((btn) => {
+        bindPress(btn, () => {
           AudioSys.sfx('select');
           UI.petTab = btn.getAttribute('data-pet-tab') || 'dex';
           UI.renderPets();
         });
-      }
+      });
     }
     const dexPanel = document.getElementById('petDexPanel');
     const eggPanel = document.getElementById('petEggPanel');
@@ -15945,8 +15936,7 @@ const UI = {
       }
       el.appendChild(right);
       if (tamed) {
-        el.addEventListener('click', () => {
-          if (!uiTapAllowed()) return;
+        bindPress(el, () => {
           safeUiAction(() => {
             if (active) {
               equipPet(null);
@@ -15960,8 +15950,7 @@ const UI = {
           }, 'equipPet/' + def.id, 'Pet kiezen mislukt');
         });
       } else if (canBuy) {
-        el.addEventListener('click', () => {
-          if (!uiTapAllowed()) return;
+        bindPress(el, () => {
           safeUiAction(() => {
             const res = buyPetWithCoins(def.id);
             if (!res) {
@@ -15997,8 +15986,7 @@ const UI = {
         `<div>Dag-ei openen<small>Gratis arcade-pull · vandaag</small></div>`;
       if (!crackBtn.dataset.bound) {
         crackBtn.dataset.bound = '1';
-        crackBtn.addEventListener('click', () => {
-          if (!uiTapAllowed()) return;
+        bindPress(crackBtn, () => {
           safeUiAction(() => {
             const res = crackDailyEgg();
             if (!res) {
@@ -16048,8 +16036,7 @@ const UI = {
       }
       el.appendChild(right);
       if (owned) {
-        el.addEventListener('click', () => {
-          if (!uiTapAllowed()) return;
+        bindPress(el, () => {
           safeUiAction(() => {
             if (active) {
               equipEggPet(null);
@@ -16123,8 +16110,7 @@ const UI = {
         : (styleSkillGated(st) ? t('ui.styleIslandGate', { lvl: st.needLvl }) : styleLabel(st, 'hint'));
       el.appendChild(sub);
       if (ok) {
-        el.addEventListener('click', () => {
-          if (!uiTapAllowed()) return;
+        bindPress(el, () => {
           safeUiAction(() => {
             save.style = st.id;
             if (!persistOrToast('stijl')) return;
@@ -16490,7 +16476,7 @@ bindPress(btnMissions, () => {
   }
 });
 const dailyClaimAllBtn = document.getElementById('dailyClaimAllBtn');
-if (dailyClaimAllBtn) dailyClaimAllBtn.addEventListener('click', () => {
+if (dailyClaimAllBtn) bindPress(dailyClaimAllBtn, () => {
   try {
     AudioSys.init(); AudioSys.sfx('select'); claimAllDailyReady();
   } catch (err) {
@@ -16498,7 +16484,7 @@ if (dailyClaimAllBtn) dailyClaimAllBtn.addEventListener('click', () => {
   }
 });
 const dailyBonusBtn = document.getElementById('dailyBonusBtn');
-if (dailyBonusBtn) dailyBonusBtn.addEventListener('click', () => {
+if (dailyBonusBtn) bindPress(dailyBonusBtn, () => {
   try {
     AudioSys.sfx('select'); claimDailyDayBonus();
   } catch (err) {

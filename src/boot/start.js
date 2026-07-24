@@ -179,7 +179,7 @@ bindPress(btnMissions, () => {
   }
 });
 const dailyClaimAllBtn = document.getElementById('dailyClaimAllBtn');
-if (dailyClaimAllBtn) dailyClaimAllBtn.addEventListener('click', () => {
+if (dailyClaimAllBtn) bindPress(dailyClaimAllBtn, () => {
   try {
     AudioSys.init(); AudioSys.sfx('select'); claimAllDailyReady();
   } catch (err) {
@@ -187,7 +187,7 @@ if (dailyClaimAllBtn) dailyClaimAllBtn.addEventListener('click', () => {
   }
 });
 const dailyBonusBtn = document.getElementById('dailyBonusBtn');
-if (dailyBonusBtn) dailyBonusBtn.addEventListener('click', () => {
+if (dailyBonusBtn) bindPress(dailyBonusBtn, () => {
   try {
     AudioSys.sfx('select'); claimDailyDayBonus();
   } catch (err) {
