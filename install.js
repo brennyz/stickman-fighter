@@ -17,6 +17,7 @@
   const desktopSteps = document.getElementById('installDesktopSteps');
   const fileNote = document.getElementById('installFileNote');
   const doneMsg = document.getElementById('installDoneMsg');
+  const cacheStatus = document.getElementById('installCacheStatus');
 
   let deferredPrompt = null;
   let refreshing = false;
@@ -33,6 +34,19 @@
     } catch (_) {}
   }
 
+  function refreshInstallCacheLine() {
+    if (!cacheStatus) return;
+    const swOk = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+    let line = swOk
+      ? 'Offline-cache actief — speel ook zonder netwerk'
+      : 'Offline-cache: open 1× online na installatie';
+    try {
+      const c = sessionStorage.getItem('sf_sw_cache');
+      if (c) line += ' · ' + c.replace('stickfighter-app-v', 'SW v');
+    } catch (_) {}
+    cacheStatus.textContent = line;
+  }
+
   function refreshMenuButton() {
     if (!btnMenu || !btnLabel) return;
     if (isStandalone) {
@@ -47,6 +61,7 @@
       btnMenu.disabled = false;
       btnLabel.innerHTML = 'Zet in app-lade<small>Één icoon · werkt ook offline na 1× online openen</small>';
     }
+    refreshInstallCacheLine();
   }
 
   function showInstallScreen() {
@@ -60,6 +75,7 @@
     if (iosSteps) iosSteps.style.display = (!isStandalone && isIOS) ? 'block' : 'none';
     if (desktopSteps) desktopSteps.style.display = (!isStandalone && !isIOS && !isAndroid && !deferredPrompt) ? 'block' : 'none';
     if (fileNote) fileNote.style.display = (location.protocol === 'file:') ? 'block' : 'none';
+    refreshInstallCacheLine();
   }
 
   function closeInstallScreen() {
@@ -180,6 +196,7 @@
         refreshMenuButton();
         markSwUpdateReady(false);
         if (typeof window.updateNetStatus === 'function') window.updateNetStatus();
+        refreshInstallCacheLine();
       }
     });
   }
