@@ -4,16 +4,15 @@
   "rollFirst": [],
   "remaining": [
     3,
-    12,
     18,
     2,
     17
   ],
   "lastRoll": {
-    "face": 11,
-    "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
-    "rolledAt": "2026-07-24T15:32:58Z",
-    "remainingCount": 5,
+    "face": 12,
+    "category": "Content \u2014 monsters, wapens, rariteit, dex",
+    "rolledAt": "2026-07-24T15:34:11Z",
+    "remainingCount": 4,
     "cycle": 2
   },
   "pending": null,
@@ -338,6 +337,13 @@
       "note": "sticky back + home always menu",
       "version": "1.17.2",
       "doneAt": "2026-07-24T15:33:52Z",
+      "cycle": 2
+    },
+    {
+      "face": 12,
+      "note": "dex filter + cosmetic progress + available highlight",
+      "version": "1.17.3",
+      "doneAt": "2026-07-24T15:35:16Z",
       "cycle": 2
     }
   ],
@@ -1279,6 +1285,13 @@
       "rolledAt": "2026-07-24T15:32:58Z",
       "remainingCount": 5,
       "cycle": 2
+    },
+    {
+      "face": 12,
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
+      "rolledAt": "2026-07-24T15:34:11Z",
+      "remainingCount": 4,
+      "cycle": 2
     }
   ],
   "rollBacklog": [
@@ -1287,15 +1300,6 @@
       "category": "Versus 2P \u2014 split controls, rematch, char balance",
       "focus": "HUD/rematch/spawn \u2014 geen roster dmg-herbalancering.",
       "rolledAt": "2026-07-24T15:25:28Z",
-      "queuedAt": "2026-07-24T15:29:21Z",
-      "reason": "backfill",
-      "cycle": 2
-    },
-    {
-      "face": 12,
-      "category": "Content \u2014 monsters, wapens, rariteit, dex",
-      "focus": "Dex/cosmetic/achievement \u2014 geen 50 levels.",
-      "rolledAt": "2026-07-24T15:26:21Z",
       "queuedAt": "2026-07-24T15:29:21Z",
       "reason": "backfill",
       "cycle": 2

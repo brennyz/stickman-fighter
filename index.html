@@ -289,6 +289,14 @@
   .style-card canvas { display:block; margin:0 auto 8px; }
   .rar-pill { display:inline-block; font-size:11px; font-weight:900; border:1px solid; border-radius:999px;
       padding:1px 8px; margin-left:6px; vertical-align:middle; letter-spacing:.3px; }
+  .dex-filter-bar { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; width:min(92vw,520px); margin:0 0 12px; }
+  .dex-filter-btn { font-size:11px; font-weight:800; padding:7px 11px; border-radius:999px; border:1px solid rgba(255,255,255,.18);
+      background:rgba(20,26,48,.85); color:#cfe0ff; touch-action:manipulation; min-height:36px; }
+  .dex-filter-btn.active { border-color: var(--dex-filter-color, #ffd75e); color:#fff; box-shadow:0 0 0 1px var(--dex-filter-color, #ffd75e); }
+  .dex-cosmetic-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+  .dex-cosmetic-chip { flex:1 1 140px; font-size:11px; padding:8px 10px; border-radius:12px;
+      background:rgba(124,245,255,.06); border:1px solid rgba(124,245,255,.22); }
+  .card.dex-available { background:rgba(124,245,255,.05); }
   .card.rar-legendary { background:rgba(255,215,94,.08); }
   .card.rar-mythic { background:rgba(255,107,157,.1); }
   .card.rar-epic { background:rgba(176,106,224,.08); }
@@ -664,6 +672,7 @@
   <h2 class="head">Monsterboek</h2>
   <div class="subtitle">Rariteit = HP-bonus (+3…+25) · 4 rariteiten = Kristallijn · helft boek = Boekmeester · 75 kills = Jagerlook</div>
   <div id="dexSummary" class="statbar" style="display:none"></div>
+  <div id="dexFilterBar" class="dex-filter-bar"></div>
   <div id="dexList"></div>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
 </div>
@@ -781,7 +790,7 @@
 </script>
 
 <script src="tunnel-check.js?v=203"></script>
-<script src="game.js?v=278"></script>
+<script src="game.js?v=279"></script>
 <script src="install.js?v=204"></script>
 <script>
 (function () {

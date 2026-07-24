@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.2';
+const APP_VERSION = '1.17.3';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 129;
+const SW_CACHE_REV = 130;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1593,6 +1593,21 @@ function dexRarityBreakdown() {
     if (sp && counts[sp.rarity] != null) counts[sp.rarity]++;
   }
   return counts;
+}
+function dexCosmeticProgressLines() {
+  const out = [];
+  const half = Math.ceil(SPECIES_ORDER.length / 2);
+  const checks = [
+    { styleId: 'crystal', cur: dexRarityTierCount(), goal: 4, label: 'rariteiten', name: 'Kristallijn' },
+    { styleId: 'tome', cur: dexCount(), goal: half, label: 'soorten', name: 'Boekmeester' },
+    { styleId: 'hunter', cur: dexTotalKills(), goal: 75, label: 'kills', name: 'Jagerlook' },
+  ];
+  for (const c of checks) {
+    const st = STYLES.find(s => s.id === c.styleId);
+    if (!st || styleUnlocked(st)) continue;
+    out.push(c);
+  }
+  return out;
 }
 const dexTotalKills = () => {
   let n = 0;
@@ -9053,6 +9068,7 @@ const UI = {
   screens: ['menuScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   charPickStep: 1,
   charSagaFilter: 'all',
+  dexRarityFilter: 'all',
   lastResult: null,
   pauseSubDefault: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
 
@@ -9823,23 +9839,56 @@ const UI = {
         if (!n) return '';
         return `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color};margin:2px">${rar.name} ${n}</span>`;
       }).filter(Boolean).join(' ');
+      const cosmetic = dexCosmeticProgressLines();
+      const cosmeticHtml = cosmetic.length
+        ? `<div class="dex-cosmetic-row">${cosmetic.map(c => {
+            const pct = Math.min(100, Math.round(c.cur / c.goal * 100));
+            return `<div class="dex-cosmetic-chip"><b>${c.name}</b> ${c.cur}/${c.goal} ${c.label}` +
+              `<div class="xpline" style="margin-top:5px;height:6px"><div style="width:${pct}%"></div></div></div>`;
+          }).join('')}</div>`
+        : '';
       sumEl.style.display = 'block';
       sumEl.innerHTML =
         `Boek <b>${dexCount()}/${SPECIES_ORDER.length}</b> · kills <b>${kills}</b> · bonus max HP <b>+${totalHp}</b>` +
         ` · rariteiten <b>${dexRarityTierCount()}/6</b>` +
         `<div class="dex-mini-row">${dexMiniStat('HP', totalHp, SPECIES_ORDER.length * 25, '#6ee06e')}` +
         `${dexMiniStat('Kills', kills, 150, '#ffd75e')}</div>` +
-        (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '');
+        (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '') +
+        cosmeticHtml;
+    }
+    const filterHost = document.getElementById('dexFilterBar');
+    if (filterHost) {
+      const cur = this.dexRarityFilter || 'all';
+      const mk = (id, label, color) =>
+        `<button type="button" class="dex-filter-btn${cur === id ? ' active' : ''}" data-dex-filter="${id}"` +
+        (color ? ` style="--dex-filter-color:${color}"` : '') + `>${label}</button>`;
+      filterHost.innerHTML =
+        mk('all', 'Alle') +
+        Object.keys(RARITIES).map(rid => mk(rid, RARITIES[rid].name, RARITIES[rid].color)).join('');
+      if (!filterHost.dataset.bound) {
+        filterHost.dataset.bound = '1';
+        filterHost.addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-dex-filter]');
+          if (!btn) return;
+          AudioSys.sfx('select');
+          UI.dexRarityFilter = btn.dataset.dexFilter || 'all';
+          UI.renderDex();
+        });
+      }
     }
     const list = document.getElementById('dexList');
     list.innerHTML = '';
+    const filter = this.dexRarityFilter || 'all';
     for (const id of SPECIES_ORDER) {
       const sp = SPECIES[id];
+      if (filter !== 'all' && sp.rarity !== filter) continue;
       const kills = save.dex[id] || 0;
       const rar = rarityOf(sp.rarity);
+      const unlockLv = UNLOCK_AT[id];
+      const canMeet = !kills && unlockLv != null && unlockLv <= save.unlocked;
       const el = document.createElement('div');
-      el.className = 'card' + (kills ? '' : ' locked');
-      el.style.borderColor = kills ? rar.color : undefined;
+      el.className = 'card' + (kills ? '' : ' locked') + (canMeet ? ' dex-available' : '');
+      el.style.borderColor = kills ? rar.color : (canMeet ? '#7cf5ff88' : undefined);
       const cv = document.createElement('canvas');
       cv.width = 64; cv.height = 64;
       const cc = cv.getContext('2d');
@@ -9860,13 +9909,20 @@ const UI = {
           `${dexMiniStat('ATK', sp.dmg, DEX_REF_STATS.dmg, '#ff7a4d')}` +
           `${dexMiniStat('SPD', sp.speed, DEX_REF_STATS.speed, '#7cf5ff')}</div>`
         : '';
+      const lockHint = kills
+        ? ''
+        : (canMeet
+          ? `<div style="color:#7cf5ff;font-size:12px;margin-top:4px">Verschijnt in avontuur · unlock Lv ${unlockLv}</div>`
+          : (unlockLv != null
+            ? `<div style="opacity:.72;font-size:12px;margin-top:4px">Unlock Lv ${unlockLv}</div>`
+            : ''));
       info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>` : ''}</div>
-        <div class="cinfo">${kills ? `${typeLbl} · basis HP ${sp.hp} · dmg ${sp.dmg} · spd ${sp.speed} · ${sp.xp} XP · Lv ${UNLOCK_AT[id] || '?'}` : 'Nog niet verslagen'}</div>${statRow}`;
+        <div class="cinfo">${kills ? `${typeLbl} · basis HP ${sp.hp} · dmg ${sp.dmg} · spd ${sp.speed} · ${sp.xp} XP · Lv ${unlockLv || '?'}` : 'Nog niet verslagen'}</div>${lockHint}${statRow}`;
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
       right.style.color = rar.color;
-      right.innerHTML = kills ? `${kills}x verslagen<br>+${hpB} max HP` : '';
+      right.innerHTML = kills ? `${kills}x verslagen<br>+${hpB} max HP` : (canMeet ? 'Speel avontuur' : '');
       el.appendChild(right);
       list.appendChild(el);
     }
