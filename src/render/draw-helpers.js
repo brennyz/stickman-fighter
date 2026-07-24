@@ -266,6 +266,25 @@ function spawnFxRing(game, x, y, color, baseR) {
   });
 }
 
+/** Jutsu impact burst — Lite FX capped; scale 'small' for projectile fade-out. */
+function spawnJutsuImpactFx(game, x, y, kind, scale) {
+  if (!game || motionReduced()) return;
+  const lite = fxLite();
+  const small = scale === 'small';
+  if (kind === 'rasengan') {
+    game.burst(x, y, '#7cf5ff', lite ? (small ? 4 : 6) : (small ? 8 : 14), { kind: 'spark', size: small ? 2.2 : 2.8 });
+    spawnFxRing(game, x, y, '#a8ecff', lite ? 6 : (small ? 8 : 14));
+    if (!lite && !small) spawnFxRing(game, x, y, '#5ad0ff', 7);
+  } else if (kind === 'chidori') {
+    game.burst(x, y, '#a8e0ff', lite ? 8 : 14);
+    spawnFxRing(game, x, y, '#c8f0ff', lite ? 7 : 11);
+  } else if (kind === 'rinnegan') {
+    game.burst(x, y, '#c47aff', lite ? 6 : 12);
+    spawnFxRing(game, x, y, '#e0a8ff', lite ? 7 : 10);
+    if (!lite && !small) spawnFxRing(game, x, y, '#ff6b9d', 6);
+  }
+}
+
 function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
   const lite = fxLite();
   c.save();

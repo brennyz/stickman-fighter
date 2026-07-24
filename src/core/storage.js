@@ -3,9 +3,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.62';
+const APP_VERSION = '1.17.63';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 188;
+const SW_CACHE_REV = 189;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -403,12 +403,13 @@ function projStrikeFighter(game, p, tgt, col) {
   game.floater(tgt.x, tgt.y - 115, '-' + dealt, col, 16);
   if (hit.crit) applyCritFx(game, tgt.x, tgt.y);
   if (p.kind === 'rinnegan' && p.pull) tgt.vx += Math.sign(p.vx || 1) * 160;
-  if (p.kind === 'chidori') {
-    game.burst(p.x, p.y, '#a8e0ff', 14);
-    spawnFxRing(game, p.x, p.y, '#c8f0ff', fxLite() ? 8 : 12);
+  if (p.kind === 'rasengan') {
+    spawnJutsuImpactFx(game, p.x, p.y, 'rasengan', 'full');
+    if (!fxLite()) game.freezeT = Math.max(game.freezeT || 0, 0.045);
+  } else if (p.kind === 'chidori') {
+    spawnJutsuImpactFx(game, p.x, p.y, 'chidori', 'full');
   } else if (p.kind === 'rinnegan') {
-    game.burst(p.x, p.y, '#c47aff', 12);
-    spawnFxRing(game, p.x, p.y, '#e0a8ff', fxLite() ? 8 : 11);
+    spawnJutsuImpactFx(game, p.x, p.y, 'rinnegan', 'full');
   }
   if (p.hitSet) p.hitSet.add(tgt);
   else if (!p.pierce) p.life = 0;
