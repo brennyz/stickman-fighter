@@ -11,6 +11,7 @@
   "stableHint": "Primair: GitHub Pages speel.html — deel die link met vrienden. Tunnel staat in hosting.json alleen voor thuis-dev; nooit als deel-link.",
   "pagesSpeel": "https://brennyz.github.io/stickman-fighter/speel.html",
   "shareOnlyPages": true,
+  "shareCacheRev": 172,
   "forceStable": false,
   "deployScript": "./deploy-netlify.sh",
   "netlifySiteId": "31915418-e76c-4951-b587-bb7af00aaabd",

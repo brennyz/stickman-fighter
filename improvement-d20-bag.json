@@ -1,16 +1,42 @@
 {
   "version": 3,
-  "cyclesCompleted": 3,
+  "cyclesCompleted": 4,
   "rollFirst": [],
-  "remaining": [],
+  "remaining": [
+    5,
+    3,
+    12,
+    10,
+    1,
+    11,
+    17,
+    19,
+    15,
+    8,
+    2,
+    7,
+    20,
+    14,
+    6,
+    9,
+    4,
+    13,
+    18
+  ],
   "lastRoll": {
     "face": 16,
     "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
-    "rolledAt": "2026-07-24T19:46:39Z",
-    "remainingCount": 0,
-    "cycle": 3
+    "rolledAt": "2026-07-24T20:42:05Z",
+    "remainingCount": 19,
+    "cycle": 4
   },
-  "pending": null,
+  "pending": {
+    "face": 16,
+    "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
+    "rolledAt": "2026-07-24T20:42:05Z",
+    "remainingCount": 19,
+    "cycle": 4
+  },
   "implemented": [
     {
       "face": 2,
@@ -523,6 +549,8 @@
       "status": "done",
       "note": "off-d20 user feature; spatial SFX + adventure stage audio pass"
     },
+    {
+      "id": "snd-extravaganza-2",
       "d20Face": null,
       "userWords": "Sounds extravanganza please lets go",
       "versions": [
@@ -533,6 +561,8 @@
       "status": "done",
       "note": "off-d20 user feature; extravaganza pass on v1.17.43 audio"
     },
+    {
+      "id": "snd-extravaganza-1",
       "d20Face": null,
       "userWords": "Give mor amazing sounds!",
       "versions": [
@@ -1620,6 +1650,13 @@
       "rolledAt": "2026-07-24T19:46:39Z",
       "remainingCount": 0,
       "cycle": 3
+    },
+    {
+      "face": 16,
+      "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
+      "rolledAt": "2026-07-24T20:42:05Z",
+      "remainingCount": 19,
+      "cycle": 4
     }
   ],
   "rollBacklog": []

@@ -982,6 +982,26 @@ function onTunnelHost() {
   return isTunnelHostUrl(location.hostname) || /\.loca\.lt$/i.test(location.hostname);
 }
 
+function playHostKind() {
+  if (location.protocol === 'file:') return 'file';
+  const h = location.hostname;
+  if (/\.github\.io$/i.test(h)) return 'pages';
+  if (/\.netlify\.app$/i.test(h)) return 'netlify';
+  if (onTunnelHost()) return 'tunnel';
+  if (/^localhost$|^127\./.test(h)) return 'local';
+  return 'other';
+}
+
+/** Append ?v=SW rev on speel.html share links so friends skip stale PWA cache. */
+function withShareRevParam(url, rev) {
+  if (!url || typeof url !== 'string') return url;
+  const base = url.split('#')[0].split('?')[0];
+  if (!/\/speel\.html$/i.test(base)) return url;
+  const v = rev != null ? rev : (typeof SW_CACHE_REV !== 'undefined' ? SW_CACHE_REV : 0);
+  if (!v) return url;
+  return base + '?v=' + v;
+}
+
 /** Canonical share/play URL — always GitHub Pages when configured; never a tunnel. */
 function canonicalPagesPlayUrl(hosting) {
   const j = hosting || {};
@@ -1043,28 +1063,31 @@ function githubPagesRootUrl() {
 
 async function resolveSharePlayUrl() {
   const { hosting, liveUrl } = await loadHostingBundle();
+  const rev = (hosting && hosting.shareCacheRev) || SW_CACHE_REV;
+  let url = '';
   if (hosting && hosting.shareOnlyPages) {
     const pagesOnly = canonicalPagesPlayUrl(hosting);
-    if (pagesOnly) return pagesOnly;
-    return 'https://brennyz.github.io/stickman-fighter/speel.html';
+    url = pagesOnly || 'https://brennyz.github.io/stickman-fighter/speel.html';
+  } else {
+    const pages = canonicalPagesPlayUrl(hosting);
+    if (pages) url = pages;
+    else {
+      const gh = githubPagesRootUrl();
+      if (gh) url = gh + 'speel.html';
+      else if (location.hostname.endsWith('.github.io')) {
+        const base = location.href.split('?')[0].split('#')[0];
+        url = base.replace(/\/(ipad|index|speel)\.html$/i, '/') + 'speel.html';
+      } else if (liveUrl && !isTunnelHostUrl(liveUrl)) {
+        url = liveUrl.replace(/\/ipad\.html$/i, '/speel.html').replace(/\/$/, '/speel.html');
+      } else if (location.protocol !== 'file:' && !onTunnelHost()) {
+        const href = location.href.split('?')[0].split('#')[0];
+        url = href.replace(/\/ipad\.html$/i, '/').replace(/\/index\.html$/i, '/');
+      } else {
+        url = 'https://brennyz.github.io/stickman-fighter/speel.html';
+      }
+    }
   }
-  const pages = canonicalPagesPlayUrl(hosting);
-  if (pages) return pages;
-  const gh = githubPagesRootUrl();
-  if (gh) return gh + 'speel.html';
-  if (location.hostname.endsWith('.github.io')) {
-    const base = location.href.split('?')[0].split('#')[0];
-    return base.replace(/\/(ipad|index|speel)\.html$/i, '/') + 'speel.html';
-  }
-  // Never share a tunnel URL — fall back to configured/non-tunnel live only
-  if (liveUrl && !isTunnelHostUrl(liveUrl)) {
-    return liveUrl.replace(/\/ipad\.html$/i, '/speel.html').replace(/\/$/, '/speel.html');
-  }
-  if (location.protocol !== 'file:' && !onTunnelHost()) {
-    const href = location.href.split('?')[0].split('#')[0];
-    return href.replace(/\/ipad\.html$/i, '/').replace(/\/index\.html$/i, '/');
-  }
-  return 'https://brennyz.github.io/stickman-fighter/speel.html';
+  return withShareRevParam(url, rev);
 }
 
 function headLiveFromPage() {

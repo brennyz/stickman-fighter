@@ -8,7 +8,9 @@
 <meta name="description" content="Gratis stickman vechtspel. Open de link, tik Spelen, en zet het als app op je scherm. Android (Chrome) en iPad (Safari).">
 <meta property="og:title" content="Stickman Fighter — speel gratis">
 <meta property="og:description" content="Rasengan, monsters, 2 spelers op één scherm. Android + iPad + PC.">
-<meta property="og:image" content="./icons/icon-512.png">
+<meta property="og:image" content="https://brennyz.github.io/stickman-fighter/icons/icon-512.png">
+<meta property="og:url" content="https://brennyz.github.io/stickman-fighter/speel.html">
+<link rel="canonical" href="https://brennyz.github.io/stickman-fighter/speel.html">
 <link rel="icon" href="./icons/icon-192.png">
 <link rel="manifest" href="./manifest.webmanifest">
 <style>
@@ -87,12 +89,20 @@
   var isAndroid = /Android/i.test(ua);
   var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-  function applyShareUrl(u) {
+  function withRev(u, rev) {
+    if (!u || /loca\.lt/i.test(u)) return u;
+    var base = u.split('#')[0].split('?')[0];
+    if (!/\/speel\.html$/i.test(base)) return u;
+    if (!rev) return u;
+    return base + '?v=' + rev;
+  }
+
+  function applyShareUrl(u, rev) {
     if (!u || /loca\.lt/i.test(u)) return;
-    shareUrl = u;
-    document.getElementById('linkline').textContent = u.replace(/^https:\/\//, '');
+    shareUrl = withRev(u, rev);
+    document.getElementById('linkline').textContent = shareUrl.replace(/^https:\/\//, '');
     var qr = document.getElementById('qrimg');
-    qr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=380x380&margin=2&data=' + encodeURIComponent(u);
+    qr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=380x380&margin=2&data=' + encodeURIComponent(shareUrl);
   }
 
   document.getElementById(isAndroid ? 'stepsAndroid' : isIOS ? 'stepsIos' : 'stepsDesktop').classList.remove('hide');
@@ -103,7 +113,7 @@
 
   applyShareUrl(shareUrl);
   fetch('./hosting.json').then(function (r) { return r.json(); }).then(function (j) {
-    applyShareUrl(j.bookmarkShare || j.pagesSpeel || shareUrl);
+    applyShareUrl(j.bookmarkShare || j.pagesSpeel || shareUrl, j.shareCacheRev || 0);
   }).catch(function () {});
 
   var qr = document.getElementById('qrimg');
