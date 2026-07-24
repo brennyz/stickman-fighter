@@ -523,7 +523,17 @@
   .vs-matchup-hint { width:100%; text-align:center; font-size:11px; font-weight:800; color:#cfe0ff; margin-top:8px; opacity:.9; }
   .vs-preview-col.preview-live { border-color:rgba(124,245,255,.55); box-shadow:0 0 0 1px rgba(124,245,255,.25); }
   .vs-preview-tag { font-size:9px; font-weight:900; color:#7cf5ff; text-transform:uppercase; letter-spacing:.06em; }
+  .vs-preview-col.preview-locked { opacity:.72; border-style:dashed; }
+  .vs-preview-lock { font-size:11px; color:#ffb0b8; margin:4px 0 6px; font-weight:800; }
+  .vs-preview-sig { font-size:10px; font-weight:800; color:#c792ff; margin:-2px 0 6px; }
+  .vs-preview-tag.locked { color:#ffb0b8; }
+  .vs-matchup-meter { display:flex; align-items:center; gap:8px; margin:8px 0 4px; font-size:10px; font-weight:800; color:#9db1e3; }
+  .vs-meter-track { flex:1; height:6px; border-radius:99px; background:rgba(255,255,255,.12); overflow:hidden; }
+  .vs-meter-track i { display:block; height:100%; background:linear-gradient(90deg,#7cf5ff,#ffb0b8); border-radius:99px; }
+  .vs-meter-p1 { min-width:42px; text-align:right; color:#7cf5ff; }
+  .vs-meter-p2 { min-width:42px; color:#ffb0b8; }
   .char-card.preview-hov { outline:2px solid rgba(124,245,255,.45); outline-offset:2px; }
+  .char-card.locked.preview-hov { outline-color:rgba(255,176,184,.45); }
   .vs-stat-col { margin:5px 0; }
   .vs-stat-l { display:block; font-size:10px; font-weight:800; color:#9db1e3; margin-bottom:2px; }
   .vs-stat-track { display:block; height:6px; border-radius:4px; background:#1a2040; overflow:hidden; }

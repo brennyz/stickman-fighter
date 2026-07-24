@@ -132,9 +132,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.51';
+const APP_VERSION = '1.17.52';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 177;
+const SW_CACHE_REV = 178;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   advIsland: 0, advFails: {}, advMasterBuff: null,
@@ -1925,7 +1925,9 @@ function vsFighterStats(entry) {
   else if (entry.special === 'chidori') special = 'Chidori';
   else if (entry.special === 'rinnegan') special = 'Rinnegan';
   const critPct = Math.round((entry.crit != null ? entry.crit : 0.08) * 100);
-  return { hp, spd, dmg, wpn: weaponById(entry.weapon).name, special, critPct };
+  const sigKey = entry.sig || 'balanced';
+  const sig = VS_SIG_LABELS[sigKey] || sigKey;
+  return { hp, spd, dmg, wpn: weaponById(entry.weapon).name, special, critPct, sig, sigKey };
 }
 function vsOverallRating(s) {
   return Math.round((s.hp + s.spd + s.dmg) / 3);
@@ -1972,46 +1974,71 @@ function vsMatchupHint(s1, s2) {
   else if (s2.dmg >= s1.dmg + 8) hints.push('P2 harder hits');
   if (s1.critPct >= s2.critPct + 3) hints.push('P1 meer crit');
   else if (s2.critPct >= s1.critPct + 3) hints.push('P2 meer crit');
-  return hints.slice(0, 2).join(' · ');
+  if (s1.sigKey !== s2.sigKey) hints.push(`${s1.sig.split(' ')[0]} vs ${s2.sig.split(' ')[0]}`);
+  return hints.slice(0, 3).join(' · ');
+}
+function vsMatchupMeter(s1, s2) {
+  const r1 = vsOverallRating(s1);
+  const r2 = vsOverallRating(s2);
+  const total = Math.max(1, r1 + r2);
+  const p1pct = Math.round(r1 / total * 100);
+  let label = 'Gelijk spel';
+  if (p1pct >= 58) label = 'P1 licht favoriet';
+  else if (p1pct <= 42) label = 'P2 licht favoriet';
+  return `<div class="vs-matchup-meter" aria-hidden="true">` +
+    `<span class="vs-meter-p1">P1 ${p1pct}%</span>` +
+    `<span class="vs-meter-track"><i style="width:${p1pct}%"></i></span>` +
+    `<span class="vs-meter-p2">P2 ${100 - p1pct}%</span></div>` +
+    `<div class="vs-matchup-hint">${label} · TOT preview</div>`;
 }
 function charStatPreviewPair() {
   const e1 = vsRosterEntry(vsSelect.p1);
   const e2 = vsRosterEntry(vsSelect.p2);
   const hover = UI.charPreviewHoverId ? vsRosterEntry(UI.charPreviewHoverId) : null;
-  if (hover && UI.charPickStep === 1 && vsUnlocked(hover)) return [hover, e2, true];
-  if (hover && UI.charPickStep === 2 && vsUnlocked(hover)) return [e1, hover, true];
-  return [e1, e2, false];
+  if (hover && UI.charPickStep === 1) return [hover, e2, true, !vsUnlocked(hover)];
+  if (hover && UI.charPickStep === 2) return [e1, hover, true, !vsUnlocked(hover)];
+  return [e1, e2, false, false];
 }
-function vsStatPreviewHtml(e1, e2, previewing) {
+function vsStatPreviewHtml(e1, e2, previewing, lockedPreview) {
   const s1 = vsFighterStats(e1);
   const s2 = vsFighterStats(e2);
   const g1 = vsSagaMeta(e1.saga || 'scroll');
   const g2 = vsSagaMeta(e2.saga || 'scroll');
   const step = UI.charPickStep === 2 ? 'Stap 2 · kies P2' : 'Stap 1 · kies P1';
-  const head = `<div class="vs-preview-head">${step} · ${vsUnlockedCount()}/${VS_ROSTER.length} vrij · stats = preview only</div>`;
-  const col = (entry, s, theirs, accent, saga, flair, side) => {
-    const live = previewing && ((UI.charPickStep === 1 && side === 'left') || (UI.charPickStep === 2 && side === 'right'));
-    const played = vsPlayedBefore(entry.id) ? '<span class="vs-played-chip">gespeeld</span>' : '';
-    return `<div class="vs-preview-col${live ? ' preview-live' : ''}" style="--accent:${accent}">` +
-    `<div class="vs-preview-name">${entry.name}${played}${live ? ' <span class="vs-preview-tag">preview</span>' : ''}</div>` +
-    `<div class="vs-preview-wpn">${sagaIconSvg(saga.id)} ${saga.label} · ${s.wpn} · ${s.special} · ${s.critPct}% crit</div>` +
+  const counts = vsSagaUnlockedCounts(UI.charSagaFilter || 'all');
+  const next = charRosterNextUnlock();
+  const prog = next
+    ? ` · volgende unlock: <b>${next.name}</b> (${next.hint})`
+    : ' · roster compleet!';
+  const head = `<div class="vs-preview-head">${step} · ${counts.unlocked}/${counts.total} in filter · ${vsUnlockedCount()}/${VS_ROSTER.length} totaal${prog}</div>`;
+  const col = (entry, s, theirs, accent, saga, flair, side, locked) => {
+    const live = previewing && !locked && ((UI.charPickStep === 1 && side === 'left') || (UI.charPickStep === 2 && side === 'right'));
+    const played = !locked && vsPlayedBefore(entry.id) ? '<span class="vs-played-chip">gespeeld</span>' : '';
+    const lockNote = locked ? `<div class="vs-preview-lock">${SVG_LOCK_ICON} ${vsUnlockHint(entry)}</div>` : '';
+    return `<div class="vs-preview-col${live ? ' preview-live' : ''}${locked ? ' preview-locked' : ''}" style="--accent:${accent}">` +
+    `<div class="vs-preview-name">${entry.name}${played}${live ? ' <span class="vs-preview-tag">preview</span>' : ''}${locked ? ' <span class="vs-preview-tag locked">locked</span>' : ''}</div>` +
+    lockNote +
+    `<div class="vs-preview-wpn">${sagaIconSvg(saga.id)} ${saga.label} · ${s.wpn} · ${s.special}</div>` +
+    `<div class="vs-preview-sig">${s.sig} · ${s.critPct}% crit</div>` +
     `<div class="vs-preview-flair">${flair}</div>` +
     `${vsStatBar('TOT', vsOverallRating(s), '#ffd75e')}` +
-    `${vsStatBar('HP', s.hp, '#6ee06e', vsStatDeltaTag(s.hp, theirs.hp))}` +
-    `${vsStatBar('SPD', s.spd, '#7cf5ff', vsStatDeltaTag(s.spd, theirs.spd))}` +
-    `${vsStatBar('DMG', s.dmg, '#ff7a4d', vsStatDeltaTag(s.dmg, theirs.dmg))}</div>`;
+    `${vsStatBar('HP', s.hp, '#6ee06e', locked ? '' : vsStatDeltaTag(s.hp, theirs.hp))}` +
+    `${vsStatBar('SPD', s.spd, '#7cf5ff', locked ? '' : vsStatDeltaTag(s.spd, theirs.spd))}` +
+    `${vsStatBar('DMG', s.dmg, '#ff7a4d', locked ? '' : vsStatDeltaTag(s.dmg, theirs.dmg))}</div>`;
   };
-  const hint = vsMatchupHint(s1, s2);
-  return head + `<div class="vs-preview-duo">${col(e1, s1, s2, '#7cf5ff', g1, rosterFlair(e1), 'left')}` +
-    `<div class="vs-preview-vs">VS</div>${col(e2, s2, s1, '#ffb0b8', g2, rosterFlair(e2), 'right')}</div>` +
+  const hint = lockedPreview ? 'Unlock om te kiezen — stats zijn preview' : vsMatchupHint(s1, s2);
+  const meter = lockedPreview ? '' : vsMatchupMeter(s1, s2);
+  return head + `<div class="vs-preview-duo">${col(e1, s1, s2, '#7cf5ff', g1, rosterFlair(e1), 'left', lockedPreview && UI.charPickStep === 1)}` +
+    `<div class="vs-preview-vs">VS</div>${col(e2, s2, s1, '#ffb0b8', g2, rosterFlair(e2), 'right', lockedPreview && UI.charPickStep === 2)}</div>` +
+    meter +
     (hint ? `<div class="vs-matchup-hint">${hint}</div>` : '') +
-    (previewing ? '<div class="vs-matchup-hint" style="opacity:.75">Tik kaart om te kiezen · stats zijn relatief, geen dmg-tweak</div>' : '');
+    (previewing && !lockedPreview ? '<div class="vs-matchup-hint" style="opacity:.75">Tik kaart om te kiezen · stats zijn relatief, geen dmg-tweak</div>' : '');
 }
 function updateCharStatPreview() {
   const statEl = document.getElementById('charStatPreview');
   if (!statEl) return;
-  const [a, b, previewing] = charStatPreviewPair();
-  statEl.innerHTML = vsStatPreviewHtml(a, b, previewing);
+  const [a, b, previewing, lockedPreview] = charStatPreviewPair();
+  statEl.innerHTML = vsStatPreviewHtml(a, b, previewing, lockedPreview);
 }
 
 function copyPlayLink() {
@@ -3174,6 +3201,55 @@ function pickSagaIconClash() {
   const diff = icons.filter(r => r.id !== a.id && r.saga !== a.saga);
   const b = diff.length ? choice(diff) : choice(icons.filter(r => r.id !== a.id));
   return { a, b };
+}
+
+const VS_SIG_LABELS = {
+  balanced: 'Balanced all-round',
+  shuriken: 'Wapen-crit focus',
+  assassin: 'Kick-assassin',
+  heavy: 'Zware crit-slagen',
+  combo: 'Combo-kick chain',
+  kenjutsu: 'Kenjutsu crit',
+  hitrun: 'Hit & run kicks',
+  quak: 'Quak punch',
+  rinne: 'Rinne jutsu boost',
+  boss: 'Baas-crit',
+  storm: 'Storm kicks',
+  tank: 'Tank punch + kb',
+  reach: 'Reach wapen',
+};
+
+function vsSagaUnlockedCounts(sagaId) {
+  const list = sagaId === 'all' ? VS_ROSTER : VS_ROSTER.filter(r => (r.saga || 'scroll') === sagaId);
+  return { unlocked: list.filter(vsUnlocked).length, total: list.length };
+}
+
+function charRosterNextUnlock() {
+  for (const r of VS_ROSTER) {
+    if (!vsUnlocked(r)) return { name: r.name, hint: vsUnlockHint(r) };
+  }
+  return null;
+}
+
+/** Willekeurig duo met vergelijkbare overall-rating (fair match, geen dmg-tweak). */
+function pickBalancedRandomDuo() {
+  const pool = pickCharPoolFiltered();
+  if (pool.length < 2) return null;
+  const rated = pool.map(r => ({ r, rating: vsOverallRating(vsFighterStats(r)) }));
+  const a = choice(rated);
+  let best = null;
+  let bestDiff = 999;
+  for (const x of rated) {
+    if (x.r.id === a.r.id) continue;
+    const d = Math.abs(x.rating - a.rating);
+    if (d < bestDiff) { bestDiff = d; best = x; }
+  }
+  if (!best) {
+    const rest = rated.filter(x => x.r.id !== a.r.id);
+    best = rest.length ? choice(rest) : null;
+  }
+  if (!best) return null;
+  return { a: a.r, b: best.r, ratingDiff: bestDiff };
 }
 
 const VS_ROSTER = [
@@ -11678,9 +11754,18 @@ function initCharSelectChrome() {
       runPick(card);
     }, { passive: false });
     grid.addEventListener('pointerover', (e) => {
-      const card = e.target.closest('.char-card:not(.locked)');
+      const card = e.target.closest('.char-card');
       if (!card || !card.dataset.id) return;
       if (UI.charPreviewHoverId === card.dataset.id) return;
+      UI.charPreviewHoverId = card.dataset.id;
+      grid.querySelectorAll('.char-card.preview-hov').forEach(c => c.classList.remove('preview-hov'));
+      if (!card.classList.contains('locked')) card.classList.add('preview-hov');
+      else card.classList.add('preview-hov');
+      updateCharStatPreview();
+    });
+    grid.addEventListener('pointerdown', (e) => {
+      const card = e.target.closest('.char-card');
+      if (!card || !card.dataset.id) return;
       UI.charPreviewHoverId = card.dataset.id;
       grid.querySelectorAll('.char-card.preview-hov').forEach(c => c.classList.remove('preview-hov'));
       card.classList.add('preview-hov');
@@ -12153,7 +12238,16 @@ const UI = {
     const sagaBar = document.getElementById('charSagaBar');
     if (sagaBar) {
       sagaBar.querySelectorAll('[data-saga]').forEach((btn) => {
-        btn.classList.toggle('active', (btn.dataset.saga || 'all') === filter);
+        const sid = btn.dataset.saga || 'all';
+        btn.classList.toggle('active', sid === filter);
+        const c = vsSagaUnlockedCounts(sid);
+        let badge = btn.querySelector('.saga-count');
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'saga-count';
+          btn.appendChild(badge);
+        }
+        badge.textContent = ` (${c.unlocked}/${c.total})`;
       });
     }
     const grid = document.getElementById('charGrid');
@@ -12224,7 +12318,7 @@ const UI = {
         const mini = document.createElement('div');
         mini.className = 'char-mini-stat';
         const st = vsFighterStats(r);
-        mini.textContent = `HP ${st.hp} · ${st.dmg}% dmg · ${st.critPct}% crit`;
+        mini.textContent = `HP ${st.hp} · ${st.dmg}% · ${st.sig.split(' ')[0]}`;
         el.appendChild(mini);
       }
       grid.appendChild(el);
@@ -12301,7 +12395,28 @@ const UI = {
         this.renderCharSelect();
         const sa = vsFighterStats(a);
         const sb = vsFighterStats(b);
-        UI.toast(`${a.name} vs ${b.name} · HP ${sa.hp}/${sb.hp} · DMG ${sa.dmg}/${sb.dmg}`, 2800);
+        UI.toast(`${a.name} vs ${b.name} · HP ${sa.hp}/${sb.hp} · TOT ${vsOverallRating(sa)}/${vsOverallRating(sb)}`, 2800);
+      });
+    }
+    const rndFair = document.getElementById('btnCharRandomFair');
+    if (rndFair && !rndFair.dataset.bound) {
+      rndFair.dataset.bound = '1';
+      bindPress(rndFair, () => {
+        AudioSys.sfx('select');
+        const duo = pickBalancedRandomDuo();
+        if (!duo) {
+          UI.toast('Niet genoeg unlocked vechters in deze saga', 2400);
+          return;
+        }
+        vsSelect.p1 = duo.a.id;
+        vsSelect.p2 = duo.b.id;
+        this.charPickStep = 2;
+        this.charPreviewHoverId = null;
+        this.renderCharSelect();
+        const sa = vsFighterStats(duo.a);
+        const sb = vsFighterStats(duo.b);
+        const diff = duo.ratingDiff != null ? duo.ratingDiff : Math.abs(vsOverallRating(sa) - vsOverallRating(sb));
+        UI.toast(`Fair duo: ${duo.a.name} vs ${duo.b.name} · TOT Δ${diff}`, 3000);
       });
     }
   },

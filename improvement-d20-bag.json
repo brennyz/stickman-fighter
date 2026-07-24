@@ -18,7 +18,6 @@
     15,
     16,
     17,
-    18,
     19,
     20
   ],
@@ -541,6 +540,13 @@
       "note": "harden combat anti-stunlock chain cd",
       "version": "1.17.50",
       "doneAt": "2026-07-24T20:32:38Z",
+      "cycle": 4
+    },
+    {
+      "face": 18,
+      "note": "char select c4: sig preview, fair duo, locked hover, saga counts",
+      "version": "1.17.52",
+      "doneAt": "2026-07-24T20:40:38Z",
       "cycle": 4
     }
   ],
