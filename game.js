@@ -132,15 +132,15 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.45';
+const APP_VERSION = '1.17.46';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 171;
-const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
+const SW_CACHE_REV = 172;
+const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {}, pets: {}, activePet: null,
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0 },
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0 },
   achievements: {}, daily: null, vsPlayedIds: [] };
 const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
@@ -451,6 +451,9 @@ function rollHitDamage(attacker, spec, mult) {
   if (attacker.isPlayer && typeof game !== 'undefined' && game && game.stageCritBonus) {
     critChance += game.stageCritBonus;
   }
+  if (attacker.isPlayer && typeof game !== 'undefined' && game && game.petCritBonus) {
+    critChance += game.petCritBonus;
+  }
   critChance = clamp(critChance, 0, 0.48);
   let dmg = spec.dmg * rand(0.9, 1.15) * mult;
   const crit = Math.random() < critChance;
@@ -716,6 +719,20 @@ function sanitizeSave(s) {
     if (tOrder > wOrder) cleanSummons[k] = v;
   }
   out.summons = cleanSummons;
+
+  const cleanPets = {};
+  for (const [k, v] of Object.entries(out.pets || {})) {
+    if (typeof PET_BY_ID !== 'undefined' && !PET_BY_ID[k]) continue;
+    if (typeof PET_BY_ID === 'undefined') continue;
+    const entry = (v && typeof v === 'object') ? v : {};
+    cleanPets[k] = {
+      kills: clamp(Math.floor(Number(entry.kills) || 0), 0, 999999),
+    };
+  }
+  out.pets = cleanPets;
+  if (out.activePet && !cleanPets[out.activePet]) out.activePet = null;
+  else if (out.activePet && typeof PET_BY_ID !== 'undefined' && !PET_BY_ID[out.activePet]) out.activePet = null;
+
   const stPick = STYLES.find(st => st.id === out.style) || STYLES[0];
   let styleOk = stPick.id === 'classic';
   if (stPick.needLvl && out.lvl >= stPick.needLvl && !(stPick.needLvl > adventureWeaponCapForLevel(out.unlocked || 1))) styleOk = true;
@@ -3414,6 +3431,126 @@ function applyGambleToStage(game, g) {
 let pendingAdvLevel = null;
 let lastGambleRoll = null;
 
+/* --- src/data/pets.js --- */
+/* ============================== DEX PETS ================================ */
+/** Getemde mini-monsters — unlock via monsterboek-kills (deel 2 pets). */
+
+const PET_KILL_NEED = { common: 12, uncommon: 18, rare: 28, epic: 40, legendary: 55, mythic: 75 };
+
+/** 12 launch-pets — 1 per type/thema, gekoppeld aan dex-species */
+const PET_ROSTER = [
+  { id: 'pet_slymo', speciesId: 'slymo', passive: 'dmg', passiveVal: 0.03, assistMul: 0.3, cd: 4.6,
+    perk: 'Spring-assist — extra schade' },
+  { id: 'pet_bubbel', speciesId: 'bubbel', passive: 'hp', passiveVal: 6, assistMul: 0.26, cd: 5.2,
+    perk: '+6 max HP · zachte assist' },
+  { id: 'pet_flapper', speciesId: 'flapper', passive: 'energy', passiveVal: 1.08, assistMul: 0.28, cd: 4.2,
+    perk: 'Snellere chakra-regen' },
+  { id: 'pet_stekelra', speciesId: 'stekelra', passive: 'dmg', passiveVal: 0.035, assistMul: 0.34, cd: 4.8,
+    perk: 'Charge-assist — stevige tik' },
+  { id: 'pet_spooki', speciesId: 'spooki', passive: 'crit', passiveVal: 0.04, assistMul: 0.29, cd: 4.9,
+    perk: '+4% crit-kans' },
+  { id: 'pet_blikkert', speciesId: 'blikkert', passive: 'shield', passiveVal: 1.2, assistMul: 0.27, cd: 5.4,
+    perk: 'Korte shield elke golf' },
+  { id: 'pet_vlamvos', speciesId: 'vlamvos', passive: 'speed', passiveVal: 1.04, assistMul: 0.33, cd: 4.4,
+    perk: '+4% loopsnelheid' },
+  { id: 'pet_piepvleugel', speciesId: 'piepvleugel', passive: 'energy', passiveVal: 1.1, assistMul: 0.3, cd: 4.0,
+    perk: 'Vlugge chakra + dart-assist' },
+  { id: 'pet_rotsbonk', speciesId: 'rotsbonk', passive: 'hp', passiveVal: 12, assistMul: 0.36, cd: 5.6,
+    perk: '+12 max HP · tank-assist' },
+  { id: 'pet_nachtwolk', speciesId: 'nachtwolk', passive: 'crit', passiveVal: 0.05, assistMul: 0.31, cd: 5.0,
+    perk: 'Spook-crit + energy drain' },
+  { id: 'pet_gloeidrake', speciesId: 'gloeidrake', passive: 'dmg', passiveVal: 0.045, assistMul: 0.38, cd: 5.2,
+    perk: 'Draken-assist — zwaarste tik' },
+  { id: 'pet_stormvos', speciesId: 'stormvos', passive: 'speed', passiveVal: 1.06, assistMul: 0.35, cd: 4.5,
+    perk: 'Storm-snelheid + combo-assist' },
+];
+
+const PET_BY_ID = Object.fromEntries(PET_ROSTER.map(p => [p.id, p]));
+const PET_BY_SPECIES = Object.fromEntries(PET_ROSTER.map(p => [p.speciesId, p]));
+
+function petDef(id) { return PET_BY_ID[id] || null; }
+
+function petKillNeed(speciesOrPetId) {
+  const def = PET_BY_ID[speciesOrPetId] || PET_BY_SPECIES[speciesOrPetId];
+  const sp = def ? SPECIES[def.speciesId] : SPECIES[speciesOrPetId];
+  if (!sp) return 999;
+  return PET_KILL_NEED[sp.rarity] || 20;
+}
+
+function isPetTamed(petId) {
+  return !!(save.pets && save.pets[petId]);
+}
+
+function petTamedCount() {
+  return Object.keys(save.pets || {}).filter(k => PET_BY_ID[k]).length;
+}
+
+function activePetDef() {
+  const id = save.activePet;
+  if (!id || !isPetTamed(id)) return null;
+  return petDef(id);
+}
+
+function canTamePetForSpecies(speciesId) {
+  const def = PET_BY_SPECIES[speciesId];
+  if (!def || isPetTamed(def.id)) return false;
+  return (save.dex[speciesId] || 0) >= petKillNeed(speciesId);
+}
+
+function maybeTamePet(speciesId) {
+  const def = PET_BY_SPECIES[speciesId];
+  if (!def || isPetTamed(def.id)) return false;
+  const kills = save.dex[speciesId] || 0;
+  const need = petKillNeed(speciesId);
+  if (kills < need) return false;
+  if (!save.pets || typeof save.pets !== 'object') save.pets = {};
+  save.pets[def.id] = { at: Date.now(), kills };
+  if (!save.activePet) save.activePet = def.id;
+  persist();
+  const sp = SPECIES[speciesId];
+  try { AudioSys.sfx('summon'); } catch (_) {}
+  return { def, sp, need, kills };
+}
+
+function petPassiveBonus() {
+  const def = activePetDef();
+  if (!def) {
+    return { dmgMul: 1, energyMul: 1, critBonus: 0, maxHp: 0, speedMul: 1, shieldWave: 0 };
+  }
+  const sp = SPECIES[def.speciesId];
+  const kills = save.dex[def.speciesId] || 0;
+  const tier = Math.min(3, Math.floor(kills / 25));
+  const tierMul = 1 + tier * 0.012;
+  const out = { dmgMul: 1, energyMul: 1, critBonus: 0, maxHp: 0, speedMul: 1, shieldWave: 0 };
+  switch (def.passive) {
+    case 'dmg': out.dmgMul = 1 + def.passiveVal * tierMul; break;
+    case 'hp': out.maxHp = Math.round(def.passiveVal * tierMul); break;
+    case 'energy': out.energyMul = def.passiveVal * tierMul; break;
+    case 'crit': out.critBonus = def.passiveVal * tierMul; break;
+    case 'speed': out.speedMul = def.passiveVal * tierMul; break;
+    case 'shield': out.shieldWave = def.passiveVal * tierMul; break;
+  }
+  if (sp) out.label = sp.name;
+  return out;
+}
+
+function equipPet(petId) {
+  if (!petId) { save.activePet = null; persist(); return true; }
+  if (!isPetTamed(petId)) return false;
+  save.activePet = petId;
+  persist();
+  return true;
+}
+
+function petProgressLine(speciesId) {
+  const def = PET_BY_SPECIES[speciesId];
+  if (!def) return '';
+  if (isPetTamed(def.id)) return save.activePet === def.id ? 'Pet · actief' : 'Pet · getemd';
+  const need = petKillNeed(speciesId);
+  const cur = save.dex[speciesId] || 0;
+  if (cur <= 0) return `Pet · ${need} kills`;
+  return `Pet · ${Math.min(cur, need)}/${need} kills`;
+}
 /* --- src/systems/audio.js --- */
 /* =============================== AUDIO ================================= */
 const AudioSys = {
@@ -6094,7 +6231,8 @@ class Fighter {
     // chakra laadt sneller bij combo-gevoel (in beweging/gevecht)
     if (this.isPlayer || this.playerSlot) {
       const stageMul = (typeof game !== 'undefined' && game && game.stageEnergyMul) ? game.stageEnergyMul : 1;
-      const rate = (this.attack ? 4.2 : 2.8) * stageMul;
+      const petMul = (typeof game !== 'undefined' && game && game.petEnergyMul) ? game.petEnergyMul : 1;
+      const rate = (this.attack ? 4.2 : 2.8) * stageMul * petMul;
       const prevE = this._energyPrev == null ? this.energy : this._energyPrev;
       this.energy = clamp(this.energy + dt * rate, 0, 100);
       if (this.energy >= 100 && prevE < 100) {
@@ -6860,6 +6998,114 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
   }
 }
 
+/* --- src/entities/pet.js --- */
+/* ============================== PET FOLLOWER ========================== */
+class Pet {
+  constructor(def, game) {
+    this.def = def;
+    this.sp = SPECIES[def.speciesId];
+    this.game = game;
+    this.x = game.player ? game.player.x - 36 : W * 0.2;
+    this.y = game.player ? game.player.y : game.ground;
+    this.face = 1;
+    this.t = Math.random() * 6;
+    this.assistT = 1.8;
+    this.size = Math.max(9, Math.round((this.sp?.size || 14) * 0.52));
+    this.flashT = 0;
+  }
+
+  update(dt) {
+    const g = this.game;
+    const p = g.player;
+    if (!p || !p.alive) return;
+    this.t += dt;
+    if (this.flashT > 0) this.flashT -= dt;
+    const bob = Math.sin(this.t * 6) * 2;
+    const tx = p.x - p.face * (IS_TOUCH ? 34 : 38);
+    const ty = p.y - 6 + bob * 0.25;
+    const follow = g.traveling ? 11 : 8;
+    this.x += (tx - this.x) * Math.min(1, dt * follow);
+    this.y += (ty - this.y) * Math.min(1, dt * 10);
+    this.face = p.face || 1;
+
+    const inAdv = g.mode === 'adventure';
+    const inTrain = g.mode === 'training';
+    if ((!inAdv && !inTrain) || g.over || g.inputLocked) return;
+    if (inAdv && !g.monsters.some(m => m.alive)) return;
+    if (inTrain && (!g.robot || !g.robot.alive)) return;
+    this.assistT -= dt;
+    if (this.assistT > 0) return;
+    this.assistT = this.def.cd || 5;
+
+    let tgt = null;
+    let best = 1e9;
+    if (inTrain) {
+      tgt = g.robot;
+      best = Math.abs(tgt.x - p.x);
+    } else {
+      for (const m of g.monsters) {
+        if (!m.alive) continue;
+        const d = Math.abs(m.x - p.x);
+        if (d < best) { best = d; tgt = m; }
+      }
+    }
+    if (!tgt || best > 420) return;
+
+    const mul = (this.def.assistMul || 0.3) * (g.stageDmgMul || 1) * (g.petDmgMul || 1);
+    const dmg = Math.max(4, Math.round(p.baseDmg * mul));
+    const kb = Math.sign(tgt.x - this.x || p.face) * (120 + dmg * 2.2);
+    tgt.takeDamage(dmg, kb, g);
+    this.flashT = 0.12;
+    const col = this.sp?.c1 || '#7cf5ff';
+    g.floater(tgt.x, tgt.y - tgt.size - 18, `${this.sp?.name || 'Pet'} −${dmg}`, col, 11);
+    if (!fxLite()) g.burst(this.x, this.y - this.size, col, 4, { kind: 'spark', size: 1.8 });
+    try { AudioSys.sfxAt('hit', tgt.x); } catch (_) {}
+  }
+
+  draw(c) {
+    if (!this.sp) return;
+    c.save();
+    c.translate(this.x, this.y - this.size * 0.35);
+    if (this.face < 0) { c.scale(-1, 1); }
+    c.globalAlpha = 0.94;
+    drawMonsterArt(c, this.sp, this.size, this.t, this.flashT > 0, false);
+    c.globalAlpha = 1;
+    c.restore();
+    c.save();
+    c.fillStyle = 'rgba(124,245,255,.75)';
+    c.beginPath();
+    c.arc(this.x, this.y - this.size * 1.15, 2.2, 0, TAU);
+    c.fill();
+    c.restore();
+  }
+}
+
+function spawnGamePet(game) {
+  if (!game) return;
+  game.pet = null;
+  const def = activePetDef();
+  if (!def) return;
+  game.pet = new Pet(def, game);
+}
+
+function applyPetBonusesToPlayer(game, player) {
+  if (!player) return;
+  const pb = petPassiveBonus();
+  game.petDmgMul = pb.dmgMul || 1;
+  game.petEnergyMul = pb.energyMul || 1;
+  game.petCritBonus = pb.critBonus || 0;
+  game.petShieldWave = pb.shieldWave || 0;
+  if (pb.maxHp) {
+    player.maxhp += pb.maxHp;
+    player.hp += pb.maxHp;
+  }
+  if (pb.dmgMul && pb.dmgMul !== 1) {
+    player.baseDmg = Math.round(player.baseDmg * pb.dmgMul);
+  }
+  if (pb.speedMul && pb.speedMul !== 1) {
+    player.speed = Math.round(player.speed * pb.speedMul);
+  }
+}
 /* --- src/render/scenery.js --- */
 /* ============== SCENERY ART — pixel-art lagen (upgrade 1/4) ============ */
 /* Gecachte offscreen tiles (1× gerenderd per thema), chunky pixel look via
@@ -7437,6 +7683,12 @@ class Game {
         rosterId: 'hero',
       });
       applyPlayerStyle(this.player);
+      this.petDmgMul = 1;
+      this.petEnergyMul = 1;
+      this.petCritBonus = 0;
+      this.petShieldWave = 0;
+      applyPetBonusesToPlayer(this, this.player);
+      spawnGamePet(this);
     }
 
     if (mode === 'adventure') {
@@ -7592,6 +7844,9 @@ class Game {
     this.wavePause = 0;
     if (this.stageShieldPerWave > 0 && this.player) {
       this.playerShieldT = Math.max(this.playerShieldT, this.stageShieldPerWave);
+    }
+    if (this.petShieldWave > 0 && this.player) {
+      this.playerShieldT = Math.max(this.playerShieldT, this.petShieldWave);
     }
     if (bossWave) {
       this.banner('BAAS-GOLF!', 1.8, '#ff6b6b', 50);
@@ -7908,6 +8163,14 @@ class Game {
     }
     save.dex[m.spId]++;
     persist();
+    const tame = maybeTamePet(m.spId);
+    if (tame) {
+      save.stats.petsTamed = petTamedCount();
+      persist();
+      spawnGamePet(this);
+      this.banner(`PET! ${tame.sp.name}`, 2.2, tame.sp.c1, 36);
+      UI.toast(`${tame.sp.name} getemd — metgezel! (${tame.kills}/${tame.need} kills)`, 4200);
+    }
     checkAchievements();
     // Cosmetics die op dex-drempels unlocken (geen combat-wijziging)
     if (countBefore < dexCount()) {
@@ -8734,6 +8997,7 @@ class Game {
     this.shakeT = Math.max(0, this.shakeT - dt);
 
     this.player.update(dt, this);
+    if (this.pet) this.pet.update(dt);
 
     if (this.mode === 'adventure') this.updateAdventure(dt);
     else if (this.mode === 'training') this.updateTraining(dt);
@@ -9033,6 +9297,7 @@ class Game {
     for (const m of this.monsters) m.draw(c);
     if (this.robot) this.robot.draw(c);
     if (this.p2) this.p2.draw(c);
+    if (this.pet) this.pet.draw(c);
     this.player.draw(c);
 
     // projectielen
@@ -9805,6 +10070,11 @@ class Game {
           const txt = this.stageAlly.name;
           c.fillText(txt, W / 2 + 7, 62);
           drawMiniDie(c, W / 2 - c.measureText(txt).width / 2 - 3, 58.5, 10, col);
+        } else if (this.pet && activePetDef()) {
+          c.font = '700 11px sans-serif';
+          c.fillStyle = this.pet.sp?.c1 || '#7cf5ff';
+          const txt = `Pet · ${this.pet.sp?.name || 'Metgezel'}`;
+          c.fillText(txt, W / 2, 62);
         } else if (this.gambleBossWave > 0) {
           c.font = '700 11px sans-serif';
           c.fillStyle = '#ffb0b8';
@@ -10553,7 +10823,7 @@ const SVG_LOCK_ICON =
 
 const MODE_HUB_META = {
   arcade: { badge: 'SOLO', badgeClass: 'badge-solo', title: 'Arcade', sub: 'Snelle sessies · high scores · geen voortgang verlies' },
-  collect: { badge: 'COLLECTIE', badgeClass: 'badge-meta', title: 'Verzameling', sub: 'Wapens · stijlen · monsterboek · XP & unlocks' },
+  collect: { badge: 'COLLECTIE', badgeClass: 'badge-meta', title: 'Verzameling', sub: 'Wapens · pets · stijlen · monsterboek · XP & unlocks' },
 };
 
 function hubForPlayMode(mode) {
@@ -10583,7 +10853,7 @@ function hubTileStatLine(hub) {
       return m > 0 ? `${w}/${m} gewonnen` : '23 vechters · lokaal';
     }
     case 'collect':
-      return `${weaponUnlockedCount()}/${WEAPONS.length} wapens · boek ${dexCount()}/${SPECIES_ORDER.length}`;
+      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · pets ${petTamedCount()}/${PET_ROSTER.length} · boek ${dexCount()}/${SPECIES_ORDER.length}`;
     default:
       return '';
   }
@@ -10605,7 +10875,7 @@ function audioMixStatusLine(inPause) {
 }
 
 const UI = {
-  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
+  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
@@ -10626,6 +10896,7 @@ const UI = {
     levelScreen: '\u2190 Menu',
     gambleScreen: '\u2190 Levels',
     weaponScreen: '\u2190 Collectie',
+    petScreen: '\u2190 Collectie',
     styleScreen: '\u2190 Collectie',
     dexScreen: '\u2190 Collectie',
     charSelectScreen: '\u2190 Menu',
@@ -10813,7 +11084,7 @@ const UI = {
         this.show('menuScreen');
         return;
       }
-      if (active === 'weaponScreen' || active === 'styleScreen' || active === 'dexScreen') {
+      if (active === 'weaponScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'dexScreen') {
         this.openModeHub('collect');
         return;
       }
@@ -11129,6 +11400,8 @@ const UI = {
       setStat('hubStatMats', mats > 0 ? `Best ${mats} munten` : 'Nog niet gespeeld');
     } else if (this.modeHubId === 'collect') {
       setStat('hubStatWeapons', `${weaponUnlockedCount()}/${WEAPONS.length} vrij`);
+      const petsN = petTamedCount();
+      setStat('hubStatPets', petsN > 0 ? `${petsN}/${PET_ROSTER.length} getemd` : `${PET_ROSTER.length} via dex`);
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
       setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
       setStat('hubStatDex', `${dexCount()}/${SPECIES_ORDER.length} · +max HP`);
@@ -11845,14 +12118,87 @@ const UI = {
           : (unlockLv != null
             ? `<div style="opacity:.72;font-size:12px;margin-top:4px">Unlock Lv ${unlockLv}</div>`
             : ''));
+      const petLine = PET_BY_SPECIES[id]
+        ? `<div style="font-size:12px;margin-top:4px;color:${isPetTamed(PET_BY_SPECIES[id].id) ? '#7cf5ff' : '#8fa3d9'}">${petProgressLine(id)}</div>`
+        : '';
       info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>` : ''}${id === topKillId ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Top jager</span>' : ''}</div>
-        <div class="cinfo">${kills ? `${typeLbl} · basis HP ${sp.hp} · dmg ${sp.dmg} · spd ${sp.speed} · ${sp.xp} XP · Lv ${unlockLv || '?'}` : 'Nog niet verslagen'}</div>${lockHint}${statRow}`;
+        <div class="cinfo">${kills ? `${typeLbl} · basis HP ${sp.hp} · dmg ${sp.dmg} · spd ${sp.speed} · ${sp.xp} XP · Lv ${unlockLv || '?'}` : 'Nog niet verslagen'}</div>${lockHint}${petLine}${statRow}`;
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
       right.style.color = rar.color;
       right.innerHTML = kills ? `${kills}x verslagen<br>+${hpB} max HP` : (canMeet ? 'Speel avontuur' : '');
       el.appendChild(right);
+      list.appendChild(el);
+    }
+  },
+
+  renderPets() {
+    const sumEl = document.getElementById('petSummary');
+    if (sumEl) {
+      const tamed = petTamedCount();
+      const active = activePetDef();
+      sumEl.style.display = 'block';
+      sumEl.innerHTML =
+        `Getemd <b>${tamed}/${PET_ROSTER.length}</b> · actief <b>${active ? SPECIES[active.speciesId].name : 'geen'}</b>` +
+        `<div style="margin-top:6px;font-size:12px;opacity:.85">Versla monsters in avontuur — genoeg kills in het boek = pet ontgrendeld. Pets volgen je en assisten in avontuur & training.</div>`;
+    }
+    const list = document.getElementById('petList');
+    if (!list) return;
+    list.innerHTML = '';
+    for (const def of PET_ROSTER) {
+      const sp = SPECIES[def.speciesId];
+      if (!sp) continue;
+      const rar = rarityOf(sp.rarity);
+      const kills = save.dex[def.speciesId] || 0;
+      const need = petKillNeed(def.speciesId);
+      const tamed = isPetTamed(def.id);
+      const active = save.activePet === def.id;
+      const el = document.createElement('div');
+      el.className = 'card' + (tamed ? '' : ' locked') + (active ? ' sel' : '');
+      el.style.borderColor = tamed ? rar.color : undefined;
+      const cv = document.createElement('canvas');
+      cv.width = 64; cv.height = 64;
+      const cc = cv.getContext('2d');
+      cc.translate(32, 38);
+      cc.scale(0.55, 0.55);
+      if (tamed) drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
+      else {
+        cc.globalAlpha = 0.45;
+        drawMonsterArt(cc, Object.assign({}, sp, { c1: '#20242e', c2: '#14161e' }), sp.size, 1.2, false, false);
+      }
+      el.appendChild(cv);
+      const info = document.createElement('div');
+      const badge = active ? ' <span class="rar-pill" style="color:#7cf5ff;border-color:#7cf5ff">ACTIEF</span>' : '';
+      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>${badge}</div>` +
+        `<div class="cinfo">${def.perk}</div>` +
+        `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed ? 'Getemd via monsterboek' : `Temmen: ${Math.min(kills, need)}/${need} kills`}</div>`;
+      el.appendChild(info);
+      const right = document.createElement('div');
+      right.className = 'right';
+      if (tamed) {
+        right.innerHTML = active ? '&#10004; actief' : 'uitrusten';
+      } else {
+        right.textContent = kills > 0 ? `${need - kills} kills` : 'dex';
+        right.style.opacity = '0.7';
+      }
+      el.appendChild(right);
+      if (tamed) {
+        el.addEventListener('click', () => {
+          if (!uiTapAllowed()) return;
+          safeUiAction(() => {
+            if (active) {
+              equipPet(null);
+              UI.toast('Geen actieve pet', 1400);
+            } else {
+              equipPet(def.id);
+              AudioSys.sfx('select');
+              UI.toast(`${sp.name} volgt je nu!`, 2200);
+            }
+            this.renderPets();
+          }, 'equipPet/' + def.id, 'Pet kiezen mislukt');
+        });
+      }
       list.appendChild(el);
     }
   },
@@ -12207,6 +12553,9 @@ bindPress(btnMatsCoins, () => {
 });
 bindPress(document.getElementById('btnWeapons'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderWeapons(); UI.show('weaponScreen');
+});
+bindPress(document.getElementById('btnPets'), () => {
+  AudioSys.init(); AudioSys.sfx('select'); UI.renderPets(); UI.show('petScreen');
 });
 bindPress(document.getElementById('btnDex'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderDex(); UI.show('dexScreen');

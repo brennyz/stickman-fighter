@@ -32,6 +32,12 @@ class Game {
         rosterId: 'hero',
       });
       applyPlayerStyle(this.player);
+      this.petDmgMul = 1;
+      this.petEnergyMul = 1;
+      this.petCritBonus = 0;
+      this.petShieldWave = 0;
+      applyPetBonusesToPlayer(this, this.player);
+      spawnGamePet(this);
     }
 
     if (mode === 'adventure') {
@@ -187,6 +193,9 @@ class Game {
     this.wavePause = 0;
     if (this.stageShieldPerWave > 0 && this.player) {
       this.playerShieldT = Math.max(this.playerShieldT, this.stageShieldPerWave);
+    }
+    if (this.petShieldWave > 0 && this.player) {
+      this.playerShieldT = Math.max(this.playerShieldT, this.petShieldWave);
     }
     if (bossWave) {
       this.banner('BAAS-GOLF!', 1.8, '#ff6b6b', 50);
@@ -503,6 +512,14 @@ class Game {
     }
     save.dex[m.spId]++;
     persist();
+    const tame = maybeTamePet(m.spId);
+    if (tame) {
+      save.stats.petsTamed = petTamedCount();
+      persist();
+      spawnGamePet(this);
+      this.banner(`PET! ${tame.sp.name}`, 2.2, tame.sp.c1, 36);
+      UI.toast(`${tame.sp.name} getemd — metgezel! (${tame.kills}/${tame.need} kills)`, 4200);
+    }
     checkAchievements();
     // Cosmetics die op dex-drempels unlocken (geen combat-wijziging)
     if (countBefore < dexCount()) {
@@ -1329,6 +1346,7 @@ class Game {
     this.shakeT = Math.max(0, this.shakeT - dt);
 
     this.player.update(dt, this);
+    if (this.pet) this.pet.update(dt);
 
     if (this.mode === 'adventure') this.updateAdventure(dt);
     else if (this.mode === 'training') this.updateTraining(dt);
@@ -1628,6 +1646,7 @@ class Game {
     for (const m of this.monsters) m.draw(c);
     if (this.robot) this.robot.draw(c);
     if (this.p2) this.p2.draw(c);
+    if (this.pet) this.pet.draw(c);
     this.player.draw(c);
 
     // projectielen
@@ -2400,6 +2419,11 @@ class Game {
           const txt = this.stageAlly.name;
           c.fillText(txt, W / 2 + 7, 62);
           drawMiniDie(c, W / 2 - c.measureText(txt).width / 2 - 3, 58.5, 10, col);
+        } else if (this.pet && activePetDef()) {
+          c.font = '700 11px sans-serif';
+          c.fillStyle = this.pet.sp?.c1 || '#7cf5ff';
+          const txt = `Pet · ${this.pet.sp?.name || 'Metgezel'}`;
+          c.fillText(txt, W / 2, 62);
         } else if (this.gambleBossWave > 0) {
           c.font = '700 11px sans-serif';
           c.fillStyle = '#ffb0b8';

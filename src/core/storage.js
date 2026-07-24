@@ -3,15 +3,15 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.45';
+const APP_VERSION = '1.17.46';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 171;
-const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
+const SW_CACHE_REV = 172;
+const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {}, pets: {}, activePet: null,
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0 },
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0 },
   achievements: {}, daily: null, vsPlayedIds: [] };
 const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
@@ -322,6 +322,9 @@ function rollHitDamage(attacker, spec, mult) {
   if (attacker.isPlayer && typeof game !== 'undefined' && game && game.stageCritBonus) {
     critChance += game.stageCritBonus;
   }
+  if (attacker.isPlayer && typeof game !== 'undefined' && game && game.petCritBonus) {
+    critChance += game.petCritBonus;
+  }
   critChance = clamp(critChance, 0, 0.48);
   let dmg = spec.dmg * rand(0.9, 1.15) * mult;
   const crit = Math.random() < critChance;
@@ -587,6 +590,20 @@ function sanitizeSave(s) {
     if (tOrder > wOrder) cleanSummons[k] = v;
   }
   out.summons = cleanSummons;
+
+  const cleanPets = {};
+  for (const [k, v] of Object.entries(out.pets || {})) {
+    if (typeof PET_BY_ID !== 'undefined' && !PET_BY_ID[k]) continue;
+    if (typeof PET_BY_ID === 'undefined') continue;
+    const entry = (v && typeof v === 'object') ? v : {};
+    cleanPets[k] = {
+      kills: clamp(Math.floor(Number(entry.kills) || 0), 0, 999999),
+    };
+  }
+  out.pets = cleanPets;
+  if (out.activePet && !cleanPets[out.activePet]) out.activePet = null;
+  else if (out.activePet && typeof PET_BY_ID !== 'undefined' && !PET_BY_ID[out.activePet]) out.activePet = null;
+
   const stPick = STYLES.find(st => st.id === out.style) || STYLES[0];
   let styleOk = stPick.id === 'classic';
   if (stPick.needLvl && out.lvl >= stPick.needLvl && !(stPick.needLvl > adventureWeaponCapForLevel(out.unlocked || 1))) styleOk = true;

@@ -512,6 +512,18 @@
   ],
   "userFeatureLog": [
     {
+      "id": "dex-pets-deel2",
+      "d20Face": null,
+      "userWords": "Pak deel 2 aan pets",
+      "versions": [
+        "1.17.46"
+      ],
+      "commits": [],
+      "code": "PET_ROSTER 12 dex-pets; unlock via monsterboek kills; follower + assist avontuur/training; passives dmg/hp/energy/crit/speed/shield; Collectie Pets scherm",
+      "status": "done",
+      "note": "off-d20 user feature; proposal B deel 1/3 — dex metgezels"
+    },
+    {
       "id": "snd-extravaganza-3",
       "d20Face": null,
       "userWords": "Implementeer snd extravaganza 3.0",
@@ -523,6 +535,8 @@
       "status": "done",
       "note": "off-d20 user feature; spatial SFX + adventure stage audio pass"
     },
+    {
+      "id": "snd-extravaganza-2",
       "d20Face": null,
       "userWords": "Sounds extravanganza please lets go",
       "versions": [
@@ -533,6 +547,8 @@
       "status": "done",
       "note": "off-d20 user feature; extravaganza pass on v1.17.43 audio"
     },
+    {
+      "id": "snd-amazing",
       "d20Face": null,
       "userWords": "Give mor amazing sounds!",
       "versions": [

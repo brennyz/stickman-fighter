@@ -379,7 +379,8 @@ class Fighter {
     // chakra laadt sneller bij combo-gevoel (in beweging/gevecht)
     if (this.isPlayer || this.playerSlot) {
       const stageMul = (typeof game !== 'undefined' && game && game.stageEnergyMul) ? game.stageEnergyMul : 1;
-      const rate = (this.attack ? 4.2 : 2.8) * stageMul;
+      const petMul = (typeof game !== 'undefined' && game && game.petEnergyMul) ? game.petEnergyMul : 1;
+      const rate = (this.attack ? 4.2 : 2.8) * stageMul * petMul;
       const prevE = this._energyPrev == null ? this.energy : this._energyPrev;
       this.energy = clamp(this.energy + dt * rate, 0, 100);
       if (this.energy >= 100 && prevE < 100) {

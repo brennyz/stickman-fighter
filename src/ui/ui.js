@@ -157,7 +157,7 @@ const SVG_LOCK_ICON =
 
 const MODE_HUB_META = {
   arcade: { badge: 'SOLO', badgeClass: 'badge-solo', title: 'Arcade', sub: 'Snelle sessies · high scores · geen voortgang verlies' },
-  collect: { badge: 'COLLECTIE', badgeClass: 'badge-meta', title: 'Verzameling', sub: 'Wapens · stijlen · monsterboek · XP & unlocks' },
+  collect: { badge: 'COLLECTIE', badgeClass: 'badge-meta', title: 'Verzameling', sub: 'Wapens · pets · stijlen · monsterboek · XP & unlocks' },
 };
 
 function hubForPlayMode(mode) {
@@ -187,7 +187,7 @@ function hubTileStatLine(hub) {
       return m > 0 ? `${w}/${m} gewonnen` : '23 vechters · lokaal';
     }
     case 'collect':
-      return `${weaponUnlockedCount()}/${WEAPONS.length} wapens · boek ${dexCount()}/${SPECIES_ORDER.length}`;
+      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · pets ${petTamedCount()}/${PET_ROSTER.length} · boek ${dexCount()}/${SPECIES_ORDER.length}`;
     default:
       return '';
   }
@@ -209,7 +209,7 @@ function audioMixStatusLine(inPause) {
 }
 
 const UI = {
-  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
+  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
@@ -230,6 +230,7 @@ const UI = {
     levelScreen: '\u2190 Menu',
     gambleScreen: '\u2190 Levels',
     weaponScreen: '\u2190 Collectie',
+    petScreen: '\u2190 Collectie',
     styleScreen: '\u2190 Collectie',
     dexScreen: '\u2190 Collectie',
     charSelectScreen: '\u2190 Menu',
@@ -417,7 +418,7 @@ const UI = {
         this.show('menuScreen');
         return;
       }
-      if (active === 'weaponScreen' || active === 'styleScreen' || active === 'dexScreen') {
+      if (active === 'weaponScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'dexScreen') {
         this.openModeHub('collect');
         return;
       }
@@ -733,6 +734,8 @@ const UI = {
       setStat('hubStatMats', mats > 0 ? `Best ${mats} munten` : 'Nog niet gespeeld');
     } else if (this.modeHubId === 'collect') {
       setStat('hubStatWeapons', `${weaponUnlockedCount()}/${WEAPONS.length} vrij`);
+      const petsN = petTamedCount();
+      setStat('hubStatPets', petsN > 0 ? `${petsN}/${PET_ROSTER.length} getemd` : `${PET_ROSTER.length} via dex`);
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
       setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
       setStat('hubStatDex', `${dexCount()}/${SPECIES_ORDER.length} · +max HP`);
@@ -1449,14 +1452,87 @@ const UI = {
           : (unlockLv != null
             ? `<div style="opacity:.72;font-size:12px;margin-top:4px">Unlock Lv ${unlockLv}</div>`
             : ''));
+      const petLine = PET_BY_SPECIES[id]
+        ? `<div style="font-size:12px;margin-top:4px;color:${isPetTamed(PET_BY_SPECIES[id].id) ? '#7cf5ff' : '#8fa3d9'}">${petProgressLine(id)}</div>`
+        : '';
       info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>` : ''}${id === topKillId ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Top jager</span>' : ''}</div>
-        <div class="cinfo">${kills ? `${typeLbl} · basis HP ${sp.hp} · dmg ${sp.dmg} · spd ${sp.speed} · ${sp.xp} XP · Lv ${unlockLv || '?'}` : 'Nog niet verslagen'}</div>${lockHint}${statRow}`;
+        <div class="cinfo">${kills ? `${typeLbl} · basis HP ${sp.hp} · dmg ${sp.dmg} · spd ${sp.speed} · ${sp.xp} XP · Lv ${unlockLv || '?'}` : 'Nog niet verslagen'}</div>${lockHint}${petLine}${statRow}`;
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
       right.style.color = rar.color;
       right.innerHTML = kills ? `${kills}x verslagen<br>+${hpB} max HP` : (canMeet ? 'Speel avontuur' : '');
       el.appendChild(right);
+      list.appendChild(el);
+    }
+  },
+
+  renderPets() {
+    const sumEl = document.getElementById('petSummary');
+    if (sumEl) {
+      const tamed = petTamedCount();
+      const active = activePetDef();
+      sumEl.style.display = 'block';
+      sumEl.innerHTML =
+        `Getemd <b>${tamed}/${PET_ROSTER.length}</b> · actief <b>${active ? SPECIES[active.speciesId].name : 'geen'}</b>` +
+        `<div style="margin-top:6px;font-size:12px;opacity:.85">Versla monsters in avontuur — genoeg kills in het boek = pet ontgrendeld. Pets volgen je en assisten in avontuur & training.</div>`;
+    }
+    const list = document.getElementById('petList');
+    if (!list) return;
+    list.innerHTML = '';
+    for (const def of PET_ROSTER) {
+      const sp = SPECIES[def.speciesId];
+      if (!sp) continue;
+      const rar = rarityOf(sp.rarity);
+      const kills = save.dex[def.speciesId] || 0;
+      const need = petKillNeed(def.speciesId);
+      const tamed = isPetTamed(def.id);
+      const active = save.activePet === def.id;
+      const el = document.createElement('div');
+      el.className = 'card' + (tamed ? '' : ' locked') + (active ? ' sel' : '');
+      el.style.borderColor = tamed ? rar.color : undefined;
+      const cv = document.createElement('canvas');
+      cv.width = 64; cv.height = 64;
+      const cc = cv.getContext('2d');
+      cc.translate(32, 38);
+      cc.scale(0.55, 0.55);
+      if (tamed) drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
+      else {
+        cc.globalAlpha = 0.45;
+        drawMonsterArt(cc, Object.assign({}, sp, { c1: '#20242e', c2: '#14161e' }), sp.size, 1.2, false, false);
+      }
+      el.appendChild(cv);
+      const info = document.createElement('div');
+      const badge = active ? ' <span class="rar-pill" style="color:#7cf5ff;border-color:#7cf5ff">ACTIEF</span>' : '';
+      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>${badge}</div>` +
+        `<div class="cinfo">${def.perk}</div>` +
+        `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed ? 'Getemd via monsterboek' : `Temmen: ${Math.min(kills, need)}/${need} kills`}</div>`;
+      el.appendChild(info);
+      const right = document.createElement('div');
+      right.className = 'right';
+      if (tamed) {
+        right.innerHTML = active ? '&#10004; actief' : 'uitrusten';
+      } else {
+        right.textContent = kills > 0 ? `${need - kills} kills` : 'dex';
+        right.style.opacity = '0.7';
+      }
+      el.appendChild(right);
+      if (tamed) {
+        el.addEventListener('click', () => {
+          if (!uiTapAllowed()) return;
+          safeUiAction(() => {
+            if (active) {
+              equipPet(null);
+              UI.toast('Geen actieve pet', 1400);
+            } else {
+              equipPet(def.id);
+              AudioSys.sfx('select');
+              UI.toast(`${sp.name} volgt je nu!`, 2200);
+            }
+            this.renderPets();
+          }, 'equipPet/' + def.id, 'Pet kiezen mislukt');
+        });
+      }
       list.appendChild(el);
     }
   },

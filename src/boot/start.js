@@ -146,6 +146,9 @@ bindPress(btnMatsCoins, () => {
 bindPress(document.getElementById('btnWeapons'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderWeapons(); UI.show('weaponScreen');
 });
+bindPress(document.getElementById('btnPets'), () => {
+  AudioSys.init(); AudioSys.sfx('select'); UI.renderPets(); UI.show('petScreen');
+});
 bindPress(document.getElementById('btnDex'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderDex(); UI.show('dexScreen');
 });
