@@ -76,16 +76,60 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.13';
+const APP_VERSION = '1.17.14';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 140;
+const SW_CACHE_REV = 141;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
+  advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0 },
   achievements: {}, daily: null, vsPlayedIds: [] };
 const MAX_LEVEL = 50;
+const LEVELS_PER_ISLAND = 10;
+const ISLAND_WEAPON_CAPS = [10, 20, 30, 40, 48];
+const ADVENTURE_ISLANDS = [
+  { id: 1, name: 'Oost-eiland', sub: 'Lv 1–10', accent: '#5ad06a' },
+  { id: 2, name: 'Vuur-eiland', sub: 'Lv 11–20', accent: '#ff7a4d' },
+  { id: 3, name: 'Neon-eiland', sub: 'Lv 21–30', accent: '#7cf5ff' },
+  { id: 4, name: 'Tempel-eiland', sub: 'Lv 31–40', accent: '#ffd75e' },
+  { id: 5, name: 'Finale-eiland', sub: 'Lv 41–50', accent: '#ff6b9d' },
+];
+function islandFromLevel(n) { return Math.min(5, Math.max(1, Math.ceil(n / LEVELS_PER_ISLAND))); }
+function islandLevelRange(islandId) {
+  const start = (islandId - 1) * LEVELS_PER_ISLAND + 1;
+  return { start, end: Math.min(MAX_LEVEL, start + LEVELS_PER_ISLAND - 1) };
+}
+function currentAdvIsland() { return islandFromLevel(save.unlocked || 1); }
+function islandUnlocked(islandId) {
+  if (islandId <= 1) return true;
+  return (save.unlocked || 1) > (islandId - 1) * LEVELS_PER_ISLAND;
+}
+function adventureWeaponCapForLevel(levelN) {
+  const idx = Math.min(ISLAND_WEAPON_CAPS.length - 1, Math.max(0, Math.ceil(levelN / LEVELS_PER_ISLAND) - 1));
+  return ISLAND_WEAPON_CAPS[idx];
+}
+function adventureWeaponCap() { return adventureWeaponCapForLevel(save.unlocked || 1); }
+function weaponSkillGated(w) { return w.unlock > adventureWeaponCap(); }
+function weaponUnlockedByLevel(w) { return save.lvl >= w.unlock; }
+function weaponUsableNow(w) { return weaponUnlockedByLevel(w) && !weaponSkillGated(w); }
+function styleSkillGated(st) { return !!(st.needLvl && st.needLvl > adventureWeaponCap()); }
+function masterBuffActive(levelN) { return save.advMasterBuff === levelN; }
+function bestWeaponForAdventureCap(cap) {
+  let best = weaponById('vuist');
+  for (const base of WEAPONS) {
+    if (save.lvl >= base.unlock && base.unlock <= cap && base.unlock >= best.unlock) best = base;
+  }
+  return applySummonTier(best);
+}
+function playerWeaponForAdventure(levelN) {
+  const w = playerWeapon();
+  const cap = adventureWeaponCapForLevel(levelN);
+  if (w.unlock <= cap) return w;
+  return bestWeaponForAdventureCap(cap);
+}
+function advFailCount(levelN) { return (save.advFails && save.advFails[levelN]) || 0; }
 let save = loadSave();
 function fighterJutsuKind(f) {
   if (!f) return 'rasengan';
@@ -526,6 +570,18 @@ function sanitizeSave(s) {
   out.lvl = clamp(Math.floor(Number(out.lvl) || 1), 1, 500);
   out.xp = clamp(Math.floor(Number(out.xp) || 0), 0, 999999);
   out.unlocked = clamp(Math.floor(Number(out.unlocked) || 1), 1, maxLevel);
+  out.advIsland = clamp(Math.floor(Number(out.advIsland) || 0), 0, 5);
+  const cleanFails = {};
+  for (const [k, v] of Object.entries(out.advFails || {})) {
+    const n = parseInt(k, 10);
+    if (n >= 1 && n <= maxLevel) cleanFails[n] = clamp(Math.floor(Number(v) || 0), 0, 99);
+  }
+  out.advFails = cleanFails;
+  const mb = parseInt(out.advMasterBuff, 10);
+  out.advMasterBuff = (Number.isFinite(mb) && mb >= 1 && mb <= maxLevel) ? mb : null;
+  if (!out.advIsland && out.unlocked > 1) {
+    out.advIsland = Math.min(5, Math.floor((out.unlocked - 1) / LEVELS_PER_ISLAND));
+  }
   out.trainWins = clamp(Math.floor(Number(out.trainWins) || 0), 0, 9999);
   out.bestWall = clamp(Math.floor(Number(out.bestWall) || 0), 0, 999999);
   out.musicVol = (() => {
@@ -572,7 +628,7 @@ function sanitizeSave(s) {
   out.summons = cleanSummons;
   const stPick = STYLES.find(st => st.id === out.style) || STYLES[0];
   let styleOk = stPick.id === 'classic';
-  if (stPick.needLvl && out.lvl >= stPick.needLvl) styleOk = true;
+  if (stPick.needLvl && out.lvl >= stPick.needLvl && !(stPick.needLvl > adventureWeaponCapForLevel(out.unlocked || 1))) styleOk = true;
   if (stPick.needTrain && out.trainWins >= stPick.needTrain) styleOk = true;
   if (stPick.needDex && dexCountFromSave(out) >= stPick.needDex) styleOk = true;
   if (stPick.needDexKills && dexTotalKillsFromSave(out) >= stPick.needDexKills) styleOk = true;
@@ -1928,14 +1984,19 @@ function dexTopKillId() {
 }
 function weaponUnlockedCount() {
   let n = 0;
-  for (const w of WEAPONS) if (save.lvl >= w.unlock) n++;
+  for (const w of WEAPONS) if (weaponUnlockedByLevel(w)) n++;
+  return n;
+}
+function weaponAdventureUsableCount() {
+  let n = 0;
+  for (const w of WEAPONS) if (weaponUsableNow(w)) n++;
   return n;
 }
 function weaponRarityBreakdown() {
   const counts = {};
   for (const id of Object.keys(RARITIES)) counts[id] = 0;
   for (const w of WEAPONS) {
-    if (save.lvl >= w.unlock && counts[w.rarity] != null) counts[w.rarity]++;
+    if (weaponUnlockedByLevel(w) && counts[w.rarity] != null) counts[w.rarity]++;
   }
   return counts;
 }
@@ -1981,10 +2042,13 @@ function dexHpBonus() {
   }
   return bonus;
 }
-function playerStats() {
+function playerStats(opts) {
+  opts = opts || {};
+  const mul = opts.masterBuff ? 1.2 : 1;
   return {
-    maxhp: 100 + (save.lvl - 1) * 12 + dexHpBonus(),
-    dmg: 10 + (save.lvl - 1) * 2 + Math.floor(rarityOf(playerWeapon().rarity).order * 0.5),
+    maxhp: Math.round((100 + (save.lvl - 1) * 12 + dexHpBonus()) * mul),
+    dmg: Math.round((10 + (save.lvl - 1) * 2 + Math.floor(rarityOf(playerWeapon().rarity).order * 0.5)) * mul),
+    speedMul: mul,
   };
 }
 
@@ -2345,6 +2409,7 @@ const STYLES = [
 const styleById = id => STYLES.find(s => s.id === id) || STYLES[0];
 function styleUnlocked(st) {
   if (st.id === 'classic') return true;
+  if (styleSkillGated(st)) return false;
   if (st.needLvl && save.lvl >= st.needLvl) return true;
   if (st.needTrain && save.trainWins >= st.needTrain) return true;
   if (st.needDex && dexCount() >= st.needDex) return true;
@@ -6702,10 +6767,15 @@ class Game {
 
     const st = playerStats();
     if (mode !== 'versus') {
+      const advLevel = mode === 'adventure' ? (opts.level || 1) : 0;
+      const mb = mode === 'adventure' && masterBuffActive(advLevel);
+      const pst = mode === 'adventure' ? playerStats({ masterBuff: mb }) : st;
+      const wpn = mode === 'adventure' ? playerWeaponForAdventure(advLevel) : playerWeapon();
       this.player = new Fighter({
         isPlayer: true, x: W * 0.25, y: this.ground,
-        hp: st.maxhp, maxhp: st.maxhp, baseDmg: st.dmg,
-        weapon: playerWeapon(), color: '#f2f5ff',
+        hp: pst.maxhp, maxhp: pst.maxhp, baseDmg: pst.dmg,
+        weapon: wpn, color: '#f2f5ff',
+        speed: Math.round(260 * (pst.speedMul || 1)),
         rosterId: 'hero',
       });
       applyPlayerStyle(this.player);
@@ -6775,6 +6845,24 @@ class Game {
     this.ketsbamPulse = 0;
     applyGambleToStage(this, gamble);
     this.banner(`LEVEL ${n}`, 1.4, '#ffd75e', 54);
+    if (masterBuffActive(n)) {
+      setTimeout(() => {
+        try {
+          if (this.over) return;
+          this.banner('MEESTER-BUFF +20%', 2, '#c47aff', 40);
+          this.floater(W * 0.5, 132, '5× verloren — HP, snelheid & schade ↑', '#c47aff', 14);
+        } catch (_) {}
+      }, 1500);
+    }
+    const wCap = adventureWeaponCapForLevel(n);
+    if (playerWeapon().unlock > wCap) {
+      setTimeout(() => {
+        try {
+          if (this.over) return;
+          this.floater(W * 0.5, 148, `Eiland-skill gate: max wapen Lv ${wCap}`, '#ffd75e', 13);
+        } catch (_) {}
+      }, masterBuffActive(n) ? 2800 : 1500);
+    }
     if (gamble && gamble.outcome !== 'neutral') {
       setTimeout(() => {
         try {
@@ -7044,20 +7132,38 @@ class Game {
     this.over = true;
     this.inputLocked = true;
     let stars = 0;
+    const lv = this.level.n;
     if (win) {
-      const bonus = 30 + this.level.n * 10;
+      const bonus = 30 + lv * 10;
       this.grantXP(bonus);
-      if (this.level.n === save.unlocked && save.unlocked < MAX_LEVEL) { save.unlocked++; persist(); }
+      if (lv === save.unlocked && save.unlocked < MAX_LEVEL) { save.unlocked++; persist(); }
+      if (lv % LEVELS_PER_ISLAND === 0) {
+        save.advIsland = Math.min(5, lv / LEVELS_PER_ISLAND);
+        persist();
+      }
+      if (save.advMasterBuff === lv) {
+        save.advMasterBuff = null;
+        persist();
+      }
       const hpPct = this.player.hp / Math.max(1, this.player.maxhp);
       stars = starsFromHpPct(hpPct);
-      const prev = save.stars[this.level.n] || 0;
-      if (stars > prev) { save.stars[this.level.n] = stars; persist(); }
+      const prev = save.stars[lv] || 0;
+      if (stars > prev) { save.stars[lv] = stars; persist(); }
       bumpStat('advWins', 1);
       bumpDaily('advWin', 1);
       checkAchievements();
       AudioSys.sfx('win');
       this.banner('GEWONNEN!', 2, '#7cfc8a', 56);
     } else {
+      if (!save.advFails || typeof save.advFails !== 'object') save.advFails = {};
+      const hadMaster = save.advMasterBuff === lv;
+      save.advFails[lv] = (save.advFails[lv] || 0) + 1;
+      const gotMaster = save.advFails[lv] >= 5 && !hadMaster;
+      if (gotMaster) save.advMasterBuff = lv;
+      persist();
+      if (gotMaster) {
+        setTimeout(() => { try { UI.toast('Meester-buff! +20% HP, snelheid & schade tot je wint', 3800); } catch (_) {} }, 1500);
+      }
       AudioSys.sfx('lose');
       this.banner('VERSLAGEN...', 2, '#ff6b6b', 50);
     }
@@ -7065,8 +7171,9 @@ class Game {
       title: win ? 'GEWONNEN!' : 'VERSLAGEN...',
       detail: (() => {
         let base = win
-          ? `Level ${this.level.n} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}`
-          : `Level ${this.level.n} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}`;
+          ? `Level ${lv} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}`
+          : `Level ${lv} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}`;
+        if (masterBuffActive(lv) && !win) base += ' · Meester-buff actief';
         if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
           base += ` · gok: ${gambleOutcomeLabel(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48)}`;
         }
@@ -9581,6 +9688,7 @@ const UI = {
   charPreviewHoverId: null,
   dexRarityFilter: 'all',
   achFilter: 'all',
+  advIslandPick: 0,
   lastResult: null,
   pauseSubDefault: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
 
@@ -10297,26 +10405,71 @@ const UI = {
   },
 
   renderLevels() {
+    const bar = document.getElementById('levelIslandBar');
+    const info = document.getElementById('levelIslandInfo');
     const grid = document.getElementById('levelGrid');
+    if (!grid) return;
+    const pick = this.advIslandPick || currentAdvIsland();
+    this.advIslandPick = pick;
+    if (bar) {
+      bar.innerHTML = '';
+      for (const isl of ADVENTURE_ISLANDS) {
+        const ok = islandUnlocked(isl.id);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'island-tab' + (pick === isl.id ? ' active' : '') + (ok ? '' : ' locked');
+        btn.style.setProperty('--isl-accent', isl.accent);
+        btn.innerHTML = `<span class="island-tab-n">${isl.id}</span><span class="island-tab-name">${isl.name}</span>` +
+          (ok ? '' : `<span class="island-tab-lock">${SVG_LOCK_ICON}</span>`);
+        btn.title = ok ? `${isl.name} · ${isl.sub}` : `Versla baas Lv ${isl.id * LEVELS_PER_ISLAND} om te openen`;
+        if (ok) {
+          btn.addEventListener('click', () => safeUiAction(() => {
+            AudioSys.sfx('select');
+            UI.advIslandPick = isl.id;
+            UI.renderLevels();
+          }, 'pickIsland/' + isl.id, 'Eiland kiezen mislukt'));
+        }
+        bar.appendChild(btn);
+      }
+    }
+    const islMeta = ADVENTURE_ISLANDS[pick - 1] || ADVENTURE_ISLANDS[0];
+    const range = islandLevelRange(pick);
+    const wCap = adventureWeaponCapForLevel(range.start);
+    if (info) {
+      const mb = save.advMasterBuff;
+      const mbLine = mb && mb >= range.start && mb <= range.end
+        ? ` · Meester-buff op Lv ${mb} (+20%)`
+        : '';
+      info.innerHTML =
+        `<b style="color:${islMeta.accent}">${islMeta.name}</b> · ${islMeta.sub}` +
+        ` · skill gate: wapens tot Lv <b>${wCap}</b>` +
+        (pick < 5 ? ` · baas Lv ${pick * LEVELS_PER_ISLAND} opent volgend eiland` : '') +
+        mbLine;
+    }
     grid.innerHTML = '';
-    for (let n = 1; n <= MAX_LEVEL; n++) {
+    for (let n = range.start; n <= range.end; n++) {
       const el = document.createElement('div');
       const boss = !!BOSS_AT[n];
       const locked = n > save.unlocked;
-      const info = buildLevel(n);
-      const rar = rarityOf(info.rarityCap);
+      const infoLv = buildLevel(n);
+      const rar = rarityOf(infoLv.rarityCap);
+      const fails = advFailCount(n);
       el.className = 'lvl' + (boss ? ' boss' : '') + (locked ? ' locked' : '') + (n < save.unlocked ? ' cleared' : '') +
-        (!locked && n === save.unlocked ? ' lvl-current' : '');
+        (!locked && n === save.unlocked ? ' lvl-current' : '') +
+        (save.advMasterBuff === n ? ' master-buff' : '');
       el.style.boxShadow = locked ? 'none' : `0 5px 0 rgba(0,0,0,.35), 0 0 0 2px ${rar.color}55`;
       el.innerHTML = locked
         ? SVG_LOCK_ICON
         : `${n}${boss ? '<small>BAAS</small>' : `<small style="color:${rar.color}">${rar.name}</small>`}` +
-          (save.stars[n] ? `<span class="lvl-stars">${'★'.repeat(save.stars[n])}</span>` : '');
+          (save.stars[n] ? `<span class="lvl-stars">${'★'.repeat(save.stars[n])}</span>` : '') +
+          (fails > 0 && !locked ? `<span class="lvl-fails">${fails}/5</span>` : '') +
+          (save.advMasterBuff === n ? '<span class="lvl-master">+20%</span>' : '');
       if (!locked) {
         const best = save.stars[n] || 0;
-        let tip = `${info.waves.length} golven · ${starHintLine()}`;
-        if (boss) tip += ' · eindigt met baas';
+        let tip = `${infoLv.waves.length} golven · ${starHintLine()}`;
+        if (boss) tip += pick * LEVELS_PER_ISLAND === n ? ' · eiland-baas — opent volgend eiland' : ' · tussendoor-baas';
         if (best > 0) tip += ` · jouw ${'★'.repeat(best)}${'☆'.repeat(3 - best)}`;
+        if (fails > 0) tip += ` · ${fails}× verloren${fails >= 5 ? ' · Meester-buff actief' : ''}`;
         el.title = tip;
         el.addEventListener('click', () => safeUiAction(() => {
           AudioSys.sfx('select');
@@ -10357,6 +10510,7 @@ const UI = {
     const sumEl = document.getElementById('weaponSummary');
     if (sumEl) {
       const unlocked = weaponUnlockedCount();
+      const advUsable = weaponAdventureUsableCount();
       const br = weaponRarityBreakdown();
       const tierChips = Object.keys(RARITIES).map(rid => {
         const rar = RARITIES[rid];
@@ -10366,17 +10520,22 @@ const UI = {
       }).filter(Boolean).join(' ');
       sumEl.style.display = 'block';
       sumEl.innerHTML =
-        `Verzameld <b>${unlocked}/${WEAPONS.length}</b> · actief <b>${weaponById(save.weapon).name}</b>` +
+        `Verzameld <b>${unlocked}/${WEAPONS.length}</b> · avontuur <b>${advUsable}</b> bruikbaar` +
+        ` · actief <b>${weaponById(save.weapon).name}</b>` +
+        ` · eiland-skill gate: Lv <b>${adventureWeaponCap()}</b>` +
         (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '');
     }
     const list = document.getElementById('weaponList');
     list.innerHTML = '';
     for (const base of WEAPONS) {
       const w = applySummonTier(base);
-      const locked = save.lvl < base.unlock;
+      const lvlLocked = !weaponUnlockedByLevel(base);
+      const islandLocked = weaponSkillGated(base);
+      const locked = lvlLocked;
       const rar = rarityOf(w.rarity);
       const el = document.createElement('div');
-      el.className = 'card rar-' + w.rarity + (save.weapon === w.id ? ' sel' : '') + (locked ? ' locked' : '');
+      el.className = 'card rar-' + w.rarity + (save.weapon === w.id ? ' sel' : '') +
+        (locked ? ' locked' : '') + (islandLocked && !lvlLocked ? ' island-gated' : '');
       el.style.borderColor = rar.color + (save.weapon === w.id ? '' : '66');
       if (w.summoned) el.style.boxShadow = `0 0 14px ${rar.glow}`;
       const cv = document.createElement('canvas');
@@ -10406,13 +10565,18 @@ const UI = {
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
-      right.innerHTML = locked ? `${SVG_LOCK_ICON} Lv ${w.unlock}` : (save.weapon === w.id ? '&#10004; gekozen' : 'kies');
+      right.innerHTML = lvlLocked
+        ? `${SVG_LOCK_ICON} Lv ${base.unlock}`
+        : (islandLocked
+          ? `Avontuur Lv ${base.unlock}`
+          : (save.weapon === w.id ? '&#10004; gekozen' : 'kies'));
       el.appendChild(right);
       if (!locked) el.addEventListener('click', () => safeUiAction(() => {
         save.weapon = w.id;
         if (!persistOrToast('wapen')) return;
         AudioSys.sfx('select');
         try { AudioSys.sfx(weaponSwingSfx(w.id)); } catch (_) {}
+        if (islandLocked) UI.toast(`Klaar voor training — in avontuur max Lv ${adventureWeaponCap()}`, 2800);
         this.renderWeapons();
       }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt'));
       list.appendChild(el);
@@ -10576,7 +10740,8 @@ const UI = {
       sub.style.fontWeight = '600';
       sub.style.opacity = '0.75';
       sub.style.marginTop = '4px';
-      sub.textContent = ok ? (save.style === st.id ? 'Actief' : 'Tik om te kiezen') : st.hint;
+      sub.textContent = ok ? (save.style === st.id ? 'Actief' : 'Tik om te kiezen')
+        : (styleSkillGated(st) ? `Eiland-skill Lv ${st.needLvl}` : st.hint);
       el.appendChild(sub);
       if (ok) {
         el.addEventListener('click', () => safeUiAction(() => {

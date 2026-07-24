@@ -221,6 +221,7 @@
       transition: border-color .15s, background .15s; }
   .card.sel { border-color:#ffd75e; background:rgba(255,215,94,.14); box-shadow:0 0 0 1px rgba(255,215,94,.2); }
   .card.locked { opacity:.45; }
+  .card.island-gated:not(.locked) { opacity:.82; border-style:dashed; }
   .card .cname { font-size:18px; font-weight:900; }
   .card .cinfo { font-size:13px; color:#9db1e3; margin-top:2px; }
   .card canvas { flex:0 0 auto; border-radius:10px; background:rgba(0,0,0,.25); }
@@ -240,6 +241,21 @@
   .stat-row { display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin-top:8px; font-size:12px; color:#9db1e3; }
   .stat-row span { background:rgba(0,0,0,.25); padding:4px 10px; border-radius:999px; }
   .lvl-stars { display:block; font-size:11px; color:#ffd75e; letter-spacing:1px; margin-top:3px; }
+  .lvl-fails { position:absolute; top:6px; right:8px; font-size:10px; font-weight:800; color:#ffb0b8; opacity:.9; }
+  .lvl-master { display:block; font-size:10px; font-weight:800; color:#c47aff; margin-top:2px; letter-spacing:.04em; }
+  .lvl.master-buff:not(.locked) { outline:2px solid rgba(196,122,255,.75); box-shadow:0 0 10px rgba(196,122,255,.25), 0 5px 0 rgba(0,0,0,.35); }
+  .island-bar { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:min(92vw,640px); margin:8px 0 10px; }
+  .island-tab { flex:1 1 88px; min-width:72px; max-width:120px; padding:10px 8px; border-radius:14px; border:2px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg,#3a4258,#262c3d); color:#cdd8f5; cursor:pointer; font-weight:800; position:relative;
+      display:flex; flex-direction:column; align-items:center; gap:2px; transition:border-color .15s, transform .1s; }
+  .island-tab.active { border-color:var(--isl-accent, #ffd75e); background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(0,0,0,.25));
+      box-shadow:0 0 0 1px color-mix(in srgb, var(--isl-accent, #ffd75e) 40%, transparent); }
+  .island-tab.locked { opacity:.45; cursor:not-allowed; }
+  .island-tab-n { font-size:18px; color:var(--isl-accent, #ffd75e); }
+  .island-tab-name { font-size:10px; line-height:1.2; text-align:center; opacity:.92; }
+  .island-tab-lock { position:absolute; top:6px; right:6px; font-size:12px; opacity:.85; }
+  .island-info { width:min(92vw,640px); text-align:center; font-size:13px; color:#9db1e3; margin:0 0 12px; line-height:1.45; }
+  .island-grid { grid-template-columns:repeat(5, minmax(56px, 1fr)); max-width:min(92vw, 520px); }
   #pauseScreen.active { backdrop-filter:blur(8px); background:rgba(10,13,24,.92) !important; }
 
   .toggles { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; justify-content:center; }
@@ -582,9 +598,11 @@
 
 <div id="levelScreen" class="screen">
   <button class="btn back-btn" data-back>&#8592; Terug</button>
-  <h2 class="head">Kies een level</h2>
-  <div class="subtitle">50 levels · kleur = hoogste rariteit · rode = baas · 3★ &gt;72% HP · 2★ &gt;38% · daarna dobbel-gok voor super-baas of bondgenoot</div>
-  <div class="grid" id="levelGrid"></div>
+  <h2 class="head">Kies een eiland</h2>
+  <div class="subtitle">5 eilanden × 10 levels · skill gate per eiland · baas op Lv 10/20/30/40/50 opent volgend eiland · 5× verlies = Meester-buff (+20%)</div>
+  <div id="levelIslandBar" class="island-bar"></div>
+  <div id="levelIslandInfo" class="island-info"></div>
+  <div class="grid island-grid" id="levelGrid"></div>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
 </div>
 
@@ -612,7 +630,7 @@
 <div id="weaponScreen" class="screen">
   <button class="btn back-btn" data-back>&#8592; Terug</button>
   <h2 class="head">Wapens</h2>
-  <div class="subtitle">Summons zijn echt: hele kleine kans in avontuur dat een lager wapen ✦ Episch of Legendarisch wordt — sterker dan hogere wapens.</div>
+  <div class="subtitle">Summons zijn echt · eiland-skill gate: alleen wapens tot je huidige eiland-cap in avontuur</div>
   <div id="weaponSummary" class="statbar" style="display:none"></div>
   <div id="weaponList"></div>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
