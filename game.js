@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.10';
+const APP_VERSION = '1.17.11';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 137;
+const SW_CACHE_REV = 138;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -479,6 +479,25 @@ function safeAsync(promise, label, userMsg) {
   });
 }
 
+function safeUiAction(fn, label, userMsg) {
+  try { return fn(); } catch (err) {
+    sfReportError(label || 'ui', err, userMsg || 'Actie mislukt — probeer opnieuw');
+  }
+}
+
+function persistOrToast(context) {
+  if (persist()) return true;
+  const key = context || 'save';
+  window.__sfPersistCtxWarn = window.__sfPersistCtxWarn || {};
+  if (!window.__sfPersistCtxWarn[key]) {
+    window.__sfPersistCtxWarn[key] = true;
+    userToast(context
+      ? `Opslaan mislukt (${context}) — export save in Instellingen`
+      : 'Opslaan mislukt — export save in Instellingen', 4200);
+  }
+  return false;
+}
+
 function restoreSaveFromBackup() {
   try {
     const backup = readSaveJson(localStorage.getItem(SAVE_BACKUP_KEY));
@@ -870,7 +889,7 @@ function claimDailyTask(taskId, opts) {
     AudioSys.sfx('bonus');
     UI.toast(`+${def.xp} XP · ${def.text}`, 2600);
   }
-  persist();
+  if (!persistOrToast('missie-claim')) return 0;
   if (!opts.skipRefresh) {
     checkDailyAllBonus();
     UI.renderMissions();
@@ -914,7 +933,7 @@ function claimDailyDayBonus() {
   save.stats.dailyBonusCount = (save.stats.dailyBonusCount || 0) + 1;
   grantMetaXP(80);
   AudioSys.sfx('win');
-  persist();
+  if (!persistOrToast('dagbonus')) return;
   checkAchievements();
   UI.renderMissions();
   UI.renderMenu();
@@ -928,7 +947,7 @@ function grantMetaXP(n) {
     save.lvl++;
     AudioSys.sfx('levelup');
   }
-  persist();
+  persistOrToast('XP');
   UI.renderMenu();
 }
 
@@ -1399,7 +1418,7 @@ function recoverToMenu() {
 function importSaveJson(text) {
   const { save: next } = previewImportSave(text);
   save = next;
-  if (!persist()) throw new Error('Import gelukt maar opslaan mislukt — probeer opnieuw');
+  if (!persistOrToast('import')) throw new Error('Import gelukt maar opslaan mislukt — probeer opnieuw');
   checkAchievements();
   UI.renderMenu();
   if (UI.renderMissions) UI.renderMissions();
@@ -1435,18 +1454,26 @@ function resumeLastPlay() {
 }
 
 function openGambleForLevel(n) {
-  pendingAdvLevel = n;
-  lastGambleRoll = null;
-  UI.renderGamble(n);
-  applyGambleOnboarding();
-  UI.show('gambleScreen');
+  try {
+    pendingAdvLevel = n;
+    lastGambleRoll = null;
+    UI.renderGamble(n);
+    applyGambleOnboarding();
+    UI.show('gambleScreen');
+  } catch (err) {
+    sfReportError('openGamble', err, 'Gok-scherm openen mislukt — kies level opnieuw');
+  }
 }
 
 function startAdventureFromGamble(skipGamble) {
-  const level = pendingAdvLevel || save.unlocked || 1;
-  const gamble = skipGamble ? null : lastGambleRoll;
-  pendingAdvLevel = null;
-  startGame('adventure', { level, gamble });
+  try {
+    const level = pendingAdvLevel || save.unlocked || 1;
+    const gamble = skipGamble ? null : lastGambleRoll;
+    pendingAdvLevel = null;
+    startGame('adventure', { level, gamble });
+  } catch (err) {
+    sfReportError('gambleStart', err, 'Avontuur starten mislukt — kies level opnieuw');
+  }
 }
 
 function vsFighterStats(entry) {
@@ -9295,19 +9322,23 @@ class Game {
 
 /* ================================= UI ================================== */
 function pickVsRosterId(id) {
-  const r = vsRosterEntry(id);
-  if (!vsUnlocked(r)) return;
-  AudioSys.sfx('select');
-  UI.charPreviewHoverId = null;
-  if (UI.charPickStep === 1) {
-    vsSelect.p1 = id;
-    UI.charPickStep = 2;
-    try { UI.toast('P1: ' + r.name + ' — kies nu P2', 2200); } catch (_) {}
-  } else {
-    vsSelect.p2 = id;
-    try { UI.toast('P2: ' + r.name + ' — tik VECHT!', 2000); } catch (_) {}
+  try {
+    const r = vsRosterEntry(id);
+    if (!vsUnlocked(r)) return;
+    AudioSys.sfx('select');
+    UI.charPreviewHoverId = null;
+    if (UI.charPickStep === 1) {
+      vsSelect.p1 = id;
+      UI.charPickStep = 2;
+      try { UI.toast('P1: ' + r.name + ' — kies nu P2', 2200); } catch (_) {}
+    } else {
+      vsSelect.p2 = id;
+      try { UI.toast('P2: ' + r.name + ' — tik VECHT!', 2000); } catch (_) {}
+    }
+    UI.renderCharSelect();
+  } catch (err) {
+    sfReportError('charPick', err, 'Vechter kiezen mislukt — tik opnieuw');
   }
-  UI.renderCharSelect();
 }
 
 function initCharSelectChrome() {
@@ -9493,7 +9524,8 @@ const UI = {
       const pauseBtn = document.getElementById('pauseBtn');
       if (pauseBtn) pauseBtn.classList.toggle('show', !id && !!game && state !== 'result');
     } catch (err) {
-      console.error('[Stickman] UI.show', err);
+      sfReportError('UI.show/' + (id || 'play'), err, 'Schermwissel mislukt — terug naar menu');
+      try { this.goMenu(); } catch (_) {}
     }
     syncPlayLayer();
   },
@@ -9979,14 +10011,17 @@ const UI = {
         btn.type = 'button';
         btn.className = 'btn claim-btn';
         btn.textContent = `Claim +${def.xp} XP`;
-        btn.addEventListener('click', () => { AudioSys.sfx('select'); claimDailyTask(t.id); });
+        btn.addEventListener('click', () => safeUiAction(() => {
+          AudioSys.sfx('select');
+          claimDailyTask(t.id);
+        }, 'claimDaily/' + t.id, 'Claim mislukt — probeer opnieuw'));
         el.appendChild(btn);
       } else if (!t.done && playTarget) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'btn mission-play-btn';
         btn.textContent = `Speel ${playTarget.label} →`;
-        btn.addEventListener('click', () => goDailyPlayTarget(t.id));
+        btn.addEventListener('click', () => safeUiAction(() => goDailyPlayTarget(t.id), 'dailyPlay/' + t.id, 'Kon modus niet openen'));
         el.appendChild(btn);
       }
       dailyHost.appendChild(el);
@@ -10126,7 +10161,10 @@ const UI = {
         if (boss) tip += ' · eindigt met baas';
         if (best > 0) tip += ` · jouw ${'★'.repeat(best)}${'☆'.repeat(3 - best)}`;
         el.title = tip;
-        el.addEventListener('click', () => { AudioSys.sfx('select'); openGambleForLevel(n); });
+        el.addEventListener('click', () => safeUiAction(() => {
+          AudioSys.sfx('select');
+          openGambleForLevel(n);
+        }, 'openLevel/' + n, 'Level openen mislukt'));
       }
       grid.appendChild(el);
     }
@@ -10213,11 +10251,13 @@ const UI = {
       right.className = 'right';
       right.innerHTML = locked ? `${SVG_LOCK_ICON} Lv ${w.unlock}` : (save.weapon === w.id ? '&#10004; gekozen' : 'kies');
       el.appendChild(right);
-      if (!locked) el.addEventListener('click', () => {
-        save.weapon = w.id; persist(); AudioSys.sfx('select');
+      if (!locked) el.addEventListener('click', () => safeUiAction(() => {
+        save.weapon = w.id;
+        if (!persistOrToast('wapen')) return;
+        AudioSys.sfx('select');
         try { AudioSys.sfx(weaponSwingSfx(w.id)); } catch (_) {}
         this.renderWeapons();
-      });
+      }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt'));
       list.appendChild(el);
     }
   },
@@ -10382,11 +10422,14 @@ const UI = {
       sub.textContent = ok ? (save.style === st.id ? 'Actief' : 'Tik om te kiezen') : st.hint;
       el.appendChild(sub);
       if (ok) {
-        el.addEventListener('click', () => {
-          save.style = st.id; persist(); AudioSys.sfx('select');
-          this.renderStyle(); this.renderMenu();
+        el.addEventListener('click', () => safeUiAction(() => {
+          save.style = st.id;
+          if (!persistOrToast('stijl')) return;
+          AudioSys.sfx('select');
+          this.renderStyle();
+          this.renderMenu();
           UI.toast(`${st.name} uitgerust`, 2200);
-        });
+        }, 'pickStyle/' + st.id, 'Stijl kiezen mislukt'));
       }
       grid.appendChild(el);
     }
@@ -10732,22 +10775,24 @@ if (btnOpenPlayLink) btnOpenPlayLink.addEventListener('click', () => {
   })(), 'openPlayLink', 'Link openen mislukt');
 });
 const btnExportSave = document.getElementById('btnExportSave');
-if (btnExportSave) btnExportSave.addEventListener('click', async () => {
-  const ta = document.getElementById('savePortText');
-  const json = exportSaveJson();
-  if (ta) { ta.value = json; ta.focus(); ta.select(); }
-  let clipped = false;
-  try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(json);
-      clipped = true;
-    }
-  } catch (_) {}
-  AudioSys.sfx('select');
-  UI.toast(clipped
-    ? `Save in klembord · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)})`
-    : `Save in vak · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)}) — kopieer handmatig`, 3400);
-  UI.renderSettings();
+if (btnExportSave) btnExportSave.addEventListener('click', () => {
+  safeAsync((async () => {
+    const ta = document.getElementById('savePortText');
+    const json = exportSaveJson();
+    if (ta) { ta.value = json; ta.focus(); ta.select(); }
+    let clipped = false;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(json);
+        clipped = true;
+      }
+    } catch (_) {}
+    AudioSys.sfx('select');
+    UI.toast(clipped
+      ? `Save in klembord · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)})`
+      : `Save in vak · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)}) — kopieer handmatig`, 3400);
+    UI.renderSettings();
+  })(), 'exportSave', 'Export mislukt — kopieer JSON handmatig uit het vak');
 });
 const btnImportSave = document.getElementById('btnImportSave');
 if (btnImportSave) btnImportSave.addEventListener('click', () => {
@@ -10830,40 +10875,44 @@ function bindSettingsControls() {
 }
 const btnRestoreBackup = document.getElementById('btnRestoreBackup');
 if (btnRestoreBackup) btnRestoreBackup.addEventListener('click', () => {
-  AudioSys.sfx('select');
-  if (!window.__sfBackupConfirm) {
-    const h = saveHealthSummary();
-    if (!h.backupOk) {
-      UI.toast('Geen backup gevonden op dit apparaat', 3000);
+  safeUiAction(() => {
+    AudioSys.sfx('select');
+    if (!window.__sfBackupConfirm) {
+      const h = saveHealthSummary();
+      if (!h.backupOk) {
+        UI.toast('Geen backup gevonden op dit apparaat', 3000);
+        return;
+      }
+      window.__sfBackupConfirm = true;
+      const driftHint = h.driftDetail || (h.drift ? ' (hoofd en backup verschillen)' : '');
+      UI.toast(`Backup Lv ${h.backupLvl}${driftHint} — tik nogmaals om te herstellen`, 4500);
+      setTimeout(() => { window.__sfBackupConfirm = false; }, 6000);
       return;
     }
-    window.__sfBackupConfirm = true;
-    const driftHint = h.driftDetail || (h.drift ? ' (hoofd en backup verschillen)' : '');
-    UI.toast(`Backup Lv ${h.backupLvl}${driftHint} — tik nogmaals om te herstellen`, 4500);
-    setTimeout(() => { window.__sfBackupConfirm = false; }, 6000);
-    return;
-  }
-  window.__sfBackupConfirm = false;
-  if (restoreSaveFromBackup()) {
-    UI.toast('Backup teruggezet — save + backup synchroon', 3000);
-    UI.renderSettings();
-  } else UI.toast('Geen backup gevonden op dit apparaat', 3000);
+    window.__sfBackupConfirm = false;
+    if (restoreSaveFromBackup()) {
+      UI.toast('Backup teruggezet — save + backup synchroon', 3000);
+      UI.renderSettings();
+    } else UI.toast('Backup herstellen mislukt — export save als je die hebt', 3200);
+  }, 'restoreBackup', 'Backup herstellen mislukt');
 });
 const btnClearSave = document.getElementById('btnClearSave');
 if (btnClearSave) btnClearSave.addEventListener('click', () => {
-  if (!window.__sfClearConfirm) {
-    window.__sfClearConfirm = true;
-    UI.toast('Nogmaals tikken = voortgang wissen (backup blijft)', 3500);
-    setTimeout(() => { window.__sfClearConfirm = false; }, 4000);
-    return;
-  }
-  window.__sfClearConfirm = false;
-  try { localStorage.removeItem(SAVE_KEY); } catch (_) {}
-  save = sanitizeSave(Object.assign({}, DEFAULT_SAVE));
-  if (!persist()) userToast('Nieuwe start — maar opslaan mislukt, export save', 4500);
-  AudioSys.sfx('lose');
-  UI.renderMenu();
-  UI.toast('Nieuwe start — backup staat nog in Instellingen', 4000);
+  safeUiAction(() => {
+    if (!window.__sfClearConfirm) {
+      window.__sfClearConfirm = true;
+      UI.toast('Nogmaals tikken = voortgang wissen (backup blijft)', 3500);
+      setTimeout(() => { window.__sfClearConfirm = false; }, 4000);
+      return;
+    }
+    window.__sfClearConfirm = false;
+    try { localStorage.removeItem(SAVE_KEY); } catch (_) {}
+    save = sanitizeSave(Object.assign({}, DEFAULT_SAVE));
+    if (!persistOrToast('nieuwe start')) return;
+    AudioSys.sfx('lose');
+    UI.renderMenu();
+    UI.toast('Nieuwe start — backup staat nog in Instellingen', 4000);
+  }, 'clearSave', 'Reset mislukt — probeer opnieuw');
 });
 bindSettingsControls();
 const btnHelp = document.getElementById('btnHelp');
@@ -11353,8 +11402,14 @@ function wireNetStatusTap() {
   el.dataset.sfNetTap = '1';
   const run = () => {
     if (!window.__sfSwUpdateReady) return;
-    if (typeof window.applySwUpdate === 'function') window.applySwUpdate();
-    else if (typeof window.forceFreshVersion === 'function') window.forceFreshVersion();
+    safeAsync((async () => {
+      if (typeof window.applySwUpdate === 'function') {
+        const ok = await window.applySwUpdate();
+        if (!ok && typeof window.forceFreshVersion === 'function') await window.forceFreshVersion();
+      } else if (typeof window.forceFreshVersion === 'function') {
+        await window.forceFreshVersion();
+      }
+    })(), 'swUpdateTap', 'Update mislukt — tik Instellingen → Verse versie');
   };
   el.addEventListener('click', run);
   el.addEventListener('keydown', (e) => {

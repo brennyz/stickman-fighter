@@ -81,7 +81,10 @@
         };
         navigator.serviceWorker.addEventListener('controllerchange', onChange, { once: true });
         reg.waiting.postMessage({ type: 'SF_SKIP_WAITING' });
-        setTimeout(() => resolve(false), 8000);
+        setTimeout(() => {
+          toast('Update duurt lang — tik «Verse versie» in Instellingen', 3600);
+          resolve(false);
+        }, 8000);
       });
     } catch (_) {
       toast('Update mislukt — tik «Verse versie»', 3200);
@@ -146,7 +149,9 @@
             }
           });
         });
-      }).catch(() => {});
+      }).catch(() => {
+        toast('Offline-cache niet beschikbaar — speel 1× online', 3600);
+      });
     });
 
     document.addEventListener('visibilitychange', () => {
@@ -200,11 +205,16 @@
       showInstallScreen();
       return;
     }
-    deferredPrompt.prompt();
-    const choice = await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    if (choice.outcome === 'accepted') closeInstallScreen();
-    refreshMenuButton();
+    try {
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      if (choice.outcome === 'accepted') closeInstallScreen();
+      refreshMenuButton();
+    } catch (_) {
+      toast('Installatie mislukt — volg stappen op het scherm', 3200);
+      showInstallScreen();
+    }
   }
 
   if (btnMenu) {
