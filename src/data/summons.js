@@ -259,7 +259,7 @@ function sanitizeWeaponSpec(spec) {
   spec.active = Math.max(0.04, spec.active || 0.08);
   spec.recover = Math.max(0.06, spec.recover || 0.12);
   spec.range = Math.max(24, spec.range || 40);
-  spec.r = Math.max(18, spec.r || 24);
+  spec.r = Math.max(22, spec.r || 24);
   if (spec.moveHitY != null) spec.moveHitY = clamp(spec.moveHitY, -32, 24);
   return spec;
 }

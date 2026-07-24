@@ -26,10 +26,10 @@ class Fighter {
     let spec;
     switch (kind) {
       case 'punch':
-        spec = { kind, windup: 0.07, active: 0.09, recover: 0.12, range: 40, r: 24, dmg: this.baseDmg * 0.7, kb: 160 };
+        spec = { kind, windup: 0.07, active: 0.09, recover: 0.12, range: 48, r: 30, dmg: this.baseDmg * 0.7, kb: 160 };
         break;
       case 'kick':
-        spec = { kind, windup: 0.11, active: 0.11, recover: 0.2,  range: 50, r: 26, dmg: this.baseDmg * 1.1, kb: 340 };
+        spec = { kind, windup: 0.11, active: 0.11, recover: 0.2,  range: 58, r: 32, dmg: this.baseDmg * 1.1, kb: 340 };
         break;
       case 'weapon': {
         const wid = (w && w.id) || 'vuist';
@@ -37,7 +37,7 @@ class Fighter {
         const move = weaponMoveDef(wid, moveIdx);
         spec = {
           kind, windup: 0.13 / (w.speed || 1), active: 0.1 / (w.speed || 1), recover: 0.2 / (w.speed || 1),
-          range: (w.range || 40) + 14, r: 26 + (w.range || 40) * 0.22, dmg: this.baseDmg * (w.dmg || 1), kb: 260,
+          range: (w.range || 40) + 18, r: 30 + (w.range || 40) * 0.26, dmg: this.baseDmg * (w.dmg || 1), kb: 260,
           moveIdx, move,
         };
         if (move) {
@@ -55,7 +55,7 @@ class Fighter {
         const j = fighterJutsuKind(this);
         const jMul = j === 'rinnegan' ? 2.55 : j === 'chidori' ? (this.isRobot ? 2.35 : 2.72) : 2.85;
         spec = {
-          kind, windup: j === 'rinnegan' ? 0.52 : 0.48, active: 0.12, recover: 0.28, range: 55, r: 36,
+          kind, windup: j === 'rinnegan' ? 0.52 : 0.48, active: 0.12, recover: 0.28, range: 62, r: 44,
           dmg: this.baseDmg * jMul, kb: j === 'rinnegan' ? 460 : 520, jutsu: j,
         };
         break;
@@ -65,7 +65,8 @@ class Fighter {
     }
     if (spec && spec.kind === 'weapon') spec = sanitizeWeaponSpec(spec);
     if (spec && spec.kind === 'weapon' && (w.masterSword || w.id === 'master_sword')) spec.unblockable = true;
-    return applySignatureToSpec(this, spec);
+    spec = applySignatureToSpec(this, spec);
+    return applyStyleToSpec(this, spec);
   }
 
   startAttack(kind, game) {
@@ -128,7 +129,9 @@ class Fighter {
   }
 
   doDash(game, dir) {
-    if (!this.alive || this.dashCd > 0 || this.attack || Math.abs(dir) < 0.1) return;
+    if (!this.alive || this.dashCd > 0 || Math.abs(dir) < 0.1) return;
+    if (this.attack && this.hurtT <= 0) return;
+    if (this.hurtT > 0) this.hurtT = 0;
     resetWeaponCombo(this);
     this.dashCd = 0.85;
     this.invulnT = Math.max(this.invulnT, 0.14);
@@ -306,7 +309,8 @@ class Fighter {
     this.afterimages = this.afterimages.filter(a => a.life > 0);
 
     if (canAct && it.subst) this.doSubstitution(game);
-    if (canAct && it.dash) this.doDash(game, it.move || this.face);
+    const canDash = canAct || ((this.isPlayer || this.playerSlot) && this.hurtT > 0 && this.onGround);
+    if (canDash && it.dash) this.doDash(game, it.move || this.face);
 
     if (canAct) {
       if (it.punch) this.startAttack('punch', game);
@@ -380,7 +384,8 @@ class Fighter {
     if (this.isPlayer || this.playerSlot) {
       const stageMul = (typeof game !== 'undefined' && game && game.stageEnergyMul) ? game.stageEnergyMul : 1;
       const petMul = (typeof game !== 'undefined' && game && game.petEnergyMul) ? game.petEnergyMul : 1;
-      const rate = (this.attack ? 4.2 : 2.8) * stageMul * petMul;
+      const styleMul = (typeof game !== 'undefined' && game && game.styleEnergyMul) ? game.styleEnergyMul : 1;
+      const rate = (this.attack ? 4.2 : 2.8) * stageMul * petMul * styleMul;
       const prevE = this._energyPrev == null ? this.energy : this._energyPrev;
       this.energy = clamp(this.energy + dt * rate, 0, 100);
       if (this.energy >= 100 && prevE < 100) {
@@ -414,7 +419,8 @@ class Fighter {
       return 0;
     }
     if (this.blocking && !opts.unblockable) {
-      dmg = Math.max(1, Math.round(dmg * 0.15));
+      const blockMul = (this.isPlayer && game && game.styleBlockMul) ? game.styleBlockMul : 1;
+      dmg = Math.max(1, Math.round(dmg * 0.15 * blockMul));
       AudioSys.sfx('block');
       const atk = opts.attacker && opts.attacker.attack;
       const parry = atk && atk.t >= atk.windup && atk.t <= atk.windup + 0.16;
@@ -433,15 +439,18 @@ class Fighter {
       game.floater(this.x, this.y - 115, 'Schild!', '#9fd8ff', 13);
     }
     dmg = Math.round(dmg);
+    if (this.isPlayer && game && game.styleDefMul && game.styleDefMul !== 1) {
+      dmg = Math.max(1, Math.round(dmg * game.styleDefMul));
+    }
     this.hp -= dmg;
-    this.hurtT = dmg >= 18 ? 0.28 : 0.24;
+    this.hurtT = dmg >= 18 ? 0.16 : 0.12;
     this.hitFlashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.18 : 0.14);
     this.attack = null;
     const kbScaled = scaleKnockback(kbx, dmg, { heavy: dmg >= 18 });
     this.vx = kbScaled;
     this.vy = Math.min(this.vy, -120);
     if (this.isPlayer || this.playerSlot) {
-      this.invulnT = Math.max(this.invulnT, dmg >= 18 ? 0.26 : 0.22);
+      this.invulnT = Math.max(this.invulnT, dmg >= 18 ? 0.48 : 0.40);
       resetWeaponCombo(this);
       if (game) applyHitStop(game, { kind: 'punch', dmg }, { playerHurt: true, heavy: dmg >= 18 });
     }
@@ -741,6 +750,33 @@ class Fighter {
       c.strokeStyle = st.bandana || '#6b5344';
       c.lineWidth = 1.2;
       c.strokeRect(hx - 18, hy - 2, 7, 10);
+    }
+    if (st.lightning && !motionReduced()) {
+      const pulse = Math.sin(this.animT * 14) * 0.5 + 0.5;
+      if (pulse > 0.35 || st.id === 'cyber') {
+        c.save();
+        c.strokeStyle = st.id === 'cyber' ? '#7cf5ff' : '#6fd7ff';
+        c.shadowColor = st.id === 'cyber' ? '#4ecf6a' : '#7cf5ff';
+        c.shadowBlur = st.id === 'cyber' ? 10 : 6;
+        c.lineWidth = st.id === 'cyber' ? 2 : 1.4;
+        c.globalAlpha = 0.55 + pulse * 0.35;
+        const lx = hx + (st.id === 'cyber' ? 14 : -12);
+        const ly = hy - 8;
+        c.beginPath();
+        c.moveTo(hx, hy - 10);
+        c.lineTo(hx + 4, hy - 4);
+        c.lineTo(hx - 2, hy + 2);
+        c.lineTo(lx, ly);
+        c.stroke();
+        if (st.id === 'cyber' && pulse > 0.6) {
+          c.beginPath();
+          c.moveTo(hx - 6, hy - 14);
+          c.lineTo(hx + 8, hy - 18);
+          c.lineTo(hx + 2, hy - 6);
+          c.stroke();
+        }
+        c.restore();
+      }
     }
   }
 

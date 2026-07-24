@@ -512,6 +512,18 @@
   ],
   "userFeatureLog": [
     {
+      "id": "combat-hitbox-stunlock-rasengan-styles",
+      "d20Face": null,
+      "userWords": "Hitbox groter, stunlock weg, rasengan horizontaal, stijl tooltips + bonuses",
+      "versions": [
+        "1.17.48"
+      ],
+      "commits": [],
+      "code": "melee hitbox +20%; hurt korter + langere i-frames + dash-escape; rasengan vx horizontaal; STYLES tooltips/mods (cyber lightning, sand defense, etc.)",
+      "status": "done",
+      "note": "off-d20 user feature; combat feel + stijl UX pass"
+    },
+    {
       "id": "egg-pets-deel3",
       "d20Face": null,
       "userWords": "Deel drie pets",

@@ -160,7 +160,7 @@ const GIANT_DMG_MUL = 1.14;
 const GIANT_XP_MUL = 1.3;
 /** Nood-ontsnapping als je omringd / stunlocked bent — tik midden-KETS! */
 const KETSBAM_DETECT_R = 148;
-const KETSBAM_NEAR_MIN = 4;
+const KETSBAM_NEAR_MIN = 3;
 const KETSBAM_BLAST_R = 192;
 const KETSBAM_CD = 9;
 const KETSBAM_INVULN = 1.15;
@@ -217,10 +217,10 @@ function applyHitStop(game, spec, opts) {
   }
   if (opts.playerHurt) {
     const dmg = spec && spec.dmg != null ? spec.dmg : 8;
-    let base = dmg >= 18 ? 0.04 : 0.026;
-    if (opts.heavy) base += 0.006;
+    let base = dmg >= 18 ? 0.018 : 0.01;
+    if (opts.heavy) base += 0.004;
     if (game.mode === 'versus') base += 0.004;
-    game.freezeT = Math.max(game.freezeT, Math.min(base, 0.048));
+    game.freezeT = Math.max(game.freezeT, Math.min(base, 0.028));
     if (opts.heavy || dmg >= 18) {
       try {
         const x = game.player ? game.player.x : (typeof W !== 'undefined' ? W * 0.5 : 0);

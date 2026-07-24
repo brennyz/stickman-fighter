@@ -1660,6 +1660,15 @@ const UI = {
   },
 
   renderStyle() {
+    const sumEl = document.getElementById('styleSummary');
+    if (sumEl) {
+      const unlocked = STYLES.filter(s => styleUnlocked(s)).length;
+      const active = styleById(save.style || 'classic');
+      sumEl.style.display = 'block';
+      sumEl.innerHTML =
+        `Outfits <b>${unlocked}/${STYLES.length}</b> · actief <b>${active.name}</b>` +
+        `<div style="margin-top:6px;font-size:12px;opacity:.85">Elke stijl heeft een eigen bonus — hover of lees de tooltip. Cosmetisch + lichte combat-perks.</div>`;
+    }
     const grid = document.getElementById('styleGrid');
     if (!grid) return;
     grid.innerHTML = '';
@@ -1668,6 +1677,7 @@ const UI = {
       const el = document.createElement('div');
       el.className = 'style-card' + (save.style === st.id ? ' sel' : '') + (ok ? '' : ' locked');
       el.style.borderColor = ok ? st.accent + '88' : '';
+      el.title = st.tooltip || st.hint || st.name;
       const cv = document.createElement('canvas');
       cv.width = 72; cv.height = 72;
       const cc = cv.getContext('2d');
@@ -1681,6 +1691,20 @@ const UI = {
       cap.style.color = st.accent;
       cap.textContent = st.name;
       el.appendChild(cap);
+      const bonus = document.createElement('div');
+      bonus.style.fontSize = '11px';
+      bonus.style.fontWeight = '800';
+      bonus.style.color = ok ? '#7cf5ff' : '#8fa3d9';
+      bonus.style.marginTop = '3px';
+      bonus.textContent = ok ? styleCombatLine(st) : '';
+      el.appendChild(bonus);
+      const tip = document.createElement('div');
+      tip.style.fontSize = '10px';
+      tip.style.opacity = '0.72';
+      tip.style.marginTop = '4px';
+      tip.style.lineHeight = '1.35';
+      tip.textContent = st.tooltip || st.hint;
+      el.appendChild(tip);
       const sub = document.createElement('div');
       sub.style.fontSize = '11px';
       sub.style.fontWeight = '600';

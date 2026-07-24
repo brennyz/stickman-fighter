@@ -32,6 +32,7 @@ class Game {
         rosterId: 'hero',
       });
       applyPlayerStyle(this.player);
+      applyStyleBonusesToPlayer(this, this.player);
       this.petDmgMul = 1;
       this.petEnergyMul = 1;
       this.petCritBonus = 0;
@@ -197,6 +198,9 @@ class Game {
     }
     if (this.petShieldWave > 0 && this.player) {
       this.playerShieldT = Math.max(this.playerShieldT, this.petShieldWave);
+    }
+    if (this.styleShieldWave > 0 && this.player) {
+      this.playerShieldT = Math.max(this.playerShieldT, this.styleShieldWave);
     }
     if (bossWave) {
       this.banner('BAAS-GOLF!', 1.8, '#ff6b6b', 50);
@@ -1111,6 +1115,9 @@ class Game {
 
   /* -------------------------- GEDEELDE LOGICA ------------------------- */
   grantXP(n) {
+    if (this.mode === 'adventure' && this.styleXpMul && this.styleXpMul !== 1) {
+      n = Math.round(n * this.styleXpMul);
+    }
     this.sessionXP += n;
     save.xp += n;
     while (save.xp >= xpNeed(save.lvl)) {
@@ -1163,10 +1170,13 @@ class Game {
       AudioSys.sfx('rinnegan');
       if (f.isPlayer || f.playerSlot) haptic(20);
     } else {
-      // Rasengan: zware draaiende chakra-bol
+      // Rasengan: horizontale chakra-bol
+      const face = f.face || 1;
+      const speed = 420;
+      const y0 = f.y - 50;
       this.spawnProjectile(Object.assign({
-        x: f.x + f.face * 40, y: y0,
-        vx: aim.vx, vy: aim.vy * 0.9, r: 26, dmg,
+        x: f.x + face * 40, y: y0,
+        vx: face * speed, vy: 0, r: 28, dmg,
         from, kind: 'rasengan', pierce: true, hitSet: new Set(), life: 1.4,
         spin: 0,
       }, critMeta));
@@ -1297,13 +1307,17 @@ class Game {
             this.floater(f.x + f.face * 30, f.y - 120, `COMBO ×${this.combo}!`, '#ffd75e', 17);
           }
         }
-        const buff = f.isPlayer ? (this.dmgBuffMul || 1) * (this.stageDmgMul || 1) : 1;
+        const buff = f.isPlayer ? (this.dmgBuffMul || 1) * (this.stageDmgMul || 1) * (this.styleAdvDmgMul || 1) : 1;
         const hitRoll = rollHitDamage(f, spec, comboMul * buff);
         if (hitRoll.crit) applyCritFx(this, m.x, m.y);
         const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         applyHitConfirmFx(this, hx, hy, spec);
+        if (f.isPlayer && this.styleLightning && !fxLite()) {
+          this.burst(m.x, m.y - m.size * 0.5, f.style?.accent || '#7cf5ff', 5, { kind: 'spark', size: 2 });
+          if (f.style?.id === 'cyber') spawnFxRing(this, m.x, m.y - m.size * 0.3, '#4ecf6a', 6);
+        }
         if (spec.dmg >= 18) this.shake(3, 0.11);
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.12);
         if ((f.isPlayer || f.playerSlot) && spec.kind === 'weapon' && spec.moveIdx === 2 && !isThrowWeapon(f.weapon.id)) {

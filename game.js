@@ -132,9 +132,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.47';
+const APP_VERSION = '1.17.48';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 173;
+const SW_CACHE_REV = 174;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   advIsland: 0, advFails: {}, advMasterBuff: null,
@@ -454,6 +454,9 @@ function rollHitDamage(attacker, spec, mult) {
   }
   if (attacker.isPlayer && typeof game !== 'undefined' && game && game.petCritBonus) {
     critChance += game.petCritBonus;
+  }
+  if (attacker.isPlayer && typeof game !== 'undefined' && game && game.styleCritBonus) {
+    critChance += game.styleCritBonus;
   }
   critChance = clamp(critChance, 0, 0.48);
   let dmg = spec.dmg * rand(0.9, 1.15) * mult;
@@ -2570,7 +2573,7 @@ function sanitizeWeaponSpec(spec) {
   spec.active = Math.max(0.04, spec.active || 0.08);
   spec.recover = Math.max(0.06, spec.recover || 0.12);
   spec.range = Math.max(24, spec.range || 40);
-  spec.r = Math.max(18, spec.r || 24);
+  spec.r = Math.max(22, spec.r || 24);
   if (spec.moveHitY != null) spec.moveHitY = clamp(spec.moveHitY, -32, 24);
   return spec;
 }
@@ -2589,39 +2592,80 @@ function drawWeaponStylePips(c, x, y, fighter) {
 /* ============================== STIJLEN ================================ */
 const STYLES = [
   { id: 'classic', name: 'Klassiek', body: '#f2f5ff', accent: '#3db8ff', bandana: null,
-    needLvl: 1, hint: 'Standaard ninja' },
+    needLvl: 1, hint: 'Standaard ninja',
+    tooltip: 'Basis ninja — geen bonus, wel de snelste unlock.',
+    bonus: 'Geen combat-bonus' },
   { id: 'konoha', name: 'Konoha bandana', body: '#f2f5ff', accent: '#43b25b', bandana: '#2d6b36', plate: '#dfe8ff',
-    needLvl: 5, hint: 'Unlock op Lv 5' },
+    needLvl: 5, hint: 'Unlock op Lv 5',
+    tooltip: 'Leaf-dorp headband. Iets meer max HP — standvastig in lange levels.',
+    bonus: '+5 max HP', mods: { maxHp: 5 } },
   { id: 'chakra', name: 'Chakra gloed', body: '#e8f4ff', accent: '#7cf5ff', bandana: '#3db8ff', glow: true,
-    needTrain: 3, hint: 'Win 3× training' },
+    needTrain: 3, hint: 'Win 3× training',
+    tooltip: 'Blauwe chakra-aura. Chakra laadt sneller — vaker Rasengan/Chidori.',
+    bonus: '+8% chakra-regen', mods: { energyMul: 1.08 } },
   { id: 'akatsuki', name: 'Rode mantel', body: '#1a1424', accent: '#e04f4f', bandana: '#e04f4f', coat: true,
-    needLvl: 12, hint: 'Unlock op Lv 12' },
+    needLvl: 12, hint: 'Unlock op Lv 12',
+    tooltip: 'Rode mantel — agressieve slagen. Meer schade op melee en wapens.',
+    bonus: '+4% schade', mods: { dmgMul: 1.04 } },
   { id: 'shadow', name: 'Schaduw-ninja', body: '#8fa3d9', accent: '#b06ae0', bandana: '#2a1840',
-    needLvl: 15, hint: 'Unlock op Lv 15' },
+    needLvl: 15, hint: 'Unlock op Lv 15',
+    tooltip: 'Schaduw-stappen. Extra crit-kans op alle hits.',
+    bonus: '+3% crit', mods: { critBonus: 0.03 } },
   { id: 'guvve', name: 'Guvvedukkie', body: '#43b25b', accent: '#ffe259', bandana: '#2a8a38', duck: true,
-    needDex: 8, hint: '8 monsters in boek' },
+    needDex: 8, hint: '8 monsters in boek',
+    tooltip: 'Quack-cosplay. Bonus XP bij avontuur-kills — licht, geen grind.',
+    bonus: '+6% avontuur-XP', mods: { xpMul: 1.06 } },
   { id: 'gold', name: 'Legendarisch', body: '#ffd75e', accent: '#c97a20', bandana: '#ffb830', glow: true,
-    needLvl: 25, hint: 'Unlock op Lv 25' },
+    needLvl: 25, hint: 'Unlock op Lv 25',
+    tooltip: 'Gouden outline + gloed. Sterkere knockback op kicks en specials.',
+    bonus: '+10% knockback', mods: { kbMul: 1.1 } },
   { id: 'sand', name: 'Woestijn', body: '#e8c98a', accent: '#c97a20', bandana: '#8a6030',
-    needLvl: 8, hint: 'Unlock op Lv 8' },
+    needLvl: 8, hint: 'Unlock op Lv 8',
+    tooltip: 'Zandmantel — minder schade bij hits én sterker blok. Tank-stijl voor omringing.',
+    bonus: '−14% schade · blok −25% chip', mods: { defMul: 0.86, blockMul: 0.75 } },
   { id: 'samurai', name: 'Samurai', body: '#2a2a35', accent: '#e04f4f', bandana: '#1a1a22', topknot: true,
-    needLvl: 20, hint: 'Unlock op Lv 20' },
-  { id: 'cyber', name: 'Cyber-ninja', body: '#1a2040', accent: '#7cf5ff', bandana: '#4ecf6a', visor: true,
-    needLvl: 18, hint: 'Unlock op Lv 18' },
+    needLvl: 20, hint: 'Unlock op Lv 20',
+    tooltip: 'Topknot + katana-houding. Wapen-combo’s raken iets verder.',
+    bonus: '+8% wapen-reach', mods: { weaponRange: 1.08 } },
+  { id: 'cyber', name: 'Cyber-ninja', body: '#1a2040', accent: '#7cf5ff', bandana: '#4ecf6a', visor: true, lightning: true,
+    needLvl: 18, hint: 'Unlock op Lv 18',
+    tooltip: 'Neon-visier + bliksem-flits bij melee. Snellere chakra en visuele chain-sparks.',
+    bonus: 'Lightning FX · +6% chakra', mods: { energyMul: 1.06, lightning: true, dmgMul: 1.02 } },
   { id: 'fox', name: 'Vossen-ninja', body: '#ff8c42', accent: '#ffe259', bandana: '#d05a1e', fox: true,
-    needDex: 12, hint: '12 monsters in boek' },
-  { id: 'storm', name: 'Stormgeest', body: '#dfe8ff', accent: '#6fd7ff', bandana: '#2a7fc0', glow: true,
-    needTrain: 5, hint: 'Win 5× training' },
+    needDex: 12, hint: '12 monsters in boek',
+    tooltip: 'Vossenoren — sneller op de grond. Ideaal voor kiting en shuriken.',
+    bonus: '+5% loopsnelheid', mods: { speedMul: 1.05 } },
+  { id: 'storm', name: 'Stormgeest', body: '#dfe8ff', accent: '#6fd7ff', bandana: '#2a7fc0', glow: true, lightning: true,
+    needTrain: 5, hint: 'Win 5× training',
+    tooltip: 'Storm-aura + zachte bliksem. Extra shield bij start van elke golf.',
+    bonus: 'Lightning gloed · +0.8s shield/golf', mods: { shieldWave: 0.8, lightning: true } },
   { id: 'void', name: 'Void-waker', body: '#2a1840', accent: '#ff6b9d', bandana: '#5a1040', coat: true,
-    needLvl: 40, hint: 'Unlock op Lv 40' },
+    needLvl: 40, hint: 'Unlock op Lv 40',
+    tooltip: 'Void-mantel — zwaardere jutsu. Specials (Rasengan/Chidori/Rinnegan) raken harder.',
+    bonus: '+8% jutsu-schade', mods: { jutsuMul: 1.08 } },
   { id: 'hunter', name: 'Jagerlook', body: '#6b5344', accent: '#5ad06a', bandana: '#3d5c32', hunter: true,
-    needDexKills: 75, hint: '75 kills in monsterboek' },
+    needDexKills: 75, hint: '75 kills in monsterboek',
+    tooltip: 'Jager-cape + groene accenten. Bonus schade vs monsters in avontuur.',
+    bonus: '+6% vs monsters', mods: { advDmgMul: 1.06 } },
   { id: 'crystal', name: 'Kristallijn', body: '#e8f7ff', accent: '#6fd7ff', bandana: '#2f7fc0', glow: true, crystal: true,
-    needDexTiers: 4, hint: '4 rariteiten in monsterboek' },
+    needDexTiers: 4, hint: '4 rariteiten in monsterboek',
+    tooltip: 'Kristallen shard — reflecterende gloed. Korte shield elke golf.',
+    bonus: '+1.0s shield/golf', mods: { shieldWave: 1.0 } },
   { id: 'tome', name: 'Boekmeester', body: '#f5efe6', accent: '#c98850', bandana: '#6b5344', tome: true,
-    needDexHalf: true, hint: 'Helft van het monsterboek' },
+    needDexHalf: true, hint: 'Helft van het monsterboek',
+    tooltip: 'Monsterboek op je rug. Meer HP-bonus bij nieuwe dex-ontdekkingen (visueel + klein HP-top-up).',
+    bonus: '+4 max HP · boek-wijsheid', mods: { maxHp: 4, dexHpBonus: 1 } },
 ];
 const styleById = id => STYLES.find(s => s.id === id) || STYLES[0];
+
+function styleMods(st) {
+  return (st && st.mods) ? st.mods : {};
+}
+
+function styleCombatLine(st) {
+  return st.bonus || st.hint || '';
+}
+
 function styleUnlocked(st) {
   if (st.id === 'classic') return true;
   if (styleSkillGated(st)) return false;
@@ -2634,6 +2678,36 @@ function styleUnlocked(st) {
       dexCount() >= Math.ceil(SPECIES_ORDER.length / 2)) return true;
   return false;
 }
+
+function applyStyleBonusesToPlayer(game, player) {
+  if (!player) return;
+  const st = styleById(save.style || 'classic');
+  const m = styleMods(st);
+  game.styleDefMul = m.defMul || 1;
+  game.styleDmgMul = m.dmgMul || 1;
+  game.styleAdvDmgMul = m.advDmgMul || 1;
+  game.styleEnergyMul = m.energyMul || 1;
+  game.styleCritBonus = m.critBonus || 0;
+  game.styleKbMul = m.kbMul || 1;
+  game.styleJutsuMul = m.jutsuMul || 1;
+  game.styleShieldWave = m.shieldWave || 0;
+  game.styleBlockMul = m.blockMul || 1;
+  game.styleXpMul = m.xpMul || 1;
+  game.styleLightning = !!(st.lightning || m.lightning);
+  if (m.maxHp) {
+    player.maxhp += m.maxHp;
+    player.hp += m.maxHp;
+  }
+  if (m.speedMul && m.speedMul !== 1) {
+    player.speed = Math.round(player.speed * m.speedMul);
+  }
+  if (m.weaponRange && m.weaponRange !== 1) {
+    game.styleWeaponRange = m.weaponRange;
+  } else {
+    game.styleWeaponRange = 1;
+  }
+}
+
 function applyPlayerStyle(fighter) {
   const st = styleById(save.style || 'classic');
   if (!styleUnlocked(st)) { save.style = 'classic'; persist(); }
@@ -2642,6 +2716,18 @@ function applyPlayerStyle(fighter) {
   fighter.lineW = st.id === 'gold' ? 5 : 4.5;
 }
 
+function applyStyleToSpec(fighter, spec) {
+  if (!spec || !fighter || !fighter.isPlayer) return spec;
+  const m = styleMods(fighter.style);
+  if (m.dmgMul && m.dmgMul !== 1) spec.dmg = Math.round(spec.dmg * m.dmgMul);
+  if (m.kbMul && m.kbMul !== 1) spec.kb = (spec.kb || 0) * m.kbMul;
+  if (m.weaponRange && spec.kind === 'weapon') {
+    spec.range = (spec.range || 40) * m.weaponRange;
+    spec.r = (spec.r || 24) * Math.sqrt(m.weaponRange);
+  }
+  if (m.jutsuMul && spec.kind === 'special') spec.dmg = Math.round(spec.dmg * m.jutsuMul);
+  return spec;
+}
 /* --- src/systems/versus.js --- */
 /* ========================== VERSUS / 2 SPELERS ========================== */
 /** Saga-hints: parodie-vibes, geen officiële manga/IP-namen. */
@@ -2908,7 +2994,7 @@ const MOVE_DIGITAL_ACCEL_MUL = 2.4;
 const MOVE_STOP_DECAY = 0.0018;
 const MOVE_AIR_MUL = 0.78;
 const MOVE_ATTACK_RECOVER_MUL = 0.76;
-const MOVE_HURT_MUL = 0.42;
+const MOVE_HURT_MUL = 0.78;
 
 function padDigitalMove(pad) {
   if (!pad) return 0;
@@ -3156,7 +3242,7 @@ const GIANT_DMG_MUL = 1.14;
 const GIANT_XP_MUL = 1.3;
 /** Nood-ontsnapping als je omringd / stunlocked bent — tik midden-KETS! */
 const KETSBAM_DETECT_R = 148;
-const KETSBAM_NEAR_MIN = 4;
+const KETSBAM_NEAR_MIN = 3;
 const KETSBAM_BLAST_R = 192;
 const KETSBAM_CD = 9;
 const KETSBAM_INVULN = 1.15;
@@ -3213,10 +3299,10 @@ function applyHitStop(game, spec, opts) {
   }
   if (opts.playerHurt) {
     const dmg = spec && spec.dmg != null ? spec.dmg : 8;
-    let base = dmg >= 18 ? 0.04 : 0.026;
-    if (opts.heavy) base += 0.006;
+    let base = dmg >= 18 ? 0.018 : 0.01;
+    if (opts.heavy) base += 0.004;
     if (game.mode === 'versus') base += 0.004;
-    game.freezeT = Math.max(game.freezeT, Math.min(base, 0.048));
+    game.freezeT = Math.max(game.freezeT, Math.min(base, 0.028));
     if (opts.heavy || dmg >= 18) {
       try {
         const x = game.player ? game.player.x : (typeof W !== 'undefined' ? W * 0.5 : 0);
@@ -6039,10 +6125,10 @@ class Fighter {
     let spec;
     switch (kind) {
       case 'punch':
-        spec = { kind, windup: 0.07, active: 0.09, recover: 0.12, range: 40, r: 24, dmg: this.baseDmg * 0.7, kb: 160 };
+        spec = { kind, windup: 0.07, active: 0.09, recover: 0.12, range: 48, r: 30, dmg: this.baseDmg * 0.7, kb: 160 };
         break;
       case 'kick':
-        spec = { kind, windup: 0.11, active: 0.11, recover: 0.2,  range: 50, r: 26, dmg: this.baseDmg * 1.1, kb: 340 };
+        spec = { kind, windup: 0.11, active: 0.11, recover: 0.2,  range: 58, r: 32, dmg: this.baseDmg * 1.1, kb: 340 };
         break;
       case 'weapon': {
         const wid = (w && w.id) || 'vuist';
@@ -6050,7 +6136,7 @@ class Fighter {
         const move = weaponMoveDef(wid, moveIdx);
         spec = {
           kind, windup: 0.13 / (w.speed || 1), active: 0.1 / (w.speed || 1), recover: 0.2 / (w.speed || 1),
-          range: (w.range || 40) + 14, r: 26 + (w.range || 40) * 0.22, dmg: this.baseDmg * (w.dmg || 1), kb: 260,
+          range: (w.range || 40) + 18, r: 30 + (w.range || 40) * 0.26, dmg: this.baseDmg * (w.dmg || 1), kb: 260,
           moveIdx, move,
         };
         if (move) {
@@ -6068,7 +6154,7 @@ class Fighter {
         const j = fighterJutsuKind(this);
         const jMul = j === 'rinnegan' ? 2.55 : j === 'chidori' ? (this.isRobot ? 2.35 : 2.72) : 2.85;
         spec = {
-          kind, windup: j === 'rinnegan' ? 0.52 : 0.48, active: 0.12, recover: 0.28, range: 55, r: 36,
+          kind, windup: j === 'rinnegan' ? 0.52 : 0.48, active: 0.12, recover: 0.28, range: 62, r: 44,
           dmg: this.baseDmg * jMul, kb: j === 'rinnegan' ? 460 : 520, jutsu: j,
         };
         break;
@@ -6078,7 +6164,8 @@ class Fighter {
     }
     if (spec && spec.kind === 'weapon') spec = sanitizeWeaponSpec(spec);
     if (spec && spec.kind === 'weapon' && (w.masterSword || w.id === 'master_sword')) spec.unblockable = true;
-    return applySignatureToSpec(this, spec);
+    spec = applySignatureToSpec(this, spec);
+    return applyStyleToSpec(this, spec);
   }
 
   startAttack(kind, game) {
@@ -6141,7 +6228,9 @@ class Fighter {
   }
 
   doDash(game, dir) {
-    if (!this.alive || this.dashCd > 0 || this.attack || Math.abs(dir) < 0.1) return;
+    if (!this.alive || this.dashCd > 0 || Math.abs(dir) < 0.1) return;
+    if (this.attack && this.hurtT <= 0) return;
+    if (this.hurtT > 0) this.hurtT = 0;
     resetWeaponCombo(this);
     this.dashCd = 0.85;
     this.invulnT = Math.max(this.invulnT, 0.14);
@@ -6319,7 +6408,8 @@ class Fighter {
     this.afterimages = this.afterimages.filter(a => a.life > 0);
 
     if (canAct && it.subst) this.doSubstitution(game);
-    if (canAct && it.dash) this.doDash(game, it.move || this.face);
+    const canDash = canAct || ((this.isPlayer || this.playerSlot) && this.hurtT > 0 && this.onGround);
+    if (canDash && it.dash) this.doDash(game, it.move || this.face);
 
     if (canAct) {
       if (it.punch) this.startAttack('punch', game);
@@ -6393,7 +6483,8 @@ class Fighter {
     if (this.isPlayer || this.playerSlot) {
       const stageMul = (typeof game !== 'undefined' && game && game.stageEnergyMul) ? game.stageEnergyMul : 1;
       const petMul = (typeof game !== 'undefined' && game && game.petEnergyMul) ? game.petEnergyMul : 1;
-      const rate = (this.attack ? 4.2 : 2.8) * stageMul * petMul;
+      const styleMul = (typeof game !== 'undefined' && game && game.styleEnergyMul) ? game.styleEnergyMul : 1;
+      const rate = (this.attack ? 4.2 : 2.8) * stageMul * petMul * styleMul;
       const prevE = this._energyPrev == null ? this.energy : this._energyPrev;
       this.energy = clamp(this.energy + dt * rate, 0, 100);
       if (this.energy >= 100 && prevE < 100) {
@@ -6427,7 +6518,8 @@ class Fighter {
       return 0;
     }
     if (this.blocking && !opts.unblockable) {
-      dmg = Math.max(1, Math.round(dmg * 0.15));
+      const blockMul = (this.isPlayer && game && game.styleBlockMul) ? game.styleBlockMul : 1;
+      dmg = Math.max(1, Math.round(dmg * 0.15 * blockMul));
       AudioSys.sfx('block');
       const atk = opts.attacker && opts.attacker.attack;
       const parry = atk && atk.t >= atk.windup && atk.t <= atk.windup + 0.16;
@@ -6446,15 +6538,18 @@ class Fighter {
       game.floater(this.x, this.y - 115, 'Schild!', '#9fd8ff', 13);
     }
     dmg = Math.round(dmg);
+    if (this.isPlayer && game && game.styleDefMul && game.styleDefMul !== 1) {
+      dmg = Math.max(1, Math.round(dmg * game.styleDefMul));
+    }
     this.hp -= dmg;
-    this.hurtT = dmg >= 18 ? 0.28 : 0.24;
+    this.hurtT = dmg >= 18 ? 0.16 : 0.12;
     this.hitFlashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.18 : 0.14);
     this.attack = null;
     const kbScaled = scaleKnockback(kbx, dmg, { heavy: dmg >= 18 });
     this.vx = kbScaled;
     this.vy = Math.min(this.vy, -120);
     if (this.isPlayer || this.playerSlot) {
-      this.invulnT = Math.max(this.invulnT, dmg >= 18 ? 0.26 : 0.22);
+      this.invulnT = Math.max(this.invulnT, dmg >= 18 ? 0.48 : 0.40);
       resetWeaponCombo(this);
       if (game) applyHitStop(game, { kind: 'punch', dmg }, { playerHurt: true, heavy: dmg >= 18 });
     }
@@ -6755,6 +6850,33 @@ class Fighter {
       c.lineWidth = 1.2;
       c.strokeRect(hx - 18, hy - 2, 7, 10);
     }
+    if (st.lightning && !motionReduced()) {
+      const pulse = Math.sin(this.animT * 14) * 0.5 + 0.5;
+      if (pulse > 0.35 || st.id === 'cyber') {
+        c.save();
+        c.strokeStyle = st.id === 'cyber' ? '#7cf5ff' : '#6fd7ff';
+        c.shadowColor = st.id === 'cyber' ? '#4ecf6a' : '#7cf5ff';
+        c.shadowBlur = st.id === 'cyber' ? 10 : 6;
+        c.lineWidth = st.id === 'cyber' ? 2 : 1.4;
+        c.globalAlpha = 0.55 + pulse * 0.35;
+        const lx = hx + (st.id === 'cyber' ? 14 : -12);
+        const ly = hy - 8;
+        c.beginPath();
+        c.moveTo(hx, hy - 10);
+        c.lineTo(hx + 4, hy - 4);
+        c.lineTo(hx - 2, hy + 2);
+        c.lineTo(lx, ly);
+        c.stroke();
+        if (st.id === 'cyber' && pulse > 0.6) {
+          c.beginPath();
+          c.moveTo(hx - 6, hy - 14);
+          c.lineTo(hx + 8, hy - 18);
+          c.lineTo(hx + 2, hy - 6);
+          c.stroke();
+        }
+        c.restore();
+      }
+    }
   }
 
   drawRobotHead(c, hx, hy) {
@@ -6900,14 +7022,14 @@ class Monster {
 
     // contactschade
     if (this.atkCD <= 0 || this.dashT > 0) {
-      const rr = (this.size + p.bodyR) * 0.9;
+      const rr = (this.size + p.bodyR) * 0.82;
       if ((p.x - this.x) ** 2 + (p.bodyY - this.y) ** 2 < rr * rr) {
         const d = this.dashT > 0 ? this.dmg * 1.3 : this.dmg;
-        if (p.takeDamage(d, dir * 300, game) > 0) {
+        if (p.takeDamage(d, dir * 180, game) > 0) {
           game.shake(4, 0.15);
           applyHitStop(game, { kind: 'punch', dmg: d }, { playerHurt: true, heavy: d >= 18 });
         }
-        this.atkCD = Math.max(this.atkCD, 1.0);
+        this.atkCD = Math.max(this.atkCD, 1.55);
       }
     }
   }
@@ -8023,6 +8145,7 @@ class Game {
         rosterId: 'hero',
       });
       applyPlayerStyle(this.player);
+      applyStyleBonusesToPlayer(this, this.player);
       this.petDmgMul = 1;
       this.petEnergyMul = 1;
       this.petCritBonus = 0;
@@ -8188,6 +8311,9 @@ class Game {
     }
     if (this.petShieldWave > 0 && this.player) {
       this.playerShieldT = Math.max(this.playerShieldT, this.petShieldWave);
+    }
+    if (this.styleShieldWave > 0 && this.player) {
+      this.playerShieldT = Math.max(this.playerShieldT, this.styleShieldWave);
     }
     if (bossWave) {
       this.banner('BAAS-GOLF!', 1.8, '#ff6b6b', 50);
@@ -9102,6 +9228,9 @@ class Game {
 
   /* -------------------------- GEDEELDE LOGICA ------------------------- */
   grantXP(n) {
+    if (this.mode === 'adventure' && this.styleXpMul && this.styleXpMul !== 1) {
+      n = Math.round(n * this.styleXpMul);
+    }
     this.sessionXP += n;
     save.xp += n;
     while (save.xp >= xpNeed(save.lvl)) {
@@ -9154,10 +9283,13 @@ class Game {
       AudioSys.sfx('rinnegan');
       if (f.isPlayer || f.playerSlot) haptic(20);
     } else {
-      // Rasengan: zware draaiende chakra-bol
+      // Rasengan: horizontale chakra-bol
+      const face = f.face || 1;
+      const speed = 420;
+      const y0 = f.y - 50;
       this.spawnProjectile(Object.assign({
-        x: f.x + f.face * 40, y: y0,
-        vx: aim.vx, vy: aim.vy * 0.9, r: 26, dmg,
+        x: f.x + face * 40, y: y0,
+        vx: face * speed, vy: 0, r: 28, dmg,
         from, kind: 'rasengan', pierce: true, hitSet: new Set(), life: 1.4,
         spin: 0,
       }, critMeta));
@@ -9288,13 +9420,17 @@ class Game {
             this.floater(f.x + f.face * 30, f.y - 120, `COMBO ×${this.combo}!`, '#ffd75e', 17);
           }
         }
-        const buff = f.isPlayer ? (this.dmgBuffMul || 1) * (this.stageDmgMul || 1) : 1;
+        const buff = f.isPlayer ? (this.dmgBuffMul || 1) * (this.stageDmgMul || 1) * (this.styleAdvDmgMul || 1) : 1;
         const hitRoll = rollHitDamage(f, spec, comboMul * buff);
         if (hitRoll.crit) applyCritFx(this, m.x, m.y);
         const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         applyHitConfirmFx(this, hx, hy, spec);
+        if (f.isPlayer && this.styleLightning && !fxLite()) {
+          this.burst(m.x, m.y - m.size * 0.5, f.style?.accent || '#7cf5ff', 5, { kind: 'spark', size: 2 });
+          if (f.style?.id === 'cyber') spawnFxRing(this, m.x, m.y - m.size * 0.3, '#4ecf6a', 6);
+        }
         if (spec.dmg >= 18) this.shake(3, 0.11);
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.12);
         if ((f.isPlayer || f.playerSlot) && spec.kind === 'weapon' && spec.moveIdx === 2 && !isThrowWeapon(f.weapon.id)) {
@@ -12686,6 +12822,15 @@ const UI = {
   },
 
   renderStyle() {
+    const sumEl = document.getElementById('styleSummary');
+    if (sumEl) {
+      const unlocked = STYLES.filter(s => styleUnlocked(s)).length;
+      const active = styleById(save.style || 'classic');
+      sumEl.style.display = 'block';
+      sumEl.innerHTML =
+        `Outfits <b>${unlocked}/${STYLES.length}</b> · actief <b>${active.name}</b>` +
+        `<div style="margin-top:6px;font-size:12px;opacity:.85">Elke stijl heeft een eigen bonus — hover of lees de tooltip. Cosmetisch + lichte combat-perks.</div>`;
+    }
     const grid = document.getElementById('styleGrid');
     if (!grid) return;
     grid.innerHTML = '';
@@ -12694,6 +12839,7 @@ const UI = {
       const el = document.createElement('div');
       el.className = 'style-card' + (save.style === st.id ? ' sel' : '') + (ok ? '' : ' locked');
       el.style.borderColor = ok ? st.accent + '88' : '';
+      el.title = st.tooltip || st.hint || st.name;
       const cv = document.createElement('canvas');
       cv.width = 72; cv.height = 72;
       const cc = cv.getContext('2d');
@@ -12707,6 +12853,20 @@ const UI = {
       cap.style.color = st.accent;
       cap.textContent = st.name;
       el.appendChild(cap);
+      const bonus = document.createElement('div');
+      bonus.style.fontSize = '11px';
+      bonus.style.fontWeight = '800';
+      bonus.style.color = ok ? '#7cf5ff' : '#8fa3d9';
+      bonus.style.marginTop = '3px';
+      bonus.textContent = ok ? styleCombatLine(st) : '';
+      el.appendChild(bonus);
+      const tip = document.createElement('div');
+      tip.style.fontSize = '10px';
+      tip.style.opacity = '0.72';
+      tip.style.marginTop = '4px';
+      tip.style.lineHeight = '1.35';
+      tip.textContent = st.tooltip || st.hint;
+      el.appendChild(tip);
       const sub = document.createElement('div');
       sub.style.fontSize = '11px';
       sub.style.fontWeight = '600';

@@ -125,14 +125,14 @@ class Monster {
 
     // contactschade
     if (this.atkCD <= 0 || this.dashT > 0) {
-      const rr = (this.size + p.bodyR) * 0.9;
+      const rr = (this.size + p.bodyR) * 0.82;
       if ((p.x - this.x) ** 2 + (p.bodyY - this.y) ** 2 < rr * rr) {
         const d = this.dashT > 0 ? this.dmg * 1.3 : this.dmg;
-        if (p.takeDamage(d, dir * 300, game) > 0) {
+        if (p.takeDamage(d, dir * 180, game) > 0) {
           game.shake(4, 0.15);
           applyHitStop(game, { kind: 'punch', dmg: d }, { playerHurt: true, heavy: d >= 18 });
         }
-        this.atkCD = Math.max(this.atkCD, 1.0);
+        this.atkCD = Math.max(this.atkCD, 1.55);
       }
     }
   }

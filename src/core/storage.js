@@ -3,9 +3,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.47';
+const APP_VERSION = '1.17.48';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 173;
+const SW_CACHE_REV = 174;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   advIsland: 0, advFails: {}, advMasterBuff: null,
@@ -325,6 +325,9 @@ function rollHitDamage(attacker, spec, mult) {
   }
   if (attacker.isPlayer && typeof game !== 'undefined' && game && game.petCritBonus) {
     critChance += game.petCritBonus;
+  }
+  if (attacker.isPlayer && typeof game !== 'undefined' && game && game.styleCritBonus) {
+    critChance += game.styleCritBonus;
   }
   critChance = clamp(critChance, 0, 0.48);
   let dmg = spec.dmg * rand(0.9, 1.15) * mult;
