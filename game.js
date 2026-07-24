@@ -133,9 +133,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.65';
+const APP_VERSION = '1.17.68';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 191;
+const SW_CACHE_REV = 194;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -545,15 +545,49 @@ function projStrikeFighter(game, p, tgt, col) {
   else if (!p.pierce) p.life = 0;
 }
 
-function loadSave() {
-  const parsed = readSaveJson(localStorage.getItem(SAVE_KEY));
-  if (parsed) return parsed;
-  const backup = readSaveJson(localStorage.getItem(SAVE_BACKUP_KEY));
+/** Vergelijk twee saves — hoogste score wint (voorkomt stille progressie-verlies). */
+function saveProgressScore(s) {
+  if (!s || typeof s !== 'object') return 0;
+  const unlocked = Math.floor(Number(s.unlocked) || 1);
+  const lvl = Math.floor(Number(s.lvl) || 1);
+  const xp = Math.floor(Number(s.xp) || 0);
+  const dex = Object.keys(s.dex || {}).length;
+  let dexKills = 0;
+  for (const v of Object.values(s.dex || {})) dexKills += Math.floor(Number(v) || 0);
+  const ach = Object.keys(s.achievements || {}).length;
+  const st = s.stats || {};
+  const statSum = (st.advWins || 0) + (st.kills || 0) + (st.vsWins || 0) + (st.bossKills || 0);
+  let starSum = 0;
+  for (const v of Object.values(s.stars || {})) starSum += Math.floor(Number(v) || 0);
+  return unlocked * 1e12 + lvl * 1e9 + xp * 1e6 + ach * 1e5 + dex * 1e4
+    + dexKills * 1e3 + starSum * 1e2 + statSum;
+}
+
+function pickBestSave(primary, backup) {
+  if (primary && backup) {
+    const pScore = saveProgressScore(primary);
+    const bScore = saveProgressScore(backup);
+    if (bScore > pScore) {
+      window.__sfRecoveredBackup = true;
+      return backup;
+    }
+    return primary;
+  }
+  if (primary) return primary;
   if (backup) {
     window.__sfRecoveredBackup = true;
     return backup;
   }
-  return Object.assign({}, DEFAULT_SAVE);
+  return null;
+}
+
+function loadSave() {
+  let primaryRaw = null;
+  let backupRaw = null;
+  try { primaryRaw = localStorage.getItem(SAVE_KEY); } catch (_) {}
+  try { backupRaw = localStorage.getItem(SAVE_BACKUP_KEY); } catch (_) {}
+  const best = pickBestSave(readSaveJson(primaryRaw), readSaveJson(backupRaw));
+  return best || Object.assign({}, DEFAULT_SAVE);
 }
 
 function readSaveJson(raw) {
@@ -587,6 +621,29 @@ function userToast(msg, ms) {
   }
 }
 
+function writeSaveStamp(json) {
+  try {
+    localStorage.setItem(SAVE_STAMP_KEY, JSON.stringify({
+      at: new Date().toISOString(),
+      bytes: json.length,
+      app: APP_VERSION,
+    }));
+  } catch (_) {}
+}
+
+/** Alleen hoofd-save schrijven — backup intact laten (nieuwe start / reset). */
+function persistPrimaryOnly() {
+  try {
+    if (!save || typeof save !== 'object') return false;
+    const json = JSON.stringify(save);
+    localStorage.setItem(SAVE_KEY, json);
+    writeSaveStamp(json);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 function persist() {
   try {
     if (!save || typeof save !== 'object') return false;
@@ -598,14 +655,16 @@ function persist() {
       }
     }
     localStorage.setItem(SAVE_KEY, json);
-    try { localStorage.setItem(SAVE_BACKUP_KEY, json); } catch (_) {}
+    let backupOk = false;
     try {
-      localStorage.setItem(SAVE_STAMP_KEY, JSON.stringify({
-        at: new Date().toISOString(),
-        bytes: json.length,
-        app: APP_VERSION,
-      }));
+      localStorage.setItem(SAVE_BACKUP_KEY, json);
+      backupOk = true;
     } catch (_) {}
+    if (!backupOk && !window.__sfBackupWriteWarn) {
+      window.__sfBackupWriteWarn = true;
+      userToast('Backup opslaan mislukt — export save in Instellingen (hoofd-save wel OK)', 5200);
+    }
+    writeSaveStamp(json);
     return true;
   } catch (e) {
     let backupSaved = false;
@@ -656,13 +715,21 @@ function persistOrToast(context) {
   return false;
 }
 
-function restoreSaveFromBackup() {
+function applySaveFromBackupRaw() {
   try {
     const backup = readSaveJson(localStorage.getItem(SAVE_BACKUP_KEY));
     if (!backup) return false;
     save = sanitizeSave(backup);
-    if (!persist()) {
-      userToast('Backup geladen maar opslaan mislukt — export save', 4200);
+    return persist();
+  } catch (_) {
+    return false;
+  }
+}
+
+function restoreSaveFromBackup() {
+  try {
+    if (!applySaveFromBackupRaw()) {
+      userToast('Backup herstellen mislukt — export save als je die hebt', 4200);
       return false;
     }
     checkAchievements();
@@ -684,13 +751,7 @@ function syncBackupFromPrimary() {
     const json = JSON.stringify(clean);
     localStorage.setItem(SAVE_KEY, json);
     localStorage.setItem(SAVE_BACKUP_KEY, json);
-    try {
-      localStorage.setItem(SAVE_STAMP_KEY, JSON.stringify({
-        at: new Date().toISOString(),
-        bytes: json.length,
-        app: APP_VERSION,
-      }));
-    } catch (_) {}
+    writeSaveStamp(json);
     return true;
   } catch (err) {
     sfReportError('syncBackup', err, 'Backup sync mislukt');
@@ -2237,8 +2298,7 @@ function saveStorageDiagnostics() {
   } catch (_) {}
   let drift = false;
   if (primaryParsed && backupParsed) {
-    drift = (primaryParsed.lvl !== backupParsed.lvl)
-      || (primaryParsed.unlocked !== backupParsed.unlocked);
+    drift = saveProgressScore(primaryParsed) !== saveProgressScore(backupParsed);
   }
   const primaryCorrupt = !!(primaryRaw && primaryRaw.length > 0 && !primaryParsed);
   const backupCorrupt = !!(backupRaw && backupRaw.length > 0 && !backupParsed);
@@ -16696,7 +16756,10 @@ if (btnClearSave) btnClearSave.addEventListener('click', () => {
     window.__sfClearConfirm = false;
     try { localStorage.removeItem(SAVE_KEY); } catch (_) {}
     save = sanitizeSave(Object.assign({}, DEFAULT_SAVE));
-    if (!persistOrToast('nieuwe start')) return;
+    if (!persistPrimaryOnly()) {
+      userToast('Opslaan mislukt — probeer opnieuw', 3200);
+      return;
+    }
     AudioSys.sfx('lose');
     UI.renderMenu();
     UI.toast('Nieuwe start — backup staat nog in Instellingen', 4000);
@@ -17295,9 +17358,14 @@ function bootGame() {
     }
   } catch (err) {
     console.error('[Stickman] save sanitize', err);
-    save = Object.assign({}, DEFAULT_SAVE);
-    try { persist(); } catch (_) {}
-    userToast('Save kon niet geladen worden — nieuwe voortgang gestart (export backup als je die had)', 4800);
+    if (applySaveFromBackupRaw()) {
+      window.__sfRecoveredBackup = true;
+      userToast('Save hersteld uit backup na laadfout', 4800);
+    } else {
+      save = Object.assign({}, DEFAULT_SAVE);
+      try { persistPrimaryOnly(); } catch (_) {}
+      userToast('Save kon niet geladen worden — nieuwe voortgang gestart (export backup als je die had)', 4800);
+    }
   }
   safeCall(() => dismissTunnelOverlayIfStatic(), 'overlay');
   safeCall(() => { if (typeof window.sfTunnelNukeOverlay === 'function') window.sfTunnelNukeOverlay(); }, 'nuke');
