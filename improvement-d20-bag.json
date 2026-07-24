@@ -301,6 +301,18 @@
   ],
   "userFeatureLog": [
     {
+      "id": "touch-btn-overlap-fix",
+      "d20Face": null,
+      "userWords": "De knoppen zitten te dicht over elkaar, en werken ze wel?",
+      "versions": [
+        "1.15.4"
+      ],
+      "commits": [],
+      "code": "layoutTouchButtonCluster: 1P 3\u00d72 grid, 2P 2\u00d73 grid, clampButtonsToScreen; punch/jump lagen exact op elkaar (jump onbereikbaar via hitButton first-match)",
+      "status": "done",
+      "note": "off-d20 user feedback; getest op 4 viewports + 2P: 0 overlap, alle knoppen raakbaar, press-dispatch klopt, joystick vrij"
+    },
+    {
       "id": "art-upgrade-scenery",
       "d20Face": null,
       "userWords": "biggest upgrade: scenery and less emoji style, pixel art or free svg, place in all the game, 1/4",

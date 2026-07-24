@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.15.3';
+const APP_VERSION = '1.15.4';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 110;
+const SW_CACHE_REV = 111;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -2869,6 +2869,19 @@ function shiftTouchButtons(buttons, dx) {
   for (const b of buttons) b.x += dx;
 }
 
+/** Knoppen mogen niet buiten de schermranden uitsteken. */
+function clampButtonsToScreen(buttons, H) {
+  let maxBy = -Infinity, maxBx = -Infinity;
+  for (const b of buttons) {
+    maxBy = Math.max(maxBy, b.y + b.r);
+    maxBx = Math.max(maxBx, b.x + b.r);
+  }
+  const overY = maxBy - (H - 4);
+  if (overY > 0) for (const b of buttons) b.y -= overY;
+  const overX = maxBx - (W - 2);
+  if (overX > 0) for (const b of buttons) b.x -= overX;
+}
+
 function layoutTouchButtonCluster(W, H, ui, safe, opts) {
   const side = opts.side || 'p1';
   const dual = !!opts.dual;
@@ -2906,16 +2919,29 @@ function layoutTouchButtonCluster(W, H, ui, safe, opts) {
       const minBx = Math.min(...buttons.map((b) => b.x - b.r));
       if (minBx < joyClear) shiftTouchButtons(buttons, joyClear - minBx);
     } else {
-      const ax = xR;
+      // Nette 3×2 grid zonder overlap (fix: punch/jump lagen op elkaar,
+      // waardoor jump onbereikbaar was — hitButton pakt de eerste match).
+      const gap = Math.max(8, Math.round(10 * ui));
+      const colW = r * 2 + gap;
+      const rowH = r * 2 + gap;
+      const x1 = xR - r;
+      const x2 = x1 - colW;
+      const x3 = x2 - colW * 0.96;
+      const yB = bottomY - r * 0.15;
+      const yT = yB - rowH;
       buttons = [
-        touchBtn('punch', ax - r * 2.05, bottomY - r * 0.15, r),
-        touchBtn('kick', ax - r * 0.55, bottomY - r * 0.82, r),
-        touchBtn('weapon', ax - r * 2.38, bottomY - r * 1.62, r),
-        touchBtn('special', ax - r * 1.12, bottomY - r * 1.92, r),
-        touchBtn('subst', ax - r * 3.35, bottomY - r * 1.28, rs),
-        touchBtn('jump', ax - r * 2.05, bottomY - rs * 0.35, rs),
+        touchBtn('punch', x1, yB, r),
+        touchBtn('kick', x2, yB, r),
+        touchBtn('jump', x3, yB + (r - rs) * 0.4, rs),
+        touchBtn('special', x1, yT, r),
+        touchBtn('weapon', x2, yT, r),
+        touchBtn('subst', x3, yT + (r - rs) * 0.4, rs),
       ];
+      const joyClear = joyHome.x + Math.round(55 * ui) + r * 0.3;
+      const minBx = Math.min(...buttons.map((b) => b.x - b.r));
+      if (minBx < joyClear) shiftTouchButtons(buttons, joyClear - minBx);
     }
+    clampButtonsToScreen(buttons, H);
     return { joyHome, buttons };
   }
 
@@ -2954,23 +2980,37 @@ function layoutTouchButtonCluster(W, H, ui, safe, opts) {
       if (maxBx > W - 6) shiftTouchButtons(buttons, -(maxBx - (W - 6)));
     }
   } else {
-    const ax = zoneEdge;
-    buttons = side === 'p1' ? [
-      touchBtn('punch', ax - r * 0.55, bottomY - r * 0.15, r),
-      touchBtn('kick', ax - r * 1.45, bottomY - r * 0.45, r),
-      touchBtn('weapon', ax - r * 0.25, bottomY - r * 1.35, r),
-      touchBtn('special', ax - r * 1.15, bottomY - r * 1.55, r),
-      touchBtn('subst', ax + r * 0.35, bottomY - r * 1.05, rs),
-      touchBtn('jump', ax + r * 0.45, bottomY + r * 0.05, rs),
-    ] : [
-      touchBtn('punch', ax + r * 0.55, bottomY - r * 0.15, r),
-      touchBtn('kick', ax + r * 1.45, bottomY - r * 0.45, r),
-      touchBtn('weapon', ax + r * 0.25, bottomY - r * 1.35, r),
-      touchBtn('special', ax + r * 1.15, bottomY - r * 1.55, r),
-      touchBtn('subst', ax - r * 0.35, bottomY - r * 1.05, rs),
-      touchBtn('jump', ax - r * 0.45, bottomY + r * 0.05, rs),
+    // 2P landscape: compacte 2×3 grid per kant — geen overlap
+    const gapD = Math.max(6, Math.round(8 * ui));
+    const rD = Math.max(19, Math.round(r * 0.88));
+    const rsD = Math.max(16, Math.round(rs * 0.88));
+    const colW2 = rD * 2 + gapD;
+    const rowH2 = rD * 2 + gapD;
+    const xIn = zoneEdge + sign * rD;
+    const xOut = zoneEdge + sign * (rD + colW2);
+    const yB2 = bottomY - rD * 0.15;
+    const yM2 = yB2 - rowH2;
+    const yT2 = yM2 - rowH2;
+    buttons = [
+      touchBtn('punch', xIn, yB2, rD),
+      touchBtn('kick', xOut, yB2, rD),
+      touchBtn('special', xIn, yM2, rD),
+      touchBtn('weapon', xOut, yM2, rD),
+      touchBtn('jump', xIn, yT2 + (rD - rsD) * 0.4, rsD),
+      touchBtn('subst', xOut, yT2 + (rD - rsD) * 0.4, rsD),
     ];
+    // joystick-clearance per kant
+    if (side === 'p1') {
+      const joyClear = joyHome.x + Math.round(55 * ui) + rD * 0.3;
+      const minBx = Math.min(...buttons.map((b) => b.x - b.r));
+      if (minBx < joyClear) shiftTouchButtons(buttons, joyClear - minBx);
+    } else {
+      const joyClearR = joyHome.x - Math.round(55 * ui) - rD * 0.3;
+      const maxBx = Math.max(...buttons.map((b) => b.x + b.r));
+      if (maxBx > joyClearR) shiftTouchButtons(buttons, joyClearR - maxBx);
+    }
   }
+  clampButtonsToScreen(buttons, H);
   return { joyHome, buttons };
 }
 
