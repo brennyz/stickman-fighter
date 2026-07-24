@@ -109,6 +109,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-24 | **16** | Hosting (cyclus 4): share ?v= rev op speel.html, host-badge in instellingen, tunnel→Open Pages CTA, speel og:url canonical. v1.17.46 / SW v172. |
 | 2026-07-24 | **16** | Hosting (cyclus 3): deploy LIVE-LINK→speel.html, speel share via hosting.json, tunnel hint, keep-tunnel Pages-first. v1.17.42 / SW v168. **Cyclus 3 vol.** |
 | 2026-07-24 | **6** | Audio (cyclus 3): slider↔mute sync, Lite FX mix refresh, ctx suspend in mute-pauze, SFX preview, settings status. v1.17.41 / SW v167. |
 | 2026-07-24 | — | **Envelope live:** d4+d9+d20+d10+d11 merged → v1.17.40 / SW v166. |
@@ -125,6 +126,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-24 | **12** | Content (cyclus 3): monsterboek type-filter + sort (boek/rariteit/unlock/kills), rariteit-tellers, volgende-dex-prestatie tracker, Top jager badge; wapens verzamel-strip. v1.17.9 / SW v136. |
 | 2026-07-24 | **1** | Combat feel (cyclus 3): hit-confirm ring/spark per aanvalstype, parry-window op blok (PARRY! + freeze), counter-hit floater + extra freeze in training/versus — geen dmg×. v1.17.8 / SW v135. |
 | 2026-07-24 | **2** | Training (cyclus 2): telegraph HUD-balk, Chidori-dash-lijn, laser wacht tot speler landt, geen Chidori vs lucht — geen one-shots. v1.17.7 / SW v134. |
+| 2026-07-24 | **18** | Char select (cyclus 4): signature-preview, locked-hover stats, saga (n/n), fair duo ΔTOT, matchup-meter, touch preview. v1.17.49 / SW v175. |
 | 2026-07-24 | **18** | Char select c3: sort HP/SPD/DMG, TOT bar, gespeeld-chip, stap-header preview. v1.17.35 / SW v161. |
 | 2026-07-24 | **10** | A11y c3: calm banners/telegraphs, static low-HP vignette, fillHudText hints, HC hub tiles. v1.17.34 / SW v160. |
 | 2026-07-24 | **15** | Onboarding c3: eiland-hint inline (geen toast), menu 2/5 progress, muur dubbele banner weg, missies 1 toast. v1.17.33 / SW v159. |

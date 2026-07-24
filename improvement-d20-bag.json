@@ -16,7 +16,6 @@
     13,
     14,
     15,
-    16,
     17,
     19,
     20
@@ -547,6 +546,13 @@
       "note": "char select c4: sig preview, fair duo, locked hover, saga counts",
       "version": "1.17.52",
       "doneAt": "2026-07-24T20:40:38Z",
+      "cycle": 4
+    },
+    {
+      "face": 16,
+      "note": "share rev host badge speel og:url",
+      "version": "1.17.53",
+      "doneAt": "2026-07-24T20:43:14Z",
       "cycle": 4
     }
   ],

@@ -1098,17 +1098,52 @@ const UI = {
     const linkEl = document.getElementById('hostingLink');
     const hintEl = document.getElementById('hostingHint');
     const curEl = document.getElementById('hostingCurrent');
+    const badgeEl = document.getElementById('hostingHostBadge');
+    const openBtn = document.getElementById('btnOpenPlayLink');
     if (!linkEl) return;
     loadHostingBundle()
       .then(({ hosting, liveUrl }) => {
-        const stable = canonicalPagesPlayUrl(hosting) || (!isTunnelHostUrl(liveUrl) && liveUrl) || headLiveFromPage();
+        const stable = withShareRevParam(
+          canonicalPagesPlayUrl(hosting) || (!isTunnelHostUrl(liveUrl) && liveUrl) || headLiveFromPage(),
+          (hosting && hosting.shareCacheRev) || SW_CACHE_REV,
+        );
         const short = (u) => String(u || '').replace(/^https:\/\//, '');
         if (stable && !isTunnelHostUrl(stable)) {
           linkEl.innerHTML =
             `<div style="opacity:.8;margin-bottom:4px">Vaste speel-link (GitHub Pages) — deel deze</div>` +
             `<a href="${stable}" style="color:#7cf5ff;font-weight:800" rel="noopener">${short(stable)}</a>`;
         } else {
-          linkEl.textContent = 'https://brennyz.github.io/stickman-fighter/speel.html';
+          linkEl.textContent = withShareRevParam('https://brennyz.github.io/stickman-fighter/speel.html', SW_CACHE_REV);
+        }
+        const kind = playHostKind();
+        if (badgeEl) {
+          const labels = {
+            pages: 'GitHub Pages — stabiele deel-link',
+            tunnel: 'Tunnel (dev) — deel nooit deze URL',
+            netlify: 'Netlify — export save bij URL-wissel',
+            local: 'Lokaal — deel GitHub Pages met vrienden',
+            file: 'Lokaal bestand — deel GitHub Pages',
+            other: 'Online host',
+          };
+          const colors = {
+            pages: '#6ee06e',
+            tunnel: '#ffb86a',
+            netlify: '#7cf5ff',
+            local: '#a8b8e8',
+            file: '#a8b8e8',
+            other: '#cfe0ff',
+          };
+          badgeEl.innerHTML =
+            `<span style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;color:${colors[kind] || '#cfe0ff'};background:rgba(0,0,0,.28);border:1px solid ${colors[kind] || '#cfe0ff'}55">Speel via: ${labels[kind] || kind}</span>`;
+        }
+        if (openBtn) {
+          openBtn.classList.toggle('tog-alert', kind === 'tunnel');
+          const lab = openBtn.querySelector('div');
+          if (lab) {
+            lab.innerHTML = kind === 'tunnel'
+              ? 'Open GitHub Pages (deel-link)<small>Tunnel is alleen thuis-dev</small>'
+              : 'Open vaste link<small>speel.html op GitHub Pages</small>';
+          }
         }
         const onTunnel = onTunnelHost();
         if (curEl) {

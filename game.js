@@ -132,11 +132,12 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.52';
+const APP_VERSION = '1.17.53';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 178;
+const SW_CACHE_REV = 179;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
+
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -2085,6 +2086,26 @@ function onTunnelHost() {
   return isTunnelHostUrl(location.hostname) || /\.loca\.lt$/i.test(location.hostname);
 }
 
+function playHostKind() {
+  if (location.protocol === 'file:') return 'file';
+  const h = location.hostname;
+  if (/\.github\.io$/i.test(h)) return 'pages';
+  if (/\.netlify\.app$/i.test(h)) return 'netlify';
+  if (onTunnelHost()) return 'tunnel';
+  if (/^localhost$|^127\./.test(h)) return 'local';
+  return 'other';
+}
+
+/** Append ?v=SW rev on speel.html share links so friends skip stale PWA cache. */
+function withShareRevParam(url, rev) {
+  if (!url || typeof url !== 'string') return url;
+  const base = url.split('#')[0].split('?')[0];
+  if (!/\/speel\.html$/i.test(base)) return url;
+  const v = rev != null ? rev : (typeof SW_CACHE_REV !== 'undefined' ? SW_CACHE_REV : 0);
+  if (!v) return url;
+  return base + '?v=' + v;
+}
+
 /** Canonical share/play URL — always GitHub Pages when configured; never a tunnel. */
 function canonicalPagesPlayUrl(hosting) {
   const j = hosting || {};
@@ -2146,28 +2167,31 @@ function githubPagesRootUrl() {
 
 async function resolveSharePlayUrl() {
   const { hosting, liveUrl } = await loadHostingBundle();
+  const rev = (hosting && hosting.shareCacheRev) || SW_CACHE_REV;
+  let url = '';
   if (hosting && hosting.shareOnlyPages) {
     const pagesOnly = canonicalPagesPlayUrl(hosting);
-    if (pagesOnly) return pagesOnly;
-    return 'https://brennyz.github.io/stickman-fighter/speel.html';
+    url = pagesOnly || 'https://brennyz.github.io/stickman-fighter/speel.html';
+  } else {
+    const pages = canonicalPagesPlayUrl(hosting);
+    if (pages) url = pages;
+    else {
+      const gh = githubPagesRootUrl();
+      if (gh) url = gh + 'speel.html';
+      else if (location.hostname.endsWith('.github.io')) {
+        const base = location.href.split('?')[0].split('#')[0];
+        url = base.replace(/\/(ipad|index|speel)\.html$/i, '/') + 'speel.html';
+      } else if (liveUrl && !isTunnelHostUrl(liveUrl)) {
+        url = liveUrl.replace(/\/ipad\.html$/i, '/speel.html').replace(/\/$/, '/speel.html');
+      } else if (location.protocol !== 'file:' && !onTunnelHost()) {
+        const href = location.href.split('?')[0].split('#')[0];
+        url = href.replace(/\/ipad\.html$/i, '/').replace(/\/index\.html$/i, '/');
+      } else {
+        url = 'https://brennyz.github.io/stickman-fighter/speel.html';
+      }
+    }
   }
-  const pages = canonicalPagesPlayUrl(hosting);
-  if (pages) return pages;
-  const gh = githubPagesRootUrl();
-  if (gh) return gh + 'speel.html';
-  if (location.hostname.endsWith('.github.io')) {
-    const base = location.href.split('?')[0].split('#')[0];
-    return base.replace(/\/(ipad|index|speel)\.html$/i, '/') + 'speel.html';
-  }
-  // Never share a tunnel URL — fall back to configured/non-tunnel live only
-  if (liveUrl && !isTunnelHostUrl(liveUrl)) {
-    return liveUrl.replace(/\/ipad\.html$/i, '/speel.html').replace(/\/$/, '/speel.html');
-  }
-  if (location.protocol !== 'file:' && !onTunnelHost()) {
-    const href = location.href.split('?')[0].split('#')[0];
-    return href.replace(/\/ipad\.html$/i, '/').replace(/\/index\.html$/i, '/');
-  }
-  return 'https://brennyz.github.io/stickman-fighter/speel.html';
+  return withShareRevParam(url, rev);
 }
 
 function headLiveFromPage() {
@@ -12813,17 +12837,52 @@ const UI = {
     const linkEl = document.getElementById('hostingLink');
     const hintEl = document.getElementById('hostingHint');
     const curEl = document.getElementById('hostingCurrent');
+    const badgeEl = document.getElementById('hostingHostBadge');
+    const openBtn = document.getElementById('btnOpenPlayLink');
     if (!linkEl) return;
     loadHostingBundle()
       .then(({ hosting, liveUrl }) => {
-        const stable = canonicalPagesPlayUrl(hosting) || (!isTunnelHostUrl(liveUrl) && liveUrl) || headLiveFromPage();
+        const stable = withShareRevParam(
+          canonicalPagesPlayUrl(hosting) || (!isTunnelHostUrl(liveUrl) && liveUrl) || headLiveFromPage(),
+          (hosting && hosting.shareCacheRev) || SW_CACHE_REV,
+        );
         const short = (u) => String(u || '').replace(/^https:\/\//, '');
         if (stable && !isTunnelHostUrl(stable)) {
           linkEl.innerHTML =
             `<div style="opacity:.8;margin-bottom:4px">Vaste speel-link (GitHub Pages) — deel deze</div>` +
             `<a href="${stable}" style="color:#7cf5ff;font-weight:800" rel="noopener">${short(stable)}</a>`;
         } else {
-          linkEl.textContent = 'https://brennyz.github.io/stickman-fighter/speel.html';
+          linkEl.textContent = withShareRevParam('https://brennyz.github.io/stickman-fighter/speel.html', SW_CACHE_REV);
+        }
+        const kind = playHostKind();
+        if (badgeEl) {
+          const labels = {
+            pages: 'GitHub Pages — stabiele deel-link',
+            tunnel: 'Tunnel (dev) — deel nooit deze URL',
+            netlify: 'Netlify — export save bij URL-wissel',
+            local: 'Lokaal — deel GitHub Pages met vrienden',
+            file: 'Lokaal bestand — deel GitHub Pages',
+            other: 'Online host',
+          };
+          const colors = {
+            pages: '#6ee06e',
+            tunnel: '#ffb86a',
+            netlify: '#7cf5ff',
+            local: '#a8b8e8',
+            file: '#a8b8e8',
+            other: '#cfe0ff',
+          };
+          badgeEl.innerHTML =
+            `<span style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;color:${colors[kind] || '#cfe0ff'};background:rgba(0,0,0,.28);border:1px solid ${colors[kind] || '#cfe0ff'}55">Speel via: ${labels[kind] || kind}</span>`;
+        }
+        if (openBtn) {
+          openBtn.classList.toggle('tog-alert', kind === 'tunnel');
+          const lab = openBtn.querySelector('div');
+          if (lab) {
+            lab.innerHTML = kind === 'tunnel'
+              ? 'Open GitHub Pages (deel-link)<small>Tunnel is alleen thuis-dev</small>'
+              : 'Open vaste link<small>speel.html op GitHub Pages</small>';
+          }
         }
         const onTunnel = onTunnelHost();
         if (curEl) {

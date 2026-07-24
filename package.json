@@ -1,7 +1,8 @@
 {
   "name": "stickman-fighter",
   "private": true,
-  "version": "1.17.52",
+  "version": "1.17.53",
+
   "description": "Stickman Fighter — Monster Arena PWA",
   "scripts": {
     "build": "node scripts/build.mjs",
