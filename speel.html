@@ -82,10 +82,18 @@
 
 <script>
 (function () {
-  var url = location.href.split('?')[0].split('#')[0];
+  var shareUrl = location.href.split('?')[0].split('#')[0];
   var ua = navigator.userAgent;
   var isAndroid = /Android/i.test(ua);
   var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  function applyShareUrl(u) {
+    if (!u || /loca\.lt/i.test(u)) return;
+    shareUrl = u;
+    document.getElementById('linkline').textContent = u.replace(/^https:\/\//, '');
+    var qr = document.getElementById('qrimg');
+    qr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=380x380&margin=2&data=' + encodeURIComponent(u);
+  }
 
   document.getElementById(isAndroid ? 'stepsAndroid' : isIOS ? 'stepsIos' : 'stepsDesktop').classList.remove('hide');
   if (!isAndroid && !isIOS) {
@@ -93,27 +101,29 @@
     document.getElementById('stepsIos').classList.remove('hide');
   }
 
-  document.getElementById('linkline').textContent = url.replace(/^https:\/\//, '');
+  applyShareUrl(shareUrl);
+  fetch('./hosting.json').then(function (r) { return r.json(); }).then(function (j) {
+    applyShareUrl(j.bookmarkShare || j.pagesSpeel || shareUrl);
+  }).catch(function () {});
+
   var qr = document.getElementById('qrimg');
-  qr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=380x380&margin=2&data=' + encodeURIComponent(url);
   qr.onerror = function () { document.getElementById('qrbox').classList.add('hide'); };
   if (location.protocol === 'file:') document.getElementById('qrbox').classList.add('hide');
-  // Geen externe QR nodig op telefoon — SPELEN-knop is genoeg
   if (isAndroid || isIOS) document.getElementById('qrbox').classList.add('hide');
 
   document.getElementById('btnShare').addEventListener('click', function () {
     if (navigator.share) {
-      navigator.share({ title: 'Stickman Fighter', text: 'Gratis stickman vechtspel — speel mee!', url: url }).catch(function () {});
+      navigator.share({ title: 'Stickman Fighter', text: 'Gratis stickman vechtspel — speel mee!', url: shareUrl }).catch(function () {});
     } else {
       copyLink();
     }
   });
   document.getElementById('btnCopy').addEventListener('click', copyLink);
   function copyLink() {
-    (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(function () {
+    (navigator.clipboard ? navigator.clipboard.writeText(shareUrl) : Promise.reject()).then(function () {
       document.getElementById('btnCopy').textContent = '✓ Gekopieerd';
     }).catch(function () {
-      prompt('Kopieer deze link:', url);
+      prompt('Kopieer deze link:', shareUrl);
     });
   }
 })();

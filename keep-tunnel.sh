@@ -81,7 +81,11 @@ PY
 
 write_link() {
   local u="$1"
-  printf '%s/ipad.html\n\nVaste iPad-bookmark (zelfde URL):\n%s/ipad.html\nStart tunnel: ./start-local.sh --tunnel\n' "$u" "$u" > "$LINK_FILE"
+  local pages="https://brennyz.github.io/stickman-fighter/speel.html"
+  if [[ -f "$ROOT/hosting.json" ]]; then
+    pages=$(python3 -c "import json; j=json.load(open('$ROOT/hosting.json')); print(j.get('bookmarkShare') or j.get('pagesSpeel') or '$pages')")
+  fi
+  printf '%s\n\nPrimair: GitHub Pages — bookmark speel.html op iPad.\nDev tunnel (niet delen): %s/ipad.html\nStart tunnel: ./start-local.sh --tunnel\n' "$pages" "$u" > "$LINK_FILE"
   write_health "$u" true
   write_hosting "$u"
 }

@@ -2,14 +2,12 @@
   "version": 3,
   "cyclesCompleted": 3,
   "rollFirst": [],
-  "remaining": [
-    16
-  ],
+  "remaining": [],
   "lastRoll": {
-    "face": 6,
-    "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
-    "rolledAt": "2026-07-24T19:43:25Z",
-    "remainingCount": 1,
+    "face": 16,
+    "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
+    "rolledAt": "2026-07-24T19:46:39Z",
+    "remainingCount": 0,
     "cycle": 3
   },
   "pending": null,
@@ -502,6 +500,13 @@
       "note": "slider mute sync lite mix suspend",
       "version": "1.17.41",
       "doneAt": "2026-07-24T19:45:31Z",
+      "cycle": 3
+    },
+    {
+      "face": 16,
+      "note": "Pages speel deploy shareOnlyPages",
+      "version": "1.17.42",
+      "doneAt": "2026-07-24T19:48:08Z",
       "cycle": 3
     }
   ],
@@ -1575,6 +1580,13 @@
       "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
       "rolledAt": "2026-07-24T19:43:25Z",
       "remainingCount": 1,
+      "cycle": 3
+    },
+    {
+      "face": 16,
+      "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
+      "rolledAt": "2026-07-24T19:46:39Z",
+      "remainingCount": 0,
       "cycle": 3
     }
   ],

@@ -109,6 +109,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-24 | **16** | Hosting (cyclus 3): deploy LIVE-LINK→speel.html, speel share via hosting.json, tunnel hint, keep-tunnel Pages-first. v1.17.42 / SW v168. **Cyclus 3 vol.** |
 | 2026-07-24 | **6** | Audio (cyclus 3): slider↔mute sync, Lite FX mix refresh, ctx suspend in mute-pauze, SFX preview, settings status. v1.17.41 / SW v167. |
 | 2026-07-24 | — | **Envelope live:** d4+d9+d20+d10+d11 merged → v1.17.40 / SW v166. |
 | 2026-07-24 | **10** | A11y (cyclus 3): calm banners/telegraphs, static low-HP, no checkpoint flash, tint hit-flash, HC HUD text, toast off. v1.17.39 / SW v165. |

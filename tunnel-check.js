@@ -18,7 +18,8 @@
   const isTunnel = /\.loca\.lt$/i.test(location.hostname);
   const ipadEntry = /[?&]ipad=1\b/.test(location.search);
 
-  let pagesFallback = 'https://brennyz.github.io/stickman-fighter/ipad.html';
+  let pagesFallback = 'https://brennyz.github.io/stickman-fighter/speel.html';
+  let hostingMeta = null;
 
   function nukeOverlay() {
     if (!overlay) return;
@@ -42,10 +43,14 @@
     if (detailEl) detailEl.textContent = msg || 'Tunnel controleren…';
     if (hintEl) {
       hintEl.style.display = 'block';
-      hintEl.innerHTML =
-        '<strong>Primair speel:</strong> GitHub Pages (vaste link)<br>' +
-        'Deze tunnel is alleen lokaal-dev. Bookmark blijft: <strong>' + location.host + '/ipad.html</strong><br>' +
-        'Thuis: <code>./start-local.sh --tunnel</code> · bij 503 → Pages openen.';
+      if (hostingMeta && hostingMeta.stableHint) {
+        hintEl.textContent = hostingMeta.stableHint;
+      } else {
+        hintEl.innerHTML =
+          '<strong>Primair speel:</strong> GitHub Pages speel.html<br>' +
+          'Deze tunnel is alleen lokaal-dev. Bookmark blijft: <strong>' + location.host + '/ipad.html</strong><br>' +
+          'Thuis: <code>./start-local.sh --tunnel</code> · bij 503 → Pages openen.';
+      }
     }
   }
 
@@ -73,6 +78,7 @@
     return fetch('./hosting.json?t=' + Date.now(), { cache: 'no-store' })
       .then((r) => r.json())
       .then((j) => {
+        hostingMeta = j;
         // Prefer share/speel (Pages) over tunnel-adjacent ipad bookmark
         if (j && j.bookmarkShare) pagesFallback = j.bookmarkShare;
         else if (j && j.pagesSpeel) pagesFallback = j.pagesSpeel;

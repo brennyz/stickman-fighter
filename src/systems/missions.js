@@ -1028,6 +1028,11 @@ function githubPagesRootUrl() {
 
 async function resolveSharePlayUrl() {
   const { hosting, liveUrl } = await loadHostingBundle();
+  if (hosting && hosting.shareOnlyPages) {
+    const pagesOnly = canonicalPagesPlayUrl(hosting);
+    if (pagesOnly) return pagesOnly;
+    return 'https://brennyz.github.io/stickman-fighter/speel.html';
+  }
   const pages = canonicalPagesPlayUrl(hosting);
   if (pages) return pages;
   const gh = githubPagesRootUrl();
