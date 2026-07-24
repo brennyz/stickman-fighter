@@ -112,13 +112,13 @@ class Game {
     this.ketsbamChargeDur = 0;
     this.ketsbamChargePulse = 0;
     applyGambleToStage(this, gamble);
-    this.banner(`LEVEL ${n}`, 1.4, '#ffd75e', 54);
+    this.banner(t('banner.levelStart', { n }), 1.4, '#ffd75e', 54);
     if (masterBuffActive(n)) {
       setTimeout(() => {
         try {
           if (this.over) return;
-          this.banner('MEESTER-BUFF +20%', 2, '#c47aff', 40);
-          this.floater(W * 0.5, 132, '5× verloren — HP, snelheid & schade ↑', '#c47aff', 14);
+          this.banner(t('banner.masterBuff'), 2, '#c47aff', 40);
+          this.floater(W * 0.5, 132, t('combat.masterBuffFloater'), '#c47aff', 14);
         } catch (_) {}
       }, 1500);
     }
@@ -127,7 +127,7 @@ class Game {
       setTimeout(() => {
         try {
           if (this.over) return;
-          this.floater(W * 0.5, 148, `Eiland-skill gate: max wapen Lv ${wCap}`, '#ffd75e', 13);
+          this.floater(W * 0.5, 148, t('combat.skillGate', { cap: wCap }), '#ffd75e', 13);
         } catch (_) {}
       }, masterBuffActive(n) ? 2800 : 1500);
     }
@@ -135,15 +135,15 @@ class Game {
       setTimeout(() => {
         try {
           if (this.over) return;
-          this.banner(gambleOutcomeLabel(gamble).slice(0, 42), 2.2, '#7cf5ff', 34);
+          this.banner(gambleOutcomeLabelFromKey(gamble).slice(0, 42), 2.2, '#7cf5ff', 34);
         } catch (_) {}
       }, 1600);
     }
     if (this.gambleBossWave > 0) {
-      this.floater(W * 0.5, 100, `Super-baas mogelijk golf ${this.gambleBossWave}`, '#ffb0b8', 14);
+      this.floater(W * 0.5, 100, t('combat.gambleSuperBoss', { n: this.gambleBossWave }), '#ffb0b8', 14);
     }
     if (this.stageAlly) {
-      this.floater(W * 0.5, 118, `${this.stageAlly.name} helpt je!`, this.stageAlly.color || '#7cf5ff', 15);
+      this.floater(W * 0.5, 118, t('combat.allyHelps', { name: this.stageAlly.name }), this.stageAlly.color || '#7cf5ff', 15);
     }
     this.allyAssistT = this.stageAlly ? 2.2 : 0;
     setTimeout(() => { try { if (!this.over) this.maybeRollMasterSword(); } catch (_) {} }, 900);
@@ -166,8 +166,8 @@ class Game {
     p.weapon = buildMasterSwordWeapon(p.weapon);
     this.masterSwordT = MASTER_SWORD_DURATION;
     resetWeaponCombo(p);
-    this.banner('MASTER SWORD!', 2.4, '#7cf5ff', 52);
-    this.floater(p.x, p.y - 132, 'Hyrules legendarische kling — 15s!', '#ffd75e', 16);
+    this.banner(t('banner.masterSword'), 2.4, '#7cf5ff', 52);
+    this.floater(p.x, p.y - 132, t('combat.masterSwordGain'), '#ffd75e', 16);
     if (!fxLite() && !motionReduced()) {
       this.burst(p.x + p.face * 18, p.y - 52, '#6fd7ff', 14, { kind: 'spark', size: 2.8 });
       spawnFxRing(this, p.x, p.y - 48, '#7cf5ff', 12);
@@ -187,7 +187,7 @@ class Game {
     this.masterSwordT = 0;
     resetWeaponCombo(this.player);
     if (!silent) {
-      this.floater(this.player.x, this.player.y - 120, 'Master Sword vervaagt…', '#9db1e3', 14);
+      this.floater(this.player.x, this.player.y - 120, t('combat.masterSwordFade'), '#9db1e3', 14);
     }
   }
 
@@ -210,7 +210,7 @@ class Game {
       this.playerShieldT = Math.max(this.playerShieldT, this.styleShieldWave);
     }
     if (bossWave) {
-      this.banner('BAAS-GOLF!', 1.8, '#ff6b6b', 50);
+      this.banner(t('banner.bossWave'), 1.8, '#ff6b6b', 50);
       AudioSys.play('boss');
       AudioSys.sfx('roar');
       try {
@@ -220,7 +220,7 @@ class Game {
       } catch (_) {}
     } else if (wave.some(s => s.elite || s.superBoss)) {
       const hasSuper = wave.some(s => s.superBoss);
-      this.banner(hasSuper ? 'SUPER-BAAS GOLF' : 'ELITE-GOLF', 1.35, hasSuper ? '#ffd75e' : '#ffb0b8', 40);
+      this.banner(hasSuper ? t('banner.superBossWave') : t('banner.eliteWave'), 1.35, hasSuper ? '#ffd75e' : '#ffb0b8', 40);
       AudioSys.play(hasSuper ? 'boss' : 'elite');
       AudioSys.sfx('roar');
     } else {
@@ -229,10 +229,10 @@ class Game {
       if (trait) {
         this.banner(trait.text, 1.2, trait.color, trait.size);
         if (meta.trait === 'flyers') {
-          try { this.floater(W * 0.5, 108, 'Joystick omhoog = hoger mikken', '#c47aff', 13); } catch (_) {}
+          try { this.floater(W * 0.5, 108, t('combat.aimUp'), '#c47aff', 13); } catch (_) {}
         }
       } else {
-        this.banner(`GOLF ${this.waveIdx + 1}/${this.level.waves.length}`, 1.1, '#cfe0ff', 38);
+        this.banner(t('banner.waveN', { n: this.waveIdx + 1, total: this.level.waves.length }), 1.1, '#cfe0ff', 38);
       }
     }
   }
@@ -291,7 +291,7 @@ class Game {
       if (f > 0.45) {
         this.bossBeatPlayed = true;
         try { AudioSys.sfx('bossWait'); } catch (_) {}
-        this.floater(W / 2, 120, 'DE BAAS WACHT…', '#ff8a9a', 15);
+        this.floater(W / 2, 120, t('combat.bossWaits'), '#ff8a9a', 15);
       }
     }
     if (this.partFlashT > 0) this.partFlashT -= dt;
@@ -301,7 +301,7 @@ class Game {
     if (part > (this.stagePart || 1)) {
       this.stagePart = part;
       this.partFlashT = motionReduced() ? 0.22 : 0.5;
-      this.floater(W / 2, 96, `CHECKPOINT — DEEL ${part}/3`, '#7cf5ff', 17);
+      this.floater(W / 2, 96, t('combat.checkpoint', { part }), '#7cf5ff', 17);
       const orbX = W / 2 - Math.min(320, W * 0.5) / 2 + clamp(this.progressSmooth || 0, 0, 1) * Math.min(320, W * 0.5);
       if (!fxLite()) this.burst(orbX, 44, '#7cf5ff', motionReduced() ? 6 : 14, { kind: 'spark', size: 2.4 });
       try { AudioSys.sfx('checkpoint'); } catch (_) {}
@@ -333,7 +333,7 @@ class Game {
         if (tgt) {
           const dmg = Math.round(this.player.baseDmg * 0.38 * (this.stageDmgMul || 1));
           tgt.takeDamage(dmg, Math.sign(tgt.x - this.player.x) * 140, this);
-          this.floater(tgt.x, tgt.y - tgt.size - 22, `${this.stageAlly.name} −${dmg}`, this.stageAlly.color || '#7cf5ff', 12);
+          this.floater(tgt.x, tgt.y - tgt.size - 22, t('combat.allyHit', { name: this.stageAlly.name, dmg }), this.stageAlly.color || '#7cf5ff', 12);
           if (!fxLite()) this.burst(tgt.x, tgt.y - tgt.size * 0.4, this.stageAlly.color || '#7cf5ff', 6, { kind: 'spark', size: 2 });
         }
       }
@@ -380,7 +380,7 @@ class Game {
           } else if (def.elite || bossWave) {
             triggerSpecialEnemyIntro(this, mon, bossWave ? 'boss' : 'elite');
           } else if (def.giant && !fxLite()) {
-            this.floater(mon.x, mon.y - mon.size - 28, 'REUS!', '#ffd75e', 13);
+            this.floater(mon.x, mon.y - mon.size - 28, t('combat.giant'), '#ffd75e', 13);
           }
         }
       } else if (alive >= ADVENTURE_MAX_ALIVE) {
@@ -395,16 +395,16 @@ class Game {
           const waveHeal = Math.max(4, Math.round(this.player.maxhp * 0.06));
           this.player.hp = Math.min(this.player.maxhp, this.player.hp + waveHeal);
           this.player.energy = clamp(this.player.energy + 8, 0, 100);
-          this.floater(this.player.x, this.player.y - 88, `Golf gewist +${waveHeal} HP`, '#6ee06e', 14);
+          this.floater(this.player.x, this.player.y - 88, t('banner.waveClear', { heal: waveHeal }), '#6ee06e', 14);
         }
         if (this.stageHealBetween > 0 && this.player && this.player.alive) {
           const heal = Math.max(8, Math.round(this.player.maxhp * this.stageHealBetween));
           this.player.hp = Math.min(this.player.maxhp, this.player.hp + heal);
-          this.floater(this.player.x, this.player.y - 108, `+${heal} bondgenoot`, '#6ee06e', 14);
+          this.floater(this.player.x, this.player.y - 108, t('combat.allyHeal', { heal }), '#6ee06e', 14);
         }
         try { AudioSys.sfx('waveClear'); } catch (_) {}
         if ((this.killStreak || 0) >= 5) {
-          this.floater(W / 2, 112, `STREAK ×${this.killStreak} vast!`, '#ffd75e', 15);
+          this.floater(W / 2, 112, t('combat.streakHold', { n: this.killStreak }), '#ffd75e', 15);
         }
       }
       this.wavePause -= dt;
@@ -428,10 +428,9 @@ class Game {
         save.advIsland = Math.min(5, lv / LEVELS_PER_ISLAND);
         persist();
         if (lv < MAX_LEVEL) {
-          const next = islandMeta(islandFromLevel(lv + 1));
           const nCap = adventureWeaponCapForLevel(lv + 1);
           setTimeout(() => {
-            try { UI.toast(`${next.name} ontgrendeld! Skill gate: wapens tot Lv ${nCap}`, 4200); } catch (_) {}
+            try { UI.toast(t('toast.islandUnlock', { name: islandLabel(islandFromLevel(lv + 1), 'name'), cap: nCap }), 4200); } catch (_) {}
           }, 1700);
         }
       }
@@ -452,14 +451,14 @@ class Game {
         setTimeout(() => {
           try {
             UI.toast(eggBonus.duplicate
-              ? `Bonus-ei dubbel: ${eggBonus.def.name} (+10 XP)`
-              : `Bonus-ei! ${eggBonus.def.name} (${rar.name})`, 3800);
+              ? t('toast.eggDuplicate', { name: eggBonus.def.name })
+              : t('toast.eggNew', { name: eggBonus.def.name, rar: rarityLabel(eggBonus.def.rarity) }), 3800);
           } catch (_) {}
         }, 1200);
       }
       checkAchievements();
       AudioSys.sfx('win');
-      this.banner('GEWONNEN!', 2, '#7cfc8a', 56);
+      this.banner(t('banner.won'), 2, '#7cfc8a', 56);
     } else {
       if (!save.advFails || typeof save.advFails !== 'object') save.advFails = {};
       const hadMaster = save.advMasterBuff === lv;
@@ -468,36 +467,37 @@ class Game {
       if (gotMaster) save.advMasterBuff = lv;
       persist();
       if (gotMaster) {
-        setTimeout(() => { try { UI.toast('Meester-buff! +20% HP, snelheid & schade tot je wint', 3800); } catch (_) {} }, 1500);
+        setTimeout(() => { try { UI.toast(t('toast.masterBuffGain'), 3800); } catch (_) {} }, 1500);
       }
       AudioSys.sfx('lose');
-      this.banner('VERSLAGEN...', 2, '#ff6b6b', 50);
+      this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
     setTimeout(() => UI.showResult(win, {
-      title: win ? 'GEWONNEN!' : 'VERSLAGEN...',
+      title: win ? t('result.advWin') : t('result.advLose'),
       detail: (() => {
+        const finishers = this.runFinishers ? t('result.finishersLine', { n: this.runFinishers }) : '';
+        const streak = (this.sessionBestKillStreak || 0) >= 3
+          ? t('result.streakLine', { n: this.sessionBestKillStreak }) : '';
         let base = win
-          ? `Level ${lv} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}` +
-            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '') +
-            ((this.sessionBestKillStreak || 0) >= 3 ? ` · streak ×${this.sessionBestKillStreak}` : '')
-          : `Level ${lv} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}` +
-            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '') +
-            ((this.sessionBestKillStreak || 0) >= 3 ? ` · streak ×${this.sessionBestKillStreak}` : '');
-        if (masterBuffActive(lv) && !win) base += ' · Meester-buff actief';
+          ? t('result.advDetailWin', { lv, kills: this.kills, stars, combo: this.maxCombo || 0, finishers, streak })
+          : t('result.advDetailLose', { lv, kills: this.kills, combo: this.maxCombo || 0, finishers, streak });
+        if (masterBuffActive(lv) && !win) base += t('result.masterBuffActive');
         if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
-          base += ` · gok: ${gambleOutcomeLabel(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48)}`;
+          base += t('result.gambleLine', {
+            text: gambleOutcomeLabelFromKey(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48),
+          });
         }
         return base;
       })(),
       xp: this.sessionXP,
       mode: 'adventure', level: this.level.n, win, stars,
-      tip: win ? (stars >= 3 ? 'Perfecte run — hou je HP hoog!' : `${starHintLine()} — pickups helpen`) : (() => {
-        const prog = this.waveIdx >= 0 ? `${this.waveIdx + 1}/${this.level.waves.length} golven` : 'start';
+      tip: win ? (stars >= 3 ? t('result.perfectRun') : t('result.pickupsHelp', { hint: starHintLine() })) : (() => {
+        const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : 'start';
         const base = this.player.hp <= 0
-          ? `Tip: blokkeer · mik omhoog op vliegers · ${prog}`
-          : `Tip: pak groene orbs · vul SUPER vóór baas · ${prog}`;
+          ? t('result.lossBlockTip', { prog })
+          : t('result.lossOrbTip', { prog });
         const once = onceResultTip('adventure', 'loss',
-          'Eerste nederlaag: vóór elk level kun je dobbelen — bondgenoot helpt tussen golven.');
+          t('result.lossGambleTip'));
         return once ? `${once} · ${base}` : base;
       })(),
     }), 1400);
@@ -510,7 +510,7 @@ class Game {
     this.sessionBestKillStreak = Math.max(this.sessionBestKillStreak || 0, ks);
     trackKillStreak(ks);
     if ([3, 5, 8, 12].includes(ks)) {
-      const msgs = { 3: 'STREAK ×3', 5: 'ON FIRE!', 8: 'RAMPAGE!', 12: 'UNSTOPPABLE!' };
+      const msgs = { 3: t('combat.streak3'), 5: t('combat.streak5'), 8: t('combat.streak8'), 12: t('combat.streak12') };
       this.floater(W / 2, 128, msgs[ks], ks >= 8 ? '#ff7a4d' : '#ffd75e', 17);
       AudioSys.sfx(ks >= 8 ? 'comboEpic' : 'combo');
       if (!motionReduced() && !fxLite()) spawnFxRing(this, m.x, m.y - m.size * 0.35, ks >= 8 ? '#ff7a4d' : '#ffd75e', 7 + ks * 0.35);
@@ -548,9 +548,9 @@ class Game {
       persist();
       AudioSys.sfx('newmonster');
       const hpB = rarityHpBonus(m.sp.rarity);
-      this.banner(`Nieuw ${rar.name}: ${m.sp.name}! +${hpB} max HP`, 2.0, rar.color, 28);
+      this.banner(t('banner.newDex', { rar: rarityLabel(m.sp.rarity), name: m.sp.name, hp: hpB }), 2.0, rar.color, 28);
       this.player.maxhp += hpB; this.player.hp += hpB;
-      UI.toast(`${rar.name}: ${m.sp.name} ontdekt! +${hpB} HP`, 3200);
+      UI.toast(t('toast.dexDiscover', { rar: rarityLabel(m.sp.rarity), name: m.sp.name, hp: hpB }), 3200);
     }
     save.dex[m.spId]++;
     persist();
@@ -559,18 +559,18 @@ class Game {
       save.stats.petsTamed = petTamedCount();
       persist();
       spawnGamePet(this);
-      this.banner(`PET! ${tame.sp.name}`, 2.2, tame.sp.c1, 36);
-      UI.toast(`${tame.sp.name} getemd — metgezel! (${tame.kills}/${tame.need} kills)`, 4200);
+      this.banner(t('banner.pet', { name: tame.sp.name }), 2.2, tame.sp.c1, 36);
+      UI.toast(t('toast.petTamed', { name: tame.sp.name, cur: tame.kills, need: tame.need }), 4200);
     }
     checkAchievements();
     // Cosmetics die op dex-drempels unlocken (geen combat-wijziging)
     if (countBefore < dexCount()) {
       const half = Math.ceil(SPECIES_ORDER.length / 2);
       if (countBefore < half && dexCount() >= half) {
-        UI.toast('Nieuwe stijl: Boekmeester!', 3500);
+        UI.toast(t('toast.styleUnlockTome'), 3500);
       }
       if (tiersBefore < 4 && dexRarityTierCount() >= 4) {
-        UI.toast('Nieuwe stijl: Kristallijn!', 3500);
+        UI.toast(t('toast.styleUnlockCrystal'), 3500);
       }
     }
     this.maybeSummon(m);
@@ -605,10 +605,10 @@ class Game {
     const py = this.player ? this.player.y : this.ground;
     this.burst(px, py - 70, rar.color, fxLite() ? 14 : 30);
     this.burst(px, py - 70, '#fff', fxLite() ? 6 : 12);
-    this.banner('✦ SUMMON! ✦', 2.2, rar.color, 44);
-    setTimeout(() => this.banner(`${pick.name} → ${rar.name}!`, 2.4, rar.color, 30), 1100);
-    this.floater(px, py - 130, `${pick.name} ✦ ${rar.name}`, rar.color, 17);
-    UI.toast(`✦ Summon! ${pick.name} is nu ${rar.name} — schade ×${asc.dmg}`, 4200);
+    this.banner(t('banner.summon'), 2.2, rar.color, 44);
+    setTimeout(() => this.banner(t('banner.summonAscend', { name: weaponLabel(pick), rar: rar.name }), 2.4, rar.color, 30), 1100);
+    this.floater(px, py - 130, `${weaponLabel(pick)} ✦ ${rar.name}`, rar.color, 17);
+    UI.toast(t('toast.summon', { name: weaponLabel(pick), rar: rar.name, dmg: asc.dmg }), 4200);
   }
 
   spawnPickup(x, y) {
@@ -626,23 +626,23 @@ class Game {
     switch (pk.kind) {
       case 'heal':
         p.hp = Math.min(p.maxhp, p.hp + Math.round(p.maxhp * 0.28));
-        this.floater(p.x, p.y - 100, '+HP', meta.color, 16);
+        this.floater(p.x, p.y - 100, t('combat.pickupHp'), meta.color, 16);
         break;
       case 'rage':
         this.dmgBuffMul = 1.38;
         this.dmgBuffT = 9;
-        this.floater(p.x, p.y - 100, 'RAGE ×1.4', meta.color, 16);
+        this.floater(p.x, p.y - 100, t('combat.pickupRage'), meta.color, 16);
         break;
       case 'chakra':
         p.energy = 100;
-        this.floater(p.x, p.y - 100, 'Vol chakra!', meta.color, 16);
+        this.floater(p.x, p.y - 100, t('combat.pickupChakra'), meta.color, 16);
         break;
       case 'shield':
         this.playerShieldT = 6.5;
-        this.floater(p.x, p.y - 100, 'Schild!', meta.color, 16);
+        this.floater(p.x, p.y - 100, t('combat.pickupShield'), meta.color, 16);
         break;
     }
-    this.banner(meta.label, 0.9, meta.color, 28);
+    this.banner(pickupLabel(pk.kind), 0.9, meta.color, 28);
     this.burst(pk.x, pk.y, meta.color, 14);
     bumpStat('pickups', 1);
     bumpDaily('pickups', 1);
@@ -703,9 +703,9 @@ class Game {
     this.comboT = 0;
     this.trainRoundBest = 0;
     this.trainDummyGrace = this.round === 1 ? 3.5 : 0;
-    this.banner(`RONDE ${this.round}`, 1.1, '#ffd75e', 52);
+    this.banner(t('banner.round', { n: this.round }), 1.1, '#ffd75e', 52);
     if (this.round === 1) {
-      this.floater(W / 2, 148, 'Combo-trainer — 3s oefenen, robot wacht', '#7cf5ff', 16);
+      this.floater(W / 2, 148, t('combat.trainIntro'), '#7cf5ff', 16);
     }
     AudioSys.sfx('bell');
   }
@@ -734,7 +734,7 @@ class Game {
     const diff = Math.min(1.5, this.robot.aiDiff || 1);
     this.trainLaserTelegraph = 0.95;
     this.trainLaserCd = rand(8, 12) / diff;
-    this.floater(this.robot.x, this.robot.y - 148, 'Oor-laser — spring!', '#ff9a9a', 15);
+    this.floater(this.robot.x, this.robot.y - 148, t('combat.earLaser'), '#ff9a9a', 15);
     haptic(8);
   }
 
@@ -756,12 +756,12 @@ class Game {
   updateTraining(dt) {
     this.phaseT += dt;
     if (this.phase === 'intro') {
-      if (this.phaseT > 1.2 && this.phaseT - dt <= 1.2) this.banner('VECHT!', 0.8, '#ff6b6b', 60);
+      if (this.phaseT > 1.2 && this.phaseT - dt <= 1.2) this.banner(t('banner.fight'), 0.8, '#ff6b6b', 60);
       if (this.phaseT > 1.6) { this.phase = 'fight'; this.inputLocked = false; }
     } else if (this.phase === 'fight') {
       if (this.trainDummyGrace > 0) {
         this.trainDummyGrace -= dt;
-        if (this.trainDummyGrace <= 0) this.floater(W / 2, 132, 'Robot activeert — hou combo vast!', '#ff9a9a', 15);
+        if (this.trainDummyGrace <= 0) this.floater(W / 2, 132, t('combat.robotActive'), '#ff9a9a', 15);
       }
       if (this.comboT > 0) {
         this.comboT -= dt;
@@ -782,9 +782,9 @@ class Game {
         this.phase = 'roundend'; this.phaseT = 0;
         this.inputLocked = true;
         const roundCombo = this.trainRoundBest || 0;
-        this.banner(pWin ? 'RONDE GEWONNEN!' : 'RONDE VERLOREN', 1.6, pWin ? '#7cfc8a' : '#ff6b6b', 40);
+        this.banner(pWin ? t('banner.roundWon') : t('banner.roundLost'), 1.6, pWin ? '#7cfc8a' : '#ff6b6b', 40);
         if (roundCombo >= 3) {
-          this.floater(W / 2, 118, `Ronde combo ×${roundCombo}`, '#ffd75e', 14);
+          this.floater(W / 2, 118, t('combat.roundCombo', { n: roundCombo }), '#ffd75e', 14);
         }
         AudioSys.sfx(pWin ? 'win' : 'lose');
       }
@@ -819,16 +819,19 @@ class Game {
     const rec = save.stats.trainMaxCombo || 0;
     const trainTip = win
       ? (trainBest >= 8
-        ? `Combo-trainer: ×${trainBest}${trainBest >= rec ? ' — nieuw record!' : ''}`
-        : (save.trainWins === 3 ? 'Nieuwe stijl vrij: Chakra gloed — Instellingen → Stijl!' : 'Unlock stijlen door meer train-wins!'))
-      : onceResultTip('training', 'loss', 'Spring tijdens CHIDORI-telegraph — robot mist · duck oor-lasers')
-        || 'Tip: duck lasers · chakra vol → Rasengan';
+        ? t('result.trainComboRecord', { n: trainBest, rec: trainBest >= rec ? t('result.trainComboNewRec') : '' })
+        : (save.trainWins === 3 ? t('result.trainStyleUnlock') : t('result.trainStyleMore')))
+      : (onceResultTip('training', 'loss', t('result.trainLossTip'))
+        || t('result.trainTipDefault'));
     setTimeout(() => UI.showResult(win, {
-      title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
-      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · max combo ×${trainBest}` +
-        (win ? ` · ${save.trainWins}x gewonnen` : '') +
-        (rec > 0 ? ` · record ×${rec}` : '') +
-        (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
+      title: win ? t('result.trainWin') : t('result.trainLose'),
+      detail: t('result.trainDetail', {
+        outcome: win ? t('result.trainOutcomeWin') : t('result.trainOutcomeLose'),
+        s: this.roundsP, r: this.roundsR, combo: trainBest,
+        wins: win ? t('result.trainWinsLine', { n: save.trainWins }) : '',
+        record: rec > 0 ? t('result.trainRecordLine', { n: rec }) : '',
+        finishers: this.runFinishers ? t('result.finishersLine', { n: this.runFinishers }) : '',
+      }),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
     }), 1200);
@@ -867,15 +870,14 @@ class Game {
     this.inputLocked = true;
     const mp = this.roundsP1 === 1 || this.roundsP2 === 1;
     const decisive = this.roundsP1 === 1 && this.roundsP2 === 1;
-    let sub = decisive ? ' · beslissende ronde' : (mp ? ' · match point' : '');
-    this.banner(`RONDE ${this.round}${sub}`, 1.1, decisive ? '#ff9a9a' : '#ffd75e', 52);
+    this.banner(decisive ? t('banner.roundDecisive', { n: this.round }) : (mp ? t('banner.roundMatchPoint', { n: this.round }) : t('banner.round', { n: this.round })), 1.1, decisive ? '#ff9a9a' : '#ffd75e', 52);
     AudioSys.sfx('bell');
   }
 
   updateVersus(dt) {
     this.phaseT += dt;
     if (this.phase === 'intro') {
-      if (this.phaseT > 1.2 && this.phaseT - dt <= 1.2) this.banner('FIGHT!', 0.8, '#ff6b6b', 60);
+      if (this.phaseT > 1.2 && this.phaseT - dt <= 1.2) this.banner(t('banner.fight'), 0.8, '#ff6b6b', 60);
       if (this.phaseT > 1.6) { this.phase = 'fight'; this.inputLocked = false; }
     } else if (this.phase === 'fight') {
       this.roundTimer -= dt;
@@ -892,11 +894,11 @@ class Game {
         this.phase = 'roundend';
         this.phaseT = 0;
         this.inputLocked = true;
-        let msg = p1Win ? 'P1 WINT RONDE!' : 'P2 WINT RONDE!';
+        let msg = p1Win ? t('banner.p1RoundWin') : t('banner.p2RoundWin');
         if (timedOut) {
           const hp1 = Math.round(this.player.hp / this.player.maxhp * 100);
           const hp2 = Math.round(this.p2.hp / this.p2.maxhp * 100);
-          msg = `TIME! ${hp1}% vs ${hp2}% · ${msg}`;
+          msg = t('banner.timeHpVs', { hp1, hp2, msg });
         }
         this.banner(msg, 1.5, p1Win ? '#7cf5ff' : '#ffb0b8', 38);
         AudioSys.sfx(p1Win ? 'win' : 'lose');
@@ -920,12 +922,12 @@ class Game {
     if (p1Win) bumpStat('vsWins', 1);
     this.grantXP(p1Win ? 35 : 20);
     setTimeout(() => UI.showResult(p1Win, {
-      title: p1Win ? 'SPELER 1 WINT!' : 'SPELER 2 WINT!',
+      title: p1Win ? t('result.vsP1Win') : t('result.vsP2Win'),
       detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}` +
         ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : '') +
         (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
       xp: this.sessionXP, mode: 'versus', win: p1Win, p1: this.p1Pick, p2: this.p2Pick,
-      tip: 'Opnieuw = rematch · Pauze → Herstart match (0-0)',
+      tip: t('result.vsRematchTip'),
     }), 1200);
   }
 
@@ -944,7 +946,7 @@ class Game {
       combo3: false, combo5: false, combo8: false,
     };
     this.layoutWall(true);
-    this.banner('SLOOP DE MUUR!', 1.5, '#ffd75e', 46);
+    this.banner(t('banner.wallStart'), 1.5, '#ffd75e', 46);
     AudioSys.play('wall');
     this.phase = 'fight';
   }
@@ -979,48 +981,48 @@ class Game {
     const hints = this.wallHints || (this.wallHints = {});
     if (!hints.half && prevTimer > 30 && this.wallTimer <= 30) {
       hints.half = true;
-      this.floater(W / 2, 108, 'Halve tijd — combo vasthouden!', '#7cf5ff', 15);
+      this.floater(W / 2, 108, t('combat.wallHalf'), '#7cf5ff', 15);
     }
     if (!hints.quarter && prevTimer > 15 && this.wallTimer <= 15) {
       hints.quarter = true;
-      this.floater(W / 2, 108, 'Laatste 15s — record jagen!', '#ffd75e', 15);
+      this.floater(W / 2, 108, t('combat.wallLast15'), '#ffd75e', 15);
       if (this.wallTimer < 10) AudioSys.sfx('bonus');
     }
     if (!hints.five && prevTimer > 5 && this.wallTimer <= 5) {
       hints.five = true;
-      this.floater(W / 2, 108, '5s — vol gas!', '#ff6b6b', 15);
+      this.floater(W / 2, 108, t('combat.wallLast5'), '#ff6b6b', 15);
       AudioSys.sfx('bonus');
     }
     const elapsed = (this.wallDuration || 60) - this.wallTimer;
     if (!hints.startCombo && elapsed > 2.5 && elapsed < 9 && this.combo === 0) {
       hints.startCombo = true;
-      this.floater(W / 2, 132, 'Tip: snelle opeenvolgende slagen vullen combo', '#7cf5ff', 14);
+      this.floater(W / 2, 132, t('combat.wallComboTipShort'), '#7cf5ff', 14);
     }
     const prevComboT = this.comboT;
     this.comboT -= dt;
     if (this.comboT <= 0) {
       if (this.combo >= 4 && !hints.lostCombo) {
         hints.lostCombo = true;
-        this.floater(W / 2, 120, 'Combo weg — snel weer raken!', '#ff9a9a', 14);
+        this.floater(W / 2, 120, t('combat.wallComboLost'), '#ff9a9a', 14);
       }
       this.combo = 0;
     } else if (!hints.comboWarn && this.combo >= 3 && prevComboT > 0.35 && this.comboT <= 0.35) {
       hints.comboWarn = true;
-      this.floater(W / 2, 120, 'Combo bijna weg!', '#ff9a9a', 13);
+      this.floater(W / 2, 120, t('combat.wallComboLow'), '#ff9a9a', 13);
     }
     const bestSaved = save.bestWall || 0;
     if (!hints.nearRec && bestSaved > 0 && this.score > 0) {
       const gap = bestSaved - this.score;
       if (gap > 0 && gap <= 5) {
         hints.nearRec = true;
-        this.floater(W / 2, 94, `Bijna record — nog ${gap}!`, '#7cfc8a', 16);
+        this.floater(W / 2, 94, t('combat.wallNearRec', { gap }), '#7cfc8a', 16);
         haptic(12);
       }
     }
     if (this.bricks.every(b => b.hp <= 0)) {
       this.wallGen++;
       this.grantXP(25);
-      this.banner('MUUR GESLOOPT! Nieuwe muur...', 1.4, '#7cfc8a', 34);
+      this.banner(t('banner.wallNewWall'), 1.4, '#7cfc8a', 34);
       AudioSys.sfx('win');
       this.layoutWall(true);
     }
@@ -1037,22 +1039,25 @@ class Game {
     bumpDaily('wallBricks', this.score);
     checkAchievements();
     AudioSys.sfx(isRecord ? 'win' : 'bell');
-    this.banner('TIJD!', 1.5, '#ffd75e', 56);
+    this.banner(t('banner.wallTime'), 1.5, '#ffd75e', 56);
     const pace = Math.round(this.score); // 60s run → stenen ≈ per minuut
     const paceDelta = wallRecordPaceDelta({ wallTimer: 0, wallDuration: this.wallDuration, score: this.score });
-    let tip = isRecord ? 'Nieuw record — share met een vriend!' : 'Tip: hou combo vast voor snellere sloop';
+    let tip = isRecord ? t('result.wallRecordShare') : t('result.wallComboTip');
     if (!isRecord && best > 0) {
       const gap = best - this.score;
-      if (gap > 0 && gap <= 15) tip = `Nog ${gap} stenen tot je record — combo helpt!`;
-      else if ((this.maxCombo || 0) < 5) tip = 'Tip: snelle opeenvolgende slagen vullen de combo-balk';
-      else if ((this.maxCombo || 0) >= 8) tip = `Sterke combo (×${this.maxCombo}) — volgende keer record?`;
-      else if (paceDelta != null && paceDelta < -3) tip = `Achter record-tempo — probeer combo ×5+ voor meer sloop`;
-      else if (paceDelta != null && paceDelta >= 3) tip = 'Goed tempo — volgende run kan record breken!';
+      if (gap > 0 && gap <= 15) tip = t('result.wallGapTip', { gap });
+      else if ((this.maxCombo || 0) < 5) tip = t('result.wallComboBarTip');
+      else if ((this.maxCombo || 0) >= 8) tip = t('result.wallStrongCombo', { n: this.maxCombo });
+      else if (paceDelta != null && paceDelta < -3) tip = t('result.wallBehindPace');
+      else if (paceDelta != null && paceDelta >= 3) tip = t('result.wallGoodPace');
     }
     setTimeout(() => UI.showResult(true, {
-      title: isRecord ? 'NIEUW RECORD!' : 'TIJD IS OM!',
-      detail: `${this.score} stenen (~${pace}/min) · record ${best} · max combo ×${this.maxCombo || 0}` +
-        (paceDelta != null && best > 0 && !isRecord ? ` · tempo ${paceDelta >= 0 ? '+' : ''}${paceDelta} vs record` : ''),
+      title: isRecord ? t('result.wallRecord') : t('result.wallTime'),
+      detail: t('result.wallDetail', {
+        score: this.score, pace, best, combo: this.maxCombo || 0,
+        paceDelta: paceDelta != null && best > 0 && !isRecord
+          ? t('result.wallPaceDelta', { delta: `${paceDelta >= 0 ? '+' : ''}${paceDelta}` }) : '',
+      }),
       xp: this.sessionXP, mode: 'wall', win: true,
       tip,
     }), 1200);
@@ -1072,7 +1077,7 @@ class Game {
     this.player.x = W * 0.28;
     this.player.face = 1;
     this.inputLocked = false;
-    this.banner('MATS · MUNTJES BONUS', 1.5, '#ffd75e', 46);
+    this.banner(t('banner.matsStart'), 1.5, '#ffd75e', 46);
     AudioSys.play('mats');
   }
 
@@ -1119,7 +1124,7 @@ class Game {
         c.got = true;
         this.coinsCollected++;
         AudioSys.sfx('pickup');
-        this.floater(c.x, c.y - 20, '+1 munt', '#ffd75e', 15);
+        this.floater(c.x, c.y - 20, t('combat.coinPlus1'), '#ffd75e', 15);
         haptic(8);
       }
     }
@@ -1151,19 +1156,21 @@ class Game {
     const xp = Math.round(n * 4 + 15);
     this.grantXP(xp);
     AudioSys.sfx(isRecord ? 'win' : 'bonus');
-    this.banner('BONUS KLAAR!', 1.4, '#7cfc8a', 40);
+    this.banner(t('banner.bonusDone'), 1.4, '#7cfc8a', 40);
     const wallet = petCoinsBalance();
     setTimeout(() => UI.showResult(true, {
-      title: isRecord ? 'MATS RECORD!' : 'Goed gedaan, Mats!',
-      detail: `${n} munten · record ${best}` +
-        (petEarned > 0 ? ` · +${petEarned} pet coins (totaal ${wallet})` : '') +
-        ' · vliegers = +3 per hit',
+      title: isRecord ? t('result.matsRecord') : t('result.matsDone'),
+      detail: t('result.matsDetail', {
+        n, best,
+        pet: petEarned > 0 ? t('result.matsPetEarned', { n: petEarned, wallet }) : '',
+        flyers: t('result.matsFlyers'),
+      }),
       xp: this.sessionXP,
       mode: 'coinrun',
       win: true,
       tip: petEarned > 0
-        ? 'Pet coins uitgeven in Collectie → Pets · elke 2 Mats-munten = 1 pet coin'
-        : 'Joystick omhoog = hoger mikken (slag + gooi) · shuriken max 3× snel',
+        ? t('result.matsPetTip')
+        : t('result.matsControlTip'),
     }), 1200);
   }
 
@@ -1201,18 +1208,18 @@ class Game {
       save.xp -= xpNeed(save.lvl);
       save.lvl++;
       AudioSys.sfx('levelup');
-      this.banner(`LEVEL OMHOOG! Lv ${save.lvl}`, 1.8, '#ffd75e', 40);
+      this.banner(t('banner.levelUp', { lvl: save.lvl }), 1.8, '#ffd75e', 40);
       const st = playerStats();
       this.player.maxhp = st.maxhp;
       this.player.baseDmg = st.dmg;
       this.player.hp = Math.min(this.player.maxhp, this.player.hp + Math.round(this.player.maxhp * 0.45));
       const unlockedW = WEAPONS.find(w => w.unlock === save.lvl);
       if (unlockedW) {
-        setTimeout(() => this.banner(`Nieuw wapen: ${unlockedW.name}!`, 2, '#c792ff', 32), 900);
+        setTimeout(() => this.banner(t('banner.newWeapon', { name: weaponLabel(unlockedW) }), 2, '#c792ff', 32), 900);
         AudioSys.sfx('newmonster');
       }
       const newStyle = STYLES.find(s => s.needLvl === save.lvl && styleUnlocked(s));
-      if (newStyle) UI.toast(`Nieuwe stijl: ${newStyle.name}!`, 3500);
+      if (newStyle) UI.toast(t('toast.styleUnlock', { name: styleLabel(newStyle) }), 3500);
     }
     persist();
   }
@@ -1271,7 +1278,7 @@ class Game {
       if (!this._shurikenWarnT || this.t - this._shurikenWarnT > 0.9) {
         this._shurikenWarnT = this.t;
         try {
-          UI.toast(f._shurikenCd > 0 ? 'Werpwapen even wachten…' : 'Niet spammen — max 3 snel achter elkaar', 1600);
+          UI.toast(f._shurikenCd > 0 ? t('toast.shurikenWait') : t('toast.shurikenSpam'), 1600);
         } catch (_) {}
       }
       return;
@@ -1327,20 +1334,20 @@ class Game {
             const wh = this.wallHints || {};
             if (this.combo === 3 && !wh.combo3) {
               wh.combo3 = true;
-              this.floater(W * 0.5, 136, `Combo ×3 · sloop +${wallComboDmgPct(3)}%`, '#7cf5ff', 15);
+              this.floater(W * 0.5, 136, t('combat.wallCombo3', { pct: wallComboDmgPct(3) }), '#7cf5ff', 15);
             } else if (this.combo === 5 && !wh.combo5) {
               wh.combo5 = true;
-              this.floater(W * 0.5, 136, `Combo ×5 · sloop +${wallComboDmgPct(5)}%`, '#7cf5ff', 16);
+              this.floater(W * 0.5, 136, t('combat.wallCombo5', { pct: wallComboDmgPct(5) }), '#7cf5ff', 16);
               AudioSys.sfx('combo');
             } else if (this.combo === 8 && !wh.combo8) {
               wh.combo8 = true;
-              this.floater(W * 0.5, 136, `Combo ×8 · sloop +${wallComboDmgPct(8)}%`, '#ffd75e', 17);
+              this.floater(W * 0.5, 136, t('combat.wallCombo8', { pct: wallComboDmgPct(8) }), '#ffd75e', 17);
               AudioSys.sfx('combo');
               haptic(14);
             }
             if (!this.wallRecordToast && this.score > save.bestWall) {
               this.wallRecordToast = true;
-              this.floater(W * 0.5, 118, 'NIEUW RECORD!', '#ffd75e', 22);
+              this.floater(W * 0.5, 118, t('combat.wallRecord'), '#ffd75e', 22);
               haptic(18);
               AudioSys.sfx('bonus');
             }
@@ -1352,7 +1359,7 @@ class Game {
               AudioSys.sfx('bonus');
               this.score += 5;
               this.burst(b.x + b.w / 2, b.y + b.h / 2, '#ffd75e', 22);
-              this.floater(b.x + b.w / 2, b.y - 22, 'BONUS +5', '#7cf5ff', 18);
+              this.floater(b.x + b.w / 2, b.y - 22, t('combat.bonus5'), '#7cf5ff', 18);
             }
           } else {
             AudioSys.sfxAt('crack', cx);
@@ -1381,7 +1388,7 @@ class Game {
           trackCombo(this.combo);
           if (this.combo === 3 || this.combo === 6 || this.combo === 10) {
             AudioSys.sfx('combo');
-            this.floater(f.x + f.face * 30, f.y - 120, `COMBO ×${this.combo}!`, '#ffd75e', 17);
+            this.floater(f.x + f.face * 30, f.y - 120, t('combat.comboN', { n: this.combo }), '#ffd75e', 17);
           }
         }
         const buff = f.isPlayer ? (this.dmgBuffMul || 1) * (this.stageDmgMul || 1) * (this.styleAdvDmgMul || 1) : 1;
@@ -1449,10 +1456,10 @@ class Game {
             goals[this.combo] = 1;
             AudioSys.sfx('combo');
             const labels = {
-              3: 'Combo ×3 — door!',
-              5: 'Combo ×5 — netjes!',
-              8: 'Combo ×8 — pro!',
-              10: 'Combo ×10 — meester!',
+              3: t('combat.combo3'),
+              5: t('combat.combo5'),
+              8: t('combat.combo8'),
+              10: t('combat.combo10'),
             };
             this.floater(f.x + f.face * 30, f.y - 130, labels[this.combo], '#ffd75e', 16);
             haptic(8 + this.combo);
@@ -1467,7 +1474,7 @@ class Game {
         });
         if (hitRoll.crit) applyCritFx(this, tgt.x, tgt.y);
         const col = tgt.playerSlot === 2 ? '#ffb0b8' : (tgt.isPlayer ? '#ff8080' : '#ffe680');
-        this.floater(tgt.x, tgt.y - 115, (counter ? 'COUNTER! ' : '') + '-' + dmg, col, 16);
+        this.floater(tgt.x, tgt.y - 115, (counter ? t('combat.counter') + ' ' : '') + '-' + dmg, col, 16);
         this.burst(tgt.bodyX, tgt.bodyY, col, 7);
         applyHitConfirmFx(this, hx, hy, spec);
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
@@ -1641,7 +1648,7 @@ class Game {
             if ((p.x - fl.x) ** 2 + (p.y - fl.y) ** 2 < (p.r + fl.r) ** 2) {
               fl.hp = 0;
               this.coinsCollected += 3;
-              this.floater(fl.x, fl.y - 24, '+3 munten', '#ffd75e', 17);
+              this.floater(fl.x, fl.y - 24, t('combat.coinPlus3'), '#ffd75e', 17);
               this.burst(fl.x, fl.y, '#ffd75e', 12);
               AudioSys.sfx('bonus');
               haptic(12);
@@ -1691,12 +1698,12 @@ class Game {
     const comboSfx = (n) => (n >= 15 ? 'comboMega' : n >= 10 ? 'comboEpic' : 'combo');
     if (this.mode === 'wall' && (this.combo === 5 || this.combo === 8 || this.combo === 10)) {
       AudioSys.sfx(comboSfx(this.combo));
-      const msg = this.combo === 8 ? 'MUUR-TEMPO!' : `COMBO ×${this.combo}!`;
+      const msg = this.combo === 8 ? t('combat.wallTempo') : t('combat.comboN', { n: this.combo });
       this.floater(W * 0.5, 130, msg, '#7cf5ff', 18);
     }
     if (this.mode === 'adventure' && (this.combo === 6 || this.combo === 10)) {
       AudioSys.sfx(comboSfx(this.combo));
-      this.floater(W * 0.5, 118, `COMBO ×${this.combo}!`, '#ffd75e', 16);
+      this.floater(W * 0.5, 118, t('combat.comboN', { n: this.combo }), '#ffd75e', 16);
     }
     if ([5, 10, 15].includes(this.combo) && this.player && !motionReduced()) {
       const col = this.combo >= 10 ? '#ffd75e' : '#7cf5ff';
@@ -1977,13 +1984,13 @@ class Game {
       let hintTxt = this.modeHintLine;
       if (!hintTxt) {
         if (Input.dualMode && IS_TOUCH) {
-          hintTxt = 'P1 = linker helft · P2 = rechter helft · joystick + aanvalsknoppen';
+          hintTxt = t('hud.hintDualTouch');
         } else if (Input.dualMode) {
-          hintTxt = 'P1: A/D · W · J/K/L/U · Shift  |  P2: pijltjes · 1/2/3/4/5';
+          hintTxt = t('hud.hintDualKb');
         } else if (IS_TOUCH) {
-          hintTxt = 'Links: joystick om te lopen · Rechts: aanvalsknoppen';
+          hintTxt = t('hud.hintTouch');
         } else {
-          hintTxt = 'A/D lopen · W springen · J stomp · K trap · L wapen · U speciaal';
+          hintTxt = t('hud.hintKb');
         }
       }
       c.font = '600 15px -apple-system, sans-serif';
@@ -2217,7 +2224,7 @@ class Game {
     c.font = '700 9px sans-serif';
     c.fillStyle = 'rgba(255,255,255,.55)';
     c.textAlign = 'center';
-    c.fillText('Volgende golf', W / 2, y - 14);
+    c.fillText(t('hud.nextWave'), W / 2, y - 14);
     for (let i = 0; i < chips; i++) {
       const def = next[i];
       const sp = SPECIES[def.sp];
@@ -2378,7 +2385,7 @@ class Game {
     c.font = '700 10px sans-serif';
     c.textAlign = 'left';
     c.fillStyle = 'rgba(255,255,255,.6)';
-    c.fillText(`deel ${Math.min(3, 1 + Math.floor(pr * 3))}/3`, x0 + tw + (this.level.boss ? 24 : 10), y + 3.5);
+    c.fillText(t('hud.part', { cur: Math.min(3, 1 + Math.floor(pr * 3)) }), x0 + tw + (this.level.boss ? 24 : 10), y + 3.5);
     // golf-pips (d4 c3): expliciete golf 1/N onder de balk
     const pipY = y + 16;
     const pipGap = Math.min(14, (tw - 8) / Math.max(1, total));
@@ -2412,7 +2419,7 @@ class Game {
     c.fillStyle = 'rgba(255,255,255,.5)';
     c.textAlign = 'center';
     const waveNum = this.waveIdx >= 0 ? Math.min(total, cur + 1) : 0;
-    c.fillText(waveNum > 0 ? `Golf ${waveNum}/${total}` : `${total} golven`, W / 2, pipY + 11);
+    c.fillText(waveNum > 0 ? t('hud.waveLine', { n: waveNum, total }) : t('hud.wavesTotal', { total }), W / 2, pipY + 11);
     c.textAlign = 'center';
   }
 
@@ -2513,8 +2520,8 @@ class Game {
     c.fillStyle = '#ffd75e';
     c.strokeStyle = 'rgba(0,0,0,.55)';
     c.lineWidth = 4;
-    c.strokeText('KETS!', px, py - 58 - prog * 24);
-    c.fillText('KETS!', px, py - 58 - prog * 24);
+    c.strokeText(t('banner.kets'), px, py - 58 - prog * 24);
+    c.fillText(t('banner.kets'), px, py - 58 - prog * 24);
     c.restore();
   }
 
@@ -2555,14 +2562,14 @@ class Game {
     c.textBaseline = 'middle';
     c.lineWidth = 5 * ui;
     c.strokeStyle = 'rgba(0,0,0,.55)';
-    c.strokeText('KETS!', 0, 2);
+    c.strokeText(t('banner.kets'), 0, 2);
     c.fillStyle = '#fff';
-    c.fillText('KETS!', 0, 2);
+    c.fillText(t('banner.kets'), 0, 2);
     c.restore();
     c.font = `700 ${Math.round(12 * ui)}px -apple-system,sans-serif`;
     c.textAlign = 'center';
     c.fillStyle = 'rgba(255,255,255,.85)';
-    c.fillText(IS_TOUCH ? 'Tik!' : 'E / tik', cx, cy + r + 18 * ui);
+    c.fillText(IS_TOUCH ? t('hud.ketsTap') : t('hud.ketsKey'), cx, cy + r + 18 * ui);
     c.textAlign = 'left';
   }
 
@@ -2604,7 +2611,7 @@ class Game {
         c.font = '800 9px -apple-system, sans-serif';
         c.fillStyle = '#c47aff';
         c.textAlign = 'left';
-        c.fillText('MEESTER +20%', bx + 4, by - 7);
+        c.fillText(t('hud.masterShort'), bx + 4, by - 7);
       }
       if (this.mode === 'adventure') {
         c.strokeStyle = 'rgba(255,215,94,.5)';
@@ -2622,9 +2629,9 @@ class Game {
       this.drawSuperMeterFill(c, bx, by + 20, bw, 11, p.energy / 100, jKind, this.t);
       c.font = '800 10px -apple-system, sans-serif';
       c.fillStyle = 'rgba(255,255,255,.85)'; c.textAlign = 'left';
-      c.fillText('SUPER', bx + 6, by + 29);
+      c.fillText(t('hud.super'), bx + 6, by + 29);
       // getekend jutsu-icoontje (art-upgrade 3/4): bliksem / oog / orb
-      const ix = bx + 6 + c.measureText('SUPER').width + 9;
+      const ix = bx + 6 + c.measureText(t('hud.super')).width + 9;
       const iy = by + 25.5;
       if (jKind === 'chidori') {
         c.fillStyle = '#a8e0ff';
@@ -2653,7 +2660,7 @@ class Game {
       c.fillText(`Lv ${save.lvl}`, bx + bw + 12, by + 13);
       if (p.energy >= 100) {
         c.fillStyle = jKind === 'chidori' ? '#a8e0ff' : jKind === 'rinnegan' ? '#c47aff' : '#7cf5ff';
-        c.fillText(jutsuHudLabel(jKind), bx + bw + 12, by + 32);
+        c.fillText(jutsuLabel(jKind), bx + bw + 12, by + 32);
         c.strokeStyle = jKind === 'chidori' ? 'rgba(168,224,255,.55)' : jKind === 'rinnegan' ? 'rgba(196,122,255,.55)' : 'rgba(124,245,255,.55)';
         c.lineWidth = 2;
         c.beginPath();
@@ -2671,13 +2678,13 @@ class Game {
       const wCap = adventureWeaponCapForLevel(this.level.n);
       const wv = Math.max(1, this.waveIdx + 1);
       c.font = '800 16px -apple-system, sans-serif';
-      fillHudText(c, `Level ${this.level.n} — Golf ${Math.min(wv, this.level.waves.length)}/${this.level.waves.length}`, W / 2, 30, {
+      fillHudText(c, t('hud.levelWave', { n: this.level.n, wv: Math.min(wv, this.level.waves.length), total: this.level.waves.length }), W / 2, 30, {
         fill: a11yHighContrast() ? '#fff' : 'rgba(255,255,255,.9)',
       });
       c.font = '700 11px -apple-system, sans-serif';
       c.fillStyle = isl.accent;
       c.globalAlpha = 0.92;
-      c.fillText(`${isl.name} · wapen ≤ Lv ${wCap}`, W / 2, 48);
+      c.fillText(t('hud.islandWeapon', { name: islandLabel(islandFromLevel(this.level.n), 'name'), cap: wCap }), W / 2, 48);
       c.globalAlpha = 1;
       this.drawStageProgress(c);
       const bossAlive = this.monsters.find(m => m.elite && m.alive);
@@ -2692,17 +2699,17 @@ class Game {
         } else if (this.eggPet && activeEggPetDef()) {
           c.font = '700 11px sans-serif';
           c.fillStyle = this.eggPet.def?.c1 || '#ffd75e';
-          const txt = `Ei · ${this.eggPet.def?.name || 'Cosmetisch'}`;
+          const txt = t('hud.eggPet', { name: this.eggPet.def?.name || t('hud.cosmetic') });
           c.fillText(txt, W / 2, 62);
         } else if (this.pet && activePetDef()) {
           c.font = '700 11px sans-serif';
           c.fillStyle = this.pet.sp?.c1 || '#7cf5ff';
-          const txt = `Pet · ${this.pet.sp?.name || 'Metgezel'}`;
+          const txt = t('hud.petActive', { name: this.pet.sp?.name || t('hud.petDefault') });
           c.fillText(txt, W / 2, 62);
         } else if (this.gambleBossWave > 0) {
           c.font = '700 11px sans-serif';
           c.fillStyle = '#ffb0b8';
-          const txt = `Super-baas mogelijk · golf ${this.gambleBossWave}`;
+          const txt = t('hud.gambleBoss', { n: this.gambleBossWave });
           c.fillText(txt, W / 2 + 7, 62);
           drawMiniDie(c, W / 2 - c.measureText(txt).width / 2 - 3, 58.5, 10, '#ffb0b8');
         }
@@ -2717,16 +2724,16 @@ class Game {
         c.font = '700 11px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.7)';
         const pct = Math.round(hpPct * 100);
-        let starHint = ' · 3★ zone';
-        if (hpPct <= STAR_HP.two) starHint = ` · 2★ bij >${Math.round(STAR_HP.two * 100)}% HP`;
-        else if (hpPct <= STAR_HP.three) starHint = ` · 3★ bij >${Math.round(STAR_HP.three * 100)}% HP`;
-        c.fillText(`${pct}% HP${starHint}`, W / 2, 76);
+        let starHint = t('hud.starZone');
+        if (hpPct <= STAR_HP.two) starHint = t('hud.star2', { pct: Math.round(STAR_HP.two * 100) });
+        else if (hpPct <= STAR_HP.three) starHint = t('hud.star3', { pct: Math.round(STAR_HP.three * 100) });
+        c.fillText(t('hud.hpPct', { pct, hint: starHint }), W / 2, 76);
       }
       if (this.waveIdx >= 0 && (this.spawnQueue.length > 0 || this.monsters.some((m) => m.alive))) {
         const rem = this.spawnQueue.length + this.monsters.filter((m) => m.alive).length;
         c.font = '700 11px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.62)';
-        c.fillText(rem === 1 ? 'Nog 1 vijand in deze golf' : `Nog ${rem} vijanden in deze golf`, W / 2, 90);
+        c.fillText(rem === 1 ? t('hud.enemiesLeft1') : t('hud.enemiesLeftN', { n: rem }), W / 2, 90);
       }
       if (this.wavePause > 0) {
         const nextBoss = isBossWave(this.level, this.waveIdx + 1);
@@ -2752,7 +2759,7 @@ class Game {
           c.restore();
         }
         c.font = '800 15px sans-serif';
-        const pauseMsg = nextBoss ? `Op weg naar de baas — ${sec.toFixed(1)}s` : `Verder lopen… volgende golf ${sec.toFixed(1)}s`;
+        const pauseMsg = nextBoss ? t('hud.toBoss', { sec: sec.toFixed(1) }) : t('hud.walkNext', { sec: sec.toFixed(1) });
         fillHudText(c, pauseMsg, ringX, ringY, {
           fill: nextBoss ? '#ffc8d0' : '#d8e8ff',
         });
@@ -2769,7 +2776,7 @@ class Game {
       if ((this.killStreak || 0) >= 2) {
         c.textAlign = 'right';
         c.font = '800 12px sans-serif';
-        fillHudText(c, `STREAK ×${this.killStreak}`, W - Math.max(14, readSafeInsets().right + 8), 62, {
+        fillHudText(c, t('hud.streak', { n: this.killStreak }), W - Math.max(14, readSafeInsets().right + 8), 62, {
           fill: this.killStreak >= 8 ? '#ff7a4d' : '#ffd75e',
         });
       }
@@ -2795,34 +2802,34 @@ class Game {
           c.shadowColor = col;
           c.shadowBlur = 12;
         }
-        fillHudText(c, `COMBO ×${this.combo}`, 0, 0, { fill: col, strokeW: calm ? 4 : 3.5 });
+        fillHudText(c, t('hud.combo', { n: this.combo }), 0, 0, { fill: col, strokeW: calm ? 4 : 3.5 });
         c.restore();
       }
       if (this.dmgBuffT > 0) {
         c.font = '800 13px sans-serif'; c.fillStyle = '#ff7a4d';
-        c.fillText(`RAGE ${Math.ceil(this.dmgBuffT)}s`, W / 2, 108);
+        c.fillText(t('hud.rage', { n: Math.ceil(this.dmgBuffT) }), W / 2, 108);
       }
       if (this.playerShieldT > 0) {
         c.font = '800 13px sans-serif'; c.fillStyle = '#9fd8ff';
-        c.fillText(`Schild ${Math.ceil(this.playerShieldT)}s`, W / 2, this.dmgBuffT > 0 ? 124 : 108);
+        c.fillText(t('hud.shield', { n: Math.ceil(this.playerShieldT) }), W / 2, this.dmgBuffT > 0 ? 124 : 108);
       }
       if (this.masterSwordT > 0) {
         c.font = '900 14px sans-serif'; c.fillStyle = '#7cf5ff';
         if (!motionReduced()) { c.shadowColor = '#7cf5ff'; c.shadowBlur = 8; }
         const yMs = 108 + (this.dmgBuffT > 0 ? 16 : 0) + (this.playerShieldT > 0 ? 16 : 0);
-        c.fillText(`MASTER SWORD ${Math.ceil(this.masterSwordT)}s`, W / 2, yMs);
+        c.fillText(t('hud.masterSword', { n: Math.ceil(this.masterSwordT) }), W / 2, yMs);
         c.shadowBlur = 0;
       }
     } else if (this.mode === 'training') {
       const r = this.robot;
       const half = Math.min(300, W * 0.36);
       const tele = this.trainLaserTelegraph > 0
-        ? { label: 'OOR-LASER — spring!', frac: this.trainLaserTelegraph / 0.95, color: '#ff6b6b', max: 0.95 }
+        ? { label: t('hud.earLaser'), frac: this.trainLaserTelegraph / 0.95, color: '#ff6b6b', max: 0.95 }
         : (this.trainTelegraphT > 0
-          ? { label: 'CHIDORI — dash/spring!', frac: this.trainTelegraphT / 0.85, color: '#7cf5ff', max: 0.85 }
+          ? { label: t('hud.chidoriTele'), frac: this.trainTelegraphT / 0.85, color: '#7cf5ff', max: 0.85 }
           : (this.trainMeleeTelegraphT > 0
             ? {
-              label: this.trainTelegraphKind === 'kick' ? 'TRAP — spring/blok!' : 'SLA — blok/weg!',
+              label: this.trainTelegraphKind === 'kick' ? t('hud.kickTele') : t('hud.punchTele'),
               frac: this.trainMeleeTelegraphT / (this.trainMeleeTelegraphMax || 0.32),
               color: '#ffb347',
               max: this.trainMeleeTelegraphMax || 0.32,
@@ -2892,7 +2899,7 @@ class Game {
         c.font = '800 13px sans-serif';
         c.textAlign = 'center';
         c.fillStyle = '#ffb0b8';
-        c.fillText('OOR-LASER', W / 2, ly - 10);
+        c.fillText(t('hud.earLaserShort'), W / 2, ly - 10);
         c.restore();
       }
       // robotbalk rechtsboven
@@ -2903,12 +2910,12 @@ class Game {
       this.rr(c, W - 16 - half * frac, by, half * frac, 15, 6); c.fill();
       c.font = '800 13px sans-serif'; c.textAlign = 'right'; c.fillStyle = '#fff';
       const rPct = Math.round(frac * 100);
-      c.fillText(`RABBITROBOT · ${rPct}%`, W - 20, by + 30);
+      c.fillText(t('hud.rabbitRobot', { pct: rPct }), W - 20, by + 30);
       // timer + rondepunten
       c.textAlign = 'center';
       c.font = '800 12px sans-serif';
       c.fillStyle = 'rgba(255,255,255,.65)';
-      c.fillText(`Ronde ${this.round} · eerst 2 wint · ${this.roundsP}-${this.roundsR}`, W / 2, 68);
+      c.fillText(t('hud.roundInfo', { n: this.round, s: this.roundsP, r: this.roundsR }), W / 2, 68);
       const tLeft = Math.ceil(Math.max(0, this.roundTimer));
       const urgent = this.roundTimer < 15 && this.phase === 'fight';
       c.font = urgent ? '900 28px sans-serif' : '900 26px sans-serif';
@@ -2932,7 +2939,7 @@ class Game {
         c.textAlign = 'center';
         c.font = '800 12px sans-serif';
         c.fillStyle = '#7cf5ff';
-        c.fillText(`Dummy ${this.trainDummyGrace.toFixed(1)}s — oefen combo`, W / 2, 118);
+        c.fillText(t('hud.dummyGrace', { n: this.trainDummyGrace.toFixed(1) }), W / 2, 118);
       }
       if (this.combo > 0 && this.comboT > 0 && save.comboHud !== false) {
         const col = this.combo >= 8 ? '#ff7a4d' : '#ffd75e';
@@ -2941,11 +2948,11 @@ class Game {
         c.textAlign = 'left';
         c.font = '800 13px sans-serif';
         c.fillStyle = col;
-        c.fillText(`COMBO ×${this.combo}`, 16, 118);
+        c.fillText(t('hud.combo', { n: this.combo }), 16, 118);
         c.font = '700 10px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.65)';
-        if (nextGoal) c.fillText(`doel ×${nextGoal}`, 16, 132);
-        if (rec > 0) c.fillText(`record ×${rec}`, 16, nextGoal ? 146 : 132);
+        if (nextGoal) c.fillText(t('hud.goal', { n: nextGoal }), 16, 132);
+        if (rec > 0) c.fillText(t('hud.record', { n: rec }), 16, nextGoal ? 146 : 132);
         const barW = Math.min(120, W * 0.28);
         const barY = nextGoal ? (rec > 0 ? 152 : 138) : (rec > 0 ? 146 : 132);
         c.fillStyle = 'rgba(255,255,255,.15)';
@@ -2966,7 +2973,7 @@ class Game {
       c.font = '700 9px sans-serif';
       c.textAlign = 'left';
       c.fillStyle = 'rgba(255,255,255,.45)';
-      c.fillText('TIJD', barX, 44);
+      c.fillText(t('hud.time'), barX, 44);
       c.textAlign = 'center';
       c.fillStyle = 'rgba(0,0,0,.42)';
       this.rr(c, barX, 48, barW, 7, 4); c.fill();
@@ -2997,11 +3004,11 @@ class Game {
         c.font = '800 12px sans-serif';
         c.textAlign = 'left';
         c.fillStyle = 'rgba(255,215,94,.85)';
-        c.fillText(`MUUR ×${this.wallGen + 1}`, 16, 36);
+        c.fillText(t('hud.wallGen', { n: this.wallGen + 1 }), 16, 36);
         c.textAlign = 'center';
       }
       c.font = '800 17px sans-serif'; c.fillStyle = '#ffd75e';
-      c.fillText(`Stenen: ${this.score}`, W / 2, 68);
+      c.fillText(t('hud.stones', { n: this.score }), W / 2, 68);
       c.font = '700 13px sans-serif';
       const bestSaved = save.bestWall || 0;
       const rec = Math.max(bestSaved, this.score);
@@ -3009,9 +3016,9 @@ class Game {
       c.fillStyle = onPace ? '#7cfc8a' : 'rgba(255,255,255,.55)';
       if (bestSaved > 0 && this.score < bestSaved) {
         const gap = bestSaved - this.score;
-        c.fillText(`Record ${bestSaved} · nog ${gap} te gaan`, W / 2, 86);
+        c.fillText(t('hud.recordGap', { best: bestSaved, gap }), W / 2, 86);
       } else {
-        c.fillText(onPace && bestSaved > 0 ? `Record gebroken · ${rec}` : `Record: ${rec}`, W / 2, 86);
+        c.fillText(onPace && bestSaved > 0 ? t('hud.recordBroken', { rec }) : t('hud.recordLine', { rec }), W / 2, 86);
       }
       let showPaceDelta = false;
       const elapsed = wallDur - this.wallTimer;
@@ -3020,14 +3027,14 @@ class Game {
         const proj = Math.round(this.score + (this.wallTimer / elapsed) * this.score);
         c.font = '700 12px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.62)';
-        c.fillText(`~${pace}/min · projectie ~${proj}`, W / 2, 102);
+        c.fillText(t('hud.pace', { pace, proj }), W / 2, 102);
         const paceDelta = wallRecordPaceDelta(this);
         if (paceDelta != null && bestSaved > 0) {
           showPaceDelta = true;
           c.font = '700 11px sans-serif';
           c.fillStyle = paceDelta >= 0 ? '#7cfc8a' : '#ffb0b8';
           c.fillText(
-            paceDelta >= 0 ? `Voor op record-tempo +${paceDelta}` : `Achter record-tempo ${paceDelta}`,
+            paceDelta >= 0 ? t('hud.paceAhead', { n: paceDelta }) : t('hud.paceBehind', { n: paceDelta }),
             W / 2, 116
           );
         }
@@ -3041,7 +3048,7 @@ class Game {
         c.font = '700 9px sans-serif';
         c.textAlign = 'left';
         c.fillStyle = 'rgba(124,245,255,.55)';
-        c.fillText('COMBO', cBarX, cy - 4);
+        c.fillText(t('hud.comboLabel'), cBarX, cy - 4);
         c.textAlign = 'center';
         c.fillStyle = 'rgba(0,0,0,.38)';
         this.rr(c, cBarX, cy, cBarW, 5, 3); c.fill();
@@ -3054,14 +3061,14 @@ class Game {
         c.translate(W / 2, showPaceDelta ? 142 : 128);
         c.scale(pulse, pulse);
         c.font = '900 22px sans-serif'; c.fillStyle = '#7cf5ff';
-        c.fillText(`COMBO ×${this.combo}`, 0, 0);
+        c.fillText(t('hud.combo', { n: this.combo }), 0, 0);
         c.font = '700 12px sans-serif'; c.fillStyle = 'rgba(124,245,255,.85)';
-        c.fillText(`+${Math.min(this.combo, 12) * 4}% sloop`, 0, 18);
+        c.fillText(t('hud.comboSmash', { pct: Math.min(this.combo, 12) * 4 }), 0, 18);
         c.restore();
       } else if (this.combo === 1 && this.comboT > 0) {
         c.font = '700 12px sans-serif';
         c.fillStyle = 'rgba(124,245,255,.75)';
-        c.fillText('Combo actief — nog een steen!', W / 2, showPaceDelta ? 132 : 118);
+        c.fillText(t('hud.comboActive'), W / 2, showPaceDelta ? 132 : 118);
       }
     } else if (this.mode === 'coinrun') {
       const tLeft = Math.ceil(Math.max(0, this.coinTimer));
@@ -3069,14 +3076,14 @@ class Game {
       c.fillStyle = this.coinTimer < 10 ? '#ff6b6b' : '#fff';
       c.fillText(String(tLeft), W / 2, 42);
       c.font = '800 18px sans-serif'; c.fillStyle = '#ffd75e';
-      c.fillText(`Munten: ${this.coinsCollected}`, W / 2, 70);
+      c.fillText(t('hud.coins', { n: this.coinsCollected }), W / 2, 70);
       c.font = '700 13px sans-serif'; c.fillStyle = 'rgba(255,255,255,.7)';
-      c.fillText(`Record Mats: ${save.stats.matsCoinBest || 0}`, W / 2, 90);
+      c.fillText(t('hud.matsRecord', { n: save.stats.matsCoinBest || 0 }), W / 2, 90);
       const pendingPet = matsPetCoinsFromRun(this.coinsCollected);
       c.fillStyle = '#ff9ad5';
-      c.fillText(`Pet coins: +${pendingPet} · wallet ${petCoinsBalance()}`, W / 2, 108);
+      c.fillText(t('hud.petCoins', { pending: pendingPet, wallet: petCoinsBalance() }), W / 2, 108);
       c.fillStyle = 'rgba(124,245,255,.85)';
-      c.fillText('Joystick ↑ mik · slag/gooi hoger · shuriken op roze vliegers', W / 2, 128);
+      c.fillText(t('hud.matsHint'), W / 2, 128);
     } else if (this.mode === 'versus' && this.p2) {
       const p2 = this.p2;
       const half = Math.min(260, W * 0.38);
@@ -3091,7 +3098,7 @@ class Game {
         c.fillText(String(n), W / 2, H * 0.4);
         c.font = '700 13px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.65)';
-        c.fillText('Spawn · eerlijk start', W / 2, H * 0.4 + 28);
+        c.fillText(t('hud.spawnFair'), W / 2, H * 0.4 + 28);
       } else if (this.phase === 'roundend') {
         const left = Math.max(0, 2.2 - this.phaseT);
         c.font = '900 34px sans-serif';
@@ -3099,7 +3106,7 @@ class Game {
         c.fillText(String(Math.ceil(left)), W / 2, H * 0.38);
         c.font = '700 13px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.7)';
-        c.fillText('Volgende ronde', W / 2, H * 0.38 + 26);
+        c.fillText(t('hud.nextRound'), W / 2, H * 0.38 + 26);
         const barW = Math.min(140, W * 0.24);
         c.fillStyle = 'rgba(0,0,0,.35)';
         this.rr(c, W / 2 - barW / 2, H * 0.38 + 34, barW, 5, 3);
@@ -3114,7 +3121,7 @@ class Game {
       this.rr(c, bx, byVs, half * clamp(p.hp / p.maxhp, 0, 1), 14, 6); c.fill();
       c.font = '800 11px sans-serif'; c.textAlign = 'left'; c.fillStyle = '#7cf5ff';
       const hp1Pct = Math.round(clamp(p.hp / p.maxhp, 0, 1) * 100);
-      c.fillText(`P1 · ${name1} · ${hp1Pct}%`, bx, byVs + 30);
+      c.fillText(t('hud.p1Line', { name: name1, pct: hp1Pct }), bx, byVs + 30);
       c.fillStyle = '#333c55'; this.rr(c, bx, byVs + 34, half, 5, 3); c.fill();
       this.drawSuperMeterFill(c, bx, byVs + 34, half, 5, p.energy / 100, fighterJutsuKind(p), this.t);
       drawWeaponStylePips(c, bx + 8, byVs + 44, p);
@@ -3126,7 +3133,7 @@ class Game {
       this.rr(c, W - 16 - half * frac2, byVs, half * frac2, 14, 6); c.fill();
       c.textAlign = 'right'; c.fillStyle = '#ffb0b8';
       const hp2Pct = Math.round(frac2 * 100);
-      c.fillText(`${hp2Pct}% · ${name2} · P2`, W - 20, byVs + 30);
+      c.fillText(t('hud.p2Line', { pct: hp2Pct, name: name2 }), W - 20, byVs + 30);
       c.fillStyle = '#333c55'; this.rr(c, W - half - 16, byVs + 34, half, 5, 3); c.fill();
       this.drawSuperMeterFill(c, W - half - 16, byVs + 34, half, 5, p2.energy / 100, fighterJutsuKind(p2), this.t);
       drawWeaponStylePips(c, W - half - 8, byVs + 44, p2);
@@ -3149,8 +3156,8 @@ class Game {
       c.font = '800 12px sans-serif'; c.fillStyle = 'rgba(255,255,255,.75)';
       const decisiveRound = this.roundsP1 === 1 && this.roundsP2 === 1;
       const scoreLine = decisiveRound
-        ? `Beslissende ronde · ${this.roundsP1}-${this.roundsP2}`
-        : `Ronde ${this.round} · eerst 2 wint · ${this.roundsP1}-${this.roundsP2}`;
+        ? t('hud.decisiveRound', { s: this.roundsP1, r: this.roundsP2 })
+        : t('hud.roundInfo', { n: this.round, s: this.roundsP1, r: this.roundsP2 });
       c.fillText(scoreLine, W / 2, timerY + 18);
       const timerBarW = Math.min(160, W * 0.28);
       const timerFrac = clamp(this.roundTimer / 99, 0, 1);
@@ -3163,7 +3170,7 @@ class Game {
       if (this.roundTimer < 12 && this.phase === 'fight') {
         c.font = '700 10px sans-serif';
         c.fillStyle = 'rgba(255,215,94,.85)';
-        c.fillText('TIME = hoogste HP % wint', W / 2, timerY + 38);
+        c.fillText(t('hud.timeHpWin'), W / 2, timerY + 38);
       }
       const mp1 = this.roundsP1 === 1 && this.roundsP2 < 2;
       const mp2 = this.roundsP2 === 1 && this.roundsP1 < 2;

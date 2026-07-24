@@ -118,14 +118,14 @@ function initCharSelectChrome() {
     AudioSys.sfx('select');
     const duo = pickSagaIconClash();
     if (!duo) {
-      try { UI.toast('Unlock minstens 2 saga-icons (Ki/Scroll/Tide/Cape/Dawn)', 2800); } catch (_) {}
+      try { UI.toast(t('toast.charSagaUnlock'), 2800); } catch (_) {}
       return;
     }
     vsSelect.p1 = duo.a.id;
     vsSelect.p2 = duo.b.id;
     UI.charPickStep = 2;
     UI.renderCharSelect();
-    UI.toast(`${duo.a.name} vs ${duo.b.name} — saga clash!`, 2600);
+    UI.toast(t('toast.charSagaClash', { a: duo.a.name, b: duo.b.name }), 2600);
   });
 }
 
@@ -334,41 +334,40 @@ const UI = {
         const pct = Math.round(prog.cleared / prog.total * 100);
         return `<div class="help-island-row${cur === isl.id ? ' cur' : ''}${ok ? '' : ' locked'}">` +
           `<span class="help-island-ico" style="color:${isl.accent}">${isl.icon}</span>` +
-          `<div class="help-island-body"><b>${isl.name}</b> · ${isl.sub}` +
-          `<div class="help-island-sub">${ok ? `${prog.cleared}/${prog.total} levels · ${prog.stars}/${prog.maxStars}★` : `Vergrendeld — versla baas Lv ${isl.id * LEVELS_PER_ISLAND}`}` +
-          ` · skill gate wapens Lv ${wCap}</div>` +
+          `<div class="help-island-body"><b>${islandLabel(isl.id, 'name')}</b> · ${islandLabel(isl.id, 'sub')}` +
+          `<div class="help-island-sub">${ok
+            ? t('ui.helpIslandProg', { cleared: prog.cleared, total: prog.total, stars: prog.stars, maxStars: prog.maxStars, cap: wCap })
+            : t('ui.helpIslandLocked', { lv: isl.id * LEVELS_PER_ISLAND })}</div>` +
           `<div class="island-prog-track"><i style="width:${pct}%;background:${isl.accent}"></i></div></div></div>`;
       }).join('');
       islHost.innerHTML =
         `<div class="step-card help-island-card">` +
-        `<b>Eilanden &amp; skill gate</b> — avontuur is <b>5×10 levels</b>. Per eiland geldt een wapen-cap (nu <b>Lv ${cap}</b> op eiland ${cur}).` +
+        `<b>${t('ui.helpIslandTitle')}</b> — ${t('ui.helpIslandIntro', { cap, cur })}` +
         `<div class="help-island-grid">${rows}</div>` +
-        `<div style="margin-top:10px;opacity:.88;line-height:1.45">` +
-        `<b>Meester-buff:</b> 5× verlies op hetzelfde level → +20% HP, snelheid &amp; schade tot je wint.` +
-        ` Baas op Lv 10/20/30/40/50 opent het volgende eiland.</div></div>`;
+        `<div style="margin-top:10px;opacity:.88;line-height:1.45">${t('ui.helpMasterBuff')}</div></div>`;
     }
     if (!host) return;
-    const touch = IS_TOUCH ? 'touch' : 'toetsenbord';
+    const touch = IS_TOUCH ? t('ui.helpTouch') : t('ui.helpKeyboard');
     const prog = onboardingProgress();
     const next = nextUntriedMode();
     const modes = [
-      { id: 'adventure', label: 'Avontuur', tip: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok vóór level' },
-      { id: 'training', label: 'Training', tip: 'Combo-trainer ×5/×8/×10 · 3s dummy · lasers · Chidori' },
-      { id: 'wall', label: 'Muur', tip: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing' },
-      { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
-      { id: 'coinrun', label: 'Mats', tip: '45s munten · 2 munten = 1 pet coin · mik ↑ · vliegers +3' },
+      { id: 'adventure', label: t('modes.adventure'), tip: t('ui.modeAdventure') },
+      { id: 'training', label: t('modes.training'), tip: t('ui.modeTraining') },
+      { id: 'wall', label: t('modes.wall'), tip: t('ui.modeWall') },
+      { id: 'versus', label: t('modes.versus'), tip: t('ui.modeVersus') },
+      { id: 'coinrun', label: t('modes.coinrun'), tip: t('ui.modeCoinrun') },
     ];
-    let html = `<div style="font-size:12px;opacity:.85;margin-bottom:8px">Eerste-minuut hints: <b>${prog.seen}/${prog.total}</b> modi gezien · max <b>één</b> regel bovenin per modus</div>`;
+    let html = `<div style="font-size:12px;opacity:.85;margin-bottom:8px">${t('ui.helpOnboardHead', { seen: prog.seen, total: prog.total })}</div>`;
     if (next) {
       html += `<div class="step-card" style="margin:6px 0;padding:10px 12px;border-color:rgba(124,245,255,.45)">` +
-        `<b>Probeer als volgende: ${next.label}</b>` +
-        `<div style="opacity:.88;margin-top:4px">Nog niet gespeeld — één hint bovenin, geen extra toast.</div></div>`;
+        `<b>${t('ui.helpTryNext', { mode: next.label })}</b>` +
+        `<div style="opacity:.88;margin-top:4px">${t('ui.helpTrySub')}</div></div>`;
     }
     html += modes.map((m) => {
       const seen = modeOnboardingSeen(m.id);
       const highlight = next && next.id === m.id ? ' border-color:rgba(124,245,255,.5)' : '';
       return `<div class="step-card" style="margin:6px 0;padding:10px 12px${highlight}">` +
-        `<b>${m.label}</b>${seen ? ' <span style="color:#7cfc8a;font-size:11px">✓ hint gezien</span>' : ' <span style="color:#ffd75e;font-size:11px">· nog niet</span>'}` +
+        `<b>${m.label}</b>${seen ? ` <span style="color:#7cfc8a;font-size:11px">${t('ui.helpHintSeen')}</span>` : ` <span style="color:#ffd75e;font-size:11px">${t('ui.helpHintNot')}</span>`}` +
         `<div style="opacity:.88;margin-top:4px">${m.tip} · ${touch}</div></div>`;
     }).join('');
     host.innerHTML = html;
@@ -496,18 +495,14 @@ const UI = {
     const stepEl = document.getElementById('charPickStep');
     const stepBadge = document.getElementById('charPickStepBadge');
     if (stepEl) {
-      stepEl.textContent = this.charPickStep === 1
-        ? 'Speler 1 — tik een unlocked kaart (linker helft in gevecht)'
-        : 'Speler 2 — tik een andere vechter (rechter helft in gevecht)';
+      stepEl.textContent = this.charPickStep === 1 ? t('ui.charSub1') : t('ui.charSub2');
     }
     if (stepBadge) {
-      stepBadge.textContent = this.charPickStep === 1
-        ? 'Stap 1/2 · Choose P1'
-        : 'Stap 2/2 · Choose P2';
+      stepBadge.textContent = this.charPickStep === 1 ? t('ui.charStep1') : t('ui.charStep2');
     }
     const blurbEl = document.getElementById('charSagaBlurb');
     if (blurbEl) blurbEl.textContent = filter === 'all'
-      ? 'Choose fighter · 5 saga-hints (parodie, geen officiële namen) · tik kaart = kiezen'
+      ? t('ui.charBlurbAll')
       : sagaMeta.blurb;
     const sagaBar = document.getElementById('charSagaBar');
     if (sagaBar) {
@@ -549,7 +544,7 @@ const UI = {
     if (!roster.length) {
       const empty = document.createElement('div');
       empty.className = 'char-grid-empty';
-      empty.textContent = 'Geen vechters in deze saga — tik ⭐ Alle';
+      empty.textContent = t('ui.charEmpty');
       grid.appendChild(empty);
     }
     for (const r of roster) {
@@ -582,7 +577,7 @@ const UI = {
       el.appendChild(cap);
       const tag = document.createElement('div');
       tag.className = 'char-tag';
-      tag.textContent = ok ? r.tag : '🔒 Locked';
+      tag.textContent = ok ? r.tag : t('ui.charLocked');
       el.appendChild(tag);
       const flair = document.createElement('div');
       flair.className = 'char-flair';
@@ -608,7 +603,7 @@ const UI = {
     if (fightBtn) fightBtn.disabled = !(vsSelect.p1 && vsSelect.p2);
     const backBtn = document.getElementById('charSelectBack');
     if (backBtn) {
-      backBtn.textContent = this.charPickStep === 2 ? '\u2190 Andere P1' : '\u2190 Menu';
+      backBtn.textContent = this.charPickStep === 2 ? t('ui.charBackP1') : t('ui.charBackMenu');
     }
     const backP = document.getElementById('charPickBackP1');
     if (backP) {
@@ -646,7 +641,7 @@ const UI = {
         vsSelect.p1 = vsSelect.p2;
         vsSelect.p2 = t;
         this.renderCharSelect();
-        UI.toast('P1 ↔ P2 omgewisseld', 1800);
+        UI.toast(t('toast.charSwap'), 1800);
       });
     }
     const rnd = document.getElementById('btnCharRandom');
@@ -656,7 +651,7 @@ const UI = {
         AudioSys.sfx('select');
         const pool = pickCharPoolFiltered();
         if (pool.length < 2) {
-          UI.toast('Niet genoeg unlocked vechters in deze saga', 2400);
+          UI.toast(t('toast.charNotEnough'), 2400);
           return;
         }
         const a = choice(pool);
@@ -669,7 +664,9 @@ const UI = {
         this.renderCharSelect();
         const sa = vsFighterStats(a);
         const sb = vsFighterStats(b);
-        UI.toast(`${a.name} vs ${b.name} · HP ${sa.hp}/${sb.hp} · TOT ${vsOverallRating(sa)}/${vsOverallRating(sb)}`, 2800);
+        UI.toast(t('toast.charRandom', {
+          a: a.name, b: b.name, hp1: sa.hp, hp2: sb.hp, tot1: vsOverallRating(sa), tot2: vsOverallRating(sb),
+        }), 2800);
       });
     }
     const rndFair = document.getElementById('btnCharRandomFair');
@@ -679,7 +676,7 @@ const UI = {
         AudioSys.sfx('select');
         const duo = pickBalancedRandomDuo();
         if (!duo) {
-          UI.toast('Niet genoeg unlocked vechters in deze saga', 2400);
+          UI.toast(t('toast.charNotEnough'), 2400);
           return;
         }
         vsSelect.p1 = duo.a.id;
@@ -690,7 +687,7 @@ const UI = {
         const sa = vsFighterStats(duo.a);
         const sb = vsFighterStats(duo.b);
         const diff = duo.ratingDiff != null ? duo.ratingDiff : Math.abs(vsOverallRating(sa) - vsOverallRating(sb));
-        UI.toast(`Fair duo: ${duo.a.name} vs ${duo.b.name} · TOT Δ${diff}`, 3000);
+        UI.toast(t('toast.charFair', { a: duo.a.name, b: duo.b.name, diff }), 3000);
       });
     }
   },
@@ -701,7 +698,7 @@ const UI = {
     row.innerHTML = '';
     const label = document.createElement('div');
     label.className = 'char-icon-row-title';
-    label.textContent = 'Saga-icons · deel 2 — tik om te kiezen';
+    label.textContent = t('ui.charIconRow');
     row.appendChild(label);
     const strip = document.createElement('div');
     strip.className = 'char-icon-strip';
@@ -797,10 +794,10 @@ const UI = {
     const profileEl = document.getElementById('menuProfileBar');
     if (profileEl) {
       profileEl.innerHTML =
-        `<span class="prof-row"><b>Lv ${save.lvl}</b><span>${w.name}</span><span style="color:${st.accent}">${st.name}</span></span>` +
+        `<span class="prof-row"><b>Lv ${save.lvl}</b><span>${weaponLabel(w)}</span><span style="color:${st.accent}">${styleLabel(st)}</span></span>` +
         `<span style="display:block;margin-top:3px;opacity:.82;font-size:11px">${adventureProgressLine()}</span>` +
         `<span class="prof-xp" aria-hidden="true"><span style="width:${pct}%"></span></span>` +
-        `<span class="prof-foot">${save.xp}/${need} XP${missAlert ? ' · missie klaar' : ''}</span>`;
+        `<span class="prof-foot">${save.xp}/${need} XP${missAlert ? ' · ' + t('ui.menuMissionReady') : ''}</span>`;
       profileEl.classList.toggle('has-alert', missAlert);
     }
     const statsEl = document.getElementById('menuStats');
@@ -839,26 +836,15 @@ const UI = {
       const prog = onboardingProgress();
       const next = nextUntriedMode();
       if (next) {
-        tipEl.textContent = `Eerste minuut ${prog.seen}/${prog.total} · probeer: ${next.label}`;
+        tipEl.textContent = t('ui.menuFirstMinuteNext', { seen: prog.seen, total: prog.total, next: next.label });
         hintLine = tipEl.textContent;
       } else if (prog.seen < prog.total) {
-        tipEl.textContent = `Eerste minuut ${prog.seen}/${prog.total} modi — één hint per modus bovenin`;
+        tipEl.textContent = t('ui.menuFirstMinutePartial', { seen: prog.seen, total: prog.total });
         hintLine = tipEl.textContent;
       } else {
-        const tips = [
-          'Kies een tegel — Avontuur · Arcade · 2P · Collectie',
-          '5 eilanden — baas Lv 10/20/30/40/50 opent volgend eiland',
-          'Skill gate — max wapen per eiland in avontuur',
-          '5× verlies op één level = Meester-buff +20%',
-          'Training = solo · Versus = 2P lokaal op iPad',
-          'Muur-combo’s = sneller sloop & meer XP',
-          'Monsterboek vullen = meer max HP',
-          'Verder spelen hervat je laatste modus',
-          'Menu-muziek wisselt als je terugkeert uit een modus',
-        ];
-        const i = Math.floor(Date.now() / 8000) % tips.length;
-        tipEl.textContent = tips[i];
-        hintLine = tips[i];
+        const i = Math.floor(Date.now() / 8000);
+        tipEl.textContent = menuTipAt(i);
+        hintLine = tipEl.textContent;
       }
     }
     if (hubHintEl) hubHintEl.textContent = hintLine;
@@ -913,15 +899,15 @@ const UI = {
       const streak = dailyStreakLine();
       if (step === 0) {
         sub.textContent = streak
-          ? `Dag voltooid · ${streak} — morgen 3 nieuwe lichte missies (middernacht)`
-          : 'Dag voltooid — morgen 3 nieuwe lichte missies (middernacht)';
+          ? t('missionsUi.subDayDoneStreak', { streak })
+          : t('missionsUi.subDayDone');
       } else {
         const pending = dailyUnclaimedXp();
         const base = step === 2
-          ? `Stap 2: claim +${pending} XP · daarna dagbonus (+80) — licht, geen grind`
+          ? t('missionsUi.subStep2', { xp: pending })
           : (step === 3
-            ? 'Stap 3: tik Dagbonus (+80 XP) — licht, geen grind'
-            : `Stap 1: speel missies · max +${dailyPotentialXp()} XP vandaag — licht, geen grind`);
+            ? t('missionsUi.subStep3')
+            : t('missionsUi.subStep1', { xp: dailyPotentialXp() }));
         sub.textContent = streak ? `${base} · ${streak}` : base;
       }
     }
@@ -934,15 +920,15 @@ const UI = {
       sum.style.display = 'block';
       const bonusLeft = !save.daily.dayBonusClaimed;
       const streak = dailyStreakLine();
-      sum.innerHTML = `<b>${doneN}/3</b> klaar · <b>${claimedN}/3</b> geclaimd` +
-        (readyN ? ` · <b style="color:#ffd75e">${readyN} klaar om te claimen</b>` : '') +
+      sum.innerHTML = t('missionsUi.summaryDone', { done: doneN, claimed: claimedN }) +
+        (readyN ? ` · <b style="color:#ffd75e">${t('missionsUi.summaryReady', { n: readyN })}</b>` : '') +
         (bonusLeft
           ? (claimedN === 3
-            ? ' · <b style="color:#7cfc8a">dagbonus +80 XP klaar</b>'
-            : ` · dagbonus na ${3 - claimedN} claim${3 - claimedN === 1 ? '' : 's'}`)
+            ? ` · <b style="color:#7cfc8a">${t('missionsUi.summaryBonusReady')}</b>`
+            : ` · ${claimedN === 2 ? t('missionsUi.summaryBonusAfter1') : t('missionsUi.summaryBonusAfterN', { n: 3 - claimedN })}`)
           : ` · dagbonus ${SVG_CHECK_MINI}`) +
         (streak ? ` · <b style="color:#7cf5ff">${streak}</b>` : '') +
-        ` · max vandaag <b>+${dailyPotentialXp()} XP</b>`;
+        ` · ${t('missionsUi.summaryMax', { xp: dailyPotentialXp() })}`;
     }
     const claimAll = document.getElementById('dailyClaimAllBtn');
     if (claimAll) {
@@ -951,56 +937,58 @@ const UI = {
       if (lab) {
         const xpSum = claimableDailyTasks().reduce((n, t) => n + (dailyDef(t.id)?.xp || 0), 0);
         const afterClaim = 3 - claimedN - readyN;
-        lab.innerHTML = `Claim alle klaar<small>+${xpSum} XP` +
+        lab.innerHTML = t('missionsUi.claimAllBtn') + `<small>+${xpSum} XP` +
           (afterClaim > 0
-            ? ` · nog ${afterClaim} claim${afterClaim === 1 ? '' : 's'} voor dagbonus +80`
-            : ' · daarna dagbonus +80') +
+            ? (afterClaim === 1
+              ? ` · ${t('missionsUi.claimAllAfter1')}`
+              : ` · ${t('missionsUi.claimAllAfterN', { n: afterClaim })}`)
+            : ` · ${t('missionsUi.claimAllThenBonus')}`) +
           '</small>';
       }
     }
     dailyHost.innerHTML = '';
-    for (const t of tasks) {
-      const def = dailyDef(t.id);
+    for (const task of tasks) {
+      const def = dailyDef(task.id);
       if (!def) continue;
       const el = document.createElement('div');
-      const claimable = t.done && !t.claimed;
-      const isNextUp = !t.done && !t.claimed && t.id === nextUpId;
+      const claimable = task.done && !task.claimed;
+      const isNextUp = !task.done && !task.claimed && task.id === nextUpId;
       el.className = 'step-card mission-card' +
         (claimable ? ' claimable' : '') +
-        (t.claimed ? ' claimed' : '') +
+        (task.claimed ? ' claimed' : '') +
         (isNextUp ? ' next-up' : '');
-      const pct = Math.min(100, Math.round(t.progress / def.goal * 100));
+      const pct = Math.min(100, Math.round(task.progress / def.goal * 100));
       let status;
-      if (t.claimed) status = `<span style="color:#7cfc8a">${SVG_CHECK_MINI} Geclaimd</span>`;
-      else if (t.done) status = '<span style="color:#ffd75e">Klaar — tik Claim hieronder</span>';
-      else status = `<span style="opacity:.85">Bezig ${t.progress}/${def.goal}</span>`;
-      const playHint = DAILY_PLAY_HINTS[def.id] || '';
+      if (task.claimed) status = `<span style="color:#7cfc8a">${SVG_CHECK_MINI} ${t('missionsUi.dailyClaimed')}</span>`;
+      else if (task.done) status = `<span style="color:#ffd75e">${t('missionsUi.dailyReady')}</span>`;
+      else status = `<span style="opacity:.85">${t('missionsUi.dailyProgress', { cur: task.progress, goal: def.goal })}</span>`;
+      const playHint = dailyHint(def.id);
       const playTarget = DAILY_PLAY_TARGETS[def.id];
-      const remainder = dailyTaskRemainderText(t, def);
+      const remainder = dailyTaskRemainderText(task, def);
       const modePill = playTarget
-        ? `<span class="mission-mode-pill">${playTarget.label}</span> `
+        ? `<span class="mission-mode-pill">${dailyModeLabel(playTarget.mode)}</span> `
         : '';
-      el.innerHTML = `${modePill}<b>${def.text}</b>${isNextUp ? ' <span class="next-up-tag">volgende</span>' : ''}<br>${status}` +
-        (remainder && !t.done ? `<div style="color:#7cf5ff;font-size:12px;margin-top:4px;font-weight:700">${remainder}</div>` : '') +
-        (playHint && !t.done ? `<div style="opacity:.75;font-size:12px;margin-top:4px">${playHint}</div>` : '') +
-        `<div style="opacity:.8;font-size:13px;margin-top:4px">Beloning +${def.xp} XP</div>` +
+      el.innerHTML = `${modePill}<b>${dailyText(def.id)}</b>${isNextUp ? ` <span class="next-up-tag">${t('missionsUi.dailyNextUp')}</span>` : ''}<br>${status}` +
+        (remainder && !task.done ? `<div style="color:#7cf5ff;font-size:12px;margin-top:4px;font-weight:700">${remainder}</div>` : '') +
+        (playHint && !task.done ? `<div style="opacity:.75;font-size:12px;margin-top:4px">${playHint}</div>` : '') +
+        `<div style="opacity:.8;font-size:13px;margin-top:4px">${t('missionsUi.dailyReward', { xp: def.xp })}</div>` +
         `<div class="xpline" style="margin-top:8px"><div style="width:${pct}%"></div></div>`;
       if (claimable) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'btn claim-btn';
-        btn.textContent = `Claim +${def.xp} XP`;
+        btn.textContent = t('missionsUi.dailyClaimBtn', { xp: def.xp });
         btn.addEventListener('click', () => safeUiAction(() => {
           AudioSys.sfx('select');
-          claimDailyTask(t.id);
-        }, 'claimDaily/' + t.id, 'Claim mislukt — probeer opnieuw'));
+          claimDailyTask(task.id);
+        }, 'claimDaily/' + task.id, 'Claim mislukt — probeer opnieuw'));
         el.appendChild(btn);
-      } else if (!t.done && playTarget) {
+      } else if (!task.done && playTarget) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'btn mission-play-btn';
-        btn.textContent = `Speel ${playTarget.label} →`;
-        btn.addEventListener('click', () => safeUiAction(() => goDailyPlayTarget(t.id), 'dailyPlay/' + t.id, 'Kon modus niet openen'));
+        btn.textContent = t('missionsUi.dailyPlayBtn', { mode: dailyModeLabel(playTarget.mode) });
+        btn.addEventListener('click', () => safeUiAction(() => goDailyPlayTarget(task.id), 'dailyPlay/' + task.id, 'Kon modus niet openen'));
         el.appendChild(btn);
       }
       dailyHost.appendChild(el);
@@ -1013,7 +1001,7 @@ const UI = {
         bonusBtn.style.display = 'flex';
         bonusBtn.disabled = true;
         bonusBtn.classList.add('done');
-        if (label) label.innerHTML = 'Dagbonus geclaimd<small>Morgen weer nieuw</small>';
+        if (label) label.innerHTML = t('missionsUi.bonusClaimed') + `<small>${t('missionsUi.bonusTomorrow')}</small>`;
       } else {
         bonusBtn.classList.remove('done');
         bonusBtn.style.display = 'flex';
@@ -1021,8 +1009,8 @@ const UI = {
         bonusBtn.style.opacity = ready ? '1' : '0.45';
         if (label) {
           label.innerHTML = ready
-            ? 'Dagbonus claimen<small>+80 XP · tik hier</small>'
-            : `Dagbonus<small>Nog ${3 - claimedN} claim${3 - claimedN === 1 ? '' : 's'} nodig</small>`;
+            ? t('missionsUi.bonusClaimBtn') + `<small>${t('missionsUi.bonusTap')}</small>`
+            : t('missionsUi.bonusNeed') + `<small>${(3 - claimedN) === 1 ? t('missionsUi.bonusNeed1') : t('missionsUi.bonusNeedN', { n: 3 - claimedN })}</small>`;
         }
       }
     }
@@ -1030,8 +1018,8 @@ const UI = {
     const gotN = Object.keys(save.achievements).length;
     const nearN = ACHIEVEMENTS.filter(a => !save.achievements[a.id] && achievementProgressFrac(a) >= 0.5).length;
     if (achSum) {
-      achSum.textContent = `${gotN}/${ACHIEVEMENTS.length} prestaties · permanent (niet dagelijks)` +
-        (nearN ? ` · ${nearN} bijna klaar` : '');
+      achSum.textContent = t('missionsUi.achSummary', { got: gotN, total: ACHIEVEMENTS.length }) +
+        (nearN ? ` · ${t('missionsUi.achNear', { n: nearN })}` : '');
     }
     const achFilterHost = document.getElementById('achFilterBar');
     if (achFilterHost) {
@@ -1039,7 +1027,8 @@ const UI = {
       const mk = (id, label) =>
         `<button type="button" class="dex-filter-btn${cur === id ? ' active' : ''}" data-ach-filter="${id}">${label}</button>`;
       achFilterHost.innerHTML =
-        mk('all', 'Alle') + mk('near', 'Bijna') + mk('open', 'Open') + mk('done', 'Behaald');
+        mk('all', t('missionsUi.filterAll')) + mk('near', t('missionsUi.filterNear')) +
+        mk('open', t('missionsUi.filterOpen')) + mk('done', t('missionsUi.filterDone'));
       if (!achFilterHost.dataset.bound) {
         achFilterHost.dataset.bound = '1';
         achFilterHost.addEventListener('click', (e) => {
@@ -1087,10 +1076,10 @@ const UI = {
       el.style.borderColor = got ? (isNew ? '#7cf5ff' : '#ffd75e') : undefined;
       const pct = Math.min(100, Math.round(frac * 100));
       const progBar = got ? '' : `<div class="xpline" style="margin-top:6px;height:5px"><div style="width:${pct}%"></div></div>`;
-      el.innerHTML = `<div class="cname">${achIconSvg(ach.id)} ${achLabel(ach, 'name')}${isNew ? ' · nieuw' : ''}${near ? ' · bijna' : ''}</div>` +
+      el.innerHTML = `<div class="cname">${achIconSvg(ach.id)} ${achLabel(ach, 'name')}${isNew ? ' · ' + t('missionsUi.badgeNew') : ''}${near ? ' · ' + t('missionsUi.badgeNear') : ''}</div>` +
         `<div class="cinfo">${achLabel(ach, 'desc')}${got ? ` · ${SVG_CHECK_MINI} ` + got : (() => {
           const hint = achievementProgressHint(ach);
-          return hint ? ' · ' + hint : ' · nog open';
+          return hint ? ' · ' + hint : ' · ' + t('missionsUi.stillOpen');
         })()}</div>${progBar}`;
       achHost.appendChild(el);
     }
@@ -1260,7 +1249,7 @@ const UI = {
       }).join('');
       el.innerHTML = locked
         ? SVG_LOCK_ICON
-        : `${n}${boss ? '<small>BAAS</small>' : `<small style="color:${rar.color}">${rarityLabel(sp.rarity)}</small>`}` +
+        : `${n}${boss ? `<small>${t('ui.boss')}</small>` : `<small style="color:${rar.color}">${rarityLabel(infoLv.rarityCap)}</small>`}` +
           `<span class="lvl-wave-strip" aria-hidden="true">${waveStrip}</span>` +
           (save.stars[n] ? `<span class="lvl-stars">${'★'.repeat(save.stars[n])}</span>` : '') +
           (fails > 0 && !locked ? `<span class="lvl-fails">${fails}/5</span>` : '') +
@@ -1286,7 +1275,7 @@ const UI = {
               pendingAdvLevel = n;
               lastGambleRoll = null;
               startAdventureFromGamble(true);
-              try { UI.toast('Zonder gok', 1400); } catch (_) {}
+              try { UI.toast(t('toast.skipGamble'), 1400); } catch (_) {}
             }, 'skipGamble/' + n, 'Start mislukt');
           }, 520);
         }, { passive: true });
@@ -1308,25 +1297,25 @@ const UI = {
     const diceRow = document.getElementById('gambleDiceRow');
     const sumLine = document.getElementById('gambleSumLine');
     const outEl = document.getElementById('gambleOutcome');
-    if (head) head.textContent = `Gok — ${islandMeta(islandFromLevel(levelN)).name} · Lv ${levelN}`;
+    if (head) head.textContent = t('ui.gambleHead', { island: islandLabel(islandFromLevel(levelN), 'name'), level: levelN });
     const ctx = document.getElementById('gambleIslandCtx');
     if (ctx) {
       const cap = adventureWeaponCapForLevel(levelN);
-      ctx.textContent = `Skill gate: wapens tot Lv ${cap} · daarna dobbelen voor super-baas of bondgenoot`;
+      ctx.textContent = t('ui.gambleCtx', { cap });
     }
     const g = lastGambleRoll;
     const face = (d) => ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][d - 1] || '?';
     if (g && diceRow) {
       diceRow.textContent = `${face(g.d1)} ${face(g.d2)}`;
-      if (sumLine) sumLine.textContent = `Som: ${g.d1} + ${g.d2} = ${g.sum}`;
+      if (sumLine) sumLine.textContent = t('ui.gambleSumRoll', { d1: g.d1, d2: g.d2, sum: g.sum });
     } else {
       if (diceRow) diceRow.textContent = '? ?';
-      if (sumLine) sumLine.textContent = 'Tik Gooi & start — of overslaan zonder gok';
+      if (sumLine) sumLine.textContent = t('ui.gambleSumDefault');
     }
     if (outEl) {
-      if (!g) outEl.textContent = 'Super-baas (som ≤5) of super-bondgenoot (som ≥9) kan dit level veranderen.';
+      if (!g) outEl.textContent = t('ui.gamblePreview');
       else {
-        outEl.textContent = gambleOutcomeLabel(g);
+        outEl.textContent = gambleOutcomeLabelFromKey(g);
         const col = g.outcome === 'superBoss' || g.outcome === 'miniBoss' ? '#ffb0b8'
           : (g.outcome === 'superAlly' || g.outcome === 'ally') ? (GAMBLE_ALLIES[g.allyId]?.color || '#7cf5ff') : '#8fa3d9';
         outEl.style.color = col;
@@ -1349,7 +1338,7 @@ const UI = {
       sumEl.style.display = 'block';
       sumEl.innerHTML =
         `Verzameld <b>${unlocked}/${WEAPONS.length}</b> · avontuur <b>${advUsable}</b> bruikbaar` +
-        ` · actief <b>${weaponById(save.weapon).name}</b>` +
+        ` · actief <b>${weaponLabel(save.weapon)}</b>` +
         ` · eiland-skill gate: Lv <b>${adventureWeaponCap()}</b>` +
         ((save.stats.weaponFinishers || 0) > 0 ? ` · finishers <b>${save.stats.weaponFinishers}</b>` : '') +
         (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '');
@@ -1398,8 +1387,8 @@ const UI = {
         ? ` <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">✦ Summon</span>`
         : '';
       const statLine = w.summoned
-        ? `${w.desc} · schade x${base.dmg} → <b style="color:${rar.color}">x${w.dmg}</b> · bereik ${w.range} · snelheid x${w.speed}`
-        : `${w.desc} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}`;
+        ? `${weaponDesc(w)} · schade x${base.dmg} → <b style="color:${rar.color}">x${w.dmg}</b> · bereik ${w.range} · snelheid x${w.speed}`
+        : `${weaponDesc(w)} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}`;
       const labels = weaponMoveLabels(w.id);
       const mast = (save.weaponMastery || {})[w.id];
       const finCount = mast && mast.finishers ? mast.finishers : 0;
@@ -1411,7 +1400,7 @@ const UI = {
       const moveLine = labels
         ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} finisher${mastLine}`
         : (isThrowWeapon(w.id) ? 'Werp-projectiel — geen melee-combo' : '');
-      info.innerHTML = `<div class="cname">${w.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${summonBadge}${tierBadge}</div>
+      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${summonBadge}${tierBadge}</div>
         <div class="cinfo">${statLine}</div>` +
         (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '');
       el.appendChild(info);
@@ -1430,7 +1419,7 @@ const UI = {
           if (!persistOrToast('wapen')) return;
           AudioSys.sfx('select');
           try { AudioSys.sfx(weaponSwingSfx(w.id)); } catch (_) {}
-          if (islandLocked) UI.toast(`Klaar voor training — in avontuur max Lv ${adventureWeaponCap()}`, 2800);
+          if (islandLocked) UI.toast(t('toast.weaponIslandCap', { cap: adventureWeaponCap() }), 2800);
           this.renderWeapons();
         }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt');
       });
@@ -1559,7 +1548,7 @@ const UI = {
       const petLine = PET_BY_SPECIES[id]
         ? `<div style="font-size:12px;margin-top:4px;color:${isPetTamed(PET_BY_SPECIES[id].id) ? '#7cf5ff' : '#8fa3d9'}">${petProgressLine(id)}</div>`
         : '';
-      info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>` : ''}${id === topKillId ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Top jager</span>' : ''}</div>
+      info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>` : ''}${id === topKillId ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.topHunter')}</span>` : ''}</div>
         <div class="cinfo">${kills ? `${typeLbl} · basis HP ${sp.hp} · dmg ${sp.dmg} · spd ${sp.speed} · ${sp.xp} XP · Lv ${unlockLv || '?'}` : 'Nog niet verslagen'}</div>${lockHint}${petLine}${statRow}`;
       el.appendChild(info);
       const right = document.createElement('div');
@@ -1667,11 +1656,11 @@ const UI = {
           safeUiAction(() => {
             if (active) {
               equipPet(null);
-              UI.toast('Geen actieve pet', 1400);
+              UI.toast(t('toast.petNone'), 1400);
             } else {
               equipPet(def.id);
               AudioSys.sfx('select');
-              UI.toast(`${sp.name} volgt je nu!`, 2200);
+              UI.toast(t('toast.petFollow', { name: sp.name }), 2200);
             }
             this.renderPets();
           }, 'equipPet/' + def.id, 'Pet kiezen mislukt');
@@ -1682,11 +1671,11 @@ const UI = {
           safeUiAction(() => {
             const res = buyPetWithCoins(def.id);
             if (!res) {
-              UI.toast('Niet genoeg pet coins', 1800);
+              UI.toast(t('toast.petNoCoins'), 1800);
               return;
             }
             AudioSys.sfx('summon');
-            UI.toast(`${sp.name} gekocht! Volgt je nu.`, 2600);
+            UI.toast(t('toast.petBought', { name: sp.name }), 2600);
             this.renderPets();
           }, 'buyPet/' + def.id, 'Pet kopen mislukt');
         });
@@ -1719,14 +1708,14 @@ const UI = {
           safeUiAction(() => {
             const res = crackDailyEgg();
             if (!res) {
-              UI.toast('Dag-ei al geopend — morgen weer', 2200);
+              UI.toast(t('toast.eggAlreadyOpened'), 2200);
               return;
             }
             try { AudioSys.sfx('diceRoll'); } catch (_) {}
             const rar = rarityOf(res.def.rarity);
             UI.toast(res.duplicate
-              ? `Dubbel ei: ${res.def.name} (+10 XP)`
-              : `Uitgekomen! ${res.def.name} (${rarityLabel(def.rarity)})`, 3600);
+              ? t('toast.eggDuplicateUi', { name: res.def.name })
+              : t('toast.eggHatch', { name: res.def.name, rarity: rarityLabel(res.def.rarity) }), 3600);
             this.renderPets();
             this.renderMenu();
           }, 'crackDailyEgg', 'Ei openen mislukt');
@@ -1770,11 +1759,11 @@ const UI = {
           safeUiAction(() => {
             if (active) {
               equipEggPet(null);
-              UI.toast('Geen actief ei-pet', 1400);
+              UI.toast(t('toast.eggNone'), 1400);
             } else {
               equipEggPet(def.id);
               AudioSys.sfx('select');
-              UI.toast(`${def.name} zweeft nu mee!`, 2200);
+              UI.toast(t('toast.eggFloat', { name: def.name }), 2200);
             }
             this.renderPets();
           }, 'equipEggPet/' + def.id, 'Ei-pet kiezen mislukt');
@@ -1791,7 +1780,7 @@ const UI = {
       const active = styleById(save.style || 'classic');
       sumEl.style.display = 'block';
       sumEl.innerHTML =
-        `Outfits <b>${unlocked}/${STYLES.length}</b> · actief <b>${active.name}</b>` +
+        `Outfits <b>${unlocked}/${STYLES.length}</b> · actief <b>${styleLabel(active)}</b>` +
         `<div style="margin-top:6px;font-size:12px;opacity:.85">Elke stijl heeft een eigen bonus — hover of lees de tooltip. Cosmetisch + lichte combat-perks.</div>`;
     }
     const grid = document.getElementById('styleGrid');
@@ -1802,7 +1791,7 @@ const UI = {
       const el = document.createElement('div');
       el.className = 'style-card' + (save.style === st.id ? ' sel' : '') + (ok ? '' : ' locked');
       el.style.borderColor = ok ? st.accent + '88' : '';
-      el.title = st.tooltip || st.hint || st.name;
+      el.title = styleLabel(st, 'tooltip') || styleLabel(st, 'hint') || styleLabel(st);
       const cv = document.createElement('canvas');
       cv.width = 72; cv.height = 72;
       const cc = cv.getContext('2d');
@@ -1814,7 +1803,7 @@ const UI = {
       const cap = document.createElement('div');
       cap.style.fontSize = '13px';
       cap.style.color = st.accent;
-      cap.textContent = st.name;
+      cap.textContent = styleLabel(st);
       el.appendChild(cap);
       const bonus = document.createElement('div');
       bonus.style.fontSize = '11px';
@@ -1829,15 +1818,15 @@ const UI = {
       tip.style.opacity = '0.72';
       tip.style.marginTop = '4px';
       tip.style.lineHeight = '1.35';
-      tip.textContent = st.tooltip || st.hint;
+      tip.textContent = styleLabel(st, 'tooltip') || styleLabel(st, 'hint');
       el.appendChild(tip);
       const sub = document.createElement('div');
       sub.style.fontSize = '11px';
       sub.style.fontWeight = '600';
       sub.style.opacity = '0.75';
       sub.style.marginTop = '4px';
-      sub.textContent = ok ? (save.style === st.id ? 'Actief' : 'Tik om te kiezen')
-        : (styleSkillGated(st) ? `Eiland-skill Lv ${st.needLvl}` : st.hint);
+      sub.textContent = ok ? (save.style === st.id ? t('ui.styleActive') : t('ui.stylePick'))
+        : (styleSkillGated(st) ? t('ui.styleIslandGate', { lvl: st.needLvl }) : styleLabel(st, 'hint'));
       el.appendChild(sub);
       if (ok) {
         el.addEventListener('click', () => {
@@ -1848,7 +1837,7 @@ const UI = {
             AudioSys.sfx('select');
             this.renderStyle();
             this.renderMenu();
-            UI.toast(`${st.name} uitgerust`, 2200);
+            UI.toast(t('toast.styleEquipped', { name: styleLabel(st) }), 2200);
           }, 'pickStyle/' + st.id, 'Stijl kiezen mislukt');
         });
       }

@@ -133,16 +133,16 @@ function dailyDef(id) { return DAILY_DEFS.find(d => d.id === id); }
 function bumpDaily(type, amount) {
   ensureDaily();
   let changed = false;
-  for (const t of save.daily.tasks) {
-    if (t.done) continue;
-    const def = dailyDef(t.id);
+  for (const task of save.daily.tasks) {
+    if (task.done) continue;
+    const def = dailyDef(task.id);
     if (!def || def.type !== type) continue;
     if (type === 'comboReach' || type === 'wallBricks') {
-      t.progress = Math.max(t.progress, amount);
+      task.progress = Math.max(task.progress, amount);
     } else {
-      t.progress += amount;
+      task.progress += amount;
     }
-    if (t.progress >= def.goal) { t.progress = def.goal; t.done = true; changed = true; UI.toast(`Missie klaar: ${def.text}`, 2800); }
+    if (task.progress >= def.goal) { task.progress = def.goal; task.done = true; changed = true; UI.toast(t('toast.missionDone', { text: dailyText(def.id) }), 2800); }
     else changed = true;
   }
   if (changed) { persist(); checkAchievements(); if (UI.renderMissions) UI.renderMissions(); }
@@ -163,7 +163,7 @@ function claimDailyTask(taskId, opts) {
   grantMetaXP(def.xp);
   if (!opts.silent) {
     AudioSys.sfx('bonus');
-    UI.toast(`+${def.xp} XP · ${def.text}`, 2600);
+    UI.toast(t('toast.claimXp', { xp: def.xp, text: dailyText(taskId) }), 2600);
   }
   if (!persistOrToast('missie-claim')) return 0;
   if (!opts.skipRefresh) {
@@ -180,7 +180,7 @@ function claimAllDailyReady() {
   ensureDaily();
   const ready = claimableDailyTasks();
   if (!ready.length) {
-    UI.toast('Nog geen missie klaar om te claimen', 2400);
+    UI.toast(t('toast.noMissionReady'), 2400);
     return;
   }
   let total = 0;
@@ -191,22 +191,22 @@ function claimAllDailyReady() {
   UI.renderMissions();
   UI.renderMenu();
   UI.toast(ready.length === 1
-    ? `+${total} XP geclaimd`
-    : `${ready.length} missies · +${total} XP`, 3200);
+    ? t('toast.claimBatch1', { total })
+    : t('toast.claimBatchN', { n: ready.length, total }), 3200);
   setTimeout(() => dailyClaimFollowUpToast(), 450);
 }
 
 function claimDailyDayBonus() {
   ensureDaily();
   if (save.daily.dayBonusClaimed) {
-    UI.toast('Dagbonus al geclaimd — morgen weer 3 nieuwe', 2800);
+    UI.toast(t('toast.dayBonusAlready'), 2800);
     return;
   }
   const left = save.daily.tasks.filter(t => !t.claimed).length;
   if (left > 0) {
     UI.toast(left === 1
-      ? 'Nog 1 missie claimen voor de dagbonus'
-      : `Nog ${left} missies claimen voor +80 XP dagbonus`, 3000);
+      ? t('toast.dayBonusNeed1')
+      : t('toast.dayBonusNeedN', { n: left }), 3000);
     return;
   }
   save.daily.dayBonusClaimed = true;
@@ -217,7 +217,7 @@ function claimDailyDayBonus() {
   checkAchievements();
   UI.renderMissions();
   UI.renderMenu();
-  UI.toast('Dagbonus! +80 XP · tot morgen', 3400);
+  UI.toast(t('toast.dayBonusDone'), 3400);
 }
 
 function grantMetaXP(n) {
@@ -234,7 +234,7 @@ function grantMetaXP(n) {
 function checkDailyAllBonus() {
   ensureDaily();
   if (save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed) {
-    UI.toast('Alles geclaimd — tik Dagbonus (+80 XP)', 3500);
+    UI.toast(t('toast.allClaimedTapBonus'), 3500);
   }
 }
 
@@ -260,28 +260,28 @@ function dailyFlowStep() {
 
 function dailyFlowBarHtml(step) {
   if (step === 0) {
-    return '<div class="mission-flow-bar mission-flow-done">✓ Dag afgerond — morgen 3 nieuwe missies (middernacht)</div>';
+    return `<div class="mission-flow-bar mission-flow-done">${t('missionsUi.flowDone')}</div>`;
   }
   const mk = (n, label, sub) => {
     const active = step === n ? ' active' : '';
     const done = step > n ? ' done' : '';
     return `<span class="mission-flow-pill${active}${done}"><b>${n}</b> ${label}<small>${sub}</small></span>`;
   };
-  return `<div class="mission-flow-bar">${mk(1, 'Speel', 'doe missies')}` +
-    `<span class="mission-flow-arrow">→</span>${mk(2, 'Claim', '+XP')}` +
-    `<span class="mission-flow-arrow">→</span>${mk(3, 'Dagbonus', '+80 XP')}</div>`;
+  return `<div class="mission-flow-bar">${mk(1, t('missionsUi.flowPlay'), t('missionsUi.flowPlaySub'))}` +
+    `<span class="mission-flow-arrow">→</span>${mk(2, t('missionsUi.flowClaim'), t('missionsUi.flowClaimSub'))}` +
+    `<span class="mission-flow-arrow">→</span>${mk(3, t('missionsUi.flowBonus'), t('missionsUi.flowBonusSub'))}</div>`;
 }
 
-function dailyTaskRemainderText(t, def) {
-  if (t.done || t.claimed) return '';
-  const left = def.goal - t.progress;
+function dailyTaskRemainderText(task, def) {
+  if (task.done || task.claimed) return '';
+  const left = def.goal - task.progress;
   if (left <= 0) return '';
-  if (def.type === 'kills') return `Nog ${left} kill${left === 1 ? '' : 's'}`;
-  if (def.type === 'wallBricks') return `Nog ${left} steen${left === 1 ? '' : 'en'}`;
-  if (def.type === 'comboReach') return `Nog combo ×${left}`;
-  if (def.type === 'pickups') return `Nog ${left} pickup${left === 1 ? '' : 's'}`;
-  if (def.type === 'advWin' || def.type === 'trainWin' || def.type === 'bossKill') return 'Nog 1 run';
-  return `Nog ${left}`;
+  if (def.type === 'kills') return left === 1 ? t('missionsUi.remainderKills1') : t('missionsUi.remainderKillsN', { n: left });
+  if (def.type === 'wallBricks') return left === 1 ? t('missionsUi.remainderBricks1') : t('missionsUi.remainderBricksN', { n: left });
+  if (def.type === 'comboReach') return t('missionsUi.remainderCombo', { n: left });
+  if (def.type === 'pickups') return left === 1 ? t('missionsUi.remainderPickups1') : t('missionsUi.remainderPickupsN', { n: left });
+  if (def.type === 'advWin' || def.type === 'trainWin' || def.type === 'bossKill') return t('missionsUi.remainderRun');
+  return t('missionsUi.remainderGeneric', { n: left });
 }
 
 function dailyClaimFollowUpToast() {
@@ -289,12 +289,12 @@ function dailyClaimFollowUpToast() {
   if (left.length > 0) {
     const xp = left.reduce((n, t) => n + (dailyDef(t.id)?.xp || 0), 0);
     UI.toast(left.length === 1
-      ? `Nog 1 missie klaar om te claimen (+${xp} XP)`
-      : `Nog ${left.length} missies klaar · +${xp} XP`, 2600);
+      ? t('toast.followUp1', { xp })
+      : t('toast.followUpN', { n: left.length, xp }), 2600);
     return;
   }
   if (save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed) {
-    UI.toast('Stap 3: tik Dagbonus (+80 XP)', 2800);
+    UI.toast(t('toast.followUpBonus'), 2800);
   }
 }
 
@@ -389,7 +389,7 @@ function achievementProgressHint(ach) {
 function dailyStreakLine() {
   const n = save.stats.dailyBonusCount || 0;
   if (n <= 0) return '';
-  return n >= 7 ? `${n}× dagbonus · Vastberaden!` : `${n}× dagbonus streak`;
+  return n >= 7 ? t('missionsUi.streakDone', { n }) : t('missionsUi.streakLine', { n });
 }
 
 function dailyStatusLine() {
@@ -402,19 +402,29 @@ function dailyStatusLine() {
   const streak = dailyStreakLine();
   const streakBit = streak ? ` · ${streak}` : '';
   if (save.daily.dayBonusClaimed) {
-    return `Vandaag klaar${streakBit} · ${achN}/${ACHIEVEMENTS.length} prestaties · morgen nieuwe missies`;
+    return t('missionsUi.statusDone', {
+      streak: streakBit,
+      ach: achN,
+      total: ACHIEVEMENTS.length,
+    });
   }
   const step = dailyFlowStep();
-  const stepHint = step === 2 ? 'Stap 2: claim XP'
-    : (step === 3 ? 'Stap 3: dagbonus +80 XP' : 'Stap 1: speel missies');
+  const stepHint = step === 2 ? t('missionsUi.statusStep2')
+    : (step === 3 ? t('missionsUi.statusStep3') : t('missionsUi.statusStep1'));
   const pendingXp = dailyUnclaimedXp();
   if (ready > 0) {
-    return `${stepHint} · +${pendingXp} XP klaar · ${done}/3 gedaan${streakBit}`;
+    return t('missionsUi.statusReady', {
+      hint: stepHint, xp: pendingXp, done, streak: streakBit,
+    });
   }
   if (claimed === 3) {
-    return `${stepHint} — open Missies${streakBit} · ${achN}/${ACHIEVEMENTS.length} prestaties`;
+    return t('missionsUi.statusAllClaimed', {
+      hint: stepHint, streak: streakBit, ach: achN, total: ACHIEVEMENTS.length,
+    });
   }
-  return `${stepHint} · ${done}/3 klaar · max +${dailyPotentialXp()} XP vandaag${streakBit}`;
+  return t('missionsUi.statusDefault', {
+    hint: stepHint, done, xp: dailyPotentialXp(), streak: streakBit,
+  });
 }
 
 function unlockAchievement(id) {
@@ -423,7 +433,7 @@ function unlockAchievement(id) {
   const ach = ACHIEVEMENTS.find(a => a.id === id);
   persist();
   AudioSys.sfx('newmonster');
-  UI.toast(`Prestatie: ${ach ? ach.name : id} — bekijk bij Missies`, 4000);
+  UI.toast(t('toast.achievementUnlock', { name: ach ? achLabel(ach, 'name') : id }), 4000);
   if (UI.renderMissions) UI.renderMissions();
 }
 
@@ -1360,7 +1370,7 @@ function maybeWelcomeToast() {
   persist();
   setTimeout(() => {
     if (state === 'play') return;
-    userToast('Welkom! Menu → Tips · per modus één korte hint bovenin (geen toast-stapel)', 3800);
+    userToast(t('toast.welcome'), 3800);
   }, 2800);
 }
 

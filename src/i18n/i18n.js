@@ -376,6 +376,7 @@ function applyLangStaticScreens() {
   const net = document.getElementById('netStatus');
   if (net) net.textContent = t('common.offline');
 
+  setText('menuLangLbl', 'settings.lang');
   setText('pressStartLine', 'menu.pressStart');
   const cont = document.getElementById('btnContinue');
   if (cont) {
@@ -442,7 +443,7 @@ function applyLangStaticScreens() {
   });
 
   setText('settingsHead', 'settings.title');
-  setText('settingsSub', 'settings.subtitle');
+  setText('settingsSub', 'settings.sub');
   setText('setLangLbl', 'settings.lang');
   const setMap = [
     ['setShake', 'settings.shake'], ['setHaptics', 'settings.haptics'], ['setComboHud', 'settings.comboHud'],
@@ -496,6 +497,37 @@ function applyLangStaticScreens() {
   setText('dexScreenSub', 'dex.sub');
   setText('helpHead', 'help.title');
   setText('installHead', 'install.title');
+  setText('installSub', 'ui.installSub');
+
+  setText('charSelectHead', 'ui.charHead');
+  setText('charSelectRosterLine', 'ui.charRosterLine');
+  setText('levelScreenHead', 'ui.levelHead');
+  setText('levelScreenSub', 'ui.levelSub');
+  setText('gambleSub', 'ui.gambleSub');
+  setText('styleScreenHead', 'ui.styleHead');
+  setText('styleScreenSub', 'ui.styleSub');
+  setText('weaponScreenHead', 'ui.weaponHead');
+  setText('weaponScreenSub', 'ui.weaponSub');
+  setText('helpFirstMinute', 'ui.helpFirstMinute');
+
+  const gambleStartLbl = document.getElementById('gambleStartLbl');
+  if (gambleStartLbl) gambleStartLbl.innerHTML = t('ui.gambleStart') + '<small>' + t('ui.gambleStartSub') + '</small>';
+  const gambleSkipLbl = document.getElementById('gambleSkipLbl');
+  if (gambleSkipLbl) gambleSkipLbl.innerHTML = t('ui.gambleSkip') + '<small>' + t('ui.gambleSkipSub') + '</small>';
+
+  const helpTipsList = document.getElementById('helpTipsList');
+  if (helpTipsList && typeof i18nList === 'function') {
+    const tips = i18nList('help.tips');
+    helpTipsList.innerHTML = tips.map((line) => `<li>${line}</li>`).join('');
+  }
+
+  const charIpadCard = document.querySelector('#charSelectScreen .step-card');
+  if (charIpadCard && charIpadCard.textContent.indexOf('iPad') >= 0) {
+    charIpadCard.innerHTML = t('ui.charIpadTip');
+  }
+
+  const charFightBtn = document.getElementById('btnCharFight');
+  if (charFightBtn) charFightBtn.textContent = t('ui.charFight');
 
   setText('pauseHead', 'pause.title');
   setText('pauseSub', 'pause.sub');
@@ -546,8 +578,22 @@ function applyLangStaticScreens() {
   UI.syncBackLabels();
 }
 
-function renderLangSwitch() {
-  const bar = document.getElementById('langSwitchBar');
+function onLangSwitchClick(e) {
+  const btn = e.target.closest('[data-lang]');
+  if (!btn) return;
+  const code = btn.getAttribute('data-lang');
+  if (!code || code === getLang()) return;
+  safeUiAction(() => {
+    setLang(code);
+    AudioSys.sfx('select');
+    UI.toast(t('settings.langChanged', { lang: LANG_LABELS[code] }), 2200);
+    UI.renderSettings();
+    UI.renderMenu();
+    if (typeof UI.renderModeHub === 'function') UI.renderModeHub();
+  }, 'setLang/' + code, t('ui.langSwitchFail') || 'Language switch failed');
+}
+
+function renderLangSwitchBar(bar) {
   if (!bar) return;
   const cur = getLang();
   bar.innerHTML = SUPPORTED_LANGS.map((code) =>
@@ -555,21 +601,13 @@ function renderLangSwitch() {
   ).join('');
   if (!bar.dataset.bound) {
     bar.dataset.bound = '1';
-    bar.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-lang]');
-      if (!btn) return;
-      const code = btn.getAttribute('data-lang');
-      if (!code || code === getLang()) return;
-      safeUiAction(() => {
-        setLang(code);
-        AudioSys.sfx('select');
-        UI.toast(t('settings.langChanged', { lang: LANG_LABELS[code] }), 2200);
-        UI.renderSettings();
-        UI.renderMenu();
-        if (typeof UI.renderModeHub === 'function') UI.renderModeHub();
-      }, 'setLang/' + code, 'Taal wisselen mislukt');
-    });
+    bar.addEventListener('click', onLangSwitchClick);
   }
+}
+
+function renderLangSwitch() {
+  renderLangSwitchBar(document.getElementById('langSwitchBar'));
+  renderLangSwitchBar(document.getElementById('menuLangBar'));
 }
 
 function applyLang() {
@@ -581,12 +619,18 @@ function applyLang() {
     const active = UI.activeScreen && UI.activeScreen();
     if (active === 'settingsScreen') UI.renderSettings();
     else if (active === 'missionsScreen') UI.renderMissions();
+    else if (active === 'helpScreen' && typeof UI.renderHelp === 'function') UI.renderHelp();
+    else if (active === 'weaponScreen' && typeof UI.renderWeapons === 'function') UI.renderWeapons();
+    else if (active === 'styleScreen' && typeof UI.renderStyle === 'function') UI.renderStyle();
+    else if (active === 'charSelectScreen' && typeof UI.renderCharSelect === 'function') UI.renderCharSelect();
+    else if (active === 'levelScreen' && typeof UI.renderLevels === 'function') UI.renderLevels();
     else if (active === 'modeHubScreen') UI.renderModeHub();
     UI.syncBackLabels();
   }
 }
 
 function initLang() {
+  if (typeof mergeI18nCatalogs === 'function') mergeI18nCatalogs();
   if (!save.lang || !SUPPORTED_LANGS.includes(save.lang)) {
     save.lang = detectBrowserLang();
     persist();

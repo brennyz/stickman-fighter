@@ -133,9 +133,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.59';
+const APP_VERSION = '1.17.60';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 185;
+const SW_CACHE_REV = 186;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -1263,6 +1263,7 @@ function applyLangStaticScreens() {
   const net = document.getElementById('netStatus');
   if (net) net.textContent = t('common.offline');
 
+  setText('menuLangLbl', 'settings.lang');
   setText('pressStartLine', 'menu.pressStart');
   const cont = document.getElementById('btnContinue');
   if (cont) {
@@ -1329,7 +1330,7 @@ function applyLangStaticScreens() {
   });
 
   setText('settingsHead', 'settings.title');
-  setText('settingsSub', 'settings.subtitle');
+  setText('settingsSub', 'settings.sub');
   setText('setLangLbl', 'settings.lang');
   const setMap = [
     ['setShake', 'settings.shake'], ['setHaptics', 'settings.haptics'], ['setComboHud', 'settings.comboHud'],
@@ -1383,6 +1384,37 @@ function applyLangStaticScreens() {
   setText('dexScreenSub', 'dex.sub');
   setText('helpHead', 'help.title');
   setText('installHead', 'install.title');
+  setText('installSub', 'ui.installSub');
+
+  setText('charSelectHead', 'ui.charHead');
+  setText('charSelectRosterLine', 'ui.charRosterLine');
+  setText('levelScreenHead', 'ui.levelHead');
+  setText('levelScreenSub', 'ui.levelSub');
+  setText('gambleSub', 'ui.gambleSub');
+  setText('styleScreenHead', 'ui.styleHead');
+  setText('styleScreenSub', 'ui.styleSub');
+  setText('weaponScreenHead', 'ui.weaponHead');
+  setText('weaponScreenSub', 'ui.weaponSub');
+  setText('helpFirstMinute', 'ui.helpFirstMinute');
+
+  const gambleStartLbl = document.getElementById('gambleStartLbl');
+  if (gambleStartLbl) gambleStartLbl.innerHTML = t('ui.gambleStart') + '<small>' + t('ui.gambleStartSub') + '</small>';
+  const gambleSkipLbl = document.getElementById('gambleSkipLbl');
+  if (gambleSkipLbl) gambleSkipLbl.innerHTML = t('ui.gambleSkip') + '<small>' + t('ui.gambleSkipSub') + '</small>';
+
+  const helpTipsList = document.getElementById('helpTipsList');
+  if (helpTipsList && typeof i18nList === 'function') {
+    const tips = i18nList('help.tips');
+    helpTipsList.innerHTML = tips.map((line) => `<li>${line}</li>`).join('');
+  }
+
+  const charIpadCard = document.querySelector('#charSelectScreen .step-card');
+  if (charIpadCard && charIpadCard.textContent.indexOf('iPad') >= 0) {
+    charIpadCard.innerHTML = t('ui.charIpadTip');
+  }
+
+  const charFightBtn = document.getElementById('btnCharFight');
+  if (charFightBtn) charFightBtn.textContent = t('ui.charFight');
 
   setText('pauseHead', 'pause.title');
   setText('pauseSub', 'pause.sub');
@@ -1433,8 +1465,22 @@ function applyLangStaticScreens() {
   UI.syncBackLabels();
 }
 
-function renderLangSwitch() {
-  const bar = document.getElementById('langSwitchBar');
+function onLangSwitchClick(e) {
+  const btn = e.target.closest('[data-lang]');
+  if (!btn) return;
+  const code = btn.getAttribute('data-lang');
+  if (!code || code === getLang()) return;
+  safeUiAction(() => {
+    setLang(code);
+    AudioSys.sfx('select');
+    UI.toast(t('settings.langChanged', { lang: LANG_LABELS[code] }), 2200);
+    UI.renderSettings();
+    UI.renderMenu();
+    if (typeof UI.renderModeHub === 'function') UI.renderModeHub();
+  }, 'setLang/' + code, t('ui.langSwitchFail') || 'Language switch failed');
+}
+
+function renderLangSwitchBar(bar) {
   if (!bar) return;
   const cur = getLang();
   bar.innerHTML = SUPPORTED_LANGS.map((code) =>
@@ -1442,24 +1488,17 @@ function renderLangSwitch() {
   ).join('');
   if (!bar.dataset.bound) {
     bar.dataset.bound = '1';
-    bar.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-lang]');
-      if (!btn) return;
-      const code = btn.getAttribute('data-lang');
-      if (!code || code === getLang()) return;
-      safeUiAction(() => {
-        setLang(code);
-        AudioSys.sfx('select');
-        UI.toast(t('settings.langChanged', { lang: LANG_LABELS[code] }), 2200);
-        UI.renderSettings();
-        UI.renderMenu();
-        if (typeof UI.renderModeHub === 'function') UI.renderModeHub();
-      }, 'setLang/' + code, 'Taal wisselen mislukt');
-    });
+    bar.addEventListener('click', onLangSwitchClick);
   }
 }
 
+function renderLangSwitch() {
+  renderLangSwitchBar(document.getElementById('langSwitchBar'));
+  renderLangSwitchBar(document.getElementById('menuLangBar'));
+}
+
 function applyLang() {
+  if (!canApplyDomI18n()) return;
   applyLangStaticScreens();
   renderLangSwitch();
     if (typeof UI !== 'undefined') {
@@ -1467,12 +1506,18 @@ function applyLang() {
     const active = UI.activeScreen && UI.activeScreen();
     if (active === 'settingsScreen') UI.renderSettings();
     else if (active === 'missionsScreen') UI.renderMissions();
+    else if (active === 'helpScreen' && typeof UI.renderHelp === 'function') UI.renderHelp();
+    else if (active === 'weaponScreen' && typeof UI.renderWeapons === 'function') UI.renderWeapons();
+    else if (active === 'styleScreen' && typeof UI.renderStyle === 'function') UI.renderStyle();
+    else if (active === 'charSelectScreen' && typeof UI.renderCharSelect === 'function') UI.renderCharSelect();
+    else if (active === 'levelScreen' && typeof UI.renderLevels === 'function') UI.renderLevels();
     else if (active === 'modeHubScreen') UI.renderModeHub();
     UI.syncBackLabels();
   }
 }
 
 function initLang() {
+  if (typeof mergeI18nCatalogs === 'function') mergeI18nCatalogs();
   if (!save.lang || !SUPPORTED_LANGS.includes(save.lang)) {
     save.lang = detectBrowserLang();
     persist();
@@ -1705,16 +1750,16 @@ function dailyDef(id) { return DAILY_DEFS.find(d => d.id === id); }
 function bumpDaily(type, amount) {
   ensureDaily();
   let changed = false;
-  for (const t of save.daily.tasks) {
-    if (t.done) continue;
-    const def = dailyDef(t.id);
+  for (const task of save.daily.tasks) {
+    if (task.done) continue;
+    const def = dailyDef(task.id);
     if (!def || def.type !== type) continue;
     if (type === 'comboReach' || type === 'wallBricks') {
-      t.progress = Math.max(t.progress, amount);
+      task.progress = Math.max(task.progress, amount);
     } else {
-      t.progress += amount;
+      task.progress += amount;
     }
-    if (t.progress >= def.goal) { t.progress = def.goal; t.done = true; changed = true; UI.toast(`Missie klaar: ${def.text}`, 2800); }
+    if (task.progress >= def.goal) { task.progress = def.goal; task.done = true; changed = true; UI.toast(t('toast.missionDone', { text: dailyText(def.id) }), 2800); }
     else changed = true;
   }
   if (changed) { persist(); checkAchievements(); if (UI.renderMissions) UI.renderMissions(); }
@@ -1735,7 +1780,7 @@ function claimDailyTask(taskId, opts) {
   grantMetaXP(def.xp);
   if (!opts.silent) {
     AudioSys.sfx('bonus');
-    UI.toast(`+${def.xp} XP · ${def.text}`, 2600);
+    UI.toast(t('toast.claimXp', { xp: def.xp, text: dailyText(taskId) }), 2600);
   }
   if (!persistOrToast('missie-claim')) return 0;
   if (!opts.skipRefresh) {
@@ -1752,7 +1797,7 @@ function claimAllDailyReady() {
   ensureDaily();
   const ready = claimableDailyTasks();
   if (!ready.length) {
-    UI.toast('Nog geen missie klaar om te claimen', 2400);
+    UI.toast(t('toast.noMissionReady'), 2400);
     return;
   }
   let total = 0;
@@ -1763,22 +1808,22 @@ function claimAllDailyReady() {
   UI.renderMissions();
   UI.renderMenu();
   UI.toast(ready.length === 1
-    ? `+${total} XP geclaimd`
-    : `${ready.length} missies · +${total} XP`, 3200);
+    ? t('toast.claimBatch1', { total })
+    : t('toast.claimBatchN', { n: ready.length, total }), 3200);
   setTimeout(() => dailyClaimFollowUpToast(), 450);
 }
 
 function claimDailyDayBonus() {
   ensureDaily();
   if (save.daily.dayBonusClaimed) {
-    UI.toast('Dagbonus al geclaimd — morgen weer 3 nieuwe', 2800);
+    UI.toast(t('toast.dayBonusAlready'), 2800);
     return;
   }
   const left = save.daily.tasks.filter(t => !t.claimed).length;
   if (left > 0) {
     UI.toast(left === 1
-      ? 'Nog 1 missie claimen voor de dagbonus'
-      : `Nog ${left} missies claimen voor +80 XP dagbonus`, 3000);
+      ? t('toast.dayBonusNeed1')
+      : t('toast.dayBonusNeedN', { n: left }), 3000);
     return;
   }
   save.daily.dayBonusClaimed = true;
@@ -1789,7 +1834,7 @@ function claimDailyDayBonus() {
   checkAchievements();
   UI.renderMissions();
   UI.renderMenu();
-  UI.toast('Dagbonus! +80 XP · tot morgen', 3400);
+  UI.toast(t('toast.dayBonusDone'), 3400);
 }
 
 function grantMetaXP(n) {
@@ -1806,7 +1851,7 @@ function grantMetaXP(n) {
 function checkDailyAllBonus() {
   ensureDaily();
   if (save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed) {
-    UI.toast('Alles geclaimd — tik Dagbonus (+80 XP)', 3500);
+    UI.toast(t('toast.allClaimedTapBonus'), 3500);
   }
 }
 
@@ -1832,28 +1877,28 @@ function dailyFlowStep() {
 
 function dailyFlowBarHtml(step) {
   if (step === 0) {
-    return '<div class="mission-flow-bar mission-flow-done">✓ Dag afgerond — morgen 3 nieuwe missies (middernacht)</div>';
+    return `<div class="mission-flow-bar mission-flow-done">${t('missionsUi.flowDone')}</div>`;
   }
   const mk = (n, label, sub) => {
     const active = step === n ? ' active' : '';
     const done = step > n ? ' done' : '';
     return `<span class="mission-flow-pill${active}${done}"><b>${n}</b> ${label}<small>${sub}</small></span>`;
   };
-  return `<div class="mission-flow-bar">${mk(1, 'Speel', 'doe missies')}` +
-    `<span class="mission-flow-arrow">→</span>${mk(2, 'Claim', '+XP')}` +
-    `<span class="mission-flow-arrow">→</span>${mk(3, 'Dagbonus', '+80 XP')}</div>`;
+  return `<div class="mission-flow-bar">${mk(1, t('missionsUi.flowPlay'), t('missionsUi.flowPlaySub'))}` +
+    `<span class="mission-flow-arrow">→</span>${mk(2, t('missionsUi.flowClaim'), t('missionsUi.flowClaimSub'))}` +
+    `<span class="mission-flow-arrow">→</span>${mk(3, t('missionsUi.flowBonus'), t('missionsUi.flowBonusSub'))}</div>`;
 }
 
-function dailyTaskRemainderText(t, def) {
-  if (t.done || t.claimed) return '';
-  const left = def.goal - t.progress;
+function dailyTaskRemainderText(task, def) {
+  if (task.done || task.claimed) return '';
+  const left = def.goal - task.progress;
   if (left <= 0) return '';
-  if (def.type === 'kills') return `Nog ${left} kill${left === 1 ? '' : 's'}`;
-  if (def.type === 'wallBricks') return `Nog ${left} steen${left === 1 ? '' : 'en'}`;
-  if (def.type === 'comboReach') return `Nog combo ×${left}`;
-  if (def.type === 'pickups') return `Nog ${left} pickup${left === 1 ? '' : 's'}`;
-  if (def.type === 'advWin' || def.type === 'trainWin' || def.type === 'bossKill') return 'Nog 1 run';
-  return `Nog ${left}`;
+  if (def.type === 'kills') return left === 1 ? t('missionsUi.remainderKills1') : t('missionsUi.remainderKillsN', { n: left });
+  if (def.type === 'wallBricks') return left === 1 ? t('missionsUi.remainderBricks1') : t('missionsUi.remainderBricksN', { n: left });
+  if (def.type === 'comboReach') return t('missionsUi.remainderCombo', { n: left });
+  if (def.type === 'pickups') return left === 1 ? t('missionsUi.remainderPickups1') : t('missionsUi.remainderPickupsN', { n: left });
+  if (def.type === 'advWin' || def.type === 'trainWin' || def.type === 'bossKill') return t('missionsUi.remainderRun');
+  return t('missionsUi.remainderGeneric', { n: left });
 }
 
 function dailyClaimFollowUpToast() {
@@ -1861,12 +1906,12 @@ function dailyClaimFollowUpToast() {
   if (left.length > 0) {
     const xp = left.reduce((n, t) => n + (dailyDef(t.id)?.xp || 0), 0);
     UI.toast(left.length === 1
-      ? `Nog 1 missie klaar om te claimen (+${xp} XP)`
-      : `Nog ${left.length} missies klaar · +${xp} XP`, 2600);
+      ? t('toast.followUp1', { xp })
+      : t('toast.followUpN', { n: left.length, xp }), 2600);
     return;
   }
   if (save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed) {
-    UI.toast('Stap 3: tik Dagbonus (+80 XP)', 2800);
+    UI.toast(t('toast.followUpBonus'), 2800);
   }
 }
 
@@ -1961,7 +2006,7 @@ function achievementProgressHint(ach) {
 function dailyStreakLine() {
   const n = save.stats.dailyBonusCount || 0;
   if (n <= 0) return '';
-  return n >= 7 ? `${n}× dagbonus · Vastberaden!` : `${n}× dagbonus streak`;
+  return n >= 7 ? t('missionsUi.streakDone', { n }) : t('missionsUi.streakLine', { n });
 }
 
 function dailyStatusLine() {
@@ -1974,19 +2019,29 @@ function dailyStatusLine() {
   const streak = dailyStreakLine();
   const streakBit = streak ? ` · ${streak}` : '';
   if (save.daily.dayBonusClaimed) {
-    return `Vandaag klaar${streakBit} · ${achN}/${ACHIEVEMENTS.length} prestaties · morgen nieuwe missies`;
+    return t('missionsUi.statusDone', {
+      streak: streakBit,
+      ach: achN,
+      total: ACHIEVEMENTS.length,
+    });
   }
   const step = dailyFlowStep();
-  const stepHint = step === 2 ? 'Stap 2: claim XP'
-    : (step === 3 ? 'Stap 3: dagbonus +80 XP' : 'Stap 1: speel missies');
+  const stepHint = step === 2 ? t('missionsUi.statusStep2')
+    : (step === 3 ? t('missionsUi.statusStep3') : t('missionsUi.statusStep1'));
   const pendingXp = dailyUnclaimedXp();
   if (ready > 0) {
-    return `${stepHint} · +${pendingXp} XP klaar · ${done}/3 gedaan${streakBit}`;
+    return t('missionsUi.statusReady', {
+      hint: stepHint, xp: pendingXp, done, streak: streakBit,
+    });
   }
   if (claimed === 3) {
-    return `${stepHint} — open Missies${streakBit} · ${achN}/${ACHIEVEMENTS.length} prestaties`;
+    return t('missionsUi.statusAllClaimed', {
+      hint: stepHint, streak: streakBit, ach: achN, total: ACHIEVEMENTS.length,
+    });
   }
-  return `${stepHint} · ${done}/3 klaar · max +${dailyPotentialXp()} XP vandaag${streakBit}`;
+  return t('missionsUi.statusDefault', {
+    hint: stepHint, done, xp: dailyPotentialXp(), streak: streakBit,
+  });
 }
 
 function unlockAchievement(id) {
@@ -1995,7 +2050,7 @@ function unlockAchievement(id) {
   const ach = ACHIEVEMENTS.find(a => a.id === id);
   persist();
   AudioSys.sfx('newmonster');
-  UI.toast(`Prestatie: ${ach ? ach.name : id} — bekijk bij Missies`, 4000);
+  UI.toast(t('toast.achievementUnlock', { name: ach ? achLabel(ach, 'name') : id }), 4000);
   if (UI.renderMissions) UI.renderMissions();
 }
 
@@ -2932,7 +2987,7 @@ function maybeWelcomeToast() {
   persist();
   setTimeout(() => {
     if (state === 'play') return;
-    userToast('Welkom! Menu → Tips · per modus één korte hint bovenin (geen toast-stapel)', 3800);
+    userToast(t('toast.welcome'), 3800);
   }, 2800);
 }
 
@@ -4976,6 +5031,1239 @@ function eggProgressSummary() {
     activeName: active ? active.name : 'geen',
     daily: eggDailyStatusLine(),
   };
+}
+/* --- src/i18n/catalog.js --- */
+/* ============================== I18N CATALOG ========================== */
+function deepMergeI18n(target, source) {
+  if (!source || typeof source !== 'object') return target;
+  for (const k of Object.keys(source)) {
+    const sv = source[k];
+    if (sv && typeof sv === 'object' && !Array.isArray(sv)) {
+      if (!target[k] || typeof target[k] !== 'object' || Array.isArray(target[k])) target[k] = {};
+      deepMergeI18n(target[k], sv);
+    } else target[k] = sv;
+  }
+  return target;
+}
+
+function seedNlGameStrings() {
+  if (!I18N.nl.banner) I18N.nl.banner = {};
+  Object.assign(I18N.nl.banner, {
+    levelStart: 'LEVEL {n}',
+    levelUp: 'LEVEL OMHOOG! Lv {lvl}',
+    newWeapon: 'Nieuw wapen: {name}!',
+    masterBuff: 'MEESTER-BUFF +20%',
+    masterSword: 'MASTER SWORD!',
+    bossWave: 'BAAS-GOLF!',
+    eliteWave: 'ELITE-GOLF',
+    superBossWave: 'SUPER-BAAS GOLF',
+    waveClear: 'Golf gewist +{heal} HP',
+    waveN: 'GOLF {n}/{total}',
+    fight: 'VECHT!',
+    won: 'GEWONNEN!',
+    lost: 'VERSLAGEN...',
+    round: 'RONDE {n}',
+    roundDecisive: 'RONDE {n} · beslissende ronde',
+    roundMatchPoint: 'RONDE {n} · match point',
+    roundWon: 'RONDE GEWONNEN!',
+    roundLost: 'RONDE VERLOREN',
+    p1RoundWin: 'P1 WINT RONDE!',
+    p2RoundWin: 'P2 WINT RONDE!',
+    timeHpVs: 'TIME! {hp1}% vs {hp2}% · {msg}',
+    summon: '✦ SUMMON! ✦',
+    summonAscend: '{name} → {rar}!',
+    newDex: 'Nieuw {rar}: {name}! +{hp} max HP',
+    pet: 'PET! {name}',
+    matsStart: 'MATS · MUNTJES BONUS',
+    wallStart: 'SLOOP DE MUUR!',
+    bonusDone: 'BONUS KLAAR!',
+    kets: 'KETS!',
+    ketsBam: 'KETS-BAM!',
+    wallTime: 'TIJD!',
+    wallNewWall: 'MUUR GESLOOPT! Nieuwe muur...',
+  });
+  if (!I18N.nl.result) I18N.nl.result = {};
+  Object.assign(I18N.nl.result, {
+    advWin: 'GEWONNEN!', advLose: 'VERSLAGEN...', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
+    vsP1Win: 'SPELER 1 WINT!', vsP2Win: 'SPELER 2 WINT!', wallRecord: 'NIEUW RECORD!', wallTime: 'TIJD IS OM!',
+    matsRecord: 'MATS RECORD!', matsDone: 'Goed gedaan, Mats!',
+    perfectRun: 'Perfecte run — hou je HP hoog!',
+    pickupsHelp: '{hint} — pickups helpen',
+    lossBlockTip: 'Tip: blokkeer · mik omhoog op vliegers · {prog}',
+    lossOrbTip: 'Tip: pak groene orbs · vul SUPER vóór baas · {prog}',
+    lossGambleTip: 'Eerste nederlaag: vóór elk level kun je dobbelen — bondgenoot helpt tussen golven.',
+    trainComboRecord: 'Combo-trainer: ×{n}{rec}',
+    trainComboNewRec: ' — nieuw record!',
+    trainStyleUnlock: 'Nieuwe stijl vrij: Chakra gloed — Instellingen → Stijl!',
+    trainStyleMore: 'Unlock stijlen door meer train-wins!',
+    trainLossTip: 'Spring tijdens CHIDORI-telegraph — robot mist · duck oor-lasers',
+    trainTipDefault: 'Tip: duck lasers · chakra vol → Rasengan',
+    vsRematchTip: 'Opnieuw = rematch · Pauze → Herstart match (0-0)',
+    wallRecordShare: 'Nieuw record — share met een vriend!',
+    wallComboTip: 'Tip: hou combo vast voor snellere sloop',
+    wallGapTip: 'Nog {gap} stenen tot je record — combo helpt!',
+    wallComboBarTip: 'Tip: snelle opeenvolgende slagen vullen de combo-balk',
+    wallStrongCombo: 'Sterke combo (×{n}) — volgende keer record?',
+    wallBehindPace: 'Achter record-tempo — probeer combo ×5+ voor meer sloop',
+    wallGoodPace: 'Goed tempo — volgende run kan record breken!',
+    matsPetTip: 'Pet coins uitgeven in Collectie → Pets · elke 2 Mats-munten = 1 pet coin',
+    matsControlTip: 'Joystick omhoog = hoger mikken (slag + gooi) · shuriken max 3× snel',
+    masterBuffActive: ' · Meester-buff actief',
+    wavesProg: '{cur}/{total} golven',
+    trainDetail: 'RabbitRobot {outcome} ({s}-{r}) · max combo ×{combo}{wins}{record}{finishers}',
+    trainOutcomeWin: 'verslagen', trainOutcomeLose: 'was te sterk',
+    trainWinsLine: ' · {n}x gewonnen', trainRecordLine: ' · record ×{n}',
+    finishersLine: ' · {n} finishers',
+    wallDetail: '{score} stenen (~{pace}/min) · record {best} · max combo ×{combo}{paceDelta}',
+    wallPaceDelta: ' · tempo {delta} vs record',
+    matsDetail: '{n} munten · record {best}{pet}{flyers}',
+    matsPetEarned: ' · +{n} pet coins (totaal {wallet})',
+    matsFlyers: ' · vliegers = +3 per hit',
+    advDetailWin: 'Level {lv} · {kills} monsters · {stars}★ · max combo ×{combo}{finishers}{streak}',
+    advDetailLose: 'Level {lv} · {kills} monsters · max combo ×{combo}{finishers}{streak}',
+    streakLine: ' · streak ×{n}',
+    gambleLine: ' · gok: {text}',
+  });
+  if (!I18N.nl.combat) I18N.nl.combat = {};
+  Object.assign(I18N.nl.combat, {
+    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
+    streak8: 'RAMPAGE!', streak12: 'UNSTOPPABLE!', streakHold: 'STREAK ×{n} vast!',
+    combo3: 'Combo ×3 — door!', combo5: 'Combo ×5 — netjes!', combo8: 'Combo ×8 — pro!',
+    combo10: 'Combo ×10 — meester!', comboN: 'COMBO ×{n}!',
+    pickupHp: '+HP', pickupRage: 'RAGE ×1.4', pickupChakra: 'Vol chakra!', pickupShield: 'Schild!',
+    giant: 'REUS!', wallCombo3: 'Combo ×3 · sloop +{pct}%',
+    wallCombo5: 'Combo ×5 · sloop +{pct}%', wallCombo8: 'Combo ×8 · sloop +{pct}%',
+    wallTempo: 'MUUR-TEMPO!', wallRecord: 'NIEUW RECORD!', bonus5: 'BONUS +5',
+    masterSwordGain: 'Hyrules legendarische kling — 15s!',
+    masterSwordFade: 'Master Sword vervaagt…',
+    bossWaits: 'DE BAAS WACHT…',
+    checkpoint: 'CHECKPOINT — DEEL {part}/3',
+    allyHeal: '+{heal} bondgenoot',
+    allyHit: '{name} −{dmg}',
+    gambleSuperBoss: 'Super-baas mogelijk golf {n}',
+    allyHelps: '{name} helpt je!',
+    masterBuffFloater: '5× verloren — HP, snelheid & schade ↑',
+    skillGate: 'Eiland-skill gate: max wapen Lv {cap}',
+    aimUp: 'Joystick omhoog = hoger mikken',
+    trainIntro: 'Combo-trainer — 3s oefenen, robot wacht',
+    earLaser: 'Oor-laser — spring!',
+    robotActive: 'Robot activeert — hou combo vast!',
+    roundCombo: 'Ronde combo ×{n}',
+    wallHalf: 'Halve tijd — combo vasthouden!',
+    wallLast15: 'Laatste 15s — record jagen!',
+    wallLast5: '5s — vol gas!',
+    wallComboTipShort: 'Tip: snelle opeenvolgende slagen vullen combo',
+    wallComboLost: 'Combo weg — snel weer raken!',
+    wallComboLow: 'Combo bijna weg!',
+    wallNearRec: 'Bijna record — nog {gap}!',
+    coinPlus1: '+1 munt', coinPlus3: '+3 munten',
+  });
+  if (!I18N.nl.toast) I18N.nl.toast = {};
+  Object.assign(I18N.nl.toast, {
+    islandUnlock: '{name} ontgrendeld! Skill gate: wapens tot Lv {cap}',
+    masterBuffGain: 'Meester-buff! +20% HP, snelheid & schade tot je wint',
+    eggDuplicate: 'Bonus-ei dubbel: {name} (+10 XP)',
+    eggNew: 'Bonus-ei! {name} ({rar})',
+    dexDiscover: '{rar}: {name} ontdekt! +{hp} HP',
+    petTamed: '{name} getemd — metgezel! ({cur}/{need} kills)',
+    styleUnlockTome: 'Nieuwe stijl: Boekmeester!',
+    styleUnlockCrystal: 'Nieuwe stijl: Kristallijn!',
+    styleUnlock: 'Nieuwe stijl: {name}!',
+    summon: '✦ Summon! {name} is nu {rar} — schade ×{dmg}',
+    shurikenWait: 'Werpwapen even wachten…',
+    shurikenSpam: 'Niet spammen — max 3 snel achter elkaar',
+    missionDone: 'Missie klaar: {text}',
+    claimXp: '+{xp} XP · {text}',
+    noMissionReady: 'Nog geen missie klaar om te claimen',
+    claimBatch1: '+{total} XP geclaimd',
+    claimBatchN: '{n} missies · +{total} XP',
+    dayBonusAlready: 'Dagbonus al geclaimd — morgen weer 3 nieuwe',
+    dayBonusNeed1: 'Nog 1 missie claimen voor de dagbonus',
+    dayBonusNeedN: 'Nog {n} missies claimen voor +80 XP dagbonus',
+    dayBonusDone: 'Dagbonus! +80 XP · tot morgen',
+    allClaimedTapBonus: 'Alles geclaimd — tik Dagbonus (+80 XP)',
+    followUp1: 'Nog 1 missie klaar om te claimen (+{xp} XP)',
+    followUpN: 'Nog {n} missies klaar · +{xp} XP',
+    followUpBonus: 'Stap 3: tik Dagbonus (+80 XP)',
+    achievementUnlock: 'Prestatie: {name} — bekijk bij Missies',
+    charSagaUnlock: 'Unlock minstens 2 saga-icons (Ki/Scroll/Tide/Cape/Dawn)',
+    charSagaClash: '{a} vs {b} — saga clash!',
+    charSwap: 'P1 ↔ P2 omgewisseld',
+    charNotEnough: 'Niet genoeg unlocked vechters in deze saga',
+    charRandom: '{a} vs {b} · HP {hp1}/{hp2} · TOT {tot1}/{tot2}',
+    charFair: 'Fair duo: {a} vs {b} · TOT Δ{diff}',
+    skipGamble: 'Zonder gok',
+    weaponIslandCap: 'Klaar voor training — in avontuur max Lv {cap}',
+    petNone: 'Geen actieve pet',
+    petFollow: '{name} volgt je nu!',
+    petNoCoins: 'Niet genoeg pet coins',
+    petBought: '{name} gekocht! Volgt je nu.',
+    eggAlreadyOpened: 'Dag-ei al geopend — morgen weer',
+    eggDuplicateUi: 'Dubbel ei: {name} (+10 XP)',
+    eggHatch: 'Uitgekomen! {name} ({rarity})',
+    eggNone: 'Geen actief ei-pet',
+    eggFloat: '{name} zweeft nu mee!',
+    styleEquipped: '{name} uitgerust',
+    welcome: 'Welkom! Menu → Tips · per modus één korte hint bovenin (geen toast-stapel)',
+  });
+  if (!I18N.nl.missionsUi) I18N.nl.missionsUi = {};
+  Object.assign(I18N.nl.missionsUi, {
+    flowDone: '✓ Dag afgerond — morgen 3 nieuwe missies (middernacht)',
+    flowPlay: 'Speel', flowPlaySub: 'doe missies',
+    flowClaim: 'Claim', flowClaimSub: '+XP',
+    flowBonus: 'Dagbonus', flowBonusSub: '+80 XP',
+    subDayDone: 'Dag voltooid — morgen 3 nieuwe lichte missies (middernacht)',
+    subDayDoneStreak: 'Dag voltooid · {streak} — morgen 3 nieuwe lichte missies (middernacht)',
+    subStep1: 'Stap 1: speel missies · max +{xp} XP vandaag — licht, geen grind',
+    subStep2: 'Stap 2: claim +{xp} XP · daarna dagbonus (+80) — licht, geen grind',
+    subStep3: 'Stap 3: tik Dagbonus (+80 XP) — licht, geen grind',
+    summaryDone: '{done}/3 klaar · {claimed}/3 geclaimd',
+    summaryReady: '{n} klaar om te claimen',
+    summaryBonusReady: 'dagbonus +80 XP klaar',
+    summaryBonusAfter1: 'dagbonus na 1 claim',
+    summaryBonusAfterN: 'dagbonus na {n} claims',
+    summaryMax: 'max vandaag +{xp} XP',
+    claimAllBtn: 'Claim alle klaar',
+    claimAllAfter1: 'nog 1 claim voor dagbonus +80',
+    claimAllAfterN: 'nog {n} claims voor dagbonus +80',
+    claimAllThenBonus: 'daarna dagbonus +80',
+    dailyClaimed: 'Geclaimd',
+    dailyReady: 'Klaar — tik Claim hieronder',
+    dailyProgress: 'Bezig {cur}/{goal}',
+    dailyReward: 'Beloning +{xp} XP',
+    dailyClaimBtn: 'Claim +{xp} XP',
+    dailyPlayBtn: 'Speel {mode} →',
+    dailyNextUp: 'volgende',
+    bonusClaimed: 'Dagbonus geclaimd',
+    bonusTomorrow: 'Morgen weer nieuw',
+    bonusClaimBtn: 'Dagbonus claimen',
+    bonusTap: '+80 XP · tik hier',
+    bonusNeed: 'Dagbonus',
+    bonusNeed1: 'Nog 1 claim nodig',
+    bonusNeedN: 'Nog {n} claims nodig',
+    achSummary: '{got}/{total} prestaties · permanent (niet dagelijks)',
+    achNear: '{n} bijna klaar',
+    filterAll: 'Alle', filterNear: 'Bijna', filterOpen: 'Open', filterDone: 'Behaald',
+    badgeNew: 'nieuw', badgeNear: 'bijna', stillOpen: 'nog open',
+    streakDone: '{n}× dagbonus · Vastberaden!',
+    streakLine: '{n}× dagbonus streak',
+    statusDone: 'Vandaag klaar{streak} · {ach}/{total} prestaties · morgen nieuwe missies',
+    statusStep2: 'Stap 2: claim XP',
+    statusStep3: 'Stap 3: dagbonus +80 XP',
+    statusStep1: 'Stap 1: speel missies',
+    statusReady: '{hint} · +{xp} XP klaar · {done}/3 gedaan{streak}',
+    statusAllClaimed: '{hint} — open Missies{streak} · {ach}/{total} prestaties',
+    statusDefault: '{hint} · {done}/3 klaar · max +{xp} XP vandaag{streak}',
+    remainderKills1: 'Nog 1 kill',
+    remainderKillsN: 'Nog {n} kills',
+    remainderBricks1: 'Nog 1 steen',
+    remainderBricksN: 'Nog {n} stenen',
+    remainderCombo: 'Nog combo ×{n}',
+    remainderPickups1: 'Nog 1 pickup',
+    remainderPickupsN: 'Nog {n} pickups',
+    remainderRun: 'Nog 1 run',
+    remainderGeneric: 'Nog {n}',
+  });
+  if (!I18N.nl.help) I18N.nl.help = {};
+  I18N.nl.help.tips = [
+    '<b>Power-ups:</b> verslagen monsters laten soms bolletjes vallen — HP, rage, chakra, schild.',
+    '<b>Bazen:</b> onder half HP worden ze woester (fase 2).',
+    '<b>Combo’s:</b> sla snel achter elkaar om ×2 / ×3 schade te stapelen.',
+    '<b>Dash:</b> dubbel-tik links/rechts (of toets <b>Shift</b>) om te ontwijken.',
+    '<b>Rasengan:</b> vul je <b>chakra</b>-balk — dan laad je een draaiende chakra-bol en knal je ‘m erin.',
+    '<b>Substitutie:</b> rookwolk + ontwijk (knop of <b>Shift</b>). Korte onkwetsbaarheid.',
+    '<b>Wapen-combo:</b> tik wapen 3× snel — elk wapen heeft 3 eigen moves (①②③). Raak met ① én ②, dan is ③ een <b>finisher</b> (+schade, +chakra). Meesterschap: Virtuoos 3× · Meester 10× · Legende 25× per wapen.',
+    '<b>2 spelers:</b> roster met <b>5 saga-icons</b> (Ki/Scroll/Tide/Cape/Dawn parodie) + filters · best-of-3.',
+    '<b>RabbitRobot:</b> hij gebruikt <b>Chidori</b> (bliksem) — wacht tot hij open is.',
+    '<b>Muur:</b> 60s timer · combo-balk (+4% sloop per hit) · milestones ×3/×5/×8 · record-tempo in HUD · bom/goud bonusstenen.',
+    '<b>Rariteiten:</b> Gewoon → Ongewoon → Zeldzaam → Episch → Legendarisch → Mythisch. Zeldzamer = meer XP & meer max HP.',
+    '<b>50 levels:</b> <b>5 eilanden × 10 levels</b> — skill gate wapens per eiland · baas Lv 10/20/30/40/50 opent volgend eiland · 5× verlies = Meester-buff (+20%).',
+    '<b>Backup:</b> elke save wordt dubbel opgeslagen — bij problemen: <b>Instellingen → Herstel save uit backup</b>.',
+    '<b>Delen:</b> menu → <b>Deel link</b> — vrienden op Android openen in Chrome → Zet in app-lade. Zie ANDROID-DELEN.txt op GitHub.',
+    '<b>Offline:</b> na 1× online openen cache’t de app HTML+JS — banner onderaan bij geen net. Tunnel-link heeft internet nodig; GitHub Pages + app-lade = stabielst.',
+  ];
+  if (!I18N.nl.menu) I18N.nl.menu = {};
+  I18N.nl.menu.tips = [
+    'Kies een tegel — Avontuur · Arcade · 2P · Collectie',
+    '5 eilanden — baas Lv 10/20/30/40/50 opent volgend eiland',
+    'Skill gate — max wapen per eiland in avontuur',
+    '5× verlies op één level = Meester-buff +20%',
+    'Training = solo · Versus = 2P lokaal op iPad',
+    'Muur-combo’s = sneller sloop & meer XP',
+    'Monsterboek vullen = meer max HP',
+    'Verder spelen hervat je laatste modus',
+    'Menu-muziek wisselt als je terugkeert uit een modus',
+  ];
+  if (!I18N.nl.ui) I18N.nl.ui = {};
+  Object.assign(I18N.nl.ui, {
+    menuMissionReady: 'missie klaar',
+    menuFirstMinuteNext: 'Eerste minuut {seen}/{total} · probeer: {next}',
+    menuFirstMinutePartial: 'Eerste minuut {seen}/{total} modi — één hint per modus bovenin',
+    charHead: 'Kies je vechter · Choose fighter',
+    charSub1: 'Speler 1 — tik een unlocked kaart (linker helft in gevecht)',
+    charSub2: 'Speler 2 — tik een andere vechter (rechter helft in gevecht)',
+    charStep1: 'Stap 1/2 · Choose P1',
+    charStep2: 'Stap 2/2 · Choose P2',
+    charRosterLine: '23 sticks · 5 saga-hints (parodie, geen officiële manga)',
+    charBlurbAll: 'Choose fighter · 5 saga-hints (parodie, geen officiële namen) · tik kaart = kiezen',
+    charEmpty: 'Geen vechters in deze saga — tik ⭐ Alle',
+    charLocked: '🔒 Locked',
+    charIconRow: 'Saga-icons · deel 2 — tik om te kiezen',
+    charBackP1: '← Andere P1',
+    charBackMenu: '← Menu',
+    charFight: 'VECHT! (best-of-3)',
+    charIpadTip: 'iPad: speler 1 gebruikt de linker helft van het scherm (joystick + knoppen), speler 2 de rechter helft. Draai je iPad liggend voor het meeste ruimte.',
+    levelHead: 'Kies een eiland',
+    levelSub: '5 eilanden × 10 levels · Tik level = Gooi & start · lang indrukken = zonder gok',
+    gambleSub: 'Twee dobbelstenen: pech = super-baas in een willekeurige golf · geluk = sterke bondgenoot (buff alleen dit level)',
+    gambleSumDefault: 'Tik Gooi & start — of overslaan zonder gok',
+    gambleSumRoll: 'Som: {d1} + {d2} = {sum}',
+    gambleHead: 'Gok — {island} · Lv {level}',
+    gambleCtx: 'Skill gate: wapens tot Lv {cap} · daarna dobbelen voor super-baas of bondgenoot',
+    gamblePreview: 'Super-baas (som ≤5) of super-bondgenoot (som ≥9) kan dit level veranderen.',
+    gambleStart: 'Gooi & start',
+    gambleStartSub: '2× d6 · meteen level',
+    gambleSkip: 'Overslaan',
+    gambleSkipSub: 'Geen gok — geen extra baas of buff',
+    styleHead: 'Stijl',
+    styleSub: 'Outfits met bonus — level, training, monsterboek · hover voor tooltip',
+    styleActive: 'Actief',
+    stylePick: 'Tik om te kiezen',
+    styleIslandGate: 'Eiland-skill Lv {lvl}',
+    weaponHead: 'Wapens',
+    weaponSub: 'Summons zijn echt · eiland-skill gate: alleen wapens tot je huidige eiland-cap in avontuur',
+    helpFirstMinute: 'Eerste minuut — per modus één korte hint bovenin het gevecht (geen toast-stapel). Avontuur: joystick + knoppen · groen = HP · vol chakra = SUPER-knop. Training = Robot · Muur = combo · 2 spelers = links/rechts.',
+    helpOnboardHead: 'Eerste-minuut hints: {seen}/{total} modi gezien · max één regel bovenin per modus',
+    helpTryNext: 'Probeer als volgende: {mode}',
+    helpTrySub: 'Nog niet gespeeld — één hint bovenin, geen extra toast.',
+    helpHintSeen: '✓ hint gezien',
+    helpHintNot: '· nog niet',
+    helpTouch: 'touch',
+    helpKeyboard: 'toetsenbord',
+    helpIslandTitle: 'Eilanden & skill gate',
+    helpIslandIntro: 'avontuur is 5×10 levels. Per eiland geldt een wapen-cap (nu Lv {cap} op eiland {cur}).',
+    helpMasterBuff: 'Meester-buff: 5× verlies op hetzelfde level → +20% HP, snelheid & schade tot je wint. Baas op Lv 10/20/30/40/50 opent het volgende eiland.',
+    helpIslandLocked: 'Vergrendeld — versla baas Lv {lv}',
+    helpIslandProg: '{cleared}/{total} levels · {stars}/{maxStars}★ · skill gate wapens Lv {cap}',
+    installSub: 'Verschijnt als icoon — net als een echte app',
+    boss: 'BAAS',
+    topHunter: 'Top jager',
+    modeAdventure: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok vóór level',
+    modeTraining: 'Combo-trainer ×5/×8/×10 · 3s dummy · lasers · Chidori',
+    modeWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing',
+    modeVersus: 'P1 links P2 rechts · best-of-3 · rematch in pauze',
+    modeCoinrun: '45s munten · 2 munten = 1 pet coin · mik ↑ · vliegers +3',
+    langSwitchFail: 'Taal wisselen mislukt',
+  });
+  if (!I18N.nl.hud) I18N.nl.hud = {};
+  Object.assign(I18N.nl.hud, {
+    super: 'SUPER', masterShort: 'MEESTER +20%', masterSword: 'MASTER SWORD {n}s',
+    levelWave: 'Level {n} — Golf {wv}/{total}', islandWeapon: '{name} · wapen ≤ Lv {cap}',
+    part: 'deel {cur}/3', waveLine: 'Golf {n}/{total}', wavesTotal: '{total} golven',
+    nextWave: 'Volgende golf', eggPet: 'Ei · {name}', petActive: 'Pet · {name}',
+    petDefault: 'Metgezel', cosmetic: 'Cosmetisch',
+    gambleBoss: 'Super-baas mogelijk · golf {n}', starZone: ' · 3★ zone',
+    star2: ' · 2★ bij >{pct}% HP', star3: ' · 3★ bij >{pct}% HP', hpPct: '{pct}% HP{hint}',
+    enemiesLeft1: 'Nog 1 vijand in deze golf', enemiesLeftN: 'Nog {n} vijanden in deze golf',
+    toBoss: 'Op weg naar de baas — {sec}s', walkNext: 'Verder lopen… volgende golf {sec}s',
+    streak: 'STREAK ×{n}', combo: 'COMBO ×{n}', rage: 'RAGE {n}s', shield: 'Schild {n}s',
+    earLaser: 'OOR-LASER — spring!', chidoriTele: 'CHIDORI — dash/spring!',
+    kickTele: 'TRAP — spring/blok!', punchTele: 'SLA — blok/weg!', earLaserShort: 'OOR-LASER',
+    rabbitRobot: 'RABBITROBOT · {pct}%', roundInfo: 'Ronde {n} · eerst 2 wint · {s}-{r}',
+    dummyGrace: 'Dummy {n}s — oefen combo', goal: 'doel ×{n}', record: 'record ×{n}',
+    time: 'TIJD', wallGen: 'MUUR ×{n}', stones: 'Stenen: {n}',
+    recordGap: 'Record {best} · nog {gap} te gaan',
+    recordBroken: 'Record gebroken · {rec}', recordLine: 'Record: {rec}',
+    pace: '~{pace}/min · projectie ~{proj}', paceAhead: 'Voor op record-tempo +{n}',
+    paceBehind: 'Achter record-tempo {n}', comboLabel: 'COMBO',
+    comboSmash: '+{pct}% sloop', comboActive: 'Combo actief — nog een steen!',
+    coins: 'Munten: {n}', matsRecord: 'Record Mats: {n}',
+    petCoins: 'Pet coins: +{pending} · wallet {wallet}',
+    matsHint: 'Joystick ↑ mik · slag/gooi hoger · shuriken op roze vliegers',
+    spawnFair: 'Spawn · eerlijk start', nextRound: 'Volgende ronde',
+    p1Line: 'P1 · {name} · {pct}%', p2Line: '{pct}% · {name} · P2',
+    decisiveRound: 'Beslissende ronde · {s}-{r}',
+    timeHpWin: 'TIME = hoogste HP % wint',
+    hintDualTouch: 'P1 = linker helft · P2 = rechter helft · joystick + aanvalsknoppen',
+    hintDualKb: 'P1: A/D · W · J/K/L/U · Shift  |  P2: pijltjes · 1/2/3/4/5',
+    hintTouch: 'Links: joystick om te lopen · Rechts: aanvalsknoppen',
+    hintKb: 'A/D lopen · W springen · J stomp · K trap · L wapen · U speciaal',
+    ketsTap: 'Tik!', ketsKey: 'E / tik',
+  });
+}
+
+function seedNlFromRuntime() {
+  if (typeof ACHIEVEMENTS !== 'undefined') {
+    if (!I18N.nl.ach) I18N.nl.ach = {};
+    for (const a of ACHIEVEMENTS) I18N.nl.ach[a.id] = { name: a.name, desc: a.desc };
+  }
+  if (typeof DAILY_DEFS !== 'undefined') {
+    if (!I18N.nl.daily) I18N.nl.daily = {};
+    for (const d of DAILY_DEFS) {
+      if (!I18N.nl.daily[d.id]) I18N.nl.daily[d.id] = {};
+      I18N.nl.daily[d.id].text = d.text;
+    }
+  }
+  if (typeof DAILY_PLAY_HINTS !== 'undefined') {
+    if (!I18N.nl.daily) I18N.nl.daily = {};
+    for (const id of Object.keys(DAILY_PLAY_HINTS)) {
+      if (!I18N.nl.daily[id]) I18N.nl.daily[id] = {};
+      I18N.nl.daily[id].hint = DAILY_PLAY_HINTS[id];
+    }
+  }
+  if (typeof WEAPONS !== 'undefined') {
+    if (!I18N.nl.weapon) I18N.nl.weapon = {};
+    for (const w of WEAPONS) I18N.nl.weapon[w.id] = { name: w.name, desc: w.desc };
+  }
+  if (typeof STYLES !== 'undefined') {
+    if (!I18N.nl.style) I18N.nl.style = {};
+    for (const s of STYLES) I18N.nl.style[s.id] = { name: s.name, hint: s.hint, tooltip: s.tooltip, bonus: s.bonus };
+  }
+  if (typeof PICKUP_META !== 'undefined') {
+    if (!I18N.nl.pickup) I18N.nl.pickup = {};
+    for (const kind of PICKUP_TYPES || Object.keys(PICKUP_META)) {
+      const m = PICKUP_META[kind];
+      if (m && m.label) I18N.nl.pickup[kind] = m.label;
+    }
+  }
+}
+
+function mergeI18nCatalogs() {
+  seedNlFromRuntime();
+  seedNlGameStrings();
+  deepMergeI18n(I18N.en, CATALOG_EN);
+  deepMergeI18n(I18N.de, CATALOG_DE);
+  deepMergeI18n(I18N.fr, CATALOG_FR);
+  deepMergeI18n(I18N.es, CATALOG_ES);
+}
+
+const CATALOG_EN = {
+  ach: {
+    first_win: { name: 'First triumph', desc: 'Win your first level' },
+    lv10: { name: 'Growing ninja', desc: 'Reach fighter Lv 10' },
+    dex10: { name: 'Monster expert', desc: '10 species in monster book' },
+    dexFull: { name: 'Encyclopedia', desc: 'All monster species discovered' },
+    dex100: { name: 'Hunter', desc: '100 monster kills logged' },
+    dexHalf: { name: 'Field guide', desc: 'Half of all species discovered' },
+    dexTiers: { name: 'Rarity hunter', desc: '4 different rarities in book' },
+    dexMythic: { name: 'Myth seeker', desc: 'Discover one mythic monster' },
+    train5: { name: 'Robot breaker', desc: 'Win training 5×' },
+    wall100: { name: 'Demolisher', desc: 'Wall record 100+' },
+    combo8: { name: 'Combo king', desc: 'Reach combo ×8' },
+    finisher10: { name: 'Style master', desc: 'Land 10 weapon finishers' },
+    finisher1: { name: 'First style', desc: 'Land your first weapon finisher' },
+    weaponMaster25: { name: 'Weapon legend', desc: '25 finishers with one weapon' },
+    finisher50: { name: 'Combo sensei', desc: '50 finishers total' },
+    streak10: { name: 'Unstoppable', desc: 'Kill streak ×10 in adventure' },
+    trainCombo10: { name: 'Dummy master', desc: 'Training combo ×10' },
+    lv50: { name: 'Legend', desc: 'Unlock level 50' },
+    daily7: { name: 'Determined', desc: 'Claim 7 daily bonuses' },
+    vs5: { name: 'Duelist', desc: 'Play 5× 2-player duels' },
+    vs_roster: { name: 'Full roster', desc: 'Play 10+ different fighters (2P)' },
+    saga_icons: { name: 'Saga legends', desc: 'Play 2P with all 5 saga-icon sticks' },
+  },
+  daily: {
+    kills12: { text: 'Defeat 12 monsters', hint: 'Play Adventure or Training' },
+    advwin: { text: 'Win 1 adventure level', hint: 'Menu → Adventure, win the level' },
+    wall35: { text: 'Smash 35 wall bricks', hint: 'Menu → Wall smash (combo helps)' },
+    trainwin: { text: 'Win training vs Robot', hint: 'Menu → Training vs RabbitRobot' },
+    combo5: { text: 'Reach combo ×5', hint: 'Adventure: fast combos on monsters' },
+    finisher3: { text: 'Land 3 weapon finishers', hint: 'Adventure/Training: hit ①+②, then finisher ③' },
+    pick3: { text: 'Grab 3 power-ups', hint: 'Adventure: green/orange/blue orbs' },
+    boss1: { text: 'Defeat 1 boss monster', hint: 'Adventure: boss at end of a level' },
+  },
+  weapon: {
+    vuist: { name: 'Fists', desc: 'Taijutsu basics' },
+    kunai: { name: 'Kunai', desc: 'Classic ninja blade' },
+    shuriken: { name: 'Shuriken', desc: 'Throws sharp stars' },
+    tanto: { name: 'Tanto', desc: 'Short blade · fast' },
+    zwaard: { name: 'Ninja sword', desc: 'Kenjutsu all-rounder' },
+    sai: { name: 'Sai', desc: 'Three-prong · parry' },
+    knuppel: { name: 'Club', desc: 'Raw blunt force' },
+    waaier: { name: 'War fan', desc: 'Fan slash · stylish' },
+    speer: { name: 'Spear', desc: 'Huge reach' },
+    tonfa: { name: 'Tonfa', desc: 'Side handle · flurry' },
+    nunchaku: { name: 'Nunchaku', desc: 'Lightning fast' },
+    kama: { name: 'Kama', desc: 'Sickle · hook strikes' },
+    boemerang: { name: 'Boomerang', desc: 'Comes back' },
+    zeis: { name: 'Shadow scythe', desc: 'Long arc · dark' },
+    hamer: { name: 'Sledgehammer', desc: 'Smashes everything' },
+    drietand: { name: 'Trident', desc: 'Three points · thrust' },
+    ketting: { name: 'Chain blade', desc: 'Reach + pressure' },
+    bostaf: { name: 'Bo staff', desc: 'Long staff · tempo' },
+    laser: { name: 'Chakra blade', desc: 'Blue burning edge' },
+    fuuma: { name: 'Fūma shuriken', desc: 'Large throwing star' },
+    kristal: { name: 'Crystal blade', desc: 'Shard slash' },
+    donder: { name: 'Lightning axe', desc: 'Like Chidori, but an axe' },
+    vlamzweep: { name: 'Flame whip', desc: 'Fire line · long reach' },
+    void: { name: 'Void claw', desc: 'Mythic claw' },
+    sterkling: { name: 'Star blade', desc: 'Sky metal · crits' },
+    guvve: { name: 'Guvvedukkie stick', desc: 'Quack. Please. Boom.' },
+  },
+  style: {
+    classic: { name: 'Classic', hint: 'Standard ninja', tooltip: 'Base ninja — no bonus, fastest unlock.', bonus: 'No combat bonus' },
+    konoha: { name: 'Konoha bandana', hint: 'Unlock at Lv 5', tooltip: 'Leaf village headband. Slightly more max HP — steady in long levels.', bonus: '+5 max HP' },
+    chakra: { name: 'Chakra glow', hint: 'Win training 3×', tooltip: 'Blue chakra aura. Chakra charges faster — more Rasengan/Chidori.', bonus: '+8% chakra regen' },
+    akatsuki: { name: 'Red cloak', hint: 'Unlock at Lv 12', tooltip: 'Red cloak — aggressive hits. More melee and weapon damage.', bonus: '+4% damage' },
+    shadow: { name: 'Shadow ninja', hint: 'Unlock at Lv 15', tooltip: 'Shadow steps. Extra crit chance on all hits.', bonus: '+3% crit' },
+    guvve: { name: 'Guvvedukkie', hint: '8 monsters in book', tooltip: 'Quack cosplay. Bonus XP on adventure kills — light, no grind.', bonus: '+6% adventure XP' },
+    gold: { name: 'Legendary', hint: 'Unlock at Lv 25', tooltip: 'Golden outline + glow. Stronger knockback on kicks and specials.', bonus: '+10% knockback' },
+    sand: { name: 'Desert', hint: 'Unlock at Lv 8', tooltip: 'Sand cloak — less damage taken and stronger block. Tank style for crowds.', bonus: '−14% damage · block −25% chip' },
+    samurai: { name: 'Samurai', hint: 'Unlock at Lv 20', tooltip: 'Topknot + katana stance. Weapon combos reach slightly farther.', bonus: '+8% weapon reach' },
+    cyber: { name: 'Cyber ninja', hint: 'Unlock at Lv 18', tooltip: 'Neon visor + lightning flash on melee. Faster chakra and chain sparks.', bonus: 'Lightning FX · +6% chakra' },
+    fox: { name: 'Fox ninja', hint: '12 monsters in book', tooltip: 'Fox ears — faster on the ground. Great for kiting and shuriken.', bonus: '+5% move speed' },
+    storm: { name: 'Storm spirit', hint: 'Win training 5×', tooltip: 'Storm aura + soft lightning. Extra shield at start of each wave.', bonus: 'Lightning glow · +0.8s shield/wave' },
+    void: { name: 'Void walker', hint: 'Unlock at Lv 40', tooltip: 'Void cloak — heavier jutsu. Specials (Rasengan/Chidori/Rinnegan) hit harder.', bonus: '+8% jutsu damage' },
+    hunter: { name: 'Hunter look', hint: '75 kills in monster book', tooltip: 'Hunter cape + green accents. Bonus damage vs monsters in adventure.', bonus: '+6% vs monsters' },
+    crystal: { name: 'Crystalline', hint: '4 rarities in monster book', tooltip: 'Crystal shard — reflective glow. Short shield each wave.', bonus: '+1.0s shield/wave' },
+    tome: { name: 'Bookmaster', hint: 'Half the monster book', tooltip: 'Monster book on your back. More HP bonus on new dex discoveries.', bonus: '+4 max HP · book wisdom' },
+  },
+  pickup: { heal: '+HP', rage: 'RAGE', chakra: 'CHAKRA', shield: 'SHIELD' },
+  result: {
+    advWin: 'VICTORY!', advLose: 'DEFEATED...', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+    vsP1Win: 'PLAYER 1 WINS!', vsP2Win: 'PLAYER 2 WINS!', wallRecord: 'NEW RECORD!', wallTime: "TIME'S UP!",
+    matsRecord: 'MATS RECORD!', matsDone: 'Nice job, Mats!',
+    perfectRun: 'Perfect run — keep HP high!',
+    pickupsHelp: '{hint} — pickups help',
+    lossBlockTip: 'Tip: block · aim up at flyers · {prog}',
+    lossOrbTip: 'Tip: grab green orbs · fill SUPER before boss · {prog}',
+    lossGambleTip: 'First loss: before each level you can gamble — ally helps between waves.',
+    trainComboRecord: 'Combo trainer: ×{n}{rec}',
+    trainComboNewRec: ' — new record!',
+    trainStyleUnlock: 'New style unlocked: Chakra glow — Settings → Style!',
+    trainStyleMore: 'Unlock styles with more training wins!',
+    trainLossTip: 'Jump during CHIDORI telegraph — robot misses · duck ear-lasers',
+    trainTipDefault: 'Tip: duck lasers · full chakra → Rasengan',
+    vsRematchTip: 'Again = rematch · Pause → Restart match (0-0)',
+    wallRecordShare: 'New record — share with a friend!',
+    wallComboTip: 'Tip: keep combo for faster smash',
+    wallGapTip: '{gap} bricks to your record — combo helps!',
+    wallComboBarTip: 'Tip: quick consecutive hits fill the combo bar',
+    wallStrongCombo: 'Strong combo (×{n}) — record next time?',
+    wallBehindPace: 'Behind record pace — try combo ×5+ for more smash',
+    wallGoodPace: 'Good pace — next run could break record!',
+    matsPetTip: 'Spend pet coins in Collection → Pets · every 2 Mats coins = 1 pet coin',
+    matsControlTip: 'Joystick up = aim higher (melee + throw) · shuriken max 3× fast',
+    masterBuffActive: ' · Master buff active',
+    wavesProg: '{cur}/{total} waves',
+    trainDetail: 'RabbitRobot {outcome} ({s}-{r}) · max combo ×{combo}{wins}{record}{finishers}',
+    trainOutcomeWin: 'defeated', trainOutcomeLose: 'was too strong',
+    trainWinsLine: ' · {n} wins', trainRecordLine: ' · record ×{n}',
+    finishersLine: ' · {n} finishers',
+    wallDetail: '{score} bricks (~{pace}/min) · record {best} · max combo ×{combo}{paceDelta}',
+    wallPaceDelta: ' · pace {delta} vs record',
+    matsDetail: '{n} coins · record {best}{pet}{flyers}',
+    matsPetEarned: ' · +{n} pet coins (total {wallet})',
+    matsFlyers: ' · flyers = +3 per hit',
+    advDetailWin: 'Level {lv} · {kills} monsters · {stars}★ · max combo ×{combo}{finishers}{streak}',
+    advDetailLose: 'Level {lv} · {kills} monsters · max combo ×{combo}{finishers}{streak}',
+    streakLine: ' · streak ×{n}',
+    gambleLine: ' · gamble: {text}',
+  },
+  banner: {
+    levelStart: 'LEVEL {n}',
+    levelUp: 'LEVEL UP! Lv {lvl}', newWeapon: 'New weapon: {name}!', masterBuff: 'MASTER BUFF +20%',
+    masterSword: 'MASTER SWORD!',
+    bossWave: 'BOSS WAVE!', eliteWave: 'ELITE WAVE', superBossWave: 'SUPER-BOSS WAVE',
+    waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
+    fight: 'FIGHT!', won: 'VICTORY!', lost: 'DEFEATED...',
+    round: 'ROUND {n}', roundDecisive: 'ROUND {n} · decisive round', roundMatchPoint: 'ROUND {n} · match point',
+    roundWon: 'ROUND WON!', roundLost: 'ROUND LOST',
+    p1RoundWin: 'P1 WINS ROUND!', p2RoundWin: 'P2 WINS ROUND!',
+    timeHpVs: 'TIME! {hp1}% vs {hp2}% · {msg}',
+    summon: '✦ SUMMON! ✦', summonAscend: '{name} → {rar}!',
+    newDex: 'New {rar}: {name}! +{hp} max HP', pet: 'PET! {name}',
+    matsStart: 'MATS · COIN BONUS', wallStart: 'SMASH THE WALL!', bonusDone: 'BONUS DONE!',
+    kets: 'KETS!', ketsBam: 'KETS-BAM!', wallTime: 'TIME!', wallNewWall: 'WALL SMASHED! New wall...',
+  },
+  help: { tips: [
+    'Power-ups: defeated monsters sometimes drop orbs — HP, rage, chakra, shield.',
+    'Bosses: below half HP they get fiercer (phase 2).',
+    'Combos: hit quickly in a row to stack ×2 / ×3 damage.',
+    'Dash: double-tap left/right (or Shift) to dodge.',
+    'Rasengan: fill your chakra bar — then charge a spinning orb and slam it in.',
+    'Substitution: smoke cloud + dodge (button or Shift). Brief invulnerability.',
+    'Weapon combo: tap weapon 3× fast — each weapon has 3 moves (①②③). Hit with ① and ②, then ③ is a finisher (+damage, +chakra). Mastery: Virtuoso 3× · Master 10× · Legend 25× per weapon.',
+    '2 players: roster with 5 saga-icons (Ki/Scroll/Tide/Cape/Dawn parody) + filters · best-of-3.',
+    'RabbitRobot: uses Chidori (lightning) — wait until he opens up.',
+    'Wall: 60s timer · combo bar (+4% smash per hit) · milestones ×3/×5/×8 · record pace in HUD · bomb/gold bonus bricks.',
+    'Rarities: Common → Uncommon → Rare → Epic → Legendary → Mythic. Rarer = more XP & max HP.',
+    '50 levels: 5 islands × 10 levels — skill gate weapons per island · boss Lv 10/20/30/40/50 opens next island · 5× loss = Master buff (+20%).',
+    'Backup: every save is stored twice — if needed: Settings → Restore save from backup.',
+    'Share: menu → Share link — friends on Android open in Chrome → Add to home screen. See ANDROID-DELEN.txt on GitHub.',
+    'Offline: after opening online once the app caches HTML+JS — banner at bottom when offline. Tunnel links need internet; GitHub Pages + home screen = most stable.',
+  ] },
+  toast: {
+    unknownMode: 'Unknown mode', noSession: 'No session yet — pick a mode',
+    missionsIntro: 'Missions: Play → claim XP → daily bonus — light, no grind',
+    missionReady1: '1 mission ready to claim', missionReadyN: '{n} missions ready to claim',
+    dayBonusReady: 'Daily bonus +80 XP ready', noPlayLink: 'No play link found — see Settings',
+    pasteSaveFirst: 'Paste save JSON in the box first', importPreview: 'Import preview — tap Import again to load',
+    invalidSave: 'Invalid save — check JSON', noBackup: 'No backup found on this device',
+    backupConfirm: 'Backup Lv {lvl}{drift} — tap again to restore',
+    backupRestored: 'Backup restored — save + backup in sync',
+    backupFailed: 'Backup restore failed — export save if you have one',
+    syncConfirm: 'Sync overwrites backup with main save — tap again',
+    syncOk: 'Backup synced with main save', syncFailed: 'Sync failed — export save as backup',
+    clearConfirm: 'Tap again = wipe progress (backup stays)', newStart: 'Fresh start — backup still in Settings',
+    exportCopied: 'Save copied + download · {summary} (~{size})',
+    exportBox: 'Save in box + download · {summary} (~{size})',
+    islandUnlock: '{name} unlocked! Skill gate: weapons up to Lv {cap}',
+    masterBuffGain: 'Master buff! +20% HP, speed & damage until you win',
+    eggDuplicate: 'Bonus egg duplicate: {name} (+10 XP)',
+    eggNew: 'Bonus egg! {name} ({rar})',
+    dexDiscover: '{rar}: {name} discovered! +{hp} HP',
+    petTamed: '{name} tamed — companion! ({cur}/{need} kills)',
+    styleUnlockTome: 'New style: Bookmaster!',
+    styleUnlockCrystal: 'New style: Crystalline!',
+    styleUnlock: 'New style: {name}!',
+    summon: '✦ Summon! {name} is now {rar} — damage ×{dmg}',
+    shurikenWait: 'Throw weapon on cooldown…',
+    shurikenSpam: "Don't spam — max 3 rapid throws",
+    missionDone: 'Mission complete: {text}',
+    claimXp: '+{xp} XP · {text}',
+    noMissionReady: 'No mission ready to claim yet',
+    claimBatch1: '+{total} XP claimed',
+    claimBatchN: '{n} missions · +{total} XP',
+    dayBonusAlready: 'Daily bonus already claimed — 3 new tomorrow',
+    dayBonusNeed1: 'Claim 1 more mission for daily bonus',
+    dayBonusNeedN: 'Claim {n} more missions for +80 XP daily bonus',
+    dayBonusDone: 'Daily bonus! +80 XP · see you tomorrow',
+    allClaimedTapBonus: 'All claimed — tap Daily bonus (+80 XP)',
+    followUp1: '1 more mission ready to claim (+{xp} XP)',
+    followUpN: '{n} more missions ready · +{xp} XP',
+    followUpBonus: 'Step 3: tap Daily bonus (+80 XP)',
+    achievementUnlock: 'Achievement: {name} — see Missions',
+    charSagaUnlock: 'Unlock at least 2 saga-icons (Ki/Scroll/Tide/Cape/Dawn)',
+    charSagaClash: '{a} vs {b} — saga clash!',
+    charSwap: 'P1 ↔ P2 swapped',
+    charNotEnough: 'Not enough unlocked fighters in this saga',
+    charRandom: '{a} vs {b} · HP {hp1}/{hp2} · TOT {tot1}/{tot2}',
+    charFair: 'Fair duo: {a} vs {b} · TOT Δ{diff}',
+    skipGamble: 'No gamble',
+    weaponIslandCap: 'Ready for training — in adventure max Lv {cap}',
+    petNone: 'No active pet',
+    petFollow: '{name} follows you now!',
+    petNoCoins: 'Not enough pet coins',
+    petBought: '{name} bought! Follows you now.',
+    eggAlreadyOpened: 'Daily egg already opened — try tomorrow',
+    eggDuplicateUi: 'Duplicate egg: {name} (+10 XP)',
+    eggHatch: 'Hatched! {name} ({rarity})',
+    eggNone: 'No active egg pet',
+    eggFloat: '{name} floats along now!',
+    styleEquipped: '{name} equipped',
+    welcome: 'Welcome! Menu → Tips · one short hint per mode (no toast stack)',
+  },
+  missionsUi: {
+    flowDone: '✓ Day complete — 3 new missions tomorrow (midnight)',
+    flowPlay: 'Play', flowPlaySub: 'do missions',
+    flowClaim: 'Claim', flowClaimSub: '+XP',
+    flowBonus: 'Daily bonus', flowBonusSub: '+80 XP',
+    subDayDone: 'Day complete — 3 new light missions tomorrow (midnight)',
+    subDayDoneStreak: 'Day complete · {streak} — 3 new light missions tomorrow (midnight)',
+    subStep1: 'Step 1: play missions · max +{xp} XP today — light, no grind',
+    subStep2: 'Step 2: claim +{xp} XP · then daily bonus (+80) — light, no grind',
+    subStep3: 'Step 3: tap Daily bonus (+80 XP) — light, no grind',
+    summaryDone: '{done}/3 done · {claimed}/3 claimed',
+    summaryReady: '{n} ready to claim',
+    summaryBonusReady: 'daily bonus +80 XP ready',
+    summaryBonusAfter1: 'daily bonus after 1 claim',
+    summaryBonusAfterN: 'daily bonus after {n} claims',
+    summaryMax: 'max today +{xp} XP',
+    claimAllBtn: 'Claim all ready',
+    claimAllAfter1: '1 more claim for +80 daily bonus',
+    claimAllAfterN: '{n} more claims for +80 daily bonus',
+    claimAllThenBonus: 'then daily bonus +80',
+    dailyClaimed: 'Claimed',
+    dailyReady: 'Ready — tap Claim below',
+    dailyProgress: 'In progress {cur}/{goal}',
+    dailyReward: 'Reward +{xp} XP',
+    dailyClaimBtn: 'Claim +{xp} XP',
+    dailyPlayBtn: 'Play {mode} →',
+    dailyNextUp: 'next up',
+    bonusClaimed: 'Daily bonus claimed',
+    bonusTomorrow: 'New tomorrow',
+    bonusClaimBtn: 'Claim daily bonus',
+    bonusTap: '+80 XP · tap here',
+    bonusNeed: 'Daily bonus',
+    bonusNeed1: '1 more claim needed',
+    bonusNeedN: '{n} more claims needed',
+    achSummary: '{got}/{total} achievements · permanent (not daily)',
+    achNear: '{n} almost done',
+    filterAll: 'All', filterNear: 'Almost', filterOpen: 'Open', filterDone: 'Earned',
+    badgeNew: 'new', badgeNear: 'almost', stillOpen: 'still open',
+    streakDone: '{n}× daily bonus · Determined!',
+    streakLine: '{n}× daily bonus streak',
+    statusDone: 'Done today{streak} · {ach}/{total} achievements · new missions tomorrow',
+    statusStep2: 'Step 2: claim XP',
+    statusStep3: 'Step 3: daily bonus +80 XP',
+    statusStep1: 'Step 1: play missions',
+    statusReady: '{hint} · +{xp} XP ready · {done}/3 done{streak}',
+    statusAllClaimed: '{hint} — open Missions{streak} · {ach}/{total} achievements',
+    statusDefault: '{hint} · {done}/3 done · max +{xp} XP today{streak}',
+    remainderKills1: '1 kill left',
+    remainderKillsN: '{n} kills left',
+    remainderBricks1: '1 brick left',
+    remainderBricksN: '{n} bricks left',
+    remainderCombo: 'combo ×{n} left',
+    remainderPickups1: '1 pickup left',
+    remainderPickupsN: '{n} pickups left',
+    remainderRun: '1 run left',
+    remainderGeneric: '{n} left',
+  },
+  ui: {
+    menuMissionReady: 'mission ready',
+    menuFirstMinuteNext: 'First minute {seen}/{total} · try: {next}',
+    menuFirstMinutePartial: 'First minute {seen}/{total} modes — one hint per mode at top',
+    charHead: 'Choose your fighter · Choose fighter',
+    charSub1: 'Player 1 — tap an unlocked card (left half in fight)',
+    charSub2: 'Player 2 — tap another fighter (right half in fight)',
+    charStep1: 'Step 1/2 · Choose P1',
+    charStep2: 'Step 2/2 · Choose P2',
+    charRosterLine: '23 sticks · 5 saga hints (parody, not official manga)',
+    charBlurbAll: 'Choose fighter · 5 saga hints (parody) · tap card to pick',
+    charEmpty: 'No fighters in this saga — tap ⭐ All',
+    charLocked: '🔒 Locked',
+    charIconRow: 'Saga icons · part 2 — tap to pick',
+    charBackP1: '← Other P1',
+    charBackMenu: '← Menu',
+    charFight: 'FIGHT! (best-of-3)',
+    charIpadTip: 'iPad: player 1 uses the left half (joystick + buttons), player 2 the right half. Landscape works best.',
+    levelHead: 'Pick an island',
+    levelSub: '5 islands × 10 levels · Tap level = Roll & start · long press = no gamble',
+    gambleSub: 'Two dice: bad luck = super-boss in a random wave · lucky = strong ally (buff this level only)',
+    gambleSumDefault: 'Tap Roll & start — or skip with no gamble',
+    gambleSumRoll: 'Sum: {d1} + {d2} = {sum}',
+    gambleHead: 'Gamble — {island} · Lv {level}',
+    gambleCtx: 'Skill gate: weapons up to Lv {cap} · then roll for super-boss or ally',
+    gamblePreview: 'Super-boss (sum ≤5) or super-ally (sum ≥9) can change this level.',
+    gambleStart: 'Roll & start',
+    gambleStartSub: '2× d6 · straight into level',
+    gambleSkip: 'Skip',
+    gambleSkipSub: 'No gamble — no extra boss or buff',
+    styleHead: 'Style',
+    styleSub: 'Outfits with bonus — level, training, monster book · hover for tooltip',
+    styleActive: 'Active',
+    stylePick: 'Tap to equip',
+    styleIslandGate: 'Island skill Lv {lvl}',
+    weaponHead: 'Weapons',
+    weaponSub: 'Summons are real · island skill gate: adventure weapons up to your island cap',
+    helpFirstMinute: 'First minute — one short hint per mode at top (no toast stack). Adventure: joystick + buttons · green = HP · full chakra = SUPER. Training = Robot · Wall = combo · 2P = left/right.',
+    helpOnboardHead: 'First-minute hints: {seen}/{total} modes seen · max one line per mode at top',
+    helpTryNext: 'Try next: {mode}',
+    helpTrySub: 'Not played yet — one hint at top, no extra toast.',
+    helpHintSeen: '✓ hint seen',
+    helpHintNot: '· not yet',
+    helpTouch: 'touch',
+    helpKeyboard: 'keyboard',
+    helpIslandTitle: 'Islands & skill gate',
+    helpIslandIntro: 'adventure is 5×10 levels. Each island has a weapon cap (now Lv {cap} on island {cur}).',
+    helpMasterBuff: 'Master buff: 5× loss on same level → +20% HP, speed & damage until you win. Boss Lv 10/20/30/40/50 opens next island.',
+    helpIslandLocked: 'Locked — beat boss Lv {lv}',
+    helpIslandProg: '{cleared}/{total} levels · {stars}/{maxStars}★ · skill gate weapons Lv {cap}',
+    installSub: 'Shows as an icon — like a real app',
+    boss: 'BOSS',
+    topHunter: 'Top hunter',
+    modeAdventure: '5 islands × 10 levels · skill gate weapons · Master buff after 5× loss · gamble roll before level',
+    modeTraining: 'Combo trainer ×5/×8/×10 · 3s dummy · lasers · Chidori',
+    modeWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD · 5s warning',
+    modeVersus: 'P1 left P2 right · best-of-3 · rematch in pause',
+    modeCoinrun: '45s coins · 2 coins = 1 pet coin · aim ↑ · flyers +3',
+    langSwitchFail: 'Language switch failed',
+  },
+  fighter: {
+    chakraEmpty: 'Chakra not full!', subst: 'Substitution!', dash: 'Dash!',
+    shield: 'Shield!', parry: 'PARRY!', block: 'BLOCK!', miss: 'MISS!',
+  },
+  egg: { dailyReady: 'Daily egg ready', advBonus: 'Bonus egg: win 1× adventure', tomorrow: 'Egg again tomorrow' },
+  pet: {
+    active: 'Pet · active', tamed: 'Pet · tamed', buy: 'Pet · buy {cost} 🪙',
+    killsNeed: 'Pet · {need} kills', killsProgress: 'Pet · {cur}/{need} kills',
+  },
+  menu: { tips: [
+    'Pick a tile — Adventure · Arcade · 2P · Collection',
+    '5 islands — boss Lv 10/20/30/40/50 opens next island',
+    'Skill gate — max weapon per island in adventure',
+    '5× loss on one level = Master buff +20%',
+    'Training = solo · Versus = 2P local on iPad',
+    'Wall combos = faster smash & more XP',
+    'Fill monster book = more max HP',
+    'Continue resumes your last mode',
+    'Menu music changes when you return from a mode',
+  ] },
+  combat: {
+    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
+    streak8: 'RAMPAGE!', streak12: 'UNSTOPPABLE!', streakHold: 'STREAK ×{n} locked!',
+    combo3: 'Combo ×3 — keep going!', combo5: 'Combo ×5 — nice!', combo8: 'Combo ×8 — pro!',
+    combo10: 'Combo ×10 — master!', comboN: 'COMBO ×{n}!',
+    pickupHp: '+HP', pickupRage: 'RAGE ×1.4', pickupChakra: 'Full chakra!', pickupShield: 'Shield!',
+    giant: 'GIANT!', wallCombo3: 'Combo ×3 · smash +{pct}%',
+    wallCombo5: 'Combo ×5 · smash +{pct}%', wallCombo8: 'Combo ×8 · smash +{pct}%',
+    wallTempo: 'WALL TEMPO!', wallRecord: 'NEW RECORD!', bonus5: 'BONUS +5',
+    masterSwordGain: "Hyrule's legendary blade — 15s!",
+    masterSwordFade: 'Master Sword fades…',
+    bossWaits: 'THE BOSS AWAITS…',
+    checkpoint: 'CHECKPOINT — PART {part}/3',
+    allyHeal: '+{heal} ally', allyHit: '{name} −{dmg}',
+    gambleSuperBoss: 'Super-boss possible wave {n}', allyHelps: '{name} helps you!',
+    masterBuffFloater: '5× lost — HP, speed & damage ↑',
+    skillGate: 'Island skill gate: max weapon Lv {cap}',
+    aimUp: 'Joystick up = aim higher',
+    trainIntro: 'Combo trainer — 3s practice, robot waits',
+    earLaser: 'Ear-laser — jump!', robotActive: 'Robot active — keep combo!',
+    roundCombo: 'Round combo ×{n}',
+    wallHalf: 'Half time — keep combo!', wallLast15: 'Last 15s — chase record!',
+    wallLast5: '5s — full gas!', wallComboTipShort: 'Tip: quick consecutive hits fill combo',
+    wallComboLost: 'Combo gone — hit again fast!', wallComboLow: 'Combo almost gone!',
+    wallNearRec: 'Almost record — {gap} to go!', coinPlus1: '+1 coin', coinPlus3: '+3 coins',
+  },
+  hud: {
+    super: 'SUPER', masterShort: 'MASTER +20%', masterSword: 'MASTER SWORD {n}s',
+    levelWave: 'Level {n} — Wave {wv}/{total}', islandWeapon: '{name} · weapon ≤ Lv {cap}',
+    part: 'part {cur}/3', waveLine: 'Wave {n}/{total}', wavesTotal: '{total} waves',
+    nextWave: 'Next wave', eggPet: 'Egg · {name}', petActive: 'Pet · {name}',
+    petDefault: 'Companion', cosmetic: 'Cosmetic',
+    gambleBoss: 'Super-boss possible · wave {n}', starZone: ' · 3★ zone',
+    star2: ' · 2★ at >{pct}% HP', star3: ' · 3★ at >{pct}% HP', hpPct: '{pct}% HP{hint}',
+    enemiesLeft1: '1 enemy left this wave', enemiesLeftN: '{n} enemies left this wave',
+    toBoss: 'Heading to boss — {sec}s', walkNext: 'Walking on… next wave {sec}s',
+    streak: 'STREAK ×{n}', combo: 'COMBO ×{n}', rage: 'RAGE {n}s', shield: 'Shield {n}s',
+    earLaser: 'EAR-LASER — jump!', chidoriTele: 'CHIDORI — dash/jump!',
+    kickTele: 'KICK — jump/block!', punchTele: 'PUNCH — block/dodge!', earLaserShort: 'EAR-LASER',
+    rabbitRobot: 'RABBITROBOT · {pct}%', roundInfo: 'Round {n} · first to 2 · {s}-{r}',
+    dummyGrace: 'Dummy {n}s — practice combo', goal: 'goal ×{n}', record: 'record ×{n}',
+    time: 'TIME', wallGen: 'WALL ×{n}', stones: 'Stones: {n}',
+    recordGap: 'Record {best} · {gap} to go',
+    recordBroken: 'Record broken · {rec}', recordLine: 'Record: {rec}',
+    pace: '~{pace}/min · projection ~{proj}', paceAhead: 'Ahead of record pace +{n}',
+    paceBehind: 'Behind record pace {n}', comboLabel: 'COMBO',
+    comboSmash: '+{pct}% smash', comboActive: 'Combo active — one more brick!',
+    coins: 'Coins: {n}', matsRecord: 'Mats record: {n}',
+    petCoins: 'Pet coins: +{pending} · wallet {wallet}',
+    matsHint: 'Joystick ↑ aim · melee/throw higher · shuriken on pink flyers',
+    spawnFair: 'Spawn · fair start', nextRound: 'Next round',
+    p1Line: 'P1 · {name} · {pct}%', p2Line: '{pct}% · {name} · P2',
+    decisiveRound: 'Decisive round · {s}-{r}',
+    timeHpWin: 'TIME = highest HP % wins',
+    hintDualTouch: 'P1 = left half · P2 = right half · joystick + attack buttons',
+    hintDualKb: 'P1: A/D · W · J/K/L/U · Shift  |  P2: arrows · 1/2/3/4/5',
+    hintTouch: 'Left: joystick to walk · Right: attack buttons',
+    hintKb: 'A/D walk · W jump · J punch · K kick · L weapon · U special',
+    ketsTap: 'Tap!', ketsKey: 'E / tap',
+  },
+  jutsu: { rasengan: 'RASENGAN!', chidori: 'CHIDORI!', rinnegan: 'RINNEGAN!' },
+  gamble: {
+    superBoss: 'Bad luck! Super-boss in a random wave',
+    miniBoss: 'Risk: extra elite in a wave',
+    superAlly: 'Jackpot! Super-ally: {name} (strong buff)',
+    ally: 'Lucky! Ally: {name} (buff this level)',
+    neutral: 'Neutral — normal level (no extra gamble effect)',
+  },
+};
+
+const CATALOG_DE = {
+  ach: {
+    first_win: { name: 'Erster Triumph', desc: 'Gewinne dein erstes Level' },
+    lv10: { name: 'Wachsender Ninja', desc: 'Erreiche Kämpfer Lv 10' },
+    dex10: { name: 'Monsterkenner', desc: '10 Arten im Monsterbuch' },
+    dexFull: { name: 'Enzyklopädie', desc: 'Alle Monsterarten entdeckt' },
+    dex100: { name: 'Jäger', desc: '100 Monster-Kills registriert' },
+    dexHalf: { name: 'Feldguide', desc: 'Hälfte aller Arten entdeckt' },
+    dexTiers: { name: 'Seltenheitsjäger', desc: '4 Seltenheiten im Buch' },
+    dexMythic: { name: 'Mythensucher', desc: 'Ein mythisches Monster entdeckt' },
+    train5: { name: 'Robotbrecher', desc: '5× Training gewonnen' },
+    wall100: { name: 'Schlacker', desc: 'Mauer-Rekord 100+' },
+    combo8: { name: 'Combo-König', desc: 'Combo ×8 erreicht' },
+    finisher10: { name: 'Stil-Meister', desc: '10 Waffen-Finisher gelandet' },
+    finisher1: { name: 'Erster Stil', desc: 'Lande deinen ersten Finisher' },
+    weaponMaster25: { name: 'Waffenlegende', desc: '25 Finisher mit einer Waffe' },
+    finisher50: { name: 'Combo-Sensei', desc: '50 Finisher insgesamt' },
+    streak10: { name: 'Unaufhaltsam', desc: 'Kill-Streak ×10 im Abenteuer' },
+    trainCombo10: { name: 'Dummy-Meister', desc: 'Training-Combo ×10' },
+    lv50: { name: 'Legende', desc: 'Level 50 freischalten' },
+    daily7: { name: 'Entschlossen', desc: '7 Tagesboni abgeholt' },
+    vs5: { name: 'Duellant', desc: '5× 2-Spieler-Duell gespielt' },
+    vs_roster: { name: 'Volles Roster', desc: '10+ verschiedene Kämpfer (2P)' },
+    saga_icons: { name: 'Saga-Legenden', desc: '2P mit allen 5 Saga-Icons' },
+  },
+  daily: {
+    kills12: { text: 'Besiege 12 Monster', hint: 'Abenteuer oder Training spielen' },
+    advwin: { text: 'Gewinne 1 Abenteuer-Level', hint: 'Menü → Abenteuer, Level gewinnen' },
+    wall35: { text: 'Zerstöre 35 Mauersteine', hint: 'Menü → Mauer (Combo hilft)' },
+    trainwin: { text: 'Gewinne Training vs Robot', hint: 'Menü → Training vs RabbitRobot' },
+    combo5: { text: 'Erreiche Combo ×5', hint: 'Abenteuer: schnelle Combos' },
+    finisher3: { text: 'Lande 3 Waffen-Finisher', hint: '①+② treffen, dann Finisher ③' },
+    pick3: { text: 'Sammle 3 Power-ups', hint: 'Abenteuer: grüne/orange/blaue Kugeln' },
+    boss1: { text: 'Besiege 1 Boss-Monster', hint: 'Abenteuer: Boss am Levelende' },
+  },
+  weapon: {
+    vuist: { name: 'Fäuste', desc: 'Taijutsu-Grundlagen' }, kunai: { name: 'Kunai', desc: 'Klassische Ninja-Klinge' },
+    shuriken: { name: 'Shuriken', desc: 'Wirft scharfe Sterne' }, tanto: { name: 'Tanto', desc: 'Kurze Klinge · schnell' },
+    zwaard: { name: 'Ninja-Schwert', desc: 'Kenjutsu-Allrounder' }, sai: { name: 'Sai', desc: 'Dreizack · parieren' },
+    knuppel: { name: 'Knüppel', desc: 'Rohe Schlagkraft' }, waaier: { name: 'Kriegsfächer', desc: 'Fächer-Schnitt · stilvoll' },
+    speer: { name: 'Speer', desc: 'Enorme Reichweite' }, tonfa: { name: 'Tonfa', desc: 'Seitengriff · Flurry' },
+    nunchaku: { name: 'Nunchaku', desc: 'Blitzschnell' }, kama: { name: 'Kama', desc: 'Sichel · Haken-Schläge' },
+    boemerang: { name: 'Bumerang', desc: 'Kommt zurück' }, zeis: { name: 'Schattensense', desc: 'Langer Bogen · dunkel' },
+    hamer: { name: 'Vorschlaghammer', desc: 'Zerstört alles' }, drietand: { name: 'Dreizack', desc: 'Drei Spitzen · stechen' },
+    ketting: { name: 'Kettenklinge', desc: 'Reichweite + Druck' }, bostaf: { name: 'Bo-Stab', desc: 'Langer Stab · Tempo' },
+    laser: { name: 'Chakra-Klinge', desc: 'Blau brennende Klinge' }, fuuma: { name: 'Fūma-Shuriken', desc: 'Großer Wurfstern' },
+    kristal: { name: 'Kristallklinge', desc: 'Splitter-Schnitt' }, donder: { name: 'Blitz-Axt', desc: 'Wie Chidori, aber eine Axt' },
+    vlamzweep: { name: 'Flammenpeitsche', desc: 'Feuerlinie · lange Reichweite' }, void: { name: 'Void-Klaue', desc: 'Mythische Klaue' },
+    sterkling: { name: 'Sternklinge', desc: 'Himmelsmetall · Crits' }, guvve: { name: 'Guvvedukkie-Stab', desc: 'Quak. Bitte. Boom.' },
+  },
+  style: {
+    classic: { name: 'Klassisch', hint: 'Standard-Ninja', tooltip: 'Basis-Ninja — kein Bonus.', bonus: 'Kein Kampfbonus' },
+    konoha: { name: 'Konoha-Bandana', hint: 'Lv 5', tooltip: 'Leaf-Dorf-Kopfband. Etwas mehr max HP.', bonus: '+5 max HP' },
+    chakra: { name: 'Chakra-Glühen', hint: '3× Training gewinnen', tooltip: 'Blaues Chakra. Schnelleres Laden.', bonus: '+8% Chakra-Regen' },
+    akatsuki: { name: 'Roter Mantel', hint: 'Lv 12', tooltip: 'Aggressive Schläge.', bonus: '+4% Schaden' },
+    shadow: { name: 'Schatten-Ninja', hint: 'Lv 15', tooltip: 'Extra Crit-Chance.', bonus: '+3% Crit' },
+    guvve: { name: 'Guvvedukkie', hint: '8 Monster im Buch', tooltip: 'Quack-Cosplay. Bonus-XP.', bonus: '+6% Abenteuer-XP' },
+    gold: { name: 'Legendär', hint: 'Lv 25', tooltip: 'Goldene Umrandung.', bonus: '+10% Knockback' },
+    sand: { name: 'Wüste', hint: 'Lv 8', tooltip: 'Sandmantel — weniger Schaden.', bonus: '−14% Schaden · Block −25%' },
+    samurai: { name: 'Samurai', hint: 'Lv 20', tooltip: 'Katana-Haltung.', bonus: '+8% Waffen-Reichweite' },
+    cyber: { name: 'Cyber-Ninja', hint: 'Lv 18', tooltip: 'Neon-Visier.', bonus: 'Blitz-FX · +6% Chakra' },
+    fox: { name: 'Fuchs-Ninja', hint: '12 Monster im Buch', tooltip: 'Fuchsohren — schneller.', bonus: '+5% Lauftempo' },
+    storm: { name: 'Sturmgeist', hint: '5× Training gewinnen', tooltip: 'Sturm-Aura.', bonus: 'Blitz · +0,8s Schild/Welle' },
+    void: { name: 'Void-Wanderer', hint: 'Lv 40', tooltip: 'Schwerere Jutsu.', bonus: '+8% Jutsu-Schaden' },
+    hunter: { name: 'Jägerlook', hint: '75 Kills im Buch', tooltip: 'Jäger-Umhang.', bonus: '+6% vs Monster' },
+    crystal: { name: 'Kristallin', hint: '4 Seltenheiten', tooltip: 'Kristall-Splitter.', bonus: '+1,0s Schild/Welle' },
+    tome: { name: 'Buchmeister', hint: 'Hälfte des Buches', tooltip: 'Monsterbuch auf dem Rücken.', bonus: '+4 max HP · Buchweisheit' },
+  },
+  result: {
+    advWin: 'GEWONNEN!', advLose: 'BESIEGT...', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+    vsP1Win: 'SPIELER 1 GEWINNT!', vsP2Win: 'SPIELER 2 GEWINNT!', wallRecord: 'NEUER REKORD!', wallTime: 'ZEIT UM!',
+    matsRecord: 'MATS-REKORD!', matsDone: 'Gut gemacht, Mats!',
+  },
+  banner: {
+    levelUp: 'LEVEL UP! Lv {lvl}', masterBuff: 'MEISTER-BUFF +20%', bossWave: 'BOSS-WELLE!',
+    fight: 'KÄMPF!', won: 'GEWONNEN!', lost: 'VERLOREN...', summon: '✦ SUMMON! ✦',
+    matsStart: 'MATS · MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
+    kets: 'KETS!', ketsBam: 'KETS-BAM!',
+  },
+  help: { tips: [
+    'Power-ups: besiegte Monster lassen manchmal Kugeln fallen — HP, Rage, Chakra, Schild.',
+    'Bosse: unter halb HP werden sie wütender (Phase 2).',
+    'Combos: schnell hintereinander schlagen für ×2 / ×3 Schaden.',
+    'Dash: doppelt tippen links/rechts (oder Shift) zum Ausweichen.',
+    'Rasengan: Chakra-Balken füllen — dann Kugel laden und einschlagen.',
+    'Substitution: Rauchwolke + Ausweichen (Taste oder Shift). Kurz unverwundbar.',
+    'Waffen-Combo: Waffe 3× schnell — ①②③. Mit ① und ② treffen, dann ③ Finisher.',
+    '2 Spieler: Roster mit 5 Saga-Icons · Best-of-3.',
+    'RabbitRobot: nutzt Chidori — warte auf eine Lücke.',
+    'Mauer: 60s · Combo-Balken · Meilensteine ×3/×5/×8 · Rekord-Tempo im HUD.',
+    'Seltenheiten: Gewöhnlich → Ungewöhnlich → Selten → Episch → Legendär → Mythisch.',
+    '50 Level: 5 Inseln × 10 — Skill-Gate · Boss Lv 10/20/30/40/50 · 5× Verlust = Meister-Buff.',
+    'Backup: jede Save doppelt — Einstellungen → Backup wiederherstellen.',
+    'Teilen: Menü → Link teilen — Chrome auf Android → Zum Home-Bildschirm.',
+    'Offline: nach 1× online wird gecacht — Banner unten ohne Netz.',
+  ] },
+};
+
+const CATALOG_FR = {
+  ach: {
+    first_win: { name: 'Première victoire', desc: 'Gagne ton premier niveau' },
+    lv10: { name: 'Ninja en croissance', desc: 'Atteins combattant Lv 10' },
+    dex10: { name: 'Expert monstres', desc: '10 espèces au bestiaire' },
+    dexFull: { name: 'Encyclopédie', desc: 'Toutes les espèces découvertes' },
+    dex100: { name: 'Chasseur', desc: '100 kills enregistrés' },
+    dexHalf: { name: 'Guide terrain', desc: 'Moitié des espèces découvertes' },
+    dexTiers: { name: 'Chasseur de raretés', desc: '4 raretés au bestiaire' },
+    dexMythic: { name: 'Chercheur de mythes', desc: 'Un monstre mythique découvert' },
+    train5: { name: 'Brise-robot', desc: '5× entraînement gagné' },
+    wall100: { name: 'Démolisseur', desc: 'Record mur 100+' },
+    combo8: { name: 'Roi du combo', desc: 'Combo ×8 atteint' },
+    finisher10: { name: 'Maître du style', desc: '10 finishers d\'arme' },
+    finisher1: { name: 'Premier style', desc: 'Ton premier finisher' },
+    weaponMaster25: { name: 'Légende d\'arme', desc: '25 finishers avec une arme' },
+    finisher50: { name: 'Sensei combo', desc: '50 finishers au total' },
+    streak10: { name: 'Impossible à arrêter', desc: 'Série ×10 en aventure' },
+    trainCombo10: { name: 'Maître du dummy', desc: 'Combo entraînement ×10' },
+    lv50: { name: 'Légende', desc: 'Débloquer niveau 50' },
+    daily7: { name: 'Déterminé', desc: '7 bonus quotidiens réclamés' },
+    vs5: { name: 'Duelliste', desc: '5× duels 2 joueurs' },
+    vs_roster: { name: 'Roster complet', desc: '10+ combattants différents (2P)' },
+    saga_icons: { name: 'Légendes saga', desc: '2P avec les 5 icônes saga' },
+  },
+  daily: {
+    kills12: { text: 'Vaincs 12 monstres', hint: 'Joue Aventure ou Entraînement' },
+    advwin: { text: 'Gagne 1 niveau aventure', hint: 'Menu → Aventure, gagne le niveau' },
+    wall35: { text: 'Casse 35 briques du mur', hint: 'Menu → Mur (combo aide)' },
+    trainwin: { text: 'Gagne entraînement vs Robot', hint: 'Menu → Entraînement vs RabbitRobot' },
+    combo5: { text: 'Atteins combo ×5', hint: 'Aventure : combos rapides' },
+    finisher3: { text: 'Lande 3 finishers d\'arme', hint: '①+② puis finisher ③' },
+    pick3: { text: 'Prends 3 power-ups', hint: 'Aventure : orbes vert/orange/bleu' },
+    boss1: { text: 'Vaincs 1 boss', hint: 'Aventure : boss en fin de niveau' },
+  },
+  weapon: {
+    vuist: { name: 'Poings', desc: 'Bases taijutsu' }, kunai: { name: 'Kunai', desc: 'Lame ninja classique' },
+    shuriken: { name: 'Shuriken', desc: 'Lance des étoiles' }, tanto: { name: 'Tanto', desc: 'Lame courte · rapide' },
+    zwaard: { name: 'Épée ninja', desc: 'Kenjutsu polyvalent' }, sai: { name: 'Sai', desc: 'Trois dents · parade' },
+    knuppel: { name: 'Massue', desc: 'Force brute' }, waaier: { name: 'Éventail de guerre', desc: 'Entaille stylée' },
+    speer: { name: 'Lance', desc: 'Grande portée' }, tonfa: { name: 'Tonfa', desc: 'Poignée latérale' },
+    nunchaku: { name: 'Nunchaku', desc: 'Ultra rapide' }, kama: { name: 'Kama', desc: 'Faucille · crochet' },
+    boemerang: { name: 'Boomerang', desc: 'Revient en arrière' }, zeis: { name: 'Faux de l\'ombre', desc: 'Long arc · sombre' },
+    hamer: { name: 'Masse', desc: 'Tout détruit' }, drietand: { name: 'Trident', desc: 'Trois pointes' },
+    ketting: { name: 'Lame chaîne', desc: 'Portée + pression' }, bostaf: { name: 'Bô', desc: 'Long bâton' },
+    laser: { name: 'Lame chakra', desc: 'Lame bleue ardente' }, fuuma: { name: 'Shuriken Fūma', desc: 'Grande étoile' },
+    kristal: { name: 'Lame cristal', desc: 'Entaille de shards' }, donder: { name: 'Hache foudre', desc: 'Comme Chidori, en hache' },
+    vlamzweep: { name: 'Fouet flamme', desc: 'Ligne de feu' }, void: { name: 'Griffe du vide', desc: 'Griffe mythique' },
+    sterkling: { name: 'Lame étoile', desc: 'Métal céleste · crits' }, guvve: { name: 'Bâton Guvvedukkie', desc: 'Coin. S\'il vous plaît. Boum.' },
+  },
+  style: {
+    classic: { name: 'Classique', hint: 'Ninja standard', tooltip: 'Ninja de base — pas de bonus.', bonus: 'Pas de bonus combat' },
+    konoha: { name: 'Bandana Konoha', hint: 'Lv 5', tooltip: 'Bandeau du village.', bonus: '+5 PV max' },
+    chakra: { name: 'Lueur chakra', hint: '3× entraînement gagné', tooltip: 'Aura bleue.', bonus: '+8% regen chakra' },
+    akatsuki: { name: 'Manteau rouge', hint: 'Lv 12', tooltip: 'Coups agressifs.', bonus: '+4% dégâts' },
+    shadow: { name: 'Ninja ombre', hint: 'Lv 15', tooltip: 'Crit en plus.', bonus: '+3% crit' },
+    guvve: { name: 'Guvvedukkie', hint: '8 monstres au bestiaire', tooltip: 'Cosplay coin-coin.', bonus: '+6% XP aventure' },
+    gold: { name: 'Légendaire', hint: 'Lv 25', tooltip: 'Contour doré.', bonus: '+10% knockback' },
+    sand: { name: 'Désert', hint: 'Lv 8', tooltip: 'Manteau de sable.', bonus: '−14% dégâts · bloc −25%' },
+    samurai: { name: 'Samouraï', hint: 'Lv 20', tooltip: 'Posture katana.', bonus: '+8% portée arme' },
+    cyber: { name: 'Cyber-ninja', hint: 'Lv 18', tooltip: 'Visière néon.', bonus: 'FX éclair · +6% chakra' },
+    fox: { name: 'Ninja renard', hint: '12 monstres', tooltip: 'Oreilles de renard.', bonus: '+5% vitesse' },
+    storm: { name: 'Esprit tempête', hint: '5× entraînement', tooltip: 'Aura tempête.', bonus: 'Éclair · +0,8s bouclier/vague' },
+    void: { name: 'Marcheur du vide', hint: 'Lv 40', tooltip: 'Jutsu plus lourds.', bonus: '+8% dégâts jutsu' },
+    hunter: { name: 'Look chasseur', hint: '75 kills bestiaire', tooltip: 'Cape chasseur.', bonus: '+6% vs monstres' },
+    crystal: { name: 'Cristallin', hint: '4 raretés', tooltip: 'Éclat cristal.', bonus: '+1,0s bouclier/vague' },
+    tome: { name: 'Maître du livre', hint: 'Moitié du bestiaire', tooltip: 'Bestiaire sur le dos.', bonus: '+4 PV max · sagesse' },
+  },
+  result: {
+    advWin: 'VICTOIRE !', advLose: 'DÉFAITE...', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
+    vsP1Win: 'JOUEUR 1 GAGNE !', vsP2Win: 'JOUEUR 2 GAGNE !', wallRecord: 'NOUVEAU RECORD !', wallTime: 'FIN DU TEMPS !',
+    matsRecord: 'RECORD MATS !', matsDone: 'Bien joué, Mats !',
+  },
+  banner: {
+    levelUp: 'LEVEL UP ! Lv {lvl}', masterBuff: 'BUFF MAÎTRE +20 %', bossWave: 'VAGUE BOSS !',
+    fight: 'COMBAT !', won: 'VICTOIRE !', lost: 'DÉFAITE...', summon: '✦ INVOCATION ! ✦',
+    matsStart: 'MATS · BONUS PIÈCES', wallStart: 'CASSE LE MUR !', bonusDone: 'BONUS TERMINÉ !',
+    kets: 'KETS !', ketsBam: 'KETS-BAM !',
+  },
+  help: { tips: [
+    'Power-ups : les monstres vaincus laissent parfois des orbes — PV, rage, chakra, bouclier.',
+    'Boss : sous la moitié des PV ils deviennent plus furieux (phase 2).',
+    'Combos : enchaîne vite pour ×2 / ×3 dégâts.',
+    'Dash : double-tap gauche/droite (ou Shift) pour esquiver.',
+    'Rasengan : remplis la barre chakra — charge une boule et frappe.',
+    'Substitution : nuage de fumée + esquive (bouton ou Shift). Invulnérabilité brève.',
+    'Combo arme : arme 3× vite — ①②③. Touche ① et ②, puis ③ finisher.',
+    '2 joueurs : roster 5 icônes saga · best-of-3.',
+    'RabbitRobot : utilise Chidori — attends qu\'il s\'ouvre.',
+    'Mur : 60 s · barre combo · jalons ×3/×5/×8 · tempo record au HUD.',
+    'Raretés : Commun → Peu commun → Rare → Épique → Légendaire → Mythique.',
+    '50 niveaux : 5 îles × 10 — skill gate · boss Lv 10/20/30/40/50 · 5× échec = buff maître.',
+    'Backup : chaque save est doublée — Options → Restaurer backup.',
+    'Partager : menu → Lien — Chrome Android → Écran d\'accueil.',
+    'Hors ligne : après 1× en ligne, cache HTML+JS — bannière sans réseau.',
+  ] },
+};
+
+const CATALOG_ES = {
+  ach: {
+    first_win: { name: 'Primer triunfo', desc: 'Gana tu primer nivel' },
+    lv10: { name: 'Ninja en crecimiento', desc: 'Alcanza luchador Lv 10' },
+    dex10: { name: 'Experto monstruos', desc: '10 especies en el bestiario' },
+    dexFull: { name: 'Enciclopedia', desc: 'Todas las especies descubiertas' },
+    dex100: { name: 'Cazador', desc: '100 kills registrados' },
+    dexHalf: { name: 'Guía de campo', desc: 'Mitad de especies descubiertas' },
+    dexTiers: { name: 'Cazador de rarezas', desc: '4 rarezas en el libro' },
+    dexMythic: { name: 'Buscador de mitos', desc: 'Un monstruo mítico descubierto' },
+    train5: { name: 'Rompe-robots', desc: '5× entrenamiento ganado' },
+    wall100: { name: 'Demoledor', desc: 'Récord muro 100+' },
+    combo8: { name: 'Rey del combo', desc: 'Combo ×8 alcanzado' },
+    finisher10: { name: 'Maestro del estilo', desc: '10 finishers de arma' },
+    finisher1: { name: 'Primer estilo', desc: 'Tu primer finisher' },
+    weaponMaster25: { name: 'Leyenda de armas', desc: '25 finishers con un arma' },
+    finisher50: { name: 'Sensei combo', desc: '50 finishers en total' },
+    streak10: { name: 'Imparable', desc: 'Racha ×10 en aventura' },
+    trainCombo10: { name: 'Maestro del dummy', desc: 'Combo entrenamiento ×10' },
+    lv50: { name: 'Leyenda', desc: 'Desbloquear nivel 50' },
+    daily7: { name: 'Determinado', desc: '7 bonos diarios reclamados' },
+    vs5: { name: 'Duelista', desc: '5× duelos a 2 jugadores' },
+    vs_roster: { name: 'Roster completo', desc: '10+ luchadores distintos (2P)' },
+    saga_icons: { name: 'Leyendas saga', desc: '2P con los 5 iconos saga' },
+  },
+  daily: {
+    kills12: { text: 'Derrota 12 monstruos', hint: 'Juega Aventura o Entrenamiento' },
+    advwin: { text: 'Gana 1 nivel aventura', hint: 'Menú → Aventura, gana el nivel' },
+    wall35: { text: 'Rompe 35 ladrillos del muro', hint: 'Menú → Muro (combo ayuda)' },
+    trainwin: { text: 'Gana entrenamiento vs Robot', hint: 'Menú → Entrenamiento vs RabbitRobot' },
+    combo5: { text: 'Alcanza combo ×5', hint: 'Aventura: combos rápidos' },
+    finisher3: { text: 'Aterriza 3 finishers de arma', hint: '①+② luego finisher ③' },
+    pick3: { text: 'Recoge 3 power-ups', hint: 'Aventura: orbes verde/naranja/azul' },
+    boss1: { text: 'Derrota 1 jefe', hint: 'Aventura: jefe al final del nivel' },
+  },
+  weapon: {
+    vuist: { name: 'Puños', desc: 'Básicos taijutsu' }, kunai: { name: 'Kunai', desc: 'Cuchilla ninja clásica' },
+    shuriken: { name: 'Shuriken', desc: 'Lanza estrellas' }, tanto: { name: 'Tanto', desc: 'Hoja corta · rápida' },
+    zwaard: { name: 'Espada ninja', desc: 'Kenjutsu versátil' }, sai: { name: 'Sai', desc: 'Tres puntas · parada' },
+    knuppel: { name: 'Garrote', desc: 'Fuerza bruta' }, waaier: { name: 'Abanico de guerra', desc: 'Corte con estilo' },
+    speer: { name: 'Lanza', desc: 'Gran alcance' }, tonfa: { name: 'Tonfa', desc: 'Empuñadura lateral' },
+    nunchaku: { name: 'Nunchaku', desc: 'Ultrarrápido' }, kama: { name: 'Kama', desc: 'Hoz · gancho' },
+    boemerang: { name: 'Bumerán', desc: 'Vuelve atrás' }, zeis: { name: 'Guadaña sombra', desc: 'Arco largo · oscuro' },
+    hamer: { name: 'Mazo', desc: 'Lo destroza todo' }, drietand: { name: 'Tridente', desc: 'Tres puntas' },
+    ketting: { name: 'Espada cadena', desc: 'Alcance + presión' }, bostaf: { name: 'Bastón bo', desc: 'Bastón largo' },
+    laser: { name: 'Hoja chakra', desc: 'Filo azul ardiente' }, fuuma: { name: 'Shuriken Fūma', desc: 'Estrella grande' },
+    kristal: { name: 'Hoja cristal', desc: 'Corte de fragmentos' }, donder: { name: 'Hacha rayo', desc: 'Como Chidori, pero hacha' },
+    vlamzweep: { name: 'Látigo llama', desc: 'Línea de fuego' }, void: { name: 'Garra void', desc: 'Garra mítica' },
+    sterkling: { name: 'Hoja estrella', desc: 'Metal celestial · críticos' }, guvve: { name: 'Palo Guvvedukkie', desc: 'Cuac. Por favor. Boom.' },
+  },
+  style: {
+    classic: { name: 'Clásico', hint: 'Ninja estándar', tooltip: 'Ninja base — sin bonus.', bonus: 'Sin bonus combate' },
+    konoha: { name: 'Bandana Konoha', hint: 'Lv 5', tooltip: 'Cinta del pueblo.', bonus: '+5 HP máx' },
+    chakra: { name: 'Brillo chakra', hint: '3× entrenamiento ganado', tooltip: 'Aura azul.', bonus: '+8% regen chakra' },
+    akatsuki: { name: 'Capa roja', hint: 'Lv 12', tooltip: 'Golpes agresivos.', bonus: '+4% daño' },
+    shadow: { name: 'Ninja sombra', hint: 'Lv 15', tooltip: 'Más críticos.', bonus: '+3% crít' },
+    guvve: { name: 'Guvvedukkie', hint: '8 monstruos en libro', tooltip: 'Cosplay cuac.', bonus: '+6% XP aventura' },
+    gold: { name: 'Legendario', hint: 'Lv 25', tooltip: 'Contorno dorado.', bonus: '+10% knockback' },
+    sand: { name: 'Desierto', hint: 'Lv 8', tooltip: 'Capa de arena.', bonus: '−14% daño · bloqueo −25%' },
+    samurai: { name: 'Samurái', hint: 'Lv 20', tooltip: 'Postura katana.', bonus: '+8% alcance arma' },
+    cyber: { name: 'Cyber-ninja', hint: 'Lv 18', tooltip: 'Visor neón.', bonus: 'FX rayo · +6% chakra' },
+    fox: { name: 'Ninja zorro', hint: '12 monstruos', tooltip: 'Orejas de zorro.', bonus: '+5% velocidad' },
+    storm: { name: 'Espíritu tormenta', hint: '5× entrenamiento', tooltip: 'Aura tormenta.', bonus: 'Rayo · +0,8s escudo/ola' },
+    void: { name: 'Caminante void', hint: 'Lv 40', tooltip: 'Jutsu más fuertes.', bonus: '+8% daño jutsu' },
+    hunter: { name: 'Look cazador', hint: '75 kills libro', tooltip: 'Capa cazador.', bonus: '+6% vs monstruos' },
+    crystal: { name: 'Cristalino', hint: '4 rarezas', tooltip: 'Fragmento cristal.', bonus: '+1,0s escudo/ola' },
+    tome: { name: 'Maestro del libro', hint: 'Mitad del bestiario', tooltip: 'Libro en la espalda.', bonus: '+4 HP máx · sabiduría' },
+  },
+  result: {
+    advWin: '¡VICTORIA!', advLose: 'DERROTA...', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
+    vsP1Win: '¡JUGADOR 1 GANA!', vsP2Win: '¡JUGADOR 2 GANA!', wallRecord: '¡NUEVO RÉCORD!', wallTime: '¡SE ACABÓ EL TIEMPO!',
+    matsRecord: '¡RÉCORD MATS!', matsDone: '¡Bien hecho, Mats!',
+  },
+  banner: {
+    levelUp: '¡SUBIDA DE NIVEL! Lv {lvl}', masterBuff: 'BUFF MAESTRO +20%', bossWave: '¡OLA JEFE!',
+    fight: '¡LUCHA!', won: '¡VICTORIA!', lost: 'DERROTA...', summon: '✦ ¡INVOCACIÓN! ✦',
+    matsStart: 'MATS · BONUS MONEDAS', wallStart: '¡ROMPE EL MURO!', bonusDone: '¡BONUS LISTO!',
+    kets: '¡KETS!', ketsBam: '¡KETS-BAM!',
+  },
+  help: { tips: [
+    'Power-ups: monstruos derrotados sueltan orbes — HP, furia, chakra, escudo.',
+    'Jefes: bajo mitad HP se vuelven más feroces (fase 2).',
+    'Combos: golpea rápido para ×2 / ×3 daño.',
+    'Dash: doble toque izquierda/derecha (o Shift) para esquivar.',
+    'Rasengan: llena la barra chakra — carga una bola y golpea.',
+    'Substitución: nube de humo + esquiva (botón o Shift). Invulnerabilidad breve.',
+    'Combo arma: arma 3× rápido — ①②③. Acierta ① y ②, luego ③ finisher.',
+    '2 jugadores: roster 5 iconos saga · best-of-3.',
+    'RabbitRobot: usa Chidori — espera que se abra.',
+    'Muro: 60 s · barra combo · hitos ×3/×5/×8 · ritmo récord en HUD.',
+    'Rarezas: Común → Poco común → Raro → Épico → Legendario → Mítico.',
+    '50 niveles: 5 islas × 10 — skill gate · jefe Lv 10/20/30/40/50 · 5× derrotas = buff maestro.',
+    'Backup: cada save se guarda doble — Opciones → Restaurar backup.',
+    'Compartir: menú → Enlace — Chrome Android → Añadir a inicio.',
+    'Offline: tras 1× online cachea HTML+JS — banner sin red.',
+  ] },
+};
+
+function weaponLabel(w) {
+  const id = typeof w === 'string' ? w : (w && w.id);
+  const k = 'weapon.' + id + '.name';
+  const v = t(k);
+  if (v && v !== k) return v;
+  const ww = typeof w === 'object' && w ? w : (typeof weaponById === 'function' ? weaponById(id) : null);
+  return ww ? ww.name : String(id || '');
+}
+
+function weaponDesc(w) {
+  const id = typeof w === 'string' ? w : (w && w.id);
+  const k = 'weapon.' + id + '.desc';
+  const v = t(k);
+  if (v && v !== k) return v;
+  const ww = typeof w === 'object' && w ? w : (typeof weaponById === 'function' ? weaponById(id) : null);
+  return ww ? ww.desc : '';
+}
+
+function styleLabel(st, field) {
+  field = field || 'name';
+  const id = typeof st === 'string' ? st : (st && st.id);
+  const k = 'style.' + id + '.' + field;
+  const v = t(k);
+  if (v && v !== k) return v;
+  const ss = typeof st === 'object' && st ? st : (typeof styleById === 'function' ? styleById(id) : null);
+  return ss && ss[field] != null ? ss[field] : '';
+}
+
+function dailyText(id) {
+  const k = 'daily.' + id + '.text';
+  const v = t(k);
+  if (v && v !== k) return v;
+  const def = typeof dailyDef === 'function' ? dailyDef(id) : null;
+  return def ? def.text : id;
+}
+
+function dailyHint(id) {
+  const k = 'daily.' + id + '.hint';
+  const v = t(k);
+  if (v && v !== k) return v;
+  return (typeof DAILY_PLAY_HINTS !== 'undefined' && DAILY_PLAY_HINTS[id]) || '';
+}
+
+function pickupLabel(kind) {
+  const k = 'pickup.' + kind;
+  const v = t(k);
+  if (v && v !== k) return v;
+  return (typeof PICKUP_META !== 'undefined' && PICKUP_META[kind] && PICKUP_META[kind].label) || kind;
+}
+
+function jutsuLabel(kind) {
+  const k = 'jutsu.' + (kind || 'rasengan');
+  const v = t(k);
+  if (v && v !== k) return v;
+  if (typeof jutsuHudLabel === 'function') return jutsuHudLabel(kind);
+  return String(kind || '').toUpperCase();
+}
+
+function eggDailyLine(key) {
+  const k = 'egg.' + key;
+  const v = t(k);
+  if (v && v !== k) return v;
+  const nl = { dailyReady: 'Dag-ei klaar', advBonus: 'Bonus-ei: win 1× avontuur', tomorrow: 'Morgen weer ei' };
+  return nl[key] || key;
+}
+
+function gambleOutcomeLabelFromKey(g) {
+  if (!g) return '';
+  const out = g.outcome || 'neutral';
+  if (out === 'superAlly' || out === 'ally') {
+    const a = typeof GAMBLE_ALLIES !== 'undefined' ? GAMBLE_ALLIES[g.allyId] : null;
+    return t('gamble.' + out, { name: a ? a.name : 'Sage' });
+  }
+  const k = 'gamble.' + out;
+  const v = t(k);
+  return (v && v !== k) ? v : (typeof gambleOutcomeLabel === 'function' ? gambleOutcomeLabel(g) : out);
+}
+
+function i18nList(key) {
+  const parts = key.split('.');
+  for (const code of [getLang(), 'nl', 'en']) {
+    let cur = I18N[code];
+    for (const p of parts) {
+      if (!cur || typeof cur !== 'object') { cur = null; break; }
+      cur = cur[p];
+    }
+    if (Array.isArray(cur) && cur.length) return cur;
+  }
+  let cur = CATALOG_EN;
+  for (const p of parts) {
+    if (!cur) return [];
+    cur = cur[p];
+  }
+  return Array.isArray(cur) ? cur : [];
+}
+
+function menuTipAt(i) {
+  const tips = i18nList('menu.tips');
+  if (!tips.length) return '';
+  return tips[((i % tips.length) + tips.length) % tips.length];
+}
+
+function dailyModeLabel(mode) {
+  if (mode === 'adventure') return t('modes.adventure');
+  if (mode === 'training') return t('modes.training');
+  if (mode === 'wall') return t('modes.wall');
+  if (mode === 'versus') return t('modes.versus');
+  if (mode === 'coinrun') return t('modes.coinrun');
+  return mode;
 }
 /* --- src/systems/audio.js --- */
 /* =============================== AUDIO ================================= */
@@ -9472,13 +10760,13 @@ class Game {
     this.ketsbamChargeDur = 0;
     this.ketsbamChargePulse = 0;
     applyGambleToStage(this, gamble);
-    this.banner(`LEVEL ${n}`, 1.4, '#ffd75e', 54);
+    this.banner(t('banner.levelStart', { n }), 1.4, '#ffd75e', 54);
     if (masterBuffActive(n)) {
       setTimeout(() => {
         try {
           if (this.over) return;
-          this.banner('MEESTER-BUFF +20%', 2, '#c47aff', 40);
-          this.floater(W * 0.5, 132, '5× verloren — HP, snelheid & schade ↑', '#c47aff', 14);
+          this.banner(t('banner.masterBuff'), 2, '#c47aff', 40);
+          this.floater(W * 0.5, 132, t('combat.masterBuffFloater'), '#c47aff', 14);
         } catch (_) {}
       }, 1500);
     }
@@ -9487,7 +10775,7 @@ class Game {
       setTimeout(() => {
         try {
           if (this.over) return;
-          this.floater(W * 0.5, 148, `Eiland-skill gate: max wapen Lv ${wCap}`, '#ffd75e', 13);
+          this.floater(W * 0.5, 148, t('combat.skillGate', { cap: wCap }), '#ffd75e', 13);
         } catch (_) {}
       }, masterBuffActive(n) ? 2800 : 1500);
     }
@@ -9495,15 +10783,15 @@ class Game {
       setTimeout(() => {
         try {
           if (this.over) return;
-          this.banner(gambleOutcomeLabel(gamble).slice(0, 42), 2.2, '#7cf5ff', 34);
+          this.banner(gambleOutcomeLabelFromKey(gamble).slice(0, 42), 2.2, '#7cf5ff', 34);
         } catch (_) {}
       }, 1600);
     }
     if (this.gambleBossWave > 0) {
-      this.floater(W * 0.5, 100, `Super-baas mogelijk golf ${this.gambleBossWave}`, '#ffb0b8', 14);
+      this.floater(W * 0.5, 100, t('combat.gambleSuperBoss', { n: this.gambleBossWave }), '#ffb0b8', 14);
     }
     if (this.stageAlly) {
-      this.floater(W * 0.5, 118, `${this.stageAlly.name} helpt je!`, this.stageAlly.color || '#7cf5ff', 15);
+      this.floater(W * 0.5, 118, t('combat.allyHelps', { name: this.stageAlly.name }), this.stageAlly.color || '#7cf5ff', 15);
     }
     this.allyAssistT = this.stageAlly ? 2.2 : 0;
     setTimeout(() => { try { if (!this.over) this.maybeRollMasterSword(); } catch (_) {} }, 900);
@@ -9526,8 +10814,8 @@ class Game {
     p.weapon = buildMasterSwordWeapon(p.weapon);
     this.masterSwordT = MASTER_SWORD_DURATION;
     resetWeaponCombo(p);
-    this.banner('MASTER SWORD!', 2.4, '#7cf5ff', 52);
-    this.floater(p.x, p.y - 132, 'Hyrules legendarische kling — 15s!', '#ffd75e', 16);
+    this.banner(t('banner.masterSword'), 2.4, '#7cf5ff', 52);
+    this.floater(p.x, p.y - 132, t('combat.masterSwordGain'), '#ffd75e', 16);
     if (!fxLite() && !motionReduced()) {
       this.burst(p.x + p.face * 18, p.y - 52, '#6fd7ff', 14, { kind: 'spark', size: 2.8 });
       spawnFxRing(this, p.x, p.y - 48, '#7cf5ff', 12);
@@ -9547,7 +10835,7 @@ class Game {
     this.masterSwordT = 0;
     resetWeaponCombo(this.player);
     if (!silent) {
-      this.floater(this.player.x, this.player.y - 120, 'Master Sword vervaagt…', '#9db1e3', 14);
+      this.floater(this.player.x, this.player.y - 120, t('combat.masterSwordFade'), '#9db1e3', 14);
     }
   }
 
@@ -9570,7 +10858,7 @@ class Game {
       this.playerShieldT = Math.max(this.playerShieldT, this.styleShieldWave);
     }
     if (bossWave) {
-      this.banner('BAAS-GOLF!', 1.8, '#ff6b6b', 50);
+      this.banner(t('banner.bossWave'), 1.8, '#ff6b6b', 50);
       AudioSys.play('boss');
       AudioSys.sfx('roar');
       try {
@@ -9580,7 +10868,7 @@ class Game {
       } catch (_) {}
     } else if (wave.some(s => s.elite || s.superBoss)) {
       const hasSuper = wave.some(s => s.superBoss);
-      this.banner(hasSuper ? 'SUPER-BAAS GOLF' : 'ELITE-GOLF', 1.35, hasSuper ? '#ffd75e' : '#ffb0b8', 40);
+      this.banner(hasSuper ? t('banner.superBossWave') : t('banner.eliteWave'), 1.35, hasSuper ? '#ffd75e' : '#ffb0b8', 40);
       AudioSys.play(hasSuper ? 'boss' : 'elite');
       AudioSys.sfx('roar');
     } else {
@@ -9589,10 +10877,10 @@ class Game {
       if (trait) {
         this.banner(trait.text, 1.2, trait.color, trait.size);
         if (meta.trait === 'flyers') {
-          try { this.floater(W * 0.5, 108, 'Joystick omhoog = hoger mikken', '#c47aff', 13); } catch (_) {}
+          try { this.floater(W * 0.5, 108, t('combat.aimUp'), '#c47aff', 13); } catch (_) {}
         }
       } else {
-        this.banner(`GOLF ${this.waveIdx + 1}/${this.level.waves.length}`, 1.1, '#cfe0ff', 38);
+        this.banner(t('banner.waveN', { n: this.waveIdx + 1, total: this.level.waves.length }), 1.1, '#cfe0ff', 38);
       }
     }
   }
@@ -9651,7 +10939,7 @@ class Game {
       if (f > 0.45) {
         this.bossBeatPlayed = true;
         try { AudioSys.sfx('bossWait'); } catch (_) {}
-        this.floater(W / 2, 120, 'DE BAAS WACHT…', '#ff8a9a', 15);
+        this.floater(W / 2, 120, t('combat.bossWaits'), '#ff8a9a', 15);
       }
     }
     if (this.partFlashT > 0) this.partFlashT -= dt;
@@ -9661,7 +10949,7 @@ class Game {
     if (part > (this.stagePart || 1)) {
       this.stagePart = part;
       this.partFlashT = motionReduced() ? 0.22 : 0.5;
-      this.floater(W / 2, 96, `CHECKPOINT — DEEL ${part}/3`, '#7cf5ff', 17);
+      this.floater(W / 2, 96, t('combat.checkpoint', { part }), '#7cf5ff', 17);
       const orbX = W / 2 - Math.min(320, W * 0.5) / 2 + clamp(this.progressSmooth || 0, 0, 1) * Math.min(320, W * 0.5);
       if (!fxLite()) this.burst(orbX, 44, '#7cf5ff', motionReduced() ? 6 : 14, { kind: 'spark', size: 2.4 });
       try { AudioSys.sfx('checkpoint'); } catch (_) {}
@@ -9693,7 +10981,7 @@ class Game {
         if (tgt) {
           const dmg = Math.round(this.player.baseDmg * 0.38 * (this.stageDmgMul || 1));
           tgt.takeDamage(dmg, Math.sign(tgt.x - this.player.x) * 140, this);
-          this.floater(tgt.x, tgt.y - tgt.size - 22, `${this.stageAlly.name} −${dmg}`, this.stageAlly.color || '#7cf5ff', 12);
+          this.floater(tgt.x, tgt.y - tgt.size - 22, t('combat.allyHit', { name: this.stageAlly.name, dmg }), this.stageAlly.color || '#7cf5ff', 12);
           if (!fxLite()) this.burst(tgt.x, tgt.y - tgt.size * 0.4, this.stageAlly.color || '#7cf5ff', 6, { kind: 'spark', size: 2 });
         }
       }
@@ -9740,7 +11028,7 @@ class Game {
           } else if (def.elite || bossWave) {
             triggerSpecialEnemyIntro(this, mon, bossWave ? 'boss' : 'elite');
           } else if (def.giant && !fxLite()) {
-            this.floater(mon.x, mon.y - mon.size - 28, 'REUS!', '#ffd75e', 13);
+            this.floater(mon.x, mon.y - mon.size - 28, t('combat.giant'), '#ffd75e', 13);
           }
         }
       } else if (alive >= ADVENTURE_MAX_ALIVE) {
@@ -9755,16 +11043,16 @@ class Game {
           const waveHeal = Math.max(4, Math.round(this.player.maxhp * 0.06));
           this.player.hp = Math.min(this.player.maxhp, this.player.hp + waveHeal);
           this.player.energy = clamp(this.player.energy + 8, 0, 100);
-          this.floater(this.player.x, this.player.y - 88, `Golf gewist +${waveHeal} HP`, '#6ee06e', 14);
+          this.floater(this.player.x, this.player.y - 88, t('banner.waveClear', { heal: waveHeal }), '#6ee06e', 14);
         }
         if (this.stageHealBetween > 0 && this.player && this.player.alive) {
           const heal = Math.max(8, Math.round(this.player.maxhp * this.stageHealBetween));
           this.player.hp = Math.min(this.player.maxhp, this.player.hp + heal);
-          this.floater(this.player.x, this.player.y - 108, `+${heal} bondgenoot`, '#6ee06e', 14);
+          this.floater(this.player.x, this.player.y - 108, t('combat.allyHeal', { heal }), '#6ee06e', 14);
         }
         try { AudioSys.sfx('waveClear'); } catch (_) {}
         if ((this.killStreak || 0) >= 5) {
-          this.floater(W / 2, 112, `STREAK ×${this.killStreak} vast!`, '#ffd75e', 15);
+          this.floater(W / 2, 112, t('combat.streakHold', { n: this.killStreak }), '#ffd75e', 15);
         }
       }
       this.wavePause -= dt;
@@ -9788,10 +11076,9 @@ class Game {
         save.advIsland = Math.min(5, lv / LEVELS_PER_ISLAND);
         persist();
         if (lv < MAX_LEVEL) {
-          const next = islandMeta(islandFromLevel(lv + 1));
           const nCap = adventureWeaponCapForLevel(lv + 1);
           setTimeout(() => {
-            try { UI.toast(`${next.name} ontgrendeld! Skill gate: wapens tot Lv ${nCap}`, 4200); } catch (_) {}
+            try { UI.toast(t('toast.islandUnlock', { name: islandLabel(islandFromLevel(lv + 1), 'name'), cap: nCap }), 4200); } catch (_) {}
           }, 1700);
         }
       }
@@ -9812,14 +11099,14 @@ class Game {
         setTimeout(() => {
           try {
             UI.toast(eggBonus.duplicate
-              ? `Bonus-ei dubbel: ${eggBonus.def.name} (+10 XP)`
-              : `Bonus-ei! ${eggBonus.def.name} (${rar.name})`, 3800);
+              ? t('toast.eggDuplicate', { name: eggBonus.def.name })
+              : t('toast.eggNew', { name: eggBonus.def.name, rar: rarityLabel(eggBonus.def.rarity) }), 3800);
           } catch (_) {}
         }, 1200);
       }
       checkAchievements();
       AudioSys.sfx('win');
-      this.banner('GEWONNEN!', 2, '#7cfc8a', 56);
+      this.banner(t('banner.won'), 2, '#7cfc8a', 56);
     } else {
       if (!save.advFails || typeof save.advFails !== 'object') save.advFails = {};
       const hadMaster = save.advMasterBuff === lv;
@@ -9828,36 +11115,37 @@ class Game {
       if (gotMaster) save.advMasterBuff = lv;
       persist();
       if (gotMaster) {
-        setTimeout(() => { try { UI.toast('Meester-buff! +20% HP, snelheid & schade tot je wint', 3800); } catch (_) {} }, 1500);
+        setTimeout(() => { try { UI.toast(t('toast.masterBuffGain'), 3800); } catch (_) {} }, 1500);
       }
       AudioSys.sfx('lose');
-      this.banner('VERSLAGEN...', 2, '#ff6b6b', 50);
+      this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
     setTimeout(() => UI.showResult(win, {
-      title: win ? 'GEWONNEN!' : 'VERSLAGEN...',
+      title: win ? t('result.advWin') : t('result.advLose'),
       detail: (() => {
+        const finishers = this.runFinishers ? t('result.finishersLine', { n: this.runFinishers }) : '';
+        const streak = (this.sessionBestKillStreak || 0) >= 3
+          ? t('result.streakLine', { n: this.sessionBestKillStreak }) : '';
         let base = win
-          ? `Level ${lv} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}` +
-            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '') +
-            ((this.sessionBestKillStreak || 0) >= 3 ? ` · streak ×${this.sessionBestKillStreak}` : '')
-          : `Level ${lv} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}` +
-            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '') +
-            ((this.sessionBestKillStreak || 0) >= 3 ? ` · streak ×${this.sessionBestKillStreak}` : '');
-        if (masterBuffActive(lv) && !win) base += ' · Meester-buff actief';
+          ? t('result.advDetailWin', { lv, kills: this.kills, stars, combo: this.maxCombo || 0, finishers, streak })
+          : t('result.advDetailLose', { lv, kills: this.kills, combo: this.maxCombo || 0, finishers, streak });
+        if (masterBuffActive(lv) && !win) base += t('result.masterBuffActive');
         if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
-          base += ` · gok: ${gambleOutcomeLabel(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48)}`;
+          base += t('result.gambleLine', {
+            text: gambleOutcomeLabelFromKey(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48),
+          });
         }
         return base;
       })(),
       xp: this.sessionXP,
       mode: 'adventure', level: this.level.n, win, stars,
-      tip: win ? (stars >= 3 ? 'Perfecte run — hou je HP hoog!' : `${starHintLine()} — pickups helpen`) : (() => {
-        const prog = this.waveIdx >= 0 ? `${this.waveIdx + 1}/${this.level.waves.length} golven` : 'start';
+      tip: win ? (stars >= 3 ? t('result.perfectRun') : t('result.pickupsHelp', { hint: starHintLine() })) : (() => {
+        const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : 'start';
         const base = this.player.hp <= 0
-          ? `Tip: blokkeer · mik omhoog op vliegers · ${prog}`
-          : `Tip: pak groene orbs · vul SUPER vóór baas · ${prog}`;
+          ? t('result.lossBlockTip', { prog })
+          : t('result.lossOrbTip', { prog });
         const once = onceResultTip('adventure', 'loss',
-          'Eerste nederlaag: vóór elk level kun je dobbelen — bondgenoot helpt tussen golven.');
+          t('result.lossGambleTip'));
         return once ? `${once} · ${base}` : base;
       })(),
     }), 1400);
@@ -9870,7 +11158,7 @@ class Game {
     this.sessionBestKillStreak = Math.max(this.sessionBestKillStreak || 0, ks);
     trackKillStreak(ks);
     if ([3, 5, 8, 12].includes(ks)) {
-      const msgs = { 3: 'STREAK ×3', 5: 'ON FIRE!', 8: 'RAMPAGE!', 12: 'UNSTOPPABLE!' };
+      const msgs = { 3: t('combat.streak3'), 5: t('combat.streak5'), 8: t('combat.streak8'), 12: t('combat.streak12') };
       this.floater(W / 2, 128, msgs[ks], ks >= 8 ? '#ff7a4d' : '#ffd75e', 17);
       AudioSys.sfx(ks >= 8 ? 'comboEpic' : 'combo');
       if (!motionReduced() && !fxLite()) spawnFxRing(this, m.x, m.y - m.size * 0.35, ks >= 8 ? '#ff7a4d' : '#ffd75e', 7 + ks * 0.35);
@@ -9908,9 +11196,9 @@ class Game {
       persist();
       AudioSys.sfx('newmonster');
       const hpB = rarityHpBonus(m.sp.rarity);
-      this.banner(`Nieuw ${rar.name}: ${m.sp.name}! +${hpB} max HP`, 2.0, rar.color, 28);
+      this.banner(t('banner.newDex', { rar: rarityLabel(m.sp.rarity), name: m.sp.name, hp: hpB }), 2.0, rar.color, 28);
       this.player.maxhp += hpB; this.player.hp += hpB;
-      UI.toast(`${rar.name}: ${m.sp.name} ontdekt! +${hpB} HP`, 3200);
+      UI.toast(t('toast.dexDiscover', { rar: rarityLabel(m.sp.rarity), name: m.sp.name, hp: hpB }), 3200);
     }
     save.dex[m.spId]++;
     persist();
@@ -9919,18 +11207,18 @@ class Game {
       save.stats.petsTamed = petTamedCount();
       persist();
       spawnGamePet(this);
-      this.banner(`PET! ${tame.sp.name}`, 2.2, tame.sp.c1, 36);
-      UI.toast(`${tame.sp.name} getemd — metgezel! (${tame.kills}/${tame.need} kills)`, 4200);
+      this.banner(t('banner.pet', { name: tame.sp.name }), 2.2, tame.sp.c1, 36);
+      UI.toast(t('toast.petTamed', { name: tame.sp.name, cur: tame.kills, need: tame.need }), 4200);
     }
     checkAchievements();
     // Cosmetics die op dex-drempels unlocken (geen combat-wijziging)
     if (countBefore < dexCount()) {
       const half = Math.ceil(SPECIES_ORDER.length / 2);
       if (countBefore < half && dexCount() >= half) {
-        UI.toast('Nieuwe stijl: Boekmeester!', 3500);
+        UI.toast(t('toast.styleUnlockTome'), 3500);
       }
       if (tiersBefore < 4 && dexRarityTierCount() >= 4) {
-        UI.toast('Nieuwe stijl: Kristallijn!', 3500);
+        UI.toast(t('toast.styleUnlockCrystal'), 3500);
       }
     }
     this.maybeSummon(m);
@@ -9965,10 +11253,10 @@ class Game {
     const py = this.player ? this.player.y : this.ground;
     this.burst(px, py - 70, rar.color, fxLite() ? 14 : 30);
     this.burst(px, py - 70, '#fff', fxLite() ? 6 : 12);
-    this.banner('✦ SUMMON! ✦', 2.2, rar.color, 44);
-    setTimeout(() => this.banner(`${pick.name} → ${rar.name}!`, 2.4, rar.color, 30), 1100);
-    this.floater(px, py - 130, `${pick.name} ✦ ${rar.name}`, rar.color, 17);
-    UI.toast(`✦ Summon! ${pick.name} is nu ${rar.name} — schade ×${asc.dmg}`, 4200);
+    this.banner(t('banner.summon'), 2.2, rar.color, 44);
+    setTimeout(() => this.banner(t('banner.summonAscend', { name: weaponLabel(pick), rar: rar.name }), 2.4, rar.color, 30), 1100);
+    this.floater(px, py - 130, `${weaponLabel(pick)} ✦ ${rar.name}`, rar.color, 17);
+    UI.toast(t('toast.summon', { name: weaponLabel(pick), rar: rar.name, dmg: asc.dmg }), 4200);
   }
 
   spawnPickup(x, y) {
@@ -9986,23 +11274,23 @@ class Game {
     switch (pk.kind) {
       case 'heal':
         p.hp = Math.min(p.maxhp, p.hp + Math.round(p.maxhp * 0.28));
-        this.floater(p.x, p.y - 100, '+HP', meta.color, 16);
+        this.floater(p.x, p.y - 100, t('combat.pickupHp'), meta.color, 16);
         break;
       case 'rage':
         this.dmgBuffMul = 1.38;
         this.dmgBuffT = 9;
-        this.floater(p.x, p.y - 100, 'RAGE ×1.4', meta.color, 16);
+        this.floater(p.x, p.y - 100, t('combat.pickupRage'), meta.color, 16);
         break;
       case 'chakra':
         p.energy = 100;
-        this.floater(p.x, p.y - 100, 'Vol chakra!', meta.color, 16);
+        this.floater(p.x, p.y - 100, t('combat.pickupChakra'), meta.color, 16);
         break;
       case 'shield':
         this.playerShieldT = 6.5;
-        this.floater(p.x, p.y - 100, 'Schild!', meta.color, 16);
+        this.floater(p.x, p.y - 100, t('combat.pickupShield'), meta.color, 16);
         break;
     }
-    this.banner(meta.label, 0.9, meta.color, 28);
+    this.banner(pickupLabel(pk.kind), 0.9, meta.color, 28);
     this.burst(pk.x, pk.y, meta.color, 14);
     bumpStat('pickups', 1);
     bumpDaily('pickups', 1);
@@ -10063,9 +11351,9 @@ class Game {
     this.comboT = 0;
     this.trainRoundBest = 0;
     this.trainDummyGrace = this.round === 1 ? 3.5 : 0;
-    this.banner(`RONDE ${this.round}`, 1.1, '#ffd75e', 52);
+    this.banner(t('banner.round', { n: this.round }), 1.1, '#ffd75e', 52);
     if (this.round === 1) {
-      this.floater(W / 2, 148, 'Combo-trainer — 3s oefenen, robot wacht', '#7cf5ff', 16);
+      this.floater(W / 2, 148, t('combat.trainIntro'), '#7cf5ff', 16);
     }
     AudioSys.sfx('bell');
   }
@@ -10094,7 +11382,7 @@ class Game {
     const diff = Math.min(1.5, this.robot.aiDiff || 1);
     this.trainLaserTelegraph = 0.95;
     this.trainLaserCd = rand(8, 12) / diff;
-    this.floater(this.robot.x, this.robot.y - 148, 'Oor-laser — spring!', '#ff9a9a', 15);
+    this.floater(this.robot.x, this.robot.y - 148, t('combat.earLaser'), '#ff9a9a', 15);
     haptic(8);
   }
 
@@ -10116,12 +11404,12 @@ class Game {
   updateTraining(dt) {
     this.phaseT += dt;
     if (this.phase === 'intro') {
-      if (this.phaseT > 1.2 && this.phaseT - dt <= 1.2) this.banner('VECHT!', 0.8, '#ff6b6b', 60);
+      if (this.phaseT > 1.2 && this.phaseT - dt <= 1.2) this.banner(t('banner.fight'), 0.8, '#ff6b6b', 60);
       if (this.phaseT > 1.6) { this.phase = 'fight'; this.inputLocked = false; }
     } else if (this.phase === 'fight') {
       if (this.trainDummyGrace > 0) {
         this.trainDummyGrace -= dt;
-        if (this.trainDummyGrace <= 0) this.floater(W / 2, 132, 'Robot activeert — hou combo vast!', '#ff9a9a', 15);
+        if (this.trainDummyGrace <= 0) this.floater(W / 2, 132, t('combat.robotActive'), '#ff9a9a', 15);
       }
       if (this.comboT > 0) {
         this.comboT -= dt;
@@ -10142,9 +11430,9 @@ class Game {
         this.phase = 'roundend'; this.phaseT = 0;
         this.inputLocked = true;
         const roundCombo = this.trainRoundBest || 0;
-        this.banner(pWin ? 'RONDE GEWONNEN!' : 'RONDE VERLOREN', 1.6, pWin ? '#7cfc8a' : '#ff6b6b', 40);
+        this.banner(pWin ? t('banner.roundWon') : t('banner.roundLost'), 1.6, pWin ? '#7cfc8a' : '#ff6b6b', 40);
         if (roundCombo >= 3) {
-          this.floater(W / 2, 118, `Ronde combo ×${roundCombo}`, '#ffd75e', 14);
+          this.floater(W / 2, 118, t('combat.roundCombo', { n: roundCombo }), '#ffd75e', 14);
         }
         AudioSys.sfx(pWin ? 'win' : 'lose');
       }
@@ -10179,16 +11467,19 @@ class Game {
     const rec = save.stats.trainMaxCombo || 0;
     const trainTip = win
       ? (trainBest >= 8
-        ? `Combo-trainer: ×${trainBest}${trainBest >= rec ? ' — nieuw record!' : ''}`
-        : (save.trainWins === 3 ? 'Nieuwe stijl vrij: Chakra gloed — Instellingen → Stijl!' : 'Unlock stijlen door meer train-wins!'))
-      : onceResultTip('training', 'loss', 'Spring tijdens CHIDORI-telegraph — robot mist · duck oor-lasers')
-        || 'Tip: duck lasers · chakra vol → Rasengan';
+        ? t('result.trainComboRecord', { n: trainBest, rec: trainBest >= rec ? t('result.trainComboNewRec') : '' })
+        : (save.trainWins === 3 ? t('result.trainStyleUnlock') : t('result.trainStyleMore')))
+      : (onceResultTip('training', 'loss', t('result.trainLossTip'))
+        || t('result.trainTipDefault'));
     setTimeout(() => UI.showResult(win, {
-      title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
-      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · max combo ×${trainBest}` +
-        (win ? ` · ${save.trainWins}x gewonnen` : '') +
-        (rec > 0 ? ` · record ×${rec}` : '') +
-        (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
+      title: win ? t('result.trainWin') : t('result.trainLose'),
+      detail: t('result.trainDetail', {
+        outcome: win ? t('result.trainOutcomeWin') : t('result.trainOutcomeLose'),
+        s: this.roundsP, r: this.roundsR, combo: trainBest,
+        wins: win ? t('result.trainWinsLine', { n: save.trainWins }) : '',
+        record: rec > 0 ? t('result.trainRecordLine', { n: rec }) : '',
+        finishers: this.runFinishers ? t('result.finishersLine', { n: this.runFinishers }) : '',
+      }),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
     }), 1200);
@@ -10227,15 +11518,14 @@ class Game {
     this.inputLocked = true;
     const mp = this.roundsP1 === 1 || this.roundsP2 === 1;
     const decisive = this.roundsP1 === 1 && this.roundsP2 === 1;
-    let sub = decisive ? ' · beslissende ronde' : (mp ? ' · match point' : '');
-    this.banner(`RONDE ${this.round}${sub}`, 1.1, decisive ? '#ff9a9a' : '#ffd75e', 52);
+    this.banner(decisive ? t('banner.roundDecisive', { n: this.round }) : (mp ? t('banner.roundMatchPoint', { n: this.round }) : t('banner.round', { n: this.round })), 1.1, decisive ? '#ff9a9a' : '#ffd75e', 52);
     AudioSys.sfx('bell');
   }
 
   updateVersus(dt) {
     this.phaseT += dt;
     if (this.phase === 'intro') {
-      if (this.phaseT > 1.2 && this.phaseT - dt <= 1.2) this.banner('FIGHT!', 0.8, '#ff6b6b', 60);
+      if (this.phaseT > 1.2 && this.phaseT - dt <= 1.2) this.banner(t('banner.fight'), 0.8, '#ff6b6b', 60);
       if (this.phaseT > 1.6) { this.phase = 'fight'; this.inputLocked = false; }
     } else if (this.phase === 'fight') {
       this.roundTimer -= dt;
@@ -10252,11 +11542,11 @@ class Game {
         this.phase = 'roundend';
         this.phaseT = 0;
         this.inputLocked = true;
-        let msg = p1Win ? 'P1 WINT RONDE!' : 'P2 WINT RONDE!';
+        let msg = p1Win ? t('banner.p1RoundWin') : t('banner.p2RoundWin');
         if (timedOut) {
           const hp1 = Math.round(this.player.hp / this.player.maxhp * 100);
           const hp2 = Math.round(this.p2.hp / this.p2.maxhp * 100);
-          msg = `TIME! ${hp1}% vs ${hp2}% · ${msg}`;
+          msg = t('banner.timeHpVs', { hp1, hp2, msg });
         }
         this.banner(msg, 1.5, p1Win ? '#7cf5ff' : '#ffb0b8', 38);
         AudioSys.sfx(p1Win ? 'win' : 'lose');
@@ -10280,12 +11570,12 @@ class Game {
     if (p1Win) bumpStat('vsWins', 1);
     this.grantXP(p1Win ? 35 : 20);
     setTimeout(() => UI.showResult(p1Win, {
-      title: p1Win ? 'SPELER 1 WINT!' : 'SPELER 2 WINT!',
+      title: p1Win ? t('result.vsP1Win') : t('result.vsP2Win'),
       detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}` +
         ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : '') +
         (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
       xp: this.sessionXP, mode: 'versus', win: p1Win, p1: this.p1Pick, p2: this.p2Pick,
-      tip: 'Opnieuw = rematch · Pauze → Herstart match (0-0)',
+      tip: t('result.vsRematchTip'),
     }), 1200);
   }
 
@@ -10304,7 +11594,7 @@ class Game {
       combo3: false, combo5: false, combo8: false,
     };
     this.layoutWall(true);
-    this.banner('SLOOP DE MUUR!', 1.5, '#ffd75e', 46);
+    this.banner(t('banner.wallStart'), 1.5, '#ffd75e', 46);
     AudioSys.play('wall');
     this.phase = 'fight';
   }
@@ -10339,48 +11629,48 @@ class Game {
     const hints = this.wallHints || (this.wallHints = {});
     if (!hints.half && prevTimer > 30 && this.wallTimer <= 30) {
       hints.half = true;
-      this.floater(W / 2, 108, 'Halve tijd — combo vasthouden!', '#7cf5ff', 15);
+      this.floater(W / 2, 108, t('combat.wallHalf'), '#7cf5ff', 15);
     }
     if (!hints.quarter && prevTimer > 15 && this.wallTimer <= 15) {
       hints.quarter = true;
-      this.floater(W / 2, 108, 'Laatste 15s — record jagen!', '#ffd75e', 15);
+      this.floater(W / 2, 108, t('combat.wallLast15'), '#ffd75e', 15);
       if (this.wallTimer < 10) AudioSys.sfx('bonus');
     }
     if (!hints.five && prevTimer > 5 && this.wallTimer <= 5) {
       hints.five = true;
-      this.floater(W / 2, 108, '5s — vol gas!', '#ff6b6b', 15);
+      this.floater(W / 2, 108, t('combat.wallLast5'), '#ff6b6b', 15);
       AudioSys.sfx('bonus');
     }
     const elapsed = (this.wallDuration || 60) - this.wallTimer;
     if (!hints.startCombo && elapsed > 2.5 && elapsed < 9 && this.combo === 0) {
       hints.startCombo = true;
-      this.floater(W / 2, 132, 'Tip: snelle opeenvolgende slagen vullen combo', '#7cf5ff', 14);
+      this.floater(W / 2, 132, t('combat.wallComboTipShort'), '#7cf5ff', 14);
     }
     const prevComboT = this.comboT;
     this.comboT -= dt;
     if (this.comboT <= 0) {
       if (this.combo >= 4 && !hints.lostCombo) {
         hints.lostCombo = true;
-        this.floater(W / 2, 120, 'Combo weg — snel weer raken!', '#ff9a9a', 14);
+        this.floater(W / 2, 120, t('combat.wallComboLost'), '#ff9a9a', 14);
       }
       this.combo = 0;
     } else if (!hints.comboWarn && this.combo >= 3 && prevComboT > 0.35 && this.comboT <= 0.35) {
       hints.comboWarn = true;
-      this.floater(W / 2, 120, 'Combo bijna weg!', '#ff9a9a', 13);
+      this.floater(W / 2, 120, t('combat.wallComboLow'), '#ff9a9a', 13);
     }
     const bestSaved = save.bestWall || 0;
     if (!hints.nearRec && bestSaved > 0 && this.score > 0) {
       const gap = bestSaved - this.score;
       if (gap > 0 && gap <= 5) {
         hints.nearRec = true;
-        this.floater(W / 2, 94, `Bijna record — nog ${gap}!`, '#7cfc8a', 16);
+        this.floater(W / 2, 94, t('combat.wallNearRec', { gap }), '#7cfc8a', 16);
         haptic(12);
       }
     }
     if (this.bricks.every(b => b.hp <= 0)) {
       this.wallGen++;
       this.grantXP(25);
-      this.banner('MUUR GESLOOPT! Nieuwe muur...', 1.4, '#7cfc8a', 34);
+      this.banner(t('banner.wallNewWall'), 1.4, '#7cfc8a', 34);
       AudioSys.sfx('win');
       this.layoutWall(true);
     }
@@ -10397,22 +11687,25 @@ class Game {
     bumpDaily('wallBricks', this.score);
     checkAchievements();
     AudioSys.sfx(isRecord ? 'win' : 'bell');
-    this.banner('TIJD!', 1.5, '#ffd75e', 56);
+    this.banner(t('banner.wallTime'), 1.5, '#ffd75e', 56);
     const pace = Math.round(this.score); // 60s run → stenen ≈ per minuut
     const paceDelta = wallRecordPaceDelta({ wallTimer: 0, wallDuration: this.wallDuration, score: this.score });
-    let tip = isRecord ? 'Nieuw record — share met een vriend!' : 'Tip: hou combo vast voor snellere sloop';
+    let tip = isRecord ? t('result.wallRecordShare') : t('result.wallComboTip');
     if (!isRecord && best > 0) {
       const gap = best - this.score;
-      if (gap > 0 && gap <= 15) tip = `Nog ${gap} stenen tot je record — combo helpt!`;
-      else if ((this.maxCombo || 0) < 5) tip = 'Tip: snelle opeenvolgende slagen vullen de combo-balk';
-      else if ((this.maxCombo || 0) >= 8) tip = `Sterke combo (×${this.maxCombo}) — volgende keer record?`;
-      else if (paceDelta != null && paceDelta < -3) tip = `Achter record-tempo — probeer combo ×5+ voor meer sloop`;
-      else if (paceDelta != null && paceDelta >= 3) tip = 'Goed tempo — volgende run kan record breken!';
+      if (gap > 0 && gap <= 15) tip = t('result.wallGapTip', { gap });
+      else if ((this.maxCombo || 0) < 5) tip = t('result.wallComboBarTip');
+      else if ((this.maxCombo || 0) >= 8) tip = t('result.wallStrongCombo', { n: this.maxCombo });
+      else if (paceDelta != null && paceDelta < -3) tip = t('result.wallBehindPace');
+      else if (paceDelta != null && paceDelta >= 3) tip = t('result.wallGoodPace');
     }
     setTimeout(() => UI.showResult(true, {
-      title: isRecord ? 'NIEUW RECORD!' : 'TIJD IS OM!',
-      detail: `${this.score} stenen (~${pace}/min) · record ${best} · max combo ×${this.maxCombo || 0}` +
-        (paceDelta != null && best > 0 && !isRecord ? ` · tempo ${paceDelta >= 0 ? '+' : ''}${paceDelta} vs record` : ''),
+      title: isRecord ? t('result.wallRecord') : t('result.wallTime'),
+      detail: t('result.wallDetail', {
+        score: this.score, pace, best, combo: this.maxCombo || 0,
+        paceDelta: paceDelta != null && best > 0 && !isRecord
+          ? t('result.wallPaceDelta', { delta: `${paceDelta >= 0 ? '+' : ''}${paceDelta}` }) : '',
+      }),
       xp: this.sessionXP, mode: 'wall', win: true,
       tip,
     }), 1200);
@@ -10432,7 +11725,7 @@ class Game {
     this.player.x = W * 0.28;
     this.player.face = 1;
     this.inputLocked = false;
-    this.banner('MATS · MUNTJES BONUS', 1.5, '#ffd75e', 46);
+    this.banner(t('banner.matsStart'), 1.5, '#ffd75e', 46);
     AudioSys.play('mats');
   }
 
@@ -10479,7 +11772,7 @@ class Game {
         c.got = true;
         this.coinsCollected++;
         AudioSys.sfx('pickup');
-        this.floater(c.x, c.y - 20, '+1 munt', '#ffd75e', 15);
+        this.floater(c.x, c.y - 20, t('combat.coinPlus1'), '#ffd75e', 15);
         haptic(8);
       }
     }
@@ -10511,19 +11804,21 @@ class Game {
     const xp = Math.round(n * 4 + 15);
     this.grantXP(xp);
     AudioSys.sfx(isRecord ? 'win' : 'bonus');
-    this.banner('BONUS KLAAR!', 1.4, '#7cfc8a', 40);
+    this.banner(t('banner.bonusDone'), 1.4, '#7cfc8a', 40);
     const wallet = petCoinsBalance();
     setTimeout(() => UI.showResult(true, {
-      title: isRecord ? 'MATS RECORD!' : 'Goed gedaan, Mats!',
-      detail: `${n} munten · record ${best}` +
-        (petEarned > 0 ? ` · +${petEarned} pet coins (totaal ${wallet})` : '') +
-        ' · vliegers = +3 per hit',
+      title: isRecord ? t('result.matsRecord') : t('result.matsDone'),
+      detail: t('result.matsDetail', {
+        n, best,
+        pet: petEarned > 0 ? t('result.matsPetEarned', { n: petEarned, wallet }) : '',
+        flyers: t('result.matsFlyers'),
+      }),
       xp: this.sessionXP,
       mode: 'coinrun',
       win: true,
       tip: petEarned > 0
-        ? 'Pet coins uitgeven in Collectie → Pets · elke 2 Mats-munten = 1 pet coin'
-        : 'Joystick omhoog = hoger mikken (slag + gooi) · shuriken max 3× snel',
+        ? t('result.matsPetTip')
+        : t('result.matsControlTip'),
     }), 1200);
   }
 
@@ -10561,18 +11856,18 @@ class Game {
       save.xp -= xpNeed(save.lvl);
       save.lvl++;
       AudioSys.sfx('levelup');
-      this.banner(`LEVEL OMHOOG! Lv ${save.lvl}`, 1.8, '#ffd75e', 40);
+      this.banner(t('banner.levelUp', { lvl: save.lvl }), 1.8, '#ffd75e', 40);
       const st = playerStats();
       this.player.maxhp = st.maxhp;
       this.player.baseDmg = st.dmg;
       this.player.hp = Math.min(this.player.maxhp, this.player.hp + Math.round(this.player.maxhp * 0.45));
       const unlockedW = WEAPONS.find(w => w.unlock === save.lvl);
       if (unlockedW) {
-        setTimeout(() => this.banner(`Nieuw wapen: ${unlockedW.name}!`, 2, '#c792ff', 32), 900);
+        setTimeout(() => this.banner(t('banner.newWeapon', { name: weaponLabel(unlockedW) }), 2, '#c792ff', 32), 900);
         AudioSys.sfx('newmonster');
       }
       const newStyle = STYLES.find(s => s.needLvl === save.lvl && styleUnlocked(s));
-      if (newStyle) UI.toast(`Nieuwe stijl: ${newStyle.name}!`, 3500);
+      if (newStyle) UI.toast(t('toast.styleUnlock', { name: styleLabel(newStyle) }), 3500);
     }
     persist();
   }
@@ -10631,7 +11926,7 @@ class Game {
       if (!this._shurikenWarnT || this.t - this._shurikenWarnT > 0.9) {
         this._shurikenWarnT = this.t;
         try {
-          UI.toast(f._shurikenCd > 0 ? 'Werpwapen even wachten…' : 'Niet spammen — max 3 snel achter elkaar', 1600);
+          UI.toast(f._shurikenCd > 0 ? t('toast.shurikenWait') : t('toast.shurikenSpam'), 1600);
         } catch (_) {}
       }
       return;
@@ -10687,20 +11982,20 @@ class Game {
             const wh = this.wallHints || {};
             if (this.combo === 3 && !wh.combo3) {
               wh.combo3 = true;
-              this.floater(W * 0.5, 136, `Combo ×3 · sloop +${wallComboDmgPct(3)}%`, '#7cf5ff', 15);
+              this.floater(W * 0.5, 136, t('combat.wallCombo3', { pct: wallComboDmgPct(3) }), '#7cf5ff', 15);
             } else if (this.combo === 5 && !wh.combo5) {
               wh.combo5 = true;
-              this.floater(W * 0.5, 136, `Combo ×5 · sloop +${wallComboDmgPct(5)}%`, '#7cf5ff', 16);
+              this.floater(W * 0.5, 136, t('combat.wallCombo5', { pct: wallComboDmgPct(5) }), '#7cf5ff', 16);
               AudioSys.sfx('combo');
             } else if (this.combo === 8 && !wh.combo8) {
               wh.combo8 = true;
-              this.floater(W * 0.5, 136, `Combo ×8 · sloop +${wallComboDmgPct(8)}%`, '#ffd75e', 17);
+              this.floater(W * 0.5, 136, t('combat.wallCombo8', { pct: wallComboDmgPct(8) }), '#ffd75e', 17);
               AudioSys.sfx('combo');
               haptic(14);
             }
             if (!this.wallRecordToast && this.score > save.bestWall) {
               this.wallRecordToast = true;
-              this.floater(W * 0.5, 118, 'NIEUW RECORD!', '#ffd75e', 22);
+              this.floater(W * 0.5, 118, t('combat.wallRecord'), '#ffd75e', 22);
               haptic(18);
               AudioSys.sfx('bonus');
             }
@@ -10712,7 +12007,7 @@ class Game {
               AudioSys.sfx('bonus');
               this.score += 5;
               this.burst(b.x + b.w / 2, b.y + b.h / 2, '#ffd75e', 22);
-              this.floater(b.x + b.w / 2, b.y - 22, 'BONUS +5', '#7cf5ff', 18);
+              this.floater(b.x + b.w / 2, b.y - 22, t('combat.bonus5'), '#7cf5ff', 18);
             }
           } else {
             AudioSys.sfxAt('crack', cx);
@@ -10741,7 +12036,7 @@ class Game {
           trackCombo(this.combo);
           if (this.combo === 3 || this.combo === 6 || this.combo === 10) {
             AudioSys.sfx('combo');
-            this.floater(f.x + f.face * 30, f.y - 120, `COMBO ×${this.combo}!`, '#ffd75e', 17);
+            this.floater(f.x + f.face * 30, f.y - 120, t('combat.comboN', { n: this.combo }), '#ffd75e', 17);
           }
         }
         const buff = f.isPlayer ? (this.dmgBuffMul || 1) * (this.stageDmgMul || 1) * (this.styleAdvDmgMul || 1) : 1;
@@ -10809,10 +12104,10 @@ class Game {
             goals[this.combo] = 1;
             AudioSys.sfx('combo');
             const labels = {
-              3: 'Combo ×3 — door!',
-              5: 'Combo ×5 — netjes!',
-              8: 'Combo ×8 — pro!',
-              10: 'Combo ×10 — meester!',
+              3: t('combat.combo3'),
+              5: t('combat.combo5'),
+              8: t('combat.combo8'),
+              10: t('combat.combo10'),
             };
             this.floater(f.x + f.face * 30, f.y - 130, labels[this.combo], '#ffd75e', 16);
             haptic(8 + this.combo);
@@ -10827,7 +12122,7 @@ class Game {
         });
         if (hitRoll.crit) applyCritFx(this, tgt.x, tgt.y);
         const col = tgt.playerSlot === 2 ? '#ffb0b8' : (tgt.isPlayer ? '#ff8080' : '#ffe680');
-        this.floater(tgt.x, tgt.y - 115, (counter ? 'COUNTER! ' : '') + '-' + dmg, col, 16);
+        this.floater(tgt.x, tgt.y - 115, (counter ? t('combat.counter') + ' ' : '') + '-' + dmg, col, 16);
         this.burst(tgt.bodyX, tgt.bodyY, col, 7);
         applyHitConfirmFx(this, hx, hy, spec);
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
@@ -11001,7 +12296,7 @@ class Game {
             if ((p.x - fl.x) ** 2 + (p.y - fl.y) ** 2 < (p.r + fl.r) ** 2) {
               fl.hp = 0;
               this.coinsCollected += 3;
-              this.floater(fl.x, fl.y - 24, '+3 munten', '#ffd75e', 17);
+              this.floater(fl.x, fl.y - 24, t('combat.coinPlus3'), '#ffd75e', 17);
               this.burst(fl.x, fl.y, '#ffd75e', 12);
               AudioSys.sfx('bonus');
               haptic(12);
@@ -11051,12 +12346,12 @@ class Game {
     const comboSfx = (n) => (n >= 15 ? 'comboMega' : n >= 10 ? 'comboEpic' : 'combo');
     if (this.mode === 'wall' && (this.combo === 5 || this.combo === 8 || this.combo === 10)) {
       AudioSys.sfx(comboSfx(this.combo));
-      const msg = this.combo === 8 ? 'MUUR-TEMPO!' : `COMBO ×${this.combo}!`;
+      const msg = this.combo === 8 ? t('combat.wallTempo') : t('combat.comboN', { n: this.combo });
       this.floater(W * 0.5, 130, msg, '#7cf5ff', 18);
     }
     if (this.mode === 'adventure' && (this.combo === 6 || this.combo === 10)) {
       AudioSys.sfx(comboSfx(this.combo));
-      this.floater(W * 0.5, 118, `COMBO ×${this.combo}!`, '#ffd75e', 16);
+      this.floater(W * 0.5, 118, t('combat.comboN', { n: this.combo }), '#ffd75e', 16);
     }
     if ([5, 10, 15].includes(this.combo) && this.player && !motionReduced()) {
       const col = this.combo >= 10 ? '#ffd75e' : '#7cf5ff';
@@ -11337,13 +12632,13 @@ class Game {
       let hintTxt = this.modeHintLine;
       if (!hintTxt) {
         if (Input.dualMode && IS_TOUCH) {
-          hintTxt = 'P1 = linker helft · P2 = rechter helft · joystick + aanvalsknoppen';
+          hintTxt = t('hud.hintDualTouch');
         } else if (Input.dualMode) {
-          hintTxt = 'P1: A/D · W · J/K/L/U · Shift  |  P2: pijltjes · 1/2/3/4/5';
+          hintTxt = t('hud.hintDualKb');
         } else if (IS_TOUCH) {
-          hintTxt = 'Links: joystick om te lopen · Rechts: aanvalsknoppen';
+          hintTxt = t('hud.hintTouch');
         } else {
-          hintTxt = 'A/D lopen · W springen · J stomp · K trap · L wapen · U speciaal';
+          hintTxt = t('hud.hintKb');
         }
       }
       c.font = '600 15px -apple-system, sans-serif';
@@ -11577,7 +12872,7 @@ class Game {
     c.font = '700 9px sans-serif';
     c.fillStyle = 'rgba(255,255,255,.55)';
     c.textAlign = 'center';
-    c.fillText('Volgende golf', W / 2, y - 14);
+    c.fillText(t('hud.nextWave'), W / 2, y - 14);
     for (let i = 0; i < chips; i++) {
       const def = next[i];
       const sp = SPECIES[def.sp];
@@ -11738,7 +13033,7 @@ class Game {
     c.font = '700 10px sans-serif';
     c.textAlign = 'left';
     c.fillStyle = 'rgba(255,255,255,.6)';
-    c.fillText(`deel ${Math.min(3, 1 + Math.floor(pr * 3))}/3`, x0 + tw + (this.level.boss ? 24 : 10), y + 3.5);
+    c.fillText(t('hud.part', { cur: Math.min(3, 1 + Math.floor(pr * 3)) }), x0 + tw + (this.level.boss ? 24 : 10), y + 3.5);
     // golf-pips (d4 c3): expliciete golf 1/N onder de balk
     const pipY = y + 16;
     const pipGap = Math.min(14, (tw - 8) / Math.max(1, total));
@@ -11772,7 +13067,7 @@ class Game {
     c.fillStyle = 'rgba(255,255,255,.5)';
     c.textAlign = 'center';
     const waveNum = this.waveIdx >= 0 ? Math.min(total, cur + 1) : 0;
-    c.fillText(waveNum > 0 ? `Golf ${waveNum}/${total}` : `${total} golven`, W / 2, pipY + 11);
+    c.fillText(waveNum > 0 ? t('hud.waveLine', { n: waveNum, total }) : t('hud.wavesTotal', { total }), W / 2, pipY + 11);
     c.textAlign = 'center';
   }
 
@@ -11873,8 +13168,8 @@ class Game {
     c.fillStyle = '#ffd75e';
     c.strokeStyle = 'rgba(0,0,0,.55)';
     c.lineWidth = 4;
-    c.strokeText('KETS!', px, py - 58 - prog * 24);
-    c.fillText('KETS!', px, py - 58 - prog * 24);
+    c.strokeText(t('banner.kets'), px, py - 58 - prog * 24);
+    c.fillText(t('banner.kets'), px, py - 58 - prog * 24);
     c.restore();
   }
 
@@ -11915,14 +13210,14 @@ class Game {
     c.textBaseline = 'middle';
     c.lineWidth = 5 * ui;
     c.strokeStyle = 'rgba(0,0,0,.55)';
-    c.strokeText('KETS!', 0, 2);
+    c.strokeText(t('banner.kets'), 0, 2);
     c.fillStyle = '#fff';
-    c.fillText('KETS!', 0, 2);
+    c.fillText(t('banner.kets'), 0, 2);
     c.restore();
     c.font = `700 ${Math.round(12 * ui)}px -apple-system,sans-serif`;
     c.textAlign = 'center';
     c.fillStyle = 'rgba(255,255,255,.85)';
-    c.fillText(IS_TOUCH ? 'Tik!' : 'E / tik', cx, cy + r + 18 * ui);
+    c.fillText(IS_TOUCH ? t('hud.ketsTap') : t('hud.ketsKey'), cx, cy + r + 18 * ui);
     c.textAlign = 'left';
   }
 
@@ -11964,7 +13259,7 @@ class Game {
         c.font = '800 9px -apple-system, sans-serif';
         c.fillStyle = '#c47aff';
         c.textAlign = 'left';
-        c.fillText('MEESTER +20%', bx + 4, by - 7);
+        c.fillText(t('hud.masterShort'), bx + 4, by - 7);
       }
       if (this.mode === 'adventure') {
         c.strokeStyle = 'rgba(255,215,94,.5)';
@@ -11982,9 +13277,9 @@ class Game {
       this.drawSuperMeterFill(c, bx, by + 20, bw, 11, p.energy / 100, jKind, this.t);
       c.font = '800 10px -apple-system, sans-serif';
       c.fillStyle = 'rgba(255,255,255,.85)'; c.textAlign = 'left';
-      c.fillText('SUPER', bx + 6, by + 29);
+      c.fillText(t('hud.super'), bx + 6, by + 29);
       // getekend jutsu-icoontje (art-upgrade 3/4): bliksem / oog / orb
-      const ix = bx + 6 + c.measureText('SUPER').width + 9;
+      const ix = bx + 6 + c.measureText(t('hud.super')).width + 9;
       const iy = by + 25.5;
       if (jKind === 'chidori') {
         c.fillStyle = '#a8e0ff';
@@ -12013,7 +13308,7 @@ class Game {
       c.fillText(`Lv ${save.lvl}`, bx + bw + 12, by + 13);
       if (p.energy >= 100) {
         c.fillStyle = jKind === 'chidori' ? '#a8e0ff' : jKind === 'rinnegan' ? '#c47aff' : '#7cf5ff';
-        c.fillText(jutsuHudLabel(jKind), bx + bw + 12, by + 32);
+        c.fillText(jutsuLabel(jKind), bx + bw + 12, by + 32);
         c.strokeStyle = jKind === 'chidori' ? 'rgba(168,224,255,.55)' : jKind === 'rinnegan' ? 'rgba(196,122,255,.55)' : 'rgba(124,245,255,.55)';
         c.lineWidth = 2;
         c.beginPath();
@@ -12031,13 +13326,13 @@ class Game {
       const wCap = adventureWeaponCapForLevel(this.level.n);
       const wv = Math.max(1, this.waveIdx + 1);
       c.font = '800 16px -apple-system, sans-serif';
-      fillHudText(c, `Level ${this.level.n} — Golf ${Math.min(wv, this.level.waves.length)}/${this.level.waves.length}`, W / 2, 30, {
+      fillHudText(c, t('hud.levelWave', { n: this.level.n, wv: Math.min(wv, this.level.waves.length), total: this.level.waves.length }), W / 2, 30, {
         fill: a11yHighContrast() ? '#fff' : 'rgba(255,255,255,.9)',
       });
       c.font = '700 11px -apple-system, sans-serif';
       c.fillStyle = isl.accent;
       c.globalAlpha = 0.92;
-      c.fillText(`${isl.name} · wapen ≤ Lv ${wCap}`, W / 2, 48);
+      c.fillText(t('hud.islandWeapon', { name: islandLabel(islandFromLevel(this.level.n), 'name'), cap: wCap }), W / 2, 48);
       c.globalAlpha = 1;
       this.drawStageProgress(c);
       const bossAlive = this.monsters.find(m => m.elite && m.alive);
@@ -12052,17 +13347,17 @@ class Game {
         } else if (this.eggPet && activeEggPetDef()) {
           c.font = '700 11px sans-serif';
           c.fillStyle = this.eggPet.def?.c1 || '#ffd75e';
-          const txt = `Ei · ${this.eggPet.def?.name || 'Cosmetisch'}`;
+          const txt = t('hud.eggPet', { name: this.eggPet.def?.name || t('hud.cosmetic') });
           c.fillText(txt, W / 2, 62);
         } else if (this.pet && activePetDef()) {
           c.font = '700 11px sans-serif';
           c.fillStyle = this.pet.sp?.c1 || '#7cf5ff';
-          const txt = `Pet · ${this.pet.sp?.name || 'Metgezel'}`;
+          const txt = t('hud.petActive', { name: this.pet.sp?.name || t('hud.petDefault') });
           c.fillText(txt, W / 2, 62);
         } else if (this.gambleBossWave > 0) {
           c.font = '700 11px sans-serif';
           c.fillStyle = '#ffb0b8';
-          const txt = `Super-baas mogelijk · golf ${this.gambleBossWave}`;
+          const txt = t('hud.gambleBoss', { n: this.gambleBossWave });
           c.fillText(txt, W / 2 + 7, 62);
           drawMiniDie(c, W / 2 - c.measureText(txt).width / 2 - 3, 58.5, 10, '#ffb0b8');
         }
@@ -12077,16 +13372,16 @@ class Game {
         c.font = '700 11px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.7)';
         const pct = Math.round(hpPct * 100);
-        let starHint = ' · 3★ zone';
-        if (hpPct <= STAR_HP.two) starHint = ` · 2★ bij >${Math.round(STAR_HP.two * 100)}% HP`;
-        else if (hpPct <= STAR_HP.three) starHint = ` · 3★ bij >${Math.round(STAR_HP.three * 100)}% HP`;
-        c.fillText(`${pct}% HP${starHint}`, W / 2, 76);
+        let starHint = t('hud.starZone');
+        if (hpPct <= STAR_HP.two) starHint = t('hud.star2', { pct: Math.round(STAR_HP.two * 100) });
+        else if (hpPct <= STAR_HP.three) starHint = t('hud.star3', { pct: Math.round(STAR_HP.three * 100) });
+        c.fillText(t('hud.hpPct', { pct, hint: starHint }), W / 2, 76);
       }
       if (this.waveIdx >= 0 && (this.spawnQueue.length > 0 || this.monsters.some((m) => m.alive))) {
         const rem = this.spawnQueue.length + this.monsters.filter((m) => m.alive).length;
         c.font = '700 11px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.62)';
-        c.fillText(rem === 1 ? 'Nog 1 vijand in deze golf' : `Nog ${rem} vijanden in deze golf`, W / 2, 90);
+        c.fillText(rem === 1 ? t('hud.enemiesLeft1') : t('hud.enemiesLeftN', { n: rem }), W / 2, 90);
       }
       if (this.wavePause > 0) {
         const nextBoss = isBossWave(this.level, this.waveIdx + 1);
@@ -12112,7 +13407,7 @@ class Game {
           c.restore();
         }
         c.font = '800 15px sans-serif';
-        const pauseMsg = nextBoss ? `Op weg naar de baas — ${sec.toFixed(1)}s` : `Verder lopen… volgende golf ${sec.toFixed(1)}s`;
+        const pauseMsg = nextBoss ? t('hud.toBoss', { sec: sec.toFixed(1) }) : t('hud.walkNext', { sec: sec.toFixed(1) });
         fillHudText(c, pauseMsg, ringX, ringY, {
           fill: nextBoss ? '#ffc8d0' : '#d8e8ff',
         });
@@ -12129,7 +13424,7 @@ class Game {
       if ((this.killStreak || 0) >= 2) {
         c.textAlign = 'right';
         c.font = '800 12px sans-serif';
-        fillHudText(c, `STREAK ×${this.killStreak}`, W - Math.max(14, readSafeInsets().right + 8), 62, {
+        fillHudText(c, t('hud.streak', { n: this.killStreak }), W - Math.max(14, readSafeInsets().right + 8), 62, {
           fill: this.killStreak >= 8 ? '#ff7a4d' : '#ffd75e',
         });
       }
@@ -12155,34 +13450,34 @@ class Game {
           c.shadowColor = col;
           c.shadowBlur = 12;
         }
-        fillHudText(c, `COMBO ×${this.combo}`, 0, 0, { fill: col, strokeW: calm ? 4 : 3.5 });
+        fillHudText(c, t('hud.combo', { n: this.combo }), 0, 0, { fill: col, strokeW: calm ? 4 : 3.5 });
         c.restore();
       }
       if (this.dmgBuffT > 0) {
         c.font = '800 13px sans-serif'; c.fillStyle = '#ff7a4d';
-        c.fillText(`RAGE ${Math.ceil(this.dmgBuffT)}s`, W / 2, 108);
+        c.fillText(t('hud.rage', { n: Math.ceil(this.dmgBuffT) }), W / 2, 108);
       }
       if (this.playerShieldT > 0) {
         c.font = '800 13px sans-serif'; c.fillStyle = '#9fd8ff';
-        c.fillText(`Schild ${Math.ceil(this.playerShieldT)}s`, W / 2, this.dmgBuffT > 0 ? 124 : 108);
+        c.fillText(t('hud.shield', { n: Math.ceil(this.playerShieldT) }), W / 2, this.dmgBuffT > 0 ? 124 : 108);
       }
       if (this.masterSwordT > 0) {
         c.font = '900 14px sans-serif'; c.fillStyle = '#7cf5ff';
         if (!motionReduced()) { c.shadowColor = '#7cf5ff'; c.shadowBlur = 8; }
         const yMs = 108 + (this.dmgBuffT > 0 ? 16 : 0) + (this.playerShieldT > 0 ? 16 : 0);
-        c.fillText(`MASTER SWORD ${Math.ceil(this.masterSwordT)}s`, W / 2, yMs);
+        c.fillText(t('hud.masterSword', { n: Math.ceil(this.masterSwordT) }), W / 2, yMs);
         c.shadowBlur = 0;
       }
     } else if (this.mode === 'training') {
       const r = this.robot;
       const half = Math.min(300, W * 0.36);
       const tele = this.trainLaserTelegraph > 0
-        ? { label: 'OOR-LASER — spring!', frac: this.trainLaserTelegraph / 0.95, color: '#ff6b6b', max: 0.95 }
+        ? { label: t('hud.earLaser'), frac: this.trainLaserTelegraph / 0.95, color: '#ff6b6b', max: 0.95 }
         : (this.trainTelegraphT > 0
-          ? { label: 'CHIDORI — dash/spring!', frac: this.trainTelegraphT / 0.85, color: '#7cf5ff', max: 0.85 }
+          ? { label: t('hud.chidoriTele'), frac: this.trainTelegraphT / 0.85, color: '#7cf5ff', max: 0.85 }
           : (this.trainMeleeTelegraphT > 0
             ? {
-              label: this.trainTelegraphKind === 'kick' ? 'TRAP — spring/blok!' : 'SLA — blok/weg!',
+              label: this.trainTelegraphKind === 'kick' ? t('hud.kickTele') : t('hud.punchTele'),
               frac: this.trainMeleeTelegraphT / (this.trainMeleeTelegraphMax || 0.32),
               color: '#ffb347',
               max: this.trainMeleeTelegraphMax || 0.32,
@@ -12252,7 +13547,7 @@ class Game {
         c.font = '800 13px sans-serif';
         c.textAlign = 'center';
         c.fillStyle = '#ffb0b8';
-        c.fillText('OOR-LASER', W / 2, ly - 10);
+        c.fillText(t('hud.earLaserShort'), W / 2, ly - 10);
         c.restore();
       }
       // robotbalk rechtsboven
@@ -12263,12 +13558,12 @@ class Game {
       this.rr(c, W - 16 - half * frac, by, half * frac, 15, 6); c.fill();
       c.font = '800 13px sans-serif'; c.textAlign = 'right'; c.fillStyle = '#fff';
       const rPct = Math.round(frac * 100);
-      c.fillText(`RABBITROBOT · ${rPct}%`, W - 20, by + 30);
+      c.fillText(t('hud.rabbitRobot', { pct: rPct }), W - 20, by + 30);
       // timer + rondepunten
       c.textAlign = 'center';
       c.font = '800 12px sans-serif';
       c.fillStyle = 'rgba(255,255,255,.65)';
-      c.fillText(`Ronde ${this.round} · eerst 2 wint · ${this.roundsP}-${this.roundsR}`, W / 2, 68);
+      c.fillText(t('hud.roundInfo', { n: this.round, s: this.roundsP, r: this.roundsR }), W / 2, 68);
       const tLeft = Math.ceil(Math.max(0, this.roundTimer));
       const urgent = this.roundTimer < 15 && this.phase === 'fight';
       c.font = urgent ? '900 28px sans-serif' : '900 26px sans-serif';
@@ -12292,7 +13587,7 @@ class Game {
         c.textAlign = 'center';
         c.font = '800 12px sans-serif';
         c.fillStyle = '#7cf5ff';
-        c.fillText(`Dummy ${this.trainDummyGrace.toFixed(1)}s — oefen combo`, W / 2, 118);
+        c.fillText(t('hud.dummyGrace', { n: this.trainDummyGrace.toFixed(1) }), W / 2, 118);
       }
       if (this.combo > 0 && this.comboT > 0 && save.comboHud !== false) {
         const col = this.combo >= 8 ? '#ff7a4d' : '#ffd75e';
@@ -12301,11 +13596,11 @@ class Game {
         c.textAlign = 'left';
         c.font = '800 13px sans-serif';
         c.fillStyle = col;
-        c.fillText(`COMBO ×${this.combo}`, 16, 118);
+        c.fillText(t('hud.combo', { n: this.combo }), 16, 118);
         c.font = '700 10px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.65)';
-        if (nextGoal) c.fillText(`doel ×${nextGoal}`, 16, 132);
-        if (rec > 0) c.fillText(`record ×${rec}`, 16, nextGoal ? 146 : 132);
+        if (nextGoal) c.fillText(t('hud.goal', { n: nextGoal }), 16, 132);
+        if (rec > 0) c.fillText(t('hud.record', { n: rec }), 16, nextGoal ? 146 : 132);
         const barW = Math.min(120, W * 0.28);
         const barY = nextGoal ? (rec > 0 ? 152 : 138) : (rec > 0 ? 146 : 132);
         c.fillStyle = 'rgba(255,255,255,.15)';
@@ -12326,7 +13621,7 @@ class Game {
       c.font = '700 9px sans-serif';
       c.textAlign = 'left';
       c.fillStyle = 'rgba(255,255,255,.45)';
-      c.fillText('TIJD', barX, 44);
+      c.fillText(t('hud.time'), barX, 44);
       c.textAlign = 'center';
       c.fillStyle = 'rgba(0,0,0,.42)';
       this.rr(c, barX, 48, barW, 7, 4); c.fill();
@@ -12357,11 +13652,11 @@ class Game {
         c.font = '800 12px sans-serif';
         c.textAlign = 'left';
         c.fillStyle = 'rgba(255,215,94,.85)';
-        c.fillText(`MUUR ×${this.wallGen + 1}`, 16, 36);
+        c.fillText(t('hud.wallGen', { n: this.wallGen + 1 }), 16, 36);
         c.textAlign = 'center';
       }
       c.font = '800 17px sans-serif'; c.fillStyle = '#ffd75e';
-      c.fillText(`Stenen: ${this.score}`, W / 2, 68);
+      c.fillText(t('hud.stones', { n: this.score }), W / 2, 68);
       c.font = '700 13px sans-serif';
       const bestSaved = save.bestWall || 0;
       const rec = Math.max(bestSaved, this.score);
@@ -12369,9 +13664,9 @@ class Game {
       c.fillStyle = onPace ? '#7cfc8a' : 'rgba(255,255,255,.55)';
       if (bestSaved > 0 && this.score < bestSaved) {
         const gap = bestSaved - this.score;
-        c.fillText(`Record ${bestSaved} · nog ${gap} te gaan`, W / 2, 86);
+        c.fillText(t('hud.recordGap', { best: bestSaved, gap }), W / 2, 86);
       } else {
-        c.fillText(onPace && bestSaved > 0 ? `Record gebroken · ${rec}` : `Record: ${rec}`, W / 2, 86);
+        c.fillText(onPace && bestSaved > 0 ? t('hud.recordBroken', { rec }) : t('hud.recordLine', { rec }), W / 2, 86);
       }
       let showPaceDelta = false;
       const elapsed = wallDur - this.wallTimer;
@@ -12380,14 +13675,14 @@ class Game {
         const proj = Math.round(this.score + (this.wallTimer / elapsed) * this.score);
         c.font = '700 12px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.62)';
-        c.fillText(`~${pace}/min · projectie ~${proj}`, W / 2, 102);
+        c.fillText(t('hud.pace', { pace, proj }), W / 2, 102);
         const paceDelta = wallRecordPaceDelta(this);
         if (paceDelta != null && bestSaved > 0) {
           showPaceDelta = true;
           c.font = '700 11px sans-serif';
           c.fillStyle = paceDelta >= 0 ? '#7cfc8a' : '#ffb0b8';
           c.fillText(
-            paceDelta >= 0 ? `Voor op record-tempo +${paceDelta}` : `Achter record-tempo ${paceDelta}`,
+            paceDelta >= 0 ? t('hud.paceAhead', { n: paceDelta }) : t('hud.paceBehind', { n: paceDelta }),
             W / 2, 116
           );
         }
@@ -12401,7 +13696,7 @@ class Game {
         c.font = '700 9px sans-serif';
         c.textAlign = 'left';
         c.fillStyle = 'rgba(124,245,255,.55)';
-        c.fillText('COMBO', cBarX, cy - 4);
+        c.fillText(t('hud.comboLabel'), cBarX, cy - 4);
         c.textAlign = 'center';
         c.fillStyle = 'rgba(0,0,0,.38)';
         this.rr(c, cBarX, cy, cBarW, 5, 3); c.fill();
@@ -12414,14 +13709,14 @@ class Game {
         c.translate(W / 2, showPaceDelta ? 142 : 128);
         c.scale(pulse, pulse);
         c.font = '900 22px sans-serif'; c.fillStyle = '#7cf5ff';
-        c.fillText(`COMBO ×${this.combo}`, 0, 0);
+        c.fillText(t('hud.combo', { n: this.combo }), 0, 0);
         c.font = '700 12px sans-serif'; c.fillStyle = 'rgba(124,245,255,.85)';
-        c.fillText(`+${Math.min(this.combo, 12) * 4}% sloop`, 0, 18);
+        c.fillText(t('hud.comboSmash', { pct: Math.min(this.combo, 12) * 4 }), 0, 18);
         c.restore();
       } else if (this.combo === 1 && this.comboT > 0) {
         c.font = '700 12px sans-serif';
         c.fillStyle = 'rgba(124,245,255,.75)';
-        c.fillText('Combo actief — nog een steen!', W / 2, showPaceDelta ? 132 : 118);
+        c.fillText(t('hud.comboActive'), W / 2, showPaceDelta ? 132 : 118);
       }
     } else if (this.mode === 'coinrun') {
       const tLeft = Math.ceil(Math.max(0, this.coinTimer));
@@ -12429,14 +13724,14 @@ class Game {
       c.fillStyle = this.coinTimer < 10 ? '#ff6b6b' : '#fff';
       c.fillText(String(tLeft), W / 2, 42);
       c.font = '800 18px sans-serif'; c.fillStyle = '#ffd75e';
-      c.fillText(`Munten: ${this.coinsCollected}`, W / 2, 70);
+      c.fillText(t('hud.coins', { n: this.coinsCollected }), W / 2, 70);
       c.font = '700 13px sans-serif'; c.fillStyle = 'rgba(255,255,255,.7)';
-      c.fillText(`Record Mats: ${save.stats.matsCoinBest || 0}`, W / 2, 90);
+      c.fillText(t('hud.matsRecord', { n: save.stats.matsCoinBest || 0 }), W / 2, 90);
       const pendingPet = matsPetCoinsFromRun(this.coinsCollected);
       c.fillStyle = '#ff9ad5';
-      c.fillText(`Pet coins: +${pendingPet} · wallet ${petCoinsBalance()}`, W / 2, 108);
+      c.fillText(t('hud.petCoins', { pending: pendingPet, wallet: petCoinsBalance() }), W / 2, 108);
       c.fillStyle = 'rgba(124,245,255,.85)';
-      c.fillText('Joystick ↑ mik · slag/gooi hoger · shuriken op roze vliegers', W / 2, 128);
+      c.fillText(t('hud.matsHint'), W / 2, 128);
     } else if (this.mode === 'versus' && this.p2) {
       const p2 = this.p2;
       const half = Math.min(260, W * 0.38);
@@ -12451,7 +13746,7 @@ class Game {
         c.fillText(String(n), W / 2, H * 0.4);
         c.font = '700 13px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.65)';
-        c.fillText('Spawn · eerlijk start', W / 2, H * 0.4 + 28);
+        c.fillText(t('hud.spawnFair'), W / 2, H * 0.4 + 28);
       } else if (this.phase === 'roundend') {
         const left = Math.max(0, 2.2 - this.phaseT);
         c.font = '900 34px sans-serif';
@@ -12459,7 +13754,7 @@ class Game {
         c.fillText(String(Math.ceil(left)), W / 2, H * 0.38);
         c.font = '700 13px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.7)';
-        c.fillText('Volgende ronde', W / 2, H * 0.38 + 26);
+        c.fillText(t('hud.nextRound'), W / 2, H * 0.38 + 26);
         const barW = Math.min(140, W * 0.24);
         c.fillStyle = 'rgba(0,0,0,.35)';
         this.rr(c, W / 2 - barW / 2, H * 0.38 + 34, barW, 5, 3);
@@ -12474,7 +13769,7 @@ class Game {
       this.rr(c, bx, byVs, half * clamp(p.hp / p.maxhp, 0, 1), 14, 6); c.fill();
       c.font = '800 11px sans-serif'; c.textAlign = 'left'; c.fillStyle = '#7cf5ff';
       const hp1Pct = Math.round(clamp(p.hp / p.maxhp, 0, 1) * 100);
-      c.fillText(`P1 · ${name1} · ${hp1Pct}%`, bx, byVs + 30);
+      c.fillText(t('hud.p1Line', { name: name1, pct: hp1Pct }), bx, byVs + 30);
       c.fillStyle = '#333c55'; this.rr(c, bx, byVs + 34, half, 5, 3); c.fill();
       this.drawSuperMeterFill(c, bx, byVs + 34, half, 5, p.energy / 100, fighterJutsuKind(p), this.t);
       drawWeaponStylePips(c, bx + 8, byVs + 44, p);
@@ -12486,7 +13781,7 @@ class Game {
       this.rr(c, W - 16 - half * frac2, byVs, half * frac2, 14, 6); c.fill();
       c.textAlign = 'right'; c.fillStyle = '#ffb0b8';
       const hp2Pct = Math.round(frac2 * 100);
-      c.fillText(`${hp2Pct}% · ${name2} · P2`, W - 20, byVs + 30);
+      c.fillText(t('hud.p2Line', { pct: hp2Pct, name: name2 }), W - 20, byVs + 30);
       c.fillStyle = '#333c55'; this.rr(c, W - half - 16, byVs + 34, half, 5, 3); c.fill();
       this.drawSuperMeterFill(c, W - half - 16, byVs + 34, half, 5, p2.energy / 100, fighterJutsuKind(p2), this.t);
       drawWeaponStylePips(c, W - half - 8, byVs + 44, p2);
@@ -12509,8 +13804,8 @@ class Game {
       c.font = '800 12px sans-serif'; c.fillStyle = 'rgba(255,255,255,.75)';
       const decisiveRound = this.roundsP1 === 1 && this.roundsP2 === 1;
       const scoreLine = decisiveRound
-        ? `Beslissende ronde · ${this.roundsP1}-${this.roundsP2}`
-        : `Ronde ${this.round} · eerst 2 wint · ${this.roundsP1}-${this.roundsP2}`;
+        ? t('hud.decisiveRound', { s: this.roundsP1, r: this.roundsP2 })
+        : t('hud.roundInfo', { n: this.round, s: this.roundsP1, r: this.roundsP2 });
       c.fillText(scoreLine, W / 2, timerY + 18);
       const timerBarW = Math.min(160, W * 0.28);
       const timerFrac = clamp(this.roundTimer / 99, 0, 1);
@@ -12523,7 +13818,7 @@ class Game {
       if (this.roundTimer < 12 && this.phase === 'fight') {
         c.font = '700 10px sans-serif';
         c.fillStyle = 'rgba(255,215,94,.85)';
-        c.fillText('TIME = hoogste HP % wint', W / 2, timerY + 38);
+        c.fillText(t('hud.timeHpWin'), W / 2, timerY + 38);
       }
       const mp1 = this.roundsP1 === 1 && this.roundsP2 < 2;
       const mp2 = this.roundsP2 === 1 && this.roundsP1 < 2;
@@ -12806,14 +14101,14 @@ function initCharSelectChrome() {
     AudioSys.sfx('select');
     const duo = pickSagaIconClash();
     if (!duo) {
-      try { UI.toast('Unlock minstens 2 saga-icons (Ki/Scroll/Tide/Cape/Dawn)', 2800); } catch (_) {}
+      try { UI.toast(t('toast.charSagaUnlock'), 2800); } catch (_) {}
       return;
     }
     vsSelect.p1 = duo.a.id;
     vsSelect.p2 = duo.b.id;
     UI.charPickStep = 2;
     UI.renderCharSelect();
-    UI.toast(`${duo.a.name} vs ${duo.b.name} — saga clash!`, 2600);
+    UI.toast(t('toast.charSagaClash', { a: duo.a.name, b: duo.b.name }), 2600);
   });
 }
 
@@ -13022,41 +14317,40 @@ const UI = {
         const pct = Math.round(prog.cleared / prog.total * 100);
         return `<div class="help-island-row${cur === isl.id ? ' cur' : ''}${ok ? '' : ' locked'}">` +
           `<span class="help-island-ico" style="color:${isl.accent}">${isl.icon}</span>` +
-          `<div class="help-island-body"><b>${isl.name}</b> · ${isl.sub}` +
-          `<div class="help-island-sub">${ok ? `${prog.cleared}/${prog.total} levels · ${prog.stars}/${prog.maxStars}★` : `Vergrendeld — versla baas Lv ${isl.id * LEVELS_PER_ISLAND}`}` +
-          ` · skill gate wapens Lv ${wCap}</div>` +
+          `<div class="help-island-body"><b>${islandLabel(isl.id, 'name')}</b> · ${islandLabel(isl.id, 'sub')}` +
+          `<div class="help-island-sub">${ok
+            ? t('ui.helpIslandProg', { cleared: prog.cleared, total: prog.total, stars: prog.stars, maxStars: prog.maxStars, cap: wCap })
+            : t('ui.helpIslandLocked', { lv: isl.id * LEVELS_PER_ISLAND })}</div>` +
           `<div class="island-prog-track"><i style="width:${pct}%;background:${isl.accent}"></i></div></div></div>`;
       }).join('');
       islHost.innerHTML =
         `<div class="step-card help-island-card">` +
-        `<b>Eilanden &amp; skill gate</b> — avontuur is <b>5×10 levels</b>. Per eiland geldt een wapen-cap (nu <b>Lv ${cap}</b> op eiland ${cur}).` +
+        `<b>${t('ui.helpIslandTitle')}</b> — ${t('ui.helpIslandIntro', { cap, cur })}` +
         `<div class="help-island-grid">${rows}</div>` +
-        `<div style="margin-top:10px;opacity:.88;line-height:1.45">` +
-        `<b>Meester-buff:</b> 5× verlies op hetzelfde level → +20% HP, snelheid &amp; schade tot je wint.` +
-        ` Baas op Lv 10/20/30/40/50 opent het volgende eiland.</div></div>`;
+        `<div style="margin-top:10px;opacity:.88;line-height:1.45">${t('ui.helpMasterBuff')}</div></div>`;
     }
     if (!host) return;
-    const touch = IS_TOUCH ? 'touch' : 'toetsenbord';
+    const touch = IS_TOUCH ? t('ui.helpTouch') : t('ui.helpKeyboard');
     const prog = onboardingProgress();
     const next = nextUntriedMode();
     const modes = [
-      { id: 'adventure', label: 'Avontuur', tip: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok vóór level' },
-      { id: 'training', label: 'Training', tip: 'Combo-trainer ×5/×8/×10 · 3s dummy · lasers · Chidori' },
-      { id: 'wall', label: 'Muur', tip: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing' },
-      { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
-      { id: 'coinrun', label: 'Mats', tip: '45s munten · 2 munten = 1 pet coin · mik ↑ · vliegers +3' },
+      { id: 'adventure', label: t('modes.adventure'), tip: t('ui.modeAdventure') },
+      { id: 'training', label: t('modes.training'), tip: t('ui.modeTraining') },
+      { id: 'wall', label: t('modes.wall'), tip: t('ui.modeWall') },
+      { id: 'versus', label: t('modes.versus'), tip: t('ui.modeVersus') },
+      { id: 'coinrun', label: t('modes.coinrun'), tip: t('ui.modeCoinrun') },
     ];
-    let html = `<div style="font-size:12px;opacity:.85;margin-bottom:8px">Eerste-minuut hints: <b>${prog.seen}/${prog.total}</b> modi gezien · max <b>één</b> regel bovenin per modus</div>`;
+    let html = `<div style="font-size:12px;opacity:.85;margin-bottom:8px">${t('ui.helpOnboardHead', { seen: prog.seen, total: prog.total })}</div>`;
     if (next) {
       html += `<div class="step-card" style="margin:6px 0;padding:10px 12px;border-color:rgba(124,245,255,.45)">` +
-        `<b>Probeer als volgende: ${next.label}</b>` +
-        `<div style="opacity:.88;margin-top:4px">Nog niet gespeeld — één hint bovenin, geen extra toast.</div></div>`;
+        `<b>${t('ui.helpTryNext', { mode: next.label })}</b>` +
+        `<div style="opacity:.88;margin-top:4px">${t('ui.helpTrySub')}</div></div>`;
     }
     html += modes.map((m) => {
       const seen = modeOnboardingSeen(m.id);
       const highlight = next && next.id === m.id ? ' border-color:rgba(124,245,255,.5)' : '';
       return `<div class="step-card" style="margin:6px 0;padding:10px 12px${highlight}">` +
-        `<b>${m.label}</b>${seen ? ' <span style="color:#7cfc8a;font-size:11px">✓ hint gezien</span>' : ' <span style="color:#ffd75e;font-size:11px">· nog niet</span>'}` +
+        `<b>${m.label}</b>${seen ? ` <span style="color:#7cfc8a;font-size:11px">${t('ui.helpHintSeen')}</span>` : ` <span style="color:#ffd75e;font-size:11px">${t('ui.helpHintNot')}</span>`}` +
         `<div style="opacity:.88;margin-top:4px">${m.tip} · ${touch}</div></div>`;
     }).join('');
     host.innerHTML = html;
@@ -13184,18 +14478,14 @@ const UI = {
     const stepEl = document.getElementById('charPickStep');
     const stepBadge = document.getElementById('charPickStepBadge');
     if (stepEl) {
-      stepEl.textContent = this.charPickStep === 1
-        ? 'Speler 1 — tik een unlocked kaart (linker helft in gevecht)'
-        : 'Speler 2 — tik een andere vechter (rechter helft in gevecht)';
+      stepEl.textContent = this.charPickStep === 1 ? t('ui.charSub1') : t('ui.charSub2');
     }
     if (stepBadge) {
-      stepBadge.textContent = this.charPickStep === 1
-        ? 'Stap 1/2 · Choose P1'
-        : 'Stap 2/2 · Choose P2';
+      stepBadge.textContent = this.charPickStep === 1 ? t('ui.charStep1') : t('ui.charStep2');
     }
     const blurbEl = document.getElementById('charSagaBlurb');
     if (blurbEl) blurbEl.textContent = filter === 'all'
-      ? 'Choose fighter · 5 saga-hints (parodie, geen officiële namen) · tik kaart = kiezen'
+      ? t('ui.charBlurbAll')
       : sagaMeta.blurb;
     const sagaBar = document.getElementById('charSagaBar');
     if (sagaBar) {
@@ -13237,7 +14527,7 @@ const UI = {
     if (!roster.length) {
       const empty = document.createElement('div');
       empty.className = 'char-grid-empty';
-      empty.textContent = 'Geen vechters in deze saga — tik ⭐ Alle';
+      empty.textContent = t('ui.charEmpty');
       grid.appendChild(empty);
     }
     for (const r of roster) {
@@ -13270,7 +14560,7 @@ const UI = {
       el.appendChild(cap);
       const tag = document.createElement('div');
       tag.className = 'char-tag';
-      tag.textContent = ok ? r.tag : '🔒 Locked';
+      tag.textContent = ok ? r.tag : t('ui.charLocked');
       el.appendChild(tag);
       const flair = document.createElement('div');
       flair.className = 'char-flair';
@@ -13296,7 +14586,7 @@ const UI = {
     if (fightBtn) fightBtn.disabled = !(vsSelect.p1 && vsSelect.p2);
     const backBtn = document.getElementById('charSelectBack');
     if (backBtn) {
-      backBtn.textContent = this.charPickStep === 2 ? '\u2190 Andere P1' : '\u2190 Menu';
+      backBtn.textContent = this.charPickStep === 2 ? t('ui.charBackP1') : t('ui.charBackMenu');
     }
     const backP = document.getElementById('charPickBackP1');
     if (backP) {
@@ -13334,7 +14624,7 @@ const UI = {
         vsSelect.p1 = vsSelect.p2;
         vsSelect.p2 = t;
         this.renderCharSelect();
-        UI.toast('P1 ↔ P2 omgewisseld', 1800);
+        UI.toast(t('toast.charSwap'), 1800);
       });
     }
     const rnd = document.getElementById('btnCharRandom');
@@ -13344,7 +14634,7 @@ const UI = {
         AudioSys.sfx('select');
         const pool = pickCharPoolFiltered();
         if (pool.length < 2) {
-          UI.toast('Niet genoeg unlocked vechters in deze saga', 2400);
+          UI.toast(t('toast.charNotEnough'), 2400);
           return;
         }
         const a = choice(pool);
@@ -13357,7 +14647,9 @@ const UI = {
         this.renderCharSelect();
         const sa = vsFighterStats(a);
         const sb = vsFighterStats(b);
-        UI.toast(`${a.name} vs ${b.name} · HP ${sa.hp}/${sb.hp} · TOT ${vsOverallRating(sa)}/${vsOverallRating(sb)}`, 2800);
+        UI.toast(t('toast.charRandom', {
+          a: a.name, b: b.name, hp1: sa.hp, hp2: sb.hp, tot1: vsOverallRating(sa), tot2: vsOverallRating(sb),
+        }), 2800);
       });
     }
     const rndFair = document.getElementById('btnCharRandomFair');
@@ -13367,7 +14659,7 @@ const UI = {
         AudioSys.sfx('select');
         const duo = pickBalancedRandomDuo();
         if (!duo) {
-          UI.toast('Niet genoeg unlocked vechters in deze saga', 2400);
+          UI.toast(t('toast.charNotEnough'), 2400);
           return;
         }
         vsSelect.p1 = duo.a.id;
@@ -13378,7 +14670,7 @@ const UI = {
         const sa = vsFighterStats(duo.a);
         const sb = vsFighterStats(duo.b);
         const diff = duo.ratingDiff != null ? duo.ratingDiff : Math.abs(vsOverallRating(sa) - vsOverallRating(sb));
-        UI.toast(`Fair duo: ${duo.a.name} vs ${duo.b.name} · TOT Δ${diff}`, 3000);
+        UI.toast(t('toast.charFair', { a: duo.a.name, b: duo.b.name, diff }), 3000);
       });
     }
   },
@@ -13389,7 +14681,7 @@ const UI = {
     row.innerHTML = '';
     const label = document.createElement('div');
     label.className = 'char-icon-row-title';
-    label.textContent = 'Saga-icons · deel 2 — tik om te kiezen';
+    label.textContent = t('ui.charIconRow');
     row.appendChild(label);
     const strip = document.createElement('div');
     strip.className = 'char-icon-strip';
@@ -13485,10 +14777,10 @@ const UI = {
     const profileEl = document.getElementById('menuProfileBar');
     if (profileEl) {
       profileEl.innerHTML =
-        `<span class="prof-row"><b>Lv ${save.lvl}</b><span>${w.name}</span><span style="color:${st.accent}">${st.name}</span></span>` +
+        `<span class="prof-row"><b>Lv ${save.lvl}</b><span>${weaponLabel(w)}</span><span style="color:${st.accent}">${styleLabel(st)}</span></span>` +
         `<span style="display:block;margin-top:3px;opacity:.82;font-size:11px">${adventureProgressLine()}</span>` +
         `<span class="prof-xp" aria-hidden="true"><span style="width:${pct}%"></span></span>` +
-        `<span class="prof-foot">${save.xp}/${need} XP${missAlert ? ' · missie klaar' : ''}</span>`;
+        `<span class="prof-foot">${save.xp}/${need} XP${missAlert ? ' · ' + t('ui.menuMissionReady') : ''}</span>`;
       profileEl.classList.toggle('has-alert', missAlert);
     }
     const statsEl = document.getElementById('menuStats');
@@ -13527,26 +14819,15 @@ const UI = {
       const prog = onboardingProgress();
       const next = nextUntriedMode();
       if (next) {
-        tipEl.textContent = `Eerste minuut ${prog.seen}/${prog.total} · probeer: ${next.label}`;
+        tipEl.textContent = t('ui.menuFirstMinuteNext', { seen: prog.seen, total: prog.total, next: next.label });
         hintLine = tipEl.textContent;
       } else if (prog.seen < prog.total) {
-        tipEl.textContent = `Eerste minuut ${prog.seen}/${prog.total} modi — één hint per modus bovenin`;
+        tipEl.textContent = t('ui.menuFirstMinutePartial', { seen: prog.seen, total: prog.total });
         hintLine = tipEl.textContent;
       } else {
-        const tips = [
-          'Kies een tegel — Avontuur · Arcade · 2P · Collectie',
-          '5 eilanden — baas Lv 10/20/30/40/50 opent volgend eiland',
-          'Skill gate — max wapen per eiland in avontuur',
-          '5× verlies op één level = Meester-buff +20%',
-          'Training = solo · Versus = 2P lokaal op iPad',
-          'Muur-combo’s = sneller sloop & meer XP',
-          'Monsterboek vullen = meer max HP',
-          'Verder spelen hervat je laatste modus',
-          'Menu-muziek wisselt als je terugkeert uit een modus',
-        ];
-        const i = Math.floor(Date.now() / 8000) % tips.length;
-        tipEl.textContent = tips[i];
-        hintLine = tips[i];
+        const i = Math.floor(Date.now() / 8000);
+        tipEl.textContent = menuTipAt(i);
+        hintLine = tipEl.textContent;
       }
     }
     if (hubHintEl) hubHintEl.textContent = hintLine;
@@ -13601,15 +14882,15 @@ const UI = {
       const streak = dailyStreakLine();
       if (step === 0) {
         sub.textContent = streak
-          ? `Dag voltooid · ${streak} — morgen 3 nieuwe lichte missies (middernacht)`
-          : 'Dag voltooid — morgen 3 nieuwe lichte missies (middernacht)';
+          ? t('missionsUi.subDayDoneStreak', { streak })
+          : t('missionsUi.subDayDone');
       } else {
         const pending = dailyUnclaimedXp();
         const base = step === 2
-          ? `Stap 2: claim +${pending} XP · daarna dagbonus (+80) — licht, geen grind`
+          ? t('missionsUi.subStep2', { xp: pending })
           : (step === 3
-            ? 'Stap 3: tik Dagbonus (+80 XP) — licht, geen grind'
-            : `Stap 1: speel missies · max +${dailyPotentialXp()} XP vandaag — licht, geen grind`);
+            ? t('missionsUi.subStep3')
+            : t('missionsUi.subStep1', { xp: dailyPotentialXp() }));
         sub.textContent = streak ? `${base} · ${streak}` : base;
       }
     }
@@ -13622,15 +14903,15 @@ const UI = {
       sum.style.display = 'block';
       const bonusLeft = !save.daily.dayBonusClaimed;
       const streak = dailyStreakLine();
-      sum.innerHTML = `<b>${doneN}/3</b> klaar · <b>${claimedN}/3</b> geclaimd` +
-        (readyN ? ` · <b style="color:#ffd75e">${readyN} klaar om te claimen</b>` : '') +
+      sum.innerHTML = t('missionsUi.summaryDone', { done: doneN, claimed: claimedN }) +
+        (readyN ? ` · <b style="color:#ffd75e">${t('missionsUi.summaryReady', { n: readyN })}</b>` : '') +
         (bonusLeft
           ? (claimedN === 3
-            ? ' · <b style="color:#7cfc8a">dagbonus +80 XP klaar</b>'
-            : ` · dagbonus na ${3 - claimedN} claim${3 - claimedN === 1 ? '' : 's'}`)
+            ? ` · <b style="color:#7cfc8a">${t('missionsUi.summaryBonusReady')}</b>`
+            : ` · ${claimedN === 2 ? t('missionsUi.summaryBonusAfter1') : t('missionsUi.summaryBonusAfterN', { n: 3 - claimedN })}`)
           : ` · dagbonus ${SVG_CHECK_MINI}`) +
         (streak ? ` · <b style="color:#7cf5ff">${streak}</b>` : '') +
-        ` · max vandaag <b>+${dailyPotentialXp()} XP</b>`;
+        ` · ${t('missionsUi.summaryMax', { xp: dailyPotentialXp() })}`;
     }
     const claimAll = document.getElementById('dailyClaimAllBtn');
     if (claimAll) {
@@ -13639,56 +14920,58 @@ const UI = {
       if (lab) {
         const xpSum = claimableDailyTasks().reduce((n, t) => n + (dailyDef(t.id)?.xp || 0), 0);
         const afterClaim = 3 - claimedN - readyN;
-        lab.innerHTML = `Claim alle klaar<small>+${xpSum} XP` +
+        lab.innerHTML = t('missionsUi.claimAllBtn') + `<small>+${xpSum} XP` +
           (afterClaim > 0
-            ? ` · nog ${afterClaim} claim${afterClaim === 1 ? '' : 's'} voor dagbonus +80`
-            : ' · daarna dagbonus +80') +
+            ? (afterClaim === 1
+              ? ` · ${t('missionsUi.claimAllAfter1')}`
+              : ` · ${t('missionsUi.claimAllAfterN', { n: afterClaim })}`)
+            : ` · ${t('missionsUi.claimAllThenBonus')}`) +
           '</small>';
       }
     }
     dailyHost.innerHTML = '';
-    for (const t of tasks) {
-      const def = dailyDef(t.id);
+    for (const task of tasks) {
+      const def = dailyDef(task.id);
       if (!def) continue;
       const el = document.createElement('div');
-      const claimable = t.done && !t.claimed;
-      const isNextUp = !t.done && !t.claimed && t.id === nextUpId;
+      const claimable = task.done && !task.claimed;
+      const isNextUp = !task.done && !task.claimed && task.id === nextUpId;
       el.className = 'step-card mission-card' +
         (claimable ? ' claimable' : '') +
-        (t.claimed ? ' claimed' : '') +
+        (task.claimed ? ' claimed' : '') +
         (isNextUp ? ' next-up' : '');
-      const pct = Math.min(100, Math.round(t.progress / def.goal * 100));
+      const pct = Math.min(100, Math.round(task.progress / def.goal * 100));
       let status;
-      if (t.claimed) status = `<span style="color:#7cfc8a">${SVG_CHECK_MINI} Geclaimd</span>`;
-      else if (t.done) status = '<span style="color:#ffd75e">Klaar — tik Claim hieronder</span>';
-      else status = `<span style="opacity:.85">Bezig ${t.progress}/${def.goal}</span>`;
-      const playHint = DAILY_PLAY_HINTS[def.id] || '';
+      if (task.claimed) status = `<span style="color:#7cfc8a">${SVG_CHECK_MINI} ${t('missionsUi.dailyClaimed')}</span>`;
+      else if (task.done) status = `<span style="color:#ffd75e">${t('missionsUi.dailyReady')}</span>`;
+      else status = `<span style="opacity:.85">${t('missionsUi.dailyProgress', { cur: task.progress, goal: def.goal })}</span>`;
+      const playHint = dailyHint(def.id);
       const playTarget = DAILY_PLAY_TARGETS[def.id];
-      const remainder = dailyTaskRemainderText(t, def);
+      const remainder = dailyTaskRemainderText(task, def);
       const modePill = playTarget
-        ? `<span class="mission-mode-pill">${playTarget.label}</span> `
+        ? `<span class="mission-mode-pill">${dailyModeLabel(playTarget.mode)}</span> `
         : '';
-      el.innerHTML = `${modePill}<b>${def.text}</b>${isNextUp ? ' <span class="next-up-tag">volgende</span>' : ''}<br>${status}` +
-        (remainder && !t.done ? `<div style="color:#7cf5ff;font-size:12px;margin-top:4px;font-weight:700">${remainder}</div>` : '') +
-        (playHint && !t.done ? `<div style="opacity:.75;font-size:12px;margin-top:4px">${playHint}</div>` : '') +
-        `<div style="opacity:.8;font-size:13px;margin-top:4px">Beloning +${def.xp} XP</div>` +
+      el.innerHTML = `${modePill}<b>${dailyText(def.id)}</b>${isNextUp ? ` <span class="next-up-tag">${t('missionsUi.dailyNextUp')}</span>` : ''}<br>${status}` +
+        (remainder && !task.done ? `<div style="color:#7cf5ff;font-size:12px;margin-top:4px;font-weight:700">${remainder}</div>` : '') +
+        (playHint && !task.done ? `<div style="opacity:.75;font-size:12px;margin-top:4px">${playHint}</div>` : '') +
+        `<div style="opacity:.8;font-size:13px;margin-top:4px">${t('missionsUi.dailyReward', { xp: def.xp })}</div>` +
         `<div class="xpline" style="margin-top:8px"><div style="width:${pct}%"></div></div>`;
       if (claimable) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'btn claim-btn';
-        btn.textContent = `Claim +${def.xp} XP`;
+        btn.textContent = t('missionsUi.dailyClaimBtn', { xp: def.xp });
         btn.addEventListener('click', () => safeUiAction(() => {
           AudioSys.sfx('select');
-          claimDailyTask(t.id);
-        }, 'claimDaily/' + t.id, 'Claim mislukt — probeer opnieuw'));
+          claimDailyTask(task.id);
+        }, 'claimDaily/' + task.id, 'Claim mislukt — probeer opnieuw'));
         el.appendChild(btn);
-      } else if (!t.done && playTarget) {
+      } else if (!task.done && playTarget) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'btn mission-play-btn';
-        btn.textContent = `Speel ${playTarget.label} →`;
-        btn.addEventListener('click', () => safeUiAction(() => goDailyPlayTarget(t.id), 'dailyPlay/' + t.id, 'Kon modus niet openen'));
+        btn.textContent = t('missionsUi.dailyPlayBtn', { mode: dailyModeLabel(playTarget.mode) });
+        btn.addEventListener('click', () => safeUiAction(() => goDailyPlayTarget(task.id), 'dailyPlay/' + task.id, 'Kon modus niet openen'));
         el.appendChild(btn);
       }
       dailyHost.appendChild(el);
@@ -13701,7 +14984,7 @@ const UI = {
         bonusBtn.style.display = 'flex';
         bonusBtn.disabled = true;
         bonusBtn.classList.add('done');
-        if (label) label.innerHTML = 'Dagbonus geclaimd<small>Morgen weer nieuw</small>';
+        if (label) label.innerHTML = t('missionsUi.bonusClaimed') + `<small>${t('missionsUi.bonusTomorrow')}</small>`;
       } else {
         bonusBtn.classList.remove('done');
         bonusBtn.style.display = 'flex';
@@ -13709,8 +14992,8 @@ const UI = {
         bonusBtn.style.opacity = ready ? '1' : '0.45';
         if (label) {
           label.innerHTML = ready
-            ? 'Dagbonus claimen<small>+80 XP · tik hier</small>'
-            : `Dagbonus<small>Nog ${3 - claimedN} claim${3 - claimedN === 1 ? '' : 's'} nodig</small>`;
+            ? t('missionsUi.bonusClaimBtn') + `<small>${t('missionsUi.bonusTap')}</small>`
+            : t('missionsUi.bonusNeed') + `<small>${(3 - claimedN) === 1 ? t('missionsUi.bonusNeed1') : t('missionsUi.bonusNeedN', { n: 3 - claimedN })}</small>`;
         }
       }
     }
@@ -13718,8 +15001,8 @@ const UI = {
     const gotN = Object.keys(save.achievements).length;
     const nearN = ACHIEVEMENTS.filter(a => !save.achievements[a.id] && achievementProgressFrac(a) >= 0.5).length;
     if (achSum) {
-      achSum.textContent = `${gotN}/${ACHIEVEMENTS.length} prestaties · permanent (niet dagelijks)` +
-        (nearN ? ` · ${nearN} bijna klaar` : '');
+      achSum.textContent = t('missionsUi.achSummary', { got: gotN, total: ACHIEVEMENTS.length }) +
+        (nearN ? ` · ${t('missionsUi.achNear', { n: nearN })}` : '');
     }
     const achFilterHost = document.getElementById('achFilterBar');
     if (achFilterHost) {
@@ -13727,7 +15010,8 @@ const UI = {
       const mk = (id, label) =>
         `<button type="button" class="dex-filter-btn${cur === id ? ' active' : ''}" data-ach-filter="${id}">${label}</button>`;
       achFilterHost.innerHTML =
-        mk('all', 'Alle') + mk('near', 'Bijna') + mk('open', 'Open') + mk('done', 'Behaald');
+        mk('all', t('missionsUi.filterAll')) + mk('near', t('missionsUi.filterNear')) +
+        mk('open', t('missionsUi.filterOpen')) + mk('done', t('missionsUi.filterDone'));
       if (!achFilterHost.dataset.bound) {
         achFilterHost.dataset.bound = '1';
         achFilterHost.addEventListener('click', (e) => {
@@ -13775,10 +15059,10 @@ const UI = {
       el.style.borderColor = got ? (isNew ? '#7cf5ff' : '#ffd75e') : undefined;
       const pct = Math.min(100, Math.round(frac * 100));
       const progBar = got ? '' : `<div class="xpline" style="margin-top:6px;height:5px"><div style="width:${pct}%"></div></div>`;
-      el.innerHTML = `<div class="cname">${achIconSvg(ach.id)} ${achLabel(ach, 'name')}${isNew ? ' · nieuw' : ''}${near ? ' · bijna' : ''}</div>` +
+      el.innerHTML = `<div class="cname">${achIconSvg(ach.id)} ${achLabel(ach, 'name')}${isNew ? ' · ' + t('missionsUi.badgeNew') : ''}${near ? ' · ' + t('missionsUi.badgeNear') : ''}</div>` +
         `<div class="cinfo">${achLabel(ach, 'desc')}${got ? ` · ${SVG_CHECK_MINI} ` + got : (() => {
           const hint = achievementProgressHint(ach);
-          return hint ? ' · ' + hint : ' · nog open';
+          return hint ? ' · ' + hint : ' · ' + t('missionsUi.stillOpen');
         })()}</div>${progBar}`;
       achHost.appendChild(el);
     }
@@ -13948,7 +15232,7 @@ const UI = {
       }).join('');
       el.innerHTML = locked
         ? SVG_LOCK_ICON
-        : `${n}${boss ? '<small>BAAS</small>' : `<small style="color:${rar.color}">${rarityLabel(sp.rarity)}</small>`}` +
+        : `${n}${boss ? `<small>${t('ui.boss')}</small>` : `<small style="color:${rar.color}">${rarityLabel(infoLv.rarityCap)}</small>`}` +
           `<span class="lvl-wave-strip" aria-hidden="true">${waveStrip}</span>` +
           (save.stars[n] ? `<span class="lvl-stars">${'★'.repeat(save.stars[n])}</span>` : '') +
           (fails > 0 && !locked ? `<span class="lvl-fails">${fails}/5</span>` : '') +
@@ -13974,7 +15258,7 @@ const UI = {
               pendingAdvLevel = n;
               lastGambleRoll = null;
               startAdventureFromGamble(true);
-              try { UI.toast('Zonder gok', 1400); } catch (_) {}
+              try { UI.toast(t('toast.skipGamble'), 1400); } catch (_) {}
             }, 'skipGamble/' + n, 'Start mislukt');
           }, 520);
         }, { passive: true });
@@ -13996,25 +15280,25 @@ const UI = {
     const diceRow = document.getElementById('gambleDiceRow');
     const sumLine = document.getElementById('gambleSumLine');
     const outEl = document.getElementById('gambleOutcome');
-    if (head) head.textContent = `Gok — ${islandMeta(islandFromLevel(levelN)).name} · Lv ${levelN}`;
+    if (head) head.textContent = t('ui.gambleHead', { island: islandLabel(islandFromLevel(levelN), 'name'), level: levelN });
     const ctx = document.getElementById('gambleIslandCtx');
     if (ctx) {
       const cap = adventureWeaponCapForLevel(levelN);
-      ctx.textContent = `Skill gate: wapens tot Lv ${cap} · daarna dobbelen voor super-baas of bondgenoot`;
+      ctx.textContent = t('ui.gambleCtx', { cap });
     }
     const g = lastGambleRoll;
     const face = (d) => ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][d - 1] || '?';
     if (g && diceRow) {
       diceRow.textContent = `${face(g.d1)} ${face(g.d2)}`;
-      if (sumLine) sumLine.textContent = `Som: ${g.d1} + ${g.d2} = ${g.sum}`;
+      if (sumLine) sumLine.textContent = t('ui.gambleSumRoll', { d1: g.d1, d2: g.d2, sum: g.sum });
     } else {
       if (diceRow) diceRow.textContent = '? ?';
-      if (sumLine) sumLine.textContent = 'Tik Gooi & start — of overslaan zonder gok';
+      if (sumLine) sumLine.textContent = t('ui.gambleSumDefault');
     }
     if (outEl) {
-      if (!g) outEl.textContent = 'Super-baas (som ≤5) of super-bondgenoot (som ≥9) kan dit level veranderen.';
+      if (!g) outEl.textContent = t('ui.gamblePreview');
       else {
-        outEl.textContent = gambleOutcomeLabel(g);
+        outEl.textContent = gambleOutcomeLabelFromKey(g);
         const col = g.outcome === 'superBoss' || g.outcome === 'miniBoss' ? '#ffb0b8'
           : (g.outcome === 'superAlly' || g.outcome === 'ally') ? (GAMBLE_ALLIES[g.allyId]?.color || '#7cf5ff') : '#8fa3d9';
         outEl.style.color = col;
@@ -14037,7 +15321,7 @@ const UI = {
       sumEl.style.display = 'block';
       sumEl.innerHTML =
         `Verzameld <b>${unlocked}/${WEAPONS.length}</b> · avontuur <b>${advUsable}</b> bruikbaar` +
-        ` · actief <b>${weaponById(save.weapon).name}</b>` +
+        ` · actief <b>${weaponLabel(save.weapon)}</b>` +
         ` · eiland-skill gate: Lv <b>${adventureWeaponCap()}</b>` +
         ((save.stats.weaponFinishers || 0) > 0 ? ` · finishers <b>${save.stats.weaponFinishers}</b>` : '') +
         (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '');
@@ -14086,8 +15370,8 @@ const UI = {
         ? ` <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">✦ Summon</span>`
         : '';
       const statLine = w.summoned
-        ? `${w.desc} · schade x${base.dmg} → <b style="color:${rar.color}">x${w.dmg}</b> · bereik ${w.range} · snelheid x${w.speed}`
-        : `${w.desc} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}`;
+        ? `${weaponDesc(w)} · schade x${base.dmg} → <b style="color:${rar.color}">x${w.dmg}</b> · bereik ${w.range} · snelheid x${w.speed}`
+        : `${weaponDesc(w)} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}`;
       const labels = weaponMoveLabels(w.id);
       const mast = (save.weaponMastery || {})[w.id];
       const finCount = mast && mast.finishers ? mast.finishers : 0;
@@ -14099,7 +15383,7 @@ const UI = {
       const moveLine = labels
         ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} finisher${mastLine}`
         : (isThrowWeapon(w.id) ? 'Werp-projectiel — geen melee-combo' : '');
-      info.innerHTML = `<div class="cname">${w.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${summonBadge}${tierBadge}</div>
+      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${summonBadge}${tierBadge}</div>
         <div class="cinfo">${statLine}</div>` +
         (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '');
       el.appendChild(info);
@@ -14118,7 +15402,7 @@ const UI = {
           if (!persistOrToast('wapen')) return;
           AudioSys.sfx('select');
           try { AudioSys.sfx(weaponSwingSfx(w.id)); } catch (_) {}
-          if (islandLocked) UI.toast(`Klaar voor training — in avontuur max Lv ${adventureWeaponCap()}`, 2800);
+          if (islandLocked) UI.toast(t('toast.weaponIslandCap', { cap: adventureWeaponCap() }), 2800);
           this.renderWeapons();
         }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt');
       });
@@ -14247,7 +15531,7 @@ const UI = {
       const petLine = PET_BY_SPECIES[id]
         ? `<div style="font-size:12px;margin-top:4px;color:${isPetTamed(PET_BY_SPECIES[id].id) ? '#7cf5ff' : '#8fa3d9'}">${petProgressLine(id)}</div>`
         : '';
-      info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>` : ''}${id === topKillId ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Top jager</span>' : ''}</div>
+      info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>` : ''}${id === topKillId ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.topHunter')}</span>` : ''}</div>
         <div class="cinfo">${kills ? `${typeLbl} · basis HP ${sp.hp} · dmg ${sp.dmg} · spd ${sp.speed} · ${sp.xp} XP · Lv ${unlockLv || '?'}` : 'Nog niet verslagen'}</div>${lockHint}${petLine}${statRow}`;
       el.appendChild(info);
       const right = document.createElement('div');
@@ -14355,11 +15639,11 @@ const UI = {
           safeUiAction(() => {
             if (active) {
               equipPet(null);
-              UI.toast('Geen actieve pet', 1400);
+              UI.toast(t('toast.petNone'), 1400);
             } else {
               equipPet(def.id);
               AudioSys.sfx('select');
-              UI.toast(`${sp.name} volgt je nu!`, 2200);
+              UI.toast(t('toast.petFollow', { name: sp.name }), 2200);
             }
             this.renderPets();
           }, 'equipPet/' + def.id, 'Pet kiezen mislukt');
@@ -14370,11 +15654,11 @@ const UI = {
           safeUiAction(() => {
             const res = buyPetWithCoins(def.id);
             if (!res) {
-              UI.toast('Niet genoeg pet coins', 1800);
+              UI.toast(t('toast.petNoCoins'), 1800);
               return;
             }
             AudioSys.sfx('summon');
-            UI.toast(`${sp.name} gekocht! Volgt je nu.`, 2600);
+            UI.toast(t('toast.petBought', { name: sp.name }), 2600);
             this.renderPets();
           }, 'buyPet/' + def.id, 'Pet kopen mislukt');
         });
@@ -14407,14 +15691,14 @@ const UI = {
           safeUiAction(() => {
             const res = crackDailyEgg();
             if (!res) {
-              UI.toast('Dag-ei al geopend — morgen weer', 2200);
+              UI.toast(t('toast.eggAlreadyOpened'), 2200);
               return;
             }
             try { AudioSys.sfx('diceRoll'); } catch (_) {}
             const rar = rarityOf(res.def.rarity);
             UI.toast(res.duplicate
-              ? `Dubbel ei: ${res.def.name} (+10 XP)`
-              : `Uitgekomen! ${res.def.name} (${rarityLabel(def.rarity)})`, 3600);
+              ? t('toast.eggDuplicateUi', { name: res.def.name })
+              : t('toast.eggHatch', { name: res.def.name, rarity: rarityLabel(res.def.rarity) }), 3600);
             this.renderPets();
             this.renderMenu();
           }, 'crackDailyEgg', 'Ei openen mislukt');
@@ -14458,11 +15742,11 @@ const UI = {
           safeUiAction(() => {
             if (active) {
               equipEggPet(null);
-              UI.toast('Geen actief ei-pet', 1400);
+              UI.toast(t('toast.eggNone'), 1400);
             } else {
               equipEggPet(def.id);
               AudioSys.sfx('select');
-              UI.toast(`${def.name} zweeft nu mee!`, 2200);
+              UI.toast(t('toast.eggFloat', { name: def.name }), 2200);
             }
             this.renderPets();
           }, 'equipEggPet/' + def.id, 'Ei-pet kiezen mislukt');
@@ -14479,7 +15763,7 @@ const UI = {
       const active = styleById(save.style || 'classic');
       sumEl.style.display = 'block';
       sumEl.innerHTML =
-        `Outfits <b>${unlocked}/${STYLES.length}</b> · actief <b>${active.name}</b>` +
+        `Outfits <b>${unlocked}/${STYLES.length}</b> · actief <b>${styleLabel(active)}</b>` +
         `<div style="margin-top:6px;font-size:12px;opacity:.85">Elke stijl heeft een eigen bonus — hover of lees de tooltip. Cosmetisch + lichte combat-perks.</div>`;
     }
     const grid = document.getElementById('styleGrid');
@@ -14490,7 +15774,7 @@ const UI = {
       const el = document.createElement('div');
       el.className = 'style-card' + (save.style === st.id ? ' sel' : '') + (ok ? '' : ' locked');
       el.style.borderColor = ok ? st.accent + '88' : '';
-      el.title = st.tooltip || st.hint || st.name;
+      el.title = styleLabel(st, 'tooltip') || styleLabel(st, 'hint') || styleLabel(st);
       const cv = document.createElement('canvas');
       cv.width = 72; cv.height = 72;
       const cc = cv.getContext('2d');
@@ -14502,7 +15786,7 @@ const UI = {
       const cap = document.createElement('div');
       cap.style.fontSize = '13px';
       cap.style.color = st.accent;
-      cap.textContent = st.name;
+      cap.textContent = styleLabel(st);
       el.appendChild(cap);
       const bonus = document.createElement('div');
       bonus.style.fontSize = '11px';
@@ -14517,15 +15801,15 @@ const UI = {
       tip.style.opacity = '0.72';
       tip.style.marginTop = '4px';
       tip.style.lineHeight = '1.35';
-      tip.textContent = st.tooltip || st.hint;
+      tip.textContent = styleLabel(st, 'tooltip') || styleLabel(st, 'hint');
       el.appendChild(tip);
       const sub = document.createElement('div');
       sub.style.fontSize = '11px';
       sub.style.fontWeight = '600';
       sub.style.opacity = '0.75';
       sub.style.marginTop = '4px';
-      sub.textContent = ok ? (save.style === st.id ? 'Actief' : 'Tik om te kiezen')
-        : (styleSkillGated(st) ? `Eiland-skill Lv ${st.needLvl}` : st.hint);
+      sub.textContent = ok ? (save.style === st.id ? t('ui.styleActive') : t('ui.stylePick'))
+        : (styleSkillGated(st) ? t('ui.styleIslandGate', { lvl: st.needLvl }) : styleLabel(st, 'hint'));
       el.appendChild(sub);
       if (ok) {
         el.addEventListener('click', () => {
@@ -14536,7 +15820,7 @@ const UI = {
             AudioSys.sfx('select');
             this.renderStyle();
             this.renderMenu();
-            UI.toast(`${st.name} uitgerust`, 2200);
+            UI.toast(t('toast.styleEquipped', { name: styleLabel(st) }), 2200);
           }, 'pickStyle/' + st.id, 'Stijl kiezen mislukt');
         });
       }

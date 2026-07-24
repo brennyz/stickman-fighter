@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=185">
+<link rel="stylesheet" href="styles/main.css?v=186">
 
 
 
@@ -90,6 +90,10 @@
         </div>
         <p class="menu-hub-hint" id="menuHubHint"></p>
         <button type="button" class="menu-profile-bar" id="menuProfileBar" aria-label="Profiel en missies"></button>
+        <div class="menu-lang-wrap" style="margin:12px auto 0;width:min(94vw,420px);text-align:center">
+          <div style="font-weight:900;color:#7cf5ff;font-size:11px;margin-bottom:6px" id="menuLangLbl">Taal / Language</div>
+          <div id="menuLangBar" class="dex-filter-bar" style="justify-content:center;margin-bottom:0" role="group" aria-label="Taal / Language"></div>
+        </div>
       </div>
     </div>
     <div class="menu-landing-footer">
@@ -150,10 +154,10 @@
 
 <div id="charSelectScreen" class="screen">
   <button class="btn back-btn" data-back id="charSelectBack">&#8592; Terug</button>
-  <h2 class="head">Kies je vechter · Choose fighter</h2>
+  <h2 class="head" id="charSelectHead">Kies je vechter · Choose fighter</h2>
   <div class="subtitle" id="charPickStep">Speler 1 — kies je vechter (links)</div>
   <div class="char-pick-step-badge" id="charPickStepBadge">Stap 1/2 · Choose P1</div>
-  <div class="subtitle" style="margin-top:-6px;font-size:12px">23 sticks · 5 saga-hints (parodie, geen officiële manga)</div>
+  <div class="subtitle" id="charSelectRosterLine" style="margin-top:-6px;font-size:12px">23 sticks · 5 saga-hints (parodie, geen officiële manga)</div>
   <div class="char-duel-bar">
     <button type="button" class="p1pill pick-pill big-touch" id="charP1Label">P1: Stick Ninja</button>
     <button type="button" class="p2pill pick-pill big-touch" id="charP2Label">P2: RabbitRobot</button>
@@ -191,8 +195,8 @@
 <div id="levelScreen" class="screen">
   <button class="btn back-btn" data-back>&#8592; Terug</button>
   <button type="button" class="btn island-help-btn" id="btnIslandHelp" title="Eilanden &amp; skill gate uitleg">?</button>
-  <h2 class="head">Kies een eiland</h2>
-  <div class="subtitle">5 eilanden × 10 levels · <b style="color:#ffd75e">Tik level = Gooi &amp; start</b> · lang indrukken = zonder gok</div>
+  <h2 class="head" id="levelScreenHead">Kies een eiland</h2>
+  <div class="subtitle" id="levelScreenSub">5 eilanden × 10 levels · <b style="color:#ffd75e">Tik level = Gooi &amp; start</b> · lang indrukken = zonder gok</div>
   <div id="levelIslandBar" class="island-bar"></div>
   <div id="levelIslandInfo" class="island-info"></div>
   <div class="grid island-grid" id="levelGrid"></div>
@@ -203,25 +207,25 @@
   <button class="btn back-btn" data-back-gamble>&#8592; Terug</button>
   <h2 class="head" id="gambleHead">Gok — level …</h2>
   <div id="gambleIslandCtx"></div>
-  <div class="subtitle">Twee dobbelstenen: pech = super-baas in een willekeurige golf · geluk = sterke bondgenoot (buff alleen dit level)</div>
+  <div class="subtitle" id="gambleSub">Twee dobbelstenen: pech = super-baas in een willekeurige golf · geluk = sterke bondgenoot (buff alleen dit level)</div>
   <div class="step-card" style="width:min(92vw,420px);text-align:center;padding:18px 16px">
     <div id="gambleDiceRow" style="font-size:min(14vw,52px);letter-spacing:.12em;margin:8px 0">? ?</div>
     <div id="gambleSumLine" style="font-size:15px;color:#8fa3d9;margin-bottom:10px">Tik <b style="color:#ffd75e">Gooi &amp; start</b> — dobbel en meteen vechten</div>
     <div id="gambleOutcome" style="font-size:14px;line-height:1.45;color:#cfe0ff;min-height:3.2em"></div>
   </div>
   <button type="button" class="btn mode-btn b-continue big-touch" id="btnGambleGooiStart" style="width:min(86vw,420px);justify-content:center;margin-top:8px">
-    <span class="ico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4" fill="#fff"/><circle cx="9" cy="9" r="1.7" fill="#1a2342"/><circle cx="15" cy="9" r="1.7" fill="#1a2342"/><circle cx="9" cy="15" r="1.7" fill="#1a2342"/><circle cx="15" cy="15" r="1.7" fill="#1a2342"/><circle cx="12" cy="12" r="1.7" fill="#d04028"/></svg></span><div>Gooi &amp; start<small>2× d6 · meteen level</small></div>
+    <span class="ico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4" fill="#fff"/><circle cx="9" cy="9" r="1.7" fill="#1a2342"/><circle cx="15" cy="9" r="1.7" fill="#1a2342"/><circle cx="9" cy="15" r="1.7" fill="#1a2342"/><circle cx="15" cy="15" r="1.7" fill="#1a2342"/><circle cx="12" cy="12" r="1.7" fill="#d04028"/></svg></span><div id="gambleStartLbl">Gooi &amp; start<small>2× d6 · meteen level</small></div>
   </button>
   <button type="button" class="btn mode-btn b-gray big-touch" id="btnGambleSkip" style="width:min(86vw,420px);justify-content:center;margin-top:10px">
-    <span class="ico"><svg viewBox="0 0 24 24" fill="#fff"><polygon points="4,5 12,12 4,19"/><polygon points="12,5 20,12 12,19"/><rect x="19" y="5" width="2" height="14" rx="1"/></svg></span><div>Overslaan<small>Geen gok — geen extra baas of buff</small></div>
+    <span class="ico"><svg viewBox="0 0 24 24" fill="#fff"><polygon points="4,5 12,12 4,19"/><polygon points="12,5 20,12 12,19"/><rect x="19" y="5" width="2" height="14" rx="1"/></svg></span><div id="gambleSkipLbl">Overslaan<small>Geen gok — geen extra baas of buff</small></div>
   </button>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
 </div>
 
 <div id="weaponScreen" class="screen">
   <button class="btn back-btn" data-back>&#8592; Terug</button>
-  <h2 class="head">Wapens</h2>
-  <div class="subtitle">Summons zijn echt · eiland-skill gate: alleen wapens tot je huidige eiland-cap in avontuur</div>
+  <h2 class="head" id="weaponScreenHead">Wapens</h2>
+  <div class="subtitle" id="weaponScreenSub">Summons zijn echt · eiland-skill gate: alleen wapens tot je huidige eiland-cap in avontuur</div>
   <div id="weaponSummary" class="statbar" style="display:none"></div>
   <div id="weaponMasteryStrip" class="statbar" style="display:none;margin-top:8px"></div>
   <div id="weaponList"></div>
@@ -230,8 +234,8 @@
 
 <div id="styleScreen" class="screen">
   <button class="btn back-btn" data-back>&#8592; Terug</button>
-  <h2 class="head">Stijl</h2>
-  <div class="subtitle">Outfits met bonus — level, training, monsterboek · hover voor tooltip</div>
+  <h2 class="head" id="styleScreenHead">Stijl</h2>
+  <div class="subtitle" id="styleScreenSub">Outfits met bonus — level, training, monsterboek · hover voor tooltip</div>
   <div id="styleSummary" class="statbar" style="display:none"></div>
   <div class="style-grid" id="styleGrid"></div>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
@@ -351,7 +355,7 @@
   <div class="install-hero">
     <img src="icons/icon-192.png" alt="Stickman Fighter icoon" width="96" height="96">
     <div class="appname">STICKMAN</div>
-    <div class="subtitle" style="margin-top:6px">Verschijnt als icoon — net als een echte app</div>
+    <div class="subtitle" id="installSub" style="margin-top:6px">Verschijnt als icoon — net als een echte app</div>
   </div>
   <div class="step-card" id="installFileNote" style="display:none;color:#ffb0a8">
     <b>Let op:</b> je opent een lokaal bestand. Upload de game eerst online (Netlify/GitHub), open de link in Safari, en druk dan opnieuw op deze knop.
@@ -386,29 +390,13 @@
   <h2 class="head" id="helpHead">Tips</h2>
   <div id="helpIslandBlock" style="width:min(92vw,520px);margin-bottom:12px"></div>
   <div id="helpModeChips" style="width:min(92vw,520px);margin-bottom:12px;font-size:13px;line-height:1.5"></div>
-  <div class="step-card" style="width:min(92vw,520px);border-color:rgba(255,215,94,.35);margin-bottom:12px">
+  <div class="step-card" id="helpFirstMinute" style="width:min(92vw,520px);border-color:rgba(255,215,94,.35);margin-bottom:12px">
     <b>Eerste minuut</b> — per modus <b>één</b> korte hint bovenin het gevecht (geen toast-stapel).
     Avontuur: joystick + knoppen · groen = HP · vol chakra = SUPER-knop.
     Training = Robot · Muur = combo · 2 spelers = links/rechts.
   </div>
   <div id="tutBox">
-    <ul>
-      <li><b>Power-ups:</b> verslagen monsters laten soms bolletjes vallen — HP, rage, chakra, schild.</li>
-      <li><b>Bazen:</b> onder half HP worden ze woester (fase 2).</li>
-      <li><b>Combo’s:</b> sla snel achter elkaar om ×2 / ×3 schade te stapelen.</li>
-      <li><b>Dash:</b> dubbel-tik links/rechts (of toets <b>Shift</b>) om te ontwijken.</li>
-      <li><b>Rasengan:</b> vul je <b>chakra</b>-balk — dan laad je een draaiende chakra-bol en knal je ‘m erin.</li>
-      <li><b>Substitutie:</b> rookwolk + ontwijk (knop of <b>Shift</b>). Korte onkwetsbaarheid.</li>
-      <li><b>Wapen-combo:</b> tik wapen 3× snel — elk wapen heeft 3 eigen moves (①②③). Raak met ① én ②, dan is ③ een <b>finisher</b> (+schade, +chakra). Meesterschap: Virtuoos 3× · Meester 10× · Legende 25× per wapen.</li>
-      <li><b>2 spelers:</b> roster met <b>5 saga-icons</b> (Ki/Scroll/Tide/Cape/Dawn parodie) + filters · best-of-3.</li>
-      <li><b>RabbitRobot:</b> hij gebruikt <b>Chidori</b> (bliksem) — wacht tot hij open is.</li>
-      <li><b>Muur:</b> 60s timer · combo-balk (+4% sloop per hit) · milestones ×3/×5/×8 · record-tempo in HUD · bom/goud bonusstenen.</li>
-      <li><b>Rariteiten:</b> Gewoon → Ongewoon → Zeldzaam → Episch → Legendarisch → Mythisch. Zeldzamer = meer XP &amp; meer max HP.</li>
-      <li><b>50 levels:</b> <b>5 eilanden × 10 levels</b> — skill gate wapens per eiland · baas Lv 10/20/30/40/50 opent volgend eiland · 5× verlies = Meester-buff (+20%).</li>
-      <li><b>Backup:</b> elke save wordt dubbel opgeslagen — bij problemen: <b>Instellingen → Herstel save uit backup</b>.</li>
-      <li><b>Delen:</b> menu → <b>Deel link</b> — vrienden op Android openen in Chrome → Zet in app-lade. Zie ANDROID-DELEN.txt op GitHub.</li>
-      <li><b>Offline:</b> na 1× online openen cache’t de app HTML+JS — banner onderaan bij geen net. Tunnel-link heeft internet nodig; GitHub Pages + app-lade = stabielst.</li>
-    </ul>
+    <ul id="helpTipsList">
   </div>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
   <button class="btn mode-btn b-adventure" id="helpOk"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 12v8h3v-8z" fill="#fff" stroke="none"/><path d="M7 19c1 .7 2.2 1 4 1h4.3a2 2 0 001.9-1.4l1.7-5.4A2 2 0 0017 10.5h-4l1-4.2A1.8 1.8 0 0010.5 4.6L7 11.5"/></svg></span><div>Begrepen!</div></button>
@@ -459,7 +447,7 @@
 </script>
 
 <script src="tunnel-check.js?v=204"></script>
-<script src="game.js?v=185"></script>
+<script src="game.js?v=186"></script>
 
 
 
