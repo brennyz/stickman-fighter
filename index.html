@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=166">
+<link rel="stylesheet" href="styles/main.css?v=167">
 </head>
 <body>
 <button id="pauseBtn" aria-label="Pauze">&#10074;&#10074;</button>
@@ -239,6 +239,7 @@
     <label>Effecten <span id="setSfxVolLbl">100%</span>
       <input type="range" id="setSfxVol" min="0" max="100" value="100">
     </label>
+    <div id="settingsAudioStatus" class="pause-audio-hint" style="margin:4px 0 10px" aria-live="polite">Volume — sync met pauze</div>
     <button type="button" class="btn tog" id="setShake"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="5" width="10" height="14" rx="2"/><path d="M3.5 9l1-1M3.5 15l1 1M20.5 9l-1-1M20.5 15l-1 1" stroke-linecap="round"/></svg></span>Schermschok</button>
     <button type="button" class="btn tog" id="setHaptics"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="4" width="8" height="16" rx="2"/><path d="M4 9c-.8 1.8-.8 4.2 0 6M20 9c.8 1.8.8 4.2 0 6" stroke-linecap="round"/></svg></span>Trillen (iPad)</button>
     <button type="button" class="btn tog" id="setComboHud"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="13,2 5,14 11,14 9,22 19,9 13,9"/></svg></span>Combo-HUD</button>
@@ -424,7 +425,7 @@
 </script>
 
 <script src="tunnel-check.js?v=204"></script>
-<script src="game.js?v=166"></script>
+<script src="game.js?v=167"></script>
 <script src="install.js?v=204"></script>
 <script>
 (function () {

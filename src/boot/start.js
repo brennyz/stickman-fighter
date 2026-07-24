@@ -250,12 +250,22 @@ if (btnImportSave) btnImportSave.addEventListener('click', () => {
   }
 });
 function bindSettingsControls() {
+  const syncVolMute = (key) => {
+    if (key === 'musicVol') {
+      if ((Number(save.musicVol) || 0) <= 0.001 && save.music) AudioSys.setMusicOn(false);
+      else if ((Number(save.musicVol) || 0) > 0.001 && !save.music) AudioSys.setMusicOn(true);
+    } else if (key === 'sfxVol') {
+      if ((Number(save.sfxVol) || 0) <= 0.001 && save.sfx) AudioSys.setSfxOn(false);
+      else if ((Number(save.sfxVol) || 0) > 0.001 && !save.sfx) AudioSys.setSfxOn(true);
+    }
+  };
   const onVol = (id, lblId, key) => {
     const el = document.getElementById(id);
     if (!el || el.dataset.bound) return;
     el.dataset.bound = '1';
-    el.addEventListener('input', () => {
+    const applyVol = () => {
       save[key] = clamp(el.value / 100, 0, 1);
+      syncVolMute(key);
       persist();
       const pctStr = Math.round(save[key] * 100) + '%';
       const lbl = document.getElementById(lblId);
@@ -271,7 +281,17 @@ function bindSettingsControls() {
         if (sibL) sibL.textContent = pctStr;
       }
       AudioSys.applyVolumes();
-    });
+      if (state === 'pause') UI.renderPauseToggles();
+      else if (UI.screens.includes('settingsScreen') && document.getElementById('settingsScreen')?.classList.contains('active')) {
+        UI.renderSettings();
+      }
+    };
+    el.addEventListener('input', applyVol);
+    if (key === 'sfxVol') {
+      el.addEventListener('change', () => {
+        if (save.sfx && (Number(save.sfxVol) || 0) > 0.01) AudioSys.sfx('select');
+      });
+    }
   };
   onVol('setMusicVol', 'setMusicVolLbl', 'musicVol');
   onVol('setSfxVol', 'setSfxVolLbl', 'sfxVol');
@@ -290,7 +310,7 @@ function bindSettingsControls() {
       if (save[key] !== false) save[key] = false;
       else save[key] = true;
       if (key === 'reducedMotion' && save.reducedMotion) save.shake = false;
-      if (key === 'liteFx') { Perf.reset(); lastResizeKey = ''; try { SceneryArt.clearCache(); } catch (_) {} scheduleResize(); }
+      if (key === 'liteFx') { Perf.reset(); lastResizeKey = ''; try { SceneryArt.clearCache(); } catch (_) {} scheduleResize(); AudioSys.applyVolumes(); }
       if (key === 'reducedMotion' || key === 'highContrast') syncA11yClasses();
       persist();
       UI.renderSettings();

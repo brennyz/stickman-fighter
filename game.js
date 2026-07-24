@@ -132,9 +132,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.40';
+const APP_VERSION = '1.17.41';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 166;
+const SW_CACHE_REV = 167;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -3450,7 +3450,7 @@ const AudioSys = {
   syncContextPower() {
     if (!this.ctx) return;
     const needAudio = !!(save.music || save.sfx);
-    const keepAwake = state === 'play' || state === 'pause';
+    const keepAwake = state === 'play' || (state === 'pause' && needAudio);
     try {
       if (!needAudio && !keepAwake && this.ctx.state === 'running') {
         this.ctx.suspend();
@@ -10173,6 +10173,17 @@ function volPct(v, d) {
   return Math.round((Number(v ?? d)) * 100);
 }
 
+function audioMixStatusLine(inPause) {
+  const mPct = volPct(save.musicVol, 0.85);
+  const sPct = volPct(save.sfxVol, 1);
+  const bits = [];
+  if (!save.music) bits.push('Muziek uit');
+  else bits.push(`Muziek ${mPct}%` + (inPause ? ' · BGM ~75% zachter in pauze' : ''));
+  if (!save.sfx) bits.push('Geluid uit');
+  else bits.push(`SFX ${sPct}%` + (inPause ? ' · iets harder voor knoppen' : ''));
+  return bits.join(' · ');
+}
+
 const UI = {
   screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
@@ -11551,6 +11562,8 @@ const UI = {
     });
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
+    const audioEl = document.getElementById('settingsAudioStatus');
+    if (audioEl) audioEl.textContent = audioMixStatusLine(state === 'pause');
     const a11yEl = document.getElementById('a11yStatusLine');
     if (a11yEl) {
       const bits = [];
@@ -11567,8 +11580,14 @@ const UI = {
   },
 
   renderPauseToggles() {
-    document.getElementById('pauseTogMusic')?.classList.toggle('off', !save.music);
-    document.getElementById('pauseTogSfx')?.classList.toggle('off', !save.sfx);
+    const togM = document.getElementById('pauseTogMusic');
+    const togS = document.getElementById('pauseTogSfx');
+    togM?.classList.toggle('off', !save.music);
+    togS?.classList.toggle('off', !save.sfx);
+    if (togM) togM.setAttribute('aria-pressed', save.music ? 'true' : 'false');
+    if (togS) togS.setAttribute('aria-pressed', save.sfx ? 'true' : 'false');
+    document.getElementById('togMusic')?.classList.toggle('off', !save.music);
+    document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const pm = document.getElementById('pauseMusicVol');
     const ps = document.getElementById('pauseSfxVol');
     const pmL = document.getElementById('pauseMusicVolLbl');
@@ -11580,14 +11599,7 @@ const UI = {
     if (pmL) pmL.textContent = mPct + '%';
     if (psL) psL.textContent = sPct + '%';
     const statusEl = document.getElementById('pauseAudioStatus');
-    if (statusEl) {
-      const bits = [];
-      if (!save.music) bits.push('Muziek uit');
-      else bits.push(`Muziek ${mPct}% · BGM ~75% zachter in pauze`);
-      if (!save.sfx) bits.push('Geluid uit');
-      else bits.push(`SFX ${sPct}%`);
-      statusEl.textContent = bits.join(' · ');
-    }
+    if (statusEl) statusEl.textContent = audioMixStatusLine(true);
   },
 
   showResult(win, data) {
@@ -11880,12 +11892,22 @@ if (btnImportSave) btnImportSave.addEventListener('click', () => {
   }
 });
 function bindSettingsControls() {
+  const syncVolMute = (key) => {
+    if (key === 'musicVol') {
+      if ((Number(save.musicVol) || 0) <= 0.001 && save.music) AudioSys.setMusicOn(false);
+      else if ((Number(save.musicVol) || 0) > 0.001 && !save.music) AudioSys.setMusicOn(true);
+    } else if (key === 'sfxVol') {
+      if ((Number(save.sfxVol) || 0) <= 0.001 && save.sfx) AudioSys.setSfxOn(false);
+      else if ((Number(save.sfxVol) || 0) > 0.001 && !save.sfx) AudioSys.setSfxOn(true);
+    }
+  };
   const onVol = (id, lblId, key) => {
     const el = document.getElementById(id);
     if (!el || el.dataset.bound) return;
     el.dataset.bound = '1';
-    el.addEventListener('input', () => {
+    const applyVol = () => {
       save[key] = clamp(el.value / 100, 0, 1);
+      syncVolMute(key);
       persist();
       const pctStr = Math.round(save[key] * 100) + '%';
       const lbl = document.getElementById(lblId);
@@ -11901,7 +11923,17 @@ function bindSettingsControls() {
         if (sibL) sibL.textContent = pctStr;
       }
       AudioSys.applyVolumes();
-    });
+      if (state === 'pause') UI.renderPauseToggles();
+      else if (UI.screens.includes('settingsScreen') && document.getElementById('settingsScreen')?.classList.contains('active')) {
+        UI.renderSettings();
+      }
+    };
+    el.addEventListener('input', applyVol);
+    if (key === 'sfxVol') {
+      el.addEventListener('change', () => {
+        if (save.sfx && (Number(save.sfxVol) || 0) > 0.01) AudioSys.sfx('select');
+      });
+    }
   };
   onVol('setMusicVol', 'setMusicVolLbl', 'musicVol');
   onVol('setSfxVol', 'setSfxVolLbl', 'sfxVol');
@@ -11920,7 +11952,7 @@ function bindSettingsControls() {
       if (save[key] !== false) save[key] = false;
       else save[key] = true;
       if (key === 'reducedMotion' && save.reducedMotion) save.shake = false;
-      if (key === 'liteFx') { Perf.reset(); lastResizeKey = ''; try { SceneryArt.clearCache(); } catch (_) {} scheduleResize(); }
+      if (key === 'liteFx') { Perf.reset(); lastResizeKey = ''; try { SceneryArt.clearCache(); } catch (_) {} scheduleResize(); AudioSys.applyVolumes(); }
       if (key === 'reducedMotion' || key === 'highContrast') syncA11yClasses();
       persist();
       UI.renderSettings();

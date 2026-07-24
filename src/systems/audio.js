@@ -65,7 +65,7 @@ const AudioSys = {
   syncContextPower() {
     if (!this.ctx) return;
     const needAudio = !!(save.music || save.sfx);
-    const keepAwake = state === 'play' || state === 'pause';
+    const keepAwake = state === 'play' || (state === 'pause' && needAudio);
     try {
       if (!needAudio && !keepAwake && this.ctx.state === 'running') {
         this.ctx.suspend();

@@ -3,14 +3,13 @@
   "cyclesCompleted": 3,
   "rollFirst": [],
   "remaining": [
-    6,
     16
   ],
   "lastRoll": {
-    "face": 10,
-    "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
-    "rolledAt": "2026-07-24T19:05:48Z",
-    "remainingCount": 7,
+    "face": 6,
+    "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+    "rolledAt": "2026-07-24T19:43:25Z",
+    "remainingCount": 1,
     "cycle": 3
   },
   "pending": null,
@@ -496,6 +495,13 @@
       "note": "sort TOT bar gespeeld chip",
       "version": "1.17.40",
       "doneAt": "2026-07-24T19:14:00Z",
+      "cycle": 3
+    },
+    {
+      "face": 6,
+      "note": "slider mute sync lite mix suspend",
+      "version": "1.17.41",
+      "doneAt": "2026-07-24T19:45:31Z",
       "cycle": 3
     }
   ],
@@ -1562,6 +1568,13 @@
       "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
       "rolledAt": "2026-07-24T19:05:48Z",
       "remainingCount": 7,
+      "cycle": 3
+    },
+    {
+      "face": 6,
+      "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+      "rolledAt": "2026-07-24T19:43:25Z",
+      "remainingCount": 1,
       "cycle": 3
     }
   ],

@@ -197,6 +197,17 @@ function volPct(v, d) {
   return Math.round((Number(v ?? d)) * 100);
 }
 
+function audioMixStatusLine(inPause) {
+  const mPct = volPct(save.musicVol, 0.85);
+  const sPct = volPct(save.sfxVol, 1);
+  const bits = [];
+  if (!save.music) bits.push('Muziek uit');
+  else bits.push(`Muziek ${mPct}%` + (inPause ? ' · BGM ~75% zachter in pauze' : ''));
+  if (!save.sfx) bits.push('Geluid uit');
+  else bits.push(`SFX ${sPct}%` + (inPause ? ' · iets harder voor knoppen' : ''));
+  return bits.join(' · ');
+}
+
 const UI = {
   screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
@@ -1575,6 +1586,8 @@ const UI = {
     });
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
+    const audioEl = document.getElementById('settingsAudioStatus');
+    if (audioEl) audioEl.textContent = audioMixStatusLine(state === 'pause');
     const a11yEl = document.getElementById('a11yStatusLine');
     if (a11yEl) {
       const bits = [];
@@ -1591,8 +1604,14 @@ const UI = {
   },
 
   renderPauseToggles() {
-    document.getElementById('pauseTogMusic')?.classList.toggle('off', !save.music);
-    document.getElementById('pauseTogSfx')?.classList.toggle('off', !save.sfx);
+    const togM = document.getElementById('pauseTogMusic');
+    const togS = document.getElementById('pauseTogSfx');
+    togM?.classList.toggle('off', !save.music);
+    togS?.classList.toggle('off', !save.sfx);
+    if (togM) togM.setAttribute('aria-pressed', save.music ? 'true' : 'false');
+    if (togS) togS.setAttribute('aria-pressed', save.sfx ? 'true' : 'false');
+    document.getElementById('togMusic')?.classList.toggle('off', !save.music);
+    document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const pm = document.getElementById('pauseMusicVol');
     const ps = document.getElementById('pauseSfxVol');
     const pmL = document.getElementById('pauseMusicVolLbl');
@@ -1604,14 +1623,7 @@ const UI = {
     if (pmL) pmL.textContent = mPct + '%';
     if (psL) psL.textContent = sPct + '%';
     const statusEl = document.getElementById('pauseAudioStatus');
-    if (statusEl) {
-      const bits = [];
-      if (!save.music) bits.push('Muziek uit');
-      else bits.push(`Muziek ${mPct}% · BGM ~75% zachter in pauze`);
-      if (!save.sfx) bits.push('Geluid uit');
-      else bits.push(`SFX ${sPct}%`);
-      statusEl.textContent = bits.join(' · ');
-    }
+    if (statusEl) statusEl.textContent = audioMixStatusLine(true);
   },
 
   showResult(win, data) {
