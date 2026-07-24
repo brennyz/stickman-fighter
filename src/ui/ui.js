@@ -8,10 +8,8 @@ function pickVsRosterId(id) {
     if (UI.charPickStep === 1) {
       vsSelect.p1 = id;
       UI.charPickStep = 2;
-      try { UI.toast('P1: ' + r.name + ' — kies nu P2', 2200); } catch (_) {}
     } else {
       vsSelect.p2 = id;
-      try { UI.toast('P2: ' + r.name + ' — tik VECHT!', 2000); } catch (_) {}
     }
     UI.renderCharSelect();
   } catch (err) {
@@ -66,6 +64,20 @@ function initCharSelectChrome() {
         UI.renderCharSelect();
       });
     });
+  }
+  const sortBtn = document.getElementById('btnCharSort');
+  if (sortBtn && !sortBtn.dataset.sfSortBound) {
+    sortBtn.dataset.sfSortBound = '1';
+    const sortLabels = { name: 'naam', hp: 'HP', spd: 'SPD', dmg: 'DMG' };
+    const cycleSort = () => {
+      const order = ['name', 'hp', 'spd', 'dmg'];
+      const i = order.indexOf(UI.charSortMode || 'name');
+      UI.charSortMode = order[(i + 1) % order.length];
+      sortBtn.textContent = 'Sort: ' + (sortLabels[UI.charSortMode] || 'naam');
+      UI.renderCharSelect();
+    };
+    bindPress(sortBtn, () => { AudioSys.sfx('select'); cycleSort(); });
+    sortBtn.textContent = 'Sort: ' + (sortLabels[UI.charSortMode || 'name'] || 'naam');
   }
   const fightBtn = document.getElementById('btnCharFight');
   bindPress(fightBtn, () => {
@@ -181,11 +193,16 @@ function hubTileStatLine(hub) {
   }
 }
 
+function volPct(v, d) {
+  return Math.round((Number(v ?? d)) * 100);
+}
+
 const UI = {
   screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
+  charSortMode: 'name',
   charPreviewHoverId: null,
   dexRarityFilter: 'all',
   achFilter: 'all',
@@ -193,10 +210,46 @@ const UI = {
   lastResult: null,
   pauseSubDefault: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
 
+  activeScreen() {
+    return this.screens.find(sid => document.getElementById(sid)?.classList.contains('active')) || null;
+  },
+
+  BACK_LABELS: {
+    modeHubScreen: '\u2190 Menu',
+    levelScreen: '\u2190 Menu',
+    gambleScreen: '\u2190 Levels',
+    weaponScreen: '\u2190 Collectie',
+    styleScreen: '\u2190 Collectie',
+    dexScreen: '\u2190 Collectie',
+    charSelectScreen: '\u2190 Menu',
+    missionsScreen: '\u2190 Menu',
+    settingsScreen: '\u2190 Menu',
+    helpScreen: '\u2190 Menu',
+    installScreen: '\u2190 Menu',
+  },
+
+  syncBackLabels() {
+    const active = this.activeScreen();
+    if (!active || active === 'charSelectScreen') return;
+    const el = document.getElementById(active);
+    if (!el) return;
+    const back = el.querySelector('.back-btn[data-back], .back-btn[data-back-gamble], #installBack');
+    if (!back) return;
+    const label = this.BACK_LABELS[active];
+    if (label) back.textContent = label;
+  },
+
   resetInnerScrolls(screenEl) {
     if (!screenEl) return;
-    const scrollables = screenEl.querySelectorAll('.char-grid-scroll, [data-scroll-reset]');
-    scrollables.forEach((el) => { try { el.scrollTop = 0; } catch (_) {} });
+    const scrollables = screenEl.querySelectorAll(
+      '.char-grid-scroll, .menu-landing-scroll, .mode-hub-body, .island-bar, .grid, #weaponList, [data-scroll-reset]'
+    );
+    scrollables.forEach((el) => {
+      try {
+        el.scrollTop = 0;
+        el.scrollLeft = 0;
+      } catch (_) {}
+    });
   },
 
   refreshPauseSubtitle() {
@@ -209,7 +262,10 @@ const UI = {
     if (game?.mode === 'versus' && game.p2) {
       const a = vsRosterEntry(game.p1Pick).name;
       const b = vsRosterEntry(game.p2Pick).name;
-      sub.textContent = `2P ${game.roundsP1}-${game.roundsP2} · ronde ${game.round} · ${a} vs ${b}`;
+      let tag = '';
+      if (game.roundsP1 === 1 && game.roundsP2 === 1) tag = ' · beslissende ronde';
+      else if (game.roundsP1 === 1 || game.roundsP2 === 1) tag = ' · match point';
+      sub.textContent = `2P ${game.roundsP1}-${game.roundsP2} · ronde ${game.round} · ${a} vs ${b}${tag}`;
     } else {
       sub.textContent = this.pauseSubDefault;
     }
@@ -229,6 +285,7 @@ const UI = {
             try {
               el.scrollTop = 0;
               this.resetInnerScrolls(el);
+              this.syncBackLabels();
             } catch (_) {}
           });
         }
@@ -318,6 +375,12 @@ const UI = {
       if (active === 'charSelectScreen' && this.charPickStep === 2) {
         this.charPickStep = 1;
         this.renderCharSelect();
+        requestAnimationFrame(() => {
+          try {
+            this.resetInnerScrolls(document.getElementById('charSelectScreen'));
+            this.syncBackLabels();
+          } catch (_) {}
+        });
         return;
       }
       if (active === 'pauseScreen' && game) {
@@ -331,7 +394,11 @@ const UI = {
         this.show('levelScreen');
         return;
       }
-      if (active === 'modeHubScreen' || active === 'levelScreen') {
+      if (active === 'modeHubScreen') {
+        this.show('menuScreen');
+        return;
+      }
+      if (active === 'levelScreen') {
         this.show('menuScreen');
         return;
       }
@@ -388,6 +455,9 @@ const UI = {
       this.syncTouchClass();
       this.renderMenu();
       this.show('menuScreen');
+      requestAnimationFrame(() => {
+        try { this.resetInnerScrolls(document.getElementById('menuScreen')); } catch (_) {}
+      });
       AudioSys.setPaused(false);
       playMenuBgm(true);
       scheduleResize();
@@ -452,9 +522,10 @@ const UI = {
     if (statEl) updateCharStatPreview();
     this.renderCharIconRow();
     grid.innerHTML = '';
-    const roster = filter === 'all'
+    const rosterBase = filter === 'all'
       ? VS_ROSTER
       : VS_ROSTER.filter(r => (r.saga || 'scroll') === filter);
+    const roster = sortVsRoster(rosterBase, UI.charSortMode || 'name');
     if (!roster.length) {
       const empty = document.createElement('div');
       empty.className = 'char-grid-empty';
@@ -528,6 +599,9 @@ const UI = {
           AudioSys.sfx('select');
           this.charPickStep = 1;
           this.renderCharSelect();
+          requestAnimationFrame(() => {
+            try { this.resetInnerScrolls(document.getElementById('charSelectScreen')); } catch (_) {}
+          });
         });
       }
     }
@@ -593,7 +667,6 @@ const UI = {
     for (const id of SAGA_ICON_IDS) {
       const r = vsRosterEntry(id);
       const ok = vsUnlocked(r);
-      const saga = vsSagaMeta(r.saga || 'scroll');
       const chip = document.createElement('button');
       chip.type = 'button';
       chip.className = 'char-icon-chip' + (ok ? '' : ' locked') +
@@ -704,10 +777,14 @@ const UI = {
     const tipEl = document.getElementById('menuTipLine');
     let hintLine = dailyLine;
     if (tipEl) {
+      const prog = onboardingProgress();
       const next = nextUntriedMode();
       if (next) {
-        tipEl.textContent = `Nog niet gespeeld: ${next.label}`;
-        hintLine = `Nog niet gespeeld: ${next.label}`;
+        tipEl.textContent = `Eerste minuut ${prog.seen}/${prog.total} · probeer: ${next.label}`;
+        hintLine = tipEl.textContent;
+      } else if (prog.seen < prog.total) {
+        tipEl.textContent = `Eerste minuut ${prog.seen}/${prog.total} modi — één hint per modus bovenin`;
+        hintLine = tipEl.textContent;
       } else {
         const tips = [
           'Kies een tegel — Avontuur · Arcade · 2P · Collectie',
@@ -772,9 +849,9 @@ const UI = {
       if (pct > nextUpPct) { nextUpPct = pct; nextUpId = t.id; }
     }
     const sub = document.getElementById('missionsSub');
+    const step = dailyFlowStep();
     if (sub) {
       const streak = dailyStreakLine();
-      const step = dailyFlowStep();
       if (step === 0) {
         sub.textContent = streak
           ? `Dag voltooid · ${streak} — morgen 3 nieuwe lichte missies (middernacht)`
@@ -791,7 +868,7 @@ const UI = {
     }
     const flowHost = document.getElementById('missionsFlowBar');
     if (flowHost) {
-      flowHost.innerHTML = dailyFlowBarHtml(dailyFlowStep());
+      flowHost.innerHTML = dailyFlowBarHtml(step);
     }
     const sum = document.getElementById('missionsSummary');
     if (sum) {
@@ -1050,9 +1127,6 @@ const UI = {
     const pct = Math.round(prog.cleared / prog.total * 100);
     if (info) {
       const mb = save.advMasterBuff;
-      const mbLine = mb && mb >= range.start && mb <= range.end
-        ? `<span class="island-info-chip master">Meester-buff Lv ${mb} · +20%</span>`
-        : '';
       info.innerHTML =
         `<div class="island-info-head">` +
         `<span class="island-info-ico">${islMeta.icon}</span>` +
@@ -1062,7 +1136,17 @@ const UI = {
         (pick < 5 ? ` · baas Lv ${pick * LEVELS_PER_ISLAND} → volgend eiland` : '') +
         `</div></div></div>` +
         `<div class="island-prog-track island-info-prog"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
-        (mbLine ? `<div class="island-info-chips">${mbLine}</div>` : '');
+        (() => {
+          const onboard = adventureIslandHintLine();
+          const mbLine = mb && mb >= range.start && mb <= range.end
+            ? `<span class="island-info-chip master">Meester-buff Lv ${mb} · +20%</span>`
+            : '';
+          const chips = [
+            onboard ? `<span class="island-info-chip onboard">${onboard}</span>` : '',
+            mbLine,
+          ].filter(Boolean).join('');
+          return chips ? `<div class="island-info-chips">${chips}</div>` : '';
+        })();
     }
     grid.innerHTML = '';
     for (let n = range.start; n <= range.end; n++) {
@@ -1076,9 +1160,14 @@ const UI = {
         (!locked && n === save.unlocked ? ' lvl-current' : '') +
         (save.advMasterBuff === n ? ' master-buff' : '');
       el.style.boxShadow = locked ? 'none' : `0 5px 0 rgba(0,0,0,.35), 0 0 0 2px ${rar.color}55`;
+      const waveStrip = infoLv.waves.map((_, wi) => {
+        const isBossPip = boss && wi === infoLv.waves.length - 1;
+        return `<i class="lvl-wave-dot${isBossPip ? ' boss' : ''}"></i>`;
+      }).join('');
       el.innerHTML = locked
         ? SVG_LOCK_ICON
         : `${n}${boss ? '<small>BAAS</small>' : `<small style="color:${rar.color}">${rar.name}</small>`}` +
+          `<span class="lvl-wave-strip" aria-hidden="true">${waveStrip}</span>` +
           (save.stars[n] ? `<span class="lvl-stars">${'★'.repeat(save.stars[n])}</span>` : '') +
           (fails > 0 && !locked ? `<span class="lvl-fails">${fails}/5</span>` : '') +
           (save.advMasterBuff === n ? '<span class="lvl-master">+20%</span>' : '');
@@ -1096,6 +1185,7 @@ const UI = {
           holdSkip = false;
           holdT = setTimeout(() => {
             holdT = null;
+            if (!uiTapAllowed()) return;
             holdSkip = true;
             safeUiAction(() => {
               AudioSys.sfx('select');
@@ -1111,6 +1201,7 @@ const UI = {
         el.addEventListener('pointercancel', cancelHold);
         el.addEventListener('click', () => {
           if (holdSkip) { holdSkip = false; return; }
+          if (!uiTapAllowed()) return;
           safeUiAction(() => gokGooiStartLevel(n), 'gokStart/' + n, 'Level starten mislukt');
         });
       }
@@ -1214,14 +1305,17 @@ const UI = {
           ? `Avontuur Lv ${base.unlock}`
           : (save.weapon === w.id ? '&#10004; gekozen' : 'kies'));
       el.appendChild(right);
-      if (!locked) el.addEventListener('click', () => safeUiAction(() => {
-        save.weapon = w.id;
-        if (!persistOrToast('wapen')) return;
-        AudioSys.sfx('select');
-        try { AudioSys.sfx(weaponSwingSfx(w.id)); } catch (_) {}
-        if (islandLocked) UI.toast(`Klaar voor training — in avontuur max Lv ${adventureWeaponCap()}`, 2800);
-        this.renderWeapons();
-      }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt'));
+      if (!locked) el.addEventListener('click', () => {
+        if (!uiTapAllowed()) return;
+        safeUiAction(() => {
+          save.weapon = w.id;
+          if (!persistOrToast('wapen')) return;
+          AudioSys.sfx('select');
+          try { AudioSys.sfx(weaponSwingSfx(w.id)); } catch (_) {}
+          if (islandLocked) UI.toast(`Klaar voor training — in avontuur max Lv ${adventureWeaponCap()}`, 2800);
+          this.renderWeapons();
+        }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt');
+      });
       list.appendChild(el);
     }
   },
@@ -1387,14 +1481,17 @@ const UI = {
         : (styleSkillGated(st) ? `Eiland-skill Lv ${st.needLvl}` : st.hint);
       el.appendChild(sub);
       if (ok) {
-        el.addEventListener('click', () => safeUiAction(() => {
-          save.style = st.id;
-          if (!persistOrToast('stijl')) return;
-          AudioSys.sfx('select');
-          this.renderStyle();
-          this.renderMenu();
-          UI.toast(`${st.name} uitgerust`, 2200);
-        }, 'pickStyle/' + st.id, 'Stijl kiezen mislukt'));
+        el.addEventListener('click', () => {
+          if (!uiTapAllowed()) return;
+          safeUiAction(() => {
+            save.style = st.id;
+            if (!persistOrToast('stijl')) return;
+            AudioSys.sfx('select');
+            this.renderStyle();
+            this.renderMenu();
+            UI.toast(`${st.name} uitgerust`, 2200);
+          }, 'pickStyle/' + st.id, 'Stijl kiezen mislukt');
+        });
       }
       grid.appendChild(el);
     }
@@ -1459,14 +1556,13 @@ const UI = {
       exportHint.textContent = `Export bevat: ${saveExportSummaryLine()} · key ${SAVE_KEY}`;
     }
     bindSavePortPreview();
-    const pct = (v, d) => Math.round((Number(v ?? d)) * 100);
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
-    setVal('setMusicVol', pct(save.musicVol, 0.85));
-    setVal('setSfxVol', pct(save.sfxVol, 1));
+    setVal('setMusicVol', volPct(save.musicVol, 0.85));
+    setVal('setSfxVol', volPct(save.sfxVol, 1));
     const lblM = document.getElementById('setMusicVolLbl');
     const lblS = document.getElementById('setSfxVolLbl');
-    if (lblM) lblM.textContent = pct(save.musicVol, 0.85) + '%';
-    if (lblS) lblS.textContent = pct(save.sfxVol, 1) + '%';
+    if (lblM) lblM.textContent = volPct(save.musicVol, 0.85) + '%';
+    if (lblS) lblS.textContent = volPct(save.sfxVol, 1) + '%';
     ['setShake', 'setHaptics', 'setComboHud', 'setBigTouch', 'setReducedMotion', 'setLiteFx', 'setHighContrast'].forEach((id, i) => {
       const el = document.getElementById(id);
       if (!el) return;
@@ -1497,13 +1593,12 @@ const UI = {
   renderPauseToggles() {
     document.getElementById('pauseTogMusic')?.classList.toggle('off', !save.music);
     document.getElementById('pauseTogSfx')?.classList.toggle('off', !save.sfx);
-    const pct = (v, d) => Math.round((Number(v ?? d)) * 100);
     const pm = document.getElementById('pauseMusicVol');
     const ps = document.getElementById('pauseSfxVol');
     const pmL = document.getElementById('pauseMusicVolLbl');
     const psL = document.getElementById('pauseSfxVolLbl');
-    const mPct = pct(save.musicVol, 0.85);
-    const sPct = pct(save.sfxVol, 1);
+    const mPct = volPct(save.musicVol, 0.85);
+    const sPct = volPct(save.sfxVol, 1);
     if (pm && document.activeElement !== pm) pm.value = String(mPct);
     if (ps && document.activeElement !== ps) ps.value = String(sPct);
     if (pmL) pmL.textContent = mPct + '%';

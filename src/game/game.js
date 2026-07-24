@@ -757,8 +757,9 @@ class Game {
     this.phaseT = 0;
     this.inputLocked = true;
     const mp = this.roundsP1 === 1 || this.roundsP2 === 1;
-    const sub = mp ? ' · match point' : '';
-    this.banner(`RONDE ${this.round}${sub}`, 1.1, '#ffd75e', 52);
+    const decisive = this.roundsP1 === 1 && this.roundsP2 === 1;
+    let sub = decisive ? ' · beslissende ronde' : (mp ? ' · match point' : '');
+    this.banner(`RONDE ${this.round}${sub}`, 1.1, decisive ? '#ff9a9a' : '#ffd75e', 52);
     AudioSys.sfx('bell');
   }
 
@@ -834,13 +835,6 @@ class Game {
     };
     this.layoutWall(true);
     this.banner('SLOOP DE MUUR!', 1.5, '#ffd75e', 46);
-    if (!modeOnboardingSeen('wall')) {
-      setTimeout(() => {
-        try {
-          if (!this.over) this.banner('Tip: 60s · combo-balk = sneller · ster-steen = bonus', 2.0, '#7cf5ff', 22);
-        } catch (_) {}
-      }, 1200);
-    }
     AudioSys.play('wall');
     this.phase = 'fight';
   }
@@ -1537,6 +1531,10 @@ class Game {
   banner(txt, dur, color, size) {
     if (!perfFxBudgetAllow(this, 1)) return;
     if (perfFxRoom(this, 'banner') <= 0) return;
+    if (motionReduced()) {
+      dur = Math.min(dur, 1.15);
+      size = Math.min(size || 40, 32);
+    }
     const cap = fxCaps();
     if (this.banners.length >= cap.banners) this.banners.shift();
     this.banners.push({ txt, dur, color: color || '#fff', size: size || 40, t: 0 });
@@ -1598,7 +1596,7 @@ class Game {
         const meta = PICKUP_META[pk.kind];
         const y = pk.y + (pk.bob || 0);
         c.save();
-        const pkBlur = (save.liteFx || Perf.tier >= 1) ? 6 : 14;
+        const pkBlur = (save.liteFx || Perf.tier >= 1 || motionReduced()) ? 0 : 14;
         c.shadowColor = meta.color; c.shadowBlur = pkBlur;
         c.fillStyle = meta.color;
         c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.fill();
@@ -1726,10 +1724,14 @@ class Game {
       }
       c.font = `900 ${b.size}px -apple-system, sans-serif`;
       c.textAlign = 'center';
-      c.lineWidth = 8; c.strokeStyle = 'rgba(0,0,0,.55)';
-      c.strokeText(b.txt, 0, 0);
-      c.fillStyle = b.color;
-      c.fillText(b.txt, 0, 0);
+      if (a11yHighContrast()) {
+        fillHudText(c, b.txt, 0, 0, { fill: b.color, stroke: 'rgba(0,0,0,.9)', strokeW: 4 });
+      } else {
+        c.lineWidth = 8; c.strokeStyle = 'rgba(0,0,0,.55)';
+        c.strokeText(b.txt, 0, 0);
+        c.fillStyle = b.color;
+        c.fillText(b.txt, 0, 0);
+      }
       if (!fxLite() && !calm && fade > 0.35) {
         c.globalAlpha = fade * 0.42;
         c.strokeStyle = b.color;
@@ -1769,11 +1771,14 @@ class Game {
       this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
       c.fill();
       c.strokeStyle = 'rgba(255,215,94,.35)';
-      c.lineWidth = 1.5;
+      c.lineWidth = a11yHighContrast() ? 2.5 : 1.5;
       this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
       c.stroke();
-      c.fillStyle = '#fff';
-      c.fillText(hintTxt, W / 2, H * 0.2);
+      fillHudText(c, hintTxt, W / 2, H * 0.2, {
+        fill: '#fff',
+        stroke: 'rgba(0,0,0,.85)',
+        strokeW: a11yHighContrast() ? 3.5 : 0,
+      });
       c.globalAlpha = 1;
     }
   }
@@ -1809,6 +1814,7 @@ class Game {
   drawSuperMeterFill(c, x, y, w, h, pct, kind, t) {
     pct = clamp(pct, 0, 1);
     const ready = pct >= 1;
+    const calm = motionReduced();
     c.save();
     if (kind === 'chidori') {
       const seg = 10;
@@ -1818,7 +1824,7 @@ class Game {
         if (pct <= segStart) continue;
         const fill = Math.min(1, (pct - segStart) * seg);
         if (fill <= 0.01) continue;
-        const flick = 0.7 + Math.sin(t * 24 + i * 1.9) * 0.3;
+        const flick = calm ? 0.85 : (0.7 + Math.sin(t * 24 + i * 1.9) * 0.3);
         c.fillStyle = ready ? `rgba(168,224,255,${flick})` : `rgba(80,160,255,${0.45 + fill * 0.45})`;
         this.rr(c, x + i * segW + 1, y + 1, Math.max(1, segW * fill - 2), h - 2, 2);
         c.fill();
@@ -1829,13 +1835,13 @@ class Game {
         const segStart = i / rings;
         if (pct <= segStart) continue;
         const fill = Math.min(1, (pct - segStart) * rings);
-        const pulse = 0.55 + Math.sin(t * 9 + i * 1.1) * 0.25;
+        const pulse = calm ? 0.7 : (0.55 + Math.sin(t * 9 + i * 1.1) * 0.25);
         c.fillStyle = ready ? `rgba(196,122,255,${pulse})` : `rgba(100,40,160,${0.35 + fill * 0.45})`;
         const rw = w / rings;
         this.rr(c, x + i * rw + 1, y + 1, Math.max(1, rw * fill - 2), h - 2, 3);
         c.fill();
       }
-      if (pct > 0.2 && !fxLite()) {
+      if (pct > 0.2 && !fxLite() && !calm) {
         c.strokeStyle = `rgba(255,120,160,${0.25 + Math.sin(t * 6) * 0.12})`;
         c.lineWidth = 1;
         c.beginPath();
@@ -1852,7 +1858,7 @@ class Game {
         c.fillStyle = g;
         this.rr(c, x, y, fw, h, 5);
         c.fill();
-        if (pct > 0.12 && !fxLite()) {
+        if (pct > 0.12 && !fxLite() && !calm) {
           c.strokeStyle = `rgba(230,250,255,${0.28 + Math.sin(t * 7) * 0.12})`;
           c.lineWidth = 1.2;
           const cx = x + fw * 0.55;
@@ -2043,7 +2049,7 @@ class Game {
 
   /** Deel 3: checkpoint-flits + baas-aankomst overlays (boven de wereld, onder HUD-tekst). */
   drawStageBeatFx(c) {
-    if (this.partFlashT > 0) {
+    if (this.partFlashT > 0 && !motionReduced()) {
       const f = clamp(this.partFlashT / 0.5, 0, 1);
       const g = c.createRadialGradient(W / 2, 44, 10, W / 2, 44, H * 0.9);
       g.addColorStop(0, `rgba(124,245,255,${0.26 * f})`);
@@ -2065,9 +2071,10 @@ class Game {
     }
     if (this.bossArriveT > 0) {
       const f = clamp(this.bossArriveT / 0.7, 0, 1);
+      const mul = motionReduced() ? 0.45 : 1;
       const g = c.createRadialGradient(W / 2, H / 2, H * 0.15, W / 2, H / 2, H * 0.95);
-      g.addColorStop(0, `rgba(255,90,90,${0.1 * f})`);
-      g.addColorStop(1, `rgba(160,10,30,${0.28 * f})`);
+      g.addColorStop(0, `rgba(255,90,90,${0.1 * f * mul})`);
+      g.addColorStop(1, `rgba(160,10,30,${0.28 * f * mul})`);
       c.fillStyle = g;
       c.fillRect(0, 0, W, H);
     }
@@ -2112,7 +2119,7 @@ class Game {
       const cx = x0 + s * (segW + segGap) - segGap / 2;
       const passed = pr * 3 >= s;
       const justFlash = passed && this.partFlashT > 0 && Math.min(3, 1 + Math.floor(pr * 3)) === s + 1;
-      const r = justFlash ? 5.5 + Math.sin(this.t * 18) * 1.2 : 4;
+      const r = justFlash && !motionReduced() ? 5.5 + Math.sin(this.t * 18) * 1.2 : (justFlash ? 5 : 4);
       c.save();
       c.translate(cx, y);
       c.rotate(Math.PI / 4);
@@ -2148,6 +2155,40 @@ class Game {
     c.textAlign = 'left';
     c.fillStyle = 'rgba(255,255,255,.6)';
     c.fillText(`deel ${Math.min(3, 1 + Math.floor(pr * 3))}/3`, x0 + tw + (this.level.boss ? 24 : 10), y + 3.5);
+    // golf-pips (d4 c3): expliciete golf 1/N onder de balk
+    const pipY = y + 16;
+    const pipGap = Math.min(14, (tw - 8) / Math.max(1, total));
+    const pipStart = W / 2 - ((total - 1) * pipGap) / 2;
+    const cur = Math.max(0, this.waveIdx);
+    for (let i = 0; i < total; i++) {
+      const px = pipStart + i * pipGap;
+      const isBossPip = this.level.boss && i === total - 1;
+      const done = i < cur;
+      const active = i === cur && this.waveIdx >= 0 && this.wavePause <= 0;
+      const nextPause = i === cur + 1 && this.wavePause > 0;
+      const pulseP = (active || nextPause) && !motionReduced() ? 1 + Math.sin(this.t * 8) * 0.12 : 1;
+      const r = (done || active ? 3.5 : 3) * pulseP;
+      c.beginPath();
+      if (done) {
+        c.fillStyle = isBossPip ? '#ff8a9a' : '#ffd75e';
+        c.arc(px, pipY, r, 0, TAU);
+        c.fill();
+      } else {
+        c.strokeStyle = isBossPip ? 'rgba(255,138,154,.85)' : (active || nextPause ? '#7cf5ff' : 'rgba(255,255,255,.35)');
+        c.lineWidth = active || nextPause ? 2 : 1.2;
+        c.arc(px, pipY, r, 0, TAU);
+        c.stroke();
+        if (active || nextPause) {
+          c.fillStyle = 'rgba(124,245,255,.28)';
+          c.fill();
+        }
+      }
+    }
+    c.font = '700 9px sans-serif';
+    c.fillStyle = 'rgba(255,255,255,.5)';
+    c.textAlign = 'center';
+    const waveNum = this.waveIdx >= 0 ? Math.min(total, cur + 1) : 0;
+    c.fillText(waveNum > 0 ? `Golf ${waveNum}/${total}` : `${total} golven`, W / 2, pipY + 11);
     c.textAlign = 'center';
   }
 
@@ -2236,8 +2277,9 @@ class Game {
   drawHUD(c) {
     if (this.mode === 'adventure') this.drawStageBeatFx(c);
     const p = this.player;
-    if (p && p.alive && p.maxhp > 0 && p.hp / p.maxhp < 0.28 && !motionReduced()) {
-      const a = 0.07 + Math.sin(this.t * 7) * 0.04;
+    if (p && p.alive && p.maxhp > 0 && p.hp / p.maxhp < 0.28) {
+      const calm = motionReduced();
+      const a = calm ? 0.055 : (0.07 + Math.sin(this.t * 7) * 0.04);
       const g = c.createRadialGradient(W / 2, H / 2, H * 0.2, W / 2, H / 2, H * 0.85);
       g.addColorStop(0, 'rgba(0,0,0,0)');
       g.addColorStop(1, `rgba(180,20,40,${a})`);
@@ -2377,9 +2419,29 @@ class Game {
       if (this.wavePause > 0) {
         const nextBoss = isBossWave(this.level, this.waveIdx + 1);
         const sec = Math.max(0, this.wavePause);
+        const totalPause = this.wavePauseTotal || 1.55;
+        const pauseFrac = clamp(1 - this.wavePause / totalPause, 0, 1);
+        const ringX = W / 2;
+        const ringY = H - 78;
+        const ringR = 24;
+        if (!motionReduced()) {
+          c.save();
+          c.strokeStyle = nextBoss ? 'rgba(255,138,154,.22)' : 'rgba(124,245,255,.18)';
+          c.lineWidth = 3.5;
+          c.beginPath();
+          c.arc(ringX, ringY, ringR, 0, TAU);
+          c.stroke();
+          c.strokeStyle = nextBoss ? '#ffb0b8' : '#7cf5ff';
+          c.lineWidth = 3.5;
+          c.lineCap = 'round';
+          c.beginPath();
+          c.arc(ringX, ringY, ringR, -Math.PI / 2, -Math.PI / 2 + pauseFrac * TAU);
+          c.stroke();
+          c.restore();
+        }
         c.font = '800 15px sans-serif';
         const pauseMsg = nextBoss ? `Op weg naar de baas — ${sec.toFixed(1)}s` : `Verder lopen… volgende golf ${sec.toFixed(1)}s`;
-        fillHudText(c, pauseMsg, W / 2, H - 78, {
+        fillHudText(c, pauseMsg, ringX, ringY, {
           fill: nextBoss ? '#ffc8d0' : '#d8e8ff',
         });
         this.drawNextWavePreview(c);
@@ -2467,7 +2529,7 @@ class Game {
       if (this.trainMeleeTelegraphT > 0 && r.alive && !this.trainLaserTelegraph && !this.trainTelegraphT) {
         const dir = Math.sign(this.player.x - r.x) || -1;
         c.save();
-        c.globalAlpha = 0.3 + Math.sin(this.t * 22) * 0.15;
+        c.globalAlpha = motionReduced() ? 0.38 : (0.3 + Math.sin(this.t * 22) * 0.15);
         c.strokeStyle = '#ffb347';
         c.lineWidth = 3;
         c.beginPath();
@@ -2477,11 +2539,11 @@ class Game {
       }
       if (this.trainTelegraphT > 0 && r.alive) {
         c.save();
-        c.globalAlpha = 0.35 + Math.sin(this.t * 18) * 0.2;
+        c.globalAlpha = motionReduced() ? 0.42 : (0.35 + Math.sin(this.t * 18) * 0.2);
         c.strokeStyle = '#7cf5ff';
         c.lineWidth = 4;
         c.beginPath();
-        c.arc(r.x, r.y - 48, 42 + Math.sin(this.t * 14) * 6, 0, TAU);
+        c.arc(r.x, r.y - 48, 42 + (motionReduced() ? 0 : Math.sin(this.t * 14) * 6), 0, TAU);
         c.stroke();
         const dashDir = Math.sign(this.player.x - r.x) || -1;
         const dashLen = Math.min(200, Math.abs(this.player.x - r.x) + 40);
@@ -2680,6 +2742,21 @@ class Game {
         c.font = '700 13px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.65)';
         c.fillText('Spawn · eerlijk start', W / 2, H * 0.4 + 28);
+      } else if (this.phase === 'roundend') {
+        const left = Math.max(0, 2.2 - this.phaseT);
+        c.font = '900 34px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.9)';
+        c.fillText(String(Math.ceil(left)), W / 2, H * 0.38);
+        c.font = '700 13px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.7)';
+        c.fillText('Volgende ronde', W / 2, H * 0.38 + 26);
+        const barW = Math.min(140, W * 0.24);
+        c.fillStyle = 'rgba(0,0,0,.35)';
+        this.rr(c, W / 2 - barW / 2, H * 0.38 + 34, barW, 5, 3);
+        c.fill();
+        c.fillStyle = '#7cf5ff';
+        this.rr(c, W / 2 - barW / 2, H * 0.38 + 34, barW * clamp(left / 2.2, 0, 1), 5, 3);
+        c.fill();
       }
       c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, bx - 4, byVs - 4, half + 8, 44, 10); c.fill();
       c.fillStyle = '#333c55'; this.rr(c, bx, byVs, half, 14, 6); c.fill();
@@ -2720,7 +2797,11 @@ class Game {
         c.fillText(String(tLeft), W / 2, timerY);
       }
       c.font = '800 12px sans-serif'; c.fillStyle = 'rgba(255,255,255,.75)';
-      c.fillText(`Ronde ${this.round} · eerst 2 wint · ${this.roundsP1}-${this.roundsP2}`, W / 2, timerY + 18);
+      const decisiveRound = this.roundsP1 === 1 && this.roundsP2 === 1;
+      const scoreLine = decisiveRound
+        ? `Beslissende ronde · ${this.roundsP1}-${this.roundsP2}`
+        : `Ronde ${this.round} · eerst 2 wint · ${this.roundsP1}-${this.roundsP2}`;
+      c.fillText(scoreLine, W / 2, timerY + 18);
       const timerBarW = Math.min(160, W * 0.28);
       const timerFrac = clamp(this.roundTimer / 99, 0, 1);
       c.fillStyle = 'rgba(0,0,0,.35)';
@@ -2737,6 +2818,14 @@ class Game {
       const mp1 = this.roundsP1 === 1 && this.roundsP2 < 2;
       const mp2 = this.roundsP2 === 1 && this.roundsP1 < 2;
       const dotY = (this.roundTimer < 12 && this.phase === 'fight') ? timerY + 48 : timerY + 34;
+      const log = this.vsRoundLog || [];
+      if (log.length) {
+        c.font = '700 9px sans-serif';
+        c.textAlign = 'center';
+        const chips = log.map((w, i) => `R${i + 1}:${w === 'p1' ? 'P1' : 'P2'}`).join(' · ');
+        c.fillStyle = 'rgba(255,255,255,.55)';
+        c.fillText(chips, W / 2, dotY - 12);
+      }
       for (let i = 0; i < 2; i++) {
         const litP1 = i < this.roundsP1;
         c.fillStyle = litP1 ? '#7cf5ff' : 'rgba(255,255,255,.22)';
@@ -2749,11 +2838,11 @@ class Game {
       }
       if (p.invulnT > 0.05) {
         c.font = '700 9px sans-serif'; c.fillStyle = 'rgba(124,245,255,.75)'; c.textAlign = 'left';
-        c.fillText('spawn', bx, byVs + 52);
+        c.fillText(`${p.invulnT.toFixed(1)}s`, bx, byVs + 52);
       }
       if (p2.invulnT > 0.05) {
         c.font = '700 9px sans-serif'; c.fillStyle = 'rgba(255,176,184,.75)'; c.textAlign = 'right';
-        c.fillText('spawn', W - 20, byVs + 52);
+        c.fillText(`${p2.invulnT.toFixed(1)}s`, W - 20, byVs + 52);
       }
       if (p.energy >= 100) {
         const k1 = fighterJutsuKind(p);

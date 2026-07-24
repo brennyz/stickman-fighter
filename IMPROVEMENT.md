@@ -109,6 +109,11 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-24 | — | **Envelope live:** d4+d9+d20+d10+d11 merged → v1.17.40 / SW v166. |
+| 2026-07-24 | **10** | A11y (cyclus 3): calm banners/telegraphs, static low-HP, no checkpoint flash, tint hit-flash, HC HUD text, toast off. v1.17.39 / SW v165. |
+| 2026-07-24 | **20** | Code health (cyclus 3): dead `openGambleForLevel`, single P1 pad, `volPct`, hitConfirm cache, redundant branches — zero gedrag. v1.17.38 / SW v164. |
+| 2026-07-24 | **9** | Touch (cyclus 3): bredere 2P neutraal-strip, dual joy-guard, uiTap op level/wapen/stijl, pan-y scroll + bigTouch slop. v1.17.37 / SW v163. |
+| 2026-07-24 | **4** | Avontuur (cyclus 3): golf-pips rij + Golf N/M label, reis-pauze countdown-ring, level-grid wave-strip (baas-pip) — geen xp/hp×. v1.17.36 / SW v162. |
 | 2026-07-24 | **2** | Training (cyclus 3): melee telegraph HUD (SLA/TRAP), Chidori cancel bij spring, laser pauze tijdens robot-aanval, fairere spacing AI — geen one-shots. v1.17.13 / SW v140. |
 | 2026-07-24 | **13** | Missies (cyclus 3): 3-stappen flow-balk (Speel→Claim→Dagbonus), “Nog X” remainder-copy, modus-pill, max-XP vandaag, claim follow-up toasts, prestatie-filter + voortgangsbalk. v1.17.12 / SW v139. |
 | 2026-07-24 | **17** | Stabiliteit (cyclus 3): `safeUiAction` + `persistOrToast`, scherm/submenu handlers (missies/levels/wapens/stijl/gok), UI.show toast, SW-update tap async, install/PWA fail hints — geen silent fail. v1.17.11 / SW v138. |
@@ -116,6 +121,14 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-24 | **12** | Content (cyclus 3): monsterboek type-filter + sort (boek/rariteit/unlock/kills), rariteit-tellers, volgende-dex-prestatie tracker, Top jager badge; wapens verzamel-strip. v1.17.9 / SW v136. |
 | 2026-07-24 | **1** | Combat feel (cyclus 3): hit-confirm ring/spark per aanvalstype, parry-window op blok (PARRY! + freeze), counter-hit floater + extra freeze in training/versus — geen dmg×. v1.17.8 / SW v135. |
 | 2026-07-24 | **2** | Training (cyclus 2): telegraph HUD-balk, Chidori-dash-lijn, laser wacht tot speler landt, geen Chidori vs lucht — geen one-shots. v1.17.7 / SW v134. |
+| 2026-07-24 | **18** | Char select c3: sort HP/SPD/DMG, TOT bar, gespeeld-chip, stap-header preview. v1.17.35 / SW v161. |
+| 2026-07-24 | **10** | A11y c3: calm banners/telegraphs, static low-HP vignette, fillHudText hints, HC hub tiles. v1.17.34 / SW v160. |
+| 2026-07-24 | **15** | Onboarding c3: eiland-hint inline (geen toast), menu 2/5 progress, muur dubbele banner weg, missies 1 toast. v1.17.33 / SW v159. |
+| 2026-07-24 | **8** | PWA c3: pageshow/visibility net refresh, cache hint in offline strip, install cache line, speel/menu offline fallback. v1.17.32 / SW v158. |
+| 2026-07-24 | **20** | Code health c3: dead gamble opener, single P1 pad, volPct helper, hitConfirm cache, saga filter noop. v1.17.31 / SW v157. |
+| 2026-07-24 | **3** | Versus c3: beslissende ronde + ronde-log HUD, spawn invuln timer, round-end countdown, pauze match point. v1.17.30 / SW v156. |
+| 2026-07-24 | **11** | Menu nav (cyclus 3): context back-labels, scroll reset menu/levels/wapens/char, grotere hub-tiles big-touch. v1.17.29 / SW v155. |
+| 2026-07-24 | **9** | iPad touch (cyclus 3): bredere 2P neutral strip, ketsbam slop, joy vs knop slop, relayoutTouchPads + bigTouch resize. v1.17.28 / SW v154. |
 | 2026-07-24 | — | **Terminologie:** `roll` = alleen d20 dev-workflow (`npm run roll`). In-game gok = **Gooi & start** (geen “Roll” in UI). v1.17.27 / SW v153. |
 | 2026-07-24 | **14** | FX (cyclus 3): kill confirm ring per tier, Lite FX rings (klein/kort), banner underline glow, death burst binnen cap. v1.17.26 / SW v152. |
 | 2026-07-24 | **5** | Performance (cyclus 3): FX-ruimte + per-frame budget vóór burst/floater/banner/ring, lagere menu-DPR, resize debounce tier 2, hidden-tab skip tick, instellingen perf-regel. v1.17.17 / SW v144. |

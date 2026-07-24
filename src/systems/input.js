@@ -365,10 +365,19 @@ function layoutTouchButtonCluster(W, H, ui, safe, opts) {
 function touchPadZone(x) {
   if (!Input.dualMode) return 'p1';
   const w = W || (typeof innerWidth === 'number' ? innerWidth : 800);
-  const lo = w * 0.46;
-  const hi = w * 0.54;
+  const margin = IS_TOUCH ? (w < 420 ? 0.08 : 0.06) : 0.04;
+  const lo = w * (0.5 - margin);
+  const hi = w * (0.5 + margin);
   if (x >= lo && x <= hi) return 'neutral';
   return x < lo ? 'p1' : 'p2';
+}
+
+function relayoutTouchPads() {
+  if (typeof W === 'undefined' || typeof H === 'undefined') return;
+  try {
+    Input.layout(W, H);
+    if (typeof InputP2 !== 'undefined') InputP2.layout(W, H);
+  } catch (_) {}
 }
 
 /** Voorkom dat scroll/slide over menu-tegels meteen selecteert (iPad). */
@@ -389,9 +398,14 @@ function uiTapScrollParents(fromEl) {
   return out;
 }
 
+function uiTapSlopPx() {
+  if (IS_TOUCH && typeof save !== 'undefined' && save.bigTouch !== false) return 16;
+  return TAP_SLOP_PX;
+}
+
 function uiTapGuardMove(x, y) {
   if (_uiTap.id == null) return;
-  if (Math.hypot(x - _uiTap.x, y - _uiTap.y) > TAP_SLOP_PX) _uiTap.moved = true;
+  if (Math.hypot(x - _uiTap.x, y - _uiTap.y) > uiTapSlopPx()) _uiTap.moved = true;
   if (_uiTap.moved) return;
   for (const s of _uiTap.scrolls) {
     if (Math.abs(s.el.scrollTop - s.top) > 1 || Math.abs(s.el.scrollLeft - s.left) > 1) {
@@ -545,7 +559,7 @@ function ketsbamHitTest(x, y, g) {
   if (!g || !g.ketsbamShow) return false;
   const ui = touchUiScale(W, H);
   const { cx, cy } = ketsbamPromptCenter();
-  const r = 58 * ui;
+  const r = 58 * ui + btnHitSlop();
   return (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
 }
 
@@ -668,6 +682,8 @@ function makePad(side) {
       }
       if (this.joy.active && this.joy.id !== id) return false;
       if (!this.joy.active) {
+        if (!pointInJoyZone(this, x, y)) return false;
+        if (nearAnyTouchButton(this.buttons, x, y, btnHitSlop())) return false;
         this.joy.active = true;
         this.joy.id = id;
         this.joy.ox = x;
@@ -708,9 +724,18 @@ function makePad(side) {
   };
 }
 
-const _padP1Methods = makePad('p1');
+const Input = makePad('p1');
+const _padP1Methods = {
+  onDown: Input.onDown,
+  onMove: Input.onMove,
+  onUp: Input.onUp,
+  hardenPointers: Input.hardenPointers,
+  refreshJoyHold: Input.refreshJoyHold,
+  releaseAll: Input.releaseAll,
+  layout: Input.layout,
+};
 
-const Input = Object.assign(makePad('p1'), {
+Object.assign(Input, {
   dualMode: false,
   pointerPads: {},
   onDown(x, y, id) {
@@ -740,7 +765,7 @@ const Input = Object.assign(makePad('p1'), {
       this.activePointers.delete(id);
       return;
     }
-    if (nearAnyTouchButton(this.buttons, x, y, 12)) {
+    if (nearAnyTouchButton(this.buttons, x, y, btnHitSlop())) {
       this.activePointers.delete(id);
       return;
     }

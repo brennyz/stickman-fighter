@@ -379,9 +379,6 @@ function dailyStatusLine() {
   if (claimed === 3) {
     return `${stepHint} — open Missies${streakBit} · ${achN}/${ACHIEVEMENTS.length} prestaties`;
   }
-  if (done > 0 && pendingXp === 0) {
-    return `${stepHint} · ${done}/3 klaar · max +${dailyPotentialXp()} XP vandaag${streakBit}`;
-  }
   return `${stepHint} · ${done}/3 klaar · max +${dailyPotentialXp()} XP vandaag${streakBit}`;
 }
 
@@ -451,8 +448,9 @@ function saveDriftDetail() {
 
 function saveExportSummaryLine(s) {
   const st = s || save;
+  const summons = summonCountFromSave(st);
   return `Lv ${st.lvl} · unlock ${st.unlocked} · boek ${dexCountFromSave(st)} · kills ${dexTotalKillsFromSave(st)} · ${Object.keys(st.achievements || {}).length} prestaties` +
-    (summonCountFromSave(st) ? ` · ✦ ${summonCountFromSave(st)} summon` : '');
+    (summons ? ` · ✦ ${summons} summon` : '');
 }
 
 function updateSaveImportPreview(text) {
@@ -774,18 +772,6 @@ function resumeLastPlay() {
   }
 }
 
-function openGambleForLevel(n) {
-  try {
-    pendingAdvLevel = n;
-    lastGambleRoll = null;
-    UI.renderGamble(n);
-    applyGambleOnboarding();
-    UI.show('gambleScreen');
-  } catch (err) {
-    sfReportError('openGamble', err, 'Gok-scherm openen mislukt — kies level opnieuw');
-  }
-}
-
 function startAdventureFromGamble(skipGamble) {
   try {
     const level = pendingAdvLevel || save.unlocked || 1;
@@ -828,7 +814,7 @@ function gokGooiStartFromScreen() {
     const sumLine = document.getElementById('gambleSumLine');
     if (sumLine) sumLine.textContent = 'START!';
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
-    const delay = (save.reducedMotion || (typeof motionReduced === 'function' && motionReduced())) ? 50 : 140;
+    const delay = motionReduced() ? 50 : 140;
     setTimeout(() => {
       gokStartBusy = false;
       startAdventureFromGamble(false);
@@ -849,6 +835,29 @@ function vsFighterStats(entry) {
   else if (entry.special === 'rinnegan') special = 'Rinnegan';
   const critPct = Math.round((entry.crit != null ? entry.crit : 0.08) * 100);
   return { hp, spd, dmg, wpn: weaponById(entry.weapon).name, special, critPct };
+}
+function vsOverallRating(s) {
+  return Math.round((s.hp + s.spd + s.dmg) / 3);
+}
+function vsPlayedBefore(id) {
+  return Array.isArray(save.vsPlayedIds) && save.vsPlayedIds.includes(id);
+}
+function vsUnlockedCount() {
+  return VS_ROSTER.filter(vsUnlocked).length;
+}
+function sortVsRoster(list, mode) {
+  const arr = list.slice();
+  if (mode === 'hp' || mode === 'spd' || mode === 'dmg') {
+    arr.sort((a, b) => {
+      const sa = vsFighterStats(a);
+      const sb = vsFighterStats(b);
+      const d = sb[mode] - sa[mode];
+      return d !== 0 ? d : a.name.localeCompare(b.name);
+    });
+  } else {
+    arr.sort((a, b) => a.name.localeCompare(b.name));
+  }
+  return arr;
 }
 function vsStatBar(label, pct, color, deltaHtml) {
   const p = Math.min(100, Math.max(6, pct));
@@ -887,17 +896,23 @@ function vsStatPreviewHtml(e1, e2, previewing) {
   const s2 = vsFighterStats(e2);
   const g1 = vsSagaMeta(e1.saga || 'scroll');
   const g2 = vsSagaMeta(e2.saga || 'scroll');
-  const col = (name, s, theirs, accent, saga, flair, side) =>
-    `<div class="vs-preview-col${previewing && ((UI.charPickStep === 1 && side === 'left') || (UI.charPickStep === 2 && side === 'right')) ? ' preview-live' : ''}" style="--accent:${accent}">` +
-    `<div class="vs-preview-name">${name}${previewing && ((UI.charPickStep === 1 && side === 'left') || (UI.charPickStep === 2 && side === 'right')) ? ' <span class="vs-preview-tag">preview</span>' : ''}</div>` +
+  const step = UI.charPickStep === 2 ? 'Stap 2 · kies P2' : 'Stap 1 · kies P1';
+  const head = `<div class="vs-preview-head">${step} · ${vsUnlockedCount()}/${VS_ROSTER.length} vrij · stats = preview only</div>`;
+  const col = (entry, s, theirs, accent, saga, flair, side) => {
+    const live = previewing && ((UI.charPickStep === 1 && side === 'left') || (UI.charPickStep === 2 && side === 'right'));
+    const played = vsPlayedBefore(entry.id) ? '<span class="vs-played-chip">gespeeld</span>' : '';
+    return `<div class="vs-preview-col${live ? ' preview-live' : ''}" style="--accent:${accent}">` +
+    `<div class="vs-preview-name">${entry.name}${played}${live ? ' <span class="vs-preview-tag">preview</span>' : ''}</div>` +
     `<div class="vs-preview-wpn">${sagaIconSvg(saga.id)} ${saga.label} · ${s.wpn} · ${s.special} · ${s.critPct}% crit</div>` +
     `<div class="vs-preview-flair">${flair}</div>` +
+    `${vsStatBar('TOT', vsOverallRating(s), '#ffd75e')}` +
     `${vsStatBar('HP', s.hp, '#6ee06e', vsStatDeltaTag(s.hp, theirs.hp))}` +
     `${vsStatBar('SPD', s.spd, '#7cf5ff', vsStatDeltaTag(s.spd, theirs.spd))}` +
     `${vsStatBar('DMG', s.dmg, '#ff7a4d', vsStatDeltaTag(s.dmg, theirs.dmg))}</div>`;
+  };
   const hint = vsMatchupHint(s1, s2);
-  return `<div class="vs-preview-duo">${col(e1.name, s1, s2, '#7cf5ff', g1, rosterFlair(e1), 'left')}` +
-    `<div class="vs-preview-vs">VS</div>${col(e2.name, s2, s1, '#ffb0b8', g2, rosterFlair(e2), 'right')}</div>` +
+  return head + `<div class="vs-preview-duo">${col(e1, s1, s2, '#7cf5ff', g1, rosterFlair(e1), 'left')}` +
+    `<div class="vs-preview-vs">VS</div>${col(e2, s2, s1, '#ffb0b8', g2, rosterFlair(e2), 'right')}</div>` +
     (hint ? `<div class="vs-matchup-hint">${hint}</div>` : '') +
     (previewing ? '<div class="vs-matchup-hint" style="opacity:.75">Tik kaart om te kiezen · stats zijn relatief, geen dmg-tweak</div>' : '');
 }
@@ -1074,25 +1089,20 @@ function onceResultTip(mode, kind, tip) {
   return tip;
 }
 
-function applyGambleOnboarding() {
-  ensureTipsSeen();
-  if (save.tipsSeen.gamble) return;
-  save.tipsSeen.gamble = 1;
-  persist();
-  const outEl = document.getElementById('gambleOutcome');
-  if (outEl && !lastGambleRoll) {
-    outEl.textContent = 'Eerste keer: som ≤5 = super-baas · som ≥9 = bondgenoot. Tik level = Gooi & start · lang = zonder gok.';
-  }
-}
-
 function applyIslandOnboarding() {
   ensureTipsSeen();
   if (save.tipsSeen.islands) return;
   save.tipsSeen.islands = 1;
   persist();
-  try {
-    UI.toast('5 eilanden × 10 levels · skill gate per eiland · 5× verlies op één level = Meester-buff +20%', 4400);
-  } catch (_) {}
+}
+
+/** Eén regel op level-scherm — geen toast (eilanden-uitleg). */
+function adventureIslandHintLine() {
+  ensureTipsSeen();
+  if (!save.tipsSeen.islands || save.tipsSeen.islandsHint) return '';
+  save.tipsSeen.islandsHint = 1;
+  persist();
+  return 'Eerste keer avontuur: 5×10 levels · skill gate per eiland · Meester-buff na 5× verlies op één level';
 }
 
 /** Eén hint per modus: in-gevecht regel, geen extra toast (geen stapel met welcome). */

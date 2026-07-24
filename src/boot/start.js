@@ -166,6 +166,7 @@ bindPress(btnMissions, () => {
     save.missionsIntroSeen = true;
     persist();
     setTimeout(() => UI.toast('Missies: Speel → claim XP → dagbonus — licht, geen grind', 4000), 280);
+    return;
   }
   const n = claimableDailyTasks().length;
   if (n > 0) {
@@ -294,7 +295,8 @@ function bindSettingsControls() {
       persist();
       UI.renderSettings();
       UI.syncTouchClass();
-      Input.layout(W, H);
+      relayoutTouchPads();
+      if (key === 'bigTouch') scheduleResize();
       AudioSys.sfx('select');
       haptic(8);
     });

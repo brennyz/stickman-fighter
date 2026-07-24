@@ -3,23 +3,14 @@
   "cyclesCompleted": 3,
   "rollFirst": [],
   "remaining": [
-    18,
-    4,
-    9,
     6,
-    3,
-    16,
-    20,
-    11,
-    8,
-    10,
-    15
+    16
   ],
   "lastRoll": {
-    "face": 14,
-    "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
-    "rolledAt": "2026-07-24T18:43:18Z",
-    "remainingCount": 11,
+    "face": 10,
+    "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
+    "rolledAt": "2026-07-24T19:05:48Z",
+    "remainingCount": 7,
     "cycle": 3
   },
   "pending": null,
@@ -442,6 +433,69 @@
       "note": "Kill rings + banner streak + lite FX rings",
       "version": "1.17.26",
       "doneAt": "2026-07-24T18:44:14Z",
+      "cycle": 3
+    },
+    {
+      "face": 4,
+      "note": "golf-pips pause ring level wave strip",
+      "version": "1.17.36",
+      "doneAt": "2026-07-24T18:59:24Z",
+      "cycle": 3
+    },
+    {
+      "face": 9,
+      "note": "dual joy-guard uiTap pan-y slop",
+      "version": "1.17.37",
+      "doneAt": "2026-07-24T19:02:13Z",
+      "cycle": 3
+    },
+    {
+      "face": 20,
+      "note": "dead gamble single pad volPct dedupe",
+      "version": "1.17.38",
+      "doneAt": "2026-07-24T19:05:18Z",
+      "cycle": 3
+    },
+    {
+      "face": 10,
+      "note": "calm FX HC HUD no flash",
+      "version": "1.17.39",
+      "doneAt": "2026-07-24T19:07:32Z",
+      "cycle": 3
+    },
+    {
+      "face": 11,
+      "note": "back labels, scroll reset, big-touch hub tiles",
+      "version": "1.17.40",
+      "doneAt": "2026-07-24T19:10:00Z",
+      "cycle": 3
+    },
+    {
+      "face": 3,
+      "note": "beslissende ronde HUD, spawn timer, round-end countdown",
+      "version": "1.17.40",
+      "doneAt": "2026-07-24T19:11:00Z",
+      "cycle": 3
+    },
+    {
+      "face": 8,
+      "note": "pageshow net refresh, cache hints, offline fallback links",
+      "version": "1.17.40",
+      "doneAt": "2026-07-24T19:12:00Z",
+      "cycle": 3
+    },
+    {
+      "face": 15,
+      "note": "inline island hint, menu progress, fewer toasts",
+      "version": "1.17.40",
+      "doneAt": "2026-07-24T19:13:00Z",
+      "cycle": 3
+    },
+    {
+      "face": 18,
+      "note": "sort TOT bar gespeeld chip",
+      "version": "1.17.40",
+      "doneAt": "2026-07-24T19:14:00Z",
       "cycle": 3
     }
   ],
@@ -1480,6 +1534,34 @@
       "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
       "rolledAt": "2026-07-24T18:43:18Z",
       "remainingCount": 11,
+      "cycle": 3
+    },
+    {
+      "face": 4,
+      "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
+      "rolledAt": "2026-07-24T18:57:59Z",
+      "remainingCount": 10,
+      "cycle": 3
+    },
+    {
+      "face": 9,
+      "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
+      "rolledAt": "2026-07-24T18:59:57Z",
+      "remainingCount": 9,
+      "cycle": 3
+    },
+    {
+      "face": 20,
+      "category": "Code health \u2014 kleine refactors, geen gameplay-break",
+      "rolledAt": "2026-07-24T19:02:42Z",
+      "remainingCount": 8,
+      "cycle": 3
+    },
+    {
+      "face": 10,
+      "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
+      "rolledAt": "2026-07-24T19:05:48Z",
+      "remainingCount": 7,
       "cycle": 3
     }
   ],

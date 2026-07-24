@@ -242,8 +242,8 @@ class Monster {
 }
 
 function drawMonsterArt(c, sp, r, t, flash, telegraph) {
-  const body = flash ? '#ffffff' : sp.c1;
-  const dark = flash ? '#dddddd' : sp.c2;
+  const body = flash ? (motionReduced() ? sp.c1 : '#ffffff') : sp.c1;
+  const dark = flash ? (motionReduced() ? sp.c2 : '#dddddd') : sp.c2;
   const sq = 1 + Math.sin(t * 5) * 0.05;
   c.lineWidth = 2;
   const eye = (x, y, s) => {

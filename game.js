@@ -6,7 +6,7 @@
    Stickman-vechtgame voor iPad (touch) en desktop (toetsenbord).
    Modi: Avontuur, Training, Versus 2P, Muur, Mats (coinrun).
    Audio (sfx + bgm) is procedureel via Web Audio — rechtenvrij.
-   d20: touch-pad method refs, Input hitButton reuse, minder dubbele error-toast.
+   d20: dead gamble opener, single P1 pad, volPct, hitConfirm cache.
    ========================================================================= */
 
 const TAU = Math.PI * 2;
@@ -132,9 +132,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.27';
+const APP_VERSION = '1.17.40';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 153;
+const SW_CACHE_REV = 166;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -487,8 +487,9 @@ function hitConfirmColor(kind) {
 function applyHitConfirmFx(game, x, y, spec) {
   if (!game || motionReduced()) return;
   const kind = spec && spec.kind ? spec.kind : 'punch';
-  spawnFxRing(game, x, y, hitConfirmColor(kind), fxLite() ? 6 : 9);
-  if (!fxLite()) game.burst(x, y, hitConfirmColor(kind), 3, { kind: 'spark', size: 2 });
+  const col = hitConfirmColor(kind);
+  spawnFxRing(game, x, y, col, fxLite() ? 6 : 9);
+  if (!fxLite()) game.burst(x, y, col, 3, { kind: 'spark', size: 2 });
 }
 
 function isCounterHitWindow(target) {
@@ -1265,9 +1266,6 @@ function dailyStatusLine() {
   if (claimed === 3) {
     return `${stepHint} — open Missies${streakBit} · ${achN}/${ACHIEVEMENTS.length} prestaties`;
   }
-  if (done > 0 && pendingXp === 0) {
-    return `${stepHint} · ${done}/3 klaar · max +${dailyPotentialXp()} XP vandaag${streakBit}`;
-  }
   return `${stepHint} · ${done}/3 klaar · max +${dailyPotentialXp()} XP vandaag${streakBit}`;
 }
 
@@ -1337,8 +1335,9 @@ function saveDriftDetail() {
 
 function saveExportSummaryLine(s) {
   const st = s || save;
+  const summons = summonCountFromSave(st);
   return `Lv ${st.lvl} · unlock ${st.unlocked} · boek ${dexCountFromSave(st)} · kills ${dexTotalKillsFromSave(st)} · ${Object.keys(st.achievements || {}).length} prestaties` +
-    (summonCountFromSave(st) ? ` · ✦ ${summonCountFromSave(st)} summon` : '');
+    (summons ? ` · ✦ ${summons} summon` : '');
 }
 
 function updateSaveImportPreview(text) {
@@ -1660,18 +1659,6 @@ function resumeLastPlay() {
   }
 }
 
-function openGambleForLevel(n) {
-  try {
-    pendingAdvLevel = n;
-    lastGambleRoll = null;
-    UI.renderGamble(n);
-    applyGambleOnboarding();
-    UI.show('gambleScreen');
-  } catch (err) {
-    sfReportError('openGamble', err, 'Gok-scherm openen mislukt — kies level opnieuw');
-  }
-}
-
 function startAdventureFromGamble(skipGamble) {
   try {
     const level = pendingAdvLevel || save.unlocked || 1;
@@ -1714,7 +1701,7 @@ function gokGooiStartFromScreen() {
     const sumLine = document.getElementById('gambleSumLine');
     if (sumLine) sumLine.textContent = 'START!';
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
-    const delay = (save.reducedMotion || (typeof motionReduced === 'function' && motionReduced())) ? 50 : 140;
+    const delay = motionReduced() ? 50 : 140;
     setTimeout(() => {
       gokStartBusy = false;
       startAdventureFromGamble(false);
@@ -1735,6 +1722,29 @@ function vsFighterStats(entry) {
   else if (entry.special === 'rinnegan') special = 'Rinnegan';
   const critPct = Math.round((entry.crit != null ? entry.crit : 0.08) * 100);
   return { hp, spd, dmg, wpn: weaponById(entry.weapon).name, special, critPct };
+}
+function vsOverallRating(s) {
+  return Math.round((s.hp + s.spd + s.dmg) / 3);
+}
+function vsPlayedBefore(id) {
+  return Array.isArray(save.vsPlayedIds) && save.vsPlayedIds.includes(id);
+}
+function vsUnlockedCount() {
+  return VS_ROSTER.filter(vsUnlocked).length;
+}
+function sortVsRoster(list, mode) {
+  const arr = list.slice();
+  if (mode === 'hp' || mode === 'spd' || mode === 'dmg') {
+    arr.sort((a, b) => {
+      const sa = vsFighterStats(a);
+      const sb = vsFighterStats(b);
+      const d = sb[mode] - sa[mode];
+      return d !== 0 ? d : a.name.localeCompare(b.name);
+    });
+  } else {
+    arr.sort((a, b) => a.name.localeCompare(b.name));
+  }
+  return arr;
 }
 function vsStatBar(label, pct, color, deltaHtml) {
   const p = Math.min(100, Math.max(6, pct));
@@ -1773,17 +1783,23 @@ function vsStatPreviewHtml(e1, e2, previewing) {
   const s2 = vsFighterStats(e2);
   const g1 = vsSagaMeta(e1.saga || 'scroll');
   const g2 = vsSagaMeta(e2.saga || 'scroll');
-  const col = (name, s, theirs, accent, saga, flair, side) =>
-    `<div class="vs-preview-col${previewing && ((UI.charPickStep === 1 && side === 'left') || (UI.charPickStep === 2 && side === 'right')) ? ' preview-live' : ''}" style="--accent:${accent}">` +
-    `<div class="vs-preview-name">${name}${previewing && ((UI.charPickStep === 1 && side === 'left') || (UI.charPickStep === 2 && side === 'right')) ? ' <span class="vs-preview-tag">preview</span>' : ''}</div>` +
+  const step = UI.charPickStep === 2 ? 'Stap 2 · kies P2' : 'Stap 1 · kies P1';
+  const head = `<div class="vs-preview-head">${step} · ${vsUnlockedCount()}/${VS_ROSTER.length} vrij · stats = preview only</div>`;
+  const col = (entry, s, theirs, accent, saga, flair, side) => {
+    const live = previewing && ((UI.charPickStep === 1 && side === 'left') || (UI.charPickStep === 2 && side === 'right'));
+    const played = vsPlayedBefore(entry.id) ? '<span class="vs-played-chip">gespeeld</span>' : '';
+    return `<div class="vs-preview-col${live ? ' preview-live' : ''}" style="--accent:${accent}">` +
+    `<div class="vs-preview-name">${entry.name}${played}${live ? ' <span class="vs-preview-tag">preview</span>' : ''}</div>` +
     `<div class="vs-preview-wpn">${sagaIconSvg(saga.id)} ${saga.label} · ${s.wpn} · ${s.special} · ${s.critPct}% crit</div>` +
     `<div class="vs-preview-flair">${flair}</div>` +
+    `${vsStatBar('TOT', vsOverallRating(s), '#ffd75e')}` +
     `${vsStatBar('HP', s.hp, '#6ee06e', vsStatDeltaTag(s.hp, theirs.hp))}` +
     `${vsStatBar('SPD', s.spd, '#7cf5ff', vsStatDeltaTag(s.spd, theirs.spd))}` +
     `${vsStatBar('DMG', s.dmg, '#ff7a4d', vsStatDeltaTag(s.dmg, theirs.dmg))}</div>`;
+  };
   const hint = vsMatchupHint(s1, s2);
-  return `<div class="vs-preview-duo">${col(e1.name, s1, s2, '#7cf5ff', g1, rosterFlair(e1), 'left')}` +
-    `<div class="vs-preview-vs">VS</div>${col(e2.name, s2, s1, '#ffb0b8', g2, rosterFlair(e2), 'right')}</div>` +
+  return head + `<div class="vs-preview-duo">${col(e1, s1, s2, '#7cf5ff', g1, rosterFlair(e1), 'left')}` +
+    `<div class="vs-preview-vs">VS</div>${col(e2, s2, s1, '#ffb0b8', g2, rosterFlair(e2), 'right')}</div>` +
     (hint ? `<div class="vs-matchup-hint">${hint}</div>` : '') +
     (previewing ? '<div class="vs-matchup-hint" style="opacity:.75">Tik kaart om te kiezen · stats zijn relatief, geen dmg-tweak</div>' : '');
 }
@@ -1960,25 +1976,20 @@ function onceResultTip(mode, kind, tip) {
   return tip;
 }
 
-function applyGambleOnboarding() {
-  ensureTipsSeen();
-  if (save.tipsSeen.gamble) return;
-  save.tipsSeen.gamble = 1;
-  persist();
-  const outEl = document.getElementById('gambleOutcome');
-  if (outEl && !lastGambleRoll) {
-    outEl.textContent = 'Eerste keer: som ≤5 = super-baas · som ≥9 = bondgenoot. Tik level = Gooi & start · lang = zonder gok.';
-  }
-}
-
 function applyIslandOnboarding() {
   ensureTipsSeen();
   if (save.tipsSeen.islands) return;
   save.tipsSeen.islands = 1;
   persist();
-  try {
-    UI.toast('5 eilanden × 10 levels · skill gate per eiland · 5× verlies op één level = Meester-buff +20%', 4400);
-  } catch (_) {}
+}
+
+/** Eén regel op level-scherm — geen toast (eilanden-uitleg). */
+function adventureIslandHintLine() {
+  ensureTipsSeen();
+  if (!save.tipsSeen.islands || save.tipsSeen.islandsHint) return '';
+  save.tipsSeen.islandsHint = 1;
+  persist();
+  return 'Eerste keer avontuur: 5×10 levels · skill gate per eiland · Meester-buff na 5× verlies op één level';
 }
 
 /** Eén hint per modus: in-gevecht regel, geen extra toast (geen stapel met welcome). */
@@ -2606,7 +2617,7 @@ function rosterFlair(r) { return r.flair || r.tag; }
 /** Deel 2 — vijf saga-icon sticks (parodie per saga) */
 const SAGA_ICON_IDS = ['kiball', 'scrollkid', 'tidecrew', 'zipcape', 'dawnlance'];
 function sagaIconEntries() {
-  return SAGA_ICON_IDS.map(id => vsRosterEntry(id)).filter(r => SAGA_ICON_IDS.includes(r.id));
+  return SAGA_ICON_IDS.map(id => vsRosterEntry(id));
 }
 function pickCharPoolFiltered() {
   const filter = UI.charSagaFilter || 'all';
@@ -4324,10 +4335,19 @@ function layoutTouchButtonCluster(W, H, ui, safe, opts) {
 function touchPadZone(x) {
   if (!Input.dualMode) return 'p1';
   const w = W || (typeof innerWidth === 'number' ? innerWidth : 800);
-  const lo = w * 0.46;
-  const hi = w * 0.54;
+  const margin = IS_TOUCH ? (w < 420 ? 0.08 : 0.06) : 0.04;
+  const lo = w * (0.5 - margin);
+  const hi = w * (0.5 + margin);
   if (x >= lo && x <= hi) return 'neutral';
   return x < lo ? 'p1' : 'p2';
+}
+
+function relayoutTouchPads() {
+  if (typeof W === 'undefined' || typeof H === 'undefined') return;
+  try {
+    Input.layout(W, H);
+    if (typeof InputP2 !== 'undefined') InputP2.layout(W, H);
+  } catch (_) {}
 }
 
 /** Voorkom dat scroll/slide over menu-tegels meteen selecteert (iPad). */
@@ -4348,9 +4368,14 @@ function uiTapScrollParents(fromEl) {
   return out;
 }
 
+function uiTapSlopPx() {
+  if (IS_TOUCH && typeof save !== 'undefined' && save.bigTouch !== false) return 16;
+  return TAP_SLOP_PX;
+}
+
 function uiTapGuardMove(x, y) {
   if (_uiTap.id == null) return;
-  if (Math.hypot(x - _uiTap.x, y - _uiTap.y) > TAP_SLOP_PX) _uiTap.moved = true;
+  if (Math.hypot(x - _uiTap.x, y - _uiTap.y) > uiTapSlopPx()) _uiTap.moved = true;
   if (_uiTap.moved) return;
   for (const s of _uiTap.scrolls) {
     if (Math.abs(s.el.scrollTop - s.top) > 1 || Math.abs(s.el.scrollLeft - s.left) > 1) {
@@ -4504,7 +4529,7 @@ function ketsbamHitTest(x, y, g) {
   if (!g || !g.ketsbamShow) return false;
   const ui = touchUiScale(W, H);
   const { cx, cy } = ketsbamPromptCenter();
-  const r = 58 * ui;
+  const r = 58 * ui + btnHitSlop();
   return (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
 }
 
@@ -4627,6 +4652,8 @@ function makePad(side) {
       }
       if (this.joy.active && this.joy.id !== id) return false;
       if (!this.joy.active) {
+        if (!pointInJoyZone(this, x, y)) return false;
+        if (nearAnyTouchButton(this.buttons, x, y, btnHitSlop())) return false;
         this.joy.active = true;
         this.joy.id = id;
         this.joy.ox = x;
@@ -4667,9 +4694,18 @@ function makePad(side) {
   };
 }
 
-const _padP1Methods = makePad('p1');
+const Input = makePad('p1');
+const _padP1Methods = {
+  onDown: Input.onDown,
+  onMove: Input.onMove,
+  onUp: Input.onUp,
+  hardenPointers: Input.hardenPointers,
+  refreshJoyHold: Input.refreshJoyHold,
+  releaseAll: Input.releaseAll,
+  layout: Input.layout,
+};
 
-const Input = Object.assign(makePad('p1'), {
+Object.assign(Input, {
   dualMode: false,
   pointerPads: {},
   onDown(x, y, id) {
@@ -4699,7 +4735,7 @@ const Input = Object.assign(makePad('p1'), {
       this.activePointers.delete(id);
       return;
     }
-    if (nearAnyTouchButton(this.buttons, x, y, 12)) {
+    if (nearAnyTouchButton(this.buttons, x, y, btnHitSlop())) {
       this.activePointers.delete(id);
       return;
     }
@@ -6275,8 +6311,8 @@ class Monster {
 }
 
 function drawMonsterArt(c, sp, r, t, flash, telegraph) {
-  const body = flash ? '#ffffff' : sp.c1;
-  const dark = flash ? '#dddddd' : sp.c2;
+  const body = flash ? (motionReduced() ? sp.c1 : '#ffffff') : sp.c1;
+  const dark = flash ? (motionReduced() ? sp.c2 : '#dddddd') : sp.c2;
   const sq = 1 + Math.sin(t * 5) * 0.05;
   c.lineWidth = 2;
   const eye = (x, y, s) => {
@@ -7719,8 +7755,9 @@ class Game {
     this.phaseT = 0;
     this.inputLocked = true;
     const mp = this.roundsP1 === 1 || this.roundsP2 === 1;
-    const sub = mp ? ' · match point' : '';
-    this.banner(`RONDE ${this.round}${sub}`, 1.1, '#ffd75e', 52);
+    const decisive = this.roundsP1 === 1 && this.roundsP2 === 1;
+    let sub = decisive ? ' · beslissende ronde' : (mp ? ' · match point' : '');
+    this.banner(`RONDE ${this.round}${sub}`, 1.1, decisive ? '#ff9a9a' : '#ffd75e', 52);
     AudioSys.sfx('bell');
   }
 
@@ -7796,13 +7833,6 @@ class Game {
     };
     this.layoutWall(true);
     this.banner('SLOOP DE MUUR!', 1.5, '#ffd75e', 46);
-    if (!modeOnboardingSeen('wall')) {
-      setTimeout(() => {
-        try {
-          if (!this.over) this.banner('Tip: 60s · combo-balk = sneller · ster-steen = bonus', 2.0, '#7cf5ff', 22);
-        } catch (_) {}
-      }, 1200);
-    }
     AudioSys.play('wall');
     this.phase = 'fight';
   }
@@ -8499,6 +8529,10 @@ class Game {
   banner(txt, dur, color, size) {
     if (!perfFxBudgetAllow(this, 1)) return;
     if (perfFxRoom(this, 'banner') <= 0) return;
+    if (motionReduced()) {
+      dur = Math.min(dur, 1.15);
+      size = Math.min(size || 40, 32);
+    }
     const cap = fxCaps();
     if (this.banners.length >= cap.banners) this.banners.shift();
     this.banners.push({ txt, dur, color: color || '#fff', size: size || 40, t: 0 });
@@ -8560,7 +8594,7 @@ class Game {
         const meta = PICKUP_META[pk.kind];
         const y = pk.y + (pk.bob || 0);
         c.save();
-        const pkBlur = (save.liteFx || Perf.tier >= 1) ? 6 : 14;
+        const pkBlur = (save.liteFx || Perf.tier >= 1 || motionReduced()) ? 0 : 14;
         c.shadowColor = meta.color; c.shadowBlur = pkBlur;
         c.fillStyle = meta.color;
         c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.fill();
@@ -8688,10 +8722,14 @@ class Game {
       }
       c.font = `900 ${b.size}px -apple-system, sans-serif`;
       c.textAlign = 'center';
-      c.lineWidth = 8; c.strokeStyle = 'rgba(0,0,0,.55)';
-      c.strokeText(b.txt, 0, 0);
-      c.fillStyle = b.color;
-      c.fillText(b.txt, 0, 0);
+      if (a11yHighContrast()) {
+        fillHudText(c, b.txt, 0, 0, { fill: b.color, stroke: 'rgba(0,0,0,.9)', strokeW: 4 });
+      } else {
+        c.lineWidth = 8; c.strokeStyle = 'rgba(0,0,0,.55)';
+        c.strokeText(b.txt, 0, 0);
+        c.fillStyle = b.color;
+        c.fillText(b.txt, 0, 0);
+      }
       if (!fxLite() && !calm && fade > 0.35) {
         c.globalAlpha = fade * 0.42;
         c.strokeStyle = b.color;
@@ -8731,11 +8769,14 @@ class Game {
       this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
       c.fill();
       c.strokeStyle = 'rgba(255,215,94,.35)';
-      c.lineWidth = 1.5;
+      c.lineWidth = a11yHighContrast() ? 2.5 : 1.5;
       this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
       c.stroke();
-      c.fillStyle = '#fff';
-      c.fillText(hintTxt, W / 2, H * 0.2);
+      fillHudText(c, hintTxt, W / 2, H * 0.2, {
+        fill: '#fff',
+        stroke: 'rgba(0,0,0,.85)',
+        strokeW: a11yHighContrast() ? 3.5 : 0,
+      });
       c.globalAlpha = 1;
     }
   }
@@ -8771,6 +8812,7 @@ class Game {
   drawSuperMeterFill(c, x, y, w, h, pct, kind, t) {
     pct = clamp(pct, 0, 1);
     const ready = pct >= 1;
+    const calm = motionReduced();
     c.save();
     if (kind === 'chidori') {
       const seg = 10;
@@ -8780,7 +8822,7 @@ class Game {
         if (pct <= segStart) continue;
         const fill = Math.min(1, (pct - segStart) * seg);
         if (fill <= 0.01) continue;
-        const flick = 0.7 + Math.sin(t * 24 + i * 1.9) * 0.3;
+        const flick = calm ? 0.85 : (0.7 + Math.sin(t * 24 + i * 1.9) * 0.3);
         c.fillStyle = ready ? `rgba(168,224,255,${flick})` : `rgba(80,160,255,${0.45 + fill * 0.45})`;
         this.rr(c, x + i * segW + 1, y + 1, Math.max(1, segW * fill - 2), h - 2, 2);
         c.fill();
@@ -8791,13 +8833,13 @@ class Game {
         const segStart = i / rings;
         if (pct <= segStart) continue;
         const fill = Math.min(1, (pct - segStart) * rings);
-        const pulse = 0.55 + Math.sin(t * 9 + i * 1.1) * 0.25;
+        const pulse = calm ? 0.7 : (0.55 + Math.sin(t * 9 + i * 1.1) * 0.25);
         c.fillStyle = ready ? `rgba(196,122,255,${pulse})` : `rgba(100,40,160,${0.35 + fill * 0.45})`;
         const rw = w / rings;
         this.rr(c, x + i * rw + 1, y + 1, Math.max(1, rw * fill - 2), h - 2, 3);
         c.fill();
       }
-      if (pct > 0.2 && !fxLite()) {
+      if (pct > 0.2 && !fxLite() && !calm) {
         c.strokeStyle = `rgba(255,120,160,${0.25 + Math.sin(t * 6) * 0.12})`;
         c.lineWidth = 1;
         c.beginPath();
@@ -8814,7 +8856,7 @@ class Game {
         c.fillStyle = g;
         this.rr(c, x, y, fw, h, 5);
         c.fill();
-        if (pct > 0.12 && !fxLite()) {
+        if (pct > 0.12 && !fxLite() && !calm) {
           c.strokeStyle = `rgba(230,250,255,${0.28 + Math.sin(t * 7) * 0.12})`;
           c.lineWidth = 1.2;
           const cx = x + fw * 0.55;
@@ -9005,7 +9047,7 @@ class Game {
 
   /** Deel 3: checkpoint-flits + baas-aankomst overlays (boven de wereld, onder HUD-tekst). */
   drawStageBeatFx(c) {
-    if (this.partFlashT > 0) {
+    if (this.partFlashT > 0 && !motionReduced()) {
       const f = clamp(this.partFlashT / 0.5, 0, 1);
       const g = c.createRadialGradient(W / 2, 44, 10, W / 2, 44, H * 0.9);
       g.addColorStop(0, `rgba(124,245,255,${0.26 * f})`);
@@ -9027,9 +9069,10 @@ class Game {
     }
     if (this.bossArriveT > 0) {
       const f = clamp(this.bossArriveT / 0.7, 0, 1);
+      const mul = motionReduced() ? 0.45 : 1;
       const g = c.createRadialGradient(W / 2, H / 2, H * 0.15, W / 2, H / 2, H * 0.95);
-      g.addColorStop(0, `rgba(255,90,90,${0.1 * f})`);
-      g.addColorStop(1, `rgba(160,10,30,${0.28 * f})`);
+      g.addColorStop(0, `rgba(255,90,90,${0.1 * f * mul})`);
+      g.addColorStop(1, `rgba(160,10,30,${0.28 * f * mul})`);
       c.fillStyle = g;
       c.fillRect(0, 0, W, H);
     }
@@ -9074,7 +9117,7 @@ class Game {
       const cx = x0 + s * (segW + segGap) - segGap / 2;
       const passed = pr * 3 >= s;
       const justFlash = passed && this.partFlashT > 0 && Math.min(3, 1 + Math.floor(pr * 3)) === s + 1;
-      const r = justFlash ? 5.5 + Math.sin(this.t * 18) * 1.2 : 4;
+      const r = justFlash && !motionReduced() ? 5.5 + Math.sin(this.t * 18) * 1.2 : (justFlash ? 5 : 4);
       c.save();
       c.translate(cx, y);
       c.rotate(Math.PI / 4);
@@ -9110,6 +9153,40 @@ class Game {
     c.textAlign = 'left';
     c.fillStyle = 'rgba(255,255,255,.6)';
     c.fillText(`deel ${Math.min(3, 1 + Math.floor(pr * 3))}/3`, x0 + tw + (this.level.boss ? 24 : 10), y + 3.5);
+    // golf-pips (d4 c3): expliciete golf 1/N onder de balk
+    const pipY = y + 16;
+    const pipGap = Math.min(14, (tw - 8) / Math.max(1, total));
+    const pipStart = W / 2 - ((total - 1) * pipGap) / 2;
+    const cur = Math.max(0, this.waveIdx);
+    for (let i = 0; i < total; i++) {
+      const px = pipStart + i * pipGap;
+      const isBossPip = this.level.boss && i === total - 1;
+      const done = i < cur;
+      const active = i === cur && this.waveIdx >= 0 && this.wavePause <= 0;
+      const nextPause = i === cur + 1 && this.wavePause > 0;
+      const pulseP = (active || nextPause) && !motionReduced() ? 1 + Math.sin(this.t * 8) * 0.12 : 1;
+      const r = (done || active ? 3.5 : 3) * pulseP;
+      c.beginPath();
+      if (done) {
+        c.fillStyle = isBossPip ? '#ff8a9a' : '#ffd75e';
+        c.arc(px, pipY, r, 0, TAU);
+        c.fill();
+      } else {
+        c.strokeStyle = isBossPip ? 'rgba(255,138,154,.85)' : (active || nextPause ? '#7cf5ff' : 'rgba(255,255,255,.35)');
+        c.lineWidth = active || nextPause ? 2 : 1.2;
+        c.arc(px, pipY, r, 0, TAU);
+        c.stroke();
+        if (active || nextPause) {
+          c.fillStyle = 'rgba(124,245,255,.28)';
+          c.fill();
+        }
+      }
+    }
+    c.font = '700 9px sans-serif';
+    c.fillStyle = 'rgba(255,255,255,.5)';
+    c.textAlign = 'center';
+    const waveNum = this.waveIdx >= 0 ? Math.min(total, cur + 1) : 0;
+    c.fillText(waveNum > 0 ? `Golf ${waveNum}/${total}` : `${total} golven`, W / 2, pipY + 11);
     c.textAlign = 'center';
   }
 
@@ -9198,8 +9275,9 @@ class Game {
   drawHUD(c) {
     if (this.mode === 'adventure') this.drawStageBeatFx(c);
     const p = this.player;
-    if (p && p.alive && p.maxhp > 0 && p.hp / p.maxhp < 0.28 && !motionReduced()) {
-      const a = 0.07 + Math.sin(this.t * 7) * 0.04;
+    if (p && p.alive && p.maxhp > 0 && p.hp / p.maxhp < 0.28) {
+      const calm = motionReduced();
+      const a = calm ? 0.055 : (0.07 + Math.sin(this.t * 7) * 0.04);
       const g = c.createRadialGradient(W / 2, H / 2, H * 0.2, W / 2, H / 2, H * 0.85);
       g.addColorStop(0, 'rgba(0,0,0,0)');
       g.addColorStop(1, `rgba(180,20,40,${a})`);
@@ -9339,9 +9417,29 @@ class Game {
       if (this.wavePause > 0) {
         const nextBoss = isBossWave(this.level, this.waveIdx + 1);
         const sec = Math.max(0, this.wavePause);
+        const totalPause = this.wavePauseTotal || 1.55;
+        const pauseFrac = clamp(1 - this.wavePause / totalPause, 0, 1);
+        const ringX = W / 2;
+        const ringY = H - 78;
+        const ringR = 24;
+        if (!motionReduced()) {
+          c.save();
+          c.strokeStyle = nextBoss ? 'rgba(255,138,154,.22)' : 'rgba(124,245,255,.18)';
+          c.lineWidth = 3.5;
+          c.beginPath();
+          c.arc(ringX, ringY, ringR, 0, TAU);
+          c.stroke();
+          c.strokeStyle = nextBoss ? '#ffb0b8' : '#7cf5ff';
+          c.lineWidth = 3.5;
+          c.lineCap = 'round';
+          c.beginPath();
+          c.arc(ringX, ringY, ringR, -Math.PI / 2, -Math.PI / 2 + pauseFrac * TAU);
+          c.stroke();
+          c.restore();
+        }
         c.font = '800 15px sans-serif';
         const pauseMsg = nextBoss ? `Op weg naar de baas — ${sec.toFixed(1)}s` : `Verder lopen… volgende golf ${sec.toFixed(1)}s`;
-        fillHudText(c, pauseMsg, W / 2, H - 78, {
+        fillHudText(c, pauseMsg, ringX, ringY, {
           fill: nextBoss ? '#ffc8d0' : '#d8e8ff',
         });
         this.drawNextWavePreview(c);
@@ -9429,7 +9527,7 @@ class Game {
       if (this.trainMeleeTelegraphT > 0 && r.alive && !this.trainLaserTelegraph && !this.trainTelegraphT) {
         const dir = Math.sign(this.player.x - r.x) || -1;
         c.save();
-        c.globalAlpha = 0.3 + Math.sin(this.t * 22) * 0.15;
+        c.globalAlpha = motionReduced() ? 0.38 : (0.3 + Math.sin(this.t * 22) * 0.15);
         c.strokeStyle = '#ffb347';
         c.lineWidth = 3;
         c.beginPath();
@@ -9439,11 +9537,11 @@ class Game {
       }
       if (this.trainTelegraphT > 0 && r.alive) {
         c.save();
-        c.globalAlpha = 0.35 + Math.sin(this.t * 18) * 0.2;
+        c.globalAlpha = motionReduced() ? 0.42 : (0.35 + Math.sin(this.t * 18) * 0.2);
         c.strokeStyle = '#7cf5ff';
         c.lineWidth = 4;
         c.beginPath();
-        c.arc(r.x, r.y - 48, 42 + Math.sin(this.t * 14) * 6, 0, TAU);
+        c.arc(r.x, r.y - 48, 42 + (motionReduced() ? 0 : Math.sin(this.t * 14) * 6), 0, TAU);
         c.stroke();
         const dashDir = Math.sign(this.player.x - r.x) || -1;
         const dashLen = Math.min(200, Math.abs(this.player.x - r.x) + 40);
@@ -9642,6 +9740,21 @@ class Game {
         c.font = '700 13px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.65)';
         c.fillText('Spawn · eerlijk start', W / 2, H * 0.4 + 28);
+      } else if (this.phase === 'roundend') {
+        const left = Math.max(0, 2.2 - this.phaseT);
+        c.font = '900 34px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.9)';
+        c.fillText(String(Math.ceil(left)), W / 2, H * 0.38);
+        c.font = '700 13px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.7)';
+        c.fillText('Volgende ronde', W / 2, H * 0.38 + 26);
+        const barW = Math.min(140, W * 0.24);
+        c.fillStyle = 'rgba(0,0,0,.35)';
+        this.rr(c, W / 2 - barW / 2, H * 0.38 + 34, barW, 5, 3);
+        c.fill();
+        c.fillStyle = '#7cf5ff';
+        this.rr(c, W / 2 - barW / 2, H * 0.38 + 34, barW * clamp(left / 2.2, 0, 1), 5, 3);
+        c.fill();
       }
       c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, bx - 4, byVs - 4, half + 8, 44, 10); c.fill();
       c.fillStyle = '#333c55'; this.rr(c, bx, byVs, half, 14, 6); c.fill();
@@ -9682,7 +9795,11 @@ class Game {
         c.fillText(String(tLeft), W / 2, timerY);
       }
       c.font = '800 12px sans-serif'; c.fillStyle = 'rgba(255,255,255,.75)';
-      c.fillText(`Ronde ${this.round} · eerst 2 wint · ${this.roundsP1}-${this.roundsP2}`, W / 2, timerY + 18);
+      const decisiveRound = this.roundsP1 === 1 && this.roundsP2 === 1;
+      const scoreLine = decisiveRound
+        ? `Beslissende ronde · ${this.roundsP1}-${this.roundsP2}`
+        : `Ronde ${this.round} · eerst 2 wint · ${this.roundsP1}-${this.roundsP2}`;
+      c.fillText(scoreLine, W / 2, timerY + 18);
       const timerBarW = Math.min(160, W * 0.28);
       const timerFrac = clamp(this.roundTimer / 99, 0, 1);
       c.fillStyle = 'rgba(0,0,0,.35)';
@@ -9699,6 +9816,14 @@ class Game {
       const mp1 = this.roundsP1 === 1 && this.roundsP2 < 2;
       const mp2 = this.roundsP2 === 1 && this.roundsP1 < 2;
       const dotY = (this.roundTimer < 12 && this.phase === 'fight') ? timerY + 48 : timerY + 34;
+      const log = this.vsRoundLog || [];
+      if (log.length) {
+        c.font = '700 9px sans-serif';
+        c.textAlign = 'center';
+        const chips = log.map((w, i) => `R${i + 1}:${w === 'p1' ? 'P1' : 'P2'}`).join(' · ');
+        c.fillStyle = 'rgba(255,255,255,.55)';
+        c.fillText(chips, W / 2, dotY - 12);
+      }
       for (let i = 0; i < 2; i++) {
         const litP1 = i < this.roundsP1;
         c.fillStyle = litP1 ? '#7cf5ff' : 'rgba(255,255,255,.22)';
@@ -9711,11 +9836,11 @@ class Game {
       }
       if (p.invulnT > 0.05) {
         c.font = '700 9px sans-serif'; c.fillStyle = 'rgba(124,245,255,.75)'; c.textAlign = 'left';
-        c.fillText('spawn', bx, byVs + 52);
+        c.fillText(`${p.invulnT.toFixed(1)}s`, bx, byVs + 52);
       }
       if (p2.invulnT > 0.05) {
         c.font = '700 9px sans-serif'; c.fillStyle = 'rgba(255,176,184,.75)'; c.textAlign = 'right';
-        c.fillText('spawn', W - 20, byVs + 52);
+        c.fillText(`${p2.invulnT.toFixed(1)}s`, W - 20, byVs + 52);
       }
       if (p.energy >= 100) {
         const k1 = fighterJutsuKind(p);
@@ -9859,10 +9984,8 @@ function pickVsRosterId(id) {
     if (UI.charPickStep === 1) {
       vsSelect.p1 = id;
       UI.charPickStep = 2;
-      try { UI.toast('P1: ' + r.name + ' — kies nu P2', 2200); } catch (_) {}
     } else {
       vsSelect.p2 = id;
-      try { UI.toast('P2: ' + r.name + ' — tik VECHT!', 2000); } catch (_) {}
     }
     UI.renderCharSelect();
   } catch (err) {
@@ -9917,6 +10040,20 @@ function initCharSelectChrome() {
         UI.renderCharSelect();
       });
     });
+  }
+  const sortBtn = document.getElementById('btnCharSort');
+  if (sortBtn && !sortBtn.dataset.sfSortBound) {
+    sortBtn.dataset.sfSortBound = '1';
+    const sortLabels = { name: 'naam', hp: 'HP', spd: 'SPD', dmg: 'DMG' };
+    const cycleSort = () => {
+      const order = ['name', 'hp', 'spd', 'dmg'];
+      const i = order.indexOf(UI.charSortMode || 'name');
+      UI.charSortMode = order[(i + 1) % order.length];
+      sortBtn.textContent = 'Sort: ' + (sortLabels[UI.charSortMode] || 'naam');
+      UI.renderCharSelect();
+    };
+    bindPress(sortBtn, () => { AudioSys.sfx('select'); cycleSort(); });
+    sortBtn.textContent = 'Sort: ' + (sortLabels[UI.charSortMode || 'name'] || 'naam');
   }
   const fightBtn = document.getElementById('btnCharFight');
   bindPress(fightBtn, () => {
@@ -10032,11 +10169,16 @@ function hubTileStatLine(hub) {
   }
 }
 
+function volPct(v, d) {
+  return Math.round((Number(v ?? d)) * 100);
+}
+
 const UI = {
   screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
+  charSortMode: 'name',
   charPreviewHoverId: null,
   dexRarityFilter: 'all',
   achFilter: 'all',
@@ -10044,10 +10186,46 @@ const UI = {
   lastResult: null,
   pauseSubDefault: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
 
+  activeScreen() {
+    return this.screens.find(sid => document.getElementById(sid)?.classList.contains('active')) || null;
+  },
+
+  BACK_LABELS: {
+    modeHubScreen: '\u2190 Menu',
+    levelScreen: '\u2190 Menu',
+    gambleScreen: '\u2190 Levels',
+    weaponScreen: '\u2190 Collectie',
+    styleScreen: '\u2190 Collectie',
+    dexScreen: '\u2190 Collectie',
+    charSelectScreen: '\u2190 Menu',
+    missionsScreen: '\u2190 Menu',
+    settingsScreen: '\u2190 Menu',
+    helpScreen: '\u2190 Menu',
+    installScreen: '\u2190 Menu',
+  },
+
+  syncBackLabels() {
+    const active = this.activeScreen();
+    if (!active || active === 'charSelectScreen') return;
+    const el = document.getElementById(active);
+    if (!el) return;
+    const back = el.querySelector('.back-btn[data-back], .back-btn[data-back-gamble], #installBack');
+    if (!back) return;
+    const label = this.BACK_LABELS[active];
+    if (label) back.textContent = label;
+  },
+
   resetInnerScrolls(screenEl) {
     if (!screenEl) return;
-    const scrollables = screenEl.querySelectorAll('.char-grid-scroll, [data-scroll-reset]');
-    scrollables.forEach((el) => { try { el.scrollTop = 0; } catch (_) {} });
+    const scrollables = screenEl.querySelectorAll(
+      '.char-grid-scroll, .menu-landing-scroll, .mode-hub-body, .island-bar, .grid, #weaponList, [data-scroll-reset]'
+    );
+    scrollables.forEach((el) => {
+      try {
+        el.scrollTop = 0;
+        el.scrollLeft = 0;
+      } catch (_) {}
+    });
   },
 
   refreshPauseSubtitle() {
@@ -10060,7 +10238,10 @@ const UI = {
     if (game?.mode === 'versus' && game.p2) {
       const a = vsRosterEntry(game.p1Pick).name;
       const b = vsRosterEntry(game.p2Pick).name;
-      sub.textContent = `2P ${game.roundsP1}-${game.roundsP2} · ronde ${game.round} · ${a} vs ${b}`;
+      let tag = '';
+      if (game.roundsP1 === 1 && game.roundsP2 === 1) tag = ' · beslissende ronde';
+      else if (game.roundsP1 === 1 || game.roundsP2 === 1) tag = ' · match point';
+      sub.textContent = `2P ${game.roundsP1}-${game.roundsP2} · ronde ${game.round} · ${a} vs ${b}${tag}`;
     } else {
       sub.textContent = this.pauseSubDefault;
     }
@@ -10080,6 +10261,7 @@ const UI = {
             try {
               el.scrollTop = 0;
               this.resetInnerScrolls(el);
+              this.syncBackLabels();
             } catch (_) {}
           });
         }
@@ -10169,6 +10351,12 @@ const UI = {
       if (active === 'charSelectScreen' && this.charPickStep === 2) {
         this.charPickStep = 1;
         this.renderCharSelect();
+        requestAnimationFrame(() => {
+          try {
+            this.resetInnerScrolls(document.getElementById('charSelectScreen'));
+            this.syncBackLabels();
+          } catch (_) {}
+        });
         return;
       }
       if (active === 'pauseScreen' && game) {
@@ -10182,7 +10370,11 @@ const UI = {
         this.show('levelScreen');
         return;
       }
-      if (active === 'modeHubScreen' || active === 'levelScreen') {
+      if (active === 'modeHubScreen') {
+        this.show('menuScreen');
+        return;
+      }
+      if (active === 'levelScreen') {
         this.show('menuScreen');
         return;
       }
@@ -10239,6 +10431,9 @@ const UI = {
       this.syncTouchClass();
       this.renderMenu();
       this.show('menuScreen');
+      requestAnimationFrame(() => {
+        try { this.resetInnerScrolls(document.getElementById('menuScreen')); } catch (_) {}
+      });
       AudioSys.setPaused(false);
       playMenuBgm(true);
       scheduleResize();
@@ -10303,9 +10498,10 @@ const UI = {
     if (statEl) updateCharStatPreview();
     this.renderCharIconRow();
     grid.innerHTML = '';
-    const roster = filter === 'all'
+    const rosterBase = filter === 'all'
       ? VS_ROSTER
       : VS_ROSTER.filter(r => (r.saga || 'scroll') === filter);
+    const roster = sortVsRoster(rosterBase, UI.charSortMode || 'name');
     if (!roster.length) {
       const empty = document.createElement('div');
       empty.className = 'char-grid-empty';
@@ -10379,6 +10575,9 @@ const UI = {
           AudioSys.sfx('select');
           this.charPickStep = 1;
           this.renderCharSelect();
+          requestAnimationFrame(() => {
+            try { this.resetInnerScrolls(document.getElementById('charSelectScreen')); } catch (_) {}
+          });
         });
       }
     }
@@ -10444,7 +10643,6 @@ const UI = {
     for (const id of SAGA_ICON_IDS) {
       const r = vsRosterEntry(id);
       const ok = vsUnlocked(r);
-      const saga = vsSagaMeta(r.saga || 'scroll');
       const chip = document.createElement('button');
       chip.type = 'button';
       chip.className = 'char-icon-chip' + (ok ? '' : ' locked') +
@@ -10555,10 +10753,14 @@ const UI = {
     const tipEl = document.getElementById('menuTipLine');
     let hintLine = dailyLine;
     if (tipEl) {
+      const prog = onboardingProgress();
       const next = nextUntriedMode();
       if (next) {
-        tipEl.textContent = `Nog niet gespeeld: ${next.label}`;
-        hintLine = `Nog niet gespeeld: ${next.label}`;
+        tipEl.textContent = `Eerste minuut ${prog.seen}/${prog.total} · probeer: ${next.label}`;
+        hintLine = tipEl.textContent;
+      } else if (prog.seen < prog.total) {
+        tipEl.textContent = `Eerste minuut ${prog.seen}/${prog.total} modi — één hint per modus bovenin`;
+        hintLine = tipEl.textContent;
       } else {
         const tips = [
           'Kies een tegel — Avontuur · Arcade · 2P · Collectie',
@@ -10623,9 +10825,9 @@ const UI = {
       if (pct > nextUpPct) { nextUpPct = pct; nextUpId = t.id; }
     }
     const sub = document.getElementById('missionsSub');
+    const step = dailyFlowStep();
     if (sub) {
       const streak = dailyStreakLine();
-      const step = dailyFlowStep();
       if (step === 0) {
         sub.textContent = streak
           ? `Dag voltooid · ${streak} — morgen 3 nieuwe lichte missies (middernacht)`
@@ -10642,7 +10844,7 @@ const UI = {
     }
     const flowHost = document.getElementById('missionsFlowBar');
     if (flowHost) {
-      flowHost.innerHTML = dailyFlowBarHtml(dailyFlowStep());
+      flowHost.innerHTML = dailyFlowBarHtml(step);
     }
     const sum = document.getElementById('missionsSummary');
     if (sum) {
@@ -10901,9 +11103,6 @@ const UI = {
     const pct = Math.round(prog.cleared / prog.total * 100);
     if (info) {
       const mb = save.advMasterBuff;
-      const mbLine = mb && mb >= range.start && mb <= range.end
-        ? `<span class="island-info-chip master">Meester-buff Lv ${mb} · +20%</span>`
-        : '';
       info.innerHTML =
         `<div class="island-info-head">` +
         `<span class="island-info-ico">${islMeta.icon}</span>` +
@@ -10913,7 +11112,17 @@ const UI = {
         (pick < 5 ? ` · baas Lv ${pick * LEVELS_PER_ISLAND} → volgend eiland` : '') +
         `</div></div></div>` +
         `<div class="island-prog-track island-info-prog"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
-        (mbLine ? `<div class="island-info-chips">${mbLine}</div>` : '');
+        (() => {
+          const onboard = adventureIslandHintLine();
+          const mbLine = mb && mb >= range.start && mb <= range.end
+            ? `<span class="island-info-chip master">Meester-buff Lv ${mb} · +20%</span>`
+            : '';
+          const chips = [
+            onboard ? `<span class="island-info-chip onboard">${onboard}</span>` : '',
+            mbLine,
+          ].filter(Boolean).join('');
+          return chips ? `<div class="island-info-chips">${chips}</div>` : '';
+        })();
     }
     grid.innerHTML = '';
     for (let n = range.start; n <= range.end; n++) {
@@ -10927,9 +11136,14 @@ const UI = {
         (!locked && n === save.unlocked ? ' lvl-current' : '') +
         (save.advMasterBuff === n ? ' master-buff' : '');
       el.style.boxShadow = locked ? 'none' : `0 5px 0 rgba(0,0,0,.35), 0 0 0 2px ${rar.color}55`;
+      const waveStrip = infoLv.waves.map((_, wi) => {
+        const isBossPip = boss && wi === infoLv.waves.length - 1;
+        return `<i class="lvl-wave-dot${isBossPip ? ' boss' : ''}"></i>`;
+      }).join('');
       el.innerHTML = locked
         ? SVG_LOCK_ICON
         : `${n}${boss ? '<small>BAAS</small>' : `<small style="color:${rar.color}">${rar.name}</small>`}` +
+          `<span class="lvl-wave-strip" aria-hidden="true">${waveStrip}</span>` +
           (save.stars[n] ? `<span class="lvl-stars">${'★'.repeat(save.stars[n])}</span>` : '') +
           (fails > 0 && !locked ? `<span class="lvl-fails">${fails}/5</span>` : '') +
           (save.advMasterBuff === n ? '<span class="lvl-master">+20%</span>' : '');
@@ -10947,6 +11161,7 @@ const UI = {
           holdSkip = false;
           holdT = setTimeout(() => {
             holdT = null;
+            if (!uiTapAllowed()) return;
             holdSkip = true;
             safeUiAction(() => {
               AudioSys.sfx('select');
@@ -10962,6 +11177,7 @@ const UI = {
         el.addEventListener('pointercancel', cancelHold);
         el.addEventListener('click', () => {
           if (holdSkip) { holdSkip = false; return; }
+          if (!uiTapAllowed()) return;
           safeUiAction(() => gokGooiStartLevel(n), 'gokStart/' + n, 'Level starten mislukt');
         });
       }
@@ -11065,14 +11281,17 @@ const UI = {
           ? `Avontuur Lv ${base.unlock}`
           : (save.weapon === w.id ? '&#10004; gekozen' : 'kies'));
       el.appendChild(right);
-      if (!locked) el.addEventListener('click', () => safeUiAction(() => {
-        save.weapon = w.id;
-        if (!persistOrToast('wapen')) return;
-        AudioSys.sfx('select');
-        try { AudioSys.sfx(weaponSwingSfx(w.id)); } catch (_) {}
-        if (islandLocked) UI.toast(`Klaar voor training — in avontuur max Lv ${adventureWeaponCap()}`, 2800);
-        this.renderWeapons();
-      }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt'));
+      if (!locked) el.addEventListener('click', () => {
+        if (!uiTapAllowed()) return;
+        safeUiAction(() => {
+          save.weapon = w.id;
+          if (!persistOrToast('wapen')) return;
+          AudioSys.sfx('select');
+          try { AudioSys.sfx(weaponSwingSfx(w.id)); } catch (_) {}
+          if (islandLocked) UI.toast(`Klaar voor training — in avontuur max Lv ${adventureWeaponCap()}`, 2800);
+          this.renderWeapons();
+        }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt');
+      });
       list.appendChild(el);
     }
   },
@@ -11238,14 +11457,17 @@ const UI = {
         : (styleSkillGated(st) ? `Eiland-skill Lv ${st.needLvl}` : st.hint);
       el.appendChild(sub);
       if (ok) {
-        el.addEventListener('click', () => safeUiAction(() => {
-          save.style = st.id;
-          if (!persistOrToast('stijl')) return;
-          AudioSys.sfx('select');
-          this.renderStyle();
-          this.renderMenu();
-          UI.toast(`${st.name} uitgerust`, 2200);
-        }, 'pickStyle/' + st.id, 'Stijl kiezen mislukt'));
+        el.addEventListener('click', () => {
+          if (!uiTapAllowed()) return;
+          safeUiAction(() => {
+            save.style = st.id;
+            if (!persistOrToast('stijl')) return;
+            AudioSys.sfx('select');
+            this.renderStyle();
+            this.renderMenu();
+            UI.toast(`${st.name} uitgerust`, 2200);
+          }, 'pickStyle/' + st.id, 'Stijl kiezen mislukt');
+        });
       }
       grid.appendChild(el);
     }
@@ -11310,14 +11532,13 @@ const UI = {
       exportHint.textContent = `Export bevat: ${saveExportSummaryLine()} · key ${SAVE_KEY}`;
     }
     bindSavePortPreview();
-    const pct = (v, d) => Math.round((Number(v ?? d)) * 100);
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
-    setVal('setMusicVol', pct(save.musicVol, 0.85));
-    setVal('setSfxVol', pct(save.sfxVol, 1));
+    setVal('setMusicVol', volPct(save.musicVol, 0.85));
+    setVal('setSfxVol', volPct(save.sfxVol, 1));
     const lblM = document.getElementById('setMusicVolLbl');
     const lblS = document.getElementById('setSfxVolLbl');
-    if (lblM) lblM.textContent = pct(save.musicVol, 0.85) + '%';
-    if (lblS) lblS.textContent = pct(save.sfxVol, 1) + '%';
+    if (lblM) lblM.textContent = volPct(save.musicVol, 0.85) + '%';
+    if (lblS) lblS.textContent = volPct(save.sfxVol, 1) + '%';
     ['setShake', 'setHaptics', 'setComboHud', 'setBigTouch', 'setReducedMotion', 'setLiteFx', 'setHighContrast'].forEach((id, i) => {
       const el = document.getElementById(id);
       if (!el) return;
@@ -11348,13 +11569,12 @@ const UI = {
   renderPauseToggles() {
     document.getElementById('pauseTogMusic')?.classList.toggle('off', !save.music);
     document.getElementById('pauseTogSfx')?.classList.toggle('off', !save.sfx);
-    const pct = (v, d) => Math.round((Number(v ?? d)) * 100);
     const pm = document.getElementById('pauseMusicVol');
     const ps = document.getElementById('pauseSfxVol');
     const pmL = document.getElementById('pauseMusicVolLbl');
     const psL = document.getElementById('pauseSfxVolLbl');
-    const mPct = pct(save.musicVol, 0.85);
-    const sPct = pct(save.sfxVol, 1);
+    const mPct = volPct(save.musicVol, 0.85);
+    const sPct = volPct(save.sfxVol, 1);
     if (pm && document.activeElement !== pm) pm.value = String(mPct);
     if (ps && document.activeElement !== ps) ps.value = String(sPct);
     if (pmL) pmL.textContent = mPct + '%';
@@ -11576,6 +11796,7 @@ bindPress(btnMissions, () => {
     save.missionsIntroSeen = true;
     persist();
     setTimeout(() => UI.toast('Missies: Speel → claim XP → dagbonus — licht, geen grind', 4000), 280);
+    return;
   }
   const n = claimableDailyTasks().length;
   if (n > 0) {
@@ -11704,7 +11925,8 @@ function bindSettingsControls() {
       persist();
       UI.renderSettings();
       UI.syncTouchClass();
-      Input.layout(W, H);
+      relayoutTouchPads();
+      if (key === 'bigTouch') scheduleResize();
       AudioSys.sfx('select');
       haptic(8);
     });
@@ -12182,6 +12404,14 @@ function isStandalonePwa() {
   }
 }
 
+function swCacheHint() {
+  try {
+    const c = sessionStorage.getItem('sf_sw_cache');
+    if (c) return ' · ' + c.replace('stickfighter-app-v', 'SW v');
+  } catch (_) {}
+  return typeof SW_CACHE_REV !== 'undefined' ? ' · SW v' + SW_CACHE_REV : '';
+}
+
 function updateNetStatus(ev) {
   const el = document.getElementById('netStatus');
   if (!el) return;
@@ -12221,7 +12451,7 @@ function updateNetStatus(ev) {
         : 'Offline — uit cache · «Zet in app-lade» = altijd spelen';
     } else {
       el.textContent = swReady
-        ? 'Offline — menu & save uit cache op dit apparaat'
+        ? 'Offline — menu & save uit cache' + swCacheHint()
         : 'Offline — open 1× online voor volledige PWA-cache';
     }
     if (ev && ev.type === 'offline') {
@@ -12266,7 +12496,7 @@ function updateNetStatus(ev) {
         el2.classList.remove('sw-pending', 'sw-update');
         el2.classList.add('offline-ready');
         const ver = typeof APP_VERSION !== 'undefined' ? APP_VERSION : '';
-        el2.textContent = ver ? `Offline-klaar · v${ver} in cache` : 'Offline-klaar — app opgeslagen';
+        el2.textContent = ver ? `Offline-klaar · v${ver} in cache${swCacheHint()}` : 'Offline-klaar — app opgeslagen';
         setTimeout(() => {
           if (!window.__sfSwUpdateReady && navigator.onLine && el2.classList.contains('offline-ready')) {
             el2.hidden = true;
@@ -12283,6 +12513,12 @@ function updateNetStatus(ev) {
 }
 window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
+window.addEventListener('pageshow', (ev) => {
+  if (ev.persisted) updateNetStatus();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') updateNetStatus();
+});
 window.updateNetStatus = updateNetStatus;
 
 function wireNetStatusTap() {
