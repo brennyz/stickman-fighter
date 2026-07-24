@@ -42,6 +42,7 @@ function makeEl(id) {
     querySelectorAll() { return []; },
     getBoundingClientRect() { return { left: 0, top: 0, width: 100, height: 40 }; },
     setAttribute() {},
+    removeAttribute() {},
     getAttribute() { return null; },
     getContext() {
       return new Proxy({}, {

@@ -3,24 +3,19 @@
   "cyclesCompleted": 2,
   "rollFirst": [],
   "remaining": [
-    1,
     2,
     3,
-    5,
-    8,
-    9,
     11,
     12,
     13,
-    15,
     17,
     18
   ],
   "lastRoll": {
-    "face": 19,
-    "category": "Muur & minigames \u2014 combo, timer, record",
-    "rolledAt": "2026-07-23T21:26:27Z",
-    "remainingCount": 12,
+    "face": 15,
+    "category": "Onboarding \u2014 tips, eerste speelminuut, help",
+    "rolledAt": "2026-07-24T08:36:37Z",
+    "remainingCount": 7,
     "cycle": 2
   },
   "pending": null,
@@ -297,9 +292,57 @@
       "version": "1.14.8",
       "doneAt": "2026-07-23T21:27:27Z",
       "cycle": 2
+    },
+    {
+      "face": 5,
+      "note": "Adaptieve perf tier + resize coalesce + scenery caps + hidden pause",
+      "version": "1.15.6",
+      "doneAt": "2026-07-24T08:28:14Z",
+      "cycle": 2
+    },
+    {
+      "face": 9,
+      "note": "Closest hit, pointer lock, joy guard, portrait grid",
+      "version": "1.15.7",
+      "doneAt": "2026-07-24T08:30:10Z",
+      "cycle": 2
+    },
+    {
+      "face": 8,
+      "note": "SW update banner, offline-ready strip, soft applySwUpdate",
+      "version": "1.15.9",
+      "doneAt": "2026-07-24T08:34:20Z",
+      "cycle": 2
+    },
+    {
+      "face": 1,
+      "note": "Kb scale, player hurt stop, block ring, combo chain bonus",
+      "version": "1.16.0",
+      "doneAt": "2026-07-24T08:36:05Z",
+      "cycle": 2
+    },
+    {
+      "face": 15,
+      "note": "Single toast, hint pill, untried modes, gamble once",
+      "version": "1.16.1",
+      "doneAt": "2026-07-24T08:38:05Z",
+      "cycle": 2
     }
   ],
   "userFeatureLog": [
+    {
+      "id": "weapon-3-move-styles",
+      "d20Face": null,
+      "userWords": "De wapen styles mogen bestaan uit 3 verschillende movements aub; Harden de styles",
+      "versions": [
+        "1.16.2",
+        "1.16.3"
+      ],
+      "commits": [],
+      "code": "WEAPON_MOVE_FAMILIES (8×3 moves), weaponMoveFamily/Def/Pose, combo chain ~1.38s primed advance, resetWeaponCombo on hurt/death/dash/subst/special, drawWeaponStylePips, sanitizeWeaponSpec clamps",
+      "status": "done",
+      "note": "off-d20 user feature; shuriken/fuuma throw-only; hardened primed chain + safe resets"
+    },
     {
       "id": "movement-aim-polish",
       "d20Face": null,
@@ -311,6 +354,18 @@
       "code": "fighterAimNorm: verticale mik los van horizontale loop; JOY_AIM_DEAD_PX; drawJoyAimGuide + drawPlayerAimIndicator (kleur HOOG/MIDDEN/LAAG); snappere vx-accel + recovery-slide + face-flip; volledige joy-dy weergave",
       "status": "done",
       "note": "off-d20 user feedback; mik blijft duidelijk tijdens lopen; aim-lijn + kruis altijd zichtbaar op speler"
+    },
+    {
+      "id": "adventure-polish-wave-traits",
+      "d20Face": null,
+      "userWords": "Verbeter adventure verder",
+      "versions": [
+        "1.15.8"
+      ],
+      "commits": [],
+      "code": "waveMeta traits (flyers/rush/elite), worldX parallax travel, wave-clear +6% HP +8 chakra, stageAlly assist dmg, drawNextWavePreview HUD, combo milestones, smarter lose tips",
+      "status": "done",
+      "note": "off-d20 user request; avontuur voelt rijker tussen golven"
     },
     {
       "id": "touch-btn-overlap-fix",
@@ -851,6 +906,41 @@
       "category": "Muur & minigames \u2014 combo, timer, record",
       "rolledAt": "2026-07-23T21:26:27Z",
       "remainingCount": 12,
+      "cycle": 2
+    },
+    {
+      "face": 5,
+      "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
+      "rolledAt": "2026-07-24T08:27:00Z",
+      "remainingCount": 11,
+      "cycle": 2
+    },
+    {
+      "face": 9,
+      "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
+      "rolledAt": "2026-07-24T08:28:32Z",
+      "remainingCount": 10,
+      "cycle": 2
+    },
+    {
+      "face": 8,
+      "category": "PWA & offline \u2014 SW cache, install, standalone",
+      "rolledAt": "2026-07-24T08:32:58Z",
+      "remainingCount": 9,
+      "cycle": 2
+    },
+    {
+      "face": 1,
+      "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
+      "rolledAt": "2026-07-24T08:34:56Z",
+      "remainingCount": 8,
+      "cycle": 2
+    },
+    {
+      "face": 15,
+      "category": "Onboarding \u2014 tips, eerste speelminuut, help",
+      "rolledAt": "2026-07-24T08:36:37Z",
+      "remainingCount": 7,
       "cycle": 2
     }
   ]
