@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.15.9';
+const APP_VERSION = '1.16.0';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 116;
+const SW_CACHE_REV = 117;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -2061,11 +2061,30 @@ function starsFromHpPct(hpPct) {
 function starHintLine() {
   return `3★ >${Math.round(STAR_HP.three * 100)}% HP · 2★ >${Math.round(STAR_HP.two * 100)}% · 1★ = win`;
 }
+function scaleKnockback(kb, dmg, opts) {
+  opts = opts || {};
+  let mul = 1;
+  if (dmg >= 22) mul += 0.22;
+  else if (dmg >= 18) mul += 0.14;
+  else if (dmg >= 12) mul += 0.06;
+  if (opts.crit) mul += 0.1;
+  if (opts.kind === 'kick') mul += 0.08;
+  if (opts.kind === 'special') mul += 0.12;
+  return kb * Math.min(mul, 1.38);
+}
 function applyHitStop(game, spec, opts) {
   if (!game || motionReduced()) return;
   opts = opts || {};
   if (opts.chip) {
     game.freezeT = Math.max(game.freezeT, 0.018);
+    return;
+  }
+  if (opts.playerHurt) {
+    const dmg = spec && spec.dmg != null ? spec.dmg : 8;
+    let base = dmg >= 18 ? 0.04 : 0.026;
+    if (opts.heavy) base += 0.006;
+    if (game.mode === 'versus') base += 0.004;
+    game.freezeT = Math.max(game.freezeT, Math.min(base, 0.048));
     return;
   }
   const kind = spec && spec.kind ? spec.kind : 'punch';
@@ -4221,7 +4240,11 @@ class Fighter {
       dmg = Math.max(1, Math.round(dmg * 0.15));
       AudioSys.sfx('block');
       game.floater(this.x, this.y - 115, 'BLOK!', '#9fd8ff', 14);
-      if (game) applyHitStop(game, { kind: 'punch' }, { chip: true });
+      if (game) {
+        applyHitStop(game, { kind: 'punch' }, { chip: true });
+        spawnFxRing(game, this.x, this.y - 42, '#9fd8ff', fxLite() ? 6 : 10);
+      }
+      if (save.haptics !== false) haptic(4);
       this.hp -= dmg;
       return dmg;
     }
@@ -4234,9 +4257,13 @@ class Fighter {
     this.hurtT = dmg >= 18 ? 0.28 : 0.24;
     this.hitFlashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.18 : 0.14);
     this.attack = null;
-    this.vx = kbx;
+    const kbScaled = scaleKnockback(kbx, dmg, { heavy: dmg >= 18 });
+    this.vx = kbScaled;
     this.vy = Math.min(this.vy, -120);
-    if (this.isPlayer || this.playerSlot) this.invulnT = Math.max(this.invulnT, 0.22);
+    if (this.isPlayer || this.playerSlot) {
+      this.invulnT = Math.max(this.invulnT, dmg >= 18 ? 0.26 : 0.22);
+      if (game) applyHitStop(game, { kind: 'punch', dmg }, { playerHurt: true, heavy: dmg >= 18 });
+    }
     if (this.isPlayer) this.energy = clamp(this.energy + 4, 0, 100);
     AudioSys.sfx(this.isPlayer ? 'hurt' : 'hit');
     if (this.isPlayer && game) {
@@ -4678,13 +4705,17 @@ class Monster {
       const rr = (this.size + p.bodyR) * 0.9;
       if ((p.x - this.x) ** 2 + (p.bodyY - this.y) ** 2 < rr * rr) {
         const d = this.dashT > 0 ? this.dmg * 1.3 : this.dmg;
-        if (p.takeDamage(d, dir * 300, game) > 0) game.shake(4, 0.15);
+        if (p.takeDamage(d, dir * 300, game) > 0) {
+          game.shake(4, 0.15);
+          applyHitStop(game, { kind: 'punch', dmg: d }, { playerHurt: true, heavy: d >= 18 });
+        }
         this.atkCD = Math.max(this.atkCD, 1.0);
       }
     }
   }
 
-  takeDamage(dmg, kbx, game) {
+  takeDamage(dmg, kbx, game, opts) {
+    opts = opts || {};
     if (!this.alive) return;
     if (this.elite && !this.enraged && this.hp - dmg <= this.maxhp * 0.5) {
       this.enraged = true;
@@ -4696,10 +4727,12 @@ class Monster {
       haptic(28);
     }
     this.hp -= dmg;
-    this.flashT = motionReduced() ? 0 : 0.1;
-    this.x += Math.sign(kbx) * 8;
+    this.flashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.14 : opts.crit ? 0.12 : 0.1);
+    const kb = scaleKnockback(kbx, dmg, { crit: opts.crit, kind: opts.kind });
+    this.x += Math.sign(kb || 1) * clamp(Math.abs(kb) * 0.038, 5, 26);
     game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
-    game.burst(this.x, this.y, this.sp.c1, 6);
+    game.burst(this.x, this.y, this.sp.c1, dmg >= 18 ? 9 : 6);
+    if (opts.crit) spawnFxRing(game, this.x, this.y - this.size * 0.4, '#ffd75e', fxLite() ? 5 : 8);
     if (this.hp <= 0) {
       this.hp = 0; this.deadT = 0;
       AudioSys.sfx('die');
@@ -6537,7 +6570,9 @@ class Game {
         let comboMul = 1;
         if (this.mode === 'adventure' && f.isPlayer) {
           this.combo = Math.min(12, this.combo + 1);
-          this.comboT = 1.62;
+          const chainBonus = (f._chainKind === spec.kind && this.combo >= 2) ? 0.18 : 0;
+          f._chainKind = spec.kind;
+          this.comboT = 1.62 + chainBonus;
           this.noteCombo();
           comboMul = 1 + Math.min(this.combo, 8) * 0.07;
           trackCombo(this.combo);
@@ -6549,8 +6584,9 @@ class Game {
         const buff = f.isPlayer ? (this.dmgBuffMul || 1) * (this.stageDmgMul || 1) : 1;
         const hitRoll = rollHitDamage(f, spec, comboMul * buff);
         if (hitRoll.crit) applyCritFx(this, m.x, m.y);
-        m.takeDamage(hitRoll.dmg, f.face * spec.kb, this);
-        applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo });
+        const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
+        m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
+        applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         if (spec.dmg >= 18) this.shake(3, 0.11);
         this.player.energy = clamp(this.player.energy + 8, 0, 100);
         hit = true;
@@ -6569,13 +6605,14 @@ class Game {
       if (!tgt.alive) continue;
       if ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2) {
         const hitRoll = rollHitDamage(f, spec, 1);
-        const dmg = tgt.takeDamage(hitRoll.dmg, f.face * spec.kb, this);
+        const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
+        const dmg = tgt.takeDamage(hitRoll.dmg, kbHit, this);
         if (hitRoll.crit) applyCritFx(this, tgt.x, tgt.y);
         const col = tgt.playerSlot === 2 ? '#ffb0b8' : (tgt.isPlayer ? '#ff8080' : '#ffe680');
         this.floater(tgt.x, tgt.y - 115, '-' + dmg, col, 16);
         this.burst(tgt.bodyX, tgt.bodyY, col, 7);
         f.energy = clamp(f.energy + 9, 0, 100);
-        applyHitStop(this, spec, { crit: hitRoll.crit, heavy: hitRoll.dmg >= 18 });
+        applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         this.shake(spec.dmg > 20 ? 4 : 3, 0.12);
         if ((f.isPlayer || f.playerSlot) && save.haptics !== false) haptic(5);
         hit = true;
@@ -6638,7 +6675,7 @@ class Game {
           const hit = resolveProjHit(p);
           pl.takeDamage(hit.dmg, Math.sign(p.vx) * 260, this);
           applyHitStop(this, { kind: p.kind === 'chidori' ? 'special' : 'punch', dmg: hit.dmg },
-            { crit: hit.crit, heavy: hit.dmg >= 18 });
+            { crit: hit.crit, heavy: hit.dmg >= 18, playerHurt: true });
           this.floater(pl.x, pl.y - 115, '-' + hit.dmg, '#ff8080', 16);
           if (hit.crit) applyCritFx(this, pl.x, pl.y);
           if (p.kind === 'chidori') this.burst(p.x, p.y, '#a8e0ff', 16);

@@ -3,7 +3,6 @@
   "cyclesCompleted": 2,
   "rollFirst": [],
   "remaining": [
-    1,
     2,
     3,
     11,
@@ -14,10 +13,10 @@
     18
   ],
   "lastRoll": {
-    "face": 8,
-    "category": "PWA & offline \u2014 SW cache, install, standalone",
-    "rolledAt": "2026-07-24T08:32:58Z",
-    "remainingCount": 9,
+    "face": 1,
+    "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
+    "rolledAt": "2026-07-24T08:34:56Z",
+    "remainingCount": 8,
     "cycle": 2
   },
   "pending": null,
@@ -314,6 +313,13 @@
       "note": "SW update banner, offline-ready strip, soft applySwUpdate",
       "version": "1.15.9",
       "doneAt": "2026-07-24T08:34:20Z",
+      "cycle": 2
+    },
+    {
+      "face": 1,
+      "note": "Kb scale, player hurt stop, block ring, combo chain bonus",
+      "version": "1.16.0",
+      "doneAt": "2026-07-24T08:36:05Z",
       "cycle": 2
     }
   ],
@@ -890,6 +896,13 @@
       "category": "PWA & offline \u2014 SW cache, install, standalone",
       "rolledAt": "2026-07-24T08:32:58Z",
       "remainingCount": 9,
+      "cycle": 2
+    },
+    {
+      "face": 1,
+      "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
+      "rolledAt": "2026-07-24T08:34:56Z",
+      "remainingCount": 8,
       "cycle": 2
     }
   ]
