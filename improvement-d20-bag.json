@@ -30,13 +30,7 @@
     "remainingCount": 19,
     "cycle": 4
   },
-  "pending": {
-    "face": 8,
-    "category": "PWA & offline \u2014 SW cache, install, standalone",
-    "rolledAt": "2026-07-24T20:46:36Z",
-    "remainingCount": 19,
-    "cycle": 4
-  },
+  "pending": null,
   "implemented": [
     {
       "face": 2,
@@ -534,6 +528,13 @@
       "version": "1.17.42",
       "doneAt": "2026-07-24T19:48:08Z",
       "cycle": 3
+    },
+    {
+      "face": 8,
+      "note": "SW shell check LIVE-LINK precache pause hint",
+      "version": "1.17.46",
+      "doneAt": "2026-07-24T20:47:07Z",
+      "cycle": 4
     }
   ],
   "userFeatureLog": [
