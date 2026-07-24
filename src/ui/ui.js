@@ -245,7 +245,10 @@ const UI = {
     if (game?.mode === 'versus' && game.p2) {
       const a = vsRosterEntry(game.p1Pick).name;
       const b = vsRosterEntry(game.p2Pick).name;
-      sub.textContent = `2P ${game.roundsP1}-${game.roundsP2} · ronde ${game.round} · ${a} vs ${b}`;
+      let tag = '';
+      if (game.roundsP1 === 1 && game.roundsP2 === 1) tag = ' · beslissende ronde';
+      else if (game.roundsP1 === 1 || game.roundsP2 === 1) tag = ' · match point';
+      sub.textContent = `2P ${game.roundsP1}-${game.roundsP2} · ronde ${game.round} · ${a} vs ${b}${tag}`;
     } else {
       sub.textContent = this.pauseSubDefault;
     }

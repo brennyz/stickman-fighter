@@ -3,7 +3,6 @@
   "cyclesCompleted": 3,
   "rollFirst": [],
   "remaining": [
-    3,
     4,
     6,
     8,
@@ -14,10 +13,10 @@
     20
   ],
   "lastRoll": {
-    "face": 11,
-    "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
-    "rolledAt": "2026-07-24T18:48:19Z",
-    "remainingCount": 9,
+    "face": 3,
+    "category": "Versus 2P \u2014 split controls, rematch, char balance",
+    "rolledAt": "2026-07-24T18:49:17Z",
+    "remainingCount": 8,
     "cycle": 3
   },
   "pending": null,
@@ -454,6 +453,13 @@
       "note": "back labels, scroll reset, big-touch hub tiles",
       "version": "1.17.29",
       "doneAt": "2026-07-24T18:48:53Z",
+      "cycle": 3
+    },
+    {
+      "face": 3,
+      "note": "beslissende ronde HUD, spawn timer, round-end countdown",
+      "version": "1.17.30",
+      "doneAt": "2026-07-24T18:49:56Z",
       "cycle": 3
     }
   ],
@@ -1506,6 +1512,13 @@
       "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
       "rolledAt": "2026-07-24T18:48:19Z",
       "remainingCount": 9,
+      "cycle": 3
+    },
+    {
+      "face": 3,
+      "category": "Versus 2P \u2014 split controls, rematch, char balance",
+      "rolledAt": "2026-07-24T18:49:17Z",
+      "remainingCount": 8,
       "cycle": 3
     }
   ],

@@ -757,8 +757,9 @@ class Game {
     this.phaseT = 0;
     this.inputLocked = true;
     const mp = this.roundsP1 === 1 || this.roundsP2 === 1;
-    const sub = mp ? ' · match point' : '';
-    this.banner(`RONDE ${this.round}${sub}`, 1.1, '#ffd75e', 52);
+    const decisive = this.roundsP1 === 1 && this.roundsP2 === 1;
+    let sub = decisive ? ' · beslissende ronde' : (mp ? ' · match point' : '');
+    this.banner(`RONDE ${this.round}${sub}`, 1.1, decisive ? '#ff9a9a' : '#ffd75e', 52);
     AudioSys.sfx('bell');
   }
 
@@ -2680,6 +2681,21 @@ class Game {
         c.font = '700 13px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.65)';
         c.fillText('Spawn · eerlijk start', W / 2, H * 0.4 + 28);
+      } else if (this.phase === 'roundend') {
+        const left = Math.max(0, 2.2 - this.phaseT);
+        c.font = '900 34px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.9)';
+        c.fillText(String(Math.ceil(left)), W / 2, H * 0.38);
+        c.font = '700 13px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.7)';
+        c.fillText('Volgende ronde', W / 2, H * 0.38 + 26);
+        const barW = Math.min(140, W * 0.24);
+        c.fillStyle = 'rgba(0,0,0,.35)';
+        this.rr(c, W / 2 - barW / 2, H * 0.38 + 34, barW, 5, 3);
+        c.fill();
+        c.fillStyle = '#7cf5ff';
+        this.rr(c, W / 2 - barW / 2, H * 0.38 + 34, barW * clamp(left / 2.2, 0, 1), 5, 3);
+        c.fill();
       }
       c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, bx - 4, byVs - 4, half + 8, 44, 10); c.fill();
       c.fillStyle = '#333c55'; this.rr(c, bx, byVs, half, 14, 6); c.fill();
@@ -2720,7 +2736,11 @@ class Game {
         c.fillText(String(tLeft), W / 2, timerY);
       }
       c.font = '800 12px sans-serif'; c.fillStyle = 'rgba(255,255,255,.75)';
-      c.fillText(`Ronde ${this.round} · eerst 2 wint · ${this.roundsP1}-${this.roundsP2}`, W / 2, timerY + 18);
+      const decisiveRound = this.roundsP1 === 1 && this.roundsP2 === 1;
+      const scoreLine = decisiveRound
+        ? `Beslissende ronde · ${this.roundsP1}-${this.roundsP2}`
+        : `Ronde ${this.round} · eerst 2 wint · ${this.roundsP1}-${this.roundsP2}`;
+      c.fillText(scoreLine, W / 2, timerY + 18);
       const timerBarW = Math.min(160, W * 0.28);
       const timerFrac = clamp(this.roundTimer / 99, 0, 1);
       c.fillStyle = 'rgba(0,0,0,.35)';
@@ -2737,6 +2757,14 @@ class Game {
       const mp1 = this.roundsP1 === 1 && this.roundsP2 < 2;
       const mp2 = this.roundsP2 === 1 && this.roundsP1 < 2;
       const dotY = (this.roundTimer < 12 && this.phase === 'fight') ? timerY + 48 : timerY + 34;
+      const log = this.vsRoundLog || [];
+      if (log.length) {
+        c.font = '700 9px sans-serif';
+        c.textAlign = 'center';
+        const chips = log.map((w, i) => `R${i + 1}:${w === 'p1' ? 'P1' : 'P2'}`).join(' · ');
+        c.fillStyle = 'rgba(255,255,255,.55)';
+        c.fillText(chips, W / 2, dotY - 12);
+      }
       for (let i = 0; i < 2; i++) {
         const litP1 = i < this.roundsP1;
         c.fillStyle = litP1 ? '#7cf5ff' : 'rgba(255,255,255,.22)';
@@ -2749,11 +2777,11 @@ class Game {
       }
       if (p.invulnT > 0.05) {
         c.font = '700 9px sans-serif'; c.fillStyle = 'rgba(124,245,255,.75)'; c.textAlign = 'left';
-        c.fillText('spawn', bx, byVs + 52);
+        c.fillText(`${p.invulnT.toFixed(1)}s`, bx, byVs + 52);
       }
       if (p2.invulnT > 0.05) {
         c.font = '700 9px sans-serif'; c.fillStyle = 'rgba(255,176,184,.75)'; c.textAlign = 'right';
-        c.fillText('spawn', W - 20, byVs + 52);
+        c.fillText(`${p2.invulnT.toFixed(1)}s`, W - 20, byVs + 52);
       }
       if (p.energy >= 100) {
         const k1 = fighterJutsuKind(p);
