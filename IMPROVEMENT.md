@@ -105,6 +105,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-24 | **18** | Char select (cyclus 2): stat-delta’s in preview, hover-preview op kaarten, matchup-hints, random duo met HP/dmg-samenvatting — geen dmg-tweak. v1.17.5 / SW v132. |
 | 2026-07-24 | **17** | Stabiliteit (cyclus 2): `safeAsync`, share/copy/resume/daily-claim toasts, save-reset melding, async reject + SW-update fail toast. v1.17.4 / SW v131. |
 | 2026-07-24 | **12** | Content (cyclus 2): monsterboek rariteit-filter, stijl-unlock voortgang (Kristallijn/Boekmeester/Jager), “verschijnt in avontuur” highlight. v1.17.3 / SW v130. |
 | 2026-07-24 | **11** | Menu-nav (cyclus 2): sticky Terug-knop op lange subschermen; **Terug naar menu** gaat altijd naar hoofdmenu (ook vanaf gok-scherm). v1.17.2 / SW v129. |

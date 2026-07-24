@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.4';
+const APP_VERSION = '1.17.5';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 131;
+const SW_CACHE_REV = 132;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1336,24 +1336,62 @@ function vsFighterStats(entry) {
   const critPct = Math.round((entry.crit != null ? entry.crit : 0.08) * 100);
   return { hp, spd, dmg, wpn: weaponById(entry.weapon).name, special, critPct };
 }
-function vsStatBar(label, pct, color) {
+function vsStatBar(label, pct, color, deltaHtml) {
   const p = Math.min(100, Math.max(6, pct));
-  return `<div class="vs-stat-col"><span class="vs-stat-l">${label}</span>` +
+  return `<div class="vs-stat-col"><span class="vs-stat-l">${label}${deltaHtml || ''}</span>` +
     `<span class="vs-stat-track"><i style="width:${p}%;background:${color}"></i></span></div>`;
 }
-function vsStatPreviewHtml(e1, e2) {
+function vsStatDeltaTag(mine, theirs, invert) {
+  const d = mine - theirs;
+  if (Math.abs(d) < 3) return '';
+  const better = invert ? d < 0 : d > 0;
+  const sign = d > 0 ? '+' : '';
+  return `<span class="vs-stat-delta${better ? ' up' : ' down'}">${sign}${d}</span>`;
+}
+function vsMatchupHint(s1, s2) {
+  const hints = [];
+  if (s1.spd >= s2.spd + 8) hints.push('P1 sneller');
+  else if (s2.spd >= s1.spd + 8) hints.push('P2 sneller');
+  if (s1.hp >= s2.hp + 8) hints.push('P1 tankier');
+  else if (s2.hp >= s1.hp + 8) hints.push('P2 tankier');
+  if (s1.dmg >= s2.dmg + 8) hints.push('P1 harder hits');
+  else if (s2.dmg >= s1.dmg + 8) hints.push('P2 harder hits');
+  if (s1.critPct >= s2.critPct + 3) hints.push('P1 meer crit');
+  else if (s2.critPct >= s1.critPct + 3) hints.push('P2 meer crit');
+  return hints.slice(0, 2).join(' · ');
+}
+function charStatPreviewPair() {
+  const e1 = vsRosterEntry(vsSelect.p1);
+  const e2 = vsRosterEntry(vsSelect.p2);
+  const hover = UI.charPreviewHoverId ? vsRosterEntry(UI.charPreviewHoverId) : null;
+  if (hover && UI.charPickStep === 1 && vsUnlocked(hover)) return [hover, e2, true];
+  if (hover && UI.charPickStep === 2 && vsUnlocked(hover)) return [e1, hover, true];
+  return [e1, e2, false];
+}
+function vsStatPreviewHtml(e1, e2, previewing) {
   const s1 = vsFighterStats(e1);
   const s2 = vsFighterStats(e2);
   const g1 = vsSagaMeta(e1.saga || 'scroll');
   const g2 = vsSagaMeta(e2.saga || 'scroll');
-  const col = (name, s, accent, saga, flair) =>
-    `<div class="vs-preview-col" style="--accent:${accent}"><div class="vs-preview-name">${name}</div>` +
+  const col = (name, s, theirs, accent, saga, flair, side) =>
+    `<div class="vs-preview-col${previewing && ((UI.charPickStep === 1 && side === 'left') || (UI.charPickStep === 2 && side === 'right')) ? ' preview-live' : ''}" style="--accent:${accent}">` +
+    `<div class="vs-preview-name">${name}${previewing && ((UI.charPickStep === 1 && side === 'left') || (UI.charPickStep === 2 && side === 'right')) ? ' <span class="vs-preview-tag">preview</span>' : ''}</div>` +
     `<div class="vs-preview-wpn">${sagaIconSvg(saga.id)} ${saga.label} · ${s.wpn} · ${s.special} · ${s.critPct}% crit</div>` +
     `<div class="vs-preview-flair">${flair}</div>` +
-    `${vsStatBar('HP', s.hp, '#6ee06e')}${vsStatBar('SPD', s.spd, '#7cf5ff')}` +
-    `${vsStatBar('DMG', s.dmg, '#ff7a4d')}</div>`;
-  return `<div class="vs-preview-duo">${col(e1.name, s1, '#7cf5ff', g1, rosterFlair(e1))}` +
-    `<div class="vs-preview-vs">VS</div>${col(e2.name, s2, '#ffb0b8', g2, rosterFlair(e2))}</div>`;
+    `${vsStatBar('HP', s.hp, '#6ee06e', vsStatDeltaTag(s.hp, theirs.hp))}` +
+    `${vsStatBar('SPD', s.spd, '#7cf5ff', vsStatDeltaTag(s.spd, theirs.spd))}` +
+    `${vsStatBar('DMG', s.dmg, '#ff7a4d', vsStatDeltaTag(s.dmg, theirs.dmg))}</div>`;
+  const hint = vsMatchupHint(s1, s2);
+  return `<div class="vs-preview-duo">${col(e1.name, s1, s2, '#7cf5ff', g1, rosterFlair(e1), 'left')}` +
+    `<div class="vs-preview-vs">VS</div>${col(e2.name, s2, s1, '#ffb0b8', g2, rosterFlair(e2), 'right')}</div>` +
+    (hint ? `<div class="vs-matchup-hint">${hint}</div>` : '') +
+    (previewing ? '<div class="vs-matchup-hint" style="opacity:.75">Tik kaart om te kiezen · stats zijn relatief, geen dmg-tweak</div>' : '');
+}
+function updateCharStatPreview() {
+  const statEl = document.getElementById('charStatPreview');
+  if (!statEl) return;
+  const [a, b, previewing] = charStatPreviewPair();
+  statEl.innerHTML = vsStatPreviewHtml(a, b, previewing);
 }
 
 function copyPlayLink() {
@@ -8958,6 +8996,7 @@ function pickVsRosterId(id) {
   const r = vsRosterEntry(id);
   if (!vsUnlocked(r)) return;
   AudioSys.sfx('select');
+  UI.charPreviewHoverId = null;
   if (UI.charPickStep === 1) {
     vsSelect.p1 = id;
     UI.charPickStep = 2;
@@ -8990,6 +9029,21 @@ function initCharSelectChrome() {
       if (e.cancelable) e.preventDefault();
       runPick(card);
     }, { passive: false });
+    grid.addEventListener('pointerover', (e) => {
+      const card = e.target.closest('.char-card:not(.locked)');
+      if (!card || !card.dataset.id) return;
+      if (UI.charPreviewHoverId === card.dataset.id) return;
+      UI.charPreviewHoverId = card.dataset.id;
+      grid.querySelectorAll('.char-card.preview-hov').forEach(c => c.classList.remove('preview-hov'));
+      card.classList.add('preview-hov');
+      updateCharStatPreview();
+    });
+    grid.addEventListener('pointerleave', (e) => {
+      if (e.relatedTarget && grid.contains(e.relatedTarget)) return;
+      UI.charPreviewHoverId = null;
+      grid.querySelectorAll('.char-card.preview-hov').forEach(c => c.classList.remove('preview-hov'));
+      updateCharStatPreview();
+    });
   }
   const sagaBar = document.getElementById('charSagaBar');
   if (sagaBar && !sagaBar.dataset.sfSagaBound) {
@@ -9082,6 +9136,7 @@ const UI = {
   screens: ['menuScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   charPickStep: 1,
   charSagaFilter: 'all',
+  charPreviewHoverId: null,
   dexRarityFilter: 'all',
   lastResult: null,
   pauseSubDefault: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
@@ -9290,7 +9345,7 @@ const UI = {
       p2Lbl.classList.toggle('active', this.charPickStep === 2);
     }
     const statEl = document.getElementById('charStatPreview');
-    if (statEl) statEl.innerHTML = vsStatPreviewHtml(e1, e2);
+    if (statEl) updateCharStatPreview();
     this.renderCharIconRow();
     grid.innerHTML = '';
     const roster = filter === 'all'
@@ -9310,7 +9365,7 @@ const UI = {
       const focus = ok && ((this.charPickStep === 1 && !sel1) || (this.charPickStep === 2 && !sel2));
       const isIcon = SAGA_ICON_IDS.includes(r.id);
       el.className = 'char-card' + (ok ? '' : ' locked') + (isIcon ? ' saga-icon' : '') + (sel1 ? ' p1sel' : '') + (sel2 ? ' p2sel' : '') +
-        (focus ? ' pick-hint' : '');
+        (focus ? ' pick-hint' : '') + (this.charPreviewHoverId === r.id ? ' preview-hov' : '');
       el.dataset.id = r.id;
       el.setAttribute('role', 'button');
       if (ok) el.setAttribute('aria-label', r.name + ', ' + rosterFlair(r));
@@ -9412,8 +9467,11 @@ const UI = {
         vsSelect.p1 = a.id;
         vsSelect.p2 = b.id;
         this.charPickStep = 2;
+        this.charPreviewHoverId = null;
         this.renderCharSelect();
-        UI.toast(`${a.name} vs ${b.name}!`, 2400);
+        const sa = vsFighterStats(a);
+        const sb = vsFighterStats(b);
+        UI.toast(`${a.name} vs ${b.name} · HP ${sa.hp}/${sb.hp} · DMG ${sa.dmg}/${sb.dmg}`, 2800);
       });
     }
   },

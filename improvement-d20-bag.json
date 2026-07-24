@@ -4,14 +4,13 @@
   "rollFirst": [],
   "remaining": [
     3,
-    18,
     2
   ],
   "lastRoll": {
-    "face": 17,
-    "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
-    "rolledAt": "2026-07-24T15:35:34Z",
-    "remainingCount": 3,
+    "face": 18,
+    "category": "Character select \u2014 roster UI, stats, random duo",
+    "rolledAt": "2026-07-24T15:36:43Z",
+    "remainingCount": 2,
     "cycle": 2
   },
   "pending": null,
@@ -350,6 +349,13 @@
       "note": "safeAsync + share/resume/claim toasts",
       "version": "1.17.4",
       "doneAt": "2026-07-24T15:36:23Z",
+      "cycle": 2
+    },
+    {
+      "face": 18,
+      "note": "stat delta hover preview matchup hints",
+      "version": "1.17.5",
+      "doneAt": "2026-07-24T15:37:30Z",
       "cycle": 2
     }
   ],
@@ -1305,6 +1311,13 @@
       "rolledAt": "2026-07-24T15:35:34Z",
       "remainingCount": 3,
       "cycle": 2
+    },
+    {
+      "face": 18,
+      "category": "Character select \u2014 roster UI, stats, random duo",
+      "rolledAt": "2026-07-24T15:36:43Z",
+      "remainingCount": 2,
+      "cycle": 2
     }
   ],
   "rollBacklog": [
@@ -1313,15 +1326,6 @@
       "category": "Versus 2P \u2014 split controls, rematch, char balance",
       "focus": "HUD/rematch/spawn \u2014 geen roster dmg-herbalancering.",
       "rolledAt": "2026-07-24T15:25:28Z",
-      "queuedAt": "2026-07-24T15:29:21Z",
-      "reason": "backfill",
-      "cycle": 2
-    },
-    {
-      "face": 18,
-      "category": "Character select \u2014 roster UI, stats, random duo",
-      "focus": "Char select UI \u2014 stats preview, geen dmg tweak.",
-      "rolledAt": "2026-07-24T15:26:21Z",
       "queuedAt": "2026-07-24T15:29:21Z",
       "reason": "backfill",
       "cycle": 2
