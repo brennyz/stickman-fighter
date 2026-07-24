@@ -6,19 +6,24 @@
     2,
     3,
     11,
-    12,
     13,
     17,
     18
   ],
   "lastRoll": {
-    "face": 15,
-    "category": "Onboarding \u2014 tips, eerste speelminuut, help",
-    "rolledAt": "2026-07-24T08:36:37Z",
-    "remainingCount": 7,
+    "face": 12,
+    "category": "Content \u2014 monsters, wapens, rariteit, dex",
+    "rolledAt": "2026-07-24T12:26:16Z",
+    "remainingCount": 6,
     "cycle": 2
   },
-  "pending": null,
+  "pending": {
+    "face": 12,
+    "category": "Content \u2014 monsters, wapens, rariteit, dex",
+    "rolledAt": "2026-07-24T12:26:16Z",
+    "remainingCount": 6,
+    "cycle": 2
+  },
   "implemented": [
     {
       "face": 2,
@@ -338,26 +343,26 @@
         "1.16.7"
       ],
       "commits": [],
-      "code": "+55 SPECIES (114 totaal = 6× origineel), UNLOCK_AT spread tot L50, boss-golf horde-padding (3–10 extra minions)",
+      "code": "+55 SPECIES (114 totaal = 6\u00d7 origineel), UNLOCK_AT spread tot L50, boss-golf horde-padding (3\u201310 extra minions)",
       "status": "done (2/2)",
       "note": "voltooit horde-expansie; p1 = spawns/reuzen +40 soorten"
     },
     {
       "id": "monster-horde-expansion-p1",
       "d20Face": null,
-      "userWords": "6x zoveel monsters, ook grotere dan normaal, monster boek gevuld — deel 1",
+      "userWords": "6x zoveel monsters, ook grotere dan normaal, monster boek gevuld \u2014 deel 1",
       "versions": [
         "1.16.6"
       ],
       "commits": [],
       "code": "ADVENTURE_HORDE_MUL 6, GIANT spawn (~15%), batch spawn + alive cap, +40 SPECIES (59 totaal), UNLOCK_AT spread",
       "status": "done (1/2)",
-      "note": "deel 1/2; horde spawns + reuzen — bestiary voltooid in p2"
+      "note": "deel 1/2; horde spawns + reuzen \u2014 bestiary voltooid in p2"
     },
     {
       "id": "master-sword-easter-egg",
       "d20Face": null,
-      "userWords": "2% kans in een level dat je zwaard verandert in de masters sword van Zelda — dubbel damage, niet te blocken, 15 seconden, groot bereik",
+      "userWords": "2% kans in een level dat je zwaard verandert in de masters sword van Zelda \u2014 dubbel damage, niet te blocken, 15 seconden, groot bereik",
       "versions": [
         "1.16.5"
       ],
@@ -387,7 +392,7 @@
         "1.16.3"
       ],
       "commits": [],
-      "code": "WEAPON_MOVE_FAMILIES (8×3 moves), weaponMoveFamily/Def/Pose, combo chain ~1.38s primed advance, resetWeaponCombo on hurt/death/dash/subst/special, drawWeaponStylePips, sanitizeWeaponSpec clamps",
+      "code": "WEAPON_MOVE_FAMILIES (8\u00d73 moves), weaponMoveFamily/Def/Pose, combo chain ~1.38s primed advance, resetWeaponCombo on hurt/death/dash/subst/special, drawWeaponStylePips, sanitizeWeaponSpec clamps",
       "status": "done",
       "note": "off-d20 user feature; shuriken/fuuma throw-only; hardened primed chain + safe resets"
     },
@@ -989,6 +994,13 @@
       "category": "Onboarding \u2014 tips, eerste speelminuut, help",
       "rolledAt": "2026-07-24T08:36:37Z",
       "remainingCount": 7,
+      "cycle": 2
+    },
+    {
+      "face": 12,
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
+      "rolledAt": "2026-07-24T12:26:16Z",
+      "remainingCount": 6,
       "cycle": 2
     }
   ]
