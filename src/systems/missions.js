@@ -77,6 +77,10 @@ const ACHIEVEMENTS = [
     test: s => s.bestWall >= 100 },
   { id: 'combo8', name: 'Combo-koning', desc: 'Combo ×8 bereikt', icon: '⚡',
     test: s => s.stats.maxCombo >= 8 },
+  { id: 'streak10', name: 'Onstuitbaar', desc: 'Kill streak ×10 in avontuur', icon: '🔥',
+    test: s => (s.stats.maxKillStreak || 0) >= 10 },
+  { id: 'trainCombo10', name: 'Dummy-meester', desc: 'Training combo ×10', icon: '🎯',
+    test: s => (s.stats.trainMaxCombo || 0) >= 10 },
   { id: 'lv50', name: 'Legende', desc: 'Unlock level 50', icon: '👑',
     test: s => s.unlocked >= 50 },
   { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd', icon: '📅',
@@ -307,6 +311,8 @@ function achievementProgressFrac(ach) {
     case 'train5': return Math.min(s.trainWins, 5) / 5;
     case 'wall100': return Math.min(s.bestWall, 100) / 100;
     case 'combo8': return Math.min(s.stats.maxCombo || 0, 8) / 8;
+    case 'streak10': return Math.min(s.stats.maxKillStreak || 0, 10) / 10;
+    case 'trainCombo10': return Math.min(s.stats.trainMaxCombo || 0, 10) / 10;
     case 'lv50': return Math.min(s.unlocked, 50) / 50;
     case 'daily7': return Math.min(s.stats.dailyBonusCount || 0, 7) / 7;
     case 'vs5': return Math.min(s.stats.vsMatches || 0, 5) / 5;
@@ -337,6 +343,8 @@ function achievementProgressHint(ach) {
     case 'train5': return `${Math.min(s.trainWins, 5)}/5 training-wins`;
     case 'wall100': return `${Math.min(s.bestWall, 100)}/100 muur-score`;
     case 'combo8': return `×${Math.min(s.stats.maxCombo || 0, 8)}/8 combo`;
+    case 'streak10': return `streak ×${Math.min(s.stats.maxKillStreak || 0, 10)}/10`;
+    case 'trainCombo10': return `train ×${Math.min(s.stats.trainMaxCombo || 0, 10)}/10`;
     case 'lv50': return `Unlock Lv ${Math.min(s.unlocked, 50)}/50`;
     case 'daily7': return `${Math.min(s.stats.dailyBonusCount || 0, 7)}/7 dagbonussen`;
     case 'vs5': return `${Math.min(s.stats.vsMatches || 0, 5)}/5 duels`;
@@ -406,6 +414,22 @@ function bumpStat(key, n) {
 function trackCombo(n) {
   if (n > (save.stats.maxCombo || 0)) save.stats.maxCombo = n;
   bumpDaily('comboReach', n);
+}
+
+function trackKillStreak(n) {
+  if (n > (save.stats.maxKillStreak || 0)) {
+    save.stats.maxKillStreak = n;
+    persist();
+    checkAchievements();
+  }
+}
+
+function trackTrainCombo(n) {
+  if (n > (save.stats.trainMaxCombo || 0)) {
+    save.stats.trainMaxCombo = n;
+    persist();
+    checkAchievements();
+  }
 }
 
 function saveSanitizeNotes(before, after) {

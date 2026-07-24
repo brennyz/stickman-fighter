@@ -132,15 +132,15 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.45';
+const APP_VERSION = '1.17.46';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 171;
+const SW_CACHE_REV = 172;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0 },
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0 },
   achievements: {}, daily: null, vsPlayedIds: [] };
 const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
@@ -964,6 +964,10 @@ const ACHIEVEMENTS = [
     test: s => s.bestWall >= 100 },
   { id: 'combo8', name: 'Combo-koning', desc: 'Combo ×8 bereikt', icon: '⚡',
     test: s => s.stats.maxCombo >= 8 },
+  { id: 'streak10', name: 'Onstuitbaar', desc: 'Kill streak ×10 in avontuur', icon: '🔥',
+    test: s => (s.stats.maxKillStreak || 0) >= 10 },
+  { id: 'trainCombo10', name: 'Dummy-meester', desc: 'Training combo ×10', icon: '🎯',
+    test: s => (s.stats.trainMaxCombo || 0) >= 10 },
   { id: 'lv50', name: 'Legende', desc: 'Unlock level 50', icon: '👑',
     test: s => s.unlocked >= 50 },
   { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd', icon: '📅',
@@ -1194,6 +1198,8 @@ function achievementProgressFrac(ach) {
     case 'train5': return Math.min(s.trainWins, 5) / 5;
     case 'wall100': return Math.min(s.bestWall, 100) / 100;
     case 'combo8': return Math.min(s.stats.maxCombo || 0, 8) / 8;
+    case 'streak10': return Math.min(s.stats.maxKillStreak || 0, 10) / 10;
+    case 'trainCombo10': return Math.min(s.stats.trainMaxCombo || 0, 10) / 10;
     case 'lv50': return Math.min(s.unlocked, 50) / 50;
     case 'daily7': return Math.min(s.stats.dailyBonusCount || 0, 7) / 7;
     case 'vs5': return Math.min(s.stats.vsMatches || 0, 5) / 5;
@@ -1224,6 +1230,8 @@ function achievementProgressHint(ach) {
     case 'train5': return `${Math.min(s.trainWins, 5)}/5 training-wins`;
     case 'wall100': return `${Math.min(s.bestWall, 100)}/100 muur-score`;
     case 'combo8': return `×${Math.min(s.stats.maxCombo || 0, 8)}/8 combo`;
+    case 'streak10': return `streak ×${Math.min(s.stats.maxKillStreak || 0, 10)}/10`;
+    case 'trainCombo10': return `train ×${Math.min(s.stats.trainMaxCombo || 0, 10)}/10`;
     case 'lv50': return `Unlock Lv ${Math.min(s.unlocked, 50)}/50`;
     case 'daily7': return `${Math.min(s.stats.dailyBonusCount || 0, 7)}/7 dagbonussen`;
     case 'vs5': return `${Math.min(s.stats.vsMatches || 0, 5)}/5 duels`;
@@ -1293,6 +1301,22 @@ function bumpStat(key, n) {
 function trackCombo(n) {
   if (n > (save.stats.maxCombo || 0)) save.stats.maxCombo = n;
   bumpDaily('comboReach', n);
+}
+
+function trackKillStreak(n) {
+  if (n > (save.stats.maxKillStreak || 0)) {
+    save.stats.maxKillStreak = n;
+    persist();
+    checkAchievements();
+  }
+}
+
+function trackTrainCombo(n) {
+  if (n > (save.stats.trainMaxCombo || 0)) {
+    save.stats.trainMaxCombo = n;
+    persist();
+    checkAchievements();
+  }
 }
 
 function saveSanitizeNotes(before, after) {
@@ -6148,6 +6172,13 @@ class Fighter {
     }
     dmg = Math.round(dmg);
     this.hp -= dmg;
+    if (this.isPlayer && game) {
+      if (game.mode === 'training' || game.mode === 'adventure') {
+        game.combo = 0;
+        game.comboT = 0;
+      }
+      if (game.mode === 'adventure') game.killStreak = 0;
+    }
     this.hurtT = dmg >= 18 ? 0.28 : 0.24;
     this.hitFlashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.18 : 0.14);
     this.attack = null;
@@ -7441,6 +7472,8 @@ class Game {
 
     if (mode === 'adventure') {
       this.combo = 0; this.comboT = 0;
+      this.killStreak = 0;
+      this.sessionBestKillStreak = 0;
       this.pickups = [];
       this.dmgBuffT = 0; this.dmgBuffMul = 1;
       this.playerShieldT = 0;
@@ -7695,7 +7728,7 @@ class Game {
       this.comboT -= dt;
       if (this.comboT <= 0) this.combo = 0;
     }
-    try { AudioSys.setCombatHeat(Math.min(1, (this.combo || 0) / 12)); } catch (_) {}
+    try { AudioSys.setCombatHeat(Math.min(1, (this.combo || 0) / 12 + (this.killStreak || 0) / 14)); } catch (_) {}
     if (this.dmgBuffT > 0) {
       this.dmgBuffT -= dt;
       if (this.dmgBuffT <= 0) this.dmgBuffMul = 1;
@@ -7787,6 +7820,9 @@ class Game {
           this.floater(this.player.x, this.player.y - 108, `+${heal} bondgenoot`, '#6ee06e', 14);
         }
         try { AudioSys.sfx('waveClear'); } catch (_) {}
+        if ((this.killStreak || 0) >= 5) {
+          this.floater(W / 2, 112, `STREAK ×${this.killStreak} vast!`, '#ffd75e', 15);
+        }
       }
       this.wavePause -= dt;
       if (this.wavePause <= 0) { this.wavePause = 0; this.nextWave(); }
@@ -7846,8 +7882,10 @@ class Game {
       title: win ? 'GEWONNEN!' : 'VERSLAGEN...',
       detail: (() => {
         let base = win
-          ? `Level ${lv} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}`
-          : `Level ${lv} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}`;
+          ? `Level ${lv} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}` +
+            ((this.sessionBestKillStreak || 0) >= 3 ? ` · streak ×${this.sessionBestKillStreak}` : '')
+          : `Level ${lv} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}` +
+            ((this.sessionBestKillStreak || 0) >= 3 ? ` · streak ×${this.sessionBestKillStreak}` : '');
         if (masterBuffActive(lv) && !win) base += ' · Meester-buff actief';
         if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
           base += ` · gok: ${gambleOutcomeLabel(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48)}`;
@@ -7870,7 +7908,18 @@ class Game {
 
   onMonsterKilled(m) {
     this.kills++;
-    this.freezeT = Math.max(this.freezeT, 0.045);
+    this.killStreak = (this.killStreak || 0) + 1;
+    const ks = this.killStreak;
+    this.sessionBestKillStreak = Math.max(this.sessionBestKillStreak || 0, ks);
+    trackKillStreak(ks);
+    if ([3, 5, 8, 12].includes(ks)) {
+      const msgs = { 3: 'STREAK ×3', 5: 'ON FIRE!', 8: 'RAMPAGE!', 12: 'UNSTOPPABLE!' };
+      this.floater(W / 2, 128, msgs[ks], ks >= 8 ? '#ff7a4d' : '#ffd75e', 17);
+      AudioSys.sfx(ks >= 8 ? 'comboEpic' : 'combo');
+      if (!motionReduced() && !fxLite()) spawnFxRing(this, m.x, m.y - m.size * 0.35, ks >= 8 ? '#ff7a4d' : '#ffd75e', 7 + ks * 0.35);
+      haptic(8 + Math.min(ks, 12));
+    }
+    this.freezeT = Math.max(this.freezeT, 0.045 + Math.min(ks, 12) * 0.002);
     this.shake(5, 0.18);
     haptic(12);
     const rar = rarityOf(m.sp.rarity);
@@ -8020,6 +8069,9 @@ class Game {
     this.trainTelegraphKind = null;
     this.trainLaserCd = rand(5, 8);
     this.trainLaserTelegraph = 0;
+    this.trainComboBest = 0;
+    this.trainComboGoals = {};
+    this.trainRoundBest = 0;
     this.startRound();
     AudioSys.play('training');
   }
@@ -8042,11 +8094,19 @@ class Game {
     this.trainLaserTelegraph = 0;
     this.trainMeleeTelegraphT = 0;
     this.trainTelegraphKind = null;
+    this.combo = 0;
+    this.comboT = 0;
+    this.trainRoundBest = 0;
+    this.trainDummyGrace = this.round === 1 ? 3.5 : 0;
     this.banner(`RONDE ${this.round}`, 1.1, '#ffd75e', 52);
+    if (this.round === 1) {
+      this.floater(W / 2, 148, 'Combo-trainer — 3s oefenen, robot wacht', '#7cf5ff', 16);
+    }
     AudioSys.sfx('bell');
   }
 
   updateTrainingLasers(dt) {
+    if ((this.trainDummyGrace || 0) > 0) return;
     if (this.phase !== 'fight' || !this.robot?.alive || !this.player?.alive) return;
     if (this.robot.attack || this.robot.hurtT > 0) {
       if ((this.trainLaserCd || 0) <= 0.5) this.trainLaserCd = rand(1.8, 3.2);
@@ -8094,6 +8154,14 @@ class Game {
       if (this.phaseT > 1.2 && this.phaseT - dt <= 1.2) this.banner('VECHT!', 0.8, '#ff6b6b', 60);
       if (this.phaseT > 1.6) { this.phase = 'fight'; this.inputLocked = false; }
     } else if (this.phase === 'fight') {
+      if (this.trainDummyGrace > 0) {
+        this.trainDummyGrace -= dt;
+        if (this.trainDummyGrace <= 0) this.floater(W / 2, 132, 'Robot activeert — hou combo vast!', '#ff9a9a', 15);
+      }
+      if (this.comboT > 0) {
+        this.comboT -= dt;
+        if (this.comboT <= 0) this.combo = 0;
+      }
       if (this.trainTelegraphT > 0) this.trainTelegraphT -= dt;
       if (this.trainMeleeTelegraphT > 0) this.trainMeleeTelegraphT -= dt;
       this.updateTrainingLasers(dt);
@@ -8105,9 +8173,14 @@ class Game {
         else if (pDead && !rDead) pWin = false;
         else pWin = (this.player.hp / this.player.maxhp) >= (this.robot.hp / this.robot.maxhp);
         if (pWin) this.roundsP++; else this.roundsR++;
+        this.trainComboBest = Math.max(this.trainComboBest || 0, this.trainRoundBest || 0);
         this.phase = 'roundend'; this.phaseT = 0;
         this.inputLocked = true;
+        const roundCombo = this.trainRoundBest || 0;
         this.banner(pWin ? 'RONDE GEWONNEN!' : 'RONDE VERLOREN', 1.6, pWin ? '#7cfc8a' : '#ff6b6b', 40);
+        if (roundCombo >= 3) {
+          this.floater(W / 2, 118, `Ronde combo ×${roundCombo}`, '#ffd75e', 14);
+        }
         AudioSys.sfx(pWin ? 'win' : 'lose');
       }
     } else if (this.phase === 'roundend') {
@@ -8123,18 +8196,33 @@ class Game {
     if (this.over) return;
     this.over = true; this.inputLocked = true;
     let xp = 0;
-    if (win) { save.trainWins++; persist(); xp = 70 + Math.min(save.trainWins, 12) * 20; this.grantXP(xp);
+    if (win) {
+      save.trainWins++;
+      persist();
+      xp = 70 + Math.min(save.trainWins, 12) * 20;
+      const best = this.trainComboBest || 0;
+      trackTrainCombo(best);
+      if (best >= 10) xp += 30;
+      else if (best >= 8) xp += 20;
+      else if (best >= 5) xp += 10;
+      this.grantXP(xp);
       bumpDaily('trainWin', 1);
       checkAchievements();
     }
     else { xp = 15; this.grantXP(xp); }
+    const trainBest = this.trainComboBest || 0;
+    const rec = save.stats.trainMaxCombo || 0;
     const trainTip = win
-      ? (save.trainWins === 3 ? 'Nieuwe stijl vrij: Chakra gloed — Instellingen → Stijl!' : 'Unlock stijlen door meer train-wins!')
+      ? (trainBest >= 8
+        ? `Combo-trainer: ×${trainBest}${trainBest >= rec ? ' — nieuw record!' : ''}`
+        : (save.trainWins === 3 ? 'Nieuwe stijl vrij: Chakra gloed — Instellingen → Stijl!' : 'Unlock stijlen door meer train-wins!'))
       : onceResultTip('training', 'loss', 'Spring tijdens CHIDORI-telegraph — robot mist · duck oor-lasers')
         || 'Tip: duck lasers · chakra vol → Rasengan';
     setTimeout(() => UI.showResult(win, {
       title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
-      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · ${save.trainWins}x gewonnen`,
+      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · max combo ×${trainBest}` +
+        (win ? ` · ${save.trainWins}x gewonnen` : '') +
+        (rec > 0 ? ` · record ×${rec}` : ''),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
     }), 1200);
@@ -8702,6 +8790,27 @@ class Game {
     for (const tgt of targets) {
       if (!tgt.alive) continue;
       if ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2) {
+        if (this.mode === 'training' && f.isPlayer) {
+          this.combo = Math.min(12, this.combo + 1);
+          f._chainKind = spec.kind;
+          this.comboT = 1.55;
+          this.trainRoundBest = Math.max(this.trainRoundBest || 0, this.combo);
+          this.trainComboBest = Math.max(this.trainComboBest || 0, this.combo);
+          trackCombo(this.combo);
+          const goals = this.trainComboGoals || (this.trainComboGoals = {});
+          if ([3, 5, 8, 10].includes(this.combo) && !goals[this.combo]) {
+            goals[this.combo] = 1;
+            AudioSys.sfx('combo');
+            const labels = {
+              3: 'Combo ×3 — door!',
+              5: 'Combo ×5 — netjes!',
+              8: 'Combo ×8 — pro!',
+              10: 'Combo ×10 — meester!',
+            };
+            this.floater(f.x + f.face * 30, f.y - 130, labels[this.combo], '#ffd75e', 16);
+            haptic(8 + this.combo);
+          }
+        }
         const hitRoll = rollHitDamage(f, spec, 1);
         const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
         const counter = isCounterHitWindow(tgt);
@@ -9695,6 +9804,16 @@ class Game {
   drawHUD(c) {
     if (this.mode === 'adventure') this.drawStageBeatFx(c);
     const p = this.player;
+    if (this.mode === 'adventure' && (this.killStreak || 0) >= 8 && !motionReduced()) {
+      const a = 0.045 + Math.min(0.07, (this.killStreak || 0) / 100);
+      const g = c.createLinearGradient(0, 0, W, 0);
+      g.addColorStop(0, `rgba(255,122,77,${a})`);
+      g.addColorStop(0.15, 'rgba(0,0,0,0)');
+      g.addColorStop(0.85, 'rgba(0,0,0,0)');
+      g.addColorStop(1, `rgba(255,122,77,${a})`);
+      c.fillStyle = g;
+      c.fillRect(0, 0, W, H);
+    }
     if (p && p.alive && p.maxhp > 0 && p.hp / p.maxhp < 0.28) {
       const calm = motionReduced();
       const a = calm ? 0.055 : (0.07 + Math.sin(this.t * 7) * 0.04);
@@ -9872,6 +9991,13 @@ class Game {
         c.font = '700 12px sans-serif';
         fillHudText(c, boss.sp.name.toUpperCase(), W / 2, 106, { fill: '#ffc8d0' });
       }
+      if ((this.killStreak || 0) >= 2) {
+        c.textAlign = 'right';
+        c.font = '800 12px sans-serif';
+        fillHudText(c, `STREAK ×${this.killStreak}`, W - Math.max(14, readSafeInsets().right + 8), 62, {
+          fill: this.killStreak >= 8 ? '#ff7a4d' : '#ffd75e',
+        });
+      }
       if (save.comboHud !== false && this.combo > 1) {
         const calm = motionReduced();
         const pulse = calm ? 1 : (1 + Math.sin(this.t * 10) * 0.08);
@@ -10026,6 +10152,34 @@ class Game {
         c.beginPath(); c.arc(W / 2 - 34 - i * 18, 82, 6, 0, TAU); c.fill();
         c.fillStyle = i < this.roundsR ? '#ff6b6b' : 'rgba(255,255,255,.25)';
         c.beginPath(); c.arc(W / 2 + 34 + i * 18, 82, 6, 0, TAU); c.fill();
+      }
+      if ((this.trainDummyGrace || 0) > 0) {
+        c.textAlign = 'center';
+        c.font = '800 12px sans-serif';
+        c.fillStyle = '#7cf5ff';
+        c.fillText(`Dummy ${this.trainDummyGrace.toFixed(1)}s — oefen combo`, W / 2, 118);
+      }
+      if (this.combo > 0 && this.comboT > 0 && save.comboHud !== false) {
+        const col = this.combo >= 8 ? '#ff7a4d' : '#ffd75e';
+        const nextGoal = this.combo < 5 ? 5 : this.combo < 8 ? 8 : this.combo < 10 ? 10 : 0;
+        const rec = save.stats.trainMaxCombo || 0;
+        c.textAlign = 'left';
+        c.font = '800 13px sans-serif';
+        c.fillStyle = col;
+        c.fillText(`COMBO ×${this.combo}`, 16, 118);
+        c.font = '700 10px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.65)';
+        if (nextGoal) c.fillText(`doel ×${nextGoal}`, 16, 132);
+        if (rec > 0) c.fillText(`record ×${rec}`, 16, nextGoal ? 146 : 132);
+        const barW = Math.min(120, W * 0.28);
+        const barY = nextGoal ? (rec > 0 ? 152 : 138) : (rec > 0 ? 146 : 132);
+        c.fillStyle = 'rgba(255,255,255,.15)';
+        this.rr(c, 16, barY, barW, 4, 2);
+        c.fill();
+        c.fillStyle = col;
+        this.rr(c, 16, barY, barW * clamp(this.comboT / 1.55, 0, 1), 4, 2);
+        c.fill();
+        c.textAlign = 'center';
       }
     } else if (this.mode === 'wall') {
       const wallDur = this.wallDuration || 60;
@@ -10749,7 +10903,7 @@ const UI = {
     const next = nextUntriedMode();
     const modes = [
       { id: 'adventure', label: 'Avontuur', tip: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok vóór level' },
-      { id: 'training', label: 'Training', tip: 'Lasers ontwijken · 2 rondes · Robot Chidori-telegraph' },
+      { id: 'training', label: 'Training', tip: 'Combo-trainer ×5/×8/×10 · 3s dummy · lasers · Chidori' },
       { id: 'wall', label: 'Muur', tip: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing' },
       { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
       { id: 'coinrun', label: 'Mats', tip: '45s munten · mik ↑ · vliegers +3' },
@@ -11123,7 +11277,12 @@ const UI = {
       if (el) el.textContent = txt || '';
     };
     if (this.modeHubId === 'arcade') {
-      setStat('hubStatTraining', save.trainWins > 0 ? `${save.trainWins} overwinningen` : 'Nog niet gespeeld');
+      setStat('hubStatTraining', (() => {
+        const rec = save.stats.trainMaxCombo || 0;
+        if (save.trainWins > 0) return `${save.trainWins} wins${rec ? ` · record ×${rec}` : ''}`;
+        if (rec > 0) return `Record combo ×${rec}`;
+        return 'Nog niet gespeeld';
+      })());
       setStat('hubStatWall', save.bestWall > 0 ? `Record ${save.bestWall}` : 'Nog geen score');
       const mats = save.stats?.matsCoinBest || 0;
       setStat('hubStatMats', mats > 0 ? `Best ${mats} munten` : 'Nog niet gespeeld');

@@ -433,6 +433,13 @@ class Fighter {
     }
     dmg = Math.round(dmg);
     this.hp -= dmg;
+    if (this.isPlayer && game) {
+      if (game.mode === 'training' || game.mode === 'adventure') {
+        game.combo = 0;
+        game.comboT = 0;
+      }
+      if (game.mode === 'adventure') game.killStreak = 0;
+    }
     this.hurtT = dmg >= 18 ? 0.28 : 0.24;
     this.hitFlashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.18 : 0.14);
     this.attack = null;
