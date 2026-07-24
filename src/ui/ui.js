@@ -181,6 +181,10 @@ function hubTileStatLine(hub) {
   }
 }
 
+function volPct(v, d) {
+  return Math.round((Number(v ?? d)) * 100);
+}
+
 const UI = {
   screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
@@ -593,7 +597,6 @@ const UI = {
     for (const id of SAGA_ICON_IDS) {
       const r = vsRosterEntry(id);
       const ok = vsUnlocked(r);
-      const saga = vsSagaMeta(r.saga || 'scroll');
       const chip = document.createElement('button');
       chip.type = 'button';
       chip.className = 'char-icon-chip' + (ok ? '' : ' locked') +
@@ -772,9 +775,9 @@ const UI = {
       if (pct > nextUpPct) { nextUpPct = pct; nextUpId = t.id; }
     }
     const sub = document.getElementById('missionsSub');
+    const step = dailyFlowStep();
     if (sub) {
       const streak = dailyStreakLine();
-      const step = dailyFlowStep();
       if (step === 0) {
         sub.textContent = streak
           ? `Dag voltooid · ${streak} — morgen 3 nieuwe lichte missies (middernacht)`
@@ -791,7 +794,7 @@ const UI = {
     }
     const flowHost = document.getElementById('missionsFlowBar');
     if (flowHost) {
-      flowHost.innerHTML = dailyFlowBarHtml(dailyFlowStep());
+      flowHost.innerHTML = dailyFlowBarHtml(step);
     }
     const sum = document.getElementById('missionsSummary');
     if (sum) {
@@ -1472,14 +1475,13 @@ const UI = {
       exportHint.textContent = `Export bevat: ${saveExportSummaryLine()} · key ${SAVE_KEY}`;
     }
     bindSavePortPreview();
-    const pct = (v, d) => Math.round((Number(v ?? d)) * 100);
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
-    setVal('setMusicVol', pct(save.musicVol, 0.85));
-    setVal('setSfxVol', pct(save.sfxVol, 1));
+    setVal('setMusicVol', volPct(save.musicVol, 0.85));
+    setVal('setSfxVol', volPct(save.sfxVol, 1));
     const lblM = document.getElementById('setMusicVolLbl');
     const lblS = document.getElementById('setSfxVolLbl');
-    if (lblM) lblM.textContent = pct(save.musicVol, 0.85) + '%';
-    if (lblS) lblS.textContent = pct(save.sfxVol, 1) + '%';
+    if (lblM) lblM.textContent = volPct(save.musicVol, 0.85) + '%';
+    if (lblS) lblS.textContent = volPct(save.sfxVol, 1) + '%';
     ['setShake', 'setHaptics', 'setComboHud', 'setBigTouch', 'setReducedMotion', 'setLiteFx', 'setHighContrast'].forEach((id, i) => {
       const el = document.getElementById(id);
       if (!el) return;
@@ -1510,13 +1512,12 @@ const UI = {
   renderPauseToggles() {
     document.getElementById('pauseTogMusic')?.classList.toggle('off', !save.music);
     document.getElementById('pauseTogSfx')?.classList.toggle('off', !save.sfx);
-    const pct = (v, d) => Math.round((Number(v ?? d)) * 100);
     const pm = document.getElementById('pauseMusicVol');
     const ps = document.getElementById('pauseSfxVol');
     const pmL = document.getElementById('pauseMusicVolLbl');
     const psL = document.getElementById('pauseSfxVolLbl');
-    const mPct = pct(save.musicVol, 0.85);
-    const sPct = pct(save.sfxVol, 1);
+    const mPct = volPct(save.musicVol, 0.85);
+    const sPct = volPct(save.sfxVol, 1);
     if (pm && document.activeElement !== pm) pm.value = String(mPct);
     if (ps && document.activeElement !== ps) ps.value = String(sPct);
     if (pmL) pmL.textContent = mPct + '%';

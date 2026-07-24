@@ -7,17 +7,16 @@
     6,
     3,
     16,
-    20,
     11,
     8,
     10,
     15
   ],
   "lastRoll": {
-    "face": 9,
-    "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
-    "rolledAt": "2026-07-24T18:59:57Z",
-    "remainingCount": 9,
+    "face": 20,
+    "category": "Code health \u2014 kleine refactors, geen gameplay-break",
+    "rolledAt": "2026-07-24T19:02:42Z",
+    "remainingCount": 8,
     "cycle": 3
   },
   "pending": null,
@@ -454,6 +453,13 @@
       "note": "dual joy-guard uiTap pan-y slop",
       "version": "1.17.37",
       "doneAt": "2026-07-24T19:02:13Z",
+      "cycle": 3
+    },
+    {
+      "face": 20,
+      "note": "dead gamble single pad volPct dedupe",
+      "version": "1.17.38",
+      "doneAt": "2026-07-24T19:05:18Z",
       "cycle": 3
     }
   ],
@@ -1506,6 +1512,13 @@
       "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
       "rolledAt": "2026-07-24T18:59:57Z",
       "remainingCount": 9,
+      "cycle": 3
+    },
+    {
+      "face": 20,
+      "category": "Code health \u2014 kleine refactors, geen gameplay-break",
+      "rolledAt": "2026-07-24T19:02:42Z",
+      "remainingCount": 8,
       "cycle": 3
     }
   ],

@@ -4,7 +4,7 @@
    Stickman-vechtgame voor iPad (touch) en desktop (toetsenbord).
    Modi: Avontuur, Training, Versus 2P, Muur, Mats (coinrun).
    Audio (sfx + bgm) is procedureel via Web Audio — rechtenvrij.
-   d20: touch-pad method refs, Input hitButton reuse, minder dubbele error-toast.
+   d20: dead gamble opener, single P1 pad, volPct, hitConfirm cache.
    ========================================================================= */
 
 const TAU = Math.PI * 2;

@@ -29,7 +29,7 @@ function rosterFlair(r) { return r.flair || r.tag; }
 /** Deel 2 — vijf saga-icon sticks (parodie per saga) */
 const SAGA_ICON_IDS = ['kiball', 'scrollkid', 'tidecrew', 'zipcape', 'dawnlance'];
 function sagaIconEntries() {
-  return SAGA_ICON_IDS.map(id => vsRosterEntry(id)).filter(r => SAGA_ICON_IDS.includes(r.id));
+  return SAGA_ICON_IDS.map(id => vsRosterEntry(id));
 }
 function pickCharPoolFiltered() {
   const filter = UI.charSagaFilter || 'all';
