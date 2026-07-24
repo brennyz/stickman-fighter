@@ -8,10 +8,11 @@ cd "$ROOT"
 echo "════════ STICKMAN FIGHTER — AGENT STATUS ════════"
 echo
 echo "── Versie (code) ──"
-grep -m1 "APP_VERSION" game.js || true
-grep -m1 "SW_CACHE_REV" game.js || true
+grep -m1 "APP_VERSION" src/core/storage.js 2>/dev/null || grep -m1 "APP_VERSION" game.js || true
+grep -m1 "SW_CACHE_REV" src/core/storage.js 2>/dev/null || grep -m1 "SW_CACHE_REV" game.js || true
 grep -m1 "const CACHE" sw.js || true
 grep -m1 "game.js?v=" index.html || true
+echo "src modules: $(wc -l < src/manifest.json 2>/dev/null | tr -d ' ') files · npm run build → game.js"
 echo
 echo "── Git ──"
 echo "branch: $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')"

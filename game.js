@@ -1,4 +1,6 @@
 'use strict';
+/* --- src/00-prelude.js --- */
+'use strict';
 /* =========================================================================
    STICKMAN FIGHTER — Monster Arena
    Stickman-vechtgame voor iPad (touch) en desktop (toetsenbord).
@@ -104,14 +106,15 @@ const rand = (a, b) => a + Math.random() * (b - a);
 const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
 
+/* --- src/core/storage.js --- */
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.20';
+const APP_VERSION = '1.17.21';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 146;
+const SW_CACHE_REV = 147;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -770,6 +773,7 @@ const PICKUP_META = {
   shield: { color: '#9fd8ff', label: 'SCHILD' },
 };
 
+/* --- src/render/art-helpers.js --- */
 /* ============ IN-GAME ART HELPERS (art-upgrade 3/4) ==================== */
 /** Getekend pickup-icoon (hart/vlam/spiraal/schild) ipv tekstlabel. */
 function drawPickupIcon(c, kind, x, y) {
@@ -859,6 +863,7 @@ function drawMiniDie(c, x, y, s, color) {
   c.restore();
 }
 
+/* --- src/systems/missions.js --- */
 /* ===================== DAGELIJKSE MISSIES & PRESTATIES ================= */
 const DAILY_DEFS = [
   { id: 'kills12', type: 'kills', goal: 12, xp: 45, text: 'Versla 12 monsters' },
@@ -2128,6 +2133,7 @@ function playerStats(opts) {
   };
 }
 
+/* --- src/data/rarities.js --- */
 /* ============================ RARITEITEN =============================== */
 const RARITIES = {
   common:    { id: 'common',    name: 'Gewoon',     color: '#9db1e3', glow: 'rgba(157,177,227,.35)', order: 0 },
@@ -2140,6 +2146,7 @@ const RARITIES = {
 const rarityOf = id => RARITIES[id] || RARITIES.common;
 const rarityHpBonus = r => ({ common: 3, uncommon: 5, rare: 8, epic: 12, legendary: 18, mythic: 25 }[r] || 5);
 
+/* --- src/data/weapons.js --- */
 /* ============================== WAPENS ================================= */
 const WEAPONS = [
   { id: 'vuist',     name: 'Vuisten',         dmg: 1.0,  range: 38, speed: 1.0,  unlock: 1,  rarity: 'common',    desc: 'Taijutsu basics' },
@@ -2171,6 +2178,7 @@ const WEAPONS = [
 ];
 const weaponById = id => WEAPONS.find(w => w.id === id) || WEAPONS[0];
 
+/* --- src/data/summons.js --- */
 /* ============================ SUMMONS ================================== */
 /* Hele kleine kans bij een kill: een Summon ascendeert een lager wapen
    (common/uncommon/rare) naar Episch of Legendarisch — met power boven
@@ -2447,6 +2455,7 @@ function drawWeaponStylePips(c, x, y, fighter) {
   }
 }
 
+/* --- src/data/styles.js --- */
 /* ============================== STIJLEN ================================ */
 const STYLES = [
   { id: 'classic', name: 'Klassiek', body: '#f2f5ff', accent: '#3db8ff', bandana: null,
@@ -2503,6 +2512,7 @@ function applyPlayerStyle(fighter) {
   fighter.lineW = st.id === 'gold' ? 5 : 4.5;
 }
 
+/* --- src/systems/versus.js --- */
 /* ========================== VERSUS / 2 SPELERS ========================== */
 /** Saga-hints: parodie-vibes, geen officiële manga/IP-namen. */
 const VS_SAGAS = {
@@ -2853,6 +2863,7 @@ function resetVsFighterRound(f, entry, ground, slot) {
 
 let vsSelect = { p1: 'hero', p2: 'rabbit' };
 
+/* --- src/data/monsters.js --- */
 /* ============================ MONSTERS ================================= */
 const SPECIES = {
   slymo:     { name: 'Slymo',     art: 'slime',    size: 17, hp: 30,  dmg: 6,  speed: 60,  type: 'hop',    xp: 8,  rarity: 'common',    c1: '#5ad06a', c2: '#2e8f3c' },
@@ -3298,6 +3309,7 @@ function applyGambleToStage(game, g) {
 let pendingAdvLevel = null;
 let lastGambleRoll = null;
 
+/* --- src/systems/audio.js --- */
 /* =============================== AUDIO ================================= */
 const AudioSys = {
   ctx: null, master: null, musicGain: null, sfxGain: null,
@@ -3881,6 +3893,7 @@ function playMenuBgm(fromGame) {
   AudioSys.play(MENU_BGM_TRACKS[menuBgmIdx]);
 }
 
+/* --- src/systems/input.js --- */
 /* =============================== INPUT ================================= */
 const SHURIKEN_CD = 0.4;
 const SHURIKEN_BURST_WINDOW = 1.35;
@@ -4749,6 +4762,7 @@ addEventListener('keyup', e => {
   if (InputP2) InputP2.keys[k] = false;
 });
 
+/* --- src/core/canvas.js --- */
 /* ============================== CANVAS ================================= */
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -4843,6 +4857,7 @@ document.addEventListener('gesturestart', e => {
 });
 document.addEventListener('pointerdown', () => AudioSys.init(), { once: false });
 
+/* --- src/render/draw-helpers.js --- */
 /* ============================ TEKENHULPEN ============================== */
 function seg(x, y, ang, len) { return [x + Math.cos(ang) * len, y + Math.sin(ang) * len]; }
 
@@ -5187,6 +5202,7 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
   c.restore();
 }
 
+/* --- src/entities/fighter.js --- */
 /* ============================== VECHTER ================================ */
 class Fighter {
   constructor(opts) {
@@ -5948,6 +5964,7 @@ class Fighter {
   }
 }
 
+/* --- src/entities/monster.js --- */
 /* ============================== MONSTER ================================ */
 class Monster {
   constructor(spId, x, game, opts) {
@@ -6333,6 +6350,7 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
   }
 }
 
+/* --- src/render/scenery.js --- */
 /* ============== SCENERY ART — pixel-art lagen (upgrade 1/4) ============ */
 /* Gecachte offscreen tiles (1× gerenderd per thema), chunky pixel look via
    imageSmoothingEnabled=false + opschaling. Geen externe assets — offline OK. */
@@ -6647,6 +6665,7 @@ function drawSceneryTile(c, tile, y, scroll, rate, scale) {
   c.imageSmoothingEnabled = prev;
 }
 
+/* --- src/render/backgrounds.js --- */
 /* ========================== ACHTERGRONDEN ============================== */
 const THEMES = {
   veld:    { sky1: '#7ec8ff', sky2: '#cfeeff', hill: '#5cb85c', hill2: '#3f9b47', ground: '#4c8f3f', gtop: '#66b356', deco: 'bloem' },
@@ -6873,6 +6892,7 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   }
 }
 
+/* --- src/game/game.js --- */
 /* ================================ GAME ================================= */
 let game = null;
 
@@ -9745,6 +9765,7 @@ class Game {
   }
 }
 
+/* --- src/ui/ui.js --- */
 /* ================================= UI ================================== */
 function pickVsRosterId(id) {
   try {
@@ -11283,6 +11304,7 @@ const UI = {
   },
 };
 
+/* --- src/boot/start.js --- */
 /* ============================ SPELSTART ================================ */
 let state = 'menu';
 
@@ -11767,6 +11789,7 @@ bindPress(document.getElementById('resNext'), () => {
 });
 bindPress(document.getElementById('resMenu'), () => { UI.goMenu(); });
 
+/* --- src/boot/loop.js --- */
 /* ============================= HOOFDLUS ================================ */
 let lastTime = performance.now();
 let menuAnimT = 0;
