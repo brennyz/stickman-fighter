@@ -188,6 +188,8 @@ function hubTileStatLine(hub) {
       if (save.bestWall > 0) bits.push(`muur ${save.bestWall}`);
       const mats = save.stats?.matsCoinBest || 0;
       if (mats > 0) bits.push(`mats ${mats}`);
+      const pc = petCoinsBalance();
+      if (pc > 0) bits.push(`${pc} pet 🪙`);
       return bits.length ? bits.join(' · ') : '3 snelle modi';
     }
     case 'versus': {
@@ -196,7 +198,7 @@ function hubTileStatLine(hub) {
       return m > 0 ? `${w}/${m} gewonnen` : '23 vechters · lokaal';
     }
     case 'collect':
-      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ei ${eggOwnedCount()}/${EGG_ROSTER.length}`;
+      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ${petCoinsBalance()} pet 🪙`;
     default:
       return '';
   }
@@ -363,7 +365,7 @@ const UI = {
       { id: 'training', label: 'Training', tip: 'Combo-trainer ×5/×8/×10 · 3s dummy · lasers · Chidori' },
       { id: 'wall', label: 'Muur', tip: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing' },
       { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
-      { id: 'coinrun', label: 'Mats', tip: '45s munten · mik ↑ · vliegers +3' },
+      { id: 'coinrun', label: 'Mats', tip: '45s munten · 2 munten = 1 pet coin · mik ↑ · vliegers +3' },
     ];
     let html = `<div style="font-size:12px;opacity:.85;margin-bottom:8px">Eerste-minuut hints: <b>${prog.seen}/${prog.total}</b> modi gezien · max <b>één</b> regel bovenin per modus</div>`;
     if (next) {
@@ -772,14 +774,18 @@ const UI = {
       })());
       setStat('hubStatWall', save.bestWall > 0 ? `Record ${save.bestWall}` : 'Nog geen score');
       const mats = save.stats?.matsCoinBest || 0;
-      setStat('hubStatMats', mats > 0 ? `Best ${mats} munten` : 'Nog niet gespeeld');
+      const pc = petCoinsBalance();
+      setStat('hubStatMats', mats > 0 || pc > 0
+        ? `Best ${mats} munten${pc > 0 ? ` · ${pc} pet 🪙` : ''}`
+        : 'Munten → pet coins');
     } else if (this.modeHubId === 'collect') {
       setStat('hubStatWeapons', `${weaponUnlockedCount()}/${WEAPONS.length} vrij`);
       const petsN = petTamedCount();
       const eggsN = eggOwnedCount();
-      setStat('hubStatPets', eggsN > 0 || petsN > 0
-        ? `dex ${petsN}/${PET_ROSTER.length} · ei ${eggsN}/${EGG_ROSTER.length}`
-        : `${PET_ROSTER.length} dex · ${EGG_ROSTER.length} ei`);
+      const pc = petCoinsBalance();
+      setStat('hubStatPets', eggsN > 0 || petsN > 0 || pc > 0
+        ? `dex ${petsN}/${PET_ROSTER.length} · ${pc} 🪙 · ei ${eggsN}/${EGG_ROSTER.length}`
+        : `${PET_ROSTER.length} dex · Mats → pet coins`);
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
       setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
       setStat('hubStatDex', `${dexCount()}/${SPECIES_ORDER.length} · +max HP`);
@@ -1604,10 +1610,12 @@ const UI = {
     if (sumEl) {
       const tamed = petTamedCount();
       const active = activePetDef();
+      const wallet = petCoinsBalance();
       sumEl.style.display = 'block';
       sumEl.innerHTML =
         `Getemd <b>${tamed}/${PET_ROSTER.length}</b> · actief <b>${active ? SPECIES[active.speciesId].name : 'geen'}</b>` +
-        `<div style="margin-top:6px;font-size:12px;opacity:.85">Versla monsters in avontuur — genoeg kills in het boek = pet ontgrendeld. Pets volgen je en assisten in avontuur & training.</div>`;
+        ` · <b>${wallet} pet coins</b>` +
+        `<div style="margin-top:6px;font-size:12px;opacity:.85">Speel <b>Mats</b> voor pet coins (2 gouden munten = 1 🪙). Koop pets hier, of tem via kills in het monsterboek. Pets volgen je in avontuur & training.</div>`;
     }
     const list = document.getElementById('petList');
     if (!list) return;
@@ -1620,8 +1628,10 @@ const UI = {
       const need = petKillNeed(def.speciesId);
       const tamed = isPetTamed(def.id);
       const active = save.activePet === def.id;
+      const cost = petCoinCost(def.id);
+      const canBuy = canBuyPetWithCoins(def.id);
       const el = document.createElement('div');
-      el.className = 'card' + (tamed ? '' : ' locked') + (active ? ' sel' : '');
+      el.className = 'card' + (tamed ? '' : ' locked') + (active ? ' sel' : '') + (canBuy ? ' dex-available' : '');
       el.style.borderColor = tamed ? rar.color : undefined;
       const cv = document.createElement('canvas');
       cv.width = 64; cv.height = 64;
@@ -1638,14 +1648,21 @@ const UI = {
       const badge = active ? ' <span class="rar-pill" style="color:#7cf5ff;border-color:#7cf5ff">ACTIEF</span>' : '';
       info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>${badge}</div>` +
         `<div class="cinfo">${def.perk}</div>` +
-        `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed ? 'Getemd via monsterboek' : `Temmen: ${Math.min(kills, need)}/${need} kills`}</div>`;
+        `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
+          ? 'Getemd · assist in avontuur'
+          : (canBuy
+            ? `Kopen: ${cost} pet coins`
+            : `Temmen: ${Math.min(kills, need)}/${need} kills · of ${cost} 🪙`)}</div>`;
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
       if (tamed) {
         right.innerHTML = active ? '&#10004; actief' : 'uitrusten';
+      } else if (canBuy) {
+        right.innerHTML = `kopen<br>${cost} 🪙`;
+        right.style.color = '#ff9ad5';
       } else {
-        right.textContent = kills > 0 ? `${need - kills} kills` : 'dex';
+        right.textContent = kills > 0 ? `${need - kills} kills` : `${cost} 🪙`;
         right.style.opacity = '0.7';
       }
       el.appendChild(right);
@@ -1663,6 +1680,20 @@ const UI = {
             }
             this.renderPets();
           }, 'equipPet/' + def.id, 'Pet kiezen mislukt');
+        });
+      } else if (canBuy) {
+        el.addEventListener('click', () => {
+          if (!uiTapAllowed()) return;
+          safeUiAction(() => {
+            const res = buyPetWithCoins(def.id);
+            if (!res) {
+              UI.toast('Niet genoeg pet coins', 1800);
+              return;
+            }
+            AudioSys.sfx('summon');
+            UI.toast(`${sp.name} gekocht! Volgt je nu.`, 2600);
+            this.renderPets();
+          }, 'buyPet/' + def.id, 'Pet kopen mislukt');
         });
       }
       list.appendChild(el);

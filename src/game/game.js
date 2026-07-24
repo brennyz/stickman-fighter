@@ -1060,6 +1060,7 @@ class Game {
     this.theme = 'cyber';
     this.coinTimer = 45;
     this.coinsCollected = 0;
+    this.petCoinsThisRun = 0;
     this.coinPickups = [];
     this.flyers = [];
     this.coinSpawnAcc = 0;
@@ -1138,18 +1139,28 @@ class Game {
     const best = Math.max(save.stats.matsCoinBest || 0, n);
     const isRecord = n > (save.stats.matsCoinBest || 0);
     save.stats.matsCoinBest = best;
+    const petEarned = matsPetCoinsFromRun(n);
+    if (petEarned > 0) {
+      save.petCoins = petCoinsBalance() + petEarned;
+      this.petCoinsThisRun = petEarned;
+    }
     persist();
     const xp = Math.round(n * 4 + 15);
     this.grantXP(xp);
     AudioSys.sfx(isRecord ? 'win' : 'bonus');
     this.banner('BONUS KLAAR!', 1.4, '#7cfc8a', 40);
+    const wallet = petCoinsBalance();
     setTimeout(() => UI.showResult(true, {
       title: isRecord ? 'MATS RECORD!' : 'Goed gedaan, Mats!',
-      detail: `${n} munten · record ${best} · vliegers = +3 per hit`,
+      detail: `${n} munten · record ${best}` +
+        (petEarned > 0 ? ` · +${petEarned} pet coins (totaal ${wallet})` : '') +
+        ' · vliegers = +3 per hit',
       xp: this.sessionXP,
       mode: 'coinrun',
       win: true,
-      tip: 'Joystick omhoog = hoger mikken (slag + gooi) · shuriken max 3× snel',
+      tip: petEarned > 0
+        ? 'Pet coins uitgeven in Collectie → Pets · elke 2 Mats-munten = 1 pet coin'
+        : 'Joystick omhoog = hoger mikken (slag + gooi) · shuriken max 3× snel',
     }), 1200);
   }
 
@@ -2963,8 +2974,11 @@ class Game {
       c.fillText(`Munten: ${this.coinsCollected}`, W / 2, 70);
       c.font = '700 13px sans-serif'; c.fillStyle = 'rgba(255,255,255,.7)';
       c.fillText(`Record Mats: ${save.stats.matsCoinBest || 0}`, W / 2, 90);
+      const pendingPet = matsPetCoinsFromRun(this.coinsCollected);
+      c.fillStyle = '#ff9ad5';
+      c.fillText(`Pet coins: +${pendingPet} · wallet ${petCoinsBalance()}`, W / 2, 108);
       c.fillStyle = 'rgba(124,245,255,.85)';
-      c.fillText('Joystick ↑ mik · slag/gooi hoger · shuriken op roze vliegers', W / 2, 112);
+      c.fillText('Joystick ↑ mik · slag/gooi hoger · shuriken op roze vliegers', W / 2, 128);
     } else if (this.mode === 'versus' && this.p2) {
       const p2 = this.p2;
       const half = Math.min(260, W * 0.38);

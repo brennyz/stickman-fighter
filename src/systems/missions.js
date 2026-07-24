@@ -526,6 +526,8 @@ function saveExportSummaryLine(s) {
   if (summons) line += ` · ✦ ${summons} summon`;
   if (pets) line += ` · pet ${pets}`;
   if (eggs) line += ` · ei ${eggs}`;
+  const pc = Math.max(0, Math.floor(Number(st.petCoins) || 0));
+  if (pc) line += ` · ${pc} pet coins`;
   return line;
 }
 

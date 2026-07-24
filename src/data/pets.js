@@ -2,6 +2,28 @@
 /** Getemde mini-monsters — unlock via monsterboek-kills (deel 2 pets). */
 
 const PET_KILL_NEED = { common: 12, uncommon: 18, rare: 28, epic: 40, legendary: 55, mythic: 75 };
+const PET_COIN_COST = { common: 18, uncommon: 28, rare: 45, epic: 65, legendary: 90, mythic: 120 };
+
+/** Mats munten → pet coins: elke 2 gouden munten = 1 pet coin aan einde ronde. */
+function matsPetCoinsFromRun(matsCoins) {
+  return Math.max(0, Math.floor((matsCoins || 0) / 2));
+}
+
+function petCoinCost(petId) {
+  const def = petDef(petId);
+  if (!def) return 999;
+  const sp = SPECIES[def.speciesId];
+  return PET_COIN_COST[sp.rarity] || 30;
+}
+
+function petCoinsBalance() {
+  return Math.max(0, Math.floor(Number(save.petCoins) || 0));
+}
+
+function canBuyPetWithCoins(petId) {
+  if (isPetTamed(petId)) return false;
+  return petCoinsBalance() >= petCoinCost(petId);
+}
 
 /** 12 launch-pets — 1 per type/thema, gekoppeld aan dex-species */
 const PET_ROSTER = [
@@ -100,6 +122,22 @@ function petPassiveBonus() {
   return out;
 }
 
+function buyPetWithCoins(petId) {
+  if (isPetTamed(petId)) return null;
+  const def = petDef(petId);
+  if (!def) return null;
+  const cost = petCoinCost(petId);
+  if (petCoinsBalance() < cost) return null;
+  save.petCoins = petCoinsBalance() - cost;
+  if (!save.pets || typeof save.pets !== 'object') save.pets = {};
+  save.pets[petId] = { at: Date.now(), coins: cost };
+  if (!save.activePet) save.activePet = petId;
+  save.stats.petsTamed = (save.stats.petsTamed || 0) + 1;
+  persist();
+  try { AudioSys.sfx('summon'); } catch (_) {}
+  return { def, cost, sp: SPECIES[def.speciesId] };
+}
+
 function equipPet(petId) {
   if (!petId) { save.activePet = null; persist(); return true; }
   if (!isPetTamed(petId)) return false;
@@ -112,8 +150,11 @@ function petProgressLine(speciesId) {
   const def = PET_BY_SPECIES[speciesId];
   if (!def) return '';
   if (isPetTamed(def.id)) return save.activePet === def.id ? 'Pet · actief' : 'Pet · getemd';
+  const cost = petCoinCost(def.id);
+  if (canBuyPetWithCoins(def.id)) return `Pet · kopen ${cost} 🪙`;
   const need = petKillNeed(speciesId);
   const cur = save.dex[speciesId] || 0;
-  if (cur <= 0) return `Pet · ${need} kills`;
-  return `Pet · ${Math.min(cur, need)}/${need} kills`;
+  const coinHint = petCoinsBalance() > 0 ? ` · ${petCoinsBalance()}/${cost} 🪙` : '';
+  if (cur <= 0) return `Pet · ${need} kills${coinHint}`;
+  return `Pet · ${Math.min(cur, need)}/${need} kills${coinHint}`;
 }
