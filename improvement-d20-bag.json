@@ -336,6 +336,18 @@
   ],
   "userFeatureLog": [
     {
+      "id": "harden-movement",
+      "d20Face": null,
+      "userWords": "Harden movement — strakkere loop, joy vasthouden, richting wissel",
+      "versions": [
+        "1.17.0"
+      ],
+      "commits": [],
+      "code": "applyFighterMove, padDigitalMove, joyMoveAxis; digital accel 2.4×, hurt-slide 42%, air 78%",
+      "status": "done",
+      "note": "movement feel pass"
+    },
+    {
       "id": "wall-bounds-joy-hold",
       "d20Face": null,
       "userWords": "muur sloop onzichtbare muur bij stenen; joycon werkt maar 1 seconde niet vasthouden",

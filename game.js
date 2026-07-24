@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.16.9';
+const APP_VERSION = '1.17.0';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 126;
+const SW_CACHE_REV = 127;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -2192,6 +2192,63 @@ function clampFighterX(f, game, x) {
   return clamp(x, b.min, b.max);
 }
 
+/** Beweging — hardened: snappy keyboard-turn, analog joy, lichte hurt-control. */
+const MOVE_ACCEL = 0.00068;
+const MOVE_FLIP_ACCEL = 0.0048;
+const MOVE_DIGITAL_ACCEL_MUL = 2.4;
+const MOVE_STOP_DECAY = 0.0018;
+const MOVE_AIR_MUL = 0.78;
+const MOVE_ATTACK_RECOVER_MUL = 0.76;
+const MOVE_HURT_MUL = 0.42;
+
+function padDigitalMove(pad) {
+  if (!pad) return 0;
+  let m = 0;
+  if (pad.side === 'p1') {
+    if (pad.keys['arrowleft'] || pad.keys['a']) m -= 1;
+    if (pad.keys['arrowright'] || pad.keys['d']) m += 1;
+  } else {
+    if (pad.keys['arrowleft']) m -= 1;
+    if (pad.keys['arrowright']) m += 1;
+  }
+  return clamp(m, -1, 1);
+}
+
+function joyMoveAxis(pad) {
+  if (!pad || !pad.joy.active) return 0;
+  const jx = pad.joy.dx;
+  if (Math.abs(jx) < JOY_DEAD_PX) return 0;
+  const t = clamp(jx / JOY_MAX_PX, -1, 1);
+  return Math.sign(t) * Math.pow(Math.abs(t), 0.78);
+}
+
+function applyFighterMove(f, mv, dt, opts) {
+  opts = opts || {};
+  const canAct = opts.canAct !== false;
+  let targetVx = mv * f.speed;
+  if (!f.onGround) targetVx *= MOVE_AIR_MUL;
+
+  const flip = f.vx !== 0 && mv !== 0 && Math.sign(f.vx) !== Math.sign(mv);
+  let accel = flip ? MOVE_FLIP_ACCEL : MOVE_ACCEL;
+  if (f.isPlayer || f.playerSlot) accel *= flip ? 1.3 : 1.14;
+  if (opts.digital) accel *= MOVE_DIGITAL_ACCEL_MUL;
+
+  if (flip && f.onGround && Math.abs(f.vx) > 30) {
+    f.vx *= opts.digital ? 0.1 : 0.16;
+  }
+
+  const lerpPow = opts.digital && canAct && Math.abs(mv) > 0.45 ? accel * 2.5 : accel;
+  f.vx = lerp(f.vx, targetVx, 1 - Math.pow(lerpPow, dt));
+
+  if (flip && canAct && Math.abs(mv) > 0.1 && f.onGround) {
+    f.vx += mv * f.speed * (opts.digital ? 0.34 : 0.24);
+  }
+  if (canAct && Math.abs(mv) < 0.035 && f.onGround) {
+    f.vx = lerp(f.vx, 0, 1 - Math.pow(MOVE_STOP_DECAY, dt));
+  }
+  if (Math.abs(mv) > 0.05) f.face = mv > 0 ? 1 : -1;
+}
+
 function vsSpawnX(slot) {
   const pad = Math.max(40, W * 0.08);
   const usable = Math.max(80, W - pad * 2);
@@ -3835,18 +3892,8 @@ function makePad(side) {
       }
     },
     get move() {
-      let m = 0;
-      if (this.side === 'p1') {
-        if (this.keys['arrowleft'] || this.keys['a']) m -= 1;
-        if (this.keys['arrowright'] || this.keys['d']) m += 1;
-      } else {
-        if (this.keys['arrowleft']) m -= 1;
-        if (this.keys['arrowright']) m += 1;
-      }
-      if (this.joy.active) {
-        const jx = this.joy.dx;
-        if (Math.abs(jx) >= JOY_DEAD_PX) m += clamp(jx / JOY_MAX_PX, -1, 1);
-      }
+      let m = padDigitalMove(this);
+      if (this.joy.active) m += joyMoveAxis(this);
       return clamp(m, -1, 1);
     },
     press(action) { this.pressed[action] = true; },
@@ -4796,27 +4843,19 @@ class Fighter {
     }
 
     const canAct = this.hurtT <= 0 && !this.blocking;
-    // bewegen — snappere accel, recovery-slide, directe face-flip
+    const pad = (this.playerSlot === 2) ? InputP2 : (this.isPlayer ? Input : null);
     let mv = 0;
     if (canAct) {
       if (!this.attack) mv = it.move || 0;
       else if (this.attack.t >= this.attack.windup + this.attack.active) {
-        mv = (it.move || 0) * 0.7;
+        mv = (it.move || 0) * MOVE_ATTACK_RECOVER_MUL;
       }
+    } else if ((this.isPlayer || this.playerSlot) && this.hurtT > 0 && this.onGround) {
+      mv = (it.move || 0) * MOVE_HURT_MUL;
     }
-    const targetVx = mv * this.speed;
-    const flip = this.vx !== 0 && mv !== 0 && Math.sign(this.vx) !== Math.sign(mv);
-    let accel = flip ? 0.0034 : 0.00072;
-    if (this.isPlayer) accel *= flip ? 1.25 : 1.12;
-    if (flip && this.onGround && Math.abs(this.vx) > 36) this.vx *= 0.22;
-    this.vx = lerp(this.vx, targetVx, 1 - Math.pow(accel, dt));
-    if (flip && canAct && Math.abs(mv) > 0.12 && this.onGround) {
-      this.vx += mv * this.speed * 0.22;
-    }
-    if (canAct && Math.abs(mv) < 0.035 && this.onGround) {
-      this.vx = lerp(this.vx, 0, 1 - Math.pow(0.0014, dt));
-    }
-    if (Math.abs(mv) > 0.05) this.face = mv > 0 ? 1 : -1;
+    const dig = pad && padDigitalMove(pad) !== 0
+      && Math.abs((it.move || 0) - padDigitalMove(pad)) < 0.08;
+    applyFighterMove(this, mv, dt, { canAct: canAct || this.hurtT > 0, digital: !!dig });
 
     if (canAct && it.jump && this.onGround && !this.attack) {
       this.vy = -this.jumpV; this.onGround = false; AudioSys.sfx('jump');

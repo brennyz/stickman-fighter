@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-24 | — | **User: harden movement.** `applyFighterMove` — snappy keyboard-turn (2.4× accel), joy curve, air control, lichte beweging tijdens hurt, snellere stop. v1.17.0 / SW v127. |
 | 2026-07-24 | — | **User fix: muur + joystick.** Muur-modus: speler mag langs hele muur lopen (geen onzichtbare muur vóór rechter stenen). Touch-joy: vasthouden werkt — geen stale-release meer bij stil vinger. v1.16.9 / SW v126. |
 | 2026-07-24 | — | **User: KETS-BAM ontsnapping + strakkere loop.** Omringd/stunlock → midden-symbool (tik / **E**): shockwave schade + knockback, ~1s super-armor (geen stun). Snappere links/rechts turn (accel + momentum-cut). v1.16.8 / SW v125. |
 | 2026-07-24 | — | **User horde deel 2/2:** **+55 nieuwe soorten** in monsterboek (**114 totaal = 6× origineel**), UNLOCK_AT tot level 50; baas-golven krijgen horde-padding (3–10 extra minions). v1.16.7 / SW v124. |
