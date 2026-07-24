@@ -109,9 +109,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.17';
+const APP_VERSION = '1.17.18';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 144;
+const SW_CACHE_REV = 145;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -1589,7 +1589,7 @@ function recoverToMenu() {
       const pb = document.getElementById('pauseBtn');
       if (pb) pb.classList.remove('show');
     }
-    try { AudioSys.play('menu'); } catch (_) {}
+    try { playMenuBgm(true); } catch (_) {}
   } catch (err) {
     console.error('[Stickman] recoverToMenu', err);
     state = 'menu';
@@ -3712,7 +3712,7 @@ const AudioSys = {
     const leadPat = s.lead[bar % s.lead.length];
     const L = leadPat[i];
     if (L != null) this.tone(midi(L), midi(L) * 0.995, spb * 1.6, 'square', 0.12, mg, t);
-    if (s.id === 'menu') {
+    if (s.id === 'menu' || s.id === 'menu2' || s.id === 'menu3' || s.id === 'menuArcade') {
       if (i === 0 && bar % 4 === 0) {
         this.tone(midi(72), midi(72), spb * 1.8, 'square', 0.13, mg, t);
         this.tone(midi(76), midi(79), spb * 1.2, 'square', 0.09, mg, t + spb * 0.45);
@@ -3723,6 +3723,18 @@ const AudioSys = {
       if (i === 0 && bar % 2 === 0) {
         this.tone(midi(57), midi(57), spb * 3.8, 'sine', 0.06, mg, t);
       }
+    }
+    if (s.id === 'menu2') {
+      if (i === 4 || i === 12) this.tone(midi(79), midi(84), spb * 1.1, 'square', 0.1, mg, t);
+      if (i === 0 && bar % 8 === 4) this.tone(midi(52), midi(45), spb * 2.6, 'triangle', 0.08, mg, t);
+    }
+    if (s.id === 'menu3') {
+      if (i === 0 && bar % 4 === 2) this.tone(midi(64), midi(67), spb * 3.4, 'sine', 0.07, mg, t);
+      if (i === 8 && bar % 4 === 0) this.tone(midi(60), midi(55), spb * 2.8, 'triangle', 0.06, mg, t);
+    }
+    if (s.id === 'menuArcade') {
+      if (i === 0 || i === 8) this.tone(midi(67), midi(60), spb * 1.5, 'square', 0.09, mg, t);
+      if (i === 4 && bar % 2 === 0) this.noise(0.03, 0.1, 5200, true, mg, t);
     }
     if (s.id === 'elite' || s.id === 'boss') {
       if (i === 0 && bar % 2 === 0) {
@@ -3759,6 +3771,36 @@ const SONGS = {
     lead: [
       [69,null,72,null, 76,null,72,null, 74,null,71,null, 69,null,64,null],
       [69,null,72,null, 76,null,79,null, 77,null,74,null, 72,null,71,null],
+    ],
+  },
+  /** Menu variant — sneller, helderder */
+  menu2: {
+    bpm: 104,
+    kick: [0, 8], snare: [4, 12], hat: [2, 6, 10, 14],
+    bass: [48,null,null,null, 52,null,null,null, 45,null,null,null, 43,null,45,null],
+    lead: [
+      [72,null,76,null, 79,null,76,null, 77,null,74,null, 72,null,69,null],
+      [74,null,77,null, 81,null,77,null, 79,null,76,null, 74,null,72,null],
+    ],
+  },
+  /** Menu variant — eiland / avontuur sfeer */
+  menu3: {
+    bpm: 84,
+    kick: [0], snare: [], hat: [4, 12],
+    bass: [43,null,null,null, 40,null,null,null, 38,null,null,null, 36,null,38,null],
+    lead: [
+      [64,null,67,null, 71,null,67,null, 69,null,64,null, 62,null,60,null],
+      [67,null,71,null, 74,null,71,null, 69,null,67,null, 64,null,62,null],
+    ],
+  },
+  /** Menu variant — coin-op arcade */
+  menuArcade: {
+    bpm: 110,
+    kick: [0, 4, 8, 12], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [50,null,50,null, 48,null,45,null, 50,null,52,null, 48,null,45,null],
+    lead: [
+      [76,null,79,null, 81,null,79,null, 76,null,74,null, 72,null,76,null],
+      [79,null,81,null, 84,null,81,null, 79,null,76,null, 74,null,72,null],
     ],
   },
   battle: {
@@ -3829,6 +3871,15 @@ const SONGS = {
     ],
   },
 };
+
+const MENU_BGM_TRACKS = ['menu', 'menu2', 'menu3', 'menuArcade'];
+let menuBgmIdx = 0;
+
+/** Rotate menu BGM when returning from a game; keep current track on boot/toggle. */
+function playMenuBgm(fromGame) {
+  if (fromGame) menuBgmIdx = (menuBgmIdx + 1) % MENU_BGM_TRACKS.length;
+  AudioSys.play(MENU_BGM_TRACKS[menuBgmIdx]);
+}
 
 /* =============================== INPUT ================================= */
 const SHURIKEN_CD = 0.4;
@@ -10030,7 +10081,7 @@ const UI = {
       this.renderMenu();
       this.show('menuScreen');
       AudioSys.setPaused(false);
-      AudioSys.play('menu');
+      playMenuBgm(true);
       scheduleResize();
       if (window.StickInstall) window.StickInstall.refreshMenuButton();
     } catch (err) {
@@ -10292,16 +10343,17 @@ const UI = {
         tipEl.textContent = `Nog niet gespeeld: ${next.label} — één hint bovenin, geen toast-stapel`;
       } else {
         const tips = [
+          'Tip: menu = Avontuur · Arcade · 2P · Collectie — kies je modus',
           'Tip: 5 eilanden — baas Lv 10/20/30/40/50 opent volgend eiland',
           'Tip: skill gate — in avontuur max wapen per eiland (zie Tips → Eilanden)',
           'Tip: 5× verlies op één level = Meester-buff +20% tot je wint',
+          'Tip: Training = solo oefenen · Versus = 2P lokaal op iPad',
           'Tip: volle chakra → tik 🌀 voor Rasengan',
-          'Tip: 2 spelers = liggend iPad, P1 links / P2 rechts',
           'Tip: muur-combo’s = sneller sloop & meer XP',
           'Tip: monsterboek vullen = meer max HP',
           'Tip: “Verder spelen” hervat je laatste modus',
+          'Tip: menu-muziek wisselt telkens als je terugkeert vanuit een modus',
           'Tip: Missies → claim XP (knop pulseert als klaar)',
-          'Tip: Menu → Tips toont welke modi je al kent',
         ];
         const i = Math.floor(Date.now() / 8000) % tips.length;
         tipEl.textContent = tips[i];
@@ -11116,7 +11168,7 @@ const UI = {
     }
     this.show('resultScreen');
     AudioSys.setPaused(false);
-    AudioSys.play('menu');
+    playMenuBgm(true);
     AudioSys.applyVolumes();
   },
 };
@@ -11497,7 +11549,7 @@ document.addEventListener('keydown', e => {
 bindPress(document.getElementById('togMusic'), () => {
   AudioSys.init();
   AudioSys.setMusicOn(!save.music);
-  if (save.music) AudioSys.play('menu');
+  if (save.music) playMenuBgm(false);
   UI.renderMenu();
 });
 bindPress(document.getElementById('togSfx'), () => {
@@ -11527,7 +11579,7 @@ bindPress(pauseTogMusic, () => {
   if (save.music && state === 'pause' && AudioSys.desiredSong) {
     AudioSys.play(AudioSys.desiredSong);
   } else if (save.music && state !== 'play' && state !== 'pause') {
-    AudioSys.play('menu');
+    playMenuBgm(false);
   }
   UI.renderPauseToggles();
   AudioSys.sfx('select');
