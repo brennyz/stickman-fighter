@@ -21,13 +21,7 @@
     "remainingCount": 10,
     "cycle": 3
   },
-  "pending": {
-    "face": 9,
-    "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
-    "rolledAt": "2026-07-24T18:46:11Z",
-    "remainingCount": 10,
-    "cycle": 3
-  },
+  "pending": null,
   "implemented": [
     {
       "face": 2,
@@ -447,6 +441,13 @@
       "note": "Kill rings + banner streak + lite FX rings",
       "version": "1.17.26",
       "doneAt": "2026-07-24T18:44:14Z",
+      "cycle": 3
+    },
+    {
+      "face": 9,
+      "note": "2P neutral strip, joy slop, menu tap guard",
+      "version": "1.17.28",
+      "doneAt": "2026-07-24T18:47:53Z",
       "cycle": 3
     }
   ],
