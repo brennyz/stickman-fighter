@@ -11,7 +11,6 @@
     3,
     16,
     20,
-    19,
     11,
     5,
     8,
@@ -19,10 +18,10 @@
     15
   ],
   "lastRoll": {
-    "face": 2,
-    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
-    "rolledAt": "2026-07-24T15:49:24Z",
-    "remainingCount": 14,
+    "face": 19,
+    "category": "Muur & minigames \u2014 combo, timer, record",
+    "rolledAt": "2026-07-24T17:16:46Z",
+    "remainingCount": 13,
     "cycle": 3
   },
   "pending": null,
@@ -424,6 +423,13 @@
       "note": "Melee telegraph, Chidori jump-cancel, fair spacing",
       "version": "1.17.13",
       "doneAt": "2026-07-24T15:50:40Z",
+      "cycle": 3
+    },
+    {
+      "face": 19,
+      "note": "Muur cyclus 3: record-tempo HUD, combo \u00d73/\u00d75/\u00d78, 5s hint, eindscherm tempo",
+      "version": "1.17.16",
+      "doneAt": "2026-07-24T17:19:12Z",
       "cycle": 3
     }
   ],
@@ -1441,6 +1447,13 @@
       "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
       "rolledAt": "2026-07-24T15:49:24Z",
       "remainingCount": 14,
+      "cycle": 3
+    },
+    {
+      "face": 19,
+      "category": "Muur & minigames \u2014 combo, timer, record",
+      "rolledAt": "2026-07-24T17:16:46Z",
+      "remainingCount": 13,
       "cycle": 3
     }
   ],

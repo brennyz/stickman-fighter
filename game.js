@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.15';
+const APP_VERSION = '1.17.16';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 142;
+const SW_CACHE_REV = 143;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -153,6 +153,16 @@ function playerWeaponForAdventure(levelN) {
   return bestWeaponForAdventureCap(cap);
 }
 function advFailCount(levelN) { return (save.advFails && save.advFails[levelN]) || 0; }
+function wallRecordPaceDelta(g) {
+  const best = save.bestWall || 0;
+  if (!g || best <= 0) return null;
+  const dur = g.wallDuration || 60;
+  const elapsed = dur - (g.wallTimer || 0);
+  if (elapsed < 3) return null;
+  const expected = (best / dur) * elapsed;
+  return Math.round(g.score - expected);
+}
+function wallComboDmgPct(combo) { return Math.min(combo, 12) * 4; }
 let save = loadSave();
 function fighterJutsuKind(f) {
   if (!f) return 'rasengan';
@@ -1892,8 +1902,8 @@ function applyModeOnboarding(mode, g) {
       ? 'Eerste minuut: ontwijk rode laser · blokkeer dichtbij · chakra vol → SUPER'
       : 'Eerste minuut: ontwijk lasers · Shift = substitutie · chakra vol → U',
     wall: touch
-      ? '60s timer · combo-balk vol = sneller sloop · record bovenin'
-      : '60s · combo-balk vol houden · record + tempo in HUD',
+      ? '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD'
+      : '60s · combo-milestones · voor/achter record-tempo · 5s countdown',
     versus: touch
       ? 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best'
       : 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
@@ -7602,7 +7612,11 @@ class Game {
     this.score = 0; this.combo = 0; this.comboT = 0; this.wallGen = 0;
     this.maxCombo = 0;
     this.wallRecordToast = false;
-    this.wallHints = { half: false, quarter: false, comboWarn: false, nearRec: false, lostCombo: false };
+    this.wallHints = {
+      half: false, quarter: false, five: false, comboWarn: false,
+      nearRec: false, lostCombo: false, startCombo: false,
+      combo3: false, combo5: false, combo8: false,
+    };
     this.layoutWall(true);
     this.banner('SLOOP DE MUUR!', 1.5, '#ffd75e', 46);
     if (!modeOnboardingSeen('wall')) {
@@ -7652,6 +7666,16 @@ class Game {
       this.floater(W / 2, 108, 'Laatste 15s — record jagen!', '#ffd75e', 15);
       if (this.wallTimer < 10) AudioSys.sfx('bonus');
     }
+    if (!hints.five && prevTimer > 5 && this.wallTimer <= 5) {
+      hints.five = true;
+      this.floater(W / 2, 108, '5s — vol gas!', '#ff6b6b', 15);
+      AudioSys.sfx('bonus');
+    }
+    const elapsed = (this.wallDuration || 60) - this.wallTimer;
+    if (!hints.startCombo && elapsed > 2.5 && elapsed < 9 && this.combo === 0) {
+      hints.startCombo = true;
+      this.floater(W / 2, 132, 'Tip: snelle opeenvolgende slagen vullen combo', '#7cf5ff', 14);
+    }
     const prevComboT = this.comboT;
     this.comboT -= dt;
     if (this.comboT <= 0) {
@@ -7694,16 +7718,21 @@ class Game {
     checkAchievements();
     AudioSys.sfx(isRecord ? 'win' : 'bell');
     this.banner('TIJD!', 1.5, '#ffd75e', 56);
+    const pace = Math.round(this.score); // 60s run → stenen ≈ per minuut
+    const paceDelta = wallRecordPaceDelta({ wallTimer: 0, wallDuration: this.wallDuration, score: this.score });
     let tip = isRecord ? 'Nieuw record — share met een vriend!' : 'Tip: hou combo vast voor snellere sloop';
     if (!isRecord && best > 0) {
       const gap = best - this.score;
       if (gap > 0 && gap <= 15) tip = `Nog ${gap} stenen tot je record — combo helpt!`;
       else if ((this.maxCombo || 0) < 5) tip = 'Tip: snelle opeenvolgende slagen vullen de combo-balk';
       else if ((this.maxCombo || 0) >= 8) tip = `Sterke combo (×${this.maxCombo}) — volgende keer record?`;
+      else if (paceDelta != null && paceDelta < -3) tip = `Achter record-tempo — probeer combo ×5+ voor meer sloop`;
+      else if (paceDelta != null && paceDelta >= 3) tip = 'Goed tempo — volgende run kan record breken!';
     }
     setTimeout(() => UI.showResult(true, {
       title: isRecord ? 'NIEUW RECORD!' : 'TIJD IS OM!',
-      detail: `${this.score} stenen · record ${best} · max combo ×${this.maxCombo || 0}`,
+      detail: `${this.score} stenen (~${pace}/min) · record ${best} · max combo ×${this.maxCombo || 0}` +
+        (paceDelta != null && best > 0 && !isRecord ? ` · tempo ${paceDelta >= 0 ? '+' : ''}${paceDelta} vs record` : ''),
       xp: this.sessionXP, mode: 'wall', win: true,
       tip,
     }), 1200);
@@ -7958,6 +7987,20 @@ class Game {
             this.score++;
             this.combo++; this.comboT = this.wallComboWindow || 1.4;
             this.noteCombo();
+            const wh = this.wallHints || {};
+            if (this.combo === 3 && !wh.combo3) {
+              wh.combo3 = true;
+              this.floater(W * 0.5, 136, `Combo ×3 · sloop +${wallComboDmgPct(3)}%`, '#7cf5ff', 15);
+            } else if (this.combo === 5 && !wh.combo5) {
+              wh.combo5 = true;
+              this.floater(W * 0.5, 136, `Combo ×5 · sloop +${wallComboDmgPct(5)}%`, '#7cf5ff', 16);
+              AudioSys.sfx('combo');
+            } else if (this.combo === 8 && !wh.combo8) {
+              wh.combo8 = true;
+              this.floater(W * 0.5, 136, `Combo ×8 · sloop +${wallComboDmgPct(8)}%`, '#ffd75e', 17);
+              AudioSys.sfx('combo');
+              haptic(14);
+            }
             if (!this.wallRecordToast && this.score > save.bestWall) {
               this.wallRecordToast = true;
               this.floater(W * 0.5, 118, 'NIEUW RECORD!', '#ffd75e', 22);
@@ -9286,6 +9329,15 @@ class Game {
       c.textAlign = 'center';
       c.fillStyle = 'rgba(0,0,0,.42)';
       this.rr(c, barX, 48, barW, 7, 4); c.fill();
+      c.strokeStyle = 'rgba(255,255,255,.22)';
+      c.lineWidth = 1;
+      for (const frac of [0.5, 0.25]) {
+        const tx = barX + barW * frac;
+        c.beginPath();
+        c.moveTo(tx, 47);
+        c.lineTo(tx, 56);
+        c.stroke();
+      }
       c.fillStyle = urgent ? '#ff6b6b' : '#7cf5ff';
       this.rr(c, barX, 48, Math.max(4, barW * timeFrac), 7, 4); c.fill();
 
@@ -9320,6 +9372,7 @@ class Game {
       } else {
         c.fillText(onPace && bestSaved > 0 ? `Record gebroken · ${rec}` : `Record: ${rec}`, W / 2, 86);
       }
+      let showPaceDelta = false;
       const elapsed = wallDur - this.wallTimer;
       if (elapsed > 2 && this.score > 0) {
         const pace = Math.round((this.score / elapsed) * 60);
@@ -9327,13 +9380,23 @@ class Game {
         c.font = '700 12px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.62)';
         c.fillText(`~${pace}/min · projectie ~${proj}`, W / 2, 102);
+        const paceDelta = wallRecordPaceDelta(this);
+        if (paceDelta != null && bestSaved > 0) {
+          showPaceDelta = true;
+          c.font = '700 11px sans-serif';
+          c.fillStyle = paceDelta >= 0 ? '#7cfc8a' : '#ffb0b8';
+          c.fillText(
+            paceDelta >= 0 ? `Voor op record-tempo +${paceDelta}` : `Achter record-tempo ${paceDelta}`,
+            W / 2, 116
+          );
+        }
       }
       const comboWin = this.wallComboWindow || 1.4;
       if (this.combo > 0 && this.comboT > 0) {
         const cFrac = clamp(this.comboT / comboWin, 0, 1);
         const cBarW = Math.min(160, W * 0.42);
         const cBarX = (W - cBarW) / 2;
-        const cy = this.combo > 1 ? 148 : 132;
+        const cy = showPaceDelta ? (this.combo > 1 ? 162 : 146) : (this.combo > 1 ? 148 : 132);
         c.font = '700 9px sans-serif';
         c.textAlign = 'left';
         c.fillStyle = 'rgba(124,245,255,.55)';
@@ -9347,7 +9410,7 @@ class Game {
       if (this.combo > 1) {
         const pulse = motionReduced() ? 1 : (1 + Math.sin(this.t * 10) * 0.1);
         c.save();
-        c.translate(W / 2, 128);
+        c.translate(W / 2, showPaceDelta ? 142 : 128);
         c.scale(pulse, pulse);
         c.font = '900 22px sans-serif'; c.fillStyle = '#7cf5ff';
         c.fillText(`COMBO ×${this.combo}`, 0, 0);
@@ -9357,7 +9420,7 @@ class Game {
       } else if (this.combo === 1 && this.comboT > 0) {
         c.font = '700 12px sans-serif';
         c.fillStyle = 'rgba(124,245,255,.75)';
-        c.fillText('Combo actief — nog een steen!', W / 2, 118);
+        c.fillText('Combo actief — nog een steen!', W / 2, showPaceDelta ? 132 : 118);
       }
     } else if (this.mode === 'coinrun') {
       const tLeft = Math.ceil(Math.max(0, this.coinTimer));
@@ -9840,7 +9903,7 @@ const UI = {
     const modes = [
       { id: 'adventure', label: 'Avontuur', tip: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok vóór level' },
       { id: 'training', label: 'Training', tip: 'Lasers ontwijken · 2 rondes · Robot Chidori-telegraph' },
-      { id: 'wall', label: 'Muur', tip: '60s · combo = sneller · beat record' },
+      { id: 'wall', label: 'Muur', tip: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing' },
       { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
       { id: 'coinrun', label: 'Mats', tip: '45s munten · mik ↑ · vliegers +3' },
     ];
@@ -10160,6 +10223,7 @@ const UI = {
       `Vechter <b>Lv ${save.lvl}</b> &nbsp;·&nbsp; Wapen: <b>${w.name}</b> &nbsp;·&nbsp; ` +
       `Stijl: <b style="color:${st.accent}">${st.name}</b> &nbsp;·&nbsp; ` +
       `Monsterboek: <b>${dexCount()}/${SPECIES_ORDER.length}</b> &nbsp;·&nbsp; Muur: <b>${save.bestWall}</b>` +
+      (save.bestWall > 0 ? ` <span style="opacity:.75">· combo = sneller sloop</span>` : '') +
       `<div style="font-size:12px;margin-top:6px;color:#9db1e3">${adventureProgressLine()}</div>` +
       `<div class="xpline"><div style="width:${Math.round(save.xp / need * 100)}%"></div></div>` +
       `<div style="font-size:12px;margin-top:4px;opacity:.85">${save.xp}/${need} XP · ${save.trainWins} train-wins</div>`;
