@@ -603,25 +603,13 @@ const UI = {
       if (pick) pick.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     });
     const fightBtn = document.getElementById('btnCharFight');
-    if (fightBtn) fightBtn.disabled = !(vsSelect.p1 && vsSelect.p2);
+    if (fightBtn) {
+      fightBtn.disabled = !(vsSelect.p1 && vsSelect.p2);
+      fightBtn.setAttribute('aria-disabled', fightBtn.disabled ? 'true' : 'false');
+    }
     const backBtn = document.getElementById('charSelectBack');
     if (backBtn) {
       backBtn.textContent = this.charPickStep === 2 ? t('ui.charBackP1') : t('ui.charBackMenu');
-    }
-    const backP = document.getElementById('charPickBackP1');
-    if (backP) {
-      backP.style.display = this.charPickStep === 2 ? 'flex' : 'none';
-      if (!backP.dataset.bound) {
-        backP.dataset.bound = '1';
-        bindPress(backP, () => {
-          AudioSys.sfx('select');
-          this.charPickStep = 1;
-          this.renderCharSelect();
-          requestAnimationFrame(() => {
-            try { this.resetInnerScrolls(document.getElementById('charSelectScreen')); } catch (_) {}
-          });
-        });
-      }
     }
     const bindPickPill = (id, step) => {
       const pill = document.getElementById(id);
@@ -887,6 +875,7 @@ const UI = {
         }).catch(() => {});
       }
     }
+    if (typeof renderLangSwitch === 'function') renderLangSwitch();
   },
 
   renderMissions() {

@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=188">
+<link rel="stylesheet" href="styles/main.css?v=192">
 
 
 
@@ -90,13 +90,13 @@
         </div>
         <p class="menu-hub-hint" id="menuHubHint"></p>
         <button type="button" class="menu-profile-bar" id="menuProfileBar" aria-label="Profiel en missies"></button>
-        <div class="menu-lang-wrap" style="margin:12px auto 0;width:min(94vw,420px);text-align:center">
-          <div style="font-weight:900;color:#7cf5ff;font-size:11px;margin-bottom:6px" id="menuLangLbl">Taal / Language</div>
-          <div id="menuLangBar" class="dex-filter-bar" style="justify-content:center;margin-bottom:0" role="group" aria-label="Taal / Language"></div>
-        </div>
       </div>
     </div>
     <div class="menu-landing-footer">
+      <div class="menu-lang-wrap">
+        <div class="menu-lang-lbl" id="menuLangLbl">Taal / Language</div>
+        <div id="menuLangBar" class="dex-filter-bar menu-lang-bar" role="group" aria-label="Taal / Language"></div>
+      </div>
       <div class="menu-dock" aria-label="Snelkoppelingen">
         <button class="btn tog" id="togMusic" type="button" title="Muziek"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V6l10-2v14"/><circle cx="7" cy="18" r="2" fill="currentColor"/><circle cx="17" cy="16" r="2" fill="currentColor"/></svg></span>Muziek</button>
         <button class="btn tog" id="btnMissions" type="button" title="Missies"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 4h8l2 4v12H6V8z"/><path d="M12 8v6M10 11h4"/></svg></span><span id="btnMissionsLbl">Missies</span></button>
@@ -184,7 +184,7 @@
   <div class="char-grid-scroll char-arena-grid-wrap" id="charGridScroll" data-scroll-reset>
     <div class="char-grid" id="charGrid"></div>
   </div>
-  <button type="button" class="btn mode-btn b-gray big-touch" id="charPickBackP1" style="display:none;width:min(86vw,480px)">&#8592; Andere P1 kiezen</button>
+  <div class="char-arena-footer">
   <div class="char-arena-actions">
     <button type="button" class="btn tog big-touch" id="btnCharSagaClash" style="flex:1 1 100%;margin:0"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l2 6h6l-5 4 2 6-5-3.6L7 19l2-6-5-4h6z"/></svg></span>Legend clash (7 icons)</button>
     <button type="button" class="btn tog big-touch" id="btnCharRandom" style="flex:1 1 200px;margin:0"><span class="tog-ico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4" fill="currentColor" opacity=".9"/><circle cx="9" cy="9" r="1.7" fill="#1a2342"/><circle cx="15" cy="15" r="1.7" fill="#1a2342"/><circle cx="12" cy="12" r="1.7" fill="#1a2342"/></svg></span>Willekeurig duo</button>
@@ -192,11 +192,11 @@
     <button type="button" class="btn tog big-touch" id="btnCharSwap" style="flex:1 1 160px;margin:0">&#8644; Wissel P1/P2</button>
   </div>
   <button type="button" class="btn char-fight-btn" id="btnCharFight">VECHT! (best-of-3)</button>
+  </div>
   <div class="step-card char-arena-tip" id="charIpadTipCard">
     <b>iPad:</b> speler 1 gebruikt de <b>linker helft</b> van het scherm (joystick + knoppen),
     speler 2 de <b>rechter helft</b>. Draai je iPad liggend voor het meeste ruimte.
   </div>
-  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
   </div>
 </div>
 

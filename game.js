@@ -133,9 +133,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.65';
+const APP_VERSION = '1.17.66';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 191;
+const SW_CACHE_REV = 192;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -1504,10 +1504,22 @@ function renderLangSwitchBar(bar) {
   bar.innerHTML = SUPPORTED_LANGS.map((code) =>
     `<button type="button" class="dex-filter-btn${cur === code ? ' active' : ''}" data-lang="${code}">${LANG_LABELS[code]}</button>`
   ).join('');
-  if (!bar.dataset.bound) {
-    bar.dataset.bound = '1';
-    bar.addEventListener('click', onLangSwitchClick);
-  }
+  bar.querySelectorAll('[data-lang]').forEach((btn) => {
+    const code = btn.getAttribute('data-lang');
+    if (!code) return;
+    btn.dataset.langBound = '1';
+    bindPress(btn, () => {
+      if (code === getLang()) return;
+      safeUiAction(() => {
+        setLang(code);
+        AudioSys.sfx('select');
+        UI.toast(t('settings.langChanged', { lang: LANG_LABELS[code] }), 2200);
+        UI.renderSettings();
+        UI.renderMenu();
+        if (typeof UI.renderModeHub === 'function') UI.renderModeHub();
+      }, 'setLang/' + code, t('ui.langSwitchFail') || 'Language switch failed');
+    });
+  });
 }
 
 function renderLangSwitch() {
@@ -14882,25 +14894,13 @@ const UI = {
       if (pick) pick.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     });
     const fightBtn = document.getElementById('btnCharFight');
-    if (fightBtn) fightBtn.disabled = !(vsSelect.p1 && vsSelect.p2);
+    if (fightBtn) {
+      fightBtn.disabled = !(vsSelect.p1 && vsSelect.p2);
+      fightBtn.setAttribute('aria-disabled', fightBtn.disabled ? 'true' : 'false');
+    }
     const backBtn = document.getElementById('charSelectBack');
     if (backBtn) {
       backBtn.textContent = this.charPickStep === 2 ? t('ui.charBackP1') : t('ui.charBackMenu');
-    }
-    const backP = document.getElementById('charPickBackP1');
-    if (backP) {
-      backP.style.display = this.charPickStep === 2 ? 'flex' : 'none';
-      if (!backP.dataset.bound) {
-        backP.dataset.bound = '1';
-        bindPress(backP, () => {
-          AudioSys.sfx('select');
-          this.charPickStep = 1;
-          this.renderCharSelect();
-          requestAnimationFrame(() => {
-            try { this.resetInnerScrolls(document.getElementById('charSelectScreen')); } catch (_) {}
-          });
-        });
-      }
     }
     const bindPickPill = (id, step) => {
       const pill = document.getElementById(id);
@@ -15166,6 +15166,7 @@ const UI = {
         }).catch(() => {});
       }
     }
+    if (typeof renderLangSwitch === 'function') renderLangSwitch();
   },
 
   renderMissions() {
