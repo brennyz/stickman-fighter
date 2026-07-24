@@ -20,9 +20,17 @@
 
   let deferredPrompt = null;
   let refreshing = false;
+  let swReg = null;
 
   function toast(msg, ms) {
     if (typeof UI !== 'undefined' && UI.toast) UI.toast(msg, ms || 3200);
+  }
+
+  function markSwUpdateReady(on) {
+    window.__sfSwUpdateReady = !!on;
+    try {
+      if (typeof window.updateNetStatus === 'function') window.updateNetStatus();
+    } catch (_) {}
   }
 
   function refreshMenuButton() {
@@ -59,9 +67,61 @@
     else if (screen) screen.classList.remove('active');
   }
 
+  async function applySwUpdate() {
+    if (!('serviceWorker' in navigator)) return false;
+    try {
+      const reg = swReg || await navigator.serviceWorker.ready;
+      if (!reg || !reg.waiting) return false;
+      markSwUpdateReady(true);
+      return new Promise((resolve) => {
+        const onChange = () => {
+          refreshing = true;
+          location.reload();
+          resolve(true);
+        };
+        navigator.serviceWorker.addEventListener('controllerchange', onChange, { once: true });
+        reg.waiting.postMessage({ type: 'SF_SKIP_WAITING' });
+        setTimeout(() => resolve(false), 8000);
+      });
+    } catch (_) {
+      return false;
+    }
+  }
+
+  async function nukeSwAndReload() {
+    try {
+      if (navigator.serviceWorker) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+      }
+      if (window.caches && caches.keys) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+    } catch (_) {}
+    try {
+      const u = new URL(location.href);
+      u.searchParams.set('fresh', String(Date.now()));
+      location.replace(u.toString());
+    } catch (_) {
+      location.reload();
+    }
+  }
+
+  async function forceFreshVersion() {
+    const soft = await applySwUpdate();
+    if (!soft) await nukeSwAndReload();
+  }
+
+  function trackWaitingWorker(reg) {
+    if (reg && reg.waiting && navigator.serviceWorker.controller) {
+      markSwUpdateReady(true);
+      toast('Update klaar — tik banner of «Verse versie»', 4200);
+    }
+  }
+
   function wireServiceWorker() {
     if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
-    // iPad-entry: geen SW tot taps werken (oude cache doodt knoppen)
     const skipSw = /[?&]ipad=1\b/.test(location.search) || /[?&]nosw=1\b/.test(location.search);
     if (skipSw) {
       navigator.serviceWorker.getRegistrations().then((regs) => {
@@ -71,37 +131,48 @@
     }
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' }).then((reg) => {
+        swReg = reg;
         refreshMenuButton();
+        trackWaitingWorker(reg);
         try { reg.update(); } catch (_) {}
-        if (reg.waiting) {
-          toast('Nieuwe versie klaar — tik «Verse versie»', 4200);
-        }
         reg.addEventListener('updatefound', () => {
           const nw = reg.installing;
           if (!nw) return;
           nw.addEventListener('statechange', () => {
             if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-              toast('Update klaar — tik «Verse versie» in menu', 4500);
+              markSwUpdateReady(true);
+              toast('Update klaar — tik banner of «Verse versie»', 4500);
             }
           });
         });
       }).catch(() => {});
     });
 
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible' || !navigator.onLine) return;
+      try {
+        (swReg || navigator.serviceWorker.ready).then((reg) => {
+          swReg = reg;
+          reg.update();
+          trackWaitingWorker(reg);
+        });
+      } catch (_) {}
+    });
+
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (refreshing) return;
       refreshing = true;
       try { toast('App-cache bijgewerkt', 2200); } catch (_) {}
+      markSwUpdateReady(false);
       if (typeof window.updateNetStatus === 'function') window.updateNetStatus();
     });
 
     navigator.serviceWorker.addEventListener('message', (ev) => {
       const data = ev.data || {};
       if (data.type === 'SF_SW_ACTIVATED' && data.cache) {
-        try {
-          sessionStorage.setItem('sf_sw_cache', data.cache);
-        } catch (_) {}
+        try { sessionStorage.setItem('sf_sw_cache', data.cache); } catch (_) {}
         refreshMenuButton();
+        markSwUpdateReady(false);
         if (typeof window.updateNetStatus === 'function') window.updateNetStatus();
       }
     });
@@ -157,5 +228,15 @@
   });
 
   refreshMenuButton();
-  window.StickInstall = { showInstallScreen, refreshMenuButton, isStandalone };
+  window.StickInstall = {
+    showInstallScreen,
+    refreshMenuButton,
+    isStandalone,
+    applySwUpdate,
+    nukeSwAndReload,
+    forceFreshVersion,
+  };
+  window.applySwUpdate = applySwUpdate;
+  window.nukeSwAndReload = nukeSwAndReload;
+  window.forceFreshVersion = forceFreshVersion;
 })();

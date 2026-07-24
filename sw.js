@@ -1,5 +1,5 @@
-/* Stickman Fighter — hardened offline cache (PWA) */
-const CACHE = 'stickfighter-app-v115';
+/* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 2 */
+const CACHE = 'stickfighter-app-v116';
 const ASSETS = [
   './',
   './index.html',
@@ -11,10 +11,27 @@ const ASSETS = [
   './tunnel-check.js',
   './install.js',
   './manifest.webmanifest',
+  './hosting.json',
+  './health.json',
   './icons/icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
 ];
+
+function offlineFallbackHtml() {
+  return `<!DOCTYPE html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stickman Fighter — offline</title><style>
+body{font-family:system-ui,-apple-system,sans-serif;background:#0a0d18;color:#e8f0ff;text-align:center;padding:28px 18px;margin:0}
+h1{font-family:Georgia,serif;color:#ffd75e;font-size:1.45rem;margin:0 0 8px}
+p{opacity:.88;line-height:1.45;max-width:360px;margin:0 auto 16px}
+button{font:inherit;font-weight:800;padding:12px 18px;border-radius:12px;border:none;background:#ffd75e;color:#2a1a00;margin:6px}
+.small{font-size:12px;opacity:.65;margin-top:18px}
+</style></head><body>
+<h1>Offline</h1>
+<p>Geen netwerk. Open via je <b>app-icoon</b> (PWA) als je het spel al eens online opende — save blijft lokaal.</p>
+<button type="button" onclick="location.reload()">Opnieuw proberen</button>
+<p class="small">Cache: ${CACHE}</p>
+</body></html>`;
+}
 
 function isNetworkFirstPath(pathname) {
   const p = pathname.replace(/\/+$/, '') || '/';
@@ -27,6 +44,7 @@ function isNetworkFirstPath(pathname) {
     p.endsWith('/ipad.html') ||
     p.endsWith('/android.html') ||
     p.endsWith('/speel.html') ||
+    p.endsWith('/404.html') ||
     p.endsWith('/game.js') ||
     p.endsWith('/tunnel-check.js') ||
     p.endsWith('/install.js') ||
@@ -39,7 +57,6 @@ function isNetworkFirstPath(pathname) {
 
 async function precache() {
   const cache = await caches.open(CACHE);
-  // Per-asset: één mislukte icon mag install niet breken
   await Promise.all(ASSETS.map(async (url) => {
     try {
       const res = await fetch(url, { cache: 'no-cache' });
@@ -93,12 +110,13 @@ self.addEventListener('fetch', (event) => {
         const cached = await caches.match(event.request, { ignoreSearch: true });
         if (cached) return cached;
         if (isDoc) {
-          const shell = await caches.match('./index.html')
+          const shell = await caches.match('./speel.html', { ignoreSearch: true })
+            || await caches.match('./index.html', { ignoreSearch: true })
             || await caches.match('index.html')
             || await caches.match('./');
           if (shell) return shell;
         }
-        return new Response('<!DOCTYPE html><html lang="nl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline</title><body style="font-family:system-ui;background:#0a0d18;color:#fff;text-align:center;padding:24px"><h1>Offline</h1><p>Geen netwerk — open het spel via je <b>app-icoon</b> (PWA) of probeer opnieuw als je weer online bent.</p></body></html>', {
+        return new Response(offlineFallbackHtml(), {
           status: 503,
           statusText: 'Offline',
           headers: { 'Content-Type': 'text/html; charset=utf-8' },
@@ -107,7 +125,7 @@ self.addEventListener('fetch', (event) => {
     }
 
     try {
-      const cached = await caches.match(event.request);
+      const cached = await caches.match(event.request, { ignoreSearch: true });
       if (cached) return cached;
       const res = await fetch(event.request);
       if (res && res.status === 200) {

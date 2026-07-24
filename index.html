@@ -381,6 +381,8 @@
   body.is-playing.sf-offline #netStatus { bottom:max(108px, calc(env(safe-area-inset-bottom) + 92px)); font-size:11px; }
   #netStatus.online-flash { color:#d8ffe8; background:rgba(12,40,28,.9); border-color:rgba(80,220,140,.5); }
   #netStatus.sw-pending { color:#cfe0ff; background:rgba(20,28,55,.92); border-color:rgba(124,245,255,.35); }
+  #netStatus.sw-update { color:#2a1a00; background:rgba(255,215,94,.95); border-color:rgba(255,180,60,.8); cursor:pointer; font-weight:800; }
+  #netStatus.offline-ready { color:#d8ffe8; background:rgba(12,40,28,.88); border-color:rgba(80,220,140,.45); }
   #netStatus[hidden] { display:none !important; }
 
   body.reduced-motion h1.title,
@@ -773,8 +775,8 @@
 </script>
 
 <script src="tunnel-check.js?v=203"></script>
-<script src="game.js?v=264"></script>
-<script src="install.js?v=203"></script>
+<script src="game.js?v=265"></script>
+<script src="install.js?v=204"></script>
 <script>
 (function () {
   function freeUi() {
@@ -828,7 +830,12 @@
     freeUi();
     var t = e.target && e.target.closest ? e.target.closest('button, .lvl, .char-card, .style-card') : null;
     if (!t || t.disabled) return;
-    if (t.id === 'sfForceFresh') { e.preventDefault(); nukeSwAndReload(); return; }
+    if (t.id === 'sfForceFresh') {
+      e.preventDefault();
+      if (typeof window.forceFreshVersion === 'function') window.forceFreshVersion();
+      else nukeSwAndReload();
+      return;
+    }
   }, true);
 
   window.addEventListener('load', function () {

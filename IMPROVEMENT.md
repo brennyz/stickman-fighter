@@ -168,6 +168,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-23 | — | **IMPROVEMENT.md + Ralph d20** toegevoegd. Gameplay: canvas tikken alleen bij `state==='play'`. v1.7.2 / SW v20. |
 | 2026-07-23 | — | GitHub Pages live `brennyz.github.io/stickman-fighter/`. iPad: menu niet klikbaar → pointer-events fix. |
 | 2026-07-23 | 14 | v1.7 combo pulse, low-HP vignette, result tips. |
+| 2026-07-24 | **8** | PWA (cyclus 2): SW v116 + hosting/health precache, branded offline fallback + speel.html shell, zachte update via `applySwUpdate`, tappable update-banner, offline-klaar strip, visibility SW check. v1.15.9 / SW v116. |
 | 2026-07-24 | — | **User: avontuur polish.** Golf-traits (vliegers/rush/elite) + banners, `worldX` scroll tijdens reis, golf-gewist +6% HP +8 chakra, bondgenoot-assist schade, volgende-golf preview chips, combo ×6/×10 callouts, slimmere lose-tips. v1.15.8 / SW v115. |
 | 2026-07-24 | **9** | iPad touch (cyclus 2): `hitTouchButton` closest-match i.p.v. first-match; portrait 3-kolommen (geen punch/jump stack); joy-guard op `joyHome`-radius; 2P pointer-pad lock (drift neutral stopt joy niet); menu scroll-lock + canvas touch-action toggle. v1.15.7 / SW v114. |
 | 2026-07-24 | **5** | Performance (cyclus 2): snellere adaptieve tier op iPad (24f sample, 22ms dremp), resize skip bij zelfde maat/DPR/tier, SceneryArt cache clear bij tier-wissel, scenery/weather caps per tier, hidden-tab pauze, tier-2 alternate-frame draw skip. v1.15.6 / SW v113. |

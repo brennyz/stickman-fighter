@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.15.8';
+const APP_VERSION = '1.15.9';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 115;
+const SW_CACHE_REV = 116;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -9668,14 +9668,33 @@ function updateNetStatus(ev) {
   const off = typeof navigator.onLine === 'boolean' && !navigator.onLine;
   const swReady = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
   const standalone = isStandalonePwa();
+  const swUpdate = !!window.__sfSwUpdateReady;
   try {
     document.body.classList.toggle('sf-offline', off);
     document.body.classList.toggle('sf-sw-ready', swReady);
+    document.body.classList.toggle('sf-sw-update', swUpdate);
   } catch (_) {}
+
+  const paintUpdateBanner = () => {
+    el.hidden = false;
+    el.classList.remove('online-flash', 'sw-pending', 'offline-ready');
+    el.classList.add('sw-update');
+    el.setAttribute('role', 'button');
+    if ('tabIndex' in el) el.tabIndex = 0;
+    el.textContent = 'Update klaar — tik om te laden · of «Verse versie»';
+  };
+
+  if (swUpdate && navigator.onLine !== false) {
+    paintUpdateBanner();
+    return;
+  }
+
+  el.removeAttribute && el.removeAttribute('role');
+  if ('tabIndex' in el) el.tabIndex = -1;
 
   if (off) {
     el.hidden = false;
-    el.classList.remove('online-flash', 'sw-pending');
+    el.classList.remove('online-flash', 'sw-pending', 'sw-update');
     if (state === 'play') {
       el.textContent = standalone
         ? 'Offline — speelt uit app-cache · save blijft lokaal'
@@ -9692,7 +9711,7 @@ function updateNetStatus(ev) {
   }
   if (ev && ev.type === 'online') {
     el.hidden = false;
-    el.classList.remove('sw-pending');
+    el.classList.remove('sw-pending', 'sw-update');
     el.classList.add('online-flash');
     el.textContent = 'Weer online — HTML/game via netwerk bij volgende load';
     try { UI.toast('Weer online', 2200); } catch (_) {}
@@ -9700,7 +9719,7 @@ function updateNetStatus(ev) {
       try { navigator.serviceWorker.ready.then((reg) => reg.update()); } catch (_) {}
     }
     setTimeout(() => {
-      if (navigator.onLine) {
+      if (navigator.onLine && !window.__sfSwUpdateReady) {
         el.hidden = true;
         el.classList.remove('online-flash');
         el.textContent = '';
@@ -9711,17 +9730,55 @@ function updateNetStatus(ev) {
   if (!swReady && location.protocol !== 'file:' && 'serviceWorker' in navigator && !/[?&](ipad|nosw)=1\b/.test(location.search)) {
     el.hidden = false;
     el.classList.add('sw-pending');
-    el.classList.remove('online-flash');
+    el.classList.remove('online-flash', 'sw-update', 'offline-ready');
     el.textContent = 'Cache laden… — daarna ook offline spelen';
     return;
   }
+  if (swReady && 'caches' in window && !window.__sfOfflineReadyShown) {
+    caches.match('./game.js', { ignoreSearch: true }).then((js) => {
+      if (!js) return;
+      return caches.match('./index.html', { ignoreSearch: true }).then((html) => {
+        if (!html || window.__sfOfflineReadyShown) return;
+        window.__sfOfflineReadyShown = 1;
+        const el2 = document.getElementById('netStatus');
+        if (!el2 || window.__sfSwUpdateReady || !navigator.onLine) return;
+        el2.hidden = false;
+        el2.classList.remove('sw-pending', 'sw-update');
+        el2.classList.add('offline-ready');
+        const ver = typeof APP_VERSION !== 'undefined' ? APP_VERSION : '';
+        el2.textContent = ver ? `Offline-klaar · v${ver} in cache` : 'Offline-klaar — app opgeslagen';
+        setTimeout(() => {
+          if (!window.__sfSwUpdateReady && navigator.onLine && el2.classList.contains('offline-ready')) {
+            el2.hidden = true;
+            el2.classList.remove('offline-ready');
+            el2.textContent = '';
+          }
+        }, 4500);
+      });
+    }).catch(() => {});
+  }
   el.hidden = true;
-  el.classList.remove('online-flash', 'sw-pending');
+  el.classList.remove('online-flash', 'sw-pending', 'sw-update', 'offline-ready');
   el.textContent = '';
 }
 window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
 window.updateNetStatus = updateNetStatus;
+
+function wireNetStatusTap() {
+  const el = document.getElementById('netStatus');
+  if (!el || el.dataset.sfNetTap) return;
+  el.dataset.sfNetTap = '1';
+  const run = () => {
+    if (!window.__sfSwUpdateReady) return;
+    if (typeof window.applySwUpdate === 'function') window.applySwUpdate();
+    else if (typeof window.forceFreshVersion === 'function') window.forceFreshVersion();
+  };
+  el.addEventListener('click', run);
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); run(); }
+  });
+}
 
 function bootGame() {
   if (window.__sfBooted) return;
@@ -9746,6 +9803,7 @@ function bootGame() {
   safeCall(ensureDaily, 'daily');
   safeCall(checkAchievements, 'ach');
   safeCall(updateNetStatus, 'net');
+  safeCall(wireNetStatusTap, 'netTap');
   safeCall(() => UI.syncTouchClass(), 'touch');
   safeCall(maybeWelcomeToast, 'welcome');
   if (!window.__sfGlobalErr) {
