@@ -30,13 +30,7 @@
     "remainingCount": 19,
     "cycle": 4
   },
-  "pending": {
-    "face": 18,
-    "category": "Character select \u2014 roster UI, stats, random duo",
-    "rolledAt": "2026-07-24T20:39:03Z",
-    "remainingCount": 19,
-    "cycle": 4
-  },
+  "pending": null,
   "implemented": [
     {
       "face": 2,
@@ -534,6 +528,13 @@
       "version": "1.17.42",
       "doneAt": "2026-07-24T19:48:08Z",
       "cycle": 3
+    },
+    {
+      "face": 18,
+      "note": "char select c4: sig preview, fair duo, locked hover, saga counts",
+      "version": "1.17.49",
+      "doneAt": "2026-07-24T20:40:38Z",
+      "cycle": 4
     }
   ],
   "userFeatureLog": [
