@@ -3,9 +3,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.65';
+const APP_VERSION = '1.17.69';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 191;
+const SW_CACHE_REV = 195;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -354,7 +354,7 @@ function projCritMeta(f) {
 
 function applyCritFx(game, x, y) {
   if (!game) return;
-  game.floater(x, y - 132, 'CRIT!', '#ffd75e', 18);
+  game.floater(x, y - 132, 'CRIT!', '#ffd75e', 18, 'fx');
   try { AudioSys.sfx('crit'); } catch (_) {}
   if (save.haptics !== false) haptic(10);
   spawnFxRing(game, x, y - 42, '#ffd75e', fxLite() ? 9 : 15);

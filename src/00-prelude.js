@@ -125,3 +125,62 @@ const volPct = (v, d) => Math.round((Number(v ?? d)) * 100);
 const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
 
+/** Combat floaters: spreid over lagen zodat BAM/KETS/schade niet op elkaar stapelen. */
+const FLOATER_LANE_H = 22;
+const FLOATER_LANE_W = 32;
+const FLOATER_CLUSTER_R = 88;
+
+function floaterLayerBase(layer) {
+  switch (layer) {
+    case 'style': return { x: 0, y: -40, laneH: 20 };
+    case 'fx': return { x: 0, y: -58, laneH: 24 };
+    case 'hud': return { x: 0, y: 0, laneH: 28, clusterR: 160 };
+    default: return { x: 0, y: 0 };
+  }
+}
+
+function floaterTextHalfW(txt, size) {
+  const len = String(txt || '').length;
+  const fs = size || 15;
+  return Math.max(18, fs * Math.min(len, 9) * 0.38);
+}
+
+function layoutFloaterPos(game, x, y, txt, size, layer) {
+  layer = layer || 'dmg';
+  const base = floaterLayerBase(layer);
+  const laneH = base.laneH || FLOATER_LANE_H;
+  const clusterR = base.clusterR || FLOATER_CLUSTER_R;
+  x += base.x;
+  y += base.y;
+  const halfW = floaterTextHalfW(txt, size);
+  const list = game && game.floaters ? game.floaters : [];
+  const sameLayer = (fl) => (fl.layer || 'dmg') === layer;
+
+  for (let lane = 0; lane < 8; lane++) {
+    const sign = lane <= 0 ? 0 : (lane % 2 === 1 ? -1 : 1);
+    const spread = lane <= 0 ? 0 : Math.ceil(lane / 2) * FLOATER_LANE_W * sign;
+    const ty = y - lane * laneH;
+    const tx = x + spread;
+    let hit = false;
+    for (const fl of list) {
+      if (fl.life <= 0.2 || !sameLayer(fl)) continue;
+      const dx = fl.x - tx;
+      const dy = fl.y - ty;
+      if (dx * dx + dy * dy > clusterR * clusterR) continue;
+      const flHalf = floaterTextHalfW(fl.txt, fl.size);
+      if (Math.abs(dx) < halfW + flHalf + 6 && Math.abs(dy) < laneH * 0.85) {
+        hit = true;
+        break;
+      }
+    }
+    if (!hit) return { x: tx, y: ty, lane, layer };
+  }
+  const lane = list.filter(sameLayer).length % 8;
+  return {
+    x: x + Math.sin(lane * 0.9) * FLOATER_LANE_W * 1.4,
+    y: y - lane * laneH,
+    lane,
+    layer,
+  };
+}
+
