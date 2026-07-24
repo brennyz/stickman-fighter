@@ -512,6 +512,18 @@
   ],
   "userFeatureLog": [
     {
+      "id": "amazing-sounds",
+      "d20Face": null,
+      "userWords": "Give mor amazing sounds!",
+      "versions": [
+        "1.17.43"
+      ],
+      "commits": [],
+      "code": "AudioSys detuneTone + impact/chord/sparkle helpers; richer combat/UI/jutsu SFX; fuller BGM kick/snare/pads on battle tracks",
+      "status": "done",
+      "note": "off-d20 user feature; liteFx trims extra layers"
+    },
+    {
       "id": "d20-roll-backlog",
       "d20Face": null,
       "userWords": "Roll moet nieuw zijn maar idee\u00ebn opslaan en later uitwerken",

@@ -132,9 +132,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.42';
+const APP_VERSION = '1.17.43';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 168;
+const SW_CACHE_REV = 169;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -3524,19 +3524,43 @@ const AudioSys = {
     src.start(t);
   },
 
+  /** Detuned twin layer — fuller body without samples */
+  detuneTone(f0, f1, dur, type, vol, cents, out, when) {
+    this.tone(f0, f1, dur, type, vol * 0.72, out, when);
+    const r = Math.pow(2, (cents || 8) / 1200);
+    this.tone(f0 * r, f1 * r, dur * 0.92, type, vol * 0.38, out, (when != null ? when : this.ctx.currentTime) + 0.004);
+  },
+
   sfx(name) {
     if (!this.ctx || !save.sfx) return;
     const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
     const v = (n) => n * (lite ? 0.72 : 0.88);
     const d = (n) => n * (lite ? 0.78 : 0.9);
     const T = (f0, f1, dur, ty, vol, w) => this.tone(f0, f1, d(dur), ty, v(vol), null, w);
+    const D = (f0, f1, dur, ty, vol, w, c) => this.detuneTone(f0, f1, d(dur), ty, v(vol), c, null, w);
     const N = (dur, vol, ff, hp, w) => this.noise(d(dur), v(vol), ff, hp, null, w);
+    const I = (thump, crack, w) => {
+      T(thump, thump * 0.52, 0.08, 'sine', 0.22, w);
+      N(0.04, 0.16, crack, true, w);
+      if (!lite) T(crack * 0.32, crack * 0.18, 0.045, 'triangle', 0.09, w + 0.012);
+    };
+    const C = (freqs, ty, vol, gap, w) => {
+      freqs.forEach((f, i) => T(f, f * 1.015, 0.1, ty, vol * (1 - i * 0.05), w + i * gap));
+    };
+    const S = (freqs, w) => {
+      if (lite) { T(freqs[0], freqs[0] * 1.06, 0.05, 'sine', 0.08, w); return; }
+      freqs.forEach((f, i) => T(f, f * 1.1, 0.045, 'sine', 0.075, w + i * 0.02));
+    };
     const now = this.ctx.currentTime;
     switch (name) {
-      case 'swing':   N(0.05, 0.2, 3200, true); T(380, 180, 0.06, 'sine', 0.1); break;
+      case 'swing':
+        N(0.05, 0.22, 3400, true, now);
+        T(420, 160, 0.07, 'sine', 0.11, now);
+        if (!lite) N(0.025, 0.08, 6200, true, now + 0.015);
+        break;
       case 'punch':
-        N(0.035, 0.16, 2800, true, now);
-        T(220, 90, 0.06, 'sine', 0.14, now);
+        I(240, 3200, now);
+        T(520, 880, 0.04, 'triangle', 0.1, now + 0.02);
         break;
       case 'kick':
         N(0.045, 0.18, 2400, true, now);
@@ -3599,8 +3623,16 @@ const AudioSys = {
         T(420, 240, 0.07, 'triangle', 0.12, now + 0.05);
         N(0.05, 0.14, 1600, false, now + 0.02);
         break;
-      case 'hit':     T(200, 70, 0.07, 'sine', 0.2); N(0.04, 0.2, 1200, true); break;
-      case 'hit2':    T(150, 55, 0.1, 'square', 0.28); N(0.06, 0.28, 700, false); T(240, 100, 0.05, 'triangle', 0.11); break;
+      case 'hit':
+        I(180, 1400, now);
+        T(880, 420, 0.05, 'triangle', 0.1, now + 0.015);
+        break;
+      case 'hit2':
+        I(130, 900, now);
+        T(150, 55, 0.09, 'square', 0.24, now);
+        N(0.07, 0.26, 650, false, now);
+        T(320, 140, 0.06, 'triangle', 0.12, now + 0.025);
+        break;
       case 'hitMetal':
         T(880, 440, 0.05, 'triangle', 0.14, now);
         N(0.04, 0.16, 2800, true, now);
@@ -3615,65 +3647,132 @@ const AudioSys = {
         T(1100, 600, 0.06, 'triangle', 0.1, now);
         N(0.04, 0.12, 4200, true, now);
         break;
-      case 'jump':    T(260, 520, 0.1, 'sine', 0.18); break;
-      case 'land':    N(0.04, 0.16, 500, false); break;
-      case 'hurt':    T(340, 140, 0.11, 'triangle', 0.2); break;
-      case 'die':     T(400, 70, 0.32, 'sawtooth', 0.26); N(0.18, 0.22, 800, false); break;
-      case 'shoot':   T(820, 280, 0.1, 'square', 0.16); break;
-      case 'laser':   T(1400, 380, 0.12, 'sawtooth', 0.16); break;
-      case 'explode': N(0.28, 0.42, 700, false); T(120, 40, 0.22, 'sine', 0.38); break;
-      case 'brick':   N(0.1, 0.34, 1600, false); T(520, 220, 0.07, 'triangle', 0.18); break;
-      case 'crack':   N(0.05, 0.18, 2200, false); break;
-      case 'block':   T(920, 720, 0.06, 'sine', 0.16); N(0.04, 0.14, 4800, true); break;
+      case 'jump':
+        T(220, 620, 0.11, 'sine', 0.16, now);
+        T(620, 880, 0.07, 'triangle', 0.1, now + 0.04);
+        if (!lite) N(0.025, 0.07, 5200, true, now);
+        break;
+      case 'land':
+        I(95, 480, now);
+        if (!lite) T(180, 70, 0.05, 'sine', 0.08, now + 0.02);
+        break;
+      case 'hurt':
+        T(380, 120, 0.12, 'triangle', 0.18, now);
+        T(220, 90, 0.08, 'sawtooth', 0.12, now + 0.03);
+        break;
+      case 'die':
+        T(420, 55, 0.34, 'sawtooth', 0.24, now);
+        N(0.2, 0.24, 750, false, now);
+        if (!lite) C([330, 262, 196], 'triangle', 0.12, 0.09, now + 0.12);
+        break;
+      case 'shoot':
+        T(920, 240, 0.11, 'square', 0.15, now);
+        N(0.035, 0.1, 5400, true, now);
+        break;
+      case 'laser':
+        T(1500, 360, 0.13, 'sawtooth', 0.15, now);
+        T(1800, 900, 0.07, 'sine', 0.1, now);
+        N(0.045, 0.11, 6800, true, now + 0.02);
+        break;
+      case 'explode':
+        N(0.3, 0.4, 650, false, now);
+        T(110, 35, 0.24, 'sine', 0.34, now);
+        if (!lite) {
+          T(80, 28, 0.32, 'sawtooth', 0.18, now + 0.04);
+          S([880, 1100, 1320], now + 0.08);
+        }
+        break;
+      case 'brick':
+        N(0.11, 0.32, 1500, false, now);
+        T(540, 200, 0.08, 'triangle', 0.16, now);
+        T(880, 440, 0.05, 'sine', 0.1, now + 0.03);
+        break;
+      case 'crack':
+        N(0.06, 0.2, 2100, false, now);
+        T(720, 280, 0.05, 'triangle', 0.1, now);
+        break;
+      case 'block':
+        T(980, 760, 0.07, 'sine', 0.14, now);
+        N(0.045, 0.15, 5000, true, now);
+        T(620, 820, 0.05, 'triangle', 0.1, now + 0.025);
+        break;
       case 'crit':
-        T(920, 1380, 0.05, 'triangle', 0.18, now);
-        T(1380, 1760, 0.06, 'sine', 0.14, now + 0.03);
+        I(520, 4200, now);
+        D(1040, 1560, 0.07, 'triangle', 0.16, now + 0.02, 12);
+        S([1560, 1870, 2093], now + 0.05);
         break;
       case 'special':
       case 'rasengan':
-        T(380, 980, 0.18, 'sine', 0.12, now);
-        T(620, 1180, 0.14, 'triangle', 0.1, now + 0.04);
-        N(0.1, 0.09, 3400, true, now);
+        T(320, 1040, 0.2, 'sine', 0.13, now);
+        D(580, 1220, 0.16, 'triangle', 0.11, now + 0.04, 10);
+        N(0.12, 0.1, 3600, true, now);
+        if (!lite) S([880, 1047, 1175], now + 0.1);
         break;
       case 'chidori':
-        T(980, 1520, 0.16, 'sine', 0.14, now);
-        N(0.12, 0.11, 5200, true, now);
+        T(920, 1580, 0.18, 'sine', 0.14, now);
+        N(0.14, 0.12, 5600, true, now);
+        T(1400, 920, 0.06, 'triangle', 0.1, now + 0.06);
+        if (!lite) T(180, 90, 0.08, 'sine', 0.08, now + 0.02);
         break;
       case 'rinnegan':
-        T(280, 720, 0.12, 'sine', 0.14, now);
-        T(720, 520, 0.14, 'triangle', 0.11, now + 0.04);
-        T(980, 1280, 0.07, 'sine', 0.1, now + 0.1);
-        N(0.08, 0.1, 2000, true, now + 0.02);
+        T(240, 760, 0.14, 'sine', 0.14, now);
+        T(760, 480, 0.15, 'triangle', 0.12, now + 0.04);
+        T(980, 1320, 0.08, 'sine', 0.11, now + 0.1);
+        N(0.1, 0.11, 1900, true, now + 0.02);
+        if (!lite) T(55, 32, 0.18, 'sawtooth', 0.1, now + 0.05);
         break;
       case 'subst':
         N(0.08, 0.26, 1100, true); T(320, 140, 0.07, 'sine', 0.12); break;
       case 'shuriken':
         T(920, 520, 0.06, 'triangle', 0.12); N(0.03, 0.1, 4500, true); break;
       case 'roar':    T(110, 65, 0.38, 'sawtooth', 0.28); N(0.28, 0.2, 400, false); break;
-      case 'select':  T(720, 920, 0.05, 'sine', 0.11); break;
+      case 'select':
+        T(660, 880, 0.045, 'sine', 0.1, now);
+        T(880, 1040, 0.055, 'triangle', 0.09, now + 0.025);
+        break;
       case 'combo':
-        T(560, 820, 0.06, 'triangle', 0.13, now);
-        T(820, 980, 0.07, 'sine', 0.11, now + 0.03);
+        T(520, 880, 0.065, 'triangle', 0.14, now);
+        T(880, 1040, 0.075, 'sine', 0.12, now + 0.03);
+        if (!lite) S([1040, 1175, 1319], now + 0.05);
         break;
       case 'dash':
-        N(0.05, 0.14, 3400, true); T(480, 720, 0.07, 'sine', 0.11); break;
-      case 'pickup':
-        T(720, 980, 0.08, 'sine', 0.15, now);
-        T(980, 1280, 0.09, 'triangle', 0.12, now + 0.04);
+        N(0.06, 0.16, 3600, true, now);
+        T(420, 820, 0.08, 'sine', 0.11, now);
+        if (!lite) T(980, 620, 0.05, 'triangle', 0.08, now + 0.04);
         break;
-      case 'bell':    T(1280, 1220, 0.45, 'triangle', 0.24); break;
-      case 'bonus':   T(920, 1320, 0.1, 'square', 0.16); T(1320, 1680, 0.1, 'square', 0.16, now + 0.07); break;
+      case 'pickup':
+        C([784, 988, 1175], 'sine', 0.14, 0.045, now);
+        if (!lite) S([1319, 1568], now + 0.12);
+        break;
+      case 'bell':
+        D(1319, 1240, 0.5, 'triangle', 0.22, now, 6);
+        T(988, 988, 0.35, 'sine', 0.08, now + 0.05);
+        break;
+      case 'bonus':
+        C([880, 1109, 1320], 'square', 0.15, 0.065, now);
+        if (!lite) S([1568, 1760], now + 0.14);
+        break;
       case 'levelup':
-        [523, 659, 784, 1047].forEach((f, i) => T(f, f, 0.11, 'triangle', 0.17, now + i * 0.07));
+        C([523, 659, 784, 1047], 'triangle', 0.16, 0.065, now);
+        if (!lite) {
+          T(1047, 1319, 0.12, 'sine', 0.12, now + 0.22);
+          S([1568, 1760, 2093], now + 0.28);
+        }
         break;
       case 'newmonster':
-        [392, 523, 659].forEach((f, i) => T(f, f, 0.1, 'sine', 0.17, now + i * 0.06));
+        C([392, 523, 659, 784], 'sine', 0.15, 0.055, now);
+        if (!lite) T(110, 70, 0.12, 'sawtooth', 0.1, now + 0.02);
         break;
       case 'win':
-        [523, 659, 784, 1047, 1319].forEach((f, i) => T(f, f, 0.14, 'triangle', 0.16, now + i * 0.09));
+        C([523, 659, 784, 1047, 1319], 'triangle', 0.15, 0.08, now);
+        if (!lite) {
+          C([1568, 1760, 2093], 'sine', 0.1, 0.07, now + 0.38);
+          N(0.08, 0.12, 1800, true, now + 0.5);
+        }
         break;
       case 'lose':
-        [392, 330, 262, 196].forEach((f, i) => T(f, f * 0.97, 0.18, 'triangle', 0.14, now + i * 0.12));
+        [392, 330, 262, 196, 147].forEach((f, i) => T(f, f * 0.96, 0.2, 'triangle', 0.13, now + i * 0.11));
+        if (!lite) N(0.12, 0.14, 600, false, now + 0.35);
         break;
     }
   },
@@ -3688,11 +3787,16 @@ const AudioSys = {
     const now = this.ctx.currentTime;
     const T = (f0, f1, dur, ty, vol, w) => this.tone(f0, f1, d(dur), ty, v(vol), null, w);
     const N = (dur, vol, ff, hp, w) => this.noise(d(dur), v(vol), ff, hp, null, w);
+    const S = (freqs, w) => {
+      if (lite) { T(freqs[0], freqs[0] * 1.06, 0.05, 'sine', 0.08, w); return; }
+      freqs.forEach((f, i) => T(f, f * 1.1, 0.045, 'sine', 0.075, w + i * 0.02));
+    };
     switch (name) {
       case 'title':
-        [392, 523, 659, 784, 988].forEach((f, i) => T(f, f, 0.08, 'triangle', 0.14, now + i * 0.05));
-        T(120, 60, 0.18, 'sine', 0.24, now + 0.04);
-        N(0.06, 0.16, 1400, false, now + 0.28);
+        [392, 523, 659, 784, 988, 1175].forEach((f, i) => T(f, f, 0.085, 'triangle', 0.13, now + i * 0.045));
+        T(120, 55, 0.2, 'sine', 0.22, now + 0.04);
+        N(0.07, 0.17, 1400, false, now + 0.28);
+        if (!lite) S([1319, 1568], now + 0.22);
         break;
       case 'modeAdventure':
         [440, 554, 659, 880].forEach((f, i) => T(f, f, 0.07, 'sine', 0.12, now + i * 0.045));
@@ -3795,14 +3899,39 @@ const AudioSys = {
   scheduleStep(i, bar, t, spb) {
     const s = this.song, mg = this.musicGain;
     const midi = n => 440 * Math.pow(2, (n - 69) / 12);
-    if (s.kick.includes(i)) this.tone(150, 42, 0.12, 'sine', 0.85, mg, t);
-    if (s.snare.includes(i)) this.noise(0.09, 0.3, 1600, true, mg, t);
+    const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
+    if (s.kick.includes(i)) {
+      this.tone(150, 42, 0.12, 'sine', 0.85, mg, t);
+      if (!lite) this.tone(72, 34, 0.16, 'sine', 0.38, mg, t);
+    }
+    if (s.snare.includes(i)) {
+      this.noise(0.09, 0.3, 1600, true, mg, t);
+      if (!lite) {
+        this.tone(190, 95, 0.055, 'triangle', 0.14, mg, t);
+        this.noise(0.025, 0.12, 5200, true, mg, t + 0.008);
+      }
+    }
     if (s.hat.includes(i)) this.noise(0.03, 0.14, 6500, true, mg, t);
     const b = s.bass[i];
-    if (b != null) this.tone(midi(b), midi(b), spb * 1.7, 'triangle', 0.4, mg, t);
+    if (b != null) {
+      this.tone(midi(b), midi(b), spb * 1.7, 'triangle', 0.4, mg, t);
+      if (!lite && (i === 0 || i === 8)) this.tone(midi(b + 12), midi(b + 12) * 0.998, spb * 1.2, 'sine', 0.08, mg, t);
+    }
     const leadPat = s.lead[bar % s.lead.length];
     const L = leadPat[i];
-    if (L != null) this.tone(midi(L), midi(L) * 0.995, spb * 1.6, 'square', 0.12, mg, t);
+    if (L != null) {
+      this.tone(midi(L), midi(L) * 0.995, spb * 1.6, 'square', 0.12, mg, t);
+      if (!lite && i % 2 === 0) this.tone(midi(L + 7), midi(L + 7) * 0.998, spb * 1.1, 'triangle', 0.05, mg, t + spb * 0.12);
+    }
+    if (s.id === 'battle' || s.id === 'elite' || s.id === 'boss') {
+      if (i === 0 && bar % 4 === 0 && !lite) {
+        this.tone(midi(60), midi(60), spb * 3.6, 'sine', 0.05, mg, t);
+        this.tone(midi(64), midi(64), spb * 3.4, 'triangle', 0.04, mg, t);
+      }
+      if (i === 12 && bar % 2 === 1 && !lite) {
+        this.tone(midi(72), midi(76), spb * 1.3, 'square', 0.07, mg, t);
+      }
+    }
     if (s.id === 'menu' || s.id === 'menu2' || s.id === 'menu3' || s.id === 'menuArcade') {
       if (i === 0 && bar % 4 === 0) {
         this.tone(midi(72), midi(72), spb * 1.8, 'square', 0.13, mg, t);
