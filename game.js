@@ -58,9 +58,42 @@ function fxCaps() {
   }
   return out;
 }
+/** Meet FX-ruimte vóór spawn — tier/lite per-frame budget. */
+function perfFxRoom(g, type) {
+  if (!g) return 0;
+  const cap = fxCaps();
+  const max = type === 'particle' ? cap.particles
+    : type === 'floater' ? cap.floaters
+      : type === 'banner' ? cap.banners : 0;
+  const arr = type === 'particle' ? g.particles
+    : type === 'floater' ? g.floaters
+      : type === 'banner' ? g.banners : null;
+  if (!arr || !max) return 0;
+  return Math.max(0, max - arr.length);
+}
+function perfFxBudgetAllow(g, cost) {
+  cost = cost || 1;
+  if (!g) return true;
+  if (!save.liteFx && Perf.tier < 1) return true;
+  const maxPerFrame = save.liteFx ? 5 : (Perf.tier >= 2 ? 9 : 14);
+  if (g._fxBudgetFrame !== Perf.frames) {
+    g._fxBudgetFrame = Perf.frames;
+    g._fxBudgetUsed = 0;
+  }
+  if (g._fxBudgetUsed + cost > maxPerFrame) return false;
+  g._fxBudgetUsed += cost;
+  return true;
+}
+function perfFxSummary() {
+  const caps = fxCaps();
+  const fps = Perf.emaMs > 0 ? Math.round(1000 / Perf.emaMs) : 0;
+  const dpr = typeof DPR !== 'undefined' ? DPR : 1;
+  return { fps, tier: Perf.tier, dpr, maxDpr: maxCanvasDpr(), caps };
+}
 function maxCanvasDpr() {
   const rm = typeof motionReduced === 'function' && motionReduced();
   if (save.liteFx || rm) return 1.25;
+  if (typeof state !== 'undefined' && state !== 'play') return IS_TOUCH ? 1.15 : 1.25;
   if (Perf.tier >= 2) return 1;
   if (Perf.tier >= 1) return 1.35;
   return 2;
@@ -76,16 +109,93 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.13';
+const APP_VERSION = '1.17.18';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 140;
+const SW_CACHE_REV = 145;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
+  advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0 },
   achievements: {}, daily: null, vsPlayedIds: [] };
 const MAX_LEVEL = 50;
+const LEVELS_PER_ISLAND = 10;
+const ISLAND_WEAPON_CAPS = [10, 20, 30, 40, 48];
+const ADVENTURE_ISLANDS = [
+  { id: 1, name: 'Oost-eiland', sub: 'Lv 1–10', accent: '#5ad06a', theme: 'veld',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20" stroke="#5ad06a" stroke-width="2" stroke-linecap="round"/><path d="M5 20V13l5-8 5 8v7" fill="#43b25b" stroke="#2d8a3e" stroke-width="1"/><circle cx="18" cy="7" r="2.5" fill="#7cf5ff" opacity=".75"/></svg>' },
+  { id: 2, name: 'Vuur-eiland', sub: 'Lv 11–20', accent: '#ff7a4d', theme: 'vulkaan',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 L12 5 L20 20 Z" fill="#e85a6a" stroke="#ff7a4d" stroke-width="1.2"/><path d="M10 11 L12 7 L14 11 Z" fill="#ffd75e"/><ellipse cx="12" cy="20" rx="8" ry="1.5" fill="#ff7a4d" opacity=".45"/></svg>' },
+  { id: 3, name: 'Neon-eiland', sub: 'Lv 21–30', accent: '#7cf5ff', theme: 'cyber',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="16" width="20" height="5" rx="1" fill="#1a2040" stroke="#7cf5ff" stroke-width="1.2"/><rect x="5" y="10" width="4" height="6" fill="#7cf5ff" opacity=".85"/><rect x="10" y="7" width="4" height="9" fill="#4ecf6a" opacity=".8"/><rect x="15" y="5" width="4" height="11" fill="#c47aff" opacity=".85"/></svg>' },
+  { id: 4, name: 'Tempel-eiland', sub: 'Lv 31–40', accent: '#ffd75e', theme: 'dojo',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 L17 8 H7 Z" fill="#ffd75e"/><rect x="10" y="8" width="4" height="12" fill="#c97a20"/><path d="M6 11 H18 M7 14 H17 M8 17 H16" stroke="#ffd75e" stroke-width="1.4" stroke-linecap="round"/><rect x="4" y="20" width="16" height="2" rx="1" fill="#8a6030"/></svg>' },
+  { id: 5, name: 'Finale-eiland', sub: 'Lv 41–50', accent: '#ff6b9d', theme: 'cyber',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18 L7 10 L12 14 L17 10 L20 18 Z" fill="#ff6b9d" stroke="#ffd75e" stroke-width="1"/><circle cx="12" cy="8" r="2.8" fill="#ffd75e"/><path d="M12 2 v2 M12 20 v2 M2 12 h2 M20 12 h2" stroke="#ffd75e" stroke-width="1.2" opacity=".7"/></svg>' },
+];
+function islandMeta(id) { return ADVENTURE_ISLANDS.find(i => i.id === id) || ADVENTURE_ISLANDS[0]; }
+function islandProgress(islandId) {
+  const { start, end } = islandLevelRange(islandId);
+  const total = end - start + 1;
+  let cleared = 0;
+  let stars = 0;
+  for (let n = start; n <= end; n++) {
+    if (n < save.unlocked) cleared++;
+    stars += save.stars[n] || 0;
+  }
+  return { cleared, total, stars, maxStars: total * 3 };
+}
+function adventureProgressLine() {
+  const cur = currentAdvIsland();
+  const prog = islandProgress(cur);
+  const isl = islandMeta(cur);
+  return `Eiland ${cur}/5 · ${isl.name} · ${prog.cleared}/${prog.total} · unlock Lv ${save.unlocked}/${MAX_LEVEL}`;
+}
+function islandFromLevel(n) { return Math.min(5, Math.max(1, Math.ceil(n / LEVELS_PER_ISLAND))); }
+function islandLevelRange(islandId) {
+  const start = (islandId - 1) * LEVELS_PER_ISLAND + 1;
+  return { start, end: Math.min(MAX_LEVEL, start + LEVELS_PER_ISLAND - 1) };
+}
+function currentAdvIsland() { return islandFromLevel(save.unlocked || 1); }
+function islandUnlocked(islandId) {
+  if (islandId <= 1) return true;
+  return (save.unlocked || 1) > (islandId - 1) * LEVELS_PER_ISLAND;
+}
+function adventureWeaponCapForLevel(levelN) {
+  const idx = Math.min(ISLAND_WEAPON_CAPS.length - 1, Math.max(0, Math.ceil(levelN / LEVELS_PER_ISLAND) - 1));
+  return ISLAND_WEAPON_CAPS[idx];
+}
+function adventureWeaponCap() { return adventureWeaponCapForLevel(save.unlocked || 1); }
+function weaponSkillGated(w) { return w.unlock > adventureWeaponCap(); }
+function weaponUnlockedByLevel(w) { return save.lvl >= w.unlock; }
+function weaponUsableNow(w) { return weaponUnlockedByLevel(w) && !weaponSkillGated(w); }
+function styleSkillGated(st) { return !!(st.needLvl && st.needLvl > adventureWeaponCap()); }
+function masterBuffActive(levelN) { return save.advMasterBuff === levelN; }
+function bestWeaponForAdventureCap(cap) {
+  let best = weaponById('vuist');
+  for (const base of WEAPONS) {
+    if (save.lvl >= base.unlock && base.unlock <= cap && base.unlock >= best.unlock) best = base;
+  }
+  return applySummonTier(best);
+}
+function playerWeaponForAdventure(levelN) {
+  const w = playerWeapon();
+  const cap = adventureWeaponCapForLevel(levelN);
+  if (w.unlock <= cap) return w;
+  return bestWeaponForAdventureCap(cap);
+}
+function advFailCount(levelN) { return (save.advFails && save.advFails[levelN]) || 0; }
+function wallRecordPaceDelta(g) {
+  const best = save.bestWall || 0;
+  if (!g || best <= 0) return null;
+  const dur = g.wallDuration || 60;
+  const elapsed = dur - (g.wallTimer || 0);
+  if (elapsed < 3) return null;
+  const expected = (best / dur) * elapsed;
+  return Math.round(g.score - expected);
+}
+function wallComboDmgPct(combo) { return Math.min(combo, 12) * 4; }
 let save = loadSave();
 function fighterJutsuKind(f) {
   if (!f) return 'rasengan';
@@ -526,6 +636,18 @@ function sanitizeSave(s) {
   out.lvl = clamp(Math.floor(Number(out.lvl) || 1), 1, 500);
   out.xp = clamp(Math.floor(Number(out.xp) || 0), 0, 999999);
   out.unlocked = clamp(Math.floor(Number(out.unlocked) || 1), 1, maxLevel);
+  out.advIsland = clamp(Math.floor(Number(out.advIsland) || 0), 0, 5);
+  const cleanFails = {};
+  for (const [k, v] of Object.entries(out.advFails || {})) {
+    const n = parseInt(k, 10);
+    if (n >= 1 && n <= maxLevel) cleanFails[n] = clamp(Math.floor(Number(v) || 0), 0, 99);
+  }
+  out.advFails = cleanFails;
+  const mb = parseInt(out.advMasterBuff, 10);
+  out.advMasterBuff = (Number.isFinite(mb) && mb >= 1 && mb <= maxLevel) ? mb : null;
+  if (!out.advIsland && out.unlocked > 1) {
+    out.advIsland = Math.min(5, Math.floor((out.unlocked - 1) / LEVELS_PER_ISLAND));
+  }
   out.trainWins = clamp(Math.floor(Number(out.trainWins) || 0), 0, 9999);
   out.bestWall = clamp(Math.floor(Number(out.bestWall) || 0), 0, 999999);
   out.musicVol = (() => {
@@ -572,7 +694,7 @@ function sanitizeSave(s) {
   out.summons = cleanSummons;
   const stPick = STYLES.find(st => st.id === out.style) || STYLES[0];
   let styleOk = stPick.id === 'classic';
-  if (stPick.needLvl && out.lvl >= stPick.needLvl) styleOk = true;
+  if (stPick.needLvl && out.lvl >= stPick.needLvl && !(stPick.needLvl > adventureWeaponCapForLevel(out.unlocked || 1))) styleOk = true;
   if (stPick.needTrain && out.trainWins >= stPick.needTrain) styleOk = true;
   if (stPick.needDex && dexCountFromSave(out) >= stPick.needDex) styleOk = true;
   if (stPick.needDexKills && dexTotalKillsFromSave(out) >= stPick.needDexKills) styleOk = true;
@@ -1467,7 +1589,7 @@ function recoverToMenu() {
       const pb = document.getElementById('pauseBtn');
       if (pb) pb.classList.remove('show');
     }
-    try { AudioSys.play('menu'); } catch (_) {}
+    try { playMenuBgm(true); } catch (_) {}
   } catch (err) {
     console.error('[Stickman] recoverToMenu', err);
     state = 'menu';
@@ -1782,6 +1904,16 @@ function applyGambleOnboarding() {
   }
 }
 
+function applyIslandOnboarding() {
+  ensureTipsSeen();
+  if (save.tipsSeen.islands) return;
+  save.tipsSeen.islands = 1;
+  persist();
+  try {
+    UI.toast('5 eilanden × 10 levels · skill gate per eiland · 5× verlies op één level = Meester-buff +20%', 4400);
+  } catch (_) {}
+}
+
 /** Eén hint per modus: in-gevecht regel, geen extra toast (geen stapel met welcome). */
 function applyModeOnboarding(mode, g) {
   if (!g || !mode) return;
@@ -1803,8 +1935,8 @@ function applyModeOnboarding(mode, g) {
       ? 'Eerste minuut: ontwijk rode laser · blokkeer dichtbij · chakra vol → SUPER'
       : 'Eerste minuut: ontwijk lasers · Shift = substitutie · chakra vol → U',
     wall: touch
-      ? '60s timer · combo-balk vol = sneller sloop · record bovenin'
-      : '60s · combo-balk vol houden · record + tempo in HUD',
+      ? '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD'
+      : '60s · combo-milestones · voor/achter record-tempo · 5s countdown',
     versus: touch
       ? 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best'
       : 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
@@ -1928,14 +2060,19 @@ function dexTopKillId() {
 }
 function weaponUnlockedCount() {
   let n = 0;
-  for (const w of WEAPONS) if (save.lvl >= w.unlock) n++;
+  for (const w of WEAPONS) if (weaponUnlockedByLevel(w)) n++;
+  return n;
+}
+function weaponAdventureUsableCount() {
+  let n = 0;
+  for (const w of WEAPONS) if (weaponUsableNow(w)) n++;
   return n;
 }
 function weaponRarityBreakdown() {
   const counts = {};
   for (const id of Object.keys(RARITIES)) counts[id] = 0;
   for (const w of WEAPONS) {
-    if (save.lvl >= w.unlock && counts[w.rarity] != null) counts[w.rarity]++;
+    if (weaponUnlockedByLevel(w) && counts[w.rarity] != null) counts[w.rarity]++;
   }
   return counts;
 }
@@ -1981,10 +2118,13 @@ function dexHpBonus() {
   }
   return bonus;
 }
-function playerStats() {
+function playerStats(opts) {
+  opts = opts || {};
+  const mul = opts.masterBuff ? 1.2 : 1;
   return {
-    maxhp: 100 + (save.lvl - 1) * 12 + dexHpBonus(),
-    dmg: 10 + (save.lvl - 1) * 2 + Math.floor(rarityOf(playerWeapon().rarity).order * 0.5),
+    maxhp: Math.round((100 + (save.lvl - 1) * 12 + dexHpBonus()) * mul),
+    dmg: Math.round((10 + (save.lvl - 1) * 2 + Math.floor(rarityOf(playerWeapon().rarity).order * 0.5)) * mul),
+    speedMul: mul,
   };
 }
 
@@ -2345,6 +2485,7 @@ const STYLES = [
 const styleById = id => STYLES.find(s => s.id === id) || STYLES[0];
 function styleUnlocked(st) {
   if (st.id === 'classic') return true;
+  if (styleSkillGated(st)) return false;
   if (st.needLvl && save.lvl >= st.needLvl) return true;
   if (st.needTrain && save.trainWins >= st.needTrain) return true;
   if (st.needDex && dexCount() >= st.needDex) return true;
@@ -3571,7 +3712,7 @@ const AudioSys = {
     const leadPat = s.lead[bar % s.lead.length];
     const L = leadPat[i];
     if (L != null) this.tone(midi(L), midi(L) * 0.995, spb * 1.6, 'square', 0.12, mg, t);
-    if (s.id === 'menu') {
+    if (s.id === 'menu' || s.id === 'menu2' || s.id === 'menu3' || s.id === 'menuArcade') {
       if (i === 0 && bar % 4 === 0) {
         this.tone(midi(72), midi(72), spb * 1.8, 'square', 0.13, mg, t);
         this.tone(midi(76), midi(79), spb * 1.2, 'square', 0.09, mg, t + spb * 0.45);
@@ -3582,6 +3723,18 @@ const AudioSys = {
       if (i === 0 && bar % 2 === 0) {
         this.tone(midi(57), midi(57), spb * 3.8, 'sine', 0.06, mg, t);
       }
+    }
+    if (s.id === 'menu2') {
+      if (i === 4 || i === 12) this.tone(midi(79), midi(84), spb * 1.1, 'square', 0.1, mg, t);
+      if (i === 0 && bar % 8 === 4) this.tone(midi(52), midi(45), spb * 2.6, 'triangle', 0.08, mg, t);
+    }
+    if (s.id === 'menu3') {
+      if (i === 0 && bar % 4 === 2) this.tone(midi(64), midi(67), spb * 3.4, 'sine', 0.07, mg, t);
+      if (i === 8 && bar % 4 === 0) this.tone(midi(60), midi(55), spb * 2.8, 'triangle', 0.06, mg, t);
+    }
+    if (s.id === 'menuArcade') {
+      if (i === 0 || i === 8) this.tone(midi(67), midi(60), spb * 1.5, 'square', 0.09, mg, t);
+      if (i === 4 && bar % 2 === 0) this.noise(0.03, 0.1, 5200, true, mg, t);
     }
     if (s.id === 'elite' || s.id === 'boss') {
       if (i === 0 && bar % 2 === 0) {
@@ -3618,6 +3771,36 @@ const SONGS = {
     lead: [
       [69,null,72,null, 76,null,72,null, 74,null,71,null, 69,null,64,null],
       [69,null,72,null, 76,null,79,null, 77,null,74,null, 72,null,71,null],
+    ],
+  },
+  /** Menu variant — sneller, helderder */
+  menu2: {
+    bpm: 104,
+    kick: [0, 8], snare: [4, 12], hat: [2, 6, 10, 14],
+    bass: [48,null,null,null, 52,null,null,null, 45,null,null,null, 43,null,45,null],
+    lead: [
+      [72,null,76,null, 79,null,76,null, 77,null,74,null, 72,null,69,null],
+      [74,null,77,null, 81,null,77,null, 79,null,76,null, 74,null,72,null],
+    ],
+  },
+  /** Menu variant — eiland / avontuur sfeer */
+  menu3: {
+    bpm: 84,
+    kick: [0], snare: [], hat: [4, 12],
+    bass: [43,null,null,null, 40,null,null,null, 38,null,null,null, 36,null,38,null],
+    lead: [
+      [64,null,67,null, 71,null,67,null, 69,null,64,null, 62,null,60,null],
+      [67,null,71,null, 74,null,71,null, 69,null,67,null, 64,null,62,null],
+    ],
+  },
+  /** Menu variant — coin-op arcade */
+  menuArcade: {
+    bpm: 110,
+    kick: [0, 4, 8, 12], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [50,null,50,null, 48,null,45,null, 50,null,52,null, 48,null,45,null],
+    lead: [
+      [76,null,79,null, 81,null,79,null, 76,null,74,null, 72,null,76,null],
+      [79,null,81,null, 84,null,81,null, 79,null,76,null, 74,null,72,null],
     ],
   },
   battle: {
@@ -3688,6 +3871,15 @@ const SONGS = {
     ],
   },
 };
+
+const MENU_BGM_TRACKS = ['menu', 'menu2', 'menu3', 'menuArcade'];
+let menuBgmIdx = 0;
+
+/** Rotate menu BGM when returning from a game; keep current track on boot/toggle. */
+function playMenuBgm(fromGame) {
+  if (fromGame) menuBgmIdx = (menuBgmIdx + 1) % MENU_BGM_TRACKS.length;
+  AudioSys.play(MENU_BGM_TRACKS[menuBgmIdx]);
+}
 
 /* =============================== INPUT ================================= */
 const SHURIKEN_CD = 0.4;
@@ -4586,7 +4778,7 @@ function resize() {
 }
 function scheduleResize() {
   if (resizeDebounce) clearTimeout(resizeDebounce);
-  const delay = IS_TOUCH ? 140 : 100;
+  const delay = IS_TOUCH ? (Perf.tier >= 2 ? 175 : 140) : 100;
   resizeDebounce = setTimeout(() => {
     resizeDebounce = null;
     if (window.__sfResizeT) cancelAnimationFrame(window.__sfResizeT);
@@ -4905,6 +5097,7 @@ function ensureParticleRoom(game, slots) {
 
 function spawnFxRing(game, x, y, color, baseR) {
   if (!game || motionReduced() || fxLite()) return;
+  if (!perfFxBudgetAllow(game, 1) || perfFxRoom(game, 'particle') <= 0) return;
   if (!ensureParticleRoom(game, 1)) return;
   const life = 0.34;
   game.particles.push({
@@ -6702,10 +6895,15 @@ class Game {
 
     const st = playerStats();
     if (mode !== 'versus') {
+      const advLevel = mode === 'adventure' ? (opts.level || 1) : 0;
+      const mb = mode === 'adventure' && masterBuffActive(advLevel);
+      const pst = mode === 'adventure' ? playerStats({ masterBuff: mb }) : st;
+      const wpn = mode === 'adventure' ? playerWeaponForAdventure(advLevel) : playerWeapon();
       this.player = new Fighter({
         isPlayer: true, x: W * 0.25, y: this.ground,
-        hp: st.maxhp, maxhp: st.maxhp, baseDmg: st.dmg,
-        weapon: playerWeapon(), color: '#f2f5ff',
+        hp: pst.maxhp, maxhp: pst.maxhp, baseDmg: pst.dmg,
+        weapon: wpn, color: '#f2f5ff',
+        speed: Math.round(260 * (pst.speedMul || 1)),
         rosterId: 'hero',
       });
       applyPlayerStyle(this.player);
@@ -6775,6 +6973,24 @@ class Game {
     this.ketsbamPulse = 0;
     applyGambleToStage(this, gamble);
     this.banner(`LEVEL ${n}`, 1.4, '#ffd75e', 54);
+    if (masterBuffActive(n)) {
+      setTimeout(() => {
+        try {
+          if (this.over) return;
+          this.banner('MEESTER-BUFF +20%', 2, '#c47aff', 40);
+          this.floater(W * 0.5, 132, '5× verloren — HP, snelheid & schade ↑', '#c47aff', 14);
+        } catch (_) {}
+      }, 1500);
+    }
+    const wCap = adventureWeaponCapForLevel(n);
+    if (playerWeapon().unlock > wCap) {
+      setTimeout(() => {
+        try {
+          if (this.over) return;
+          this.floater(W * 0.5, 148, `Eiland-skill gate: max wapen Lv ${wCap}`, '#ffd75e', 13);
+        } catch (_) {}
+      }, masterBuffActive(n) ? 2800 : 1500);
+    }
     if (gamble && gamble.outcome !== 'neutral') {
       setTimeout(() => {
         try {
@@ -7044,20 +7260,45 @@ class Game {
     this.over = true;
     this.inputLocked = true;
     let stars = 0;
+    const lv = this.level.n;
     if (win) {
-      const bonus = 30 + this.level.n * 10;
+      const bonus = 30 + lv * 10;
       this.grantXP(bonus);
-      if (this.level.n === save.unlocked && save.unlocked < MAX_LEVEL) { save.unlocked++; persist(); }
+      if (lv === save.unlocked && save.unlocked < MAX_LEVEL) { save.unlocked++; persist(); }
+      if (lv % LEVELS_PER_ISLAND === 0) {
+        save.advIsland = Math.min(5, lv / LEVELS_PER_ISLAND);
+        persist();
+        if (lv < MAX_LEVEL) {
+          const next = islandMeta(islandFromLevel(lv + 1));
+          const nCap = adventureWeaponCapForLevel(lv + 1);
+          setTimeout(() => {
+            try { UI.toast(`${next.name} ontgrendeld! Skill gate: wapens tot Lv ${nCap}`, 4200); } catch (_) {}
+          }, 1700);
+        }
+      }
+      if (save.advMasterBuff === lv) {
+        save.advMasterBuff = null;
+        persist();
+      }
       const hpPct = this.player.hp / Math.max(1, this.player.maxhp);
       stars = starsFromHpPct(hpPct);
-      const prev = save.stars[this.level.n] || 0;
-      if (stars > prev) { save.stars[this.level.n] = stars; persist(); }
+      const prev = save.stars[lv] || 0;
+      if (stars > prev) { save.stars[lv] = stars; persist(); }
       bumpStat('advWins', 1);
       bumpDaily('advWin', 1);
       checkAchievements();
       AudioSys.sfx('win');
       this.banner('GEWONNEN!', 2, '#7cfc8a', 56);
     } else {
+      if (!save.advFails || typeof save.advFails !== 'object') save.advFails = {};
+      const hadMaster = save.advMasterBuff === lv;
+      save.advFails[lv] = (save.advFails[lv] || 0) + 1;
+      const gotMaster = save.advFails[lv] >= 5 && !hadMaster;
+      if (gotMaster) save.advMasterBuff = lv;
+      persist();
+      if (gotMaster) {
+        setTimeout(() => { try { UI.toast('Meester-buff! +20% HP, snelheid & schade tot je wint', 3800); } catch (_) {} }, 1500);
+      }
       AudioSys.sfx('lose');
       this.banner('VERSLAGEN...', 2, '#ff6b6b', 50);
     }
@@ -7065,8 +7306,9 @@ class Game {
       title: win ? 'GEWONNEN!' : 'VERSLAGEN...',
       detail: (() => {
         let base = win
-          ? `Level ${this.level.n} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}`
-          : `Level ${this.level.n} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}`;
+          ? `Level ${lv} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}`
+          : `Level ${lv} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}`;
+        if (masterBuffActive(lv) && !win) base += ' · Meester-buff actief';
         if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
           base += ` · gok: ${gambleOutcomeLabel(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48)}`;
         }
@@ -7455,7 +7697,11 @@ class Game {
     this.score = 0; this.combo = 0; this.comboT = 0; this.wallGen = 0;
     this.maxCombo = 0;
     this.wallRecordToast = false;
-    this.wallHints = { half: false, quarter: false, comboWarn: false, nearRec: false, lostCombo: false };
+    this.wallHints = {
+      half: false, quarter: false, five: false, comboWarn: false,
+      nearRec: false, lostCombo: false, startCombo: false,
+      combo3: false, combo5: false, combo8: false,
+    };
     this.layoutWall(true);
     this.banner('SLOOP DE MUUR!', 1.5, '#ffd75e', 46);
     if (!modeOnboardingSeen('wall')) {
@@ -7505,6 +7751,16 @@ class Game {
       this.floater(W / 2, 108, 'Laatste 15s — record jagen!', '#ffd75e', 15);
       if (this.wallTimer < 10) AudioSys.sfx('bonus');
     }
+    if (!hints.five && prevTimer > 5 && this.wallTimer <= 5) {
+      hints.five = true;
+      this.floater(W / 2, 108, '5s — vol gas!', '#ff6b6b', 15);
+      AudioSys.sfx('bonus');
+    }
+    const elapsed = (this.wallDuration || 60) - this.wallTimer;
+    if (!hints.startCombo && elapsed > 2.5 && elapsed < 9 && this.combo === 0) {
+      hints.startCombo = true;
+      this.floater(W / 2, 132, 'Tip: snelle opeenvolgende slagen vullen combo', '#7cf5ff', 14);
+    }
     const prevComboT = this.comboT;
     this.comboT -= dt;
     if (this.comboT <= 0) {
@@ -7547,16 +7803,21 @@ class Game {
     checkAchievements();
     AudioSys.sfx(isRecord ? 'win' : 'bell');
     this.banner('TIJD!', 1.5, '#ffd75e', 56);
+    const pace = Math.round(this.score); // 60s run → stenen ≈ per minuut
+    const paceDelta = wallRecordPaceDelta({ wallTimer: 0, wallDuration: this.wallDuration, score: this.score });
     let tip = isRecord ? 'Nieuw record — share met een vriend!' : 'Tip: hou combo vast voor snellere sloop';
     if (!isRecord && best > 0) {
       const gap = best - this.score;
       if (gap > 0 && gap <= 15) tip = `Nog ${gap} stenen tot je record — combo helpt!`;
       else if ((this.maxCombo || 0) < 5) tip = 'Tip: snelle opeenvolgende slagen vullen de combo-balk';
       else if ((this.maxCombo || 0) >= 8) tip = `Sterke combo (×${this.maxCombo}) — volgende keer record?`;
+      else if (paceDelta != null && paceDelta < -3) tip = `Achter record-tempo — probeer combo ×5+ voor meer sloop`;
+      else if (paceDelta != null && paceDelta >= 3) tip = 'Goed tempo — volgende run kan record breken!';
     }
     setTimeout(() => UI.showResult(true, {
       title: isRecord ? 'NIEUW RECORD!' : 'TIJD IS OM!',
-      detail: `${this.score} stenen · record ${best} · max combo ×${this.maxCombo || 0}`,
+      detail: `${this.score} stenen (~${pace}/min) · record ${best} · max combo ×${this.maxCombo || 0}` +
+        (paceDelta != null && best > 0 && !isRecord ? ` · tempo ${paceDelta >= 0 ? '+' : ''}${paceDelta} vs record` : ''),
       xp: this.sessionXP, mode: 'wall', win: true,
       tip,
     }), 1200);
@@ -7811,6 +8072,20 @@ class Game {
             this.score++;
             this.combo++; this.comboT = this.wallComboWindow || 1.4;
             this.noteCombo();
+            const wh = this.wallHints || {};
+            if (this.combo === 3 && !wh.combo3) {
+              wh.combo3 = true;
+              this.floater(W * 0.5, 136, `Combo ×3 · sloop +${wallComboDmgPct(3)}%`, '#7cf5ff', 15);
+            } else if (this.combo === 5 && !wh.combo5) {
+              wh.combo5 = true;
+              this.floater(W * 0.5, 136, `Combo ×5 · sloop +${wallComboDmgPct(5)}%`, '#7cf5ff', 16);
+              AudioSys.sfx('combo');
+            } else if (this.combo === 8 && !wh.combo8) {
+              wh.combo8 = true;
+              this.floater(W * 0.5, 136, `Combo ×8 · sloop +${wallComboDmgPct(8)}%`, '#ffd75e', 17);
+              AudioSys.sfx('combo');
+              haptic(14);
+            }
             if (!this.wallRecordToast && this.score > save.bestWall) {
               this.wallRecordToast = true;
               this.floater(W * 0.5, 118, 'NIEUW RECORD!', '#ffd75e', 22);
@@ -8099,6 +8374,8 @@ class Game {
     if (motionReduced()) n = Math.max(floorN, Math.floor(n * 0.45));
     else if (save.liteFx || Perf.tier >= 1) n = Math.max(kind === 'spark' ? 1 : 3, Math.floor(n * 0.65));
     if (Perf.tier >= 2) n = Math.max(floorN, Math.floor(n * 0.55));
+    if (!perfFxBudgetAllow(this, Math.min(n, 4))) n = Math.max(floorN, Math.floor(n * 0.45));
+    if (n <= 0 || perfFxRoom(this, 'particle') <= 0) return;
     ensureParticleRoom(this, Math.min(n, 12));
     const cap = fxCaps();
     const room = cap.particles - this.particles.length;
@@ -8121,11 +8398,15 @@ class Game {
     }
   }
   floater(x, y, txt, color, size) {
+    if (!perfFxBudgetAllow(this, 1)) return;
+    if (perfFxRoom(this, 'floater') <= 0) return;
     const cap = fxCaps();
     if (this.floaters.length >= cap.floaters) this.floaters.shift();
     this.floaters.push({ x, y, txt, color, size: size || 15, life: 1.0 });
   }
   banner(txt, dur, color, size) {
+    if (!perfFxBudgetAllow(this, 1)) return;
+    if (perfFxRoom(this, 'banner') <= 0) return;
     const cap = fxCaps();
     if (this.banners.length >= cap.banners) this.banners.shift();
     this.banners.push({ txt, dur, color: color || '#fff', size: size || 40, t: 0 });
@@ -8832,6 +9113,14 @@ class Game {
       c.fillStyle = '#333c55'; this.rr(c, bx, by, bw, 15, 6); c.fill();
       c.fillStyle = p.hp / p.maxhp > 0.35 ? '#6ee06e' : '#ff6b6b';
       this.rr(c, bx, by, bw * clamp(p.hp / p.maxhp, 0, 1), 15, 6); c.fill();
+      if (this.mode === 'adventure' && masterBuffActive(this.level.n)) {
+        c.fillStyle = 'rgba(196,122,255,.28)';
+        this.rr(c, bx - 2, by - 16, bw + 4, 13, 5); c.fill();
+        c.font = '800 9px -apple-system, sans-serif';
+        c.fillStyle = '#c47aff';
+        c.textAlign = 'left';
+        c.fillText('MEESTER +20%', bx + 4, by - 7);
+      }
       if (this.mode === 'adventure') {
         c.strokeStyle = 'rgba(255,215,94,.5)';
         c.lineWidth = 1;
@@ -8893,11 +9182,18 @@ class Game {
 
     c.textAlign = 'center';
     if (this.mode === 'adventure') {
+      const isl = islandMeta(islandFromLevel(this.level.n));
+      const wCap = adventureWeaponCapForLevel(this.level.n);
       const wv = Math.max(1, this.waveIdx + 1);
       c.font = '800 16px -apple-system, sans-serif';
       fillHudText(c, `Level ${this.level.n} — Golf ${Math.min(wv, this.level.waves.length)}/${this.level.waves.length}`, W / 2, 30, {
         fill: a11yHighContrast() ? '#fff' : 'rgba(255,255,255,.9)',
       });
+      c.font = '700 11px -apple-system, sans-serif';
+      c.fillStyle = isl.accent;
+      c.globalAlpha = 0.92;
+      c.fillText(`${isl.name} · wapen ≤ Lv ${wCap}`, W / 2, 48);
+      c.globalAlpha = 1;
       this.drawStageProgress(c);
       const bossAlive = this.monsters.find(m => m.elite && m.alive);
       if (!bossAlive) {
@@ -9124,6 +9420,15 @@ class Game {
       c.textAlign = 'center';
       c.fillStyle = 'rgba(0,0,0,.42)';
       this.rr(c, barX, 48, barW, 7, 4); c.fill();
+      c.strokeStyle = 'rgba(255,255,255,.22)';
+      c.lineWidth = 1;
+      for (const frac of [0.5, 0.25]) {
+        const tx = barX + barW * frac;
+        c.beginPath();
+        c.moveTo(tx, 47);
+        c.lineTo(tx, 56);
+        c.stroke();
+      }
       c.fillStyle = urgent ? '#ff6b6b' : '#7cf5ff';
       this.rr(c, barX, 48, Math.max(4, barW * timeFrac), 7, 4); c.fill();
 
@@ -9158,6 +9463,7 @@ class Game {
       } else {
         c.fillText(onPace && bestSaved > 0 ? `Record gebroken · ${rec}` : `Record: ${rec}`, W / 2, 86);
       }
+      let showPaceDelta = false;
       const elapsed = wallDur - this.wallTimer;
       if (elapsed > 2 && this.score > 0) {
         const pace = Math.round((this.score / elapsed) * 60);
@@ -9165,13 +9471,23 @@ class Game {
         c.font = '700 12px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.62)';
         c.fillText(`~${pace}/min · projectie ~${proj}`, W / 2, 102);
+        const paceDelta = wallRecordPaceDelta(this);
+        if (paceDelta != null && bestSaved > 0) {
+          showPaceDelta = true;
+          c.font = '700 11px sans-serif';
+          c.fillStyle = paceDelta >= 0 ? '#7cfc8a' : '#ffb0b8';
+          c.fillText(
+            paceDelta >= 0 ? `Voor op record-tempo +${paceDelta}` : `Achter record-tempo ${paceDelta}`,
+            W / 2, 116
+          );
+        }
       }
       const comboWin = this.wallComboWindow || 1.4;
       if (this.combo > 0 && this.comboT > 0) {
         const cFrac = clamp(this.comboT / comboWin, 0, 1);
         const cBarW = Math.min(160, W * 0.42);
         const cBarX = (W - cBarW) / 2;
-        const cy = this.combo > 1 ? 148 : 132;
+        const cy = showPaceDelta ? (this.combo > 1 ? 162 : 146) : (this.combo > 1 ? 148 : 132);
         c.font = '700 9px sans-serif';
         c.textAlign = 'left';
         c.fillStyle = 'rgba(124,245,255,.55)';
@@ -9185,7 +9501,7 @@ class Game {
       if (this.combo > 1) {
         const pulse = motionReduced() ? 1 : (1 + Math.sin(this.t * 10) * 0.1);
         c.save();
-        c.translate(W / 2, 128);
+        c.translate(W / 2, showPaceDelta ? 142 : 128);
         c.scale(pulse, pulse);
         c.font = '900 22px sans-serif'; c.fillStyle = '#7cf5ff';
         c.fillText(`COMBO ×${this.combo}`, 0, 0);
@@ -9195,7 +9511,7 @@ class Game {
       } else if (this.combo === 1 && this.comboT > 0) {
         c.font = '700 12px sans-serif';
         c.fillStyle = 'rgba(124,245,255,.75)';
-        c.fillText('Combo actief — nog een steen!', W / 2, 118);
+        c.fillText('Combo actief — nog een steen!', W / 2, showPaceDelta ? 132 : 118);
       }
     } else if (this.mode === 'coinrun') {
       const tLeft = Math.ceil(Math.max(0, this.coinTimer));
@@ -9581,6 +9897,7 @@ const UI = {
   charPreviewHoverId: null,
   dexRarityFilter: 'all',
   achFilter: 'all',
+  advIslandPick: 0,
   lastResult: null,
   pauseSubDefault: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
 
@@ -9628,6 +9945,10 @@ const UI = {
           this.renderPauseToggles();
         }
         if (id === 'helpScreen') this.renderHelp();
+        if (id === 'levelScreen') {
+          if (!this.advIslandPick) this.advIslandPick = currentAdvIsland();
+          applyIslandOnboarding();
+        }
       } else if (game?.mode === 'versus') {
         this.refreshPauseSubtitle();
       }
@@ -9642,14 +9963,38 @@ const UI = {
 
   renderHelp() {
     const host = document.getElementById('helpModeChips');
+    const islHost = document.getElementById('helpIslandBlock');
+    if (islHost) {
+      const cur = currentAdvIsland();
+      const cap = adventureWeaponCap();
+      const rows = ADVENTURE_ISLANDS.map((isl) => {
+        const prog = islandProgress(isl.id);
+        const ok = islandUnlocked(isl.id);
+        const wCap = ISLAND_WEAPON_CAPS[isl.id - 1];
+        const pct = Math.round(prog.cleared / prog.total * 100);
+        return `<div class="help-island-row${cur === isl.id ? ' cur' : ''}${ok ? '' : ' locked'}">` +
+          `<span class="help-island-ico" style="color:${isl.accent}">${isl.icon}</span>` +
+          `<div class="help-island-body"><b>${isl.name}</b> · ${isl.sub}` +
+          `<div class="help-island-sub">${ok ? `${prog.cleared}/${prog.total} levels · ${prog.stars}/${prog.maxStars}★` : `Vergrendeld — versla baas Lv ${isl.id * LEVELS_PER_ISLAND}`}` +
+          ` · skill gate wapens Lv ${wCap}</div>` +
+          `<div class="island-prog-track"><i style="width:${pct}%;background:${isl.accent}"></i></div></div></div>`;
+      }).join('');
+      islHost.innerHTML =
+        `<div class="step-card help-island-card">` +
+        `<b>Eilanden &amp; skill gate</b> — avontuur is <b>5×10 levels</b>. Per eiland geldt een wapen-cap (nu <b>Lv ${cap}</b> op eiland ${cur}).` +
+        `<div class="help-island-grid">${rows}</div>` +
+        `<div style="margin-top:10px;opacity:.88;line-height:1.45">` +
+        `<b>Meester-buff:</b> 5× verlies op hetzelfde level → +20% HP, snelheid &amp; schade tot je wint.` +
+        ` Baas op Lv 10/20/30/40/50 opent het volgende eiland.</div></div>`;
+    }
     if (!host) return;
     const touch = IS_TOUCH ? 'touch' : 'toetsenbord';
     const prog = onboardingProgress();
     const next = nextUntriedMode();
     const modes = [
-      { id: 'adventure', label: 'Avontuur', tip: 'Groen HP · oranje rage · blauw chakra · SUPER bij vol · vóór level: dobbel-gok' },
+      { id: 'adventure', label: 'Avontuur', tip: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok vóór level' },
       { id: 'training', label: 'Training', tip: 'Lasers ontwijken · 2 rondes · Robot Chidori-telegraph' },
-      { id: 'wall', label: 'Muur', tip: '60s · combo = sneller · beat record' },
+      { id: 'wall', label: 'Muur', tip: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing' },
       { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
       { id: 'coinrun', label: 'Mats', tip: '45s munten · mik ↑ · vliegers +3' },
     ];
@@ -9736,7 +10081,8 @@ const UI = {
       this.renderMenu();
       this.show('menuScreen');
       AudioSys.setPaused(false);
-      AudioSys.play('menu');
+      playMenuBgm(true);
+      scheduleResize();
       if (window.StickInstall) window.StickInstall.refreshMenuButton();
     } catch (err) {
       sfReportError('goMenu', err, 'Kon menu niet openen — herlaad de pagina');
@@ -9969,6 +10315,8 @@ const UI = {
       `Vechter <b>Lv ${save.lvl}</b> &nbsp;·&nbsp; Wapen: <b>${w.name}</b> &nbsp;·&nbsp; ` +
       `Stijl: <b style="color:${st.accent}">${st.name}</b> &nbsp;·&nbsp; ` +
       `Monsterboek: <b>${dexCount()}/${SPECIES_ORDER.length}</b> &nbsp;·&nbsp; Muur: <b>${save.bestWall}</b>` +
+      (save.bestWall > 0 ? ` <span style="opacity:.75">· combo = sneller sloop</span>` : '') +
+      `<div style="font-size:12px;margin-top:6px;color:#9db1e3">${adventureProgressLine()}</div>` +
       `<div class="xpline"><div style="width:${Math.round(save.xp / need * 100)}%"></div></div>` +
       `<div style="font-size:12px;margin-top:4px;opacity:.85">${save.xp}/${need} XP · ${save.trainWins} train-wins</div>`;
     const cont = document.getElementById('btnContinue');
@@ -9995,13 +10343,17 @@ const UI = {
         tipEl.textContent = `Nog niet gespeeld: ${next.label} — één hint bovenin, geen toast-stapel`;
       } else {
         const tips = [
+          'Tip: menu = Avontuur · Arcade · 2P · Collectie — kies je modus',
+          'Tip: 5 eilanden — baas Lv 10/20/30/40/50 opent volgend eiland',
+          'Tip: skill gate — in avontuur max wapen per eiland (zie Tips → Eilanden)',
+          'Tip: 5× verlies op één level = Meester-buff +20% tot je wint',
+          'Tip: Training = solo oefenen · Versus = 2P lokaal op iPad',
           'Tip: volle chakra → tik 🌀 voor Rasengan',
-          'Tip: 2 spelers = liggend iPad, P1 links / P2 rechts',
           'Tip: muur-combo’s = sneller sloop & meer XP',
           'Tip: monsterboek vullen = meer max HP',
           'Tip: “Verder spelen” hervat je laatste modus',
+          'Tip: menu-muziek wisselt telkens als je terugkeert vanuit een modus',
           'Tip: Missies → claim XP (knop pulseert als klaar)',
-          'Tip: Menu → Tips toont welke modi je al kent',
         ];
         const i = Math.floor(Date.now() / 8000) % tips.length;
         tipEl.textContent = tips[i];
@@ -10297,26 +10649,82 @@ const UI = {
   },
 
   renderLevels() {
+    const bar = document.getElementById('levelIslandBar');
+    const info = document.getElementById('levelIslandInfo');
     const grid = document.getElementById('levelGrid');
+    if (!grid) return;
+    const pick = this.advIslandPick || currentAdvIsland();
+    this.advIslandPick = pick;
+    if (bar) {
+      bar.innerHTML = '';
+      for (const isl of ADVENTURE_ISLANDS) {
+        const ok = islandUnlocked(isl.id);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'island-tab' + (pick === isl.id ? ' active' : '') + (ok ? '' : ' locked');
+        btn.style.setProperty('--isl-accent', isl.accent);
+        const prog = islandProgress(isl.id);
+        const pct = Math.round(prog.cleared / prog.total * 100);
+        btn.innerHTML = `<span class="island-tab-ico">${isl.icon}</span>` +
+          `<span class="island-tab-n">${isl.id}</span><span class="island-tab-name">${isl.name}</span>` +
+          `<span class="island-prog-track island-tab-prog"><i style="width:${pct}%;background:${isl.accent}"></i></span>` +
+          (ok ? '' : `<span class="island-tab-lock">${SVG_LOCK_ICON}</span>`);
+        btn.title = ok ? `${isl.name} · ${isl.sub}` : `Versla baas Lv ${isl.id * LEVELS_PER_ISLAND} om te openen`;
+        if (ok) {
+          btn.addEventListener('click', () => safeUiAction(() => {
+            AudioSys.sfx('select');
+            UI.advIslandPick = isl.id;
+            UI.renderLevels();
+          }, 'pickIsland/' + isl.id, 'Eiland kiezen mislukt'));
+        }
+        bar.appendChild(btn);
+      }
+    }
+    const islMeta = ADVENTURE_ISLANDS[pick - 1] || ADVENTURE_ISLANDS[0];
+    const range = islandLevelRange(pick);
+    const wCap = adventureWeaponCapForLevel(range.start);
+    const prog = islandProgress(pick);
+    const pct = Math.round(prog.cleared / prog.total * 100);
+    if (info) {
+      const mb = save.advMasterBuff;
+      const mbLine = mb && mb >= range.start && mb <= range.end
+        ? `<span class="island-info-chip master">Meester-buff Lv ${mb} · +20%</span>`
+        : '';
+      info.innerHTML =
+        `<div class="island-info-head">` +
+        `<span class="island-info-ico">${islMeta.icon}</span>` +
+        `<div class="island-info-text">` +
+        `<b style="color:${islMeta.accent}">${islMeta.name}</b> · ${islMeta.sub}` +
+        `<div class="island-info-sub">Skill gate: wapens tot Lv <b>${wCap}</b> · ${prog.cleared}/${prog.total} levels · ${prog.stars}★` +
+        (pick < 5 ? ` · baas Lv ${pick * LEVELS_PER_ISLAND} → volgend eiland` : '') +
+        `</div></div></div>` +
+        `<div class="island-prog-track island-info-prog"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
+        (mbLine ? `<div class="island-info-chips">${mbLine}</div>` : '');
+    }
     grid.innerHTML = '';
-    for (let n = 1; n <= MAX_LEVEL; n++) {
+    for (let n = range.start; n <= range.end; n++) {
       const el = document.createElement('div');
       const boss = !!BOSS_AT[n];
       const locked = n > save.unlocked;
-      const info = buildLevel(n);
-      const rar = rarityOf(info.rarityCap);
+      const infoLv = buildLevel(n);
+      const rar = rarityOf(infoLv.rarityCap);
+      const fails = advFailCount(n);
       el.className = 'lvl' + (boss ? ' boss' : '') + (locked ? ' locked' : '') + (n < save.unlocked ? ' cleared' : '') +
-        (!locked && n === save.unlocked ? ' lvl-current' : '');
+        (!locked && n === save.unlocked ? ' lvl-current' : '') +
+        (save.advMasterBuff === n ? ' master-buff' : '');
       el.style.boxShadow = locked ? 'none' : `0 5px 0 rgba(0,0,0,.35), 0 0 0 2px ${rar.color}55`;
       el.innerHTML = locked
         ? SVG_LOCK_ICON
         : `${n}${boss ? '<small>BAAS</small>' : `<small style="color:${rar.color}">${rar.name}</small>`}` +
-          (save.stars[n] ? `<span class="lvl-stars">${'★'.repeat(save.stars[n])}</span>` : '');
+          (save.stars[n] ? `<span class="lvl-stars">${'★'.repeat(save.stars[n])}</span>` : '') +
+          (fails > 0 && !locked ? `<span class="lvl-fails">${fails}/5</span>` : '') +
+          (save.advMasterBuff === n ? '<span class="lvl-master">+20%</span>' : '');
       if (!locked) {
         const best = save.stars[n] || 0;
-        let tip = `${info.waves.length} golven · ${starHintLine()}`;
-        if (boss) tip += ' · eindigt met baas';
+        let tip = `${infoLv.waves.length} golven · ${starHintLine()}`;
+        if (boss) tip += pick * LEVELS_PER_ISLAND === n ? ' · eiland-baas — opent volgend eiland' : ' · tussendoor-baas';
         if (best > 0) tip += ` · jouw ${'★'.repeat(best)}${'☆'.repeat(3 - best)}`;
+        if (fails > 0) tip += ` · ${fails}× verloren${fails >= 5 ? ' · Meester-buff actief' : ''}`;
         el.title = tip;
         el.addEventListener('click', () => safeUiAction(() => {
           AudioSys.sfx('select');
@@ -10332,7 +10740,12 @@ const UI = {
     const diceRow = document.getElementById('gambleDiceRow');
     const sumLine = document.getElementById('gambleSumLine');
     const outEl = document.getElementById('gambleOutcome');
-    if (head) head.textContent = `Gok — level ${levelN}`;
+    if (head) head.textContent = `Gok — ${islandMeta(islandFromLevel(levelN)).name} · Lv ${levelN}`;
+    const ctx = document.getElementById('gambleIslandCtx');
+    if (ctx) {
+      const cap = adventureWeaponCapForLevel(levelN);
+      ctx.textContent = `Skill gate: wapens tot Lv ${cap} · daarna dobbelen voor super-baas of bondgenoot`;
+    }
     const g = lastGambleRoll;
     const face = (d) => ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][d - 1] || '?';
     if (g && diceRow) {
@@ -10357,6 +10770,7 @@ const UI = {
     const sumEl = document.getElementById('weaponSummary');
     if (sumEl) {
       const unlocked = weaponUnlockedCount();
+      const advUsable = weaponAdventureUsableCount();
       const br = weaponRarityBreakdown();
       const tierChips = Object.keys(RARITIES).map(rid => {
         const rar = RARITIES[rid];
@@ -10366,17 +10780,22 @@ const UI = {
       }).filter(Boolean).join(' ');
       sumEl.style.display = 'block';
       sumEl.innerHTML =
-        `Verzameld <b>${unlocked}/${WEAPONS.length}</b> · actief <b>${weaponById(save.weapon).name}</b>` +
+        `Verzameld <b>${unlocked}/${WEAPONS.length}</b> · avontuur <b>${advUsable}</b> bruikbaar` +
+        ` · actief <b>${weaponById(save.weapon).name}</b>` +
+        ` · eiland-skill gate: Lv <b>${adventureWeaponCap()}</b>` +
         (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '');
     }
     const list = document.getElementById('weaponList');
     list.innerHTML = '';
     for (const base of WEAPONS) {
       const w = applySummonTier(base);
-      const locked = save.lvl < base.unlock;
+      const lvlLocked = !weaponUnlockedByLevel(base);
+      const islandLocked = weaponSkillGated(base);
+      const locked = lvlLocked;
       const rar = rarityOf(w.rarity);
       const el = document.createElement('div');
-      el.className = 'card rar-' + w.rarity + (save.weapon === w.id ? ' sel' : '') + (locked ? ' locked' : '');
+      el.className = 'card rar-' + w.rarity + (save.weapon === w.id ? ' sel' : '') +
+        (locked ? ' locked' : '') + (islandLocked && !lvlLocked ? ' island-gated' : '');
       el.style.borderColor = rar.color + (save.weapon === w.id ? '' : '66');
       if (w.summoned) el.style.boxShadow = `0 0 14px ${rar.glow}`;
       const cv = document.createElement('canvas');
@@ -10406,13 +10825,18 @@ const UI = {
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
-      right.innerHTML = locked ? `${SVG_LOCK_ICON} Lv ${w.unlock}` : (save.weapon === w.id ? '&#10004; gekozen' : 'kies');
+      right.innerHTML = lvlLocked
+        ? `${SVG_LOCK_ICON} Lv ${base.unlock}`
+        : (islandLocked
+          ? `Avontuur Lv ${base.unlock}`
+          : (save.weapon === w.id ? '&#10004; gekozen' : 'kies'));
       el.appendChild(right);
       if (!locked) el.addEventListener('click', () => safeUiAction(() => {
         save.weapon = w.id;
         if (!persistOrToast('wapen')) return;
         AudioSys.sfx('select');
         try { AudioSys.sfx(weaponSwingSfx(w.id)); } catch (_) {}
+        if (islandLocked) UI.toast(`Klaar voor training — in avontuur max Lv ${adventureWeaponCap()}`, 2800);
         this.renderWeapons();
       }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt'));
       list.appendChild(el);
@@ -10576,7 +11000,8 @@ const UI = {
       sub.style.fontWeight = '600';
       sub.style.opacity = '0.75';
       sub.style.marginTop = '4px';
-      sub.textContent = ok ? (save.style === st.id ? 'Actief' : 'Tik om te kiezen') : st.hint;
+      sub.textContent = ok ? (save.style === st.id ? 'Actief' : 'Tik om te kiezen')
+        : (styleSkillGated(st) ? `Eiland-skill Lv ${st.needLvl}` : st.hint);
       el.appendChild(sub);
       if (ok) {
         el.addEventListener('click', () => safeUiAction(() => {
@@ -10600,6 +11025,13 @@ const UI = {
         ? 'Lite FX'
         : (Perf.tier >= 2 ? `adaptief zwaar · ~${fps} fps` : Perf.tier >= 1 ? `adaptief · ~${fps} fps` : `vloeiend · ~${fps} fps`);
       verEl.textContent = `v${APP_VERSION} · SW v${SW_CACHE_REV} · ${perfNote}`;
+    }
+    const perfEl = document.getElementById('setPerfLine');
+    if (perfEl) {
+      const p = perfFxSummary();
+      perfEl.textContent =
+        `Perf tier ${p.tier} · DPR ${p.dpr.toFixed(2)}/${p.maxDpr} · ~${p.fps} fps · ` +
+        `FX cap ${p.caps.particles} deeltjes / ${p.caps.floaters} floaters`;
     }
     const healthEl = document.getElementById('saveHealthLine');
     if (healthEl) {
@@ -10707,6 +11139,7 @@ const UI = {
   showResult(win, data) {
     this.lastResult = data;
     state = 'result';
+    scheduleResize();
     document.getElementById('pauseBtn').classList.remove('show');
     const title = document.getElementById('resTitle');
     title.textContent = data.title;
@@ -10735,7 +11168,7 @@ const UI = {
     }
     this.show('resultScreen');
     AudioSys.setPaused(false);
-    AudioSys.play('menu');
+    playMenuBgm(true);
     AudioSys.applyVolumes();
   },
 };
@@ -10773,6 +11206,7 @@ function startGame(mode, opts) {
     return;
   }
   state = 'play';
+  scheduleResize();
   try { AudioSys.setPaused(false); } catch (_) {}
   try { recordLastPlay(mode, opts); } catch (_) {}
   try { applyModeOnboarding(mode, game); } catch (_) {}
@@ -11078,6 +11512,12 @@ bindPress(btnHelp, () => {
   UI.renderHelp();
   UI.show('helpScreen');
 });
+const btnIslandHelp = document.getElementById('btnIslandHelp');
+bindPress(btnIslandHelp, () => {
+  AudioSys.sfx('select');
+  UI.renderHelp();
+  UI.show('helpScreen');
+});
 const helpOk = document.getElementById('helpOk');
 bindPress(helpOk, () => { AudioSys.sfx('select'); UI.goMenu(); });
 const btnGuvve = document.getElementById('btnGuvve');
@@ -11109,7 +11549,7 @@ document.addEventListener('keydown', e => {
 bindPress(document.getElementById('togMusic'), () => {
   AudioSys.init();
   AudioSys.setMusicOn(!save.music);
-  if (save.music) AudioSys.play('menu');
+  if (save.music) playMenuBgm(false);
   UI.renderMenu();
 });
 bindPress(document.getElementById('togSfx'), () => {
@@ -11139,7 +11579,7 @@ bindPress(pauseTogMusic, () => {
   if (save.music && state === 'pause' && AudioSys.desiredSong) {
     AudioSys.play(AudioSys.desiredSong);
   } else if (save.music && state !== 'play' && state !== 'pause') {
-    AudioSys.play('menu');
+    playMenuBgm(false);
   }
   UI.renderPauseToggles();
   AudioSys.sfx('select');
@@ -11353,9 +11793,9 @@ function loop(now) {
     const hidden = typeof document !== 'undefined' && document.hidden;
     const dt = Math.min((now - lastTime) / 1000, 0.05);
     if (!(dt >= 0) || dt > 1) { lastTime = now; return; }
+    if (hidden) { lastTime = now; return; }
     Perf.tick(dt * 1000);
     lastTime = now;
-    if (hidden) return;
     if (state === 'play' && game) {
       try {
         game.update(dt);
