@@ -251,14 +251,16 @@ function ensureParticleRoom(game, slots) {
 }
 
 function spawnFxRing(game, x, y, color, baseR) {
-  if (!game || motionReduced() || fxLite()) return;
+  if (!game || motionReduced()) return;
   if (!perfFxBudgetAllow(game, 1) || perfFxRoom(game, 'particle') <= 0) return;
   if (!ensureParticleRoom(game, 1)) return;
-  const life = 0.34;
+  const lite = fxLite();
+  const life = lite ? 0.22 : 0.34;
+  const size = (baseR || 12) * (lite ? 0.62 : 1);
   game.particles.push({
     x, y, vx: 0, vy: 0, life, maxLife: life,
     color: color || '#7cf5ff',
-    size: baseR || 12,
+    size,
     kind: 'ring',
     grav: 0,
   });

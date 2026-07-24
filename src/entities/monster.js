@@ -159,7 +159,8 @@ class Monster {
     if (this.hp <= 0) {
       this.hp = 0; this.deadT = 0;
       AudioSys.sfx('die');
-      game.burst(this.x, this.y, this.sp.c1, 18);
+      const burstN = fxLite() ? 6 : (this.superBoss ? 14 : (this.elite ? 12 : 10));
+      game.burst(this.x, this.y, this.sp.c1, burstN);
       game.onMonsterKilled(this);
     } else {
       AudioSys.sfx('hit');

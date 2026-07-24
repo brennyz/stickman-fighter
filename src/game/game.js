@@ -458,6 +458,12 @@ class Game {
     this.freezeT = Math.max(this.freezeT, 0.045);
     this.shake(5, 0.18);
     haptic(12);
+    const rar = rarityOf(m.sp.rarity);
+    const killRingR = m.superBoss ? 18 : (m.elite ? 14 : (m.giant ? 12 : 9));
+    spawnFxRing(this, m.x, m.y - m.size * 0.32, rar.color, killRingR);
+    if (!fxLite() && m.elite && !motionReduced()) {
+      this.burst(m.x, m.y - m.size * 0.2, '#fff', 4, { kind: 'spark', size: 2.2 });
+    }
     const dropChance = m.elite ? 0.42 : 0.22;
     if (Math.random() < dropChance) this.spawnPickup(m.x, m.y - m.size * 0.5);
     bumpStat('kills', 1);
@@ -466,7 +472,6 @@ class Game {
       bumpStat('bossKills', 1);
       bumpDaily('bossKill', 1);
     }
-    const rar = rarityOf(m.sp.rarity);
     const lvlScale = 1 + (this.level ? (this.level.n - 1) * 0.1 : 0);
     const rarMul = 1 + rar.order * 0.15;
     const giantMul = m.giant ? GIANT_XP_MUL : 1;
@@ -1725,6 +1730,17 @@ class Game {
       c.strokeText(b.txt, 0, 0);
       c.fillStyle = b.color;
       c.fillText(b.txt, 0, 0);
+      if (!fxLite() && !calm && fade > 0.35) {
+        c.globalAlpha = fade * 0.42;
+        c.strokeStyle = b.color;
+        c.lineWidth = 2.5;
+        c.lineCap = 'round';
+        const tw = c.measureText(b.txt).width;
+        c.beginPath();
+        c.moveTo(-tw * 0.52, 10);
+        c.lineTo(tw * 0.52, 10);
+        c.stroke();
+      }
       c.restore();
     }
 

@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-24 | **12** | Content (cyclus 3): monsterboek type-filter + sort (boek/rariteit/unlock/kills), rariteit-tellers, volgende-dex-prestatie tracker, Top jager badge; wapens verzamel-strip. v1.17.9 / SW v136. |
 | 2026-07-24 | **1** | Combat feel (cyclus 3): hit-confirm ring/spark per aanvalstype, parry-window op blok (PARRY! + freeze), counter-hit floater + extra freeze in training/versus — geen dmg×. v1.17.8 / SW v135. |
 | 2026-07-24 | **2** | Training (cyclus 2): telegraph HUD-balk, Chidori-dash-lijn, laser wacht tot speler landt, geen Chidori vs lucht — geen one-shots. v1.17.7 / SW v134. |
+| 2026-07-24 | **14** | FX (cyclus 3): kill confirm ring per tier, Lite FX rings (klein/kort), banner underline glow, death burst binnen cap. v1.17.26 / SW v152. |
 | 2026-07-24 | **5** | Performance (cyclus 3): FX-ruimte + per-frame budget vóór burst/floater/banner/ring, lagere menu-DPR, resize debounce tier 2, hidden-tab skip tick, instellingen perf-regel. v1.17.17 / SW v144. |
 | 2026-07-24 | **19** | Muur (cyclus 3): record-tempo HUD (voor/achter), timer-ticks 30s/15s, 5s hint, combo ×3/×5/×8 milestones, start-combo tip, eindscherm tempo-delta. v1.17.16 / SW v143. |
 | 2026-07-24 | **3** | Versus (cyclus 2): timer-balk + HP% HUD, TIME-toast met %, spawn-markers, ronde-log op result, pauze-herstart zichtbaar, resize clamp. v1.17.6 / SW v133. |

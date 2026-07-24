@@ -132,9 +132,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.25';
+const APP_VERSION = '1.17.26';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 151;
+const SW_CACHE_REV = 152;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -5175,14 +5175,16 @@ function ensureParticleRoom(game, slots) {
 }
 
 function spawnFxRing(game, x, y, color, baseR) {
-  if (!game || motionReduced() || fxLite()) return;
+  if (!game || motionReduced()) return;
   if (!perfFxBudgetAllow(game, 1) || perfFxRoom(game, 'particle') <= 0) return;
   if (!ensureParticleRoom(game, 1)) return;
-  const life = 0.34;
+  const lite = fxLite();
+  const life = lite ? 0.22 : 0.34;
+  const size = (baseR || 12) * (lite ? 0.62 : 1);
   game.particles.push({
     x, y, vx: 0, vy: 0, life, maxLife: life,
     color: color || '#7cf5ff',
-    size: baseR || 12,
+    size,
     kind: 'ring',
     grav: 0,
   });
@@ -6190,7 +6192,8 @@ class Monster {
     if (this.hp <= 0) {
       this.hp = 0; this.deadT = 0;
       AudioSys.sfx('die');
-      game.burst(this.x, this.y, this.sp.c1, 18);
+      const burstN = fxLite() ? 6 : (this.superBoss ? 14 : (this.elite ? 12 : 10));
+      game.burst(this.x, this.y, this.sp.c1, burstN);
       game.onMonsterKilled(this);
     } else {
       AudioSys.sfx('hit');
@@ -7417,6 +7420,12 @@ class Game {
     this.freezeT = Math.max(this.freezeT, 0.045);
     this.shake(5, 0.18);
     haptic(12);
+    const rar = rarityOf(m.sp.rarity);
+    const killRingR = m.superBoss ? 18 : (m.elite ? 14 : (m.giant ? 12 : 9));
+    spawnFxRing(this, m.x, m.y - m.size * 0.32, rar.color, killRingR);
+    if (!fxLite() && m.elite && !motionReduced()) {
+      this.burst(m.x, m.y - m.size * 0.2, '#fff', 4, { kind: 'spark', size: 2.2 });
+    }
     const dropChance = m.elite ? 0.42 : 0.22;
     if (Math.random() < dropChance) this.spawnPickup(m.x, m.y - m.size * 0.5);
     bumpStat('kills', 1);
@@ -7425,7 +7434,6 @@ class Game {
       bumpStat('bossKills', 1);
       bumpDaily('bossKill', 1);
     }
-    const rar = rarityOf(m.sp.rarity);
     const lvlScale = 1 + (this.level ? (this.level.n - 1) * 0.1 : 0);
     const rarMul = 1 + rar.order * 0.15;
     const giantMul = m.giant ? GIANT_XP_MUL : 1;
@@ -8684,6 +8692,17 @@ class Game {
       c.strokeText(b.txt, 0, 0);
       c.fillStyle = b.color;
       c.fillText(b.txt, 0, 0);
+      if (!fxLite() && !calm && fade > 0.35) {
+        c.globalAlpha = fade * 0.42;
+        c.strokeStyle = b.color;
+        c.lineWidth = 2.5;
+        c.lineCap = 'round';
+        const tw = c.measureText(b.txt).width;
+        c.beginPath();
+        c.moveTo(-tw * 0.52, 10);
+        c.lineTo(tw * 0.52, 10);
+        c.stroke();
+      }
       c.restore();
     }
 
