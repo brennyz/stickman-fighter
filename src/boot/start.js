@@ -358,6 +358,20 @@ bindPress(btnHelp, () => {
   UI.renderHelp();
   UI.show('helpScreen');
 });
+function runForceFreshVersion() {
+  AudioSys.init();
+  AudioSys.sfx('select');
+  const go = () => {
+    if (typeof window.forceFreshVersion === 'function') return window.forceFreshVersion();
+    const u = new URL(location.href);
+    u.searchParams.set('fresh', String(Date.now()));
+    location.replace(u.toString());
+    return Promise.resolve();
+  };
+  safeAsync(go(), 'forceFresh', 'Cache legen mislukt — sluit tab en open opnieuw');
+}
+bindPress(document.getElementById('btnVerseVersie'), runForceFreshVersion);
+bindPress(document.getElementById('btnForceFresh'), runForceFreshVersion);
 const btnIslandHelp = document.getElementById('btnIslandHelp');
 bindPress(btnIslandHelp, () => {
   AudioSys.sfx('select');

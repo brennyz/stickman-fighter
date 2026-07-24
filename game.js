@@ -132,9 +132,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.22';
+const APP_VERSION = '1.17.23';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 148;
+const SW_CACHE_REV = 149;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -11687,6 +11687,20 @@ bindPress(btnHelp, () => {
   UI.renderHelp();
   UI.show('helpScreen');
 });
+function runForceFreshVersion() {
+  AudioSys.init();
+  AudioSys.sfx('select');
+  const go = () => {
+    if (typeof window.forceFreshVersion === 'function') return window.forceFreshVersion();
+    const u = new URL(location.href);
+    u.searchParams.set('fresh', String(Date.now()));
+    location.replace(u.toString());
+    return Promise.resolve();
+  };
+  safeAsync(go(), 'forceFresh', 'Cache legen mislukt — sluit tab en open opnieuw');
+}
+bindPress(document.getElementById('btnVerseVersie'), runForceFreshVersion);
+bindPress(document.getElementById('btnForceFresh'), runForceFreshVersion);
 const btnIslandHelp = document.getElementById('btnIslandHelp');
 bindPress(btnIslandHelp, () => {
   AudioSys.sfx('select');
@@ -12295,6 +12309,15 @@ function bootGame() {
   }, 'titleSting');
   requestAnimationFrame(loop);
   if (state === 'menu') safeCall(() => UI.show('menuScreen'), 'showMenu');
+  setTimeout(() => {
+    try {
+      const hub = document.querySelector('[data-hub]');
+      if (hub && !hub.dataset.sfPressBound) {
+        userToast('Oude cache — menu reageert niet. Tik «Verse versie» in de dock.', 6500);
+        document.getElementById('btnVerseVersie')?.classList.add('sw-update');
+      }
+    } catch (_) {}
+  }, 900);
   if (!window.__sfTipTimer) {
     window.__sfTipTimer = setInterval(() => {
       if (state !== 'menu') return;

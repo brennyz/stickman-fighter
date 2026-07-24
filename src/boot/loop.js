@@ -481,6 +481,15 @@ function bootGame() {
   }, 'titleSting');
   requestAnimationFrame(loop);
   if (state === 'menu') safeCall(() => UI.show('menuScreen'), 'showMenu');
+  setTimeout(() => {
+    try {
+      const hub = document.querySelector('[data-hub]');
+      if (hub && !hub.dataset.sfPressBound) {
+        userToast('Oude cache — menu reageert niet. Tik «Verse versie» in de dock.', 6500);
+        document.getElementById('btnVerseVersie')?.classList.add('sw-update');
+      }
+    } catch (_) {}
+  }, 900);
   if (!window.__sfTipTimer) {
     window.__sfTipTimer = setInterval(() => {
       if (state !== 'menu') return;

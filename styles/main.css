@@ -202,6 +202,7 @@
   }
   .menu-dock .btn.tog:active { box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); transform: none; }
   .menu-dock .tog .tog-ico { margin: 0; width: 1.25em; height: 1.25em; }
+  #btnVerseVersie.sw-update { box-shadow: 0 0 0 2px rgba(255,215,94,.85), inset 0 0 0 1px rgba(255,255,255,.12); color: #ffd75e; }
   .menu-landing-footer .btn.b-install { width: 100%; margin: 8px 0 0; padding: 10px 14px; font-size: 14px; min-height: 44px; }
   .menu-landing-footer .btn.b-install.done { display: none; }
   .menu-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
