@@ -7,20 +7,20 @@
     3,
     11,
     13,
-    17,
-    12
+    12,
+    18
   ],
   "lastRoll": {
-    "face": 18,
-    "category": "Character select \u2014 roster UI, stats, random duo",
-    "rolledAt": "2026-07-24T12:26:51Z",
+    "face": 17,
+    "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
+    "rolledAt": "2026-07-24T14:38:06Z",
     "remainingCount": 6,
     "cycle": 2
   },
   "pending": {
-    "face": 18,
-    "category": "Character select \u2014 roster UI, stats, random duo",
-    "rolledAt": "2026-07-24T12:26:51Z",
+    "face": 17,
+    "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
+    "rolledAt": "2026-07-24T14:38:06Z",
     "remainingCount": 6,
     "cycle": 2
   },
@@ -1007,6 +1007,13 @@
       "face": 18,
       "category": "Character select \u2014 roster UI, stats, random duo",
       "rolledAt": "2026-07-24T12:26:51Z",
+      "remainingCount": 6,
+      "cycle": 2
+    },
+    {
+      "face": 17,
+      "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
+      "rolledAt": "2026-07-24T14:38:06Z",
       "remainingCount": 6,
       "cycle": 2
     }
