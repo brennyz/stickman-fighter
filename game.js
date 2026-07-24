@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.16.8';
+const APP_VERSION = '1.16.9';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 125;
+const SW_CACHE_REV = 126;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -2176,6 +2176,12 @@ function applyVsArenaBounds(game) {
 function fighterMoveXBounds(f, game) {
   let min = game.minX ?? 40;
   let max = game.maxX ?? W - 40;
+  if (game.mode === 'wall' && f.isPlayer && game.wallX != null) {
+    const cols = game.wallCols || 4;
+    const bw = game.wallBrickW || 62;
+    const wallFace = game.wallX + cols * bw;
+    max = Math.min(max, wallFace - 12);
+  }
   if (game.mode === 'versus' && f.playerSlot === 1) max = Math.min(max, game.p1MaxX ?? max);
   if (game.mode === 'versus' && f.playerSlot === 2) min = Math.max(min, game.p2MinX ?? min);
   return { min, max };
@@ -3351,8 +3357,8 @@ function noteShurikenThrow(f, game) {
 const JOY_DEAD_PX = 11;
 const JOY_AIM_DEAD_PX = 7;
 const JOY_MAX_PX = 58;
-/** Geen pointermove meer → joy los (iPad mist soms pointerup) */
-const JOY_STALE_MS = IS_TOUCH ? 200 : 160;
+/** Geen pointermove meer → joy los (iPad mist soms pointerup) — alleen als touch weg is */
+const JOY_STALE_MS = IS_TOUCH ? 2000 : 1600;
 
 function btnHitSlop() {
   const base = (typeof save !== 'undefined' && save.bigTouch !== false) ? 14 : 10;
@@ -3797,13 +3803,18 @@ function makePad(side) {
       this.activePointers.clear();
       this.keys = {};
     },
+    refreshJoyHold(now) {
+      if (this.joy.active && this.joy.id != null && this.activePointers.has(this.joy.id)) {
+        this.joy.lastAt = now;
+      }
+    },
     hardenPointers(now) {
       const t = now || performance.now();
       if (this.joy.active) {
         if (this.joy.id == null || !this.activePointers.has(this.joy.id)) {
           this.releaseJoy();
         } else if (
-          Math.abs(this.joy.dx) >= JOY_DEAD_PX
+          this.activePointers.size === 0
           && this.joy.lastAt
           && t - this.joy.lastAt > JOY_STALE_MS
         ) {
@@ -4000,6 +4011,8 @@ const Input = Object.assign(makePad('p1'), {
   },
   endFrame() {
     const now = performance.now();
+    _padP1Methods.refreshJoyHold.call(this, now);
+    if (InputP2 && Input.dualMode) InputP2.refreshJoyHold.call(InputP2, now);
     this.hardenPointers(now);
     this.pressed = {};
     if (InputP2) InputP2.pressed = {};
@@ -6946,6 +6959,8 @@ class Game {
     // laag en breed, zodat elke steen bereikbaar is (ook springend)
     const bw = 62, bh = 34, cols = 4, rows = 5;
     this.wallX = W - cols * bw - 30;
+    this.wallCols = cols;
+    this.wallBrickW = bw;
     if (!fresh) return;
     this.bricks = [];
     const hpBase = 26 + this.wallGen * 10;
@@ -6997,7 +7012,6 @@ class Game {
         haptic(12);
       }
     }
-    this.maxX = this.wallX - 16;
     if (this.bricks.every(b => b.hp <= 0)) {
       this.wallGen++;
       this.grantXP(25);

@@ -336,6 +336,18 @@
   ],
   "userFeatureLog": [
     {
+      "id": "wall-bounds-joy-hold",
+      "d20Face": null,
+      "userWords": "muur sloop onzichtbare muur bij stenen; joycon werkt maar 1 seconde niet vasthouden",
+      "versions": [
+        "1.16.9"
+      ],
+      "commits": [],
+      "code": "fighterMoveXBounds wall face, remove maxX=wallX-16; joy refreshJoyHold + geen stale-release bij actieve touch",
+      "status": "done",
+      "note": "muur + touch joy"
+    },
+    {
       "id": "ketsbam-escape-movement",
       "d20Face": null,
       "userWords": "stunlock omringd door monsters — midden ketsbam symbool tikken voor explosie; betere links/rechts besturing",
