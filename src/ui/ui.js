@@ -2105,10 +2105,14 @@ const UI = {
       const moveLine = labels
         ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} finisher${mastLine}`
         : (isThrowWeapon(w.id) ? 'Werp-projectiel — geen melee-combo' : '');
+      const islandLine = islandLocked && !lvlLocked
+        ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:#ffd75e">${t('ui.weaponIslandPick', { cap: adventureWeaponCap() })}</div>`
+        : '';
       info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${summonBadge}${tierBadge}${upBadge}</div>
         <div class="cinfo">${statLine}</div>` +
         upLine +
-        (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '');
+        (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '') +
+        islandLine;
       el.appendChild(info);
       if (weaponUpgradeEligible(base)) appendItemUpgradeButton(el, 'weapon', w.id, () => this.renderWeapons());
       const right = document.createElement('div');
@@ -2116,7 +2120,7 @@ const UI = {
       right.innerHTML = lvlLocked
         ? `${SVG_LOCK_ICON} Lv ${base.unlock}`
         : (islandLocked
-          ? `Avontuur Lv ${base.unlock}`
+          ? t('ui.weaponIslandCapShort', { cap: adventureWeaponCap() })
           : (save.weapon === w.id ? '&#10004; gekozen' : 'kies'));
       el.appendChild(right);
       if (!locked) bindPress(el, () => {
@@ -2730,7 +2734,7 @@ const UI = {
       sub.style.opacity = '0.75';
       sub.style.marginTop = '4px';
       sub.textContent = ok ? (save.style === st.id ? t('ui.styleActive') : t('ui.stylePick'))
-        : (styleSkillGated(st) ? t('ui.styleIslandGate', { lvl: st.needLvl }) : styleLabel(st, 'hint'));
+        : (styleSkillGated(st) ? t('ui.styleIslandGate', { cap: adventureWeaponCap(), need: st.needLvl || '?' }) : styleLabel(st, 'hint'));
       el.appendChild(sub);
       if (ok) {
         bindPress(el, () => {
