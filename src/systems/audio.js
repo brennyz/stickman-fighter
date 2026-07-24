@@ -391,6 +391,7 @@ const AudioSys = {
 
   tick() {
     if (!this.ctx || !this.song || !save.music) return;
+    if (typeof document !== 'undefined' && document.hidden) return;
     const s = this.song;
     const spb = 60 / s.bpm / 4;
     while (this.nextTime < this.ctx.currentTime + 0.18) {

@@ -44,6 +44,26 @@ const Perf = {
   skipHeavyDraw() {
     return state === 'play' && this.tier >= 2 && (this.frames & 1) === 0;
   },
+  /** Hoofdmenu-landing zichtbaar — enige menu-scherm met canvas-animatie. */
+  menuLandingVisible() {
+    if (typeof state === 'undefined' || state !== 'menu') return false;
+    try {
+      const ms = document.getElementById('menuScreen');
+      return !!(ms && ms.classList.contains('active'));
+    } catch (_) {
+      return false;
+    }
+  },
+  /** Canvas mag getekend worden (gevecht of menu-backdrop). */
+  canvasDrawActive() {
+    if (typeof state !== 'undefined' && state === 'play' && typeof game !== 'undefined' && game) return true;
+    return this.menuLandingVisible();
+  },
+  /** Statische submenu's — verlaag rAF-work (~2 Hz i.p.v. 60 Hz). */
+  loopIdleMode() {
+    if (typeof state === 'undefined' || state === 'play') return false;
+    return !this.menuLandingVisible();
+  },
 };
 function fxCaps() {
   let mul = 1;

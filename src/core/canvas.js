@@ -12,6 +12,7 @@ function resize() {
   const sizeKey = vp.w + 'x' + vp.h + '@' + newDpr + 't' + Perf.tier;
   if (sizeKey === lastResizeKey) return;
   lastResizeKey = sizeKey;
+  try { if (typeof menuBgCacheInvalidate === 'function') menuBgCacheInvalidate(); } catch (_) {}
   DPR = newDpr;
   W = vp.w;
   H = vp.h;
