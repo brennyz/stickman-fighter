@@ -165,7 +165,7 @@ class Monster {
       const burstN = fxLite() ? 6 : (this.superBoss ? 14 : (this.elite ? 12 : 10));
       game.burst(this.x, this.y, this.sp.c1, burstN);
       game.onMonsterKilled(this);
-    } else {
+    } else if (!opts.skipHitSfx) {
       AudioSys.sfxAt('hit', this.x);
     }
   }

@@ -325,6 +325,18 @@ const AudioSys = {
         N(0.045, 0.11, 3800, true, now);
         if (!lite) E(620, 920, 0.07, 'sine', 0.08, now + 0.08, 0.05, 0.38);
         break;
+      case 'wFan':
+        N(0.025, 0.1, 4800, true, now);
+        T(760, 1120, 0.07, 'sine', 0.1, now);
+        T(520, 880, 0.05, 'triangle', 0.08, now + 0.04);
+        if (!lite) T(980, 620, 0.04, 'sine', 0.06, now + 0.07);
+        break;
+      case 'wFuuma':
+        N(0.04, 0.14, 4600, true, now);
+        T(880, 520, 0.08, 'triangle', 0.12, now);
+        T(620, 380, 0.06, 'sine', 0.09, now + 0.035);
+        if (!lite) N(0.03, 0.08, 6200, true, now + 0.05);
+        break;
       case 'wHamer':
         I(80, 550, now);
         T(95, 38, 0.15, 'sine', 0.26, now);

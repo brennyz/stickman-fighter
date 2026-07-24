@@ -1426,13 +1426,12 @@ const UI = {
           ? `Avontuur Lv ${base.unlock}`
           : (save.weapon === w.id ? '&#10004; gekozen' : 'kies'));
       el.appendChild(right);
-      if (!locked) el.addEventListener('click', () => {
+      if (!locked) bindPress(el, () => {
         if (!uiTapAllowed()) return;
         safeUiAction(() => {
           save.weapon = w.id;
           if (!persistOrToast('wapen')) return;
-          AudioSys.sfx('select');
-          try { AudioSys.sfx(weaponSwingSfx(w.id)); } catch (_) {}
+          playWeaponPickFeedback(w.id);
           if (islandLocked) UI.toast(t('toast.weaponIslandCap', { cap: adventureWeaponCap() }), 2800);
           this.renderWeapons();
         }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt');
