@@ -177,6 +177,139 @@ const WEAPON_MOVE_FAMILIES = {
   },
 };
 
+/** Per wapen: eigen 1-2-3 stijl (labels + optionele move-tweaks; stats erven anders van family). */
+const WEAPON_COMBOS = {
+  kunai: {
+    labels: ['Kunai-steek', 'Ruk-terug', 'Kruis-snede'],
+    moves: [
+      { pose: 'thrust', rangeMul: 1.04, dmgMul: 1, kbMul: 1, hitY: -4, windupMul: 0.9, activeMul: 0.92 },
+      { pose: 'hook', rangeMul: 0.98, dmgMul: 1.02, kbMul: 1.04, hitY: 2, windupMul: 0.88, activeMul: 0.9 },
+      { pose: 'slash', rangeMul: 1.02, dmgMul: 1.04, kbMul: 1.06, hitY: 0, windupMul: 0.94, activeMul: 0.96 },
+    ],
+  },
+  tanto: {
+    labels: ['Quick-draw', 'Omkeer-priem', 'Lethale punctie'],
+    moves: [
+      { pose: 'slash', rangeMul: 0.98, dmgMul: 1, kbMul: 0.98, hitY: 0, windupMul: 0.82, activeMul: 0.88 },
+      { pose: 'hook', rangeMul: 1, dmgMul: 1.02, kbMul: 1.04, hitY: 4, windupMul: 0.86, activeMul: 0.9 },
+      { pose: 'thrust', rangeMul: 1.06, dmgMul: 1.08, kbMul: 1.1, hitY: -6, windupMul: 0.98, activeMul: 1 },
+    ],
+  },
+  zwaard: {
+    labels: ['Iai-houw', 'Diagonale kling', 'Kenjutsu-eind'],
+  },
+  sai: {
+    labels: ['Drie-punt stoot', 'Blok-snap', 'Parry-kruis'],
+  },
+  knuppel: {
+    labels: ['Woudslag', 'Zij-knock', 'Knuppel-smash'],
+  },
+  waaier: {
+    labels: ['Waaier-dans', 'Bladstorm', 'Wind-coup'],
+  },
+  speer: {
+    labels: ['Verre steek', 'Lage sweep', 'Speersprong'],
+  },
+  tonfa: {
+    labels: ['Tonfa-flurry', 'Worp-rotatie', 'Breaker-slag'],
+    moves: [
+      { pose: 'slash', rangeMul: 0.96, dmgMul: 0.98, kbMul: 0.95, hitY: 0, windupMul: 0.82, activeMul: 0.88 },
+      { pose: 'spin', rangeMul: 1.02, dmgMul: 1, kbMul: 1.02, hitY: -2, windupMul: 0.88, activeMul: 0.92 },
+      { pose: 'overhead', rangeMul: 1.02, dmgMul: 1.12, kbMul: 1.22, hitY: -10, windupMul: 1.04, activeMul: 0.96 },
+    ],
+  },
+  nunchaku: {
+    labels: ['Bliksem-flurry', 'Ketting-wervel', 'Finisher-hak'],
+  },
+  kama: {
+    labels: ['Sikkel-haak', 'Oogst-sweep', 'Grap-stoot'],
+  },
+  boemerang: {
+    labels: ['Return-slag', 'Boomer-sweep', 'Spin-out'],
+  },
+  zeis: {
+    labels: ['Schaduw-sweep', 'Rip-sikkel', 'Zeis-doorsteek'],
+    moves: [
+      { pose: 'sweep', rangeMul: 1.08, dmgMul: 1, kbMul: 1.02, hitY: 12, windupMul: 0.96, activeMul: 1.02 },
+      { pose: 'hook', rangeMul: 1.04, dmgMul: 1.04, kbMul: 1.08, hitY: 6, windupMul: 0.94, activeMul: 1 },
+      { pose: 'thrust', rangeMul: 1.12, dmgMul: 1.1, kbMul: 1.14, hitY: -8, windupMul: 1.08, activeMul: 1.04 },
+    ],
+  },
+  hamer: {
+    labels: ['Moker-slag', 'Aardbeving', 'Afteller-smash'],
+    moves: [
+      { pose: 'overhead', rangeMul: 0.92, dmgMul: 1.12, kbMul: 1.2, hitY: -8, windupMul: 1.14, activeMul: 0.9 },
+      { pose: 'slash', rangeMul: 1, dmgMul: 1.04, kbMul: 1.08, hitY: 4, windupMul: 1, activeMul: 0.96 },
+      { pose: 'upper', rangeMul: 0.98, dmgMul: 1.14, kbMul: 1.24, hitY: -18, windupMul: 1.1, activeMul: 0.96 },
+    ],
+  },
+  drietand: {
+    labels: ['Drie-punt prik', 'Poseidon-sweep', 'Neptune-stoot'],
+  },
+  ketting: {
+    labels: ['Ketting-flurry', 'Steel-whip', 'Bladregen'],
+  },
+  bostaf: {
+    labels: ['Bo-flow', 'Endurance-sweep', 'Zen-stoot'],
+    moves: [
+      { pose: 'thrust', rangeMul: 1.08, dmgMul: 1, kbMul: 1.06, hitY: -2, windupMul: 0.9, activeMul: 0.98 },
+      { pose: 'sweep', rangeMul: 1.08, dmgMul: 0.98, kbMul: 1.04, hitY: 10, windupMul: 0.88, activeMul: 0.98 },
+      { pose: 'thrust', rangeMul: 1.1, dmgMul: 1.06, kbMul: 1.12, hitY: -12, windupMul: 1.02, activeMul: 1.04 },
+    ],
+  },
+  laser: {
+    labels: ['Chakra-zwaai', 'Focus-stoot', 'Licht-nova'],
+  },
+  kristal: {
+    labels: ['Kristal-splinter', 'Prisma-stoot', 'Shard-burst'],
+  },
+  donder: {
+    labels: ['Bliksem-hak', 'Storm-overhead', 'Donder-smash'],
+    moves: [
+      { pose: 'slash', rangeMul: 1, dmgMul: 1.04, kbMul: 1.08, hitY: 0, windupMul: 0.98, activeMul: 0.96 },
+      { pose: 'overhead', rangeMul: 0.96, dmgMul: 1.12, kbMul: 1.18, hitY: -10, windupMul: 1.12, activeMul: 0.9 },
+      { pose: 'upper', rangeMul: 1.02, dmgMul: 1.16, kbMul: 1.26, hitY: -20, windupMul: 1.08, activeMul: 0.94 },
+    ],
+  },
+  vlamzweep: {
+    labels: ['Vlam-zweef', 'Vuur-wervel', 'Inferno-hak'],
+  },
+  void: {
+    labels: ['Void-rits', 'Leegte-stoot', 'Klauw-nova'],
+  },
+  sterkling: {
+    labels: ['Ster-val', 'Nova-stoot', 'Kosmische sweep'],
+  },
+  guvve: {
+    labels: ['GUVOO', 'QUAK', 'STICK'],
+    moves: [
+      { pose: 'overhead', rangeMul: 0.96, dmgMul: 1.1, kbMul: 1.18, hitY: -6, windupMul: 1.08, activeMul: 0.94 },
+      { pose: 'slash', rangeMul: 1.04, dmgMul: 1.06, kbMul: 1.1, hitY: 4, windupMul: 0.96, activeMul: 0.98 },
+      { pose: 'upper', rangeMul: 1.06, dmgMul: 1.18, kbMul: 1.28, hitY: -14, windupMul: 1.1, activeMul: 0.96 },
+    ],
+  },
+  master_sword: {
+    labels: ['Licht-slice', 'Zwaard-dans', 'Triforce-stoot'],
+    moves: [
+      { pose: 'slash', rangeMul: 1.06, dmgMul: 1.04, kbMul: 1.06, hitY: 0, windupMul: 0.92, activeMul: 0.96 },
+      { pose: 'spin', rangeMul: 1.1, dmgMul: 1.08, kbMul: 1.12, hitY: -4, windupMul: 0.98, activeMul: 1.02 },
+      { pose: 'thrust', rangeMul: 1.16, dmgMul: 1.12, kbMul: 1.18, hitY: -8, windupMul: 1.04, activeMul: 1.06 },
+    ],
+  },
+};
+
+function weaponComboSet(id) {
+  const fam = weaponMoveFamily(id);
+  if (!fam) return null;
+  const familySet = WEAPON_MOVE_FAMILIES[fam] || WEAPON_MOVE_FAMILIES.slash;
+  const custom = WEAPON_COMBOS[id];
+  if (!custom) return familySet;
+  return {
+    labels: custom.labels || familySet.labels,
+    moves: custom.moves || familySet.moves,
+  };
+}
+
 function weaponMoveFamily(id) {
   if (id === 'master_sword') return 'slash';
   if (isThrowWeapon(id) || id === 'vuist') return null;
@@ -191,19 +324,17 @@ function weaponMoveFamily(id) {
 }
 
 function weaponMoveDef(id, idx) {
-  const fam = weaponMoveFamily(id);
-  if (!fam) return null;
-  const set = WEAPON_MOVE_FAMILIES[fam] || WEAPON_MOVE_FAMILIES.slash;
-  const moves = set && set.moves;
+  const set = weaponComboSet(id);
+  if (!set) return null;
+  const moves = set.moves;
   if (!moves || !moves.length) return WEAPON_MOVE_FAMILIES.slash.moves[0];
   const n = ((idx || 0) % 3 + 3) % 3;
   return moves[n] || moves[0];
 }
 
 function weaponMoveLabels(id) {
-  const fam = weaponMoveFamily(id);
-  if (!fam) return null;
-  const set = WEAPON_MOVE_FAMILIES[fam] || WEAPON_MOVE_FAMILIES.slash;
+  const set = weaponComboSet(id);
+  if (!set) return null;
   return set.labels || WEAPON_MOVE_FAMILIES.slash.labels;
 }
 
@@ -239,6 +370,97 @@ function applyWeaponMovePose(P, ext, move) {
 
 const WEAPON_COMBO_WINDOW = 1.38;
 const WEAPON_COMBO_GRACE = 0.6;
+const WEAPON_COMBO_STEP_MUL = [1, 1.06, 1.12];
+const WEAPON_FINISHER_MUL = { dmg: 1.15, kb: 1.12, energy: 6 };
+const WEAPON_POSE_FX = {
+  slash: '#e8f0ff', thrust: '#9fd8ff', upper: '#ffd75e', sweep: '#b06ae0',
+  overhead: '#ff8080', spin: '#7cf5ff', hook: '#c792ff',
+};
+
+function weaponComboStepMul(idx) {
+  const n = clamp(((idx || 0) % 3 + 3) % 3, 0, 2);
+  return WEAPON_COMBO_STEP_MUL[n] || 1;
+}
+
+function weaponMoveFxColor(move) {
+  const pose = (move && move.pose) || 'slash';
+  return WEAPON_POSE_FX[pose] || '#e8f0ff';
+}
+
+function isWeaponFinisher(f, spec) {
+  if (!f || !spec || spec.kind !== 'weapon' || spec.moveIdx !== 2) return false;
+  if (isThrowWeapon(f.weapon?.id)) return false;
+  return (f._weaponComboHits || 0) >= 2;
+}
+
+const WEAPON_MASTERY_TIERS = [
+  { min: 0, name: 'Leerling', color: '#9fd8ff' },
+  { min: 3, name: 'Virtuoos', color: '#c792ff' },
+  { min: 10, name: 'Meester', color: '#ffd75e' },
+  { min: 25, name: 'Legende', color: '#ffb830' },
+];
+
+function weaponMasteryCount(id) {
+  return (save.weaponMastery && save.weaponMastery[id] && save.weaponMastery[id].finishers) || 0;
+}
+
+function weaponMasteryTierIdx(count) {
+  let idx = 0;
+  for (let i = 0; i < WEAPON_MASTERY_TIERS.length; i++) {
+    if (count >= WEAPON_MASTERY_TIERS[i].min) idx = i;
+  }
+  return idx;
+}
+
+function weaponMasteryTier(id, countOverride) {
+  const count = countOverride != null ? countOverride : weaponMasteryCount(id);
+  return WEAPON_MASTERY_TIERS[weaponMasteryTierIdx(count)];
+}
+
+function weaponMasteryTopList(limit) {
+  const list = [];
+  for (const w of WEAPONS) {
+    if (isThrowWeapon(w.id) || w.id === 'vuist') continue;
+    const n = weaponMasteryCount(w.id);
+    if (n > 0) list.push({ id: w.id, name: w.name, finishers: n, tier: weaponMasteryTier(w.id) });
+  }
+  list.sort((a, b) => b.finishers - a.finishers);
+  return list.slice(0, limit || 3);
+}
+
+function weaponComboTipOnce() {
+  if (typeof save === 'undefined') return;
+  if (!save.tipsSeen || typeof save.tipsSeen !== 'object') save.tipsSeen = {};
+  if (save.tipsSeen.weaponCombo) return;
+  save.tipsSeen.weaponCombo = 1;
+  if (typeof persist === 'function') persist();
+  try { UI.toast('Wapen 3× tikken = ①②③ · raak met ①+② voor gouden finisher ③', 4200); } catch (_) {}
+}
+
+function trackWeaponFinisher(weaponId, gameRef) {
+  if (!weaponId || isThrowWeapon(weaponId) || typeof save === 'undefined') return;
+  save.stats = save.stats || {};
+  const prevTotal = save.stats.weaponFinishers || 0;
+  save.stats.weaponFinishers = prevTotal + 1;
+  save.weaponMastery = save.weaponMastery || {};
+  const m = save.weaponMastery[weaponId] || { finishers: 0 };
+  const prevCount = m.finishers || 0;
+  const prevTierIdx = weaponMasteryTierIdx(prevCount);
+  m.finishers = prevCount + 1;
+  save.weaponMastery[weaponId] = m;
+  const newTierIdx = weaponMasteryTierIdx(m.finishers);
+  if (gameRef) gameRef.runFinishers = (gameRef.runFinishers || 0) + 1;
+  if (typeof bumpDaily === 'function') bumpDaily('weaponFinisher', 1);
+  if (newTierIdx > prevTierIdx && typeof UI !== 'undefined') {
+    const w = weaponById(weaponId);
+    const tier = WEAPON_MASTERY_TIERS[newTierIdx];
+    try { UI.toast(`${w.name}: ${tier.name}!`, 3200); } catch (_) {}
+  }
+  if (prevTotal === 0 && typeof UI !== 'undefined') {
+    try { UI.toast('Eerste finisher! Raak ① én ②, dan is ③ goud.', 3600); } catch (_) {}
+  }
+  if (typeof checkAchievements === 'function') checkAchievements();
+}
 
 function resetWeaponCombo(f) {
   if (!f) return;
@@ -246,6 +468,7 @@ function resetWeaponCombo(f) {
   f.weaponComboT = 0;
   f._lastWeaponKind = null;
   f._weaponComboPrimed = false;
+  f._weaponComboHits = 0;
 }
 
 function bumpWeaponComboWindow(f, bonus) {
@@ -266,11 +489,37 @@ function sanitizeWeaponSpec(spec) {
 
 function drawWeaponStylePips(c, x, y, fighter) {
   if (!fighter || !weaponMoveFamily(fighter.weapon?.id) || fighter.weaponComboT <= 0) return;
+  const labels = weaponMoveLabels(fighter.weapon.id);
+  const readyFin = fighter.weaponComboIdx >= 2 && (fighter._weaponComboHits || 0) >= 2;
   for (let i = 0; i < 3; i++) {
-    c.fillStyle = i <= fighter.weaponComboIdx ? '#ffd75e' : 'rgba(255,255,255,.22)';
+    const lit = i <= fighter.weaponComboIdx;
+    const fin = readyFin && i === 2;
+    c.fillStyle = fin ? '#ffb830' : (lit ? '#ffd75e' : 'rgba(255,255,255,.22)');
     c.beginPath();
-    c.arc(x + i * 13, y, 3.5, 0, TAU);
+    c.arc(x + i * 13, y, fin ? 4.2 : 3.5, 0, TAU);
     c.fill();
+    if (fin && !motionReduced()) {
+      c.strokeStyle = 'rgba(255,184,48,.45)';
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.arc(x + i * 13, y, 6.5, 0, TAU);
+      c.stroke();
+    }
+  }
+  if (labels && labels[fighter.weaponComboIdx]) {
+    c.font = '9px sans-serif';
+    c.fillStyle = readyFin && fighter.weaponComboIdx === 2 ? '#ffb830' : 'rgba(255,255,255,.72)';
+    c.textAlign = 'center';
+    const lbl = labels[fighter.weaponComboIdx];
+    c.fillText(lbl.length > 14 ? lbl.slice(0, 13) + '…' : lbl, x + 13, y + 12);
+    c.textAlign = 'left';
+  }
+  if (!motionReduced()) {
+    const frac = clamp(fighter.weaponComboT / WEAPON_COMBO_WINDOW, 0, 1);
+    c.fillStyle = 'rgba(255,255,255,.14)';
+    c.fillRect(x - 2, y + 18, 40, 3);
+    c.fillStyle = readyFin ? '#ffb830' : '#ffd75e';
+    c.fillRect(x - 2, y + 18, 40 * frac, 3);
   }
 }
 

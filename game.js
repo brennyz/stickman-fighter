@@ -132,17 +132,17 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.50';
+const APP_VERSION = '1.17.51';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 176;
+const SW_CACHE_REV = 177;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0 },
-  achievements: {}, daily: null, vsPlayedIds: [] };
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0 },
+  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {} };
 const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
 const ISLAND_WEAPON_CAPS = [10, 20, 30, 40, 48];
@@ -494,7 +494,8 @@ function hitConfirmColor(kind) {
 function applyHitConfirmFx(game, x, y, spec) {
   if (!game || motionReduced()) return;
   const kind = spec && spec.kind ? spec.kind : 'punch';
-  const col = hitConfirmColor(kind);
+  let col = hitConfirmColor(kind);
+  if (kind === 'weapon' && spec.move) col = weaponMoveFxColor(spec.move);
   spawnFxRing(game, x, y, col, fxLite() ? 6 : 9);
   if (!fxLite()) game.burst(x, y, col, 3, { kind: 'spark', size: 2 });
 }
@@ -811,6 +812,14 @@ function sanitizeSave(s) {
   }
   out.dex = cleanDex;
 
+  const cleanMastery = {};
+  for (const [k, v] of Object.entries(out.weaponMastery || {})) {
+    if (!WEAPONS.some(w => w.id === k)) continue;
+    const fin = clamp(Math.floor(Number(v && v.finishers) || 0), 0, 999999);
+    if (fin > 0) cleanMastery[k] = { finishers: fin };
+  }
+  out.weaponMastery = cleanMastery;
+
   out.stats = Object.assign({}, DEFAULT_SAVE.stats, out.stats || {});
   const cleanStats = {};
   for (const key of Object.keys(DEFAULT_SAVE.stats)) {
@@ -960,6 +969,7 @@ const DAILY_DEFS = [
   { id: 'wall35', type: 'wallBricks', goal: 35, xp: 40, text: 'Sloop 35 muurstenen' },
   { id: 'trainwin', type: 'trainWin', goal: 1, xp: 60, text: 'Win training vs Robot' },
   { id: 'combo5', type: 'comboReach', goal: 5, xp: 35, text: 'Bereik combo ×5' },
+  { id: 'finisher3', type: 'weaponFinisher', goal: 3, xp: 42, text: 'Land 3 wapen-finishers' },
   { id: 'pick3', type: 'pickups', goal: 3, xp: 30, text: 'Pak 3 power-ups' },
   { id: 'boss1', type: 'bossKill', goal: 1, xp: 50, text: 'Versla 1 baas-monster' },
 ];
@@ -969,6 +979,7 @@ const DAILY_PLAY_HINTS = {
   wall35: 'Menu → Muur slopen (combo helpt)',
   trainwin: 'Menu → Training vs RabbitRobot',
   combo5: 'Avontuur: snelle combo’s op monsters',
+  finisher3: 'Avontuur/Training: ①+② raken, dan finisher ③',
   pick3: 'Avontuur: groen/oranje/blauwe bolletjes',
   boss1: 'Avontuur: baas aan einde van een level',
 };
@@ -978,6 +989,7 @@ const DAILY_PLAY_TARGETS = {
   wall35: { mode: 'wall', label: 'Muur' },
   trainwin: { mode: 'training', label: 'Training' },
   combo5: { mode: 'adventure', label: 'Avontuur' },
+  finisher3: { mode: 'adventure', label: 'Avontuur' },
   pick3: { mode: 'adventure', label: 'Avontuur' },
   boss1: { mode: 'adventure', label: 'Avontuur' },
 };
@@ -1032,6 +1044,14 @@ const ACHIEVEMENTS = [
     test: s => s.bestWall >= 100 },
   { id: 'combo8', name: 'Combo-koning', desc: 'Combo ×8 bereikt', icon: '⚡',
     test: s => s.stats.maxCombo >= 8 },
+  { id: 'finisher10', name: 'Stijl-meester', desc: '10 wapen-finishers geland', icon: '⚔',
+    test: s => (s.stats.weaponFinishers || 0) >= 10 },
+  { id: 'finisher1', name: 'Eerste stijl', desc: 'Land je eerste wapen-finisher', icon: '🗡',
+    test: s => (s.stats.weaponFinishers || 0) >= 1 },
+  { id: 'weaponMaster25', name: 'Wapen-legende', desc: '25 finishers met één wapen', icon: '👑',
+    test: s => Object.values(s.weaponMastery || {}).some(m => (m.finishers || 0) >= 25) },
+  { id: 'finisher50', name: 'Combo-sensei', desc: '50 finishers totaal', icon: '✨',
+    test: s => (s.stats.weaponFinishers || 0) >= 50 },
   { id: 'lv50', name: 'Legende', desc: 'Unlock level 50', icon: '👑',
     test: s => s.unlocked >= 50 },
   { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd', icon: '📅',
@@ -1262,6 +1282,14 @@ function achievementProgressFrac(ach) {
     case 'train5': return Math.min(s.trainWins, 5) / 5;
     case 'wall100': return Math.min(s.bestWall, 100) / 100;
     case 'combo8': return Math.min(s.stats.maxCombo || 0, 8) / 8;
+    case 'finisher10': return Math.min(s.stats.weaponFinishers || 0, 10) / 10;
+    case 'finisher1': return Math.min(s.stats.weaponFinishers || 0, 1);
+    case 'finisher50': return Math.min(s.stats.weaponFinishers || 0, 50) / 50;
+    case 'weaponMaster25': {
+      let best = 0;
+      for (const m of Object.values(s.weaponMastery || {})) best = Math.max(best, m.finishers || 0);
+      return Math.min(best, 25) / 25;
+    }
     case 'lv50': return Math.min(s.unlocked, 50) / 50;
     case 'daily7': return Math.min(s.stats.dailyBonusCount || 0, 7) / 7;
     case 'vs5': return Math.min(s.stats.vsMatches || 0, 5) / 5;
@@ -1292,6 +1320,14 @@ function achievementProgressHint(ach) {
     case 'train5': return `${Math.min(s.trainWins, 5)}/5 training-wins`;
     case 'wall100': return `${Math.min(s.bestWall, 100)}/100 muur-score`;
     case 'combo8': return `×${Math.min(s.stats.maxCombo || 0, 8)}/8 combo`;
+    case 'finisher10': return `${Math.min(s.stats.weaponFinishers || 0, 10)}/10 finishers`;
+    case 'finisher1': return `${Math.min(s.stats.weaponFinishers || 0, 1)}/1 finisher`;
+    case 'finisher50': return `${Math.min(s.stats.weaponFinishers || 0, 50)}/50 finishers`;
+    case 'weaponMaster25': {
+      let best = 0;
+      for (const m of Object.values(s.weaponMastery || {})) best = Math.max(best, m.finishers || 0);
+      return `${Math.min(best, 25)}/25 op één wapen`;
+    }
     case 'lv50': return `Unlock Lv ${Math.min(s.unlocked, 50)}/50`;
     case 'daily7': return `${Math.min(s.stats.dailyBonusCount || 0, 7)}/7 dagbonussen`;
     case 'vs5': return `${Math.min(s.stats.vsMatches || 0, 5)}/5 duels`;
@@ -2605,6 +2641,139 @@ const WEAPON_MOVE_FAMILIES = {
   },
 };
 
+/** Per wapen: eigen 1-2-3 stijl (labels + optionele move-tweaks; stats erven anders van family). */
+const WEAPON_COMBOS = {
+  kunai: {
+    labels: ['Kunai-steek', 'Ruk-terug', 'Kruis-snede'],
+    moves: [
+      { pose: 'thrust', rangeMul: 1.04, dmgMul: 1, kbMul: 1, hitY: -4, windupMul: 0.9, activeMul: 0.92 },
+      { pose: 'hook', rangeMul: 0.98, dmgMul: 1.02, kbMul: 1.04, hitY: 2, windupMul: 0.88, activeMul: 0.9 },
+      { pose: 'slash', rangeMul: 1.02, dmgMul: 1.04, kbMul: 1.06, hitY: 0, windupMul: 0.94, activeMul: 0.96 },
+    ],
+  },
+  tanto: {
+    labels: ['Quick-draw', 'Omkeer-priem', 'Lethale punctie'],
+    moves: [
+      { pose: 'slash', rangeMul: 0.98, dmgMul: 1, kbMul: 0.98, hitY: 0, windupMul: 0.82, activeMul: 0.88 },
+      { pose: 'hook', rangeMul: 1, dmgMul: 1.02, kbMul: 1.04, hitY: 4, windupMul: 0.86, activeMul: 0.9 },
+      { pose: 'thrust', rangeMul: 1.06, dmgMul: 1.08, kbMul: 1.1, hitY: -6, windupMul: 0.98, activeMul: 1 },
+    ],
+  },
+  zwaard: {
+    labels: ['Iai-houw', 'Diagonale kling', 'Kenjutsu-eind'],
+  },
+  sai: {
+    labels: ['Drie-punt stoot', 'Blok-snap', 'Parry-kruis'],
+  },
+  knuppel: {
+    labels: ['Woudslag', 'Zij-knock', 'Knuppel-smash'],
+  },
+  waaier: {
+    labels: ['Waaier-dans', 'Bladstorm', 'Wind-coup'],
+  },
+  speer: {
+    labels: ['Verre steek', 'Lage sweep', 'Speersprong'],
+  },
+  tonfa: {
+    labels: ['Tonfa-flurry', 'Worp-rotatie', 'Breaker-slag'],
+    moves: [
+      { pose: 'slash', rangeMul: 0.96, dmgMul: 0.98, kbMul: 0.95, hitY: 0, windupMul: 0.82, activeMul: 0.88 },
+      { pose: 'spin', rangeMul: 1.02, dmgMul: 1, kbMul: 1.02, hitY: -2, windupMul: 0.88, activeMul: 0.92 },
+      { pose: 'overhead', rangeMul: 1.02, dmgMul: 1.12, kbMul: 1.22, hitY: -10, windupMul: 1.04, activeMul: 0.96 },
+    ],
+  },
+  nunchaku: {
+    labels: ['Bliksem-flurry', 'Ketting-wervel', 'Finisher-hak'],
+  },
+  kama: {
+    labels: ['Sikkel-haak', 'Oogst-sweep', 'Grap-stoot'],
+  },
+  boemerang: {
+    labels: ['Return-slag', 'Boomer-sweep', 'Spin-out'],
+  },
+  zeis: {
+    labels: ['Schaduw-sweep', 'Rip-sikkel', 'Zeis-doorsteek'],
+    moves: [
+      { pose: 'sweep', rangeMul: 1.08, dmgMul: 1, kbMul: 1.02, hitY: 12, windupMul: 0.96, activeMul: 1.02 },
+      { pose: 'hook', rangeMul: 1.04, dmgMul: 1.04, kbMul: 1.08, hitY: 6, windupMul: 0.94, activeMul: 1 },
+      { pose: 'thrust', rangeMul: 1.12, dmgMul: 1.1, kbMul: 1.14, hitY: -8, windupMul: 1.08, activeMul: 1.04 },
+    ],
+  },
+  hamer: {
+    labels: ['Moker-slag', 'Aardbeving', 'Afteller-smash'],
+    moves: [
+      { pose: 'overhead', rangeMul: 0.92, dmgMul: 1.12, kbMul: 1.2, hitY: -8, windupMul: 1.14, activeMul: 0.9 },
+      { pose: 'slash', rangeMul: 1, dmgMul: 1.04, kbMul: 1.08, hitY: 4, windupMul: 1, activeMul: 0.96 },
+      { pose: 'upper', rangeMul: 0.98, dmgMul: 1.14, kbMul: 1.24, hitY: -18, windupMul: 1.1, activeMul: 0.96 },
+    ],
+  },
+  drietand: {
+    labels: ['Drie-punt prik', 'Poseidon-sweep', 'Neptune-stoot'],
+  },
+  ketting: {
+    labels: ['Ketting-flurry', 'Steel-whip', 'Bladregen'],
+  },
+  bostaf: {
+    labels: ['Bo-flow', 'Endurance-sweep', 'Zen-stoot'],
+    moves: [
+      { pose: 'thrust', rangeMul: 1.08, dmgMul: 1, kbMul: 1.06, hitY: -2, windupMul: 0.9, activeMul: 0.98 },
+      { pose: 'sweep', rangeMul: 1.08, dmgMul: 0.98, kbMul: 1.04, hitY: 10, windupMul: 0.88, activeMul: 0.98 },
+      { pose: 'thrust', rangeMul: 1.1, dmgMul: 1.06, kbMul: 1.12, hitY: -12, windupMul: 1.02, activeMul: 1.04 },
+    ],
+  },
+  laser: {
+    labels: ['Chakra-zwaai', 'Focus-stoot', 'Licht-nova'],
+  },
+  kristal: {
+    labels: ['Kristal-splinter', 'Prisma-stoot', 'Shard-burst'],
+  },
+  donder: {
+    labels: ['Bliksem-hak', 'Storm-overhead', 'Donder-smash'],
+    moves: [
+      { pose: 'slash', rangeMul: 1, dmgMul: 1.04, kbMul: 1.08, hitY: 0, windupMul: 0.98, activeMul: 0.96 },
+      { pose: 'overhead', rangeMul: 0.96, dmgMul: 1.12, kbMul: 1.18, hitY: -10, windupMul: 1.12, activeMul: 0.9 },
+      { pose: 'upper', rangeMul: 1.02, dmgMul: 1.16, kbMul: 1.26, hitY: -20, windupMul: 1.08, activeMul: 0.94 },
+    ],
+  },
+  vlamzweep: {
+    labels: ['Vlam-zweef', 'Vuur-wervel', 'Inferno-hak'],
+  },
+  void: {
+    labels: ['Void-rits', 'Leegte-stoot', 'Klauw-nova'],
+  },
+  sterkling: {
+    labels: ['Ster-val', 'Nova-stoot', 'Kosmische sweep'],
+  },
+  guvve: {
+    labels: ['GUVOO', 'QUAK', 'STICK'],
+    moves: [
+      { pose: 'overhead', rangeMul: 0.96, dmgMul: 1.1, kbMul: 1.18, hitY: -6, windupMul: 1.08, activeMul: 0.94 },
+      { pose: 'slash', rangeMul: 1.04, dmgMul: 1.06, kbMul: 1.1, hitY: 4, windupMul: 0.96, activeMul: 0.98 },
+      { pose: 'upper', rangeMul: 1.06, dmgMul: 1.18, kbMul: 1.28, hitY: -14, windupMul: 1.1, activeMul: 0.96 },
+    ],
+  },
+  master_sword: {
+    labels: ['Licht-slice', 'Zwaard-dans', 'Triforce-stoot'],
+    moves: [
+      { pose: 'slash', rangeMul: 1.06, dmgMul: 1.04, kbMul: 1.06, hitY: 0, windupMul: 0.92, activeMul: 0.96 },
+      { pose: 'spin', rangeMul: 1.1, dmgMul: 1.08, kbMul: 1.12, hitY: -4, windupMul: 0.98, activeMul: 1.02 },
+      { pose: 'thrust', rangeMul: 1.16, dmgMul: 1.12, kbMul: 1.18, hitY: -8, windupMul: 1.04, activeMul: 1.06 },
+    ],
+  },
+};
+
+function weaponComboSet(id) {
+  const fam = weaponMoveFamily(id);
+  if (!fam) return null;
+  const familySet = WEAPON_MOVE_FAMILIES[fam] || WEAPON_MOVE_FAMILIES.slash;
+  const custom = WEAPON_COMBOS[id];
+  if (!custom) return familySet;
+  return {
+    labels: custom.labels || familySet.labels,
+    moves: custom.moves || familySet.moves,
+  };
+}
+
 function weaponMoveFamily(id) {
   if (id === 'master_sword') return 'slash';
   if (isThrowWeapon(id) || id === 'vuist') return null;
@@ -2619,19 +2788,17 @@ function weaponMoveFamily(id) {
 }
 
 function weaponMoveDef(id, idx) {
-  const fam = weaponMoveFamily(id);
-  if (!fam) return null;
-  const set = WEAPON_MOVE_FAMILIES[fam] || WEAPON_MOVE_FAMILIES.slash;
-  const moves = set && set.moves;
+  const set = weaponComboSet(id);
+  if (!set) return null;
+  const moves = set.moves;
   if (!moves || !moves.length) return WEAPON_MOVE_FAMILIES.slash.moves[0];
   const n = ((idx || 0) % 3 + 3) % 3;
   return moves[n] || moves[0];
 }
 
 function weaponMoveLabels(id) {
-  const fam = weaponMoveFamily(id);
-  if (!fam) return null;
-  const set = WEAPON_MOVE_FAMILIES[fam] || WEAPON_MOVE_FAMILIES.slash;
+  const set = weaponComboSet(id);
+  if (!set) return null;
   return set.labels || WEAPON_MOVE_FAMILIES.slash.labels;
 }
 
@@ -2667,6 +2834,97 @@ function applyWeaponMovePose(P, ext, move) {
 
 const WEAPON_COMBO_WINDOW = 1.38;
 const WEAPON_COMBO_GRACE = 0.6;
+const WEAPON_COMBO_STEP_MUL = [1, 1.06, 1.12];
+const WEAPON_FINISHER_MUL = { dmg: 1.15, kb: 1.12, energy: 6 };
+const WEAPON_POSE_FX = {
+  slash: '#e8f0ff', thrust: '#9fd8ff', upper: '#ffd75e', sweep: '#b06ae0',
+  overhead: '#ff8080', spin: '#7cf5ff', hook: '#c792ff',
+};
+
+function weaponComboStepMul(idx) {
+  const n = clamp(((idx || 0) % 3 + 3) % 3, 0, 2);
+  return WEAPON_COMBO_STEP_MUL[n] || 1;
+}
+
+function weaponMoveFxColor(move) {
+  const pose = (move && move.pose) || 'slash';
+  return WEAPON_POSE_FX[pose] || '#e8f0ff';
+}
+
+function isWeaponFinisher(f, spec) {
+  if (!f || !spec || spec.kind !== 'weapon' || spec.moveIdx !== 2) return false;
+  if (isThrowWeapon(f.weapon?.id)) return false;
+  return (f._weaponComboHits || 0) >= 2;
+}
+
+const WEAPON_MASTERY_TIERS = [
+  { min: 0, name: 'Leerling', color: '#9fd8ff' },
+  { min: 3, name: 'Virtuoos', color: '#c792ff' },
+  { min: 10, name: 'Meester', color: '#ffd75e' },
+  { min: 25, name: 'Legende', color: '#ffb830' },
+];
+
+function weaponMasteryCount(id) {
+  return (save.weaponMastery && save.weaponMastery[id] && save.weaponMastery[id].finishers) || 0;
+}
+
+function weaponMasteryTierIdx(count) {
+  let idx = 0;
+  for (let i = 0; i < WEAPON_MASTERY_TIERS.length; i++) {
+    if (count >= WEAPON_MASTERY_TIERS[i].min) idx = i;
+  }
+  return idx;
+}
+
+function weaponMasteryTier(id, countOverride) {
+  const count = countOverride != null ? countOverride : weaponMasteryCount(id);
+  return WEAPON_MASTERY_TIERS[weaponMasteryTierIdx(count)];
+}
+
+function weaponMasteryTopList(limit) {
+  const list = [];
+  for (const w of WEAPONS) {
+    if (isThrowWeapon(w.id) || w.id === 'vuist') continue;
+    const n = weaponMasteryCount(w.id);
+    if (n > 0) list.push({ id: w.id, name: w.name, finishers: n, tier: weaponMasteryTier(w.id) });
+  }
+  list.sort((a, b) => b.finishers - a.finishers);
+  return list.slice(0, limit || 3);
+}
+
+function weaponComboTipOnce() {
+  if (typeof save === 'undefined') return;
+  if (!save.tipsSeen || typeof save.tipsSeen !== 'object') save.tipsSeen = {};
+  if (save.tipsSeen.weaponCombo) return;
+  save.tipsSeen.weaponCombo = 1;
+  if (typeof persist === 'function') persist();
+  try { UI.toast('Wapen 3× tikken = ①②③ · raak met ①+② voor gouden finisher ③', 4200); } catch (_) {}
+}
+
+function trackWeaponFinisher(weaponId, gameRef) {
+  if (!weaponId || isThrowWeapon(weaponId) || typeof save === 'undefined') return;
+  save.stats = save.stats || {};
+  const prevTotal = save.stats.weaponFinishers || 0;
+  save.stats.weaponFinishers = prevTotal + 1;
+  save.weaponMastery = save.weaponMastery || {};
+  const m = save.weaponMastery[weaponId] || { finishers: 0 };
+  const prevCount = m.finishers || 0;
+  const prevTierIdx = weaponMasteryTierIdx(prevCount);
+  m.finishers = prevCount + 1;
+  save.weaponMastery[weaponId] = m;
+  const newTierIdx = weaponMasteryTierIdx(m.finishers);
+  if (gameRef) gameRef.runFinishers = (gameRef.runFinishers || 0) + 1;
+  if (typeof bumpDaily === 'function') bumpDaily('weaponFinisher', 1);
+  if (newTierIdx > prevTierIdx && typeof UI !== 'undefined') {
+    const w = weaponById(weaponId);
+    const tier = WEAPON_MASTERY_TIERS[newTierIdx];
+    try { UI.toast(`${w.name}: ${tier.name}!`, 3200); } catch (_) {}
+  }
+  if (prevTotal === 0 && typeof UI !== 'undefined') {
+    try { UI.toast('Eerste finisher! Raak ① én ②, dan is ③ goud.', 3600); } catch (_) {}
+  }
+  if (typeof checkAchievements === 'function') checkAchievements();
+}
 
 function resetWeaponCombo(f) {
   if (!f) return;
@@ -2674,6 +2932,7 @@ function resetWeaponCombo(f) {
   f.weaponComboT = 0;
   f._lastWeaponKind = null;
   f._weaponComboPrimed = false;
+  f._weaponComboHits = 0;
 }
 
 function bumpWeaponComboWindow(f, bonus) {
@@ -2694,11 +2953,37 @@ function sanitizeWeaponSpec(spec) {
 
 function drawWeaponStylePips(c, x, y, fighter) {
   if (!fighter || !weaponMoveFamily(fighter.weapon?.id) || fighter.weaponComboT <= 0) return;
+  const labels = weaponMoveLabels(fighter.weapon.id);
+  const readyFin = fighter.weaponComboIdx >= 2 && (fighter._weaponComboHits || 0) >= 2;
   for (let i = 0; i < 3; i++) {
-    c.fillStyle = i <= fighter.weaponComboIdx ? '#ffd75e' : 'rgba(255,255,255,.22)';
+    const lit = i <= fighter.weaponComboIdx;
+    const fin = readyFin && i === 2;
+    c.fillStyle = fin ? '#ffb830' : (lit ? '#ffd75e' : 'rgba(255,255,255,.22)');
     c.beginPath();
-    c.arc(x + i * 13, y, 3.5, 0, TAU);
+    c.arc(x + i * 13, y, fin ? 4.2 : 3.5, 0, TAU);
     c.fill();
+    if (fin && !motionReduced()) {
+      c.strokeStyle = 'rgba(255,184,48,.45)';
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.arc(x + i * 13, y, 6.5, 0, TAU);
+      c.stroke();
+    }
+  }
+  if (labels && labels[fighter.weaponComboIdx]) {
+    c.font = '9px sans-serif';
+    c.fillStyle = readyFin && fighter.weaponComboIdx === 2 ? '#ffb830' : 'rgba(255,255,255,.72)';
+    c.textAlign = 'center';
+    const lbl = labels[fighter.weaponComboIdx];
+    c.fillText(lbl.length > 14 ? lbl.slice(0, 13) + '…' : lbl, x + 13, y + 12);
+    c.textAlign = 'left';
+  }
+  if (!motionReduced()) {
+    const frac = clamp(fighter.weaponComboT / WEAPON_COMBO_WINDOW, 0, 1);
+    c.fillStyle = 'rgba(255,255,255,.14)';
+    c.fillRect(x - 2, y + 18, 40, 3);
+    c.fillStyle = readyFin ? '#ffb830' : '#ffd75e';
+    c.fillRect(x - 2, y + 18, 40 * frac, 3);
   }
 }
 
@@ -6229,7 +6514,7 @@ class Fighter {
       ai: null, aiTimer: 0, aiMove: 0, aiCd: 2,
       name: 'Stickman',
       substCd: 0, invulnT: 0, hitFlashT: 0, afterimages: [], dashCd: 0,
-      weaponComboIdx: 0, weaponComboT: 0, _lastWeaponKind: null, _weaponComboPrimed: false,
+      weaponComboIdx: 0, weaponComboT: 0, _lastWeaponKind: null, _weaponComboPrimed: false, _weaponComboHits: 0,
       style: null, playerSlot: 0, vsSpecial: 'rasengan',
     }, opts);
   }
@@ -6266,6 +6551,9 @@ class Fighter {
           spec.dmg *= move.dmgMul || 1;
           spec.kb *= move.kbMul || 1;
           spec.moveHitY = move.hitY || 0;
+          const stepMul = weaponComboStepMul(moveIdx);
+          spec.dmg *= stepMul;
+          spec.kb *= stepMul;
         }
         break;
       }
@@ -6306,6 +6594,7 @@ class Fighter {
       AudioSys.sfx(weaponSwingSfx(this.weapon, kind));
     }
     if (kind === 'weapon' && !isThrowWeapon(this.weapon.id)) {
+      if (this.isPlayer || this.playerSlot) weaponComboTipOnce();
       const sameWep = this._lastWeaponKind === this.weapon.id;
       if (this._weaponComboPrimed && this.weaponComboT > 0 && sameWep) {
         this.weaponComboIdx = (this.weaponComboIdx + 1) % 3;
@@ -6825,6 +7114,20 @@ class Fighter {
         ? clamp(this._aimAtAttack.ny, -1, 0.4) * 0.85
         : 0;
       const wAng = this.attack && this.attack.kind === 'weapon' ? P.arms[1][1] + aimLift : -0.5 + aimLift * 0.25;
+      if (this.attack && this.attack.kind === 'weapon' && this.attack.move && !motionReduced() && !fxLite()) {
+        const a = this.attack;
+        if (a.t >= a.windup && a.t <= a.windup + a.active) {
+          const ext = clamp((a.t - a.windup) / Math.max(0.01, a.active), 0, 1);
+          c.save();
+          c.globalAlpha = 0.32 * (1 - ext * 0.35);
+          c.strokeStyle = weaponMoveFxColor(a.move);
+          c.lineWidth = 2.5;
+          c.beginPath();
+          c.arc(hx, hy, 16 + ext * 30, wAng - 0.85, wAng + 0.45);
+          c.stroke();
+          c.restore();
+        }
+      }
       c.save(); c.translate(hx, hy); c.rotate(wAng);
       if (this.weapon.masterSword || this.weapon.id === 'master_sword') {
         c.shadowColor = '#6fd7ff';
@@ -8261,6 +8564,7 @@ class Game {
     this.maxCombo = 0;
     this.combo = 0;
     this.comboT = 0;
+    this.runFinishers = 0;
 
     const st = playerStats();
     if (mode !== 'versus') {
@@ -8711,8 +9015,10 @@ class Game {
       title: win ? 'GEWONNEN!' : 'VERSLAGEN...',
       detail: (() => {
         let base = win
-          ? `Level ${lv} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}`
-          : `Level ${lv} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}`;
+          ? `Level ${lv} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}` +
+            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '')
+          : `Level ${lv} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}` +
+            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '');
         if (masterBuffActive(lv) && !win) base += ' · Meester-buff actief';
         if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
           base += ` · gok: ${gambleOutcomeLabel(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48)}`;
@@ -9007,7 +9313,8 @@ class Game {
         || 'Tip: duck lasers · chakra vol → Rasengan';
     setTimeout(() => UI.showResult(win, {
       title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
-      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · ${save.trainWins}x gewonnen`,
+      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · ${save.trainWins}x gewonnen` +
+        (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
     }), 1200);
@@ -9101,7 +9408,8 @@ class Game {
     setTimeout(() => UI.showResult(p1Win, {
       title: p1Win ? 'SPELER 1 WINT!' : 'SPELER 2 WINT!',
       detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}` +
-        ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : ''),
+        ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : '') +
+        (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
       xp: this.sessionXP, mode: 'versus', win: p1Win, p1: this.p1Pick, p2: this.p2Pick,
       tip: 'Opnieuw = rematch · Pauze → Herstart match (0-0)',
     }), 1200);
@@ -9552,9 +9860,10 @@ class Game {
           }
         }
         const buff = f.isPlayer ? (this.dmgBuffMul || 1) * (this.stageDmgMul || 1) * (this.styleAdvDmgMul || 1) : 1;
-        const hitRoll = rollHitDamage(f, spec, comboMul * buff);
+        const finisher = spec.kind === 'weapon' && isWeaponFinisher(f, spec);
+        const hitRoll = rollHitDamage(f, spec, comboMul * buff * (finisher ? WEAPON_FINISHER_MUL.dmg : 1));
         if (hitRoll.crit) applyCritFx(this, m.x, m.y);
-        const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
+        const kbHit = scaleKnockback(f.face * spec.kb * (finisher ? WEAPON_FINISHER_MUL.kb : 1), hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         applyHitConfirmFx(this, hx, hy, spec);
@@ -9564,9 +9873,27 @@ class Game {
         }
         if (spec.dmg >= 18) this.shake(3, 0.11);
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.12);
-        if ((f.isPlayer || f.playerSlot) && spec.kind === 'weapon' && spec.moveIdx === 2 && !isThrowWeapon(f.weapon.id)) {
+        if (spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id) && spec.moveIdx < 2) {
+          f._weaponComboHits = (f._weaponComboHits || 0) + 1;
+        }
+        if ((f.isPlayer || f.playerSlot) && spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id)) {
           const labels = weaponMoveLabels(f.weapon.id);
-          if (labels) this.floater(f.x + f.face * 24, f.y - 128, labels[2], '#ffd75e', 13);
+          const idx = spec.moveIdx || 0;
+          if (labels && labels[idx]) {
+            const txt = finisher ? labels[idx] + '!' : labels[idx];
+            const col = finisher ? '#ffb830' : (idx === 2 ? '#ffd75e' : 'rgba(255,255,255,.88)');
+            this.floater(f.x + f.face * 24, f.y - (118 + idx * 5), txt, col, finisher ? 15 : (idx === 2 ? 13 : 11));
+          }
+          if (finisher) {
+            trackWeaponFinisher(f.weapon.id, this);
+            try { AudioSys.sfx('comboEpic'); } catch (_) {}
+            if (!fxLite()) {
+              this.burst(hx, hy, f.style?.accent || '#ffb830', 8, { kind: 'spark', size: 2.5 });
+              spawnFxRing(this, hx, hy, '#ffb830', 12);
+            }
+            f.energy = clamp(f.energy + WEAPON_FINISHER_MUL.energy, 0, 100);
+            bumpWeaponComboWindow(f, 0.18);
+          }
         }
         this.player.energy = clamp(this.player.energy + 8, 0, 100);
         try { AudioSys.sfxAt(weaponHitSfx(f.weapon, hitRoll.dmg), m.x); } catch (_) {}
@@ -9585,8 +9912,9 @@ class Game {
     for (const tgt of targets) {
       if (!tgt.alive) continue;
       if ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2) {
-        const hitRoll = rollHitDamage(f, spec, 1);
-        const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
+        const finisher = spec.kind === 'weapon' && isWeaponFinisher(f, spec);
+        const hitRoll = rollHitDamage(f, spec, finisher ? WEAPON_FINISHER_MUL.dmg : 1);
+        const kbHit = scaleKnockback(f.face * spec.kb * (finisher ? WEAPON_FINISHER_MUL.kb : 1), hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
         const counter = isCounterHitWindow(tgt);
         const dmg = tgt.takeDamage(hitRoll.dmg, kbHit, this, {
           unblockable: spec.unblockable, attacker: f, kind: spec.kind,
@@ -9596,10 +9924,26 @@ class Game {
         this.floater(tgt.x, tgt.y - 115, (counter ? 'COUNTER! ' : '') + '-' + dmg, col, 16);
         this.burst(tgt.bodyX, tgt.bodyY, col, 7);
         applyHitConfirmFx(this, hx, hy, spec);
+        if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
+        if (spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id) && spec.moveIdx < 2) {
+          f._weaponComboHits = (f._weaponComboHits || 0) + 1;
+        }
+        if ((f.isPlayer || f.playerSlot) && spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id)) {
+          const labels = weaponMoveLabels(f.weapon.id);
+          const idx = spec.moveIdx || 0;
+          if (labels && labels[idx]) {
+            const txt = finisher ? labels[idx] + '!' : labels[idx];
+            this.floater(f.x + f.face * 24, f.y - (118 + idx * 5), txt, finisher ? '#ffb830' : '#ffd75e', finisher ? 14 : 11);
+          }
+          if (finisher) {
+            trackWeaponFinisher(f.weapon.id, this);
+            try { AudioSys.sfx('comboEpic'); } catch (_) {}
+            bumpWeaponComboWindow(f, 0.14);
+          }
+        }
         f.energy = clamp(f.energy + 9, 0, 100);
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         if (counter) this.freezeT = Math.max(this.freezeT, 0.014);
-        if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
         this.shake(spec.dmg > 20 ? 4 : 3, 0.12);
         if ((f.isPlayer || f.playerSlot) && save.haptics !== false) haptic(5);
         try { AudioSys.sfxAt(weaponHitSfx(f.weapon, hitRoll.dmg), tgt.x); } catch (_) {}
@@ -12570,7 +12914,24 @@ const UI = {
         `Verzameld <b>${unlocked}/${WEAPONS.length}</b> · avontuur <b>${advUsable}</b> bruikbaar` +
         ` · actief <b>${weaponById(save.weapon).name}</b>` +
         ` · eiland-skill gate: Lv <b>${adventureWeaponCap()}</b>` +
+        ((save.stats.weaponFinishers || 0) > 0 ? ` · finishers <b>${save.stats.weaponFinishers}</b>` : '') +
         (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '');
+    }
+    const mastEl = document.getElementById('weaponMasteryStrip');
+    if (mastEl) {
+      const top = weaponMasteryTopList(3);
+      if (!top.length) {
+        mastEl.style.display = 'none';
+        mastEl.innerHTML = '';
+      } else {
+        mastEl.style.display = 'block';
+        mastEl.innerHTML = '<div style="font-size:12px;opacity:.85;margin-bottom:6px">Top stijl-meesterschap</div>' +
+          top.map(e =>
+            `<span class="rar-pill" style="color:${e.tier.color};border-color:${e.tier.color};margin:2px 4px 2px 0">` +
+            `${e.name} · ${e.tier.name} · ${e.finishers}×</span>`
+          ).join('') +
+          '<div style="font-size:11px;opacity:.65;margin-top:6px">Tiers: Leerling → Virtuoos (3) → Meester (10) → Legende (25)</div>';
+      }
     }
     const list = document.getElementById('weaponList');
     list.innerHTML = '';
@@ -12603,10 +12964,17 @@ const UI = {
         ? `${w.desc} · schade x${base.dmg} → <b style="color:${rar.color}">x${w.dmg}</b> · bereik ${w.range} · snelheid x${w.speed}`
         : `${w.desc} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}`;
       const labels = weaponMoveLabels(w.id);
+      const mast = (save.weaponMastery || {})[w.id];
+      const finCount = mast && mast.finishers ? mast.finishers : 0;
+      const tier = finCount > 0 ? weaponMasteryTier(w.id) : null;
+      const tierBadge = tier && finCount >= 3
+        ? ` <span class="rar-pill" style="color:${tier.color};border-color:${tier.color}">${tier.name}</span>`
+        : '';
+      const mastLine = finCount ? ` · ${finCount}× finisher` : '';
       const moveLine = labels
-        ? `3 moves: ${labels.join(' · ')}`
+        ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} finisher${mastLine}`
         : (isThrowWeapon(w.id) ? 'Werp-projectiel — geen melee-combo' : '');
-      info.innerHTML = `<div class="cname">${w.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>${summonBadge}</div>
+      info.innerHTML = `<div class="cname">${w.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>${summonBadge}${tierBadge}</div>
         <div class="cinfo">${statLine}</div>` +
         (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '');
       el.appendChild(info);

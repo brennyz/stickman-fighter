@@ -18,6 +18,7 @@ class Game {
     this.maxCombo = 0;
     this.combo = 0;
     this.comboT = 0;
+    this.runFinishers = 0;
 
     const st = playerStats();
     if (mode !== 'versus') {
@@ -468,8 +469,10 @@ class Game {
       title: win ? 'GEWONNEN!' : 'VERSLAGEN...',
       detail: (() => {
         let base = win
-          ? `Level ${lv} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}`
-          : `Level ${lv} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}`;
+          ? `Level ${lv} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}` +
+            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '')
+          : `Level ${lv} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}` +
+            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '');
         if (masterBuffActive(lv) && !win) base += ' · Meester-buff actief';
         if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
           base += ` · gok: ${gambleOutcomeLabel(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48)}`;
@@ -764,7 +767,8 @@ class Game {
         || 'Tip: duck lasers · chakra vol → Rasengan';
     setTimeout(() => UI.showResult(win, {
       title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
-      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · ${save.trainWins}x gewonnen`,
+      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · ${save.trainWins}x gewonnen` +
+        (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
     }), 1200);
@@ -858,7 +862,8 @@ class Game {
     setTimeout(() => UI.showResult(p1Win, {
       title: p1Win ? 'SPELER 1 WINT!' : 'SPELER 2 WINT!',
       detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}` +
-        ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : ''),
+        ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : '') +
+        (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
       xp: this.sessionXP, mode: 'versus', win: p1Win, p1: this.p1Pick, p2: this.p2Pick,
       tip: 'Opnieuw = rematch · Pauze → Herstart match (0-0)',
     }), 1200);
@@ -1309,9 +1314,10 @@ class Game {
           }
         }
         const buff = f.isPlayer ? (this.dmgBuffMul || 1) * (this.stageDmgMul || 1) * (this.styleAdvDmgMul || 1) : 1;
-        const hitRoll = rollHitDamage(f, spec, comboMul * buff);
+        const finisher = spec.kind === 'weapon' && isWeaponFinisher(f, spec);
+        const hitRoll = rollHitDamage(f, spec, comboMul * buff * (finisher ? WEAPON_FINISHER_MUL.dmg : 1));
         if (hitRoll.crit) applyCritFx(this, m.x, m.y);
-        const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
+        const kbHit = scaleKnockback(f.face * spec.kb * (finisher ? WEAPON_FINISHER_MUL.kb : 1), hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         applyHitConfirmFx(this, hx, hy, spec);
@@ -1321,9 +1327,27 @@ class Game {
         }
         if (spec.dmg >= 18) this.shake(3, 0.11);
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.12);
-        if ((f.isPlayer || f.playerSlot) && spec.kind === 'weapon' && spec.moveIdx === 2 && !isThrowWeapon(f.weapon.id)) {
+        if (spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id) && spec.moveIdx < 2) {
+          f._weaponComboHits = (f._weaponComboHits || 0) + 1;
+        }
+        if ((f.isPlayer || f.playerSlot) && spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id)) {
           const labels = weaponMoveLabels(f.weapon.id);
-          if (labels) this.floater(f.x + f.face * 24, f.y - 128, labels[2], '#ffd75e', 13);
+          const idx = spec.moveIdx || 0;
+          if (labels && labels[idx]) {
+            const txt = finisher ? labels[idx] + '!' : labels[idx];
+            const col = finisher ? '#ffb830' : (idx === 2 ? '#ffd75e' : 'rgba(255,255,255,.88)');
+            this.floater(f.x + f.face * 24, f.y - (118 + idx * 5), txt, col, finisher ? 15 : (idx === 2 ? 13 : 11));
+          }
+          if (finisher) {
+            trackWeaponFinisher(f.weapon.id, this);
+            try { AudioSys.sfx('comboEpic'); } catch (_) {}
+            if (!fxLite()) {
+              this.burst(hx, hy, f.style?.accent || '#ffb830', 8, { kind: 'spark', size: 2.5 });
+              spawnFxRing(this, hx, hy, '#ffb830', 12);
+            }
+            f.energy = clamp(f.energy + WEAPON_FINISHER_MUL.energy, 0, 100);
+            bumpWeaponComboWindow(f, 0.18);
+          }
         }
         this.player.energy = clamp(this.player.energy + 8, 0, 100);
         try { AudioSys.sfxAt(weaponHitSfx(f.weapon, hitRoll.dmg), m.x); } catch (_) {}
@@ -1342,8 +1366,9 @@ class Game {
     for (const tgt of targets) {
       if (!tgt.alive) continue;
       if ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2) {
-        const hitRoll = rollHitDamage(f, spec, 1);
-        const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
+        const finisher = spec.kind === 'weapon' && isWeaponFinisher(f, spec);
+        const hitRoll = rollHitDamage(f, spec, finisher ? WEAPON_FINISHER_MUL.dmg : 1);
+        const kbHit = scaleKnockback(f.face * spec.kb * (finisher ? WEAPON_FINISHER_MUL.kb : 1), hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
         const counter = isCounterHitWindow(tgt);
         const dmg = tgt.takeDamage(hitRoll.dmg, kbHit, this, {
           unblockable: spec.unblockable, attacker: f, kind: spec.kind,
@@ -1353,10 +1378,26 @@ class Game {
         this.floater(tgt.x, tgt.y - 115, (counter ? 'COUNTER! ' : '') + '-' + dmg, col, 16);
         this.burst(tgt.bodyX, tgt.bodyY, col, 7);
         applyHitConfirmFx(this, hx, hy, spec);
+        if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
+        if (spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id) && spec.moveIdx < 2) {
+          f._weaponComboHits = (f._weaponComboHits || 0) + 1;
+        }
+        if ((f.isPlayer || f.playerSlot) && spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id)) {
+          const labels = weaponMoveLabels(f.weapon.id);
+          const idx = spec.moveIdx || 0;
+          if (labels && labels[idx]) {
+            const txt = finisher ? labels[idx] + '!' : labels[idx];
+            this.floater(f.x + f.face * 24, f.y - (118 + idx * 5), txt, finisher ? '#ffb830' : '#ffd75e', finisher ? 14 : 11);
+          }
+          if (finisher) {
+            trackWeaponFinisher(f.weapon.id, this);
+            try { AudioSys.sfx('comboEpic'); } catch (_) {}
+            bumpWeaponComboWindow(f, 0.14);
+          }
+        }
         f.energy = clamp(f.energy + 9, 0, 100);
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         if (counter) this.freezeT = Math.max(this.freezeT, 0.014);
-        if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
         this.shake(spec.dmg > 20 ? 4 : 3, 0.12);
         if ((f.isPlayer || f.playerSlot) && save.haptics !== false) haptic(5);
         try { AudioSys.sfxAt(weaponHitSfx(f.weapon, hitRoll.dmg), tgt.x); } catch (_) {}

@@ -5,6 +5,7 @@ const DAILY_DEFS = [
   { id: 'wall35', type: 'wallBricks', goal: 35, xp: 40, text: 'Sloop 35 muurstenen' },
   { id: 'trainwin', type: 'trainWin', goal: 1, xp: 60, text: 'Win training vs Robot' },
   { id: 'combo5', type: 'comboReach', goal: 5, xp: 35, text: 'Bereik combo ×5' },
+  { id: 'finisher3', type: 'weaponFinisher', goal: 3, xp: 42, text: 'Land 3 wapen-finishers' },
   { id: 'pick3', type: 'pickups', goal: 3, xp: 30, text: 'Pak 3 power-ups' },
   { id: 'boss1', type: 'bossKill', goal: 1, xp: 50, text: 'Versla 1 baas-monster' },
 ];
@@ -14,6 +15,7 @@ const DAILY_PLAY_HINTS = {
   wall35: 'Menu → Muur slopen (combo helpt)',
   trainwin: 'Menu → Training vs RabbitRobot',
   combo5: 'Avontuur: snelle combo’s op monsters',
+  finisher3: 'Avontuur/Training: ①+② raken, dan finisher ③',
   pick3: 'Avontuur: groen/oranje/blauwe bolletjes',
   boss1: 'Avontuur: baas aan einde van een level',
 };
@@ -23,6 +25,7 @@ const DAILY_PLAY_TARGETS = {
   wall35: { mode: 'wall', label: 'Muur' },
   trainwin: { mode: 'training', label: 'Training' },
   combo5: { mode: 'adventure', label: 'Avontuur' },
+  finisher3: { mode: 'adventure', label: 'Avontuur' },
   pick3: { mode: 'adventure', label: 'Avontuur' },
   boss1: { mode: 'adventure', label: 'Avontuur' },
 };
@@ -77,6 +80,14 @@ const ACHIEVEMENTS = [
     test: s => s.bestWall >= 100 },
   { id: 'combo8', name: 'Combo-koning', desc: 'Combo ×8 bereikt', icon: '⚡',
     test: s => s.stats.maxCombo >= 8 },
+  { id: 'finisher10', name: 'Stijl-meester', desc: '10 wapen-finishers geland', icon: '⚔',
+    test: s => (s.stats.weaponFinishers || 0) >= 10 },
+  { id: 'finisher1', name: 'Eerste stijl', desc: 'Land je eerste wapen-finisher', icon: '🗡',
+    test: s => (s.stats.weaponFinishers || 0) >= 1 },
+  { id: 'weaponMaster25', name: 'Wapen-legende', desc: '25 finishers met één wapen', icon: '👑',
+    test: s => Object.values(s.weaponMastery || {}).some(m => (m.finishers || 0) >= 25) },
+  { id: 'finisher50', name: 'Combo-sensei', desc: '50 finishers totaal', icon: '✨',
+    test: s => (s.stats.weaponFinishers || 0) >= 50 },
   { id: 'lv50', name: 'Legende', desc: 'Unlock level 50', icon: '👑',
     test: s => s.unlocked >= 50 },
   { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd', icon: '📅',
@@ -307,6 +318,14 @@ function achievementProgressFrac(ach) {
     case 'train5': return Math.min(s.trainWins, 5) / 5;
     case 'wall100': return Math.min(s.bestWall, 100) / 100;
     case 'combo8': return Math.min(s.stats.maxCombo || 0, 8) / 8;
+    case 'finisher10': return Math.min(s.stats.weaponFinishers || 0, 10) / 10;
+    case 'finisher1': return Math.min(s.stats.weaponFinishers || 0, 1);
+    case 'finisher50': return Math.min(s.stats.weaponFinishers || 0, 50) / 50;
+    case 'weaponMaster25': {
+      let best = 0;
+      for (const m of Object.values(s.weaponMastery || {})) best = Math.max(best, m.finishers || 0);
+      return Math.min(best, 25) / 25;
+    }
     case 'lv50': return Math.min(s.unlocked, 50) / 50;
     case 'daily7': return Math.min(s.stats.dailyBonusCount || 0, 7) / 7;
     case 'vs5': return Math.min(s.stats.vsMatches || 0, 5) / 5;
@@ -337,6 +356,14 @@ function achievementProgressHint(ach) {
     case 'train5': return `${Math.min(s.trainWins, 5)}/5 training-wins`;
     case 'wall100': return `${Math.min(s.bestWall, 100)}/100 muur-score`;
     case 'combo8': return `×${Math.min(s.stats.maxCombo || 0, 8)}/8 combo`;
+    case 'finisher10': return `${Math.min(s.stats.weaponFinishers || 0, 10)}/10 finishers`;
+    case 'finisher1': return `${Math.min(s.stats.weaponFinishers || 0, 1)}/1 finisher`;
+    case 'finisher50': return `${Math.min(s.stats.weaponFinishers || 0, 50)}/50 finishers`;
+    case 'weaponMaster25': {
+      let best = 0;
+      for (const m of Object.values(s.weaponMastery || {})) best = Math.max(best, m.finishers || 0);
+      return `${Math.min(best, 25)}/25 op één wapen`;
+    }
     case 'lv50': return `Unlock Lv ${Math.min(s.unlocked, 50)}/50`;
     case 'daily7': return `${Math.min(s.stats.dailyBonusCount || 0, 7)}/7 dagbonussen`;
     case 'vs5': return `${Math.min(s.stats.vsMatches || 0, 5)}/5 duels`;
