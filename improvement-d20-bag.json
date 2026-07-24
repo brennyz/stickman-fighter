@@ -8,15 +8,14 @@
     11,
     12,
     13,
-    15,
     17,
     18
   ],
   "lastRoll": {
-    "face": 1,
-    "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
-    "rolledAt": "2026-07-24T08:34:56Z",
-    "remainingCount": 8,
+    "face": 15,
+    "category": "Onboarding \u2014 tips, eerste speelminuut, help",
+    "rolledAt": "2026-07-24T08:36:37Z",
+    "remainingCount": 7,
     "cycle": 2
   },
   "pending": null,
@@ -320,6 +319,13 @@
       "note": "Kb scale, player hurt stop, block ring, combo chain bonus",
       "version": "1.16.0",
       "doneAt": "2026-07-24T08:36:05Z",
+      "cycle": 2
+    },
+    {
+      "face": 15,
+      "note": "Single toast, hint pill, untried modes, gamble once",
+      "version": "1.16.1",
+      "doneAt": "2026-07-24T08:38:05Z",
       "cycle": 2
     }
   ],
@@ -903,6 +909,13 @@
       "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
       "rolledAt": "2026-07-24T08:34:56Z",
       "remainingCount": 8,
+      "cycle": 2
+    },
+    {
+      "face": 15,
+      "category": "Onboarding \u2014 tips, eerste speelminuut, help",
+      "rolledAt": "2026-07-24T08:36:37Z",
+      "remainingCount": 7,
       "cycle": 2
     }
   ]

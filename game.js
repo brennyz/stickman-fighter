@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.16.0';
+const APP_VERSION = '1.16.1';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 117;
+const SW_CACHE_REV = 118;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1230,6 +1230,7 @@ function openGambleForLevel(n) {
   pendingAdvLevel = n;
   lastGambleRoll = null;
   UI.renderGamble(n);
+  applyGambleOnboarding();
   UI.show('gambleScreen');
 }
 
@@ -1411,6 +1412,45 @@ function modeOnboardingSeen(mode) {
   return !!(save.tipsSeen['onboard_' + mode] || save.tipsSeen['mode_' + mode]);
 }
 
+const ONBOARD_MODES = [
+  { id: 'adventure', label: 'Avontuur' },
+  { id: 'training', label: 'Training' },
+  { id: 'wall', label: 'Muur' },
+  { id: 'versus', label: '2 spelers' },
+  { id: 'coinrun', label: 'Mats' },
+];
+
+function onboardingProgress() {
+  const seen = ONBOARD_MODES.filter(m => modeOnboardingSeen(m.id)).length;
+  return { seen, total: ONBOARD_MODES.length };
+}
+
+function nextUntriedMode() {
+  return ONBOARD_MODES.find(m => !modeOnboardingSeen(m.id)) || null;
+}
+
+/** Eén result-tip per modus+uitkomst — geen herhaling, geen toast. */
+function onceResultTip(mode, kind, tip) {
+  if (!tip) return '';
+  ensureTipsSeen();
+  const key = 'result_' + mode + '_' + kind;
+  if (save.tipsSeen[key]) return '';
+  save.tipsSeen[key] = 1;
+  persist();
+  return tip;
+}
+
+function applyGambleOnboarding() {
+  ensureTipsSeen();
+  if (save.tipsSeen.gamble) return;
+  save.tipsSeen.gamble = 1;
+  persist();
+  const outEl = document.getElementById('gambleOutcome');
+  if (outEl && !lastGambleRoll) {
+    outEl.textContent = 'Eerste keer: som ≤5 = super-baas · som ≥9 = bondgenoot voor dit level. Of tik Start zonder gok.';
+  }
+}
+
 /** Eén hint per modus: in-gevecht regel, geen extra toast (geen stapel met welcome). */
 function applyModeOnboarding(mode, g) {
   if (!g || !mode) return;
@@ -1426,19 +1466,19 @@ function applyModeOnboarding(mode, g) {
   const touch = IS_TOUCH;
   const lines = {
     adventure: touch
-      ? 'Eerste minuut: links lopen · rechts slaan · groen = HP · vol chakra = SUPER-knop'
-      : 'Eerste minuut: A/D · J/K/L · groen = HP · chakra vol → U',
+      ? 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol chakra = SUPER'
+      : 'Eerste minuut: A/D · J/K/L · mik omhoog op vliegers · chakra vol → U',
     training: touch
-      ? 'Eerste minuut: ontwijk rode laser · chakra vol → SUPER-knop'
-      : 'Eerste minuut: ontwijk lasers · chakra vol → U',
+      ? 'Eerste minuut: ontwijk rode laser · blokkeer dichtbij · chakra vol → SUPER'
+      : 'Eerste minuut: ontwijk lasers · Shift = substitutie · chakra vol → U',
     wall: touch
-      ? '60s timer · combo-balk vol = sneller sloop · record + projectie bovenin'
-      : '60s · combo-balk vol houden · record + ~stenen/min in HUD',
+      ? '60s timer · combo-balk vol = sneller sloop · record bovenin'
+      : '60s · combo-balk vol houden · record + tempo in HUD',
     versus: touch
       ? 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best'
-      : 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5',
+      : 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
     coinrun: touch
-      ? 'Eerste minuut: munten · joystick ↑ mik · roze vlieger = +3'
+      ? '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel'
       : 'Munten pakken · joy ↑ = hoger mikken · max 3 shuriken snel',
   };
   g.modeHintLine = lines[mode] || lines.adventure;
@@ -1448,12 +1488,18 @@ function applyModeOnboarding(mode, g) {
 function maybeWelcomeToast() {
   ensureTipsSeen();
   if (save.tipsSeen.welcome) return;
+  const prog = onboardingProgress();
+  if (prog.seen > 0 || save.lvl > 1) {
+    save.tipsSeen.welcome = 1;
+    persist();
+    return;
+  }
   save.tipsSeen.welcome = 1;
   persist();
   setTimeout(() => {
     if (state === 'play') return;
-    userToast('Welkom! Tips in het menu · bij eerste keer per modus: één korte hint bovenin', 4200);
-  }, 2400);
+    userToast('Welkom! Menu → Tips · per modus één korte hint bovenin (geen toast-stapel)', 3800);
+  }, 2800);
 }
 
 /** Level-pacing v1.14.3: iets rustiger — +15% vroeg, oplopend tot +50% vanaf ~Lv 18. */
@@ -5598,7 +5644,6 @@ class Game {
     }
     this.allyAssistT = this.stageAlly ? 2.2 : 0;
     AudioSys.play(this.level.boss ? 'boss' : 'battle');
-    if (n === 1 && save.lvl === 1 && !modeOnboardingSeen('adventure')) this.hint = 6;
   }
 
   nextWave() {
@@ -5827,9 +5872,12 @@ class Game {
       mode: 'adventure', level: this.level.n, win, stars,
       tip: win ? (stars >= 3 ? 'Perfecte run — hou je HP hoog!' : `${starHintLine()} — pickups helpen`) : (() => {
         const prog = this.waveIdx >= 0 ? `${this.waveIdx + 1}/${this.level.waves.length} golven` : 'start';
-        return this.player.hp <= 0
+        const base = this.player.hp <= 0
           ? `Tip: blokkeer · mik omhoog op vliegers · ${prog}`
           : `Tip: pak groene orbs · vul SUPER vóór baas · ${prog}`;
+        const once = onceResultTip('adventure', 'loss',
+          'Eerste nederlaag: vóór elk level kun je dobbelen — bondgenoot helpt tussen golven.');
+        return once ? `${once} · ${base}` : base;
       })(),
     }), 1400);
   }
@@ -6070,14 +6118,17 @@ class Game {
     if (win) { save.trainWins++; persist(); xp = 70 + Math.min(save.trainWins, 12) * 20; this.grantXP(xp);
       bumpDaily('trainWin', 1);
       checkAchievements();
-      if (save.trainWins === 3) UI.toast('Stijl vrij: Chakra gloed!', 3200);
     }
     else { xp = 15; this.grantXP(xp); }
+    const trainTip = win
+      ? (save.trainWins === 3 ? 'Nieuwe stijl vrij: Chakra gloed — Instellingen → Stijl!' : 'Unlock stijlen door meer train-wins!')
+      : onceResultTip('training', 'loss', 'Robot laadt Chidori — spring weg als je “CHIDORI — dash/spring!” ziet')
+        || 'Tip: duck lasers · chakra vol → Rasengan';
     setTimeout(() => UI.showResult(win, {
       title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
       detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · ${save.trainWins}x gewonnen`,
       xp: this.sessionXP, mode: 'training', win,
-      tip: win ? 'Unlock stijlen door meer train-wins!' : 'Tip: duck lasers · chakra vol → Rasengan',
+      tip: trainTip,
     }), 1200);
   }
 
@@ -6295,11 +6346,6 @@ class Game {
     this.player.face = 1;
     this.inputLocked = false;
     this.banner('MATS · MUNTJES BONUS', 1.5, '#ffd75e', 46);
-    if (!modeOnboardingSeen('coinrun')) {
-      setTimeout(() => {
-        try { this.banner('Joystick ↑ = hoog mikken (slag/gooi) · vliegers = +3', 1.8, '#7cf5ff', 24); } catch (_) {}
-      }, 900);
-    }
     AudioSys.play('mats');
   }
 
@@ -7020,8 +7066,6 @@ class Game {
 
     if (this.hint > 0) {
       c.globalAlpha = clamp(this.hint, 0, 1);
-      c.font = '600 15px -apple-system, sans-serif';
-      c.fillStyle = '#fff'; c.textAlign = 'center';
       let hintTxt = this.modeHintLine;
       if (!hintTxt) {
         if (Input.dualMode && IS_TOUCH) {
@@ -7034,6 +7078,19 @@ class Game {
           hintTxt = 'A/D lopen · W springen · J stomp · K trap · L wapen · U speciaal';
         }
       }
+      c.font = '600 15px -apple-system, sans-serif';
+      c.textAlign = 'center';
+      const tw = c.measureText(hintTxt).width;
+      const padX = 16;
+      const pillY = H * 0.2 - 24;
+      c.fillStyle = 'rgba(6,10,24,.78)';
+      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
+      c.fill();
+      c.strokeStyle = 'rgba(255,215,94,.35)';
+      c.lineWidth = 1.5;
+      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
+      c.stroke();
+      c.fillStyle = '#fff';
       c.fillText(hintTxt, W / 2, H * 0.2);
       c.globalAlpha = 1;
     }
@@ -8145,19 +8202,29 @@ const UI = {
     const host = document.getElementById('helpModeChips');
     if (!host) return;
     const touch = IS_TOUCH ? 'touch' : 'toetsenbord';
+    const prog = onboardingProgress();
+    const next = nextUntriedMode();
     const modes = [
-      { id: 'adventure', label: 'Avontuur', tip: 'Groen HP · oranje rage · blauw chakra · SUPER bij vol · vóór elk level: dobbel-gok (super-baas of ally)' },
-      { id: 'training', label: 'Training', tip: 'Lasers ontwijken · 2 rondes · Robot Chidori' },
+      { id: 'adventure', label: 'Avontuur', tip: 'Groen HP · oranje rage · blauw chakra · SUPER bij vol · vóór level: dobbel-gok' },
+      { id: 'training', label: 'Training', tip: 'Lasers ontwijken · 2 rondes · Robot Chidori-telegraph' },
       { id: 'wall', label: 'Muur', tip: '60s · combo = sneller · beat record' },
       { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
-      { id: 'coinrun', label: 'Mats', tip: 'Munten · mik ↑ · vliegers +3' },
+      { id: 'coinrun', label: 'Mats', tip: '45s munten · mik ↑ · vliegers +3' },
     ];
-    host.innerHTML = modes.map((m) => {
+    let html = `<div style="font-size:12px;opacity:.85;margin-bottom:8px">Eerste-minuut hints: <b>${prog.seen}/${prog.total}</b> modi gezien · max <b>één</b> regel bovenin per modus</div>`;
+    if (next) {
+      html += `<div class="step-card" style="margin:6px 0;padding:10px 12px;border-color:rgba(124,245,255,.45)">` +
+        `<b>Probeer als volgende: ${next.label}</b>` +
+        `<div style="opacity:.88;margin-top:4px">Nog niet gespeeld — één hint bovenin, geen extra toast.</div></div>`;
+    }
+    html += modes.map((m) => {
       const seen = modeOnboardingSeen(m.id);
-      return `<div class="step-card" style="margin:6px 0;padding:10px 12px">` +
-        `<b>${m.label}</b>${seen ? ' <span style="color:#7cfc8a;font-size:11px">✓ hint gezien</span>' : ''}` +
+      const highlight = next && next.id === m.id ? ' border-color:rgba(124,245,255,.5)' : '';
+      return `<div class="step-card" style="margin:6px 0;padding:10px 12px${highlight}">` +
+        `<b>${m.label}</b>${seen ? ' <span style="color:#7cfc8a;font-size:11px">✓ hint gezien</span>' : ' <span style="color:#ffd75e;font-size:11px">· nog niet</span>'}` +
         `<div style="opacity:.88;margin-top:4px">${m.tip} · ${touch}</div></div>`;
     }).join('');
+    host.innerHTML = html;
   },
 
   syncTouchClass() {
@@ -8199,11 +8266,20 @@ const UI = {
   toast(msg, ms) {
     const host = document.getElementById('toastHost');
     if (!host) return;
+    if (this._toastHide) {
+      clearTimeout(this._toastHide);
+      this._toastHide = null;
+    }
+    if (typeof host.replaceChildren === 'function') host.replaceChildren();
+    else host.innerHTML = '';
     const el = document.createElement('div');
     el.className = 'toast';
     el.textContent = msg;
     host.appendChild(el);
-    setTimeout(() => el.remove(), ms || 2800);
+    this._toastHide = setTimeout(() => {
+      el.remove();
+      this._toastHide = null;
+    }, ms || 2800);
   },
 
   goMenu() {
@@ -8463,17 +8539,22 @@ const UI = {
     if (missEl) missEl.textContent = dailyStatusLine();
     const tipEl = document.getElementById('menuTipLine');
     if (tipEl) {
-      const tips = [
-        'Tip: volle chakra → tik 🌀 voor Rasengan',
-        'Tip: 2 spelers = liggend iPad, P1 links / P2 rechts',
-        'Tip: muur-combo’s = sneller sloop & meer XP',
-        'Tip: monsterboek vullen = meer max HP',
-        'Tip: “Verder spelen” hervat je laatste modus',
-        'Tip: Missies → claim XP (of “Claim alle klaar”)',
-        'Tip: Deel link → altijd GitHub Pages speel.html (niet de tunnel)',
-      ];
-      const i = Math.floor(Date.now() / 8000) % tips.length;
-      tipEl.textContent = tips[i];
+      const next = nextUntriedMode();
+      if (next) {
+        tipEl.textContent = `Nog niet gespeeld: ${next.label} — één hint bovenin, geen toast-stapel`;
+      } else {
+        const tips = [
+          'Tip: volle chakra → tik 🌀 voor Rasengan',
+          'Tip: 2 spelers = liggend iPad, P1 links / P2 rechts',
+          'Tip: muur-combo’s = sneller sloop & meer XP',
+          'Tip: monsterboek vullen = meer max HP',
+          'Tip: “Verder spelen” hervat je laatste modus',
+          'Tip: Missies → claim XP (knop pulseert als klaar)',
+          'Tip: Menu → Tips toont welke modi je al kent',
+        ];
+        const i = Math.floor(Date.now() / 8000) % tips.length;
+        tipEl.textContent = tips[i];
+      }
     }
     const missBtn = document.getElementById('btnMissions');
     const missLbl = document.getElementById('btnMissionsLbl');
