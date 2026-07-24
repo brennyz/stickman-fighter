@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=154">
+<link rel="stylesheet" href="styles/main.css?v=158">
 </head>
 <body>
 <button id="pauseBtn" aria-label="Pauze">&#10074;&#10074;</button>
@@ -316,6 +316,7 @@
     <img src="icons/icon-192.png" alt="Stickman Fighter icoon" width="96" height="96">
     <div class="appname">STICKMAN</div>
     <div class="subtitle" style="margin-top:6px">Verschijnt als icoon — net als een echte app</div>
+    <div class="subtitle" id="installCacheStatus" style="font-size:12px;opacity:.82;margin-top:6px"></div>
   </div>
   <div class="step-card" id="installFileNote" style="display:none;color:#ffb0a8">
     <b>Let op:</b> je opent een lokaal bestand. Upload de game eerst online (Netlify/GitHub), open de link in Safari, en druk dan opnieuw op deze knop.
@@ -423,7 +424,7 @@
 </script>
 
 <script src="tunnel-check.js?v=204"></script>
-<script src="game.js?v=154"></script>
+<script src="game.js?v=158"></script>
 <script src="install.js?v=204"></script>
 <script>
 (function () {

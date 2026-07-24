@@ -5,17 +5,16 @@
   "remaining": [
     4,
     6,
-    8,
     10,
     15,
     16,
     18
   ],
   "lastRoll": {
-    "face": 20,
-    "category": "Code health \u2014 kleine refactors, geen gameplay-break",
-    "rolledAt": "2026-07-24T18:50:21Z",
-    "remainingCount": 7,
+    "face": 8,
+    "category": "PWA & offline \u2014 SW cache, install, standalone",
+    "rolledAt": "2026-07-24T18:53:31Z",
+    "remainingCount": 6,
     "cycle": 3
   },
   "pending": null,
@@ -466,6 +465,13 @@
       "note": "dead gamble opener, single P1 pad, volPct, hitConfirm cache",
       "version": "1.17.31",
       "doneAt": "2026-07-24T18:52:55Z",
+      "cycle": 3
+    },
+    {
+      "face": 8,
+      "note": "pageshow net refresh, cache hints, offline fallback links",
+      "version": "1.17.32",
+      "doneAt": "2026-07-24T18:54:15Z",
       "cycle": 3
     }
   ],
@@ -1533,17 +1539,14 @@
       "rolledAt": "2026-07-24T18:50:21Z",
       "remainingCount": 7,
       "cycle": 3
-    }
-  ],
-  "rollBacklog": [
+    },
     {
       "face": 8,
       "category": "PWA & offline \u2014 SW cache, install, standalone",
-      "focus": "SW bump + offline banner \u2014 network-first HTML.",
-      "rolledAt": "2026-07-24T18:48:04Z",
-      "queuedAt": "2026-07-24T18:48:10Z",
-      "reason": "unroll",
+      "rolledAt": "2026-07-24T18:53:31Z",
+      "remainingCount": 6,
       "cycle": 3
     }
-  ]
+  ],
+  "rollBacklog": []
 }

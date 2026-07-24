@@ -1,5 +1,5 @@
-/* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 2 */
-const CACHE = 'stickfighter-app-v157';
+/* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 3 */
+const CACHE = 'stickfighter-app-v158';
 const ASSETS = [
   './',
   './index.html',
@@ -29,6 +29,8 @@ button{font:inherit;font-weight:800;padding:12px 18px;border-radius:12px;border:
 </style></head><body>
 <h1>Offline</h1>
 <p>Geen netwerk. Open via je <b>app-icoon</b> (PWA) als je het spel al eens online opende — save blijft lokaal.</p>
+<button type="button" onclick="location.href='./speel.html'">Open speel (cache)</button>
+<button type="button" onclick="location.href='./index.html'">Open menu (cache)</button>
 <button type="button" onclick="location.reload()">Opnieuw proberen</button>
 <p class="small">Cache: ${CACHE}</p>
 </body></html>`;

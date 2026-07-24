@@ -132,9 +132,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.31';
+const APP_VERSION = '1.17.32';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 157;
+const SW_CACHE_REV = 158;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -12270,6 +12270,14 @@ function isStandalonePwa() {
   }
 }
 
+function swCacheHint() {
+  try {
+    const c = sessionStorage.getItem('sf_sw_cache');
+    if (c) return ' · ' + c.replace('stickfighter-app-v', 'SW v');
+  } catch (_) {}
+  return typeof SW_CACHE_REV !== 'undefined' ? ' · SW v' + SW_CACHE_REV : '';
+}
+
 function updateNetStatus(ev) {
   const el = document.getElementById('netStatus');
   if (!el) return;
@@ -12309,7 +12317,7 @@ function updateNetStatus(ev) {
         : 'Offline — uit cache · «Zet in app-lade» = altijd spelen';
     } else {
       el.textContent = swReady
-        ? 'Offline — menu & save uit cache op dit apparaat'
+        ? 'Offline — menu & save uit cache' + swCacheHint()
         : 'Offline — open 1× online voor volledige PWA-cache';
     }
     if (ev && ev.type === 'offline') {
@@ -12354,7 +12362,7 @@ function updateNetStatus(ev) {
         el2.classList.remove('sw-pending', 'sw-update');
         el2.classList.add('offline-ready');
         const ver = typeof APP_VERSION !== 'undefined' ? APP_VERSION : '';
-        el2.textContent = ver ? `Offline-klaar · v${ver} in cache` : 'Offline-klaar — app opgeslagen';
+        el2.textContent = ver ? `Offline-klaar · v${ver} in cache${swCacheHint()}` : 'Offline-klaar — app opgeslagen';
         setTimeout(() => {
           if (!window.__sfSwUpdateReady && navigator.onLine && el2.classList.contains('offline-ready')) {
             el2.hidden = true;
@@ -12371,6 +12379,12 @@ function updateNetStatus(ev) {
 }
 window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
+window.addEventListener('pageshow', (ev) => {
+  if (ev.persisted) updateNetStatus();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') updateNetStatus();
+});
 window.updateNetStatus = updateNetStatus;
 
 function wireNetStatusTap() {
