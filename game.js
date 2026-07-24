@@ -133,9 +133,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.65';
+const APP_VERSION = '1.17.70';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 191;
+const SW_CACHE_REV = 196;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -7850,6 +7850,22 @@ function relayoutTouchPads() {
   } catch (_) {}
 }
 
+/** Level-start / na pause: joycon + knoppen resetten (fix sticky input tot unpause). */
+function primePlayInput(mode) {
+  Input.dualMode = mode === 'versus';
+  try { Input.releaseAll(); } catch (_) {}
+  try {
+    if (typeof forceGameResize === 'function') forceGameResize();
+    else relayoutTouchPads();
+  } catch (_) {
+    try { relayoutTouchPads(); } catch (_) {}
+  }
+  requestAnimationFrame(() => {
+    try { relayoutTouchPads(); Input.releaseAll(); } catch (_) {}
+    requestAnimationFrame(() => { try { Input.releaseAll(); } catch (_) {} });
+  });
+}
+
 /** Voorkom dat scroll/slide over menu-tegels meteen selecteert (iPad). */
 const TAP_SLOP_PX = IS_TOUCH ? 12 : 8;
 const _uiTap = { id: null, x: 0, y: 0, moved: false, scrolls: [] };
@@ -8401,6 +8417,12 @@ function scheduleResize() {
       resize();
     });
   }, delay);
+}
+
+/** Force canvas + touch-pad layout (level-start; debounced resize kan 140ms wachten). */
+function forceGameResize() {
+  lastResizeKey = '';
+  resize();
 }
 addEventListener('resize', scheduleResize);
 addEventListener('orientationchange', () => {
@@ -16341,6 +16363,7 @@ function startGame(mode, opts) {
     return;
   }
   state = 'play';
+  primePlayInput(mode);
   scheduleResize();
   try { AudioSys.setPaused(false); } catch (_) {}
   try { recordLastPlay(mode, opts); } catch (_) {}
@@ -16806,6 +16829,7 @@ bindPress(document.getElementById('pauseResume'), () => {
   state = 'play';
   AudioSys.setPaused(false);
   if (save.music && AudioSys.desiredSong) AudioSys.play(AudioSys.desiredSong);
+  try { primePlayInput(game && game.mode); } catch (_) {}
   UI.show(null);
 });
 bindPress(document.getElementById('pauseQuit'), () => { UI.goMenu(); });

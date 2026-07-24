@@ -380,6 +380,22 @@ function relayoutTouchPads() {
   } catch (_) {}
 }
 
+/** Level-start / na pause: joycon + knoppen resetten (fix sticky input tot unpause). */
+function primePlayInput(mode) {
+  Input.dualMode = mode === 'versus';
+  try { Input.releaseAll(); } catch (_) {}
+  try {
+    if (typeof forceGameResize === 'function') forceGameResize();
+    else relayoutTouchPads();
+  } catch (_) {
+    try { relayoutTouchPads(); } catch (_) {}
+  }
+  requestAnimationFrame(() => {
+    try { relayoutTouchPads(); Input.releaseAll(); } catch (_) {}
+    requestAnimationFrame(() => { try { Input.releaseAll(); } catch (_) {} });
+  });
+}
+
 /** Voorkom dat scroll/slide over menu-tegels meteen selecteert (iPad). */
 const TAP_SLOP_PX = IS_TOUCH ? 12 : 8;
 const _uiTap = { id: null, x: 0, y: 0, moved: false, scrolls: [] };
