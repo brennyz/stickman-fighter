@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.16.1';
+const APP_VERSION = '1.16.2';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 118;
+const SW_CACHE_REV = 119;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1690,6 +1690,131 @@ function isThrowWeapon(id) {
   return id === 'shuriken' || id === 'fuuma';
 }
 
+/** Per wapen: 3 opeenvolgende melee-bewegingen (combo-ketting ~1,4s). */
+const WEAPON_MOVE_FAMILIES = {
+  slash: {
+    labels: ['Horizontale snede', 'Opwaartse kling', 'Doorsteek'],
+    moves: [
+      { pose: 'slash', rangeMul: 1, dmgMul: 1, kbMul: 1, hitY: 0, windupMul: 1, activeMul: 1 },
+      { pose: 'upper', rangeMul: 0.96, dmgMul: 1.04, kbMul: 1.08, hitY: -22, windupMul: 0.94, activeMul: 0.95 },
+      { pose: 'thrust', rangeMul: 1.1, dmgMul: 1.06, kbMul: 1.12, hitY: -6, windupMul: 1.05, activeMul: 1.04 },
+    ],
+  },
+  spear: {
+    labels: ['Steek', 'Lage sweep', 'Hoge stoot'],
+    moves: [
+      { pose: 'thrust', rangeMul: 1.12, dmgMul: 1, kbMul: 1.1, hitY: -4, windupMul: 1.02, activeMul: 1.05 },
+      { pose: 'sweep', rangeMul: 1.05, dmgMul: 0.98, kbMul: 1.05, hitY: 14, windupMul: 0.92, activeMul: 1 },
+      { pose: 'upper', rangeMul: 1.08, dmgMul: 1.08, kbMul: 1.14, hitY: -20, windupMul: 1.08, activeMul: 1.02 },
+    ],
+  },
+  blunt: {
+    labels: ['Overhead', 'Zijslag', 'Opwaartse smash'],
+    moves: [
+      { pose: 'overhead', rangeMul: 0.94, dmgMul: 1.08, kbMul: 1.15, hitY: -8, windupMul: 1.1, activeMul: 0.92 },
+      { pose: 'slash', rangeMul: 1.02, dmgMul: 1, kbMul: 1.05, hitY: 2, windupMul: 0.95, activeMul: 1 },
+      { pose: 'upper', rangeMul: 1, dmgMul: 1.1, kbMul: 1.2, hitY: -16, windupMul: 1.06, activeMul: 0.98 },
+    ],
+  },
+  chain: {
+    labels: ['Flurry', 'Wervel', 'Hak'],
+    moves: [
+      { pose: 'slash', rangeMul: 0.98, dmgMul: 0.98, kbMul: 0.95, hitY: 0, windupMul: 0.88, activeMul: 0.92 },
+      { pose: 'spin', rangeMul: 1.06, dmgMul: 1.02, kbMul: 1.08, hitY: -4, windupMul: 0.96, activeMul: 1.02 },
+      { pose: 'overhead', rangeMul: 1, dmgMul: 1.1, kbMul: 1.18, hitY: -10, windupMul: 1.04, activeMul: 1 },
+    ],
+  },
+  hook: {
+    labels: ['Haak', 'Lage rippen', 'Opstoot'],
+    moves: [
+      { pose: 'hook', rangeMul: 1, dmgMul: 1, kbMul: 1.08, hitY: 4, windupMul: 0.96, activeMul: 1 },
+      { pose: 'sweep', rangeMul: 1.04, dmgMul: 1.02, kbMul: 1.05, hitY: 16, windupMul: 0.94, activeMul: 0.98 },
+      { pose: 'thrust', rangeMul: 1.08, dmgMul: 1.08, kbMul: 1.12, hitY: -8, windupMul: 1.06, activeMul: 1.04 },
+    ],
+  },
+  fan: {
+    labels: ['Waaier-zweef', 'Kruissnede', 'Windslag'],
+    moves: [
+      { pose: 'slash', rangeMul: 1, dmgMul: 0.98, kbMul: 0.98, hitY: -6, windupMul: 0.9, activeMul: 0.95 },
+      { pose: 'spin', rangeMul: 1.04, dmgMul: 1.02, kbMul: 1.02, hitY: 0, windupMul: 0.92, activeMul: 1 },
+      { pose: 'upper', rangeMul: 1.06, dmgMul: 1.06, kbMul: 1.1, hitY: -18, windupMul: 1, activeMul: 1.02 },
+    ],
+  },
+  dual: {
+    labels: ['Kruis-stoot', 'Parry-snap', 'Dubbel-slagen'],
+    moves: [
+      { pose: 'thrust', rangeMul: 1, dmgMul: 1, kbMul: 1, hitY: -2, windupMul: 0.92, activeMul: 0.95 },
+      { pose: 'hook', rangeMul: 0.98, dmgMul: 1.04, kbMul: 1.06, hitY: 6, windupMul: 0.9, activeMul: 0.92 },
+      { pose: 'spin', rangeMul: 1.08, dmgMul: 1.08, kbMul: 1.12, hitY: -4, windupMul: 1.02, activeMul: 1.04 },
+    ],
+  },
+  energy: {
+    labels: ['Energie-zwaai', 'Focus-stoot', 'Nova-sweep'],
+    moves: [
+      { pose: 'slash', rangeMul: 1, dmgMul: 1, kbMul: 1.02, hitY: -4, windupMul: 0.94, activeMul: 0.98 },
+      { pose: 'thrust', rangeMul: 1.1, dmgMul: 1.06, kbMul: 1.1, hitY: -8, windupMul: 1.04, activeMul: 1.05 },
+      { pose: 'spin', rangeMul: 1.06, dmgMul: 1.08, kbMul: 1.14, hitY: 0, windupMul: 1.06, activeMul: 1.02 },
+    ],
+  },
+};
+
+function weaponMoveFamily(id) {
+  if (isThrowWeapon(id) || id === 'vuist') return null;
+  if (id === 'speer' || id === 'drietand' || id === 'bostaf') return 'spear';
+  if (id === 'knuppel' || id === 'hamer' || id === 'tonfa' || id === 'guvve' || id === 'donder') return 'blunt';
+  if (id === 'nunchaku' || id === 'ketting' || id === 'vlamzweep' || id === 'boemerang') return 'chain';
+  if (id === 'kama' || id === 'zeis') return 'hook';
+  if (id === 'waaier') return 'fan';
+  if (id === 'sai') return 'dual';
+  if (id === 'laser' || id === 'void' || id === 'kristal' || id === 'sterkling') return 'energy';
+  return 'slash';
+}
+
+function weaponMoveDef(id, idx) {
+  const fam = weaponMoveFamily(id);
+  if (!fam) return null;
+  const set = WEAPON_MOVE_FAMILIES[fam];
+  return set.moves[(idx || 0) % 3];
+}
+
+function weaponMoveLabels(id) {
+  const fam = weaponMoveFamily(id);
+  if (!fam) return null;
+  return WEAPON_MOVE_FAMILIES[fam].labels;
+}
+
+function applyWeaponMovePose(P, ext, move) {
+  const e = Math.max(0, ext);
+  const pose = (move && move.pose) || 'slash';
+  if (pose === 'thrust') {
+    P.arms = [[1.9, -1.1], [lerp(0.9, 0.0, e), lerp(-0.4, 0.0, e)]];
+    P.lean = 0.18 * e;
+  } else if (pose === 'upper') {
+    P.arms = [[1.7, -1.3], [lerp(0.4, -1.3, e), lerp(-0.2, -0.55, e)]];
+    P.lean = -0.08 * e;
+  } else if (pose === 'sweep') {
+    P.arms = [[1.9, -1.1], [lerp(0.2, 0.55, e), lerp(0.3, 0.9, e)]];
+    P.lean = 0.14 * e;
+  } else if (pose === 'overhead') {
+    P.arms = [[2.0, -1.5], [lerp(0.8, -1.55, e), lerp(-0.3, -0.88, e)]];
+    P.lean = -0.12 * e;
+  } else if (pose === 'spin') {
+    const sw = lerp(-2.4, 1.05, e);
+    P.arms = [[1.6, -1.0], [sw, sw + 0.35]];
+    P.lean = 0.16 * Math.sin(e * Math.PI) * e;
+  } else if (pose === 'hook') {
+    P.arms = [[1.9, -1.1], [lerp(-1.8, 0.35, e), lerp(-0.6, 0.15, e)]];
+    P.lean = 0.12 * e;
+  } else {
+    const sw = lerp(-2.15, 0.75, e);
+    const base = ext < 0 ? lerp(-1.6, -2.15, -ext / 0.25) : sw;
+    P.arms = [[1.9, -1.1], [base, base + 0.12]];
+    P.lean = 0.1 * ext;
+  }
+}
+
+const WEAPON_COMBO_WINDOW = 1.38;
+
 /* ============================== STIJLEN ================================ */
 const STYLES = [
   { id: 'classic', name: 'Klassiek', body: '#f2f5ff', accent: '#3db8ff', bandana: null,
@@ -2027,6 +2152,9 @@ function resetVsFighterRound(f, entry, ground, slot) {
   f.hitFlashT = 0;
   f.afterimages = [];
   f.dashCd = 0;
+  f.weaponComboIdx = 0;
+  f.weaponComboT = 0;
+  f._lastWeaponKind = null;
 }
 
 let vsSelect = { p1: 'hero', p2: 'rabbit' };
@@ -2927,8 +3055,8 @@ function meleeHitPoint(f, spec) {
   const aim = (f && f._aimAtAttack) || fighterAimNorm(f);
   const range = (spec && spec.range) || 40;
   const hx = f.x + f.face * range * (0.72 + Math.abs(aim.nx) * 0.18);
-  // ny −1 → hy lager (hoger op scherm), tot ~+90 px
-  const hy = f.y - 48 + clamp(aim.ny, -1, 0.65) * 88;
+  const moveOff = (spec && spec.moveHitY) || 0;
+  const hy = f.y - 48 + clamp(aim.ny, -1, 0.65) * 88 + moveOff;
   return { hx, hy, aim };
 }
 
@@ -3675,9 +3803,12 @@ document.addEventListener('pointerdown', () => AudioSys.init(), { once: false })
 /* ============================ TEKENHULPEN ============================== */
 function seg(x, y, ang, len) { return [x + Math.cos(ang) * len, y + Math.sin(ang) * len]; }
 
-function drawWeaponShape(c, id, spin) {
+function drawWeaponShape(c, id, spin, moveIdx) {
   // getekend langs +x vanaf de hand (0,0); c is al getransleerd/geroteerd
   c.lineCap = 'round';
+  const mi = moveIdx || 0;
+  if (mi === 1) c.rotate(0.22);
+  else if (mi === 2) c.rotate(-0.12);
   switch (id) {
     case 'zwaard':
       c.strokeStyle = '#c9d6e8'; c.lineWidth = 5; c.beginPath(); c.moveTo(4, 0); c.lineTo(46, 0); c.stroke();
@@ -4004,6 +4135,7 @@ class Fighter {
       ai: null, aiTimer: 0, aiMove: 0, aiCd: 2,
       name: 'Stickman',
       substCd: 0, invulnT: 0, hitFlashT: 0, afterimages: [], dashCd: 0,
+      weaponComboIdx: 0, weaponComboT: 0, _lastWeaponKind: null,
       style: null, playerSlot: 0, vsSpecial: 'rasengan',
     }, opts);
   }
@@ -4023,10 +4155,25 @@ class Fighter {
       case 'kick':
         spec = { kind, windup: 0.11, active: 0.11, recover: 0.2,  range: 50, r: 26, dmg: this.baseDmg * 1.1, kb: 340 };
         break;
-      case 'weapon':
-        spec = { kind, windup: 0.13 / w.speed, active: 0.1 / w.speed, recover: 0.2 / w.speed,
-                 range: w.range + 14, r: 26 + w.range * 0.22, dmg: this.baseDmg * w.dmg, kb: 260 };
+      case 'weapon': {
+        const moveIdx = this.weaponComboIdx || 0;
+        const move = weaponMoveDef(w.id, moveIdx);
+        spec = {
+          kind, windup: 0.13 / w.speed, active: 0.1 / w.speed, recover: 0.2 / w.speed,
+          range: w.range + 14, r: 26 + w.range * 0.22, dmg: this.baseDmg * w.dmg, kb: 260,
+          moveIdx, move,
+        };
+        if (move) {
+          spec.windup *= move.windupMul;
+          spec.active *= move.activeMul;
+          spec.range *= move.rangeMul;
+          spec.r *= move.rangeMul;
+          spec.dmg *= move.dmgMul;
+          spec.kb *= move.kbMul;
+          spec.moveHitY = move.hitY;
+        }
         break;
+      }
       case 'special': {
         const j = fighterJutsuKind(this);
         const jMul = j === 'rinnegan' ? 2.55 : j === 'chidori' ? (this.isRobot ? 2.35 : 2.72) : 2.85;
@@ -4059,6 +4206,19 @@ class Fighter {
       }
     } else {
       AudioSys.sfx(weaponSwingSfx(this.weapon, kind));
+    }
+    if (kind === 'weapon' && !isThrowWeapon(this.weapon.id)) {
+      if (this.weaponComboT > 0 && this._lastWeaponKind === this.weapon.id) {
+        this.weaponComboIdx = (this.weaponComboIdx + 1) % 3;
+      } else {
+        this.weaponComboIdx = 0;
+      }
+      this.weaponComboT = WEAPON_COMBO_WINDOW;
+      this._lastWeaponKind = this.weapon.id;
+    } else if (kind !== 'weapon') {
+      this.weaponComboIdx = 0;
+      this.weaponComboT = 0;
+      this._lastWeaponKind = null;
     }
     this.attack = Object.assign({ t: 0, hasHit: false, fired: false }, this.attackSpec(kind));
     this._aimAtAttack = fighterAimNorm(this);
@@ -4200,6 +4360,13 @@ class Fighter {
     }
     if (this.substCd > 0) this.substCd -= dt;
     if (this.dashCd > 0) this.dashCd -= dt;
+    if (this.weaponComboT > 0) {
+      this.weaponComboT -= dt;
+      if (this.weaponComboT <= 0) {
+        this.weaponComboIdx = 0;
+        this._lastWeaponKind = null;
+      }
+    }
     if (this.invulnT > 0) this.invulnT -= dt;
     if (this.hitFlashT > 0) this.hitFlashT -= dt;
     if (this._shurikenCd > 0) this._shurikenCd -= dt;
@@ -4308,6 +4475,9 @@ class Fighter {
     this.vy = Math.min(this.vy, -120);
     if (this.isPlayer || this.playerSlot) {
       this.invulnT = Math.max(this.invulnT, dmg >= 18 ? 0.26 : 0.22);
+      this.weaponComboIdx = 0;
+      this.weaponComboT = 0;
+      this._lastWeaponKind = null;
       if (game) applyHitStop(game, { kind: 'punch', dmg }, { playerHurt: true, heavy: dmg >= 18 });
     }
     if (this.isPlayer) this.energy = clamp(this.energy + 4, 0, 100);
@@ -4373,16 +4543,8 @@ class Fighter {
         P.legs = [[1.82, 1.72], [lerp(1.34, -0.06, Math.max(0, ext)), lerp(1.55, -0.02, Math.max(0, ext))]];
         P.arms = [[2.2, -2.2], [-0.8, -0.4]];
       } else if (a.kind === 'weapon') {
-        const wid = this.weapon.id;
-        if (wid === 'speer') {
-          P.arms = [[1.9, -1.1], [lerp(0.9, 0.0, Math.max(0, ext)), lerp(-0.4, 0.0, Math.max(0, ext))]];
-          P.lean = 0.16 * ext;
-        } else {
-          const sw = lerp(-2.15, 0.75, Math.max(0, ext) * (ext < 0 ? 0 : 1));
-          const base = ext < 0 ? lerp(-1.6, -2.15, -ext / 0.25) : sw;
-          P.arms = [[1.9, -1.1], [base, base + 0.12]];
-          P.lean = 0.1 * ext;
-        }
+        const move = a.move || weaponMoveDef(this.weapon.id, a.moveIdx || 0);
+        applyWeaponMovePose(P, ext, move);
       } else if (a.kind === 'special') {
         // Rasengan / Chidori houding: hand naar voren
         const charge = clamp(a.t / a.windup, 0, 1);
@@ -4464,7 +4626,7 @@ class Fighter {
         : 0;
       const wAng = this.attack && this.attack.kind === 'weapon' ? P.arms[1][1] + aimLift : -0.5 + aimLift * 0.25;
       c.save(); c.translate(hx, hy); c.rotate(wAng);
-      drawWeaponShape(c, this.weapon.id, this.animT);
+      drawWeaponShape(c, this.weapon.id, this.animT, this.attack && this.attack.moveIdx);
       c.restore();
     }
 
@@ -6634,6 +6796,10 @@ class Game {
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         if (spec.dmg >= 18) this.shake(3, 0.11);
+        if (f.isPlayer && spec.kind === 'weapon' && spec.moveIdx === 2 && !isThrowWeapon(f.weapon.id)) {
+          const labels = weaponMoveLabels(f.weapon.id);
+          if (labels) this.floater(f.x + f.face * 24, f.y - 128, labels[2], '#ffd75e', 13);
+        }
         this.player.energy = clamp(this.player.energy + 8, 0, 100);
         hit = true;
       }
@@ -7544,6 +7710,15 @@ class Game {
         const joyR = motionReduced() ? 18 : 18 + Math.sin(this.t * 8) * 3;
         c.arc(bx + bw * 0.5, by + 25, joyR, 0, TAU);
         c.stroke();
+      }
+      const wFam = weaponMoveFamily(p.weapon.id);
+      if (wFam && p.weaponComboT > 0) {
+        for (let i = 0; i < 3; i++) {
+          c.fillStyle = i <= p.weaponComboIdx ? '#ffd75e' : 'rgba(255,255,255,.22)';
+          c.beginPath();
+          c.arc(bx + 10 + i * 13, by + 38, 3.5, 0, TAU);
+          c.fill();
+        }
       }
     }
 
@@ -8829,8 +9004,13 @@ const UI = {
       const statLine = w.summoned
         ? `${w.desc} · schade x${base.dmg} → <b style="color:${rar.color}">x${w.dmg}</b> · bereik ${w.range} · snelheid x${w.speed}`
         : `${w.desc} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}`;
+      const labels = weaponMoveLabels(w.id);
+      const moveLine = labels
+        ? `3 moves: ${labels.join(' · ')}`
+        : (isThrowWeapon(w.id) ? 'Werp-projectiel — geen melee-combo' : '');
       info.innerHTML = `<div class="cname">${w.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>${summonBadge}</div>
-        <div class="cinfo">${statLine}</div>`;
+        <div class="cinfo">${statLine}</div>` +
+        (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '');
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
