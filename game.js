@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.8';
+const APP_VERSION = '1.17.9';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 135;
+const SW_CACHE_REV = 136;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1662,6 +1662,82 @@ function dexRarityBreakdown() {
   for (const id of Object.keys(save.dex || {})) {
     const sp = SPECIES[id];
     if (sp && counts[sp.rarity] != null) counts[sp.rarity]++;
+  }
+  return counts;
+}
+function dexRarityTotals() {
+  const counts = {};
+  for (const id of Object.keys(RARITIES)) counts[id] = 0;
+  for (const id of SPECIES_ORDER) {
+    const sp = SPECIES[id];
+    if (sp && counts[sp.rarity] != null) counts[sp.rarity]++;
+  }
+  return counts;
+}
+const DEX_ACH_IDS = ['dex10', 'dexHalf', 'dexTiers', 'dex100', 'dexMythic', 'dexFull'];
+function dexNextAchievementHtml() {
+  let best = null, bestFrac = -1;
+  for (const id of DEX_ACH_IDS) {
+    if (save.achievements[id]) continue;
+    const ach = ACHIEVEMENTS.find(a => a.id === id);
+    if (!ach) continue;
+    const frac = achievementProgressFrac(ach);
+    if (frac >= 1) continue;
+    if (frac > bestFrac) { bestFrac = frac; best = ach; }
+  }
+  if (!best) return '';
+  const pct = Math.min(100, Math.round(bestFrac * 100));
+  const hint = achievementProgressHint(best);
+  return `<div class="dex-ach-next" style="margin-top:10px;padding:8px 10px;border-radius:12px;background:rgba(255,215,94,.06);border:1px solid rgba(255,215,94,.2)">` +
+    `<div style="font-size:11px;font-weight:800;color:#ffd75e;margin-bottom:4px">Volgende prestatie · ${best.name}</div>` +
+    `<div style="font-size:12px;opacity:.85">${best.desc}${hint ? ' · ' + hint : ''}</div>` +
+    `<div class="xpline" style="margin-top:6px;height:6px"><div style="width:${pct}%"></div></div></div>`;
+}
+function dexSortedIds(rarityFilter, typeFilter, sortKey) {
+  let ids = SPECIES_ORDER.filter(id => {
+    const sp = SPECIES[id];
+    if (rarityFilter !== 'all' && sp.rarity !== rarityFilter) return false;
+    if (typeFilter !== 'all' && sp.type !== typeFilter) return false;
+    return true;
+  });
+  if (sortKey === 'rarity') {
+    ids.sort((a, b) => {
+      const ra = rarityOf(SPECIES[a].rarity).order;
+      const rb = rarityOf(SPECIES[b].rarity).order;
+      if (ra !== rb) return rb - ra;
+      return SPECIES_ORDER.indexOf(a) - SPECIES_ORDER.indexOf(b);
+    });
+  } else if (sortKey === 'unlock') {
+    ids.sort((a, b) => (UNLOCK_AT[a] || 999) - (UNLOCK_AT[b] || 999));
+  } else if (sortKey === 'kills') {
+    ids.sort((a, b) => {
+      const ka = save.dex[a] || 0, kb = save.dex[b] || 0;
+      if (ka && kb) return kb - ka;
+      if (ka) return -1;
+      if (kb) return 1;
+      return (UNLOCK_AT[a] || 999) - (UNLOCK_AT[b] || 999);
+    });
+  }
+  return ids;
+}
+function dexTopKillId() {
+  let topId = null, topN = 0;
+  for (const id of Object.keys(save.dex || {})) {
+    const n = save.dex[id] || 0;
+    if (n > topN) { topN = n; topId = id; }
+  }
+  return topN >= 3 ? topId : null;
+}
+function weaponUnlockedCount() {
+  let n = 0;
+  for (const w of WEAPONS) if (save.lvl >= w.unlock) n++;
+  return n;
+}
+function weaponRarityBreakdown() {
+  const counts = {};
+  for (const id of Object.keys(RARITIES)) counts[id] = 0;
+  for (const w of WEAPONS) {
+    if (save.lvl >= w.unlock && counts[w.rarity] != null) counts[w.rarity]++;
   }
   return counts;
 }
@@ -9972,6 +10048,21 @@ const UI = {
   },
 
   renderWeapons() {
+    const sumEl = document.getElementById('weaponSummary');
+    if (sumEl) {
+      const unlocked = weaponUnlockedCount();
+      const br = weaponRarityBreakdown();
+      const tierChips = Object.keys(RARITIES).map(rid => {
+        const rar = RARITIES[rid];
+        const n = br[rid] || 0;
+        if (!n) return '';
+        return `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color};margin:2px">${rar.name} ${n}</span>`;
+      }).filter(Boolean).join(' ');
+      sumEl.style.display = 'block';
+      sumEl.innerHTML =
+        `Verzameld <b>${unlocked}/${WEAPONS.length}</b> · actief <b>${weaponById(save.weapon).name}</b>` +
+        (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '');
+    }
     const list = document.getElementById('weaponList');
     list.innerHTML = '';
     for (const base of WEAPONS) {
@@ -10047,34 +10138,63 @@ const UI = {
         `<div class="dex-mini-row">${dexMiniStat('HP', totalHp, SPECIES_ORDER.length * 25, '#6ee06e')}` +
         `${dexMiniStat('Kills', kills, 150, '#ffd75e')}</div>` +
         (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '') +
-        cosmeticHtml;
+        cosmeticHtml +
+        dexNextAchievementHtml();
     }
-    const filterHost = document.getElementById('dexFilterBar');
-    if (filterHost) {
+    const bindFilterBar = (host, attr, stateKey, mkButtons) => {
+      if (!host) return;
+      host.innerHTML = mkButtons();
+      if (host.dataset.bound) return;
+      host.dataset.bound = '1';
+      host.addEventListener('click', (e) => {
+        const btn = e.target.closest(`[${attr}]`);
+        if (!btn) return;
+        AudioSys.sfx('select');
+        UI[stateKey] = btn.getAttribute(attr) || 'all';
+        UI.renderDex();
+      });
+    };
+    const rarityTotals = dexRarityTotals();
+    bindFilterBar(document.getElementById('dexFilterBar'), 'data-dex-filter', 'dexRarityFilter', () => {
       const cur = this.dexRarityFilter || 'all';
       const mk = (id, label, color) =>
         `<button type="button" class="dex-filter-btn${cur === id ? ' active' : ''}" data-dex-filter="${id}"` +
         (color ? ` style="--dex-filter-color:${color}"` : '') + `>${label}</button>`;
-      filterHost.innerHTML =
-        mk('all', 'Alle') +
-        Object.keys(RARITIES).map(rid => mk(rid, RARITIES[rid].name, RARITIES[rid].color)).join('');
-      if (!filterHost.dataset.bound) {
-        filterHost.dataset.bound = '1';
-        filterHost.addEventListener('click', (e) => {
-          const btn = e.target.closest('[data-dex-filter]');
-          if (!btn) return;
-          AudioSys.sfx('select');
-          UI.dexRarityFilter = btn.dataset.dexFilter || 'all';
-          UI.renderDex();
-        });
+      return mk('all', `Alle ${dexCount()}/${SPECIES_ORDER.length}`) +
+        Object.keys(RARITIES).map(rid => {
+          const rar = RARITIES[rid];
+          const n = (dexRarityBreakdown()[rid] || 0);
+          const tot = rarityTotals[rid] || 0;
+          return mk(rid, `${rar.name} ${n}/${tot}`, rar.color);
+        }).join('');
+    });
+    bindFilterBar(document.getElementById('dexTypeFilterBar'), 'data-dex-type-filter', 'dexTypeFilter', () => {
+      const cur = this.dexTypeFilter || 'all';
+      const mk = (id, label) =>
+        `<button type="button" class="dex-filter-btn${cur === id ? ' active' : ''}" data-dex-type-filter="${id}">${label}</button>`;
+      const types = [];
+      const seen = new Set();
+      for (const id of SPECIES_ORDER) {
+        const t = SPECIES[id].type;
+        if (!seen.has(t)) { seen.add(t); types.push(t); }
       }
-    }
+      return mk('all', 'Alle types') +
+        types.map(t => mk(t, MONSTER_TYPE_LABEL[t] || t)).join('');
+    });
+    bindFilterBar(document.getElementById('dexSortBar'), 'data-dex-sort', 'dexSortKey', () => {
+      const cur = this.dexSortKey || 'book';
+      const mk = (id, label) =>
+        `<button type="button" class="dex-filter-btn${cur === id ? ' active' : ''}" data-dex-sort="${id}">${label}</button>`;
+      return mk('book', 'Boek') + mk('rarity', 'Rariteit') + mk('unlock', 'Unlock Lv') + mk('kills', 'Kills');
+    });
     const list = document.getElementById('dexList');
     list.innerHTML = '';
     const filter = this.dexRarityFilter || 'all';
-    for (const id of SPECIES_ORDER) {
+    const typeFilter = this.dexTypeFilter || 'all';
+    const sortKey = this.dexSortKey || 'book';
+    const topKillId = dexTopKillId();
+    for (const id of dexSortedIds(filter, typeFilter, sortKey)) {
       const sp = SPECIES[id];
-      if (filter !== 'all' && sp.rarity !== filter) continue;
       const kills = save.dex[id] || 0;
       const rar = rarityOf(sp.rarity);
       const unlockLv = UNLOCK_AT[id];
@@ -10109,7 +10229,7 @@ const UI = {
           : (unlockLv != null
             ? `<div style="opacity:.72;font-size:12px;margin-top:4px">Unlock Lv ${unlockLv}</div>`
             : ''));
-      info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>` : ''}</div>
+      info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>` : ''}${id === topKillId ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Top jager</span>' : ''}</div>
         <div class="cinfo">${kills ? `${typeLbl} · basis HP ${sp.hp} · dmg ${sp.dmg} · spd ${sp.speed} · ${sp.xp} XP · Lv ${unlockLv || '?'}` : 'Nog niet verslagen'}</div>${lockHint}${statRow}`;
       el.appendChild(info);
       const right = document.createElement('div');

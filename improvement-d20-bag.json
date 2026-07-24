@@ -20,14 +20,13 @@
     10,
     15,
     2,
-    13,
-    12
+    13
   ],
   "lastRoll": {
-    "face": 1,
-    "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
-    "rolledAt": "2026-07-24T15:40:37Z",
-    "remainingCount": 19,
+    "face": 12,
+    "category": "Content \u2014 monsters, wapens, rariteit, dex",
+    "rolledAt": "2026-07-24T15:42:41Z",
+    "remainingCount": 18,
     "cycle": 3
   },
   "pending": null,
@@ -394,6 +393,13 @@
       "note": "Hit-confirm FX, parry window, counter-hit feedback",
       "version": "1.17.8",
       "doneAt": "2026-07-24T15:42:33Z",
+      "cycle": 3
+    },
+    {
+      "face": 12,
+      "note": "Type filter, sort, achievement tracker, weapon summary",
+      "version": "1.17.9",
+      "doneAt": "2026-07-24T15:43:37Z",
       "cycle": 3
     }
   ],
@@ -1376,6 +1382,13 @@
       "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
       "rolledAt": "2026-07-24T15:40:37Z",
       "remainingCount": 19,
+      "cycle": 3
+    },
+    {
+      "face": 12,
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
+      "rolledAt": "2026-07-24T15:42:41Z",
+      "remainingCount": 18,
       "cycle": 3
     }
   ],
