@@ -301,6 +301,18 @@
   ],
   "userFeatureLog": [
     {
+      "id": "movement-aim-polish",
+      "d20Face": null,
+      "userWords": "Movement is cluncky en mikken boven en onder is onduidelijk",
+      "versions": [
+        "1.15.5"
+      ],
+      "commits": [],
+      "code": "fighterAimNorm: verticale mik los van horizontale loop; JOY_AIM_DEAD_PX; drawJoyAimGuide + drawPlayerAimIndicator (kleur HOOG/MIDDEN/LAAG); snappere vx-accel + recovery-slide + face-flip; volledige joy-dy weergave",
+      "status": "done",
+      "note": "off-d20 user feedback; mik blijft duidelijk tijdens lopen; aim-lijn + kruis altijd zichtbaar op speler"
+    },
+    {
       "id": "touch-btn-overlap-fix",
       "d20Face": null,
       "userWords": "De knoppen zitten te dicht over elkaar, en werken ze wel?",

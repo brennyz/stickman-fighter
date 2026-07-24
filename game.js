@@ -63,9 +63,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.15.4';
+const APP_VERSION = '1.15.5';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 111;
+const SW_CACHE_REV = 112;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -2776,28 +2776,104 @@ function inputPadForFighter(f) {
 function fighterAimNorm(f) {
   const pad = inputPadForFighter(f);
   const face = (f && f.face) || 1;
-  let nx = face;
-  let ny = -0.1;
+  let nx = face * 0.82;
+  let ny = -0.2;
   if (pad && pad.joy && pad.joy.active) {
     const jx = pad.joy.dx;
     const jy = pad.joy.dy;
-    const mag = Math.hypot(jx, jy);
-    if (mag >= JOY_DEAD_PX) {
-      nx = jx / JOY_MAX_PX;
-      ny = jy / JOY_MAX_PX;
-      // Omhoog sterker doorgeven — vliegers / hoge enemies raken
-      if (ny < -0.12) ny = clamp(ny * 1.45, -1.15, 0);
-      if (Math.abs(nx) < 0.2) nx = face * 0.42;
+    // Verticale mik los van horizontale looprichting — joy ↑ blijft duidelijk
+    if (Math.abs(jy) >= JOY_AIM_DEAD_PX) {
+      ny = clamp(jy / JOY_MAX_PX, -1.05, 0.78);
+      if (ny < -0.14) ny = clamp(ny * 1.38, -1.15, 0);
     }
+    if (Math.abs(jx) >= JOY_DEAD_PX) nx = clamp(jx / JOY_MAX_PX, -1, 1);
+    else nx = face * 0.72;
   }
   if (pad && pad.keys) {
     const up = !!(pad.keys.arrowup || pad.keys.w);
     const down = !!(pad.keys.arrowdown || pad.keys.s);
-    if (up && !down) ny = Math.min(ny, -0.92);
-    if (down && !up) ny = Math.max(ny, 0.55);
+    if (up && !down) ny = -0.95;
+    if (down && !up) ny = 0.62;
   }
   const len = Math.hypot(nx, ny) || 1;
   return { nx: nx / len, ny: ny / len };
+}
+
+function aimVisualColor(ny) {
+  if (ny < -0.42) return '#7cf5ff';
+  if (ny > 0.22) return '#ffb06a';
+  return '#e8f0ff';
+}
+
+function drawJoyAimGuide(c, jx, jy, j, ui, accent) {
+  const outer = Math.round(48 * ui);
+  c.save();
+  c.globalAlpha = j.active ? 0.44 : 0.2;
+  c.strokeStyle = accent || '#fff';
+  c.lineWidth = 2;
+  c.beginPath();
+  c.moveTo(jx, jy - outer + 6);
+  c.lineTo(jx - 6, jy - outer + 16);
+  c.lineTo(jx + 6, jy - outer + 16);
+  c.closePath();
+  c.stroke();
+  c.beginPath();
+  c.moveTo(jx, jy + outer - 6);
+  c.lineTo(jx - 6, jy + outer - 16);
+  c.lineTo(jx + 6, jy + outer - 16);
+  c.closePath();
+  c.stroke();
+  const barX = jx + outer + Math.round(8 * ui);
+  const barH = outer * 1.3;
+  c.globalAlpha = 0.26;
+  c.beginPath();
+  c.moveTo(barX, jy - barH / 2);
+  c.lineTo(barX, jy + barH / 2);
+  c.stroke();
+  c.fillStyle = '#aab4cc';
+  c.beginPath();
+  c.arc(barX, jy, 3, 0, TAU);
+  c.fill();
+  if (j.active && Math.abs(j.dy) >= JOY_AIM_DEAD_PX) {
+    const t = clamp(-j.dy / JOY_MAX_PX, -1, 1);
+    c.globalAlpha = 0.78;
+    c.fillStyle = aimVisualColor(-t);
+    c.beginPath();
+    c.arc(barX, jy - t * (barH / 2 - 4), 5, 0, TAU);
+    c.fill();
+  }
+  c.restore();
+}
+
+function drawPlayerAimIndicator(c, fighter, alpha) {
+  if (!fighter || !fighter.alive) return;
+  const aim = fighterAimNorm(fighter);
+  const col = aimVisualColor(aim.ny);
+  const ox = fighter.x;
+  const oy = fighter.y - 52 + clamp(aim.ny, -1, 0.55) * 32;
+  const len = 54;
+  c.save();
+  c.globalAlpha = alpha != null ? alpha : 0.5;
+  c.strokeStyle = col;
+  c.lineWidth = 3;
+  c.beginPath();
+  c.moveTo(ox, oy);
+  c.lineTo(ox + aim.nx * len, oy + aim.ny * len * 1.08);
+  c.stroke();
+  c.fillStyle = col;
+  c.beginPath();
+  c.arc(ox + aim.nx * len, oy + aim.ny * len * 1.08, 5, 0, TAU);
+  c.fill();
+  const hit = meleeHitPoint(fighter, { range: 40 });
+  c.globalAlpha *= 0.55;
+  c.lineWidth = 1.5;
+  c.beginPath();
+  c.moveTo(hit.hx - 6, hit.hy);
+  c.lineTo(hit.hx + 6, hit.hy);
+  c.moveTo(hit.hx, hit.hy - 6);
+  c.lineTo(hit.hx, hit.hy + 6);
+  c.stroke();
+  c.restore();
 }
 
 /** Werpers / jutsu: snelheid in de mikrichting (joy ↑ = hoger gooien). */
@@ -2836,8 +2912,9 @@ function noteShurikenThrow(f, game) {
   f._shurikenBurst.push(t);
 }
 
-const JOY_DEAD_PX = 14;
-const JOY_MAX_PX = 55;
+const JOY_DEAD_PX = 11;
+const JOY_AIM_DEAD_PX = 7;
+const JOY_MAX_PX = 58;
 /** Geen pointermove meer → joy los (iPad mist soms pointerup) */
 const JOY_STALE_MS = IS_TOUCH ? 200 : 160;
 
@@ -3199,7 +3276,7 @@ function makePad(side) {
       }
       if (this.joy.active) {
         const jx = this.joy.dx;
-        if (Math.abs(jx) >= JOY_DEAD_PX) m += clamp(jx / 45, -1, 1);
+        if (Math.abs(jx) >= JOY_DEAD_PX) m += clamp(jx / JOY_MAX_PX, -1, 1);
       }
       return clamp(m, -1, 1);
     },
@@ -4029,13 +4106,22 @@ class Fighter {
     }
 
     const canAct = this.hurtT <= 0 && !this.blocking;
-    // bewegen
-    let mv = canAct && !this.attack ? (it.move || 0) : 0;
-    this.vx = lerp(this.vx, mv * this.speed, 1 - Math.pow(0.0001, dt));
-    if (canAct && !this.attack && Math.abs(mv) < 0.04 && this.onGround) {
-      this.vx = lerp(this.vx, 0, 1 - Math.pow(0.00002, dt));
+    // bewegen — snappere accel, recovery-slide, directe face-flip
+    let mv = 0;
+    if (canAct) {
+      if (!this.attack) mv = it.move || 0;
+      else if (this.attack.t >= this.attack.windup + this.attack.active) {
+        mv = (it.move || 0) * 0.7;
+      }
     }
-    if (Math.abs(mv) > 0.1) this.face = mv > 0 ? 1 : -1;
+    const targetVx = mv * this.speed;
+    const flip = this.vx !== 0 && mv !== 0 && Math.sign(this.vx) !== Math.sign(mv);
+    const accel = flip ? 0.0008 : 0.0004;
+    this.vx = lerp(this.vx, targetVx, 1 - Math.pow(accel, dt));
+    if (canAct && Math.abs(mv) < 0.035 && this.onGround) {
+      this.vx = lerp(this.vx, 0, 1 - Math.pow(0.0012, dt));
+    }
+    if (Math.abs(mv) > 0.05) this.face = mv > 0 ? 1 : -1;
 
     if (canAct && it.jump && this.onGround && !this.attack) {
       this.vy = -this.jumpV; this.onGround = false; AudioSys.sfx('jump');
@@ -4112,9 +4198,12 @@ class Fighter {
     else if (Math.abs(this.vx) > 30) this.state = 'run';
     else this.state = 'idle';
     // Bewegend decor: speler "loopt" mee tijdens reis tussen golven
-    if (this.isPlayer && this.state === 'idle' && game && game.traveling) {
-      this.state = 'run';
-      this.face = 1;
+    if (this.isPlayer && game && game.traveling) {
+      const pad = inputPadForFighter(this);
+      const tMove = pad ? pad.move : 0;
+      if (Math.abs(tMove) > 0.05) this.face = tMove > 0 ? 1 : -1;
+      else if (this.state === 'idle' || Math.abs(this.vx) < 22) this.face = 1;
+      if (this.state === 'idle') this.state = 'run';
     }
   }
 
@@ -7649,25 +7738,12 @@ class Game {
     c.globalAlpha = j.active ? 0.5 : 0.22;
     c.strokeStyle = '#fff'; c.lineWidth = 3;
     c.beginPath(); c.arc(jx, jy, joyOuter, 0, TAU); c.stroke();
+    drawJoyAimGuide(c, jx, jy, j, ui, '#7cf5ff');
     c.globalAlpha = j.active ? 0.65 : 0.3;
     c.fillStyle = '#fff';
-    c.beginPath(); c.arc(jx + (j.active ? j.dx : 0), jy + (j.active ? j.dy * 0.3 : 0), joyInner, 0, TAU); c.fill();
-    if (this.player && j.active) {
-      const aim = projAimVelocity(this.player, 100);
-      const ox = this.player.x;
-      const oy = this.player.y - 52 + clamp(aim.ny, -1, 0.5) * 28;
-      c.globalAlpha = 0.55;
-      c.strokeStyle = '#7cf5ff';
-      c.lineWidth = 3;
-      c.beginPath();
-      c.moveTo(ox, oy);
-      c.lineTo(ox + aim.vx * 0.48, oy + aim.vy * 0.48);
-      c.stroke();
-      c.globalAlpha = 0.35;
-      c.fillStyle = '#7cf5ff';
-      c.beginPath();
-      c.arc(ox + aim.vx * 0.48, oy + aim.vy * 0.48, 5, 0, TAU);
-      c.fill();
+    c.beginPath(); c.arc(jx + (j.active ? j.dx : 0), jy + (j.active ? j.dy : 0), joyInner, 0, TAU); c.fill();
+    if (this.player) {
+      drawPlayerAimIndicator(c, this.player, j.active ? 0.62 : 0.28);
     }
     // knoppen
     for (const b of Input.buttons) {
@@ -7702,9 +7778,11 @@ class Game {
     c.strokeStyle = accent;
     c.lineWidth = 3;
     c.beginPath(); c.arc(jx, jy, joyOuter, 0, TAU); c.stroke();
+    drawJoyAimGuide(c, jx, jy, j, ui, accent);
     c.globalAlpha = j.active ? 0.55 : 0.25;
     c.fillStyle = accent;
-    c.beginPath(); c.arc(jx + (j.active ? j.dx : 0), jy + (j.active ? j.dy * 0.25 : 0), joyInner, 0, TAU); c.fill();
+    c.beginPath(); c.arc(jx + (j.active ? j.dx : 0), jy + (j.active ? j.dy : 0), joyInner, 0, TAU); c.fill();
+    if (fighter) drawPlayerAimIndicator(c, fighter, j.active ? 0.55 : 0.24);
     c.font = '900 11px sans-serif'; c.fillStyle = accent; c.textAlign = 'center';
     c.fillText(label, jx, jy - 58);
     for (const b of pad.buttons) {
