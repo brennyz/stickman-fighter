@@ -722,9 +722,18 @@ function makePad(side) {
   };
 }
 
-const _padP1Methods = makePad('p1');
+const Input = makePad('p1');
+const _padP1Methods = {
+  onDown: Input.onDown,
+  onMove: Input.onMove,
+  onUp: Input.onUp,
+  hardenPointers: Input.hardenPointers,
+  refreshJoyHold: Input.refreshJoyHold,
+  releaseAll: Input.releaseAll,
+  layout: Input.layout,
+};
 
-const Input = Object.assign(makePad('p1'), {
+Object.assign(Input, {
   dualMode: false,
   pointerPads: {},
   onDown(x, y, id) {

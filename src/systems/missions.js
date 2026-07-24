@@ -451,8 +451,9 @@ function saveDriftDetail() {
 
 function saveExportSummaryLine(s) {
   const st = s || save;
+  const summons = summonCountFromSave(st);
   return `Lv ${st.lvl} · unlock ${st.unlocked} · boek ${dexCountFromSave(st)} · kills ${dexTotalKillsFromSave(st)} · ${Object.keys(st.achievements || {}).length} prestaties` +
-    (summonCountFromSave(st) ? ` · ✦ ${summonCountFromSave(st)} summon` : '');
+    (summons ? ` · ✦ ${summons} summon` : '');
 }
 
 function updateSaveImportPreview(text) {
@@ -774,18 +775,6 @@ function resumeLastPlay() {
   }
 }
 
-function openGambleForLevel(n) {
-  try {
-    pendingAdvLevel = n;
-    lastGambleRoll = null;
-    UI.renderGamble(n);
-    applyGambleOnboarding();
-    UI.show('gambleScreen');
-  } catch (err) {
-    sfReportError('openGamble', err, 'Gok-scherm openen mislukt — kies level opnieuw');
-  }
-}
-
 function startAdventureFromGamble(skipGamble) {
   try {
     const level = pendingAdvLevel || save.unlocked || 1;
@@ -1072,17 +1061,6 @@ function onceResultTip(mode, kind, tip) {
   save.tipsSeen[key] = 1;
   persist();
   return tip;
-}
-
-function applyGambleOnboarding() {
-  ensureTipsSeen();
-  if (save.tipsSeen.gamble) return;
-  save.tipsSeen.gamble = 1;
-  persist();
-  const outEl = document.getElementById('gambleOutcome');
-  if (outEl && !lastGambleRoll) {
-    outEl.textContent = 'Eerste keer: som ≤5 = super-baas · som ≥9 = bondgenoot. Tik level = Gooi & start · lang = zonder gok.';
-  }
 }
 
 function applyIslandOnboarding() {

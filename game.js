@@ -132,9 +132,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.30';
+const APP_VERSION = '1.17.31';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 156;
+const SW_CACHE_REV = 157;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -487,8 +487,9 @@ function hitConfirmColor(kind) {
 function applyHitConfirmFx(game, x, y, spec) {
   if (!game || motionReduced()) return;
   const kind = spec && spec.kind ? spec.kind : 'punch';
-  spawnFxRing(game, x, y, hitConfirmColor(kind), fxLite() ? 6 : 9);
-  if (!fxLite()) game.burst(x, y, hitConfirmColor(kind), 3, { kind: 'spark', size: 2 });
+  const col = hitConfirmColor(kind);
+  spawnFxRing(game, x, y, col, fxLite() ? 6 : 9);
+  if (!fxLite()) game.burst(x, y, col, 3, { kind: 'spark', size: 2 });
 }
 
 function isCounterHitWindow(target) {
@@ -1337,8 +1338,9 @@ function saveDriftDetail() {
 
 function saveExportSummaryLine(s) {
   const st = s || save;
+  const summons = summonCountFromSave(st);
   return `Lv ${st.lvl} · unlock ${st.unlocked} · boek ${dexCountFromSave(st)} · kills ${dexTotalKillsFromSave(st)} · ${Object.keys(st.achievements || {}).length} prestaties` +
-    (summonCountFromSave(st) ? ` · ✦ ${summonCountFromSave(st)} summon` : '');
+    (summons ? ` · ✦ ${summons} summon` : '');
 }
 
 function updateSaveImportPreview(text) {
@@ -1660,18 +1662,6 @@ function resumeLastPlay() {
   }
 }
 
-function openGambleForLevel(n) {
-  try {
-    pendingAdvLevel = n;
-    lastGambleRoll = null;
-    UI.renderGamble(n);
-    applyGambleOnboarding();
-    UI.show('gambleScreen');
-  } catch (err) {
-    sfReportError('openGamble', err, 'Gok-scherm openen mislukt — kies level opnieuw');
-  }
-}
-
 function startAdventureFromGamble(skipGamble) {
   try {
     const level = pendingAdvLevel || save.unlocked || 1;
@@ -1958,17 +1948,6 @@ function onceResultTip(mode, kind, tip) {
   save.tipsSeen[key] = 1;
   persist();
   return tip;
-}
-
-function applyGambleOnboarding() {
-  ensureTipsSeen();
-  if (save.tipsSeen.gamble) return;
-  save.tipsSeen.gamble = 1;
-  persist();
-  const outEl = document.getElementById('gambleOutcome');
-  if (outEl && !lastGambleRoll) {
-    outEl.textContent = 'Eerste keer: som ≤5 = super-baas · som ≥9 = bondgenoot. Tik level = Gooi & start · lang = zonder gok.';
-  }
 }
 
 function applyIslandOnboarding() {
@@ -2606,7 +2585,7 @@ function rosterFlair(r) { return r.flair || r.tag; }
 /** Deel 2 — vijf saga-icon sticks (parodie per saga) */
 const SAGA_ICON_IDS = ['kiball', 'scrollkid', 'tidecrew', 'zipcape', 'dawnlance'];
 function sagaIconEntries() {
-  return SAGA_ICON_IDS.map(id => vsRosterEntry(id)).filter(r => SAGA_ICON_IDS.includes(r.id));
+  return SAGA_ICON_IDS.map(id => vsRosterEntry(id));
 }
 function pickCharPoolFiltered() {
   const filter = UI.charSagaFilter || 'all';
@@ -4681,9 +4660,18 @@ function makePad(side) {
   };
 }
 
-const _padP1Methods = makePad('p1');
+const Input = makePad('p1');
+const _padP1Methods = {
+  onDown: Input.onDown,
+  onMove: Input.onMove,
+  onUp: Input.onUp,
+  hardenPointers: Input.hardenPointers,
+  refreshJoyHold: Input.refreshJoyHold,
+  releaseAll: Input.releaseAll,
+  layout: Input.layout,
+};
 
-const Input = Object.assign(makePad('p1'), {
+Object.assign(Input, {
   dualMode: false,
   pointerPads: {},
   onDown(x, y, id) {
@@ -10074,6 +10062,10 @@ function hubTileStatLine(hub) {
   }
 }
 
+function volPct(v, d) {
+  return Math.round((Number(v ?? d)) * 100);
+}
+
 const UI = {
   screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
@@ -10542,7 +10534,6 @@ const UI = {
     for (const id of SAGA_ICON_IDS) {
       const r = vsRosterEntry(id);
       const ok = vsUnlocked(r);
-      const saga = vsSagaMeta(r.saga || 'scroll');
       const chip = document.createElement('button');
       chip.type = 'button';
       chip.className = 'char-icon-chip' + (ok ? '' : ' locked') +
@@ -10740,7 +10731,7 @@ const UI = {
     }
     const flowHost = document.getElementById('missionsFlowBar');
     if (flowHost) {
-      flowHost.innerHTML = dailyFlowBarHtml(dailyFlowStep());
+      flowHost.innerHTML = dailyFlowBarHtml(step);
     }
     const sum = document.getElementById('missionsSummary');
     if (sum) {
@@ -11408,14 +11399,13 @@ const UI = {
       exportHint.textContent = `Export bevat: ${saveExportSummaryLine()} · key ${SAVE_KEY}`;
     }
     bindSavePortPreview();
-    const pct = (v, d) => Math.round((Number(v ?? d)) * 100);
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
-    setVal('setMusicVol', pct(save.musicVol, 0.85));
-    setVal('setSfxVol', pct(save.sfxVol, 1));
+    setVal('setMusicVol', volPct(save.musicVol, 0.85));
+    setVal('setSfxVol', volPct(save.sfxVol, 1));
     const lblM = document.getElementById('setMusicVolLbl');
     const lblS = document.getElementById('setSfxVolLbl');
-    if (lblM) lblM.textContent = pct(save.musicVol, 0.85) + '%';
-    if (lblS) lblS.textContent = pct(save.sfxVol, 1) + '%';
+    if (lblM) lblM.textContent = volPct(save.musicVol, 0.85) + '%';
+    if (lblS) lblS.textContent = volPct(save.sfxVol, 1) + '%';
     ['setShake', 'setHaptics', 'setComboHud', 'setBigTouch', 'setReducedMotion', 'setLiteFx', 'setHighContrast'].forEach((id, i) => {
       const el = document.getElementById(id);
       if (!el) return;
@@ -11446,13 +11436,12 @@ const UI = {
   renderPauseToggles() {
     document.getElementById('pauseTogMusic')?.classList.toggle('off', !save.music);
     document.getElementById('pauseTogSfx')?.classList.toggle('off', !save.sfx);
-    const pct = (v, d) => Math.round((Number(v ?? d)) * 100);
     const pm = document.getElementById('pauseMusicVol');
     const ps = document.getElementById('pauseSfxVol');
     const pmL = document.getElementById('pauseMusicVolLbl');
     const psL = document.getElementById('pauseSfxVolLbl');
-    const mPct = pct(save.musicVol, 0.85);
-    const sPct = pct(save.sfxVol, 1);
+    const mPct = volPct(save.musicVol, 0.85);
+    const sPct = volPct(save.sfxVol, 1);
     if (pm && document.activeElement !== pm) pm.value = String(mPct);
     if (ps && document.activeElement !== ps) ps.value = String(sPct);
     if (pmL) pmL.textContent = mPct + '%';

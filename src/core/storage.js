@@ -3,9 +3,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.30';
+const APP_VERSION = '1.17.31';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 156;
+const SW_CACHE_REV = 157;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -358,8 +358,9 @@ function hitConfirmColor(kind) {
 function applyHitConfirmFx(game, x, y, spec) {
   if (!game || motionReduced()) return;
   const kind = spec && spec.kind ? spec.kind : 'punch';
-  spawnFxRing(game, x, y, hitConfirmColor(kind), fxLite() ? 6 : 9);
-  if (!fxLite()) game.burst(x, y, hitConfirmColor(kind), 3, { kind: 'spark', size: 2 });
+  const col = hitConfirmColor(kind);
+  spawnFxRing(game, x, y, col, fxLite() ? 6 : 9);
+  if (!fxLite()) game.burst(x, y, col, 3, { kind: 'spark', size: 2 });
 }
 
 function isCounterHitWindow(target) {

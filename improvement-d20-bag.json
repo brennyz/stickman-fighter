@@ -9,14 +9,13 @@
     10,
     15,
     16,
-    18,
-    20
+    18
   ],
   "lastRoll": {
-    "face": 3,
-    "category": "Versus 2P \u2014 split controls, rematch, char balance",
-    "rolledAt": "2026-07-24T18:49:17Z",
-    "remainingCount": 8,
+    "face": 20,
+    "category": "Code health \u2014 kleine refactors, geen gameplay-break",
+    "rolledAt": "2026-07-24T18:50:21Z",
+    "remainingCount": 7,
     "cycle": 3
   },
   "pending": null,
@@ -460,6 +459,13 @@
       "note": "beslissende ronde HUD, spawn timer, round-end countdown",
       "version": "1.17.30",
       "doneAt": "2026-07-24T18:49:56Z",
+      "cycle": 3
+    },
+    {
+      "face": 20,
+      "note": "dead gamble opener, single P1 pad, volPct, hitConfirm cache",
+      "version": "1.17.31",
+      "doneAt": "2026-07-24T18:52:55Z",
       "cycle": 3
     }
   ],
@@ -1519,6 +1525,13 @@
       "category": "Versus 2P \u2014 split controls, rematch, char balance",
       "rolledAt": "2026-07-24T18:49:17Z",
       "remainingCount": 8,
+      "cycle": 3
+    },
+    {
+      "face": 20,
+      "category": "Code health \u2014 kleine refactors, geen gameplay-break",
+      "rolledAt": "2026-07-24T18:50:21Z",
+      "remainingCount": 7,
       "cycle": 3
     }
   ],
