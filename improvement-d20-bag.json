@@ -6,7 +6,6 @@
     1,
     2,
     3,
-    5,
     8,
     9,
     11,
@@ -17,10 +16,10 @@
     18
   ],
   "lastRoll": {
-    "face": 19,
-    "category": "Muur & minigames \u2014 combo, timer, record",
-    "rolledAt": "2026-07-23T21:26:27Z",
-    "remainingCount": 12,
+    "face": 5,
+    "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
+    "rolledAt": "2026-07-24T08:27:00Z",
+    "remainingCount": 11,
     "cycle": 2
   },
   "pending": null,
@@ -296,6 +295,13 @@
       "note": "timer/combo/record hints + HUD labels",
       "version": "1.14.8",
       "doneAt": "2026-07-23T21:27:27Z",
+      "cycle": 2
+    },
+    {
+      "face": 5,
+      "note": "Adaptieve perf tier + resize coalesce + scenery caps + hidden pause",
+      "version": "1.15.6",
+      "doneAt": "2026-07-24T08:28:14Z",
       "cycle": 2
     }
   ],
@@ -839,6 +845,13 @@
       "category": "Muur & minigames \u2014 combo, timer, record",
       "rolledAt": "2026-07-23T21:26:27Z",
       "remainingCount": 12,
+      "cycle": 2
+    },
+    {
+      "face": 5,
+      "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
+      "rolledAt": "2026-07-24T08:27:00Z",
+      "remainingCount": 11,
       "cycle": 2
     }
   ]

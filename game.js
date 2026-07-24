@@ -14,23 +14,36 @@ const Perf = {
   emaMs: 16.7,
   frames: 0,
   tick(frameMs) {
-    this.emaMs = this.emaMs * 0.9 + frameMs * 0.1;
     this.frames++;
+    if (typeof document !== 'undefined' && document.hidden) return;
+    this.emaMs = this.emaMs * 0.9 + frameMs * 0.1;
     if (save.liteFx) {
-      if (this.tier !== 1) { this.tier = 1; scheduleResize(); }
+      if (this.tier !== 1) {
+        this.tier = 1;
+        try { SceneryArt.clearCache(); } catch (_) {}
+        scheduleResize();
+      }
       return;
     }
-    if (this.frames % 40 !== 0) return;
+    const sampleEvery = IS_TOUCH ? 24 : 40;
+    if (this.frames % sampleEvery !== 0) return;
     const prev = this.tier;
-    if (this.emaMs > 24) this.tier = Math.min(2, this.tier + 1);
+    const heavyMs = IS_TOUCH ? 22 : 24;
+    if (this.emaMs > heavyMs) this.tier = Math.min(2, this.tier + 1);
     else if (this.emaMs < 17.5 && this.tier > 0) this.tier -= 1;
-    if (prev !== this.tier) scheduleResize();
+    if (prev !== this.tier) {
+      try { SceneryArt.clearCache(); } catch (_) {}
+      scheduleResize();
+    }
     if (this.tier >= 2 && this.frames > 120 && !save.liteFx && !window.__sfLiteHint) {
       window.__sfLiteHint = 1;
       try { UI.toast('Traag op iPad? Instellingen → Lite FX', 4200); } catch (_) {}
     }
   },
   reset() { this.tier = 0; this.emaMs = 16.7; this.frames = 0; },
+  skipHeavyDraw() {
+    return state === 'play' && this.tier >= 2 && (this.frames & 1) === 0;
+  },
 };
 function fxCaps() {
   let mul = 1;
@@ -63,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.15.4';
+const APP_VERSION = '1.15.6';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 111;
+const SW_CACHE_REV = 113;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -3434,11 +3447,16 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 let W = innerWidth, H = innerHeight, DPR = 1;
 let resizeDebounce = null;
+let lastResizeKey = '';
 
 function resize() {
   const vp = viewportGameSize();
   syncViewportCssVars(vp);
-  DPR = Math.min(devicePixelRatio || 1, maxCanvasDpr());
+  const newDpr = Math.min(devicePixelRatio || 1, maxCanvasDpr());
+  const sizeKey = vp.w + 'x' + vp.h + '@' + newDpr + 't' + Perf.tier;
+  if (sizeKey === lastResizeKey) return;
+  lastResizeKey = sizeKey;
+  DPR = newDpr;
   W = vp.w;
   H = vp.h;
   canvas.width = W * DPR;
@@ -3453,11 +3471,14 @@ function resize() {
 }
 function scheduleResize() {
   if (resizeDebounce) clearTimeout(resizeDebounce);
-  const delay = IS_TOUCH ? 120 : 100;
+  const delay = IS_TOUCH ? 140 : 100;
   resizeDebounce = setTimeout(() => {
     resizeDebounce = null;
     if (window.__sfResizeT) cancelAnimationFrame(window.__sfResizeT);
-    window.__sfResizeT = requestAnimationFrame(resize);
+    window.__sfResizeT = requestAnimationFrame(() => {
+      window.__sfResizeT = null;
+      resize();
+    });
   }, delay);
 }
 addEventListener('resize', scheduleResize);
@@ -4845,6 +4866,8 @@ const SCENERY_SCALE = 3;
 const SceneryArt = {
   cache: {},
 
+  clearCache() { this.cache = {}; },
+
   get(themeName, kind) {
     const key = themeName + ':' + kind;
     if (key in this.cache) return this.cache[key];
@@ -5054,9 +5077,9 @@ const SceneryArt = {
 
 /** Weer per thema (art-upgrade 4/4) — stateless deeltjes uit formules. */
 function drawThemeWeather(c, themeName, t, ground, scroll) {
-  if (fxLite() || motionReduced()) return;
+  if (fxLite() || motionReduced() || Perf.tier >= 2) return;
   const wrapW = (v, span) => ((v % span) + span) % span;
-  const n = 11;
+  const n = Perf.tier >= 1 ? 6 : 11;
   c.save();
   for (let i = 0; i < n; i++) {
     const seed = i * 137.5 + 31;
@@ -5160,7 +5183,8 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
 
   if (themeName === 'grot' || themeName === 'cyber') {
     c.fillStyle = 'rgba(255,255,255,.5)';
-    for (let i = 0; i < 26; i++) {
+    const starN = Perf.tier >= 1 ? 14 : 26;
+    for (let i = 0; i < starN; i++) {
       const x = wrap(i * 137.5 - scroll * 0.08, W), y = (i * 61.3) % (ground * 0.7);
       const tw = 0.5 + Math.sin(t * 2 + i) * 0.5;
       c.globalAlpha = 0.25 + tw * 0.5;
@@ -5173,7 +5197,8 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
     if (cloud) {
       const prev = c.imageSmoothingEnabled;
       c.imageSmoothingEnabled = false;
-      for (let i = 0; i < 4; i++) {
+      const cloudN = Perf.tier >= 1 ? 2 : 4;
+      for (let i = 0; i < cloudN; i++) {
         const s = (i % 2 ? 2.6 : 3.4);
         const cw = cloud.width * s, chh = cloud.height * s;
         const x = wrap(i * 260 + t * 10 - scroll * 0.15, W + 240) - 120;
@@ -5187,7 +5212,7 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   }
   // pixel-art skyline per thema (art-upgrade 1/4) — traagste parallax-laag
   const farTile = SceneryArt.get(themeName, 'far');
-  if (farTile) {
+  if (farTile && Perf.tier < 2) {
     drawSceneryTile(c, farTile, ground - 52 - farTile.height * SCENERY_SCALE, scroll, 0.18);
   }
   // heuvels (parallax: verre laag traag, nabije laag sneller)
@@ -5209,7 +5234,8 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
     if (tree) {
       const prev = c.imageSmoothingEnabled;
       c.imageSmoothingEnabled = false;
-      for (let i = 0; i < 5; i++) {
+      const treeN = Perf.tier >= 2 ? 3 : (Perf.tier >= 1 ? 4 : 5);
+      for (let i = 0; i < treeN; i++) {
         const x = dX((i * 0.22 + 0.06) * dSpan);
         const s = i % 2 ? 3.6 : 4.6;
         const twd = tree.width * s, thg = tree.height * s;
@@ -9042,7 +9068,7 @@ function bindSettingsControls() {
       if (save[key] !== false) save[key] = false;
       else save[key] = true;
       if (key === 'reducedMotion' && save.reducedMotion) save.shake = false;
-      if (key === 'liteFx') { Perf.reset(); scheduleResize(); }
+      if (key === 'liteFx') { Perf.reset(); lastResizeKey = ''; try { SceneryArt.clearCache(); } catch (_) {} scheduleResize(); }
       if (key === 'reducedMotion' || key === 'highContrast') syncA11yClasses();
       persist();
       UI.renderSettings();
@@ -9369,10 +9395,12 @@ function loop(now) {
   requestAnimationFrame(loop);
   try {
     if (!ctx || !canvas) return;
+    const hidden = typeof document !== 'undefined' && document.hidden;
     const dt = Math.min((now - lastTime) / 1000, 0.05);
     if (!(dt >= 0) || dt > 1) { lastTime = now; return; }
     Perf.tick(dt * 1000);
     lastTime = now;
+    if (hidden) return;
     if (state === 'play' && game) {
       try {
         game.update(dt);
@@ -9401,7 +9429,7 @@ function loop(now) {
         }
       }
     }
-    if (game && typeof game.draw === 'function') {
+    if (game && typeof game.draw === 'function' && !Perf.skipHeavyDraw()) {
       try {
         game.draw(ctx);
       } catch (drawErr) {
@@ -9413,7 +9441,7 @@ function loop(now) {
         }
         return;
       }
-    } else {
+    } else if (!Perf.skipHeavyDraw()) {
       // Backdrop-fout mag nooit schermen sluiten — alleen vlak vangnet tekenen.
       try {
         drawMenuBackdrop(ctx, menuAnimT);

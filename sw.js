@@ -1,5 +1,5 @@
 /* Stickman Fighter — hardened offline cache (PWA) */
-const CACHE = 'stickfighter-app-v111';
+const CACHE = 'stickfighter-app-v113';
 const ASSETS = [
   './',
   './index.html',
