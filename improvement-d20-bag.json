@@ -3,14 +3,13 @@
   "cyclesCompleted": 2,
   "rollFirst": [],
   "remaining": [
-    3,
     2
   ],
   "lastRoll": {
-    "face": 18,
-    "category": "Character select \u2014 roster UI, stats, random duo",
-    "rolledAt": "2026-07-24T15:36:43Z",
-    "remainingCount": 2,
+    "face": 3,
+    "category": "Versus 2P \u2014 split controls, rematch, char balance",
+    "rolledAt": "2026-07-24T15:37:52Z",
+    "remainingCount": 1,
     "cycle": 2
   },
   "pending": null,
@@ -356,6 +355,13 @@
       "note": "stat delta hover preview matchup hints",
       "version": "1.17.5",
       "doneAt": "2026-07-24T15:37:30Z",
+      "cycle": 2
+    },
+    {
+      "face": 3,
+      "note": "vs HUD timer HP% spawn log pause restart",
+      "version": "1.17.6",
+      "doneAt": "2026-07-24T15:38:47Z",
       "cycle": 2
     }
   ],
@@ -1318,18 +1324,16 @@
       "rolledAt": "2026-07-24T15:36:43Z",
       "remainingCount": 2,
       "cycle": 2
-    }
-  ],
-  "rollBacklog": [
+    },
     {
       "face": 3,
       "category": "Versus 2P \u2014 split controls, rematch, char balance",
-      "focus": "HUD/rematch/spawn \u2014 geen roster dmg-herbalancering.",
-      "rolledAt": "2026-07-24T15:25:28Z",
-      "queuedAt": "2026-07-24T15:29:21Z",
-      "reason": "backfill",
+      "rolledAt": "2026-07-24T15:37:52Z",
+      "remainingCount": 1,
       "cycle": 2
-    },
+    }
+  ],
+  "rollBacklog": [
     {
       "face": 2,
       "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",

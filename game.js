@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.5';
+const APP_VERSION = '1.17.6';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 132;
+const SW_CACHE_REV = 133;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -6422,9 +6422,9 @@ class Game {
       applyVsArenaBounds(this);
       Input.dualMode = true;
       Input.layout(W, H);
-      this.player.x = vsSpawnX(1);
+      this.player.x = clampFighterX(this.player, this, vsSpawnX(1));
       this.player.y = this.ground;
-      this.p2.x = vsSpawnX(2);
+      this.p2.x = clampFighterX(this.p2, this, vsSpawnX(2));
       this.p2.y = this.ground;
     }
     if (this.mode === 'wall') this.layoutWall(false);
@@ -7029,6 +7029,7 @@ class Game {
     this.roundsP1 = 0;
     this.roundsP2 = 0;
     this.round = 0;
+    this.vsRoundLog = [];
     this.p1Pick = normalizeVsPick(opts.p1 || vsSelect.p1, 'hero');
     this.p2Pick = normalizeVsPick(opts.p2 || vsSelect.p2, 'rabbit');
     vsSelect.p1 = this.p1Pick;
@@ -7072,11 +7073,17 @@ class Game {
         else if (p1d && !p2d) p1Win = false;
         else p1Win = (this.player.hp / this.player.maxhp) >= (this.p2.hp / this.p2.maxhp);
         if (p1Win) this.roundsP1++; else this.roundsP2++;
+        this.vsRoundLog = this.vsRoundLog || [];
+        this.vsRoundLog.push(p1Win ? 'p1' : 'p2');
         this.phase = 'roundend';
         this.phaseT = 0;
         this.inputLocked = true;
         let msg = p1Win ? 'P1 WINT RONDE!' : 'P2 WINT RONDE!';
-        if (timedOut) msg = `TIME! · ${msg}`;
+        if (timedOut) {
+          const hp1 = Math.round(this.player.hp / this.player.maxhp * 100);
+          const hp2 = Math.round(this.p2.hp / this.p2.maxhp * 100);
+          msg = `TIME! ${hp1}% vs ${hp2}% · ${msg}`;
+        }
         this.banner(msg, 1.5, p1Win ? '#7cf5ff' : '#ffb0b8', 38);
         AudioSys.sfx(p1Win ? 'win' : 'lose');
       }
@@ -7100,7 +7107,8 @@ class Game {
     this.grantXP(p1Win ? 35 : 20);
     setTimeout(() => UI.showResult(p1Win, {
       title: p1Win ? 'SPELER 1 WINT!' : 'SPELER 2 WINT!',
-      detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}`,
+      detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}` +
+        ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : ''),
       xp: this.sessionXP, mode: 'versus', win: p1Win, p1: this.p1Pick, p2: this.p2Pick,
       tip: 'Opnieuw = rematch · Pauze → Herstart match (0-0)',
     }), 1200);
@@ -7809,6 +7817,22 @@ class Game {
       c.lineTo(this.vsMid, H);
       c.stroke();
       c.setLineDash([]);
+      if (this.phase === 'intro') {
+        const sx1 = vsSpawnX(1);
+        const sx2 = vsSpawnX(2);
+        c.setLineDash([4, 8]);
+        c.strokeStyle = 'rgba(124,245,255,.35)';
+        c.beginPath(); c.moveTo(sx1, this.ground - 72); c.lineTo(sx1, H); c.stroke();
+        c.strokeStyle = 'rgba(255,176,184,.35)';
+        c.beginPath(); c.moveTo(sx2, this.ground - 72); c.lineTo(sx2, H); c.stroke();
+        c.setLineDash([]);
+        c.font = '800 9px sans-serif';
+        c.fillStyle = 'rgba(124,245,255,.65)';
+        c.textAlign = 'center';
+        c.fillText('P1 spawn', sx1, this.ground - 78);
+        c.fillStyle = 'rgba(255,176,184,.65)';
+        c.fillText('P2 spawn', sx2, this.ground - 78);
+      }
       c.font = '800 10px sans-serif';
       c.fillStyle = 'rgba(124,245,255,.5)';
       c.textAlign = 'left';
@@ -8815,7 +8839,8 @@ class Game {
       c.fillStyle = p.hp / p.maxhp > 0.35 ? '#6ee06e' : '#ff6b6b';
       this.rr(c, bx, byVs, half * clamp(p.hp / p.maxhp, 0, 1), 14, 6); c.fill();
       c.font = '800 11px sans-serif'; c.textAlign = 'left'; c.fillStyle = '#7cf5ff';
-      c.fillText(`P1 · ${name1}`, bx, byVs + 30);
+      const hp1Pct = Math.round(clamp(p.hp / p.maxhp, 0, 1) * 100);
+      c.fillText(`P1 · ${name1} · ${hp1Pct}%`, bx, byVs + 30);
       c.fillStyle = '#333c55'; this.rr(c, bx, byVs + 34, half, 5, 3); c.fill();
       this.drawSuperMeterFill(c, bx, byVs + 34, half, 5, p.energy / 100, fighterJutsuKind(p), this.t);
       drawWeaponStylePips(c, bx + 8, byVs + 44, p);
@@ -8826,7 +8851,8 @@ class Game {
       const frac2 = clamp(p2.hp / p2.maxhp, 0, 1);
       this.rr(c, W - 16 - half * frac2, byVs, half * frac2, 14, 6); c.fill();
       c.textAlign = 'right'; c.fillStyle = '#ffb0b8';
-      c.fillText(`${name2} · P2`, W - 20, byVs + 30);
+      const hp2Pct = Math.round(frac2 * 100);
+      c.fillText(`${hp2Pct}% · ${name2} · P2`, W - 20, byVs + 30);
       c.fillStyle = '#333c55'; this.rr(c, W - half - 16, byVs + 34, half, 5, 3); c.fill();
       this.drawSuperMeterFill(c, W - half - 16, byVs + 34, half, 5, p2.energy / 100, fighterJutsuKind(p2), this.t);
       drawWeaponStylePips(c, W - half - 8, byVs + 44, p2);
@@ -8848,6 +8874,19 @@ class Game {
       }
       c.font = '800 12px sans-serif'; c.fillStyle = 'rgba(255,255,255,.75)';
       c.fillText(`Ronde ${this.round} · eerst 2 wint · ${this.roundsP1}-${this.roundsP2}`, W / 2, timerY + 18);
+      const timerBarW = Math.min(160, W * 0.28);
+      const timerFrac = clamp(this.roundTimer / 99, 0, 1);
+      c.fillStyle = 'rgba(0,0,0,.35)';
+      this.rr(c, W / 2 - timerBarW / 2, timerY + 24, timerBarW, 5, 3);
+      c.fill();
+      c.fillStyle = urgent ? '#ff6b6b' : '#7cf5ff';
+      this.rr(c, W / 2 - timerBarW / 2, timerY + 24, timerBarW * timerFrac, 5, 3);
+      c.fill();
+      if (this.roundTimer < 12 && this.phase === 'fight') {
+        c.font = '700 10px sans-serif';
+        c.fillStyle = 'rgba(255,215,94,.85)';
+        c.fillText('TIME = hoogste HP % wint', W / 2, timerY + 38);
+      }
       const mp1 = this.roundsP1 === 1 && this.roundsP2 < 2;
       const mp2 = this.roundsP2 === 1 && this.roundsP1 < 2;
       for (let i = 0; i < 2; i++) {
@@ -9151,7 +9190,7 @@ const UI = {
     const sub = document.querySelector('#pauseScreen .subtitle');
     const vsRestart = document.getElementById('pauseVsRestart');
     if (vsRestart) {
-      vsRestart.style.display = (game?.mode === 'versus' && state === 'play') ? 'flex' : 'none';
+      vsRestart.style.display = (game?.mode === 'versus' && (state === 'play' || state === 'pause')) ? 'flex' : 'none';
     }
     if (!sub) return;
     if (game?.mode === 'versus' && game.p2) {
@@ -9307,6 +9346,12 @@ const UI = {
     initCharSelectChrome();
     this.charPickStep = this.charPickStep || 1;
     const filter = this.charSagaFilter || 'all';
+    if (this.charPreviewHoverId) {
+      const h = vsRosterEntry(this.charPreviewHoverId);
+      if (!vsUnlocked(h) || (filter !== 'all' && (h.saga || 'scroll') !== filter)) {
+        this.charPreviewHoverId = null;
+      }
+    }
     const sagaMeta = vsSagaMeta(filter);
     const stepEl = document.getElementById('charPickStep');
     const stepBadge = document.getElementById('charPickStepBadge');
