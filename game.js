@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.16.2';
+const APP_VERSION = '1.16.3';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 119;
+const SW_CACHE_REV = 120;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1773,14 +1773,18 @@ function weaponMoveFamily(id) {
 function weaponMoveDef(id, idx) {
   const fam = weaponMoveFamily(id);
   if (!fam) return null;
-  const set = WEAPON_MOVE_FAMILIES[fam];
-  return set.moves[(idx || 0) % 3];
+  const set = WEAPON_MOVE_FAMILIES[fam] || WEAPON_MOVE_FAMILIES.slash;
+  const moves = set && set.moves;
+  if (!moves || !moves.length) return WEAPON_MOVE_FAMILIES.slash.moves[0];
+  const n = ((idx || 0) % 3 + 3) % 3;
+  return moves[n] || moves[0];
 }
 
 function weaponMoveLabels(id) {
   const fam = weaponMoveFamily(id);
   if (!fam) return null;
-  return WEAPON_MOVE_FAMILIES[fam].labels;
+  const set = WEAPON_MOVE_FAMILIES[fam] || WEAPON_MOVE_FAMILIES.slash;
+  return set.labels || WEAPON_MOVE_FAMILIES.slash.labels;
 }
 
 function applyWeaponMovePose(P, ext, move) {
@@ -1814,6 +1818,41 @@ function applyWeaponMovePose(P, ext, move) {
 }
 
 const WEAPON_COMBO_WINDOW = 1.38;
+const WEAPON_COMBO_GRACE = 0.6;
+
+function resetWeaponCombo(f) {
+  if (!f) return;
+  f.weaponComboIdx = 0;
+  f.weaponComboT = 0;
+  f._lastWeaponKind = null;
+  f._weaponComboPrimed = false;
+}
+
+function bumpWeaponComboWindow(f, bonus) {
+  if (!f || f.weaponComboT <= 0) return;
+  f.weaponComboT = Math.min(WEAPON_COMBO_WINDOW + 0.32, f.weaponComboT + (bonus || 0.14));
+}
+
+function sanitizeWeaponSpec(spec) {
+  if (!spec) return spec;
+  spec.windup = Math.max(0.045, spec.windup || 0.1);
+  spec.active = Math.max(0.04, spec.active || 0.08);
+  spec.recover = Math.max(0.06, spec.recover || 0.12);
+  spec.range = Math.max(24, spec.range || 40);
+  spec.r = Math.max(18, spec.r || 24);
+  if (spec.moveHitY != null) spec.moveHitY = clamp(spec.moveHitY, -32, 24);
+  return spec;
+}
+
+function drawWeaponStylePips(c, x, y, fighter) {
+  if (!fighter || !weaponMoveFamily(fighter.weapon?.id) || fighter.weaponComboT <= 0) return;
+  for (let i = 0; i < 3; i++) {
+    c.fillStyle = i <= fighter.weaponComboIdx ? '#ffd75e' : 'rgba(255,255,255,.22)';
+    c.beginPath();
+    c.arc(x + i * 13, y, 3.5, 0, TAU);
+    c.fill();
+  }
+}
 
 /* ============================== STIJLEN ================================ */
 const STYLES = [
@@ -2152,9 +2191,7 @@ function resetVsFighterRound(f, entry, ground, slot) {
   f.hitFlashT = 0;
   f.afterimages = [];
   f.dashCd = 0;
-  f.weaponComboIdx = 0;
-  f.weaponComboT = 0;
-  f._lastWeaponKind = null;
+  resetWeaponCombo(f);
 }
 
 let vsSelect = { p1: 'hero', p2: 'rabbit' };
@@ -3806,9 +3843,12 @@ function seg(x, y, ang, len) { return [x + Math.cos(ang) * len, y + Math.sin(ang
 function drawWeaponShape(c, id, spin, moveIdx) {
   // getekend langs +x vanaf de hand (0,0); c is al getransleerd/geroteerd
   c.lineCap = 'round';
-  const mi = moveIdx || 0;
-  if (mi === 1) c.rotate(0.22);
-  else if (mi === 2) c.rotate(-0.12);
+  const mi = ((moveIdx || 0) % 3 + 3) % 3;
+  if (mi) {
+    c.save();
+    if (mi === 1) c.rotate(0.22);
+    else if (mi === 2) c.rotate(-0.12);
+  }
   switch (id) {
     case 'zwaard':
       c.strokeStyle = '#c9d6e8'; c.lineWidth = 5; c.beginPath(); c.moveTo(4, 0); c.lineTo(46, 0); c.stroke();
@@ -4009,6 +4049,7 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.closePath(); c.fill();
       break;
   }
+  if (mi) c.restore();
 }
 
 function fxLite() {
@@ -4135,7 +4176,7 @@ class Fighter {
       ai: null, aiTimer: 0, aiMove: 0, aiCd: 2,
       name: 'Stickman',
       substCd: 0, invulnT: 0, hitFlashT: 0, afterimages: [], dashCd: 0,
-      weaponComboIdx: 0, weaponComboT: 0, _lastWeaponKind: null,
+      weaponComboIdx: 0, weaponComboT: 0, _lastWeaponKind: null, _weaponComboPrimed: false,
       style: null, playerSlot: 0, vsSpecial: 'rasengan',
     }, opts);
   }
@@ -4156,21 +4197,22 @@ class Fighter {
         spec = { kind, windup: 0.11, active: 0.11, recover: 0.2,  range: 50, r: 26, dmg: this.baseDmg * 1.1, kb: 340 };
         break;
       case 'weapon': {
-        const moveIdx = this.weaponComboIdx || 0;
-        const move = weaponMoveDef(w.id, moveIdx);
+        const wid = (w && w.id) || 'vuist';
+        const moveIdx = clamp(((this.weaponComboIdx || 0) % 3 + 3) % 3, 0, 2);
+        const move = weaponMoveDef(wid, moveIdx);
         spec = {
-          kind, windup: 0.13 / w.speed, active: 0.1 / w.speed, recover: 0.2 / w.speed,
-          range: w.range + 14, r: 26 + w.range * 0.22, dmg: this.baseDmg * w.dmg, kb: 260,
+          kind, windup: 0.13 / (w.speed || 1), active: 0.1 / (w.speed || 1), recover: 0.2 / (w.speed || 1),
+          range: (w.range || 40) + 14, r: 26 + (w.range || 40) * 0.22, dmg: this.baseDmg * (w.dmg || 1), kb: 260,
           moveIdx, move,
         };
         if (move) {
-          spec.windup *= move.windupMul;
-          spec.active *= move.activeMul;
-          spec.range *= move.rangeMul;
-          spec.r *= move.rangeMul;
-          spec.dmg *= move.dmgMul;
-          spec.kb *= move.kbMul;
-          spec.moveHitY = move.hitY;
+          spec.windup *= move.windupMul || 1;
+          spec.active *= move.activeMul || 1;
+          spec.range *= move.rangeMul || 1;
+          spec.r *= move.rangeMul || 1;
+          spec.dmg *= move.dmgMul || 1;
+          spec.kb *= move.kbMul || 1;
+          spec.moveHitY = move.hitY || 0;
         }
         break;
       }
@@ -4186,6 +4228,7 @@ class Fighter {
       default:
         return null;
     }
+    if (spec && spec.kind === 'weapon') spec = sanitizeWeaponSpec(spec);
     return applySignatureToSpec(this, spec);
   }
 
@@ -4208,19 +4251,22 @@ class Fighter {
       AudioSys.sfx(weaponSwingSfx(this.weapon, kind));
     }
     if (kind === 'weapon' && !isThrowWeapon(this.weapon.id)) {
-      if (this.weaponComboT > 0 && this._lastWeaponKind === this.weapon.id) {
+      const sameWep = this._lastWeaponKind === this.weapon.id;
+      if (this._weaponComboPrimed && this.weaponComboT > 0 && sameWep) {
         this.weaponComboIdx = (this.weaponComboIdx + 1) % 3;
       } else {
         this.weaponComboIdx = 0;
       }
+      this._weaponComboPrimed = false;
       this.weaponComboT = WEAPON_COMBO_WINDOW;
       this._lastWeaponKind = this.weapon.id;
     } else if (kind !== 'weapon') {
-      this.weaponComboIdx = 0;
-      this.weaponComboT = 0;
-      this._lastWeaponKind = null;
+      resetWeaponCombo(this);
     }
     this.attack = Object.assign({ t: 0, hasHit: false, fired: false }, this.attackSpec(kind));
+    if (this.attack && this.attack.kind === 'weapon' && this.attack.move) {
+      this.attack.moveIdx = this.weaponComboIdx;
+    }
     this._aimAtAttack = fighterAimNorm(this);
     if (this.isRobot && kind === 'special') this.attack.windup = 0.58;
     this.blocking = false;
@@ -4228,6 +4274,7 @@ class Fighter {
 
   doSubstitution(game) {
     if (!this.alive || this.substCd > 0 || this.attack || this.invulnT > 0) return;
+    resetWeaponCombo(this);
     this.substCd = 1.35;
     this.invulnT = 0.28;
     AudioSys.sfx('subst');
@@ -4246,6 +4293,7 @@ class Fighter {
 
   doDash(game, dir) {
     if (!this.alive || this.dashCd > 0 || this.attack || Math.abs(dir) < 0.1) return;
+    resetWeaponCombo(this);
     this.dashCd = 0.85;
     this.invulnT = Math.max(this.invulnT, 0.14);
     AudioSys.sfx('dash');
@@ -4329,6 +4377,7 @@ class Fighter {
     this.animT += dt;
     if (!this.alive) {
       this.deadT += dt;
+      resetWeaponCombo(this);
       this.vy += 1600 * dt; this.y += this.vy * dt;
       if (this.y > game.ground) { this.y = game.ground; this.vy = 0; }
       return;
@@ -4362,10 +4411,7 @@ class Fighter {
     if (this.dashCd > 0) this.dashCd -= dt;
     if (this.weaponComboT > 0) {
       this.weaponComboT -= dt;
-      if (this.weaponComboT <= 0) {
-        this.weaponComboIdx = 0;
-        this._lastWeaponKind = null;
-      }
+      if (this.weaponComboT <= 0) resetWeaponCombo(this);
     }
     if (this.invulnT > 0) this.invulnT -= dt;
     if (this.hitFlashT > 0) this.hitFlashT -= dt;
@@ -4415,7 +4461,13 @@ class Fighter {
       if (a.kind !== 'special' && !a.hasHit && a.t >= a.windup && a.t <= a.windup + a.active) {
         if (game.tryMelee(this, a)) a.hasHit = true;
       }
-      if (a.t >= a.windup + a.active + a.recover) this.attack = null;
+      if (a.t >= a.windup + a.active + a.recover) {
+        if (a.kind === 'weapon' && !isThrowWeapon(this.weapon.id)) {
+          this._weaponComboPrimed = true;
+          this.weaponComboT = Math.max(this.weaponComboT, WEAPON_COMBO_WINDOW * WEAPON_COMBO_GRACE);
+        }
+        this.attack = null;
+      }
     }
 
     // chakra laadt sneller bij combo-gevoel (in beweging/gevecht)
@@ -4475,9 +4527,7 @@ class Fighter {
     this.vy = Math.min(this.vy, -120);
     if (this.isPlayer || this.playerSlot) {
       this.invulnT = Math.max(this.invulnT, dmg >= 18 ? 0.26 : 0.22);
-      this.weaponComboIdx = 0;
-      this.weaponComboT = 0;
-      this._lastWeaponKind = null;
+      resetWeaponCombo(this);
       if (game) applyHitStop(game, { kind: 'punch', dmg }, { playerHurt: true, heavy: dmg >= 18 });
     }
     if (this.isPlayer) this.energy = clamp(this.energy + 4, 0, 100);
@@ -6198,9 +6248,11 @@ class Game {
     this.player.hp = this.player.maxhp = st.maxhp;
     this.player.x = W * 0.25; this.player.y = this.ground; this.player.vx = 0; this.player.face = 1;
     this.player.attack = null; this.player.hurtT = 0; this.player.energy = 30;
+    resetWeaponCombo(this.player);
     this.robot.hp = this.robot.maxhp = this.robotMaxHp;
     this.robot.x = W * 0.75; this.robot.y = this.ground; this.robot.vx = 0; this.robot.face = -1;
     this.robot.attack = null; this.robot.hurtT = 0; this.robot.deadT = 0;
+    resetWeaponCombo(this.robot);
     this.phase = 'intro'; this.phaseT = 0;
     this.inputLocked = true;
     this.trainLaserCd = rand(4, 7);
@@ -6796,7 +6848,8 @@ class Game {
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         if (spec.dmg >= 18) this.shake(3, 0.11);
-        if (f.isPlayer && spec.kind === 'weapon' && spec.moveIdx === 2 && !isThrowWeapon(f.weapon.id)) {
+        if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.12);
+        if ((f.isPlayer || f.playerSlot) && spec.kind === 'weapon' && spec.moveIdx === 2 && !isThrowWeapon(f.weapon.id)) {
           const labels = weaponMoveLabels(f.weapon.id);
           if (labels) this.floater(f.x + f.face * 24, f.y - 128, labels[2], '#ffd75e', 13);
         }
@@ -6825,6 +6878,7 @@ class Game {
         this.burst(tgt.bodyX, tgt.bodyY, col, 7);
         f.energy = clamp(f.energy + 9, 0, 100);
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
+        if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
         this.shake(spec.dmg > 20 ? 4 : 3, 0.12);
         if ((f.isPlayer || f.playerSlot) && save.haptics !== false) haptic(5);
         hit = true;
@@ -7712,14 +7766,7 @@ class Game {
         c.stroke();
       }
       const wFam = weaponMoveFamily(p.weapon.id);
-      if (wFam && p.weaponComboT > 0) {
-        for (let i = 0; i < 3; i++) {
-          c.fillStyle = i <= p.weaponComboIdx ? '#ffd75e' : 'rgba(255,255,255,.22)';
-          c.beginPath();
-          c.arc(bx + 10 + i * 13, by + 38, 3.5, 0, TAU);
-          c.fill();
-        }
-      }
+      if (wFam) drawWeaponStylePips(c, bx + 10, by + 38, p);
     }
 
     c.textAlign = 'center';
@@ -8004,6 +8051,7 @@ class Game {
       c.fillText(`P1 · ${name1}`, bx, byVs + 30);
       c.fillStyle = '#333c55'; this.rr(c, bx, byVs + 34, half, 5, 3); c.fill();
       this.drawSuperMeterFill(c, bx, byVs + 34, half, 5, p.energy / 100, fighterJutsuKind(p), this.t);
+      drawWeaponStylePips(c, bx + 8, byVs + 44, p);
 
       c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, W - half - 20, byVs - 4, half + 8, 44, 10); c.fill();
       c.fillStyle = '#333c55'; this.rr(c, W - half - 16, byVs, half, 14, 6); c.fill();
@@ -8014,6 +8062,7 @@ class Game {
       c.fillText(`${name2} · P2`, W - 20, byVs + 30);
       c.fillStyle = '#333c55'; this.rr(c, W - half - 16, byVs + 34, half, 5, 3); c.fill();
       this.drawSuperMeterFill(c, W - half - 16, byVs + 34, half, 5, p2.energy / 100, fighterJutsuKind(p2), this.t);
+      drawWeaponStylePips(c, W - half - 8, byVs + 44, p2);
 
       c.textAlign = 'center';
       const tLeft = Math.ceil(Math.max(0, this.roundTimer));
