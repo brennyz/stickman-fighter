@@ -13,8 +13,8 @@ Elk gezicht = één thema. **Roll** = kies willekeurig uit wat nog in de zak zit
 ```bash
 chmod +x scripts/roll-improvement-d20.sh scripts/mark-d20-done.sh
 ./scripts/roll-improvement-d20.sh status      # zak + PENDING
-./scripts/roll-improvement-d20.sh            # roll (preflight + pending-lock)
-./scripts/roll-improvement-d20.sh unroll     # pending terug in zak
+./scripts/roll-improvement-d20.sh            # roll (preflight; open pending → zak + nieuwe roll)
+./scripts/roll-improvement-d20.sh unroll     # pending terug in zak (geen nieuwe roll)
 ./scripts/roll-improvement-d20.sh preflight  # node --check + smoke load
 ./scripts/mark-d20-done.sh 7 "korte note" 1.8.9
 ```
@@ -104,6 +104,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-24 | — | **d20 roll UX:** `./scripts/roll-improvement-d20.sh` blokkeert niet meer op open pending — zet vorige face terug in zak en rolt direct opnieuw. `unroll` = terug zonder roll. |
 | 2026-07-24 | — | **User: harden movement.** `applyFighterMove` — snappy keyboard-turn (2.4× accel), joy curve, air control, lichte beweging tijdens hurt, snellere stop. v1.17.0 / SW v127. |
 | 2026-07-24 | — | **User fix: muur + joystick.** Muur-modus: speler mag langs hele muur lopen (geen onzichtbare muur vóór rechter stenen). Touch-joy: vasthouden werkt — geen stale-release meer bij stil vinger. v1.16.9 / SW v126. |
 | 2026-07-24 | — | **User: KETS-BAM ontsnapping + strakkere loop.** Omringd/stunlock → midden-symbool (tik / **E**): shockwave schade + knockback, ~1s super-armor (geen stun). Snappere links/rechts turn (accel + momentum-cut). v1.16.8 / SW v125. |
@@ -209,8 +210,8 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 1. Open **IMPROVEMENT.md** (dit bestand).
 2. Run **`./scripts/roll-improvement-d20.sh status`** — check PENDING.
-3. Run **`./scripts/roll-improvement-d20.sh`** (of user zegt “roll”) — preflight + één face.
-4. Werk **alleen** dat thema af — kleine diff. Bij vergissing: `unroll`.
+3. Run **`./scripts/roll-improvement-d20.sh`** (of user zegt “roll”) — preflight + één face (open pending gaat terug in zak).
+4. Werk **alleen** dat thema af — kleine diff. Wil je pending houden zonder te rollen: `unroll` na per ongeluk rollen.
 5. Checklist + **`node --check game.js`** + **`node scripts/smoke-load-game.mjs`**.
 6. `./scripts/mark-d20-done.sh <d#> "note" <version>` · Agent log · commit bag.
 7. Push naar **main** → Pages update (geen tunnel nodig).

@@ -2,11 +2,11 @@
 # Ralph Wiggum d20 v3 — roll één verbeter-thema (geen herhaling binnen cyclus).
 #
 # Commands:
-#   ./scripts/roll-improvement-d20.sh           # roll (blokkeert als pending open)
+#   ./scripts/roll-improvement-d20.sh           # roll (preflight; open pending → terug in zak + nieuwe roll)
 #   ./scripts/roll-improvement-d20.sh status
 #   ./scripts/roll-improvement-d20.sh history
-#   ./scripts/roll-improvement-d20.sh unroll    # zet pending terug in de zak
-#   ./scripts/roll-improvement-d20.sh force     # roll ondanks open pending
+#   ./scripts/roll-improvement-d20.sh unroll    # zet pending terug in de zak (geen nieuwe roll)
+#   ./scripts/roll-improvement-d20.sh force     # alias van roll (pending → zak + roll)
 #   ./scripts/roll-improvement-d20.sh preflight # node --check + smoke load
 #
 set -euo pipefail
@@ -241,26 +241,14 @@ if mode not in ("roll", "force"):
     sys.exit(1)
 
 pending = bag.get("pending")
-if pending and mode != "force":
-    face = pending.get("face")
-    print("", file=sys.stderr)
-    print("BLOKKEERD: open PENDING d" + str(face) + " — " + str(pending.get("category", "")), file=sys.stderr)
-    print("Focus: " + focus.get(int(face), ""), file=sys.stderr)
-    print("Maak af met mark-d20-done.sh, of: ./scripts/roll-improvement-d20.sh unroll", file=sys.stderr)
-    print("Forceer nieuwe roll: ./scripts/roll-improvement-d20.sh force", file=sys.stderr)
-    print("", file=sys.stderr)
-    sys.exit(3)
-
-if pending and mode == "force":
-    # Pending blijft open tenzij we 'm terugzetten — force markeert oude pending als verloren?
-    # Veiliger: stop force als pending bestaat en eis unroll. Of: auto-unroll warning.
+if pending and mode in ("roll", "force"):
     old = int(pending["face"])
     rem = [int(x) for x in bag.get("remaining") or []]
     if old not in rem:
         rem.append(old)
     bag["remaining"] = rem
     bag["pending"] = None
-    print("FORCE: oude pending d" + str(old) + " terug in zak vóór nieuwe roll.", file=sys.stderr)
+    print("Open pending d" + str(old) + " terug in zak — nieuwe roll.", file=sys.stderr)
 
 rem = [int(x) for x in bag.get("remaining") or []]
 if not rem:

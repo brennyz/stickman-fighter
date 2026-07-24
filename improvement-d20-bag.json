@@ -7,20 +7,20 @@
     18,
     17,
     12,
-    13,
-    2
+    2,
+    3
   ],
   "lastRoll": {
-    "face": 3,
-    "category": "Versus 2P \u2014 split controls, rematch, char balance",
-    "rolledAt": "2026-07-24T15:13:38Z",
+    "face": 13,
+    "category": "Missies & achievements \u2014 daily loop, beloningen",
+    "rolledAt": "2026-07-24T15:24:07Z",
     "remainingCount": 6,
     "cycle": 2
   },
   "pending": {
-    "face": 3,
-    "category": "Versus 2P \u2014 split controls, rematch, char balance",
-    "rolledAt": "2026-07-24T15:13:38Z",
+    "face": 13,
+    "category": "Missies & achievements \u2014 daily loop, beloningen",
+    "rolledAt": "2026-07-24T15:24:07Z",
     "remainingCount": 6,
     "cycle": 2
   },
@@ -1134,6 +1134,13 @@
       "face": 3,
       "category": "Versus 2P \u2014 split controls, rematch, char balance",
       "rolledAt": "2026-07-24T15:13:38Z",
+      "remainingCount": 6,
+      "cycle": 2
+    },
+    {
+      "face": 13,
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
+      "rolledAt": "2026-07-24T15:24:07Z",
       "remainingCount": 6,
       "cycle": 2
     }
