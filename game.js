@@ -133,9 +133,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.63';
+const APP_VERSION = '1.17.64';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 189;
+const SW_CACHE_REV = 190;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -535,7 +535,7 @@ function projStrikeFighter(game, p, tgt, col) {
   if (p.kind === 'rinnegan' && p.pull) tgt.vx += Math.sign(p.vx || 1) * 160;
   if (p.kind === 'rasengan') {
     spawnJutsuImpactFx(game, p.x, p.y, 'rasengan', 'full');
-    if (!fxLite()) game.freezeT = Math.max(game.freezeT || 0, 0.045);
+    if (!fxLite() && !motionReduced()) game.freezeT = Math.max(game.freezeT || 0, 0.045);
   } else if (p.kind === 'chidori') {
     spawnJutsuImpactFx(game, p.x, p.y, 'chidori', 'full');
   } else if (p.kind === 'rinnegan') {
@@ -934,6 +934,9 @@ const I18N = {
       lang: 'Taal / Language', music: 'Muziek', sfx: 'Effecten', shake: 'Schermschok', haptics: 'Trillen (iPad)',
       comboHud: 'Combo-HUD', bigTouch: 'Grote knoppen (iPad)', reducedMotion: 'Minder beweging (FX + iOS)',
       liteFx: 'Lite FX (iPad sneller)', highContrast: 'Hoog contrast tekst', restoreBackup: 'Herstel save uit backup',
+      a11yMotionOn: 'Minder beweging: aan', a11yMotionOs: 'Minder beweging: via iOS/OS',
+      a11yContrastOn: 'Hoog contrast: aan', a11yContrastOs: 'Hoog contrast: via iOS/OS',
+      a11yDefault: 'Toegankelijkheid: standaard — schakel hierboven of via iOS Weergave',
       syncBackup: 'Sync backup = hoofd-save', freshCache: 'Verse versie (cache legen)', clearSave: 'Nieuwe start (dubbel tikken)',
       hosting: 'Hosting & voortgang', copyLink: 'Kopieer vaste speel-link', openLink: 'Open vaste link',
       savePort: 'Save export / import', exportSave: 'Export save', importSave: 'Import save',
@@ -993,6 +996,9 @@ const I18N = {
       lang: 'Language / Taal', music: 'Music', sfx: 'Effects', shake: 'Screen shake', haptics: 'Haptics (iPad)',
       comboHud: 'Combo HUD', bigTouch: 'Big buttons (iPad)', reducedMotion: 'Reduce motion (FX + iOS)',
       liteFx: 'Lite FX (faster iPad)', highContrast: 'High contrast text', restoreBackup: 'Restore save from backup',
+      a11yMotionOn: 'Reduce motion: on', a11yMotionOs: 'Reduce motion: via iOS/OS',
+      a11yContrastOn: 'High contrast: on', a11yContrastOs: 'High contrast: via iOS/OS',
+      a11yDefault: 'Accessibility: default — toggle above or via iOS Display settings',
       syncBackup: 'Sync backup = main save', freshCache: 'Fresh version (clear cache)', clearSave: 'New start (tap twice)',
       hosting: 'Hosting & progress', copyLink: 'Copy play link', openLink: 'Open play link',
       savePort: 'Save export / import', exportSave: 'Export save', importSave: 'Import save',
@@ -4120,6 +4126,25 @@ function a11yHighContrast() {
 function syncA11yClasses() {
   document.body.classList.toggle('reduced-motion', motionReduced());
   document.body.classList.toggle('high-contrast', a11yHighContrast());
+}
+function a11yStatusText() {
+  const bits = [];
+  if (motionReduced()) {
+    bits.push(save.reducedMotion ? t('settings.a11yMotionOn') : t('settings.a11yMotionOs'));
+  }
+  if (a11yHighContrast()) {
+    bits.push(save.highContrast ? t('settings.a11yContrastOn') : t('settings.a11yContrastOs'));
+  }
+  return bits.length ? bits.join(' · ') : t('settings.a11yDefault');
+}
+function refreshA11yUi() {
+  syncA11yClasses();
+  try {
+    const el = document.getElementById('a11yStatusLine');
+    if (el) el.textContent = a11yStatusText();
+    const active = document.getElementById('settingsScreen')?.classList.contains('active');
+    if (active && typeof UI !== 'undefined' && UI.renderSettings) UI.renderSettings();
+  } catch (_) {}
 }
 
 /** Canvas HUD-tekst met optionele stroke bij hoog contrast (geen flits). */
@@ -13214,7 +13239,7 @@ class Game {
     const lite = fxLite() || calm;
 
     c.save();
-    const ringR = 28 + prog * 88 + Math.sin(pulse * 11) * 7;
+    const ringR = calm ? (28 + prog * 88) : (28 + prog * 88 + Math.sin(pulse * 11) * 7);
     c.globalAlpha = 0.22 + prog * 0.38;
     c.strokeStyle = '#ffd75e';
     c.lineWidth = 2.5 + prog * 3.5;
@@ -13232,7 +13257,9 @@ class Game {
 
     const rings = lite ? 2 : 4;
     for (let i = 0; i < rings; i++) {
-      const r = 34 + i * 13 + prog * 22 + Math.sin(pulse * 10 + i * 1.4) * 5;
+      const r = calm
+        ? (34 + i * 13 + prog * 22)
+        : (34 + i * 13 + prog * 22 + Math.sin(pulse * 10 + i * 1.4) * 5);
       c.globalAlpha = (0.3 + prog * 0.28) * (1 - i * 0.17);
       c.strokeStyle = i % 2 ? '#fff8dc' : '#ff9a3d';
       c.lineWidth = 2 + prog * 2;
@@ -13271,7 +13298,8 @@ class Game {
     if (!this.ketsbamShow || !this.player?.alive) return;
     const ui = touchUiScale(W, H);
     const { cx, cy } = ketsbamPromptCenter();
-    const pulse = 0.9 + Math.sin((this.ketsbamPulse || 0) * 10) * 0.1;
+    const calm = motionReduced();
+    const pulse = calm ? 1 : (0.9 + Math.sin((this.ketsbamPulse || 0) * 10) * 0.1);
     const r = 46 * ui * pulse;
     c.save();
     c.globalAlpha = 0.92;
@@ -13284,7 +13312,7 @@ class Game {
     c.stroke();
     // ster/kets-symbool
     c.translate(cx, cy);
-    c.rotate((this.ketsbamPulse || 0) * 2.2);
+    if (!calm) c.rotate((this.ketsbamPulse || 0) * 2.2);
     c.fillStyle = '#ffd75e';
     c.strokeStyle = '#ff7043';
     c.lineWidth = 2.5 * ui;
@@ -13298,7 +13326,7 @@ class Game {
     c.closePath();
     c.fill();
     c.stroke();
-    c.rotate(-(this.ketsbamPulse || 0) * 2.2);
+    if (!calm) c.rotate(-(this.ketsbamPulse || 0) * 2.2);
     c.font = `900 ${Math.round(17 * ui)}px -apple-system,sans-serif`;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
@@ -13585,8 +13613,7 @@ class Game {
         c.fill();
         c.font = '800 11px sans-serif';
         c.textAlign = 'center';
-        c.fillStyle = tele.color;
-        c.fillText(tele.label, W / 2, 102);
+        fillHudText(c, tele.label, W / 2, 102, { fill: tele.color, strokeW: a11yHighContrast() ? 3 : 0 });
         c.fillStyle = 'rgba(255,255,255,.15)';
         this.rr(c, bx, 108, barW, 5, 3);
         c.fill();
@@ -14455,7 +14482,7 @@ const UI = {
 
   syncTouchClass() {
     document.body.classList.toggle('big-touch', save.bigTouch !== false);
-    syncA11yClasses();
+    refreshA11yUi();
   },
 
   goBack() {
@@ -16028,18 +16055,7 @@ const UI = {
     const audioEl = document.getElementById('settingsAudioStatus');
     if (audioEl) audioEl.textContent = audioMixStatusLine(state === 'pause');
     const a11yEl = document.getElementById('a11yStatusLine');
-    if (a11yEl) {
-      const bits = [];
-      if (motionReduced()) {
-        bits.push(save.reducedMotion ? 'Minder beweging: aan' : 'Minder beweging: via iOS/OS');
-      }
-      if (a11yHighContrast()) {
-        bits.push(save.highContrast ? 'Hoog contrast: aan' : 'Hoog contrast: via iOS/OS');
-      }
-      a11yEl.textContent = bits.length
-        ? bits.join(' · ')
-        : 'Toegankelijkheid: standaard — schakel hierboven of via iOS Weergave';
-    }
+    if (a11yEl) a11yEl.textContent = a11yStatusText();
   },
 
   renderPauseToggles() {
@@ -16436,7 +16452,7 @@ function bindSettingsControls() {
       else save[key] = true;
       if (key === 'reducedMotion' && save.reducedMotion) save.shake = false;
       if (key === 'liteFx') { Perf.reset(); lastResizeKey = ''; try { SceneryArt.clearCache(); } catch (_) {} scheduleResize(); AudioSys.applyVolumes(); }
-      if (key === 'reducedMotion' || key === 'highContrast') syncA11yClasses();
+      if (key === 'reducedMotion' || key === 'highContrast') refreshA11yUi();
       persist();
       UI.renderSettings();
       UI.syncTouchClass();
@@ -17136,7 +17152,7 @@ function bootGame() {
   }
   try {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const onMq = () => syncA11yClasses();
+    const onMq = () => refreshA11yUi();
     if (mq.addEventListener) mq.addEventListener('change', onMq);
     else if (mq.addListener) mq.addListener(onMq);
     const mqC = window.matchMedia('(prefers-contrast: more)');

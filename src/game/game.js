@@ -2502,7 +2502,7 @@ class Game {
     const lite = fxLite() || calm;
 
     c.save();
-    const ringR = 28 + prog * 88 + Math.sin(pulse * 11) * 7;
+    const ringR = calm ? (28 + prog * 88) : (28 + prog * 88 + Math.sin(pulse * 11) * 7);
     c.globalAlpha = 0.22 + prog * 0.38;
     c.strokeStyle = '#ffd75e';
     c.lineWidth = 2.5 + prog * 3.5;
@@ -2520,7 +2520,9 @@ class Game {
 
     const rings = lite ? 2 : 4;
     for (let i = 0; i < rings; i++) {
-      const r = 34 + i * 13 + prog * 22 + Math.sin(pulse * 10 + i * 1.4) * 5;
+      const r = calm
+        ? (34 + i * 13 + prog * 22)
+        : (34 + i * 13 + prog * 22 + Math.sin(pulse * 10 + i * 1.4) * 5);
       c.globalAlpha = (0.3 + prog * 0.28) * (1 - i * 0.17);
       c.strokeStyle = i % 2 ? '#fff8dc' : '#ff9a3d';
       c.lineWidth = 2 + prog * 2;
@@ -2559,7 +2561,8 @@ class Game {
     if (!this.ketsbamShow || !this.player?.alive) return;
     const ui = touchUiScale(W, H);
     const { cx, cy } = ketsbamPromptCenter();
-    const pulse = 0.9 + Math.sin((this.ketsbamPulse || 0) * 10) * 0.1;
+    const calm = motionReduced();
+    const pulse = calm ? 1 : (0.9 + Math.sin((this.ketsbamPulse || 0) * 10) * 0.1);
     const r = 46 * ui * pulse;
     c.save();
     c.globalAlpha = 0.92;
@@ -2572,7 +2575,7 @@ class Game {
     c.stroke();
     // ster/kets-symbool
     c.translate(cx, cy);
-    c.rotate((this.ketsbamPulse || 0) * 2.2);
+    if (!calm) c.rotate((this.ketsbamPulse || 0) * 2.2);
     c.fillStyle = '#ffd75e';
     c.strokeStyle = '#ff7043';
     c.lineWidth = 2.5 * ui;
@@ -2586,7 +2589,7 @@ class Game {
     c.closePath();
     c.fill();
     c.stroke();
-    c.rotate(-(this.ketsbamPulse || 0) * 2.2);
+    if (!calm) c.rotate(-(this.ketsbamPulse || 0) * 2.2);
     c.font = `900 ${Math.round(17 * ui)}px -apple-system,sans-serif`;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
@@ -2873,8 +2876,7 @@ class Game {
         c.fill();
         c.font = '800 11px sans-serif';
         c.textAlign = 'center';
-        c.fillStyle = tele.color;
-        c.fillText(tele.label, W / 2, 102);
+        fillHudText(c, tele.label, W / 2, 102, { fill: tele.color, strokeW: a11yHighContrast() ? 3 : 0 });
         c.fillStyle = 'rgba(255,255,255,.15)';
         this.rr(c, bx, 108, barW, 5, 3);
         c.fill();
@@ -2928,8 +2930,7 @@ class Game {
         c.setLineDash([]);
         c.font = '800 13px sans-serif';
         c.textAlign = 'center';
-        c.fillStyle = '#ffb0b8';
-        c.fillText(t('hud.earLaserShort'), W / 2, ly - 10);
+        fillHudText(c, t('hud.earLaserShort'), W / 2, ly - 10, { fill: '#ffb0b8' });
         c.restore();
       }
       // robotbalk rechtsboven

@@ -214,6 +214,25 @@ function syncA11yClasses() {
   document.body.classList.toggle('reduced-motion', motionReduced());
   document.body.classList.toggle('high-contrast', a11yHighContrast());
 }
+function a11yStatusText() {
+  const bits = [];
+  if (motionReduced()) {
+    bits.push(save.reducedMotion ? t('settings.a11yMotionOn') : t('settings.a11yMotionOs'));
+  }
+  if (a11yHighContrast()) {
+    bits.push(save.highContrast ? t('settings.a11yContrastOn') : t('settings.a11yContrastOs'));
+  }
+  return bits.length ? bits.join(' · ') : t('settings.a11yDefault');
+}
+function refreshA11yUi() {
+  syncA11yClasses();
+  try {
+    const el = document.getElementById('a11yStatusLine');
+    if (el) el.textContent = a11yStatusText();
+    const active = document.getElementById('settingsScreen')?.classList.contains('active');
+    if (active && typeof UI !== 'undefined' && UI.renderSettings) UI.renderSettings();
+  } catch (_) {}
+}
 
 /** Canvas HUD-tekst met optionele stroke bij hoog contrast (geen flits). */
 function fillHudText(c, text, x, y, opts) {

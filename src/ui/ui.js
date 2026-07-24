@@ -378,7 +378,7 @@ const UI = {
 
   syncTouchClass() {
     document.body.classList.toggle('big-touch', save.bigTouch !== false);
-    syncA11yClasses();
+    refreshA11yUi();
   },
 
   goBack() {
@@ -1951,18 +1951,7 @@ const UI = {
     const audioEl = document.getElementById('settingsAudioStatus');
     if (audioEl) audioEl.textContent = audioMixStatusLine(state === 'pause');
     const a11yEl = document.getElementById('a11yStatusLine');
-    if (a11yEl) {
-      const bits = [];
-      if (motionReduced()) {
-        bits.push(save.reducedMotion ? 'Minder beweging: aan' : 'Minder beweging: via iOS/OS');
-      }
-      if (a11yHighContrast()) {
-        bits.push(save.highContrast ? 'Hoog contrast: aan' : 'Hoog contrast: via iOS/OS');
-      }
-      a11yEl.textContent = bits.length
-        ? bits.join(' · ')
-        : 'Toegankelijkheid: standaard — schakel hierboven of via iOS Weergave';
-    }
+    if (a11yEl) a11yEl.textContent = a11yStatusText();
   },
 
   renderPauseToggles() {
