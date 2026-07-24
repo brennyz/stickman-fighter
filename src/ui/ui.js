@@ -65,6 +65,20 @@ function initCharSelectChrome() {
       });
     });
   }
+  const sortBtn = document.getElementById('btnCharSort');
+  if (sortBtn && !sortBtn.dataset.sfSortBound) {
+    sortBtn.dataset.sfSortBound = '1';
+    const sortLabels = { name: 'naam', hp: 'HP', spd: 'SPD', dmg: 'DMG' };
+    const cycleSort = () => {
+      const order = ['name', 'hp', 'spd', 'dmg'];
+      const i = order.indexOf(UI.charSortMode || 'name');
+      UI.charSortMode = order[(i + 1) % order.length];
+      sortBtn.textContent = 'Sort: ' + (sortLabels[UI.charSortMode] || 'naam');
+      UI.renderCharSelect();
+    };
+    bindPress(sortBtn, () => { AudioSys.sfx('select'); cycleSort(); });
+    sortBtn.textContent = 'Sort: ' + (sortLabels[UI.charSortMode || 'name'] || 'naam');
+  }
   const fightBtn = document.getElementById('btnCharFight');
   bindPress(fightBtn, () => {
     if (!vsSelect.p1 || !vsSelect.p2) return;
@@ -188,6 +202,7 @@ const UI = {
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
+  charSortMode: 'name',
   charPreviewHoverId: null,
   dexRarityFilter: 'all',
   achFilter: 'all',
@@ -507,9 +522,10 @@ const UI = {
     if (statEl) updateCharStatPreview();
     this.renderCharIconRow();
     grid.innerHTML = '';
-    const roster = filter === 'all'
+    const rosterBase = filter === 'all'
       ? VS_ROSTER
       : VS_ROSTER.filter(r => (r.saga || 'scroll') === filter);
+    const roster = sortVsRoster(rosterBase, UI.charSortMode || 'name');
     if (!roster.length) {
       const empty = document.createElement('div');
       empty.className = 'char-grid-empty';

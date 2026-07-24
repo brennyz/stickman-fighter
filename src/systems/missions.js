@@ -836,6 +836,29 @@ function vsFighterStats(entry) {
   const critPct = Math.round((entry.crit != null ? entry.crit : 0.08) * 100);
   return { hp, spd, dmg, wpn: weaponById(entry.weapon).name, special, critPct };
 }
+function vsOverallRating(s) {
+  return Math.round((s.hp + s.spd + s.dmg) / 3);
+}
+function vsPlayedBefore(id) {
+  return Array.isArray(save.vsPlayedIds) && save.vsPlayedIds.includes(id);
+}
+function vsUnlockedCount() {
+  return VS_ROSTER.filter(vsUnlocked).length;
+}
+function sortVsRoster(list, mode) {
+  const arr = list.slice();
+  if (mode === 'hp' || mode === 'spd' || mode === 'dmg') {
+    arr.sort((a, b) => {
+      const sa = vsFighterStats(a);
+      const sb = vsFighterStats(b);
+      const d = sb[mode] - sa[mode];
+      return d !== 0 ? d : a.name.localeCompare(b.name);
+    });
+  } else {
+    arr.sort((a, b) => a.name.localeCompare(b.name));
+  }
+  return arr;
+}
 function vsStatBar(label, pct, color, deltaHtml) {
   const p = Math.min(100, Math.max(6, pct));
   return `<div class="vs-stat-col"><span class="vs-stat-l">${label}${deltaHtml || ''}</span>` +
@@ -873,17 +896,23 @@ function vsStatPreviewHtml(e1, e2, previewing) {
   const s2 = vsFighterStats(e2);
   const g1 = vsSagaMeta(e1.saga || 'scroll');
   const g2 = vsSagaMeta(e2.saga || 'scroll');
-  const col = (name, s, theirs, accent, saga, flair, side) =>
-    `<div class="vs-preview-col${previewing && ((UI.charPickStep === 1 && side === 'left') || (UI.charPickStep === 2 && side === 'right')) ? ' preview-live' : ''}" style="--accent:${accent}">` +
-    `<div class="vs-preview-name">${name}${previewing && ((UI.charPickStep === 1 && side === 'left') || (UI.charPickStep === 2 && side === 'right')) ? ' <span class="vs-preview-tag">preview</span>' : ''}</div>` +
+  const step = UI.charPickStep === 2 ? 'Stap 2 · kies P2' : 'Stap 1 · kies P1';
+  const head = `<div class="vs-preview-head">${step} · ${vsUnlockedCount()}/${VS_ROSTER.length} vrij · stats = preview only</div>`;
+  const col = (entry, s, theirs, accent, saga, flair, side) => {
+    const live = previewing && ((UI.charPickStep === 1 && side === 'left') || (UI.charPickStep === 2 && side === 'right'));
+    const played = vsPlayedBefore(entry.id) ? '<span class="vs-played-chip">gespeeld</span>' : '';
+    return `<div class="vs-preview-col${live ? ' preview-live' : ''}" style="--accent:${accent}">` +
+    `<div class="vs-preview-name">${entry.name}${played}${live ? ' <span class="vs-preview-tag">preview</span>' : ''}</div>` +
     `<div class="vs-preview-wpn">${sagaIconSvg(saga.id)} ${saga.label} · ${s.wpn} · ${s.special} · ${s.critPct}% crit</div>` +
     `<div class="vs-preview-flair">${flair}</div>` +
+    `${vsStatBar('TOT', vsOverallRating(s), '#ffd75e')}` +
     `${vsStatBar('HP', s.hp, '#6ee06e', vsStatDeltaTag(s.hp, theirs.hp))}` +
     `${vsStatBar('SPD', s.spd, '#7cf5ff', vsStatDeltaTag(s.spd, theirs.spd))}` +
     `${vsStatBar('DMG', s.dmg, '#ff7a4d', vsStatDeltaTag(s.dmg, theirs.dmg))}</div>`;
+  };
   const hint = vsMatchupHint(s1, s2);
-  return `<div class="vs-preview-duo">${col(e1.name, s1, s2, '#7cf5ff', g1, rosterFlair(e1), 'left')}` +
-    `<div class="vs-preview-vs">VS</div>${col(e2.name, s2, s1, '#ffb0b8', g2, rosterFlair(e2), 'right')}</div>` +
+  return head + `<div class="vs-preview-duo">${col(e1, s1, s2, '#7cf5ff', g1, rosterFlair(e1), 'left')}` +
+    `<div class="vs-preview-vs">VS</div>${col(e2, s2, s1, '#ffb0b8', g2, rosterFlair(e2), 'right')}</div>` +
     (hint ? `<div class="vs-matchup-hint">${hint}</div>` : '') +
     (previewing ? '<div class="vs-matchup-hint" style="opacity:.75">Tik kaart om te kiezen · stats zijn relatief, geen dmg-tweak</div>' : '');
 }
