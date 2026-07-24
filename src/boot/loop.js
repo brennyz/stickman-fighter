@@ -364,11 +364,13 @@ function updateNetStatus(ev) {
     return;
   }
   if (swReady && 'caches' in window && !window.__sfOfflineReadyShown) {
-    caches.match('./game.js', { ignoreSearch: true }).then((js) => {
-      if (!js) return;
-      return caches.match('./index.html', { ignoreSearch: true }).then((html) => {
-        if (!html || window.__sfOfflineReadyShown) return;
-        window.__sfOfflineReadyShown = 1;
+    Promise.all([
+      caches.match('./game.js', { ignoreSearch: true }),
+      caches.match('./index.html', { ignoreSearch: true }),
+      caches.match('./styles/main.css', { ignoreSearch: true }),
+    ]).then(([js, html, css]) => {
+      if (!js || !html || !css || window.__sfOfflineReadyShown) return;
+      window.__sfOfflineReadyShown = 1;
         const el2 = document.getElementById('netStatus');
         if (!el2 || window.__sfSwUpdateReady || !navigator.onLine) return;
         el2.hidden = false;
@@ -383,7 +385,6 @@ function updateNetStatus(ev) {
             el2.textContent = '';
           }
         }, 4500);
-      });
     }).catch(() => {});
   }
   el.hidden = true;
