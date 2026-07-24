@@ -761,7 +761,7 @@ function resumeLastPlay() {
   if (!lp || !lp.mode) return false;
   try {
     if (lp.mode === 'adventure') {
-      rollGogoForLevel(lp.level || 1);
+      gokGooiStartLevel(lp.level || 1);
     } else if (lp.mode === 'versus') {
       startGame('versus', { p1: lp.p1, p2: lp.p2 });
     } else {
@@ -797,45 +797,45 @@ function startAdventureFromGamble(skipGamble) {
   }
 }
 
-let gambleRollGoBusy = false;
+let gokStartBusy = false;
 
 /** Instant: level-tik → dobbel + vecht (geen tussen-scherm). */
-function rollGogoForLevel(n) {
-  if (gambleRollGoBusy) return;
-  gambleRollGoBusy = true;
+function gokGooiStartLevel(n) {
+  if (gokStartBusy) return;
+  gokStartBusy = true;
   try {
     pendingAdvLevel = n;
     AudioSys.init();
     AudioSys.sfx('select');
     lastGambleRoll = rollStageGamble();
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
-    gambleRollGoBusy = false;
+    gokStartBusy = false;
     startAdventureFromGamble(false);
   } catch (err) {
-    gambleRollGoBusy = false;
-    sfReportError('rollGogo', err, 'Roll & gogo mislukt — probeer opnieuw');
+    gokStartBusy = false;
+    sfReportError('gokStart', err, 'Gok start mislukt — probeer opnieuw');
   }
 }
 
-function rollAndGoAdventure() {
-  if (gambleRollGoBusy) return;
-  gambleRollGoBusy = true;
+function gokGooiStartFromScreen() {
+  if (gokStartBusy) return;
+  gokStartBusy = true;
   try {
     AudioSys.init();
     AudioSys.sfx('select');
     lastGambleRoll = rollStageGamble();
     UI.renderGamble(pendingAdvLevel || save.unlocked || 1);
     const sumLine = document.getElementById('gambleSumLine');
-    if (sumLine) sumLine.textContent = 'GOGO!';
+    if (sumLine) sumLine.textContent = 'START!';
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
     const delay = (save.reducedMotion || (typeof motionReduced === 'function' && motionReduced())) ? 50 : 140;
     setTimeout(() => {
-      gambleRollGoBusy = false;
+      gokStartBusy = false;
       startAdventureFromGamble(false);
     }, delay);
   } catch (err) {
-    gambleRollGoBusy = false;
-    sfReportError('rollGo', err, 'Roll & gogo mislukt — probeer opnieuw');
+    gokStartBusy = false;
+    sfReportError('gokGooi', err, 'Gok start mislukt — probeer opnieuw');
   }
 }
 
@@ -1081,7 +1081,7 @@ function applyGambleOnboarding() {
   persist();
   const outEl = document.getElementById('gambleOutcome');
   if (outEl && !lastGambleRoll) {
-    outEl.textContent = 'Eerste keer: som ≤5 = super-baas · som ≥9 = bondgenoot. Tik level = Roll & gogo · lang = zonder gok.';
+    outEl.textContent = 'Eerste keer: som ≤5 = super-baas · som ≥9 = bondgenoot. Tik level = Gooi & start · lang = zonder gok.';
   }
 }
 
