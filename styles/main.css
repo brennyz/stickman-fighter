@@ -606,6 +606,9 @@
   body.high-contrast #menuTipLine,
   body.high-contrast #menuDailyHint { color: #e8f0ff; opacity: 1; }
   body.high-contrast #a11yStatusLine { color: #f0f4ff; border-color: rgba(255,255,255,.35); }
+  body.high-contrast .hub-tile { border-width: 2px; }
+  body.high-contrast .island-info-chip.onboard { color: #e8f4ff; border-color: rgba(124,245,255,.55); }
+  body.reduced-motion .toast { animation: none; }
   body.high-contrast #netStatus { font-weight: 900; border-width: 2px; }
   body.reduced-motion #netStatus.online-flash { animation: none; }
 

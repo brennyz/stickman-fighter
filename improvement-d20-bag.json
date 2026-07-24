@@ -5,15 +5,14 @@
   "remaining": [
     4,
     6,
-    10,
     16,
     18
   ],
   "lastRoll": {
-    "face": 15,
-    "category": "Onboarding \u2014 tips, eerste speelminuut, help",
-    "rolledAt": "2026-07-24T18:54:37Z",
-    "remainingCount": 5,
+    "face": 10,
+    "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
+    "rolledAt": "2026-07-24T18:55:49Z",
+    "remainingCount": 4,
     "cycle": 3
   },
   "pending": null,
@@ -478,6 +477,13 @@
       "note": "inline island hint, menu progress, fewer toasts",
       "version": "1.17.33",
       "doneAt": "2026-07-24T18:55:24Z",
+      "cycle": 3
+    },
+    {
+      "face": 10,
+      "note": "calm banners/telegraphs, HC HUD text, static low-HP",
+      "version": "1.17.34",
+      "doneAt": "2026-07-24T18:56:28Z",
       "cycle": 3
     }
   ],
@@ -1558,6 +1564,13 @@
       "category": "Onboarding \u2014 tips, eerste speelminuut, help",
       "rolledAt": "2026-07-24T18:54:37Z",
       "remainingCount": 5,
+      "cycle": 3
+    },
+    {
+      "face": 10,
+      "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
+      "rolledAt": "2026-07-24T18:55:49Z",
+      "remainingCount": 4,
       "cycle": 3
     }
   ],
