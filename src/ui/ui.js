@@ -77,9 +77,12 @@ function initCharSelectChrome() {
   const sortBtn = document.getElementById('btnCharSort');
   if (sortBtn && !sortBtn.dataset.sfSortBound) {
     sortBtn.dataset.sfSortBound = '1';
-    const sortLabels = { name: 'naam', hp: 'HP', spd: 'SPD', dmg: 'DMG' };
+    const sortLabels = {
+      name: 'naam', tot: 'TOT', str: 'STR', rng: 'RNG', meleeDps: 'mDPS', rangeDps: 'rDPS',
+      hp: 'HP', spd: 'SPD', dmg: 'DMG',
+    };
     const cycleSort = () => {
-      const order = ['name', 'hp', 'spd', 'dmg'];
+      const order = ['name', 'tot', 'str', 'rng', 'meleeDps', 'rangeDps', 'hp', 'spd', 'dmg'];
       const i = order.indexOf(UI.charSortMode || 'name');
       UI.charSortMode = order[(i + 1) % order.length];
       sortBtn.textContent = 'Sort: ' + (sortLabels[UI.charSortMode] || 'naam');
@@ -587,7 +590,7 @@ const UI = {
         const mini = document.createElement('div');
         mini.className = 'char-mini-stat';
         const st = vsFighterStats(r);
-        mini.textContent = `HP ${st.hp} · ${st.dmg}% · ${st.sig.split(' ')[0]}`;
+        mini.textContent = `STR ${st.str} · RNG ${st.rng} · mDPS ${st.meleeDps} · rDPS ${st.rangeDps}`;
         el.appendChild(mini);
       }
       grid.appendChild(el);
@@ -698,8 +701,12 @@ const UI = {
     row.innerHTML = '';
     const label = document.createElement('div');
     label.className = 'char-icon-row-title';
-    label.textContent = t('ui.charIconRow');
+    label.textContent = t('ui.charBig5Title');
     row.appendChild(label);
+    const hint = document.createElement('div');
+    hint.className = 'char-icon-row-hint';
+    hint.textContent = t('ui.charBig5Hint');
+    row.appendChild(hint);
     const strip = document.createElement('div');
     strip.className = 'char-icon-strip';
     for (const id of SAGA_ICON_IDS) {
@@ -718,8 +725,15 @@ const UI = {
       chip.appendChild(cv);
       const cap = document.createElement('span');
       cap.className = 'char-icon-name';
-      cap.textContent = r.name.replace(' Stick', '').replace(' Kid', '');
+      cap.textContent = r.name;
       chip.appendChild(cap);
+      if (ok) {
+        const st = vsFighterStats(r);
+        const stat = document.createElement('span');
+        stat.className = 'char-icon-stat';
+        stat.textContent = `STR${st.str} RNG${st.rng}`;
+        chip.appendChild(stat);
+      }
       strip.appendChild(chip);
     }
     row.appendChild(strip);

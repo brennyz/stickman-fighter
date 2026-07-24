@@ -133,9 +133,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.60';
+const APP_VERSION = '1.17.61';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 186;
+const SW_CACHE_REV = 187;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -2605,21 +2605,38 @@ function gokGooiStartFromScreen() {
   }
 }
 
+function vsWeaponRangeFactor(w) {
+  if (!w) return 0.25;
+  if (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) return 1;
+  if (w.id === 'boemerang') return 0.88;
+  if (w.range >= 74) return 0.72;
+  if (w.range >= 58) return 0.48;
+  return 0.22;
+}
 function vsFighterStats(entry) {
+  const w = weaponById(entry.weapon);
   const hp = Math.round(100 * entry.hpMul);
   const spd = Math.round(100 * entry.spdMul);
   const dmg = Math.round(100 * entry.dmgMul);
+  const crit = entry.crit != null ? entry.crit : 0.08;
+  const critMul = entry.critMul != null ? entry.critMul : 1.5;
+  const critPct = Math.round(crit * 100);
+  const str = Math.round(Math.min(100, dmg * (w.dmg || 1) * (0.72 + crit * critMul * 0.35)));
+  const rng = Math.round(Math.min(100, ((w.range || 38) / 78) * 100));
+  const meleeScale = (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) ? 0.38
+    : (w.id === 'boemerang' ? 0.52 : 1);
+  const meleeDps = Math.round(Math.min(100, (dmg * (w.speed || 1) * spd) / 88 * meleeScale));
+  const rangeDps = Math.round(Math.min(100, (dmg * (w.speed || 1) * rng) / 72 * vsWeaponRangeFactor(w) * (0.82 + crit * 0.9)));
   let special = 'Rasengan';
   if (entry.isRobot) special = 'Robot · Chidori';
   else if (entry.special === 'chidori') special = 'Chidori';
   else if (entry.special === 'rinnegan') special = 'Rinnegan';
-  const critPct = Math.round((entry.crit != null ? entry.crit : 0.08) * 100);
   const sigKey = entry.sig || 'balanced';
   const sig = VS_SIG_LABELS[sigKey] || sigKey;
-  return { hp, spd, dmg, wpn: weaponById(entry.weapon).name, special, critPct, sig, sigKey };
+  return { hp, spd, dmg, str, rng, meleeDps, rangeDps, wpn: w.name, special, critPct, sig, sigKey };
 }
 function vsOverallRating(s) {
-  return Math.round((s.hp + s.spd + s.dmg) / 3);
+  return Math.round((s.str + s.rng + s.meleeDps + s.rangeDps + s.hp * 0.35 + s.spd * 0.25) / 4.6);
 }
 function vsPlayedBefore(id) {
   return Array.isArray(save.vsPlayedIds) && save.vsPlayedIds.includes(id);
@@ -2629,11 +2646,15 @@ function vsUnlockedCount() {
 }
 function sortVsRoster(list, mode) {
   const arr = list.slice();
-  if (mode === 'hp' || mode === 'spd' || mode === 'dmg') {
+  const statSort = ['hp', 'spd', 'dmg', 'str', 'rng', 'meleeDps', 'rangeDps', 'tot'];
+  if (statSort.includes(mode)) {
     arr.sort((a, b) => {
       const sa = vsFighterStats(a);
       const sb = vsFighterStats(b);
-      const d = sb[mode] - sa[mode];
+      const key = mode === 'tot' ? null : mode;
+      const va = key ? sa[key] : vsOverallRating(sa);
+      const vb = key ? sb[key] : vsOverallRating(sb);
+      const d = vb - va;
       return d !== 0 ? d : a.name.localeCompare(b.name);
     });
   } else {
@@ -2661,6 +2682,14 @@ function vsMatchupHint(s1, s2) {
   else if (s2.hp >= s1.hp + 8) hints.push('P2 tankier');
   if (s1.dmg >= s2.dmg + 8) hints.push('P1 harder hits');
   else if (s2.dmg >= s1.dmg + 8) hints.push('P2 harder hits');
+  if (s1.str >= s2.str + 8) hints.push('P1 sterker (STR)');
+  else if (s2.str >= s1.str + 8) hints.push('P2 sterker (STR)');
+  if (s1.rng >= s2.rng + 8) hints.push('P1 meer reach');
+  else if (s2.rng >= s1.rng + 8) hints.push('P2 meer reach');
+  if (s1.meleeDps >= s2.meleeDps + 8) hints.push('P1 melee DPS');
+  else if (s2.meleeDps >= s1.meleeDps + 8) hints.push('P2 melee DPS');
+  if (s1.rangeDps >= s2.rangeDps + 8) hints.push('P1 range DPS');
+  else if (s2.rangeDps >= s1.rangeDps + 8) hints.push('P2 range DPS');
   if (s1.critPct >= s2.critPct + 3) hints.push('P1 meer crit');
   else if (s2.critPct >= s1.critPct + 3) hints.push('P2 meer crit');
   if (s1.sigKey !== s2.sigKey) hints.push(`${s1.sig.split(' ')[0]} vs ${s2.sig.split(' ')[0]}`);
@@ -2711,9 +2740,12 @@ function vsStatPreviewHtml(e1, e2, previewing, lockedPreview) {
     `<div class="vs-preview-sig">${s.sig} · ${s.critPct}% crit</div>` +
     `<div class="vs-preview-flair">${flair}</div>` +
     `${vsStatBar('TOT', vsOverallRating(s), '#ffd75e')}` +
+    `${vsStatBar('STR', s.str, '#ff9a42', locked ? '' : vsStatDeltaTag(s.str, theirs.str))}` +
+    `${vsStatBar('RNG', s.rng, '#c792ff', locked ? '' : vsStatDeltaTag(s.rng, theirs.rng))}` +
+    `${vsStatBar('mDPS', s.meleeDps, '#ff7a4d', locked ? '' : vsStatDeltaTag(s.meleeDps, theirs.meleeDps))}` +
+    `${vsStatBar('rDPS', s.rangeDps, '#7cf5ff', locked ? '' : vsStatDeltaTag(s.rangeDps, theirs.rangeDps))}` +
     `${vsStatBar('HP', s.hp, '#6ee06e', locked ? '' : vsStatDeltaTag(s.hp, theirs.hp))}` +
-    `${vsStatBar('SPD', s.spd, '#7cf5ff', locked ? '' : vsStatDeltaTag(s.spd, theirs.spd))}` +
-    `${vsStatBar('DMG', s.dmg, '#ff7a4d', locked ? '' : vsStatDeltaTag(s.dmg, theirs.dmg))}</div>`;
+    `${vsStatBar('SPD', s.spd, '#9db1e3', locked ? '' : vsStatDeltaTag(s.spd, theirs.spd))}</div>`;
   };
   const hint = lockedPreview ? 'Unlock om te kiezen — stats zijn preview' : vsMatchupHint(s1, s2);
   const meter = lockedPreview ? '' : vsMatchupMeter(s1, s2);
@@ -3895,8 +3927,16 @@ function sagaIconSvg(id) {
 }
 function rosterFlair(r) { return r.flair || r.tag; }
 
-/** Deel 2 — vijf saga-icon sticks (parodie per saga) */
+/** Big 5 saga picks — één icon per parodie-saga (Ki / Scroll / Tide / Cape / Dawn). */
 const SAGA_ICON_IDS = ['kiball', 'scrollkid', 'tidecrew', 'zipcape', 'dawnlance'];
+const VS_BIG5 = {
+  kiball: { saga: 'ki', label: 'Ki-saga', hint: 'Ki-spikes · power trainee (DBZ-vibes)' },
+  scrollkid: { saga: 'scroll', label: 'Scroll-saga', hint: 'Headband ninja · clone dash (Naruto-vibes)' },
+  tidecrew: { saga: 'tide', label: 'Tide-saga', hint: 'Rubber reach · crew stretch (One Piece-vibes)' },
+  zipcape: { saga: 'cape', label: 'Cape-saga', hint: 'Serious zip · blink hero (OPM-vibes)' },
+  dawnlance: { saga: 'dawn', label: 'Dawn-saga', hint: 'Holy lance · sin aura (SDS-vibes)' },
+};
+function vsBig5Meta(id) { return VS_BIG5[id] || null; }
 function sagaIconEntries() {
   return SAGA_ICON_IDS.map(id => vsRosterEntry(id));
 }
@@ -4027,21 +4067,21 @@ const VS_ROSTER = [
   { id: 'dragon', name: 'Kristallo', tag: 'Baas', saga: 'ki', flair: 'Crystal ki · boss spike',
     styleId: 'gold', weapon: 'donder',
     hpMul: 1.08, spdMul: 0.94, dmgMul: 1.18, crit: 0.11, critMul: 1.75, sig: 'boss', unlock: () => save.unlocked >= 45 },
-  { id: 'kiball', name: 'Ki-Ball Stick', tag: 'Ki icon', saga: 'ki', flair: 'Orange trainee · ki-ball spam',
+  { id: 'kiball', name: 'Spiky Ki', tag: 'Ki · melee DPS', saga: 'ki', flair: 'Orange trainee · ki-ball rush · high STR',
     styleId: 'gold', bodyColor: '#ff9a42', weapon: 'donder', special: 'rasengan',
-    hpMul: 1.02, spdMul: 1.04, dmgMul: 1.06, crit: 0.1, critMul: 1.52, sig: 'storm', unlock: () => save.lvl >= 6 },
-  { id: 'scrollkid', name: 'Scroll Kid', tag: 'Ninja icon', saga: 'scroll', flair: 'Scroll dash · clone feint',
+    hpMul: 1.0, spdMul: 1.1, dmgMul: 1.14, crit: 0.09, critMul: 1.55, sig: 'heavy', unlock: () => save.lvl >= 6 },
+  { id: 'scrollkid', name: 'Bandana Kid', tag: 'Scroll · crit', saga: 'scroll', flair: 'Clone dash · kunai flurry · crit assassin',
     styleId: 'konoha', weapon: 'kunai', special: 'rasengan',
-    hpMul: 0.92, spdMul: 1.1, dmgMul: 0.96, crit: 0.12, critMul: 1.48, sig: 'assassin', unlock: () => true },
-  { id: 'tidecrew', name: 'Tide Crew', tag: 'Crew icon', saga: 'tide', flair: 'Crew hat energy · stretch hits',
+    hpMul: 0.9, spdMul: 1.12, dmgMul: 1.0, crit: 0.14, critMul: 1.55, sig: 'assassin', unlock: () => true },
+  { id: 'tidecrew', name: 'Rubber Crew', tag: 'Tide · range', saga: 'tide', flair: 'Stretch captain · boomerang reach · range DPS',
     styleId: 'sand', weapon: 'boemerang',
-    hpMul: 1.06, spdMul: 1.02, dmgMul: 1.04, crit: 0.08, critMul: 1.5, sig: 'reach', unlock: () => save.lvl >= 10 },
-  { id: 'zipcape', name: 'Zip Cape', tag: 'Hero icon', saga: 'cape', flair: 'Serious zip · one-blink rush',
+    hpMul: 1.08, spdMul: 0.98, dmgMul: 1.02, crit: 0.07, critMul: 1.48, sig: 'reach', unlock: () => save.lvl >= 10 },
+  { id: 'zipcape', name: 'Serious Cape', tag: 'Cape · speed', saga: 'cape', flair: 'Hero zip · nunchaku blur · glass cannon SPD',
     styleId: 'classic', bodyColor: '#ffe259', weapon: 'nunchaku', special: 'chidori',
-    hpMul: 0.82, spdMul: 1.18, dmgMul: 0.92, crit: 0.14, critMul: 1.62, sig: 'combo', unlock: () => save.trainWins >= 2 },
-  { id: 'dawnlance', name: 'Dawn Lance', tag: 'Sin icon', saga: 'dawn', flair: 'Holy lance · dawn rinne',
+    hpMul: 0.78, spdMul: 1.24, dmgMul: 0.94, crit: 0.15, critMul: 1.65, sig: 'combo', unlock: () => save.trainWins >= 2 },
+  { id: 'dawnlance', name: 'Holy Lance', tag: 'Dawn · lancer', saga: 'dawn', flair: 'Sin lance · spear reach · balanced STR+RNG',
     styleId: 'samurai', weapon: 'speer', special: 'rinnegan',
-    hpMul: 1.08, spdMul: 1.02, dmgMul: 1.1, crit: 0.11, critMul: 1.58, sig: 'rinne', unlock: () => save.lvl >= 30 },
+    hpMul: 1.12, spdMul: 0.96, dmgMul: 1.12, crit: 0.1, critMul: 1.58, sig: 'kenjutsu', unlock: () => save.lvl >= 30 },
 ];
 const vsRosterEntry = id => VS_ROSTER.find(r => r.id === id) || VS_ROSTER[0];
 function vsUnlocked(r) { return !r.unlock || r.unlock(); }
@@ -5309,6 +5349,8 @@ function seedNlGameStrings() {
     charEmpty: 'Geen vechters in deze saga — tik ⭐ Alle',
     charLocked: '🔒 Locked',
     charIconRow: 'Saga-icons · deel 2 — tik om te kiezen',
+    charBig5Title: 'Big 5 · kies saga-icon',
+    charBig5Hint: 'Ki · Scroll · Tide · Cape · Dawn — parodie-namen, elk andere STR/RNG/DPS',
     charBackP1: '← Andere P1',
     charBackMenu: '← Menu',
     charFight: 'VECHT! (best-of-3)',
@@ -5725,6 +5767,8 @@ const CATALOG_EN = {
     charEmpty: 'No fighters in this saga — tap ⭐ All',
     charLocked: '🔒 Locked',
     charIconRow: 'Saga icons · part 2 — tap to pick',
+    charBig5Title: 'Big 5 · pick saga icon',
+    charBig5Hint: 'Ki · Scroll · Tide · Cape · Dawn — parody names, each with unique STR/RNG/DPS',
     charBackP1: '← Other P1',
     charBackMenu: '← Menu',
     charFight: 'FIGHT! (best-of-3)',
@@ -14060,9 +14104,12 @@ function initCharSelectChrome() {
   const sortBtn = document.getElementById('btnCharSort');
   if (sortBtn && !sortBtn.dataset.sfSortBound) {
     sortBtn.dataset.sfSortBound = '1';
-    const sortLabels = { name: 'naam', hp: 'HP', spd: 'SPD', dmg: 'DMG' };
+    const sortLabels = {
+      name: 'naam', tot: 'TOT', str: 'STR', rng: 'RNG', meleeDps: 'mDPS', rangeDps: 'rDPS',
+      hp: 'HP', spd: 'SPD', dmg: 'DMG',
+    };
     const cycleSort = () => {
-      const order = ['name', 'hp', 'spd', 'dmg'];
+      const order = ['name', 'tot', 'str', 'rng', 'meleeDps', 'rangeDps', 'hp', 'spd', 'dmg'];
       const i = order.indexOf(UI.charSortMode || 'name');
       UI.charSortMode = order[(i + 1) % order.length];
       sortBtn.textContent = 'Sort: ' + (sortLabels[UI.charSortMode] || 'naam');
@@ -14570,7 +14617,7 @@ const UI = {
         const mini = document.createElement('div');
         mini.className = 'char-mini-stat';
         const st = vsFighterStats(r);
-        mini.textContent = `HP ${st.hp} · ${st.dmg}% · ${st.sig.split(' ')[0]}`;
+        mini.textContent = `STR ${st.str} · RNG ${st.rng} · mDPS ${st.meleeDps} · rDPS ${st.rangeDps}`;
         el.appendChild(mini);
       }
       grid.appendChild(el);
@@ -14681,8 +14728,12 @@ const UI = {
     row.innerHTML = '';
     const label = document.createElement('div');
     label.className = 'char-icon-row-title';
-    label.textContent = t('ui.charIconRow');
+    label.textContent = t('ui.charBig5Title');
     row.appendChild(label);
+    const hint = document.createElement('div');
+    hint.className = 'char-icon-row-hint';
+    hint.textContent = t('ui.charBig5Hint');
+    row.appendChild(hint);
     const strip = document.createElement('div');
     strip.className = 'char-icon-strip';
     for (const id of SAGA_ICON_IDS) {
@@ -14701,8 +14752,15 @@ const UI = {
       chip.appendChild(cv);
       const cap = document.createElement('span');
       cap.className = 'char-icon-name';
-      cap.textContent = r.name.replace(' Stick', '').replace(' Kid', '');
+      cap.textContent = r.name;
       chip.appendChild(cap);
+      if (ok) {
+        const st = vsFighterStats(r);
+        const stat = document.createElement('span');
+        stat.className = 'char-icon-stat';
+        stat.textContent = `STR${st.str} RNG${st.rng}`;
+        chip.appendChild(stat);
+      }
       strip.appendChild(chip);
     }
     row.appendChild(strip);

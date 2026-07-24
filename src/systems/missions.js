@@ -988,21 +988,38 @@ function gokGooiStartFromScreen() {
   }
 }
 
+function vsWeaponRangeFactor(w) {
+  if (!w) return 0.25;
+  if (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) return 1;
+  if (w.id === 'boemerang') return 0.88;
+  if (w.range >= 74) return 0.72;
+  if (w.range >= 58) return 0.48;
+  return 0.22;
+}
 function vsFighterStats(entry) {
+  const w = weaponById(entry.weapon);
   const hp = Math.round(100 * entry.hpMul);
   const spd = Math.round(100 * entry.spdMul);
   const dmg = Math.round(100 * entry.dmgMul);
+  const crit = entry.crit != null ? entry.crit : 0.08;
+  const critMul = entry.critMul != null ? entry.critMul : 1.5;
+  const critPct = Math.round(crit * 100);
+  const str = Math.round(Math.min(100, dmg * (w.dmg || 1) * (0.72 + crit * critMul * 0.35)));
+  const rng = Math.round(Math.min(100, ((w.range || 38) / 78) * 100));
+  const meleeScale = (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) ? 0.38
+    : (w.id === 'boemerang' ? 0.52 : 1);
+  const meleeDps = Math.round(Math.min(100, (dmg * (w.speed || 1) * spd) / 88 * meleeScale));
+  const rangeDps = Math.round(Math.min(100, (dmg * (w.speed || 1) * rng) / 72 * vsWeaponRangeFactor(w) * (0.82 + crit * 0.9)));
   let special = 'Rasengan';
   if (entry.isRobot) special = 'Robot · Chidori';
   else if (entry.special === 'chidori') special = 'Chidori';
   else if (entry.special === 'rinnegan') special = 'Rinnegan';
-  const critPct = Math.round((entry.crit != null ? entry.crit : 0.08) * 100);
   const sigKey = entry.sig || 'balanced';
   const sig = VS_SIG_LABELS[sigKey] || sigKey;
-  return { hp, spd, dmg, wpn: weaponById(entry.weapon).name, special, critPct, sig, sigKey };
+  return { hp, spd, dmg, str, rng, meleeDps, rangeDps, wpn: w.name, special, critPct, sig, sigKey };
 }
 function vsOverallRating(s) {
-  return Math.round((s.hp + s.spd + s.dmg) / 3);
+  return Math.round((s.str + s.rng + s.meleeDps + s.rangeDps + s.hp * 0.35 + s.spd * 0.25) / 4.6);
 }
 function vsPlayedBefore(id) {
   return Array.isArray(save.vsPlayedIds) && save.vsPlayedIds.includes(id);
@@ -1012,11 +1029,15 @@ function vsUnlockedCount() {
 }
 function sortVsRoster(list, mode) {
   const arr = list.slice();
-  if (mode === 'hp' || mode === 'spd' || mode === 'dmg') {
+  const statSort = ['hp', 'spd', 'dmg', 'str', 'rng', 'meleeDps', 'rangeDps', 'tot'];
+  if (statSort.includes(mode)) {
     arr.sort((a, b) => {
       const sa = vsFighterStats(a);
       const sb = vsFighterStats(b);
-      const d = sb[mode] - sa[mode];
+      const key = mode === 'tot' ? null : mode;
+      const va = key ? sa[key] : vsOverallRating(sa);
+      const vb = key ? sb[key] : vsOverallRating(sb);
+      const d = vb - va;
       return d !== 0 ? d : a.name.localeCompare(b.name);
     });
   } else {
@@ -1044,6 +1065,14 @@ function vsMatchupHint(s1, s2) {
   else if (s2.hp >= s1.hp + 8) hints.push('P2 tankier');
   if (s1.dmg >= s2.dmg + 8) hints.push('P1 harder hits');
   else if (s2.dmg >= s1.dmg + 8) hints.push('P2 harder hits');
+  if (s1.str >= s2.str + 8) hints.push('P1 sterker (STR)');
+  else if (s2.str >= s1.str + 8) hints.push('P2 sterker (STR)');
+  if (s1.rng >= s2.rng + 8) hints.push('P1 meer reach');
+  else if (s2.rng >= s1.rng + 8) hints.push('P2 meer reach');
+  if (s1.meleeDps >= s2.meleeDps + 8) hints.push('P1 melee DPS');
+  else if (s2.meleeDps >= s1.meleeDps + 8) hints.push('P2 melee DPS');
+  if (s1.rangeDps >= s2.rangeDps + 8) hints.push('P1 range DPS');
+  else if (s2.rangeDps >= s1.rangeDps + 8) hints.push('P2 range DPS');
   if (s1.critPct >= s2.critPct + 3) hints.push('P1 meer crit');
   else if (s2.critPct >= s1.critPct + 3) hints.push('P2 meer crit');
   if (s1.sigKey !== s2.sigKey) hints.push(`${s1.sig.split(' ')[0]} vs ${s2.sig.split(' ')[0]}`);
@@ -1094,9 +1123,12 @@ function vsStatPreviewHtml(e1, e2, previewing, lockedPreview) {
     `<div class="vs-preview-sig">${s.sig} · ${s.critPct}% crit</div>` +
     `<div class="vs-preview-flair">${flair}</div>` +
     `${vsStatBar('TOT', vsOverallRating(s), '#ffd75e')}` +
+    `${vsStatBar('STR', s.str, '#ff9a42', locked ? '' : vsStatDeltaTag(s.str, theirs.str))}` +
+    `${vsStatBar('RNG', s.rng, '#c792ff', locked ? '' : vsStatDeltaTag(s.rng, theirs.rng))}` +
+    `${vsStatBar('mDPS', s.meleeDps, '#ff7a4d', locked ? '' : vsStatDeltaTag(s.meleeDps, theirs.meleeDps))}` +
+    `${vsStatBar('rDPS', s.rangeDps, '#7cf5ff', locked ? '' : vsStatDeltaTag(s.rangeDps, theirs.rangeDps))}` +
     `${vsStatBar('HP', s.hp, '#6ee06e', locked ? '' : vsStatDeltaTag(s.hp, theirs.hp))}` +
-    `${vsStatBar('SPD', s.spd, '#7cf5ff', locked ? '' : vsStatDeltaTag(s.spd, theirs.spd))}` +
-    `${vsStatBar('DMG', s.dmg, '#ff7a4d', locked ? '' : vsStatDeltaTag(s.dmg, theirs.dmg))}</div>`;
+    `${vsStatBar('SPD', s.spd, '#9db1e3', locked ? '' : vsStatDeltaTag(s.spd, theirs.spd))}</div>`;
   };
   const hint = lockedPreview ? 'Unlock om te kiezen — stats zijn preview' : vsMatchupHint(s1, s2);
   const meter = lockedPreview ? '' : vsMatchupMeter(s1, s2);

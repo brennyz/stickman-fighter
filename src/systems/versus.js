@@ -26,8 +26,16 @@ function sagaIconSvg(id) {
 }
 function rosterFlair(r) { return r.flair || r.tag; }
 
-/** Deel 2 — vijf saga-icon sticks (parodie per saga) */
+/** Big 5 saga picks — één icon per parodie-saga (Ki / Scroll / Tide / Cape / Dawn). */
 const SAGA_ICON_IDS = ['kiball', 'scrollkid', 'tidecrew', 'zipcape', 'dawnlance'];
+const VS_BIG5 = {
+  kiball: { saga: 'ki', label: 'Ki-saga', hint: 'Ki-spikes · power trainee (DBZ-vibes)' },
+  scrollkid: { saga: 'scroll', label: 'Scroll-saga', hint: 'Headband ninja · clone dash (Naruto-vibes)' },
+  tidecrew: { saga: 'tide', label: 'Tide-saga', hint: 'Rubber reach · crew stretch (One Piece-vibes)' },
+  zipcape: { saga: 'cape', label: 'Cape-saga', hint: 'Serious zip · blink hero (OPM-vibes)' },
+  dawnlance: { saga: 'dawn', label: 'Dawn-saga', hint: 'Holy lance · sin aura (SDS-vibes)' },
+};
+function vsBig5Meta(id) { return VS_BIG5[id] || null; }
 function sagaIconEntries() {
   return SAGA_ICON_IDS.map(id => vsRosterEntry(id));
 }
@@ -158,21 +166,21 @@ const VS_ROSTER = [
   { id: 'dragon', name: 'Kristallo', tag: 'Baas', saga: 'ki', flair: 'Crystal ki · boss spike',
     styleId: 'gold', weapon: 'donder',
     hpMul: 1.08, spdMul: 0.94, dmgMul: 1.18, crit: 0.11, critMul: 1.75, sig: 'boss', unlock: () => save.unlocked >= 45 },
-  { id: 'kiball', name: 'Ki-Ball Stick', tag: 'Ki icon', saga: 'ki', flair: 'Orange trainee · ki-ball spam',
+  { id: 'kiball', name: 'Spiky Ki', tag: 'Ki · melee DPS', saga: 'ki', flair: 'Orange trainee · ki-ball rush · high STR',
     styleId: 'gold', bodyColor: '#ff9a42', weapon: 'donder', special: 'rasengan',
-    hpMul: 1.02, spdMul: 1.04, dmgMul: 1.06, crit: 0.1, critMul: 1.52, sig: 'storm', unlock: () => save.lvl >= 6 },
-  { id: 'scrollkid', name: 'Scroll Kid', tag: 'Ninja icon', saga: 'scroll', flair: 'Scroll dash · clone feint',
+    hpMul: 1.0, spdMul: 1.1, dmgMul: 1.14, crit: 0.09, critMul: 1.55, sig: 'heavy', unlock: () => save.lvl >= 6 },
+  { id: 'scrollkid', name: 'Bandana Kid', tag: 'Scroll · crit', saga: 'scroll', flair: 'Clone dash · kunai flurry · crit assassin',
     styleId: 'konoha', weapon: 'kunai', special: 'rasengan',
-    hpMul: 0.92, spdMul: 1.1, dmgMul: 0.96, crit: 0.12, critMul: 1.48, sig: 'assassin', unlock: () => true },
-  { id: 'tidecrew', name: 'Tide Crew', tag: 'Crew icon', saga: 'tide', flair: 'Crew hat energy · stretch hits',
+    hpMul: 0.9, spdMul: 1.12, dmgMul: 1.0, crit: 0.14, critMul: 1.55, sig: 'assassin', unlock: () => true },
+  { id: 'tidecrew', name: 'Rubber Crew', tag: 'Tide · range', saga: 'tide', flair: 'Stretch captain · boomerang reach · range DPS',
     styleId: 'sand', weapon: 'boemerang',
-    hpMul: 1.06, spdMul: 1.02, dmgMul: 1.04, crit: 0.08, critMul: 1.5, sig: 'reach', unlock: () => save.lvl >= 10 },
-  { id: 'zipcape', name: 'Zip Cape', tag: 'Hero icon', saga: 'cape', flair: 'Serious zip · one-blink rush',
+    hpMul: 1.08, spdMul: 0.98, dmgMul: 1.02, crit: 0.07, critMul: 1.48, sig: 'reach', unlock: () => save.lvl >= 10 },
+  { id: 'zipcape', name: 'Serious Cape', tag: 'Cape · speed', saga: 'cape', flair: 'Hero zip · nunchaku blur · glass cannon SPD',
     styleId: 'classic', bodyColor: '#ffe259', weapon: 'nunchaku', special: 'chidori',
-    hpMul: 0.82, spdMul: 1.18, dmgMul: 0.92, crit: 0.14, critMul: 1.62, sig: 'combo', unlock: () => save.trainWins >= 2 },
-  { id: 'dawnlance', name: 'Dawn Lance', tag: 'Sin icon', saga: 'dawn', flair: 'Holy lance · dawn rinne',
+    hpMul: 0.78, spdMul: 1.24, dmgMul: 0.94, crit: 0.15, critMul: 1.65, sig: 'combo', unlock: () => save.trainWins >= 2 },
+  { id: 'dawnlance', name: 'Holy Lance', tag: 'Dawn · lancer', saga: 'dawn', flair: 'Sin lance · spear reach · balanced STR+RNG',
     styleId: 'samurai', weapon: 'speer', special: 'rinnegan',
-    hpMul: 1.08, spdMul: 1.02, dmgMul: 1.1, crit: 0.11, critMul: 1.58, sig: 'rinne', unlock: () => save.lvl >= 30 },
+    hpMul: 1.12, spdMul: 0.96, dmgMul: 1.12, crit: 0.1, critMul: 1.58, sig: 'kenjutsu', unlock: () => save.lvl >= 30 },
 ];
 const vsRosterEntry = id => VS_ROSTER.find(r => r.id === id) || VS_ROSTER[0];
 function vsUnlocked(r) { return !r.unlock || r.unlock(); }
