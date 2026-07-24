@@ -46,6 +46,55 @@ function pickSagaIconClash() {
   return { a, b };
 }
 
+const VS_SIG_LABELS = {
+  balanced: 'Balanced all-round',
+  shuriken: 'Wapen-crit focus',
+  assassin: 'Kick-assassin',
+  heavy: 'Zware crit-slagen',
+  combo: 'Combo-kick chain',
+  kenjutsu: 'Kenjutsu crit',
+  hitrun: 'Hit & run kicks',
+  quak: 'Quak punch',
+  rinne: 'Rinne jutsu boost',
+  boss: 'Baas-crit',
+  storm: 'Storm kicks',
+  tank: 'Tank punch + kb',
+  reach: 'Reach wapen',
+};
+
+function vsSagaUnlockedCounts(sagaId) {
+  const list = sagaId === 'all' ? VS_ROSTER : VS_ROSTER.filter(r => (r.saga || 'scroll') === sagaId);
+  return { unlocked: list.filter(vsUnlocked).length, total: list.length };
+}
+
+function charRosterNextUnlock() {
+  for (const r of VS_ROSTER) {
+    if (!vsUnlocked(r)) return { name: r.name, hint: vsUnlockHint(r) };
+  }
+  return null;
+}
+
+/** Willekeurig duo met vergelijkbare overall-rating (fair match, geen dmg-tweak). */
+function pickBalancedRandomDuo() {
+  const pool = pickCharPoolFiltered();
+  if (pool.length < 2) return null;
+  const rated = pool.map(r => ({ r, rating: vsOverallRating(vsFighterStats(r)) }));
+  const a = choice(rated);
+  let best = null;
+  let bestDiff = 999;
+  for (const x of rated) {
+    if (x.r.id === a.r.id) continue;
+    const d = Math.abs(x.rating - a.rating);
+    if (d < bestDiff) { bestDiff = d; best = x; }
+  }
+  if (!best) {
+    const rest = rated.filter(x => x.r.id !== a.r.id);
+    best = rest.length ? choice(rest) : null;
+  }
+  if (!best) return null;
+  return { a: a.r, b: best.r, ratingDiff: bestDiff };
+}
+
 const VS_ROSTER = [
   { id: 'hero', name: 'Stick Ninja', tag: 'Balanced', saga: 'scroll', flair: 'Headband rookie · balanced kunai',
     styleId: 'classic', weapon: 'kunai',

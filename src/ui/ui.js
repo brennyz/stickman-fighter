@@ -39,9 +39,18 @@ function initCharSelectChrome() {
       runPick(card);
     }, { passive: false });
     grid.addEventListener('pointerover', (e) => {
-      const card = e.target.closest('.char-card:not(.locked)');
+      const card = e.target.closest('.char-card');
       if (!card || !card.dataset.id) return;
       if (UI.charPreviewHoverId === card.dataset.id) return;
+      UI.charPreviewHoverId = card.dataset.id;
+      grid.querySelectorAll('.char-card.preview-hov').forEach(c => c.classList.remove('preview-hov'));
+      if (!card.classList.contains('locked')) card.classList.add('preview-hov');
+      else card.classList.add('preview-hov');
+      updateCharStatPreview();
+    });
+    grid.addEventListener('pointerdown', (e) => {
+      const card = e.target.closest('.char-card');
+      if (!card || !card.dataset.id) return;
       UI.charPreviewHoverId = card.dataset.id;
       grid.querySelectorAll('.char-card.preview-hov').forEach(c => c.classList.remove('preview-hov'));
       card.classList.add('preview-hov');
@@ -512,7 +521,16 @@ const UI = {
     const sagaBar = document.getElementById('charSagaBar');
     if (sagaBar) {
       sagaBar.querySelectorAll('[data-saga]').forEach((btn) => {
-        btn.classList.toggle('active', (btn.dataset.saga || 'all') === filter);
+        const sid = btn.dataset.saga || 'all';
+        btn.classList.toggle('active', sid === filter);
+        const c = vsSagaUnlockedCounts(sid);
+        let badge = btn.querySelector('.saga-count');
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'saga-count';
+          btn.appendChild(badge);
+        }
+        badge.textContent = ` (${c.unlocked}/${c.total})`;
       });
     }
     const grid = document.getElementById('charGrid');
@@ -583,7 +601,7 @@ const UI = {
         const mini = document.createElement('div');
         mini.className = 'char-mini-stat';
         const st = vsFighterStats(r);
-        mini.textContent = `HP ${st.hp} · ${st.dmg}% dmg · ${st.critPct}% crit`;
+        mini.textContent = `HP ${st.hp} · ${st.dmg}% · ${st.sig.split(' ')[0]}`;
         el.appendChild(mini);
       }
       grid.appendChild(el);
@@ -660,7 +678,28 @@ const UI = {
         this.renderCharSelect();
         const sa = vsFighterStats(a);
         const sb = vsFighterStats(b);
-        UI.toast(`${a.name} vs ${b.name} · HP ${sa.hp}/${sb.hp} · DMG ${sa.dmg}/${sb.dmg}`, 2800);
+        UI.toast(`${a.name} vs ${b.name} · HP ${sa.hp}/${sb.hp} · TOT ${vsOverallRating(sa)}/${vsOverallRating(sb)}`, 2800);
+      });
+    }
+    const rndFair = document.getElementById('btnCharRandomFair');
+    if (rndFair && !rndFair.dataset.bound) {
+      rndFair.dataset.bound = '1';
+      bindPress(rndFair, () => {
+        AudioSys.sfx('select');
+        const duo = pickBalancedRandomDuo();
+        if (!duo) {
+          UI.toast('Niet genoeg unlocked vechters in deze saga', 2400);
+          return;
+        }
+        vsSelect.p1 = duo.a.id;
+        vsSelect.p2 = duo.b.id;
+        this.charPickStep = 2;
+        this.charPreviewHoverId = null;
+        this.renderCharSelect();
+        const sa = vsFighterStats(duo.a);
+        const sb = vsFighterStats(duo.b);
+        const diff = duo.ratingDiff != null ? duo.ratingDiff : Math.abs(vsOverallRating(sa) - vsOverallRating(sb));
+        UI.toast(`Fair duo: ${duo.a.name} vs ${duo.b.name} · TOT Δ${diff}`, 3000);
       });
     }
   },

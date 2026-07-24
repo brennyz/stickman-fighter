@@ -1,16 +1,42 @@
 {
   "version": 3,
-  "cyclesCompleted": 3,
+  "cyclesCompleted": 4,
   "rollFirst": [],
-  "remaining": [],
+  "remaining": [
+    14,
+    15,
+    10,
+    9,
+    5,
+    20,
+    13,
+    2,
+    4,
+    16,
+    7,
+    1,
+    11,
+    8,
+    17,
+    12,
+    6,
+    19,
+    3
+  ],
   "lastRoll": {
-    "face": 16,
-    "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
-    "rolledAt": "2026-07-24T19:46:39Z",
-    "remainingCount": 0,
-    "cycle": 3
+    "face": 18,
+    "category": "Character select \u2014 roster UI, stats, random duo",
+    "rolledAt": "2026-07-24T20:39:03Z",
+    "remainingCount": 19,
+    "cycle": 4
   },
-  "pending": null,
+  "pending": {
+    "face": 18,
+    "category": "Character select \u2014 roster UI, stats, random duo",
+    "rolledAt": "2026-07-24T20:39:03Z",
+    "remainingCount": 19,
+    "cycle": 4
+  },
   "implemented": [
     {
       "face": 2,
@@ -523,6 +549,8 @@
       "status": "done",
       "note": "off-d20 user feature; spatial SFX + adventure stage audio pass"
     },
+    {
+      "id": "snd-extravaganza-2",
       "d20Face": null,
       "userWords": "Sounds extravanganza please lets go",
       "versions": [
@@ -533,6 +561,8 @@
       "status": "done",
       "note": "off-d20 user feature; extravaganza pass on v1.17.43 audio"
     },
+    {
+      "id": "snd-extravaganza-1",
       "d20Face": null,
       "userWords": "Give mor amazing sounds!",
       "versions": [
@@ -1620,6 +1650,13 @@
       "rolledAt": "2026-07-24T19:46:39Z",
       "remainingCount": 0,
       "cycle": 3
+    },
+    {
+      "face": 18,
+      "category": "Character select \u2014 roster UI, stats, random duo",
+      "rolledAt": "2026-07-24T20:39:03Z",
+      "remainingCount": 19,
+      "cycle": 4
     }
   ],
   "rollBacklog": []
