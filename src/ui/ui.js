@@ -1088,7 +1088,7 @@ const UI = {
         if (boss) tip += pick * LEVELS_PER_ISLAND === n ? ' · eiland-baas — opent volgend eiland' : ' · tussendoor-baas';
         if (best > 0) tip += ` · jouw ${'★'.repeat(best)}${'☆'.repeat(3 - best)}`;
         if (fails > 0) tip += ` · ${fails}× verloren${fails >= 5 ? ' · Meester-buff actief' : ''}`;
-        tip += ' · Tik = Roll & gogo · Lang = zonder gok';
+        tip += ' · Tik = Gooi & start · Lang = zonder gok';
         el.title = tip;
         let holdT = null;
         let holdSkip = false;
@@ -1111,7 +1111,7 @@ const UI = {
         el.addEventListener('pointercancel', cancelHold);
         el.addEventListener('click', () => {
           if (holdSkip) { holdSkip = false; return; }
-          safeUiAction(() => rollGogoForLevel(n), 'rollGogo/' + n, 'Level starten mislukt');
+          safeUiAction(() => gokGooiStartLevel(n), 'gokStart/' + n, 'Level starten mislukt');
         });
       }
       grid.appendChild(el);
@@ -1136,7 +1136,7 @@ const UI = {
       if (sumLine) sumLine.textContent = `Som: ${g.d1} + ${g.d2} = ${g.sum}`;
     } else {
       if (diceRow) diceRow.textContent = '? ?';
-      if (sumLine) sumLine.textContent = 'Tik Gooi & gogo! — of overslaan zonder gok';
+      if (sumLine) sumLine.textContent = 'Tik Gooi & start — of overslaan zonder gok';
     }
     if (outEl) {
       if (!g) outEl.textContent = 'Super-baas (som ≤5) of super-bondgenoot (som ≥9) kan dit level veranderen.';

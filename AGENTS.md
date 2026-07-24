@@ -37,7 +37,7 @@ Stickman Fighter wordt door **meerdere cloud-agent runs** aangepast (iPad-app, M
 | Bestand | Doel |
 |---------|------|
 | **`agent-handoff.json`** | Open wensen, canonical URL, versie waarheid, sessielog |
-| **`IMPROVEMENT.md`** | d20-loop, agent log, veilig wijzigen |
+| **`IMPROVEMENT.md`** | d20-loop (`npm run roll`), agent log, veilig wijzigen |
 | **`IPAD-GEEN-COMMANDO.txt`** | Wat Mats op iPad wél/niet doet |
 
 ## Wat elke agent **bij afloop** doet

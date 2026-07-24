@@ -103,7 +103,7 @@ bindPress(document.getElementById('menuProfileBar'), () => {
   UI.renderMissions();
   UI.show('missionsScreen');
 });
-bindPress(document.getElementById('btnGambleRollGo'), () => rollAndGoAdventure());
+bindPress(document.getElementById('btnGambleGooiStart'), () => gokGooiStartFromScreen());
 bindPress(document.getElementById('btnGambleSkip'), () => {
   AudioSys.sfx('select');
   startAdventureFromGamble(true);
@@ -467,7 +467,7 @@ if (pauseVsRestart) {
 bindPress(document.getElementById('resAgain'), () => {
   const d = UI.lastResult;
   AudioSys.sfx('select');
-  if (d.mode === 'adventure') rollGogoForLevel(d.level);
+  if (d.mode === 'adventure') gokGooiStartLevel(d.level);
   else if (d.mode === 'versus') {
     const p1 = d.p1 || vsSelect.p1;
     const p2 = d.p2 || vsSelect.p2;
@@ -482,7 +482,7 @@ bindPress(document.getElementById('resNext'), () => {
   const d = UI.lastResult;
   if (!d || d.mode !== 'adventure' || !d.win) return;
   AudioSys.sfx('select');
-  rollGogoForLevel(Math.min(MAX_LEVEL, d.level + 1));
+  gokGooiStartLevel(Math.min(MAX_LEVEL, d.level + 1));
 });
 bindPress(document.getElementById('resMenu'), () => { UI.goMenu(); });
 
