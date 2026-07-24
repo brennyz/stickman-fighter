@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.16.3';
+const APP_VERSION = '1.16.4';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 120;
+const SW_CACHE_REV = 121;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -3410,7 +3410,81 @@ function touchPadZone(x) {
   return x < lo ? 'p1' : 'p2';
 }
 
+/** Voorkom dat scroll/slide over menu-tegels meteen selecteert (iPad). */
+const TAP_SLOP_PX = IS_TOUCH ? 12 : 8;
+const _uiTap = { id: null, x: 0, y: 0, moved: false, scrolls: [] };
+let _uiLastGestureScroll = false;
+let _uiBlockClickAfterScroll = false;
+
+function uiTapScrollParents(fromEl) {
+  const out = [];
+  let el = fromEl;
+  while (el && el !== document.documentElement) {
+    if (el.scrollHeight > el.clientHeight + 2 || el.scrollWidth > el.clientWidth + 2) {
+      out.push({ el, top: el.scrollTop, left: el.scrollLeft });
+    }
+    el = el.parentElement;
+  }
+  return out;
+}
+
+function uiTapGuardMove(x, y) {
+  if (_uiTap.id == null) return;
+  if (Math.hypot(x - _uiTap.x, y - _uiTap.y) > TAP_SLOP_PX) _uiTap.moved = true;
+  if (_uiTap.moved) return;
+  for (const s of _uiTap.scrolls) {
+    if (Math.abs(s.el.scrollTop - s.top) > 1 || Math.abs(s.el.scrollLeft - s.left) > 1) {
+      _uiTap.moved = true;
+      break;
+    }
+  }
+}
+
+function uiTapGuardFinish(cancelled) {
+  const tap = !cancelled && _uiTap.id != null && !_uiTap.moved;
+  _uiLastGestureScroll = !tap;
+  if (!tap) _uiBlockClickAfterScroll = true;
+  _uiTap.id = null;
+  _uiTap.scrolls = [];
+}
+
+function uiTapAllowed() { return !_uiLastGestureScroll; }
+
+function initUiTapScrollGuard() {
+  if (window.__sfUiTapGuard) return;
+  window.__sfUiTapGuard = true;
+  document.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    _uiTap.id = e.pointerId;
+    _uiTap.x = e.clientX;
+    _uiTap.y = e.clientY;
+    _uiTap.moved = false;
+    _uiTap.scrolls = uiTapScrollParents(e.target);
+    _uiLastGestureScroll = false;
+  }, { passive: true, capture: true });
+  document.addEventListener('pointermove', (e) => {
+    if (_uiTap.id !== e.pointerId) return;
+    uiTapGuardMove(e.clientX, e.clientY);
+  }, { passive: true, capture: true });
+  document.addEventListener('pointerup', (e) => {
+    if (_uiTap.id !== e.pointerId) return;
+    uiTapGuardFinish(false);
+  }, { passive: true, capture: true });
+  document.addEventListener('pointercancel', (e) => {
+    if (_uiTap.id !== e.pointerId) return;
+    uiTapGuardFinish(true);
+  }, { passive: true, capture: true });
+  document.addEventListener('click', (e) => {
+    if (!_uiBlockClickAfterScroll) return;
+    _uiBlockClickAfterScroll = false;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  }, true);
+}
+
 function touchEndedOnSelector(e, selector) {
+  if (!uiTapAllowed()) return null;
   const t = e.changedTouches && e.changedTouches[0];
   const fromTarget = e.target && e.target.closest ? e.target.closest(selector) : null;
   if (!fromTarget) return null;
@@ -9459,6 +9533,7 @@ function bindPress(el, handler) {
   };
   el.addEventListener('click', run);
   el.addEventListener('touchend', (e) => {
+    if (!uiTapAllowed()) return;
     const t = e.changedTouches && e.changedTouches[0];
     if (t) {
       try {
@@ -10208,6 +10283,7 @@ function wireNetStatusTap() {
 function bootGame() {
   if (window.__sfBooted) return;
   window.__sfBooted = true;
+  initUiTapScrollGuard();
   try {
     const hadCorruptPrimary = saveStorageDiagnostics().primaryCorrupt;
     save = sanitizeSave(save || Object.assign({}, DEFAULT_SAVE));

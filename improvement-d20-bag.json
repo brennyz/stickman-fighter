@@ -331,6 +331,18 @@
   ],
   "userFeatureLog": [
     {
+      "id": "menu-tile-scroll-tap",
+      "d20Face": null,
+      "userWords": "Als je over een tegel heen sleept in menu dan gaat hij direct daarheen, slide is dus gelijk kiezen",
+      "versions": [
+        "1.16.4"
+      ],
+      "commits": [],
+      "code": "initUiTapScrollGuard: pointer slop + scroll-parent delta; uiTapAllowed blocks bindPress/touchend; click capture suppresses ghost select after scroll",
+      "status": "done",
+      "note": "off-d20 user feedback; scrollen door level/char/wapen-tegels selecteert niet meer per ongeluk"
+    },
+    {
       "id": "weapon-3-move-styles",
       "d20Face": null,
       "userWords": "De wapen styles mogen bestaan uit 3 verschillende movements aub; Harden de styles",
