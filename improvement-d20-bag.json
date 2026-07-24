@@ -3,24 +3,24 @@
   "cyclesCompleted": 2,
   "rollFirst": [],
   "remaining": [
-    17,
     13,
     3,
     12,
     18,
-    2
+    2,
+    11
   ],
   "lastRoll": {
-    "face": 11,
-    "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
-    "rolledAt": "2026-07-24T15:26:55Z",
+    "face": 17,
+    "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
+    "rolledAt": "2026-07-24T15:27:12Z",
     "remainingCount": 6,
     "cycle": 2
   },
   "pending": {
-    "face": 11,
-    "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
-    "rolledAt": "2026-07-24T15:26:55Z",
+    "face": 17,
+    "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
+    "rolledAt": "2026-07-24T15:27:12Z",
     "remainingCount": 6,
     "cycle": 2
   },
@@ -1239,6 +1239,13 @@
       "face": 11,
       "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
       "rolledAt": "2026-07-24T15:26:55Z",
+      "remainingCount": 6,
+      "cycle": 2
+    },
+    {
+      "face": 17,
+      "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
+      "rolledAt": "2026-07-24T15:27:12Z",
       "remainingCount": 6,
       "cycle": 2
     }
