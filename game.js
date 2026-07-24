@@ -132,9 +132,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.24';
+const APP_VERSION = '1.17.25';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 150;
+const SW_CACHE_REV = 151;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -1647,7 +1647,7 @@ function resumeLastPlay() {
   if (!lp || !lp.mode) return false;
   try {
     if (lp.mode === 'adventure') {
-      openGambleForLevel(lp.level || 1);
+      rollGogoForLevel(lp.level || 1);
     } else if (lp.mode === 'versus') {
       startGame('versus', { p1: lp.p1, p2: lp.p2 });
     } else {
@@ -1685,6 +1685,24 @@ function startAdventureFromGamble(skipGamble) {
 
 let gambleRollGoBusy = false;
 
+/** Instant: level-tik → dobbel + vecht (geen tussen-scherm). */
+function rollGogoForLevel(n) {
+  if (gambleRollGoBusy) return;
+  gambleRollGoBusy = true;
+  try {
+    pendingAdvLevel = n;
+    AudioSys.init();
+    AudioSys.sfx('select');
+    lastGambleRoll = rollStageGamble();
+    try { AudioSys.sting('modeAdventure'); } catch (_) {}
+    gambleRollGoBusy = false;
+    startAdventureFromGamble(false);
+  } catch (err) {
+    gambleRollGoBusy = false;
+    sfReportError('rollGogo', err, 'Roll & gogo mislukt — probeer opnieuw');
+  }
+}
+
 function rollAndGoAdventure() {
   if (gambleRollGoBusy) return;
   gambleRollGoBusy = true;
@@ -1693,15 +1711,17 @@ function rollAndGoAdventure() {
     AudioSys.sfx('select');
     lastGambleRoll = rollStageGamble();
     UI.renderGamble(pendingAdvLevel || save.unlocked || 1);
+    const sumLine = document.getElementById('gambleSumLine');
+    if (sumLine) sumLine.textContent = 'GOGO!';
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
-    const delay = (save.reducedMotion || (typeof motionReduced === 'function' && motionReduced())) ? 100 : 380;
+    const delay = (save.reducedMotion || (typeof motionReduced === 'function' && motionReduced())) ? 50 : 140;
     setTimeout(() => {
       gambleRollGoBusy = false;
       startAdventureFromGamble(false);
     }, delay);
   } catch (err) {
     gambleRollGoBusy = false;
-    sfReportError('rollGo', err, 'Roll & go mislukt — probeer opnieuw');
+    sfReportError('rollGo', err, 'Roll & gogo mislukt — probeer opnieuw');
   }
 }
 
@@ -1947,7 +1967,7 @@ function applyGambleOnboarding() {
   persist();
   const outEl = document.getElementById('gambleOutcome');
   if (outEl && !lastGambleRoll) {
-    outEl.textContent = 'Eerste keer: som ≤5 = super-baas · som ≥9 = bondgenoot. Tik Gooi & start — of overslaan.';
+    outEl.textContent = 'Eerste keer: som ≤5 = super-baas · som ≥9 = bondgenoot. Tik level = Roll & gogo · lang = zonder gok.';
   }
 }
 
@@ -10900,11 +10920,31 @@ const UI = {
         if (boss) tip += pick * LEVELS_PER_ISLAND === n ? ' · eiland-baas — opent volgend eiland' : ' · tussendoor-baas';
         if (best > 0) tip += ` · jouw ${'★'.repeat(best)}${'☆'.repeat(3 - best)}`;
         if (fails > 0) tip += ` · ${fails}× verloren${fails >= 5 ? ' · Meester-buff actief' : ''}`;
+        tip += ' · Tik = Roll & gogo · Lang = zonder gok';
         el.title = tip;
-        el.addEventListener('click', () => safeUiAction(() => {
-          AudioSys.sfx('select');
-          openGambleForLevel(n);
-        }, 'openLevel/' + n, 'Level openen mislukt'));
+        let holdT = null;
+        let holdSkip = false;
+        el.addEventListener('pointerdown', () => {
+          holdSkip = false;
+          holdT = setTimeout(() => {
+            holdT = null;
+            holdSkip = true;
+            safeUiAction(() => {
+              AudioSys.sfx('select');
+              pendingAdvLevel = n;
+              lastGambleRoll = null;
+              startAdventureFromGamble(true);
+              try { UI.toast('Zonder gok', 1400); } catch (_) {}
+            }, 'skipGamble/' + n, 'Start mislukt');
+          }, 520);
+        }, { passive: true });
+        const cancelHold = () => { if (holdT) { clearTimeout(holdT); holdT = null; } };
+        el.addEventListener('pointerup', cancelHold);
+        el.addEventListener('pointercancel', cancelHold);
+        el.addEventListener('click', () => {
+          if (holdSkip) { holdSkip = false; return; }
+          safeUiAction(() => rollGogoForLevel(n), 'rollGogo/' + n, 'Level starten mislukt');
+        });
       }
       grid.appendChild(el);
     }
@@ -10928,7 +10968,7 @@ const UI = {
       if (sumLine) sumLine.textContent = `Som: ${g.d1} + ${g.d2} = ${g.sum}`;
     } else {
       if (diceRow) diceRow.textContent = '? ?';
-      if (sumLine) sumLine.textContent = 'Tik Gooi & start — of overslaan zonder gok';
+      if (sumLine) sumLine.textContent = 'Tik Gooi & gogo! — of overslaan zonder gok';
     }
     if (outEl) {
       if (!g) outEl.textContent = 'Super-baas (som ≤5) of super-bondgenoot (som ≥9) kan dit level veranderen.';
@@ -11818,7 +11858,7 @@ if (pauseVsRestart) {
 bindPress(document.getElementById('resAgain'), () => {
   const d = UI.lastResult;
   AudioSys.sfx('select');
-  if (d.mode === 'adventure') openGambleForLevel(d.level);
+  if (d.mode === 'adventure') rollGogoForLevel(d.level);
   else if (d.mode === 'versus') {
     const p1 = d.p1 || vsSelect.p1;
     const p2 = d.p2 || vsSelect.p2;
@@ -11833,7 +11873,7 @@ bindPress(document.getElementById('resNext'), () => {
   const d = UI.lastResult;
   if (!d || d.mode !== 'adventure' || !d.win) return;
   AudioSys.sfx('select');
-  openGambleForLevel(Math.min(MAX_LEVEL, d.level + 1));
+  rollGogoForLevel(Math.min(MAX_LEVEL, d.level + 1));
 });
 bindPress(document.getElementById('resMenu'), () => { UI.goMenu(); });
 
