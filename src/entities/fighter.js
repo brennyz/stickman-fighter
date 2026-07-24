@@ -621,7 +621,27 @@ class Fighter {
     // voorste been
     drawLimb(hipX, hipY, P.legs[1][0], P.legs[1][1], legL, legL);
     // hoofd
-    c.beginPath(); c.arc(headX, headY - 9, 10.5, 0, TAU); c.stroke();
+    if (this.bald) {
+      c.fillStyle = '#ffe8c8';
+      c.beginPath(); c.arc(headX, headY - 9, 10.5, 0, TAU); c.fill();
+      c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1.2;
+      c.beginPath(); c.arc(headX, headY - 9, 10.5, 0, TAU); c.stroke();
+      c.fillStyle = 'rgba(255,255,255,.4)';
+      c.beginPath(); c.arc(headX - 3, headY - 12, 2.8, 0, TAU); c.fill();
+    } else {
+      c.beginPath(); c.arc(headX, headY - 9, 10.5, 0, TAU); c.stroke();
+    }
+    if (this.gi === 'white' || this.gi === 'red' || this.gi === 'hero') {
+      const giFill = this.gi === 'red' ? 'rgba(220,48,48,.55)' : this.gi === 'hero' ? 'rgba(255,226,89,.72)' : 'rgba(255,255,255,.78)';
+      c.fillStyle = giFill;
+      c.fillRect(shX - 14, shY - 8, 28, 22);
+      c.strokeStyle = 'rgba(0,0,0,.2)'; c.lineWidth = 1;
+      c.strokeRect(shX - 14, shY - 8, 28, 22);
+      if (this.gi === 'hero') {
+        c.fillStyle = 'rgba(255,80,80,.75)';
+        c.fillRect(shX - 16, shY - 2, 6, 18);
+      }
+    }
     if (this.isPlayer && this.style) this.drawStyleExtras(c, headX, headY - 9, shX, shY, hipX, hipY);
     if (this.isRobot) this.drawRobotHead(c, headX, headY - 9);
 

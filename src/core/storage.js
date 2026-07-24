@@ -3,9 +3,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.61';
+const APP_VERSION = '1.17.62';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 187;
+const SW_CACHE_REV = 188;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -733,7 +733,13 @@ function sanitizeSave(s) {
     out.daily = null;
   }
   if (!Array.isArray(out.vsPlayedIds)) out.vsPlayedIds = [];
-  out.vsPlayedIds = out.vsPlayedIds.filter(id => typeof id === 'string' && VS_ROSTER.some(r => r.id === id)).slice(0, 32);
+  const played = [];
+  for (const raw of out.vsPlayedIds) {
+    if (typeof raw !== 'string') continue;
+    const id = migrateVsRosterId(raw);
+    if (VS_ROSTER.some(r => r.id === id) && !played.includes(id)) played.push(id);
+  }
+  out.vsPlayedIds = played.slice(0, 32);
 
   const allowedKeys = new Set(Object.keys(DEFAULT_SAVE));
   for (const k of Object.keys(out)) {

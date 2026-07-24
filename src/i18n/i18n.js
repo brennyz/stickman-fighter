@@ -24,7 +24,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Mats coins · dex temmen · ei arcade',
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
       dex: 'Monsterboek', dexSub: '114 soorten · rariteit = HP',
-      modes3: '3 snelle modi', fightersLocal: '23 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
+      modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
     },
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Mats · munten' },
     pause: {
@@ -83,7 +83,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Mats coins · dex tame · egg arcade',
       style: 'Style', styleSub: 'Bandana & outfit unlocks',
       dex: 'Monster book', dexSub: '114 species · rarity = HP',
-      modes3: '3 quick modes', fightersLocal: '23 fighters · local', vsRecord: '{w}/{m} won',
+      modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
     },
     modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Mats · coins' },
     pause: {
@@ -142,7 +142,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Mats-Coins · Dex zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
       dex: 'Monsterbuch', dexSub: '114 Arten · Seltenheit = HP',
-      modes3: '3 schnelle Modi', fightersLocal: '23 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
+      modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
     },
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Mats · Münzen' },
     pause: {
@@ -200,7 +200,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Pièces Mats · dex · œufs',
       style: 'Style', styleSub: 'Déblocages tenues',
       dex: 'Bestiaire', dexSub: '114 espèces · rareté = PV',
-      modes3: '3 modes rapides', fightersLocal: '23 combattants · local', vsRecord: '{w}/{m} victoires',
+      modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
     },
     modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Mats · pièces' },
     pause: {
@@ -258,7 +258,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Monedas Mats · dex · huevos',
       style: 'Estilo', styleSub: 'Desbloqueos de outfit',
       dex: 'Bestiario', dexSub: '114 especies · rareza = HP',
-      modes3: '3 modos rápidos', fightersLocal: '23 luchadores · local', vsRecord: '{w}/{m} ganados',
+      modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
     },
     modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Mats · monedas' },
     pause: {
@@ -499,6 +499,7 @@ function applyLangStaticScreens() {
   setText('installHead', 'install.title');
   setText('installSub', 'ui.installSub');
 
+  setText('charArenaPre', 'ui.charArenaPre');
   setText('charSelectHead', 'ui.charHead');
   setText('charSelectRosterLine', 'ui.charRosterLine');
   setText('levelScreenHead', 'ui.levelHead');
@@ -521,10 +522,8 @@ function applyLangStaticScreens() {
     helpTipsList.innerHTML = tips.map((line) => `<li>${line}</li>`).join('');
   }
 
-  const charIpadCard = document.querySelector('#charSelectScreen .step-card');
-  if (charIpadCard && charIpadCard.textContent.indexOf('iPad') >= 0) {
-    charIpadCard.innerHTML = t('ui.charIpadTip');
-  }
+  const charIpadCard = document.getElementById('charIpadTipCard');
+  if (charIpadCard) charIpadCard.innerHTML = t('ui.charIpadTip');
 
   const charFightBtn = document.getElementById('btnCharFight');
   if (charFightBtn) charFightBtn.textContent = t('ui.charFight');

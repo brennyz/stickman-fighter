@@ -12,10 +12,10 @@ function startGame(mode, opts) {
   try { dismissTunnelOverlayIfStatic(); } catch (_) {}
   if (mode === 'versus') {
     try {
-      opts.p1 = normalizeVsPick(opts.p1 || vsSelect.p1, 'hero');
-      opts.p2 = normalizeVsPick(opts.p2 || vsSelect.p2, 'rabbit');
+      opts.p1 = normalizeVsPick(opts.p1 || vsSelect.p1, 'ryu');
+      opts.p2 = normalizeVsPick(opts.p2 || vsSelect.p2, 'ken');
     } catch (_) {
-      opts.p1 = 'hero'; opts.p2 = 'rabbit';
+      opts.p1 = 'ryu'; opts.p2 = 'ken';
     }
   }
   try {

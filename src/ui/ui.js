@@ -556,8 +556,8 @@ const UI = {
       const sel1 = vsSelect.p1 === r.id;
       const sel2 = vsSelect.p2 === r.id;
       const focus = ok && ((this.charPickStep === 1 && !sel1) || (this.charPickStep === 2 && !sel2));
-      const isIcon = SAGA_ICON_IDS.includes(r.id);
-      el.className = 'char-card' + (ok ? '' : ' locked') + (isIcon ? ' saga-icon' : '') + (sel1 ? ' p1sel' : '') + (sel2 ? ' p2sel' : '') +
+      const isFeatured = VS_FEATURED_IDS.includes(r.id) || r.featured;
+      el.className = 'char-card' + (ok ? '' : ' locked') + (isFeatured ? ' saga-icon featured' : '') + (sel1 ? ' p1sel' : '') + (sel2 ? ' p2sel' : '') +
         (focus ? ' pick-hint' : '') + (this.charPreviewHoverId === r.id ? ' preview-hov' : '');
       el.dataset.id = r.id;
       el.setAttribute('role', 'button');
@@ -709,7 +709,7 @@ const UI = {
     row.appendChild(hint);
     const strip = document.createElement('div');
     strip.className = 'char-icon-strip';
-    for (const id of SAGA_ICON_IDS) {
+    for (const id of VS_FEATURED_IDS) {
       const r = vsRosterEntry(id);
       const ok = vsUnlocked(r);
       const chip = document.createElement('button');
