@@ -4,23 +4,23 @@
   "rollFirst": [],
   "remaining": [
     17,
-    11,
     13,
     3,
     12,
-    18
+    18,
+    2
   ],
   "lastRoll": {
-    "face": 2,
-    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
-    "rolledAt": "2026-07-24T15:26:21Z",
+    "face": 11,
+    "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
+    "rolledAt": "2026-07-24T15:26:55Z",
     "remainingCount": 6,
     "cycle": 2
   },
   "pending": {
-    "face": 2,
-    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
-    "rolledAt": "2026-07-24T15:26:21Z",
+    "face": 11,
+    "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
+    "rolledAt": "2026-07-24T15:26:55Z",
     "remainingCount": 6,
     "cycle": 2
   },
@@ -1232,6 +1232,13 @@
       "face": 2,
       "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
       "rolledAt": "2026-07-24T15:26:21Z",
+      "remainingCount": 6,
+      "cycle": 2
+    },
+    {
+      "face": 11,
+      "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
+      "rolledAt": "2026-07-24T15:26:55Z",
       "remainingCount": 6,
       "cycle": 2
     }
