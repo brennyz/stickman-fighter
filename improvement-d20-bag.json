@@ -13,14 +13,14 @@
   "lastRoll": {
     "face": 13,
     "category": "Missies & achievements \u2014 daily loop, beloningen",
-    "rolledAt": "2026-07-24T14:39:20Z",
+    "rolledAt": "2026-07-24T15:11:33Z",
     "remainingCount": 6,
     "cycle": 2
   },
   "pending": {
     "face": 13,
     "category": "Missies & achievements \u2014 daily loop, beloningen",
-    "rolledAt": "2026-07-24T14:39:20Z",
+    "rolledAt": "2026-07-24T15:11:33Z",
     "remainingCount": 6,
     "cycle": 2
   },
@@ -338,12 +338,12 @@
     {
       "id": "harden-movement",
       "d20Face": null,
-      "userWords": "Harden movement — strakkere loop, joy vasthouden, richting wissel",
+      "userWords": "Harden movement \u2014 strakkere loop, joy vasthouden, richting wissel",
       "versions": [
         "1.17.0"
       ],
       "commits": [],
-      "code": "applyFighterMove, padDigitalMove, joyMoveAxis; digital accel 2.4×, hurt-slide 42%, air 78%",
+      "code": "applyFighterMove, padDigitalMove, joyMoveAxis; digital accel 2.4\u00d7, hurt-slide 42%, air 78%",
       "status": "done",
       "note": "movement feel pass"
     },
@@ -362,7 +362,7 @@
     {
       "id": "ketsbam-escape-movement",
       "d20Face": null,
-      "userWords": "stunlock omringd door monsters — midden ketsbam symbool tikken voor explosie; betere links/rechts besturing",
+      "userWords": "stunlock omringd door monsters \u2014 midden ketsbam symbool tikken voor explosie; betere links/rechts besturing",
       "versions": [
         "1.16.8"
       ],
@@ -1092,6 +1092,13 @@
       "face": 13,
       "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-07-24T14:39:20Z",
+      "remainingCount": 6,
+      "cycle": 2
+    },
+    {
+      "face": 13,
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
+      "rolledAt": "2026-07-24T15:11:33Z",
       "remainingCount": 6,
       "cycle": 2
     }
