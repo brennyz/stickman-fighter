@@ -9,14 +9,13 @@
     16,
     11,
     8,
-    10,
     15
   ],
   "lastRoll": {
-    "face": 20,
-    "category": "Code health \u2014 kleine refactors, geen gameplay-break",
-    "rolledAt": "2026-07-24T19:02:42Z",
-    "remainingCount": 8,
+    "face": 10,
+    "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
+    "rolledAt": "2026-07-24T19:05:48Z",
+    "remainingCount": 7,
     "cycle": 3
   },
   "pending": null,
@@ -460,6 +459,13 @@
       "note": "dead gamble single pad volPct dedupe",
       "version": "1.17.38",
       "doneAt": "2026-07-24T19:05:18Z",
+      "cycle": 3
+    },
+    {
+      "face": 10,
+      "note": "calm FX HC HUD no flash",
+      "version": "1.17.39",
+      "doneAt": "2026-07-24T19:07:32Z",
       "cycle": 3
     }
   ],
@@ -1519,6 +1525,13 @@
       "category": "Code health \u2014 kleine refactors, geen gameplay-break",
       "rolledAt": "2026-07-24T19:02:42Z",
       "remainingCount": 8,
+      "cycle": 3
+    },
+    {
+      "face": 10,
+      "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
+      "rolledAt": "2026-07-24T19:05:48Z",
+      "remainingCount": 7,
       "cycle": 3
     }
   ],

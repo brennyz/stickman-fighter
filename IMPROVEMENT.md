@@ -109,6 +109,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-24 | **10** | A11y (cyclus 3): calm banners/telegraphs, static low-HP, no checkpoint flash, tint hit-flash, HC HUD text, toast off. v1.17.39 / SW v165. |
 | 2026-07-24 | **20** | Code health (cyclus 3): dead `openGambleForLevel`, single P1 pad, `volPct`, hitConfirm cache, redundant branches — zero gedrag. v1.17.38 / SW v164. |
 | 2026-07-24 | **9** | Touch (cyclus 3): bredere 2P neutraal-strip, dual joy-guard, uiTap op level/wapen/stijl, pan-y scroll + bigTouch slop. v1.17.37 / SW v163. |
 | 2026-07-24 | **4** | Avontuur (cyclus 3): golf-pips rij + Golf N/M label, reis-pauze countdown-ring, level-grid wave-strip (baas-pip) — geen xp/hp×. v1.17.36 / SW v162. |

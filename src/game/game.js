@@ -1537,6 +1537,10 @@ class Game {
   banner(txt, dur, color, size) {
     if (!perfFxBudgetAllow(this, 1)) return;
     if (perfFxRoom(this, 'banner') <= 0) return;
+    if (motionReduced()) {
+      dur = Math.min(dur, 1.15);
+      size = Math.min(size || 40, 32);
+    }
     const cap = fxCaps();
     if (this.banners.length >= cap.banners) this.banners.shift();
     this.banners.push({ txt, dur, color: color || '#fff', size: size || 40, t: 0 });
@@ -1598,7 +1602,7 @@ class Game {
         const meta = PICKUP_META[pk.kind];
         const y = pk.y + (pk.bob || 0);
         c.save();
-        const pkBlur = (save.liteFx || Perf.tier >= 1) ? 6 : 14;
+        const pkBlur = (save.liteFx || Perf.tier >= 1 || motionReduced()) ? 0 : 14;
         c.shadowColor = meta.color; c.shadowBlur = pkBlur;
         c.fillStyle = meta.color;
         c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.fill();
@@ -1726,10 +1730,14 @@ class Game {
       }
       c.font = `900 ${b.size}px -apple-system, sans-serif`;
       c.textAlign = 'center';
-      c.lineWidth = 8; c.strokeStyle = 'rgba(0,0,0,.55)';
-      c.strokeText(b.txt, 0, 0);
-      c.fillStyle = b.color;
-      c.fillText(b.txt, 0, 0);
+      if (a11yHighContrast()) {
+        fillHudText(c, b.txt, 0, 0, { fill: b.color, stroke: 'rgba(0,0,0,.9)', strokeW: 4 });
+      } else {
+        c.lineWidth = 8; c.strokeStyle = 'rgba(0,0,0,.55)';
+        c.strokeText(b.txt, 0, 0);
+        c.fillStyle = b.color;
+        c.fillText(b.txt, 0, 0);
+      }
       if (!fxLite() && !calm && fade > 0.35) {
         c.globalAlpha = fade * 0.42;
         c.strokeStyle = b.color;
@@ -1769,11 +1777,14 @@ class Game {
       this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
       c.fill();
       c.strokeStyle = 'rgba(255,215,94,.35)';
-      c.lineWidth = 1.5;
+      c.lineWidth = a11yHighContrast() ? 2.5 : 1.5;
       this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
       c.stroke();
-      c.fillStyle = '#fff';
-      c.fillText(hintTxt, W / 2, H * 0.2);
+      fillHudText(c, hintTxt, W / 2, H * 0.2, {
+        fill: '#fff',
+        stroke: 'rgba(0,0,0,.85)',
+        strokeW: a11yHighContrast() ? 3.5 : 0,
+      });
       c.globalAlpha = 1;
     }
   }
@@ -1809,6 +1820,7 @@ class Game {
   drawSuperMeterFill(c, x, y, w, h, pct, kind, t) {
     pct = clamp(pct, 0, 1);
     const ready = pct >= 1;
+    const calm = motionReduced();
     c.save();
     if (kind === 'chidori') {
       const seg = 10;
@@ -1818,7 +1830,7 @@ class Game {
         if (pct <= segStart) continue;
         const fill = Math.min(1, (pct - segStart) * seg);
         if (fill <= 0.01) continue;
-        const flick = 0.7 + Math.sin(t * 24 + i * 1.9) * 0.3;
+        const flick = calm ? 0.85 : (0.7 + Math.sin(t * 24 + i * 1.9) * 0.3);
         c.fillStyle = ready ? `rgba(168,224,255,${flick})` : `rgba(80,160,255,${0.45 + fill * 0.45})`;
         this.rr(c, x + i * segW + 1, y + 1, Math.max(1, segW * fill - 2), h - 2, 2);
         c.fill();
@@ -1829,13 +1841,13 @@ class Game {
         const segStart = i / rings;
         if (pct <= segStart) continue;
         const fill = Math.min(1, (pct - segStart) * rings);
-        const pulse = 0.55 + Math.sin(t * 9 + i * 1.1) * 0.25;
+        const pulse = calm ? 0.7 : (0.55 + Math.sin(t * 9 + i * 1.1) * 0.25);
         c.fillStyle = ready ? `rgba(196,122,255,${pulse})` : `rgba(100,40,160,${0.35 + fill * 0.45})`;
         const rw = w / rings;
         this.rr(c, x + i * rw + 1, y + 1, Math.max(1, rw * fill - 2), h - 2, 3);
         c.fill();
       }
-      if (pct > 0.2 && !fxLite()) {
+      if (pct > 0.2 && !fxLite() && !calm) {
         c.strokeStyle = `rgba(255,120,160,${0.25 + Math.sin(t * 6) * 0.12})`;
         c.lineWidth = 1;
         c.beginPath();
@@ -1852,7 +1864,7 @@ class Game {
         c.fillStyle = g;
         this.rr(c, x, y, fw, h, 5);
         c.fill();
-        if (pct > 0.12 && !fxLite()) {
+        if (pct > 0.12 && !fxLite() && !calm) {
           c.strokeStyle = `rgba(230,250,255,${0.28 + Math.sin(t * 7) * 0.12})`;
           c.lineWidth = 1.2;
           const cx = x + fw * 0.55;
@@ -2043,7 +2055,7 @@ class Game {
 
   /** Deel 3: checkpoint-flits + baas-aankomst overlays (boven de wereld, onder HUD-tekst). */
   drawStageBeatFx(c) {
-    if (this.partFlashT > 0) {
+    if (this.partFlashT > 0 && !motionReduced()) {
       const f = clamp(this.partFlashT / 0.5, 0, 1);
       const g = c.createRadialGradient(W / 2, 44, 10, W / 2, 44, H * 0.9);
       g.addColorStop(0, `rgba(124,245,255,${0.26 * f})`);
@@ -2065,9 +2077,10 @@ class Game {
     }
     if (this.bossArriveT > 0) {
       const f = clamp(this.bossArriveT / 0.7, 0, 1);
+      const mul = motionReduced() ? 0.45 : 1;
       const g = c.createRadialGradient(W / 2, H / 2, H * 0.15, W / 2, H / 2, H * 0.95);
-      g.addColorStop(0, `rgba(255,90,90,${0.1 * f})`);
-      g.addColorStop(1, `rgba(160,10,30,${0.28 * f})`);
+      g.addColorStop(0, `rgba(255,90,90,${0.1 * f * mul})`);
+      g.addColorStop(1, `rgba(160,10,30,${0.28 * f * mul})`);
       c.fillStyle = g;
       c.fillRect(0, 0, W, H);
     }
@@ -2112,7 +2125,7 @@ class Game {
       const cx = x0 + s * (segW + segGap) - segGap / 2;
       const passed = pr * 3 >= s;
       const justFlash = passed && this.partFlashT > 0 && Math.min(3, 1 + Math.floor(pr * 3)) === s + 1;
-      const r = justFlash ? 5.5 + Math.sin(this.t * 18) * 1.2 : 4;
+      const r = justFlash && !motionReduced() ? 5.5 + Math.sin(this.t * 18) * 1.2 : (justFlash ? 5 : 4);
       c.save();
       c.translate(cx, y);
       c.rotate(Math.PI / 4);
@@ -2270,8 +2283,9 @@ class Game {
   drawHUD(c) {
     if (this.mode === 'adventure') this.drawStageBeatFx(c);
     const p = this.player;
-    if (p && p.alive && p.maxhp > 0 && p.hp / p.maxhp < 0.28 && !motionReduced()) {
-      const a = 0.07 + Math.sin(this.t * 7) * 0.04;
+    if (p && p.alive && p.maxhp > 0 && p.hp / p.maxhp < 0.28) {
+      const calm = motionReduced();
+      const a = calm ? 0.055 : (0.07 + Math.sin(this.t * 7) * 0.04);
       const g = c.createRadialGradient(W / 2, H / 2, H * 0.2, W / 2, H / 2, H * 0.85);
       g.addColorStop(0, 'rgba(0,0,0,0)');
       g.addColorStop(1, `rgba(180,20,40,${a})`);
@@ -2521,7 +2535,7 @@ class Game {
       if (this.trainMeleeTelegraphT > 0 && r.alive && !this.trainLaserTelegraph && !this.trainTelegraphT) {
         const dir = Math.sign(this.player.x - r.x) || -1;
         c.save();
-        c.globalAlpha = 0.3 + Math.sin(this.t * 22) * 0.15;
+        c.globalAlpha = motionReduced() ? 0.38 : (0.3 + Math.sin(this.t * 22) * 0.15);
         c.strokeStyle = '#ffb347';
         c.lineWidth = 3;
         c.beginPath();
@@ -2531,11 +2545,11 @@ class Game {
       }
       if (this.trainTelegraphT > 0 && r.alive) {
         c.save();
-        c.globalAlpha = 0.35 + Math.sin(this.t * 18) * 0.2;
+        c.globalAlpha = motionReduced() ? 0.42 : (0.35 + Math.sin(this.t * 18) * 0.2);
         c.strokeStyle = '#7cf5ff';
         c.lineWidth = 4;
         c.beginPath();
-        c.arc(r.x, r.y - 48, 42 + Math.sin(this.t * 14) * 6, 0, TAU);
+        c.arc(r.x, r.y - 48, 42 + (motionReduced() ? 0 : Math.sin(this.t * 14) * 6), 0, TAU);
         c.stroke();
         const dashDir = Math.sign(this.player.x - r.x) || -1;
         const dashLen = Math.min(200, Math.abs(this.player.x - r.x) + 40);
