@@ -132,15 +132,15 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.46';
+const APP_VERSION = '1.17.47';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 172;
+const SW_CACHE_REV = 173;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0 },
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, weaponFinishers: 0 },
   achievements: {}, daily: null, vsPlayedIds: [] };
 const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
@@ -487,7 +487,8 @@ function hitConfirmColor(kind) {
 function applyHitConfirmFx(game, x, y, spec) {
   if (!game || motionReduced()) return;
   const kind = spec && spec.kind ? spec.kind : 'punch';
-  const col = hitConfirmColor(kind);
+  let col = hitConfirmColor(kind);
+  if (kind === 'weapon' && spec.move) col = weaponMoveFxColor(spec.move);
   spawnFxRing(game, x, y, col, fxLite() ? 6 : 9);
   if (!fxLite()) game.burst(x, y, col, 3, { kind: 'spark', size: 2 });
 }
@@ -964,6 +965,8 @@ const ACHIEVEMENTS = [
     test: s => s.bestWall >= 100 },
   { id: 'combo8', name: 'Combo-koning', desc: 'Combo ×8 bereikt', icon: '⚡',
     test: s => s.stats.maxCombo >= 8 },
+  { id: 'finisher10', name: 'Stijl-meester', desc: '10 wapen-finishers geland', icon: '⚔',
+    test: s => (s.stats.weaponFinishers || 0) >= 10 },
   { id: 'lv50', name: 'Legende', desc: 'Unlock level 50', icon: '👑',
     test: s => s.unlocked >= 50 },
   { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd', icon: '📅',
@@ -1194,6 +1197,7 @@ function achievementProgressFrac(ach) {
     case 'train5': return Math.min(s.trainWins, 5) / 5;
     case 'wall100': return Math.min(s.bestWall, 100) / 100;
     case 'combo8': return Math.min(s.stats.maxCombo || 0, 8) / 8;
+    case 'finisher10': return Math.min(s.stats.weaponFinishers || 0, 10) / 10;
     case 'lv50': return Math.min(s.unlocked, 50) / 50;
     case 'daily7': return Math.min(s.stats.dailyBonusCount || 0, 7) / 7;
     case 'vs5': return Math.min(s.stats.vsMatches || 0, 5) / 5;
@@ -1224,6 +1228,7 @@ function achievementProgressHint(ach) {
     case 'train5': return `${Math.min(s.trainWins, 5)}/5 training-wins`;
     case 'wall100': return `${Math.min(s.bestWall, 100)}/100 muur-score`;
     case 'combo8': return `×${Math.min(s.stats.maxCombo || 0, 8)}/8 combo`;
+    case 'finisher10': return `${Math.min(s.stats.weaponFinishers || 0, 10)}/10 finishers`;
     case 'lv50': return `Unlock Lv ${Math.min(s.unlocked, 50)}/50`;
     case 'daily7': return `${Math.min(s.stats.dailyBonusCount || 0, 7)}/7 dagbonussen`;
     case 'vs5': return `${Math.min(s.stats.vsMatches || 0, 5)}/5 duels`;
@@ -2644,6 +2649,39 @@ function applyWeaponMovePose(P, ext, move) {
 
 const WEAPON_COMBO_WINDOW = 1.38;
 const WEAPON_COMBO_GRACE = 0.6;
+const WEAPON_COMBO_STEP_MUL = [1, 1.06, 1.12];
+const WEAPON_FINISHER_MUL = { dmg: 1.15, kb: 1.12, energy: 6 };
+const WEAPON_POSE_FX = {
+  slash: '#e8f0ff', thrust: '#9fd8ff', upper: '#ffd75e', sweep: '#b06ae0',
+  overhead: '#ff8080', spin: '#7cf5ff', hook: '#c792ff',
+};
+
+function weaponComboStepMul(idx) {
+  const n = clamp(((idx || 0) % 3 + 3) % 3, 0, 2);
+  return WEAPON_COMBO_STEP_MUL[n] || 1;
+}
+
+function weaponMoveFxColor(move) {
+  const pose = (move && move.pose) || 'slash';
+  return WEAPON_POSE_FX[pose] || '#e8f0ff';
+}
+
+function isWeaponFinisher(f, spec) {
+  if (!f || !spec || spec.kind !== 'weapon' || spec.moveIdx !== 2) return false;
+  if (isThrowWeapon(f.weapon?.id)) return false;
+  return (f._weaponComboHits || 0) >= 2;
+}
+
+function trackWeaponFinisher(weaponId) {
+  if (!weaponId || isThrowWeapon(weaponId) || typeof save === 'undefined') return;
+  save.stats = save.stats || {};
+  save.stats.weaponFinishers = (save.stats.weaponFinishers || 0) + 1;
+  save.weaponMastery = save.weaponMastery || {};
+  const m = save.weaponMastery[weaponId] || { finishers: 0 };
+  m.finishers = (m.finishers || 0) + 1;
+  save.weaponMastery[weaponId] = m;
+  if (typeof checkAchievements === 'function') checkAchievements();
+}
 
 function resetWeaponCombo(f) {
   if (!f) return;
@@ -2651,6 +2689,7 @@ function resetWeaponCombo(f) {
   f.weaponComboT = 0;
   f._lastWeaponKind = null;
   f._weaponComboPrimed = false;
+  f._weaponComboHits = 0;
 }
 
 function bumpWeaponComboWindow(f, bonus) {
@@ -2672,15 +2711,25 @@ function sanitizeWeaponSpec(spec) {
 function drawWeaponStylePips(c, x, y, fighter) {
   if (!fighter || !weaponMoveFamily(fighter.weapon?.id) || fighter.weaponComboT <= 0) return;
   const labels = weaponMoveLabels(fighter.weapon.id);
+  const readyFin = fighter.weaponComboIdx >= 2 && (fighter._weaponComboHits || 0) >= 2;
   for (let i = 0; i < 3; i++) {
-    c.fillStyle = i <= fighter.weaponComboIdx ? '#ffd75e' : 'rgba(255,255,255,.22)';
+    const lit = i <= fighter.weaponComboIdx;
+    const fin = readyFin && i === 2;
+    c.fillStyle = fin ? '#ffb830' : (lit ? '#ffd75e' : 'rgba(255,255,255,.22)');
     c.beginPath();
-    c.arc(x + i * 13, y, 3.5, 0, TAU);
+    c.arc(x + i * 13, y, fin ? 4.2 : 3.5, 0, TAU);
     c.fill();
+    if (fin && !motionReduced()) {
+      c.strokeStyle = 'rgba(255,184,48,.45)';
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.arc(x + i * 13, y, 6.5, 0, TAU);
+      c.stroke();
+    }
   }
   if (labels && labels[fighter.weaponComboIdx]) {
     c.font = '9px sans-serif';
-    c.fillStyle = 'rgba(255,255,255,.72)';
+    c.fillStyle = readyFin && fighter.weaponComboIdx === 2 ? '#ffb830' : 'rgba(255,255,255,.72)';
     c.textAlign = 'center';
     const lbl = labels[fighter.weaponComboIdx];
     c.fillText(lbl.length > 14 ? lbl.slice(0, 13) + '…' : lbl, x + 13, y + 12);
@@ -5866,7 +5915,7 @@ class Fighter {
       ai: null, aiTimer: 0, aiMove: 0, aiCd: 2,
       name: 'Stickman',
       substCd: 0, invulnT: 0, hitFlashT: 0, afterimages: [], dashCd: 0,
-      weaponComboIdx: 0, weaponComboT: 0, _lastWeaponKind: null, _weaponComboPrimed: false,
+      weaponComboIdx: 0, weaponComboT: 0, _lastWeaponKind: null, _weaponComboPrimed: false, _weaponComboHits: 0,
       style: null, playerSlot: 0, vsSpecial: 'rasengan',
     }, opts);
   }
@@ -5903,6 +5952,9 @@ class Fighter {
           spec.dmg *= move.dmgMul || 1;
           spec.kb *= move.kbMul || 1;
           spec.moveHitY = move.hitY || 0;
+          const stepMul = weaponComboStepMul(moveIdx);
+          spec.dmg *= stepMul;
+          spec.kb *= stepMul;
         }
         break;
       }
@@ -8813,17 +8865,36 @@ class Game {
           }
         }
         const buff = f.isPlayer ? (this.dmgBuffMul || 1) * (this.stageDmgMul || 1) : 1;
-        const hitRoll = rollHitDamage(f, spec, comboMul * buff);
+        const finisher = spec.kind === 'weapon' && isWeaponFinisher(f, spec);
+        const hitRoll = rollHitDamage(f, spec, comboMul * buff * (finisher ? WEAPON_FINISHER_MUL.dmg : 1));
         if (hitRoll.crit) applyCritFx(this, m.x, m.y);
-        const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
+        const kbHit = scaleKnockback(f.face * spec.kb * (finisher ? WEAPON_FINISHER_MUL.kb : 1), hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         applyHitConfirmFx(this, hx, hy, spec);
         if (spec.dmg >= 18) this.shake(3, 0.11);
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.12);
-        if ((f.isPlayer || f.playerSlot) && spec.kind === 'weapon' && spec.moveIdx === 2 && !isThrowWeapon(f.weapon.id)) {
+        if (spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id) && spec.moveIdx < 2) {
+          f._weaponComboHits = (f._weaponComboHits || 0) + 1;
+        }
+        if ((f.isPlayer || f.playerSlot) && spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id)) {
           const labels = weaponMoveLabels(f.weapon.id);
-          if (labels) this.floater(f.x + f.face * 24, f.y - 128, labels[2], '#ffd75e', 13);
+          const idx = spec.moveIdx || 0;
+          if (labels && labels[idx]) {
+            const txt = finisher ? labels[idx] + '!' : labels[idx];
+            const col = finisher ? '#ffb830' : (idx === 2 ? '#ffd75e' : 'rgba(255,255,255,.88)');
+            this.floater(f.x + f.face * 24, f.y - (118 + idx * 5), txt, col, finisher ? 15 : (idx === 2 ? 13 : 11));
+          }
+          if (finisher) {
+            trackWeaponFinisher(f.weapon.id);
+            try { AudioSys.sfx('comboEpic'); } catch (_) {}
+            if (!fxLite()) {
+              this.burst(hx, hy, f.style?.accent || '#ffb830', 8, { kind: 'spark', size: 2.5 });
+              spawnFxRing(this, hx, hy, '#ffb830', 12);
+            }
+            f.energy = clamp(f.energy + WEAPON_FINISHER_MUL.energy, 0, 100);
+            bumpWeaponComboWindow(f, 0.18);
+          }
         }
         this.player.energy = clamp(this.player.energy + 8, 0, 100);
         try { AudioSys.sfxAt(weaponHitSfx(f.weapon, hitRoll.dmg), m.x); } catch (_) {}
@@ -8842,8 +8913,9 @@ class Game {
     for (const tgt of targets) {
       if (!tgt.alive) continue;
       if ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2) {
-        const hitRoll = rollHitDamage(f, spec, 1);
-        const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
+        const finisher = spec.kind === 'weapon' && isWeaponFinisher(f, spec);
+        const hitRoll = rollHitDamage(f, spec, finisher ? WEAPON_FINISHER_MUL.dmg : 1);
+        const kbHit = scaleKnockback(f.face * spec.kb * (finisher ? WEAPON_FINISHER_MUL.kb : 1), hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
         const counter = isCounterHitWindow(tgt);
         const dmg = tgt.takeDamage(hitRoll.dmg, kbHit, this, {
           unblockable: spec.unblockable, attacker: f, kind: spec.kind,
@@ -8853,10 +8925,26 @@ class Game {
         this.floater(tgt.x, tgt.y - 115, (counter ? 'COUNTER! ' : '') + '-' + dmg, col, 16);
         this.burst(tgt.bodyX, tgt.bodyY, col, 7);
         applyHitConfirmFx(this, hx, hy, spec);
+        if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
+        if (spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id) && spec.moveIdx < 2) {
+          f._weaponComboHits = (f._weaponComboHits || 0) + 1;
+        }
+        if ((f.isPlayer || f.playerSlot) && spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id)) {
+          const labels = weaponMoveLabels(f.weapon.id);
+          const idx = spec.moveIdx || 0;
+          if (labels && labels[idx]) {
+            const txt = finisher ? labels[idx] + '!' : labels[idx];
+            this.floater(f.x + f.face * 24, f.y - (118 + idx * 5), txt, finisher ? '#ffb830' : '#ffd75e', finisher ? 14 : 11);
+          }
+          if (finisher) {
+            trackWeaponFinisher(f.weapon.id);
+            try { AudioSys.sfx('comboEpic'); } catch (_) {}
+            bumpWeaponComboWindow(f, 0.14);
+          }
+        }
         f.energy = clamp(f.energy + 9, 0, 100);
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         if (counter) this.freezeT = Math.max(this.freezeT, 0.014);
-        if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
         this.shake(spec.dmg > 20 ? 4 : 3, 0.12);
         if ((f.isPlayer || f.playerSlot) && save.haptics !== false) haptic(5);
         try { AudioSys.sfxAt(weaponHitSfx(f.weapon, hitRoll.dmg), tgt.x); } catch (_) {}
@@ -11804,6 +11892,7 @@ const UI = {
         `Verzameld <b>${unlocked}/${WEAPONS.length}</b> · avontuur <b>${advUsable}</b> bruikbaar` +
         ` · actief <b>${weaponById(save.weapon).name}</b>` +
         ` · eiland-skill gate: Lv <b>${adventureWeaponCap()}</b>` +
+        ((save.stats.weaponFinishers || 0) > 0 ? ` · finishers <b>${save.stats.weaponFinishers}</b>` : '') +
         (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '');
     }
     const list = document.getElementById('weaponList');
@@ -11837,8 +11926,10 @@ const UI = {
         ? `${w.desc} · schade x${base.dmg} → <b style="color:${rar.color}">x${w.dmg}</b> · bereik ${w.range} · snelheid x${w.speed}`
         : `${w.desc} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}`;
       const labels = weaponMoveLabels(w.id);
+      const mast = (save.weaponMastery || {})[w.id];
+      const mastLine = mast && mast.finishers ? ` · ${mast.finishers}× finisher` : '';
       const moveLine = labels
-        ? `3 moves: ${labels.join(' · ')}`
+        ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} finisher${mastLine}`
         : (isThrowWeapon(w.id) ? 'Werp-projectiel — geen melee-combo' : '');
       info.innerHTML = `<div class="cname">${w.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>${summonBadge}</div>
         <div class="cinfo">${statLine}</div>` +

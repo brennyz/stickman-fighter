@@ -11,7 +11,7 @@ class Fighter {
       ai: null, aiTimer: 0, aiMove: 0, aiCd: 2,
       name: 'Stickman',
       substCd: 0, invulnT: 0, hitFlashT: 0, afterimages: [], dashCd: 0,
-      weaponComboIdx: 0, weaponComboT: 0, _lastWeaponKind: null, _weaponComboPrimed: false,
+      weaponComboIdx: 0, weaponComboT: 0, _lastWeaponKind: null, _weaponComboPrimed: false, _weaponComboHits: 0,
       style: null, playerSlot: 0, vsSpecial: 'rasengan',
     }, opts);
   }
@@ -48,6 +48,9 @@ class Fighter {
           spec.dmg *= move.dmgMul || 1;
           spec.kb *= move.kbMul || 1;
           spec.moveHitY = move.hitY || 0;
+          const stepMul = weaponComboStepMul(moveIdx);
+          spec.dmg *= stepMul;
+          spec.kb *= stepMul;
         }
         break;
       }

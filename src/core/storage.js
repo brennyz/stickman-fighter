@@ -3,15 +3,15 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.46';
+const APP_VERSION = '1.17.47';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 172;
+const SW_CACHE_REV = 173;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0 },
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, weaponFinishers: 0 },
   achievements: {}, daily: null, vsPlayedIds: [] };
 const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
@@ -358,7 +358,8 @@ function hitConfirmColor(kind) {
 function applyHitConfirmFx(game, x, y, spec) {
   if (!game || motionReduced()) return;
   const kind = spec && spec.kind ? spec.kind : 'punch';
-  const col = hitConfirmColor(kind);
+  let col = hitConfirmColor(kind);
+  if (kind === 'weapon' && spec.move) col = weaponMoveFxColor(spec.move);
   spawnFxRing(game, x, y, col, fxLite() ? 6 : 9);
   if (!fxLite()) game.burst(x, y, col, 3, { kind: 'spark', size: 2 });
 }

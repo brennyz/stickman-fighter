@@ -1268,6 +1268,7 @@ const UI = {
         `Verzameld <b>${unlocked}/${WEAPONS.length}</b> · avontuur <b>${advUsable}</b> bruikbaar` +
         ` · actief <b>${weaponById(save.weapon).name}</b>` +
         ` · eiland-skill gate: Lv <b>${adventureWeaponCap()}</b>` +
+        ((save.stats.weaponFinishers || 0) > 0 ? ` · finishers <b>${save.stats.weaponFinishers}</b>` : '') +
         (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '');
     }
     const list = document.getElementById('weaponList');
@@ -1301,8 +1302,10 @@ const UI = {
         ? `${w.desc} · schade x${base.dmg} → <b style="color:${rar.color}">x${w.dmg}</b> · bereik ${w.range} · snelheid x${w.speed}`
         : `${w.desc} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}`;
       const labels = weaponMoveLabels(w.id);
+      const mast = (save.weaponMastery || {})[w.id];
+      const mastLine = mast && mast.finishers ? ` · ${mast.finishers}× finisher` : '';
       const moveLine = labels
-        ? `3 moves: ${labels.join(' · ')}`
+        ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} finisher${mastLine}`
         : (isThrowWeapon(w.id) ? 'Werp-projectiel — geen melee-combo' : '');
       info.innerHTML = `<div class="cname">${w.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>${summonBadge}</div>
         <div class="cinfo">${statLine}</div>` +

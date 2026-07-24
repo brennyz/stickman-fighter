@@ -77,6 +77,8 @@ const ACHIEVEMENTS = [
     test: s => s.bestWall >= 100 },
   { id: 'combo8', name: 'Combo-koning', desc: 'Combo ×8 bereikt', icon: '⚡',
     test: s => s.stats.maxCombo >= 8 },
+  { id: 'finisher10', name: 'Stijl-meester', desc: '10 wapen-finishers geland', icon: '⚔',
+    test: s => (s.stats.weaponFinishers || 0) >= 10 },
   { id: 'lv50', name: 'Legende', desc: 'Unlock level 50', icon: '👑',
     test: s => s.unlocked >= 50 },
   { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd', icon: '📅',
@@ -307,6 +309,7 @@ function achievementProgressFrac(ach) {
     case 'train5': return Math.min(s.trainWins, 5) / 5;
     case 'wall100': return Math.min(s.bestWall, 100) / 100;
     case 'combo8': return Math.min(s.stats.maxCombo || 0, 8) / 8;
+    case 'finisher10': return Math.min(s.stats.weaponFinishers || 0, 10) / 10;
     case 'lv50': return Math.min(s.unlocked, 50) / 50;
     case 'daily7': return Math.min(s.stats.dailyBonusCount || 0, 7) / 7;
     case 'vs5': return Math.min(s.stats.vsMatches || 0, 5) / 5;
@@ -337,6 +340,7 @@ function achievementProgressHint(ach) {
     case 'train5': return `${Math.min(s.trainWins, 5)}/5 training-wins`;
     case 'wall100': return `${Math.min(s.bestWall, 100)}/100 muur-score`;
     case 'combo8': return `×${Math.min(s.stats.maxCombo || 0, 8)}/8 combo`;
+    case 'finisher10': return `${Math.min(s.stats.weaponFinishers || 0, 10)}/10 finishers`;
     case 'lv50': return `Unlock Lv ${Math.min(s.unlocked, 50)}/50`;
     case 'daily7': return `${Math.min(s.stats.dailyBonusCount || 0, 7)}/7 dagbonussen`;
     case 'vs5': return `${Math.min(s.stats.vsMatches || 0, 5)}/5 duels`;

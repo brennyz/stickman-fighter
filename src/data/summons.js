@@ -370,6 +370,39 @@ function applyWeaponMovePose(P, ext, move) {
 
 const WEAPON_COMBO_WINDOW = 1.38;
 const WEAPON_COMBO_GRACE = 0.6;
+const WEAPON_COMBO_STEP_MUL = [1, 1.06, 1.12];
+const WEAPON_FINISHER_MUL = { dmg: 1.15, kb: 1.12, energy: 6 };
+const WEAPON_POSE_FX = {
+  slash: '#e8f0ff', thrust: '#9fd8ff', upper: '#ffd75e', sweep: '#b06ae0',
+  overhead: '#ff8080', spin: '#7cf5ff', hook: '#c792ff',
+};
+
+function weaponComboStepMul(idx) {
+  const n = clamp(((idx || 0) % 3 + 3) % 3, 0, 2);
+  return WEAPON_COMBO_STEP_MUL[n] || 1;
+}
+
+function weaponMoveFxColor(move) {
+  const pose = (move && move.pose) || 'slash';
+  return WEAPON_POSE_FX[pose] || '#e8f0ff';
+}
+
+function isWeaponFinisher(f, spec) {
+  if (!f || !spec || spec.kind !== 'weapon' || spec.moveIdx !== 2) return false;
+  if (isThrowWeapon(f.weapon?.id)) return false;
+  return (f._weaponComboHits || 0) >= 2;
+}
+
+function trackWeaponFinisher(weaponId) {
+  if (!weaponId || isThrowWeapon(weaponId) || typeof save === 'undefined') return;
+  save.stats = save.stats || {};
+  save.stats.weaponFinishers = (save.stats.weaponFinishers || 0) + 1;
+  save.weaponMastery = save.weaponMastery || {};
+  const m = save.weaponMastery[weaponId] || { finishers: 0 };
+  m.finishers = (m.finishers || 0) + 1;
+  save.weaponMastery[weaponId] = m;
+  if (typeof checkAchievements === 'function') checkAchievements();
+}
 
 function resetWeaponCombo(f) {
   if (!f) return;
@@ -377,6 +410,7 @@ function resetWeaponCombo(f) {
   f.weaponComboT = 0;
   f._lastWeaponKind = null;
   f._weaponComboPrimed = false;
+  f._weaponComboHits = 0;
 }
 
 function bumpWeaponComboWindow(f, bonus) {
@@ -398,15 +432,25 @@ function sanitizeWeaponSpec(spec) {
 function drawWeaponStylePips(c, x, y, fighter) {
   if (!fighter || !weaponMoveFamily(fighter.weapon?.id) || fighter.weaponComboT <= 0) return;
   const labels = weaponMoveLabels(fighter.weapon.id);
+  const readyFin = fighter.weaponComboIdx >= 2 && (fighter._weaponComboHits || 0) >= 2;
   for (let i = 0; i < 3; i++) {
-    c.fillStyle = i <= fighter.weaponComboIdx ? '#ffd75e' : 'rgba(255,255,255,.22)';
+    const lit = i <= fighter.weaponComboIdx;
+    const fin = readyFin && i === 2;
+    c.fillStyle = fin ? '#ffb830' : (lit ? '#ffd75e' : 'rgba(255,255,255,.22)');
     c.beginPath();
-    c.arc(x + i * 13, y, 3.5, 0, TAU);
+    c.arc(x + i * 13, y, fin ? 4.2 : 3.5, 0, TAU);
     c.fill();
+    if (fin && !motionReduced()) {
+      c.strokeStyle = 'rgba(255,184,48,.45)';
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.arc(x + i * 13, y, 6.5, 0, TAU);
+      c.stroke();
+    }
   }
   if (labels && labels[fighter.weaponComboIdx]) {
     c.font = '9px sans-serif';
-    c.fillStyle = 'rgba(255,255,255,.72)';
+    c.fillStyle = readyFin && fighter.weaponComboIdx === 2 ? '#ffb830' : 'rgba(255,255,255,.72)';
     c.textAlign = 'center';
     const lbl = labels[fighter.weaponComboIdx];
     c.fillText(lbl.length > 14 ? lbl.slice(0, 13) + '…' : lbl, x + 13, y + 12);
