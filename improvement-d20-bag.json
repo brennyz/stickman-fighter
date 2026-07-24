@@ -14,7 +14,6 @@
     19,
     11,
     5,
-    7,
     17,
     8,
     10,
@@ -23,10 +22,10 @@
     13
   ],
   "lastRoll": {
-    "face": 12,
-    "category": "Content \u2014 monsters, wapens, rariteit, dex",
-    "rolledAt": "2026-07-24T15:42:41Z",
-    "remainingCount": 18,
+    "face": 7,
+    "category": "Save & backup \u2014 import/export, corruptie, migratie",
+    "rolledAt": "2026-07-24T15:43:59Z",
+    "remainingCount": 17,
     "cycle": 3
   },
   "pending": null,
@@ -400,6 +399,13 @@
       "note": "Type filter, sort, achievement tracker, weapon summary",
       "version": "1.17.9",
       "doneAt": "2026-07-24T15:43:37Z",
+      "cycle": 3
+    },
+    {
+      "face": 7,
+      "note": "Sanitize hints, export summary, live preview, drift detail",
+      "version": "1.17.10",
+      "doneAt": "2026-07-24T15:45:22Z",
       "cycle": 3
     }
   ],
@@ -1389,6 +1395,13 @@
       "category": "Content \u2014 monsters, wapens, rariteit, dex",
       "rolledAt": "2026-07-24T15:42:41Z",
       "remainingCount": 18,
+      "cycle": 3
+    },
+    {
+      "face": 7,
+      "category": "Save & backup \u2014 import/export, corruptie, migratie",
+      "rolledAt": "2026-07-24T15:43:59Z",
+      "remainingCount": 17,
       "cycle": 3
     }
   ],

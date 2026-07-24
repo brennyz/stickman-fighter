@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.9';
+const APP_VERSION = '1.17.10';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 136;
+const SW_CACHE_REV = 137;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -555,7 +555,11 @@ function sanitizeSave(s) {
   let styleOk = stPick.id === 'classic';
   if (stPick.needLvl && out.lvl >= stPick.needLvl) styleOk = true;
   if (stPick.needTrain && out.trainWins >= stPick.needTrain) styleOk = true;
-  if (stPick.needDex && Object.keys(out.dex).length >= stPick.needDex) styleOk = true;
+  if (stPick.needDex && dexCountFromSave(out) >= stPick.needDex) styleOk = true;
+  if (stPick.needDexKills && dexTotalKillsFromSave(out) >= stPick.needDexKills) styleOk = true;
+  if (stPick.needDexTiers && dexRarityTierCountFromSave(out) >= stPick.needDexTiers) styleOk = true;
+  if (stPick.needDexHalf && typeof SPECIES_ORDER !== 'undefined' &&
+      dexCountFromSave(out) >= Math.ceil(SPECIES_ORDER.length / 2)) styleOk = true;
   if (!styleOk) out.style = 'classic';
 
   const cleanStars = {};
@@ -1067,6 +1071,85 @@ function trackCombo(n) {
   bumpDaily('comboReach', n);
 }
 
+function saveSanitizeNotes(before, after) {
+  const notes = [];
+  if (!before || !after) return notes;
+  const num = (v) => Math.floor(Number(v) || 0);
+  if (num(before.lvl) !== after.lvl) notes.push(`Lv ${num(before.lvl)}→${after.lvl}`);
+  if (num(before.unlocked) !== after.unlocked) notes.push(`unlock ${num(before.unlocked)}→${after.unlocked}`);
+  if (before.weapon !== after.weapon) notes.push('wapen reset');
+  if (before.style !== after.style) notes.push('stijl reset');
+  const stripCount = Object.keys(before).filter(k => !(k in DEFAULT_SAVE) && k !== '_exportMeta').length;
+  if (stripCount) notes.push(`${stripCount} onbekend veld verwijderd`);
+  const badDex = Object.keys(before.dex || {}).filter(k => !SPECIES[k]).length;
+  if (badDex) notes.push(`${badDex} ongeldige dex-entry`);
+  const badSummon = Object.keys(before.summons || {}).filter(k => {
+    const w = WEAPONS.find(x => x.id === k);
+    const v = before.summons[k];
+    return !w || (v !== 'epic' && v !== 'legendary');
+  }).length;
+  if (badSummon) notes.push(`${badSummon} ongeldige summon`);
+  if (!Number.isFinite(Number(before.musicVol)) || !Number.isFinite(Number(before.sfxVol))) {
+    notes.push('volume gecorrigeerd');
+  }
+  return notes;
+}
+
+function saveDriftDetail() {
+  const diag = saveStorageDiagnostics();
+  if (!diag.drift) return '';
+  const p = readSaveJson(localStorage.getItem(SAVE_KEY));
+  const b = readSaveJson(localStorage.getItem(SAVE_BACKUP_KEY));
+  if (!p || !b) return '';
+  const parts = [];
+  if (p.lvl !== b.lvl) parts.push(`Lv ${p.lvl} vs backup ${b.lvl}`);
+  if (p.unlocked !== b.unlocked) parts.push(`unlock ${p.unlocked} vs ${b.unlocked}`);
+  const pd = Object.keys(p.dex || {}).length, bd = Object.keys(b.dex || {}).length;
+  if (pd !== bd) parts.push(`boek ${pd} vs ${bd}`);
+  return parts.join(' · ');
+}
+
+function saveExportSummaryLine(s) {
+  const st = s || save;
+  return `Lv ${st.lvl} · unlock ${st.unlocked} · boek ${dexCountFromSave(st)} · kills ${dexTotalKillsFromSave(st)} · ${Object.keys(st.achievements || {}).length} prestaties` +
+    (summonCountFromSave(st) ? ` · ✦ ${summonCountFromSave(st)} summon` : '');
+}
+
+function updateSaveImportPreview(text) {
+  const previewEl = document.getElementById('saveImportPreview');
+  if (!previewEl) return;
+  if (typeof text !== 'string' || !text.trim()) {
+    previewEl.style.display = 'none';
+    previewEl.textContent = '';
+    previewEl.style.color = '#ffd75e';
+    return;
+  }
+  try {
+    const { save: next, meta, warnings } = previewImportSave(text);
+    previewEl.style.display = 'block';
+    previewEl.style.color = '#ffd75e';
+    const metaLine = meta && meta.app ? ` · export v${meta.app}` : '';
+    const warnLine = warnings && warnings.length ? '\n' + warnings.join(' · ') : '';
+    previewEl.textContent =
+      `Preview: ${saveExportSummaryLine(next)}${metaLine}.${warnLine} Import 2× om te laden.`;
+  } catch (e) {
+    previewEl.style.display = 'block';
+    previewEl.style.color = '#ffb0b8';
+    previewEl.textContent = (e && e.message) ? e.message : 'Ongeldige save-JSON';
+  }
+}
+
+let savePortPreviewT = null;
+function bindSavePortPreview() {
+  const ta = document.getElementById('savePortText');
+  if (!ta || ta.dataset.previewBound) return;
+  ta.dataset.previewBound = '1';
+  ta.addEventListener('input', () => {
+    clearTimeout(savePortPreviewT);
+    savePortPreviewT = setTimeout(() => updateSaveImportPreview(ta.value), 420);
+  });
+}
+
 function formatSaveBytes(n) {
   const b = Math.max(0, Math.floor(Number(n) || 0));
   if (b < 1024) return b + ' B';
@@ -1116,13 +1199,22 @@ function summonCountFromSave(s) {
 }
 
 function exportSaveJson() {
-  const payload = Object.assign({}, sanitizeSave(save), {
+  const clean = sanitizeSave(save);
+  const payload = Object.assign({}, clean, {
     _exportMeta: {
       schema: SAVE_EXPORT_SCHEMA,
       app: APP_VERSION,
       exportedAt: new Date().toISOString(),
       key: SAVE_KEY,
       backupKey: SAVE_BACKUP_KEY,
+      summary: {
+        lvl: clean.lvl,
+        unlocked: clean.unlocked,
+        dex: dexCountFromSave(clean),
+        kills: dexTotalKillsFromSave(clean),
+        achievements: Object.keys(clean.achievements || {}).length,
+        summons: summonCountFromSave(clean),
+      },
       note: 'Stickman Fighter save — plak in Instellingen → Import (2× tikken). Wissel van URL? Export vóór en import ná.',
     },
   });
@@ -1157,6 +1249,7 @@ function saveHealthSummary() {
     primaryCorrupt: diag.primaryCorrupt,
     backupCorrupt: diag.backupCorrupt,
     drift: diag.drift,
+    driftDetail: saveDriftDetail(),
     stampAt: diag.stampAt,
     summons: summonCountFromSave(save),
     exportSchema: SAVE_EXPORT_SCHEMA,
@@ -1183,6 +1276,10 @@ function importPreviewWarnings(next, meta) {
     } catch (_) {}
   }
   if (meta && meta.app) lines.push('App-versie export: v' + meta.app);
+  if (meta && meta.summary && typeof meta.summary === 'object') {
+    const s = meta.summary;
+    lines.push(`Export-samenvatting: Lv ${s.lvl} · unlock ${s.unlocked} · boek ${s.dex} · ${s.achievements} prestaties`);
+  }
   const summonN = summonCountFromSave(next);
   const curSummonN = summonCountFromSave(save);
   if (summonN > curSummonN) lines.push(`+${summonN - curSummonN} summon-wapen(s) in import`);
@@ -1215,6 +1312,14 @@ function previewImportSave(text) {
   clean.summons = Object.assign({}, parsed.summons || {});
   const final = sanitizeSave(clean);
   const warnings = importPreviewWarnings(final, meta);
+  const rawMerged = Object.assign({}, DEFAULT_SAVE, parsed);
+  rawMerged.stats = Object.assign({}, DEFAULT_SAVE.stats, parsed.stats || {});
+  rawMerged.achievements = Object.assign({}, parsed.achievements || {});
+  rawMerged.stars = Object.assign({}, parsed.stars || {});
+  rawMerged.dex = Object.assign({}, parsed.dex || {});
+  rawMerged.summons = Object.assign({}, parsed.summons || {});
+  const repairNotes = saveSanitizeNotes(rawMerged, final);
+  if (repairNotes.length) warnings.push('Reparatie: ' + repairNotes.slice(0, 3).join(' · '));
   return { save: final, meta, warnings };
 }
 function sfReportError(where, err, userMsg) {
@@ -1648,9 +1753,15 @@ const xpNeed = (lvl) => {
   return Math.round(base * pace / 5) * 5;
 };
 const dexCount = () => Object.keys(save.dex).length;
+function dexCountFromSave(s) {
+  return Object.keys((s && s.dex) || {}).length;
+}
 function dexRarityTierCount() {
+  return dexRarityTierCountFromSave(save);
+}
+function dexRarityTierCountFromSave(s) {
   const tiers = new Set();
-  for (const id of Object.keys(save.dex || {})) {
+  for (const id of Object.keys((s && s.dex) || {})) {
     const sp = SPECIES[id];
     if (sp && sp.rarity) tiers.add(sp.rarity);
   }
@@ -10299,7 +10410,11 @@ const UI = {
       let statusPrimary = h.primaryCorrupt
         ? '⚠ Hoofd-save corrupt'
         : (h.primaryValid ? `${SVG_CHECK_MINI} Save OK` : (h.primaryOk ? '⚠ Save onleesbaar' : '⚠ Geen primary save'));
-      if (h.drift && h.backupOk) statusPrimary += ' · hoofd/backup verschillen — tik Herstel backup';
+      if (h.drift && h.backupOk) {
+        statusPrimary += h.driftDetail
+          ? ` · ${h.driftDetail} — tik Herstel backup`
+          : ' · hoofd/backup verschillen — tik Herstel backup';
+      }
       if (h.backupCorrupt && h.backupOk === false && h.primaryValid) {
         statusPrimary += ' · backup corrupt (hoofd OK)';
       }
@@ -10324,6 +10439,11 @@ const UI = {
       healthEl.innerHTML = healthHtml +
         `<br><span style="opacity:.75">Export schema v${h.exportSchema || SAVE_EXPORT_SCHEMA} · keys vast: ${SAVE_KEY} + backup (niet hernoemen)</span>`;
     }
+    const exportHint = document.getElementById('saveExportHint');
+    if (exportHint) {
+      exportHint.textContent = `Export bevat: ${saveExportSummaryLine()} · key ${SAVE_KEY}`;
+    }
+    bindSavePortPreview();
     const pct = (v, d) => Math.round((Number(v ?? d)) * 100);
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
     setVal('setMusicVol', pct(save.musicVol, 0.85));
@@ -10625,8 +10745,8 @@ if (btnExportSave) btnExportSave.addEventListener('click', async () => {
   } catch (_) {}
   AudioSys.sfx('select');
   UI.toast(clipped
-    ? `Save in klembord + vak (~${formatSaveBytes(json.length)})`
-    : `Save in vak (~${formatSaveBytes(json.length)}) — kopieer handmatig`, 3400);
+    ? `Save in klembord · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)})`
+    : `Save in vak · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)}) — kopieer handmatig`, 3400);
   UI.renderSettings();
 });
 const btnImportSave = document.getElementById('btnImportSave');
@@ -10641,15 +10761,7 @@ if (btnImportSave) btnImportSave.addEventListener('click', () => {
     const { save: next, meta, warnings } = previewImportSave(ta.value);
     if (!window.__sfImportConfirm) {
       window.__sfImportConfirm = true;
-      const metaLine = meta && meta.app ? ` · export v${meta.app}` : '';
-      const warnLine = warnings && warnings.length ? '\n' + warnings.join(' · ') : '';
-      if (previewEl) {
-        previewEl.style.display = 'block';
-        previewEl.textContent =
-          `Preview: Lv ${next.lvl} · unlock ${next.unlocked} · boek ${Object.keys(next.dex || {}).length} · kills ${dexTotalKillsFromSave(next)}` +
-          (summonCountFromSave(next) ? ` · ✦ ${summonCountFromSave(next)} summon` : '') +
-          `${metaLine}.${warnLine} Tik Import nogmaals om te toepassen.`;
-      }
+      updateSaveImportPreview(ta.value);
       UI.toast('Import-preview — tik Import nogmaals om te laden', 3600);
       setTimeout(() => { window.__sfImportConfirm = false; }, 8000);
       return;
@@ -10726,8 +10838,8 @@ if (btnRestoreBackup) btnRestoreBackup.addEventListener('click', () => {
       return;
     }
     window.__sfBackupConfirm = true;
-    const driftHint = h.drift ? ' (hoofd en backup verschillen)' : '';
-    UI.toast(`Backup Lv ${h.backupLvl}${driftHint} — tik nogmaals om te herstellen`, 4000);
+    const driftHint = h.driftDetail || (h.drift ? ' (hoofd en backup verschillen)' : '');
+    UI.toast(`Backup Lv ${h.backupLvl}${driftHint} — tik nogmaals om te herstellen`, 4500);
     setTimeout(() => { window.__sfBackupConfirm = false; }, 6000);
     return;
   }
@@ -11256,8 +11368,13 @@ function bootGame() {
   initUiTapScrollGuard();
   try {
     const hadCorruptPrimary = saveStorageDiagnostics().primaryCorrupt;
+    const beforeSave = Object.assign({}, save);
     save = sanitizeSave(save || Object.assign({}, DEFAULT_SAVE));
+    const repairNotes = saveSanitizeNotes(beforeSave, save);
     persist();
+    if (repairNotes.length && !hadCorruptPrimary && !window.__sfRecoveredBackup) {
+      userToast('Save gerepareerd: ' + repairNotes.slice(0, 2).join(' · '), 4200);
+    }
     if (hadCorruptPrimary && !window.__sfRecoveredBackup) {
       userToast('Corrupte hoofd-save overschreven — export blijft je vangnet bij URL-wissel', 4500);
     }

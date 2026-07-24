@@ -649,7 +649,8 @@
     <div style="font-size:12px;opacity:.85;margin-bottom:8px;line-height:1.4">
       Export kopieert JSON (ook clipboard). Import: 1× = preview, 2× = toepassen. Backup blijft bij “Nieuwe start”.
     </div>
-    <textarea id="savePortText" rows="4" style="width:100%;margin-top:4px;border-radius:12px;padding:10px;font-size:11px;background:#0a0d18;color:#cfe0ff;border:1px solid rgba(255,255,255,.15)" placeholder="Plak export-JSON — meta.key moet stickfighter_save_v1 zijn · schema v2 · 2× Import om te laden"></textarea>
+    <div id="saveExportHint" style="font-size:12px;color:#9db1e3;margin-bottom:6px;line-height:1.4"></div>
+    <textarea id="savePortText" rows="4" style="width:100%;margin-top:4px;border-radius:12px;padding:10px;font-size:11px;background:#0a0d18;color:#cfe0ff;border:1px solid rgba(255,255,255,.15)" placeholder="Plak export-JSON — meta.key moet stickfighter_save_v1 zijn · live preview · 2× Import om te laden"></textarea>
     <div id="saveImportPreview" style="display:none;font-size:12px;color:#ffd75e;margin-top:8px;line-height:1.4"></div>
     <button type="button" class="btn tog" id="btnExportSave" style="margin-top:8px"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 14V3M8 7l4-4 4 4"/><path d="M4 17v3h16v-3"/></svg></span>Export save</button>
     <button type="button" class="btn tog" id="btnImportSave"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v10M8 9l4 4 4-4"/><path d="M4 17v3h16v-3"/></svg></span>Import save</button>
@@ -800,7 +801,7 @@
 </script>
 
 <script src="tunnel-check.js?v=203"></script>
-<script src="game.js?v=285"></script>
+<script src="game.js?v=286"></script>
 <script src="install.js?v=204"></script>
 <script>
 (function () {
