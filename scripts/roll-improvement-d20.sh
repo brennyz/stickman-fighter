@@ -6,13 +6,15 @@
 #   ./scripts/roll-improvement-d20.sh status
 #   ./scripts/roll-improvement-d20.sh history
 #   ./scripts/roll-improvement-d20.sh unroll    # zet pending terug in de zak (geen nieuwe roll)
-#   ./scripts/roll-improvement-d20.sh force     # alias van roll (pending → zak + roll)
+#   ./scripts/roll-improvement-d20.sh backlog   # wachtrij: gerold maar nog niet uitgewerkt
+#   ./scripts/roll-improvement-d20.sh pick 11   # zet d11 uit backlog als PENDING (geen roll)
 #   ./scripts/roll-improvement-d20.sh preflight # node --check + smoke load
 #
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 export SF_ROOT="$ROOT"
 export SF_MODE="${1:-roll}"
+export SF_PICK_FACE="${2:-}"
 
 run_preflight() {
   echo ""
@@ -61,6 +63,7 @@ from pathlib import Path
 root = Path(os.environ["SF_ROOT"])
 bag_path = root / "improvement-d20-bag.json"
 mode = os.environ.get("SF_MODE", "roll")
+pick_face = os.environ.get("SF_PICK_FACE", "").strip()
 
 categories = {
     1: "Combat feel — hits, knockback, frame data, fairness",
@@ -126,8 +129,41 @@ def load_bag():
     migrate(bag)
     return bag
 
-def implemented_faces(bag):
-    return {int(x["face"]) for x in bag.get("implemented") or [] if x.get("face") is not None}
+def implemented_faces(bag, cycle=None):
+    out = set()
+    for x in bag.get("implemented") or []:
+        if x.get("face") is None:
+            continue
+        if cycle is not None and int(x.get("cycle", -1)) != int(cycle):
+            continue
+        out.add(int(x["face"]))
+    return out
+
+def queue_roll(bag, roll, reason="skipped"):
+    if not roll:
+        return
+    face = int(roll.get("face", 0))
+    if not face:
+        return
+    done = implemented_faces(bag, bag.get("cyclesCompleted", 0))
+    if face in done:
+        return
+    bag.setdefault("rollBacklog", [])
+    bl = bag["rollBacklog"]
+    bl = [x for x in bl if int(x.get("face", 0)) != face]
+    bl.insert(0, {
+        "face": face,
+        "category": roll.get("category") or categories.get(face, ""),
+        "focus": focus.get(face, ""),
+        "rolledAt": roll.get("rolledAt") or utc_now(),
+        "queuedAt": utc_now(),
+        "reason": reason,
+        "cycle": bag.get("cyclesCompleted", 0),
+    })
+    bag["rollBacklog"] = bl[:24]
+
+def backlog_faces(bag):
+    return [int(x.get("face", 0)) for x in bag.get("rollBacklog") or [] if x.get("face") is not None]
 
 def migrate(bag):
     ver = int(bag.get("version", 1))
@@ -135,6 +171,7 @@ def migrate(bag):
     bag.setdefault("history", [])
     bag.setdefault("remaining", list(range(1, 21)))
     bag.setdefault("cyclesCompleted", 0)
+    bag.setdefault("rollBacklog", [])
     if ver < 3:
         bag["version"] = 3
         bag.setdefault("pending", None)
@@ -145,9 +182,24 @@ def migrate(bag):
             face = int(lr.get("face", 0))
             if face and face not in done:
                 bag["pending"] = dict(lr)
-                # Face mag niet in remaining zitten als hij pending is
                 rem = [int(x) for x in bag.get("remaining") or []]
                 bag["remaining"] = [x for x in rem if x != face]
+    # Eenmalige backfill: cyclus-rolls die nog niet af zijn → backlog
+    if not bag.get("rollBacklog") and bag.get("history"):
+        cyc = int(bag.get("cyclesCompleted", 0))
+        done_c = implemented_faces(bag, cyc)
+        seen = set()
+        for h in reversed(bag.get("history") or []):
+            if int(h.get("cycle", -1)) != cyc:
+                continue
+            f = int(h.get("face", 0))
+            if not f or f in done_c or f in seen:
+                continue
+            pend = bag.get("pending")
+            if pend and int(pend.get("face", 0)) == f:
+                continue
+            seen.add(f)
+            queue_roll(bag, h, reason="backfill")
     bag["version"] = 3
     # Dedup remaining, clamp 1..20
     rem = []
@@ -185,6 +237,27 @@ def print_status(bag):
         last = done[-1]
         print("Laatst af: d" + str(last.get("face")), "·", last.get("note", ""), "·", last.get("version", ""))
     print("Resterend:", ", ".join("d" + str(x) for x in sorted(rem)) or "(leeg → nieuwe cyclus bij roll)")
+    bl = bag.get("rollBacklog") or []
+    if bl:
+        print("Backlog (uit te werken):", ", ".join("d" + str(x.get("face")) for x in bl[:8]))
+        if len(bl) > 8:
+            print("  … +" + str(len(bl) - 8) + " meer · pick d# · ./scripts/roll-improvement-d20.sh backlog")
+    print("")
+
+def print_backlog(bag):
+    bl = bag.get("rollBacklog") or []
+    print("")
+    print("RALPH d20 — BACKLOG (uit te werken)")
+    if not bl:
+        print("(leeg — roll zet overgeslagen faces hier)")
+        print("")
+        return
+    for i, x in enumerate(bl):
+        print("  " + str(i + 1) + ". d" + str(x.get("face")), "·", (x.get("category") or "")[:52])
+        print("     focus:", (x.get("focus") or focus.get(int(x.get("face", 0)), ""))[:60])
+    print("")
+    print("Pick: ./scripts/roll-improvement-d20.sh pick <d#>")
+    print("Af:   ./scripts/mark-d20-done.sh <d#> \"note\" 1.x.y")
     print("")
 
 def print_history(bag):
@@ -211,12 +284,51 @@ if mode == "history":
     save_bag(bag)
     sys.exit(0)
 
+if mode == "backlog":
+    print_backlog(bag)
+    save_bag(bag)
+    sys.exit(0)
+
+if mode == "pick":
+    if not pick_face.isdigit():
+        print("Usage: pick <d#>  (bijv. pick 11)", file=sys.stderr)
+        sys.exit(1)
+    want = int(pick_face)
+    bl = bag.get("rollBacklog") or []
+    hit = next((x for x in bl if int(x.get("face", 0)) == want), None)
+    if not hit:
+        print("d" + str(want) + " staat niet in backlog. Run: ./scripts/roll-improvement-d20.sh backlog", file=sys.stderr)
+        sys.exit(1)
+    if bag.get("pending"):
+        queue_roll(bag, bag.get("pending"), reason="pick-replace")
+    bag["rollBacklog"] = [x for x in bl if int(x.get("face", 0)) != want]
+    rem = [int(x) for x in bag.get("remaining") or [] if int(x) != want]
+    bag["remaining"] = rem
+    roll = {
+        "face": want,
+        "category": hit.get("category") or categories.get(want, ""),
+        "rolledAt": utc_now(),
+        "remainingCount": len(rem),
+        "cycle": bag.get("cyclesCompleted", 0),
+        "fromBacklog": True,
+    }
+    bag["pending"] = roll
+    bag["lastRoll"] = roll
+    save_bag(bag)
+    print("")
+    print("PICK — d" + str(want) + " uit backlog → PENDING")
+    print("Thema:", roll["category"])
+    print("Focus:", focus.get(want, ""))
+    print("")
+    sys.exit(0)
+
 if mode == "unroll":
     pending = bag.get("pending")
     if not pending:
         print("Geen pending roll om terug te zetten.", file=sys.stderr)
         sys.exit(1)
     face = int(pending["face"])
+    queue_roll(bag, pending, reason="unroll")
     rem = [int(x) for x in bag.get("remaining") or []]
     if face not in rem:
         rem.append(face)
@@ -237,18 +349,19 @@ if mode == "unroll":
     sys.exit(0)
 
 if mode not in ("roll", "force"):
-    print("Usage: roll | status | history | unroll | force | preflight", file=sys.stderr)
+    print("Usage: roll | status | history | backlog | pick <d#> | unroll | force | preflight", file=sys.stderr)
     sys.exit(1)
 
 pending = bag.get("pending")
 if pending and mode in ("roll", "force"):
     old = int(pending["face"])
+    queue_roll(bag, pending, reason="re-roll")
     rem = [int(x) for x in bag.get("remaining") or []]
     if old not in rem:
         rem.append(old)
     bag["remaining"] = rem
     bag["pending"] = None
-    print("Open pending d" + str(old) + " terug in zak — nieuwe roll.", file=sys.stderr)
+    print("Open pending d" + str(old) + " → backlog + zak — nieuwe roll.", file=sys.stderr)
 
 rem = [int(x) for x in bag.get("remaining") or []]
 if not rem:
@@ -287,7 +400,10 @@ print("Rol: d" + str(face))
 print("Thema: " + categories[face])
 print("Focus: " + focus.get(face, "Kleine diff · checklist IMPROVEMENT.md"))
 print("Nog in zak: " + str(len(rem)) + "/20 · cyclus " + str(bag["cyclesCompleted"]))
-print("PENDING: d" + str(face) + " (nieuwe roll geblokkeerd tot done/unroll)")
+print("PENDING: d" + str(face) + " — uitwerken met go + mark-d20-done")
+bln = len(bag.get("rollBacklog") or [])
+if bln:
+    print("Backlog:", bln, "thema('s) wachten · ./scripts/roll-improvement-d20.sh backlog")
 print("")
 print("Checklist: menu klikbaar · geen balance-bom · SW bump · node --check + smoke")
 print("Na afloop: ./scripts/mark-d20-done.sh", face, '"korte note"', "1.x.y")

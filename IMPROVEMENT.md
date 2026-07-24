@@ -15,13 +15,14 @@ chmod +x scripts/roll-improvement-d20.sh scripts/mark-d20-done.sh
 ./scripts/roll-improvement-d20.sh status      # zak + PENDING
 ./scripts/roll-improvement-d20.sh            # roll (preflight; open pending → zak + nieuwe roll)
 ./scripts/roll-improvement-d20.sh unroll     # pending terug in zak (geen nieuwe roll)
-./scripts/roll-improvement-d20.sh preflight  # node --check + smoke load
+./scripts/roll-improvement-d20.sh backlog   # wachtrij uit te werken
+./scripts/roll-improvement-d20.sh pick 11   # d11 uit backlog → PENDING
 ./scripts/mark-d20-done.sh 7 "korte note" 1.8.9
 ```
 
 Staat: `improvement-d20-bag.json` (commit na roll + na afronden).
 
-**d20 v3:** open roll = **PENDING** · **`userFeatureLog`** in `improvement-d20-bag.json` = user-wensen **zonder** nieuwe roll (Mats, mikken) · zoek **handoff** → `HANDOFF-ZOEKINDEX.md` + `.cursor/agent-handoffs/handoff.md`
+**d20 v3:** open roll = **PENDING** · **`rollBacklog`** = gerold maar nog niet uitgewerkt (blijft bewaard bij re-roll) · **`userFeatureLog`** = user-wensen zonder roll · handoff → `HANDOFF-ZOEKINDEX.md`
 
 ### Diagnose — Chrome “tap feedback, geen actie” (2026-07-23)
 
@@ -104,6 +105,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-24 | — | **d20 backlog:** `rollBacklog` in bag — overgeslagen rolls blijven bewaard; `backlog` + `pick d#` om uit te werken. History + userFeatureLog blijven apart. |
 | 2026-07-24 | — | **d20 roll UX:** `./scripts/roll-improvement-d20.sh` blokkeert niet meer op open pending — zet vorige face terug in zak en rolt direct opnieuw. `unroll` = terug zonder roll. |
 | 2026-07-24 | — | **User: harden movement.** `applyFighterMove` — snappy keyboard-turn (2.4× accel), joy curve, air control, lichte beweging tijdens hurt, snellere stop. v1.17.0 / SW v127. |
 | 2026-07-24 | — | **User fix: muur + joystick.** Muur-modus: speler mag langs hele muur lopen (geen onzichtbare muur vóór rechter stenen). Touch-joy: vasthouden werkt — geen stale-release meer bij stil vinger. v1.16.9 / SW v126. |
@@ -209,12 +211,12 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 
 1. Open **IMPROVEMENT.md** (dit bestand).
-2. Run **`./scripts/roll-improvement-d20.sh status`** — check PENDING.
-3. Run **`./scripts/roll-improvement-d20.sh`** (of user zegt “roll”) — preflight + één face (open pending gaat terug in zak).
-4. Werk **alleen** dat thema af — kleine diff. Wil je pending houden zonder te rollen: `unroll` na per ongeluk rollen.
-5. Checklist + **`node --check game.js`** + **`node scripts/smoke-load-game.mjs`**.
-6. `./scripts/mark-d20-done.sh <d#> "note" <version>` · Agent log · commit bag.
-7. Push naar **main** → Pages update (geen tunnel nodig).
+2. Run **`./scripts/roll-improvement-d20.sh status`** — check PENDING + backlog.
+3. Run **`./scripts/roll-improvement-d20.sh`** (of user zegt “roll”) — vorige pending → **`rollBacklog`** + nieuwe face.
+4. Werk **PENDING** af (code + test). **`mark-d20-done.sh`** wist pending + backlog-entry.
+5. Andere ideeën uit backlog: **`./scripts/roll-improvement-d20.sh pick <d#>`** of zeg **go pick 11**.
+6. User-wensen zonder roll: **`userFeatureLog`** in `improvement-d20-bag.json`.
+7. Checklist + **`node --check game.js`** + **`node scripts/smoke-load-game.mjs`** · commit bag · push **main**.
 
 ---
 

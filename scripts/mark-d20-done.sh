@@ -43,6 +43,8 @@ elif pending is None and bag.get("lastRoll") and int(bag["lastRoll"].get("face",
     pass
 # Face mag niet meer in remaining
 bag["remaining"] = [int(x) for x in bag.get("remaining") or [] if int(x) != face]
+bag.setdefault("rollBacklog", [])
+bag["rollBacklog"] = [x for x in bag.get("rollBacklog") or [] if int(x.get("face", 0)) != face]
 bag_path.write_text(json.dumps(bag, indent=2) + "\n")
 print("d" + str(face) + " gemarkeerd als af:", note, ("· " + ver) if ver else "")
 if bag.get("pending"):

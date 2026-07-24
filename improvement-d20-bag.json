@@ -336,6 +336,16 @@
   ],
   "userFeatureLog": [
     {
+      "id": "d20-roll-backlog",
+      "d20Face": null,
+      "userWords": "Roll moet nieuw zijn maar ideeën opslaan en later uitwerken",
+      "versions": [],
+      "commits": [],
+      "code": "rollBacklog in improvement-d20-bag.json; roll→backlog bij re-roll; backlog + pick d# commands",
+      "status": "done",
+      "note": "history + userFeatureLog blijven; pending = actief werk"
+    },
+    {
       "id": "harden-movement",
       "d20Face": null,
       "userWords": "Harden movement \u2014 strakkere loop, joy vasthouden, richting wissel",
@@ -1254,6 +1264,62 @@
       "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-07-24T15:27:24Z",
       "remainingCount": 6,
+      "cycle": 2
+    }
+  ],
+  "rollBacklog": [
+    {
+      "face": 3,
+      "category": "Versus 2P \u2014 split controls, rematch, char balance",
+      "focus": "HUD/rematch/spawn \u2014 geen roster dmg-herbalancering.",
+      "rolledAt": "2026-07-24T15:25:28Z",
+      "queuedAt": "2026-07-24T15:29:21Z",
+      "reason": "backfill",
+      "cycle": 2
+    },
+    {
+      "face": 12,
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
+      "focus": "Dex/cosmetic/achievement \u2014 geen 50 levels.",
+      "rolledAt": "2026-07-24T15:26:21Z",
+      "queuedAt": "2026-07-24T15:29:21Z",
+      "reason": "backfill",
+      "cycle": 2
+    },
+    {
+      "face": 18,
+      "category": "Character select \u2014 roster UI, stats, random duo",
+      "focus": "Char select UI \u2014 stats preview, geen dmg tweak.",
+      "rolledAt": "2026-07-24T15:26:21Z",
+      "queuedAt": "2026-07-24T15:29:21Z",
+      "reason": "backfill",
+      "cycle": 2
+    },
+    {
+      "face": 2,
+      "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
+      "focus": "Telegraphen + 1 AI-tweak \u2014 geen one-shot kills.",
+      "rolledAt": "2026-07-24T15:26:21Z",
+      "queuedAt": "2026-07-24T15:29:21Z",
+      "reason": "backfill",
+      "cycle": 2
+    },
+    {
+      "face": 11,
+      "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
+      "focus": "goBack/scroll/grote knoppen \u2014 \u00e9\u00e9n flow-fix.",
+      "rolledAt": "2026-07-24T15:26:55Z",
+      "queuedAt": "2026-07-24T15:29:21Z",
+      "reason": "backfill",
+      "cycle": 2
+    },
+    {
+      "face": 17,
+      "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
+      "focus": "try/catch + user toast \u2014 geen silent fail.",
+      "rolledAt": "2026-07-24T15:27:12Z",
+      "queuedAt": "2026-07-24T15:29:21Z",
+      "reason": "backfill",
       "cycle": 2
     }
   ]
