@@ -1,0 +1,14 @@
+{
+  "name": "stickman-fighter",
+  "private": true,
+  "version": "1.17.21",
+  "description": "Stickman Fighter — Monster Arena PWA",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:css": "node scripts/extract-css.mjs",
+    "split": "node scripts/split-game.mjs",
+    "check": "node --check game.js",
+    "smoke": "node scripts/smoke-load-game.mjs",
+    "test": "npm run build && npm run check && npm run smoke"
+  }
+}

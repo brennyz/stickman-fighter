@@ -1,0 +1,31 @@
+/* ============================== WAPENS ================================= */
+const WEAPONS = [
+  { id: 'vuist',     name: 'Vuisten',         dmg: 1.0,  range: 38, speed: 1.0,  unlock: 1,  rarity: 'common',    desc: 'Taijutsu basics' },
+  { id: 'kunai',     name: 'Kunai',           dmg: 1.35, range: 52, speed: 1.15, unlock: 2,  rarity: 'common',    desc: 'Klassieke ninja-mes' },
+  { id: 'shuriken',  name: 'Shuriken',        dmg: 1.25, range: 64, speed: 1.35, unlock: 3,  rarity: 'common',    desc: 'Gooit scherpe sterren' },
+  { id: 'tanto',     name: 'Tanto',           dmg: 1.22, range: 44, speed: 1.28, unlock: 4,  rarity: 'common',    desc: 'Korte blade · snel' },
+  { id: 'zwaard',    name: 'Ninja-zwaard',    dmg: 1.55, range: 58, speed: 0.95, unlock: 5,  rarity: 'uncommon',  desc: 'Kenjutsu alleskunner' },
+  { id: 'sai',       name: 'Sai',             dmg: 1.42, range: 46, speed: 1.22, unlock: 6,  rarity: 'uncommon',  desc: 'Driepuntig · pareren' },
+  { id: 'knuppel',   name: 'Knuppel',         dmg: 1.8,  range: 50, speed: 0.72, unlock: 7,  rarity: 'uncommon',  desc: 'Rauwe slagkracht' },
+  { id: 'waaier',    name: 'Strijdwaaier',    dmg: 1.48, range: 56, speed: 1.12, unlock: 9,  rarity: 'uncommon',  desc: 'Waaier-snede · stijlvol' },
+  { id: 'speer',     name: 'Speer',           dmg: 1.6,  range: 78, speed: 0.8,  unlock: 10, rarity: 'uncommon',  desc: 'Enorm bereik' },
+  { id: 'tonfa',     name: 'Tonfa',           dmg: 1.52, range: 50, speed: 1.28, unlock: 12, rarity: 'rare',      desc: 'Zijhandvat · flurry' },
+  { id: 'nunchaku',  name: 'Nunchaku',        dmg: 1.3,  range: 48, speed: 1.4,  unlock: 13, rarity: 'rare',      desc: 'Bliksemsnel' },
+  { id: 'kama',      name: 'Kama',            dmg: 1.68, range: 54, speed: 1.14, unlock: 15, rarity: 'rare',      desc: 'Sikkel · haak-slagen' },
+  { id: 'boemerang', name: 'Boemerang',       dmg: 1.7,  range: 70, speed: 1.05, unlock: 16, rarity: 'rare',      desc: 'Komt terug' },
+  { id: 'zeis',      name: 'Schaduwzeis',     dmg: 1.95, range: 74, speed: 0.82, unlock: 18, rarity: 'rare',      desc: 'Lange boog · duister' },
+  { id: 'hamer',     name: 'Mokerhamer',      dmg: 2.6,  range: 52, speed: 0.55, unlock: 20, rarity: 'epic',      desc: 'Sloopt alles' },
+  { id: 'drietand',  name: 'Drietand',        dmg: 2.05, range: 76, speed: 0.88, unlock: 22, rarity: 'epic',      desc: 'Drie punten · prikken' },
+  { id: 'ketting',   name: 'Kettingzwaard',   dmg: 2.1,  range: 68, speed: 0.95, unlock: 24, rarity: 'epic',      desc: 'Bereik + druk' },
+  { id: 'bostaf',    name: 'Bo-staf',         dmg: 1.9,  range: 72, speed: 1.08, unlock: 26, rarity: 'epic',      desc: 'Lange staf · tempo' },
+  { id: 'laser',     name: 'Chakra-kling',    dmg: 2.3,  range: 62, speed: 1.15, unlock: 28, rarity: 'legendary', desc: 'Blauw brandende kling' },
+  { id: 'fuuma',     name: 'Fūma-shuriken',   dmg: 1.95, range: 72, speed: 1.18, unlock: 30, rarity: 'legendary', desc: 'Grote werpster' },
+  { id: 'kristal',   name: 'Kristalkling',    dmg: 2.45, range: 60, speed: 1.05, unlock: 32, rarity: 'legendary', desc: 'Scherven-snede' },
+  { id: 'donder',    name: 'Bliksem-bijl',    dmg: 2.8,  range: 58, speed: 0.7,  unlock: 34, rarity: 'legendary', desc: 'Als Chidori, maar een bijl' },
+  { id: 'vlamzweep', name: 'Vlamzweep',       dmg: 2.55, range: 78, speed: 1.0,  unlock: 36, rarity: 'legendary', desc: 'Vuurlijn · lang bereik' },
+  { id: 'void',      name: 'Voidklaauw',      dmg: 2.5,  range: 64, speed: 1.25, unlock: 40, rarity: 'mythic',    desc: 'Mythische klauw' },
+  { id: 'sterkling', name: 'Sterkling',       dmg: 2.75, range: 66, speed: 1.12, unlock: 44, rarity: 'mythic',    desc: 'Hemelmetaal · krits' },
+  { id: 'guvve',     name: 'Guvvedukkie-stok', dmg: 3.1,  range: 66, speed: 1.0,  unlock: 48, rarity: 'mythic',    desc: 'Quak. Bitte. Boom.' },
+];
+const weaponById = id => WEAPONS.find(w => w.id === id) || WEAPONS[0];
+
