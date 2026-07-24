@@ -132,9 +132,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.23';
+const APP_VERSION = '1.17.24';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 149;
+const SW_CACHE_REV = 150;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -1683,6 +1683,28 @@ function startAdventureFromGamble(skipGamble) {
   }
 }
 
+let gambleRollGoBusy = false;
+
+function rollAndGoAdventure() {
+  if (gambleRollGoBusy) return;
+  gambleRollGoBusy = true;
+  try {
+    AudioSys.init();
+    AudioSys.sfx('select');
+    lastGambleRoll = rollStageGamble();
+    UI.renderGamble(pendingAdvLevel || save.unlocked || 1);
+    try { AudioSys.sting('modeAdventure'); } catch (_) {}
+    const delay = (save.reducedMotion || (typeof motionReduced === 'function' && motionReduced())) ? 100 : 380;
+    setTimeout(() => {
+      gambleRollGoBusy = false;
+      startAdventureFromGamble(false);
+    }, delay);
+  } catch (err) {
+    gambleRollGoBusy = false;
+    sfReportError('rollGo', err, 'Roll & go mislukt — probeer opnieuw');
+  }
+}
+
 function vsFighterStats(entry) {
   const hp = Math.round(100 * entry.hpMul);
   const spd = Math.round(100 * entry.spdMul);
@@ -1925,7 +1947,7 @@ function applyGambleOnboarding() {
   persist();
   const outEl = document.getElementById('gambleOutcome');
   if (outEl && !lastGambleRoll) {
-    outEl.textContent = 'Eerste keer: som ≤5 = super-baas · som ≥9 = bondgenoot voor dit level. Of tik Start zonder gok.';
+    outEl.textContent = 'Eerste keer: som ≤5 = super-baas · som ≥9 = bondgenoot. Tik Gooi & start — of overslaan.';
   }
 }
 
@@ -10906,7 +10928,7 @@ const UI = {
       if (sumLine) sumLine.textContent = `Som: ${g.d1} + ${g.d2} = ${g.sum}`;
     } else {
       if (diceRow) diceRow.textContent = '? ?';
-      if (sumLine) sumLine.textContent = 'Tik op Gooi dobbelstenen — of start zonder gok';
+      if (sumLine) sumLine.textContent = 'Tik Gooi & start — of overslaan zonder gok';
     }
     if (outEl) {
       if (!g) outEl.textContent = 'Super-baas (som ≤5) of super-bondgenoot (som ≥9) kan dit level veranderen.';
@@ -11432,17 +11454,7 @@ bindPress(document.getElementById('menuProfileBar'), () => {
   UI.renderMissions();
   UI.show('missionsScreen');
 });
-bindPress(document.getElementById('btnGambleRoll'), () => {
-  AudioSys.init();
-  AudioSys.sfx('select');
-  lastGambleRoll = rollStageGamble();
-  UI.renderGamble(pendingAdvLevel || save.unlocked || 1);
-  try { AudioSys.sting('modeAdventure'); } catch (_) {}
-});
-bindPress(document.getElementById('btnGambleStart'), () => {
-  AudioSys.sfx('select');
-  startAdventureFromGamble(false);
-});
+bindPress(document.getElementById('btnGambleRollGo'), () => rollAndGoAdventure());
 bindPress(document.getElementById('btnGambleSkip'), () => {
   AudioSys.sfx('select');
   startAdventureFromGamble(true);

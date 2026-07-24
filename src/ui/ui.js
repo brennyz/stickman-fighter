@@ -1116,7 +1116,7 @@ const UI = {
       if (sumLine) sumLine.textContent = `Som: ${g.d1} + ${g.d2} = ${g.sum}`;
     } else {
       if (diceRow) diceRow.textContent = '? ?';
-      if (sumLine) sumLine.textContent = 'Tik op Gooi dobbelstenen — of start zonder gok';
+      if (sumLine) sumLine.textContent = 'Tik Gooi & start — of overslaan zonder gok';
     }
     if (outEl) {
       if (!g) outEl.textContent = 'Super-baas (som ≤5) of super-bondgenoot (som ≥9) kan dit level veranderen.';
