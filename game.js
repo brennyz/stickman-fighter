@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.3';
+const APP_VERSION = '1.17.4';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 130;
+const SW_CACHE_REV = 131;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -454,6 +454,12 @@ function safeCall(fn, label, toastOnFail) {
   }
 }
 
+function safeAsync(promise, label, userMsg) {
+  return Promise.resolve(promise).catch((err) => {
+    sfReportError(label || 'async', err, userMsg || 'Actie mislukt — probeer opnieuw');
+  });
+}
+
 function restoreSaveFromBackup() {
   try {
     const backup = readSaveJson(localStorage.getItem(SAVE_BACKUP_KEY));
@@ -718,17 +724,21 @@ const DAILY_PLAY_TARGETS = {
   boss1: { mode: 'adventure', label: 'Avontuur' },
 };
 function goDailyPlayTarget(taskId) {
-  const t = DAILY_PLAY_TARGETS[taskId];
-  if (!t) return;
-  AudioSys.init();
-  AudioSys.sfx('select');
-  if (t.mode === 'adventure') {
-    UI.renderLevels();
-    UI.show('levelScreen');
-  } else if (t.mode === 'training') {
-    startGame('training');
-  } else if (t.mode === 'wall') {
-    startGame('wall');
+  try {
+    const t = DAILY_PLAY_TARGETS[taskId];
+    if (!t) return;
+    AudioSys.init();
+    AudioSys.sfx('select');
+    if (t.mode === 'adventure') {
+      UI.renderLevels();
+      UI.show('levelScreen');
+    } else if (t.mode === 'training') {
+      startGame('training');
+    } else if (t.mode === 'wall') {
+      startGame('wall');
+    }
+  } catch (err) {
+    sfReportError('dailyPlay', err, 'Kon modus niet openen — kies handmatig in menu');
   }
 }
 const ACHIEVEMENTS = [
@@ -1285,13 +1295,19 @@ function recordLastPlay(mode, opts) {
 function resumeLastPlay() {
   const lp = save.lastPlay;
   if (!lp || !lp.mode) return false;
-  if (lp.mode === 'adventure') {
-    openGambleForLevel(lp.level || 1);
+  try {
+    if (lp.mode === 'adventure') {
+      openGambleForLevel(lp.level || 1);
+    } else if (lp.mode === 'versus') {
+      startGame('versus', { p1: lp.p1, p2: lp.p2 });
+    } else {
+      startGame(lp.mode);
+    }
     return true;
+  } catch (err) {
+    sfReportError('resumeLastPlay', err, 'Verder spelen mislukt — kies een modus');
+    return false;
   }
-  else if (lp.mode === 'versus') startGame('versus', { p1: lp.p1, p2: lp.p2 });
-  else startGame(lp.mode);
-  return true;
 }
 
 function openGambleForLevel(n) {
@@ -1341,7 +1357,7 @@ function vsStatPreviewHtml(e1, e2) {
 }
 
 function copyPlayLink() {
-  const go = async () => {
+  safeAsync((async () => {
     const url = await resolveSharePlayUrl();
     try {
       await navigator.clipboard.writeText(url);
@@ -1349,12 +1365,11 @@ function copyPlayLink() {
     } catch (_) {
       UI.toast(url, 4500);
     }
-  };
-  go();
+  })(), 'copyLink', 'Link kopiëren mislukt — zie Instellingen → Deel link');
 }
 
 function sharePlayLink() {
-  const go = async () => {
+  safeAsync((async () => {
     const url = await resolveSharePlayUrl();
     if (navigator.share) {
       try {
@@ -1374,8 +1389,7 @@ function sharePlayLink() {
     } catch (_) {
       UI.toast(url, 4500);
     }
-  };
-  go();
+  })(), 'shareLink', 'Delen mislukt — kopieer link via Instellingen');
 }
 
 function isTunnelHostUrl(u) {
@@ -10273,19 +10287,30 @@ bindPress(btnMissions, () => {
 });
 const dailyClaimAllBtn = document.getElementById('dailyClaimAllBtn');
 if (dailyClaimAllBtn) dailyClaimAllBtn.addEventListener('click', () => {
-  AudioSys.init(); AudioSys.sfx('select'); claimAllDailyReady();
+  try {
+    AudioSys.init(); AudioSys.sfx('select'); claimAllDailyReady();
+  } catch (err) {
+    sfReportError('claimAll', err, 'Claim mislukt — probeer opnieuw');
+  }
 });
 const dailyBonusBtn = document.getElementById('dailyBonusBtn');
 if (dailyBonusBtn) dailyBonusBtn.addEventListener('click', () => {
-  AudioSys.sfx('select'); claimDailyDayBonus();
+  try {
+    AudioSys.sfx('select'); claimDailyDayBonus();
+  } catch (err) {
+    sfReportError('dayBonus', err, 'Dagbonus mislukt — probeer opnieuw');
+  }
 });
 const btnCopyLink = document.getElementById('btnCopyLink');
 if (btnCopyLink) btnCopyLink.addEventListener('click', () => copyPlayLink());
 const btnOpenPlayLink = document.getElementById('btnOpenPlayLink');
-if (btnOpenPlayLink) btnOpenPlayLink.addEventListener('click', async () => {
+if (btnOpenPlayLink) btnOpenPlayLink.addEventListener('click', () => {
   AudioSys.sfx('select');
-  const url = await resolveSharePlayUrl();
-  if (url) window.open(url, '_blank', 'noopener');
+  safeAsync((async () => {
+    const url = await resolveSharePlayUrl();
+    if (url) window.open(url, '_blank', 'noopener');
+    else userToast('Geen speel-link gevonden — zie Instellingen', 2800);
+  })(), 'openPlayLink', 'Link openen mislukt');
 });
 const btnExportSave = document.getElementById('btnExportSave');
 if (btnExportSave) btnExportSave.addEventListener('click', async () => {
@@ -10941,6 +10966,7 @@ function bootGame() {
     console.error('[Stickman] save sanitize', err);
     save = Object.assign({}, DEFAULT_SAVE);
     try { persist(); } catch (_) {}
+    userToast('Save kon niet geladen worden — nieuwe voortgang gestart (export backup als je die had)', 4800);
   }
   safeCall(() => dismissTunnelOverlayIfStatic(), 'overlay');
   safeCall(() => { if (typeof window.sfTunnelNukeOverlay === 'function') window.sfTunnelNukeOverlay(); }, 'nuke');
@@ -10966,7 +10992,8 @@ function bootGame() {
     window.addEventListener('unhandledrejection', (ev) => {
       if (window.__sfLoopErr) return;
       const r = ev.reason;
-      if (r instanceof Error) sfReportError('async', r);
+      const err = r instanceof Error ? r : new Error(String(r != null ? r : 'async reject'));
+      sfReportError('async', err, 'Actie mislukt — probeer opnieuw');
       if (state === 'play') {
         try { recoverToMenu(); } catch (_) {}
       }

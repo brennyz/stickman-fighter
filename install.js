@@ -84,6 +84,7 @@
         setTimeout(() => resolve(false), 8000);
       });
     } catch (_) {
+      toast('Update mislukt — tik «Verse versie»', 3200);
       return false;
     }
   }
