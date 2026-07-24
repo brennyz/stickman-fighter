@@ -1271,6 +1271,22 @@ const UI = {
         ((save.stats.weaponFinishers || 0) > 0 ? ` · finishers <b>${save.stats.weaponFinishers}</b>` : '') +
         (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '');
     }
+    const mastEl = document.getElementById('weaponMasteryStrip');
+    if (mastEl) {
+      const top = weaponMasteryTopList(3);
+      if (!top.length) {
+        mastEl.style.display = 'none';
+        mastEl.innerHTML = '';
+      } else {
+        mastEl.style.display = 'block';
+        mastEl.innerHTML = '<div style="font-size:12px;opacity:.85;margin-bottom:6px">Top stijl-meesterschap</div>' +
+          top.map(e =>
+            `<span class="rar-pill" style="color:${e.tier.color};border-color:${e.tier.color};margin:2px 4px 2px 0">` +
+            `${e.name} · ${e.tier.name} · ${e.finishers}×</span>`
+          ).join('') +
+          '<div style="font-size:11px;opacity:.65;margin-top:6px">Tiers: Leerling → Virtuoos (3) → Meester (10) → Legende (25)</div>';
+      }
+    }
     const list = document.getElementById('weaponList');
     list.innerHTML = '';
     for (const base of WEAPONS) {
@@ -1303,11 +1319,16 @@ const UI = {
         : `${w.desc} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}`;
       const labels = weaponMoveLabels(w.id);
       const mast = (save.weaponMastery || {})[w.id];
-      const mastLine = mast && mast.finishers ? ` · ${mast.finishers}× finisher` : '';
+      const finCount = mast && mast.finishers ? mast.finishers : 0;
+      const tier = finCount > 0 ? weaponMasteryTier(w.id) : null;
+      const tierBadge = tier && finCount >= 3
+        ? ` <span class="rar-pill" style="color:${tier.color};border-color:${tier.color}">${tier.name}</span>`
+        : '';
+      const mastLine = finCount ? ` · ${finCount}× finisher` : '';
       const moveLine = labels
         ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} finisher${mastLine}`
         : (isThrowWeapon(w.id) ? 'Werp-projectiel — geen melee-combo' : '');
-      info.innerHTML = `<div class="cname">${w.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>${summonBadge}</div>
+      info.innerHTML = `<div class="cname">${w.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>${summonBadge}${tierBadge}</div>
         <div class="cinfo">${statLine}</div>` +
         (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '');
       el.appendChild(info);

@@ -17,6 +17,7 @@ class Game {
     this.maxCombo = 0;
     this.combo = 0;
     this.comboT = 0;
+    this.runFinishers = 0;
 
     const st = playerStats();
     if (mode !== 'versus') {
@@ -441,8 +442,10 @@ class Game {
       title: win ? 'GEWONNEN!' : 'VERSLAGEN...',
       detail: (() => {
         let base = win
-          ? `Level ${lv} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}`
-          : `Level ${lv} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}`;
+          ? `Level ${lv} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}` +
+            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '')
+          : `Level ${lv} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}` +
+            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '');
         if (masterBuffActive(lv) && !win) base += ' · Meester-buff actief';
         if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
           base += ` · gok: ${gambleOutcomeLabel(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48)}`;
@@ -729,7 +732,8 @@ class Game {
         || 'Tip: duck lasers · chakra vol → Rasengan';
     setTimeout(() => UI.showResult(win, {
       title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
-      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · ${save.trainWins}x gewonnen`,
+      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · ${save.trainWins}x gewonnen` +
+        (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
     }), 1200);
@@ -823,7 +827,8 @@ class Game {
     setTimeout(() => UI.showResult(p1Win, {
       title: p1Win ? 'SPELER 1 WINT!' : 'SPELER 2 WINT!',
       detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}` +
-        ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : ''),
+        ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : '') +
+        (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
       xp: this.sessionXP, mode: 'versus', win: p1Win, p1: this.p1Pick, p2: this.p2Pick,
       tip: 'Opnieuw = rematch · Pauze → Herstart match (0-0)',
     }), 1200);
@@ -1289,7 +1294,7 @@ class Game {
             this.floater(f.x + f.face * 24, f.y - (118 + idx * 5), txt, col, finisher ? 15 : (idx === 2 ? 13 : 11));
           }
           if (finisher) {
-            trackWeaponFinisher(f.weapon.id);
+            trackWeaponFinisher(f.weapon.id, this);
             try { AudioSys.sfx('comboEpic'); } catch (_) {}
             if (!fxLite()) {
               this.burst(hx, hy, f.style?.accent || '#ffb830', 8, { kind: 'spark', size: 2.5 });
@@ -1340,7 +1345,7 @@ class Game {
             this.floater(f.x + f.face * 24, f.y - (118 + idx * 5), txt, finisher ? '#ffb830' : '#ffd75e', finisher ? 14 : 11);
           }
           if (finisher) {
-            trackWeaponFinisher(f.weapon.id);
+            trackWeaponFinisher(f.weapon.id, this);
             try { AudioSys.sfx('comboEpic'); } catch (_) {}
             bumpWeaponComboWindow(f, 0.14);
           }

@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=173">
+<link rel="stylesheet" href="styles/main.css?v=174">
 </head>
 <body>
 <button id="pauseBtn" aria-label="Pauze">&#10074;&#10074;</button>
@@ -216,6 +216,7 @@
   <h2 class="head">Wapens</h2>
   <div class="subtitle">Summons zijn echt · eiland-skill gate: alleen wapens tot je huidige eiland-cap in avontuur</div>
   <div id="weaponSummary" class="statbar" style="display:none"></div>
+  <div id="weaponMasteryStrip" class="statbar" style="display:none;margin-top:8px"></div>
   <div id="weaponList"></div>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
 </div>
@@ -365,7 +366,7 @@
       <li><b>Dash:</b> dubbel-tik links/rechts (of toets <b>Shift</b>) om te ontwijken.</li>
       <li><b>Rasengan:</b> vul je <b>chakra</b>-balk — dan laad je een draaiende chakra-bol en knal je ‘m erin.</li>
       <li><b>Substitutie:</b> rookwolk + ontwijk (knop of <b>Shift</b>). Korte onkwetsbaarheid.</li>
-      <li><b>Wapen-combo:</b> tik wapen 3× snel — elk wapen heeft 3 eigen moves (①②③). Raak met ① én ②, dan is ③ een <b>finisher</b> (+schade, +chakra).</li>
+      <li><b>Wapen-combo:</b> tik wapen 3× snel — elk wapen heeft 3 eigen moves (①②③). Raak met ① én ②, dan is ③ een <b>finisher</b> (+schade, +chakra). Meesterschap: Virtuoos 3× · Meester 10× · Legende 25× per wapen.</li>
       <li><b>2 spelers:</b> roster met <b>5 saga-icons</b> (Ki/Scroll/Tide/Cape/Dawn parodie) + filters · best-of-3.</li>
       <li><b>RabbitRobot:</b> hij gebruikt <b>Chidori</b> (bliksem) — wacht tot hij open is.</li>
       <li><b>Muur:</b> 60s timer · combo-balk (+4% sloop per hit) · milestones ×3/×5/×8 · record-tempo in HUD · bom/goud bonusstenen.</li>
@@ -425,7 +426,7 @@
 </script>
 
 <script src="tunnel-check.js?v=204"></script>
-<script src="game.js?v=173"></script>
+<script src="game.js?v=174"></script>
 <script src="install.js?v=204"></script>
 <script>
 (function () {

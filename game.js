@@ -132,16 +132,16 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.47';
+const APP_VERSION = '1.17.48';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 173;
+const SW_CACHE_REV = 174;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, weaponFinishers: 0 },
-  achievements: {}, daily: null, vsPlayedIds: [] };
+  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {} };
 const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
 const ISLAND_WEAPON_CAPS = [10, 20, 30, 40, 48];
@@ -744,6 +744,14 @@ function sanitizeSave(s) {
   }
   out.dex = cleanDex;
 
+  const cleanMastery = {};
+  for (const [k, v] of Object.entries(out.weaponMastery || {})) {
+    if (!WEAPONS.some(w => w.id === k)) continue;
+    const fin = clamp(Math.floor(Number(v && v.finishers) || 0), 0, 999999);
+    if (fin > 0) cleanMastery[k] = { finishers: fin };
+  }
+  out.weaponMastery = cleanMastery;
+
   out.stats = Object.assign({}, DEFAULT_SAVE.stats, out.stats || {});
   const cleanStats = {};
   for (const key of Object.keys(DEFAULT_SAVE.stats)) {
@@ -893,6 +901,7 @@ const DAILY_DEFS = [
   { id: 'wall35', type: 'wallBricks', goal: 35, xp: 40, text: 'Sloop 35 muurstenen' },
   { id: 'trainwin', type: 'trainWin', goal: 1, xp: 60, text: 'Win training vs Robot' },
   { id: 'combo5', type: 'comboReach', goal: 5, xp: 35, text: 'Bereik combo ×5' },
+  { id: 'finisher3', type: 'weaponFinisher', goal: 3, xp: 42, text: 'Land 3 wapen-finishers' },
   { id: 'pick3', type: 'pickups', goal: 3, xp: 30, text: 'Pak 3 power-ups' },
   { id: 'boss1', type: 'bossKill', goal: 1, xp: 50, text: 'Versla 1 baas-monster' },
 ];
@@ -902,6 +911,7 @@ const DAILY_PLAY_HINTS = {
   wall35: 'Menu → Muur slopen (combo helpt)',
   trainwin: 'Menu → Training vs RabbitRobot',
   combo5: 'Avontuur: snelle combo’s op monsters',
+  finisher3: 'Avontuur/Training: ①+② raken, dan finisher ③',
   pick3: 'Avontuur: groen/oranje/blauwe bolletjes',
   boss1: 'Avontuur: baas aan einde van een level',
 };
@@ -911,6 +921,7 @@ const DAILY_PLAY_TARGETS = {
   wall35: { mode: 'wall', label: 'Muur' },
   trainwin: { mode: 'training', label: 'Training' },
   combo5: { mode: 'adventure', label: 'Avontuur' },
+  finisher3: { mode: 'adventure', label: 'Avontuur' },
   pick3: { mode: 'adventure', label: 'Avontuur' },
   boss1: { mode: 'adventure', label: 'Avontuur' },
 };
@@ -967,6 +978,12 @@ const ACHIEVEMENTS = [
     test: s => s.stats.maxCombo >= 8 },
   { id: 'finisher10', name: 'Stijl-meester', desc: '10 wapen-finishers geland', icon: '⚔',
     test: s => (s.stats.weaponFinishers || 0) >= 10 },
+  { id: 'finisher1', name: 'Eerste stijl', desc: 'Land je eerste wapen-finisher', icon: '🗡',
+    test: s => (s.stats.weaponFinishers || 0) >= 1 },
+  { id: 'weaponMaster25', name: 'Wapen-legende', desc: '25 finishers met één wapen', icon: '👑',
+    test: s => Object.values(s.weaponMastery || {}).some(m => (m.finishers || 0) >= 25) },
+  { id: 'finisher50', name: 'Combo-sensei', desc: '50 finishers totaal', icon: '✨',
+    test: s => (s.stats.weaponFinishers || 0) >= 50 },
   { id: 'lv50', name: 'Legende', desc: 'Unlock level 50', icon: '👑',
     test: s => s.unlocked >= 50 },
   { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd', icon: '📅',
@@ -1198,6 +1215,13 @@ function achievementProgressFrac(ach) {
     case 'wall100': return Math.min(s.bestWall, 100) / 100;
     case 'combo8': return Math.min(s.stats.maxCombo || 0, 8) / 8;
     case 'finisher10': return Math.min(s.stats.weaponFinishers || 0, 10) / 10;
+    case 'finisher1': return Math.min(s.stats.weaponFinishers || 0, 1);
+    case 'finisher50': return Math.min(s.stats.weaponFinishers || 0, 50) / 50;
+    case 'weaponMaster25': {
+      let best = 0;
+      for (const m of Object.values(s.weaponMastery || {})) best = Math.max(best, m.finishers || 0);
+      return Math.min(best, 25) / 25;
+    }
     case 'lv50': return Math.min(s.unlocked, 50) / 50;
     case 'daily7': return Math.min(s.stats.dailyBonusCount || 0, 7) / 7;
     case 'vs5': return Math.min(s.stats.vsMatches || 0, 5) / 5;
@@ -1229,6 +1253,13 @@ function achievementProgressHint(ach) {
     case 'wall100': return `${Math.min(s.bestWall, 100)}/100 muur-score`;
     case 'combo8': return `×${Math.min(s.stats.maxCombo || 0, 8)}/8 combo`;
     case 'finisher10': return `${Math.min(s.stats.weaponFinishers || 0, 10)}/10 finishers`;
+    case 'finisher1': return `${Math.min(s.stats.weaponFinishers || 0, 1)}/1 finisher`;
+    case 'finisher50': return `${Math.min(s.stats.weaponFinishers || 0, 50)}/50 finishers`;
+    case 'weaponMaster25': {
+      let best = 0;
+      for (const m of Object.values(s.weaponMastery || {})) best = Math.max(best, m.finishers || 0);
+      return `${Math.min(best, 25)}/25 op één wapen`;
+    }
     case 'lv50': return `Unlock Lv ${Math.min(s.unlocked, 50)}/50`;
     case 'daily7': return `${Math.min(s.stats.dailyBonusCount || 0, 7)}/7 dagbonussen`;
     case 'vs5': return `${Math.min(s.stats.vsMatches || 0, 5)}/5 duels`;
@@ -2672,14 +2703,72 @@ function isWeaponFinisher(f, spec) {
   return (f._weaponComboHits || 0) >= 2;
 }
 
-function trackWeaponFinisher(weaponId) {
+const WEAPON_MASTERY_TIERS = [
+  { min: 0, name: 'Leerling', color: '#9fd8ff' },
+  { min: 3, name: 'Virtuoos', color: '#c792ff' },
+  { min: 10, name: 'Meester', color: '#ffd75e' },
+  { min: 25, name: 'Legende', color: '#ffb830' },
+];
+
+function weaponMasteryCount(id) {
+  return (save.weaponMastery && save.weaponMastery[id] && save.weaponMastery[id].finishers) || 0;
+}
+
+function weaponMasteryTierIdx(count) {
+  let idx = 0;
+  for (let i = 0; i < WEAPON_MASTERY_TIERS.length; i++) {
+    if (count >= WEAPON_MASTERY_TIERS[i].min) idx = i;
+  }
+  return idx;
+}
+
+function weaponMasteryTier(id, countOverride) {
+  const count = countOverride != null ? countOverride : weaponMasteryCount(id);
+  return WEAPON_MASTERY_TIERS[weaponMasteryTierIdx(count)];
+}
+
+function weaponMasteryTopList(limit) {
+  const list = [];
+  for (const w of WEAPONS) {
+    if (isThrowWeapon(w.id) || w.id === 'vuist') continue;
+    const n = weaponMasteryCount(w.id);
+    if (n > 0) list.push({ id: w.id, name: w.name, finishers: n, tier: weaponMasteryTier(w.id) });
+  }
+  list.sort((a, b) => b.finishers - a.finishers);
+  return list.slice(0, limit || 3);
+}
+
+function weaponComboTipOnce() {
+  if (typeof save === 'undefined') return;
+  if (!save.tipsSeen || typeof save.tipsSeen !== 'object') save.tipsSeen = {};
+  if (save.tipsSeen.weaponCombo) return;
+  save.tipsSeen.weaponCombo = 1;
+  if (typeof persist === 'function') persist();
+  try { UI.toast('Wapen 3× tikken = ①②③ · raak met ①+② voor gouden finisher ③', 4200); } catch (_) {}
+}
+
+function trackWeaponFinisher(weaponId, gameRef) {
   if (!weaponId || isThrowWeapon(weaponId) || typeof save === 'undefined') return;
   save.stats = save.stats || {};
-  save.stats.weaponFinishers = (save.stats.weaponFinishers || 0) + 1;
+  const prevTotal = save.stats.weaponFinishers || 0;
+  save.stats.weaponFinishers = prevTotal + 1;
   save.weaponMastery = save.weaponMastery || {};
   const m = save.weaponMastery[weaponId] || { finishers: 0 };
-  m.finishers = (m.finishers || 0) + 1;
+  const prevCount = m.finishers || 0;
+  const prevTierIdx = weaponMasteryTierIdx(prevCount);
+  m.finishers = prevCount + 1;
   save.weaponMastery[weaponId] = m;
+  const newTierIdx = weaponMasteryTierIdx(m.finishers);
+  if (gameRef) gameRef.runFinishers = (gameRef.runFinishers || 0) + 1;
+  if (typeof bumpDaily === 'function') bumpDaily('weaponFinisher', 1);
+  if (newTierIdx > prevTierIdx && typeof UI !== 'undefined') {
+    const w = weaponById(weaponId);
+    const tier = WEAPON_MASTERY_TIERS[newTierIdx];
+    try { UI.toast(`${w.name}: ${tier.name}!`, 3200); } catch (_) {}
+  }
+  if (prevTotal === 0 && typeof UI !== 'undefined') {
+    try { UI.toast('Eerste finisher! Raak ① én ②, dan is ③ goud.', 3600); } catch (_) {}
+  }
   if (typeof checkAchievements === 'function') checkAchievements();
 }
 
@@ -2734,6 +2823,13 @@ function drawWeaponStylePips(c, x, y, fighter) {
     const lbl = labels[fighter.weaponComboIdx];
     c.fillText(lbl.length > 14 ? lbl.slice(0, 13) + '…' : lbl, x + 13, y + 12);
     c.textAlign = 'left';
+  }
+  if (!motionReduced()) {
+    const frac = clamp(fighter.weaponComboT / WEAPON_COMBO_WINDOW, 0, 1);
+    c.fillStyle = 'rgba(255,255,255,.14)';
+    c.fillRect(x - 2, y + 18, 40, 3);
+    c.fillStyle = readyFin ? '#ffb830' : '#ffd75e';
+    c.fillRect(x - 2, y + 18, 40 * frac, 3);
   }
 }
 
@@ -5994,6 +6090,7 @@ class Fighter {
       AudioSys.sfx(weaponSwingSfx(this.weapon, kind));
     }
     if (kind === 'weapon' && !isThrowWeapon(this.weapon.id)) {
+      if (this.isPlayer || this.playerSlot) weaponComboTipOnce();
       const sameWep = this._lastWeaponKind === this.weapon.id;
       if (this._weaponComboPrimed && this.weaponComboT > 0 && sameWep) {
         this.weaponComboIdx = (this.weaponComboIdx + 1) % 3;
@@ -6496,6 +6593,20 @@ class Fighter {
         ? clamp(this._aimAtAttack.ny, -1, 0.4) * 0.85
         : 0;
       const wAng = this.attack && this.attack.kind === 'weapon' ? P.arms[1][1] + aimLift : -0.5 + aimLift * 0.25;
+      if (this.attack && this.attack.kind === 'weapon' && this.attack.move && !motionReduced() && !fxLite()) {
+        const a = this.attack;
+        if (a.t >= a.windup && a.t <= a.windup + a.active) {
+          const ext = clamp((a.t - a.windup) / Math.max(0.01, a.active), 0, 1);
+          c.save();
+          c.globalAlpha = 0.32 * (1 - ext * 0.35);
+          c.strokeStyle = weaponMoveFxColor(a.move);
+          c.lineWidth = 2.5;
+          c.beginPath();
+          c.arc(hx, hy, 16 + ext * 30, wAng - 0.85, wAng + 0.45);
+          c.stroke();
+          c.restore();
+        }
+      }
       c.save(); c.translate(hx, hy); c.rotate(wAng);
       if (this.weapon.masterSword || this.weapon.id === 'master_sword') {
         c.shadowColor = '#6fd7ff';
@@ -7614,6 +7725,7 @@ class Game {
     this.maxCombo = 0;
     this.combo = 0;
     this.comboT = 0;
+    this.runFinishers = 0;
 
     const st = playerStats();
     if (mode !== 'versus') {
@@ -8038,8 +8150,10 @@ class Game {
       title: win ? 'GEWONNEN!' : 'VERSLAGEN...',
       detail: (() => {
         let base = win
-          ? `Level ${lv} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}`
-          : `Level ${lv} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}`;
+          ? `Level ${lv} · ${this.kills} monsters · ${stars}★ · max combo ×${this.maxCombo || 0}` +
+            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '')
+          : `Level ${lv} · ${this.kills} monsters · max combo ×${this.maxCombo || 0}` +
+            (this.runFinishers ? ` · ${this.runFinishers} finishers` : '');
         if (masterBuffActive(lv) && !win) base += ' · Meester-buff actief';
         if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
           base += ` · gok: ${gambleOutcomeLabel(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48)}`;
@@ -8326,7 +8440,8 @@ class Game {
         || 'Tip: duck lasers · chakra vol → Rasengan';
     setTimeout(() => UI.showResult(win, {
       title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
-      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · ${save.trainWins}x gewonnen`,
+      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · ${save.trainWins}x gewonnen` +
+        (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
     }), 1200);
@@ -8420,7 +8535,8 @@ class Game {
     setTimeout(() => UI.showResult(p1Win, {
       title: p1Win ? 'SPELER 1 WINT!' : 'SPELER 2 WINT!',
       detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}` +
-        ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : ''),
+        ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : '') +
+        (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
       xp: this.sessionXP, mode: 'versus', win: p1Win, p1: this.p1Pick, p2: this.p2Pick,
       tip: 'Opnieuw = rematch · Pauze → Herstart match (0-0)',
     }), 1200);
@@ -8886,7 +9002,7 @@ class Game {
             this.floater(f.x + f.face * 24, f.y - (118 + idx * 5), txt, col, finisher ? 15 : (idx === 2 ? 13 : 11));
           }
           if (finisher) {
-            trackWeaponFinisher(f.weapon.id);
+            trackWeaponFinisher(f.weapon.id, this);
             try { AudioSys.sfx('comboEpic'); } catch (_) {}
             if (!fxLite()) {
               this.burst(hx, hy, f.style?.accent || '#ffb830', 8, { kind: 'spark', size: 2.5 });
@@ -8937,7 +9053,7 @@ class Game {
             this.floater(f.x + f.face * 24, f.y - (118 + idx * 5), txt, finisher ? '#ffb830' : '#ffd75e', finisher ? 14 : 11);
           }
           if (finisher) {
-            trackWeaponFinisher(f.weapon.id);
+            trackWeaponFinisher(f.weapon.id, this);
             try { AudioSys.sfx('comboEpic'); } catch (_) {}
             bumpWeaponComboWindow(f, 0.14);
           }
@@ -11895,6 +12011,22 @@ const UI = {
         ((save.stats.weaponFinishers || 0) > 0 ? ` · finishers <b>${save.stats.weaponFinishers}</b>` : '') +
         (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '');
     }
+    const mastEl = document.getElementById('weaponMasteryStrip');
+    if (mastEl) {
+      const top = weaponMasteryTopList(3);
+      if (!top.length) {
+        mastEl.style.display = 'none';
+        mastEl.innerHTML = '';
+      } else {
+        mastEl.style.display = 'block';
+        mastEl.innerHTML = '<div style="font-size:12px;opacity:.85;margin-bottom:6px">Top stijl-meesterschap</div>' +
+          top.map(e =>
+            `<span class="rar-pill" style="color:${e.tier.color};border-color:${e.tier.color};margin:2px 4px 2px 0">` +
+            `${e.name} · ${e.tier.name} · ${e.finishers}×</span>`
+          ).join('') +
+          '<div style="font-size:11px;opacity:.65;margin-top:6px">Tiers: Leerling → Virtuoos (3) → Meester (10) → Legende (25)</div>';
+      }
+    }
     const list = document.getElementById('weaponList');
     list.innerHTML = '';
     for (const base of WEAPONS) {
@@ -11927,11 +12059,16 @@ const UI = {
         : `${w.desc} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}`;
       const labels = weaponMoveLabels(w.id);
       const mast = (save.weaponMastery || {})[w.id];
-      const mastLine = mast && mast.finishers ? ` · ${mast.finishers}× finisher` : '';
+      const finCount = mast && mast.finishers ? mast.finishers : 0;
+      const tier = finCount > 0 ? weaponMasteryTier(w.id) : null;
+      const tierBadge = tier && finCount >= 3
+        ? ` <span class="rar-pill" style="color:${tier.color};border-color:${tier.color}">${tier.name}</span>`
+        : '';
+      const mastLine = finCount ? ` · ${finCount}× finisher` : '';
       const moveLine = labels
         ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} finisher${mastLine}`
         : (isThrowWeapon(w.id) ? 'Werp-projectiel — geen melee-combo' : '');
-      info.innerHTML = `<div class="cname">${w.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>${summonBadge}</div>
+      info.innerHTML = `<div class="cname">${w.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rar.name}</span>${summonBadge}${tierBadge}</div>
         <div class="cinfo">${statLine}</div>` +
         (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '');
       el.appendChild(info);

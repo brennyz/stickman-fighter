@@ -393,14 +393,72 @@ function isWeaponFinisher(f, spec) {
   return (f._weaponComboHits || 0) >= 2;
 }
 
-function trackWeaponFinisher(weaponId) {
+const WEAPON_MASTERY_TIERS = [
+  { min: 0, name: 'Leerling', color: '#9fd8ff' },
+  { min: 3, name: 'Virtuoos', color: '#c792ff' },
+  { min: 10, name: 'Meester', color: '#ffd75e' },
+  { min: 25, name: 'Legende', color: '#ffb830' },
+];
+
+function weaponMasteryCount(id) {
+  return (save.weaponMastery && save.weaponMastery[id] && save.weaponMastery[id].finishers) || 0;
+}
+
+function weaponMasteryTierIdx(count) {
+  let idx = 0;
+  for (let i = 0; i < WEAPON_MASTERY_TIERS.length; i++) {
+    if (count >= WEAPON_MASTERY_TIERS[i].min) idx = i;
+  }
+  return idx;
+}
+
+function weaponMasteryTier(id, countOverride) {
+  const count = countOverride != null ? countOverride : weaponMasteryCount(id);
+  return WEAPON_MASTERY_TIERS[weaponMasteryTierIdx(count)];
+}
+
+function weaponMasteryTopList(limit) {
+  const list = [];
+  for (const w of WEAPONS) {
+    if (isThrowWeapon(w.id) || w.id === 'vuist') continue;
+    const n = weaponMasteryCount(w.id);
+    if (n > 0) list.push({ id: w.id, name: w.name, finishers: n, tier: weaponMasteryTier(w.id) });
+  }
+  list.sort((a, b) => b.finishers - a.finishers);
+  return list.slice(0, limit || 3);
+}
+
+function weaponComboTipOnce() {
+  if (typeof save === 'undefined') return;
+  if (!save.tipsSeen || typeof save.tipsSeen !== 'object') save.tipsSeen = {};
+  if (save.tipsSeen.weaponCombo) return;
+  save.tipsSeen.weaponCombo = 1;
+  if (typeof persist === 'function') persist();
+  try { UI.toast('Wapen 3× tikken = ①②③ · raak met ①+② voor gouden finisher ③', 4200); } catch (_) {}
+}
+
+function trackWeaponFinisher(weaponId, gameRef) {
   if (!weaponId || isThrowWeapon(weaponId) || typeof save === 'undefined') return;
   save.stats = save.stats || {};
-  save.stats.weaponFinishers = (save.stats.weaponFinishers || 0) + 1;
+  const prevTotal = save.stats.weaponFinishers || 0;
+  save.stats.weaponFinishers = prevTotal + 1;
   save.weaponMastery = save.weaponMastery || {};
   const m = save.weaponMastery[weaponId] || { finishers: 0 };
-  m.finishers = (m.finishers || 0) + 1;
+  const prevCount = m.finishers || 0;
+  const prevTierIdx = weaponMasteryTierIdx(prevCount);
+  m.finishers = prevCount + 1;
   save.weaponMastery[weaponId] = m;
+  const newTierIdx = weaponMasteryTierIdx(m.finishers);
+  if (gameRef) gameRef.runFinishers = (gameRef.runFinishers || 0) + 1;
+  if (typeof bumpDaily === 'function') bumpDaily('weaponFinisher', 1);
+  if (newTierIdx > prevTierIdx && typeof UI !== 'undefined') {
+    const w = weaponById(weaponId);
+    const tier = WEAPON_MASTERY_TIERS[newTierIdx];
+    try { UI.toast(`${w.name}: ${tier.name}!`, 3200); } catch (_) {}
+  }
+  if (prevTotal === 0 && typeof UI !== 'undefined') {
+    try { UI.toast('Eerste finisher! Raak ① én ②, dan is ③ goud.', 3600); } catch (_) {}
+  }
   if (typeof checkAchievements === 'function') checkAchievements();
 }
 
@@ -455,6 +513,13 @@ function drawWeaponStylePips(c, x, y, fighter) {
     const lbl = labels[fighter.weaponComboIdx];
     c.fillText(lbl.length > 14 ? lbl.slice(0, 13) + '…' : lbl, x + 13, y + 12);
     c.textAlign = 'left';
+  }
+  if (!motionReduced()) {
+    const frac = clamp(fighter.weaponComboT / WEAPON_COMBO_WINDOW, 0, 1);
+    c.fillStyle = 'rgba(255,255,255,.14)';
+    c.fillRect(x - 2, y + 18, 40, 3);
+    c.fillStyle = readyFin ? '#ffb830' : '#ffd75e';
+    c.fillRect(x - 2, y + 18, 40 * frac, 3);
   }
 }
 

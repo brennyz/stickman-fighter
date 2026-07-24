@@ -3,16 +3,16 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.47';
+const APP_VERSION = '1.17.48';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 173;
+const SW_CACHE_REV = 174;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, weaponFinishers: 0 },
-  achievements: {}, daily: null, vsPlayedIds: [] };
+  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {} };
 const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
 const ISLAND_WEAPON_CAPS = [10, 20, 30, 40, 48];
@@ -614,6 +614,14 @@ function sanitizeSave(s) {
     if (n > 0) cleanDex[k] = clamp(n, 1, 999999);
   }
   out.dex = cleanDex;
+
+  const cleanMastery = {};
+  for (const [k, v] of Object.entries(out.weaponMastery || {})) {
+    if (!WEAPONS.some(w => w.id === k)) continue;
+    const fin = clamp(Math.floor(Number(v && v.finishers) || 0), 0, 999999);
+    if (fin > 0) cleanMastery[k] = { finishers: fin };
+  }
+  out.weaponMastery = cleanMastery;
 
   out.stats = Object.assign({}, DEFAULT_SAVE.stats, out.stats || {});
   const cleanStats = {};

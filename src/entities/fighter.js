@@ -90,6 +90,7 @@ class Fighter {
       AudioSys.sfx(weaponSwingSfx(this.weapon, kind));
     }
     if (kind === 'weapon' && !isThrowWeapon(this.weapon.id)) {
+      if (this.isPlayer || this.playerSlot) weaponComboTipOnce();
       const sameWep = this._lastWeaponKind === this.weapon.id;
       if (this._weaponComboPrimed && this.weaponComboT > 0 && sameWep) {
         this.weaponComboIdx = (this.weaponComboIdx + 1) % 3;
@@ -592,6 +593,20 @@ class Fighter {
         ? clamp(this._aimAtAttack.ny, -1, 0.4) * 0.85
         : 0;
       const wAng = this.attack && this.attack.kind === 'weapon' ? P.arms[1][1] + aimLift : -0.5 + aimLift * 0.25;
+      if (this.attack && this.attack.kind === 'weapon' && this.attack.move && !motionReduced() && !fxLite()) {
+        const a = this.attack;
+        if (a.t >= a.windup && a.t <= a.windup + a.active) {
+          const ext = clamp((a.t - a.windup) / Math.max(0.01, a.active), 0, 1);
+          c.save();
+          c.globalAlpha = 0.32 * (1 - ext * 0.35);
+          c.strokeStyle = weaponMoveFxColor(a.move);
+          c.lineWidth = 2.5;
+          c.beginPath();
+          c.arc(hx, hy, 16 + ext * 30, wAng - 0.85, wAng + 0.45);
+          c.stroke();
+          c.restore();
+        }
+      }
       c.save(); c.translate(hx, hy); c.rotate(wAng);
       if (this.weapon.masterSword || this.weapon.id === 'master_sword') {
         c.shadowColor = '#6fd7ff';
