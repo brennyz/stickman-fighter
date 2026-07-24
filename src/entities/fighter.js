@@ -454,7 +454,18 @@ class Fighter {
       dmg = Math.max(1, Math.round(dmg * game.styleDefMul));
     }
     this.hp -= dmg;
+<<<<<<< HEAD
     this.hurtT = dmg >= 18 ? 0.16 : 0.12;
+=======
+    if (this.isPlayer && game) {
+      if (game.mode === 'training' || game.mode === 'adventure') {
+        game.combo = 0;
+        game.comboT = 0;
+      }
+      if (game.mode === 'adventure') game.killStreak = 0;
+    }
+    this.hurtT = dmg >= 18 ? 0.28 : 0.24;
+>>>>>>> origin/cursor/feel-killstreak-combotrainer-2125
     this.hitFlashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.18 : 0.14);
     this.attack = null;
     const kbScaled = scaleKnockback(kbx, dmg, { heavy: dmg >= 18 });

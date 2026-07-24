@@ -360,7 +360,7 @@ const UI = {
     const next = nextUntriedMode();
     const modes = [
       { id: 'adventure', label: 'Avontuur', tip: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok vóór level' },
-      { id: 'training', label: 'Training', tip: 'Lasers ontwijken · 2 rondes · Robot Chidori-telegraph' },
+      { id: 'training', label: 'Training', tip: 'Combo-trainer ×5/×8/×10 · 3s dummy · lasers · Chidori' },
       { id: 'wall', label: 'Muur', tip: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing' },
       { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
       { id: 'coinrun', label: 'Mats', tip: '45s munten · mik ↑ · vliegers +3' },
@@ -764,7 +764,12 @@ const UI = {
       if (el) el.textContent = txt || '';
     };
     if (this.modeHubId === 'arcade') {
-      setStat('hubStatTraining', save.trainWins > 0 ? `${save.trainWins} overwinningen` : 'Nog niet gespeeld');
+      setStat('hubStatTraining', (() => {
+        const rec = save.stats.trainMaxCombo || 0;
+        if (save.trainWins > 0) return `${save.trainWins} wins${rec ? ` · record ×${rec}` : ''}`;
+        if (rec > 0) return `Record combo ×${rec}`;
+        return 'Nog niet gespeeld';
+      })());
       setStat('hubStatWall', save.bestWall > 0 ? `Record ${save.bestWall}` : 'Nog geen score');
       const mats = save.stats?.matsCoinBest || 0;
       setStat('hubStatMats', mats > 0 ? `Best ${mats} munten` : 'Nog niet gespeeld');

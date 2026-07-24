@@ -3,11 +3,12 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.55';
+const APP_VERSION = '1.17.56';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 181;
+const SW_CACHE_REV = 182;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
+
 
 
 
@@ -17,6 +18,7 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, sum
   reducedMotion: false, liteFx: false, highContrast: false, lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {} };
+
 const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
 const ISLAND_WEAPON_CAPS = [10, 20, 30, 40, 48];

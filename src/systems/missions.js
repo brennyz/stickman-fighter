@@ -80,6 +80,7 @@ const ACHIEVEMENTS = [
     test: s => s.bestWall >= 100 },
   { id: 'combo8', name: 'Combo-koning', desc: 'Combo ×8 bereikt', icon: '⚡',
     test: s => s.stats.maxCombo >= 8 },
+<<<<<<< HEAD
   { id: 'finisher10', name: 'Stijl-meester', desc: '10 wapen-finishers geland', icon: '⚔',
     test: s => (s.stats.weaponFinishers || 0) >= 10 },
   { id: 'finisher1', name: 'Eerste stijl', desc: 'Land je eerste wapen-finisher', icon: '🗡',
@@ -88,6 +89,12 @@ const ACHIEVEMENTS = [
     test: s => Object.values(s.weaponMastery || {}).some(m => (m.finishers || 0) >= 25) },
   { id: 'finisher50', name: 'Combo-sensei', desc: '50 finishers totaal', icon: '✨',
     test: s => (s.stats.weaponFinishers || 0) >= 50 },
+=======
+  { id: 'streak10', name: 'Onstuitbaar', desc: 'Kill streak ×10 in avontuur', icon: '🔥',
+    test: s => (s.stats.maxKillStreak || 0) >= 10 },
+  { id: 'trainCombo10', name: 'Dummy-meester', desc: 'Training combo ×10', icon: '🎯',
+    test: s => (s.stats.trainMaxCombo || 0) >= 10 },
+>>>>>>> origin/cursor/feel-killstreak-combotrainer-2125
   { id: 'lv50', name: 'Legende', desc: 'Unlock level 50', icon: '👑',
     test: s => s.unlocked >= 50 },
   { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd', icon: '📅',
@@ -318,6 +325,7 @@ function achievementProgressFrac(ach) {
     case 'train5': return Math.min(s.trainWins, 5) / 5;
     case 'wall100': return Math.min(s.bestWall, 100) / 100;
     case 'combo8': return Math.min(s.stats.maxCombo || 0, 8) / 8;
+<<<<<<< HEAD
     case 'finisher10': return Math.min(s.stats.weaponFinishers || 0, 10) / 10;
     case 'finisher1': return Math.min(s.stats.weaponFinishers || 0, 1);
     case 'finisher50': return Math.min(s.stats.weaponFinishers || 0, 50) / 50;
@@ -326,6 +334,10 @@ function achievementProgressFrac(ach) {
       for (const m of Object.values(s.weaponMastery || {})) best = Math.max(best, m.finishers || 0);
       return Math.min(best, 25) / 25;
     }
+=======
+    case 'streak10': return Math.min(s.stats.maxKillStreak || 0, 10) / 10;
+    case 'trainCombo10': return Math.min(s.stats.trainMaxCombo || 0, 10) / 10;
+>>>>>>> origin/cursor/feel-killstreak-combotrainer-2125
     case 'lv50': return Math.min(s.unlocked, 50) / 50;
     case 'daily7': return Math.min(s.stats.dailyBonusCount || 0, 7) / 7;
     case 'vs5': return Math.min(s.stats.vsMatches || 0, 5) / 5;
@@ -356,6 +368,7 @@ function achievementProgressHint(ach) {
     case 'train5': return `${Math.min(s.trainWins, 5)}/5 training-wins`;
     case 'wall100': return `${Math.min(s.bestWall, 100)}/100 muur-score`;
     case 'combo8': return `×${Math.min(s.stats.maxCombo || 0, 8)}/8 combo`;
+<<<<<<< HEAD
     case 'finisher10': return `${Math.min(s.stats.weaponFinishers || 0, 10)}/10 finishers`;
     case 'finisher1': return `${Math.min(s.stats.weaponFinishers || 0, 1)}/1 finisher`;
     case 'finisher50': return `${Math.min(s.stats.weaponFinishers || 0, 50)}/50 finishers`;
@@ -364,6 +377,10 @@ function achievementProgressHint(ach) {
       for (const m of Object.values(s.weaponMastery || {})) best = Math.max(best, m.finishers || 0);
       return `${Math.min(best, 25)}/25 op één wapen`;
     }
+=======
+    case 'streak10': return `streak ×${Math.min(s.stats.maxKillStreak || 0, 10)}/10`;
+    case 'trainCombo10': return `train ×${Math.min(s.stats.trainMaxCombo || 0, 10)}/10`;
+>>>>>>> origin/cursor/feel-killstreak-combotrainer-2125
     case 'lv50': return `Unlock Lv ${Math.min(s.unlocked, 50)}/50`;
     case 'daily7': return `${Math.min(s.stats.dailyBonusCount || 0, 7)}/7 dagbonussen`;
     case 'vs5': return `${Math.min(s.stats.vsMatches || 0, 5)}/5 duels`;
@@ -433,6 +450,22 @@ function bumpStat(key, n) {
 function trackCombo(n) {
   if (n > (save.stats.maxCombo || 0)) save.stats.maxCombo = n;
   bumpDaily('comboReach', n);
+}
+
+function trackKillStreak(n) {
+  if (n > (save.stats.maxKillStreak || 0)) {
+    save.stats.maxKillStreak = n;
+    persist();
+    checkAchievements();
+  }
+}
+
+function trackTrainCombo(n) {
+  if (n > (save.stats.trainMaxCombo || 0)) {
+    save.stats.trainMaxCombo = n;
+    persist();
+    checkAchievements();
+  }
 }
 
 function saveSanitizeNotes(before, after) {
