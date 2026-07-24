@@ -76,9 +76,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.15.6';
+const APP_VERSION = '1.15.7';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 113;
+const SW_CACHE_REV = 114;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1134,7 +1134,9 @@ function syncPlayLayer() {
   const canvasHits = state === 'play' && !!game;
   el.style.pointerEvents = canvasHits ? 'auto' : 'none';
   el.style.visibility = canvasHits ? 'visible' : 'hidden';
+  el.style.touchAction = canvasHits ? 'none' : 'manipulation';
   document.body.classList.toggle('is-playing', canvasHits);
+  document.body.style.overflow = canvasHits ? 'hidden' : '';
   try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
 }
 
@@ -2863,6 +2865,40 @@ function btnHitSlop() {
   return base;
 }
 
+/** Dichtstbijzijnde knop binnen slop — voorkomt verkeerde match bij overlap/slop (d9). */
+function hitTouchButton(buttons, x, y) {
+  const slop = btnHitSlop();
+  let best = null;
+  let bestD = Infinity;
+  for (const b of buttons) {
+    const d = Math.hypot(x - b.x, y - b.y);
+    if (d <= b.r + slop && d < bestD) {
+      bestD = d;
+      best = b;
+    }
+  }
+  return best;
+}
+
+function joyGuardRadius(pad) {
+  const ui = touchUiScale(W, H);
+  return Math.round((pad && pad.side === 'p2' ? 54 : 58) * ui);
+}
+
+function pointInJoyZone(pad, x, y) {
+  const home = (pad && pad.joyHome) || { x: 110, y: (H || 600) - 110 };
+  return Math.hypot(x - home.x, y - home.y) <= joyGuardRadius(pad) + btnHitSlop() * 0.5;
+}
+
+function nearAnyTouchButton(buttons, x, y, extra) {
+  const pad = extra || 0;
+  const slop = btnHitSlop() + pad;
+  for (const b of buttons) {
+    if (Math.hypot(x - b.x, y - b.y) < b.r + slop) return true;
+  }
+  return false;
+}
+
 const TOUCH_BTN_META = {
   punch: { label: '\u{1F44A}', color: '#e0533f' },
   kick: { label: '\u{1F9B6}', color: '#3f8fe0' },
@@ -2922,11 +2958,11 @@ function layoutTouchButtonCluster(W, H, ui, safe, opts) {
       const xFar = xR - col * 2.25;
       buttons = [
         touchBtn('jump', xJump, by, rsSmall),
-        touchBtn('punch', xJump, by - (rsSmall + rSmall + gap), rSmall),
-        touchBtn('kick', xMid, by - rSmall * 0.35, rSmall),
-        touchBtn('special', xMid, by - (rSmall * 0.35 + rSmall + rSmall + gap), rSmall),
-        touchBtn('subst', xFar, by - rsSmall * 0.4, rsSmall),
-        touchBtn('weapon', xFar, by - (rsSmall * 0.4 + rsSmall + rSmall + gap), rSmall),
+        touchBtn('punch', xMid, by, rSmall),
+        touchBtn('kick', xFar, by, rSmall),
+        touchBtn('special', xJump, by - (rsSmall + rSmall + gap), rSmall),
+        touchBtn('weapon', xMid, by - (rSmall + rSmall + gap), rSmall),
+        touchBtn('subst', xFar, by - (rsSmall + rSmall + gap), rsSmall),
       ];
       const joyClear = joyHome.x + Math.round(50 * ui) + rSmall * 0.25;
       const minBx = Math.min(...buttons.map((b) => b.x - b.r));
@@ -2972,11 +3008,11 @@ function layoutTouchButtonCluster(W, H, ui, safe, opts) {
     const xFar = edge + sign * col * 2.2;
     buttons = [
       touchBtn('jump', xNear, by, rsSmall),
-      touchBtn('punch', xNear, by - (rsSmall + rSmall + gap), rSmall),
-      touchBtn('kick', xMid, by - rSmall * 0.32, rSmall),
-      touchBtn('special', xMid, by - (rSmall * 0.32 + rSmall + rSmall + gap), rSmall),
-      touchBtn('subst', xFar, by - rsSmall * 0.38, rsSmall),
-      touchBtn('weapon', xFar, by - (rsSmall * 0.38 + rsSmall + rSmall + gap), rSmall),
+      touchBtn('punch', xMid, by, rSmall),
+      touchBtn('kick', xFar, by, rSmall),
+      touchBtn('special', xNear, by - (rsSmall + rSmall + gap), rSmall),
+      touchBtn('weapon', xMid, by - (rSmall + rSmall + gap), rSmall),
+      touchBtn('subst', xFar, by - (rsSmall + rSmall + gap), rsSmall),
     ];
     if (side === 'p1') {
       const joyClear = joyHome.x + Math.round(46 * ui) + rSmall * 0.2;
@@ -3158,6 +3194,7 @@ function makePad(side) {
     joy: { active: false, id: null, ox: 0, oy: 0, dx: 0, dy: 0, lastAt: 0 },
     buttons: [],
     btnPointers: {},
+    pointerPads: {},
     joyHome: { x: 110, y: 0 },
     lastMoveTap: 0,
     lastMoveDir: 0,
@@ -3172,6 +3209,7 @@ function makePad(side) {
       this.releaseJoy();
       for (const b of this.buttons) b.held = false;
       this.btnPointers = {};
+      this.pointerPads = {};
       this.activePointers.clear();
       this.keys = {};
     },
@@ -3226,11 +3264,7 @@ function makePad(side) {
       this.buttons = laid.buttons;
     },
     hitButton(x, y) {
-      const slop = btnHitSlop();
-      for (const b of this.buttons) {
-        if ((x - b.x) ** 2 + (y - b.y) ** 2 < (b.r + slop) ** 2) return b;
-      }
-      return null;
+      return hitTouchButton(this.buttons, x, y);
     },
     ownsTouch(x, y, dual) {
       if (!dual) return this.side === 'p1';
@@ -3241,8 +3275,10 @@ function makePad(side) {
     onDown(x, y, id, dual) {
       if (!this.ownsTouch(x, y, dual)) return false;
       this.activePointers.add(id);
+      if (dual) this.pointerPads[id] = this.side;
       const b = this.hitButton(x, y);
       if (b) {
+        if (b.held) return true;
         this.btnPointers[id] = b.id;
         b.held = true;
         this.press(b.id);
@@ -3266,14 +3302,12 @@ function makePad(side) {
     },
     onMove(x, y, id, dual) {
       if (!this.activePointers.has(id)) return;
-      if (dual && !this.ownsTouch(x, y, true)) {
-        if (this.joy.active && this.joy.id === id) this.releaseJoy();
-        return;
-      }
+      if (dual && this.pointerPads[id] && this.pointerPads[id] !== this.side) return;
       applyJoyDelta(this, x, y, id);
     },
     onUp(id) {
       this.activePointers.delete(id);
+      delete this.pointerPads[id];
       if (this.joy.active && this.joy.id === id) {
         const dx = this.joy.dx;
         if (Math.abs(dx) > 22) {
@@ -3299,11 +3333,13 @@ const _padP1Methods = makePad('p1');
 
 const Input = Object.assign(makePad('p1'), {
   dualMode: false,
+  pointerPads: {},
   onDown(x, y, id) {
     AudioSys.init();
     if (this.dualMode) {
       const z = touchPadZone(x);
       if (z === 'neutral') return;
+      this.pointerPads[id] = z;
       if (z === 'p2') {
         InputP2.onDown(x, y, id, true);
         return;
@@ -3312,22 +3348,20 @@ const Input = Object.assign(makePad('p1'), {
       return;
     }
     this.activePointers.add(id);
-    const b = this.hitButton(x, y);
+    const b = hitTouchButton(this.buttons, x, y);
     if (b) {
+      if (b.held) return;
       this.btnPointers[id] = b.id;
       b.held = true;
       this.press(b.id);
       return;
     }
-    const slop = btnHitSlop();
-    const joyZone = x < W * (W < 400 ? 0.48 : 0.52);
-    if (!joyZone) {
-      if (this.joy.active) this.releaseJoy();
+    if (!pointInJoyZone(this, x, y)) {
+      if (this.joy.active && this.joy.id === id) this.releaseJoy();
       this.activePointers.delete(id);
       return;
     }
-    const nearBtn = this.buttons.some(b => (x - b.x) ** 2 + (y - b.y) ** 2 < (b.r + slop + 18) ** 2);
-    if (nearBtn) {
+    if (nearAnyTouchButton(this.buttons, x, y, 12)) {
       this.activePointers.delete(id);
       return;
     }
@@ -3347,13 +3381,14 @@ const Input = Object.assign(makePad('p1'), {
   },
   onMove(x, y, id) {
     if (this.dualMode) {
-      if (InputP2.ownsTouch(x, y, true)) {
-        if (this.joy.active && this.joy.id === id) this.releaseJoy();
+      const owner = this.pointerPads[id];
+      if (owner === 'p2') {
         InputP2.onMove(x, y, id, true);
-      } else {
-        if (InputP2.joy.active && InputP2.joy.id === id) InputP2.releaseJoy();
-        if (!this.activePointers.has(id)) return;
+        return;
+      }
+      if (owner === 'p1') {
         _padP1Methods.onMove.call(this, x, y, id, true);
+        return;
       }
       return;
     }
@@ -3361,7 +3396,13 @@ const Input = Object.assign(makePad('p1'), {
     applyJoyDelta(this, x, y, id);
   },
   onUp(id) {
-    if (this.dualMode) InputP2.onUp(id);
+    if (this.dualMode) {
+      const owner = this.pointerPads[id];
+      if (owner === 'p2') InputP2.onUp(id);
+      else if (owner === 'p1') _padP1Methods.onUp.call(this, id);
+      delete this.pointerPads[id];
+      return;
+    }
     _padP1Methods.onUp.call(this, id);
   },
   hardenPointers(now) {
@@ -3370,6 +3411,7 @@ const Input = Object.assign(makePad('p1'), {
   },
   releaseAll() {
     _padP1Methods.releaseAll.call(this);
+    this.pointerPads = {};
     if (InputP2) InputP2.releaseAll();
   },
   endFrame() {

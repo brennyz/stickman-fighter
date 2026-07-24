@@ -7,7 +7,6 @@
     2,
     3,
     8,
-    9,
     11,
     12,
     13,
@@ -16,13 +15,19 @@
     18
   ],
   "lastRoll": {
-    "face": 5,
-    "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
-    "rolledAt": "2026-07-24T08:27:00Z",
-    "remainingCount": 11,
+    "face": 9,
+    "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
+    "rolledAt": "2026-07-24T08:28:32Z",
+    "remainingCount": 10,
     "cycle": 2
   },
-  "pending": null,
+  "pending": {
+    "face": 9,
+    "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
+    "rolledAt": "2026-07-24T08:28:32Z",
+    "remainingCount": 10,
+    "cycle": 2
+  },
   "implemented": [
     {
       "face": 2,
@@ -852,6 +857,13 @@
       "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
       "rolledAt": "2026-07-24T08:27:00Z",
       "remainingCount": 11,
+      "cycle": 2
+    },
+    {
+      "face": 9,
+      "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
+      "rolledAt": "2026-07-24T08:28:32Z",
+      "remainingCount": 10,
       "cycle": 2
     }
   ]
