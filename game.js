@@ -58,9 +58,42 @@ function fxCaps() {
   }
   return out;
 }
+/** Meet FX-ruimte vóór spawn — tier/lite per-frame budget. */
+function perfFxRoom(g, type) {
+  if (!g) return 0;
+  const cap = fxCaps();
+  const max = type === 'particle' ? cap.particles
+    : type === 'floater' ? cap.floaters
+      : type === 'banner' ? cap.banners : 0;
+  const arr = type === 'particle' ? g.particles
+    : type === 'floater' ? g.floaters
+      : type === 'banner' ? g.banners : null;
+  if (!arr || !max) return 0;
+  return Math.max(0, max - arr.length);
+}
+function perfFxBudgetAllow(g, cost) {
+  cost = cost || 1;
+  if (!g) return true;
+  if (!save.liteFx && Perf.tier < 1) return true;
+  const maxPerFrame = save.liteFx ? 5 : (Perf.tier >= 2 ? 9 : 14);
+  if (g._fxBudgetFrame !== Perf.frames) {
+    g._fxBudgetFrame = Perf.frames;
+    g._fxBudgetUsed = 0;
+  }
+  if (g._fxBudgetUsed + cost > maxPerFrame) return false;
+  g._fxBudgetUsed += cost;
+  return true;
+}
+function perfFxSummary() {
+  const caps = fxCaps();
+  const fps = Perf.emaMs > 0 ? Math.round(1000 / Perf.emaMs) : 0;
+  const dpr = typeof DPR !== 'undefined' ? DPR : 1;
+  return { fps, tier: Perf.tier, dpr, maxDpr: maxCanvasDpr(), caps };
+}
 function maxCanvasDpr() {
   const rm = typeof motionReduced === 'function' && motionReduced();
   if (save.liteFx || rm) return 1.25;
+  if (typeof state !== 'undefined' && state !== 'play') return IS_TOUCH ? 1.15 : 1.25;
   if (Perf.tier >= 2) return 1;
   if (Perf.tier >= 1) return 1.35;
   return 2;
@@ -76,9 +109,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.16';
+const APP_VERSION = '1.17.17';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 143;
+const SW_CACHE_REV = 144;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
@@ -4694,7 +4727,7 @@ function resize() {
 }
 function scheduleResize() {
   if (resizeDebounce) clearTimeout(resizeDebounce);
-  const delay = IS_TOUCH ? 140 : 100;
+  const delay = IS_TOUCH ? (Perf.tier >= 2 ? 175 : 140) : 100;
   resizeDebounce = setTimeout(() => {
     resizeDebounce = null;
     if (window.__sfResizeT) cancelAnimationFrame(window.__sfResizeT);
@@ -5013,6 +5046,7 @@ function ensureParticleRoom(game, slots) {
 
 function spawnFxRing(game, x, y, color, baseR) {
   if (!game || motionReduced() || fxLite()) return;
+  if (!perfFxBudgetAllow(game, 1) || perfFxRoom(game, 'particle') <= 0) return;
   if (!ensureParticleRoom(game, 1)) return;
   const life = 0.34;
   game.particles.push({
@@ -8289,6 +8323,8 @@ class Game {
     if (motionReduced()) n = Math.max(floorN, Math.floor(n * 0.45));
     else if (save.liteFx || Perf.tier >= 1) n = Math.max(kind === 'spark' ? 1 : 3, Math.floor(n * 0.65));
     if (Perf.tier >= 2) n = Math.max(floorN, Math.floor(n * 0.55));
+    if (!perfFxBudgetAllow(this, Math.min(n, 4))) n = Math.max(floorN, Math.floor(n * 0.45));
+    if (n <= 0 || perfFxRoom(this, 'particle') <= 0) return;
     ensureParticleRoom(this, Math.min(n, 12));
     const cap = fxCaps();
     const room = cap.particles - this.particles.length;
@@ -8311,11 +8347,15 @@ class Game {
     }
   }
   floater(x, y, txt, color, size) {
+    if (!perfFxBudgetAllow(this, 1)) return;
+    if (perfFxRoom(this, 'floater') <= 0) return;
     const cap = fxCaps();
     if (this.floaters.length >= cap.floaters) this.floaters.shift();
     this.floaters.push({ x, y, txt, color, size: size || 15, life: 1.0 });
   }
   banner(txt, dur, color, size) {
+    if (!perfFxBudgetAllow(this, 1)) return;
+    if (perfFxRoom(this, 'banner') <= 0) return;
     const cap = fxCaps();
     if (this.banners.length >= cap.banners) this.banners.shift();
     this.banners.push({ txt, dur, color: color || '#fff', size: size || 40, t: 0 });
@@ -9991,6 +10031,7 @@ const UI = {
       this.show('menuScreen');
       AudioSys.setPaused(false);
       AudioSys.play('menu');
+      scheduleResize();
       if (window.StickInstall) window.StickInstall.refreshMenuButton();
     } catch (err) {
       sfReportError('goMenu', err, 'Kon menu niet openen — herlaad de pagina');
@@ -10933,6 +10974,13 @@ const UI = {
         : (Perf.tier >= 2 ? `adaptief zwaar · ~${fps} fps` : Perf.tier >= 1 ? `adaptief · ~${fps} fps` : `vloeiend · ~${fps} fps`);
       verEl.textContent = `v${APP_VERSION} · SW v${SW_CACHE_REV} · ${perfNote}`;
     }
+    const perfEl = document.getElementById('setPerfLine');
+    if (perfEl) {
+      const p = perfFxSummary();
+      perfEl.textContent =
+        `Perf tier ${p.tier} · DPR ${p.dpr.toFixed(2)}/${p.maxDpr} · ~${p.fps} fps · ` +
+        `FX cap ${p.caps.particles} deeltjes / ${p.caps.floaters} floaters`;
+    }
     const healthEl = document.getElementById('saveHealthLine');
     if (healthEl) {
       const h = saveHealthSummary();
@@ -11039,6 +11087,7 @@ const UI = {
   showResult(win, data) {
     this.lastResult = data;
     state = 'result';
+    scheduleResize();
     document.getElementById('pauseBtn').classList.remove('show');
     const title = document.getElementById('resTitle');
     title.textContent = data.title;
@@ -11105,6 +11154,7 @@ function startGame(mode, opts) {
     return;
   }
   state = 'play';
+  scheduleResize();
   try { AudioSys.setPaused(false); } catch (_) {}
   try { recordLastPlay(mode, opts); } catch (_) {}
   try { applyModeOnboarding(mode, game); } catch (_) {}
@@ -11691,9 +11741,9 @@ function loop(now) {
     const hidden = typeof document !== 'undefined' && document.hidden;
     const dt = Math.min((now - lastTime) / 1000, 0.05);
     if (!(dt >= 0) || dt > 1) { lastTime = now; return; }
+    if (hidden) { lastTime = now; return; }
     Perf.tick(dt * 1000);
     lastTime = now;
-    if (hidden) return;
     if (state === 'play' && game) {
       try {
         game.update(dt);
