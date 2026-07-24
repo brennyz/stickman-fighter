@@ -236,7 +236,9 @@
   .mode-hub-panel .hub-mode-row > div { flex: 1; min-width: 0; }
   .mode-hub-panel .hub-mode-row small { font-size: .56em; opacity: .78; display: block; margin-top: 1px; }
   .hub-mode-stat { font-size: 10px; font-weight: 800; color: #ffd75e; margin-top: 2px; opacity: .9; }
-  body.big-touch .hub-tile { min-height: 96px; padding-bottom: 12px; }
+  body.big-touch .hub-tile { min-height: 104px; padding: 15px 34px 13px 15px; }
+  body.big-touch .hub-tile-grid { gap: 12px; }
+  body.big-touch .back-btn { min-width: 118px; padding-left: 18px; padding-right: 22px; }
   body.big-touch .mode-hub-panel .hub-mode-row { min-height: 58px; padding-top: 14px; padding-bottom: 14px; }
   .menu-tagline {
     margin: 8px 0 4px; font-size: min(3.6vw, 13px); font-weight: 700;
