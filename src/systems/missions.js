@@ -1235,47 +1235,15 @@ function applyPlayLayerStyles(canvasHits) {
   const el = document.getElementById('game');
   if (!el) return;
   if (canvasHits) clearScreensForPlay();
-  const st = el.style;
-  const setImp = (prop, val) => {
-    try {
-      if (typeof st.setProperty === 'function') st.setProperty(prop, val, 'important');
-      else st[prop.replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = val;
-    } catch (_) {
-      try { st[prop] = val; } catch (__) {}
-    }
-  };
-  const clearImp = (prop, camel) => {
-    try {
-      if (typeof st.removeProperty === 'function') st.removeProperty(prop);
-      else if (camel) st[camel] = '';
-    } catch (_) {}
-  };
-  if (canvasHits) {
-    // Important: overschrijf eerdere inline hides (race met gok-flash / guard)
-    setImp('pointer-events', 'auto');
-    setImp('visibility', 'visible');
-    setImp('opacity', '1');
-    setImp('z-index', '40');
-    setImp('display', 'block');
-    st.touchAction = 'none';
-    document.body.classList.add('is-playing');
-    document.body.style.overflow = 'hidden';
-  } else {
-    clearImp('pointer-events', 'pointerEvents');
-    clearImp('visibility', 'visibility');
-    clearImp('opacity', 'opacity');
-    clearImp('z-index', 'zIndex');
-    clearImp('display', 'display');
-    st.pointerEvents = 'none';
-    st.visibility = 'hidden';
-    st.opacity = '';
-    st.zIndex = '';
-    st.display = '';
-    st.touchAction = 'manipulation';
-    document.body.classList.remove('is-playing');
-    document.body.style.overflow = '';
-  }
-  // Pauze-knop alleen tijdens live gevecht — niet als weesje op zwart deksel
+  // Simpele inline styles (ochtend-werkende aanpak) + body.is-playing CSS !important
+  el.style.pointerEvents = canvasHits ? 'auto' : 'none';
+  el.style.visibility = canvasHits ? 'visible' : 'hidden';
+  el.style.opacity = canvasHits ? '1' : '';
+  el.style.zIndex = canvasHits ? '40' : '';
+  el.style.display = canvasHits ? 'block' : '';
+  el.style.touchAction = canvasHits ? 'none' : 'manipulation';
+  document.body.classList.toggle('is-playing', !!canvasHits);
+  document.body.style.overflow = canvasHits ? 'hidden' : '';
   try {
     const pb = document.getElementById('pauseBtn');
     if (pb) pb.classList.toggle('show', !!(canvasHits && state === 'play' && game));
@@ -1287,7 +1255,7 @@ function syncPlayLayer() {
   applyPlayLayerStyles(state === 'play' && !!game);
 }
 
-/** True als gevecht loopt maar canvas/deksel kapot is (alleen pauseBtn zichtbaar). */
+/** True als gevecht loopt maar canvas/deksel kapot is. */
 function playLayerBroken() {
   if (!(state === 'play' && game)) return false;
   if (activeScreenEl()) return true;
@@ -1310,23 +1278,18 @@ function forcePlayCanvasVisible(where) {
   clearScreensForPlay();
   applyPlayLayerStyles(true);
   const canvas = document.getElementById('game');
-  if (canvas && canvas.style) {
-    const st = canvas.style;
-    const setImp = (prop, val) => {
-      try {
-        if (typeof st.setProperty === 'function') st.setProperty(prop, val, 'important');
-        else st[prop.replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = val;
-      } catch (_) {}
-    };
-    setImp('visibility', 'visible');
-    setImp('opacity', '1');
-    setImp('z-index', '40');
-    setImp('display', 'block');
-    setImp('pointer-events', 'auto');
+  if (canvas) {
+    canvas.style.visibility = 'visible';
+    canvas.style.opacity = '1';
+    canvas.style.zIndex = '40';
+    canvas.style.display = 'block';
+    canvas.style.pointerEvents = 'auto';
   }
   document.body.classList.add('is-playing');
-  const pb = document.getElementById('pauseBtn');
-  if (pb) pb.classList.add('show');
+  try {
+    const pb = document.getElementById('pauseBtn');
+    if (pb) pb.classList.add('show');
+  } catch (_) {}
   if (where) console.warn('[Stickman] forcePlayCanvas', where);
   return true;
 }
@@ -1746,38 +1709,18 @@ function startAdventureFromGamble(skipGamble) {
     const gamble = skipGamble ? null : lastGambleRoll;
     pendingAdvLevel = null;
     try { UI.hideGambleRollFlash(); } catch (_) {}
-    try { clearScreensForPlay(); } catch (_) {}
-    // Level/hub-schermen hard weg vóór start (blauw deksel = .screen over canvas)
-    try {
-      ['levelScreen', 'modeHubScreen', 'gambleScreen', 'menuScreen'].forEach((id) => {
-        document.getElementById(id)?.classList.remove('active');
-      });
-    } catch (_) {}
+    // Geen screens clearen vóór startGame terwijl state nog 'menu' is —
+    // dat opende een race naar blauw menu-backdrop op het canvas.
     startGame('adventure', { level, gamble });
-    try { syncPlayLayer(); } catch (_) {}
     try {
       if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('advStart');
+      else syncPlayLayer();
     } catch (_) {}
     try { if (typeof blackScreenGuard === 'function') blackScreenGuard('advStart'); } catch (_) {}
-    // iPad: flash/CSS race — herhaal force na frames
-    const reassert = (label) => {
-      try {
-        if (state === 'play' && game && game.mode === 'adventure') {
-          UI.hideGambleRollFlash();
-          clearScreensForPlay();
-          forcePlayCanvasVisible(label);
-        }
-      } catch (_) {}
-    };
+    // Direct eerste frame schilderen (voorkomt 1–N frames menu-blauw)
     try {
-      requestAnimationFrame(() => {
-        reassert('advStart-raf');
-        requestAnimationFrame(() => reassert('advStart-raf2'));
-      });
+      if (state === 'play' && game && ctx) game.draw(ctx);
     } catch (_) {}
-    setTimeout(() => reassert('advStart-50'), 50);
-    setTimeout(() => reassert('advStart-200'), 200);
-    setTimeout(() => reassert('advStart-500'), 500);
   } catch (err) {
     sfReportError('gambleStart', err, 'Avontuur starten mislukt — kies level opnieuw');
   }

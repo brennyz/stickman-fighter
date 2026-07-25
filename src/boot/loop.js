@@ -279,17 +279,22 @@ function loop(now) {
       }
     }
     if (!Perf.canvasDrawActive()) return;
-    if (game && typeof game.draw === 'function' && !Perf.skipHeavyDraw()) {
-      try {
-        game.draw(ctx);
-      } catch (drawErr) {
-        if (!window.__sfLoopErr) {
-          window.__sfLoopErr = true;
-          sfReportError('draw', drawErr, 'Tekenen mislukt — terug naar menu');
-          recoverToMenu();
-          setTimeout(() => { window.__sfLoopErr = false; }, 2000);
+    // NOOIT menu-blauw (#151b33) tekenen tijdens play/pause — dat IS het "blauwe scherm"
+    if (state === 'play' || state === 'pause') {
+      if (game && typeof game.draw === 'function' && !Perf.skipHeavyDraw()) {
+        try {
+          game.draw(ctx);
+        } catch (drawErr) {
+          if (!window.__sfLoopErr) {
+            window.__sfLoopErr = true;
+            sfReportError('draw', drawErr, 'Tekenen mislukt — terug naar menu');
+            recoverToMenu();
+            setTimeout(() => { window.__sfLoopErr = false; }, 2000);
+          }
+          return;
         }
-        return;
+      } else if (!game) {
+        try { ctx.fillStyle = '#0a0d18'; ctx.fillRect(0, 0, W, H); } catch (_) {}
       }
     } else if (!Perf.skipHeavyDraw()) {
       try {
