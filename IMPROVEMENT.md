@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-25 | **17** | Stabiliteit cron: stale result timer (d17 regressie), training→scheduleGameResult, gamble cancel op level terug. v1.18.68 / SW v278. |
 | 2026-07-25 | **17** | Stabiliteit cron: char swap `t()` shadow crash; adventure win→pauze→menu laat resultaat zien. v1.18.67 / SW v277. |
 | 2026-07-25 | — | **HOTFIX Kets smooth:** 1e/2e Kets → unlock altijd, snellere charge, fall-through na finish, soft freeze (FX+wave). v1.18.66 / SW v276. |
 | 2026-07-25 | — | **HOTFIX:** zeldzame extra krachten UIT (summon/Master Sword/tide); level-einde → LEVEL KLAAR + betrouwbaar resultaat/Volgende. v1.18.65 / SW v275. |
