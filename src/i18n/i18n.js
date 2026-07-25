@@ -256,7 +256,7 @@ const I18N = {
       syncBackup: 'Sync backup', freshCache: 'Version fraîche (cache)', clearSave: 'Nouveau départ (2× tap)',
       hosting: 'Hébergement & progrès', copyLink: 'Copier le lien', openLink: 'Ouvrir le lien',
       savePort: 'Export / import save', exportSave: 'Exporter save', importSave: 'Importer save',
-      importSaveFile: 'Choisir un fichier',
+      importSaveFile: 'Choisir fichier',
       savePortDesc: 'Export copie le JSON (presse-papiers + téléchargement). Import : choisir un fichier ou coller le JSON — 1× Import = aperçu, 2× = appliquer.',
       savePortPlaceholder: 'Coller le JSON ou choisir un fichier (.json) — meta.key stickfighter_save_v1 · 2× Import pour charger',
       langChanged: 'Langue : {lang}',
@@ -523,6 +523,10 @@ function applyLangStaticScreens() {
   if (hostingTitle) hostingTitle.textContent = t('settings.hosting');
   const savePortTitle = document.querySelectorAll('#settingsScreen .settings-card div[style*="ffd75e"]')[1];
   if (savePortTitle) savePortTitle.textContent = t('settings.savePort');
+  const savePortDesc = document.getElementById('savePortDesc');
+  if (savePortDesc) savePortDesc.textContent = t('settings.savePortDesc');
+  const savePortText = document.getElementById('savePortText');
+  if (savePortText) savePortText.placeholder = t('settings.savePortPlaceholder');
 
   setText('missionsHead', 'missions.title');
   setText('missionsSub', 'missions.sub');

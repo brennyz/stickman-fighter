@@ -8,19 +8,32 @@
     5,
     9,
     12,
-    15,
-    17,
+    13,
     19
   ],
   "lastRoll": {
-    "face": 6,
-    "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
-    "rolledAt": "2026-07-25T07:18:19Z",
+    "face": 15,
+    "category": "Onboarding \u2014 tips, eerste speelminuut, help",
+    "rolledAt": "2026-07-25T08:15:02Z",
     "remainingCount": 10,
     "cycle": 4
   },
   "pending": null,
   "implemented": [
+    {
+      "face": 17,
+      "note": "Error recovery + save import",
+      "version": "1.8.5",
+      "doneAt": "2026-07-23T13:36:46Z",
+      "cycle": 0
+    },
+    {
+      "face": 3,
+      "note": "Versus HUD timer/rematch/spawn reset",
+      "version": "1.8.6",
+      "doneAt": "2026-07-23T13:38:12Z",
+      "cycle": 0
+    },
     {
       "face": 13,
       "note": "Daily claim UX + claim-all + status copy",
@@ -554,10 +567,17 @@
       "cycle": 4
     },
     {
-      "face": 6,
-      "note": "Pauze presets + duck ramp + track status",
-      "version": "1.17.76",
-      "doneAt": "2026-07-25T07:19:46Z",
+      "face": 17,
+      "note": "tideBattle toasts + import file picker + persistOrToast",
+      "version": "1.17.71",
+      "doneAt": "2026-07-25T08:14:10Z",
+      "cycle": 4
+    },
+    {
+      "face": 15,
+      "note": "hint pill not toast, help chips, missions inline",
+      "version": "1.17.72",
+      "doneAt": "2026-07-25T08:16:37Z",
       "cycle": 4
     }
   ],
@@ -1734,9 +1754,16 @@
       "cycle": 4
     },
     {
-      "face": 6,
-      "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
-      "rolledAt": "2026-07-25T07:18:19Z",
+      "face": 17,
+      "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
+      "rolledAt": "2026-07-25T08:11:44Z",
+      "remainingCount": 11,
+      "cycle": 4
+    },
+    {
+      "face": 15,
+      "category": "Onboarding \u2014 tips, eerste speelminuut, help",
+      "rolledAt": "2026-07-25T08:15:02Z",
       "remainingCount": 10,
       "cycle": 4
     }

@@ -428,13 +428,23 @@ function weaponMasteryTopList(limit) {
   return list.slice(0, limit || 3);
 }
 
-function weaponComboTipOnce() {
+function weaponComboTipOnce(gameRef) {
   if (typeof save === 'undefined') return;
   if (!save.tipsSeen || typeof save.tipsSeen !== 'object') save.tipsSeen = {};
   if (save.tipsSeen.weaponCombo) return;
   save.tipsSeen.weaponCombo = 1;
   if (typeof persist === 'function') persist();
-  try { UI.toast('Wapen 3× tikken = ①②③ · raak met ①+② voor gouden finisher ③', 4200); } catch (_) {}
+  const tip = (typeof t === 'function' && t('ui.weaponComboHint') !== 'ui.weaponComboHint')
+    ? t('ui.weaponComboHint')
+    : 'Wapen 3× = ①②③ · ①+② raken → gouden ③';
+  if (gameRef && gameRef.hint > 0) {
+    if (!gameRef.modeHintLine || gameRef.modeHintLine.indexOf('①') < 0) {
+      gameRef.modeHintLine = gameRef.modeHintLine
+        ? gameRef.modeHintLine + ' · ' + tip
+        : tip;
+    }
+    gameRef.hint = Math.max(gameRef.hint, 6);
+  }
 }
 
 function trackWeaponFinisher(weaponId, gameRef) {
@@ -456,9 +466,6 @@ function trackWeaponFinisher(weaponId, gameRef) {
     const w = weaponById(weaponId);
     const tier = WEAPON_MASTERY_TIERS[newTierIdx];
     try { UI.toast(`${w.name}: ${tier.name}!`, 3200); } catch (_) {}
-  }
-  if (prevTotal === 0 && typeof UI !== 'undefined') {
-    try { UI.toast('Eerste finisher! Raak ① én ②, dan is ③ goud.', 3600); } catch (_) {}
   }
   if (typeof checkAchievements === 'function') checkAchievements();
 }

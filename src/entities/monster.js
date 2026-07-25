@@ -38,10 +38,7 @@ class Monster {
     this.enraged = false;
     this.introT = 0;
     this.introTier = null;
-    this.safetyT = (opts.bossCore || opts.superBoss) ? BOSS_SAFETY_DUR : 0;
-    this.enemyJutsu = pickEnemyJutsu(spId, opts.levelN || 1);
-    this.jutsuCD = rand(2.8, 5.2);
-    this.jutsuTelegraphT = 0;
+    this.tideBoss = !!opts.tideBoss;
   }
   get alive() { return this.hp > 0; }
 
@@ -252,7 +249,7 @@ class Monster {
       const p = clamp(this.introT / 1.6, 0, 1);
       const pulse = 1 + Math.sin(this.t * 14) * 0.08;
       c.globalAlpha = 0.25 + p * 0.45;
-      c.strokeStyle = this.introTier === 'superBoss' ? '#ffd75e' : (this.introTier === 'boss' ? '#ff6b6b' : '#c47aff');
+      c.strokeStyle = this.introTier === 'tideBoss' ? '#4a9fff' : (this.introTier === 'superBoss' ? '#ffd75e' : (this.introTier === 'boss' ? '#ff6b6b' : '#c47aff'));
       c.lineWidth = 4 + p * 4;
       c.beginPath();
       c.ellipse(0, 0, this.size * (1.7 + (1 - p) * 0.9) * pulse, this.size * (1.35 + (1 - p) * 0.7) * pulse, 0, 0, TAU);
@@ -280,12 +277,24 @@ class Monster {
     }
     if (rar.order >= 2 && this.alive) {
       c.save();
-      c.strokeStyle = this.superBoss ? '#ffd75e' : rar.glow; c.lineWidth = 3 + rar.order * 0.4;
+      c.strokeStyle = this.tideBoss ? '#4a9fff' : (this.superBoss ? '#ffd75e' : rar.glow); c.lineWidth = 3 + rar.order * 0.4;
       c.beginPath(); c.ellipse(0, 0, this.size * 1.55, this.size * 1.2, 0, 0, TAU); c.stroke();
       if (rar.order >= 4) {
         c.globalAlpha = 0.25 + Math.sin(this.t * 6) * 0.1;
         c.fillStyle = rar.color;
         c.beginPath(); c.ellipse(0, 0, this.size * 1.7, this.size * 1.35, 0, 0, TAU); c.fill();
+      }
+      c.restore();
+    }
+    if (this.tideBoss && this.alive) {
+      c.save();
+      c.globalAlpha = 0.28 + Math.sin(this.t * 5) * 0.1;
+      c.strokeStyle = '#4a9fff'; c.lineWidth = 3.5;
+      c.beginPath(); c.ellipse(0, 0, this.size * 1.62, this.size * 1.28, 0, 0, TAU); c.stroke();
+      if (!motionReduced() && !fxLite()) {
+        c.globalAlpha = 0.12 + Math.sin(this.t * 3.5) * 0.06;
+        c.fillStyle = '#4a9fff';
+        c.beginPath(); c.ellipse(0, this.size * 0.1, this.size * 1.75, this.size * 0.35, 0, 0, TAU); c.fill();
       }
       c.restore();
     }
@@ -340,8 +349,10 @@ class Monster {
 }
 
 function drawMonsterArt(c, sp, r, t, flash, telegraph) {
-  const body = flash ? (motionReduced() ? sp.c1 : '#ffffff') : sp.c1;
-  const dark = flash ? (motionReduced() ? sp.c2 : '#dddddd') : sp.c2;
+  if (!sp || !c) return;
+  r = clamp(Number(r) || 24, 6, 120);
+  const body = flash ? (motionReduced() ? sp.c1 : '#ffffff') : (sp.c1 || '#888');
+  const dark = flash ? (motionReduced() ? sp.c2 : '#dddddd') : (sp.c2 || '#444');
   const sq = 1 + Math.sin(t * 5) * 0.05;
   c.lineWidth = 2;
   const eye = (x, y, s) => {
@@ -479,72 +490,26 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
       eye(-r * 1.0, -r * 0.85, r * 0.13);
       break;
     }
-    case 'shark': {
-      const wag = Math.sin(t * 5.5) * 0.12;
-      c.fillStyle = body;
-      c.beginPath();
-      c.ellipse(0, 0, r * 1.15, r * 0.62, wag, 0, TAU);
-      c.fill();
-      c.fillStyle = dark;
-      c.beginPath();
-      c.moveTo(0, -r * 0.72);
-      c.lineTo(r * 0.08, -r * 1.15);
-      c.lineTo(r * 0.22, -r * 0.55);
-      c.closePath();
-      c.fill();
-      c.fillStyle = body;
-      c.beginPath();
-      c.moveTo(r * 0.95, 0);
-      c.quadraticCurveTo(r * 1.55, r * 0.35 + Math.sin(t * 4) * r * 0.08, r * 1.35, -r * 0.15);
-      c.lineTo(r * 0.75, 0);
-      c.closePath();
-      c.fill();
-      if (sp.name === 'Hamerkop') {
-        c.fillStyle = dark;
-        c.beginPath();
-        c.ellipse(-r * 0.15, -r * 0.55, r * 0.55, r * 0.18, 0, 0, TAU);
-        c.fill();
-      }
-      c.fillStyle = 'rgba(255,255,255,.28)';
-      c.beginPath();
-      c.ellipse(-r * 0.35, -r * 0.12, r * 0.42, r * 0.14, -0.2, 0, TAU);
-      c.fill();
-      eye(-r * 0.55, -r * 0.08, r * 0.16);
-      c.strokeStyle = dark;
-      c.lineWidth = 1.5;
-      for (const gx of [-0.28, -0.12]) {
-        c.beginPath();
-        c.moveTo(r * gx, -r * 0.05);
-        c.lineTo(r * (gx - 0.08), r * 0.12);
-        c.stroke();
+    case 'tideFox':
+    case 'tideSnake':
+    case 'tideToad':
+    case 'tideSlug':
+    case 'tideTanuki':
+    case 'tideOx':
+    case 'tideMonkey':
+    case 'tideHawk':
+    case 'tideHound':
+      if (typeof drawTideBossArt === 'function') {
+        try { drawTideBossArt(c, sp.art, r, t, body, dark, flash, telegraph); } catch (err) {
+          console.error('[TideArt]', sp.art, err);
+          c.fillStyle = body;
+          c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+        }
+      } else {
+        c.fillStyle = body;
+        c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
       }
       break;
-    }
-    case 'octo': {
-      c.fillStyle = body;
-      c.beginPath();
-      c.arc(-r * 0.1, -r * 0.15, r * 0.82, 0, TAU);
-      c.fill();
-      c.fillStyle = dark;
-      for (let i = 0; i < 8; i++) {
-        const baseA = Math.PI * 0.35 + (i / 7) * Math.PI * 1.35;
-        const len = r * (1.05 + (i % 2) * 0.12);
-        const wob = Math.sin(t * 4 + i * 1.1) * r * 0.14;
-        const x0 = Math.cos(baseA) * r * 0.55;
-        const y0 = Math.sin(baseA) * r * 0.55;
-        const x1 = Math.cos(baseA) * len + wob;
-        const y1 = Math.sin(baseA) * len + r * 0.35;
-        c.lineWidth = r * 0.14;
-        c.lineCap = 'round';
-        c.beginPath();
-        c.moveTo(x0, y0);
-        c.quadraticCurveTo(x0 + wob, (y0 + y1) * 0.55, x1, y1);
-        c.stroke();
-      }
-      eye(-r * 0.35, -r * 0.28, r * 0.22);
-      if (r >= 20) eye(r * 0.05, -r * 0.22, r * 0.14);
-      break;
-    }
   }
 }
 

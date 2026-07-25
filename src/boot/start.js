@@ -176,18 +176,6 @@ bindPress(btnMissions, () => {
   AudioSys.init(); AudioSys.sfx('select');
   UI.renderMissions();
   UI.show('missionsScreen');
-  if (!save.missionsIntroSeen) {
-    save.missionsIntroSeen = true;
-    persist();
-    setTimeout(() => UI.toast('Missies: Speel → claim XP → dagbonus — licht, geen grind', 4000), 280);
-    return;
-  }
-  const n = claimableDailyTasks().length;
-  if (n > 0) {
-    setTimeout(() => UI.toast(n === 1 ? '1 missie klaar om te claimen' : `${n} missies klaar om te claimen`, 2600), 200);
-  } else if (save.daily && save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed) {
-    setTimeout(() => UI.toast('Dagbonus +80 XP staat klaar', 2600), 200);
-  }
 });
 const dailyClaimAllBtn = document.getElementById('dailyClaimAllBtn');
 if (dailyClaimAllBtn) dailyClaimAllBtn.addEventListener('click', () => {
@@ -245,13 +233,13 @@ if (btnExportSave) btnExportSave.addEventListener('click', () => {
     UI.renderSettings();
   })(), 'exportSave', 'Export mislukt — kopieer JSON handmatig uit het vak');
 });
+const btnImportSave = document.getElementById('btnImportSave');
 bindSaveImportFile();
 const btnImportSaveFile = document.getElementById('btnImportSaveFile');
 if (btnImportSaveFile) btnImportSaveFile.addEventListener('click', () => {
   AudioSys.sfx('select');
-  if (!openSaveImportFilePicker()) UI.toast('Bestand kiezen niet beschikbaar', 2400);
+  if (!openSaveImportFilePicker()) userToast('Bestand kiezen niet beschikbaar', 2400);
 });
-const btnImportSave = document.getElementById('btnImportSave');
 if (btnImportSave) btnImportSave.addEventListener('click', () => runImportSaveClick());
 function bindSettingsControls() {
   const syncVolMute = (key) => {
