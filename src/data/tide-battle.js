@@ -1,6 +1,6 @@
 /* ============================== TIDE BATTLE ============================== */
-/** Zeldzame tide-boss per kill — herkenbare summons, generieke namen (geen IP). */
-const TIDE_BATTLE_CHANCE = 0.0005;
+/** Tide-boss per kill — UIT (zeldzame interrupt brak avontuur-flow). */
+const TIDE_BATTLE_CHANCE = 0;
 const TIDE_BOSS_IDS = [
   'tideKyuu', 'tideManda', 'tideGama', 'tideKatsu',
   'tideShuka', 'tideGyuu', 'tideEnma', 'tideGaruda', 'tideCerber',
@@ -28,8 +28,7 @@ function tideBattleCanRoll(game) {
 }
 
 function rollTideBattleChance(game) {
-  if (!tideBattleCanRoll(game)) return false;
-  return Math.random() < TIDE_BATTLE_CHANCE;
+  return false;
 }
 
 function tideBossSpawnOpts(game) {
