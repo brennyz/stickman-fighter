@@ -75,16 +75,24 @@ canvas.addEventListener('pointerdown', e => {
   e.preventDefault();
   canvasPointers.add(e.pointerId);
   try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
-  const p = pointerGameCoords(e.clientX, e.clientY);
-  if (ketsbamHitTest(p.x, p.y, game) && game.tryKetsbam()) return;
-  Input.onDown(p.x, p.y, e.pointerId);
+  try {
+    const p = pointerGameCoords(e.clientX, e.clientY);
+    if (ketsbamHitTest(p.x, p.y, game) && game.tryKetsbam()) return;
+    Input.onDown(p.x, p.y, e.pointerId);
+  } catch (err) {
+    try { sfReportError('canvas/pointerdown', err); } catch (_) {}
+  }
 });
 canvas.addEventListener('pointermove', e => {
   if (state !== 'play' || !game) return;
   if (!canvasPointers.has(e.pointerId)) return;
   e.preventDefault();
-  const p = pointerGameCoords(e.clientX, e.clientY);
-  Input.onMove(p.x, p.y, e.pointerId);
+  try {
+    const p = pointerGameCoords(e.clientX, e.clientY);
+    Input.onMove(p.x, p.y, e.pointerId);
+  } catch (err) {
+    try { sfReportError('canvas/pointermove', err); } catch (_) {}
+  }
 });
 canvas.addEventListener('pointerup', e => {
   if (state !== 'play' || !game) return;

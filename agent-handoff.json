@@ -13,16 +13,16 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.57",
-    "swCache": "stickfighter-app-v267",
-    "gameJsQuery": "game.js?v=267",
-    "cssQuery": "styles/main.css?v=267",
+    "appVersion": "1.18.58",
+    "swCache": "stickfighter-app-v268",
+    "gameJsQuery": "game.js?v=268",
+    "cssQuery": "styles/main.css?v=268",
     "featureBranch": "cursor/adventure-tap-menu-2125",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "adventure tap→menu: playInputSuppressed restore · v1.18.57"
+    "note": "HOTFIX adventure tap→menu triple lock · v1.18.58"
   },
   "userWishlist": [
     {
