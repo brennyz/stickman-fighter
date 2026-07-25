@@ -449,6 +449,89 @@
     }
   }
 
+  /* —— Menu overhaul harden: play-safe stage, contrast, touch, no-blur fallbacks —— */
+  #menuScreen.menu-video-overhaul {
+    isolation: isolate;
+  }
+  #menuScreen.menu-video-overhaul .menu-stage {
+    contain: paint;
+  }
+  /* Stage never steals hits; hide when hub not active / during play */
+  #menuScreen:not(.active) .menu-stage,
+  body.is-playing #menuScreen .menu-stage {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  #menuScreen.menu-video-overhaul .hub-tile-title,
+  #menuScreen.menu-video-overhaul .hub-tile-sub {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  }
+  #menuScreen.menu-video-overhaul .hub-tile:focus-visible,
+  #menuScreen.menu-video-overhaul .menu-profile-bar:focus-visible,
+  #menuScreen.menu-video-overhaul .menu-landing-inner > .btn:focus-visible,
+  #menuScreen.menu-video-overhaul .menu-meta-dock .btn.tog:focus-visible,
+  #menuScreen.menu-video-overhaul .menu-lang-compact .dex-filter-btn:focus-visible,
+  #menuScreen.menu-video-overhaul .menu-meta-cluster .btn.b-install:focus-visible {
+    outline: 2px solid var(--menu-accent, #7cf5aa);
+    outline-offset: 2px;
+  }
+  #menuScreen.menu-video-overhaul .hub-tile,
+  #menuScreen.menu-video-overhaul .menu-profile-bar,
+  #menuScreen.menu-video-overhaul .menu-landing-inner .btn,
+  #menuScreen.menu-video-overhaul .menu-utility-row .btn,
+  #menuScreen.menu-video-overhaul .menu-utility-row .tog,
+  #menuScreen.menu-video-overhaul .menu-lang-compact .dex-filter-btn {
+    touch-action: pan-y;
+  }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    #menuScreen.menu-video-overhaul {
+      --menu-glass-blur: 0px;
+      --menu-glass-title: rgba(8, 12, 22, 0.78);
+      --menu-glass-tile: rgba(8, 12, 22, 0.62);
+      --menu-glass-meta: rgba(8, 12, 22, 0.7);
+      --menu-glass-lang: rgba(8, 12, 22, 0.66);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #menuScreen.menu-video-overhaul {
+      --menu-glass-blur: 0px;
+      --menu-glass-title: rgba(8, 12, 22, 0.72);
+      --menu-glass-tile: rgba(8, 12, 22, 0.48);
+      --menu-glass-meta: rgba(8, 12, 22, 0.58);
+      --menu-glass-lang: rgba(8, 12, 22, 0.52);
+    }
+    #menuScreen.menu-video-overhaul .menu-title-glass,
+    #menuScreen.menu-video-overhaul .hub-tile {
+      animation: none !important;
+    }
+  }
+  body.lite-fx #menuScreen.menu-video-overhaul {
+    --menu-glass-blur: 0px;
+    --menu-glass-title: rgba(8, 12, 22, 0.7);
+    --menu-glass-tile: rgba(8, 12, 22, 0.5);
+    --menu-glass-meta: rgba(8, 12, 22, 0.58);
+    --menu-glass-lang: rgba(8, 12, 22, 0.54);
+  }
+  body.lite-fx #menuScreen.menu-video-overhaul .menu-title-glass,
+  body.lite-fx #menuScreen.menu-video-overhaul .hub-tile {
+    animation: none;
+  }
+  @media (orientation: landscape) and (max-height: 520px) {
+    #menuScreen.menu-video-overhaul .menu-title-glass {
+      padding: 6px 12px 8px;
+      margin-bottom: 8px;
+    }
+    #menuScreen.menu-video-overhaul h1.title.arcade-logo {
+      font-size: min(7vw, 34px);
+    }
+    #menuScreen.menu-video-overhaul .hub-tile {
+      min-height: 72px;
+      padding: 10px 28px 9px 11px;
+    }
+    #menuScreen.menu-video-overhaul .hub-tile-sub { display: none; }
+  }
+
   .menu-landing-inner { width: min(92vw, 520px); display: flex; flex-direction: column; gap: 10px; }
   .menu-landing-footer {
     width: 100%; padding: 6px 12px max(10px, env(safe-area-inset-bottom));

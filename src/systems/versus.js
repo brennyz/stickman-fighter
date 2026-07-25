@@ -213,6 +213,7 @@ function a11yHighContrast() {
 function syncA11yClasses() {
   document.body.classList.toggle('reduced-motion', motionReduced());
   document.body.classList.toggle('high-contrast', a11yHighContrast());
+  document.body.classList.toggle('lite-fx', !!(typeof save !== 'undefined' && save && save.liteFx));
 }
 function a11yStatusText() {
   const bits = [];

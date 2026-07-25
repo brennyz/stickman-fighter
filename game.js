@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.46';
+const APP_VERSION = '1.18.47';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 256;
+const SW_CACHE_REV = 257;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -3400,7 +3400,25 @@ function syncPlayLayer() {
     const pb = document.getElementById('pauseBtn');
     if (pb) pb.classList.toggle('show', !!(canvasHits && state === 'play' && game));
   } catch (_) {}
+  try { syncMenuHubStage(); } catch (_) {}
   try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
+}
+
+/** Hub full-bleed stage: alleen zichtbaar op actieve menu-landing — nooit tijdens play. */
+function syncMenuHubStage() {
+  const menu = document.getElementById('menuScreen');
+  const stage = menu && menu.querySelector ? menu.querySelector('.menu-stage') : null;
+  const live = !!(typeof Perf !== 'undefined' && Perf.menuLandingVisible && Perf.menuLandingVisible());
+  document.body.classList.toggle('menu-hub-live', live);
+  if (!stage) return;
+  stage.setAttribute('aria-hidden', 'true');
+  if (live) {
+    stage.hidden = false;
+    stage.style.visibility = '';
+    stage.style.opacity = '';
+  } else {
+    stage.hidden = true;
+  }
 }
 
 function syncPlayLayerWithoutGuard() {
@@ -7315,6 +7333,7 @@ function a11yHighContrast() {
 function syncA11yClasses() {
   document.body.classList.toggle('reduced-motion', motionReduced());
   document.body.classList.toggle('high-contrast', a11yHighContrast());
+  document.body.classList.toggle('lite-fx', !!(typeof save !== 'undefined' && save && save.liteFx));
 }
 function a11yStatusText() {
   const bits = [];
@@ -27137,7 +27156,7 @@ function bindSettingsControls() {
       if (save[key] !== false) save[key] = false;
       else save[key] = true;
       if (key === 'reducedMotion' && save.reducedMotion) save.shake = false;
-      if (key === 'liteFx') { Perf.reset(); lastResizeKey = ''; try { SceneryArt.clearCache(); } catch (_) {} scheduleResize(); AudioSys.applyVolumes(); }
+      if (key === 'liteFx') { Perf.reset(); lastResizeKey = ''; try { SceneryArt.clearCache(); } catch (_) {} scheduleResize(); AudioSys.applyVolumes(); refreshA11yUi(); }
       if (key === 'reducedMotion' || key === 'highContrast') refreshA11yUi();
       persist();
       UI.renderSettings();
@@ -27504,8 +27523,12 @@ function ensureMenuVistaBuf(w, h) {
 }
 
 function paintMenuHeroCanvas(t) {
+  if (typeof document !== 'undefined' && document.body && document.body.classList.contains('is-playing')) return;
+  if (typeof Perf !== 'undefined' && Perf.menuLandingVisible && !Perf.menuLandingVisible()) return;
   const cv = document.getElementById('menuHeroCanvas');
   if (!cv) return;
+  const menu = document.getElementById('menuScreen');
+  if (menu && !menu.classList.contains('active')) return;
   const c = cv.getContext('2d');
   if (!c) return;
   const lite = save.liteFx || Perf.tier >= 1;

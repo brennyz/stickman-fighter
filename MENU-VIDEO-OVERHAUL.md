@@ -163,6 +163,7 @@ Z-index: stage `0` · chrome `1+` · geen lids over game-canvas.
 - [x] First viewport: **merk + korte regel + game-grid + utility** — geen stats-strips / extra promo’s
 - [x] Behoud touch-scroll contract (`#menuScreen` als scroll surface op Android)
 - [x] Ship: v1.18.46 / SW v256 (`.menu-video-overhaul`)
+- [x] Harden (v1.18.47): `syncMenuHubStage`, play-safe CSS, lite-fx/a11y glass, `smoke:menu`
 
 ### Fase 2 — Video inschakelen
 
