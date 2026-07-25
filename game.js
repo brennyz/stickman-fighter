@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.22';
+const APP_VERSION = '1.18.23';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 232;
+const SW_CACHE_REV = 233;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -16098,7 +16098,7 @@ function drawMenuSemi25dVista(c, w, h, t, opts) {
     c.fillStyle = P.captionFg;
     c.font = '700 9px -apple-system, sans-serif';
     c.textAlign = 'left';
-    c.fillText('1/2 · eik', 10, 16);
+    c.fillText('1/3 · eik', 10, 16);
   }
 
   c.imageSmoothingEnabled = prev;
@@ -16328,11 +16328,258 @@ function drawMenuStonehouseVista(c, w, h, t, opts) {
     c.fillStyle = P.captionFg;
     c.font = '700 9px -apple-system, sans-serif';
     c.textAlign = 'left';
-    c.fillText('2/2 · steenhuis', 10, 16);
+    c.fillText('2/3 · steenhuis', 10, 16);
   }
 
   c.imageSmoothingEnabled = prev;
   return { roadY: grassY + Math.round(grassH * 0.55), fieldY: grassY, horizonY, id: 'stonehouse' };
+}
+
+/**
+ * Startscherm vista 3 — open landweg-panorama (foto: kronkelweg + akker + haag + heuvelbos).
+ * Lagen: heldere sky → heuvelrijen → gouden akker/hek → haag → kronkelende asfaltweg.
+ */
+function drawMenuOpenRoadVista(c, w, h, t, opts) {
+  opts = opts || {};
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  const lite = !!opts.lite;
+  const calm = motionReduced();
+  const px = 3;
+  const P = COUNTRY_PAL;
+  // Photo-brighter sky than the muted oak/stonehouse set
+  const skyTop = '#4a9adf';
+  const skyMid = '#7eb8e8';
+  const skyLow = '#c5e0f5';
+  const hillFar = '#3a6a42';
+  const hillMid = '#2e5636';
+  const hillNear = '#264a2e';
+  const hedge = '#2a5030';
+  const hedgeLite = '#3a6840';
+  const hedgeDeep = '#1e3e26';
+
+  const roadH = Math.round(h * 0.34);
+  const roadY = h - roadH;
+  const fieldTop = Math.round(h * 0.48);
+  const horizonY = Math.round(h * 0.42);
+  const wrap = (v, span) => ((v % span) + span) % span;
+  const pSky = calm ? 0 : t * 4.5;
+  const pFar = calm ? 0 : t * 6;
+  const pMid = calm ? 0 : t * 11;
+  const pNear = calm ? 0 : t * 24;
+
+  // —— L0: bright sky ——
+  const sky = c.createLinearGradient(0, 0, 0, horizonY);
+  sky.addColorStop(0, skyTop);
+  sky.addColorStop(0.55, skyMid);
+  sky.addColorStop(1, skyLow);
+  c.fillStyle = sky;
+  c.fillRect(0, 0, w, horizonY);
+
+  const cloudN = lite ? 4 : 7;
+  for (let i = 0; i < cloudN; i++) {
+    const cw = 28 + (i % 4) * 12;
+    const cx = wrap(i * 0.22 * w + pSky * (0.55 + i * 0.07), w + cw) - cw * 0.5;
+    const cy = 4 + (i % 4) * 10 + (i > 4 ? 4 : 0);
+    c.fillStyle = '#f4f9ff';
+    c.fillRect(Math.round(cx), cy + 6, cw, 8);
+    c.fillRect(Math.round(cx + 6), cy, Math.round(cw * 0.7), 9);
+    c.fillRect(Math.round(cx + 12), cy - 3, Math.round(cw * 0.35), 6);
+    c.fillStyle = '#d4e4f2';
+    c.fillRect(Math.round(cx + 4), cy + 12, cw - 8, 3);
+  }
+
+  // —— L1: rolling forest hills (layered) ——
+  const farOff = Math.round(wrap(-pFar, 50) - 25);
+  const drawHillBand = (baseY, amp, step, col, seed) => {
+    c.fillStyle = col;
+    c.beginPath();
+    c.moveTo(0, h);
+    c.lineTo(0, baseY);
+    for (let x = 0; x <= w + step; x += step) {
+      const yy = baseY - amp * (0.55 + 0.45 * Math.sin((x + farOff + seed) * 0.018));
+      c.lineTo(x, yy);
+    }
+    c.lineTo(w, h);
+    c.closePath();
+    c.fill();
+  };
+  drawHillBand(horizonY + 6, 18, 18, hillFar, 10);
+  drawHillBand(horizonY + 18, 14, 14, hillMid, 40);
+  drawHillBand(horizonY + 28, 10, 12, hillNear, 70);
+
+  // Tree crowns on near hill
+  for (let i = -1; i < 18; i++) {
+    const tx = Math.round(i * 36 + farOff * 0.6);
+    const th = 16 + ((i * 11) % 14);
+    const ty = horizonY + 22 - th;
+    c.fillStyle = i % 3 === 0 ? hedgeLite : (i % 2 ? hillNear : hedge);
+    c.fillRect(tx, ty, 14, th + 6);
+    c.fillRect(tx + 2, ty - 5, 10, 7);
+    // subtle early-autumn flecks
+    if (i % 5 === 0) {
+      c.fillStyle = '#a87838';
+      c.fillRect(tx + 4, ty + 2, 4, 3);
+    }
+  }
+
+  // —— L2: golden field (left of road) ——
+  for (let y = fieldTop; y < h; y += px) {
+    const pr = (y - fieldTop) / Math.max(1, h - fieldTop);
+    c.fillStyle = pr < 0.28 ? P.fieldHi : pr < 0.6 ? P.fieldMid : P.fieldLo;
+    c.fillRect(0, y, Math.round(w * 0.62), px);
+  }
+  const midOff = Math.round(wrap(-pMid, 16));
+  for (let x = -16; x < w * 0.6; x += 7) {
+    const xx = x + midOff;
+    for (let y = fieldTop + 4; y < roadY + 20; y += 8) {
+      const bit = ((xx + y * 3) & 7);
+      c.fillStyle = bit < 2 ? 'rgba(220,200,150,.2)' : bit > 5 ? 'rgba(60,48,24,.14)' : 'rgba(140,110,50,.08)';
+      c.fillRect(Math.round(xx), y, 3, 3);
+    }
+  }
+
+  // Wire fence along field / road edge
+  const fencePosts = [
+    [0.08, fieldTop + 18], [0.16, fieldTop + 22], [0.24, fieldTop + 28],
+    [0.32, fieldTop + 36], [0.40, fieldTop + 48], [0.48, roadY + 8],
+  ];
+  c.strokeStyle = 'rgba(40,40,38,.5)';
+  c.lineWidth = 1;
+  c.beginPath();
+  for (let i = 0; i < fencePosts.length; i++) {
+    const [fx, fy] = fencePosts[i];
+    const x = Math.round(w * fx);
+    const y = Math.round(fy);
+    if (i === 0) c.moveTo(x, y);
+    else c.lineTo(x, y);
+  }
+  c.stroke();
+  for (const [fx, fy] of fencePosts) {
+    const x = Math.round(w * fx + (calm ? 0 : Math.sin(t + fx * 8) * 0.5));
+    const y = Math.round(fy);
+    c.fillStyle = '#4a4a48';
+    c.fillRect(x - 1, y - 10, 2, 14);
+    c.fillStyle = '#6a6a66';
+    c.fillRect(x - 1, y - 10, 1, 14);
+  }
+  // Weed tufts along fence
+  for (let i = 0; i < 10; i++) {
+    const wx = Math.round(w * (0.06 + i * 0.045));
+    const wy = Math.round(fieldTop + 20 + i * 4);
+    c.fillStyle = i % 2 ? hedgeLite : P.straw;
+    c.fillRect(wx, wy, 2, 8);
+    c.fillRect(wx + 2, wy + 2, 1, 5);
+  }
+
+  // —— L3: tall green hedge (right) ——
+  const hedgeX = Math.round(w * 0.72);
+  for (let y = fieldTop - 4; y < h; y += px) {
+    const pr = (y - fieldTop) / Math.max(1, h - fieldTop);
+    c.fillStyle = pr < 0.2 ? hedgeLite : pr < 0.55 ? hedge : hedgeDeep;
+    c.fillRect(hedgeX, y, w - hedgeX, px);
+  }
+  const leafOff = calm ? 0 : Math.sin(t * 1.2) * 2;
+  for (let i = 0; i < (lite ? 6 : 10); i++) {
+    const bx = hedgeX + 8 + (i % 3) * 18;
+    const by = fieldTop + 6 + i * 16 + leafOff * (i % 2 ? 1 : -1);
+    c.fillStyle = i % 2 ? hedgeLite : '#456e48';
+    c.beginPath();
+    c.ellipse(bx, by, 16, 12, 0.2, 0, TAU);
+    c.fill();
+  }
+
+  // —— L4: winding asphalt road (bottom-right → left-center) ——
+  const segs = [
+    { y: h + 2, xl: w * 0.30, xr: w * 0.99 },
+    { y: h - roadH * 0.28, xl: w * 0.36, xr: w * 0.92 },
+    { y: h - roadH * 0.55, xl: w * 0.40, xr: w * 0.82 },
+    { y: h - roadH * 0.78, xl: w * 0.42, xr: w * 0.70 },
+    { y: horizonY + 14, xl: w * 0.44, xr: w * 0.56 },
+  ];
+  // Road fill
+  c.beginPath();
+  c.moveTo(segs[0].xl, segs[0].y);
+  for (let i = 1; i < segs.length; i++) c.lineTo(segs[i].xl, segs[i].y);
+  for (let i = segs.length - 1; i >= 0; i--) c.lineTo(segs[i].xr, segs[i].y);
+  c.closePath();
+  c.fillStyle = P.roadMid;
+  c.fill();
+  // Road edge highlight / shoulder
+  c.strokeStyle = 'rgba(220,214,200,.16)';
+  c.lineWidth = 2;
+  c.beginPath();
+  c.moveTo(segs[0].xl, segs[0].y);
+  for (let i = 1; i < segs.length; i++) c.lineTo(segs[i].xl, segs[i].y);
+  c.stroke();
+  c.strokeStyle = 'rgba(0,0,0,.18)';
+  c.beginPath();
+  c.moveTo(segs[0].xr, segs[0].y);
+  for (let i = 1; i < segs.length; i++) c.lineTo(segs[i].xr, segs[i].y);
+  c.stroke();
+  // Band shading
+  for (let i = 0; i < segs.length - 1; i++) {
+    const a = segs[i];
+    const b = segs[i + 1];
+    const midY = (a.y + b.y) * 0.5;
+    const pr = (h - midY) / Math.max(1, roadH);
+    c.fillStyle = pr > 0.7 ? 'rgba(255,255,255,.06)' : (pr < 0.35 ? 'rgba(0,0,0,.12)' : 'rgba(0,0,0,.04)');
+    c.beginPath();
+    c.moveTo(a.xl, a.y);
+    c.lineTo(b.xl, b.y);
+    c.lineTo(b.xr, b.y);
+    c.lineTo(a.xr, a.y);
+    c.closePath();
+    c.fill();
+  }
+  // Gravel sparkle on near road
+  const nearOff = Math.round(wrap(-pNear, 28));
+  for (let x = -28; x < w + 28; x += 28) {
+    const xx = x + nearOff;
+    if (xx < w * 0.32 || xx > w * 0.95) continue;
+    const yy = h - 18 - ((x * 3) % 12);
+    c.fillStyle = 'rgba(255,255,255,.12)';
+    c.fillRect(Math.round(xx), yy, 3, 3);
+    c.fillStyle = 'rgba(20,20,18,.2)';
+    c.fillRect(Math.round(xx + 8), yy + 6, 2, 2);
+  }
+
+  // Mid-road tree cluster at the bend (photo: trees at curve)
+  if (!lite) {
+    const bendX = Math.round(w * 0.52);
+    const bendY = horizonY + 20;
+    c.fillStyle = hillNear;
+    c.fillRect(bendX - 6, bendY - 22, 8, 24);
+    c.fillRect(bendX + 8, bendY - 18, 7, 20);
+    c.fillStyle = hedgeLite;
+    c.beginPath();
+    c.ellipse(bendX - 2, bendY - 26, 12, 10, 0, 0, TAU);
+    c.fill();
+    c.beginPath();
+    c.ellipse(bendX + 12, bendY - 22, 10, 8, 0, 0, TAU);
+    c.fill();
+    c.fillStyle = '#a87838';
+    c.fillRect(bendX + 2, bendY - 28, 3, 3);
+  }
+
+  const vig = c.createLinearGradient(0, 0, 0, h);
+  vig.addColorStop(0, 'rgba(40,90,140,.1)');
+  vig.addColorStop(0.5, 'rgba(0,0,0,0)');
+  vig.addColorStop(1, 'rgba(24,20,14,.2)');
+  c.fillStyle = vig;
+  c.fillRect(0, 0, w, h);
+
+  if (opts.caption !== false) {
+    c.fillStyle = P.captionBg;
+    c.fillRect(6, 6, 132, 14);
+    c.fillStyle = P.captionFg;
+    c.font = '700 9px -apple-system, sans-serif';
+    c.textAlign = 'left';
+    c.fillText('3/3 · open weg', 10, 16);
+  }
+
+  c.imageSmoothingEnabled = prev;
+  return { roadY: roadY + Math.round(roadH * 0.35), fieldY: fieldTop, horizonY, id: 'openroad' };
 }
 
 /**
@@ -25704,53 +25951,54 @@ function paintMenuHeroCanvas(t) {
   const Hs = cv.height;
   c.clearRect(0, 0, Ws, Hs);
 
-  // Foto-album: eik ↔ steenhuis met zachte crossfade
+  // Foto-album: eik → steenhuis → open weg (zachte crossfade)
+  const VISTAS = [];
+  if (typeof drawMenuSemi25dVista === 'function') VISTAS.push(drawMenuSemi25dVista);
+  if (typeof drawMenuStonehouseVista === 'function') VISTAS.push(drawMenuStonehouseVista);
+  if (typeof drawMenuOpenRoadVista === 'function') VISTAS.push(drawMenuOpenRoadVista);
+  const N = VISTAS.length;
   const SLOT = motionReduced() ? 12 : 8;
   const FADE = motionReduced() ? 0.01 : 1.35;
-  const u = t % (SLOT * 2);
-  const inSlot = u % SLOT;
-  let aOak = 1;
-  let aStone = 0;
-  if (u < SLOT) {
+  let aFrom = 1;
+  let aTo = 0;
+  let fromIdx = 0;
+  let toIdx = 0;
+  if (N > 1) {
+    const cycle = SLOT * N;
+    const u = ((t % cycle) + cycle) % cycle;
+    fromIdx = Math.floor(u / SLOT) % N;
+    toIdx = (fromIdx + 1) % N;
+    const inSlot = u % SLOT;
     if (inSlot > SLOT - FADE) {
       const f = (inSlot - (SLOT - FADE)) / FADE;
-      aOak = 1 - f;
-      aStone = f;
+      aFrom = 1 - f;
+      aTo = f;
     } else {
-      aOak = 1;
-      aStone = 0;
+      aFrom = 1;
+      aTo = 0;
+      toIdx = fromIdx;
     }
-  } else if (inSlot > SLOT - FADE) {
-    const f = (inSlot - (SLOT - FADE)) / FADE;
-    aStone = 1 - f;
-    aOak = f;
-  } else {
-    aOak = 0;
-    aStone = 1;
   }
 
   let map = { roadY: Hs * 0.82 };
-  const hasOak = typeof drawMenuSemi25dVista === 'function';
-  const hasStone = typeof drawMenuStonehouseVista === 'function';
+  const drawOne = (fn, ctx) => fn(ctx, Ws, Hs, t, { lite, caption: true }) || map;
 
-  if (hasOak && hasStone && (aOak > 0.02 && aStone > 0.02)) {
+  if (N >= 2 && aTo > 0.02 && fromIdx !== toIdx) {
     const buf = ensureMenuVistaBuf(Ws, Hs);
     const ca = buf.a.getContext('2d');
     const cb = buf.b.getContext('2d');
     ca.clearRect(0, 0, Ws, Hs);
     cb.clearRect(0, 0, Ws, Hs);
-    const mOak = drawMenuSemi25dVista(ca, Ws, Hs, t, { lite, caption: true }) || map;
-    const mStone = drawMenuStonehouseVista(cb, Ws, Hs, t, { lite, caption: true }) || map;
-    c.globalAlpha = aOak;
+    const mA = drawOne(VISTAS[fromIdx], ca);
+    const mB = drawOne(VISTAS[toIdx], cb);
+    c.globalAlpha = aFrom;
     c.drawImage(buf.a, 0, 0);
-    c.globalAlpha = aStone;
+    c.globalAlpha = aTo;
     c.drawImage(buf.b, 0, 0);
     c.globalAlpha = 1;
-    map = aStone > aOak ? mStone : mOak;
-  } else if (hasStone && aStone >= aOak) {
-    map = drawMenuStonehouseVista(c, Ws, Hs, t, { lite, caption: true }) || map;
-  } else if (hasOak) {
-    map = drawMenuSemi25dVista(c, Ws, Hs, t, { lite, caption: true }) || map;
+    map = aTo > aFrom ? mB : mA;
+  } else if (N >= 1) {
+    map = drawOne(VISTAS[fromIdx], c);
   } else if (typeof drawLandwegPixelmap === 'function') {
     map = drawLandwegPixelmap(c, Ws, Hs, t, { lite, caption: true, groundY: Hs * 0.58 }) || map;
     map.roadY = (map.groundY || Hs * 0.58) + 8;
@@ -25763,8 +26011,7 @@ function paintMenuHeroCanvas(t) {
     drawMenuHeroPixelGround(c, Ws, Hs, Hs * 0.62, t);
   }
 
-  const roadY = map.roadY || Hs * 0.82;
-  // d20 #8 — unifying pixel grondstrip under both vistas
+  // d20 #8 — unifying pixel grondstrip under vistas
   if (typeof drawMenuPixelGroundStrip === 'function') {
     drawMenuPixelGroundStrip(c, Ws, Hs, t);
   }

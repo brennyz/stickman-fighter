@@ -127,53 +127,54 @@ function paintMenuHeroCanvas(t) {
   const Hs = cv.height;
   c.clearRect(0, 0, Ws, Hs);
 
-  // Foto-album: eik ↔ steenhuis met zachte crossfade
+  // Foto-album: eik → steenhuis → open weg (zachte crossfade)
+  const VISTAS = [];
+  if (typeof drawMenuSemi25dVista === 'function') VISTAS.push(drawMenuSemi25dVista);
+  if (typeof drawMenuStonehouseVista === 'function') VISTAS.push(drawMenuStonehouseVista);
+  if (typeof drawMenuOpenRoadVista === 'function') VISTAS.push(drawMenuOpenRoadVista);
+  const N = VISTAS.length;
   const SLOT = motionReduced() ? 12 : 8;
   const FADE = motionReduced() ? 0.01 : 1.35;
-  const u = t % (SLOT * 2);
-  const inSlot = u % SLOT;
-  let aOak = 1;
-  let aStone = 0;
-  if (u < SLOT) {
+  let aFrom = 1;
+  let aTo = 0;
+  let fromIdx = 0;
+  let toIdx = 0;
+  if (N > 1) {
+    const cycle = SLOT * N;
+    const u = ((t % cycle) + cycle) % cycle;
+    fromIdx = Math.floor(u / SLOT) % N;
+    toIdx = (fromIdx + 1) % N;
+    const inSlot = u % SLOT;
     if (inSlot > SLOT - FADE) {
       const f = (inSlot - (SLOT - FADE)) / FADE;
-      aOak = 1 - f;
-      aStone = f;
+      aFrom = 1 - f;
+      aTo = f;
     } else {
-      aOak = 1;
-      aStone = 0;
+      aFrom = 1;
+      aTo = 0;
+      toIdx = fromIdx;
     }
-  } else if (inSlot > SLOT - FADE) {
-    const f = (inSlot - (SLOT - FADE)) / FADE;
-    aStone = 1 - f;
-    aOak = f;
-  } else {
-    aOak = 0;
-    aStone = 1;
   }
 
   let map = { roadY: Hs * 0.82 };
-  const hasOak = typeof drawMenuSemi25dVista === 'function';
-  const hasStone = typeof drawMenuStonehouseVista === 'function';
+  const drawOne = (fn, ctx) => fn(ctx, Ws, Hs, t, { lite, caption: true }) || map;
 
-  if (hasOak && hasStone && (aOak > 0.02 && aStone > 0.02)) {
+  if (N >= 2 && aTo > 0.02 && fromIdx !== toIdx) {
     const buf = ensureMenuVistaBuf(Ws, Hs);
     const ca = buf.a.getContext('2d');
     const cb = buf.b.getContext('2d');
     ca.clearRect(0, 0, Ws, Hs);
     cb.clearRect(0, 0, Ws, Hs);
-    const mOak = drawMenuSemi25dVista(ca, Ws, Hs, t, { lite, caption: true }) || map;
-    const mStone = drawMenuStonehouseVista(cb, Ws, Hs, t, { lite, caption: true }) || map;
-    c.globalAlpha = aOak;
+    const mA = drawOne(VISTAS[fromIdx], ca);
+    const mB = drawOne(VISTAS[toIdx], cb);
+    c.globalAlpha = aFrom;
     c.drawImage(buf.a, 0, 0);
-    c.globalAlpha = aStone;
+    c.globalAlpha = aTo;
     c.drawImage(buf.b, 0, 0);
     c.globalAlpha = 1;
-    map = aStone > aOak ? mStone : mOak;
-  } else if (hasStone && aStone >= aOak) {
-    map = drawMenuStonehouseVista(c, Ws, Hs, t, { lite, caption: true }) || map;
-  } else if (hasOak) {
-    map = drawMenuSemi25dVista(c, Ws, Hs, t, { lite, caption: true }) || map;
+    map = aTo > aFrom ? mB : mA;
+  } else if (N >= 1) {
+    map = drawOne(VISTAS[fromIdx], c);
   } else if (typeof drawLandwegPixelmap === 'function') {
     map = drawLandwegPixelmap(c, Ws, Hs, t, { lite, caption: true, groundY: Hs * 0.58 }) || map;
     map.roadY = (map.groundY || Hs * 0.58) + 8;
@@ -186,8 +187,7 @@ function paintMenuHeroCanvas(t) {
     drawMenuHeroPixelGround(c, Ws, Hs, Hs * 0.62, t);
   }
 
-  const roadY = map.roadY || Hs * 0.82;
-  // d20 #8 — unifying pixel grondstrip under both vistas
+  // d20 #8 — unifying pixel grondstrip under vistas
   if (typeof drawMenuPixelGroundStrip === 'function') {
     drawMenuPixelGroundStrip(c, Ws, Hs, t);
   }
