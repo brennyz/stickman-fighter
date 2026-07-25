@@ -71,6 +71,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-25T21:07:50Z",
+      "summary": "Stabiliteit: char select crash, claim batch, gamble race, lastPlay · v1.18.60"
+    },
+    {
       "at": "2026-07-25T21:05:00Z",
       "summary": "Stabiliteit: char select crash, claim batch, gamble race, lastPlay · v1.18.60"
     },
