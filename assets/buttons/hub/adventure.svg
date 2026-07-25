@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48"
      shape-rendering="crispEdges" aria-hidden="true">
-  <!-- Stickman Fighter hub  Avontuur: foto’pixel countryside (COUNTRY_PAL) -->
+  <!-- Stickman Fighter hub - Adventure: photo-pixel countryside (COUNTRY_PAL) -->
   <!-- Sky bands -->
   <rect x="0" y="0" width="48" height="10" fill="#4a6a82"/>
   <rect x="0" y="10" width="48" height="8" fill="#7a94a6"/>
@@ -43,8 +43,8 @@
   <rect x="28" y="10" width="14" height="8" fill="#465a46"/>
   <rect x="34" y="12" width="10" height="6" fill="#465a46"/>
   <rect x="30" y="7" width="8" height="5" fill="#5a6e56"/>
-  <rect x="31" y="9" width="2" height="2" fill="rgba(180,190,160,.45)"/>
-  <rect x="38" y="11" width="2" height="2" fill="rgba(180,190,160,.35)"/>
+  <rect x="31" y="9" width="2" height="2" fill="#c4c8a8"/>
+  <rect x="38" y="11" width="2" height="2" fill="#a8b098"/>
   <!-- Asphalt road (near) -->
   <rect x="0" y="36" width="48" height="12" fill="#5e5c58"/>
   <rect x="0" y="36" width="48" height="3" fill="#7a7874"/>
@@ -55,7 +55,7 @@
   <rect x="16" y="41" width="6" height="2" fill="#8a8880"/>
   <rect x="28" y="41" width="6" height="2" fill="#8a8880"/>
   <rect x="40" y="41" width="5" height="2" fill="#8a8880"/>
-  <!-- Path fork hint (adventure)  lighter gravel wedge -->
+  <!-- Path fork hint -->
   <rect x="18" y="34" width="10" height="3" fill="#6a6864"/>
   <rect x="20" y="32" width="6" height="2" fill="#7a7874"/>
   <!-- Tiny stick silhouette on the road -->
