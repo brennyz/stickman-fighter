@@ -1546,6 +1546,11 @@ function blackScreenGuard(where) {
     console.warn('[Stickman] black screen guard:', where || '?', 'state=', state,
       'active=', activeScreenEl() && activeScreenEl().id);
     if (state === 'play') {
+      if (game?.tideBattleActive) {
+        try { clearTideBattleState(game, { restoreMusic: true }); } catch (_) {
+          try { cancelTideBattleMusicPending(game); } catch (_) {}
+        }
+      }
       state = 'menu';
       game = null;
     }

@@ -831,7 +831,9 @@ function sanitizeSave(s) {
     out.activeJutsu = 'rasengan';
   }
   if (out.eggDaily && typeof out.eggDaily === 'object') {
-    const dk = typeof out.eggDaily.date === 'string' ? out.eggDaily.date.slice(0, 10) : todayKey();
+    const dk = typeof out.eggDaily.date === 'string'
+      ? out.eggDaily.date.slice(0, 10)
+      : (typeof todayKey === 'function' ? todayKey() : new Date().toISOString().slice(0, 10));
     out.eggDaily = {
       date: dk,
       dailyCracked: !!out.eggDaily.dailyCracked,
@@ -943,7 +945,9 @@ function sanitizeSave(s) {
   out.achievements = cleanAch;
 
   if (out.daily && typeof out.daily === 'object') {
-    const dk = typeof out.daily.date === 'string' ? out.daily.date.slice(0, 10) : todayKey();
+    const dk = typeof out.daily.date === 'string'
+      ? out.daily.date.slice(0, 10)
+      : (typeof todayKey === 'function' ? todayKey() : new Date().toISOString().slice(0, 10));
     const tasks = Array.isArray(out.daily.tasks) ? out.daily.tasks : [];
     out.daily = {
       date: dk,

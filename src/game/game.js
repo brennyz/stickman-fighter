@@ -2149,33 +2149,37 @@ class Game {
   update(dt) {
     if (this.playerHurtCd > 0) this.playerHurtCd -= dt;
     if (this.ketsbamChargeT > 0) {
-      if (this.ketsbamCd > 0) this.ketsbamCd -= dt;
-      if (this.ketsbamSuperT > 0) this.ketsbamSuperT -= dt;
-      this.ketsbamChargeT -= dt;
-      this.ketsbamChargePulse = (this.ketsbamChargePulse || 0) + dt;
-      this.t += dt;
-      if (this.player?.alive) {
+      if (this.over || !this.player?.alive) {
+        this.ketsbamChargeT = 0;
+        this.inputLocked = false;
+        this.ketsbamShow = false;
+      } else {
+        if (this.ketsbamCd > 0) this.ketsbamCd -= dt;
+        if (this.ketsbamSuperT > 0) this.ketsbamSuperT -= dt;
+        this.ketsbamChargeT -= dt;
+        this.ketsbamChargePulse = (this.ketsbamChargePulse || 0) + dt;
+        this.t += dt;
         this.player.vx = 0;
         this.player.update(dt, this);
-      }
-      this.ketsbamChargeAcc = (this.ketsbamChargeAcc || 0) + dt;
-      const dur = this.ketsbamChargeDur || KETSBAM_CHARGE_DUR;
-      const prog = 1 - this.ketsbamChargeT / dur;
-      const chargeSp = equippedSuper();
-      const cCol = chargeSp.color || '#ffd75e';
-      const cCol2 = chargeSp.color2 || '#ff9a3d';
-      if (this.ketsbamChargeAcc >= 0.07 && !motionReduced()) {
-        this.ketsbamChargeAcc = 0;
-        const px = this.player.x;
-        const py = this.player.y - 50;
-        this.burst(px + rand(-20, 20), py + rand(-30, 10), prog > 0.6 ? '#fff8dc' : cCol,
-          fxLite() ? 2 : 4, { kind: 'spark', size: 2 + prog * 2 });
-        if (prog > 0.45 && !fxLite()) {
-          this.burst(px, this.player.y + 2, cCol2, 2, { kind: 'ring' });
+        this.ketsbamChargeAcc = (this.ketsbamChargeAcc || 0) + dt;
+        const dur = this.ketsbamChargeDur || KETSBAM_CHARGE_DUR;
+        const prog = 1 - this.ketsbamChargeT / dur;
+        const chargeSp = equippedSuper();
+        const cCol = chargeSp.color || '#ffd75e';
+        const cCol2 = chargeSp.color2 || '#ff9a3d';
+        if (this.ketsbamChargeAcc >= 0.07 && !motionReduced()) {
+          this.ketsbamChargeAcc = 0;
+          const px = this.player.x;
+          const py = this.player.y - 50;
+          this.burst(px + rand(-20, 20), py + rand(-30, 10), prog > 0.6 ? '#fff8dc' : cCol,
+            fxLite() ? 2 : 4, { kind: 'spark', size: 2 + prog * 2 });
+          if (prog > 0.45 && !fxLite()) {
+            this.burst(px, this.player.y + 2, cCol2, 2, { kind: 'ring' });
+          }
         }
+        if (this.ketsbamChargeT <= 0) this.player.finishKetsbam(this);
+        return;
       }
-      if (this.ketsbamChargeT <= 0 && this.player?.alive) this.player.finishKetsbam(this);
-      return;
     }
     if (this.freezeT > 0) { this.freezeT -= dt; return; }
     if (this.mode === 'adventure') this.updateKetsbam(dt);
