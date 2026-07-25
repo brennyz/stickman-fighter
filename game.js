@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.55';
+const APP_VERSION = '1.18.56';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 265;
+const SW_CACHE_REV = 266;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -8839,6 +8839,7 @@ function seedNlGameStrings() {
     partGateIdle: 'Loop naar rechts →',
     trainIntro: 'Combo-trainer — 3s oefenen, robot wacht',
     earLaser: 'Oor-laser — spring!',
+    chidoriMissJump: 'Chidori gemist — spring werkt!',
     robotActive: 'Robot activeert — hou combo vast!',
     roundCombo: 'Ronde combo ×{n}',
     wallHalf: 'Halve tijd — combo vasthouden!',
@@ -10024,6 +10025,10 @@ const CATALOG_EN = {
     weaponComboHint: 'Weapon 3× = ①②③ · hit ①+② → golden ③',
     gambleOnboardTouch: 'First gamble: low sum = super-boss · high sum = ally · Skip = normal level',
     gambleOnboardKb: 'First time: sum ≤5 super-boss · sum ≥9 ally buff · Skip = no gamble',
+    ketsbamOnboardTouch: 'Surrounded? Tap the center symbol — Ketsbam escape · 9s cooldown',
+    ketsbamOnboardKb: 'Surrounded? E or center symbol = Ketsbam · 9s cooldown',
+    tideBattleOnboardTouch: 'First Tide Battle: defeat {name} — no other waves until done',
+    tideBattleOnboardKb: 'First Tide Battle: defeat {name} — waves pause until done',
     langSwitchFail: 'Language switch failed',
   },
   fighter: {
@@ -10143,7 +10148,9 @@ const CATALOG_EN = {
     partGateIntro: 'Levels have 3 parts — walk right at checkpoints',
     partGateIdle: 'Walk right →',
     trainIntro: 'Combo trainer — 3s practice, robot waits',
-    earLaser: 'Ear-laser — jump!', robotActive: 'Robot active — keep combo!',
+    earLaser: 'Ear-laser — jump!',
+    chidoriMissJump: 'Chidori missed — jump works!',
+    robotActive: 'Robot active — keep combo!',
     roundCombo: 'Round combo ×{n}',
     wallHalf: 'Half time — keep combo!', wallLast15: 'Last 15s — chase record!',
     wallLast5: '5s — full gas!', wallComboTipShort: 'Tip: quick consecutive hits fill combo',
@@ -14291,7 +14298,7 @@ class Fighter {
       this.attack.moveIdx = this.weaponComboIdx;
     }
     this._aimAtAttack = fighterAimNorm(this);
-    if (this.isRobot && kind === 'special') this.attack.windup = 0.58;
+    if (this.isRobot && kind === 'special') this.attack.windup = 0.68;
     this.blocking = false;
   }
 
@@ -14411,30 +14418,59 @@ class Fighter {
     const p = game.player;
     if (!p || !p.alive || !this.alive) return out;
     this.aiTimer -= dt; this.aiCd -= dt;
+    if ((this.comboRespectT || 0) > 0) this.comboRespectT -= dt;
     const dx = p.x - this.x, dist = Math.abs(dx), dir = Math.sign(dx) || 1;
     let diff = this.aiDiff || 1;
     if (game.mode === 'training' && p.hp / Math.max(1, p.maxhp) < 0.32) diff *= 0.84;
     const pAir = !p.onGround;
+    const train = game.mode === 'training';
+    const dummy = train && (game.trainDummyGrace || 0) > 0;
+    const comboRespect = train && ((this.comboRespectT || 0) > 0 || (game.combo || 0) >= 4);
+
+    // d2 c5: during dummy grace, only soft patrol — no attacks (combo practice window)
+    if (dummy) {
+      this.aiMove = Math.abs(dist - 150) < 40 ? 0 : (dist > 150 ? dir * 0.35 : -dir * 0.45);
+      out.move = this.aiMove;
+      return out;
+    }
 
     // reactief blokkeren als de speler aanvalt en dichtbij is
     if (p.attack && p.attack.t < p.attack.windup + p.attack.active && dist < 130 && !this.attack) {
-      if (Math.random() < 0.55 * diff * dt * 22) { this.blockT = 0.42; }
+      const blockChance = comboRespect ? 0.78 : 0.55;
+      if (Math.random() < blockChance * diff * dt * 22) { this.blockT = comboRespect ? 0.55 : 0.42; }
     }
     if (this.blockT > 0) { this.blockT -= dt; out.block = true; return out; }
+
+    // d2 c5 AI tweak: respect player combo — retreat / no Chidori (no one-shot trades)
+    if (comboRespect && (game.combo || 0) >= 4 && (this.comboRespectT || 0) <= 0) {
+      this.comboRespectT = 1.15;
+    }
+    if ((this.comboRespectT || 0) > 0) {
+      this.aiMove = -dir * (dist < 140 ? 1 : 0.55);
+      out.move = this.aiMove;
+      if (dist < 100 && Math.random() < 0.4 * dt * 10) { this.blockT = 0.35; out.block = true; }
+      return out;
+    }
 
     if (this.aiTimer <= 0) {
       this.aiTimer = rand(0.22, 0.55) / diff;
       if (dist > 240) {
         this.aiMove = dir;
-        if (this.aiCd <= 0 && dist > 105 && !pAir && Math.random() < 0.3) { out.special = true; this.aiCd = rand(2.6, 4.2) / diff; }
+        // Prefer Chidori less at long range when player is already low
+        const specialOdds = (train && p.hp / Math.max(1, p.maxhp) < 0.4) ? 0.18 : 0.3;
+        if (this.aiCd <= 0 && dist > 105 && !pAir && Math.random() < specialOdds) {
+          out.special = true; this.aiCd = rand(2.6, 4.2) / diff;
+        }
         if (Math.random() < 0.12) out.jump = true;
       } else if (dist > 110) {
         const r = Math.random();
         if (r < 0.55) this.aiMove = dir;
-        else if (r < 0.72 && this.aiCd <= 0 && dist > 120 && !pAir) { out.special = true; this.aiCd = rand(2.6, 4.2) / diff; }
+        else if (r < 0.72 && this.aiCd <= 0 && dist > 120 && !pAir) {
+          out.special = true; this.aiCd = rand(2.6, 4.2) / diff;
+        }
         else this.aiMove = -dir * 0.6;
       } else {
-        const trainFair = game.mode === 'training';
+        const trainFair = train;
         const r = Math.random();
         if (r < (trainFair ? 0.34 : 0.42)) out.punch = true;
         else if (r < (trainFair ? 0.58 : 0.72)) out.kick = true;
@@ -14555,11 +14591,11 @@ class Fighter {
     if (this.attack) {
       const a = this.attack;
       a.t += dt;
-      if (this.isRobot && a.kind === 'special' && !a.fired && !a._telegraphed && a.t >= a.windup * 0.28) {
+      if (this.isRobot && a.kind === 'special' && !a.fired && !a._telegraphed && a.t >= a.windup * 0.18) {
         a._telegraphed = true;
         if (game.mode === 'training') {
-          game.trainTelegraphT = 0.85;
-          game.floater(this.x, this.y - 138, 'CHIDORI — dash/spring!', '#7cf5ff', 16);
+          game.trainTelegraphT = 0.95;
+          game.floater(this.x, this.y - 138, t('hud.chidoriTele'), '#7cf5ff', 16);
           haptic(10);
         }
       }
@@ -14568,8 +14604,9 @@ class Fighter {
         if (p && !p.onGround) {
           this.attack = null;
           game.trainTelegraphT = 0;
-          this.aiCd = rand(2.5, 4.2) / (this.aiDiff || 1);
-          game.floater(this.x, this.y - 128, 'Chidori gemist — spring werkt!', '#7cf5ff', 14);
+          this.aiCd = rand(2.8, 4.6) / (this.aiDiff || 1);
+          this.comboRespectT = Math.max(this.comboRespectT || 0, 0.85);
+          game.floater(this.x, this.y - 128, t('combat.chidoriMissJump'), '#7cf5ff', 14);
         } else if (a.t >= a.windup) {
           a.fired = true;
           game.spawnJutsu(this, a);
@@ -14580,11 +14617,12 @@ class Fighter {
       }
       if (this.isRobot && game.mode === 'training' && !a.fired && (a.kind === 'punch' || a.kind === 'kick') && a.t < a.windup) {
         const p = game.player;
-        if (p && p.alive && Math.abs(p.x - this.x) < a.range + 36) {
-          const maxT = a.kind === 'kick' ? 0.42 : 0.32;
-          game.trainMeleeTelegraphT = Math.max(game.trainMeleeTelegraphT || 0, a.windup - a.t + 0.04);
+        if (p && p.alive && Math.abs(p.x - this.x) < a.range + 48) {
+          const maxT = a.kind === 'kick' ? 0.48 : 0.38;
+          game.trainMeleeTelegraphT = Math.max(game.trainMeleeTelegraphT || 0, a.windup - a.t + 0.06);
           game.trainMeleeTelegraphMax = maxT;
           game.trainTelegraphKind = a.kind;
+          game.trainMeleeTeleRange = a.range || 52;
         }
       }
       if (a.kind !== 'special' && !a.hasHit && a.t >= a.windup && a.t <= a.windup + a.active) {
@@ -14668,6 +14706,11 @@ class Fighter {
     dmg = Math.round(dmg);
     if (this.isPlayer && game && game.styleDefMul && game.styleDefMul !== 1) {
       dmg = Math.max(1, Math.round(dmg * game.styleDefMul));
+    }
+    // d2 c5: training — no one-shot from robot (cap ~22% max HP per hit)
+    if (this.isPlayer && game && game.mode === 'training' && opts.attacker && opts.attacker.isRobot) {
+      const cap = Math.max(8, Math.round(this.maxhp * 0.22));
+      if (dmg > cap) dmg = cap;
     }
     this.hp -= dmg;
     if (this.isPlayer && game) {
@@ -19818,10 +19861,12 @@ class Game {
     this.robotMaxHp = Math.round(110 + save.lvl * 9 + save.trainWins * 14);
     this.trainTelegraphT = 0;
     this.trainMeleeTelegraphT = 0;
-    this.trainMeleeTelegraphMax = 0.32;
+    this.trainMeleeTelegraphMax = 0.38;
     this.trainTelegraphKind = null;
+    this.trainMeleeTeleRange = 52;
     this.trainLaserCd = rand(5, 8);
     this.trainLaserTelegraph = 0;
+    this.trainDummyGrace = 0;
     this.trainComboBest = 0;
     this.trainComboGoals = {};
     this.startRound();
@@ -19839,6 +19884,7 @@ class Game {
     this.robot.hp = this.robot.maxhp = this.robotMaxHp;
     this.robot.x = W * 0.75; this.robot.y = this.ground; this.robot.vx = 0; this.robot.face = -1;
     this.robot.attack = null; this.robot.hurtT = 0; this.robot.deadT = 0;
+    this.robot.comboRespectT = 0;
     resetWeaponCombo(this.robot);
     this.phase = 'intro'; this.phaseT = 0;
     this.inputLocked = true;
@@ -19846,6 +19892,7 @@ class Game {
     this.trainLaserTelegraph = 0;
     this.trainMeleeTelegraphT = 0;
     this.trainTelegraphKind = null;
+    this.trainDummyGrace = 0; // starts when fight phase begins
     this.combo = 0;
     this.comboT = 0;
     this.banner(`RONDE ${this.round}`, 1.1, '#ffd75e', 52);
@@ -19853,6 +19900,7 @@ class Game {
   }
 
   updateTrainingLasers(dt) {
+    // grace timer ticks in updateTraining — only gate lasers here
     if ((this.trainDummyGrace || 0) > 0) return;
     if (this.phase !== 'fight' || !this.robot?.alive || !this.player?.alive) return;
     if (this.robot.attack || this.robot.hurtT > 0) {
@@ -19878,6 +19926,11 @@ class Game {
       this.trainLaserCd = rand(3.2, 5.5);
       return;
     }
+    // Pause lasers while player is mid combo-trainer streak
+    if ((this.combo || 0) >= 5) {
+      this.trainLaserCd = rand(2.2, 3.5);
+      return;
+    }
     const diff = Math.min(1.5, (this.robot.aiDiff || 1) * (pLow ? 0.88 : 1));
     this.trainLaserTelegraph = 0.95;
     this.trainLaserCd = rand(8, 12) / diff;
@@ -19890,7 +19943,9 @@ class Game {
     if (!r || !r.alive) return;
     const dir = Math.sign(this.player.x - r.x) || -1;
     const y = r.y - 52;
-    const dmg = Math.min(20, Math.round(8 + save.lvl * 0.35 + save.trainWins * 0.35));
+    const raw = Math.round(8 + save.lvl * 0.35 + save.trainWins * 0.35);
+    const cap = Math.max(8, Math.round((this.player?.maxhp || 100) * 0.22));
+    const dmg = Math.min(20, raw, cap);
     this.spawnProjectile({
       x: r.x + dir * 30, y,
       vx: dir * 480, vy: 0, r: 13, dmg,
@@ -19904,7 +19959,13 @@ class Game {
     this.phaseT += dt;
     if (this.phase === 'intro') {
       if (this.phaseT > 1.2 && this.phaseT - dt <= 1.2) this.banner(t('banner.fight'), 0.8, '#ff6b6b', 60);
-      if (this.phaseT > 1.6) { this.phase = 'fight'; this.inputLocked = false; }
+      if (this.phaseT > 1.6) {
+        this.phase = 'fight';
+        this.inputLocked = false;
+        // d2 c5: short dummy window after FIGHT — first round longer
+        this.trainDummyGrace = this.round === 1 ? 2.8 : 1.5;
+        if (this.round === 1) this.floater(W / 2, 118, t('combat.trainIntro'), '#9ef0ff', 13, 'hud');
+      }
     } else if (this.phase === 'fight') {
       if (this.comboT > 0) {
         this.comboT -= dt;
@@ -19912,6 +19973,7 @@ class Game {
       }
       if (this.trainTelegraphT > 0) this.trainTelegraphT -= dt;
       if (this.trainMeleeTelegraphT > 0) this.trainMeleeTelegraphT -= dt;
+      if (this.trainDummyGrace > 0) this.trainDummyGrace -= dt;
       this.updateTrainingLasers(dt);
       this.roundTimer -= dt;
       const pDead = !this.player.alive, rDead = !this.robot.alive;
@@ -22790,13 +22852,13 @@ class Game {
       const tele = this.trainLaserTelegraph > 0
         ? { label: t('hud.earLaser'), frac: this.trainLaserTelegraph / 0.95, color: '#ff6b6b', max: 0.95 }
         : (this.trainTelegraphT > 0
-          ? { label: t('hud.chidoriTele'), frac: this.trainTelegraphT / 0.85, color: '#7cf5ff', max: 0.85 }
+          ? { label: t('hud.chidoriTele'), frac: this.trainTelegraphT / 0.95, color: '#7cf5ff', max: 0.95 }
           : (this.trainMeleeTelegraphT > 0
             ? {
               label: this.trainTelegraphKind === 'kick' ? t('hud.kickTele') : t('hud.punchTele'),
-              frac: this.trainMeleeTelegraphT / (this.trainMeleeTelegraphMax || 0.32),
+              frac: this.trainMeleeTelegraphT / (this.trainMeleeTelegraphMax || 0.38),
               color: '#ffb347',
-              max: this.trainMeleeTelegraphMax || 0.32,
+              max: this.trainMeleeTelegraphMax || 0.38,
             }
             : null));
       if (tele) {
@@ -22817,6 +22879,7 @@ class Game {
       }
       if (this.trainMeleeTelegraphT > 0 && r.alive && !this.trainLaserTelegraph && !this.trainTelegraphT) {
         const dir = Math.sign(this.player.x - r.x) || -1;
+        const reach = this.trainMeleeTeleRange || 52;
         c.save();
         c.globalAlpha = motionReduced() ? 0.38 : (0.3 + Math.sin(this.t * 22) * 0.15);
         c.strokeStyle = '#ffb347';
@@ -22824,9 +22887,20 @@ class Game {
         c.beginPath();
         c.arc(r.x + dir * 28, r.y - 28, 22, 0, TAU);
         c.stroke();
+        // Ground tick — melee danger zone
+        c.globalAlpha = 0.4;
+        c.fillStyle = '#ffb347';
+        const gx = r.x + dir * (reach * 0.55);
+        c.fillRect(gx - 10, this.ground - 4, 20, 4);
+        c.setLineDash([6, 6]);
+        c.beginPath();
+        c.moveTo(r.x + dir * 18, r.y - 18);
+        c.lineTo(r.x + dir * reach, r.y - 18);
+        c.stroke();
+        c.setLineDash([]);
         c.restore();
       }
-      if (this.trainTelegraphT > 0 && r.alive) {
+      if (this.trainTelegraphT > 0 && r.alive && !(this.trainLaserTelegraph > 0)) {
         c.save();
         c.globalAlpha = motionReduced() ? 0.42 : (0.35 + Math.sin(this.t * 18) * 0.2);
         c.strokeStyle = '#7cf5ff';
@@ -22836,7 +22910,7 @@ class Game {
         c.stroke();
         const dashDir = Math.sign(this.player.x - r.x) || -1;
         const dashLen = Math.min(200, Math.abs(this.player.x - r.x) + 40);
-        c.globalAlpha = 0.35 + (this.trainTelegraphT / 0.85) * 0.35;
+        c.globalAlpha = 0.35 + (this.trainTelegraphT / 0.95) * 0.35;
         c.strokeStyle = '#7cf5ff';
         c.lineWidth = 3;
         c.setLineDash([8, 10]);
@@ -22859,9 +22933,23 @@ class Game {
         c.lineTo(W - 24, ly);
         c.stroke();
         c.setLineDash([]);
+        // Jump chevrons — telegraph "spring!"
+        if (!motionReduced()) {
+          c.globalAlpha = 0.55 + Math.sin(this.t * 14) * 0.2;
+          c.fillStyle = '#ffb0b8';
+          for (const ox of [-90, 0, 90]) {
+            const cx = W / 2 + ox;
+            c.beginPath();
+            c.moveTo(cx, ly - 22);
+            c.lineTo(cx - 8, ly - 10);
+            c.lineTo(cx + 8, ly - 10);
+            c.closePath();
+            c.fill();
+          }
+        }
         c.font = '800 13px sans-serif';
         c.textAlign = 'center';
-        fillHudText(c, t('hud.earLaserShort'), W / 2, ly - 10, { fill: '#ffb0b8' });
+        fillHudText(c, t('hud.earLaserShort'), W / 2, ly - 28, { fill: '#ffb0b8' });
         c.restore();
       }
       // robotbalk rechtsboven

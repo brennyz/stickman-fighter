@@ -1063,10 +1063,12 @@ class Game {
     this.robotMaxHp = Math.round(110 + save.lvl * 9 + save.trainWins * 14);
     this.trainTelegraphT = 0;
     this.trainMeleeTelegraphT = 0;
-    this.trainMeleeTelegraphMax = 0.32;
+    this.trainMeleeTelegraphMax = 0.38;
     this.trainTelegraphKind = null;
+    this.trainMeleeTeleRange = 52;
     this.trainLaserCd = rand(5, 8);
     this.trainLaserTelegraph = 0;
+    this.trainDummyGrace = 0;
     this.trainComboBest = 0;
     this.trainComboGoals = {};
     this.startRound();
@@ -1084,6 +1086,7 @@ class Game {
     this.robot.hp = this.robot.maxhp = this.robotMaxHp;
     this.robot.x = W * 0.75; this.robot.y = this.ground; this.robot.vx = 0; this.robot.face = -1;
     this.robot.attack = null; this.robot.hurtT = 0; this.robot.deadT = 0;
+    this.robot.comboRespectT = 0;
     resetWeaponCombo(this.robot);
     this.phase = 'intro'; this.phaseT = 0;
     this.inputLocked = true;
@@ -1091,6 +1094,7 @@ class Game {
     this.trainLaserTelegraph = 0;
     this.trainMeleeTelegraphT = 0;
     this.trainTelegraphKind = null;
+    this.trainDummyGrace = 0; // starts when fight phase begins
     this.combo = 0;
     this.comboT = 0;
     this.banner(`RONDE ${this.round}`, 1.1, '#ffd75e', 52);
@@ -1098,6 +1102,7 @@ class Game {
   }
 
   updateTrainingLasers(dt) {
+    // grace timer ticks in updateTraining — only gate lasers here
     if ((this.trainDummyGrace || 0) > 0) return;
     if (this.phase !== 'fight' || !this.robot?.alive || !this.player?.alive) return;
     if (this.robot.attack || this.robot.hurtT > 0) {
@@ -1123,6 +1128,11 @@ class Game {
       this.trainLaserCd = rand(3.2, 5.5);
       return;
     }
+    // Pause lasers while player is mid combo-trainer streak
+    if ((this.combo || 0) >= 5) {
+      this.trainLaserCd = rand(2.2, 3.5);
+      return;
+    }
     const diff = Math.min(1.5, (this.robot.aiDiff || 1) * (pLow ? 0.88 : 1));
     this.trainLaserTelegraph = 0.95;
     this.trainLaserCd = rand(8, 12) / diff;
@@ -1135,7 +1145,9 @@ class Game {
     if (!r || !r.alive) return;
     const dir = Math.sign(this.player.x - r.x) || -1;
     const y = r.y - 52;
-    const dmg = Math.min(20, Math.round(8 + save.lvl * 0.35 + save.trainWins * 0.35));
+    const raw = Math.round(8 + save.lvl * 0.35 + save.trainWins * 0.35);
+    const cap = Math.max(8, Math.round((this.player?.maxhp || 100) * 0.22));
+    const dmg = Math.min(20, raw, cap);
     this.spawnProjectile({
       x: r.x + dir * 30, y,
       vx: dir * 480, vy: 0, r: 13, dmg,
@@ -1149,7 +1161,13 @@ class Game {
     this.phaseT += dt;
     if (this.phase === 'intro') {
       if (this.phaseT > 1.2 && this.phaseT - dt <= 1.2) this.banner(t('banner.fight'), 0.8, '#ff6b6b', 60);
-      if (this.phaseT > 1.6) { this.phase = 'fight'; this.inputLocked = false; }
+      if (this.phaseT > 1.6) {
+        this.phase = 'fight';
+        this.inputLocked = false;
+        // d2 c5: short dummy window after FIGHT — first round longer
+        this.trainDummyGrace = this.round === 1 ? 2.8 : 1.5;
+        if (this.round === 1) this.floater(W / 2, 118, t('combat.trainIntro'), '#9ef0ff', 13, 'hud');
+      }
     } else if (this.phase === 'fight') {
       if (this.comboT > 0) {
         this.comboT -= dt;
@@ -1157,6 +1175,7 @@ class Game {
       }
       if (this.trainTelegraphT > 0) this.trainTelegraphT -= dt;
       if (this.trainMeleeTelegraphT > 0) this.trainMeleeTelegraphT -= dt;
+      if (this.trainDummyGrace > 0) this.trainDummyGrace -= dt;
       this.updateTrainingLasers(dt);
       this.roundTimer -= dt;
       const pDead = !this.player.alive, rDead = !this.robot.alive;
@@ -4035,13 +4054,13 @@ class Game {
       const tele = this.trainLaserTelegraph > 0
         ? { label: t('hud.earLaser'), frac: this.trainLaserTelegraph / 0.95, color: '#ff6b6b', max: 0.95 }
         : (this.trainTelegraphT > 0
-          ? { label: t('hud.chidoriTele'), frac: this.trainTelegraphT / 0.85, color: '#7cf5ff', max: 0.85 }
+          ? { label: t('hud.chidoriTele'), frac: this.trainTelegraphT / 0.95, color: '#7cf5ff', max: 0.95 }
           : (this.trainMeleeTelegraphT > 0
             ? {
               label: this.trainTelegraphKind === 'kick' ? t('hud.kickTele') : t('hud.punchTele'),
-              frac: this.trainMeleeTelegraphT / (this.trainMeleeTelegraphMax || 0.32),
+              frac: this.trainMeleeTelegraphT / (this.trainMeleeTelegraphMax || 0.38),
               color: '#ffb347',
-              max: this.trainMeleeTelegraphMax || 0.32,
+              max: this.trainMeleeTelegraphMax || 0.38,
             }
             : null));
       if (tele) {
@@ -4062,6 +4081,7 @@ class Game {
       }
       if (this.trainMeleeTelegraphT > 0 && r.alive && !this.trainLaserTelegraph && !this.trainTelegraphT) {
         const dir = Math.sign(this.player.x - r.x) || -1;
+        const reach = this.trainMeleeTeleRange || 52;
         c.save();
         c.globalAlpha = motionReduced() ? 0.38 : (0.3 + Math.sin(this.t * 22) * 0.15);
         c.strokeStyle = '#ffb347';
@@ -4069,9 +4089,20 @@ class Game {
         c.beginPath();
         c.arc(r.x + dir * 28, r.y - 28, 22, 0, TAU);
         c.stroke();
+        // Ground tick — melee danger zone
+        c.globalAlpha = 0.4;
+        c.fillStyle = '#ffb347';
+        const gx = r.x + dir * (reach * 0.55);
+        c.fillRect(gx - 10, this.ground - 4, 20, 4);
+        c.setLineDash([6, 6]);
+        c.beginPath();
+        c.moveTo(r.x + dir * 18, r.y - 18);
+        c.lineTo(r.x + dir * reach, r.y - 18);
+        c.stroke();
+        c.setLineDash([]);
         c.restore();
       }
-      if (this.trainTelegraphT > 0 && r.alive) {
+      if (this.trainTelegraphT > 0 && r.alive && !(this.trainLaserTelegraph > 0)) {
         c.save();
         c.globalAlpha = motionReduced() ? 0.42 : (0.35 + Math.sin(this.t * 18) * 0.2);
         c.strokeStyle = '#7cf5ff';
@@ -4081,7 +4112,7 @@ class Game {
         c.stroke();
         const dashDir = Math.sign(this.player.x - r.x) || -1;
         const dashLen = Math.min(200, Math.abs(this.player.x - r.x) + 40);
-        c.globalAlpha = 0.35 + (this.trainTelegraphT / 0.85) * 0.35;
+        c.globalAlpha = 0.35 + (this.trainTelegraphT / 0.95) * 0.35;
         c.strokeStyle = '#7cf5ff';
         c.lineWidth = 3;
         c.setLineDash([8, 10]);
@@ -4104,9 +4135,23 @@ class Game {
         c.lineTo(W - 24, ly);
         c.stroke();
         c.setLineDash([]);
+        // Jump chevrons — telegraph "spring!"
+        if (!motionReduced()) {
+          c.globalAlpha = 0.55 + Math.sin(this.t * 14) * 0.2;
+          c.fillStyle = '#ffb0b8';
+          for (const ox of [-90, 0, 90]) {
+            const cx = W / 2 + ox;
+            c.beginPath();
+            c.moveTo(cx, ly - 22);
+            c.lineTo(cx - 8, ly - 10);
+            c.lineTo(cx + 8, ly - 10);
+            c.closePath();
+            c.fill();
+          }
+        }
         c.font = '800 13px sans-serif';
         c.textAlign = 'center';
-        fillHudText(c, t('hud.earLaserShort'), W / 2, ly - 10, { fill: '#ffb0b8' });
+        fillHudText(c, t('hud.earLaserShort'), W / 2, ly - 28, { fill: '#ffb0b8' });
         c.restore();
       }
       // robotbalk rechtsboven

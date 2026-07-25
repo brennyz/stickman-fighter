@@ -109,7 +109,7 @@ class Fighter {
       this.attack.moveIdx = this.weaponComboIdx;
     }
     this._aimAtAttack = fighterAimNorm(this);
-    if (this.isRobot && kind === 'special') this.attack.windup = 0.58;
+    if (this.isRobot && kind === 'special') this.attack.windup = 0.68;
     this.blocking = false;
   }
 
@@ -229,30 +229,59 @@ class Fighter {
     const p = game.player;
     if (!p || !p.alive || !this.alive) return out;
     this.aiTimer -= dt; this.aiCd -= dt;
+    if ((this.comboRespectT || 0) > 0) this.comboRespectT -= dt;
     const dx = p.x - this.x, dist = Math.abs(dx), dir = Math.sign(dx) || 1;
     let diff = this.aiDiff || 1;
     if (game.mode === 'training' && p.hp / Math.max(1, p.maxhp) < 0.32) diff *= 0.84;
     const pAir = !p.onGround;
+    const train = game.mode === 'training';
+    const dummy = train && (game.trainDummyGrace || 0) > 0;
+    const comboRespect = train && ((this.comboRespectT || 0) > 0 || (game.combo || 0) >= 4);
+
+    // d2 c5: during dummy grace, only soft patrol — no attacks (combo practice window)
+    if (dummy) {
+      this.aiMove = Math.abs(dist - 150) < 40 ? 0 : (dist > 150 ? dir * 0.35 : -dir * 0.45);
+      out.move = this.aiMove;
+      return out;
+    }
 
     // reactief blokkeren als de speler aanvalt en dichtbij is
     if (p.attack && p.attack.t < p.attack.windup + p.attack.active && dist < 130 && !this.attack) {
-      if (Math.random() < 0.55 * diff * dt * 22) { this.blockT = 0.42; }
+      const blockChance = comboRespect ? 0.78 : 0.55;
+      if (Math.random() < blockChance * diff * dt * 22) { this.blockT = comboRespect ? 0.55 : 0.42; }
     }
     if (this.blockT > 0) { this.blockT -= dt; out.block = true; return out; }
+
+    // d2 c5 AI tweak: respect player combo — retreat / no Chidori (no one-shot trades)
+    if (comboRespect && (game.combo || 0) >= 4 && (this.comboRespectT || 0) <= 0) {
+      this.comboRespectT = 1.15;
+    }
+    if ((this.comboRespectT || 0) > 0) {
+      this.aiMove = -dir * (dist < 140 ? 1 : 0.55);
+      out.move = this.aiMove;
+      if (dist < 100 && Math.random() < 0.4 * dt * 10) { this.blockT = 0.35; out.block = true; }
+      return out;
+    }
 
     if (this.aiTimer <= 0) {
       this.aiTimer = rand(0.22, 0.55) / diff;
       if (dist > 240) {
         this.aiMove = dir;
-        if (this.aiCd <= 0 && dist > 105 && !pAir && Math.random() < 0.3) { out.special = true; this.aiCd = rand(2.6, 4.2) / diff; }
+        // Prefer Chidori less at long range when player is already low
+        const specialOdds = (train && p.hp / Math.max(1, p.maxhp) < 0.4) ? 0.18 : 0.3;
+        if (this.aiCd <= 0 && dist > 105 && !pAir && Math.random() < specialOdds) {
+          out.special = true; this.aiCd = rand(2.6, 4.2) / diff;
+        }
         if (Math.random() < 0.12) out.jump = true;
       } else if (dist > 110) {
         const r = Math.random();
         if (r < 0.55) this.aiMove = dir;
-        else if (r < 0.72 && this.aiCd <= 0 && dist > 120 && !pAir) { out.special = true; this.aiCd = rand(2.6, 4.2) / diff; }
+        else if (r < 0.72 && this.aiCd <= 0 && dist > 120 && !pAir) {
+          out.special = true; this.aiCd = rand(2.6, 4.2) / diff;
+        }
         else this.aiMove = -dir * 0.6;
       } else {
-        const trainFair = game.mode === 'training';
+        const trainFair = train;
         const r = Math.random();
         if (r < (trainFair ? 0.34 : 0.42)) out.punch = true;
         else if (r < (trainFair ? 0.58 : 0.72)) out.kick = true;
@@ -373,11 +402,11 @@ class Fighter {
     if (this.attack) {
       const a = this.attack;
       a.t += dt;
-      if (this.isRobot && a.kind === 'special' && !a.fired && !a._telegraphed && a.t >= a.windup * 0.28) {
+      if (this.isRobot && a.kind === 'special' && !a.fired && !a._telegraphed && a.t >= a.windup * 0.18) {
         a._telegraphed = true;
         if (game.mode === 'training') {
-          game.trainTelegraphT = 0.85;
-          game.floater(this.x, this.y - 138, 'CHIDORI — dash/spring!', '#7cf5ff', 16);
+          game.trainTelegraphT = 0.95;
+          game.floater(this.x, this.y - 138, t('hud.chidoriTele'), '#7cf5ff', 16);
           haptic(10);
         }
       }
@@ -386,8 +415,9 @@ class Fighter {
         if (p && !p.onGround) {
           this.attack = null;
           game.trainTelegraphT = 0;
-          this.aiCd = rand(2.5, 4.2) / (this.aiDiff || 1);
-          game.floater(this.x, this.y - 128, 'Chidori gemist — spring werkt!', '#7cf5ff', 14);
+          this.aiCd = rand(2.8, 4.6) / (this.aiDiff || 1);
+          this.comboRespectT = Math.max(this.comboRespectT || 0, 0.85);
+          game.floater(this.x, this.y - 128, t('combat.chidoriMissJump'), '#7cf5ff', 14);
         } else if (a.t >= a.windup) {
           a.fired = true;
           game.spawnJutsu(this, a);
@@ -398,11 +428,12 @@ class Fighter {
       }
       if (this.isRobot && game.mode === 'training' && !a.fired && (a.kind === 'punch' || a.kind === 'kick') && a.t < a.windup) {
         const p = game.player;
-        if (p && p.alive && Math.abs(p.x - this.x) < a.range + 36) {
-          const maxT = a.kind === 'kick' ? 0.42 : 0.32;
-          game.trainMeleeTelegraphT = Math.max(game.trainMeleeTelegraphT || 0, a.windup - a.t + 0.04);
+        if (p && p.alive && Math.abs(p.x - this.x) < a.range + 48) {
+          const maxT = a.kind === 'kick' ? 0.48 : 0.38;
+          game.trainMeleeTelegraphT = Math.max(game.trainMeleeTelegraphT || 0, a.windup - a.t + 0.06);
           game.trainMeleeTelegraphMax = maxT;
           game.trainTelegraphKind = a.kind;
+          game.trainMeleeTeleRange = a.range || 52;
         }
       }
       if (a.kind !== 'special' && !a.hasHit && a.t >= a.windup && a.t <= a.windup + a.active) {
@@ -486,6 +517,11 @@ class Fighter {
     dmg = Math.round(dmg);
     if (this.isPlayer && game && game.styleDefMul && game.styleDefMul !== 1) {
       dmg = Math.max(1, Math.round(dmg * game.styleDefMul));
+    }
+    // d2 c5: training — no one-shot from robot (cap ~22% max HP per hit)
+    if (this.isPlayer && game && game.mode === 'training' && opts.attacker && opts.attacker.isRobot) {
+      const cap = Math.max(8, Math.round(this.maxhp * 0.22));
+      if (dmg > cap) dmg = cap;
     }
     this.hp -= dmg;
     if (this.isPlayer && game) {
