@@ -1957,9 +1957,12 @@ class Game {
       const calm = motionReduced();
       const pop = calm ? 1 : (k < 0.15 ? k / 0.15 : 1);
       const fade = k > 0.75 ? 1 - (k - 0.75) / 0.25 : 1;
+      const bannerY = (this.mode === 'adventure' && this.advHudBottom > 0)
+        ? Math.max(H * 0.28, this.advHudBottom + 30)
+        : H * 0.34;
       c.save();
       c.globalAlpha = fade;
-      c.translate(W / 2, H * 0.34);
+      c.translate(W / 2, bannerY);
       c.scale(calm ? 1 : (0.6 + pop * 0.4), calm ? 1 : (0.6 + pop * 0.4));
       if (!fxLite() && !calm) {
         c.shadowColor = b.color;
@@ -2027,7 +2030,10 @@ class Game {
       c.textAlign = 'center';
       const tw = c.measureText(hintTxt).width;
       const padX = 16;
-      const pillY = H * 0.2 - 24;
+      const hintY = (this.mode === 'adventure' && this.advHudBottom > 0)
+        ? Math.max(H * 0.2, this.advHudBottom + 20)
+        : H * 0.2;
+      const pillY = hintY - 24;
       c.fillStyle = 'rgba(6,10,24,.78)';
       this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
       c.fill();
@@ -2035,7 +2041,7 @@ class Game {
       c.lineWidth = a11yHighContrast() ? 2.5 : 1.5;
       this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
       c.stroke();
-      fillHudText(c, hintTxt, W / 2, H * 0.2, {
+      fillHudText(c, hintTxt, W / 2, hintY, {
         fill: '#fff',
         stroke: 'rgba(0,0,0,.85)',
         strokeW: a11yHighContrast() ? 3.5 : 0,
@@ -2342,12 +2348,12 @@ class Game {
   }
 
   /** Stage-voortgang: balk in 3 delen + lopend bolletje (vervangt wave-pips). */
-  drawStageProgress(c) {
-    if (!this.level || !this.level.waves) return;
+  drawStageProgress(c, barY) {
+    if (!this.level || !this.level.waves) return barY || 44;
     const total = this.level.waves.length;
     const tw = Math.min(320, W * 0.5);
     const x0 = W / 2 - tw / 2;
-    const y = 44;
+    const y = barY != null ? barY : 44;
     const target = this.stageProgress();
     if (this.progressSmooth == null) this.progressSmooth = target;
     this.progressSmooth += (target - this.progressSmooth) * (motionReduced() ? 0.25 : 0.09);
@@ -2448,9 +2454,7 @@ class Game {
     c.font = '700 9px sans-serif';
     c.fillStyle = 'rgba(255,255,255,.5)';
     c.textAlign = 'center';
-    const waveNum = this.waveIdx >= 0 ? Math.min(total, cur + 1) : 0;
-    c.fillText(waveNum > 0 ? t('hud.waveLine', { n: waveNum, total }) : t('hud.wavesTotal', { total }), W / 2, pipY + 11);
-    c.textAlign = 'center';
+    return pipY + 6;
   }
 
   countNearbyMonsters(radius) {
@@ -2607,6 +2611,7 @@ class Game {
   }
 
   drawHUD(c) {
+    this.advHudBottom = 0;
     if (this.mode === 'adventure') this.drawStageBeatFx(c);
     const p = this.player;
     if (this.mode === 'adventure' && (this.killStreak || 0) >= 8 && !motionReduced()) {
@@ -2710,64 +2715,151 @@ class Game {
       const isl = islandMeta(islandFromLevel(this.level.n));
       const wCap = adventureWeaponCapForLevel(this.level.n);
       const wv = Math.max(1, this.waveIdx + 1);
+      let hy = Math.max(28, hudInsetTop() + 4);
+      this.advHudBottom = hy;
+
       c.font = '800 16px -apple-system, sans-serif';
-      fillHudText(c, t('hud.levelWave', { n: this.level.n, wv: Math.min(wv, this.level.waves.length), total: this.level.waves.length }), W / 2, 30, {
+      fillHudText(c, t('hud.levelWave', { n: this.level.n, wv: Math.min(wv, this.level.waves.length), total: this.level.waves.length }), W / 2, hy, {
         fill: a11yHighContrast() ? '#fff' : 'rgba(255,255,255,.9)',
       });
+      hy += 17;
+
       c.font = '700 11px -apple-system, sans-serif';
       c.fillStyle = isl.accent;
       c.globalAlpha = 0.92;
-      c.fillText(t('hud.islandWeapon', { name: islandLabel(islandFromLevel(this.level.n), 'name'), cap: wCap }), W / 2, 48);
+      c.fillText(t('hud.islandWeapon', { name: islandLabel(islandFromLevel(this.level.n), 'name'), cap: wCap }), W / 2, hy);
       c.globalAlpha = 1;
-      this.drawStageProgress(c);
+      hy += 14;
+
+      hy = this.drawStageProgress(c, hy + 4) + 10;
+
       const bossAlive = this.monsters.find(m => m.elite && m.alive);
       if (!bossAlive) {
+        let ctxTxt = null;
+        let ctxCol = null;
+        let ctxDie = false;
         if (this.stageAlly) {
-          c.font = '700 11px sans-serif';
-          const col = this.stageAlly.color || '#7cf5ff';
-          c.fillStyle = col;
-          const txt = this.stageAlly.name;
-          c.fillText(txt, W / 2 + 7, 62);
-          drawMiniDie(c, W / 2 - c.measureText(txt).width / 2 - 3, 58.5, 10, col);
+          ctxCol = this.stageAlly.color || '#7cf5ff';
+          ctxTxt = this.stageAlly.name;
+          ctxDie = true;
         } else if (this.eggPet && activeEggPetDef()) {
-          c.font = '700 11px sans-serif';
-          c.fillStyle = this.eggPet.def?.c1 || '#ffd75e';
-          const txt = t('hud.eggPet', { name: this.eggPet.def?.name || t('hud.cosmetic') });
-          c.fillText(txt, W / 2, 62);
+          ctxCol = this.eggPet.def?.c1 || '#ffd75e';
+          ctxTxt = t('hud.eggPet', { name: this.eggPet.def?.name || t('hud.cosmetic') });
         } else if (this.pet && activePetDef()) {
-          c.font = '700 11px sans-serif';
-          c.fillStyle = this.pet.sp?.c1 || '#7cf5ff';
-          const txt = t('hud.petActive', { name: this.pet.sp?.name || t('hud.petDefault') });
-          c.fillText(txt, W / 2, 62);
+          ctxCol = this.pet.sp?.c1 || '#7cf5ff';
+          ctxTxt = t('hud.petActive', { name: this.pet.sp?.name || t('hud.petDefault') });
         } else if (this.gambleBossWave > 0) {
+          ctxCol = '#ffb0b8';
+          ctxTxt = t('hud.gambleBoss', { n: this.gambleBossWave });
+          ctxDie = true;
+        }
+        if (ctxTxt) {
           c.font = '700 11px sans-serif';
-          c.fillStyle = '#ffb0b8';
-          const txt = t('hud.gambleBoss', { n: this.gambleBossWave });
-          c.fillText(txt, W / 2 + 7, 62);
-          drawMiniDie(c, W / 2 - c.measureText(txt).width / 2 - 3, 58.5, 10, '#ffb0b8');
+          c.fillStyle = ctxCol;
+          if (ctxDie) {
+            c.fillText(ctxTxt, W / 2 + 7, hy);
+            drawMiniDie(c, W / 2 - c.measureText(ctxTxt).width / 2 - 3, hy - 3.5, 10, ctxCol);
+          } else {
+            c.fillText(ctxTxt, W / 2, hy);
+          }
+          hy += 14;
         }
       }
+
+      const starY = Math.max(24, hudInsetTop() + 2);
       if (p.alive) {
         const hpPct = p.hp / Math.max(1, p.maxhp);
         const proj = starsFromHpPct(hpPct);
         for (let i = 0; i < 3; i++) {
-          drawStarShape(c, W - 52 + i * 19, 26, 8, '#ffd75e', i < proj);
+          drawStarShape(c, W - 52 + i * 19, starY, 8, '#ffd75e', i < proj);
         }
-        c.textAlign = 'center';
-        c.font = '700 11px sans-serif';
-        c.fillStyle = 'rgba(255,255,255,.7)';
+      }
+
+      const rightX = W - Math.max(14, readSafeInsets().right + 8);
+      let rightY = starY + 18;
+      if ((this.killStreak || 0) >= 2) {
+        c.textAlign = 'right';
+        c.font = '800 12px sans-serif';
+        fillHudText(c, t('hud.streak', { n: this.killStreak }), rightX, rightY, {
+          fill: this.killStreak >= 8 ? '#ff7a4d' : '#ffd75e',
+        });
+        rightY += 15;
+      }
+      if (save.comboHud !== false && this.combo > 1) {
+        const calm = motionReduced();
+        const pulse = calm ? 1 : (1 + Math.sin(this.t * 10) * 0.08);
+        const col = this.combo >= 8 ? '#ff7a4d' : '#ffd75e';
+        c.save();
+        c.textAlign = 'right';
+        c.translate(rightX, rightY);
+        c.scale(pulse, pulse);
+        if (!fxLite() && !calm) {
+          c.globalAlpha = 0.35 + Math.sin(this.t * 12) * 0.1;
+          c.strokeStyle = col;
+          c.lineWidth = 2;
+          c.beginPath();
+          c.arc(-24, -2, 22 + Math.min(10, this.combo) + Math.sin(this.t * 14) * 2, 0, TAU);
+          c.stroke();
+          c.globalAlpha = 1;
+        }
+        c.font = '900 17px sans-serif';
+        if (!calm) {
+          c.shadowColor = col;
+          c.shadowBlur = 10;
+        }
+        fillHudText(c, t('hud.combo', { n: this.combo }), 0, 0, { fill: col, strokeW: calm ? 4 : 3.5, align: 'right' });
+        c.restore();
+      }
+
+      const boss = bossAlive;
+      if (boss) {
+        const bwid = Math.min(420, W * 0.5);
+        c.fillStyle = 'rgba(0,0,0,.5)'; this.rr(c, W / 2 - bwid / 2 - 3, hy - 3, bwid + 6, 16, 8); c.fill();
+        c.fillStyle = '#e04f5f'; this.rr(c, W / 2 - bwid / 2, hy, bwid * boss.hp / boss.maxhp, 10, 5); c.fill();
+        hy += 18;
+        c.font = '700 12px sans-serif';
+        fillHudText(c, boss.sp.name.toUpperCase(), W / 2, hy, { fill: '#ffc8d0' });
+        hy += 16;
+      }
+
+      c.textAlign = 'center';
+      if (p.alive && !boss) {
+        const hpPct = p.hp / Math.max(1, p.maxhp);
         const pct = Math.round(hpPct * 100);
         let starHint = t('hud.starZone');
         if (hpPct <= STAR_HP.two) starHint = t('hud.star2', { pct: Math.round(STAR_HP.two * 100) });
         else if (hpPct <= STAR_HP.three) starHint = t('hud.star3', { pct: Math.round(STAR_HP.three * 100) });
-        c.fillText(t('hud.hpPct', { pct, hint: starHint }), W / 2, 76);
+        c.font = '700 11px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.7)';
+        c.fillText(t('hud.hpPct', { pct, hint: starHint }), W / 2, hy);
+        hy += 14;
       }
       if (this.waveIdx >= 0 && (this.spawnQueue.length > 0 || this.monsters.some((m) => m.alive))) {
         const rem = this.spawnQueue.length + this.monsters.filter((m) => m.alive).length;
         c.font = '700 11px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.62)';
-        c.fillText(rem === 1 ? t('hud.enemiesLeft1') : t('hud.enemiesLeftN', { n: rem }), W / 2, 90);
+        c.fillText(rem === 1 ? t('hud.enemiesLeft1') : t('hud.enemiesLeftN', { n: rem }), W / 2, hy);
+        hy += 14;
       }
+      if (this.dmgBuffT > 0) {
+        c.font = '800 13px sans-serif'; c.fillStyle = '#ff7a4d';
+        c.fillText(t('hud.rage', { n: Math.ceil(this.dmgBuffT) }), W / 2, hy);
+        hy += 16;
+      }
+      if (this.playerShieldT > 0) {
+        c.font = '800 13px sans-serif'; c.fillStyle = '#9fd8ff';
+        c.fillText(t('hud.shield', { n: Math.ceil(this.playerShieldT) }), W / 2, hy);
+        hy += 16;
+      }
+      if (this.masterSwordT > 0) {
+        c.font = '900 14px sans-serif'; c.fillStyle = '#7cf5ff';
+        if (!motionReduced()) { c.shadowColor = '#7cf5ff'; c.shadowBlur = 8; }
+        c.fillText(t('hud.masterSword', { n: Math.ceil(this.masterSwordT) }), W / 2, hy);
+        c.shadowBlur = 0;
+        hy += 16;
+      }
+      this.advHudBottom = hy;
+
       if (this.wavePause > 0) {
         const nextBoss = isBossWave(this.level, this.waveIdx + 1);
         const sec = Math.max(0, this.wavePause);
@@ -2797,61 +2889,6 @@ class Game {
           fill: nextBoss ? '#ffc8d0' : '#d8e8ff',
         });
         this.drawNextWavePreview(c);
-      }
-      const boss = bossAlive;
-      if (boss) {
-        const bwid = Math.min(420, W * 0.5);
-        c.fillStyle = 'rgba(0,0,0,.5)'; this.rr(c, W / 2 - bwid / 2 - 3, 57, bwid + 6, 16, 8); c.fill();
-        c.fillStyle = '#e04f5f'; this.rr(c, W / 2 - bwid / 2, 60, bwid * boss.hp / boss.maxhp, 10, 5); c.fill();
-        c.font = '700 12px sans-serif';
-        fillHudText(c, boss.sp.name.toUpperCase(), W / 2, 106, { fill: '#ffc8d0' });
-      }
-      if ((this.killStreak || 0) >= 2) {
-        c.textAlign = 'right';
-        c.font = '800 12px sans-serif';
-        fillHudText(c, t('hud.streak', { n: this.killStreak }), W - Math.max(14, readSafeInsets().right + 8), 62, {
-          fill: this.killStreak >= 8 ? '#ff7a4d' : '#ffd75e',
-        });
-      }
-      if (save.comboHud !== false && this.combo > 1) {
-        const calm = motionReduced();
-        const pulse = calm ? 1 : (1 + Math.sin(this.t * 10) * 0.08);
-        const col = this.combo >= 8 ? '#ff7a4d' : '#ffd75e';
-        c.save();
-        c.translate(W / 2, 92);
-        c.scale(pulse, pulse);
-        if (!fxLite() && !calm) {
-          c.globalAlpha = 0.35 + Math.sin(this.t * 12) * 0.1;
-          c.strokeStyle = col;
-          c.lineWidth = 2;
-          c.beginPath();
-          c.arc(0, -4, 30 + Math.min(12, this.combo) + Math.sin(this.t * 14) * 3, 0, TAU);
-          c.stroke();
-          c.globalAlpha = 1;
-        }
-        c.font = '900 20px sans-serif';
-        c.fillStyle = col;
-        if (!calm) {
-          c.shadowColor = col;
-          c.shadowBlur = 12;
-        }
-        fillHudText(c, t('hud.combo', { n: this.combo }), 0, 0, { fill: col, strokeW: calm ? 4 : 3.5 });
-        c.restore();
-      }
-      if (this.dmgBuffT > 0) {
-        c.font = '800 13px sans-serif'; c.fillStyle = '#ff7a4d';
-        c.fillText(t('hud.rage', { n: Math.ceil(this.dmgBuffT) }), W / 2, 108);
-      }
-      if (this.playerShieldT > 0) {
-        c.font = '800 13px sans-serif'; c.fillStyle = '#9fd8ff';
-        c.fillText(t('hud.shield', { n: Math.ceil(this.playerShieldT) }), W / 2, this.dmgBuffT > 0 ? 124 : 108);
-      }
-      if (this.masterSwordT > 0) {
-        c.font = '900 14px sans-serif'; c.fillStyle = '#7cf5ff';
-        if (!motionReduced()) { c.shadowColor = '#7cf5ff'; c.shadowBlur = 8; }
-        const yMs = 108 + (this.dmgBuffT > 0 ? 16 : 0) + (this.playerShieldT > 0 ? 16 : 0);
-        c.fillText(t('hud.masterSword', { n: Math.ceil(this.masterSwordT) }), W / 2, yMs);
-        c.shadowBlur = 0;
       }
     } else if (this.mode === 'training') {
       const r = this.robot;
