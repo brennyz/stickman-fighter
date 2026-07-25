@@ -11,8 +11,8 @@
   /* Canvas achter UI; geen hits in menu (anders vangt iPad alle tikken) */
   #game { position:fixed; left:0; top:0; width:100%; height:100%; height:100dvh; display:block; touch-action:none;
       z-index:0; pointer-events:none !important; }
-  /* Gevecht: canvas zichtbaar — screens zonder .active zijn al display:none (ochtend-aanpak) */
-  body.is-playing #game { pointer-events:auto !important; z-index:2; visibility:visible !important; }
+  /* Gevecht: canvas zichtbaar — screens zonder .active zijn al display:none (ochtend-route) */
+  body.is-playing #game { pointer-events:auto !important; z-index:1; visibility:visible !important; }
 
   .screen { position:fixed; top:var(--vv-top, 0); left:var(--vv-left, 0);
       width:var(--vv-w, 100%); height:var(--vv-h, 100dvh); max-height:100dvh;

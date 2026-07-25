@@ -10,7 +10,6 @@ function startGame(mode, opts) {
   }
   try { primePlayInput(mode === 'versus'); } catch (_) {}
   window.__sfLoopErr = false;
-  window.__sfPlayLock = false;
   try { Input.releaseAll(); } catch (_) {}
   Input.dualMode = false;
   try { dismissTunnelOverlayIfStatic(); } catch (_) {}

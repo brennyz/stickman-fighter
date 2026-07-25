@@ -1,23 +1,27 @@
 # Debug: zwart / blauw scherm (Avontuur + menu)
 
-Dit is het **blauwachtig-zwarte menu-deksel** (`#151b33` → `#0a0d18`) dat soms **over** het gevechtscanvas blijft staan, of een **submenu zonder knoppen** (alleen deksel) terwijl `state=menu`.
-
 Live: https://brennyz.github.io/stickman-fighter/
+
+## Canonieke play-laag (doe dit, niets zwaarder)
+
+1. Menu/collections → `.screen.active` (CSS). Canvas `visibility:hidden`.
+2. Avontuur start → `state=play`, `UI.show(null)` (stript `.active`), `body.is-playing`, canvas zichtbaar.
+3. Dobbel-flash zit **in** `#levelScreen` → verdwijnt met het scherm.
+4. Loop tekent tijdens play **geen** `drawMenuBackdrop` (#151b33).
+5. **Verboden regressie:** `display:none !important` op alle screens, flash buiten `.screen`, MutationObserver-lid-wars, canvas z50+.
+
+Code: `syncPlayLayer()` + comment-contract in `src/systems/missions.js`.
 
 ---
 
 ## 1. Eerst: verse versie
 
 1. Open https://brennyz.github.io/stickman-fighter/speel.html  
-2. Instellingen → **Verse versie** / hard refresh.  
-3. Check menu-voettekst: moet **≥ v1.18.43 · SW v253** zijn.  
-4. Probeer opnieuw.
+2. Instellingen → **Verse versie**.  
+3. Voettekst: **≥ v1.18.44 · SW v254**.  
+4. Avontuur → level tikken.
 
-**Aanpak gewijzigd:** geen nuclear `display:none !important` op screens meer. Terug naar ochtend-flow: flash in `levelScreen`, simpele `syncPlayLayer`, canvas z2. Loop tekent geen menu-blauw tijdens play.
-
-**Orphan pauseBtn (training/rabbit):** alleen ║║ zichtbaar, speelveld zwart → play-laag kapot. Fix forceert canvas terug; debug-strip toont `playBroken=Y`.
-
-**Adventure blue/black:** na level-tik/dobbel moet speelveld zichtbaar zijn. Strip: `state=play` · `screens=—` · `isPlaying=true` · `playBroken=N`.
+Gezond gevecht: `state=play` · `screens=—` · `isPlaying=true` · `playBroken=N`.
 
 ---
 
@@ -27,53 +31,27 @@ Live: https://brennyz.github.io/stickman-fighter/
 https://brennyz.github.io/stickman-fighter/?sfdebug=1
 ```
 
-Of:
+Of: `localStorage.setItem('sf_debug_screen','1'); location.reload();`
+
+Tik op de debug-strip → forceert hoofdmenu.
 
 ```js
-localStorage.setItem('sf_debug_screen','1'); location.reload();
-```
-
-**Tik op de debug-strip onderaan** → forceert **hoofdmenu** (wist settings/level-deksel).
-
-| Veld | Gezond menu | Kapot (jouw screenshot) |
-|------|-------------|-------------------------|
-| `state` | `menu` | `menu` |
-| `screens` | `menuScreen` | `settingsScreen` (of level/gamble) |
-| `usable` | `Y` | `N` |
-| `isPlaying` | `false` | `false` |
-| `canvas` | `hidden` / z≈0 | `hidden` |
-
-Gevecht-zwart: `state=play`, `screens` niet leeg, canvas z laag.
-
----
-
-## 3. Console / nood-fix
-
-```js
-__sf.goMenu()                 // altijd hoofdmenu
-__sf.debug({ fix: true })     // play→canvas; anders→menu
-sfDebugScreen({ fix: true })
+__sf.goMenu()
+__sf.debug({ fix: true })
 ```
 
 ---
 
-## 4. Wat de agent wil weten
+## 3. Wat de agent wil weten
 
 1. Apparaat (iPad / Android / PWA)  
-2. Versie-regel  
-3. Debug-strip foto (zoals je deed — top)  
-4. Pad: avontuur-zwart → debug → menu? of settings → leeg?
+2. Versie-regel in menu  
+3. Debug-strip foto tijdens blauw  
+4. Werken collections/training wél?
 
 ---
 
-## 5. Root cause (bekend)
-
-- **Play:** `.screen.active` over `#game` = blauw deksel + wel audio.  
-- **Menu (screenshot):** `state=menu` + `settingsScreen` active maar UI niet bruikbaar; oude `recoverToMenu` deed early-return en liet het deksel staan. Fix: `screenLooksUsable` + `recoverToMenu({ force:true })` + tikbare debug-strip.
-
----
-
-## 6. Wat jij níet hoeft te doen
+## 4. Wat jij níet hoeft te doen
 
 - Geen save wissen.  
 - Geen d20 nodig.  

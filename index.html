@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=253">
+<link rel="stylesheet" href="styles/main.css?v=254">
 
 
 
@@ -582,9 +582,9 @@
 })();
 </script>
 
-<script src="tunnel-check.js?v=253"></script>
-<script src="game.js?v=253"></script>
-<script src="install.js?v=253"></script>
+<script src="tunnel-check.js?v=254"></script>
+<script src="game.js?v=254"></script>
+<script src="install.js?v=254"></script>
 <script>
 (function () {
   function freeUi() {
@@ -599,16 +599,8 @@
     if (!c) return;
     if (typeof state !== 'undefined' && state === 'play' && typeof game !== 'undefined' && game) {
       c.style.visibility = 'visible';
-      c.style.opacity = '1';
       c.style.pointerEvents = 'auto';
       document.body.classList.add('is-playing');
-      document.querySelectorAll('.screen.active').forEach(function (s) { s.classList.remove('active'); });
-      return;
-    }
-    if (document.body.classList.contains('is-playing')) {
-      c.style.visibility = 'visible';
-      c.style.opacity = '1';
-      c.style.pointerEvents = 'auto';
       document.querySelectorAll('.screen.active').forEach(function (s) { s.classList.remove('active'); });
       return;
     }
