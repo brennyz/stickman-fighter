@@ -460,7 +460,7 @@ class Fighter {
     if (!this.alive) return 0;
     if ((this.isPlayer || this.playerSlot) && game && game.ketsbamSuperT > 0) return 0;
     if (this.invulnT > 0) {
-      game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13, 'fx');
+      if (game) game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13, 'fx');
       return 0;
     }
     if (this.blocking && !opts.unblockable) {
@@ -469,7 +469,7 @@ class Fighter {
       AudioSys.sfx('block');
       const atk = opts.attacker && opts.attacker.attack;
       const parry = atk && atk.t >= atk.windup && atk.t <= atk.windup + 0.16;
-      game.floater(this.x, this.y - 115, parry ? 'PARRY!' : 'BLOK!', parry ? '#ffd75e' : '#9fd8ff', 14, 'fx');
+      if (game) game.floater(this.x, this.y - 115, parry ? 'PARRY!' : 'BLOK!', parry ? '#ffd75e' : '#9fd8ff', 14, 'fx');
       if (game) {
         applyHitStop(game, { kind: 'punch' }, { chip: true });
         if (parry) game.freezeT = Math.max(game.freezeT, 0.032);

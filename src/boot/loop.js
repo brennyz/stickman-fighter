@@ -280,7 +280,7 @@ function loop(now) {
     }
     if (!Perf.canvasDrawActive()) return;
     // NOOIT menu-blauw (#151b33) tekenen tijdens play/pause — dat IS het "blauwe scherm"
-    if (state === 'play' || state === 'pause') {
+    if (state === 'play') {
       if (game && typeof game.draw === 'function' && !Perf.skipHeavyDraw()) {
         try {
           game.draw(ctx);

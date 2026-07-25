@@ -58,9 +58,9 @@ const Perf = {
       return false;
     }
   },
-  /** Canvas mag getekend worden (gevecht of menu-backdrop). */
+  /** Canvas mag getekend worden (gevecht of menu-backdrop). Pauze = canvas hidden → geen draw. */
   canvasDrawActive() {
-    if (typeof state !== 'undefined' && (state === 'play' || state === 'pause')) return true;
+    if (typeof state !== 'undefined' && state === 'play') return true;
     return this.menuLandingVisible();
   },
   /** Statische submenu's — verlaag rAF-work (~2 Hz i.p.v. 60 Hz). */

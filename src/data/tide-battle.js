@@ -87,7 +87,7 @@ function clearTideBattleState(game, opts) {
 function syncTideBattleState(game) {
   if (!game || game.mode !== 'adventure' || !game.tideBattleActive) return;
   const mon = game.tideBattleMon;
-  if (!mon || !game.monsters.includes(mon)) {
+  if (!mon || !Array.isArray(game.monsters) || !game.monsters.includes(mon)) {
     clearTideBattleState(game, { restoreMusic: true });
     reportTideBattleRecover('sync');
     return;

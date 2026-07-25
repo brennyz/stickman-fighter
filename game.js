@@ -60,9 +60,9 @@ const Perf = {
       return false;
     }
   },
-  /** Canvas mag getekend worden (gevecht of menu-backdrop). */
+  /** Canvas mag getekend worden (gevecht of menu-backdrop). Pauze = canvas hidden → geen draw. */
   canvasDrawActive() {
-    if (typeof state !== 'undefined' && (state === 'play' || state === 'pause')) return true;
+    if (typeof state !== 'undefined' && state === 'play') return true;
     return this.menuLandingVisible();
   },
   /** Statische submenu's — verlaag rAF-work (~2 Hz i.p.v. 60 Hz). */
@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.44';
+const APP_VERSION = '1.18.45';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 254;
+const SW_CACHE_REV = 255;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -2272,8 +2272,9 @@ function claimDailyTask(taskId, opts) {
   const task = save.daily.tasks.find(x => x.id === taskId);
   const def = dailyDef(taskId);
   if (!task || !def || !task.done || task.claimed) return 0;
+  const snap = { xp: save.xp, lvl: save.lvl, claimed: task.claimed, intro: save.missionsIntroSeen };
   task.claimed = true;
-  grantMetaXP(def.xp);
+  grantMetaXP(def.xp, { deferPersist: true });
   if (!save.missionsIntroSeen) {
     save.missionsIntroSeen = true;
   }
@@ -2287,7 +2288,14 @@ function claimDailyTask(taskId, opts) {
         : t('toast.claimPathN', { n: leftClaims }));
     UI.toast(t('toast.claimXp', { xp: def.xp, text: dailyText(taskId) }) + ' · ' + path, 2800);
   }
-  if (!persistOrToast('missie-claim')) return 0;
+  if (!persistOrToast('missie-claim')) {
+    task.claimed = snap.claimed;
+    save.xp = snap.xp;
+    save.lvl = snap.lvl;
+    save.missionsIntroSeen = snap.intro;
+    return 0;
+  }
+  UI.renderMenu();
   if (!opts.skipRefresh) {
     checkDailyAllBonus();
     UI.renderMissions();
@@ -2338,11 +2346,24 @@ function claimDailyDayBonus() {
       : t('toast.dayBonusNeedN', { n: left }), 3000);
     return;
   }
+  const snap = {
+    xp: save.xp,
+    lvl: save.lvl,
+    dayBonusClaimed: save.daily.dayBonusClaimed,
+    dailyBonusCount: save.stats.dailyBonusCount || 0,
+  };
   save.daily.dayBonusClaimed = true;
-  save.stats.dailyBonusCount = (save.stats.dailyBonusCount || 0) + 1;
-  grantMetaXP(80);
+  save.stats.dailyBonusCount = snap.dailyBonusCount + 1;
+  grantMetaXP(80, { deferPersist: true });
   AudioSys.sfx('win');
-  if (!persistOrToast('dagbonus')) return;
+  if (!persistOrToast('dagbonus')) {
+    save.daily.dayBonusClaimed = snap.dayBonusClaimed;
+    save.stats.dailyBonusCount = snap.dailyBonusCount;
+    save.xp = snap.xp;
+    save.lvl = snap.lvl;
+    return;
+  }
+  UI.renderMenu();
   checkAchievements();
   UI.renderMissions();
   UI.renderMenu();
@@ -2353,15 +2374,18 @@ function claimDailyDayBonus() {
   UI.toast(t('toast.dayBonusDone') + ' · ' + streakBit, 3600);
 }
 
-function grantMetaXP(n) {
+function grantMetaXP(n, opts) {
+  opts = opts || {};
   save.xp += n;
   while (save.xp >= xpNeed(save.lvl)) {
     save.xp -= xpNeed(save.lvl);
     save.lvl++;
     AudioSys.sfx('levelup');
   }
-  persistOrToast('XP');
-  UI.renderMenu();
+  if (!opts.deferPersist) {
+    persistOrToast('XP');
+    UI.renderMenu();
+  }
 }
 
 function checkDailyAllBonus() {
@@ -8164,7 +8188,7 @@ function clearTideBattleState(game, opts) {
 function syncTideBattleState(game) {
   if (!game || game.mode !== 'adventure' || !game.tideBattleActive) return;
   const mon = game.tideBattleMon;
-  if (!mon || !game.monsters.includes(mon)) {
+  if (!mon || !Array.isArray(game.monsters) || !game.monsters.includes(mon)) {
     clearTideBattleState(game, { restoreMusic: true });
     reportTideBattleRecover('sync');
     return;
@@ -14495,7 +14519,7 @@ class Fighter {
     if (!this.alive) return 0;
     if ((this.isPlayer || this.playerSlot) && game && game.ketsbamSuperT > 0) return 0;
     if (this.invulnT > 0) {
-      game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13, 'fx');
+      if (game) game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13, 'fx');
       return 0;
     }
     if (this.blocking && !opts.unblockable) {
@@ -14504,7 +14528,7 @@ class Fighter {
       AudioSys.sfx('block');
       const atk = opts.attacker && opts.attacker.attack;
       const parry = atk && atk.t >= atk.windup && atk.t <= atk.windup + 0.16;
-      game.floater(this.x, this.y - 115, parry ? 'PARRY!' : 'BLOK!', parry ? '#ffd75e' : '#9fd8ff', 14, 'fx');
+      if (game) game.floater(this.x, this.y - 115, parry ? 'PARRY!' : 'BLOK!', parry ? '#ffd75e' : '#9fd8ff', 14, 'fx');
       if (game) {
         applyHitStop(game, { kind: 'punch' }, { chip: true });
         if (parry) game.freezeT = Math.max(game.freezeT, 0.032);
@@ -27646,7 +27670,7 @@ function loop(now) {
     }
     if (!Perf.canvasDrawActive()) return;
     // NOOIT menu-blauw (#151b33) tekenen tijdens play/pause — dat IS het "blauwe scherm"
-    if (state === 'play' || state === 'pause') {
+    if (state === 'play') {
       if (game && typeof game.draw === 'function' && !Perf.skipHeavyDraw()) {
         try {
           game.draw(ctx);

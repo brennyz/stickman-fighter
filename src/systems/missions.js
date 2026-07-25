@@ -160,8 +160,9 @@ function claimDailyTask(taskId, opts) {
   const task = save.daily.tasks.find(x => x.id === taskId);
   const def = dailyDef(taskId);
   if (!task || !def || !task.done || task.claimed) return 0;
+  const snap = { xp: save.xp, lvl: save.lvl, claimed: task.claimed, intro: save.missionsIntroSeen };
   task.claimed = true;
-  grantMetaXP(def.xp);
+  grantMetaXP(def.xp, { deferPersist: true });
   if (!save.missionsIntroSeen) {
     save.missionsIntroSeen = true;
   }
@@ -175,7 +176,14 @@ function claimDailyTask(taskId, opts) {
         : t('toast.claimPathN', { n: leftClaims }));
     UI.toast(t('toast.claimXp', { xp: def.xp, text: dailyText(taskId) }) + ' · ' + path, 2800);
   }
-  if (!persistOrToast('missie-claim')) return 0;
+  if (!persistOrToast('missie-claim')) {
+    task.claimed = snap.claimed;
+    save.xp = snap.xp;
+    save.lvl = snap.lvl;
+    save.missionsIntroSeen = snap.intro;
+    return 0;
+  }
+  UI.renderMenu();
   if (!opts.skipRefresh) {
     checkDailyAllBonus();
     UI.renderMissions();
@@ -226,11 +234,24 @@ function claimDailyDayBonus() {
       : t('toast.dayBonusNeedN', { n: left }), 3000);
     return;
   }
+  const snap = {
+    xp: save.xp,
+    lvl: save.lvl,
+    dayBonusClaimed: save.daily.dayBonusClaimed,
+    dailyBonusCount: save.stats.dailyBonusCount || 0,
+  };
   save.daily.dayBonusClaimed = true;
-  save.stats.dailyBonusCount = (save.stats.dailyBonusCount || 0) + 1;
-  grantMetaXP(80);
+  save.stats.dailyBonusCount = snap.dailyBonusCount + 1;
+  grantMetaXP(80, { deferPersist: true });
   AudioSys.sfx('win');
-  if (!persistOrToast('dagbonus')) return;
+  if (!persistOrToast('dagbonus')) {
+    save.daily.dayBonusClaimed = snap.dayBonusClaimed;
+    save.stats.dailyBonusCount = snap.dailyBonusCount;
+    save.xp = snap.xp;
+    save.lvl = snap.lvl;
+    return;
+  }
+  UI.renderMenu();
   checkAchievements();
   UI.renderMissions();
   UI.renderMenu();
@@ -241,15 +262,18 @@ function claimDailyDayBonus() {
   UI.toast(t('toast.dayBonusDone') + ' · ' + streakBit, 3600);
 }
 
-function grantMetaXP(n) {
+function grantMetaXP(n, opts) {
+  opts = opts || {};
   save.xp += n;
   while (save.xp >= xpNeed(save.lvl)) {
     save.xp -= xpNeed(save.lvl);
     save.lvl++;
     AudioSys.sfx('levelup');
   }
-  persistOrToast('XP');
-  UI.renderMenu();
+  if (!opts.deferPersist) {
+    persistOrToast('XP');
+    UI.renderMenu();
+  }
 }
 
 function checkDailyAllBonus() {

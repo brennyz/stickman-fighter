@@ -2,25 +2,16 @@
   "version": 3,
   "cyclesCompleted": 4,
   "rollFirst": [],
-  "remaining": [
-    5
-  ],
+  "remaining": [],
   "lastRoll": {
-    "face": 4,
-    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
-    "rolledAt": "2026-07-25T15:03:15Z",
-    "remainingCount": 1,
+    "face": 5,
+    "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
+    "rolledAt": "2026-07-25T17:05:08Z",
+    "remainingCount": 0,
     "cycle": 4
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 20,
-      "note": "dead code/no-ops/shared joy onMove \u2014 zero behavior",
-      "version": "1.9.7",
-      "doneAt": "2026-07-23T15:04:20Z",
-      "cycle": 0
-    },
     {
       "face": 14,
       "note": "Rasengan rings+trail, combo ring, banner glow",
@@ -573,6 +564,13 @@
       "version": "1.18.36",
       "doneAt": "2026-07-25T15:04:13Z",
       "cycle": 4
+    },
+    {
+      "face": 5,
+      "note": "claim rollback + pause draw skip + tide/fighter guards",
+      "version": "1.18.45",
+      "doneAt": "2026-07-25T17:05:50Z",
+      "cycle": 4
     }
   ],
   "userFeatureLog": [
@@ -961,13 +959,6 @@
     }
   ],
   "history": [
-    {
-      "face": 9,
-      "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
-      "rolledAt": "2026-07-23T13:21:57Z",
-      "remainingCount": 19,
-      "cycle": 0
-    },
     {
       "face": 11,
       "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
@@ -1801,6 +1792,13 @@
       "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
       "rolledAt": "2026-07-25T15:03:15Z",
       "remainingCount": 1,
+      "cycle": 4
+    },
+    {
+      "face": 5,
+      "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
+      "rolledAt": "2026-07-25T17:05:08Z",
+      "remainingCount": 0,
       "cycle": 4
     }
   ],
