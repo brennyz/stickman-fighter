@@ -523,10 +523,6 @@ function applyLangStaticScreens() {
   if (hostingTitle) hostingTitle.textContent = t('settings.hosting');
   const savePortTitle = document.querySelectorAll('#settingsScreen .settings-card div[style*="ffd75e"]')[1];
   if (savePortTitle) savePortTitle.textContent = t('settings.savePort');
-  const savePortDesc = document.getElementById('savePortDesc');
-  if (savePortDesc) savePortDesc.textContent = t('settings.savePortDesc');
-  const savePortText = document.getElementById('savePortText');
-  if (savePortText) savePortText.placeholder = t('settings.savePortPlaceholder');
 
   setText('missionsHead', 'missions.title');
   setText('missionsSub', 'missions.sub');

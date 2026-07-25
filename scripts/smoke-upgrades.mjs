@@ -72,7 +72,7 @@ function assert(cond, msg) {
 }
 
 // Baseline save — kunai unlocked at Lv1+
-const baseline = ctx.sanitizeSave(Object.assign({}, ctx.DEFAULT_SAVE, {
+ctx.save = ctx.sanitizeSave(Object.assign({}, ctx.DEFAULT_SAVE, {
   lvl: 5,
   weapon: 'kunai',
   skillUpgrades: { rasengan: { level: 99, shards: 0 }, dash: { level: 2, shards: 1 } },
@@ -84,18 +84,18 @@ const baseline = ctx.sanitizeSave(Object.assign({}, ctx.DEFAULT_SAVE, {
   },
 }));
 
-assert((baseline.skillUpgrades?.rasengan?.level || 0) <= ctx.skillMaxLevel('rasengan'), 'skill level clamped to max');
-assert((baseline.skillUpgrades?.dash?.level || 0) <= 2, 'skill level clamped by shard budget');
-assert(!baseline.itemUpgrades.weapon?.vuist, 'vuist upgrades stripped');
-assert(!baseline.itemUpgrades.weapon?.fake, 'invalid weapon id stripped');
-assert(!baseline.itemUpgrades.hacker, 'invalid category stripped');
-assert((baseline.itemUpgrades.weapon?.kunai?.level || 0) <= ctx.itemUpgradeMax('weapon', 'kunai'), 'weapon level clamped');
-assert(!baseline.itemUpgrades.pet?.pet_slymo, 'untamed pet upgrades stripped');
+assert(ctx.skillLevel('rasengan') <= ctx.skillMaxLevel('rasengan'), 'skill level clamped to max');
+assert(ctx.skillLevel('dash') <= 2, 'skill level clamped by shard budget');
+assert(!ctx.save.itemUpgrades.weapon?.vuist, 'vuist upgrades stripped');
+assert(!ctx.save.itemUpgrades.weapon?.fake, 'invalid weapon id stripped');
+assert(!ctx.save.itemUpgrades.hacker, 'invalid category stripped');
+assert(ctx.save.itemUpgrades.style?.void, 'style upgrades persist when island-gated');
+assert(ctx.itemUpgradeLevel('weapon', 'kunai') <= ctx.itemUpgradeMax('weapon', 'kunai'), 'weapon level clamped');
+assert(ctx.save.itemUpgrades.pet?.pet_slymo, 'pet upgrades persist when untamed');
 
-const withPet = ctx.sanitizeSave(Object.assign({}, baseline, {
-  pets: { pet_slymo: { at: Date.now() } },
-}));
-assert(!withPet.itemUpgrades.pet?.pet_slymo || withPet.itemUpgrades.pet.pet_slymo.level <= ctx.itemUpgradeMax('pet', 'pet_slymo'), 'pet level clamped when tamed');
+ctx.save.pets = { pet_slymo: { at: Date.now() } };
+ctx.normalizeItemUpgrades();
+assert(ctx.itemUpgradeLevel('pet', 'pet_slymo') <= ctx.itemUpgradeMax('pet', 'pet_slymo'), 'pet level clamped when tamed');
 
 assert(ctx.addItemShards('weapon', 'vuist', 1) === 0, 'ineligible weapon shard add blocked');
 assert(ctx.addItemShards('weapon', 'fake_id', 1) === 0, 'invalid weapon shard add blocked');

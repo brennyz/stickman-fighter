@@ -7,6 +7,8 @@
   "src/data/rarities.js",
   "src/data/weapons.js",
   "src/data/styles.js",
+  "src/data/upgrades.js",
+  "src/data/summons.js",
   "src/data/skills.js",
   "src/data/supers.js",
   "src/systems/versus.js",

@@ -1477,6 +1477,9 @@ const UI = {
       }
     }
     if (typeof renderLangSwitch === 'function') renderLangSwitch();
+    } catch (err) {
+      sfReportError('renderMenu', err, 'Menu kon niet ververst worden');
+    }
   },
 
   renderMissions() {
@@ -2252,7 +2255,7 @@ const UI = {
           `<div class="cinfo" style="opacity:.78;font-size:11px;margin-top:3px">${statusLine}</div>` +
           `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:4px"><b>${t('ui.skillNow')}:</b> ${now}</div>` +
           (next ? `<div class="cinfo" style="opacity:.75;font-size:11px;margin-top:3px"><b>${t('ui.skillNext')}:</b> ${next}</div>` : '') +
-          (isJutsu ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:4px">${active ? t('ui.jutsuEquipped') : t('ui.jutsuTapEquip')}</div>` : '') +
+          (def.group === 'jutsu' ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:4px">${equipped ? t('ui.jutsuEquipped') : t('ui.jutsuTapEquip')}</div>` : '') +
           `</div>`;
         if (def.group === 'jutsu' && unlocked && !equipped) {
           const eqBtn = document.createElement('button');

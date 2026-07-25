@@ -3603,68 +3603,12 @@ class Game {
         });
         this.drawNextWavePreview(c);
       }
-      const boss = bossAlive;
-      if (boss) {
-        const bwid = Math.min(420, W * 0.5);
-        c.fillStyle = 'rgba(0,0,0,.5)'; this.rr(c, W / 2 - bwid / 2 - 3, 57, bwid + 6, 16, 8); c.fill();
-        c.fillStyle = '#e04f5f'; this.rr(c, W / 2 - bwid / 2, 60, bwid * boss.hp / boss.maxhp, 10, 5); c.fill();
-        c.font = '700 12px sans-serif';
-        fillHudText(c, boss.sp.name.toUpperCase(), W / 2, 106, { fill: '#ffc8d0' });
-      }
       let advTele = null;
       for (const m of this.monsters) {
         advTele = adventureTelegraphHud(m);
         if (advTele) break;
       }
-      if (advTele) drawTelegraphBar(c, this, advTele, boss ? 124 : 112);
-      if ((this.killStreak || 0) >= 2) {
-        c.textAlign = 'right';
-        c.font = '800 12px sans-serif';
-        c.fillStyle = this.killStreak >= 8 ? '#ff7a4d' : '#ffd75e';
-        fillHudText(c, `STREAK ×${this.killStreak}`, W - Math.max(14, readSafeInsets().right + 8), 62, {
-          fill: this.killStreak >= 8 ? '#ff7a4d' : '#ffd75e',
-        });
-      }
-      if (save.comboHud !== false && this.combo > 1) {
-        const calm = motionReduced();
-        const pulse = calm ? 1 : (1 + Math.sin(this.t * 10) * 0.08);
-        const col = this.combo >= 8 ? '#ff7a4d' : '#ffd75e';
-        c.save();
-        c.translate(W / 2, 92);
-        c.scale(pulse, pulse);
-        if (!fxLite() && !calm) {
-          c.globalAlpha = 0.35 + Math.sin(this.t * 12) * 0.1;
-          c.strokeStyle = col;
-          c.lineWidth = 2;
-          c.beginPath();
-          c.arc(0, -4, 30 + Math.min(12, this.combo) + Math.sin(this.t * 14) * 3, 0, TAU);
-          c.stroke();
-          c.globalAlpha = 1;
-        }
-        c.font = '900 20px sans-serif';
-        c.fillStyle = col;
-        if (!calm) {
-          c.shadowColor = col;
-          c.shadowBlur = 12;
-        }
-        fillHudText(c, `COMBO ×${this.combo}`, 0, 0, { fill: col, strokeW: calm ? 4 : 3.5 });
-        c.restore();
-      }
-      if (this.dmgBuffT > 0) {
-        c.font = '800 13px sans-serif'; c.fillStyle = '#ff7a4d';
-        c.fillText(`RAGE ${Math.ceil(this.dmgBuffT)}s`, W / 2, 108);
-      }
-      if (this.playerShieldT > 0) {
-        c.font = '800 13px sans-serif'; c.fillStyle = '#9fd8ff';
-        c.fillText(`Schild ${Math.ceil(this.playerShieldT)}s`, W / 2, this.dmgBuffT > 0 ? 124 : 108);
-      }
-      if (this.masterSwordT > 0) {
-        c.font = '900 14px sans-serif'; c.fillStyle = '#7cf5ff';
-        if (!motionReduced()) { c.shadowColor = '#7cf5ff'; c.shadowBlur = 8; }
-        const yMs = 108 + (this.dmgBuffT > 0 ? 16 : 0) + (this.playerShieldT > 0 ? 16 : 0);
-        c.fillText(`MASTER SWORD ${Math.ceil(this.masterSwordT)}s`, W / 2, yMs);
-        c.shadowBlur = 0;
-      }
+      if (advTele) drawTelegraphBar(c, this, advTele, bossAlive ? hy + 8 : hy);
     } else if (this.mode === 'training') {
       const r = this.robot;
       const half = Math.min(300, W * 0.36);
