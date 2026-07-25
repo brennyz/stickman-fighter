@@ -22,21 +22,32 @@ function startGame(mode, opts) {
     }
     try { primePlayInput(true); } catch (_) {}
   }
+  // Lock + lids weg VÓÓR Game-construct — voorkomt freeUi/sync die canvas hidet terwijl audio al start
+  window.__sfPlayLock = true;
+  try {
+    document.body.classList.add('is-playing');
+    if (typeof killUiLidsForPlay === 'function') killUiLidsForPlay();
+    else {
+      try { clearScreensForPlay(); } catch (_) {}
+      try { UI.hideGambleRollFlash(); } catch (_) {}
+    }
+  } catch (_) {}
   try {
     game = new Game(mode, opts);
   } catch (err) {
+    window.__sfPlayLock = false;
     sfReportError('start/' + mode, err);
-    recoverToMenu();
+    recoverToMenu({ force: true });
     return;
   }
   if (!game || !game.player) {
+    window.__sfPlayLock = false;
     sfReportError('start/' + mode, new Error('game incomplete'));
-    recoverToMenu();
+    recoverToMenu({ force: true });
     return;
   }
   state = 'play';
   primePlayInput(mode);
-  // Direct resize — scheduleResize debounced 140ms liet canvas op oude menu-frame / te klein
   try {
     if (typeof forceGameResize === 'function') forceGameResize();
     else scheduleResize();
@@ -44,24 +55,11 @@ function startGame(mode, opts) {
   try { AudioSys.setPaused(false); } catch (_) {}
   try { recordLastPlay(mode, opts); } catch (_) {}
   try { applyModeOnboarding(mode, game); } catch (_) {}
-  try { clearScreensForPlay(); } catch (_) {}
-  try { UI.hideGambleRollFlash(); } catch (_) {}
   try { UI.show(null); } catch (_) {}
-  try { syncPlayLayer(); } catch (_) {}
-  // Extra force: body class + canvas zichtbaar (iPad race met gok-flash)
   try {
-    document.body.classList.add('is-playing');
-    const canvas = document.getElementById('game');
-    if (canvas) {
-      canvas.style.visibility = 'visible';
-      canvas.style.opacity = '1';
-      canvas.style.zIndex = '40';
-      canvas.style.pointerEvents = 'auto';
-      canvas.style.display = 'block';
-    }
     if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('startGame/' + mode);
-  } catch (_) {}
-  // Eerste speelframe nu — anders blijft menu-blauw (#151b33) op het canvas staan
+    else syncPlayLayer();
+  } catch (_) { try { syncPlayLayer(); } catch (__) {} }
   try {
     if (ctx && game && typeof game.draw === 'function') game.draw(ctx);
   } catch (_) {}
@@ -78,7 +76,15 @@ function startGame(mode, opts) {
     else if (mode === 'wall') AudioSys.play('wall');
     else AudioSys.play('battle');
   } catch (_) {}
+  // Na audio nogmaals — freeUi/pointer kan tussendoor styles strippen
+  try {
+    if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('startGame-postAudio/' + mode);
+  } catch (_) {}
   try { if (typeof blackScreenGuard === 'function') blackScreenGuard('startGame/' + mode); } catch (_) {}
+  window.__sfPlayLock = false;
+  try {
+    if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('startGame-unlock/' + mode);
+  } catch (_) {}
 }
 
 /** iPad: touchend + click zonder dubbel-vuur (preventDefault stopt ghost-click). */

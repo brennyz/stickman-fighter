@@ -12,9 +12,9 @@
   #game { position:fixed; left:0; top:0; width:100%; height:100%; height:100dvh; display:block; touch-action:none;
       z-index:0; pointer-events:none !important; }
   /* Gevecht: canvas BOVEN UI — voorkomt zwart scherm terwijl audio/AI doorlopen */
-  body.is-playing #game { pointer-events:auto !important; z-index:40 !important; visibility:visible !important;
+  body.is-playing #game { pointer-events:auto !important; z-index:60 !important; visibility:visible !important;
       opacity:1 !important; display:block !important; }
-  body.is-playing .screen { display:none !important; pointer-events:none !important; visibility:hidden !important; }
+  body.is-playing .screen { display:none !important; pointer-events:none !important; visibility:hidden !important; opacity:0 !important; }
   /* Dobbel-flash mag nooit over het gevecht blijven (blauw/zwart deksel) */
   body.is-playing .level-roll-flash,
   body.is-playing #levelRollFlash {

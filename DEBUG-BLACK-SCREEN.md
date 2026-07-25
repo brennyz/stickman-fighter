@@ -10,8 +10,10 @@ Live: https://brennyz.github.io/stickman-fighter/
 
 1. Open https://brennyz.github.io/stickman-fighter/speel.html  
 2. Instellingen → **Verse versie** / hard refresh.  
-3. Check menu-voettekst: moet **≥ v1.18.40 · SW v250** zijn (én CSS `main.css?v=250` — oude `?v=239` liet blauw deksel staan).  
+3. Check menu-voettekst: moet **≥ v1.18.41 · SW v251** zijn.  
 4. Probeer opnieuw.
+
+**Blauw + wél geluid** = gevecht loopt achter een UI-deksel (`#151b33`) of dobbel-flash. Fix: lids hard `display:none !important`, canvas z60, `freeUi` mag canvas nooit meer verbergen tijdens play.
 
 **Orphan pauseBtn (training/rabbit):** alleen ║║ zichtbaar, speelveld zwart → play-laag kapot. Fix forceert canvas terug; debug-strip toont `playBroken=Y`.
 
