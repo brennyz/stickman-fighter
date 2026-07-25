@@ -2055,6 +2055,7 @@ class Game {
     this.t += dt;
     if (this.hint > 0) this.hint -= dt;
     this.shakeT = Math.max(0, this.shakeT - dt);
+    if (this.bossPhase2Flash > 0) this.bossPhase2Flash -= dt;
 
     if (!this.player) return;
     this.player.update(dt, this);
@@ -2550,6 +2551,33 @@ class Game {
       }
     }
     c.globalAlpha = 1;
+
+    // d20 polish #12 — baas fase-2 scherm kleurflits
+    if (this.bossPhase2Flash > 0 && !motionReduced()) {
+      const p = clamp(this.bossPhase2Flash / 0.55, 0, 1);
+      c.save();
+      c.globalAlpha = p * 0.32;
+      c.fillStyle = this.bossPhase2Hue || '#ff3040';
+      c.fillRect(0, 0, W, H);
+      c.globalAlpha = p * 0.22;
+      const g = c.createRadialGradient(W * 0.5, H * 0.42, 20, W * 0.5, H * 0.42, Math.max(W, H) * 0.55);
+      g.addColorStop(0, '#ffd75e');
+      g.addColorStop(0.45, '#ff6b6b');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = g;
+      c.fillRect(0, 0, W, H);
+      // Pixel edge ticks
+      if (!fxLite() && p > 0.2) {
+        c.globalAlpha = p * 0.55;
+        c.fillStyle = '#ffb830';
+        const px = 4;
+        for (let i = 0; i < 10; i++) {
+          c.fillRect(i * (W / 10) + 6, 8, px, px);
+          c.fillRect(i * (W / 10) + 6, H - 12, px, px);
+        }
+      }
+      c.restore();
+    }
 
     // zwevende tekstjes — sorteer op diepte, outline voor leesbaarheid
     c.textAlign = 'center';

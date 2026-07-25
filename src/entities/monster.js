@@ -36,6 +36,7 @@ class Monster {
     this.dashT = 0; this.telegraphT = 0; this.hopT = rand(0, 0.8);
     this.face = -1;
     this.enraged = false;
+    this.phase2FlashT = 0;
     this.introT = 0;
     this.introTier = null;
     this.tideBoss = !!opts.tideBoss;
@@ -47,6 +48,7 @@ class Monster {
     if (this.introT > 0) this.introT -= dt;
     if (this.safetyT > 0) this.safetyT -= dt;
     if (this.flashT > 0) this.flashT -= dt;
+    if (this.phase2FlashT > 0) this.phase2FlashT -= dt;
     if (!this.alive) { this.deadT += dt; return; }
     const p = game.player;
     const dx = p.x - this.x, dir = Math.sign(dx) || 1, dist = Math.abs(dx);
@@ -202,12 +204,24 @@ class Monster {
     if (!this.alive) return;
     if (this.elite && !this.enraged && this.hp - dmg <= this.maxhp * 0.5) {
       this.enraged = true;
+      this.phase2FlashT = motionReduced() ? 0.35 : 0.85;
       this.speed = Math.round(this.speed * 1.28);
       this.dmg = Math.round(this.dmg * 1.22);
       game.banner(`${this.sp.name} — FASE 2!`, 1.6, '#ff6b6b', 36);
       AudioSys.sfx('roar');
       game.shake(9, 0.28);
       haptic(28);
+      // d20 polish #12 — baas fase-2 kleurflits
+      game.bossPhase2Flash = motionReduced() ? 0.22 : 0.55;
+      game.bossPhase2Hue = this.sp?.c1 || '#ff6b6b';
+      this.flashT = Math.max(this.flashT, motionReduced() ? 0.12 : 0.28);
+      const lite = fxLite() || motionReduced();
+      try {
+        spawnFxRing(game, this.x, this.y - this.size * 0.35, '#ff3040', lite ? 12 : 20);
+        spawnFxRing(game, this.x, this.y - this.size * 0.55, '#ffb830', lite ? 8 : 14);
+        game.burst(this.x, this.y - this.size * 0.3, '#ff6b6b', lite ? 10 : 22, { kind: 'spark', size: 2.8 });
+        game.burst(this.x, this.y - this.size * 0.45, '#ffd75e', lite ? 6 : 14, { kind: 'spark', size: 2.2 });
+      } catch (_) {}
     }
     if (this.safetyT > 0 && this.hp - dmg < 1) dmg = Math.max(0, this.hp - 1);
     this.hp -= dmg;
@@ -320,9 +334,53 @@ class Monster {
     drawMonsterArt(c, this.sp, this.size, this.t, this.flashT > 0, this.telegraphT > 0);
     if (this.enraged && this.alive) {
       c.save();
-      c.globalAlpha = 0.35 + Math.sin(this.t * 10) * 0.15;
-      c.strokeStyle = '#ff6b6b'; c.lineWidth = 3;
-      c.beginPath(); c.arc(0, 0, this.size * 1.35, 0, TAU); c.stroke();
+      const calm = motionReduced();
+      const flashP = this.phase2FlashT > 0
+        ? clamp(this.phase2FlashT / 0.85, 0, 1)
+        : 0;
+      const pulse = calm ? 0.4 : (0.38 + Math.sin(this.t * 11) * 0.18);
+      // Outer rage ring
+      c.globalAlpha = pulse + flashP * 0.35;
+      c.strokeStyle = '#ff6b6b';
+      c.lineWidth = 3 + flashP * 3;
+      c.beginPath();
+      c.arc(0, 0, this.size * (1.35 + flashP * 0.25), 0, TAU);
+      c.stroke();
+      // Inner hot ring
+      c.globalAlpha = 0.22 + pulse * 0.35 + flashP * 0.25;
+      c.strokeStyle = '#ffb830';
+      c.lineWidth = 2;
+      c.beginPath();
+      c.arc(0, 0, this.size * (1.12 + Math.sin(this.t * 14) * 0.04), 0, TAU);
+      c.stroke();
+      // Color flash wedges on phase-2 entry
+      if (flashP > 0.05 && !calm) {
+        const wedges = fxLite() ? 4 : 7;
+        for (let i = 0; i < wedges; i++) {
+          const a0 = this.t * 6 + i * (TAU / wedges);
+          c.globalAlpha = flashP * (0.28 + (i % 2) * 0.12);
+          c.fillStyle = i % 2 ? '#ff3040' : '#ffd75e';
+          c.beginPath();
+          c.moveTo(0, 0);
+          c.arc(0, 0, this.size * (1.7 + flashP * 0.5), a0, a0 + 0.28);
+          c.closePath();
+          c.fill();
+        }
+        // Pixel spark ticks around rim
+        if (!fxLite()) {
+          for (let i = 0; i < 8; i++) {
+            const a = this.t * 9 + i * (TAU / 8);
+            const rr = this.size * (1.5 + flashP * 0.35);
+            c.globalAlpha = flashP * 0.7;
+            c.fillStyle = i % 2 ? '#fff' : '#ffb830';
+            c.fillRect(
+              Math.round(Math.cos(a) * rr) - 1.5,
+              Math.round(Math.sin(a) * rr) - 1.5,
+              3, 3
+            );
+          }
+        }
+      }
       c.restore();
     }
     if (this.jutsuTelegraphT > 0 && this.alive) {
