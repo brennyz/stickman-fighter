@@ -13,16 +13,16 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.40",
-    "swCache": "stickfighter-app-v250",
-    "gameJsQuery": "game.js?v=250",
-    "cssQuery": "styles/main.css?v=250",
-    "featureBranch": "cursor/blue-css-cachebust-2125",
+    "appVersion": "1.18.41",
+    "swCache": "stickfighter-app-v251",
+    "gameJsQuery": "game.js?v=251",
+    "cssQuery": "styles/main.css?v=251",
+    "featureBranch": "cursor/adventure-blue-audio-2125",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "stale main.css?v=239 was overlooked blue lid after Verse versie · v1.18.40"
+    "note": "blue+audio = lid over canvas; nuclear killUiLids + freeUi fix · v1.18.41"
   },
   "userWishlist": [
     {
