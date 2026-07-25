@@ -241,7 +241,7 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.67';
+const APP_VERSION = '1.17.66';
 /** Keep in sync with sw.js CACHE suffix */
 const SW_CACHE_REV = 193;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
@@ -644,10 +644,10 @@ function resolveProjHit(p) {
 function projStrikeFighter(game, p, tgt, col) {
   if (!tgt || !tgt.alive) return;
   const hit = resolveProjHit(p);
-  const sk = skillById(p.kind);
-  const kbBase = sk.kb || (sk.behavior === 'pull' || sk.behavior === 'meteor' ? 300 : 260);
-  const kb = Math.sign(p.vx || 1) * kbBase;
-  const dealt = tgt.takeDamage(hit.dmg, kb, game);
+  const kb = Math.sign(p.vx || 1) * (p.kind === 'rinnegan' ? 300 : 260);
+  const dealt = tgt.takeDamage(hit.dmg, kb, game, {
+    projWeaponId: p.kind === 'shuriken' ? (p.throwId || 'shuriken') : null,
+  });
   if (dealt > 0) {
     applyHitStop(game, { kind: sk ? 'special' : 'punch', dmg: hit.dmg }, { crit: hit.crit, heavy: hit.dmg >= 18 });
   }
@@ -5363,7 +5363,7 @@ const WEAPON_SWING_SFX = {
   zwaard: 'wZwaard',
   sai: 'wKunai',
   knuppel: 'wKnuppel',
-  waaier: 'wBoemerang',
+  waaier: 'wFan',
   speer: 'wSpeer',
   tonfa: 'wNunchaku',
   nunchaku: 'wNunchaku',
@@ -5375,7 +5375,7 @@ const WEAPON_SWING_SFX = {
   ketting: 'wKetting',
   bostaf: 'wKnuppel',
   laser: 'wLaser',
-  fuuma: 'shuriken',
+  fuuma: 'wFuuma',
   kristal: 'wLaser',
   donder: 'wDonder',
   vlamzweep: 'wLaser',
@@ -5385,21 +5385,60 @@ const WEAPON_SWING_SFX = {
   master_sword: 'wMaster',
 };
 
+const FAMILY_SWING_SFX = {
+  slash: 'wZwaard',
+  spear: 'wSpeer',
+  blunt: 'wKnuppel',
+  chain: 'wNunchaku',
+  hook: 'wKunai',
+  fan: 'wFan',
+  dual: 'wKunai',
+  energy: 'wLaser',
+};
+
 function weaponSwingSfx(weaponOrId, attackKind) {
   if (attackKind === 'kick') return 'kick';
   if (attackKind === 'punch') return 'punch';
   const id = typeof weaponOrId === 'string' ? weaponOrId : (weaponOrId && weaponOrId.id);
-  return WEAPON_SWING_SFX[id] || 'swing';
+  if (WEAPON_SWING_SFX[id]) return WEAPON_SWING_SFX[id];
+  const fam = weaponMoveFamily(id);
+  if (fam && FAMILY_SWING_SFX[fam]) return FAMILY_SWING_SFX[fam];
+  return 'swing';
+}
+
+function weaponThrowSfx(id) {
+  return id === 'fuuma' ? 'wFuuma' : 'shuriken';
+}
+
+function weaponFinisherSfx(weaponOrId) {
+  const id = typeof weaponOrId === 'string' ? weaponOrId : (weaponOrId && weaponOrId.id);
+  if (id === 'master_sword') return 'wMaster';
+  const fam = weaponMoveFamily(id);
+  if (fam === 'blunt') return 'hitHeavy';
+  if (fam === 'energy') return 'hitEnergy';
+  if (fam === 'chain' || fam === 'fan') return 'wBoemerang';
+  if (fam === 'spear') return 'wSpeer';
+  if (fam === 'slash' || fam === 'hook' || fam === 'dual') return 'wZwaard';
+  return 'comboEpic';
 }
 
 function weaponHitSfx(weaponOrId, dmg) {
   const id = typeof weaponOrId === 'string' ? weaponOrId : (weaponOrId && weaponOrId.id);
-  if (id === 'laser' || id === 'void' || id === 'donder' || id === 'kristal' || id === 'vlamzweep' || id === 'sterkling') return 'hitEnergy';
+  if (id === 'laser' || id === 'void' || id === 'donder' || id === 'kristal' || id === 'vlamzweep' || id === 'sterkling' || id === 'master_sword') return 'hitEnergy';
   if (id === 'hamer' || id === 'knuppel' || id === 'guvve' || id === 'bostaf') return 'hitHeavy';
-  if (id === 'zwaard' || id === 'ketting' || id === 'kunai' || id === 'tanto' || id === 'sai' || id === 'kama' || id === 'zeis' || id === 'drietand') return 'hitMetal';
-  if (id === 'master_sword') return 'hitEnergy';
+  if (id === 'zwaard' || id === 'ketting' || id === 'kunai' || id === 'tanto' || id === 'sai' || id === 'kama' || id === 'zeis' || id === 'drietand' || id === 'nunchaku' || id === 'tonfa' || id === 'speer') return 'hitMetal';
+  if (id === 'shuriken' || id === 'fuuma') return 'hitMetal';
+  if (id === 'waaier' || id === 'boemerang') return 'hit2';
   if (dmg > 22) return 'hit2';
   return 'hit';
+}
+
+function playWeaponPickFeedback(id) {
+  AudioSys.sfx('select');
+  if (save.haptics !== false) haptic(6);
+  setTimeout(() => {
+    try { AudioSys.sfx(weaponSwingSfx(id)); } catch (_) {}
+  }, 48);
 }
 
 function isThrowWeapon(id) {
@@ -10203,6 +10242,12 @@ const SFX_SAMPLE_MAP = {
   wGuvve: { pack: 'impact', vol: 0.75, files: ['impactSoft_heavy_001.ogg', 'impactPlank_medium_001.ogg'] },
   wKatana: { pack: 'rpg', vol: 0.62, files: ['chop.ogg', 'drawKnife3.ogg'] },
   wMaster: { pack: 'digital', vol: 0.78, files: ['phaseJump4.ogg', 'laser8.ogg', 'highUp.ogg'] },
+  wNunchaku: { pack: 'rpg', vol: 0.52, files: ['cloth2.ogg', 'cloth3.ogg', 'cloth4.ogg'] },
+  wHamer: { pack: 'impact', vol: 0.88, files: ['impactWood_heavy_001.ogg', 'impactWood_heavy_002.ogg', 'impactPunch_heavy_002.ogg'] },
+  wKetting: { pack: 'impact', vol: 0.72, files: ['impactMetal_light_001.ogg', 'impactMetal_light_002.ogg', 'impactMetal_medium_001.ogg'] },
+  wDonder: { pack: 'impact', vol: 0.82, files: ['impactMetal_heavy_001.ogg', 'impactMetal_heavy_003.ogg', 'impactPunch_heavy_004.ogg'] },
+  wVoid: { pack: 'digital', vol: 0.68, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'phaseJump4.ogg'] },
+  wFan: { pack: 'rpg', vol: 0.48, files: ['clothBelt.ogg', 'clothBelt2.ogg', 'cloth2.ogg'] },
   shuriken: { pack: 'digital', vol: 0.55, files: ['laser1.ogg', 'laser2.ogg', 'lowDown.ogg'] },
   shoot: { pack: 'digital', vol: 0.62, files: ['laser4.ogg', 'laser5.ogg'] },
   laser: { pack: 'digital', vol: 0.68, files: ['laser6.ogg', 'laser7.ogg', 'laser8.ogg', 'laser9.ogg'] },
@@ -10229,7 +10274,6 @@ const SFX_SAMPLE_MAP = {
   bossArrive: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_003.ogg'] },
   bossWait: { pack: 'impact', vol: 0.6, files: ['impactSoft_medium_003.ogg', 'creak1.ogg'] },
   masterSword: { pack: 'digital', vol: 0.82, files: ['phaseJump5.ogg', 'laser8.ogg', 'highUp.ogg'] },
-  wMaster: { pack: 'digital', vol: 0.7, files: ['laser7.ogg', 'pepSound5.ogg'] },
   waveClear: { pack: 'ui', vol: 0.68, files: ['confirmation_003.ogg', 'confirmation_001.ogg'] },
   hitstop: { pack: 'impact', vol: 0.45, files: ['impactGeneric_light_001.ogg', 'impactMetal_light_004.ogg'] },
   ketsbam: { pack: 'impact', vol: 1, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactGlass_heavy_004.ogg'] },
@@ -10768,6 +10812,18 @@ const AudioSys = {
         T(980, 420, 0.11, 'sine', 0.11, now + 0.05);
         N(0.045, 0.11, 3800, true, now);
         if (!lite) E(620, 920, 0.07, 'sine', 0.08, now + 0.08, 0.05, 0.38);
+        break;
+      case 'wFan':
+        N(0.025, 0.1, 4800, true, now);
+        T(760, 1120, 0.07, 'sine', 0.1, now);
+        T(520, 880, 0.05, 'triangle', 0.08, now + 0.04);
+        if (!lite) T(980, 620, 0.04, 'sine', 0.06, now + 0.07);
+        break;
+      case 'wFuuma':
+        N(0.04, 0.14, 4600, true, now);
+        T(880, 520, 0.08, 'triangle', 0.12, now);
+        T(620, 380, 0.06, 'sine', 0.09, now + 0.035);
+        if (!lite) N(0.03, 0.08, 6200, true, now + 0.05);
         break;
       case 'wHamer':
         I(80, 550, now);
@@ -13802,7 +13858,11 @@ class Fighter {
       if (game) applyHitStop(game, { kind: 'punch', dmg }, { playerHurt: true, heavy: dmg >= 18 });
     }
     if (this.isPlayer) this.energy = clamp(this.energy + 4, 0, 100);
-    AudioSys.sfxAt(this.isPlayer ? 'hurt' : 'hit', this.x);
+    if (opts.projWeaponId) {
+      try { AudioSys.sfxAt(weaponHitSfx(opts.projWeaponId, dmg), this.x); } catch (_) {}
+    } else {
+      AudioSys.sfxAt(this.isPlayer ? 'hurt' : 'hit', this.x);
+    }
     if (this.isPlayer && game) {
       game.floater(this.x, this.y - 118, '-' + dmg, '#ff8080', 15);
     }
@@ -14402,7 +14462,7 @@ class Monster {
       const burstN = fxLite() ? 6 : (this.superBoss ? 14 : (this.elite ? 12 : 10));
       game.burst(this.x, this.y, this.sp.c1, burstN);
       game.onMonsterKilled(this);
-    } else {
+    } else if (!opts.skipHitSfx) {
       AudioSys.sfxAt('hit', this.x);
     }
   }
@@ -17454,8 +17514,8 @@ class Game {
       return;
     }
     noteShurikenThrow(f, this);
-    AudioSys.sfx('shuriken');
     const w = f.weapon;
+    AudioSys.sfx(weaponThrowSfx(w.id));
     const big = w.id === 'fuuma';
     const critMeta = projCritMeta(f);
     const aim = projAimVelocity(f, big ? 500 : 560);
@@ -17623,7 +17683,7 @@ class Game {
           }
           if (finisher) {
             trackWeaponFinisher(f.weapon.id, this);
-            try { AudioSys.sfx('comboEpic'); } catch (_) {}
+            try { AudioSys.sfx(weaponFinisherSfx(f.weapon)); } catch (_) {}
             if (!fxLite()) {
               this.burst(hx, hy, f.style?.accent || '#ffb830', 8, { kind: 'spark', size: 2.5 });
               spawnFxRing(this, hx, hy, '#ffb830', 12);
@@ -17693,7 +17753,7 @@ class Game {
           }
           if (finisher) {
             trackWeaponFinisher(f.weapon.id, this);
-            try { AudioSys.sfx('comboEpic'); } catch (_) {}
+            try { AudioSys.sfx(weaponFinisherSfx(f.weapon)); } catch (_) {}
             bumpWeaponComboWindow(f, 0.14);
           }
         }
@@ -17827,7 +17887,8 @@ class Game {
           if (p.hitSet && p.hitSet.has(m) && !allowRehit) continue;
           if ((p.x - m.x) ** 2 + (p.y - m.y) ** 2 < (p.r + m.size) ** 2) {
             const hit = resolveProjHit(p);
-            m.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this);
+            try { AudioSys.sfxAt(weaponHitSfx(p.throwId || 'shuriken', hit.dmg), m.x); } catch (_) {}
+            m.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this, { skipHitSfx: true, crit: hit.crit });
             if (hit.crit) applyCritFx(this, m.x, m.y);
             if (skProj) spawnJutsuImpactFx(this, p.x, p.y, p.kind, 'full');
             if (p.hitSet) p.hitSet.add(m); else p.life = 0;
@@ -22082,11 +22143,11 @@ const UI = {
           : (save.weapon === w.id ? '&#10004; gekozen' : 'kies'));
       el.appendChild(right);
       if (!locked) bindPress(el, () => {
+        if (!uiTapAllowed()) return;
         safeUiAction(() => {
           save.weapon = w.id;
           if (!persistOrToast('wapen')) return;
-          AudioSys.sfx('select');
-          try { AudioSys.sfx(weaponSwingSfx(w.id)); } catch (_) {}
+          playWeaponPickFeedback(w.id);
           if (islandLocked) UI.toast(t('toast.weaponIslandCap', { cap: adventureWeaponCap() }), 2800);
           this.renderWeapons();
         }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt');

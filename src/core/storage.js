@@ -3,9 +3,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.67';
+const APP_VERSION = '1.17.66';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 193;
+const SW_CACHE_REV = 192;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -406,10 +406,10 @@ function resolveProjHit(p) {
 function projStrikeFighter(game, p, tgt, col) {
   if (!tgt || !tgt.alive) return;
   const hit = resolveProjHit(p);
-  const sk = skillById(p.kind);
-  const kbBase = sk.kb || (sk.behavior === 'pull' || sk.behavior === 'meteor' ? 300 : 260);
-  const kb = Math.sign(p.vx || 1) * kbBase;
-  const dealt = tgt.takeDamage(hit.dmg, kb, game);
+  const kb = Math.sign(p.vx || 1) * (p.kind === 'rinnegan' ? 300 : 260);
+  const dealt = tgt.takeDamage(hit.dmg, kb, game, {
+    projWeaponId: p.kind === 'shuriken' ? (p.throwId || 'shuriken') : null,
+  });
   if (dealt > 0) {
     applyHitStop(game, { kind: sk ? 'special' : 'punch', dmg: hit.dmg }, { crit: hit.crit, heavy: hit.dmg >= 18 });
   }

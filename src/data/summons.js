@@ -66,7 +66,7 @@ const WEAPON_SWING_SFX = {
   zwaard: 'wZwaard',
   sai: 'wKunai',
   knuppel: 'wKnuppel',
-  waaier: 'wBoemerang',
+  waaier: 'wFan',
   speer: 'wSpeer',
   tonfa: 'wNunchaku',
   nunchaku: 'wNunchaku',
@@ -78,7 +78,7 @@ const WEAPON_SWING_SFX = {
   ketting: 'wKetting',
   bostaf: 'wKnuppel',
   laser: 'wLaser',
-  fuuma: 'shuriken',
+  fuuma: 'wFuuma',
   kristal: 'wLaser',
   donder: 'wDonder',
   vlamzweep: 'wLaser',
@@ -88,21 +88,60 @@ const WEAPON_SWING_SFX = {
   master_sword: 'wMaster',
 };
 
+const FAMILY_SWING_SFX = {
+  slash: 'wZwaard',
+  spear: 'wSpeer',
+  blunt: 'wKnuppel',
+  chain: 'wNunchaku',
+  hook: 'wKunai',
+  fan: 'wFan',
+  dual: 'wKunai',
+  energy: 'wLaser',
+};
+
 function weaponSwingSfx(weaponOrId, attackKind) {
   if (attackKind === 'kick') return 'kick';
   if (attackKind === 'punch') return 'punch';
   const id = typeof weaponOrId === 'string' ? weaponOrId : (weaponOrId && weaponOrId.id);
-  return WEAPON_SWING_SFX[id] || 'swing';
+  if (WEAPON_SWING_SFX[id]) return WEAPON_SWING_SFX[id];
+  const fam = weaponMoveFamily(id);
+  if (fam && FAMILY_SWING_SFX[fam]) return FAMILY_SWING_SFX[fam];
+  return 'swing';
+}
+
+function weaponThrowSfx(id) {
+  return id === 'fuuma' ? 'wFuuma' : 'shuriken';
+}
+
+function weaponFinisherSfx(weaponOrId) {
+  const id = typeof weaponOrId === 'string' ? weaponOrId : (weaponOrId && weaponOrId.id);
+  if (id === 'master_sword') return 'wMaster';
+  const fam = weaponMoveFamily(id);
+  if (fam === 'blunt') return 'hitHeavy';
+  if (fam === 'energy') return 'hitEnergy';
+  if (fam === 'chain' || fam === 'fan') return 'wBoemerang';
+  if (fam === 'spear') return 'wSpeer';
+  if (fam === 'slash' || fam === 'hook' || fam === 'dual') return 'wZwaard';
+  return 'comboEpic';
 }
 
 function weaponHitSfx(weaponOrId, dmg) {
   const id = typeof weaponOrId === 'string' ? weaponOrId : (weaponOrId && weaponOrId.id);
-  if (id === 'laser' || id === 'void' || id === 'donder' || id === 'kristal' || id === 'vlamzweep' || id === 'sterkling') return 'hitEnergy';
+  if (id === 'laser' || id === 'void' || id === 'donder' || id === 'kristal' || id === 'vlamzweep' || id === 'sterkling' || id === 'master_sword') return 'hitEnergy';
   if (id === 'hamer' || id === 'knuppel' || id === 'guvve' || id === 'bostaf') return 'hitHeavy';
-  if (id === 'zwaard' || id === 'ketting' || id === 'kunai' || id === 'tanto' || id === 'sai' || id === 'kama' || id === 'zeis' || id === 'drietand') return 'hitMetal';
-  if (id === 'master_sword') return 'hitEnergy';
+  if (id === 'zwaard' || id === 'ketting' || id === 'kunai' || id === 'tanto' || id === 'sai' || id === 'kama' || id === 'zeis' || id === 'drietand' || id === 'nunchaku' || id === 'tonfa' || id === 'speer') return 'hitMetal';
+  if (id === 'shuriken' || id === 'fuuma') return 'hitMetal';
+  if (id === 'waaier' || id === 'boemerang') return 'hit2';
   if (dmg > 22) return 'hit2';
   return 'hit';
+}
+
+function playWeaponPickFeedback(id) {
+  AudioSys.sfx('select');
+  if (save.haptics !== false) haptic(6);
+  setTimeout(() => {
+    try { AudioSys.sfx(weaponSwingSfx(id)); } catch (_) {}
+  }, 48);
 }
 
 function isThrowWeapon(id) {

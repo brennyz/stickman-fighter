@@ -1764,8 +1764,8 @@ class Game {
       return;
     }
     noteShurikenThrow(f, this);
-    AudioSys.sfx('shuriken');
     const w = f.weapon;
+    AudioSys.sfx(weaponThrowSfx(w.id));
     const big = w.id === 'fuuma';
     const critMeta = projCritMeta(f);
     const aim = projAimVelocity(f, big ? 500 : 560);
@@ -1933,7 +1933,7 @@ class Game {
           }
           if (finisher) {
             trackWeaponFinisher(f.weapon.id, this);
-            try { AudioSys.sfx('comboEpic'); } catch (_) {}
+            try { AudioSys.sfx(weaponFinisherSfx(f.weapon)); } catch (_) {}
             if (!fxLite()) {
               this.burst(hx, hy, f.style?.accent || '#ffb830', 8, { kind: 'spark', size: 2.5 });
               spawnFxRing(this, hx, hy, '#ffb830', 12);
@@ -2003,7 +2003,7 @@ class Game {
           }
           if (finisher) {
             trackWeaponFinisher(f.weapon.id, this);
-            try { AudioSys.sfx('comboEpic'); } catch (_) {}
+            try { AudioSys.sfx(weaponFinisherSfx(f.weapon)); } catch (_) {}
             bumpWeaponComboWindow(f, 0.14);
           }
         }
@@ -2137,7 +2137,8 @@ class Game {
           if (p.hitSet && p.hitSet.has(m) && !allowRehit) continue;
           if ((p.x - m.x) ** 2 + (p.y - m.y) ** 2 < (p.r + m.size) ** 2) {
             const hit = resolveProjHit(p);
-            m.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this);
+            try { AudioSys.sfxAt(weaponHitSfx(p.throwId || 'shuriken', hit.dmg), m.x); } catch (_) {}
+            m.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this, { skipHitSfx: true, crit: hit.crit });
             if (hit.crit) applyCritFx(this, m.x, m.y);
             if (skProj) spawnJutsuImpactFx(this, p.x, p.y, p.kind, 'full');
             if (p.hitSet) p.hitSet.add(m); else p.life = 0;
