@@ -18,26 +18,18 @@
     4,
     18,
     11,
-    17,
     8,
     3
   ],
   "lastRoll": {
-    "face": 9,
-    "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
-    "rolledAt": "2026-07-24T17:02:22Z",
-    "remainingCount": 18,
+    "face": 17,
+    "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
+    "rolledAt": "2026-07-24T18:01:11Z",
+    "remainingCount": 17,
     "cycle": 5
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 18,
-      "note": "Deel 1: saga filters/UI/touch \u00b7 Deel 2: 5 saga-icon sticks (Ki/Scroll/Tide/Cape/Dawn parodie)",
-      "version": "1.11.0",
-      "doneAt": "2026-07-23T15:44:00Z",
-      "cycle": 1
-    },
     {
       "face": 18,
       "note": "Deel 1: step badge, unlock hints, saga bindPress, pick scroll",
@@ -590,6 +582,13 @@
       "version": "1.18.56",
       "doneAt": "2026-07-25T20:03:14Z",
       "cycle": 5
+    },
+    {
+      "face": 17,
+      "note": "char swap t() shadow + adventure result na pauze\u2192menu",
+      "version": "1.18.67",
+      "doneAt": "2026-07-25T22:05:21Z",
+      "cycle": 5
     }
   ],
   "userFeatureLog": [
@@ -978,13 +977,6 @@
     }
   ],
   "history": [
-    {
-      "face": 12,
-      "category": "Content \u2014 monsters, wapens, rariteit, dex",
-      "rolledAt": "2026-07-23T13:26:04Z",
-      "remainingCount": 16,
-      "cycle": 0
-    },
     {
       "face": 18,
       "category": "Character select \u2014 roster UI, stats, random duo",
@@ -1818,6 +1810,13 @@
       "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
       "rolledAt": "2026-07-24T17:02:22Z",
       "remainingCount": 18,
+      "cycle": 5
+    },
+    {
+      "face": 17,
+      "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
+      "rolledAt": "2026-07-24T18:01:11Z",
+      "remainingCount": 17,
       "cycle": 5
     }
   ],

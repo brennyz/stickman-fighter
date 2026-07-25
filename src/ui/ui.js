@@ -1415,9 +1415,9 @@ const UI = {
       swapBtn.dataset.bound = '1';
       bindPress(swapBtn, () => {
         AudioSys.sfx('select');
-        const t = vsSelect.p1;
+        const p1Hold = vsSelect.p1;
         vsSelect.p1 = vsSelect.p2;
-        vsSelect.p2 = t;
+        vsSelect.p2 = p1Hold;
         this.renderCharSelect();
         UI.toast(t('toast.charSwap'), 1800);
       });
@@ -3462,8 +3462,8 @@ const UI = {
 
   showResult(win, data) {
     if (!data) return;
-    // Na win/lose: altijd resultaat tonen (ook als state kort menu was)
-    if (state === 'menu' && !(game && game.over)) return;
+    // Na win/lose: altijd resultaat — ook na pauze→menu terwijl gameRef nog pending was
+    if (state === 'menu' && game && !game.over) return;
     try {
     this.lastResult = data;
     const title = document.getElementById('resTitle');

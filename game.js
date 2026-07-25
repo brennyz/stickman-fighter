@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.66';
+const APP_VERSION = '1.18.67';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 276;
+const SW_CACHE_REV = 277;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -3789,8 +3789,8 @@ function scheduleGameResult(gameRef, delayMs, showFn) {
   setTimeout(() => {
     safeUiAction(() => {
       if (!gameRef || gameRef._resultToken !== token) return;
-      if (game !== gameRef) return;
-      // Alleen skippen als speler bewust naar menu ging vóór einde
+      // Na over: resultaat tonen ook als goMenu() game=null zette tijdens delay
+      if (game !== gameRef && !gameRef.over) return;
       if (state === 'menu' && !gameRef.over) return;
       gameRef._pendingResult = false;
       showFn();
@@ -25240,9 +25240,9 @@ const UI = {
       swapBtn.dataset.bound = '1';
       bindPress(swapBtn, () => {
         AudioSys.sfx('select');
-        const t = vsSelect.p1;
+        const p1Hold = vsSelect.p1;
         vsSelect.p1 = vsSelect.p2;
-        vsSelect.p2 = t;
+        vsSelect.p2 = p1Hold;
         this.renderCharSelect();
         UI.toast(t('toast.charSwap'), 1800);
       });
@@ -27287,8 +27287,8 @@ const UI = {
 
   showResult(win, data) {
     if (!data) return;
-    // Na win/lose: altijd resultaat tonen (ook als state kort menu was)
-    if (state === 'menu' && !(game && game.over)) return;
+    // Na win/lose: altijd resultaat — ook na pauze→menu terwijl gameRef nog pending was
+    if (state === 'menu' && game && !game.over) return;
     try {
     this.lastResult = data;
     const title = document.getElementById('resTitle');

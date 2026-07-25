@@ -13,16 +13,16 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.66",
-    "swCache": "stickfighter-app-v276",
-    "gameJsQuery": "game.js?v=276",
-    "cssQuery": "styles/main.css?v=276",
-    "featureBranch": "cursor/kets-double-smooth-2125",
+    "appVersion": "1.18.67",
+    "swCache": "stickfighter-app-v277",
+    "gameJsQuery": "game.js?v=277",
+    "cssQuery": "styles/main.css?v=277",
+    "featureBranch": "cursor/wiggum-d20-categorie-n-b77a",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "Kets 1e/2e smooth \u2192 next wave/level \u00b7 MERGE"
+    "note": "d17 stabiliteit cron \u2192 MERGE"
   },
   "userWishlist": [
     {
@@ -71,8 +71,8 @@
   ],
   "sessionLog": [
     {
-      "at": "2026-07-25T21:45:00Z",
-      "summary": "Kets 1e/2e smooth: unlock, charge fall-through, soft freeze \u00b7 v1.18.66"
+      "at": "2026-07-25T22:05:00Z",
+      "summary": "d17 stabiliteit: char swap t() crash, adventure result na pauze\u2192menu \u00b7 v1.18.67"
     },
     {
       "at": "2026-07-25T21:35:00Z",

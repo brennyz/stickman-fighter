@@ -1658,8 +1658,8 @@ function scheduleGameResult(gameRef, delayMs, showFn) {
   setTimeout(() => {
     safeUiAction(() => {
       if (!gameRef || gameRef._resultToken !== token) return;
-      if (game !== gameRef) return;
-      // Alleen skippen als speler bewust naar menu ging vóór einde
+      // Na over: resultaat tonen ook als goMenu() game=null zette tijdens delay
+      if (game !== gameRef && !gameRef.over) return;
       if (state === 'menu' && !gameRef.over) return;
       gameRef._pendingResult = false;
       showFn();

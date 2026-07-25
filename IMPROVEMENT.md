@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-25 | **17** | Stabiliteit cron: char swap `t()` shadow crash; adventure win→pauze→menu laat resultaat zien. v1.18.67 / SW v277. |
 | 2026-07-25 | — | **HOTFIX Kets smooth:** 1e/2e Kets → unlock altijd, snellere charge, fall-through na finish, soft freeze (FX+wave). v1.18.66 / SW v276. |
 | 2026-07-25 | — | **HOTFIX:** zeldzame extra krachten UIT (summon/Master Sword/tide); level-einde → LEVEL KLAAR + betrouwbaar resultaat/Volgende. v1.18.65 / SW v275. |
 | 2026-07-25 | — | **HOTFIX rariteit:** kill/summon/tide/masterSword + showResult hardened — zeldzame rolls crashen run niet meer. v1.18.64 / SW v274. |
