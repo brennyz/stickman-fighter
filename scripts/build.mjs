@@ -43,10 +43,17 @@ const appVer = verMatch ? verMatch[1] : null;
 
 if (swRev && fs.existsSync(indexPath)) {
   let html = fs.readFileSync(indexPath, 'utf8');
-  if (/game\.js\?v=\d+/.test(html)) {
-    html = html.replace(/game\.js\?v=\d+/, `game.js?v=${swRev}`);
-    fs.writeFileSync(indexPath, html);
+  html = html.replace(/\?v=\d+/g, `?v=${swRev}`);
+  if (/__SF_EXPECT_REV\s*=\s*\d+/.test(html)) {
+    html = html.replace(/__SF_EXPECT_REV\s*=\s*\d+/, `__SF_EXPECT_REV = ${swRev}`);
   }
+  if (appVer && /__SF_EXPECT_APP\s*=\s*'[^']*'/.test(html)) {
+    html = html.replace(/__SF_EXPECT_APP\s*=\s*'[^']*'/, `__SF_EXPECT_APP = '${appVer}'`);
+  }
+  if (appVer) {
+    html = html.replace(/v\d+\.\d+\.\d+ · arcade/g, `v${appVer} · arcade`);
+  }
+  fs.writeFileSync(indexPath, html);
 }
 
 if (swRev && fs.existsSync(swPath)) {
