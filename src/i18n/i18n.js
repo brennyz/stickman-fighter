@@ -382,6 +382,11 @@ function canApplyDomI18n() {
     && typeof document.createTextNode === 'function';
 }
 
+function setTitle(id, key, params) {
+  const el = document.getElementById(id);
+  if (el) el.title = t(key, params);
+}
+
 function applyLangStaticScreens() {
   if (!canApplyDomI18n()) return;
   if (document.documentElement) document.documentElement.lang = getLang();
@@ -516,6 +521,7 @@ function applyLangStaticScreens() {
   setText('charSelectRosterLine', 'ui.charRosterLine');
   setText('levelScreenHead', 'ui.levelHead');
   setText('levelScreenSub', 'ui.levelSub');
+  setTitle('btnIslandHelp', 'ui.helpIslandBtnTitle');
   setText('gambleSub', 'ui.gambleSub');
   setText('styleScreenHead', 'ui.styleHead');
   setText('styleScreenSub', 'ui.styleSub');
@@ -621,6 +627,7 @@ function renderLangSwitchBar(bar) {
 function renderLangSwitch() {
   renderLangSwitchBar(document.getElementById('langSwitchBar'));
   renderLangSwitchBar(document.getElementById('menuLangBar'));
+  renderLangSwitchBar(document.getElementById('levelLangBar'));
 }
 
 function applyLang() {
@@ -637,6 +644,11 @@ function applyLang() {
     else if (active === 'styleScreen' && typeof UI.renderStyle === 'function') UI.renderStyle();
     else if (active === 'charSelectScreen' && typeof UI.renderCharSelect === 'function') UI.renderCharSelect();
     else if (active === 'levelScreen' && typeof UI.renderLevels === 'function') UI.renderLevels();
+    else if (active === 'gambleScreen' && typeof UI.renderGamble === 'function' && pendingAdvLevel) {
+      UI.renderGamble(pendingAdvLevel);
+    } else if (active === 'petScreen' && typeof UI.renderDexPets === 'function') UI.renderDexPets();
+    else if (active === 'dexScreen' && typeof UI.renderDex === 'function') UI.renderDex();
+    else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'modeHubScreen') UI.renderModeHub();
     UI.syncBackLabels();
   }

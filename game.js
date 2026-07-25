@@ -135,9 +135,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.84';
+const APP_VERSION = '1.17.86';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 202;
+const SW_CACHE_REV = 204;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -1395,6 +1395,11 @@ function canApplyDomI18n() {
     && typeof document.createTextNode === 'function';
 }
 
+function setTitle(id, key, params) {
+  const el = document.getElementById(id);
+  if (el) el.title = t(key, params);
+}
+
 function applyLangStaticScreens() {
   if (!canApplyDomI18n()) return;
   if (document.documentElement) document.documentElement.lang = getLang();
@@ -1529,6 +1534,7 @@ function applyLangStaticScreens() {
   setText('charSelectRosterLine', 'ui.charRosterLine');
   setText('levelScreenHead', 'ui.levelHead');
   setText('levelScreenSub', 'ui.levelSub');
+  setTitle('btnIslandHelp', 'ui.helpIslandBtnTitle');
   setText('gambleSub', 'ui.gambleSub');
   setText('styleScreenHead', 'ui.styleHead');
   setText('styleScreenSub', 'ui.styleSub');
@@ -1634,6 +1640,7 @@ function renderLangSwitchBar(bar) {
 function renderLangSwitch() {
   renderLangSwitchBar(document.getElementById('langSwitchBar'));
   renderLangSwitchBar(document.getElementById('menuLangBar'));
+  renderLangSwitchBar(document.getElementById('levelLangBar'));
 }
 
 function applyLang() {
@@ -1650,6 +1657,11 @@ function applyLang() {
     else if (active === 'styleScreen' && typeof UI.renderStyle === 'function') UI.renderStyle();
     else if (active === 'charSelectScreen' && typeof UI.renderCharSelect === 'function') UI.renderCharSelect();
     else if (active === 'levelScreen' && typeof UI.renderLevels === 'function') UI.renderLevels();
+    else if (active === 'gambleScreen' && typeof UI.renderGamble === 'function' && pendingAdvLevel) {
+      UI.renderGamble(pendingAdvLevel);
+    } else if (active === 'petScreen' && typeof UI.renderDexPets === 'function') UI.renderDexPets();
+    else if (active === 'dexScreen' && typeof UI.renderDex === 'function') UI.renderDex();
+    else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'modeHubScreen') UI.renderModeHub();
     UI.syncBackLabels();
   }
@@ -3192,21 +3204,17 @@ function modeOnboardingSeen(mode) {
   return !!(save.tipsSeen['onboard_' + mode] || save.tipsSeen['mode_' + mode]);
 }
 
-const ONBOARD_MODES = [
-  { id: 'adventure', label: 'Avontuur' },
-  { id: 'training', label: 'Training' },
-  { id: 'wall', label: 'Muur' },
-  { id: 'versus', label: '2 spelers' },
-  { id: 'coinrun', label: 'Mats' },
-];
+const ONBOARD_MODE_IDS = ['adventure', 'training', 'wall', 'versus', 'coinrun'];
 
 function onboardingProgress() {
-  const seen = ONBOARD_MODES.filter(m => modeOnboardingSeen(m.id)).length;
-  return { seen, total: ONBOARD_MODES.length };
+  const seen = ONBOARD_MODE_IDS.filter((id) => modeOnboardingSeen(id)).length;
+  return { seen, total: ONBOARD_MODE_IDS.length };
 }
 
 function nextUntriedMode() {
-  return ONBOARD_MODES.find(m => !modeOnboardingSeen(m.id)) || null;
+  const id = ONBOARD_MODE_IDS.find((mid) => !modeOnboardingSeen(mid));
+  if (!id) return null;
+  return { id, label: dailyModeLabel(id) };
 }
 
 /** Eén result-tip per modus+uitkomst — geen herhaling, geen toast. */
@@ -3233,7 +3241,7 @@ function adventureIslandHintLine() {
   if (!save.tipsSeen.islands || save.tipsSeen.islandsHint) return '';
   save.tipsSeen.islandsHint = 1;
   persist();
-  return 'Eerste keer avontuur: 5×10 levels · skill gate per eiland · Meester-buff na 5× verlies op één level';
+  return t('ui.islandFirstHint');
 }
 
 /** Eén hint per modus: in-gevecht regel, geen extra toast (geen stapel met welcome). */
@@ -5668,7 +5676,10 @@ function starsFromHpPct(hpPct) {
   return 1;
 }
 function starHintLine() {
-  return `3★ >${Math.round(STAR_HP.three * 100)}% HP · 2★ >${Math.round(STAR_HP.two * 100)}% · 1★ = win`;
+  return t('ui.starHint', {
+    three: Math.round(STAR_HP.three * 100),
+    two: Math.round(STAR_HP.two * 100),
+  });
 }
 function scaleKnockback(kb, dmg, opts) {
   opts = opts || {};
@@ -6458,6 +6469,40 @@ function seedNlGameStrings() {
     helpMasterBuff: 'Meester-buff: 5× verlies op hetzelfde level → +20% HP, snelheid & schade tot je wint. Baas op Lv 10/20/30/40/50 opent het volgende eiland.',
     helpIslandLocked: 'Vergrendeld — versla baas Lv {lv}',
     helpIslandProg: '{cleared}/{total} levels · {stars}/{maxStars}★ · skill gate wapens Lv {cap}',
+    helpIslandBtnTitle: 'Eilanden & skill gate uitleg',
+    islandInfoSub: 'Skill gate: wapens tot Lv {cap} · {cleared}/{total} levels · {stars}★',
+    islandBossGate: ' · baas Lv {lv} → volgend eiland',
+    masterBuffChip: 'Meester-buff Lv {lv} · +20%',
+    islandFirstHint: 'Eerste keer avontuur: 5×10 levels · skill gate per eiland · Meester-buff na 5× verlies op één level',
+    starHint: '3★ >{three}% HP · 2★ >{two}% · 1★ = win',
+    levelTipWaves: '{waves} golven · {starHint}',
+    levelTipIslandBoss: ' · eiland-baas — opent volgend eiland',
+    levelTipMidBoss: ' · tussendoor-baas',
+    levelTipYourStars: ' · jouw {stars}{empty}',
+    levelTipFails: ' · {n}× verloren',
+    levelTipMasterActive: ' · Meester-buff actief',
+    levelTipTap: ' · Tik = Gooi & start · Lang = zonder gok',
+    errPickIsland: 'Eiland kiezen mislukt',
+    errStart: 'Start mislukt',
+    errLevelStart: 'Level starten mislukt',
+    hubStatNotPlayed: 'Nog niet gespeeld',
+    hubStatTrainWins: '{wins} wins{rec}',
+    hubStatTrainRecOnly: 'Record combo ×{n}',
+    hubStatWallRec: 'Record {n}',
+    hubStatWallEmpty: 'Nog geen score',
+    hubStatCoinsBest: 'Best {n} munten{pet}',
+    hubStatCoinsPet: ' · {n} pet 🪙',
+    hubStatCoinsEmpty: 'Munten → pet coins',
+    hubStatWeapons: '{n}/{total} vrij',
+    hubStatSkillLv: 'Lv {n} totaal',
+    hubStatSkillShards: 'Shards in avontuur',
+    hubStatPetsFull: 'dex {pets}/{total} · {coins} 🪙 · ei {eggs}/{eggTotal}',
+    hubStatPetsEmpty: '{total} dex · munten → pet coins',
+    hubStatStyle: '{n}/{total} outfits',
+    hubStatDex: '{n}/{total} · +max HP',
+    petCoinTip: 'Speel <b>munten bonus</b> voor pet coins (2 gouden munten = 1 🪙). Koop pets hier, of tem via kills in het monsterboek. Pets volgen je in avontuur & training.',
+    petSummaryTamed: 'Getemd <b>{tamed}/{total}</b> · actief <b>{active}</b> · <b>{wallet} pet coins</b>',
+    petNone: 'geen',
     installSub: 'Verschijnt als icoon — net als een echte app',
     boss: 'BAAS',
     topHunter: 'Top jager',
@@ -6934,6 +6979,40 @@ const CATALOG_EN = {
     helpMasterBuff: 'Master buff: 5× loss on same level → +20% HP, speed & damage until you win. Boss Lv 10/20/30/40/50 opens next island.',
     helpIslandLocked: 'Locked — beat boss Lv {lv}',
     helpIslandProg: '{cleared}/{total} levels · {stars}/{maxStars}★ · skill gate weapons Lv {cap}',
+    helpIslandBtnTitle: 'Islands & skill gate help',
+    islandInfoSub: 'Skill gate: weapons up to Lv {cap} · {cleared}/{total} levels · {stars}★',
+    islandBossGate: ' · boss Lv {lv} → next island',
+    masterBuffChip: 'Master buff Lv {lv} · +20%',
+    islandFirstHint: 'First adventure run: 5×10 levels · skill gate per island · Master buff after 5× loss on one level',
+    starHint: '3★ >{three}% HP · 2★ >{two}% · 1★ = win',
+    levelTipWaves: '{waves} waves · {starHint}',
+    levelTipIslandBoss: ' · island boss — opens next island',
+    levelTipMidBoss: ' · mid boss',
+    levelTipYourStars: ' · yours {stars}{empty}',
+    levelTipFails: ' · {n}× lost',
+    levelTipMasterActive: ' · Master buff active',
+    levelTipTap: ' · Tap = Roll & start · Hold = skip gamble',
+    errPickIsland: 'Could not pick island',
+    errStart: 'Start failed',
+    errLevelStart: 'Could not start level',
+    hubStatNotPlayed: 'Not played yet',
+    hubStatTrainWins: '{wins} wins{rec}',
+    hubStatTrainRecOnly: 'Record combo ×{n}',
+    hubStatWallRec: 'Record {n}',
+    hubStatWallEmpty: 'No score yet',
+    hubStatCoinsBest: 'Best {n} coins{pet}',
+    hubStatCoinsPet: ' · {n} pet 🪙',
+    hubStatCoinsEmpty: 'Coins → pet coins',
+    hubStatWeapons: '{n}/{total} unlocked',
+    hubStatSkillLv: 'Lv {n} total',
+    hubStatSkillShards: 'Shards in adventure',
+    hubStatPetsFull: 'dex {pets}/{total} · {coins} 🪙 · egg {eggs}/{eggTotal}',
+    hubStatPetsEmpty: '{total} dex · coins → pet coins',
+    hubStatStyle: '{n}/{total} outfits',
+    hubStatDex: '{n}/{total} · +max HP',
+    petCoinTip: 'Play <b>coin bonus</b> for pet coins (2 gold coins = 1 🪙). Buy pets here, or tame via monster book kills. Pets follow you in adventure & training.',
+    petSummaryTamed: 'Tamed <b>{tamed}/{total}</b> · active <b>{active}</b> · <b>{wallet} pet coins</b>',
+    petNone: 'none',
     installSub: 'Shows as an icon — like a real app',
     boss: 'BOSS',
     topHunter: 'Top hunter',
@@ -15984,6 +16063,18 @@ function audioMixStatusLine(inPause) {
   return bits.join(' · ');
 }
 
+function levelTileTip(n, pick, infoLv, boss, best, fails) {
+  let tip = t('ui.levelTipWaves', { waves: infoLv.waves.length, starHint: starHintLine() });
+  if (boss) tip += pick * LEVELS_PER_ISLAND === n ? t('ui.levelTipIslandBoss') : t('ui.levelTipMidBoss');
+  if (best > 0) tip += t('ui.levelTipYourStars', { stars: '★'.repeat(best), empty: '☆'.repeat(3 - best) });
+  if (fails > 0) {
+    tip += t('ui.levelTipFails', { n: fails });
+    if (fails >= 5) tip += t('ui.levelTipMasterActive');
+  }
+  tip += t('ui.levelTipTap');
+  return tip;
+}
+
 const UI = {
   screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'skillScreen', 'petScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
@@ -16540,32 +16631,37 @@ const UI = {
     if (this.modeHubId === 'arcade') {
       setStat('hubStatTraining', (() => {
         const rec = save.stats.trainMaxCombo || 0;
-        if (save.trainWins > 0) return `${save.trainWins} wins${rec ? ` · record ×${rec}` : ''}`;
-        if (rec > 0) return `Record combo ×${rec}`;
-        return 'Nog niet gespeeld';
+        if (save.trainWins > 0) {
+          return t('ui.hubStatTrainWins', {
+            wins: save.trainWins,
+            rec: rec ? ` · ${t('ui.hubStatTrainRecOnly', { n: rec })}` : '',
+          });
+        }
+        if (rec > 0) return t('ui.hubStatTrainRecOnly', { n: rec });
+        return t('ui.hubStatNotPlayed');
       })());
-      setStat('hubStatWall', save.bestWall > 0 ? `Record ${save.bestWall}` : 'Nog geen score');
+      setStat('hubStatWall', save.bestWall > 0 ? t('ui.hubStatWallRec', { n: save.bestWall }) : t('ui.hubStatWallEmpty'));
       const mats = save.stats?.matsCoinBest || 0;
       const pc = petCoinsBalance();
       setStat('hubStatMats', mats > 0 || pc > 0
-        ? `Best ${mats} munten${pc > 0 ? ` · ${pc} pet 🪙` : ''}`
-        : 'Munten → pet coins');
+        ? t('ui.hubStatCoinsBest', { n: mats, pet: pc > 0 ? t('ui.hubStatCoinsPet', { n: pc }) : '' })
+        : t('ui.hubStatCoinsEmpty'));
     } else if (this.modeHubId === 'collect') {
-      setStat('hubStatWeapons', `${weaponUnlockedCount()}/${WEAPONS.length} vrij`);
+      setStat('hubStatWeapons', t('ui.hubStatWeapons', { n: weaponUnlockedCount(), total: WEAPONS.length }));
       const skillLv = totalAllUpgradeLevels();
       const ready = countAllUpgradesReady();
       setStat('hubStatSkills', ready > 0
         ? t('ui.upgradeReady', { n: ready })
-        : (skillLv > 0 ? `Lv ${skillLv} totaal` : 'Shards in avontuur'));
+        : (skillLv > 0 ? t('ui.hubStatSkillLv', { n: skillLv }) : t('ui.hubStatSkillShards')));
       const petsN = petTamedCount();
       const eggsN = eggOwnedCount();
       const pc = petCoinsBalance();
       setStat('hubStatPets', eggsN > 0 || petsN > 0 || pc > 0
-        ? `dex ${petsN}/${PET_ROSTER.length} · ${pc} 🪙 · ei ${eggsN}/${EGG_ROSTER.length}`
-        : `${PET_ROSTER.length} dex · Mats → pet coins`);
+        ? t('ui.hubStatPetsFull', { pets: petsN, total: PET_ROSTER.length, coins: pc, eggs: eggsN, eggTotal: EGG_ROSTER.length })
+        : t('ui.hubStatPetsEmpty', { total: PET_ROSTER.length }));
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
-      setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
-      setStat('hubStatDex', `${dexCount()}/${SPECIES_ORDER.length} · +max HP`);
+      setStat('hubStatStyle', t('ui.hubStatStyle', { n: stylesN, total: STYLES.length }));
+      setStat('hubStatDex', t('ui.hubStatDex', { n: dexCount(), total: SPECIES_ORDER.length }));
     }
   },
 
@@ -16987,13 +17083,13 @@ const UI = {
           `<span class="island-tab-n">${isl.id}</span><span class="island-tab-name">${islName}</span>` +
           `<span class="island-prog-track island-tab-prog"><i style="width:${pct}%;background:${isl.accent}"></i></span>` +
           (ok ? '' : `<span class="island-tab-lock">${SVG_LOCK_ICON}</span>`);
-        btn.title = ok ? `${islName} · ${islSub}` : `Versla baas Lv ${isl.id * LEVELS_PER_ISLAND} om te openen`;
+        btn.title = ok ? `${islName} · ${islSub}` : t('ui.helpIslandLocked', { lv: isl.id * LEVELS_PER_ISLAND });
         if (ok) {
           btn.addEventListener('click', () => safeUiAction(() => {
             AudioSys.sfx('select');
             UI.advIslandPick = isl.id;
             UI.renderLevels();
-          }, 'pickIsland/' + isl.id, 'Eiland kiezen mislukt'));
+          }, 'pickIsland/' + isl.id, t('ui.errPickIsland')));
         }
         bar.appendChild(btn);
       }
@@ -17010,14 +17106,14 @@ const UI = {
         `<span class="island-info-ico">${islMeta.icon}</span>` +
         `<div class="island-info-text">` +
         `<b style="color:${islMeta.accent}">${islandLabel(islMeta.id, 'name')}</b> · ${islandLabel(islMeta.id, 'sub')}` +
-        `<div class="island-info-sub">Skill gate: wapens tot Lv <b>${wCap}</b> · ${prog.cleared}/${prog.total} levels · ${prog.stars}★` +
-        (pick < 5 ? ` · baas Lv ${pick * LEVELS_PER_ISLAND} → volgend eiland` : '') +
+        `<div class="island-info-sub">${t('ui.islandInfoSub', { cap: wCap, cleared: prog.cleared, total: prog.total, stars: prog.stars })}` +
+        (pick < 5 ? t('ui.islandBossGate', { lv: pick * LEVELS_PER_ISLAND }) : '') +
         `</div></div></div>` +
         `<div class="island-prog-track island-info-prog"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
         (() => {
           const onboard = adventureIslandHintLine();
           const mbLine = mb && mb >= range.start && mb <= range.end
-            ? `<span class="island-info-chip master">Meester-buff Lv ${mb} · +20%</span>`
+            ? `<span class="island-info-chip master">${t('ui.masterBuffChip', { lv: mb })}</span>`
             : '';
           const chips = [
             onboard ? `<span class="island-info-chip onboard">${onboard}</span>` : '',
@@ -17051,12 +17147,7 @@ const UI = {
           (save.advMasterBuff === n ? '<span class="lvl-master">+20%</span>' : '');
       if (!locked) {
         const best = save.stars[n] || 0;
-        let tip = `${infoLv.waves.length} golven · ${starHintLine()}`;
-        if (boss) tip += pick * LEVELS_PER_ISLAND === n ? ' · eiland-baas — opent volgend eiland' : ' · tussendoor-baas';
-        if (best > 0) tip += ` · jouw ${'★'.repeat(best)}${'☆'.repeat(3 - best)}`;
-        if (fails > 0) tip += ` · ${fails}× verloren${fails >= 5 ? ' · Meester-buff actief' : ''}`;
-        tip += ' · Tik = Gooi & start · Lang = zonder gok';
-        el.title = tip;
+        el.title = levelTileTip(n, pick, infoLv, boss, best, fails);
         let holdT = null;
         let holdSkip = false;
         let holdX = 0;
@@ -17075,7 +17166,7 @@ const UI = {
               lastGambleRoll = null;
               startAdventureFromGamble(true);
               try { UI.toast(t('toast.skipGamble'), 1400); } catch (_) {}
-            }, 'skipGamble/' + n, 'Start mislukt');
+            }, 'skipGamble/' + n, t('ui.errStart'));
           }, 520);
         }, { passive: true });
         const cancelHold = () => { if (holdT) { clearTimeout(holdT); holdT = null; } };
@@ -17089,7 +17180,7 @@ const UI = {
         el.addEventListener('click', () => {
           if (holdSkip) { holdSkip = false; return; }
           if (!uiTapAllowed()) return;
-          safeUiAction(() => gokGooiStartLevel(n), 'gokStart/' + n, 'Level starten mislukt');
+          safeUiAction(() => gokGooiStartLevel(n), 'gokStart/' + n, t('ui.errLevelStart'));
         });
       }
       grid.appendChild(el);
@@ -17573,9 +17664,13 @@ const UI = {
       const wallet = petCoinsBalance();
       sumEl.style.display = 'block';
       sumEl.innerHTML =
-        `Getemd <b>${tamed}/${PET_ROSTER.length}</b> · actief <b>${active ? SPECIES[active.speciesId].name : 'geen'}</b>` +
-        ` · <b>${wallet} pet coins</b>` +
-        `<div style="margin-top:6px;font-size:12px;opacity:.85">Speel <b>Mats</b> voor pet coins (2 gouden munten = 1 🪙). Koop pets hier, of tem via kills in het monsterboek. Pets volgen je in avontuur & training.</div>`;
+        t('ui.petSummaryTamed', {
+          tamed,
+          total: PET_ROSTER.length,
+          active: active ? SPECIES[active.speciesId].name : t('ui.petNone'),
+          wallet,
+        }) +
+        `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.petCoinTip')}</div>`;
     }
     const list = document.getElementById('petList');
     if (!list) return;

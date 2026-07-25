@@ -1416,21 +1416,17 @@ function modeOnboardingSeen(mode) {
   return !!(save.tipsSeen['onboard_' + mode] || save.tipsSeen['mode_' + mode]);
 }
 
-const ONBOARD_MODES = [
-  { id: 'adventure', label: 'Avontuur' },
-  { id: 'training', label: 'Training' },
-  { id: 'wall', label: 'Muur' },
-  { id: 'versus', label: '2 spelers' },
-  { id: 'coinrun', label: 'Mats' },
-];
+const ONBOARD_MODE_IDS = ['adventure', 'training', 'wall', 'versus', 'coinrun'];
 
 function onboardingProgress() {
-  const seen = ONBOARD_MODES.filter(m => modeOnboardingSeen(m.id)).length;
-  return { seen, total: ONBOARD_MODES.length };
+  const seen = ONBOARD_MODE_IDS.filter((id) => modeOnboardingSeen(id)).length;
+  return { seen, total: ONBOARD_MODE_IDS.length };
 }
 
 function nextUntriedMode() {
-  return ONBOARD_MODES.find(m => !modeOnboardingSeen(m.id)) || null;
+  const id = ONBOARD_MODE_IDS.find((mid) => !modeOnboardingSeen(mid));
+  if (!id) return null;
+  return { id, label: dailyModeLabel(id) };
 }
 
 /** Eén result-tip per modus+uitkomst — geen herhaling, geen toast. */
@@ -1457,7 +1453,7 @@ function adventureIslandHintLine() {
   if (!save.tipsSeen.islands || save.tipsSeen.islandsHint) return '';
   save.tipsSeen.islandsHint = 1;
   persist();
-  return 'Eerste keer avontuur: 5×10 levels · skill gate per eiland · Meester-buff na 5× verlies op één level';
+  return t('ui.islandFirstHint');
 }
 
 /** Eén hint per modus: in-gevecht regel, geen extra toast (geen stapel met welcome). */

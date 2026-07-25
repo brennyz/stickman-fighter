@@ -198,7 +198,10 @@ function starsFromHpPct(hpPct) {
   return 1;
 }
 function starHintLine() {
-  return `3★ >${Math.round(STAR_HP.three * 100)}% HP · 2★ >${Math.round(STAR_HP.two * 100)}% · 1★ = win`;
+  return t('ui.starHint', {
+    three: Math.round(STAR_HP.three * 100),
+    two: Math.round(STAR_HP.two * 100),
+  });
 }
 function scaleKnockback(kb, dmg, opts) {
   opts = opts || {};
