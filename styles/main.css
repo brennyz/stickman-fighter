@@ -728,7 +728,6 @@
   .vs-preview-name { font-weight:900; font-size:14px; color:#fff; }
   .vs-preview-wpn { font-size:11px; color:#9db1e3; margin:4px 0 8px; }
   .vs-preview-flair { font-size:10px; font-weight:700; color:#cfe0ff; margin:-4px 0 8px; line-height:1.35; opacity:.92; }
-  .vs-preview-vs { align-self:center; font-weight:900; font-size:13px; color:#ffd75e; opacity:.85; }
   /* d20 polish #14 — Versus VS-banner pixels (char-select) */
   .vs-preview-vs {
     position: relative;
