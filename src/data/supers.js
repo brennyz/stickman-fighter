@@ -87,10 +87,6 @@ const SUPER_BEHAVIORS = ['blast', 'shield', 'heal', 'sharingan', 'lightning', 'm
 
 const superById = id => SUPERS.find(s => s.id === id) || SUPERS[0];
 
-function superExists(id) {
-  return SUPERS.some(s => s.id === id);
-}
-
 function superBehaviorLabel(sp) {
   const map = {
     blast: 'Blast', shield: 'Schild', heal: 'Heal', sharingan: 'Genjutsu',

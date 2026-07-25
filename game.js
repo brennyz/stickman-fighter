@@ -6,7 +6,6 @@
    Stickman-vechtgame voor iPad (touch) en desktop (toetsenbord).
    Modi: Avontuur, Training, Versus 2P, Muur, Mats (coinrun).
    Audio (sfx + bgm) is procedureel via Web Audio — rechtenvrij.
-   d20 c4 d5: horde FX scaling, pause perf strip helpers.
    ========================================================================= */
 
 const TAU = Math.PI * 2;
@@ -243,9 +242,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.55';
+const APP_VERSION = '1.18.56';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 265;
+const SW_CACHE_REV = 266;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -1650,11 +1649,6 @@ function setText(id, key, params) {
   if (el) el.textContent = t(key, params);
 }
 
-function setHtml(id, html) {
-  const el = document.getElementById(id);
-  if (el) el.innerHTML = html;
-}
-
 function canApplyDomI18n() {
   return typeof document !== 'undefined' && document.getElementById
     && typeof document.createTextNode === 'function';
@@ -1912,21 +1906,6 @@ function applyLangStaticScreens() {
     installScreen: t('back.menu'),
   });
   UI.syncBackLabels();
-}
-
-function onLangSwitchClick(e) {
-  const btn = e.target.closest('[data-lang]');
-  if (!btn) return;
-  const code = btn.getAttribute('data-lang');
-  if (!code || code === getLang()) return;
-  safeUiAction(() => {
-    setLang(code);
-    AudioSys.sfx('select');
-    UI.toast(t('settings.langChanged', { lang: LANG_LABELS[code] }), 2200);
-    UI.renderSettings();
-    UI.renderMenu();
-    if (typeof UI.renderModeHub === 'function') UI.renderModeHub();
-  }, 'setLang/' + code, t('ui.langSwitchFail') || 'Language switch failed');
 }
 
 function renderLangSwitchBar(bar) {
@@ -2715,22 +2694,6 @@ function bumpStat(key, n) {
 function trackCombo(n) {
   if (n > (save.stats.maxCombo || 0)) save.stats.maxCombo = n;
   bumpDaily('comboReach', n);
-}
-
-function trackKillStreak(n) {
-  if (n > (save.stats.maxKillStreak || 0)) {
-    save.stats.maxKillStreak = n;
-    persist();
-    checkAchievements();
-  }
-}
-
-function trackTrainCombo(n) {
-  if (n > (save.stats.trainMaxCombo || 0)) {
-    save.stats.trainMaxCombo = n;
-    persist();
-    checkAchievements();
-  }
 }
 
 function saveSanitizeNotes(before, after) {
@@ -6037,16 +6000,6 @@ function sanitizeSkillUpgradeEntry(id, raw) {
   return { level: lv, shards };
 }
 
-function normalizeSkillUpgrades() {
-  const clean = {};
-  const raw = (save.skillUpgrades && typeof save.skillUpgrades === 'object') ? save.skillUpgrades : {};
-  for (const id of SKILL_IDS) {
-    const fixed = sanitizeSkillUpgradeEntry(id, raw[id]);
-    if (fixed) clean[id] = fixed;
-  }
-  save.skillUpgrades = clean;
-}
-
 function snapshotSkillUpgradeTracks(st) {
   const snap = {};
   const raw = (st && st.skillUpgrades && typeof st.skillUpgrades === 'object') ? st.skillUpgrades : {};
@@ -6201,11 +6154,6 @@ function jutsuSkillUnlocked(id, st) {
   return skillLevel(id, st) >= 1;
 }
 
-function utilitySkillActive(id, st) {
-  if (!SKILL_DEFS[id] || SKILL_DEFS[id].group !== 'utility') return false;
-  return skillLevel(id, st) >= 1;
-}
-
 function activeJutsuId(preferred, st) {
   const bag = st || save;
   const pick = (preferred && JUTSU_SKILL_IDS.includes(preferred)) ? preferred : (bag.activeJutsu || 'rasengan');
@@ -6214,12 +6162,6 @@ function activeJutsuId(preferred, st) {
     if (jutsuSkillUnlocked(jid, bag)) return jid;
   }
   return 'rasengan';
-}
-
-function ensureActiveJutsuValid(preferred) {
-  const id = activeJutsuId(preferred);
-  save.activeJutsu = id;
-  return id;
 }
 
 function setActiveJutsu(id, silent) {
@@ -6653,10 +6595,6 @@ const SUPERS = [
 const SUPER_BEHAVIORS = ['blast', 'shield', 'heal', 'sharingan', 'lightning', 'meteor', 'rage', 'timestop', 'clones', 'void'];
 
 const superById = id => SUPERS.find(s => s.id === id) || SUPERS[0];
-
-function superExists(id) {
-  return SUPERS.some(s => s.id === id);
-}
 
 function superBehaviorLabel(sp) {
   const map = {
@@ -7770,26 +7708,6 @@ const SPECIES_ORDER = Object.keys(SPECIES).sort((a, b) =>
   (rarityOf(SPECIES[a].rarity).order - rarityOf(SPECIES[b].rarity).order) || SPECIES[a].name.localeCompare(SPECIES[b].name)
 );
 
-function speciesPowerScore(spId) {
-  const sp = SPECIES[spId];
-  if (!sp) return 0;
-  return rarityOf(sp.rarity).order * 100 + sp.hp + sp.dmg * 5;
-}
-
-let _speciesTop10Threshold = null;
-function speciesTop10Threshold() {
-  if (_speciesTop10Threshold != null) return _speciesTop10Threshold;
-  const scores = Object.keys(SPECIES).map(speciesPowerScore).sort((a, b) => a - b);
-  _speciesTop10Threshold = scores[Math.floor(scores.length * 0.9)] ?? scores[scores.length - 1];
-  return _speciesTop10Threshold;
-}
-
-function pickEnemyJutsu(spId, levelN) {
-  if (levelN < ENEMY_JUTSU_MIN_LEVEL) return null;
-  if (speciesPowerScore(spId) < speciesTop10Threshold()) return null;
-  return ENEMY_JUTSU_KINDS[Math.floor(Math.random() * ENEMY_JUTSU_KINDS.length)];
-}
-
 const WORLD_THEMES = [
   'landweg','landweg','landweg','bos','bos',
   'bos','grot','grot','grot','vulkaan',
@@ -7857,9 +7775,6 @@ const KETSBAM_INVULN = 1.15;
 const KETSBAM_SUPER_ARMOR = 0.95;
 /** Top-10 baas-golven: flagship bazen overleven minstens 3s. */
 const BOSS_SAFETY_DUR = 3;
-/** Vanaf dit level mogen top-10% soorten vijandelijke jutsu gebruiken. */
-const ENEMY_JUTSU_MIN_LEVEL = 20;
-const ENEMY_JUTSU_KINDS = ['rasengan', 'chidori', 'kamehame'];
 /** Min. gap tussen speler-hits door contact/projectiles — anti stunlock-keten */
 const PLAYER_HURT_CHAIN_CD = 0.42;
 const BOSS_AT = {
@@ -8471,11 +8386,10 @@ function canTamePetForSpecies(speciesId) {
 }
 
 function maybeTamePet(speciesId) {
+  if (!canTamePetForSpecies(speciesId)) return false;
   const def = PET_BY_SPECIES[speciesId];
-  if (!def || isPetTamed(def.id)) return false;
   const kills = save.dex[speciesId] || 0;
   const need = petKillNeed(speciesId);
-  if (kills < need) return false;
   if (!save.pets || typeof save.pets !== 'object') save.pets = {};
   save.pets[def.id] = { at: Date.now(), kills };
   if (!save.activePet) save.activePet = def.id;
@@ -9075,28 +8989,6 @@ function seedNlGameStrings() {
     'Willekeurig duo op character select: 🎲 kiest twee verschillende vechters.',
     'Instellingen: grote knoppen, minder schok, combo-HUD — handig op iPad.',
     'Komt eraan: Mat co-op assist — korte buff als je zijn bonus haalt.',
-  ];
-  I18N.nl.menu.d20Polish = [
-    'Wapen-preview glow in collectie',
-    'Monster-aura vormen in gevecht',
-    'Upgrade-kaart orbs & schaduwen',
-    'Touch-knop press-animatie',
-    'Menu-tegel rand & hover',
-    'Skill-picker kaart frames',
-    'Character-select portret frames',
-    'Menu hero — pixel grondstrip',
-    'Pause-scherm pixel backdrop',
-    'Combo-HUD pixel accenten',
-    'Jutsu-aura (Rasengan/Chidori) polish',
-    'Baas fase-2 kleurflits',
-    'Muur-modus tegel texture',
-    'Versus VS-banner pixels',
-    'Collectie hub tegel borders',
-    'Pet/summon spawn sparkles',
-    'Level-select sterren & locks',
-    'Schade-floaters pixel font',
-    'Joystick ring pixel art',
-    'Laadscherm / splash strip',
   ];
   I18N.nl.menu.tips = [
     'Kies een tegel — Avontuur · Arcade · 2P · Collectie',
@@ -10011,7 +9903,7 @@ const CATALOG_EN = {
     installSub: 'Shows as an icon — like a real app',
     boss: 'BOSS',
     topHunter: 'Top hunter',
-    modeAdventure: '5 islands × 10 levels · skill gate weapons · Master buff after 5× loss · gamble roll · swarmed = KABLAM!',
+    modeAdventure: '5 islands × 10 levels · skill gate weapons · Master buff after 5× loss · gamble (dobbel) · swarmed = KABLAM!',
     modeTraining: 'Combo trainer ×5/×8/×10 · 3s dummy · lasers · Chidori',
     modeWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD · 5s warning',
     modeVersus: 'P1 left P2 right · best-of-3 · rematch in pause',
@@ -10024,6 +9916,10 @@ const CATALOG_EN = {
     weaponComboHint: 'Weapon 3× = ①②③ · hit ①+② → golden ③',
     gambleOnboardTouch: 'First gamble: low sum = super-boss · high sum = ally · Skip = normal level',
     gambleOnboardKb: 'First time: sum ≤5 super-boss · sum ≥9 ally buff · Skip = no gamble',
+    ketsbamOnboardTouch: 'Surrounded? Tap the center symbol — Ketsbam escape · 9s cooldown',
+    ketsbamOnboardKb: 'Surrounded? E or center symbol = Ketsbam · 9s cooldown',
+    tideBattleOnboardTouch: 'First Tide Battle: defeat {name} — no other waves until done',
+    tideBattleOnboardKb: 'First Tide Battle: defeat {name} — waves pause until done',
     langSwitchFail: 'Language switch failed',
   },
   fighter: {
@@ -10093,27 +9989,6 @@ const CATALOG_EN = {
     'Random duo on character select: 🎲 picks two different fighters.',
     'Settings: big buttons, less shake, combo HUD — handy on iPad.',
     'Coming: Mat co-op assist — short buff when you clear his bonus.',
-  ], d20Polish: [
-    'Weapon preview glow in collection',
-    'Monster aura shapes in combat',
-    'Upgrade card orbs & shadows',
-    'Touch button press animation',
-    'Menu tile border & hover',
-    'Skill picker card frames',
-    'Character select portrait frames',
-    'Menu hero — pixel ground strip',
-    'Pause screen pixel backdrop',
-    'Combo HUD pixel accents',
-    'Jutsu aura (Rasengan/Chidori) polish',
-    'Boss phase-2 color flash',
-    'Wall mode tile texture',
-    'Versus VS banner pixels',
-    'Collection hub tile borders',
-    'Pet/summon spawn sparkles',
-    'Level select stars & locks',
-    'Damage floater pixel font',
-    'Joystick ring pixel art',
-    'Loading / splash strip',
   ] },
   combat: {
     counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
@@ -10616,14 +10491,6 @@ function jutsuLabel(kind) {
   return String(kind || '').toUpperCase();
 }
 
-function eggDailyLine(key) {
-  const k = 'egg.' + key;
-  const v = t(k);
-  if (v && v !== k) return v;
-  const nl = { dailyReady: 'Dag-ei klaar', advBonus: 'Bonus-ei: win 1× avontuur', tomorrow: 'Morgen weer ei' };
-  return nl[key] || key;
-}
-
 function gambleOutcomeLabelFromKey(g) {
   if (!g) return '';
   const out = g.outcome || 'neutral';
@@ -10676,13 +10543,6 @@ function rollD20Entry() {
   if (!tips.length) return { n: 1, text: menuTipAt(0) };
   const n = 1 + Math.floor(Math.random() * tips.length);
   return { n, text: tips[n - 1] };
-}
-
-function rollD20Polish() {
-  const topics = i18nList('menu.d20Polish');
-  if (!topics.length) return rollD20Entry();
-  const n = 1 + Math.floor(Math.random() * topics.length);
-  return { n, text: topics[n - 1], polish: true };
 }
 
 function dailyModeLabel(mode) {
@@ -18589,169 +18449,6 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   }
 }
 
-/* --- src/game/kablam-ui.js --- */
-/** KABLAM! nood-ontsnapping UI — vecht-poep cursor + random stickman-smile. */
-const KABLAM_PROMPT_R_BASE = 46;
-const KABLAM_HIT_PAD = 12;
-const KABLAM_SMILE_STYLES = ['grin', 'smirk', 'toothy', 'beam', 'wink'];
-
-function kablamPromptRadius(ui, pulse) {
-  return KABLAM_PROMPT_R_BASE * ui * (pulse || 1);
-}
-
-function kablamPromptHitRadius(ui) {
-  return kablamPromptRadius(ui, 1) + 10 * ui + btnHitSlop() + KABLAM_HIT_PAD;
-}
-
-function pickKablamStickFace() {
-  const pool = (typeof VS_ROSTER !== 'undefined' ? VS_ROSTER : []).filter((r) => !r.isRobot);
-  const entry = pool[Math.floor(Math.random() * pool.length)] || pool[0] || { bodyColor: '#eef5ff' };
-  const style = KABLAM_SMILE_STYLES[Math.floor(Math.random() * KABLAM_SMILE_STYLES.length)];
-  return { color: entry.bodyColor || '#eef5ff', style, bald: !!entry.bald };
-}
-
-function drawKablamPoopCursor(c, s) {
-  c.save();
-  c.fillStyle = '#7a4f2a';
-  c.strokeStyle = '#4a3018';
-  c.lineWidth = 2.2 * s;
-  c.lineJoin = 'round';
-
-  const blob = (bx, by, rx, ry) => {
-    c.beginPath();
-    c.ellipse(bx, by, rx, ry, 0, 0, TAU);
-    c.fill();
-    c.stroke();
-  };
-  blob(0, 10 * s, 15 * s, 11 * s);
-  blob(0, -2 * s, 12 * s, 10 * s);
-  blob(0, -13 * s, 9 * s, 8 * s);
-  c.strokeStyle = '#5a3818';
-  c.lineWidth = 1.8 * s;
-  c.beginPath();
-  c.arc(0, -15 * s, 3.2 * s, 0, TAU * 1.25);
-  c.stroke();
-
-  const fist = (fx, fy) => {
-    c.fillStyle = '#ffd75e';
-    c.strokeStyle = '#c05820';
-    c.lineWidth = 2 * s;
-    c.beginPath();
-    c.arc(fx, fy, 5.5 * s, 0, TAU);
-    c.fill();
-    c.stroke();
-    c.strokeStyle = '#8a4010';
-    c.lineWidth = 1.4 * s;
-    c.beginPath();
-    c.moveTo(fx - 3 * s, fy - 1 * s);
-    c.lineTo(fx + 3 * s, fy - 1 * s);
-    c.stroke();
-  };
-  fist(-18 * s, 4 * s);
-  fist(18 * s, -1 * s);
-
-  c.fillStyle = '#fff8ef';
-  c.strokeStyle = '#2a2018';
-  c.lineWidth = 1.6 * s;
-  c.beginPath();
-  c.moveTo(11 * s, 16 * s);
-  c.lineTo(24 * s, 30 * s);
-  c.lineTo(15 * s, 21 * s);
-  c.lineTo(8 * s, 27 * s);
-  c.closePath();
-  c.fill();
-  c.stroke();
-  c.restore();
-}
-
-function drawKablamStickSmile(c, face, s, pulse) {
-  if (!face) return;
-  const bob = Math.sin(pulse * 8) * 1.5 * s;
-  const hx = 30 * s;
-  const hy = -24 * s + bob;
-  c.save();
-  c.strokeStyle = face.color;
-  c.fillStyle = face.color;
-  c.lineWidth = 2.4 * s;
-  c.lineCap = 'round';
-
-  if (face.bald) {
-    c.fillStyle = '#ffe8c8';
-    c.beginPath();
-    c.arc(hx, hy, 8.5 * s, 0, TAU);
-    c.fill();
-    c.strokeStyle = face.color;
-    c.stroke();
-  } else {
-    c.beginPath();
-    c.arc(hx, hy, 8.5 * s, 0, TAU);
-    c.stroke();
-  }
-
-  c.strokeStyle = '#1a2030';
-  c.lineWidth = 1.6 * s;
-  const eyeY = hy - 1.5 * s;
-  if (face.style === 'wink') {
-    c.beginPath();
-    c.arc(hx - 3 * s, eyeY, 1.2 * s, 0, TAU);
-    c.fill();
-    c.beginPath();
-    c.moveTo(hx + 2 * s, eyeY);
-    c.lineTo(hx + 4.5 * s, eyeY);
-    c.stroke();
-  } else {
-    c.fillStyle = '#1a2030';
-    c.beginPath();
-    c.arc(hx - 3 * s, eyeY, 1.1 * s, 0, TAU);
-    c.arc(hx + 3 * s, eyeY, 1.1 * s, 0, TAU);
-    c.fill();
-  }
-
-  c.strokeStyle = '#1a2030';
-  c.lineWidth = 1.8 * s;
-  c.beginPath();
-  if (face.style === 'grin' || face.style === 'beam') {
-    c.arc(hx, hy + 2 * s, 4.5 * s, 0.12 * Math.PI, 0.88 * Math.PI);
-  } else if (face.style === 'smirk') {
-    c.arc(hx + 1.5 * s, hy + 2.5 * s, 4 * s, 0.05 * Math.PI, 0.72 * Math.PI);
-  } else if (face.style === 'toothy') {
-    c.arc(hx, hy + 1.5 * s, 4 * s, 0.18 * Math.PI, 0.82 * Math.PI);
-    c.stroke();
-    c.lineWidth = 1.2 * s;
-    for (let i = -1; i <= 1; i++) {
-      c.beginPath();
-      c.moveTo(hx + i * 2.2 * s, hy + 4 * s);
-      c.lineTo(hx + i * 2.2 * s, hy + 5.6 * s);
-      c.stroke();
-    }
-    c.restore();
-    return;
-  } else {
-    c.arc(hx, hy + 2 * s, 4 * s, 0.15 * Math.PI, 0.85 * Math.PI);
-  }
-  c.stroke();
-  c.restore();
-}
-
-function drawKablamIcon(c, scale, pulse, calm, face, spin) {
-  if (!calm && spin) c.rotate(spin);
-  drawKablamPoopCursor(c, scale);
-  drawKablamStickSmile(c, face, scale, pulse);
-  if (!calm && spin) c.rotate(-spin);
-}
-
-function drawKablamLabel(c, text, x, y, size, fill) {
-  c.save();
-  c.font = `900 ${size}px "Black Ops One", Bangers, sans-serif`;
-  c.textAlign = 'center';
-  c.textBaseline = 'middle';
-  c.lineWidth = Math.max(3, size * 0.28);
-  c.strokeStyle = 'rgba(0,0,0,.55)';
-  c.strokeText(text, x, y);
-  c.fillStyle = fill || '#fff';
-  c.fillText(text, x, y);
-  c.restore();
-}
 /* --- src/game/game.js --- */
 /* ================================ GAME ================================= */
 let game = null;
@@ -23608,15 +23305,6 @@ function scrollCharFightIntoView() {
       (dock || btn)?.scrollIntoView({ block: 'end', behavior: 'smooth' });
     } catch (_) {}
   });
-}
-
-function syncCharFightBtn() {
-  const fightBtn = document.getElementById('btnCharFight');
-  if (!fightBtn) return;
-  const ready = charSelectFightReady();
-  fightBtn.classList.toggle('char-fight-ready', ready);
-  fightBtn.classList.toggle('char-fight-off', !ready);
-  fightBtn.setAttribute('aria-disabled', ready ? 'false' : 'true');
 }
 
 function pickVsRosterId(id) {

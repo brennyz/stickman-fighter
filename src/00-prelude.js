@@ -4,7 +4,6 @@
    Stickman-vechtgame voor iPad (touch) en desktop (toetsenbord).
    Modi: Avontuur, Training, Versus 2P, Muur, Mats (coinrun).
    Audio (sfx + bgm) is procedureel via Web Audio — rechtenvrij.
-   d20 c4 d5: horde FX scaling, pause perf strip helpers.
    ========================================================================= */
 
 const TAU = Math.PI * 2;

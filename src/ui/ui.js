@@ -131,15 +131,6 @@ function scrollCharFightIntoView() {
   });
 }
 
-function syncCharFightBtn() {
-  const fightBtn = document.getElementById('btnCharFight');
-  if (!fightBtn) return;
-  const ready = charSelectFightReady();
-  fightBtn.classList.toggle('char-fight-ready', ready);
-  fightBtn.classList.toggle('char-fight-off', !ready);
-  fightBtn.setAttribute('aria-disabled', ready ? 'false' : 'true');
-}
-
 function pickVsRosterId(id) {
   try {
     const r = vsRosterEntry(id);

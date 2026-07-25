@@ -409,11 +409,6 @@ function setText(id, key, params) {
   if (el) el.textContent = t(key, params);
 }
 
-function setHtml(id, html) {
-  const el = document.getElementById(id);
-  if (el) el.innerHTML = html;
-}
-
 function canApplyDomI18n() {
   return typeof document !== 'undefined' && document.getElementById
     && typeof document.createTextNode === 'function';
@@ -671,21 +666,6 @@ function applyLangStaticScreens() {
     installScreen: t('back.menu'),
   });
   UI.syncBackLabels();
-}
-
-function onLangSwitchClick(e) {
-  const btn = e.target.closest('[data-lang]');
-  if (!btn) return;
-  const code = btn.getAttribute('data-lang');
-  if (!code || code === getLang()) return;
-  safeUiAction(() => {
-    setLang(code);
-    AudioSys.sfx('select');
-    UI.toast(t('settings.langChanged', { lang: LANG_LABELS[code] }), 2200);
-    UI.renderSettings();
-    UI.renderMenu();
-    if (typeof UI.renderModeHub === 'function') UI.renderModeHub();
-  }, 'setLang/' + code, t('ui.langSwitchFail') || 'Language switch failed');
 }
 
 function renderLangSwitchBar(bar) {

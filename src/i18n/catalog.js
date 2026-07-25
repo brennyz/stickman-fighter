@@ -388,28 +388,6 @@ function seedNlGameStrings() {
     'Instellingen: grote knoppen, minder schok, combo-HUD — handig op iPad.',
     'Komt eraan: Mat co-op assist — korte buff als je zijn bonus haalt.',
   ];
-  I18N.nl.menu.d20Polish = [
-    'Wapen-preview glow in collectie',
-    'Monster-aura vormen in gevecht',
-    'Upgrade-kaart orbs & schaduwen',
-    'Touch-knop press-animatie',
-    'Menu-tegel rand & hover',
-    'Skill-picker kaart frames',
-    'Character-select portret frames',
-    'Menu hero — pixel grondstrip',
-    'Pause-scherm pixel backdrop',
-    'Combo-HUD pixel accenten',
-    'Jutsu-aura (Rasengan/Chidori) polish',
-    'Baas fase-2 kleurflits',
-    'Muur-modus tegel texture',
-    'Versus VS-banner pixels',
-    'Collectie hub tegel borders',
-    'Pet/summon spawn sparkles',
-    'Level-select sterren & locks',
-    'Schade-floaters pixel font',
-    'Joystick ring pixel art',
-    'Laadscherm / splash strip',
-  ];
   I18N.nl.menu.tips = [
     'Kies een tegel — Avontuur · Arcade · 2P · Collectie',
     '5 eilanden — baas Lv 10/20/30/40/50 opent volgend eiland',
@@ -1323,7 +1301,7 @@ const CATALOG_EN = {
     installSub: 'Shows as an icon — like a real app',
     boss: 'BOSS',
     topHunter: 'Top hunter',
-    modeAdventure: '5 islands × 10 levels · skill gate weapons · Master buff after 5× loss · gamble roll · swarmed = KABLAM!',
+    modeAdventure: '5 islands × 10 levels · skill gate weapons · Master buff after 5× loss · gamble (dobbel) · swarmed = KABLAM!',
     modeTraining: 'Combo trainer ×5/×8/×10 · 3s dummy · lasers · Chidori',
     modeWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD · 5s warning',
     modeVersus: 'P1 left P2 right · best-of-3 · rematch in pause',
@@ -1409,27 +1387,6 @@ const CATALOG_EN = {
     'Random duo on character select: 🎲 picks two different fighters.',
     'Settings: big buttons, less shake, combo HUD — handy on iPad.',
     'Coming: Mat co-op assist — short buff when you clear his bonus.',
-  ], d20Polish: [
-    'Weapon preview glow in collection',
-    'Monster aura shapes in combat',
-    'Upgrade card orbs & shadows',
-    'Touch button press animation',
-    'Menu tile border & hover',
-    'Skill picker card frames',
-    'Character select portrait frames',
-    'Menu hero — pixel ground strip',
-    'Pause screen pixel backdrop',
-    'Combo HUD pixel accents',
-    'Jutsu aura (Rasengan/Chidori) polish',
-    'Boss phase-2 color flash',
-    'Wall mode tile texture',
-    'Versus VS banner pixels',
-    'Collection hub tile borders',
-    'Pet/summon spawn sparkles',
-    'Level select stars & locks',
-    'Damage floater pixel font',
-    'Joystick ring pixel art',
-    'Loading / splash strip',
   ] },
   combat: {
     counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
@@ -1932,14 +1889,6 @@ function jutsuLabel(kind) {
   return String(kind || '').toUpperCase();
 }
 
-function eggDailyLine(key) {
-  const k = 'egg.' + key;
-  const v = t(k);
-  if (v && v !== k) return v;
-  const nl = { dailyReady: 'Dag-ei klaar', advBonus: 'Bonus-ei: win 1× avontuur', tomorrow: 'Morgen weer ei' };
-  return nl[key] || key;
-}
-
 function gambleOutcomeLabelFromKey(g) {
   if (!g) return '';
   const out = g.outcome || 'neutral';
@@ -1992,13 +1941,6 @@ function rollD20Entry() {
   if (!tips.length) return { n: 1, text: menuTipAt(0) };
   const n = 1 + Math.floor(Math.random() * tips.length);
   return { n, text: tips[n - 1] };
-}
-
-function rollD20Polish() {
-  const topics = i18nList('menu.d20Polish');
-  if (!topics.length) return rollD20Entry();
-  const n = 1 + Math.floor(Math.random() * topics.length);
-  return { n, text: topics[n - 1], polish: true };
 }
 
 function dailyModeLabel(mode) {

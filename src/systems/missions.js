@@ -593,22 +593,6 @@ function trackCombo(n) {
   bumpDaily('comboReach', n);
 }
 
-function trackKillStreak(n) {
-  if (n > (save.stats.maxKillStreak || 0)) {
-    save.stats.maxKillStreak = n;
-    persist();
-    checkAchievements();
-  }
-}
-
-function trackTrainCombo(n) {
-  if (n > (save.stats.trainMaxCombo || 0)) {
-    save.stats.trainMaxCombo = n;
-    persist();
-    checkAchievements();
-  }
-}
-
 function saveSanitizeNotes(before, after) {
   const notes = [];
   if (!before || !after) return notes;

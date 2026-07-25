@@ -1409,7 +1409,6 @@
     padding:10px 0 max(12px, env(safe-area-inset-bottom));
     background:linear-gradient(180deg, transparent 0%, rgba(10,14,34,.88) 32%, rgba(10,14,34,.97) 100%);
     border-top:1px solid rgba(255,215,94,.12); }
-  #btnCharFight.char-fight-ready { box-shadow:0 6px 0 #6b1515, 0 0 24px rgba(255,107,107,.45); }
   .char-icon-row { width:min(94vw,720px); margin:0 0 10px; padding:10px 8px 12px; border-radius:16px;
     background:rgba(255,215,94,.06); border:1px solid rgba(255,215,94,.2); }
   .char-icon-row-title { font-size:11px; font-weight:900; color:#ffd75e; text-align:center; margin-bottom:8px; letter-spacing:.04em; }

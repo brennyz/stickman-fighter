@@ -86,11 +86,10 @@ function canTamePetForSpecies(speciesId) {
 }
 
 function maybeTamePet(speciesId) {
+  if (!canTamePetForSpecies(speciesId)) return false;
   const def = PET_BY_SPECIES[speciesId];
-  if (!def || isPetTamed(def.id)) return false;
   const kills = save.dex[speciesId] || 0;
   const need = petKillNeed(speciesId);
-  if (kills < need) return false;
   if (!save.pets || typeof save.pets !== 'object') save.pets = {};
   save.pets[def.id] = { at: Date.now(), kills };
   if (!save.activePet) save.activePet = def.id;

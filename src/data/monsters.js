@@ -146,26 +146,6 @@ const SPECIES_ORDER = Object.keys(SPECIES).sort((a, b) =>
   (rarityOf(SPECIES[a].rarity).order - rarityOf(SPECIES[b].rarity).order) || SPECIES[a].name.localeCompare(SPECIES[b].name)
 );
 
-function speciesPowerScore(spId) {
-  const sp = SPECIES[spId];
-  if (!sp) return 0;
-  return rarityOf(sp.rarity).order * 100 + sp.hp + sp.dmg * 5;
-}
-
-let _speciesTop10Threshold = null;
-function speciesTop10Threshold() {
-  if (_speciesTop10Threshold != null) return _speciesTop10Threshold;
-  const scores = Object.keys(SPECIES).map(speciesPowerScore).sort((a, b) => a - b);
-  _speciesTop10Threshold = scores[Math.floor(scores.length * 0.9)] ?? scores[scores.length - 1];
-  return _speciesTop10Threshold;
-}
-
-function pickEnemyJutsu(spId, levelN) {
-  if (levelN < ENEMY_JUTSU_MIN_LEVEL) return null;
-  if (speciesPowerScore(spId) < speciesTop10Threshold()) return null;
-  return ENEMY_JUTSU_KINDS[Math.floor(Math.random() * ENEMY_JUTSU_KINDS.length)];
-}
-
 const WORLD_THEMES = [
   'landweg','landweg','landweg','bos','bos',
   'bos','grot','grot','grot','vulkaan',
@@ -233,9 +213,6 @@ const KETSBAM_INVULN = 1.15;
 const KETSBAM_SUPER_ARMOR = 0.95;
 /** Top-10 baas-golven: flagship bazen overleven minstens 3s. */
 const BOSS_SAFETY_DUR = 3;
-/** Vanaf dit level mogen top-10% soorten vijandelijke jutsu gebruiken. */
-const ENEMY_JUTSU_MIN_LEVEL = 20;
-const ENEMY_JUTSU_KINDS = ['rasengan', 'chidori', 'kamehame'];
 /** Min. gap tussen speler-hits door contact/projectiles — anti stunlock-keten */
 const PLAYER_HURT_CHAIN_CD = 0.42;
 const BOSS_AT = {
