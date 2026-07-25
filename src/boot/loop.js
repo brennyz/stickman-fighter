@@ -266,8 +266,9 @@ document.addEventListener('visibilitychange', () => {
       try { Input.releaseAll(); } catch (_) {}
       state = 'pause';
       AudioSys.setPaused(true);
-      try { UI.renderPauseToggles(); } catch (_) {}
-      UI.show('pauseScreen');
+      try {
+        UI.safeOpen('pauseScreen', () => UI.renderPauseToggles(), { renderBeforeShow: true });
+      } catch (_) { ensureVisibleScreen(); }
     } else {
       try { AudioSys.syncContextPower(); } catch (_) {}
     }
@@ -537,13 +538,11 @@ function bootGame() {
       setTimeout(() => {
         try {
           if (mode === 'adventure') {
-            UI.renderLevels();
-            UI.show('levelScreen');
+            UI.safeOpen('levelScreen', () => UI.renderLevels(), { renderBeforeShow: true });
           } else if (mode === 'training') startGame('training');
           else if (mode === 'versus') {
             UI.charPickStep = 1;
-            UI.renderCharSelect();
-            UI.show('charSelectScreen');
+            UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { renderBeforeShow: true });
           } else if (mode === 'wall') startGame('wall');
           else if (mode === 'coinrun') startGame('coinrun');
         } catch (err) {
@@ -581,7 +580,7 @@ function bindUiLayerWatch() {
   const tick = () => {
     try {
       syncPlayLayer();
-      ensureMenuScreenActive();
+      ensureVisibleScreen();
       if (typeof window.sfTunnelNukeOverlay === 'function') window.sfTunnelNukeOverlay();
     } catch (_) {}
   };

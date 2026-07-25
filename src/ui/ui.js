@@ -926,47 +926,79 @@ const UI = {
     }
   },
 
+  safeOpen(screenId, renderFn, opts) {
+    opts = opts || {};
+    const el = document.getElementById(screenId);
+    if (!el) {
+      sfReportError('safeOpen/' + screenId, new Error('missing screen DOM'), 'Scherm niet gevonden — terug naar menu');
+      try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
+      return;
+    }
+    if (opts.renderBeforeShow && renderFn) {
+      try { renderFn(); } catch (err) {
+        sfReportError(renderFn.name || screenId, err, opts.msg || 'Scherm laden mislukt');
+        return;
+      }
+    }
+    this.show(screenId);
+    if (!opts.renderBeforeShow && renderFn) {
+      try { renderFn(); } catch (err) {
+        sfReportError(renderFn.name || screenId, err, opts.msg || 'Scherm laden mislukt — herlaad via Verse versie');
+      }
+    }
+  },
+
   show(id) {
     try {
+      if (id) {
+        const target = document.getElementById(id);
+        if (!target) {
+          sfReportError('UI.show/' + id, new Error('missing screen DOM'), 'Scherm niet gevonden — terug naar menu');
+          try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
+          syncPlayLayer();
+          return;
+        }
+      }
       for (const s of this.screens) {
         const scr = document.getElementById(s);
         if (scr) scr.classList.remove('active');
       }
       if (id) {
         const el = document.getElementById(id);
-        if (el) {
-          el.classList.add('active');
-          requestAnimationFrame(() => {
-            try {
-              this.scrollNavTop(el);
-              this.syncBackLabels();
-            } catch (_) {}
-          });
-        }
+        el.classList.add('active');
+        requestAnimationFrame(() => {
+          try {
+            this.scrollNavTop(el);
+            this.syncBackLabels();
+          } catch (_) {}
+        });
         if (id === 'pauseScreen') {
-          this.refreshPauseSubtitle();
-          this.renderPauseToggles();
-          this.renderPausePerfStrip();
+          try { this.refreshPauseSubtitle(); } catch (_) {}
+          try { this.renderPauseToggles(); } catch (_) {}
+          try { this.renderPausePerfStrip(); } catch (_) {}
         }
-        if (id === 'helpScreen') this.renderHelp();
+        if (id === 'helpScreen') {
+          try { this.renderHelp(); } catch (err) { sfReportError('renderHelp', err); }
+        }
         if (id === 'skillScreen') {
           this.skillPreviewId = save.skill || 'rasengan';
           this.superPreviewId = save.super || 'ketsbam';
         }
         if (id === 'levelScreen') {
           if (!this.advIslandPick) this.advIslandPick = currentAdvIsland();
-          applyIslandOnboarding();
+          try { applyIslandOnboarding(); } catch (_) {}
         }
       } else if (game?.mode === 'versus') {
-        this.refreshPauseSubtitle();
+        try { this.refreshPauseSubtitle(); } catch (_) {}
       }
       const pauseBtn = document.getElementById('pauseBtn');
       if (pauseBtn) pauseBtn.classList.toggle('show', !id && !!game && state !== 'result');
     } catch (err) {
       sfReportError('UI.show/' + (id || 'play'), err, 'Schermwissel mislukt — terug naar menu');
-      try { this.goMenu(); } catch (_) {}
+      try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
     }
     syncPlayLayer();
+    if (id) ensureVisibleScreen();
   },
 
   renderHelp() {
@@ -1046,7 +1078,7 @@ const UI = {
       }
       if (active === 'gambleScreen') {
         try { cancelGambleStart(); } catch (_) {}
-        this.show('levelScreen');
+        this.safeOpen('levelScreen', () => this.renderLevels(), { renderBeforeShow: true });
         return;
       }
       if (active === 'modeHubScreen') {
@@ -1134,6 +1166,9 @@ const UI = {
       state = 'menu';
       window.__sfLoopErr = false;
       syncPlayLayer();
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('menuScreen')?.classList.add('active');
+      try { playMenuBgm(true); } catch (_) {}
     }
   },
 
@@ -1408,8 +1443,10 @@ const UI = {
   openModeHub(id) {
     if (!MODE_HUB_META[id]) return;
     this.modeHubId = id;
-    this.renderModeHub();
-    this.show('modeHubScreen');
+    this.safeOpen('modeHubScreen', () => this.renderModeHub(), {
+      renderBeforeShow: true,
+      msg: 'Hub laden mislukt',
+    });
   },
 
   renderModeHub() {
@@ -2156,6 +2193,7 @@ const UI = {
       }
     }
     const list = document.getElementById('weaponList');
+    if (!list) return;
     list.innerHTML = '';
     for (const base of WEAPONS) {
       const w = applySummonTier(base);
@@ -2238,10 +2276,9 @@ const UI = {
 
   openUpgrades(tab) {
     this.upgradeTab = tab || 'skills';
-    this.show('upgradeScreen');
-    try { this.renderUpgrades(); } catch (err) {
-      sfReportError('renderUpgrades', err, 'Upgrades laden mislukt — herlaad via Verse versie');
-    }
+    this.safeOpen('upgradeScreen', () => this.renderUpgrades(), {
+      msg: 'Upgrades laden mislukt — herlaad via Verse versie',
+    });
   },
 
   renderUpgrades() {
@@ -2506,6 +2543,7 @@ const UI = {
       return mk('book', 'Boek') + mk('rarity', 'Rariteit') + mk('unlock', 'Unlock Lv') + mk('kills', 'Kills');
     });
     const list = document.getElementById('dexList');
+    if (!list) return;
     list.innerHTML = '';
     const filter = this.dexRarityFilter || 'all';
     const typeFilter = this.dexTypeFilter || 'all';
@@ -3220,12 +3258,10 @@ const UI = {
 
   showResult(win, data) {
     if (state === 'menu' || !data) return;
+    try {
     this.lastResult = data;
-    state = 'result';
-    scheduleResize();
-    document.getElementById('pauseBtn')?.classList.remove('show');
     const title = document.getElementById('resTitle');
-    if (!title) return;
+    if (!title) throw new Error('result DOM missing');
     title.textContent = data.title;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
     const detailEl = document.getElementById('resDetail');
@@ -3276,10 +3312,17 @@ const UI = {
         else label.textContent = t('result.again');
       }
     }
+    state = 'result';
+    scheduleResize();
+    document.getElementById('pauseBtn')?.classList.remove('show');
     this.show('resultScreen');
     AudioSys.setPaused(false);
     playMenuBgm(true);
     AudioSys.applyVolumes();
+    } catch (err) {
+      sfReportError('showResult', err, 'Resultaat laden mislukt — terug naar menu');
+      try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
+    }
   },
 };
 

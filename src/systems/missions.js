@@ -36,8 +36,7 @@ function goDailyPlayTarget(taskId) {
     AudioSys.init();
     AudioSys.sfx('select');
     if (t.mode === 'adventure') {
-      UI.renderLevels();
-      UI.show('levelScreen');
+      UI.safeOpen('levelScreen', () => UI.renderLevels(), { renderBeforeShow: true });
     } else if (t.mode === 'training') {
       startGame('training');
     } else if (t.mode === 'wall') {
@@ -1209,6 +1208,45 @@ function ensureMenuScreenActive() {
   }
 }
 
+/** Voorkom zwart scherm wanneer geen .screen.active (menu/pauze/result). */
+function ensureVisibleScreen() {
+  if (document.querySelector('.screen.active')) return;
+  if (state === 'play') return;
+  if (state === 'pause') {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('pauseScreen')?.classList.add('active');
+    syncPlayLayer();
+    return;
+  }
+  if (state === 'result') {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    if (document.getElementById('resultScreen')) {
+      document.getElementById('resultScreen').classList.add('active');
+    } else {
+      state = 'menu';
+      document.getElementById('menuScreen')?.classList.add('active');
+    }
+    syncPlayLayer();
+    return;
+  }
+  ensureMenuScreenActive();
+}
+
+/** Veilig resultaat na gevecht — voorkomt ReferenceError + zwart scherm. */
+function scheduleGameResult(gameRef, delayMs, showFn) {
+  if (!gameRef || typeof showFn !== 'function') return;
+  const token = (gameRef._resultToken || 0) + 1;
+  gameRef._resultToken = token;
+  setTimeout(() => {
+    safeUiAction(() => {
+      if (!gameRef || gameRef._resultToken !== token) return;
+      if (state === 'menu') return;
+      if (game !== gameRef) return;
+      showFn();
+    }, 'scheduleGameResult', 'Resultaat laden mislukt — terug naar menu');
+  }, Math.max(0, delayMs || 0));
+}
+
 function dismissTunnelOverlayIfStatic() {
   const o = document.getElementById('tunnelBootOverlay');
   if (!o) return;
@@ -1253,6 +1291,7 @@ function recoverToMenu() {
       if (pb) pb.classList.remove('show');
     }
     try { playMenuBgm(true); } catch (_) {}
+    ensureVisibleScreen();
   } catch (err) {
     console.error('[Stickman] recoverToMenu', err);
     sfReportError('recoverToMenu', err, 'Herstel mislukt — herlaad de pagina als menu vastzit');

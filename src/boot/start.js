@@ -85,19 +85,18 @@ function bindPress(el, handler) {
 }
 
 bindPress(document.getElementById('btnAdventure'), () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.renderLevels(); UI.show('levelScreen');
+  AudioSys.init(); AudioSys.sfx('select');
+  UI.safeOpen('levelScreen', () => UI.renderLevels(), { renderBeforeShow: true, msg: 'Avontuur laden mislukt' });
 });
 document.querySelectorAll('[data-hub]').forEach((el) => {
   bindPress(el, () => {
     AudioSys.init(); AudioSys.sfx('select');
     const hub = el.dataset.hub;
     if (hub === 'adventure') {
-      UI.renderLevels();
-      UI.show('levelScreen');
+      UI.safeOpen('levelScreen', () => UI.renderLevels(), { renderBeforeShow: true, msg: 'Avontuur laden mislukt' });
     } else if (hub === 'versus') {
       UI.charPickStep = 1;
-      UI.renderCharSelect();
-      UI.show('charSelectScreen');
+      UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { renderBeforeShow: true, msg: 'Kies karakter mislukt' });
     } else {
       UI.openModeHub(hub);
     }
@@ -105,10 +104,9 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
 });
 bindPress(document.getElementById('menuProfileBar'), () => {
   AudioSys.init(); AudioSys.sfx('select');
-  UI.show('missionsScreen');
-  try { UI.renderMissions(); } catch (err) {
-    sfReportError('renderMissions', err, 'Missies laden mislukt — herlaad via Verse versie');
-  }
+  UI.safeOpen('missionsScreen', () => UI.renderMissions(), {
+    msg: 'Missies laden mislukt — herlaad via Verse versie',
+  });
 });
 bindPress(document.getElementById('btnGambleGooiStart'), () => gokGooiStartFromScreen());
 bindPress(document.getElementById('btnGambleSkip'), () => {
@@ -116,7 +114,10 @@ bindPress(document.getElementById('btnGambleSkip'), () => {
   startAdventureFromGamble(true);
 });
 document.querySelectorAll('[data-back-gamble]').forEach((b) => {
-  bindPress(b, () => { AudioSys.sfx('select'); UI.show('levelScreen'); });
+  bindPress(b, () => {
+    AudioSys.sfx('select');
+    UI.safeOpen('levelScreen', () => UI.renderLevels(), { renderBeforeShow: true });
+  });
 });
 const btnContinue = document.getElementById('btnContinue');
 bindPress(btnContinue, () => {
@@ -134,8 +135,7 @@ const btnVersus = document.getElementById('btnVersus');
 bindPress(btnVersus, () => {
   AudioSys.init(); AudioSys.sfx('select');
   UI.charPickStep = 1;
-  UI.renderCharSelect();
-  UI.show('charSelectScreen');
+  UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { renderBeforeShow: true, msg: 'Kies karakter mislukt' });
 });
 const charPickBackP1 = document.getElementById('charPickBackP1');
 bindPress(charPickBackP1, () => {
@@ -152,10 +152,7 @@ bindPress(btnMatsCoins, () => {
 function openCollectionScreen(screenId, renderFn) {
   AudioSys.init();
   AudioSys.sfx('select');
-  UI.show(screenId);
-  try { renderFn(); } catch (err) {
-    sfReportError(renderFn.name || screenId, err, 'Scherm laden mislukt — herlaad via Verse versie');
-  }
+  UI.safeOpen(screenId, renderFn, { msg: 'Scherm laden mislukt — herlaad via Verse versie' });
 }
 
 bindPress(document.getElementById('btnWeapons'), () => {
@@ -181,15 +178,18 @@ bindPress(btnStyle, () => {
 });
 const btnSettings = document.getElementById('btnSettings');
 bindPress(btnSettings, () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.renderSettings(); UI.renderHosting(); UI.show('settingsScreen');
+  AudioSys.init(); AudioSys.sfx('select');
+  UI.safeOpen('settingsScreen', () => {
+    UI.renderSettings();
+    UI.renderHosting();
+  }, { renderBeforeShow: true, msg: 'Instellingen laden mislukt' });
 });
 const btnMissions = document.getElementById('btnMissions');
 bindPress(btnMissions, () => {
   AudioSys.init(); AudioSys.sfx('select');
-  UI.show('missionsScreen');
-  try { UI.renderMissions(); } catch (err) {
-    sfReportError('renderMissions', err, 'Missies laden mislukt — herlaad via Verse versie');
-  }
+  UI.safeOpen('missionsScreen', () => UI.renderMissions(), {
+    msg: 'Missies laden mislukt — herlaad via Verse versie',
+  });
 });
 const dailyClaimAllBtn = document.getElementById('dailyClaimAllBtn');
 if (dailyClaimAllBtn) bindPress(dailyClaimAllBtn, () => {
@@ -412,8 +412,7 @@ bindSettingsControls();
 const btnHelp = document.getElementById('btnHelp');
 bindPress(btnHelp, () => {
   AudioSys.init(); AudioSys.sfx('select');
-  UI.renderHelp();
-  UI.show('helpScreen');
+  UI.safeOpen('helpScreen', () => UI.renderHelp(), { renderBeforeShow: true, msg: 'Help laden mislukt' });
 });
 function runForceFreshVersion() {
   safeAsync(runVersionUpdateWithSavePrompt(), 'forceFresh', t('versionUpdate.fail'));
@@ -423,8 +422,7 @@ bindPress(document.getElementById('btnForceFresh'), runForceFreshVersion);
 const btnIslandHelp = document.getElementById('btnIslandHelp');
 bindPress(btnIslandHelp, () => {
   AudioSys.sfx('select');
-  UI.renderHelp();
-  UI.show('helpScreen');
+  UI.safeOpen('helpScreen', () => UI.renderHelp(), { renderBeforeShow: true, msg: 'Help laden mislukt' });
 });
 const helpOk = document.getElementById('helpOk');
 bindPress(helpOk, () => { AudioSys.sfx('select'); UI.goMenu(); });
@@ -487,8 +485,7 @@ bindPress(document.getElementById('pauseBtn'), () => {
     try { Input.releaseAll(); } catch (_) {}
     state = 'pause';
     AudioSys.setPaused(true);
-    UI.renderPauseToggles();
-    UI.show('pauseScreen');
+    UI.safeOpen('pauseScreen', () => UI.renderPauseToggles(), { renderBeforeShow: true });
   }
 });
 const pauseTogMusic = document.getElementById('pauseTogMusic');
