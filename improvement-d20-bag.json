@@ -4,7 +4,7 @@
   "rollFirst": [],
   "remaining": [
     3,
-    5,
+    4,
     6,
     9,
     12,
@@ -13,10 +13,10 @@
     19
   ],
   "lastRoll": {
-    "face": 4,
-    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
-    "rolledAt": "2026-07-24T18:30:45Z",
-    "remainingCount": 8,
+    "face": 5,
+    "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
+    "rolledAt": "2026-07-25T06:58:24Z",
+    "remainingCount": 11,
     "cycle": 4
   },
   "pending": null,
@@ -554,10 +554,10 @@
       "cycle": 4
     },
     {
-      "face": 13,
-      "note": "Vandaag-plan + menu-chip + prestatie-spotlight",
-      "version": "1.17.75",
-      "doneAt": "2026-07-25T07:09:15Z",
+      "face": 5,
+      "note": "Horde FX scaling + pauze perf-strip",
+      "version": "1.17.72",
+      "doneAt": "2026-07-25T06:59:31Z",
       "cycle": 4
     }
   ],
@@ -1734,31 +1734,10 @@
       "cycle": 4
     },
     {
-      "face": 9,
-      "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
-      "rolledAt": "2026-07-24T18:00:37Z",
+      "face": 5,
+      "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
+      "rolledAt": "2026-07-25T06:58:24Z",
       "remainingCount": 11,
-      "cycle": 4
-    },
-    {
-      "face": 2,
-      "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
-      "rolledAt": "2026-07-24T18:00:39Z",
-      "remainingCount": 10,
-      "cycle": 4
-    },
-    {
-      "face": 6,
-      "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
-      "rolledAt": "2026-07-24T18:01:10Z",
-      "remainingCount": 9,
-      "cycle": 4
-    },
-    {
-      "face": 4,
-      "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
-      "rolledAt": "2026-07-24T18:30:45Z",
-      "remainingCount": 8,
       "cycle": 4
     }
   ],

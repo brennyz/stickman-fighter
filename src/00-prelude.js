@@ -4,7 +4,7 @@
    Stickman-vechtgame voor iPad (touch) en desktop (toetsenbord).
    Modi: Avontuur, Training, Versus 2P, Muur, Mats (coinrun).
    Audio (sfx + bgm) is procedureel via Web Audio — rechtenvrij.
-   d20 c4: volPct prelude, menuBackdropLiteFlags, motionReduced guards.
+   d20 c4 d5: horde FX scaling, pause perf strip helpers.
    ========================================================================= */
 
 const TAU = Math.PI * 2;
@@ -43,7 +43,10 @@ const Perf = {
   },
   reset() { this.tier = 0; this.emaMs = 16.7; this.frames = 0; },
   skipHeavyDraw() {
-    return state === 'play' && this.tier >= 2 && (this.frames & 1) === 0;
+    if (typeof state === 'undefined' || state !== 'play') return false;
+    if (this.tier >= 2 && (this.frames & 1) === 0) return true;
+    const horde = perfHordeLoad();
+    return horde.alive >= 34 && this.tier >= 1 && (this.frames & 1) === 0;
   },
   /** Hoofdmenu-landing zichtbaar — enige menu-scherm met canvas-animatie. */
   menuLandingVisible() {
@@ -66,12 +69,25 @@ const Perf = {
     return !this.menuLandingVisible();
   },
 };
+function perfHordeLoad() {
+  if (typeof game === 'undefined' || !game || game.mode !== 'adventure' || !game.monsters) {
+    return { alive: 0, mul: 1 };
+  }
+  const alive = game.monsters.filter((m) => m.alive).length;
+  let mul = 1;
+  if (alive >= 40) mul = 0.5;
+  else if (alive >= 28) mul = 0.65;
+  else if (alive >= 18) mul = 0.78;
+  else if (alive >= 10) mul = 0.9;
+  return { alive, mul };
+}
 function fxCaps() {
   let mul = 1;
   if (save.liteFx) mul = 0.55;
   else if (Perf.tier >= 2) mul = 0.42;
   else if (Perf.tier >= 1) mul = 0.68;
   if (motionReduced()) mul *= 0.62;
+  mul *= perfHordeLoad().mul;
   const floor = { particles: 24, floaters: 8, projectiles: 16, banners: 2, afterimages: 4 };
   const out = {};
   for (const k of Object.keys(FX_CAP)) {
@@ -95,8 +111,10 @@ function perfFxRoom(g, type) {
 function perfFxBudgetAllow(g, cost) {
   cost = cost || 1;
   if (!g) return true;
-  if (!save.liteFx && Perf.tier < 1) return true;
-  const maxPerFrame = save.liteFx ? 5 : (Perf.tier >= 2 ? 9 : 14);
+  if (!save.liteFx && Perf.tier < 1 && perfHordeLoad().mul >= 0.95) return true;
+  let maxPerFrame = save.liteFx ? 5 : (Perf.tier >= 2 ? 9 : 14);
+  const horde = perfHordeLoad();
+  if (horde.mul < 1) maxPerFrame = Math.max(4, Math.floor(maxPerFrame * horde.mul));
   if (g._fxBudgetFrame !== Perf.frames) {
     g._fxBudgetFrame = Perf.frames;
     g._fxBudgetUsed = 0;
@@ -109,7 +127,14 @@ function perfFxSummary() {
   const caps = fxCaps();
   const fps = Perf.emaMs > 0 ? Math.round(1000 / Perf.emaMs) : 0;
   const dpr = typeof DPR !== 'undefined' ? DPR : 1;
-  return { fps, tier: Perf.tier, dpr, maxDpr: maxCanvasDpr(), caps };
+  const horde = perfHordeLoad();
+  return { fps, tier: Perf.tier, dpr, maxDpr: maxCanvasDpr(), caps, hordeAlive: horde.alive, hordeMul: horde.mul };
+}
+function formatPerfStripLine(p) {
+  p = p || perfFxSummary();
+  const tierNote = save.liteFx ? 'Lite FX' : `tier ${p.tier}`;
+  const hordeNote = p.hordeAlive >= 10 ? ` · horde ${p.hordeAlive}` : '';
+  return `~${p.fps} fps · ${tierNote} · DPR ${p.dpr.toFixed(2)}/${p.maxDpr}${hordeNote} · FX ${p.caps.particles}/${p.caps.floaters}`;
 }
 
 function pickBannerLane(banners) {
