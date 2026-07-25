@@ -801,6 +801,82 @@ function bindSavePortPreview() {
   });
 }
 
+function openSaveImportFilePicker() {
+  const input = document.getElementById('saveImportFile');
+  if (!input) return false;
+  try { input.value = ''; } catch (_) {}
+  input.click();
+  return true;
+}
+
+function applySaveImportText(text, sourceLabel) {
+  const ta = document.getElementById('savePortText');
+  if (!ta) return false;
+  ta.value = text;
+  window.__sfImportConfirm = false;
+  updateSaveImportPreview(text);
+  if (sourceLabel) {
+    userToast(`Save geladen uit ${sourceLabel} — tik Import voor preview`, 3200);
+  }
+  return true;
+}
+
+function readSaveImportFile(file) {
+  return new Promise((resolve, reject) => {
+    if (!file) { reject(new Error('Geen bestand gekozen')); return; }
+    if (file.size > 120000) { reject(new Error('Save-bestand te groot (>120 KB)')); return; }
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('Bestand lezen mislukt'));
+    reader.readAsText(file);
+  });
+}
+
+function bindSaveImportFile() {
+  const input = document.getElementById('saveImportFile');
+  if (!input || input.dataset.bound) return;
+  input.dataset.bound = '1';
+  input.addEventListener('change', () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    safeAsync((async () => {
+      const text = await readSaveImportFile(file);
+      if (!text.trim()) throw new Error('Bestand is leeg');
+      applySaveImportText(text, file.name || 'bestand');
+      AudioSys.sfx('select');
+    })(), 'importSaveFile', 'Importbestand lezen mislukt');
+    try { input.value = ''; } catch (_) {}
+  });
+}
+
+function runImportSaveClick() {
+  const ta = document.getElementById('savePortText');
+  const previewEl = document.getElementById('saveImportPreview');
+  if (!ta || !ta.value.trim()) {
+    if (openSaveImportFilePicker()) return;
+    UI.toast('Kies een exportbestand of plak save-JSON in het vak', 2800);
+    return;
+  }
+  try {
+    previewImportSave(ta.value);
+    if (!window.__sfImportConfirm) {
+      window.__sfImportConfirm = true;
+      updateSaveImportPreview(ta.value);
+      UI.toast('Import-preview — tik Import nogmaals om te laden', 3600);
+      setTimeout(() => { window.__sfImportConfirm = false; }, 8000);
+      return;
+    }
+    window.__sfImportConfirm = false;
+    if (previewEl) { previewEl.style.display = 'none'; previewEl.textContent = ''; }
+    importSaveJson(ta.value);
+    AudioSys.sfx('win');
+  } catch (e) {
+    window.__sfImportConfirm = false;
+    if (previewEl) { previewEl.style.display = 'none'; previewEl.textContent = ''; }
+    UI.toast((e && e.message) ? e.message : 'Ongeldige save — controleer JSON', 3200);
+  }
+}
+
 function formatSaveBytes(n) {
   const b = Math.max(0, Math.floor(Number(n) || 0));
   if (b < 1024) return b + ' B';

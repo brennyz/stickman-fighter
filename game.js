@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.68';
+const APP_VERSION = '1.17.66';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 194;
+const SW_CACHE_REV = 192;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null, activeJutsu: 'rasengan',
 
@@ -1244,6 +1244,9 @@ const I18N = {
       syncBackup: 'Sync backup = hoofd-save', freshCache: 'Verse versie (cache legen)', clearSave: 'Nieuwe start (dubbel tikken)',
       hosting: 'Hosting & voortgang', copyLink: 'Kopieer vaste speel-link', openLink: 'Open vaste link',
       savePort: 'Save export / import', exportSave: 'Export save', importSave: 'Import save',
+      importSaveFile: 'Bestand kiezen',
+      savePortDesc: 'Export kopieert JSON (clipboard + download). Import: kies een exportbestand of plak JSON — 1× Import = preview, 2× = toepassen.',
+      savePortPlaceholder: 'Plak JSON of kies een exportbestand (.json) — meta.key stickfighter_save_v1 · 2× Import om te laden',
       langChanged: 'Taal: {lang}',
     },
     missions: { title: 'Missies & prestaties', sub: '3 lichte dagmissies · claim XP wanneer klaar',
@@ -1315,6 +1318,9 @@ const I18N = {
       syncBackup: 'Sync backup = main save', freshCache: 'Fresh version (clear cache)', clearSave: 'New start (tap twice)',
       hosting: 'Hosting & progress', copyLink: 'Copy play link', openLink: 'Open play link',
       savePort: 'Save export / import', exportSave: 'Export save', importSave: 'Import save',
+      importSaveFile: 'Choose file',
+      savePortDesc: 'Export copies JSON (clipboard + download). Import: pick an export file or paste JSON — 1× Import = preview, 2× = apply.',
+      savePortPlaceholder: 'Paste JSON or choose an export file (.json) — meta.key stickfighter_save_v1 · tap Import twice to load',
       langChanged: 'Language: {lang}',
     },
     missions: { title: 'Missions & achievements', sub: '3 light daily missions · claim XP when done',
@@ -1379,6 +1385,9 @@ const I18N = {
       syncBackup: 'Backup syncen', freshCache: 'Neue Version (Cache leeren)', clearSave: 'Neustart (2× tippen)',
       hosting: 'Hosting & Fortschritt', copyLink: 'Link kopieren', openLink: 'Link öffnen',
       savePort: 'Save export / import', exportSave: 'Save exportieren', importSave: 'Save importieren',
+      importSaveFile: 'Datei wählen',
+      savePortDesc: 'Export kopiert JSON (Zwischenablage + Download). Import: Datei wählen oder JSON einfügen — 1× Import = Vorschau, 2× = anwenden.',
+      savePortPlaceholder: 'JSON einfügen oder Exportdatei (.json) wählen — meta.key stickfighter_save_v1 · 2× Import zum Laden',
       langChanged: 'Sprache: {lang}',
     },
     missions: { title: 'Missionen & Erfolge', sub: '3 tägliche Missionen · XP abholen',
@@ -1437,6 +1446,9 @@ const I18N = {
       syncBackup: 'Sync backup', freshCache: 'Version fraîche (cache)', clearSave: 'Nouveau départ (2× tap)',
       hosting: 'Hébergement & progrès', copyLink: 'Copier le lien', openLink: 'Ouvrir le lien',
       savePort: 'Export / import save', exportSave: 'Exporter save', importSave: 'Importer save',
+      importSaveFile: 'Choisir un fichier',
+      savePortDesc: 'Export copie le JSON (presse-papiers + téléchargement). Import : choisir un fichier ou coller le JSON — 1× Import = aperçu, 2× = appliquer.',
+      savePortPlaceholder: 'Coller le JSON ou choisir un fichier (.json) — meta.key stickfighter_save_v1 · 2× Import pour charger',
       langChanged: 'Langue : {lang}',
     },
     missions: { title: 'Missions & succès', sub: '3 missions quotidiennes · réclamer XP',
@@ -1495,6 +1507,9 @@ const I18N = {
       syncBackup: 'Sync backup', freshCache: 'Versión nueva (caché)', clearSave: 'Nuevo inicio (2× tap)',
       hosting: 'Hosting y progreso', copyLink: 'Copiar enlace', openLink: 'Abrir enlace',
       savePort: 'Export / import save', exportSave: 'Exportar save', importSave: 'Importar save',
+      importSaveFile: 'Elegir archivo',
+      savePortDesc: 'Export copia JSON (portapapeles + descarga). Import: elige un archivo o pega JSON — 1× Import = vista previa, 2× = aplicar.',
+      savePortPlaceholder: 'Pega JSON o elige un archivo (.json) — meta.key stickfighter_save_v1 · 2× Import para cargar',
       langChanged: 'Idioma: {lang}',
     },
     missions: { title: 'Misiones y logros', sub: '3 misiones diarias · reclamar XP',
@@ -1675,7 +1690,7 @@ function applyLangStaticScreens() {
     ['btnRestoreBackup', 'settings.restoreBackup'], ['btnSyncBackup', 'settings.syncBackup'],
     ['btnForceFresh', 'settings.freshCache'], ['btnClearSave', 'settings.clearSave'],
     ['btnCopyLink', 'settings.copyLink'], ['btnOpenPlayLink', 'settings.openLink'],
-    ['btnExportSave', 'settings.exportSave'], ['btnImportSave', 'settings.importSave'],
+    ['btnExportSave', 'settings.exportSave'], ['btnImportSaveFile', 'settings.importSaveFile'], ['btnImportSave', 'settings.importSave'],
   ];
   for (const [id, key] of setMap) {
     const el = document.getElementById(id);
@@ -1688,6 +1703,10 @@ function applyLangStaticScreens() {
       el.appendChild(document.createTextNode(label));
     } else el.textContent = label;
   }
+  const savePortDesc = document.getElementById('savePortDesc');
+  if (savePortDesc) savePortDesc.textContent = t('settings.savePortDesc');
+  const savePortText = document.getElementById('savePortText');
+  if (savePortText) savePortText.placeholder = t('settings.savePortPlaceholder');
   const hostingTitle = document.querySelector('#settingsScreen .settings-card div[style*="ffd75e"]');
   if (hostingTitle) hostingTitle.textContent = t('settings.hosting');
   const savePortTitle = document.querySelectorAll('#settingsScreen .settings-card div[style*="ffd75e"]')[1];
@@ -2789,6 +2808,82 @@ function bindSavePortPreview() {
     clearTimeout(savePortPreviewT);
     savePortPreviewT = setTimeout(() => updateSaveImportPreview(ta.value), 420);
   });
+}
+
+function openSaveImportFilePicker() {
+  const input = document.getElementById('saveImportFile');
+  if (!input) return false;
+  try { input.value = ''; } catch (_) {}
+  input.click();
+  return true;
+}
+
+function applySaveImportText(text, sourceLabel) {
+  const ta = document.getElementById('savePortText');
+  if (!ta) return false;
+  ta.value = text;
+  window.__sfImportConfirm = false;
+  updateSaveImportPreview(text);
+  if (sourceLabel) {
+    userToast(`Save geladen uit ${sourceLabel} — tik Import voor preview`, 3200);
+  }
+  return true;
+}
+
+function readSaveImportFile(file) {
+  return new Promise((resolve, reject) => {
+    if (!file) { reject(new Error('Geen bestand gekozen')); return; }
+    if (file.size > 120000) { reject(new Error('Save-bestand te groot (>120 KB)')); return; }
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('Bestand lezen mislukt'));
+    reader.readAsText(file);
+  });
+}
+
+function bindSaveImportFile() {
+  const input = document.getElementById('saveImportFile');
+  if (!input || input.dataset.bound) return;
+  input.dataset.bound = '1';
+  input.addEventListener('change', () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    safeAsync((async () => {
+      const text = await readSaveImportFile(file);
+      if (!text.trim()) throw new Error('Bestand is leeg');
+      applySaveImportText(text, file.name || 'bestand');
+      AudioSys.sfx('select');
+    })(), 'importSaveFile', 'Importbestand lezen mislukt');
+    try { input.value = ''; } catch (_) {}
+  });
+}
+
+function runImportSaveClick() {
+  const ta = document.getElementById('savePortText');
+  const previewEl = document.getElementById('saveImportPreview');
+  if (!ta || !ta.value.trim()) {
+    if (openSaveImportFilePicker()) return;
+    UI.toast('Kies een exportbestand of plak save-JSON in het vak', 2800);
+    return;
+  }
+  try {
+    previewImportSave(ta.value);
+    if (!window.__sfImportConfirm) {
+      window.__sfImportConfirm = true;
+      updateSaveImportPreview(ta.value);
+      UI.toast('Import-preview — tik Import nogmaals om te laden', 3600);
+      setTimeout(() => { window.__sfImportConfirm = false; }, 8000);
+      return;
+    }
+    window.__sfImportConfirm = false;
+    if (previewEl) { previewEl.style.display = 'none'; previewEl.textContent = ''; }
+    importSaveJson(ta.value);
+    AudioSys.sfx('win');
+  } catch (e) {
+    window.__sfImportConfirm = false;
+    if (previewEl) { previewEl.style.display = 'none'; previewEl.textContent = ''; }
+    UI.toast((e && e.message) ? e.message : 'Ongeldige save — controleer JSON', 3200);
+  }
 }
 
 function formatSaveBytes(n) {
@@ -19882,33 +19977,14 @@ if (btnExportSave) btnExportSave.addEventListener('click', () => {
     UI.renderSettings();
   })(), 'exportSave', 'Export mislukt — kopieer JSON handmatig uit het vak');
 });
-const btnImportSave = document.getElementById('btnImportSave');
-if (btnImportSave) btnImportSave.addEventListener('click', () => {
-  const ta = document.getElementById('savePortText');
-  const previewEl = document.getElementById('saveImportPreview');
-  if (!ta || !ta.value.trim()) {
-    UI.toast('Plak eerst een save-JSON in het vak', 2600);
-    return;
-  }
-  try {
-    const { save: next, meta, warnings } = previewImportSave(ta.value);
-    if (!window.__sfImportConfirm) {
-      window.__sfImportConfirm = true;
-      updateSaveImportPreview(ta.value);
-      UI.toast('Import-preview — tik Import nogmaals om te laden', 3600);
-      setTimeout(() => { window.__sfImportConfirm = false; }, 8000);
-      return;
-    }
-    window.__sfImportConfirm = false;
-    if (previewEl) { previewEl.style.display = 'none'; previewEl.textContent = ''; }
-    importSaveJson(ta.value);
-    AudioSys.sfx('win');
-  } catch (e) {
-    window.__sfImportConfirm = false;
-    if (previewEl) { previewEl.style.display = 'none'; previewEl.textContent = ''; }
-    UI.toast((e && e.message) ? e.message : 'Ongeldige save — controleer JSON', 3200);
-  }
+bindSaveImportFile();
+const btnImportSaveFile = document.getElementById('btnImportSaveFile');
+if (btnImportSaveFile) btnImportSaveFile.addEventListener('click', () => {
+  AudioSys.sfx('select');
+  if (!openSaveImportFilePicker()) UI.toast('Bestand kiezen niet beschikbaar', 2400);
 });
+const btnImportSave = document.getElementById('btnImportSave');
+if (btnImportSave) btnImportSave.addEventListener('click', () => runImportSaveClick());
 function bindSettingsControls() {
   const syncVolMute = (key) => {
     if (key === 'musicVol') {

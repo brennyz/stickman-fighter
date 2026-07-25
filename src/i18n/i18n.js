@@ -50,6 +50,9 @@ const I18N = {
       syncBackup: 'Sync backup = hoofd-save', freshCache: 'Verse versie (cache legen)', clearSave: 'Nieuwe start (dubbel tikken)',
       hosting: 'Hosting & voortgang', copyLink: 'Kopieer vaste speel-link', openLink: 'Open vaste link',
       savePort: 'Save export / import', exportSave: 'Export save', importSave: 'Import save',
+      importSaveFile: 'Bestand kiezen',
+      savePortDesc: 'Export kopieert JSON (clipboard + download). Import: kies een exportbestand of plak JSON — 1× Import = preview, 2× = toepassen.',
+      savePortPlaceholder: 'Plak JSON of kies een exportbestand (.json) — meta.key stickfighter_save_v1 · 2× Import om te laden',
       langChanged: 'Taal: {lang}',
     },
     missions: { title: 'Missies & prestaties', sub: '3 lichte dagmissies · claim XP wanneer klaar',
@@ -121,6 +124,9 @@ const I18N = {
       syncBackup: 'Sync backup = main save', freshCache: 'Fresh version (clear cache)', clearSave: 'New start (tap twice)',
       hosting: 'Hosting & progress', copyLink: 'Copy play link', openLink: 'Open play link',
       savePort: 'Save export / import', exportSave: 'Export save', importSave: 'Import save',
+      importSaveFile: 'Choose file',
+      savePortDesc: 'Export copies JSON (clipboard + download). Import: pick an export file or paste JSON — 1× Import = preview, 2× = apply.',
+      savePortPlaceholder: 'Paste JSON or choose an export file (.json) — meta.key stickfighter_save_v1 · tap Import twice to load',
       langChanged: 'Language: {lang}',
     },
     missions: { title: 'Missions & achievements', sub: '3 light daily missions · claim XP when done',
@@ -185,6 +191,9 @@ const I18N = {
       syncBackup: 'Backup syncen', freshCache: 'Neue Version (Cache leeren)', clearSave: 'Neustart (2× tippen)',
       hosting: 'Hosting & Fortschritt', copyLink: 'Link kopieren', openLink: 'Link öffnen',
       savePort: 'Save export / import', exportSave: 'Save exportieren', importSave: 'Save importieren',
+      importSaveFile: 'Datei wählen',
+      savePortDesc: 'Export kopiert JSON (Zwischenablage + Download). Import: Datei wählen oder JSON einfügen — 1× Import = Vorschau, 2× = anwenden.',
+      savePortPlaceholder: 'JSON einfügen oder Exportdatei (.json) wählen — meta.key stickfighter_save_v1 · 2× Import zum Laden',
       langChanged: 'Sprache: {lang}',
     },
     missions: { title: 'Missionen & Erfolge', sub: '3 tägliche Missionen · XP abholen',
@@ -243,6 +252,9 @@ const I18N = {
       syncBackup: 'Sync backup', freshCache: 'Version fraîche (cache)', clearSave: 'Nouveau départ (2× tap)',
       hosting: 'Hébergement & progrès', copyLink: 'Copier le lien', openLink: 'Ouvrir le lien',
       savePort: 'Export / import save', exportSave: 'Exporter save', importSave: 'Importer save',
+      importSaveFile: 'Choisir un fichier',
+      savePortDesc: 'Export copie le JSON (presse-papiers + téléchargement). Import : choisir un fichier ou coller le JSON — 1× Import = aperçu, 2× = appliquer.',
+      savePortPlaceholder: 'Coller le JSON ou choisir un fichier (.json) — meta.key stickfighter_save_v1 · 2× Import pour charger',
       langChanged: 'Langue : {lang}',
     },
     missions: { title: 'Missions & succès', sub: '3 missions quotidiennes · réclamer XP',
@@ -301,6 +313,9 @@ const I18N = {
       syncBackup: 'Sync backup', freshCache: 'Versión nueva (caché)', clearSave: 'Nuevo inicio (2× tap)',
       hosting: 'Hosting y progreso', copyLink: 'Copiar enlace', openLink: 'Abrir enlace',
       savePort: 'Export / import save', exportSave: 'Exportar save', importSave: 'Importar save',
+      importSaveFile: 'Elegir archivo',
+      savePortDesc: 'Export copia JSON (portapapeles + descarga). Import: elige un archivo o pega JSON — 1× Import = vista previa, 2× = aplicar.',
+      savePortPlaceholder: 'Pega JSON o elige un archivo (.json) — meta.key stickfighter_save_v1 · 2× Import para cargar',
       langChanged: 'Idioma: {lang}',
     },
     missions: { title: 'Misiones y logros', sub: '3 misiones diarias · reclamar XP',
@@ -481,7 +496,7 @@ function applyLangStaticScreens() {
     ['btnRestoreBackup', 'settings.restoreBackup'], ['btnSyncBackup', 'settings.syncBackup'],
     ['btnForceFresh', 'settings.freshCache'], ['btnClearSave', 'settings.clearSave'],
     ['btnCopyLink', 'settings.copyLink'], ['btnOpenPlayLink', 'settings.openLink'],
-    ['btnExportSave', 'settings.exportSave'], ['btnImportSave', 'settings.importSave'],
+    ['btnExportSave', 'settings.exportSave'], ['btnImportSaveFile', 'settings.importSaveFile'], ['btnImportSave', 'settings.importSave'],
   ];
   for (const [id, key] of setMap) {
     const el = document.getElementById(id);
@@ -494,6 +509,10 @@ function applyLangStaticScreens() {
       el.appendChild(document.createTextNode(label));
     } else el.textContent = label;
   }
+  const savePortDesc = document.getElementById('savePortDesc');
+  if (savePortDesc) savePortDesc.textContent = t('settings.savePortDesc');
+  const savePortText = document.getElementById('savePortText');
+  if (savePortText) savePortText.placeholder = t('settings.savePortPlaceholder');
   const hostingTitle = document.querySelector('#settingsScreen .settings-card div[style*="ffd75e"]');
   if (hostingTitle) hostingTitle.textContent = t('settings.hosting');
   const savePortTitle = document.querySelectorAll('#settingsScreen .settings-card div[style*="ffd75e"]')[1];
