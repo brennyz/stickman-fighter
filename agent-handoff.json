@@ -26,6 +26,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260725T163000",
+      "from": "user",
+      "text": "Documenteer waarom Avontuur een blauw scherm met niets toont. → DEBUG-BLACK-SCREEN.md (waarom: menu-backdrop op canvas + stale CSS + screen-deksel + gamble-timer).",
+      "status": "done-in-code",
+      "updated": "2026-07-25"
+    },
+    {
       "id": "w-20260725T141500",
       "from": "user",
       "text": "ASSET-STYLE.md leidend voor knoppen/beelden: agent leest doc → SVG in assets/buttons → vervangt inline iconen. Eerste batch later: hub of modes.",
@@ -70,6 +77,10 @@
     "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md."
   ],
   "sessionLog": [
+    {
+      "at": "2026-07-25T09:19:29Z",
+      "summary": "Docs: waarom Avontuur blauw scherm — DEBUG-BLACK-SCREEN.md herschreven (menu-backdrop + stale CSS + deksels)"
+    },
     {
       "at": "2026-07-25T15:20:00Z",
       "summary": "Adventure blue/black lid harden · v1.18.38 / SW v248"

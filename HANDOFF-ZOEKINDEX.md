@@ -1,6 +1,6 @@
 # HANDOFF zoekindex (voor agents & `git grep`)
 
-**handoff** · **agent-handoff** · **Mats** · **mikken** · **character select** · **deel 1** · **deel 2** · **coinrun** · **d20** · **ASSET-STYLE** · **buttons**
+**handoff** · **agent-handoff** · **Mats** · **mikken** · **character select** · **deel 1** · **deel 2** · **coinrun** · **d20** · **ASSET-STYLE** · **buttons** · **blauw scherm** · **DEBUG-BLACK-SCREEN**
 
 > Tot push staat dit **alleen** in lokale main / patch. GitHub `main` = `60423e4` (v1.7).
 
@@ -20,6 +20,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 | Gebruiker vroeg | Versie | Commit | Waar in code |
 |-----------------|--------|--------|----------------|
 | **Asset / knop-stijl (leidend)** | docs | — | `ASSET-STYLE.md`, `assets/buttons/` |
+| **Avontuur blauw scherm (waarom)** | docs + 1.18.35–40 | #140–#143 | `DEBUG-BLACK-SCREEN.md` — menu-backdrop, stale CSS, screen-deksel, gamble-timer |
 | Character select **deel 1** | 1.11.1 | `09b7dc2` | `index.html` `#charSelectScreen`, `game.js` charPickStep |
 | Character select **deel 2** | 1.11.2 | `7d236c1` | `#charIconRow`, `#btnCharSagaClash`, saga strip |
 | **Mats** muntjes bonus | 1.12.0 | `f6c86bf` | `coinrun`, `#btnMatsCoins`, `initCoinRun` |
