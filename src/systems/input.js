@@ -380,6 +380,24 @@ function relayoutTouchPads() {
   } catch (_) {}
 }
 
+/** Wis spook-vingers vóór play — voorkomt vastgelopen joystick bij level-start. */
+function primePlayInput(dual) {
+  Input.releaseAll();
+  Input.dualMode = !!dual;
+  Input.suppressUntil = performance.now() + (IS_TOUCH ? 400 : 140);
+  Input.lastMoveTap = 0;
+  Input.lastMoveDir = 0;
+  if (InputP2) {
+    InputP2.lastMoveTap = 0;
+    InputP2.lastMoveDir = 0;
+  }
+  relayoutTouchPads();
+}
+
+function playInputSuppressed() {
+  return Input.suppressUntil && performance.now() < Input.suppressUntil;
+}
+
 /** Voorkom dat scroll/slide over menu-tegels meteen selecteert (iPad). */
 const TAP_SLOP_PX = IS_TOUCH ? 12 : 8;
 const _uiTap = { id: null, x: 0, y: 0, moved: false, scrolls: [] };
@@ -741,8 +759,10 @@ const _padP1Methods = {
 
 Object.assign(Input, {
   dualMode: false,
+  suppressUntil: 0,
   pointerPads: {},
   onDown(x, y, id) {
+    if (playInputSuppressed()) return;
     AudioSys.init();
     if (this.dualMode) {
       const z = touchPadZone(x);
@@ -789,6 +809,7 @@ Object.assign(Input, {
     }
   },
   onMove(x, y, id) {
+    if (playInputSuppressed()) return;
     if (this.dualMode) {
       const owner = this.pointerPads[id];
       if (owner === 'p2') {
@@ -821,7 +842,14 @@ Object.assign(Input, {
   releaseAll() {
     _padP1Methods.releaseAll.call(this);
     this.pointerPads = {};
-    if (InputP2) InputP2.releaseAll();
+    this.suppressUntil = 0;
+    this.lastMoveTap = 0;
+    this.lastMoveDir = 0;
+    if (InputP2) {
+      InputP2.releaseAll();
+      InputP2.lastMoveTap = 0;
+      InputP2.lastMoveDir = 0;
+    }
   },
   endFrame() {
     const now = performance.now();

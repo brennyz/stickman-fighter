@@ -8,6 +8,7 @@ function startGame(mode, opts) {
     try { UI.toast('Onbekende modus', 2200); } catch (_) {}
     return;
   }
+  try { primePlayInput(mode === 'versus'); } catch (_) {}
   window.__sfLoopErr = false;
   try { Input.releaseAll(); } catch (_) {}
   Input.dualMode = false;
@@ -539,6 +540,7 @@ bindPress(document.getElementById('pauseResume'), () => {
   state = 'play';
   AudioSys.setPaused(false);
   if (save.music && AudioSys.desiredSong) AudioSys.play(AudioSys.desiredSong);
+  try { primePlayInput(game && game.mode === 'versus'); } catch (_) {}
   UI.show(null);
 });
 bindPress(document.getElementById('pauseQuit'), () => { UI.goMenu(); });

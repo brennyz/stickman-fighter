@@ -184,9 +184,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.66';
+const APP_VERSION = '1.17.67';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 192;
+const SW_CACHE_REV = 193;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null, activeJutsu: 'rasengan',
 
@@ -9443,6 +9443,24 @@ function relayoutTouchPads() {
   } catch (_) {}
 }
 
+/** Wis spook-vingers vóór play — voorkomt vastgelopen joystick bij level-start. */
+function primePlayInput(dual) {
+  Input.releaseAll();
+  Input.dualMode = !!dual;
+  Input.suppressUntil = performance.now() + (IS_TOUCH ? 400 : 140);
+  Input.lastMoveTap = 0;
+  Input.lastMoveDir = 0;
+  if (InputP2) {
+    InputP2.lastMoveTap = 0;
+    InputP2.lastMoveDir = 0;
+  }
+  relayoutTouchPads();
+}
+
+function playInputSuppressed() {
+  return Input.suppressUntil && performance.now() < Input.suppressUntil;
+}
+
 /** Voorkom dat scroll/slide over menu-tegels meteen selecteert (iPad). */
 const TAP_SLOP_PX = IS_TOUCH ? 12 : 8;
 const _uiTap = { id: null, x: 0, y: 0, moved: false, scrolls: [] };
@@ -9804,8 +9822,10 @@ const _padP1Methods = {
 
 Object.assign(Input, {
   dualMode: false,
+  suppressUntil: 0,
   pointerPads: {},
   onDown(x, y, id) {
+    if (playInputSuppressed()) return;
     AudioSys.init();
     if (this.dualMode) {
       const z = touchPadZone(x);
@@ -9852,6 +9872,7 @@ Object.assign(Input, {
     }
   },
   onMove(x, y, id) {
+    if (playInputSuppressed()) return;
     if (this.dualMode) {
       const owner = this.pointerPads[id];
       if (owner === 'p2') {
@@ -9884,7 +9905,14 @@ Object.assign(Input, {
   releaseAll() {
     _padP1Methods.releaseAll.call(this);
     this.pointerPads = {};
-    if (InputP2) InputP2.releaseAll();
+    this.suppressUntil = 0;
+    this.lastMoveTap = 0;
+    this.lastMoveDir = 0;
+    if (InputP2) {
+      InputP2.releaseAll();
+      InputP2.lastMoveTap = 0;
+      InputP2.lastMoveDir = 0;
+    }
   },
   endFrame() {
     const now = performance.now();
@@ -9975,6 +10003,17 @@ if (!canvas || !ctx) {
 let W = innerWidth, H = innerHeight, DPR = 1;
 let resizeDebounce = null;
 let lastResizeKey = '';
+const canvasPointers = new Set();
+
+function clearCanvasPointers() {
+  canvasPointers.clear();
+}
+
+function releaseCanvasPointer(id) {
+  if (!canvasPointers.has(id)) return;
+  canvasPointers.delete(id);
+  Input.onUp(id);
+}
 
 function resize() {
   const vp = viewportGameSize();
@@ -10024,6 +10063,7 @@ window.addEventListener('pageshow', () => scheduleResize());
 canvas.addEventListener('pointerdown', e => {
   if (state !== 'play' || !game) return;
   e.preventDefault();
+  canvasPointers.add(e.pointerId);
   try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
   const p = pointerGameCoords(e.clientX, e.clientY);
   if (ketsbamHitTest(p.x, p.y, game) && game.tryKetsbam()) return;
@@ -10031,6 +10071,7 @@ canvas.addEventListener('pointerdown', e => {
 });
 canvas.addEventListener('pointermove', e => {
   if (state !== 'play' || !game) return;
+  if (!canvasPointers.has(e.pointerId)) return;
   e.preventDefault();
   const p = pointerGameCoords(e.clientX, e.clientY);
   Input.onMove(p.x, p.y, e.pointerId);
@@ -10038,33 +10079,44 @@ canvas.addEventListener('pointermove', e => {
 canvas.addEventListener('pointerup', e => {
   if (state !== 'play' || !game) return;
   e.preventDefault();
-  Input.onUp(e.pointerId);
+  releaseCanvasPointer(e.pointerId);
 });
 canvas.addEventListener('pointercancel', e => {
   if (state !== 'play' || !game) return;
-  Input.onUp(e.pointerId);
+  releaseCanvasPointer(e.pointerId);
 });
 canvas.addEventListener('lostpointercapture', e => {
   if (state !== 'play' || !game) return;
-  Input.onUp(e.pointerId);
+  releaseCanvasPointer(e.pointerId);
 });
 function onGlobalPointerEnd(e) {
   if (state !== 'play' || !game) return;
-  Input.onUp(e.pointerId);
+  releaseCanvasPointer(e.pointerId);
 }
 window.addEventListener('pointerup', onGlobalPointerEnd);
 window.addEventListener('pointercancel', onGlobalPointerEnd);
 window.addEventListener('blur', () => {
-  if (state === 'play') try { Input.releaseAll(); } catch (_) {}
+  if (state === 'play') {
+    clearCanvasPointers();
+    try { Input.releaseAll(); } catch (_) {}
+  }
 });
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && state === 'play') try { Input.releaseAll(); } catch (_) {}
+  if (document.hidden && state === 'play') {
+    clearCanvasPointers();
+    try { Input.releaseAll(); } catch (_) {}
+  }
 });
 document.addEventListener('gesturestart', e => {
   if (state === 'play') e.preventDefault();
 });
 document.addEventListener('pointerdown', () => AudioSys.init(), { once: false });
 
+const _releaseAllInput = Input.releaseAll.bind(Input);
+Input.releaseAll = function releaseAllWithCanvasClear() {
+  clearCanvasPointers();
+  _releaseAllInput();
+};
 /* --- src/render/draw-helpers.js --- */
 /* ============================ TEKENHULPEN ============================== */
 function seg(x, y, ang, len) { return [x + Math.cos(ang) * len, y + Math.sin(ang) * len]; }
@@ -16974,6 +17026,7 @@ const UI = {
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
+      try { Input.releaseAll(); } catch (_) {}
       Input.dualMode = false;
       Input.layout(W, H);
       this.charPickStep = 1;
@@ -18918,6 +18971,7 @@ function startGame(mode, opts) {
     try { UI.toast('Onbekende modus', 2200); } catch (_) {}
     return;
   }
+  try { primePlayInput(mode === 'versus'); } catch (_) {}
   window.__sfLoopErr = false;
   try { Input.releaseAll(); } catch (_) {}
   Input.dualMode = false;
@@ -19449,6 +19503,7 @@ bindPress(document.getElementById('pauseResume'), () => {
   state = 'play';
   AudioSys.setPaused(false);
   if (save.music && AudioSys.desiredSong) AudioSys.play(AudioSys.desiredSong);
+  try { primePlayInput(game && game.mode === 'versus'); } catch (_) {}
   UI.show(null);
 });
 bindPress(document.getElementById('pauseQuit'), () => { UI.goMenu(); });

@@ -596,6 +596,7 @@ const UI = {
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
+      try { Input.releaseAll(); } catch (_) {}
       Input.dualMode = false;
       Input.layout(W, H);
       this.charPickStep = 1;
