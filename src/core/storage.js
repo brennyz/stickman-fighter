@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.49';
+const APP_VERSION = '1.18.50';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 259;
+const SW_CACHE_REV = 260;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -947,12 +947,20 @@ function sanitizeSave(s) {
     const tasks = Array.isArray(out.daily.tasks) ? out.daily.tasks : [];
     out.daily = {
       date: dk,
-      tasks: tasks.filter(t => t && typeof dailyDef === 'function' && dailyDef(t.id)).map(t => ({
-        id: t.id,
-        progress: clamp(Math.floor(Number(t.progress) || 0), 0, 99999),
-        done: !!t.done,
-        claimed: !!t.claimed,
-      })).slice(0, 5),
+      tasks: tasks.filter(t => t && typeof dailyDef === 'function' && dailyDef(t.id)).map(t => {
+        const def = dailyDef(t.id);
+        const goal = def ? def.goal : 99999;
+        const progress = clamp(Math.floor(Number(t.progress) || 0), 0, goal);
+        const done = def ? progress >= goal : false;
+        let claimed = !!t.claimed;
+        if (claimed && !done) claimed = false;
+        return {
+          id: t.id,
+          progress: done ? goal : progress,
+          done,
+          claimed,
+        };
+      }).slice(0, 5),
       dayBonusClaimed: !!out.daily.dayBonusClaimed,
     };
   } else {

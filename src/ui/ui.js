@@ -1171,6 +1171,13 @@ const UI = {
         save.missionsIntroSeen = true;
         persist();
       }
+      if (game) {
+        try {
+          if (typeof clearTideBattleState === 'function') clearTideBattleState(game, { restoreMusic: true });
+        } catch (_) {
+          try { if (typeof cancelTideBattleMusicPending === 'function') cancelTideBattleMusicPending(game); } catch (_) {}
+        }
+      }
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
@@ -1191,6 +1198,13 @@ const UI = {
     } catch (err) {
       sfReportError('goMenu', err, 'Kon menu niet openen — herlaad de pagina');
       try { Input.releaseAll(); } catch (_) {}
+      if (game) {
+        try {
+          if (typeof clearTideBattleState === 'function') clearTideBattleState(game, { restoreMusic: true });
+        } catch (_) {
+          try { if (typeof cancelTideBattleMusicPending === 'function') cancelTideBattleMusicPending(game); } catch (_) {}
+        }
+      }
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
