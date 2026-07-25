@@ -10,6 +10,7 @@ function startGame(mode, opts) {
   }
   try { primePlayInput(mode === 'versus'); } catch (_) {}
   window.__sfLoopErr = false;
+  window.__sfPlayLock = false;
   try { Input.releaseAll(); } catch (_) {}
   Input.dualMode = false;
   try { dismissTunnelOverlayIfStatic(); } catch (_) {}
@@ -22,51 +23,33 @@ function startGame(mode, opts) {
     }
     try { primePlayInput(true); } catch (_) {}
   }
-
-  // ——— Fase lock: lids weg vóór construct (volgorde = veiligheid) ———
-  try {
-    if (typeof beginPlaySession === 'function') beginPlaySession('lock', 'start/' + mode);
-    else {
-      window.__sfPlayLock = true;
-      document.body.classList.add('is-playing');
-      if (typeof killUiLidsForPlay === 'function') killUiLidsForPlay();
-    }
-  } catch (_) {
-    window.__sfPlayLock = true;
-  }
-
   try {
     game = new Game(mode, opts);
   } catch (err) {
-    try { if (typeof beginPlaySession === 'function') beginPlaySession('end', 'startFail'); } catch (_) {
-      window.__sfPlayLock = false;
-    }
     sfReportError('start/' + mode, err);
     recoverToMenu({ force: true });
     return;
   }
   if (!game || !game.player) {
-    try { if (typeof beginPlaySession === 'function') beginPlaySession('end', 'startIncomplete'); } catch (_) {
-      window.__sfPlayLock = false;
-    }
     sfReportError('start/' + mode, new Error('game incomplete'));
     recoverToMenu({ force: true });
     return;
   }
-
   state = 'play';
   primePlayInput(mode);
+  try {
+    if (typeof forceGameResize === 'function') forceGameResize();
+    else scheduleResize();
+  } catch (_) { try { scheduleResize(); } catch (__) {} }
+  try { AudioSys.setPaused(false); } catch (_) {}
   try { recordLastPlay(mode, opts); } catch (_) {}
   try { applyModeOnboarding(mode, game); } catch (_) {}
-  try { AudioSys.setPaused(false); } catch (_) {}
-
-  // ——— Fase armed: canvas + lids vóór audio ———
-  try { UI.show(null); } catch (_) {}
+  try { UI.hideGambleRollFlash(); } catch (_) {}
+  try { UI.show(null); } catch (_) { try { syncPlayLayer(); } catch (__) {} }
+  // Eerste speelframe — voorkomt 1 frame menu-blauw op canvas
   try {
-    if (typeof beginPlaySession === 'function') beginPlaySession('armed', 'start/' + mode);
-    else if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('startGame/' + mode);
-  } catch (_) { try { syncPlayLayer(); } catch (__) {} }
-
+    if (ctx && game && typeof game.draw === 'function') game.draw(ctx);
+  } catch (_) {}
   try {
     AudioSys.init();
     const modeSting = { adventure: 'modeAdventure', training: 'modeTraining', versus: 'modeVersus', wall: 'modeWall', coinrun: 'modeMats' };
@@ -80,13 +63,6 @@ function startGame(mode, opts) {
     else if (mode === 'wall') AudioSys.play('wall');
     else AudioSys.play('battle');
   } catch (_) {}
-
-  // ——— Fase live: na audio + timed reassert ———
-  try {
-    if (typeof beginPlaySession === 'function') beginPlaySession('live', 'start/' + mode);
-    else if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('startGame-live/' + mode);
-  } catch (_) {}
-  try { if (typeof blackScreenGuard === 'function') blackScreenGuard('startGame/' + mode); } catch (_) {}
 }
 
 /** iPad: touchend + click zonder dubbel-vuur (preventDefault stopt ghost-click). */
@@ -578,10 +554,6 @@ bindPress(document.getElementById('pauseResume'), () => {
     try { primePlayInput(true); } catch (_) {}
   }
   UI.show(null);
-  try {
-    if (typeof beginPlaySession === 'function') beginPlaySession('live', 'pauseResume');
-    else if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('pauseResume');
-  } catch (_) {}
 });
 bindPress(document.getElementById('pauseQuit'), () => { UI.goMenu(); });
 const pauseVsRestart = document.getElementById('pauseVsRestart');
@@ -622,4 +594,3 @@ bindPress(document.getElementById('resNext'), () => {
   gokGooiStartLevel(Math.min(MAX_LEVEL, d.level + 1));
 });
 bindPress(document.getElementById('resMenu'), () => { UI.goMenu(); });
-

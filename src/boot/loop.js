@@ -718,13 +718,11 @@ window.addEventListener('unhandledrejection', (e) => {
 function bindUiLayerWatch() {
   const tick = () => {
     try {
-      if (typeof isFighting === 'function' ? isFighting() : (state === 'play' && game)) {
+      if (state === 'play' && game) {
         if (typeof playLayerBroken === 'function' && playLayerBroken()) {
           forcePlayCanvasVisible('uiWatch');
-        } else if (state === 'play') {
-          // Lichte sync: lids dood houden zonder full redraw-storm
-          try { killUiLidsForPlay(); } catch (_) { syncPlayLayer(); }
-          try { document.body.classList.add('is-playing'); } catch (_) {}
+        } else {
+          syncPlayLayer();
         }
         blackScreenGuard('uiWatch');
       } else {
@@ -736,6 +734,6 @@ function bindUiLayerWatch() {
   };
   document.addEventListener('touchstart', tick, { passive: true, capture: true });
   document.addEventListener('pointerdown', tick, { passive: true, capture: true });
-  setInterval(tick, 900);
+  setInterval(tick, 1200);
 }
 bindUiLayerWatch();

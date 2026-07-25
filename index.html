@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=252">
+<link rel="stylesheet" href="styles/main.css?v=253">
 
 
 
@@ -246,6 +246,14 @@
   <div id="levelIslandInfo" class="island-info"></div>
   <div class="grid island-grid" id="levelGrid"></div>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="sub-home-label">Terug naar menu</span></button></div>
+  <!-- Flash IN levelScreen: mee-hidden als .screen niet active (ochtend-aanpak) -->
+  <div id="levelRollFlash" class="level-roll-flash" hidden aria-hidden="true">
+    <div class="level-roll-flash-card">
+      <div id="levelRollDice" class="level-roll-dice">? ?</div>
+      <div id="levelRollSum" class="level-roll-sum"></div>
+      <div id="levelRollOutcome" class="level-roll-outcome"></div>
+    </div>
+  </div>
 </div>
 
 <div id="gambleScreen" class="screen">
@@ -564,14 +572,6 @@
 </div>
 
 <canvas id="game" aria-hidden="true"></canvas>
-<!-- Dobbel-flash BUITEN .screen — anders verdwijnt die met levelScreen en blijft menu-blauw op canvas -->
-<div id="levelRollFlash" class="level-roll-flash" hidden aria-hidden="true">
-  <div class="level-roll-flash-card">
-    <div id="levelRollDice" class="level-roll-dice">? ?</div>
-    <div id="levelRollSum" class="level-roll-sum"></div>
-    <div id="levelRollOutcome" class="level-roll-outcome"></div>
-  </div>
-</div>
 <script>
 (function () {
   var c = document.getElementById('game');
@@ -582,9 +582,9 @@
 })();
 </script>
 
-<script src="tunnel-check.js?v=252"></script>
-<script src="game.js?v=252"></script>
-<script src="install.js?v=252"></script>
+<script src="tunnel-check.js?v=253"></script>
+<script src="game.js?v=253"></script>
+<script src="install.js?v=253"></script>
 <script>
 (function () {
   function freeUi() {
@@ -597,40 +597,19 @@
     }
     var c = document.getElementById('game');
     if (!c) return;
-    var playing = (typeof isFighting === 'function')
-      ? isFighting()
-      : (window.__sfPlayLock
-        || (typeof state !== 'undefined' && state === 'play' && typeof game !== 'undefined' && game));
-    if (playing) {
-      // Nooit canvas verbergen tijdens gevecht (blauw deksel + wél geluid)
-      try {
-        if (typeof forcePlayCanvasVisible === 'function') {
-          forcePlayCanvasVisible('freeUi');
-          return;
-        }
-      } catch (_) {}
+    if (typeof state !== 'undefined' && state === 'play' && typeof game !== 'undefined' && game) {
+      c.style.visibility = 'visible';
+      c.style.opacity = '1';
+      c.style.pointerEvents = 'auto';
       document.body.classList.add('is-playing');
-      try {
-        c.style.setProperty('visibility', 'visible', 'important');
-        c.style.setProperty('opacity', '1', 'important');
-        c.style.setProperty('z-index', '80', 'important');
-        c.style.setProperty('display', 'block', 'important');
-        c.style.setProperty('pointer-events', 'auto', 'important');
-      } catch (_) {
-        c.style.visibility = 'visible';
-        c.style.opacity = '1';
-        c.style.zIndex = '80';
-        c.style.pointerEvents = 'auto';
-      }
       document.querySelectorAll('.screen.active').forEach(function (s) { s.classList.remove('active'); });
-      var flash = document.getElementById('levelRollFlash');
-      if (flash) {
-        flash.classList.remove('visible');
-        flash.hidden = true;
-        try {
-          flash.style.setProperty('display', 'none', 'important');
-        } catch (_) {}
-      }
+      return;
+    }
+    if (document.body.classList.contains('is-playing')) {
+      c.style.visibility = 'visible';
+      c.style.opacity = '1';
+      c.style.pointerEvents = 'auto';
+      document.querySelectorAll('.screen.active').forEach(function (s) { s.classList.remove('active'); });
       return;
     }
     c.style.pointerEvents = 'none';

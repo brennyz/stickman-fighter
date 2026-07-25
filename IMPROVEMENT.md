@@ -128,6 +128,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-24 | **7** | Save (cyclus 4): schema v3 meta pets/ei/stijl; readSaveJson pets+egg merge; sync backup knop; export download; drift pets/ei; import repair-toast; stale-save hint — SAVE_KEY vast. v1.17.49 / SW v175. |
 | 2026-07-24 | **7** | Save (cyclus 3): sanitize-reparatie hints (boot + import), export meta summary, live import-preview, drift-detail bij backup, stijl-unlock check op dex-prestaties — SAVE_KEY vast. v1.17.10 / SW v137. |
 | 2026-07-24 | **12** | Content (cyclus 3): monsterboek type-filter + sort (boek/rariteit/unlock/kills), rariteit-tellers, volgende-dex-prestatie tracker, Top jager badge; wapens verzamel-strip. v1.17.9 / SW v136. |
+| 2026-07-25 | — | **Adventure simple revert:** nuclear lids approach wrong — back to morning syncPlayLayer, flash inside levelScreen, no !important screen kills. Keep no-menu-backdrop-during-play. v1.18.43 / SW v253. |
 | 2026-07-25 | — | **Play-layer harden:** `beginPlaySession(lock→armed→live)`, UI.show blocks lids during play, DOM order, mutobs+280ms watchdog, canvas z80. v1.18.42 / SW v252. |
 | 2026-07-25 | — | **Blue+audio nuclear:** lids `display:none !important`, canvas z60, `__sfPlayLock`, freeUi never hides during play, flash in playLayerBroken. v1.18.41 / SW v251. |
 | 2026-07-25 | — | **Blue CSS cachebust:** `main.css` bleef op `?v=239` terwijl JS `?v=249` was — Verse versie liet oude CSS (geen flash-hide / play z40). Flash `:not(.visible)` hard weg + reassert. v1.18.40 / SW v250. |
