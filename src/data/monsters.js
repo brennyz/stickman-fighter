@@ -226,6 +226,8 @@ const KETSBAM_DETECT_R = 148;
 const KETSBAM_NEAR_MIN = 3;
 const KETSBAM_BLAST_R = 192;
 const KETSBAM_CD = 9;
+/** Gradual fill (thermometer) before KETS is ready to tap. */
+const KETSBAM_BUILD_DUR = 3.8;
 const KETSBAM_CHARGE_DUR = 1.2;
 const KETSBAM_INVULN = 1.15;
 const KETSBAM_SUPER_ARMOR = 0.95;
