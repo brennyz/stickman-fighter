@@ -258,10 +258,22 @@ function trySkillUpgrade(id) {
 }
 
 
+/** Jutsu equipbaar als SUPER: Rasengan altijd, of shard-upgrade Lv≥1, of roster-unlock (needLvl). */
 function jutsuSkillUnlocked(id, st) {
   if (!SKILL_DEFS[id] || SKILL_DEFS[id].group !== 'jutsu') return false;
   if (id === 'rasengan') return true;
-  return skillLevel(id, st) >= 1;
+  if (skillLevel(id, st) >= 1) return true;
+  const bag = st || save;
+  const sk = typeof skillById === 'function' ? skillById(id) : null;
+  if (!sk || sk.id !== id) return false;
+  const lvl = Math.floor(Number(bag && bag.lvl) || 1);
+  const unlockedAdv = Math.floor(Number(bag && bag.unlocked) || 1);
+  const cap = typeof adventureWeaponCapForLevel === 'function'
+    ? adventureWeaponCapForLevel(unlockedAdv)
+    : 999;
+  if (sk.needLvl && sk.needLvl > cap) return false;
+  if (sk.needLvl && lvl >= sk.needLvl) return true;
+  return false;
 }
 
 function utilitySkillActive(id, st) {
@@ -529,9 +541,12 @@ function fighterEquippedSkill(f) {
     return skillById(vs) || skillById('rasengan');
   }
   if (f.isPlayer && !f.playerSlot) {
-    const skillId = save.skill || (typeof activeJutsuId === 'function' ? activeJutsuId() : 'rasengan') || 'rasengan';
-    const eq = skillById(skillId);
-    return skillUnlocked(eq) ? eq : skillById('rasengan');
+    // Prefer explicit skill pick; fall back to active SUPER jutsu (Rasengan/Chidori/Rinnegan).
+    const fromSkill = save.skill ? skillById(save.skill) : null;
+    if (fromSkill && skillUnlocked(fromSkill)) return fromSkill;
+    const jutsuId = typeof activeJutsuId === 'function' ? activeJutsuId() : 'rasengan';
+    const fromJutsu = skillById(jutsuId);
+    return (fromJutsu && skillUnlocked(fromJutsu)) ? fromJutsu : skillById('rasengan');
   }
   if (f.vsSpecial) return skillById(f.vsSpecial) || skillById('rasengan');
   return skillById('rasengan');

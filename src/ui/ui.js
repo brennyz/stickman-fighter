@@ -2546,6 +2546,7 @@ const UI = {
         const canUp = skillCanUpgrade(id);
         const equipped = def.group === 'jutsu' && activeJutsuId() === id;
         const unlocked = def.group === 'jutsu' ? jutsuSkillUnlocked(id) : (lv >= 1 || id === 'rasengan');
+        const rosterNeed = (def.group === 'jutsu' && skillById(id) && skillById(id).needLvl) || 1;
         const el = document.createElement('div');
         el.className = 'card skill-card upgrade-polish-card' + (canUp ? ' claimable' : '') + (lv >= maxLv ? ' claimed' : '') + (equipped ? ' sel' : '');
         el.style.borderColor = def.color + (equipped ? '' : '88');
@@ -2558,7 +2559,7 @@ const UI = {
           : t('ui.skillMax');
         const desc = skillDesc(id);
         const statusLine = def.group === 'jutsu'
-          ? (equipped ? t('ui.skillEquipped') : (unlocked ? t('ui.skillEquipHint') : t('ui.skillLocked', { lv: 1 })))
+          ? (equipped ? t('ui.skillEquipped') : (unlocked ? t('ui.skillEquipHint') : t('ui.skillLocked', { lv: rosterNeed })))
           : (lv >= 1 ? t('ui.skillPassiveActive') : t('ui.skillPassiveLocked', { lv: 1 }));
         el.innerHTML =
           `<div class="upgrade-icon-orb skill-orb-swatch" style="--orb-c:${def.color}" aria-hidden="true">` +

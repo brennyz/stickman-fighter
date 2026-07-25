@@ -103,6 +103,7 @@ assert(ctx.weaponUpgradeBonuses('vuist').dmgMul === 1, 'vuist gets no weapon bon
 
 const equipped = ctx.sanitizeSave(Object.assign({}, ctx.DEFAULT_SAVE, {
   lvl: 8,
+  unlocked: 8,
   skillUpgrades: { chidori: { level: 2, shards: 0 }, rasengan: { level: 1, shards: 0 } },
   activeJutsu: 'chidori',
 }));
@@ -111,5 +112,29 @@ assert(ctx.activeJutsuId(undefined, equipped) === 'chidori', 'active jutsu resol
 assert(ctx.jutsuSkillUnlocked('chidori', equipped), 'chidori unlocked at Lv 2');
 assert(ctx.skillBonuses('chidori', equipped).dmgMul > 1, 'upgraded skill bonuses apply from Lv 1+');
 assert(ctx.skillBonuses('rasengan', equipped).dmgMul > 1, 'rasengan Lv 1 bonus applies');
+
+// Roster unlock (needLvl) must allow equipping Chidori without shard upgrades
+const rosterOnly = ctx.sanitizeSave(Object.assign({}, ctx.DEFAULT_SAVE, {
+  lvl: 8,
+  unlocked: 8,
+  skill: 'chidori',
+  activeJutsu: 'chidori',
+  skillUpgrades: {},
+}));
+assert(ctx.jutsuSkillUnlocked('chidori', rosterOnly), 'chidori equippable via roster needLvl without shards');
+assert(rosterOnly.activeJutsu === 'chidori', 'sanitize keeps roster-equipped chidori');
+assert(ctx.activeJutsuId(undefined, rosterOnly) === 'chidori', 'activeJutsuId respects roster unlock');
+
+vm.runInContext(
+  "Object.assign(save, { lvl: 8, unlocked: 8, skillUpgrades: {}, activeJutsu: 'rasengan', skill: 'rasengan' });",
+  ctx
+);
+assert(ctx.jutsuSkillUnlocked('chidori'), 'live save: chidori unlocked at fighter Lv 8');
+assert(ctx.setActiveJutsu('chidori', true), 'setActiveJutsu chidori without shards');
+assert(vm.runInContext('save.activeJutsu', ctx) === 'chidori', 'activeJutsu set to chidori');
+assert(vm.runInContext('save.skill', ctx) === 'chidori', 'skill synced to chidori');
+
+const tooLow = Object.assign({}, ctx.DEFAULT_SAVE, { lvl: 4, unlocked: 4, skillUpgrades: {} });
+assert(!ctx.jutsuSkillUnlocked('chidori', tooLow), 'chidori still locked below needLvl without shards');
 
 console.log('SMOKE_OK upgrades hardened');

@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.55';
+const APP_VERSION = '1.18.56';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 265;
+const SW_CACHE_REV = 266;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -6195,10 +6195,22 @@ function trySkillUpgrade(id) {
 }
 
 
+/** Jutsu equipbaar als SUPER: Rasengan altijd, of shard-upgrade Lv≥1, of roster-unlock (needLvl). */
 function jutsuSkillUnlocked(id, st) {
   if (!SKILL_DEFS[id] || SKILL_DEFS[id].group !== 'jutsu') return false;
   if (id === 'rasengan') return true;
-  return skillLevel(id, st) >= 1;
+  if (skillLevel(id, st) >= 1) return true;
+  const bag = st || save;
+  const sk = typeof skillById === 'function' ? skillById(id) : null;
+  if (!sk || sk.id !== id) return false;
+  const lvl = Math.floor(Number(bag && bag.lvl) || 1);
+  const unlockedAdv = Math.floor(Number(bag && bag.unlocked) || 1);
+  const cap = typeof adventureWeaponCapForLevel === 'function'
+    ? adventureWeaponCapForLevel(unlockedAdv)
+    : 999;
+  if (sk.needLvl && sk.needLvl > cap) return false;
+  if (sk.needLvl && lvl >= sk.needLvl) return true;
+  return false;
 }
 
 function utilitySkillActive(id, st) {
@@ -6466,9 +6478,12 @@ function fighterEquippedSkill(f) {
     return skillById(vs) || skillById('rasengan');
   }
   if (f.isPlayer && !f.playerSlot) {
-    const skillId = save.skill || (typeof activeJutsuId === 'function' ? activeJutsuId() : 'rasengan') || 'rasengan';
-    const eq = skillById(skillId);
-    return skillUnlocked(eq) ? eq : skillById('rasengan');
+    // Prefer explicit skill pick; fall back to active SUPER jutsu (Rasengan/Chidori/Rinnegan).
+    const fromSkill = save.skill ? skillById(save.skill) : null;
+    if (fromSkill && skillUnlocked(fromSkill)) return fromSkill;
+    const jutsuId = typeof activeJutsuId === 'function' ? activeJutsuId() : 'rasengan';
+    const fromJutsu = skillById(jutsuId);
+    return (fromJutsu && skillUnlocked(fromJutsu)) ? fromJutsu : skillById('rasengan');
   }
   if (f.vsSpecial) return skillById(f.vsSpecial) || skillById('rasengan');
   return skillById('rasengan');
@@ -10024,6 +10039,10 @@ const CATALOG_EN = {
     weaponComboHint: 'Weapon 3× = ①②③ · hit ①+② → golden ③',
     gambleOnboardTouch: 'First gamble: low sum = super-boss · high sum = ally · Skip = normal level',
     gambleOnboardKb: 'First time: sum ≤5 super-boss · sum ≥9 ally buff · Skip = no gamble',
+    ketsbamOnboardTouch: 'Surrounded? Tap the center symbol — Ketsbam escape · 9s cooldown',
+    ketsbamOnboardKb: 'Surrounded? E or center symbol = Ketsbam · 9s cooldown',
+    tideBattleOnboardTouch: 'First Tide Battle: defeat {name} — no other waves until done',
+    tideBattleOnboardKb: 'First Tide Battle: defeat {name} — waves pause until done',
     langSwitchFail: 'Language switch failed',
   },
   fighter: {
@@ -26025,6 +26044,7 @@ const UI = {
         const canUp = skillCanUpgrade(id);
         const equipped = def.group === 'jutsu' && activeJutsuId() === id;
         const unlocked = def.group === 'jutsu' ? jutsuSkillUnlocked(id) : (lv >= 1 || id === 'rasengan');
+        const rosterNeed = (def.group === 'jutsu' && skillById(id) && skillById(id).needLvl) || 1;
         const el = document.createElement('div');
         el.className = 'card skill-card upgrade-polish-card' + (canUp ? ' claimable' : '') + (lv >= maxLv ? ' claimed' : '') + (equipped ? ' sel' : '');
         el.style.borderColor = def.color + (equipped ? '' : '88');
@@ -26037,7 +26057,7 @@ const UI = {
           : t('ui.skillMax');
         const desc = skillDesc(id);
         const statusLine = def.group === 'jutsu'
-          ? (equipped ? t('ui.skillEquipped') : (unlocked ? t('ui.skillEquipHint') : t('ui.skillLocked', { lv: 1 })))
+          ? (equipped ? t('ui.skillEquipped') : (unlocked ? t('ui.skillEquipHint') : t('ui.skillLocked', { lv: rosterNeed })))
           : (lv >= 1 ? t('ui.skillPassiveActive') : t('ui.skillPassiveLocked', { lv: 1 }));
         el.innerHTML =
           `<div class="upgrade-icon-orb skill-orb-swatch" style="--orb-c:${def.color}" aria-hidden="true">` +
