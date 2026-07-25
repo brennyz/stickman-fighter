@@ -634,6 +634,138 @@ function saveExportSummaryLine(s) {
   return line;
 }
 
+/* ---------- Run-buit (naast XP) — overzicht in pauze + resultaat ---------- */
+function createRunLoot() {
+  return {
+    summons: [],
+    dex: [],
+    pets: [],
+    eggs: [],
+    pickups: { heal: 0, rage: 0, chakra: 0, shield: 0 },
+    petCoins: 0,
+    hpBonus: 0,
+    levelUps: 0,
+    weapons: [],
+    finishers: 0,
+  };
+}
+
+function noteRunLootSummon(loot, weaponId, tier) {
+  if (!loot) return;
+  loot.summons.push({ id: weaponId, tier: tier || 'epic' });
+}
+
+function noteRunLootDex(loot, sp, hpBonus) {
+  if (!loot || !sp) return;
+  loot.dex.push({ name: sp.name, rarity: sp.rarity });
+  loot.hpBonus += Math.max(0, Math.floor(Number(hpBonus) || 0));
+}
+
+function noteRunLootPet(loot, name) {
+  if (!loot || !name) return;
+  loot.pets.push({ name: String(name).slice(0, 32) });
+}
+
+function noteRunLootEgg(loot, name, duplicate) {
+  if (!loot || !name) return;
+  loot.eggs.push({ name: String(name).slice(0, 32), duplicate: !!duplicate });
+}
+
+function noteRunLootPickup(loot, kind) {
+  if (!loot || !kind || !loot.pickups) return;
+  if (loot.pickups[kind] != null) loot.pickups[kind]++;
+}
+
+function noteRunLootPetCoins(loot, n) {
+  if (!loot) return;
+  loot.petCoins += Math.max(0, Math.floor(Number(n) || 0));
+}
+
+function noteRunLootFinisher(loot) {
+  if (!loot) return;
+  loot.finishers++;
+}
+
+function noteRunLootLevelUp(loot, newLvl) {
+  if (!loot) return;
+  loot.levelUps++;
+  const w = WEAPONS.find(x => x.unlock === newLvl);
+  if (w) loot.weapons.push(w.id);
+}
+
+function runLootHasItems(loot) {
+  if (!loot) return false;
+  if (loot.summons.length || loot.dex.length || loot.pets.length || loot.eggs.length) return true;
+  if (loot.petCoins > 0 || loot.hpBonus > 0 || loot.levelUps > 0 || loot.weapons.length) return true;
+  if (loot.finishers > 0) return true;
+  const pk = loot.pickups || {};
+  return (pk.heal || 0) + (pk.rage || 0) + (pk.chakra || 0) + (pk.shield || 0) > 0;
+}
+
+function runLootSummaryShort(loot) {
+  if (!runLootHasItems(loot)) return '';
+  const parts = [];
+  if (loot.summons.length) parts.push(`✦${loot.summons.length}`);
+  if (loot.dex.length) parts.push(`📖${loot.dex.length}`);
+  if (loot.pets.length) parts.push(`🐾${loot.pets.length}`);
+  if (loot.eggs.length) parts.push(`🥚${loot.eggs.length}`);
+  const pk = loot.pickups || {};
+  const pickN = (pk.heal || 0) + (pk.rage || 0) + (pk.chakra || 0) + (pk.shield || 0);
+  if (pickN) parts.push(`💊${pickN}`);
+  if (loot.finishers) parts.push(`③${loot.finishers}`);
+  if (loot.levelUps) parts.push(`↑${loot.levelUps}`);
+  if (loot.petCoins) parts.push(`🪙${loot.petCoins}`);
+  return parts.join(' · ');
+}
+
+function escRunLootHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function formatRunLootHtml(loot, mode) {
+  if (!runLootHasItems(loot)) return '';
+  const rows = [];
+  const push = (ico, text, color) => {
+    rows.push(`<div class="run-loot-row"><span class="run-loot-ico">${ico}</span>` +
+      `<span class="run-loot-txt"${color ? ` style="color:${escRunLootHtml(color)}"` : ''}>${escRunLootHtml(text)}</span></div>`);
+  };
+  for (const s of loot.summons) {
+    const w = weaponById(s.id);
+    const rar = rarityOf(s.tier);
+    push('✦', t('runLoot.summonLine', { name: weaponLabel(w), rar: rar.name }), rar.color);
+  }
+  for (const d of loot.dex) {
+    const col = (typeof rarityOf === 'function' && d.rarity) ? rarityOf(d.rarity).color : '#7cf5ff';
+    push('📖', t('runLoot.dexLine', { name: d.name, rar: rarityLabel(d.rarity) }), col);
+  }
+  if (loot.hpBonus > 0) {
+    push('❤', t('runLoot.hpBonusLine', { n: loot.hpBonus }), '#6ee06e');
+  }
+  for (const p of loot.pets) {
+    push('🐾', t('runLoot.petLine', { name: p.name }), '#7cf5ff');
+  }
+  for (const e of loot.eggs) {
+    push('🥚', e.duplicate ? t('runLoot.eggDupLine', { name: e.name }) : t('runLoot.eggLine', { name: e.name }), '#ffd75e');
+  }
+  const pk = loot.pickups || {};
+  if (pk.heal) push('💚', t('runLoot.pickupLine', { kind: t('pickup.heal'), n: pk.heal }), '#6ee06e');
+  if (pk.rage) push('🔥', t('runLoot.pickupLine', { kind: t('pickup.rage'), n: pk.rage }), '#ff7a4d');
+  if (pk.chakra) push('🌀', t('runLoot.pickupLine', { kind: t('pickup.chakra'), n: pk.chakra }), '#7cf5ff');
+  if (pk.shield) push('🛡', t('runLoot.pickupLine', { kind: t('pickup.shield'), n: pk.shield }), '#9fd8ff');
+  if (loot.finishers) push('③', t('runLoot.finishersLine', { n: loot.finishers }), '#ffb830');
+  if (loot.levelUps) {
+    push('↑', t('runLoot.levelUpLine', { n: loot.levelUps }), '#ffd75e');
+    for (const wid of loot.weapons) {
+      push('⚔', t('runLoot.weaponLine', { name: weaponLabel(weaponById(wid)) }), '#c792ff');
+    }
+  }
+  if (loot.petCoins) push('🪙', t('runLoot.petCoinsLine', { n: loot.petCoins }), '#ffd75e');
+  if (!rows.length) return '';
+  const head = mode === 'adventure' ? t('runLoot.headAdv') : t('runLoot.head');
+  return `<div class="run-loot-head">${escRunLootHtml(head)}</div><div class="run-loot-lines">${rows.join('')}</div>`;
+}
+
 function updateSaveImportPreview(text) {
   const previewEl = document.getElementById('saveImportPreview');
   if (!previewEl) return;

@@ -35,7 +35,7 @@ class Game {
     this.combo = 0;
     this.comboT = 0;
     this.runFinishers = 0;
-    this.matchFatality = false;
+    this.runLoot = createRunLoot();
 
     const st = playerStats();
     if (mode !== 'versus') {
@@ -473,6 +473,7 @@ class Game {
       const eggBonus = maybeAdvEggBonus();
       if (eggBonus) {
         spawnGameEggPet(this);
+        noteRunLootEgg(this.runLoot, eggBonus.def.name, eggBonus.duplicate);
         const rar = rarityOf(eggBonus.def.rarity);
         setTimeout(() => {
           try {
@@ -582,6 +583,7 @@ class Game {
       persist();
       AudioSys.sfx('newmonster');
       const hpB = rarityHpBonus(m.sp.rarity);
+      noteRunLootDex(this.runLoot, m.sp, hpB);
       this.banner(t('banner.newDex', { rar: rarityLabel(m.sp.rarity), name: m.sp.name, hp: hpB }), 2.0, rar.color, 28);
       this.player.maxhp += hpB; this.player.hp += hpB;
       UI.toast(t('toast.dexDiscover', { rar: rarityLabel(m.sp.rarity), name: m.sp.name, hp: hpB }), 3200);
@@ -593,6 +595,7 @@ class Game {
       save.stats.petsTamed = petTamedCount();
       persist();
       spawnGamePet(this);
+      noteRunLootPet(this.runLoot, tame.sp.name);
       this.banner(t('banner.pet', { name: tame.sp.name }), 2.2, tame.sp.c1, 36);
       UI.toast(t('toast.petTamed', { name: tame.sp.name, cur: tame.kills, need: tame.need }), 4200);
     }
@@ -623,6 +626,7 @@ class Game {
     save.summons[pick.id] = tier;
     save.stats.summonCount = (save.stats.summonCount || 0) + 1;
     save.stats.killsSinceSummon = 0;
+    noteRunLootSummon(this.runLoot, pick.id, tier);
     persist();
     const rar = rarityOf(tier);
     const asc = applyWeaponUpgrades(applySummonTier(weaponById(pick.id)));
@@ -701,19 +705,23 @@ class Game {
       }
       case 'heal':
         p.hp = Math.min(p.maxhp, p.hp + Math.round(p.maxhp * 0.28));
+        noteRunLootPickup(this.runLoot, 'heal');
         this.floater(p.x, p.y - 100, t('combat.pickupHp'), meta.color, 16);
         break;
       case 'rage':
         this.dmgBuffMul = 1.38;
         this.dmgBuffT = 9;
+        noteRunLootPickup(this.runLoot, 'rage');
         this.floater(p.x, p.y - 100, t('combat.pickupRage'), meta.color, 16);
         break;
       case 'chakra':
         p.energy = 100;
+        noteRunLootPickup(this.runLoot, 'chakra');
         this.floater(p.x, p.y - 100, t('combat.pickupChakra'), meta.color, 16);
         break;
       case 'shield':
         this.playerShieldT = 6.5;
+        noteRunLootPickup(this.runLoot, 'shield');
         this.floater(p.x, p.y - 100, t('combat.pickupShield'), meta.color, 16);
         break;
     }
@@ -1350,6 +1358,7 @@ class Game {
     if (petEarned > 0) {
       save.petCoins = petCoinsBalance() + petEarned;
       this.petCoinsThisRun = petEarned;
+      noteRunLootPetCoins(this.runLoot, petEarned);
     }
     persist();
     const xp = Math.round(n * 4 + 15);
@@ -1406,6 +1415,7 @@ class Game {
     while (save.xp >= xpNeed(save.lvl)) {
       save.xp -= xpNeed(save.lvl);
       save.lvl++;
+      noteRunLootLevelUp(this.runLoot, save.lvl);
       AudioSys.sfx('levelup');
       this.banner(t('banner.levelUp', { lvl: save.lvl }), 1.8, '#ffd75e', 40);
       const st = playerStats();
@@ -2962,6 +2972,16 @@ class Game {
     const bw = Math.min(240, W * 0.32);
     const bx = Math.max(12, readSafeInsets().left + 8);
     const by = hudInsetTop();
+    if (this.mode === 'adventure' && this.runLoot && runLootHasItems(this.runLoot)) {
+      const short = runLootSummaryShort(this.runLoot);
+      if (short) {
+        c.font = '700 11px -apple-system, sans-serif';
+        c.textAlign = 'right';
+        c.fillStyle = 'rgba(255,255,255,.78)';
+        c.fillText(t('runLoot.hudShort', { line: short }), W - Math.max(10, readSafeInsets().right + 8), by + 2);
+        c.textAlign = 'left';
+      }
+    }
     if (this.mode !== 'versus') {
       c.fillStyle = 'rgba(0,0,0,.45)';
       this.rr(c, bx - 4, by - 4, bw + 8, 52, 10); c.fill();

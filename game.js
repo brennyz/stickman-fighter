@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.77';
+const APP_VERSION = '1.17.71';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 203;
+const SW_CACHE_REV = 197;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null, activeJutsu: 'rasengan',
 
@@ -2561,6 +2561,138 @@ function saveExportSummaryLine(s) {
   const pc = Math.max(0, Math.floor(Number(st.petCoins) || 0));
   if (pc) line += ` · ${pc} pet coins`;
   return line;
+}
+
+/* ---------- Run-buit (naast XP) — overzicht in pauze + resultaat ---------- */
+function createRunLoot() {
+  return {
+    summons: [],
+    dex: [],
+    pets: [],
+    eggs: [],
+    pickups: { heal: 0, rage: 0, chakra: 0, shield: 0 },
+    petCoins: 0,
+    hpBonus: 0,
+    levelUps: 0,
+    weapons: [],
+    finishers: 0,
+  };
+}
+
+function noteRunLootSummon(loot, weaponId, tier) {
+  if (!loot) return;
+  loot.summons.push({ id: weaponId, tier: tier || 'epic' });
+}
+
+function noteRunLootDex(loot, sp, hpBonus) {
+  if (!loot || !sp) return;
+  loot.dex.push({ name: sp.name, rarity: sp.rarity });
+  loot.hpBonus += Math.max(0, Math.floor(Number(hpBonus) || 0));
+}
+
+function noteRunLootPet(loot, name) {
+  if (!loot || !name) return;
+  loot.pets.push({ name: String(name).slice(0, 32) });
+}
+
+function noteRunLootEgg(loot, name, duplicate) {
+  if (!loot || !name) return;
+  loot.eggs.push({ name: String(name).slice(0, 32), duplicate: !!duplicate });
+}
+
+function noteRunLootPickup(loot, kind) {
+  if (!loot || !kind || !loot.pickups) return;
+  if (loot.pickups[kind] != null) loot.pickups[kind]++;
+}
+
+function noteRunLootPetCoins(loot, n) {
+  if (!loot) return;
+  loot.petCoins += Math.max(0, Math.floor(Number(n) || 0));
+}
+
+function noteRunLootFinisher(loot) {
+  if (!loot) return;
+  loot.finishers++;
+}
+
+function noteRunLootLevelUp(loot, newLvl) {
+  if (!loot) return;
+  loot.levelUps++;
+  const w = WEAPONS.find(x => x.unlock === newLvl);
+  if (w) loot.weapons.push(w.id);
+}
+
+function runLootHasItems(loot) {
+  if (!loot) return false;
+  if (loot.summons.length || loot.dex.length || loot.pets.length || loot.eggs.length) return true;
+  if (loot.petCoins > 0 || loot.hpBonus > 0 || loot.levelUps > 0 || loot.weapons.length) return true;
+  if (loot.finishers > 0) return true;
+  const pk = loot.pickups || {};
+  return (pk.heal || 0) + (pk.rage || 0) + (pk.chakra || 0) + (pk.shield || 0) > 0;
+}
+
+function runLootSummaryShort(loot) {
+  if (!runLootHasItems(loot)) return '';
+  const parts = [];
+  if (loot.summons.length) parts.push(`✦${loot.summons.length}`);
+  if (loot.dex.length) parts.push(`📖${loot.dex.length}`);
+  if (loot.pets.length) parts.push(`🐾${loot.pets.length}`);
+  if (loot.eggs.length) parts.push(`🥚${loot.eggs.length}`);
+  const pk = loot.pickups || {};
+  const pickN = (pk.heal || 0) + (pk.rage || 0) + (pk.chakra || 0) + (pk.shield || 0);
+  if (pickN) parts.push(`💊${pickN}`);
+  if (loot.finishers) parts.push(`③${loot.finishers}`);
+  if (loot.levelUps) parts.push(`↑${loot.levelUps}`);
+  if (loot.petCoins) parts.push(`🪙${loot.petCoins}`);
+  return parts.join(' · ');
+}
+
+function escRunLootHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function formatRunLootHtml(loot, mode) {
+  if (!runLootHasItems(loot)) return '';
+  const rows = [];
+  const push = (ico, text, color) => {
+    rows.push(`<div class="run-loot-row"><span class="run-loot-ico">${ico}</span>` +
+      `<span class="run-loot-txt"${color ? ` style="color:${escRunLootHtml(color)}"` : ''}>${escRunLootHtml(text)}</span></div>`);
+  };
+  for (const s of loot.summons) {
+    const w = weaponById(s.id);
+    const rar = rarityOf(s.tier);
+    push('✦', t('runLoot.summonLine', { name: weaponLabel(w), rar: rar.name }), rar.color);
+  }
+  for (const d of loot.dex) {
+    const col = (typeof rarityOf === 'function' && d.rarity) ? rarityOf(d.rarity).color : '#7cf5ff';
+    push('📖', t('runLoot.dexLine', { name: d.name, rar: rarityLabel(d.rarity) }), col);
+  }
+  if (loot.hpBonus > 0) {
+    push('❤', t('runLoot.hpBonusLine', { n: loot.hpBonus }), '#6ee06e');
+  }
+  for (const p of loot.pets) {
+    push('🐾', t('runLoot.petLine', { name: p.name }), '#7cf5ff');
+  }
+  for (const e of loot.eggs) {
+    push('🥚', e.duplicate ? t('runLoot.eggDupLine', { name: e.name }) : t('runLoot.eggLine', { name: e.name }), '#ffd75e');
+  }
+  const pk = loot.pickups || {};
+  if (pk.heal) push('💚', t('runLoot.pickupLine', { kind: t('pickup.heal'), n: pk.heal }), '#6ee06e');
+  if (pk.rage) push('🔥', t('runLoot.pickupLine', { kind: t('pickup.rage'), n: pk.rage }), '#ff7a4d');
+  if (pk.chakra) push('🌀', t('runLoot.pickupLine', { kind: t('pickup.chakra'), n: pk.chakra }), '#7cf5ff');
+  if (pk.shield) push('🛡', t('runLoot.pickupLine', { kind: t('pickup.shield'), n: pk.shield }), '#9fd8ff');
+  if (loot.finishers) push('③', t('runLoot.finishersLine', { n: loot.finishers }), '#ffb830');
+  if (loot.levelUps) {
+    push('↑', t('runLoot.levelUpLine', { n: loot.levelUps }), '#ffd75e');
+    for (const wid of loot.weapons) {
+      push('⚔', t('runLoot.weaponLine', { name: weaponLabel(weaponById(wid)) }), '#c792ff');
+    }
+  }
+  if (loot.petCoins) push('🪙', t('runLoot.petCoinsLine', { n: loot.petCoins }), '#ffd75e');
+  if (!rows.length) return '';
+  const head = mode === 'adventure' ? t('runLoot.headAdv') : t('runLoot.head');
+  return `<div class="run-loot-head">${escRunLootHtml(head)}</div><div class="run-loot-lines">${rows.join('')}</div>`;
 }
 
 function updateSaveImportPreview(text) {
@@ -5353,6 +5485,7 @@ function trackWeaponFinisher(weaponId, gameRef) {
   save.weaponMastery[weaponId] = m;
   const newTierIdx = weaponMasteryTierIdx(m.finishers);
   if (gameRef) gameRef.runFinishers = (gameRef.runFinishers || 0) + 1;
+  noteRunLootFinisher(gameRef && gameRef.runLoot);
   if (typeof bumpDaily === 'function') bumpDaily('weaponFinisher', 1);
   if (newTierIdx > prevTierIdx && typeof UI !== 'undefined') {
     const w = weaponById(weaponId);
@@ -6576,6 +6709,23 @@ function seedNlGameStrings() {
     starGain: '+{n}★',
     starImproved: 'Nieuwe sterren! Was {prev}★ — nu {stars}★ · hou HP hoog voor meer',
   });
+  if (!I18N.nl.runLoot) I18N.nl.runLoot = {};
+  Object.assign(I18N.nl.runLoot, {
+    head: 'Deze run · buit naast XP',
+    headAdv: 'Deze run · buit naast XP',
+    hudShort: 'Buit: {line}',
+    summonLine: 'Summon: {name} → {rar}',
+    dexLine: 'Boek: {name} ({rar})',
+    hpBonusLine: '+{n} max HP uit boek',
+    petLine: 'Pet getemd: {name}',
+    eggLine: 'Bonus-ei: {name}',
+    eggDupLine: 'Ei-dubbel: {name}',
+    pickupLine: '{kind} ×{n}',
+    finishersLine: '{n} wapen-finishers',
+    levelUpLine: '{n}× level-up',
+    weaponLine: 'Nieuw wapen: {name}',
+    petCoinsLine: '+{n} pet coins',
+  });
   if (!I18N.nl.combat) I18N.nl.combat = {};
   Object.assign(I18N.nl.combat, {
     counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
@@ -7167,6 +7317,22 @@ const CATALOG_EN = {
     progress: 'Island {cur}: {name} · {cleared}/{total} · Lv {unlocked}/{max}',
     levelsProg: 'Levels cleared on this island',
     starsProg: 'Stars earned on this island (max 3 per level)',
+  },
+  runLoot: {
+    head: 'This run · loot besides XP',
+    headAdv: 'This run · loot besides XP',
+    hudShort: 'Loot: {line}',
+    summonLine: 'Summon: {name} → {rar}',
+    dexLine: 'Dex: {name} ({rar})',
+    hpBonusLine: '+{n} max HP from dex',
+    petLine: 'Pet tamed: {name}',
+    eggLine: 'Bonus egg: {name}',
+    eggDupLine: 'Egg duplicate: {name}',
+    pickupLine: '{kind} ×{n}',
+    finishersLine: '{n} weapon finishers',
+    levelUpLine: '{n}× level-up',
+    weaponLine: 'New weapon: {name}',
+    petCoinsLine: '+{n} pet coins',
   },
   banner: {
     levelStart: 'LEVEL {n}',
@@ -13049,7 +13215,7 @@ class Game {
     this.combo = 0;
     this.comboT = 0;
     this.runFinishers = 0;
-    this.matchFatality = false;
+    this.runLoot = createRunLoot();
 
     const st = playerStats();
     if (mode !== 'versus') {
@@ -13487,6 +13653,7 @@ class Game {
       const eggBonus = maybeAdvEggBonus();
       if (eggBonus) {
         spawnGameEggPet(this);
+        noteRunLootEgg(this.runLoot, eggBonus.def.name, eggBonus.duplicate);
         const rar = rarityOf(eggBonus.def.rarity);
         setTimeout(() => {
           try {
@@ -13596,6 +13763,7 @@ class Game {
       persist();
       AudioSys.sfx('newmonster');
       const hpB = rarityHpBonus(m.sp.rarity);
+      noteRunLootDex(this.runLoot, m.sp, hpB);
       this.banner(t('banner.newDex', { rar: rarityLabel(m.sp.rarity), name: m.sp.name, hp: hpB }), 2.0, rar.color, 28);
       this.player.maxhp += hpB; this.player.hp += hpB;
       UI.toast(t('toast.dexDiscover', { rar: rarityLabel(m.sp.rarity), name: m.sp.name, hp: hpB }), 3200);
@@ -13607,6 +13775,7 @@ class Game {
       save.stats.petsTamed = petTamedCount();
       persist();
       spawnGamePet(this);
+      noteRunLootPet(this.runLoot, tame.sp.name);
       this.banner(t('banner.pet', { name: tame.sp.name }), 2.2, tame.sp.c1, 36);
       UI.toast(t('toast.petTamed', { name: tame.sp.name, cur: tame.kills, need: tame.need }), 4200);
     }
@@ -13637,6 +13806,7 @@ class Game {
     save.summons[pick.id] = tier;
     save.stats.summonCount = (save.stats.summonCount || 0) + 1;
     save.stats.killsSinceSummon = 0;
+    noteRunLootSummon(this.runLoot, pick.id, tier);
     persist();
     const rar = rarityOf(tier);
     const asc = applyWeaponUpgrades(applySummonTier(weaponById(pick.id)));
@@ -13715,19 +13885,23 @@ class Game {
       }
       case 'heal':
         p.hp = Math.min(p.maxhp, p.hp + Math.round(p.maxhp * 0.28));
+        noteRunLootPickup(this.runLoot, 'heal');
         this.floater(p.x, p.y - 100, t('combat.pickupHp'), meta.color, 16);
         break;
       case 'rage':
         this.dmgBuffMul = 1.38;
         this.dmgBuffT = 9;
+        noteRunLootPickup(this.runLoot, 'rage');
         this.floater(p.x, p.y - 100, t('combat.pickupRage'), meta.color, 16);
         break;
       case 'chakra':
         p.energy = 100;
+        noteRunLootPickup(this.runLoot, 'chakra');
         this.floater(p.x, p.y - 100, t('combat.pickupChakra'), meta.color, 16);
         break;
       case 'shield':
         this.playerShieldT = 6.5;
+        noteRunLootPickup(this.runLoot, 'shield');
         this.floater(p.x, p.y - 100, t('combat.pickupShield'), meta.color, 16);
         break;
     }
@@ -14364,6 +14538,7 @@ class Game {
     if (petEarned > 0) {
       save.petCoins = petCoinsBalance() + petEarned;
       this.petCoinsThisRun = petEarned;
+      noteRunLootPetCoins(this.runLoot, petEarned);
     }
     persist();
     const xp = Math.round(n * 4 + 15);
@@ -14420,6 +14595,7 @@ class Game {
     while (save.xp >= xpNeed(save.lvl)) {
       save.xp -= xpNeed(save.lvl);
       save.lvl++;
+      noteRunLootLevelUp(this.runLoot, save.lvl);
       AudioSys.sfx('levelup');
       this.banner(t('banner.levelUp', { lvl: save.lvl }), 1.8, '#ffd75e', 40);
       const st = playerStats();
@@ -15976,6 +16152,16 @@ class Game {
     const bw = Math.min(240, W * 0.32);
     const bx = Math.max(12, readSafeInsets().left + 8);
     const by = hudInsetTop();
+    if (this.mode === 'adventure' && this.runLoot && runLootHasItems(this.runLoot)) {
+      const short = runLootSummaryShort(this.runLoot);
+      if (short) {
+        c.font = '700 11px -apple-system, sans-serif';
+        c.textAlign = 'right';
+        c.fillStyle = 'rgba(255,255,255,.78)';
+        c.fillText(t('runLoot.hudShort', { line: short }), W - Math.max(10, readSafeInsets().right + 8), by + 2);
+        c.textAlign = 'left';
+      }
+    }
     if (this.mode !== 'versus') {
       c.fillStyle = 'rgba(0,0,0,.45)';
       this.rr(c, bx - 4, by - 4, bw + 8, 52, 10); c.fill();
@@ -17198,19 +17384,21 @@ const UI = {
     } else {
       sub.textContent = this.pauseSubDefault;
     }
-    this.renderPausePerfStrip();
+    this.renderPauseRunLoot();
   },
 
-  renderPausePerfStrip() {
-    const el = document.getElementById('pausePerfStrip');
+  renderPauseRunLoot() {
+    const el = document.getElementById('pauseRunLoot');
     if (!el) return;
-    if (!game || state !== 'pause') {
+    const loot = game && game.runLoot;
+    const html = formatRunLootHtml(loot, game && game.mode);
+    if (html) {
+      el.innerHTML = html;
+      el.style.display = 'block';
+    } else {
+      el.innerHTML = '';
       el.style.display = 'none';
-      el.textContent = '';
-      return;
     }
-    el.textContent = formatPerfStripLine();
-    el.style.display = 'block';
   },
 
   show(id) {
@@ -19339,10 +19527,19 @@ const UI = {
     if (!title) return;
     title.textContent = data.title;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
-    const detailEl = document.getElementById('resDetail');
-    if (detailEl) detailEl.textContent = data.detail;
-    const xpEl = document.getElementById('resXp');
-    if (xpEl) xpEl.textContent = t('result.xp', {
+    document.getElementById('resDetail').textContent = data.detail;
+    const lootEl = document.getElementById('resLoot');
+    if (lootEl) {
+      const html = formatRunLootHtml(game && game.runLoot, data.mode);
+      if (html) {
+        lootEl.innerHTML = html;
+        lootEl.style.display = 'block';
+      } else {
+        lootEl.innerHTML = '';
+        lootEl.style.display = 'none';
+      }
+    }
+    document.getElementById('resXp').textContent = t('result.xp', {
       xp: data.xp, lvl: save.lvl, cur: save.xp, need: xpNeed(save.lvl),
     });
     const tipEl = document.getElementById('resTip');

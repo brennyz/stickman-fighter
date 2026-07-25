@@ -378,19 +378,21 @@ const UI = {
     } else {
       sub.textContent = this.pauseSubDefault;
     }
-    this.renderPausePerfStrip();
+    this.renderPauseRunLoot();
   },
 
-  renderPausePerfStrip() {
-    const el = document.getElementById('pausePerfStrip');
+  renderPauseRunLoot() {
+    const el = document.getElementById('pauseRunLoot');
     if (!el) return;
-    if (!game || state !== 'pause') {
+    const loot = game && game.runLoot;
+    const html = formatRunLootHtml(loot, game && game.mode);
+    if (html) {
+      el.innerHTML = html;
+      el.style.display = 'block';
+    } else {
+      el.innerHTML = '';
       el.style.display = 'none';
-      el.textContent = '';
-      return;
     }
-    el.textContent = formatPerfStripLine();
-    el.style.display = 'block';
   },
 
   show(id) {
@@ -2519,10 +2521,19 @@ const UI = {
     if (!title) return;
     title.textContent = data.title;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
-    const detailEl = document.getElementById('resDetail');
-    if (detailEl) detailEl.textContent = data.detail;
-    const xpEl = document.getElementById('resXp');
-    if (xpEl) xpEl.textContent = t('result.xp', {
+    document.getElementById('resDetail').textContent = data.detail;
+    const lootEl = document.getElementById('resLoot');
+    if (lootEl) {
+      const html = formatRunLootHtml(game && game.runLoot, data.mode);
+      if (html) {
+        lootEl.innerHTML = html;
+        lootEl.style.display = 'block';
+      } else {
+        lootEl.innerHTML = '';
+        lootEl.style.display = 'none';
+      }
+    }
+    document.getElementById('resXp').textContent = t('result.xp', {
       xp: data.xp, lvl: save.lvl, cur: save.xp, need: xpNeed(save.lvl),
     });
     const tipEl = document.getElementById('resTip');
