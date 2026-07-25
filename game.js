@@ -133,9 +133,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.78';
+const APP_VERSION = '1.17.79';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 196;
+const SW_CACHE_REV = 197;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -2653,21 +2653,30 @@ function playGambleRollSfx(g) {
   }, delay);
 }
 
-/** Instant: level-tik → dobbel + vecht (geen tussen-scherm). */
+/** Instant: level-tik → dobbel-flash → vecht (geen tussen-scherm). */
 function gokGooiStartLevel(n) {
   if (gokStartBusy) return;
+  cancelGambleStart();
   gokStartBusy = true;
   try {
     pendingAdvLevel = n;
     AudioSys.init();
     lastGambleRoll = rollStageGamble();
     playGambleRollSfx(lastGambleRoll);
+    try {
+      const line = typeof gambleRollToastLine === 'function' ? gambleRollToastLine(lastGambleRoll) : '';
+      if (line) UI.toast(line, motionReduced() ? 900 : 1400);
+    } catch (_) {}
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
-    startAdventureFromGamble(false);
+    const delay = motionReduced() ? 80 : 420;
+    gokScreenTimer = setTimeout(() => {
+      gokScreenTimer = null;
+      gokStartBusy = false;
+      startAdventureFromGamble(false);
+    }, delay);
   } catch (err) {
+    cancelGambleStart();
     sfReportError('gokStart', err, 'Gok start mislukt — probeer opnieuw');
-  } finally {
-    gokStartBusy = false;
   }
 }
 
@@ -5650,6 +5659,20 @@ function rollStageGamble() {
   else if (sum >= 9) outcome = 'ally';
   const allyId = GAMBLE_ALLY_IDS[Math.floor(Math.random() * GAMBLE_ALLY_IDS.length)];
   return { d1, d2, sum, outcome, allyId };
+}
+
+function gambleDiceFace(d) {
+  return ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][d - 1] || '?';
+}
+
+function gambleRollToastLine(g) {
+  if (!g) return '';
+  const faces = `${gambleDiceFace(g.d1)} ${gambleDiceFace(g.d2)} = ${g.sum}`;
+  if (g.outcome === 'neutral') return `${faces} · normaal level`;
+  const label = typeof gambleOutcomeLabelFromKey === 'function'
+    ? gambleOutcomeLabelFromKey(g).replace(/^[^!]+!?\s*/, '').slice(0, 40)
+    : '';
+  return label ? `${faces} · ${label}` : faces;
 }
 
 function gambleOutcomeLabel(g) {
@@ -16753,7 +16776,7 @@ const UI = {
       ctx.textContent = t('ui.gambleCtx', { cap });
     }
     const g = lastGambleRoll;
-    const face = (d) => ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][d - 1] || '?';
+    const face = (d) => (typeof gambleDiceFace === 'function' ? gambleDiceFace(d) : '?');
     if (g && diceRow) {
       diceRow.textContent = `${face(g.d1)} ${face(g.d2)}`;
       if (sumLine) sumLine.textContent = t('ui.gambleSumRoll', { d1: g.d1, d2: g.d2, sum: g.sum });

@@ -1428,7 +1428,7 @@ const UI = {
       ctx.textContent = t('ui.gambleCtx', { cap });
     }
     const g = lastGambleRoll;
-    const face = (d) => ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][d - 1] || '?';
+    const face = (d) => (typeof gambleDiceFace === 'function' ? gambleDiceFace(d) : '?');
     if (g && diceRow) {
       diceRow.textContent = `${face(g.d1)} ${face(g.d2)}`;
       if (sumLine) sumLine.textContent = t('ui.gambleSumRoll', { d1: g.d1, d2: g.d2, sum: g.sum });
