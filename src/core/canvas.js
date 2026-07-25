@@ -4,6 +4,17 @@ const ctx = canvas.getContext('2d');
 let W = innerWidth, H = innerHeight, DPR = 1;
 let resizeDebounce = null;
 let lastResizeKey = '';
+const canvasPointers = new Set();
+
+function clearCanvasPointers() {
+  canvasPointers.clear();
+}
+
+function releaseCanvasPointer(id) {
+  if (!canvasPointers.has(id)) return;
+  canvasPointers.delete(id);
+  Input.onUp(id);
+}
 
 function resize() {
   const vp = viewportGameSize();
@@ -52,6 +63,7 @@ window.addEventListener('pageshow', () => scheduleResize());
 canvas.addEventListener('pointerdown', e => {
   if (state !== 'play' || !game) return;
   e.preventDefault();
+  canvasPointers.add(e.pointerId);
   try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
   const p = pointerGameCoords(e.clientX, e.clientY);
   if (ketsbamHitTest(p.x, p.y, game) && game.tryKetsbam()) return;
@@ -59,6 +71,7 @@ canvas.addEventListener('pointerdown', e => {
 });
 canvas.addEventListener('pointermove', e => {
   if (state !== 'play' || !game) return;
+  if (!canvasPointers.has(e.pointerId)) return;
   e.preventDefault();
   const p = pointerGameCoords(e.clientX, e.clientY);
   Input.onMove(p.x, p.y, e.pointerId);
@@ -66,30 +79,41 @@ canvas.addEventListener('pointermove', e => {
 canvas.addEventListener('pointerup', e => {
   if (state !== 'play' || !game) return;
   e.preventDefault();
-  Input.onUp(e.pointerId);
+  releaseCanvasPointer(e.pointerId);
 });
 canvas.addEventListener('pointercancel', e => {
   if (state !== 'play' || !game) return;
-  Input.onUp(e.pointerId);
+  releaseCanvasPointer(e.pointerId);
 });
 canvas.addEventListener('lostpointercapture', e => {
   if (state !== 'play' || !game) return;
-  Input.onUp(e.pointerId);
+  releaseCanvasPointer(e.pointerId);
 });
 function onGlobalPointerEnd(e) {
   if (state !== 'play' || !game) return;
-  Input.onUp(e.pointerId);
+  releaseCanvasPointer(e.pointerId);
 }
 window.addEventListener('pointerup', onGlobalPointerEnd);
 window.addEventListener('pointercancel', onGlobalPointerEnd);
 window.addEventListener('blur', () => {
-  if (state === 'play') try { Input.releaseAll(); } catch (_) {}
+  if (state === 'play') {
+    clearCanvasPointers();
+    try { Input.releaseAll(); } catch (_) {}
+  }
 });
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && state === 'play') try { Input.releaseAll(); } catch (_) {}
+  if (document.hidden && state === 'play') {
+    clearCanvasPointers();
+    try { Input.releaseAll(); } catch (_) {}
+  }
 });
 document.addEventListener('gesturestart', e => {
   if (state === 'play') e.preventDefault();
 });
 document.addEventListener('pointerdown', () => AudioSys.init(), { once: false });
 
+const _releaseAllInput = Input.releaseAll.bind(Input);
+Input.releaseAll = function releaseAllWithCanvasClear() {
+  clearCanvasPointers();
+  _releaseAllInput();
+};
