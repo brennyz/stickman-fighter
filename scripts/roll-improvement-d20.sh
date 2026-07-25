@@ -9,6 +9,7 @@
 #   ./scripts/roll-improvement-d20.sh backlog   # wachtrij: gerold maar nog niet uitgewerkt
 #   ./scripts/roll-improvement-d20.sh pick 11   # zet d11 uit backlog als PENDING (geen roll)
 #   ./scripts/roll-improvement-d20.sh preflight # node --check + smoke load
+#   ./scripts/roll-improvement-d20.sh verify    # bag integrity (geen overlap pending/remaining)
 #
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -39,6 +40,39 @@ run_preflight() {
     return 1
   fi
   echo "App: ${ver:-?} · SW: ${sw:-?}"
+  if ! python3 - "$ROOT/improvement-d20-bag.json" <<'PYVERIFY'
+import json, sys
+from pathlib import Path
+p = Path(sys.argv[1])
+if not p.exists():
+    print("OK  bag (missing — first roll creates)")
+    sys.exit(0)
+bag = json.loads(p.read_text())
+rem = sorted(set(int(x) for x in bag.get("remaining") or [] if 1 <= int(x) <= 20))
+pend = bag.get("pending")
+pend_f = int(pend.get("face", 0)) if pend else 0
+cyc = int(bag.get("cyclesCompleted", 0))
+done_c = set(int(x["face"]) for x in bag.get("implemented") or [] if x.get("face") is not None and int(x.get("cycle", -1)) == cyc)
+errs = []
+if len(rem) != len(set(rem)):
+    errs.append("remaining has duplicates")
+if pend_f and pend_f in rem:
+    errs.append(f"pending d{pend_f} still in remaining")
+if pend_f and pend_f in done_c:
+    errs.append(f"pending d{pend_f} already implemented this cycle")
+for f in rem:
+    if f in done_c:
+        errs.append(f"d{f} in remaining but implemented cycle {cyc}")
+if len(rem) + len(done_c) + (1 if pend_f else 0) > 20:
+    errs.append("face count overflow")
+if errs:
+    print("FAIL: bag verify — " + "; ".join(errs))
+    sys.exit(1)
+print("OK  bag verify")
+PYVERIFY
+  then
+    return 1
+  fi
   echo ""
 }
 
@@ -348,8 +382,28 @@ if mode == "unroll":
     print("")
     sys.exit(0)
 
+if mode == "verify":
+    errs = []
+    rem = sorted(set(int(x) for x in bag.get("remaining") or [] if 1 <= int(x) <= 20))
+    pend = bag.get("pending")
+    pend_f = int(pend.get("face", 0)) if pend else 0
+    cyc = int(bag.get("cyclesCompleted", 0))
+    done_c = implemented_faces(bag, cyc)
+    if pend_f and pend_f in rem:
+        errs.append("pending d" + str(pend_f) + " still in remaining")
+    if pend_f and pend_f in done_c:
+        errs.append("pending d" + str(pend_f) + " already done this cycle")
+    for f in rem:
+        if f in done_c:
+            errs.append("d" + str(f) + " in remaining but implemented")
+    if errs:
+        print("BAG_VERIFY FAIL:", "; ".join(errs))
+        sys.exit(1)
+    print("BAG_VERIFY OK · cyclus", cyc, "· remaining", len(rem), "· pending", ("d" + str(pend_f)) if pend_f else "—")
+    sys.exit(0)
+
 if mode not in ("roll", "force"):
-    print("Usage: roll | status | history | backlog | pick <d#> | unroll | force | preflight", file=sys.stderr)
+    print("Usage: roll | status | history | backlog | pick <d#> | unroll | force | preflight | verify", file=sys.stderr)
     sys.exit(1)
 
 pending = bag.get("pending")

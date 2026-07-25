@@ -135,9 +135,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.82';
+const APP_VERSION = '1.17.83';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 200;
+const SW_CACHE_REV = 201;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -1079,7 +1079,7 @@ const I18N = {
       progress: 'Eiland {cur}/5 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
     },
     rarity: { common: 'Gewoon', uncommon: 'Ongewoon', rare: 'Zeldzaam', epic: 'Episch', legendary: 'Legendarisch', mythic: 'Mythisch' },
-    audio: { musicOff: 'Muziek uit', sfxOff: 'Geluid uit', musicPct: 'Muziek {pct}%', sfxPct: 'SFX {pct}%' },
+    audio: { musicOff: 'Muziek uit', sfxOff: 'Geluid uit', musicPct: 'Muziek {pct}%', sfxPct: 'SFX {pct}%', bgmDuckPause: ' · BGM gedempt' },
   },
   en: {
     back: { menu: '← Menu', collect: '← Collection', levels: '← Levels' },
@@ -1144,7 +1144,7 @@ const I18N = {
       progress: 'Island {cur}/5 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
     },
     rarity: { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary', mythic: 'Mythic' },
-    audio: { musicOff: 'Music off', sfxOff: 'Sound off', musicPct: 'Music {pct}%', sfxPct: 'SFX {pct}%' },
+    audio: { musicOff: 'Music off', sfxOff: 'Sound off', musicPct: 'Music {pct}%', sfxPct: 'SFX {pct}%', bgmDuckPause: ' · BGM ducked' },
   },
   de: {
     back: { menu: '← Menü', collect: '← Sammlung', levels: '← Level' },
@@ -1202,7 +1202,7 @@ const I18N = {
       progress: 'Insel {cur}/5 · {name} · {cleared}/{total} · Lv {unlocked}/{max}',
     },
     rarity: { common: 'Gewöhnlich', uncommon: 'Ungewöhnlich', rare: 'Selten', epic: 'Episch', legendary: 'Legendär', mythic: 'Mythisch' },
-    audio: { musicOff: 'Musik aus', sfxOff: 'Sound aus', musicPct: 'Musik {pct}%', sfxPct: 'SFX {pct}%' },
+    audio: { musicOff: 'Musik aus', sfxOff: 'Sound aus', musicPct: 'Musik {pct}%', sfxPct: 'SFX {pct}%', bgmDuckPause: ' · BGM gedämpft' },
   },
   fr: {
     back: { menu: '← Menu', collect: '← Collection', levels: '← Niveaux' },
@@ -1260,7 +1260,7 @@ const I18N = {
       progress: 'Île {cur}/5 · {name} · {cleared}/{total} · Lv {unlocked}/{max}',
     },
     rarity: { common: 'Commun', uncommon: 'Peu commun', rare: 'Rare', epic: 'Épique', legendary: 'Légendaire', mythic: 'Mythique' },
-    audio: { musicOff: 'Musique off', sfxOff: 'Son off', musicPct: 'Musique {pct}%', sfxPct: 'SFX {pct}%' },
+    audio: { musicOff: 'Musique off', sfxOff: 'Son off', musicPct: 'Musique {pct}%', sfxPct: 'SFX {pct}%', bgmDuckPause: ' · BGM atténué' },
   },
   es: {
     back: { menu: '← Menú', collect: '← Colección', levels: '← Niveles' },
@@ -1318,7 +1318,7 @@ const I18N = {
       progress: 'Isla {cur}/5 · {name} · {cleared}/{total} · Lv {unlocked}/{max}',
     },
     rarity: { common: 'Común', uncommon: 'Poco común', rare: 'Raro', epic: 'Épico', legendary: 'Legendario', mythic: 'Mítico' },
-    audio: { musicOff: 'Música off', sfxOff: 'Sonido off', musicPct: 'Música {pct}%', sfxPct: 'SFX {pct}%' },
+    audio: { musicOff: 'Música off', sfxOff: 'Sonido off', musicPct: 'Música {pct}%', sfxPct: 'SFX {pct}%', bgmDuckPause: ' · BGM atenuado' },
   },
 };
 
@@ -7702,25 +7702,48 @@ const AudioSys = {
     this.syncContextPower();
   },
 
-  /** Suspend Web Audio when fully muted (menu/pause) — saves battery on iPad/PWA */
+  /** Suspend Web Audio when fully muted / tab hidden — saves battery on iPad/PWA */
   syncContextPower() {
     if (!this.ctx) return;
     const needAudio = !!(save.music || save.sfx);
-    const keepAwake = state === 'play' || (state === 'pause' && needAudio);
+    if (typeof document !== 'undefined' && document.hidden) {
+      try { if (this.ctx.state === 'running') this.ctx.suspend(); } catch (_) {}
+      return;
+    }
+    const inFight = state === 'play' || state === 'pause';
+    const menuBgm = (state === 'menu' || state === 'result') && save.music && this.song;
+    const keepAwake = needAudio && (inFight || menuBgm);
     try {
-      if (!needAudio && !keepAwake && this.ctx.state === 'running') {
+      if (!keepAwake && this.ctx.state === 'running') {
         this.ctx.suspend();
-      } else if (needAudio && !document.hidden && this.ctx.state === 'suspended') {
+      } else if (keepAwake && this.ctx.state === 'suspended') {
         this.ctx.resume().catch(() => {});
       }
     } catch (_) {}
   },
 
+  /** Soft music-channel blip when dragging volume sliders (pauze/instellingen). */
+  previewMusicVol() {
+    if (!this.ctx || !save.music) return;
+    try { if (this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
+    const mv = clamp(Number(save.musicVol) || 0.85, 0, 1);
+    if (mv <= 0.001) return;
+    const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
+    let vol = 0.14 * mv * (lite ? 0.88 : 1);
+    if (this.paused || state === 'pause') vol *= 0.26;
+    this.tone(660, 880, 0.11, 'sine', vol, this.musicGain);
+  },
+
   setPaused(on) {
     this.paused = !!on;
+    const needAudio = !!(save.music || save.sfx);
     if (on) {
       try { this.init(); } catch (_) {}
-      try { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
+      if (needAudio) {
+        try { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
+      } else {
+        try { this.syncContextPower(); } catch (_) {}
+      }
     }
     this.applyVolumes();
     if (!on) {
@@ -15955,7 +15978,7 @@ function audioMixStatusLine(inPause) {
   const sPct = volPct(save.sfxVol, 1);
   const bits = [];
   if (!save.music) bits.push(t('audio.musicOff'));
-  else bits.push(t('audio.musicPct', { pct: mPct }) + (inPause ? ' · BGM ~75%' : ''));
+  else bits.push(t('audio.musicPct', { pct: mPct }) + (inPause ? t('audio.bgmDuckPause') : ''));
   if (!save.sfx) bits.push(t('audio.sfxOff'));
   else bits.push(t('audio.sfxPct', { pct: sPct }));
   return bits.join(' · ');
@@ -18374,6 +18397,16 @@ function bindSettingsControls() {
       el.addEventListener('change', () => {
         if (save.sfx && (Number(save.sfxVol) || 0) > 0.01) AudioSys.sfx('select');
       });
+    } else if (key === 'musicVol') {
+      let previewT = 0;
+      const previewMusic = () => {
+        if (save.music && (Number(save.musicVol) || 0) > 0.01) AudioSys.previewMusicVol();
+      };
+      el.addEventListener('change', previewMusic);
+      el.addEventListener('input', () => {
+        clearTimeout(previewT);
+        previewT = setTimeout(previewMusic, 280);
+      });
     }
   };
   onVol('setMusicVol', 'setMusicVolLbl', 'musicVol');
@@ -18873,16 +18906,10 @@ document.addEventListener('visibilitychange', () => {
       try { UI.renderPauseToggles(); } catch (_) {}
       UI.show('pauseScreen');
     } else {
-      try {
-        if (AudioSys.ctx && AudioSys.ctx.state === 'running') AudioSys.ctx.suspend();
-      } catch (_) {}
+      try { AudioSys.syncContextPower(); } catch (_) {}
     }
   } else {
-    try {
-      if (AudioSys.ctx && AudioSys.ctx.state === 'suspended' && (save.music || save.sfx)) {
-        AudioSys.ctx.resume();
-      }
-    } catch (_) {}
+    try { AudioSys.syncContextPower(); } catch (_) {}
     AudioSys.applyVolumes();
   }
 });

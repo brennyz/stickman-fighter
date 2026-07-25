@@ -270,16 +270,10 @@ document.addEventListener('visibilitychange', () => {
       try { UI.renderPauseToggles(); } catch (_) {}
       UI.show('pauseScreen');
     } else {
-      try {
-        if (AudioSys.ctx && AudioSys.ctx.state === 'running') AudioSys.ctx.suspend();
-      } catch (_) {}
+      try { AudioSys.syncContextPower(); } catch (_) {}
     }
   } else {
-    try {
-      if (AudioSys.ctx && AudioSys.ctx.state === 'suspended' && (save.music || save.sfx)) {
-        AudioSys.ctx.resume();
-      }
-    } catch (_) {}
+    try { AudioSys.syncContextPower(); } catch (_) {}
     AudioSys.applyVolumes();
   }
 });

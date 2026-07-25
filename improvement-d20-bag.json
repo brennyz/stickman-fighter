@@ -6,7 +6,6 @@
     3,
     4,
     5,
-    6,
     11,
     12,
     13,
@@ -15,21 +14,14 @@
     19
   ],
   "lastRoll": {
-    "face": 2,
-    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
-    "rolledAt": "2026-07-24T18:00:39Z",
-    "remainingCount": 10,
+    "face": 6,
+    "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+    "rolledAt": "2026-07-24T18:01:10Z",
+    "remainingCount": 9,
     "cycle": 4
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 17,
-      "note": "Error recovery + save import",
-      "version": "1.8.5",
-      "doneAt": "2026-07-23T13:36:46Z",
-      "cycle": 0
-    },
     {
       "face": 3,
       "note": "Versus HUD timer/rematch/spawn reset",
@@ -581,6 +573,13 @@
       "note": "match point HUD, round countdown, low-HP mercy AI",
       "version": "1.17.82",
       "doneAt": "2026-07-25T09:01:51Z",
+      "cycle": 4
+    },
+    {
+      "face": 6,
+      "note": "pause mute ctx fix, music preview, bag verify",
+      "version": "1.17.83",
+      "doneAt": "2026-07-25T10:04:24Z",
       "cycle": 4
     }
   ],
@@ -1768,6 +1767,13 @@
       "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
       "rolledAt": "2026-07-24T18:00:39Z",
       "remainingCount": 10,
+      "cycle": 4
+    },
+    {
+      "face": 6,
+      "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+      "rolledAt": "2026-07-24T18:01:10Z",
+      "remainingCount": 9,
       "cycle": 4
     }
   ],

@@ -308,6 +308,16 @@ function bindSettingsControls() {
       el.addEventListener('change', () => {
         if (save.sfx && (Number(save.sfxVol) || 0) > 0.01) AudioSys.sfx('select');
       });
+    } else if (key === 'musicVol') {
+      let previewT = 0;
+      const previewMusic = () => {
+        if (save.music && (Number(save.musicVol) || 0) > 0.01) AudioSys.previewMusicVol();
+      };
+      el.addEventListener('change', previewMusic);
+      el.addEventListener('input', () => {
+        clearTimeout(previewT);
+        previewT = setTimeout(previewMusic, 280);
+      });
     }
   };
   onVol('setMusicVol', 'setMusicVolLbl', 'musicVol');

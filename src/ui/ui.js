@@ -310,7 +310,7 @@ function audioMixStatusLine(inPause) {
   const sPct = volPct(save.sfxVol, 1);
   const bits = [];
   if (!save.music) bits.push(t('audio.musicOff'));
-  else bits.push(t('audio.musicPct', { pct: mPct }) + (inPause ? ' · BGM ~75%' : ''));
+  else bits.push(t('audio.musicPct', { pct: mPct }) + (inPause ? t('audio.bgmDuckPause') : ''));
   if (!save.sfx) bits.push(t('audio.sfxOff'));
   else bits.push(t('audio.sfxPct', { pct: sPct }));
   return bits.join(' · ');

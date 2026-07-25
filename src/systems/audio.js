@@ -130,25 +130,48 @@ const AudioSys = {
     this.syncContextPower();
   },
 
-  /** Suspend Web Audio when fully muted (menu/pause) — saves battery on iPad/PWA */
+  /** Suspend Web Audio when fully muted / tab hidden — saves battery on iPad/PWA */
   syncContextPower() {
     if (!this.ctx) return;
     const needAudio = !!(save.music || save.sfx);
-    const keepAwake = state === 'play' || (state === 'pause' && needAudio);
+    if (typeof document !== 'undefined' && document.hidden) {
+      try { if (this.ctx.state === 'running') this.ctx.suspend(); } catch (_) {}
+      return;
+    }
+    const inFight = state === 'play' || state === 'pause';
+    const menuBgm = (state === 'menu' || state === 'result') && save.music && this.song;
+    const keepAwake = needAudio && (inFight || menuBgm);
     try {
-      if (!needAudio && !keepAwake && this.ctx.state === 'running') {
+      if (!keepAwake && this.ctx.state === 'running') {
         this.ctx.suspend();
-      } else if (needAudio && !document.hidden && this.ctx.state === 'suspended') {
+      } else if (keepAwake && this.ctx.state === 'suspended') {
         this.ctx.resume().catch(() => {});
       }
     } catch (_) {}
   },
 
+  /** Soft music-channel blip when dragging volume sliders (pauze/instellingen). */
+  previewMusicVol() {
+    if (!this.ctx || !save.music) return;
+    try { if (this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
+    const mv = clamp(Number(save.musicVol) || 0.85, 0, 1);
+    if (mv <= 0.001) return;
+    const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
+    let vol = 0.14 * mv * (lite ? 0.88 : 1);
+    if (this.paused || state === 'pause') vol *= 0.26;
+    this.tone(660, 880, 0.11, 'sine', vol, this.musicGain);
+  },
+
   setPaused(on) {
     this.paused = !!on;
+    const needAudio = !!(save.music || save.sfx);
     if (on) {
       try { this.init(); } catch (_) {}
-      try { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
+      if (needAudio) {
+        try { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
+      } else {
+        try { this.syncContextPower(); } catch (_) {}
+      }
     }
     this.applyVolumes();
     if (!on) {
