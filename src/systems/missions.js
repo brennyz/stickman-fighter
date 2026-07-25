@@ -1235,19 +1235,93 @@ function applyPlayLayerStyles(canvasHits) {
   const el = document.getElementById('game');
   if (!el) return;
   if (canvasHits) clearScreensForPlay();
-  el.style.pointerEvents = canvasHits ? 'auto' : 'none';
-  el.style.visibility = canvasHits ? 'visible' : 'hidden';
-  el.style.opacity = canvasHits ? '1' : '';
-  el.style.zIndex = canvasHits ? '40' : '';
-  el.style.display = canvasHits ? 'block' : '';
-  el.style.touchAction = canvasHits ? 'none' : 'manipulation';
-  document.body.classList.toggle('is-playing', canvasHits);
-  document.body.style.overflow = canvasHits ? 'hidden' : '';
+  const st = el.style;
+  const setImp = (prop, val) => {
+    try {
+      if (typeof st.setProperty === 'function') st.setProperty(prop, val, 'important');
+      else st[prop.replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = val;
+    } catch (_) {
+      try { st[prop] = val; } catch (__) {}
+    }
+  };
+  const clearImp = (prop, camel) => {
+    try {
+      if (typeof st.removeProperty === 'function') st.removeProperty(prop);
+      else if (camel) st[camel] = '';
+    } catch (_) {}
+  };
+  if (canvasHits) {
+    // Important: overschrijf eerdere inline hides (race met gok-flash / guard)
+    setImp('pointer-events', 'auto');
+    setImp('visibility', 'visible');
+    setImp('opacity', '1');
+    setImp('z-index', '40');
+    setImp('display', 'block');
+    st.touchAction = 'none';
+    document.body.classList.add('is-playing');
+    document.body.style.overflow = 'hidden';
+  } else {
+    clearImp('pointer-events', 'pointerEvents');
+    clearImp('visibility', 'visibility');
+    clearImp('opacity', 'opacity');
+    clearImp('z-index', 'zIndex');
+    clearImp('display', 'display');
+    st.pointerEvents = 'none';
+    st.visibility = 'hidden';
+    st.opacity = '';
+    st.zIndex = '';
+    st.display = '';
+    st.touchAction = 'manipulation';
+    document.body.classList.remove('is-playing');
+    document.body.style.overflow = '';
+  }
+  // Pauze-knop alleen tijdens live gevecht — niet als weesje op zwart deksel
+  try {
+    const pb = document.getElementById('pauseBtn');
+    if (pb) pb.classList.toggle('show', !!(canvasHits && state === 'play' && game));
+  } catch (_) {}
   try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
 }
 
 function syncPlayLayer() {
   applyPlayLayerStyles(state === 'play' && !!game);
+}
+
+/** True als gevecht loopt maar canvas/deksel kapot is (alleen pauseBtn zichtbaar). */
+function playLayerBroken() {
+  if (!(state === 'play' && game)) return false;
+  if (activeScreenEl()) return true;
+  if (!document.body.classList.contains('is-playing')) return true;
+  const el = document.getElementById('game');
+  if (!el) return true;
+  try {
+    const cs = getComputedStyle(el);
+    if (cs.visibility === 'hidden' || cs.display === 'none') return true;
+    if (Number(cs.opacity) < 0.05) return true;
+  } catch (_) {
+    if (el.style.visibility === 'hidden') return true;
+  }
+  return false;
+}
+
+function forcePlayCanvasVisible(where) {
+  if (!(state === 'play' && game)) return false;
+  try { if (typeof UI !== 'undefined' && UI.hideGambleRollFlash) UI.hideGambleRollFlash(); } catch (_) {}
+  clearScreensForPlay();
+  applyPlayLayerStyles(true);
+  const canvas = document.getElementById('game');
+  if (canvas) {
+    canvas.style.setProperty('visibility', 'visible', 'important');
+    canvas.style.setProperty('opacity', '1', 'important');
+    canvas.style.setProperty('z-index', '40', 'important');
+    canvas.style.setProperty('display', 'block', 'important');
+    canvas.style.setProperty('pointer-events', 'auto', 'important');
+  }
+  document.body.classList.add('is-playing');
+  const pb = document.getElementById('pauseBtn');
+  if (pb) pb.classList.add('show');
+  if (where) console.warn('[Stickman] forcePlayCanvas', where);
+  return true;
 }
 
 function activeScreenEl() {
@@ -1313,6 +1387,7 @@ function sfDebugScreen(opts) {
     isPlaying: document.body.classList.contains('is-playing'),
     activeScreens: active,
     screenUsable: screenLooksUsable(activeEl),
+    playBroken: typeof playLayerBroken === 'function' ? playLayerBroken() : false,
     canvas: canvas ? {
       visibility: canvas.style.visibility || cs.visibility,
       display: canvas.style.display || cs.display,
@@ -1347,16 +1422,7 @@ function sfDebugScreen(opts) {
       if (typeof UI !== 'undefined' && UI.hideGambleRollFlash) UI.hideGambleRollFlash();
       // In gevecht: canvas vrijmaken. Anders (menu/settings “blauw deksel”): hard naar menu.
       if (state === 'play' && game) {
-        clearScreensForPlay();
-        syncPlayLayer();
-        document.body.classList.add('is-playing');
-        if (canvas) {
-          canvas.style.visibility = 'visible';
-          canvas.style.opacity = '1';
-          canvas.style.zIndex = '40';
-          canvas.style.display = 'block';
-          canvas.style.pointerEvents = 'auto';
-        }
+        forcePlayCanvasVisible('sfDebugFix');
         if (typeof blackScreenGuard === 'function') blackScreenGuard('sfDebugFix');
         userToast('Canvas geforceerd zichtbaar — speel verder of tik strip → MENU', 3600);
       } else {
@@ -1397,6 +1463,7 @@ function sfDebugOverlayTick() {
     `SF DEBUG v${d.version} SW${d.sw}`,
     `state=${d.state} mode=${d.mode || '—'} isPlaying=${d.isPlaying}`,
     `screens=${(d.activeScreens && d.activeScreens.join(',')) || '—'} usable=${d.screenUsable ? 'Y' : 'N'}`,
+    `playBroken=${d.playBroken ? 'Y' : 'N'}`,
     d.canvas ? `canvas vis=${d.canvas.visibility} z=${d.canvas.zIndex} ${d.canvas.w}x${d.canvas.h}` : 'canvas=MISSING',
     d.rollFlash ? `flash hidden=${d.rollFlash.hidden} vis=${d.rollFlash.visibleClass}` : 'flash=—',
     'TIK DEZE STRIP → hoofdmenu  ·  __sf.debug({fix:true})',
@@ -1428,14 +1495,13 @@ function wireSfDebugTools() {
 /** Detecteer en herstel volledig zwart scherm (geen UI, geen canvas). */
 function blackScreenGuard(where) {
   if (window.__sfBlackGuardBusy) return;
-  // Play met game: altijd canvas vrijmaken van UI-deksel
+  // Play met game: altijd canvas vrijmaken van UI-deksel / wees-pauseBtn
   if (state === 'play' && game) {
-    if (activeScreenEl() || !document.body.classList.contains('is-playing')) {
+    if (playLayerBroken()) {
       window.__sfBlackGuardBusy = true;
       try {
         console.warn('[Stickman] play cover guard:', where || '?');
-        try { if (typeof UI !== 'undefined' && UI.hideGambleRollFlash) UI.hideGambleRollFlash(); } catch (_) {}
-        syncPlayLayerWithoutGuard();
+        forcePlayCanvasVisible(where || 'blackGuard');
       } finally {
         window.__sfBlackGuardBusy = false;
       }

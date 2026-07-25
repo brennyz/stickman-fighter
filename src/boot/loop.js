@@ -259,6 +259,10 @@ function loop(now) {
         }
         return;
       }
+      // Mid-fight: herstel wees-pause / verborgen canvas (training rabbit e.d.)
+      if (typeof playLayerBroken === 'function' && playLayerBroken()) {
+        try { forcePlayCanvasVisible('loop'); } catch (_) {}
+      }
       try { Input.endFrame(); } catch (frameErr) {
         sfReportError('input', frameErr);
       }
@@ -653,6 +657,7 @@ function bootGame() {
     debug: typeof sfDebugScreen === 'function' ? sfDebugScreen : null,
     fixPlayLayer: () => (typeof sfDebugScreen === 'function' ? sfDebugScreen({ fix: true }) : null),
     goMenu: () => recoverToMenu({ force: true }),
+    forcePlay: () => (typeof forcePlayCanvasVisible === 'function' ? forcePlayCanvasVisible('__sf') : null),
   };
   safeCall(wireSfDebugTools, 'sfDebug');
 
@@ -709,7 +714,11 @@ function bindUiLayerWatch() {
   const tick = () => {
     try {
       if (state === 'play' && game) {
-        syncPlayLayer();
+        if (typeof playLayerBroken === 'function' && playLayerBroken()) {
+          forcePlayCanvasVisible('uiWatch');
+        } else {
+          syncPlayLayer();
+        }
         blackScreenGuard('uiWatch');
       } else {
         syncPlayLayer();
@@ -720,6 +729,6 @@ function bindUiLayerWatch() {
   };
   document.addEventListener('touchstart', tick, { passive: true, capture: true });
   document.addEventListener('pointerdown', tick, { passive: true, capture: true });
-  setInterval(tick, 2000);
+  setInterval(tick, 1200);
 }
 bindUiLayerWatch();
