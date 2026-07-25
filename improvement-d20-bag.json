@@ -5,7 +5,8 @@
   "remaining": [
     3,
     5,
-    11,
+    6,
+    9,
     12,
     13,
     15,
@@ -554,31 +555,10 @@
       "cycle": 4
     },
     {
-      "face": 9,
-      "note": "scroll-guard long-press, haptic+held ring, orient release",
-      "version": "1.17.80",
-      "doneAt": "2026-07-25T08:53:58Z",
-      "cycle": 4
-    },
-    {
-      "face": 2,
-      "note": "match point HUD, round countdown, low-HP mercy AI",
-      "version": "1.17.82",
-      "doneAt": "2026-07-25T09:01:51Z",
-      "cycle": 4
-    },
-    {
-      "face": 6,
-      "note": "pause mute ctx fix, music preview, bag verify",
-      "version": "1.17.83",
-      "doneAt": "2026-07-25T10:04:24Z",
-      "cycle": 4
-    },
-    {
-      "face": 4,
-      "note": "wave trait pips, island stars bar, result star delta",
-      "version": "1.17.84",
-      "doneAt": "2026-07-25T11:04:01Z",
+      "face": 11,
+      "note": "sticky char footer + scrollNavTop on goBack",
+      "version": "1.17.66",
+      "doneAt": "2026-07-25T07:25:54Z",
       "cycle": 4
     }
   ],

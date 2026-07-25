@@ -350,13 +350,30 @@ const UI = {
   resetInnerScrolls(screenEl) {
     if (!screenEl) return;
     const scrollables = screenEl.querySelectorAll(
-      '.char-grid-scroll, .menu-landing-scroll, .mode-hub-body, .island-bar, .grid, #weaponList, [data-scroll-reset]'
+      '.char-grid-scroll, .char-arena-body, .menu-landing-scroll, .mode-hub-body, .island-bar, .grid, #weaponList, #dailyList, #achList, #petList, #eggList, #dexList, [data-scroll-reset]'
     );
     scrollables.forEach((el) => {
       try {
         el.scrollTop = 0;
         el.scrollLeft = 0;
       } catch (_) {}
+    });
+  },
+
+  scrollNavTop(screenEl) {
+    if (!screenEl) return;
+    try {
+      screenEl.scrollTop = 0;
+      screenEl.scrollLeft = 0;
+    } catch (_) {}
+    this.resetInnerScrolls(screenEl);
+  },
+
+  charSelectBackToP1() {
+    this.charPickStep = 1;
+    this.renderCharSelect();
+    requestAnimationFrame(() => {
+      try { this.scrollNavTop(document.getElementById('charSelectScreen')); } catch (_) {}
     });
   },
 
@@ -391,8 +408,7 @@ const UI = {
           el.classList.add('active');
           requestAnimationFrame(() => {
             try {
-              el.scrollTop = 0;
-              this.resetInnerScrolls(el);
+              this.scrollNavTop(el);
               this.syncBackLabels();
             } catch (_) {}
           });
@@ -480,14 +496,7 @@ const UI = {
       AudioSys.sfx('select');
       const active = this.screens.find(sid => document.getElementById(sid)?.classList.contains('active'));
       if (active === 'charSelectScreen' && this.charPickStep === 2) {
-        this.charPickStep = 1;
-        this.renderCharSelect();
-        requestAnimationFrame(() => {
-          try {
-            this.resetInnerScrolls(document.getElementById('charSelectScreen'));
-            this.syncBackLabels();
-          } catch (_) {}
-        });
+        this.charSelectBackToP1();
         return;
       }
       if (active === 'pauseScreen' && game) {
@@ -569,7 +578,7 @@ const UI = {
       this.renderMenu();
       this.show('menuScreen');
       requestAnimationFrame(() => {
-        try { this.resetInnerScrolls(document.getElementById('menuScreen')); } catch (_) {}
+        try { this.scrollNavTop(document.getElementById('menuScreen')); } catch (_) {}
       });
       AudioSys.setPaused(false);
       playMenuBgm(true);
@@ -712,15 +721,12 @@ const UI = {
     const backP = document.getElementById('charPickBackP1');
     if (backP) {
       backP.style.display = this.charPickStep === 2 ? 'flex' : 'none';
+      backP.textContent = t('ui.charBackP1');
       if (!backP.dataset.bound) {
         backP.dataset.bound = '1';
         bindPress(backP, () => {
           AudioSys.sfx('select');
-          this.charPickStep = 1;
-          this.renderCharSelect();
-          requestAnimationFrame(() => {
-            try { this.resetInnerScrolls(document.getElementById('charSelectScreen')); } catch (_) {}
-          });
+          this.charSelectBackToP1();
         });
       }
     }
@@ -732,6 +738,9 @@ const UI = {
         AudioSys.sfx('select');
         this.charPickStep = step;
         this.renderCharSelect();
+        requestAnimationFrame(() => {
+          try { this.scrollNavTop(document.getElementById('charSelectScreen')); } catch (_) {}
+        });
       });
     };
     bindPickPill('charP1Label', 1);

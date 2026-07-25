@@ -593,8 +593,18 @@
   .char-card.featured { background:linear-gradient(180deg,rgba(255,215,94,.12),rgba(255,255,255,.04)); }
 
   /* Character select — arcade arena */
-  #charSelectScreen.char-select-arena { position:relative; overflow:hidden; padding-bottom:24px;
+  #charSelectScreen.char-select-arena { position:relative; overflow:hidden; padding-bottom:0;
     background:linear-gradient(180deg,#0a0e22 0%,#121832 38%,#0d1228 100%); }
+  #charSelectScreen.char-select-arena.active { flex-direction:column; align-items:stretch; justify-content:flex-start; }
+  #charSelectScreen.char-select-arena .char-arena-body { flex:1; min-height:0; overflow-y:auto; overflow-x:hidden;
+    width:100%; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
+  #charSelectScreen.char-select-arena .char-arena-footer { flex-shrink:0; width:100%; z-index:6;
+    padding:10px 12px max(12px, env(safe-area-inset-bottom)); text-align:center;
+    background:linear-gradient(180deg, rgba(10,14,34,.55) 0%, rgba(10,14,34,.96) 28%);
+    border-top:1px solid rgba(255,215,94,.28); box-shadow:0 -8px 28px rgba(0,0,0,.45); }
+  .char-footer-back-p1 { width:min(94vw,480px); margin:0 auto 8px; min-height:48px; justify-content:center; font-weight:800;
+    background:linear-gradient(180deg,#5a6784,#39445e); }
+  body.big-touch .char-footer-back-p1 { min-height:56px; font-size:17px; }
   #charSelectScreen.char-select-arena .char-arena-bg {
     position:absolute; inset:0; pointer-events:none; z-index:0;
     background:
@@ -619,8 +629,9 @@
   .char-arena-grid-wrap { border-color:rgba(124,245,255,.12); background:rgba(0,0,0,.26); }
   .char-arena-actions { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:min(94vw,720px); margin:8px 0; }
   .char-arena-tip { width:min(92vw,640px); margin-top:14px; font-size:12px; opacity:.92; }
-  .char-fight-btn { width:min(86vw,420px); margin:10px auto 0; font-size:18px; font-weight:900; letter-spacing:.06em;
+  .char-fight-btn { width:min(94vw,480px); margin:0 auto; font-size:18px; font-weight:900; letter-spacing:.06em;
     background:linear-gradient(180deg,#ff6b6b,#c92a2a); box-shadow:0 6px 0 #6b1515, 0 0 20px rgba(255,107,107,.25); }
+  body.big-touch .char-fight-btn { min-height:58px; font-size:20px; padding:16px 20px; }
   .char-fight-btn:active { transform:translateY(4px); box-shadow:0 2px 0 #6b1515; }
   .char-icon-row { width:min(94vw,720px); margin:0 0 10px; padding:10px 8px 12px; border-radius:16px;
     background:rgba(255,215,94,.06); border:1px solid rgba(255,215,94,.2); }
@@ -640,11 +651,9 @@
   .char-duel-bar .pick-pill.active { box-shadow:0 0 0 2px rgba(255,215,94,.55); transform:scale(1.03); }
   .char-duel-bar .p1pill { color:#7cf5ff; border:1px solid rgba(124,245,255,.45); }
   .char-duel-bar .p2pill { color:#ffb0b8; border:1px solid rgba(255,176,184,.45); }
-  #btnCharFight { width:min(86vw,480px); padding:18px 20px; font-size:22px; margin-top:8px;
+  #btnCharFight { width:min(94vw,480px); padding:16px 20px; font-size:20px; margin:0 auto;
       background:linear-gradient(180deg,#ff5a8a,#a82050); justify-content:center; }
   #btnCharFight:disabled { opacity:.35; filter:grayscale(.4); cursor:not-allowed; }
-  #charPickBackP1 { margin:8px 0; width:min(86vw,480px); justify-content:center;
-      background:linear-gradient(180deg,#5a6784,#39445e); }
 
   #netStatus { position:fixed; left:50%; bottom:max(12px, env(safe-area-inset-bottom)); transform:translateX(-50%);
       z-index:35; max-width:92vw; padding:8px 14px; border-radius:999px; font-size:12px; font-weight:800;

@@ -159,9 +159,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.84';
+const APP_VERSION = '1.17.66';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 202;
+const SW_CACHE_REV = 192;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null, activeJutsu: 'rasengan',
 
@@ -16413,13 +16413,30 @@ const UI = {
   resetInnerScrolls(screenEl) {
     if (!screenEl) return;
     const scrollables = screenEl.querySelectorAll(
-      '.char-grid-scroll, .menu-landing-scroll, .mode-hub-body, .island-bar, .grid, #weaponList, [data-scroll-reset]'
+      '.char-grid-scroll, .char-arena-body, .menu-landing-scroll, .mode-hub-body, .island-bar, .grid, #weaponList, #dailyList, #achList, #petList, #eggList, #dexList, [data-scroll-reset]'
     );
     scrollables.forEach((el) => {
       try {
         el.scrollTop = 0;
         el.scrollLeft = 0;
       } catch (_) {}
+    });
+  },
+
+  scrollNavTop(screenEl) {
+    if (!screenEl) return;
+    try {
+      screenEl.scrollTop = 0;
+      screenEl.scrollLeft = 0;
+    } catch (_) {}
+    this.resetInnerScrolls(screenEl);
+  },
+
+  charSelectBackToP1() {
+    this.charPickStep = 1;
+    this.renderCharSelect();
+    requestAnimationFrame(() => {
+      try { this.scrollNavTop(document.getElementById('charSelectScreen')); } catch (_) {}
     });
   },
 
@@ -16454,8 +16471,7 @@ const UI = {
           el.classList.add('active');
           requestAnimationFrame(() => {
             try {
-              el.scrollTop = 0;
-              this.resetInnerScrolls(el);
+              this.scrollNavTop(el);
               this.syncBackLabels();
             } catch (_) {}
           });
@@ -16543,14 +16559,7 @@ const UI = {
       AudioSys.sfx('select');
       const active = this.screens.find(sid => document.getElementById(sid)?.classList.contains('active'));
       if (active === 'charSelectScreen' && this.charPickStep === 2) {
-        this.charPickStep = 1;
-        this.renderCharSelect();
-        requestAnimationFrame(() => {
-          try {
-            this.resetInnerScrolls(document.getElementById('charSelectScreen'));
-            this.syncBackLabels();
-          } catch (_) {}
-        });
+        this.charSelectBackToP1();
         return;
       }
       if (active === 'pauseScreen' && game) {
@@ -16632,7 +16641,7 @@ const UI = {
       this.renderMenu();
       this.show('menuScreen');
       requestAnimationFrame(() => {
-        try { this.resetInnerScrolls(document.getElementById('menuScreen')); } catch (_) {}
+        try { this.scrollNavTop(document.getElementById('menuScreen')); } catch (_) {}
       });
       AudioSys.setPaused(false);
       playMenuBgm(true);
@@ -16775,15 +16784,12 @@ const UI = {
     const backP = document.getElementById('charPickBackP1');
     if (backP) {
       backP.style.display = this.charPickStep === 2 ? 'flex' : 'none';
+      backP.textContent = t('ui.charBackP1');
       if (!backP.dataset.bound) {
         backP.dataset.bound = '1';
         bindPress(backP, () => {
           AudioSys.sfx('select');
-          this.charPickStep = 1;
-          this.renderCharSelect();
-          requestAnimationFrame(() => {
-            try { this.resetInnerScrolls(document.getElementById('charSelectScreen')); } catch (_) {}
-          });
+          this.charSelectBackToP1();
         });
       }
     }
@@ -16795,6 +16801,9 @@ const UI = {
         AudioSys.sfx('select');
         this.charPickStep = step;
         this.renderCharSelect();
+        requestAnimationFrame(() => {
+          try { this.scrollNavTop(document.getElementById('charSelectScreen')); } catch (_) {}
+        });
       });
     };
     bindPickPill('charP1Label', 1);
@@ -18670,8 +18679,7 @@ bindPress(btnVersus, () => {
 const charPickBackP1 = document.getElementById('charPickBackP1');
 bindPress(charPickBackP1, () => {
   AudioSys.sfx('select');
-  UI.charPickStep = 1;
-  UI.renderCharSelect();
+  UI.charSelectBackToP1();
 });
 bindPress(document.getElementById('btnWall'), () => {
   AudioSys.init(); AudioSys.sfx('select'); startGame('wall');
