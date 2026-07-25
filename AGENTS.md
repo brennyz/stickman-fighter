@@ -72,3 +72,12 @@ per-platform installatie-stappen — Android/Chrome én iPad/Safari):
 - GitHub write tokens — alleen via dashboard hierboven.
 
 Wel: **handoff + één bookmark + environment fix** = iPad-instructies komen overal aan en push kan werken.
+
+## Cursor Cloud specific instructions
+
+Static PWA — **no installable dependencies**. Node and Python 3 are preinstalled; the update script is a no-op. Scripts live in `package.json` / `scripts/`.
+
+- **Build:** `npm run build` concatenates `src/**` modules (per `src/manifest.json`) into the committed `game.js` bundle. `game.js` is generated (~17k lines) — edit `src/` modules, not `game.js` directly, then rebuild.
+- **Test / lint:** `npm test` = build + `npm run check` (`node --check game.js` syntax check) + `npm run smoke` (loads `game.js` in a headless DOM stub to catch init/TDZ crashes). There is no separate ESLint/lint tool.
+- **Run (dev):** `./start-local.sh` (or `python3 serve.py`) serves the repo statically at `http://127.0.0.1:8787` — open `/index.html`. The game runs fully client-side; keyboard controls (A/D move, W jump, J/K attack) work in the browser.
+- **Gotcha:** `serve.py` fires `keep-tunnel.sh` (a localtunnel/Cloudflare side-effect) when `/health.json`, `/LIVE-LINK.txt`, or `/hosting.json` are requested, which rewrites those local files. Tunneling does not work in the cloud VM, but the static server serves the game fine regardless — just don't commit those touched files (see `agentRules`).
