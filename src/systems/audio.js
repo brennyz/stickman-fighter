@@ -620,6 +620,49 @@ const AudioSys = {
         N(0.09, 0.15, 4300, true, now);
         T(260, 1280, 0.13, 'sine', 0.11, now);
         break;
+      case 'skillSwoosh':
+        N(0.11, 0.2, 5200, true, now);
+        T(180, 1680, 0.16, 'sine', 0.14, now);
+        E(920, 2200, 0.07, 'triangle', 0.1, now + 0.04, 0.05, 0.4);
+        if (!lite) N(0.04, 0.1, 7800, true, now + 0.08);
+        break;
+      case 'skillSwooshEpic':
+        N(0.14, 0.22, 4800, true, now);
+        D(220, 2200, 0.18, 'sawtooth', 0.13, now, 16);
+        E(680, 2640, 0.09, 'sine', 0.12, now + 0.05, 0.06, 0.45);
+        if (!lite) {
+          C([880, 1047, 1175], 'triangle', 0.1, 0.04, now + 0.1);
+          S([1568, 1760], now + 0.14);
+        }
+        break;
+      case 'megaDrop':
+        C([784, 988, 1175, 1319, 1568], 'triangle', 0.17, 0.055, now);
+        N(0.1, 0.18, 2400, true, now + 0.08);
+        if (!lite) {
+          S([1760, 2093, 2349, 2637], now + 0.22);
+          E(1040, 520, 0.12, 'sine', 0.14, now + 0.15, 0.07, 0.5);
+          T(105, 38, 0.18, 'sine', 0.16, now + 0.28);
+        }
+        break;
+      case 'tideSurge':
+        N(0.12, 0.14, 1800, true, now);
+        T(280, 880, 0.2, 'sine', 0.12, now);
+        T(880, 1320, 0.14, 'triangle', 0.1, now + 0.08);
+        if (!lite) {
+          T(520, 1040, 0.1, 'sine', 0.08, now + 0.16);
+          E(660, 1180, 0.08, 'sine', 0.09, now + 0.1, 0.06, 0.38);
+        }
+        break;
+      case 'bossTurn':
+        T(55, 28, 0.28, 'sawtooth', 0.26, now);
+        N(0.2, 0.24, 420, false, now);
+        C([311, 370, 494, 622, 784], 'square', 0.14, 0.07, now + 0.1);
+        if (!lite) {
+          S([988, 1175, 1319, 1568, 1760], now + 0.25);
+          T(880, 180, 0.32, 'sawtooth', 0.18, now + 0.35);
+          N(0.14, 0.16, 900, true, now + 0.4);
+        }
+        break;
       case 'travel':
         N(0.06, 0.12, 3200, true, now);
         T(180, 520, 0.14, 'sine', 0.1, now);

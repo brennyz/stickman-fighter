@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.66';
+const APP_VERSION = '1.17.86';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 192;
+const SW_CACHE_REV = 204;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null, activeJutsu: 'rasengan',
 
@@ -1217,7 +1217,7 @@ const I18N = {
       weapons: 'Wapens', weaponsSub: '26 wapens · summon ascends',
       pets: 'Pets', petsSub: 'Muntjes · dex temmen · ei arcade',
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
-      dex: 'Monsterboek', dexSub: '114 soorten · rariteit = HP',
+      dex: 'Monsterboek', dexSub: '126 soorten · rariteit = HP',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
     },
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
@@ -1291,7 +1291,7 @@ const I18N = {
       weapons: 'Weapons', weaponsSub: '26 weapons · summon ascends',
       pets: 'Pets', petsSub: 'Coins · dex tame · egg arcade',
       style: 'Style', styleSub: 'Bandana & outfit unlocks',
-      dex: 'Monster book', dexSub: '114 species · rarity = HP',
+      dex: 'Monster book', dexSub: '126 species · rarity = HP',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
     },
     modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Coins' },
@@ -1365,7 +1365,7 @@ const I18N = {
       weapons: 'Waffen', weaponsSub: '26 Waffen · Summons',
       pets: 'Pets', petsSub: 'Münzen · Dex zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
-      dex: 'Monsterbuch', dexSub: '114 Arten · Seltenheit = HP',
+      dex: 'Monsterbuch', dexSub: '126 Arten · Seltenheit = HP',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
     },
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
@@ -1426,7 +1426,7 @@ const I18N = {
       weapons: 'Armes', weaponsSub: '26 armes · invocations',
       pets: 'Pets', petsSub: 'Pièces · dex · œufs',
       style: 'Style', styleSub: 'Déblocages tenues',
-      dex: 'Bestiaire', dexSub: '114 espèces · rareté = PV',
+      dex: 'Bestiaire', dexSub: '126 espèces · rareté = PV',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
     },
     modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Pièces' },
@@ -1487,7 +1487,7 @@ const I18N = {
       weapons: 'Armas', weaponsSub: '26 armas · invocaciones',
       pets: 'Pets', petsSub: 'Monedas · dex · huevos',
       style: 'Estilo', styleSub: 'Desbloqueos de outfit',
-      dex: 'Bestiario', dexSub: '114 especies · rareza = HP',
+      dex: 'Bestiario', dexSub: '126 especies · rareza = HP',
       modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
     },
     modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Monedas' },
@@ -2003,6 +2003,25 @@ function drawMiniDie(c, x, y, s, color) {
     c.arc(x + dx, y + dy, pr, 0, TAU);
     c.fill();
   }
+  c.restore();
+}
+
+/** Mini-golf-icoon voor Tide bondgenoot-HUD. */
+function drawMiniWave(c, x, y, s, color) {
+  c.save();
+  c.strokeStyle = color;
+  c.lineWidth = Math.max(1.2, s * 0.14);
+  c.lineCap = 'round';
+  const w = s * 0.9;
+  c.beginPath();
+  c.moveTo(x - w, y);
+  c.bezierCurveTo(x - w * 0.55, y - s * 0.35, x - w * 0.15, y + s * 0.35, x, y);
+  c.bezierCurveTo(x + w * 0.15, y - s * 0.35, x + w * 0.55, y + s * 0.35, x + w, y);
+  c.stroke();
+  c.beginPath();
+  c.moveTo(x - w * 0.75, y + s * 0.22);
+  c.bezierCurveTo(x - w * 0.35, y - s * 0.12, x - w * 0.05, y + s * 0.42, x + w * 0.25, y + s * 0.22);
+  c.stroke();
   c.restore();
 }
 
@@ -5187,6 +5206,14 @@ function totalSkillLevels() {
   for (const id of SKILL_IDS) n += skillLevel(id);
   return n;
 }
+
+/** SFX key for jutsu release swoosh — scales with skill level / jutsu tier. */
+function jutsuSwooshSfx(jutsu) {
+  const lv = skillLevel(jutsu) || 0;
+  if (jutsu === 'rinnegan' || lv >= 4) return 'skillSwooshEpic';
+  if (jutsu === 'chidori' || jutsu === 'rasengan' || lv >= 2) return 'skillSwoosh';
+  return 'whoosh';
+}
 /* --- src/data/summons.js --- */
 /* ============================ SUMMONS ================================== */
 /* Hele kleine kans bij een kill: een Summon ascendeert een lager wapen
@@ -5983,6 +6010,7 @@ function buildVsFighter(entry, x, slot) {
     style: st,
     isRobot: !!entry.isRobot,
     vsSpecial: entry.special || 'rasengan',
+    vsSaga: entry.saga || 'scroll',
     rosterId: entry.id,
     bald: !!entry.bald,
     gi: entry.gi || null,
@@ -6237,6 +6265,21 @@ const SPECIES = {
     chaoswyrm: { name: 'Chaoswyrm', art: 'dragon', size: 32, hp: 225, dmg: 22, speed: 88, type: 'dragon', xp: 42, rarity: 'legendary', c1: '#b06ae0', c2: '#5a2080' },
     prismewyrm: { name: 'Prismewyrm', art: 'dragon', size: 33, hp: 240, dmg: 23, speed: 90, type: 'dragon', xp: 48, rarity: 'legendary', c1: '#7cf5ff', c2: '#ff6b9d' },
     apexwyrm: { name: 'Apexwyrm', art: 'dragon', size: 35, hp: 285, dmg: 25, speed: 95, type: 'dragon', xp: 58, rarity: 'mythic', c1: '#ffe259', c2: '#e04f4f' },
+  /* --- Tide zee-expansie: haaien & octo's --- */
+  rifhaai: { name: 'Rifhaai', art: 'shark', size: 18, hp: 34, dmg: 8, speed: 118, type: 'swim', xp: 10, rarity: 'common', c1: '#6a9fc8', c2: '#2a5080' },
+  snelvin: { name: 'Snelvin', art: 'shark', size: 17, hp: 32, dmg: 7, speed: 128, type: 'swim', xp: 11, rarity: 'common', c1: '#8fb8d8', c2: '#3a6088' },
+  hamerkop: { name: 'Hamerkop', art: 'shark', size: 19, hp: 42, dmg: 10, speed: 105, type: 'swim', xp: 13, rarity: 'uncommon', c1: '#7aa8cf', c2: '#2f6088' },
+  tijvin: { name: 'Tijvin', art: 'shark', size: 20, hp: 52, dmg: 12, speed: 115, type: 'swim', xp: 17, rarity: 'rare', c1: '#5a8fd4', c2: '#1a4080' },
+  neonhaai: { name: 'Neonhaai', art: 'shark', size: 22, hp: 68, dmg: 14, speed: 120, type: 'swim', xp: 26, rarity: 'epic', c1: '#7cf5ff', c2: '#2a7fc0' },
+  abysshaai: { name: 'Abysshaai', art: 'shark', size: 24, hp: 95, dmg: 16, speed: 122, type: 'swim', xp: 38, rarity: 'legendary', c1: '#2a5080', c2: '#0a1830' },
+  levihaai: { name: 'Levihaai', art: 'shark', size: 26, hp: 120, dmg: 18, speed: 108, type: 'swim', xp: 52, rarity: 'mythic', c1: '#4a9fff', c2: '#0a2040' },
+  octo: { name: 'Octo', art: 'octo', size: 16, hp: 30, dmg: 6, speed: 52, type: 'swim', xp: 9, rarity: 'common', c1: '#c47aff', c2: '#5a2080' },
+  inktvissie: { name: 'Inktvissie', art: 'octo', size: 17, hp: 36, dmg: 7, speed: 48, type: 'swim', xp: 11, rarity: 'uncommon', c1: '#b06ae0', c2: '#4a1870' },
+  koraalocto: { name: 'Koraalocto', art: 'octo', size: 18, hp: 44, dmg: 9, speed: 50, type: 'swim', xp: 14, rarity: 'uncommon', c1: '#ff9ad5', c2: '#8a3060' },
+  dieptocto: { name: 'Dieptocto', art: 'octo', size: 19, hp: 58, dmg: 11, speed: 46, type: 'swim', xp: 20, rarity: 'rare', c1: '#6b5cff', c2: '#2e2266' },
+  stormocto: { name: 'Stormocto', art: 'octo', size: 21, hp: 72, dmg: 13, speed: 54, type: 'swim', xp: 28, rarity: 'epic', c1: '#7cf5ff', c2: '#2a7fc0' },
+  krakenling: { name: 'Krakenling', art: 'octo', size: 28, hp: 155, dmg: 17, speed: 42, type: 'swim', xp: 48, rarity: 'legendary', c1: '#2a1840', c2: '#6ee06e' },
+  voidocto: { name: 'Voidocto', art: 'octo', size: 24, hp: 98, dmg: 15, speed: 50, type: 'swim', xp: 42, rarity: 'mythic', c1: '#5a1040', c2: '#ff6b9d' },
 };
 const SPECIES_ORDER = Object.keys(SPECIES).sort((a, b) =>
   (rarityOf(SPECIES[a].rarity).order - rarityOf(SPECIES[b].rarity).order) || SPECIES[a].name.localeCompare(SPECIES[b].name)
@@ -6288,9 +6331,10 @@ const UNLOCK_AT = {
   obsidianaut: 33, titanbonk: 34, zeewyrm: 36, voidsly: 38, neondrake: 40,
   etherwyrm: 43, omegadrake: 46,
   kleiply: 1, spinbub: 2, hongerly: 4, parelsly: 6, modderblob: 4, crystalbub: 6, chaosly: 8, zwerm: 10, karmijnvleerm: 7, echovleerm: 9, spiegelvleerm: 11, voidvleerm: 13, duskwing: 11, glimwing: 13, bronzenstek: 15, koperstek: 17, froststek: 14, kolossstek: 16, thornox: 18, spineclaw: 20, quillfang: 18, spookvlam: 20, koudspook: 22, spiraalgeest: 24, wispgeest: 21, nexusgeest: 23, mistwraith: 25, palewraith: 27, olieblik: 25, batterijkan: 27, schrootblik: 29, turboblok: 30, ionkan: 28, quantumkan: 30, omegacan: 32, zilvervos: 34, maanvos: 32, jadevos: 34, stellarvos: 36, kosmischvos: 37, emberfox: 35, shadowfox: 37, leisteen: 39, marmerbonk: 41, koraalbonk: 39, barnsteen: 41, adamantbonk: 43, basaltbonk: 44, titanrock: 42, mistwyrm: 44, sandwyrm: 46, frostwyrm: 48, chaoswyrm: 46, prismewyrm: 48, apexwyrm: 50,
+  rifhaai: 8, snelvin: 9, octo: 8, inktvissie: 10, hamerkop: 12, koraalocto: 14, tijvin: 16, dieptocto: 18, stormocto: 22, neonhaai: 24, abysshaai: 32, krakenling: 38, levihaai: 44, voidocto: 40,
 
 };
-/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (114 soorten). */
+/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (126 soorten). */
 const ADVENTURE_HORDE_MUL = 6;
 const ADVENTURE_HORDE_MAX_PER_WAVE = 36;
 const ADVENTURE_MAX_ALIVE = IS_TOUCH ? 54 : 78;
@@ -6299,7 +6343,24 @@ const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
 const GIANT_DMG_MUL = 1.14;
 const GIANT_XP_MUL = 1.3;
-/** Nood-ontsnapping als je omringd / stunlocked bent — tik midden-KABLAM! */
+
+const SEA_ARTS = new Set(['shark', 'octo']);
+
+function seaSpeciesPool(levelN, maxRarityOrder) {
+  return Object.keys(UNLOCK_AT).filter((id) => {
+    const sp = SPECIES[id];
+    if (!sp || !SEA_ARTS.has(sp.art)) return false;
+    if (UNLOCK_AT[id] > levelN) return false;
+    return rarityOf(sp.rarity).order <= maxRarityOrder;
+  });
+}
+
+function tideWaveSeaPick(seaPool, levelN, maxRarityOrder) {
+  if (!seaPool || !seaPool.length) return null;
+  return weightedPick(seaPool, levelN);
+}
+
+/** Nood-ontsnapping als je omringd / stunlocked bent — tik midden-KETS! */
 const KETSBAM_DETECT_R = 148;
 const KETSBAM_NEAR_MIN = 3;
 const KETSBAM_BLAST_R = 192;
@@ -6439,11 +6500,21 @@ function buildLevel(n) {
       list[Math.floor(Math.random() * list.length)].sp = weightedPick(flyPool, n);
       meta.trait = 'flyers';
       meta.label = 'Vliegers — mik omhoog!';
-    } else if (roll < 0.38) {
+    } else if (roll < 0.36) {
       meta.trait = 'rush';
       meta.spawnMul = 0.76;
-      meta.label = 'Rush-golf';
-    } else if (n >= 7 && roll < 0.52) {
+      meta.label = 'rush';
+    } else if (n >= 8 && roll < 0.48) {
+      meta.trait = 'tide';
+      meta.spawnMul = 0.84;
+      meta.label = 'tide';
+      const seaPool = seaSpeciesPool(n, maxRarity);
+      if (seaPool.length) {
+        for (let i = 0; i < list.length; i++) {
+          if (Math.random() < 0.58) list[i].sp = tideWaveSeaPick(seaPool, n, maxRarity);
+        }
+      }
+    } else if (n >= 7 && roll < 0.54) {
       const sp = weightedPick(pool, n);
       list.push({ sp, elite: true, giant: rollWaveGiant(n, true) });
       meta.trait = 'elite';
@@ -6468,10 +6539,17 @@ function buildLevel(n) {
 }
 
 const WAVE_TRAIT_BANNER = {
-  flyers: { text: 'VLIEGER-GOLF', color: '#c47aff', size: 40 },
-  rush: { text: 'RUSH-GOLF', color: '#ffb06a', size: 40 },
-  elite: { text: 'ELITE-GOLF', color: '#ffb0b8', size: 40 },
+  flyers: { key: 'banner.flyerWave', color: '#c47aff', size: 40 },
+  rush: { key: 'banner.rushWave', color: '#ffb06a', size: 40 },
+  elite: { key: 'banner.eliteTraitWave', color: '#ffb0b8', size: 40 },
+  tide: { key: 'banner.tideWave', color: '#6ee06e', size: 40 },
 };
+
+function waveTraitBanner(trait) {
+  const m = WAVE_TRAIT_BANNER[trait];
+  if (!m || typeof t !== 'function') return null;
+  return { text: t(m.key), color: m.color, size: m.size };
+}
 
 /** Avontuur: 2× d6 gok vóór level — super-baas of super-bondgenoot (alleen dit level). */
 const GAMBLE_ALLIES = {
@@ -6550,6 +6628,9 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
   if (firstOfWave) {
     try {
       if (tier === 'superBoss') {
+        if (game.gambleBossWave > 0) {
+          try { AudioSys.sfx('bossTurn'); } catch (_) {}
+        }
         AudioSys.sting('superBossIntro');
         AudioSys.play('boss');
         game.banner(`SUPER BAAS — ${name}!`, 2.0, col, 44);
@@ -6619,6 +6700,26 @@ function applyGambleToStage(game, g) {
     game.stageHealBetween = (ally.healBetweenWaves || 0) * pot;
     game.stageShieldPerWave = (ally.shieldStart || 0) * pot;
     game.stageCritBonus = (ally.critBonus || 0) * pot;
+    if (ally.id === 'tide' && game.level && game.level.waveMeta && game.level.waves) {
+      const slots = game.level.waveMeta.map((m, i) => ({ m, i })).filter((x) => x.m.trait !== 'boss');
+      if (slots.length) {
+        const pick = slots[Math.floor(Math.random() * slots.length)];
+        pick.m.trait = 'tide';
+        pick.m.spawnMul = Math.min(pick.m.spawnMul || 1, 0.82);
+        pick.m.label = 'tide';
+        const maxOrd = rarityOf(game.level.rarityCap || 'mythic').order;
+        const seaPool = seaSpeciesPool(game.level.n, maxOrd);
+        const wave = game.level.waves[pick.i];
+        if (seaPool.length && wave) {
+          for (let j = 0; j < wave.length; j++) {
+            if (Math.random() < 0.62) {
+              const sp = tideWaveSeaPick(seaPool, game.level.n, maxOrd);
+              if (sp) wave[j].sp = sp;
+            }
+          }
+        }
+      }
+    }
   }
 }
 
@@ -6791,6 +6892,10 @@ function seedNlGameStrings() {
     bossWave: 'BAAS-GOLF!',
     eliteWave: 'ELITE-GOLF',
     superBossWave: 'SUPER-BAAS GOLF',
+    flyerWave: 'VLIEGER-GOLF',
+    rushWave: 'RUSH-GOLF',
+    eliteTraitWave: 'ELITE-GOLF',
+    tideWave: 'TIDE-GOLF',
     waveClear: 'Golf gewist +{heal} HP',
     waveN: 'GOLF {n}/{total}',
     fight: 'VECHT!',
@@ -6899,6 +7004,9 @@ function seedNlGameStrings() {
     checkpoint: 'CHECKPOINT — DEEL {part}/3',
     allyHeal: '+{heal} bondgenoot',
     allyHit: '{name} −{dmg}',
+    tideAllyIntro: '{name} — tide-heal tussen golven',
+    tideHeal: '+{heal} tide · {name}',
+    tideTraitTip: 'Snelle tide-golf — bondgenoot-heal telt extra',
     gambleSuperBoss: 'Super-baas mogelijk golf {n}',
     allyHelps: '{name} helpt je!',
     masterBuffFloater: '5× verloren — HP, snelheid & schade ↑',
@@ -7494,6 +7602,7 @@ const CATALOG_EN = {
     levelUp: 'LEVEL UP! Lv {lvl}', newWeapon: 'New weapon: {name}!', masterBuff: 'MASTER BUFF +20%',
     masterSword: 'MASTER SWORD!',
     bossWave: 'BOSS WAVE!', eliteWave: 'ELITE WAVE', superBossWave: 'SUPER-BOSS WAVE',
+    flyerWave: 'FLYER WAVE', rushWave: 'RUSH WAVE', eliteTraitWave: 'ELITE WAVE', tideWave: 'TIDE WAVE',
     waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
     fight: 'FIGHT!', won: 'VICTORY!', lost: 'DEFEATED...',
     round: 'ROUND {n}', roundDecisive: 'ROUND {n} · decisive round', roundMatchPoint: 'ROUND {n} · match point',
@@ -7860,6 +7969,9 @@ const CATALOG_EN = {
     bossWaits: 'THE BOSS AWAITS…',
     checkpoint: 'CHECKPOINT — PART {part}/3',
     allyHeal: '+{heal} ally', allyHit: '{name} −{dmg}',
+    tideAllyIntro: '{name} — tide heal between waves',
+    tideHeal: '+{heal} tide · {name}',
+    tideTraitTip: 'Fast tide wave — ally heal counts extra',
     gambleSuperBoss: 'Super-boss possible wave {n}', allyHelps: '{name} helps you!',
     masterBuffFloater: '5× lost — HP, speed & damage ↑',
     skillGate: 'Island skill gate: max weapon Lv {cap}',
@@ -8424,6 +8536,11 @@ const SFX_SAMPLE_MAP = {
   brick: { pack: 'impact', vol: 0.7, files: ['impactPlank_medium_002.ogg', 'impactWood_light_002.ogg', 'impactGeneric_light_004.ogg'] },
   crack: { pack: 'impact', vol: 0.65, files: ['impactGlass_light_002.ogg', 'impactWood_light_003.ogg'] },
   whoosh: { pack: 'digital', vol: 0.45, files: ['lowDown.ogg', 'lowRandom.ogg', 'phaseJump1.ogg'] },
+  skillSwoosh: { pack: 'digital', vol: 0.62, files: ['lowDown.ogg', 'phaseJump2.ogg', 'lowRandom.ogg'] },
+  skillSwooshEpic: { pack: 'digital', vol: 0.78, files: ['phaseJump5.ogg', 'laser8.ogg', 'highUp.ogg'] },
+  megaDrop: { pack: 'digital', vol: 0.88, files: ['phaseJump5.ogg', 'pepSound5.ogg', 'bong_001.ogg'] },
+  tideSurge: { pack: 'digital', vol: 0.65, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'laser4.ogg'] },
+  bossTurn: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactBell_heavy_001.ogg'] },
   checkpoint: { pack: 'ui', vol: 0.72, files: ['confirmation_002.ogg', 'bong_001.ogg'] },
   bossArrive: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_003.ogg'] },
   bossWait: { pack: 'impact', vol: 0.6, files: ['impactSoft_medium_003.ogg', 'creak1.ogg'] },
@@ -9072,6 +9189,49 @@ const AudioSys = {
       case 'whoosh':
         N(0.09, 0.15, 4300, true, now);
         T(260, 1280, 0.13, 'sine', 0.11, now);
+        break;
+      case 'skillSwoosh':
+        N(0.11, 0.2, 5200, true, now);
+        T(180, 1680, 0.16, 'sine', 0.14, now);
+        E(920, 2200, 0.07, 'triangle', 0.1, now + 0.04, 0.05, 0.4);
+        if (!lite) N(0.04, 0.1, 7800, true, now + 0.08);
+        break;
+      case 'skillSwooshEpic':
+        N(0.14, 0.22, 4800, true, now);
+        D(220, 2200, 0.18, 'sawtooth', 0.13, now, 16);
+        E(680, 2640, 0.09, 'sine', 0.12, now + 0.05, 0.06, 0.45);
+        if (!lite) {
+          C([880, 1047, 1175], 'triangle', 0.1, 0.04, now + 0.1);
+          S([1568, 1760], now + 0.14);
+        }
+        break;
+      case 'megaDrop':
+        C([784, 988, 1175, 1319, 1568], 'triangle', 0.17, 0.055, now);
+        N(0.1, 0.18, 2400, true, now + 0.08);
+        if (!lite) {
+          S([1760, 2093, 2349, 2637], now + 0.22);
+          E(1040, 520, 0.12, 'sine', 0.14, now + 0.15, 0.07, 0.5);
+          T(105, 38, 0.18, 'sine', 0.16, now + 0.28);
+        }
+        break;
+      case 'tideSurge':
+        N(0.12, 0.14, 1800, true, now);
+        T(280, 880, 0.2, 'sine', 0.12, now);
+        T(880, 1320, 0.14, 'triangle', 0.1, now + 0.08);
+        if (!lite) {
+          T(520, 1040, 0.1, 'sine', 0.08, now + 0.16);
+          E(660, 1180, 0.08, 'sine', 0.09, now + 0.1, 0.06, 0.38);
+        }
+        break;
+      case 'bossTurn':
+        T(55, 28, 0.28, 'sawtooth', 0.26, now);
+        N(0.2, 0.24, 420, false, now);
+        C([311, 370, 494, 622, 784], 'square', 0.14, 0.07, now + 0.1);
+        if (!lite) {
+          S([988, 1175, 1319, 1568, 1760], now + 0.25);
+          T(880, 180, 0.32, 'sawtooth', 0.18, now + 0.35);
+          N(0.14, 0.16, 900, true, now + 0.4);
+        }
         break;
       case 'travel':
         N(0.06, 0.12, 3200, true, now);
@@ -11931,6 +12091,7 @@ class Monster {
     this.speed = sp.speed;
     this.x = x;
     this.flying = sp.type === 'fly' || sp.type === 'dragon';
+    this.swimming = sp.type === 'swim';
     this.y = this.flying ? game.ground - rand(90, 160) : game.ground - this.size;
     this.vx = 0; this.vy = 0;
     this.t = rand(0, 10); this.flashT = 0; this.deadT = -1;
@@ -12028,6 +12189,39 @@ class Monster {
           vx: Math.cos(a) * 260, vy: Math.sin(a) * 260, r: 10, dmg: this.dmg, from: 'enemy', kind: 'fire', grav: 60 });
         AudioSys.sfx('roar');
       }
+    } else if (type === 'swim') {
+      const bob = Math.sin(this.t * 3.4) * 6;
+      this.y = game.ground - this.size + bob;
+      if (this.sp.art === 'shark') {
+        if (this.dashT > 0) {
+          this.dashT -= dt;
+          this.x += this.vx * dt;
+        } else if (this.telegraphT > 0) {
+          this.telegraphT -= dt;
+          if (this.telegraphT <= 0) {
+            this.dashT = 0.42;
+            this.vx = dir * this.speed * spdMul * 3.9;
+            try { AudioSys.sfx('swing'); } catch (_) {}
+          }
+        } else {
+          this.x += dir * this.speed * spdMul * dt * 0.78;
+          if (dist < 230 && this.atkCD <= 0) {
+            this.telegraphT = this.enraged ? 0.2 : 0.36;
+            this.atkCD = rand(1.35, 2.1) / (this.enraged ? 1.25 : 1);
+          }
+        }
+      } else {
+        if (dist < 200) this.x -= dir * this.speed * spdMul * dt * 0.45;
+        else if (dist > 340) this.x += dir * this.speed * spdMul * dt * 0.65;
+        if (this.shootCD <= 0 && dist < 540) {
+          this.shootCD = rand(1.9, 2.8);
+          game.spawnProjectile({
+            x: this.x + dir * this.size, y: this.y - 8,
+            vx: dir * 250, vy: rand(-50, 50), r: 9, dmg: this.dmg, from: 'enemy', kind: 'ink',
+          });
+          try { AudioSys.sfx('shoot'); } catch (_) {}
+        }
+      }
     }
     this.x = clamp(this.x, game.minX - 20, game.maxX + 20);
 
@@ -12108,7 +12302,7 @@ class Monster {
       c.scale(1 + k * 0.6, Math.max(0.05, 1 - k));
     }
     // schaduw
-    if (!this.flying) {
+    if (!this.flying && !this.swimming) {
       c.save(); c.fillStyle = 'rgba(0,0,0,.28)';
       c.beginPath(); c.ellipse(0, this.size - 2, this.size, this.size * 0.24, 0, 0, TAU); c.fill(); c.restore();
     }
@@ -12332,6 +12526,72 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
       c.fillStyle = '#ffe9c9';
       c.beginPath(); c.moveTo(-r * 0.75, -r * 1.05); c.lineTo(-r * 0.65, -r * 1.5); c.lineTo(-r * 0.5, -r * 1.0); c.closePath(); c.fill();
       eye(-r * 1.0, -r * 0.85, r * 0.13);
+      break;
+    }
+    case 'shark': {
+      const wag = Math.sin(t * 5.5) * 0.12;
+      c.fillStyle = body;
+      c.beginPath();
+      c.ellipse(0, 0, r * 1.15, r * 0.62, wag, 0, TAU);
+      c.fill();
+      c.fillStyle = dark;
+      c.beginPath();
+      c.moveTo(0, -r * 0.72);
+      c.lineTo(r * 0.08, -r * 1.15);
+      c.lineTo(r * 0.22, -r * 0.55);
+      c.closePath();
+      c.fill();
+      c.fillStyle = body;
+      c.beginPath();
+      c.moveTo(r * 0.95, 0);
+      c.quadraticCurveTo(r * 1.55, r * 0.35 + Math.sin(t * 4) * r * 0.08, r * 1.35, -r * 0.15);
+      c.lineTo(r * 0.75, 0);
+      c.closePath();
+      c.fill();
+      if (sp.name === 'Hamerkop') {
+        c.fillStyle = dark;
+        c.beginPath();
+        c.ellipse(-r * 0.15, -r * 0.55, r * 0.55, r * 0.18, 0, 0, TAU);
+        c.fill();
+      }
+      c.fillStyle = 'rgba(255,255,255,.28)';
+      c.beginPath();
+      c.ellipse(-r * 0.35, -r * 0.12, r * 0.42, r * 0.14, -0.2, 0, TAU);
+      c.fill();
+      eye(-r * 0.55, -r * 0.08, r * 0.16);
+      c.strokeStyle = dark;
+      c.lineWidth = 1.5;
+      for (const gx of [-0.28, -0.12]) {
+        c.beginPath();
+        c.moveTo(r * gx, -r * 0.05);
+        c.lineTo(r * (gx - 0.08), r * 0.12);
+        c.stroke();
+      }
+      break;
+    }
+    case 'octo': {
+      c.fillStyle = body;
+      c.beginPath();
+      c.arc(-r * 0.1, -r * 0.15, r * 0.82, 0, TAU);
+      c.fill();
+      c.fillStyle = dark;
+      for (let i = 0; i < 8; i++) {
+        const baseA = Math.PI * 0.35 + (i / 7) * Math.PI * 1.35;
+        const len = r * (1.05 + (i % 2) * 0.12);
+        const wob = Math.sin(t * 4 + i * 1.1) * r * 0.14;
+        const x0 = Math.cos(baseA) * r * 0.55;
+        const y0 = Math.sin(baseA) * r * 0.55;
+        const x1 = Math.cos(baseA) * len + wob;
+        const y1 = Math.sin(baseA) * len + r * 0.35;
+        c.lineWidth = r * 0.14;
+        c.lineCap = 'round';
+        c.beginPath();
+        c.moveTo(x0, y0);
+        c.quadraticCurveTo(x0 + wob, (y0 + y1) * 0.55, x1, y1);
+        c.stroke();
+      }
+      eye(-r * 0.35, -r * 0.28, r * 0.22);
+      if (r >= 20) eye(r * 0.05, -r * 0.22, r * 0.14);
       break;
     }
   }
@@ -13499,7 +13759,10 @@ class Game {
       this.floater(W * 0.5, 100, t('combat.gambleSuperBoss', { n: this.gambleBossWave }), '#ffb0b8', 14, 'hud');
     }
     if (this.stageAlly) {
-      this.floater(W * 0.5, 118, t('combat.allyHelps', { name: this.stageAlly.name }), this.stageAlly.color || '#7cf5ff', 15, 'hud');
+      const intro = this.stageAlly.id === 'tide'
+        ? t('combat.tideAllyIntro', { name: this.stageAlly.name })
+        : t('combat.allyHelps', { name: this.stageAlly.name });
+      this.floater(W * 0.5, 118, intro, this.stageAlly.color || '#7cf5ff', 15);
     }
     this.allyAssistT = this.stageAlly ? 2.2 : 0;
     setTimeout(() => { try { if (!this.over) this.maybeRollMasterSword(); } catch (_) {} }, 900);
@@ -13585,11 +13848,19 @@ class Game {
       AudioSys.sfx('roar');
     } else {
       const meta = this.level.waveMeta && this.level.waveMeta[this.waveIdx];
-      const trait = meta && meta.trait && WAVE_TRAIT_BANNER[meta.trait];
+      const trait = meta && meta.trait && (typeof waveTraitBanner === 'function' ? waveTraitBanner(meta.trait) : null);
       if (trait) {
         this.banner(trait.text, 1.2, trait.color, trait.size);
         if (meta.trait === 'flyers') {
-          try { this.floater(W * 0.5, 108, t('combat.aimUp'), '#c47aff', 13, 'hud'); } catch (_) {}
+          try { this.floater(W * 0.5, 108, t('combat.aimUp'), '#c47aff', 13); } catch (_) {}
+        } else if (meta.trait === 'tide') {
+          try {
+            AudioSys.sfx('tideSurge');
+            this.floater(W * 0.5, 108, t('combat.tideTraitTip'), '#6ee06e', 13);
+            if (!fxLite() && this.player) {
+              this.burst(this.player.x, this.player.y - 40, '#6ee06e', 8, { kind: 'spark', size: 2.2 });
+            }
+          } catch (_) {}
         }
       } else {
         this.banner(t('banner.waveN', { n: this.waveIdx + 1, total: this.level.waves.length }), 1.1, '#cfe0ff', 38);
@@ -13684,7 +13955,8 @@ class Game {
     if (this.stageAlly && this.player && this.player.alive && this.monsters.some((m) => m.alive)) {
       this.allyAssistT = (this.allyAssistT || 0) - dt;
       if (this.allyAssistT <= 0) {
-        this.allyAssistT = this.stageAlly.id === 'dawn' ? 3.6 : 5;
+        const allyId = this.stageAlly.id;
+        this.allyAssistT = allyId === 'dawn' ? 3.6 : (allyId === 'tide' ? 4.2 : 5);
         const tgt = this.monsters.reduce((best, m) => {
           if (!m.alive) return best;
           const d = Math.abs(m.x - this.player.x);
@@ -13692,9 +13964,22 @@ class Game {
         }, null);
         if (tgt) {
           const dmg = Math.round(this.player.baseDmg * 0.38 * (this.stageDmgMul || 1));
-          tgt.takeDamage(dmg, Math.sign(tgt.x - this.player.x) * 140, this);
+          const kb = allyId === 'tide' ? 180 : 140;
+          tgt.takeDamage(dmg, Math.sign(tgt.x - this.player.x) * kb, this);
           this.floater(tgt.x, tgt.y - tgt.size - 22, t('combat.allyHit', { name: this.stageAlly.name, dmg }), this.stageAlly.color || '#7cf5ff', 12);
-          if (!fxLite()) this.burst(tgt.x, tgt.y - tgt.size * 0.4, this.stageAlly.color || '#7cf5ff', 6, { kind: 'spark', size: 2 });
+          try {
+            if (allyId === 'tide') {
+              AudioSys.sfxAt('tideSurge', tgt.x);
+              if (this.player) {
+                const micro = Math.max(1, Math.round(this.player.maxhp * 0.012));
+                this.player.hp = Math.min(this.player.maxhp, this.player.hp + micro);
+              }
+            } else {
+              AudioSys.sfxAt(typeof jutsuSwooshSfx === 'function' ? jutsuSwooshSfx('rasengan') : 'skillSwoosh', tgt.x);
+            }
+          } catch (_) {}
+          const burstN = allyId === 'tide' ? 9 : 6;
+          if (!fxLite()) this.burst(tgt.x, tgt.y - tgt.size * 0.4, this.stageAlly.color || '#7cf5ff', burstN, { kind: 'spark', size: 2 });
         }
       }
     }
@@ -13760,7 +14045,18 @@ class Game {
         if (this.stageHealBetween > 0) {
           const heal = Math.max(8, Math.round(this.player.maxhp * this.stageHealBetween));
           this.player.hp = Math.min(this.player.maxhp, this.player.hp + heal);
-          this.floater(this.player.x, this.player.y - 108, t('combat.allyHeal', { heal }), '#6ee06e', 14);
+          const allyName = this.stageAlly ? this.stageAlly.name : '';
+          const healMsg = this.stageAlly && this.stageAlly.id === 'tide'
+            ? t('combat.tideHeal', { heal, name: allyName })
+            : t('combat.allyHeal', { heal });
+          this.floater(this.player.x, this.player.y - 108, healMsg, '#6ee06e', 14);
+          if (this.stageAlly && this.stageAlly.id === 'tide') {
+            try { AudioSys.sfx('tideSurge'); } catch (_) {}
+            if (!fxLite() && this.player) {
+              this.burst(this.player.x, this.player.y - 52, '#6ee06e', 10, { kind: 'spark', size: 2.4 });
+              this.burst(this.player.x, this.player.y - 68, '#7cf5ff', 5, { kind: 'spark', size: 1.8 });
+            }
+          }
         }
         try { AudioSys.sfx('waveClear'); } catch (_) {}
         if ((this.killStreak || 0) >= 5) {
@@ -13893,9 +14189,21 @@ class Game {
     if (Math.random() < dropChance) this.spawnPickup(m.x, m.y - m.size * 0.5);
     if (this.mode === 'adventure') {
       const skillId = rollSkillShardDrop(m);
-      if (skillId) this.spawnPickup(m.x + rand(-18, 18), m.y - m.size * 0.35, { skillId });
+      if (skillId) {
+        let dropTier = 'normal';
+        if (m.superBoss) dropTier = 'superBoss';
+        else if (m.elite) dropTier = 'elite';
+        else if (m.giant) dropTier = 'giant';
+        this.spawnPickup(m.x + rand(-18, 18), m.y - m.size * 0.35, { skillId, dropTier });
+      }
       const itemDrop = rollItemShardDrop(m);
-      if (itemDrop) this.spawnPickup(m.x + rand(-22, 22), m.y - m.size * 0.45, { itemCat: itemDrop.cat, itemId: itemDrop.id });
+      if (itemDrop) {
+        let dropTier = 'normal';
+        if (m.superBoss) dropTier = 'superBoss';
+        else if (m.elite) dropTier = 'elite';
+        else if (m.giant) dropTier = 'giant';
+        this.spawnPickup(m.x + rand(-22, 22), m.y - m.size * 0.45, { itemCat: itemDrop.cat, itemId: itemDrop.id, dropTier });
+      }
     }
     bumpStat('kills', 1);
     bumpDaily('kills', 1);
@@ -13988,16 +14296,22 @@ class Game {
     opts = opts || {};
     if (opts.skillId && SKILL_DEFS[opts.skillId]) {
       this.pickups.push({
-        x, y, kind: 'skill_shard', skillId: opts.skillId,
+        x, y, kind: 'skill_shard', skillId: opts.skillId, dropTier: opts.dropTier || 'normal',
         t: rand(0, TAU), life: 18, bob: 0,
       });
+      if (opts.dropTier && opts.dropTier !== 'normal') {
+        try { AudioSys.sfxAt('bell', x); } catch (_) {}
+      }
       return;
     }
     if (opts.itemCat && opts.itemId && itemUpgradeEligible(opts.itemCat, opts.itemId)) {
       this.pickups.push({
-        x, y, kind: 'item_shard', itemCat: opts.itemCat, itemId: opts.itemId,
+        x, y, kind: 'item_shard', itemCat: opts.itemCat, itemId: opts.itemId, dropTier: opts.dropTier || 'normal',
         t: rand(0, TAU), life: 18, bob: 0,
       });
+      if (opts.dropTier && opts.dropTier !== 'normal') {
+        try { AudioSys.sfxAt('bell', x); } catch (_) {}
+      }
       return;
     }
     const kind = choice(PICKUP_TYPES);
@@ -14009,8 +14323,19 @@ class Game {
     pk._got = true;
     const meta = PICKUP_META[pk.kind] || PICKUP_META.heal;
     const p = this.player;
-    AudioSys.sfx('pickup');
-    haptic(20);
+    const rareDrop = pk.dropTier === 'superBoss' || pk.dropTier === 'elite' || pk.dropTier === 'giant';
+    if (pk.kind === 'skill_shard' || pk.kind === 'item_shard') {
+      if (rareDrop) {
+        try { AudioSys.sfx('megaDrop'); } catch (_) {}
+        haptic(pk.dropTier === 'superBoss' ? 28 : 18);
+      } else {
+        AudioSys.sfx('pickup');
+        haptic(20);
+      }
+    } else {
+      AudioSys.sfx('pickup');
+      haptic(20);
+    }
     switch (pk.kind) {
       case 'skill_shard': {
         const sid = pk.skillId;
@@ -14825,6 +15150,11 @@ class Game {
       AudioSys.sfx('rasengan');
       if (f.isPlayer || f.playerSlot) haptic(22);
     }
+    try {
+      const swoosh = typeof jutsuSwooshSfx === 'function' ? jutsuSwooshSfx(jutsu) : 'skillSwoosh';
+      if (this.mode === 'versus' && f.vsSaga === 'tide') AudioSys.sfx('tideSurge');
+      AudioSys.sfxAt(swoosh, f.x + f.face * 40);
+    } catch (_) {}
     const extra = (atk && atk.extraShot) || jb.extraShot || 0;
     if (extra > 0 && Math.random() < extra) {
       fireProj(f.face * 12, rand(-8, 8), 0.72);
@@ -15621,6 +15951,11 @@ class Game {
       } else if (p.kind === 'orb') {
         c.fillStyle = 'rgba(180,140,255,.9)';
         c.beginPath(); c.arc(p.x, p.y, p.r, 0, TAU); c.fill();
+      } else if (p.kind === 'ink') {
+        c.fillStyle = 'rgba(42,24,64,.88)';
+        c.beginPath(); c.arc(p.x, p.y, p.r, 0, TAU); c.fill();
+        c.fillStyle = 'rgba(180,120,255,.55)';
+        c.beginPath(); c.arc(p.x - p.vx * 0.012, p.y - p.vy * 0.012, p.r * 0.55, 0, TAU); c.fill();
       } else { // laser / robolaser
         c.strokeStyle = p.kind === 'robolaser' ? '#ff5d5d' : '#7cf5ff'; c.lineWidth = 5; c.lineCap = 'round';
         c.beginPath(); c.moveTo(p.x - p.vx * 0.05, p.y - p.vy * 0.05); c.lineTo(p.x, p.y); c.stroke();
@@ -16419,9 +16754,16 @@ class Game {
         let ctxCol = null;
         let ctxDie = false;
         if (this.stageAlly) {
-          ctxCol = this.stageAlly.color || '#7cf5ff';
-          ctxTxt = this.stageAlly.name;
-          ctxDie = true;
+          c.font = '700 11px sans-serif';
+          const col = this.stageAlly.color || '#7cf5ff';
+          c.fillStyle = col;
+          const txt = this.stageAlly.name;
+          c.fillText(txt, W / 2 + 7, 62);
+          if (this.stageAlly.id === 'tide' && typeof drawMiniWave === 'function') {
+            drawMiniWave(c, W / 2 - c.measureText(txt).width / 2 - 3, 58.5, 10, col);
+          } else {
+            drawMiniDie(c, W / 2 - c.measureText(txt).width / 2 - 3, 58.5, 10, col);
+          }
         } else if (this.eggPet && activeEggPetDef()) {
           ctxCol = this.eggPet.def?.c1 || '#ffd75e';
           ctxTxt = t('hud.eggPet', { name: this.eggPet.def?.name || t('hud.cosmetic') });

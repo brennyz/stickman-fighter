@@ -28,6 +28,7 @@ class Monster {
     this.speed = sp.speed;
     this.x = x;
     this.flying = sp.type === 'fly' || sp.type === 'dragon';
+    this.swimming = sp.type === 'swim';
     this.y = this.flying ? game.ground - rand(90, 160) : game.ground - this.size;
     this.vx = 0; this.vy = 0;
     this.t = rand(0, 10); this.flashT = 0; this.deadT = -1;
@@ -125,6 +126,39 @@ class Monster {
           vx: Math.cos(a) * 260, vy: Math.sin(a) * 260, r: 10, dmg: this.dmg, from: 'enemy', kind: 'fire', grav: 60 });
         AudioSys.sfx('roar');
       }
+    } else if (type === 'swim') {
+      const bob = Math.sin(this.t * 3.4) * 6;
+      this.y = game.ground - this.size + bob;
+      if (this.sp.art === 'shark') {
+        if (this.dashT > 0) {
+          this.dashT -= dt;
+          this.x += this.vx * dt;
+        } else if (this.telegraphT > 0) {
+          this.telegraphT -= dt;
+          if (this.telegraphT <= 0) {
+            this.dashT = 0.42;
+            this.vx = dir * this.speed * spdMul * 3.9;
+            try { AudioSys.sfx('swing'); } catch (_) {}
+          }
+        } else {
+          this.x += dir * this.speed * spdMul * dt * 0.78;
+          if (dist < 230 && this.atkCD <= 0) {
+            this.telegraphT = this.enraged ? 0.2 : 0.36;
+            this.atkCD = rand(1.35, 2.1) / (this.enraged ? 1.25 : 1);
+          }
+        }
+      } else {
+        if (dist < 200) this.x -= dir * this.speed * spdMul * dt * 0.45;
+        else if (dist > 340) this.x += dir * this.speed * spdMul * dt * 0.65;
+        if (this.shootCD <= 0 && dist < 540) {
+          this.shootCD = rand(1.9, 2.8);
+          game.spawnProjectile({
+            x: this.x + dir * this.size, y: this.y - 8,
+            vx: dir * 250, vy: rand(-50, 50), r: 9, dmg: this.dmg, from: 'enemy', kind: 'ink',
+          });
+          try { AudioSys.sfx('shoot'); } catch (_) {}
+        }
+      }
     }
     this.x = clamp(this.x, game.minX - 20, game.maxX + 20);
 
@@ -205,7 +239,7 @@ class Monster {
       c.scale(1 + k * 0.6, Math.max(0.05, 1 - k));
     }
     // schaduw
-    if (!this.flying) {
+    if (!this.flying && !this.swimming) {
       c.save(); c.fillStyle = 'rgba(0,0,0,.28)';
       c.beginPath(); c.ellipse(0, this.size - 2, this.size, this.size * 0.24, 0, 0, TAU); c.fill(); c.restore();
     }
@@ -429,6 +463,72 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
       c.fillStyle = '#ffe9c9';
       c.beginPath(); c.moveTo(-r * 0.75, -r * 1.05); c.lineTo(-r * 0.65, -r * 1.5); c.lineTo(-r * 0.5, -r * 1.0); c.closePath(); c.fill();
       eye(-r * 1.0, -r * 0.85, r * 0.13);
+      break;
+    }
+    case 'shark': {
+      const wag = Math.sin(t * 5.5) * 0.12;
+      c.fillStyle = body;
+      c.beginPath();
+      c.ellipse(0, 0, r * 1.15, r * 0.62, wag, 0, TAU);
+      c.fill();
+      c.fillStyle = dark;
+      c.beginPath();
+      c.moveTo(0, -r * 0.72);
+      c.lineTo(r * 0.08, -r * 1.15);
+      c.lineTo(r * 0.22, -r * 0.55);
+      c.closePath();
+      c.fill();
+      c.fillStyle = body;
+      c.beginPath();
+      c.moveTo(r * 0.95, 0);
+      c.quadraticCurveTo(r * 1.55, r * 0.35 + Math.sin(t * 4) * r * 0.08, r * 1.35, -r * 0.15);
+      c.lineTo(r * 0.75, 0);
+      c.closePath();
+      c.fill();
+      if (sp.name === 'Hamerkop') {
+        c.fillStyle = dark;
+        c.beginPath();
+        c.ellipse(-r * 0.15, -r * 0.55, r * 0.55, r * 0.18, 0, 0, TAU);
+        c.fill();
+      }
+      c.fillStyle = 'rgba(255,255,255,.28)';
+      c.beginPath();
+      c.ellipse(-r * 0.35, -r * 0.12, r * 0.42, r * 0.14, -0.2, 0, TAU);
+      c.fill();
+      eye(-r * 0.55, -r * 0.08, r * 0.16);
+      c.strokeStyle = dark;
+      c.lineWidth = 1.5;
+      for (const gx of [-0.28, -0.12]) {
+        c.beginPath();
+        c.moveTo(r * gx, -r * 0.05);
+        c.lineTo(r * (gx - 0.08), r * 0.12);
+        c.stroke();
+      }
+      break;
+    }
+    case 'octo': {
+      c.fillStyle = body;
+      c.beginPath();
+      c.arc(-r * 0.1, -r * 0.15, r * 0.82, 0, TAU);
+      c.fill();
+      c.fillStyle = dark;
+      for (let i = 0; i < 8; i++) {
+        const baseA = Math.PI * 0.35 + (i / 7) * Math.PI * 1.35;
+        const len = r * (1.05 + (i % 2) * 0.12);
+        const wob = Math.sin(t * 4 + i * 1.1) * r * 0.14;
+        const x0 = Math.cos(baseA) * r * 0.55;
+        const y0 = Math.sin(baseA) * r * 0.55;
+        const x1 = Math.cos(baseA) * len + wob;
+        const y1 = Math.sin(baseA) * len + r * 0.35;
+        c.lineWidth = r * 0.14;
+        c.lineCap = 'round';
+        c.beginPath();
+        c.moveTo(x0, y0);
+        c.quadraticCurveTo(x0 + wob, (y0 + y1) * 0.55, x1, y1);
+        c.stroke();
+      }
+      eye(-r * 0.35, -r * 0.28, r * 0.22);
+      if (r >= 20) eye(r * 0.05, -r * 0.22, r * 0.14);
       break;
     }
   }

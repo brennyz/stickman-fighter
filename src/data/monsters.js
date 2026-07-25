@@ -116,6 +116,21 @@ const SPECIES = {
     chaoswyrm: { name: 'Chaoswyrm', art: 'dragon', size: 32, hp: 225, dmg: 22, speed: 88, type: 'dragon', xp: 42, rarity: 'legendary', c1: '#b06ae0', c2: '#5a2080' },
     prismewyrm: { name: 'Prismewyrm', art: 'dragon', size: 33, hp: 240, dmg: 23, speed: 90, type: 'dragon', xp: 48, rarity: 'legendary', c1: '#7cf5ff', c2: '#ff6b9d' },
     apexwyrm: { name: 'Apexwyrm', art: 'dragon', size: 35, hp: 285, dmg: 25, speed: 95, type: 'dragon', xp: 58, rarity: 'mythic', c1: '#ffe259', c2: '#e04f4f' },
+  /* --- Tide zee-expansie: haaien & octo's --- */
+  rifhaai: { name: 'Rifhaai', art: 'shark', size: 18, hp: 34, dmg: 8, speed: 118, type: 'swim', xp: 10, rarity: 'common', c1: '#6a9fc8', c2: '#2a5080' },
+  snelvin: { name: 'Snelvin', art: 'shark', size: 17, hp: 32, dmg: 7, speed: 128, type: 'swim', xp: 11, rarity: 'common', c1: '#8fb8d8', c2: '#3a6088' },
+  hamerkop: { name: 'Hamerkop', art: 'shark', size: 19, hp: 42, dmg: 10, speed: 105, type: 'swim', xp: 13, rarity: 'uncommon', c1: '#7aa8cf', c2: '#2f6088' },
+  tijvin: { name: 'Tijvin', art: 'shark', size: 20, hp: 52, dmg: 12, speed: 115, type: 'swim', xp: 17, rarity: 'rare', c1: '#5a8fd4', c2: '#1a4080' },
+  neonhaai: { name: 'Neonhaai', art: 'shark', size: 22, hp: 68, dmg: 14, speed: 120, type: 'swim', xp: 26, rarity: 'epic', c1: '#7cf5ff', c2: '#2a7fc0' },
+  abysshaai: { name: 'Abysshaai', art: 'shark', size: 24, hp: 95, dmg: 16, speed: 122, type: 'swim', xp: 38, rarity: 'legendary', c1: '#2a5080', c2: '#0a1830' },
+  levihaai: { name: 'Levihaai', art: 'shark', size: 26, hp: 120, dmg: 18, speed: 108, type: 'swim', xp: 52, rarity: 'mythic', c1: '#4a9fff', c2: '#0a2040' },
+  octo: { name: 'Octo', art: 'octo', size: 16, hp: 30, dmg: 6, speed: 52, type: 'swim', xp: 9, rarity: 'common', c1: '#c47aff', c2: '#5a2080' },
+  inktvissie: { name: 'Inktvissie', art: 'octo', size: 17, hp: 36, dmg: 7, speed: 48, type: 'swim', xp: 11, rarity: 'uncommon', c1: '#b06ae0', c2: '#4a1870' },
+  koraalocto: { name: 'Koraalocto', art: 'octo', size: 18, hp: 44, dmg: 9, speed: 50, type: 'swim', xp: 14, rarity: 'uncommon', c1: '#ff9ad5', c2: '#8a3060' },
+  dieptocto: { name: 'Dieptocto', art: 'octo', size: 19, hp: 58, dmg: 11, speed: 46, type: 'swim', xp: 20, rarity: 'rare', c1: '#6b5cff', c2: '#2e2266' },
+  stormocto: { name: 'Stormocto', art: 'octo', size: 21, hp: 72, dmg: 13, speed: 54, type: 'swim', xp: 28, rarity: 'epic', c1: '#7cf5ff', c2: '#2a7fc0' },
+  krakenling: { name: 'Krakenling', art: 'octo', size: 28, hp: 155, dmg: 17, speed: 42, type: 'swim', xp: 48, rarity: 'legendary', c1: '#2a1840', c2: '#6ee06e' },
+  voidocto: { name: 'Voidocto', art: 'octo', size: 24, hp: 98, dmg: 15, speed: 50, type: 'swim', xp: 42, rarity: 'mythic', c1: '#5a1040', c2: '#ff6b9d' },
 };
 const SPECIES_ORDER = Object.keys(SPECIES).sort((a, b) =>
   (rarityOf(SPECIES[a].rarity).order - rarityOf(SPECIES[b].rarity).order) || SPECIES[a].name.localeCompare(SPECIES[b].name)
@@ -167,9 +182,10 @@ const UNLOCK_AT = {
   obsidianaut: 33, titanbonk: 34, zeewyrm: 36, voidsly: 38, neondrake: 40,
   etherwyrm: 43, omegadrake: 46,
   kleiply: 1, spinbub: 2, hongerly: 4, parelsly: 6, modderblob: 4, crystalbub: 6, chaosly: 8, zwerm: 10, karmijnvleerm: 7, echovleerm: 9, spiegelvleerm: 11, voidvleerm: 13, duskwing: 11, glimwing: 13, bronzenstek: 15, koperstek: 17, froststek: 14, kolossstek: 16, thornox: 18, spineclaw: 20, quillfang: 18, spookvlam: 20, koudspook: 22, spiraalgeest: 24, wispgeest: 21, nexusgeest: 23, mistwraith: 25, palewraith: 27, olieblik: 25, batterijkan: 27, schrootblik: 29, turboblok: 30, ionkan: 28, quantumkan: 30, omegacan: 32, zilvervos: 34, maanvos: 32, jadevos: 34, stellarvos: 36, kosmischvos: 37, emberfox: 35, shadowfox: 37, leisteen: 39, marmerbonk: 41, koraalbonk: 39, barnsteen: 41, adamantbonk: 43, basaltbonk: 44, titanrock: 42, mistwyrm: 44, sandwyrm: 46, frostwyrm: 48, chaoswyrm: 46, prismewyrm: 48, apexwyrm: 50,
+  rifhaai: 8, snelvin: 9, octo: 8, inktvissie: 10, hamerkop: 12, koraalocto: 14, tijvin: 16, dieptocto: 18, stormocto: 22, neonhaai: 24, abysshaai: 32, krakenling: 38, levihaai: 44, voidocto: 40,
 
 };
-/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (114 soorten). */
+/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (126 soorten). */
 const ADVENTURE_HORDE_MUL = 6;
 const ADVENTURE_HORDE_MAX_PER_WAVE = 36;
 const ADVENTURE_MAX_ALIVE = IS_TOUCH ? 54 : 78;
@@ -178,7 +194,24 @@ const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
 const GIANT_DMG_MUL = 1.14;
 const GIANT_XP_MUL = 1.3;
-/** Nood-ontsnapping als je omringd / stunlocked bent — tik midden-KABLAM! */
+
+const SEA_ARTS = new Set(['shark', 'octo']);
+
+function seaSpeciesPool(levelN, maxRarityOrder) {
+  return Object.keys(UNLOCK_AT).filter((id) => {
+    const sp = SPECIES[id];
+    if (!sp || !SEA_ARTS.has(sp.art)) return false;
+    if (UNLOCK_AT[id] > levelN) return false;
+    return rarityOf(sp.rarity).order <= maxRarityOrder;
+  });
+}
+
+function tideWaveSeaPick(seaPool, levelN, maxRarityOrder) {
+  if (!seaPool || !seaPool.length) return null;
+  return weightedPick(seaPool, levelN);
+}
+
+/** Nood-ontsnapping als je omringd / stunlocked bent — tik midden-KETS! */
 const KETSBAM_DETECT_R = 148;
 const KETSBAM_NEAR_MIN = 3;
 const KETSBAM_BLAST_R = 192;
@@ -318,11 +351,21 @@ function buildLevel(n) {
       list[Math.floor(Math.random() * list.length)].sp = weightedPick(flyPool, n);
       meta.trait = 'flyers';
       meta.label = 'Vliegers — mik omhoog!';
-    } else if (roll < 0.38) {
+    } else if (roll < 0.36) {
       meta.trait = 'rush';
       meta.spawnMul = 0.76;
-      meta.label = 'Rush-golf';
-    } else if (n >= 7 && roll < 0.52) {
+      meta.label = 'rush';
+    } else if (n >= 8 && roll < 0.48) {
+      meta.trait = 'tide';
+      meta.spawnMul = 0.84;
+      meta.label = 'tide';
+      const seaPool = seaSpeciesPool(n, maxRarity);
+      if (seaPool.length) {
+        for (let i = 0; i < list.length; i++) {
+          if (Math.random() < 0.58) list[i].sp = tideWaveSeaPick(seaPool, n, maxRarity);
+        }
+      }
+    } else if (n >= 7 && roll < 0.54) {
       const sp = weightedPick(pool, n);
       list.push({ sp, elite: true, giant: rollWaveGiant(n, true) });
       meta.trait = 'elite';
@@ -347,10 +390,17 @@ function buildLevel(n) {
 }
 
 const WAVE_TRAIT_BANNER = {
-  flyers: { text: 'VLIEGER-GOLF', color: '#c47aff', size: 40 },
-  rush: { text: 'RUSH-GOLF', color: '#ffb06a', size: 40 },
-  elite: { text: 'ELITE-GOLF', color: '#ffb0b8', size: 40 },
+  flyers: { key: 'banner.flyerWave', color: '#c47aff', size: 40 },
+  rush: { key: 'banner.rushWave', color: '#ffb06a', size: 40 },
+  elite: { key: 'banner.eliteTraitWave', color: '#ffb0b8', size: 40 },
+  tide: { key: 'banner.tideWave', color: '#6ee06e', size: 40 },
 };
+
+function waveTraitBanner(trait) {
+  const m = WAVE_TRAIT_BANNER[trait];
+  if (!m || typeof t !== 'function') return null;
+  return { text: t(m.key), color: m.color, size: m.size };
+}
 
 /** Avontuur: 2× d6 gok vóór level — super-baas of super-bondgenoot (alleen dit level). */
 const GAMBLE_ALLIES = {
@@ -429,6 +479,9 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
   if (firstOfWave) {
     try {
       if (tier === 'superBoss') {
+        if (game.gambleBossWave > 0) {
+          try { AudioSys.sfx('bossTurn'); } catch (_) {}
+        }
         AudioSys.sting('superBossIntro');
         AudioSys.play('boss');
         game.banner(`SUPER BAAS — ${name}!`, 2.0, col, 44);
@@ -498,6 +551,26 @@ function applyGambleToStage(game, g) {
     game.stageHealBetween = (ally.healBetweenWaves || 0) * pot;
     game.stageShieldPerWave = (ally.shieldStart || 0) * pot;
     game.stageCritBonus = (ally.critBonus || 0) * pot;
+    if (ally.id === 'tide' && game.level && game.level.waveMeta && game.level.waves) {
+      const slots = game.level.waveMeta.map((m, i) => ({ m, i })).filter((x) => x.m.trait !== 'boss');
+      if (slots.length) {
+        const pick = slots[Math.floor(Math.random() * slots.length)];
+        pick.m.trait = 'tide';
+        pick.m.spawnMul = Math.min(pick.m.spawnMul || 1, 0.82);
+        pick.m.label = 'tide';
+        const maxOrd = rarityOf(game.level.rarityCap || 'mythic').order;
+        const seaPool = seaSpeciesPool(game.level.n, maxOrd);
+        const wave = game.level.waves[pick.i];
+        if (seaPool.length && wave) {
+          for (let j = 0; j < wave.length; j++) {
+            if (Math.random() < 0.62) {
+              const sp = tideWaveSeaPick(seaPool, game.level.n, maxOrd);
+              if (sp) wave[j].sp = sp;
+            }
+          }
+        }
+      }
+    }
   }
 }
 
