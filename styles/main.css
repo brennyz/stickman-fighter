@@ -433,6 +433,15 @@
   .help-island-sub { font-size:11px; opacity:.85; margin-top:3px; margin-bottom:6px; }
   .island-grid { grid-template-columns:repeat(5, minmax(56px, 1fr)); max-width:min(92vw, 520px); }
   #gambleIslandCtx { width:min(86vw,420px); text-align:center; font-size:12px; color:#9db1e3; margin:-4px auto 10px; line-height:1.4; }
+  .level-roll-flash { position:fixed; inset:0; z-index:35; display:flex; align-items:center; justify-content:center;
+      background:rgba(10,13,24,.72); backdrop-filter:blur(6px); pointer-events:none; opacity:0; transition:opacity .12s ease; }
+  .level-roll-flash.visible { opacity:1; }
+  .level-roll-flash-card { text-align:center; padding:24px 28px; border-radius:20px; background:rgba(15,20,40,.95);
+      border:2px solid rgba(255,215,94,.5); box-shadow:0 12px 40px rgba(0,0,0,.55); animation:levelRollPop .35s ease; }
+  .level-roll-dice { font-size:min(18vw,64px); letter-spacing:.12em; line-height:1.1; }
+  .level-roll-sum { font-size:15px; color:#8fa3d9; margin-top:8px; }
+  .level-roll-outcome { font-size:14px; line-height:1.45; color:#cfe0ff; margin-top:10px; max-width:min(86vw,360px); }
+  @keyframes levelRollPop { from { transform:scale(.85); opacity:0; } to { transform:scale(1); opacity:1; } }
   #pauseScreen.active { backdrop-filter:blur(8px); background:rgba(10,13,24,.92) !important; }
 
   .toggles { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; justify-content:center; }
@@ -676,6 +685,7 @@
   body.high-contrast #netStatus { font-weight: 900; border-width: 2px; }
   body.reduced-motion #netStatus.online-flash { animation: none; }
   body.reduced-motion .toast { animation: none; }
+  body.reduced-motion .level-roll-flash-card { animation: none; }
   body.high-contrast .hub-tile { border-width: 2px; }
 
   @media (max-height: 640px) {
@@ -723,7 +733,7 @@
   /* OS-level a11y — applies before JS syncA11yClasses */
   @media (prefers-reduced-motion: reduce) {
     .screen.active, h1.title, .char-card.pick-hint, .xpline > div, .toast,
-    #netStatus.online-flash, .press-start { animation: none !important; }
+    #netStatus.online-flash, .press-start, .level-roll-flash-card { animation: none !important; }
     .char-fight-btn { box-shadow: 0 4px 0 #6b1515; }
   }
   @media (prefers-contrast: more) {

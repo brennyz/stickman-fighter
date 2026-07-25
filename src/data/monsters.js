@@ -366,11 +366,11 @@ function gambleDiceFace(d) {
 function gambleRollToastLine(g) {
   if (!g) return '';
   const faces = `${gambleDiceFace(g.d1)} ${gambleDiceFace(g.d2)} = ${g.sum}`;
-  if (g.outcome === 'neutral') return `${faces} · normaal level`;
+  if (g.outcome === 'neutral') return t('ui.gambleRollNeutral', { faces });
   const label = typeof gambleOutcomeLabelFromKey === 'function'
     ? gambleOutcomeLabelFromKey(g).replace(/^[^!]+!?\s*/, '').slice(0, 40)
     : '';
-  return label ? `${faces} · ${label}` : faces;
+  return label ? t('ui.gambleRollOutcome', { faces, label }) : faces;
 }
 
 function gambleOutcomeLabel(g) {

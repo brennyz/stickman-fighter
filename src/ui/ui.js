@@ -1471,6 +1471,36 @@ const UI = {
     }
   },
 
+  showGambleRollFlash(g) {
+    const el = document.getElementById('levelRollFlash');
+    if (!el || !g) return;
+    const diceEl = document.getElementById('levelRollDice');
+    const sumEl = document.getElementById('levelRollSum');
+    const outEl = document.getElementById('levelRollOutcome');
+    const face = (d) => (typeof gambleDiceFace === 'function' ? gambleDiceFace(d) : '?');
+    if (diceEl) diceEl.textContent = `${face(g.d1)} ${face(g.d2)}`;
+    if (sumEl) sumEl.textContent = t('ui.gambleSumRoll', { d1: g.d1, d2: g.d2, sum: g.sum });
+    if (outEl) {
+      outEl.textContent = typeof gambleOutcomeLabelFromKey === 'function'
+        ? gambleOutcomeLabelFromKey(g)
+        : (g.outcome || '');
+      const col = g.outcome === 'superBoss' || g.outcome === 'miniBoss' ? '#ffb0b8'
+        : (g.outcome === 'superAlly' || g.outcome === 'ally') ? (GAMBLE_ALLIES[g.allyId]?.color || '#7cf5ff') : '#8fa3d9';
+      outEl.style.color = col;
+    }
+    el.hidden = false;
+    el.setAttribute('aria-hidden', 'false');
+    el.classList.add('visible');
+  },
+
+  hideGambleRollFlash() {
+    const el = document.getElementById('levelRollFlash');
+    if (!el) return;
+    el.classList.remove('visible');
+    el.hidden = true;
+    el.setAttribute('aria-hidden', 'true');
+  },
+
   renderWeapons() {
     const sumEl = document.getElementById('weaponSummary');
     if (sumEl) {

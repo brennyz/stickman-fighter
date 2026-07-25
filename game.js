@@ -135,9 +135,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.88';
+const APP_VERSION = '1.17.89';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 206;
+const SW_CACHE_REV = 207;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -2813,6 +2813,7 @@ function cancelGambleStart() {
     gokScreenTimer = null;
   }
   gokStartBusy = false;
+  try { UI.hideGambleRollFlash(); } catch (_) {}
 }
 
 function playGambleRollSfx(g) {
@@ -2844,16 +2845,18 @@ function gokGooiStartLevel(n) {
       const line = typeof gambleRollToastLine === 'function' ? gambleRollToastLine(lastGambleRoll) : '';
       if (line) UI.toast(line, motionReduced() ? 900 : 1400);
     } catch (_) {}
+    try { UI.showGambleRollFlash(lastGambleRoll); } catch (_) {}
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
     const delay = motionReduced() ? 80 : 420;
     gokScreenTimer = setTimeout(() => {
       gokScreenTimer = null;
       gokStartBusy = false;
+      try { UI.hideGambleRollFlash(); } catch (_) {}
       startAdventureFromGamble(false);
     }, delay);
   } catch (err) {
     cancelGambleStart();
-    sfReportError('gokStart', err, 'Gok start mislukt — probeer opnieuw');
+    sfReportError('gokStart', err, t('toast.errGambleStart'));
   }
 }
 
@@ -2867,7 +2870,7 @@ function gokGooiStartFromScreen() {
     playGambleRollSfx(lastGambleRoll);
     UI.renderGamble(pendingAdvLevel || save.unlocked || 1);
     const sumLine = document.getElementById('gambleSumLine');
-    if (sumLine) sumLine.textContent = 'START!';
+    if (sumLine) sumLine.textContent = t('ui.gambleGoStart');
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
     const delay = motionReduced() ? 50 : 140;
     gokScreenTimer = setTimeout(() => {
@@ -2877,7 +2880,7 @@ function gokGooiStartFromScreen() {
     }, delay);
   } catch (err) {
     cancelGambleStart();
-    sfReportError('gokGooi', err, 'Gok start mislukt — probeer opnieuw');
+    sfReportError('gokGooi', err, t('toast.errGambleStart'));
   }
 }
 
@@ -5844,11 +5847,11 @@ function gambleDiceFace(d) {
 function gambleRollToastLine(g) {
   if (!g) return '';
   const faces = `${gambleDiceFace(g.d1)} ${gambleDiceFace(g.d2)} = ${g.sum}`;
-  if (g.outcome === 'neutral') return `${faces} · normaal level`;
+  if (g.outcome === 'neutral') return t('ui.gambleRollNeutral', { faces });
   const label = typeof gambleOutcomeLabelFromKey === 'function'
     ? gambleOutcomeLabelFromKey(g).replace(/^[^!]+!?\s*/, '').slice(0, 40)
     : '';
-  return label ? `${faces} · ${label}` : faces;
+  return label ? t('ui.gambleRollOutcome', { faces, label }) : faces;
 }
 
 function gambleOutcomeLabel(g) {
@@ -6264,6 +6267,7 @@ function seedNlGameStrings() {
     itemUpgradeReady: '{name} kan upgraden — Collectie → Upgrades',
     itemUpgraded: '{name} Lv {lv}! {detail}',
     skipGamble: 'Zonder gok',
+    errGambleStart: 'Gok start mislukt — probeer opnieuw',
     weaponIslandCap: 'Klaar voor training — in avontuur max Lv {cap}',
     petNone: 'Geen actieve pet',
     petFollow: '{name} volgt je nu!',
@@ -6276,6 +6280,14 @@ function seedNlGameStrings() {
     eggFloat: '{name} zweeft nu mee!',
     styleEquipped: '{name} uitgerust',
     welcome: 'Welkom! Menu → Tips · per modus één korte hint bovenin (geen toast-stapel)',
+  });
+  if (!I18N.nl.gamble) I18N.nl.gamble = {};
+  Object.assign(I18N.nl.gamble, {
+    superBoss: 'Pech! Super-baas in een willekeurige golf',
+    miniBoss: 'Risico: extra elite-super in een golf',
+    superAlly: 'Jackpot! Super-bondgenoot: {name} (sterk buff)',
+    ally: 'Geluk! Bondgenoot: {name} (buff dit level)',
+    neutral: 'Neutraal — gewoon level (geen extra gok-effect)',
   });
   if (!I18N.nl.versionUpdate) I18N.nl.versionUpdate = {};
   Object.assign(I18N.nl.versionUpdate, {
@@ -6419,6 +6431,9 @@ function seedNlGameStrings() {
     gambleStartSub: '2× d6 · meteen level',
     gambleSkip: 'Overslaan',
     gambleSkipSub: 'Geen gok — geen extra baas of buff',
+    gambleRollNeutral: '{faces} · normaal level',
+    gambleRollOutcome: '{faces} · {label}',
+    gambleGoStart: 'START!',
     styleHead: 'Stijl',
     styleSub: 'Outfits met bonus — level, training, monsterboek · hover voor tooltip',
     styleActive: 'Actief',
@@ -6808,6 +6823,7 @@ const CATALOG_EN = {
     itemUpgradeReady: '{name} ready to upgrade — Collection → Upgrades',
     itemUpgraded: '{name} Lv {lv}! {detail}',
     skipGamble: 'No gamble',
+    errGambleStart: 'Gamble start failed — try again',
     weaponIslandCap: 'Ready for training — in adventure max Lv {cap}',
     petNone: 'No active pet',
     petFollow: '{name} follows you now!',
@@ -6929,6 +6945,9 @@ const CATALOG_EN = {
     gambleStartSub: '2× d6 · straight into level',
     gambleSkip: 'Skip',
     gambleSkipSub: 'No gamble — no extra boss or buff',
+    gambleRollNeutral: '{faces} · normal level',
+    gambleRollOutcome: '{faces} · {label}',
+    gambleGoStart: 'START!',
     styleHead: 'Style',
     styleSub: 'Outfits with bonus — level, training, monster book · hover for tooltip',
     styleActive: 'Active',
@@ -17365,6 +17384,36 @@ const UI = {
         outEl.style.color = col;
       }
     }
+  },
+
+  showGambleRollFlash(g) {
+    const el = document.getElementById('levelRollFlash');
+    if (!el || !g) return;
+    const diceEl = document.getElementById('levelRollDice');
+    const sumEl = document.getElementById('levelRollSum');
+    const outEl = document.getElementById('levelRollOutcome');
+    const face = (d) => (typeof gambleDiceFace === 'function' ? gambleDiceFace(d) : '?');
+    if (diceEl) diceEl.textContent = `${face(g.d1)} ${face(g.d2)}`;
+    if (sumEl) sumEl.textContent = t('ui.gambleSumRoll', { d1: g.d1, d2: g.d2, sum: g.sum });
+    if (outEl) {
+      outEl.textContent = typeof gambleOutcomeLabelFromKey === 'function'
+        ? gambleOutcomeLabelFromKey(g)
+        : (g.outcome || '');
+      const col = g.outcome === 'superBoss' || g.outcome === 'miniBoss' ? '#ffb0b8'
+        : (g.outcome === 'superAlly' || g.outcome === 'ally') ? (GAMBLE_ALLIES[g.allyId]?.color || '#7cf5ff') : '#8fa3d9';
+      outEl.style.color = col;
+    }
+    el.hidden = false;
+    el.setAttribute('aria-hidden', 'false');
+    el.classList.add('visible');
+  },
+
+  hideGambleRollFlash() {
+    const el = document.getElementById('levelRollFlash');
+    if (!el) return;
+    el.classList.remove('visible');
+    el.hidden = true;
+    el.setAttribute('aria-hidden', 'true');
   },
 
   renderWeapons() {

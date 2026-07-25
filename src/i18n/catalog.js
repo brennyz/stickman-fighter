@@ -164,6 +164,7 @@ function seedNlGameStrings() {
     itemUpgradeReady: '{name} kan upgraden — Collectie → Upgrades',
     itemUpgraded: '{name} Lv {lv}! {detail}',
     skipGamble: 'Zonder gok',
+    errGambleStart: 'Gok start mislukt — probeer opnieuw',
     weaponIslandCap: 'Klaar voor training — in avontuur max Lv {cap}',
     petNone: 'Geen actieve pet',
     petFollow: '{name} volgt je nu!',
@@ -176,6 +177,14 @@ function seedNlGameStrings() {
     eggFloat: '{name} zweeft nu mee!',
     styleEquipped: '{name} uitgerust',
     welcome: 'Welkom! Menu → Tips · per modus één korte hint bovenin (geen toast-stapel)',
+  });
+  if (!I18N.nl.gamble) I18N.nl.gamble = {};
+  Object.assign(I18N.nl.gamble, {
+    superBoss: 'Pech! Super-baas in een willekeurige golf',
+    miniBoss: 'Risico: extra elite-super in een golf',
+    superAlly: 'Jackpot! Super-bondgenoot: {name} (sterk buff)',
+    ally: 'Geluk! Bondgenoot: {name} (buff dit level)',
+    neutral: 'Neutraal — gewoon level (geen extra gok-effect)',
   });
   if (!I18N.nl.versionUpdate) I18N.nl.versionUpdate = {};
   Object.assign(I18N.nl.versionUpdate, {
@@ -319,6 +328,9 @@ function seedNlGameStrings() {
     gambleStartSub: '2× d6 · meteen level',
     gambleSkip: 'Overslaan',
     gambleSkipSub: 'Geen gok — geen extra baas of buff',
+    gambleRollNeutral: '{faces} · normaal level',
+    gambleRollOutcome: '{faces} · {label}',
+    gambleGoStart: 'START!',
     styleHead: 'Stijl',
     styleSub: 'Outfits met bonus — level, training, monsterboek · hover voor tooltip',
     styleActive: 'Actief',
@@ -708,6 +720,7 @@ const CATALOG_EN = {
     itemUpgradeReady: '{name} ready to upgrade — Collection → Upgrades',
     itemUpgraded: '{name} Lv {lv}! {detail}',
     skipGamble: 'No gamble',
+    errGambleStart: 'Gamble start failed — try again',
     weaponIslandCap: 'Ready for training — in adventure max Lv {cap}',
     petNone: 'No active pet',
     petFollow: '{name} follows you now!',
@@ -829,6 +842,9 @@ const CATALOG_EN = {
     gambleStartSub: '2× d6 · straight into level',
     gambleSkip: 'Skip',
     gambleSkipSub: 'No gamble — no extra boss or buff',
+    gambleRollNeutral: '{faces} · normal level',
+    gambleRollOutcome: '{faces} · {label}',
+    gambleGoStart: 'START!',
     styleHead: 'Style',
     styleSub: 'Outfits with bonus — level, training, monster book · hover for tooltip',
     styleActive: 'Active',

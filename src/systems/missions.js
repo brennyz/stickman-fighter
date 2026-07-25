@@ -1025,6 +1025,7 @@ function cancelGambleStart() {
     gokScreenTimer = null;
   }
   gokStartBusy = false;
+  try { UI.hideGambleRollFlash(); } catch (_) {}
 }
 
 function playGambleRollSfx(g) {
@@ -1056,16 +1057,18 @@ function gokGooiStartLevel(n) {
       const line = typeof gambleRollToastLine === 'function' ? gambleRollToastLine(lastGambleRoll) : '';
       if (line) UI.toast(line, motionReduced() ? 900 : 1400);
     } catch (_) {}
+    try { UI.showGambleRollFlash(lastGambleRoll); } catch (_) {}
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
     const delay = motionReduced() ? 80 : 420;
     gokScreenTimer = setTimeout(() => {
       gokScreenTimer = null;
       gokStartBusy = false;
+      try { UI.hideGambleRollFlash(); } catch (_) {}
       startAdventureFromGamble(false);
     }, delay);
   } catch (err) {
     cancelGambleStart();
-    sfReportError('gokStart', err, 'Gok start mislukt — probeer opnieuw');
+    sfReportError('gokStart', err, t('toast.errGambleStart'));
   }
 }
 
@@ -1079,7 +1082,7 @@ function gokGooiStartFromScreen() {
     playGambleRollSfx(lastGambleRoll);
     UI.renderGamble(pendingAdvLevel || save.unlocked || 1);
     const sumLine = document.getElementById('gambleSumLine');
-    if (sumLine) sumLine.textContent = 'START!';
+    if (sumLine) sumLine.textContent = t('ui.gambleGoStart');
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
     const delay = motionReduced() ? 50 : 140;
     gokScreenTimer = setTimeout(() => {
@@ -1089,7 +1092,7 @@ function gokGooiStartFromScreen() {
     }, delay);
   } catch (err) {
     cancelGambleStart();
-    sfReportError('gokGooi', err, 'Gok start mislukt — probeer opnieuw');
+    sfReportError('gokGooi', err, t('toast.errGambleStart'));
   }
 }
 
