@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.86';
+const APP_VERSION = '1.17.87';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 204;
+const SW_CACHE_REV = 205;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null, activeJutsu: 'rasengan',
 
@@ -13612,6 +13612,9 @@ function clearGameResultTimer(g) {
   }
 }
 
+const SHARD_PICKUP_LIFE = 36;
+const GENERIC_PICKUP_LIFE = 22;
+
 class Game {
   constructor(mode, opts) {
     opts = opts || {};
@@ -14294,10 +14297,13 @@ class Game {
 
   spawnPickup(x, y, opts) {
     opts = opts || {};
+    const pos = this.clampPickupPos(x, y);
+    x = pos.x;
+    y = pos.y;
     if (opts.skillId && SKILL_DEFS[opts.skillId]) {
       this.pickups.push({
         x, y, kind: 'skill_shard', skillId: opts.skillId, dropTier: opts.dropTier || 'normal',
-        t: rand(0, TAU), life: 18, bob: 0,
+        t: rand(0, TAU), life: SHARD_PICKUP_LIFE, bob: 0,
       });
       if (opts.dropTier && opts.dropTier !== 'normal') {
         try { AudioSys.sfxAt('bell', x); } catch (_) {}
@@ -14307,7 +14313,7 @@ class Game {
     if (opts.itemCat && opts.itemId && itemUpgradeEligible(opts.itemCat, opts.itemId)) {
       this.pickups.push({
         x, y, kind: 'item_shard', itemCat: opts.itemCat, itemId: opts.itemId, dropTier: opts.dropTier || 'normal',
-        t: rand(0, TAU), life: 18, bob: 0,
+        t: rand(0, TAU), life: SHARD_PICKUP_LIFE, bob: 0,
       });
       if (opts.dropTier && opts.dropTier !== 'normal') {
         try { AudioSys.sfxAt('bell', x); } catch (_) {}
@@ -14315,7 +14321,21 @@ class Game {
       return;
     }
     const kind = choice(PICKUP_TYPES);
-    this.pickups.push({ x, y, kind, t: rand(0, TAU), life: 16, bob: 0 });
+    this.pickups.push({ x, y, kind, t: rand(0, TAU), life: GENERIC_PICKUP_LIFE, bob: 0 });
+  }
+
+  /** Houd pickups (vooral shards) binnen het speelveld — geen spawns off-screen. */
+  clampPickupPos(x, y) {
+    const padX = 32;
+    const minX = (this.minX != null ? this.minX : 40) + padX;
+    const maxX = (this.maxX != null ? this.maxX : W - 40) - padX;
+    const gy = this.ground != null ? this.ground : playfieldGroundY(H, W);
+    const minY = gy - 168;
+    const maxY = gy - 28;
+    return {
+      x: clamp(x, minX, maxX),
+      y: clamp(y, minY, maxY),
+    };
   }
 
   collectPickup(pk) {
