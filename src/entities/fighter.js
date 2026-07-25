@@ -686,44 +686,14 @@ class Fighter {
       c.strokeStyle = 'rgba(120,220,255,.8)'; c.lineWidth = 3;
       c.beginPath(); c.arc(22, -50, 26, -1.4, 1.4); c.stroke();
     }
-    // Rasengan / Chidori oplaad in de hand
+    // Rasengan / Chidori oplaad-aura in de hand
     if (this.attack && this.attack.kind === 'special' && !this.attack.fired) {
       const g = clamp(this.attack.t / this.attack.windup, 0, 1);
       const kind = fighterJutsuKind(this);
-      drawJutsuOrb(c, hx + 14, hy, 8 + g * 16, this.animT * (8 + g * 20), kind, 0.55 + g * 0.45);
-      if (kind === 'chidori') {
-        c.strokeStyle = `rgba(200,240,255,${0.35 + g * 0.45})`;
-        c.lineWidth = 2;
-        for (let i = 0; i < 4; i++) {
-          const a = this.animT * 14 + i * 1.4;
-          c.beginPath();
-          c.moveTo(hx + 10, hy - 4);
-          c.lineTo(hx + 10 + Math.cos(a) * (18 + g * 22), hy - 4 + Math.sin(a) * 8);
-          c.stroke();
-        }
-      } else if (kind === 'rinnegan') {
-        c.strokeStyle = `rgba(196,122,255,${0.4 + g * 0.45})`;
-        c.lineWidth = 2;
-        for (let ring = 0; ring < 3; ring++) {
-          c.beginPath();
-          c.arc(hx + 14, hy, 10 + g * 16 + ring * 4, this.animT * (6 + ring), this.animT * (6 + ring) + Math.PI * 1.1);
-          c.stroke();
-        }
-        c.fillStyle = `rgba(255,100,140,${0.35 + g * 0.4})`;
-        for (let i = 0; i < 3; i++) {
-          const a = this.animT * 8 + i * (TAU / 3);
-          c.beginPath();
-          c.arc(hx + 14 + Math.cos(a) * (8 + g * 12), hy + Math.sin(a) * (8 + g * 10), 2.5 + g * 2, 0, TAU);
-          c.fill();
-        }
+      if (typeof drawJutsuChargeAura === 'function') {
+        drawJutsuChargeAura(c, hx, hy, g, this.animT, kind);
       } else {
-        c.fillStyle = `rgba(124,245,255,${0.25 + g * 0.35})`;
-        for (let i = 0; i < 5; i++) {
-          const a = this.animT * 10 + i * (TAU / 5);
-          c.beginPath();
-          c.arc(hx + 14 + Math.cos(a) * (10 + g * 14), hy + Math.sin(a) * (6 + g * 8), 2 + g * 2, 0, TAU);
-          c.fill();
-        }
+        drawJutsuOrb(c, hx + 14, hy, 8 + g * 16, this.animT * (8 + g * 20), kind, 0.55 + g * 0.45);
       }
     }
     c.restore();

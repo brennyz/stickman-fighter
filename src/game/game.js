@@ -2473,15 +2473,43 @@ class Game {
       c.save();
       if (skillExists(p.kind)) {
         const skDraw = skillById(p.kind);
-        if (!fxLite() && !motionReduced() && skDraw.behavior === 'orb') {
-          c.save();
-          c.globalAlpha = 0.28 + Math.sin((p.spin || 0) * 2.1) * 0.12;
-          c.strokeStyle = skDraw.color || '#7cf5ff';
-          c.lineWidth = 2;
-          c.beginPath();
-          c.arc(p.x, p.y, p.r * (1.22 + Math.sin(p.spin * 1.4) * 0.06), 0, TAU);
-          c.stroke();
-          c.restore();
+        if (!fxLite() && !motionReduced()) {
+          if (skDraw.behavior === 'orb') {
+            c.save();
+            c.globalAlpha = 0.28 + Math.sin((p.spin || 0) * 2.1) * 0.12;
+            c.strokeStyle = skDraw.color || '#7cf5ff';
+            c.lineWidth = 2;
+            c.beginPath();
+            c.arc(p.x, p.y, p.r * (1.22 + Math.sin(p.spin * 1.4) * 0.06), 0, TAU);
+            c.stroke();
+            // Outer spiral whisper
+            c.globalAlpha = 0.18 + Math.sin((p.spin || 0) * 3.2) * 0.08;
+            c.lineWidth = 1.4;
+            c.beginPath();
+            c.arc(p.x, p.y, p.r * 1.45, p.spin || 0, (p.spin || 0) + Math.PI * 1.4);
+            c.stroke();
+            c.restore();
+          } else if (skDraw.behavior === 'dash') {
+            // Chidori flight — crackle trail behind the bolt
+            const ang = Math.atan2(p.vy || 0, p.vx || 1);
+            c.save();
+            c.globalAlpha = 0.35;
+            c.strokeStyle = skDraw.color || '#a8e0ff';
+            c.lineWidth = 2;
+            c.lineCap = 'round';
+            for (let i = 0; i < 3; i++) {
+              const back = 10 + i * 9;
+              const wob = Math.sin((p.spin || 0) * 8 + i * 2.2) * 5;
+              c.beginPath();
+              c.moveTo(p.x, p.y);
+              c.lineTo(
+                p.x - Math.cos(ang) * back + Math.cos(ang + Math.PI / 2) * wob,
+                p.y - Math.sin(ang) * back + Math.sin(ang + Math.PI / 2) * wob
+              );
+              c.stroke();
+            }
+            c.restore();
+          }
         }
         drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, p.kind, 1);
       } else if (p.kind === 'shuriken') {

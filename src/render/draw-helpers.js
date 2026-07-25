@@ -279,6 +279,133 @@ function spawnJutsuImpactFx(game, x, y, kind, scale) {
   if (!lite && !small && (sk.behavior === 'pull' || sk.behavior === 'meteor')) {
     game.burst(x, y, '#ff6b9d', 6);
   }
+  if (!lite && !small && (kind === 'rasengan' || sk.behavior === 'orb')) {
+    spawnFxRing(game, x, y, '#ffffff', 10);
+  }
+  if (!lite && !small && (kind === 'chidori' || sk.behavior === 'dash')) {
+    game.burst(x, y, '#e8f7ff', 8, { kind: 'spark', size: 1.8 });
+  }
+}
+
+/**
+ * Hand-charge aura while winding up a jutsu (Rasengan spiral / Chidori crackle).
+ * g = charge progress 0..1, animT = fighter anim clock.
+ */
+function drawJutsuChargeAura(c, hx, hy, g, animT, kind) {
+  const sk = skillById(kind);
+  const behavior = sk.behavior || 'orb';
+  const col = sk.color || '#7cf5ff';
+  const calm = motionReduced();
+  const lite = fxLite() || calm;
+  const ox = hx + 14;
+  const oy = hy;
+  const spin = animT * (8 + g * 20);
+
+  drawJutsuOrb(c, ox, oy, 8 + g * 16, spin, kind, 0.55 + g * 0.45);
+
+  c.save();
+  if (behavior === 'dash' || kind === 'chidori') {
+    // Chidori — crackling sheath + jagged bolts from the palm
+    const halo = c.createRadialGradient(ox, oy, 2, ox, oy, 22 + g * 28);
+    halo.addColorStop(0, `rgba(232,247,255,${0.35 + g * 0.4})`);
+    halo.addColorStop(0.45, `rgba(168,224,255,${0.22 + g * 0.28})`);
+    halo.addColorStop(1, 'rgba(120,180,255,0)');
+    c.fillStyle = halo;
+    c.beginPath();
+    c.arc(ox, oy, 22 + g * 28, 0, TAU);
+    c.fill();
+
+    c.lineCap = 'round';
+    c.lineJoin = 'round';
+    const bolts = lite ? 4 : 8;
+    for (let i = 0; i < bolts; i++) {
+      const a = animT * (12 + g * 10) + i * (TAU / bolts);
+      const len = 14 + g * 26 + (calm ? 0 : Math.sin(animT * 28 + i) * 4);
+      c.strokeStyle = i % 2
+        ? `rgba(255,255,255,${0.45 + g * 0.4})`
+        : `rgba(168,224,255,${0.35 + g * 0.45})`;
+      c.lineWidth = i % 2 ? 1.4 : 2.2;
+      c.beginPath();
+      c.moveTo(ox + Math.cos(a) * 4, oy + Math.sin(a) * 3);
+      const mx = ox + Math.cos(a + 0.35) * len * 0.55;
+      const my = oy + Math.sin(a + 0.35) * len * 0.45 + (calm ? 0 : Math.sin(animT * 40 + i * 2) * 3);
+      c.lineTo(mx, my);
+      c.lineTo(ox + Math.cos(a + 0.15) * len, oy + Math.sin(a) * len * 0.55);
+      c.stroke();
+    }
+    if (!lite) {
+      c.strokeStyle = `rgba(200,240,255,${0.25 + g * 0.35})`;
+      c.lineWidth = 1.5;
+      for (let i = 0; i < 3; i++) {
+        const a = animT * 16 + i * 2.1;
+        c.beginPath();
+        c.moveTo(hx + 4, hy - 2);
+        c.quadraticCurveTo(
+          hx + 8 + Math.cos(a) * 10,
+          hy - 8 + Math.sin(a * 1.3) * 6,
+          ox + Math.cos(a) * (10 + g * 8),
+          oy + Math.sin(a) * (6 + g * 6)
+        );
+        c.stroke();
+      }
+    }
+  } else if (behavior === 'pull' || behavior === 'meteor' || kind === 'rinnegan') {
+    c.strokeStyle = `rgba(196,122,255,${0.4 + g * 0.45})`;
+    c.lineWidth = 2;
+    for (let ring = 0; ring < (lite ? 2 : 3); ring++) {
+      c.beginPath();
+      c.arc(ox, oy, 10 + g * 16 + ring * 4, animT * (6 + ring), animT * (6 + ring) + Math.PI * 1.1);
+      c.stroke();
+    }
+    c.fillStyle = `rgba(255,100,140,${0.35 + g * 0.4})`;
+    for (let i = 0; i < 3; i++) {
+      const a = animT * 8 + i * (TAU / 3);
+      c.beginPath();
+      c.arc(ox + Math.cos(a) * (8 + g * 12), oy + Math.sin(a) * (8 + g * 10), 2.5 + g * 2, 0, TAU);
+      c.fill();
+    }
+  } else {
+    // Rasengan — cyan halo + orbiting motes + spiral rings
+    const halo = c.createRadialGradient(ox, oy, 2, ox, oy, 20 + g * 26);
+    halo.addColorStop(0, `rgba(255,255,255,${0.4 + g * 0.35})`);
+    halo.addColorStop(0.4, `rgba(124,245,255,${0.28 + g * 0.32})`);
+    halo.addColorStop(1, 'rgba(80,180,220,0)');
+    c.fillStyle = halo;
+    c.beginPath();
+    c.arc(ox, oy, 20 + g * 26, 0, TAU);
+    c.fill();
+
+    c.strokeStyle = `rgba(124,245,255,${0.35 + g * 0.4})`;
+    c.lineWidth = lite ? 1.6 : 2.2;
+    c.lineCap = 'round';
+    const spirals = lite ? 2 : 4;
+    for (let i = 0; i < spirals; i++) {
+      const a0 = spin * (0.35 + i * 0.12) + i * 0.9;
+      c.beginPath();
+      c.arc(ox, oy, 9 + g * 10 + i * 3.5, a0, a0 + Math.PI * (1.1 + g * 0.35));
+      c.stroke();
+    }
+
+    c.fillStyle = `rgba(124,245,255,${0.3 + g * 0.4})`;
+    const motes = lite ? 4 : 7;
+    for (let i = 0; i < motes; i++) {
+      const a = animT * (10 + g * 6) + i * (TAU / motes);
+      const rr = 10 + g * 14 + (i % 3) * 2;
+      const mx = ox + Math.cos(a) * rr;
+      const my = oy + Math.sin(a) * (6 + g * 8) * (0.85 + (i % 2) * 0.2);
+      c.beginPath();
+      c.arc(mx, my, 1.6 + g * 2.2, 0, TAU);
+      c.fill();
+      if (!lite) {
+        c.fillStyle = `rgba(255,255,255,${0.2 + g * 0.25})`;
+        c.beginPath();
+        c.arc(mx - Math.cos(a) * 3, my - Math.sin(a) * 2, 1 + g, 0, TAU);
+        c.fill();
+        c.fillStyle = `rgba(124,245,255,${0.3 + g * 0.4})`;
+      }
+    }
+  }
+  c.restore();
 }
 
 function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
@@ -286,20 +413,38 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
   const behavior = sk.behavior || 'orb';
   const col = sk.color || '#7cf5ff';
   const lite = fxLite();
+  const calm = motionReduced();
   c.save();
   c.translate(x, y);
   c.globalAlpha = alpha == null ? 1 : alpha;
   if (behavior === 'dash') {
-    c.shadowColor = col; c.shadowBlur = lite ? 8 : 18;
-    c.fillStyle = col.length === 7 ? col + '88' : 'rgba(200,240,255,.55)';
-    c.beginPath(); c.arc(0, 0, r * 0.9, 0, TAU); c.fill();
+    c.shadowColor = col; c.shadowBlur = lite ? 8 : 20;
+    const core = c.createRadialGradient(0, 0, 0, 0, 0, r);
+    core.addColorStop(0, 'rgba(255,255,255,.95)');
+    core.addColorStop(0.35, col.length === 7 ? col + 'cc' : 'rgba(200,240,255,.8)');
+    core.addColorStop(1, col.length === 7 ? col + '22' : 'rgba(120,180,255,.15)');
+    c.fillStyle = core;
+    c.beginPath(); c.arc(0, 0, r * 0.95, 0, TAU); c.fill();
     c.strokeStyle = '#e8f7ff'; c.lineWidth = 2;
-    const bolts = lite ? 4 : 7;
+    c.lineCap = 'round';
+    const bolts = lite ? 4 : 9;
     for (let i = 0; i < bolts; i++) {
       const a = spin + i * (TAU / bolts);
+      const jagged = calm ? 0 : Math.sin(spin * 6 + i * 2.3) * 0.18;
       c.beginPath();
-      c.moveTo(Math.cos(a) * r * 0.2, Math.sin(a) * r * 0.2);
-      c.lineTo(Math.cos(a + 0.4) * r * 1.3, Math.sin(a + 0.4) * r * 1.3);
+      c.moveTo(Math.cos(a) * r * 0.15, Math.sin(a) * r * 0.15);
+      c.lineTo(
+        Math.cos(a + 0.25 + jagged) * r * 0.75,
+        Math.sin(a + 0.25 + jagged) * r * 0.75
+      );
+      c.lineTo(Math.cos(a + 0.45) * r * 1.35, Math.sin(a + 0.45) * r * 1.35);
+      c.stroke();
+    }
+    if (!lite) {
+      c.strokeStyle = 'rgba(255,255,255,.55)';
+      c.lineWidth = 1.2;
+      c.beginPath();
+      c.arc(0, 0, r * 1.18, spin * 1.4, spin * 1.4 + Math.PI * 1.2);
       c.stroke();
     }
   } else if (behavior === 'beam' || behavior === 'disc') {
@@ -334,19 +479,37 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
       }
     }
   } else {
-    c.shadowColor = col; c.shadowBlur = lite ? 8 : 22;
+    c.shadowColor = col; c.shadowBlur = lite ? 8 : 24;
     const grd = c.createRadialGradient(0, 0, 0, 0, 0, r);
-    grd.addColorStop(0, 'rgba(255,255,255,.92)');
-    grd.addColorStop(0.45, col + 'cc');
-    grd.addColorStop(1, col + '22');
+    grd.addColorStop(0, 'rgba(255,255,255,.95)');
+    grd.addColorStop(0.35, col + 'dd');
+    grd.addColorStop(0.7, col + '88');
+    grd.addColorStop(1, col + '18');
     c.fillStyle = grd;
     c.beginPath(); c.arc(0, 0, r, 0, TAU); c.fill();
     c.strokeStyle = col; c.lineWidth = 2;
-    const ellipses = lite ? 2 : 5;
+    const ellipses = lite ? 2 : 6;
     for (let i = 0; i < ellipses; i++) {
-      const a0 = spin + i * 1.1;
+      const a0 = spin + i * 0.95;
       c.beginPath();
-      c.ellipse(0, 0, r * 0.95, r * (0.35 + (i % 3) * 0.12), a0, 0, TAU);
+      c.ellipse(0, 0, r * 0.95, r * (0.32 + (i % 3) * 0.11), a0, 0, TAU);
+      c.stroke();
+    }
+    // Inner spiral ribbon (Rasengan signature)
+    if (!lite) {
+      c.strokeStyle = 'rgba(255,255,255,.55)';
+      c.lineWidth = 1.5;
+      c.lineCap = 'round';
+      c.beginPath();
+      for (let i = 0; i <= 18; i++) {
+        const t = i / 18;
+        const a = spin * 1.6 + t * Math.PI * 3.2;
+        const rr = r * (0.12 + t * 0.78);
+        const px = Math.cos(a) * rr;
+        const py = Math.sin(a) * rr * 0.72;
+        if (i === 0) c.moveTo(px, py);
+        else c.lineTo(px, py);
+      }
       c.stroke();
     }
     c.strokeStyle = col;
@@ -355,6 +518,13 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
     c.beginPath();
     c.arc(0, 0, r * 1.14, spin, spin + Math.PI * 1.35);
     c.stroke();
+    if (!lite && !calm) {
+      c.strokeStyle = 'rgba(255,255,255,.4)';
+      c.lineWidth = 1.4;
+      c.beginPath();
+      c.arc(0, 0, r * 1.28, -spin * 0.8, -spin * 0.8 + Math.PI * 0.9);
+      c.stroke();
+    }
   }
   c.restore();
 }
