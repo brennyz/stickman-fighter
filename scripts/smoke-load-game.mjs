@@ -110,6 +110,12 @@ const ctx = {
   devicePixelRatio: 2,
   requestAnimationFrame: () => 0,
   cancelAnimationFrame() {},
+  getComputedStyle() {
+    return {
+      display: 'flex', visibility: 'visible', opacity: '1',
+      animationName: 'none', zIndex: '20', pointerEvents: 'auto',
+    };
+  },
   setInterval() { return 0; },
   clearInterval() {},
   setTimeout(fn) { try { fn(); } catch (_) {} return 0; },
