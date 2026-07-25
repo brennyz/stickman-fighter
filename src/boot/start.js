@@ -412,7 +412,10 @@ if (btnClearSave) btnClearSave.addEventListener('click', () => {
     window.__sfClearConfirm = false;
     try { localStorage.removeItem(SAVE_KEY); } catch (_) {}
     save = sanitizeSave(Object.assign({}, DEFAULT_SAVE));
-    if (!persistOrToast('nieuwe start')) return;
+    if (!persistPrimaryOnly()) {
+      userToast('Opslaan mislukt — probeer opnieuw', 3200);
+      return;
+    }
     AudioSys.sfx('lose');
     UI.renderMenu();
     UI.toast('Nieuwe start — backup staat nog in Instellingen', 4000);

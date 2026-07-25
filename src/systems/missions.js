@@ -903,8 +903,7 @@ function saveStorageDiagnostics() {
   } catch (_) {}
   let drift = false;
   if (primaryParsed && backupParsed) {
-    drift = (primaryParsed.lvl !== backupParsed.lvl)
-      || (primaryParsed.unlocked !== backupParsed.unlocked);
+    drift = saveProgressScore(primaryParsed) !== saveProgressScore(backupParsed);
   }
   const primaryCorrupt = !!(primaryRaw && primaryRaw.length > 0 && !primaryParsed);
   const backupCorrupt = !!(backupRaw && backupRaw.length > 0 && !backupParsed);

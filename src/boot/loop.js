@@ -445,9 +445,14 @@ function bootGame() {
     }
   } catch (err) {
     console.error('[Stickman] save sanitize', err);
-    save = Object.assign({}, DEFAULT_SAVE);
-    try { persist(); } catch (_) {}
-    userToast('Save kon niet geladen worden — nieuwe voortgang gestart (export backup als je die had)', 4800);
+    if (applySaveFromBackupRaw()) {
+      window.__sfRecoveredBackup = true;
+      userToast('Save hersteld uit backup na laadfout', 4800);
+    } else {
+      save = Object.assign({}, DEFAULT_SAVE);
+      try { persistPrimaryOnly(); } catch (_) {}
+      userToast('Save kon niet geladen worden — nieuwe voortgang gestart (export backup als je die had)', 4800);
+    }
   }
   safeCall(() => dismissTunnelOverlayIfStatic(), 'overlay');
   safeCall(() => { if (typeof window.sfTunnelNukeOverlay === 'function') window.sfTunnelNukeOverlay(); }, 'nuke');
