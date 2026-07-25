@@ -1,16 +1,42 @@
 {
   "version": 3,
-  "cyclesCompleted": 4,
+  "cyclesCompleted": 5,
   "rollFirst": [],
-  "remaining": [],
+  "remaining": [
+    16,
+    10,
+    19,
+    9,
+    12,
+    20,
+    5,
+    13,
+    14,
+    6,
+    7,
+    2,
+    1,
+    4,
+    18,
+    11,
+    17,
+    8,
+    3
+  ],
   "lastRoll": {
-    "face": 5,
-    "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
-    "rolledAt": "2026-07-25T17:05:08Z",
-    "remainingCount": 0,
-    "cycle": 4
+    "face": 15,
+    "category": "Onboarding \u2014 tips, eerste speelminuut, help",
+    "rolledAt": "2026-07-25T19:03:04Z",
+    "remainingCount": 19,
+    "cycle": 5
   },
-  "pending": null,
+  "pending": {
+    "face": 15,
+    "category": "Onboarding \u2014 tips, eerste speelminuut, help",
+    "rolledAt": "2026-07-25T19:03:04Z",
+    "remainingCount": 19,
+    "cycle": 5
+  },
   "implemented": [
     {
       "face": 14,
@@ -960,13 +986,6 @@
   ],
   "history": [
     {
-      "face": 11,
-      "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
-      "rolledAt": "2026-07-23T13:23:30Z",
-      "remainingCount": 18,
-      "cycle": 0
-    },
-    {
       "face": 19,
       "category": "Muur & minigames \u2014 combo, timer, record",
       "rolledAt": "2026-07-23T13:25:13Z",
@@ -1800,6 +1819,13 @@
       "rolledAt": "2026-07-25T17:05:08Z",
       "remainingCount": 0,
       "cycle": 4
+    },
+    {
+      "face": 15,
+      "category": "Onboarding \u2014 tips, eerste speelminuut, help",
+      "rolledAt": "2026-07-25T19:03:04Z",
+      "remainingCount": 19,
+      "cycle": 5
     }
   ],
   "rollBacklog": []

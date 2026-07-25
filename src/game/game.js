@@ -810,8 +810,18 @@ class Game {
       this.monsters.push(mon);
       this.tideBattleMon = mon;
       triggerTideBattleIntro(this, mon);
-      UI.toast(t('toast.tideBattle', { name: mon.sp.name }), 4000);
+      const firstTide = typeof tideBattleOnboardPending === 'function' && tideBattleOnboardPending();
+      if (firstTide) {
+        if (typeof markTideBattleOnboardSeen === 'function') markTideBattleOnboardSeen();
+        this.modeHintLine = typeof tideBattleOnboardHintLine === 'function'
+          ? tideBattleOnboardHintLine(mon.sp.name)
+          : `Tide Battle — versla ${mon.sp.name}!`;
+        this.hint = 9;
+      }
       this.floater(W / 2, Math.max(100, (this.advHudBottom || 120) + 24), t('hud.tideBattleShort'), '#4a9fff', 18);
+      if (!firstTide) {
+        UI.toast(t('toast.tideBattle', { name: mon.sp.name }), 3200);
+      }
     } catch (err) {
       console.error('[TideBattle] start', err);
       clearTideBattleState(this, { restoreMusic: true });
@@ -3535,6 +3545,14 @@ class Game {
     }
     this.ketsbamBuildProg = clamp(this.ketsbamBuildT / KETSBAM_BUILD_DUR, 0, 1);
     this.ketsbamShow = eligible && this.ketsbamBuildProg >= 1;
+    if (this.ketsbamShow && typeof ketsbamOnboardHintLine === 'function') {
+      const kbHint = ketsbamOnboardHintLine();
+      if (kbHint) {
+        this.modeHintLine = kbHint;
+        this.hint = Math.max(this.hint || 0, 8);
+        if (typeof markKetsbamOnboardSeen === 'function') markKetsbamOnboardSeen();
+      }
+    }
     if (this.ketsbamShow || this.ketsbamBuildProg > 0) this.ketsbamPulse = (this.ketsbamPulse || 0) + dt;
     else this.ketsbamPulse = 0;
   }

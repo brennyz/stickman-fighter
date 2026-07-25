@@ -921,6 +921,19 @@ const UI = {
       vsRestart.style.display = (game?.mode === 'versus' && (state === 'play' || state === 'pause')) ? 'flex' : 'none';
     }
     if (!sub) return;
+    const onboardEl = document.getElementById('pauseOnboardLine');
+    if (onboardEl) {
+      const hint = (game && typeof pauseOnboardHintLine === 'function')
+        ? pauseOnboardHintLine(game.mode)
+        : '';
+      if (hint) {
+        onboardEl.textContent = hint;
+        onboardEl.style.display = 'block';
+      } else {
+        onboardEl.textContent = '';
+        onboardEl.style.display = 'none';
+      }
+    }
     if (game?.mode === 'versus' && game.p2) {
       const a = vsRosterEntry(game.p1Pick).name;
       const b = vsRosterEntry(game.p2Pick).name;

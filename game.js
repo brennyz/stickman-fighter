@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.54';
+const APP_VERSION = '1.18.55';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 264;
+const SW_CACHE_REV = 265;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -1069,7 +1069,9 @@ function sanitizeSave(s) {
     out.activeJutsu = 'rasengan';
   }
   if (out.eggDaily && typeof out.eggDaily === 'object') {
-    const dk = typeof out.eggDaily.date === 'string' ? out.eggDaily.date.slice(0, 10) : todayKey();
+    const dk = typeof out.eggDaily.date === 'string'
+      ? out.eggDaily.date.slice(0, 10)
+      : (typeof todayKey === 'function' ? todayKey() : new Date().toISOString().slice(0, 10));
     out.eggDaily = {
       date: dk,
       dailyCracked: !!out.eggDaily.dailyCracked,
@@ -1181,7 +1183,9 @@ function sanitizeSave(s) {
   out.achievements = cleanAch;
 
   if (out.daily && typeof out.daily === 'object') {
-    const dk = typeof out.daily.date === 'string' ? out.daily.date.slice(0, 10) : todayKey();
+    const dk = typeof out.daily.date === 'string'
+      ? out.daily.date.slice(0, 10)
+      : (typeof todayKey === 'function' ? todayKey() : new Date().toISOString().slice(0, 10));
     const tasks = Array.isArray(out.daily.tasks) ? out.daily.tasks : [];
     out.daily = {
       date: dk,
@@ -3666,6 +3670,11 @@ function blackScreenGuard(where) {
     console.warn('[Stickman] black screen guard:', where || '?', 'state=', state,
       'active=', activeScreenEl() && activeScreenEl().id);
     if (state === 'play') {
+      if (game?.tideBattleActive) {
+        try { clearTideBattleState(game, { restoreMusic: true }); } catch (_) {
+          try { cancelTideBattleMusicPending(game); } catch (_) {}
+        }
+      }
       state = 'menu';
       game = null;
     }
@@ -4362,6 +4371,57 @@ function modeFirstMinuteLine(mode) {
       : 'Munten pakken · joy ↑ = hoger mikken · max 3 shuriken snel',
   };
   return lines[mode] || lines.adventure;
+}
+
+/** Eén keer Ketsbam-uitleg — geen toast (avontuur ontsnapping). */
+function ketsbamOnboardHintLine() {
+  ensureTipsSeen();
+  if (save.tipsSeen.ketsbamOnboard) return '';
+  const key = IS_TOUCH ? 'ui.ketsbamOnboardTouch' : 'ui.ketsbamOnboardKb';
+  const line = typeof t === 'function' ? t(key) : '';
+  if (line && line !== key) return line;
+  return IS_TOUCH
+    ? 'Omringd? Tik het midden-symbool — Ketsbam-ontsnapping · 9s cooldown'
+    : 'Omringd? E of midden-symbool = Ketsbam · 9s cooldown';
+}
+
+function markKetsbamOnboardSeen() {
+  ensureTipsSeen();
+  if (save.tipsSeen.ketsbamOnboard) return;
+  save.tipsSeen.ketsbamOnboard = 1;
+  persist();
+}
+
+function tideBattleOnboardPending() {
+  ensureTipsSeen();
+  return !save.tipsSeen.tideBattleOnboard;
+}
+
+function tideBattleOnboardHintLine(bossName) {
+  const key = IS_TOUCH ? 'ui.tideBattleOnboardTouch' : 'ui.tideBattleOnboardKb';
+  const line = typeof t === 'function' ? t(key, { name: bossName || 'baas' }) : '';
+  if (line && line !== key) return line;
+  return IS_TOUCH
+    ? `Eerste Tide Battle: versla ${bossName || 'de baas'} — geen andere golven tot klaar`
+    : `First Tide Battle: defeat ${bossName || 'the boss'} — waves pause until done`;
+}
+
+function markTideBattleOnboardSeen() {
+  ensureTipsSeen();
+  if (save.tipsSeen.tideBattleOnboard) return;
+  save.tipsSeen.tideBattleOnboard = 1;
+  persist();
+}
+
+/** Eén eerste-minuut regel per modus in pauze — geen toast. */
+function pauseOnboardHintLine(mode) {
+  if (!mode) return '';
+  ensureTipsSeen();
+  const key = 'pauseHint_' + mode;
+  if (save.tipsSeen[key]) return '';
+  save.tipsSeen[key] = 1;
+  persist();
+  return modeFirstMinuteLine(mode);
 }
 
 /** Eén hint per modus: in-gevecht regel, geen extra toast (geen stapel met welcome). */
@@ -9239,6 +9299,10 @@ function seedNlGameStrings() {
     weaponComboHint: 'Wapen 3× = ①②③ · ①+② raken → gouden ③',
     gambleOnboardTouch: 'Eerste keer gok: lage som = super-baas · hoge som = bondgenoot · Overslaan = normaal level',
     gambleOnboardKb: 'Eerste keer: sum ≤5 super-baas · sum ≥9 ally buff · Skip = geen gok',
+    ketsbamOnboardTouch: 'Omringd? Tik het midden-symbool — Ketsbam-ontsnapping · 9s cooldown',
+    ketsbamOnboardKb: 'Omringd? E of midden-symbool = Ketsbam · 9s cooldown',
+    tideBattleOnboardTouch: 'Eerste Tide Battle: versla {name} — geen andere golven tot klaar',
+    tideBattleOnboardKb: 'Eerste Tide Battle: versla {name} — golven pauzeren tot klaar',
     langSwitchFail: 'Taal wisselen mislukt',
   });
   if (!I18N.nl.skill) I18N.nl.skill = {};
@@ -19489,8 +19553,18 @@ class Game {
       this.monsters.push(mon);
       this.tideBattleMon = mon;
       triggerTideBattleIntro(this, mon);
-      UI.toast(t('toast.tideBattle', { name: mon.sp.name }), 4000);
+      const firstTide = typeof tideBattleOnboardPending === 'function' && tideBattleOnboardPending();
+      if (firstTide) {
+        if (typeof markTideBattleOnboardSeen === 'function') markTideBattleOnboardSeen();
+        this.modeHintLine = typeof tideBattleOnboardHintLine === 'function'
+          ? tideBattleOnboardHintLine(mon.sp.name)
+          : `Tide Battle — versla ${mon.sp.name}!`;
+        this.hint = 9;
+      }
       this.floater(W / 2, Math.max(100, (this.advHudBottom || 120) + 24), t('hud.tideBattleShort'), '#4a9fff', 18);
+      if (!firstTide) {
+        UI.toast(t('toast.tideBattle', { name: mon.sp.name }), 3200);
+      }
     } catch (err) {
       console.error('[TideBattle] start', err);
       clearTideBattleState(this, { restoreMusic: true });
@@ -20828,33 +20902,37 @@ class Game {
   update(dt) {
     if (this.playerHurtCd > 0) this.playerHurtCd -= dt;
     if (this.ketsbamChargeT > 0) {
-      if (this.ketsbamCd > 0) this.ketsbamCd -= dt;
-      if (this.ketsbamSuperT > 0) this.ketsbamSuperT -= dt;
-      this.ketsbamChargeT -= dt;
-      this.ketsbamChargePulse = (this.ketsbamChargePulse || 0) + dt;
-      this.t += dt;
-      if (this.player?.alive) {
+      if (this.over || !this.player?.alive) {
+        this.ketsbamChargeT = 0;
+        this.inputLocked = false;
+        this.ketsbamShow = false;
+      } else {
+        if (this.ketsbamCd > 0) this.ketsbamCd -= dt;
+        if (this.ketsbamSuperT > 0) this.ketsbamSuperT -= dt;
+        this.ketsbamChargeT -= dt;
+        this.ketsbamChargePulse = (this.ketsbamChargePulse || 0) + dt;
+        this.t += dt;
         this.player.vx = 0;
         this.player.update(dt, this);
-      }
-      this.ketsbamChargeAcc = (this.ketsbamChargeAcc || 0) + dt;
-      const dur = this.ketsbamChargeDur || KETSBAM_CHARGE_DUR;
-      const prog = 1 - this.ketsbamChargeT / dur;
-      const chargeSp = equippedSuper();
-      const cCol = chargeSp.color || '#ffd75e';
-      const cCol2 = chargeSp.color2 || '#ff9a3d';
-      if (this.ketsbamChargeAcc >= 0.07 && !motionReduced()) {
-        this.ketsbamChargeAcc = 0;
-        const px = this.player.x;
-        const py = this.player.y - 50;
-        this.burst(px + rand(-20, 20), py + rand(-30, 10), prog > 0.6 ? '#fff8dc' : cCol,
-          fxLite() ? 2 : 4, { kind: 'spark', size: 2 + prog * 2 });
-        if (prog > 0.45 && !fxLite()) {
-          this.burst(px, this.player.y + 2, cCol2, 2, { kind: 'ring' });
+        this.ketsbamChargeAcc = (this.ketsbamChargeAcc || 0) + dt;
+        const dur = this.ketsbamChargeDur || KETSBAM_CHARGE_DUR;
+        const prog = 1 - this.ketsbamChargeT / dur;
+        const chargeSp = equippedSuper();
+        const cCol = chargeSp.color || '#ffd75e';
+        const cCol2 = chargeSp.color2 || '#ff9a3d';
+        if (this.ketsbamChargeAcc >= 0.07 && !motionReduced()) {
+          this.ketsbamChargeAcc = 0;
+          const px = this.player.x;
+          const py = this.player.y - 50;
+          this.burst(px + rand(-20, 20), py + rand(-30, 10), prog > 0.6 ? '#fff8dc' : cCol,
+            fxLite() ? 2 : 4, { kind: 'spark', size: 2 + prog * 2 });
+          if (prog > 0.45 && !fxLite()) {
+            this.burst(px, this.player.y + 2, cCol2, 2, { kind: 'ring' });
+          }
         }
+        if (this.ketsbamChargeT <= 0) this.player.finishKetsbam(this);
+        return;
       }
-      if (this.ketsbamChargeT <= 0 && this.player?.alive) this.player.finishKetsbam(this);
-      return;
     }
     if (this.freezeT > 0) { this.freezeT -= dt; return; }
     if (this.mode === 'adventure') this.updateKetsbam(dt);
@@ -22210,6 +22288,14 @@ class Game {
     }
     this.ketsbamBuildProg = clamp(this.ketsbamBuildT / KETSBAM_BUILD_DUR, 0, 1);
     this.ketsbamShow = eligible && this.ketsbamBuildProg >= 1;
+    if (this.ketsbamShow && typeof ketsbamOnboardHintLine === 'function') {
+      const kbHint = ketsbamOnboardHintLine();
+      if (kbHint) {
+        this.modeHintLine = kbHint;
+        this.hint = Math.max(this.hint || 0, 8);
+        if (typeof markKetsbamOnboardSeen === 'function') markKetsbamOnboardSeen();
+      }
+    }
     if (this.ketsbamShow || this.ketsbamBuildProg > 0) this.ketsbamPulse = (this.ketsbamPulse || 0) + dt;
     else this.ketsbamPulse = 0;
   }
@@ -24302,6 +24388,19 @@ const UI = {
       vsRestart.style.display = (game?.mode === 'versus' && (state === 'play' || state === 'pause')) ? 'flex' : 'none';
     }
     if (!sub) return;
+    const onboardEl = document.getElementById('pauseOnboardLine');
+    if (onboardEl) {
+      const hint = (game && typeof pauseOnboardHintLine === 'function')
+        ? pauseOnboardHintLine(game.mode)
+        : '';
+      if (hint) {
+        onboardEl.textContent = hint;
+        onboardEl.style.display = 'block';
+      } else {
+        onboardEl.textContent = '';
+        onboardEl.style.display = 'none';
+      }
+    }
     if (game?.mode === 'versus' && game.p2) {
       const a = vsRosterEntry(game.p1Pick).name;
       const b = vsRosterEntry(game.p2Pick).name;

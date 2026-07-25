@@ -1240,6 +1240,8 @@
   .pause-perf-strip { width:min(92vw,420px); margin:-4px auto 12px; padding:6px 10px; font-size:11px; line-height:1.4;
       text-align:center; color:#9ec8ff; background:rgba(20,28,48,.55); border:1px solid rgba(124,245,255,.18); border-radius:8px; }
   .pause-audio-hint { font-size:11px; opacity:.72; line-height:1.4; margin:8px 0 2px; text-align:center; color:#a8b8e8; }
+  .pause-onboard-line { width:min(92vw,420px); margin:-6px auto 10px; padding:8px 12px; font-size:12px; line-height:1.45;
+    text-align:center; color:#ffd75e; background:rgba(255,215,94,.08); border:1px solid rgba(255,215,94,.28); border-radius:12px; }
   .pause-audio-quick { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:10px 0 2px; }
   .pause-audio-quick .btn.tog { flex:1 1 30%; min-width:92px; min-height:40px; font-size:12px; padding:8px 10px; justify-content:center; }
   .settings-card .tog { width:100%; margin-top:8px; justify-content:center; }

@@ -2249,6 +2249,57 @@ function modeFirstMinuteLine(mode) {
   return lines[mode] || lines.adventure;
 }
 
+/** Eén keer Ketsbam-uitleg — geen toast (avontuur ontsnapping). */
+function ketsbamOnboardHintLine() {
+  ensureTipsSeen();
+  if (save.tipsSeen.ketsbamOnboard) return '';
+  const key = IS_TOUCH ? 'ui.ketsbamOnboardTouch' : 'ui.ketsbamOnboardKb';
+  const line = typeof t === 'function' ? t(key) : '';
+  if (line && line !== key) return line;
+  return IS_TOUCH
+    ? 'Omringd? Tik het midden-symbool — Ketsbam-ontsnapping · 9s cooldown'
+    : 'Omringd? E of midden-symbool = Ketsbam · 9s cooldown';
+}
+
+function markKetsbamOnboardSeen() {
+  ensureTipsSeen();
+  if (save.tipsSeen.ketsbamOnboard) return;
+  save.tipsSeen.ketsbamOnboard = 1;
+  persist();
+}
+
+function tideBattleOnboardPending() {
+  ensureTipsSeen();
+  return !save.tipsSeen.tideBattleOnboard;
+}
+
+function tideBattleOnboardHintLine(bossName) {
+  const key = IS_TOUCH ? 'ui.tideBattleOnboardTouch' : 'ui.tideBattleOnboardKb';
+  const line = typeof t === 'function' ? t(key, { name: bossName || 'baas' }) : '';
+  if (line && line !== key) return line;
+  return IS_TOUCH
+    ? `Eerste Tide Battle: versla ${bossName || 'de baas'} — geen andere golven tot klaar`
+    : `First Tide Battle: defeat ${bossName || 'the boss'} — waves pause until done`;
+}
+
+function markTideBattleOnboardSeen() {
+  ensureTipsSeen();
+  if (save.tipsSeen.tideBattleOnboard) return;
+  save.tipsSeen.tideBattleOnboard = 1;
+  persist();
+}
+
+/** Eén eerste-minuut regel per modus in pauze — geen toast. */
+function pauseOnboardHintLine(mode) {
+  if (!mode) return '';
+  ensureTipsSeen();
+  const key = 'pauseHint_' + mode;
+  if (save.tipsSeen[key]) return '';
+  save.tipsSeen[key] = 1;
+  persist();
+  return modeFirstMinuteLine(mode);
+}
+
 /** Eén hint per modus: in-gevecht regel, geen extra toast (geen stapel met welcome). */
 function applyModeOnboarding(mode, g) {
   if (!g || !mode) return;

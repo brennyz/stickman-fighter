@@ -623,6 +623,10 @@ function seedNlGameStrings() {
     weaponComboHint: 'Wapen 3× = ①②③ · ①+② raken → gouden ③',
     gambleOnboardTouch: 'Eerste keer gok: lage som = super-baas · hoge som = bondgenoot · Overslaan = normaal level',
     gambleOnboardKb: 'Eerste keer: sum ≤5 super-baas · sum ≥9 ally buff · Skip = geen gok',
+    ketsbamOnboardTouch: 'Omringd? Tik het midden-symbool — Ketsbam-ontsnapping · 9s cooldown',
+    ketsbamOnboardKb: 'Omringd? E of midden-symbool = Ketsbam · 9s cooldown',
+    tideBattleOnboardTouch: 'Eerste Tide Battle: versla {name} — geen andere golven tot klaar',
+    tideBattleOnboardKb: 'Eerste Tide Battle: versla {name} — golven pauzeren tot klaar',
     langSwitchFail: 'Taal wisselen mislukt',
   });
   if (!I18N.nl.skill) I18N.nl.skill = {};
@@ -1332,6 +1336,10 @@ const CATALOG_EN = {
     weaponComboHint: 'Weapon 3× = ①②③ · hit ①+② → golden ③',
     gambleOnboardTouch: 'First gamble: low sum = super-boss · high sum = ally · Skip = normal level',
     gambleOnboardKb: 'First time: sum ≤5 super-boss · sum ≥9 ally buff · Skip = no gamble',
+    ketsbamOnboardTouch: 'Surrounded? Tap the center symbol — Ketsbam escape · 9s cooldown',
+    ketsbamOnboardKb: 'Surrounded? E or center symbol = Ketsbam · 9s cooldown',
+    tideBattleOnboardTouch: 'First Tide Battle: defeat {name} — no other waves until done',
+    tideBattleOnboardKb: 'First Tide Battle: defeat {name} — waves pause until done',
     langSwitchFail: 'Language switch failed',
   },
   fighter: {
