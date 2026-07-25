@@ -22,6 +22,7 @@
   let deferredPrompt = null;
   let refreshing = false;
   let swReg = null;
+  let pendingReload = null;
 
   function toast(msg, ms) {
     if (typeof UI !== 'undefined' && UI.toast) UI.toast(msg, ms || 3200);
@@ -107,7 +108,7 @@
       return new Promise((resolve) => {
         const onChange = () => {
           refreshing = true;
-          location.reload();
+          reloadWhenIdle('applySwUpdate');
           resolve(true);
         };
         navigator.serviceWorker.addEventListener('controllerchange', onChange, { once: true });
@@ -148,6 +149,69 @@
     if (!soft) await nukeSwAndReload();
   }
 
+  /** Midden in een gevecht nooit herladen — dat gooit je naar het startscherm. */
+  function busyPlaying() {
+    try {
+      if (document.body.classList.contains('is-playing')) return true;
+      const s = window.__sf && window.__sf.state;
+      if (s === 'play' || s === 'pause') return true;
+    } catch (_) {}
+    return false;
+  }
+
+  /**
+   * Alleen herladen als de geladen game.js écht ouder is dan de HTML verwacht.
+   * Anders pakt de nieuwe cache gewoon bij de volgende start — herladen tijdens
+   * spelen of tijdens level kiezen (dobbelstenen!) gooit je naar het startscherm.
+   */
+  function needsFreshJs() {
+    try {
+      const expect = window.__SF_EXPECT_REV;
+      if (expect == null) return false;
+      const loaded = window.__sf && window.__sf.swRev;
+      if (loaded == null) return false;
+      return Number(loaded) !== Number(expect);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /** Veilig moment: rustig op de menu-landing, geen gevecht of level-flow bezig. */
+  function safeToReload() {
+    if (busyPlaying()) return false;
+    try {
+      if (typeof window.__sfSafeToReload === 'function') return !!window.__sfSafeToReload();
+      return document.body.classList.contains('menu-hub-live');
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function reloadWhenIdle(reason) {
+    if (pendingReload) return;
+    pendingReload = reason || 'sw';
+    let waited = 0;
+    const tryReload = () => {
+      if (!pendingReload) return;
+      if (!safeToReload()) {
+        if (waited < 180000) {
+          waited += 2000;
+          setTimeout(tryReload, 2000);
+          return;
+        }
+        // Niet forceren midden in flow — banner blijft, user tikt «Verse versie».
+        pendingReload = null;
+        refreshing = false;
+        markSwUpdateReady(true);
+        try { toast('Update klaar — tik «Verse versie» als je in het menu bent', 4500); } catch (_) {}
+        return;
+      }
+      pendingReload = null;
+      location.reload();
+    };
+    setTimeout(tryReload, 200);
+  }
+
   function trackWaitingWorker(reg) {
     if (reg && reg.waiting && navigator.serviceWorker.controller) {
       markSwUpdateReady(true);
@@ -174,15 +238,25 @@
           const nw = reg.installing;
           if (!nw) return;
           nw.addEventListener('statechange', () => {
-            if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-              markSwUpdateReady(true);
-              // Auto-apply: nieuwe UI + oude JS = broken adventure.
-              try {
-                nw.postMessage({ type: 'SF_SKIP_WAITING' });
-              } catch (_) {
+            if (nw.state !== 'installed' || !navigator.serviceWorker.controller) return;
+            markSwUpdateReady(true);
+            // Auto-apply (nieuwe UI + oude JS = kapot avontuur), maar niet midden
+            // in een gevecht of level-keuze: activeren triggert controllerchange.
+            let waited = 0;
+            const apply = () => {
+              if (!safeToReload()) {
+                if (waited < 180000) {
+                  waited += 2000;
+                  setTimeout(apply, 2000);
+                  return;
+                }
                 toast('Update klaar — tik banner of «Verse versie»', 4500);
+                return;
               }
-            }
+              try { nw.postMessage({ type: 'SF_SKIP_WAITING' }); }
+              catch (_) { toast('Update klaar — tik banner of «Verse versie»', 4500); }
+            };
+            apply();
           });
         });
       }).catch(() => {
@@ -204,10 +278,17 @@
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (refreshing) return;
       refreshing = true;
-      try { toast('App-cache bijgewerkt — herladen…', 1800); } catch (_) {}
       markSwUpdateReady(false);
-      // Oude in-memory game.js blijft anders actief terwijl HTML/UI al nieuw is.
-      setTimeout(() => { location.reload(); }, 120);
+      if (typeof window.updateNetStatus === 'function') window.updateNetStatus();
+      if (!needsFreshJs()) {
+        // Cache is bij; de draaiende game.js is al de juiste versie.
+        try { toast('App-cache bijgewerkt', 2000); } catch (_) {}
+        return;
+      }
+      // Oude in-memory game.js terwijl HTML/UI al nieuw is → wél verversen,
+      // maar pas op een rustig moment in het menu.
+      try { toast('Update klaar — laadt zodra je in het menu bent', 3200); } catch (_) {}
+      reloadWhenIdle('controllerchange');
     });
 
     navigator.serviceWorker.addEventListener('message', (ev) => {
