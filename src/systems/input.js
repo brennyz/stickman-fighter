@@ -451,9 +451,6 @@ function uiTapAllowed(e) {
   return true;
 }
 
-/** True tijdens/na scroll-slide — blokkeert tap én long-press (iPad level-tegels). */
-function uiGestureMoved() { return !!_uiTap.moved || _uiLastGestureScroll; }
-
 function initUiTapScrollGuard() {
   if (window.__sfUiTapGuard) return;
   window.__sfUiTapGuard = true;

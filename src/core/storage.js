@@ -3,9 +3,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.0';
+const APP_VERSION = '1.18.1';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 210;
+const SW_CACHE_REV = 211;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -489,7 +489,8 @@ function readSaveJson(raw) {
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
     if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;
     if (typeof parsed.activeJutsu === 'string') merged.activeJutsu = parsed.activeJutsu;
-    if (typeof parsed.lang === 'string' && SUPPORTED_LANGS.includes(parsed.lang)) merged.lang = parsed.lang;
+    // lang: copy raw — SUPPORTED_LANGS may not exist yet (storage loads before i18n)
+    if (typeof parsed.lang === 'string') merged.lang = parsed.lang;
     return merged;
   } catch (e) {
     return null;
