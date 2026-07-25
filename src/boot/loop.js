@@ -652,6 +652,7 @@ function bootGame() {
     startGame, save, Game, UI, recoverToMenu, syncPlayLayer,
     debug: typeof sfDebugScreen === 'function' ? sfDebugScreen : null,
     fixPlayLayer: () => (typeof sfDebugScreen === 'function' ? sfDebugScreen({ fix: true }) : null),
+    goMenu: () => recoverToMenu({ force: true }),
   };
   safeCall(wireSfDebugTools, 'sfDebug');
 

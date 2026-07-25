@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.35';
+const APP_VERSION = '1.18.36';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 245;
+const SW_CACHE_REV = 246;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -3369,6 +3369,25 @@ function activeScreenEl() {
   return document.querySelector('.screen.active');
 }
 
+/** True als .screen.active ook echt zichtbare UI heeft (niet alleen blauw deksel). */
+function screenLooksUsable(el) {
+  if (!el) return false;
+  try {
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+    if (Number(cs.opacity) < 0.08) return false;
+    if (el.clientWidth < 40 || el.clientHeight < 40) return false;
+    const nodes = el.querySelectorAll(
+      'button, .hub-tile, .head, h1, h2, .settings-card, .btn, .lvl, .char-card, .mode-btn, .wrow'
+    );
+    for (let i = 0; i < nodes.length; i++) {
+      const n = nodes[i];
+      if (n.clientWidth > 8 && n.clientHeight > 8) return true;
+    }
+  } catch (_) {}
+  return false;
+}
+
 function isUiVisible() {
   // Tijdens play telt een open .screen NIET als “zichtbaar” — dat IS het zwarte deksel.
   if (state === 'play' && game) {
@@ -3376,8 +3395,9 @@ function isUiVisible() {
     return !!(el && el.style.visibility !== 'hidden' && document.body.classList.contains('is-playing')
       && !activeScreenEl());
   }
-  if (activeScreenEl()) return true;
-  return false;
+  const active = activeScreenEl();
+  if (!active) return false;
+  return screenLooksUsable(active);
 }
 
 /** Dump UI/canvas state — op iPad: Safari Web Inspector of console toast. */
@@ -3388,6 +3408,7 @@ function sfDebugScreen(opts) {
   const active = [];
   document.querySelectorAll('.screen.active').forEach((s) => active.push(s.id || '?'));
   const cs = canvas ? getComputedStyle(canvas) : null;
+  const activeEl = activeScreenEl();
   const info = {
     version: typeof APP_VERSION !== 'undefined' ? APP_VERSION : '?',
     sw: typeof SW_CACHE_REV !== 'undefined' ? SW_CACHE_REV : '?',
@@ -3395,6 +3416,7 @@ function sfDebugScreen(opts) {
     mode: (typeof game !== 'undefined' && game && game.mode) || null,
     isPlaying: document.body.classList.contains('is-playing'),
     activeScreens: active,
+    screenUsable: screenLooksUsable(activeEl),
     canvas: canvas ? {
       visibility: canvas.style.visibility || cs.visibility,
       display: canvas.style.display || cs.display,
@@ -3416,6 +3438,7 @@ function sfDebugScreen(opts) {
     (info.mode ? `/${info.mode}` : '') +
     ` · play=${info.isPlaying ? 'Y' : 'N'}` +
     ` · screens=${active.join(',') || '—'}` +
+    ` · usable=${info.screenUsable ? 'Y' : 'N'}` +
     ` · z=${info.canvas ? info.canvas.zIndex : '?'}` +
     ` · flash=${info.rollFlash && info.rollFlash.visibleClass ? 'ON' : 'off'}`;
   if (opts.toast !== false) {
@@ -3426,20 +3449,27 @@ function sfDebugScreen(opts) {
   if (opts.fix) {
     try {
       if (typeof UI !== 'undefined' && UI.hideGambleRollFlash) UI.hideGambleRollFlash();
-      clearScreensForPlay();
-      syncPlayLayer();
-      document.body.classList.add('is-playing');
-      if (canvas) {
-        canvas.style.visibility = 'visible';
-        canvas.style.opacity = '1';
-        canvas.style.zIndex = '40';
-        canvas.style.display = 'block';
-        canvas.style.pointerEvents = 'auto';
+      // In gevecht: canvas vrijmaken. Anders (menu/settings “blauw deksel”): hard naar menu.
+      if (state === 'play' && game) {
+        clearScreensForPlay();
+        syncPlayLayer();
+        document.body.classList.add('is-playing');
+        if (canvas) {
+          canvas.style.visibility = 'visible';
+          canvas.style.opacity = '1';
+          canvas.style.zIndex = '40';
+          canvas.style.display = 'block';
+          canvas.style.pointerEvents = 'auto';
+        }
+        if (typeof blackScreenGuard === 'function') blackScreenGuard('sfDebugFix');
+        userToast('Canvas geforceerd zichtbaar — speel verder of tik strip → MENU', 3600);
+      } else {
+        recoverToMenu({ force: true });
+        userToast('Menu geforceerd — settings/deksel weg', 3600);
       }
-      if (typeof blackScreenGuard === 'function') blackScreenGuard('sfDebugFix');
-      userToast('Canvas geforceerd zichtbaar — speel verder of terug menu', 3600);
     } catch (err) {
       console.error('[Stickman] sfDebug fix', err);
+      try { recoverToMenu({ force: true }); } catch (_) {}
     }
   }
   return info;
@@ -3452,18 +3482,28 @@ function sfDebugOverlayTick() {
     el.id = 'sfDebugStrip';
     el.setAttribute('aria-live', 'polite');
     el.style.cssText = 'position:fixed;left:4px;right:4px;bottom:4px;z-index:9999;font:11px/1.35 monospace;' +
-      'background:rgba(0,0,0,.78);color:#7cf5ff;padding:6px 8px;border-radius:8px;pointer-events:none;' +
-      'max-height:28vh;overflow:auto;white-space:pre-wrap';
+      'background:rgba(0,0,0,.82);color:#7cf5ff;padding:8px 10px;border-radius:10px;pointer-events:auto;' +
+      'max-height:32vh;overflow:auto;white-space:pre-wrap;touch-action:manipulation;' +
+      'border:1px solid rgba(124,245,255,.35)';
+    el.title = 'Tik → forceer hoofdmenu';
+    const go = (e) => {
+      try { if (e) { e.preventDefault(); e.stopPropagation(); } } catch (_) {}
+      try { recoverToMenu({ force: true }); } catch (_) {
+        try { sfDebugScreen({ fix: true, toast: true }); } catch (__) {}
+      }
+    };
+    el.addEventListener('click', go, { passive: false });
+    el.addEventListener('touchend', go, { passive: false });
     document.body.appendChild(el);
   }
   const d = sfDebugScreen({ toast: false });
   el.textContent = [
     `SF DEBUG v${d.version} SW${d.sw}`,
     `state=${d.state} mode=${d.mode || '—'} isPlaying=${d.isPlaying}`,
-    `screens=${(d.activeScreens && d.activeScreens.join(',')) || '—'}`,
+    `screens=${(d.activeScreens && d.activeScreens.join(',')) || '—'} usable=${d.screenUsable ? 'Y' : 'N'}`,
     d.canvas ? `canvas vis=${d.canvas.visibility} z=${d.canvas.zIndex} ${d.canvas.w}x${d.canvas.h}` : 'canvas=MISSING',
     d.rollFlash ? `flash hidden=${d.rollFlash.hidden} vis=${d.rollFlash.visibleClass}` : 'flash=—',
-    'Tap 5× versie-regel of: __sf.debug({fix:true})',
+    'TIK DEZE STRIP → hoofdmenu  ·  __sf.debug({fix:true})',
   ].join('\n');
 }
 
@@ -3472,6 +3512,7 @@ function wireSfDebugTools() {
   if (window.__sf) {
     window.__sf.debug = sfDebugScreen;
     window.__sf.fixPlayLayer = () => sfDebugScreen({ fix: true });
+    window.__sf.goMenu = () => recoverToMenu({ force: true });
   }
   let want = false;
   try {
@@ -3508,16 +3549,20 @@ function blackScreenGuard(where) {
   if (isUiVisible()) return;
   window.__sfBlackGuardBusy = true;
   try {
-    console.warn('[Stickman] black screen guard:', where || '?', 'state=', state);
+    console.warn('[Stickman] black screen guard:', where || '?', 'state=', state,
+      'active=', activeScreenEl() && activeScreenEl().id);
     if (state === 'play') {
       state = 'menu';
       game = null;
     }
-    ensureVisibleScreen();
-    if (!isUiVisible()) {
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      document.getElementById('menuScreen')?.classList.add('active');
-      syncPlayLayerWithoutGuard();
+    // Actief maar leeg/onzichtbaar scherm (bv. settings blauw deksel) → hard menu
+    try { recoverToMenu({ force: true }); } catch (_) {
+      ensureVisibleScreen();
+      if (!isUiVisible()) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('menuScreen')?.classList.add('active');
+        syncPlayLayerWithoutGuard();
+      }
     }
     if (!window.__sfBlackGuardToast || Date.now() - window.__sfBlackGuardToast > 5000) {
       window.__sfBlackGuardToast = Date.now();
@@ -3534,7 +3579,12 @@ function syncPlayLayerWithoutGuard() {
 
 function ensureMenuScreenActive() {
   if (state !== 'menu') return;
-  if (activeScreenEl()) return;
+  const active = activeScreenEl();
+  if (active && screenLooksUsable(active)) {
+    // Gezond submenu (settings/missies/…) mag blijven — alleen kapot deksel forceren
+    if (active.id === 'menuScreen') return;
+    return;
+  }
   try { UI.show('menuScreen'); } catch (_) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('menuScreen')?.classList.add('active');
@@ -3544,7 +3594,7 @@ function ensureMenuScreenActive() {
 
 /** Voorkom zwart scherm wanneer geen .screen.active (menu/pauze/result). */
 function ensureVisibleScreen() {
-  if (activeScreenEl()) return;
+  if (isUiVisible()) return;
   if (state === 'play') {
     if (game) {
       syncPlayLayerWithoutGuard();
@@ -3600,14 +3650,35 @@ function dismissTunnelOverlayIfStatic() {
   try { o.remove(); } catch (_) {}
 }
 
-function recoverToMenu() {
+function recoverToMenu(opts) {
+  opts = opts || {};
+  let force = !!opts.force;
   try {
-    // Al in menu zonder game? Niet schermen wegslingeren (menu-loop fout
-    // mag navigatie/scroll niet elke frame terugzetten naar hoofdmenu).
-    if (state === 'menu' && !game) {
+    // Al in menu zonder game? Alleen vroeg returnen als UI echt bruikbaar is —
+    // anders blijf je steken op settingsScreen met alleen het blauwe deksel.
+    if (state === 'menu' && !game && !force) {
       window.__sfLoopErr = false;
       syncPlayLayer();
-      ensureMenuScreenActive();
+      const active = activeScreenEl();
+      if (active && screenLooksUsable(active)) return;
+      force = true;
+    }
+    if (force && state === 'menu' && !game) {
+      window.__sfLoopErr = false;
+      document.body.classList.remove('is-playing');
+      syncPlayLayer();
+      try {
+        if (typeof UI !== 'undefined' && UI.goMenu) UI.goMenu();
+        else {
+          document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+          document.getElementById('menuScreen')?.classList.add('active');
+        }
+      } catch (_) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('menuScreen')?.classList.add('active');
+      }
+      try { playMenuBgm(true); } catch (_) {}
+      ensureVisibleScreen();
       return;
     }
     if (game && game.tideBattleActive) {
@@ -3642,6 +3713,10 @@ function recoverToMenu() {
     state = 'menu';
     game = null;
     syncPlayLayer();
+    try {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('menuScreen')?.classList.add('active');
+    } catch (_) {}
   }
 }
 function importSaveJson(text) {
@@ -27833,6 +27908,7 @@ function bootGame() {
     startGame, save, Game, UI, recoverToMenu, syncPlayLayer,
     debug: typeof sfDebugScreen === 'function' ? sfDebugScreen : null,
     fixPlayLayer: () => (typeof sfDebugScreen === 'function' ? sfDebugScreen({ fix: true }) : null),
+    goMenu: () => recoverToMenu({ force: true }),
   };
   safeCall(wireSfDebugTools, 'sfDebug');
 

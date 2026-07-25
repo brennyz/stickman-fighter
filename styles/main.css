@@ -38,7 +38,7 @@
   .screen button, .screen .btn, .screen .lvl, .screen .char-card, .screen .hub-tile,
   .screen .island-tab, .screen .tog, .screen .wrow, .screen .style-card,
   .screen .skill-card, .screen .super-card, .screen .dex-filter-btn { touch-action:manipulation; }
-  .screen.active { display:flex; animation: fadeIn .25s ease; }
+  .screen.active { display:flex; opacity:1; visibility:visible; animation: fadeIn .25s ease; }
   @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
   @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.04); } }
   @keyframes shimmer { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
