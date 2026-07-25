@@ -163,7 +163,9 @@ const KETSBAM_DETECT_R = 148;
 const KETSBAM_NEAR_MIN = 3;
 const KETSBAM_BLAST_R = 192;
 const KETSBAM_CD = 9;
-const KETSBAM_CHARGE_DUR = 2;
+/** Langzamer opladen vóór KETS-BAM (thermometer boven jutsu-knop). */
+const KETSBAM_BUILD_DUR = 3.8;
+const KETSBAM_CHARGE_DUR = 3.4;
 const KETSBAM_INVULN = 1.15;
 const KETSBAM_SUPER_ARMOR = 0.95;
 /** Min. gap tussen speler-hits door contact/projectiles — anti stunlock-keten */

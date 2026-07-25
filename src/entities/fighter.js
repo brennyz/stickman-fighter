@@ -166,6 +166,8 @@ class Fighter {
     game.ketsbamCd = KETSBAM_CD;
     game.ketsbamSuperT = KETSBAM_SUPER_ARMOR + KETSBAM_CHARGE_DUR;
     game.ketsbamShow = false;
+    game.ketsbamBuildT = 0;
+    game.ketsbamBuildProg = 0;
     game.ketsbamChargeT = KETSBAM_CHARGE_DUR;
     game.ketsbamChargeDur = KETSBAM_CHARGE_DUR;
     game.ketsbamChargePulse = 0;
