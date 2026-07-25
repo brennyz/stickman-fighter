@@ -532,13 +532,20 @@ function viewportGameSize() {
   return { w: Math.max(1, innerWidth), h: Math.max(1, innerHeight), offsetX: 0, offsetY: 0 };
 }
 
-function touchUiScale(W, H) {
+function touchUiScale(W, H, opts) {
+  opts = opts || {};
   const base = (typeof save !== 'undefined' && save.bigTouch !== false) ? 1.1 : 1;
   const portrait = H > W * 1.04;
   const fit = portrait
     ? Math.min(W / 390, H / 660, W / H * 0.95)
     : Math.min(W / 400, H / 740);
-  return clamp(fit * base, 0.62, 1.16);
+  let scale = clamp(fit * base, 0.62, 1.16);
+  const dual = opts.dual || (typeof Input !== 'undefined' && Input.dualMode);
+  if (dual) {
+    const mul = portrait ? (W < 420 ? 0.78 : 0.86) : 0.9;
+    scale = clamp(scale * mul, 0.56, 1.02);
+  }
+  return scale;
 }
 
 function hudInsetTop() {
@@ -547,6 +554,12 @@ function hudInsetTop() {
 
 function playfieldGroundY(H, W) {
   const portrait = H > W * 1.02;
+  const dualVs = typeof Input !== 'undefined' && Input.dualMode;
+  if (dualVs && portrait) {
+    if (H < 520) return H * 0.63;
+    if (H < 640) return H * 0.65;
+    return H * 0.66;
+  }
   if (portrait && H < 480) return H * 0.68;
   if (portrait && H < 520) return H * 0.7;
   if (portrait && H < 640) return H * 0.72;
@@ -673,7 +686,7 @@ function makePad(side) {
     layout(W, H) {
       const ui = touchUiScale(W, H);
       const safe = readSafeInsets();
-      const laid = layoutTouchButtonCluster(W, H, ui, safe, { side: this.side, dual: true });
+      const laid = layoutTouchButtonCluster(W, H, ui, safe, { side: this.side, dual: !!Input.dualMode });
       this.joyHome = laid.joyHome;
       this.buttons = laid.buttons;
     },
