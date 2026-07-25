@@ -39,7 +39,15 @@ function makeEl(id) {
     focus() {},
     select() {},
     querySelector() { return null; },
-    querySelectorAll() { return []; },
+    querySelectorAll(sel) {
+      // Genoeg voor screenLooksUsable / hub checks in smoke
+      if (this.id && String(this.id).endsWith('Screen')) {
+        return [{ clientWidth: 48, clientHeight: 24, className: 'btn' }];
+      }
+      return [];
+    },
+    clientWidth: 320,
+    clientHeight: 480,
     getBoundingClientRect() { return { left: 0, top: 0, width: 100, height: 40 }; },
     setAttribute() {},
     removeAttribute() {},
@@ -102,6 +110,12 @@ const ctx = {
   devicePixelRatio: 2,
   requestAnimationFrame: () => 0,
   cancelAnimationFrame() {},
+  getComputedStyle() {
+    return {
+      display: 'flex', visibility: 'visible', opacity: '1',
+      animationName: 'none', zIndex: '20', pointerEvents: 'auto',
+    };
+  },
   setInterval() { return 0; },
   clearInterval() {},
   setTimeout(fn) { try { fn(); } catch (_) {} return 0; },

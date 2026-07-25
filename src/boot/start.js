@@ -46,14 +46,17 @@ function startGame(mode, opts) {
   try { syncPlayLayer(); } catch (_) {}
   // Extra force: body class + canvas zichtbaar (iPad race met gok-flash)
   try {
-    document.body.classList.add('is-playing');
-    const canvas = document.getElementById('game');
-    if (canvas) {
-      canvas.style.visibility = 'visible';
-      canvas.style.opacity = '1';
-      canvas.style.zIndex = '40';
-      canvas.style.pointerEvents = 'auto';
-      canvas.style.display = 'block';
+    if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('startGame/' + mode);
+    else {
+      document.body.classList.add('is-playing');
+      const canvas = document.getElementById('game');
+      if (canvas) {
+        canvas.style.visibility = 'visible';
+        canvas.style.opacity = '1';
+        canvas.style.zIndex = '40';
+        canvas.style.pointerEvents = 'auto';
+        canvas.style.display = 'block';
+      }
     }
   } catch (_) {}
   try {

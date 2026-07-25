@@ -14,9 +14,14 @@
   /* Gevecht: canvas BOVEN UI — voorkomt zwart scherm terwijl audio/AI doorlopen */
   body.is-playing #game { pointer-events:auto !important; z-index:40 !important; visibility:visible !important;
       opacity:1 !important; display:block !important; }
-  body.is-playing .screen { display:none !important; pointer-events:none !important; visibility:hidden !important; }
+  body.is-playing .screen { display:none !important; pointer-events:none !important; visibility:hidden !important;
+      opacity:0 !important; z-index:-1 !important; }
   /* Dobbel-flash mag nooit over het gevecht blijven (blauw/zwart deksel) */
-  body.is-playing .level-roll-flash { display:none !important; opacity:0 !important; visibility:hidden !important; }
+  body.is-playing .level-roll-flash,
+  body.is-playing #levelRollFlash {
+    display:none !important; opacity:0 !important; visibility:hidden !important;
+    pointer-events:none !important; z-index:-1 !important;
+  }
 
   .screen { position:fixed; top:var(--vv-top, 0); left:var(--vv-left, 0);
       width:var(--vv-w, 100%); height:var(--vv-h, 100dvh); max-height:100dvh;
@@ -38,7 +43,7 @@
   .screen button, .screen .btn, .screen .lvl, .screen .char-card, .screen .hub-tile,
   .screen .island-tab, .screen .tog, .screen .wrow, .screen .style-card,
   .screen .skill-card, .screen .super-card, .screen .dex-filter-btn { touch-action:manipulation; }
-  .screen.active { display:flex; animation: fadeIn .25s ease; }
+  .screen.active { display:flex; opacity:1; visibility:visible; animation: fadeIn .25s ease; }
   @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
   @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.04); } }
   @keyframes shimmer { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
@@ -700,8 +705,12 @@
   .island-grid { grid-template-columns:repeat(5, minmax(56px, 1fr)); max-width:min(92vw, 520px); }
   #gambleIslandCtx { width:min(86vw,420px); text-align:center; font-size:12px; color:#9db1e3; margin:-4px auto 10px; line-height:1.4; }
   .level-roll-flash { position:fixed; inset:0; z-index:35; display:flex; align-items:center; justify-content:center;
-      background:rgba(10,13,24,.72); backdrop-filter:blur(6px); pointer-events:none; opacity:0; transition:opacity .12s ease; }
-  .level-roll-flash.visible { opacity:1; }
+      background:rgba(10,13,24,.88); backdrop-filter:blur(6px); pointer-events:none; opacity:0; transition:opacity .12s ease; }
+  .level-roll-flash.visible { opacity:1; pointer-events:auto; }
+  body.is-playing .level-roll-flash,
+  body.is-playing .level-roll-flash.visible {
+    display:none !important; opacity:0 !important; visibility:hidden !important; pointer-events:none !important;
+  }
   .level-roll-flash-card { text-align:center; padding:24px 28px; border-radius:20px; background:rgba(15,20,40,.95);
       border:2px solid rgba(255,215,94,.5); box-shadow:0 12px 40px rgba(0,0,0,.55); animation:levelRollPop .35s ease; }
   .level-roll-dice { font-size:min(18vw,64px); letter-spacing:.12em; line-height:1.1; }
@@ -735,7 +744,7 @@
   .tog.off { opacity:.4; }
 
   #pauseBtn { position:fixed; top:max(10px, calc(var(--vv-top, 0px) + env(safe-area-inset-top)));
-      right:max(12px, env(safe-area-inset-right)); z-index:11;
+      right:max(12px, env(safe-area-inset-right)); z-index:50;
       width:48px; height:48px; border-radius:14px; font-size:18px; display:none;
       background:rgba(20,26,48,.8); border:1px solid rgba(255,255,255,.22); color:#fff;
       box-shadow:0 4px 12px rgba(0,0,0,.35); pointer-events:auto;
@@ -744,6 +753,11 @@
   body.big-touch #pauseBtn { width:56px; height:56px; font-size:20px; }
   body.big-touch #pauseBtn::before { inset:-18px; }
   #pauseBtn.show { display:block; }
+  /* Boven canvas (z40) tijdens gevecht — anders verdwijnt pauze onder het speelveld */
+  body.is-playing #pauseBtn.show {
+    z-index:50 !important; display:block !important; pointer-events:auto !important;
+    visibility:visible !important; opacity:1 !important;
+  }
 
   #resultScreen .bigres { font-family:'Bangers', cursive; font-size:min(14vw,68px); font-weight:400;
       letter-spacing:2px; margin:28px 0 6px; }
