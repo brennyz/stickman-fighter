@@ -2612,7 +2612,7 @@ class Game {
     const wasShow = this.ketsbamShow;
     this.ketsbamShow = this.ketsbamCd <= 0 && !this.inputLocked && !this.traveling && (swarmed || stuck);
     if (this.ketsbamShow && !wasShow) this.ketsbamStickPick = pickKablamStickFace();
-    if (!this.ketsbamShow) this.ketsbamStickPick = null;
+    if (!this.ketsbamShow && this.ketsbamChargeT <= 0) this.ketsbamStickPick = null;
     if (this.ketsbamShow) this.ketsbamPulse = (this.ketsbamPulse || 0) + dt;
     else this.ketsbamPulse = 0;
   }
@@ -2678,13 +2678,15 @@ class Game {
     }
 
     c.globalAlpha = 0.85;
-    c.font = `900 ${18 + prog * 8}px "Black Ops One", Bangers, sans-serif`;
-    c.textAlign = 'center';
-    c.fillStyle = '#ffd75e';
-    c.strokeStyle = 'rgba(0,0,0,.55)';
-    c.lineWidth = 4;
-    c.strokeText(t('banner.kets'), px, py - 58 - prog * 24);
-    c.fillText(t('banner.kets'), px, py - 58 - prog * 24);
+    drawKablamLabel(c, t('banner.kets'), px, py - 58 - prog * 24, 18 + prog * 8, '#ffd75e');
+
+    if (this.ketsbamStickPick) {
+      c.save();
+      c.translate(px, py - 18);
+      c.scale(0.55 + prog * 0.2, 0.55 + prog * 0.2);
+      drawKablamIcon(c, 1, pulse, calm, this.ketsbamStickPick, calm ? 0 : pulse * 1.6);
+      c.restore();
+    }
     c.restore();
   }
 
@@ -2694,7 +2696,7 @@ class Game {
     const { cx, cy } = ketsbamPromptCenter();
     const calm = motionReduced();
     const pulse = calm ? 1 : (0.9 + Math.sin((this.ketsbamPulse || 0) * 10) * 0.1);
-    const r = 46 * ui * pulse;
+    const r = kablamPromptRadius(ui, pulse);
     c.save();
     c.globalAlpha = 0.92;
     c.fillStyle = 'rgba(6,10,24,.72)';
@@ -2704,25 +2706,14 @@ class Game {
     c.strokeStyle = 'rgba(255,215,94,.55)';
     c.lineWidth = 3 * ui;
     c.stroke();
-    // ster/kets-symbool
     c.translate(cx, cy);
-    if (!calm) c.rotate((this.ketsbamPulse || 0) * 2.2);
-    drawKablamPoopCursor(c, ui * pulse * 0.92);
-    drawKablamStickSmile(c, this.ketsbamStickPick, ui * pulse, this.ketsbamPulse || 0);
-    if (!calm) c.rotate(-(this.ketsbamPulse || 0) * 2.2);
-    c.font = `900 ${Math.round(15 * ui)}px "Black Ops One", Bangers, sans-serif`;
-    c.textAlign = 'center';
-    c.textBaseline = 'middle';
-    c.lineWidth = 5 * ui;
-    c.strokeStyle = 'rgba(0,0,0,.55)';
-    c.strokeText(t('banner.kets'), 0, r * 0.72);
-    c.fillStyle = '#fff';
-    c.fillText(t('banner.kets'), 0, r * 0.72);
+    drawKablamIcon(c, ui * pulse * 0.92, this.ketsbamPulse || 0, calm, this.ketsbamStickPick, calm ? 0 : (this.ketsbamPulse || 0) * 2.2);
     c.restore();
+    drawKablamLabel(c, t('banner.ketsBam'), cx, cy + r + 14 * ui, Math.round(17 * ui), '#ffd75e');
     c.font = `700 ${Math.round(12 * ui)}px -apple-system,sans-serif`;
     c.textAlign = 'center';
     c.fillStyle = 'rgba(255,255,255,.85)';
-    c.fillText(IS_TOUCH ? t('hud.ketsTap') : t('hud.ketsKey'), cx, cy + r + 18 * ui);
+    c.fillText(IS_TOUCH ? t('hud.ketsTap') : t('hud.ketsKey'), cx, cy + r + 34 * ui);
     c.textAlign = 'left';
   }
 

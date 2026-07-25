@@ -163,6 +163,7 @@ class Fighter {
     const swarmed = near >= KETSBAM_NEAR_MIN;
     if (!swarmed && !stuck) return false;
 
+    if (!game.ketsbamStickPick) game.ketsbamStickPick = pickKablamStickFace();
     game.ketsbamCd = KETSBAM_CD;
     game.ketsbamSuperT = KETSBAM_SUPER_ARMOR + KETSBAM_CHARGE_DUR;
     game.ketsbamShow = false;
@@ -210,6 +211,7 @@ class Fighter {
     game.burst(px, py, '#ff7043', fxLite() ? 14 : 26);
     spawnFxRing(game, px, py, '#ffe259', fxLite() ? 10 : 18);
     game.floater(px, py - 80, t('banner.ketsBam'), '#ffd75e', 20);
+    game.ketsbamStickPick = null;
     if (save.haptics !== false) haptic(32);
   }
 

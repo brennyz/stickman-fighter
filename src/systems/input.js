@@ -562,7 +562,7 @@ function ketsbamHitTest(x, y, g) {
   if (!g || !g.ketsbamShow) return false;
   const ui = touchUiScale(W, H);
   const { cx, cy } = ketsbamPromptCenter();
-  const r = 58 * ui + btnHitSlop();
+  const r = kablamPromptHitRadius(ui);
   return (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
 }
 

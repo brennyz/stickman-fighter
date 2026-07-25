@@ -1,9 +1,19 @@
 /** KABLAM! nood-ontsnapping UI — vecht-poep cursor + random stickman-smile. */
+const KABLAM_PROMPT_R_BASE = 46;
+const KABLAM_HIT_PAD = 12;
 const KABLAM_SMILE_STYLES = ['grin', 'smirk', 'toothy', 'beam', 'wink'];
 
+function kablamPromptRadius(ui, pulse) {
+  return KABLAM_PROMPT_R_BASE * ui * (pulse || 1);
+}
+
+function kablamPromptHitRadius(ui) {
+  return kablamPromptRadius(ui, 1) + 10 * ui + btnHitSlop() + KABLAM_HIT_PAD;
+}
+
 function pickKablamStickFace() {
-  const pool = VS_ROSTER.filter((r) => !r.isRobot);
-  const entry = pool[Math.floor(Math.random() * pool.length)] || VS_ROSTER[0];
+  const pool = (typeof VS_ROSTER !== 'undefined' ? VS_ROSTER : []).filter((r) => !r.isRobot);
+  const entry = pool[Math.floor(Math.random() * pool.length)] || pool[0] || { bodyColor: '#eef5ff' };
   const style = KABLAM_SMILE_STYLES[Math.floor(Math.random() * KABLAM_SMILE_STYLES.length)];
   return { color: entry.bodyColor || '#eef5ff', style, bald: !!entry.bald };
 }
@@ -30,7 +40,6 @@ function drawKablamPoopCursor(c, s) {
   c.arc(0, -15 * s, 3.2 * s, 0, TAU * 1.25);
   c.stroke();
 
-  // Vecht-vuisten — hecht naast de poep
   const fist = (fx, fy) => {
     c.fillStyle = '#ffd75e';
     c.strokeStyle = '#c05820';
@@ -49,7 +58,6 @@ function drawKablamPoopCursor(c, s) {
   fist(-18 * s, 4 * s);
   fist(18 * s, -1 * s);
 
-  // Cursor-punt — scherp, klikbaar
   c.fillStyle = '#fff8ef';
   c.strokeStyle = '#2a2018';
   c.lineWidth = 1.6 * s;
@@ -130,5 +138,25 @@ function drawKablamStickSmile(c, face, s, pulse) {
     c.arc(hx, hy + 2 * s, 4 * s, 0.15 * Math.PI, 0.85 * Math.PI);
   }
   c.stroke();
+  c.restore();
+}
+
+function drawKablamIcon(c, scale, pulse, calm, face, spin) {
+  if (!calm && spin) c.rotate(spin);
+  drawKablamPoopCursor(c, scale);
+  drawKablamStickSmile(c, face, scale, pulse);
+  if (!calm && spin) c.rotate(-spin);
+}
+
+function drawKablamLabel(c, text, x, y, size, fill) {
+  c.save();
+  c.font = `900 ${size}px "Black Ops One", Bangers, sans-serif`;
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.lineWidth = Math.max(3, size * 0.28);
+  c.strokeStyle = 'rgba(0,0,0,.55)';
+  c.strokeText(text, x, y);
+  c.fillStyle = fill || '#fff';
+  c.fillText(text, x, y);
   c.restore();
 }
