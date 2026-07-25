@@ -1067,7 +1067,9 @@ addEventListener('keydown', e => {
     if (k === 'l') Input.press('weapon');
     if (k === 'u' || k === 'i') Input.press('special');
     if (k === 'shift') Input.press('subst');
-    if (k === 'e' && state === 'play' && game) game.tryKetsbam();
+    if (k === 'e' && state === 'play' && game) {
+      try { game.tryKetsbam(); } catch (_) {}
+    }
   }
   if (k === 'a' || (!Input.dualMode && k === 'arrowleft')) {
     if (now - Input.lastMoveTap < 300 && Input.lastMoveDir === -1) Input.press('dash');

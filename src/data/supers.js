@@ -6,7 +6,7 @@ const SUPERS = [
     color: '#ffd75e', color2: '#ff7043',
     chargeBanner: 'KETS!', finishBanner: 'KETS-BAM!',
     chargeSfx: 'ketsbamCharge', finishSfx: 'ketsbam',
-    cd: 9, chargeDur: 2, blastR: 192, power: 5,
+    cd: 9, chargeDur: 1.15, blastR: 192, power: 5,
     hint: 'Standaard', tooltip: 'Omringd? Laad op en knal alles weg — klassieke nood-ontsnapping.',
     bonus: 'AOE schade-blast', tags: ['blast', 'knockback'] },
   { id: 'iron_shield', name: 'IJzeren schild', needLvl: 5,
@@ -337,7 +337,12 @@ function finishEquippedSuper(fighter, game) {
   if (!game.monsters) game.monsters = [];
 
   try { game.shake(sp.behavior === 'shield' ? 8 : 14, sp.behavior === 'timestop' ? 0.28 : 0.38); } catch (_) {}
-  try { game.freezeT = Math.max(game.freezeT || 0, sp.behavior === 'timestop' ? (sp.freezeDur || 0.26) : 0.06); } catch (_) {}
+  // Korte hit-stop — blast bijna instant zodat 1e/2e Kets → next wave soepel blijft
+  try {
+    const freezeHit = sp.behavior === 'timestop' ? (sp.freezeDur || 0.26)
+      : (sp.behavior === 'blast' ? 0.02 : 0.045);
+    game.freezeT = Math.max(game.freezeT || 0, freezeHit);
+  } catch (_) {}
   try { game.banner(banner, 0.85, sp.color, 42); } catch (_) {}
   try { AudioSys.sfx(superSfxId(sp, 'finish')); } catch (_) {}
 

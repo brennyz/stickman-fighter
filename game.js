@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.65';
+const APP_VERSION = '1.18.66';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 275;
+const SW_CACHE_REV = 276;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -6600,7 +6600,7 @@ const SUPERS = [
     color: '#ffd75e', color2: '#ff7043',
     chargeBanner: 'KETS!', finishBanner: 'KETS-BAM!',
     chargeSfx: 'ketsbamCharge', finishSfx: 'ketsbam',
-    cd: 9, chargeDur: 2, blastR: 192, power: 5,
+    cd: 9, chargeDur: 1.15, blastR: 192, power: 5,
     hint: 'Standaard', tooltip: 'Omringd? Laad op en knal alles weg — klassieke nood-ontsnapping.',
     bonus: 'AOE schade-blast', tags: ['blast', 'knockback'] },
   { id: 'iron_shield', name: 'IJzeren schild', needLvl: 5,
@@ -6931,7 +6931,12 @@ function finishEquippedSuper(fighter, game) {
   if (!game.monsters) game.monsters = [];
 
   try { game.shake(sp.behavior === 'shield' ? 8 : 14, sp.behavior === 'timestop' ? 0.28 : 0.38); } catch (_) {}
-  try { game.freezeT = Math.max(game.freezeT || 0, sp.behavior === 'timestop' ? (sp.freezeDur || 0.26) : 0.06); } catch (_) {}
+  // Korte hit-stop — blast bijna instant zodat 1e/2e Kets → next wave soepel blijft
+  try {
+    const freezeHit = sp.behavior === 'timestop' ? (sp.freezeDur || 0.26)
+      : (sp.behavior === 'blast' ? 0.02 : 0.045);
+    game.freezeT = Math.max(game.freezeT || 0, freezeHit);
+  } catch (_) {}
   try { game.banner(banner, 0.85, sp.color, 42); } catch (_) {}
   try { AudioSys.sfx(superSfxId(sp, 'finish')); } catch (_) {}
 
@@ -13234,7 +13239,9 @@ addEventListener('keydown', e => {
     if (k === 'l') Input.press('weapon');
     if (k === 'u' || k === 'i') Input.press('special');
     if (k === 'shift') Input.press('subst');
-    if (k === 'e' && state === 'play' && game) game.tryKetsbam();
+    if (k === 'e' && state === 'play' && game) {
+      try { game.tryKetsbam(); } catch (_) {}
+    }
   }
   if (k === 'a' || (!Input.dualMode && k === 'arrowleft')) {
     if (now - Input.lastMoveTap < 300 && Input.lastMoveDir === -1) Input.press('dash');
@@ -14481,7 +14488,7 @@ class Fighter {
 
   /** Nood-super (Kets-slot): omringd/stunlock → tik midden-symbool of druk E. */
   doKetsbam(game) {
-    if (!this.isPlayer || !this.alive || !game) return false;
+    if (!this.isPlayer || !this.alive || !game || game.over) return false;
     if (game.ketsbamCd > 0 || game.ketsbamChargeT > 0 || game.inputLocked || game.traveling) return false;
     const near = game.countNearbyMonsters(KETSBAM_DETECT_R);
     const stuck = this.hurtT > 0 && near >= 2;
@@ -14493,10 +14500,15 @@ class Fighter {
 
     game.ketsbamCd = superCooldown(sp);
     game.ketsbamSuperT = KETSBAM_SUPER_ARMOR + chargeDur;
+    // Thermometer schoon → 2e Kets voelt als frisse opbouw, niet halfvolle bar
     game.ketsbamShow = false;
+    game.ketsbamBuildT = 0;
+    game.ketsbamBuildProg = 0;
+    game.ketsbamPulse = 0;
     game.ketsbamChargeT = chargeDur;
     game.ketsbamChargeDur = chargeDur;
     game.ketsbamChargePulse = 0;
+    game.ketsbamChargeAcc = 0;
     game.inputLocked = true;
     this.hurtT = 0;
     this.attack = null;
@@ -14513,10 +14525,19 @@ class Fighter {
   }
 
   finishKetsbam(game) {
-    if (!this.isPlayer || !this.alive || !game) return;
+    if (!game) return;
+    // Altijd charge/lock opruimen — ook bij dood — anders blijft 2e Kets/input vast
     game.ketsbamChargeT = 0;
+    game.ketsbamShow = false;
+    game.ketsbamBuildT = 0;
+    game.ketsbamBuildProg = 0;
+    if (game.over) {
+      game.inputLocked = true;
+      return;
+    }
     game.inputLocked = false;
-    game.ketsbamSuperT = Math.max(game.ketsbamSuperT, KETSBAM_SUPER_ARMOR);
+    if (!this.isPlayer || !this.alive) return;
+    game.ketsbamSuperT = Math.max(game.ketsbamSuperT || 0, KETSBAM_SUPER_ARMOR);
     try {
       finishEquippedSuper(this, game);
     } catch (err) {
@@ -21091,11 +21112,15 @@ class Game {
       try { Input.dualMode = false; Input.layout(W, H); } catch (_) {}
     }
     if (this.playerHurtCd > 0) this.playerHurtCd -= dt;
+    let ketsJustFinished = false;
     if (this.ketsbamChargeT > 0) {
       if (this.over || !this.player?.alive) {
         this.ketsbamChargeT = 0;
-        this.inputLocked = false;
         this.ketsbamShow = false;
+        this.ketsbamBuildT = 0;
+        this.ketsbamBuildProg = 0;
+        // Bij level-einde lock houden; anders altijd ontgrendelen
+        this.inputLocked = !!this.over;
       } else {
         if (this.ketsbamCd > 0) this.ketsbamCd -= dt;
         if (this.ketsbamSuperT > 0) this.ketsbamSuperT -= dt;
@@ -21129,14 +21154,36 @@ class Game {
             this.ketsbamChargeT = 0;
             this.inputLocked = false;
             this.ketsbamShow = false;
+            this.ketsbamBuildT = 0;
+            this.ketsbamBuildProg = 0;
           }
+          // Zelfde frame door → wave-clear / Next voelt direct na 1e én 2e Kets
+          ketsJustFinished = true;
+        } else {
+          return;
         }
-        return;
       }
     }
-    if (this.freezeT > 0) { this.freezeT -= dt; return; }
+    if (this.freezeT > 0 && !ketsJustFinished) {
+      this.freezeT -= dt;
+      this.t += dt;
+      this.shakeT = Math.max(0, this.shakeT - dt);
+      // Soft hit-stop: FX + adventure mogen door (2e Kets → golf/level-einde soepel)
+      if (this.mode === 'adventure') {
+        try { tickSuperFx(this, dt); } catch (_) {}
+        if (!this.over && this.player?.alive) {
+          try { this.updateAdventure(dt); } catch (_) {}
+        }
+      }
+      for (const m of this.monsters) {
+        try { if (!m.alive) m.update(dt, this); } catch (_) {}
+      }
+      this.monsters = this.monsters.filter(m => m.alive || m.deadT < 1);
+      return;
+    }
+    if (ketsJustFinished && this.freezeT > 0) this.freezeT = Math.max(0, this.freezeT - dt);
     if (this.mode === 'adventure') this.updateKetsbam(dt);
-    this.t += dt;
+    if (!ketsJustFinished) this.t += dt;
     if (this.hint > 0) this.hint -= dt;
     this.shakeT = Math.max(0, this.shakeT - dt);
     if (this.bossPhase2Flash > 0) this.bossPhase2Flash -= dt;
@@ -22485,12 +22532,21 @@ class Game {
       this.ketsbamShow = false;
       return;
     }
-    if (this.ketsbamCd > 0) this.ketsbamCd -= dt;
+    if (this.ketsbamCd > 0) {
+      this.ketsbamCd -= dt;
+      // Tijdens CD: thermometer leeg houden — klaar = frisse fill voor 2e Kets
+      this.ketsbamBuildT = 0;
+      this.ketsbamBuildProg = 0;
+      this.ketsbamShow = false;
+      this.ketsbamPulse = 0;
+      if (this.ketsbamSuperT > 0) this.ketsbamSuperT -= dt;
+      return;
+    }
     if (this.ketsbamSuperT > 0) this.ketsbamSuperT -= dt;
     const near = this.countNearbyMonsters(KETSBAM_DETECT_R);
     const stuck = this.player.hurtT > 0 && near >= 2;
     const swarmed = near >= KETSBAM_NEAR_MIN;
-    const eligible = this.ketsbamCd <= 0 && !this.inputLocked && !this.traveling && (swarmed || stuck);
+    const eligible = !this.inputLocked && !this.traveling && (swarmed || stuck);
     if (eligible) {
       this.ketsbamBuildT = Math.min(KETSBAM_BUILD_DUR, (this.ketsbamBuildT || 0) + dt);
     } else {
@@ -22511,8 +22567,19 @@ class Game {
   }
 
   tryKetsbam() {
-    if (this.ketsbamChargeT > 0 || !this.ketsbamShow || !this.player?.alive || this.over) return false;
-    return this.player.doKetsbam(this);
+    try {
+      if (this.ketsbamChargeT > 0 || !this.ketsbamShow || !this.player?.alive || this.over) return false;
+      if (this.inputLocked || this.traveling) return false;
+      return !!this.player.doKetsbam(this);
+    } catch (err) {
+      try { sfReportError('tryKetsbam', err); } catch (_) {}
+      try {
+        this.ketsbamChargeT = 0;
+        this.ketsbamShow = false;
+        this.inputLocked = !!this.over;
+      } catch (_) {}
+      return false;
+    }
   }
 
   drawKetsbamChargeAura(c) {
@@ -28194,9 +28261,11 @@ function loop(now) {
         try { sfReportError('update', updateErr, 'Hiccup in gevecht — speel door'); } catch (_) {}
         try {
           if (game) {
-            game.inputLocked = false;
+            game.inputLocked = !!game.over;
             game.ketsbamChargeT = 0;
             game.ketsbamShow = false;
+            game.ketsbamBuildT = 0;
+            game.ketsbamBuildProg = 0;
           }
         } catch (_) {}
         try { if (typeof Input !== 'undefined') Input.dualMode = false; } catch (_) {}

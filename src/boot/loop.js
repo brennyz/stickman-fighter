@@ -259,9 +259,11 @@ function loop(now) {
         try { sfReportError('update', updateErr, 'Hiccup in gevecht — speel door'); } catch (_) {}
         try {
           if (game) {
-            game.inputLocked = false;
+            game.inputLocked = !!game.over;
             game.ketsbamChargeT = 0;
             game.ketsbamShow = false;
+            game.ketsbamBuildT = 0;
+            game.ketsbamBuildProg = 0;
           }
         } catch (_) {}
         try { if (typeof Input !== 'undefined') Input.dualMode = false; } catch (_) {}
