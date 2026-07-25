@@ -10,10 +10,12 @@ Live: https://brennyz.github.io/stickman-fighter/
 
 1. Open https://brennyz.github.io/stickman-fighter/speel.html  
 2. Instellingen → **Verse versie** / hard refresh.  
-3. Check menu-voettekst: moet **≥ v1.18.37 · SW v247** zijn.  
+3. Check menu-voettekst: moet **≥ v1.18.38 · SW v248** zijn.  
 4. Probeer opnieuw.
 
 **Orphan pauseBtn (training/rabbit):** alleen ║║ zichtbaar, speelveld zwart → play-laag kapot. Fix forceert canvas terug; debug-strip toont `playBroken=Y`.
+
+**Adventure blue/black:** na level-tik/dobbel moet speelveld zichtbaar zijn. Strip: `state=play` · `screens=—` · `isPlaying=true` · `playBroken=N`.
 
 ---
 

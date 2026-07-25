@@ -1747,9 +1747,37 @@ function startAdventureFromGamble(skipGamble) {
     pendingAdvLevel = null;
     try { UI.hideGambleRollFlash(); } catch (_) {}
     try { clearScreensForPlay(); } catch (_) {}
+    // Level/hub-schermen hard weg vóór start (blauw deksel = .screen over canvas)
+    try {
+      ['levelScreen', 'modeHubScreen', 'gambleScreen', 'menuScreen'].forEach((id) => {
+        document.getElementById(id)?.classList.remove('active');
+      });
+    } catch (_) {}
     startGame('adventure', { level, gamble });
     try { syncPlayLayer(); } catch (_) {}
+    try {
+      if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('advStart');
+    } catch (_) {}
     try { if (typeof blackScreenGuard === 'function') blackScreenGuard('advStart'); } catch (_) {}
+    // iPad: flash/CSS race — herhaal force na frames
+    const reassert = (label) => {
+      try {
+        if (state === 'play' && game && game.mode === 'adventure') {
+          UI.hideGambleRollFlash();
+          clearScreensForPlay();
+          forcePlayCanvasVisible(label);
+        }
+      } catch (_) {}
+    };
+    try {
+      requestAnimationFrame(() => {
+        reassert('advStart-raf');
+        requestAnimationFrame(() => reassert('advStart-raf2'));
+      });
+    } catch (_) {}
+    setTimeout(() => reassert('advStart-50'), 50);
+    setTimeout(() => reassert('advStart-200'), 200);
+    setTimeout(() => reassert('advStart-500'), 500);
   } catch (err) {
     sfReportError('gambleStart', err, 'Avontuur starten mislukt — kies level opnieuw');
   }

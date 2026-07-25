@@ -2180,9 +2180,29 @@ const UI = {
     }
   },
 
+  hideGambleRollFlash() {
+    const el = document.getElementById('levelRollFlash');
+    if (!el) return;
+    el.classList.remove('visible');
+    el.hidden = true;
+    el.setAttribute('aria-hidden', 'true');
+    // Inline force — voorkomt blauw deksel als class/CSS race op iPad
+    try {
+      el.style.setProperty('display', 'none', 'important');
+      el.style.setProperty('opacity', '0', 'important');
+      el.style.setProperty('visibility', 'hidden', 'important');
+      el.style.setProperty('pointer-events', 'none', 'important');
+    } catch (_) {}
+  },
+
   showGambleRollFlash(g) {
     const el = document.getElementById('levelRollFlash');
     if (!el || !g) return;
+    // Nooit flash tonen als we al in een gevecht zitten
+    if (typeof state !== 'undefined' && state === 'play' && typeof game !== 'undefined' && game) {
+      this.hideGambleRollFlash();
+      return;
+    }
     const diceEl = document.getElementById('levelRollDice');
     const sumEl = document.getElementById('levelRollSum');
     const outEl = document.getElementById('levelRollOutcome');
@@ -2197,17 +2217,15 @@ const UI = {
         : (g.outcome === 'superAlly' || g.outcome === 'ally') ? (GAMBLE_ALLIES[g.allyId]?.color || '#7cf5ff') : '#8fa3d9';
       outEl.style.color = col;
     }
+    try {
+      el.style.removeProperty('display');
+      el.style.removeProperty('opacity');
+      el.style.removeProperty('visibility');
+      el.style.removeProperty('pointer-events');
+    } catch (_) {}
     el.hidden = false;
     el.setAttribute('aria-hidden', 'false');
     el.classList.add('visible');
-  },
-
-  hideGambleRollFlash() {
-    const el = document.getElementById('levelRollFlash');
-    if (!el) return;
-    el.classList.remove('visible');
-    el.hidden = true;
-    el.setAttribute('aria-hidden', 'true');
   },
 
   renderWeapons() {

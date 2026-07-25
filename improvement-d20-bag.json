@@ -3,25 +3,17 @@
   "cyclesCompleted": 4,
   "rollFirst": [],
   "remaining": [
-    4,
     5
   ],
   "lastRoll": {
-    "face": 13,
-    "category": "Missies & achievements \u2014 daily loop, beloningen",
-    "rolledAt": "2026-07-25T14:12:28Z",
-    "remainingCount": 2,
+    "face": 4,
+    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
+    "rolledAt": "2026-07-25T15:03:15Z",
+    "remainingCount": 1,
     "cycle": 4
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 6,
-      "note": "BGM duck pause/result + mute paths + pause song keep",
-      "version": "1.9.6",
-      "doneAt": "2026-07-23T15:01:40Z",
-      "cycle": 0
-    },
     {
       "face": 20,
       "note": "dead code/no-ops/shared joy onMove \u2014 zero behavior",
@@ -573,6 +565,13 @@
       "note": "claim path copy + almost tag + streak bonus toast",
       "version": "1.18.34",
       "doneAt": "2026-07-25T14:14:09Z",
+      "cycle": 4
+    },
+    {
+      "face": 4,
+      "note": "trait chip + star buffer + next-wave trait ring; ketsbam crash fix",
+      "version": "1.18.36",
+      "doneAt": "2026-07-25T15:04:13Z",
       "cycle": 4
     }
   ],
@@ -1795,6 +1794,13 @@
       "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-07-25T14:12:28Z",
       "remainingCount": 2,
+      "cycle": 4
+    },
+    {
+      "face": 4,
+      "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
+      "rolledAt": "2026-07-25T15:03:15Z",
+      "remainingCount": 1,
       "cycle": 4
     }
   ],
