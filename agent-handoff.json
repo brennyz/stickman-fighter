@@ -19,9 +19,9 @@
     "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "localMainHead": "pending",
-    "remoteMainHead": "ca2acca",
-    "note": "d6 audio c4 v1.17.83 — merge pending"
+    "localMainHead": "8da50bb",
+    "remoteMainHead": "8da50bb",
+    "note": "main gepusht 2026-07-25 — d6 audio c4 v1.17.83"
   },
   "userWishlist": [
     {
@@ -55,6 +55,10 @@
     "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md."
   ],
   "sessionLog": [
+    {
+      "at": "2026-07-25T10:04:47Z",
+      "summary": "d6 audio c4: pause ctx/mute, music preview, d20 verify v1.17.83"
+    },
     {
       "at": "2026-07-25T10:02:38Z",
       "summary": "d6 audio c4: pause ctx/mute fix, music preview, d20 bag verify v1.17.83"
