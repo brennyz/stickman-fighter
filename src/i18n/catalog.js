@@ -42,8 +42,8 @@ function seedNlGameStrings() {
     matsStart: 'MATS · MUNTJES BONUS',
     wallStart: 'SLOOP DE MUUR!',
     bonusDone: 'BONUS KLAAR!',
-    kets: 'KETS!',
-    ketsBam: 'KETS-BAM!',
+    kets: 'KABLAM!',
+    ketsBam: 'KABLAM!',
     wallTime: 'TIJD!',
     wallNewWall: 'MUUR GESLOOPT! Nieuwe muur...',
   });
@@ -603,7 +603,7 @@ const CATALOG_EN = {
     summon: '✦ SUMMON! ✦', summonAscend: '{name} → {rar}!',
     newDex: 'New {rar}: {name}! +{hp} max HP', pet: 'PET! {name}',
     matsStart: 'MATS · COIN BONUS', wallStart: 'SMASH THE WALL!', bonusDone: 'BONUS DONE!',
-    kets: 'KETS!', ketsBam: 'KETS-BAM!', wallTime: 'TIME!', wallNewWall: 'WALL SMASHED! New wall...',
+    kets: 'KABLAM!', ketsBam: 'KABLAM!', wallTime: 'TIME!', wallNewWall: 'WALL SMASHED! New wall...',
   },
   help: { tips: [
     'Power-ups: defeated monsters sometimes drop orbs — HP, rage, chakra, shield.',
@@ -1028,7 +1028,7 @@ const CATALOG_DE = {
     levelUp: 'LEVEL UP! Lv {lvl}', masterBuff: 'MEISTER-BUFF +20%', bossWave: 'BOSS-WELLE!',
     fight: 'KÄMPF!', won: 'GEWONNEN!', lost: 'VERLOREN...', summon: '✦ SUMMON! ✦',
     matsStart: 'MATS · MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
-    kets: 'KETS!', ketsBam: 'KETS-BAM!',
+    kets: 'KABLAM!', ketsBam: 'KABLAM!',
   },
   help: { tips: [
     'Power-ups: besiegte Monster lassen manchmal Kugeln fallen — HP, Rage, Chakra, Schild.',
@@ -1126,7 +1126,7 @@ const CATALOG_FR = {
     levelUp: 'LEVEL UP ! Lv {lvl}', masterBuff: 'BUFF MAÎTRE +20 %', bossWave: 'VAGUE BOSS !',
     fight: 'COMBAT !', won: 'VICTOIRE !', lost: 'DÉFAITE...', summon: '✦ INVOCATION ! ✦',
     matsStart: 'MATS · BONUS PIÈCES', wallStart: 'CASSE LE MUR !', bonusDone: 'BONUS TERMINÉ !',
-    kets: 'KETS !', ketsBam: 'KETS-BAM !',
+    kets: 'KABLAM !', ketsBam: 'KABLAM !',
   },
   help: { tips: [
     'Power-ups : les monstres vaincus laissent parfois des orbes — PV, rage, chakra, bouclier.',
@@ -1224,7 +1224,7 @@ const CATALOG_ES = {
     levelUp: '¡SUBIDA DE NIVEL! Lv {lvl}', masterBuff: 'BUFF MAESTRO +20%', bossWave: '¡OLA JEFE!',
     fight: '¡LUCHA!', won: '¡VICTORIA!', lost: 'DERROTA...', summon: '✦ ¡INVOCACIÓN! ✦',
     matsStart: 'MATS · BONUS MONEDAS', wallStart: '¡ROMPE EL MURO!', bonusDone: '¡BONUS LISTO!',
-    kets: '¡KETS!', ketsBam: '¡KETS-BAM!',
+    kets: '¡KABLAM!', ketsBam: '¡KABLAM!',
   },
   help: { tips: [
     'Power-ups: monstruos derrotados sueltan orbes — HP, furia, chakra, escudo.',

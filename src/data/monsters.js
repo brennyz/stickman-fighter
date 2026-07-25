@@ -158,7 +158,7 @@ const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
 const GIANT_DMG_MUL = 1.14;
 const GIANT_XP_MUL = 1.3;
-/** Nood-ontsnapping als je omringd / stunlocked bent — tik midden-KETS! */
+/** Nood-ontsnapping als je omringd / stunlocked bent — tik midden-KABLAM! */
 const KETSBAM_DETECT_R = 148;
 const KETSBAM_NEAR_MIN = 3;
 const KETSBAM_BLAST_R = 192;

@@ -127,6 +127,7 @@ class Game {
     this.ketsbamChargeT = 0;
     this.ketsbamChargeDur = 0;
     this.ketsbamChargePulse = 0;
+    this.ketsbamStickPick = null;
     applyGambleToStage(this, gamble);
     this.banner(t('banner.levelStart', { n }), 1.4, '#ffd75e', 54);
     if (masterBuffActive(n)) {
@@ -2608,7 +2609,10 @@ class Game {
     const near = this.countNearbyMonsters(KETSBAM_DETECT_R);
     const stuck = this.player.hurtT > 0 && near >= 2;
     const swarmed = near >= KETSBAM_NEAR_MIN;
+    const wasShow = this.ketsbamShow;
     this.ketsbamShow = this.ketsbamCd <= 0 && !this.inputLocked && !this.traveling && (swarmed || stuck);
+    if (this.ketsbamShow && !wasShow) this.ketsbamStickPick = pickKablamStickFace();
+    if (!this.ketsbamShow) this.ketsbamStickPick = null;
     if (this.ketsbamShow) this.ketsbamPulse = (this.ketsbamPulse || 0) + dt;
     else this.ketsbamPulse = 0;
   }
@@ -2674,7 +2678,7 @@ class Game {
     }
 
     c.globalAlpha = 0.85;
-    c.font = `900 ${18 + prog * 8}px -apple-system, sans-serif`;
+    c.font = `900 ${18 + prog * 8}px "Black Ops One", Bangers, sans-serif`;
     c.textAlign = 'center';
     c.fillStyle = '#ffd75e';
     c.strokeStyle = 'rgba(0,0,0,.55)';
@@ -2703,28 +2707,17 @@ class Game {
     // ster/kets-symbool
     c.translate(cx, cy);
     if (!calm) c.rotate((this.ketsbamPulse || 0) * 2.2);
-    c.fillStyle = '#ffd75e';
-    c.strokeStyle = '#ff7043';
-    c.lineWidth = 2.5 * ui;
-    c.beginPath();
-    for (let i = 0; i < 8; i++) {
-      const a = (i / 8) * TAU - Math.PI / 2;
-      const rr = i % 2 ? r * 0.42 : r * 0.88;
-      const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
-      if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
-    }
-    c.closePath();
-    c.fill();
-    c.stroke();
+    drawKablamPoopCursor(c, ui * pulse * 0.92);
+    drawKablamStickSmile(c, this.ketsbamStickPick, ui * pulse, this.ketsbamPulse || 0);
     if (!calm) c.rotate(-(this.ketsbamPulse || 0) * 2.2);
-    c.font = `900 ${Math.round(17 * ui)}px -apple-system,sans-serif`;
+    c.font = `900 ${Math.round(15 * ui)}px "Black Ops One", Bangers, sans-serif`;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
     c.lineWidth = 5 * ui;
     c.strokeStyle = 'rgba(0,0,0,.55)';
-    c.strokeText(t('banner.kets'), 0, 2);
+    c.strokeText(t('banner.kets'), 0, r * 0.72);
     c.fillStyle = '#fff';
-    c.fillText(t('banner.kets'), 0, 2);
+    c.fillText(t('banner.kets'), 0, r * 0.72);
     c.restore();
     c.font = `700 ${Math.round(12 * ui)}px -apple-system,sans-serif`;
     c.textAlign = 'center';

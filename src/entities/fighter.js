@@ -154,7 +154,7 @@ class Fighter {
     game.floater(this.x, this.y - 92, 'Dash!', '#7cf5ff', 12);
   }
 
-  /** Nood-KETS-BAM: omringd/stunlock → tik midden-symbool of druk E. */
+  /** Nood-KABLAM: omringd/stunlock → tik midden-symbool of druk E. */
   doKetsbam(game) {
     if (!this.isPlayer || !this.alive || !game) return false;
     if (game.ketsbamCd > 0 || game.ketsbamChargeT > 0 || game.inputLocked || game.traveling) return false;
@@ -178,7 +178,7 @@ class Fighter {
     this.invulnT = Math.max(this.invulnT, KETSBAM_INVULN + KETSBAM_CHARGE_DUR);
     resetWeaponCombo(this);
 
-    game.banner('KETS!', KETSBAM_CHARGE_DUR, '#ffd75e', 44);
+    game.banner(t('banner.kets'), KETSBAM_CHARGE_DUR, '#ffd75e', 44);
     try { AudioSys.sfx('ketsbamCharge'); } catch (_) {}
     if (save.haptics !== false) haptic(12);
     return true;
@@ -192,7 +192,7 @@ class Fighter {
 
     game.shake(14, 0.38);
     game.freezeT = Math.max(game.freezeT, 0.06);
-    game.banner('KETS-BAM!', 0.85, '#ffd75e', 42);
+    game.banner(t('banner.ketsBam'), 0.85, '#ffd75e', 42);
     try { AudioSys.sfx('ketsbam'); } catch (_) {}
 
     const px = this.x, py = this.y - 42;
@@ -209,7 +209,7 @@ class Fighter {
     game.burst(px, py, '#ffd75e', fxLite() ? 22 : 40, { kind: 'spark', size: 3.2 });
     game.burst(px, py, '#ff7043', fxLite() ? 14 : 26);
     spawnFxRing(game, px, py, '#ffe259', fxLite() ? 10 : 18);
-    game.floater(px, py - 80, 'KETS-BAM!', '#ffd75e', 20);
+    game.floater(px, py - 80, t('banner.ketsBam'), '#ffd75e', 20);
     if (save.haptics !== false) haptic(32);
   }
 
