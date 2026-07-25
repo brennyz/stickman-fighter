@@ -241,9 +241,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.7';
+const APP_VERSION = '1.18.8';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 217;
+const SW_CACHE_REV = 218;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -3262,16 +3262,33 @@ function sfReportError(where, err, userMsg) {
     userToast(userMsg || 'Er ging iets mis — terug naar menu');
   }
 }
-function syncPlayLayer() {
+/** Tijdens gevecht: strip ALLE .screen.active (menu bleef anders over canvas = zwart beeld + wel audio). */
+function clearScreensForPlay() {
+  document.querySelectorAll('.screen.active').forEach((s) => s.classList.remove('active'));
+  if (typeof UI !== 'undefined' && UI.screens) {
+    for (const sid of UI.screens) {
+      document.getElementById(sid)?.classList.remove('active');
+    }
+  }
+}
+
+function applyPlayLayerStyles(canvasHits) {
   const el = document.getElementById('game');
   if (!el) return;
-  const canvasHits = state === 'play' && !!game;
+  if (canvasHits) clearScreensForPlay();
   el.style.pointerEvents = canvasHits ? 'auto' : 'none';
   el.style.visibility = canvasHits ? 'visible' : 'hidden';
+  el.style.opacity = canvasHits ? '1' : '';
+  el.style.zIndex = canvasHits ? '40' : '';
+  el.style.display = canvasHits ? 'block' : '';
   el.style.touchAction = canvasHits ? 'none' : 'manipulation';
   document.body.classList.toggle('is-playing', canvasHits);
   document.body.style.overflow = canvasHits ? 'hidden' : '';
   try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
+}
+
+function syncPlayLayer() {
+  applyPlayLayerStyles(state === 'play' && !!game);
 }
 
 function activeScreenEl() {
@@ -3285,26 +3302,37 @@ function activeScreenEl() {
 }
 
 function isUiVisible() {
-  if (activeScreenEl()) return true;
+  // Tijdens play telt een open .screen NIET als “zichtbaar” — dat IS het zwarte deksel.
   if (state === 'play' && game) {
     const el = document.getElementById('game');
-    return !!(el && el.style.visibility !== 'hidden' && document.body.classList.contains('is-playing'));
+    return !!(el && el.style.visibility !== 'hidden' && document.body.classList.contains('is-playing')
+      && !activeScreenEl());
   }
+  if (activeScreenEl()) return true;
   return false;
 }
 
 /** Detecteer en herstel volledig zwart scherm (geen UI, geen canvas). */
 function blackScreenGuard(where) {
   if (window.__sfBlackGuardBusy) return;
+  // Play met game: altijd canvas vrijmaken van UI-deksel
+  if (state === 'play' && game) {
+    if (activeScreenEl() || !document.body.classList.contains('is-playing')) {
+      window.__sfBlackGuardBusy = true;
+      try {
+        console.warn('[Stickman] play cover guard:', where || '?');
+        syncPlayLayerWithoutGuard();
+      } finally {
+        window.__sfBlackGuardBusy = false;
+      }
+    }
+    return;
+  }
   if (isUiVisible()) return;
   window.__sfBlackGuardBusy = true;
   try {
     console.warn('[Stickman] black screen guard:', where || '?', 'state=', state);
     if (state === 'play') {
-      if (game) {
-        syncPlayLayerWithoutGuard();
-        if (isUiVisible()) return;
-      }
       state = 'menu';
       game = null;
     }
@@ -3324,15 +3352,7 @@ function blackScreenGuard(where) {
 }
 
 function syncPlayLayerWithoutGuard() {
-  const el = document.getElementById('game');
-  if (!el) return;
-  const canvasHits = state === 'play' && !!game;
-  el.style.pointerEvents = canvasHits ? 'auto' : 'none';
-  el.style.visibility = canvasHits ? 'visible' : 'hidden';
-  el.style.touchAction = canvasHits ? 'none' : 'manipulation';
-  document.body.classList.toggle('is-playing', canvasHits);
-  document.body.style.overflow = canvasHits ? 'hidden' : '';
-  try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
+  applyPlayLayerStyles(state === 'play' && !!game);
 }
 
 function ensureMenuScreenActive() {
@@ -20939,6 +20959,7 @@ const UI = {
           syncPlayLayer();
           return;
         }
+        try { clearScreensForPlay(); } catch (_) {}
       } else {
         const target = document.getElementById(id);
         if (!target) {
@@ -23360,7 +23381,9 @@ function startGame(mode, opts) {
   try { AudioSys.setPaused(false); } catch (_) {}
   try { recordLastPlay(mode, opts); } catch (_) {}
   try { applyModeOnboarding(mode, game); } catch (_) {}
-  try { UI.show(null); } catch (_) { syncPlayLayer(); }
+  try { clearScreensForPlay(); } catch (_) {}
+  try { UI.show(null); } catch (_) {}
+  try { syncPlayLayer(); } catch (_) {}
   try {
     AudioSys.init();
     const modeSting = { adventure: 'modeAdventure', training: 'modeTraining', versus: 'modeVersus', wall: 'modeWall', coinrun: 'modeMats' };
@@ -24489,8 +24512,13 @@ window.addEventListener('unhandledrejection', (e) => {
 function bindUiLayerWatch() {
   const tick = () => {
     try {
-      syncPlayLayer();
-      blackScreenGuard('uiWatch');
+      if (state === 'play' && game) {
+        syncPlayLayer();
+        blackScreenGuard('uiWatch');
+      } else {
+        syncPlayLayer();
+        blackScreenGuard('uiWatch');
+      }
       if (typeof window.sfTunnelNukeOverlay === 'function') window.sfTunnelNukeOverlay();
     } catch (_) {}
   };

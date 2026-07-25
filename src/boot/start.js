@@ -40,7 +40,9 @@ function startGame(mode, opts) {
   try { AudioSys.setPaused(false); } catch (_) {}
   try { recordLastPlay(mode, opts); } catch (_) {}
   try { applyModeOnboarding(mode, game); } catch (_) {}
-  try { UI.show(null); } catch (_) { syncPlayLayer(); }
+  try { clearScreensForPlay(); } catch (_) {}
+  try { UI.show(null); } catch (_) {}
+  try { syncPlayLayer(); } catch (_) {}
   try {
     AudioSys.init();
     const modeSting = { adventure: 'modeAdventure', training: 'modeTraining', versus: 'modeVersus', wall: 'modeWall', coinrun: 'modeMats' };

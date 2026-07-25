@@ -1184,16 +1184,33 @@ function sfReportError(where, err, userMsg) {
     userToast(userMsg || 'Er ging iets mis — terug naar menu');
   }
 }
-function syncPlayLayer() {
+/** Tijdens gevecht: strip ALLE .screen.active (menu bleef anders over canvas = zwart beeld + wel audio). */
+function clearScreensForPlay() {
+  document.querySelectorAll('.screen.active').forEach((s) => s.classList.remove('active'));
+  if (typeof UI !== 'undefined' && UI.screens) {
+    for (const sid of UI.screens) {
+      document.getElementById(sid)?.classList.remove('active');
+    }
+  }
+}
+
+function applyPlayLayerStyles(canvasHits) {
   const el = document.getElementById('game');
   if (!el) return;
-  const canvasHits = state === 'play' && !!game;
+  if (canvasHits) clearScreensForPlay();
   el.style.pointerEvents = canvasHits ? 'auto' : 'none';
   el.style.visibility = canvasHits ? 'visible' : 'hidden';
+  el.style.opacity = canvasHits ? '1' : '';
+  el.style.zIndex = canvasHits ? '40' : '';
+  el.style.display = canvasHits ? 'block' : '';
   el.style.touchAction = canvasHits ? 'none' : 'manipulation';
   document.body.classList.toggle('is-playing', canvasHits);
   document.body.style.overflow = canvasHits ? 'hidden' : '';
   try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
+}
+
+function syncPlayLayer() {
+  applyPlayLayerStyles(state === 'play' && !!game);
 }
 
 function activeScreenEl() {
@@ -1207,26 +1224,37 @@ function activeScreenEl() {
 }
 
 function isUiVisible() {
-  if (activeScreenEl()) return true;
+  // Tijdens play telt een open .screen NIET als “zichtbaar” — dat IS het zwarte deksel.
   if (state === 'play' && game) {
     const el = document.getElementById('game');
-    return !!(el && el.style.visibility !== 'hidden' && document.body.classList.contains('is-playing'));
+    return !!(el && el.style.visibility !== 'hidden' && document.body.classList.contains('is-playing')
+      && !activeScreenEl());
   }
+  if (activeScreenEl()) return true;
   return false;
 }
 
 /** Detecteer en herstel volledig zwart scherm (geen UI, geen canvas). */
 function blackScreenGuard(where) {
   if (window.__sfBlackGuardBusy) return;
+  // Play met game: altijd canvas vrijmaken van UI-deksel
+  if (state === 'play' && game) {
+    if (activeScreenEl() || !document.body.classList.contains('is-playing')) {
+      window.__sfBlackGuardBusy = true;
+      try {
+        console.warn('[Stickman] play cover guard:', where || '?');
+        syncPlayLayerWithoutGuard();
+      } finally {
+        window.__sfBlackGuardBusy = false;
+      }
+    }
+    return;
+  }
   if (isUiVisible()) return;
   window.__sfBlackGuardBusy = true;
   try {
     console.warn('[Stickman] black screen guard:', where || '?', 'state=', state);
     if (state === 'play') {
-      if (game) {
-        syncPlayLayerWithoutGuard();
-        if (isUiVisible()) return;
-      }
       state = 'menu';
       game = null;
     }
@@ -1246,15 +1274,7 @@ function blackScreenGuard(where) {
 }
 
 function syncPlayLayerWithoutGuard() {
-  const el = document.getElementById('game');
-  if (!el) return;
-  const canvasHits = state === 'play' && !!game;
-  el.style.pointerEvents = canvasHits ? 'auto' : 'none';
-  el.style.visibility = canvasHits ? 'visible' : 'hidden';
-  el.style.touchAction = canvasHits ? 'none' : 'manipulation';
-  document.body.classList.toggle('is-playing', canvasHits);
-  document.body.style.overflow = canvasHits ? 'hidden' : '';
-  try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
+  applyPlayLayerStyles(state === 'play' && !!game);
 }
 
 function ensureMenuScreenActive() {

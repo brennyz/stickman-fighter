@@ -11,7 +11,10 @@
   /* Canvas achter UI; geen hits in menu (anders vangt iPad alle tikken) */
   #game { position:fixed; left:0; top:0; width:100%; height:100%; height:100dvh; display:block; touch-action:none;
       z-index:0; pointer-events:none !important; }
-  body.is-playing #game { pointer-events:auto !important; z-index:1; visibility:visible !important; }
+  /* Gevecht: canvas BOVEN UI — voorkomt zwart scherm terwijl audio/AI doorlopen */
+  body.is-playing #game { pointer-events:auto !important; z-index:40 !important; visibility:visible !important;
+      opacity:1 !important; display:block !important; }
+  body.is-playing .screen { display:none !important; pointer-events:none !important; visibility:hidden !important; }
 
   .screen { position:fixed; top:var(--vv-top, 0); left:var(--vv-left, 0);
       width:var(--vv-w, 100%); height:var(--vv-h, 100dvh); max-height:100dvh;

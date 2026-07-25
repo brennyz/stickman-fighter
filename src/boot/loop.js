@@ -580,8 +580,13 @@ window.addEventListener('unhandledrejection', (e) => {
 function bindUiLayerWatch() {
   const tick = () => {
     try {
-      syncPlayLayer();
-      blackScreenGuard('uiWatch');
+      if (state === 'play' && game) {
+        syncPlayLayer();
+        blackScreenGuard('uiWatch');
+      } else {
+        syncPlayLayer();
+        blackScreenGuard('uiWatch');
+      }
       if (typeof window.sfTunnelNukeOverlay === 'function') window.sfTunnelNukeOverlay();
     } catch (_) {}
   };

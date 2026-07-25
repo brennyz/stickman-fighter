@@ -951,6 +951,7 @@ const UI = {
           syncPlayLayer();
           return;
         }
+        try { clearScreensForPlay(); } catch (_) {}
       } else {
         const target = document.getElementById(id);
         if (!target) {
