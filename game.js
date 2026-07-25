@@ -241,9 +241,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.3';
+const APP_VERSION = '1.18.4';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 213;
+const SW_CACHE_REV = 214;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -19883,6 +19883,100 @@ class Game {
 
 /* --- src/ui/ui.js --- */
 /* ================================= UI ================================== */
+function appendItemUpgradeButton(el, cat, id, rerender) {
+  if (!itemUpgradeEligible(cat, id) || !itemCanUpgrade(cat, id)) return;
+  const cost = itemUpgradeCost(cat, id);
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'btn claim-btn';
+  btn.textContent = t('ui.itemUpgrade') + ` (${cost})`;
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    safeUiAction(() => {
+      if (!tryItemUpgrade(cat, id)) return;
+      AudioSys.sfx('levelup');
+      const name = itemUpgradeLabel(cat, id);
+      const lv = itemUpgradeLevel(cat, id);
+      UI.toast(t('toast.itemUpgraded', { name, lv, detail: itemUpgradeSummary(cat, id) }), 3200);
+      rerender();
+    }, 'itemUp/' + cat + '/' + id, 'Upgrade mislukt');
+  });
+  el.appendChild(btn);
+}
+
+function itemUpgradeCardParts(cat, id, color) {
+  if (!itemUpgradeEligible(cat, id)) return { canUp: false, lv: 0, max: 0, html: '' };
+  const lv = itemUpgradeLevel(cat, id);
+  const max = itemUpgradeMax(cat, id);
+  const shards = itemUpgradeShards(cat, id);
+  const cost = itemUpgradeCost(cat, id);
+  const canUp = itemCanUpgrade(cat, id);
+  const now = itemUpgradeSummary(cat, id);
+  const next = itemUpgradePreview(cat, id);
+  const shardLine = cost != null ? t('ui.itemShards', { cur: shards, cost }) : t('ui.itemMax');
+  return {
+    canUp, lv, max,
+    html:
+      `<div class="skill-card-body"><div class="cname" style="color:${color}">${itemUpgradeLabel(cat, id)} ` +
+      `<span class="rar-pill" style="color:${color};border-color:${color}">${t('ui.itemLevel', { lv, max })}</span></div>` +
+      `<div class="cinfo">${shardLine}</div>` +
+      `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:4px"><b>${t('ui.itemNow')}:</b> ${now}</div>` +
+      (next ? `<div class="cinfo" style="opacity:.75;font-size:11px;margin-top:3px"><b>${t('ui.itemNext')}:</b> ${next}</div>` : '') +
+      `</div>`,
+  };
+}
+
+function drawUpgradeItemIcon(cat, id, cv) {
+  if (!cv) return;
+  const cc = cv.getContext('2d');
+  if (!cc) return;
+  cc.clearRect(0, 0, cv.width, cv.height);
+  if (cat === 'weapon') {
+    const w = WEAPONS.find((x) => x.id === id);
+    if (!w) return;
+    cc.translate(10, 40);
+    cc.rotate(-0.6);
+    if (w.id === 'vuist') {
+      cc.strokeStyle = '#f2f5ff'; cc.lineWidth = 5; cc.lineCap = 'round';
+      cc.beginPath(); cc.moveTo(2, 8); cc.lineTo(24, -6); cc.stroke();
+      cc.fillStyle = '#f2f5ff'; cc.beginPath(); cc.arc(28, -9, 7, 0, TAU); cc.fill();
+    } else {
+      drawWeaponShape(cc, w.id, 0.2);
+    }
+  } else if (cat === 'pet') {
+    const p = petDef(id);
+    const sp = p ? SPECIES[p.speciesId] : null;
+    if (!sp) return;
+    cc.translate(32, 38);
+    cc.scale(0.55, 0.55);
+    drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
+  } else if (cat === 'style') {
+    const st = styleById(id);
+    cc.translate(36, 58);
+    cc.scale(0.85, 0.85);
+    const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9 });
+    preview.animT = 0.4;
+    preview.draw(cc);
+  }
+}
+
+function buildUpgradeItemCard(cat, id, color, rerender) {
+  const card = itemUpgradeCardParts(cat, id, color);
+  const el = document.createElement('div');
+  el.className = 'card skill-card' + (card.canUp ? ' claimable' : '') + (card.lv >= card.max ? ' claimed' : '');
+  el.style.borderColor = color + '88';
+  const cv = document.createElement('canvas');
+  cv.width = 64;
+  cv.height = 64;
+  drawUpgradeItemIcon(cat, id, cv);
+  el.appendChild(cv);
+  const wrap = document.createElement('div');
+  wrap.innerHTML = card.html;
+  while (wrap.firstChild) el.appendChild(wrap.firstChild);
+  appendItemUpgradeButton(el, cat, id, rerender);
+  return el;
+}
+
 function charSelectFightReady() {
   if (!vsSelect.p1 || !vsSelect.p2) return false;
   if ((UI.charPickStep || 1) !== 2) return false;
@@ -22028,8 +22122,10 @@ const UI = {
 
   openUpgrades(tab) {
     this.upgradeTab = tab || 'skills';
-    this.renderUpgrades();
     this.show('upgradeScreen');
+    try { this.renderUpgrades(); } catch (err) {
+      sfReportError('renderUpgrades', err, 'Upgrades laden mislukt — herlaad via Verse versie');
+    }
   },
 
   renderUpgrades() {
@@ -23211,24 +23307,35 @@ const btnMatsCoins = document.getElementById('btnMatsCoins');
 bindPress(btnMatsCoins, () => {
   AudioSys.init(); AudioSys.sfx('select'); startGame('coinrun');
 });
+function openCollectionScreen(screenId, renderFn) {
+  AudioSys.init();
+  AudioSys.sfx('select');
+  UI.show(screenId);
+  try { renderFn(); } catch (err) {
+    sfReportError(renderFn.name || screenId, err, 'Scherm laden mislukt — herlaad via Verse versie');
+  }
+}
+
 bindPress(document.getElementById('btnWeapons'), () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.renderWeapons(); UI.show('weaponScreen');
+  openCollectionScreen('weaponScreen', () => UI.renderWeapons());
 });
 bindPress(document.getElementById('btnSkills'), () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.renderSkills(); UI.show('skillScreen');
+  openCollectionScreen('skillScreen', () => UI.renderSkills());
 });
 bindPress(document.getElementById('btnUpgrades'), () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.openUpgrades('skills');
+  AudioSys.init();
+  AudioSys.sfx('select');
+  UI.openUpgrades('skills');
 });
 bindPress(document.getElementById('btnPets'), () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.renderPets(); UI.show('petScreen');
+  openCollectionScreen('petScreen', () => UI.renderPets());
 });
 bindPress(document.getElementById('btnDex'), () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.renderDex(); UI.show('dexScreen');
+  openCollectionScreen('dexScreen', () => UI.renderDex());
 });
 const btnStyle = document.getElementById('btnStyle');
 bindPress(btnStyle, () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.renderStyle(); UI.show('styleScreen');
+  openCollectionScreen('styleScreen', () => UI.renderStyle());
 });
 const btnSettings = document.getElementById('btnSettings');
 bindPress(btnSettings, () => {

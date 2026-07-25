@@ -149,24 +149,35 @@ const btnMatsCoins = document.getElementById('btnMatsCoins');
 bindPress(btnMatsCoins, () => {
   AudioSys.init(); AudioSys.sfx('select'); startGame('coinrun');
 });
+function openCollectionScreen(screenId, renderFn) {
+  AudioSys.init();
+  AudioSys.sfx('select');
+  UI.show(screenId);
+  try { renderFn(); } catch (err) {
+    sfReportError(renderFn.name || screenId, err, 'Scherm laden mislukt — herlaad via Verse versie');
+  }
+}
+
 bindPress(document.getElementById('btnWeapons'), () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.renderWeapons(); UI.show('weaponScreen');
+  openCollectionScreen('weaponScreen', () => UI.renderWeapons());
 });
 bindPress(document.getElementById('btnSkills'), () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.renderSkills(); UI.show('skillScreen');
+  openCollectionScreen('skillScreen', () => UI.renderSkills());
 });
 bindPress(document.getElementById('btnUpgrades'), () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.openUpgrades('skills');
+  AudioSys.init();
+  AudioSys.sfx('select');
+  UI.openUpgrades('skills');
 });
 bindPress(document.getElementById('btnPets'), () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.renderPets(); UI.show('petScreen');
+  openCollectionScreen('petScreen', () => UI.renderPets());
 });
 bindPress(document.getElementById('btnDex'), () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.renderDex(); UI.show('dexScreen');
+  openCollectionScreen('dexScreen', () => UI.renderDex());
 });
 const btnStyle = document.getElementById('btnStyle');
 bindPress(btnStyle, () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.renderStyle(); UI.show('styleScreen');
+  openCollectionScreen('styleScreen', () => UI.renderStyle());
 });
 const btnSettings = document.getElementById('btnSettings');
 bindPress(btnSettings, () => {
