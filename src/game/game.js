@@ -4301,13 +4301,24 @@ class Game {
     c.save();
     const j = Input.joy;
     const jx = j.active ? j.ox : (Input.joyHome?.x || 110), jy = j.active ? j.oy : (Input.joyHome?.y || H - 110);
-    c.globalAlpha = j.active ? 0.5 : 0.22;
-    c.strokeStyle = '#fff'; c.lineWidth = 3;
-    c.beginPath(); c.arc(jx, jy, joyOuter, 0, TAU); c.stroke();
-    drawJoyAimGuide(c, jx, jy, j, ui, '#7cf5ff');
-    c.globalAlpha = j.active ? 0.65 : 0.3;
-    c.fillStyle = '#fff';
-    c.beginPath(); c.arc(jx + (j.active ? j.dx : 0), jy + (j.active ? j.dy : 0), joyInner, 0, TAU); c.fill();
+    // d20 #19 — pixel ring + knob (was smooth arcs)
+    if (typeof drawPixelJoyRing === 'function') {
+      drawPixelJoyRing(c, jx, jy, joyOuter, '#e8ecf2', j.active ? 0.48 : 0.22, Math.max(3, Math.round(4 * ui)));
+    } else {
+      c.globalAlpha = j.active ? 0.5 : 0.22;
+      c.strokeStyle = '#fff'; c.lineWidth = 3;
+      c.beginPath(); c.arc(jx, jy, joyOuter, 0, TAU); c.stroke();
+    }
+    drawJoyAimGuide(c, jx, jy, j, ui, '#7a9aaa');
+    const kx = jx + (j.active ? j.dx : 0);
+    const ky = jy + (j.active ? j.dy : 0);
+    if (typeof drawPixelJoyKnob === 'function') {
+      drawPixelJoyKnob(c, kx, ky, joyInner, '#d8dde4', j.active ? 0.62 : 0.28);
+    } else {
+      c.globalAlpha = j.active ? 0.65 : 0.3;
+      c.fillStyle = '#fff';
+      c.beginPath(); c.arc(kx, ky, joyInner, 0, TAU); c.fill();
+    }
     if (this.player) {
       drawPlayerAimIndicator(c, this.player, j.active ? 0.62 : 0.28);
     }
@@ -4346,15 +4357,26 @@ class Game {
     const joyInner = Math.round(22 * ui);
     const j = pad.joy;
     const jx = j.active ? j.ox : pad.joyHome.x, jy = j.active ? j.oy : pad.joyHome.y;
-    c.globalAlpha = 0.35;
-    c.strokeStyle = accent;
-    c.lineWidth = 3;
-    c.beginPath(); c.arc(jx, jy, joyOuter, 0, TAU); c.stroke();
+    if (typeof drawPixelJoyRing === 'function') {
+      drawPixelJoyRing(c, jx, jy, joyOuter, accent, j.active ? 0.42 : 0.28, Math.max(3, Math.round(3.5 * ui)));
+    } else {
+      c.globalAlpha = 0.35;
+      c.strokeStyle = accent;
+      c.lineWidth = 3;
+      c.beginPath(); c.arc(jx, jy, joyOuter, 0, TAU); c.stroke();
+    }
     drawJoyAimGuide(c, jx, jy, j, ui, accent);
-    c.globalAlpha = j.active ? 0.55 : 0.25;
-    c.fillStyle = accent;
-    c.beginPath(); c.arc(jx + (j.active ? j.dx : 0), jy + (j.active ? j.dy : 0), joyInner, 0, TAU); c.fill();
+    const kx = jx + (j.active ? j.dx : 0);
+    const ky = jy + (j.active ? j.dy : 0);
+    if (typeof drawPixelJoyKnob === 'function') {
+      drawPixelJoyKnob(c, kx, ky, joyInner, accent, j.active ? 0.52 : 0.26);
+    } else {
+      c.globalAlpha = j.active ? 0.55 : 0.25;
+      c.fillStyle = accent;
+      c.beginPath(); c.arc(kx, ky, joyInner, 0, TAU); c.fill();
+    }
     if (fighter) drawPlayerAimIndicator(c, fighter, j.active ? 0.55 : 0.24);
+    c.globalAlpha = 0.75;
     c.font = '900 11px sans-serif'; c.fillStyle = accent; c.textAlign = 'center';
     c.fillText(label, jx, jy - 58);
     for (const b of pad.buttons) {

@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.20';
+const APP_VERSION = '1.18.21';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 230;
+const SW_CACHE_REV = 231;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -11655,42 +11655,38 @@ function aimVisualColor(ny) {
 
 function drawJoyAimGuide(c, jx, jy, j, ui, accent) {
   const outer = Math.round(48 * ui);
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
   c.save();
-  c.globalAlpha = j.active ? 0.44 : 0.2;
-  c.strokeStyle = accent || '#fff';
-  c.lineWidth = 2;
-  c.beginPath();
-  c.moveTo(jx, jy - outer + 6);
-  c.lineTo(jx - 6, jy - outer + 16);
-  c.lineTo(jx + 6, jy - outer + 16);
-  c.closePath();
-  c.stroke();
-  c.beginPath();
-  c.moveTo(jx, jy + outer - 6);
-  c.lineTo(jx - 6, jy + outer - 16);
-  c.lineTo(jx + 6, jy + outer - 16);
-  c.closePath();
-  c.stroke();
-  const barX = jx + outer + Math.round(8 * ui);
+  c.globalAlpha = j.active ? 0.4 : 0.18;
+  c.fillStyle = accent || '#aab4cc';
+  const px = Math.max(2, Math.round(2 * ui));
+  // Pixel chevrons N/S
+  const tipN = jy - outer + 4;
+  c.fillRect(Math.round(jx - px), Math.round(tipN), px * 2, px);
+  c.fillRect(Math.round(jx - px * 2), Math.round(tipN + px), px * 4, px);
+  c.fillRect(Math.round(jx - px * 3), Math.round(tipN + px * 2), px * 6, px);
+  const tipS = jy + outer - 4;
+  c.fillRect(Math.round(jx - px * 3), Math.round(tipS - px * 3), px * 6, px);
+  c.fillRect(Math.round(jx - px * 2), Math.round(tipS - px * 2), px * 4, px);
+  c.fillRect(Math.round(jx - px), Math.round(tipS - px), px * 2, px);
+  const barX = Math.round(jx + outer + Math.round(8 * ui));
   const barH = outer * 1.3;
-  c.globalAlpha = 0.26;
-  c.beginPath();
-  c.moveTo(barX, jy - barH / 2);
-  c.lineTo(barX, jy + barH / 2);
-  c.stroke();
-  c.fillStyle = '#aab4cc';
-  c.beginPath();
-  c.arc(barX, jy, 3, 0, TAU);
-  c.fill();
+  c.globalAlpha = 0.22;
+  for (let y = -barH / 2; y < barH / 2; y += px) {
+    c.fillRect(barX - (px >> 1), Math.round(jy + y), px, px);
+  }
+  c.fillStyle = '#9aa4b8';
+  c.fillRect(barX - px, Math.round(jy - px), px * 2, px * 2);
   if (j.active && Math.abs(j.dy) >= JOY_AIM_DEAD_PX) {
     const t = clamp(-j.dy / JOY_MAX_PX, -1, 1);
-    c.globalAlpha = 0.78;
+    c.globalAlpha = 0.75;
     c.fillStyle = aimVisualColor(-t);
-    c.beginPath();
-    c.arc(barX, jy - t * (barH / 2 - 4), 5, 0, TAU);
-    c.fill();
+    const ay = Math.round(jy - t * (barH / 2 - 4));
+    c.fillRect(barX - px * 2, ay - px, px * 4, px * 3);
   }
   c.restore();
+  c.imageSmoothingEnabled = prev;
 }
 
 function drawPlayerAimIndicator(c, fighter, alpha) {
@@ -13288,6 +13284,70 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
     }
   }
   c.restore();
+}
+
+/**
+ * d20 #19 — Chunky pixel joystick outer ring (forgotten gap vs smooth arcs).
+ */
+function drawPixelJoyRing(c, cx, cy, r, color, alpha, thickness) {
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  const a0 = c.globalAlpha;
+  c.globalAlpha = (alpha == null ? 1 : alpha) * a0;
+  const chunk = Math.max(2, Math.round(r / 14));
+  const thick = Math.max(chunk, Math.round(thickness || chunk * 1.5));
+  const n = Math.max(20, Math.round(r * 1.35));
+  c.fillStyle = color || '#fff';
+  for (let i = 0; i < n; i++) {
+    const ang = (i / n) * TAU;
+    for (let t = 0; t < thick; t += chunk) {
+      const rr = r - t;
+      const x = Math.round(cx + Math.cos(ang) * rr);
+      const y = Math.round(cy + Math.sin(ang) * rr);
+      c.fillRect(x - (chunk >> 1), y - (chunk >> 1), chunk, chunk);
+    }
+  }
+  const tick = Math.max(chunk + 1, Math.round(r * 0.12));
+  const inset = r - thick;
+  c.fillRect(Math.round(cx - (chunk >> 1)), Math.round(cy - r - 1), chunk, tick);
+  c.fillRect(Math.round(cx - (chunk >> 1)), Math.round(cy + inset), chunk, tick);
+  c.fillRect(Math.round(cx - r - 1), Math.round(cy - (chunk >> 1)), tick, chunk);
+  c.fillRect(Math.round(cx + inset), Math.round(cy - (chunk >> 1)), tick, chunk);
+  c.globalAlpha = a0;
+  c.imageSmoothingEnabled = prev;
+}
+
+/** Chunky pixel joystick knob (filled disc). */
+function drawPixelJoyKnob(c, cx, cy, r, color, alpha) {
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  const a0 = c.globalAlpha;
+  c.globalAlpha = (alpha == null ? 1 : alpha) * a0;
+  const chunk = Math.max(2, Math.round(r / 5.5));
+  const r2 = r * r;
+  c.fillStyle = color || '#fff';
+  for (let y = -r; y <= r; y += chunk) {
+    for (let x = -r; x <= r; x += chunk) {
+      if (x * x + y * y <= r2) {
+        c.fillRect(Math.round(cx + x - (chunk >> 1)), Math.round(cy + y - (chunk >> 1)), chunk, chunk);
+      }
+    }
+  }
+  c.fillStyle = 'rgba(255,255,255,.28)';
+  const hr = Math.max(chunk, Math.round(r * 0.35));
+  for (let y = -hr; y <= 0; y += chunk) {
+    for (let x = -hr; x <= 0; x += chunk) {
+      if (x * x + y * y <= hr * hr) {
+        c.fillRect(
+          Math.round(cx + x - r * 0.25 - (chunk >> 1)),
+          Math.round(cy + y - r * 0.25 - (chunk >> 1)),
+          chunk, chunk
+        );
+      }
+    }
+  }
+  c.globalAlpha = a0;
+  c.imageSmoothingEnabled = prev;
 }
 
 /* --- src/render/tide-art.js --- */
@@ -21275,13 +21335,24 @@ class Game {
     c.save();
     const j = Input.joy;
     const jx = j.active ? j.ox : (Input.joyHome?.x || 110), jy = j.active ? j.oy : (Input.joyHome?.y || H - 110);
-    c.globalAlpha = j.active ? 0.5 : 0.22;
-    c.strokeStyle = '#fff'; c.lineWidth = 3;
-    c.beginPath(); c.arc(jx, jy, joyOuter, 0, TAU); c.stroke();
-    drawJoyAimGuide(c, jx, jy, j, ui, '#7cf5ff');
-    c.globalAlpha = j.active ? 0.65 : 0.3;
-    c.fillStyle = '#fff';
-    c.beginPath(); c.arc(jx + (j.active ? j.dx : 0), jy + (j.active ? j.dy : 0), joyInner, 0, TAU); c.fill();
+    // d20 #19 — pixel ring + knob (was smooth arcs)
+    if (typeof drawPixelJoyRing === 'function') {
+      drawPixelJoyRing(c, jx, jy, joyOuter, '#e8ecf2', j.active ? 0.48 : 0.22, Math.max(3, Math.round(4 * ui)));
+    } else {
+      c.globalAlpha = j.active ? 0.5 : 0.22;
+      c.strokeStyle = '#fff'; c.lineWidth = 3;
+      c.beginPath(); c.arc(jx, jy, joyOuter, 0, TAU); c.stroke();
+    }
+    drawJoyAimGuide(c, jx, jy, j, ui, '#7a9aaa');
+    const kx = jx + (j.active ? j.dx : 0);
+    const ky = jy + (j.active ? j.dy : 0);
+    if (typeof drawPixelJoyKnob === 'function') {
+      drawPixelJoyKnob(c, kx, ky, joyInner, '#d8dde4', j.active ? 0.62 : 0.28);
+    } else {
+      c.globalAlpha = j.active ? 0.65 : 0.3;
+      c.fillStyle = '#fff';
+      c.beginPath(); c.arc(kx, ky, joyInner, 0, TAU); c.fill();
+    }
     if (this.player) {
       drawPlayerAimIndicator(c, this.player, j.active ? 0.62 : 0.28);
     }
@@ -21320,15 +21391,26 @@ class Game {
     const joyInner = Math.round(22 * ui);
     const j = pad.joy;
     const jx = j.active ? j.ox : pad.joyHome.x, jy = j.active ? j.oy : pad.joyHome.y;
-    c.globalAlpha = 0.35;
-    c.strokeStyle = accent;
-    c.lineWidth = 3;
-    c.beginPath(); c.arc(jx, jy, joyOuter, 0, TAU); c.stroke();
+    if (typeof drawPixelJoyRing === 'function') {
+      drawPixelJoyRing(c, jx, jy, joyOuter, accent, j.active ? 0.42 : 0.28, Math.max(3, Math.round(3.5 * ui)));
+    } else {
+      c.globalAlpha = 0.35;
+      c.strokeStyle = accent;
+      c.lineWidth = 3;
+      c.beginPath(); c.arc(jx, jy, joyOuter, 0, TAU); c.stroke();
+    }
     drawJoyAimGuide(c, jx, jy, j, ui, accent);
-    c.globalAlpha = j.active ? 0.55 : 0.25;
-    c.fillStyle = accent;
-    c.beginPath(); c.arc(jx + (j.active ? j.dx : 0), jy + (j.active ? j.dy : 0), joyInner, 0, TAU); c.fill();
+    const kx = jx + (j.active ? j.dx : 0);
+    const ky = jy + (j.active ? j.dy : 0);
+    if (typeof drawPixelJoyKnob === 'function') {
+      drawPixelJoyKnob(c, kx, ky, joyInner, accent, j.active ? 0.52 : 0.26);
+    } else {
+      c.globalAlpha = j.active ? 0.55 : 0.25;
+      c.fillStyle = accent;
+      c.beginPath(); c.arc(kx, ky, joyInner, 0, TAU); c.fill();
+    }
     if (fighter) drawPlayerAimIndicator(c, fighter, j.active ? 0.55 : 0.24);
+    c.globalAlpha = 0.75;
     c.font = '900 11px sans-serif'; c.fillStyle = accent; c.textAlign = 'center';
     c.fillText(label, jx, jy - 58);
     for (const b of pad.buttons) {

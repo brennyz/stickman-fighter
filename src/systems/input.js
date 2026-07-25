@@ -43,42 +43,38 @@ function aimVisualColor(ny) {
 
 function drawJoyAimGuide(c, jx, jy, j, ui, accent) {
   const outer = Math.round(48 * ui);
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
   c.save();
-  c.globalAlpha = j.active ? 0.44 : 0.2;
-  c.strokeStyle = accent || '#fff';
-  c.lineWidth = 2;
-  c.beginPath();
-  c.moveTo(jx, jy - outer + 6);
-  c.lineTo(jx - 6, jy - outer + 16);
-  c.lineTo(jx + 6, jy - outer + 16);
-  c.closePath();
-  c.stroke();
-  c.beginPath();
-  c.moveTo(jx, jy + outer - 6);
-  c.lineTo(jx - 6, jy + outer - 16);
-  c.lineTo(jx + 6, jy + outer - 16);
-  c.closePath();
-  c.stroke();
-  const barX = jx + outer + Math.round(8 * ui);
+  c.globalAlpha = j.active ? 0.4 : 0.18;
+  c.fillStyle = accent || '#aab4cc';
+  const px = Math.max(2, Math.round(2 * ui));
+  // Pixel chevrons N/S
+  const tipN = jy - outer + 4;
+  c.fillRect(Math.round(jx - px), Math.round(tipN), px * 2, px);
+  c.fillRect(Math.round(jx - px * 2), Math.round(tipN + px), px * 4, px);
+  c.fillRect(Math.round(jx - px * 3), Math.round(tipN + px * 2), px * 6, px);
+  const tipS = jy + outer - 4;
+  c.fillRect(Math.round(jx - px * 3), Math.round(tipS - px * 3), px * 6, px);
+  c.fillRect(Math.round(jx - px * 2), Math.round(tipS - px * 2), px * 4, px);
+  c.fillRect(Math.round(jx - px), Math.round(tipS - px), px * 2, px);
+  const barX = Math.round(jx + outer + Math.round(8 * ui));
   const barH = outer * 1.3;
-  c.globalAlpha = 0.26;
-  c.beginPath();
-  c.moveTo(barX, jy - barH / 2);
-  c.lineTo(barX, jy + barH / 2);
-  c.stroke();
-  c.fillStyle = '#aab4cc';
-  c.beginPath();
-  c.arc(barX, jy, 3, 0, TAU);
-  c.fill();
+  c.globalAlpha = 0.22;
+  for (let y = -barH / 2; y < barH / 2; y += px) {
+    c.fillRect(barX - (px >> 1), Math.round(jy + y), px, px);
+  }
+  c.fillStyle = '#9aa4b8';
+  c.fillRect(barX - px, Math.round(jy - px), px * 2, px * 2);
   if (j.active && Math.abs(j.dy) >= JOY_AIM_DEAD_PX) {
     const t = clamp(-j.dy / JOY_MAX_PX, -1, 1);
-    c.globalAlpha = 0.78;
+    c.globalAlpha = 0.75;
     c.fillStyle = aimVisualColor(-t);
-    c.beginPath();
-    c.arc(barX, jy - t * (barH / 2 - 4), 5, 0, TAU);
-    c.fill();
+    const ay = Math.round(jy - t * (barH / 2 - 4));
+    c.fillRect(barX - px * 2, ay - px, px * 4, px * 3);
   }
   c.restore();
+  c.imageSmoothingEnabled = prev;
 }
 
 function drawPlayerAimIndicator(c, fighter, alpha) {

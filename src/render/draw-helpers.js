@@ -571,3 +571,67 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
   c.restore();
 }
 
+/**
+ * d20 #19 — Chunky pixel joystick outer ring (forgotten gap vs smooth arcs).
+ */
+function drawPixelJoyRing(c, cx, cy, r, color, alpha, thickness) {
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  const a0 = c.globalAlpha;
+  c.globalAlpha = (alpha == null ? 1 : alpha) * a0;
+  const chunk = Math.max(2, Math.round(r / 14));
+  const thick = Math.max(chunk, Math.round(thickness || chunk * 1.5));
+  const n = Math.max(20, Math.round(r * 1.35));
+  c.fillStyle = color || '#fff';
+  for (let i = 0; i < n; i++) {
+    const ang = (i / n) * TAU;
+    for (let t = 0; t < thick; t += chunk) {
+      const rr = r - t;
+      const x = Math.round(cx + Math.cos(ang) * rr);
+      const y = Math.round(cy + Math.sin(ang) * rr);
+      c.fillRect(x - (chunk >> 1), y - (chunk >> 1), chunk, chunk);
+    }
+  }
+  const tick = Math.max(chunk + 1, Math.round(r * 0.12));
+  const inset = r - thick;
+  c.fillRect(Math.round(cx - (chunk >> 1)), Math.round(cy - r - 1), chunk, tick);
+  c.fillRect(Math.round(cx - (chunk >> 1)), Math.round(cy + inset), chunk, tick);
+  c.fillRect(Math.round(cx - r - 1), Math.round(cy - (chunk >> 1)), tick, chunk);
+  c.fillRect(Math.round(cx + inset), Math.round(cy - (chunk >> 1)), tick, chunk);
+  c.globalAlpha = a0;
+  c.imageSmoothingEnabled = prev;
+}
+
+/** Chunky pixel joystick knob (filled disc). */
+function drawPixelJoyKnob(c, cx, cy, r, color, alpha) {
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  const a0 = c.globalAlpha;
+  c.globalAlpha = (alpha == null ? 1 : alpha) * a0;
+  const chunk = Math.max(2, Math.round(r / 5.5));
+  const r2 = r * r;
+  c.fillStyle = color || '#fff';
+  for (let y = -r; y <= r; y += chunk) {
+    for (let x = -r; x <= r; x += chunk) {
+      if (x * x + y * y <= r2) {
+        c.fillRect(Math.round(cx + x - (chunk >> 1)), Math.round(cy + y - (chunk >> 1)), chunk, chunk);
+      }
+    }
+  }
+  c.fillStyle = 'rgba(255,255,255,.28)';
+  const hr = Math.max(chunk, Math.round(r * 0.35));
+  for (let y = -hr; y <= 0; y += chunk) {
+    for (let x = -hr; x <= 0; x += chunk) {
+      if (x * x + y * y <= hr * hr) {
+        c.fillRect(
+          Math.round(cx + x - r * 0.25 - (chunk >> 1)),
+          Math.round(cy + y - r * 0.25 - (chunk >> 1)),
+          chunk, chunk
+        );
+      }
+    }
+  }
+  c.globalAlpha = a0;
+  c.imageSmoothingEnabled = prev;
+}
+
