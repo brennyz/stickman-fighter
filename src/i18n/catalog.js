@@ -172,6 +172,7 @@ function seedNlGameStrings() {
     skillUnlock: 'Nieuwe skill: {name}!',
     skillEquipped: '{name} uitgerust als special',
     superEquipped: '{name} uitgerust als nood-super',
+    superUnlock: 'Nieuwe nood-super: {name}!',
     welcome: 'Welkom! Menu → Tips · per modus één korte hint bovenin (geen toast-stapel)',
   });
   if (!I18N.nl.missionsUi) I18N.nl.missionsUi = {};
@@ -335,6 +336,11 @@ function seedNlGameStrings() {
     superNextUnlock: 'Volgende super: <b>{name}</b> op Lv {lvl} · nog {need} level(s)',
     superNextUnlockSoon: 'Volgende super: <b>{name}</b> (Lv {lvl}) — bijna klaar',
     superNextIsland: 'Volgende super: <b>{name}</b> — eiland-gate tot Lv {cap} in avontuur',
+    superStat_pow: 'Kracht',
+    superStat_rad: 'Radius',
+    superStat_cd: 'Cooldown',
+    superStat_charge: 'Laden',
+    superHudCd: 'Nood-super {n}s',
     weaponHead: 'Wapens',
     weaponSub: 'Summons zijn echt · eiland-skill gate: alleen wapens tot je huidige eiland-cap in avontuur',
     helpFirstMinute: 'Eerste minuut — per modus één korte hint bovenin het gevecht (geen toast-stapel). Avontuur: joystick + knoppen · groen = HP · vol chakra = SUPER-knop. Training = Robot · Muur = combo · 2 spelers = links/rechts.',
@@ -438,6 +444,29 @@ function seedNlFromRuntime() {
         fighter: { blurb: 'Street stretch — Gum-Gum dash & Gear Second steam.' },
         cape: { blurb: 'Hero specials — Thunder Palm & Serious Series.' },
         dawn: { blurb: 'Dawn palm — solar orbs & lunar pull control.' },
+      },
+    });
+  }
+  if (typeof SUPERS !== 'undefined') {
+    if (!I18N.nl.super) I18N.nl.super = {};
+    for (const s of SUPERS) {
+      I18N.nl.super[s.id] = {
+        name: s.name, hint: s.hint, tooltip: s.tooltip, bonus: s.bonus,
+        charge: s.chargeBanner, finish: s.finishBanner,
+      };
+    }
+    Object.assign(I18N.nl.super, {
+      behavior: {
+        blast: 'Blast', shield: 'Schild', heal: 'Heal', sharingan: 'Genjutsu',
+        lightning: 'Bliksem', meteor: 'Meteor', rage: 'Rage', timestop: 'Tijd',
+        clones: 'Clones', void: 'Void',
+      },
+      stat: { pow: 'Kracht', rad: 'Radius', cd: 'Cooldown', charge: 'Laden' },
+      tag: {
+        blast: 'Blast', knockback: 'Knockback', defense: 'Verdediging', push: 'Push',
+        heal: 'Heal', genjutsu: 'Genjutsu', pull: 'Pull', slow: 'Slow',
+        lightning: 'Bliksem', 'multi-hit': 'Multi-hit', meteor: 'Meteor', zone: 'Zone',
+        buff: 'Buff', freeze: 'Freeze', burst: 'Burst', rush: 'Rush', void: 'Void',
       },
     });
   }
@@ -677,6 +706,7 @@ const CATALOG_EN = {
     skillUnlock: 'New skill: {name}!',
     skillEquipped: '{name} equipped as special',
     superEquipped: '{name} equipped as emergency super',
+    superUnlock: 'New emergency super: {name}!',
   },
   missionsUi: {
     flowDone: '✓ Day complete — 3 new missions tomorrow (midnight)',
@@ -806,6 +836,11 @@ const CATALOG_EN = {
     superNextUnlock: 'Next super: <b>{name}</b> at Lv {lvl} · {need} level(s) to go',
     superNextUnlockSoon: 'Next super: <b>{name}</b> (Lv {lvl}) — almost ready',
     superNextIsland: 'Next super: <b>{name}</b> — island gate until Lv {cap} in adventure',
+    superStat_pow: 'Power',
+    superStat_rad: 'Radius',
+    superStat_cd: 'Cooldown',
+    superStat_charge: 'Charge',
+    superHudCd: 'Emergency super {n}s',
     weaponHead: 'Weapons',
     weaponSub: 'Summons are real · island skill gate: adventure weapons up to your island cap',
     helpFirstMinute: 'First minute — one short hint per mode at top (no toast stack). Adventure: joystick + buttons · green = HP · full chakra = SUPER. Training = Robot · Wall = combo · 2P = left/right.',
@@ -847,6 +882,20 @@ const CATALOG_EN = {
       fighter: { blurb: 'Street stretch — Gum-Gum dash & Gear Second steam.' },
       cape: { blurb: 'Hero specials — Thunder Palm & Serious Series.' },
       dawn: { blurb: 'Dawn palm — solar orbs & lunar pull control.' },
+    },
+  },
+  super: {
+    behavior: {
+      blast: 'Blast', shield: 'Shield', heal: 'Heal', sharingan: 'Genjutsu',
+      lightning: 'Lightning', meteor: 'Meteor', rage: 'Rage', timestop: 'Time',
+      clones: 'Clones', void: 'Void',
+    },
+    stat: { pow: 'Power', rad: 'Radius', cd: 'Cooldown', charge: 'Charge' },
+    tag: {
+      blast: 'Blast', knockback: 'Knockback', defense: 'Defense', push: 'Push',
+      heal: 'Heal', genjutsu: 'Genjutsu', pull: 'Pull', slow: 'Slow',
+      lightning: 'Lightning', 'multi-hit': 'Multi-hit', meteor: 'Meteor', zone: 'Zone',
+      buff: 'Buff', freeze: 'Freeze', burst: 'Burst', rush: 'Rush', void: 'Void',
     },
   },
   pet: {

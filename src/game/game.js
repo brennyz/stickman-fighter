@@ -112,6 +112,8 @@ class Game {
     this.ketsbamChargeT = 0;
     this.ketsbamChargeDur = 0;
     this.ketsbamChargePulse = 0;
+    this.superFx = [];
+    this._superBoltSeg = [];
     applyGambleToStage(this, gamble);
     this.banner(t('banner.levelStart', { n }), 1.4, '#ffd75e', 54);
     if (masterBuffActive(n)) {
@@ -1223,6 +1225,8 @@ class Game {
       if (newStyle) UI.toast(t('toast.styleUnlock', { name: styleLabel(newStyle) }), 3500);
       const newSkill = SKILLS.find(s => s.needLvl === save.lvl && skillUnlocked(s));
       if (newSkill) UI.toast(t('toast.skillUnlock', { name: skillLabel(newSkill) }), 3500);
+      const newSuper = SUPERS.find(s => s.needLvl === save.lvl && superUnlocked(s));
+      if (newSuper) UI.toast(t('toast.superUnlock', { name: superLabel(newSuper) }), 3500);
     }
     persist();
   }
@@ -1541,14 +1545,17 @@ class Game {
       this.ketsbamChargeAcc = (this.ketsbamChargeAcc || 0) + dt;
       const dur = this.ketsbamChargeDur || KETSBAM_CHARGE_DUR;
       const prog = 1 - this.ketsbamChargeT / dur;
+      const chargeSp = equippedSuper();
+      const cCol = chargeSp.color || '#ffd75e';
+      const cCol2 = chargeSp.color2 || '#ff9a3d';
       if (this.ketsbamChargeAcc >= 0.07 && !motionReduced()) {
         this.ketsbamChargeAcc = 0;
         const px = this.player.x;
         const py = this.player.y - 50;
-        this.burst(px + rand(-20, 20), py + rand(-30, 10), prog > 0.6 ? '#fff8dc' : '#ffd75e',
+        this.burst(px + rand(-20, 20), py + rand(-30, 10), prog > 0.6 ? '#fff8dc' : cCol,
           fxLite() ? 2 : 4, { kind: 'spark', size: 2 + prog * 2 });
         if (prog > 0.45 && !fxLite()) {
-          this.burst(px, this.player.y + 2, '#ff9a3d', 2, { kind: 'ring' });
+          this.burst(px, this.player.y + 2, cCol2, 2, { kind: 'ring' });
         }
       }
       if (this.ketsbamChargeT <= 0 && this.player?.alive) this.player.finishKetsbam(this);
@@ -1572,6 +1579,7 @@ class Game {
 
     for (const m of this.monsters) m.update(dt, this);
     this.monsters = this.monsters.filter(m => m.alive || m.deadT < 1);
+    if (this.mode === 'adventure') tickSuperFx(this, dt);
 
     // projectielen
     for (const p of this.projectiles) {
@@ -1862,6 +1870,7 @@ class Game {
     if (this.p2) this.p2.draw(c);
     if (this.eggPet) this.eggPet.draw(c);
     if (this.pet) this.pet.draw(c);
+    if (this.mode === 'adventure') drawSuperShieldBubble(this, c, this.player);
     this.player.draw(c);
 
     // projectielen
@@ -1955,6 +1964,7 @@ class Game {
     c.restore();
 
     this.drawChakraReadyFx(c);
+    if (this.mode === 'adventure') drawSuperFxLayer(this, c);
     if (this.mode === 'adventure') this.drawKetsbamChargeAura(c);
 
     this.drawHUD(c);
@@ -2707,6 +2717,20 @@ class Game {
       }
       const wFam = weaponMoveFamily(p.weapon.id);
       if (wFam) drawWeaponStylePips(c, bx + 10, by + 38, p);
+      const eqSp = equippedSuper();
+      c.save();
+      c.translate(bx + 6, by + 44);
+      c.scale(0.19, 0.19);
+      drawSuperIcon(c, eqSp.icon || 'star', 16, eqSp.color, eqSp.color2);
+      c.restore();
+      c.font = '700 9px -apple-system,sans-serif';
+      c.fillStyle = eqSp.color;
+      c.textAlign = 'left';
+      c.fillText(superLabel(eqSp), bx + 16, by + 48);
+      if (this.ketsbamCd > 0) {
+        c.fillStyle = 'rgba(255,255,255,.62)';
+        c.fillText(Math.ceil(this.ketsbamCd) + 's', bx + bw - 20, by + 48);
+      }
     }
 
     c.textAlign = 'center';

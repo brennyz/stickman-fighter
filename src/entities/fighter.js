@@ -156,7 +156,7 @@ class Fighter {
     const sp = equippedSuper();
     const chargeDur = superChargeDur(sp);
 
-    game.ketsbamCd = KETSBAM_CD;
+    game.ketsbamCd = superCooldown(sp);
     game.ketsbamSuperT = KETSBAM_SUPER_ARMOR + chargeDur;
     game.ketsbamShow = false;
     game.ketsbamChargeT = chargeDur;

@@ -269,14 +269,30 @@ function updateSuperPreview() {
       ? `<span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.superActive')}</span>`
       : `<button type="button" class="btn mode-btn b-skills" id="superEquipBtn" style="min-height:44px;padding:10px 18px">${t('ui.superEquipBtn')}</button>`)
     : `<span class="skill-preview-lock">${lockLine}</span>`;
+  const statLabels = {
+    pow: t('super.stat.pow'),
+    rad: t('super.stat.rad'),
+    cd: t('super.stat.cd'),
+    charge: t('super.stat.charge'),
+  };
+  const statRows = superStatRows(sp).map(row =>
+    `<div class="skill-stat-row">${statLabels[row.key] || row.key}
+      <span class="skill-stat-val">${row.text}</span>
+      <span class="skill-stat-track"><i style="width:${Math.round(row.pct * 100)}%;background:${sp.color}"></i></span></div>`
+  ).join('');
+  const tags = superTags(sp).map(tag =>
+    `<span class="skill-tag" style="border-color:${sp.color}66;color:${sp.color}">${tag}</span>`
+  ).join('');
   host.innerHTML =
     `<div class="skill-preview-top">` +
     `<div class="skill-preview-orb"><canvas id="superPreviewCanvas" width="88" height="88"></canvas></div>` +
     `<div class="skill-preview-body">` +
     `<div class="skill-preview-name" style="color:${sp.color}">${superLabel(sp)}</div>` +
-    `<div class="skill-preview-banner">${sp.finishBanner || ''} · ${superCombatLine(sp)}</div>` +
+    `<div class="skill-preview-banner">${superFinishBanner(sp)} · ${superBehaviorLabelI18n(sp)}</div>` +
+    `<div class="skill-tag-row">${tags}</div>` +
     `<div class="skill-preview-tip">${superLabel(sp, 'tooltip') || superCombatLine(sp)}</div>` +
     `</div></div>` +
+    `<div class="skill-stat-grid">${statRows}</div>` +
     `<div class="skill-preview-foot">${foot}</div>`;
   const cv = document.getElementById('superPreviewCanvas');
   if (cv) {
@@ -349,7 +365,7 @@ function renderSupers() {
     const beh = document.createElement('div');
     beh.className = 'skill-beh-badge';
     beh.style.color = sp.color;
-    beh.textContent = (sp.behavior || 'blast').toUpperCase() + ' · Lv ' + (sp.needLvl || 1);
+    beh.textContent = superBehaviorLabelI18n(sp) + ' · Lv ' + (sp.needLvl || 1);
     el.appendChild(beh);
     const bonus = document.createElement('div');
     bonus.style.fontSize = '11px';
@@ -1267,6 +1283,7 @@ const UI = {
       profileEl.innerHTML =
         `<span class="prof-row"><b>Lv ${save.lvl}</b><span>${weaponLabel(w)}</span>` +
         `<span style="color:${(skillById(save.skill || 'rasengan').color)}">${skillLabel(skillById(save.skill || 'rasengan'))}</span>` +
+        `<span style="color:${equippedSuper().color}">${superLabel(equippedSuper())}</span>` +
         `<span style="color:${st.accent}">${styleLabel(st)}</span></span>` +
         `<span style="display:block;margin-top:3px;opacity:.82;font-size:11px">${adventureProgressLine()}</span>` +
         `<span class="prof-xp" aria-hidden="true"><span style="width:${pct}%"></span></span>` +

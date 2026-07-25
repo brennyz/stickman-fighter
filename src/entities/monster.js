@@ -49,7 +49,9 @@ class Monster {
     const dx = p.x - this.x, dir = Math.sign(dx) || 1, dist = Math.abs(dx);
     this.face = dir;
     this.atkCD -= dt; this.shootCD -= dt;
-    const spdMul = this.enraged ? 1.32 : 1;
+    if (this.superSlowT > 0) this.superSlowT -= dt;
+    const genjutsuMul = (this.superSlowT > 0) ? (this.superSlowMul || 0.25) : 1;
+    const spdMul = (this.enraged ? 1.32 : 1) * genjutsuMul;
     const type = this.sp.type;
 
     if (type === 'hop') {
@@ -203,6 +205,18 @@ class Monster {
         c.ellipse(0, 0, this.size * 1.9 * pulse, this.size * 1.5 * pulse, 0, 0, TAU);
         c.fill();
       }
+      c.restore();
+    }
+    if (this.superSlowT > 0 && this.alive && !motionReduced()) {
+      c.save();
+      c.globalAlpha = 0.35 + Math.sin(this.t * 9) * 0.12;
+      c.strokeStyle = '#c47aff';
+      c.lineWidth = 2;
+      c.setLineDash([4, 5]);
+      c.beginPath();
+      c.arc(0, -this.size * 0.35, this.size * 0.55, 0, TAU);
+      c.stroke();
+      c.setLineDash([]);
       c.restore();
     }
     if (rar.order >= 2 && this.alive) {
