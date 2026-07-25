@@ -3,9 +3,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.65';
+const APP_VERSION = '1.17.66';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 191;
+const SW_CACHE_REV = 192;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -428,7 +428,7 @@ function loadSave() {
 
 function readSaveJson(raw) {
   try {
-    if (!raw || raw.length > 200000) return null;
+    if (!raw || raw.length > 180000) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
     const merged = Object.assign({}, DEFAULT_SAVE, parsed);
@@ -439,6 +439,9 @@ function readSaveJson(raw) {
     merged.summons = Object.assign({}, parsed.summons || {});
     merged.pets = Object.assign({}, parsed.pets || {});
     merged.eggPets = Object.assign({}, parsed.eggPets || {});
+    merged.weaponMastery = Object.assign({}, DEFAULT_SAVE.weaponMastery || {}, parsed.weaponMastery || {});
+    merged.tipsSeen = Object.assign({}, parsed.tipsSeen || {});
+    merged.advFails = Object.assign({}, parsed.advFails || {});
     if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
     if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;

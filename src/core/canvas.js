@@ -1,6 +1,9 @@
 /* ============================== CANVAS ================================= */
 const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
+const ctx = canvas ? canvas.getContext('2d') : null;
+if (!canvas || !ctx) {
+  try { sfReportError('canvas', new Error('2d context unavailable')); } catch (_) {}
+}
 let W = innerWidth, H = innerHeight, DPR = 1;
 let resizeDebounce = null;
 let lastResizeKey = '';

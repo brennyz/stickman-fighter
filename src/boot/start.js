@@ -9,6 +9,8 @@ function startGame(mode, opts) {
     return;
   }
   window.__sfLoopErr = false;
+  try { Input.releaseAll(); } catch (_) {}
+  Input.dualMode = false;
   try { dismissTunnelOverlayIfStatic(); } catch (_) {}
   if (mode === 'versus') {
     try {

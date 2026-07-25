@@ -113,7 +113,7 @@ function todayKey() {
 }
 function ensureDaily() {
   const dk = todayKey();
-  if (!save.daily || save.daily.date !== dk) {
+  if (!save.daily || save.daily.date !== dk || !Array.isArray(save.daily.tasks) || !save.daily.tasks.length) {
     const order = [...DAILY_DEFS].sort((a, b) => {
       const h = (s) => { let x = 0; for (let i = 0; i < s.length; i++) x = (x * 33 + s.charCodeAt(i)) | 0; return x; };
       return h(dk + a.id) - h(dk + b.id);
@@ -876,6 +876,13 @@ function recoverToMenu() {
   }
 }
 function importSaveJson(text) {
+  if (state === 'play' || state === 'pause') {
+    try { recoverToMenu(); } catch (_) {
+      game = null;
+      state = 'menu';
+      try { syncPlayLayer(); } catch (_) {}
+    }
+  }
   const { save: next, warnings } = previewImportSave(text);
   save = next;
   if (!persistOrToast('import')) throw new Error('Import gelukt maar opslaan mislukt — probeer opnieuw');

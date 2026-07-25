@@ -459,6 +459,7 @@ const UI = {
 
   goMenu() {
     try {
+      try { Input.releaseAll(); } catch (_) {}
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
@@ -477,6 +478,7 @@ const UI = {
       if (window.StickInstall) window.StickInstall.refreshMenuButton();
     } catch (err) {
       sfReportError('goMenu', err, 'Kon menu niet openen — herlaad de pagina');
+      try { Input.releaseAll(); } catch (_) {}
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
@@ -796,14 +798,16 @@ const UI = {
   },
 
   renderMenu() {
+    try {
     this.syncTouchClass();
     const need = xpNeed(save.lvl);
     const w = weaponById(save.weapon);
     const st = styleById(save.style || 'classic');
     const pct = Math.round(save.xp / need * 100);
     ensureDaily();
+    const dailyTasks = (save.daily && Array.isArray(save.daily.tasks)) ? save.daily.tasks : [];
     const readyClaim = claimableDailyTasks().length;
-    const bonusReady = save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed;
+    const bonusReady = dailyTasks.length > 0 && dailyTasks.every(t => t.claimed) && !save.daily.dayBonusClaimed;
     const missAlert = readyClaim > 0 || bonusReady;
     const profileEl = document.getElementById('menuProfileBar');
     if (profileEl) {
@@ -887,6 +891,9 @@ const UI = {
         }).catch(() => {});
       }
     }
+    } catch (err) {
+      sfReportError('renderMenu', err, 'Menu kon niet ververst worden');
+    }
   },
 
   renderMissions() {
@@ -894,7 +901,7 @@ const UI = {
     const dailyHost = document.getElementById('dailyList');
     const achHost = document.getElementById('achList');
     if (!dailyHost || !achHost) return;
-    const tasks = save.daily.tasks;
+    const tasks = (save.daily && Array.isArray(save.daily.tasks)) ? save.daily.tasks : [];
     const readyN = tasks.filter(t => t.done && !t.claimed).length;
     const claimedN = tasks.filter(t => t.claimed).length;
     const doneN = tasks.filter(t => t.done).length;

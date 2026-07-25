@@ -909,7 +909,7 @@ class Game {
         else this.startVsRound();
       }
     }
-    this.p2.update(dt, this);
+    if (this.p2) this.p2.update(dt, this);
   }
 
   finishVersus(p1Win) {
@@ -1540,6 +1540,7 @@ class Game {
     if (this.hint > 0) this.hint -= dt;
     this.shakeT = Math.max(0, this.shakeT - dt);
 
+    if (!this.player) return;
     this.player.update(dt, this);
     if (this.pet) this.pet.update(dt);
     if (this.eggPet) this.eggPet.update(dt);

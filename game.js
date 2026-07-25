@@ -133,9 +133,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.65';
+const APP_VERSION = '1.17.66';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 191;
+const SW_CACHE_REV = 192;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -558,7 +558,7 @@ function loadSave() {
 
 function readSaveJson(raw) {
   try {
-    if (!raw || raw.length > 200000) return null;
+    if (!raw || raw.length > 180000) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
     const merged = Object.assign({}, DEFAULT_SAVE, parsed);
@@ -569,6 +569,9 @@ function readSaveJson(raw) {
     merged.summons = Object.assign({}, parsed.summons || {});
     merged.pets = Object.assign({}, parsed.pets || {});
     merged.eggPets = Object.assign({}, parsed.eggPets || {});
+    merged.weaponMastery = Object.assign({}, DEFAULT_SAVE.weaponMastery || {}, parsed.weaponMastery || {});
+    merged.tipsSeen = Object.assign({}, parsed.tipsSeen || {});
+    merged.advFails = Object.assign({}, parsed.advFails || {});
     if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
     if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;
@@ -1748,7 +1751,7 @@ function todayKey() {
 }
 function ensureDaily() {
   const dk = todayKey();
-  if (!save.daily || save.daily.date !== dk) {
+  if (!save.daily || save.daily.date !== dk || !Array.isArray(save.daily.tasks) || !save.daily.tasks.length) {
     const order = [...DAILY_DEFS].sort((a, b) => {
       const h = (s) => { let x = 0; for (let i = 0; i < s.length; i++) x = (x * 33 + s.charCodeAt(i)) | 0; return x; };
       return h(dk + a.id) - h(dk + b.id);
@@ -2511,6 +2514,13 @@ function recoverToMenu() {
   }
 }
 function importSaveJson(text) {
+  if (state === 'play' || state === 'pause') {
+    try { recoverToMenu(); } catch (_) {
+      game = null;
+      state = 'menu';
+      try { syncPlayLayer(); } catch (_) {}
+    }
+  }
   const { save: next, warnings } = previewImportSave(text);
   save = next;
   if (!persistOrToast('import')) throw new Error('Import gelukt maar opslaan mislukt — probeer opnieuw');
@@ -8364,7 +8374,10 @@ addEventListener('keyup', e => {
 /* --- src/core/canvas.js --- */
 /* ============================== CANVAS ================================= */
 const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
+const ctx = canvas ? canvas.getContext('2d') : null;
+if (!canvas || !ctx) {
+  try { sfReportError('canvas', new Error('2d context unavailable')); } catch (_) {}
+}
 let W = innerWidth, H = innerHeight, DPR = 1;
 let resizeDebounce = null;
 let lastResizeKey = '';
@@ -11822,7 +11835,7 @@ class Game {
         else this.startVsRound();
       }
     }
-    this.p2.update(dt, this);
+    if (this.p2) this.p2.update(dt, this);
   }
 
   finishVersus(p1Win) {
@@ -12453,6 +12466,7 @@ class Game {
     if (this.hint > 0) this.hint -= dt;
     this.shakeT = Math.max(0, this.shakeT - dt);
 
+    if (!this.player) return;
     this.player.update(dt, this);
     if (this.pet) this.pet.update(dt);
     if (this.eggPet) this.eggPet.update(dt);
@@ -14738,6 +14752,7 @@ const UI = {
 
   goMenu() {
     try {
+      try { Input.releaseAll(); } catch (_) {}
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
@@ -14756,6 +14771,7 @@ const UI = {
       if (window.StickInstall) window.StickInstall.refreshMenuButton();
     } catch (err) {
       sfReportError('goMenu', err, 'Kon menu niet openen — herlaad de pagina');
+      try { Input.releaseAll(); } catch (_) {}
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
@@ -15075,14 +15091,16 @@ const UI = {
   },
 
   renderMenu() {
+    try {
     this.syncTouchClass();
     const need = xpNeed(save.lvl);
     const w = weaponById(save.weapon);
     const st = styleById(save.style || 'classic');
     const pct = Math.round(save.xp / need * 100);
     ensureDaily();
+    const dailyTasks = (save.daily && Array.isArray(save.daily.tasks)) ? save.daily.tasks : [];
     const readyClaim = claimableDailyTasks().length;
-    const bonusReady = save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed;
+    const bonusReady = dailyTasks.length > 0 && dailyTasks.every(t => t.claimed) && !save.daily.dayBonusClaimed;
     const missAlert = readyClaim > 0 || bonusReady;
     const profileEl = document.getElementById('menuProfileBar');
     if (profileEl) {
@@ -15166,6 +15184,9 @@ const UI = {
         }).catch(() => {});
       }
     }
+    } catch (err) {
+      sfReportError('renderMenu', err, 'Menu kon niet ververst worden');
+    }
   },
 
   renderMissions() {
@@ -15173,7 +15194,7 @@ const UI = {
     const dailyHost = document.getElementById('dailyList');
     const achHost = document.getElementById('achList');
     if (!dailyHost || !achHost) return;
-    const tasks = save.daily.tasks;
+    const tasks = (save.daily && Array.isArray(save.daily.tasks)) ? save.daily.tasks : [];
     const readyN = tasks.filter(t => t.done && !t.claimed).length;
     const claimedN = tasks.filter(t => t.claimed).length;
     const doneN = tasks.filter(t => t.done).length;
@@ -16319,6 +16340,8 @@ function startGame(mode, opts) {
     return;
   }
   window.__sfLoopErr = false;
+  try { Input.releaseAll(); } catch (_) {}
+  Input.dualMode = false;
   try { dismissTunnelOverlayIfStatic(); } catch (_) {}
   if (mode === 'versus') {
     try {
@@ -17064,6 +17087,10 @@ function loop(now) {
       try { Input.endFrame(); } catch (frameErr) {
         sfReportError('input', frameErr);
       }
+    } else if (state === 'pause' && game) {
+      try { Input.endFrame(); } catch (frameErr) {
+        sfReportError('input', frameErr);
+      }
     } else if (Perf.menuLandingVisible()) {
       menuAnimT += dt;
       ensureMenuScreenActive();
@@ -17249,7 +17276,16 @@ function updateNetStatus(ev) {
 window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
 window.addEventListener('pageshow', (ev) => {
-  if (ev.persisted) updateNetStatus();
+  if (ev.persisted) {
+    try { Input.releaseAll(); } catch (_) {}
+    if (state === 'play' && game) {
+      state = 'pause';
+      try { AudioSys.setPaused(true); } catch (_) {}
+      try { UI.renderPauseToggles(); UI.show('pauseScreen'); } catch (_) {}
+    }
+    scheduleResize();
+  }
+  updateNetStatus(ev);
 });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') updateNetStatus();
