@@ -135,9 +135,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.84';
+const APP_VERSION = '1.17.85';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 202;
+const SW_CACHE_REV = 203;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -1770,6 +1770,25 @@ function drawMiniDie(c, x, y, s, color) {
     c.arc(x + dx, y + dy, pr, 0, TAU);
     c.fill();
   }
+  c.restore();
+}
+
+/** Mini-golf-icoon voor Tide bondgenoot-HUD. */
+function drawMiniWave(c, x, y, s, color) {
+  c.save();
+  c.strokeStyle = color;
+  c.lineWidth = Math.max(1.2, s * 0.14);
+  c.lineCap = 'round';
+  const w = s * 0.9;
+  c.beginPath();
+  c.moveTo(x - w, y);
+  c.bezierCurveTo(x - w * 0.55, y - s * 0.35, x - w * 0.15, y + s * 0.35, x, y);
+  c.bezierCurveTo(x + w * 0.15, y - s * 0.35, x + w * 0.55, y + s * 0.35, x + w, y);
+  c.stroke();
+  c.beginPath();
+  c.moveTo(x - w * 0.75, y + s * 0.22);
+  c.bezierCurveTo(x - w * 0.35, y - s * 0.12, x - w * 0.05, y + s * 0.42, x + w * 0.25, y + s * 0.22);
+  c.stroke();
   c.restore();
 }
 
@@ -5769,11 +5788,15 @@ function buildLevel(n) {
       list[Math.floor(Math.random() * list.length)].sp = weightedPick(flyPool, n);
       meta.trait = 'flyers';
       meta.label = 'Vliegers — mik omhoog!';
-    } else if (roll < 0.38) {
+    } else if (roll < 0.36) {
       meta.trait = 'rush';
       meta.spawnMul = 0.76;
-      meta.label = 'Rush-golf';
-    } else if (n >= 7 && roll < 0.52) {
+      meta.label = 'rush';
+    } else if (n >= 8 && roll < 0.48) {
+      meta.trait = 'tide';
+      meta.spawnMul = 0.84;
+      meta.label = 'tide';
+    } else if (n >= 7 && roll < 0.54) {
       const sp = weightedPick(pool, n);
       list.push({ sp, elite: true, giant: rollWaveGiant(n, true) });
       meta.trait = 'elite';
@@ -5798,10 +5821,17 @@ function buildLevel(n) {
 }
 
 const WAVE_TRAIT_BANNER = {
-  flyers: { text: 'VLIEGER-GOLF', color: '#c47aff', size: 40 },
-  rush: { text: 'RUSH-GOLF', color: '#ffb06a', size: 40 },
-  elite: { text: 'ELITE-GOLF', color: '#ffb0b8', size: 40 },
+  flyers: { key: 'banner.flyerWave', color: '#c47aff', size: 40 },
+  rush: { key: 'banner.rushWave', color: '#ffb06a', size: 40 },
+  elite: { key: 'banner.eliteTraitWave', color: '#ffb0b8', size: 40 },
+  tide: { key: 'banner.tideWave', color: '#6ee06e', size: 40 },
 };
+
+function waveTraitBanner(trait) {
+  const m = WAVE_TRAIT_BANNER[trait];
+  if (!m || typeof t !== 'function') return null;
+  return { text: t(m.key), color: m.color, size: m.size };
+}
 
 /** Avontuur: 2× d6 gok vóór level — super-baas of super-bondgenoot (alleen dit level). */
 const GAMBLE_ALLIES = {
@@ -5951,6 +5981,15 @@ function applyGambleToStage(game, g) {
     game.stageHealBetween = (ally.healBetweenWaves || 0) * pot;
     game.stageShieldPerWave = (ally.shieldStart || 0) * pot;
     game.stageCritBonus = (ally.critBonus || 0) * pot;
+    if (ally.id === 'tide' && game.level && game.level.waveMeta) {
+      const slots = game.level.waveMeta.map((m, i) => ({ m, i })).filter((x) => x.m.trait !== 'boss');
+      if (slots.length) {
+        const pick = slots[Math.floor(Math.random() * slots.length)];
+        pick.m.trait = 'tide';
+        pick.m.spawnMul = Math.min(pick.m.spawnMul || 1, 0.82);
+        pick.m.label = 'tide';
+      }
+    }
   }
 }
 
@@ -6123,6 +6162,10 @@ function seedNlGameStrings() {
     bossWave: 'BAAS-GOLF!',
     eliteWave: 'ELITE-GOLF',
     superBossWave: 'SUPER-BAAS GOLF',
+    flyerWave: 'VLIEGER-GOLF',
+    rushWave: 'RUSH-GOLF',
+    eliteTraitWave: 'ELITE-GOLF',
+    tideWave: 'TIDE-GOLF',
     waveClear: 'Golf gewist +{heal} HP',
     waveN: 'GOLF {n}/{total}',
     fight: 'VECHT!',
@@ -6208,6 +6251,9 @@ function seedNlGameStrings() {
     checkpoint: 'CHECKPOINT — DEEL {part}/3',
     allyHeal: '+{heal} bondgenoot',
     allyHit: '{name} −{dmg}',
+    tideAllyIntro: '{name} — tide-heal tussen golven',
+    tideHeal: '+{heal} tide · {name}',
+    tideTraitTip: 'Snelle tide-golf — bondgenoot-heal telt extra',
     gambleSuperBoss: 'Super-baas mogelijk golf {n}',
     allyHelps: '{name} helpt je!',
     masterBuffFloater: '5× verloren — HP, snelheid & schade ↑',
@@ -6695,6 +6741,7 @@ const CATALOG_EN = {
     levelUp: 'LEVEL UP! Lv {lvl}', newWeapon: 'New weapon: {name}!', masterBuff: 'MASTER BUFF +20%',
     masterSword: 'MASTER SWORD!',
     bossWave: 'BOSS WAVE!', eliteWave: 'ELITE WAVE', superBossWave: 'SUPER-BOSS WAVE',
+    flyerWave: 'FLYER WAVE', rushWave: 'RUSH WAVE', eliteTraitWave: 'ELITE WAVE', tideWave: 'TIDE WAVE',
     waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
     fight: 'FIGHT!', won: 'VICTORY!', lost: 'DEFEATED...',
     round: 'ROUND {n}', roundDecisive: 'ROUND {n} · decisive round', roundMatchPoint: 'ROUND {n} · match point',
@@ -6992,6 +7039,9 @@ const CATALOG_EN = {
     bossWaits: 'THE BOSS AWAITS…',
     checkpoint: 'CHECKPOINT — PART {part}/3',
     allyHeal: '+{heal} ally', allyHit: '{name} −{dmg}',
+    tideAllyIntro: '{name} — tide heal between waves',
+    tideHeal: '+{heal} tide · {name}',
+    tideTraitTip: 'Fast tide wave — ally heal counts extra',
     gambleSuperBoss: 'Super-boss possible wave {n}', allyHelps: '{name} helps you!',
     masterBuffFloater: '5× lost — HP, speed & damage ↑',
     skillGate: 'Island skill gate: max weapon Lv {cap}',
@@ -12329,7 +12379,10 @@ class Game {
       this.floater(W * 0.5, 100, t('combat.gambleSuperBoss', { n: this.gambleBossWave }), '#ffb0b8', 14);
     }
     if (this.stageAlly) {
-      this.floater(W * 0.5, 118, t('combat.allyHelps', { name: this.stageAlly.name }), this.stageAlly.color || '#7cf5ff', 15);
+      const intro = this.stageAlly.id === 'tide'
+        ? t('combat.tideAllyIntro', { name: this.stageAlly.name })
+        : t('combat.allyHelps', { name: this.stageAlly.name });
+      this.floater(W * 0.5, 118, intro, this.stageAlly.color || '#7cf5ff', 15);
     }
     this.allyAssistT = this.stageAlly ? 2.2 : 0;
     setTimeout(() => { try { if (!this.over) this.maybeRollMasterSword(); } catch (_) {} }, 900);
@@ -12415,11 +12468,19 @@ class Game {
       AudioSys.sfx('roar');
     } else {
       const meta = this.level.waveMeta && this.level.waveMeta[this.waveIdx];
-      const trait = meta && meta.trait && WAVE_TRAIT_BANNER[meta.trait];
+      const trait = meta && meta.trait && (typeof waveTraitBanner === 'function' ? waveTraitBanner(meta.trait) : null);
       if (trait) {
         this.banner(trait.text, 1.2, trait.color, trait.size);
         if (meta.trait === 'flyers') {
           try { this.floater(W * 0.5, 108, t('combat.aimUp'), '#c47aff', 13); } catch (_) {}
+        } else if (meta.trait === 'tide') {
+          try {
+            AudioSys.sfx('tideSurge');
+            this.floater(W * 0.5, 108, t('combat.tideTraitTip'), '#6ee06e', 13);
+            if (!fxLite() && this.player) {
+              this.burst(this.player.x, this.player.y - 40, '#6ee06e', 8, { kind: 'spark', size: 2.2 });
+            }
+          } catch (_) {}
         }
       } else {
         this.banner(t('banner.waveN', { n: this.waveIdx + 1, total: this.level.waves.length }), 1.1, '#cfe0ff', 38);
@@ -12514,7 +12575,8 @@ class Game {
     if (this.stageAlly && this.player && this.player.alive && this.monsters.some((m) => m.alive)) {
       this.allyAssistT = (this.allyAssistT || 0) - dt;
       if (this.allyAssistT <= 0) {
-        this.allyAssistT = this.stageAlly.id === 'dawn' ? 3.6 : 5;
+        const allyId = this.stageAlly.id;
+        this.allyAssistT = allyId === 'dawn' ? 3.6 : (allyId === 'tide' ? 4.2 : 5);
         const tgt = this.monsters.reduce((best, m) => {
           if (!m.alive) return best;
           const d = Math.abs(m.x - this.player.x);
@@ -12522,10 +12584,22 @@ class Game {
         }, null);
         if (tgt) {
           const dmg = Math.round(this.player.baseDmg * 0.38 * (this.stageDmgMul || 1));
-          tgt.takeDamage(dmg, Math.sign(tgt.x - this.player.x) * 140, this);
+          const kb = allyId === 'tide' ? 180 : 140;
+          tgt.takeDamage(dmg, Math.sign(tgt.x - this.player.x) * kb, this);
           this.floater(tgt.x, tgt.y - tgt.size - 22, t('combat.allyHit', { name: this.stageAlly.name, dmg }), this.stageAlly.color || '#7cf5ff', 12);
-          try { AudioSys.sfxAt(typeof jutsuSwooshSfx === 'function' ? jutsuSwooshSfx('rasengan') : 'skillSwoosh', tgt.x); } catch (_) {}
-          if (!fxLite()) this.burst(tgt.x, tgt.y - tgt.size * 0.4, this.stageAlly.color || '#7cf5ff', 6, { kind: 'spark', size: 2 });
+          try {
+            if (allyId === 'tide') {
+              AudioSys.sfxAt('tideSurge', tgt.x);
+              if (this.player) {
+                const micro = Math.max(1, Math.round(this.player.maxhp * 0.012));
+                this.player.hp = Math.min(this.player.maxhp, this.player.hp + micro);
+              }
+            } else {
+              AudioSys.sfxAt(typeof jutsuSwooshSfx === 'function' ? jutsuSwooshSfx('rasengan') : 'skillSwoosh', tgt.x);
+            }
+          } catch (_) {}
+          const burstN = allyId === 'tide' ? 9 : 6;
+          if (!fxLite()) this.burst(tgt.x, tgt.y - tgt.size * 0.4, this.stageAlly.color || '#7cf5ff', burstN, { kind: 'spark', size: 2 });
         }
       }
     }
@@ -12589,9 +12663,17 @@ class Game {
         if (this.stageHealBetween > 0) {
           const heal = Math.max(8, Math.round(this.player.maxhp * this.stageHealBetween));
           this.player.hp = Math.min(this.player.maxhp, this.player.hp + heal);
-          this.floater(this.player.x, this.player.y - 108, t('combat.allyHeal', { heal }), '#6ee06e', 14);
+          const allyName = this.stageAlly ? this.stageAlly.name : '';
+          const healMsg = this.stageAlly && this.stageAlly.id === 'tide'
+            ? t('combat.tideHeal', { heal, name: allyName })
+            : t('combat.allyHeal', { heal });
+          this.floater(this.player.x, this.player.y - 108, healMsg, '#6ee06e', 14);
           if (this.stageAlly && this.stageAlly.id === 'tide') {
             try { AudioSys.sfx('tideSurge'); } catch (_) {}
+            if (!fxLite() && this.player) {
+              this.burst(this.player.x, this.player.y - 52, '#6ee06e', 10, { kind: 'spark', size: 2.4 });
+              this.burst(this.player.x, this.player.y - 68, '#7cf5ff', 5, { kind: 'spark', size: 1.8 });
+            }
           }
         }
         try { AudioSys.sfx('waveClear'); } catch (_) {}
@@ -15063,7 +15145,11 @@ class Game {
           c.fillStyle = col;
           const txt = this.stageAlly.name;
           c.fillText(txt, W / 2 + 7, 62);
-          drawMiniDie(c, W / 2 - c.measureText(txt).width / 2 - 3, 58.5, 10, col);
+          if (this.stageAlly.id === 'tide' && typeof drawMiniWave === 'function') {
+            drawMiniWave(c, W / 2 - c.measureText(txt).width / 2 - 3, 58.5, 10, col);
+          } else {
+            drawMiniDie(c, W / 2 - c.measureText(txt).width / 2 - 3, 58.5, 10, col);
+          }
         } else if (this.eggPet && activeEggPetDef()) {
           c.font = '700 11px sans-serif';
           c.fillStyle = this.eggPet.def?.c1 || '#ffd75e';

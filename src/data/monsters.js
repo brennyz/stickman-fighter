@@ -290,11 +290,15 @@ function buildLevel(n) {
       list[Math.floor(Math.random() * list.length)].sp = weightedPick(flyPool, n);
       meta.trait = 'flyers';
       meta.label = 'Vliegers — mik omhoog!';
-    } else if (roll < 0.38) {
+    } else if (roll < 0.36) {
       meta.trait = 'rush';
       meta.spawnMul = 0.76;
-      meta.label = 'Rush-golf';
-    } else if (n >= 7 && roll < 0.52) {
+      meta.label = 'rush';
+    } else if (n >= 8 && roll < 0.48) {
+      meta.trait = 'tide';
+      meta.spawnMul = 0.84;
+      meta.label = 'tide';
+    } else if (n >= 7 && roll < 0.54) {
       const sp = weightedPick(pool, n);
       list.push({ sp, elite: true, giant: rollWaveGiant(n, true) });
       meta.trait = 'elite';
@@ -319,10 +323,17 @@ function buildLevel(n) {
 }
 
 const WAVE_TRAIT_BANNER = {
-  flyers: { text: 'VLIEGER-GOLF', color: '#c47aff', size: 40 },
-  rush: { text: 'RUSH-GOLF', color: '#ffb06a', size: 40 },
-  elite: { text: 'ELITE-GOLF', color: '#ffb0b8', size: 40 },
+  flyers: { key: 'banner.flyerWave', color: '#c47aff', size: 40 },
+  rush: { key: 'banner.rushWave', color: '#ffb06a', size: 40 },
+  elite: { key: 'banner.eliteTraitWave', color: '#ffb0b8', size: 40 },
+  tide: { key: 'banner.tideWave', color: '#6ee06e', size: 40 },
 };
+
+function waveTraitBanner(trait) {
+  const m = WAVE_TRAIT_BANNER[trait];
+  if (!m || typeof t !== 'function') return null;
+  return { text: t(m.key), color: m.color, size: m.size };
+}
 
 /** Avontuur: 2× d6 gok vóór level — super-baas of super-bondgenoot (alleen dit level). */
 const GAMBLE_ALLIES = {
@@ -472,6 +483,15 @@ function applyGambleToStage(game, g) {
     game.stageHealBetween = (ally.healBetweenWaves || 0) * pot;
     game.stageShieldPerWave = (ally.shieldStart || 0) * pot;
     game.stageCritBonus = (ally.critBonus || 0) * pot;
+    if (ally.id === 'tide' && game.level && game.level.waveMeta) {
+      const slots = game.level.waveMeta.map((m, i) => ({ m, i })).filter((x) => x.m.trait !== 'boss');
+      if (slots.length) {
+        const pick = slots[Math.floor(Math.random() * slots.length)];
+        pick.m.trait = 'tide';
+        pick.m.spawnMul = Math.min(pick.m.spawnMul || 1, 0.82);
+        pick.m.label = 'tide';
+      }
+    }
   }
 }
 

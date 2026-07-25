@@ -107,3 +107,22 @@ function drawMiniDie(c, x, y, s, color) {
   c.restore();
 }
 
+/** Mini-golf-icoon voor Tide bondgenoot-HUD. */
+function drawMiniWave(c, x, y, s, color) {
+  c.save();
+  c.strokeStyle = color;
+  c.lineWidth = Math.max(1.2, s * 0.14);
+  c.lineCap = 'round';
+  const w = s * 0.9;
+  c.beginPath();
+  c.moveTo(x - w, y);
+  c.bezierCurveTo(x - w * 0.55, y - s * 0.35, x - w * 0.15, y + s * 0.35, x, y);
+  c.bezierCurveTo(x + w * 0.15, y - s * 0.35, x + w * 0.55, y + s * 0.35, x + w, y);
+  c.stroke();
+  c.beginPath();
+  c.moveTo(x - w * 0.75, y + s * 0.22);
+  c.bezierCurveTo(x - w * 0.35, y - s * 0.12, x - w * 0.05, y + s * 0.42, x + w * 0.25, y + s * 0.22);
+  c.stroke();
+  c.restore();
+}
+
