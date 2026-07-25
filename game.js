@@ -243,7 +243,7 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.70';
+const APP_VERSION = '1.17.85';
 /** Keep in sync with sw.js CACHE suffix */
 const SW_CACHE_REV = 196;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
@@ -6016,7 +6016,9 @@ const KETSBAM_DETECT_R = 148;
 const KETSBAM_NEAR_MIN = 3;
 const KETSBAM_BLAST_R = 192;
 const KETSBAM_CD = 9;
-const KETSBAM_CHARGE_DUR = 2;
+/** Langzamer opladen vóór KETS-BAM (thermometer boven jutsu-knop). */
+const KETSBAM_BUILD_DUR = 3.8;
+const KETSBAM_CHARGE_DUR = 3.4;
 const KETSBAM_INVULN = 1.15;
 const KETSBAM_SUPER_ARMOR = 0.95;
 /** Top-10 baas-golven: flagship bazen overleven minstens 3s. */
@@ -9796,16 +9798,39 @@ function pointerGameCoords(clientX, clientY) {
   };
 }
 
-function ketsbamPromptCenter() {
-  return { cx: W * 0.5, cy: H * 0.46 };
+function specialTouchBtn(pad) {
+  const buttons = pad?.buttons || Input.buttons || [];
+  for (const b of buttons) if (b.id === 'special') return b;
+  return null;
+}
+
+function ketsbamPromptLayout(g) {
+  const ui = touchUiScale(W, H);
+  const special = specialTouchBtn(g?.mode === 'versus' && Input.dualMode ? Input : Input);
+  if (!special) {
+    return { cx: W * 0.88, cy: H * 0.68, w: 72 * ui, h: 12 * ui, gap: 8 * ui };
+  }
+  const gap = Math.max(7, Math.round(9 * ui));
+  const w = Math.max(special.r * 2.15, 58 * ui);
+  const h = Math.max(10, Math.round(12 * ui));
+  return {
+    cx: special.x,
+    cy: special.y - special.r - gap - h * 0.5,
+    w,
+    h,
+    gap,
+    specialR: special.r,
+  };
 }
 
 function ketsbamHitTest(x, y, g) {
   if (!g || !g.ketsbamShow) return false;
   const ui = touchUiScale(W, H);
-  const { cx, cy } = ketsbamPromptCenter();
-  const r = kablamPromptHitRadius(ui);
-  return (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
+  const { cx, cy, w, h } = ketsbamPromptLayout(g);
+  const slop = btnHitSlop();
+  const hw = w * 0.5 + slop;
+  const hh = h * 0.5 + slop + 10 * ui;
+  return Math.abs(x - cx) <= hw && Math.abs(y - cy) <= hh;
 }
 
 function applyJoyDelta(pad, x, y, id) {
@@ -10820,6 +10845,8 @@ class Fighter {
     game.ketsbamCd = KETSBAM_CD;
     game.ketsbamSuperT = KETSBAM_SUPER_ARMOR + KETSBAM_CHARGE_DUR;
     game.ketsbamShow = false;
+    game.ketsbamBuildT = 0;
+    game.ketsbamBuildProg = 0;
     game.ketsbamChargeT = KETSBAM_CHARGE_DUR;
     game.ketsbamChargeDur = KETSBAM_CHARGE_DUR;
     game.ketsbamChargePulse = 0;
@@ -13091,6 +13118,8 @@ class Game {
     this.ketsbamSuperT = 0;
     this.ketsbamShow = false;
     this.ketsbamPulse = 0;
+    this.ketsbamBuildT = 0;
+    this.ketsbamBuildProg = 0;
     this.ketsbamChargeT = 0;
     this.ketsbamChargeDur = 0;
     this.ketsbamChargePulse = 0;
@@ -15305,13 +15334,13 @@ class Game {
     if (this.mode === 'adventure') this.drawKetsbamChargeAura(c);
 
     this.drawHUD(c);
-    if (this.mode === 'adventure') this.drawKetsbamPrompt(c);
 
     // banners — max 3 lanes, geen overlap
     const bannerDraw = this.banners.slice().sort((a, b) => (a.lane || 0) - (b.lane || 0));
     for (const b of bannerDraw) this.drawBannerLine(c, b);
 
     if (IS_TOUCH) this.drawTouchControls(c);
+    if (this.mode === 'adventure') this.drawKetsbamPrompt(c);
 
     if (this.hint > 0) {
       c.globalAlpha = clamp(this.hint, 0, 1);
@@ -15775,6 +15804,8 @@ class Game {
   updateKetsbam(dt) {
     if (this.over || !this.player?.alive) {
       this.ketsbamShow = false;
+      this.ketsbamBuildT = 0;
+      this.ketsbamBuildProg = 0;
       return;
     }
     if (this.ketsbamChargeT > 0) {
@@ -15786,11 +15817,15 @@ class Game {
     const near = this.countNearbyMonsters(KETSBAM_DETECT_R);
     const stuck = this.player.hurtT > 0 && near >= 2;
     const swarmed = near >= KETSBAM_NEAR_MIN;
-    const wasShow = this.ketsbamShow;
-    this.ketsbamShow = this.ketsbamCd <= 0 && !this.inputLocked && !this.traveling && (swarmed || stuck);
-    if (this.ketsbamShow && !wasShow) this.ketsbamStickPick = pickKablamStickFace();
-    if (!this.ketsbamShow && this.ketsbamChargeT <= 0) this.ketsbamStickPick = null;
-    if (this.ketsbamShow) this.ketsbamPulse = (this.ketsbamPulse || 0) + dt;
+    const eligible = this.ketsbamCd <= 0 && !this.inputLocked && !this.traveling && (swarmed || stuck);
+    if (eligible) {
+      this.ketsbamBuildT = Math.min(KETSBAM_BUILD_DUR, (this.ketsbamBuildT || 0) + dt);
+    } else {
+      this.ketsbamBuildT = Math.max(0, (this.ketsbamBuildT || 0) - dt * 2.2);
+    }
+    this.ketsbamBuildProg = clamp(this.ketsbamBuildT / KETSBAM_BUILD_DUR, 0, 1);
+    this.ketsbamShow = eligible && this.ketsbamBuildProg >= 1;
+    if (this.ketsbamShow || this.ketsbamBuildProg > 0) this.ketsbamPulse = (this.ketsbamPulse || 0) + dt;
     else this.ketsbamPulse = 0;
   }
 
@@ -15868,29 +15903,71 @@ class Game {
   }
 
   drawKetsbamPrompt(c) {
-    if (!this.ketsbamShow || !this.player?.alive) return;
+    const prog = this.ketsbamBuildProg || 0;
+    if (prog <= 0 || !this.player?.alive) return;
     const ui = touchUiScale(W, H);
-    const { cx, cy } = ketsbamPromptCenter();
+    const { cx, cy, w, h } = ketsbamPromptLayout(this);
+    const ready = !!this.ketsbamShow;
     const calm = motionReduced();
-    const pulse = calm ? 1 : (0.9 + Math.sin((this.ketsbamPulse || 0) * 10) * 0.1);
-    const r = kablamPromptRadius(ui, pulse);
+    const pulse = this.ketsbamPulse || 0;
+    const x = cx - w * 0.5;
+    const y = cy - h * 0.5;
+    const fillW = Math.max(2, w * prog);
+
     c.save();
-    c.globalAlpha = 0.92;
-    c.fillStyle = 'rgba(6,10,24,.72)';
-    c.beginPath();
-    c.arc(cx, cy, r + 10 * ui, 0, TAU);
+    c.globalAlpha = ready ? 0.98 : 0.88;
+    c.fillStyle = 'rgba(6,10,24,.78)';
+    c.strokeStyle = 'rgba(255,215,94,.45)';
+    c.lineWidth = 2 * ui;
+    this.rr(c, x, y, w, h, h * 0.45);
     c.fill();
-    c.strokeStyle = 'rgba(255,215,94,.55)';
-    c.lineWidth = 3 * ui;
     c.stroke();
-    c.translate(cx, cy);
-    drawKablamIcon(c, ui * pulse * 0.92, this.ketsbamPulse || 0, calm, this.ketsbamStickPick, calm ? 0 : (this.ketsbamPulse || 0) * 2.2);
+
+    if (fillW > 1) {
+      c.save();
+      this.rr(c, x + 1.5, y + 1.5, w - 3, h - 3, (h - 3) * 0.42);
+      c.clip();
+      const grad = c.createLinearGradient(x, y, x + fillW, y);
+      grad.addColorStop(0, '#ffb347');
+      grad.addColorStop(0.55, '#ffd75e');
+      grad.addColorStop(1, '#fff3a8');
+      c.fillStyle = grad;
+      c.fillRect(x + 1.5, y + 1.5, fillW - 3, h - 3);
+      c.restore();
+    }
+
+    if (ready) {
+      const dotR = Math.max(5, h * 0.42);
+      const dotX = x + w + dotR * 0.55;
+      const dotY = cy;
+      const blink = calm ? 1 : (0.45 + Math.abs(Math.sin(pulse * 9)) * 0.55);
+      c.globalAlpha = blink;
+      c.fillStyle = '#ff3344';
+      c.strokeStyle = '#fff';
+      c.lineWidth = 1.5 * ui;
+      c.beginPath();
+      c.arc(dotX, dotY, dotR, 0, TAU);
+      c.fill();
+      c.stroke();
+      c.globalAlpha = 0.95;
+      c.font = `900 ${Math.round(10 * ui)}px -apple-system,sans-serif`;
+      c.textAlign = 'center';
+      c.textBaseline = 'bottom';
+      c.fillStyle = '#ffd75e';
+      c.strokeStyle = 'rgba(0,0,0,.55)';
+      c.lineWidth = 3 * ui;
+      c.strokeText(t('banner.kets'), cx, y - 3 * ui);
+      c.fillText(t('banner.kets'), cx, y - 3 * ui);
+    }
+
+    if (!ready && prog > 0.08 && !calm) {
+      c.globalAlpha = 0.35 + prog * 0.25;
+      c.fillStyle = '#ffd75e';
+      c.fillRect(x + fillW - 2, y + 2, 2, h - 4);
+    }
+
     c.restore();
-    drawKablamLabel(c, t('banner.ketsBam'), cx, cy + r + 14 * ui, Math.round(17 * ui), '#ffd75e');
-    c.font = `700 ${Math.round(12 * ui)}px -apple-system,sans-serif`;
-    c.textAlign = 'center';
-    c.fillStyle = 'rgba(255,255,255,.85)';
-    c.fillText(IS_TOUCH ? t('hud.ketsTap') : t('hud.ketsKey'), cx, cy + r + 34 * ui);
+    c.textBaseline = 'alphabetic';
     c.textAlign = 'left';
   }
 

@@ -583,16 +583,39 @@ function pointerGameCoords(clientX, clientY) {
   };
 }
 
-function ketsbamPromptCenter() {
-  return { cx: W * 0.5, cy: H * 0.46 };
+function specialTouchBtn(pad) {
+  const buttons = pad?.buttons || Input.buttons || [];
+  for (const b of buttons) if (b.id === 'special') return b;
+  return null;
+}
+
+function ketsbamPromptLayout(g) {
+  const ui = touchUiScale(W, H);
+  const special = specialTouchBtn(g?.mode === 'versus' && Input.dualMode ? Input : Input);
+  if (!special) {
+    return { cx: W * 0.88, cy: H * 0.68, w: 72 * ui, h: 12 * ui, gap: 8 * ui };
+  }
+  const gap = Math.max(7, Math.round(9 * ui));
+  const w = Math.max(special.r * 2.15, 58 * ui);
+  const h = Math.max(10, Math.round(12 * ui));
+  return {
+    cx: special.x,
+    cy: special.y - special.r - gap - h * 0.5,
+    w,
+    h,
+    gap,
+    specialR: special.r,
+  };
 }
 
 function ketsbamHitTest(x, y, g) {
   if (!g || !g.ketsbamShow) return false;
   const ui = touchUiScale(W, H);
-  const { cx, cy } = ketsbamPromptCenter();
-  const r = kablamPromptHitRadius(ui);
-  return (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
+  const { cx, cy, w, h } = ketsbamPromptLayout(g);
+  const slop = btnHitSlop();
+  const hw = w * 0.5 + slop;
+  const hh = h * 0.5 + slop + 10 * ui;
+  return Math.abs(x - cx) <= hw && Math.abs(y - cy) <= hh;
 }
 
 function applyJoyDelta(pad, x, y, id) {
