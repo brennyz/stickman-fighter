@@ -42,6 +42,17 @@ Stickman Fighter wordt door **meerdere cloud-agent runs** aangepast (iPad-app, M
 | **`DEBUG-BLACK-SCREEN.md`** | Zwart/blauw scherm bij Avontuur — debug-overlay + dump |
 | **`IPAD-GEEN-COMMANDO.txt`** | Wat Mats op iPad wél/niet doet |
 
+### Play-laag (Avontuur) — canonieke route
+
+**Niet** “nuclear lids” (`display:none !important` op alle `.screen`, MutationObservers, canvas z80). Dat brak adventure terwijl collections nog werkten.
+
+Wel (ochtend-route in `syncPlayLayer` / `startGame`):
+1. Menu = `.screen.active`; canvas `visibility:hidden`
+2. Play = `state=play` + `body.is-playing`; canvas zichtbaar; **geen** `.screen.active`
+3. Dobbel-flash **in** `#levelScreen` (niet buiten `.screen`)
+4. Loop: tijdens play/pause **nooit** `drawMenuBackdrop` (#151b33)
+5. Flash alleen verbergen bij echte play — niet bij elke menu-`syncPlayLayer`
+
 ## Wat elke agent **bij afloop** doet
 
 ```bash
