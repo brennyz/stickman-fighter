@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.33';
+const APP_VERSION = '1.18.34';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 243;
+const SW_CACHE_REV = 244;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -2266,14 +2266,23 @@ function claimableDailyTasks() {
 function claimDailyTask(taskId, opts) {
   opts = opts || {};
   ensureDaily();
-  const t = save.daily.tasks.find(x => x.id === taskId);
+  const task = save.daily.tasks.find(x => x.id === taskId);
   const def = dailyDef(taskId);
-  if (!t || !def || !t.done || t.claimed) return 0;
-  t.claimed = true;
+  if (!task || !def || !task.done || task.claimed) return 0;
+  task.claimed = true;
   grantMetaXP(def.xp);
+  if (!save.missionsIntroSeen) {
+    save.missionsIntroSeen = true;
+  }
   if (!opts.silent) {
     AudioSys.sfx('bonus');
-    UI.toast(t('toast.claimXp', { xp: def.xp, text: dailyText(taskId) }), 2600);
+    const leftClaims = save.daily.tasks.filter(x => !x.claimed).length;
+    const path = leftClaims === 0
+      ? t('toast.claimPathBonus')
+      : (leftClaims === 1
+        ? t('toast.claimPath1')
+        : t('toast.claimPathN', { n: leftClaims }));
+    UI.toast(t('toast.claimXp', { xp: def.xp, text: dailyText(taskId) }) + ' · ' + path, 2800);
   }
   if (!persistOrToast('missie-claim')) return 0;
   if (!opts.skipRefresh) {
@@ -2294,15 +2303,22 @@ function claimAllDailyReady() {
     return;
   }
   let total = 0;
-  for (const t of ready) total += claimDailyTask(t.id, { silent: true, skipRefresh: true });
+  for (const task of ready) total += claimDailyTask(task.id, { silent: true, skipRefresh: true });
+  if (!save.missionsIntroSeen) save.missionsIntroSeen = true;
   AudioSys.sfx('bonus');
   persist();
   checkDailyAllBonus();
   UI.renderMissions();
   UI.renderMenu();
-  UI.toast(ready.length === 1
+  const leftClaims = save.daily.tasks.filter(x => !x.claimed).length;
+  const path = leftClaims === 0
+    ? t('toast.claimPathBonus')
+    : (leftClaims === 1
+      ? t('toast.claimPath1')
+      : t('toast.claimPathN', { n: leftClaims }));
+  UI.toast((ready.length === 1
     ? t('toast.claimBatch1', { total })
-    : t('toast.claimBatchN', { n: ready.length, total }), 3200);
+    : t('toast.claimBatchN', { n: ready.length, total })) + ' · ' + path, 3400);
   setTimeout(() => dailyClaimFollowUpToast(), 450);
 }
 
@@ -2327,7 +2343,11 @@ function claimDailyDayBonus() {
   checkAchievements();
   UI.renderMissions();
   UI.renderMenu();
-  UI.toast(t('toast.dayBonusDone'), 3400);
+  const n = save.stats.dailyBonusCount || 0;
+  const streakBit = n >= 7
+    ? t('toast.dayBonusStreakDone', { n })
+    : t('toast.dayBonusStreak', { n, left: Math.max(0, 7 - n) });
+  UI.toast(t('toast.dayBonusDone') + ' · ' + streakBit, 3600);
 }
 
 function grantMetaXP(n) {
@@ -2397,15 +2417,29 @@ function dailyTaskRemainderText(task, def) {
 function dailyClaimFollowUpToast() {
   const left = claimableDailyTasks();
   if (left.length > 0) {
-    const xp = left.reduce((n, t) => n + (dailyDef(t.id)?.xp || 0), 0);
+    const xp = left.reduce((n, task) => n + (dailyDef(task.id)?.xp || 0), 0);
     UI.toast(left.length === 1
       ? t('toast.followUp1', { xp })
       : t('toast.followUpN', { n: left.length, xp }), 2600);
     return;
   }
-  if (save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed) {
+  if (save.daily.tasks.every(task => task.claimed) && !save.daily.dayBonusClaimed) {
     UI.toast(t('toast.followUpBonus'), 2800);
+    return;
   }
+  if (save.daily.dayBonusClaimed) {
+    UI.toast(t('toast.followUpDone', { reset: dailyResetCountdown() }), 2600);
+  }
+}
+
+/** d13 c4: korte claim-pad regel voor kaarten (naar dagbonus). */
+function dailyClaimPathHint(claimedN, readyN) {
+  const afterThis = claimedN + 1;
+  if (afterThis >= 3) return t('missionsUi.claimPathOpensBonus');
+  const left = 3 - afterThis;
+  return left === 1
+    ? t('missionsUi.claimPathAfter1')
+    : t('missionsUi.claimPathAfterN', { n: left });
 }
 
 function achievementProgressFrac(ach) {
@@ -8352,7 +8386,7 @@ function seedNlGameStrings() {
     trainLossTip: 'Spring tijdens CHIDORI-telegraph — robot mist · duck oor-lasers',
     trainTipDefault: 'Tip: duck lasers · chakra vol → Rasengan',
     vsRematchTip: 'Opnieuw = rematch · Pauze → Herstart match (0-0)',
-    vsCloseRematchTip: 'Niksen! Rematch met Opnieuw · of Pauze → Herstart 0-0',
+    vsCloseRematchTip: 'Krappe match! Rematch met Opnieuw · of Pauze → Herstart 0-0',
     vsFatalityRematchTip: 'Fatality! Rematch met Opnieuw · zelfde vechters',
     vsFatalityLine: ' · fatality',
     wallRecordShare: 'Nieuw record — share met een vriend!',
@@ -8473,14 +8507,20 @@ function seedNlGameStrings() {
     noMissionReady: 'Nog geen missie klaar om te claimen',
     claimBatch1: '+{total} XP geclaimd',
     claimBatchN: '{n} missies · +{total} XP',
+    claimPathBonus: 'nu Dagbonus +80 klaar',
+    claimPath1: 'nog 1 claim tot Dagbonus',
+    claimPathN: 'nog {n} claims tot Dagbonus',
     dayBonusAlready: 'Dagbonus al geclaimd — morgen weer 3 nieuwe',
     dayBonusNeed1: 'Nog 1 missie claimen voor de dagbonus',
     dayBonusNeedN: 'Nog {n} missies claimen voor +80 XP dagbonus',
     dayBonusDone: 'Dagbonus! +80 XP · tot morgen',
+    dayBonusStreak: 'streak {n}/7 · nog {left}',
+    dayBonusStreakDone: '{n}× dagbonus · Vastberaden!',
     allClaimedTapBonus: 'Alles geclaimd — tik Dagbonus (+80 XP)',
     followUp1: 'Nog 1 missie klaar om te claimen (+{xp} XP)',
     followUpN: 'Nog {n} missies klaar · +{xp} XP',
     followUpBonus: 'Stap 3: tik Dagbonus (+80 XP)',
+    followUpDone: 'Dag rond — nieuwe missies over {reset}',
     achievementUnlock: 'Prestatie: {name} — bekijk bij Missies',
     charSagaUnlock: 'Unlock minstens 2 saga-icons (Ki/Scroll/Tide/Cape/Dawn)',
     charSagaClash: '{a} vs {b} — saga clash!',
@@ -8560,6 +8600,11 @@ function seedNlGameStrings() {
     claimAllAfter1: 'nog 1 claim voor dagbonus +80',
     claimAllAfterN: 'nog {n} claims voor dagbonus +80',
     claimAllThenBonus: 'daarna dagbonus +80',
+    claimCall: '{n} klaar · +{xp} XP — claim hieronder (licht, geen grind)',
+    claimCallBonus: 'Tik Dagbonus hieronder · +80 XP (licht, geen grind)',
+    claimPathOpensBonus: 'opent Dagbonus +80',
+    claimPathAfter1: 'daarna nog 1 tot Dagbonus',
+    claimPathAfterN: 'daarna nog {n} tot Dagbonus',
     dailyClaimed: 'Geclaimd',
     dailyReady: 'Klaar — tik Claim hieronder',
     dailyProgress: 'Bezig {cur}/{goal}',
@@ -8567,10 +8612,13 @@ function seedNlGameStrings() {
     dailyClaimBtn: 'Claim +{xp} XP',
     dailyPlayBtn: 'Speel {mode} →',
     dailyNextUp: 'volgende',
+    dailyAlmost: 'bijna',
     bonusClaimed: 'Dagbonus geclaimd',
     bonusTomorrow: 'Morgen weer nieuw',
     bonusClaimBtn: 'Dagbonus claimen',
     bonusTap: '+80 XP · tik hier',
+    bonusStreakHint: 'wordt {n}× streak',
+    bonusStreakAlmost: 'laatste tot Vastberaden (7×)',
     bonusNeed: 'Dagbonus',
     bonusNeed1: 'Nog 1 claim nodig',
     bonusNeedN: 'Nog {n} claims nodig',
@@ -9256,14 +9304,20 @@ const CATALOG_EN = {
     noMissionReady: 'No mission ready to claim yet',
     claimBatch1: '+{total} XP claimed',
     claimBatchN: '{n} missions · +{total} XP',
+    claimPathBonus: 'daily bonus +80 ready now',
+    claimPath1: '1 more claim until daily bonus',
+    claimPathN: '{n} more claims until daily bonus',
     dayBonusAlready: 'Daily bonus already claimed — 3 new tomorrow',
     dayBonusNeed1: 'Claim 1 more mission for daily bonus',
     dayBonusNeedN: 'Claim {n} more missions for +80 XP daily bonus',
     dayBonusDone: 'Daily bonus! +80 XP · see you tomorrow',
+    dayBonusStreak: 'streak {n}/7 · {left} left',
+    dayBonusStreakDone: '{n}× daily bonus · Determined!',
     allClaimedTapBonus: 'All claimed — tap Daily bonus (+80 XP)',
     followUp1: '1 more mission ready to claim (+{xp} XP)',
     followUpN: '{n} more missions ready · +{xp} XP',
     followUpBonus: 'Step 3: tap Daily bonus (+80 XP)',
+    followUpDone: 'Day done — new missions in {reset}',
     achievementUnlock: 'Achievement: {name} — see Missions',
     charSagaUnlock: 'Unlock at least 2 saga-icons (Ki/Scroll/Tide/Cape/Dawn)',
     charSagaClash: '{a} vs {b} — saga clash!',
@@ -9332,6 +9386,11 @@ const CATALOG_EN = {
     claimAllAfter1: '1 more claim for +80 daily bonus',
     claimAllAfterN: '{n} more claims for +80 daily bonus',
     claimAllThenBonus: 'then daily bonus +80',
+    claimCall: '{n} ready · +{xp} XP — claim below (light, no grind)',
+    claimCallBonus: 'Tap Daily bonus below · +80 XP (light, no grind)',
+    claimPathOpensBonus: 'opens Daily bonus +80',
+    claimPathAfter1: 'then 1 more to Daily bonus',
+    claimPathAfterN: 'then {n} more to Daily bonus',
     dailyClaimed: 'Claimed',
     dailyReady: 'Ready — tap Claim below',
     dailyProgress: 'In progress {cur}/{goal}',
@@ -9339,10 +9398,13 @@ const CATALOG_EN = {
     dailyClaimBtn: 'Claim +{xp} XP',
     dailyPlayBtn: 'Play {mode} →',
     dailyNextUp: 'next up',
+    dailyAlmost: 'almost',
     bonusClaimed: 'Daily bonus claimed',
     bonusTomorrow: 'New tomorrow',
     bonusClaimBtn: 'Claim daily bonus',
     bonusTap: '+80 XP · tap here',
+    bonusStreakHint: 'becomes {n}× streak',
+    bonusStreakAlmost: 'last one to Determined (7×)',
     bonusNeed: 'Daily bonus',
     bonusNeed1: '1 more claim needed',
     bonusNeedN: '{n} more claims needed',
@@ -24621,7 +24683,17 @@ const UI = {
       const earned = dailyEarnedXpToday();
       const maxXp = dailyPotentialXp();
       const next = dailyNextActionLine();
+      let claimCall = '';
+      if (readyN > 0) {
+        const xpSum = claimableDailyTasks().reduce((n, task) => n + (dailyDef(task.id)?.xp || 0), 0);
+        claimCall = `<div class="mission-claim-call">${t('missionsUi.claimCall', {
+          n: readyN, xp: xpSum,
+        })}</div>`;
+      } else if (step === 3) {
+        claimCall = `<div class="mission-claim-call mission-claim-call-bonus">${t('missionsUi.claimCallBonus')}</div>`;
+      }
       planHost.innerHTML =
+        claimCall +
         `<div class="mission-plan-next"><b>${t('missionsUi.planNow')}</b> ${next}</div>` +
         `<div class="mission-plan-xp">${t('missionsUi.planEarned', { earned, max: maxXp })}` +
         (step === 0 ? ` · ${t('missionsUi.planReset', { reset: dailyResetCountdown() })}` : '') +
@@ -24645,9 +24717,10 @@ const UI = {
     const claimAll = document.getElementById('dailyClaimAllBtn');
     if (claimAll) {
       claimAll.style.display = readyN >= 1 ? 'flex' : 'none';
+      claimAll.classList.toggle('mission-claim-pulse', readyN >= 1);
       const lab = claimAll.querySelector('div');
       if (lab) {
-        const xpSum = claimableDailyTasks().reduce((n, t) => n + (dailyDef(t.id)?.xp || 0), 0);
+        const xpSum = claimableDailyTasks().reduce((n, task) => n + (dailyDef(task.id)?.xp || 0), 0);
         const afterClaim = 3 - claimedN - readyN;
         lab.innerHTML = t('missionsUi.claimAllBtn') + `<small>+${xpSum} XP` +
           (afterClaim > 0
@@ -24665,10 +24738,12 @@ const UI = {
       const el = document.createElement('div');
       const claimable = task.done && !task.claimed;
       const isNextUp = !task.done && !task.claimed && task.id === nextUpId;
+      const almost = !task.done && !task.claimed && (task.progress / def.goal) >= 0.75;
       el.className = 'step-card mission-card' +
         (claimable ? ' claimable' : '') +
         (task.claimed ? ' claimed' : '') +
-        (isNextUp ? ' next-up' : '');
+        (isNextUp ? ' next-up' : '') +
+        (almost ? ' almost' : '');
       const pct = Math.min(100, Math.round(task.progress / def.goal * 100));
       let status;
       if (task.claimed) status = `<span style="color:#7cfc8a">${SVG_CHECK_MINI} ${t('missionsUi.dailyClaimed')} · ${t('missionsUi.dailyClaimedXp', { xp: def.xp })}</span>`;
@@ -24680,7 +24755,8 @@ const UI = {
       const modePill = playTarget
         ? `<span class="mission-mode-pill">${dailyModeLabel(playTarget.mode)}</span> `
         : '';
-      el.innerHTML = `${modePill}<b>${dailyText(def.id)}</b>${isNextUp ? ` <span class="next-up-tag">${t('missionsUi.dailyNextUp')}</span>` : ''}<br>${status}` +
+      const almostTag = almost ? ` <span class="almost-tag">${t('missionsUi.dailyAlmost')}</span>` : '';
+      el.innerHTML = `${modePill}<b>${dailyText(def.id)}</b>${isNextUp ? ` <span class="next-up-tag">${t('missionsUi.dailyNextUp')}</span>` : ''}${almostTag}<br>${status}` +
         (remainder && !task.done ? `<div style="color:#7cf5ff;font-size:12px;margin-top:4px;font-weight:700">${remainder}</div>` : '') +
         (playHint && !task.done ? `<div style="opacity:.75;font-size:12px;margin-top:4px">${playHint}</div>` : '') +
         `<div style="opacity:.8;font-size:13px;margin-top:4px">${t('missionsUi.dailyReward', { xp: def.xp })}</div>` +
@@ -24689,7 +24765,8 @@ const UI = {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'btn claim-btn';
-        btn.textContent = t('missionsUi.dailyClaimBtn', { xp: def.xp });
+        btn.innerHTML = t('missionsUi.dailyClaimBtn', { xp: def.xp }) +
+          `<small>${dailyClaimPathHint(claimedN, readyN)}</small>`;
         bindPress(btn, () => safeUiAction(() => {
           AudioSys.sfx('select');
           claimDailyTask(task.id);
@@ -24709,6 +24786,7 @@ const UI = {
     if (bonusBtn) {
       const ready = claimedN === 3 && !save.daily.dayBonusClaimed;
       const label = bonusBtn.querySelector('div');
+      bonusBtn.classList.toggle('mission-bonus-pulse', ready);
       if (save.daily.dayBonusClaimed) {
         bonusBtn.style.display = 'flex';
         bonusBtn.disabled = true;
@@ -24720,8 +24798,14 @@ const UI = {
         bonusBtn.disabled = !ready;
         bonusBtn.style.opacity = ready ? '1' : '0.45';
         if (label) {
+          const streakN = save.stats.dailyBonusCount || 0;
+          const streakHint = ready
+            ? (streakN >= 6
+              ? t('missionsUi.bonusStreakAlmost')
+              : t('missionsUi.bonusStreakHint', { n: streakN + 1 }))
+            : '';
           label.innerHTML = ready
-            ? t('missionsUi.bonusClaimBtn') + `<small>${t('missionsUi.bonusTap')}</small>`
+            ? t('missionsUi.bonusClaimBtn') + `<small>${t('missionsUi.bonusTap')}${streakHint ? ' · ' + streakHint : ''}</small>`
             : t('missionsUi.bonusNeed') + `<small>${(3 - claimedN) === 1 ? t('missionsUi.bonusNeed1') : t('missionsUi.bonusNeedN', { n: 3 - claimedN })}</small>`;
         }
       }

@@ -157,14 +157,23 @@ function claimableDailyTasks() {
 function claimDailyTask(taskId, opts) {
   opts = opts || {};
   ensureDaily();
-  const t = save.daily.tasks.find(x => x.id === taskId);
+  const task = save.daily.tasks.find(x => x.id === taskId);
   const def = dailyDef(taskId);
-  if (!t || !def || !t.done || t.claimed) return 0;
-  t.claimed = true;
+  if (!task || !def || !task.done || task.claimed) return 0;
+  task.claimed = true;
   grantMetaXP(def.xp);
+  if (!save.missionsIntroSeen) {
+    save.missionsIntroSeen = true;
+  }
   if (!opts.silent) {
     AudioSys.sfx('bonus');
-    UI.toast(t('toast.claimXp', { xp: def.xp, text: dailyText(taskId) }), 2600);
+    const leftClaims = save.daily.tasks.filter(x => !x.claimed).length;
+    const path = leftClaims === 0
+      ? t('toast.claimPathBonus')
+      : (leftClaims === 1
+        ? t('toast.claimPath1')
+        : t('toast.claimPathN', { n: leftClaims }));
+    UI.toast(t('toast.claimXp', { xp: def.xp, text: dailyText(taskId) }) + ' · ' + path, 2800);
   }
   if (!persistOrToast('missie-claim')) return 0;
   if (!opts.skipRefresh) {
@@ -185,15 +194,22 @@ function claimAllDailyReady() {
     return;
   }
   let total = 0;
-  for (const t of ready) total += claimDailyTask(t.id, { silent: true, skipRefresh: true });
+  for (const task of ready) total += claimDailyTask(task.id, { silent: true, skipRefresh: true });
+  if (!save.missionsIntroSeen) save.missionsIntroSeen = true;
   AudioSys.sfx('bonus');
   persist();
   checkDailyAllBonus();
   UI.renderMissions();
   UI.renderMenu();
-  UI.toast(ready.length === 1
+  const leftClaims = save.daily.tasks.filter(x => !x.claimed).length;
+  const path = leftClaims === 0
+    ? t('toast.claimPathBonus')
+    : (leftClaims === 1
+      ? t('toast.claimPath1')
+      : t('toast.claimPathN', { n: leftClaims }));
+  UI.toast((ready.length === 1
     ? t('toast.claimBatch1', { total })
-    : t('toast.claimBatchN', { n: ready.length, total }), 3200);
+    : t('toast.claimBatchN', { n: ready.length, total })) + ' · ' + path, 3400);
   setTimeout(() => dailyClaimFollowUpToast(), 450);
 }
 
@@ -218,7 +234,11 @@ function claimDailyDayBonus() {
   checkAchievements();
   UI.renderMissions();
   UI.renderMenu();
-  UI.toast(t('toast.dayBonusDone'), 3400);
+  const n = save.stats.dailyBonusCount || 0;
+  const streakBit = n >= 7
+    ? t('toast.dayBonusStreakDone', { n })
+    : t('toast.dayBonusStreak', { n, left: Math.max(0, 7 - n) });
+  UI.toast(t('toast.dayBonusDone') + ' · ' + streakBit, 3600);
 }
 
 function grantMetaXP(n) {
@@ -288,15 +308,29 @@ function dailyTaskRemainderText(task, def) {
 function dailyClaimFollowUpToast() {
   const left = claimableDailyTasks();
   if (left.length > 0) {
-    const xp = left.reduce((n, t) => n + (dailyDef(t.id)?.xp || 0), 0);
+    const xp = left.reduce((n, task) => n + (dailyDef(task.id)?.xp || 0), 0);
     UI.toast(left.length === 1
       ? t('toast.followUp1', { xp })
       : t('toast.followUpN', { n: left.length, xp }), 2600);
     return;
   }
-  if (save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed) {
+  if (save.daily.tasks.every(task => task.claimed) && !save.daily.dayBonusClaimed) {
     UI.toast(t('toast.followUpBonus'), 2800);
+    return;
   }
+  if (save.daily.dayBonusClaimed) {
+    UI.toast(t('toast.followUpDone', { reset: dailyResetCountdown() }), 2600);
+  }
+}
+
+/** d13 c4: korte claim-pad regel voor kaarten (naar dagbonus). */
+function dailyClaimPathHint(claimedN, readyN) {
+  const afterThis = claimedN + 1;
+  if (afterThis >= 3) return t('missionsUi.claimPathOpensBonus');
+  const left = 3 - afterThis;
+  return left === 1
+    ? t('missionsUi.claimPathAfter1')
+    : t('missionsUi.claimPathAfterN', { n: left });
 }
 
 function achievementProgressFrac(ach) {

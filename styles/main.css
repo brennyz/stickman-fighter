@@ -1193,8 +1193,11 @@
   .mission-card.claimable { border-color: rgba(255,215,94,.55); background: rgba(255,215,94,.1);
       box-shadow: 0 0 0 1px rgba(255,215,94,.2); }
   .mission-card.claimed { opacity: .78; }
-  .mission-card .claim-btn { width:100%; margin-top:10px; justify-content:center;
+  .mission-card.almost { border-color: rgba(124,245,255,.4); }
+  .mission-card .almost-tag { font-size:11px; font-weight:800; color:#ffd75e; text-transform:uppercase; letter-spacing:.04em; }
+  .mission-card .claim-btn { width:100%; margin-top:10px; justify-content:center; flex-direction:column; gap:2px;
       background:linear-gradient(180deg,#ffe259,#c97a20); color:#2a1a00; min-height:46px; font-size:16px; }
+  .mission-card .claim-btn small { display:block; font-size:11px; font-weight:700; opacity:.88; color:#2a1a00; }
   .mission-card.next-up { border-color: rgba(124,245,255,.45); }
   .mission-card .next-up-tag { font-size:11px; font-weight:800; color:#7cf5ff; text-transform:uppercase; letter-spacing:.04em; }
   .mission-card .mission-play-btn { width:100%; margin-top:10px; justify-content:center;
@@ -1202,9 +1205,21 @@
   body.reduced-motion .mission-card.claimable { box-shadow: none; }
   .mission-today-plan { width:min(92vw,480px); margin:0 auto 12px; padding:12px 14px; border-radius:14px;
     background:rgba(124,245,255,.08); border:1px solid rgba(124,245,255,.28); color:#cfe0ff; font-size:13px; line-height:1.45; }
+  .mission-claim-call { font-size:13px; font-weight:800; color:#ffd75e; margin-bottom:8px; }
+  .mission-claim-call-bonus { color:#7cfc8a; }
   .mission-plan-next { margin-bottom:6px; }
   .mission-plan-next b { color:#ffd75e; margin-right:4px; }
   .mission-plan-xp { font-size:12px; font-weight:800; color:#9db1e3; }
+  #dailyClaimAllBtn.mission-claim-pulse {
+    box-shadow: 0 0 0 2px rgba(255,215,94,.45), 0 6px 0 rgba(0,0,0,.35);
+  }
+  #dailyBonusBtn.mission-bonus-pulse:not([disabled]) {
+    box-shadow: 0 0 0 2px rgba(124,252,138,.5), 0 6px 0 rgba(0,0,0,.35);
+  }
+  body.reduced-motion #dailyClaimAllBtn.mission-claim-pulse,
+  body.reduced-motion #dailyBonusBtn.mission-bonus-pulse:not([disabled]) {
+    box-shadow: 0 6px 0 rgba(0,0,0,.35);
+  }
   .mission-ach-spotlight { width:min(92vw,520px); margin:0 auto 12px; padding:12px 14px; border-radius:14px;
     background:rgba(255,215,94,.08); border:1px solid rgba(255,215,94,.28); color:#e8f0ff; font-size:13px; line-height:1.4; }
   .mission-spot-title { font-size:11px; font-weight:900; color:#ffd75e; letter-spacing:.04em; text-transform:uppercase; margin-bottom:6px; }

@@ -4,25 +4,17 @@
   "rollFirst": [],
   "remaining": [
     4,
-    5,
-    13
+    5
   ],
   "lastRoll": {
-    "face": 3,
-    "category": "Versus 2P \u2014 split controls, rematch, char balance",
-    "rolledAt": "2026-07-25T14:09:13Z",
-    "remainingCount": 3,
+    "face": 13,
+    "category": "Missies & achievements \u2014 daily loop, beloningen",
+    "rolledAt": "2026-07-25T14:12:28Z",
+    "remainingCount": 2,
     "cycle": 4
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 7,
-      "note": "Save health + dex kills fix + import preview",
-      "version": "1.9.2",
-      "doneAt": "2026-07-23T14:22:36Z",
-      "cycle": 0
-    },
     {
       "face": 6,
       "note": "BGM duck pause/result + mute paths + pause song keep",
@@ -574,6 +566,13 @@
       "note": "spawn pads + MP/HP lead + round skip + rematch tips",
       "version": "1.18.33",
       "doneAt": "2026-07-25T14:11:01Z",
+      "cycle": 4
+    },
+    {
+      "face": 13,
+      "note": "claim path copy + almost tag + streak bonus toast",
+      "version": "1.18.34",
+      "doneAt": "2026-07-25T14:14:09Z",
       "cycle": 4
     }
   ],
@@ -1789,6 +1788,13 @@
       "category": "Versus 2P \u2014 split controls, rematch, char balance",
       "rolledAt": "2026-07-25T14:09:13Z",
       "remainingCount": 3,
+      "cycle": 4
+    },
+    {
+      "face": 13,
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
+      "rolledAt": "2026-07-25T14:12:28Z",
+      "remainingCount": 2,
       "cycle": 4
     }
   ],

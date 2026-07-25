@@ -1699,7 +1699,17 @@ const UI = {
       const earned = dailyEarnedXpToday();
       const maxXp = dailyPotentialXp();
       const next = dailyNextActionLine();
+      let claimCall = '';
+      if (readyN > 0) {
+        const xpSum = claimableDailyTasks().reduce((n, task) => n + (dailyDef(task.id)?.xp || 0), 0);
+        claimCall = `<div class="mission-claim-call">${t('missionsUi.claimCall', {
+          n: readyN, xp: xpSum,
+        })}</div>`;
+      } else if (step === 3) {
+        claimCall = `<div class="mission-claim-call mission-claim-call-bonus">${t('missionsUi.claimCallBonus')}</div>`;
+      }
       planHost.innerHTML =
+        claimCall +
         `<div class="mission-plan-next"><b>${t('missionsUi.planNow')}</b> ${next}</div>` +
         `<div class="mission-plan-xp">${t('missionsUi.planEarned', { earned, max: maxXp })}` +
         (step === 0 ? ` · ${t('missionsUi.planReset', { reset: dailyResetCountdown() })}` : '') +
@@ -1723,9 +1733,10 @@ const UI = {
     const claimAll = document.getElementById('dailyClaimAllBtn');
     if (claimAll) {
       claimAll.style.display = readyN >= 1 ? 'flex' : 'none';
+      claimAll.classList.toggle('mission-claim-pulse', readyN >= 1);
       const lab = claimAll.querySelector('div');
       if (lab) {
-        const xpSum = claimableDailyTasks().reduce((n, t) => n + (dailyDef(t.id)?.xp || 0), 0);
+        const xpSum = claimableDailyTasks().reduce((n, task) => n + (dailyDef(task.id)?.xp || 0), 0);
         const afterClaim = 3 - claimedN - readyN;
         lab.innerHTML = t('missionsUi.claimAllBtn') + `<small>+${xpSum} XP` +
           (afterClaim > 0
@@ -1743,10 +1754,12 @@ const UI = {
       const el = document.createElement('div');
       const claimable = task.done && !task.claimed;
       const isNextUp = !task.done && !task.claimed && task.id === nextUpId;
+      const almost = !task.done && !task.claimed && (task.progress / def.goal) >= 0.75;
       el.className = 'step-card mission-card' +
         (claimable ? ' claimable' : '') +
         (task.claimed ? ' claimed' : '') +
-        (isNextUp ? ' next-up' : '');
+        (isNextUp ? ' next-up' : '') +
+        (almost ? ' almost' : '');
       const pct = Math.min(100, Math.round(task.progress / def.goal * 100));
       let status;
       if (task.claimed) status = `<span style="color:#7cfc8a">${SVG_CHECK_MINI} ${t('missionsUi.dailyClaimed')} · ${t('missionsUi.dailyClaimedXp', { xp: def.xp })}</span>`;
@@ -1758,7 +1771,8 @@ const UI = {
       const modePill = playTarget
         ? `<span class="mission-mode-pill">${dailyModeLabel(playTarget.mode)}</span> `
         : '';
-      el.innerHTML = `${modePill}<b>${dailyText(def.id)}</b>${isNextUp ? ` <span class="next-up-tag">${t('missionsUi.dailyNextUp')}</span>` : ''}<br>${status}` +
+      const almostTag = almost ? ` <span class="almost-tag">${t('missionsUi.dailyAlmost')}</span>` : '';
+      el.innerHTML = `${modePill}<b>${dailyText(def.id)}</b>${isNextUp ? ` <span class="next-up-tag">${t('missionsUi.dailyNextUp')}</span>` : ''}${almostTag}<br>${status}` +
         (remainder && !task.done ? `<div style="color:#7cf5ff;font-size:12px;margin-top:4px;font-weight:700">${remainder}</div>` : '') +
         (playHint && !task.done ? `<div style="opacity:.75;font-size:12px;margin-top:4px">${playHint}</div>` : '') +
         `<div style="opacity:.8;font-size:13px;margin-top:4px">${t('missionsUi.dailyReward', { xp: def.xp })}</div>` +
@@ -1767,7 +1781,8 @@ const UI = {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'btn claim-btn';
-        btn.textContent = t('missionsUi.dailyClaimBtn', { xp: def.xp });
+        btn.innerHTML = t('missionsUi.dailyClaimBtn', { xp: def.xp }) +
+          `<small>${dailyClaimPathHint(claimedN, readyN)}</small>`;
         bindPress(btn, () => safeUiAction(() => {
           AudioSys.sfx('select');
           claimDailyTask(task.id);
@@ -1787,6 +1802,7 @@ const UI = {
     if (bonusBtn) {
       const ready = claimedN === 3 && !save.daily.dayBonusClaimed;
       const label = bonusBtn.querySelector('div');
+      bonusBtn.classList.toggle('mission-bonus-pulse', ready);
       if (save.daily.dayBonusClaimed) {
         bonusBtn.style.display = 'flex';
         bonusBtn.disabled = true;
@@ -1798,8 +1814,14 @@ const UI = {
         bonusBtn.disabled = !ready;
         bonusBtn.style.opacity = ready ? '1' : '0.45';
         if (label) {
+          const streakN = save.stats.dailyBonusCount || 0;
+          const streakHint = ready
+            ? (streakN >= 6
+              ? t('missionsUi.bonusStreakAlmost')
+              : t('missionsUi.bonusStreakHint', { n: streakN + 1 }))
+            : '';
           label.innerHTML = ready
-            ? t('missionsUi.bonusClaimBtn') + `<small>${t('missionsUi.bonusTap')}</small>`
+            ? t('missionsUi.bonusClaimBtn') + `<small>${t('missionsUi.bonusTap')}${streakHint ? ' · ' + streakHint : ''}</small>`
             : t('missionsUi.bonusNeed') + `<small>${(3 - claimedN) === 1 ? t('missionsUi.bonusNeed1') : t('missionsUi.bonusNeedN', { n: 3 - claimedN })}</small>`;
         }
       }
