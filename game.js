@@ -133,20 +133,20 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.77';
+const APP_VERSION = '1.17.78';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 195;
+const SW_CACHE_REV = 196;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
 
 
 
-  advIsland: 0, advFails: {}, advMasterBuff: null,
+  advIsland: 0, advFails: {}, advMasterBuff: null, missionsIntroSeen: false,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, skillShards: 0, itemShards: 0 },
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {} };
 
 const MAX_LEVEL = 50;
@@ -561,7 +561,7 @@ function loadSave() {
 
 function readSaveJson(raw) {
   try {
-    if (!raw || raw.length > 200000) return null;
+    if (!raw || raw.length > 180000) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
     const merged = Object.assign({}, DEFAULT_SAVE, parsed);
@@ -572,6 +572,9 @@ function readSaveJson(raw) {
     merged.summons = Object.assign({}, parsed.summons || {});
     merged.pets = Object.assign({}, parsed.pets || {});
     merged.eggPets = Object.assign({}, parsed.eggPets || {});
+    merged.weaponMastery = Object.assign({}, DEFAULT_SAVE.weaponMastery || {}, parsed.weaponMastery || {});
+    merged.tipsSeen = Object.assign({}, parsed.tipsSeen || {});
+    merged.advFails = Object.assign({}, parsed.advFails || {});
     if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
     if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;
@@ -1797,7 +1800,7 @@ function todayKey() {
 }
 function ensureDaily() {
   const dk = todayKey();
-  if (!save.daily || save.daily.date !== dk) {
+  if (!save.daily || save.daily.date !== dk || !Array.isArray(save.daily.tasks) || !save.daily.tasks.length) {
     const order = [...DAILY_DEFS].sort((a, b) => {
       const h = (s) => { let x = 0; for (let i = 0; i < s.length; i++) x = (x * 33 + s.charCodeAt(i)) | 0; return x; };
       return h(dk + a.id) - h(dk + b.id);
@@ -2536,6 +2539,8 @@ function recoverToMenu() {
       ensureMenuScreenActive();
       return;
     }
+    try { clearGameResultTimer(game); } catch (_) {}
+    try { cancelGambleStart(); } catch (_) {}
     game = null;
     state = 'menu';
     window.__sfLoopErr = false;
@@ -2560,6 +2565,13 @@ function recoverToMenu() {
   }
 }
 function importSaveJson(text) {
+  if (state === 'play' || state === 'pause') {
+    try { recoverToMenu(); } catch (_) {
+      game = null;
+      state = 'menu';
+      try { syncPlayLayer(); } catch (_) {}
+    }
+  }
   const { save: next, warnings } = previewImportSave(text);
   save = next;
   if (!persistOrToast('import')) throw new Error('Import gelukt maar opslaan mislukt — probeer opnieuw');
@@ -2616,6 +2628,15 @@ function startAdventureFromGamble(skipGamble) {
 }
 
 let gokStartBusy = false;
+let gokScreenTimer = null;
+
+function cancelGambleStart() {
+  if (gokScreenTimer) {
+    clearTimeout(gokScreenTimer);
+    gokScreenTimer = null;
+  }
+  gokStartBusy = false;
+}
 
 function playGambleRollSfx(g) {
   try { AudioSys.sfx('diceRoll'); } catch (_) {}
@@ -2642,16 +2663,17 @@ function gokGooiStartLevel(n) {
     lastGambleRoll = rollStageGamble();
     playGambleRollSfx(lastGambleRoll);
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
-    gokStartBusy = false;
     startAdventureFromGamble(false);
   } catch (err) {
-    gokStartBusy = false;
     sfReportError('gokStart', err, 'Gok start mislukt — probeer opnieuw');
+  } finally {
+    gokStartBusy = false;
   }
 }
 
 function gokGooiStartFromScreen() {
   if (gokStartBusy) return;
+  cancelGambleStart();
   gokStartBusy = true;
   try {
     AudioSys.init();
@@ -2662,12 +2684,13 @@ function gokGooiStartFromScreen() {
     if (sumLine) sumLine.textContent = 'START!';
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
     const delay = motionReduced() ? 50 : 140;
-    setTimeout(() => {
+    gokScreenTimer = setTimeout(() => {
+      gokScreenTimer = null;
       gokStartBusy = false;
       startAdventureFromGamble(false);
     }, delay);
   } catch (err) {
-    gokStartBusy = false;
+    cancelGambleStart();
     sfReportError('gokGooi', err, 'Gok start mislukt — probeer opnieuw');
   }
 }
@@ -5186,8 +5209,13 @@ function padDigitalMove(pad) {
   if (!pad) return 0;
   let m = 0;
   if (pad.side === 'p1') {
-    if (pad.keys['arrowleft'] || pad.keys['a']) m -= 1;
-    if (pad.keys['arrowright'] || pad.keys['d']) m += 1;
+    if (Input.dualMode) {
+      if (pad.keys['a']) m -= 1;
+      if (pad.keys['d']) m += 1;
+    } else {
+      if (pad.keys['arrowleft'] || pad.keys['a']) m -= 1;
+      if (pad.keys['arrowright'] || pad.keys['d']) m += 1;
+    }
   } else {
     if (pad.keys['arrowleft']) m -= 1;
     if (pad.keys['arrowright']) m += 1;
@@ -9244,20 +9272,29 @@ addEventListener('keydown', e => {
       InputP2.lastMoveTap = now; InputP2.lastMoveDir = 1;
     }
     InputP2.keys[k] = true;
+    if (!['arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(k)) Input.keys[k] = true;
+  } else {
+    Input.keys[k] = true;
   }
-  Input.keys[k] = true;
   if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) e.preventDefault();
 });
 addEventListener('keyup', e => {
   const k = e.key.toLowerCase();
-  Input.keys[k] = false;
-  if (InputP2) InputP2.keys[k] = false;
+  if (Input.dualMode && ['arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(k)) {
+    if (InputP2) InputP2.keys[k] = false;
+  } else {
+    Input.keys[k] = false;
+    if (InputP2) InputP2.keys[k] = false;
+  }
 });
 
 /* --- src/core/canvas.js --- */
 /* ============================== CANVAS ================================= */
 const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
+const ctx = canvas ? canvas.getContext('2d') : null;
+if (!canvas || !ctx) {
+  try { sfReportError('canvas', new Error('2d context unavailable')); } catch (_) {}
+}
 let W = innerWidth, H = innerHeight, DPR = 1;
 let resizeDebounce = null;
 let lastResizeKey = '';
@@ -10171,7 +10208,7 @@ class Fighter {
     if (!this.alive) return 0;
     if ((this.isPlayer || this.playerSlot) && game && game.ketsbamSuperT > 0) return 0;
     if (this.invulnT > 0) {
-      game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13);
+      if (game) game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13);
       return 0;
     }
     if (this.blocking && !opts.unblockable) {
@@ -11819,6 +11856,22 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
 /* ================================ GAME ================================= */
 let game = null;
 
+function scheduleGameResult(g, delay, fn) {
+  if (!g) return;
+  if (g._resultTimer) clearTimeout(g._resultTimer);
+  g._resultTimer = setTimeout(() => {
+    g._resultTimer = null;
+    fn();
+  }, delay);
+}
+
+function clearGameResultTimer(g) {
+  if (g && g._resultTimer) {
+    clearTimeout(g._resultTimer);
+    g._resultTimer = null;
+  }
+}
+
 class Game {
   constructor(mode, opts) {
     opts = opts || {};
@@ -12010,6 +12063,10 @@ class Game {
   }
 
   nextWave() {
+    if (!this.player?.alive) {
+      if (!this.over) this.finishAdventure(false);
+      return;
+    }
     this.waveIdx++;
     if (this.waveIdx >= this.level.waves.length) { this.finishAdventure(true); return; }
     const wave = this.level.waves[this.waveIdx];
@@ -12168,7 +12225,7 @@ class Game {
     this.pickups = this.pickups.filter(pk => pk.life > 0);
     if (this.betweenT > 0) {
       this.betweenT -= dt;
-      if (this.betweenT <= 0 && this.waveIdx < 0) this.nextWave();
+      if (this.betweenT <= 0 && this.waveIdx < 0 && this.player?.alive) this.nextWave();
     }
     if (this.spawnQueue.length) {
       const alive = this.monsters.filter((m) => m.alive).length;
@@ -12204,18 +12261,16 @@ class Game {
       } else if (alive >= ADVENTURE_MAX_ALIVE) {
         this.spawnTimer = Math.min(this.spawnTimer, 0.12);
       }
-    } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive)) {
+    } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive) && this.player?.alive) {
       if (!this.wavePause) {
         const nextIsBoss = isBossWave(this.level, this.waveIdx + 1);
         this.wavePause = nextIsBoss ? 2.15 : 1.55;
         this.wavePauseTotal = this.wavePause;
-        if (this.player && this.player.alive) {
-          const waveHeal = Math.max(4, Math.round(this.player.maxhp * 0.06));
-          this.player.hp = Math.min(this.player.maxhp, this.player.hp + waveHeal);
-          this.player.energy = clamp(this.player.energy + 8, 0, 100);
-          this.floater(this.player.x, this.player.y - 88, t('banner.waveClear', { heal: waveHeal }), '#6ee06e', 14);
-        }
-        if (this.stageHealBetween > 0 && this.player && this.player.alive) {
+        const waveHeal = Math.max(4, Math.round(this.player.maxhp * 0.06));
+        this.player.hp = Math.min(this.player.maxhp, this.player.hp + waveHeal);
+        this.player.energy = clamp(this.player.energy + 8, 0, 100);
+        this.floater(this.player.x, this.player.y - 88, t('banner.waveClear', { heal: waveHeal }), '#6ee06e', 14);
+        if (this.stageHealBetween > 0) {
           const heal = Math.max(8, Math.round(this.player.maxhp * this.stageHealBetween));
           this.player.hp = Math.min(this.player.maxhp, this.player.hp + heal);
           this.floater(this.player.x, this.player.y - 108, t('combat.allyHeal', { heal }), '#6ee06e', 14);
@@ -12233,6 +12288,7 @@ class Game {
 
   finishAdventure(win) {
     if (this.over) return;
+    if (win && (!this.player || !this.player.alive)) win = false;
     this.deactivateMasterSword(true);
     this.over = true;
     this.inputLocked = true;
@@ -12290,7 +12346,7 @@ class Game {
       AudioSys.sfx('lose');
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
-    setTimeout(() => UI.showResult(win, {
+    scheduleGameResult(this, 1400, () => UI.showResult(win, {
       title: win ? t('result.advWin') : t('result.advLose'),
       detail: (() => {
         const finishers = this.runFinishers ? t('result.finishersLine', { n: this.runFinishers }) : '';
@@ -12318,7 +12374,7 @@ class Game {
           t('result.lossGambleTip'));
         return once ? `${once} · ${base}` : base;
       })(),
-    }), 1400);
+    }));
   }
 
   onMonsterKilled(m) {
@@ -12647,7 +12703,7 @@ class Game {
         let pWin;
         if (rDead && !pDead) pWin = true;
         else if (pDead && !rDead) pWin = false;
-        else pWin = (this.player.hp / this.player.maxhp) >= (this.robot.hp / this.robot.maxhp);
+        else pWin = (this.player.hp / Math.max(1, this.player.maxhp)) >= (this.robot.hp / Math.max(1, this.robot.maxhp));
         if (pWin) this.roundsP++; else this.roundsR++;
         this.trainComboBest = Math.max(this.trainComboBest || 0, this.trainRoundBest || 0);
         this.phase = 'roundend'; this.phaseT = 0;
@@ -12694,7 +12750,7 @@ class Game {
         : (save.trainWins === 3 ? t('result.trainStyleUnlock') : t('result.trainStyleMore')))
       : (onceResultTip('training', 'loss', t('result.trainLossTip'))
         || t('result.trainTipDefault'));
-    setTimeout(() => UI.showResult(win, {
+    scheduleGameResult(this, 1200, () => UI.showResult(win, {
       title: win ? t('result.trainWin') : t('result.trainLose'),
       detail: t('result.trainDetail', {
         outcome: win ? t('result.trainOutcomeWin') : t('result.trainOutcomeLose'),
@@ -12705,7 +12761,7 @@ class Game {
       }),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
-    }), 1200);
+    }));
   }
 
   initVersus(opts) {
@@ -12758,7 +12814,7 @@ class Game {
         const timedOut = !p1d && !p2d && this.roundTimer <= 0;
         if (p2d && !p1d) p1Win = true;
         else if (p1d && !p2d) p1Win = false;
-        else p1Win = (this.player.hp / this.player.maxhp) >= (this.p2.hp / this.p2.maxhp);
+        else p1Win = (this.player.hp / Math.max(1, this.player.maxhp)) >= (this.p2.hp / Math.max(1, this.p2.maxhp));
         if (p1Win) this.roundsP1++; else this.roundsP2++;
         this.vsRoundLog = this.vsRoundLog || [];
         this.vsRoundLog.push(p1Win ? 'p1' : 'p2');
@@ -12767,8 +12823,8 @@ class Game {
         this.inputLocked = true;
         let msg = p1Win ? t('banner.p1RoundWin') : t('banner.p2RoundWin');
         if (timedOut) {
-          const hp1 = Math.round(this.player.hp / this.player.maxhp * 100);
-          const hp2 = Math.round(this.p2.hp / this.p2.maxhp * 100);
+          const hp1 = Math.round(this.player.hp / Math.max(1, this.player.maxhp) * 100);
+          const hp2 = Math.round(this.p2.hp / Math.max(1, this.p2.maxhp) * 100);
           msg = t('banner.timeHpVs', { hp1, hp2, msg });
         }
         this.banner(msg, 1.5, p1Win ? '#7cf5ff' : '#ffb0b8', 38);
@@ -12780,7 +12836,7 @@ class Game {
         else this.startVsRound();
       }
     }
-    this.p2.update(dt, this);
+    if (this.p2) this.p2.update(dt, this);
   }
 
   finishVersus(p1Win) {
@@ -12792,14 +12848,14 @@ class Game {
     bumpStat('vsMatches', 1);
     if (p1Win) bumpStat('vsWins', 1);
     this.grantXP(p1Win ? 35 : 20);
-    setTimeout(() => UI.showResult(p1Win, {
+    scheduleGameResult(this, 1200, () => UI.showResult(p1Win, {
       title: p1Win ? t('result.vsP1Win') : t('result.vsP2Win'),
       detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}` +
         ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : '') +
         (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
       xp: this.sessionXP, mode: 'versus', win: p1Win, p1: this.p1Pick, p2: this.p2Pick,
       tip: t('result.vsRematchTip'),
-    }), 1200);
+    }));
   }
 
   /* ------------------------------ MUUR -------------------------------- */
@@ -12922,7 +12978,7 @@ class Game {
       else if (paceDelta != null && paceDelta < -3) tip = t('result.wallBehindPace');
       else if (paceDelta != null && paceDelta >= 3) tip = t('result.wallGoodPace');
     }
-    setTimeout(() => UI.showResult(true, {
+    scheduleGameResult(this, 1200, () => UI.showResult(true, {
       title: isRecord ? t('result.wallRecord') : t('result.wallTime'),
       detail: t('result.wallDetail', {
         score: this.score, pace, best, combo: this.maxCombo || 0,
@@ -12931,7 +12987,7 @@ class Game {
       }),
       xp: this.sessionXP, mode: 'wall', win: true,
       tip,
-    }), 1200);
+    }));
   }
 
   /* ------------------------ MATS · MUNTJES BONUS ----------------------- */
@@ -13029,7 +13085,7 @@ class Game {
     AudioSys.sfx(isRecord ? 'win' : 'bonus');
     this.banner(t('banner.bonusDone'), 1.4, '#7cfc8a', 40);
     const wallet = petCoinsBalance();
-    setTimeout(() => UI.showResult(true, {
+    scheduleGameResult(this, 1200, () => UI.showResult(true, {
       title: isRecord ? t('result.matsRecord') : t('result.matsDone'),
       detail: t('result.matsDetail', {
         n, best,
@@ -13042,7 +13098,7 @@ class Game {
       tip: petEarned > 0
         ? t('result.matsPetTip')
         : t('result.matsControlTip'),
-    }), 1200);
+    }));
   }
 
   drawCoinRunLayer(c) {
@@ -13425,6 +13481,7 @@ class Game {
     if (this.hint > 0) this.hint -= dt;
     this.shakeT = Math.max(0, this.shakeT - dt);
 
+    if (!this.player) return;
     this.player.update(dt, this);
     if (this.pet) this.pet.update(dt);
     if (this.eggPet) this.eggPet.update(dt);
@@ -15759,6 +15816,7 @@ const UI = {
         return;
       }
       if (active === 'pauseScreen' && game) {
+        try { Input.releaseAll(); } catch (_) {}
         state = 'play';
         AudioSys.setPaused(false);
         if (save.music && AudioSys.desiredSong) AudioSys.play(AudioSys.desiredSong);
@@ -15766,6 +15824,7 @@ const UI = {
         return;
       }
       if (active === 'gambleScreen') {
+        try { cancelGambleStart(); } catch (_) {}
         this.show('levelScreen');
         return;
       }
@@ -15821,6 +15880,9 @@ const UI = {
 
   goMenu() {
     try {
+      try { clearGameResultTimer(game); } catch (_) {}
+      try { cancelGambleStart(); } catch (_) {}
+      try { Input.releaseAll(); } catch (_) {}
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
@@ -15839,6 +15901,7 @@ const UI = {
       if (window.StickInstall) window.StickInstall.refreshMenuButton();
     } catch (err) {
       sfReportError('goMenu', err, 'Kon menu niet openen — herlaad de pagina');
+      try { Input.releaseAll(); } catch (_) {}
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
@@ -16163,14 +16226,16 @@ const UI = {
   },
 
   renderMenu() {
+    try {
     this.syncTouchClass();
     const need = xpNeed(save.lvl);
     const w = weaponById(save.weapon);
     const st = styleById(save.style || 'classic');
     const pct = Math.round(save.xp / need * 100);
     ensureDaily();
+    const dailyTasks = (save.daily && Array.isArray(save.daily.tasks)) ? save.daily.tasks : [];
     const readyClaim = claimableDailyTasks().length;
-    const bonusReady = save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed;
+    const bonusReady = dailyTasks.length > 0 && dailyTasks.every(t => t.claimed) && !save.daily.dayBonusClaimed;
     const missAlert = readyClaim > 0 || bonusReady;
     const profileEl = document.getElementById('menuProfileBar');
     if (profileEl) {
@@ -16203,8 +16268,8 @@ const UI = {
     document.querySelectorAll('[data-hub-stat]').forEach((el) => {
       el.textContent = hubTileStatLine(el.dataset.hubStat);
     });
-    document.getElementById('togMusic').classList.toggle('off', !save.music);
-    document.getElementById('togSfx').classList.toggle('off', !save.sfx);
+    document.getElementById('togMusic')?.classList.toggle('off', !save.music);
+    document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const verLine = document.getElementById('menuVerLine');
     if (verLine) verLine.textContent = 'v' + APP_VERSION + ' · arcade · SW v' + SW_CACHE_REV;
     const missEl = document.getElementById('menuDailyHint');
@@ -16254,6 +16319,9 @@ const UI = {
         }).catch(() => {});
       }
     }
+    } catch (err) {
+      sfReportError('renderMenu', err, 'Menu kon niet ververst worden');
+    }
   },
 
   renderMissions() {
@@ -16261,7 +16329,7 @@ const UI = {
     const dailyHost = document.getElementById('dailyList');
     const achHost = document.getElementById('achList');
     if (!dailyHost || !achHost) return;
-    const tasks = save.daily.tasks;
+    const tasks = (save.daily && Array.isArray(save.daily.tasks)) ? save.daily.tasks : [];
     const readyN = tasks.filter(t => t.done && !t.claimed).length;
     const claimedN = tasks.filter(t => t.claimed).length;
     const doneN = tasks.filter(t => t.done).length;
@@ -17547,15 +17615,19 @@ const UI = {
   },
 
   showResult(win, data) {
+    if (state === 'menu' || !data) return;
     this.lastResult = data;
     state = 'result';
     scheduleResize();
-    document.getElementById('pauseBtn').classList.remove('show');
+    document.getElementById('pauseBtn')?.classList.remove('show');
     const title = document.getElementById('resTitle');
+    if (!title) return;
     title.textContent = data.title;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
-    document.getElementById('resDetail').textContent = data.detail;
-    document.getElementById('resXp').textContent = t('result.xp', {
+    const detailEl = document.getElementById('resDetail');
+    if (detailEl) detailEl.textContent = data.detail;
+    const xpEl = document.getElementById('resXp');
+    if (xpEl) xpEl.textContent = t('result.xp', {
       xp: data.xp, lvl: save.lvl, cur: save.xp, need: xpNeed(save.lvl),
     });
     const tipEl = document.getElementById('resTip');
@@ -17597,6 +17669,8 @@ function startGame(mode, opts) {
     return;
   }
   window.__sfLoopErr = false;
+  try { Input.releaseAll(); } catch (_) {}
+  Input.dualMode = false;
   try { dismissTunnelOverlayIfStatic(); } catch (_) {}
   if (mode === 'versus') {
     try {
@@ -18108,6 +18182,7 @@ if (pauseVsRestart) {
 }
 bindPress(document.getElementById('resAgain'), () => {
   const d = UI.lastResult;
+  if (!d || !d.mode) return;
   AudioSys.sfx('select');
   if (d.mode === 'adventure') gokGooiStartLevel(d.level);
   else if (d.mode === 'versus') {
@@ -18345,6 +18420,10 @@ function loop(now) {
       try { Input.endFrame(); } catch (frameErr) {
         sfReportError('input', frameErr);
       }
+    } else if (state === 'pause' && game) {
+      try { Input.endFrame(); } catch (frameErr) {
+        sfReportError('input', frameErr);
+      }
     } else if (Perf.menuLandingVisible()) {
       menuAnimT += dt;
       ensureMenuScreenActive();
@@ -18530,7 +18609,16 @@ function updateNetStatus(ev) {
 window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
 window.addEventListener('pageshow', (ev) => {
-  if (ev.persisted) updateNetStatus();
+  if (ev.persisted) {
+    try { Input.releaseAll(); } catch (_) {}
+    if (state === 'play' && game) {
+      state = 'pause';
+      try { AudioSys.setPaused(true); } catch (_) {}
+      try { UI.renderPauseToggles(); UI.show('pauseScreen'); } catch (_) {}
+    }
+    scheduleResize();
+  }
+  updateNetStatus(ev);
 });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') updateNetStatus();
@@ -18598,7 +18686,7 @@ function bootGame() {
       if (window.__sfLoopErr) return;
       const err = ev.error || new Error(ev.message || 'unknown');
       sfReportError('window', err);
-      if (state === 'play') {
+      if (state === 'play' || state === 'pause' || state === 'result') {
         try { recoverToMenu(); } catch (_) {}
       }
     });
@@ -18607,7 +18695,7 @@ function bootGame() {
       const r = ev.reason;
       const err = r instanceof Error ? r : new Error(String(r != null ? r : 'async reject'));
       sfReportError('async', err, 'Actie mislukt — probeer opnieuw');
-      if (state === 'play') {
+      if (state === 'play' || state === 'pause' || state === 'result') {
         try { recoverToMenu(); } catch (_) {}
       }
     });

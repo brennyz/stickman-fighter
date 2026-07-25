@@ -1,6 +1,22 @@
 /* ================================ GAME ================================= */
 let game = null;
 
+function scheduleGameResult(g, delay, fn) {
+  if (!g) return;
+  if (g._resultTimer) clearTimeout(g._resultTimer);
+  g._resultTimer = setTimeout(() => {
+    g._resultTimer = null;
+    fn();
+  }, delay);
+}
+
+function clearGameResultTimer(g) {
+  if (g && g._resultTimer) {
+    clearTimeout(g._resultTimer);
+    g._resultTimer = null;
+  }
+}
+
 class Game {
   constructor(mode, opts) {
     opts = opts || {};
@@ -192,6 +208,10 @@ class Game {
   }
 
   nextWave() {
+    if (!this.player?.alive) {
+      if (!this.over) this.finishAdventure(false);
+      return;
+    }
     this.waveIdx++;
     if (this.waveIdx >= this.level.waves.length) { this.finishAdventure(true); return; }
     const wave = this.level.waves[this.waveIdx];
@@ -350,7 +370,7 @@ class Game {
     this.pickups = this.pickups.filter(pk => pk.life > 0);
     if (this.betweenT > 0) {
       this.betweenT -= dt;
-      if (this.betweenT <= 0 && this.waveIdx < 0) this.nextWave();
+      if (this.betweenT <= 0 && this.waveIdx < 0 && this.player?.alive) this.nextWave();
     }
     if (this.spawnQueue.length) {
       const alive = this.monsters.filter((m) => m.alive).length;
@@ -386,18 +406,16 @@ class Game {
       } else if (alive >= ADVENTURE_MAX_ALIVE) {
         this.spawnTimer = Math.min(this.spawnTimer, 0.12);
       }
-    } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive)) {
+    } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive) && this.player?.alive) {
       if (!this.wavePause) {
         const nextIsBoss = isBossWave(this.level, this.waveIdx + 1);
         this.wavePause = nextIsBoss ? 2.15 : 1.55;
         this.wavePauseTotal = this.wavePause;
-        if (this.player && this.player.alive) {
-          const waveHeal = Math.max(4, Math.round(this.player.maxhp * 0.06));
-          this.player.hp = Math.min(this.player.maxhp, this.player.hp + waveHeal);
-          this.player.energy = clamp(this.player.energy + 8, 0, 100);
-          this.floater(this.player.x, this.player.y - 88, t('banner.waveClear', { heal: waveHeal }), '#6ee06e', 14);
-        }
-        if (this.stageHealBetween > 0 && this.player && this.player.alive) {
+        const waveHeal = Math.max(4, Math.round(this.player.maxhp * 0.06));
+        this.player.hp = Math.min(this.player.maxhp, this.player.hp + waveHeal);
+        this.player.energy = clamp(this.player.energy + 8, 0, 100);
+        this.floater(this.player.x, this.player.y - 88, t('banner.waveClear', { heal: waveHeal }), '#6ee06e', 14);
+        if (this.stageHealBetween > 0) {
           const heal = Math.max(8, Math.round(this.player.maxhp * this.stageHealBetween));
           this.player.hp = Math.min(this.player.maxhp, this.player.hp + heal);
           this.floater(this.player.x, this.player.y - 108, t('combat.allyHeal', { heal }), '#6ee06e', 14);
@@ -415,6 +433,7 @@ class Game {
 
   finishAdventure(win) {
     if (this.over) return;
+    if (win && (!this.player || !this.player.alive)) win = false;
     this.deactivateMasterSword(true);
     this.over = true;
     this.inputLocked = true;
@@ -472,7 +491,7 @@ class Game {
       AudioSys.sfx('lose');
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
-    setTimeout(() => UI.showResult(win, {
+    scheduleGameResult(this, 1400, () => UI.showResult(win, {
       title: win ? t('result.advWin') : t('result.advLose'),
       detail: (() => {
         const finishers = this.runFinishers ? t('result.finishersLine', { n: this.runFinishers }) : '';
@@ -500,7 +519,7 @@ class Game {
           t('result.lossGambleTip'));
         return once ? `${once} · ${base}` : base;
       })(),
-    }), 1400);
+    }));
   }
 
   onMonsterKilled(m) {
@@ -829,7 +848,7 @@ class Game {
         let pWin;
         if (rDead && !pDead) pWin = true;
         else if (pDead && !rDead) pWin = false;
-        else pWin = (this.player.hp / this.player.maxhp) >= (this.robot.hp / this.robot.maxhp);
+        else pWin = (this.player.hp / Math.max(1, this.player.maxhp)) >= (this.robot.hp / Math.max(1, this.robot.maxhp));
         if (pWin) this.roundsP++; else this.roundsR++;
         this.trainComboBest = Math.max(this.trainComboBest || 0, this.trainRoundBest || 0);
         this.phase = 'roundend'; this.phaseT = 0;
@@ -876,7 +895,7 @@ class Game {
         : (save.trainWins === 3 ? t('result.trainStyleUnlock') : t('result.trainStyleMore')))
       : (onceResultTip('training', 'loss', t('result.trainLossTip'))
         || t('result.trainTipDefault'));
-    setTimeout(() => UI.showResult(win, {
+    scheduleGameResult(this, 1200, () => UI.showResult(win, {
       title: win ? t('result.trainWin') : t('result.trainLose'),
       detail: t('result.trainDetail', {
         outcome: win ? t('result.trainOutcomeWin') : t('result.trainOutcomeLose'),
@@ -887,7 +906,7 @@ class Game {
       }),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
-    }), 1200);
+    }));
   }
 
   initVersus(opts) {
@@ -940,7 +959,7 @@ class Game {
         const timedOut = !p1d && !p2d && this.roundTimer <= 0;
         if (p2d && !p1d) p1Win = true;
         else if (p1d && !p2d) p1Win = false;
-        else p1Win = (this.player.hp / this.player.maxhp) >= (this.p2.hp / this.p2.maxhp);
+        else p1Win = (this.player.hp / Math.max(1, this.player.maxhp)) >= (this.p2.hp / Math.max(1, this.p2.maxhp));
         if (p1Win) this.roundsP1++; else this.roundsP2++;
         this.vsRoundLog = this.vsRoundLog || [];
         this.vsRoundLog.push(p1Win ? 'p1' : 'p2');
@@ -949,8 +968,8 @@ class Game {
         this.inputLocked = true;
         let msg = p1Win ? t('banner.p1RoundWin') : t('banner.p2RoundWin');
         if (timedOut) {
-          const hp1 = Math.round(this.player.hp / this.player.maxhp * 100);
-          const hp2 = Math.round(this.p2.hp / this.p2.maxhp * 100);
+          const hp1 = Math.round(this.player.hp / Math.max(1, this.player.maxhp) * 100);
+          const hp2 = Math.round(this.p2.hp / Math.max(1, this.p2.maxhp) * 100);
           msg = t('banner.timeHpVs', { hp1, hp2, msg });
         }
         this.banner(msg, 1.5, p1Win ? '#7cf5ff' : '#ffb0b8', 38);
@@ -962,7 +981,7 @@ class Game {
         else this.startVsRound();
       }
     }
-    this.p2.update(dt, this);
+    if (this.p2) this.p2.update(dt, this);
   }
 
   finishVersus(p1Win) {
@@ -974,14 +993,14 @@ class Game {
     bumpStat('vsMatches', 1);
     if (p1Win) bumpStat('vsWins', 1);
     this.grantXP(p1Win ? 35 : 20);
-    setTimeout(() => UI.showResult(p1Win, {
+    scheduleGameResult(this, 1200, () => UI.showResult(p1Win, {
       title: p1Win ? t('result.vsP1Win') : t('result.vsP2Win'),
       detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}` +
         ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : '') +
         (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
       xp: this.sessionXP, mode: 'versus', win: p1Win, p1: this.p1Pick, p2: this.p2Pick,
       tip: t('result.vsRematchTip'),
-    }), 1200);
+    }));
   }
 
   /* ------------------------------ MUUR -------------------------------- */
@@ -1104,7 +1123,7 @@ class Game {
       else if (paceDelta != null && paceDelta < -3) tip = t('result.wallBehindPace');
       else if (paceDelta != null && paceDelta >= 3) tip = t('result.wallGoodPace');
     }
-    setTimeout(() => UI.showResult(true, {
+    scheduleGameResult(this, 1200, () => UI.showResult(true, {
       title: isRecord ? t('result.wallRecord') : t('result.wallTime'),
       detail: t('result.wallDetail', {
         score: this.score, pace, best, combo: this.maxCombo || 0,
@@ -1113,7 +1132,7 @@ class Game {
       }),
       xp: this.sessionXP, mode: 'wall', win: true,
       tip,
-    }), 1200);
+    }));
   }
 
   /* ------------------------ MATS · MUNTJES BONUS ----------------------- */
@@ -1211,7 +1230,7 @@ class Game {
     AudioSys.sfx(isRecord ? 'win' : 'bonus');
     this.banner(t('banner.bonusDone'), 1.4, '#7cfc8a', 40);
     const wallet = petCoinsBalance();
-    setTimeout(() => UI.showResult(true, {
+    scheduleGameResult(this, 1200, () => UI.showResult(true, {
       title: isRecord ? t('result.matsRecord') : t('result.matsDone'),
       detail: t('result.matsDetail', {
         n, best,
@@ -1224,7 +1243,7 @@ class Game {
       tip: petEarned > 0
         ? t('result.matsPetTip')
         : t('result.matsControlTip'),
-    }), 1200);
+    }));
   }
 
   drawCoinRunLayer(c) {
@@ -1607,6 +1626,7 @@ class Game {
     if (this.hint > 0) this.hint -= dt;
     this.shakeT = Math.max(0, this.shakeT - dt);
 
+    if (!this.player) return;
     this.player.update(dt, this);
     if (this.pet) this.pet.update(dt);
     if (this.eggPet) this.eggPet.update(dt);

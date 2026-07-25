@@ -113,7 +113,7 @@ function todayKey() {
 }
 function ensureDaily() {
   const dk = todayKey();
-  if (!save.daily || save.daily.date !== dk) {
+  if (!save.daily || save.daily.date !== dk || !Array.isArray(save.daily.tasks) || !save.daily.tasks.length) {
     const order = [...DAILY_DEFS].sort((a, b) => {
       const h = (s) => { let x = 0; for (let i = 0; i < s.length; i++) x = (x * 33 + s.charCodeAt(i)) | 0; return x; };
       return h(dk + a.id) - h(dk + b.id);
@@ -852,6 +852,8 @@ function recoverToMenu() {
       ensureMenuScreenActive();
       return;
     }
+    try { clearGameResultTimer(game); } catch (_) {}
+    try { cancelGambleStart(); } catch (_) {}
     game = null;
     state = 'menu';
     window.__sfLoopErr = false;
@@ -876,6 +878,13 @@ function recoverToMenu() {
   }
 }
 function importSaveJson(text) {
+  if (state === 'play' || state === 'pause') {
+    try { recoverToMenu(); } catch (_) {
+      game = null;
+      state = 'menu';
+      try { syncPlayLayer(); } catch (_) {}
+    }
+  }
   const { save: next, warnings } = previewImportSave(text);
   save = next;
   if (!persistOrToast('import')) throw new Error('Import gelukt maar opslaan mislukt — probeer opnieuw');
@@ -932,6 +941,15 @@ function startAdventureFromGamble(skipGamble) {
 }
 
 let gokStartBusy = false;
+let gokScreenTimer = null;
+
+function cancelGambleStart() {
+  if (gokScreenTimer) {
+    clearTimeout(gokScreenTimer);
+    gokScreenTimer = null;
+  }
+  gokStartBusy = false;
+}
 
 function playGambleRollSfx(g) {
   try { AudioSys.sfx('diceRoll'); } catch (_) {}
@@ -958,16 +976,17 @@ function gokGooiStartLevel(n) {
     lastGambleRoll = rollStageGamble();
     playGambleRollSfx(lastGambleRoll);
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
-    gokStartBusy = false;
     startAdventureFromGamble(false);
   } catch (err) {
-    gokStartBusy = false;
     sfReportError('gokStart', err, 'Gok start mislukt — probeer opnieuw');
+  } finally {
+    gokStartBusy = false;
   }
 }
 
 function gokGooiStartFromScreen() {
   if (gokStartBusy) return;
+  cancelGambleStart();
   gokStartBusy = true;
   try {
     AudioSys.init();
@@ -978,12 +997,13 @@ function gokGooiStartFromScreen() {
     if (sumLine) sumLine.textContent = 'START!';
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
     const delay = motionReduced() ? 50 : 140;
-    setTimeout(() => {
+    gokScreenTimer = setTimeout(() => {
+      gokScreenTimer = null;
       gokStartBusy = false;
       startAdventureFromGamble(false);
     }, delay);
   } catch (err) {
-    gokStartBusy = false;
+    cancelGambleStart();
     sfReportError('gokGooi', err, 'Gok start mislukt — probeer opnieuw');
   }
 }

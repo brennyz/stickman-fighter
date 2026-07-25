@@ -317,8 +317,13 @@ function padDigitalMove(pad) {
   if (!pad) return 0;
   let m = 0;
   if (pad.side === 'p1') {
-    if (pad.keys['arrowleft'] || pad.keys['a']) m -= 1;
-    if (pad.keys['arrowright'] || pad.keys['d']) m += 1;
+    if (Input.dualMode) {
+      if (pad.keys['a']) m -= 1;
+      if (pad.keys['d']) m += 1;
+    } else {
+      if (pad.keys['arrowleft'] || pad.keys['a']) m -= 1;
+      if (pad.keys['arrowright'] || pad.keys['d']) m += 1;
+    }
   } else {
     if (pad.keys['arrowleft']) m -= 1;
     if (pad.keys['arrowright']) m += 1;
