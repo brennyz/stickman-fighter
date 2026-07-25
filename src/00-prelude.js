@@ -8,7 +8,8 @@
    ========================================================================= */
 
 const TAU = Math.PI * 2;
-const FX_CAP = { particles: 140, floaters: 28, projectiles: 48, banners: 5, afterimages: 12 };
+const BANNER_LANES = 3;
+const FX_CAP = { particles: 140, floaters: 28, projectiles: 48, banners: BANNER_LANES, afterimages: 12 };
 const Perf = {
   tier: 0,
   emaMs: 16.7,
@@ -109,6 +110,29 @@ function perfFxSummary() {
   const fps = Perf.emaMs > 0 ? Math.round(1000 / Perf.emaMs) : 0;
   const dpr = typeof DPR !== 'undefined' ? DPR : 1;
   return { fps, tier: Perf.tier, dpr, maxDpr: maxCanvasDpr(), caps };
+}
+
+function pickBannerLane(banners) {
+  const occupied = new Set();
+  for (const b of banners) {
+    if (typeof b.lane === 'number' && b.lane >= 0 && b.lane < BANNER_LANES) occupied.add(b.lane);
+  }
+  for (let i = 0; i < BANNER_LANES; i++) if (!occupied.has(i)) return i;
+  let pick = 0;
+  let best = -1;
+  for (const b of banners) {
+    const p = b.t / b.dur;
+    if (p > best) { best = p; pick = b.lane; }
+  }
+  return pick;
+}
+
+function bannerLaneY(H, lane, size) {
+  const baseY = H * 0.31;
+  const step = Math.max(32, Math.min(48, H * 0.052));
+  const mid = (BANNER_LANES - 1) * 0.5;
+  const laneN = typeof lane === 'number' ? lane : 1;
+  return baseY + (laneN - mid) * step;
 }
 function maxCanvasDpr() {
   const rm = motionReduced();
