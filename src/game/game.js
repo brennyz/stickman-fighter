@@ -3338,6 +3338,7 @@ class Game {
     const lite = fxLite() || calm;
     const col = sp.color || '#ffd75e';
     const col2 = sp.color2 || '#ff9a3d';
+    const pulse = calm ? 0 : (this.ketsbamPulse || 0);
 
     c.save();
     const ringR = calm ? (28 + prog * 88) : (28 + prog * 88 + Math.sin(pulse * 11) * 7);
@@ -3365,7 +3366,7 @@ class Game {
       c.strokeStyle = i % 2 ? '#fff8dc' : col2;
       c.lineWidth = 2 + prog * 2;
       c.beginPath();
-      c.arc(px, py, innerR + 18 + prog * 28, 0, TAU);
+      c.arc(px, py, r + 18 + prog * 28, 0, TAU);
       c.stroke();
     }
 

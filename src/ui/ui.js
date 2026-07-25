@@ -1575,8 +1575,10 @@ const UI = {
           training: t('modes.training'), wall: t('modes.wall'), versus: t('modes.versus'), coinrun: t('modes.coinrun'),
         };
         cont.style.display = 'flex';
-        cont.querySelector('div').innerHTML =
-          `${t('menu.continue')}<small>${labels[lp.mode] || lp.mode}</small>`;
+        const contDiv = cont.querySelector('div');
+        if (contDiv) {
+          contDiv.innerHTML = `${t('menu.continue')}<small>${labels[lp.mode] || lp.mode}</small>`;
+        }
       } else cont.style.display = 'none';
     }
     document.querySelectorAll('[data-hub]').forEach((el) => {
