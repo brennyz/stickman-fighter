@@ -647,7 +647,6 @@ function pickSkillPreview(id, silent) {
 
 function initCharSelectChrome() {
   if (window.__sfCharChrome) return;
-  window.__sfCharChrome = true;
   UI.charSagaFilter = 'all';
   const grid = document.getElementById('charGrid');
   const runPick = (card) => {
@@ -655,7 +654,13 @@ function initCharSelectChrome() {
     pickVsRosterId(card.dataset.id);
   };
   if (grid) {
-    bindCharPickSurface(grid, '.char-card', runPick);
+    bindCollectionPickGrid(grid, {
+      selector: '.char-card',
+      onPick: (card, meta) => {
+        if (meta && meta.scrollGesture) return;
+        runPick(card);
+      },
+    });
     grid.addEventListener('pointerover', (e) => {
       const card = e.target.closest('.char-card');
       if (!card || !card.dataset.id) return;
@@ -724,10 +729,13 @@ function initCharSelectChrome() {
     startGame('versus', { p1: vsSelect.p1, p2: vsSelect.p2 });
   });
   const iconRow = document.getElementById('charIconRow');
-  if (iconRow && !iconRow.dataset.sfIconBound) {
-    iconRow.dataset.sfIconBound = '1';
-    bindCharPickSurface(iconRow, '.char-icon-chip:not(.locked)', (chip) => {
-      if (chip.dataset.id) pickVsRosterId(chip.dataset.id);
+  if (iconRow) {
+    bindCollectionPickGrid(iconRow, {
+      selector: '.char-icon-chip:not(.locked)',
+      onPick: (chip, meta) => {
+        if (meta && meta.scrollGesture) return;
+        if (chip.dataset.id) pickVsRosterId(chip.dataset.id);
+      },
     });
   }
   const clashBtn = document.getElementById('btnCharSagaClash');
@@ -745,6 +753,7 @@ function initCharSelectChrome() {
     scrollCharFightIntoView();
     UI.toast(t('toast.charSagaClash', { a: duo.a.name, b: duo.b.name }), 2600);
   });
+  window.__sfCharChrome = true;
 }
 
 /** Prestatie-iconen als inline SVG (art-upgrade 4/4) — vervangt emoji. */

@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-25 | **17** | Stabiliteit cron: char select bindCharPickSurface crash (→ bindCollectionPickGrid), claim-all batch, gamble race, lastPlay clamp. v1.18.60 / SW v270. |
 | 2026-07-25 | — | **HOTFIX play v2:** adventure 1-tap→menu. Inline suppress + NOOIT recoverToMenu bij window-error tijdens play/pause + smoke regressie. v1.18.59 / SW v269. |
 | 2026-07-25 | — | **HOTFIX play:** adventure 1e tik → menu. `playInputSuppressed` + try/catch Input/canvas + geen recoverToMenu zolang game leeft. v1.18.58 / SW v268. |
 | 2026-07-25 | — | **Adventure tap→menu:** `playInputSuppressed` terug + geen recoverToMenu bij window-error zolang `game` leeft. v1.18.57 / SW v267. |

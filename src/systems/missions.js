@@ -202,10 +202,21 @@ function claimAllDailyReady() {
     return;
   }
   let total = 0;
-  for (const task of ready) total += claimDailyTask(task.id, { silent: true, skipRefresh: true });
-  if (!save.missionsIntroSeen) save.missionsIntroSeen = true;
+  let claimed = 0;
+  for (const task of ready) {
+    const xp = claimDailyTask(task.id, { silent: true, skipRefresh: true });
+    if (xp > 0) {
+      total += xp;
+      claimed++;
+    }
+  }
+  if (claimed === 0) {
+    UI.toast(t('toast.noMissionReady'), 2400);
+    return;
+  }
+  if (claimed === ready.length && !save.missionsIntroSeen) save.missionsIntroSeen = true;
   AudioSys.sfx('bonus');
-  persist();
+  if (!persistOrToast('claim-all')) return;
   checkDailyAllBonus();
   UI.renderMissions();
   UI.renderMenu();
@@ -215,9 +226,9 @@ function claimAllDailyReady() {
     : (leftClaims === 1
       ? t('toast.claimPath1')
       : t('toast.claimPathN', { n: leftClaims }));
-  UI.toast((ready.length === 1
+  UI.toast((claimed === 1
     ? t('toast.claimBatch1', { total })
-    : t('toast.claimBatchN', { n: ready.length, total })) + ' · ' + path, 3400);
+    : t('toast.claimBatchN', { n: claimed, total })) + ' · ' + path, 3400);
   setTimeout(() => dailyClaimFollowUpToast(), 450);
 }
 
@@ -1838,7 +1849,6 @@ function gokGooiStartLevel(n) {
     const delay = motionReduced() ? 80 : 420;
     gokScreenTimer = setTimeout(() => {
       gokScreenTimer = null;
-      gokStartBusy = false;
       try { UI.hideGambleRollFlash(); } catch (_) {}
       startAdventureFromGamble(false);
     }, delay);
@@ -1863,7 +1873,6 @@ function gokGooiStartFromScreen() {
     const delay = motionReduced() ? 50 : 140;
     gokScreenTimer = setTimeout(() => {
       gokScreenTimer = null;
-      gokStartBusy = false;
       startAdventureFromGamble(false);
     }, delay);
   } catch (err) {

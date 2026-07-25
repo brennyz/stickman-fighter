@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.59';
+const APP_VERSION = '1.18.60';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 269;
+const SW_CACHE_REV = 270;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -1018,11 +1018,18 @@ function sanitizeSave(s) {
     const lp = out.lastPlay;
     if (!['adventure', 'training', 'wall', 'versus', 'coinrun'].includes(lp.mode)) out.lastPlay = null;
     else {
+      const advCap = lp.mode === 'adventure' ? out.unlocked : maxLevel;
+      let p1 = typeof lp.p1 === 'string' ? lp.p1.slice(0, 24) : undefined;
+      let p2 = typeof lp.p2 === 'string' ? lp.p2.slice(0, 24) : undefined;
+      if (typeof VS_ROSTER !== 'undefined') {
+        if (p1 && !VS_ROSTER.some(r => r.id === p1)) p1 = undefined;
+        if (p2 && !VS_ROSTER.some(r => r.id === p2)) p2 = undefined;
+      }
       out.lastPlay = {
         mode: lp.mode,
-        level: clamp(Math.floor(Number(lp.level) || 1), 1, maxLevel),
-        p1: typeof lp.p1 === 'string' ? lp.p1.slice(0, 24) : undefined,
-        p2: typeof lp.p2 === 'string' ? lp.p2.slice(0, 24) : undefined,
+        level: clamp(Math.floor(Number(lp.level) || 1), 1, advCap),
+        p1,
+        p2,
       };
     }
   } else out.lastPlay = null;
@@ -2326,10 +2333,21 @@ function claimAllDailyReady() {
     return;
   }
   let total = 0;
-  for (const task of ready) total += claimDailyTask(task.id, { silent: true, skipRefresh: true });
-  if (!save.missionsIntroSeen) save.missionsIntroSeen = true;
+  let claimed = 0;
+  for (const task of ready) {
+    const xp = claimDailyTask(task.id, { silent: true, skipRefresh: true });
+    if (xp > 0) {
+      total += xp;
+      claimed++;
+    }
+  }
+  if (claimed === 0) {
+    UI.toast(t('toast.noMissionReady'), 2400);
+    return;
+  }
+  if (claimed === ready.length && !save.missionsIntroSeen) save.missionsIntroSeen = true;
   AudioSys.sfx('bonus');
-  persist();
+  if (!persistOrToast('claim-all')) return;
   checkDailyAllBonus();
   UI.renderMissions();
   UI.renderMenu();
@@ -2339,9 +2357,9 @@ function claimAllDailyReady() {
     : (leftClaims === 1
       ? t('toast.claimPath1')
       : t('toast.claimPathN', { n: leftClaims }));
-  UI.toast((ready.length === 1
+  UI.toast((claimed === 1
     ? t('toast.claimBatch1', { total })
-    : t('toast.claimBatchN', { n: ready.length, total })) + ' · ' + path, 3400);
+    : t('toast.claimBatchN', { n: claimed, total })) + ' · ' + path, 3400);
   setTimeout(() => dailyClaimFollowUpToast(), 450);
 }
 
@@ -3962,7 +3980,6 @@ function gokGooiStartLevel(n) {
     const delay = motionReduced() ? 80 : 420;
     gokScreenTimer = setTimeout(() => {
       gokScreenTimer = null;
-      gokStartBusy = false;
       try { UI.hideGambleRollFlash(); } catch (_) {}
       startAdventureFromGamble(false);
     }, delay);
@@ -3987,7 +4004,6 @@ function gokGooiStartFromScreen() {
     const delay = motionReduced() ? 50 : 140;
     gokScreenTimer = setTimeout(() => {
       gokScreenTimer = null;
-      gokStartBusy = false;
       startAdventureFromGamble(false);
     }, delay);
   } catch (err) {
@@ -24262,7 +24278,6 @@ function pickSkillPreview(id, silent) {
 
 function initCharSelectChrome() {
   if (window.__sfCharChrome) return;
-  window.__sfCharChrome = true;
   UI.charSagaFilter = 'all';
   const grid = document.getElementById('charGrid');
   const runPick = (card) => {
@@ -24270,7 +24285,13 @@ function initCharSelectChrome() {
     pickVsRosterId(card.dataset.id);
   };
   if (grid) {
-    bindCharPickSurface(grid, '.char-card', runPick);
+    bindCollectionPickGrid(grid, {
+      selector: '.char-card',
+      onPick: (card, meta) => {
+        if (meta && meta.scrollGesture) return;
+        runPick(card);
+      },
+    });
     grid.addEventListener('pointerover', (e) => {
       const card = e.target.closest('.char-card');
       if (!card || !card.dataset.id) return;
@@ -24339,10 +24360,13 @@ function initCharSelectChrome() {
     startGame('versus', { p1: vsSelect.p1, p2: vsSelect.p2 });
   });
   const iconRow = document.getElementById('charIconRow');
-  if (iconRow && !iconRow.dataset.sfIconBound) {
-    iconRow.dataset.sfIconBound = '1';
-    bindCharPickSurface(iconRow, '.char-icon-chip:not(.locked)', (chip) => {
-      if (chip.dataset.id) pickVsRosterId(chip.dataset.id);
+  if (iconRow) {
+    bindCollectionPickGrid(iconRow, {
+      selector: '.char-icon-chip:not(.locked)',
+      onPick: (chip, meta) => {
+        if (meta && meta.scrollGesture) return;
+        if (chip.dataset.id) pickVsRosterId(chip.dataset.id);
+      },
     });
   }
   const clashBtn = document.getElementById('btnCharSagaClash');
@@ -24360,6 +24384,7 @@ function initCharSelectChrome() {
     scrollCharFightIntoView();
     UI.toast(t('toast.charSagaClash', { a: duo.a.name, b: duo.b.name }), 2600);
   });
+  window.__sfCharChrome = true;
 }
 
 /** Prestatie-iconen als inline SVG (art-upgrade 4/4) — vervangt emoji. */

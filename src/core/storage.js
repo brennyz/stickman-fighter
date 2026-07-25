@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.59';
+const APP_VERSION = '1.18.60';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 269;
+const SW_CACHE_REV = 270;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -780,11 +780,18 @@ function sanitizeSave(s) {
     const lp = out.lastPlay;
     if (!['adventure', 'training', 'wall', 'versus', 'coinrun'].includes(lp.mode)) out.lastPlay = null;
     else {
+      const advCap = lp.mode === 'adventure' ? out.unlocked : maxLevel;
+      let p1 = typeof lp.p1 === 'string' ? lp.p1.slice(0, 24) : undefined;
+      let p2 = typeof lp.p2 === 'string' ? lp.p2.slice(0, 24) : undefined;
+      if (typeof VS_ROSTER !== 'undefined') {
+        if (p1 && !VS_ROSTER.some(r => r.id === p1)) p1 = undefined;
+        if (p2 && !VS_ROSTER.some(r => r.id === p2)) p2 = undefined;
+      }
       out.lastPlay = {
         mode: lp.mode,
-        level: clamp(Math.floor(Number(lp.level) || 1), 1, maxLevel),
-        p1: typeof lp.p1 === 'string' ? lp.p1.slice(0, 24) : undefined,
-        p2: typeof lp.p2 === 'string' ? lp.p2.slice(0, 24) : undefined,
+        level: clamp(Math.floor(Number(lp.level) || 1), 1, advCap),
+        p1,
+        p2,
       };
     }
   } else out.lastPlay = null;

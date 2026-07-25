@@ -13,16 +13,16 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.59",
-    "swCache": "stickfighter-app-v269",
-    "gameJsQuery": "game.js?v=269",
-    "cssQuery": "styles/main.css?v=269",
-    "featureBranch": "cursor/adventure-tap-menu-2125",
+    "appVersion": "1.18.60",
+    "swCache": "stickfighter-app-v270",
+    "gameJsQuery": "game.js?v=270",
+    "cssQuery": "styles/main.css?v=270",
+    "featureBranch": "cursor/wiggum-d20-categorie-n-970c",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "HOTFIX adventure tap→menu nuclear · v1.18.59 — MERGE ASAP"
+    "note": "Stabiliteit: char select crash, claim batch, gamble race, lastPlay · v1.18.60"
   },
   "userWishlist": [
     {
@@ -70,6 +70,10 @@
     "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md."
   ],
   "sessionLog": [
+    {
+      "at": "2026-07-25T21:05:00Z",
+      "summary": "Stabiliteit: char select crash, claim batch, gamble race, lastPlay · v1.18.60"
+    },
     {
       "at": "2026-07-25T20:15:00Z",
       "summary": "Adventure tap→startscherm: restore playInputSuppressed + soft window-error guard · v1.18.57"
