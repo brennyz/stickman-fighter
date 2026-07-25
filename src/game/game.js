@@ -613,27 +613,34 @@ class Game {
     } catch (err) {
       console.error('[TideBattle] start', err);
       clearTideBattleState(this, { restoreMusic: true });
+      reportTideBattleRecover('spawn', err);
     }
   }
 
   finishTideBattle(won, m) {
     if (!this.tideBattleActive) return;
-    const bossId = (m && m.spId) || this.tideBattleBossId;
-    clearTideBattleState(this, { restoreMusic: true });
-    if (!won) return;
-    const sp = (m && m.sp) || (bossId && SPECIES[bossId]) || null;
-    if (!sp) return;
-    const xp = tideBattleRewardXp(this);
-    const coins = tideBattleRewardCoins();
-    this.grantXP(xp);
-    save.petCoins = (save.petCoins || 0) + coins;
-    save.stats.tideBattleWins = (save.stats.tideBattleWins || 0) + 1;
-    persist();
-    this.banner(t('banner.tideBattleWin'), 2.2, '#4a9fff', 44);
-    UI.toast(t('toast.tideBattleWin', { xp, coins }), 4200);
-    this.floater(W / 2, 140, `+${xp} XP · +${coins} 🪙`, '#4a9fff', 17);
-    try { AudioSys.sfx('win'); } catch (_) {}
-    checkAchievements();
+    try {
+      const bossId = (m && m.spId) || this.tideBattleBossId;
+      clearTideBattleState(this, { restoreMusic: true });
+      if (!won) return;
+      const sp = (m && m.sp) || (bossId && SPECIES[bossId]) || null;
+      if (!sp) return;
+      const xp = tideBattleRewardXp(this);
+      const coins = tideBattleRewardCoins();
+      this.grantXP(xp);
+      save.petCoins = (save.petCoins || 0) + coins;
+      save.stats.tideBattleWins = (save.stats.tideBattleWins || 0) + 1;
+      if (!persistOrToast('tide-battle')) return;
+      this.banner(t('banner.tideBattleWin'), 2.2, '#4a9fff', 44);
+      UI.toast(t('toast.tideBattleWin', { xp, coins }), 4200);
+      this.floater(W / 2, 140, `+${xp} XP · +${coins} 🪙`, '#4a9fff', 17);
+      try { AudioSys.sfx('win'); } catch (_) {}
+      checkAchievements();
+    } catch (err) {
+      console.error('[TideBattle] finish', err);
+      clearTideBattleState(this, { restoreMusic: true });
+      sfReportError('tideBattle/finish', err, 'Tide Battle beloning mislukt — voortgang veilig');
+    }
   }
 
   /** Hele kleine kans: Summon ascendeert een lager wapen naar Episch/Legendarisch. */

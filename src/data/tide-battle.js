@@ -61,6 +61,17 @@ function restoreTideBattleMusic(game) {
   try { AudioSys.play(next); } catch (_) {}
 }
 
+function reportTideBattleRecover(reason, err) {
+  const now = Date.now();
+  if (window.__sfTideRecoverT && now - window.__sfTideRecoverT < 6000) return;
+  window.__sfTideRecoverT = now;
+  const msg = reason === 'spawn'
+    ? 'Tide Battle start mislukt — ga verder met avontuur'
+    : 'Tide Battle hersteld — muziek/HUD gesynchroniseerd';
+  if (typeof sfReportError === 'function') sfReportError('tideBattle/' + (reason || 'recover'), err, msg);
+  else if (typeof userToast === 'function') userToast(msg, 3400);
+}
+
 function clearTideBattleState(game, opts) {
   opts = opts || {};
   if (!game) return;
@@ -78,17 +89,25 @@ function syncTideBattleState(game) {
   const mon = game.tideBattleMon;
   if (!mon || !game.monsters.includes(mon)) {
     clearTideBattleState(game, { restoreMusic: true });
+    reportTideBattleRecover('sync');
     return;
   }
   if (!mon.alive) {
     if ((mon.deadT || 0) >= 0.35) {
-      if (typeof game.finishTideBattle === 'function') game.finishTideBattle(true, mon);
-      else clearTideBattleState(game, { restoreMusic: true });
+      try {
+        if (typeof game.finishTideBattle === 'function') game.finishTideBattle(true, mon);
+        else clearTideBattleState(game, { restoreMusic: true });
+      } catch (err) {
+        console.error('[TideBattle] finish', err);
+        clearTideBattleState(game, { restoreMusic: true });
+        reportTideBattleRecover('finish', err);
+      }
     }
     return;
   }
   if (!game.player || !game.player.alive || game.over) {
     clearTideBattleState(game, { restoreMusic: true });
+    reportTideBattleRecover('abort');
   }
 }
 

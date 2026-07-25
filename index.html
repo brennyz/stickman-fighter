@@ -293,13 +293,15 @@
     <button type="button" class="btn tog" id="btnCopyLink"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7L11.5 6.8"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1.5-1.5"/></svg></span>Kopieer vaste speel-link</button>
     <button type="button" class="btn tog" id="btnOpenPlayLink" style="margin-top:8px"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6"/><path d="M20 4L11 13"/><path d="M9 6H5v13h13v-4"/></svg></span>Open vaste link</button>
     <div style="font-weight:900;color:#ffd75e;margin:14px 0 6px">Save export / import</div>
-    <div style="font-size:12px;opacity:.85;margin-bottom:8px;line-height:1.4">
-      Export kopieert JSON (clipboard + optioneel download). Import: 1× = preview, 2× = toepassen. Schema v3 bevat pets/ei in meta.
+    <div id="savePortDesc" style="font-size:12px;opacity:.85;margin-bottom:8px;line-height:1.4">
+      Export kopieert JSON (clipboard + download). Import: kies een exportbestand of plak JSON — 1× Import = preview, 2× = toepassen. Schema v3 bevat pets/ei in meta.
     </div>
     <div id="saveExportHint" style="font-size:12px;color:#9db1e3;margin-bottom:6px;line-height:1.4"></div>
-    <textarea id="savePortText" rows="4" style="width:100%;margin-top:4px;border-radius:12px;padding:10px;font-size:11px;background:#0a0d18;color:#cfe0ff;border:1px solid rgba(255,255,255,.15)" placeholder="Plak export-JSON — meta.key moet stickfighter_save_v1 zijn · live preview · 2× Import om te laden"></textarea>
+    <input type="file" id="saveImportFile" accept=".json,application/json,text/plain,.txt" hidden>
+    <textarea id="savePortText" rows="4" style="width:100%;margin-top:4px;border-radius:12px;padding:10px;font-size:11px;background:#0a0d18;color:#cfe0ff;border:1px solid rgba(255,255,255,.15)" placeholder="Plak JSON of kies een exportbestand (.json) — meta.key stickfighter_save_v1 · 2× Import om te laden"></textarea>
     <div id="saveImportPreview" style="display:none;font-size:12px;color:#ffd75e;margin-top:8px;line-height:1.4"></div>
     <button type="button" class="btn tog" id="btnExportSave" style="margin-top:8px"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 14V3M8 7l4-4 4 4"/><path d="M4 17v3h16v-3"/></svg></span>Export save</button>
+    <button type="button" class="btn tog" id="btnImportSaveFile" style="margin-top:8px"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6M9 15l3 3 3-3"/></svg></span>Bestand kiezen</button>
     <button type="button" class="btn tog" id="btnImportSave"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v10M8 9l4 4 4-4"/><path d="M4 17v3h16v-3"/></svg></span>Import save</button>
   </div>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
@@ -455,7 +457,7 @@
 </script>
 
 <script src="tunnel-check.js?v=204"></script>
-<script src="game.js?v=196"></script>
+<script src="game.js?v=197"></script>
 
 
 
