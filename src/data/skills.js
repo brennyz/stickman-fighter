@@ -110,6 +110,50 @@ function normalizeSkillUpgrades() {
   save.skillUpgrades = clean;
 }
 
+function snapshotSkillUpgradeTracks(st) {
+  const snap = {};
+  const raw = (st && st.skillUpgrades && typeof st.skillUpgrades === 'object') ? st.skillUpgrades : {};
+  for (const [id, e] of Object.entries(raw)) {
+    if (!SKILL_DEFS[id] || !e || typeof e !== 'object') continue;
+    const lv = Math.floor(Number(e.level) || 0);
+    const shards = Math.floor(Number(e.shards) || 0);
+    if (lv > 0 || shards > 0) snap[id] = { level: lv, shards };
+  }
+  return snap;
+}
+
+function countSkillUpgradeLevels(st) {
+  let n = 0;
+  const raw = (st && st.skillUpgrades) || {};
+  for (const id of SKILL_IDS) {
+    n += Math.floor(Number(raw[id] && raw[id].level) || 0);
+  }
+  return n;
+}
+
+function restoreLostSkillUpgrades(snap, out) {
+  if (!snap || !out) return out;
+  for (const [id, raw] of Object.entries(snap)) {
+    if (!SKILL_DEFS[id]) continue;
+    const cur = (out.skillUpgrades || {})[id];
+    const curLv = cur ? Math.floor(Number(cur.level) || 0) : 0;
+    const curSh = cur ? Math.floor(Number(cur.shards) || 0) : 0;
+    const prevLv = Math.floor(Number(raw.level) || 0);
+    const prevSh = Math.floor(Number(raw.shards) || 0);
+    if (prevLv > curLv || (prevLv === curLv && prevSh > curSh)) {
+      const merged = sanitizeSkillUpgradeEntry(id, {
+        level: Math.max(prevLv, curLv),
+        shards: Math.max(prevSh, curSh),
+      });
+      if (merged) {
+        if (!out.skillUpgrades) out.skillUpgrades = {};
+        out.skillUpgrades[id] = merged;
+      }
+    }
+  }
+  return out;
+}
+
 function skillLevel(id) {
   const def = SKILL_DEFS[id];
   if (!def) return 0;
@@ -207,8 +251,7 @@ function trySkillUpgrade(id) {
   if (next > skillMaxLevel(id)) return false;
   e.shards = clamp(skillShards(id) - cost, 0, SKILL_SHARD_CAP);
   e.level = next;
-  persist();
-  return true;
+  return persistOrToast('skillUp/' + id);
 }
 
 function rollSkillShardDrop(monster) {
