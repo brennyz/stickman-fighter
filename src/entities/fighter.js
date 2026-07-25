@@ -442,7 +442,11 @@ class Fighter {
     if (this.isPlayer && game && game.traveling) {
       const pad = inputPadForFighter(this);
       const tMove = pad ? pad.move : 0;
-      if (Math.abs(tMove) > 0.05) this.face = tMove > 0 ? 1 : -1;
+      if (game.partGate && tMove > 0.05) {
+        this.face = 1;
+        this.vx = Math.max(this.vx, this.speed * 0.92);
+        this.state = 'run';
+      } else if (Math.abs(tMove) > 0.05) this.face = tMove > 0 ? 1 : -1;
       else if (this.state === 'idle' || Math.abs(this.vx) < 22) this.face = 1;
       if (this.state === 'idle') this.state = 'run';
     }
