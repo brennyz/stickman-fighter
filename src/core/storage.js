@@ -3,10 +3,10 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.65';
+const APP_VERSION = '1.17.78';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 191;
-const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
+const SW_CACHE_REV = 204;
+const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', skill: 'rasengan', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
 
@@ -101,25 +101,23 @@ function wallRecordPaceDelta(g) {
 function wallComboDmgPct(combo) { return Math.min(combo, 12) * 4; }
 let save = loadSave();
 function fighterJutsuKind(f) {
-  if (!f) return 'rasengan';
-  if (f.vsSpecial === 'rinnegan') return 'rinnegan';
-  if (f.isRobot || f.vsSpecial === 'chidori') return 'chidori';
-  return 'rasengan';
+  return fighterEquippedSkill(f).id;
 }
 function jutsuHudLabel(kind) {
-  if (kind === 'chidori') return 'CHIDORI!';
-  if (kind === 'rinnegan') return 'RINNEGAN!';
-  return 'RASENGAN!';
+  const sk = skillById(kind);
+  return sk.banner || 'SPECIAL!';
 }
 
 /** Klein getekend jutsu-icoon (bliksem/oog/orb) voor HUD-markers. */
 function drawJutsuMiniIcon(c, kind, x, y, color) {
+  const sk = skillById(kind);
+  const behavior = sk.behavior || 'orb';
   c.save();
   c.translate(x, y);
-  c.strokeStyle = color;
-  c.fillStyle = color;
+  c.strokeStyle = color || sk.color || '#7cf5ff';
+  c.fillStyle = c.strokeStyle;
   c.lineWidth = 1.4;
-  if (kind === 'chidori') {
+  if (behavior === 'dash') {
     c.beginPath();
     c.moveTo(2, -5.5);
     c.lineTo(-2.5, 1);
@@ -129,9 +127,13 @@ function drawJutsuMiniIcon(c, kind, x, y, color) {
     c.lineTo(0.7, -1);
     c.closePath();
     c.fill();
-  } else if (kind === 'rinnegan') {
+  } else if (behavior === 'pull' || behavior === 'meteor') {
     c.beginPath(); c.ellipse(0, 0, 5.2, 3.2, 0, 0, TAU); c.stroke();
     c.beginPath(); c.arc(0, 0, 1.7, 0, TAU); c.fill();
+  } else if (behavior === 'beam' || behavior === 'disc') {
+    c.beginPath(); c.ellipse(0, 0, 6, 2.8, 0, 0, TAU); c.stroke();
+    c.fillStyle = c.strokeStyle;
+    c.beginPath(); c.arc(0, 0, 1.4, 0, TAU); c.fill();
   } else {
     c.beginPath(); c.arc(0, 0, 4.6, 0, TAU); c.stroke();
     c.beginPath(); c.arc(0, 0, 2, 0, TAU); c.fill();
@@ -198,7 +200,9 @@ function drawTouchBtnIcon(c, id, x, y, r, jutsuKind) {
       break;
     }
     case 'special': {
-      if (jutsuKind === 'chidori') {
+      const sk = skillById(jutsuKind);
+      const behavior = sk.behavior || 'orb';
+      if (behavior === 'dash') {
         c.beginPath();
         c.moveTo(s * 0.35, -s);
         c.lineTo(-s * 0.55, s * 0.15);
@@ -208,9 +212,12 @@ function drawTouchBtnIcon(c, id, x, y, r, jutsuKind) {
         c.lineTo(s * 0.1, -s * 0.2);
         c.closePath();
         c.fill();
-      } else if (jutsuKind === 'rinnegan') {
+      } else if (behavior === 'pull' || behavior === 'meteor') {
         c.beginPath(); c.ellipse(0, 0, s, s * 0.62, 0, 0, TAU); c.stroke();
         c.beginPath(); c.arc(0, 0, s * 0.3, 0, TAU); c.fill();
+      } else if (behavior === 'beam' || behavior === 'disc') {
+        c.beginPath(); c.ellipse(0, 0, s * 1.05, s * 0.45, 0, 0, TAU); c.stroke();
+        c.beginPath(); c.arc(0, 0, s * 0.25, 0, TAU); c.fill();
       } else {
         // rasengan: orb + spiraal
         c.beginPath(); c.arc(0, 0, s * 0.95, 0, TAU); c.stroke();
@@ -260,8 +267,8 @@ function drawTouchBtnIcon(c, id, x, y, r, jutsuKind) {
 }
 
 function jutsuAccentColor(kind, p2Slot) {
-  if (kind === 'chidori') return p2Slot ? '#ffb0b8' : '#a8e0ff';
-  if (kind === 'rinnegan') return p2Slot ? '#ffb0b8' : '#c47aff';
+  const sk = SKILLS.find(s => s.id === kind);
+  if (sk) return p2Slot ? '#ffb0b8' : sk.color;
   return p2Slot ? '#ffb0b8' : '#7cf5ff';
 }
 
@@ -326,7 +333,8 @@ function rollHitDamage(attacker, spec, mult) {
   if (k === 'punch') critChance += sig.punchCrit || 0;
   if (k === 'special' || spec.jutsu) {
     critChance += sig.jutsuCrit || 0;
-    if (spec.jutsu === 'rinnegan') critChance += 0.05;
+    const jsk = SKILLS.find(s => s.id === spec.jutsu);
+    if (jsk && (jsk.id === 'rinnegan' || jsk.behavior === 'pull')) critChance += 0.05;
   }
   if (attacker.isPlayer && typeof game !== 'undefined' && game && game.stageCritBonus) {
     critChance += game.stageCritBonus;
@@ -348,7 +356,8 @@ function projCritMeta(f) {
   const prof = combatEntryFor(f);
   const sig = SIG_MODS[prof.sig] || {};
   let critChance = prof.crit + (sig.critAdd || 0) + (sig.jutsuCrit || 0);
-  if (fighterJutsuKind(f) === 'rinnegan') critChance += 0.05;
+  const eqSk = fighterEquippedSkill(f);
+  if (eqSk && (eqSk.id === 'rinnegan' || eqSk.behavior === 'pull')) critChance += 0.05;
   return { critChance: clamp(critChance, 0, 0.42), critMul: prof.critMul };
 }
 
@@ -394,22 +403,19 @@ function resolveProjHit(p) {
 function projStrikeFighter(game, p, tgt, col) {
   if (!tgt || !tgt.alive) return;
   const hit = resolveProjHit(p);
-  const kb = Math.sign(p.vx || 1) * (p.kind === 'rinnegan' ? 300 : 260);
+  const sk = skillById(p.kind);
+  const kbBase = sk.kb || (sk.behavior === 'pull' || sk.behavior === 'meteor' ? 300 : 260);
+  const kb = Math.sign(p.vx || 1) * kbBase;
   const dealt = tgt.takeDamage(hit.dmg, kb, game);
   if (dealt > 0) {
-    const kind = p.kind === 'rasengan' || p.kind === 'rinnegan' || p.kind === 'chidori' ? 'special' : 'punch';
-    applyHitStop(game, { kind, dmg: hit.dmg }, { crit: hit.crit, heavy: hit.dmg >= 18 });
+    applyHitStop(game, { kind: sk ? 'special' : 'punch', dmg: hit.dmg }, { crit: hit.crit, heavy: hit.dmg >= 18 });
   }
   game.floater(tgt.x, tgt.y - 115, '-' + dealt, col, 16);
   if (hit.crit) applyCritFx(game, tgt.x, tgt.y);
-  if (p.kind === 'rinnegan' && p.pull) tgt.vx += Math.sign(p.vx || 1) * 160;
-  if (p.kind === 'rasengan') {
-    spawnJutsuImpactFx(game, p.x, p.y, 'rasengan', 'full');
-    if (!fxLite() && !motionReduced()) game.freezeT = Math.max(game.freezeT || 0, 0.045);
-  } else if (p.kind === 'chidori') {
-    spawnJutsuImpactFx(game, p.x, p.y, 'chidori', 'full');
-  } else if (p.kind === 'rinnegan') {
-    spawnJutsuImpactFx(game, p.x, p.y, 'rinnegan', 'full');
+  if (p.pull) tgt.vx += Math.sign(p.vx || 1) * 160;
+  spawnJutsuImpactFx(game, p.x, p.y, p.kind, 'full');
+  if (sk.behavior === 'orb' && sk.id === 'rasengan' && !fxLite() && !motionReduced()) {
+    game.freezeT = Math.max(game.freezeT || 0, 0.045);
   }
   if (p.hitSet) p.hitSet.add(tgt);
   else if (!p.pierce) p.life = 0;

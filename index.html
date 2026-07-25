@@ -146,6 +146,8 @@
         <div>Pets<small>Mats coins · dex temmen · ei arcade</small><span class="hub-mode-stat" id="hubStatPets"></span></div></button>
       <button class="btn mode-btn b-style hub-mode-row" id="btnStyle" type="button"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 4c-4 0-7 2-7 5v3c0 5 7 9 7 9s7-4 7-9V9c0-3-3-5-7-5z"/><path d="M9 10h6M10 14h4"/></svg></span>
         <div>Stijl<small>Bandana &amp; outfit unlocks</small><span class="hub-mode-stat" id="hubStatStyle"></span></div></button>
+      <button class="btn mode-btn b-skills hub-mode-row" id="btnSkills" type="button"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="4" fill="rgba(124,245,255,.35)"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M19.1 4.9l-2.8 2.8M7.7 16.3l-2.8 2.8"/></svg></span>
+        <div>Skills<small>Chakra specials · Rasengan · Kamehameha</small><span class="hub-mode-stat" id="hubStatSkills"></span></div></button>
       <button class="btn mode-btn b-dex hub-mode-row" id="btnDex" type="button"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M6 4h12v16H6z"/><path d="M8 8h8M8 12h8"/><polygon points="17,3 20,6 17,9" fill="#ffd75e"/></svg></span>
         <div>Monsterboek<small>114 soorten · rariteit = HP</small><span class="hub-mode-stat" id="hubStatDex"></span></div></button>
     </div>
@@ -246,6 +248,24 @@
   <div class="subtitle" id="styleScreenSub">Outfits met bonus — level, training, monsterboek · hover voor tooltip</div>
   <div id="styleSummary" class="statbar" style="display:none"></div>
   <div class="style-grid" id="styleGrid"></div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
+</div>
+
+<div id="skillScreen" class="screen">
+  <button class="btn back-btn" data-back>&#8592; Terug</button>
+  <h2 class="head" id="skillScreenHead">Skills</h2>
+  <div class="subtitle" id="skillScreenSub">Chakra-specials — level unlocks · avontuur/training/muur/mats</div>
+  <div id="skillSummary" class="statbar" style="display:none"></div>
+  <div class="char-saga-bar" id="skillSagaBar" role="tablist" aria-label="Saga filter">
+    <button type="button" data-saga="all" class="active">Alle</button>
+    <button type="button" data-saga="scroll">Scroll</button>
+    <button type="button" data-saga="ki">Ki</button>
+    <button type="button" data-saga="tide">Tide</button>
+    <button type="button" data-saga="fighter">Street</button>
+    <button type="button" data-saga="cape">Cape</button>
+    <button type="button" data-saga="dawn">Dawn</button>
+  </div>
+  <div class="style-grid" id="skillGrid"></div>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
 </div>
 
@@ -455,7 +475,7 @@
 </script>
 
 <script src="tunnel-check.js?v=204"></script>
-<script src="game.js?v=188"></script>
+<script src="game.js?v=204"></script>
 
 
 

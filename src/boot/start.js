@@ -156,6 +156,10 @@ const btnStyle = document.getElementById('btnStyle');
 bindPress(btnStyle, () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderStyle(); UI.show('styleScreen');
 });
+const btnSkills = document.getElementById('btnSkills');
+bindPress(btnSkills, () => {
+  AudioSys.init(); AudioSys.sfx('select'); UI.renderSkills(); UI.show('skillScreen');
+});
 const btnSettings = document.getElementById('btnSettings');
 bindPress(btnSettings, () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderSettings(); UI.renderHosting(); UI.show('settingsScreen');

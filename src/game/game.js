@@ -35,6 +35,7 @@ class Game {
       });
       applyPlayerStyle(this.player);
       applyStyleBonusesToPlayer(this, this.player);
+      applyPlayerSkill(this.player);
       this.petDmgMul = 1;
       this.petEnergyMul = 1;
       this.petCritBonus = 0;
@@ -1220,55 +1221,74 @@ class Game {
       }
       const newStyle = STYLES.find(s => s.needLvl === save.lvl && styleUnlocked(s));
       if (newStyle) UI.toast(t('toast.styleUnlock', { name: styleLabel(newStyle) }), 3500);
+      const newSkill = SKILLS.find(s => s.needLvl === save.lvl && skillUnlocked(s));
+      if (newSkill) UI.toast(t('toast.skillUnlock', { name: skillLabel(newSkill) }), 3500);
     }
     persist();
   }
 
   spawnJutsu(f, atk) {
-    const jutsu = (atk && atk.jutsu) || fighterJutsuKind(f);
-    const dmg = atk ? atk.dmg : f.baseDmg * 2.8;
+    const sk = skillById((atk && atk.jutsu) || fighterJutsuKind(f));
+    const dmg = atk ? atk.dmg : f.baseDmg * (sk.dmgMul || 2.8);
     const from = this.projFrom(f);
     const critMeta = projCritMeta(f);
-    const aim = projAimVelocity(f, jutsu === 'chidori' ? 620 : jutsu === 'rinnegan' ? 340 : 420);
+    const behavior = sk.behavior || 'orb';
+    const speed = sk.speed || 420;
+    const aim = projAimVelocity(f, behavior === 'dash' ? speed : speed * 0.9);
     const y0 = f.y - 50 + clamp(aim.ny, -1, 0.5) * 36;
-    if (jutsu === 'chidori') {
+    const face = f.face || 1;
+    const col = sk.color || '#7cf5ff';
+
+    if (behavior === 'dash') {
       this.spawnProjectile(Object.assign({
-        x: f.x + f.face * 36, y: y0,
-        vx: aim.vx, vy: aim.vy * 0.85, r: 22, dmg, life: 0.35,
-        from, kind: 'chidori', pierce: false, hitSet: new Set(),
+        x: f.x + face * 36, y: y0,
+        vx: aim.vx, vy: aim.vy * 0.85, r: sk.radius || 22, dmg, life: sk.life || 0.35,
+        from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(),
       }, critMeta));
-      f.vx = f.face * 380;
+      f.vx = face * (sk.dashVx || 380);
       this.shake(7, 0.2);
-      AudioSys.sfx('chidori');
-    } else if (jutsu === 'rinnegan') {
+      AudioSys.sfx(sk.sfx || 'chidori');
+    } else if (behavior === 'pull' || behavior === 'meteor') {
+      const sp = behavior === 'meteor' ? speed * 0.55 : speed;
       this.spawnProjectile(Object.assign({
-        x: f.x + f.face * 38, y: y0,
-        vx: aim.vx, vy: aim.vy * 0.9, r: 30, dmg,
-        from, kind: 'rinnegan', pierce: true, hitSet: new Set(), life: 1.05,
-        spin: 0, pull: true,
+        x: f.x + face * 38, y: y0,
+        vx: aim.vx * (sp / speed), vy: aim.vy * 0.9, r: sk.radius || 30, dmg,
+        from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(), life: sk.life || 1.05,
+        spin: 0, pull: !!sk.pull,
       }, critMeta));
-      this.burst(f.x + f.face * 28, y0, '#c47aff', 22);
-      this.burst(f.x + f.face * 28, y0, '#ff6b9d', 10);
-      this.shake(8, 0.24);
-      this.freezeT = Math.max(this.freezeT, 0.05);
-      AudioSys.sfx('rinnegan');
+      this.burst(f.x + face * 28, y0, col, behavior === 'meteor' ? 18 : 14);
+      this.burst(f.x + face * 28, y0, '#ff6b9d', 8);
+      this.shake(behavior === 'meteor' ? 10 : 8, 0.24);
+      this.freezeT = Math.max(this.freezeT, behavior === 'meteor' ? 0.07 : 0.05);
+      AudioSys.sfx(sk.sfx || 'rinnegan');
       if (f.isPlayer || f.playerSlot) haptic(20);
+    } else if (behavior === 'beam' || behavior === 'disc') {
+      const beamSpeed = speed;
+      const rx = behavior === 'disc' ? (sk.radius || 18) : (sk.radius || 32);
+      this.spawnProjectile(Object.assign({
+        x: f.x + face * 42, y: y0,
+        vx: aim.vx || face * beamSpeed, vy: (aim.vy || 0) * 0.35, r: rx, dmg,
+        from, kind: sk.id, pierce: sk.pierce !== false, hitSet: new Set(), life: sk.life || 1.1,
+        spin: behavior === 'disc' ? 0.4 : 0,
+      }, critMeta));
+      this.burst(f.x + face * 34, y0, col, fxLite() ? 8 : 14);
+      spawnFxRing(this, f.x + face * 38, y0, col, 12);
+      this.shake(8, 0.26);
+      this.freezeT = Math.max(this.freezeT, 0.05);
+      AudioSys.sfx(sk.sfx || 'rasengan');
+      if (f.isPlayer || f.playerSlot) haptic(18);
     } else {
-      // Rasengan: horizontale chakra-bol
-      const face = f.face || 1;
-      const speed = 420;
-      const y0 = f.y - 50;
       this.spawnProjectile(Object.assign({
         x: f.x + face * 40, y: y0,
-        vx: face * speed, vy: 0, r: 28, dmg,
-        from, kind: 'rasengan', pierce: true, hitSet: new Set(), life: 1.4,
+        vx: aim.vx || face * speed, vy: aim.vy || 0, r: sk.radius || 28, dmg,
+        from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(), life: sk.life || 1.4,
         spin: 0,
       }, critMeta));
-      this.burst(f.x + f.face * 30, y0, '#7cf5ff', fxLite() ? 8 : 16);
-      spawnFxRing(this, f.x + f.face * 34, y0, '#7cf5ff', 10);
+      this.burst(f.x + face * 30, y0, col, fxLite() ? 8 : 16);
+      spawnFxRing(this, f.x + face * 34, y0, col, 10);
       this.shake(9, 0.28);
       this.freezeT = Math.max(this.freezeT, 0.06);
-      AudioSys.sfx('rasengan');
+      AudioSys.sfx(sk.sfx || 'rasengan');
       if (f.isPlayer || f.playerSlot) haptic(22);
     }
   }
@@ -1555,13 +1575,18 @@ class Game {
 
     // projectielen
     for (const p of this.projectiles) {
+      const skProj = skillExists(p.kind) ? skillById(p.kind) : null;
       p.life -= dt;
-      p.spin = (p.spin || 0) + dt * (p.kind === 'rasengan' ? 22 : p.kind === 'rinnegan' ? 16 : p.kind === 'shuriken' ? 28 : 12);
+      const spinRate = skProj
+        ? (skProj.behavior === 'pull' || skProj.behavior === 'meteor' ? 16
+          : skProj.behavior === 'dash' ? 20 : skProj.behavior === 'disc' ? 24 : 22)
+        : (p.kind === 'shuriken' ? 28 : 12);
+      p.spin = (p.spin || 0) + dt * spinRate;
       p.vy += (p.grav || 0) * dt;
       p.x += p.vx * dt; p.y += p.vy * dt;
-      if (p.kind === 'rasengan') {
-        p.r = Math.min(34, (p.r || 26) + dt * 4);
-        // Capte chakra-trail — minder frequent bij Lite FX / lag
+      if (skProj && (skProj.behavior === 'orb' || skProj.behavior === 'pull' || skProj.behavior === 'meteor')) {
+        const grow = (skProj.behavior === 'pull' || skProj.behavior === 'meteor') ? 2.5 : 4;
+        p.r = Math.min((skProj.radius || 28) + 8, (p.r || skProj.radius) + dt * grow);
         if (!motionReduced()) {
           p._trailAcc = (p._trailAcc || 0) + dt;
           const interval = (save.liteFx || Perf.tier >= 1) ? 0.07 : 0.032;
@@ -1569,17 +1594,7 @@ class Game {
             p._trailAcc = 0;
             const n = (save.liteFx || Perf.tier >= 1) ? 1 : 2;
             const back = Math.sign(p.vx || 1) * 10;
-            this.burst(p.x - back, p.y + rand(-4, 4), '#7cf5ff', n, { kind: 'spark', size: 2.4 });
-          }
-        }
-      }
-      if (p.kind === 'rinnegan') {
-        p.r = Math.min(36, (p.r || 30) + dt * 2.5);
-        if (!motionReduced() && !fxLite()) {
-          p._trailAcc = (p._trailAcc || 0) + dt;
-          if (p._trailAcc >= 0.055) {
-            p._trailAcc = 0;
-            this.burst(p.x, p.y, '#c47aff', 1, { kind: 'spark', size: 2.2 });
+            this.burst(p.x - back, p.y + rand(-4, 4), skProj.color || '#7cf5ff', n, { kind: 'spark', size: 2.4 });
           }
         }
       }
@@ -1589,13 +1604,13 @@ class Game {
             && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
           const hit = resolveProjHit(p);
           pl.takeDamage(hit.dmg, Math.sign(p.vx) * 260, this);
-          applyHitStop(this, { kind: p.kind === 'chidori' ? 'special' : 'punch', dmg: hit.dmg },
+          applyHitStop(this, { kind: skProj && skProj.behavior === 'dash' ? 'special' : 'punch', dmg: hit.dmg },
             { crit: hit.crit, heavy: hit.dmg >= 18, playerHurt: true });
           this.floater(pl.x, pl.y - 115, '-' + hit.dmg, '#ff8080', 16);
           if (hit.crit) applyCritFx(this, pl.x, pl.y);
-          if (p.kind === 'chidori') this.burst(p.x, p.y, '#a8e0ff', 16);
+          if (skProj) this.burst(p.x, p.y, skProj.color || '#a8e0ff', 16);
           p.life = 0;
-          this.burst(p.x, p.y, p.kind === 'chidori' ? '#a8e0ff' : '#ff9a3d', 8);
+          this.burst(p.x, p.y, skProj ? (skProj.color || '#a8e0ff') : '#ff9a3d', 8);
         }
       } else if (p.from === 'p2' && this.p2) {
         const pl = this.player;
@@ -1614,10 +1629,7 @@ class Game {
             const hit = resolveProjHit(p);
             m.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this);
             if (hit.crit) applyCritFx(this, m.x, m.y);
-            if (p.kind === 'rasengan') {
-              spawnJutsuImpactFx(this, p.x, p.y, 'rasengan', 'full');
-            }
-            if (p.kind === 'rinnegan') this.burst(p.x, p.y, '#c47aff', 10);
+            if (skProj) spawnJutsuImpactFx(this, p.x, p.y, p.kind, 'full');
             if (p.hitSet) p.hitSet.add(m); else p.life = 0;
           }
         }
@@ -1660,7 +1672,7 @@ class Game {
       if (p.y > this.ground + 10 || p.x < -60 || p.x > W + 60) p.life = 0;
     }
     for (const p of this.projectiles) {
-      if (p.life <= 0 && !p._impactFx && (p.kind === 'rasengan' || p.kind === 'rinnegan' || p.kind === 'chidori')) {
+      if (p.life <= 0 && !p._impactFx && skillExists(p.kind)) {
         p._impactFx = true;
         spawnJutsuImpactFx(this, p.x, p.y, p.kind, 'small');
       }
@@ -1855,22 +1867,19 @@ class Game {
     // projectielen
     for (const p of this.projectiles) {
       c.save();
-      if (p.kind === 'rasengan') {
-        if (!fxLite() && !motionReduced()) {
+      if (skillExists(p.kind)) {
+        const skDraw = skillById(p.kind);
+        if (!fxLite() && !motionReduced() && skDraw.behavior === 'orb') {
           c.save();
           c.globalAlpha = 0.28 + Math.sin((p.spin || 0) * 2.1) * 0.12;
-          c.strokeStyle = '#7cf5ff';
+          c.strokeStyle = skDraw.color || '#7cf5ff';
           c.lineWidth = 2;
           c.beginPath();
           c.arc(p.x, p.y, p.r * (1.22 + Math.sin(p.spin * 1.4) * 0.06), 0, TAU);
           c.stroke();
           c.restore();
         }
-        drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'rasengan', 1);
-      } else if (p.kind === 'chidori') {
-        drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'chidori', 1);
-      } else if (p.kind === 'rinnegan') {
-        drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'rinnegan', 1);
+        drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, p.kind, 1);
       } else if (p.kind === 'shuriken') {
         c.translate(p.x, p.y); c.rotate(p.spin || 0);
         const big = p.throwId === 'fuuma';

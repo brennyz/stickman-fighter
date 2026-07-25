@@ -169,6 +169,8 @@ function seedNlGameStrings() {
     eggNone: 'Geen actief ei-pet',
     eggFloat: '{name} zweeft nu mee!',
     styleEquipped: '{name} uitgerust',
+    skillUnlock: 'Nieuwe skill: {name}!',
+    skillEquipped: '{name} uitgerust als special',
     welcome: 'Welkom! Menu → Tips · per modus één korte hint bovenin (geen toast-stapel)',
   });
   if (!I18N.nl.missionsUi) I18N.nl.missionsUi = {};
@@ -299,6 +301,14 @@ function seedNlGameStrings() {
     styleActive: 'Actief',
     stylePick: 'Tik om te kiezen',
     styleIslandGate: 'Eiland-skill Lv {lvl}',
+    skillHead: 'Skills',
+    skillSub: 'Chakra-specials — level unlocks · avontuur/training/muur/mats',
+    skillSummaryHead: 'Skills',
+    skillSummaryActive: 'actief',
+    skillSummarySub: 'Kies je chakra-special voor avontuur & solo-modi. Versus gebruikt roster-specials.',
+    skillActive: 'Actief',
+    skillPick: 'Tik om uit te rusten',
+    skillIslandGate: 'Eiland-skill Lv {lvl}',
     weaponHead: 'Wapens',
     weaponSub: 'Summons zijn echt · eiland-skill gate: alleen wapens tot je huidige eiland-cap in avontuur',
     helpFirstMinute: 'Eerste minuut — per modus één korte hint bovenin het gevecht (geen toast-stapel). Avontuur: joystick + knoppen · groen = HP · vol chakra = SUPER-knop. Training = Robot · Muur = combo · 2 spelers = links/rechts.',
@@ -621,6 +631,8 @@ const CATALOG_EN = {
     eggNone: 'No active egg pet',
     eggFloat: '{name} floats along now!',
     styleEquipped: '{name} equipped',
+    skillUnlock: 'New skill: {name}!',
+    skillEquipped: '{name} equipped as special',
     welcome: 'Welcome! Menu → Tips · one short hint per mode (no toast stack)',
   },
   missionsUi: {
@@ -718,6 +730,14 @@ const CATALOG_EN = {
     styleActive: 'Active',
     stylePick: 'Tap to equip',
     styleIslandGate: 'Island skill Lv {lvl}',
+    skillHead: 'Skills',
+    skillSub: 'Chakra specials — level unlocks · adventure/training/wall/mats',
+    skillSummaryHead: 'Skills',
+    skillSummaryActive: 'active',
+    skillSummarySub: 'Pick your chakra special for adventure & solo modes. Versus uses roster specials.',
+    skillActive: 'Active',
+    skillPick: 'Tap to equip',
+    skillIslandGate: 'Island skill Lv {lvl}',
     weaponHead: 'Weapons',
     weaponSub: 'Summons are real · island skill gate: adventure weapons up to your island cap',
     helpFirstMinute: 'First minute — one short hint per mode at top (no toast stack). Adventure: joystick + buttons · green = HP · full chakra = SUPER. Training = Robot · Wall = combo · 2P = left/right.',
@@ -1152,6 +1172,16 @@ function styleLabel(st, field) {
   const v = t(k);
   if (v && v !== k) return v;
   const ss = typeof st === 'object' && st ? st : (typeof styleById === 'function' ? styleById(id) : null);
+  return ss && ss[field] != null ? ss[field] : '';
+}
+
+function skillLabel(sk, field) {
+  field = field || 'name';
+  const id = typeof sk === 'string' ? sk : (sk && sk.id);
+  const k = 'skill.' + id + '.' + field;
+  const v = t(k);
+  if (v && v !== k) return v;
+  const ss = typeof sk === 'object' && sk ? sk : (typeof skillById === 'function' ? skillById(id) : null);
   return ss && ss[field] != null ? ss[field] : '';
 }
 

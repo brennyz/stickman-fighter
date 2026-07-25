@@ -17,6 +17,22 @@ function pickVsRosterId(id) {
   }
 }
 
+function initSkillScreenChrome() {
+  if (window.__sfSkillChrome) return;
+  window.__sfSkillChrome = true;
+  UI.skillSagaFilter = 'all';
+  const bar = document.getElementById('skillSagaBar');
+  if (!bar) return;
+  bar.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-saga]');
+    if (!btn) return;
+    UI.skillSagaFilter = btn.dataset.saga || 'all';
+    bar.querySelectorAll('[data-saga]').forEach(b => b.classList.toggle('active', b === btn));
+    AudioSys.sfx('select');
+    UI.renderSkills();
+  });
+}
+
 function initCharSelectChrome() {
   if (window.__sfCharChrome) return;
   window.__sfCharChrome = true;
@@ -223,7 +239,7 @@ function audioMixStatusLine(inPause) {
 }
 
 const UI = {
-  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
+  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
@@ -419,7 +435,7 @@ const UI = {
         this.show('menuScreen');
         return;
       }
-      if (active === 'weaponScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'dexScreen') {
+      if (active === 'weaponScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'skillScreen' || active === 'dexScreen') {
         this.openModeHub('collect');
         return;
       }
@@ -791,6 +807,11 @@ const UI = {
         : `${PET_ROSTER.length} dex · Mats → pet coins`);
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
       setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
+      const skillsN = skillUnlockedCount();
+      const activeSk = skillById(save.skill || 'rasengan');
+      setStat('hubStatSkills', skillsN > 0
+        ? `${skillsN}/${SKILLS.length} · ${skillLabel(activeSk)}`
+        : `${SKILLS.length} specials`);
       setStat('hubStatDex', `${dexCount()}/${SPECIES_ORDER.length} · +max HP`);
     }
   },
@@ -1853,6 +1874,85 @@ const UI = {
             this.renderMenu();
             UI.toast(t('toast.styleEquipped', { name: styleLabel(st) }), 2200);
           }, 'pickStyle/' + st.id, 'Stijl kiezen mislukt');
+        });
+      }
+      grid.appendChild(el);
+    }
+  },
+
+  renderSkills() {
+    initSkillScreenChrome();
+    const sumEl = document.getElementById('skillSummary');
+    if (sumEl) {
+      const unlocked = skillUnlockedCount();
+      const active = skillById(save.skill || 'rasengan');
+      sumEl.style.display = 'block';
+      sumEl.innerHTML =
+        `${t('ui.skillSummaryHead')} <b>${unlocked}/${SKILLS.length}</b> · ${t('ui.skillSummaryActive')} <b style="color:${active.color}">${skillLabel(active)}</b>` +
+        `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.skillSummarySub')}</div>`;
+    }
+    const grid = document.getElementById('skillGrid');
+    if (!grid) return;
+    const saga = UI.skillSagaFilter || 'all';
+    grid.innerHTML = '';
+    const list = saga === 'all' ? SKILLS : SKILLS.filter(sk => sk.saga === saga);
+    for (const sk of list) {
+      const ok = skillUnlocked(sk);
+      const el = document.createElement('div');
+      el.className = 'style-card' + (save.skill === sk.id ? ' sel' : '') + (ok ? '' : ' locked');
+      el.style.borderColor = ok ? sk.color + '88' : '';
+      el.title = skillLabel(sk, 'tooltip') || skillLabel(sk, 'hint') || skillLabel(sk);
+      const cv = document.createElement('canvas');
+      cv.width = 72; cv.height = 72;
+      const cc = cv.getContext('2d');
+      cc.translate(36, 38);
+      if (typeof drawJutsuOrb === 'function') {
+        drawJutsuOrb(cc, 0, 0, 22, 0.6, sk.id, ok ? 1 : 0.45);
+      } else {
+        cc.fillStyle = sk.color;
+        cc.beginPath(); cc.arc(0, 0, 20, 0, TAU); cc.fill();
+      }
+      el.appendChild(cv);
+      const cap = document.createElement('div');
+      cap.style.fontSize = '13px';
+      cap.style.color = sk.color;
+      cap.textContent = skillLabel(sk);
+      el.appendChild(cap);
+      const bonus = document.createElement('div');
+      bonus.style.fontSize = '11px';
+      bonus.style.fontWeight = '800';
+      bonus.style.color = ok ? '#7cf5ff' : '#8fa3d9';
+      bonus.style.marginTop = '3px';
+      bonus.textContent = skillCombatLine(sk) + ' · ' + skillBehaviorLabel(sk);
+      bonus.style.opacity = ok ? '1' : '0.55';
+      el.appendChild(bonus);
+      const tip = document.createElement('div');
+      tip.style.fontSize = '10px';
+      tip.style.opacity = '0.72';
+      tip.style.marginTop = '4px';
+      tip.style.lineHeight = '1.35';
+      tip.textContent = skillLabel(sk, 'tooltip') || skillLabel(sk, 'hint');
+      el.appendChild(tip);
+      const sub = document.createElement('div');
+      sub.style.fontSize = '11px';
+      sub.style.fontWeight = '600';
+      sub.style.opacity = '0.75';
+      sub.style.marginTop = '4px';
+      sub.textContent = ok ? (save.skill === sk.id ? t('ui.skillActive') : t('ui.skillPick'))
+        : (skillSkillGated(sk) ? t('ui.skillIslandGate', { lvl: sk.needLvl }) : skillLabel(sk, 'hint'));
+      el.appendChild(sub);
+      if (ok) {
+        el.addEventListener('click', () => {
+          if (!uiTapAllowed()) return;
+          safeUiAction(() => {
+            save.skill = sk.id;
+            if (!persistOrToast('skill')) return;
+            AudioSys.sfx('select');
+            this.renderSkills();
+            this.renderMenu();
+            this.renderModeHub();
+            UI.toast(t('toast.skillEquipped', { name: skillLabel(sk) }), 2200);
+          }, 'pickSkill/' + sk.id, 'Skill kiezen mislukt');
         });
       }
       grid.appendChild(el);

@@ -55,11 +55,11 @@ class Fighter {
         break;
       }
       case 'special': {
-        const j = fighterJutsuKind(this);
-        const jMul = j === 'rinnegan' ? 2.55 : j === 'chidori' ? (this.isRobot ? 2.35 : 2.72) : 2.85;
+        const sk = fighterEquippedSkill(this);
         spec = {
-          kind, windup: j === 'rinnegan' ? 0.52 : 0.48, active: 0.12, recover: 0.28, range: 62, r: 44,
-          dmg: this.baseDmg * jMul, kb: j === 'rinnegan' ? 460 : 520, jutsu: j,
+          kind, windup: sk.windup || 0.48, active: 0.12, recover: sk.recover || 0.28,
+          range: 62, r: sk.radius || 44,
+          dmg: this.baseDmg * (sk.dmgMul || 2.8), kb: sk.kb || 520, jutsu: sk.id,
         };
         break;
       }
@@ -80,12 +80,10 @@ class Fighter {
         return;
       }
       this.energy = 0;
-      const jKind = fighterJutsuKind(this);
-      AudioSys.sfx(jKind === 'chidori' ? 'chidori' : jKind === 'rinnegan' ? 'rinnegan' : 'rasengan');
+      const sk = fighterEquippedSkill(this);
+      AudioSys.sfx(sk.sfx || 'rasengan');
       if (this.isPlayer || this.playerSlot) {
-        const lbl = jKind === 'chidori' ? 'CHIDORI!' : jKind === 'rinnegan' ? 'RINNEGAN!' : 'RASENGAN!';
-        const col = jKind === 'chidori' ? '#a8e0ff' : jKind === 'rinnegan' ? '#c47aff' : '#7cf5ff';
-        game.banner(lbl, 0.7, col, 40);
+        game.banner(skillBanner(sk), 0.7, skillHudColor(sk), 40);
       }
     } else {
       AudioSys.sfx(weaponSwingSfx(this.weapon, kind));

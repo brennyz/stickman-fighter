@@ -303,6 +303,7 @@
   .b-weapons   { background:linear-gradient(180deg,#b06ae0,#7438a8); }
   .b-dex       { background:linear-gradient(180deg,#f0c45a,#b88828); color:#2a1a00; }
   .b-style     { background:linear-gradient(180deg,#5ad0c8,#2a8a84); }
+  .b-skills    { background:linear-gradient(180deg,#9a6cff,#5a38c8); }
   .b-gray      { background:linear-gradient(180deg,#5a6784,#39445e); }
   .b-install   { background:linear-gradient(180deg,#3dd6c8,#1a9a90); color:#042824;
       box-shadow:0 6px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.35); }
