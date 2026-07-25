@@ -128,6 +128,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-24 | **7** | Save (cyclus 4): schema v3 meta pets/ei/stijl; readSaveJson pets+egg merge; sync backup knop; export download; drift pets/ei; import repair-toast; stale-save hint — SAVE_KEY vast. v1.17.49 / SW v175. |
 | 2026-07-24 | **7** | Save (cyclus 3): sanitize-reparatie hints (boot + import), export meta summary, live import-preview, drift-detail bij backup, stijl-unlock check op dex-prestaties — SAVE_KEY vast. v1.17.10 / SW v137. |
 | 2026-07-24 | **12** | Content (cyclus 3): monsterboek type-filter + sort (boek/rariteit/unlock/kills), rariteit-tellers, volgende-dex-prestatie tracker, Top jager badge; wapens verzamel-strip. v1.17.9 / SW v136. |
+| 2026-07-25 | — | **Adventure blue ROOT:** menu-backdrop op canvas tijdens play + geen forceGameResize; flash buiten levelScreen; first-frame draw. v1.18.39 / SW v249. |
 | 2026-07-25 | — | **Adventure blue-lid:** merge main + harden gok-flash hide, forcePlayCanvas retries, CSS is-playing kills screens/flash. v1.18.38 / SW v248. |
 | 2026-07-25 | — | **Fix orphan pauseBtn:** training/rabbit — alleen pauze zichtbaar; `playLayerBroken` + `forcePlayCanvasVisible`, pause z50 boven canvas. v1.18.37 / SW v247. |
 | 2026-07-25 | — | **Fix menu-stuck:** screenshot `state=menu`+`settingsScreen` deksel — `screenLooksUsable`, `recoverToMenu({force})`, tikbare debug-strip → menu. v1.18.36 / SW v246. |

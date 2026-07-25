@@ -36,7 +36,11 @@ function startGame(mode, opts) {
   }
   state = 'play';
   primePlayInput(mode);
-  scheduleResize();
+  // Direct resize — scheduleResize debounced 140ms liet canvas op oude menu-frame / te klein
+  try {
+    if (typeof forceGameResize === 'function') forceGameResize();
+    else scheduleResize();
+  } catch (_) { try { scheduleResize(); } catch (__) {} }
   try { AudioSys.setPaused(false); } catch (_) {}
   try { recordLastPlay(mode, opts); } catch (_) {}
   try { applyModeOnboarding(mode, game); } catch (_) {}
@@ -46,18 +50,20 @@ function startGame(mode, opts) {
   try { syncPlayLayer(); } catch (_) {}
   // Extra force: body class + canvas zichtbaar (iPad race met gok-flash)
   try {
-    if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('startGame/' + mode);
-    else {
-      document.body.classList.add('is-playing');
-      const canvas = document.getElementById('game');
-      if (canvas) {
-        canvas.style.visibility = 'visible';
-        canvas.style.opacity = '1';
-        canvas.style.zIndex = '40';
-        canvas.style.pointerEvents = 'auto';
-        canvas.style.display = 'block';
-      }
+    document.body.classList.add('is-playing');
+    const canvas = document.getElementById('game');
+    if (canvas) {
+      canvas.style.visibility = 'visible';
+      canvas.style.opacity = '1';
+      canvas.style.zIndex = '40';
+      canvas.style.pointerEvents = 'auto';
+      canvas.style.display = 'block';
     }
+    if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('startGame/' + mode);
+  } catch (_) {}
+  // Eerste speelframe nu — anders blijft menu-blauw (#151b33) op het canvas staan
+  try {
+    if (ctx && game && typeof game.draw === 'function') game.draw(ctx);
   } catch (_) {}
   try {
     AudioSys.init();

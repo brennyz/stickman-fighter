@@ -60,7 +60,7 @@ const Perf = {
   },
   /** Canvas mag getekend worden (gevecht of menu-backdrop). */
   canvasDrawActive() {
-    if (typeof state !== 'undefined' && state === 'play' && typeof game !== 'undefined' && game) return true;
+    if (typeof state !== 'undefined' && (state === 'play' || state === 'pause')) return true;
     return this.menuLandingVisible();
   },
   /** Statische submenu's — verlaag rAF-work (~2 Hz i.p.v. 60 Hz). */
