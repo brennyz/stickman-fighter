@@ -599,8 +599,11 @@ function saveSanitizeNotes(before, after) {
 function saveDriftDetail() {
   const diag = saveStorageDiagnostics();
   if (!diag.drift) return '';
-  const p = readSaveJson(localStorage.getItem(SAVE_KEY));
-  const b = readSaveJson(localStorage.getItem(SAVE_BACKUP_KEY));
+  let p = null, b = null;
+  try {
+    p = readSaveJson(localStorage.getItem(SAVE_KEY));
+    b = readSaveJson(localStorage.getItem(SAVE_BACKUP_KEY));
+  } catch (_) { return ''; }
   if (!p || !b) return '';
   const parts = [];
   if (p.lvl !== b.lvl) parts.push(`Lv ${p.lvl} vs backup ${b.lvl}`);

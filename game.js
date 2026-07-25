@@ -240,6 +240,8 @@ function layoutFloaterPos(game, x, y, txt, size, layer) {
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
+const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
+const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
 const APP_VERSION = '1.18.16';
 /** Keep in sync with sw.js CACHE suffix */
@@ -643,6 +645,7 @@ function resolveProjHit(p) {
 
 function projStrikeFighter(game, p, tgt, col) {
   if (!tgt || !tgt.alive) return;
+  const sk = (typeof skillExists === 'function' && skillExists(p.kind)) ? skillById(p.kind) : null;
   const hit = resolveProjHit(p);
   const kb = Math.sign(p.vx || 1) * (p.kind === 'rinnegan' ? 300 : 260);
   const dealt = tgt.takeDamage(hit.dmg, kb, game, {
@@ -655,7 +658,7 @@ function projStrikeFighter(game, p, tgt, col) {
   if (hit.crit) applyCritFx(game, tgt.x, tgt.y);
   if (p.pull) tgt.vx += Math.sign(p.vx || 1) * 160;
   spawnJutsuImpactFx(game, p.x, p.y, p.kind, 'full');
-  if (sk.behavior === 'orb' && sk.id === 'rasengan' && !fxLite() && !motionReduced()) {
+  if (sk && sk.behavior === 'orb' && sk.id === 'rasengan' && !fxLite() && !motionReduced()) {
     game.freezeT = Math.max(game.freezeT || 0, 0.045);
   }
   if (p.hitSet) p.hitSet.add(tgt);
@@ -2677,8 +2680,11 @@ function saveSanitizeNotes(before, after) {
 function saveDriftDetail() {
   const diag = saveStorageDiagnostics();
   if (!diag.drift) return '';
-  const p = readSaveJson(localStorage.getItem(SAVE_KEY));
-  const b = readSaveJson(localStorage.getItem(SAVE_BACKUP_KEY));
+  let p = null, b = null;
+  try {
+    p = readSaveJson(localStorage.getItem(SAVE_KEY));
+    b = readSaveJson(localStorage.getItem(SAVE_BACKUP_KEY));
+  } catch (_) { return ''; }
   if (!p || !b) return '';
   const parts = [];
   if (p.lvl !== b.lvl) parts.push(`Lv ${p.lvl} vs backup ${b.lvl}`);
