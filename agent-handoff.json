@@ -25,6 +25,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260725T083800",
+      "from": "user",
+      "text": "Elke 2 uur automatisch code scannen op bugs/optimalisaties en fixen, volledig autonoom. Opzet via Cursor Automation (cron 0 */2 * * *) — zie AUTOMATION-BUGFIX.md. Automation is door gebruiker aangezet in dashboard (2026-07-25).",
+      "status": "active",
+      "updated": "2026-07-25"
+    },
+    {
       "id": "w-20260723T173249",
       "from": "user",
       "text": "Push main zodat Pages speelbaar is voor Android/iPad",
