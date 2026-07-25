@@ -966,16 +966,6 @@ const UI = {
 
   show(id) {
     try {
-      // Veiligheid: tijdens gevecht geen menu/level/settings-deksel openen
-      if (id && typeof isFighting === 'function' && isFighting() && state === 'play') {
-        if (!isPlayAllowedScreen(id)) {
-          console.warn('[Stickman] UI.show blocked during play:', id);
-          try {
-            if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('showBlock/' + id);
-          } catch (_) {}
-          return;
-        }
-      }
       if (!id) {
         if (state === 'play' && !game) {
           sfReportError('UI.show/play', new Error('no game ref'), 'Gevecht niet geladen — terug naar menu');
@@ -984,30 +974,13 @@ const UI = {
           return;
         }
         try { clearScreensForPlay(); } catch (_) {}
-        if (typeof isFighting === 'function' && isFighting()) {
-          try { if (typeof killUiLidsForPlay === 'function') killUiLidsForPlay(); } catch (_) {}
-        }
       } else {
-        // Opening een UI-scherm: play-inline hides op dit scherm wissen
         const target = document.getElementById(id);
         if (!target) {
           sfReportError('UI.show/' + id, new Error('missing screen DOM'), 'Scherm niet gevonden — terug naar menu');
           try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
           syncPlayLayer();
           return;
-        }
-        try {
-          if (typeof clearStyleImportant === 'function') {
-            clearStyleImportant(target, 'display');
-            clearStyleImportant(target, 'visibility');
-            clearStyleImportant(target, 'pointer-events');
-            clearStyleImportant(target, 'opacity');
-            clearStyleImportant(target, 'z-index');
-          }
-        } catch (_) {}
-        // Pauze: body.is-playing uit zodat pauseScreen zichtbaar is
-        if (id === 'pauseScreen') {
-          try { document.body.classList.remove('is-playing'); } catch (_) {}
         }
         target.classList.add('active');
       }
@@ -1053,15 +1026,7 @@ const UI = {
       sfReportError('UI.show/' + (id || 'play'), err, 'Schermwissel mislukt — terug naar menu');
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
     }
-    // Tijdens play: sync = force lids weg. Tijdens pause/menu: normale sync.
-    if (!id && typeof isFighting === 'function' && isFighting() && state === 'play') {
-      try {
-        if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('UI.show/null');
-        else syncPlayLayer();
-      } catch (_) { syncPlayLayer(); }
-    } else {
-      syncPlayLayer();
-    }
+    syncPlayLayer();
     if (id) ensureVisibleScreen();
   },
 
@@ -2221,19 +2186,11 @@ const UI = {
     el.classList.remove('visible');
     el.hidden = true;
     el.setAttribute('aria-hidden', 'true');
-    // Inline force — voorkomt blauw deksel als class/CSS race op iPad
-    try {
-      el.style.setProperty('display', 'none', 'important');
-      el.style.setProperty('opacity', '0', 'important');
-      el.style.setProperty('visibility', 'hidden', 'important');
-      el.style.setProperty('pointer-events', 'none', 'important');
-    } catch (_) {}
   },
 
   showGambleRollFlash(g) {
     const el = document.getElementById('levelRollFlash');
     if (!el || !g) return;
-    // Nooit flash tonen als we al in een gevecht zitten
     if (typeof state !== 'undefined' && state === 'play' && typeof game !== 'undefined' && game) {
       this.hideGambleRollFlash();
       return;
@@ -2252,12 +2209,6 @@ const UI = {
         : (g.outcome === 'superAlly' || g.outcome === 'ally') ? (GAMBLE_ALLIES[g.allyId]?.color || '#7cf5ff') : '#8fa3d9';
       outEl.style.color = col;
     }
-    try {
-      el.style.removeProperty('display');
-      el.style.removeProperty('opacity');
-      el.style.removeProperty('visibility');
-      el.style.removeProperty('pointer-events');
-    } catch (_) {}
     el.hidden = false;
     el.removeAttribute('hidden');
     el.setAttribute('aria-hidden', 'false');
