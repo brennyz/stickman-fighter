@@ -52,6 +52,12 @@ function scheduleResize() {
     });
   }, delay);
 }
+
+/** Force canvas + touch-pad layout (level-start; debounced resize kan 140ms wachten). */
+function forceGameResize() {
+  lastResizeKey = '';
+  resize();
+}
 addEventListener('resize', scheduleResize);
 addEventListener('orientationchange', () => {
   if (state === 'play') try { Input.releaseAll(); } catch (_) {}

@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.89';
+const APP_VERSION = '1.17.70';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 207;
+const SW_CACHE_REV = 196;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null, activeJutsu: 'rasengan',
 
@@ -9593,22 +9593,20 @@ function relayoutTouchPads() {
   } catch (_) {}
 }
 
-/** Wis spook-vingers vóór play — voorkomt vastgelopen joystick bij level-start. */
-function primePlayInput(dual) {
-  Input.releaseAll();
-  Input.dualMode = !!dual;
-  Input.suppressUntil = performance.now() + (IS_TOUCH ? 400 : 140);
-  Input.lastMoveTap = 0;
-  Input.lastMoveDir = 0;
-  if (InputP2) {
-    InputP2.lastMoveTap = 0;
-    InputP2.lastMoveDir = 0;
+/** Level-start / na pause: joycon + knoppen resetten (fix sticky input tot unpause). */
+function primePlayInput(mode) {
+  Input.dualMode = mode === 'versus';
+  try { Input.releaseAll(); } catch (_) {}
+  try {
+    if (typeof forceGameResize === 'function') forceGameResize();
+    else relayoutTouchPads();
+  } catch (_) {
+    try { relayoutTouchPads(); } catch (_) {}
   }
-  relayoutTouchPads();
-}
-
-function playInputSuppressed() {
-  return Input.suppressUntil && performance.now() < Input.suppressUntil;
+  requestAnimationFrame(() => {
+    try { relayoutTouchPads(); Input.releaseAll(); } catch (_) {}
+    requestAnimationFrame(() => { try { Input.releaseAll(); } catch (_) {} });
+  });
 }
 
 /** Voorkom dat scroll/slide over menu-tegels meteen selecteert (iPad). */
@@ -10210,6 +10208,12 @@ function scheduleResize() {
       resize();
     });
   }, delay);
+}
+
+/** Force canvas + touch-pad layout (level-start; debounced resize kan 140ms wachten). */
+function forceGameResize() {
+  lastResizeKey = '';
+  resize();
 }
 addEventListener('resize', scheduleResize);
 addEventListener('orientationchange', () => {
@@ -19321,6 +19325,7 @@ function startGame(mode, opts) {
     return;
   }
   state = 'play';
+  primePlayInput(mode);
   scheduleResize();
   try { AudioSys.setPaused(false); } catch (_) {}
   try { recordLastPlay(mode, opts); } catch (_) {}
@@ -19827,7 +19832,7 @@ bindPress(document.getElementById('pauseResume'), () => {
   state = 'play';
   AudioSys.setPaused(false);
   if (save.music && AudioSys.desiredSong) AudioSys.play(AudioSys.desiredSong);
-  try { primePlayInput(game && game.mode === 'versus'); } catch (_) {}
+  try { primePlayInput(game && game.mode); } catch (_) {}
   UI.show(null);
 });
 bindPress(document.getElementById('pauseQuit'), () => { UI.goMenu(); });

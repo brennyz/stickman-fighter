@@ -380,22 +380,20 @@ function relayoutTouchPads() {
   } catch (_) {}
 }
 
-/** Wis spook-vingers vóór play — voorkomt vastgelopen joystick bij level-start. */
-function primePlayInput(dual) {
-  Input.releaseAll();
-  Input.dualMode = !!dual;
-  Input.suppressUntil = performance.now() + (IS_TOUCH ? 400 : 140);
-  Input.lastMoveTap = 0;
-  Input.lastMoveDir = 0;
-  if (InputP2) {
-    InputP2.lastMoveTap = 0;
-    InputP2.lastMoveDir = 0;
+/** Level-start / na pause: joycon + knoppen resetten (fix sticky input tot unpause). */
+function primePlayInput(mode) {
+  Input.dualMode = mode === 'versus';
+  try { Input.releaseAll(); } catch (_) {}
+  try {
+    if (typeof forceGameResize === 'function') forceGameResize();
+    else relayoutTouchPads();
+  } catch (_) {
+    try { relayoutTouchPads(); } catch (_) {}
   }
-  relayoutTouchPads();
-}
-
-function playInputSuppressed() {
-  return Input.suppressUntil && performance.now() < Input.suppressUntil;
+  requestAnimationFrame(() => {
+    try { relayoutTouchPads(); Input.releaseAll(); } catch (_) {}
+    requestAnimationFrame(() => { try { Input.releaseAll(); } catch (_) {} });
+  });
 }
 
 /** Voorkom dat scroll/slide over menu-tegels meteen selecteert (iPad). */

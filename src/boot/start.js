@@ -34,6 +34,7 @@ function startGame(mode, opts) {
     return;
   }
   state = 'play';
+  primePlayInput(mode);
   scheduleResize();
   try { AudioSys.setPaused(false); } catch (_) {}
   try { recordLastPlay(mode, opts); } catch (_) {}
@@ -540,7 +541,7 @@ bindPress(document.getElementById('pauseResume'), () => {
   state = 'play';
   AudioSys.setPaused(false);
   if (save.music && AudioSys.desiredSong) AudioSys.play(AudioSys.desiredSong);
-  try { primePlayInput(game && game.mode === 'versus'); } catch (_) {}
+  try { primePlayInput(game && game.mode); } catch (_) {}
   UI.show(null);
 });
 bindPress(document.getElementById('pauseQuit'), () => { UI.goMenu(); });
