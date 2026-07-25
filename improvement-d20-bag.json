@@ -11,7 +11,6 @@
     9,
     11,
     12,
-    13,
     15,
     17,
     19
@@ -576,6 +575,13 @@
       "note": "OS sync, calm ketsbam, HC char select, CSS MQ",
       "version": "1.17.64",
       "doneAt": "2026-07-24T21:36:16Z",
+      "cycle": 4
+    },
+    {
+      "face": 13,
+      "note": "Vandaag-plan + menu-chip + prestatie-spotlight",
+      "version": "1.17.75",
+      "doneAt": "2026-07-25T07:09:15Z",
       "cycle": 4
     }
   ],

@@ -427,6 +427,85 @@ function dailyStatusLine() {
   });
 }
 
+function dailyEarnedXpToday() {
+  ensureDaily();
+  let xp = save.daily.tasks.filter(t => t.claimed).reduce((n, t) => n + (dailyDef(t.id)?.xp || 0), 0);
+  if (save.daily.dayBonusClaimed) xp += 80;
+  return xp;
+}
+
+function dailyResetCountdown() {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0);
+  const ms = Math.max(0, midnight - now);
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  if (h <= 0 && m <= 1) return t('missionsUi.resetSoon');
+  if (h <= 0) return t('missionsUi.resetMinutes', { m });
+  if (m <= 0) return t('missionsUi.resetHoursOnly', { h });
+  return t('missionsUi.resetHours', { h, m });
+}
+
+function dailyNextActionLine() {
+  ensureDaily();
+  const step = dailyFlowStep();
+  if (step === 0) return t('missionsUi.nextDone', { reset: dailyResetCountdown() });
+  if (step === 2) {
+    const ready = claimableDailyTasks();
+    const xp = ready.reduce((n, task) => n + (dailyDef(task.id)?.xp || 0), 0);
+    if (ready.length === 1) {
+      return t('missionsUi.nextClaim1', { text: dailyText(ready[0].id), xp });
+    }
+    return t('missionsUi.nextClaimN', { n: ready.length, xp });
+  }
+  if (step === 3) return t('missionsUi.nextBonus');
+  let best = null;
+  let bestPct = -1;
+  for (const task of save.daily.tasks) {
+    if (task.done || task.claimed) continue;
+    const def = dailyDef(task.id);
+    if (!def) continue;
+    const pct = task.progress / def.goal;
+    if (pct > bestPct) { bestPct = pct; best = task; }
+  }
+  if (!best) return t('missionsUi.nextPlayGeneric');
+  const def = dailyDef(best.id);
+  const target = DAILY_PLAY_TARGETS[best.id];
+  const mode = target ? dailyModeLabel(target.mode) : '';
+  const remainder = dailyTaskRemainderText(best, def);
+  return t('missionsUi.nextPlay', {
+    text: dailyText(best.id),
+    mode,
+    remainder: remainder ? ` · ${remainder}` : '',
+  });
+}
+
+function nearestAchievement() {
+  let best = null;
+  let bestFrac = -1;
+  for (const ach of ACHIEVEMENTS) {
+    if (save.achievements[ach.id]) continue;
+    const frac = achievementProgressFrac(ach);
+    if (frac > bestFrac) { bestFrac = frac; best = ach; }
+  }
+  if (!best || bestFrac < 0.2) return null;
+  return { ach: best, frac: bestFrac, hint: achievementProgressHint(best) };
+}
+
+function dailyMenuChipLine() {
+  ensureDaily();
+  if (save.daily.dayBonusClaimed) return '';
+  const bonusReady = save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed;
+  if (bonusReady) return t('ui.menuMissionBonus');
+  const ready = claimableDailyTasks().length;
+  if (ready > 0) return t('ui.menuMissionClaim', { xp: dailyUnclaimedXp() });
+  const done = save.daily.tasks.filter(t => t.done).length;
+  const claimed = save.daily.tasks.filter(t => t.claimed).length;
+  if (done === 0) return t('ui.menuMissionStart');
+  return t('ui.menuMissionProgress', { done, claimed });
+}
+
 function unlockAchievement(id) {
   if (save.achievements[id]) return;
   save.achievements[id] = todayKey();
