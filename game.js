@@ -135,7 +135,7 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.88';
+const APP_VERSION = '1.17.89';
 /** Keep in sync with sw.js CACHE suffix */
 const SW_CACHE_REV = 201;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
@@ -6204,6 +6204,7 @@ function seedNlGameStrings() {
     partGateHint: 'Checkpoint: loop rechts door — scherm scrollt mee · 3 delen per level',
     partGateWalk: 'Loop door → Deel {part}/3',
     partGateIntro: 'Levels hebben 3 delen — loop bij checkpoints rechts door',
+    partGateIdle: 'Loop naar rechts →',
     trainIntro: 'Combo-trainer — 3s oefenen, robot wacht',
     earLaser: 'Oor-laser — spring!',
     robotActive: 'Robot activeert — hou combo vast!',
@@ -6992,6 +6993,7 @@ const CATALOG_EN = {
     partGateHint: 'Checkpoint: walk right — screen scrolls with you · 3 parts per level',
     partGateWalk: 'Walk through → Part {part}/3',
     partGateIntro: 'Levels have 3 parts — walk right at checkpoints',
+    partGateIdle: 'Walk right →',
     trainIntro: 'Combo trainer — 3s practice, robot waits',
     earLaser: 'Ear-laser — jump!', robotActive: 'Robot active — keep combo!',
     roundCombo: 'Round combo ×{n}',
@@ -10317,6 +10319,11 @@ class Fighter {
     }
     const locked = game.inputLocked && (this.isPlayer || this.playerSlot);
     const it = locked ? { move: 0 } : this.intent(dt, game);
+    if (this.isPlayer && game && game.partGate) {
+      if (it.move < 0) it.move = 0;
+      it.punch = it.kick = it.weapon = it.special = it.subst = it.jump = it.dash = false;
+      it.block = false;
+    }
     if (game.inputLocked && !this.isPlayer && !this.playerSlot) {
       it.punch = it.kick = it.weapon = it.special = false; it.move = 0;
     }
@@ -10464,8 +10471,11 @@ class Fighter {
       const tMove = pad ? pad.move : 0;
       if (game.partGate && tMove > 0.05) {
         this.face = 1;
-        this.vx = Math.max(this.vx, this.speed * 0.92);
+        this.vx = Math.max(this.vx, this.speed * 0.95);
         this.state = 'run';
+      } else if (game.partGate) {
+        this.face = 1;
+        if (this.state === 'idle') this.state = 'run';
       } else if (Math.abs(tMove) > 0.05) this.face = tMove > 0 ? 1 : -1;
       else if (this.state === 'idle' || Math.abs(this.vx) < 22) this.face = 1;
       if (this.state === 'idle') this.state = 'run';
@@ -12142,19 +12152,35 @@ function clearGameResultTimer(g) {
 }
 
 /** Seconden actief naar rechts lopen om checkpoint-deel te unlocken. */
-const PART_GATE_WALK_SEC = 2.75;
+const PART_GATE_WALK_SEC = 3.35;
+const PART_GATE_DECAY_MUL = 1.5;
+const PART_GATE_IDLE_HINT = 1.35;
+const PART_GATE_PLAYER_X = 0.28;
 
 function partBoundaryWaveIdx(totalWaves, currentPart) {
-  if (currentPart === 1) return Math.max(0, Math.ceil(totalWaves / 3) - 1);
-  if (currentPart === 2) return Math.max(0, Math.ceil((2 * totalWaves) / 3) - 1);
+  if (totalWaves < 1) return -1;
+  const b1 = Math.max(0, Math.ceil(totalWaves / 3) - 1);
+  if (currentPart === 1) return b1;
+  if (currentPart === 2) {
+    const b2 = Math.max(0, Math.ceil((2 * totalWaves) / 3) - 1);
+    return Math.max(b1 + 1, b2);
+  }
   return -1;
 }
 
-function playerWalkRightInput() {
+function playerWalkInput() {
   if (typeof Input === 'undefined' || Input.dualMode) return 0;
-  if (Input.move > 0.08) return Input.move;
-  if (Input.keys.d || Input.keys.arrowright) return 1;
-  return 0;
+  let mv = Input.move || 0;
+  if (Math.abs(mv) < 0.08) {
+    if (Input.keys.d || Input.keys.arrowright) mv = 1;
+    else if (Input.keys.a || Input.keys.arrowleft) mv = -1;
+  }
+  return mv;
+}
+
+function playerWalkRightInput() {
+  const mv = playerWalkInput();
+  return mv > 0.05 ? mv : 0;
 }
 
 class Game {
@@ -12408,10 +12434,18 @@ class Game {
   }
 
   startPartGate() {
+    if (this.partGate || !this.player?.alive) return;
     const targetPart = Math.min(3, (this.stagePart || 1) + 1);
-    this.partGate = { targetPart, progress: 0, t: 0 };
+    this.partGate = {
+      targetPart, progress: 0, t: 0, idleT: 0, milestone: 0, stepAcc: 0, idleHintShown: false,
+    };
     this.wavePause = 1;
     this.wavePauseTotal = 1;
+    if (this.player) {
+      this.player.attack = null;
+      this.player.face = 1;
+      this.player.vx = Math.max(this.player.vx, this.player.speed * 0.35);
+    }
     if (!save.tipsSeen) save.tipsSeen = {};
     if (!save.tipsSeen.partGate) {
       save.tipsSeen.partGate = true;
@@ -12424,7 +12458,8 @@ class Game {
   }
 
   completePartGate() {
-    if (!this.partGate) return;
+    if (!this.partGate || this.partGate.completing) return;
+    this.partGate.completing = true;
     const part = this.partGate.targetPart;
     this.stagePart = part;
     this.partFlashT = motionReduced() ? 0.22 : 0.55;
@@ -12433,25 +12468,62 @@ class Game {
     const orbX = W / 2 - tw / 2 + clamp(this.progressSmooth || 0, 0, 1) * tw;
     if (!fxLite()) this.burst(orbX, 44, '#7cf5ff', motionReduced() ? 6 : 14, { kind: 'spark', size: 2.4 });
     try { AudioSys.sfx('checkpoint'); } catch (_) {}
-    haptic(10);
+    haptic(14);
     this.partGate = null;
-    this.wavePause = 0.75;
-    this.wavePauseTotal = 0.75;
+    this.wavePause = 0.85;
+    this.wavePauseTotal = 0.85;
+    if (this.player) {
+      this.player.attack = null;
+      this.player.vx = Math.max(this.player.vx, 60);
+    }
   }
 
   updatePartGate(dt) {
-    if (!this.partGate || !this.player?.alive) return;
-    const move = playerWalkRightInput();
-    this.partGate.t = (this.partGate.t || 0) + dt;
-    if (move > 0.05) {
-      this.partGate.progress = Math.min(1, (this.partGate.progress || 0) + dt / PART_GATE_WALK_SEC);
-      this.worldX = (this.worldX || 0) + dt * (95 + move * 155);
-      this.player.face = 1;
-      this.player.vx = Math.max(this.player.vx, move * 200);
-    } else {
-      this.worldX = (this.worldX || 0) + dt * 38;
+    if (!this.partGate || !this.player?.alive) {
+      this.partGate = null;
+      return;
     }
-    if (this.partGate.progress >= 1) this.completePartGate();
+    const pg = this.partGate;
+    const move = playerWalkInput();
+    pg.t = (pg.t || 0) + dt;
+    pg.walking = move > 0.05;
+    if (pg.walking) {
+      pg.idleT = 0;
+      pg.idleHintShown = false;
+      pg.progress = Math.min(1, (pg.progress || 0) + dt / PART_GATE_WALK_SEC);
+      this.worldX = (this.worldX || 0) + dt * (115 + move * 175);
+      const tick = Math.floor((pg.progress || 0) * 3);
+      if (tick > (pg.milestone || 0)) {
+        pg.milestone = tick;
+        try { AudioSys.sfx('step'); } catch (_) {}
+        if (tick < 3) haptic(5);
+      }
+      pg.stepAcc = (pg.stepAcc || 0) + dt;
+      if (pg.stepAcc >= 0.34) {
+        pg.stepAcc = 0;
+        if (!fxLite() && !motionReduced()) {
+          this.burst(this.player.x + 14, this.player.y - 6, '#c9b691', 2, { kind: 'spark', size: 2 });
+        }
+      }
+    } else if (move < -0.05 && (pg.progress || 0) > 0) {
+      pg.progress = Math.max(0, pg.progress - (dt / PART_GATE_WALK_SEC) * PART_GATE_DECAY_MUL);
+      this.worldX = (this.worldX || 0) + dt * 16;
+      pg.idleT = (pg.idleT || 0) + dt;
+    } else {
+      this.worldX = (this.worldX || 0) + dt * 24;
+      pg.idleT = (pg.idleT || 0) + dt;
+    }
+    if (pg.idleT >= PART_GATE_IDLE_HINT && !pg.idleHintShown) {
+      pg.idleHintShown = true;
+      this.floater(this.player.x, this.player.y - 102, t('combat.partGateIdle'), '#ffd75e', 13);
+      this.modeHintLine = IS_TOUCH ? t('hud.partGateTouch') : t('hud.partGateKb');
+      this.hint = Math.max(this.hint || 0, 3.5);
+    }
+    const targetX = W * PART_GATE_PLAYER_X;
+    if (this.player.x < targetX - 6) {
+      this.player.x += (targetX - this.player.x) * Math.min(1, dt * 5);
+    }
+    if (pg.progress >= 1) this.completePartGate();
   }
 
   /** 0..1 voortgang door het level (golven + kills binnen golf). */
@@ -12628,6 +12700,7 @@ class Game {
 
   finishAdventure(win) {
     if (this.over) return;
+    this.partGate = null;
     if (win && (!this.player || !this.player.alive)) win = false;
     this.deactivateMasterSword(true);
     this.over = true;
@@ -14636,7 +14709,8 @@ class Game {
     if (!this.partGate || !this.player?.alive) return;
     const pg = this.partGate;
     const prog = clamp(pg.progress || 0, 0, 1);
-    const t = pg.t || 0;
+    const gt = pg.t || 0;
+    const walking = !!pg.walking;
     const calm = motionReduced();
     const ui = touchUiScale(W, H);
     const px = this.player.x;
@@ -14662,8 +14736,10 @@ class Game {
 
     // drie chevrons >>
     for (let i = 0; i < 3; i++) {
-      const phase = t * (calm ? 4 : 7) - i * 0.38;
-      const blink = calm ? 0.75 : (0.35 + Math.max(0, Math.sin(phase)) * 0.65);
+      const phase = gt * (calm ? 4 : (walking ? 9 : 5)) - i * 0.38;
+      const blink = calm ? 0.75 : (walking
+        ? (0.55 + Math.max(0, Math.sin(phase)) * 0.45)
+        : (0.28 + Math.max(0, Math.sin(phase * 0.7)) * 0.35));
       const slide = calm ? 0 : Math.sin(phase * 0.9) * 6;
       const cx = px + 36 + i * (34 * ui) + slide + prog * 18;
       const cy = py + (i % 2 ? -6 : 6);
@@ -14703,6 +14779,11 @@ class Game {
     c.stroke();
     c.fillStyle = '#fff';
     c.fillText(label, pillX + pillW * 0.5, pillY + 16);
+    if (!walking && prog < 0.98) {
+      c.font = `700 ${Math.round(10 * ui)}px -apple-system,sans-serif`;
+      c.fillStyle = 'rgba(255,215,94,.88)';
+      c.fillText(t('combat.partGateIdle'), pillX + pillW * 0.5, pillY + 28);
+    }
     const bx = pillX + 10;
     const by = pillY + 24;
     c.fillStyle = 'rgba(255,255,255,.16)';
