@@ -283,6 +283,19 @@ const UI = {
     } else {
       sub.textContent = this.pauseSubDefault;
     }
+    this.renderPausePerfStrip();
+  },
+
+  renderPausePerfStrip() {
+    const el = document.getElementById('pausePerfStrip');
+    if (!el) return;
+    if (!game || state !== 'pause') {
+      el.style.display = 'none';
+      el.textContent = '';
+      return;
+    }
+    el.textContent = formatPerfStripLine();
+    el.style.display = 'block';
   },
 
   show(id) {
@@ -306,6 +319,7 @@ const UI = {
         if (id === 'pauseScreen') {
           this.refreshPauseSubtitle();
           this.renderPauseToggles();
+          this.renderPausePerfStrip();
         }
         if (id === 'helpScreen') this.renderHelp();
         if (id === 'levelScreen') {
@@ -1872,9 +1886,7 @@ const UI = {
     const perfEl = document.getElementById('setPerfLine');
     if (perfEl) {
       const p = perfFxSummary();
-      perfEl.textContent =
-        `Perf tier ${p.tier} · DPR ${p.dpr.toFixed(2)}/${p.maxDpr} · ~${p.fps} fps · ` +
-        `FX cap ${p.caps.particles} deeltjes / ${p.caps.floaters} floaters`;
+      perfEl.textContent = formatPerfStripLine(p);
     }
     const healthEl = document.getElementById('saveHealthLine');
     if (healthEl) {

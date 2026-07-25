@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-24 | **ship** | Alles live: dex/pets, egg pets, combat styles, save backup, combat harden, weapon combos, char select, hosting, code health, PWA offline, kill streak + combo-trainer. v1.17.56 / SW v182. |
 | 2026-07-24 | — | **Feel #2+#3:** kill streak (STREAK juice, record, BGM heat, achievements) + combo-trainer (dummy 3s, goals, record, bonus XP). |
 | 2026-07-24 | **8** | PWA (cyclus 4): SW + LIVE-LINK precache, shell-check (JS+HTML+CSS) voor offline-klaar, pauze offline-hint, branded fallback Pages-link. |
+| 2026-07-25 | **5** | Performance (cyclus 4): horde FX scaling (alive-cap schaalt deeltjes/floaters + frame-budget), alternate-frame draw bij grote hordes, pauze perf-strip (fps/tier/DPR/horde). v1.17.72 / SW v198. |
 | 2026-07-24 | **20** | Code health (cyclus 4): volPct→prelude, settings vol DRY, menuBackdropLiteFlags, drawJutsuOrb branch merge, motionReduced guards — zero gedrag. |
 | 2026-07-24 | **16** | Hosting (cyclus 4): share ?v= rev op speel.html, host-badge in instellingen, tunnel→Open Pages CTA, speel og:url canonical. |
 | 2026-07-24 | **16** | Hosting (cyclus 3): deploy LIVE-LINK→speel.html, speel share via hosting.json, tunnel hint, keep-tunnel Pages-first. v1.17.42 / SW v168. **Cyclus 3 vol.** |
