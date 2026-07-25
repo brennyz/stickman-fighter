@@ -127,8 +127,9 @@ function paintMenuHeroCanvas(t) {
   const Hs = cv.height;
   c.clearRect(0, 0, Ws, Hs);
 
-  // Foto-album: eik → steenhuis → open weg (zachte crossfade)
+  // Foto-album: kruispunt (4 paden) → eik → steenhuis → open weg
   const VISTAS = [];
+  if (typeof drawMenuCrossroadsVista === 'function') VISTAS.push(drawMenuCrossroadsVista);
   if (typeof drawMenuSemi25dVista === 'function') VISTAS.push(drawMenuSemi25dVista);
   if (typeof drawMenuStonehouseVista === 'function') VISTAS.push(drawMenuStonehouseVista);
   if (typeof drawMenuOpenRoadVista === 'function') VISTAS.push(drawMenuOpenRoadVista);

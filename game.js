@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.24';
+const APP_VERSION = '1.18.25';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 234;
+const SW_CACHE_REV = 235;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -1234,6 +1234,7 @@ const I18N = {
       collect: 'Collectie', collectSub: 'Wapens · stijl · boek', music: 'Muziek', missions: 'Missies',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon op je beginscherm',
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
+      choosePath: 'KIES JE PAD',
     },
     hub: {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
@@ -1309,6 +1310,7 @@ const I18N = {
       collect: 'Collection', collectSub: 'Weapons · style · book', music: 'Music', missions: 'Missions',
       options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add to home screen', installSub: 'One icon on your device',
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
+      choosePath: 'CHOOSE YOUR PATH',
     },
     hub: {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -1384,6 +1386,7 @@ const I18N = {
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch', music: 'Musik', missions: 'Missionen',
       options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Zum Home-Bildschirm', installSub: 'Ein Icon auf dem Gerät',
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
+      choosePath: 'WÄHLE DEINEN WEG',
     },
     hub: {
       step: 'Schritt 2 · Modus wählen', solo: 'SOLO', collection: 'SAMMLUNG',
@@ -1446,6 +1449,7 @@ const I18N = {
       collect: 'Collection', collectSub: 'Armes · style · bestiaire', music: 'Musique', missions: 'Missions',
       options: 'Options', tips: 'Astuces', fresh: 'Version fraîche', install: 'Ajouter à l\'écran d\'accueil', installSub: 'Une icône sur l\'appareil',
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
+      choosePath: 'CHOISIS TON CHEMIN',
     },
     hub: {
       step: 'Étape 2 · Choisir le mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -1508,6 +1512,7 @@ const I18N = {
       collect: 'Colección', collectSub: 'Armas · estilo · bestiario', music: 'Música', missions: 'Misiones',
       options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir a inicio', installSub: 'Un icono en tu dispositivo',
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
+      choosePath: 'ELIGE TU CAMINO',
     },
     hub: {
       step: 'Paso 2 · Elige modo', solo: 'SOLO', collection: 'COLECCIÓN',
@@ -1649,6 +1654,7 @@ function applyLangStaticScreens() {
 
   setText('menuLangLbl', 'settings.lang');
   setText('pressStartLine', 'menu.pressStart');
+  setText('menuArcadePre', 'menu.choosePath');
   const cont = document.getElementById('btnContinue');
   if (cont) {
     const div = cont.querySelector('div');
@@ -16098,7 +16104,7 @@ function drawMenuSemi25dVista(c, w, h, t, opts) {
     c.fillStyle = P.captionFg;
     c.font = '700 9px -apple-system, sans-serif';
     c.textAlign = 'left';
-    c.fillText('1/3 · eik', 10, 16);
+    c.fillText('2/4 · eik', 10, 16);
   }
 
   c.imageSmoothingEnabled = prev;
@@ -16328,7 +16334,7 @@ function drawMenuStonehouseVista(c, w, h, t, opts) {
     c.fillStyle = P.captionFg;
     c.font = '700 9px -apple-system, sans-serif';
     c.textAlign = 'left';
-    c.fillText('2/3 · steenhuis', 10, 16);
+    c.fillText('3/4 · steenhuis', 10, 16);
   }
 
   c.imageSmoothingEnabled = prev;
@@ -16575,11 +16581,281 @@ function drawMenuOpenRoadVista(c, w, h, t, opts) {
     c.fillStyle = P.captionFg;
     c.font = '700 9px -apple-system, sans-serif';
     c.textAlign = 'left';
-    c.fillText('3/3 · open weg', 10, 16);
+    c.fillText('4/4 · open weg', 10, 16);
   }
 
   c.imageSmoothingEnabled = prev;
   return { roadY: roadY + Math.round(roadH * 0.35), fieldY: fieldTop, horizonY, id: 'openroad' };
+}
+
+/**
+ * Startscherm vista — vierweg-kruispunt (foto: gravel + asfalt + gouden gras).
+ * Vier paden = hub-keuze: links Avontuur · rechtuit Arcade · rechts 2P · hier Collectie.
+ */
+function drawMenuCrossroadsVista(c, w, h, t, opts) {
+  opts = opts || {};
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  const lite = !!opts.lite;
+  const calm = motionReduced();
+  const px = 3;
+  const P = COUNTRY_PAL;
+  const skyTop = '#4a9adf';
+  const skyMid = '#7eb8e8';
+  const skyLow = '#c8e4f6';
+  const gravelHi = '#b8b0a0';
+  const gravelMid = '#9a9284';
+  const gravelLo = '#7a7468';
+  const asphalt = P.roadMid;
+  const asphaltHi = P.roadHi;
+  const redBush = '#7a4030';
+  const redBushLite = '#9a5840';
+  const redBushDeep = '#5a2e24';
+  const grassHi = '#c4a85a';
+  const grassMid = P.fieldMid;
+  const grassLo = P.fieldLo;
+  const hedge = '#2e5034';
+  const hedgeLite = '#3e6844';
+
+  const horizonY = Math.round(h * 0.40);
+  const forkY = Math.round(h * 0.52);
+  const wrap = (v, span) => ((v % span) + span) % span;
+  const pSky = calm ? 0 : t * 4;
+  const pFar = calm ? 0 : t * 5;
+  const pulse = calm ? 0 : (0.5 + 0.5 * Math.sin(t * 2.2));
+
+  // —— sky ——
+  const sky = c.createLinearGradient(0, 0, 0, horizonY);
+  sky.addColorStop(0, skyTop);
+  sky.addColorStop(0.55, skyMid);
+  sky.addColorStop(1, skyLow);
+  c.fillStyle = sky;
+  c.fillRect(0, 0, w, horizonY);
+
+  const cloudN = lite ? 4 : 6;
+  for (let i = 0; i < cloudN; i++) {
+    const cw = 30 + (i % 3) * 14;
+    const cx = wrap(i * 0.24 * w + pSky * (0.5 + i * 0.08), w + cw) - cw * 0.5;
+    const cy = 6 + (i % 3) * 11;
+    c.fillStyle = '#f4f9ff';
+    c.fillRect(Math.round(cx), cy + 6, cw, 8);
+    c.fillRect(Math.round(cx + 8), cy, Math.round(cw * 0.65), 9);
+    c.fillStyle = '#d4e4f2';
+    c.fillRect(Math.round(cx + 4), cy + 12, cw - 8, 3);
+  }
+
+  // —— distant hills / forest ——
+  const farOff = Math.round(wrap(-pFar, 40) - 20);
+  c.fillStyle = '#3a6a42';
+  c.beginPath();
+  c.moveTo(0, h);
+  c.lineTo(0, horizonY + 4);
+  for (let x = 0; x <= w; x += 16) {
+    c.lineTo(x, horizonY + 4 - 12 * (0.5 + 0.5 * Math.sin((x + farOff) * 0.02)));
+  }
+  c.lineTo(w, h);
+  c.closePath();
+  c.fill();
+  for (let i = -1; i < 16; i++) {
+    const tx = Math.round(i * 40 + farOff * 0.5);
+    const th = 18 + ((i * 9) % 16);
+    c.fillStyle = i % 2 ? '#2a5030' : '#355a38';
+    c.fillRect(tx, horizonY - th + 8, 16, th + 10);
+    c.fillRect(tx + 3, horizonY - th + 2, 10, 8);
+  }
+
+  // —— golden grass field base ——
+  for (let y = horizonY + 6; y < h; y += px) {
+    const pr = (y - horizonY) / Math.max(1, h - horizonY);
+    c.fillStyle = pr < 0.25 ? grassHi : pr < 0.55 ? grassMid : grassLo;
+    c.fillRect(0, y, w, px);
+  }
+  for (let x = 0; x < w; x += 6) {
+    for (let y = horizonY + 10; y < forkY + 20; y += 9) {
+      const bit = ((x + y * 3) & 7);
+      if (bit < 2) {
+        c.fillStyle = 'rgba(220,200,140,.18)';
+        c.fillRect(x, y, 3, 3);
+      }
+    }
+  }
+
+  // —— LEFT gravel path ——
+  c.beginPath();
+  c.moveTo(0, Math.round(h * 0.62));
+  c.lineTo(Math.round(w * 0.38), forkY + 4);
+  c.lineTo(Math.round(w * 0.42), forkY + 18);
+  c.lineTo(0, Math.round(h * 0.78));
+  c.closePath();
+  c.fillStyle = gravelMid;
+  c.fill();
+  c.fillStyle = gravelHi;
+  c.beginPath();
+  c.moveTo(0, Math.round(h * 0.62));
+  c.lineTo(Math.round(w * 0.38), forkY + 4);
+  c.lineTo(Math.round(w * 0.36), forkY + 10);
+  c.lineTo(0, Math.round(h * 0.68));
+  c.closePath();
+  c.fill();
+
+  // —— RIGHT gravel path ——
+  c.beginPath();
+  c.moveTo(w, Math.round(h * 0.58));
+  c.lineTo(Math.round(w * 0.62), forkY + 2);
+  c.lineTo(Math.round(w * 0.58), forkY + 20);
+  c.lineTo(w, Math.round(h * 0.76));
+  c.closePath();
+  c.fillStyle = gravelMid;
+  c.fill();
+  c.fillStyle = gravelLo;
+  c.beginPath();
+  c.moveTo(w, Math.round(h * 0.70));
+  c.lineTo(Math.round(w * 0.60), forkY + 14);
+  c.lineTo(Math.round(w * 0.58), forkY + 20);
+  c.lineTo(w, Math.round(h * 0.76));
+  c.closePath();
+  c.fill();
+
+  // —— CENTER asphalt going into trees ——
+  c.beginPath();
+  c.moveTo(Math.round(w * 0.40), forkY);
+  c.lineTo(Math.round(w * 0.46), horizonY + 14);
+  c.lineTo(Math.round(w * 0.54), horizonY + 14);
+  c.lineTo(Math.round(w * 0.60), forkY);
+  c.closePath();
+  c.fillStyle = asphalt;
+  c.fill();
+  c.fillStyle = asphaltHi;
+  c.fillRect(Math.round(w * 0.47), horizonY + 14, Math.round(w * 0.06), forkY - horizonY - 12);
+
+  // —— FOREGROUND gravel (you stand here) ——
+  c.beginPath();
+  c.moveTo(Math.round(w * 0.18), h);
+  c.lineTo(Math.round(w * 0.38), forkY + 8);
+  c.lineTo(Math.round(w * 0.62), forkY + 8);
+  c.lineTo(Math.round(w * 0.88), h);
+  c.closePath();
+  c.fillStyle = gravelMid;
+  c.fill();
+  // gravel sparkle
+  for (let i = 0; i < (lite ? 10 : 18); i++) {
+    const gx = Math.round(w * 0.28 + (i * 37) % Math.round(w * 0.44));
+    const gy = Math.round(forkY + 24 + (i * 19) % Math.round(h - forkY - 30));
+    c.fillStyle = i % 2 ? 'rgba(255,255,255,.14)' : 'rgba(40,36,30,.2)';
+    c.fillRect(gx, gy, 2 + (i % 2), 2);
+  }
+  c.fillStyle = gravelHi;
+  c.fillRect(Math.round(w * 0.35), forkY + 6, Math.round(w * 0.30), 4);
+
+  // Fence post + gate hint (left)
+  const postX = Math.round(w * 0.08);
+  const postY = Math.round(h * 0.58);
+  c.fillStyle = P.log;
+  c.fillRect(postX, postY - 28, 4, 32);
+  c.fillStyle = P.logLite;
+  c.fillRect(postX, postY - 28, 2, 32);
+  c.strokeStyle = 'rgba(80,80,78,.55)';
+  c.lineWidth = 1;
+  c.beginPath();
+  c.moveTo(postX + 4, postY - 18);
+  c.lineTo(postX + 28, postY - 14);
+  c.stroke();
+
+  // Reddish bush (right — photo anchor)
+  const bx = Math.round(w * 0.78);
+  const by = Math.round(h * 0.55);
+  c.fillStyle = redBushDeep;
+  c.beginPath();
+  c.ellipse(bx, by, 28, 22, 0, 0, TAU);
+  c.fill();
+  c.fillStyle = redBush;
+  c.beginPath();
+  c.ellipse(bx - 8, by - 6, 18, 14, -0.2, 0, TAU);
+  c.fill();
+  c.fillStyle = redBushLite;
+  c.beginPath();
+  c.ellipse(bx + 6, by - 10, 14, 11, 0.15, 0, TAU);
+  c.fill();
+  c.fillStyle = hedge;
+  c.beginPath();
+  c.ellipse(bx - 22, by + 4, 12, 10, 0, 0, TAU);
+  c.fill();
+
+  // Green trees flanking the asphalt vanishing point
+  c.fillStyle = hedge;
+  c.fillRect(Math.round(w * 0.40) - 14, horizonY - 6, 12, 28);
+  c.fillRect(Math.round(w * 0.60) + 2, horizonY - 4, 12, 26);
+  c.fillStyle = hedgeLite;
+  c.beginPath();
+  c.ellipse(Math.round(w * 0.40) - 8, horizonY - 10, 14, 11, 0, 0, TAU);
+  c.fill();
+  c.beginPath();
+  c.ellipse(Math.round(w * 0.60) + 8, horizonY - 8, 13, 10, 0, 0, TAU);
+  c.fill();
+
+  // —— Four-path choice markers (hub colors) ——
+  const lab = (key, fallback) => {
+    try { return (typeof t === 'function' && t(key)) || fallback; } catch (_) { return fallback; }
+  };
+  const markers = [
+    { x: w * 0.18, y: h * 0.64, label: lab('menu.adventure', 'Avontuur'), col: '#7cf5aa', dir: '←' },
+    { x: w * 0.50, y: forkY - 6, label: lab('menu.arcade', 'Arcade'), col: '#9db8ff', dir: '↑' },
+    { x: w * 0.78, y: h * 0.62, label: lab('menu.versus', '2P'), col: '#ff9ab8', dir: '→' },
+    { x: w * 0.50, y: h * 0.88, label: lab('menu.collect', 'Collectie'), col: '#d8a8ff', dir: '●' },
+  ];
+  // Shorten long translated versus labels for pixel chip
+  if (markers[2].label && markers[2].label.length > 10) markers[2].label = '2P';
+  c.font = '700 8px -apple-system, sans-serif';
+  c.textAlign = 'center';
+  for (const m of markers) {
+    const mx = Math.round(m.x);
+    const my = Math.round(m.y);
+    const glow = 0.55 + pulse * 0.35;
+    c.fillStyle = m.col;
+    c.globalAlpha = glow;
+    // chevron / node
+    if (m.dir === '←') {
+      c.fillRect(mx - 10, my - 2, 14, 4);
+      c.fillRect(mx - 10, my - 6, 4, 12);
+    } else if (m.dir === '→') {
+      c.fillRect(mx - 4, my - 2, 14, 4);
+      c.fillRect(mx + 6, my - 6, 4, 12);
+    } else if (m.dir === '↑') {
+      c.fillRect(mx - 2, my - 10, 4, 14);
+      c.fillRect(mx - 6, my - 10, 12, 4);
+    } else {
+      c.beginPath();
+      c.arc(mx, my - 4, 4, 0, TAU);
+      c.fill();
+    }
+    c.globalAlpha = 0.92;
+    c.fillStyle = 'rgba(12,14,16,.55)';
+    const tw = Math.ceil(c.measureText(m.label).width) + 8;
+    c.fillRect(mx - tw / 2, my + 4, tw, 11);
+    c.fillStyle = m.col;
+    c.fillText(m.label, mx, my + 12);
+  }
+  c.globalAlpha = 1;
+
+  // Soft vignette
+  const vig = c.createLinearGradient(0, 0, 0, h);
+  vig.addColorStop(0, 'rgba(40,90,140,.08)');
+  vig.addColorStop(0.45, 'rgba(0,0,0,0)');
+  vig.addColorStop(1, 'rgba(24,20,14,.24)');
+  c.fillStyle = vig;
+  c.fillRect(0, 0, w, h);
+
+  if (opts.caption !== false) {
+    c.fillStyle = P.captionBg;
+    c.fillRect(6, 6, 148, 14);
+    c.fillStyle = P.captionFg;
+    c.font = '700 9px -apple-system, sans-serif';
+    c.textAlign = 'left';
+    c.fillText('1/4 · kruispunt', 10, 16);
+  }
+
+  c.imageSmoothingEnabled = prev;
+  return { roadY: forkY + 20, fieldY: horizonY + 6, horizonY, id: 'crossroads' };
 }
 
 /**
@@ -25951,8 +26227,9 @@ function paintMenuHeroCanvas(t) {
   const Hs = cv.height;
   c.clearRect(0, 0, Ws, Hs);
 
-  // Foto-album: eik → steenhuis → open weg (zachte crossfade)
+  // Foto-album: kruispunt (4 paden) → eik → steenhuis → open weg
   const VISTAS = [];
+  if (typeof drawMenuCrossroadsVista === 'function') VISTAS.push(drawMenuCrossroadsVista);
   if (typeof drawMenuSemi25dVista === 'function') VISTAS.push(drawMenuSemi25dVista);
   if (typeof drawMenuStonehouseVista === 'function') VISTAS.push(drawMenuStonehouseVista);
   if (typeof drawMenuOpenRoadVista === 'function') VISTAS.push(drawMenuOpenRoadVista);

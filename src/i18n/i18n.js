@@ -12,6 +12,7 @@ const I18N = {
       collect: 'Collectie', collectSub: 'Wapens · stijl · boek', music: 'Muziek', missions: 'Missies',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon op je beginscherm',
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
+      choosePath: 'KIES JE PAD',
     },
     hub: {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
@@ -87,6 +88,7 @@ const I18N = {
       collect: 'Collection', collectSub: 'Weapons · style · book', music: 'Music', missions: 'Missions',
       options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add to home screen', installSub: 'One icon on your device',
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
+      choosePath: 'CHOOSE YOUR PATH',
     },
     hub: {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -162,6 +164,7 @@ const I18N = {
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch', music: 'Musik', missions: 'Missionen',
       options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Zum Home-Bildschirm', installSub: 'Ein Icon auf dem Gerät',
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
+      choosePath: 'WÄHLE DEINEN WEG',
     },
     hub: {
       step: 'Schritt 2 · Modus wählen', solo: 'SOLO', collection: 'SAMMLUNG',
@@ -224,6 +227,7 @@ const I18N = {
       collect: 'Collection', collectSub: 'Armes · style · bestiaire', music: 'Musique', missions: 'Missions',
       options: 'Options', tips: 'Astuces', fresh: 'Version fraîche', install: 'Ajouter à l\'écran d\'accueil', installSub: 'Une icône sur l\'appareil',
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
+      choosePath: 'CHOISIS TON CHEMIN',
     },
     hub: {
       step: 'Étape 2 · Choisir le mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -286,6 +290,7 @@ const I18N = {
       collect: 'Colección', collectSub: 'Armas · estilo · bestiario', music: 'Música', missions: 'Misiones',
       options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir a inicio', installSub: 'Un icono en tu dispositivo',
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
+      choosePath: 'ELIGE TU CAMINO',
     },
     hub: {
       step: 'Paso 2 · Elige modo', solo: 'SOLO', collection: 'COLECCIÓN',
@@ -427,6 +432,7 @@ function applyLangStaticScreens() {
 
   setText('menuLangLbl', 'settings.lang');
   setText('pressStartLine', 'menu.pressStart');
+  setText('menuArcadePre', 'menu.choosePath');
   const cont = document.getElementById('btnContinue');
   if (cont) {
     const div = cont.querySelector('div');
