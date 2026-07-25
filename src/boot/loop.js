@@ -107,66 +107,59 @@ function paintMenuHeroCanvas(t) {
   const Ws = cv.width;
   const Hs = cv.height;
   c.clearRect(0, 0, Ws, Hs);
-  const sky = c.createLinearGradient(0, 0, 0, Hs);
-  sky.addColorStop(0, '#2a1848');
-  sky.addColorStop(0.55, '#120c20');
-  sky.addColorStop(1, '#08060c');
-  c.fillStyle = sky;
-  c.fillRect(0, 0, Ws, Hs);
-  const cx = Ws * 0.5;
-  const cy = Hs * 0.38;
-  const pulse = 0.92 + Math.sin(t * 2.2) * 0.06;
-  c.save();
-  c.translate(cx, cy);
-  c.scale(pulse, pulse);
-  const rays = lite ? (Perf.tier >= 2 ? 6 : 8) : 12;
-  for (let i = 0; i < rays; i++) {
-    const a = (i / rays) * TAU + t * 0.15;
-    c.strokeStyle = i % 2 ? 'rgba(255,100,60,.25)' : 'rgba(255,220,80,.18)';
-    c.lineWidth = 3;
-    c.beginPath();
-    c.moveTo(0, 0);
-    c.lineTo(Math.cos(a) * Ws * 0.55, Math.sin(a) * Hs * 0.9);
-    c.stroke();
+
+  // Onverwacht: arcade-titel is een vakantie-pixelmap van de landweg-foto
+  let map = { groundY: Hs * 0.62, roadX: Ws * 0.4 };
+  if (typeof drawLandwegPixelmap === 'function') {
+    map = drawLandwegPixelmap(c, Ws, Hs, t, { lite, caption: true, groundY: Hs * 0.58 }) || map;
+  } else {
+    const sky = c.createLinearGradient(0, 0, 0, Hs);
+    sky.addColorStop(0, '#4ea6e8');
+    sky.addColorStop(1, '#c5e0f5');
+    c.fillStyle = sky;
+    c.fillRect(0, 0, Ws, Hs);
+    drawMenuHeroPixelGround(c, Ws, Hs, Hs * 0.62, t);
   }
-  const grd = c.createRadialGradient(0, 0, 0, 0, 0, 72);
-  grd.addColorStop(0, '#ffe259');
-  grd.addColorStop(1, 'rgba(255,120,40,.15)');
-  c.fillStyle = grd;
-  c.beginPath();
-  c.arc(0, 0, 72, 0, TAU);
-  c.fill();
-  c.restore();
-  drawMenuHeroPixelGround(c, Ws, Hs, Hs * 0.72, t);
-  const bounce = Math.sin(t * 3.5) * 4;
-  const drawMenuStick = (x, face, col) => {
+
+  const roadY = (map.groundY || Hs * 0.58) + 8;
+  const walk = motionReduced() ? 0 : Math.sin(t * 3.2) * 3;
+  const stroll = motionReduced() ? 0 : Math.sin(t * 0.7) * (Ws * 0.04);
+  const drawTourist = (x, face, col) => {
     c.save();
-    c.translate(x, Hs * 0.78 + bounce * (face > 0 ? 1 : -1));
+    c.translate(x + stroll * face, roadY + walk * (face > 0 ? 1 : 0.5));
     c.scale(face, 1);
     c.strokeStyle = col;
-    c.lineWidth = 5;
+    c.lineWidth = 4;
     c.lineCap = 'round';
     c.beginPath();
     c.moveTo(0, 0);
-    c.lineTo(0, -52);
+    c.lineTo(0, -36);
     c.stroke();
+    // wandelende benen
+    const leg = motionReduced() ? 0 : Math.sin(t * 5 + face) * 8;
     c.beginPath();
-    c.moveTo(0, -52);
-    c.lineTo(28, -78);
+    c.moveTo(0, 0);
+    c.lineTo(-6, 10 + leg * 0.3);
+    c.moveTo(0, 0);
+    c.lineTo(6, 10 - leg * 0.3);
     c.stroke();
     c.fillStyle = col;
     c.beginPath();
-    c.arc(0, -88, 14, 0, TAU);
+    c.arc(0, -46, 10, 0, TAU);
     c.fill();
+    // "camera" / vuist als toerist-gimmick
     c.fillStyle = '#ffd75e';
     c.beginPath();
-    c.arc(32, -72, 10, 0, TAU);
+    c.arc(14, -28, 6, 0, TAU);
     c.fill();
     c.restore();
   };
-  drawMenuStick(Ws * 0.28, 1, '#eef5ff');
-  drawMenuStick(Ws * 0.72, -1, '#ff8a9a');
-  drawPixelVsBanner(c, Ws * 0.5, Hs * 0.58, 3, t);
+  drawTourist(Ws * 0.55, 1, '#eef5ff');
+  drawTourist(Ws * 0.78, -1, '#ff8a9a');
+  // Absurde VS-banner midden in de vakantiefoto
+  if (typeof drawPixelVsBanner === 'function') {
+    drawPixelVsBanner(c, Ws * 0.5, Hs * 0.42, 2.4, t);
+  }
 }
 
 function loop(now) {

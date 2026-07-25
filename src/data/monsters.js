@@ -167,11 +167,11 @@ function pickEnemyJutsu(spId, levelN) {
 }
 
 const WORLD_THEMES = [
-  'veld','veld','veld','bos','bos',
+  'landweg','landweg','landweg','bos','bos',
   'bos','grot','grot','grot','vulkaan',
   'vulkaan','vulkaan','cyber','cyber','cyber',
   'dojo','dojo','grot','vulkaan','cyber',
-  'veld','bos','grot','vulkaan','cyber',
+  'landweg','bos','grot','vulkaan','cyber',
   'dojo','sloop','cyber','vulkaan','grot',
   'cyber','cyber','vulkaan','dojo','cyber',
   'cyber','vulkaan','dojo','cyber','cyber',

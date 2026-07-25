@@ -1,6 +1,7 @@
 /* ========================== ACHTERGRONDEN ============================== */
 const THEMES = {
   veld:    { sky1: '#7ec8ff', sky2: '#cfeeff', hill: '#5cb85c', hill2: '#3f9b47', ground: '#4c8f3f', gtop: '#66b356', deco: 'bloem' },
+  landweg: { sky1: '#4ea6e8', sky2: '#c5e0f5', hill: '#3f8a48', hill2: '#2f6a38', ground: '#b8964a', gtop: '#d4b45e', deco: 'struik' },
   bos:     { sky1: '#5aa9d6', sky2: '#bfe6d0', hill: '#2f7a45', hill2: '#215c33', ground: '#3c6b33', gtop: '#4c8543', deco: 'boom' },
   grot:    { sky1: '#232840', sky2: '#3a4265', hill: '#2a3050', hill2: '#1d2340', ground: '#3d4056', gtop: '#4d5170', deco: 'stalag' },
   vulkaan: { sky1: '#3a1f28', sky2: '#7a3020', hill: '#552430', hill2: '#3a1820', ground: '#4a2a28', gtop: '#5e3630', deco: 'lava' },
@@ -139,6 +140,26 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
       c.strokeStyle = '#2f7a45'; c.lineWidth = 2;
       c.beginPath(); c.moveTo(x, ground - 4); c.lineTo(x, ground + 4); c.stroke();
     }
+  } else if (th.deco === 'struik') {
+    // landweg: rode struik + gouden grasplukken (foto-inspiratie)
+    for (let i = 0; i < 5; i++) {
+      const x = dX((i * 0.22 + 0.08) * dSpan);
+      const tall = i % 2 === 0;
+      c.fillStyle = tall ? '#8a2e3a' : '#6e2430';
+      c.beginPath();
+      c.ellipse(x, ground - (tall ? 22 : 14), tall ? 28 : 18, tall ? 26 : 16, 0, 0, TAU);
+      c.fill();
+      c.fillStyle = '#a84852';
+      c.beginPath();
+      c.ellipse(x - 6, ground - (tall ? 28 : 18), tall ? 12 : 8, tall ? 10 : 7, 0, 0, TAU);
+      c.fill();
+    }
+    for (let i = 0; i < 7; i++) {
+      const x = dX((i * 0.14 + 0.02) * dSpan);
+      c.fillStyle = '#c9a24a';
+      c.fillRect(x - 2, ground - 10, 3, 10);
+      c.fillRect(x + 3, ground - 7, 2, 7);
+    }
   }
 
   // grond
@@ -147,6 +168,35 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   c.fillStyle = gg; c.fillRect(0, ground, W, H - ground);
   c.fillStyle = 'rgba(255,255,255,.12)';
   c.fillRect(0, ground, W, 3);
+
+  // landweg: grindpad over de gouden akker (foto-pixelmap)
+  if (themeName === 'landweg') {
+    const roadY = ground + 6;
+    const roadH = Math.max(28, (H - ground) * 0.42);
+    c.fillStyle = '#9a9a92';
+    c.fillRect(0, roadY, W, roadH);
+    c.fillStyle = '#b0aea4';
+    c.fillRect(0, roadY, W, 5);
+    c.fillStyle = '#7e7e76';
+    c.fillRect(0, roadY + roadH - 4, W, 4);
+    // grind-pixels
+    if (!fxLite()) {
+      const wrapSp = 37;
+      const offR = wrap(-scroll * 1.05, wrapSp);
+      for (let x = offR - wrapSp; x < W + wrapSp; x += wrapSp) {
+        c.fillStyle = 'rgba(255,255,255,.18)';
+        c.fillRect(x + 4, roadY + 10, 3, 3);
+        c.fillRect(x + 18, roadY + 22, 2, 2);
+        c.fillStyle = 'rgba(40,40,36,.22)';
+        c.fillRect(x + 12, roadY + 16, 3, 3);
+        c.fillRect(x + 26, roadY + 8, 2, 2);
+      }
+    }
+    // linker akker-rand (goud)
+    c.fillStyle = 'rgba(212,180,94,.55)';
+    c.fillRect(0, ground, W * 0.38, 8);
+  }
+
   // grondstrepen — lopen mee met de wereld (loop-gevoel)
   c.fillStyle = 'rgba(0,0,0,.14)';
   const span = 92;

@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.16';
+const APP_VERSION = '1.18.17';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 226;
+const SW_CACHE_REV = 227;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -263,7 +263,7 @@ const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
 const ISLAND_WEAPON_CAPS = [10, 20, 30, 40, 48];
 const ADVENTURE_ISLANDS = [
-  { id: 1, name: 'Oost-eiland', sub: 'Lv 1–10', accent: '#5ad06a', theme: 'veld',
+  { id: 1, name: 'Oost-eiland', sub: 'Lv 1–10 · landweg', accent: '#5ad06a', theme: 'landweg',
     icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20" stroke="#5ad06a" stroke-width="2" stroke-linecap="round"/><path d="M5 20V13l5-8 5 8v7" fill="#43b25b" stroke="#2d8a3e" stroke-width="1"/><circle cx="18" cy="7" r="2.5" fill="#7cf5ff" opacity=".75"/></svg>' },
   { id: 2, name: 'Vuur-eiland', sub: 'Lv 11–20', accent: '#ff7a4d', theme: 'vulkaan',
     icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 L12 5 L20 20 Z" fill="#e85a6a" stroke="#ff7a4d" stroke-width="1.2"/><path d="M10 11 L12 7 L14 11 Z" fill="#ffd75e"/><ellipse cx="12" cy="20" rx="8" ry="1.5" fill="#ff7a4d" opacity=".45"/></svg>' },
@@ -7359,11 +7359,11 @@ function pickEnemyJutsu(spId, levelN) {
 }
 
 const WORLD_THEMES = [
-  'veld','veld','veld','bos','bos',
+  'landweg','landweg','landweg','bos','bos',
   'bos','grot','grot','grot','vulkaan',
   'vulkaan','vulkaan','cyber','cyber','cyber',
   'dojo','dojo','grot','vulkaan','cyber',
-  'veld','bos','grot','vulkaan','cyber',
+  'landweg','bos','grot','vulkaan','cyber',
   'dojo','sloop','cyber','vulkaan','grot',
   'cyber','cyber','vulkaan','dojo','cyber',
   'cyber','vulkaan','dojo','cyber','cyber',
@@ -15381,6 +15381,18 @@ const SceneryArt = {
 
   renderTree(themeName) {
     const { cv, px } = this.makeTile(22, 34);
+    if (themeName === 'landweg') {
+      // Haag / loofboom — diepgroen uit de foto
+      px(9, 24, 4, 10, '#4a3420');
+      px(9, 24, 2, 10, '#5c4228');
+      px(2, 14, 18, 12, '#1e5a2c');
+      px(4, 8, 14, 10, '#2a7040');
+      px(6, 4, 10, 8, '#3a8850');
+      this.dither(px, 2, 26, 18, '#1e5a2c', 2);
+      px(5, 10, 3, 2, '#4aa060');
+      px(12, 12, 3, 2, '#4aa060');
+      return cv;
+    }
     const dark = themeName === 'bos' ? '#1d4a2c' : '#2e7a3c';
     const mid = themeName === 'bos' ? '#276238' : '#3f9b4c';
     const light = themeName === 'bos' ? '#347a46' : '#55b862';
@@ -15397,8 +15409,6 @@ const SceneryArt = {
       px(x0 + 2, y0, w - 4, 2, col);
       this.dither(px, x0, y0 + h, w, col, 2);
     }
-    px(6, 10, 2, 2, '#eaf6d8');
-    px(13, 15, 2, 2, '#eaf6d8');
     return cv;
   },
 
@@ -15519,6 +15529,43 @@ const SceneryArt = {
         px(139, base - 42, 3, 3, '#2e353d');
         break;
       }
+      case 'landweg': {
+        // Foto-pixelmap: verre heuvels, boomlijn, bakstenen huis, rode struik
+        for (let x = 0; x < W0; x += 2) {
+          const h = 10 + Math.sin(x * 0.04 + 1.2) * 5 + Math.sin(x * 0.09) * 3;
+          px(x, base - h, 2, h, '#4a8f52');
+          if ((x >> 1) % 2 === 0) px(x, base - h - 1, 1, 1, '#5aa860');
+        }
+        // boomlijn / haag
+        for (let i = 0; i < 8; i++) {
+          const tx = 48 + i * 12 + Math.floor(r() * 3);
+          const th = 14 + Math.floor(r() * 10);
+          px(tx, base - th, 10, th, '#1e5a2c');
+          px(tx + 2, base - th - 4, 6, 6, '#2a7040');
+        }
+        // bakstenen huis met donker dak
+        const hx = 72, hw = 22, hh = 18;
+        px(hx, base - hh, hw, hh, '#a85a48');
+        px(hx + 1, base - hh + 2, hw - 2, 2, '#8a4838');
+        px(hx + 1, base - hh + 8, hw - 2, 2, '#8a4838');
+        px(hx - 2, base - hh - 5, hw + 4, 5, '#3a3a40');
+        px(hx + 2, base - hh - 8, hw - 4, 3, '#2e2e34');
+        px(hx + 8, base - 10, 4, 10, '#4a3028');
+        px(hx + 4, base - 14, 3, 3, '#7cf5ff88');
+        px(hx + 14, base - 14, 3, 3, '#7cf5ff88');
+        // schuur rechts
+        px(108, base - 10, 16, 10, '#8a6a48');
+        px(106, base - 13, 20, 3, '#5a4a38');
+        // rode struik links
+        px(14, base - 12, 18, 12, '#6e2430');
+        px(16, base - 18, 14, 10, '#8a2e3a');
+        px(20, base - 22, 8, 6, '#a84852');
+        // gouden akker-pixels onderaan
+        for (let x = 0; x < 52; x += 2) {
+          px(x, base - 2, 2, 2, x % 4 ? '#d4b45e' : '#c4a04a');
+        }
+        break;
+      }
       default: {
         // veld: glooiende verre heuvels + molen + boerderijtje
         for (let x = 0; x < W0; x += 2) {
@@ -15562,12 +15609,17 @@ function drawThemeWeather(c, themeName, t, ground, scroll) {
         break;
       }
       case 'veld':
+      case 'landweg':
       case 'dojo': {
-        // bloesem-blaadjes die zijwaarts drijven
+        // bloesem / stro-pollen (landweg: gouden vlokjes)
         const drift = 18 + (i % 3) * 8;
         const x = wrapW(seed * 3.7 - t * drift - scroll * 0.35, W + 40) - 20;
         const y = wrapW(seed * 1.7 + t * 14 + Math.sin(t * 1.4 + i) * 24, ground + 30) - 15;
-        c.fillStyle = themeName === 'dojo' ? 'rgba(255,170,190,.5)' : 'rgba(255,235,250,.55)';
+        c.fillStyle = themeName === 'dojo'
+          ? 'rgba(255,170,190,.5)'
+          : themeName === 'landweg'
+            ? (i % 2 ? 'rgba(212,180,94,.55)' : 'rgba(255,240,200,.45)')
+            : 'rgba(255,235,250,.55)';
         c.save(); c.translate(x, y); c.rotate(t * 1.6 + i * 2); c.fillRect(-2.4, -1.4, 4.8, 2.8); c.restore();
         break;
       }
@@ -15616,59 +15668,173 @@ function drawThemeWeather(c, themeName, t, ground, scroll) {
 }
 
 /** Menu hero — pixel grondstrip (d20 polish #8), chunky look + donkere menu-tint. */
+/**
+ * Levende pixelmap van de landweg-foto — sky, gouden akker, grindpad,
+ * rode struik, boomlijn, bakstenen huis. Gebruikt op menu-hero (onverwacht)
+ * en als diorama-referentie voor thema `landweg`.
+ */
+function drawLandwegPixelmap(c, w, h, t, opts) {
+  opts = opts || {};
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  const px = Math.max(2, Math.round(opts.px || 3));
+  const groundY = Math.round(opts.groundY != null ? opts.groundY : h * 0.62);
+  const calm = motionReduced();
+
+  // Lucht
+  const sky = c.createLinearGradient(0, 0, 0, groundY);
+  sky.addColorStop(0, '#3f9adf');
+  sky.addColorStop(0.55, '#7eb8e8');
+  sky.addColorStop(1, '#c5e0f5');
+  c.fillStyle = sky;
+  c.fillRect(0, 0, w, groundY);
+
+  // Wolken (blokjes)
+  const cloudN = opts.lite ? 2 : 4;
+  for (let i = 0; i < cloudN; i++) {
+    const cx = ((i * 0.28 * w + (calm ? 0 : t * (6 + i * 2))) % (w + 80)) - 40;
+    const cy = 10 + (i % 3) * 16;
+    c.fillStyle = '#f4f9ff';
+    c.fillRect(Math.round(cx), cy + 6, 28, 8);
+    c.fillRect(Math.round(cx + 6), cy, 18, 10);
+    c.fillStyle = '#d8e8f6';
+    c.fillRect(Math.round(cx + 4), cy + 12, 22, 3);
+  }
+
+  // Verre heuvels
+  c.fillStyle = '#4a8f52';
+  c.beginPath();
+  c.moveTo(0, groundY);
+  for (let x = 0; x <= w; x += 20) {
+    c.lineTo(x, groundY - 28 - Math.sin(x * 0.012 + 1) * 10);
+  }
+  c.lineTo(w, groundY);
+  c.closePath();
+  c.fill();
+  c.fillStyle = '#3a7040';
+  c.beginPath();
+  c.moveTo(0, groundY);
+  for (let x = 0; x <= w; x += 16) {
+    c.lineTo(x, groundY - 14 - Math.sin(x * 0.02 + 3) * 6);
+  }
+  c.lineTo(w, groundY);
+  c.closePath();
+  c.fill();
+
+  // Boomlijn
+  for (let i = 0; i < 9; i++) {
+    const tx = Math.round(w * 0.28 + i * (w * 0.07));
+    const th = 22 + (i % 3) * 8;
+    c.fillStyle = i % 2 ? '#1e5a2c' : '#2a7040';
+    c.fillRect(tx, groundY - th, 14, th);
+    c.fillStyle = '#3a8850';
+    c.fillRect(tx + 2, groundY - th - 6, 10, 8);
+  }
+
+  // Bakstenen huis
+  const hx = Math.round(w * 0.48);
+  const hw = Math.round(w * 0.12);
+  const hh = Math.round(h * 0.22);
+  c.fillStyle = '#a85a48';
+  c.fillRect(hx, groundY - hh, hw, hh);
+  c.fillStyle = '#8a4838';
+  for (let row = 0; row < 4; row++) {
+    c.fillRect(hx + 2, groundY - hh + 4 + row * 8, hw - 4, 2);
+  }
+  c.fillStyle = '#3a3a40';
+  c.beginPath();
+  c.moveTo(hx - 4, groundY - hh);
+  c.lineTo(hx + hw / 2, groundY - hh - 14);
+  c.lineTo(hx + hw + 4, groundY - hh);
+  c.closePath();
+  c.fill();
+  c.fillStyle = '#4a3028';
+  c.fillRect(hx + hw * 0.4, groundY - 16, hw * 0.2, 16);
+  c.fillStyle = 'rgba(180,220,255,.55)';
+  c.fillRect(hx + 6, groundY - hh + 10, 8, 8);
+  c.fillRect(hx + hw - 14, groundY - hh + 10, 8, 8);
+
+  // Schuur
+  c.fillStyle = '#8a6a48';
+  c.fillRect(hx + hw + 10, groundY - 18, 22, 18);
+  c.fillStyle = '#5a4a38';
+  c.fillRect(hx + hw + 8, groundY - 22, 26, 4);
+
+  // Rode struik
+  const bx = Math.round(w * 0.12);
+  c.fillStyle = '#6e2430';
+  c.beginPath();
+  c.ellipse(bx, groundY - 16, 28, 20, 0, 0, TAU);
+  c.fill();
+  c.fillStyle = '#8a2e3a';
+  c.beginPath();
+  c.ellipse(bx - 8, groundY - 26, 16, 14, 0, 0, TAU);
+  c.fill();
+  c.fillStyle = '#a84852';
+  c.beginPath();
+  c.ellipse(bx + 6, groundY - 30, 10, 8, 0, 0, TAU);
+  c.fill();
+
+  // Gouden akker (links) + grindpad (rechts/onder)
+  const fieldW = Math.round(w * 0.42);
+  for (let y = groundY; y < h; y += px) {
+    const pr = (y - groundY) / Math.max(1, h - groundY);
+    c.fillStyle = pr < 0.35 ? '#d8bc6a' : pr < 0.7 ? '#c4a04a' : '#a88838';
+    c.fillRect(0, y, fieldW, px);
+  }
+  // Grasplukken
+  for (let i = 0; i < 10; i++) {
+    const gx = 8 + i * Math.floor(fieldW / 10);
+    c.fillStyle = '#b89240';
+    c.fillRect(gx, groundY - 6, 2, 6);
+    c.fillRect(gx + 3, groundY - 4, 2, 4);
+  }
+
+  const roadX = fieldW - 4;
+  for (let y = groundY; y < h; y += px) {
+    const pr = (y - groundY) / Math.max(1, h - groundY);
+    c.fillStyle = pr < 0.25 ? '#b0aea4' : pr < 0.65 ? '#9a9a92' : '#7e7e76';
+    c.fillRect(roadX, y, w - roadX, px);
+  }
+  if (!opts.lite) {
+    const off = calm ? 0 : ((t * 14) % 28);
+    for (let x = roadX; x < w; x += 28) {
+      c.fillStyle = 'rgba(255,255,255,.2)';
+      c.fillRect(Math.round(x + off), groundY + 10, 3, 3);
+      c.fillStyle = 'rgba(40,40,36,.25)';
+      c.fillRect(Math.round(x + off + 12), groundY + 22, 2, 2);
+    }
+  }
+
+  // Tiny caption
+  if (opts.caption !== false) {
+    c.fillStyle = 'rgba(20,24,40,.45)';
+    c.fillRect(6, 6, 118, 14);
+    c.fillStyle = 'rgba(255,248,220,.85)';
+    c.font = '900 9px -apple-system, sans-serif';
+    c.textAlign = 'left';
+    c.fillText('vakantiefoto · pixelmap', 10, 16);
+  }
+
+  c.imageSmoothingEnabled = prev;
+  return { groundY, roadX, fieldW };
+}
+
 function drawMenuHeroPixelGround(c, w, h, groundY, t) {
+  // Legacy hook — menu gebruikt nu drawLandwegPixelmap; fallback grasstrook
   const gh = h - groundY;
   if (gh <= 0) return;
   const px = 3;
   const prev = c.imageSmoothingEnabled;
   c.imageSmoothingEnabled = false;
   const gy = Math.round(groundY);
-
   for (let y = 0; y < gh; y += px) {
     const pr = y / gh;
-    c.fillStyle = pr < 0.32 ? '#3a3250' : pr < 0.68 ? '#2a2438' : '#181422';
+    c.fillStyle = pr < 0.32 ? '#d4b45e' : pr < 0.68 ? '#b8964a' : '#9a7a38';
     c.fillRect(0, gy + y, w, px);
   }
-
-  c.fillStyle = '#3d7a4a';
-  c.fillRect(0, gy, w, px);
-  for (let x = 0; x < w; x += px * 2) {
-    c.fillStyle = '#4a9460';
-    c.fillRect(x, gy - px, px, px);
-    c.fillStyle = '#2d5a3a';
-    c.fillRect(x + px, gy - px, px, px);
-  }
-  c.fillStyle = 'rgba(120,200,140,.32)';
-  c.fillRect(0, gy, w, 1);
-
-  const span = 47;
-  const off = (((t * 18) % span) + span) % span;
-  for (let x = -span; x < w + span; x += span) {
-    c.fillStyle = 'rgba(255,255,255,.08)';
-    c.fillRect(Math.round(x + off + 6), gy + 14, px, px);
-    c.fillStyle = 'rgba(0,0,0,.14)';
-    c.fillRect(Math.round(x + off + 28), gy + 28, px, px);
-    c.fillRect(Math.round(x + off + 40), gy + 18, px, px);
-  }
-
-  const tuftSpan = 38;
-  const tuftOff = (((t * 8) % tuftSpan) + tuftSpan) % tuftSpan;
-  for (let x = -tuftSpan; x < w + tuftSpan; x += tuftSpan) {
-    const tx = Math.round(x + tuftOff + 10);
-    c.fillStyle = '#356848';
-    c.fillRect(tx, gy - px * 2, px, px);
-    c.fillRect(tx - px, gy - px, px, px);
-    c.fillRect(tx + px, gy - px, px, px);
-  }
-
-  const stripeSpan = 56;
-  const stripeOff = (((t * 12) % stripeSpan) + stripeSpan) % stripeSpan;
-  c.fillStyle = 'rgba(0,0,0,.11)';
-  for (let x = -stripeSpan; x < w + stripeSpan; x += stripeSpan) {
-    c.fillRect(Math.round(x + stripeOff + 8), gy + px * 4, px * 5, px);
-    c.fillRect(Math.round(x + stripeOff + 32), gy + px * 7, px * 3, px);
-  }
-
+  c.fillStyle = '#9a9a92';
+  c.fillRect(Math.round(w * 0.4), gy, Math.round(w * 0.6), gh);
   c.imageSmoothingEnabled = prev;
 }
 
@@ -15860,6 +16026,7 @@ function drawSceneryTile(c, tile, y, scroll, rate, scale) {
 /* ========================== ACHTERGRONDEN ============================== */
 const THEMES = {
   veld:    { sky1: '#7ec8ff', sky2: '#cfeeff', hill: '#5cb85c', hill2: '#3f9b47', ground: '#4c8f3f', gtop: '#66b356', deco: 'bloem' },
+  landweg: { sky1: '#4ea6e8', sky2: '#c5e0f5', hill: '#3f8a48', hill2: '#2f6a38', ground: '#b8964a', gtop: '#d4b45e', deco: 'struik' },
   bos:     { sky1: '#5aa9d6', sky2: '#bfe6d0', hill: '#2f7a45', hill2: '#215c33', ground: '#3c6b33', gtop: '#4c8543', deco: 'boom' },
   grot:    { sky1: '#232840', sky2: '#3a4265', hill: '#2a3050', hill2: '#1d2340', ground: '#3d4056', gtop: '#4d5170', deco: 'stalag' },
   vulkaan: { sky1: '#3a1f28', sky2: '#7a3020', hill: '#552430', hill2: '#3a1820', ground: '#4a2a28', gtop: '#5e3630', deco: 'lava' },
@@ -15998,6 +16165,26 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
       c.strokeStyle = '#2f7a45'; c.lineWidth = 2;
       c.beginPath(); c.moveTo(x, ground - 4); c.lineTo(x, ground + 4); c.stroke();
     }
+  } else if (th.deco === 'struik') {
+    // landweg: rode struik + gouden grasplukken (foto-inspiratie)
+    for (let i = 0; i < 5; i++) {
+      const x = dX((i * 0.22 + 0.08) * dSpan);
+      const tall = i % 2 === 0;
+      c.fillStyle = tall ? '#8a2e3a' : '#6e2430';
+      c.beginPath();
+      c.ellipse(x, ground - (tall ? 22 : 14), tall ? 28 : 18, tall ? 26 : 16, 0, 0, TAU);
+      c.fill();
+      c.fillStyle = '#a84852';
+      c.beginPath();
+      c.ellipse(x - 6, ground - (tall ? 28 : 18), tall ? 12 : 8, tall ? 10 : 7, 0, 0, TAU);
+      c.fill();
+    }
+    for (let i = 0; i < 7; i++) {
+      const x = dX((i * 0.14 + 0.02) * dSpan);
+      c.fillStyle = '#c9a24a';
+      c.fillRect(x - 2, ground - 10, 3, 10);
+      c.fillRect(x + 3, ground - 7, 2, 7);
+    }
   }
 
   // grond
@@ -16006,6 +16193,35 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   c.fillStyle = gg; c.fillRect(0, ground, W, H - ground);
   c.fillStyle = 'rgba(255,255,255,.12)';
   c.fillRect(0, ground, W, 3);
+
+  // landweg: grindpad over de gouden akker (foto-pixelmap)
+  if (themeName === 'landweg') {
+    const roadY = ground + 6;
+    const roadH = Math.max(28, (H - ground) * 0.42);
+    c.fillStyle = '#9a9a92';
+    c.fillRect(0, roadY, W, roadH);
+    c.fillStyle = '#b0aea4';
+    c.fillRect(0, roadY, W, 5);
+    c.fillStyle = '#7e7e76';
+    c.fillRect(0, roadY + roadH - 4, W, 4);
+    // grind-pixels
+    if (!fxLite()) {
+      const wrapSp = 37;
+      const offR = wrap(-scroll * 1.05, wrapSp);
+      for (let x = offR - wrapSp; x < W + wrapSp; x += wrapSp) {
+        c.fillStyle = 'rgba(255,255,255,.18)';
+        c.fillRect(x + 4, roadY + 10, 3, 3);
+        c.fillRect(x + 18, roadY + 22, 2, 2);
+        c.fillStyle = 'rgba(40,40,36,.22)';
+        c.fillRect(x + 12, roadY + 16, 3, 3);
+        c.fillRect(x + 26, roadY + 8, 2, 2);
+      }
+    }
+    // linker akker-rand (goud)
+    c.fillStyle = 'rgba(212,180,94,.55)';
+    c.fillRect(0, ground, W * 0.38, 8);
+  }
+
   // grondstrepen — lopen mee met de wereld (loop-gevoel)
   c.fillStyle = 'rgba(0,0,0,.14)';
   const span = 92;
@@ -24692,66 +24908,59 @@ function paintMenuHeroCanvas(t) {
   const Ws = cv.width;
   const Hs = cv.height;
   c.clearRect(0, 0, Ws, Hs);
-  const sky = c.createLinearGradient(0, 0, 0, Hs);
-  sky.addColorStop(0, '#2a1848');
-  sky.addColorStop(0.55, '#120c20');
-  sky.addColorStop(1, '#08060c');
-  c.fillStyle = sky;
-  c.fillRect(0, 0, Ws, Hs);
-  const cx = Ws * 0.5;
-  const cy = Hs * 0.38;
-  const pulse = 0.92 + Math.sin(t * 2.2) * 0.06;
-  c.save();
-  c.translate(cx, cy);
-  c.scale(pulse, pulse);
-  const rays = lite ? (Perf.tier >= 2 ? 6 : 8) : 12;
-  for (let i = 0; i < rays; i++) {
-    const a = (i / rays) * TAU + t * 0.15;
-    c.strokeStyle = i % 2 ? 'rgba(255,100,60,.25)' : 'rgba(255,220,80,.18)';
-    c.lineWidth = 3;
-    c.beginPath();
-    c.moveTo(0, 0);
-    c.lineTo(Math.cos(a) * Ws * 0.55, Math.sin(a) * Hs * 0.9);
-    c.stroke();
+
+  // Onverwacht: arcade-titel is een vakantie-pixelmap van de landweg-foto
+  let map = { groundY: Hs * 0.62, roadX: Ws * 0.4 };
+  if (typeof drawLandwegPixelmap === 'function') {
+    map = drawLandwegPixelmap(c, Ws, Hs, t, { lite, caption: true, groundY: Hs * 0.58 }) || map;
+  } else {
+    const sky = c.createLinearGradient(0, 0, 0, Hs);
+    sky.addColorStop(0, '#4ea6e8');
+    sky.addColorStop(1, '#c5e0f5');
+    c.fillStyle = sky;
+    c.fillRect(0, 0, Ws, Hs);
+    drawMenuHeroPixelGround(c, Ws, Hs, Hs * 0.62, t);
   }
-  const grd = c.createRadialGradient(0, 0, 0, 0, 0, 72);
-  grd.addColorStop(0, '#ffe259');
-  grd.addColorStop(1, 'rgba(255,120,40,.15)');
-  c.fillStyle = grd;
-  c.beginPath();
-  c.arc(0, 0, 72, 0, TAU);
-  c.fill();
-  c.restore();
-  drawMenuHeroPixelGround(c, Ws, Hs, Hs * 0.72, t);
-  const bounce = Math.sin(t * 3.5) * 4;
-  const drawMenuStick = (x, face, col) => {
+
+  const roadY = (map.groundY || Hs * 0.58) + 8;
+  const walk = motionReduced() ? 0 : Math.sin(t * 3.2) * 3;
+  const stroll = motionReduced() ? 0 : Math.sin(t * 0.7) * (Ws * 0.04);
+  const drawTourist = (x, face, col) => {
     c.save();
-    c.translate(x, Hs * 0.78 + bounce * (face > 0 ? 1 : -1));
+    c.translate(x + stroll * face, roadY + walk * (face > 0 ? 1 : 0.5));
     c.scale(face, 1);
     c.strokeStyle = col;
-    c.lineWidth = 5;
+    c.lineWidth = 4;
     c.lineCap = 'round';
     c.beginPath();
     c.moveTo(0, 0);
-    c.lineTo(0, -52);
+    c.lineTo(0, -36);
     c.stroke();
+    // wandelende benen
+    const leg = motionReduced() ? 0 : Math.sin(t * 5 + face) * 8;
     c.beginPath();
-    c.moveTo(0, -52);
-    c.lineTo(28, -78);
+    c.moveTo(0, 0);
+    c.lineTo(-6, 10 + leg * 0.3);
+    c.moveTo(0, 0);
+    c.lineTo(6, 10 - leg * 0.3);
     c.stroke();
     c.fillStyle = col;
     c.beginPath();
-    c.arc(0, -88, 14, 0, TAU);
+    c.arc(0, -46, 10, 0, TAU);
     c.fill();
+    // "camera" / vuist als toerist-gimmick
     c.fillStyle = '#ffd75e';
     c.beginPath();
-    c.arc(32, -72, 10, 0, TAU);
+    c.arc(14, -28, 6, 0, TAU);
     c.fill();
     c.restore();
   };
-  drawMenuStick(Ws * 0.28, 1, '#eef5ff');
-  drawMenuStick(Ws * 0.72, -1, '#ff8a9a');
-  drawPixelVsBanner(c, Ws * 0.5, Hs * 0.58, 3, t);
+  drawTourist(Ws * 0.55, 1, '#eef5ff');
+  drawTourist(Ws * 0.78, -1, '#ff8a9a');
+  // Absurde VS-banner midden in de vakantiefoto
+  if (typeof drawPixelVsBanner === 'function') {
+    drawPixelVsBanner(c, Ws * 0.5, Hs * 0.42, 2.4, t);
+  }
 }
 
 function loop(now) {

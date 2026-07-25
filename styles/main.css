@@ -124,7 +124,7 @@
     width: min(100vw, 520px); margin: 0 auto 4px;
     box-shadow: 0 8px 24px rgba(0,0,0,.35);
   }
-  #menuScreen.menu-hub-landing .menu-hero-canvas { aspect-ratio: 520/120; max-height: 120px; }
+  #menuScreen.menu-hub-landing .menu-hero-canvas { aspect-ratio: 520/160; max-height: 160px; }
   #menuScreen.menu-hub-landing h1.title.arcade-logo {
     font-size: min(8.5vw, 42px);
     -webkit-text-stroke: 1.5px #c02020;
