@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=188">
+<link rel="stylesheet" href="styles/main.css?v=189">
 
 
 
@@ -207,7 +207,7 @@
     <b>iPad:</b> speler 1 gebruikt de <b>linker helft</b> van het scherm (joystick + knoppen),
     speler 2 de <b>rechter helft</b>. Draai je iPad liggend voor het meeste ruimte.
   </div>
-  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="sub-home-label">Terug naar menu</span></button></div>
   </div>
   </div>
   <div class="char-arena-footer">
@@ -221,10 +221,20 @@
   <button type="button" class="btn island-help-btn" id="btnIslandHelp" title="Eilanden &amp; skill gate uitleg">?</button>
   <h2 class="head" id="levelScreenHead">Kies een eiland</h2>
   <div class="subtitle" id="levelScreenSub">5 eilanden × 10 levels · <b style="color:#ffd75e">Tik level = Gooi &amp; start</b> · lang indrukken = zonder gok</div>
+  <div class="menu-lang-wrap level-lang-wrap" style="margin:0 auto 12px;width:min(94vw,420px);text-align:center">
+    <div id="levelLangBar" class="dex-filter-bar" style="justify-content:center;margin-bottom:0" role="group" aria-label="Taal / Language"></div>
+  </div>
   <div id="levelIslandBar" class="island-bar"></div>
   <div id="levelIslandInfo" class="island-info"></div>
   <div class="grid island-grid" id="levelGrid"></div>
-  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
+  <div id="levelRollFlash" class="level-roll-flash" hidden aria-hidden="true">
+    <div class="level-roll-flash-card">
+      <div id="levelRollDice" class="level-roll-dice">? ?</div>
+      <div id="levelRollSum" class="level-roll-sum"></div>
+      <div id="levelRollOutcome" class="level-roll-outcome"></div>
+    </div>
+  </div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="sub-home-label">Terug naar menu</span></button></div>
 </div>
 
 <div id="gambleScreen" class="screen">
@@ -243,7 +253,7 @@
   <button type="button" class="btn mode-btn b-gray big-touch" id="btnGambleSkip" style="width:min(86vw,420px);justify-content:center;margin-top:10px">
     <span class="ico"><svg viewBox="0 0 24 24" fill="#fff"><polygon points="4,5 12,12 4,19"/><polygon points="12,5 20,12 12,19"/><rect x="19" y="5" width="2" height="14" rx="1"/></svg></span><div id="gambleSkipLbl">Overslaan<small>Geen gok — geen extra baas of buff</small></div>
   </button>
-  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="sub-home-label">Terug naar menu</span></button></div>
 </div>
 
 <div id="weaponScreen" class="screen">
@@ -253,7 +263,7 @@
   <div id="weaponSummary" class="statbar" style="display:none"></div>
   <div id="weaponMasteryStrip" class="statbar" style="display:none;margin-top:8px"></div>
   <div id="weaponList"></div>
-  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="sub-home-label">Terug naar menu</span></button></div>
 </div>
 
 <div id="skillScreen" class="screen upgrade-screen">
@@ -265,7 +275,7 @@
   <div id="upgradeListScroll" class="upgrade-list-scroll">
     <div id="skillList" class="upgrade-list" role="tabpanel"></div>
   </div>
-  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="sub-home-label">Terug naar menu</span></button></div>
 </div>
 
 <div id="styleScreen" class="screen">
@@ -274,7 +284,7 @@
   <div class="subtitle" id="styleScreenSub">Outfits met bonus — level, training, monsterboek · hover voor tooltip</div>
   <div id="styleSummary" class="statbar" style="display:none"></div>
   <div class="style-grid" id="styleGrid"></div>
-  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="sub-home-label">Terug naar menu</span></button></div>
 </div>
 
 <div id="settingsScreen" class="screen">
@@ -330,7 +340,7 @@
     <button type="button" class="btn tog" id="btnExportSave" style="margin-top:8px"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 14V3M8 7l4-4 4 4"/><path d="M4 17v3h16v-3"/></svg></span>Export save</button>
     <button type="button" class="btn tog" id="btnImportSave"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v10M8 9l4 4 4-4"/><path d="M4 17v3h16v-3"/></svg></span>Import save</button>
   </div>
-  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="sub-home-label">Terug naar menu</span></button></div>
 </div>
 
 <div id="missionsScreen" class="screen">
@@ -352,7 +362,7 @@
   <div id="achFilterBar" class="dex-filter-bar" style="margin-bottom:10px"></div>
   <div id="achSpotlight" class="mission-ach-spotlight" style="display:none" aria-live="polite"></div>
   <div id="achList" style="width:min(92vw,520px)"></div>
-  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="sub-home-label">Terug naar menu</span></button></div>
 </div>
 
 <div id="petScreen" class="screen">
@@ -372,7 +382,7 @@
     </button>
     <div id="eggList"></div>
   </div>
-  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="sub-home-label">Terug naar menu</span></button></div>
 </div>
 
 <div id="dexScreen" class="screen">
@@ -384,7 +394,7 @@
   <div id="dexTypeFilterBar" class="dex-filter-bar"></div>
   <div id="dexSortBar" class="dex-filter-bar"></div>
   <div id="dexList"></div>
-  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="sub-home-label">Terug naar menu</span></button></div>
 </div>
 
 <div id="installScreen" class="screen">
@@ -420,7 +430,7 @@
     &#10004; Je speelt al als app! Sluit Safari en open het icoon <b>Stickman</b> op je beginscherm.
   </div>
   <div class="subtitle" style="margin-top:12px">Android: lang indrukken op icoon voor snelkoppelingen. iPad: Safari → Zet op beginscherm (zie stappen hierboven).</div>
-  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="sub-home-label">Terug naar menu</span></button></div>
 </div>
 
 <div id="helpScreen" class="screen">
@@ -436,7 +446,7 @@
   <div id="tutBox">
     <ul id="helpTipsList">
   </div>
-  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="sub-home-label">Terug naar menu</span></button></div>
   <button class="btn mode-btn b-adventure" id="helpOk"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 12v8h3v-8z" fill="#fff" stroke="none"/><path d="M7 19c1 .7 2.2 1 4 1h4.3a2 2 0 001.9-1.4l1.7-5.4A2 2 0 0017 10.5h-4l1-4.2A1.8 1.8 0 0010.5 4.6L7 11.5"/></svg></span><div>Begrepen!</div></button>
 </div>
 
@@ -490,8 +500,8 @@
 })();
 </script>
 
-<script src="tunnel-check.js?v=204"></script>
-<script src="game.js?v=195"></script>
+<script src="tunnel-check.js?v=206"></script>
+<script src="game.js?v=207"></script>
 
 
 

@@ -26,6 +26,7 @@
   "src/entities/egg-pet.js",
   "src/render/scenery.js",
   "src/render/backgrounds.js",
+  "src/game/kablam-ui.js",
   "src/game/game.js",
   "src/ui/ui.js",
   "src/boot/start.js",

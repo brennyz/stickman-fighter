@@ -178,7 +178,7 @@ const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
 const GIANT_DMG_MUL = 1.14;
 const GIANT_XP_MUL = 1.3;
-/** Nood-ontsnapping als je omringd / stunlocked bent — tik midden-KETS! */
+/** Nood-ontsnapping als je omringd / stunlocked bent — tik midden-KABLAM! */
 const KETSBAM_DETECT_R = 148;
 const KETSBAM_NEAR_MIN = 3;
 const KETSBAM_BLAST_R = 192;
@@ -223,7 +223,10 @@ function starsFromHpPct(hpPct) {
   return 1;
 }
 function starHintLine() {
-  return `3★ >${Math.round(STAR_HP.three * 100)}% HP · 2★ >${Math.round(STAR_HP.two * 100)}% · 1★ = win`;
+  return t('ui.starHint', {
+    three: Math.round(STAR_HP.three * 100),
+    two: Math.round(STAR_HP.two * 100),
+  });
 }
 function scaleKnockback(kb, dmg, opts) {
   opts = opts || {};
@@ -388,11 +391,11 @@ function gambleDiceFace(d) {
 function gambleRollToastLine(g) {
   if (!g) return '';
   const faces = `${gambleDiceFace(g.d1)} ${gambleDiceFace(g.d2)} = ${g.sum}`;
-  if (g.outcome === 'neutral') return `${faces} · normaal level`;
+  if (g.outcome === 'neutral') return t('ui.gambleRollNeutral', { faces });
   const label = typeof gambleOutcomeLabelFromKey === 'function'
     ? gambleOutcomeLabelFromKey(g).replace(/^[^!]+!?\s*/, '').slice(0, 40)
     : '';
-  return label ? `${faces} · ${label}` : faces;
+  return label ? t('ui.gambleRollOutcome', { faces, label }) : faces;
 }
 
 function gambleOutcomeLabel(g) {

@@ -273,6 +273,18 @@ function audioMixStatusLine(inPause) {
   return bits.join(' · ');
 }
 
+function levelTileTip(n, pick, infoLv, boss, best, fails) {
+  let tip = t('ui.levelTipWaves', { waves: infoLv.waves.length, starHint: starHintLine() });
+  if (boss) tip += pick * LEVELS_PER_ISLAND === n ? t('ui.levelTipIslandBoss') : t('ui.levelTipMidBoss');
+  if (best > 0) tip += t('ui.levelTipYourStars', { stars: '★'.repeat(best), empty: '☆'.repeat(3 - best) });
+  if (fails > 0) {
+    tip += t('ui.levelTipFails', { n: fails });
+    if (fails >= 5) tip += t('ui.levelTipMasterActive');
+  }
+  tip += t('ui.levelTipTap');
+  return tip;
+}
+
 const UI = {
   screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'skillScreen', 'petScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
@@ -854,32 +866,37 @@ const UI = {
     if (this.modeHubId === 'arcade') {
       setStat('hubStatTraining', (() => {
         const rec = save.stats.trainMaxCombo || 0;
-        if (save.trainWins > 0) return `${save.trainWins} wins${rec ? ` · record ×${rec}` : ''}`;
-        if (rec > 0) return `Record combo ×${rec}`;
-        return 'Nog niet gespeeld';
+        if (save.trainWins > 0) {
+          return t('ui.hubStatTrainWins', {
+            wins: save.trainWins,
+            rec: rec ? ` · ${t('ui.hubStatTrainRecOnly', { n: rec })}` : '',
+          });
+        }
+        if (rec > 0) return t('ui.hubStatTrainRecOnly', { n: rec });
+        return t('ui.hubStatNotPlayed');
       })());
-      setStat('hubStatWall', save.bestWall > 0 ? `Record ${save.bestWall}` : 'Nog geen score');
+      setStat('hubStatWall', save.bestWall > 0 ? t('ui.hubStatWallRec', { n: save.bestWall }) : t('ui.hubStatWallEmpty'));
       const mats = save.stats?.matsCoinBest || 0;
       const pc = petCoinsBalance();
       setStat('hubStatMats', mats > 0 || pc > 0
-        ? `Best ${mats} munten${pc > 0 ? ` · ${pc} pet 🪙` : ''}`
-        : 'Munten → pet coins');
+        ? t('ui.hubStatCoinsBest', { n: mats, pet: pc > 0 ? t('ui.hubStatCoinsPet', { n: pc }) : '' })
+        : t('ui.hubStatCoinsEmpty'));
     } else if (this.modeHubId === 'collect') {
-      setStat('hubStatWeapons', `${weaponUnlockedCount()}/${WEAPONS.length} vrij`);
+      setStat('hubStatWeapons', t('ui.hubStatWeapons', { n: weaponUnlockedCount(), total: WEAPONS.length }));
       const skillLv = totalAllUpgradeLevels();
       const ready = countAllUpgradesReady();
       setStat('hubStatSkills', ready > 0
         ? t('ui.upgradeReady', { n: ready })
-        : (skillLv > 0 ? `Lv ${skillLv} totaal` : 'Shards in avontuur'));
+        : (skillLv > 0 ? t('ui.hubStatSkillLv', { n: skillLv }) : t('ui.hubStatSkillShards')));
       const petsN = petTamedCount();
       const eggsN = eggOwnedCount();
       const pc = petCoinsBalance();
       setStat('hubStatPets', eggsN > 0 || petsN > 0 || pc > 0
-        ? `dex ${petsN}/${PET_ROSTER.length} · ${pc} 🪙 · ei ${eggsN}/${EGG_ROSTER.length}`
-        : `${PET_ROSTER.length} dex · Mats → pet coins`);
+        ? t('ui.hubStatPetsFull', { pets: petsN, total: PET_ROSTER.length, coins: pc, eggs: eggsN, eggTotal: EGG_ROSTER.length })
+        : t('ui.hubStatPetsEmpty', { total: PET_ROSTER.length }));
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
-      setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
-      setStat('hubStatDex', `${dexCount()}/${SPECIES_ORDER.length} · +max HP`);
+      setStat('hubStatStyle', t('ui.hubStatStyle', { n: stylesN, total: STYLES.length }));
+      setStat('hubStatDex', t('ui.hubStatDex', { n: dexCount(), total: SPECIES_ORDER.length }));
     }
   },
 
@@ -1323,17 +1340,19 @@ const UI = {
         btn.style.setProperty('--isl-accent', isl.accent);
         const prog = islandProgress(isl.id);
         const pct = Math.round(prog.cleared / prog.total * 100);
+        const islName = islandLabel(isl.id, 'name');
+        const islSub = islandLabel(isl.id, 'sub');
         btn.innerHTML = `<span class="island-tab-ico">${isl.icon}</span>` +
-          `<span class="island-tab-n">${isl.id}</span><span class="island-tab-name">${isl.name}</span>` +
+          `<span class="island-tab-n">${isl.id}</span><span class="island-tab-name">${islName}</span>` +
           `<span class="island-prog-track island-tab-prog"><i style="width:${pct}%;background:${isl.accent}"></i></span>` +
           (ok ? '' : `<span class="island-tab-lock">${SVG_LOCK_ICON}</span>`);
-        btn.title = ok ? `${isl.name} · ${isl.sub}` : `Versla baas Lv ${isl.id * LEVELS_PER_ISLAND} om te openen`;
+        btn.title = ok ? `${islName} · ${islSub}` : t('ui.helpIslandLocked', { lv: isl.id * LEVELS_PER_ISLAND });
         if (ok) {
           btn.addEventListener('click', () => safeUiAction(() => {
             AudioSys.sfx('select');
             UI.advIslandPick = isl.id;
             UI.renderLevels();
-          }, 'pickIsland/' + isl.id, 'Eiland kiezen mislukt'));
+          }, 'pickIsland/' + isl.id, t('ui.errPickIsland')));
         }
         bar.appendChild(btn);
       }
@@ -1349,16 +1368,16 @@ const UI = {
         `<div class="island-info-head">` +
         `<span class="island-info-ico">${islMeta.icon}</span>` +
         `<div class="island-info-text">` +
-        `<b style="color:${islMeta.accent}">${islMeta.name}</b> · ${islMeta.sub}` +
-        `<div class="island-info-sub">Skill gate: wapens tot Lv <b>${wCap}</b> · ${prog.cleared}/${prog.total} levels · ${prog.stars}/${prog.maxStars}★` +
-        (pick < 5 ? ` · baas Lv ${pick * LEVELS_PER_ISLAND} → volgend eiland` : '') +
+        `<b style="color:${islMeta.accent}">${islandLabel(islMeta.id, 'name')}</b> · ${islandLabel(islMeta.id, 'sub')}` +
+        `<div class="island-info-sub">${t('ui.islandInfoSub', { cap: wCap, cleared: prog.cleared, total: prog.total, stars: prog.stars })}` +
+        (pick < 5 ? t('ui.islandBossGate', { lv: pick * LEVELS_PER_ISLAND }) : '') +
         `</div></div></div>` +
         `<div class="island-prog-track island-info-prog" title="${t('island.levelsProg')}"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
         `<div class="island-prog-track island-info-stars" title="${t('island.starsProg')}"><i style="width:${Math.round(prog.stars / Math.max(1, prog.maxStars) * 100)}%"></i></div>` +
         (() => {
           const onboard = adventureIslandHintLine();
           const mbLine = mb && mb >= range.start && mb <= range.end
-            ? `<span class="island-info-chip master">Meester-buff Lv ${mb} · +20%</span>`
+            ? `<span class="island-info-chip master">${t('ui.masterBuffChip', { lv: mb })}</span>`
             : '';
           const chips = [
             onboard ? `<span class="island-info-chip onboard">${onboard}</span>` : '',
@@ -1399,14 +1418,7 @@ const UI = {
           (save.advMasterBuff === n ? '<span class="lvl-master">+20%</span>' : '');
       if (!locked) {
         const best = save.stars[n] || 0;
-        let tip = `${infoLv.waves.length} golven · ${starHintLine()}`;
-        const traitLabels = [...new Set((infoLv.waveMeta || []).map((m) => m && m.label).filter(Boolean))];
-        if (traitLabels.length) tip += ' · ' + traitLabels.join(' · ');
-        if (boss) tip += pick * LEVELS_PER_ISLAND === n ? ' · eiland-baas — opent volgend eiland' : ' · tussendoor-baas';
-        if (best > 0) tip += ` · jouw ${'★'.repeat(best)}${'☆'.repeat(3 - best)}`;
-        if (fails > 0) tip += ` · ${fails}× verloren${fails >= 5 ? ' · Meester-buff actief' : ''}`;
-        tip += ' · Tik = Gooi & start · Lang = zonder gok';
-        el.title = tip;
+        el.title = levelTileTip(n, pick, infoLv, boss, best, fails);
         let holdT = null;
         let holdSkip = false;
         let holdX = 0;
@@ -1425,7 +1437,7 @@ const UI = {
               lastGambleRoll = null;
               startAdventureFromGamble(true);
               try { UI.toast(t('toast.skipGamble'), 1400); } catch (_) {}
-            }, 'skipGamble/' + n, 'Start mislukt');
+            }, 'skipGamble/' + n, t('ui.errStart'));
           }, 520);
         }, { passive: true });
         const cancelHold = () => { if (holdT) { clearTimeout(holdT); holdT = null; } };
@@ -1439,7 +1451,7 @@ const UI = {
         el.addEventListener('click', () => {
           if (holdSkip) { holdSkip = false; return; }
           if (!uiTapAllowed()) return;
-          safeUiAction(() => gokGooiStartLevel(n), 'gokStart/' + n, 'Level starten mislukt');
+          safeUiAction(() => gokGooiStartLevel(n), 'gokStart/' + n, t('ui.errLevelStart'));
         });
       }
       grid.appendChild(el);
@@ -1475,6 +1487,36 @@ const UI = {
         outEl.style.color = col;
       }
     }
+  },
+
+  showGambleRollFlash(g) {
+    const el = document.getElementById('levelRollFlash');
+    if (!el || !g) return;
+    const diceEl = document.getElementById('levelRollDice');
+    const sumEl = document.getElementById('levelRollSum');
+    const outEl = document.getElementById('levelRollOutcome');
+    const face = (d) => (typeof gambleDiceFace === 'function' ? gambleDiceFace(d) : '?');
+    if (diceEl) diceEl.textContent = `${face(g.d1)} ${face(g.d2)}`;
+    if (sumEl) sumEl.textContent = t('ui.gambleSumRoll', { d1: g.d1, d2: g.d2, sum: g.sum });
+    if (outEl) {
+      outEl.textContent = typeof gambleOutcomeLabelFromKey === 'function'
+        ? gambleOutcomeLabelFromKey(g)
+        : (g.outcome || '');
+      const col = g.outcome === 'superBoss' || g.outcome === 'miniBoss' ? '#ffb0b8'
+        : (g.outcome === 'superAlly' || g.outcome === 'ally') ? (GAMBLE_ALLIES[g.allyId]?.color || '#7cf5ff') : '#8fa3d9';
+      outEl.style.color = col;
+    }
+    el.hidden = false;
+    el.setAttribute('aria-hidden', 'false');
+    el.classList.add('visible');
+  },
+
+  hideGambleRollFlash() {
+    const el = document.getElementById('levelRollFlash');
+    if (!el) return;
+    el.classList.remove('visible');
+    el.hidden = true;
+    el.setAttribute('aria-hidden', 'true');
   },
 
   renderWeapons() {
@@ -1955,9 +1997,13 @@ const UI = {
       const wallet = petCoinsBalance();
       sumEl.style.display = 'block';
       sumEl.innerHTML =
-        `Getemd <b>${tamed}/${PET_ROSTER.length}</b> · actief <b>${active ? SPECIES[active.speciesId].name : 'geen'}</b>` +
-        ` · <b>${wallet} pet coins</b>` +
-        `<div style="margin-top:6px;font-size:12px;opacity:.85">Speel <b>Mats</b> voor pet coins (2 gouden munten = 1 🪙). Koop pets hier, of tem via kills in het monsterboek. Pets volgen je in avontuur & training.</div>`;
+        t('ui.petSummaryTamed', {
+          tamed,
+          total: PET_ROSTER.length,
+          active: active ? SPECIES[active.speciesId].name : t('ui.petNone'),
+          wallet,
+        }) +
+        `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.petCoinTip')}</div>`;
     }
     const list = document.getElementById('petList');
     if (!list) return;

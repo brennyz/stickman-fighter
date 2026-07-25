@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.69';
+const APP_VERSION = '1.17.89';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 195;
+const SW_CACHE_REV = 207;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null, activeJutsu: 'rasengan',
 
@@ -1141,7 +1141,7 @@ const I18N = {
     common: { backHome: 'Terug naar menu', ok: 'Begrepen!', offline: 'Offline' },
     menu: {
       continue: 'Verder spelen', adventure: 'Avontuur', adventureSub: 'Verhaal · eilanden · bazen',
-      arcade: 'Arcade', arcadeSub: 'Training · Muur · Mats', versus: '2 spelers', versusSub: 'Lokaal · iPad liggend',
+      arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal · iPad liggend',
       collect: 'Collectie', collectSub: 'Wapens · stijl · boek', music: 'Muziek', missions: 'Missies',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon op je beginscherm',
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
@@ -1152,14 +1152,14 @@ const I18N = {
       collectTitle: 'Verzameling', collectSub: 'Wapens · dex & ei-pets · stijlen · monsterboek',
       training: 'Training vs RabbitRobot', trainingSub: '1v1 · oefenen',
       wall: 'Muur Slopen', wallSub: '60 sec · combo = sneller',
-      mats: 'Mats · Muntjes bonus', matsSub: '45 sec · munten → pet coins',
+      mats: 'Muntjes bonus', matsSub: '45 sec · munten → pet coins',
       weapons: 'Wapens', weaponsSub: '26 wapens · summon ascends',
-      pets: 'Pets', petsSub: 'Mats coins · dex temmen · ei arcade',
+      pets: 'Pets', petsSub: 'Muntjes · dex temmen · ei arcade',
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
       dex: 'Monsterboek', dexSub: '114 soorten · rariteit = HP',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
     },
-    modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Mats · munten' },
+    modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
     pause: {
       title: 'Pauze', sub: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
       resume: 'Verder spelen', music: 'Muziek', sfx: 'Geluid', quit: 'Stop & hoofdmenu',
@@ -1212,7 +1212,7 @@ const I18N = {
     common: { backHome: 'Back to menu', ok: 'Got it!', offline: 'Offline' },
     menu: {
       continue: 'Continue', adventure: 'Adventure', adventureSub: 'Story · islands · bosses',
-      arcade: 'Arcade', arcadeSub: 'Training · Wall · Mats', versus: '2 players', versusSub: 'Local · iPad landscape',
+      arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local · iPad landscape',
       collect: 'Collection', collectSub: 'Weapons · style · book', music: 'Music', missions: 'Missions',
       options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add to home screen', installSub: 'One icon on your device',
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
@@ -1223,14 +1223,14 @@ const I18N = {
       collectTitle: 'Collection', collectSub: 'Weapons · dex & egg pets · styles · monster book',
       training: 'Training vs RabbitRobot', trainingSub: '1v1 · practice',
       wall: 'Wall Smash', wallSub: '60 sec · combo = faster',
-      mats: 'Mats · Coin bonus', matsSub: '45 sec · coins → pet coins',
+      mats: 'Coin bonus', matsSub: '45 sec · coins → pet coins',
       weapons: 'Weapons', weaponsSub: '26 weapons · summon ascends',
-      pets: 'Pets', petsSub: 'Mats coins · dex tame · egg arcade',
+      pets: 'Pets', petsSub: 'Coins · dex tame · egg arcade',
       style: 'Style', styleSub: 'Bandana & outfit unlocks',
       dex: 'Monster book', dexSub: '114 species · rarity = HP',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
     },
-    modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Mats · coins' },
+    modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Coins' },
     pause: {
       title: 'Paused', sub: 'Rasengan ready — go! · progress stays on this device',
       resume: 'Resume', music: 'Music', sfx: 'Sound', quit: 'Quit to menu',
@@ -1283,7 +1283,7 @@ const I18N = {
     common: { backHome: 'Zurück zum Menü', ok: 'Verstanden!', offline: 'Offline' },
     menu: {
       continue: 'Weiterspielen', adventure: 'Abenteuer', adventureSub: 'Story · Inseln · Bosse',
-      arcade: 'Arcade', arcadeSub: 'Training · Mauer · Mats', versus: '2 Spieler', versusSub: 'Lokal · iPad quer',
+      arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal · iPad quer',
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch', music: 'Musik', missions: 'Missionen',
       options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Zum Home-Bildschirm', installSub: 'Ein Icon auf dem Gerät',
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
@@ -1294,14 +1294,14 @@ const I18N = {
       collectTitle: 'Sammlung', collectSub: 'Waffen · Pets · Stile · Monsterbuch',
       training: 'Training vs RabbitRobot', trainingSub: '1v1 · Üben',
       wall: 'Mauer zerstören', wallSub: '60 Sek · Combo = schneller',
-      mats: 'Mats · Münzen', matsSub: '45 Sek · Münzen → Pet-Coins',
+      mats: 'Münzen-Bonus', matsSub: '45 Sek · Münzen → Pet-Coins',
       weapons: 'Waffen', weaponsSub: '26 Waffen · Summons',
-      pets: 'Pets', petsSub: 'Mats-Coins · Dex zähmen',
+      pets: 'Pets', petsSub: 'Münzen · Dex zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
       dex: 'Monsterbuch', dexSub: '114 Arten · Seltenheit = HP',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
     },
-    modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Mats · Münzen' },
+    modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
     pause: {
       title: 'Pause', sub: 'Rasengan bereit — los! · Fortschritt bleibt auf diesem Gerät',
       resume: 'Weiter', music: 'Musik', sfx: 'Sound', quit: 'Menü verlassen',
@@ -1341,7 +1341,7 @@ const I18N = {
     common: { backHome: 'Retour au menu', ok: 'Compris !', offline: 'Hors ligne' },
     menu: {
       continue: 'Continuer', adventure: 'Aventure', adventureSub: 'Histoire · îles · boss',
-      arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Mats', versus: '2 joueurs', versusSub: 'Local · iPad paysage',
+      arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Pièces', versus: '2 joueurs', versusSub: 'Local · iPad paysage',
       collect: 'Collection', collectSub: 'Armes · style · bestiaire', music: 'Musique', missions: 'Missions',
       options: 'Options', tips: 'Astuces', fresh: 'Version fraîche', install: 'Ajouter à l\'écran d\'accueil', installSub: 'Une icône sur l\'appareil',
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
@@ -1352,14 +1352,14 @@ const I18N = {
       collectTitle: 'Collection', collectSub: 'Armes · pets · styles · bestiaire',
       training: 'Entraînement vs RabbitRobot', trainingSub: '1v1 · pratique',
       wall: 'Mur à détruire', wallSub: '60 s · combo = plus vite',
-      mats: 'Mats · Pièces', matsSub: '45 s · pièces → pet coins',
+      mats: 'Bonus pièces', matsSub: '45 s · pièces → pet coins',
       weapons: 'Armes', weaponsSub: '26 armes · invocations',
-      pets: 'Pets', petsSub: 'Pièces Mats · dex · œufs',
+      pets: 'Pets', petsSub: 'Pièces · dex · œufs',
       style: 'Style', styleSub: 'Déblocages tenues',
       dex: 'Bestiaire', dexSub: '114 espèces · rareté = PV',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
     },
-    modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Mats · pièces' },
+    modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Pièces' },
     pause: {
       title: 'Pause', sub: 'Rasengan prêt — go ! · progrès sur cet appareil',
       resume: 'Reprendre', music: 'Musique', sfx: 'Son', quit: 'Quitter au menu',
@@ -1399,7 +1399,7 @@ const I18N = {
     common: { backHome: 'Volver al menú', ok: '¡Entendido!', offline: 'Sin conexión' },
     menu: {
       continue: 'Continuar', adventure: 'Aventura', adventureSub: 'Historia · islas · jefes',
-      arcade: 'Arcade', arcadeSub: 'Entrenamiento · Muro · Mats', versus: '2 jugadores', versusSub: 'Local · iPad horizontal',
+      arcade: 'Arcade', arcadeSub: 'Entrenamiento · Muro · Monedas', versus: '2 jugadores', versusSub: 'Local · iPad horizontal',
       collect: 'Colección', collectSub: 'Armas · estilo · bestiario', music: 'Música', missions: 'Misiones',
       options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir a inicio', installSub: 'Un icono en tu dispositivo',
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
@@ -1410,14 +1410,14 @@ const I18N = {
       collectTitle: 'Colección', collectSub: 'Armas · pets · estilos · bestiario',
       training: 'Entrenamiento vs RabbitRobot', trainingSub: '1v1 · practicar',
       wall: 'Romper muro', wallSub: '60 s · combo = más rápido',
-      mats: 'Mats · Monedas', matsSub: '45 s · monedas → pet coins',
+      mats: 'Bonus monedas', matsSub: '45 s · monedas → pet coins',
       weapons: 'Armas', weaponsSub: '26 armas · invocaciones',
-      pets: 'Pets', petsSub: 'Monedas Mats · dex · huevos',
+      pets: 'Pets', petsSub: 'Monedas · dex · huevos',
       style: 'Estilo', styleSub: 'Desbloqueos de outfit',
       dex: 'Bestiario', dexSub: '114 especies · rareza = HP',
       modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
     },
-    modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Mats · monedas' },
+    modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Monedas' },
     pause: {
       title: 'Pausa', sub: 'Rasengan listo — ¡ya! · progreso en este dispositivo',
       resume: 'Seguir', music: 'Música', sfx: 'Sonido', quit: 'Salir al menú',
@@ -1527,6 +1527,11 @@ function canApplyDomI18n() {
     && typeof document.createTextNode === 'function';
 }
 
+function setTitle(id, key, params) {
+  const el = document.getElementById(id);
+  if (el) el.title = t(key, params);
+}
+
 function applyLangStaticScreens() {
   if (!canApplyDomI18n()) return;
   if (document.documentElement) document.documentElement.lang = getLang();
@@ -1595,7 +1600,7 @@ function applyLangStaticScreens() {
     div.innerHTML = t(titleKey) + '<small>' + t(subKey) + '</small>' + statHtml;
   }
 
-  document.querySelectorAll('.sub-home-btn div').forEach((el) => {
+  document.querySelectorAll('.sub-home-btn .sub-home-label').forEach((el) => {
     el.textContent = t('common.backHome');
   });
 
@@ -1661,6 +1666,7 @@ function applyLangStaticScreens() {
   setText('charSelectRosterLine', 'ui.charRosterLine');
   setText('levelScreenHead', 'ui.levelHead');
   setText('levelScreenSub', 'ui.levelSub');
+  setTitle('btnIslandHelp', 'ui.helpIslandBtnTitle');
   setText('gambleSub', 'ui.gambleSub');
   setText('styleScreenHead', 'ui.styleHead');
   setText('styleScreenSub', 'ui.styleSub');
@@ -1775,6 +1781,7 @@ function renderLangSwitchBar(bar) {
 function renderLangSwitch() {
   renderLangSwitchBar(document.getElementById('langSwitchBar'));
   renderLangSwitchBar(document.getElementById('menuLangBar'));
+  renderLangSwitchBar(document.getElementById('levelLangBar'));
 }
 
 function applyLang() {
@@ -1791,6 +1798,11 @@ function applyLang() {
     else if (active === 'styleScreen' && typeof UI.renderStyle === 'function') UI.renderStyle();
     else if (active === 'charSelectScreen' && typeof UI.renderCharSelect === 'function') UI.renderCharSelect();
     else if (active === 'levelScreen' && typeof UI.renderLevels === 'function') UI.renderLevels();
+    else if (active === 'gambleScreen' && typeof UI.renderGamble === 'function' && pendingAdvLevel) {
+      UI.renderGamble(pendingAdvLevel);
+    } else if (active === 'petScreen' && typeof UI.renderDexPets === 'function') UI.renderDexPets();
+    else if (active === 'dexScreen' && typeof UI.renderDex === 'function') UI.renderDex();
+    else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'modeHubScreen') UI.renderModeHub();
     UI.syncBackLabels();
   }
@@ -3035,6 +3047,7 @@ function cancelGambleStart() {
     gokScreenTimer = null;
   }
   gokStartBusy = false;
+  try { UI.hideGambleRollFlash(); } catch (_) {}
 }
 
 function playGambleRollSfx(g) {
@@ -3066,16 +3079,18 @@ function gokGooiStartLevel(n) {
       const line = typeof gambleRollToastLine === 'function' ? gambleRollToastLine(lastGambleRoll) : '';
       if (line) UI.toast(line, motionReduced() ? 900 : 1400);
     } catch (_) {}
+    try { UI.showGambleRollFlash(lastGambleRoll); } catch (_) {}
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
     const delay = motionReduced() ? 80 : 420;
     gokScreenTimer = setTimeout(() => {
       gokScreenTimer = null;
       gokStartBusy = false;
+      try { UI.hideGambleRollFlash(); } catch (_) {}
       startAdventureFromGamble(false);
     }, delay);
   } catch (err) {
     cancelGambleStart();
-    sfReportError('gokStart', err, 'Gok start mislukt — probeer opnieuw');
+    sfReportError('gokStart', err, t('toast.errGambleStart'));
   }
 }
 
@@ -3089,7 +3104,7 @@ function gokGooiStartFromScreen() {
     playGambleRollSfx(lastGambleRoll);
     UI.renderGamble(pendingAdvLevel || save.unlocked || 1);
     const sumLine = document.getElementById('gambleSumLine');
-    if (sumLine) sumLine.textContent = 'START!';
+    if (sumLine) sumLine.textContent = t('ui.gambleGoStart');
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
     const delay = motionReduced() ? 50 : 140;
     gokScreenTimer = setTimeout(() => {
@@ -3099,7 +3114,7 @@ function gokGooiStartFromScreen() {
     }, delay);
   } catch (err) {
     cancelGambleStart();
-    sfReportError('gokGooi', err, 'Gok start mislukt — probeer opnieuw');
+    sfReportError('gokGooi', err, t('toast.errGambleStart'));
   }
 }
 
@@ -3426,21 +3441,17 @@ function modeOnboardingSeen(mode) {
   return !!(save.tipsSeen['onboard_' + mode] || save.tipsSeen['mode_' + mode]);
 }
 
-const ONBOARD_MODES = [
-  { id: 'adventure', label: 'Avontuur' },
-  { id: 'training', label: 'Training' },
-  { id: 'wall', label: 'Muur' },
-  { id: 'versus', label: '2 spelers' },
-  { id: 'coinrun', label: 'Mats' },
-];
+const ONBOARD_MODE_IDS = ['adventure', 'training', 'wall', 'versus', 'coinrun'];
 
 function onboardingProgress() {
-  const seen = ONBOARD_MODES.filter(m => modeOnboardingSeen(m.id)).length;
-  return { seen, total: ONBOARD_MODES.length };
+  const seen = ONBOARD_MODE_IDS.filter((id) => modeOnboardingSeen(id)).length;
+  return { seen, total: ONBOARD_MODE_IDS.length };
 }
 
 function nextUntriedMode() {
-  return ONBOARD_MODES.find(m => !modeOnboardingSeen(m.id)) || null;
+  const id = ONBOARD_MODE_IDS.find((mid) => !modeOnboardingSeen(mid));
+  if (!id) return null;
+  return { id, label: dailyModeLabel(id) };
 }
 
 /** Eén result-tip per modus+uitkomst — geen herhaling, geen toast. */
@@ -3467,7 +3478,7 @@ function adventureIslandHintLine() {
   if (!save.tipsSeen.islands || save.tipsSeen.islandsHint) return '';
   save.tipsSeen.islandsHint = 1;
   persist();
-  return 'Eerste keer avontuur: 5×10 levels · skill gate per eiland · Meester-buff na 5× verlies op één level';
+  return t('ui.islandFirstHint');
 }
 
 /** Eén hint per modus: in-gevecht regel, geen extra toast (geen stapel met welcome). */
@@ -6000,7 +6011,7 @@ const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
 const GIANT_DMG_MUL = 1.14;
 const GIANT_XP_MUL = 1.3;
-/** Nood-ontsnapping als je omringd / stunlocked bent — tik midden-KETS! */
+/** Nood-ontsnapping als je omringd / stunlocked bent — tik midden-KABLAM! */
 const KETSBAM_DETECT_R = 148;
 const KETSBAM_NEAR_MIN = 3;
 const KETSBAM_BLAST_R = 192;
@@ -6045,7 +6056,10 @@ function starsFromHpPct(hpPct) {
   return 1;
 }
 function starHintLine() {
-  return `3★ >${Math.round(STAR_HP.three * 100)}% HP · 2★ >${Math.round(STAR_HP.two * 100)}% · 1★ = win`;
+  return t('ui.starHint', {
+    three: Math.round(STAR_HP.three * 100),
+    two: Math.round(STAR_HP.two * 100),
+  });
 }
 function scaleKnockback(kb, dmg, opts) {
   opts = opts || {};
@@ -6210,11 +6224,11 @@ function gambleDiceFace(d) {
 function gambleRollToastLine(g) {
   if (!g) return '';
   const faces = `${gambleDiceFace(g.d1)} ${gambleDiceFace(g.d2)} = ${g.sum}`;
-  if (g.outcome === 'neutral') return `${faces} · normaal level`;
+  if (g.outcome === 'neutral') return t('ui.gambleRollNeutral', { faces });
   const label = typeof gambleOutcomeLabelFromKey === 'function'
     ? gambleOutcomeLabelFromKey(g).replace(/^[^!]+!?\s*/, '').slice(0, 40)
     : '';
-  return label ? `${faces} · ${label}` : faces;
+  return label ? t('ui.gambleRollOutcome', { faces, label }) : faces;
 }
 
 function gambleOutcomeLabel(g) {
@@ -6506,11 +6520,11 @@ function seedNlGameStrings() {
     summonAscend: '{name} → {rar}!',
     newDex: 'Nieuw {rar}: {name}! +{hp} max HP',
     pet: 'PET! {name}',
-    matsStart: 'MATS · MUNTJES BONUS',
+    matsStart: 'MUNTJES BONUS',
     wallStart: 'SLOOP DE MUUR!',
     bonusDone: 'BONUS KLAAR!',
-    kets: 'KETS!',
-    ketsBam: 'KETS-BAM!',
+    kets: 'KABLAM…',
+    ketsBam: 'KABLAM!',
     wallTime: 'TIJD!',
     wallNewWall: 'MUUR GESLOOPT! Nieuwe muur...',
     vsFatality: 'FATALITY!',
@@ -6521,7 +6535,7 @@ function seedNlGameStrings() {
   Object.assign(I18N.nl.result, {
     advWin: 'GEWONNEN!', advLose: 'VERSLAGEN...', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
     vsP1Win: 'SPELER 1 WINT!', vsP2Win: 'SPELER 2 WINT!', wallRecord: 'NIEUW RECORD!', wallTime: 'TIJD IS OM!',
-    matsRecord: 'MATS RECORD!', matsDone: 'Goed gedaan, Mats!',
+    matsRecord: 'RECORD!', matsDone: 'Goed gedaan!',
     perfectRun: 'Perfecte run — hou je HP hoog!',
     pickupsHelp: '{hint} — pickups helpen',
     lossBlockTip: 'Tip: blokkeer · mik omhoog op vliegers · {prog}',
@@ -6542,7 +6556,7 @@ function seedNlGameStrings() {
     wallStrongCombo: 'Sterke combo (×{n}) — volgende keer record?',
     wallBehindPace: 'Achter record-tempo — probeer combo ×5+ voor meer sloop',
     wallGoodPace: 'Goed tempo — volgende run kan record breken!',
-    matsPetTip: 'Pet coins uitgeven in Collectie → Pets · elke 2 Mats-munten = 1 pet coin',
+    matsPetTip: 'Pet coins uitgeven in Collectie → Pets · elke 2 munten = 1 pet coin',
     matsControlTip: 'Joystick omhoog = hoger mikken (slag + gooi) · shuriken max 3× snel',
     masterBuffActive: ' · Meester-buff actief',
     wavesProg: '{cur}/{total} golven',
@@ -6635,6 +6649,7 @@ function seedNlGameStrings() {
     charPickP1First: 'Kies eerst P1 — daarna P2 en VECHT',
     charPickDifferent: 'P2 moet een andere vechter zijn dan P1',
     skipGamble: 'Zonder gok',
+    errGambleStart: 'Gok start mislukt — probeer opnieuw',
     weaponIslandCap: 'Klaar voor training — in avontuur max Lv {cap}',
     petNone: 'Geen actieve pet',
     petFollow: '{name} volgt je nu!',
@@ -6647,6 +6662,14 @@ function seedNlGameStrings() {
     eggFloat: '{name} zweeft nu mee!',
     styleEquipped: '{name} uitgerust',
     welcome: 'Welkom! Menu → Tips · per modus één korte hint bovenin (geen toast-stapel)',
+  });
+  if (!I18N.nl.gamble) I18N.nl.gamble = {};
+  Object.assign(I18N.nl.gamble, {
+    superBoss: 'Pech! Super-baas in een willekeurige golf',
+    miniBoss: 'Risico: extra elite-super in een golf',
+    superAlly: 'Jackpot! Super-bondgenoot: {name} (sterk buff)',
+    ally: 'Geluk! Bondgenoot: {name} (buff dit level)',
+    neutral: 'Neutraal — gewoon level (geen extra gok-effect)',
   });
   if (!I18N.nl.versionUpdate) I18N.nl.versionUpdate = {};
   Object.assign(I18N.nl.versionUpdate, {
@@ -6810,6 +6833,9 @@ function seedNlGameStrings() {
     gambleStartSub: '2× d6 · meteen level',
     gambleSkip: 'Overslaan',
     gambleSkipSub: 'Geen gok — geen extra baas of buff',
+    gambleRollNeutral: '{faces} · normaal level',
+    gambleRollOutcome: '{faces} · {label}',
+    gambleGoStart: 'START!',
     styleHead: 'Stijl',
     styleSub: 'Outfits met bonus — level, training, monsterboek · hover voor tooltip',
     styleActive: 'Actief',
@@ -6866,10 +6892,44 @@ function seedNlGameStrings() {
     helpMasterBuff: 'Meester-buff: 5× verlies op hetzelfde level → +20% HP, snelheid & schade tot je wint. Baas op Lv 10/20/30/40/50 opent het volgende eiland.',
     helpIslandLocked: 'Vergrendeld — versla baas Lv {lv}',
     helpIslandProg: '{cleared}/{total} levels · {stars}/{maxStars}★ · skill gate wapens Lv {cap}',
+    helpIslandBtnTitle: 'Eilanden & skill gate uitleg',
+    islandInfoSub: 'Skill gate: wapens tot Lv {cap} · {cleared}/{total} levels · {stars}★',
+    islandBossGate: ' · baas Lv {lv} → volgend eiland',
+    masterBuffChip: 'Meester-buff Lv {lv} · +20%',
+    islandFirstHint: 'Eerste keer avontuur: 5×10 levels · skill gate per eiland · Meester-buff na 5× verlies op één level',
+    starHint: '3★ >{three}% HP · 2★ >{two}% · 1★ = win',
+    levelTipWaves: '{waves} golven · {starHint}',
+    levelTipIslandBoss: ' · eiland-baas — opent volgend eiland',
+    levelTipMidBoss: ' · tussendoor-baas',
+    levelTipYourStars: ' · jouw {stars}{empty}',
+    levelTipFails: ' · {n}× verloren',
+    levelTipMasterActive: ' · Meester-buff actief',
+    levelTipTap: ' · Tik = Gooi & start · Lang = zonder gok',
+    errPickIsland: 'Eiland kiezen mislukt',
+    errStart: 'Start mislukt',
+    errLevelStart: 'Level starten mislukt',
+    hubStatNotPlayed: 'Nog niet gespeeld',
+    hubStatTrainWins: '{wins} wins{rec}',
+    hubStatTrainRecOnly: 'Record combo ×{n}',
+    hubStatWallRec: 'Record {n}',
+    hubStatWallEmpty: 'Nog geen score',
+    hubStatCoinsBest: 'Best {n} munten{pet}',
+    hubStatCoinsPet: ' · {n} pet 🪙',
+    hubStatCoinsEmpty: 'Munten → pet coins',
+    hubStatWeapons: '{n}/{total} vrij',
+    hubStatSkillLv: 'Lv {n} totaal',
+    hubStatSkillShards: 'Shards in avontuur',
+    hubStatPetsFull: 'dex {pets}/{total} · {coins} 🪙 · ei {eggs}/{eggTotal}',
+    hubStatPetsEmpty: '{total} dex · munten → pet coins',
+    hubStatStyle: '{n}/{total} outfits',
+    hubStatDex: '{n}/{total} · +max HP',
+    petCoinTip: 'Speel <b>munten bonus</b> voor pet coins (2 gouden munten = 1 🪙). Koop pets hier, of tem via kills in het monsterboek. Pets volgen je in avontuur & training.',
+    petSummaryTamed: 'Getemd <b>{tamed}/{total}</b> · actief <b>{active}</b> · <b>{wallet} pet coins</b>',
+    petNone: 'geen',
     installSub: 'Verschijnt als icoon — net als een echte app',
     boss: 'BAAS',
     topHunter: 'Top jager',
-    modeAdventure: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok vóór level',
+    modeAdventure: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok · omringd = KABLAM!',
     modeTraining: 'Combo-trainer ×5/×8/×10 · 3s dummy · lasers · Chidori',
     modeWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing',
     modeVersus: 'P1 links P2 rechts · best-of-3 · rematch in pauze',
@@ -6903,7 +6963,7 @@ function seedNlGameStrings() {
     pace: '~{pace}/min · projectie ~{proj}', paceAhead: 'Voor op record-tempo +{n}',
     paceBehind: 'Achter record-tempo {n}', comboLabel: 'COMBO',
     comboSmash: '+{pct}% sloop', comboActive: 'Combo actief — nog een steen!',
-    coins: 'Munten: {n}', matsRecord: 'Record Mats: {n}',
+    coins: 'Munten: {n}', matsRecord: 'Record: {n}',
     petCoins: 'Pet coins: +{pending} · wallet {wallet}',
     matsHint: 'Joystick ↑ mik · slag/gooi hoger · shuriken op roze vliegers',
     spawnFair: 'Spawn · eerlijk start', nextRound: 'Volgende ronde',
@@ -6915,7 +6975,7 @@ function seedNlGameStrings() {
     hintDualKb: 'P1: A/D · W · J/K/L/U · Shift  |  P2: pijltjes · 1/2/3/4/5',
     hintTouch: 'Links: joystick om te lopen · Rechts: aanvalsknoppen',
     hintKb: 'A/D lopen · W springen · J stomp · K trap · L wapen · U speciaal',
-    ketsTap: 'Tik!', ketsKey: 'E / tik',
+    ketsTap: 'Tik KABLAM!', ketsKey: 'E · KABLAM',
   });
   if (!I18N.nl.island) I18N.nl.island = {};
   Object.assign(I18N.nl.island, {
@@ -7056,7 +7116,7 @@ const CATALOG_EN = {
   result: {
     advWin: 'VICTORY!', advLose: 'DEFEATED...', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
     vsP1Win: 'PLAYER 1 WINS!', vsP2Win: 'PLAYER 2 WINS!', wallRecord: 'NEW RECORD!', wallTime: "TIME'S UP!",
-    matsRecord: 'MATS RECORD!', matsDone: 'Nice job, Mats!',
+    matsRecord: 'NEW RECORD!', matsDone: 'Well done!',
     perfectRun: 'Perfect run — keep HP high!',
     pickupsHelp: '{hint} — pickups help',
     lossBlockTip: 'Tip: block · aim up at flyers · {prog}',
@@ -7077,7 +7137,7 @@ const CATALOG_EN = {
     wallStrongCombo: 'Strong combo (×{n}) — record next time?',
     wallBehindPace: 'Behind record pace — try combo ×5+ for more smash',
     wallGoodPace: 'Good pace — next run could break record!',
-    matsPetTip: 'Spend pet coins in Collection → Pets · every 2 Mats coins = 1 pet coin',
+    matsPetTip: 'Spend pet coins in Collection → Pets · every 2 coins = 1 pet coin',
     matsControlTip: 'Joystick up = aim higher (melee + throw) · shuriken max 3× fast',
     masterBuffActive: ' · Master buff active',
     wavesProg: '{cur}/{total} waves',
@@ -7115,9 +7175,8 @@ const CATALOG_EN = {
     timeHpVs: 'TIME! {hp1}% vs {hp2}% · {msg}',
     summon: '✦ SUMMON! ✦', summonAscend: '{name} → {rar}!',
     newDex: 'New {rar}: {name}! +{hp} max HP', pet: 'PET! {name}',
-    matsStart: 'MATS · COIN BONUS', wallStart: 'SMASH THE WALL!', bonusDone: 'BONUS DONE!',
-    kets: 'KETS!', ketsBam: 'KETS-BAM!', wallTime: 'TIME!', wallNewWall: 'WALL SMASHED! New wall...',
-    vsFatality: 'FATALITY!', vsFatalityShout: 'FATALITY!', vsFatalityWin: '{msg} · STYL-FINISH!',
+    matsStart: 'COIN BONUS', wallStart: 'SMASH THE WALL!', bonusDone: 'BONUS DONE!',
+    kets: 'KABLAM…', ketsBam: 'KABLAM!', wallTime: 'TIME!', wallNewWall: 'WALL SMASHED! New wall...',
   },
   help: { tips: [
     'Power-ups: defeated monsters sometimes drop orbs — HP, rage, chakra, shield.',
@@ -7187,6 +7246,7 @@ const CATALOG_EN = {
     charPickP1First: 'Pick P1 first — then P2 and FIGHT',
     charPickDifferent: 'P2 must be a different fighter than P1',
     skipGamble: 'No gamble',
+    errGambleStart: 'Gamble start failed — try again',
     weaponIslandCap: 'Ready for training — in adventure max Lv {cap}',
     petNone: 'No active pet',
     petFollow: '{name} follows you now!',
@@ -7328,6 +7388,9 @@ const CATALOG_EN = {
     gambleStartSub: '2× d6 · straight into level',
     gambleSkip: 'Skip',
     gambleSkipSub: 'No gamble — no extra boss or buff',
+    gambleRollNeutral: '{faces} · normal level',
+    gambleRollOutcome: '{faces} · {label}',
+    gambleGoStart: 'START!',
     styleHead: 'Style',
     styleSub: 'Outfits with bonus — level, training, monster book · hover for tooltip',
     styleActive: 'Active',
@@ -7384,10 +7447,44 @@ const CATALOG_EN = {
     helpMasterBuff: 'Master buff: 5× loss on same level → +20% HP, speed & damage until you win. Boss Lv 10/20/30/40/50 opens next island.',
     helpIslandLocked: 'Locked — beat boss Lv {lv}',
     helpIslandProg: '{cleared}/{total} levels · {stars}/{maxStars}★ · skill gate weapons Lv {cap}',
+    helpIslandBtnTitle: 'Islands & skill gate help',
+    islandInfoSub: 'Skill gate: weapons up to Lv {cap} · {cleared}/{total} levels · {stars}★',
+    islandBossGate: ' · boss Lv {lv} → next island',
+    masterBuffChip: 'Master buff Lv {lv} · +20%',
+    islandFirstHint: 'First adventure run: 5×10 levels · skill gate per island · Master buff after 5× loss on one level',
+    starHint: '3★ >{three}% HP · 2★ >{two}% · 1★ = win',
+    levelTipWaves: '{waves} waves · {starHint}',
+    levelTipIslandBoss: ' · island boss — opens next island',
+    levelTipMidBoss: ' · mid boss',
+    levelTipYourStars: ' · yours {stars}{empty}',
+    levelTipFails: ' · {n}× lost',
+    levelTipMasterActive: ' · Master buff active',
+    levelTipTap: ' · Tap = Roll & start · Hold = skip gamble',
+    errPickIsland: 'Could not pick island',
+    errStart: 'Start failed',
+    errLevelStart: 'Could not start level',
+    hubStatNotPlayed: 'Not played yet',
+    hubStatTrainWins: '{wins} wins{rec}',
+    hubStatTrainRecOnly: 'Record combo ×{n}',
+    hubStatWallRec: 'Record {n}',
+    hubStatWallEmpty: 'No score yet',
+    hubStatCoinsBest: 'Best {n} coins{pet}',
+    hubStatCoinsPet: ' · {n} pet 🪙',
+    hubStatCoinsEmpty: 'Coins → pet coins',
+    hubStatWeapons: '{n}/{total} unlocked',
+    hubStatSkillLv: 'Lv {n} total',
+    hubStatSkillShards: 'Shards in adventure',
+    hubStatPetsFull: 'dex {pets}/{total} · {coins} 🪙 · egg {eggs}/{eggTotal}',
+    hubStatPetsEmpty: '{total} dex · coins → pet coins',
+    hubStatStyle: '{n}/{total} outfits',
+    hubStatDex: '{n}/{total} · +max HP',
+    petCoinTip: 'Play <b>coin bonus</b> for pet coins (2 gold coins = 1 🪙). Buy pets here, or tame via monster book kills. Pets follow you in adventure & training.',
+    petSummaryTamed: 'Tamed <b>{tamed}/{total}</b> · active <b>{active}</b> · <b>{wallet} pet coins</b>',
+    petNone: 'none',
     installSub: 'Shows as an icon — like a real app',
     boss: 'BOSS',
     topHunter: 'Top hunter',
-    modeAdventure: '5 islands × 10 levels · skill gate weapons · Master buff after 5× loss · gamble roll before level',
+    modeAdventure: '5 islands × 10 levels · skill gate weapons · Master buff after 5× loss · gamble roll · swarmed = KABLAM!',
     modeTraining: 'Combo trainer ×5/×8/×10 · 3s dummy · lasers · Chidori',
     modeWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD · 5s warning',
     modeVersus: 'P1 left P2 right · best-of-3 · rematch in pause',
@@ -7463,7 +7560,7 @@ const CATALOG_EN = {
     pace: '~{pace}/min · projection ~{proj}', paceAhead: 'Ahead of record pace +{n}',
     paceBehind: 'Behind record pace {n}', comboLabel: 'COMBO',
     comboSmash: '+{pct}% smash', comboActive: 'Combo active — one more brick!',
-    coins: 'Coins: {n}', matsRecord: 'Mats record: {n}',
+    coins: 'Coins: {n}', matsRecord: 'Record: {n}',
     petCoins: 'Pet coins: +{pending} · wallet {wallet}',
     matsHint: 'Joystick ↑ aim · melee/throw higher · shuriken on pink flyers',
     spawnFair: 'Spawn · fair start', nextRound: 'Next round',
@@ -7475,7 +7572,7 @@ const CATALOG_EN = {
     hintDualKb: 'P1: A/D · W · J/K/L/U · Shift  |  P2: arrows · 1/2/3/4/5',
     hintTouch: 'Left: joystick to walk · Right: attack buttons',
     hintKb: 'A/D walk · W jump · J punch · K kick · L weapon · U special',
-    ketsTap: 'Tap!', ketsKey: 'E / tap',
+    ketsTap: 'Tap KABLAM!', ketsKey: 'E · KABLAM',
   },
   jutsu: { rasengan: 'RASENGAN!', chidori: 'CHIDORI!', rinnegan: 'RINNEGAN!' },
   skill: {
@@ -7562,13 +7659,13 @@ const CATALOG_DE = {
   result: {
     advWin: 'GEWONNEN!', advLose: 'BESIEGT...', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
     vsP1Win: 'SPIELER 1 GEWINNT!', vsP2Win: 'SPIELER 2 GEWINNT!', wallRecord: 'NEUER REKORD!', wallTime: 'ZEIT UM!',
-    matsRecord: 'MATS-REKORD!', matsDone: 'Gut gemacht, Mats!',
+    matsRecord: 'NEUER REKORD!', matsDone: 'Gut gemacht!',
   },
   banner: {
     levelUp: 'LEVEL UP! Lv {lvl}', masterBuff: 'MEISTER-BUFF +20%', bossWave: 'BOSS-WELLE!',
     fight: 'KÄMPF!', won: 'GEWONNEN!', lost: 'VERLOREN...', summon: '✦ SUMMON! ✦',
-    matsStart: 'MATS · MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
-    kets: 'KETS!', ketsBam: 'KETS-BAM!',
+    matsStart: 'MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
+    kets: 'KABLAM…', ketsBam: 'KABLAM!',
   },
   help: { tips: [
     'Power-ups: besiegte Monster lassen manchmal Kugeln fallen — HP, Rage, Chakra, Schild.',
@@ -7660,13 +7757,13 @@ const CATALOG_FR = {
   result: {
     advWin: 'VICTOIRE !', advLose: 'DÉFAITE...', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
     vsP1Win: 'JOUEUR 1 GAGNE !', vsP2Win: 'JOUEUR 2 GAGNE !', wallRecord: 'NOUVEAU RECORD !', wallTime: 'FIN DU TEMPS !',
-    matsRecord: 'RECORD MATS !', matsDone: 'Bien joué, Mats !',
+    matsRecord: 'NOUVEAU RECORD !', matsDone: 'Bien joué !',
   },
   banner: {
     levelUp: 'LEVEL UP ! Lv {lvl}', masterBuff: 'BUFF MAÎTRE +20 %', bossWave: 'VAGUE BOSS !',
     fight: 'COMBAT !', won: 'VICTOIRE !', lost: 'DÉFAITE...', summon: '✦ INVOCATION ! ✦',
-    matsStart: 'MATS · BONUS PIÈCES', wallStart: 'CASSE LE MUR !', bonusDone: 'BONUS TERMINÉ !',
-    kets: 'KETS !', ketsBam: 'KETS-BAM !',
+    matsStart: 'BONUS PIÈCES', wallStart: 'CASSE LE MUR !', bonusDone: 'BONUS TERMINÉ !',
+    kets: 'KABLAM…', ketsBam: 'KABLAM !',
   },
   help: { tips: [
     'Power-ups : les monstres vaincus laissent parfois des orbes — PV, rage, chakra, bouclier.',
@@ -7758,13 +7855,13 @@ const CATALOG_ES = {
   result: {
     advWin: '¡VICTORIA!', advLose: 'DERROTA...', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
     vsP1Win: '¡JUGADOR 1 GANA!', vsP2Win: '¡JUGADOR 2 GANA!', wallRecord: '¡NUEVO RÉCORD!', wallTime: '¡SE ACABÓ EL TIEMPO!',
-    matsRecord: '¡RÉCORD MATS!', matsDone: '¡Bien hecho, Mats!',
+    matsRecord: '¡NUEVO RÉCORD!', matsDone: '¡Bien hecho!',
   },
   banner: {
     levelUp: '¡SUBIDA DE NIVEL! Lv {lvl}', masterBuff: 'BUFF MAESTRO +20%', bossWave: '¡OLA JEFE!',
     fight: '¡LUCHA!', won: '¡VICTORIA!', lost: 'DERROTA...', summon: '✦ ¡INVOCACIÓN! ✦',
-    matsStart: 'MATS · BONUS MONEDAS', wallStart: '¡ROMPE EL MURO!', bonusDone: '¡BONUS LISTO!',
-    kets: '¡KETS!', ketsBam: '¡KETS-BAM!',
+    matsStart: 'BONUS MONEDAS', wallStart: '¡ROMPE EL MURO!', bonusDone: '¡BONUS LISTO!',
+    kets: '¡KABLAM…', ketsBam: '¡KABLAM!',
   },
   help: { tips: [
     'Power-ups: monstruos derrotados sueltan orbes — HP, furia, chakra, escudo.',
@@ -9709,7 +9806,7 @@ function ketsbamHitTest(x, y, g) {
   if (!g || !g.ketsbamShow) return false;
   const ui = touchUiScale(W, H);
   const { cx, cy } = ketsbamPromptCenter();
-  const r = 58 * ui + btnHitSlop();
+  const r = kablamPromptHitRadius(ui);
   return (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
 }
 
@@ -10706,7 +10803,7 @@ class Fighter {
     game.floater(this.x, this.y - 92, 'Dash!', '#7cf5ff', 12);
   }
 
-  /** Nood-KETS-BAM: omringd/stunlock → tik midden-symbool of druk E. */
+  /** Nood-KABLAM: omringd/stunlock → tik midden-symbool of druk E. */
   doKetsbam(game) {
     if (!this.isPlayer || !this.alive || !game) return false;
     if (game.ketsbamCd > 0 || game.ketsbamChargeT > 0 || game.inputLocked || game.traveling) return false;
@@ -10715,6 +10812,7 @@ class Fighter {
     const swarmed = near >= KETSBAM_NEAR_MIN;
     if (!swarmed && !stuck) return false;
 
+    if (!game.ketsbamStickPick) game.ketsbamStickPick = pickKablamStickFace();
     game.ketsbamCd = KETSBAM_CD;
     game.ketsbamSuperT = KETSBAM_SUPER_ARMOR + KETSBAM_CHARGE_DUR;
     game.ketsbamShow = false;
@@ -10730,7 +10828,7 @@ class Fighter {
     this.invulnT = Math.max(this.invulnT, KETSBAM_INVULN + KETSBAM_CHARGE_DUR);
     resetWeaponCombo(this);
 
-    game.banner('KETS!', KETSBAM_CHARGE_DUR, '#ffd75e', 44);
+    game.banner(t('banner.kets'), KETSBAM_CHARGE_DUR, '#ffd75e', 44);
     try { AudioSys.sfx('ketsbamCharge'); } catch (_) {}
     if (save.haptics !== false) haptic(12);
     return true;
@@ -10744,7 +10842,7 @@ class Fighter {
 
     game.shake(14, 0.38);
     game.freezeT = Math.max(game.freezeT, 0.06);
-    game.banner('KETS-BAM!', 0.85, '#ffd75e', 42);
+    game.banner(t('banner.ketsBam'), 0.85, '#ffd75e', 42);
     try { AudioSys.sfx('ketsbam'); } catch (_) {}
 
     const px = this.x, py = this.y - 42;
@@ -10761,7 +10859,8 @@ class Fighter {
     game.burst(px, py, '#ffd75e', fxLite() ? 22 : 40, { kind: 'spark', size: 3.2 });
     game.burst(px, py, '#ff7043', fxLite() ? 14 : 26);
     spawnFxRing(game, px, py, '#ffe259', fxLite() ? 10 : 18);
-    game.floater(px, py - 80, 'KETS-BAM!', '#ffd75e', 20, 'fx');
+    game.floater(px, py - 80, t('banner.ketsBam'), '#ffd75e', 20);
+    game.ketsbamStickPick = null;
     if (save.haptics !== false) haptic(32);
   }
 
@@ -12696,6 +12795,169 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   }
 }
 
+/* --- src/game/kablam-ui.js --- */
+/** KABLAM! nood-ontsnapping UI — vecht-poep cursor + random stickman-smile. */
+const KABLAM_PROMPT_R_BASE = 46;
+const KABLAM_HIT_PAD = 12;
+const KABLAM_SMILE_STYLES = ['grin', 'smirk', 'toothy', 'beam', 'wink'];
+
+function kablamPromptRadius(ui, pulse) {
+  return KABLAM_PROMPT_R_BASE * ui * (pulse || 1);
+}
+
+function kablamPromptHitRadius(ui) {
+  return kablamPromptRadius(ui, 1) + 10 * ui + btnHitSlop() + KABLAM_HIT_PAD;
+}
+
+function pickKablamStickFace() {
+  const pool = (typeof VS_ROSTER !== 'undefined' ? VS_ROSTER : []).filter((r) => !r.isRobot);
+  const entry = pool[Math.floor(Math.random() * pool.length)] || pool[0] || { bodyColor: '#eef5ff' };
+  const style = KABLAM_SMILE_STYLES[Math.floor(Math.random() * KABLAM_SMILE_STYLES.length)];
+  return { color: entry.bodyColor || '#eef5ff', style, bald: !!entry.bald };
+}
+
+function drawKablamPoopCursor(c, s) {
+  c.save();
+  c.fillStyle = '#7a4f2a';
+  c.strokeStyle = '#4a3018';
+  c.lineWidth = 2.2 * s;
+  c.lineJoin = 'round';
+
+  const blob = (bx, by, rx, ry) => {
+    c.beginPath();
+    c.ellipse(bx, by, rx, ry, 0, 0, TAU);
+    c.fill();
+    c.stroke();
+  };
+  blob(0, 10 * s, 15 * s, 11 * s);
+  blob(0, -2 * s, 12 * s, 10 * s);
+  blob(0, -13 * s, 9 * s, 8 * s);
+  c.strokeStyle = '#5a3818';
+  c.lineWidth = 1.8 * s;
+  c.beginPath();
+  c.arc(0, -15 * s, 3.2 * s, 0, TAU * 1.25);
+  c.stroke();
+
+  const fist = (fx, fy) => {
+    c.fillStyle = '#ffd75e';
+    c.strokeStyle = '#c05820';
+    c.lineWidth = 2 * s;
+    c.beginPath();
+    c.arc(fx, fy, 5.5 * s, 0, TAU);
+    c.fill();
+    c.stroke();
+    c.strokeStyle = '#8a4010';
+    c.lineWidth = 1.4 * s;
+    c.beginPath();
+    c.moveTo(fx - 3 * s, fy - 1 * s);
+    c.lineTo(fx + 3 * s, fy - 1 * s);
+    c.stroke();
+  };
+  fist(-18 * s, 4 * s);
+  fist(18 * s, -1 * s);
+
+  c.fillStyle = '#fff8ef';
+  c.strokeStyle = '#2a2018';
+  c.lineWidth = 1.6 * s;
+  c.beginPath();
+  c.moveTo(11 * s, 16 * s);
+  c.lineTo(24 * s, 30 * s);
+  c.lineTo(15 * s, 21 * s);
+  c.lineTo(8 * s, 27 * s);
+  c.closePath();
+  c.fill();
+  c.stroke();
+  c.restore();
+}
+
+function drawKablamStickSmile(c, face, s, pulse) {
+  if (!face) return;
+  const bob = Math.sin(pulse * 8) * 1.5 * s;
+  const hx = 30 * s;
+  const hy = -24 * s + bob;
+  c.save();
+  c.strokeStyle = face.color;
+  c.fillStyle = face.color;
+  c.lineWidth = 2.4 * s;
+  c.lineCap = 'round';
+
+  if (face.bald) {
+    c.fillStyle = '#ffe8c8';
+    c.beginPath();
+    c.arc(hx, hy, 8.5 * s, 0, TAU);
+    c.fill();
+    c.strokeStyle = face.color;
+    c.stroke();
+  } else {
+    c.beginPath();
+    c.arc(hx, hy, 8.5 * s, 0, TAU);
+    c.stroke();
+  }
+
+  c.strokeStyle = '#1a2030';
+  c.lineWidth = 1.6 * s;
+  const eyeY = hy - 1.5 * s;
+  if (face.style === 'wink') {
+    c.beginPath();
+    c.arc(hx - 3 * s, eyeY, 1.2 * s, 0, TAU);
+    c.fill();
+    c.beginPath();
+    c.moveTo(hx + 2 * s, eyeY);
+    c.lineTo(hx + 4.5 * s, eyeY);
+    c.stroke();
+  } else {
+    c.fillStyle = '#1a2030';
+    c.beginPath();
+    c.arc(hx - 3 * s, eyeY, 1.1 * s, 0, TAU);
+    c.arc(hx + 3 * s, eyeY, 1.1 * s, 0, TAU);
+    c.fill();
+  }
+
+  c.strokeStyle = '#1a2030';
+  c.lineWidth = 1.8 * s;
+  c.beginPath();
+  if (face.style === 'grin' || face.style === 'beam') {
+    c.arc(hx, hy + 2 * s, 4.5 * s, 0.12 * Math.PI, 0.88 * Math.PI);
+  } else if (face.style === 'smirk') {
+    c.arc(hx + 1.5 * s, hy + 2.5 * s, 4 * s, 0.05 * Math.PI, 0.72 * Math.PI);
+  } else if (face.style === 'toothy') {
+    c.arc(hx, hy + 1.5 * s, 4 * s, 0.18 * Math.PI, 0.82 * Math.PI);
+    c.stroke();
+    c.lineWidth = 1.2 * s;
+    for (let i = -1; i <= 1; i++) {
+      c.beginPath();
+      c.moveTo(hx + i * 2.2 * s, hy + 4 * s);
+      c.lineTo(hx + i * 2.2 * s, hy + 5.6 * s);
+      c.stroke();
+    }
+    c.restore();
+    return;
+  } else {
+    c.arc(hx, hy + 2 * s, 4 * s, 0.15 * Math.PI, 0.85 * Math.PI);
+  }
+  c.stroke();
+  c.restore();
+}
+
+function drawKablamIcon(c, scale, pulse, calm, face, spin) {
+  if (!calm && spin) c.rotate(spin);
+  drawKablamPoopCursor(c, scale);
+  drawKablamStickSmile(c, face, scale, pulse);
+  if (!calm && spin) c.rotate(-spin);
+}
+
+function drawKablamLabel(c, text, x, y, size, fill) {
+  c.save();
+  c.font = `900 ${size}px "Black Ops One", Bangers, sans-serif`;
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.lineWidth = Math.max(3, size * 0.28);
+  c.strokeStyle = 'rgba(0,0,0,.55)';
+  c.strokeText(text, x, y);
+  c.fillStyle = fill || '#fff';
+  c.fillText(text, x, y);
+  c.restore();
+}
 /* --- src/game/game.js --- */
 /* ================================ GAME ================================= */
 let game = null;
@@ -12828,6 +13090,7 @@ class Game {
     this.ketsbamChargeT = 0;
     this.ketsbamChargeDur = 0;
     this.ketsbamChargePulse = 0;
+    this.ketsbamStickPick = null;
     applyGambleToStage(this, gamble);
     this.banner(t('banner.levelStart', { n }), 1.4, '#ffd75e', 54);
     if (masterBuffActive(n)) {
@@ -15519,7 +15782,10 @@ class Game {
     const near = this.countNearbyMonsters(KETSBAM_DETECT_R);
     const stuck = this.player.hurtT > 0 && near >= 2;
     const swarmed = near >= KETSBAM_NEAR_MIN;
+    const wasShow = this.ketsbamShow;
     this.ketsbamShow = this.ketsbamCd <= 0 && !this.inputLocked && !this.traveling && (swarmed || stuck);
+    if (this.ketsbamShow && !wasShow) this.ketsbamStickPick = pickKablamStickFace();
+    if (!this.ketsbamShow && this.ketsbamChargeT <= 0) this.ketsbamStickPick = null;
     if (this.ketsbamShow) this.ketsbamPulse = (this.ketsbamPulse || 0) + dt;
     else this.ketsbamPulse = 0;
   }
@@ -15585,13 +15851,15 @@ class Game {
     }
 
     c.globalAlpha = 0.85;
-    c.font = `900 ${18 + prog * 8}px -apple-system, sans-serif`;
-    c.textAlign = 'center';
-    c.fillStyle = '#ffd75e';
-    c.strokeStyle = 'rgba(0,0,0,.55)';
-    c.lineWidth = 4;
-    c.strokeText(t('banner.kets'), px, py - 58 - prog * 24);
-    c.fillText(t('banner.kets'), px, py - 58 - prog * 24);
+    drawKablamLabel(c, t('banner.kets'), px, py - 58 - prog * 24, 18 + prog * 8, '#ffd75e');
+
+    if (this.ketsbamStickPick) {
+      c.save();
+      c.translate(px, py - 18);
+      c.scale(0.55 + prog * 0.2, 0.55 + prog * 0.2);
+      drawKablamIcon(c, 1, pulse, calm, this.ketsbamStickPick, calm ? 0 : pulse * 1.6);
+      c.restore();
+    }
     c.restore();
   }
 
@@ -15601,7 +15869,7 @@ class Game {
     const { cx, cy } = ketsbamPromptCenter();
     const calm = motionReduced();
     const pulse = calm ? 1 : (0.9 + Math.sin((this.ketsbamPulse || 0) * 10) * 0.1);
-    const r = 46 * ui * pulse;
+    const r = kablamPromptRadius(ui, pulse);
     c.save();
     c.globalAlpha = 0.92;
     c.fillStyle = 'rgba(6,10,24,.72)';
@@ -15611,36 +15879,14 @@ class Game {
     c.strokeStyle = 'rgba(255,215,94,.55)';
     c.lineWidth = 3 * ui;
     c.stroke();
-    // ster/kets-symbool
     c.translate(cx, cy);
-    if (!calm) c.rotate((this.ketsbamPulse || 0) * 2.2);
-    c.fillStyle = '#ffd75e';
-    c.strokeStyle = '#ff7043';
-    c.lineWidth = 2.5 * ui;
-    c.beginPath();
-    for (let i = 0; i < 8; i++) {
-      const a = (i / 8) * TAU - Math.PI / 2;
-      const rr = i % 2 ? r * 0.42 : r * 0.88;
-      const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
-      if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
-    }
-    c.closePath();
-    c.fill();
-    c.stroke();
-    if (!calm) c.rotate(-(this.ketsbamPulse || 0) * 2.2);
-    c.font = `900 ${Math.round(17 * ui)}px -apple-system,sans-serif`;
-    c.textAlign = 'center';
-    c.textBaseline = 'middle';
-    c.lineWidth = 5 * ui;
-    c.strokeStyle = 'rgba(0,0,0,.55)';
-    c.strokeText(t('banner.kets'), 0, 2);
-    c.fillStyle = '#fff';
-    c.fillText(t('banner.kets'), 0, 2);
+    drawKablamIcon(c, ui * pulse * 0.92, this.ketsbamPulse || 0, calm, this.ketsbamStickPick, calm ? 0 : (this.ketsbamPulse || 0) * 2.2);
     c.restore();
+    drawKablamLabel(c, t('banner.ketsBam'), cx, cy + r + 14 * ui, Math.round(17 * ui), '#ffd75e');
     c.font = `700 ${Math.round(12 * ui)}px -apple-system,sans-serif`;
     c.textAlign = 'center';
     c.fillStyle = 'rgba(255,255,255,.85)';
-    c.fillText(IS_TOUCH ? t('hud.ketsTap') : t('hud.ketsKey'), cx, cy + r + 18 * ui);
+    c.fillText(IS_TOUCH ? t('hud.ketsTap') : t('hud.ketsKey'), cx, cy + r + 34 * ui);
     c.textAlign = 'left';
   }
 
@@ -16788,6 +17034,18 @@ function audioMixStatusLine(inPause) {
   return bits.join(' · ');
 }
 
+function levelTileTip(n, pick, infoLv, boss, best, fails) {
+  let tip = t('ui.levelTipWaves', { waves: infoLv.waves.length, starHint: starHintLine() });
+  if (boss) tip += pick * LEVELS_PER_ISLAND === n ? t('ui.levelTipIslandBoss') : t('ui.levelTipMidBoss');
+  if (best > 0) tip += t('ui.levelTipYourStars', { stars: '★'.repeat(best), empty: '☆'.repeat(3 - best) });
+  if (fails > 0) {
+    tip += t('ui.levelTipFails', { n: fails });
+    if (fails >= 5) tip += t('ui.levelTipMasterActive');
+  }
+  tip += t('ui.levelTipTap');
+  return tip;
+}
+
 const UI = {
   screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'skillScreen', 'petScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
@@ -17369,32 +17627,37 @@ const UI = {
     if (this.modeHubId === 'arcade') {
       setStat('hubStatTraining', (() => {
         const rec = save.stats.trainMaxCombo || 0;
-        if (save.trainWins > 0) return `${save.trainWins} wins${rec ? ` · record ×${rec}` : ''}`;
-        if (rec > 0) return `Record combo ×${rec}`;
-        return 'Nog niet gespeeld';
+        if (save.trainWins > 0) {
+          return t('ui.hubStatTrainWins', {
+            wins: save.trainWins,
+            rec: rec ? ` · ${t('ui.hubStatTrainRecOnly', { n: rec })}` : '',
+          });
+        }
+        if (rec > 0) return t('ui.hubStatTrainRecOnly', { n: rec });
+        return t('ui.hubStatNotPlayed');
       })());
-      setStat('hubStatWall', save.bestWall > 0 ? `Record ${save.bestWall}` : 'Nog geen score');
+      setStat('hubStatWall', save.bestWall > 0 ? t('ui.hubStatWallRec', { n: save.bestWall }) : t('ui.hubStatWallEmpty'));
       const mats = save.stats?.matsCoinBest || 0;
       const pc = petCoinsBalance();
       setStat('hubStatMats', mats > 0 || pc > 0
-        ? `Best ${mats} munten${pc > 0 ? ` · ${pc} pet 🪙` : ''}`
-        : 'Munten → pet coins');
+        ? t('ui.hubStatCoinsBest', { n: mats, pet: pc > 0 ? t('ui.hubStatCoinsPet', { n: pc }) : '' })
+        : t('ui.hubStatCoinsEmpty'));
     } else if (this.modeHubId === 'collect') {
-      setStat('hubStatWeapons', `${weaponUnlockedCount()}/${WEAPONS.length} vrij`);
+      setStat('hubStatWeapons', t('ui.hubStatWeapons', { n: weaponUnlockedCount(), total: WEAPONS.length }));
       const skillLv = totalAllUpgradeLevels();
       const ready = countAllUpgradesReady();
       setStat('hubStatSkills', ready > 0
         ? t('ui.upgradeReady', { n: ready })
-        : (skillLv > 0 ? `Lv ${skillLv} totaal` : 'Shards in avontuur'));
+        : (skillLv > 0 ? t('ui.hubStatSkillLv', { n: skillLv }) : t('ui.hubStatSkillShards')));
       const petsN = petTamedCount();
       const eggsN = eggOwnedCount();
       const pc = petCoinsBalance();
       setStat('hubStatPets', eggsN > 0 || petsN > 0 || pc > 0
-        ? `dex ${petsN}/${PET_ROSTER.length} · ${pc} 🪙 · ei ${eggsN}/${EGG_ROSTER.length}`
-        : `${PET_ROSTER.length} dex · Mats → pet coins`);
+        ? t('ui.hubStatPetsFull', { pets: petsN, total: PET_ROSTER.length, coins: pc, eggs: eggsN, eggTotal: EGG_ROSTER.length })
+        : t('ui.hubStatPetsEmpty', { total: PET_ROSTER.length }));
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
-      setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
-      setStat('hubStatDex', `${dexCount()}/${SPECIES_ORDER.length} · +max HP`);
+      setStat('hubStatStyle', t('ui.hubStatStyle', { n: stylesN, total: STYLES.length }));
+      setStat('hubStatDex', t('ui.hubStatDex', { n: dexCount(), total: SPECIES_ORDER.length }));
     }
   },
 
@@ -17838,17 +18101,19 @@ const UI = {
         btn.style.setProperty('--isl-accent', isl.accent);
         const prog = islandProgress(isl.id);
         const pct = Math.round(prog.cleared / prog.total * 100);
+        const islName = islandLabel(isl.id, 'name');
+        const islSub = islandLabel(isl.id, 'sub');
         btn.innerHTML = `<span class="island-tab-ico">${isl.icon}</span>` +
-          `<span class="island-tab-n">${isl.id}</span><span class="island-tab-name">${isl.name}</span>` +
+          `<span class="island-tab-n">${isl.id}</span><span class="island-tab-name">${islName}</span>` +
           `<span class="island-prog-track island-tab-prog"><i style="width:${pct}%;background:${isl.accent}"></i></span>` +
           (ok ? '' : `<span class="island-tab-lock">${SVG_LOCK_ICON}</span>`);
-        btn.title = ok ? `${isl.name} · ${isl.sub}` : `Versla baas Lv ${isl.id * LEVELS_PER_ISLAND} om te openen`;
+        btn.title = ok ? `${islName} · ${islSub}` : t('ui.helpIslandLocked', { lv: isl.id * LEVELS_PER_ISLAND });
         if (ok) {
           btn.addEventListener('click', () => safeUiAction(() => {
             AudioSys.sfx('select');
             UI.advIslandPick = isl.id;
             UI.renderLevels();
-          }, 'pickIsland/' + isl.id, 'Eiland kiezen mislukt'));
+          }, 'pickIsland/' + isl.id, t('ui.errPickIsland')));
         }
         bar.appendChild(btn);
       }
@@ -17864,16 +18129,16 @@ const UI = {
         `<div class="island-info-head">` +
         `<span class="island-info-ico">${islMeta.icon}</span>` +
         `<div class="island-info-text">` +
-        `<b style="color:${islMeta.accent}">${islMeta.name}</b> · ${islMeta.sub}` +
-        `<div class="island-info-sub">Skill gate: wapens tot Lv <b>${wCap}</b> · ${prog.cleared}/${prog.total} levels · ${prog.stars}/${prog.maxStars}★` +
-        (pick < 5 ? ` · baas Lv ${pick * LEVELS_PER_ISLAND} → volgend eiland` : '') +
+        `<b style="color:${islMeta.accent}">${islandLabel(islMeta.id, 'name')}</b> · ${islandLabel(islMeta.id, 'sub')}` +
+        `<div class="island-info-sub">${t('ui.islandInfoSub', { cap: wCap, cleared: prog.cleared, total: prog.total, stars: prog.stars })}` +
+        (pick < 5 ? t('ui.islandBossGate', { lv: pick * LEVELS_PER_ISLAND }) : '') +
         `</div></div></div>` +
         `<div class="island-prog-track island-info-prog" title="${t('island.levelsProg')}"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
         `<div class="island-prog-track island-info-stars" title="${t('island.starsProg')}"><i style="width:${Math.round(prog.stars / Math.max(1, prog.maxStars) * 100)}%"></i></div>` +
         (() => {
           const onboard = adventureIslandHintLine();
           const mbLine = mb && mb >= range.start && mb <= range.end
-            ? `<span class="island-info-chip master">Meester-buff Lv ${mb} · +20%</span>`
+            ? `<span class="island-info-chip master">${t('ui.masterBuffChip', { lv: mb })}</span>`
             : '';
           const chips = [
             onboard ? `<span class="island-info-chip onboard">${onboard}</span>` : '',
@@ -17914,14 +18179,7 @@ const UI = {
           (save.advMasterBuff === n ? '<span class="lvl-master">+20%</span>' : '');
       if (!locked) {
         const best = save.stars[n] || 0;
-        let tip = `${infoLv.waves.length} golven · ${starHintLine()}`;
-        const traitLabels = [...new Set((infoLv.waveMeta || []).map((m) => m && m.label).filter(Boolean))];
-        if (traitLabels.length) tip += ' · ' + traitLabels.join(' · ');
-        if (boss) tip += pick * LEVELS_PER_ISLAND === n ? ' · eiland-baas — opent volgend eiland' : ' · tussendoor-baas';
-        if (best > 0) tip += ` · jouw ${'★'.repeat(best)}${'☆'.repeat(3 - best)}`;
-        if (fails > 0) tip += ` · ${fails}× verloren${fails >= 5 ? ' · Meester-buff actief' : ''}`;
-        tip += ' · Tik = Gooi & start · Lang = zonder gok';
-        el.title = tip;
+        el.title = levelTileTip(n, pick, infoLv, boss, best, fails);
         let holdT = null;
         let holdSkip = false;
         let holdX = 0;
@@ -17940,7 +18198,7 @@ const UI = {
               lastGambleRoll = null;
               startAdventureFromGamble(true);
               try { UI.toast(t('toast.skipGamble'), 1400); } catch (_) {}
-            }, 'skipGamble/' + n, 'Start mislukt');
+            }, 'skipGamble/' + n, t('ui.errStart'));
           }, 520);
         }, { passive: true });
         const cancelHold = () => { if (holdT) { clearTimeout(holdT); holdT = null; } };
@@ -17954,7 +18212,7 @@ const UI = {
         el.addEventListener('click', () => {
           if (holdSkip) { holdSkip = false; return; }
           if (!uiTapAllowed()) return;
-          safeUiAction(() => gokGooiStartLevel(n), 'gokStart/' + n, 'Level starten mislukt');
+          safeUiAction(() => gokGooiStartLevel(n), 'gokStart/' + n, t('ui.errLevelStart'));
         });
       }
       grid.appendChild(el);
@@ -17990,6 +18248,36 @@ const UI = {
         outEl.style.color = col;
       }
     }
+  },
+
+  showGambleRollFlash(g) {
+    const el = document.getElementById('levelRollFlash');
+    if (!el || !g) return;
+    const diceEl = document.getElementById('levelRollDice');
+    const sumEl = document.getElementById('levelRollSum');
+    const outEl = document.getElementById('levelRollOutcome');
+    const face = (d) => (typeof gambleDiceFace === 'function' ? gambleDiceFace(d) : '?');
+    if (diceEl) diceEl.textContent = `${face(g.d1)} ${face(g.d2)}`;
+    if (sumEl) sumEl.textContent = t('ui.gambleSumRoll', { d1: g.d1, d2: g.d2, sum: g.sum });
+    if (outEl) {
+      outEl.textContent = typeof gambleOutcomeLabelFromKey === 'function'
+        ? gambleOutcomeLabelFromKey(g)
+        : (g.outcome || '');
+      const col = g.outcome === 'superBoss' || g.outcome === 'miniBoss' ? '#ffb0b8'
+        : (g.outcome === 'superAlly' || g.outcome === 'ally') ? (GAMBLE_ALLIES[g.allyId]?.color || '#7cf5ff') : '#8fa3d9';
+      outEl.style.color = col;
+    }
+    el.hidden = false;
+    el.setAttribute('aria-hidden', 'false');
+    el.classList.add('visible');
+  },
+
+  hideGambleRollFlash() {
+    const el = document.getElementById('levelRollFlash');
+    if (!el) return;
+    el.classList.remove('visible');
+    el.hidden = true;
+    el.setAttribute('aria-hidden', 'true');
   },
 
   renderWeapons() {
@@ -18470,9 +18758,13 @@ const UI = {
       const wallet = petCoinsBalance();
       sumEl.style.display = 'block';
       sumEl.innerHTML =
-        `Getemd <b>${tamed}/${PET_ROSTER.length}</b> · actief <b>${active ? SPECIES[active.speciesId].name : 'geen'}</b>` +
-        ` · <b>${wallet} pet coins</b>` +
-        `<div style="margin-top:6px;font-size:12px;opacity:.85">Speel <b>Mats</b> voor pet coins (2 gouden munten = 1 🪙). Koop pets hier, of tem via kills in het monsterboek. Pets volgen je in avontuur & training.</div>`;
+        t('ui.petSummaryTamed', {
+          tamed,
+          total: PET_ROSTER.length,
+          active: active ? SPECIES[active.speciesId].name : t('ui.petNone'),
+          wallet,
+        }) +
+        `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.petCoinTip')}</div>`;
     }
     const list = document.getElementById('petList');
     if (!list) return;
