@@ -48,6 +48,7 @@ class Game {
         weapon: wpn, color: '#f2f5ff',
         speed: Math.round(260 * (pst.speedMul || 1)),
         rosterId: 'hero',
+        vsSpecial: activeJutsuId(),
       });
       applyPlayerStyle(this.player);
       applyStyleBonusesToPlayer(this, this.player);

@@ -5,11 +5,11 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.83';
+const APP_VERSION = '1.17.84';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 201;
+const SW_CACHE_REV = 202;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
-  eggPets: {}, activeEggPet: null, eggDaily: null,
+  eggPets: {}, activeEggPet: null, eggDaily: null, activeJutsu: 'rasengan',
 
 
 
@@ -450,6 +450,7 @@ function readSaveJson(raw) {
     if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
     if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;
+    if (typeof parsed.activeJutsu === 'string') merged.activeJutsu = parsed.activeJutsu;
     if (typeof parsed.lang === 'string' && SUPPORTED_LANGS.includes(parsed.lang)) merged.lang = parsed.lang;
     return merged;
   } catch (e) {
@@ -752,6 +753,12 @@ function sanitizeSave(s) {
   out.eggPets = cleanEggs;
   if (out.activeEggPet && !cleanEggs[out.activeEggPet]) out.activeEggPet = null;
   else if (out.activeEggPet && typeof EGG_BY_ID !== 'undefined' && !EGG_BY_ID[out.activeEggPet]) out.activeEggPet = null;
+
+  if (typeof JUTSU_SKILL_IDS !== 'undefined' && JUTSU_SKILL_IDS.includes(out.activeJutsu)) {
+    /* keep */
+  } else {
+    out.activeJutsu = 'rasengan';
+  }
   if (out.eggDaily && typeof out.eggDaily === 'object') {
     const dk = typeof out.eggDaily.date === 'string' ? out.eggDaily.date.slice(0, 10) : todayKey();
     out.eggDaily = {

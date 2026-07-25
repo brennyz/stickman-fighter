@@ -77,6 +77,18 @@ const SKILL_DEFS = {
 const SKILL_IDS = Object.keys(SKILL_DEFS);
 const JUTSU_SKILL_IDS = SKILL_IDS.filter((id) => SKILL_DEFS[id].group === 'jutsu');
 
+function activeJutsuId() {
+  const raw = (typeof save !== 'undefined' && save && save.activeJutsu) || 'rasengan';
+  return JUTSU_SKILL_IDS.includes(raw) ? raw : 'rasengan';
+}
+
+function equipJutsu(id) {
+  if (!JUTSU_SKILL_IDS.includes(id)) return false;
+  save.activeJutsu = id;
+  persist();
+  return true;
+}
+
 function skillEntry(id) {
   if (!SKILL_DEFS[id]) return null;
   if (!save.skillUpgrades || typeof save.skillUpgrades !== 'object') save.skillUpgrades = {};
@@ -223,7 +235,7 @@ function rollSkillShardDrop(monster) {
   const weights = [];
   for (const id of SKILL_IDS) {
     let w = 1;
-    if (SKILL_DEFS[id].group === 'jutsu') w = id === 'rasengan' ? 2.2 : 0.85;
+    if (SKILL_DEFS[id].group === 'jutsu') w = id === activeJutsuId() ? 2.2 : 0.85;
     if (skillLevel(id) >= skillMaxLevel(id)) w *= 0.35;
     weights.push({ id, w });
   }

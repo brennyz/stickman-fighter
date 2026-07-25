@@ -1625,12 +1625,24 @@ const UI = {
       const itemShards = save.stats?.itemShards || 0;
       const ready = countAllUpgradesReady();
       sumEl.style.display = 'block';
-      sumEl.innerHTML =
-        `Totaal <b>${totalAllUpgradeLevels()}</b> upgrade-levels · ` +
-        `<b>${skillShards}</b> skill · <b>${itemShards}</b> item shards` +
-        (ready > 0 ? ` · <b style="color:#ffd75e">${t('ui.upgradeReady', { n: ready })}</b>` : '') +
-        `<div class="upgrade-shard-hint">${t('ui.upgradeShardHint')}</div>` +
-        `<div style="font-size:11px;opacity:.72;margin-top:4px">Standaard max Lv ${UPGRADE_MAX_STANDARD} · mythische/extreme max Lv ${UPGRADE_MAX_EXTREME}</div>`;
+      if (tab === 'skills') {
+        const activeJ = activeJutsuId();
+        const activeName = `<b style="color:${SKILL_DEFS[activeJ]?.color || '#7cf5ff'}">${skillLabel(activeJ)}</b>`;
+        sumEl.innerHTML =
+          `${t('ui.jutsuActive', { name: activeName })} · ` +
+          `Totaal <b>${totalAllUpgradeLevels()}</b> upgrade-levels · ` +
+          `<b>${skillShards}</b> skill · <b>${itemShards}</b> item shards` +
+          (ready > 0 ? ` · <b style="color:#ffd75e">${t('ui.upgradeReady', { n: ready })}</b>` : '') +
+          `<div class="upgrade-shard-hint">${t('ui.upgradeShardHint')}</div>` +
+          `<div style="font-size:11px;opacity:.72;margin-top:4px">${t('ui.jutsuSelectHint')}</div>`;
+      } else {
+        sumEl.innerHTML =
+          `Totaal <b>${totalAllUpgradeLevels()}</b> upgrade-levels · ` +
+          `<b>${skillShards}</b> skill · <b>${itemShards}</b> item shards` +
+          (ready > 0 ? ` · <b style="color:#ffd75e">${t('ui.upgradeReady', { n: ready })}</b>` : '') +
+          `<div class="upgrade-shard-hint">${t('ui.upgradeShardHint')}</div>` +
+          `<div style="font-size:11px;opacity:.72;margin-top:4px">Standaard max Lv ${UPGRADE_MAX_STANDARD} · mythische/extreme max Lv ${UPGRADE_MAX_EXTREME}</div>`;
+      }
     }
     if (tab === 'skills') this.renderUpgradeSkills();
     else this.renderUpgradeItems(tab);
@@ -1656,8 +1668,10 @@ const UI = {
         const shards = skillShards(id);
         const cost = skillUpgradeCost(id);
         const canUp = skillCanUpgrade(id);
+        const isJutsu = g.id === 'jutsu';
+        const active = isJutsu && activeJutsuId() === id;
         const el = document.createElement('div');
-        el.className = 'card skill-card' + (canUp ? ' claimable' : '') + (lv >= maxLv ? ' claimed' : '');
+        el.className = 'card skill-card' + (canUp ? ' claimable' : '') + (lv >= maxLv ? ' claimed' : '') + (active ? ' sel' : '');
         el.style.borderColor = def.color + '88';
         const name = skillLabel(id);
         const now = skillUpgradeSummary(id);
@@ -1666,14 +1680,32 @@ const UI = {
           ? t('ui.skillShards', { cur: shards, cost })
           : t('ui.skillMax');
         const desc = skillDesc(id);
+        const activeBadge = active ? ` <span class="rar-pill" style="color:#7cf5ff;border-color:#7cf5ff">${t('ui.jutsuActiveBadge')}</span>` : '';
         el.innerHTML =
           `<div class="skill-card-body"><div class="cname" style="color:${def.color}">${name} ` +
-          `<span class="rar-pill" style="color:${def.color};border-color:${def.color}">${t('ui.skillLevel', { lv, max: maxLv })}</span></div>` +
+          `<span class="rar-pill" style="color:${def.color};border-color:${def.color}">${t('ui.skillLevel', { lv, max: maxLv })}</span>${activeBadge}</div>` +
           (desc ? `<div class="cinfo" style="opacity:.82;font-size:12px">${desc}</div>` : '') +
           `<div class="cinfo">${shardLine}</div>` +
           `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:4px"><b>${t('ui.skillNow')}:</b> ${now}</div>` +
           (next ? `<div class="cinfo" style="opacity:.75;font-size:11px;margin-top:3px"><b>${t('ui.skillNext')}:</b> ${next}</div>` : '') +
+          (isJutsu ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:4px">${active ? t('ui.jutsuEquipped') : t('ui.jutsuTapEquip')}</div>` : '') +
           `</div>`;
+        if (isJutsu && !active) {
+          const equipBtn = document.createElement('button');
+          equipBtn.type = 'button';
+          equipBtn.className = 'btn claim-btn';
+          equipBtn.textContent = t('ui.jutsuEquip');
+          equipBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            safeUiAction(() => {
+              if (!equipJutsu(id)) return;
+              AudioSys.sfx('select');
+              UI.toast(t('toast.jutsuEquipped', { name }), 2200);
+              this.renderUpgrades();
+            }, 'equipJutsu/' + id, 'Jutsu kiezen mislukt');
+          });
+          el.appendChild(equipBtn);
+        }
         if (canUp) {
           const btn = document.createElement('button');
           btn.type = 'button';
