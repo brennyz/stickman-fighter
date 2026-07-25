@@ -465,6 +465,17 @@
       box-shadow:0 8px 24px rgba(0,0,0,.4); animation: toastIn .35s ease; max-width:90vw; text-align:center; }
   @keyframes toastIn { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:none; } }
 
+  .version-update-overlay { position:fixed; inset:0; z-index:55; display:flex; align-items:center; justify-content:center;
+      padding:max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+      background:rgba(4,8,20,.78); backdrop-filter:blur(4px); }
+  .version-update-overlay[hidden] { display:none !important; }
+  .version-update-card { width:min(92vw,440px); background:linear-gradient(165deg,#141c38,#0a1024); border:1px solid rgba(124,245,255,.35);
+      border-radius:18px; padding:18px 18px 14px; box-shadow:0 16px 48px rgba(0,0,0,.55); }
+  .version-update-title { margin:0 0 10px; font-family:'Black Ops One',sans-serif; font-size:22px; color:#ffd75e; letter-spacing:.04em; }
+  .version-update-body { margin:0 0 14px; font-size:14px; line-height:1.5; color:#cfe0ff; white-space:pre-line; }
+  .version-update-actions { display:flex; flex-direction:column; gap:8px; }
+  .version-update-actions .btn { width:100%; justify-content:center; margin:0; }
+
   #tutBox { max-width:min(92vw,520px); background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14);
       border-radius:18px; padding:18px 20px; margin:8px 0 16px; font-size:15px; color:#d5e0ff; line-height:1.45; }
   #tutBox li { margin:6px 0 6px 18px; }

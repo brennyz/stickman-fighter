@@ -425,14 +425,7 @@ function wireNetStatusTap() {
   el.dataset.sfNetTap = '1';
   const run = () => {
     if (!window.__sfSwUpdateReady) return;
-    safeAsync((async () => {
-      if (typeof window.applySwUpdate === 'function') {
-        const ok = await window.applySwUpdate();
-        if (!ok && typeof window.forceFreshVersion === 'function') await window.forceFreshVersion();
-      } else if (typeof window.forceFreshVersion === 'function') {
-        await window.forceFreshVersion();
-      }
-    })(), 'swUpdateTap', 'Update mislukt — tik Instellingen → Verse versie');
+    safeAsync(runVersionUpdateWithSavePrompt(), 'swUpdateTap', t('versionUpdate.fail'));
   };
   el.addEventListener('click', run);
   el.addEventListener('keydown', (e) => {
@@ -474,6 +467,7 @@ function bootGame() {
   safeCall(wireNetStatusTap, 'netTap');
   safeCall(() => UI.syncTouchClass(), 'touch');
   safeCall(maybeWelcomeToast, 'welcome');
+  safeCall(maybeOfferVersionUpdateSave, 'versionRestore');
   if (!window.__sfGlobalErr) {
     window.__sfGlobalErr = true;
     window.addEventListener('error', (ev) => {

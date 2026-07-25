@@ -24,6 +24,13 @@
 <body>
 <button id="pauseBtn" aria-label="Pauze">&#10074;&#10074;</button>
 <div id="toastHost"></div>
+<div id="versionUpdateOverlay" class="version-update-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="versionUpdateTitle">
+  <div class="version-update-card">
+    <h3 id="versionUpdateTitle" class="version-update-title">Versie ophalen</h3>
+    <p id="versionUpdateBody" class="version-update-body"></p>
+    <div id="versionUpdateActions" class="version-update-actions"></div>
+  </div>
+</div>
 <div id="netStatus" hidden aria-live="polite">Offline</div>
 
 <div id="tunnelBootOverlay" hidden aria-live="polite" aria-busy="false">
@@ -469,7 +476,7 @@
 </script>
 
 <script src="tunnel-check.js?v=204"></script>
-<script src="game.js?v=198"></script>
+<script src="game.js?v=199"></script>
 
 
 

@@ -2,10 +2,12 @@
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
+const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
+const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.80';
+const APP_VERSION = '1.17.81';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 198;
+const SW_CACHE_REV = 199;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -549,6 +551,93 @@ function restoreSaveFromBackup() {
     sfReportError('restoreBackup', err, 'Backup herstellen mislukt');
     return false;
   }
+}
+
+function saveHasProgress(s) {
+  const st = s || save;
+  if (!st || typeof st !== 'object') return false;
+  if ((st.lvl || 1) > 1) return true;
+  if ((st.unlocked || 1) > 1) return true;
+  if ((st.stats && st.stats.kills) > 0) return true;
+  if ((st.stats && st.stats.advWins) > 0) return true;
+  if (Object.keys(st.dex || {}).length > 0) return true;
+  if (Object.keys(st.achievements || {}).length > 0) return true;
+  if (Object.keys(st.summons || {}).length > 0) return true;
+  if (Object.keys(st.pets || {}).length > 0) return true;
+  return false;
+}
+
+/** Bewaar save vóór versie-ophalen — blijft staan tot speler na update kiest. */
+function stashSaveForVersionUpdate() {
+  try {
+    persist();
+    syncBackupFromPrimary();
+    const clean = sanitizeSave(save);
+    const payload = {
+      schema: SAVE_EXPORT_SCHEMA,
+      fromApp: APP_VERSION,
+      stashedAt: new Date().toISOString(),
+      save: clean,
+      summary: typeof saveExportSummaryLine === 'function' ? saveExportSummaryLine(clean) : `Lv ${clean.lvl}`,
+    };
+    localStorage.setItem(VERSION_UPDATE_SAVE_KEY, JSON.stringify(payload));
+    localStorage.setItem(VERSION_UPDATE_FLAG_KEY, '1');
+    return true;
+  } catch (err) {
+    sfReportError('versionStash', err, 'Save veiligstellen mislukt');
+    return false;
+  }
+}
+
+function peekVersionUpdateSave() {
+  try {
+    const raw = localStorage.getItem(VERSION_UPDATE_SAVE_KEY);
+    if (!raw || raw.length > 200000) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || !parsed.save) return null;
+    return parsed;
+  } catch (_) {
+    return null;
+  }
+}
+
+function clearVersionUpdateSave() {
+  try {
+    localStorage.removeItem(VERSION_UPDATE_SAVE_KEY);
+    localStorage.removeItem(VERSION_UPDATE_FLAG_KEY);
+  } catch (_) {}
+}
+
+function applyVersionUpdateSave() {
+  const stash = peekVersionUpdateSave();
+  if (!stash || !stash.save) return false;
+  try {
+    save = sanitizeSave(stash.save);
+    if (!persist()) {
+      userToast('Save geladen maar opslaan mislukt — export in Instellingen', 4200);
+      return false;
+    }
+    clearVersionUpdateSave();
+    checkAchievements();
+    if (typeof UI !== 'undefined') {
+      UI.renderMenu();
+      if (UI.renderMissions) UI.renderMissions();
+      if (UI.renderSettings) UI.renderSettings();
+    }
+    return true;
+  } catch (err) {
+    sfReportError('versionApply', err, 'Save laden mislukt');
+    return false;
+  }
+}
+
+function versionUpdateRestorePending() {
+  try {
+    if (localStorage.getItem(VERSION_UPDATE_FLAG_KEY) !== '1') return false;
+  } catch (_) {
+    return false;
+  }
+  return !!peekVersionUpdateSave();
 }
 
 /** Schrijf hoofd-save opnieuw naar backup (fix drift zonder progressie te verliezen). */
