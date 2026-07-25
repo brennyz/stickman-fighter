@@ -27,6 +27,9 @@
         radial-gradient(ellipse at 50% 100%, rgba(67,178,91,.08), transparent 40%),
         linear-gradient(180deg, #151b33 0%, #0a0d18 70%);
       color:#fff; z-index:20; pointer-events:auto; touch-action:pan-y; overscroll-behavior:contain; }
+  .screen:has(.sub-home-bar) {
+    scroll-padding-bottom: max(88px, calc(env(safe-area-inset-bottom) + 76px));
+  }
   .screen button, .screen .btn, .screen .lvl, .screen .char-card, .screen .hub-tile,
   .screen .island-tab, .screen .tog, .screen .wrow, .screen .style-card,
   .screen .skill-card, .screen .super-card, .screen .dex-filter-btn { touch-action:manipulation; }
@@ -141,6 +144,9 @@
     border-top: 1px solid rgba(255,255,255,.07);
   }
   .menu-landing-footer .menu-dock { margin: 0; padding-top: 4px; border-top: none; }
+  .menu-lang-wrap { width: 100%; margin: 0 0 8px; text-align: center; }
+  .menu-lang-lbl { font-weight: 900; color: #7cf5ff; font-size: 11px; margin-bottom: 6px; letter-spacing: .06em; }
+  .menu-lang-bar { width: 100%; margin: 0; justify-content: center; }
   .menu-landing-inner > .btn.mode-btn.b-continue { width: 100%; margin: 2px 0 0; min-height: 54px; }
   .hub-tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin: 4px 0 0; }
   .hub-tile {
@@ -241,6 +247,18 @@
   body.big-touch .hub-tile-grid { gap: 12px; }
   body.big-touch .back-btn { min-width: 118px; padding-left: 18px; padding-right: 22px; }
   body.big-touch .mode-hub-panel .hub-mode-row { min-height: 58px; padding-top: 14px; padding-bottom: 14px; }
+  body.big-touch .menu-dock .btn.tog { min-height: 52px; padding: 10px 6px 9px; font-size: 10px; }
+  body.big-touch .dex-filter-btn,
+  body.big-touch .menu-lang-bar .dex-filter-btn { min-height: 44px; padding: 10px 14px; font-size: 13px; }
+  body.big-touch .char-saga-bar button { min-height: 44px; padding: 10px 12px; font-size: 13px; }
+  body.big-touch .char-arena-actions .btn { min-height: 48px; font-size: 13px; }
+  body.big-touch .char-fight-btn { min-height: 56px; font-size: 20px; }
+  body.big-touch .pick-pill { min-height: 48px; padding: 12px 16px; font-size: 15px; }
+  body.big-touch .island-tab { min-height: 48px; padding: 12px 10px; }
+  body.big-touch .char-icon-chip { min-width: 84px; min-height: 72px; padding: 8px 6px 10px; }
+  body.big-touch #pauseScreen .mode-btn,
+  body.big-touch #resultScreen .mode-btn { min-height: 56px; font-size: min(5vw, 20px); }
+  body.big-touch #helpScreen #helpOk { min-height: 58px; font-size: min(5vw, 20px); }
   .menu-tagline {
     margin: 8px 0 4px; font-size: min(3.6vw, 13px); font-weight: 700;
     letter-spacing: .08em; color: #9db1e3; text-align: center; line-height: 1.45;
@@ -667,7 +685,8 @@
   .char-card.featured { background:linear-gradient(180deg,rgba(255,215,94,.12),rgba(255,255,255,.04)); }
 
   /* Character select — arcade arena */
-  #charSelectScreen.char-select-arena { position:relative; overflow:hidden; padding-bottom:0;
+  #charSelectScreen.char-select-arena { position:relative; overflow-x:hidden; overflow-y:auto;
+    padding-bottom:max(16px, env(safe-area-inset-bottom)); scroll-padding-bottom:120px;
     background:linear-gradient(180deg,#0a0e22 0%,#121832 38%,#0d1228 100%); }
   #charSelectScreen.char-select-arena.active { flex-direction:column; align-items:stretch; justify-content:flex-start; }
   #charSelectScreen.char-select-arena .char-arena-body { flex:1; min-height:0; overflow-y:auto; overflow-x:hidden;
@@ -707,11 +726,19 @@
   .char-arena-preview { width:min(94vw,720px); font-size:12px; padding:10px 14px; margin:0 0 10px; text-align:center; color:#cfe0ff;
     background:rgba(0,0,0,.32); border:1px solid rgba(124,245,255,.18); border-radius:14px; }
   .char-arena-grid-wrap { border-color:rgba(124,245,255,.12); background:rgba(0,0,0,.26); }
-  .char-arena-actions { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:min(94vw,720px); margin:8px 0; }
+  .char-arena-actions { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:min(94vw,720px); margin:8px 0 0; }
+  .char-arena-footer {
+    position: sticky; bottom: 0; z-index: 3; width: min(94vw, 720px); margin: 10px auto 0;
+    padding: 10px 0 max(8px, env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, transparent, rgba(13,18,40,.92) 22%, rgba(13,18,40,.98) 55%);
+    border-top: 1px solid rgba(124,245,255,.12);
+  }
+  .char-arena-footer .char-fight-btn { margin-top: 8px; }
+  .char-fight-btn:disabled { opacity: .45; filter: grayscale(.35); box-shadow: none; transform: none; }
   .char-arena-tip { width:min(92vw,640px); margin-top:14px; font-size:12px; opacity:.92; }
-  .char-fight-btn { width:min(94vw,480px); margin:0 auto; font-size:18px; font-weight:900; letter-spacing:.06em;
-    background:linear-gradient(180deg,#ff6b6b,#c92a2a); box-shadow:0 6px 0 #6b1515, 0 0 20px rgba(255,107,107,.25);
-    min-height:52px; justify-content:center; }
+  #helpScreen #helpOk { width: min(86vw, 420px); min-height: 52px; margin-top: 8px; }
+  .char-fight-btn { width:min(86vw,420px); margin:10px auto 0; font-size:18px; font-weight:900; letter-spacing:.06em;
+    background:linear-gradient(180deg,#ff6b6b,#c92a2a); box-shadow:0 6px 0 #6b1515, 0 0 20px rgba(255,107,107,.25); }
   .char-fight-btn:active { transform:translateY(4px); box-shadow:0 2px 0 #6b1515; }
   .char-fight-dock { position:sticky; bottom:0; z-index:4; width:min(94vw,720px); margin-top:8px;
     padding:10px 0 max(12px, env(safe-area-inset-bottom));
@@ -865,6 +892,7 @@
   body.high-contrast .char-fight-btn { border: 2px solid rgba(255,255,255,.4); box-shadow: 0 4px 0 #6b1515; }
   body.reduced-motion .char-fight-btn { box-shadow: 0 4px 0 #6b1515; }
   body.reduced-motion .char-arena-head { text-shadow: 0 2px 0 rgba(0,0,0,.45); }
+  body.high-contrast .menu-lang-bar .dex-filter-btn.active { border-width: 2px; }
   .btn.tog.tog-alert { box-shadow: 0 0 0 2px rgba(255,215,94,.7); color: #ffd75e; font-weight: 800; }
   .mission-flow-host { width:min(92vw,480px); margin:0 auto 10px; }
   .mission-flow-bar { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px;

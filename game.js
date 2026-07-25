@@ -240,11 +240,16 @@ function layoutFloaterPos(game, x, y, txt, size, layer) {
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
-const SAVE_EXPORT_SCHEMA = 2;
-const APP_VERSION = '1.17.47';
+const SAVE_EXPORT_SCHEMA = 3;
+const APP_VERSION = '1.17.67';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 173;
-const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', dex: {}, summons: {},
+const SW_CACHE_REV = 193;
+const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
+  eggPets: {}, activeEggPet: null, eggDaily: null,
+
+
+
+
   advIsland: 0, advFails: {}, advMasterBuff: null,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -1886,10 +1891,22 @@ function renderLangSwitchBar(bar) {
   bar.innerHTML = SUPPORTED_LANGS.map((code) =>
     `<button type="button" class="dex-filter-btn${cur === code ? ' active' : ''}" data-lang="${code}">${LANG_LABELS[code]}</button>`
   ).join('');
-  if (!bar.dataset.bound) {
-    bar.dataset.bound = '1';
-    bar.addEventListener('click', onLangSwitchClick);
-  }
+  bar.querySelectorAll('[data-lang]').forEach((btn) => {
+    const code = btn.getAttribute('data-lang');
+    if (!code) return;
+    btn.dataset.langBound = '1';
+    bindPress(btn, () => {
+      if (code === getLang()) return;
+      safeUiAction(() => {
+        setLang(code);
+        AudioSys.sfx('select');
+        UI.toast(t('settings.langChanged', { lang: LANG_LABELS[code] }), 2200);
+        UI.renderSettings();
+        UI.renderMenu();
+        if (typeof UI.renderModeHub === 'function') UI.renderModeHub();
+      }, 'setLang/' + code, t('ui.langSwitchFail') || 'Language switch failed');
+    });
+  });
 }
 
 function renderLangSwitch() {
@@ -21126,38 +21143,13 @@ const UI = {
       if (pick) pick.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     });
     const fightBtn = document.getElementById('btnCharFight');
-    const fightSummary = document.getElementById('charFightSummary');
-    const ready = !!(vsSelect.p1 && vsSelect.p2);
-    if (fightSummary) {
-      if (ready) {
-        fightSummary.textContent = t('ui.charFightSummary', { p1: e1.name, p2: e2.name });
-      } else if (this.charPickStep === 1) {
-        fightSummary.textContent = t('ui.charFightNeedP1');
-      } else {
-        fightSummary.textContent = t('ui.charFightNeedP2', { p1: e1.name });
-      }
-    }
     if (fightBtn) {
-      fightBtn.disabled = !ready;
-      fightBtn.textContent = ready
-        ? t('ui.charFightReady', { p1: e1.name, p2: e2.name })
-        : t('ui.charFight');
+      fightBtn.disabled = !(vsSelect.p1 && vsSelect.p2);
+      fightBtn.setAttribute('aria-disabled', fightBtn.disabled ? 'true' : 'false');
     }
     const backBtn = document.getElementById('charSelectBack');
     if (backBtn) {
       backBtn.textContent = this.charPickStep === 2 ? t('ui.charBackP1') : t('ui.charBackMenu');
-    }
-    const backP = document.getElementById('charPickBackP1');
-    if (backP) {
-      backP.style.display = this.charPickStep === 2 ? 'flex' : 'none';
-      backP.textContent = t('ui.charBackP1');
-      if (!backP.dataset.bound) {
-        backP.dataset.bound = '1';
-        bindPress(backP, () => {
-          AudioSys.sfx('select');
-          this.charSelectBackToP1();
-        });
-      }
     }
     const bindPickPill = (id, step) => {
       const pill = document.getElementById(id);
@@ -21449,9 +21441,7 @@ const UI = {
         }).catch(() => {});
       }
     }
-    } catch (err) {
-      sfReportError('renderMenu', err, 'Menu kon niet ververst worden');
-    }
+    if (typeof renderLangSwitch === 'function') renderLangSwitch();
   },
 
   renderMissions() {
@@ -21578,7 +21568,7 @@ const UI = {
         btn.type = 'button';
         btn.className = 'btn claim-btn';
         btn.textContent = t('missionsUi.dailyClaimBtn', { xp: def.xp });
-        btn.addEventListener('click', () => safeUiAction(() => {
+        bindPress(btn, () => safeUiAction(() => {
           AudioSys.sfx('select');
           claimDailyTask(task.id);
         }, 'claimDaily/' + task.id, 'Claim mislukt — probeer opnieuw'));
@@ -21588,7 +21578,7 @@ const UI = {
         btn.type = 'button';
         btn.className = 'btn mission-play-btn';
         btn.textContent = t('missionsUi.dailyPlayBtn', { mode: dailyModeLabel(playTarget.mode) });
-        btn.addEventListener('click', () => safeUiAction(() => goDailyPlayTarget(task.id), 'dailyPlay/' + task.id, 'Kon modus niet openen'));
+        bindPress(btn, () => safeUiAction(() => goDailyPlayTarget(task.id), 'dailyPlay/' + task.id, 'Kon modus niet openen'));
         el.appendChild(btn);
       }
       dailyHost.appendChild(el);
@@ -21629,16 +21619,13 @@ const UI = {
       achFilterHost.innerHTML =
         mk('all', t('missionsUi.filterAll')) + mk('near', t('missionsUi.filterNear')) +
         mk('open', t('missionsUi.filterOpen')) + mk('done', t('missionsUi.filterDone'));
-      if (!achFilterHost.dataset.bound) {
-        achFilterHost.dataset.bound = '1';
-        achFilterHost.addEventListener('click', (e) => {
-          const btn = e.target.closest('[data-ach-filter]');
-          if (!btn) return;
+      achFilterHost.querySelectorAll('[data-ach-filter]').forEach((btn) => {
+        bindPress(btn, () => {
           AudioSys.sfx('select');
           UI.achFilter = btn.dataset.achFilter || 'all';
           UI.renderMissions();
         });
-      }
+      });
     }
     const achSpot = document.getElementById('achSpotlight');
     if (achSpot) {
@@ -21814,7 +21801,7 @@ const UI = {
           (ok ? '' : `<span class="island-tab-lock">${SVG_LOCK_ICON}</span>`);
         btn.title = ok ? `${islName} · ${islSub}` : t('ui.helpIslandLocked', { lv: isl.id * LEVELS_PER_ISLAND });
         if (ok) {
-          btn.addEventListener('click', () => safeUiAction(() => {
+          bindPress(btn, () => safeUiAction(() => {
             AudioSys.sfx('select');
             UI.advIslandPick = isl.id;
             UI.renderLevels();
@@ -22094,8 +22081,7 @@ const UI = {
           ? `Avontuur Lv ${base.unlock}`
           : (save.weapon === w.id ? '&#10004; gekozen' : 'kies'));
       el.appendChild(right);
-      if (!locked) el.addEventListener('click', (e) => {
-        if (!uiTapAllowed(e)) return;
+      if (!locked) bindPress(el, () => {
         safeUiAction(() => {
           save.weapon = w.id;
           if (!persistOrToast('wapen')) return;
@@ -22337,17 +22323,15 @@ const UI = {
         cosmeticHtml +
         dexNextAchievementHtml();
     }
-    const bindFilterBar = (host, attr, stateKey, mkButtons) => {
+    const bindFilterBar = (host, attr, stateKey, mkButtons, renderFn) => {
       if (!host) return;
       host.innerHTML = mkButtons();
-      if (host.dataset.bound) return;
-      host.dataset.bound = '1';
-      host.addEventListener('click', (e) => {
-        const btn = e.target.closest(`[${attr}]`);
-        if (!btn) return;
-        AudioSys.sfx('select');
-        UI[stateKey] = btn.getAttribute(attr) || 'all';
-        UI.renderDex();
+      host.querySelectorAll(`[${attr}]`).forEach((btn) => {
+        bindPress(btn, () => {
+          AudioSys.sfx('select');
+          UI[stateKey] = btn.getAttribute(attr) || 'all';
+          (renderFn || (() => UI.renderDex())).call(UI);
+        });
       });
     };
     const rarityTotals = dexRarityTotals();
@@ -22447,16 +22431,13 @@ const UI = {
       bar.innerHTML =
         `<button type="button" class="dex-filter-btn${tab === 'dex' ? ' active' : ''}" data-pet-tab="dex">Dex · ${petTamedCount()}/${PET_ROSTER.length}</button>` +
         `<button type="button" class="dex-filter-btn${tab === 'egg' ? ' active' : ''}" data-pet-tab="egg">Ei arcade · ${eggOwnedCount()}/${EGG_ROSTER.length}</button>`;
-      if (!bar.dataset.bound) {
-        bar.dataset.bound = '1';
-        bar.addEventListener('click', (e) => {
-          const btn = e.target.closest('[data-pet-tab]');
-          if (!btn) return;
+      bar.querySelectorAll('[data-pet-tab]').forEach((btn) => {
+        bindPress(btn, () => {
           AudioSys.sfx('select');
           UI.petTab = btn.getAttribute('data-pet-tab') || 'dex';
           UI.renderPets();
         });
-      }
+      });
     }
     const dexPanel = document.getElementById('petDexPanel');
     const eggPanel = document.getElementById('petEggPanel');
@@ -22540,8 +22521,7 @@ const UI = {
       }
       el.appendChild(right);
       if (tamed) {
-        el.addEventListener('click', (e) => {
-          if (!uiTapAllowed(e)) return;
+        bindPress(el, () => {
           safeUiAction(() => {
             if (active) {
               equipPet(null);
@@ -22555,8 +22535,7 @@ const UI = {
           }, 'equipPet/' + def.id, 'Pet kiezen mislukt');
         });
       } else if (canBuy) {
-        el.addEventListener('click', (e) => {
-          if (!uiTapAllowed(e)) return;
+        bindPress(el, () => {
           safeUiAction(() => {
             const res = buyPetWithCoins(def.id);
             if (!res) {
@@ -22592,8 +22571,7 @@ const UI = {
         `<div>Dag-ei openen<small>Gratis arcade-pull · vandaag</small></div>`;
       if (!crackBtn.dataset.bound) {
         crackBtn.dataset.bound = '1';
-        crackBtn.addEventListener('click', (e) => {
-          if (!uiTapAllowed(e)) return;
+        bindPress(crackBtn, () => {
           safeUiAction(() => {
             const res = crackDailyEgg();
             if (!res) {
@@ -22643,8 +22621,7 @@ const UI = {
       }
       el.appendChild(right);
       if (owned) {
-        el.addEventListener('click', (e) => {
-          if (!uiTapAllowed(e)) return;
+        bindPress(el, () => {
           safeUiAction(() => {
             if (active) {
               equipEggPet(null);
@@ -22718,8 +22695,7 @@ const UI = {
         : (styleSkillGated(st) ? t('ui.styleIslandGate', { lvl: st.needLvl }) : styleLabel(st, 'hint'));
       el.appendChild(sub);
       if (ok) {
-        el.addEventListener('click', (e) => {
-          if (!uiTapAllowed(e)) return;
+        bindPress(el, () => {
           safeUiAction(() => {
             save.style = st.id;
             if (!persistOrToast('stijl')) return;
@@ -23334,7 +23310,7 @@ bindPress(btnMissions, () => {
   UI.show('missionsScreen');
 });
 const dailyClaimAllBtn = document.getElementById('dailyClaimAllBtn');
-if (dailyClaimAllBtn) dailyClaimAllBtn.addEventListener('click', () => {
+if (dailyClaimAllBtn) bindPress(dailyClaimAllBtn, () => {
   try {
     AudioSys.init(); AudioSys.sfx('select'); claimAllDailyReady();
   } catch (err) {
@@ -23342,7 +23318,7 @@ if (dailyClaimAllBtn) dailyClaimAllBtn.addEventListener('click', () => {
   }
 });
 const dailyBonusBtn = document.getElementById('dailyBonusBtn');
-if (dailyBonusBtn) dailyBonusBtn.addEventListener('click', () => {
+if (dailyBonusBtn) bindPress(dailyBonusBtn, () => {
   try {
     AudioSys.sfx('select'); claimDailyDayBonus();
   } catch (err) {

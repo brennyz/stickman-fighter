@@ -673,10 +673,22 @@ function renderLangSwitchBar(bar) {
   bar.innerHTML = SUPPORTED_LANGS.map((code) =>
     `<button type="button" class="dex-filter-btn${cur === code ? ' active' : ''}" data-lang="${code}">${LANG_LABELS[code]}</button>`
   ).join('');
-  if (!bar.dataset.bound) {
-    bar.dataset.bound = '1';
-    bar.addEventListener('click', onLangSwitchClick);
-  }
+  bar.querySelectorAll('[data-lang]').forEach((btn) => {
+    const code = btn.getAttribute('data-lang');
+    if (!code) return;
+    btn.dataset.langBound = '1';
+    bindPress(btn, () => {
+      if (code === getLang()) return;
+      safeUiAction(() => {
+        setLang(code);
+        AudioSys.sfx('select');
+        UI.toast(t('settings.langChanged', { lang: LANG_LABELS[code] }), 2200);
+        UI.renderSettings();
+        UI.renderMenu();
+        if (typeof UI.renderModeHub === 'function') UI.renderModeHub();
+      }, 'setLang/' + code, t('ui.langSwitchFail') || 'Language switch failed');
+    });
+  });
 }
 
 function renderLangSwitch() {
