@@ -122,56 +122,13 @@ function normalizeSkillUpgrades() {
   save.skillUpgrades = clean;
 }
 
-function snapshotSkillUpgradeTracks(st) {
-  const snap = {};
-  const raw = (st && st.skillUpgrades && typeof st.skillUpgrades === 'object') ? st.skillUpgrades : {};
-  for (const [id, e] of Object.entries(raw)) {
-    if (!SKILL_DEFS[id] || !e || typeof e !== 'object') continue;
-    const lv = Math.floor(Number(e.level) || 0);
-    const shards = Math.floor(Number(e.shards) || 0);
-    if (lv > 0 || shards > 0) snap[id] = { level: lv, shards };
-  }
-  return snap;
-}
-
-function countSkillUpgradeLevels(st) {
-  let n = 0;
-  const raw = (st && st.skillUpgrades) || {};
-  for (const id of SKILL_IDS) {
-    n += Math.floor(Number(raw[id] && raw[id].level) || 0);
-  }
-  return n;
-}
-
-function restoreLostSkillUpgrades(snap, out) {
-  if (!snap || !out) return out;
-  for (const [id, raw] of Object.entries(snap)) {
-    if (!SKILL_DEFS[id]) continue;
-    const cur = (out.skillUpgrades || {})[id];
-    const curLv = cur ? Math.floor(Number(cur.level) || 0) : 0;
-    const curSh = cur ? Math.floor(Number(cur.shards) || 0) : 0;
-    const prevLv = Math.floor(Number(raw.level) || 0);
-    const prevSh = Math.floor(Number(raw.shards) || 0);
-    if (prevLv > curLv || (prevLv === curLv && prevSh > curSh)) {
-      const merged = sanitizeSkillUpgradeEntry(id, {
-        level: Math.max(prevLv, curLv),
-        shards: Math.max(prevSh, curSh),
-      });
-      if (merged) {
-        if (!out.skillUpgrades) out.skillUpgrades = {};
-        out.skillUpgrades[id] = merged;
-      }
-    }
-  }
-  return out;
-}
-
-function skillLevel(id) {
+function skillLevel(id, s) {
   const def = SKILL_DEFS[id];
   if (!def) return 0;
-  const e = skillEntry(id);
-  if (!e) return 0;
-  return clamp(Math.floor(Number(e.level) || 0), 0, skillMaxLevel(id));
+  const bag = (s && s.skillUpgrades) || (save && save.skillUpgrades) || {};
+  const raw = bag[id];
+  if (!raw) return 0;
+  return clamp(Math.floor(Number(raw.level) || 0), 0, skillMaxLevel(id));
 }
 
 function skillShards(id) {
@@ -194,7 +151,7 @@ function skillCanUpgrade(id) {
   return skillShards(id) >= cost;
 }
 
-function skillBonuses(id) {
+function skillBonuses(id, s) {
   const def = SKILL_DEFS[id];
   const b = {
     dmgMul: 1, radius: 0, speedMul: 1, lifeMul: 1, windupMul: 1, energySave: 0,
@@ -202,7 +159,8 @@ function skillBonuses(id) {
     extraShot: 0, pierceRepeat: 0, pullMul: 1,
   };
   if (!def) return b;
-  const lv = skillLevel(id);
+  const lv = skillLevel(id, s);
+  if (lv <= 0) return b;
   for (let i = 0; i < lv; i++) {
     const s = def.steps[i];
     if (!s) continue;
@@ -263,7 +221,46 @@ function trySkillUpgrade(id) {
   if (next > skillMaxLevel(id)) return false;
   e.shards = clamp(skillShards(id) - cost, 0, SKILL_SHARD_CAP);
   e.level = next;
-  return persistOrToast('skillUp/' + id);
+  persist();
+  if (SKILL_DEFS[id].group === 'jutsu' && next === 1) setActiveJutsu(id, false);
+  return true;
+}
+
+function jutsuSkillUnlocked(id, s) {
+  if (!SKILL_DEFS[id] || SKILL_DEFS[id].group !== 'jutsu') return false;
+  if (id === 'rasengan') return true;
+  return skillLevel(id, s) >= 1;
+}
+
+function utilitySkillActive(id, s) {
+  if (!SKILL_DEFS[id] || SKILL_DEFS[id].group !== 'utility') return false;
+  return skillLevel(id, s) >= 1;
+}
+
+function activeJutsuId(preferred, s) {
+  const st = s || save;
+  const pick = (preferred && JUTSU_SKILL_IDS.includes(preferred)) ? preferred : (st.activeJutsu || 'rasengan');
+  if (jutsuSkillUnlocked(pick, st)) return pick;
+  for (const id of JUTSU_SKILL_IDS) {
+    if (jutsuSkillUnlocked(id, st)) return id;
+  }
+  return 'rasengan';
+}
+
+function ensureActiveJutsuValid(preferred) {
+  const id = activeJutsuId(preferred);
+  save.activeJutsu = id;
+  return id;
+}
+
+function setActiveJutsu(id, silent) {
+  if (!jutsuSkillUnlocked(id)) return false;
+  save.activeJutsu = id;
+  persist();
+  if (!silent) {
+    try { UI.toast(t('toast.jutsuEquipped', { name: skillLabel(id) }), 2800); } catch (_) {}
+  }
+  return true;
 }
 
 function rollSkillShardDrop(monster) {
