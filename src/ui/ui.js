@@ -2124,6 +2124,7 @@ const UI = {
             holdSkip = true;
             safeUiAction(() => {
               AudioSys.sfx('select');
+              try { cancelGambleStart(); } catch (_) {}
               pendingAdvLevel = n;
               lastGambleRoll = null;
               startAdventureFromGamble(true);
