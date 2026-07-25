@@ -4068,12 +4068,20 @@ class Game {
       const name2 = vsRosterEntry(this.p2Pick).name;
       if (this.phase === 'intro' && this.phaseT < 1.55) {
         const n = Math.ceil(Math.max(0.35, 1.55 - this.phaseT));
+        if (typeof drawPixelVsBanner === 'function') {
+          drawPixelVsBanner(c, W / 2, H * 0.28, Math.max(3, Math.round(Math.min(W, H) / 160)), this.t);
+        }
         c.font = '900 48px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.92)';
-        c.fillText(String(n), W / 2, H * 0.4);
+        c.fillText(String(n), W / 2, H * 0.42);
         c.font = '700 13px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.65)';
-        c.fillText(t('hud.spawnFair'), W / 2, H * 0.4 + 28);
+        c.fillText(t('hud.spawnFair'), W / 2, H * 0.42 + 28);
+        c.font = '800 14px sans-serif';
+        c.fillStyle = '#7cf5ff';
+        c.fillText(name1, W * 0.28, H * 0.28);
+        c.fillStyle = '#ffb0b8';
+        c.fillText(name2, W * 0.72, H * 0.28);
       } else if (this.phase === 'roundend') {
         const left = Math.max(0, 2.2 - this.phaseT);
         c.font = '900 34px sans-serif';

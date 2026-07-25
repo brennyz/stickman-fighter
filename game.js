@@ -241,9 +241,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.12';
+const APP_VERSION = '1.18.13';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 222;
+const SW_CACHE_REV = 223;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -15437,6 +15437,78 @@ function drawMenuHeroPixelGround(c, w, h, groundY, t) {
   c.imageSmoothingEnabled = prev;
 }
 
+/** d20 polish #14 — Versus VS-banner pixels (chunky block letters). */
+function drawPixelVsBanner(c, cx, cy, scale, t) {
+  const s = Math.max(2, Math.round(scale || 4));
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  const bounce = motionReduced() ? 0 : Math.round(Math.sin((t || 0) * 6) * s * 0.15);
+  const y = Math.round(cy) + bounce;
+  const x = Math.round(cx);
+  const bw = 17 * s;
+  const bh = 9 * s;
+
+  // Shadow plate
+  c.fillStyle = 'rgba(0,0,0,.45)';
+  c.fillRect(x - bw / 2 + s, y - bh / 2 + s, bw, bh);
+  // Red banner body
+  c.fillStyle = '#c01828';
+  c.fillRect(x - bw / 2, y - bh / 2, bw, bh);
+  // Gold pixel rim
+  c.fillStyle = '#ffd75e';
+  c.fillRect(x - bw / 2, y - bh / 2, bw, s);
+  c.fillRect(x - bw / 2, y + bh / 2 - s, bw, s);
+  c.fillRect(x - bw / 2, y - bh / 2, s, bh);
+  c.fillRect(x + bw / 2 - s, y - bh / 2, s, bh);
+  // Corner ticks
+  c.fillStyle = '#fff8dc';
+  c.fillRect(x - bw / 2 + s, y - bh / 2 + s, s, s);
+  c.fillRect(x + bw / 2 - s * 2, y - bh / 2 + s, s, s);
+  c.fillRect(x - bw / 2 + s, y + bh / 2 - s * 2, s, s);
+  c.fillRect(x + bw / 2 - s * 2, y + bh / 2 - s * 2, s, s);
+
+  // 5×7 pixel glyphs for V and S
+  const V = [
+    '10001',
+    '10001',
+    '10001',
+    '01010',
+    '01010',
+    '00100',
+    '00100',
+  ];
+  const S = [
+    '01110',
+    '10001',
+    '10000',
+    '01110',
+    '00001',
+    '10001',
+    '01110',
+  ];
+  const drawGlyph = (glyph, ox) => {
+    for (let row = 0; row < 7; row++) {
+      for (let col = 0; col < 5; col++) {
+        if (glyph[row][col] !== '1') continue;
+        c.fillStyle = '#ffffff';
+        c.fillRect(ox + col * s, y - 3.5 * s + row * s, s, s);
+        c.fillStyle = 'rgba(0,0,0,.25)';
+        c.fillRect(ox + col * s, y - 3.5 * s + row * s + s - 1, s, 1);
+      }
+    }
+  };
+  drawGlyph(V, x - 7 * s);
+  drawGlyph(S, x + 2 * s);
+
+  // Side accent pips
+  c.fillStyle = '#7cf5ff';
+  c.fillRect(x - bw / 2 - s * 2, y - s, s, s * 2);
+  c.fillStyle = '#ffb0b8';
+  c.fillRect(x + bw / 2 + s, y - s, s, s * 2);
+
+  c.imageSmoothingEnabled = prev;
+}
+
 /** Pixel-art laag tekenen: getild, smoothing uit, parallax-offset. */
 function drawSceneryTile(c, tile, y, scroll, rate, scale) {
   if (!tile) return;
@@ -19913,12 +19985,20 @@ class Game {
       const name2 = vsRosterEntry(this.p2Pick).name;
       if (this.phase === 'intro' && this.phaseT < 1.55) {
         const n = Math.ceil(Math.max(0.35, 1.55 - this.phaseT));
+        if (typeof drawPixelVsBanner === 'function') {
+          drawPixelVsBanner(c, W / 2, H * 0.28, Math.max(3, Math.round(Math.min(W, H) / 160)), this.t);
+        }
         c.font = '900 48px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.92)';
-        c.fillText(String(n), W / 2, H * 0.4);
+        c.fillText(String(n), W / 2, H * 0.42);
         c.font = '700 13px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.65)';
-        c.fillText(t('hud.spawnFair'), W / 2, H * 0.4 + 28);
+        c.fillText(t('hud.spawnFair'), W / 2, H * 0.42 + 28);
+        c.font = '800 14px sans-serif';
+        c.fillStyle = '#7cf5ff';
+        c.fillText(name1, W * 0.28, H * 0.28);
+        c.fillStyle = '#ffb0b8';
+        c.fillText(name2, W * 0.72, H * 0.28);
       } else if (this.phase === 'roundend') {
         const left = Math.max(0, 2.2 - this.phaseT);
         c.font = '900 34px sans-serif';
@@ -24295,18 +24375,7 @@ function paintMenuHeroCanvas(t) {
   };
   drawMenuStick(Ws * 0.28, 1, '#eef5ff');
   drawMenuStick(Ws * 0.72, -1, '#ff8a9a');
-  const vx = Ws * 0.5;
-  const vy = Hs * 0.58;
-  c.fillStyle = '#c01828';
-  c.strokeStyle = '#ffd75e';
-  c.lineWidth = 3;
-  c.fillRect(vx - 38, vy - 22, 76, 44);
-  c.strokeRect(vx - 38, vy - 22, 76, 44);
-  c.font = '900 26px "Black Ops One", Bangers, sans-serif';
-  c.textAlign = 'center';
-  c.textBaseline = 'middle';
-  c.fillStyle = '#fff';
-  c.fillText('VS', vx, vy + 1);
+  drawPixelVsBanner(c, Ws * 0.5, Hs * 0.58, 3, t);
 }
 
 function loop(now) {

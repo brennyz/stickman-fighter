@@ -166,18 +166,7 @@ function paintMenuHeroCanvas(t) {
   };
   drawMenuStick(Ws * 0.28, 1, '#eef5ff');
   drawMenuStick(Ws * 0.72, -1, '#ff8a9a');
-  const vx = Ws * 0.5;
-  const vy = Hs * 0.58;
-  c.fillStyle = '#c01828';
-  c.strokeStyle = '#ffd75e';
-  c.lineWidth = 3;
-  c.fillRect(vx - 38, vy - 22, 76, 44);
-  c.strokeRect(vx - 38, vy - 22, 76, 44);
-  c.font = '900 26px "Black Ops One", Bangers, sans-serif';
-  c.textAlign = 'center';
-  c.textBaseline = 'middle';
-  c.fillStyle = '#fff';
-  c.fillText('VS', vx, vy + 1);
+  drawPixelVsBanner(c, Ws * 0.5, Hs * 0.58, 3, t);
 }
 
 function loop(now) {

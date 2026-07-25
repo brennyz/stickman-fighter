@@ -729,6 +729,31 @@
   .vs-preview-wpn { font-size:11px; color:#9db1e3; margin:4px 0 8px; }
   .vs-preview-flair { font-size:10px; font-weight:700; color:#cfe0ff; margin:-4px 0 8px; line-height:1.35; opacity:.92; }
   .vs-preview-vs { align-self:center; font-weight:900; font-size:13px; color:#ffd75e; opacity:.85; }
+  /* d20 polish #14 — Versus VS-banner pixels (char-select) */
+  .vs-preview-vs {
+    position: relative;
+    align-self: center;
+    min-width: 46px; min-height: 34px;
+    margin: 0 2px; padding: 6px 10px;
+    font-weight: 900; font-size: 14px; letter-spacing: .08em;
+    color: #fff; text-align: center; line-height: 1;
+    background: #c01828;
+    border: 2px solid #ffd75e;
+    box-shadow:
+      2px 2px 0 rgba(0,0,0,.45),
+      inset 0 0 0 1px rgba(255,255,255,.18),
+      inset 0 2px 0 rgba(255,248,220,.25);
+    image-rendering: pixelated;
+    opacity: 1;
+  }
+  .vs-preview-vs::before,
+  .vs-preview-vs::after {
+    content: '';
+    position: absolute; top: 50%; width: 6px; height: 6px;
+    transform: translateY(-50%);
+  }
+  .vs-preview-vs::before { left: -10px; background: #7cf5ff; box-shadow: 1px 1px 0 rgba(0,0,0,.35); }
+  .vs-preview-vs::after { right: -10px; background: #ffb0b8; box-shadow: 1px 1px 0 rgba(0,0,0,.35); }
   .vs-stat-delta { font-size:9px; font-weight:900; margin-left:4px; }
   .vs-stat-delta.up { color:#7cfc8a; }
   .vs-stat-delta.down { color:#ff8a8a; opacity:.85; }
