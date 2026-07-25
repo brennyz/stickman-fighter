@@ -127,6 +127,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-24 | **7** | Save (cyclus 4): schema v3 meta pets/ei/stijl; readSaveJson pets+egg merge; sync backup knop; export download; drift pets/ei; import repair-toast; stale-save hint — SAVE_KEY vast. v1.17.49 / SW v175. |
 | 2026-07-24 | **7** | Save (cyclus 3): sanitize-reparatie hints (boot + import), export meta summary, live import-preview, drift-detail bij backup, stijl-unlock check op dex-prestaties — SAVE_KEY vast. v1.17.10 / SW v137. |
 | 2026-07-24 | **12** | Content (cyclus 3): monsterboek type-filter + sort (boek/rariteit/unlock/kills), rariteit-tellers, volgende-dex-prestatie tracker, Top jager badge; wapens verzamel-strip. v1.17.9 / SW v136. |
+| 2026-07-25 | **3** | Versus (cyclus 4): spawn-pads + grace label, match-point/HP-lead floaters, low-HP bar pulse, round-end skip + winner, rematch tips. v1.18.33 / SW v243. |
 | 2026-07-25 | **19** | Muur (cyclus 4): record-chase meter + tempo-tick, pace-checkpoints 45s/20s, combo-warn re-arm, near-miss eindtip, muren in result. v1.18.32 / SW v242. |
 | 2026-07-24 | **1** | Combat feel (cyclus 3): hit-confirm ring/spark per aanvalstype, parry-window op blok (PARRY! + freeze), counter-hit floater + extra freeze in training/versus — geen dmg×. v1.17.8 / SW v135. |
 | 2026-07-24 | **2** | Training (cyclus 2): telegraph HUD-balk, Chidori-dash-lijn, laser wacht tot speler landt, geen Chidori vs lucht — geen one-shots. v1.17.7 / SW v134. |
