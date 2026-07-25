@@ -12,7 +12,7 @@ if [[ -z "$FACE" || -z "$NOTE" ]]; then
 fi
 export SF_ROOT="$ROOT" SF_FACE="$FACE" SF_NOTE="$NOTE" SF_VER="$VERSION"
 python3 <<'PY'
-import json, os
+import json, os, sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -51,4 +51,13 @@ if bag.get("pending"):
     print("Let op: andere PENDING nog open: d" + str(bag["pending"].get("face")))
 else:
     print("PENDING vrij — volgende: ./scripts/roll-improvement-d20.sh")
+# Bag integrity check
+rem = sorted(set(int(x) for x in bag.get("remaining") or [] if 1 <= int(x) <= 20))
+pend_f = int(bag["pending"].get("face", 0)) if bag.get("pending") else 0
+if pend_f and pend_f in rem:
+    print("WARN: bag verify — pending d" + str(pend_f) + " still in remaining", file=sys.stderr)
+    sys.exit(1)
+if face in rem:
+    print("WARN: bag verify — d" + str(face) + " still in remaining after mark-done", file=sys.stderr)
+    sys.exit(1)
 PY

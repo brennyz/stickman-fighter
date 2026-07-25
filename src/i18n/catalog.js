@@ -88,6 +88,8 @@ function seedNlGameStrings() {
     advDetailLose: 'Level {lv} · {kills} monsters · max combo ×{combo}{finishers}{streak}',
     streakLine: ' · streak ×{n}',
     gambleLine: ' · gok: {text}',
+    starGain: '+{n}★',
+    starImproved: 'Nieuwe sterren! Was {prev}★ — nu {stars}★ · hou HP hoog voor meer',
   });
   if (!I18N.nl.combat) I18N.nl.combat = {};
   Object.assign(I18N.nl.combat, {
@@ -419,6 +421,12 @@ function seedNlGameStrings() {
     hintKb: 'A/D lopen · W springen · J stomp · K trap · L wapen · U speciaal',
     ketsTap: 'Tik!', ketsKey: 'E / tik',
   });
+  if (!I18N.nl.island) I18N.nl.island = {};
+  Object.assign(I18N.nl.island, {
+    progress: 'Eiland {cur}: {name} · {cleared}/{total} · Lv {unlocked}/{max}',
+    levelsProg: 'Levels vrijgespeeld op dit eiland',
+    starsProg: 'Sterren verdiend op dit eiland (max 3 per level)',
+  });
 }
 
 function seedNlFromRuntime() {
@@ -588,6 +596,13 @@ const CATALOG_EN = {
     advDetailLose: 'Level {lv} · {kills} monsters · max combo ×{combo}{finishers}{streak}',
     streakLine: ' · streak ×{n}',
     gambleLine: ' · gamble: {text}',
+    starGain: '+{n}★',
+    starImproved: 'New stars! Was {prev}★ — now {stars}★ · keep HP high for more',
+  },
+  island: {
+    progress: 'Island {cur}: {name} · {cleared}/{total} · Lv {unlocked}/{max}',
+    levelsProg: 'Levels cleared on this island',
+    starsProg: 'Stars earned on this island (max 3 per level)',
   },
   banner: {
     levelStart: 'LEVEL {n}',

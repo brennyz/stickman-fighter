@@ -439,6 +439,7 @@ class Game {
     this.inputLocked = true;
     let stars = 0;
     const lv = this.level.n;
+    const prevStars = save.stars[lv] || 0;
     if (win) {
       const bonus = 30 + lv * 10;
       this.grantXP(bonus);
@@ -459,8 +460,7 @@ class Game {
       }
       const hpPct = this.player.hp / Math.max(1, this.player.maxhp);
       stars = starsFromHpPct(hpPct);
-      const prev = save.stars[lv] || 0;
-      if (stars > prev) { save.stars[lv] = stars; persist(); }
+      if (stars > prevStars) { save.stars[lv] = stars; persist(); }
       bumpStat('advWins', 1);
       bumpDaily('advWin', 1);
       const eggBonus = maybeAdvEggBonus();
@@ -509,8 +509,10 @@ class Game {
         return base;
       })(),
       xp: this.sessionXP,
-      mode: 'adventure', level: this.level.n, win, stars,
-      tip: win ? (stars >= 3 ? t('result.perfectRun') : t('result.pickupsHelp', { hint: starHintLine() })) : (() => {
+      mode: 'adventure', level: this.level.n, win, stars, prevStars,
+      tip: win ? (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
+        ? t('result.starImproved', { stars, prev: prevStars })
+        : t('result.pickupsHelp', { hint: starHintLine() }))) : (() => {
         const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : 'start';
         const base = this.player.hp <= 0
           ? t('result.lossBlockTip', { prog })
@@ -2838,7 +2840,12 @@ class Game {
       const wCap = adventureWeaponCapForLevel(this.level.n);
       const wv = Math.max(1, this.waveIdx + 1);
       c.font = '800 16px -apple-system, sans-serif';
-      fillHudText(c, t('hud.levelWave', { n: this.level.n, wv: Math.min(wv, this.level.waves.length), total: this.level.waves.length }), W / 2, 30, {
+      let waveHead = t('hud.levelWave', { n: this.level.n, wv: Math.min(wv, this.level.waves.length), total: this.level.waves.length });
+      const curMeta = this.level.waveMeta && this.level.waveMeta[this.waveIdx];
+      if (curMeta && curMeta.label && this.waveIdx >= 0 && this.wavePause <= 0) {
+        waveHead += ' · ' + curMeta.label;
+      }
+      fillHudText(c, waveHead, W / 2, 30, {
         fill: a11yHighContrast() ? '#fff' : 'rgba(255,255,255,.9)',
       });
       c.font = '700 11px -apple-system, sans-serif';

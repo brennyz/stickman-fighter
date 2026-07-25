@@ -389,6 +389,9 @@
   .lvl-wave-strip { display:flex; gap:2px; justify-content:center; margin-top:3px; flex-wrap:wrap; max-width:92%; }
   .lvl-wave-dot { display:block; width:4px; height:4px; border-radius:50%; background:rgba(255,255,255,.28); flex-shrink:0; }
   .lvl-wave-dot.boss { background:rgba(255,138,154,.85); box-shadow:0 0 3px rgba(255,138,154,.45); }
+  .lvl-wave-dot.trait-fly { background:rgba(196,122,255,.88); box-shadow:0 0 3px rgba(196,122,255,.4); }
+  .lvl-wave-dot.trait-rush { background:rgba(255,176,106,.92); }
+  .lvl-wave-dot.trait-elite { background:rgba(255,176,184,.92); box-shadow:0 0 3px rgba(255,138,154,.35); }
   .lvl-stars { display:block; font-size:11px; color:#ffd75e; letter-spacing:1px; margin-top:3px; }
   .lvl-fails { position:absolute; top:6px; right:8px; font-size:10px; font-weight:800; color:#ffb0b8; opacity:.9; }
   .lvl-master { display:block; font-size:10px; font-weight:800; color:#c47aff; margin-top:2px; letter-spacing:.04em; }
@@ -414,6 +417,11 @@
   .island-info-chip.onboard { background:rgba(124,245,255,.12); color:#9db8ff; border-color:rgba(124,245,255,.35); }
   .island-prog-track { display:block; width:100%; height:5px; border-radius:4px; background:#1a2040; overflow:hidden; }
   .island-prog-track i { display:block; height:100%; border-radius:4px; transition:width .25s ease; }
+  .island-info-stars { margin-top:5px; height:4px; }
+  .island-info-stars i { background:linear-gradient(90deg,#ffd75e,#ffb347); }
+  .stars-big.stars-improved { color:#ffd75e; }
+  .stars-big .stars-delta { display:block; font-size:14px; font-weight:800; color:#7cfc8a; margin-top:4px; letter-spacing:0; }
+  .stars-big.stars-perfect { text-shadow:0 0 12px rgba(255,215,94,.45); }
   .island-tab-ico { line-height:0; margin-bottom:2px; }
   .island-tab-ico svg { width:28px; height:28px; display:block; }
   .island-tab-prog { margin-top:6px; max-width:100%; }

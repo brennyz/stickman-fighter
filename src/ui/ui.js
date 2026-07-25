@@ -1340,10 +1340,11 @@ const UI = {
         `<span class="island-info-ico">${islMeta.icon}</span>` +
         `<div class="island-info-text">` +
         `<b style="color:${islMeta.accent}">${islMeta.name}</b> · ${islMeta.sub}` +
-        `<div class="island-info-sub">Skill gate: wapens tot Lv <b>${wCap}</b> · ${prog.cleared}/${prog.total} levels · ${prog.stars}★` +
+        `<div class="island-info-sub">Skill gate: wapens tot Lv <b>${wCap}</b> · ${prog.cleared}/${prog.total} levels · ${prog.stars}/${prog.maxStars}★` +
         (pick < 5 ? ` · baas Lv ${pick * LEVELS_PER_ISLAND} → volgend eiland` : '') +
         `</div></div></div>` +
-        `<div class="island-prog-track island-info-prog"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
+        `<div class="island-prog-track island-info-prog" title="${t('island.levelsProg')}"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
+        `<div class="island-prog-track island-info-stars" title="${t('island.starsProg')}"><i style="width:${Math.round(prog.stars / Math.max(1, prog.maxStars) * 100)}%"></i></div>` +
         (() => {
           const onboard = adventureIslandHintLine();
           const mbLine = mb && mb >= range.start && mb <= range.end
@@ -1369,8 +1370,15 @@ const UI = {
         (save.advMasterBuff === n ? ' master-buff' : '');
       el.style.boxShadow = locked ? 'none' : `0 5px 0 rgba(0,0,0,.35), 0 0 0 2px ${rar.color}55`;
       const waveStrip = infoLv.waves.map((_, wi) => {
+        const meta = infoLv.waveMeta && infoLv.waveMeta[wi];
+        const trait = meta && meta.trait;
         const isBossPip = boss && wi === infoLv.waves.length - 1;
-        return `<i class="lvl-wave-dot${isBossPip ? ' boss' : ''}"></i>`;
+        let cls = 'lvl-wave-dot';
+        if (isBossPip) cls += ' boss';
+        else if (trait === 'flyers') cls += ' trait-fly';
+        else if (trait === 'rush') cls += ' trait-rush';
+        else if (trait === 'elite') cls += ' trait-elite';
+        return `<i class="${cls}"></i>`;
       }).join('');
       el.innerHTML = locked
         ? SVG_LOCK_ICON
@@ -1382,6 +1390,8 @@ const UI = {
       if (!locked) {
         const best = save.stars[n] || 0;
         let tip = `${infoLv.waves.length} golven · ${starHintLine()}`;
+        const traitLabels = [...new Set((infoLv.waveMeta || []).map((m) => m && m.label).filter(Boolean))];
+        if (traitLabels.length) tip += ' · ' + traitLabels.join(' · ');
         if (boss) tip += pick * LEVELS_PER_ISLAND === n ? ' · eiland-baas — opent volgend eiland' : ' · tussendoor-baas';
         if (best > 0) tip += ` · jouw ${'★'.repeat(best)}${'☆'.repeat(3 - best)}`;
         if (fails > 0) tip += ` · ${fails}× verloren${fails >= 5 ? ' · Meester-buff actief' : ''}`;
@@ -2396,7 +2406,16 @@ const UI = {
     const starsEl = document.getElementById('resStars');
     if (starsEl) {
       const n = win && data.stars ? data.stars : 0;
-      starsEl.textContent = n ? '★'.repeat(n) + '☆'.repeat(3 - n) : '';
+      const prev = data.prevStars ?? 0;
+      if (!n) {
+        starsEl.textContent = '';
+        starsEl.className = 'stars-big';
+      } else {
+        const delta = n > prev ? n - prev : 0;
+        starsEl.className = 'stars-big' + (delta ? ' stars-improved' : '') + (n >= 3 ? ' stars-perfect' : '');
+        starsEl.innerHTML = '★'.repeat(n) + '☆'.repeat(3 - n) +
+          (delta ? `<small class="stars-delta">${t('result.starGain', { n: delta })}</small>` : '');
+      }
     }
     const nextBtn = document.getElementById('resNext');
     if (nextBtn) {

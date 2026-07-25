@@ -4,7 +4,6 @@
   "rollFirst": [],
   "remaining": [
     3,
-    4,
     5,
     11,
     12,
@@ -14,13 +13,19 @@
     19
   ],
   "lastRoll": {
-    "face": 6,
-    "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
-    "rolledAt": "2026-07-24T18:01:10Z",
-    "remainingCount": 9,
+    "face": 4,
+    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
+    "rolledAt": "2026-07-24T18:30:45Z",
+    "remainingCount": 8,
     "cycle": 4
   },
-  "pending": null,
+  "pending": {
+    "face": 4,
+    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
+    "rolledAt": "2026-07-24T18:30:45Z",
+    "remainingCount": 8,
+    "cycle": 4
+  },
   "implemented": [
     {
       "face": 3,
@@ -1774,6 +1779,13 @@
       "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
       "rolledAt": "2026-07-24T18:01:10Z",
       "remainingCount": 9,
+      "cycle": 4
+    },
+    {
+      "face": 4,
+      "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
+      "rolledAt": "2026-07-24T18:30:45Z",
+      "remainingCount": 8,
       "cycle": 4
     }
   ],
