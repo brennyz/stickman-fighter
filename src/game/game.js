@@ -829,10 +829,33 @@ class Game {
       if (!sp) return;
       const xp = tideBattleRewardXp(this);
       const coins = tideBattleRewardCoins();
-      this.grantXP(xp);
-      save.petCoins = (save.petCoins || 0) + coins;
-      save.stats.tideBattleWins = (save.stats.tideBattleWins || 0) + 1;
-      if (!persistOrToast('tide-battle')) return;
+      const p = this.player;
+      const snap = {
+        xp: save.xp,
+        lvl: save.lvl,
+        petCoins: save.petCoins || 0,
+        tideWins: save.stats.tideBattleWins || 0,
+        sessionXP: this.sessionXP || 0,
+        maxhp: p ? p.maxhp : 0,
+        baseDmg: p ? p.baseDmg : 0,
+        hp: p ? p.hp : 0,
+      };
+      this.grantXP(xp, { deferPersist: true });
+      save.petCoins = snap.petCoins + coins;
+      save.stats.tideBattleWins = snap.tideWins + 1;
+      if (!persistOrToast('tide-battle')) {
+        save.xp = snap.xp;
+        save.lvl = snap.lvl;
+        save.petCoins = snap.petCoins;
+        save.stats.tideBattleWins = snap.tideWins;
+        this.sessionXP = snap.sessionXP;
+        if (p) {
+          p.maxhp = snap.maxhp;
+          p.baseDmg = snap.baseDmg;
+          p.hp = snap.hp;
+        }
+        return;
+      }
       this.banner(t('banner.tideBattleWin'), 2.2, '#4a9fff', 44);
       UI.toast(t('toast.tideBattleWin', { xp, coins }), 4200);
       this.floater(W / 2, 140, `+${xp} XP · +${coins} 🪙`, '#4a9fff', 17);
@@ -1750,7 +1773,8 @@ class Game {
   }
 
   /* -------------------------- GEDEELDE LOGICA ------------------------- */
-  grantXP(n) {
+  grantXP(n, opts) {
+    opts = opts || {};
     if (this.mode === 'adventure' && this.styleXpMul && this.styleXpMul !== 1) {
       n = Math.round(n * this.styleXpMul);
     }
@@ -1778,7 +1802,7 @@ class Game {
       const newSuper = SUPERS.find(s => s.needLvl === save.lvl && superUnlocked(s));
       if (newSuper) UI.toast(t('toast.superUnlock', { name: superLabel(newSuper) }), 3500);
     }
-    persist();
+    if (!opts.deferPersist) persist();
   }
 
   spawnJutsu(f, atk) {
