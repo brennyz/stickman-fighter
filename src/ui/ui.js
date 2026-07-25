@@ -283,6 +283,21 @@ const UI = {
     } else {
       sub.textContent = this.pauseSubDefault;
     }
+    this.renderPauseRunLoot();
+  },
+
+  renderPauseRunLoot() {
+    const el = document.getElementById('pauseRunLoot');
+    if (!el) return;
+    const loot = game && game.runLoot;
+    const html = formatRunLootHtml(loot, game && game.mode);
+    if (html) {
+      el.innerHTML = html;
+      el.style.display = 'block';
+    } else {
+      el.innerHTML = '';
+      el.style.display = 'none';
+    }
   },
 
   show(id) {
@@ -1998,6 +2013,17 @@ const UI = {
     title.textContent = data.title;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
     document.getElementById('resDetail').textContent = data.detail;
+    const lootEl = document.getElementById('resLoot');
+    if (lootEl) {
+      const html = formatRunLootHtml(game && game.runLoot, data.mode);
+      if (html) {
+        lootEl.innerHTML = html;
+        lootEl.style.display = 'block';
+      } else {
+        lootEl.innerHTML = '';
+        lootEl.style.display = 'none';
+      }
+    }
     document.getElementById('resXp').textContent = t('result.xp', {
       xp: data.xp, lvl: save.lvl, cur: save.xp, need: xpNeed(save.lvl),
     });

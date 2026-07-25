@@ -454,6 +454,17 @@
   #resultScreen .win  { color:#7CFC8a; text-shadow:0 4px 0 #1f7a35, 0 0 24px rgba(90,255,120,.4); }
   #resultScreen .lose { color:#ff6b6b; text-shadow:0 4px 0 #8a2020, 0 0 24px rgba(255,80,80,.4); }
   #resultScreen .detail { font-size:16px; color:#bcd; margin:4px 0; text-align:center; max-width:520px; }
+  .run-loot-panel { width:min(92vw,480px); margin:10px auto 6px; padding:10px 12px 8px;
+    background:rgba(8,12,28,.72); border:1px solid rgba(124,245,255,.22); border-radius:14px;
+    text-align:left; max-height:min(42vh,280px); overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .run-loot-panel.pause-loot { margin:0 auto 14px; max-height:min(36vh,220px); }
+  .run-loot-head { font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+    color:rgba(255,215,94,.88); margin-bottom:8px; text-align:center; }
+  .run-loot-row { display:flex; align-items:flex-start; gap:8px; font-size:13px; line-height:1.35;
+    padding:4px 0; border-bottom:1px solid rgba(255,255,255,.06); }
+  .run-loot-row:last-child { border-bottom:none; }
+  .run-loot-ico { flex:0 0 1.4em; text-align:center; opacity:.95; }
+  .run-loot-txt { flex:1; color:#dbe4ff; }
   #resultScreen .stars-big { font-size:min(10vw,42px); color:#ffd75e; letter-spacing:6px; margin:8px 0 14px;
       text-shadow:0 3px 0 #a86818; }
   #resultScreen .btn { margin-top:8px; }

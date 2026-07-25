@@ -450,6 +450,7 @@ function trackWeaponFinisher(weaponId, gameRef) {
   save.weaponMastery[weaponId] = m;
   const newTierIdx = weaponMasteryTierIdx(m.finishers);
   if (gameRef) gameRef.runFinishers = (gameRef.runFinishers || 0) + 1;
+  noteRunLootFinisher(gameRef && gameRef.runLoot);
   if (typeof bumpDaily === 'function') bumpDaily('weaponFinisher', 1);
   if (newTierIdx > prevTierIdx && typeof UI !== 'undefined') {
     const w = weaponById(weaponId);

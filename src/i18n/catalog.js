@@ -89,6 +89,23 @@ function seedNlGameStrings() {
     streakLine: ' · streak ×{n}',
     gambleLine: ' · gok: {text}',
   });
+  if (!I18N.nl.runLoot) I18N.nl.runLoot = {};
+  Object.assign(I18N.nl.runLoot, {
+    head: 'Deze run · buit naast XP',
+    headAdv: 'Deze run · buit naast XP',
+    hudShort: 'Buit: {line}',
+    summonLine: 'Summon: {name} → {rar}',
+    dexLine: 'Boek: {name} ({rar})',
+    hpBonusLine: '+{n} max HP uit boek',
+    petLine: 'Pet getemd: {name}',
+    eggLine: 'Bonus-ei: {name}',
+    eggDupLine: 'Ei-dubbel: {name}',
+    pickupLine: '{kind} ×{n}',
+    finishersLine: '{n} wapen-finishers',
+    levelUpLine: '{n}× level-up',
+    weaponLine: 'Nieuw wapen: {name}',
+    petCoinsLine: '+{n} pet coins',
+  });
   if (!I18N.nl.combat) I18N.nl.combat = {};
   Object.assign(I18N.nl.combat, {
     counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
@@ -528,6 +545,22 @@ const CATALOG_EN = {
     advDetailLose: 'Level {lv} · {kills} monsters · max combo ×{combo}{finishers}{streak}',
     streakLine: ' · streak ×{n}',
     gambleLine: ' · gamble: {text}',
+  },
+  runLoot: {
+    head: 'This run · loot besides XP',
+    headAdv: 'This run · loot besides XP',
+    hudShort: 'Loot: {line}',
+    summonLine: 'Summon: {name} → {rar}',
+    dexLine: 'Dex: {name} ({rar})',
+    hpBonusLine: '+{n} max HP from dex',
+    petLine: 'Pet tamed: {name}',
+    eggLine: 'Bonus egg: {name}',
+    eggDupLine: 'Egg duplicate: {name}',
+    pickupLine: '{kind} ×{n}',
+    finishersLine: '{n} weapon finishers',
+    levelUpLine: '{n}× level-up',
+    weaponLine: 'New weapon: {name}',
+    petCoinsLine: '+{n} pet coins',
   },
   banner: {
     levelStart: 'LEVEL {n}',
