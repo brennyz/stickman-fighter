@@ -621,10 +621,11 @@ function bootGame() {
       if (window.__sfLoopErr) return;
       const err = ev.error || new Error(ev.message || 'unknown');
       sfReportError('window', err);
-      // Adventure/play: niet meteen startscherm bij elke transient error
-      // (bv. mist helper → ReferenceError). Alleen herstellen als geen game meer.
-      if (state === 'play' || state === 'pause' || state === 'result') {
-        if (game) return;
+      // NOOIT recoverToMenu tijdens play/pause — dat was de adventure
+      // 1-tap→menu crash (ReferenceError in Input.onDown → startscherm).
+      // Toast alleen; fight blijft staan. Result zonder game mag wel herstellen.
+      if (state === 'play' || state === 'pause') return;
+      if (state === 'result' && !game) {
         try { recoverToMenu(); } catch (_) {}
       }
     });
@@ -633,8 +634,8 @@ function bootGame() {
       const r = ev.reason;
       const err = r instanceof Error ? r : new Error(String(r != null ? r : 'async reject'));
       sfReportError('async', err, 'Actie mislukt — probeer opnieuw');
-      if (state === 'play' || state === 'pause' || state === 'result') {
-        if (game) return;
+      if (state === 'play' || state === 'pause') return;
+      if (state === 'result' && !game) {
         try { recoverToMenu(); } catch (_) {}
       }
     });

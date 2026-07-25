@@ -918,6 +918,10 @@ Object.assign(Input, {
   pointerPads: {},
   onDown(x, y, id) {
     try {
+      // Inline + helper: nooit ReferenceError als helper ooit weer ontbreekt
+      try {
+        if (this.suppressUntil && performance.now() < this.suppressUntil) return;
+      } catch (_) {}
       if (typeof playInputSuppressed === 'function' && playInputSuppressed()) return;
       AudioSys.init();
       if (this.dualMode) {
@@ -972,6 +976,9 @@ Object.assign(Input, {
   },
   onMove(x, y, id) {
     try {
+      try {
+        if (this.suppressUntil && performance.now() < this.suppressUntil) return;
+      } catch (_) {}
       if (typeof playInputSuppressed === 'function' && playInputSuppressed()) return;
       if (this.dualMode) {
         const owner = this.pointerPads[id];

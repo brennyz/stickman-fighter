@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.58';
+const APP_VERSION = '1.18.59';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 268;
+const SW_CACHE_REV = 269;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -13045,6 +13045,10 @@ Object.assign(Input, {
   pointerPads: {},
   onDown(x, y, id) {
     try {
+      // Inline + helper: nooit ReferenceError als helper ooit weer ontbreekt
+      try {
+        if (this.suppressUntil && performance.now() < this.suppressUntil) return;
+      } catch (_) {}
       if (typeof playInputSuppressed === 'function' && playInputSuppressed()) return;
       AudioSys.init();
       if (this.dualMode) {
@@ -13099,6 +13103,9 @@ Object.assign(Input, {
   },
   onMove(x, y, id) {
     try {
+      try {
+        if (this.suppressUntil && performance.now() < this.suppressUntil) return;
+      } catch (_) {}
       if (typeof playInputSuppressed === 'function' && playInputSuppressed()) return;
       if (this.dualMode) {
         const owner = this.pointerPads[id];
@@ -28372,10 +28379,11 @@ function bootGame() {
       if (window.__sfLoopErr) return;
       const err = ev.error || new Error(ev.message || 'unknown');
       sfReportError('window', err);
-      // Adventure/play: niet meteen startscherm bij elke transient error
-      // (bv. mist helper → ReferenceError). Alleen herstellen als geen game meer.
-      if (state === 'play' || state === 'pause' || state === 'result') {
-        if (game) return;
+      // NOOIT recoverToMenu tijdens play/pause — dat was de adventure
+      // 1-tap→menu crash (ReferenceError in Input.onDown → startscherm).
+      // Toast alleen; fight blijft staan. Result zonder game mag wel herstellen.
+      if (state === 'play' || state === 'pause') return;
+      if (state === 'result' && !game) {
         try { recoverToMenu(); } catch (_) {}
       }
     });
@@ -28384,8 +28392,8 @@ function bootGame() {
       const r = ev.reason;
       const err = r instanceof Error ? r : new Error(String(r != null ? r : 'async reject'));
       sfReportError('async', err, 'Actie mislukt — probeer opnieuw');
-      if (state === 'play' || state === 'pause' || state === 'result') {
-        if (game) return;
+      if (state === 'play' || state === 'pause') return;
+      if (state === 'result' && !game) {
         try { recoverToMenu(); } catch (_) {}
       }
     });
