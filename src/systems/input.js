@@ -920,6 +920,12 @@ Object.assign(Input, {
   pointerPads: {},
   onDown(x, y, id) {
     try {
+      // Solo adventure mag nooit 2P-routing houden
+      try {
+        if (this.dualMode && typeof game !== 'undefined' && game && game.mode !== 'versus') {
+          this.dualMode = false;
+        }
+      } catch (_) {}
       // Inline + helper: nooit ReferenceError als helper ooit weer ontbreekt
       try {
         if (this.suppressUntil && performance.now() < this.suppressUntil) return;

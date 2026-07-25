@@ -255,12 +255,16 @@ function loop(now) {
       try {
         game.update(dt);
       } catch (updateErr) {
-        if (!window.__sfLoopErr) {
-          window.__sfLoopErr = true;
-          sfReportError('update', updateErr, 'Gevecht onderbroken — terug naar menu');
-          recoverToMenu();
-          setTimeout(() => { window.__sfLoopErr = false; }, 2000);
-        }
+        // NOOIT recoverToMenu tijdens live fight (Kets/charge crashte → startscherm)
+        try { sfReportError('update', updateErr, 'Hiccup in gevecht — speel door'); } catch (_) {}
+        try {
+          if (game) {
+            game.inputLocked = false;
+            game.ketsbamChargeT = 0;
+            game.ketsbamShow = false;
+          }
+        } catch (_) {}
+        try { if (typeof Input !== 'undefined') Input.dualMode = false; } catch (_) {}
         return;
       }
       // Mid-fight: herstel wees-pause / verborgen canvas (training rabbit e.d.)
@@ -289,12 +293,7 @@ function loop(now) {
         try {
           game.draw(ctx);
         } catch (drawErr) {
-          if (!window.__sfLoopErr) {
-            window.__sfLoopErr = true;
-            sfReportError('draw', drawErr, 'Tekenen mislukt — terug naar menu');
-            recoverToMenu();
-            setTimeout(() => { window.__sfLoopErr = false; }, 2000);
-          }
+          try { sfReportError('draw', drawErr, 'Tekenen hiccup — speel door'); } catch (_) {}
           return;
         }
       } else if (!game) {
@@ -313,11 +312,10 @@ function loop(now) {
     }
   } catch (err) {
     console.error(err);
-    if (!window.__sfLoopErr) {
-      window.__sfLoopErr = true;
-      sfReportError('loop', err);
-      recoverToMenu();
-      setTimeout(() => { window.__sfLoopErr = false; }, 2000);
+    try { sfReportError('loop', err); } catch (_) {}
+    // Alleen naar menu als er geen live game meer is
+    if (!(state === 'play' && game) && !(state === 'pause' && game)) {
+      try { recoverToMenu(); } catch (_) {}
     }
   }
 }

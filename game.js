@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.62';
+const APP_VERSION = '1.18.63';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 272;
+const SW_CACHE_REV = 273;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -6896,118 +6896,124 @@ function drawSuperShieldBubble(game, c, f) {
 }
 
 function finishSuperBlast(fighter, game, sp, px, py, blastR, dmgMul, kbBase) {
-  for (const m of game.monsters) {
-    if (!m.alive) continue;
+  const monsters = (game && game.monsters) || [];
+  for (const m of monsters) {
+    if (!m || !m.alive) continue;
     const dx = m.x - px, dy = m.y - py;
     const dist = Math.hypot(dx, dy);
     if (dist > blastR) continue;
     const falloff = 1 - dist / blastR;
     const dmg = Math.max(10, Math.round(fighter.baseDmg * (dmgMul + falloff * 1.1)));
     const kb = Math.sign(dx || fighter.face || 1) * (kbBase + falloff * 120);
-    m.takeDamage(dmg, kb, game);
+    try { m.takeDamage(dmg, kb, game); } catch (_) {}
   }
 }
 
 function finishEquippedSuper(fighter, game) {
   if (!fighter || !game) return;
   const sp = equippedSuper();
+  if (!sp) return;
   const px = fighter.x, py = fighter.y - 42;
   const blastR = superBlastRadius(sp);
   const banner = superFinishBanner(sp);
   const lite = fxLite();
+  if (!game.monsters) game.monsters = [];
 
-  game.shake(sp.behavior === 'shield' ? 8 : 14, sp.behavior === 'timestop' ? 0.28 : 0.38);
-  game.freezeT = Math.max(game.freezeT, sp.behavior === 'timestop' ? (sp.freezeDur || 0.26) : 0.06);
-  game.banner(banner, 0.85, sp.color, 42);
+  try { game.shake(sp.behavior === 'shield' ? 8 : 14, sp.behavior === 'timestop' ? 0.28 : 0.38); } catch (_) {}
+  try { game.freezeT = Math.max(game.freezeT || 0, sp.behavior === 'timestop' ? (sp.freezeDur || 0.26) : 0.06); } catch (_) {}
+  try { game.banner(banner, 0.85, sp.color, 42); } catch (_) {}
   try { AudioSys.sfx(superSfxId(sp, 'finish')); } catch (_) {}
 
+  try {
   switch (sp.behavior) {
     case 'shield':
-      game.playerShieldT = Math.max(game.playerShieldT, sp.shieldDur || 9);
+      game.playerShieldT = Math.max(game.playerShieldT || 0, sp.shieldDur || 9);
       game.superShieldFrom = sp.id;
       finishSuperBlast(fighter, game, sp, px, py, blastR * 0.72, 0.85, 280);
-      game.burst(px, py, sp.color, lite ? 16 : 28, { kind: 'ring' });
-      spawnFxRing(game, px, py, sp.color2 || sp.color, lite ? 8 : 14);
-      game.floater(px, py - 80, banner, sp.color, 20);
+      try { game.burst(px, py, sp.color, lite ? 16 : 28, { kind: 'ring' }); } catch (_) {}
+      try { spawnFxRing(game, px, py, sp.color2 || sp.color, lite ? 8 : 14); } catch (_) {}
+      try { game.floater(px, py - 80, banner, sp.color, 20); } catch (_) {}
       break;
 
     case 'heal': {
-      const maxHp = fighter.maxHp || 100;
+      const maxHp = fighter.maxhp || fighter.maxHp || 100;
       const heal = Math.round(maxHp * (sp.healPct || 0.38));
-      fighter.hp = Math.min(maxHp, fighter.hp + heal);
+      fighter.hp = Math.min(maxHp, (fighter.hp || 0) + heal);
       finishSuperBlast(fighter, game, sp, px, py, blastR * 0.65, 0.75, 240);
-      game.burst(px, py, sp.color, lite ? 18 : 32, { kind: 'spark', size: 2.4 });
+      try { game.burst(px, py, sp.color, lite ? 18 : 32, { kind: 'spark', size: 2.4 }); } catch (_) {}
       if (!lite) {
         for (let i = 0; i < 5; i++) {
-          game.burst(px + rand(-40, 40), py + rand(-20, 30), sp.color2 || sp.color, 2);
+          try { game.burst(px + rand(-40, 40), py + rand(-20, 30), sp.color2 || sp.color, 2); } catch (_) {}
         }
       }
-      game.floater(px, py - 80, '+' + heal + ' HP', sp.color, 18);
-      game.floater(px, py - 102, banner, sp.color2 || sp.color, 16);
+      try { game.floater(px, py - 80, '+' + heal + ' HP', sp.color, 18); } catch (_) {}
+      try { game.floater(px, py - 102, banner, sp.color2 || sp.color, 16); } catch (_) {}
       break;
     }
 
     case 'sharingan': {
       for (const m of game.monsters) {
-        if (!m.alive) continue;
+        if (!m || !m.alive) continue;
         const dx = px - m.x, dy = py - m.y;
         const dist = Math.hypot(dx, dy);
         if (dist > blastR) continue;
-        applySuperMonsterSlow(m, sp.slowDur || 1.5, sp.slowMul || 0.22);
+        try { applySuperMonsterSlow(m, sp.slowDur || 1.5, sp.slowMul || 0.22); } catch (_) {}
         const falloff = 1 - dist / blastR;
         const pullF = 0.35 + falloff * 0.55;
         m.x += (dx / (dist || 1)) * pullF * 52;
         m.y += (dy / (dist || 1)) * pullF * 20;
-        const dmg = Math.max(10, Math.round(fighter.baseDmg * (1.45 + falloff * 0.95)));
-        m.takeDamage(dmg, Math.sign(m.x - px || fighter.face || 1) * (320 + falloff * 100), game);
+        const dmg = Math.max(10, Math.round((fighter.baseDmg || 10) * (1.45 + falloff * 0.95)));
+        try { m.takeDamage(dmg, Math.sign(m.x - px || fighter.face || 1) * (320 + falloff * 100), game); } catch (_) {}
       }
-      if (!lite) spawnFxRing(game, px, py - 20, sp.color, 14);
-      game.burst(px, py, sp.color, lite ? 20 : 36, { kind: 'spark', size: 2.8 });
-      game.burst(px, py - 18, sp.color2 || '#fff', lite ? 10 : 18);
-      game.floater(px, py - 80, banner, sp.color, 20);
+      if (!lite) try { spawnFxRing(game, px, py - 20, sp.color, 14); } catch (_) {}
+      try { game.burst(px, py, sp.color, lite ? 20 : 36, { kind: 'spark', size: 2.8 }); } catch (_) {}
+      try { game.burst(px, py - 18, sp.color2 || '#fff', lite ? 10 : 18); } catch (_) {}
+      try { game.floater(px, py - 80, banner, sp.color, 20); } catch (_) {}
       break;
     }
 
     case 'void': {
       for (const m of game.monsters) {
-        if (!m.alive) continue;
+        if (!m || !m.alive) continue;
         const dx = px - m.x, dy = py - m.y;
         const dist = Math.hypot(dx, dy);
         if (dist > blastR) continue;
-        applySuperMonsterSlow(m, 0.85, 0.35);
+        try { applySuperMonsterSlow(m, 0.85, 0.35); } catch (_) {}
         const falloff = 1 - dist / blastR;
         m.x += (dx / (dist || 1)) * (0.45 + falloff * 0.65) * 58;
         m.y += (dy / (dist || 1)) * (0.45 + falloff * 0.65) * 22;
-        const dmg = Math.max(12, Math.round(fighter.baseDmg * (1.55 + falloff * 1.05)));
-        m.takeDamage(dmg, Math.sign(m.x - px || fighter.face || 1) * (340 + falloff * 110), game);
+        const dmg = Math.max(12, Math.round((fighter.baseDmg || 10) * (1.55 + falloff * 1.05)));
+        try { m.takeDamage(dmg, Math.sign(m.x - px || fighter.face || 1) * (340 + falloff * 110), game); } catch (_) {}
       }
-      game.burst(px, py, sp.color, lite ? 22 : 40, { kind: 'ring' });
-      game.burst(px, py, sp.color2 || '#2a1050', lite ? 12 : 22);
-      spawnFxRing(game, px, py, sp.color, lite ? 12 : 18);
-      game.floater(px, py - 80, banner, sp.color, 20);
+      try { game.burst(px, py, sp.color, lite ? 22 : 40, { kind: 'ring' }); } catch (_) {}
+      try { game.burst(px, py, sp.color2 || '#2a1050', lite ? 12 : 22); } catch (_) {}
+      try { spawnFxRing(game, px, py, sp.color, lite ? 12 : 18); } catch (_) {}
+      try { game.floater(px, py - 80, banner, sp.color, 20); } catch (_) {}
       break;
     }
 
     case 'lightning': {
-      const targets = game.monsters.filter(m => m.alive && Math.hypot(m.x - px, m.y - py) <= blastR);
+      const targets = game.monsters.filter(m => m && m.alive && Math.hypot(m.x - px, m.y - py) <= blastR);
       const strikes = sp.strikes || 8;
       for (let i = 0; i < strikes; i++) {
         const m = targets[i % Math.max(1, targets.length)];
         if (!m) break;
         const falloff = 1 - Math.hypot(m.x - px, m.y - py) / blastR;
-        queueSuperFx(game, {
-          kind: 'lightning',
-          target: m,
-          x: m.x + rand(-14, 14),
-          y: m.y - 92 + rand(-16, 8),
-          color: sp.color,
-          dmg: Math.max(12, Math.round(fighter.baseDmg * (1.32 + falloff * 0.85))),
-          kb: Math.sign(m.x - px || fighter.face || 1) * (360 + falloff * 80),
-          delay: i * 0.07,
-          t: 0,
-        });
+        try {
+          queueSuperFx(game, {
+            kind: 'lightning',
+            target: m,
+            x: m.x + rand(-14, 14),
+            y: m.y - 92 + rand(-16, 8),
+            color: sp.color,
+            dmg: Math.max(12, Math.round((fighter.baseDmg || 10) * (1.32 + falloff * 0.85))),
+            kb: Math.sign(m.x - px || fighter.face || 1) * (360 + falloff * 80),
+            delay: i * 0.07,
+            t: 0,
+          });
+        } catch (_) {}
       }
-      game.floater(px, py - 80, banner, sp.color, 20);
+      try { game.floater(px, py - 80, banner, sp.color, 20); } catch (_) {}
       break;
     }
 
@@ -7018,84 +7024,91 @@ function finishEquippedSuper(fighter, game) {
         const dist = rand(blastR * 0.18, blastR * 0.94);
         const mx = px + Math.cos(ang) * dist;
         const my = py + Math.sin(ang) * dist * 0.35;
-        queueSuperFx(game, {
-          kind: 'meteor',
-          x: mx, y: my,
-          color: sp.color,
-          color2: sp.color2 || '#ffe259',
-          dmg: Math.max(10, Math.round(fighter.baseDmg * (1.15 + rand(0, 0.65)))),
-          kb: rand(300, 440),
-          r: 58,
-          delay: i * 0.09,
-          t: 0,
-        });
+        try {
+          queueSuperFx(game, {
+            kind: 'meteor',
+            x: mx, y: my,
+            color: sp.color,
+            color2: sp.color2 || '#ffe259',
+            dmg: Math.max(10, Math.round((fighter.baseDmg || 10) * (1.15 + rand(0, 0.65)))),
+            kb: rand(300, 440),
+            r: 58,
+            delay: i * 0.09,
+            t: 0,
+          });
+        } catch (_) {}
       }
-      game.shake(10, 0.22);
-      game.floater(px, py - 80, banner, sp.color, 20);
+      try { game.shake(10, 0.22); } catch (_) {}
+      try { game.floater(px, py - 80, banner, sp.color, 20); } catch (_) {}
       break;
     }
 
     case 'rage':
-      game.dmgBuffT = Math.max(game.dmgBuffT, sp.rageDur || 10);
+      game.dmgBuffT = Math.max(game.dmgBuffT || 0, sp.rageDur || 10);
       game.dmgBuffMul = Math.max(game.dmgBuffMul || 1, sp.rageMul || 1.48);
       finishSuperBlast(fighter, game, sp, px, py, blastR * 0.78, 1.05, 300);
-      game.burst(px, py, sp.color, lite ? 18 : 30);
-      if (!lite) game.burst(px, py - 30, sp.color2 || '#ff3d3d', 12);
-      game.floater(px, py - 80, banner, sp.color, 20);
+      try { game.burst(px, py, sp.color, lite ? 18 : 30); } catch (_) {}
+      if (!lite) try { game.burst(px, py - 30, sp.color2 || '#ff3d3d', 12); } catch (_) {}
+      try { game.floater(px, py - 80, banner, sp.color, 20); } catch (_) {}
       break;
 
     case 'timestop': {
-      game.freezeT = Math.max(game.freezeT, sp.freezeDur || 0.26);
+      game.freezeT = Math.max(game.freezeT || 0, sp.freezeDur || 0.26);
       for (const m of game.monsters) {
-        if (!m.alive) continue;
+        if (!m || !m.alive) continue;
         if (Math.hypot(m.x - px, m.y - py) > blastR * 1.05) continue;
-        applySuperMonsterSlow(m, sp.slowDur || 2.6, sp.slowMul || 0.06);
+        try { applySuperMonsterSlow(m, sp.slowDur || 2.6, sp.slowMul || 0.06); } catch (_) {}
       }
       finishSuperBlast(fighter, game, sp, px, py, blastR * 1.05, 1.55, 340);
-      game.burst(px, py, sp.color, lite ? 22 : 38, { kind: 'ring' });
-      game.burst(px, py, sp.color2 || '#fff', lite ? 12 : 20);
-      if (!lite) spawnFxRing(game, px, py - 24, sp.color2 || '#7cf5ff', 12);
-      game.floater(px, py - 80, banner, sp.color, 20);
+      try { game.burst(px, py, sp.color, lite ? 22 : 38, { kind: 'ring' }); } catch (_) {}
+      try { game.burst(px, py, sp.color2 || '#fff', lite ? 12 : 20); } catch (_) {}
+      if (!lite) try { spawnFxRing(game, px, py - 24, sp.color2 || '#7cf5ff', 12); } catch (_) {}
+      try { game.floater(px, py - 80, banner, sp.color, 20); } catch (_) {}
       break;
     }
 
     case 'clones': {
       const hits = sp.cloneHits || 5;
-      const nearby = game.monsters.filter(m => m.alive && Math.hypot(m.x - px, m.y - py) <= blastR);
+      const nearby = game.monsters.filter(m => m && m.alive && Math.hypot(m.x - px, m.y - py) <= blastR);
       let delay = 0;
       for (const m of nearby) {
         for (let h = 0; h < hits; h++) {
           const off = (h - (hits - 1) / 2) * 26;
-          queueSuperFx(game, {
-            kind: 'clone',
-            target: m,
-            x: m.x + off,
-            y: m.y,
-            color: sp.color,
-            dmg: Math.max(8, Math.round(fighter.baseDmg * (0.38 + h * 0.09))),
-            kb: Math.sign(m.x - px + off || fighter.face || 1) * (250 + h * 42),
-            delay: delay,
-            t: 0,
-          });
+          try {
+            queueSuperFx(game, {
+              kind: 'clone',
+              target: m,
+              x: m.x + off,
+              y: m.y,
+              color: sp.color,
+              dmg: Math.max(8, Math.round((fighter.baseDmg || 10) * (0.38 + h * 0.09))),
+              kb: Math.sign(m.x - px + off || fighter.face || 1) * (250 + h * 42),
+              delay: delay,
+              t: 0,
+            });
+          } catch (_) {}
           delay += 0.045;
         }
       }
-      game.burst(px, py, sp.color, lite ? 16 : 26);
-      game.floater(px, py - 80, banner, sp.color, 20);
+      try { game.burst(px, py, sp.color, lite ? 16 : 26); } catch (_) {}
+      try { game.floater(px, py - 80, banner, sp.color, 20); } catch (_) {}
       break;
     }
 
     case 'blast':
     default:
       finishSuperBlast(fighter, game, sp, px, py, blastR, 1.65, 380);
-      game.burst(px, py, sp.color, lite ? 22 : 40, { kind: 'spark', size: 3.2 });
-      game.burst(px, py, sp.color2 || '#ff7043', lite ? 14 : 26);
-      spawnFxRing(game, px, py, '#ffe259', lite ? 10 : 18);
-      game.floater(px, py - 80, banner, sp.color, 20);
+      try { game.burst(px, py, sp.color, lite ? 22 : 40, { kind: 'spark', size: 3.2 }); } catch (_) {}
+      try { game.burst(px, py, sp.color2 || '#ff7043', lite ? 14 : 26); } catch (_) {}
+      try { spawnFxRing(game, px, py, '#ffe259', lite ? 10 : 18); } catch (_) {}
+      try { game.floater(px, py - 80, banner, sp.color, 20); } catch (_) {}
       break;
   }
+  } catch (finErr) {
+    try { sfReportError('finishEquippedSuper/' + (sp && sp.id), finErr); } catch (_) {}
+  }
 
-  if (save.haptics !== false) haptic(sp.behavior === 'shield' ? 18 : 32);
+  try { if (save.haptics !== false) haptic(sp.behavior === 'shield' ? 18 : 32); } catch (_) {}
 }
 
 /** Prompt/charge icoon op canvas. */
@@ -13063,6 +13076,12 @@ Object.assign(Input, {
   pointerPads: {},
   onDown(x, y, id) {
     try {
+      // Solo adventure mag nooit 2P-routing houden
+      try {
+        if (this.dualMode && typeof game !== 'undefined' && game && game.mode !== 'versus') {
+          this.dualMode = false;
+        }
+      } catch (_) {}
       // Inline + helper: nooit ReferenceError als helper ooit weer ontbreekt
       try {
         if (this.suppressUntil && performance.now() < this.suppressUntil) return;
@@ -21418,6 +21437,9 @@ class Game {
   /* ------------------------------ TEKENEN ----------------------------- */
   draw(c) {
     if (!c || W < 8 || H < 8) return;
+    if (this.mode !== 'versus' && typeof Input !== 'undefined' && Input.dualMode) {
+      try { Input.dualMode = false; } catch (_) {}
+    }
     c.save();
     if (this.shakeT > 0) {
       c.translate(rand(-1, 1) * this.shakeMag, rand(-1, 1) * this.shakeMag);
@@ -21690,9 +21712,11 @@ class Game {
     c.restore();
 
     this.drawChakraReadyFx(c);
-    if (this.mode === 'adventure') drawSuperFxLayer(this, c);
-    if (this.mode === 'adventure') this.drawKetsbamChargeAura(c);
-    if (this.mode === 'adventure') this.drawPartGateCue(c);
+    if (this.mode === 'adventure') {
+      try { drawSuperFxLayer(this, c); } catch (_) {}
+      try { this.drawKetsbamChargeAura(c); } catch (_) {}
+      try { this.drawPartGateCue(c); } catch (_) {}
+    }
 
     this.drawHUD(c);
 
@@ -21700,8 +21724,12 @@ class Game {
     const bannerDraw = this.banners.slice().sort((a, b) => (a.lane || 0) - (b.lane || 0));
     for (const b of bannerDraw) this.drawBannerLine(c, b);
 
-    if (IS_TOUCH) this.drawTouchControls(c);
-    if (this.mode === 'adventure') this.drawKetsbamPrompt(c);
+    if (IS_TOUCH) {
+      try { this.drawTouchControls(c); } catch (_) {}
+    }
+    if (this.mode === 'adventure') {
+      try { this.drawKetsbamPrompt(c); } catch (_) {}
+    }
 
     if (this.hint > 0) {
       c.globalAlpha = clamp(this.hint, 0, 1);
@@ -23573,10 +23601,17 @@ class Game {
   }
 
   drawTouchControls(c) {
+    // NUCLEAR: solo modes NEVER show P1/P2 pads — dualMode leak looked like versus in adventure
+    if (this.mode !== 'versus' && typeof Input !== 'undefined' && Input.dualMode) {
+      try {
+        Input.dualMode = false;
+        Input.layout(W, H);
+      } catch (_) {}
+    }
     const ui = touchUiScale(W, H);
     const joyOuter = Math.round(52 * ui);
     const joyInner = Math.round(26 * ui);
-    if (Input.dualMode) {
+    if (Input.dualMode && this.mode === 'versus') {
       const nz = typeof touchNeutralZoneBounds === 'function' ? touchNeutralZoneBounds() : null;
       if (nz) {
         c.save();
@@ -28100,12 +28135,16 @@ function loop(now) {
       try {
         game.update(dt);
       } catch (updateErr) {
-        if (!window.__sfLoopErr) {
-          window.__sfLoopErr = true;
-          sfReportError('update', updateErr, 'Gevecht onderbroken — terug naar menu');
-          recoverToMenu();
-          setTimeout(() => { window.__sfLoopErr = false; }, 2000);
-        }
+        // NOOIT recoverToMenu tijdens live fight (Kets/charge crashte → startscherm)
+        try { sfReportError('update', updateErr, 'Hiccup in gevecht — speel door'); } catch (_) {}
+        try {
+          if (game) {
+            game.inputLocked = false;
+            game.ketsbamChargeT = 0;
+            game.ketsbamShow = false;
+          }
+        } catch (_) {}
+        try { if (typeof Input !== 'undefined') Input.dualMode = false; } catch (_) {}
         return;
       }
       // Mid-fight: herstel wees-pause / verborgen canvas (training rabbit e.d.)
@@ -28134,12 +28173,7 @@ function loop(now) {
         try {
           game.draw(ctx);
         } catch (drawErr) {
-          if (!window.__sfLoopErr) {
-            window.__sfLoopErr = true;
-            sfReportError('draw', drawErr, 'Tekenen mislukt — terug naar menu');
-            recoverToMenu();
-            setTimeout(() => { window.__sfLoopErr = false; }, 2000);
-          }
+          try { sfReportError('draw', drawErr, 'Tekenen hiccup — speel door'); } catch (_) {}
           return;
         }
       } else if (!game) {
@@ -28158,11 +28192,10 @@ function loop(now) {
     }
   } catch (err) {
     console.error(err);
-    if (!window.__sfLoopErr) {
-      window.__sfLoopErr = true;
-      sfReportError('loop', err);
-      recoverToMenu();
-      setTimeout(() => { window.__sfLoopErr = false; }, 2000);
+    try { sfReportError('loop', err); } catch (_) {}
+    // Alleen naar menu als er geen live game meer is
+    if (!(state === 'play' && game) && !(state === 'pause' && game)) {
+      try { recoverToMenu(); } catch (_) {}
     }
   }
 }
