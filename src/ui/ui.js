@@ -902,11 +902,11 @@ const UI = {
     const prog = onboardingProgress();
     const next = nextUntriedMode();
     const modes = [
-      { id: 'adventure', label: t('modes.adventure'), tip: t('ui.modeAdventure') },
-      { id: 'training', label: t('modes.training'), tip: t('ui.modeTraining') },
-      { id: 'wall', label: t('modes.wall'), tip: t('ui.modeWall') },
-      { id: 'versus', label: t('modes.versus'), tip: t('ui.modeVersus') },
-      { id: 'coinrun', label: t('modes.coinrun'), tip: t('ui.modeCoinrun') },
+      { id: 'adventure', label: 'Avontuur', tip: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok vóór level' },
+      { id: 'training', label: 'Training', tip: 'Combo-trainer ×5/×8/×10 · lasers · Chidori-telegraph' },
+      { id: 'wall', label: 'Muur', tip: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing' },
+      { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
+      { id: 'coinrun', label: 'Mats', tip: '45s munten · mik ↑ · vliegers +3' },
     ];
     let html = `<div style="font-size:12px;opacity:.85;margin-bottom:8px">${t('ui.helpOnboardHead', { seen: prog.seen, total: prog.total })}</div>`;
     if (next) {

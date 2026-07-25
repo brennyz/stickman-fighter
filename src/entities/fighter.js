@@ -478,7 +478,7 @@ class Fighter {
       }
       if (game.mode === 'adventure') game.killStreak = 0;
     }
-    this.hurtT = dmg >= 18 ? 0.16 : 0.12;
+    this.hurtT = dmg >= 18 ? 0.28 : 0.24;
     this.hitFlashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.18 : 0.14);
     this.attack = null;
     const kbScaled = scaleKnockback(kbx, dmg, { heavy: dmg >= 18 });
