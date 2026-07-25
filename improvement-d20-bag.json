@@ -5,7 +5,7 @@
   "remaining": [
     3,
     4,
-    6,
+    5,
     9,
     12,
     15,
@@ -13,10 +13,10 @@
     19
   ],
   "lastRoll": {
-    "face": 5,
-    "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
-    "rolledAt": "2026-07-25T06:58:24Z",
-    "remainingCount": 11,
+    "face": 6,
+    "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+    "rolledAt": "2026-07-25T07:18:19Z",
+    "remainingCount": 10,
     "cycle": 4
   },
   "pending": null,
@@ -554,10 +554,10 @@
       "cycle": 4
     },
     {
-      "face": 5,
-      "note": "Horde FX scaling + pauze perf-strip",
-      "version": "1.17.72",
-      "doneAt": "2026-07-25T06:59:31Z",
+      "face": 6,
+      "note": "Pauze presets + duck ramp + track status",
+      "version": "1.17.76",
+      "doneAt": "2026-07-25T07:19:46Z",
       "cycle": 4
     }
   ],
@@ -1734,10 +1734,10 @@
       "cycle": 4
     },
     {
-      "face": 5,
-      "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
-      "rolledAt": "2026-07-25T06:58:24Z",
-      "remainingCount": 11,
+      "face": 6,
+      "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+      "rolledAt": "2026-07-25T07:18:19Z",
+      "remainingCount": 10,
       "cycle": 4
     }
   ],

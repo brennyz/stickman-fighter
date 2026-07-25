@@ -519,8 +519,8 @@
   .pause-audio-vol label { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:6px 0; flex-wrap:wrap; }
   .pause-audio-vol input[type=range] { flex:1; min-width:100px; accent-color:#7cf5ff; }
   .pause-audio-hint { font-size:11px; opacity:.72; line-height:1.4; margin:8px 0 2px; text-align:center; color:#a8b8e8; }
-  .pause-perf-strip { width:min(92vw,420px); margin:-4px auto 12px; padding:6px 10px; font-size:11px; line-height:1.4;
-    text-align:center; color:#9ec8ff; background:rgba(20,28,48,.55); border:1px solid rgba(124,245,255,.18); border-radius:8px; }
+  .pause-audio-quick { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:10px 0 2px; }
+  .pause-audio-quick .btn.tog { flex:1 1 30%; min-width:92px; min-height:40px; font-size:12px; padding:8px 10px; justify-content:center; }
   .settings-card .tog { width:100%; margin-top:8px; justify-content:center; }
 
   .char-grid-scroll { width:min(94vw, 720px); max-height:min(42vh, 340px); overflow-y:auto;
