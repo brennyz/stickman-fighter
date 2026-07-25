@@ -176,7 +176,12 @@
           nw.addEventListener('statechange', () => {
             if (nw.state === 'installed' && navigator.serviceWorker.controller) {
               markSwUpdateReady(true);
-              toast('Update klaar — tik banner of «Verse versie»', 4500);
+              // Auto-apply: nieuwe UI + oude JS = broken adventure.
+              try {
+                nw.postMessage({ type: 'SF_SKIP_WAITING' });
+              } catch (_) {
+                toast('Update klaar — tik banner of «Verse versie»', 4500);
+              }
             }
           });
         });
@@ -199,9 +204,10 @@
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (refreshing) return;
       refreshing = true;
-      try { toast('App-cache bijgewerkt', 2200); } catch (_) {}
+      try { toast('App-cache bijgewerkt — herladen…', 1800); } catch (_) {}
       markSwUpdateReady(false);
-      if (typeof window.updateNetStatus === 'function') window.updateNetStatus();
+      // Oude in-memory game.js blijft anders actief terwijl HTML/UI al nieuw is.
+      setTimeout(() => { location.reload(); }, 120);
     });
 
     navigator.serviceWorker.addEventListener('message', (ev) => {

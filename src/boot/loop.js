@@ -562,6 +562,20 @@ function runSplashIntro() {
 
 function bootGame() {
   if (window.__sfBooted) return;
+  // Stale PWA: nieuwe menu-HTML + oude game.js (classic “UI werkt, avontuur blauw”).
+  try {
+    const expect = window.__SF_EXPECT_REV;
+    if (expect != null && Number(SW_CACHE_REV) !== Number(expect)) {
+      if (typeof window.__sfNukeStale === 'function') window.__sfNukeStale('boot-rev');
+      else if (typeof window.forceFreshVersion === 'function') window.forceFreshVersion();
+      return;
+    }
+    if (typeof KETSBAM_BUILD_DUR === 'undefined') {
+      if (typeof window.__sfNukeStale === 'function') window.__sfNukeStale('boot-kets');
+      else if (typeof window.forceFreshVersion === 'function') window.forceFreshVersion();
+      return;
+    }
+  } catch (_) {}
   window.__sfBooted = true;
   safeCall(runSplashIntro, 'splash');
   initUiTapScrollGuard();

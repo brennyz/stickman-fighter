@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.52';
+const APP_VERSION = '1.18.53';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 262;
+const SW_CACHE_REV = 263;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -28041,6 +28041,20 @@ function runSplashIntro() {
 
 function bootGame() {
   if (window.__sfBooted) return;
+  // Stale PWA: nieuwe menu-HTML + oude game.js (classic “UI werkt, avontuur blauw”).
+  try {
+    const expect = window.__SF_EXPECT_REV;
+    if (expect != null && Number(SW_CACHE_REV) !== Number(expect)) {
+      if (typeof window.__sfNukeStale === 'function') window.__sfNukeStale('boot-rev');
+      else if (typeof window.forceFreshVersion === 'function') window.forceFreshVersion();
+      return;
+    }
+    if (typeof KETSBAM_BUILD_DUR === 'undefined') {
+      if (typeof window.__sfNukeStale === 'function') window.__sfNukeStale('boot-kets');
+      else if (typeof window.forceFreshVersion === 'function') window.forceFreshVersion();
+      return;
+    }
+  } catch (_) {}
   window.__sfBooted = true;
   safeCall(runSplashIntro, 'splash');
   initUiTapScrollGuard();

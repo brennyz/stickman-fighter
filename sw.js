@@ -1,5 +1,5 @@
 /* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 2 */
-const CACHE = 'stickfighter-app-v262';
+const CACHE = 'stickfighter-app-v263';
 
 
 
@@ -152,14 +152,30 @@ self.addEventListener('fetch', (event) => {
   const isDoc = event.request.mode === 'navigate'
     || (event.request.headers.get('accept') || '').includes('text/html');
   const netFirst = isDoc || isNetworkFirstPath(url.pathname);
+  const critical = netFirst;
+  const fetchInit = critical ? { cache: 'no-store' } : undefined;
 
   event.respondWith((async () => {
     if (netFirst) {
       try {
-        const res = await fetch(event.request);
+        const res = await fetch(event.request, fetchInit);
         if (res && res.status === 200) {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(event.request, copy)).catch(() => {});
+          const forReq = res.clone();
+          const forCanon = res.clone();
+          caches.open(CACHE).then(async (c) => {
+            try { await c.put(event.request, forReq); } catch (_) {}
+            // Keep canonical unversioned keys fresh so ignoreSearch offline
+            // fallback cannot revive a stale game.js/css from an older put.
+            try {
+              const path = url.pathname;
+              if (path.endsWith('/game.js')) await c.put('./game.js', forCanon);
+              else if (path.endsWith('/styles/main.css')) await c.put('./styles/main.css', forCanon);
+              else if (path.endsWith('/install.js')) await c.put('./install.js', forCanon);
+              else if (path.endsWith('/index.html') || /\/stickman-fighter\/?$/.test(path) || path.endsWith('/')) {
+                await c.put('./index.html', forCanon);
+              }
+            } catch (_) {}
+          }).catch(() => {});
         }
         return res;
       } catch (_) {
