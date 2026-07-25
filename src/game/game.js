@@ -626,7 +626,7 @@ class Game {
       });
       return;
     }
-    if (opts.itemCat && opts.itemId) {
+    if (opts.itemCat && opts.itemId && itemUpgradeEligible(opts.itemCat, opts.itemId)) {
       this.pickups.push({
         x, y, kind: 'item_shard', itemCat: opts.itemCat, itemId: opts.itemId,
         t: rand(0, TAU), life: 18, bob: 0,
@@ -646,10 +646,11 @@ class Game {
     haptic(20);
     switch (pk.kind) {
       case 'skill_shard': {
-        const sid = pk.skillId || 'rasengan';
+        const sid = pk.skillId;
+        if (!sid || !SKILL_DEFS[sid]) break;
         addSkillShards(sid, 1);
         const def = SKILL_DEFS[sid];
-        const col = def ? def.color : meta.color;
+        const col = def.color;
         const lbl = skillLabel(sid);
         this.floater(p.x, p.y - 100, t('combat.pickupSkillShard', { name: lbl }), col, 15);
         if (skillCanUpgrade(sid)) {
@@ -660,14 +661,13 @@ class Game {
       case 'item_shard': {
         const cat = pk.itemCat;
         const iid = pk.itemId;
-        if (cat && iid) {
-          addItemShards(cat, iid, 1);
-          const lbl = itemUpgradeLabel(cat, iid);
-          const col = itemUpgradeColor(cat, iid);
-          this.floater(p.x, p.y - 100, t('combat.pickupItemShard', { name: lbl }), col, 15);
-          if (itemCanUpgrade(cat, iid)) {
-            try { UI.toast(t('toast.itemUpgradeReady', { name: lbl }), 2800); } catch (_) {}
-          }
+        if (!cat || !iid || !itemUpgradeEligible(cat, iid)) break;
+        if (addItemShards(cat, iid, 1) <= 0) break;
+        const lbl = itemUpgradeLabel(cat, iid);
+        const col = itemUpgradeColor(cat, iid);
+        this.floater(p.x, p.y - 100, t('combat.pickupItemShard', { name: lbl }), col, 15);
+        if (itemCanUpgrade(cat, iid)) {
+          try { UI.toast(t('toast.itemUpgradeReady', { name: lbl }), 2800); } catch (_) {}
         }
         break;
       }

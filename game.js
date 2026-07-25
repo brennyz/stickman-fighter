@@ -133,9 +133,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.75';
+const APP_VERSION = '1.17.76';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 193;
+const SW_CACHE_REV = 194;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -835,33 +835,23 @@ function sanitizeSave(s) {
   out.weaponMastery = cleanMastery;
 
   const cleanSkills = {};
-  const skillIds = ['rasengan', 'chidori', 'rinnegan', 'subst', 'dash', 'chakra'];
-  for (const id of skillIds) {
-    const raw = (out.skillUpgrades || {})[id];
-    const entry = (raw && typeof raw === 'object') ? raw : {};
-    const maxLv = typeof skillMaxLevel === 'function' ? skillMaxLevel(id) : SKILL_MAX_LEVEL;
-    const lv = clamp(Math.floor(Number(entry.level) || 0), 0, maxLv);
-    const shards = clamp(Math.floor(Number(entry.shards) || 0), 0, 9999);
-    if (lv > 0 || shards > 0) cleanSkills[id] = { level: lv, shards };
+  for (const id of SKILL_IDS) {
+    const fixed = typeof sanitizeSkillUpgradeEntry === 'function'
+      ? sanitizeSkillUpgradeEntry(id, (out.skillUpgrades || {})[id])
+      : null;
+    if (fixed) cleanSkills[id] = fixed;
   }
   out.skillUpgrades = cleanSkills;
 
   const cleanItems = { weapon: {}, pet: {}, style: {} };
-  const rawItems = (out.itemUpgrades && typeof out.itemUpgrades === 'object') ? out.itemUpgrades : {};
-  for (const cat of ['weapon', 'pet', 'style']) {
-    const bag = (rawItems[cat] && typeof rawItems[cat] === 'object') ? rawItems[cat] : {};
+  for (const cat of (typeof ITEM_UPGRADE_CATS !== 'undefined' ? ITEM_UPGRADE_CATS : ['weapon', 'pet', 'style'])) {
+    const bag = (out.itemUpgrades && out.itemUpgrades[cat] && typeof out.itemUpgrades[cat] === 'object')
+      ? out.itemUpgrades[cat] : {};
     for (const [id, raw] of Object.entries(bag)) {
-      const entry = (raw && typeof raw === 'object') ? raw : {};
-      let ok = false;
-      let maxLv = UPGRADE_MAX_STANDARD;
-      if (cat === 'weapon') ok = WEAPONS.some(w => w.id === id);
-      else if (cat === 'pet') ok = !!petDef(id);
-      else if (cat === 'style') ok = STYLES.some(s => s.id === id);
-      if (!ok) continue;
-      if (typeof itemUpgradeMax === 'function') maxLv = itemUpgradeMax(cat, id);
-      const lv = clamp(Math.floor(Number(entry.level) || 0), 0, maxLv);
-      const shards = clamp(Math.floor(Number(entry.shards) || 0), 0, 9999);
-      if (lv > 0 || shards > 0) cleanItems[cat][id] = { level: lv, shards };
+      const fixed = typeof sanitizeItemUpgradeEntry === 'function'
+        ? sanitizeItemUpgradeEntry(cat, id, raw)
+        : null;
+      if (fixed) cleanItems[cat][id] = fixed;
     }
   }
   out.itemUpgrades = cleanItems;
@@ -3626,15 +3616,66 @@ function petProgressLine(speciesId) {
 const UPGRADE_MAX_STANDARD = 3;
 const UPGRADE_MAX_EXTREME = 5;
 const UPGRADE_PHASE_MAX = UPGRADE_MAX_STANDARD;
+const ITEM_UPGRADE_CATS = ['weapon', 'pet', 'style'];
+const ITEM_SHARD_CAP = 9999;
+const ITEM_SHARD_ADD_CAP = 8;
 
 const ITEM_SHARD_COSTS = [2, 4, 7, 12, 20];
+
+function upgradeShardsSpentForLevel(lv, costs) {
+  const n = clamp(Math.floor(lv) || 0, 0, costs.length + 2);
+  let spent = 0;
+  for (let i = 0; i < n; i++) spent += costs[i] || costs[costs.length - 1];
+  return spent;
+}
+
+function upgradeMaxLevelFromBanked(banked, costs, hardMax) {
+  let lv = 0;
+  let budget = clamp(Math.floor(banked) || 0, 0, ITEM_SHARD_CAP);
+  while (lv < hardMax) {
+    const cost = costs[lv] || costs[costs.length - 1];
+    if (budget < cost) break;
+    budget -= cost;
+    lv++;
+  }
+  return lv;
+}
 
 function upgradeMaxForRarity(rarity) {
   const order = rarityOf(rarity).order;
   return order >= 5 ? UPGRADE_MAX_EXTREME : UPGRADE_MAX_STANDARD;
 }
 
+function itemUpgradeIdValid(cat, id) {
+  if (!ITEM_UPGRADE_CATS.includes(cat) || !id || typeof id !== 'string') return false;
+  if (cat === 'weapon') return WEAPONS.some((w) => w.id === id);
+  if (cat === 'pet') return !!petDef(id);
+  if (cat === 'style') return STYLES.some((s) => s.id === id);
+  return false;
+}
+
+function weaponUpgradeEligible(w) {
+  return w && w.id && w.id !== 'vuist' && w.id !== 'master_sword' && save.lvl >= w.unlock && !isThrowWeapon(w.id);
+}
+
+function petUpgradeEligible(p) {
+  return p && isPetTamed(p.id);
+}
+
+function styleUpgradeEligible(st) {
+  return st && styleUnlocked(st);
+}
+
+function itemUpgradeEligible(cat, id) {
+  if (!itemUpgradeIdValid(cat, id)) return false;
+  if (cat === 'weapon') return weaponUpgradeEligible(WEAPONS.find((w) => w.id === id));
+  if (cat === 'pet') return petUpgradeEligible(petDef(id));
+  if (cat === 'style') return styleUpgradeEligible(styleById(id));
+  return false;
+}
+
 function itemUpgradeEntry(cat, id) {
+  if (!itemUpgradeIdValid(cat, id)) return null;
   if (!save.itemUpgrades || typeof save.itemUpgrades !== 'object') save.itemUpgrades = {};
   if (!save.itemUpgrades[cat] || typeof save.itemUpgrades[cat] !== 'object') save.itemUpgrades[cat] = {};
   if (!save.itemUpgrades[cat][id]) save.itemUpgrades[cat][id] = { level: 0, shards: 0 };
@@ -3642,8 +3683,10 @@ function itemUpgradeEntry(cat, id) {
 }
 
 function itemUpgradeMax(cat, id) {
+  if (!itemUpgradeIdValid(cat, id)) return UPGRADE_MAX_STANDARD;
   if (cat === 'weapon') {
-    const w = weaponById(id);
+    const w = WEAPONS.find((x) => x.id === id);
+    if (!w) return UPGRADE_MAX_STANDARD;
     return upgradeMaxForRarity(w.rarity);
   }
   if (cat === 'pet') {
@@ -3655,21 +3698,28 @@ function itemUpgradeMax(cat, id) {
   if (cat === 'style') {
     const st = styleById(id);
     if (st.id === 'void' || (st.needLvl && st.needLvl >= 40)) return UPGRADE_MAX_EXTREME;
-    if (st.needDexTiers || st.needDexHalf) return UPGRADE_MAX_EXTREME;
+    if (st.needDexTiers || st.needDexHalf || st.needDexKills) return UPGRADE_MAX_EXTREME;
     return UPGRADE_MAX_STANDARD;
   }
   return UPGRADE_MAX_STANDARD;
 }
 
 function itemUpgradeLevel(cat, id) {
-  return clamp(Math.floor(Number(itemUpgradeEntry(cat, id).level) || 0), 0, itemUpgradeMax(cat, id));
+  if (!itemUpgradeIdValid(cat, id)) return 0;
+  const e = itemUpgradeEntry(cat, id);
+  if (!e) return 0;
+  return clamp(Math.floor(Number(e.level) || 0), 0, itemUpgradeMax(cat, id));
 }
 
 function itemUpgradeShards(cat, id) {
-  return clamp(Math.floor(Number(itemUpgradeEntry(cat, id).shards) || 0), 0, 9999);
+  if (!itemUpgradeIdValid(cat, id)) return 0;
+  const e = itemUpgradeEntry(cat, id);
+  if (!e) return 0;
+  return clamp(Math.floor(Number(e.shards) || 0), 0, ITEM_SHARD_CAP);
 }
 
 function itemUpgradeCost(cat, id) {
+  if (!itemUpgradeIdValid(cat, id)) return null;
   const lv = itemUpgradeLevel(cat, id);
   const max = itemUpgradeMax(cat, id);
   if (lv >= max) return null;
@@ -3677,27 +3727,62 @@ function itemUpgradeCost(cat, id) {
 }
 
 function itemCanUpgrade(cat, id) {
+  if (!itemUpgradeEligible(cat, id)) return false;
   const cost = itemUpgradeCost(cat, id);
   if (cost == null) return false;
   return itemUpgradeShards(cat, id) >= cost;
 }
 
+function sanitizeItemUpgradeEntry(cat, id, raw) {
+  if (!itemUpgradeIdValid(cat, id) || !itemUpgradeEligible(cat, id)) return null;
+  const max = itemUpgradeMax(cat, id);
+  const entry = (raw && typeof raw === 'object') ? raw : {};
+  let lv = clamp(Math.floor(Number(entry.level) || 0), 0, max);
+  let shards = clamp(Math.floor(Number(entry.shards) || 0), 0, ITEM_SHARD_CAP);
+  const spent = upgradeShardsSpentForLevel(lv, ITEM_SHARD_COSTS);
+  const total = shards + spent;
+  const maxFromBanked = upgradeMaxLevelFromBanked(total, ITEM_SHARD_COSTS, max);
+  if (lv > maxFromBanked) lv = maxFromBanked;
+  const spent2 = upgradeShardsSpentForLevel(lv, ITEM_SHARD_COSTS);
+  shards = clamp(total - spent2, 0, ITEM_SHARD_CAP);
+  if (lv <= 0 && shards <= 0) return null;
+  return { level: lv, shards };
+}
+
+function normalizeItemUpgrades() {
+  const clean = { weapon: {}, pet: {}, style: {} };
+  const raw = (save.itemUpgrades && typeof save.itemUpgrades === 'object') ? save.itemUpgrades : {};
+  for (const cat of ITEM_UPGRADE_CATS) {
+    const bag = (raw[cat] && typeof raw[cat] === 'object') ? raw[cat] : {};
+    for (const [id, entry] of Object.entries(bag)) {
+      const fixed = sanitizeItemUpgradeEntry(cat, id, entry);
+      if (fixed) clean[cat][id] = fixed;
+    }
+  }
+  save.itemUpgrades = clean;
+}
+
 function addItemShards(cat, id, n) {
-  if (!cat || !id || n <= 0) return 0;
+  if (!itemUpgradeEligible(cat, id)) return 0;
+  const add = clamp(Math.floor(Number(n) || 0), 1, ITEM_SHARD_ADD_CAP);
   const e = itemUpgradeEntry(cat, id);
-  e.shards = clamp((e.shards || 0) + n, 0, 9999);
+  if (!e) return 0;
+  e.shards = clamp(itemUpgradeShards(cat, id) + add, 0, ITEM_SHARD_CAP);
   save.stats = save.stats || {};
-  save.stats.itemShards = (save.stats.itemShards || 0) + n;
+  save.stats.itemShards = clamp((save.stats.itemShards || 0) + add, 0, 9999999);
   persist();
-  return n;
+  return add;
 }
 
 function tryItemUpgrade(cat, id) {
-  if (!itemCanUpgrade(cat, id)) return false;
+  if (!itemUpgradeEligible(cat, id) || !itemCanUpgrade(cat, id)) return false;
   const cost = itemUpgradeCost(cat, id);
   const e = itemUpgradeEntry(cat, id);
-  e.shards -= cost;
-  e.level = itemUpgradeLevel(cat, id) + 1;
+  if (!e || cost == null || itemUpgradeShards(cat, id) < cost) return false;
+  const next = itemUpgradeLevel(cat, id) + 1;
+  if (next > itemUpgradeMax(cat, id)) return false;
+  e.shards = clamp(itemUpgradeShards(cat, id) - cost, 0, ITEM_SHARD_CAP);
+  e.level = next;
   persist();
   return true;
 }
@@ -3714,7 +3799,10 @@ function weaponUpgradeStep(w, i) {
 }
 
 function weaponUpgradeBonuses(weaponId) {
-  const w = weaponById(weaponId);
+  const w = WEAPONS.find((x) => x.id === weaponId);
+  if (!w || !weaponUpgradeEligible(w)) {
+    return { dmgMul: 1, range: 0, speedMul: 1, critBonus: 0 };
+  }
   const lv = itemUpgradeLevel('weapon', weaponId);
   const b = { dmgMul: 1, range: 0, speedMul: 1, critBonus: 0 };
   for (let i = 0; i < lv; i++) {
@@ -3724,11 +3812,15 @@ function weaponUpgradeBonuses(weaponId) {
     if (s.speedMul) b.speedMul *= s.speedMul;
     if (s.critBonus) b.critBonus += s.critBonus;
   }
+  b.dmgMul = clamp(b.dmgMul, 1, 2.2);
+  b.speedMul = clamp(b.speedMul, 1, 1.35);
+  b.range = clamp(b.range, 0, 24);
+  b.critBonus = clamp(b.critBonus, 0, 0.08);
   return b;
 }
 
 function applyWeaponUpgrades(w) {
-  if (!w || !w.id) return w;
+  if (!w || !w.id || !weaponUpgradeEligible(w)) return w;
   const b = weaponUpgradeBonuses(w.id);
   const lv = itemUpgradeLevel('weapon', w.id);
   if (lv <= 0) return w;
@@ -3754,7 +3846,8 @@ function weaponUpgradeSummary(id) {
 }
 
 function weaponUpgradePreview(id) {
-  const w = weaponById(id);
+  const w = WEAPONS.find((x) => x.id === id);
+  if (!w || !weaponUpgradeEligible(w)) return '';
   const lv = itemUpgradeLevel('weapon', id);
   if (lv >= itemUpgradeMax('weapon', id)) return '';
   const s = weaponUpgradeStep(w, lv);
@@ -3768,11 +3861,15 @@ function weaponUpgradePreview(id) {
 
 /* ---- Pet upgrades ---- */
 function petUpgradeBonuses(petId) {
+  const p = petDef(petId);
+  if (!p || !petUpgradeEligible(p)) {
+    return { passiveMul: 1, assistMul: 1, cdMul: 1 };
+  }
   const lv = itemUpgradeLevel('pet', petId);
   return {
-    passiveMul: 1 + lv * 0.1,
-    assistMul: 1 + lv * 0.08,
-    cdMul: Math.pow(0.93, lv),
+    passiveMul: clamp(1 + lv * 0.1, 1, 1.5),
+    assistMul: clamp(1 + lv * 0.08, 1, 1.45),
+    cdMul: clamp(Math.pow(0.93, lv), 0.65, 1),
   };
 }
 
@@ -3795,8 +3892,16 @@ function petUpgradePreview(id) {
 
 /* ---- Style upgrades ---- */
 function styleUpgradeBonuses(styleId) {
+  const st = styleById(styleId);
+  if (!st || !styleUpgradeEligible(st)) {
+    return { modScale: 1, maxHpAdd: 0, shieldAdd: 0 };
+  }
   const lv = itemUpgradeLevel('style', styleId);
-  return { modScale: 1 + lv * 0.1, maxHpAdd: lv * 2, shieldAdd: lv * 0.2 };
+  return {
+    modScale: clamp(1 + lv * 0.1, 1, 1.5),
+    maxHpAdd: clamp(lv * 2, 0, 10),
+    shieldAdd: clamp(lv * 0.2, 0, 1),
+  };
 }
 
 function scaleStyleModValue(key, val, scale) {
@@ -3825,18 +3930,6 @@ function styleUpgradePreview(id) {
   const lv = itemUpgradeLevel('style', id);
   if (lv >= itemUpgradeMax('style', id)) return '';
   return `bonus +10% · +2 HP · +0.2s shield/golf`;
-}
-
-function weaponUpgradeEligible(w) {
-  return w && save.lvl >= w.unlock && !isThrowWeapon(w.id);
-}
-
-function petUpgradeEligible(p) {
-  return p && isPetTamed(p.id);
-}
-
-function styleUpgradeEligible(st) {
-  return st && styleUnlocked(st);
 }
 
 function rollItemShardDrop(monster) {
@@ -3883,7 +3976,11 @@ function rollItemShardDrop(monster) {
 }
 
 function itemUpgradeLabel(cat, id) {
-  if (cat === 'weapon') return weaponLabel(weaponById(id));
+  if (!itemUpgradeIdValid(cat, id)) return id || '?';
+  if (cat === 'weapon') {
+    const w = WEAPONS.find((x) => x.id === id);
+    return w ? weaponLabel(w) : id;
+  }
   if (cat === 'pet') {
     const p = petDef(id);
     return p ? (SPECIES[p.speciesId]?.name || p.id) : id;
@@ -3907,7 +4004,11 @@ function itemUpgradePreview(cat, id) {
 }
 
 function itemUpgradeColor(cat, id) {
-  if (cat === 'weapon') return rarityOf(weaponById(id).rarity).color;
+  if (!itemUpgradeIdValid(cat, id)) return '#ffd75e';
+  if (cat === 'weapon') {
+    const w = WEAPONS.find((x) => x.id === id);
+    return w ? rarityOf(w.rarity).color : '#ffd75e';
+  }
   if (cat === 'pet') {
     const p = petDef(id);
     const sp = p ? SPECIES[p.speciesId] : null;
@@ -3934,6 +4035,8 @@ function totalAllUpgradeLevels() {
 /* ========================== SKILL UPGRADES ============================= */
 /** Permanent skill upgrades via adventure shard drops. */
 const SKILL_MAX_LEVEL = 5;
+const SKILL_SHARD_CAP = 9999;
+const SKILL_SHARD_ADD_CAP = 8;
 const SKILL_SHARD_COSTS = [3, 5, 8, 12, 18];
 
 function skillMaxLevel(id) {
@@ -4009,20 +4112,51 @@ const SKILL_IDS = Object.keys(SKILL_DEFS);
 const JUTSU_SKILL_IDS = SKILL_IDS.filter((id) => SKILL_DEFS[id].group === 'jutsu');
 
 function skillEntry(id) {
+  if (!SKILL_DEFS[id]) return null;
   if (!save.skillUpgrades || typeof save.skillUpgrades !== 'object') save.skillUpgrades = {};
   if (!save.skillUpgrades[id]) save.skillUpgrades[id] = { level: 0, shards: 0 };
   return save.skillUpgrades[id];
 }
 
+function sanitizeSkillUpgradeEntry(id, raw) {
+  if (!SKILL_DEFS[id]) return null;
+  const max = skillMaxLevel(id);
+  const entry = (raw && typeof raw === 'object') ? raw : {};
+  let lv = clamp(Math.floor(Number(entry.level) || 0), 0, max);
+  let shards = clamp(Math.floor(Number(entry.shards) || 0), 0, SKILL_SHARD_CAP);
+  const spent = upgradeShardsSpentForLevel(lv, SKILL_SHARD_COSTS);
+  const total = shards + spent;
+  const maxFromBanked = upgradeMaxLevelFromBanked(total, SKILL_SHARD_COSTS, max);
+  if (lv > maxFromBanked) lv = maxFromBanked;
+  const spent2 = upgradeShardsSpentForLevel(lv, SKILL_SHARD_COSTS);
+  shards = clamp(total - spent2, 0, SKILL_SHARD_CAP);
+  if (lv <= 0 && shards <= 0) return null;
+  return { level: lv, shards };
+}
+
+function normalizeSkillUpgrades() {
+  const clean = {};
+  const raw = (save.skillUpgrades && typeof save.skillUpgrades === 'object') ? save.skillUpgrades : {};
+  for (const id of SKILL_IDS) {
+    const fixed = sanitizeSkillUpgradeEntry(id, raw[id]);
+    if (fixed) clean[id] = fixed;
+  }
+  save.skillUpgrades = clean;
+}
+
 function skillLevel(id) {
   const def = SKILL_DEFS[id];
   if (!def) return 0;
-  return clamp(Math.floor(Number(skillEntry(id).level) || 0), 0, skillMaxLevel(id));
+  const e = skillEntry(id);
+  if (!e) return 0;
+  return clamp(Math.floor(Number(e.level) || 0), 0, skillMaxLevel(id));
 }
 
 function skillShards(id) {
   if (!SKILL_DEFS[id]) return 0;
-  return clamp(Math.floor(Number(skillEntry(id).shards) || 0), 0, 9999);
+  const e = skillEntry(id);
+  if (!e) return 0;
+  return clamp(Math.floor(Number(e.shards) || 0), 0, SKILL_SHARD_CAP);
 }
 
 function skillUpgradeCost(id) {
@@ -4087,21 +4221,26 @@ function skillChakraCost(jutsuKind) {
 }
 
 function addSkillShards(id, n) {
-  if (!SKILL_DEFS[id] || n <= 0) return 0;
+  if (!SKILL_DEFS[id]) return 0;
+  const add = clamp(Math.floor(Number(n) || 0), 1, SKILL_SHARD_ADD_CAP);
   const e = skillEntry(id);
-  e.shards = clamp((e.shards || 0) + n, 0, 9999);
+  if (!e) return 0;
+  e.shards = clamp(skillShards(id) + add, 0, SKILL_SHARD_CAP);
   save.stats = save.stats || {};
-  save.stats.skillShards = (save.stats.skillShards || 0) + n;
+  save.stats.skillShards = clamp((save.stats.skillShards || 0) + add, 0, 9999999);
   persist();
-  return n;
+  return add;
 }
 
 function trySkillUpgrade(id) {
   if (!SKILL_DEFS[id] || !skillCanUpgrade(id)) return false;
   const cost = skillUpgradeCost(id);
   const e = skillEntry(id);
-  e.shards -= cost;
-  e.level = skillLevel(id) + 1;
+  if (!e || cost == null || skillShards(id) < cost) return false;
+  const next = skillLevel(id) + 1;
+  if (next > skillMaxLevel(id)) return false;
+  e.shards = clamp(skillShards(id) - cost, 0, SKILL_SHARD_CAP);
+  e.level = next;
   persist();
   return true;
 }
@@ -12227,7 +12366,7 @@ class Game {
     save.stats.killsSinceSummon = 0;
     persist();
     const rar = rarityOf(tier);
-    const asc = applySummonTier(weaponById(pick.id));
+    const asc = applyWeaponUpgrades(applySummonTier(weaponById(pick.id)));
     if (this.player && this.player.weapon && this.player.weapon.id === pick.id) {
       this.player.weapon = playerWeapon();
       const st = playerStats();
@@ -12256,7 +12395,7 @@ class Game {
       });
       return;
     }
-    if (opts.itemCat && opts.itemId) {
+    if (opts.itemCat && opts.itemId && itemUpgradeEligible(opts.itemCat, opts.itemId)) {
       this.pickups.push({
         x, y, kind: 'item_shard', itemCat: opts.itemCat, itemId: opts.itemId,
         t: rand(0, TAU), life: 18, bob: 0,
@@ -12276,10 +12415,11 @@ class Game {
     haptic(20);
     switch (pk.kind) {
       case 'skill_shard': {
-        const sid = pk.skillId || 'rasengan';
+        const sid = pk.skillId;
+        if (!sid || !SKILL_DEFS[sid]) break;
         addSkillShards(sid, 1);
         const def = SKILL_DEFS[sid];
-        const col = def ? def.color : meta.color;
+        const col = def.color;
         const lbl = skillLabel(sid);
         this.floater(p.x, p.y - 100, t('combat.pickupSkillShard', { name: lbl }), col, 15);
         if (skillCanUpgrade(sid)) {
@@ -12290,14 +12430,13 @@ class Game {
       case 'item_shard': {
         const cat = pk.itemCat;
         const iid = pk.itemId;
-        if (cat && iid) {
-          addItemShards(cat, iid, 1);
-          const lbl = itemUpgradeLabel(cat, iid);
-          const col = itemUpgradeColor(cat, iid);
-          this.floater(p.x, p.y - 100, t('combat.pickupItemShard', { name: lbl }), col, 15);
-          if (itemCanUpgrade(cat, iid)) {
-            try { UI.toast(t('toast.itemUpgradeReady', { name: lbl }), 2800); } catch (_) {}
-          }
+        if (!cat || !iid || !itemUpgradeEligible(cat, iid)) break;
+        if (addItemShards(cat, iid, 1) <= 0) break;
+        const lbl = itemUpgradeLabel(cat, iid);
+        const col = itemUpgradeColor(cat, iid);
+        this.floater(p.x, p.y - 100, t('combat.pickupItemShard', { name: lbl }), col, 15);
+        if (itemCanUpgrade(cat, iid)) {
+          try { UI.toast(t('toast.itemUpgradeReady', { name: lbl }), 2800); } catch (_) {}
         }
         break;
       }
@@ -15080,7 +15219,7 @@ class Game {
 /* --- src/ui/ui.js --- */
 /* ================================= UI ================================== */
 function appendItemUpgradeButton(el, cat, id, rerender) {
-  if (!itemCanUpgrade(cat, id)) return;
+  if (!itemUpgradeEligible(cat, id) || !itemCanUpgrade(cat, id)) return;
   const cost = itemUpgradeCost(cat, id);
   const btn = document.createElement('button');
   btn.type = 'button';
@@ -15101,6 +15240,7 @@ function appendItemUpgradeButton(el, cat, id, rerender) {
 }
 
 function itemUpgradeCardParts(cat, id, color) {
+  if (!itemUpgradeEligible(cat, id)) return { canUp: false, lv: 0, max: 0, html: '' };
   const lv = itemUpgradeLevel(cat, id);
   const max = itemUpgradeMax(cat, id);
   const shards = itemUpgradeShards(cat, id);

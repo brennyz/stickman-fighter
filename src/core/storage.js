@@ -3,9 +3,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.75';
+const APP_VERSION = '1.17.76';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 193;
+const SW_CACHE_REV = 194;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -705,33 +705,23 @@ function sanitizeSave(s) {
   out.weaponMastery = cleanMastery;
 
   const cleanSkills = {};
-  const skillIds = ['rasengan', 'chidori', 'rinnegan', 'subst', 'dash', 'chakra'];
-  for (const id of skillIds) {
-    const raw = (out.skillUpgrades || {})[id];
-    const entry = (raw && typeof raw === 'object') ? raw : {};
-    const maxLv = typeof skillMaxLevel === 'function' ? skillMaxLevel(id) : SKILL_MAX_LEVEL;
-    const lv = clamp(Math.floor(Number(entry.level) || 0), 0, maxLv);
-    const shards = clamp(Math.floor(Number(entry.shards) || 0), 0, 9999);
-    if (lv > 0 || shards > 0) cleanSkills[id] = { level: lv, shards };
+  for (const id of SKILL_IDS) {
+    const fixed = typeof sanitizeSkillUpgradeEntry === 'function'
+      ? sanitizeSkillUpgradeEntry(id, (out.skillUpgrades || {})[id])
+      : null;
+    if (fixed) cleanSkills[id] = fixed;
   }
   out.skillUpgrades = cleanSkills;
 
   const cleanItems = { weapon: {}, pet: {}, style: {} };
-  const rawItems = (out.itemUpgrades && typeof out.itemUpgrades === 'object') ? out.itemUpgrades : {};
-  for (const cat of ['weapon', 'pet', 'style']) {
-    const bag = (rawItems[cat] && typeof rawItems[cat] === 'object') ? rawItems[cat] : {};
+  for (const cat of (typeof ITEM_UPGRADE_CATS !== 'undefined' ? ITEM_UPGRADE_CATS : ['weapon', 'pet', 'style'])) {
+    const bag = (out.itemUpgrades && out.itemUpgrades[cat] && typeof out.itemUpgrades[cat] === 'object')
+      ? out.itemUpgrades[cat] : {};
     for (const [id, raw] of Object.entries(bag)) {
-      const entry = (raw && typeof raw === 'object') ? raw : {};
-      let ok = false;
-      let maxLv = UPGRADE_MAX_STANDARD;
-      if (cat === 'weapon') ok = WEAPONS.some(w => w.id === id);
-      else if (cat === 'pet') ok = !!petDef(id);
-      else if (cat === 'style') ok = STYLES.some(s => s.id === id);
-      if (!ok) continue;
-      if (typeof itemUpgradeMax === 'function') maxLv = itemUpgradeMax(cat, id);
-      const lv = clamp(Math.floor(Number(entry.level) || 0), 0, maxLv);
-      const shards = clamp(Math.floor(Number(entry.shards) || 0), 0, 9999);
-      if (lv > 0 || shards > 0) cleanItems[cat][id] = { level: lv, shards };
+      const fixed = typeof sanitizeItemUpgradeEntry === 'function'
+        ? sanitizeItemUpgradeEntry(cat, id, raw)
+        : null;
+      if (fixed) cleanItems[cat][id] = fixed;
     }
   }
   out.itemUpgrades = cleanItems;

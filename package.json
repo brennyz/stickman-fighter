@@ -1,7 +1,7 @@
 {
   "name": "stickman-fighter",
   "private": true,
-  "version": "1.17.75",
+  "version": "1.17.76",
 
 
 
@@ -13,7 +13,8 @@
     "split": "node scripts/split-game.mjs",
     "check": "node --check game.js",
     "smoke": "node scripts/smoke-load-game.mjs",
-    "test": "npm run build && npm run check && npm run smoke",
+    "smoke:upgrades": "node scripts/smoke-upgrades.mjs",
+    "test": "npm run build && npm run check && npm run smoke && npm run smoke:upgrades",
     "roll": "bash scripts/roll-improvement-d20.sh",
     "roll:status": "bash scripts/roll-improvement-d20.sh status",
     "d20:done": "bash scripts/mark-d20-done.sh"

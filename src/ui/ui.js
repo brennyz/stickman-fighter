@@ -1,6 +1,6 @@
 /* ================================= UI ================================== */
 function appendItemUpgradeButton(el, cat, id, rerender) {
-  if (!itemCanUpgrade(cat, id)) return;
+  if (!itemUpgradeEligible(cat, id) || !itemCanUpgrade(cat, id)) return;
   const cost = itemUpgradeCost(cat, id);
   const btn = document.createElement('button');
   btn.type = 'button';
@@ -21,6 +21,7 @@ function appendItemUpgradeButton(el, cat, id, rerender) {
 }
 
 function itemUpgradeCardParts(cat, id, color) {
+  if (!itemUpgradeEligible(cat, id)) return { canUp: false, lv: 0, max: 0, html: '' };
   const lv = itemUpgradeLevel(cat, id);
   const max = itemUpgradeMax(cat, id);
   const shards = itemUpgradeShards(cat, id);

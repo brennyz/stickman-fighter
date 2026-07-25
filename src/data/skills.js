@@ -1,6 +1,8 @@
 /* ========================== SKILL UPGRADES ============================= */
 /** Permanent skill upgrades via adventure shard drops. */
 const SKILL_MAX_LEVEL = 5;
+const SKILL_SHARD_CAP = 9999;
+const SKILL_SHARD_ADD_CAP = 8;
 const SKILL_SHARD_COSTS = [3, 5, 8, 12, 18];
 
 function skillMaxLevel(id) {
@@ -76,20 +78,51 @@ const SKILL_IDS = Object.keys(SKILL_DEFS);
 const JUTSU_SKILL_IDS = SKILL_IDS.filter((id) => SKILL_DEFS[id].group === 'jutsu');
 
 function skillEntry(id) {
+  if (!SKILL_DEFS[id]) return null;
   if (!save.skillUpgrades || typeof save.skillUpgrades !== 'object') save.skillUpgrades = {};
   if (!save.skillUpgrades[id]) save.skillUpgrades[id] = { level: 0, shards: 0 };
   return save.skillUpgrades[id];
 }
 
+function sanitizeSkillUpgradeEntry(id, raw) {
+  if (!SKILL_DEFS[id]) return null;
+  const max = skillMaxLevel(id);
+  const entry = (raw && typeof raw === 'object') ? raw : {};
+  let lv = clamp(Math.floor(Number(entry.level) || 0), 0, max);
+  let shards = clamp(Math.floor(Number(entry.shards) || 0), 0, SKILL_SHARD_CAP);
+  const spent = upgradeShardsSpentForLevel(lv, SKILL_SHARD_COSTS);
+  const total = shards + spent;
+  const maxFromBanked = upgradeMaxLevelFromBanked(total, SKILL_SHARD_COSTS, max);
+  if (lv > maxFromBanked) lv = maxFromBanked;
+  const spent2 = upgradeShardsSpentForLevel(lv, SKILL_SHARD_COSTS);
+  shards = clamp(total - spent2, 0, SKILL_SHARD_CAP);
+  if (lv <= 0 && shards <= 0) return null;
+  return { level: lv, shards };
+}
+
+function normalizeSkillUpgrades() {
+  const clean = {};
+  const raw = (save.skillUpgrades && typeof save.skillUpgrades === 'object') ? save.skillUpgrades : {};
+  for (const id of SKILL_IDS) {
+    const fixed = sanitizeSkillUpgradeEntry(id, raw[id]);
+    if (fixed) clean[id] = fixed;
+  }
+  save.skillUpgrades = clean;
+}
+
 function skillLevel(id) {
   const def = SKILL_DEFS[id];
   if (!def) return 0;
-  return clamp(Math.floor(Number(skillEntry(id).level) || 0), 0, skillMaxLevel(id));
+  const e = skillEntry(id);
+  if (!e) return 0;
+  return clamp(Math.floor(Number(e.level) || 0), 0, skillMaxLevel(id));
 }
 
 function skillShards(id) {
   if (!SKILL_DEFS[id]) return 0;
-  return clamp(Math.floor(Number(skillEntry(id).shards) || 0), 0, 9999);
+  const e = skillEntry(id);
+  if (!e) return 0;
+  return clamp(Math.floor(Number(e.shards) || 0), 0, SKILL_SHARD_CAP);
 }
 
 function skillUpgradeCost(id) {
@@ -154,21 +187,26 @@ function skillChakraCost(jutsuKind) {
 }
 
 function addSkillShards(id, n) {
-  if (!SKILL_DEFS[id] || n <= 0) return 0;
+  if (!SKILL_DEFS[id]) return 0;
+  const add = clamp(Math.floor(Number(n) || 0), 1, SKILL_SHARD_ADD_CAP);
   const e = skillEntry(id);
-  e.shards = clamp((e.shards || 0) + n, 0, 9999);
+  if (!e) return 0;
+  e.shards = clamp(skillShards(id) + add, 0, SKILL_SHARD_CAP);
   save.stats = save.stats || {};
-  save.stats.skillShards = (save.stats.skillShards || 0) + n;
+  save.stats.skillShards = clamp((save.stats.skillShards || 0) + add, 0, 9999999);
   persist();
-  return n;
+  return add;
 }
 
 function trySkillUpgrade(id) {
   if (!SKILL_DEFS[id] || !skillCanUpgrade(id)) return false;
   const cost = skillUpgradeCost(id);
   const e = skillEntry(id);
-  e.shards -= cost;
-  e.level = skillLevel(id) + 1;
+  if (!e || cost == null || skillShards(id) < cost) return false;
+  const next = skillLevel(id) + 1;
+  if (next > skillMaxLevel(id)) return false;
+  e.shards = clamp(skillShards(id) - cost, 0, SKILL_SHARD_CAP);
+  e.level = next;
   persist();
   return true;
 }
