@@ -101,22 +101,26 @@ const SceneryArt = {
     const base = H0; // silhouet staat op tile-bodem
     switch (themeName) {
       case 'bos': {
-        // twee rijen dennen-silhouetten
-        for (let i = 0; i < 9; i++) {
-          const x = i * 19 + r() * 6;
-          const h = 26 + r() * 14;
-          for (let yy = 0; yy < h; yy += 3) {
-            const w = 2 + (yy / h) * 14;
-            px(x - w / 2, base - h + yy, w, 3, '#1c3f2b');
-          }
+        // Photo thicket: stick lattice + ivy flecks (stickfight DNA)
+        const P = typeof FOREST_FLOOR_PAL !== 'undefined' ? FOREST_FLOOR_PAL : null;
+        const twig = P ? P.twigDark : '#2a3228';
+        const twig2 = P ? P.twig : '#3a4a38';
+        const ivy = P ? P.ivy : '#1e4a28';
+        const ivyL = P ? P.ivyLite : '#2e6a38';
+        for (let i = 0; i < 14; i++) {
+          const x = i * 12 + r() * 4;
+          const h = 20 + r() * 28;
+          px(x, base - h, 2, h, i % 2 ? twig : twig2);
+          if (r() < 0.45) px(x - 6, base - h * 0.6, 14, 2, twig2);
         }
-        for (let i = 0; i < 7; i++) {
-          const x = 8 + i * 24 + r() * 8;
-          const h = 16 + r() * 10;
-          for (let yy = 0; yy < h; yy += 3) {
-            const w = 2 + (yy / h) * 12;
-            px(x - w / 2, base - h + yy, w, 3, '#152f20');
-          }
+        for (let i = 0; i < 6; i++) {
+          const x = 10 + i * 26 + r() * 6;
+          px(x, base - 18 - r() * 10, 8, 6, ivy);
+          px(x + 2, base - 22 - r() * 8, 5, 4, ivyL);
+        }
+        // leaf litter band
+        for (let x = 0; x < W0; x += 2) {
+          px(x, base - 2, 2, 2, (x % 4) ? (P ? P.leafOchre : '#a88848') : (P ? P.leafTan : '#c4a46a'));
         }
         break;
       }
@@ -278,12 +282,21 @@ function drawThemeWeather(c, themeName, t, ground, scroll) {
     const seed = i * 137.5 + 31;
     switch (themeName) {
       case 'bos': {
-        // dwarrelende blaadjes
+        // photo-leaf + twig grit (forest-floor samples)
+        const P = typeof FOREST_FLOOR_PAL !== 'undefined' ? FOREST_FLOOR_PAL : null;
         const fall = 26 + (i % 4) * 9;
         const x = wrapW(seed * 4.1 + Math.sin(t * 0.8 + i * 1.3) * 46 - t * 12 - scroll * 0.3, W + 60) - 30;
         const y = wrapW(seed * 2.3 + t * fall, ground + 40) - 20;
-        c.fillStyle = i % 2 ? 'rgba(96,168,96,.5)' : 'rgba(150,190,92,.42)';
-        c.save(); c.translate(x, y); c.rotate(t * 2.2 + i); c.fillRect(-3.2, -1.6, 6.4, 3.2); c.restore();
+        const cols = P
+          ? [P.leafTan, P.leafOchre, P.ivyLite, P.twig, P.moss]
+          : ['#c4a46a', '#a88848', '#4a7a38', '#6a6458', '#6a8a30'];
+        c.fillStyle = cols[i % cols.length];
+        c.globalAlpha = 0.55;
+        c.save(); c.translate(x, y); c.rotate(t * 2.2 + i);
+        if (i % 3 === 0) c.fillRect(-4, -1, 8, 2); // twig
+        else c.fillRect(-3.2, -1.6, 6.4, 3.2); // leaf
+        c.restore();
+        c.globalAlpha = 1;
         break;
       }
       case 'veld':

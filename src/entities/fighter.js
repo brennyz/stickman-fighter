@@ -347,7 +347,19 @@ class Fighter {
     this.x += this.vx * dt;
     this.y += this.vy * dt;
     if (this.y >= game.ground) {
-      if (!this.onGround && this.vy > 300) AudioSys.sfx('land');
+      const hardLand = !this.onGround && this.vy > 300;
+      if (hardLand) AudioSys.sfx('land');
+      // bos: kick photo-sampled leaf/twig pixels (stickfight grit)
+      if (!this.onGround && this.vy > 180 && game.theme === 'bos' && !fxLite()
+          && typeof forestFloorKickColors === 'function') {
+        const cols = forestFloorKickColors();
+        const n = motionReduced() ? 2 : (this.vy > 500 ? 7 : 4);
+        for (let i = 0; i < n; i++) {
+          game.burst(this.x + rand(-14, 14), this.y - 2, cols[i % cols.length], 1, {
+            kind: 'spark', size: 1.6 + (i % 3) * 0.4,
+          });
+        }
+      }
       this.y = game.ground; this.vy = 0; this.onGround = true;
     } else this.onGround = false;
     this.x = clampFighterX(this, game, this.x);

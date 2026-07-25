@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.26';
+const APP_VERSION = '1.18.27';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 236;
+const SW_CACHE_REV = 237;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -13978,7 +13978,19 @@ class Fighter {
     this.x += this.vx * dt;
     this.y += this.vy * dt;
     if (this.y >= game.ground) {
-      if (!this.onGround && this.vy > 300) AudioSys.sfx('land');
+      const hardLand = !this.onGround && this.vy > 300;
+      if (hardLand) AudioSys.sfx('land');
+      // bos: kick photo-sampled leaf/twig pixels (stickfight grit)
+      if (!this.onGround && this.vy > 180 && game.theme === 'bos' && !fxLite()
+          && typeof forestFloorKickColors === 'function') {
+        const cols = forestFloorKickColors();
+        const n = motionReduced() ? 2 : (this.vy > 500 ? 7 : 4);
+        for (let i = 0; i < n; i++) {
+          game.burst(this.x + rand(-14, 14), this.y - 2, cols[i % cols.length], 1, {
+            kind: 'spark', size: 1.6 + (i % 3) * 0.4,
+          });
+        }
+      }
       this.y = game.ground; this.vy = 0; this.onGround = true;
     } else this.onGround = false;
     this.x = clampFighterX(this, game, this.x);
@@ -15485,22 +15497,26 @@ const SceneryArt = {
     const base = H0; // silhouet staat op tile-bodem
     switch (themeName) {
       case 'bos': {
-        // twee rijen dennen-silhouetten
-        for (let i = 0; i < 9; i++) {
-          const x = i * 19 + r() * 6;
-          const h = 26 + r() * 14;
-          for (let yy = 0; yy < h; yy += 3) {
-            const w = 2 + (yy / h) * 14;
-            px(x - w / 2, base - h + yy, w, 3, '#1c3f2b');
-          }
+        // Photo thicket: stick lattice + ivy flecks (stickfight DNA)
+        const P = typeof FOREST_FLOOR_PAL !== 'undefined' ? FOREST_FLOOR_PAL : null;
+        const twig = P ? P.twigDark : '#2a3228';
+        const twig2 = P ? P.twig : '#3a4a38';
+        const ivy = P ? P.ivy : '#1e4a28';
+        const ivyL = P ? P.ivyLite : '#2e6a38';
+        for (let i = 0; i < 14; i++) {
+          const x = i * 12 + r() * 4;
+          const h = 20 + r() * 28;
+          px(x, base - h, 2, h, i % 2 ? twig : twig2);
+          if (r() < 0.45) px(x - 6, base - h * 0.6, 14, 2, twig2);
         }
-        for (let i = 0; i < 7; i++) {
-          const x = 8 + i * 24 + r() * 8;
-          const h = 16 + r() * 10;
-          for (let yy = 0; yy < h; yy += 3) {
-            const w = 2 + (yy / h) * 12;
-            px(x - w / 2, base - h + yy, w, 3, '#152f20');
-          }
+        for (let i = 0; i < 6; i++) {
+          const x = 10 + i * 26 + r() * 6;
+          px(x, base - 18 - r() * 10, 8, 6, ivy);
+          px(x + 2, base - 22 - r() * 8, 5, 4, ivyL);
+        }
+        // leaf litter band
+        for (let x = 0; x < W0; x += 2) {
+          px(x, base - 2, 2, 2, (x % 4) ? (P ? P.leafOchre : '#a88848') : (P ? P.leafTan : '#c4a46a'));
         }
         break;
       }
@@ -15662,12 +15678,21 @@ function drawThemeWeather(c, themeName, t, ground, scroll) {
     const seed = i * 137.5 + 31;
     switch (themeName) {
       case 'bos': {
-        // dwarrelende blaadjes
+        // photo-leaf + twig grit (forest-floor samples)
+        const P = typeof FOREST_FLOOR_PAL !== 'undefined' ? FOREST_FLOOR_PAL : null;
         const fall = 26 + (i % 4) * 9;
         const x = wrapW(seed * 4.1 + Math.sin(t * 0.8 + i * 1.3) * 46 - t * 12 - scroll * 0.3, W + 60) - 30;
         const y = wrapW(seed * 2.3 + t * fall, ground + 40) - 20;
-        c.fillStyle = i % 2 ? 'rgba(96,168,96,.5)' : 'rgba(150,190,92,.42)';
-        c.save(); c.translate(x, y); c.rotate(t * 2.2 + i); c.fillRect(-3.2, -1.6, 6.4, 3.2); c.restore();
+        const cols = P
+          ? [P.leafTan, P.leafOchre, P.ivyLite, P.twig, P.moss]
+          : ['#c4a46a', '#a88848', '#4a7a38', '#6a6458', '#6a8a30'];
+        c.fillStyle = cols[i % cols.length];
+        c.globalAlpha = 0.55;
+        c.save(); c.translate(x, y); c.rotate(t * 2.2 + i);
+        if (i % 3 === 0) c.fillRect(-4, -1, 8, 2); // twig
+        else c.fillRect(-3.2, -1.6, 6.4, 3.2); // leaf
+        c.restore();
+        c.globalAlpha = 1;
         break;
       }
       case 'veld':
@@ -17293,12 +17318,245 @@ function drawSceneryTile(c, tile, y, scroll, rate, scale) {
   c.imageSmoothingEnabled = prev;
 }
 
+/* --- src/render/forest-floor.js --- */
+/* ===================== FOREST FLOOR — photo-sampled ===================== */
+/**
+ * Bosbodem uit echte foto’s (bladstrooisel · twijgen · klimop · mos · grind).
+ * Kleuren gesampled uit 3 close-ups; patches zijn 16×8 “foto-pixels” die
+ * als tile atlas in fights (thema `bos`) worden gestempeld — stickfight grit.
+ *
+ * Drop later raw JPG’s in assets/forest-floor/ en run:
+ *   node scripts/sample-forest-floor.mjs
+ * om de atlas te verversen vanuit echte bestanden.
+ */
+
+/** Photo-sampled palette (bosbodem 1–3). */
+const FOREST_FLOOR_PAL = {
+  soil: '#2c2822',
+  soilMid: '#3a342c',
+  soilLite: '#4a4438',
+  leafTan: '#c4a46a',
+  leafOchre: '#a88848',
+  leafRust: '#8a6438',
+  leafDry: '#d4b878',
+  twig: '#6a6458',
+  twigLite: '#8a8478',
+  twigDark: '#4a463c',
+  bark: '#3a3028',
+  ivy: '#2e5a28',
+  ivyLite: '#4a7a38',
+  ivyDeep: '#1e4020',
+  moss: '#6a8a30',
+  mossLite: '#8aaa40',
+  pebble: '#8a8a84',
+  pebbleLite: '#a8a89e',
+};
+
+const FF_COLS = [
+  FOREST_FLOOR_PAL.soil,
+  FOREST_FLOOR_PAL.soilMid,
+  FOREST_FLOOR_PAL.soilLite,
+  FOREST_FLOOR_PAL.leafTan,
+  FOREST_FLOOR_PAL.leafOchre,
+  FOREST_FLOOR_PAL.leafRust,
+  FOREST_FLOOR_PAL.leafDry,
+  FOREST_FLOOR_PAL.twig,
+  FOREST_FLOOR_PAL.twigLite,
+  FOREST_FLOOR_PAL.twigDark,
+  FOREST_FLOOR_PAL.bark,
+  FOREST_FLOOR_PAL.ivy,
+  FOREST_FLOOR_PAL.ivyLite,
+  FOREST_FLOOR_PAL.ivyDeep,
+  FOREST_FLOOR_PAL.moss,
+  FOREST_FLOOR_PAL.mossLite,
+  FOREST_FLOOR_PAL.pebble,
+  FOREST_FLOOR_PAL.pebbleLite,
+];
+
+/**
+ * Packed 16×8 patches — each char is a hex nibble into FF_COLS (0–f, g→16, h→17).
+ * Patterns mimic photo structure: tan leaf mats, twig grids, ivy clusters, soil+pebbles.
+ */
+const FOREST_FLOOR_PATCH_STRS = [
+  // 0 — dried leaf carpet (photo 1)
+  '3344553344553344' +
+  '4556634556634556' +
+  '3366443366443366' +
+  '5544335544335544' +
+  '4466554466554466' +
+  '3355443355443355' +
+  '6644336644336644' +
+  '1122331122331122',
+  // 1 — twig tangle over leaves (photo 2)
+  '3799379937993799' +
+  '4557455745574557' +
+  '9937993799379937' +
+  '3445344534453445' +
+  '7a77a77a77a77a77' +
+  '5566556655665566' +
+  '9a99a99a99a99a99' +
+  '0112011201120112',
+  // 2 — ivy pockets + moss branch (photo 1/3)
+  'bbccbbccbbccbbcc' +
+  '3b4c3b4c3b4c3b4c' +
+  'cdeedcdeedcdeedc' +
+  '455b455b455b455b' +
+  'aa7a7aa7a7aa7a7a' +
+  '3344334433443344' +
+  'eeffeeffeeffeeff' +
+  '0110011001100110',
+  // 3 — soil + pebbles + seedlings (photo 3 bottom)
+  '0011001100110011' +
+  '1g1h1g1h1g1h1g1h' +
+  '2233223322332233' +
+  '0b0c0b0c0b0c0b0c' +
+  '11gg11hh11gg11hh' +
+  '3344334433443344' +
+  '0h0g0h0g0h0g0h0g' +
+  '1122112211221122',
+];
+
+const FF_PX = 3;
+let _ffTiles = null;
+let _ffThicket = null;
+
+function ffCharToIdx(ch) {
+  if (ch >= '0' && ch <= '9') return ch.charCodeAt(0) - 48;
+  if (ch >= 'a' && ch <= 'h') return 10 + (ch.charCodeAt(0) - 97);
+  return 0;
+}
+
+function buildForestFloorTiles() {
+  if (_ffTiles) return _ffTiles;
+  _ffTiles = FOREST_FLOOR_PATCH_STRS.map((str, pi) => {
+    const cv = document.createElement('canvas');
+    cv.width = 16;
+    cv.height = 8;
+    const c = cv.getContext('2d');
+    c.imageSmoothingEnabled = false;
+    for (let i = 0; i < 128; i++) {
+      const idx = ffCharToIdx(str[i] || '0');
+      c.fillStyle = FF_COLS[idx] || FF_COLS[0];
+      c.fillRect(i % 16, (i / 16) | 0, 1, 1);
+    }
+    // micro variance so tiles don’t look stamped
+    const img = c.getImageData(0, 0, 16, 8);
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const n = ((i * 17 + pi * 91) % 7) - 3;
+      d[i] = Math.max(0, Math.min(255, d[i] + n));
+      d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + n));
+      d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + (n >> 1)));
+    }
+    c.putImageData(img, 0, 0);
+    return cv;
+  });
+  return _ffTiles;
+}
+
+function buildForestFloorThicket() {
+  if (_ffThicket) return _ffThicket;
+  const cv = document.createElement('canvas');
+  cv.width = 64;
+  cv.height = 40;
+  const c = cv.getContext('2d');
+  c.imageSmoothingEnabled = false;
+  const P = FOREST_FLOOR_PAL;
+  // stick lattice — stickfight DNA from photo twigs
+  const sticks = [
+    [4, 36, 58, 8, P.twigDark],
+    [2, 30, 50, 4, P.twig],
+    [10, 38, 40, 2, P.twigLite],
+    [8, 20, 20, 34, P.bark],
+    [22, 6, 48, 28, P.twig],
+    [30, 2, 55, 22, P.twigDark],
+    [14, 12, 60, 18, P.twigLite],
+    [40, 34, 62, 10, P.twig],
+    [6, 8, 28, 32, P.twigDark],
+  ];
+  for (const [x0, y0, x1, y1, col] of sticks) {
+    c.strokeStyle = col;
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(x0, y0);
+    c.lineTo(x1, y1);
+    c.stroke();
+  }
+  // ivy flecks
+  c.fillStyle = P.ivy;
+  c.fillRect(12, 14, 5, 4);
+  c.fillRect(36, 20, 4, 4);
+  c.fillRect(48, 8, 5, 3);
+  c.fillStyle = P.ivyLite;
+  c.fillRect(14, 12, 3, 3);
+  c.fillRect(50, 6, 3, 2);
+  c.fillStyle = P.moss;
+  c.fillRect(24, 30, 6, 3);
+  c.fillRect(44, 32, 5, 2);
+  _ffThicket = cv;
+  return cv;
+}
+
+/** Fight floor: stamp photo-sampled leaf/soil tiles under the fighters. */
+function drawForestFloorGround(c, ground, scroll) {
+  const tiles = buildForestFloorTiles();
+  if (!tiles || !tiles.length) return;
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  const tw = 16 * FF_PX;
+  const th = 8 * FF_PX;
+  const wrap = (v, span) => ((v % span) + span) % span;
+  const off = wrap(-scroll, tw);
+  const rows = Math.ceil((H - ground) / th) + 1;
+  for (let row = 0; row < rows; row++) {
+    const y = ground + row * th;
+    const tile = tiles[(row + ((scroll / tw) | 0)) % tiles.length];
+    for (let x = off - tw; x < W + tw; x += tw) {
+      const t2 = tiles[(((x / tw) | 0) + row * 3) % tiles.length];
+      c.drawImage(t2 || tile, Math.round(x), y, tw, th);
+    }
+  }
+  // soft seam at fight line
+  c.fillStyle = 'rgba(196,164,106,.2)';
+  c.fillRect(0, ground, W, 3);
+  c.fillStyle = 'rgba(42,38,32,.35)';
+  c.fillRect(0, ground + 3, W, 2);
+  c.imageSmoothingEnabled = prev;
+}
+
+/** Mid-layer stick thicket (parallax) — photo twigs as stickfight scenery. */
+function drawForestFloorThicket(c, ground, scroll, t) {
+  const tile = buildForestFloorThicket();
+  if (!tile) return;
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  const calm = typeof motionReduced === 'function' && motionReduced();
+  const sway = calm ? 0 : Math.sin((t || 0) * 0.9) * 2;
+  const wrap = (v, span) => ((v % span) + span) % span;
+  const span = 140;
+  const off = wrap(-scroll * 0.55 + sway, span);
+  const scale = 2.2;
+  const tw = tile.width * scale;
+  const th = tile.height * scale;
+  c.globalAlpha = 0.85;
+  for (let x = off - span; x < W + span; x += span) {
+    c.drawImage(tile, Math.round(x), Math.round(ground - th + 6), tw, th);
+  }
+  c.globalAlpha = 1;
+  c.imageSmoothingEnabled = prev;
+}
+
+/** Kick up photo-leaf / twig pixels (stickfight grit). */
+function forestFloorKickColors() {
+  const P = FOREST_FLOOR_PAL;
+  return [P.leafTan, P.leafOchre, P.leafRust, P.twig, P.ivyLite, P.moss];
+}
 /* --- src/render/backgrounds.js --- */
 /* ========================== ACHTERGRONDEN ============================== */
 const THEMES = {
   veld:    { sky1: '#7ec8ff', sky2: '#cfeeff', hill: '#5cb85c', hill2: '#3f9b47', ground: '#4c8f3f', gtop: '#66b356', deco: 'bloem' },
   landweg: { sky1: '#4a9adf', sky2: '#c5e0f5', hill: '#3a6a42', hill2: '#2a5030', ground: '#7a6848', gtop: '#9a8458', deco: 'struik' },
-  bos:     { sky1: '#5aa9d6', sky2: '#bfe6d0', hill: '#2f7a45', hill2: '#215c33', ground: '#3c6b33', gtop: '#4c8543', deco: 'boom' },
+  bos:     { sky1: '#4a6a58', sky2: '#8aaa78', hill: '#2a4a30', hill2: '#1e3a24', ground: '#3a342c', gtop: '#4a4438', deco: 'boom' },
   grot:    { sky1: '#232840', sky2: '#3a4265', hill: '#2a3050', hill2: '#1d2340', ground: '#3d4056', gtop: '#4d5170', deco: 'stalag' },
   vulkaan: { sky1: '#3a1f28', sky2: '#7a3020', hill: '#552430', hill2: '#3a1820', ground: '#4a2a28', gtop: '#5e3630', deco: 'lava' },
   cyber:   { sky1: '#0a1030', sky2: '#252a60', hill: '#1c2350', hill2: '#131840', ground: '#20264a', gtop: '#2c3468', deco: 'neon' },
@@ -17472,6 +17730,10 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   const dSpan = W + 220;
   const dX = (base) => wrap(base - scroll * 0.7, dSpan) - 110;
   if (th.deco === 'boom') {
+    // forest floor thicket (photo twigs) behind trees — stickfight grit
+    if (themeName === 'bos' && typeof drawForestFloorThicket === 'function') {
+      drawForestFloorThicket(c, ground, scroll, t);
+    }
     // pixel-art bomen (art-upgrade 1/4) — cached sprite, 2 formaten
     const tree = SceneryArt.get(themeName, 'tree');
     if (tree) {
@@ -17552,11 +17814,15 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   }
 
   // grond
-  const gg = c.createLinearGradient(0, ground, 0, H);
-  gg.addColorStop(0, th.gtop); gg.addColorStop(1, th.ground);
-  c.fillStyle = gg; c.fillRect(0, ground, W, H - ground);
-  c.fillStyle = 'rgba(255,255,255,.12)';
-  c.fillRect(0, ground, W, 3);
+  if (themeName === 'bos' && typeof drawForestFloorGround === 'function') {
+    drawForestFloorGround(c, ground, scroll);
+  } else {
+    const gg = c.createLinearGradient(0, ground, 0, H);
+    gg.addColorStop(0, th.gtop); gg.addColorStop(1, th.ground);
+    c.fillStyle = gg; c.fillRect(0, ground, W, H - ground);
+    c.fillStyle = 'rgba(255,255,255,.12)';
+    c.fillRect(0, ground, W, 3);
+  }
 
   // landweg: asfaltweg + gouden berm (fight floor)
   if (themeName === 'landweg') {
@@ -17599,7 +17865,7 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   }
 
   // grondstrepen — lopen mee met de wereld (loop-gevoel)
-  if (themeName !== 'landweg') {
+  if (themeName !== 'landweg' && themeName !== 'bos') {
     c.fillStyle = 'rgba(0,0,0,.14)';
     const span = 92;
     const off = wrap(-scroll, span);
@@ -17607,7 +17873,7 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
       c.fillRect(x, ground + 10, 36, 4);
       c.fillRect(x + 52, ground + 26, 20, 3);
     }
-  } else {
+  } else if (themeName === 'landweg') {
     // landweg: soft berm tufts instead of dirt stripes
     c.fillStyle = '#8a9a58';
     const span = 54;
