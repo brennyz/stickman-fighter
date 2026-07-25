@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.50';
+const APP_VERSION = '1.18.51';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 260;
+const SW_CACHE_REV = 261;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -3764,6 +3764,7 @@ function recoverToMenu(opts) {
   opts = opts || {};
   let force = !!opts.force;
   try {
+    cancelGambleStart();
     // Al in menu zonder game? Alleen vroeg returnen als UI echt bruikbaar is —
     // anders blijf je steken op settingsScreen met alleen het blauwe deksel.
     if (state === 'menu' && !game && !force) {
@@ -3883,6 +3884,7 @@ function resumeLastPlay() {
 
 function startAdventureFromGamble(skipGamble) {
   try {
+    cancelGambleStart();
     const level = pendingAdvLevel || save.unlocked || 1;
     const gamble = skipGamble ? null : lastGambleRoll;
     pendingAdvLevel = null;
@@ -25501,6 +25503,7 @@ const UI = {
             holdSkip = true;
             safeUiAction(() => {
               AudioSys.sfx('select');
+              try { cancelGambleStart(); } catch (_) {}
               pendingAdvLevel = n;
               lastGambleRoll = null;
               startAdventureFromGamble(true);
@@ -26878,6 +26881,7 @@ let state = 'menu';
 
 function startGame(mode, opts) {
   opts = opts || {};
+  try { cancelGambleStart(); } catch (_) {}
   const allowed = { adventure: 1, training: 1, wall: 1, versus: 1, coinrun: 1 };
   if (!allowed[mode]) {
     try { UI.toast('Onbekende modus', 2200); } catch (_) {}
@@ -26994,11 +26998,13 @@ bindPress(document.getElementById('menuProfileBar'), () => {
 bindPress(document.getElementById('btnGambleGooiStart'), () => gokGooiStartFromScreen());
 bindPress(document.getElementById('btnGambleSkip'), () => {
   AudioSys.sfx('select');
+  try { cancelGambleStart(); } catch (_) {}
   startAdventureFromGamble(true);
 });
 document.querySelectorAll('[data-back-gamble]').forEach((b) => {
   bindPress(b, () => {
     AudioSys.sfx('select');
+    try { cancelGambleStart(); } catch (_) {}
     UI.safeOpen('levelScreen', () => UI.renderLevels());
   });
 });

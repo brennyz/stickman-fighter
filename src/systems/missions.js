@@ -1644,6 +1644,7 @@ function recoverToMenu(opts) {
   opts = opts || {};
   let force = !!opts.force;
   try {
+    cancelGambleStart();
     // Al in menu zonder game? Alleen vroeg returnen als UI echt bruikbaar is —
     // anders blijf je steken op settingsScreen met alleen het blauwe deksel.
     if (state === 'menu' && !game && !force) {
@@ -1763,6 +1764,7 @@ function resumeLastPlay() {
 
 function startAdventureFromGamble(skipGamble) {
   try {
+    cancelGambleStart();
     const level = pendingAdvLevel || save.unlocked || 1;
     const gamble = skipGamble ? null : lastGambleRoll;
     pendingAdvLevel = null;
