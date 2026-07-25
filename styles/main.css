@@ -193,6 +193,345 @@
     #menuScreen.menu-hub-landing .arcade-title-block { padding: 2px 10px 6px; }
     #menuScreen.menu-hub-landing h1.title.arcade-logo { font-size: min(7.5vw, 36px); }
   }
+
+  /* —— Menu video overhaul (fase 1): full-bleed stage + glass zones —— */
+  #menuScreen.menu-video-overhaul {
+    --menu-glass-title: rgba(8, 12, 22, 0.55);
+    --menu-glass-tile: rgba(8, 12, 22, 0.28);
+    --menu-glass-meta: rgba(8, 12, 22, 0.42);
+    --menu-glass-lang: rgba(8, 12, 22, 0.35);
+    --menu-glass-blur: 10px;
+    --menu-ink: #f2efe6;
+    --menu-ink-muted: rgba(242, 239, 230, 0.78);
+    --menu-accent: #7cf5aa;
+    --menu-edge: rgba(255, 255, 255, 0.14);
+    background: #0a1218;
+    padding: 0;
+    justify-content: flex-start;
+  }
+  #menuScreen.menu-video-overhaul::before { display: none; }
+  #menuScreen.menu-video-overhaul > * { position: relative; z-index: 1; }
+  #menuScreen.menu-video-overhaul .menu-stage {
+    position: fixed;
+    top: var(--vv-top, 0);
+    left: var(--vv-left, 0);
+    width: var(--vv-w, 100%);
+    height: var(--vv-h, 100dvh);
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 90% 60% at 50% 20%, rgba(90, 140, 160, 0.28), transparent 60%),
+      linear-gradient(180deg, #3a5a72 0%, #1a2834 55%, #0a1218 100%);
+  }
+  #menuScreen.menu-video-overhaul .menu-hero-canvas,
+  #menuScreen.menu-video-overhaul .menu-hero-fallback {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    aspect-ratio: auto;
+    object-fit: cover;
+    object-position: center 42%;
+    image-rendering: pixelated;
+    background: transparent;
+  }
+  #menuScreen.menu-video-overhaul .menu-chrome {
+    position: relative;
+    z-index: 1;
+    flex: 1 0 auto;
+    width: 100%;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding:
+      max(12px, env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
+      max(14px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
+  }
+  #menuScreen.menu-video-overhaul .menu-title-glass {
+    width: min(92vw, 520px);
+    margin: 4px auto 14px;
+    padding: 12px 18px 14px;
+    border-radius: 16px;
+    text-align: center;
+    color: var(--menu-ink);
+    background: var(--menu-glass-title);
+    border: 1px solid var(--menu-edge);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    -webkit-backdrop-filter: blur(var(--menu-glass-blur));
+    backdrop-filter: blur(var(--menu-glass-blur));
+    animation: menuGlassIn 0.45s ease both;
+  }
+  #menuScreen.menu-video-overhaul .arcade-pre {
+    color: var(--menu-ink-muted);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    opacity: 0.9;
+    letter-spacing: 0.28em;
+  }
+  #menuScreen.menu-video-overhaul h1.title.arcade-logo {
+    font-size: min(11vw, 54px);
+    color: var(--menu-ink);
+    -webkit-text-stroke: 1.5px rgba(20, 28, 36, 0.85);
+    text-shadow:
+      0 2px 0 rgba(0, 0, 0, 0.55),
+      0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+  #menuScreen.menu-video-overhaul h1.title.arcade-logo span {
+    color: #d9e7f2;
+  }
+  #menuScreen.menu-video-overhaul #menuVerLine {
+    color: rgba(255, 196, 170, 0.92);
+    font-size: 11px;
+    margin: 8px 0 0;
+    opacity: 0.95;
+  }
+  #menuScreen.menu-video-overhaul .press-start { display: none; }
+  #menuScreen.menu-video-overhaul .menu-landing-body {
+    width: 100%;
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 0;
+  }
+  #menuScreen.menu-video-overhaul .menu-landing-scroll {
+    flex: 0 0 auto;
+    overflow: visible;
+    width: 100%;
+    align-items: center;
+    padding: 0 0 10px;
+  }
+  #menuScreen.menu-video-overhaul .hub-tile {
+    background: var(--menu-glass-tile);
+    border-color: var(--menu-edge);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    -webkit-backdrop-filter: blur(calc(var(--menu-glass-blur) * 0.7));
+    backdrop-filter: blur(calc(var(--menu-glass-blur) * 0.7));
+    color: var(--menu-ink);
+    animation: menuTileIn 0.4s ease both;
+  }
+  #menuScreen.menu-video-overhaul .hub-tile:nth-child(1) { animation-delay: 0.05s; }
+  #menuScreen.menu-video-overhaul .hub-tile:nth-child(2) { animation-delay: 0.1s; }
+  #menuScreen.menu-video-overhaul .hub-tile:nth-child(3) { animation-delay: 0.15s; }
+  #menuScreen.menu-video-overhaul .hub-tile:nth-child(4) { animation-delay: 0.2s; }
+  #menuScreen.menu-video-overhaul .hub-tile-title { color: var(--menu-ink); opacity: 1; }
+  #menuScreen.menu-video-overhaul .hub-tile-sub { color: var(--menu-ink-muted); opacity: 1; }
+  #menuScreen.menu-video-overhaul .hub-tile-stat {
+    background: rgba(0, 0, 0, 0.28);
+    color: #e8f0ff;
+  }
+  #menuScreen.menu-video-overhaul .hub-tile-ico {
+    background: rgba(0, 0, 0, 0.22);
+  }
+  #menuScreen.menu-video-overhaul .hub-tile-collect {
+    background:
+      linear-gradient(135deg, rgba(176, 106, 224, 0.12), transparent 42%),
+      var(--menu-glass-tile);
+  }
+  #menuScreen.menu-video-overhaul .menu-profile-bar,
+  #menuScreen.menu-video-overhaul .menu-landing-inner > .btn.mode-btn.b-continue {
+    background: var(--menu-glass-tile);
+    border-color: var(--menu-edge);
+    -webkit-backdrop-filter: blur(calc(var(--menu-glass-blur) * 0.7));
+    backdrop-filter: blur(calc(var(--menu-glass-blur) * 0.7));
+    color: var(--menu-ink-muted);
+  }
+  #menuScreen.menu-video-overhaul .menu-hub-hint { color: var(--menu-ink-muted); }
+  #menuScreen.menu-video-overhaul .menu-utility-row {
+    width: min(92vw, 520px);
+    margin: auto auto 0;
+    padding: 8px 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px;
+    background: transparent;
+    border-top: none;
+  }
+  #menuScreen.menu-video-overhaul .menu-lang-compact {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: 42%;
+    margin: 0;
+    text-align: left;
+  }
+  #menuScreen.menu-video-overhaul .menu-lang-bar {
+    width: auto;
+    margin: 0;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  #menuScreen.menu-video-overhaul .menu-lang-compact .dex-filter-btn {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 10px;
+    font-size: 11px;
+    border-radius: 12px;
+    background: var(--menu-glass-lang);
+    border-color: rgba(255, 180, 200, 0.28);
+    color: var(--menu-ink);
+    -webkit-backdrop-filter: blur(calc(var(--menu-glass-blur) * 0.6));
+    backdrop-filter: blur(calc(var(--menu-glass-blur) * 0.6));
+  }
+  #menuScreen.menu-video-overhaul .menu-meta-cluster {
+    flex: 1 1 180px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  #menuScreen.menu-video-overhaul .menu-meta-dock {
+    margin: 0;
+    padding: 6px;
+    border-radius: 14px;
+    background: var(--menu-glass-meta);
+    border: 1px solid var(--menu-edge);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    -webkit-backdrop-filter: blur(var(--menu-glass-blur));
+    backdrop-filter: blur(var(--menu-glass-blur));
+  }
+  #menuScreen.menu-video-overhaul .menu-meta-dock .btn.tog {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--menu-ink);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  }
+  #menuScreen.menu-video-overhaul .menu-meta-cluster .btn.b-install {
+    width: 100%;
+    margin: 0;
+    opacity: 0.92;
+  }
+  @keyframes menuGlassIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes menuTileIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+  }
+  body.reduced-motion #menuScreen.menu-video-overhaul {
+    --menu-glass-blur: 0px;
+    --menu-glass-title: rgba(8, 12, 22, 0.72);
+    --menu-glass-tile: rgba(8, 12, 22, 0.48);
+    --menu-glass-meta: rgba(8, 12, 22, 0.58);
+    --menu-glass-lang: rgba(8, 12, 22, 0.52);
+  }
+  body.reduced-motion #menuScreen.menu-video-overhaul .menu-title-glass,
+  body.reduced-motion #menuScreen.menu-video-overhaul .hub-tile {
+    animation: none;
+  }
+  body.high-contrast #menuScreen.menu-video-overhaul {
+    --menu-glass-blur: 0px;
+    --menu-glass-title: rgba(0, 0, 0, 0.82);
+    --menu-glass-tile: rgba(0, 0, 0, 0.75);
+    --menu-glass-meta: rgba(0, 0, 0, 0.78);
+    --menu-glass-lang: rgba(0, 0, 0, 0.78);
+    --menu-edge: rgba(255, 255, 255, 0.45);
+  }
+  @media (max-height: 720px) {
+    #menuScreen.menu-video-overhaul .menu-title-glass {
+      padding: 8px 14px 10px;
+      margin-bottom: 10px;
+    }
+    #menuScreen.menu-video-overhaul h1.title.arcade-logo { font-size: min(9vw, 42px); }
+  }
+  @media (max-width: 420px) {
+    #menuScreen.menu-video-overhaul .menu-utility-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    #menuScreen.menu-video-overhaul .menu-lang-compact {
+      max-width: none;
+    }
+  }
+
+  /* —— Menu overhaul harden: play-safe stage, contrast, touch, no-blur fallbacks —— */
+  #menuScreen.menu-video-overhaul {
+    isolation: isolate;
+  }
+  #menuScreen.menu-video-overhaul .menu-stage {
+    contain: paint;
+  }
+  /* Stage never steals hits; hide when hub not active / during play */
+  #menuScreen:not(.active) .menu-stage,
+  body.is-playing #menuScreen .menu-stage {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  #menuScreen.menu-video-overhaul .hub-tile-title,
+  #menuScreen.menu-video-overhaul .hub-tile-sub {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  }
+  #menuScreen.menu-video-overhaul .hub-tile:focus-visible,
+  #menuScreen.menu-video-overhaul .menu-profile-bar:focus-visible,
+  #menuScreen.menu-video-overhaul .menu-landing-inner > .btn:focus-visible,
+  #menuScreen.menu-video-overhaul .menu-meta-dock .btn.tog:focus-visible,
+  #menuScreen.menu-video-overhaul .menu-lang-compact .dex-filter-btn:focus-visible,
+  #menuScreen.menu-video-overhaul .menu-meta-cluster .btn.b-install:focus-visible {
+    outline: 2px solid var(--menu-accent, #7cf5aa);
+    outline-offset: 2px;
+  }
+  #menuScreen.menu-video-overhaul .hub-tile,
+  #menuScreen.menu-video-overhaul .menu-profile-bar,
+  #menuScreen.menu-video-overhaul .menu-landing-inner .btn,
+  #menuScreen.menu-video-overhaul .menu-utility-row .btn,
+  #menuScreen.menu-video-overhaul .menu-utility-row .tog,
+  #menuScreen.menu-video-overhaul .menu-lang-compact .dex-filter-btn {
+    touch-action: pan-y;
+  }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    #menuScreen.menu-video-overhaul {
+      --menu-glass-blur: 0px;
+      --menu-glass-title: rgba(8, 12, 22, 0.78);
+      --menu-glass-tile: rgba(8, 12, 22, 0.62);
+      --menu-glass-meta: rgba(8, 12, 22, 0.7);
+      --menu-glass-lang: rgba(8, 12, 22, 0.66);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #menuScreen.menu-video-overhaul {
+      --menu-glass-blur: 0px;
+      --menu-glass-title: rgba(8, 12, 22, 0.72);
+      --menu-glass-tile: rgba(8, 12, 22, 0.48);
+      --menu-glass-meta: rgba(8, 12, 22, 0.58);
+      --menu-glass-lang: rgba(8, 12, 22, 0.52);
+    }
+    #menuScreen.menu-video-overhaul .menu-title-glass,
+    #menuScreen.menu-video-overhaul .hub-tile {
+      animation: none !important;
+    }
+  }
+  body.lite-fx #menuScreen.menu-video-overhaul {
+    --menu-glass-blur: 0px;
+    --menu-glass-title: rgba(8, 12, 22, 0.7);
+    --menu-glass-tile: rgba(8, 12, 22, 0.5);
+    --menu-glass-meta: rgba(8, 12, 22, 0.58);
+    --menu-glass-lang: rgba(8, 12, 22, 0.54);
+  }
+  body.lite-fx #menuScreen.menu-video-overhaul .menu-title-glass,
+  body.lite-fx #menuScreen.menu-video-overhaul .hub-tile {
+    animation: none;
+  }
+  @media (orientation: landscape) and (max-height: 520px) {
+    #menuScreen.menu-video-overhaul .menu-title-glass {
+      padding: 6px 12px 8px;
+      margin-bottom: 8px;
+    }
+    #menuScreen.menu-video-overhaul h1.title.arcade-logo {
+      font-size: min(7vw, 34px);
+    }
+    #menuScreen.menu-video-overhaul .hub-tile {
+      min-height: 72px;
+      padding: 10px 28px 9px 11px;
+    }
+    #menuScreen.menu-video-overhaul .hub-tile-sub { display: none; }
+  }
+
   .menu-landing-inner { width: min(92vw, 520px); display: flex; flex-direction: column; gap: 10px; }
   .menu-landing-footer {
     width: 100%; padding: 6px 12px max(10px, env(safe-area-inset-bottom));
@@ -229,6 +568,44 @@
   .hub-tile-ico { width: 1.85em; height: 1.85em; display: flex; align-items: center; justify-content: center;
     border-radius: 9px; background: rgba(0,0,0,.2); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
   .hub-tile-ico svg { width: 1.15em; height: 1.15em; }
+
+  /* —— File SVG icons harden (ASSET-STYLE) —— */
+  .hub-tile-ico img,
+  .mode-btn .ico img,
+  .btn .ico img,
+  .menu-dock .tog-ico img,
+  .btn.tog .tog-ico img,
+  .sub-home-btn .ico img {
+    display: block;
+    width: 28px;
+    height: 28px;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    flex-shrink: 0;
+  }
+  .mode-btn .ico img { width: 1.55em; height: 1.55em; }
+  .menu-dock .tog-ico img,
+  .btn.tog .tog-ico img {
+    width: 1.25em;
+    height: 1.25em;
+  }
+  body.big-touch .hub-tile-ico img { width: 32px; height: 32px; }
+  body.big-touch .btn.tog .tog-ico img { width: 1.4em; height: 1.4em; }
+  body.high-contrast .hub-tile-ico img,
+  body.high-contrast .mode-btn .ico img,
+  body.high-contrast .btn .ico img,
+  body.high-contrast .btn.tog .tog-ico img {
+    filter: contrast(1.15) brightness(1.08);
+  }
+  img.sf-icon-broken {
+    opacity: .35;
+    outline: 1px dashed rgba(255,107,107,.55);
+    outline-offset: 1px;
+  }
   .hub-tile-title { font-weight: 800; font-size: min(4vw, 16px); line-height: 1.1; }
   .hub-tile-sub { font-size: 10px; font-weight: 600; opacity: .72; line-height: 1.3; }
   .hub-tile-stat {

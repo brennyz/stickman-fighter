@@ -2,6 +2,9 @@
 
 Live: https://brennyz.github.io/stickman-fighter/
 
+**Diepe trechter (lagen, beslisboom, leerlog):**  
+→ **[`SCREEN-VISIBILITY-FUNNEL.md`](./SCREEN-VISIBILITY-FUNNEL.md)** — lees dit vóór een nieuwe “fix”-PR.
+
 ## Canonieke play-laag (doe dit, niets zwaarder)
 
 1. Menu/collections → `.screen.active` (CSS). Canvas `visibility:hidden`.
@@ -14,11 +17,26 @@ Code: `syncPlayLayer()` + comment-contract in `src/systems/missions.js`.
 
 ---
 
+## Mini-trechter (30 seconden)
+
+| Strip-veld | Gezond play | Als fout → kijk naar |
+|------------|-------------|----------------------|
+| `state` | `play` | `startGame` / recover |
+| `screens` | `—` | `clearScreensForPlay` / iets zet `.active` terug |
+| `isPlaying` | `Y` | `syncPlayLayer` / `game` null |
+| `playBroken` | `N` | lid of canvas hidden |
+| `flash` | `off` | flash buiten `#levelScreen`? |
+
+Twee blauwen: **UI-blauw** (`.screen.active` over canvas) vs **canvas-blauw** (`drawMenuBackdrop` / geen `game.draw`).  
+Collections OK + Avontuur blauw ⇒ meestal UI/lid, niet “hele game dood”.
+
+---
+
 ## 1. Eerst: verse versie
 
 1. Open https://brennyz.github.io/stickman-fighter/speel.html  
 2. Instellingen → **Verse versie**.  
-3. Voettekst: **≥ v1.18.44 · SW v254**.  
+3. Voettekst: check actuele `v… · SW v…` in menu.  
 4. Avontuur → level tikken.
 
 Gezond gevecht: `state=play` · `screens=—` · `isPlaying=true` · `playBroken=N`.
@@ -55,3 +73,4 @@ __sf.debug({ fix: true })
 
 - Geen save wissen.  
 - Geen d20 nodig.  
+- Geen nuclear lids “om zeker te zijn”.

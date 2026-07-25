@@ -1288,7 +1288,41 @@ function syncPlayLayer() {
     const pb = document.getElementById('pauseBtn');
     if (pb) pb.classList.toggle('show', !!(canvasHits && state === 'play' && game));
   } catch (_) {}
+  try { syncMenuHubStage(); } catch (_) {}
   try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
+}
+
+/** Hub full-bleed stage: alleen zichtbaar op actieve menu-landing — nooit tijdens play. */
+function syncMenuHubStage() {
+  const menu = document.getElementById('menuScreen');
+  const stage = menu && menu.querySelector ? menu.querySelector('.menu-stage') : null;
+  const live = !!(typeof Perf !== 'undefined' && Perf.menuLandingVisible && Perf.menuLandingVisible());
+  document.body.classList.toggle('menu-hub-live', live);
+  if (!stage) return;
+  stage.setAttribute('aria-hidden', 'true');
+  if (live) {
+    stage.hidden = false;
+    stage.style.visibility = '';
+    stage.style.opacity = '';
+  } else {
+    stage.hidden = true;
+  }
+}
+
+/** ASSET-STYLE file icons: mark broken loads without killing the button. */
+function hardenButtonIcons(root) {
+  try {
+    const scope = root && root.querySelectorAll ? root : document;
+    scope.querySelectorAll('img[src*="assets/buttons/"]').forEach((img) => {
+      if (img.dataset.sfIconHard) return;
+      img.dataset.sfIconHard = '1';
+      img.decoding = img.decoding || 'async';
+      img.draggable = false;
+      img.addEventListener('error', () => {
+        img.classList.add('sf-icon-broken');
+      }, { once: true });
+    });
+  } catch (_) {}
 }
 
 function syncPlayLayerWithoutGuard() {

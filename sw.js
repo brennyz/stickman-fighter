@@ -1,5 +1,5 @@
 /* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 2 */
-const CACHE = 'stickfighter-app-v256';
+const CACHE = 'stickfighter-app-v260';
 
 
 
@@ -22,6 +22,53 @@ const ASSETS = [
   './icons/icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './assets/buttons/chrome/backup.svg',
+  './assets/buttons/chrome/big-touch.svg',
+  './assets/buttons/chrome/bonus.svg',
+  './assets/buttons/chrome/claim.svg',
+  './assets/buttons/chrome/combo.svg',
+  './assets/buttons/chrome/contrast.svg',
+  './assets/buttons/chrome/dice.svg',
+  './assets/buttons/chrome/egg.svg',
+  './assets/buttons/chrome/export.svg',
+  './assets/buttons/chrome/external.svg',
+  './assets/buttons/chrome/fair.svg',
+  './assets/buttons/chrome/file.svg',
+  './assets/buttons/chrome/haptics.svg',
+  './assets/buttons/chrome/help.svg',
+  './assets/buttons/chrome/home.svg',
+  './assets/buttons/chrome/import.svg',
+  './assets/buttons/chrome/install.svg',
+  './assets/buttons/chrome/link.svg',
+  './assets/buttons/chrome/lite-fx.svg',
+  './assets/buttons/chrome/missions.svg',
+  './assets/buttons/chrome/music.svg',
+  './assets/buttons/chrome/next.svg',
+  './assets/buttons/chrome/play.svg',
+  './assets/buttons/chrome/reduced-motion.svg',
+  './assets/buttons/chrome/refresh.svg',
+  './assets/buttons/chrome/settings.svg',
+  './assets/buttons/chrome/sfx.svg',
+  './assets/buttons/chrome/shake.svg',
+  './assets/buttons/chrome/skip.svg',
+  './assets/buttons/chrome/star.svg',
+  './assets/buttons/chrome/sync.svg',
+  './assets/buttons/chrome/thumb.svg',
+  './assets/buttons/chrome/trash.svg',
+  './assets/buttons/hub/adventure.svg',
+  './assets/buttons/hub/arcade.svg',
+  './assets/buttons/hub/collect.svg',
+  './assets/buttons/hub/continue.svg',
+  './assets/buttons/hub/versus.svg',
+  './assets/buttons/modes/dex.svg',
+  './assets/buttons/modes/mats.svg',
+  './assets/buttons/modes/pets.svg',
+  './assets/buttons/modes/skills.svg',
+  './assets/buttons/modes/style.svg',
+  './assets/buttons/modes/training.svg',
+  './assets/buttons/modes/upgrades.svg',
+  './assets/buttons/modes/wall.svg',
+  './assets/buttons/modes/weapons.svg'
 ];
 
 function offlineFallbackHtml() {

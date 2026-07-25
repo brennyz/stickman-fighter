@@ -114,8 +114,12 @@ function ensureMenuVistaBuf(w, h) {
 }
 
 function paintMenuHeroCanvas(t) {
+  if (typeof document !== 'undefined' && document.body && document.body.classList.contains('is-playing')) return;
+  if (typeof Perf !== 'undefined' && Perf.menuLandingVisible && !Perf.menuLandingVisible()) return;
   const cv = document.getElementById('menuHeroCanvas');
   if (!cv) return;
+  const menu = document.getElementById('menuScreen');
+  if (menu && !menu.classList.contains('active')) return;
   const c = cv.getContext('2d');
   if (!c) return;
   const lite = save.liteFx || Perf.tier >= 1;
@@ -665,6 +669,7 @@ function bootGame() {
     forcePlay: () => (typeof forcePlayCanvasVisible === 'function' ? forcePlayCanvasVisible('__sf') : null),
   };
   safeCall(wireSfDebugTools, 'sfDebug');
+  safeCall(hardenButtonIcons, 'buttonIcons');
 
   (function handleLaunchShortcut() {
     try {
