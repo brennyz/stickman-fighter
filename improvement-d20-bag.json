@@ -8,7 +8,6 @@
     6,
     9,
     12,
-    13,
     15,
     17,
     19
@@ -555,10 +554,10 @@
       "cycle": 4
     },
     {
-      "face": 11,
-      "note": "sticky char footer + scrollNavTop on goBack",
-      "version": "1.17.66",
-      "doneAt": "2026-07-25T07:25:54Z",
+      "face": 13,
+      "note": "Vandaag-plan + menu-chip + prestatie-spotlight",
+      "version": "1.17.75",
+      "doneAt": "2026-07-25T07:09:15Z",
       "cycle": 4
     }
   ],

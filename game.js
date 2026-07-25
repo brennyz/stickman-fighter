@@ -159,9 +159,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.66';
+const APP_VERSION = '1.17.75';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 192;
+const SW_CACHE_REV = 201;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null, activeJutsu: 'rasengan',
 
@@ -2237,6 +2237,85 @@ function dailyStatusLine() {
   return t('missionsUi.statusDefault', {
     hint: stepHint, done, xp: dailyPotentialXp(), streak: streakBit,
   });
+}
+
+function dailyEarnedXpToday() {
+  ensureDaily();
+  let xp = save.daily.tasks.filter(t => t.claimed).reduce((n, t) => n + (dailyDef(t.id)?.xp || 0), 0);
+  if (save.daily.dayBonusClaimed) xp += 80;
+  return xp;
+}
+
+function dailyResetCountdown() {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0);
+  const ms = Math.max(0, midnight - now);
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  if (h <= 0 && m <= 1) return t('missionsUi.resetSoon');
+  if (h <= 0) return t('missionsUi.resetMinutes', { m });
+  if (m <= 0) return t('missionsUi.resetHoursOnly', { h });
+  return t('missionsUi.resetHours', { h, m });
+}
+
+function dailyNextActionLine() {
+  ensureDaily();
+  const step = dailyFlowStep();
+  if (step === 0) return t('missionsUi.nextDone', { reset: dailyResetCountdown() });
+  if (step === 2) {
+    const ready = claimableDailyTasks();
+    const xp = ready.reduce((n, task) => n + (dailyDef(task.id)?.xp || 0), 0);
+    if (ready.length === 1) {
+      return t('missionsUi.nextClaim1', { text: dailyText(ready[0].id), xp });
+    }
+    return t('missionsUi.nextClaimN', { n: ready.length, xp });
+  }
+  if (step === 3) return t('missionsUi.nextBonus');
+  let best = null;
+  let bestPct = -1;
+  for (const task of save.daily.tasks) {
+    if (task.done || task.claimed) continue;
+    const def = dailyDef(task.id);
+    if (!def) continue;
+    const pct = task.progress / def.goal;
+    if (pct > bestPct) { bestPct = pct; best = task; }
+  }
+  if (!best) return t('missionsUi.nextPlayGeneric');
+  const def = dailyDef(best.id);
+  const target = DAILY_PLAY_TARGETS[best.id];
+  const mode = target ? dailyModeLabel(target.mode) : '';
+  const remainder = dailyTaskRemainderText(best, def);
+  return t('missionsUi.nextPlay', {
+    text: dailyText(best.id),
+    mode,
+    remainder: remainder ? ` · ${remainder}` : '',
+  });
+}
+
+function nearestAchievement() {
+  let best = null;
+  let bestFrac = -1;
+  for (const ach of ACHIEVEMENTS) {
+    if (save.achievements[ach.id]) continue;
+    const frac = achievementProgressFrac(ach);
+    if (frac > bestFrac) { bestFrac = frac; best = ach; }
+  }
+  if (!best || bestFrac < 0.2) return null;
+  return { ach: best, frac: bestFrac, hint: achievementProgressHint(best) };
+}
+
+function dailyMenuChipLine() {
+  ensureDaily();
+  if (save.daily.dayBonusClaimed) return '';
+  const bonusReady = save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed;
+  if (bonusReady) return t('ui.menuMissionBonus');
+  const ready = claimableDailyTasks().length;
+  if (ready > 0) return t('ui.menuMissionClaim', { xp: dailyUnclaimedXp() });
+  const done = save.daily.tasks.filter(t => t.done).length;
+  const claimed = save.daily.tasks.filter(t => t.claimed).length;
+  if (done === 0) return t('ui.menuMissionStart');
+  return t('ui.menuMissionProgress', { done, claimed });
 }
 
 function unlockAchievement(id) {
@@ -6535,6 +6614,22 @@ function seedNlGameStrings() {
     remainderPickupsN: 'Nog {n} pickups',
     remainderRun: 'Nog 1 run',
     remainderGeneric: 'Nog {n}',
+    planNow: 'Nu:',
+    planEarned: 'Vandaag +{earned} / max +{max} XP',
+    planReset: 'Nieuwe missies over {reset}',
+    resetSoon: 'binnenkort',
+    resetMinutes: '{m} min',
+    resetHoursOnly: '{h} u',
+    resetHours: '{h} u {m} min',
+    nextDone: 'Klaar voor vandaag — nieuwe missies over {reset}',
+    nextClaim1: 'Claim +{xp} XP · {text}',
+    nextClaimN: 'Claim {n} missies · +{xp} XP totaal',
+    nextBonus: 'Tik Dagbonus (+80 XP) hieronder',
+    nextPlay: 'Speel {mode} · {text}{remainder}',
+    nextPlayGeneric: 'Speel een missie-modus (Avontuur / Muur / Training)',
+    dailyClaimedXp: '+{xp} XP',
+    spotlightTitle: 'Volgende prestatie (permanent)',
+    spotlightFoot: '{pct}% — geen dagelijkse grind',
   });
   if (!I18N.nl.help) I18N.nl.help = {};
   I18N.nl.help.tips = [
@@ -6569,6 +6664,10 @@ function seedNlGameStrings() {
   if (!I18N.nl.ui) I18N.nl.ui = {};
   Object.assign(I18N.nl.ui, {
     menuMissionReady: 'missie klaar',
+    menuMissionClaim: 'Claim +{xp} XP',
+    menuMissionBonus: 'Dagbonus +80',
+    menuMissionStart: '3 dagmissies',
+    menuMissionProgress: '{done}/3 klaar · {claimed}/3 geclaimd',
     menuFirstMinuteNext: 'Eerste minuut {seen}/{total} · probeer: {next}',
     menuFirstMinutePartial: 'Eerste minuut {seen}/{total} modi — één hint per modus bovenin',
     charArenaPre: 'VERSUS · BEST OF 3',
@@ -7063,9 +7162,29 @@ const CATALOG_EN = {
     remainderPickupsN: '{n} pickups left',
     remainderRun: '1 run left',
     remainderGeneric: '{n} left',
+    planNow: 'Now:',
+    planEarned: 'Today +{earned} / max +{max} XP',
+    planReset: 'New missions in {reset}',
+    resetSoon: 'soon',
+    resetMinutes: '{m} min',
+    resetHoursOnly: '{h} h',
+    resetHours: '{h} h {m} min',
+    nextDone: 'Done for today — new missions in {reset}',
+    nextClaim1: 'Claim +{xp} XP · {text}',
+    nextClaimN: 'Claim {n} missions · +{xp} XP total',
+    nextBonus: 'Tap Daily bonus (+80 XP) below',
+    nextPlay: 'Play {mode} · {text}{remainder}',
+    nextPlayGeneric: 'Play a mission mode (Adventure / Wall / Training)',
+    dailyClaimedXp: '+{xp} XP',
+    spotlightTitle: 'Next achievement (permanent)',
+    spotlightFoot: '{pct}% — not daily grind',
   },
   ui: {
     menuMissionReady: 'mission ready',
+    menuMissionClaim: 'Claim +{xp} XP',
+    menuMissionBonus: 'Daily bonus +80',
+    menuMissionStart: '3 daily missions',
+    menuMissionProgress: '{done}/3 done · {claimed}/3 claimed',
     menuFirstMinuteNext: 'First minute {seen}/{total} · try: {next}',
     menuFirstMinutePartial: 'First minute {seen}/{total} modes — one hint per mode at top',
     charSub1: 'Player 1 — tap an unlocked card (left half in fight)',
@@ -17047,9 +17166,8 @@ const UI = {
     if (missBtn) {
       missBtn.classList.toggle('tog-alert', missAlert);
       if (missLbl) {
-        if (readyClaim > 0) missLbl.textContent = `+${dailyUnclaimedXp()} XP`;
-        else if (bonusReady) missLbl.textContent = t('menu.dayBonus');
-        else missLbl.textContent = t('menu.missions');
+        const chip = dailyMenuChipLine();
+        missLbl.textContent = chip || t('menu.missions');
       }
     }
     const playLinkEl = document.getElementById('menuPlayLink');
@@ -17112,6 +17230,17 @@ const UI = {
     if (flowHost) {
       flowHost.innerHTML = dailyFlowBarHtml(step);
     }
+    const planHost = document.getElementById('missionsTodayPlan');
+    if (planHost) {
+      const earned = dailyEarnedXpToday();
+      const maxXp = dailyPotentialXp();
+      const next = dailyNextActionLine();
+      planHost.innerHTML =
+        `<div class="mission-plan-next"><b>${t('missionsUi.planNow')}</b> ${next}</div>` +
+        `<div class="mission-plan-xp">${t('missionsUi.planEarned', { earned, max: maxXp })}` +
+        (step === 0 ? ` · ${t('missionsUi.planReset', { reset: dailyResetCountdown() })}` : '') +
+        '</div>';
+    }
     const sum = document.getElementById('missionsSummary');
     if (sum) {
       sum.style.display = 'block';
@@ -17156,7 +17285,7 @@ const UI = {
         (isNextUp ? ' next-up' : '');
       const pct = Math.min(100, Math.round(task.progress / def.goal * 100));
       let status;
-      if (task.claimed) status = `<span style="color:#7cfc8a">${SVG_CHECK_MINI} ${t('missionsUi.dailyClaimed')}</span>`;
+      if (task.claimed) status = `<span style="color:#7cfc8a">${SVG_CHECK_MINI} ${t('missionsUi.dailyClaimed')} · ${t('missionsUi.dailyClaimedXp', { xp: def.xp })}</span>`;
       else if (task.done) status = `<span style="color:#ffd75e">${t('missionsUi.dailyReady')}</span>`;
       else status = `<span style="opacity:.85">${t('missionsUi.dailyProgress', { cur: task.progress, goal: def.goal })}</span>`;
       const playHint = dailyHint(def.id);
@@ -17235,6 +17364,24 @@ const UI = {
           UI.achFilter = btn.dataset.achFilter || 'all';
           UI.renderMissions();
         });
+      }
+    }
+    const achSpot = document.getElementById('achSpotlight');
+    if (achSpot) {
+      const near = nearestAchievement();
+      const showSpot = step === 0 && near;
+      if (showSpot) {
+        const pct = Math.min(100, Math.round(near.frac * 100));
+        achSpot.style.display = 'block';
+        achSpot.innerHTML =
+          `<div class="mission-spot-title">${t('missionsUi.spotlightTitle')}</div>` +
+          `<b>${achIconSvg(near.ach.id)} ${achLabel(near.ach, 'name')}</b>` +
+          `<div class="mission-spot-desc">${achLabel(near.ach, 'desc')}${near.hint ? ` · ${near.hint}` : ''}</div>` +
+          `<div class="xpline" style="margin-top:8px;height:6px"><div style="width:${pct}%"></div></div>` +
+          `<div class="mission-spot-foot">${t('missionsUi.spotlightFoot', { pct })}</div>`;
+      } else {
+        achSpot.style.display = 'none';
+        achSpot.innerHTML = '';
       }
     }
     achHost.innerHTML = '';

@@ -734,6 +734,16 @@
   .mission-card .mission-play-btn { width:100%; margin-top:10px; justify-content:center;
       background:linear-gradient(180deg,#3a6a9a,#254a72); color:#e8f4ff; min-height:44px; font-size:15px; }
   body.reduced-motion .mission-card.claimable { box-shadow: none; }
+  .mission-today-plan { width:min(92vw,480px); margin:0 auto 12px; padding:12px 14px; border-radius:14px;
+    background:rgba(124,245,255,.08); border:1px solid rgba(124,245,255,.28); color:#cfe0ff; font-size:13px; line-height:1.45; }
+  .mission-plan-next { margin-bottom:6px; }
+  .mission-plan-next b { color:#ffd75e; margin-right:4px; }
+  .mission-plan-xp { font-size:12px; font-weight:800; color:#9db1e3; }
+  .mission-ach-spotlight { width:min(92vw,520px); margin:0 auto 12px; padding:12px 14px; border-radius:14px;
+    background:rgba(255,215,94,.08); border:1px solid rgba(255,215,94,.28); color:#e8f0ff; font-size:13px; line-height:1.4; }
+  .mission-spot-title { font-size:11px; font-weight:900; color:#ffd75e; letter-spacing:.04em; text-transform:uppercase; margin-bottom:6px; }
+  .mission-spot-desc { font-size:12px; color:#b8c8e8; margin-top:4px; }
+  .mission-spot-foot { font-size:11px; font-weight:800; color:#7cf5ff; margin-top:6px; }
 
   /* OS-level a11y — applies before JS syncA11yClasses */
   @media (prefers-reduced-motion: reduce) {

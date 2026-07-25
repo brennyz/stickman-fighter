@@ -984,9 +984,8 @@ const UI = {
     if (missBtn) {
       missBtn.classList.toggle('tog-alert', missAlert);
       if (missLbl) {
-        if (readyClaim > 0) missLbl.textContent = `+${dailyUnclaimedXp()} XP`;
-        else if (bonusReady) missLbl.textContent = t('menu.dayBonus');
-        else missLbl.textContent = t('menu.missions');
+        const chip = dailyMenuChipLine();
+        missLbl.textContent = chip || t('menu.missions');
       }
     }
     const playLinkEl = document.getElementById('menuPlayLink');
@@ -1049,6 +1048,17 @@ const UI = {
     if (flowHost) {
       flowHost.innerHTML = dailyFlowBarHtml(step);
     }
+    const planHost = document.getElementById('missionsTodayPlan');
+    if (planHost) {
+      const earned = dailyEarnedXpToday();
+      const maxXp = dailyPotentialXp();
+      const next = dailyNextActionLine();
+      planHost.innerHTML =
+        `<div class="mission-plan-next"><b>${t('missionsUi.planNow')}</b> ${next}</div>` +
+        `<div class="mission-plan-xp">${t('missionsUi.planEarned', { earned, max: maxXp })}` +
+        (step === 0 ? ` · ${t('missionsUi.planReset', { reset: dailyResetCountdown() })}` : '') +
+        '</div>';
+    }
     const sum = document.getElementById('missionsSummary');
     if (sum) {
       sum.style.display = 'block';
@@ -1093,7 +1103,7 @@ const UI = {
         (isNextUp ? ' next-up' : '');
       const pct = Math.min(100, Math.round(task.progress / def.goal * 100));
       let status;
-      if (task.claimed) status = `<span style="color:#7cfc8a">${SVG_CHECK_MINI} ${t('missionsUi.dailyClaimed')}</span>`;
+      if (task.claimed) status = `<span style="color:#7cfc8a">${SVG_CHECK_MINI} ${t('missionsUi.dailyClaimed')} · ${t('missionsUi.dailyClaimedXp', { xp: def.xp })}</span>`;
       else if (task.done) status = `<span style="color:#ffd75e">${t('missionsUi.dailyReady')}</span>`;
       else status = `<span style="opacity:.85">${t('missionsUi.dailyProgress', { cur: task.progress, goal: def.goal })}</span>`;
       const playHint = dailyHint(def.id);
@@ -1172,6 +1182,24 @@ const UI = {
           UI.achFilter = btn.dataset.achFilter || 'all';
           UI.renderMissions();
         });
+      }
+    }
+    const achSpot = document.getElementById('achSpotlight');
+    if (achSpot) {
+      const near = nearestAchievement();
+      const showSpot = step === 0 && near;
+      if (showSpot) {
+        const pct = Math.min(100, Math.round(near.frac * 100));
+        achSpot.style.display = 'block';
+        achSpot.innerHTML =
+          `<div class="mission-spot-title">${t('missionsUi.spotlightTitle')}</div>` +
+          `<b>${achIconSvg(near.ach.id)} ${achLabel(near.ach, 'name')}</b>` +
+          `<div class="mission-spot-desc">${achLabel(near.ach, 'desc')}${near.hint ? ` · ${near.hint}` : ''}</div>` +
+          `<div class="xpline" style="margin-top:8px;height:6px"><div style="width:${pct}%"></div></div>` +
+          `<div class="mission-spot-foot">${t('missionsUi.spotlightFoot', { pct })}</div>`;
+      } else {
+        achSpot.style.display = 'none';
+        achSpot.innerHTML = '';
       }
     }
     achHost.innerHTML = '';
