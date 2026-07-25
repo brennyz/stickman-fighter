@@ -8,6 +8,13 @@ import { fileURLToPath } from 'url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const code = fs.readFileSync(path.join(root, 'game.js'), 'utf8');
 
+// Regressie: Input.onDown mag playInputSuppressed() niet aanroepen als de helper
+// ontbreekt — dat gaf ReferenceError → window error → recoverToMenu (adventure 1-tap crash).
+if (/\bplayInputSuppressed\s*\(/.test(code) && !/function\s+playInputSuppressed\s*\(/.test(code)) {
+  console.error('SMOKE_FAIL playInputSuppressed() called but function not defined — adventure tap→menu');
+  process.exit(1);
+}
+
 function makeEl(id) {
   return {
     id,

@@ -430,7 +430,24 @@ function relayoutTouchPads() {
 function primePlayInput(dual) {
   Input.releaseAll();
   Input.dualMode = !!dual;
+  // Kort suppress-venster: menu-tap ghost mag niet meteen Input.onDown raken.
+  // playInputSuppressed MOET bestaan — anders ReferenceError → window error → recoverToMenu.
+  Input.suppressUntil = performance.now() + (IS_TOUCH ? 400 : 140);
+  Input.lastMoveTap = 0;
+  Input.lastMoveDir = 0;
+  if (typeof InputP2 !== 'undefined' && InputP2) {
+    InputP2.lastMoveTap = 0;
+    InputP2.lastMoveDir = 0;
+  }
   relayoutTouchPads();
+}
+
+function playInputSuppressed() {
+  try {
+    return !!(Input && Input.suppressUntil && performance.now() < Input.suppressUntil);
+  } catch (_) {
+    return false;
+  }
 }
 
 /** Voorkom dat scroll/slide over menu-tegels meteen selecteert (iPad). */
@@ -900,71 +917,86 @@ Object.assign(Input, {
   suppressUntil: 0,
   pointerPads: {},
   onDown(x, y, id) {
-    if (playInputSuppressed()) return;
-    AudioSys.init();
-    if (this.dualMode) {
-      const z = touchPadZone(x);
-      if (z === 'neutral') return;
-      this.pointerPads[id] = z;
-      if (z === 'p2') {
-        InputP2.onDown(x, y, id, true);
+    try {
+      // Inline + helper: nooit ReferenceError als helper ooit weer ontbreekt
+      try {
+        if (this.suppressUntil && performance.now() < this.suppressUntil) return;
+      } catch (_) {}
+      if (typeof playInputSuppressed === 'function' && playInputSuppressed()) return;
+      AudioSys.init();
+      if (this.dualMode) {
+        const z = touchPadZone(x);
+        if (z === 'neutral') return;
+        this.pointerPads[id] = z;
+        if (z === 'p2') {
+          InputP2.onDown(x, y, id, true);
+          return;
+        }
+        _padP1Methods.onDown.call(this, x, y, id, true);
         return;
       }
-      _padP1Methods.onDown.call(this, x, y, id, true);
-      return;
-    }
-    if (this.activePointers.size >= MAX_PAD_POINTERS && !this.activePointers.has(id)) return;
-    this.activePointers.add(id);
-    const b = hitTouchButton(this.buttons, x, y);
-    if (b) {
-      if (b.held) return;
-      this.btnPointers[id] = b.id;
-      b.held = true;
-      b.pressVis = 1;
-      b._pressSyncAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-      this.press(b.id);
-      try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
-      return;
-    }
-    if (!pointInJoyZone(this, x, y)) {
-      if (this.joy.active && this.joy.id === id) this.releaseJoy();
-      this.activePointers.delete(id);
-      return;
-    }
-    if (nearAnyTouchButton(this.buttons, x, y, btnHitSlop())) {
-      this.activePointers.delete(id);
-      return;
-    }
-    if (this.joy.active && this.joy.id !== id && !this.activePointers.has(this.joy.id)) {
-      this.releaseJoy();
-    }
-    if (this.joy.active && this.joy.id !== id) return;
-    if (!this.joy.active) {
-      this.joy.active = true;
-      this.joy.id = id;
-      this.joy.ox = x;
-      this.joy.oy = y;
-      this.joy.dx = 0;
-      this.joy.dy = 0;
-      this.joy.lastAt = performance.now();
+      if (this.activePointers.size >= MAX_PAD_POINTERS && !this.activePointers.has(id)) return;
+      this.activePointers.add(id);
+      const b = hitTouchButton(this.buttons, x, y);
+      if (b) {
+        if (b.held) return;
+        this.btnPointers[id] = b.id;
+        b.held = true;
+        b.pressVis = 1;
+        b._pressSyncAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+        this.press(b.id);
+        try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
+        return;
+      }
+      if (!pointInJoyZone(this, x, y)) {
+        if (this.joy.active && this.joy.id === id) this.releaseJoy();
+        this.activePointers.delete(id);
+        return;
+      }
+      if (nearAnyTouchButton(this.buttons, x, y, btnHitSlop())) {
+        this.activePointers.delete(id);
+        return;
+      }
+      if (this.joy.active && this.joy.id !== id && !this.activePointers.has(this.joy.id)) {
+        this.releaseJoy();
+      }
+      if (this.joy.active && this.joy.id !== id) return;
+      if (!this.joy.active) {
+        this.joy.active = true;
+        this.joy.id = id;
+        this.joy.ox = x;
+        this.joy.oy = y;
+        this.joy.dx = 0;
+        this.joy.dy = 0;
+        this.joy.lastAt = performance.now();
+      }
+    } catch (err) {
+      try { sfReportError('Input.onDown', err); } catch (_) {}
     }
   },
   onMove(x, y, id) {
-    if (playInputSuppressed()) return;
-    if (this.dualMode) {
-      const owner = this.pointerPads[id];
-      if (owner === 'p2') {
-        InputP2.onMove(x, y, id, true);
+    try {
+      try {
+        if (this.suppressUntil && performance.now() < this.suppressUntil) return;
+      } catch (_) {}
+      if (typeof playInputSuppressed === 'function' && playInputSuppressed()) return;
+      if (this.dualMode) {
+        const owner = this.pointerPads[id];
+        if (owner === 'p2') {
+          InputP2.onMove(x, y, id, true);
+          return;
+        }
+        if (owner === 'p1') {
+          _padP1Methods.onMove.call(this, x, y, id, true);
+          return;
+        }
         return;
       }
-      if (owner === 'p1') {
-        _padP1Methods.onMove.call(this, x, y, id, true);
-        return;
-      }
-      return;
+      if (!this.activePointers.has(id)) return;
+      applyJoyDelta(this, x, y, id);
+    } catch (err) {
+      try { sfReportError('Input.onMove', err); } catch (_) {}
     }
-    if (!this.activePointers.has(id)) return;
-    applyJoyDelta(this, x, y, id);
   },
   onUp(id) {
     if (this.dualMode) {
