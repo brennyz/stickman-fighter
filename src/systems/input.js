@@ -410,6 +410,14 @@ function touchPadZone(x) {
   return x < lo ? 'p1' : 'p2';
 }
 
+/** Canvas-bounds van 2P neutrale zone (d9 c5 visuele hint). */
+function touchNeutralZoneBounds() {
+  if (!Input.dualMode) return null;
+  const w = W || (typeof innerWidth === 'number' ? innerWidth : 800);
+  const margin = IS_TOUCH ? (w < 420 ? 0.08 : 0.06) : 0.04;
+  return { lo: w * (0.5 - margin), hi: w * (0.5 + margin), w };
+}
+
 function relayoutTouchPads() {
   if (typeof W === 'undefined' || typeof H === 'undefined') return;
   try {
@@ -429,6 +437,8 @@ function primePlayInput(dual) {
 const TAP_SLOP_PX = IS_TOUCH ? 12 : 8;
 const _uiTaps = new Map();
 const _uiTapBlocked = new Set();
+/** Recent geblokkeerde taps (coords) — touchend id ≠ pointerId op iOS (d9 c5). */
+const _uiTapBlockedCoords = [];
 let _uiBlockClickAfterScroll = false;
 const MAX_PAD_POINTERS = IS_TOUCH ? 8 : 12;
 
@@ -468,24 +478,69 @@ function uiTapGuardMove(id, x, y) {
   }
 }
 
+function uiTapEventCoords(e) {
+  if (!e) return null;
+  if (e.clientX != null && e.clientY != null) return { x: e.clientX, y: e.clientY };
+  const t = e.changedTouches && e.changedTouches[0];
+  if (t) return { x: t.clientX, y: t.clientY };
+  return null;
+}
+
+function uiTapNearBlockedCoords(x, y) {
+  const now = Date.now();
+  const slop = uiTapSlopPx() * 2.2;
+  for (let i = _uiTapBlockedCoords.length - 1; i >= 0; i--) {
+    const b = _uiTapBlockedCoords[i];
+    if (now - b.at > 700) {
+      _uiTapBlockedCoords.splice(i, 1);
+      continue;
+    }
+    if (Math.hypot(x - b.x, y - b.y) <= slop) return true;
+  }
+  return false;
+}
+
+function uiTapFindActiveByCoords(x, y) {
+  const slop = uiTapSlopPx() * 2.2;
+  for (const tap of _uiTaps.values()) {
+    if (Math.hypot(x - tap.x, y - tap.y) <= slop) return tap;
+  }
+  return null;
+}
+
 function uiTapGuardFinish(cancelled, id) {
   const tap = _uiTaps.get(id);
   if (!tap) return;
-  if (cancelled || tap.moved) _uiTapBlocked.add(id);
-  else _uiTapBlocked.delete(id);
+  if (cancelled || tap.moved) {
+    _uiTapBlocked.add(id);
+    _uiTapBlockedCoords.push({ x: tap.x, y: tap.y, at: Date.now() });
+    if (_uiTapBlockedCoords.length > 24) _uiTapBlockedCoords.splice(0, _uiTapBlockedCoords.length - 24);
+  } else _uiTapBlocked.delete(id);
   if (cancelled || tap.moved) _uiBlockClickAfterScroll = true;
   _uiTaps.delete(id);
 }
 
 function uiTapAllowed(e) {
+  const coords = uiTapEventCoords(e);
+  if (coords && uiTapNearBlockedCoords(coords.x, coords.y)) return false;
   const id = uiTapPointerId(e);
-  if (id == null) return true;
+  if (id == null) {
+    if (coords) {
+      const tap = uiTapFindActiveByCoords(coords.x, coords.y);
+      if (tap) return !tap.moved;
+    }
+    return true;
+  }
   if (_uiTapBlocked.has(id)) {
     _uiTapBlocked.delete(id);
     return false;
   }
   const tap = _uiTaps.get(id);
   if (tap) return !tap.moved;
+  if (coords) {
+    const near = uiTapFindActiveByCoords(coords.x, coords.y);
+    if (near) return !near.moved;
+  }
   return true;
 }
 

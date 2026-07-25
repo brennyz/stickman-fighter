@@ -179,17 +179,23 @@ function bindCollectionPickGrid(grid, opts) {
   };
   grid.addEventListener('click', (e) => {
     if (Date.now() - lastTouchAt < 480) return;
+    if (typeof PointerEvent !== 'undefined' && e.pointerType && e.pointerType !== 'mouse') return;
     const card = e.target.closest(sel);
     if (!card) return;
     fire(card);
   });
-  grid.addEventListener('touchend', (e) => {
+  const onTouchPick = (e) => {
     const card = touchEndedOnSelector(e, sel);
     if (!card) return;
     if (e.cancelable) e.preventDefault();
     lastTouchAt = Date.now();
     fire(card);
-  }, { passive: false });
+  };
+  if (typeof PointerEvent !== 'undefined') {
+    grid.addEventListener('pointerup', onTouchPick);
+  } else {
+    grid.addEventListener('touchend', onTouchPick, { passive: false });
+  }
   grid.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     const card = e.target.closest(sel);
@@ -212,25 +218,31 @@ function bindPreviewEquipHost(host, opts) {
   let lastEquip = 0;
   let lastTouchAt = 0;
   const debounce = opts.debounceMs || 320;
-  const runEquip = () => {
+  const runEquip = (e) => {
     const now = Date.now();
     if (now - lastEquip < debounce) return;
-    if (!uiTapAllowed()) return;
+    if (e && !uiTapAllowed(e)) return;
     lastEquip = now;
     opts.onEquip();
   };
   host.addEventListener('click', (e) => {
     if (Date.now() - lastTouchAt < 480) return;
+    if (typeof PointerEvent !== 'undefined' && e.pointerType && e.pointerType !== 'mouse') return;
     if (!e.target.closest(opts.btnSelector)) return;
-    runEquip();
+    runEquip(e);
   });
-  host.addEventListener('touchend', (e) => {
+  const onTouchEquip = (e) => {
     if (!e.target.closest(opts.btnSelector)) return;
-    if (!uiTapAllowed()) return;
+    if (!uiTapAllowed(e)) return;
     if (e.cancelable) e.preventDefault();
     lastTouchAt = Date.now();
-    runEquip();
-  }, { passive: false });
+    runEquip(e);
+  };
+  if (typeof PointerEvent !== 'undefined') {
+    host.addEventListener('pointerup', onTouchEquip);
+  } else {
+    host.addEventListener('touchend', onTouchEquip, { passive: false });
+  }
 }
 
 function initSkillScreenChrome() {

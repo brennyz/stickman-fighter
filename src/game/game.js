@@ -4649,6 +4649,23 @@ class Game {
     const joyOuter = Math.round(52 * ui);
     const joyInner = Math.round(26 * ui);
     if (Input.dualMode) {
+      const nz = typeof touchNeutralZoneBounds === 'function' ? touchNeutralZoneBounds() : null;
+      if (nz) {
+        c.save();
+        c.fillStyle = 'rgba(255,255,255,.06)';
+        c.fillRect(nz.lo, H * 0.58, nz.hi - nz.lo, H * 0.38);
+        c.globalAlpha = 0.28;
+        c.strokeStyle = 'rgba(255,255,255,.14)';
+        c.setLineDash([6, 8]);
+        c.lineWidth = 1.5;
+        c.beginPath();
+        c.moveTo(nz.lo, H * 0.6);
+        c.lineTo(nz.lo, H - 8);
+        c.moveTo(nz.hi, H * 0.6);
+        c.lineTo(nz.hi, H - 8);
+        c.stroke();
+        c.restore();
+      }
       this.drawPad(c, Input, this.player, 'P1', '#7cf5ff');
       this.drawPad(c, InputP2, this.p2 || this.player, 'P2', '#ffb0b8');
       return;
@@ -4663,6 +4680,16 @@ class Game {
       c.globalAlpha = j.active ? 0.5 : 0.22;
       c.strokeStyle = '#fff'; c.lineWidth = 3;
       c.beginPath(); c.arc(jx, jy, joyOuter, 0, TAU); c.stroke();
+    }
+    if (j.active) {
+      c.save();
+      c.globalAlpha = 0.32 + Math.sin(this.t * 14) * 0.1;
+      c.strokeStyle = '#7cf5ff';
+      c.lineWidth = 2.5;
+      c.beginPath();
+      c.arc(jx, jy, joyOuter + 7 + Math.sin(this.t * 11) * 2, 0, TAU);
+      c.stroke();
+      c.restore();
     }
     drawJoyAimGuide(c, jx, jy, j, ui, '#7a9aaa');
     const kx = jx + (j.active ? j.dx : 0);
@@ -4698,6 +4725,16 @@ class Game {
       c.strokeStyle = accent;
       c.lineWidth = 3;
       c.beginPath(); c.arc(jx, jy, joyOuter, 0, TAU); c.stroke();
+    }
+    if (j.active) {
+      c.save();
+      c.globalAlpha = 0.38 + Math.sin(this.t * 14) * 0.12;
+      c.strokeStyle = accent;
+      c.lineWidth = 2;
+      c.beginPath();
+      c.arc(jx, jy, joyOuter + 6 + Math.sin(this.t * 11) * 2, 0, TAU);
+      c.stroke();
+      c.restore();
     }
     drawJoyAimGuide(c, jx, jy, j, ui, accent);
     const kx = jx + (j.active ? j.dx : 0);

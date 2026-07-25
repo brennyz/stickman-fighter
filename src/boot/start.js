@@ -65,7 +65,7 @@ function startGame(mode, opts) {
   } catch (_) {}
 }
 
-/** iPad: touchend + click zonder dubbel-vuur (preventDefault stopt ghost-click). */
+/** iPad: pointerup + click — zelfde pointerId als scroll-guard (d9 c5); geen dubbel-vuur. */
 function bindPress(el, handler) {
   if (!el || el.dataset.sfPressBound) return;
   el.dataset.sfPressBound = '1';
@@ -78,19 +78,39 @@ function bindPress(el, handler) {
       sfReportError('ui/' + (el.id || 'press'), err, 'Actie mislukt — probeer opnieuw');
     }
   };
-  el.addEventListener('click', run);
-  el.addEventListener('touchend', (e) => {
-    if (!uiTapAllowed(e)) return;
-    const t = e.changedTouches && e.changedTouches[0];
-    if (t) {
-      try {
-        const top = document.elementFromPoint(t.clientX, t.clientY);
-        if (top && top !== el && !el.contains(top)) return;
-      } catch (_) {}
-    }
-    if (e.cancelable) e.preventDefault();
+  const hitOk = (e) => {
+    try {
+      const top = document.elementFromPoint(e.clientX, e.clientY);
+      if (top && top !== el && !el.contains(top)) return false;
+    } catch (_) {}
+    return true;
+  };
+  el.addEventListener('click', (e) => {
+    if (typeof PointerEvent !== 'undefined' && e.pointerType && e.pointerType !== 'mouse') return;
     run(e);
-  }, { passive: false });
+  });
+  if (typeof PointerEvent !== 'undefined') {
+    el.addEventListener('pointerup', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (!uiTapAllowed(e)) return;
+      if (!hitOk(e)) return;
+      if (e.cancelable) e.preventDefault();
+      run(e);
+    });
+  } else {
+    el.addEventListener('touchend', (e) => {
+      if (!uiTapAllowed(e)) return;
+      const t = e.changedTouches && e.changedTouches[0];
+      if (t) {
+        try {
+          const top = document.elementFromPoint(t.clientX, t.clientY);
+          if (top && top !== el && !el.contains(top)) return;
+        } catch (_) {}
+      }
+      if (e.cancelable) e.preventDefault();
+      run(e);
+    }, { passive: false });
+  }
 }
 
 bindPress(document.getElementById('btnAdventure'), () => {

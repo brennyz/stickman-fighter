@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-25 | **9** | iPad touch c5: pointerup scroll-guard (id mismatch fix), joy held pulse, 2P neutral zone strip. v1.18.56 / SW v266. |
 | 2026-07-25 | **15** | Onboarding c5: pauze eerste-minuut chip, Ketsbam/Tide inline hints, eerste Tide zonder toast. v1.18.55 / SW v265. |
 | 2026-07-25 | **17** | Stabiliteit (cron): blackScreenGuard tide cleanup, ketsbam charge abort bij death, todayKey fallback in sanitizeSave. v1.18.55. |
 | 2026-07-25 | — | **Ship:** gamble timer cancel op skip/back/recover (uit #141) mee naar live. v1.18.51 / SW v261. |

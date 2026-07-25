@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.55';
+const APP_VERSION = '1.18.56';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 265;
+const SW_CACHE_REV = 266;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -10024,6 +10024,10 @@ const CATALOG_EN = {
     weaponComboHint: 'Weapon 3× = ①②③ · hit ①+② → golden ③',
     gambleOnboardTouch: 'First gamble: low sum = super-boss · high sum = ally · Skip = normal level',
     gambleOnboardKb: 'First time: sum ≤5 super-boss · sum ≥9 ally buff · Skip = no gamble',
+    ketsbamOnboardTouch: 'Surrounded? Tap the center symbol — Ketsbam escape · 9s cooldown',
+    ketsbamOnboardKb: 'Surrounded? E or center symbol = Ketsbam · 9s cooldown',
+    tideBattleOnboardTouch: 'First Tide Battle: defeat {name} — no other waves until done',
+    tideBattleOnboardKb: 'First Tide Battle: defeat {name} — waves pause until done',
     langSwitchFail: 'Language switch failed',
   },
   fighter: {
@@ -12533,6 +12537,14 @@ function touchPadZone(x) {
   return x < lo ? 'p1' : 'p2';
 }
 
+/** Canvas-bounds van 2P neutrale zone (d9 c5 visuele hint). */
+function touchNeutralZoneBounds() {
+  if (!Input.dualMode) return null;
+  const w = W || (typeof innerWidth === 'number' ? innerWidth : 800);
+  const margin = IS_TOUCH ? (w < 420 ? 0.08 : 0.06) : 0.04;
+  return { lo: w * (0.5 - margin), hi: w * (0.5 + margin), w };
+}
+
 function relayoutTouchPads() {
   if (typeof W === 'undefined' || typeof H === 'undefined') return;
   try {
@@ -12552,6 +12564,8 @@ function primePlayInput(dual) {
 const TAP_SLOP_PX = IS_TOUCH ? 12 : 8;
 const _uiTaps = new Map();
 const _uiTapBlocked = new Set();
+/** Recent geblokkeerde taps (coords) — touchend id ≠ pointerId op iOS (d9 c5). */
+const _uiTapBlockedCoords = [];
 let _uiBlockClickAfterScroll = false;
 const MAX_PAD_POINTERS = IS_TOUCH ? 8 : 12;
 
@@ -12591,24 +12605,69 @@ function uiTapGuardMove(id, x, y) {
   }
 }
 
+function uiTapEventCoords(e) {
+  if (!e) return null;
+  if (e.clientX != null && e.clientY != null) return { x: e.clientX, y: e.clientY };
+  const t = e.changedTouches && e.changedTouches[0];
+  if (t) return { x: t.clientX, y: t.clientY };
+  return null;
+}
+
+function uiTapNearBlockedCoords(x, y) {
+  const now = Date.now();
+  const slop = uiTapSlopPx() * 2.2;
+  for (let i = _uiTapBlockedCoords.length - 1; i >= 0; i--) {
+    const b = _uiTapBlockedCoords[i];
+    if (now - b.at > 700) {
+      _uiTapBlockedCoords.splice(i, 1);
+      continue;
+    }
+    if (Math.hypot(x - b.x, y - b.y) <= slop) return true;
+  }
+  return false;
+}
+
+function uiTapFindActiveByCoords(x, y) {
+  const slop = uiTapSlopPx() * 2.2;
+  for (const tap of _uiTaps.values()) {
+    if (Math.hypot(x - tap.x, y - tap.y) <= slop) return tap;
+  }
+  return null;
+}
+
 function uiTapGuardFinish(cancelled, id) {
   const tap = _uiTaps.get(id);
   if (!tap) return;
-  if (cancelled || tap.moved) _uiTapBlocked.add(id);
-  else _uiTapBlocked.delete(id);
+  if (cancelled || tap.moved) {
+    _uiTapBlocked.add(id);
+    _uiTapBlockedCoords.push({ x: tap.x, y: tap.y, at: Date.now() });
+    if (_uiTapBlockedCoords.length > 24) _uiTapBlockedCoords.splice(0, _uiTapBlockedCoords.length - 24);
+  } else _uiTapBlocked.delete(id);
   if (cancelled || tap.moved) _uiBlockClickAfterScroll = true;
   _uiTaps.delete(id);
 }
 
 function uiTapAllowed(e) {
+  const coords = uiTapEventCoords(e);
+  if (coords && uiTapNearBlockedCoords(coords.x, coords.y)) return false;
   const id = uiTapPointerId(e);
-  if (id == null) return true;
+  if (id == null) {
+    if (coords) {
+      const tap = uiTapFindActiveByCoords(coords.x, coords.y);
+      if (tap) return !tap.moved;
+    }
+    return true;
+  }
   if (_uiTapBlocked.has(id)) {
     _uiTapBlocked.delete(id);
     return false;
   }
   const tap = _uiTaps.get(id);
   if (tap) return !tap.moved;
+  if (coords) {
+    const near = uiTapFindActiveByCoords(coords.x, coords.y);
+    if (near) return !near.moved;
+  }
   return true;
 }
 
@@ -23404,6 +23463,23 @@ class Game {
     const joyOuter = Math.round(52 * ui);
     const joyInner = Math.round(26 * ui);
     if (Input.dualMode) {
+      const nz = typeof touchNeutralZoneBounds === 'function' ? touchNeutralZoneBounds() : null;
+      if (nz) {
+        c.save();
+        c.fillStyle = 'rgba(255,255,255,.06)';
+        c.fillRect(nz.lo, H * 0.58, nz.hi - nz.lo, H * 0.38);
+        c.globalAlpha = 0.28;
+        c.strokeStyle = 'rgba(255,255,255,.14)';
+        c.setLineDash([6, 8]);
+        c.lineWidth = 1.5;
+        c.beginPath();
+        c.moveTo(nz.lo, H * 0.6);
+        c.lineTo(nz.lo, H - 8);
+        c.moveTo(nz.hi, H * 0.6);
+        c.lineTo(nz.hi, H - 8);
+        c.stroke();
+        c.restore();
+      }
       this.drawPad(c, Input, this.player, 'P1', '#7cf5ff');
       this.drawPad(c, InputP2, this.p2 || this.player, 'P2', '#ffb0b8');
       return;
@@ -23418,6 +23494,16 @@ class Game {
       c.globalAlpha = j.active ? 0.5 : 0.22;
       c.strokeStyle = '#fff'; c.lineWidth = 3;
       c.beginPath(); c.arc(jx, jy, joyOuter, 0, TAU); c.stroke();
+    }
+    if (j.active) {
+      c.save();
+      c.globalAlpha = 0.32 + Math.sin(this.t * 14) * 0.1;
+      c.strokeStyle = '#7cf5ff';
+      c.lineWidth = 2.5;
+      c.beginPath();
+      c.arc(jx, jy, joyOuter + 7 + Math.sin(this.t * 11) * 2, 0, TAU);
+      c.stroke();
+      c.restore();
     }
     drawJoyAimGuide(c, jx, jy, j, ui, '#7a9aaa');
     const kx = jx + (j.active ? j.dx : 0);
@@ -23453,6 +23539,16 @@ class Game {
       c.strokeStyle = accent;
       c.lineWidth = 3;
       c.beginPath(); c.arc(jx, jy, joyOuter, 0, TAU); c.stroke();
+    }
+    if (j.active) {
+      c.save();
+      c.globalAlpha = 0.38 + Math.sin(this.t * 14) * 0.12;
+      c.strokeStyle = accent;
+      c.lineWidth = 2;
+      c.beginPath();
+      c.arc(jx, jy, joyOuter + 6 + Math.sin(this.t * 11) * 2, 0, TAU);
+      c.stroke();
+      c.restore();
     }
     drawJoyAimGuide(c, jx, jy, j, ui, accent);
     const kx = jx + (j.active ? j.dx : 0);
@@ -23658,17 +23754,23 @@ function bindCollectionPickGrid(grid, opts) {
   };
   grid.addEventListener('click', (e) => {
     if (Date.now() - lastTouchAt < 480) return;
+    if (typeof PointerEvent !== 'undefined' && e.pointerType && e.pointerType !== 'mouse') return;
     const card = e.target.closest(sel);
     if (!card) return;
     fire(card);
   });
-  grid.addEventListener('touchend', (e) => {
+  const onTouchPick = (e) => {
     const card = touchEndedOnSelector(e, sel);
     if (!card) return;
     if (e.cancelable) e.preventDefault();
     lastTouchAt = Date.now();
     fire(card);
-  }, { passive: false });
+  };
+  if (typeof PointerEvent !== 'undefined') {
+    grid.addEventListener('pointerup', onTouchPick);
+  } else {
+    grid.addEventListener('touchend', onTouchPick, { passive: false });
+  }
   grid.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     const card = e.target.closest(sel);
@@ -23691,25 +23793,31 @@ function bindPreviewEquipHost(host, opts) {
   let lastEquip = 0;
   let lastTouchAt = 0;
   const debounce = opts.debounceMs || 320;
-  const runEquip = () => {
+  const runEquip = (e) => {
     const now = Date.now();
     if (now - lastEquip < debounce) return;
-    if (!uiTapAllowed()) return;
+    if (e && !uiTapAllowed(e)) return;
     lastEquip = now;
     opts.onEquip();
   };
   host.addEventListener('click', (e) => {
     if (Date.now() - lastTouchAt < 480) return;
+    if (typeof PointerEvent !== 'undefined' && e.pointerType && e.pointerType !== 'mouse') return;
     if (!e.target.closest(opts.btnSelector)) return;
-    runEquip();
+    runEquip(e);
   });
-  host.addEventListener('touchend', (e) => {
+  const onTouchEquip = (e) => {
     if (!e.target.closest(opts.btnSelector)) return;
-    if (!uiTapAllowed()) return;
+    if (!uiTapAllowed(e)) return;
     if (e.cancelable) e.preventDefault();
     lastTouchAt = Date.now();
-    runEquip();
-  }, { passive: false });
+    runEquip(e);
+  };
+  if (typeof PointerEvent !== 'undefined') {
+    host.addEventListener('pointerup', onTouchEquip);
+  } else {
+    host.addEventListener('touchend', onTouchEquip, { passive: false });
+  }
 }
 
 function initSkillScreenChrome() {
@@ -27056,7 +27164,7 @@ function startGame(mode, opts) {
   } catch (_) {}
 }
 
-/** iPad: touchend + click zonder dubbel-vuur (preventDefault stopt ghost-click). */
+/** iPad: pointerup + click — zelfde pointerId als scroll-guard (d9 c5); geen dubbel-vuur. */
 function bindPress(el, handler) {
   if (!el || el.dataset.sfPressBound) return;
   el.dataset.sfPressBound = '1';
@@ -27069,19 +27177,39 @@ function bindPress(el, handler) {
       sfReportError('ui/' + (el.id || 'press'), err, 'Actie mislukt — probeer opnieuw');
     }
   };
-  el.addEventListener('click', run);
-  el.addEventListener('touchend', (e) => {
-    if (!uiTapAllowed(e)) return;
-    const t = e.changedTouches && e.changedTouches[0];
-    if (t) {
-      try {
-        const top = document.elementFromPoint(t.clientX, t.clientY);
-        if (top && top !== el && !el.contains(top)) return;
-      } catch (_) {}
-    }
-    if (e.cancelable) e.preventDefault();
+  const hitOk = (e) => {
+    try {
+      const top = document.elementFromPoint(e.clientX, e.clientY);
+      if (top && top !== el && !el.contains(top)) return false;
+    } catch (_) {}
+    return true;
+  };
+  el.addEventListener('click', (e) => {
+    if (typeof PointerEvent !== 'undefined' && e.pointerType && e.pointerType !== 'mouse') return;
     run(e);
-  }, { passive: false });
+  });
+  if (typeof PointerEvent !== 'undefined') {
+    el.addEventListener('pointerup', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (!uiTapAllowed(e)) return;
+      if (!hitOk(e)) return;
+      if (e.cancelable) e.preventDefault();
+      run(e);
+    });
+  } else {
+    el.addEventListener('touchend', (e) => {
+      if (!uiTapAllowed(e)) return;
+      const t = e.changedTouches && e.changedTouches[0];
+      if (t) {
+        try {
+          const top = document.elementFromPoint(t.clientX, t.clientY);
+          if (top && top !== el && !el.contains(top)) return;
+        } catch (_) {}
+      }
+      if (e.cancelable) e.preventDefault();
+      run(e);
+    }, { passive: false });
+  }
 }
 
 bindPress(document.getElementById('btnAdventure'), () => {
