@@ -234,33 +234,14 @@ if (btnExportSave) btnExportSave.addEventListener('click', () => {
     UI.renderSettings();
   })(), 'exportSave', 'Export mislukt — kopieer JSON handmatig uit het vak');
 });
-const btnImportSave = document.getElementById('btnImportSave');
-if (btnImportSave) btnImportSave.addEventListener('click', () => {
-  const ta = document.getElementById('savePortText');
-  const previewEl = document.getElementById('saveImportPreview');
-  if (!ta || !ta.value.trim()) {
-    UI.toast('Plak eerst een save-JSON in het vak', 2600);
-    return;
-  }
-  try {
-    const { save: next, meta, warnings } = previewImportSave(ta.value);
-    if (!window.__sfImportConfirm) {
-      window.__sfImportConfirm = true;
-      updateSaveImportPreview(ta.value);
-      UI.toast('Import-preview — tik Import nogmaals om te laden', 3600);
-      setTimeout(() => { window.__sfImportConfirm = false; }, 8000);
-      return;
-    }
-    window.__sfImportConfirm = false;
-    if (previewEl) { previewEl.style.display = 'none'; previewEl.textContent = ''; }
-    importSaveJson(ta.value);
-    AudioSys.sfx('win');
-  } catch (e) {
-    window.__sfImportConfirm = false;
-    if (previewEl) { previewEl.style.display = 'none'; previewEl.textContent = ''; }
-    UI.toast((e && e.message) ? e.message : 'Ongeldige save — controleer JSON', 3200);
-  }
+bindSaveImportFile();
+const btnImportSaveFile = document.getElementById('btnImportSaveFile');
+if (btnImportSaveFile) btnImportSaveFile.addEventListener('click', () => {
+  AudioSys.sfx('select');
+  if (!openSaveImportFilePicker()) UI.toast('Bestand kiezen niet beschikbaar', 2400);
 });
+const btnImportSave = document.getElementById('btnImportSave');
+if (btnImportSave) btnImportSave.addEventListener('click', () => runImportSaveClick());
 function bindSettingsControls() {
   const syncVolMute = (key) => {
     if (key === 'musicVol') {
