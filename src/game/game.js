@@ -4268,14 +4268,14 @@ class Game {
     c.globalAlpha = 0.28;
     c.strokeStyle = '#1a2030';
     c.lineWidth = 6;
-    c.beginPath(); c.arc(b.x, b.y, ring, 0, TAU); c.stroke();
+    c.beginPath(); c.arc(0, 0, ring, 0, TAU); c.stroke();
     if (pct > 0.02) {
       c.globalAlpha = kind === 'chidori' ? 0.75 + Math.sin(this.t * 18) * 0.12 : 0.82;
       c.strokeStyle = kind === 'chidori' ? '#7ec8ff' : kind === 'rinnegan' ? '#b06ae0' : accent || '#3db8ff';
       c.lineWidth = 5;
       c.lineCap = 'round';
       c.beginPath();
-      c.arc(b.x, b.y, ring, -Math.PI / 2, -Math.PI / 2 + TAU * pct);
+      c.arc(0, 0, ring, -Math.PI / 2, -Math.PI / 2 + TAU * pct);
       c.stroke();
     }
     if (pct >= 1) {
@@ -4283,8 +4283,46 @@ class Game {
       c.strokeStyle = kind === 'chidori' ? '#a8e0ff' : kind === 'rinnegan' ? '#c47aff' : '#7cf5ff';
       c.lineWidth = 3;
       c.beginPath();
-      c.arc(b.x, b.y, ring + 5 + Math.sin(this.t * 8) * 2, 0, TAU);
+      c.arc(0, 0, ring + 5 + Math.sin(this.t * 8) * 2, 0, TAU);
       c.stroke();
+    }
+    c.restore();
+  }
+
+  /** Combat touch-knop met press-squash (d9 / polish #4). Tekent op lokale (0,0). */
+  drawTouchActionBtn(c, b, fighter, accent, opts) {
+    opts = opts || {};
+    const xf = typeof touchBtnPressXform === 'function'
+      ? touchBtnPressXform(b)
+      : { p: b.held ? 1 : 0, sx: b.held ? 0.89 : 1, sy: b.held ? 0.83 : 1, dy: b.held ? 3 : 0 };
+    c.save();
+    c.translate(b.x, b.y + xf.dy);
+    c.scale(xf.sx, xf.sy);
+    if (b.id === 'special') this.drawSpecialBtnMeter(c, b, fighter, accent || '#3db8ff');
+    const heldA = opts.dual ? 0.85 : 0.85;
+    const idleA = opts.dual ? 0.42 : 0.45;
+    c.globalAlpha = idleA + (heldA - idleA) * (xf.p || 0);
+    c.fillStyle = b.color;
+    c.beginPath(); c.arc(0, 0, b.r, 0, TAU); c.fill();
+    if (xf.p > 0.08) {
+      c.globalAlpha = (opts.dual ? 0.55 : 0.6) * xf.p;
+      c.strokeStyle = accent || '#fff';
+      c.lineWidth = opts.dual ? 2 : 2.5;
+      c.beginPath(); c.arc(0, 0, b.r + 3, 0, TAU); c.stroke();
+    }
+    c.globalAlpha = opts.dual ? 0.9 : (0.85 + 0.15 * (xf.p || 0));
+    const jk = b.id === 'special'
+      ? (fighter ? fighterJutsuKind(fighter) : 'rasengan')
+      : null;
+    if (!drawTouchBtnIcon(c, b.id, 0, 0, b.r, jk)) {
+      c.font = `${b.r * (opts.dual ? 0.8 : 0.85)}px sans-serif`;
+      c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText(b.label, 0, 2);
+    }
+    if (b.id === 'subst' && fighter && fighter.substCd > 0) {
+      c.globalAlpha = 0.35;
+      c.fillStyle = '#000';
+      c.beginPath(); c.arc(0, 0, b.r, 0, TAU); c.fill();
     }
     c.restore();
   }
@@ -4322,29 +4360,8 @@ class Game {
     if (this.player) {
       drawPlayerAimIndicator(c, this.player, j.active ? 0.62 : 0.28);
     }
-    // knoppen
     for (const b of Input.buttons) {
-      if (b.id === 'special') this.drawSpecialBtnMeter(c, b, this.player, '#3db8ff');
-      c.globalAlpha = b.held ? 0.85 : 0.45;
-      c.fillStyle = b.color;
-      c.beginPath(); c.arc(b.x, b.y, b.r, 0, TAU); c.fill();
-      if (b.held) {
-        c.globalAlpha = 0.6;
-        c.strokeStyle = '#fff';
-        c.lineWidth = 2.5;
-        c.beginPath(); c.arc(b.x, b.y, b.r + 3, 0, TAU); c.stroke();
-      }
-      c.globalAlpha = b.held ? 1 : 0.85;
-      const jk = b.id === 'special' ? fighterJutsuKind(this.player) : null;
-      if (!drawTouchBtnIcon(c, b.id, b.x, b.y, b.r, jk)) {
-        c.font = `${b.r * 0.85}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
-        c.fillText(b.label, b.x, b.y + 2);
-      }
-      if (b.id === 'subst' && this.player.substCd > 0) {
-        c.globalAlpha = 0.35;
-        c.fillStyle = '#000';
-        c.beginPath(); c.arc(b.x, b.y, b.r, 0, TAU); c.fill();
-      }
+      this.drawTouchActionBtn(c, b, this.player, '#fff', { dual: false });
     }
     c.textBaseline = 'alphabetic';
     c.restore();
@@ -4380,22 +4397,7 @@ class Game {
     c.font = '900 11px sans-serif'; c.fillStyle = accent; c.textAlign = 'center';
     c.fillText(label, jx, jy - 58);
     for (const b of pad.buttons) {
-      if (b.id === 'special') this.drawSpecialBtnMeter(c, b, fighter, accent);
-      c.globalAlpha = b.held ? 0.85 : 0.42;
-      c.fillStyle = b.color;
-      c.beginPath(); c.arc(b.x, b.y, b.r, 0, TAU); c.fill();
-      if (b.held) {
-        c.globalAlpha = 0.55;
-        c.strokeStyle = accent;
-        c.lineWidth = 2;
-        c.beginPath(); c.arc(b.x, b.y, b.r + 3, 0, TAU); c.stroke();
-      }
-      c.globalAlpha = 0.9;
-      const jk2 = b.id === 'special' && fighter ? fighterJutsuKind(fighter) : (b.id === 'special' ? 'rasengan' : null);
-      if (!drawTouchBtnIcon(c, b.id, b.x, b.y, b.r, jk2)) {
-        c.font = `${b.r * 0.8}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
-        c.fillText(b.label, b.x, b.y + 2);
-      }
+      this.drawTouchActionBtn(c, b, fighter, accent, { dual: true });
     }
     c.textBaseline = 'alphabetic';
     c.restore();

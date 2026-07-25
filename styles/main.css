@@ -470,7 +470,8 @@
       transition:transform .06s, filter .15s;
       touch-action:manipulation; -webkit-touch-callout:none;
       position:relative; z-index:2; min-height:48px; }
-  .btn:active { transform:translateY(4px); box-shadow:0 2px 0 rgba(0,0,0,.35); }
+  .btn:active { transform:translateY(4px) scale(0.97); box-shadow:0 2px 0 rgba(0,0,0,.35); }
+  body.reduced-motion .btn:active { transform:translateY(3px); }
   .mode-btn { width:min(86vw, 480px); padding:16px 20px; font-size:min(5vw,21px); margin:8px 0;
       justify-content:flex-start; }
   .mode-btn .ico { font-size:1.55em; width:1.6em; text-align:center; }

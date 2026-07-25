@@ -6,26 +6,18 @@
     3,
     4,
     5,
-    9,
     13,
     19
   ],
   "lastRoll": {
-    "face": 12,
-    "category": "Content \u2014 monsters, wapens, rariteit, dex",
-    "rolledAt": "2026-07-25T13:58:29Z",
-    "remainingCount": 6,
+    "face": 9,
+    "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
+    "rolledAt": "2026-07-25T14:02:25Z",
+    "remainingCount": 5,
     "cycle": 4
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 3,
-      "note": "Versus HUD timer/rematch/spawn reset",
-      "version": "1.8.6",
-      "doneAt": "2026-07-23T13:38:12Z",
-      "cycle": 0
-    },
     {
       "face": 13,
       "note": "Daily claim UX + claim-all + status copy",
@@ -577,6 +569,13 @@
       "note": "weapon preview rarity glow + dex epic+ aura",
       "version": "1.18.29",
       "doneAt": "2026-07-25T14:01:25Z",
+      "cycle": 4
+    },
+    {
+      "face": 9,
+      "note": "touch press-squash + hit-slop + menu active scale",
+      "version": "1.18.30",
+      "doneAt": "2026-07-25T14:04:16Z",
       "cycle": 4
     }
   ],
@@ -1771,6 +1770,13 @@
       "category": "Content \u2014 monsters, wapens, rariteit, dex",
       "rolledAt": "2026-07-25T13:58:29Z",
       "remainingCount": 6,
+      "cycle": 4
+    },
+    {
+      "face": 9,
+      "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
+      "rolledAt": "2026-07-25T14:02:25Z",
+      "remainingCount": 5,
       "cycle": 4
     }
   ],

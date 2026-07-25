@@ -151,12 +151,54 @@ const JOY_MAX_PX = 58;
 const JOY_STALE_MS = IS_TOUCH ? 2000 : 1600;
 
 function btnHitSlop() {
-  const base = (typeof save !== 'undefined' && save.bigTouch !== false) ? 14 : 10;
+  // d9: iets ruimere hit-slop op touch (iPad mis-taps), bigTouch nog ruimer
+  const base = (typeof save !== 'undefined' && save.bigTouch !== false) ? 16 : 11;
   if (IS_TOUCH && typeof W === 'number' && W > 0 && typeof H === 'number' && H > 0) {
     const ui = touchUiScale(W, H);
-    return Math.round(base + (ui >= 1.02 ? 5 : 2));
+    return Math.round(base + (ui >= 1.02 ? 6 : 3));
   }
   return base;
+}
+
+/** Press-vis 0..1 voor touch-knop squash (polish #4 / d9). Respecteert reduced motion + lite. */
+function syncTouchBtnPressVis(b) {
+  if (!b) return 0;
+  const target = b.held ? 1 : 0;
+  const calm = (typeof motionReduced === 'function' && motionReduced())
+    || (typeof fxLite === 'function' && fxLite())
+    || (typeof save !== 'undefined' && save && save.liteFx);
+  const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  if (calm) {
+    b.pressVis = target;
+    b._pressSyncAt = now;
+    return target;
+  }
+  if (b.pressVis == null) b.pressVis = 0;
+  if (b._pressSyncAt == null) {
+    b._pressSyncAt = now;
+    b.pressVis = target;
+    return b.pressVis;
+  }
+  let dt = (now - b._pressSyncAt) / 1000;
+  b._pressSyncAt = now;
+  if (!(dt > 0)) dt = 0;
+  if (dt > 0.05) dt = 0.05;
+  // Indruk sneller dan loslaten — voelt als fysieke knop
+  const rate = target > b.pressVis ? 30 : 17;
+  b.pressVis += (target - b.pressVis) * (1 - Math.exp(-rate * dt));
+  if (Math.abs(b.pressVis - target) < 0.012) b.pressVis = target;
+  return b.pressVis;
+}
+
+/** Schaal + sink voor canvas touch-knop (sx/sy/dy + glow). */
+function touchBtnPressXform(b) {
+  const p = syncTouchBtnPressVis(b);
+  return {
+    p,
+    sx: 1 - p * 0.11,
+    sy: 1 - p * 0.17,
+    dy: p * Math.max(2.5, (b.r || 28) * 0.07),
+  };
 }
 
 /** Dichtstbijzijnde knop binnen slop — voorkomt verkeerde match bij overlap/slop (d9). */
@@ -204,7 +246,7 @@ const TOUCH_BTN_META = {
 
 function touchBtn(id, x, y, rad) {
   const m = TOUCH_BTN_META[id];
-  return { id, x, y, r: rad, label: m.label, color: m.color, held: false };
+  return { id, x, y, r: rad, label: m.label, color: m.color, held: false, pressVis: 0 };
 }
 
 function shiftTouchButtons(buttons, dx) {
@@ -734,6 +776,8 @@ function makePad(side) {
         if (b.held) return true;
         this.btnPointers[id] = b.id;
         b.held = true;
+        b.pressVis = 1;
+        b._pressSyncAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
         this.press(b.id);
         try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
         return true;
@@ -821,6 +865,8 @@ Object.assign(Input, {
       if (b.held) return;
       this.btnPointers[id] = b.id;
       b.held = true;
+      b.pressVis = 1;
+      b._pressSyncAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
       this.press(b.id);
       try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
       return;
