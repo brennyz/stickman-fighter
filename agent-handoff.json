@@ -13,16 +13,16 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.62",
-    "swCache": "stickfighter-app-v272",
-    "gameJsQuery": "game.js?v=272",
-    "cssQuery": "styles/main.css?v=272",
-    "featureBranch": "cursor/kets-supers-visible-2125",
+    "appVersion": "1.18.63",
+    "swCache": "stickfighter-app-v273",
+    "gameJsQuery": "game.js?v=273",
+    "cssQuery": "styles/main.css?v=273",
+    "featureBranch": "cursor/adventure-kets-2p-again-2125",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "Kets thermo + skill scroll \u00b7 v1.18.62 \u2014 MERGE so supers visible"
+    "note": "adventure 2P+Kets\u2192menu nuclear \u00b7 MERGE"
   },
   "userWishlist": [
     {

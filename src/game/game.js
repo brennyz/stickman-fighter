@@ -2542,6 +2542,9 @@ class Game {
   /* ------------------------------ TEKENEN ----------------------------- */
   draw(c) {
     if (!c || W < 8 || H < 8) return;
+    if (this.mode !== 'versus' && typeof Input !== 'undefined' && Input.dualMode) {
+      try { Input.dualMode = false; } catch (_) {}
+    }
     c.save();
     if (this.shakeT > 0) {
       c.translate(rand(-1, 1) * this.shakeMag, rand(-1, 1) * this.shakeMag);
@@ -2814,9 +2817,11 @@ class Game {
     c.restore();
 
     this.drawChakraReadyFx(c);
-    if (this.mode === 'adventure') drawSuperFxLayer(this, c);
-    if (this.mode === 'adventure') this.drawKetsbamChargeAura(c);
-    if (this.mode === 'adventure') this.drawPartGateCue(c);
+    if (this.mode === 'adventure') {
+      try { drawSuperFxLayer(this, c); } catch (_) {}
+      try { this.drawKetsbamChargeAura(c); } catch (_) {}
+      try { this.drawPartGateCue(c); } catch (_) {}
+    }
 
     this.drawHUD(c);
 
@@ -2824,16 +2829,21 @@ class Game {
     const bannerDraw = this.banners.slice().sort((a, b) => (a.lane || 0) - (b.lane || 0));
     for (const b of bannerDraw) this.drawBannerLine(c, b);
 
-    if (IS_TOUCH) this.drawTouchControls(c);
-    if (this.mode === 'adventure') this.drawKetsbamPrompt(c);
+    if (IS_TOUCH) {
+      try { this.drawTouchControls(c); } catch (_) {}
+    }
+    if (this.mode === 'adventure') {
+      try { this.drawKetsbamPrompt(c); } catch (_) {}
+    }
 
     if (this.hint > 0) {
       c.globalAlpha = clamp(this.hint, 0, 1);
       let hintTxt = this.modeHintLine;
       if (!hintTxt) {
-        if (Input.dualMode && IS_TOUCH) {
+        const dualOk = Input.dualMode && this.mode === 'versus';
+        if (dualOk && IS_TOUCH) {
           hintTxt = t('hud.hintDualTouch');
-        } else if (Input.dualMode) {
+        } else if (dualOk) {
           hintTxt = t('hud.hintDualKb');
         } else if (IS_TOUCH) {
           hintTxt = t('hud.hintTouch');
@@ -4697,10 +4707,17 @@ class Game {
   }
 
   drawTouchControls(c) {
+    // NUCLEAR: solo modes NEVER show P1/P2 pads — dualMode leak looked like versus in adventure
+    if (this.mode !== 'versus' && typeof Input !== 'undefined' && Input.dualMode) {
+      try {
+        Input.dualMode = false;
+        Input.layout(W, H);
+      } catch (_) {}
+    }
     const ui = touchUiScale(W, H);
     const joyOuter = Math.round(52 * ui);
     const joyInner = Math.round(26 * ui);
-    if (Input.dualMode) {
+    if (Input.dualMode && this.mode === 'versus') {
       const nz = typeof touchNeutralZoneBounds === 'function' ? touchNeutralZoneBounds() : null;
       if (nz) {
         c.save();
