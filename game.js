@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.56';
+const APP_VERSION = '1.18.57';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 266;
+const SW_CACHE_REV = 267;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -1266,7 +1266,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Muntjes · dex temmen · ei arcade',
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
       skills: 'Skills', skillsSub: 'Chakra specials · Rasengan · Kamehameha',
-      dex: 'Monsterboek', dexSub: '114 soorten · rariteit = HP',
+      dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
     },
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
@@ -1342,7 +1342,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Coins · dex tame · egg arcade',
       style: 'Style', styleSub: 'Bandana & outfit unlocks',
       skills: 'Skills', skillsSub: 'Chakra specials · Rasengan · Kamehameha',
-      dex: 'Monster book', dexSub: '114 species · rarity = HP',
+      dex: 'Monster book', dexSub: '{n} species · rarity = HP',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
     },
     modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Coins' },
@@ -1418,7 +1418,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Münzen · Dex zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
       skills: 'Skills', skillsSub: 'Chakra-Specials · Rasengan · Kamehameha',
-      dex: 'Monsterbuch', dexSub: '114 Arten · Seltenheit = HP',
+      dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
     },
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
@@ -1481,7 +1481,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Pièces · dex · œufs',
       style: 'Style', styleSub: 'Déblocages tenues',
       skills: 'Skills', skillsSub: 'Spéciaux chakra · Rasengan · Kamehameha',
-      dex: 'Bestiaire', dexSub: '114 espèces · rareté = PV',
+      dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
     },
     modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Pièces' },
@@ -1544,7 +1544,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Monedas · dex · huevos',
       style: 'Estilo', styleSub: 'Desbloqueos de outfit',
       skills: 'Skills', skillsSub: 'Especiales chakra · Rasengan · Kamehameha',
-      dex: 'Bestiario', dexSub: '114 especies · rareza = HP',
+      dex: 'Bestiario', dexSub: '{n} especies · rareza = HP',
       modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
     },
     modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Monedas' },
@@ -1732,7 +1732,7 @@ function applyLangStaticScreens() {
     if (!div) continue;
     const stat = div.querySelector('.hub-mode-stat');
     const statHtml = stat ? stat.outerHTML : '';
-    div.innerHTML = t(titleKey) + '<small>' + t(subKey) + '</small>' + statHtml;
+    div.innerHTML = t(titleKey) + '<small>' + t(subKey, id === 'btnDex' ? { n: SPECIES_ORDER.length } : undefined) + '</small>' + statHtml;
   }
 
   document.querySelectorAll('.sub-home-btn .sub-home-label').forEach((el) => {
@@ -2176,9 +2176,9 @@ const ACHIEVEMENTS = [
   { id: 'lv10', name: 'Groeiende ninja', desc: 'Bereik vechter Lv 10', icon: '⬆️',
     test: s => s.lvl >= 10 },
   { id: 'dex10', name: 'Monsterkenner', desc: '10 soorten in monsterboek', icon: '📖',
-    test: s => Object.keys(s.dex).length >= 10 },
+    test: s => dexCountFromSave(s) >= 10 },
   { id: 'dexFull', name: 'Encyclopedie', desc: 'Alle monster-soorten ontdekt', icon: '📚',
-    test: s => Object.keys(s.dex).length >= SPECIES_ORDER.length },
+    test: s => dexCountFromSave(s) >= SPECIES_ORDER.length },
   { id: 'dex100', name: 'Jager', desc: '100 monster-kills geregistreerd', icon: '🎯',
     test: s => {
       let n = 0;
@@ -2186,7 +2186,7 @@ const ACHIEVEMENTS = [
       return n >= 100;
     } },
   { id: 'dexHalf', name: 'Veldgids', desc: 'Helft van alle soorten ontdekt', icon: '🧭',
-    test: s => Object.keys(s.dex || {}).length >= Math.ceil(SPECIES_ORDER.length / 2) },
+    test: s => dexCountFromSave(s) >= Math.ceil(SPECIES_ORDER.length / 2) },
   { id: 'dexTiers', name: 'Rariteitenjager', desc: '4 verschillende rariteiten in boek', icon: '💎',
     test: () => dexRarityTierCount() >= 4 },
   { id: 'dexMythic', name: 'Mythe-zoeker', desc: 'Eén mythisch monster ontdekt', icon: '✨',
@@ -2486,14 +2486,14 @@ function achievementProgressFrac(ach) {
   switch (ach.id) {
     case 'first_win': return Math.min(s.stats.advWins || 0, 1);
     case 'lv10': return Math.min(s.lvl, 10) / 10;
-    case 'dex10': return Math.min(Object.keys(s.dex || {}).length, 10) / 10;
-    case 'dexFull': return Object.keys(s.dex || {}).length / SPECIES_ORDER.length;
+    case 'dex10': return Math.min(dexCountFromSave(s), 10) / 10;
+    case 'dexFull': return dexCountFromSave(s) / SPECIES_ORDER.length;
     case 'dex100': {
       let n = 0;
       for (const v of Object.values(s.dex || {})) n += v || 0;
       return Math.min(n, 100) / 100;
     }
-    case 'dexHalf': return Object.keys(s.dex || {}).length / Math.ceil(SPECIES_ORDER.length / 2);
+    case 'dexHalf': return dexCountFromSave(s) / Math.ceil(SPECIES_ORDER.length / 2);
     case 'dexTiers': return dexRarityTierCount() / 4;
     case 'dexMythic': {
       for (const id of Object.keys(s.dex || {})) {
@@ -2534,14 +2534,14 @@ function achievementProgressHint(ach) {
   switch (ach.id) {
     case 'first_win': return `${Math.min(s.stats.advWins || 0, 1)}/1 level-win`;
     case 'lv10': return `Lv ${Math.min(s.lvl, 10)}/10`;
-    case 'dex10': return `${Object.keys(s.dex || {}).length}/10 soorten`;
-    case 'dexFull': return `${Object.keys(s.dex || {}).length}/${SPECIES_ORDER.length} soorten`;
+    case 'dex10': return `${dexCountFromSave(s)}/10 soorten`;
+    case 'dexFull': return `${dexCountFromSave(s)}/${SPECIES_ORDER.length} soorten`;
     case 'dex100': {
       let n = 0;
       for (const v of Object.values(s.dex || {})) n += v || 0;
       return `${Math.min(n, 100)}/100 kills in boek`;
     }
-    case 'dexHalf': return `${Object.keys(s.dex || {}).length}/${Math.ceil(SPECIES_ORDER.length / 2)} soorten`;
+    case 'dexHalf': return `${dexCountFromSave(s)}/${Math.ceil(SPECIES_ORDER.length / 2)} soorten`;
     case 'dexTiers': return `${dexRarityTierCount()}/4 rariteiten`;
     case 'train5': return `${Math.min(s.trainWins, 5)}/5 training-wins`;
     case 'wall100': return `${Math.min(s.bestWall, 100)}/100 muur-score`;
@@ -4490,9 +4490,14 @@ const xpNeed = (lvl) => {
   const pace = 1.15 + Math.min(0.35, (lvl - 1) * 0.02);
   return Math.round(base * pace / 5) * 5;
 };
-const dexCount = () => Object.keys(save.dex).length;
+const dexCount = () => dexCountFromSave(save);
 function dexCountFromSave(s) {
-  return Object.keys((s && s.dex) || {}).length;
+  const dex = (s && s.dex) || {};
+  let n = 0;
+  for (const id of Object.keys(dex)) {
+    if (typeof SPECIES !== 'undefined' && SPECIES[id]) n++;
+  }
+  return n;
 }
 function dexRarityTierCount() {
   return dexRarityTierCountFromSave(save);
@@ -7684,7 +7689,7 @@ const SPECIES = {
   neondrake:   { name: 'Neondrake',   art: 'dragon',   size: 36, hp: 310, dmg: 24, speed: 98,  type: 'dragon', xp: 72, rarity: 'mythic',    c1: '#7cf5ff', c2: '#ff6b9d' },
   etherwyrm:   { name: 'Etherwyrm',   art: 'dragon',   size: 37, hp: 360, dmg: 26, speed: 102, type: 'dragon', xp: 88, rarity: 'mythic',    c1: '#c47aff', c2: '#2a1840' },
   omegadrake:  { name: 'Omegadrake',  art: 'dragon',   size: 39, hp: 400, dmg: 27, speed: 105, type: 'dragon', xp: 120, rarity: 'mythic',   c1: '#ffe259', c2: '#e04f4f' },
-  /* --- Deel 2/2 horde-expansie: +55 soorten (114 totaal = 6× bestiary) --- */
+  /* --- Deel 2/2 horde-expansie: +55 soorten (114 land = 6× bestiary; +zee/tide later) --- */
     kleiply: { name: 'Kleiply', art: 'slime', size: 15, hp: 30, dmg: 5, speed: 56, type: 'hop', xp: 7, rarity: 'common', c1: '#4a8f52', c2: '#1e4a28' },
     spinbub: { name: 'Spinbub', art: 'slime', size: 15, hp: 32, dmg: 6, speed: 58, type: 'hop', xp: 8, rarity: 'common', c1: '#7ad06a', c2: '#3a7a42' },
     hongerly: { name: 'Hongerly', art: 'slime', size: 16, hp: 38, dmg: 7, speed: 60, type: 'hop', xp: 10, rarity: 'uncommon', c1: '#b06ae0', c2: '#5a3080' },
@@ -7819,7 +7824,7 @@ const UNLOCK_AT = {
   rifhaai: 8, snelvin: 9, octo: 8, inktvissie: 10, hamerkop: 12, koraalocto: 14, tijvin: 16, dieptocto: 18, stormocto: 22, neonhaai: 24, abysshaai: 32, krakenling: 38, levihaai: 44, voidocto: 40,
 
 };
-/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (126 soorten). */
+/** Avontuur horde: 6× meer spawns + reuzen · monsterboek = SPECIES_ORDER.length (land+zee+tide). */
 const ADVENTURE_HORDE_MUL = 6;
 const ADVENTURE_HORDE_MAX_PER_WAVE = 36;
 const ADVENTURE_MAX_ALIVE = IS_TOUCH ? 54 : 78;
@@ -24395,7 +24400,7 @@ function hubTileStatLine(hub) {
       return m > 0 ? t('hub.vsRecord', { w, m }) : t('hub.fightersLocal');
     }
     case 'collect':
-      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ${petCoinsBalance()} pet 🪙`;
+      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · boek ${dexCount()}/${SPECIES_ORDER.length} · ${petCoinsBalance()} pet 🪙`;
     default:
       return '';
   }

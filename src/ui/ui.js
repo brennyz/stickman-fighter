@@ -820,7 +820,7 @@ function hubTileStatLine(hub) {
       return m > 0 ? t('hub.vsRecord', { w, m }) : t('hub.fightersLocal');
     }
     case 'collect':
-      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ${petCoinsBalance()} pet 🪙`;
+      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · boek ${dexCount()}/${SPECIES_ORDER.length} · ${petCoinsBalance()} pet 🪙`;
     default:
       return '';
   }

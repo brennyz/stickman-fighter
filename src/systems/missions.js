@@ -52,9 +52,9 @@ const ACHIEVEMENTS = [
   { id: 'lv10', name: 'Groeiende ninja', desc: 'Bereik vechter Lv 10', icon: '⬆️',
     test: s => s.lvl >= 10 },
   { id: 'dex10', name: 'Monsterkenner', desc: '10 soorten in monsterboek', icon: '📖',
-    test: s => Object.keys(s.dex).length >= 10 },
+    test: s => dexCountFromSave(s) >= 10 },
   { id: 'dexFull', name: 'Encyclopedie', desc: 'Alle monster-soorten ontdekt', icon: '📚',
-    test: s => Object.keys(s.dex).length >= SPECIES_ORDER.length },
+    test: s => dexCountFromSave(s) >= SPECIES_ORDER.length },
   { id: 'dex100', name: 'Jager', desc: '100 monster-kills geregistreerd', icon: '🎯',
     test: s => {
       let n = 0;
@@ -62,7 +62,7 @@ const ACHIEVEMENTS = [
       return n >= 100;
     } },
   { id: 'dexHalf', name: 'Veldgids', desc: 'Helft van alle soorten ontdekt', icon: '🧭',
-    test: s => Object.keys(s.dex || {}).length >= Math.ceil(SPECIES_ORDER.length / 2) },
+    test: s => dexCountFromSave(s) >= Math.ceil(SPECIES_ORDER.length / 2) },
   { id: 'dexTiers', name: 'Rariteitenjager', desc: '4 verschillende rariteiten in boek', icon: '💎',
     test: () => dexRarityTierCount() >= 4 },
   { id: 'dexMythic', name: 'Mythe-zoeker', desc: 'Eén mythisch monster ontdekt', icon: '✨',
@@ -362,14 +362,14 @@ function achievementProgressFrac(ach) {
   switch (ach.id) {
     case 'first_win': return Math.min(s.stats.advWins || 0, 1);
     case 'lv10': return Math.min(s.lvl, 10) / 10;
-    case 'dex10': return Math.min(Object.keys(s.dex || {}).length, 10) / 10;
-    case 'dexFull': return Object.keys(s.dex || {}).length / SPECIES_ORDER.length;
+    case 'dex10': return Math.min(dexCountFromSave(s), 10) / 10;
+    case 'dexFull': return dexCountFromSave(s) / SPECIES_ORDER.length;
     case 'dex100': {
       let n = 0;
       for (const v of Object.values(s.dex || {})) n += v || 0;
       return Math.min(n, 100) / 100;
     }
-    case 'dexHalf': return Object.keys(s.dex || {}).length / Math.ceil(SPECIES_ORDER.length / 2);
+    case 'dexHalf': return dexCountFromSave(s) / Math.ceil(SPECIES_ORDER.length / 2);
     case 'dexTiers': return dexRarityTierCount() / 4;
     case 'dexMythic': {
       for (const id of Object.keys(s.dex || {})) {
@@ -410,14 +410,14 @@ function achievementProgressHint(ach) {
   switch (ach.id) {
     case 'first_win': return `${Math.min(s.stats.advWins || 0, 1)}/1 level-win`;
     case 'lv10': return `Lv ${Math.min(s.lvl, 10)}/10`;
-    case 'dex10': return `${Object.keys(s.dex || {}).length}/10 soorten`;
-    case 'dexFull': return `${Object.keys(s.dex || {}).length}/${SPECIES_ORDER.length} soorten`;
+    case 'dex10': return `${dexCountFromSave(s)}/10 soorten`;
+    case 'dexFull': return `${dexCountFromSave(s)}/${SPECIES_ORDER.length} soorten`;
     case 'dex100': {
       let n = 0;
       for (const v of Object.values(s.dex || {})) n += v || 0;
       return `${Math.min(n, 100)}/100 kills in boek`;
     }
-    case 'dexHalf': return `${Object.keys(s.dex || {}).length}/${Math.ceil(SPECIES_ORDER.length / 2)} soorten`;
+    case 'dexHalf': return `${dexCountFromSave(s)}/${Math.ceil(SPECIES_ORDER.length / 2)} soorten`;
     case 'dexTiers': return `${dexRarityTierCount()}/4 rariteiten`;
     case 'train5': return `${Math.min(s.trainWins, 5)}/5 training-wins`;
     case 'wall100': return `${Math.min(s.bestWall, 100)}/100 muur-score`;
@@ -2366,9 +2366,14 @@ const xpNeed = (lvl) => {
   const pace = 1.15 + Math.min(0.35, (lvl - 1) * 0.02);
   return Math.round(base * pace / 5) * 5;
 };
-const dexCount = () => Object.keys(save.dex).length;
+const dexCount = () => dexCountFromSave(save);
 function dexCountFromSave(s) {
-  return Object.keys((s && s.dex) || {}).length;
+  const dex = (s && s.dex) || {};
+  let n = 0;
+  for (const id of Object.keys(dex)) {
+    if (typeof SPECIES !== 'undefined' && SPECIES[id]) n++;
+  }
+  return n;
 }
 function dexRarityTierCount() {
   return dexRarityTierCountFromSave(save);

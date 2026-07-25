@@ -25,7 +25,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Muntjes · dex temmen · ei arcade',
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
       skills: 'Skills', skillsSub: 'Chakra specials · Rasengan · Kamehameha',
-      dex: 'Monsterboek', dexSub: '114 soorten · rariteit = HP',
+      dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
     },
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
@@ -101,7 +101,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Coins · dex tame · egg arcade',
       style: 'Style', styleSub: 'Bandana & outfit unlocks',
       skills: 'Skills', skillsSub: 'Chakra specials · Rasengan · Kamehameha',
-      dex: 'Monster book', dexSub: '114 species · rarity = HP',
+      dex: 'Monster book', dexSub: '{n} species · rarity = HP',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
     },
     modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Coins' },
@@ -177,7 +177,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Münzen · Dex zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
       skills: 'Skills', skillsSub: 'Chakra-Specials · Rasengan · Kamehameha',
-      dex: 'Monsterbuch', dexSub: '114 Arten · Seltenheit = HP',
+      dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
     },
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
@@ -240,7 +240,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Pièces · dex · œufs',
       style: 'Style', styleSub: 'Déblocages tenues',
       skills: 'Skills', skillsSub: 'Spéciaux chakra · Rasengan · Kamehameha',
-      dex: 'Bestiaire', dexSub: '114 espèces · rareté = PV',
+      dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
     },
     modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Pièces' },
@@ -303,7 +303,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Monedas · dex · huevos',
       style: 'Estilo', styleSub: 'Desbloqueos de outfit',
       skills: 'Skills', skillsSub: 'Especiales chakra · Rasengan · Kamehameha',
-      dex: 'Bestiario', dexSub: '114 especies · rareza = HP',
+      dex: 'Bestiario', dexSub: '{n} especies · rareza = HP',
       modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
     },
     modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Monedas' },
@@ -491,7 +491,7 @@ function applyLangStaticScreens() {
     if (!div) continue;
     const stat = div.querySelector('.hub-mode-stat');
     const statHtml = stat ? stat.outerHTML : '';
-    div.innerHTML = t(titleKey) + '<small>' + t(subKey) + '</small>' + statHtml;
+    div.innerHTML = t(titleKey) + '<small>' + t(subKey, id === 'btnDex' ? { n: SPECIES_ORDER.length } : undefined) + '</small>' + statHtml;
   }
 
   document.querySelectorAll('.sub-home-btn .sub-home-label').forEach((el) => {

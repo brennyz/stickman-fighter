@@ -60,7 +60,7 @@ const SPECIES = {
   neondrake:   { name: 'Neondrake',   art: 'dragon',   size: 36, hp: 310, dmg: 24, speed: 98,  type: 'dragon', xp: 72, rarity: 'mythic',    c1: '#7cf5ff', c2: '#ff6b9d' },
   etherwyrm:   { name: 'Etherwyrm',   art: 'dragon',   size: 37, hp: 360, dmg: 26, speed: 102, type: 'dragon', xp: 88, rarity: 'mythic',    c1: '#c47aff', c2: '#2a1840' },
   omegadrake:  { name: 'Omegadrake',  art: 'dragon',   size: 39, hp: 400, dmg: 27, speed: 105, type: 'dragon', xp: 120, rarity: 'mythic',   c1: '#ffe259', c2: '#e04f4f' },
-  /* --- Deel 2/2 horde-expansie: +55 soorten (114 totaal = 6× bestiary) --- */
+  /* --- Deel 2/2 horde-expansie: +55 soorten (114 land = 6× bestiary; +zee/tide later) --- */
     kleiply: { name: 'Kleiply', art: 'slime', size: 15, hp: 30, dmg: 5, speed: 56, type: 'hop', xp: 7, rarity: 'common', c1: '#4a8f52', c2: '#1e4a28' },
     spinbub: { name: 'Spinbub', art: 'slime', size: 15, hp: 32, dmg: 6, speed: 58, type: 'hop', xp: 8, rarity: 'common', c1: '#7ad06a', c2: '#3a7a42' },
     hongerly: { name: 'Hongerly', art: 'slime', size: 16, hp: 38, dmg: 7, speed: 60, type: 'hop', xp: 10, rarity: 'uncommon', c1: '#b06ae0', c2: '#5a3080' },
@@ -195,7 +195,7 @@ const UNLOCK_AT = {
   rifhaai: 8, snelvin: 9, octo: 8, inktvissie: 10, hamerkop: 12, koraalocto: 14, tijvin: 16, dieptocto: 18, stormocto: 22, neonhaai: 24, abysshaai: 32, krakenling: 38, levihaai: 44, voidocto: 40,
 
 };
-/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (126 soorten). */
+/** Avontuur horde: 6× meer spawns + reuzen · monsterboek = SPECIES_ORDER.length (land+zee+tide). */
 const ADVENTURE_HORDE_MUL = 6;
 const ADVENTURE_HORDE_MAX_PER_WAVE = 36;
 const ADVENTURE_MAX_ALIVE = IS_TOUCH ? 54 : 78;
