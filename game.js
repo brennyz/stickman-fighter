@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.43';
+const APP_VERSION = '1.18.44';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 253;
+const SW_CACHE_REV = 254;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -3344,27 +3344,38 @@ function clearScreensForPlay() {
 }
 
 /**
- * Ochtend-simpele play-laag (werkte): alleen visibility + is-playing.
- * Geen display:none !important op screens — dat vergiftigde de UI en loste adventure niet op.
+ * CANONIEKE play-laag (ochtend-route — NIET “nuclear lids” terugzetten).
+ *
+ * Contract:
+ * 1. Menu/collections = .screen.active (CSS display:flex). Canvas visibility:hidden.
+ * 2. Play = state=play + game + body.is-playing; canvas visibility:visible; geen .screen.active.
+ * 3. Dobbel-flash leeft IN #levelScreen → verdwijnt met het scherm. Niet buiten .screen zetten.
+ * 4. Nooit display:none !important op alle .screen zetten — dat breekt adventure/collections.
+ * 5. Loop mag tijdens play/pause NOOIT drawMenuBackdrop (#151b33) tekenen.
  */
 function syncPlayLayer() {
   const el = document.getElementById('game');
   if (!el) return;
   const canvasHits = state === 'play' && !!game;
-  if (canvasHits) clearScreensForPlay();
+  if (canvasHits) {
+    clearScreensForPlay();
+    try { if (typeof UI !== 'undefined' && UI.hideGambleRollFlash) UI.hideGambleRollFlash(); } catch (_) {}
+  }
   el.style.pointerEvents = canvasHits ? 'auto' : 'none';
   el.style.visibility = canvasHits ? 'visible' : 'hidden';
-  el.style.opacity = canvasHits ? '1' : '';
-  el.style.zIndex = canvasHits ? '2' : '';
-  el.style.display = canvasHits ? 'block' : '';
   el.style.touchAction = canvasHits ? 'none' : 'manipulation';
+  // Geen inline z-index/opacity/display — CSS body.is-playing + .screen.active is genoeg
+  if (!canvasHits) {
+    el.style.opacity = '';
+    el.style.zIndex = '';
+    el.style.display = '';
+  }
   document.body.classList.toggle('is-playing', canvasHits);
   document.body.style.overflow = canvasHits ? 'hidden' : '';
   try {
     const pb = document.getElementById('pauseBtn');
     if (pb) pb.classList.toggle('show', !!(canvasHits && state === 'play' && game));
   } catch (_) {}
-  try { if (typeof UI !== 'undefined' && UI.hideGambleRollFlash) UI.hideGambleRollFlash(); } catch (_) {}
   try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
 }
 
@@ -3389,8 +3400,8 @@ function playLayerBroken() {
 
 function forcePlayCanvasVisible(where) {
   if (!(state === 'play' && game)) return false;
-  try { if (typeof UI !== 'undefined' && UI.hideGambleRollFlash) UI.hideGambleRollFlash(); } catch (_) {}
   clearScreensForPlay();
+  try { if (typeof UI !== 'undefined' && UI.hideGambleRollFlash) UI.hideGambleRollFlash(); } catch (_) {}
   syncPlayLayer();
   try {
     if (ctx && game && typeof game.draw === 'function') game.draw(ctx);
@@ -3610,10 +3621,6 @@ function blackScreenGuard(where) {
   }
 }
 
-function syncPlayLayerWithoutGuard() {
-  syncPlayLayer();
-}
-
 function ensureMenuScreenActive() {
   if (state !== 'menu') return;
   const active = activeScreenEl();
@@ -3689,7 +3696,6 @@ function dismissTunnelOverlayIfStatic() {
 
 function recoverToMenu(opts) {
   opts = opts || {};
-  window.__sfPlayLock = false;
   let force = !!opts.force;
   try {
     // Al in menu zonder game? Alleen vroeg returnen als UI echt bruikbaar is —
@@ -26774,7 +26780,6 @@ function startGame(mode, opts) {
   }
   try { primePlayInput(mode === 'versus'); } catch (_) {}
   window.__sfLoopErr = false;
-  window.__sfPlayLock = false;
   try { Input.releaseAll(); } catch (_) {}
   Input.dualMode = false;
   try { dismissTunnelOverlayIfStatic(); } catch (_) {}
