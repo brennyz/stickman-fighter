@@ -30,21 +30,8 @@
     "remainingCount": 19,
     "cycle": 5
   },
-  "pending": {
-    "face": 15,
-    "category": "Onboarding \u2014 tips, eerste speelminuut, help",
-    "rolledAt": "2026-07-25T19:03:04Z",
-    "remainingCount": 19,
-    "cycle": 5
-  },
+  "pending": null,
   "implemented": [
-    {
-      "face": 14,
-      "note": "Rasengan rings+trail, combo ring, banner glow",
-      "version": "1.9.8",
-      "doneAt": "2026-07-23T15:05:43Z",
-      "cycle": 0
-    },
     {
       "face": 12,
       "note": "dex rariteit-chips + Kristallijn/Boekmeester + 3 prestaties",
@@ -597,6 +584,13 @@
       "version": "1.18.45",
       "doneAt": "2026-07-25T17:05:50Z",
       "cycle": 4
+    },
+    {
+      "face": 15,
+      "note": "pause+ketsbam+tide inline hints, first tide no toast",
+      "version": "1.18.55",
+      "doneAt": "2026-07-25T19:04:17Z",
+      "cycle": 5
     }
   ],
   "userFeatureLog": [
