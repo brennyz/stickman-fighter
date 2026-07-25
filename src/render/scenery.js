@@ -426,6 +426,103 @@ function drawPixelVsBanner(c, cx, cy, scale, t) {
   c.imageSmoothingEnabled = prev;
 }
 
+/** d20 polish #9 — Pause-scherm pixel backdrop. */
+function paintPausePixelBackdrop(t) {
+  const cv = document.getElementById('pausePixelBg');
+  if (!cv) return;
+  const parent = cv.parentElement;
+  if (parent) {
+    const w = Math.max(240, Math.floor(parent.clientWidth || 480));
+    const h = Math.max(320, Math.floor(parent.clientHeight || 720));
+    if (cv.width !== w || cv.height !== h) {
+      cv.width = w;
+      cv.height = h;
+    }
+  }
+  const c = cv.getContext('2d');
+  if (!c) return;
+  const W = cv.width;
+  const H = cv.height;
+  const px = 4;
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  const lite = (typeof save !== 'undefined' && save.liteFx) || (typeof Perf !== 'undefined' && Perf.tier >= 2);
+  const calm = typeof motionReduced === 'function' && motionReduced();
+
+  // Night sky bands
+  for (let y = 0; y < H; y += px) {
+    const pr = y / H;
+    c.fillStyle = pr < 0.35 ? '#1a1430' : pr < 0.7 ? '#12101c' : '#0a0812';
+    c.fillRect(0, y, W, px);
+  }
+
+  // Pixel stars
+  const starN = lite ? 18 : 36;
+  for (let i = 0; i < starN; i++) {
+    const sx = ((i * 97 + Math.floor((t || 0) * (calm ? 2 : 8))) % (W / px)) * px;
+    const sy = ((i * 53) % Math.floor(H * 0.55 / px)) * px;
+    c.fillStyle = i % 3 === 0 ? '#ffd75e' : (i % 2 ? '#7cf5ff' : '#ffffff');
+    c.globalAlpha = 0.25 + (i % 5) * 0.1;
+    c.fillRect(sx, sy, px, px);
+  }
+  c.globalAlpha = 1;
+
+  // Arena ground strip
+  const gy = Math.floor(H * 0.78 / px) * px;
+  for (let y = gy; y < H; y += px) {
+    const pr = (y - gy) / Math.max(1, H - gy);
+    c.fillStyle = pr < 0.25 ? '#2a2438' : pr < 0.6 ? '#1c1828' : '#100e18';
+    c.fillRect(0, y, W, px);
+  }
+  c.fillStyle = '#3d7a4a';
+  c.fillRect(0, gy, W, px);
+  for (let x = 0; x < W; x += px * 2) {
+    c.fillStyle = '#4a9460';
+    c.fillRect(x, gy - px, px, px);
+    c.fillStyle = '#2d5a3a';
+    c.fillRect(x + px, gy - px, px, px);
+  }
+
+  // Soft vignette pillars (pause frame)
+  c.fillStyle = 'rgba(0,0,0,.28)';
+  for (let x = 0; x < W; x += px) {
+    const edge = Math.min(x, W - x) / (W * 0.22);
+    if (edge >= 1) continue;
+    c.globalAlpha = (1 - edge) * 0.45;
+    c.fillRect(x, 0, px, H);
+  }
+  c.globalAlpha = 1;
+
+  // Pause diamond watermark
+  const cx = Math.round(W / 2);
+  const cy = Math.round(H * 0.22);
+  c.fillStyle = 'rgba(255,215,94,.12)';
+  c.fillRect(cx - px * 3, cy, px * 6, px);
+  c.fillRect(cx - px * 2, cy - px, px * 4, px);
+  c.fillRect(cx - px, cy - px * 2, px * 2, px);
+  c.fillRect(cx - px * 2, cy + px, px * 4, px);
+  c.fillRect(cx - px * 3, cy + px * 2, px * 6, px);
+  c.fillStyle = 'rgba(124,245,255,.1)';
+  c.fillRect(cx - px, cy, px * 2, px);
+
+  c.imageSmoothingEnabled = prev;
+}
+
+function startPausePixelBackdropLoop() {
+  if (window.__sfPauseBgRaf) return;
+  const t0 = performance.now();
+  const tick = (now) => {
+    const scr = document.getElementById('pauseScreen');
+    if (!scr || !scr.classList.contains('active') || (typeof state !== 'undefined' && state !== 'pause')) {
+      window.__sfPauseBgRaf = 0;
+      return;
+    }
+    try { paintPausePixelBackdrop((now - t0) / 1000); } catch (_) {}
+    window.__sfPauseBgRaf = requestAnimationFrame(tick);
+  };
+  window.__sfPauseBgRaf = requestAnimationFrame(tick);
+}
+
 /** Pixel-art laag tekenen: getild, smoothing uit, parallax-offset. */
 function drawSceneryTile(c, tile, y, scroll, rate, scale) {
   if (!tile) return;

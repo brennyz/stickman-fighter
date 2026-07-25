@@ -1000,6 +1000,10 @@ const UI = {
           try { this.refreshPauseSubtitle(); } catch (_) {}
           try { this.renderPauseToggles(); } catch (_) {}
           try { this.renderPausePerfStrip(); } catch (_) {}
+          try {
+            paintPausePixelBackdrop(0);
+            startPausePixelBackdropLoop();
+          } catch (_) {}
         }
         if (id === 'helpScreen') {
           try { this.renderHelp(); } catch (err) { sfReportError('renderHelp', err); }
