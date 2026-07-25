@@ -212,8 +212,11 @@
   #menuScreen.menu-video-overhaul::before { display: none; }
   #menuScreen.menu-video-overhaul > * { position: relative; z-index: 1; }
   #menuScreen.menu-video-overhaul .menu-stage {
-    position: absolute;
-    inset: 0;
+    position: fixed;
+    top: var(--vv-top, 0);
+    left: var(--vv-left, 0);
+    width: var(--vv-w, 100%);
+    height: var(--vv-h, 100dvh);
     z-index: 0;
     pointer-events: none;
     overflow: hidden;
