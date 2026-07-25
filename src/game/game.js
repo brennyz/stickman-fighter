@@ -725,6 +725,7 @@ class Game {
   initTraining() {
     this.theme = 'dojo';
     this.roundsP = 0; this.roundsR = 0;
+    this.trainRoundLog = [];
     this.round = 0;
     this.roundTimer = 60;
     this.phase = 'intro'; this.phaseT = 0;
@@ -775,7 +776,13 @@ class Game {
     this.comboT = 0;
     this.trainRoundBest = 0;
     this.trainDummyGrace = this.round === 1 ? 3.5 : 0;
-    this.banner(t('banner.round', { n: this.round }), 1.1, '#ffd75e', 52);
+    const mp = this.roundsP === 1 || this.roundsR === 1;
+    const decisive = this.roundsP === 1 && this.roundsR === 1;
+    this.banner(
+      decisive ? t('banner.roundDecisive', { n: this.round })
+        : (mp ? t('banner.roundMatchPoint', { n: this.round }) : t('banner.round', { n: this.round })),
+      1.1, decisive ? '#ff9a9a' : '#ffd75e', 52,
+    );
     if (this.round === 1) {
       this.floater(W / 2, 148, t('combat.trainIntro'), '#7cf5ff', 16);
     }
@@ -803,7 +810,12 @@ class Game {
       this.trainLaserCd = rand(2.5, 4.5);
       return;
     }
-    const diff = Math.min(1.5, this.robot.aiDiff || 1);
+    const pLow = this.player.hp / Math.max(1, this.player.maxhp) < 0.32;
+    if (pLow && Math.random() < 0.38) {
+      this.trainLaserCd = rand(3.2, 5.5);
+      return;
+    }
+    const diff = Math.min(1.5, (this.robot.aiDiff || 1) * (pLow ? 0.88 : 1));
     this.trainLaserTelegraph = 0.95;
     this.trainLaserCd = rand(8, 12) / diff;
     this.floater(this.robot.x, this.robot.y - 148, t('combat.earLaser'), '#ff9a9a', 15);
@@ -846,22 +858,31 @@ class Game {
       const pDead = !this.player.alive, rDead = !this.robot.alive;
       if (pDead || rDead || this.roundTimer <= 0) {
         let pWin;
+        const timedOut = !pDead && !rDead && this.roundTimer <= 0;
         if (rDead && !pDead) pWin = true;
         else if (pDead && !rDead) pWin = false;
         else pWin = (this.player.hp / Math.max(1, this.player.maxhp)) >= (this.robot.hp / Math.max(1, this.robot.maxhp));
         if (pWin) this.roundsP++; else this.roundsR++;
+        this.trainRoundLog = this.trainRoundLog || [];
+        this.trainRoundLog.push(pWin ? 'p' : 'r');
         this.trainComboBest = Math.max(this.trainComboBest || 0, this.trainRoundBest || 0);
         this.phase = 'roundend'; this.phaseT = 0;
         this.inputLocked = true;
         const roundCombo = this.trainRoundBest || 0;
-        this.banner(pWin ? t('banner.roundWon') : t('banner.roundLost'), 1.6, pWin ? '#7cfc8a' : '#ff6b6b', 40);
+        let msg = pWin ? t('banner.roundWon') : t('banner.roundLost');
+        if (timedOut) {
+          const hpP = Math.round(this.player.hp / Math.max(1, this.player.maxhp) * 100);
+          const hpR = Math.round(this.robot.hp / Math.max(1, this.robot.maxhp) * 100);
+          msg = t('banner.timeHpVs', { hp1: hpP, hp2: hpR, msg });
+        }
+        this.banner(msg, 1.6, pWin ? '#7cfc8a' : '#ff6b6b', 40);
         if (roundCombo >= 3) {
           this.floater(W / 2, 118, t('combat.roundCombo', { n: roundCombo }), '#ffd75e', 14);
         }
         AudioSys.sfx(pWin ? 'win' : 'lose');
       }
     } else if (this.phase === 'roundend') {
-      if (this.phaseT > 2) {
+      if (this.phaseT > 2.2) {
         if (this.roundsP >= 2 || this.roundsR >= 2) this.finishTraining(this.roundsP >= 2);
         else this.startRound();
       }
@@ -903,7 +924,9 @@ class Game {
         wins: win ? t('result.trainWinsLine', { n: save.trainWins }) : '',
         record: rec > 0 ? t('result.trainRecordLine', { n: rec }) : '',
         finishers: this.runFinishers ? t('result.finishersLine', { n: this.runFinishers }) : '',
-      }),
+      }) + ((this.trainRoundLog || []).length
+        ? ' · ' + this.trainRoundLog.map((w, i) => `R${i + 1} ${w === 'p' ? 'Jij' : 'Bot'}`).join(' · ')
+        : ''),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
     }));
@@ -2960,6 +2983,30 @@ class Game {
     } else if (this.mode === 'training') {
       const r = this.robot;
       const half = Math.min(300, W * 0.36);
+      if (this.phase === 'intro' && this.phaseT < 1.55) {
+        const n = Math.ceil(Math.max(0.35, 1.55 - this.phaseT));
+        c.font = '900 48px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.92)';
+        c.fillText(String(n), W / 2, H * 0.4);
+        c.font = '700 13px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.65)';
+        c.fillText(t('hud.spawnFair'), W / 2, H * 0.4 + 28);
+      } else if (this.phase === 'roundend') {
+        const left = Math.max(0, 2.2 - this.phaseT);
+        c.font = '900 34px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.9)';
+        c.fillText(String(Math.ceil(left)), W / 2, H * 0.38);
+        c.font = '700 13px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.7)';
+        c.fillText(t('hud.nextRound'), W / 2, H * 0.38 + 26);
+        const barW = Math.min(140, W * 0.24);
+        c.fillStyle = 'rgba(0,0,0,.35)';
+        this.rr(c, W / 2 - barW / 2, H * 0.38 + 34, barW, 5, 3);
+        c.fill();
+        c.fillStyle = '#7cf5ff';
+        this.rr(c, W / 2 - barW / 2, H * 0.38 + 34, barW * clamp(left / 2.2, 0, 1), 5, 3);
+        c.fill();
+      }
       const tele = this.trainLaserTelegraph > 0
         ? { label: t('hud.earLaser'), frac: this.trainLaserTelegraph / 0.95, color: '#ff6b6b', max: 0.95 }
         : (this.trainTelegraphT > 0
@@ -3050,7 +3097,11 @@ class Game {
       c.textAlign = 'center';
       c.font = '800 12px sans-serif';
       c.fillStyle = 'rgba(255,255,255,.65)';
-      c.fillText(t('hud.roundInfo', { n: this.round, s: this.roundsP, r: this.roundsR }), W / 2, 68);
+      const decisiveRound = this.roundsP === 1 && this.roundsR === 1;
+      const scoreLine = decisiveRound
+        ? t('hud.decisiveRound', { s: this.roundsP, r: this.roundsR })
+        : t('hud.roundInfo', { n: this.round, s: this.roundsP, r: this.roundsR });
+      c.fillText(scoreLine, W / 2, 68);
       const tLeft = Math.ceil(Math.max(0, this.roundTimer));
       const urgent = this.roundTimer < 15 && this.phase === 'fight';
       c.font = urgent ? '900 28px sans-serif' : '900 26px sans-serif';
@@ -3064,11 +3115,36 @@ class Game {
       } else {
         c.fillText(String(tLeft), W / 2, 40);
       }
+      const timerBarW = Math.min(160, W * 0.28);
+      const timerFrac = clamp(this.roundTimer / 60, 0, 1);
+      c.fillStyle = 'rgba(0,0,0,.35)';
+      this.rr(c, W / 2 - timerBarW / 2, 46, timerBarW, 5, 3);
+      c.fill();
+      c.fillStyle = urgent ? '#ff6b6b' : '#7cf5ff';
+      this.rr(c, W / 2 - timerBarW / 2, 46, timerBarW * timerFrac, 5, 3);
+      c.fill();
+      if (this.roundTimer < 12 && this.phase === 'fight') {
+        c.font = '700 9px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.55)';
+        c.fillText(t('hud.timeHpWin'), W / 2, 58);
+      }
+      const mpP = this.roundsP === 1 && this.roundsR < 2;
+      const mpR = this.roundsR === 1 && this.roundsP < 2;
       for (let i = 0; i < 2; i++) {
+        const px = W / 2 - 34 - i * 18;
         c.fillStyle = i < this.roundsP ? '#7cfc8a' : 'rgba(255,255,255,.25)';
-        c.beginPath(); c.arc(W / 2 - 34 - i * 18, 82, 6, 0, TAU); c.fill();
+        c.beginPath(); c.arc(px, 82, 6, 0, TAU); c.fill();
+        if (mpP && i === 1) {
+          c.strokeStyle = '#ffd75e'; c.lineWidth = 2;
+          c.beginPath(); c.arc(px, 82, 9, 0, TAU); c.stroke();
+        }
+        const rx = W / 2 + 34 + i * 18;
         c.fillStyle = i < this.roundsR ? '#ff6b6b' : 'rgba(255,255,255,.25)';
-        c.beginPath(); c.arc(W / 2 + 34 + i * 18, 82, 6, 0, TAU); c.fill();
+        c.beginPath(); c.arc(rx, 82, 6, 0, TAU); c.fill();
+        if (mpR && i === 1) {
+          c.strokeStyle = '#ffd75e'; c.lineWidth = 2;
+          c.beginPath(); c.arc(rx, 82, 9, 0, TAU); c.stroke();
+        }
       }
       if ((this.trainDummyGrace || 0) > 0) {
         c.textAlign = 'center';

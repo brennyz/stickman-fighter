@@ -252,7 +252,8 @@ class Fighter {
     if (!p || !p.alive || !this.alive) return out;
     this.aiTimer -= dt; this.aiCd -= dt;
     const dx = p.x - this.x, dist = Math.abs(dx), dir = Math.sign(dx) || 1;
-    const diff = this.aiDiff || 1;
+    let diff = this.aiDiff || 1;
+    if (game.mode === 'training' && p.hp / Math.max(1, p.maxhp) < 0.32) diff *= 0.84;
     const pAir = !p.onGround;
 
     // reactief blokkeren als de speler aanvalt en dichtbij is

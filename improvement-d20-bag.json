@@ -3,7 +3,6 @@
   "cyclesCompleted": 4,
   "rollFirst": [],
   "remaining": [
-    2,
     3,
     4,
     5,
@@ -16,13 +15,19 @@
     19
   ],
   "lastRoll": {
-    "face": 9,
-    "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
-    "rolledAt": "2026-07-24T18:00:37Z",
-    "remainingCount": 11,
+    "face": 2,
+    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
+    "rolledAt": "2026-07-24T18:00:39Z",
+    "remainingCount": 10,
     "cycle": 4
   },
-  "pending": null,
+  "pending": {
+    "face": 2,
+    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
+    "rolledAt": "2026-07-24T18:00:39Z",
+    "remainingCount": 10,
+    "cycle": 4
+  },
   "implemented": [
     {
       "face": 2,
@@ -1762,6 +1767,13 @@
       "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
       "rolledAt": "2026-07-24T18:00:37Z",
       "remainingCount": 11,
+      "cycle": 4
+    },
+    {
+      "face": 2,
+      "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
+      "rolledAt": "2026-07-24T18:00:39Z",
+      "remainingCount": 10,
       "cycle": 4
     }
   ],
