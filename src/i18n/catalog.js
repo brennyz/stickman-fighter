@@ -142,6 +142,10 @@ function seedNlGameStrings() {
     masterBuffFloater: '5× verloren — HP, snelheid & schade ↑',
     skillGate: 'Eiland-skill gate: max wapen Lv {cap}',
     aimUp: 'Joystick omhoog = hoger mikken',
+    partGateHint: 'Checkpoint: loop rechts door — scherm scrollt mee · 3 delen per level',
+    partGateWalk: 'Loop door → Deel {part}/3',
+    partGateIntro: 'Levels hebben 3 delen — loop bij checkpoints rechts door',
+    partGateIdle: 'Loop naar rechts →',
     trainIntro: 'Combo-trainer — 3s oefenen, robot wacht',
     earLaser: 'Oor-laser — spring!',
     robotActive: 'Robot activeert — hou combo vast!',
@@ -578,13 +582,9 @@ function seedNlGameStrings() {
     hintDualKb: 'P1: A/D · W · J/K/L/U · Shift  |  P2: pijltjes · 1/2/3/4/5',
     hintTouch: 'Links: joystick om te lopen · Rechts: aanvalsknoppen',
     hintKb: 'A/D lopen · W springen · J stomp · K trap · L wapen · U speciaal',
-    ketsTap: 'Tik KABLAM!', ketsKey: 'E · KABLAM',
-  });
-  if (!I18N.nl.island) I18N.nl.island = {};
-  Object.assign(I18N.nl.island, {
-    progress: 'Eiland {cur}: {name} · {cleared}/{total} · Lv {unlocked}/{max}',
-    levelsProg: 'Levels vrijgespeeld op dit eiland',
-    starsProg: 'Sterren verdiend op dit eiland (max 3 per level)',
+    partGateTouch: 'Checkpoint: joystick → rechts lopen',
+    partGateKb: 'Checkpoint: D / → lopen naar volgend deel',
+    ketsTap: 'Tik!', ketsKey: 'E / tik',
   });
 }
 
@@ -1279,6 +1279,10 @@ const CATALOG_EN = {
     masterBuffFloater: '5× lost — HP, speed & damage ↑',
     skillGate: 'Island skill gate: max weapon Lv {cap}',
     aimUp: 'Joystick up = aim higher',
+    partGateHint: 'Checkpoint: walk right — screen scrolls with you · 3 parts per level',
+    partGateWalk: 'Walk through → Part {part}/3',
+    partGateIntro: 'Levels have 3 parts — walk right at checkpoints',
+    partGateIdle: 'Walk right →',
     trainIntro: 'Combo trainer — 3s practice, robot waits',
     earLaser: 'Ear-laser — jump!', robotActive: 'Robot active — keep combo!',
     roundCombo: 'Round combo ×{n}',
@@ -1320,7 +1324,9 @@ const CATALOG_EN = {
     hintDualKb: 'P1: A/D · W · J/K/L/U · Shift  |  P2: arrows · 1/2/3/4/5',
     hintTouch: 'Left: joystick to walk · Right: attack buttons',
     hintKb: 'A/D walk · W jump · J punch · K kick · L weapon · U special',
-    ketsTap: 'Tap KABLAM!', ketsKey: 'E · KABLAM',
+    partGateTouch: 'Checkpoint: joystick → walk right',
+    partGateKb: 'Checkpoint: D / → walk to next part',
+    ketsTap: 'Tap!', ketsKey: 'E / tap',
   },
   jutsu: { rasengan: 'RASENGAN!', chidori: 'CHIDORI!', rinnegan: 'RINNEGAN!' },
   skill: {

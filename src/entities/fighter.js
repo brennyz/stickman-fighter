@@ -275,6 +275,11 @@ class Fighter {
     }
     const locked = game.inputLocked && (this.isPlayer || this.playerSlot);
     const it = locked ? { move: 0 } : this.intent(dt, game);
+    if (this.isPlayer && game && game.partGate) {
+      if (it.move < 0) it.move = 0;
+      it.punch = it.kick = it.weapon = it.special = it.subst = it.jump = it.dash = false;
+      it.block = false;
+    }
     if (game.inputLocked && !this.isPlayer && !this.playerSlot) {
       it.punch = it.kick = it.weapon = it.special = false; it.move = 0;
     }
@@ -420,7 +425,14 @@ class Fighter {
     if (this.isPlayer && game && game.traveling) {
       const pad = inputPadForFighter(this);
       const tMove = pad ? pad.move : 0;
-      if (Math.abs(tMove) > 0.05) this.face = tMove > 0 ? 1 : -1;
+      if (game.partGate && tMove > 0.05) {
+        this.face = 1;
+        this.vx = Math.max(this.vx, this.speed * 0.95);
+        this.state = 'run';
+      } else if (game.partGate) {
+        this.face = 1;
+        if (this.state === 'idle') this.state = 'run';
+      } else if (Math.abs(tMove) > 0.05) this.face = tMove > 0 ? 1 : -1;
       else if (this.state === 'idle' || Math.abs(this.vx) < 22) this.face = 1;
       if (this.state === 'idle') this.state = 'run';
     }

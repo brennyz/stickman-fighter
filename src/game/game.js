@@ -17,8 +17,37 @@ function clearGameResultTimer(g) {
   }
 }
 
-const SHARD_PICKUP_LIFE = 36;
-const GENERIC_PICKUP_LIFE = 22;
+/** Seconden actief naar rechts lopen om checkpoint-deel te unlocken. */
+const PART_GATE_WALK_SEC = 3.35;
+const PART_GATE_DECAY_MUL = 1.5;
+const PART_GATE_IDLE_HINT = 1.35;
+const PART_GATE_PLAYER_X = 0.28;
+
+function partBoundaryWaveIdx(totalWaves, currentPart) {
+  if (totalWaves < 1) return -1;
+  const b1 = Math.max(0, Math.ceil(totalWaves / 3) - 1);
+  if (currentPart === 1) return b1;
+  if (currentPart === 2) {
+    const b2 = Math.max(0, Math.ceil((2 * totalWaves) / 3) - 1);
+    return Math.max(b1 + 1, b2);
+  }
+  return -1;
+}
+
+function playerWalkInput() {
+  if (typeof Input === 'undefined' || Input.dualMode) return 0;
+  let mv = Input.move || 0;
+  if (Math.abs(mv) < 0.08) {
+    if (Input.keys.d || Input.keys.arrowright) mv = 1;
+    else if (Input.keys.a || Input.keys.arrowleft) mv = -1;
+  }
+  return mv;
+}
+
+function playerWalkRightInput() {
+  const mv = playerWalkInput();
+  return mv > 0.05 ? mv : 0;
+}
 
 class Game {
   constructor(mode, opts) {
@@ -120,6 +149,7 @@ class Game {
     this.progressSmooth = 0;
     this.stagePart = 1;
     this.partFlashT = 0;
+    this.partGate = null;
     this.bossArriveT = 0;
     this.travelWasOn = false;
     this.bossBeatPlayed = false;
@@ -173,6 +203,15 @@ class Game {
         ? t('combat.tideAllyIntro', { name: this.stageAlly.name })
         : t('combat.allyHelps', { name: this.stageAlly.name });
       this.floater(W * 0.5, 118, intro, this.stageAlly.color || '#7cf5ff', 15);
+    }
+    if (!save.tipsSeen) save.tipsSeen = {};
+    if (!save.tipsSeen.partGate && n <= 8) {
+      setTimeout(() => {
+        try {
+          if (this.over) return;
+          this.floater(W * 0.5, 124, t('combat.partGateIntro'), '#7cf5ff', 13);
+        } catch (_) {}
+      }, 2400);
     }
     this.allyAssistT = this.stageAlly ? 2.2 : 0;
     setTimeout(() => { try { if (!this.over) this.maybeRollMasterSword(); } catch (_) {} }, 900);
@@ -278,6 +317,99 @@ class Game {
     }
   }
 
+  startPartGate() {
+    if (this.partGate || !this.player?.alive) return;
+    const targetPart = Math.min(3, (this.stagePart || 1) + 1);
+    this.partGate = {
+      targetPart, progress: 0, t: 0, idleT: 0, milestone: 0, stepAcc: 0, idleHintShown: false,
+    };
+    this.wavePause = 1;
+    this.wavePauseTotal = 1;
+    if (this.player) {
+      this.player.attack = null;
+      this.player.face = 1;
+      this.player.vx = Math.max(this.player.vx, this.player.speed * 0.35);
+    }
+    if (!save.tipsSeen) save.tipsSeen = {};
+    if (!save.tipsSeen.partGate) {
+      save.tipsSeen.partGate = true;
+      persist();
+      this.modeHintLine = IS_TOUCH ? t('hud.partGateTouch') : t('hud.partGateKb');
+      this.hint = 5.5;
+    }
+    try { AudioSys.sfx('travel'); } catch (_) {}
+    this.shake(motionReduced() ? 0 : 3, 0.12);
+  }
+
+  completePartGate() {
+    if (!this.partGate || this.partGate.completing) return;
+    this.partGate.completing = true;
+    const part = this.partGate.targetPart;
+    this.stagePart = part;
+    this.partFlashT = motionReduced() ? 0.22 : 0.55;
+    this.floater(W / 2, 96, t('combat.checkpoint', { part }), '#7cf5ff', 17);
+    const tw = Math.min(320, W * 0.5);
+    const orbX = W / 2 - tw / 2 + clamp(this.progressSmooth || 0, 0, 1) * tw;
+    if (!fxLite()) this.burst(orbX, 44, '#7cf5ff', motionReduced() ? 6 : 14, { kind: 'spark', size: 2.4 });
+    try { AudioSys.sfx('checkpoint'); } catch (_) {}
+    haptic(14);
+    this.partGate = null;
+    this.wavePause = 0.85;
+    this.wavePauseTotal = 0.85;
+    if (this.player) {
+      this.player.attack = null;
+      this.player.vx = Math.max(this.player.vx, 60);
+    }
+  }
+
+  updatePartGate(dt) {
+    if (!this.partGate || !this.player?.alive) {
+      this.partGate = null;
+      return;
+    }
+    const pg = this.partGate;
+    const move = playerWalkInput();
+    pg.t = (pg.t || 0) + dt;
+    pg.walking = move > 0.05;
+    if (pg.walking) {
+      pg.idleT = 0;
+      pg.idleHintShown = false;
+      pg.progress = Math.min(1, (pg.progress || 0) + dt / PART_GATE_WALK_SEC);
+      this.worldX = (this.worldX || 0) + dt * (115 + move * 175);
+      const tick = Math.floor((pg.progress || 0) * 3);
+      if (tick > (pg.milestone || 0)) {
+        pg.milestone = tick;
+        try { AudioSys.sfx('step'); } catch (_) {}
+        if (tick < 3) haptic(5);
+      }
+      pg.stepAcc = (pg.stepAcc || 0) + dt;
+      if (pg.stepAcc >= 0.34) {
+        pg.stepAcc = 0;
+        if (!fxLite() && !motionReduced()) {
+          this.burst(this.player.x + 14, this.player.y - 6, '#c9b691', 2, { kind: 'spark', size: 2 });
+        }
+      }
+    } else if (move < -0.05 && (pg.progress || 0) > 0) {
+      pg.progress = Math.max(0, pg.progress - (dt / PART_GATE_WALK_SEC) * PART_GATE_DECAY_MUL);
+      this.worldX = (this.worldX || 0) + dt * 16;
+      pg.idleT = (pg.idleT || 0) + dt;
+    } else {
+      this.worldX = (this.worldX || 0) + dt * 24;
+      pg.idleT = (pg.idleT || 0) + dt;
+    }
+    if (pg.idleT >= PART_GATE_IDLE_HINT && !pg.idleHintShown) {
+      pg.idleHintShown = true;
+      this.floater(this.player.x, this.player.y - 102, t('combat.partGateIdle'), '#ffd75e', 13);
+      this.modeHintLine = IS_TOUCH ? t('hud.partGateTouch') : t('hud.partGateKb');
+      this.hint = Math.max(this.hint || 0, 3.5);
+    }
+    const targetX = W * PART_GATE_PLAYER_X;
+    if (this.player.x < targetX - 6) {
+      this.player.x += (targetX - this.player.x) * Math.min(1, dt * 5);
+    }
+    if (pg.progress >= 1) this.completePartGate();
+  }
+
   /** 0..1 voortgang door het level (golven + kills binnen golf). */
   stageProgress() {
     if (!this.level || !this.level.waves) return 0;
@@ -297,7 +429,7 @@ class Game {
 
   updateAdventure(dt) {
     // Bewegend decor: tussen golven "loopt" de wereld door (à la beat 'em up)
-    const travelPhase = this.wavePause > 0 || (this.betweenT > 0 && this.waveIdx < 0);
+    const travelPhase = this.wavePause > 0 || (this.betweenT > 0 && this.waveIdx < 0) || !!this.partGate;
     this.traveling = travelPhase && !!(this.player && this.player.alive) && !this.over;
     // Deel 3: camera-punch bij vertrek, zwaardere beat bij aankomst op de baas
     if (this.traveling && !this.travelWasOn) {
@@ -337,17 +469,7 @@ class Game {
     }
     if (this.partFlashT > 0) this.partFlashT -= dt;
     if (this.bossArriveT > 0) this.bossArriveT -= dt;
-    const pr = this.stageProgress();
-    const part = Math.min(3, 1 + Math.floor(pr * 3));
-    if (part > (this.stagePart || 1)) {
-      this.stagePart = part;
-      this.partFlashT = motionReduced() ? 0.22 : 0.5;
-      this.floater(W / 2, 96, t('combat.checkpoint', { part }), '#7cf5ff', 17, 'hud');
-      const orbX = W / 2 - Math.min(320, W * 0.5) / 2 + clamp(this.progressSmooth || 0, 0, 1) * Math.min(320, W * 0.5);
-      if (!fxLite()) this.burst(orbX, 44, '#7cf5ff', motionReduced() ? 6 : 14, { kind: 'spark', size: 2.4 });
-      try { AudioSys.sfx('checkpoint'); } catch (_) {}
-      haptic(10);
-    }
+    if (this.partGate) this.updatePartGate(dt);
     if (this.comboT > 0) {
       this.comboT -= dt;
       if (this.comboT <= 0) this.combo = 0;
@@ -444,10 +566,16 @@ class Game {
         this.spawnTimer = Math.min(this.spawnTimer, 0.12);
       }
     } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive) && this.player?.alive) {
-      if (!this.wavePause) {
+      if (!this.wavePause && !this.partGate) {
         const nextIsBoss = isBossWave(this.level, this.waveIdx + 1);
-        this.wavePause = nextIsBoss ? 2.15 : 1.55;
-        this.wavePauseTotal = this.wavePause;
+        const total = this.level.waves.length;
+        const boundary = partBoundaryWaveIdx(total, this.stagePart || 1);
+        if (this.stagePart < 3 && this.waveIdx === boundary) {
+          this.startPartGate();
+        } else {
+          this.wavePause = nextIsBoss ? 2.15 : 1.55;
+          this.wavePauseTotal = this.wavePause;
+        }
         const waveHeal = Math.max(4, Math.round(this.player.maxhp * 0.06));
         this.player.hp = Math.min(this.player.maxhp, this.player.hp + waveHeal);
         this.player.energy = clamp(this.player.energy + 8, 0, 100);
@@ -473,14 +601,17 @@ class Game {
           this.floater(W / 2, 112, t('combat.streakHold', { n: this.killStreak }), '#ffd75e', 15, 'hud');
         }
       }
-      this.wavePause -= dt;
-      if (this.wavePause <= 0) { this.wavePause = 0; this.nextWave(); }
+      if (!this.partGate) {
+        this.wavePause -= dt;
+        if (this.wavePause <= 0) { this.wavePause = 0; this.nextWave(); }
+      }
     }
     if (!this.player.alive && !this.over) this.finishAdventure(false);
   }
 
   finishAdventure(win) {
     if (this.over) return;
+    this.partGate = null;
     if (win && (!this.player || !this.player.alive)) win = false;
     this.deactivateMasterSword(true);
     this.over = true;
@@ -2420,6 +2551,7 @@ class Game {
     this.drawChakraReadyFx(c);
     if (this.mode === 'adventure') drawSuperFxLayer(this, c);
     if (this.mode === 'adventure') this.drawKetsbamChargeAura(c);
+    if (this.mode === 'adventure') this.drawPartGateCue(c);
 
     this.drawHUD(c);
 
@@ -2730,6 +2862,103 @@ class Game {
     }
     c.restore();
     c.globalAlpha = 1;
+  }
+
+  /** Checkpoint-tunnel: drie knipperende pijlen + voortgangsbalk — loop rechts door. */
+  drawPartGateCue(c) {
+    if (!this.partGate || !this.player?.alive) return;
+    const pg = this.partGate;
+    const prog = clamp(pg.progress || 0, 0, 1);
+    const gt = pg.t || 0;
+    const walking = !!pg.walking;
+    const calm = motionReduced();
+    const ui = touchUiScale(W, H);
+    const px = this.player.x;
+    const py = this.player.y - 72;
+    const barW = Math.min(220, W * 0.42);
+    const barH = Math.max(10, Math.round(12 * ui));
+
+    c.save();
+    // gloedpad op de grond
+    c.globalAlpha = 0.22 + prog * 0.18;
+    const pathGrad = c.createLinearGradient(px - 20, py, px + barW + 40, py);
+    pathGrad.addColorStop(0, 'rgba(124,245,255,0)');
+    pathGrad.addColorStop(0.35, 'rgba(124,245,255,0.55)');
+    pathGrad.addColorStop(1, 'rgba(255,215,94,0.85)');
+    c.fillStyle = pathGrad;
+    c.beginPath();
+    c.moveTo(px - 12, this.ground - 4);
+    c.lineTo(px + barW + 52, this.ground - 4);
+    c.lineTo(px + barW + 36, this.ground + 8);
+    c.lineTo(px - 8, this.ground + 8);
+    c.closePath();
+    c.fill();
+
+    // drie chevrons >>
+    for (let i = 0; i < 3; i++) {
+      const phase = gt * (calm ? 4 : (walking ? 9 : 5)) - i * 0.38;
+      const blink = calm ? 0.75 : (walking
+        ? (0.55 + Math.max(0, Math.sin(phase)) * 0.45)
+        : (0.28 + Math.max(0, Math.sin(phase * 0.7)) * 0.35));
+      const slide = calm ? 0 : Math.sin(phase * 0.9) * 6;
+      const cx = px + 36 + i * (34 * ui) + slide + prog * 18;
+      const cy = py + (i % 2 ? -6 : 6);
+      const sz = (18 + i * 3) * ui;
+      c.save();
+      c.translate(cx, cy);
+      c.globalAlpha = blink * (0.55 + prog * 0.45);
+      c.fillStyle = i === 2 ? '#ffd75e' : '#7cf5ff';
+      c.strokeStyle = 'rgba(0,0,0,.45)';
+      c.lineWidth = 2.5 * ui;
+      c.lineJoin = 'round';
+      c.beginPath();
+      c.moveTo(-sz * 0.45, -sz * 0.55);
+      c.lineTo(sz * 0.2, 0);
+      c.lineTo(-sz * 0.45, sz * 0.55);
+      c.lineTo(-sz * 0.15, 0);
+      c.closePath();
+      c.fill();
+      c.stroke();
+      c.restore();
+    }
+
+    // label + progress pill boven speler
+    const label = t('combat.partGateWalk', { part: pg.targetPart });
+    c.font = `900 ${Math.round(13 * ui)}px -apple-system,sans-serif`;
+    c.textAlign = 'center';
+    const tw = c.measureText(label).width;
+    const pillW = Math.max(tw + 28, barW + 16);
+    const pillX = px + 48 - pillW * 0.35;
+    const pillY = py - 38;
+    c.fillStyle = 'rgba(6,10,24,.82)';
+    this.rr(c, pillX, pillY, pillW, 34 + barH, 12);
+    c.fill();
+    c.strokeStyle = 'rgba(124,245,255,.45)';
+    c.lineWidth = 2;
+    this.rr(c, pillX, pillY, pillW, 34 + barH, 12);
+    c.stroke();
+    c.fillStyle = '#fff';
+    c.fillText(label, pillX + pillW * 0.5, pillY + 16);
+    if (!walking && prog < 0.98) {
+      c.font = `700 ${Math.round(10 * ui)}px -apple-system,sans-serif`;
+      c.fillStyle = 'rgba(255,215,94,.88)';
+      c.fillText(t('combat.partGateIdle'), pillX + pillW * 0.5, pillY + 28);
+    }
+    const bx = pillX + 10;
+    const by = pillY + 24;
+    c.fillStyle = 'rgba(255,255,255,.16)';
+    this.rr(c, bx, by, pillW - 20, barH, barH * 0.45);
+    c.fill();
+    if (prog > 0.02) {
+      const grad = c.createLinearGradient(bx, by, bx + (pillW - 20) * prog, by);
+      grad.addColorStop(0, '#7cf5ff');
+      grad.addColorStop(1, '#ffd75e');
+      c.fillStyle = grad;
+      this.rr(c, bx, by, (pillW - 20) * prog, barH, barH * 0.45);
+      c.fill();
+    }
+    c.restore();
+    c.textAlign = 'left';
   }
 
   /** Deel 3: checkpoint-flits + baas-aankomst overlays (boven de wereld, onder HUD-tekst). */
