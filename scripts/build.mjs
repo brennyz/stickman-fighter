@@ -7,6 +7,10 @@ import { fileURLToPath } from 'url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const manifestPath = path.join(root, 'src', 'manifest.json');
 const outPath = path.join(root, 'game.js');
+const indexPath = path.join(root, 'index.html');
+const storagePath = path.join(root, 'src', 'core', 'storage.js');
+const swPath = path.join(root, 'sw.js');
+const pkgPath = path.join(root, 'package.json');
 
 if (!fs.existsSync(manifestPath)) {
   console.error('build: missing src/manifest.json — run node scripts/split-game.mjs first');
@@ -30,4 +34,31 @@ for (const rel of files) {
 }
 
 fs.writeFileSync(outPath, parts.join(''));
-console.log(`BUILD_OK ${files.length} modules → game.js (~${total} lines)`);
+
+const storageSrc = fs.readFileSync(storagePath, 'utf8');
+const revMatch = storageSrc.match(/const SW_CACHE_REV = (\d+)/);
+const verMatch = storageSrc.match(/const APP_VERSION = '([^']+)'/);
+const swRev = revMatch ? revMatch[1] : null;
+const appVer = verMatch ? verMatch[1] : null;
+
+if (swRev && fs.existsSync(indexPath)) {
+  let html = fs.readFileSync(indexPath, 'utf8');
+  if (/game\.js\?v=\d+/.test(html)) {
+    html = html.replace(/game\.js\?v=\d+/, `game.js?v=${swRev}`);
+    fs.writeFileSync(indexPath, html);
+  }
+}
+
+if (swRev && fs.existsSync(swPath)) {
+  let sw = fs.readFileSync(swPath, 'utf8');
+  sw = sw.replace(/const CACHE = 'stickfighter-app-v\d+'/, `const CACHE = 'stickfighter-app-v${swRev}'`);
+  fs.writeFileSync(swPath, sw);
+}
+
+if (appVer && fs.existsSync(pkgPath)) {
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+  pkg.version = appVer;
+  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+}
+
+console.log(`BUILD_OK ${files.length} modules → game.js (~${total} lines)${swRev ? ` · cache v${swRev}` : ''}`);

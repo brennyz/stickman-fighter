@@ -1,6 +1,22 @@
 /* ================================ GAME ================================= */
 let game = null;
 
+function scheduleGameResult(g, delay, fn) {
+  if (!g) return;
+  if (g._resultTimer) clearTimeout(g._resultTimer);
+  g._resultTimer = setTimeout(() => {
+    g._resultTimer = null;
+    fn();
+  }, delay);
+}
+
+function clearGameResultTimer(g) {
+  if (g && g._resultTimer) {
+    clearTimeout(g._resultTimer);
+    g._resultTimer = null;
+  }
+}
+
 class Game {
   constructor(mode, opts) {
     opts = opts || {};
@@ -192,6 +208,10 @@ class Game {
   }
 
   nextWave() {
+    if (!this.player?.alive) {
+      if (!this.over) this.finishAdventure(false);
+      return;
+    }
     this.waveIdx++;
     if (this.waveIdx >= this.level.waves.length) { this.finishAdventure(true); return; }
     const wave = this.level.waves[this.waveIdx];
@@ -350,7 +370,7 @@ class Game {
     this.pickups = this.pickups.filter(pk => pk.life > 0);
     if (this.betweenT > 0) {
       this.betweenT -= dt;
-      if (this.betweenT <= 0 && this.waveIdx < 0) this.nextWave();
+      if (this.betweenT <= 0 && this.waveIdx < 0 && this.player?.alive) this.nextWave();
     }
     if (this.spawnQueue.length) {
       const alive = this.monsters.filter((m) => m.alive).length;
@@ -386,18 +406,16 @@ class Game {
       } else if (alive >= ADVENTURE_MAX_ALIVE) {
         this.spawnTimer = Math.min(this.spawnTimer, 0.12);
       }
-    } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive)) {
+    } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive) && this.player?.alive) {
       if (!this.wavePause) {
         const nextIsBoss = isBossWave(this.level, this.waveIdx + 1);
         this.wavePause = nextIsBoss ? 2.15 : 1.55;
         this.wavePauseTotal = this.wavePause;
-        if (this.player && this.player.alive) {
-          const waveHeal = Math.max(4, Math.round(this.player.maxhp * 0.06));
-          this.player.hp = Math.min(this.player.maxhp, this.player.hp + waveHeal);
-          this.player.energy = clamp(this.player.energy + 8, 0, 100);
-          this.floater(this.player.x, this.player.y - 88, t('banner.waveClear', { heal: waveHeal }), '#6ee06e', 14);
-        }
-        if (this.stageHealBetween > 0 && this.player && this.player.alive) {
+        const waveHeal = Math.max(4, Math.round(this.player.maxhp * 0.06));
+        this.player.hp = Math.min(this.player.maxhp, this.player.hp + waveHeal);
+        this.player.energy = clamp(this.player.energy + 8, 0, 100);
+        this.floater(this.player.x, this.player.y - 88, t('banner.waveClear', { heal: waveHeal }), '#6ee06e', 14);
+        if (this.stageHealBetween > 0) {
           const heal = Math.max(8, Math.round(this.player.maxhp * this.stageHealBetween));
           this.player.hp = Math.min(this.player.maxhp, this.player.hp + heal);
           this.floater(this.player.x, this.player.y - 108, t('combat.allyHeal', { heal }), '#6ee06e', 14);
@@ -415,6 +433,7 @@ class Game {
 
   finishAdventure(win) {
     if (this.over) return;
+    if (win && (!this.player || !this.player.alive)) win = false;
     this.deactivateMasterSword(true);
     this.over = true;
     this.inputLocked = true;
@@ -472,7 +491,7 @@ class Game {
       AudioSys.sfx('lose');
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
-    setTimeout(() => UI.showResult(win, {
+    scheduleGameResult(this, 1400, () => UI.showResult(win, {
       title: win ? t('result.advWin') : t('result.advLose'),
       detail: (() => {
         const finishers = this.runFinishers ? t('result.finishersLine', { n: this.runFinishers }) : '';
@@ -500,7 +519,7 @@ class Game {
           t('result.lossGambleTip'));
         return once ? `${once} · ${base}` : base;
       })(),
-    }), 1400);
+    }));
   }
 
   onMonsterKilled(m) {
@@ -527,6 +546,12 @@ class Game {
     }
     const dropChance = m.elite ? 0.42 : 0.22;
     if (Math.random() < dropChance) this.spawnPickup(m.x, m.y - m.size * 0.5);
+    if (this.mode === 'adventure') {
+      const skillId = rollSkillShardDrop(m);
+      if (skillId) this.spawnPickup(m.x + rand(-18, 18), m.y - m.size * 0.35, { skillId });
+      const itemDrop = rollItemShardDrop(m);
+      if (itemDrop) this.spawnPickup(m.x + rand(-22, 22), m.y - m.size * 0.45, { itemCat: itemDrop.cat, itemId: itemDrop.id });
+    }
     bumpStat('kills', 1);
     bumpDaily('kills', 1);
     if (m.elite) {
@@ -591,7 +616,7 @@ class Game {
     save.stats.killsSinceSummon = 0;
     persist();
     const rar = rarityOf(tier);
-    const asc = applySummonTier(weaponById(pick.id));
+    const asc = applyWeaponUpgrades(applySummonTier(weaponById(pick.id)));
     if (this.player && this.player.weapon && this.player.weapon.id === pick.id) {
       this.player.weapon = playerWeapon();
       const st = playerStats();
@@ -611,7 +636,22 @@ class Game {
     UI.toast(t('toast.summon', { name: weaponLabel(pick), rar: rar.name, dmg: asc.dmg }), 4200);
   }
 
-  spawnPickup(x, y) {
+  spawnPickup(x, y, opts) {
+    opts = opts || {};
+    if (opts.skillId && SKILL_DEFS[opts.skillId]) {
+      this.pickups.push({
+        x, y, kind: 'skill_shard', skillId: opts.skillId,
+        t: rand(0, TAU), life: 18, bob: 0,
+      });
+      return;
+    }
+    if (opts.itemCat && opts.itemId && itemUpgradeEligible(opts.itemCat, opts.itemId)) {
+      this.pickups.push({
+        x, y, kind: 'item_shard', itemCat: opts.itemCat, itemId: opts.itemId,
+        t: rand(0, TAU), life: 18, bob: 0,
+      });
+      return;
+    }
     const kind = choice(PICKUP_TYPES);
     this.pickups.push({ x, y, kind, t: rand(0, TAU), life: 16, bob: 0 });
   }
@@ -619,11 +659,37 @@ class Game {
   collectPickup(pk) {
     if (pk._got) return;
     pk._got = true;
-    const meta = PICKUP_META[pk.kind];
+    const meta = PICKUP_META[pk.kind] || PICKUP_META.heal;
     const p = this.player;
     AudioSys.sfx('pickup');
     haptic(20);
     switch (pk.kind) {
+      case 'skill_shard': {
+        const sid = pk.skillId;
+        if (!sid || !SKILL_DEFS[sid]) break;
+        addSkillShards(sid, 1);
+        const def = SKILL_DEFS[sid];
+        const col = def.color;
+        const lbl = skillLabel(sid);
+        this.floater(p.x, p.y - 100, t('combat.pickupSkillShard', { name: lbl }), col, 15);
+        if (skillCanUpgrade(sid)) {
+          try { UI.toast(t('toast.skillUpgradeReady', { name: lbl }), 2800); } catch (_) {}
+        }
+        break;
+      }
+      case 'item_shard': {
+        const cat = pk.itemCat;
+        const iid = pk.itemId;
+        if (!cat || !iid || !itemUpgradeEligible(cat, iid)) break;
+        if (addItemShards(cat, iid, 1) <= 0) break;
+        const lbl = itemUpgradeLabel(cat, iid);
+        const col = itemUpgradeColor(cat, iid);
+        this.floater(p.x, p.y - 100, t('combat.pickupItemShard', { name: lbl }), col, 15);
+        if (itemCanUpgrade(cat, iid)) {
+          try { UI.toast(t('toast.itemUpgradeReady', { name: lbl }), 2800); } catch (_) {}
+        }
+        break;
+      }
       case 'heal':
         p.hp = Math.min(p.maxhp, p.hp + Math.round(p.maxhp * 0.28));
         this.floater(p.x, p.y - 100, t('combat.pickupHp'), meta.color, 16);
@@ -642,8 +708,14 @@ class Game {
         this.floater(p.x, p.y - 100, t('combat.pickupShield'), meta.color, 16);
         break;
     }
-    this.banner(pickupLabel(pk.kind), 0.9, meta.color, 28);
-    this.burst(pk.x, pk.y, meta.color, 14);
+    this.banner(pickupLabel(pk.kind, pk.skillId, pk.itemCat, pk.itemId), 0.9,
+      (pk.kind === 'skill_shard' && SKILL_DEFS[pk.skillId]) ? SKILL_DEFS[pk.skillId].color
+        : (pk.kind === 'item_shard' && pk.itemCat && pk.itemId) ? itemUpgradeColor(pk.itemCat, pk.itemId)
+          : meta.color, 28);
+    this.burst(pk.x, pk.y,
+      (pk.kind === 'skill_shard' && SKILL_DEFS[pk.skillId]) ? SKILL_DEFS[pk.skillId].color
+        : (pk.kind === 'item_shard' && pk.itemCat && pk.itemId) ? itemUpgradeColor(pk.itemCat, pk.itemId)
+          : meta.color, 14);
     bumpStat('pickups', 1);
     bumpDaily('pickups', 1);
     pk.life = 0;
@@ -776,7 +848,7 @@ class Game {
         let pWin;
         if (rDead && !pDead) pWin = true;
         else if (pDead && !rDead) pWin = false;
-        else pWin = (this.player.hp / this.player.maxhp) >= (this.robot.hp / this.robot.maxhp);
+        else pWin = (this.player.hp / Math.max(1, this.player.maxhp)) >= (this.robot.hp / Math.max(1, this.robot.maxhp));
         if (pWin) this.roundsP++; else this.roundsR++;
         this.trainComboBest = Math.max(this.trainComboBest || 0, this.trainRoundBest || 0);
         this.phase = 'roundend'; this.phaseT = 0;
@@ -823,7 +895,7 @@ class Game {
         : (save.trainWins === 3 ? t('result.trainStyleUnlock') : t('result.trainStyleMore')))
       : (onceResultTip('training', 'loss', t('result.trainLossTip'))
         || t('result.trainTipDefault'));
-    setTimeout(() => UI.showResult(win, {
+    scheduleGameResult(this, 1200, () => UI.showResult(win, {
       title: win ? t('result.trainWin') : t('result.trainLose'),
       detail: t('result.trainDetail', {
         outcome: win ? t('result.trainOutcomeWin') : t('result.trainOutcomeLose'),
@@ -834,7 +906,7 @@ class Game {
       }),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
-    }), 1200);
+    }));
   }
 
   initVersus(opts) {
@@ -887,7 +959,7 @@ class Game {
         const timedOut = !p1d && !p2d && this.roundTimer <= 0;
         if (p2d && !p1d) p1Win = true;
         else if (p1d && !p2d) p1Win = false;
-        else p1Win = (this.player.hp / this.player.maxhp) >= (this.p2.hp / this.p2.maxhp);
+        else p1Win = (this.player.hp / Math.max(1, this.player.maxhp)) >= (this.p2.hp / Math.max(1, this.p2.maxhp));
         if (p1Win) this.roundsP1++; else this.roundsP2++;
         this.vsRoundLog = this.vsRoundLog || [];
         this.vsRoundLog.push(p1Win ? 'p1' : 'p2');
@@ -896,8 +968,8 @@ class Game {
         this.inputLocked = true;
         let msg = p1Win ? t('banner.p1RoundWin') : t('banner.p2RoundWin');
         if (timedOut) {
-          const hp1 = Math.round(this.player.hp / this.player.maxhp * 100);
-          const hp2 = Math.round(this.p2.hp / this.p2.maxhp * 100);
+          const hp1 = Math.round(this.player.hp / Math.max(1, this.player.maxhp) * 100);
+          const hp2 = Math.round(this.p2.hp / Math.max(1, this.p2.maxhp) * 100);
           msg = t('banner.timeHpVs', { hp1, hp2, msg });
         }
         this.banner(msg, 1.5, p1Win ? '#7cf5ff' : '#ffb0b8', 38);
@@ -909,7 +981,7 @@ class Game {
         else this.startVsRound();
       }
     }
-    this.p2.update(dt, this);
+    if (this.p2) this.p2.update(dt, this);
   }
 
   finishVersus(p1Win) {
@@ -921,14 +993,14 @@ class Game {
     bumpStat('vsMatches', 1);
     if (p1Win) bumpStat('vsWins', 1);
     this.grantXP(p1Win ? 35 : 20);
-    setTimeout(() => UI.showResult(p1Win, {
+    scheduleGameResult(this, 1200, () => UI.showResult(p1Win, {
       title: p1Win ? t('result.vsP1Win') : t('result.vsP2Win'),
       detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}` +
         ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : '') +
         (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
       xp: this.sessionXP, mode: 'versus', win: p1Win, p1: this.p1Pick, p2: this.p2Pick,
       tip: t('result.vsRematchTip'),
-    }), 1200);
+    }));
   }
 
   /* ------------------------------ MUUR -------------------------------- */
@@ -1051,7 +1123,7 @@ class Game {
       else if (paceDelta != null && paceDelta < -3) tip = t('result.wallBehindPace');
       else if (paceDelta != null && paceDelta >= 3) tip = t('result.wallGoodPace');
     }
-    setTimeout(() => UI.showResult(true, {
+    scheduleGameResult(this, 1200, () => UI.showResult(true, {
       title: isRecord ? t('result.wallRecord') : t('result.wallTime'),
       detail: t('result.wallDetail', {
         score: this.score, pace, best, combo: this.maxCombo || 0,
@@ -1060,7 +1132,7 @@ class Game {
       }),
       xp: this.sessionXP, mode: 'wall', win: true,
       tip,
-    }), 1200);
+    }));
   }
 
   /* ------------------------ MATS · MUNTJES BONUS ----------------------- */
@@ -1158,7 +1230,7 @@ class Game {
     AudioSys.sfx(isRecord ? 'win' : 'bonus');
     this.banner(t('banner.bonusDone'), 1.4, '#7cfc8a', 40);
     const wallet = petCoinsBalance();
-    setTimeout(() => UI.showResult(true, {
+    scheduleGameResult(this, 1200, () => UI.showResult(true, {
       title: isRecord ? t('result.matsRecord') : t('result.matsDone'),
       detail: t('result.matsDetail', {
         n, best,
@@ -1171,7 +1243,7 @@ class Game {
       tip: petEarned > 0
         ? t('result.matsPetTip')
         : t('result.matsControlTip'),
-    }), 1200);
+    }));
   }
 
   drawCoinRunLayer(c) {
@@ -1226,27 +1298,46 @@ class Game {
 
   spawnJutsu(f, atk) {
     const jutsu = (atk && atk.jutsu) || fighterJutsuKind(f);
-    const dmg = atk ? atk.dmg : f.baseDmg * 2.8;
+    const jb = jutsuSkillBonuses(jutsu);
+    const dmg = (atk ? atk.dmg : f.baseDmg * 2.8);
     const from = this.projFrom(f);
     const critMeta = projCritMeta(f);
-    const aim = projAimVelocity(f, jutsu === 'chidori' ? 620 : jutsu === 'rinnegan' ? 340 : 420);
+    const baseSpd = jutsu === 'chidori' ? 620 : jutsu === 'rinnegan' ? 340 : 420;
+    const aim = projAimVelocity(f, baseSpd * jb.speedMul);
     const y0 = f.y - 50 + clamp(aim.ny, -1, 0.5) * 36;
+    const fireProj = (offX, offY, scale) => {
+      const sc = scale || 1;
+      if (jutsu === 'chidori') {
+        this.spawnProjectile(Object.assign({
+          x: f.x + f.face * (36 + offX), y: y0 + offY,
+          vx: aim.vx, vy: aim.vy * 0.85, r: (22 + jb.radius) * sc, dmg: dmg * sc,
+          life: 0.35 * jb.lifeMul, from, kind: 'chidori', pierce: false, hitSet: new Set(),
+          pierceRepeat: jb.pierceRepeat,
+        }, critMeta));
+      } else if (jutsu === 'rinnegan') {
+        this.spawnProjectile(Object.assign({
+          x: f.x + f.face * (38 + offX), y: y0 + offY,
+          vx: aim.vx, vy: aim.vy * 0.9, r: (30 + jb.radius) * sc, dmg: dmg * sc,
+          from, kind: 'rinnegan', pierce: true, hitSet: new Set(), life: 1.05 * jb.lifeMul,
+          spin: 0, pull: true, pullMul: jb.pullMul || 1, extraShot: jb.extraShot,
+        }, critMeta));
+      } else {
+        const face = f.face || 1;
+        this.spawnProjectile(Object.assign({
+          x: f.x + face * (40 + offX), y: y0 + offY,
+          vx: face * baseSpd * jb.speedMul, vy: 0, r: (28 + jb.radius) * sc, dmg: dmg * sc,
+          from, kind: 'rasengan', pierce: true, hitSet: new Set(), life: 1.4 * jb.lifeMul,
+          spin: 0, extraShot: jb.extraShot,
+        }, critMeta));
+      }
+    };
     if (jutsu === 'chidori') {
-      this.spawnProjectile(Object.assign({
-        x: f.x + f.face * 36, y: y0,
-        vx: aim.vx, vy: aim.vy * 0.85, r: 22, dmg, life: 0.35,
-        from, kind: 'chidori', pierce: false, hitSet: new Set(),
-      }, critMeta));
-      f.vx = f.face * 380;
+      fireProj(0, 0, 1);
+      f.vx = f.face * 380 * jb.speedMul;
       this.shake(7, 0.2);
       AudioSys.sfx('chidori');
     } else if (jutsu === 'rinnegan') {
-      this.spawnProjectile(Object.assign({
-        x: f.x + f.face * 38, y: y0,
-        vx: aim.vx, vy: aim.vy * 0.9, r: 30, dmg,
-        from, kind: 'rinnegan', pierce: true, hitSet: new Set(), life: 1.05,
-        spin: 0, pull: true,
-      }, critMeta));
+      fireProj(0, 0, 1);
       this.burst(f.x + f.face * 28, y0, '#c47aff', 22);
       this.burst(f.x + f.face * 28, y0, '#ff6b9d', 10);
       this.shake(8, 0.24);
@@ -1254,22 +1345,17 @@ class Game {
       AudioSys.sfx('rinnegan');
       if (f.isPlayer || f.playerSlot) haptic(20);
     } else {
-      // Rasengan: horizontale chakra-bol
-      const face = f.face || 1;
-      const speed = 420;
-      const y0 = f.y - 50;
-      this.spawnProjectile(Object.assign({
-        x: f.x + face * 40, y: y0,
-        vx: face * speed, vy: 0, r: 28, dmg,
-        from, kind: 'rasengan', pierce: true, hitSet: new Set(), life: 1.4,
-        spin: 0,
-      }, critMeta));
+      fireProj(0, 0, 1);
       this.burst(f.x + f.face * 30, y0, '#7cf5ff', fxLite() ? 8 : 16);
       spawnFxRing(this, f.x + f.face * 34, y0, '#7cf5ff', 10);
       this.shake(9, 0.28);
       this.freezeT = Math.max(this.freezeT, 0.06);
       AudioSys.sfx('rasengan');
       if (f.isPlayer || f.playerSlot) haptic(22);
+    }
+    const extra = (atk && atk.extraShot) || jb.extraShot || 0;
+    if (extra > 0 && Math.random() < extra) {
+      fireProj(f.face * 12, rand(-8, 8), 0.72);
     }
   }
 
@@ -1540,6 +1626,7 @@ class Game {
     if (this.hint > 0) this.hint -= dt;
     this.shakeT = Math.max(0, this.shakeT - dt);
 
+    if (!this.player) return;
     this.player.update(dt, this);
     if (this.pet) this.pet.update(dt);
     if (this.eggPet) this.eggPet.update(dt);
@@ -1609,7 +1696,9 @@ class Game {
         }
       } else {
         for (const m of this.monsters) {
-          if (!m.alive || (p.hitSet && p.hitSet.has(m))) continue;
+          if (!m.alive) continue;
+          const allowRehit = p._rehit && p._rehit.has(m);
+          if (p.hitSet && p.hitSet.has(m) && !allowRehit) continue;
           if ((p.x - m.x) ** 2 + (p.y - m.y) ** 2 < (p.r + m.size) ** 2) {
             const hit = resolveProjHit(p);
             m.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this);
@@ -1618,7 +1707,17 @@ class Game {
               spawnJutsuImpactFx(this, p.x, p.y, 'rasengan', 'full');
             }
             if (p.kind === 'rinnegan') this.burst(p.x, p.y, '#c47aff', 10);
-            if (p.hitSet) p.hitSet.add(m); else p.life = 0;
+            if (allowRehit) {
+              if (p._rehit) p._rehit.delete(m);
+              if (p.hitSet) p.hitSet.add(m);
+            } else if (p.hitSet) {
+              if (p.pierceRepeat > 0 && Math.random() < p.pierceRepeat) {
+                if (!p._rehit) p._rehit = new Set();
+                p._rehit.add(m);
+              } else {
+                p.hitSet.add(m);
+              }
+            } else p.life = 0;
           }
         }
         if (this.robot && this.robot.alive && !(p.hitSet && p.hitSet.has(this.robot))) {
@@ -1826,16 +1925,21 @@ class Game {
 
     if (this.mode === 'adventure' && this.pickups) {
       for (const pk of this.pickups) {
-        const meta = PICKUP_META[pk.kind];
+        const meta = PICKUP_META[pk.kind] || PICKUP_META.heal;
+        const pkCol = (pk.kind === 'skill_shard' && pk.skillId && SKILL_DEFS[pk.skillId])
+          ? SKILL_DEFS[pk.skillId].color
+          : (pk.kind === 'item_shard' && pk.itemCat && pk.itemId)
+            ? itemUpgradeColor(pk.itemCat, pk.itemId)
+            : meta.color;
         const y = pk.y + (pk.bob || 0);
         c.save();
         const pkBlur = (save.liteFx || Perf.tier >= 1 || motionReduced()) ? 0 : 14;
-        c.shadowColor = meta.color; c.shadowBlur = pkBlur;
-        c.fillStyle = meta.color;
+        c.shadowColor = pkCol; c.shadowBlur = pkBlur;
+        c.fillStyle = pkCol;
         c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.fill();
         c.strokeStyle = '#fff'; c.lineWidth = 2;
         c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.stroke();
-        drawPickupIcon(c, pk.kind, pk.x, y);
+        drawPickupIcon(c, pk.kind, pk.x, y, pkCol);
         c.restore();
       }
     }

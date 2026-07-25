@@ -1,4 +1,98 @@
 /* ================================= UI ================================== */
+function appendItemUpgradeButton(el, cat, id, rerender) {
+  if (!itemUpgradeEligible(cat, id) || !itemCanUpgrade(cat, id)) return;
+  const cost = itemUpgradeCost(cat, id);
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'btn claim-btn';
+  btn.textContent = t('ui.itemUpgrade') + ` (${cost})`;
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    safeUiAction(() => {
+      if (!tryItemUpgrade(cat, id)) return;
+      AudioSys.sfx('levelup');
+      const name = itemUpgradeLabel(cat, id);
+      const lv = itemUpgradeLevel(cat, id);
+      UI.toast(t('toast.itemUpgraded', { name, lv, detail: itemUpgradeSummary(cat, id) }), 3200);
+      rerender();
+    }, 'itemUp/' + cat + '/' + id, 'Upgrade mislukt');
+  });
+  el.appendChild(btn);
+}
+
+function itemUpgradeCardParts(cat, id, color) {
+  if (!itemUpgradeEligible(cat, id)) return { canUp: false, lv: 0, max: 0, html: '' };
+  const lv = itemUpgradeLevel(cat, id);
+  const max = itemUpgradeMax(cat, id);
+  const shards = itemUpgradeShards(cat, id);
+  const cost = itemUpgradeCost(cat, id);
+  const canUp = itemCanUpgrade(cat, id);
+  const now = itemUpgradeSummary(cat, id);
+  const next = itemUpgradePreview(cat, id);
+  const shardLine = cost != null ? t('ui.itemShards', { cur: shards, cost }) : t('ui.itemMax');
+  return {
+    canUp, lv, max,
+    html:
+      `<div class="skill-card-body"><div class="cname" style="color:${color}">${itemUpgradeLabel(cat, id)} ` +
+      `<span class="rar-pill" style="color:${color};border-color:${color}">${t('ui.itemLevel', { lv, max })}</span></div>` +
+      `<div class="cinfo">${shardLine}</div>` +
+      `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:4px"><b>${t('ui.itemNow')}:</b> ${now}</div>` +
+      (next ? `<div class="cinfo" style="opacity:.75;font-size:11px;margin-top:3px"><b>${t('ui.itemNext')}:</b> ${next}</div>` : '') +
+      `</div>`,
+  };
+}
+
+function drawUpgradeItemIcon(cat, id, cv) {
+  if (!cv) return;
+  const cc = cv.getContext('2d');
+  if (!cc) return;
+  cc.clearRect(0, 0, cv.width, cv.height);
+  if (cat === 'weapon') {
+    const w = WEAPONS.find((x) => x.id === id);
+    if (!w) return;
+    cc.translate(10, 40);
+    cc.rotate(-0.6);
+    if (w.id === 'vuist') {
+      cc.strokeStyle = '#f2f5ff'; cc.lineWidth = 5; cc.lineCap = 'round';
+      cc.beginPath(); cc.moveTo(2, 8); cc.lineTo(24, -6); cc.stroke();
+      cc.fillStyle = '#f2f5ff'; cc.beginPath(); cc.arc(28, -9, 7, 0, TAU); cc.fill();
+    } else {
+      drawWeaponShape(cc, w.id, 0.2);
+    }
+  } else if (cat === 'pet') {
+    const p = petDef(id);
+    const sp = p ? SPECIES[p.speciesId] : null;
+    if (!sp) return;
+    cc.translate(32, 38);
+    cc.scale(0.55, 0.55);
+    drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
+  } else if (cat === 'style') {
+    const st = styleById(id);
+    cc.translate(36, 58);
+    cc.scale(0.85, 0.85);
+    const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9 });
+    preview.animT = 0.4;
+    preview.draw(cc);
+  }
+}
+
+function buildUpgradeItemCard(cat, id, color, rerender) {
+  const card = itemUpgradeCardParts(cat, id, color);
+  const el = document.createElement('div');
+  el.className = 'card skill-card' + (card.canUp ? ' claimable' : '') + (card.lv >= card.max ? ' claimed' : '');
+  el.style.borderColor = color + '88';
+  const cv = document.createElement('canvas');
+  cv.width = 64;
+  cv.height = 64;
+  drawUpgradeItemIcon(cat, id, cv);
+  el.appendChild(cv);
+  const wrap = document.createElement('div');
+  wrap.innerHTML = card.html;
+  while (wrap.firstChild) el.appendChild(wrap.firstChild);
+  appendItemUpgradeButton(el, cat, id, rerender);
+  return el;
+}
+
 function pickVsRosterId(id) {
   try {
     const r = vsRosterEntry(id);
@@ -223,7 +317,7 @@ function audioMixStatusLine(inPause) {
 }
 
 const UI = {
-  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
+  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'skillScreen', 'petScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
@@ -397,6 +491,7 @@ const UI = {
         return;
       }
       if (active === 'pauseScreen' && game) {
+        try { Input.releaseAll(); } catch (_) {}
         state = 'play';
         AudioSys.setPaused(false);
         if (save.music && AudioSys.desiredSong) AudioSys.play(AudioSys.desiredSong);
@@ -404,6 +499,7 @@ const UI = {
         return;
       }
       if (active === 'gambleScreen') {
+        try { cancelGambleStart(); } catch (_) {}
         this.show('levelScreen');
         return;
       }
@@ -419,7 +515,7 @@ const UI = {
         this.show('menuScreen');
         return;
       }
-      if (active === 'weaponScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'dexScreen') {
+      if (active === 'weaponScreen' || active === 'skillScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'dexScreen') {
         this.openModeHub('collect');
         return;
       }
@@ -459,6 +555,9 @@ const UI = {
 
   goMenu() {
     try {
+      try { clearGameResultTimer(game); } catch (_) {}
+      try { cancelGambleStart(); } catch (_) {}
+      try { Input.releaseAll(); } catch (_) {}
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
@@ -477,6 +576,7 @@ const UI = {
       if (window.StickInstall) window.StickInstall.refreshMenuButton();
     } catch (err) {
       sfReportError('goMenu', err, 'Kon menu niet openen — herlaad de pagina');
+      try { Input.releaseAll(); } catch (_) {}
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
@@ -783,6 +883,11 @@ const UI = {
         : 'Munten → pet coins');
     } else if (this.modeHubId === 'collect') {
       setStat('hubStatWeapons', `${weaponUnlockedCount()}/${WEAPONS.length} vrij`);
+      const skillLv = totalAllUpgradeLevels();
+      const ready = countAllUpgradesReady();
+      setStat('hubStatSkills', ready > 0
+        ? t('ui.upgradeReady', { n: ready })
+        : (skillLv > 0 ? `Lv ${skillLv} totaal` : 'Shards in avontuur'));
       const petsN = petTamedCount();
       const eggsN = eggOwnedCount();
       const pc = petCoinsBalance();
@@ -796,14 +901,16 @@ const UI = {
   },
 
   renderMenu() {
+    try {
     this.syncTouchClass();
     const need = xpNeed(save.lvl);
     const w = weaponById(save.weapon);
     const st = styleById(save.style || 'classic');
     const pct = Math.round(save.xp / need * 100);
     ensureDaily();
+    const dailyTasks = (save.daily && Array.isArray(save.daily.tasks)) ? save.daily.tasks : [];
     const readyClaim = claimableDailyTasks().length;
-    const bonusReady = save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed;
+    const bonusReady = dailyTasks.length > 0 && dailyTasks.every(t => t.claimed) && !save.daily.dayBonusClaimed;
     const missAlert = readyClaim > 0 || bonusReady;
     const profileEl = document.getElementById('menuProfileBar');
     if (profileEl) {
@@ -836,8 +943,8 @@ const UI = {
     document.querySelectorAll('[data-hub-stat]').forEach((el) => {
       el.textContent = hubTileStatLine(el.dataset.hubStat);
     });
-    document.getElementById('togMusic').classList.toggle('off', !save.music);
-    document.getElementById('togSfx').classList.toggle('off', !save.sfx);
+    document.getElementById('togMusic')?.classList.toggle('off', !save.music);
+    document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const verLine = document.getElementById('menuVerLine');
     if (verLine) verLine.textContent = 'v' + APP_VERSION + ' · arcade · SW v' + SW_CACHE_REV;
     const missEl = document.getElementById('menuDailyHint');
@@ -887,6 +994,9 @@ const UI = {
         }).catch(() => {});
       }
     }
+    } catch (err) {
+      sfReportError('renderMenu', err, 'Menu kon niet ververst worden');
+    }
   },
 
   renderMissions() {
@@ -894,7 +1004,7 @@ const UI = {
     const dailyHost = document.getElementById('dailyList');
     const achHost = document.getElementById('achList');
     if (!dailyHost || !achHost) return;
-    const tasks = save.daily.tasks;
+    const tasks = (save.daily && Array.isArray(save.daily.tasks)) ? save.daily.tasks : [];
     const readyN = tasks.filter(t => t.done && !t.claimed).length;
     const claimedN = tasks.filter(t => t.claimed).length;
     const doneN = tasks.filter(t => t.done).length;
@@ -1411,13 +1521,23 @@ const UI = {
         ? ` <span class="rar-pill" style="color:${tier.color};border-color:${tier.color}">${tier.name}</span>`
         : '';
       const mastLine = finCount ? ` · ${finCount}× finisher` : '';
+      const upLv = weaponUpgradeEligible(base) ? itemUpgradeLevel('weapon', w.id) : 0;
+      const upMax = weaponUpgradeEligible(base) ? itemUpgradeMax('weapon', w.id) : 0;
+      const upBadge = upLv > 0
+        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">↑ Lv ${upLv}/${upMax}</span>`
+        : '';
+      const upLine = weaponUpgradeEligible(base) && (upLv > 0 || itemUpgradeShards('weapon', w.id) > 0)
+        ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px">${weaponUpgradeSummary(w.id)}</div>`
+        : '';
       const moveLine = labels
         ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} finisher${mastLine}`
         : (isThrowWeapon(w.id) ? 'Werp-projectiel — geen melee-combo' : '');
-      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${summonBadge}${tierBadge}</div>
+      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${summonBadge}${tierBadge}${upBadge}</div>
         <div class="cinfo">${statLine}</div>` +
+        upLine +
         (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '');
       el.appendChild(info);
+      if (weaponUpgradeEligible(base)) appendItemUpgradeButton(el, 'weapon', w.id, () => this.renderWeapons());
       const right = document.createElement('div');
       right.className = 'right';
       right.innerHTML = lvlLocked
@@ -1438,6 +1558,168 @@ const UI = {
         }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt');
       });
       list.appendChild(el);
+    }
+  },
+
+  renderSkills(tab) {
+    if (tab) this.upgradeTab = tab;
+    this.renderUpgrades();
+  },
+
+  openUpgrades(tab) {
+    this.upgradeTab = tab || 'skills';
+    this.renderUpgrades();
+    this.show('skillScreen');
+  },
+
+  renderUpgrades() {
+    const tab = this.upgradeTab || 'skills';
+    const head = document.getElementById('skillScreenHead');
+    const sub = document.getElementById('skillScreenSub');
+    if (head) head.textContent = t('ui.skillHead');
+    const subKeys = {
+      skills: 'ui.upgradeSubSkills',
+      weapon: 'ui.upgradeSubWeapons',
+      pet: 'ui.upgradeSubPets',
+      style: 'ui.upgradeSubStyle',
+    };
+    if (sub) sub.textContent = t(subKeys[tab] || 'ui.skillSub');
+    const bar = document.getElementById('upgradeTabBar');
+    if (bar) {
+      const tabs = [
+        { id: 'skills', label: t('ui.skillTabSkills'), ready: countSkillUpgradesReady() },
+        { id: 'weapon', label: t('ui.skillTabWeapons'), ready: countItemUpgradesReady('weapon') },
+        { id: 'pet', label: t('ui.skillTabPets'), ready: countItemUpgradesReady('pet') },
+        { id: 'style', label: t('ui.skillTabStyle'), ready: countItemUpgradesReady('style') },
+      ];
+      bar.innerHTML = tabs.map((tb) =>
+        `<button type="button" role="tab" aria-selected="${tab === tb.id ? 'true' : 'false'}" ` +
+        `class="dex-filter-btn${tab === tb.id ? ' active' : ''}" data-upgrade-tab="${tb.id}">${tb.label}` +
+        (tb.ready > 0 ? `<span class="upgrade-tab-badge">${tb.ready}</span>` : '') +
+        `</button>`
+      ).join('');
+      if (!bar.dataset.bound) {
+        bar.dataset.bound = '1';
+        bar.addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-upgrade-tab]');
+          if (!btn) return;
+          AudioSys.sfx('select');
+          UI.upgradeTab = btn.getAttribute('data-upgrade-tab') || 'skills';
+          UI.renderUpgrades();
+        });
+      }
+    }
+    const sumEl = document.getElementById('skillSummary');
+    if (sumEl) {
+      const skillShards = save.stats?.skillShards || 0;
+      const itemShards = save.stats?.itemShards || 0;
+      const ready = countAllUpgradesReady();
+      sumEl.style.display = 'block';
+      sumEl.innerHTML =
+        `Totaal <b>${totalAllUpgradeLevels()}</b> upgrade-levels · ` +
+        `<b>${skillShards}</b> skill · <b>${itemShards}</b> item shards` +
+        (ready > 0 ? ` · <b style="color:#ffd75e">${t('ui.upgradeReady', { n: ready })}</b>` : '') +
+        `<div class="upgrade-shard-hint">${t('ui.upgradeShardHint')}</div>` +
+        `<div style="font-size:11px;opacity:.72;margin-top:4px">Standaard max Lv ${UPGRADE_MAX_STANDARD} · mythische/extreme max Lv ${UPGRADE_MAX_EXTREME}</div>`;
+    }
+    if (tab === 'skills') this.renderUpgradeSkills();
+    else this.renderUpgradeItems(tab);
+  },
+
+  renderUpgradeSkills() {
+    const list = document.getElementById('skillList');
+    if (!list) return;
+    list.innerHTML = '';
+    const groups = [
+      { id: 'jutsu', title: t('ui.skillGroupJutsu'), ids: JUTSU_SKILL_IDS },
+      { id: 'utility', title: t('ui.skillGroupUtility'), ids: SKILL_IDS.filter((id) => SKILL_DEFS[id].group === 'utility') },
+    ];
+    for (const g of groups) {
+      const hdr = document.createElement('div');
+      hdr.className = 'skill-group-head';
+      hdr.textContent = g.title;
+      list.appendChild(hdr);
+      for (const id of g.ids) {
+        const def = SKILL_DEFS[id];
+        const lv = skillLevel(id);
+        const maxLv = skillMaxLevel(id);
+        const shards = skillShards(id);
+        const cost = skillUpgradeCost(id);
+        const canUp = skillCanUpgrade(id);
+        const el = document.createElement('div');
+        el.className = 'card skill-card' + (canUp ? ' claimable' : '') + (lv >= maxLv ? ' claimed' : '');
+        el.style.borderColor = def.color + '88';
+        const name = skillLabel(id);
+        const now = skillUpgradeSummary(id);
+        const next = skillNextStepPreview(id);
+        const shardLine = cost != null
+          ? t('ui.skillShards', { cur: shards, cost })
+          : t('ui.skillMax');
+        const desc = skillDesc(id);
+        el.innerHTML =
+          `<div class="skill-card-body"><div class="cname" style="color:${def.color}">${name} ` +
+          `<span class="rar-pill" style="color:${def.color};border-color:${def.color}">${t('ui.skillLevel', { lv, max: maxLv })}</span></div>` +
+          (desc ? `<div class="cinfo" style="opacity:.82;font-size:12px">${desc}</div>` : '') +
+          `<div class="cinfo">${shardLine}</div>` +
+          `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:4px"><b>${t('ui.skillNow')}:</b> ${now}</div>` +
+          (next ? `<div class="cinfo" style="opacity:.75;font-size:11px;margin-top:3px"><b>${t('ui.skillNext')}:</b> ${next}</div>` : '') +
+          `</div>`;
+        if (canUp) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn claim-btn';
+          btn.textContent = t('ui.skillUpgrade') + ` (${cost})`;
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            safeUiAction(() => {
+              if (!trySkillUpgrade(id)) return;
+              AudioSys.sfx('levelup');
+              const nlv = skillLevel(id);
+              UI.toast(t('toast.skillUpgraded', { name, lv: nlv, detail: skillUpgradeSummary(id) }), 3200);
+              this.renderUpgrades();
+            }, 'skillUp/' + id, 'Upgrade mislukt');
+          });
+          el.appendChild(btn);
+        }
+        list.appendChild(el);
+      }
+    }
+  },
+
+  renderUpgradeItems(cat) {
+    const list = document.getElementById('skillList');
+    if (!list) return;
+    list.innerHTML = '';
+    let items = [];
+    if (cat === 'weapon') {
+      items = WEAPONS.filter((w) => weaponUpgradeEligible(w)).map((w) => ({
+        id: w.id, color: rarityOf(w.rarity).color,
+      }));
+    } else if (cat === 'pet') {
+      items = PET_ROSTER.filter((p) => petUpgradeEligible(p)).map((p) => {
+        const sp = SPECIES[p.speciesId];
+        return { id: p.id, color: sp ? rarityOf(sp.rarity).color : '#7cf5ff' };
+      });
+    } else if (cat === 'style') {
+      items = STYLES.filter((st) => styleUpgradeEligible(st)).map((st) => ({
+        id: st.id, color: st.accent || '#c792ff',
+      }));
+    }
+    items.sort((a, b) => itemUpgradeLevel(cat, b.id) - itemUpgradeLevel(cat, a.id));
+    if (!items.length) {
+      const empty = document.createElement('div');
+      empty.className = 'step-card upgrade-empty';
+      const emptyKeys = {
+        weapon: 'ui.upgradeEmptyWeapons',
+        pet: 'ui.upgradeEmptyPets',
+        style: 'ui.upgradeEmptyStyle',
+      };
+      empty.textContent = t(emptyKeys[cat] || 'ui.skillSub');
+      list.appendChild(empty);
+      return;
+    }
+    for (const it of items) {
+      list.appendChild(buildUpgradeItemCard(cat, it.id, it.color, () => this.renderUpgrades()));
     }
   },
 
@@ -1644,13 +1926,18 @@ const UI = {
       el.appendChild(cv);
       const info = document.createElement('div');
       const badge = active ? ' <span class="rar-pill" style="color:#7cf5ff;border-color:#7cf5ff">ACTIEF</span>' : '';
-      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}</div>` +
+      const upLv = tamed ? itemUpgradeLevel('pet', def.id) : 0;
+      const upMax = tamed ? itemUpgradeMax('pet', def.id) : 0;
+      const upBadge = upLv > 0 ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">↑ Lv ${upLv}/${upMax}</span>` : '';
+      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${upBadge}</div>` +
         `<div class="cinfo">${def.perk}</div>` +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
           ? 'Getemd · assist in avontuur'
           : (canBuy
             ? `Kopen: ${cost} pet coins`
-            : `Temmen: ${Math.min(kills, need)}/${need} kills · of ${cost} 🪙`)}</div>`;
+            : `Temmen: ${Math.min(kills, need)}/${need} kills · of ${cost} 🪙`)}</div>` +
+        (tamed && (upLv > 0 || itemUpgradeShards('pet', def.id) > 0)
+          ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px">${petUpgradeSummary(def.id)}</div>` : '');
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
@@ -1665,6 +1952,7 @@ const UI = {
       }
       el.appendChild(right);
       if (tamed) {
+        appendItemUpgradeButton(el, 'pet', def.id, () => this.renderPets());
         el.addEventListener('click', () => {
           if (!uiTapAllowed()) return;
           safeUiAction(() => {
@@ -1843,6 +2131,18 @@ const UI = {
         : (styleSkillGated(st) ? t('ui.styleIslandGate', { lvl: st.needLvl }) : styleLabel(st, 'hint'));
       el.appendChild(sub);
       if (ok) {
+        const upLv = itemUpgradeLevel('style', st.id);
+        const upMax = itemUpgradeMax('style', st.id);
+        if (upLv > 0 || itemUpgradeShards('style', st.id) > 0) {
+          const up = document.createElement('div');
+          up.style.fontSize = '10px';
+          up.style.fontWeight = '700';
+          up.style.color = '#ffd75e';
+          up.style.marginTop = '4px';
+          up.textContent = `↑ Lv ${upLv}/${upMax} · ${styleUpgradeSummary(st.id)}`;
+          el.appendChild(up);
+        }
+        appendItemUpgradeButton(el, 'style', st.id, () => this.renderStyle());
         el.addEventListener('click', () => {
           if (!uiTapAllowed()) return;
           safeUiAction(() => {
@@ -1990,15 +2290,19 @@ const UI = {
   },
 
   showResult(win, data) {
+    if (state === 'menu' || !data) return;
     this.lastResult = data;
     state = 'result';
     scheduleResize();
-    document.getElementById('pauseBtn').classList.remove('show');
+    document.getElementById('pauseBtn')?.classList.remove('show');
     const title = document.getElementById('resTitle');
+    if (!title) return;
     title.textContent = data.title;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
-    document.getElementById('resDetail').textContent = data.detail;
-    document.getElementById('resXp').textContent = t('result.xp', {
+    const detailEl = document.getElementById('resDetail');
+    if (detailEl) detailEl.textContent = data.detail;
+    const xpEl = document.getElementById('resXp');
+    if (xpEl) xpEl.textContent = t('result.xp', {
       xp: data.xp, lvl: save.lvl, cur: save.xp, need: xpNeed(save.lvl),
     });
     const tipEl = document.getElementById('resTip');

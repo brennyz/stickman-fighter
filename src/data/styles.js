@@ -92,26 +92,34 @@ function applyStyleBonusesToPlayer(game, player) {
   if (!player) return;
   const st = styleById(save.style || 'classic');
   const m = styleMods(st);
-  game.styleDefMul = m.defMul || 1;
-  game.styleDmgMul = m.dmgMul || 1;
-  game.styleAdvDmgMul = m.advDmgMul || 1;
-  game.styleEnergyMul = m.energyMul || 1;
-  game.styleCritBonus = m.critBonus || 0;
-  game.styleKbMul = m.kbMul || 1;
-  game.styleJutsuMul = m.jutsuMul || 1;
-  game.styleShieldWave = m.shieldWave || 0;
-  game.styleBlockMul = m.blockMul || 1;
-  game.styleXpMul = m.xpMul || 1;
+  const up = styleUpgradeBonuses(st.id);
+  const sc = up.modScale;
+  game.styleDefMul = scaleStyleModValue('defMul', m.defMul || 1, sc) || 1;
+  game.styleDmgMul = scaleStyleModValue('dmgMul', m.dmgMul || 1, sc) || 1;
+  game.styleAdvDmgMul = scaleStyleModValue('advDmgMul', m.advDmgMul || 1, sc) || 1;
+  game.styleEnergyMul = scaleStyleModValue('energyMul', m.energyMul || 1, sc) || 1;
+  game.styleCritBonus = scaleStyleModValue('critBonus', m.critBonus || 0, sc) || 0;
+  game.styleKbMul = scaleStyleModValue('kbMul', m.kbMul || 1, sc) || 1;
+  game.styleJutsuMul = scaleStyleModValue('jutsuMul', m.jutsuMul || 1, sc) || 1;
+  game.styleShieldWave = (m.shieldWave || 0) + up.shieldAdd;
+  game.styleBlockMul = scaleStyleModValue('blockMul', m.blockMul || 1, sc) || 1;
+  game.styleXpMul = scaleStyleModValue('xpMul', m.xpMul || 1, sc) || 1;
   game.styleLightning = !!(st.lightning || m.lightning);
   if (m.maxHp) {
-    player.maxhp += m.maxHp;
-    player.hp += m.maxHp;
+    const hp = m.maxHp + up.maxHpAdd;
+    player.maxhp += hp;
+    player.hp += hp;
+  } else if (up.maxHpAdd > 0) {
+    player.maxhp += up.maxHpAdd;
+    player.hp += up.maxHpAdd;
   }
-  if (m.speedMul && m.speedMul !== 1) {
-    player.speed = Math.round(player.speed * m.speedMul);
+  const speedMul = scaleStyleModValue('speedMul', m.speedMul || 1, sc) || 1;
+  if (speedMul !== 1) {
+    player.speed = Math.round(player.speed * speedMul);
   }
-  if (m.weaponRange && m.weaponRange !== 1) {
-    game.styleWeaponRange = m.weaponRange;
+  const weaponRange = scaleStyleModValue('weaponRange', m.weaponRange || 1, sc) || 1;
+  if (weaponRange !== 1) {
+    game.styleWeaponRange = weaponRange;
   } else {
     game.styleWeaponRange = 1;
   }

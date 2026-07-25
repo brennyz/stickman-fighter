@@ -214,6 +214,10 @@ function loop(now) {
       try { Input.endFrame(); } catch (frameErr) {
         sfReportError('input', frameErr);
       }
+    } else if (state === 'pause' && game) {
+      try { Input.endFrame(); } catch (frameErr) {
+        sfReportError('input', frameErr);
+      }
     } else if (Perf.menuLandingVisible()) {
       menuAnimT += dt;
       ensureMenuScreenActive();
@@ -399,7 +403,16 @@ function updateNetStatus(ev) {
 window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
 window.addEventListener('pageshow', (ev) => {
-  if (ev.persisted) updateNetStatus();
+  if (ev.persisted) {
+    try { Input.releaseAll(); } catch (_) {}
+    if (state === 'play' && game) {
+      state = 'pause';
+      try { AudioSys.setPaused(true); } catch (_) {}
+      try { UI.renderPauseToggles(); UI.show('pauseScreen'); } catch (_) {}
+    }
+    scheduleResize();
+  }
+  updateNetStatus(ev);
 });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') updateNetStatus();
@@ -467,7 +480,7 @@ function bootGame() {
       if (window.__sfLoopErr) return;
       const err = ev.error || new Error(ev.message || 'unknown');
       sfReportError('window', err);
-      if (state === 'play') {
+      if (state === 'play' || state === 'pause' || state === 'result') {
         try { recoverToMenu(); } catch (_) {}
       }
     });
@@ -476,7 +489,7 @@ function bootGame() {
       const r = ev.reason;
       const err = r instanceof Error ? r : new Error(String(r != null ? r : 'async reject'));
       sfReportError('async', err, 'Actie mislukt — probeer opnieuw');
-      if (state === 'play') {
+      if (state === 'play' || state === 'pause' || state === 'result') {
         try { recoverToMenu(); } catch (_) {}
       }
     });

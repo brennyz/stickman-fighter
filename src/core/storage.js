@@ -3,21 +3,21 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.65';
+const APP_VERSION = '1.17.78';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 191;
+const SW_CACHE_REV = 196;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
 
 
 
-  advIsland: 0, advFails: {}, advMasterBuff: null,
+  advIsland: 0, advFails: {}, advMasterBuff: null, missionsIntroSeen: false,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0 },
-  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {} };
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
+  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {} };
 
 const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
@@ -337,6 +337,9 @@ function rollHitDamage(attacker, spec, mult) {
   if (attacker.isPlayer && typeof game !== 'undefined' && game && game.styleCritBonus) {
     critChance += game.styleCritBonus;
   }
+  if (attacker.isPlayer && k === 'weapon' && attacker.weapon && attacker.weapon.upgradeCrit) {
+    critChance += attacker.weapon.upgradeCrit;
+  }
   critChance = clamp(critChance, 0, 0.48);
   let dmg = spec.dmg * rand(0.9, 1.15) * mult;
   const crit = Math.random() < critChance;
@@ -428,7 +431,7 @@ function loadSave() {
 
 function readSaveJson(raw) {
   try {
-    if (!raw || raw.length > 200000) return null;
+    if (!raw || raw.length > 180000) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
     const merged = Object.assign({}, DEFAULT_SAVE, parsed);
@@ -439,6 +442,9 @@ function readSaveJson(raw) {
     merged.summons = Object.assign({}, parsed.summons || {});
     merged.pets = Object.assign({}, parsed.pets || {});
     merged.eggPets = Object.assign({}, parsed.eggPets || {});
+    merged.weaponMastery = Object.assign({}, DEFAULT_SAVE.weaponMastery || {}, parsed.weaponMastery || {});
+    merged.tipsSeen = Object.assign({}, parsed.tipsSeen || {});
+    merged.advFails = Object.assign({}, parsed.advFails || {});
     if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
     if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;
@@ -701,6 +707,28 @@ function sanitizeSave(s) {
   }
   out.weaponMastery = cleanMastery;
 
+  const cleanSkills = {};
+  for (const id of SKILL_IDS) {
+    const fixed = typeof sanitizeSkillUpgradeEntry === 'function'
+      ? sanitizeSkillUpgradeEntry(id, (out.skillUpgrades || {})[id])
+      : null;
+    if (fixed) cleanSkills[id] = fixed;
+  }
+  out.skillUpgrades = cleanSkills;
+
+  const cleanItems = { weapon: {}, pet: {}, style: {} };
+  for (const cat of (typeof ITEM_UPGRADE_CATS !== 'undefined' ? ITEM_UPGRADE_CATS : ['weapon', 'pet', 'style'])) {
+    const bag = (out.itemUpgrades && out.itemUpgrades[cat] && typeof out.itemUpgrades[cat] === 'object')
+      ? out.itemUpgrades[cat] : {};
+    for (const [id, raw] of Object.entries(bag)) {
+      const fixed = typeof sanitizeItemUpgradeEntry === 'function'
+        ? sanitizeItemUpgradeEntry(cat, id, raw)
+        : null;
+      if (fixed) cleanItems[cat][id] = fixed;
+    }
+  }
+  out.itemUpgrades = cleanItems;
+
   out.petCoins = clamp(Math.floor(Number(out.petCoins) || 0), 0, 999999);
   if (out.lang != null && !SUPPORTED_LANGS.includes(out.lang)) out.lang = null;
 
@@ -759,5 +787,7 @@ const PICKUP_META = {
   rage:   { color: '#ff7a4d', label: 'RAGE' },
   chakra: { color: '#7cf5ff', label: 'CHAKRA' },
   shield: { color: '#9fd8ff', label: 'SCHILD' },
+  skill_shard: { color: '#ffd75e', label: 'SKILL' },
+  item_shard: { color: '#c792ff', label: 'ITEM' },
 };
 

@@ -521,6 +521,8 @@ function applyLangStaticScreens() {
   setText('styleScreenSub', 'ui.styleSub');
   setText('weaponScreenHead', 'ui.weaponHead');
   setText('weaponScreenSub', 'ui.weaponSub');
+  setText('skillScreenHead', 'ui.skillHead');
+  setText('skillScreenSub', 'ui.skillSub');
   setText('helpFirstMinute', 'ui.helpFirstMinute');
 
   const gambleStartLbl = document.getElementById('gambleStartLbl');

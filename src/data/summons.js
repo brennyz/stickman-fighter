@@ -27,7 +27,7 @@ function applySummonTier(w) {
     summoned: true,
   });
 }
-const playerWeapon = () => applySummonTier(weaponById(save.weapon));
+const playerWeapon = () => applyWeaponUpgrades(applySummonTier(weaponById(save.weapon)));
 
 /** 2% per avontuur-level: zwaard → Master Sword (Zelda) — 15s, ×2 dmg, groot bereik, unblockable. */
 const MASTER_SWORD_DURATION = 15;

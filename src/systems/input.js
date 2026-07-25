@@ -881,13 +881,19 @@ addEventListener('keydown', e => {
       InputP2.lastMoveTap = now; InputP2.lastMoveDir = 1;
     }
     InputP2.keys[k] = true;
+    if (!['arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(k)) Input.keys[k] = true;
+  } else {
+    Input.keys[k] = true;
   }
-  Input.keys[k] = true;
   if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) e.preventDefault();
 });
 addEventListener('keyup', e => {
   const k = e.key.toLowerCase();
-  Input.keys[k] = false;
-  if (InputP2) InputP2.keys[k] = false;
+  if (Input.dualMode && ['arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(k)) {
+    if (InputP2) InputP2.keys[k] = false;
+  } else {
+    Input.keys[k] = false;
+    if (InputP2) InputP2.keys[k] = false;
+  }
 });
 

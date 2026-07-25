@@ -109,14 +109,15 @@ function petPassiveBonus() {
   const kills = save.dex[def.speciesId] || 0;
   const tier = Math.min(3, Math.floor(kills / 25));
   const tierMul = 1 + tier * 0.012;
+  const up = petUpgradeBonuses(def.id);
   const out = { dmgMul: 1, energyMul: 1, critBonus: 0, maxHp: 0, speedMul: 1, shieldWave: 0 };
   switch (def.passive) {
-    case 'dmg': out.dmgMul = 1 + def.passiveVal * tierMul; break;
-    case 'hp': out.maxHp = Math.round(def.passiveVal * tierMul); break;
-    case 'energy': out.energyMul = def.passiveVal * tierMul; break;
-    case 'crit': out.critBonus = def.passiveVal * tierMul; break;
-    case 'speed': out.speedMul = def.passiveVal * tierMul; break;
-    case 'shield': out.shieldWave = def.passiveVal * tierMul; break;
+    case 'dmg': out.dmgMul = 1 + def.passiveVal * tierMul * up.passiveMul; break;
+    case 'hp': out.maxHp = Math.round(def.passiveVal * tierMul * up.passiveMul); break;
+    case 'energy': out.energyMul = 1 + (def.passiveVal - 1) * tierMul * up.passiveMul; break;
+    case 'crit': out.critBonus = def.passiveVal * tierMul * up.passiveMul; break;
+    case 'speed': out.speedMul = 1 + (def.passiveVal - 1) * tierMul * up.passiveMul; break;
+    case 'shield': out.shieldWave = def.passiveVal * tierMul * up.passiveMul; break;
   }
   if (sp) out.label = sp.name;
   return out;

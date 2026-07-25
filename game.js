@@ -133,21 +133,21 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.65';
+const APP_VERSION = '1.17.78';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 191;
+const SW_CACHE_REV = 196;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
 
 
 
-  advIsland: 0, advFails: {}, advMasterBuff: null,
+  advIsland: 0, advFails: {}, advMasterBuff: null, missionsIntroSeen: false,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0 },
-  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {} };
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
+  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {} };
 
 const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
@@ -467,6 +467,9 @@ function rollHitDamage(attacker, spec, mult) {
   if (attacker.isPlayer && typeof game !== 'undefined' && game && game.styleCritBonus) {
     critChance += game.styleCritBonus;
   }
+  if (attacker.isPlayer && k === 'weapon' && attacker.weapon && attacker.weapon.upgradeCrit) {
+    critChance += attacker.weapon.upgradeCrit;
+  }
   critChance = clamp(critChance, 0, 0.48);
   let dmg = spec.dmg * rand(0.9, 1.15) * mult;
   const crit = Math.random() < critChance;
@@ -558,7 +561,7 @@ function loadSave() {
 
 function readSaveJson(raw) {
   try {
-    if (!raw || raw.length > 200000) return null;
+    if (!raw || raw.length > 180000) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
     const merged = Object.assign({}, DEFAULT_SAVE, parsed);
@@ -569,6 +572,9 @@ function readSaveJson(raw) {
     merged.summons = Object.assign({}, parsed.summons || {});
     merged.pets = Object.assign({}, parsed.pets || {});
     merged.eggPets = Object.assign({}, parsed.eggPets || {});
+    merged.weaponMastery = Object.assign({}, DEFAULT_SAVE.weaponMastery || {}, parsed.weaponMastery || {});
+    merged.tipsSeen = Object.assign({}, parsed.tipsSeen || {});
+    merged.advFails = Object.assign({}, parsed.advFails || {});
     if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
     if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;
@@ -831,6 +837,28 @@ function sanitizeSave(s) {
   }
   out.weaponMastery = cleanMastery;
 
+  const cleanSkills = {};
+  for (const id of SKILL_IDS) {
+    const fixed = typeof sanitizeSkillUpgradeEntry === 'function'
+      ? sanitizeSkillUpgradeEntry(id, (out.skillUpgrades || {})[id])
+      : null;
+    if (fixed) cleanSkills[id] = fixed;
+  }
+  out.skillUpgrades = cleanSkills;
+
+  const cleanItems = { weapon: {}, pet: {}, style: {} };
+  for (const cat of (typeof ITEM_UPGRADE_CATS !== 'undefined' ? ITEM_UPGRADE_CATS : ['weapon', 'pet', 'style'])) {
+    const bag = (out.itemUpgrades && out.itemUpgrades[cat] && typeof out.itemUpgrades[cat] === 'object')
+      ? out.itemUpgrades[cat] : {};
+    for (const [id, raw] of Object.entries(bag)) {
+      const fixed = typeof sanitizeItemUpgradeEntry === 'function'
+        ? sanitizeItemUpgradeEntry(cat, id, raw)
+        : null;
+      if (fixed) cleanItems[cat][id] = fixed;
+    }
+  }
+  out.itemUpgrades = cleanItems;
+
   out.petCoins = clamp(Math.floor(Number(out.petCoins) || 0), 0, 999999);
   if (out.lang != null && !SUPPORTED_LANGS.includes(out.lang)) out.lang = null;
 
@@ -889,6 +917,8 @@ const PICKUP_META = {
   rage:   { color: '#ff7a4d', label: 'RAGE' },
   chakra: { color: '#7cf5ff', label: 'CHAKRA' },
   shield: { color: '#9fd8ff', label: 'SCHILD' },
+  skill_shard: { color: '#ffd75e', label: 'SKILL' },
+  item_shard: { color: '#c792ff', label: 'ITEM' },
 };
 
 /* --- src/i18n/i18n.js --- */
@@ -1415,6 +1445,8 @@ function applyLangStaticScreens() {
   setText('styleScreenSub', 'ui.styleSub');
   setText('weaponScreenHead', 'ui.weaponHead');
   setText('weaponScreenSub', 'ui.weaponSub');
+  setText('skillScreenHead', 'ui.skillHead');
+  setText('skillScreenSub', 'ui.skillSub');
   setText('helpFirstMinute', 'ui.helpFirstMinute');
 
   const gambleStartLbl = document.getElementById('gambleStartLbl');
@@ -1545,7 +1577,7 @@ function initLang() {
 /* --- src/render/art-helpers.js --- */
 /* ============ IN-GAME ART HELPERS (art-upgrade 3/4) ==================== */
 /** Getekend pickup-icoon (hart/vlam/spiraal/schild) ipv tekstlabel. */
-function drawPickupIcon(c, kind, x, y) {
+function drawPickupIcon(c, kind, x, y, tint) {
   c.save();
   c.translate(x, y);
   c.fillStyle = '#0a0d18';
@@ -1578,6 +1610,26 @@ function drawPickupIcon(c, kind, x, y) {
       if (a === 0) c.moveTo(sx, sy); else c.lineTo(sx, sy);
     }
     c.stroke();
+  } else if (kind === 'skill_shard' || kind === 'item_shard') {
+    const fill = tint || (kind === 'item_shard' ? '#c792ff' : '#ffd75e');
+    c.fillStyle = fill;
+    c.beginPath();
+    c.moveTo(0, -7);
+    c.lineTo(6.5, -1);
+    c.lineTo(4, 7);
+    c.lineTo(-4, 7);
+    c.lineTo(-6.5, -1);
+    c.closePath();
+    c.fill();
+    c.strokeStyle = '#0a0d18';
+    c.lineWidth = 1.6;
+    c.stroke();
+    if (kind === 'item_shard') {
+      c.fillStyle = '#0a0d18';
+      c.beginPath();
+      c.arc(0, 0, 2.2, 0, TAU);
+      c.fill();
+    }
   } else {
     c.beginPath();
     c.moveTo(0, -8);
@@ -1748,7 +1800,7 @@ function todayKey() {
 }
 function ensureDaily() {
   const dk = todayKey();
-  if (!save.daily || save.daily.date !== dk) {
+  if (!save.daily || save.daily.date !== dk || !Array.isArray(save.daily.tasks) || !save.daily.tasks.length) {
     const order = [...DAILY_DEFS].sort((a, b) => {
       const h = (s) => { let x = 0; for (let i = 0; i < s.length; i++) x = (x * 33 + s.charCodeAt(i)) | 0; return x; };
       return h(dk + a.id) - h(dk + b.id);
@@ -2487,6 +2539,8 @@ function recoverToMenu() {
       ensureMenuScreenActive();
       return;
     }
+    try { clearGameResultTimer(game); } catch (_) {}
+    try { cancelGambleStart(); } catch (_) {}
     game = null;
     state = 'menu';
     window.__sfLoopErr = false;
@@ -2511,6 +2565,13 @@ function recoverToMenu() {
   }
 }
 function importSaveJson(text) {
+  if (state === 'play' || state === 'pause') {
+    try { recoverToMenu(); } catch (_) {
+      game = null;
+      state = 'menu';
+      try { syncPlayLayer(); } catch (_) {}
+    }
+  }
   const { save: next, warnings } = previewImportSave(text);
   save = next;
   if (!persistOrToast('import')) throw new Error('Import gelukt maar opslaan mislukt — probeer opnieuw');
@@ -2567,6 +2628,15 @@ function startAdventureFromGamble(skipGamble) {
 }
 
 let gokStartBusy = false;
+let gokScreenTimer = null;
+
+function cancelGambleStart() {
+  if (gokScreenTimer) {
+    clearTimeout(gokScreenTimer);
+    gokScreenTimer = null;
+  }
+  gokStartBusy = false;
+}
 
 function playGambleRollSfx(g) {
   try { AudioSys.sfx('diceRoll'); } catch (_) {}
@@ -2593,16 +2663,17 @@ function gokGooiStartLevel(n) {
     lastGambleRoll = rollStageGamble();
     playGambleRollSfx(lastGambleRoll);
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
-    gokStartBusy = false;
     startAdventureFromGamble(false);
   } catch (err) {
-    gokStartBusy = false;
     sfReportError('gokStart', err, 'Gok start mislukt — probeer opnieuw');
+  } finally {
+    gokStartBusy = false;
   }
 }
 
 function gokGooiStartFromScreen() {
   if (gokStartBusy) return;
+  cancelGambleStart();
   gokStartBusy = true;
   try {
     AudioSys.init();
@@ -2613,12 +2684,13 @@ function gokGooiStartFromScreen() {
     if (sumLine) sumLine.textContent = 'START!';
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
     const delay = motionReduced() ? 50 : 140;
-    setTimeout(() => {
+    gokScreenTimer = setTimeout(() => {
+      gokScreenTimer = null;
       gokStartBusy = false;
       startAdventureFromGamble(false);
     }, delay);
   } catch (err) {
-    gokStartBusy = false;
+    cancelGambleStart();
     sfReportError('gokGooi', err, 'Gok start mislukt — probeer opnieuw');
   }
 }
@@ -3250,6 +3322,1047 @@ const WEAPONS = [
 ];
 const weaponById = id => WEAPONS.find(w => w.id === id) || WEAPONS[0];
 
+/* --- src/data/styles.js --- */
+/* ============================== STIJLEN ================================ */
+const STYLES = [
+  { id: 'classic', name: 'Klassiek', body: '#f2f5ff', accent: '#3db8ff', bandana: null,
+    needLvl: 1, hint: 'Standaard ninja',
+    tooltip: 'Basis ninja — geen bonus, wel de snelste unlock.',
+    bonus: 'Geen combat-bonus' },
+  { id: 'konoha', name: 'Konoha bandana', body: '#f2f5ff', accent: '#43b25b', bandana: '#2d6b36', plate: '#dfe8ff',
+    needLvl: 5, hint: 'Unlock op Lv 5',
+    tooltip: 'Leaf-dorp headband. Iets meer max HP — standvastig in lange levels.',
+    bonus: '+5 max HP', mods: { maxHp: 5 } },
+  { id: 'chakra', name: 'Chakra gloed', body: '#e8f4ff', accent: '#7cf5ff', bandana: '#3db8ff', glow: true,
+    needTrain: 3, hint: 'Win 3× training',
+    tooltip: 'Blauwe chakra-aura. Chakra laadt sneller — vaker Rasengan/Chidori.',
+    bonus: '+8% chakra-regen', mods: { energyMul: 1.08 } },
+  { id: 'akatsuki', name: 'Rode mantel', body: '#1a1424', accent: '#e04f4f', bandana: '#e04f4f', coat: true,
+    needLvl: 12, hint: 'Unlock op Lv 12',
+    tooltip: 'Rode mantel — agressieve slagen. Meer schade op melee en wapens.',
+    bonus: '+4% schade', mods: { dmgMul: 1.04 } },
+  { id: 'shadow', name: 'Schaduw-ninja', body: '#8fa3d9', accent: '#b06ae0', bandana: '#2a1840',
+    needLvl: 15, hint: 'Unlock op Lv 15',
+    tooltip: 'Schaduw-stappen. Extra crit-kans op alle hits.',
+    bonus: '+3% crit', mods: { critBonus: 0.03 } },
+  { id: 'guvve', name: 'Guvvedukkie', body: '#43b25b', accent: '#ffe259', bandana: '#2a8a38', duck: true,
+    needDex: 8, hint: '8 monsters in boek',
+    tooltip: 'Quack-cosplay. Bonus XP bij avontuur-kills — licht, geen grind.',
+    bonus: '+6% avontuur-XP', mods: { xpMul: 1.06 } },
+  { id: 'gold', name: 'Legendarisch', body: '#ffd75e', accent: '#c97a20', bandana: '#ffb830', glow: true,
+    needLvl: 25, hint: 'Unlock op Lv 25',
+    tooltip: 'Gouden outline + gloed. Sterkere knockback op kicks en specials.',
+    bonus: '+10% knockback', mods: { kbMul: 1.1 } },
+  { id: 'sand', name: 'Woestijn', body: '#e8c98a', accent: '#c97a20', bandana: '#8a6030',
+    needLvl: 8, hint: 'Unlock op Lv 8',
+    tooltip: 'Zandmantel — minder schade bij hits én sterker blok. Tank-stijl voor omringing.',
+    bonus: '−14% schade · blok −25% chip', mods: { defMul: 0.86, blockMul: 0.75 } },
+  { id: 'samurai', name: 'Samurai', body: '#2a2a35', accent: '#e04f4f', bandana: '#1a1a22', topknot: true,
+    needLvl: 20, hint: 'Unlock op Lv 20',
+    tooltip: 'Topknot + katana-houding. Wapen-combo’s raken iets verder.',
+    bonus: '+8% wapen-reach', mods: { weaponRange: 1.08 } },
+  { id: 'cyber', name: 'Cyber-ninja', body: '#1a2040', accent: '#7cf5ff', bandana: '#4ecf6a', visor: true, lightning: true,
+    needLvl: 18, hint: 'Unlock op Lv 18',
+    tooltip: 'Neon-visier + bliksem-flits bij melee. Snellere chakra en visuele chain-sparks.',
+    bonus: 'Lightning FX · +6% chakra', mods: { energyMul: 1.06, lightning: true, dmgMul: 1.02 } },
+  { id: 'fox', name: 'Vossen-ninja', body: '#ff8c42', accent: '#ffe259', bandana: '#d05a1e', fox: true,
+    needDex: 12, hint: '12 monsters in boek',
+    tooltip: 'Vossenoren — sneller op de grond. Ideaal voor kiting en shuriken.',
+    bonus: '+5% loopsnelheid', mods: { speedMul: 1.05 } },
+  { id: 'storm', name: 'Stormgeest', body: '#dfe8ff', accent: '#6fd7ff', bandana: '#2a7fc0', glow: true, lightning: true,
+    needTrain: 5, hint: 'Win 5× training',
+    tooltip: 'Storm-aura + zachte bliksem. Extra shield bij start van elke golf.',
+    bonus: 'Lightning gloed · +0.8s shield/golf', mods: { shieldWave: 0.8, lightning: true } },
+  { id: 'void', name: 'Void-waker', body: '#2a1840', accent: '#ff6b9d', bandana: '#5a1040', coat: true,
+    needLvl: 40, hint: 'Unlock op Lv 40',
+    tooltip: 'Void-mantel — zwaardere jutsu. Specials (Rasengan/Chidori/Rinnegan) raken harder.',
+    bonus: '+8% jutsu-schade', mods: { jutsuMul: 1.08 } },
+  { id: 'hunter', name: 'Jagerlook', body: '#6b5344', accent: '#5ad06a', bandana: '#3d5c32', hunter: true,
+    needDexKills: 75, hint: '75 kills in monsterboek',
+    tooltip: 'Jager-cape + groene accenten. Bonus schade vs monsters in avontuur.',
+    bonus: '+6% vs monsters', mods: { advDmgMul: 1.06 } },
+  { id: 'crystal', name: 'Kristallijn', body: '#e8f7ff', accent: '#6fd7ff', bandana: '#2f7fc0', glow: true, crystal: true,
+    needDexTiers: 4, hint: '4 rariteiten in monsterboek',
+    tooltip: 'Kristallen shard — reflecterende gloed. Korte shield elke golf.',
+    bonus: '+1.0s shield/golf', mods: { shieldWave: 1.0 } },
+  { id: 'tome', name: 'Boekmeester', body: '#f5efe6', accent: '#c98850', bandana: '#6b5344', tome: true,
+    needDexHalf: true, hint: 'Helft van het monsterboek',
+    tooltip: 'Monsterboek op je rug. Meer HP-bonus bij nieuwe dex-ontdekkingen (visueel + klein HP-top-up).',
+    bonus: '+4 max HP · boek-wijsheid', mods: { maxHp: 4, dexHpBonus: 1 } },
+];
+const styleById = id => STYLES.find(s => s.id === id) || STYLES[0];
+
+function styleMods(st) {
+  return (st && st.mods) ? st.mods : {};
+}
+
+function styleCombatLine(st) {
+  return st.bonus || st.hint || '';
+}
+
+function styleUnlocked(st) {
+  if (st.id === 'classic') return true;
+  if (styleSkillGated(st)) return false;
+  if (st.needLvl && save.lvl >= st.needLvl) return true;
+  if (st.needTrain && save.trainWins >= st.needTrain) return true;
+  if (st.needDex && dexCount() >= st.needDex) return true;
+  if (st.needDexKills && dexTotalKills() >= st.needDexKills) return true;
+  if (st.needDexTiers && dexRarityTierCount() >= st.needDexTiers) return true;
+  if (st.needDexHalf && typeof SPECIES_ORDER !== 'undefined' &&
+      dexCount() >= Math.ceil(SPECIES_ORDER.length / 2)) return true;
+  return false;
+}
+
+function applyStyleBonusesToPlayer(game, player) {
+  if (!player) return;
+  const st = styleById(save.style || 'classic');
+  const m = styleMods(st);
+  const up = styleUpgradeBonuses(st.id);
+  const sc = up.modScale;
+  game.styleDefMul = scaleStyleModValue('defMul', m.defMul || 1, sc) || 1;
+  game.styleDmgMul = scaleStyleModValue('dmgMul', m.dmgMul || 1, sc) || 1;
+  game.styleAdvDmgMul = scaleStyleModValue('advDmgMul', m.advDmgMul || 1, sc) || 1;
+  game.styleEnergyMul = scaleStyleModValue('energyMul', m.energyMul || 1, sc) || 1;
+  game.styleCritBonus = scaleStyleModValue('critBonus', m.critBonus || 0, sc) || 0;
+  game.styleKbMul = scaleStyleModValue('kbMul', m.kbMul || 1, sc) || 1;
+  game.styleJutsuMul = scaleStyleModValue('jutsuMul', m.jutsuMul || 1, sc) || 1;
+  game.styleShieldWave = (m.shieldWave || 0) + up.shieldAdd;
+  game.styleBlockMul = scaleStyleModValue('blockMul', m.blockMul || 1, sc) || 1;
+  game.styleXpMul = scaleStyleModValue('xpMul', m.xpMul || 1, sc) || 1;
+  game.styleLightning = !!(st.lightning || m.lightning);
+  if (m.maxHp) {
+    const hp = m.maxHp + up.maxHpAdd;
+    player.maxhp += hp;
+    player.hp += hp;
+  } else if (up.maxHpAdd > 0) {
+    player.maxhp += up.maxHpAdd;
+    player.hp += up.maxHpAdd;
+  }
+  const speedMul = scaleStyleModValue('speedMul', m.speedMul || 1, sc) || 1;
+  if (speedMul !== 1) {
+    player.speed = Math.round(player.speed * speedMul);
+  }
+  const weaponRange = scaleStyleModValue('weaponRange', m.weaponRange || 1, sc) || 1;
+  if (weaponRange !== 1) {
+    game.styleWeaponRange = weaponRange;
+  } else {
+    game.styleWeaponRange = 1;
+  }
+}
+
+function applyPlayerStyle(fighter) {
+  const st = styleById(save.style || 'classic');
+  if (!styleUnlocked(st)) { save.style = 'classic'; persist(); }
+  fighter.color = styleById(save.style).body;
+  fighter.style = styleById(save.style);
+  fighter.lineW = st.id === 'gold' ? 5 : 4.5;
+}
+
+function applyStyleToSpec(fighter, spec) {
+  if (!spec || !fighter || !fighter.isPlayer) return spec;
+  const m = styleMods(fighter.style);
+  if (m.dmgMul && m.dmgMul !== 1) spec.dmg = Math.round(spec.dmg * m.dmgMul);
+  if (m.kbMul && m.kbMul !== 1) spec.kb = (spec.kb || 0) * m.kbMul;
+  if (m.weaponRange && spec.kind === 'weapon') {
+    spec.range = (spec.range || 40) * m.weaponRange;
+    spec.r = (spec.r || 24) * Math.sqrt(m.weaponRange);
+  }
+  if (m.jutsuMul && spec.kind === 'special') spec.dmg = Math.round(spec.dmg * m.jutsuMul);
+  return spec;
+}
+/* --- src/data/pets.js --- */
+/* ============================== DEX PETS ================================ */
+/** Getemde mini-monsters — unlock via monsterboek-kills (deel 2 pets). */
+
+const PET_KILL_NEED = { common: 12, uncommon: 18, rare: 28, epic: 40, legendary: 55, mythic: 75 };
+const PET_COIN_COST = { common: 18, uncommon: 28, rare: 45, epic: 65, legendary: 90, mythic: 120 };
+
+/** Mats munten → pet coins: elke 2 gouden munten = 1 pet coin aan einde ronde. */
+function matsPetCoinsFromRun(matsCoins) {
+  return Math.max(0, Math.floor((matsCoins || 0) / 2));
+}
+
+function petCoinCost(petId) {
+  const def = petDef(petId);
+  if (!def) return 999;
+  const sp = SPECIES[def.speciesId];
+  return PET_COIN_COST[sp.rarity] || 30;
+}
+
+function petCoinsBalance() {
+  return Math.max(0, Math.floor(Number(save.petCoins) || 0));
+}
+
+function canBuyPetWithCoins(petId) {
+  if (isPetTamed(petId)) return false;
+  return petCoinsBalance() >= petCoinCost(petId);
+}
+
+/** 12 launch-pets — 1 per type/thema, gekoppeld aan dex-species */
+const PET_ROSTER = [
+  { id: 'pet_slymo', speciesId: 'slymo', passive: 'dmg', passiveVal: 0.03, assistMul: 0.3, cd: 4.6,
+    perk: 'Spring-assist — extra schade' },
+  { id: 'pet_bubbel', speciesId: 'bubbel', passive: 'hp', passiveVal: 6, assistMul: 0.26, cd: 5.2,
+    perk: '+6 max HP · zachte assist' },
+  { id: 'pet_flapper', speciesId: 'flapper', passive: 'energy', passiveVal: 1.08, assistMul: 0.28, cd: 4.2,
+    perk: 'Snellere chakra-regen' },
+  { id: 'pet_stekelra', speciesId: 'stekelra', passive: 'dmg', passiveVal: 0.035, assistMul: 0.34, cd: 4.8,
+    perk: 'Charge-assist — stevige tik' },
+  { id: 'pet_spooki', speciesId: 'spooki', passive: 'crit', passiveVal: 0.04, assistMul: 0.29, cd: 4.9,
+    perk: '+4% crit-kans' },
+  { id: 'pet_blikkert', speciesId: 'blikkert', passive: 'shield', passiveVal: 1.2, assistMul: 0.27, cd: 5.4,
+    perk: 'Korte shield elke golf' },
+  { id: 'pet_vlamvos', speciesId: 'vlamvos', passive: 'speed', passiveVal: 1.04, assistMul: 0.33, cd: 4.4,
+    perk: '+4% loopsnelheid' },
+  { id: 'pet_piepvleugel', speciesId: 'piepvleugel', passive: 'energy', passiveVal: 1.1, assistMul: 0.3, cd: 4.0,
+    perk: 'Vlugge chakra + dart-assist' },
+  { id: 'pet_rotsbonk', speciesId: 'rotsbonk', passive: 'hp', passiveVal: 12, assistMul: 0.36, cd: 5.6,
+    perk: '+12 max HP · tank-assist' },
+  { id: 'pet_nachtwolk', speciesId: 'nachtwolk', passive: 'crit', passiveVal: 0.05, assistMul: 0.31, cd: 5.0,
+    perk: 'Spook-crit + energy drain' },
+  { id: 'pet_gloeidrake', speciesId: 'gloeidrake', passive: 'dmg', passiveVal: 0.045, assistMul: 0.38, cd: 5.2,
+    perk: 'Draken-assist — zwaarste tik' },
+  { id: 'pet_stormvos', speciesId: 'stormvos', passive: 'speed', passiveVal: 1.06, assistMul: 0.35, cd: 4.5,
+    perk: 'Storm-snelheid + combo-assist' },
+];
+
+const PET_BY_ID = Object.fromEntries(PET_ROSTER.map(p => [p.id, p]));
+const PET_BY_SPECIES = Object.fromEntries(PET_ROSTER.map(p => [p.speciesId, p]));
+
+function petDef(id) { return PET_BY_ID[id] || null; }
+
+function petKillNeed(speciesOrPetId) {
+  const def = PET_BY_ID[speciesOrPetId] || PET_BY_SPECIES[speciesOrPetId];
+  const sp = def ? SPECIES[def.speciesId] : SPECIES[speciesOrPetId];
+  if (!sp) return 999;
+  return PET_KILL_NEED[sp.rarity] || 20;
+}
+
+function isPetTamed(petId) {
+  return !!(save.pets && save.pets[petId]);
+}
+
+function petTamedCount() {
+  return Object.keys(save.pets || {}).filter(k => PET_BY_ID[k]).length;
+}
+
+function activePetDef() {
+  const id = save.activePet;
+  if (!id || !isPetTamed(id)) return null;
+  return petDef(id);
+}
+
+function canTamePetForSpecies(speciesId) {
+  const def = PET_BY_SPECIES[speciesId];
+  if (!def || isPetTamed(def.id)) return false;
+  return (save.dex[speciesId] || 0) >= petKillNeed(speciesId);
+}
+
+function maybeTamePet(speciesId) {
+  const def = PET_BY_SPECIES[speciesId];
+  if (!def || isPetTamed(def.id)) return false;
+  const kills = save.dex[speciesId] || 0;
+  const need = petKillNeed(speciesId);
+  if (kills < need) return false;
+  if (!save.pets || typeof save.pets !== 'object') save.pets = {};
+  save.pets[def.id] = { at: Date.now(), kills };
+  if (!save.activePet) save.activePet = def.id;
+  persist();
+  const sp = SPECIES[speciesId];
+  try { AudioSys.sfx('summon'); } catch (_) {}
+  return { def, sp, need, kills };
+}
+
+function petPassiveBonus() {
+  const def = activePetDef();
+  if (!def) {
+    return { dmgMul: 1, energyMul: 1, critBonus: 0, maxHp: 0, speedMul: 1, shieldWave: 0 };
+  }
+  const sp = SPECIES[def.speciesId];
+  const kills = save.dex[def.speciesId] || 0;
+  const tier = Math.min(3, Math.floor(kills / 25));
+  const tierMul = 1 + tier * 0.012;
+  const up = petUpgradeBonuses(def.id);
+  const out = { dmgMul: 1, energyMul: 1, critBonus: 0, maxHp: 0, speedMul: 1, shieldWave: 0 };
+  switch (def.passive) {
+    case 'dmg': out.dmgMul = 1 + def.passiveVal * tierMul * up.passiveMul; break;
+    case 'hp': out.maxHp = Math.round(def.passiveVal * tierMul * up.passiveMul); break;
+    case 'energy': out.energyMul = 1 + (def.passiveVal - 1) * tierMul * up.passiveMul; break;
+    case 'crit': out.critBonus = def.passiveVal * tierMul * up.passiveMul; break;
+    case 'speed': out.speedMul = 1 + (def.passiveVal - 1) * tierMul * up.passiveMul; break;
+    case 'shield': out.shieldWave = def.passiveVal * tierMul * up.passiveMul; break;
+  }
+  if (sp) out.label = sp.name;
+  return out;
+}
+
+function buyPetWithCoins(petId) {
+  if (isPetTamed(petId)) return null;
+  const def = petDef(petId);
+  if (!def) return null;
+  const cost = petCoinCost(petId);
+  if (petCoinsBalance() < cost) return null;
+  save.petCoins = petCoinsBalance() - cost;
+  if (!save.pets || typeof save.pets !== 'object') save.pets = {};
+  save.pets[petId] = { at: Date.now(), coins: cost };
+  if (!save.activePet) save.activePet = petId;
+  save.stats.petsTamed = (save.stats.petsTamed || 0) + 1;
+  persist();
+  try { AudioSys.sfx('summon'); } catch (_) {}
+  return { def, cost, sp: SPECIES[def.speciesId] };
+}
+
+function equipPet(petId) {
+  if (!petId) { save.activePet = null; persist(); return true; }
+  if (!isPetTamed(petId)) return false;
+  save.activePet = petId;
+  persist();
+  return true;
+}
+
+function petProgressLine(speciesId) {
+  const def = PET_BY_SPECIES[speciesId];
+  if (!def) return '';
+  if (isPetTamed(def.id)) return save.activePet === def.id ? 'Pet · actief' : 'Pet · getemd';
+  const cost = petCoinCost(def.id);
+  if (canBuyPetWithCoins(def.id)) return `Pet · kopen ${cost} 🪙`;
+  const need = petKillNeed(speciesId);
+  const cur = save.dex[speciesId] || 0;
+  const coinHint = petCoinsBalance() > 0 ? ` · ${petCoinsBalance()}/${cost} 🪙` : '';
+  if (cur <= 0) return `Pet · ${need} kills${coinHint}`;
+  return `Pet · ${Math.min(cur, need)}/${need} kills${coinHint}`;
+}
+/* --- src/data/upgrades.js --- */
+/* ========================== ITEM UPGRADE ENGINE ========================= */
+/** Shared upgrade tracks: weapons, pets, styles (skills stay in skills.js).
+ *  Standard max Lv3 · mythic / extreme items max Lv5. */
+const UPGRADE_MAX_STANDARD = 3;
+const UPGRADE_MAX_EXTREME = 5;
+const UPGRADE_PHASE_MAX = UPGRADE_MAX_STANDARD;
+const ITEM_UPGRADE_CATS = ['weapon', 'pet', 'style'];
+const ITEM_SHARD_CAP = 9999;
+const ITEM_SHARD_ADD_CAP = 8;
+
+const ITEM_SHARD_COSTS = [2, 4, 7, 12, 20];
+
+function upgradeShardsSpentForLevel(lv, costs) {
+  const n = clamp(Math.floor(lv) || 0, 0, costs.length + 2);
+  let spent = 0;
+  for (let i = 0; i < n; i++) spent += costs[i] || costs[costs.length - 1];
+  return spent;
+}
+
+function upgradeMaxLevelFromBanked(banked, costs, hardMax) {
+  let lv = 0;
+  let budget = clamp(Math.floor(banked) || 0, 0, ITEM_SHARD_CAP);
+  while (lv < hardMax) {
+    const cost = costs[lv] || costs[costs.length - 1];
+    if (budget < cost) break;
+    budget -= cost;
+    lv++;
+  }
+  return lv;
+}
+
+function upgradeMaxForRarity(rarity) {
+  const order = rarityOf(rarity).order;
+  return order >= 5 ? UPGRADE_MAX_EXTREME : UPGRADE_MAX_STANDARD;
+}
+
+function itemUpgradeIdValid(cat, id) {
+  if (!ITEM_UPGRADE_CATS.includes(cat) || !id || typeof id !== 'string') return false;
+  if (cat === 'weapon') return WEAPONS.some((w) => w.id === id);
+  if (cat === 'pet') return !!petDef(id);
+  if (cat === 'style') return STYLES.some((s) => s.id === id);
+  return false;
+}
+
+function weaponUpgradeEligible(w) {
+  return w && w.id && w.id !== 'vuist' && w.id !== 'master_sword' && save.lvl >= w.unlock && !isThrowWeapon(w.id);
+}
+
+function petUpgradeEligible(p) {
+  return p && isPetTamed(p.id);
+}
+
+function styleUpgradeEligible(st) {
+  return st && styleUnlocked(st);
+}
+
+function itemUpgradeEligible(cat, id) {
+  if (!itemUpgradeIdValid(cat, id)) return false;
+  if (cat === 'weapon') return weaponUpgradeEligible(WEAPONS.find((w) => w.id === id));
+  if (cat === 'pet') return petUpgradeEligible(petDef(id));
+  if (cat === 'style') return styleUpgradeEligible(styleById(id));
+  return false;
+}
+
+function itemUpgradeEntry(cat, id) {
+  if (!itemUpgradeIdValid(cat, id)) return null;
+  if (!save.itemUpgrades || typeof save.itemUpgrades !== 'object') save.itemUpgrades = {};
+  if (!save.itemUpgrades[cat] || typeof save.itemUpgrades[cat] !== 'object') save.itemUpgrades[cat] = {};
+  if (!save.itemUpgrades[cat][id]) save.itemUpgrades[cat][id] = { level: 0, shards: 0 };
+  return save.itemUpgrades[cat][id];
+}
+
+function itemUpgradeMax(cat, id) {
+  if (!itemUpgradeIdValid(cat, id)) return UPGRADE_MAX_STANDARD;
+  if (cat === 'weapon') {
+    const w = WEAPONS.find((x) => x.id === id);
+    if (!w) return UPGRADE_MAX_STANDARD;
+    return upgradeMaxForRarity(w.rarity);
+  }
+  if (cat === 'pet') {
+    const p = petDef(id);
+    if (!p) return UPGRADE_MAX_STANDARD;
+    const sp = SPECIES[p.speciesId];
+    return upgradeMaxForRarity(sp ? sp.rarity : 'common');
+  }
+  if (cat === 'style') {
+    const st = styleById(id);
+    if (st.id === 'void' || (st.needLvl && st.needLvl >= 40)) return UPGRADE_MAX_EXTREME;
+    if (st.needDexTiers || st.needDexHalf || st.needDexKills) return UPGRADE_MAX_EXTREME;
+    return UPGRADE_MAX_STANDARD;
+  }
+  return UPGRADE_MAX_STANDARD;
+}
+
+function itemUpgradeLevel(cat, id) {
+  if (!itemUpgradeIdValid(cat, id)) return 0;
+  const e = itemUpgradeEntry(cat, id);
+  if (!e) return 0;
+  return clamp(Math.floor(Number(e.level) || 0), 0, itemUpgradeMax(cat, id));
+}
+
+function itemUpgradeShards(cat, id) {
+  if (!itemUpgradeIdValid(cat, id)) return 0;
+  const e = itemUpgradeEntry(cat, id);
+  if (!e) return 0;
+  return clamp(Math.floor(Number(e.shards) || 0), 0, ITEM_SHARD_CAP);
+}
+
+function itemUpgradeCost(cat, id) {
+  if (!itemUpgradeIdValid(cat, id)) return null;
+  const lv = itemUpgradeLevel(cat, id);
+  const max = itemUpgradeMax(cat, id);
+  if (lv >= max) return null;
+  return ITEM_SHARD_COSTS[lv] || ITEM_SHARD_COSTS[ITEM_SHARD_COSTS.length - 1];
+}
+
+function itemCanUpgrade(cat, id) {
+  if (!itemUpgradeEligible(cat, id)) return false;
+  const cost = itemUpgradeCost(cat, id);
+  if (cost == null) return false;
+  return itemUpgradeShards(cat, id) >= cost;
+}
+
+function sanitizeItemUpgradeEntry(cat, id, raw) {
+  if (!itemUpgradeIdValid(cat, id) || !itemUpgradeEligible(cat, id)) return null;
+  const max = itemUpgradeMax(cat, id);
+  const entry = (raw && typeof raw === 'object') ? raw : {};
+  let lv = clamp(Math.floor(Number(entry.level) || 0), 0, max);
+  let shards = clamp(Math.floor(Number(entry.shards) || 0), 0, ITEM_SHARD_CAP);
+  const spent = upgradeShardsSpentForLevel(lv, ITEM_SHARD_COSTS);
+  const total = shards + spent;
+  const maxFromBanked = upgradeMaxLevelFromBanked(total, ITEM_SHARD_COSTS, max);
+  if (lv > maxFromBanked) lv = maxFromBanked;
+  const spent2 = upgradeShardsSpentForLevel(lv, ITEM_SHARD_COSTS);
+  shards = clamp(total - spent2, 0, ITEM_SHARD_CAP);
+  if (lv <= 0 && shards <= 0) return null;
+  return { level: lv, shards };
+}
+
+function normalizeItemUpgrades() {
+  const clean = { weapon: {}, pet: {}, style: {} };
+  const raw = (save.itemUpgrades && typeof save.itemUpgrades === 'object') ? save.itemUpgrades : {};
+  for (const cat of ITEM_UPGRADE_CATS) {
+    const bag = (raw[cat] && typeof raw[cat] === 'object') ? raw[cat] : {};
+    for (const [id, entry] of Object.entries(bag)) {
+      const fixed = sanitizeItemUpgradeEntry(cat, id, entry);
+      if (fixed) clean[cat][id] = fixed;
+    }
+  }
+  save.itemUpgrades = clean;
+}
+
+function addItemShards(cat, id, n) {
+  if (!itemUpgradeEligible(cat, id)) return 0;
+  const add = clamp(Math.floor(Number(n) || 0), 1, ITEM_SHARD_ADD_CAP);
+  const e = itemUpgradeEntry(cat, id);
+  if (!e) return 0;
+  e.shards = clamp(itemUpgradeShards(cat, id) + add, 0, ITEM_SHARD_CAP);
+  save.stats = save.stats || {};
+  save.stats.itemShards = clamp((save.stats.itemShards || 0) + add, 0, 9999999);
+  persist();
+  return add;
+}
+
+function tryItemUpgrade(cat, id) {
+  if (!itemUpgradeEligible(cat, id) || !itemCanUpgrade(cat, id)) return false;
+  const cost = itemUpgradeCost(cat, id);
+  const e = itemUpgradeEntry(cat, id);
+  if (!e || cost == null || itemUpgradeShards(cat, id) < cost) return false;
+  const next = itemUpgradeLevel(cat, id) + 1;
+  if (next > itemUpgradeMax(cat, id)) return false;
+  e.shards = clamp(itemUpgradeShards(cat, id) - cost, 0, ITEM_SHARD_CAP);
+  e.level = next;
+  persist();
+  return true;
+}
+
+/* ---- Weapon upgrade steps (procedural per rarity) ---- */
+function weaponUpgradeStep(w, i) {
+  const mythic = rarityOf(w.rarity).order >= 5;
+  if (i === 0) return { dmgMul: 1.07, speedMul: 1.03 };
+  if (i === 1) return { dmgMul: 1.06, range: 4 };
+  if (i === 2) return { dmgMul: 1.08, speedMul: 1.05, range: 2 };
+  if (i === 3 && mythic) return { dmgMul: 1.1, critBonus: 0.02 };
+  if (i === 4 && mythic) return { dmgMul: 1.12, range: 6, speedMul: 1.06 };
+  return { dmgMul: 1.05 };
+}
+
+function weaponUpgradeBonuses(weaponId) {
+  const w = WEAPONS.find((x) => x.id === weaponId);
+  if (!w || !weaponUpgradeEligible(w)) {
+    return { dmgMul: 1, range: 0, speedMul: 1, critBonus: 0 };
+  }
+  const lv = itemUpgradeLevel('weapon', weaponId);
+  const b = { dmgMul: 1, range: 0, speedMul: 1, critBonus: 0 };
+  for (let i = 0; i < lv; i++) {
+    const s = weaponUpgradeStep(w, i);
+    if (s.dmgMul) b.dmgMul *= s.dmgMul;
+    if (s.range) b.range += s.range;
+    if (s.speedMul) b.speedMul *= s.speedMul;
+    if (s.critBonus) b.critBonus += s.critBonus;
+  }
+  b.dmgMul = clamp(b.dmgMul, 1, 2.2);
+  b.speedMul = clamp(b.speedMul, 1, 1.35);
+  b.range = clamp(b.range, 0, 24);
+  b.critBonus = clamp(b.critBonus, 0, 0.08);
+  return b;
+}
+
+function applyWeaponUpgrades(w) {
+  if (!w || !w.id || !weaponUpgradeEligible(w)) return w;
+  const b = weaponUpgradeBonuses(w.id);
+  const lv = itemUpgradeLevel('weapon', w.id);
+  if (lv <= 0) return w;
+  return Object.assign({}, w, {
+    dmg: Math.round(w.dmg * b.dmgMul * 100) / 100,
+    range: w.range + b.range,
+    speed: Math.round(w.speed * b.speedMul * 100) / 100,
+    upgradeLevel: lv,
+    upgradeCrit: b.critBonus,
+  });
+}
+
+function weaponUpgradeSummary(id) {
+  const lv = itemUpgradeLevel('weapon', id);
+  const b = weaponUpgradeBonuses(id);
+  const parts = [];
+  if (b.dmgMul > 1.001) parts.push(`DMG ×${b.dmgMul.toFixed(2)}`);
+  if (b.range > 0) parts.push(`+${b.range} reach`);
+  if (b.speedMul > 1.001) parts.push(`spd ×${b.speedMul.toFixed(2)}`);
+  if (b.critBonus > 0) parts.push(`+${Math.round(b.critBonus * 100)}% crit`);
+  if (lv >= itemUpgradeMax('weapon', id)) parts.push('MAX');
+  return parts.length ? parts.join(' · ') : (lv ? `Lv ${lv}` : '—');
+}
+
+function weaponUpgradePreview(id) {
+  const w = WEAPONS.find((x) => x.id === id);
+  if (!w || !weaponUpgradeEligible(w)) return '';
+  const lv = itemUpgradeLevel('weapon', id);
+  if (lv >= itemUpgradeMax('weapon', id)) return '';
+  const s = weaponUpgradeStep(w, lv);
+  const parts = [];
+  if (s.dmgMul) parts.push(`DMG +${Math.round((s.dmgMul - 1) * 100)}%`);
+  if (s.range) parts.push(`+${s.range} reach`);
+  if (s.speedMul) parts.push(`spd +${Math.round((s.speedMul - 1) * 100)}%`);
+  if (s.critBonus) parts.push(`+${Math.round(s.critBonus * 100)}% crit`);
+  return parts.join(' · ');
+}
+
+/* ---- Pet upgrades ---- */
+function petUpgradeBonuses(petId) {
+  const p = petDef(petId);
+  if (!p || !petUpgradeEligible(p)) {
+    return { passiveMul: 1, assistMul: 1, cdMul: 1 };
+  }
+  const lv = itemUpgradeLevel('pet', petId);
+  return {
+    passiveMul: clamp(1 + lv * 0.1, 1, 1.5),
+    assistMul: clamp(1 + lv * 0.08, 1, 1.45),
+    cdMul: clamp(Math.pow(0.93, lv), 0.65, 1),
+  };
+}
+
+function petUpgradeSummary(id) {
+  const lv = itemUpgradeLevel('pet', id);
+  const b = petUpgradeBonuses(id);
+  const parts = [];
+  if (b.passiveMul > 1.001) parts.push(`passief ×${b.passiveMul.toFixed(2)}`);
+  if (b.assistMul > 1.001) parts.push(`assist ×${b.assistMul.toFixed(2)}`);
+  if (b.cdMul < 0.999) parts.push(`CD ×${b.cdMul.toFixed(2)}`);
+  if (lv >= itemUpgradeMax('pet', id)) parts.push('MAX');
+  return parts.length ? parts.join(' · ') : (lv ? `Lv ${lv}` : '—');
+}
+
+function petUpgradePreview(id) {
+  const lv = itemUpgradeLevel('pet', id);
+  if (lv >= itemUpgradeMax('pet', id)) return '';
+  return `passief +10% · assist +8% · CD −7%`;
+}
+
+/* ---- Style upgrades ---- */
+function styleUpgradeBonuses(styleId) {
+  const st = styleById(styleId);
+  if (!st || !styleUpgradeEligible(st)) {
+    return { modScale: 1, maxHpAdd: 0, shieldAdd: 0 };
+  }
+  const lv = itemUpgradeLevel('style', styleId);
+  return {
+    modScale: clamp(1 + lv * 0.1, 1, 1.5),
+    maxHpAdd: clamp(lv * 2, 0, 10),
+    shieldAdd: clamp(lv * 0.2, 0, 1),
+  };
+}
+
+function scaleStyleModValue(key, val, scale) {
+  if (val == null || val === 1 || val === 0) return val;
+  if (key === 'maxHp') return val;
+  if (key === 'shieldWave') return val;
+  if (key === 'critBonus') return val * scale;
+  if (key === 'dexHpBonus') return val;
+  if (typeof val === 'number' && val > 1) return 1 + (val - 1) * scale;
+  if (typeof val === 'number' && val < 1) return 1 - (1 - val) * scale;
+  return val;
+}
+
+function styleUpgradeSummary(id) {
+  const lv = itemUpgradeLevel('style', id);
+  const b = styleUpgradeBonuses(id);
+  const parts = [];
+  if (b.modScale > 1.001) parts.push(`bonus ×${b.modScale.toFixed(2)}`);
+  if (b.maxHpAdd > 0) parts.push(`+${b.maxHpAdd} HP`);
+  if (b.shieldAdd > 0) parts.push(`+${b.shieldAdd.toFixed(1)}s shield/golf`);
+  if (lv >= itemUpgradeMax('style', id)) parts.push('MAX');
+  return parts.length ? parts.join(' · ') : (lv ? `Lv ${lv}` : '—');
+}
+
+function styleUpgradePreview(id) {
+  const lv = itemUpgradeLevel('style', id);
+  if (lv >= itemUpgradeMax('style', id)) return '';
+  return `bonus +10% · +2 HP · +0.2s shield/golf`;
+}
+
+function rollItemShardDrop(monster) {
+  const elite = !!(monster && monster.elite);
+  const giant = !!(monster && monster.giant);
+  const superBoss = !!(monster && monster.superBoss);
+  let chance = 0.07;
+  if (superBoss) chance = 0.42;
+  else if (elite) chance = 0.18;
+  else if (giant) chance = 0.11;
+  if (Math.random() >= chance) return null;
+
+  const pool = [];
+  const curW = save.weapon || 'vuist';
+  for (const w of WEAPONS) {
+    if (!weaponUpgradeEligible(w)) continue;
+    let wgt = w.id === curW ? 3 : 0.8;
+    if (itemUpgradeLevel('weapon', w.id) >= itemUpgradeMax('weapon', w.id)) wgt *= 0.25;
+    pool.push({ cat: 'weapon', id: w.id, w: wgt });
+  }
+  const ap = activePetDef();
+  for (const p of PET_ROSTER) {
+    if (!petUpgradeEligible(p)) continue;
+    let wgt = ap && ap.id === p.id ? 2.8 : 0.7;
+    if (itemUpgradeLevel('pet', p.id) >= itemUpgradeMax('pet', p.id)) wgt *= 0.25;
+    pool.push({ cat: 'pet', id: p.id, w: wgt });
+  }
+  const curSt = save.style || 'classic';
+  for (const st of STYLES) {
+    if (!styleUpgradeEligible(st)) continue;
+    let wgt = st.id === curSt ? 2.5 : 0.65;
+    if (itemUpgradeLevel('style', st.id) >= itemUpgradeMax('style', st.id)) wgt *= 0.25;
+    pool.push({ cat: 'style', id: st.id, w: wgt });
+  }
+  if (!pool.length) return null;
+  let total = 0;
+  for (const x of pool) total += x.w;
+  let r = Math.random() * total;
+  for (const x of pool) {
+    r -= x.w;
+    if (r <= 0) return x;
+  }
+  return pool[0];
+}
+
+function itemUpgradeLabel(cat, id) {
+  if (!itemUpgradeIdValid(cat, id)) return id || '?';
+  if (cat === 'weapon') {
+    const w = WEAPONS.find((x) => x.id === id);
+    return w ? weaponLabel(w) : id;
+  }
+  if (cat === 'pet') {
+    const p = petDef(id);
+    return p ? (SPECIES[p.speciesId]?.name || p.id) : id;
+  }
+  if (cat === 'style') return styleLabel(styleById(id));
+  return id;
+}
+
+function itemUpgradeSummary(cat, id) {
+  if (cat === 'weapon') return weaponUpgradeSummary(id);
+  if (cat === 'pet') return petUpgradeSummary(id);
+  if (cat === 'style') return styleUpgradeSummary(id);
+  return '';
+}
+
+function itemUpgradePreview(cat, id) {
+  if (cat === 'weapon') return weaponUpgradePreview(id);
+  if (cat === 'pet') return petUpgradePreview(id);
+  if (cat === 'style') return styleUpgradePreview(id);
+  return '';
+}
+
+function itemUpgradeColor(cat, id) {
+  if (!itemUpgradeIdValid(cat, id)) return '#ffd75e';
+  if (cat === 'weapon') {
+    const w = WEAPONS.find((x) => x.id === id);
+    return w ? rarityOf(w.rarity).color : '#ffd75e';
+  }
+  if (cat === 'pet') {
+    const p = petDef(id);
+    const sp = p ? SPECIES[p.speciesId] : null;
+    return sp ? rarityOf(sp.rarity).color : '#7cf5ff';
+  }
+  if (cat === 'style') return styleById(id).accent || '#c792ff';
+  return '#ffd75e';
+}
+
+function totalItemUpgradeLevels() {
+  let n = 0;
+  if (!save.itemUpgrades) return 0;
+  for (const cat of ['weapon', 'pet', 'style']) {
+    const bag = save.itemUpgrades[cat] || {};
+    for (const id of Object.keys(bag)) n += itemUpgradeLevel(cat, id);
+  }
+  return n;
+}
+
+function totalAllUpgradeLevels() {
+  return totalSkillLevels() + totalItemUpgradeLevels();
+}
+
+function countSkillUpgradesReady() {
+  let n = 0;
+  for (const id of SKILL_IDS) if (skillCanUpgrade(id)) n++;
+  return n;
+}
+
+function countItemUpgradesReady(cat) {
+  let n = 0;
+  if (cat === 'weapon') {
+    for (const w of WEAPONS) {
+      if (weaponUpgradeEligible(w) && itemCanUpgrade('weapon', w.id)) n++;
+    }
+  } else if (cat === 'pet') {
+    for (const p of PET_ROSTER) {
+      if (petUpgradeEligible(p) && itemCanUpgrade('pet', p.id)) n++;
+    }
+  } else if (cat === 'style') {
+    for (const st of STYLES) {
+      if (styleUpgradeEligible(st) && itemCanUpgrade('style', st.id)) n++;
+    }
+  }
+  return n;
+}
+
+function countAllUpgradesReady() {
+  return countSkillUpgradesReady()
+    + countItemUpgradesReady('weapon')
+    + countItemUpgradesReady('pet')
+    + countItemUpgradesReady('style');
+}
+/* --- src/data/skills.js --- */
+/* ========================== SKILL UPGRADES ============================= */
+/** Permanent skill upgrades via adventure shard drops. */
+const SKILL_MAX_LEVEL = 5;
+const SKILL_SHARD_CAP = 9999;
+const SKILL_SHARD_ADD_CAP = 8;
+const SKILL_SHARD_COSTS = [3, 5, 8, 12, 18];
+
+function skillMaxLevel(id) {
+  const def = SKILL_DEFS[id];
+  if (!def) return UPGRADE_MAX_STANDARD;
+  return def.group === 'jutsu' ? UPGRADE_MAX_EXTREME : UPGRADE_MAX_STANDARD;
+}
+
+const SKILL_DEFS = {
+  rasengan: {
+    id: 'rasengan', group: 'jutsu', color: '#7cf5ff',
+    steps: [
+      { dmgMul: 1.08, radius: 2 },
+      { dmgMul: 1.08, speedMul: 1.06, energySave: 5 },
+      { dmgMul: 1.1, radius: 2, extraShot: 0.14 },
+      { dmgMul: 1.1, lifeMul: 1.12, windupMul: 0.92 },
+      { dmgMul: 1.12, radius: 3, energySave: 8, extraShot: 0.1 },
+    ],
+  },
+  chidori: {
+    id: 'chidori', group: 'jutsu', color: '#a8e0ff',
+    steps: [
+      { dmgMul: 1.1, radius: 1 },
+      { dmgMul: 1.08, speedMul: 1.08, energySave: 5 },
+      { dmgMul: 1.1, windupMul: 0.9, dashMul: 1.1 },
+      { dmgMul: 1.12, radius: 2, lifeMul: 1.08 },
+      { dmgMul: 1.14, energySave: 10, pierceRepeat: 0.22 },
+    ],
+  },
+  rinnegan: {
+    id: 'rinnegan', group: 'jutsu', color: '#c47aff',
+    steps: [
+      { dmgMul: 1.08, radius: 2 },
+      { dmgMul: 1.08, lifeMul: 1.1, energySave: 5 },
+      { dmgMul: 1.1, radius: 2, pullMul: 1.15 },
+      { dmgMul: 1.1, extraShot: 0.12, windupMul: 0.92 },
+      { dmgMul: 1.12, radius: 3, energySave: 8, lifeMul: 1.1 },
+    ],
+  },
+  subst: {
+    id: 'subst', group: 'utility', color: '#c9a66b',
+    steps: [
+      { cdMul: 0.92 },
+      { cdMul: 0.92, invulnAdd: 0.04 },
+      { cdMul: 0.9, dashDistMul: 1.1 },
+      { cdMul: 0.9, invulnAdd: 0.05 },
+      { cdMul: 0.88, dashDistMul: 1.12 },
+    ],
+  },
+  dash: {
+    id: 'dash', group: 'utility', color: '#7cf5ff',
+    steps: [
+      { cdMul: 0.9 },
+      { cdMul: 0.92, dashDistMul: 1.1 },
+      { cdMul: 0.9, dashSpeedMul: 1.12 },
+      { cdMul: 0.92, dashDistMul: 1.08 },
+      { cdMul: 0.88, dashSpeedMul: 1.15 },
+    ],
+  },
+  chakra: {
+    id: 'chakra', group: 'utility', color: '#ffd75e',
+    steps: [
+      { regenMul: 1.12, energySave: 3 },
+      { regenMul: 1.1, energySave: 4 },
+      { regenMul: 1.15 },
+      { energySave: 5, regenMul: 1.1 },
+      { regenMul: 1.18, energySave: 6 },
+    ],
+  },
+};
+
+const SKILL_IDS = Object.keys(SKILL_DEFS);
+const JUTSU_SKILL_IDS = SKILL_IDS.filter((id) => SKILL_DEFS[id].group === 'jutsu');
+
+function skillEntry(id) {
+  if (!SKILL_DEFS[id]) return null;
+  if (!save.skillUpgrades || typeof save.skillUpgrades !== 'object') save.skillUpgrades = {};
+  if (!save.skillUpgrades[id]) save.skillUpgrades[id] = { level: 0, shards: 0 };
+  return save.skillUpgrades[id];
+}
+
+function sanitizeSkillUpgradeEntry(id, raw) {
+  if (!SKILL_DEFS[id]) return null;
+  const max = skillMaxLevel(id);
+  const entry = (raw && typeof raw === 'object') ? raw : {};
+  let lv = clamp(Math.floor(Number(entry.level) || 0), 0, max);
+  let shards = clamp(Math.floor(Number(entry.shards) || 0), 0, SKILL_SHARD_CAP);
+  const spent = upgradeShardsSpentForLevel(lv, SKILL_SHARD_COSTS);
+  const total = shards + spent;
+  const maxFromBanked = upgradeMaxLevelFromBanked(total, SKILL_SHARD_COSTS, max);
+  if (lv > maxFromBanked) lv = maxFromBanked;
+  const spent2 = upgradeShardsSpentForLevel(lv, SKILL_SHARD_COSTS);
+  shards = clamp(total - spent2, 0, SKILL_SHARD_CAP);
+  if (lv <= 0 && shards <= 0) return null;
+  return { level: lv, shards };
+}
+
+function normalizeSkillUpgrades() {
+  const clean = {};
+  const raw = (save.skillUpgrades && typeof save.skillUpgrades === 'object') ? save.skillUpgrades : {};
+  for (const id of SKILL_IDS) {
+    const fixed = sanitizeSkillUpgradeEntry(id, raw[id]);
+    if (fixed) clean[id] = fixed;
+  }
+  save.skillUpgrades = clean;
+}
+
+function skillLevel(id) {
+  const def = SKILL_DEFS[id];
+  if (!def) return 0;
+  const e = skillEntry(id);
+  if (!e) return 0;
+  return clamp(Math.floor(Number(e.level) || 0), 0, skillMaxLevel(id));
+}
+
+function skillShards(id) {
+  if (!SKILL_DEFS[id]) return 0;
+  const e = skillEntry(id);
+  if (!e) return 0;
+  return clamp(Math.floor(Number(e.shards) || 0), 0, SKILL_SHARD_CAP);
+}
+
+function skillUpgradeCost(id) {
+  const lv = skillLevel(id);
+  const max = skillMaxLevel(id);
+  if (lv >= max) return null;
+  return SKILL_SHARD_COSTS[lv] || SKILL_SHARD_COSTS[SKILL_SHARD_COSTS.length - 1];
+}
+
+function skillCanUpgrade(id) {
+  const cost = skillUpgradeCost(id);
+  if (cost == null) return false;
+  return skillShards(id) >= cost;
+}
+
+function skillBonuses(id) {
+  const def = SKILL_DEFS[id];
+  const b = {
+    dmgMul: 1, radius: 0, speedMul: 1, lifeMul: 1, windupMul: 1, energySave: 0,
+    regenMul: 1, cdMul: 1, dashDistMul: 1, dashSpeedMul: 1, invulnAdd: 0,
+    extraShot: 0, pierceRepeat: 0, pullMul: 1,
+  };
+  if (!def) return b;
+  const lv = skillLevel(id);
+  for (let i = 0; i < lv; i++) {
+    const s = def.steps[i];
+    if (!s) continue;
+    if (s.dmgMul) b.dmgMul *= s.dmgMul;
+    if (s.radius) b.radius += s.radius;
+    if (s.speedMul) b.speedMul *= s.speedMul;
+    if (s.lifeMul) b.lifeMul *= s.lifeMul;
+    if (s.windupMul) b.windupMul *= s.windupMul;
+    if (s.energySave) b.energySave += s.energySave;
+    if (s.regenMul) b.regenMul *= s.regenMul;
+    if (s.cdMul) b.cdMul *= s.cdMul;
+    if (s.dashDistMul) b.dashDistMul *= s.dashDistMul;
+    if (s.dashSpeedMul) b.dashSpeedMul *= s.dashSpeedMul;
+    if (s.invulnAdd) b.invulnAdd += s.invulnAdd;
+    if (s.extraShot) b.extraShot = Math.min(0.45, b.extraShot + s.extraShot);
+    if (s.pierceRepeat) b.pierceRepeat = Math.min(0.4, b.pierceRepeat + s.pierceRepeat);
+    if (s.pullMul) b.pullMul *= s.pullMul;
+  }
+  return b;
+}
+
+function jutsuSkillBonuses(kind) {
+  return skillBonuses(kind && SKILL_DEFS[kind] ? kind : 'rasengan');
+}
+
+function utilitySkillBonuses() {
+  return {
+    subst: skillBonuses('subst'),
+    dash: skillBonuses('dash'),
+    chakra: skillBonuses('chakra'),
+  };
+}
+
+function skillChakraCost(jutsuKind) {
+  const j = jutsuSkillBonuses(jutsuKind || 'rasengan');
+  const c = utilitySkillBonuses().chakra;
+  return clamp(100 - (j.energySave || 0) - (c.energySave || 0), 72, 100);
+}
+
+function addSkillShards(id, n) {
+  if (!SKILL_DEFS[id]) return 0;
+  const add = clamp(Math.floor(Number(n) || 0), 1, SKILL_SHARD_ADD_CAP);
+  const e = skillEntry(id);
+  if (!e) return 0;
+  e.shards = clamp(skillShards(id) + add, 0, SKILL_SHARD_CAP);
+  save.stats = save.stats || {};
+  save.stats.skillShards = clamp((save.stats.skillShards || 0) + add, 0, 9999999);
+  persist();
+  return add;
+}
+
+function trySkillUpgrade(id) {
+  if (!SKILL_DEFS[id] || !skillCanUpgrade(id)) return false;
+  const cost = skillUpgradeCost(id);
+  const e = skillEntry(id);
+  if (!e || cost == null || skillShards(id) < cost) return false;
+  const next = skillLevel(id) + 1;
+  if (next > skillMaxLevel(id)) return false;
+  e.shards = clamp(skillShards(id) - cost, 0, SKILL_SHARD_CAP);
+  e.level = next;
+  persist();
+  return true;
+}
+
+function rollSkillShardDrop(monster) {
+  const elite = !!(monster && monster.elite);
+  const giant = !!(monster && monster.giant);
+  const superBoss = !!(monster && monster.superBoss);
+  let chance = 0.1;
+  if (superBoss) chance = 0.55;
+  else if (elite) chance = 0.28;
+  else if (giant) chance = 0.16;
+  if (Math.random() >= chance) return null;
+  const weights = [];
+  for (const id of SKILL_IDS) {
+    let w = 1;
+    if (SKILL_DEFS[id].group === 'jutsu') w = id === 'rasengan' ? 2.2 : 0.85;
+    if (skillLevel(id) >= skillMaxLevel(id)) w *= 0.35;
+    weights.push({ id, w });
+  }
+  let total = 0;
+  for (const x of weights) total += x.w;
+  let r = Math.random() * total;
+  for (const x of weights) {
+    r -= x.w;
+    if (r <= 0) return x.id;
+  }
+  return weights[0]?.id || 'rasengan';
+}
+
+function skillUpgradeSummary(id) {
+  const lv = skillLevel(id);
+  const b = skillBonuses(id);
+  const parts = [];
+  if (b.dmgMul > 1.001) parts.push(`DMG ×${b.dmgMul.toFixed(2)}`);
+  if (b.radius > 0) parts.push(`+${b.radius} radius`);
+  if (b.energySave > 0) parts.push(`−${b.energySave} chakra`);
+  if (b.regenMul > 1.001) parts.push(`regen ×${b.regenMul.toFixed(2)}`);
+  if (b.cdMul < 0.999) parts.push(`CD ×${b.cdMul.toFixed(2)}`);
+  if (b.extraShot > 0) parts.push(`${Math.round(b.extraShot * 100)}% extra shot`);
+  if (b.pierceRepeat > 0) parts.push(`${Math.round(b.pierceRepeat * 100)}% re-hit`);
+  if (b.windupMul < 0.999) parts.push(`sneller cast`);
+  if (lv >= skillMaxLevel(id)) parts.push('MAX');
+  return parts.length ? parts.join(' · ') : (lv ? 'Lv ' + lv : '—');
+}
+
+function skillNextStepPreview(id) {
+  const lv = skillLevel(id);
+  const def = SKILL_DEFS[id];
+  if (!def || lv >= skillMaxLevel(id)) return '';
+  const s = def.steps[lv];
+  if (!s) return '';
+  const parts = [];
+  if (s.dmgMul) parts.push(`DMG +${Math.round((s.dmgMul - 1) * 100)}%`);
+  if (s.radius) parts.push(`+${s.radius} radius`);
+  if (s.energySave) parts.push(`−${s.energySave} chakra`);
+  if (s.regenMul) parts.push(`regen +${Math.round((s.regenMul - 1) * 100)}%`);
+  if (s.cdMul) parts.push(`CD −${Math.round((1 - s.cdMul) * 100)}%`);
+  if (s.extraShot) parts.push(`+${Math.round(s.extraShot * 100)}% extra`);
+  if (s.pierceRepeat) parts.push(`+${Math.round(s.pierceRepeat * 100)}% re-hit`);
+  return parts.join(' · ');
+}
+
+function totalSkillLevels() {
+  let n = 0;
+  for (const id of SKILL_IDS) n += skillLevel(id);
+  return n;
+}
 /* --- src/data/summons.js --- */
 /* ============================ SUMMONS ================================== */
 /* Hele kleine kans bij een kill: een Summon ascendeert een lager wapen
@@ -3280,7 +4393,7 @@ function applySummonTier(w) {
     summoned: true,
   });
 }
-const playerWeapon = () => applySummonTier(weaponById(save.weapon));
+const playerWeapon = () => applyWeaponUpgrades(applySummonTier(weaponById(save.weapon)));
 
 /** 2% per avontuur-level: zwaard → Master Sword (Zelda) — 15s, ×2 dmg, groot bereik, unblockable. */
 const MASTER_SWORD_DURATION = 15;
@@ -3776,146 +4889,6 @@ function drawWeaponStylePips(c, x, y, fighter) {
   }
 }
 
-/* --- src/data/styles.js --- */
-/* ============================== STIJLEN ================================ */
-const STYLES = [
-  { id: 'classic', name: 'Klassiek', body: '#f2f5ff', accent: '#3db8ff', bandana: null,
-    needLvl: 1, hint: 'Standaard ninja',
-    tooltip: 'Basis ninja — geen bonus, wel de snelste unlock.',
-    bonus: 'Geen combat-bonus' },
-  { id: 'konoha', name: 'Konoha bandana', body: '#f2f5ff', accent: '#43b25b', bandana: '#2d6b36', plate: '#dfe8ff',
-    needLvl: 5, hint: 'Unlock op Lv 5',
-    tooltip: 'Leaf-dorp headband. Iets meer max HP — standvastig in lange levels.',
-    bonus: '+5 max HP', mods: { maxHp: 5 } },
-  { id: 'chakra', name: 'Chakra gloed', body: '#e8f4ff', accent: '#7cf5ff', bandana: '#3db8ff', glow: true,
-    needTrain: 3, hint: 'Win 3× training',
-    tooltip: 'Blauwe chakra-aura. Chakra laadt sneller — vaker Rasengan/Chidori.',
-    bonus: '+8% chakra-regen', mods: { energyMul: 1.08 } },
-  { id: 'akatsuki', name: 'Rode mantel', body: '#1a1424', accent: '#e04f4f', bandana: '#e04f4f', coat: true,
-    needLvl: 12, hint: 'Unlock op Lv 12',
-    tooltip: 'Rode mantel — agressieve slagen. Meer schade op melee en wapens.',
-    bonus: '+4% schade', mods: { dmgMul: 1.04 } },
-  { id: 'shadow', name: 'Schaduw-ninja', body: '#8fa3d9', accent: '#b06ae0', bandana: '#2a1840',
-    needLvl: 15, hint: 'Unlock op Lv 15',
-    tooltip: 'Schaduw-stappen. Extra crit-kans op alle hits.',
-    bonus: '+3% crit', mods: { critBonus: 0.03 } },
-  { id: 'guvve', name: 'Guvvedukkie', body: '#43b25b', accent: '#ffe259', bandana: '#2a8a38', duck: true,
-    needDex: 8, hint: '8 monsters in boek',
-    tooltip: 'Quack-cosplay. Bonus XP bij avontuur-kills — licht, geen grind.',
-    bonus: '+6% avontuur-XP', mods: { xpMul: 1.06 } },
-  { id: 'gold', name: 'Legendarisch', body: '#ffd75e', accent: '#c97a20', bandana: '#ffb830', glow: true,
-    needLvl: 25, hint: 'Unlock op Lv 25',
-    tooltip: 'Gouden outline + gloed. Sterkere knockback op kicks en specials.',
-    bonus: '+10% knockback', mods: { kbMul: 1.1 } },
-  { id: 'sand', name: 'Woestijn', body: '#e8c98a', accent: '#c97a20', bandana: '#8a6030',
-    needLvl: 8, hint: 'Unlock op Lv 8',
-    tooltip: 'Zandmantel — minder schade bij hits én sterker blok. Tank-stijl voor omringing.',
-    bonus: '−14% schade · blok −25% chip', mods: { defMul: 0.86, blockMul: 0.75 } },
-  { id: 'samurai', name: 'Samurai', body: '#2a2a35', accent: '#e04f4f', bandana: '#1a1a22', topknot: true,
-    needLvl: 20, hint: 'Unlock op Lv 20',
-    tooltip: 'Topknot + katana-houding. Wapen-combo’s raken iets verder.',
-    bonus: '+8% wapen-reach', mods: { weaponRange: 1.08 } },
-  { id: 'cyber', name: 'Cyber-ninja', body: '#1a2040', accent: '#7cf5ff', bandana: '#4ecf6a', visor: true, lightning: true,
-    needLvl: 18, hint: 'Unlock op Lv 18',
-    tooltip: 'Neon-visier + bliksem-flits bij melee. Snellere chakra en visuele chain-sparks.',
-    bonus: 'Lightning FX · +6% chakra', mods: { energyMul: 1.06, lightning: true, dmgMul: 1.02 } },
-  { id: 'fox', name: 'Vossen-ninja', body: '#ff8c42', accent: '#ffe259', bandana: '#d05a1e', fox: true,
-    needDex: 12, hint: '12 monsters in boek',
-    tooltip: 'Vossenoren — sneller op de grond. Ideaal voor kiting en shuriken.',
-    bonus: '+5% loopsnelheid', mods: { speedMul: 1.05 } },
-  { id: 'storm', name: 'Stormgeest', body: '#dfe8ff', accent: '#6fd7ff', bandana: '#2a7fc0', glow: true, lightning: true,
-    needTrain: 5, hint: 'Win 5× training',
-    tooltip: 'Storm-aura + zachte bliksem. Extra shield bij start van elke golf.',
-    bonus: 'Lightning gloed · +0.8s shield/golf', mods: { shieldWave: 0.8, lightning: true } },
-  { id: 'void', name: 'Void-waker', body: '#2a1840', accent: '#ff6b9d', bandana: '#5a1040', coat: true,
-    needLvl: 40, hint: 'Unlock op Lv 40',
-    tooltip: 'Void-mantel — zwaardere jutsu. Specials (Rasengan/Chidori/Rinnegan) raken harder.',
-    bonus: '+8% jutsu-schade', mods: { jutsuMul: 1.08 } },
-  { id: 'hunter', name: 'Jagerlook', body: '#6b5344', accent: '#5ad06a', bandana: '#3d5c32', hunter: true,
-    needDexKills: 75, hint: '75 kills in monsterboek',
-    tooltip: 'Jager-cape + groene accenten. Bonus schade vs monsters in avontuur.',
-    bonus: '+6% vs monsters', mods: { advDmgMul: 1.06 } },
-  { id: 'crystal', name: 'Kristallijn', body: '#e8f7ff', accent: '#6fd7ff', bandana: '#2f7fc0', glow: true, crystal: true,
-    needDexTiers: 4, hint: '4 rariteiten in monsterboek',
-    tooltip: 'Kristallen shard — reflecterende gloed. Korte shield elke golf.',
-    bonus: '+1.0s shield/golf', mods: { shieldWave: 1.0 } },
-  { id: 'tome', name: 'Boekmeester', body: '#f5efe6', accent: '#c98850', bandana: '#6b5344', tome: true,
-    needDexHalf: true, hint: 'Helft van het monsterboek',
-    tooltip: 'Monsterboek op je rug. Meer HP-bonus bij nieuwe dex-ontdekkingen (visueel + klein HP-top-up).',
-    bonus: '+4 max HP · boek-wijsheid', mods: { maxHp: 4, dexHpBonus: 1 } },
-];
-const styleById = id => STYLES.find(s => s.id === id) || STYLES[0];
-
-function styleMods(st) {
-  return (st && st.mods) ? st.mods : {};
-}
-
-function styleCombatLine(st) {
-  return st.bonus || st.hint || '';
-}
-
-function styleUnlocked(st) {
-  if (st.id === 'classic') return true;
-  if (styleSkillGated(st)) return false;
-  if (st.needLvl && save.lvl >= st.needLvl) return true;
-  if (st.needTrain && save.trainWins >= st.needTrain) return true;
-  if (st.needDex && dexCount() >= st.needDex) return true;
-  if (st.needDexKills && dexTotalKills() >= st.needDexKills) return true;
-  if (st.needDexTiers && dexRarityTierCount() >= st.needDexTiers) return true;
-  if (st.needDexHalf && typeof SPECIES_ORDER !== 'undefined' &&
-      dexCount() >= Math.ceil(SPECIES_ORDER.length / 2)) return true;
-  return false;
-}
-
-function applyStyleBonusesToPlayer(game, player) {
-  if (!player) return;
-  const st = styleById(save.style || 'classic');
-  const m = styleMods(st);
-  game.styleDefMul = m.defMul || 1;
-  game.styleDmgMul = m.dmgMul || 1;
-  game.styleAdvDmgMul = m.advDmgMul || 1;
-  game.styleEnergyMul = m.energyMul || 1;
-  game.styleCritBonus = m.critBonus || 0;
-  game.styleKbMul = m.kbMul || 1;
-  game.styleJutsuMul = m.jutsuMul || 1;
-  game.styleShieldWave = m.shieldWave || 0;
-  game.styleBlockMul = m.blockMul || 1;
-  game.styleXpMul = m.xpMul || 1;
-  game.styleLightning = !!(st.lightning || m.lightning);
-  if (m.maxHp) {
-    player.maxhp += m.maxHp;
-    player.hp += m.maxHp;
-  }
-  if (m.speedMul && m.speedMul !== 1) {
-    player.speed = Math.round(player.speed * m.speedMul);
-  }
-  if (m.weaponRange && m.weaponRange !== 1) {
-    game.styleWeaponRange = m.weaponRange;
-  } else {
-    game.styleWeaponRange = 1;
-  }
-}
-
-function applyPlayerStyle(fighter) {
-  const st = styleById(save.style || 'classic');
-  if (!styleUnlocked(st)) { save.style = 'classic'; persist(); }
-  fighter.color = styleById(save.style).body;
-  fighter.style = styleById(save.style);
-  fighter.lineW = st.id === 'gold' ? 5 : 4.5;
-}
-
-function applyStyleToSpec(fighter, spec) {
-  if (!spec || !fighter || !fighter.isPlayer) return spec;
-  const m = styleMods(fighter.style);
-  if (m.dmgMul && m.dmgMul !== 1) spec.dmg = Math.round(spec.dmg * m.dmgMul);
-  if (m.kbMul && m.kbMul !== 1) spec.kb = (spec.kb || 0) * m.kbMul;
-  if (m.weaponRange && spec.kind === 'weapon') {
-    spec.range = (spec.range || 40) * m.weaponRange;
-    spec.r = (spec.r || 24) * Math.sqrt(m.weaponRange);
-  }
-  if (m.jutsuMul && spec.kind === 'special') spec.dmg = Math.round(spec.dmg * m.jutsuMul);
-  return spec;
-}
 /* --- src/systems/versus.js --- */
 /* ========================== VERSUS / 2 SPELERS ========================== */
 /** Saga-hints: parodie-vibes, geen officiële manga/IP-namen. */
@@ -4236,8 +5209,13 @@ function padDigitalMove(pad) {
   if (!pad) return 0;
   let m = 0;
   if (pad.side === 'p1') {
-    if (pad.keys['arrowleft'] || pad.keys['a']) m -= 1;
-    if (pad.keys['arrowright'] || pad.keys['d']) m += 1;
+    if (Input.dualMode) {
+      if (pad.keys['a']) m -= 1;
+      if (pad.keys['d']) m += 1;
+    } else {
+      if (pad.keys['arrowleft'] || pad.keys['a']) m -= 1;
+      if (pad.keys['arrowright'] || pad.keys['d']) m += 1;
+    }
   } else {
     if (pad.keys['arrowleft']) m -= 1;
     if (pad.keys['arrowright']) m += 1;
@@ -4779,167 +5757,6 @@ function applyGambleToStage(game, g) {
 let pendingAdvLevel = null;
 let lastGambleRoll = null;
 
-/* --- src/data/pets.js --- */
-/* ============================== DEX PETS ================================ */
-/** Getemde mini-monsters — unlock via monsterboek-kills (deel 2 pets). */
-
-const PET_KILL_NEED = { common: 12, uncommon: 18, rare: 28, epic: 40, legendary: 55, mythic: 75 };
-const PET_COIN_COST = { common: 18, uncommon: 28, rare: 45, epic: 65, legendary: 90, mythic: 120 };
-
-/** Mats munten → pet coins: elke 2 gouden munten = 1 pet coin aan einde ronde. */
-function matsPetCoinsFromRun(matsCoins) {
-  return Math.max(0, Math.floor((matsCoins || 0) / 2));
-}
-
-function petCoinCost(petId) {
-  const def = petDef(petId);
-  if (!def) return 999;
-  const sp = SPECIES[def.speciesId];
-  return PET_COIN_COST[sp.rarity] || 30;
-}
-
-function petCoinsBalance() {
-  return Math.max(0, Math.floor(Number(save.petCoins) || 0));
-}
-
-function canBuyPetWithCoins(petId) {
-  if (isPetTamed(petId)) return false;
-  return petCoinsBalance() >= petCoinCost(petId);
-}
-
-/** 12 launch-pets — 1 per type/thema, gekoppeld aan dex-species */
-const PET_ROSTER = [
-  { id: 'pet_slymo', speciesId: 'slymo', passive: 'dmg', passiveVal: 0.03, assistMul: 0.3, cd: 4.6,
-    perk: 'Spring-assist — extra schade' },
-  { id: 'pet_bubbel', speciesId: 'bubbel', passive: 'hp', passiveVal: 6, assistMul: 0.26, cd: 5.2,
-    perk: '+6 max HP · zachte assist' },
-  { id: 'pet_flapper', speciesId: 'flapper', passive: 'energy', passiveVal: 1.08, assistMul: 0.28, cd: 4.2,
-    perk: 'Snellere chakra-regen' },
-  { id: 'pet_stekelra', speciesId: 'stekelra', passive: 'dmg', passiveVal: 0.035, assistMul: 0.34, cd: 4.8,
-    perk: 'Charge-assist — stevige tik' },
-  { id: 'pet_spooki', speciesId: 'spooki', passive: 'crit', passiveVal: 0.04, assistMul: 0.29, cd: 4.9,
-    perk: '+4% crit-kans' },
-  { id: 'pet_blikkert', speciesId: 'blikkert', passive: 'shield', passiveVal: 1.2, assistMul: 0.27, cd: 5.4,
-    perk: 'Korte shield elke golf' },
-  { id: 'pet_vlamvos', speciesId: 'vlamvos', passive: 'speed', passiveVal: 1.04, assistMul: 0.33, cd: 4.4,
-    perk: '+4% loopsnelheid' },
-  { id: 'pet_piepvleugel', speciesId: 'piepvleugel', passive: 'energy', passiveVal: 1.1, assistMul: 0.3, cd: 4.0,
-    perk: 'Vlugge chakra + dart-assist' },
-  { id: 'pet_rotsbonk', speciesId: 'rotsbonk', passive: 'hp', passiveVal: 12, assistMul: 0.36, cd: 5.6,
-    perk: '+12 max HP · tank-assist' },
-  { id: 'pet_nachtwolk', speciesId: 'nachtwolk', passive: 'crit', passiveVal: 0.05, assistMul: 0.31, cd: 5.0,
-    perk: 'Spook-crit + energy drain' },
-  { id: 'pet_gloeidrake', speciesId: 'gloeidrake', passive: 'dmg', passiveVal: 0.045, assistMul: 0.38, cd: 5.2,
-    perk: 'Draken-assist — zwaarste tik' },
-  { id: 'pet_stormvos', speciesId: 'stormvos', passive: 'speed', passiveVal: 1.06, assistMul: 0.35, cd: 4.5,
-    perk: 'Storm-snelheid + combo-assist' },
-];
-
-const PET_BY_ID = Object.fromEntries(PET_ROSTER.map(p => [p.id, p]));
-const PET_BY_SPECIES = Object.fromEntries(PET_ROSTER.map(p => [p.speciesId, p]));
-
-function petDef(id) { return PET_BY_ID[id] || null; }
-
-function petKillNeed(speciesOrPetId) {
-  const def = PET_BY_ID[speciesOrPetId] || PET_BY_SPECIES[speciesOrPetId];
-  const sp = def ? SPECIES[def.speciesId] : SPECIES[speciesOrPetId];
-  if (!sp) return 999;
-  return PET_KILL_NEED[sp.rarity] || 20;
-}
-
-function isPetTamed(petId) {
-  return !!(save.pets && save.pets[petId]);
-}
-
-function petTamedCount() {
-  return Object.keys(save.pets || {}).filter(k => PET_BY_ID[k]).length;
-}
-
-function activePetDef() {
-  const id = save.activePet;
-  if (!id || !isPetTamed(id)) return null;
-  return petDef(id);
-}
-
-function canTamePetForSpecies(speciesId) {
-  const def = PET_BY_SPECIES[speciesId];
-  if (!def || isPetTamed(def.id)) return false;
-  return (save.dex[speciesId] || 0) >= petKillNeed(speciesId);
-}
-
-function maybeTamePet(speciesId) {
-  const def = PET_BY_SPECIES[speciesId];
-  if (!def || isPetTamed(def.id)) return false;
-  const kills = save.dex[speciesId] || 0;
-  const need = petKillNeed(speciesId);
-  if (kills < need) return false;
-  if (!save.pets || typeof save.pets !== 'object') save.pets = {};
-  save.pets[def.id] = { at: Date.now(), kills };
-  if (!save.activePet) save.activePet = def.id;
-  persist();
-  const sp = SPECIES[speciesId];
-  try { AudioSys.sfx('summon'); } catch (_) {}
-  return { def, sp, need, kills };
-}
-
-function petPassiveBonus() {
-  const def = activePetDef();
-  if (!def) {
-    return { dmgMul: 1, energyMul: 1, critBonus: 0, maxHp: 0, speedMul: 1, shieldWave: 0 };
-  }
-  const sp = SPECIES[def.speciesId];
-  const kills = save.dex[def.speciesId] || 0;
-  const tier = Math.min(3, Math.floor(kills / 25));
-  const tierMul = 1 + tier * 0.012;
-  const out = { dmgMul: 1, energyMul: 1, critBonus: 0, maxHp: 0, speedMul: 1, shieldWave: 0 };
-  switch (def.passive) {
-    case 'dmg': out.dmgMul = 1 + def.passiveVal * tierMul; break;
-    case 'hp': out.maxHp = Math.round(def.passiveVal * tierMul); break;
-    case 'energy': out.energyMul = def.passiveVal * tierMul; break;
-    case 'crit': out.critBonus = def.passiveVal * tierMul; break;
-    case 'speed': out.speedMul = def.passiveVal * tierMul; break;
-    case 'shield': out.shieldWave = def.passiveVal * tierMul; break;
-  }
-  if (sp) out.label = sp.name;
-  return out;
-}
-
-function buyPetWithCoins(petId) {
-  if (isPetTamed(petId)) return null;
-  const def = petDef(petId);
-  if (!def) return null;
-  const cost = petCoinCost(petId);
-  if (petCoinsBalance() < cost) return null;
-  save.petCoins = petCoinsBalance() - cost;
-  if (!save.pets || typeof save.pets !== 'object') save.pets = {};
-  save.pets[petId] = { at: Date.now(), coins: cost };
-  if (!save.activePet) save.activePet = petId;
-  save.stats.petsTamed = (save.stats.petsTamed || 0) + 1;
-  persist();
-  try { AudioSys.sfx('summon'); } catch (_) {}
-  return { def, cost, sp: SPECIES[def.speciesId] };
-}
-
-function equipPet(petId) {
-  if (!petId) { save.activePet = null; persist(); return true; }
-  if (!isPetTamed(petId)) return false;
-  save.activePet = petId;
-  persist();
-  return true;
-}
-
-function petProgressLine(speciesId) {
-  const def = PET_BY_SPECIES[speciesId];
-  if (!def) return '';
-  if (isPetTamed(def.id)) return save.activePet === def.id ? 'Pet · actief' : 'Pet · getemd';
-  const cost = petCoinCost(def.id);
-  if (canBuyPetWithCoins(def.id)) return `Pet · kopen ${cost} 🪙`;
-  const need = petKillNeed(speciesId);
-  const cur = save.dex[speciesId] || 0;
-  const coinHint = petCoinsBalance() > 0 ? ` · ${petCoinsBalance()}/${cost} 🪙` : '';
-  if (cur <= 0) return `Pet · ${need} kills${coinHint}`;
-  return `Pet · ${Math.min(cur, need)}/${need} kills${coinHint}`;
-}
 /* --- src/data/egg-pets.js --- */
 /* ============================== EGG PETS (ARCADE) ===================== */
 /** Cosmetische ei-metgezels — dagelijks + bonus na avontuur-win (deel 3 pets). */
@@ -5180,6 +5997,8 @@ function seedNlGameStrings() {
     combo3: 'Combo ×3 — door!', combo5: 'Combo ×5 — netjes!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — meester!', comboN: 'COMBO ×{n}!',
     pickupHp: '+HP', pickupRage: 'RAGE ×1.4', pickupChakra: 'Vol chakra!', pickupShield: 'Schild!',
+    pickupSkillShard: '+1 {name} shard',
+    pickupItemShard: '+1 {name} item-shard',
     giant: 'REUS!', wallCombo3: 'Combo ×3 · sloop +{pct}%',
     wallCombo5: 'Combo ×5 · sloop +{pct}%', wallCombo8: 'Combo ×8 · sloop +{pct}%',
     wallTempo: 'MUUR-TEMPO!', wallRecord: 'NIEUW RECORD!', bonus5: 'BONUS +5',
@@ -5241,6 +6060,10 @@ function seedNlGameStrings() {
     charNotEnough: 'Niet genoeg unlocked vechters in deze saga',
     charRandom: '{a} vs {b} · HP {hp1}/{hp2} · TOT {tot1}/{tot2}',
     charFair: 'Fair duo: {a} vs {b} · TOT Δ{diff}',
+    skillUpgradeReady: '{name} kan upgraden — Collectie → Upgrades',
+    skillUpgraded: '{name} Lv {lv}! {detail}',
+    itemUpgradeReady: '{name} kan upgraden — Collectie → Upgrades',
+    itemUpgraded: '{name} Lv {lv}! {detail}',
     skipGamble: 'Zonder gok',
     weaponIslandCap: 'Klaar voor training — in avontuur max Lv {cap}',
     petNone: 'Geen actieve pet',
@@ -5385,6 +6208,36 @@ function seedNlGameStrings() {
     styleIslandGate: 'Eiland-skill Lv {lvl}',
     weaponHead: 'Wapens',
     weaponSub: 'Summons zijn echt · eiland-skill gate: alleen wapens tot je huidige eiland-cap in avontuur',
+    skillHead: 'Upgrades',
+    skillSub: 'Shards in avontuur · skills, wapens, pets & stijl · meestal max Lv 3 · zeldzaam Lv 5',
+    skillTabSkills: 'Skills',
+    skillTabWeapons: 'Wapens',
+    skillTabPets: 'Pets',
+    skillTabStyle: 'Stijl',
+    upgradeSubSkills: 'Skill-shards in avontuur · jutsu max Lv 5 · utility max Lv 3',
+    upgradeSubWeapons: 'Item-shards voor unlocked wapens · mythisch max Lv 5',
+    upgradeSubPets: 'Item-shards voor getemde pets · passief, assist & CD',
+    upgradeSubStyle: 'Item-shards voor unlocked outfits · bonus, HP & shield',
+    upgradeEmptyWeapons: 'Unlock eerst wapens via level in avontuur.',
+    upgradeEmptyPets: 'Tem eerst een pet via monsterboek-kills of pet coins.',
+    upgradeEmptyStyle: 'Unlock eerst stijlen via level, training of monsterboek.',
+    upgradeReady: '{n} klaar om te upgraden',
+    upgradeShardHint: 'Goud = skill shard · paars = wapen/pet/stijl shard',
+    itemUpgrade: 'Upgrade',
+    itemMax: 'MAX',
+    itemShards: '{cur}/{cost} shards',
+    itemLevel: 'Lv {lv}/{max}',
+    itemNow: 'Nu',
+    itemNext: 'Volgende',
+    skillUpgrade: 'Upgrade',
+    skillMax: 'MAX',
+    skillShards: '{cur}/{cost} shards',
+    skillShardsOnly: '{n} shards',
+    skillLevel: 'Lv {lv}/{max}',
+    skillNow: 'Nu',
+    skillNext: 'Volgende',
+    skillGroupJutsu: 'Jutsu',
+    skillGroupUtility: 'Utility',
     helpFirstMinute: 'Eerste minuut — per modus één korte hint bovenin het gevecht (geen toast-stapel). Avontuur: joystick + knoppen · groen = HP · vol chakra = SUPER-knop. Training = Robot · Muur = combo · 2 spelers = links/rechts.',
     helpOnboardHead: 'Eerste-minuut hints: {seen}/{total} modi gezien · max één regel bovenin per modus',
     helpTryNext: 'Probeer als volgende: {mode}',
@@ -5407,6 +6260,11 @@ function seedNlGameStrings() {
     modeVersus: 'P1 links P2 rechts · best-of-3 · rematch in pauze',
     modeCoinrun: '45s munten · 2 munten = 1 pet coin · mik ↑ · vliegers +3',
     langSwitchFail: 'Taal wisselen mislukt',
+  });
+  if (!I18N.nl.skill) I18N.nl.skill = {};
+  Object.assign(I18N.nl.skill, {
+    rasengan: 'Rasengan', chidori: 'Chidori', rinnegan: 'Rinnegan',
+    subst: 'Substitutie', dash: 'Dash', chakra: 'Chakra',
   });
   if (!I18N.nl.hud) I18N.nl.hud = {};
   Object.assign(I18N.nl.hud, {
@@ -5693,6 +6551,10 @@ const CATALOG_EN = {
     charNotEnough: 'Not enough unlocked fighters in this saga',
     charRandom: '{a} vs {b} · HP {hp1}/{hp2} · TOT {tot1}/{tot2}',
     charFair: 'Fair duo: {a} vs {b} · TOT Δ{diff}',
+    skillUpgradeReady: '{name} ready to upgrade — Collection → Upgrades',
+    skillUpgraded: '{name} Lv {lv}! {detail}',
+    itemUpgradeReady: '{name} ready to upgrade — Collection → Upgrades',
+    itemUpgraded: '{name} Lv {lv}! {detail}',
     skipGamble: 'No gamble',
     weaponIslandCap: 'Ready for training — in adventure max Lv {cap}',
     petNone: 'No active pet',
@@ -5804,6 +6666,36 @@ const CATALOG_EN = {
     styleIslandGate: 'Island skill Lv {lvl}',
     weaponHead: 'Weapons',
     weaponSub: 'Summons are real · island skill gate: adventure weapons up to your island cap',
+    skillHead: 'Upgrades',
+    skillSub: 'Adventure shards · skills, weapons, pets & style · usually max Lv 3 · rare Lv 5',
+    skillTabSkills: 'Skills',
+    skillTabWeapons: 'Weapons',
+    skillTabPets: 'Pets',
+    skillTabStyle: 'Style',
+    upgradeSubSkills: 'Skill shards in adventure · jutsu max Lv 5 · utility max Lv 3',
+    upgradeSubWeapons: 'Item shards for unlocked weapons · mythic max Lv 5',
+    upgradeSubPets: 'Item shards for tamed pets · passive, assist & CD',
+    upgradeSubStyle: 'Item shards for unlocked outfits · bonus, HP & shield',
+    upgradeEmptyWeapons: 'Unlock weapons via adventure level first.',
+    upgradeEmptyPets: 'Tame a pet via monster book kills or pet coins first.',
+    upgradeEmptyStyle: 'Unlock styles via level, training or monster book first.',
+    upgradeReady: '{n} ready to upgrade',
+    upgradeShardHint: 'Gold = skill shard · purple = weapon/pet/style shard',
+    itemUpgrade: 'Upgrade',
+    itemMax: 'MAX',
+    itemShards: '{cur}/{cost} shards',
+    itemLevel: 'Lv {lv}/{max}',
+    itemNow: 'Now',
+    itemNext: 'Next',
+    skillUpgrade: 'Upgrade',
+    skillMax: 'MAX',
+    skillShards: '{cur}/{cost} shards',
+    skillShardsOnly: '{n} shards',
+    skillLevel: 'Lv {lv}/{max}',
+    skillNow: 'Now',
+    skillNext: 'Next',
+    skillGroupJutsu: 'Jutsu',
+    skillGroupUtility: 'Utility',
     helpFirstMinute: 'First minute — one short hint per mode at top (no toast stack). Adventure: joystick + buttons · green = HP · full chakra = SUPER. Training = Robot · Wall = combo · 2P = left/right.',
     helpOnboardHead: 'First-minute hints: {seen}/{total} modes seen · max one line per mode at top',
     helpTryNext: 'Try next: {mode}',
@@ -5853,6 +6745,8 @@ const CATALOG_EN = {
     combo3: 'Combo ×3 — keep going!', combo5: 'Combo ×5 — nice!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — master!', comboN: 'COMBO ×{n}!',
     pickupHp: '+HP', pickupRage: 'RAGE ×1.4', pickupChakra: 'Full chakra!', pickupShield: 'Shield!',
+    pickupSkillShard: '+1 {name} shard',
+    pickupItemShard: '+1 {name} item-shard',
     giant: 'GIANT!', wallCombo3: 'Combo ×3 · smash +{pct}%',
     wallCombo5: 'Combo ×5 · smash +{pct}%', wallCombo8: 'Combo ×8 · smash +{pct}%',
     wallTempo: 'WALL TEMPO!', wallRecord: 'NEW RECORD!', bonus5: 'BONUS +5',
@@ -5908,6 +6802,10 @@ const CATALOG_EN = {
     ketsTap: 'Tap!', ketsKey: 'E / tap',
   },
   jutsu: { rasengan: 'RASENGAN!', chidori: 'CHIDORI!', rinnegan: 'RINNEGAN!' },
+  skill: {
+    rasengan: 'Rasengan', chidori: 'Chidori', rinnegan: 'Rinnegan',
+    subst: 'Substitution', dash: 'Dash', chakra: 'Chakra',
+  },
   gamble: {
     superBoss: 'Bad luck! Super-boss in a random wave',
     miniBoss: 'Risk: extra elite in a wave',
@@ -6254,11 +7152,34 @@ function dailyHint(id) {
   return (typeof DAILY_PLAY_HINTS !== 'undefined' && DAILY_PLAY_HINTS[id]) || '';
 }
 
-function pickupLabel(kind) {
+function pickupLabel(kind, skillId, itemCat, itemId) {
+  if (kind === 'skill_shard' && skillId) {
+    return t('combat.pickupSkillShard', { name: skillLabel(skillId) });
+  }
+  if (kind === 'item_shard' && itemCat && itemId) {
+    return t('combat.pickupItemShard', { name: itemUpgradeLabel(itemCat, itemId) });
+  }
   const k = 'pickup.' + kind;
   const v = t(k);
   if (v && v !== k) return v;
   return (typeof PICKUP_META !== 'undefined' && PICKUP_META[kind] && PICKUP_META[kind].label) || kind;
+}
+
+function skillLabel(id) {
+  const k = 'skill.' + (id || 'rasengan');
+  const v = t(k);
+  if (v && v !== k) return v;
+  if (id === 'subst') return 'Substitutie';
+  if (id === 'dash') return 'Dash';
+  if (id === 'chakra') return 'Chakra';
+  return jutsuLabel(id);
+}
+
+function skillDesc(id) {
+  const k = 'skillDesc.' + id;
+  const v = t(k);
+  if (v && v !== k) return v;
+  return '';
 }
 
 function jutsuLabel(kind) {
@@ -8351,20 +9272,29 @@ addEventListener('keydown', e => {
       InputP2.lastMoveTap = now; InputP2.lastMoveDir = 1;
     }
     InputP2.keys[k] = true;
+    if (!['arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(k)) Input.keys[k] = true;
+  } else {
+    Input.keys[k] = true;
   }
-  Input.keys[k] = true;
   if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) e.preventDefault();
 });
 addEventListener('keyup', e => {
   const k = e.key.toLowerCase();
-  Input.keys[k] = false;
-  if (InputP2) InputP2.keys[k] = false;
+  if (Input.dualMode && ['arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(k)) {
+    if (InputP2) InputP2.keys[k] = false;
+  } else {
+    Input.keys[k] = false;
+    if (InputP2) InputP2.keys[k] = false;
+  }
 });
 
 /* --- src/core/canvas.js --- */
 /* ============================== CANVAS ================================= */
 const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
+const ctx = canvas ? canvas.getContext('2d') : null;
+if (!canvas || !ctx) {
+  try { sfReportError('canvas', new Error('2d context unavailable')); } catch (_) {}
+}
 let W = innerWidth, H = innerHeight, DPR = 1;
 let resizeDebounce = null;
 let lastResizeKey = '';
@@ -8882,10 +9812,13 @@ class Fighter {
       }
       case 'special': {
         const j = fighterJutsuKind(this);
-        const jMul = j === 'rinnegan' ? 2.55 : j === 'chidori' ? (this.isRobot ? 2.35 : 2.72) : 2.85;
+        const jb = jutsuSkillBonuses(j);
+        const jMul = (j === 'rinnegan' ? 2.55 : j === 'chidori' ? (this.isRobot ? 2.35 : 2.72) : 2.85) * jb.dmgMul;
+        const windup = (j === 'rinnegan' ? 0.52 : 0.48) * jb.windupMul;
         spec = {
-          kind, windup: j === 'rinnegan' ? 0.52 : 0.48, active: 0.12, recover: 0.28, range: 62, r: 44,
+          kind, windup, active: 0.12, recover: 0.28, range: 62 + jb.radius, r: 44 + jb.radius * 0.5,
           dmg: this.baseDmg * jMul, kb: j === 'rinnegan' ? 460 : 520, jutsu: j,
+          extraShot: jb.extraShot, pierceRepeat: jb.pierceRepeat, pullMul: jb.pullMul,
         };
         break;
       }
@@ -8901,12 +9834,13 @@ class Fighter {
   startAttack(kind, game) {
     if (this.attack || this.state === 'hurt' || !this.alive || this.invulnT > 0 && kind !== 'special') return;
     if (kind === 'special') {
-      if (this.energy < 100) {
+      const jKind = fighterJutsuKind(this);
+      const chakraCost = skillChakraCost(jKind);
+      if (this.energy < chakraCost) {
         if (this.isPlayer) game.floater(this.x, this.y - 110, 'Chakra niet vol!', '#7cf5ff', 13);
         return;
       }
-      this.energy = 0;
-      const jKind = fighterJutsuKind(this);
+      this.energy = Math.max(0, this.energy - chakraCost);
       AudioSys.sfx(jKind === 'chidori' ? 'chidori' : jKind === 'rinnegan' ? 'rinnegan' : 'rasengan');
       if (this.isPlayer || this.playerSlot) {
         const lbl = jKind === 'chidori' ? 'CHIDORI!' : jKind === 'rinnegan' ? 'RINNEGAN!' : 'RASENGAN!';
@@ -8941,9 +9875,10 @@ class Fighter {
 
   doSubstitution(game) {
     if (!this.alive || this.substCd > 0 || this.attack || this.invulnT > 0) return;
+    const sb = skillBonuses('subst');
     resetWeaponCombo(this);
-    this.substCd = 1.35;
-    this.invulnT = 0.28;
+    this.substCd = 1.35 * sb.cdMul;
+    this.invulnT = 0.28 + (sb.invulnAdd || 0);
     AudioSys.sfx('subst');
     // rookwolk + afterimage (substitutie / Kawarimi)
     game.burst(this.x, this.y - 40, '#c9a66b', 16);
@@ -8952,8 +9887,9 @@ class Fighter {
     const dir = this.face || 1;
     const pad = this.playerSlot === 2 ? InputP2 : Input;
     const dashDir = Math.abs(pad.move) > 0.2 ? Math.sign(pad.move) : dir;
-    this.x = clampFighterX(this, game, this.x + dashDir * 140);
-    this.vx = dashDir * 420;
+    const dist = 140 * (sb.dashDistMul || 1);
+    this.x = clampFighterX(this, game, this.x + dashDir * dist);
+    this.vx = dashDir * 420 * (sb.dashDistMul || 1);
     game.floater(this.x, this.y - 100, 'Substitutie!', '#c9a66b', 14);
     game.shake(2, 0.08);
   }
@@ -8962,12 +9898,14 @@ class Fighter {
     if (!this.alive || this.dashCd > 0 || Math.abs(dir) < 0.1) return;
     if (this.attack && this.hurtT <= 0) return;
     if (this.hurtT > 0) this.hurtT = 0;
+    const db = skillBonuses('dash');
     resetWeaponCombo(this);
-    this.dashCd = 0.85;
+    this.dashCd = 0.85 * db.cdMul;
     this.invulnT = Math.max(this.invulnT, 0.14);
     AudioSys.sfx('dash');
-    this.x = clampFighterX(this, game, this.x + dir * 98);
-    this.vx = dir * 340;
+    const dist = 98 * (db.dashDistMul || 1);
+    this.x = clampFighterX(this, game, this.x + dir * dist);
+    this.vx = dir * 340 * (db.dashSpeedMul || 1);
     game.burst(this.x, this.y - 38, this.style?.accent || '#7cf5ff', 8);
     game.floater(this.x, this.y - 92, 'Dash!', '#7cf5ff', 12);
   }
@@ -9239,7 +10177,8 @@ class Fighter {
       const stageMul = (typeof game !== 'undefined' && game && game.stageEnergyMul) ? game.stageEnergyMul : 1;
       const petMul = (typeof game !== 'undefined' && game && game.petEnergyMul) ? game.petEnergyMul : 1;
       const styleMul = (typeof game !== 'undefined' && game && game.styleEnergyMul) ? game.styleEnergyMul : 1;
-      const rate = (this.attack ? 4.2 : 2.8) * stageMul * petMul * styleMul;
+      const chakraMul = (this.isPlayer || this.playerSlot) ? skillBonuses('chakra').regenMul : 1;
+      const rate = (this.attack ? 4.2 : 2.8) * stageMul * petMul * styleMul * chakraMul;
       const prevE = this._energyPrev == null ? this.energy : this._energyPrev;
       this.energy = clamp(this.energy + dt * rate, 0, 100);
       if (this.energy >= 100 && prevE < 100) {
@@ -9269,7 +10208,7 @@ class Fighter {
     if (!this.alive) return 0;
     if ((this.isPlayer || this.playerSlot) && game && game.ketsbamSuperT > 0) return 0;
     if (this.invulnT > 0) {
-      game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13);
+      if (game) game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13);
       return 0;
     }
     if (this.blocking && !opts.unblockable) {
@@ -10093,6 +11032,7 @@ class Pet {
     this.face = 1;
     this.t = Math.random() * 6;
     this.assistT = 1.8;
+    this.assistCd = (def.cd || 5) * (petUpgradeBonuses(def.id).cdMul || 1);
     this.size = Math.max(9, Math.round((this.sp?.size || 14) * 0.52));
     this.flashT = 0;
   }
@@ -10118,7 +11058,8 @@ class Pet {
     if (inTrain && (!g.robot || !g.robot.alive)) return;
     this.assistT -= dt;
     if (this.assistT > 0) return;
-    this.assistT = this.def.cd || 5;
+    this.assistCd = (this.def.cd || 5) * (petUpgradeBonuses(this.def.id).cdMul || 1);
+    this.assistT = this.assistCd;
 
     let tgt = null;
     let best = 1e9;
@@ -10134,7 +11075,8 @@ class Pet {
     }
     if (!tgt || best > 420) return;
 
-    const mul = (this.def.assistMul || 0.3) * (g.stageDmgMul || 1) * (g.petDmgMul || 1);
+    const up = petUpgradeBonuses(this.def.id);
+    const mul = (this.def.assistMul || 0.3) * (up.assistMul || 1) * (g.stageDmgMul || 1) * (g.petDmgMul || 1);
     const dmg = Math.max(4, Math.round(p.baseDmg * mul));
     const kb = Math.sign(tgt.x - this.x || p.face) * (120 + dmg * 2.2);
     tgt.takeDamage(dmg, kb, g);
@@ -10914,6 +11856,22 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
 /* ================================ GAME ================================= */
 let game = null;
 
+function scheduleGameResult(g, delay, fn) {
+  if (!g) return;
+  if (g._resultTimer) clearTimeout(g._resultTimer);
+  g._resultTimer = setTimeout(() => {
+    g._resultTimer = null;
+    fn();
+  }, delay);
+}
+
+function clearGameResultTimer(g) {
+  if (g && g._resultTimer) {
+    clearTimeout(g._resultTimer);
+    g._resultTimer = null;
+  }
+}
+
 class Game {
   constructor(mode, opts) {
     opts = opts || {};
@@ -11105,6 +12063,10 @@ class Game {
   }
 
   nextWave() {
+    if (!this.player?.alive) {
+      if (!this.over) this.finishAdventure(false);
+      return;
+    }
     this.waveIdx++;
     if (this.waveIdx >= this.level.waves.length) { this.finishAdventure(true); return; }
     const wave = this.level.waves[this.waveIdx];
@@ -11263,7 +12225,7 @@ class Game {
     this.pickups = this.pickups.filter(pk => pk.life > 0);
     if (this.betweenT > 0) {
       this.betweenT -= dt;
-      if (this.betweenT <= 0 && this.waveIdx < 0) this.nextWave();
+      if (this.betweenT <= 0 && this.waveIdx < 0 && this.player?.alive) this.nextWave();
     }
     if (this.spawnQueue.length) {
       const alive = this.monsters.filter((m) => m.alive).length;
@@ -11299,18 +12261,16 @@ class Game {
       } else if (alive >= ADVENTURE_MAX_ALIVE) {
         this.spawnTimer = Math.min(this.spawnTimer, 0.12);
       }
-    } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive)) {
+    } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive) && this.player?.alive) {
       if (!this.wavePause) {
         const nextIsBoss = isBossWave(this.level, this.waveIdx + 1);
         this.wavePause = nextIsBoss ? 2.15 : 1.55;
         this.wavePauseTotal = this.wavePause;
-        if (this.player && this.player.alive) {
-          const waveHeal = Math.max(4, Math.round(this.player.maxhp * 0.06));
-          this.player.hp = Math.min(this.player.maxhp, this.player.hp + waveHeal);
-          this.player.energy = clamp(this.player.energy + 8, 0, 100);
-          this.floater(this.player.x, this.player.y - 88, t('banner.waveClear', { heal: waveHeal }), '#6ee06e', 14);
-        }
-        if (this.stageHealBetween > 0 && this.player && this.player.alive) {
+        const waveHeal = Math.max(4, Math.round(this.player.maxhp * 0.06));
+        this.player.hp = Math.min(this.player.maxhp, this.player.hp + waveHeal);
+        this.player.energy = clamp(this.player.energy + 8, 0, 100);
+        this.floater(this.player.x, this.player.y - 88, t('banner.waveClear', { heal: waveHeal }), '#6ee06e', 14);
+        if (this.stageHealBetween > 0) {
           const heal = Math.max(8, Math.round(this.player.maxhp * this.stageHealBetween));
           this.player.hp = Math.min(this.player.maxhp, this.player.hp + heal);
           this.floater(this.player.x, this.player.y - 108, t('combat.allyHeal', { heal }), '#6ee06e', 14);
@@ -11328,6 +12288,7 @@ class Game {
 
   finishAdventure(win) {
     if (this.over) return;
+    if (win && (!this.player || !this.player.alive)) win = false;
     this.deactivateMasterSword(true);
     this.over = true;
     this.inputLocked = true;
@@ -11385,7 +12346,7 @@ class Game {
       AudioSys.sfx('lose');
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
-    setTimeout(() => UI.showResult(win, {
+    scheduleGameResult(this, 1400, () => UI.showResult(win, {
       title: win ? t('result.advWin') : t('result.advLose'),
       detail: (() => {
         const finishers = this.runFinishers ? t('result.finishersLine', { n: this.runFinishers }) : '';
@@ -11413,7 +12374,7 @@ class Game {
           t('result.lossGambleTip'));
         return once ? `${once} · ${base}` : base;
       })(),
-    }), 1400);
+    }));
   }
 
   onMonsterKilled(m) {
@@ -11440,6 +12401,12 @@ class Game {
     }
     const dropChance = m.elite ? 0.42 : 0.22;
     if (Math.random() < dropChance) this.spawnPickup(m.x, m.y - m.size * 0.5);
+    if (this.mode === 'adventure') {
+      const skillId = rollSkillShardDrop(m);
+      if (skillId) this.spawnPickup(m.x + rand(-18, 18), m.y - m.size * 0.35, { skillId });
+      const itemDrop = rollItemShardDrop(m);
+      if (itemDrop) this.spawnPickup(m.x + rand(-22, 22), m.y - m.size * 0.45, { itemCat: itemDrop.cat, itemId: itemDrop.id });
+    }
     bumpStat('kills', 1);
     bumpDaily('kills', 1);
     if (m.elite) {
@@ -11504,7 +12471,7 @@ class Game {
     save.stats.killsSinceSummon = 0;
     persist();
     const rar = rarityOf(tier);
-    const asc = applySummonTier(weaponById(pick.id));
+    const asc = applyWeaponUpgrades(applySummonTier(weaponById(pick.id)));
     if (this.player && this.player.weapon && this.player.weapon.id === pick.id) {
       this.player.weapon = playerWeapon();
       const st = playerStats();
@@ -11524,7 +12491,22 @@ class Game {
     UI.toast(t('toast.summon', { name: weaponLabel(pick), rar: rar.name, dmg: asc.dmg }), 4200);
   }
 
-  spawnPickup(x, y) {
+  spawnPickup(x, y, opts) {
+    opts = opts || {};
+    if (opts.skillId && SKILL_DEFS[opts.skillId]) {
+      this.pickups.push({
+        x, y, kind: 'skill_shard', skillId: opts.skillId,
+        t: rand(0, TAU), life: 18, bob: 0,
+      });
+      return;
+    }
+    if (opts.itemCat && opts.itemId && itemUpgradeEligible(opts.itemCat, opts.itemId)) {
+      this.pickups.push({
+        x, y, kind: 'item_shard', itemCat: opts.itemCat, itemId: opts.itemId,
+        t: rand(0, TAU), life: 18, bob: 0,
+      });
+      return;
+    }
     const kind = choice(PICKUP_TYPES);
     this.pickups.push({ x, y, kind, t: rand(0, TAU), life: 16, bob: 0 });
   }
@@ -11532,11 +12514,37 @@ class Game {
   collectPickup(pk) {
     if (pk._got) return;
     pk._got = true;
-    const meta = PICKUP_META[pk.kind];
+    const meta = PICKUP_META[pk.kind] || PICKUP_META.heal;
     const p = this.player;
     AudioSys.sfx('pickup');
     haptic(20);
     switch (pk.kind) {
+      case 'skill_shard': {
+        const sid = pk.skillId;
+        if (!sid || !SKILL_DEFS[sid]) break;
+        addSkillShards(sid, 1);
+        const def = SKILL_DEFS[sid];
+        const col = def.color;
+        const lbl = skillLabel(sid);
+        this.floater(p.x, p.y - 100, t('combat.pickupSkillShard', { name: lbl }), col, 15);
+        if (skillCanUpgrade(sid)) {
+          try { UI.toast(t('toast.skillUpgradeReady', { name: lbl }), 2800); } catch (_) {}
+        }
+        break;
+      }
+      case 'item_shard': {
+        const cat = pk.itemCat;
+        const iid = pk.itemId;
+        if (!cat || !iid || !itemUpgradeEligible(cat, iid)) break;
+        if (addItemShards(cat, iid, 1) <= 0) break;
+        const lbl = itemUpgradeLabel(cat, iid);
+        const col = itemUpgradeColor(cat, iid);
+        this.floater(p.x, p.y - 100, t('combat.pickupItemShard', { name: lbl }), col, 15);
+        if (itemCanUpgrade(cat, iid)) {
+          try { UI.toast(t('toast.itemUpgradeReady', { name: lbl }), 2800); } catch (_) {}
+        }
+        break;
+      }
       case 'heal':
         p.hp = Math.min(p.maxhp, p.hp + Math.round(p.maxhp * 0.28));
         this.floater(p.x, p.y - 100, t('combat.pickupHp'), meta.color, 16);
@@ -11555,8 +12563,14 @@ class Game {
         this.floater(p.x, p.y - 100, t('combat.pickupShield'), meta.color, 16);
         break;
     }
-    this.banner(pickupLabel(pk.kind), 0.9, meta.color, 28);
-    this.burst(pk.x, pk.y, meta.color, 14);
+    this.banner(pickupLabel(pk.kind, pk.skillId, pk.itemCat, pk.itemId), 0.9,
+      (pk.kind === 'skill_shard' && SKILL_DEFS[pk.skillId]) ? SKILL_DEFS[pk.skillId].color
+        : (pk.kind === 'item_shard' && pk.itemCat && pk.itemId) ? itemUpgradeColor(pk.itemCat, pk.itemId)
+          : meta.color, 28);
+    this.burst(pk.x, pk.y,
+      (pk.kind === 'skill_shard' && SKILL_DEFS[pk.skillId]) ? SKILL_DEFS[pk.skillId].color
+        : (pk.kind === 'item_shard' && pk.itemCat && pk.itemId) ? itemUpgradeColor(pk.itemCat, pk.itemId)
+          : meta.color, 14);
     bumpStat('pickups', 1);
     bumpDaily('pickups', 1);
     pk.life = 0;
@@ -11689,7 +12703,7 @@ class Game {
         let pWin;
         if (rDead && !pDead) pWin = true;
         else if (pDead && !rDead) pWin = false;
-        else pWin = (this.player.hp / this.player.maxhp) >= (this.robot.hp / this.robot.maxhp);
+        else pWin = (this.player.hp / Math.max(1, this.player.maxhp)) >= (this.robot.hp / Math.max(1, this.robot.maxhp));
         if (pWin) this.roundsP++; else this.roundsR++;
         this.trainComboBest = Math.max(this.trainComboBest || 0, this.trainRoundBest || 0);
         this.phase = 'roundend'; this.phaseT = 0;
@@ -11736,7 +12750,7 @@ class Game {
         : (save.trainWins === 3 ? t('result.trainStyleUnlock') : t('result.trainStyleMore')))
       : (onceResultTip('training', 'loss', t('result.trainLossTip'))
         || t('result.trainTipDefault'));
-    setTimeout(() => UI.showResult(win, {
+    scheduleGameResult(this, 1200, () => UI.showResult(win, {
       title: win ? t('result.trainWin') : t('result.trainLose'),
       detail: t('result.trainDetail', {
         outcome: win ? t('result.trainOutcomeWin') : t('result.trainOutcomeLose'),
@@ -11747,7 +12761,7 @@ class Game {
       }),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
-    }), 1200);
+    }));
   }
 
   initVersus(opts) {
@@ -11800,7 +12814,7 @@ class Game {
         const timedOut = !p1d && !p2d && this.roundTimer <= 0;
         if (p2d && !p1d) p1Win = true;
         else if (p1d && !p2d) p1Win = false;
-        else p1Win = (this.player.hp / this.player.maxhp) >= (this.p2.hp / this.p2.maxhp);
+        else p1Win = (this.player.hp / Math.max(1, this.player.maxhp)) >= (this.p2.hp / Math.max(1, this.p2.maxhp));
         if (p1Win) this.roundsP1++; else this.roundsP2++;
         this.vsRoundLog = this.vsRoundLog || [];
         this.vsRoundLog.push(p1Win ? 'p1' : 'p2');
@@ -11809,8 +12823,8 @@ class Game {
         this.inputLocked = true;
         let msg = p1Win ? t('banner.p1RoundWin') : t('banner.p2RoundWin');
         if (timedOut) {
-          const hp1 = Math.round(this.player.hp / this.player.maxhp * 100);
-          const hp2 = Math.round(this.p2.hp / this.p2.maxhp * 100);
+          const hp1 = Math.round(this.player.hp / Math.max(1, this.player.maxhp) * 100);
+          const hp2 = Math.round(this.p2.hp / Math.max(1, this.p2.maxhp) * 100);
           msg = t('banner.timeHpVs', { hp1, hp2, msg });
         }
         this.banner(msg, 1.5, p1Win ? '#7cf5ff' : '#ffb0b8', 38);
@@ -11822,7 +12836,7 @@ class Game {
         else this.startVsRound();
       }
     }
-    this.p2.update(dt, this);
+    if (this.p2) this.p2.update(dt, this);
   }
 
   finishVersus(p1Win) {
@@ -11834,14 +12848,14 @@ class Game {
     bumpStat('vsMatches', 1);
     if (p1Win) bumpStat('vsWins', 1);
     this.grantXP(p1Win ? 35 : 20);
-    setTimeout(() => UI.showResult(p1Win, {
+    scheduleGameResult(this, 1200, () => UI.showResult(p1Win, {
       title: p1Win ? t('result.vsP1Win') : t('result.vsP2Win'),
       detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}` +
         ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : '') +
         (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
       xp: this.sessionXP, mode: 'versus', win: p1Win, p1: this.p1Pick, p2: this.p2Pick,
       tip: t('result.vsRematchTip'),
-    }), 1200);
+    }));
   }
 
   /* ------------------------------ MUUR -------------------------------- */
@@ -11964,7 +12978,7 @@ class Game {
       else if (paceDelta != null && paceDelta < -3) tip = t('result.wallBehindPace');
       else if (paceDelta != null && paceDelta >= 3) tip = t('result.wallGoodPace');
     }
-    setTimeout(() => UI.showResult(true, {
+    scheduleGameResult(this, 1200, () => UI.showResult(true, {
       title: isRecord ? t('result.wallRecord') : t('result.wallTime'),
       detail: t('result.wallDetail', {
         score: this.score, pace, best, combo: this.maxCombo || 0,
@@ -11973,7 +12987,7 @@ class Game {
       }),
       xp: this.sessionXP, mode: 'wall', win: true,
       tip,
-    }), 1200);
+    }));
   }
 
   /* ------------------------ MATS · MUNTJES BONUS ----------------------- */
@@ -12071,7 +13085,7 @@ class Game {
     AudioSys.sfx(isRecord ? 'win' : 'bonus');
     this.banner(t('banner.bonusDone'), 1.4, '#7cfc8a', 40);
     const wallet = petCoinsBalance();
-    setTimeout(() => UI.showResult(true, {
+    scheduleGameResult(this, 1200, () => UI.showResult(true, {
       title: isRecord ? t('result.matsRecord') : t('result.matsDone'),
       detail: t('result.matsDetail', {
         n, best,
@@ -12084,7 +13098,7 @@ class Game {
       tip: petEarned > 0
         ? t('result.matsPetTip')
         : t('result.matsControlTip'),
-    }), 1200);
+    }));
   }
 
   drawCoinRunLayer(c) {
@@ -12139,27 +13153,46 @@ class Game {
 
   spawnJutsu(f, atk) {
     const jutsu = (atk && atk.jutsu) || fighterJutsuKind(f);
-    const dmg = atk ? atk.dmg : f.baseDmg * 2.8;
+    const jb = jutsuSkillBonuses(jutsu);
+    const dmg = (atk ? atk.dmg : f.baseDmg * 2.8);
     const from = this.projFrom(f);
     const critMeta = projCritMeta(f);
-    const aim = projAimVelocity(f, jutsu === 'chidori' ? 620 : jutsu === 'rinnegan' ? 340 : 420);
+    const baseSpd = jutsu === 'chidori' ? 620 : jutsu === 'rinnegan' ? 340 : 420;
+    const aim = projAimVelocity(f, baseSpd * jb.speedMul);
     const y0 = f.y - 50 + clamp(aim.ny, -1, 0.5) * 36;
+    const fireProj = (offX, offY, scale) => {
+      const sc = scale || 1;
+      if (jutsu === 'chidori') {
+        this.spawnProjectile(Object.assign({
+          x: f.x + f.face * (36 + offX), y: y0 + offY,
+          vx: aim.vx, vy: aim.vy * 0.85, r: (22 + jb.radius) * sc, dmg: dmg * sc,
+          life: 0.35 * jb.lifeMul, from, kind: 'chidori', pierce: false, hitSet: new Set(),
+          pierceRepeat: jb.pierceRepeat,
+        }, critMeta));
+      } else if (jutsu === 'rinnegan') {
+        this.spawnProjectile(Object.assign({
+          x: f.x + f.face * (38 + offX), y: y0 + offY,
+          vx: aim.vx, vy: aim.vy * 0.9, r: (30 + jb.radius) * sc, dmg: dmg * sc,
+          from, kind: 'rinnegan', pierce: true, hitSet: new Set(), life: 1.05 * jb.lifeMul,
+          spin: 0, pull: true, pullMul: jb.pullMul || 1, extraShot: jb.extraShot,
+        }, critMeta));
+      } else {
+        const face = f.face || 1;
+        this.spawnProjectile(Object.assign({
+          x: f.x + face * (40 + offX), y: y0 + offY,
+          vx: face * baseSpd * jb.speedMul, vy: 0, r: (28 + jb.radius) * sc, dmg: dmg * sc,
+          from, kind: 'rasengan', pierce: true, hitSet: new Set(), life: 1.4 * jb.lifeMul,
+          spin: 0, extraShot: jb.extraShot,
+        }, critMeta));
+      }
+    };
     if (jutsu === 'chidori') {
-      this.spawnProjectile(Object.assign({
-        x: f.x + f.face * 36, y: y0,
-        vx: aim.vx, vy: aim.vy * 0.85, r: 22, dmg, life: 0.35,
-        from, kind: 'chidori', pierce: false, hitSet: new Set(),
-      }, critMeta));
-      f.vx = f.face * 380;
+      fireProj(0, 0, 1);
+      f.vx = f.face * 380 * jb.speedMul;
       this.shake(7, 0.2);
       AudioSys.sfx('chidori');
     } else if (jutsu === 'rinnegan') {
-      this.spawnProjectile(Object.assign({
-        x: f.x + f.face * 38, y: y0,
-        vx: aim.vx, vy: aim.vy * 0.9, r: 30, dmg,
-        from, kind: 'rinnegan', pierce: true, hitSet: new Set(), life: 1.05,
-        spin: 0, pull: true,
-      }, critMeta));
+      fireProj(0, 0, 1);
       this.burst(f.x + f.face * 28, y0, '#c47aff', 22);
       this.burst(f.x + f.face * 28, y0, '#ff6b9d', 10);
       this.shake(8, 0.24);
@@ -12167,22 +13200,17 @@ class Game {
       AudioSys.sfx('rinnegan');
       if (f.isPlayer || f.playerSlot) haptic(20);
     } else {
-      // Rasengan: horizontale chakra-bol
-      const face = f.face || 1;
-      const speed = 420;
-      const y0 = f.y - 50;
-      this.spawnProjectile(Object.assign({
-        x: f.x + face * 40, y: y0,
-        vx: face * speed, vy: 0, r: 28, dmg,
-        from, kind: 'rasengan', pierce: true, hitSet: new Set(), life: 1.4,
-        spin: 0,
-      }, critMeta));
+      fireProj(0, 0, 1);
       this.burst(f.x + f.face * 30, y0, '#7cf5ff', fxLite() ? 8 : 16);
       spawnFxRing(this, f.x + f.face * 34, y0, '#7cf5ff', 10);
       this.shake(9, 0.28);
       this.freezeT = Math.max(this.freezeT, 0.06);
       AudioSys.sfx('rasengan');
       if (f.isPlayer || f.playerSlot) haptic(22);
+    }
+    const extra = (atk && atk.extraShot) || jb.extraShot || 0;
+    if (extra > 0 && Math.random() < extra) {
+      fireProj(f.face * 12, rand(-8, 8), 0.72);
     }
   }
 
@@ -12453,6 +13481,7 @@ class Game {
     if (this.hint > 0) this.hint -= dt;
     this.shakeT = Math.max(0, this.shakeT - dt);
 
+    if (!this.player) return;
     this.player.update(dt, this);
     if (this.pet) this.pet.update(dt);
     if (this.eggPet) this.eggPet.update(dt);
@@ -12522,7 +13551,9 @@ class Game {
         }
       } else {
         for (const m of this.monsters) {
-          if (!m.alive || (p.hitSet && p.hitSet.has(m))) continue;
+          if (!m.alive) continue;
+          const allowRehit = p._rehit && p._rehit.has(m);
+          if (p.hitSet && p.hitSet.has(m) && !allowRehit) continue;
           if ((p.x - m.x) ** 2 + (p.y - m.y) ** 2 < (p.r + m.size) ** 2) {
             const hit = resolveProjHit(p);
             m.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this);
@@ -12531,7 +13562,17 @@ class Game {
               spawnJutsuImpactFx(this, p.x, p.y, 'rasengan', 'full');
             }
             if (p.kind === 'rinnegan') this.burst(p.x, p.y, '#c47aff', 10);
-            if (p.hitSet) p.hitSet.add(m); else p.life = 0;
+            if (allowRehit) {
+              if (p._rehit) p._rehit.delete(m);
+              if (p.hitSet) p.hitSet.add(m);
+            } else if (p.hitSet) {
+              if (p.pierceRepeat > 0 && Math.random() < p.pierceRepeat) {
+                if (!p._rehit) p._rehit = new Set();
+                p._rehit.add(m);
+              } else {
+                p.hitSet.add(m);
+              }
+            } else p.life = 0;
           }
         }
         if (this.robot && this.robot.alive && !(p.hitSet && p.hitSet.has(this.robot))) {
@@ -12739,16 +13780,21 @@ class Game {
 
     if (this.mode === 'adventure' && this.pickups) {
       for (const pk of this.pickups) {
-        const meta = PICKUP_META[pk.kind];
+        const meta = PICKUP_META[pk.kind] || PICKUP_META.heal;
+        const pkCol = (pk.kind === 'skill_shard' && pk.skillId && SKILL_DEFS[pk.skillId])
+          ? SKILL_DEFS[pk.skillId].color
+          : (pk.kind === 'item_shard' && pk.itemCat && pk.itemId)
+            ? itemUpgradeColor(pk.itemCat, pk.itemId)
+            : meta.color;
         const y = pk.y + (pk.bob || 0);
         c.save();
         const pkBlur = (save.liteFx || Perf.tier >= 1 || motionReduced()) ? 0 : 14;
-        c.shadowColor = meta.color; c.shadowBlur = pkBlur;
-        c.fillStyle = meta.color;
+        c.shadowColor = pkCol; c.shadowBlur = pkBlur;
+        c.fillStyle = pkCol;
         c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.fill();
         c.strokeStyle = '#fff'; c.lineWidth = 2;
         c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.stroke();
-        drawPickupIcon(c, pk.kind, pk.x, y);
+        drawPickupIcon(c, pk.kind, pk.x, y, pkCol);
         c.restore();
       }
     }
@@ -14278,6 +15324,100 @@ class Game {
 
 /* --- src/ui/ui.js --- */
 /* ================================= UI ================================== */
+function appendItemUpgradeButton(el, cat, id, rerender) {
+  if (!itemUpgradeEligible(cat, id) || !itemCanUpgrade(cat, id)) return;
+  const cost = itemUpgradeCost(cat, id);
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'btn claim-btn';
+  btn.textContent = t('ui.itemUpgrade') + ` (${cost})`;
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    safeUiAction(() => {
+      if (!tryItemUpgrade(cat, id)) return;
+      AudioSys.sfx('levelup');
+      const name = itemUpgradeLabel(cat, id);
+      const lv = itemUpgradeLevel(cat, id);
+      UI.toast(t('toast.itemUpgraded', { name, lv, detail: itemUpgradeSummary(cat, id) }), 3200);
+      rerender();
+    }, 'itemUp/' + cat + '/' + id, 'Upgrade mislukt');
+  });
+  el.appendChild(btn);
+}
+
+function itemUpgradeCardParts(cat, id, color) {
+  if (!itemUpgradeEligible(cat, id)) return { canUp: false, lv: 0, max: 0, html: '' };
+  const lv = itemUpgradeLevel(cat, id);
+  const max = itemUpgradeMax(cat, id);
+  const shards = itemUpgradeShards(cat, id);
+  const cost = itemUpgradeCost(cat, id);
+  const canUp = itemCanUpgrade(cat, id);
+  const now = itemUpgradeSummary(cat, id);
+  const next = itemUpgradePreview(cat, id);
+  const shardLine = cost != null ? t('ui.itemShards', { cur: shards, cost }) : t('ui.itemMax');
+  return {
+    canUp, lv, max,
+    html:
+      `<div class="skill-card-body"><div class="cname" style="color:${color}">${itemUpgradeLabel(cat, id)} ` +
+      `<span class="rar-pill" style="color:${color};border-color:${color}">${t('ui.itemLevel', { lv, max })}</span></div>` +
+      `<div class="cinfo">${shardLine}</div>` +
+      `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:4px"><b>${t('ui.itemNow')}:</b> ${now}</div>` +
+      (next ? `<div class="cinfo" style="opacity:.75;font-size:11px;margin-top:3px"><b>${t('ui.itemNext')}:</b> ${next}</div>` : '') +
+      `</div>`,
+  };
+}
+
+function drawUpgradeItemIcon(cat, id, cv) {
+  if (!cv) return;
+  const cc = cv.getContext('2d');
+  if (!cc) return;
+  cc.clearRect(0, 0, cv.width, cv.height);
+  if (cat === 'weapon') {
+    const w = WEAPONS.find((x) => x.id === id);
+    if (!w) return;
+    cc.translate(10, 40);
+    cc.rotate(-0.6);
+    if (w.id === 'vuist') {
+      cc.strokeStyle = '#f2f5ff'; cc.lineWidth = 5; cc.lineCap = 'round';
+      cc.beginPath(); cc.moveTo(2, 8); cc.lineTo(24, -6); cc.stroke();
+      cc.fillStyle = '#f2f5ff'; cc.beginPath(); cc.arc(28, -9, 7, 0, TAU); cc.fill();
+    } else {
+      drawWeaponShape(cc, w.id, 0.2);
+    }
+  } else if (cat === 'pet') {
+    const p = petDef(id);
+    const sp = p ? SPECIES[p.speciesId] : null;
+    if (!sp) return;
+    cc.translate(32, 38);
+    cc.scale(0.55, 0.55);
+    drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
+  } else if (cat === 'style') {
+    const st = styleById(id);
+    cc.translate(36, 58);
+    cc.scale(0.85, 0.85);
+    const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9 });
+    preview.animT = 0.4;
+    preview.draw(cc);
+  }
+}
+
+function buildUpgradeItemCard(cat, id, color, rerender) {
+  const card = itemUpgradeCardParts(cat, id, color);
+  const el = document.createElement('div');
+  el.className = 'card skill-card' + (card.canUp ? ' claimable' : '') + (card.lv >= card.max ? ' claimed' : '');
+  el.style.borderColor = color + '88';
+  const cv = document.createElement('canvas');
+  cv.width = 64;
+  cv.height = 64;
+  drawUpgradeItemIcon(cat, id, cv);
+  el.appendChild(cv);
+  const wrap = document.createElement('div');
+  wrap.innerHTML = card.html;
+  while (wrap.firstChild) el.appendChild(wrap.firstChild);
+  appendItemUpgradeButton(el, cat, id, rerender);
+  return el;
+}
+
 function pickVsRosterId(id) {
   try {
     const r = vsRosterEntry(id);
@@ -14502,7 +15642,7 @@ function audioMixStatusLine(inPause) {
 }
 
 const UI = {
-  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
+  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'skillScreen', 'petScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
@@ -14676,6 +15816,7 @@ const UI = {
         return;
       }
       if (active === 'pauseScreen' && game) {
+        try { Input.releaseAll(); } catch (_) {}
         state = 'play';
         AudioSys.setPaused(false);
         if (save.music && AudioSys.desiredSong) AudioSys.play(AudioSys.desiredSong);
@@ -14683,6 +15824,7 @@ const UI = {
         return;
       }
       if (active === 'gambleScreen') {
+        try { cancelGambleStart(); } catch (_) {}
         this.show('levelScreen');
         return;
       }
@@ -14698,7 +15840,7 @@ const UI = {
         this.show('menuScreen');
         return;
       }
-      if (active === 'weaponScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'dexScreen') {
+      if (active === 'weaponScreen' || active === 'skillScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'dexScreen') {
         this.openModeHub('collect');
         return;
       }
@@ -14738,6 +15880,9 @@ const UI = {
 
   goMenu() {
     try {
+      try { clearGameResultTimer(game); } catch (_) {}
+      try { cancelGambleStart(); } catch (_) {}
+      try { Input.releaseAll(); } catch (_) {}
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
@@ -14756,6 +15901,7 @@ const UI = {
       if (window.StickInstall) window.StickInstall.refreshMenuButton();
     } catch (err) {
       sfReportError('goMenu', err, 'Kon menu niet openen — herlaad de pagina');
+      try { Input.releaseAll(); } catch (_) {}
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
@@ -15062,6 +16208,11 @@ const UI = {
         : 'Munten → pet coins');
     } else if (this.modeHubId === 'collect') {
       setStat('hubStatWeapons', `${weaponUnlockedCount()}/${WEAPONS.length} vrij`);
+      const skillLv = totalAllUpgradeLevels();
+      const ready = countAllUpgradesReady();
+      setStat('hubStatSkills', ready > 0
+        ? t('ui.upgradeReady', { n: ready })
+        : (skillLv > 0 ? `Lv ${skillLv} totaal` : 'Shards in avontuur'));
       const petsN = petTamedCount();
       const eggsN = eggOwnedCount();
       const pc = petCoinsBalance();
@@ -15075,14 +16226,16 @@ const UI = {
   },
 
   renderMenu() {
+    try {
     this.syncTouchClass();
     const need = xpNeed(save.lvl);
     const w = weaponById(save.weapon);
     const st = styleById(save.style || 'classic');
     const pct = Math.round(save.xp / need * 100);
     ensureDaily();
+    const dailyTasks = (save.daily && Array.isArray(save.daily.tasks)) ? save.daily.tasks : [];
     const readyClaim = claimableDailyTasks().length;
-    const bonusReady = save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed;
+    const bonusReady = dailyTasks.length > 0 && dailyTasks.every(t => t.claimed) && !save.daily.dayBonusClaimed;
     const missAlert = readyClaim > 0 || bonusReady;
     const profileEl = document.getElementById('menuProfileBar');
     if (profileEl) {
@@ -15115,8 +16268,8 @@ const UI = {
     document.querySelectorAll('[data-hub-stat]').forEach((el) => {
       el.textContent = hubTileStatLine(el.dataset.hubStat);
     });
-    document.getElementById('togMusic').classList.toggle('off', !save.music);
-    document.getElementById('togSfx').classList.toggle('off', !save.sfx);
+    document.getElementById('togMusic')?.classList.toggle('off', !save.music);
+    document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const verLine = document.getElementById('menuVerLine');
     if (verLine) verLine.textContent = 'v' + APP_VERSION + ' · arcade · SW v' + SW_CACHE_REV;
     const missEl = document.getElementById('menuDailyHint');
@@ -15166,6 +16319,9 @@ const UI = {
         }).catch(() => {});
       }
     }
+    } catch (err) {
+      sfReportError('renderMenu', err, 'Menu kon niet ververst worden');
+    }
   },
 
   renderMissions() {
@@ -15173,7 +16329,7 @@ const UI = {
     const dailyHost = document.getElementById('dailyList');
     const achHost = document.getElementById('achList');
     if (!dailyHost || !achHost) return;
-    const tasks = save.daily.tasks;
+    const tasks = (save.daily && Array.isArray(save.daily.tasks)) ? save.daily.tasks : [];
     const readyN = tasks.filter(t => t.done && !t.claimed).length;
     const claimedN = tasks.filter(t => t.claimed).length;
     const doneN = tasks.filter(t => t.done).length;
@@ -15690,13 +16846,23 @@ const UI = {
         ? ` <span class="rar-pill" style="color:${tier.color};border-color:${tier.color}">${tier.name}</span>`
         : '';
       const mastLine = finCount ? ` · ${finCount}× finisher` : '';
+      const upLv = weaponUpgradeEligible(base) ? itemUpgradeLevel('weapon', w.id) : 0;
+      const upMax = weaponUpgradeEligible(base) ? itemUpgradeMax('weapon', w.id) : 0;
+      const upBadge = upLv > 0
+        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">↑ Lv ${upLv}/${upMax}</span>`
+        : '';
+      const upLine = weaponUpgradeEligible(base) && (upLv > 0 || itemUpgradeShards('weapon', w.id) > 0)
+        ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px">${weaponUpgradeSummary(w.id)}</div>`
+        : '';
       const moveLine = labels
         ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} finisher${mastLine}`
         : (isThrowWeapon(w.id) ? 'Werp-projectiel — geen melee-combo' : '');
-      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${summonBadge}${tierBadge}</div>
+      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${summonBadge}${tierBadge}${upBadge}</div>
         <div class="cinfo">${statLine}</div>` +
+        upLine +
         (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '');
       el.appendChild(info);
+      if (weaponUpgradeEligible(base)) appendItemUpgradeButton(el, 'weapon', w.id, () => this.renderWeapons());
       const right = document.createElement('div');
       right.className = 'right';
       right.innerHTML = lvlLocked
@@ -15717,6 +16883,168 @@ const UI = {
         }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt');
       });
       list.appendChild(el);
+    }
+  },
+
+  renderSkills(tab) {
+    if (tab) this.upgradeTab = tab;
+    this.renderUpgrades();
+  },
+
+  openUpgrades(tab) {
+    this.upgradeTab = tab || 'skills';
+    this.renderUpgrades();
+    this.show('skillScreen');
+  },
+
+  renderUpgrades() {
+    const tab = this.upgradeTab || 'skills';
+    const head = document.getElementById('skillScreenHead');
+    const sub = document.getElementById('skillScreenSub');
+    if (head) head.textContent = t('ui.skillHead');
+    const subKeys = {
+      skills: 'ui.upgradeSubSkills',
+      weapon: 'ui.upgradeSubWeapons',
+      pet: 'ui.upgradeSubPets',
+      style: 'ui.upgradeSubStyle',
+    };
+    if (sub) sub.textContent = t(subKeys[tab] || 'ui.skillSub');
+    const bar = document.getElementById('upgradeTabBar');
+    if (bar) {
+      const tabs = [
+        { id: 'skills', label: t('ui.skillTabSkills'), ready: countSkillUpgradesReady() },
+        { id: 'weapon', label: t('ui.skillTabWeapons'), ready: countItemUpgradesReady('weapon') },
+        { id: 'pet', label: t('ui.skillTabPets'), ready: countItemUpgradesReady('pet') },
+        { id: 'style', label: t('ui.skillTabStyle'), ready: countItemUpgradesReady('style') },
+      ];
+      bar.innerHTML = tabs.map((tb) =>
+        `<button type="button" role="tab" aria-selected="${tab === tb.id ? 'true' : 'false'}" ` +
+        `class="dex-filter-btn${tab === tb.id ? ' active' : ''}" data-upgrade-tab="${tb.id}">${tb.label}` +
+        (tb.ready > 0 ? `<span class="upgrade-tab-badge">${tb.ready}</span>` : '') +
+        `</button>`
+      ).join('');
+      if (!bar.dataset.bound) {
+        bar.dataset.bound = '1';
+        bar.addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-upgrade-tab]');
+          if (!btn) return;
+          AudioSys.sfx('select');
+          UI.upgradeTab = btn.getAttribute('data-upgrade-tab') || 'skills';
+          UI.renderUpgrades();
+        });
+      }
+    }
+    const sumEl = document.getElementById('skillSummary');
+    if (sumEl) {
+      const skillShards = save.stats?.skillShards || 0;
+      const itemShards = save.stats?.itemShards || 0;
+      const ready = countAllUpgradesReady();
+      sumEl.style.display = 'block';
+      sumEl.innerHTML =
+        `Totaal <b>${totalAllUpgradeLevels()}</b> upgrade-levels · ` +
+        `<b>${skillShards}</b> skill · <b>${itemShards}</b> item shards` +
+        (ready > 0 ? ` · <b style="color:#ffd75e">${t('ui.upgradeReady', { n: ready })}</b>` : '') +
+        `<div class="upgrade-shard-hint">${t('ui.upgradeShardHint')}</div>` +
+        `<div style="font-size:11px;opacity:.72;margin-top:4px">Standaard max Lv ${UPGRADE_MAX_STANDARD} · mythische/extreme max Lv ${UPGRADE_MAX_EXTREME}</div>`;
+    }
+    if (tab === 'skills') this.renderUpgradeSkills();
+    else this.renderUpgradeItems(tab);
+  },
+
+  renderUpgradeSkills() {
+    const list = document.getElementById('skillList');
+    if (!list) return;
+    list.innerHTML = '';
+    const groups = [
+      { id: 'jutsu', title: t('ui.skillGroupJutsu'), ids: JUTSU_SKILL_IDS },
+      { id: 'utility', title: t('ui.skillGroupUtility'), ids: SKILL_IDS.filter((id) => SKILL_DEFS[id].group === 'utility') },
+    ];
+    for (const g of groups) {
+      const hdr = document.createElement('div');
+      hdr.className = 'skill-group-head';
+      hdr.textContent = g.title;
+      list.appendChild(hdr);
+      for (const id of g.ids) {
+        const def = SKILL_DEFS[id];
+        const lv = skillLevel(id);
+        const maxLv = skillMaxLevel(id);
+        const shards = skillShards(id);
+        const cost = skillUpgradeCost(id);
+        const canUp = skillCanUpgrade(id);
+        const el = document.createElement('div');
+        el.className = 'card skill-card' + (canUp ? ' claimable' : '') + (lv >= maxLv ? ' claimed' : '');
+        el.style.borderColor = def.color + '88';
+        const name = skillLabel(id);
+        const now = skillUpgradeSummary(id);
+        const next = skillNextStepPreview(id);
+        const shardLine = cost != null
+          ? t('ui.skillShards', { cur: shards, cost })
+          : t('ui.skillMax');
+        const desc = skillDesc(id);
+        el.innerHTML =
+          `<div class="skill-card-body"><div class="cname" style="color:${def.color}">${name} ` +
+          `<span class="rar-pill" style="color:${def.color};border-color:${def.color}">${t('ui.skillLevel', { lv, max: maxLv })}</span></div>` +
+          (desc ? `<div class="cinfo" style="opacity:.82;font-size:12px">${desc}</div>` : '') +
+          `<div class="cinfo">${shardLine}</div>` +
+          `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:4px"><b>${t('ui.skillNow')}:</b> ${now}</div>` +
+          (next ? `<div class="cinfo" style="opacity:.75;font-size:11px;margin-top:3px"><b>${t('ui.skillNext')}:</b> ${next}</div>` : '') +
+          `</div>`;
+        if (canUp) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn claim-btn';
+          btn.textContent = t('ui.skillUpgrade') + ` (${cost})`;
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            safeUiAction(() => {
+              if (!trySkillUpgrade(id)) return;
+              AudioSys.sfx('levelup');
+              const nlv = skillLevel(id);
+              UI.toast(t('toast.skillUpgraded', { name, lv: nlv, detail: skillUpgradeSummary(id) }), 3200);
+              this.renderUpgrades();
+            }, 'skillUp/' + id, 'Upgrade mislukt');
+          });
+          el.appendChild(btn);
+        }
+        list.appendChild(el);
+      }
+    }
+  },
+
+  renderUpgradeItems(cat) {
+    const list = document.getElementById('skillList');
+    if (!list) return;
+    list.innerHTML = '';
+    let items = [];
+    if (cat === 'weapon') {
+      items = WEAPONS.filter((w) => weaponUpgradeEligible(w)).map((w) => ({
+        id: w.id, color: rarityOf(w.rarity).color,
+      }));
+    } else if (cat === 'pet') {
+      items = PET_ROSTER.filter((p) => petUpgradeEligible(p)).map((p) => {
+        const sp = SPECIES[p.speciesId];
+        return { id: p.id, color: sp ? rarityOf(sp.rarity).color : '#7cf5ff' };
+      });
+    } else if (cat === 'style') {
+      items = STYLES.filter((st) => styleUpgradeEligible(st)).map((st) => ({
+        id: st.id, color: st.accent || '#c792ff',
+      }));
+    }
+    items.sort((a, b) => itemUpgradeLevel(cat, b.id) - itemUpgradeLevel(cat, a.id));
+    if (!items.length) {
+      const empty = document.createElement('div');
+      empty.className = 'step-card upgrade-empty';
+      const emptyKeys = {
+        weapon: 'ui.upgradeEmptyWeapons',
+        pet: 'ui.upgradeEmptyPets',
+        style: 'ui.upgradeEmptyStyle',
+      };
+      empty.textContent = t(emptyKeys[cat] || 'ui.skillSub');
+      list.appendChild(empty);
+      return;
+    }
+    for (const it of items) {
+      list.appendChild(buildUpgradeItemCard(cat, it.id, it.color, () => this.renderUpgrades()));
     }
   },
 
@@ -15923,13 +17251,18 @@ const UI = {
       el.appendChild(cv);
       const info = document.createElement('div');
       const badge = active ? ' <span class="rar-pill" style="color:#7cf5ff;border-color:#7cf5ff">ACTIEF</span>' : '';
-      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}</div>` +
+      const upLv = tamed ? itemUpgradeLevel('pet', def.id) : 0;
+      const upMax = tamed ? itemUpgradeMax('pet', def.id) : 0;
+      const upBadge = upLv > 0 ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">↑ Lv ${upLv}/${upMax}</span>` : '';
+      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${upBadge}</div>` +
         `<div class="cinfo">${def.perk}</div>` +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
           ? 'Getemd · assist in avontuur'
           : (canBuy
             ? `Kopen: ${cost} pet coins`
-            : `Temmen: ${Math.min(kills, need)}/${need} kills · of ${cost} 🪙`)}</div>`;
+            : `Temmen: ${Math.min(kills, need)}/${need} kills · of ${cost} 🪙`)}</div>` +
+        (tamed && (upLv > 0 || itemUpgradeShards('pet', def.id) > 0)
+          ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px">${petUpgradeSummary(def.id)}</div>` : '');
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
@@ -15944,6 +17277,7 @@ const UI = {
       }
       el.appendChild(right);
       if (tamed) {
+        appendItemUpgradeButton(el, 'pet', def.id, () => this.renderPets());
         el.addEventListener('click', () => {
           if (!uiTapAllowed()) return;
           safeUiAction(() => {
@@ -16122,6 +17456,18 @@ const UI = {
         : (styleSkillGated(st) ? t('ui.styleIslandGate', { lvl: st.needLvl }) : styleLabel(st, 'hint'));
       el.appendChild(sub);
       if (ok) {
+        const upLv = itemUpgradeLevel('style', st.id);
+        const upMax = itemUpgradeMax('style', st.id);
+        if (upLv > 0 || itemUpgradeShards('style', st.id) > 0) {
+          const up = document.createElement('div');
+          up.style.fontSize = '10px';
+          up.style.fontWeight = '700';
+          up.style.color = '#ffd75e';
+          up.style.marginTop = '4px';
+          up.textContent = `↑ Lv ${upLv}/${upMax} · ${styleUpgradeSummary(st.id)}`;
+          el.appendChild(up);
+        }
+        appendItemUpgradeButton(el, 'style', st.id, () => this.renderStyle());
         el.addEventListener('click', () => {
           if (!uiTapAllowed()) return;
           safeUiAction(() => {
@@ -16269,15 +17615,19 @@ const UI = {
   },
 
   showResult(win, data) {
+    if (state === 'menu' || !data) return;
     this.lastResult = data;
     state = 'result';
     scheduleResize();
-    document.getElementById('pauseBtn').classList.remove('show');
+    document.getElementById('pauseBtn')?.classList.remove('show');
     const title = document.getElementById('resTitle');
+    if (!title) return;
     title.textContent = data.title;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
-    document.getElementById('resDetail').textContent = data.detail;
-    document.getElementById('resXp').textContent = t('result.xp', {
+    const detailEl = document.getElementById('resDetail');
+    if (detailEl) detailEl.textContent = data.detail;
+    const xpEl = document.getElementById('resXp');
+    if (xpEl) xpEl.textContent = t('result.xp', {
       xp: data.xp, lvl: save.lvl, cur: save.xp, need: xpNeed(save.lvl),
     });
     const tipEl = document.getElementById('resTip');
@@ -16319,6 +17669,8 @@ function startGame(mode, opts) {
     return;
   }
   window.__sfLoopErr = false;
+  try { Input.releaseAll(); } catch (_) {}
+  Input.dualMode = false;
   try { dismissTunnelOverlayIfStatic(); } catch (_) {}
   if (mode === 'versus') {
     try {
@@ -16455,6 +17807,9 @@ bindPress(btnMatsCoins, () => {
 });
 bindPress(document.getElementById('btnWeapons'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderWeapons(); UI.show('weaponScreen');
+});
+bindPress(document.getElementById('btnSkills'), () => {
+  AudioSys.init(); AudioSys.sfx('select'); UI.openUpgrades('skills');
 });
 bindPress(document.getElementById('btnPets'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderPets(); UI.show('petScreen');
@@ -16827,6 +18182,7 @@ if (pauseVsRestart) {
 }
 bindPress(document.getElementById('resAgain'), () => {
   const d = UI.lastResult;
+  if (!d || !d.mode) return;
   AudioSys.sfx('select');
   if (d.mode === 'adventure') gokGooiStartLevel(d.level);
   else if (d.mode === 'versus') {
@@ -17064,6 +18420,10 @@ function loop(now) {
       try { Input.endFrame(); } catch (frameErr) {
         sfReportError('input', frameErr);
       }
+    } else if (state === 'pause' && game) {
+      try { Input.endFrame(); } catch (frameErr) {
+        sfReportError('input', frameErr);
+      }
     } else if (Perf.menuLandingVisible()) {
       menuAnimT += dt;
       ensureMenuScreenActive();
@@ -17249,7 +18609,16 @@ function updateNetStatus(ev) {
 window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
 window.addEventListener('pageshow', (ev) => {
-  if (ev.persisted) updateNetStatus();
+  if (ev.persisted) {
+    try { Input.releaseAll(); } catch (_) {}
+    if (state === 'play' && game) {
+      state = 'pause';
+      try { AudioSys.setPaused(true); } catch (_) {}
+      try { UI.renderPauseToggles(); UI.show('pauseScreen'); } catch (_) {}
+    }
+    scheduleResize();
+  }
+  updateNetStatus(ev);
 });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') updateNetStatus();
@@ -17317,7 +18686,7 @@ function bootGame() {
       if (window.__sfLoopErr) return;
       const err = ev.error || new Error(ev.message || 'unknown');
       sfReportError('window', err);
-      if (state === 'play') {
+      if (state === 'play' || state === 'pause' || state === 'result') {
         try { recoverToMenu(); } catch (_) {}
       }
     });
@@ -17326,7 +18695,7 @@ function bootGame() {
       const r = ev.reason;
       const err = r instanceof Error ? r : new Error(String(r != null ? r : 'async reject'));
       sfReportError('async', err, 'Actie mislukt — probeer opnieuw');
-      if (state === 'play') {
+      if (state === 'play' || state === 'pause' || state === 'result') {
         try { recoverToMenu(); } catch (_) {}
       }
     });
