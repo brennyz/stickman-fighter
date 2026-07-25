@@ -300,7 +300,7 @@ function drawThemeWeather(c, themeName, t, ground, scroll) {
         c.fillStyle = themeName === 'dojo'
           ? 'rgba(255,170,190,.5)'
           : themeName === 'landweg'
-            ? (i % 2 ? 'rgba(212,180,94,.55)' : 'rgba(255,240,200,.45)')
+            ? (i % 2 ? 'rgba(168,140,80,.4)' : 'rgba(200,185,150,.28)')
             : 'rgba(255,235,250,.55)';
         c.save(); c.translate(x, y); c.rotate(t * 1.6 + i * 2); c.fillRect(-2.4, -1.4, 4.8, 2.8); c.restore();
         break;
@@ -502,26 +502,60 @@ function drawLandwegPixelmap(c, w, h, t, opts) {
   return { groundY, roadX, fieldW };
 }
 
+/** Mature countryside palette — foto-vistas + landweg (minder “speelgoed”). */
+const COUNTRY_PAL = {
+  skyTop: '#4a6a82',
+  skyMid: '#7a94a6',
+  skyLow: '#b4c2cc',
+  cloud: '#e8eef2',
+  cloudShade: '#c8d2da',
+  forestDeep: '#243428',
+  forestMid: '#2e4034',
+  forestLite: '#3a4e3e',
+  fieldHi: '#b89a5c',
+  fieldMid: '#9a7e48',
+  fieldLo: '#7a6438',
+  straw: '#a88850',
+  roadHi: '#7a7874',
+  roadMid: '#5e5c58',
+  roadLo: '#484642',
+  stone: '#6a6058',
+  stoneDark: '#524840',
+  stoneLite: '#7e746c',
+  log: '#5c4a38',
+  logLite: '#7a6448',
+  logEnd: '#a89068',
+  leaf: '#3a4e34',
+  leafLite: '#4a5e40',
+  oakDark: '#2a402c',
+  oakMid: '#354a38',
+  oakLite: '#465a46',
+  oakHi: '#5a6e56',
+  captionBg: 'rgba(18,22,26,.55)',
+  captionFg: 'rgba(220,214,200,.82)',
+};
+
 /** Pixel-eik (canopy clusters) voor semi-2.5D menu-vista. */
 function drawPixelOakTree(c, cx, baseY, scale, sway) {
   const s = Math.max(1.2, scale || 1);
   const trunkW = Math.round(10 * s);
   const trunkH = Math.round(42 * s);
   const swayX = Math.round(sway || 0);
-  c.fillStyle = '#3a2818';
+  c.fillStyle = '#3a3024';
   c.fillRect(cx - trunkW / 2, baseY - trunkH, trunkW, trunkH);
-  c.fillStyle = '#5a3c24';
+  c.fillStyle = '#4e4234';
   c.fillRect(cx - trunkW / 2, baseY - trunkH, Math.max(2, Math.round(3 * s)), trunkH);
-  c.fillStyle = '#2e2010';
+  c.fillStyle = '#2a241c';
   c.fillRect(cx - Math.round(18 * s) + swayX, baseY - trunkH + Math.round(6 * s), Math.round(16 * s), Math.round(3 * s));
   c.fillRect(cx + Math.round(2 * s) + swayX, baseY - trunkH + Math.round(10 * s), Math.round(14 * s), Math.round(3 * s));
+  const P = COUNTRY_PAL;
   const clusters = [
-    [0, -trunkH - 8 * s, 28 * s, 22 * s, '#1e6a30'],
-    [-16 * s, -trunkH + 2 * s, 22 * s, 18 * s, '#246838'],
-    [14 * s, -trunkH + 4 * s, 20 * s, 16 * s, '#246838'],
-    [-6 * s, -trunkH - 18 * s, 24 * s, 16 * s, '#2f8a42'],
-    [8 * s, -trunkH - 14 * s, 18 * s, 14 * s, '#3a9a4e'],
-    [-2 * s, -trunkH - 26 * s, 14 * s, 10 * s, '#4aad5e'],
+    [0, -trunkH - 8 * s, 28 * s, 22 * s, P.oakDark],
+    [-16 * s, -trunkH + 2 * s, 22 * s, 18 * s, P.oakMid],
+    [14 * s, -trunkH + 4 * s, 20 * s, 16 * s, P.oakMid],
+    [-6 * s, -trunkH - 18 * s, 24 * s, 16 * s, P.oakLite],
+    [8 * s, -trunkH - 14 * s, 18 * s, 14 * s, P.oakLite],
+    [-2 * s, -trunkH - 26 * s, 14 * s, 10 * s, P.oakHi],
   ];
   for (const [ox, oy, cw, ch, col] of clusters) {
     c.fillStyle = col;
@@ -529,10 +563,9 @@ function drawPixelOakTree(c, cx, baseY, scale, sway) {
     c.ellipse(cx + ox + swayX, baseY + oy, cw / 2, ch / 2, 0, 0, TAU);
     c.fill();
   }
-  c.fillStyle = '#6ecf7a';
+  c.fillStyle = 'rgba(180,190,160,.35)';
   c.fillRect(cx - Math.round(4 * s) + swayX, baseY - trunkH - Math.round(22 * s), 3, 3);
   c.fillRect(cx + Math.round(8 * s) + swayX, baseY - trunkH - Math.round(16 * s), 3, 3);
-  c.fillRect(cx - Math.round(12 * s) + swayX, baseY - trunkH - Math.round(8 * s), 2, 2);
 }
 
 /**
@@ -559,10 +592,11 @@ function drawMenuSemi25dVista(c, w, h, t, opts) {
   const wrap = (v, span) => ((v % span) + span) % span;
 
   // —— L0: sky ——
+  const P = COUNTRY_PAL;
   const sky = c.createLinearGradient(0, 0, 0, horizonY);
-  sky.addColorStop(0, '#2f8fd6');
-  sky.addColorStop(0.45, '#5aade6');
-  sky.addColorStop(1, '#a8d4f0');
+  sky.addColorStop(0, P.skyTop);
+  sky.addColorStop(0.45, P.skyMid);
+  sky.addColorStop(1, P.skyLow);
   c.fillStyle = sky;
   c.fillRect(0, 0, w, horizonY);
 
@@ -571,59 +605,59 @@ function drawMenuSemi25dVista(c, w, h, t, opts) {
     const cw = 36 + (i % 3) * 14;
     const cx = wrap(i * 0.31 * w + pSky * (0.6 + i * 0.1), w + cw) - cw * 0.5;
     const cy = 8 + (i % 3) * 14 + (i === 2 ? 6 : 0);
-    c.fillStyle = '#ffffff';
+    c.fillStyle = P.cloud;
     c.fillRect(Math.round(cx), cy + 8, cw, 10);
     c.fillRect(Math.round(cx + 8), cy, cw - 14, 12);
     c.fillRect(Math.round(cx + 16), cy - 4, Math.round(cw * 0.35), 8);
-    c.fillStyle = '#e4eef8';
+    c.fillStyle = P.cloudShade;
     c.fillRect(Math.round(cx + 4), cy + 16, cw - 8, 4);
   }
 
   // —— L1: bosrij + schuurtje ——
   const farOff = Math.round(wrap(-pFar, 48) - 24);
-  c.fillStyle = '#1a4a28';
+  c.fillStyle = P.forestDeep;
   c.fillRect(0, horizonY - 18, w, 20);
   for (let i = -1; i < 14; i++) {
     const tx = Math.round(i * 42 + farOff);
     const th = 28 + ((i * 17) % 22);
-    c.fillStyle = i % 2 ? '#163e22' : '#1e5230';
+    c.fillStyle = i % 2 ? P.forestDeep : P.forestMid;
     c.fillRect(tx, horizonY - th, 28, th);
-    c.fillStyle = '#2a6a3c';
+    c.fillStyle = P.forestLite;
     c.fillRect(tx + 4, horizonY - th - 8, 20, 12);
-    c.fillStyle = '#3a8250';
+    c.fillStyle = P.oakHi;
     c.fillRect(tx + 8, horizonY - th - 14, 12, 8);
   }
   const bldgX = Math.round(w * 0.14 + farOff * 0.35);
-  c.fillStyle = '#6a6e72';
+  c.fillStyle = P.stone;
   c.fillRect(bldgX, horizonY - 26, 28, 26);
-  c.fillStyle = '#4a4e52';
+  c.fillStyle = P.stoneDark;
   c.beginPath();
   c.moveTo(bldgX - 3, horizonY - 26);
   c.lineTo(bldgX + 14, horizonY - 38);
   c.lineTo(bldgX + 31, horizonY - 26);
   c.closePath();
   c.fill();
-  c.fillStyle = '#3a3e42';
+  c.fillStyle = '#2e322e';
   c.fillRect(bldgX + 10, horizonY - 14, 8, 14);
 
   // —— L2: gouden akker ——
   const midOff = Math.round(wrap(-pMid, 20));
   for (let y = fieldY; y < roadY; y += px) {
     const pr = (y - fieldY) / Math.max(1, fieldH);
-    c.fillStyle = pr < 0.35 ? '#e0c45c' : pr < 0.7 ? '#c9a848' : '#a88834';
+    c.fillStyle = pr < 0.35 ? P.fieldHi : pr < 0.7 ? P.fieldMid : P.fieldLo;
     c.fillRect(0, y, w, px);
   }
   for (let x = -20; x < w + 20; x += 8) {
     const xx = x + midOff;
     for (let y = fieldY + 4; y < roadY - 2; y += 7) {
       const bit = ((xx + y * 3) & 7);
-      c.fillStyle = bit < 2 ? 'rgba(255,240,180,.28)' : bit > 5 ? 'rgba(90,60,20,.18)' : 'rgba(180,140,50,.12)';
+      c.fillStyle = bit < 2 ? 'rgba(220,200,150,.18)' : bit > 5 ? 'rgba(60,48,24,.16)' : 'rgba(140,110,50,.1)';
       c.fillRect(xx, y, 3, 3);
     }
   }
   for (let i = 0; i < 16; i++) {
     const gx = Math.round(wrap(i * 38 + midOff * 1.2, w + 40) - 20);
-    c.fillStyle = '#b89238';
+    c.fillStyle = P.straw;
     c.fillRect(gx, roadY - 10, 2, 8);
     c.fillRect(gx + 3, roadY - 7, 2, 5);
     c.fillRect(gx - 3, roadY - 6, 2, 4);
@@ -655,38 +689,38 @@ function drawMenuSemi25dVista(c, w, h, t, opts) {
   // —— L4: weg ——
   for (let y = roadY; y < h; y += px) {
     const pr = (y - roadY) / Math.max(1, roadH);
-    c.fillStyle = pr < 0.25 ? '#9a9a96' : pr < 0.65 ? '#7e7e7a' : '#5e5e5a';
+    c.fillStyle = pr < 0.25 ? P.roadHi : pr < 0.65 ? P.roadMid : P.roadLo;
     c.fillRect(0, y, w, px);
   }
-  c.fillStyle = 'rgba(255,255,255,.14)';
+  c.fillStyle = 'rgba(255,255,255,.08)';
   c.fillRect(0, roadY, w, 3);
-  c.fillStyle = 'rgba(0,0,0,.18)';
+  c.fillStyle = 'rgba(0,0,0,.2)';
   c.fillRect(0, roadY + 3, w, 2);
   const nearOff = Math.round(wrap(-pNear, 32));
   for (let x = -32; x < w + 32; x += 32) {
     const xx = x + nearOff;
-    c.fillStyle = 'rgba(255,255,255,.16)';
+    c.fillStyle = 'rgba(255,255,255,.1)';
     c.fillRect(xx + 4, roadY + 10, 3, 3);
     c.fillRect(xx + 18, roadY + 18, 2, 2);
-    c.fillStyle = 'rgba(20,20,18,.22)';
+    c.fillStyle = 'rgba(20,20,18,.2)';
     c.fillRect(xx + 10, roadY + 14, 3, 3);
     c.fillRect(xx + 24, roadY + 8, 2, 2);
   }
 
   const vig = c.createLinearGradient(0, 0, 0, h);
-  vig.addColorStop(0, 'rgba(20,40,70,.12)');
+  vig.addColorStop(0, 'rgba(30,40,50,.14)');
   vig.addColorStop(0.5, 'rgba(0,0,0,0)');
-  vig.addColorStop(1, 'rgba(20,16,10,.18)');
+  vig.addColorStop(1, 'rgba(24,20,14,.22)');
   c.fillStyle = vig;
   c.fillRect(0, 0, w, h);
 
   if (opts.caption !== false) {
-    c.fillStyle = 'rgba(12,18,28,.5)';
-    c.fillRect(6, 6, 132, 14);
-    c.fillStyle = 'rgba(255,248,220,.88)';
-    c.font = '900 9px -apple-system, sans-serif';
+    c.fillStyle = P.captionBg;
+    c.fillRect(6, 6, 118, 14);
+    c.fillStyle = P.captionFg;
+    c.font = '700 9px -apple-system, sans-serif';
     c.textAlign = 'left';
-    c.fillText('1/2 · eik · pixel vista', 10, 16);
+    c.fillText('1/2 · eik', 10, 16);
   }
 
   c.imageSmoothingEnabled = prev;
@@ -695,6 +729,7 @@ function drawMenuSemi25dVista(c, w, h, t, opts) {
 
 /** Gestapelde houtblokken-muur (foto-inspiratie). */
 function drawPixelLogWall(c, x0, y0, w, h) {
+  const P = COUNTRY_PAL;
   const rowH = 5;
   const logW = 7;
   for (let y = 0; y < h; y += rowH) {
@@ -702,14 +737,13 @@ function drawPixelLogWall(c, x0, y0, w, h) {
     for (let x = odd * -3; x < w; x += logW) {
       const lx = x0 + x;
       const ly = y0 + y;
-      c.fillStyle = ((x + y) % 14 === 0) ? '#5a4838' : '#7a6248';
+      c.fillStyle = ((x + y) % 14 === 0) ? '#4a3a2c' : P.log;
       c.fillRect(lx, ly, logW - 1, rowH - 1);
-      c.fillStyle = '#9a8260';
+      c.fillStyle = P.logLite;
       c.fillRect(lx + 1, ly, 2, rowH - 1);
-      c.fillStyle = '#3a2e22';
+      c.fillStyle = '#2e2418';
       c.fillRect(lx + logW - 2, ly + 1, 1, rowH - 2);
-      // kopse kant ring
-      c.fillStyle = '#c4a878';
+      c.fillStyle = P.logEnd;
       c.fillRect(lx + 2, ly + 1, 2, 2);
     }
   }
@@ -718,39 +752,36 @@ function drawPixelLogWall(c, x0, y0, w, h) {
 /** Steenhuis + serre + wit bijgebouw. */
 function drawPixelStoneHouse(c, hx, baseY, scale) {
   const s = Math.max(1, scale || 1);
+  const P = COUNTRY_PAL;
   const hw = Math.round(58 * s);
   const hh = Math.round(48 * s);
-  // Serre / zonnekamer links
   const sx = hx - Math.round(28 * s);
-  c.fillStyle = '#8a9aaa';
+  c.fillStyle = '#6e787e';
   c.fillRect(sx, baseY - Math.round(22 * s), Math.round(28 * s), Math.round(22 * s));
-  c.fillStyle = '#6a7a88';
+  c.fillStyle = '#565e64';
   c.beginPath();
   c.moveTo(sx - 2, baseY - Math.round(22 * s));
   c.lineTo(sx + Math.round(14 * s), baseY - Math.round(32 * s));
   c.lineTo(sx + Math.round(30 * s), baseY - Math.round(22 * s));
   c.closePath();
   c.fill();
-  c.fillStyle = 'rgba(180,220,255,.35)';
+  c.fillStyle = 'rgba(160,180,190,.28)';
   for (let i = 0; i < 3; i++) {
     c.fillRect(sx + 4 + i * 8 * s, baseY - Math.round(18 * s), Math.round(5 * s), Math.round(12 * s));
   }
-  // Steenhuis
-  c.fillStyle = '#6e5e52';
+  c.fillStyle = P.stone;
   c.fillRect(hx, baseY - hh, hw, hh);
-  // steen-dither
   for (let yy = 0; yy < hh; yy += 5) {
     for (let xx = 0; xx < hw; xx += 6) {
       if (((xx + yy) / 2 | 0) % 3 === 0) {
-        c.fillStyle = '#5a4a40';
+        c.fillStyle = P.stoneDark;
         c.fillRect(hx + xx, baseY - hh + yy, 4, 3);
       } else if (((xx * 3 + yy) | 0) % 5 === 0) {
-        c.fillStyle = '#8a7a6c';
+        c.fillStyle = P.stoneLite;
         c.fillRect(hx + xx + 1, baseY - hh + yy + 1, 3, 2);
       }
     }
   }
-  // Dak
   c.fillStyle = '#3a3834';
   c.beginPath();
   c.moveTo(hx - 4, baseY - hh);
@@ -760,21 +791,18 @@ function drawPixelStoneHouse(c, hx, baseY, scale) {
   c.fill();
   c.fillStyle = '#2a2824';
   c.fillRect(hx + Math.round(hw * 0.42), baseY - hh - Math.round(18 * s), Math.round(6 * s), Math.round(10 * s));
-  // Ramen
-  c.fillStyle = '#1a2430';
+  c.fillStyle = '#1c2228';
   c.fillRect(hx + Math.round(8 * s), baseY - hh + Math.round(12 * s), Math.round(10 * s), Math.round(10 * s));
   c.fillRect(hx + Math.round(40 * s), baseY - hh + Math.round(12 * s), Math.round(10 * s), Math.round(10 * s));
   c.fillRect(hx + Math.round(8 * s), baseY - Math.round(22 * s), Math.round(10 * s), Math.round(10 * s));
   c.fillRect(hx + Math.round(40 * s), baseY - Math.round(22 * s), Math.round(10 * s), Math.round(10 * s));
-  c.fillStyle = 'rgba(200,230,255,.4)';
+  c.fillStyle = 'rgba(170,190,200,.3)';
   c.fillRect(hx + Math.round(9 * s), baseY - hh + Math.round(13 * s), Math.round(8 * s), Math.round(4 * s));
   c.fillRect(hx + Math.round(41 * s), baseY - hh + Math.round(13 * s), Math.round(8 * s), Math.round(4 * s));
-  // Deur
   c.fillStyle = '#2e2418';
   c.fillRect(hx + Math.round(24 * s), baseY - Math.round(18 * s), Math.round(10 * s), Math.round(18 * s));
-  // Wit bijgebouw rechts
   const wx = hx + hw + Math.round(6 * s);
-  c.fillStyle = '#f0f0ec';
+  c.fillStyle = '#d8d6d0';
   c.fillRect(wx, baseY - Math.round(28 * s), Math.round(26 * s), Math.round(28 * s));
   c.fillStyle = '#2e2e2a';
   c.beginPath();
@@ -783,7 +811,7 @@ function drawPixelStoneHouse(c, hx, baseY, scale) {
   c.lineTo(wx + Math.round(28 * s), baseY - Math.round(28 * s));
   c.closePath();
   c.fill();
-  c.fillStyle = '#1a2430';
+  c.fillStyle = '#1c2228';
   c.fillRect(wx + Math.round(8 * s), baseY - Math.round(18 * s), Math.round(8 * s), Math.round(8 * s));
 }
 
@@ -811,10 +839,11 @@ function drawMenuStonehouseVista(c, w, h, t, opts) {
   const wrap = (v, span) => ((v % span) + span) % span;
 
   // —— sky ——
+  const P = COUNTRY_PAL;
   const sky = c.createLinearGradient(0, 0, 0, horizonY);
-  sky.addColorStop(0, '#6eb4e8');
-  sky.addColorStop(0.5, '#9ecced');
-  sky.addColorStop(1, '#d0e8f6');
+  sky.addColorStop(0, P.skyTop);
+  sky.addColorStop(0.5, P.skyMid);
+  sky.addColorStop(1, P.skyLow);
   c.fillStyle = sky;
   c.fillRect(0, 0, w, Math.max(horizonY, 1));
 
@@ -823,10 +852,10 @@ function drawMenuStonehouseVista(c, w, h, t, opts) {
     const cw = 40 + (i % 3) * 16;
     const cx = wrap(i * 0.29 * w + pSky * (0.5 + i * 0.08), w + cw) - cw * 0.5;
     const cy = 6 + (i % 3) * 12;
-    c.fillStyle = '#ffffff';
+    c.fillStyle = P.cloud;
     c.fillRect(Math.round(cx), cy + 8, cw, 10);
     c.fillRect(Math.round(cx + 10), cy, cw - 16, 12);
-    c.fillStyle = '#e8f0f8';
+    c.fillStyle = P.cloudShade;
     c.fillRect(Math.round(cx + 6), cy + 16, cw - 10, 3);
   }
 
@@ -835,14 +864,14 @@ function drawMenuStonehouseVista(c, w, h, t, opts) {
   for (let i = -1; i < 16; i++) {
     const tx = Math.round(i * 38 + farOff);
     const th = 34 + ((i * 13) % 20);
-    c.fillStyle = i % 2 ? '#1a3e24' : '#224a2c';
+    c.fillStyle = i % 2 ? P.forestDeep : P.forestMid;
     c.beginPath();
     c.moveTo(tx + 10, horizonY - th);
     c.lineTo(tx, horizonY);
     c.lineTo(tx + 20, horizonY);
     c.closePath();
     c.fill();
-    c.fillStyle = '#2a5a36';
+    c.fillStyle = P.forestLite;
     c.beginPath();
     c.moveTo(tx + 10, horizonY - th + 10);
     c.lineTo(tx + 3, horizonY - 8);
@@ -853,12 +882,11 @@ function drawMenuStonehouseVista(c, w, h, t, opts) {
 
   // —— mid: tuinstruiken + huis ——
   const midOff = Math.round((calm ? 0 : Math.sin(t * 0.25) * 2));
-  // grasstrook achter muur
-  c.fillStyle = '#3a7a40';
+  c.fillStyle = P.forestMid;
   c.fillRect(0, horizonY, w, wallY - horizonY + 4);
   for (let i = 0; i < 10; i++) {
     const bx = Math.round(wrap(i * 58 + midOff * 2, w + 40) - 20);
-    c.fillStyle = i % 2 ? '#2f6a38' : '#4a8a48';
+    c.fillStyle = i % 2 ? P.leaf : P.leafLite;
     c.beginPath();
     c.ellipse(bx, wallY - 4, 14, 10, 0, 0, TAU);
     c.fill();
@@ -875,14 +903,14 @@ function drawMenuStonehouseVista(c, w, h, t, opts) {
   // —— gouden gras voorgrond ——
   for (let y = grassY; y < h; y += px) {
     const pr = (y - grassY) / Math.max(1, grassH);
-    c.fillStyle = pr < 0.3 ? '#e3c565' : pr < 0.65 ? '#d4af37' : '#b8922e';
+    c.fillStyle = pr < 0.3 ? P.fieldHi : pr < 0.65 ? P.fieldMid : P.fieldLo;
     c.fillRect(0, y, w, px);
   }
   const nearOff = Math.round(wrap(-pNear, 14));
   for (let x = -14; x < w + 14; x += 5) {
     const xx = x + nearOff;
     const sway = calm ? 0 : Math.sin(t * 2.2 + x * 0.08) * 2;
-    c.fillStyle = ((x / 5) | 0) % 3 === 0 ? '#c9a040' : '#e8d070';
+    c.fillStyle = ((x / 5) | 0) % 3 === 0 ? P.straw : P.fieldHi;
     c.fillRect(Math.round(xx + sway), grassY + 4, 2, grassH - 10);
     c.fillRect(Math.round(xx + 2 - sway), grassY + 10, 1, grassH - 16);
   }
@@ -890,7 +918,7 @@ function drawMenuStonehouseVista(c, w, h, t, opts) {
   // —— framing blad (links/rechts, snelste laag) ——
   if (!lite) {
     const leafOff = calm ? 0 : Math.sin(t * 1.4) * 3;
-    c.fillStyle = '#2d5a27';
+    c.fillStyle = P.leaf;
     for (let i = 0; i < 6; i++) {
       const ly = 10 + i * 28 + leafOff;
       c.beginPath();
@@ -900,7 +928,7 @@ function drawMenuStonehouseVista(c, w, h, t, opts) {
       c.ellipse(w - 10 - (i % 2) * 5, ly + 8, 16, 11, 0.4, 0, TAU);
       c.fill();
     }
-    c.fillStyle = '#4f7942';
+    c.fillStyle = P.leafLite;
     c.beginPath();
     c.ellipse(14, 40 + leafOff, 10, 7, -0.3, 0, TAU);
     c.fill();
@@ -910,23 +938,75 @@ function drawMenuStonehouseVista(c, w, h, t, opts) {
   }
 
   const vig = c.createLinearGradient(0, 0, 0, h);
-  vig.addColorStop(0, 'rgba(40,70,100,.1)');
+  vig.addColorStop(0, 'rgba(30,40,50,.12)');
   vig.addColorStop(0.55, 'rgba(0,0,0,0)');
-  vig.addColorStop(1, 'rgba(40,30,10,.2)');
+  vig.addColorStop(1, 'rgba(28,24,16,.22)');
   c.fillStyle = vig;
   c.fillRect(0, 0, w, h);
 
   if (opts.caption !== false) {
-    c.fillStyle = 'rgba(12,18,28,.5)';
-    c.fillRect(6, 6, 148, 14);
-    c.fillStyle = 'rgba(255,248,220,.88)';
-    c.font = '900 9px -apple-system, sans-serif';
+    c.fillStyle = P.captionBg;
+    c.fillRect(6, 6, 128, 14);
+    c.fillStyle = P.captionFg;
+    c.font = '700 9px -apple-system, sans-serif';
     c.textAlign = 'left';
-    c.fillText('2/2 · steenhuis · pixel vista', 10, 16);
+    c.fillText('2/2 · steenhuis', 10, 16);
   }
 
   c.imageSmoothingEnabled = prev;
   return { roadY: grassY + Math.round(grassH * 0.55), fieldY: grassY, horizonY, id: 'stonehouse' };
+}
+
+/**
+ * d20 #8 — Menu hero pixel grondstrip.
+ * Chunky asphalt/gravel edge that unifies both vistas with the title block.
+ */
+function drawMenuPixelGroundStrip(c, w, h, t) {
+  const P = typeof COUNTRY_PAL !== 'undefined' ? COUNTRY_PAL : null;
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  const px = 3;
+  const stripH = Math.max(18, Math.round(h * 0.09));
+  const y0 = h - stripH;
+  const calm = motionReduced();
+  const wrap = (v, span) => ((v % span) + span) % span;
+  const scroll = calm ? 0 : t * 18;
+
+  for (let y = 0; y < stripH; y += px) {
+    const pr = y / stripH;
+    c.fillStyle = pr < 0.28
+      ? (P ? P.roadHi : '#7a7874')
+      : pr < 0.62
+        ? (P ? P.roadMid : '#5e5c58')
+        : (P ? P.roadLo : '#484642');
+    c.fillRect(0, y0 + y, w, px);
+  }
+  // Seam highlight where vista meets strip
+  c.fillStyle = 'rgba(220,214,200,.14)';
+  c.fillRect(0, y0, w, 2);
+  c.fillStyle = 'rgba(0,0,0,.28)';
+  c.fillRect(0, y0 + 2, w, 2);
+
+  // Scrolling gravel pixels
+  const span = 29;
+  const off = wrap(-scroll, span);
+  for (let x = off - span; x < w + span; x += span) {
+    c.fillStyle = 'rgba(255,255,255,.1)';
+    c.fillRect(Math.round(x + 4), y0 + 7, px, px);
+    c.fillRect(Math.round(x + 16), y0 + 12, 2, 2);
+    c.fillStyle = 'rgba(0,0,0,.18)';
+    c.fillRect(Math.round(x + 10), y0 + 9, px, px);
+    c.fillRect(Math.round(x + 22), y0 + 14, 2, 2);
+  }
+  // Soft tufts peeking from field into strip
+  for (let i = 0; i < 11; i++) {
+    const tx = Math.round(wrap(i * 58 + scroll * 0.35, w + 40) - 20);
+    c.fillStyle = P ? P.straw : '#a88850';
+    c.fillRect(tx, y0 - 4, 2, 5);
+    c.fillRect(tx + 3, y0 - 3, 1, 4);
+  }
+
+  c.imageSmoothingEnabled = prev;
 }
 
 function drawMenuHeroPixelGround(c, w, h, groundY, t) {

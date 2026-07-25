@@ -187,42 +187,45 @@ function paintMenuHeroCanvas(t) {
   }
 
   const roadY = map.roadY || Hs * 0.82;
+  // d20 #8 — unifying pixel grondstrip under both vistas
+  if (typeof drawMenuPixelGroundStrip === 'function') {
+    drawMenuPixelGroundStrip(c, Ws, Hs, t);
+  }
+  const footY = Hs - Math.max(18, Math.round(Hs * 0.09)) + 2;
   const walk = motionReduced() ? 0 : Math.sin(t * 3.2) * 2;
   const stroll = motionReduced() ? 0 : Math.sin(t * 0.55) * (Ws * 0.03);
   const drawTourist = (x, face, col, scale) => {
     const sc = scale || 1;
     c.save();
-    c.translate(x + stroll * face, roadY + walk * (face > 0 ? 1 : 0.5) - 2);
+    c.translate(x + stroll * face, footY + walk * (face > 0 ? 1 : 0.5) - 2);
     c.scale(face * sc, sc);
     c.strokeStyle = col;
-    c.lineWidth = 4;
+    c.lineWidth = 3.5;
     c.lineCap = 'round';
     c.beginPath();
     c.moveTo(0, 0);
-    c.lineTo(0, -34);
+    c.lineTo(0, -32);
     c.stroke();
-    const leg = motionReduced() ? 0 : Math.sin(t * 5 + face) * 7;
+    const leg = motionReduced() ? 0 : Math.sin(t * 5 + face) * 6;
     c.beginPath();
     c.moveTo(0, 0);
-    c.lineTo(-6, 9 + leg * 0.3);
+    c.lineTo(-5, 8 + leg * 0.3);
     c.moveTo(0, 0);
-    c.lineTo(6, 9 - leg * 0.3);
+    c.lineTo(5, 8 - leg * 0.3);
     c.stroke();
     c.fillStyle = col;
     c.beginPath();
-    c.arc(0, -44, 9, 0, TAU);
+    c.arc(0, -40, 8, 0, TAU);
     c.fill();
-    c.fillStyle = '#ffd75e';
+    c.fillStyle = '#b8a878';
     c.beginPath();
-    c.arc(12, -26, 5, 0, TAU);
+    c.arc(11, -24, 4, 0, TAU);
     c.fill();
     c.restore();
   };
-  drawTourist(Ws * 0.22, 1, '#eef5ff', 0.85);
-  drawTourist(Ws * 0.38, -1, '#ff8a9a', 1);
-  if (typeof drawPixelVsBanner === 'function' && !lite && aOak > 0.5) {
-    drawPixelVsBanner(c, Ws * 0.18, Hs * 0.28, 1.8, t);
-  }
+  // Muted stickmen — less neon
+  drawTourist(Ws * 0.24, 1, '#d0d4da', 0.85);
+  drawTourist(Ws * 0.40, -1, '#c09098', 1);
 }
 
 function loop(now) {
