@@ -1271,6 +1271,114 @@ function isUiVisible() {
   return false;
 }
 
+/** Dump UI/canvas state — op iPad: Safari Web Inspector of console toast. */
+function sfDebugScreen(opts) {
+  opts = opts || {};
+  const canvas = document.getElementById('game');
+  const flash = document.getElementById('levelRollFlash');
+  const active = [];
+  document.querySelectorAll('.screen.active').forEach((s) => active.push(s.id || '?'));
+  const cs = canvas ? getComputedStyle(canvas) : null;
+  const info = {
+    version: typeof APP_VERSION !== 'undefined' ? APP_VERSION : '?',
+    sw: typeof SW_CACHE_REV !== 'undefined' ? SW_CACHE_REV : '?',
+    state: typeof state !== 'undefined' ? state : '?',
+    mode: (typeof game !== 'undefined' && game && game.mode) || null,
+    isPlaying: document.body.classList.contains('is-playing'),
+    activeScreens: active,
+    canvas: canvas ? {
+      visibility: canvas.style.visibility || cs.visibility,
+      display: canvas.style.display || cs.display,
+      opacity: canvas.style.opacity || cs.opacity,
+      zIndex: canvas.style.zIndex || cs.zIndex,
+      pointerEvents: canvas.style.pointerEvents || cs.pointerEvents,
+      w: typeof W !== 'undefined' ? W : 0,
+      h: typeof H !== 'undefined' ? H : 0,
+    } : null,
+    rollFlash: flash ? {
+      hidden: flash.hidden,
+      visibleClass: flash.classList.contains('visible'),
+      z: getComputedStyle(flash).zIndex,
+    } : null,
+    loopErr: !!window.__sfLoopErr,
+  };
+  console.warn('[Stickman] sfDebugScreen', info);
+  const line = `v${info.version} · ${info.state}` +
+    (info.mode ? `/${info.mode}` : '') +
+    ` · play=${info.isPlaying ? 'Y' : 'N'}` +
+    ` · screens=${active.join(',') || '—'}` +
+    ` · z=${info.canvas ? info.canvas.zIndex : '?'}` +
+    ` · flash=${info.rollFlash && info.rollFlash.visibleClass ? 'ON' : 'off'}`;
+  if (opts.toast !== false) {
+    try { userToast(line, 5200); } catch (_) {
+      try { UI.toast(line, 5200); } catch (__) {}
+    }
+  }
+  if (opts.fix) {
+    try {
+      if (typeof UI !== 'undefined' && UI.hideGambleRollFlash) UI.hideGambleRollFlash();
+      clearScreensForPlay();
+      syncPlayLayer();
+      document.body.classList.add('is-playing');
+      if (canvas) {
+        canvas.style.visibility = 'visible';
+        canvas.style.opacity = '1';
+        canvas.style.zIndex = '40';
+        canvas.style.display = 'block';
+        canvas.style.pointerEvents = 'auto';
+      }
+      if (typeof blackScreenGuard === 'function') blackScreenGuard('sfDebugFix');
+      userToast('Canvas geforceerd zichtbaar — speel verder of terug menu', 3600);
+    } catch (err) {
+      console.error('[Stickman] sfDebug fix', err);
+    }
+  }
+  return info;
+}
+
+function sfDebugOverlayTick() {
+  let el = document.getElementById('sfDebugStrip');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'sfDebugStrip';
+    el.setAttribute('aria-live', 'polite');
+    el.style.cssText = 'position:fixed;left:4px;right:4px;bottom:4px;z-index:9999;font:11px/1.35 monospace;' +
+      'background:rgba(0,0,0,.78);color:#7cf5ff;padding:6px 8px;border-radius:8px;pointer-events:none;' +
+      'max-height:28vh;overflow:auto;white-space:pre-wrap';
+    document.body.appendChild(el);
+  }
+  const d = sfDebugScreen({ toast: false });
+  el.textContent = [
+    `SF DEBUG v${d.version} SW${d.sw}`,
+    `state=${d.state} mode=${d.mode || '—'} isPlaying=${d.isPlaying}`,
+    `screens=${(d.activeScreens && d.activeScreens.join(',')) || '—'}`,
+    d.canvas ? `canvas vis=${d.canvas.visibility} z=${d.canvas.zIndex} ${d.canvas.w}x${d.canvas.h}` : 'canvas=MISSING',
+    d.rollFlash ? `flash hidden=${d.rollFlash.hidden} vis=${d.rollFlash.visibleClass}` : 'flash=—',
+    'Tap 5× versie-regel of: __sf.debug({fix:true})',
+  ].join('\n');
+}
+
+function wireSfDebugTools() {
+  window.sfDebugScreen = sfDebugScreen;
+  if (window.__sf) {
+    window.__sf.debug = sfDebugScreen;
+    window.__sf.fixPlayLayer = () => sfDebugScreen({ fix: true });
+  }
+  let want = false;
+  try {
+    want = new URLSearchParams(location.search).get('sfdebug') === '1'
+      || localStorage.getItem('sf_debug_screen') === '1';
+  } catch (_) {}
+  if (!want) return;
+  document.body.classList.add('sf-debug');
+  sfDebugOverlayTick();
+  if (!window.__sfDebugTimer) {
+    window.__sfDebugTimer = setInterval(() => {
+      try { sfDebugOverlayTick(); } catch (_) {}
+    }, 800);
+  }
+}
+
 /** Detecteer en herstel volledig zwart scherm (geen UI, geen canvas). */
 function blackScreenGuard(where) {
   if (window.__sfBlackGuardBusy) return;
@@ -1280,6 +1388,7 @@ function blackScreenGuard(where) {
       window.__sfBlackGuardBusy = true;
       try {
         console.warn('[Stickman] play cover guard:', where || '?');
+        try { if (typeof UI !== 'undefined' && UI.hideGambleRollFlash) UI.hideGambleRollFlash(); } catch (_) {}
         syncPlayLayerWithoutGuard();
       } finally {
         window.__sfBlackGuardBusy = false;
@@ -1483,7 +1592,11 @@ function startAdventureFromGamble(skipGamble) {
     const level = pendingAdvLevel || save.unlocked || 1;
     const gamble = skipGamble ? null : lastGambleRoll;
     pendingAdvLevel = null;
+    try { UI.hideGambleRollFlash(); } catch (_) {}
+    try { clearScreensForPlay(); } catch (_) {}
     startGame('adventure', { level, gamble });
+    try { syncPlayLayer(); } catch (_) {}
+    try { if (typeof blackScreenGuard === 'function') blackScreenGuard('advStart'); } catch (_) {}
   } catch (err) {
     sfReportError('gambleStart', err, 'Avontuur starten mislukt — kies level opnieuw');
   }

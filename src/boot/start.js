@@ -41,8 +41,21 @@ function startGame(mode, opts) {
   try { recordLastPlay(mode, opts); } catch (_) {}
   try { applyModeOnboarding(mode, game); } catch (_) {}
   try { clearScreensForPlay(); } catch (_) {}
+  try { UI.hideGambleRollFlash(); } catch (_) {}
   try { UI.show(null); } catch (_) {}
   try { syncPlayLayer(); } catch (_) {}
+  // Extra force: body class + canvas zichtbaar (iPad race met gok-flash)
+  try {
+    document.body.classList.add('is-playing');
+    const canvas = document.getElementById('game');
+    if (canvas) {
+      canvas.style.visibility = 'visible';
+      canvas.style.opacity = '1';
+      canvas.style.zIndex = '40';
+      canvas.style.pointerEvents = 'auto';
+      canvas.style.display = 'block';
+    }
+  } catch (_) {}
   try {
     AudioSys.init();
     const modeSting = { adventure: 'modeAdventure', training: 'modeTraining', versus: 'modeVersus', wall: 'modeWall', coinrun: 'modeMats' };
@@ -56,6 +69,7 @@ function startGame(mode, opts) {
     else if (mode === 'wall') AudioSys.play('wall');
     else AudioSys.play('battle');
   } catch (_) {}
+  try { if (typeof blackScreenGuard === 'function') blackScreenGuard('startGame/' + mode); } catch (_) {}
 }
 
 /** iPad: touchend + click zonder dubbel-vuur (preventDefault stopt ghost-click). */

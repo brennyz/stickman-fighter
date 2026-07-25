@@ -15,6 +15,8 @@
   body.is-playing #game { pointer-events:auto !important; z-index:40 !important; visibility:visible !important;
       opacity:1 !important; display:block !important; }
   body.is-playing .screen { display:none !important; pointer-events:none !important; visibility:hidden !important; }
+  /* Dobbel-flash mag nooit over het gevecht blijven (blauw/zwart deksel) */
+  body.is-playing .level-roll-flash { display:none !important; opacity:0 !important; visibility:hidden !important; }
 
   .screen { position:fixed; top:var(--vv-top, 0); left:var(--vv-left, 0);
       width:var(--vv-w, 100%); height:var(--vv-h, 100dvh); max-height:100dvh;

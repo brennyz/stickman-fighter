@@ -650,7 +650,10 @@ function bootGame() {
     get game() { return game; },
     get version() { return APP_VERSION; },
     startGame, save, Game, UI, recoverToMenu, syncPlayLayer,
+    debug: typeof sfDebugScreen === 'function' ? sfDebugScreen : null,
+    fixPlayLayer: () => (typeof sfDebugScreen === 'function' ? sfDebugScreen({ fix: true }) : null),
   };
+  safeCall(wireSfDebugTools, 'sfDebug');
 
   (function handleLaunchShortcut() {
     try {

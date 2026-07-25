@@ -39,6 +39,7 @@ Stickman Fighter wordt door **meerdere cloud-agent runs** aangepast (iPad-app, M
 | **`agent-handoff.json`** | Open wensen, canonical URL, versie waarheid, sessielog |
 | **`IMPROVEMENT.md`** | d20-loop (`npm run roll`), agent log, veilig wijzigen |
 | **`ASSET-STYLE.md`** | **Leidend** voor knoppen/beelden: tokens, mappen, vervang-workflow |
+| **`DEBUG-BLACK-SCREEN.md`** | Zwart/blauw scherm bij Avontuur — debug-overlay + dump |
 | **`IPAD-GEEN-COMMANDO.txt`** | Wat Mats op iPad wél/niet doet |
 
 ## Wat elke agent **bij afloop** doet
