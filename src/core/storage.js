@@ -5,9 +5,11 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.55';
+/** Soft max for primary/backup JSON chars — import must match (SAVE_KEY frozen). */
+const SAVE_JSON_MAX_CHARS = 180000;
+const APP_VERSION = '1.18.56';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 265;
+const SW_CACHE_REV = 266;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -474,7 +476,7 @@ function loadSave() {
 
 function readSaveJson(raw) {
   try {
-    if (!raw || raw.length > 180000) return null;
+    if (!raw || raw.length > SAVE_JSON_MAX_CHARS) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
     const merged = Object.assign({}, DEFAULT_SAVE, parsed);
@@ -535,7 +537,7 @@ function persist() {
   try {
     if (!save || typeof save !== 'object') return false;
     const json = JSON.stringify(save);
-    if (json.length > 180000) {
+    if (json.length > SAVE_JSON_MAX_CHARS) {
       if (!window.__sfPersistWarn) {
         window.__sfPersistWarn = true;
         try { UI.toast('Save bijna te groot — export in Instellingen', 4800); } catch (_) {}
@@ -803,8 +805,8 @@ function sanitizeSave(s) {
 
   const cleanPets = {};
   for (const [k, v] of Object.entries(out.pets || {})) {
+    // d7 c5: if pet catalog not loaded yet, keep entries (don't wipe)
     if (typeof PET_BY_ID !== 'undefined' && !PET_BY_ID[k]) continue;
-    if (typeof PET_BY_ID === 'undefined') continue;
     const entry = (v && typeof v === 'object') ? v : {};
     cleanPets[k] = {
       kills: clamp(Math.floor(Number(entry.kills) || 0), 0, 999999),
@@ -816,8 +818,8 @@ function sanitizeSave(s) {
 
   const cleanEggs = {};
   for (const [k, v] of Object.entries(out.eggPets || {})) {
+    // d7 c5: if egg catalog not loaded yet, keep entries (don't wipe)
     if (typeof EGG_BY_ID !== 'undefined' && !EGG_BY_ID[k]) continue;
-    if (typeof EGG_BY_ID === 'undefined') continue;
     const entry = (v && typeof v === 'object') ? v : {};
     cleanEggs[k] = { src: typeof entry.src === 'string' ? entry.src.slice(0, 12) : 'daily' };
   }
@@ -872,8 +874,8 @@ function sanitizeSave(s) {
   // Bewaar kill-counts (Jager-prestatie); clamp corrupte waarden — nooit hard op 1 zetten
   const cleanDex = {};
   for (const [k, v] of Object.entries(out.dex || {})) {
+    // d7 c5: SPECIES undefined → keep numeric entries (don't wipe boek)
     if (typeof SPECIES !== 'undefined' && !SPECIES[k]) continue;
-    if (typeof SPECIES === 'undefined') break;
     const n = Math.floor(Number(v) || 0);
     if (n > 0) cleanDex[k] = clamp(n, 1, 999999);
   }
@@ -938,9 +940,10 @@ function sanitizeSave(s) {
 
   const cleanAch = {};
   for (const [k, v] of Object.entries(out.achievements || {})) {
-    if (typeof ACHIEVEMENTS !== 'undefined' && ACHIEVEMENTS.some(a => a.id === k) && typeof v === 'string') {
-      cleanAch[k] = v.slice(0, 32);
-    }
+    if (typeof v !== 'string') continue;
+    // d7 c5: ACHIEVEMENTS undefined → keep id/date strings (don't wipe)
+    if (typeof ACHIEVEMENTS !== 'undefined' && !ACHIEVEMENTS.some(a => a.id === k)) continue;
+    cleanAch[k] = v.slice(0, 32);
   }
   out.achievements = cleanAch;
 
@@ -949,18 +952,19 @@ function sanitizeSave(s) {
       ? out.daily.date.slice(0, 10)
       : (typeof todayKey === 'function' ? todayKey() : new Date().toISOString().slice(0, 10));
     const tasks = Array.isArray(out.daily.tasks) ? out.daily.tasks : [];
+    const hasDailyDef = typeof dailyDef === 'function';
     out.daily = {
       date: dk,
-      tasks: tasks.filter(t => t && typeof dailyDef === 'function' && dailyDef(t.id)).map(t => {
-        const def = dailyDef(t.id);
+      tasks: tasks.filter(t => t && typeof t.id === 'string' && (!hasDailyDef || dailyDef(t.id))).map(t => {
+        const def = hasDailyDef ? dailyDef(t.id) : null;
         const goal = def ? def.goal : 99999;
         const progress = clamp(Math.floor(Number(t.progress) || 0), 0, goal);
-        const done = def ? progress >= goal : false;
+        const done = def ? progress >= goal : !!t.done;
         let claimed = !!t.claimed;
         if (claimed && !done) claimed = false;
         return {
-          id: t.id,
-          progress: done ? goal : progress,
+          id: String(t.id).slice(0, 32),
+          progress: done && def ? goal : progress,
           done,
           claimed,
         };
@@ -975,7 +979,11 @@ function sanitizeSave(s) {
   for (const raw of out.vsPlayedIds) {
     if (typeof raw !== 'string') continue;
     const id = migrateVsRosterId(raw);
-    if (typeof VS_ROSTER !== 'undefined' && VS_ROSTER.some(r => r.id === id) && !played.includes(id)) played.push(id);
+    // d7 c5: VS_ROSTER undefined → keep migrated ids (don't wipe)
+    if (typeof VS_ROSTER !== 'undefined') {
+      if (!VS_ROSTER.some(r => r.id === id)) continue;
+    }
+    if (!played.includes(id)) played.push(id);
   }
   out.vsPlayedIds = played.slice(0, 32);
 

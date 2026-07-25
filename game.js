@@ -243,9 +243,11 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.55';
+/** Soft max for primary/backup JSON chars — import must match (SAVE_KEY frozen). */
+const SAVE_JSON_MAX_CHARS = 180000;
+const APP_VERSION = '1.18.56';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 265;
+const SW_CACHE_REV = 266;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -712,7 +714,7 @@ function loadSave() {
 
 function readSaveJson(raw) {
   try {
-    if (!raw || raw.length > 180000) return null;
+    if (!raw || raw.length > SAVE_JSON_MAX_CHARS) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
     const merged = Object.assign({}, DEFAULT_SAVE, parsed);
@@ -773,7 +775,7 @@ function persist() {
   try {
     if (!save || typeof save !== 'object') return false;
     const json = JSON.stringify(save);
-    if (json.length > 180000) {
+    if (json.length > SAVE_JSON_MAX_CHARS) {
       if (!window.__sfPersistWarn) {
         window.__sfPersistWarn = true;
         try { UI.toast('Save bijna te groot — export in Instellingen', 4800); } catch (_) {}
@@ -1041,8 +1043,8 @@ function sanitizeSave(s) {
 
   const cleanPets = {};
   for (const [k, v] of Object.entries(out.pets || {})) {
+    // d7 c5: if pet catalog not loaded yet, keep entries (don't wipe)
     if (typeof PET_BY_ID !== 'undefined' && !PET_BY_ID[k]) continue;
-    if (typeof PET_BY_ID === 'undefined') continue;
     const entry = (v && typeof v === 'object') ? v : {};
     cleanPets[k] = {
       kills: clamp(Math.floor(Number(entry.kills) || 0), 0, 999999),
@@ -1054,8 +1056,8 @@ function sanitizeSave(s) {
 
   const cleanEggs = {};
   for (const [k, v] of Object.entries(out.eggPets || {})) {
+    // d7 c5: if egg catalog not loaded yet, keep entries (don't wipe)
     if (typeof EGG_BY_ID !== 'undefined' && !EGG_BY_ID[k]) continue;
-    if (typeof EGG_BY_ID === 'undefined') continue;
     const entry = (v && typeof v === 'object') ? v : {};
     cleanEggs[k] = { src: typeof entry.src === 'string' ? entry.src.slice(0, 12) : 'daily' };
   }
@@ -1110,8 +1112,8 @@ function sanitizeSave(s) {
   // Bewaar kill-counts (Jager-prestatie); clamp corrupte waarden — nooit hard op 1 zetten
   const cleanDex = {};
   for (const [k, v] of Object.entries(out.dex || {})) {
+    // d7 c5: SPECIES undefined → keep numeric entries (don't wipe boek)
     if (typeof SPECIES !== 'undefined' && !SPECIES[k]) continue;
-    if (typeof SPECIES === 'undefined') break;
     const n = Math.floor(Number(v) || 0);
     if (n > 0) cleanDex[k] = clamp(n, 1, 999999);
   }
@@ -1176,9 +1178,10 @@ function sanitizeSave(s) {
 
   const cleanAch = {};
   for (const [k, v] of Object.entries(out.achievements || {})) {
-    if (typeof ACHIEVEMENTS !== 'undefined' && ACHIEVEMENTS.some(a => a.id === k) && typeof v === 'string') {
-      cleanAch[k] = v.slice(0, 32);
-    }
+    if (typeof v !== 'string') continue;
+    // d7 c5: ACHIEVEMENTS undefined → keep id/date strings (don't wipe)
+    if (typeof ACHIEVEMENTS !== 'undefined' && !ACHIEVEMENTS.some(a => a.id === k)) continue;
+    cleanAch[k] = v.slice(0, 32);
   }
   out.achievements = cleanAch;
 
@@ -1187,18 +1190,19 @@ function sanitizeSave(s) {
       ? out.daily.date.slice(0, 10)
       : (typeof todayKey === 'function' ? todayKey() : new Date().toISOString().slice(0, 10));
     const tasks = Array.isArray(out.daily.tasks) ? out.daily.tasks : [];
+    const hasDailyDef = typeof dailyDef === 'function';
     out.daily = {
       date: dk,
-      tasks: tasks.filter(t => t && typeof dailyDef === 'function' && dailyDef(t.id)).map(t => {
-        const def = dailyDef(t.id);
+      tasks: tasks.filter(t => t && typeof t.id === 'string' && (!hasDailyDef || dailyDef(t.id))).map(t => {
+        const def = hasDailyDef ? dailyDef(t.id) : null;
         const goal = def ? def.goal : 99999;
         const progress = clamp(Math.floor(Number(t.progress) || 0), 0, goal);
-        const done = def ? progress >= goal : false;
+        const done = def ? progress >= goal : !!t.done;
         let claimed = !!t.claimed;
         if (claimed && !done) claimed = false;
         return {
-          id: t.id,
-          progress: done ? goal : progress,
+          id: String(t.id).slice(0, 32),
+          progress: done && def ? goal : progress,
           done,
           claimed,
         };
@@ -1213,7 +1217,11 @@ function sanitizeSave(s) {
   for (const raw of out.vsPlayedIds) {
     if (typeof raw !== 'string') continue;
     const id = migrateVsRosterId(raw);
-    if (typeof VS_ROSTER !== 'undefined' && VS_ROSTER.some(r => r.id === id) && !played.includes(id)) played.push(id);
+    // d7 c5: VS_ROSTER undefined → keep migrated ids (don't wipe)
+    if (typeof VS_ROSTER !== 'undefined') {
+      if (!VS_ROSTER.some(r => r.id === id)) continue;
+    }
+    if (!played.includes(id)) played.push(id);
   }
   out.vsPlayedIds = played.slice(0, 32);
 
@@ -2741,10 +2749,16 @@ function saveSanitizeNotes(before, after) {
   if (num(before.unlocked) !== after.unlocked) notes.push(`unlock ${num(before.unlocked)}→${after.unlocked}`);
   if (before.weapon !== after.weapon) notes.push('wapen reset');
   if (before.style !== after.style) notes.push('stijl reset');
+  if (before.skill !== after.skill) notes.push('skill reset');
+  if (before.super !== after.super) notes.push('super reset');
+  if (before.activeJutsu !== after.activeJutsu) notes.push('jutsu reset');
   const stripCount = Object.keys(before).filter(k => !(k in DEFAULT_SAVE) && k !== '_exportMeta').length;
   if (stripCount) notes.push(`${stripCount} onbekend veld verwijderd`);
-  const badDex = Object.keys(before.dex || {}).filter(k => !SPECIES[k]).length;
+  const badDex = Object.keys(before.dex || {}).filter(k => typeof SPECIES !== 'undefined' && !SPECIES[k]).length;
   if (badDex) notes.push(`${badDex} ongeldige dex-entry`);
+  const dexB = Object.keys(before.dex || {}).length;
+  const dexA = Object.keys(after.dex || {}).length;
+  if (dexA < dexB - badDex) notes.push(`dex ${dexB}→${dexA}`);
   const badSummon = Object.keys(before.summons || {}).filter(k => {
     const w = WEAPONS.find(x => x.id === k);
     const v = before.summons[k];
@@ -2762,6 +2776,18 @@ function saveSanitizeNotes(before, after) {
     if (before.activeEggPet && before.activeEggPet !== after.activeEggPet) notes.push('actief ei reset');
   }
   if (before.eggDaily && !after.eggDaily) notes.push('ei-dag reset');
+  const achB = Object.keys(before.achievements || {}).length;
+  const achA = Object.keys(after.achievements || {}).length;
+  if (achA < achB) notes.push(`prestaties ${achB}→${achA}`);
+  const vsB = Array.isArray(before.vsPlayedIds) ? before.vsPlayedIds.length : 0;
+  const vsA = Array.isArray(after.vsPlayedIds) ? after.vsPlayedIds.length : 0;
+  if (vsA < vsB) notes.push(`vs-gespeeld ${vsB}→${vsA}`);
+  const mastB = Object.keys(before.weaponMastery || {}).length;
+  const mastA = Object.keys(after.weaponMastery || {}).length;
+  if (mastA < mastB) notes.push(`wapen-mastery ${mastB}→${mastA}`);
+  const dailyB = (before.daily && Array.isArray(before.daily.tasks)) ? before.daily.tasks.length : 0;
+  const dailyA = (after.daily && Array.isArray(after.daily.tasks)) ? after.daily.tasks.length : 0;
+  if (dailyA < dailyB) notes.push(`daily ${dailyB}→${dailyA}`);
   if (!Number.isFinite(Number(before.musicVol)) || !Number.isFinite(Number(before.sfxVol))) {
     notes.push('volume gecorrigeerd');
   }
@@ -3008,7 +3034,10 @@ function applySaveImportText(text, sourceLabel) {
 function readSaveImportFile(file) {
   return new Promise((resolve, reject) => {
     if (!file) { reject(new Error('Geen bestand gekozen')); return; }
-    if (file.size > 120000) { reject(new Error('Save-bestand te groot (>120 KB)')); return; }
+    if (file.size > SAVE_JSON_MAX_CHARS) {
+      reject(new Error(`Save-bestand te groot (>${Math.floor(SAVE_JSON_MAX_CHARS / 1000)} KB)`));
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ''));
     reader.onerror = () => reject(new Error('Bestand lezen mislukt'));
@@ -3042,21 +3071,28 @@ function runImportSaveClick() {
     return;
   }
   try {
-    previewImportSave(ta.value);
+    const preview = previewImportSave(ta.value);
+    const wrongKey = preview.meta && preview.meta.key && preview.meta.key !== SAVE_KEY;
     if (!window.__sfImportConfirm) {
       window.__sfImportConfirm = true;
       updateSaveImportPreview(ta.value);
-      UI.toast('Import-preview — tik Import nogmaals om te laden', 3600);
+      UI.toast(wrongKey
+        ? `Verkeerde save-key — tik Import nogmaals om toch te laden (verwacht ${SAVE_KEY})`
+        : 'Import-preview — tik Import nogmaals om te laden', 4200);
       setTimeout(() => { window.__sfImportConfirm = false; }, 8000);
       return;
     }
     window.__sfImportConfirm = false;
-    if (previewEl) { previewEl.style.display = 'none'; previewEl.textContent = ''; }
     importSaveJson(ta.value);
     AudioSys.sfx('win');
+    updateSaveImportPreview('');
   } catch (e) {
     window.__sfImportConfirm = false;
-    if (previewEl) { previewEl.style.display = 'none'; previewEl.textContent = ''; }
+    if (previewEl) {
+      previewEl.style.display = 'block';
+      previewEl.style.color = '#ffb0b8';
+      previewEl.textContent = (e && e.message) ? e.message : 'Ongeldige save — controleer JSON';
+    }
     UI.toast((e && e.message) ? e.message : 'Ongeldige save — controleer JSON', 3200);
   }
 }
@@ -3225,10 +3261,16 @@ function exportSaveJson() {
         eggs: eggCountFromSave(clean),
         style: clean.style || 'classic',
       },
-      note: 'Stickman Fighter save — plak in Instellingen → Import (2× tikken). Wissel van URL? Export vóór en import ná.',
+      note: 'Stickman Fighter save — plak in Instellingen → Import (2× tikken). SAVE_KEY niet hernoemen. Wissel van URL? Export vóór en import ná.',
     },
   });
-  return JSON.stringify(payload, null, 2);
+  const json = JSON.stringify(payload, null, 2);
+  if (json.length > SAVE_JSON_MAX_CHARS * 0.9) {
+    try {
+      UI.toast(`Export groot (~${formatSaveBytes(json.length)}) — import limiet ${Math.floor(SAVE_JSON_MAX_CHARS / 1000)} KB`, 4800);
+    } catch (_) {}
+  }
+  return json;
 }
 
 function saveHealthSummary() {
@@ -3323,7 +3365,9 @@ function importPreviewWarnings(next, meta) {
 
 function previewImportSave(text) {
   if (typeof text !== 'string' || !text.trim()) throw new Error('Plak eerst save-JSON in het vak');
-  if (text.length > 120000) throw new Error('Save te groot of ongeldig');
+  if (text.length > SAVE_JSON_MAX_CHARS) {
+    throw new Error(`Save te groot (>${Math.floor(SAVE_JSON_MAX_CHARS / 1000)} KB) — export opnieuw of knip meta`);
+  }
   let parsed;
   try { parsed = JSON.parse(text); } catch (_) {
     throw new Error('Geen geldige JSON — controleer plaksel');
@@ -3358,7 +3402,7 @@ function previewImportSave(text) {
   if (typeof parsed.activePet === 'string') rawMerged.activePet = parsed.activePet;
   if (typeof parsed.activeEggPet === 'string') rawMerged.activeEggPet = parsed.activeEggPet;
   const repairNotes = saveSanitizeNotes(rawMerged, final);
-  if (repairNotes.length) warnings.push('Reparatie: ' + repairNotes.slice(0, 3).join(' · '));
+  if (repairNotes.length) warnings.push('Reparatie: ' + repairNotes.slice(0, 5).join(' · '));
   return { save: final, meta, warnings };
 }
 function sfReportError(where, err, userMsg) {
@@ -10024,6 +10068,10 @@ const CATALOG_EN = {
     weaponComboHint: 'Weapon 3× = ①②③ · hit ①+② → golden ③',
     gambleOnboardTouch: 'First gamble: low sum = super-boss · high sum = ally · Skip = normal level',
     gambleOnboardKb: 'First time: sum ≤5 super-boss · sum ≥9 ally buff · Skip = no gamble',
+    ketsbamOnboardTouch: 'Surrounded? Tap the center symbol — Ketsbam escape · 9s cooldown',
+    ketsbamOnboardKb: 'Surrounded? E or center symbol = Ketsbam · 9s cooldown',
+    tideBattleOnboardTouch: 'First Tide Battle: defeat {name} — no other waves until done',
+    tideBattleOnboardKb: 'First Tide Battle: defeat {name} — waves pause until done',
     langSwitchFail: 'Language switch failed',
   },
   fighter: {
@@ -26765,7 +26813,8 @@ const UI = {
     }
     const exportHint = document.getElementById('saveExportHint');
     if (exportHint) {
-      exportHint.textContent = `Export bevat: ${saveExportSummaryLine()} · key ${SAVE_KEY}`;
+      exportHint.textContent =
+        `Export: ${saveExportSummaryLine()} · schema v${SAVE_EXPORT_SCHEMA} · key ${SAVE_KEY} (niet hernoemen) · Import 2× om te laden`;
     }
     bindSavePortPreview();
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };

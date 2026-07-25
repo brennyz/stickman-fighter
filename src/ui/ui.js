@@ -3286,7 +3286,8 @@ const UI = {
     }
     const exportHint = document.getElementById('saveExportHint');
     if (exportHint) {
-      exportHint.textContent = `Export bevat: ${saveExportSummaryLine()} · key ${SAVE_KEY}`;
+      exportHint.textContent =
+        `Export: ${saveExportSummaryLine()} · schema v${SAVE_EXPORT_SCHEMA} · key ${SAVE_KEY} (niet hernoemen) · Import 2× om te laden`;
     }
     bindSavePortPreview();
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };

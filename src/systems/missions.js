@@ -617,10 +617,16 @@ function saveSanitizeNotes(before, after) {
   if (num(before.unlocked) !== after.unlocked) notes.push(`unlock ${num(before.unlocked)}→${after.unlocked}`);
   if (before.weapon !== after.weapon) notes.push('wapen reset');
   if (before.style !== after.style) notes.push('stijl reset');
+  if (before.skill !== after.skill) notes.push('skill reset');
+  if (before.super !== after.super) notes.push('super reset');
+  if (before.activeJutsu !== after.activeJutsu) notes.push('jutsu reset');
   const stripCount = Object.keys(before).filter(k => !(k in DEFAULT_SAVE) && k !== '_exportMeta').length;
   if (stripCount) notes.push(`${stripCount} onbekend veld verwijderd`);
-  const badDex = Object.keys(before.dex || {}).filter(k => !SPECIES[k]).length;
+  const badDex = Object.keys(before.dex || {}).filter(k => typeof SPECIES !== 'undefined' && !SPECIES[k]).length;
   if (badDex) notes.push(`${badDex} ongeldige dex-entry`);
+  const dexB = Object.keys(before.dex || {}).length;
+  const dexA = Object.keys(after.dex || {}).length;
+  if (dexA < dexB - badDex) notes.push(`dex ${dexB}→${dexA}`);
   const badSummon = Object.keys(before.summons || {}).filter(k => {
     const w = WEAPONS.find(x => x.id === k);
     const v = before.summons[k];
@@ -638,6 +644,18 @@ function saveSanitizeNotes(before, after) {
     if (before.activeEggPet && before.activeEggPet !== after.activeEggPet) notes.push('actief ei reset');
   }
   if (before.eggDaily && !after.eggDaily) notes.push('ei-dag reset');
+  const achB = Object.keys(before.achievements || {}).length;
+  const achA = Object.keys(after.achievements || {}).length;
+  if (achA < achB) notes.push(`prestaties ${achB}→${achA}`);
+  const vsB = Array.isArray(before.vsPlayedIds) ? before.vsPlayedIds.length : 0;
+  const vsA = Array.isArray(after.vsPlayedIds) ? after.vsPlayedIds.length : 0;
+  if (vsA < vsB) notes.push(`vs-gespeeld ${vsB}→${vsA}`);
+  const mastB = Object.keys(before.weaponMastery || {}).length;
+  const mastA = Object.keys(after.weaponMastery || {}).length;
+  if (mastA < mastB) notes.push(`wapen-mastery ${mastB}→${mastA}`);
+  const dailyB = (before.daily && Array.isArray(before.daily.tasks)) ? before.daily.tasks.length : 0;
+  const dailyA = (after.daily && Array.isArray(after.daily.tasks)) ? after.daily.tasks.length : 0;
+  if (dailyA < dailyB) notes.push(`daily ${dailyB}→${dailyA}`);
   if (!Number.isFinite(Number(before.musicVol)) || !Number.isFinite(Number(before.sfxVol))) {
     notes.push('volume gecorrigeerd');
   }
@@ -884,7 +902,10 @@ function applySaveImportText(text, sourceLabel) {
 function readSaveImportFile(file) {
   return new Promise((resolve, reject) => {
     if (!file) { reject(new Error('Geen bestand gekozen')); return; }
-    if (file.size > 120000) { reject(new Error('Save-bestand te groot (>120 KB)')); return; }
+    if (file.size > SAVE_JSON_MAX_CHARS) {
+      reject(new Error(`Save-bestand te groot (>${Math.floor(SAVE_JSON_MAX_CHARS / 1000)} KB)`));
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ''));
     reader.onerror = () => reject(new Error('Bestand lezen mislukt'));
@@ -918,21 +939,28 @@ function runImportSaveClick() {
     return;
   }
   try {
-    previewImportSave(ta.value);
+    const preview = previewImportSave(ta.value);
+    const wrongKey = preview.meta && preview.meta.key && preview.meta.key !== SAVE_KEY;
     if (!window.__sfImportConfirm) {
       window.__sfImportConfirm = true;
       updateSaveImportPreview(ta.value);
-      UI.toast('Import-preview — tik Import nogmaals om te laden', 3600);
+      UI.toast(wrongKey
+        ? `Verkeerde save-key — tik Import nogmaals om toch te laden (verwacht ${SAVE_KEY})`
+        : 'Import-preview — tik Import nogmaals om te laden', 4200);
       setTimeout(() => { window.__sfImportConfirm = false; }, 8000);
       return;
     }
     window.__sfImportConfirm = false;
-    if (previewEl) { previewEl.style.display = 'none'; previewEl.textContent = ''; }
     importSaveJson(ta.value);
     AudioSys.sfx('win');
+    updateSaveImportPreview('');
   } catch (e) {
     window.__sfImportConfirm = false;
-    if (previewEl) { previewEl.style.display = 'none'; previewEl.textContent = ''; }
+    if (previewEl) {
+      previewEl.style.display = 'block';
+      previewEl.style.color = '#ffb0b8';
+      previewEl.textContent = (e && e.message) ? e.message : 'Ongeldige save — controleer JSON';
+    }
     UI.toast((e && e.message) ? e.message : 'Ongeldige save — controleer JSON', 3200);
   }
 }
@@ -1101,10 +1129,16 @@ function exportSaveJson() {
         eggs: eggCountFromSave(clean),
         style: clean.style || 'classic',
       },
-      note: 'Stickman Fighter save — plak in Instellingen → Import (2× tikken). Wissel van URL? Export vóór en import ná.',
+      note: 'Stickman Fighter save — plak in Instellingen → Import (2× tikken). SAVE_KEY niet hernoemen. Wissel van URL? Export vóór en import ná.',
     },
   });
-  return JSON.stringify(payload, null, 2);
+  const json = JSON.stringify(payload, null, 2);
+  if (json.length > SAVE_JSON_MAX_CHARS * 0.9) {
+    try {
+      UI.toast(`Export groot (~${formatSaveBytes(json.length)}) — import limiet ${Math.floor(SAVE_JSON_MAX_CHARS / 1000)} KB`, 4800);
+    } catch (_) {}
+  }
+  return json;
 }
 
 function saveHealthSummary() {
@@ -1199,7 +1233,9 @@ function importPreviewWarnings(next, meta) {
 
 function previewImportSave(text) {
   if (typeof text !== 'string' || !text.trim()) throw new Error('Plak eerst save-JSON in het vak');
-  if (text.length > 120000) throw new Error('Save te groot of ongeldig');
+  if (text.length > SAVE_JSON_MAX_CHARS) {
+    throw new Error(`Save te groot (>${Math.floor(SAVE_JSON_MAX_CHARS / 1000)} KB) — export opnieuw of knip meta`);
+  }
   let parsed;
   try { parsed = JSON.parse(text); } catch (_) {
     throw new Error('Geen geldige JSON — controleer plaksel');
@@ -1234,7 +1270,7 @@ function previewImportSave(text) {
   if (typeof parsed.activePet === 'string') rawMerged.activePet = parsed.activePet;
   if (typeof parsed.activeEggPet === 'string') rawMerged.activeEggPet = parsed.activeEggPet;
   const repairNotes = saveSanitizeNotes(rawMerged, final);
-  if (repairNotes.length) warnings.push('Reparatie: ' + repairNotes.slice(0, 3).join(' · '));
+  if (repairNotes.length) warnings.push('Reparatie: ' + repairNotes.slice(0, 5).join(' · '));
   return { save: final, meta, warnings };
 }
 function sfReportError(where, err, userMsg) {
