@@ -405,16 +405,7 @@ bindPress(btnHelp, () => {
   UI.show('helpScreen');
 });
 function runForceFreshVersion() {
-  AudioSys.init();
-  AudioSys.sfx('select');
-  const go = () => {
-    if (typeof window.forceFreshVersion === 'function') return window.forceFreshVersion();
-    const u = new URL(location.href);
-    u.searchParams.set('fresh', String(Date.now()));
-    location.replace(u.toString());
-    return Promise.resolve();
-  };
-  safeAsync(go(), 'forceFresh', 'Cache legen mislukt — sluit tab en open opnieuw');
+  safeAsync(runVersionUpdateWithSavePrompt(), 'forceFresh', t('versionUpdate.fail'));
 }
 bindPress(document.getElementById('btnVerseVersie'), runForceFreshVersion);
 bindPress(document.getElementById('btnForceFresh'), runForceFreshVersion);

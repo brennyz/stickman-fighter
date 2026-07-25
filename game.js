@@ -132,10 +132,12 @@ const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) |
 const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
+const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
+const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.80';
+const APP_VERSION = '1.17.81';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 198;
+const SW_CACHE_REV = 199;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -679,6 +681,93 @@ function restoreSaveFromBackup() {
     sfReportError('restoreBackup', err, 'Backup herstellen mislukt');
     return false;
   }
+}
+
+function saveHasProgress(s) {
+  const st = s || save;
+  if (!st || typeof st !== 'object') return false;
+  if ((st.lvl || 1) > 1) return true;
+  if ((st.unlocked || 1) > 1) return true;
+  if ((st.stats && st.stats.kills) > 0) return true;
+  if ((st.stats && st.stats.advWins) > 0) return true;
+  if (Object.keys(st.dex || {}).length > 0) return true;
+  if (Object.keys(st.achievements || {}).length > 0) return true;
+  if (Object.keys(st.summons || {}).length > 0) return true;
+  if (Object.keys(st.pets || {}).length > 0) return true;
+  return false;
+}
+
+/** Bewaar save vóór versie-ophalen — blijft staan tot speler na update kiest. */
+function stashSaveForVersionUpdate() {
+  try {
+    persist();
+    syncBackupFromPrimary();
+    const clean = sanitizeSave(save);
+    const payload = {
+      schema: SAVE_EXPORT_SCHEMA,
+      fromApp: APP_VERSION,
+      stashedAt: new Date().toISOString(),
+      save: clean,
+      summary: typeof saveExportSummaryLine === 'function' ? saveExportSummaryLine(clean) : `Lv ${clean.lvl}`,
+    };
+    localStorage.setItem(VERSION_UPDATE_SAVE_KEY, JSON.stringify(payload));
+    localStorage.setItem(VERSION_UPDATE_FLAG_KEY, '1');
+    return true;
+  } catch (err) {
+    sfReportError('versionStash', err, 'Save veiligstellen mislukt');
+    return false;
+  }
+}
+
+function peekVersionUpdateSave() {
+  try {
+    const raw = localStorage.getItem(VERSION_UPDATE_SAVE_KEY);
+    if (!raw || raw.length > 200000) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || !parsed.save) return null;
+    return parsed;
+  } catch (_) {
+    return null;
+  }
+}
+
+function clearVersionUpdateSave() {
+  try {
+    localStorage.removeItem(VERSION_UPDATE_SAVE_KEY);
+    localStorage.removeItem(VERSION_UPDATE_FLAG_KEY);
+  } catch (_) {}
+}
+
+function applyVersionUpdateSave() {
+  const stash = peekVersionUpdateSave();
+  if (!stash || !stash.save) return false;
+  try {
+    save = sanitizeSave(stash.save);
+    if (!persist()) {
+      userToast('Save geladen maar opslaan mislukt — export in Instellingen', 4200);
+      return false;
+    }
+    clearVersionUpdateSave();
+    checkAchievements();
+    if (typeof UI !== 'undefined') {
+      UI.renderMenu();
+      if (UI.renderMissions) UI.renderMissions();
+      if (UI.renderSettings) UI.renderSettings();
+    }
+    return true;
+  } catch (err) {
+    sfReportError('versionApply', err, 'Save laden mislukt');
+    return false;
+  }
+}
+
+function versionUpdateRestorePending() {
+  try {
+    if (localStorage.getItem(VERSION_UPDATE_FLAG_KEY) !== '1') return false;
+  } catch (_) {
+    return false;
+  }
+  return !!peekVersionUpdateSave();
 }
 
 /** Schrijf hoofd-save opnieuw naar backup (fix drift zonder progressie te verliezen). */
@@ -2267,6 +2356,82 @@ function formatSaveBytes(n) {
   const b = Math.max(0, Math.floor(Number(n) || 0));
   if (b < 1024) return b + ' B';
   return (b / 1024).toFixed(b < 10240 ? 1 : 0) + ' KB';
+}
+
+async function promptVersionUpdateBeforeReload() {
+  if (state === 'play' || state === 'pause' || state === 'result') {
+    try { recoverToMenu(); } catch (_) {
+      game = null;
+      state = 'menu';
+    }
+  }
+  return new Promise((resolve) => {
+    UI.showVersionUpdateBeforeReload({
+      hasProgress: saveHasProgress(),
+      summary: saveExportSummaryLine(),
+      onBackup: () => {
+        if (!stashSaveForVersionUpdate()) {
+          UI.toast(t('versionUpdate.stashFail'), 3600);
+          resolve(false);
+          return;
+        }
+        UI.toast(t('versionUpdate.stashOk'), 2800);
+        resolve(true);
+      },
+      onSkip: () => resolve(true),
+      onCancel: () => resolve(false),
+    });
+  });
+}
+
+async function runVersionUpdateWithSavePrompt() {
+  AudioSys.init();
+  AudioSys.sfx('select');
+  const proceed = await promptVersionUpdateBeforeReload();
+  if (!proceed) return;
+  const go = () => {
+    if (typeof window.forceFreshVersion === 'function') return window.forceFreshVersion();
+    const u = new URL(location.href);
+    u.searchParams.set('fresh', String(Date.now()));
+    location.replace(u.toString());
+    return Promise.resolve();
+  };
+  safeAsync(go(), 'forceFresh', t('versionUpdate.fail'));
+}
+
+function maybeOfferVersionUpdateSave() {
+  if (!versionUpdateRestorePending()) return;
+  const stash = peekVersionUpdateSave();
+  if (!stash) {
+    clearVersionUpdateSave();
+    return;
+  }
+  setTimeout(() => {
+    try {
+      UI.showVersionUpdateRestore({
+        stash,
+        currentSummary: saveExportSummaryLine(),
+        onUse: () => {
+          if (applyVersionUpdateSave()) {
+            AudioSys.sfx('win');
+            UI.toast(t('versionUpdate.applied', {
+              from: stash.fromApp || '?',
+              to: APP_VERSION,
+              summary: saveExportSummaryLine(),
+            }), 4800);
+          } else {
+            UI.toast(t('versionUpdate.applyFail'), 3600);
+          }
+        },
+        onSkip: () => {
+          clearVersionUpdateSave();
+          UI.toast(t('versionUpdate.keptCurrent'), 3200);
+        },
+      });
+    } catch (err) {
+      sfReportError('versionRestoreOffer', err);
+    }
+  }, 900);
 }
 
 function saveStorageDiagnostics() {
@@ -6101,6 +6266,25 @@ function seedNlGameStrings() {
     styleEquipped: '{name} uitgerust',
     welcome: 'Welkom! Menu → Tips · per modus één korte hint bovenin (geen toast-stapel)',
   });
+  if (!I18N.nl.versionUpdate) I18N.nl.versionUpdate = {};
+  Object.assign(I18N.nl.versionUpdate, {
+    beforeTitle: 'Versie ophalen',
+    beforeBodyProgress: 'Je hebt voortgang op dit apparaat:\n{summary}\n\nSave veiligstellen vóór v{version}? Daarna kun je die save in de nieuwe versie gebruiken.',
+    beforeBodyFresh: 'Nieuwe versie laden (v{version})?\nGeen voortgang gevonden — je kunt direct updaten.',
+    backupAndGo: 'Ja — save maken & updaten',
+    goWithout: 'Updaten zonder extra save',
+    cancel: 'Annuleren',
+    afterTitle: 'Save gevonden',
+    afterBody: 'Vóór de update (v{from}) bewaarde je:\n{stashSummary}\n\nHuidige save:\n{currentSummary}\n\nDeze save gebruiken in v{to}?',
+    useStash: 'Ja — gebruik bewaarde save',
+    keepCurrent: 'Nee — houd huidige save',
+    stashOk: 'Save bewaard — update start…',
+    stashFail: 'Save bewaren mislukt — probeer Export in Instellingen',
+    applied: 'Save van v{from} geladen in v{to} · {summary}',
+    applyFail: 'Save laden mislukt — probeer Herstel backup in Instellingen',
+    keptCurrent: 'Huidige save behouden',
+    fail: 'Update mislukt — sluit tab en open opnieuw',
+  });
   if (!I18N.nl.missionsUi) I18N.nl.missionsUi = {};
   Object.assign(I18N.nl.missionsUi, {
     flowDone: '✓ Dag afgerond — morgen 3 nieuwe missies (middernacht)',
@@ -6591,6 +6775,24 @@ const CATALOG_EN = {
     eggFloat: '{name} floats along now!',
     styleEquipped: '{name} equipped',
     welcome: 'Welcome! Menu → Tips · one short hint per mode (no toast stack)',
+  },
+  versionUpdate: {
+    beforeTitle: 'Fetch new version',
+    beforeBodyProgress: 'You have progress on this device:\n{summary}\n\nBack up save before v{version}? You can use it in the new version after reload.',
+    beforeBodyFresh: 'Load new version (v{version})?\nNo progress found — you can update directly.',
+    backupAndGo: 'Yes — back up save & update',
+    goWithout: 'Update without extra backup',
+    cancel: 'Cancel',
+    afterTitle: 'Save found',
+    afterBody: 'Before update (v{from}) you saved:\n{stashSummary}\n\nCurrent save:\n{currentSummary}\n\nUse this save in v{to}?',
+    useStash: 'Yes — use saved backup',
+    keepCurrent: 'No — keep current save',
+    stashOk: 'Save backed up — starting update…',
+    stashFail: 'Backup failed — try Export in Settings',
+    applied: 'Save from v{from} loaded in v{to} · {summary}',
+    applyFail: 'Load failed — try Restore backup in Settings',
+    keptCurrent: 'Kept current save',
+    fail: 'Update failed — close tab and reopen',
   },
   missionsUi: {
     flowDone: '✓ Day complete — 3 new missions tomorrow (midnight)',
@@ -15921,6 +16123,7 @@ const UI = {
 
   goMenu() {
     try {
+      this.hideVersionUpdateDialog();
       try { clearGameResultTimer(game); } catch (_) {}
       try { cancelGambleStart(); } catch (_) {}
       try { Input.releaseAll(); } catch (_) {}
@@ -17664,6 +17867,82 @@ const UI = {
     }
   },
 
+  hideVersionUpdateDialog() {
+    const ov = document.getElementById('versionUpdateOverlay');
+    if (ov) ov.hidden = true;
+    const actions = document.getElementById('versionUpdateActions');
+    if (actions) actions.replaceChildren();
+  },
+
+  _versionUpdateBtn(label, cls, onClick) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn mode-btn big-touch ' + (cls || 'b-gray');
+    const div = document.createElement('div');
+    div.textContent = label;
+    btn.appendChild(div);
+    btn.addEventListener('click', () => {
+      try { AudioSys.sfx('select'); } catch (_) {}
+      this.hideVersionUpdateDialog();
+      onClick();
+    });
+    return btn;
+  },
+
+  showVersionUpdateBeforeReload(opts) {
+    opts = opts || {};
+    const ov = document.getElementById('versionUpdateOverlay');
+    const title = document.getElementById('versionUpdateTitle');
+    const body = document.getElementById('versionUpdateBody');
+    const actions = document.getElementById('versionUpdateActions');
+    if (!ov || !title || !body || !actions) {
+      if (opts.onSkip) opts.onSkip();
+      return;
+    }
+    title.textContent = t('versionUpdate.beforeTitle');
+    body.textContent = opts.hasProgress
+      ? t('versionUpdate.beforeBodyProgress', { summary: opts.summary || '', version: APP_VERSION })
+      : t('versionUpdate.beforeBodyFresh', { version: APP_VERSION });
+    actions.replaceChildren();
+    if (opts.hasProgress) {
+      actions.appendChild(this._versionUpdateBtn(t('versionUpdate.backupAndGo'), 'b-continue', () => {
+        if (opts.onBackup) opts.onBackup();
+      }));
+    }
+    actions.appendChild(this._versionUpdateBtn(t('versionUpdate.goWithout'), 'b-gray', () => {
+      if (opts.onSkip) opts.onSkip();
+    }));
+    actions.appendChild(this._versionUpdateBtn(t('versionUpdate.cancel'), 'b-gray', () => {
+      if (opts.onCancel) opts.onCancel();
+    }));
+    ov.hidden = false;
+  },
+
+  showVersionUpdateRestore(opts) {
+    opts = opts || {};
+    const stash = opts.stash;
+    const ov = document.getElementById('versionUpdateOverlay');
+    const title = document.getElementById('versionUpdateTitle');
+    const body = document.getElementById('versionUpdateBody');
+    const actions = document.getElementById('versionUpdateActions');
+    if (!ov || !title || !body || !actions || !stash) return;
+    title.textContent = t('versionUpdate.afterTitle');
+    body.textContent = t('versionUpdate.afterBody', {
+      from: stash.fromApp || '?',
+      to: APP_VERSION,
+      stashSummary: stash.summary || saveExportSummaryLine(stash.save),
+      currentSummary: opts.currentSummary || saveExportSummaryLine(),
+    });
+    actions.replaceChildren();
+    actions.appendChild(this._versionUpdateBtn(t('versionUpdate.useStash'), 'b-continue', () => {
+      if (opts.onUse) opts.onUse();
+    }));
+    actions.appendChild(this._versionUpdateBtn(t('versionUpdate.keepCurrent'), 'b-gray', () => {
+      if (opts.onSkip) opts.onSkip();
+    }));
+    ov.hidden = false;
+  },
+
   showResult(win, data) {
     if (state === 'menu' || !data) return;
     this.lastResult = data;
@@ -18115,16 +18394,7 @@ bindPress(btnHelp, () => {
   UI.show('helpScreen');
 });
 function runForceFreshVersion() {
-  AudioSys.init();
-  AudioSys.sfx('select');
-  const go = () => {
-    if (typeof window.forceFreshVersion === 'function') return window.forceFreshVersion();
-    const u = new URL(location.href);
-    u.searchParams.set('fresh', String(Date.now()));
-    location.replace(u.toString());
-    return Promise.resolve();
-  };
-  safeAsync(go(), 'forceFresh', 'Cache legen mislukt — sluit tab en open opnieuw');
+  safeAsync(runVersionUpdateWithSavePrompt(), 'forceFresh', t('versionUpdate.fail'));
 }
 bindPress(document.getElementById('btnVerseVersie'), runForceFreshVersion);
 bindPress(document.getElementById('btnForceFresh'), runForceFreshVersion);
@@ -18681,14 +18951,7 @@ function wireNetStatusTap() {
   el.dataset.sfNetTap = '1';
   const run = () => {
     if (!window.__sfSwUpdateReady) return;
-    safeAsync((async () => {
-      if (typeof window.applySwUpdate === 'function') {
-        const ok = await window.applySwUpdate();
-        if (!ok && typeof window.forceFreshVersion === 'function') await window.forceFreshVersion();
-      } else if (typeof window.forceFreshVersion === 'function') {
-        await window.forceFreshVersion();
-      }
-    })(), 'swUpdateTap', 'Update mislukt — tik Instellingen → Verse versie');
+    safeAsync(runVersionUpdateWithSavePrompt(), 'swUpdateTap', t('versionUpdate.fail'));
   };
   el.addEventListener('click', run);
   el.addEventListener('keydown', (e) => {
@@ -18730,6 +18993,7 @@ function bootGame() {
   safeCall(wireNetStatusTap, 'netTap');
   safeCall(() => UI.syncTouchClass(), 'touch');
   safeCall(maybeWelcomeToast, 'welcome');
+  safeCall(maybeOfferVersionUpdateSave, 'versionRestore');
   if (!window.__sfGlobalErr) {
     window.__sfGlobalErr = true;
     window.addEventListener('error', (ev) => {

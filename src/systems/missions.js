@@ -582,6 +582,82 @@ function formatSaveBytes(n) {
   return (b / 1024).toFixed(b < 10240 ? 1 : 0) + ' KB';
 }
 
+async function promptVersionUpdateBeforeReload() {
+  if (state === 'play' || state === 'pause' || state === 'result') {
+    try { recoverToMenu(); } catch (_) {
+      game = null;
+      state = 'menu';
+    }
+  }
+  return new Promise((resolve) => {
+    UI.showVersionUpdateBeforeReload({
+      hasProgress: saveHasProgress(),
+      summary: saveExportSummaryLine(),
+      onBackup: () => {
+        if (!stashSaveForVersionUpdate()) {
+          UI.toast(t('versionUpdate.stashFail'), 3600);
+          resolve(false);
+          return;
+        }
+        UI.toast(t('versionUpdate.stashOk'), 2800);
+        resolve(true);
+      },
+      onSkip: () => resolve(true),
+      onCancel: () => resolve(false),
+    });
+  });
+}
+
+async function runVersionUpdateWithSavePrompt() {
+  AudioSys.init();
+  AudioSys.sfx('select');
+  const proceed = await promptVersionUpdateBeforeReload();
+  if (!proceed) return;
+  const go = () => {
+    if (typeof window.forceFreshVersion === 'function') return window.forceFreshVersion();
+    const u = new URL(location.href);
+    u.searchParams.set('fresh', String(Date.now()));
+    location.replace(u.toString());
+    return Promise.resolve();
+  };
+  safeAsync(go(), 'forceFresh', t('versionUpdate.fail'));
+}
+
+function maybeOfferVersionUpdateSave() {
+  if (!versionUpdateRestorePending()) return;
+  const stash = peekVersionUpdateSave();
+  if (!stash) {
+    clearVersionUpdateSave();
+    return;
+  }
+  setTimeout(() => {
+    try {
+      UI.showVersionUpdateRestore({
+        stash,
+        currentSummary: saveExportSummaryLine(),
+        onUse: () => {
+          if (applyVersionUpdateSave()) {
+            AudioSys.sfx('win');
+            UI.toast(t('versionUpdate.applied', {
+              from: stash.fromApp || '?',
+              to: APP_VERSION,
+              summary: saveExportSummaryLine(),
+            }), 4800);
+          } else {
+            UI.toast(t('versionUpdate.applyFail'), 3600);
+          }
+        },
+        onSkip: () => {
+          clearVersionUpdateSave();
+          UI.toast(t('versionUpdate.keptCurrent'), 3200);
+        },
+      });
+    } catch (err) {
+      sfReportError('versionRestoreOffer', err);
+    }
+  }, 900);
+}
+
 function saveStorageDiagnostics() {
   let primaryRaw = null;
   let backupRaw = null;

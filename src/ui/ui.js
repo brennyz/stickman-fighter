@@ -555,6 +555,7 @@ const UI = {
 
   goMenu() {
     try {
+      this.hideVersionUpdateDialog();
       try { clearGameResultTimer(game); } catch (_) {}
       try { cancelGambleStart(); } catch (_) {}
       try { Input.releaseAll(); } catch (_) {}
@@ -2296,6 +2297,82 @@ const UI = {
       }
       statusEl.textContent = line;
     }
+  },
+
+  hideVersionUpdateDialog() {
+    const ov = document.getElementById('versionUpdateOverlay');
+    if (ov) ov.hidden = true;
+    const actions = document.getElementById('versionUpdateActions');
+    if (actions) actions.replaceChildren();
+  },
+
+  _versionUpdateBtn(label, cls, onClick) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn mode-btn big-touch ' + (cls || 'b-gray');
+    const div = document.createElement('div');
+    div.textContent = label;
+    btn.appendChild(div);
+    btn.addEventListener('click', () => {
+      try { AudioSys.sfx('select'); } catch (_) {}
+      this.hideVersionUpdateDialog();
+      onClick();
+    });
+    return btn;
+  },
+
+  showVersionUpdateBeforeReload(opts) {
+    opts = opts || {};
+    const ov = document.getElementById('versionUpdateOverlay');
+    const title = document.getElementById('versionUpdateTitle');
+    const body = document.getElementById('versionUpdateBody');
+    const actions = document.getElementById('versionUpdateActions');
+    if (!ov || !title || !body || !actions) {
+      if (opts.onSkip) opts.onSkip();
+      return;
+    }
+    title.textContent = t('versionUpdate.beforeTitle');
+    body.textContent = opts.hasProgress
+      ? t('versionUpdate.beforeBodyProgress', { summary: opts.summary || '', version: APP_VERSION })
+      : t('versionUpdate.beforeBodyFresh', { version: APP_VERSION });
+    actions.replaceChildren();
+    if (opts.hasProgress) {
+      actions.appendChild(this._versionUpdateBtn(t('versionUpdate.backupAndGo'), 'b-continue', () => {
+        if (opts.onBackup) opts.onBackup();
+      }));
+    }
+    actions.appendChild(this._versionUpdateBtn(t('versionUpdate.goWithout'), 'b-gray', () => {
+      if (opts.onSkip) opts.onSkip();
+    }));
+    actions.appendChild(this._versionUpdateBtn(t('versionUpdate.cancel'), 'b-gray', () => {
+      if (opts.onCancel) opts.onCancel();
+    }));
+    ov.hidden = false;
+  },
+
+  showVersionUpdateRestore(opts) {
+    opts = opts || {};
+    const stash = opts.stash;
+    const ov = document.getElementById('versionUpdateOverlay');
+    const title = document.getElementById('versionUpdateTitle');
+    const body = document.getElementById('versionUpdateBody');
+    const actions = document.getElementById('versionUpdateActions');
+    if (!ov || !title || !body || !actions || !stash) return;
+    title.textContent = t('versionUpdate.afterTitle');
+    body.textContent = t('versionUpdate.afterBody', {
+      from: stash.fromApp || '?',
+      to: APP_VERSION,
+      stashSummary: stash.summary || saveExportSummaryLine(stash.save),
+      currentSummary: opts.currentSummary || saveExportSummaryLine(),
+    });
+    actions.replaceChildren();
+    actions.appendChild(this._versionUpdateBtn(t('versionUpdate.useStash'), 'b-continue', () => {
+      if (opts.onUse) opts.onUse();
+    }));
+    actions.appendChild(this._versionUpdateBtn(t('versionUpdate.keepCurrent'), 'b-gray', () => {
+      if (opts.onSkip) opts.onSkip();
+    }));
+    ov.hidden = false;
   },
 
   showResult(win, data) {

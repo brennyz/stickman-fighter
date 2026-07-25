@@ -177,6 +177,25 @@ function seedNlGameStrings() {
     styleEquipped: '{name} uitgerust',
     welcome: 'Welkom! Menu → Tips · per modus één korte hint bovenin (geen toast-stapel)',
   });
+  if (!I18N.nl.versionUpdate) I18N.nl.versionUpdate = {};
+  Object.assign(I18N.nl.versionUpdate, {
+    beforeTitle: 'Versie ophalen',
+    beforeBodyProgress: 'Je hebt voortgang op dit apparaat:\n{summary}\n\nSave veiligstellen vóór v{version}? Daarna kun je die save in de nieuwe versie gebruiken.',
+    beforeBodyFresh: 'Nieuwe versie laden (v{version})?\nGeen voortgang gevonden — je kunt direct updaten.',
+    backupAndGo: 'Ja — save maken & updaten',
+    goWithout: 'Updaten zonder extra save',
+    cancel: 'Annuleren',
+    afterTitle: 'Save gevonden',
+    afterBody: 'Vóór de update (v{from}) bewaarde je:\n{stashSummary}\n\nHuidige save:\n{currentSummary}\n\nDeze save gebruiken in v{to}?',
+    useStash: 'Ja — gebruik bewaarde save',
+    keepCurrent: 'Nee — houd huidige save',
+    stashOk: 'Save bewaard — update start…',
+    stashFail: 'Save bewaren mislukt — probeer Export in Instellingen',
+    applied: 'Save van v{from} geladen in v{to} · {summary}',
+    applyFail: 'Save laden mislukt — probeer Herstel backup in Instellingen',
+    keptCurrent: 'Huidige save behouden',
+    fail: 'Update mislukt — sluit tab en open opnieuw',
+  });
   if (!I18N.nl.missionsUi) I18N.nl.missionsUi = {};
   Object.assign(I18N.nl.missionsUi, {
     flowDone: '✓ Dag afgerond — morgen 3 nieuwe missies (middernacht)',
@@ -667,6 +686,24 @@ const CATALOG_EN = {
     eggFloat: '{name} floats along now!',
     styleEquipped: '{name} equipped',
     welcome: 'Welcome! Menu → Tips · one short hint per mode (no toast stack)',
+  },
+  versionUpdate: {
+    beforeTitle: 'Fetch new version',
+    beforeBodyProgress: 'You have progress on this device:\n{summary}\n\nBack up save before v{version}? You can use it in the new version after reload.',
+    beforeBodyFresh: 'Load new version (v{version})?\nNo progress found — you can update directly.',
+    backupAndGo: 'Yes — back up save & update',
+    goWithout: 'Update without extra backup',
+    cancel: 'Cancel',
+    afterTitle: 'Save found',
+    afterBody: 'Before update (v{from}) you saved:\n{stashSummary}\n\nCurrent save:\n{currentSummary}\n\nUse this save in v{to}?',
+    useStash: 'Yes — use saved backup',
+    keepCurrent: 'No — keep current save',
+    stashOk: 'Save backed up — starting update…',
+    stashFail: 'Backup failed — try Export in Settings',
+    applied: 'Save from v{from} loaded in v{to} · {summary}',
+    applyFail: 'Load failed — try Restore backup in Settings',
+    keptCurrent: 'Kept current save',
+    fail: 'Update failed — close tab and reopen',
   },
   missionsUi: {
     flowDone: '✓ Day complete — 3 new missions tomorrow (midnight)',
