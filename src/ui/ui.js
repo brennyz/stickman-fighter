@@ -1447,7 +1447,7 @@ const UI = {
         hintLine = tipEl.textContent;
       } else {
         const i = Math.floor(Date.now() / 8000);
-        tipEl.textContent = menuTipAt(i);
+        tipEl.textContent = d20TipAt(i);
         hintLine = tipEl.textContent;
       }
     }

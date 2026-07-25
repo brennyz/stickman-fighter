@@ -340,6 +340,28 @@ function seedNlGameStrings() {
     '<b>Offline:</b> na 1× online openen cache’t de app HTML+JS — banner onderaan bij geen net. Tunnel-link heeft internet nodig; GitHub Pages + app-lade = stabielst.',
   ];
   if (!I18N.nl.menu) I18N.nl.menu = {};
+  I18N.nl.menu.d20Tips = [
+    '2 spelers: character select in twee delen — eerst P1, dan P2 (18 vechters, best-of-3).',
+    'Komt eraan: Mat\'s bonus game — korte mini-uitdaging na een sterke run of perfecte ronde.',
+    'Komt eraan: mik met je wapen — richt op de vloer voor schokgolven of op vogels voor bonus-XP.',
+    'Volle chakra → tik 🌀 voor Rasengan — grote schade en screen-shake.',
+    '2P op iPad: liggend houden; P1 linker helft, P2 rechter helft (joystick + knoppen).',
+    'Muur: combo\'s stapelen schade — bomstenen (rood) ontploffen, goud = extra XP.',
+    'Monsterboek vullen = meer max HP via rariteit (gewoon +3 … mythisch +25).',
+    'Komt eraan: avontuur-character select vóór elk level — eigen loadout per run.',
+    'Training vs RabbitRobot: duck zijn lasers; Chidori open = jouw moment.',
+    'Dash / substitutie: dubbel-tik links-rechts of Shift — korte onkwetsbaarheid.',
+    'Komt eraan: Mat\'s dojo — timing-minigame met planken en combo-multipliers.',
+    'Kunai & shuriken unlocken vroeg — gooi projectielen naast melee.',
+    'Bazen fase 2 onder half HP — blokkeer en spaar chakra voor de finish.',
+    'Komt eraan: vogels in levels — mik met boog/kunai voor pickups zonder grond te raken.',
+    'Dagelijkse missies + dagbonus (+80 XP) — reset om middernacht (UTC).',
+    'Verder spelen hervat je laatste modus (avontuur, training, muur of 2P).',
+    'Komt eraan: vloer-slag met zware wapens — scheurt tegels in muur-modus.',
+    'Willekeurig duo op character select: 🎲 kiest twee verschillende vechters.',
+    'Instellingen: grote knoppen, minder schok, combo-HUD — handig op iPad.',
+    'Komt eraan: Mat co-op assist — korte buff als je zijn bonus haalt.',
+  ];
   I18N.nl.menu.tips = [
     'Kies een tegel — Avontuur · Arcade · 2P · Collectie',
     '5 eilanden — baas Lv 10/20/30/40/50 opent volgend eiland',
@@ -1282,6 +1304,27 @@ const CATALOG_EN = {
     'Fill monster book = more max HP',
     'Continue resumes your last mode',
     'Menu music changes when you return from a mode',
+  ], d20Tips: [
+    '2P: character select in two steps — P1 then P2 (18 fighters, best-of-3).',
+    'Coming: Mat\'s bonus game — short mini-challenge after a strong run or perfect round.',
+    'Coming: aim your weapon — floor for shockwaves or birds for bonus XP.',
+    'Full chakra → tap 🌀 for Rasengan — big damage and screen-shake.',
+    '2P on iPad: landscape; P1 left half, P2 right half (joystick + buttons).',
+    'Wall: combos stack damage — red bombs explode, gold = extra XP.',
+    'Fill monster book = more max HP by rarity (common +3 … mythic +25).',
+    'Coming: adventure character select before each level — loadout per run.',
+    'Training vs RabbitRobot: duck lasers; open Chidori = your moment.',
+    'Dash / substitution: double-tap left-right or Shift — brief invulnerability.',
+    'Coming: Mat\'s dojo — timing minigame with boards and combo multipliers.',
+    'Kunai & shuriken unlock early — throw projectiles alongside melee.',
+    'Bosses phase 2 under half HP — block and save chakra for the finish.',
+    'Coming: birds in levels — aim with bow/kunai for pickups without touching ground.',
+    'Daily missions + day bonus (+80 XP) — resets at midnight (UTC).',
+    'Continue resumes your last mode (adventure, training, wall or 2P).',
+    'Coming: floor slam with heavy weapons — cracks tiles in wall mode.',
+    'Random duo on character select: 🎲 picks two different fighters.',
+    'Settings: big buttons, less shake, combo HUD — handy on iPad.',
+    'Coming: Mat co-op assist — short buff when you clear his bonus.',
   ] },
   combat: {
     counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
@@ -1807,6 +1850,24 @@ function menuTipAt(i) {
   const tips = i18nList('menu.tips');
   if (!tips.length) return '';
   return tips[((i % tips.length) + tips.length) % tips.length];
+}
+
+function formatD20Line(roll) {
+  return `🎲 ${roll.n}/20 — ${roll.text}`;
+}
+
+function d20TipAt(i) {
+  const tips = i18nList('menu.d20Tips');
+  if (!tips.length) return menuTipAt(i);
+  const idx = ((i % tips.length) + tips.length) % tips.length;
+  return formatD20Line({ n: idx + 1, text: tips[idx] });
+}
+
+function rollD20Entry() {
+  const tips = i18nList('menu.d20Tips');
+  if (!tips.length) return { n: 1, text: menuTipAt(0) };
+  const n = 1 + Math.floor(Math.random() * tips.length);
+  return { n, text: tips[n - 1] };
 }
 
 function dailyModeLabel(mode) {

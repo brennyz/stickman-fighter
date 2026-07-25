@@ -414,6 +414,18 @@ bindPress(btnIslandHelp, () => {
 });
 const helpOk = document.getElementById('helpOk');
 bindPress(helpOk, () => { AudioSys.sfx('select'); UI.goMenu(); });
+const btnD20Roll = document.getElementById('btnD20Roll');
+bindPress(btnD20Roll, () => {
+  AudioSys.init();
+  AudioSys.sfx('bell');
+  const roll = rollD20Entry();
+  const el = document.getElementById('d20RollResult');
+  if (el) {
+    el.style.display = 'block';
+    el.innerHTML = `<b>🎲 ${roll.n} op de d20</b><br><span style="opacity:.92">${roll.text}</span>`;
+  }
+  UI.toast(formatD20Line(roll), 4500);
+});
 const btnGuvve = document.getElementById('btnGuvve');
 if (btnGuvve) {
   const guvveLines = [
