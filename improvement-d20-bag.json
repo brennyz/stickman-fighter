@@ -3,27 +3,19 @@
   "cyclesCompleted": 4,
   "rollFirst": [],
   "remaining": [
-    3,
     4,
     5,
     13
   ],
   "lastRoll": {
-    "face": 19,
-    "category": "Muur & minigames \u2014 combo, timer, record",
-    "rolledAt": "2026-07-25T14:06:03Z",
-    "remainingCount": 4,
+    "face": 3,
+    "category": "Versus 2P \u2014 split controls, rematch, char balance",
+    "rolledAt": "2026-07-25T14:09:13Z",
+    "remainingCount": 3,
     "cycle": 4
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 8,
-      "note": "PWA network-first shell + offline banner + SW update toast",
-      "version": "1.9.1",
-      "doneAt": "2026-07-23T14:21:43Z",
-      "cycle": 0
-    },
     {
       "face": 7,
       "note": "Save health + dex kills fix + import preview",
@@ -575,6 +567,13 @@
       "note": "chase meter + pace 45/20 + combo re-arm + near-miss",
       "version": "1.18.32",
       "doneAt": "2026-07-25T14:07:40Z",
+      "cycle": 4
+    },
+    {
+      "face": 3,
+      "note": "spawn pads + MP/HP lead + round skip + rematch tips",
+      "version": "1.18.33",
+      "doneAt": "2026-07-25T14:11:01Z",
       "cycle": 4
     }
   ],
@@ -1783,6 +1782,13 @@
       "category": "Muur & minigames \u2014 combo, timer, record",
       "rolledAt": "2026-07-25T14:06:03Z",
       "remainingCount": 4,
+      "cycle": 4
+    },
+    {
+      "face": 3,
+      "category": "Versus 2P \u2014 split controls, rematch, char balance",
+      "rolledAt": "2026-07-25T14:09:13Z",
+      "remainingCount": 3,
       "cycle": 4
     }
   ],

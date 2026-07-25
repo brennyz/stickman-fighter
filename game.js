@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.32';
+const APP_VERSION = '1.18.33';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 242;
+const SW_CACHE_REV = 243;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -8352,6 +8352,8 @@ function seedNlGameStrings() {
     trainLossTip: 'Spring tijdens CHIDORI-telegraph — robot mist · duck oor-lasers',
     trainTipDefault: 'Tip: duck lasers · chakra vol → Rasengan',
     vsRematchTip: 'Opnieuw = rematch · Pauze → Herstart match (0-0)',
+    vsCloseRematchTip: 'Niksen! Rematch met Opnieuw · of Pauze → Herstart 0-0',
+    vsFatalityRematchTip: 'Fatality! Rematch met Opnieuw · zelfde vechters',
     vsFatalityLine: ' · fatality',
     wallRecordShare: 'Nieuw record — share met een vriend!',
     wallComboTip: 'Tip: hou combo vast voor snellere sloop',
@@ -8443,6 +8445,11 @@ function seedNlGameStrings() {
     wallNearRecFinal: 'Laatste kans — nog {gap} tot record!',
     wallPaceOk: 'Op tempo · +{n} vs record',
     wallPacePush: 'Achter tempo · −{n} — combo!',
+    vsMatchPointP1: 'Match point · P1!',
+    vsMatchPointP2: 'Match point · P2!',
+    vsHpLeadP1: 'P1 leidt +{n}% HP',
+    vsHpLeadP2: 'P2 leidt +{n}% HP',
+    vsHpEven: 'HP gelijk — TIME telt!',
     coinPlus1: '+1 munt', coinPlus3: '+3 munten',
   });
   if (!I18N.nl.toast) I18N.nl.toast = {};
@@ -8918,6 +8925,16 @@ function seedNlGameStrings() {
     petCoins: 'Pet coins: +{pending} · wallet {wallet}',
     matsHint: 'Joystick ↑ mik · slag/gooi hoger · shuriken op roze vliegers',
     spawnFair: 'Spawn · eerlijk start', nextRound: 'Volgende ronde',
+    matchOver: 'Match klaar',
+    roundWinnerP1: 'Ronde → P1',
+    roundWinnerP2: 'Ronde → P2',
+    roundSkipHint: 'Tik slag om door te gaan',
+    spawnP1: 'P1 spawn', spawnP2: 'P2 spawn',
+    spawnGrace: 'Spawn {n}s',
+    matchPointP1: 'MATCH POINT · P1',
+    matchPointP2: 'MATCH POINT · P2',
+    hpLeadP1: 'P1 +{n}% HP',
+    hpLeadP2: 'P2 +{n}% HP',
     vsFatalityHint: 'Tik wapen/slag/trap voor styl-finish · auto skip',
     p1Line: 'P1 · {name} · {pct}%', p2Line: '{pct}% · {name} · P2',
     decisiveRound: 'Beslissende ronde · {s}-{r}',
@@ -9116,6 +9133,8 @@ const CATALOG_EN = {
     trainLossTip: 'Jump during CHIDORI telegraph — robot misses · duck ear-lasers',
     trainTipDefault: 'Tip: duck lasers · full chakra → Rasengan',
     vsRematchTip: 'Again = rematch · Pause → Restart match (0-0)',
+    vsCloseRematchTip: 'Close one! Rematch with Again · or Pause → Restart 0-0',
+    vsFatalityRematchTip: 'Fatality! Rematch with Again · same fighters',
     vsFatalityLine: ' · fatality',
     wallRecordShare: 'New record — share with a friend!',
     wallComboTip: 'Tip: keep combo for faster smash',
@@ -9695,6 +9714,11 @@ const CATALOG_EN = {
     wallNearRecFinal: 'Last chance — {gap} to record!',
     wallPaceOk: 'On pace · +{n} vs record',
     wallPacePush: 'Behind pace · −{n} — combo!',
+    vsMatchPointP1: 'Match point · P1!',
+    vsMatchPointP2: 'Match point · P2!',
+    vsHpLeadP1: 'P1 leads +{n}% HP',
+    vsHpLeadP2: 'P2 leads +{n}% HP',
+    vsHpEven: 'HP even — TIME matters!',
     coinPlus1: '+1 coin', coinPlus3: '+3 coins',
   },
   hud: {
@@ -9723,6 +9747,16 @@ const CATALOG_EN = {
     petCoins: 'Pet coins: +{pending} · wallet {wallet}',
     matsHint: 'Joystick ↑ aim · melee/throw higher · shuriken on pink flyers',
     spawnFair: 'Spawn · fair start', nextRound: 'Next round',
+    matchOver: 'Match over',
+    roundWinnerP1: 'Round → P1',
+    roundWinnerP2: 'Round → P2',
+    roundSkipHint: 'Tap attack to continue',
+    spawnP1: 'P1 spawn', spawnP2: 'P2 spawn',
+    spawnGrace: 'Spawn {n}s',
+    matchPointP1: 'MATCH POINT · P1',
+    matchPointP2: 'MATCH POINT · P2',
+    hpLeadP1: 'P1 +{n}% HP',
+    hpLeadP2: 'P2 +{n}% HP',
     vsFatalityHint: 'Tap weapon/punch/kick for styl-finish · auto skip',
     p1Line: 'P1 · {name} · {pct}%', p2Line: '{pct}% · {name} · P2',
     decisiveRound: 'Decisive round · {s}-{r}',
@@ -19502,6 +19536,9 @@ class Game {
   startVsRound() {
     this.round++;
     this.roundTimer = 99;
+    this.vsHints = this.vsHints || {};
+    this.vsHints.timeLead = false;
+    this.vsHints.mpToast = false;
     const e1 = vsRosterEntry(this.p1Pick);
     const e2 = vsRosterEntry(this.p2Pick);
     resetVsFighterRound(this.player, e1, this.ground, 1);
@@ -19522,6 +19559,40 @@ class Game {
       if (this.phaseT > 1.6) { this.phase = 'fight'; this.inputLocked = false; }
     } else if (this.phase === 'fight') {
       this.roundTimer -= dt;
+      const hints = this.vsHints || (this.vsHints = {});
+      // d3 c4: match-point toast once per round when someone is one win from match
+      if (!hints.mpToast && this.phaseT > 0.4) {
+        const mp1 = this.roundsP1 === 1 && this.roundsP2 < 2;
+        const mp2 = this.roundsP2 === 1 && this.roundsP1 < 2;
+        if (mp1 || mp2) {
+          hints.mpToast = true;
+          if (!(mp1 && mp2)) {
+            this.floater(
+              W / 2, 96,
+              mp1 ? t('combat.vsMatchPointP1') : t('combat.vsMatchPointP2'),
+              mp1 ? '#7cf5ff' : '#ffb0b8',
+              15, 'hud'
+            );
+          }
+        }
+      }
+      // d3 c4: HP-lead nudge in last 25s (TIME win reminder)
+      if (!hints.timeLead && this.roundTimer <= 25 && this.roundTimer > 12) {
+        hints.timeLead = true;
+        const pct1 = this.player.hp / this.player.maxhp;
+        const pct2 = this.p2.hp / this.p2.maxhp;
+        const d = Math.round((pct1 - pct2) * 100);
+        if (Math.abs(d) >= 8) {
+          this.floater(
+            W / 2, 108,
+            d > 0 ? t('combat.vsHpLeadP1', { n: d }) : t('combat.vsHpLeadP2', { n: Math.abs(d) }),
+            d > 0 ? '#7cf5ff' : '#ffb0b8',
+            14, 'hud'
+          );
+        } else {
+          this.floater(W / 2, 108, t('combat.vsHpEven'), '#ffd75e', 13, 'hud');
+        }
+      }
       const p1d = !this.player.alive, p2d = !this.p2.alive;
       if (p1d || p2d || this.roundTimer <= 0) {
         let p1Win;
@@ -19548,6 +19619,8 @@ class Game {
           if (p1Win) this.roundsP1++; else this.roundsP2++;
           this.vsRoundLog = this.vsRoundLog || [];
           this.vsRoundLog.push(p1Win ? 'p1' : 'p2');
+          this.vsLastRoundP1Win = p1Win;
+          this.vsLastTimedOut = timedOut;
           this.phase = 'roundend';
           this.phaseT = 0;
           this.inputLocked = true;
@@ -19564,6 +19637,12 @@ class Game {
     } else if (this.phase === 'fatality') {
       this.updateFatality(dt);
     } else if (this.phase === 'roundend') {
+      // d3 c4: punch/kick van P1 of P2 slaat countdown over (na 0.45s)
+      if (this.phaseT > 0.45 && this.phaseT < 2.15) {
+        const skip = (Input && (Input.take('punch') || Input.take('kick') || Input.take('weapon')))
+          || (InputP2 && (InputP2.take('punch') || InputP2.take('kick') || InputP2.take('weapon')));
+        if (skip) this.phaseT = 2.15;
+      }
       if (this.phaseT > 2.2) {
         if (this.roundsP1 >= 2 || this.roundsP2 >= 2) this.finishVersus(this.roundsP1 >= 2);
         else this.startVsRound();
@@ -19632,6 +19711,8 @@ class Game {
     if (p1Win) this.roundsP1++; else this.roundsP2++;
     this.vsRoundLog = this.vsRoundLog || [];
     this.vsRoundLog.push(p1Win ? 'p1' : 'p2');
+    this.vsLastRoundP1Win = p1Win;
+    this.vsLastTimedOut = false;
     this.phase = 'roundend';
     this.phaseT = 0;
     this.inputLocked = true;
@@ -19655,6 +19736,11 @@ class Game {
     bumpStat('vsMatches', 1);
     if (p1Win) bumpStat('vsWins', 1);
     this.grantXP(p1Win ? 35 : 20);
+    const close = (this.roundsP1 === 2 && this.roundsP2 === 1)
+      || (this.roundsP2 === 2 && this.roundsP1 === 1);
+    let tip = t('result.vsRematchTip');
+    if (this.matchFatality) tip = t('result.vsFatalityRematchTip');
+    else if (close) tip = t('result.vsCloseRematchTip');
     scheduleGameResult(this, 1200, () => UI.showResult(p1Win, {
       title: p1Win ? t('result.vsP1Win') : t('result.vsP2Win'),
       detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}` +
@@ -19662,7 +19748,7 @@ class Game {
         (this.matchFatality ? t('result.vsFatalityLine') : '') +
         (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
       xp: this.sessionXP, mode: 'versus', win: p1Win, p1: this.p1Pick, p2: this.p2Pick,
-      tip: t('result.vsRematchTip'),
+      tip,
     }));
   }
 
@@ -20741,21 +20827,44 @@ class Game {
       c.lineTo(this.vsMid, H);
       c.stroke();
       c.setLineDash([]);
+      const sx1 = vsSpawnX(1);
+      const sx2 = vsSpawnX(2);
+      const showPads = this.phase === 'intro'
+        || (this.player && this.player.invulnT > 0.05)
+        || (this.p2 && this.p2.invulnT > 0.05);
+      if (showPads) {
+        const drawPad = (sx, col, label) => {
+          c.save();
+          c.globalAlpha = this.phase === 'intro' ? 0.55 : 0.28;
+          c.fillStyle = col;
+          c.beginPath();
+          c.ellipse(sx, this.ground - 2, 28, 8, 0, 0, TAU);
+          c.fill();
+          c.globalAlpha = this.phase === 'intro' ? 0.75 : 0.4;
+          c.strokeStyle = col;
+          c.lineWidth = 2;
+          c.beginPath();
+          c.ellipse(sx, this.ground - 2, 34, 10, 0, 0, TAU);
+          c.stroke();
+          if (this.phase === 'intro') {
+            c.globalAlpha = 0.85;
+            c.font = '800 9px sans-serif';
+            c.fillStyle = col;
+            c.textAlign = 'center';
+            c.fillText(label, sx, this.ground - 78);
+          }
+          c.restore();
+        };
+        drawPad(sx1, '#7cf5ff', t('hud.spawnP1'));
+        drawPad(sx2, '#ffb0b8', t('hud.spawnP2'));
+      }
       if (this.phase === 'intro') {
-        const sx1 = vsSpawnX(1);
-        const sx2 = vsSpawnX(2);
         c.setLineDash([4, 8]);
         c.strokeStyle = 'rgba(124,245,255,.35)';
         c.beginPath(); c.moveTo(sx1, this.ground - 72); c.lineTo(sx1, H); c.stroke();
         c.strokeStyle = 'rgba(255,176,184,.35)';
         c.beginPath(); c.moveTo(sx2, this.ground - 72); c.lineTo(sx2, H); c.stroke();
         c.setLineDash([]);
-        c.font = '800 9px sans-serif';
-        c.fillStyle = 'rgba(124,245,255,.65)';
-        c.textAlign = 'center';
-        c.fillText('P1 spawn', sx1, this.ground - 78);
-        c.fillStyle = 'rgba(255,176,184,.65)';
-        c.fillText('P2 spawn', sx2, this.ground - 78);
       }
       c.font = '800 10px sans-serif';
       c.fillStyle = 'rgba(124,245,255,.5)';
@@ -22491,18 +22600,30 @@ class Game {
         c.fillText(name2, W * 0.72, H * 0.28);
       } else if (this.phase === 'roundend') {
         const left = Math.max(0, 2.2 - this.phaseT);
+        const matchOver = this.roundsP1 >= 2 || this.roundsP2 >= 2;
         c.font = '900 34px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.9)';
         c.fillText(String(Math.ceil(left)), W / 2, H * 0.38);
         c.font = '700 13px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.7)';
-        c.fillText(t('hud.nextRound'), W / 2, H * 0.38 + 26);
+        c.fillText(matchOver ? t('hud.matchOver') : t('hud.nextRound'), W / 2, H * 0.38 + 26);
+        if (this.vsLastRoundP1Win != null) {
+          c.font = '800 12px sans-serif';
+          c.fillStyle = this.vsLastRoundP1Win ? '#7cf5ff' : '#ffb0b8';
+          c.fillText(
+            this.vsLastRoundP1Win ? t('hud.roundWinnerP1') : t('hud.roundWinnerP2'),
+            W / 2, H * 0.38 + 46
+          );
+        }
+        c.font = '700 10px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.45)';
+        c.fillText(t('hud.roundSkipHint'), W / 2, H * 0.38 + 62);
         const barW = Math.min(140, W * 0.24);
         c.fillStyle = 'rgba(0,0,0,.35)';
-        this.rr(c, W / 2 - barW / 2, H * 0.38 + 34, barW, 5, 3);
+        this.rr(c, W / 2 - barW / 2, H * 0.38 + 70, barW, 5, 3);
         c.fill();
         c.fillStyle = '#7cf5ff';
-        this.rr(c, W / 2 - barW / 2, H * 0.38 + 34, barW * clamp(left / 2.2, 0, 1), 5, 3);
+        this.rr(c, W / 2 - barW / 2, H * 0.38 + 70, barW * clamp(left / 2.2, 0, 1), 5, 3);
         c.fill();
       } else if (this.phase === 'fatality') {
         c.font = '900 44px sans-serif';
@@ -22520,10 +22641,14 @@ class Game {
       }
       c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, bx - 4, byVs - 4, half + 8, 44, 10); c.fill();
       c.fillStyle = '#333c55'; this.rr(c, bx, byVs, half, 14, 6); c.fill();
-      c.fillStyle = p.hp / p.maxhp > 0.35 ? '#6ee06e' : '#ff6b6b';
-      this.rr(c, bx, byVs, half * clamp(p.hp / p.maxhp, 0, 1), 14, 6); c.fill();
+      const hp1Frac = clamp(p.hp / p.maxhp, 0, 1);
+      const low1 = hp1Frac < 0.28 && this.phase === 'fight';
+      c.fillStyle = hp1Frac > 0.35 ? '#6ee06e' : '#ff6b6b';
+      if (low1 && !motionReduced()) c.globalAlpha = 0.65 + Math.sin(this.t * 11) * 0.3;
+      this.rr(c, bx, byVs, half * hp1Frac, 14, 6); c.fill();
+      c.globalAlpha = 1;
       c.font = '800 11px sans-serif'; c.textAlign = 'left'; c.fillStyle = '#7cf5ff';
-      const hp1Pct = Math.round(clamp(p.hp / p.maxhp, 0, 1) * 100);
+      const hp1Pct = Math.round(hp1Frac * 100);
       c.fillText(t('hud.p1Line', { name: name1, pct: hp1Pct }), bx, byVs + 30);
       c.fillStyle = '#333c55'; this.rr(c, bx, byVs + 34, half, 5, 3); c.fill();
       this.drawSuperMeterFill(c, bx, byVs + 34, half, 5, p.energy / 100, fighterJutsuKind(p), this.t);
@@ -22531,9 +22656,12 @@ class Game {
 
       c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, W - half - 20, byVs - 4, half + 8, 44, 10); c.fill();
       c.fillStyle = '#333c55'; this.rr(c, W - half - 16, byVs, half, 14, 6); c.fill();
-      c.fillStyle = '#ff8080';
       const frac2 = clamp(p2.hp / p2.maxhp, 0, 1);
+      const low2 = frac2 < 0.28 && this.phase === 'fight';
+      c.fillStyle = '#ff8080';
+      if (low2 && !motionReduced()) c.globalAlpha = 0.65 + Math.sin(this.t * 11) * 0.3;
       this.rr(c, W - 16 - half * frac2, byVs, half * frac2, 14, 6); c.fill();
+      c.globalAlpha = 1;
       c.textAlign = 'right'; c.fillStyle = '#ffb0b8';
       const hp2Pct = Math.round(frac2 * 100);
       c.fillText(t('hud.p2Line', { pct: hp2Pct, name: name2 }), W - 20, byVs + 30);
@@ -22562,22 +22690,42 @@ class Game {
         ? t('hud.decisiveRound', { s: this.roundsP1, r: this.roundsP2 })
         : t('hud.roundInfo', { n: this.round, s: this.roundsP1, r: this.roundsP2 });
       c.fillText(scoreLine, W / 2, timerY + 18);
+      // d3 c4: match-point side chip
+      const mp1Only = this.roundsP1 === 1 && this.roundsP2 === 0;
+      const mp2Only = this.roundsP2 === 1 && this.roundsP1 === 0;
+      if ((mp1Only || mp2Only) && this.phase === 'fight') {
+        c.font = '800 10px sans-serif';
+        c.fillStyle = mp1Only ? '#7cf5ff' : '#ffb0b8';
+        c.fillText(mp1Only ? t('hud.matchPointP1') : t('hud.matchPointP2'), W / 2, timerY + 32);
+      }
       const timerBarW = Math.min(160, W * 0.28);
       const timerFrac = clamp(this.roundTimer / 99, 0, 1);
+      const timerBarY = (mp1Only || mp2Only) && this.phase === 'fight' ? timerY + 38 : timerY + 24;
       c.fillStyle = 'rgba(0,0,0,.35)';
-      this.rr(c, W / 2 - timerBarW / 2, timerY + 24, timerBarW, 5, 3);
+      this.rr(c, W / 2 - timerBarW / 2, timerBarY, timerBarW, 5, 3);
       c.fill();
       c.fillStyle = urgent ? '#ff6b6b' : '#7cf5ff';
-      this.rr(c, W / 2 - timerBarW / 2, timerY + 24, timerBarW * timerFrac, 5, 3);
+      this.rr(c, W / 2 - timerBarW / 2, timerBarY, timerBarW * timerFrac, 5, 3);
       c.fill();
       if (this.roundTimer < 12 && this.phase === 'fight') {
         c.font = '700 10px sans-serif';
         c.fillStyle = 'rgba(255,215,94,.85)';
-        c.fillText(t('hud.timeHpWin'), W / 2, timerY + 38);
+        c.fillText(t('hud.timeHpWin'), W / 2, timerBarY + 14);
+        // live HP lead
+        const lead = hp1Pct - hp2Pct;
+        if (Math.abs(lead) >= 1) {
+          c.font = '700 9px sans-serif';
+          c.fillStyle = lead > 0 ? 'rgba(124,245,255,.8)' : 'rgba(255,176,184,.8)';
+          c.fillText(
+            lead > 0 ? t('hud.hpLeadP1', { n: lead }) : t('hud.hpLeadP2', { n: Math.abs(lead) }),
+            W / 2, timerBarY + 26
+          );
+        }
       }
       const mp1 = this.roundsP1 === 1 && this.roundsP2 < 2;
       const mp2 = this.roundsP2 === 1 && this.roundsP1 < 2;
-      const dotY = (this.roundTimer < 12 && this.phase === 'fight') ? timerY + 48 : timerY + 34;
+      let dotY = timerBarY + 14;
+      if (this.roundTimer < 12 && this.phase === 'fight') dotY = timerBarY + 38;
       const log = this.vsRoundLog || [];
       if (log.length) {
         c.font = '700 9px sans-serif';
@@ -22598,11 +22746,11 @@ class Game {
       }
       if (p.invulnT > 0.05) {
         c.font = '700 9px sans-serif'; c.fillStyle = 'rgba(124,245,255,.75)'; c.textAlign = 'left';
-        c.fillText(`${p.invulnT.toFixed(1)}s`, bx, byVs + 52);
+        c.fillText(t('hud.spawnGrace', { n: p.invulnT.toFixed(1) }), bx, byVs + 52);
       }
       if (p2.invulnT > 0.05) {
         c.font = '700 9px sans-serif'; c.fillStyle = 'rgba(255,176,184,.75)'; c.textAlign = 'right';
-        c.fillText(`${p2.invulnT.toFixed(1)}s`, W - 20, byVs + 52);
+        c.fillText(t('hud.spawnGrace', { n: p2.invulnT.toFixed(1) }), W - 20, byVs + 52);
       }
       if (p.energy >= 100) {
         const k1 = fighterJutsuKind(p);
