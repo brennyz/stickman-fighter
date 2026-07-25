@@ -105,8 +105,10 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
 });
 bindPress(document.getElementById('menuProfileBar'), () => {
   AudioSys.init(); AudioSys.sfx('select');
-  UI.renderMissions();
   UI.show('missionsScreen');
+  try { UI.renderMissions(); } catch (err) {
+    sfReportError('renderMissions', err, 'Missies laden mislukt — herlaad via Verse versie');
+  }
 });
 bindPress(document.getElementById('btnGambleGooiStart'), () => gokGooiStartFromScreen());
 bindPress(document.getElementById('btnGambleSkip'), () => {
@@ -173,8 +175,10 @@ bindPress(btnSettings, () => {
 const btnMissions = document.getElementById('btnMissions');
 bindPress(btnMissions, () => {
   AudioSys.init(); AudioSys.sfx('select');
-  UI.renderMissions();
   UI.show('missionsScreen');
+  try { UI.renderMissions(); } catch (err) {
+    sfReportError('renderMissions', err, 'Missies laden mislukt — herlaad via Verse versie');
+  }
 });
 const dailyClaimAllBtn = document.getElementById('dailyClaimAllBtn');
 if (dailyClaimAllBtn) bindPress(dailyClaimAllBtn, () => {
