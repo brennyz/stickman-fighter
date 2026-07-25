@@ -221,7 +221,7 @@ function tideWaveSeaPick(seaPool, levelN, maxRarityOrder) {
   return weightedPick(seaPool, levelN);
 }
 
-/** Nood-ontsnapping als je omringd / stunlocked bent — tik midden-KETS! */
+/** Nood-ontsnapping als je omringd / stunlocked bent — thermometer boven special-knop. */
 const KETSBAM_DETECT_R = 148;
 const KETSBAM_NEAR_MIN = 3;
 const KETSBAM_BLAST_R = 192;
