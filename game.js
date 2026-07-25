@@ -10,7 +10,8 @@
    ========================================================================= */
 
 const TAU = Math.PI * 2;
-const FX_CAP = { particles: 140, floaters: 28, projectiles: 48, banners: 5, afterimages: 12 };
+const BANNER_LANES = 3;
+const FX_CAP = { particles: 140, floaters: 28, projectiles: 48, banners: BANNER_LANES, afterimages: 12 };
 const Perf = {
   tier: 0,
   emaMs: 16.7,
@@ -112,6 +113,29 @@ function perfFxSummary() {
   const dpr = typeof DPR !== 'undefined' ? DPR : 1;
   return { fps, tier: Perf.tier, dpr, maxDpr: maxCanvasDpr(), caps };
 }
+
+function pickBannerLane(banners) {
+  const occupied = new Set();
+  for (const b of banners) {
+    if (typeof b.lane === 'number' && b.lane >= 0 && b.lane < BANNER_LANES) occupied.add(b.lane);
+  }
+  for (let i = 0; i < BANNER_LANES; i++) if (!occupied.has(i)) return i;
+  let pick = 0;
+  let best = -1;
+  for (const b of banners) {
+    const p = b.t / b.dur;
+    if (p > best) { best = p; pick = b.lane; }
+  }
+  return pick;
+}
+
+function bannerLaneY(H, lane, size) {
+  const baseY = H * 0.31;
+  const step = Math.max(32, Math.min(48, H * 0.052));
+  const mid = (BANNER_LANES - 1) * 0.5;
+  const laneN = typeof lane === 'number' ? lane : 1;
+  return baseY + (laneN - mid) * step;
+}
 function maxCanvasDpr() {
   const rm = motionReduced();
   if (save.liteFx || rm) return 1.25;
@@ -135,7 +159,7 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.83';
+const APP_VERSION = '1.17.86';
 /** Keep in sync with sw.js CACHE suffix */
 const SW_CACHE_REV = 201;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
@@ -14000,9 +14024,84 @@ class Game {
       dur = Math.min(dur, 1.15);
       size = Math.min(size || 40, 32);
     }
-    const cap = fxCaps();
-    if (this.banners.length >= cap.banners) this.banners.shift();
-    this.banners.push({ txt, dur, color: color || '#fff', size: size || 40, t: 0 });
+    const lane = pickBannerLane(this.banners);
+    this.banners = this.banners.filter((b) => b.lane !== lane);
+    this.banners.push({
+      txt, dur, color: color || '#fff', size: size || 40, t: 0, lane,
+    });
+  }
+
+  drawBannerLine(c, b) {
+    const k = b.t / b.dur;
+    const calm = motionReduced();
+    const pop = calm ? 1 : (k < 0.15 ? k / 0.15 : 1);
+    const fade = k > 0.75 ? 1 - (k - 0.75) / 0.25 : 1;
+    const lane = typeof b.lane === 'number' ? b.lane : 1;
+    const laneScale = lane === 1 ? 1 : 0.92;
+    const y = bannerLaneY(H, lane, b.size);
+    c.save();
+    c.globalAlpha = fade;
+    c.translate(W / 2, y);
+    c.scale(
+      (calm ? 1 : (0.6 + pop * 0.4)) * laneScale,
+      (calm ? 1 : (0.6 + pop * 0.4)) * laneScale,
+    );
+    if (!fxLite() && !calm) {
+      c.shadowColor = b.color;
+      c.shadowBlur = lane === 1 ? 14 : 9;
+    }
+    c.font = `900 ${b.size}px -apple-system, sans-serif`;
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    const tw = c.measureText(b.txt).width;
+    const ph = b.size * 1.05;
+    const pw = tw + 28;
+    c.fillStyle = 'rgba(6,10,24,.42)';
+    this.rr(c, -pw * 0.5, -ph * 0.52, pw, ph, Math.min(10, ph * 0.22));
+    c.fill();
+    c.strokeStyle = 'rgba(255,255,255,.08)';
+    c.lineWidth = 1.5;
+    this.rr(c, -pw * 0.5, -ph * 0.52, pw, ph, Math.min(10, ph * 0.22));
+    c.stroke();
+    if (a11yHighContrast()) {
+      fillHudText(c, b.txt, 0, 0, { fill: b.color, stroke: 'rgba(0,0,0,.9)', strokeW: 4 });
+    } else {
+      c.lineWidth = 8;
+      c.strokeStyle = 'rgba(0,0,0,.55)';
+      c.strokeText(b.txt, 0, 0);
+      c.fillStyle = b.color;
+      c.fillText(b.txt, 0, 0);
+    }
+    if (!fxLite() && !calm && fade > 0.35 && lane === 1) {
+      c.globalAlpha = fade * 0.42;
+      c.strokeStyle = b.color;
+      c.lineWidth = 2.5;
+      c.lineCap = 'round';
+      c.beginPath();
+      c.moveTo(-tw * 0.52, ph * 0.42);
+      c.lineTo(tw * 0.52, ph * 0.42);
+      c.stroke();
+      const sweep = clamp((k - 0.12) / 0.55, 0, 1);
+      if (sweep > 0 && sweep < 1) {
+        c.save();
+        c.globalAlpha = fade * 0.28 * (1 - Math.abs(sweep - 0.5) * 1.6);
+        c.globalCompositeOperation = 'lighter';
+        c.fillStyle = '#fff';
+        const bandW = Math.max(18, tw * 0.14);
+        const sx = -tw * 0.58 + (tw * 1.16 * sweep);
+        c.beginPath();
+        c.moveTo(sx, -b.size * 0.62);
+        c.lineTo(sx + bandW, -b.size * 0.62);
+        c.lineTo(sx + bandW * 0.55, b.size * 0.55);
+        c.lineTo(sx - bandW * 0.2, b.size * 0.55);
+        c.closePath();
+        c.fill();
+        c.restore();
+      }
+    }
+    c.restore();
+    c.textBaseline = 'alphabetic';
+    c.textAlign = 'left';
   }
 
   /* ------------------------------ TEKENEN ----------------------------- */
@@ -14188,61 +14287,9 @@ class Game {
     this.drawHUD(c);
     if (this.mode === 'adventure') this.drawKetsbamPrompt(c);
 
-    // banners
-    for (const b of this.banners) {
-      const k = b.t / b.dur;
-      const calm = motionReduced();
-      const pop = calm ? 1 : (k < 0.15 ? k / 0.15 : 1);
-      const fade = k > 0.75 ? 1 - (k - 0.75) / 0.25 : 1;
-      c.save();
-      c.globalAlpha = fade;
-      c.translate(W / 2, H * 0.34);
-      c.scale(calm ? 1 : (0.6 + pop * 0.4), calm ? 1 : (0.6 + pop * 0.4));
-      if (!fxLite() && !calm) {
-        c.shadowColor = b.color;
-        c.shadowBlur = 14;
-      }
-      c.font = `900 ${b.size}px -apple-system, sans-serif`;
-      c.textAlign = 'center';
-      if (a11yHighContrast()) {
-        fillHudText(c, b.txt, 0, 0, { fill: b.color, stroke: 'rgba(0,0,0,.9)', strokeW: 4 });
-      } else {
-        c.lineWidth = 8; c.strokeStyle = 'rgba(0,0,0,.55)';
-        c.strokeText(b.txt, 0, 0);
-        c.fillStyle = b.color;
-        c.fillText(b.txt, 0, 0);
-      }
-      if (!fxLite() && !calm && fade > 0.35) {
-        c.globalAlpha = fade * 0.42;
-        c.strokeStyle = b.color;
-        c.lineWidth = 2.5;
-        c.lineCap = 'round';
-        const tw = c.measureText(b.txt).width;
-        c.beginPath();
-        c.moveTo(-tw * 0.52, 10);
-        c.lineTo(tw * 0.52, 10);
-        c.stroke();
-        // Shine sweep across banner text (d14 cycle 4)
-        const sweep = clamp((k - 0.12) / 0.55, 0, 1);
-        if (sweep > 0 && sweep < 1) {
-          c.save();
-          c.globalAlpha = fade * 0.28 * (1 - Math.abs(sweep - 0.5) * 1.6);
-          c.globalCompositeOperation = 'lighter';
-          c.fillStyle = '#fff';
-          const bandW = Math.max(18, tw * 0.14);
-          const sx = -tw * 0.58 + (tw * 1.16 * sweep);
-          c.beginPath();
-          c.moveTo(sx, -b.size * 0.62);
-          c.lineTo(sx + bandW, -b.size * 0.62);
-          c.lineTo(sx + bandW * 0.55, b.size * 0.55);
-          c.lineTo(sx - bandW * 0.2, b.size * 0.55);
-          c.closePath();
-          c.fill();
-          c.restore();
-        }
-      }
-      c.restore();
-    }
+    // banners — max 3 lanes, geen overlap
+    const bannerDraw = this.banners.slice().sort((a, b) => (a.lane || 0) - (b.lane || 0));
+    for (const b of bannerDraw) this.drawBannerLine(c, b);
 
     if (IS_TOUCH) this.drawTouchControls(c);
 
