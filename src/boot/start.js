@@ -17,6 +17,7 @@ function startGame(mode, opts) {
     } catch (_) {
       opts.p1 = 'ryu'; opts.p2 = 'ken';
     }
+    try { primePlayInput(true); } catch (_) {}
   }
   try {
     game = new Game(mode, opts);
@@ -66,7 +67,7 @@ function bindPress(el, handler) {
   };
   el.addEventListener('click', run);
   el.addEventListener('touchend', (e) => {
-    if (!uiTapAllowed()) return;
+    if (!uiTapAllowed(e)) return;
     const t = e.changedTouches && e.changedTouches[0];
     if (t) {
       try {
@@ -496,6 +497,9 @@ bindPress(document.getElementById('pauseResume'), () => {
   state = 'play';
   AudioSys.setPaused(false);
   if (save.music && AudioSys.desiredSong) AudioSys.play(AudioSys.desiredSong);
+  if (game && game.mode === 'versus') {
+    try { primePlayInput(true); } catch (_) {}
+  }
   UI.show(null);
 });
 bindPress(document.getElementById('pauseQuit'), () => { UI.goMenu(); });

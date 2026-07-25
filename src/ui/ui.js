@@ -20,24 +20,25 @@ function pickVsRosterId(id) {
 function bindCharPickSurface(root, selector, onPick) {
   if (!root || root.dataset.sfPickBound) return;
   root.dataset.sfPickBound = '1';
-  let active = null;
+  const actives = new Map();
   const scrollEl = () => root.closest('[data-char-scroll]') || root.closest('.char-grid-scroll') || root.closest('.char-icon-strip') || root;
   root.addEventListener('pointerdown', (e) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     const card = e.target.closest(selector);
     if (!card) return;
     const sc = scrollEl();
-    active = {
-      id: e.pointerId,
+    actives.set(e.pointerId, {
       card,
       x: e.clientX,
       y: e.clientY,
       scrollTop: sc ? sc.scrollTop : 0,
       scrollLeft: sc ? sc.scrollLeft : 0,
-    };
+    });
   }, { passive: true });
   const finish = (e) => {
-    if (!active || active.id !== e.pointerId) return;
+    const active = actives.get(e.pointerId);
+    if (!active) return;
+    actives.delete(e.pointerId);
     const slop = IS_TOUCH ? 18 : 10;
     const moved = Math.hypot(e.clientX - active.x, e.clientY - active.y) > slop;
     const sc = scrollEl();
@@ -46,12 +47,11 @@ function bindCharPickSurface(root, selector, onPick) {
       Math.abs(sc.scrollLeft - active.scrollLeft) > 3
     );
     const card = active.card;
-    active = null;
     if (moved || scrolled || !card || card.classList.contains('locked')) return;
     onPick(card);
   };
   root.addEventListener('pointerup', finish, { passive: true });
-  root.addEventListener('pointercancel', () => { active = null; }, { passive: true });
+  root.addEventListener('pointercancel', (e) => { actives.delete(e.pointerId); }, { passive: true });
 }
 
 function initCharSelectChrome() {
@@ -1329,11 +1329,12 @@ const UI = {
         el.title = tip;
         let holdT = null;
         let holdSkip = false;
-        el.addEventListener('pointerdown', () => {
+        el.addEventListener('pointerdown', (e) => {
+          const tapId = e.pointerId;
           holdSkip = false;
           holdT = setTimeout(() => {
             holdT = null;
-            if (!uiTapAllowed()) return;
+            if (!uiTapAllowed({ pointerId: tapId })) return;
             holdSkip = true;
             safeUiAction(() => {
               AudioSys.sfx('select');
@@ -1347,9 +1348,9 @@ const UI = {
         const cancelHold = () => { if (holdT) { clearTimeout(holdT); holdT = null; } };
         el.addEventListener('pointerup', cancelHold);
         el.addEventListener('pointercancel', cancelHold);
-        el.addEventListener('click', () => {
+        el.addEventListener('click', (e) => {
           if (holdSkip) { holdSkip = false; return; }
-          if (!uiTapAllowed()) return;
+          if (!uiTapAllowed(e)) return;
           safeUiAction(() => gokGooiStartLevel(n), 'gokStart/' + n, 'Level starten mislukt');
         });
       }
@@ -1477,8 +1478,8 @@ const UI = {
           ? `Avontuur Lv ${base.unlock}`
           : (save.weapon === w.id ? '&#10004; gekozen' : 'kies'));
       el.appendChild(right);
-      if (!locked) el.addEventListener('click', () => {
-        if (!uiTapAllowed()) return;
+      if (!locked) el.addEventListener('click', (e) => {
+        if (!uiTapAllowed(e)) return;
         safeUiAction(() => {
           save.weapon = w.id;
           if (!persistOrToast('wapen')) return;
@@ -1716,8 +1717,8 @@ const UI = {
       }
       el.appendChild(right);
       if (tamed) {
-        el.addEventListener('click', () => {
-          if (!uiTapAllowed()) return;
+        el.addEventListener('click', (e) => {
+          if (!uiTapAllowed(e)) return;
           safeUiAction(() => {
             if (active) {
               equipPet(null);
@@ -1731,8 +1732,8 @@ const UI = {
           }, 'equipPet/' + def.id, 'Pet kiezen mislukt');
         });
       } else if (canBuy) {
-        el.addEventListener('click', () => {
-          if (!uiTapAllowed()) return;
+        el.addEventListener('click', (e) => {
+          if (!uiTapAllowed(e)) return;
           safeUiAction(() => {
             const res = buyPetWithCoins(def.id);
             if (!res) {
@@ -1768,8 +1769,8 @@ const UI = {
         `<div>Dag-ei openen<small>Gratis arcade-pull · vandaag</small></div>`;
       if (!crackBtn.dataset.bound) {
         crackBtn.dataset.bound = '1';
-        crackBtn.addEventListener('click', () => {
-          if (!uiTapAllowed()) return;
+        crackBtn.addEventListener('click', (e) => {
+          if (!uiTapAllowed(e)) return;
           safeUiAction(() => {
             const res = crackDailyEgg();
             if (!res) {
@@ -1819,8 +1820,8 @@ const UI = {
       }
       el.appendChild(right);
       if (owned) {
-        el.addEventListener('click', () => {
-          if (!uiTapAllowed()) return;
+        el.addEventListener('click', (e) => {
+          if (!uiTapAllowed(e)) return;
           safeUiAction(() => {
             if (active) {
               equipEggPet(null);
@@ -1894,8 +1895,8 @@ const UI = {
         : (styleSkillGated(st) ? t('ui.styleIslandGate', { lvl: st.needLvl }) : styleLabel(st, 'hint'));
       el.appendChild(sub);
       if (ok) {
-        el.addEventListener('click', () => {
-          if (!uiTapAllowed()) return;
+        el.addEventListener('click', (e) => {
+          if (!uiTapAllowed(e)) return;
           safeUiAction(() => {
             save.style = st.id;
             if (!persistOrToast('stijl')) return;
