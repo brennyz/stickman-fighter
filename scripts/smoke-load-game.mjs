@@ -39,7 +39,15 @@ function makeEl(id) {
     focus() {},
     select() {},
     querySelector() { return null; },
-    querySelectorAll() { return []; },
+    querySelectorAll(sel) {
+      // Genoeg voor screenLooksUsable / hub checks in smoke
+      if (this.id && String(this.id).endsWith('Screen')) {
+        return [{ clientWidth: 48, clientHeight: 24, className: 'btn' }];
+      }
+      return [];
+    },
+    clientWidth: 320,
+    clientHeight: 480,
     getBoundingClientRect() { return { left: 0, top: 0, width: 100, height: 40 }; },
     setAttribute() {},
     removeAttribute() {},
