@@ -1396,6 +1396,7 @@ class Game {
       half: false, quarter: false, five: false, comboWarn: false,
       nearRec: false, lostCombo: false, startCombo: false,
       combo3: false, combo5: false, combo8: false,
+      pace45: false, pace20: false, nearRec2: false,
     };
     this.layoutWall(true);
     this.banner(t('banner.wallStart'), 1.5, '#ffd75e', 46);
@@ -1450,6 +1451,35 @@ class Game {
       hints.startCombo = true;
       this.floater(W / 2, 132, t('combat.wallComboTipShort'), '#7cf5ff', 14, 'hud');
     }
+    // d19 c4: pace-checkpoints — voor/achter record-tempo op 45s en 20s resterend
+    const bestSaved = save.bestWall || 0;
+    if (bestSaved > 0 && this.score > 0) {
+      if (!hints.pace45 && prevTimer > 45 && this.wallTimer <= 45) {
+        hints.pace45 = true;
+        const d = wallRecordPaceDelta(this);
+        if (d != null) {
+          this.floater(
+            W / 2, 100,
+            d >= 0 ? t('combat.wallPaceOk', { n: d }) : t('combat.wallPacePush', { n: Math.abs(d) }),
+            d >= 0 ? '#7cfc8a' : '#ffb06a',
+            14, 'hud'
+          );
+        }
+      }
+      if (!hints.pace20 && prevTimer > 20 && this.wallTimer <= 20) {
+        hints.pace20 = true;
+        const d = wallRecordPaceDelta(this);
+        if (d != null) {
+          this.floater(
+            W / 2, 100,
+            d >= 0 ? t('combat.wallPaceOk', { n: d }) : t('combat.wallPacePush', { n: Math.abs(d) }),
+            d >= 0 ? '#7cfc8a' : '#ff9a9a',
+            15, 'hud'
+          );
+          if (d < 0) try { AudioSys.sfx('bell'); } catch (_) {}
+        }
+      }
+    }
     const prevComboT = this.comboT;
     this.comboT -= dt;
     if (this.comboT <= 0) {
@@ -1458,17 +1488,30 @@ class Game {
         this.floater(W / 2, 120, t('combat.wallComboLost'), '#ff9a9a', 14, 'hud');
       }
       this.combo = 0;
-    } else if (!hints.comboWarn && this.combo >= 3 && prevComboT > 0.35 && this.comboT <= 0.35) {
+      hints.comboWarn = false;
+    } else if (this.combo >= 3 && this.comboT > 0.55) {
+      // Re-arm: mag opnieuw waarschuwen als combo weer veilig is
+      hints.comboWarn = false;
+    }
+    if (!hints.comboWarn && this.combo >= 3 && prevComboT > 0.35 && this.comboT <= 0.35) {
       hints.comboWarn = true;
       this.floater(W / 2, 120, t('combat.wallComboLow'), '#ff9a9a', 13, 'hud');
     }
-    const bestSaved = save.bestWall || 0;
     if (!hints.nearRec && bestSaved > 0 && this.score > 0) {
       const gap = bestSaved - this.score;
       if (gap > 0 && gap <= 5) {
         hints.nearRec = true;
         this.floater(W / 2, 94, t('combat.wallNearRec', { gap }), '#7cfc8a', 16, 'hud');
         haptic(12);
+      }
+    }
+    // d19 c4: extra nudge bij gap ≤2 in laatste 25s
+    if (!hints.nearRec2 && bestSaved > 0 && this.wallTimer <= 25) {
+      const gap = bestSaved - this.score;
+      if (gap > 0 && gap <= 2) {
+        hints.nearRec2 = true;
+        this.floater(W / 2, 94, t('combat.wallNearRecFinal', { gap }), '#ffd75e', 16, 'hud');
+        haptic(14);
       }
     }
     if (this.bricks.every(b => b.hp <= 0)) {
@@ -1485,6 +1528,7 @@ class Game {
     this.over = true; this.inputLocked = true;
     const best = Math.max(save.bestWall, this.score);
     const isRecord = this.score > save.bestWall;
+    const prevBest = save.bestWall || 0;
     save.bestWall = best; persist();
     const xp = Math.round(this.score * 0.6);
     this.grantXP(xp);
@@ -1494,10 +1538,12 @@ class Game {
     this.banner(t('banner.wallTime'), 1.5, '#ffd75e', 56);
     const pace = Math.round(this.score); // 60s run → stenen ≈ per minuut
     const paceDelta = wallRecordPaceDelta({ wallTimer: 0, wallDuration: this.wallDuration, score: this.score });
+    const wallsCleared = this.wallGen || 0;
     let tip = isRecord ? t('result.wallRecordShare') : t('result.wallComboTip');
     if (!isRecord && best > 0) {
       const gap = best - this.score;
-      if (gap > 0 && gap <= 15) tip = t('result.wallGapTip', { gap });
+      if (gap > 0 && gap <= 3) tip = t('result.wallNearMiss', { gap });
+      else if (gap > 0 && gap <= 15) tip = t('result.wallGapTip', { gap });
       else if ((this.maxCombo || 0) < 5) tip = t('result.wallComboBarTip');
       else if ((this.maxCombo || 0) >= 8) tip = t('result.wallStrongCombo', { n: this.maxCombo });
       else if (paceDelta != null && paceDelta < -3) tip = t('result.wallBehindPace');
@@ -1507,7 +1553,8 @@ class Game {
       title: isRecord ? t('result.wallRecord') : t('result.wallTime'),
       detail: t('result.wallDetail', {
         score: this.score, pace, best, combo: this.maxCombo || 0,
-        paceDelta: paceDelta != null && best > 0 && !isRecord
+        walls: wallsCleared > 0 ? t('result.wallWallsLine', { n: wallsCleared }) : '',
+        paceDelta: paceDelta != null && prevBest > 0 && !isRecord
           ? t('result.wallPaceDelta', { delta: `${paceDelta >= 0 ? '+' : ''}${paceDelta}` }) : '',
       }),
       xp: this.sessionXP, mode: 'wall', win: true,
@@ -4036,6 +4083,37 @@ class Game {
       } else {
         c.fillText(onPace && bestSaved > 0 ? t('hud.recordBroken', { rec }) : t('hud.recordLine', { rec }), W / 2, 86);
       }
+      // d19 c4: record-chase meter (score → best) + expected-pace tick
+      if (bestSaved > 0) {
+        const chaseW = Math.min(180, W * 0.48);
+        const chaseX = (W - chaseW) / 2;
+        const chaseY = 90;
+        const chaseFrac = clamp(this.score / Math.max(1, bestSaved), 0, 1.15);
+        c.fillStyle = 'rgba(0,0,0,.38)';
+        this.rr(c, chaseX, chaseY, chaseW, 5, 3); c.fill();
+        c.fillStyle = onPace ? '#7cfc8a' : (chaseFrac >= 0.85 ? '#ffd75e' : '#7cf5ff');
+        this.rr(c, chaseX, chaseY, Math.max(3, chaseW * Math.min(1, chaseFrac)), 5, 3); c.fill();
+        // 100% notch
+        c.strokeStyle = 'rgba(255,255,255,.55)';
+        c.lineWidth = 1.5;
+        c.beginPath();
+        c.moveTo(chaseX + chaseW, chaseY - 1);
+        c.lineTo(chaseX + chaseW, chaseY + 6);
+        c.stroke();
+        const elapsedChase = wallDur - this.wallTimer;
+        if (elapsedChase > 2) {
+          const expectedFrac = clamp(elapsedChase / wallDur, 0, 1);
+          const tickX = chaseX + chaseW * expectedFrac;
+          c.fillStyle = 'rgba(255,176,184,.9)';
+          c.beginPath();
+          c.moveTo(tickX, chaseY - 2);
+          c.lineTo(tickX + 3.5, chaseY + 2.5);
+          c.lineTo(tickX, chaseY + 7);
+          c.lineTo(tickX - 3.5, chaseY + 2.5);
+          c.closePath();
+          c.fill();
+        }
+      }
       let showPaceDelta = false;
       const elapsed = wallDur - this.wallTimer;
       if (elapsed > 2 && this.score > 0) {
@@ -4043,7 +4121,7 @@ class Game {
         const proj = Math.round(this.score + (this.wallTimer / elapsed) * this.score);
         c.font = '700 12px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.62)';
-        c.fillText(t('hud.pace', { pace, proj }), W / 2, 102);
+        c.fillText(t('hud.pace', { pace, proj }), W / 2, 112);
         const paceDelta = wallRecordPaceDelta(this);
         if (paceDelta != null && bestSaved > 0) {
           showPaceDelta = true;
@@ -4051,7 +4129,7 @@ class Game {
           c.fillStyle = paceDelta >= 0 ? '#7cfc8a' : '#ffb0b8';
           c.fillText(
             paceDelta >= 0 ? t('hud.paceAhead', { n: paceDelta }) : t('hud.paceBehind', { n: paceDelta }),
-            W / 2, 116
+            W / 2, 126
           );
         }
       }
@@ -4060,7 +4138,7 @@ class Game {
         const cFrac = clamp(this.comboT / comboWin, 0, 1);
         const cBarW = Math.min(160, W * 0.42);
         const cBarX = (W - cBarW) / 2;
-        const cy = showPaceDelta ? (this.combo > 1 ? 162 : 146) : (this.combo > 1 ? 148 : 132);
+        const cy = showPaceDelta ? (this.combo > 1 ? 172 : 156) : (this.combo > 1 ? 158 : 142);
         c.font = '700 9px sans-serif';
         c.textAlign = 'left';
         c.fillStyle = 'rgba(124,245,255,.55)';
@@ -4068,13 +4146,18 @@ class Game {
         c.textAlign = 'center';
         c.fillStyle = 'rgba(0,0,0,.38)';
         this.rr(c, cBarX, cy, cBarW, 5, 3); c.fill();
-        c.fillStyle = cFrac < 0.25 ? '#ff9a9a' : '#7cf5ff';
+        const lowCombo = cFrac < 0.25;
+        c.fillStyle = lowCombo ? '#ff9a9a' : '#7cf5ff';
+        if (lowCombo && !motionReduced()) {
+          c.globalAlpha = 0.55 + Math.sin(this.t * 14) * 0.35;
+        }
         this.rr(c, cBarX, cy, Math.max(3, cBarW * cFrac), 5, 3); c.fill();
+        c.globalAlpha = 1;
       }
       if (this.combo > 1) {
         const pulse = motionReduced() ? 1 : (1 + Math.sin(this.t * 10) * 0.1);
         c.save();
-        c.translate(W / 2, showPaceDelta ? 142 : 128);
+        c.translate(W / 2, showPaceDelta ? 152 : 138);
         c.scale(pulse, pulse);
         c.font = '900 22px sans-serif'; c.fillStyle = '#7cf5ff';
         c.fillText(t('hud.combo', { n: this.combo }), 0, 0);
@@ -4084,7 +4167,7 @@ class Game {
       } else if (this.combo === 1 && this.comboT > 0) {
         c.font = '700 12px sans-serif';
         c.fillStyle = 'rgba(124,245,255,.75)';
-        c.fillText(t('hud.comboActive'), W / 2, showPaceDelta ? 132 : 118);
+        c.fillText(t('hud.comboActive'), W / 2, showPaceDelta ? 142 : 128);
       }
     } else if (this.mode === 'coinrun') {
       const tLeft = Math.ceil(Math.max(0, this.coinTimer));

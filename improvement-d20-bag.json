@@ -6,25 +6,17 @@
     3,
     4,
     5,
-    13,
-    19
+    13
   ],
   "lastRoll": {
-    "face": 9,
-    "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
-    "rolledAt": "2026-07-25T14:02:25Z",
-    "remainingCount": 5,
+    "face": 19,
+    "category": "Muur & minigames \u2014 combo, timer, record",
+    "rolledAt": "2026-07-25T14:06:03Z",
+    "remainingCount": 4,
     "cycle": 4
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 13,
-      "note": "Daily claim UX + claim-all + status copy",
-      "version": "1.9.0",
-      "doneAt": "2026-07-23T14:20:43Z",
-      "cycle": 0
-    },
     {
       "face": 8,
       "note": "PWA network-first shell + offline banner + SW update toast",
@@ -576,6 +568,13 @@
       "note": "touch press-squash + hit-slop + menu active scale",
       "version": "1.18.30",
       "doneAt": "2026-07-25T14:04:16Z",
+      "cycle": 4
+    },
+    {
+      "face": 19,
+      "note": "chase meter + pace 45/20 + combo re-arm + near-miss",
+      "version": "1.18.32",
+      "doneAt": "2026-07-25T14:07:40Z",
       "cycle": 4
     }
   ],
@@ -1777,6 +1776,13 @@
       "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
       "rolledAt": "2026-07-25T14:02:25Z",
       "remainingCount": 5,
+      "cycle": 4
+    },
+    {
+      "face": 19,
+      "category": "Muur & minigames \u2014 combo, timer, record",
+      "rolledAt": "2026-07-25T14:06:03Z",
+      "remainingCount": 4,
       "cycle": 4
     }
   ],
