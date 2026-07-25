@@ -29,9 +29,9 @@ function applySummonTier(w) {
 }
 const playerWeapon = () => applyWeaponUpgrades(applySummonTier(weaponById(save.weapon)));
 
-/** 2% per avontuur-level: zwaard → Master Sword (Zelda) — 15s, ×2 dmg, groot bereik, unblockable. */
+/** 2% per avontuur-level: zwaard → Master Sword — UIT (zorgde voor plotselinge run-breaks). */
 const MASTER_SWORD_DURATION = 15;
-const MASTER_SWORD_CHANCE = 0.02;
+const MASTER_SWORD_CHANCE = 0;
 function canMasterSwordRoll(w) {
   if (!w || w.id === 'vuist' || w.id === 'master_sword' || isThrowWeapon(w.id)) return false;
   const fam = weaponMoveFamily(w.id);
@@ -51,10 +51,8 @@ function buildMasterSwordWeapon(base) {
   });
 }
 function rollSummonChance(elite) {
-  const since = save.stats.killsSinceSummon || 0;
-  // Basis ~0,7% per kill; zachte pity-ramp (+0,004%/kill, max +2%); elites ×2,5
-  const chance = (0.007 + Math.min(0.02, since * 0.00004)) * (elite ? 2.5 : 1);
-  return Math.random() < chance;
+  // UIT: zeldzame summon-ascend (epic/legendary) crashte runs midden in combo-spam
+  return false;
 }
 
 /** Swing-SFX per wapen (procedureel) — geen generieke “swing” voor alles. */

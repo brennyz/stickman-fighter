@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-25 | — | **HOTFIX:** zeldzame extra krachten UIT (summon/Master Sword/tide); level-einde → LEVEL KLAAR + betrouwbaar resultaat/Volgende. v1.18.65 / SW v275. |
 | 2026-07-25 | — | **HOTFIX rariteit:** kill/summon/tide/masterSword + showResult hardened — zeldzame rolls crashen run niet meer. v1.18.64 / SW v274. |
 | 2026-07-25 | — | **HOTFIX adventure flow:** dual pads alleen versus; update/draw crash → geen menu; Kets finish hardened. v1.18.63 / SW v273. |
 | 2026-07-25 | — | **HOTFIX zichtbaar:** Kets-thermometer + skills/supers scroll (speciale Kets weer te zien/equippen). hosting shareCacheRev sync. v1.18.62 / SW v272. |

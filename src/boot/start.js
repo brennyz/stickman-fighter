@@ -602,6 +602,7 @@ bindPress(document.getElementById('resAgain'), () => {
   const d = UI.lastResult;
   if (!d || !d.mode) return;
   AudioSys.sfx('select');
+  try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
   if (d.mode === 'adventure') gokGooiStartLevel(d.level);
   else if (d.mode === 'versus') {
     const p1 = d.p1 || vsSelect.p1;
@@ -617,6 +618,10 @@ bindPress(document.getElementById('resNext'), () => {
   const d = UI.lastResult;
   if (!d || d.mode !== 'adventure' || !d.win) return;
   AudioSys.sfx('select');
+  try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
   gokGooiStartLevel(Math.min(MAX_LEVEL, d.level + 1));
 });
-bindPress(document.getElementById('resMenu'), () => { UI.goMenu(); });
+bindPress(document.getElementById('resMenu'), () => {
+  try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
+  UI.goMenu();
+});

@@ -3461,7 +3461,9 @@ const UI = {
   },
 
   showResult(win, data) {
-    if (state === 'menu' || !data) return;
+    if (!data) return;
+    // Na win/lose: altijd resultaat tonen (ook als state kort menu was)
+    if (state === 'menu' && !(game && game.over)) return;
     try {
     this.lastResult = data;
     const title = document.getElementById('resTitle');

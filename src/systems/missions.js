@@ -1654,13 +1654,16 @@ function scheduleGameResult(gameRef, delayMs, showFn) {
   if (!gameRef || typeof showFn !== 'function') return;
   const token = (gameRef._resultToken || 0) + 1;
   gameRef._resultToken = token;
+  gameRef._pendingResult = true;
   setTimeout(() => {
     safeUiAction(() => {
       if (!gameRef || gameRef._resultToken !== token) return;
-      if (state === 'menu') return;
       if (game !== gameRef) return;
+      // Alleen skippen als speler bewust naar menu ging vóór einde
+      if (state === 'menu' && !gameRef.over) return;
+      gameRef._pendingResult = false;
       showFn();
-    }, 'scheduleGameResult', 'Resultaat laden mislukt — terug naar menu');
+    }, 'scheduleGameResult', 'Resultaat laden mislukt — tik Menu of Opnieuw');
   }, Math.max(0, delayMs || 0));
 }
 

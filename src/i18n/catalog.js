@@ -29,6 +29,7 @@ function seedNlGameStrings() {
     waveClear: 'Golf gewist +{heal} HP',
     waveN: 'GOLF {n}/{total}',
     fight: 'VECHT!',
+    levelClear: 'LEVEL {n} KLAAR!',
     won: 'GEWONNEN!',
     lost: 'VERSLAGEN...',
     round: 'RONDE {n}',
@@ -929,7 +930,7 @@ const CATALOG_EN = {
     bossWave: 'BOSS WAVE!', eliteWave: 'ELITE WAVE', superBossWave: 'SUPER-BOSS WAVE',
     flyerWave: 'FLYER WAVE', rushWave: 'RUSH WAVE', eliteTraitWave: 'ELITE WAVE', tideWave: 'TIDE WAVE',
     waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
-    fight: 'FIGHT!', won: 'VICTORY!', lost: 'DEFEATED...',
+    fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'DEFEATED...',
     round: 'ROUND {n}', roundDecisive: 'ROUND {n} · decisive round', roundMatchPoint: 'ROUND {n} · match point',
     roundWon: 'ROUND WON!', roundLost: 'ROUND LOST',
     p1RoundWin: 'P1 WINS ROUND!', p2RoundWin: 'P2 WINS ROUND!',
@@ -1612,7 +1613,7 @@ const CATALOG_DE = {
   },
   banner: {
     levelUp: 'LEVEL UP! Lv {lvl}', masterBuff: 'MEISTER-BUFF +20%', bossWave: 'BOSS-WELLE!',
-    fight: 'KÄMPF!', won: 'GEWONNEN!', lost: 'VERLOREN...', summon: '✦ SUMMON! ✦',
+    fight: 'KÄMPF!', levelClear: 'LEVEL {n} FERTIG!', won: 'GEWONNEN!', lost: 'VERLOREN...', summon: '✦ SUMMON! ✦',
     matsStart: 'MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
     kets: 'KABLAM…', ketsBam: 'KABLAM!',
   },
@@ -1710,7 +1711,7 @@ const CATALOG_FR = {
   },
   banner: {
     levelUp: 'LEVEL UP ! Lv {lvl}', masterBuff: 'BUFF MAÎTRE +20 %', bossWave: 'VAGUE BOSS !',
-    fight: 'COMBAT !', won: 'VICTOIRE !', lost: 'DÉFAITE...', summon: '✦ INVOCATION ! ✦',
+    fight: 'COMBAT !', levelClear: 'NIVEAU {n} TERMINÉ !', won: 'VICTOIRE !', lost: 'DÉFAITE...', summon: '✦ INVOCATION ! ✦',
     matsStart: 'BONUS PIÈCES', wallStart: 'CASSE LE MUR !', bonusDone: 'BONUS TERMINÉ !',
     kets: 'KABLAM…', ketsBam: 'KABLAM !',
   },
@@ -1808,7 +1809,7 @@ const CATALOG_ES = {
   },
   banner: {
     levelUp: '¡SUBIDA DE NIVEL! Lv {lvl}', masterBuff: 'BUFF MAESTRO +20%', bossWave: '¡OLA JEFE!',
-    fight: '¡LUCHA!', won: '¡VICTORIA!', lost: 'DERROTA...', summon: '✦ ¡INVOCACIÓN! ✦',
+    fight: '¡LUCHA!', levelClear: '¡NIVEL {n} LISTO!', won: '¡VICTORIA!', lost: 'DERROTA...', summon: '✦ ¡INVOCACIÓN! ✦',
     matsStart: 'BONUS MONEDAS', wallStart: '¡ROMPE EL MURO!', bonusDone: '¡BONUS LISTO!',
     kets: '¡KABLAM…', ketsBam: '¡KABLAM!',
   },
