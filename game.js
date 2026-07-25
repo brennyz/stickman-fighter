@@ -133,7 +133,7 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.65';
+const APP_VERSION = '1.17.73';
 /** Keep in sync with sw.js CACHE suffix */
 const SW_CACHE_REV = 191;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
@@ -5241,6 +5241,8 @@ function seedNlGameStrings() {
     charNotEnough: 'Niet genoeg unlocked vechters in deze saga',
     charRandom: '{a} vs {b} · HP {hp1}/{hp2} · TOT {tot1}/{tot2}',
     charFair: 'Fair duo: {a} vs {b} · TOT Δ{diff}',
+    charPickP1First: 'Kies eerst P1 — daarna P2 en VECHT',
+    charPickDifferent: 'P2 moet een andere vechter zijn dan P1',
     skipGamble: 'Zonder gok',
     weaponIslandCap: 'Klaar voor training — in avontuur max Lv {cap}',
     petNone: 'Geen actieve pet',
@@ -5693,6 +5695,8 @@ const CATALOG_EN = {
     charNotEnough: 'Not enough unlocked fighters in this saga',
     charRandom: '{a} vs {b} · HP {hp1}/{hp2} · TOT {tot1}/{tot2}',
     charFair: 'Fair duo: {a} vs {b} · TOT Δ{diff}',
+    charPickP1First: 'Pick P1 first — then P2 and FIGHT',
+    charPickDifferent: 'P2 must be a different fighter than P1',
     skipGamble: 'No gamble',
     weaponIslandCap: 'Ready for training — in adventure max Lv {cap}',
     petNone: 'No active pet',
@@ -7981,13 +7985,20 @@ function viewportGameSize() {
   return { w: Math.max(1, innerWidth), h: Math.max(1, innerHeight), offsetX: 0, offsetY: 0 };
 }
 
-function touchUiScale(W, H) {
+function touchUiScale(W, H, opts) {
+  opts = opts || {};
   const base = (typeof save !== 'undefined' && save.bigTouch !== false) ? 1.1 : 1;
   const portrait = H > W * 1.04;
   const fit = portrait
     ? Math.min(W / 390, H / 660, W / H * 0.95)
     : Math.min(W / 400, H / 740);
-  return clamp(fit * base, 0.62, 1.16);
+  let scale = clamp(fit * base, 0.62, 1.16);
+  const dual = opts.dual || (typeof Input !== 'undefined' && Input.dualMode);
+  if (dual) {
+    const mul = portrait ? (W < 420 ? 0.78 : 0.86) : 0.9;
+    scale = clamp(scale * mul, 0.56, 1.02);
+  }
+  return scale;
 }
 
 function hudInsetTop() {
@@ -7996,6 +8007,12 @@ function hudInsetTop() {
 
 function playfieldGroundY(H, W) {
   const portrait = H > W * 1.02;
+  const dualVs = typeof Input !== 'undefined' && Input.dualMode;
+  if (dualVs && portrait) {
+    if (H < 520) return H * 0.63;
+    if (H < 640) return H * 0.65;
+    return H * 0.66;
+  }
   if (portrait && H < 480) return H * 0.68;
   if (portrait && H < 520) return H * 0.7;
   if (portrait && H < 640) return H * 0.72;
@@ -8122,7 +8139,7 @@ function makePad(side) {
     layout(W, H) {
       const ui = touchUiScale(W, H);
       const safe = readSafeInsets();
-      const laid = layoutTouchButtonCluster(W, H, ui, safe, { side: this.side, dual: true });
+      const laid = layoutTouchButtonCluster(W, H, ui, safe, { side: this.side, dual: !!Input.dualMode });
       this.joyHome = laid.joyHome;
       this.buttons = laid.buttons;
     },
@@ -14278,6 +14295,32 @@ class Game {
 
 /* --- src/ui/ui.js --- */
 /* ================================= UI ================================== */
+function charSelectFightReady() {
+  if (!vsSelect.p1 || !vsSelect.p2) return false;
+  if ((UI.charPickStep || 1) !== 2) return false;
+  if (vsSelect.p1 === vsSelect.p2) return false;
+  return true;
+}
+
+function scrollCharFightIntoView() {
+  requestAnimationFrame(() => {
+    try {
+      const dock = document.getElementById('charFightDock');
+      const btn = document.getElementById('btnCharFight');
+      (dock || btn)?.scrollIntoView({ block: 'end', behavior: 'smooth' });
+    } catch (_) {}
+  });
+}
+
+function syncCharFightBtn() {
+  const fightBtn = document.getElementById('btnCharFight');
+  if (!fightBtn) return;
+  const ready = charSelectFightReady();
+  fightBtn.classList.toggle('char-fight-ready', ready);
+  fightBtn.classList.toggle('char-fight-off', !ready);
+  fightBtn.setAttribute('aria-disabled', ready ? 'false' : 'true');
+}
+
 function pickVsRosterId(id) {
   try {
     const r = vsRosterEntry(id);
@@ -14286,11 +14329,16 @@ function pickVsRosterId(id) {
     UI.charPreviewHoverId = null;
     if (UI.charPickStep === 1) {
       vsSelect.p1 = id;
+      if (vsSelect.p2 === id) {
+        const alt = VS_ROSTER.find((x) => x.id !== id && vsUnlocked(x));
+        if (alt) vsSelect.p2 = alt.id;
+      }
       UI.charPickStep = 2;
     } else {
       vsSelect.p2 = id;
     }
     UI.renderCharSelect();
+    if (UI.charPickStep === 2) scrollCharFightIntoView();
   } catch (err) {
     sfReportError('charPick', err, 'Vechter kiezen mislukt — tik opnieuw');
   }
@@ -14372,7 +14420,15 @@ function initCharSelectChrome() {
   }
   const fightBtn = document.getElementById('btnCharFight');
   bindPress(fightBtn, () => {
-    if (!vsSelect.p1 || !vsSelect.p2) return;
+    if (!charSelectFightReady()) {
+      if ((UI.charPickStep || 1) === 1) {
+        try { UI.toast(t('toast.charPickP1First'), 2400); } catch (_) {}
+      } else if (vsSelect.p1 === vsSelect.p2) {
+        try { UI.toast(t('toast.charPickDifferent'), 2600); } catch (_) {}
+      }
+      scrollCharFightIntoView();
+      return;
+    }
     AudioSys.sfx('bell');
     startGame('versus', { p1: vsSelect.p1, p2: vsSelect.p2 });
   });
@@ -14407,6 +14463,7 @@ function initCharSelectChrome() {
     vsSelect.p2 = duo.b.id;
     UI.charPickStep = 2;
     UI.renderCharSelect();
+    scrollCharFightIntoView();
     UI.toast(t('toast.charSagaClash', { a: duo.a.name, b: duo.b.name }), 2600);
   });
 }
@@ -14881,8 +14938,7 @@ const UI = {
       );
       if (pick) pick.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     });
-    const fightBtn = document.getElementById('btnCharFight');
-    if (fightBtn) fightBtn.disabled = !(vsSelect.p1 && vsSelect.p2);
+    syncCharFightBtn();
     const backBtn = document.getElementById('charSelectBack');
     if (backBtn) {
       backBtn.textContent = this.charPickStep === 2 ? t('ui.charBackP1') : t('ui.charBackMenu');
@@ -14944,6 +15000,7 @@ const UI = {
         this.charPickStep = 2;
         this.charPreviewHoverId = null;
         this.renderCharSelect();
+        scrollCharFightIntoView();
         const sa = vsFighterStats(a);
         const sb = vsFighterStats(b);
         UI.toast(t('toast.charRandom', {
@@ -14966,6 +15023,7 @@ const UI = {
         this.charPickStep = 2;
         this.charPreviewHoverId = null;
         this.renderCharSelect();
+        scrollCharFightIntoView();
         const sa = vsFighterStats(duo.a);
         const sb = vsFighterStats(duo.b);
         const diff = duo.ratingDiff != null ? duo.ratingDiff : Math.abs(vsOverallRating(sa) - vsOverallRating(sb));

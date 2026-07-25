@@ -1,4 +1,30 @@
 /* ================================= UI ================================== */
+function charSelectFightReady() {
+  if (!vsSelect.p1 || !vsSelect.p2) return false;
+  if ((UI.charPickStep || 1) !== 2) return false;
+  if (vsSelect.p1 === vsSelect.p2) return false;
+  return true;
+}
+
+function scrollCharFightIntoView() {
+  requestAnimationFrame(() => {
+    try {
+      const dock = document.getElementById('charFightDock');
+      const btn = document.getElementById('btnCharFight');
+      (dock || btn)?.scrollIntoView({ block: 'end', behavior: 'smooth' });
+    } catch (_) {}
+  });
+}
+
+function syncCharFightBtn() {
+  const fightBtn = document.getElementById('btnCharFight');
+  if (!fightBtn) return;
+  const ready = charSelectFightReady();
+  fightBtn.classList.toggle('char-fight-ready', ready);
+  fightBtn.classList.toggle('char-fight-off', !ready);
+  fightBtn.setAttribute('aria-disabled', ready ? 'false' : 'true');
+}
+
 function pickVsRosterId(id) {
   try {
     const r = vsRosterEntry(id);
@@ -7,11 +33,16 @@ function pickVsRosterId(id) {
     UI.charPreviewHoverId = null;
     if (UI.charPickStep === 1) {
       vsSelect.p1 = id;
+      if (vsSelect.p2 === id) {
+        const alt = VS_ROSTER.find((x) => x.id !== id && vsUnlocked(x));
+        if (alt) vsSelect.p2 = alt.id;
+      }
       UI.charPickStep = 2;
     } else {
       vsSelect.p2 = id;
     }
     UI.renderCharSelect();
+    if (UI.charPickStep === 2) scrollCharFightIntoView();
   } catch (err) {
     sfReportError('charPick', err, 'Vechter kiezen mislukt — tik opnieuw');
   }
@@ -93,7 +124,15 @@ function initCharSelectChrome() {
   }
   const fightBtn = document.getElementById('btnCharFight');
   bindPress(fightBtn, () => {
-    if (!vsSelect.p1 || !vsSelect.p2) return;
+    if (!charSelectFightReady()) {
+      if ((UI.charPickStep || 1) === 1) {
+        try { UI.toast(t('toast.charPickP1First'), 2400); } catch (_) {}
+      } else if (vsSelect.p1 === vsSelect.p2) {
+        try { UI.toast(t('toast.charPickDifferent'), 2600); } catch (_) {}
+      }
+      scrollCharFightIntoView();
+      return;
+    }
     AudioSys.sfx('bell');
     startGame('versus', { p1: vsSelect.p1, p2: vsSelect.p2 });
   });
@@ -128,6 +167,7 @@ function initCharSelectChrome() {
     vsSelect.p2 = duo.b.id;
     UI.charPickStep = 2;
     UI.renderCharSelect();
+    scrollCharFightIntoView();
     UI.toast(t('toast.charSagaClash', { a: duo.a.name, b: duo.b.name }), 2600);
   });
 }
@@ -602,8 +642,7 @@ const UI = {
       );
       if (pick) pick.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     });
-    const fightBtn = document.getElementById('btnCharFight');
-    if (fightBtn) fightBtn.disabled = !(vsSelect.p1 && vsSelect.p2);
+    syncCharFightBtn();
     const backBtn = document.getElementById('charSelectBack');
     if (backBtn) {
       backBtn.textContent = this.charPickStep === 2 ? t('ui.charBackP1') : t('ui.charBackMenu');
@@ -665,6 +704,7 @@ const UI = {
         this.charPickStep = 2;
         this.charPreviewHoverId = null;
         this.renderCharSelect();
+        scrollCharFightIntoView();
         const sa = vsFighterStats(a);
         const sb = vsFighterStats(b);
         UI.toast(t('toast.charRandom', {
@@ -687,6 +727,7 @@ const UI = {
         this.charPickStep = 2;
         this.charPreviewHoverId = null;
         this.renderCharSelect();
+        scrollCharFightIntoView();
         const sa = vsFighterStats(duo.a);
         const sb = vsFighterStats(duo.b);
         const diff = duo.ratingDiff != null ? duo.ratingDiff : Math.abs(vsOverallRating(sa) - vsOverallRating(sb));

@@ -574,7 +574,8 @@
   .char-card.featured { background:linear-gradient(180deg,rgba(255,215,94,.12),rgba(255,255,255,.04)); }
 
   /* Character select — arcade arena */
-  #charSelectScreen.char-select-arena { position:relative; overflow:hidden; padding-bottom:24px;
+  #charSelectScreen.char-select-arena { position:relative; overflow-x:hidden; overflow-y:auto;
+    -webkit-overflow-scrolling:touch; padding-bottom:8px;
     background:linear-gradient(180deg,#0a0e22 0%,#121832 38%,#0d1228 100%); }
   #charSelectScreen.char-select-arena .char-arena-bg {
     position:absolute; inset:0; pointer-events:none; z-index:0;
@@ -603,6 +604,11 @@
   .char-fight-btn { width:min(86vw,420px); margin:10px auto 0; font-size:18px; font-weight:900; letter-spacing:.06em;
     background:linear-gradient(180deg,#ff6b6b,#c92a2a); box-shadow:0 6px 0 #6b1515, 0 0 20px rgba(255,107,107,.25); }
   .char-fight-btn:active { transform:translateY(4px); box-shadow:0 2px 0 #6b1515; }
+  .char-fight-dock { position:sticky; bottom:0; z-index:4; width:min(94vw,720px); margin-top:8px;
+    padding:10px 0 max(12px, env(safe-area-inset-bottom));
+    background:linear-gradient(180deg, transparent 0%, rgba(10,14,34,.88) 32%, rgba(10,14,34,.97) 100%);
+    border-top:1px solid rgba(255,215,94,.12); }
+  #btnCharFight.char-fight-ready { box-shadow:0 6px 0 #6b1515, 0 0 24px rgba(255,107,107,.45); }
   .char-icon-row { width:min(94vw,720px); margin:0 0 10px; padding:10px 8px 12px; border-radius:16px;
     background:rgba(255,215,94,.06); border:1px solid rgba(255,215,94,.2); }
   .char-icon-row-title { font-size:11px; font-weight:900; color:#ffd75e; text-align:center; margin-bottom:8px; letter-spacing:.04em; }
@@ -623,6 +629,7 @@
   .char-duel-bar .p2pill { color:#ffb0b8; border:1px solid rgba(255,176,184,.45); }
   #btnCharFight { width:min(86vw,480px); padding:18px 20px; font-size:22px; margin-top:8px;
       background:linear-gradient(180deg,#ff5a8a,#a82050); justify-content:center; }
+  #btnCharFight.char-fight-off { opacity:.4; filter:grayscale(.35); cursor:not-allowed; }
   #btnCharFight:disabled { opacity:.35; filter:grayscale(.4); cursor:not-allowed; }
   #charPickBackP1 { margin:8px 0; width:min(86vw,480px); justify-content:center;
       background:linear-gradient(180deg,#5a6784,#39445e); }
@@ -665,10 +672,18 @@
   body.reduced-motion .toast { animation: none; }
   body.high-contrast .hub-tile { border-width: 2px; }
 
+  @media (max-height: 720px) {
+    .char-arena-preview { max-height:min(26vh, 200px); overflow-y:auto; }
+    .char-grid-scroll { max-height:min(36vh, 280px); }
+    .char-arena-title-block { margin:2px 0 6px; }
+    .char-arena-head { font-size:clamp(22px,5.5vw,32px); }
+  }
   @media (max-height: 640px) {
     .mode-btn { padding: 12px 16px; margin: 5px 0; font-size: min(4.6vw, 19px); }
     h1.title.arcade-logo { font-size: min(10vw, 50px); }
-    .char-grid-scroll { max-height: min(34vh, 240px); }
+    .char-grid-scroll { max-height: min(30vh, 220px); }
+    .char-arena-featured { padding:6px 6px 4px; margin-bottom:4px; }
+    .char-arena-actions { margin:4px 0; gap:6px; }
     #pauseScreen .head { margin-top: 36px !important; }
   }
   @media (max-width: 380px) {
