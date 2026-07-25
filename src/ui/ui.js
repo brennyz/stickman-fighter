@@ -1388,11 +1388,15 @@ const UI = {
         el.title = tip;
         let holdT = null;
         let holdSkip = false;
-        el.addEventListener('pointerdown', () => {
+        let holdX = 0;
+        let holdY = 0;
+        el.addEventListener('pointerdown', (e) => {
           holdSkip = false;
+          holdX = e.clientX;
+          holdY = e.clientY;
           holdT = setTimeout(() => {
             holdT = null;
-            if (!uiTapAllowed()) return;
+            if (!uiTapAllowed() || (typeof uiGestureMoved === 'function' && uiGestureMoved())) return;
             holdSkip = true;
             safeUiAction(() => {
               AudioSys.sfx('select');
@@ -1404,6 +1408,11 @@ const UI = {
           }, 520);
         }, { passive: true });
         const cancelHold = () => { if (holdT) { clearTimeout(holdT); holdT = null; } };
+        el.addEventListener('pointermove', (e) => {
+          if (!holdT) return;
+          const slop = typeof uiTapSlopPx === 'function' ? uiTapSlopPx() : 12;
+          if (Math.hypot(e.clientX - holdX, e.clientY - holdY) > slop) cancelHold();
+        }, { passive: true });
         el.addEventListener('pointerup', cancelHold);
         el.addEventListener('pointercancel', cancelHold);
         el.addEventListener('click', () => {

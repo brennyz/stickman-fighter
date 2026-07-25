@@ -3416,6 +3416,12 @@ class Game {
       c.globalAlpha = b.held ? 0.85 : 0.45;
       c.fillStyle = b.color;
       c.beginPath(); c.arc(b.x, b.y, b.r, 0, TAU); c.fill();
+      if (b.held) {
+        c.globalAlpha = 0.6;
+        c.strokeStyle = '#fff';
+        c.lineWidth = 2.5;
+        c.beginPath(); c.arc(b.x, b.y, b.r + 3, 0, TAU); c.stroke();
+      }
       c.globalAlpha = b.held ? 1 : 0.85;
       const jk = b.id === 'special' ? fighterJutsuKind(this.player) : null;
       if (!drawTouchBtnIcon(c, b.id, b.x, b.y, b.r, jk)) {
@@ -3455,6 +3461,12 @@ class Game {
       c.globalAlpha = b.held ? 0.85 : 0.42;
       c.fillStyle = b.color;
       c.beginPath(); c.arc(b.x, b.y, b.r, 0, TAU); c.fill();
+      if (b.held) {
+        c.globalAlpha = 0.55;
+        c.strokeStyle = accent;
+        c.lineWidth = 2;
+        c.beginPath(); c.arc(b.x, b.y, b.r + 3, 0, TAU); c.stroke();
+      }
       c.globalAlpha = 0.9;
       const jk2 = b.id === 'special' && fighter ? fighterJutsuKind(fighter) : (b.id === 'special' ? 'rasengan' : null);
       if (!drawTouchBtnIcon(c, b.id, b.x, b.y, b.r, jk2)) {

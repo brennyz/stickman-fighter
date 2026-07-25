@@ -133,9 +133,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.79';
+const APP_VERSION = '1.17.80';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 197;
+const SW_CACHE_REV = 198;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -8839,6 +8839,9 @@ function uiTapGuardFinish(cancelled) {
 
 function uiTapAllowed() { return !_uiLastGestureScroll; }
 
+/** True tijdens/na scroll-slide — blokkeert tap én long-press (iPad level-tegels). */
+function uiGestureMoved() { return !!_uiTap.moved || _uiLastGestureScroll; }
+
 function initUiTapScrollGuard() {
   if (window.__sfUiTapGuard) return;
   window.__sfUiTapGuard = true;
@@ -9089,6 +9092,7 @@ function makePad(side) {
         this.btnPointers[id] = b.id;
         b.held = true;
         this.press(b.id);
+        try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
         return true;
       }
       if (this.joy.active && this.joy.id !== id && !this.activePointers.has(this.joy.id)) {
@@ -9172,6 +9176,7 @@ Object.assign(Input, {
       this.btnPointers[id] = b.id;
       b.held = true;
       this.press(b.id);
+      try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
       return;
     }
     if (!pointInJoyZone(this, x, y)) {
@@ -9357,6 +9362,7 @@ function scheduleResize() {
 }
 addEventListener('resize', scheduleResize);
 addEventListener('orientationchange', () => {
+  if (state === 'play') try { Input.releaseAll(); } catch (_) {}
   setTimeout(resize, 60);
   scheduleResize();
 });
@@ -15294,6 +15300,12 @@ class Game {
       c.globalAlpha = b.held ? 0.85 : 0.45;
       c.fillStyle = b.color;
       c.beginPath(); c.arc(b.x, b.y, b.r, 0, TAU); c.fill();
+      if (b.held) {
+        c.globalAlpha = 0.6;
+        c.strokeStyle = '#fff';
+        c.lineWidth = 2.5;
+        c.beginPath(); c.arc(b.x, b.y, b.r + 3, 0, TAU); c.stroke();
+      }
       c.globalAlpha = b.held ? 1 : 0.85;
       const jk = b.id === 'special' ? fighterJutsuKind(this.player) : null;
       if (!drawTouchBtnIcon(c, b.id, b.x, b.y, b.r, jk)) {
@@ -15333,6 +15345,12 @@ class Game {
       c.globalAlpha = b.held ? 0.85 : 0.42;
       c.fillStyle = b.color;
       c.beginPath(); c.arc(b.x, b.y, b.r, 0, TAU); c.fill();
+      if (b.held) {
+        c.globalAlpha = 0.55;
+        c.strokeStyle = accent;
+        c.lineWidth = 2;
+        c.beginPath(); c.arc(b.x, b.y, b.r + 3, 0, TAU); c.stroke();
+      }
       c.globalAlpha = 0.9;
       const jk2 = b.id === 'special' && fighter ? fighterJutsuKind(fighter) : (b.id === 'special' ? 'rasengan' : null);
       if (!drawTouchBtnIcon(c, b.id, b.x, b.y, b.r, jk2)) {
@@ -16736,11 +16754,15 @@ const UI = {
         el.title = tip;
         let holdT = null;
         let holdSkip = false;
-        el.addEventListener('pointerdown', () => {
+        let holdX = 0;
+        let holdY = 0;
+        el.addEventListener('pointerdown', (e) => {
           holdSkip = false;
+          holdX = e.clientX;
+          holdY = e.clientY;
           holdT = setTimeout(() => {
             holdT = null;
-            if (!uiTapAllowed()) return;
+            if (!uiTapAllowed() || (typeof uiGestureMoved === 'function' && uiGestureMoved())) return;
             holdSkip = true;
             safeUiAction(() => {
               AudioSys.sfx('select');
@@ -16752,6 +16774,11 @@ const UI = {
           }, 520);
         }, { passive: true });
         const cancelHold = () => { if (holdT) { clearTimeout(holdT); holdT = null; } };
+        el.addEventListener('pointermove', (e) => {
+          if (!holdT) return;
+          const slop = typeof uiTapSlopPx === 'function' ? uiTapSlopPx() : 12;
+          if (Math.hypot(e.clientX - holdX, e.clientY - holdY) > slop) cancelHold();
+        }, { passive: true });
         el.addEventListener('pointerup', cancelHold);
         el.addEventListener('pointercancel', cancelHold);
         el.addEventListener('click', () => {

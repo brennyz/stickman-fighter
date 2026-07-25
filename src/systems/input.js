@@ -425,6 +425,9 @@ function uiTapGuardFinish(cancelled) {
 
 function uiTapAllowed() { return !_uiLastGestureScroll; }
 
+/** True tijdens/na scroll-slide — blokkeert tap én long-press (iPad level-tegels). */
+function uiGestureMoved() { return !!_uiTap.moved || _uiLastGestureScroll; }
+
 function initUiTapScrollGuard() {
   if (window.__sfUiTapGuard) return;
   window.__sfUiTapGuard = true;
@@ -675,6 +678,7 @@ function makePad(side) {
         this.btnPointers[id] = b.id;
         b.held = true;
         this.press(b.id);
+        try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
         return true;
       }
       if (this.joy.active && this.joy.id !== id && !this.activePointers.has(this.joy.id)) {
@@ -758,6 +762,7 @@ Object.assign(Input, {
       this.btnPointers[id] = b.id;
       b.held = true;
       this.press(b.id);
+      try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
       return;
     }
     if (!pointInJoyZone(this, x, y)) {

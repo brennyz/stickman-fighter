@@ -43,6 +43,7 @@ function scheduleResize() {
 }
 addEventListener('resize', scheduleResize);
 addEventListener('orientationchange', () => {
+  if (state === 'play') try { Input.releaseAll(); } catch (_) {}
   setTimeout(resize, 60);
   scheduleResize();
 });
