@@ -1266,7 +1266,7 @@ function screenLooksUsable(el) {
   try {
     const cs = getComputedStyle(el);
     if (cs.display === 'none' || cs.visibility === 'hidden') return false;
-    if (Number(cs.opacity) < 0.08) return false;
+    // Geen opacity-check: fadeIn start op 0 en gaf valse "kapot" tijdens boot.
     const nodes = el.querySelectorAll(
       'button, .hub-tile, .head, h1, h2, .settings-card, .btn, .lvl, .char-card, .mode-btn, .wrow'
     );

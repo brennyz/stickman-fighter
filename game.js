@@ -3375,15 +3375,20 @@ function screenLooksUsable(el) {
   try {
     const cs = getComputedStyle(el);
     if (cs.display === 'none' || cs.visibility === 'hidden') return false;
-    if (Number(cs.opacity) < 0.08) return false;
-    if (el.clientWidth < 40 || el.clientHeight < 40) return false;
+    // Geen opacity-check: fadeIn start op 0 en gaf valse "kapot" tijdens boot.
     const nodes = el.querySelectorAll(
       'button, .hub-tile, .head, h1, h2, .settings-card, .btn, .lvl, .char-card, .mode-btn, .wrow'
     );
+    if (!nodes.length) return false;
+    let sized = 0;
     for (let i = 0; i < nodes.length; i++) {
-      const n = nodes[i];
-      if (n.clientWidth > 8 && n.clientHeight > 8) return true;
+      if (nodes[i].clientWidth > 8 && nodes[i].clientHeight > 8) sized++;
     }
+    if (sized > 0) return true;
+    // Boot / smoke / pre-layout (0×0): markup aanwezig → nog niet als kapot markeren
+    if (el.clientWidth < 40 || el.clientHeight < 40) return true;
+    // Scherm heeft formaat maar kinderen niet → leeg blauw deksel
+    return false;
   } catch (_) {}
   return false;
 }
