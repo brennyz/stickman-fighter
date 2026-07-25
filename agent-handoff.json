@@ -56,6 +56,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-25T09:01:55Z",
+      "summary": "d2 training c4: match point HUD, round countdown, low-HP mercy AI v1.17.82"
+    },
+    {
       "at": "2026-07-25T08:54:13Z",
       "summary": "d9 touch: scroll-guard bugfix, haptic+held ring, orient release v1.17.80"
     },

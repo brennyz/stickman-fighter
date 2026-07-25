@@ -21,21 +21,8 @@
     "remainingCount": 10,
     "cycle": 4
   },
-  "pending": {
-    "face": 2,
-    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
-    "rolledAt": "2026-07-24T18:00:39Z",
-    "remainingCount": 10,
-    "cycle": 4
-  },
+  "pending": null,
   "implemented": [
-    {
-      "face": 2,
-      "note": "Chidori telegraph + ronde HUD",
-      "version": "1.8.4",
-      "doneAt": "2026-07-23T13:35:30Z",
-      "cycle": 0
-    },
     {
       "face": 17,
       "note": "Error recovery + save import",
@@ -587,6 +574,13 @@
       "note": "scroll-guard long-press, haptic+held ring, orient release",
       "version": "1.17.80",
       "doneAt": "2026-07-25T08:53:58Z",
+      "cycle": 4
+    },
+    {
+      "face": 2,
+      "note": "match point HUD, round countdown, low-HP mercy AI",
+      "version": "1.17.82",
+      "doneAt": "2026-07-25T09:01:51Z",
       "cycle": 4
     }
   ],

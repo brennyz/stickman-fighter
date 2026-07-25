@@ -109,6 +109,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-25 | **2** | Training c4: match point/beslissende ronde banners, spawn+round-end countdown, timer bar, TIME=HP%, round-log, low-HP mercy (lasers/AI) — geen one-shots. v1.17.82 / SW v200. |
 | 2026-07-25 | **9** | Touch c4: level long-press scroll-guard, uiGestureMoved, knop-haptic + held ring, joy release bij orientatie. Bug: skip-gok tijdens scroll. v1.17.80 / SW v198. |
 | 2026-07-24 | **ship** | Alles live: dex/pets, egg pets, combat styles, save backup, combat harden, weapon combos, char select, hosting, code health, PWA offline, kill streak + combo-trainer. v1.17.56 / SW v182. |
 | 2026-07-24 | — | **Feel #2+#3:** kill streak (STREAK juice, record, BGM heat, achievements) + combo-trainer (dummy 3s, goals, record, bonus XP). |
