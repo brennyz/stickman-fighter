@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.84';
+const APP_VERSION = '1.17.85';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 202;
+const SW_CACHE_REV = 203;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -667,6 +667,8 @@ function syncBackupFromPrimary() {
 function sanitizeSave(s) {
   // Literal max — nooit TDZ op MAX_LEVEL (anders crashen alle click-handlers)
   const maxLevel = 50;
+  const skillSnap = typeof snapshotSkillUpgradeTracks === 'function' ? snapshotSkillUpgradeTracks(s) : null;
+  const itemSnap = typeof snapshotItemUpgradeTracks === 'function' ? snapshotItemUpgradeTracks(s) : null;
   const out = Object.assign({}, DEFAULT_SAVE, s);
   delete out._exportMeta;
   out.lvl = clamp(Math.floor(Number(out.lvl) || 1), 1, 500);
@@ -817,6 +819,9 @@ function sanitizeSave(s) {
     }
   }
   out.itemUpgrades = cleanItems;
+
+  if (skillSnap && typeof restoreLostSkillUpgrades === 'function') restoreLostSkillUpgrades(skillSnap, out);
+  if (itemSnap && typeof restoreLostItemUpgrades === 'function') restoreLostItemUpgrades(itemSnap, out);
 
   out.petCoins = clamp(Math.floor(Number(out.petCoins) || 0), 0, 999999);
   if (out.lang != null && !SUPPORTED_LANGS.includes(out.lang)) out.lang = null;

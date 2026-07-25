@@ -89,8 +89,9 @@ assert(ctx.skillLevel('dash') <= 2, 'skill level clamped by shard budget');
 assert(!ctx.save.itemUpgrades.weapon?.vuist, 'vuist upgrades stripped');
 assert(!ctx.save.itemUpgrades.weapon?.fake, 'invalid weapon id stripped');
 assert(!ctx.save.itemUpgrades.hacker, 'invalid category stripped');
+assert(ctx.save.itemUpgrades.style?.void, 'style upgrades persist when island-gated');
 assert(ctx.itemUpgradeLevel('weapon', 'kunai') <= ctx.itemUpgradeMax('weapon', 'kunai'), 'weapon level clamped');
-assert(!ctx.save.itemUpgrades.pet?.pet_slymo, 'untamed pet upgrades stripped');
+assert(ctx.save.itemUpgrades.pet?.pet_slymo, 'pet upgrades persist when untamed');
 
 ctx.save.pets = { pet_slymo: { at: Date.now() } };
 ctx.normalizeItemUpgrades();

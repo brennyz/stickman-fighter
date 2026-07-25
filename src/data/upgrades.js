@@ -62,6 +62,16 @@ function itemUpgradeEligible(cat, id) {
   return false;
 }
 
+/** Save/export: keep earned tracks — runtime eligibility must not wipe progress. */
+function itemUpgradePersistable(cat, id) {
+  if (!itemUpgradeIdValid(cat, id)) return false;
+  if (cat === 'weapon') {
+    const w = WEAPONS.find((x) => x.id === id);
+    if (!w || w.id === 'vuist' || w.id === 'master_sword' || isThrowWeapon(w.id)) return false;
+  }
+  return true;
+}
+
 function itemUpgradeEntry(cat, id) {
   if (!itemUpgradeIdValid(cat, id)) return null;
   if (!save.itemUpgrades || typeof save.itemUpgrades !== 'object') save.itemUpgrades = {};
@@ -122,7 +132,7 @@ function itemCanUpgrade(cat, id) {
 }
 
 function sanitizeItemUpgradeEntry(cat, id, raw) {
-  if (!itemUpgradeIdValid(cat, id) || !itemUpgradeEligible(cat, id)) return null;
+  if (!itemUpgradePersistable(cat, id)) return null;
   const max = itemUpgradeMax(cat, id);
   const entry = (raw && typeof raw === 'object') ? raw : {};
   let lv = clamp(Math.floor(Number(entry.level) || 0), 0, max);
@@ -150,6 +160,60 @@ function normalizeItemUpgrades() {
   save.itemUpgrades = clean;
 }
 
+function snapshotItemUpgradeTracks(st) {
+  const snap = { weapon: {}, pet: {}, style: {} };
+  const raw = (st && st.itemUpgrades && typeof st.itemUpgrades === 'object') ? st.itemUpgrades : {};
+  for (const cat of ITEM_UPGRADE_CATS) {
+    const bag = (raw[cat] && typeof raw[cat] === 'object') ? raw[cat] : {};
+    for (const [id, e] of Object.entries(bag)) {
+      if (!itemUpgradePersistable(cat, id) || !e || typeof e !== 'object') continue;
+      const lv = Math.floor(Number(e.level) || 0);
+      const shards = Math.floor(Number(e.shards) || 0);
+      if (lv > 0 || shards > 0) snap[cat][id] = { level: lv, shards };
+    }
+  }
+  return snap;
+}
+
+function countItemUpgradeLevels(st) {
+  let n = 0;
+  const raw = (st && st.itemUpgrades) || {};
+  for (const cat of ITEM_UPGRADE_CATS) {
+    const bag = raw[cat] || {};
+    for (const id of Object.keys(bag)) {
+      n += Math.floor(Number(bag[id] && bag[id].level) || 0);
+    }
+  }
+  return n;
+}
+
+function restoreLostItemUpgrades(snap, out) {
+  if (!snap || !out) return out;
+  if (!out.itemUpgrades || typeof out.itemUpgrades !== 'object') out.itemUpgrades = { weapon: {}, pet: {}, style: {} };
+  for (const cat of ITEM_UPGRADE_CATS) {
+    const bag = snap[cat] || {};
+    for (const [id, raw] of Object.entries(bag)) {
+      if (!itemUpgradePersistable(cat, id)) continue;
+      const cur = (out.itemUpgrades[cat] || {})[id];
+      const curLv = cur ? Math.floor(Number(cur.level) || 0) : 0;
+      const curSh = cur ? Math.floor(Number(cur.shards) || 0) : 0;
+      const prevLv = Math.floor(Number(raw.level) || 0);
+      const prevSh = Math.floor(Number(raw.shards) || 0);
+      if (prevLv > curLv || (prevLv === curLv && prevSh > curSh)) {
+        const merged = sanitizeItemUpgradeEntry(cat, id, {
+          level: Math.max(prevLv, curLv),
+          shards: Math.max(prevSh, curSh),
+        });
+        if (merged) {
+          if (!out.itemUpgrades[cat]) out.itemUpgrades[cat] = {};
+          out.itemUpgrades[cat][id] = merged;
+        }
+      }
+    }
+  }
+  return out;
+}
+
 function addItemShards(cat, id, n) {
   if (!itemUpgradeEligible(cat, id)) return 0;
   const add = clamp(Math.floor(Number(n) || 0), 1, ITEM_SHARD_ADD_CAP);
@@ -171,8 +235,7 @@ function tryItemUpgrade(cat, id) {
   if (next > itemUpgradeMax(cat, id)) return false;
   e.shards = clamp(itemUpgradeShards(cat, id) - cost, 0, ITEM_SHARD_CAP);
   e.level = next;
-  persist();
-  return true;
+  return persistOrToast('itemUp/' + cat + '/' + id);
 }
 
 /* ---- Weapon upgrade steps (procedural per rarity) ---- */

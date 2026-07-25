@@ -501,6 +501,16 @@ function saveSanitizeNotes(before, after) {
   if (!Number.isFinite(Number(before.musicVol)) || !Number.isFinite(Number(before.sfxVol))) {
     notes.push('volume gecorrigeerd');
   }
+  if (typeof countSkillUpgradeLevels === 'function') {
+    const skB = countSkillUpgradeLevels(before);
+    const skA = countSkillUpgradeLevels(after);
+    if (skA < skB) notes.push(`skill-upgrades ${skB}→${skA} Lv`);
+  }
+  if (typeof countItemUpgradeLevels === 'function') {
+    const itB = countItemUpgradeLevels(before);
+    const itA = countItemUpgradeLevels(after);
+    if (itA < itB) notes.push(`item-upgrades ${itB}→${itA} Lv`);
+  }
   return notes;
 }
 
