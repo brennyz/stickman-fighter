@@ -39,7 +39,7 @@ function seedNlGameStrings() {
     summonAscend: '{name} → {rar}!',
     newDex: 'Nieuw {rar}: {name}! +{hp} max HP',
     pet: 'PET! {name}',
-    matsStart: 'MATS · MUNTJES BONUS',
+    matsStart: 'MUNTJES BONUS',
     wallStart: 'SLOOP DE MUUR!',
     bonusDone: 'BONUS KLAAR!',
     kets: 'KETS!',
@@ -51,7 +51,7 @@ function seedNlGameStrings() {
   Object.assign(I18N.nl.result, {
     advWin: 'GEWONNEN!', advLose: 'VERSLAGEN...', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
     vsP1Win: 'SPELER 1 WINT!', vsP2Win: 'SPELER 2 WINT!', wallRecord: 'NIEUW RECORD!', wallTime: 'TIJD IS OM!',
-    matsRecord: 'MATS RECORD!', matsDone: 'Goed gedaan, Mats!',
+    matsRecord: 'RECORD!', matsDone: 'Goed gedaan!',
     perfectRun: 'Perfecte run — hou je HP hoog!',
     pickupsHelp: '{hint} — pickups helpen',
     lossBlockTip: 'Tip: blokkeer · mik omhoog op vliegers · {prog}',
@@ -71,7 +71,7 @@ function seedNlGameStrings() {
     wallStrongCombo: 'Sterke combo (×{n}) — volgende keer record?',
     wallBehindPace: 'Achter record-tempo — probeer combo ×5+ voor meer sloop',
     wallGoodPace: 'Goed tempo — volgende run kan record breken!',
-    matsPetTip: 'Pet coins uitgeven in Collectie → Pets · elke 2 Mats-munten = 1 pet coin',
+    matsPetTip: 'Pet coins uitgeven in Collectie → Pets · elke 2 munten = 1 pet coin',
     matsControlTip: 'Joystick omhoog = hoger mikken (slag + gooi) · shuriken max 3× snel',
     masterBuffActive: ' · Meester-buff actief',
     wavesProg: '{cur}/{total} golven',
@@ -406,7 +406,7 @@ function seedNlGameStrings() {
     pace: '~{pace}/min · projectie ~{proj}', paceAhead: 'Voor op record-tempo +{n}',
     paceBehind: 'Achter record-tempo {n}', comboLabel: 'COMBO',
     comboSmash: '+{pct}% sloop', comboActive: 'Combo actief — nog een steen!',
-    coins: 'Munten: {n}', matsRecord: 'Record Mats: {n}',
+    coins: 'Munten: {n}', matsRecord: 'Record: {n}',
     petCoins: 'Pet coins: +{pending} · wallet {wallet}',
     matsHint: 'Joystick ↑ mik · slag/gooi hoger · shuriken op roze vliegers',
     spawnFair: 'Spawn · eerlijk start', nextRound: 'Volgende ronde',
@@ -551,7 +551,7 @@ const CATALOG_EN = {
   result: {
     advWin: 'VICTORY!', advLose: 'DEFEATED...', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
     vsP1Win: 'PLAYER 1 WINS!', vsP2Win: 'PLAYER 2 WINS!', wallRecord: 'NEW RECORD!', wallTime: "TIME'S UP!",
-    matsRecord: 'MATS RECORD!', matsDone: 'Nice job, Mats!',
+    matsRecord: 'NEW RECORD!', matsDone: 'Well done!',
     perfectRun: 'Perfect run — keep HP high!',
     pickupsHelp: '{hint} — pickups help',
     lossBlockTip: 'Tip: block · aim up at flyers · {prog}',
@@ -571,7 +571,7 @@ const CATALOG_EN = {
     wallStrongCombo: 'Strong combo (×{n}) — record next time?',
     wallBehindPace: 'Behind record pace — try combo ×5+ for more smash',
     wallGoodPace: 'Good pace — next run could break record!',
-    matsPetTip: 'Spend pet coins in Collection → Pets · every 2 Mats coins = 1 pet coin',
+    matsPetTip: 'Spend pet coins in Collection → Pets · every 2 coins = 1 pet coin',
     matsControlTip: 'Joystick up = aim higher (melee + throw) · shuriken max 3× fast',
     masterBuffActive: ' · Master buff active',
     wavesProg: '{cur}/{total} waves',
@@ -602,7 +602,7 @@ const CATALOG_EN = {
     timeHpVs: 'TIME! {hp1}% vs {hp2}% · {msg}',
     summon: '✦ SUMMON! ✦', summonAscend: '{name} → {rar}!',
     newDex: 'New {rar}: {name}! +{hp} max HP', pet: 'PET! {name}',
-    matsStart: 'MATS · COIN BONUS', wallStart: 'SMASH THE WALL!', bonusDone: 'BONUS DONE!',
+    matsStart: 'COIN BONUS', wallStart: 'SMASH THE WALL!', bonusDone: 'BONUS DONE!',
     kets: 'KETS!', ketsBam: 'KETS-BAM!', wallTime: 'TIME!', wallNewWall: 'WALL SMASHED! New wall...',
   },
   help: { tips: [
@@ -924,7 +924,7 @@ const CATALOG_EN = {
     pace: '~{pace}/min · projection ~{proj}', paceAhead: 'Ahead of record pace +{n}',
     paceBehind: 'Behind record pace {n}', comboLabel: 'COMBO',
     comboSmash: '+{pct}% smash', comboActive: 'Combo active — one more brick!',
-    coins: 'Coins: {n}', matsRecord: 'Mats record: {n}',
+    coins: 'Coins: {n}', matsRecord: 'Record: {n}',
     petCoins: 'Pet coins: +{pending} · wallet {wallet}',
     matsHint: 'Joystick ↑ aim · melee/throw higher · shuriken on pink flyers',
     spawnFair: 'Spawn · fair start', nextRound: 'Next round',
@@ -1022,12 +1022,12 @@ const CATALOG_DE = {
   result: {
     advWin: 'GEWONNEN!', advLose: 'BESIEGT...', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
     vsP1Win: 'SPIELER 1 GEWINNT!', vsP2Win: 'SPIELER 2 GEWINNT!', wallRecord: 'NEUER REKORD!', wallTime: 'ZEIT UM!',
-    matsRecord: 'MATS-REKORD!', matsDone: 'Gut gemacht, Mats!',
+    matsRecord: 'NEUER REKORD!', matsDone: 'Gut gemacht!',
   },
   banner: {
     levelUp: 'LEVEL UP! Lv {lvl}', masterBuff: 'MEISTER-BUFF +20%', bossWave: 'BOSS-WELLE!',
     fight: 'KÄMPF!', won: 'GEWONNEN!', lost: 'VERLOREN...', summon: '✦ SUMMON! ✦',
-    matsStart: 'MATS · MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
+    matsStart: 'MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
     kets: 'KETS!', ketsBam: 'KETS-BAM!',
   },
   help: { tips: [
@@ -1120,12 +1120,12 @@ const CATALOG_FR = {
   result: {
     advWin: 'VICTOIRE !', advLose: 'DÉFAITE...', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
     vsP1Win: 'JOUEUR 1 GAGNE !', vsP2Win: 'JOUEUR 2 GAGNE !', wallRecord: 'NOUVEAU RECORD !', wallTime: 'FIN DU TEMPS !',
-    matsRecord: 'RECORD MATS !', matsDone: 'Bien joué, Mats !',
+    matsRecord: 'NOUVEAU RECORD !', matsDone: 'Bien joué !',
   },
   banner: {
     levelUp: 'LEVEL UP ! Lv {lvl}', masterBuff: 'BUFF MAÎTRE +20 %', bossWave: 'VAGUE BOSS !',
     fight: 'COMBAT !', won: 'VICTOIRE !', lost: 'DÉFAITE...', summon: '✦ INVOCATION ! ✦',
-    matsStart: 'MATS · BONUS PIÈCES', wallStart: 'CASSE LE MUR !', bonusDone: 'BONUS TERMINÉ !',
+    matsStart: 'BONUS PIÈCES', wallStart: 'CASSE LE MUR !', bonusDone: 'BONUS TERMINÉ !',
     kets: 'KETS !', ketsBam: 'KETS-BAM !',
   },
   help: { tips: [
@@ -1218,12 +1218,12 @@ const CATALOG_ES = {
   result: {
     advWin: '¡VICTORIA!', advLose: 'DERROTA...', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
     vsP1Win: '¡JUGADOR 1 GANA!', vsP2Win: '¡JUGADOR 2 GANA!', wallRecord: '¡NUEVO RÉCORD!', wallTime: '¡SE ACABÓ EL TIEMPO!',
-    matsRecord: '¡RÉCORD MATS!', matsDone: '¡Bien hecho, Mats!',
+    matsRecord: '¡NUEVO RÉCORD!', matsDone: '¡Bien hecho!',
   },
   banner: {
     levelUp: '¡SUBIDA DE NIVEL! Lv {lvl}', masterBuff: 'BUFF MAESTRO +20%', bossWave: '¡OLA JEFE!',
     fight: '¡LUCHA!', won: '¡VICTORIA!', lost: 'DERROTA...', summon: '✦ ¡INVOCACIÓN! ✦',
-    matsStart: 'MATS · BONUS MONEDAS', wallStart: '¡ROMPE EL MURO!', bonusDone: '¡BONUS LISTO!',
+    matsStart: 'BONUS MONEDAS', wallStart: '¡ROMPE EL MURO!', bonusDone: '¡BONUS LISTO!',
     kets: '¡KETS!', ketsBam: '¡KETS-BAM!',
   },
   help: { tips: [

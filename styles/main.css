@@ -344,9 +344,11 @@
   body.big-touch .back-btn { padding:14px 22px; font-size:18px; min-height:52px; left:12px; }
   .sub-home-bar { position:sticky; bottom:0; width:min(94vw,720px); margin-top:18px;
     padding:8px 0 max(14px, env(safe-area-inset-bottom)); z-index:3; flex-shrink:0;
+    display:flex; justify-content:center; align-items:center;
     background:linear-gradient(180deg, transparent, rgba(10,13,24,.94) 38%); }
-  .sub-home-bar .sub-home-btn { width:100%; min-height:52px; font-size:16px; font-weight:800; }
-  body.big-touch .sub-home-bar .sub-home-btn { min-height:58px; font-size:18px; }
+  .sub-home-bar .sub-home-btn { width:auto; max-width:min(88vw,380px); min-width:min(52vw,240px);
+    min-height:48px; padding:10px 22px; font-size:15px; font-weight:800; justify-content:center; }
+  body.big-touch .sub-home-bar .sub-home-btn { min-height:54px; padding:12px 26px; font-size:17px; }
 
   .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(96px,1fr));
       gap:12px; width:min(92vw, 640px); }

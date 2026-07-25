@@ -1313,11 +1313,13 @@ const UI = {
         btn.style.setProperty('--isl-accent', isl.accent);
         const prog = islandProgress(isl.id);
         const pct = Math.round(prog.cleared / prog.total * 100);
+        const islName = islandLabel(isl.id, 'name');
+        const islSub = islandLabel(isl.id, 'sub');
         btn.innerHTML = `<span class="island-tab-ico">${isl.icon}</span>` +
-          `<span class="island-tab-n">${isl.id}</span><span class="island-tab-name">${isl.name}</span>` +
+          `<span class="island-tab-n">${isl.id}</span><span class="island-tab-name">${islName}</span>` +
           `<span class="island-prog-track island-tab-prog"><i style="width:${pct}%;background:${isl.accent}"></i></span>` +
           (ok ? '' : `<span class="island-tab-lock">${SVG_LOCK_ICON}</span>`);
-        btn.title = ok ? `${isl.name} · ${isl.sub}` : `Versla baas Lv ${isl.id * LEVELS_PER_ISLAND} om te openen`;
+        btn.title = ok ? `${islName} · ${islSub}` : `Versla baas Lv ${isl.id * LEVELS_PER_ISLAND} om te openen`;
         if (ok) {
           btn.addEventListener('click', () => safeUiAction(() => {
             AudioSys.sfx('select');
@@ -1339,7 +1341,7 @@ const UI = {
         `<div class="island-info-head">` +
         `<span class="island-info-ico">${islMeta.icon}</span>` +
         `<div class="island-info-text">` +
-        `<b style="color:${islMeta.accent}">${islMeta.name}</b> · ${islMeta.sub}` +
+        `<b style="color:${islMeta.accent}">${islandLabel(islMeta.id, 'name')}</b> · ${islandLabel(islMeta.id, 'sub')}` +
         `<div class="island-info-sub">Skill gate: wapens tot Lv <b>${wCap}</b> · ${prog.cleared}/${prog.total} levels · ${prog.stars}★` +
         (pick < 5 ? ` · baas Lv ${pick * LEVELS_PER_ISLAND} → volgend eiland` : '') +
         `</div></div></div>` +

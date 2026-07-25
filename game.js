@@ -135,9 +135,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.83';
+const APP_VERSION = '1.17.84';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 201;
+const SW_CACHE_REV = 202;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -1021,7 +1021,7 @@ const I18N = {
     common: { backHome: 'Terug naar menu', ok: 'Begrepen!', offline: 'Offline' },
     menu: {
       continue: 'Verder spelen', adventure: 'Avontuur', adventureSub: 'Verhaal · eilanden · bazen',
-      arcade: 'Arcade', arcadeSub: 'Training · Muur · Mats', versus: '2 spelers', versusSub: 'Lokaal · iPad liggend',
+      arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal · iPad liggend',
       collect: 'Collectie', collectSub: 'Wapens · stijl · boek', music: 'Muziek', missions: 'Missies',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon op je beginscherm',
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
@@ -1032,14 +1032,14 @@ const I18N = {
       collectTitle: 'Verzameling', collectSub: 'Wapens · dex & ei-pets · stijlen · monsterboek',
       training: 'Training vs RabbitRobot', trainingSub: '1v1 · oefenen',
       wall: 'Muur Slopen', wallSub: '60 sec · combo = sneller',
-      mats: 'Mats · Muntjes bonus', matsSub: '45 sec · munten → pet coins',
+      mats: 'Muntjes bonus', matsSub: '45 sec · munten → pet coins',
       weapons: 'Wapens', weaponsSub: '26 wapens · summon ascends',
-      pets: 'Pets', petsSub: 'Mats coins · dex temmen · ei arcade',
+      pets: 'Pets', petsSub: 'Muntjes · dex temmen · ei arcade',
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
       dex: 'Monsterboek', dexSub: '114 soorten · rariteit = HP',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
     },
-    modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Mats · munten' },
+    modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
     pause: {
       title: 'Pauze', sub: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
       resume: 'Verder spelen', music: 'Muziek', sfx: 'Geluid', quit: 'Stop & hoofdmenu',
@@ -1086,7 +1086,7 @@ const I18N = {
     common: { backHome: 'Back to menu', ok: 'Got it!', offline: 'Offline' },
     menu: {
       continue: 'Continue', adventure: 'Adventure', adventureSub: 'Story · islands · bosses',
-      arcade: 'Arcade', arcadeSub: 'Training · Wall · Mats', versus: '2 players', versusSub: 'Local · iPad landscape',
+      arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local · iPad landscape',
       collect: 'Collection', collectSub: 'Weapons · style · book', music: 'Music', missions: 'Missions',
       options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add to home screen', installSub: 'One icon on your device',
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
@@ -1097,14 +1097,14 @@ const I18N = {
       collectTitle: 'Collection', collectSub: 'Weapons · dex & egg pets · styles · monster book',
       training: 'Training vs RabbitRobot', trainingSub: '1v1 · practice',
       wall: 'Wall Smash', wallSub: '60 sec · combo = faster',
-      mats: 'Mats · Coin bonus', matsSub: '45 sec · coins → pet coins',
+      mats: 'Coin bonus', matsSub: '45 sec · coins → pet coins',
       weapons: 'Weapons', weaponsSub: '26 weapons · summon ascends',
-      pets: 'Pets', petsSub: 'Mats coins · dex tame · egg arcade',
+      pets: 'Pets', petsSub: 'Coins · dex tame · egg arcade',
       style: 'Style', styleSub: 'Bandana & outfit unlocks',
       dex: 'Monster book', dexSub: '114 species · rarity = HP',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
     },
-    modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Mats · coins' },
+    modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Coins' },
     pause: {
       title: 'Paused', sub: 'Rasengan ready — go! · progress stays on this device',
       resume: 'Resume', music: 'Music', sfx: 'Sound', quit: 'Quit to menu',
@@ -1151,7 +1151,7 @@ const I18N = {
     common: { backHome: 'Zurück zum Menü', ok: 'Verstanden!', offline: 'Offline' },
     menu: {
       continue: 'Weiterspielen', adventure: 'Abenteuer', adventureSub: 'Story · Inseln · Bosse',
-      arcade: 'Arcade', arcadeSub: 'Training · Mauer · Mats', versus: '2 Spieler', versusSub: 'Lokal · iPad quer',
+      arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal · iPad quer',
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch', music: 'Musik', missions: 'Missionen',
       options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Zum Home-Bildschirm', installSub: 'Ein Icon auf dem Gerät',
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
@@ -1162,14 +1162,14 @@ const I18N = {
       collectTitle: 'Sammlung', collectSub: 'Waffen · Pets · Stile · Monsterbuch',
       training: 'Training vs RabbitRobot', trainingSub: '1v1 · Üben',
       wall: 'Mauer zerstören', wallSub: '60 Sek · Combo = schneller',
-      mats: 'Mats · Münzen', matsSub: '45 Sek · Münzen → Pet-Coins',
+      mats: 'Münzen-Bonus', matsSub: '45 Sek · Münzen → Pet-Coins',
       weapons: 'Waffen', weaponsSub: '26 Waffen · Summons',
-      pets: 'Pets', petsSub: 'Mats-Coins · Dex zähmen',
+      pets: 'Pets', petsSub: 'Münzen · Dex zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
       dex: 'Monsterbuch', dexSub: '114 Arten · Seltenheit = HP',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
     },
-    modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Mats · Münzen' },
+    modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
     pause: {
       title: 'Pause', sub: 'Rasengan bereit — los! · Fortschritt bleibt auf diesem Gerät',
       resume: 'Weiter', music: 'Musik', sfx: 'Sound', quit: 'Menü verlassen',
@@ -1209,7 +1209,7 @@ const I18N = {
     common: { backHome: 'Retour au menu', ok: 'Compris !', offline: 'Hors ligne' },
     menu: {
       continue: 'Continuer', adventure: 'Aventure', adventureSub: 'Histoire · îles · boss',
-      arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Mats', versus: '2 joueurs', versusSub: 'Local · iPad paysage',
+      arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Pièces', versus: '2 joueurs', versusSub: 'Local · iPad paysage',
       collect: 'Collection', collectSub: 'Armes · style · bestiaire', music: 'Musique', missions: 'Missions',
       options: 'Options', tips: 'Astuces', fresh: 'Version fraîche', install: 'Ajouter à l\'écran d\'accueil', installSub: 'Une icône sur l\'appareil',
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
@@ -1220,14 +1220,14 @@ const I18N = {
       collectTitle: 'Collection', collectSub: 'Armes · pets · styles · bestiaire',
       training: 'Entraînement vs RabbitRobot', trainingSub: '1v1 · pratique',
       wall: 'Mur à détruire', wallSub: '60 s · combo = plus vite',
-      mats: 'Mats · Pièces', matsSub: '45 s · pièces → pet coins',
+      mats: 'Bonus pièces', matsSub: '45 s · pièces → pet coins',
       weapons: 'Armes', weaponsSub: '26 armes · invocations',
-      pets: 'Pets', petsSub: 'Pièces Mats · dex · œufs',
+      pets: 'Pets', petsSub: 'Pièces · dex · œufs',
       style: 'Style', styleSub: 'Déblocages tenues',
       dex: 'Bestiaire', dexSub: '114 espèces · rareté = PV',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
     },
-    modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Mats · pièces' },
+    modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Pièces' },
     pause: {
       title: 'Pause', sub: 'Rasengan prêt — go ! · progrès sur cet appareil',
       resume: 'Reprendre', music: 'Musique', sfx: 'Son', quit: 'Quitter au menu',
@@ -1267,7 +1267,7 @@ const I18N = {
     common: { backHome: 'Volver al menú', ok: '¡Entendido!', offline: 'Sin conexión' },
     menu: {
       continue: 'Continuar', adventure: 'Aventura', adventureSub: 'Historia · islas · jefes',
-      arcade: 'Arcade', arcadeSub: 'Entrenamiento · Muro · Mats', versus: '2 jugadores', versusSub: 'Local · iPad horizontal',
+      arcade: 'Arcade', arcadeSub: 'Entrenamiento · Muro · Monedas', versus: '2 jugadores', versusSub: 'Local · iPad horizontal',
       collect: 'Colección', collectSub: 'Armas · estilo · bestiario', music: 'Música', missions: 'Misiones',
       options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir a inicio', installSub: 'Un icono en tu dispositivo',
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
@@ -1278,14 +1278,14 @@ const I18N = {
       collectTitle: 'Colección', collectSub: 'Armas · pets · estilos · bestiario',
       training: 'Entrenamiento vs RabbitRobot', trainingSub: '1v1 · practicar',
       wall: 'Romper muro', wallSub: '60 s · combo = más rápido',
-      mats: 'Mats · Monedas', matsSub: '45 s · monedas → pet coins',
+      mats: 'Bonus monedas', matsSub: '45 s · monedas → pet coins',
       weapons: 'Armas', weaponsSub: '26 armas · invocaciones',
-      pets: 'Pets', petsSub: 'Monedas Mats · dex · huevos',
+      pets: 'Pets', petsSub: 'Monedas · dex · huevos',
       style: 'Estilo', styleSub: 'Desbloqueos de outfit',
       dex: 'Bestiario', dexSub: '114 especies · rareza = HP',
       modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
     },
-    modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Mats · monedas' },
+    modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Monedas' },
     pause: {
       title: 'Pausa', sub: 'Rasengan listo — ¡ya! · progreso en este dispositivo',
       resume: 'Seguir', music: 'Música', sfx: 'Sonido', quit: 'Salir al menú',
@@ -1463,7 +1463,7 @@ function applyLangStaticScreens() {
     div.innerHTML = t(titleKey) + '<small>' + t(subKey) + '</small>' + statHtml;
   }
 
-  document.querySelectorAll('.sub-home-btn div').forEach((el) => {
+  document.querySelectorAll('.sub-home-btn .sub-home-label').forEach((el) => {
     el.textContent = t('common.backHome');
   });
 
@@ -6128,7 +6128,7 @@ function seedNlGameStrings() {
     summonAscend: '{name} → {rar}!',
     newDex: 'Nieuw {rar}: {name}! +{hp} max HP',
     pet: 'PET! {name}',
-    matsStart: 'MATS · MUNTJES BONUS',
+    matsStart: 'MUNTJES BONUS',
     wallStart: 'SLOOP DE MUUR!',
     bonusDone: 'BONUS KLAAR!',
     kets: 'KETS!',
@@ -6140,7 +6140,7 @@ function seedNlGameStrings() {
   Object.assign(I18N.nl.result, {
     advWin: 'GEWONNEN!', advLose: 'VERSLAGEN...', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
     vsP1Win: 'SPELER 1 WINT!', vsP2Win: 'SPELER 2 WINT!', wallRecord: 'NIEUW RECORD!', wallTime: 'TIJD IS OM!',
-    matsRecord: 'MATS RECORD!', matsDone: 'Goed gedaan, Mats!',
+    matsRecord: 'RECORD!', matsDone: 'Goed gedaan!',
     perfectRun: 'Perfecte run — hou je HP hoog!',
     pickupsHelp: '{hint} — pickups helpen',
     lossBlockTip: 'Tip: blokkeer · mik omhoog op vliegers · {prog}',
@@ -6160,7 +6160,7 @@ function seedNlGameStrings() {
     wallStrongCombo: 'Sterke combo (×{n}) — volgende keer record?',
     wallBehindPace: 'Achter record-tempo — probeer combo ×5+ voor meer sloop',
     wallGoodPace: 'Goed tempo — volgende run kan record breken!',
-    matsPetTip: 'Pet coins uitgeven in Collectie → Pets · elke 2 Mats-munten = 1 pet coin',
+    matsPetTip: 'Pet coins uitgeven in Collectie → Pets · elke 2 munten = 1 pet coin',
     matsControlTip: 'Joystick omhoog = hoger mikken (slag + gooi) · shuriken max 3× snel',
     masterBuffActive: ' · Meester-buff actief',
     wavesProg: '{cur}/{total} golven',
@@ -6495,7 +6495,7 @@ function seedNlGameStrings() {
     pace: '~{pace}/min · projectie ~{proj}', paceAhead: 'Voor op record-tempo +{n}',
     paceBehind: 'Achter record-tempo {n}', comboLabel: 'COMBO',
     comboSmash: '+{pct}% sloop', comboActive: 'Combo actief — nog een steen!',
-    coins: 'Munten: {n}', matsRecord: 'Record Mats: {n}',
+    coins: 'Munten: {n}', matsRecord: 'Record: {n}',
     petCoins: 'Pet coins: +{pending} · wallet {wallet}',
     matsHint: 'Joystick ↑ mik · slag/gooi hoger · shuriken op roze vliegers',
     spawnFair: 'Spawn · eerlijk start', nextRound: 'Volgende ronde',
@@ -6640,7 +6640,7 @@ const CATALOG_EN = {
   result: {
     advWin: 'VICTORY!', advLose: 'DEFEATED...', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
     vsP1Win: 'PLAYER 1 WINS!', vsP2Win: 'PLAYER 2 WINS!', wallRecord: 'NEW RECORD!', wallTime: "TIME'S UP!",
-    matsRecord: 'MATS RECORD!', matsDone: 'Nice job, Mats!',
+    matsRecord: 'NEW RECORD!', matsDone: 'Well done!',
     perfectRun: 'Perfect run — keep HP high!',
     pickupsHelp: '{hint} — pickups help',
     lossBlockTip: 'Tip: block · aim up at flyers · {prog}',
@@ -6660,7 +6660,7 @@ const CATALOG_EN = {
     wallStrongCombo: 'Strong combo (×{n}) — record next time?',
     wallBehindPace: 'Behind record pace — try combo ×5+ for more smash',
     wallGoodPace: 'Good pace — next run could break record!',
-    matsPetTip: 'Spend pet coins in Collection → Pets · every 2 Mats coins = 1 pet coin',
+    matsPetTip: 'Spend pet coins in Collection → Pets · every 2 coins = 1 pet coin',
     matsControlTip: 'Joystick up = aim higher (melee + throw) · shuriken max 3× fast',
     masterBuffActive: ' · Master buff active',
     wavesProg: '{cur}/{total} waves',
@@ -6691,7 +6691,7 @@ const CATALOG_EN = {
     timeHpVs: 'TIME! {hp1}% vs {hp2}% · {msg}',
     summon: '✦ SUMMON! ✦', summonAscend: '{name} → {rar}!',
     newDex: 'New {rar}: {name}! +{hp} max HP', pet: 'PET! {name}',
-    matsStart: 'MATS · COIN BONUS', wallStart: 'SMASH THE WALL!', bonusDone: 'BONUS DONE!',
+    matsStart: 'COIN BONUS', wallStart: 'SMASH THE WALL!', bonusDone: 'BONUS DONE!',
     kets: 'KETS!', ketsBam: 'KETS-BAM!', wallTime: 'TIME!', wallNewWall: 'WALL SMASHED! New wall...',
   },
   help: { tips: [
@@ -7013,7 +7013,7 @@ const CATALOG_EN = {
     pace: '~{pace}/min · projection ~{proj}', paceAhead: 'Ahead of record pace +{n}',
     paceBehind: 'Behind record pace {n}', comboLabel: 'COMBO',
     comboSmash: '+{pct}% smash', comboActive: 'Combo active — one more brick!',
-    coins: 'Coins: {n}', matsRecord: 'Mats record: {n}',
+    coins: 'Coins: {n}', matsRecord: 'Record: {n}',
     petCoins: 'Pet coins: +{pending} · wallet {wallet}',
     matsHint: 'Joystick ↑ aim · melee/throw higher · shuriken on pink flyers',
     spawnFair: 'Spawn · fair start', nextRound: 'Next round',
@@ -7111,12 +7111,12 @@ const CATALOG_DE = {
   result: {
     advWin: 'GEWONNEN!', advLose: 'BESIEGT...', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
     vsP1Win: 'SPIELER 1 GEWINNT!', vsP2Win: 'SPIELER 2 GEWINNT!', wallRecord: 'NEUER REKORD!', wallTime: 'ZEIT UM!',
-    matsRecord: 'MATS-REKORD!', matsDone: 'Gut gemacht, Mats!',
+    matsRecord: 'NEUER REKORD!', matsDone: 'Gut gemacht!',
   },
   banner: {
     levelUp: 'LEVEL UP! Lv {lvl}', masterBuff: 'MEISTER-BUFF +20%', bossWave: 'BOSS-WELLE!',
     fight: 'KÄMPF!', won: 'GEWONNEN!', lost: 'VERLOREN...', summon: '✦ SUMMON! ✦',
-    matsStart: 'MATS · MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
+    matsStart: 'MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
     kets: 'KETS!', ketsBam: 'KETS-BAM!',
   },
   help: { tips: [
@@ -7209,12 +7209,12 @@ const CATALOG_FR = {
   result: {
     advWin: 'VICTOIRE !', advLose: 'DÉFAITE...', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
     vsP1Win: 'JOUEUR 1 GAGNE !', vsP2Win: 'JOUEUR 2 GAGNE !', wallRecord: 'NOUVEAU RECORD !', wallTime: 'FIN DU TEMPS !',
-    matsRecord: 'RECORD MATS !', matsDone: 'Bien joué, Mats !',
+    matsRecord: 'NOUVEAU RECORD !', matsDone: 'Bien joué !',
   },
   banner: {
     levelUp: 'LEVEL UP ! Lv {lvl}', masterBuff: 'BUFF MAÎTRE +20 %', bossWave: 'VAGUE BOSS !',
     fight: 'COMBAT !', won: 'VICTOIRE !', lost: 'DÉFAITE...', summon: '✦ INVOCATION ! ✦',
-    matsStart: 'MATS · BONUS PIÈCES', wallStart: 'CASSE LE MUR !', bonusDone: 'BONUS TERMINÉ !',
+    matsStart: 'BONUS PIÈCES', wallStart: 'CASSE LE MUR !', bonusDone: 'BONUS TERMINÉ !',
     kets: 'KETS !', ketsBam: 'KETS-BAM !',
   },
   help: { tips: [
@@ -7307,12 +7307,12 @@ const CATALOG_ES = {
   result: {
     advWin: '¡VICTORIA!', advLose: 'DERROTA...', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
     vsP1Win: '¡JUGADOR 1 GANA!', vsP2Win: '¡JUGADOR 2 GANA!', wallRecord: '¡NUEVO RÉCORD!', wallTime: '¡SE ACABÓ EL TIEMPO!',
-    matsRecord: '¡RÉCORD MATS!', matsDone: '¡Bien hecho, Mats!',
+    matsRecord: '¡NUEVO RÉCORD!', matsDone: '¡Bien hecho!',
   },
   banner: {
     levelUp: '¡SUBIDA DE NIVEL! Lv {lvl}', masterBuff: 'BUFF MAESTRO +20%', bossWave: '¡OLA JEFE!',
     fight: '¡LUCHA!', won: '¡VICTORIA!', lost: 'DERROTA...', summon: '✦ ¡INVOCACIÓN! ✦',
-    matsStart: 'MATS · BONUS MONEDAS', wallStart: '¡ROMPE EL MURO!', bonusDone: '¡BONUS LISTO!',
+    matsStart: 'BONUS MONEDAS', wallStart: '¡ROMPE EL MURO!', bonusDone: '¡BONUS LISTO!',
     kets: '¡KETS!', ketsBam: '¡KETS-BAM!',
   },
   help: { tips: [
@@ -16981,11 +16981,13 @@ const UI = {
         btn.style.setProperty('--isl-accent', isl.accent);
         const prog = islandProgress(isl.id);
         const pct = Math.round(prog.cleared / prog.total * 100);
+        const islName = islandLabel(isl.id, 'name');
+        const islSub = islandLabel(isl.id, 'sub');
         btn.innerHTML = `<span class="island-tab-ico">${isl.icon}</span>` +
-          `<span class="island-tab-n">${isl.id}</span><span class="island-tab-name">${isl.name}</span>` +
+          `<span class="island-tab-n">${isl.id}</span><span class="island-tab-name">${islName}</span>` +
           `<span class="island-prog-track island-tab-prog"><i style="width:${pct}%;background:${isl.accent}"></i></span>` +
           (ok ? '' : `<span class="island-tab-lock">${SVG_LOCK_ICON}</span>`);
-        btn.title = ok ? `${isl.name} · ${isl.sub}` : `Versla baas Lv ${isl.id * LEVELS_PER_ISLAND} om te openen`;
+        btn.title = ok ? `${islName} · ${islSub}` : `Versla baas Lv ${isl.id * LEVELS_PER_ISLAND} om te openen`;
         if (ok) {
           btn.addEventListener('click', () => safeUiAction(() => {
             AudioSys.sfx('select');
@@ -17007,7 +17009,7 @@ const UI = {
         `<div class="island-info-head">` +
         `<span class="island-info-ico">${islMeta.icon}</span>` +
         `<div class="island-info-text">` +
-        `<b style="color:${islMeta.accent}">${islMeta.name}</b> · ${islMeta.sub}` +
+        `<b style="color:${islMeta.accent}">${islandLabel(islMeta.id, 'name')}</b> · ${islandLabel(islMeta.id, 'sub')}` +
         `<div class="island-info-sub">Skill gate: wapens tot Lv <b>${wCap}</b> · ${prog.cleared}/${prog.total} levels · ${prog.stars}★` +
         (pick < 5 ? ` · baas Lv ${pick * LEVELS_PER_ISLAND} → volgend eiland` : '') +
         `</div></div></div>` +
