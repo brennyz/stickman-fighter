@@ -17,6 +17,9 @@ function clearGameResultTimer(g) {
   }
 }
 
+const SHARD_PICKUP_LIFE = 36;
+const GENERIC_PICKUP_LIFE = 22;
+
 class Game {
   constructor(mode, opts) {
     opts = opts || {};
@@ -686,10 +689,13 @@ class Game {
 
   spawnPickup(x, y, opts) {
     opts = opts || {};
+    const pos = this.clampPickupPos(x, y);
+    x = pos.x;
+    y = pos.y;
     if (opts.skillId && SKILL_DEFS[opts.skillId]) {
       this.pickups.push({
         x, y, kind: 'skill_shard', skillId: opts.skillId, dropTier: opts.dropTier || 'normal',
-        t: rand(0, TAU), life: 18, bob: 0,
+        t: rand(0, TAU), life: SHARD_PICKUP_LIFE, bob: 0,
       });
       if (opts.dropTier && opts.dropTier !== 'normal') {
         try { AudioSys.sfxAt('bell', x); } catch (_) {}
@@ -699,7 +705,7 @@ class Game {
     if (opts.itemCat && opts.itemId && itemUpgradeEligible(opts.itemCat, opts.itemId)) {
       this.pickups.push({
         x, y, kind: 'item_shard', itemCat: opts.itemCat, itemId: opts.itemId, dropTier: opts.dropTier || 'normal',
-        t: rand(0, TAU), life: 18, bob: 0,
+        t: rand(0, TAU), life: SHARD_PICKUP_LIFE, bob: 0,
       });
       if (opts.dropTier && opts.dropTier !== 'normal') {
         try { AudioSys.sfxAt('bell', x); } catch (_) {}
@@ -707,7 +713,21 @@ class Game {
       return;
     }
     const kind = choice(PICKUP_TYPES);
-    this.pickups.push({ x, y, kind, t: rand(0, TAU), life: 16, bob: 0 });
+    this.pickups.push({ x, y, kind, t: rand(0, TAU), life: GENERIC_PICKUP_LIFE, bob: 0 });
+  }
+
+  /** Houd pickups (vooral shards) binnen het speelveld — geen spawns off-screen. */
+  clampPickupPos(x, y) {
+    const padX = 32;
+    const minX = (this.minX != null ? this.minX : 40) + padX;
+    const maxX = (this.maxX != null ? this.maxX : W - 40) - padX;
+    const gy = this.ground != null ? this.ground : playfieldGroundY(H, W);
+    const minY = gy - 168;
+    const maxY = gy - 28;
+    return {
+      x: clamp(x, minX, maxX),
+      y: clamp(y, minY, maxY),
+    };
   }
 
   collectPickup(pk) {
