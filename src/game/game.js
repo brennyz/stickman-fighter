@@ -115,6 +115,7 @@ class Game {
     this.tideBattleBossId = null;
     this.tideBattleMon = null;
     this.tideBattlePrevSong = null;
+    this.tideBattleMusicT = null;
     applyGambleToStage(this, gamble);
     this.banner(t('banner.levelStart', { n }), 1.4, '#ffd75e', 54);
     if (masterBuffActive(n)) {
@@ -259,6 +260,7 @@ class Game {
   }
 
   updateAdventure(dt) {
+    syncTideBattleState(this);
     // Bewegend decor: tussen golven "loopt" de wereld door (à la beat 'em up)
     const travelPhase = this.wavePause > 0 || (this.betweenT > 0 && this.waveIdx < 0);
     this.traveling = travelPhase && !!(this.player && this.player.alive) && !this.over;
@@ -419,10 +421,7 @@ class Game {
 
   finishAdventure(win) {
     if (this.over) return;
-    this.tideBattleActive = false;
-    this.tideBattleBossId = null;
-    this.tideBattleMon = null;
-    restoreTideBattleMusic(this);
+    clearTideBattleState(this, { restoreMusic: true });
     this.deactivateMasterSword(true);
     this.over = true;
     this.inputLocked = true;
@@ -581,11 +580,11 @@ class Game {
         UI.toast(t('toast.styleUnlockCrystal'), 3500);
       }
     }
-    this.maybeSummon(m);
     if (m.tideBoss && this.tideBattleActive) {
       this.finishTideBattle(true, m);
       return;
     }
+    this.maybeSummon(m);
     this.maybeTideBattle(m);
   }
 
@@ -596,27 +595,34 @@ class Game {
   }
 
   startTideBattle(spId) {
-    if (this.mode !== 'adventure' || this.over || !SPECIES[spId]) return;
+    if (this.mode !== 'adventure' || this.over) return;
+    if (!isTideBossId(spId)) return;
     if (this.tideBattleActive) return;
-    this.tideBattleActive = true;
-    this.tideBattleBossId = spId;
-    const spawnX = clamp(this.player ? this.player.x + rand(140, 220) : W * 0.72, 80, this.maxX || W - 80);
-    const mon = new Monster(spId, spawnX, this, tideBossSpawnOpts(this));
-    this.monsters.push(mon);
-    this.tideBattleMon = mon;
-    triggerTideBattleIntro(this, mon);
-    UI.toast(t('toast.tideBattle', { name: mon.sp.name }), 4000);
-    this.floater(W / 2, Math.max(100, (this.advHudBottom || 120) + 24), t('hud.tideBattleShort'), '#4a9fff', 18);
+    if (!this.player || !this.player.alive) return;
+    try {
+      this.tideBattleActive = true;
+      this.tideBattleBossId = spId;
+      const spawnX = tideBattleSpawnX(this);
+      const mon = new Monster(spId, spawnX, this, tideBossSpawnOpts(this));
+      if (!mon || !mon.sp) throw new Error('tide spawn invalid');
+      this.monsters.push(mon);
+      this.tideBattleMon = mon;
+      triggerTideBattleIntro(this, mon);
+      UI.toast(t('toast.tideBattle', { name: mon.sp.name }), 4000);
+      this.floater(W / 2, Math.max(100, (this.advHudBottom || 120) + 24), t('hud.tideBattleShort'), '#4a9fff', 18);
+    } catch (err) {
+      console.error('[TideBattle] start', err);
+      clearTideBattleState(this, { restoreMusic: true });
+    }
   }
 
   finishTideBattle(won, m) {
     if (!this.tideBattleActive) return;
-    const sp = m && m.sp ? m.sp : (SPECIES[this.tideBattleBossId] || null);
-    this.tideBattleActive = false;
-    this.tideBattleBossId = null;
-    this.tideBattleMon = null;
-    restoreTideBattleMusic(this);
+    const bossId = (m && m.spId) || this.tideBattleBossId;
+    clearTideBattleState(this, { restoreMusic: true });
     if (!won) return;
+    const sp = (m && m.sp) || (bossId && SPECIES[bossId]) || null;
+    if (!sp) return;
     const xp = tideBattleRewardXp(this);
     const coins = tideBattleRewardCoins();
     this.grantXP(xp);
@@ -626,7 +632,7 @@ class Game {
     this.banner(t('banner.tideBattleWin'), 2.2, '#4a9fff', 44);
     UI.toast(t('toast.tideBattleWin', { xp, coins }), 4200);
     this.floater(W / 2, 140, `+${xp} XP · +${coins} 🪙`, '#4a9fff', 17);
-    AudioSys.sfx('win');
+    try { AudioSys.sfx('win'); } catch (_) {}
     checkAchievements();
   }
 
@@ -2789,10 +2795,15 @@ class Game {
 
       const bossAlive = this.monsters.find(m => m.alive && (m.tideBoss || m.elite));
       if (this.tideBattleActive && this.tideBattleBossId) {
-        const tideName = (SPECIES[this.tideBattleBossId] && SPECIES[this.tideBattleBossId].name) || 'Tide';
+        const tideSp = SPECIES[this.tideBattleBossId];
+        const tideMon = this.tideBattleMon;
+        const tideName = (tideMon && tideMon.sp && tideMon.sp.name) || (tideSp && tideSp.name) || 'Tide';
+        const tideHp = tideMon && tideMon.alive && tideMon.maxhp > 0
+          ? ` · ${Math.round(100 * tideMon.hp / tideMon.maxhp)}%`
+          : '';
         c.font = '700 11px sans-serif';
         c.fillStyle = '#4a9fff';
-        const txt = t('hud.tideBattle', { name: tideName });
+        const txt = t('hud.tideBattle', { name: tideName }) + tideHp;
         c.fillText(txt, W / 2 + 7, hy);
         drawMiniDie(c, W / 2 - c.measureText(txt).width / 2 - 3, hy - 3.5, 10, '#4a9fff');
         hy += 14;

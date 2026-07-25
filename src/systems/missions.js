@@ -852,6 +852,13 @@ function recoverToMenu() {
       ensureMenuScreenActive();
       return;
     }
+    if (game && game.tideBattleActive) {
+      try { cancelTideBattleMusicPending(game); } catch (_) {}
+      game.tideBattleActive = false;
+      game.tideBattleBossId = null;
+      game.tideBattleMon = null;
+      game.tideBattlePrevSong = null;
+    }
     game = null;
     state = 'menu';
     window.__sfLoopErr = false;

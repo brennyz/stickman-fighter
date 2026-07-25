@@ -7,11 +7,12 @@ function tideArtOutline(c, lw) {
 }
 
 function tideArtFill(c, fill, stroke, lw) {
+  if (!c) return;
   c.fillStyle = fill;
-  c.fill();
+  try { c.fill(); } catch (_) { return; }
   if (stroke !== false) {
     tideArtOutline(c, lw);
-    c.stroke();
+    try { c.stroke(); } catch (_) {}
   }
 }
 
@@ -44,20 +45,31 @@ function tideArtGlowRing(c, r, t, col) {
 }
 
 function drawTideBossArt(c, art, r, t, body, dark, flash, telegraph) {
-  const breathe = 1 + Math.sin(t * 3.2) * 0.04;
-  r *= breathe;
-  tideArtGlowRing(c, r, t, flash ? '#fff' : '#4a9fff');
-  switch (art) {
-    case 'tideFox': drawTideFox(c, r, t, body, dark, flash); break;
-    case 'tideSnake': drawTideSnake(c, r, t, body, dark, flash); break;
-    case 'tideToad': drawTideToad(c, r, t, body, dark, flash); break;
-    case 'tideSlug': drawTideSlug(c, r, t, body, dark, flash); break;
-    case 'tideTanuki': drawTideTanuki(c, r, t, body, dark, flash); break;
-    case 'tideOx': drawTideOx(c, r, t, body, dark, flash); break;
-    case 'tideMonkey': drawTideMonkey(c, r, t, body, dark, flash, telegraph); break;
-    case 'tideHawk': drawTideHawk(c, r, t, body, dark, flash); break;
-    case 'tideHound': drawTideHound(c, r, t, body, dark, flash); break;
-    default: break;
+  if (!c || !art) return;
+  r = clamp(Number(r) || 24, 8, 120);
+  t = Number(t) || 0;
+  body = body || '#4a9fff';
+  dark = dark || '#203050';
+  try {
+    const breathe = 1 + Math.sin(t * 3.2) * 0.04;
+    r *= breathe;
+    tideArtGlowRing(c, r, t, flash ? '#fff' : '#4a9fff');
+    switch (art) {
+      case 'tideFox': drawTideFox(c, r, t, body, dark, flash); break;
+      case 'tideSnake': drawTideSnake(c, r, t, body, dark, flash); break;
+      case 'tideToad': drawTideToad(c, r, t, body, dark, flash); break;
+      case 'tideSlug': drawTideSlug(c, r, t, body, dark, flash); break;
+      case 'tideTanuki': drawTideTanuki(c, r, t, body, dark, flash); break;
+      case 'tideOx': drawTideOx(c, r, t, body, dark, flash); break;
+      case 'tideMonkey': drawTideMonkey(c, r, t, body, dark, flash, telegraph); break;
+      case 'tideHawk': drawTideHawk(c, r, t, body, dark, flash); break;
+      case 'tideHound': drawTideHound(c, r, t, body, dark, flash); break;
+      default: break;
+    }
+  } catch (err) {
+    console.error('[TideArt]', art, err);
+    c.fillStyle = body;
+    c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
   }
 }
 

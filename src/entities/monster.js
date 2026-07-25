@@ -258,8 +258,10 @@ class Monster {
 }
 
 function drawMonsterArt(c, sp, r, t, flash, telegraph) {
-  const body = flash ? (motionReduced() ? sp.c1 : '#ffffff') : sp.c1;
-  const dark = flash ? (motionReduced() ? sp.c2 : '#dddddd') : sp.c2;
+  if (!sp || !c) return;
+  r = clamp(Number(r) || 24, 6, 120);
+  const body = flash ? (motionReduced() ? sp.c1 : '#ffffff') : (sp.c1 || '#888');
+  const dark = flash ? (motionReduced() ? sp.c2 : '#dddddd') : (sp.c2 || '#444');
   const sq = 1 + Math.sin(t * 5) * 0.05;
   c.lineWidth = 2;
   const eye = (x, y, s) => {
@@ -406,7 +408,16 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
     case 'tideMonkey':
     case 'tideHawk':
     case 'tideHound':
-      drawTideBossArt(c, sp.art, r, t, body, dark, flash, telegraph);
+      if (typeof drawTideBossArt === 'function') {
+        try { drawTideBossArt(c, sp.art, r, t, body, dark, flash, telegraph); } catch (err) {
+          console.error('[TideArt]', sp.art, err);
+          c.fillStyle = body;
+          c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+        }
+      } else {
+        c.fillStyle = body;
+        c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+      }
       break;
   }
 }
