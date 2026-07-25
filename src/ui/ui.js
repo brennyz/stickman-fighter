@@ -397,6 +397,7 @@ const UI = {
         return;
       }
       if (active === 'pauseScreen' && game) {
+        try { Input.releaseAll(); } catch (_) {}
         state = 'play';
         AudioSys.setPaused(false);
         if (save.music && AudioSys.desiredSong) AudioSys.play(AudioSys.desiredSong);
@@ -404,6 +405,7 @@ const UI = {
         return;
       }
       if (active === 'gambleScreen') {
+        try { cancelGambleStart(); } catch (_) {}
         this.show('levelScreen');
         return;
       }
@@ -459,6 +461,8 @@ const UI = {
 
   goMenu() {
     try {
+      try { clearGameResultTimer(game); } catch (_) {}
+      try { cancelGambleStart(); } catch (_) {}
       try { Input.releaseAll(); } catch (_) {}
       game = null;
       state = 'menu';
@@ -840,8 +844,8 @@ const UI = {
     document.querySelectorAll('[data-hub-stat]').forEach((el) => {
       el.textContent = hubTileStatLine(el.dataset.hubStat);
     });
-    document.getElementById('togMusic').classList.toggle('off', !save.music);
-    document.getElementById('togSfx').classList.toggle('off', !save.sfx);
+    document.getElementById('togMusic')?.classList.toggle('off', !save.music);
+    document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const verLine = document.getElementById('menuVerLine');
     if (verLine) verLine.textContent = 'v' + APP_VERSION + ' · arcade · SW v' + SW_CACHE_REV;
     const missEl = document.getElementById('menuDailyHint');
@@ -1997,15 +2001,19 @@ const UI = {
   },
 
   showResult(win, data) {
+    if (state === 'menu' || !data) return;
     this.lastResult = data;
     state = 'result';
     scheduleResize();
-    document.getElementById('pauseBtn').classList.remove('show');
+    document.getElementById('pauseBtn')?.classList.remove('show');
     const title = document.getElementById('resTitle');
+    if (!title) return;
     title.textContent = data.title;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
-    document.getElementById('resDetail').textContent = data.detail;
-    document.getElementById('resXp').textContent = t('result.xp', {
+    const detailEl = document.getElementById('resDetail');
+    if (detailEl) detailEl.textContent = data.detail;
+    const xpEl = document.getElementById('resXp');
+    if (xpEl) xpEl.textContent = t('result.xp', {
       xp: data.xp, lvl: save.lvl, cur: save.xp, need: xpNeed(save.lvl),
     });
     const tipEl = document.getElementById('resTip');

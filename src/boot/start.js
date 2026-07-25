@@ -519,6 +519,7 @@ if (pauseVsRestart) {
 }
 bindPress(document.getElementById('resAgain'), () => {
   const d = UI.lastResult;
+  if (!d || !d.mode) return;
   AudioSys.sfx('select');
   if (d.mode === 'adventure') gokGooiStartLevel(d.level);
   else if (d.mode === 'versus') {

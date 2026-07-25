@@ -443,7 +443,7 @@ class Fighter {
     if (!this.alive) return 0;
     if ((this.isPlayer || this.playerSlot) && game && game.ketsbamSuperT > 0) return 0;
     if (this.invulnT > 0) {
-      game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13);
+      if (game) game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13);
       return 0;
     }
     if (this.blocking && !opts.unblockable) {

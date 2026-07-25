@@ -480,7 +480,7 @@ function bootGame() {
       if (window.__sfLoopErr) return;
       const err = ev.error || new Error(ev.message || 'unknown');
       sfReportError('window', err);
-      if (state === 'play') {
+      if (state === 'play' || state === 'pause' || state === 'result') {
         try { recoverToMenu(); } catch (_) {}
       }
     });
@@ -489,7 +489,7 @@ function bootGame() {
       const r = ev.reason;
       const err = r instanceof Error ? r : new Error(String(r != null ? r : 'async reject'));
       sfReportError('async', err, 'Actie mislukt — probeer opnieuw');
-      if (state === 'play') {
+      if (state === 'play' || state === 'pause' || state === 'result') {
         try { recoverToMenu(); } catch (_) {}
       }
     });

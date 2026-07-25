@@ -133,20 +133,20 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.66';
+const APP_VERSION = '1.17.67';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 192;
+const SW_CACHE_REV = 193;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
 
 
 
-  advIsland: 0, advFails: {}, advMasterBuff: null,
+  advIsland: 0, advFails: {}, advMasterBuff: null, missionsIntroSeen: false,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0 },
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, dailyBonusCount: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {} };
 
 const MAX_LEVEL = 50;
@@ -2490,6 +2490,8 @@ function recoverToMenu() {
       ensureMenuScreenActive();
       return;
     }
+    try { clearGameResultTimer(game); } catch (_) {}
+    try { cancelGambleStart(); } catch (_) {}
     game = null;
     state = 'menu';
     window.__sfLoopErr = false;
@@ -2577,6 +2579,15 @@ function startAdventureFromGamble(skipGamble) {
 }
 
 let gokStartBusy = false;
+let gokScreenTimer = null;
+
+function cancelGambleStart() {
+  if (gokScreenTimer) {
+    clearTimeout(gokScreenTimer);
+    gokScreenTimer = null;
+  }
+  gokStartBusy = false;
+}
 
 function playGambleRollSfx(g) {
   try { AudioSys.sfx('diceRoll'); } catch (_) {}
@@ -2603,16 +2614,17 @@ function gokGooiStartLevel(n) {
     lastGambleRoll = rollStageGamble();
     playGambleRollSfx(lastGambleRoll);
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
-    gokStartBusy = false;
     startAdventureFromGamble(false);
   } catch (err) {
-    gokStartBusy = false;
     sfReportError('gokStart', err, 'Gok start mislukt — probeer opnieuw');
+  } finally {
+    gokStartBusy = false;
   }
 }
 
 function gokGooiStartFromScreen() {
   if (gokStartBusy) return;
+  cancelGambleStart();
   gokStartBusy = true;
   try {
     AudioSys.init();
@@ -2623,12 +2635,13 @@ function gokGooiStartFromScreen() {
     if (sumLine) sumLine.textContent = 'START!';
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
     const delay = motionReduced() ? 50 : 140;
-    setTimeout(() => {
+    gokScreenTimer = setTimeout(() => {
+      gokScreenTimer = null;
       gokStartBusy = false;
       startAdventureFromGamble(false);
     }, delay);
   } catch (err) {
-    gokStartBusy = false;
+    cancelGambleStart();
     sfReportError('gokGooi', err, 'Gok start mislukt — probeer opnieuw');
   }
 }
@@ -4246,8 +4259,13 @@ function padDigitalMove(pad) {
   if (!pad) return 0;
   let m = 0;
   if (pad.side === 'p1') {
-    if (pad.keys['arrowleft'] || pad.keys['a']) m -= 1;
-    if (pad.keys['arrowright'] || pad.keys['d']) m += 1;
+    if (Input.dualMode) {
+      if (pad.keys['a']) m -= 1;
+      if (pad.keys['d']) m += 1;
+    } else {
+      if (pad.keys['arrowleft'] || pad.keys['a']) m -= 1;
+      if (pad.keys['arrowright'] || pad.keys['d']) m += 1;
+    }
   } else {
     if (pad.keys['arrowleft']) m -= 1;
     if (pad.keys['arrowright']) m += 1;
@@ -8361,14 +8379,20 @@ addEventListener('keydown', e => {
       InputP2.lastMoveTap = now; InputP2.lastMoveDir = 1;
     }
     InputP2.keys[k] = true;
+    if (!['arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(k)) Input.keys[k] = true;
+  } else {
+    Input.keys[k] = true;
   }
-  Input.keys[k] = true;
   if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) e.preventDefault();
 });
 addEventListener('keyup', e => {
   const k = e.key.toLowerCase();
-  Input.keys[k] = false;
-  if (InputP2) InputP2.keys[k] = false;
+  if (Input.dualMode && ['arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(k)) {
+    if (InputP2) InputP2.keys[k] = false;
+  } else {
+    Input.keys[k] = false;
+    if (InputP2) InputP2.keys[k] = false;
+  }
 });
 
 /* --- src/core/canvas.js --- */
@@ -9282,7 +9306,7 @@ class Fighter {
     if (!this.alive) return 0;
     if ((this.isPlayer || this.playerSlot) && game && game.ketsbamSuperT > 0) return 0;
     if (this.invulnT > 0) {
-      game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13);
+      if (game) game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13);
       return 0;
     }
     if (this.blocking && !opts.unblockable) {
@@ -10927,6 +10951,22 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
 /* ================================ GAME ================================= */
 let game = null;
 
+function scheduleGameResult(g, delay, fn) {
+  if (!g) return;
+  if (g._resultTimer) clearTimeout(g._resultTimer);
+  g._resultTimer = setTimeout(() => {
+    g._resultTimer = null;
+    fn();
+  }, delay);
+}
+
+function clearGameResultTimer(g) {
+  if (g && g._resultTimer) {
+    clearTimeout(g._resultTimer);
+    g._resultTimer = null;
+  }
+}
+
 class Game {
   constructor(mode, opts) {
     opts = opts || {};
@@ -11118,6 +11158,10 @@ class Game {
   }
 
   nextWave() {
+    if (!this.player?.alive) {
+      if (!this.over) this.finishAdventure(false);
+      return;
+    }
     this.waveIdx++;
     if (this.waveIdx >= this.level.waves.length) { this.finishAdventure(true); return; }
     const wave = this.level.waves[this.waveIdx];
@@ -11276,7 +11320,7 @@ class Game {
     this.pickups = this.pickups.filter(pk => pk.life > 0);
     if (this.betweenT > 0) {
       this.betweenT -= dt;
-      if (this.betweenT <= 0 && this.waveIdx < 0) this.nextWave();
+      if (this.betweenT <= 0 && this.waveIdx < 0 && this.player?.alive) this.nextWave();
     }
     if (this.spawnQueue.length) {
       const alive = this.monsters.filter((m) => m.alive).length;
@@ -11312,18 +11356,16 @@ class Game {
       } else if (alive >= ADVENTURE_MAX_ALIVE) {
         this.spawnTimer = Math.min(this.spawnTimer, 0.12);
       }
-    } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive)) {
+    } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive) && this.player?.alive) {
       if (!this.wavePause) {
         const nextIsBoss = isBossWave(this.level, this.waveIdx + 1);
         this.wavePause = nextIsBoss ? 2.15 : 1.55;
         this.wavePauseTotal = this.wavePause;
-        if (this.player && this.player.alive) {
-          const waveHeal = Math.max(4, Math.round(this.player.maxhp * 0.06));
-          this.player.hp = Math.min(this.player.maxhp, this.player.hp + waveHeal);
-          this.player.energy = clamp(this.player.energy + 8, 0, 100);
-          this.floater(this.player.x, this.player.y - 88, t('banner.waveClear', { heal: waveHeal }), '#6ee06e', 14);
-        }
-        if (this.stageHealBetween > 0 && this.player && this.player.alive) {
+        const waveHeal = Math.max(4, Math.round(this.player.maxhp * 0.06));
+        this.player.hp = Math.min(this.player.maxhp, this.player.hp + waveHeal);
+        this.player.energy = clamp(this.player.energy + 8, 0, 100);
+        this.floater(this.player.x, this.player.y - 88, t('banner.waveClear', { heal: waveHeal }), '#6ee06e', 14);
+        if (this.stageHealBetween > 0) {
           const heal = Math.max(8, Math.round(this.player.maxhp * this.stageHealBetween));
           this.player.hp = Math.min(this.player.maxhp, this.player.hp + heal);
           this.floater(this.player.x, this.player.y - 108, t('combat.allyHeal', { heal }), '#6ee06e', 14);
@@ -11341,6 +11383,7 @@ class Game {
 
   finishAdventure(win) {
     if (this.over) return;
+    if (win && (!this.player || !this.player.alive)) win = false;
     this.deactivateMasterSword(true);
     this.over = true;
     this.inputLocked = true;
@@ -11398,7 +11441,7 @@ class Game {
       AudioSys.sfx('lose');
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
-    setTimeout(() => UI.showResult(win, {
+    scheduleGameResult(this, 1400, () => UI.showResult(win, {
       title: win ? t('result.advWin') : t('result.advLose'),
       detail: (() => {
         const finishers = this.runFinishers ? t('result.finishersLine', { n: this.runFinishers }) : '';
@@ -11426,7 +11469,7 @@ class Game {
           t('result.lossGambleTip'));
         return once ? `${once} · ${base}` : base;
       })(),
-    }), 1400);
+    }));
   }
 
   onMonsterKilled(m) {
@@ -11702,7 +11745,7 @@ class Game {
         let pWin;
         if (rDead && !pDead) pWin = true;
         else if (pDead && !rDead) pWin = false;
-        else pWin = (this.player.hp / this.player.maxhp) >= (this.robot.hp / this.robot.maxhp);
+        else pWin = (this.player.hp / Math.max(1, this.player.maxhp)) >= (this.robot.hp / Math.max(1, this.robot.maxhp));
         if (pWin) this.roundsP++; else this.roundsR++;
         this.trainComboBest = Math.max(this.trainComboBest || 0, this.trainRoundBest || 0);
         this.phase = 'roundend'; this.phaseT = 0;
@@ -11749,7 +11792,7 @@ class Game {
         : (save.trainWins === 3 ? t('result.trainStyleUnlock') : t('result.trainStyleMore')))
       : (onceResultTip('training', 'loss', t('result.trainLossTip'))
         || t('result.trainTipDefault'));
-    setTimeout(() => UI.showResult(win, {
+    scheduleGameResult(this, 1200, () => UI.showResult(win, {
       title: win ? t('result.trainWin') : t('result.trainLose'),
       detail: t('result.trainDetail', {
         outcome: win ? t('result.trainOutcomeWin') : t('result.trainOutcomeLose'),
@@ -11760,7 +11803,7 @@ class Game {
       }),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
-    }), 1200);
+    }));
   }
 
   initVersus(opts) {
@@ -11813,7 +11856,7 @@ class Game {
         const timedOut = !p1d && !p2d && this.roundTimer <= 0;
         if (p2d && !p1d) p1Win = true;
         else if (p1d && !p2d) p1Win = false;
-        else p1Win = (this.player.hp / this.player.maxhp) >= (this.p2.hp / this.p2.maxhp);
+        else p1Win = (this.player.hp / Math.max(1, this.player.maxhp)) >= (this.p2.hp / Math.max(1, this.p2.maxhp));
         if (p1Win) this.roundsP1++; else this.roundsP2++;
         this.vsRoundLog = this.vsRoundLog || [];
         this.vsRoundLog.push(p1Win ? 'p1' : 'p2');
@@ -11822,8 +11865,8 @@ class Game {
         this.inputLocked = true;
         let msg = p1Win ? t('banner.p1RoundWin') : t('banner.p2RoundWin');
         if (timedOut) {
-          const hp1 = Math.round(this.player.hp / this.player.maxhp * 100);
-          const hp2 = Math.round(this.p2.hp / this.p2.maxhp * 100);
+          const hp1 = Math.round(this.player.hp / Math.max(1, this.player.maxhp) * 100);
+          const hp2 = Math.round(this.p2.hp / Math.max(1, this.p2.maxhp) * 100);
           msg = t('banner.timeHpVs', { hp1, hp2, msg });
         }
         this.banner(msg, 1.5, p1Win ? '#7cf5ff' : '#ffb0b8', 38);
@@ -11847,14 +11890,14 @@ class Game {
     bumpStat('vsMatches', 1);
     if (p1Win) bumpStat('vsWins', 1);
     this.grantXP(p1Win ? 35 : 20);
-    setTimeout(() => UI.showResult(p1Win, {
+    scheduleGameResult(this, 1200, () => UI.showResult(p1Win, {
       title: p1Win ? t('result.vsP1Win') : t('result.vsP2Win'),
       detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}` +
         ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : '') +
         (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
       xp: this.sessionXP, mode: 'versus', win: p1Win, p1: this.p1Pick, p2: this.p2Pick,
       tip: t('result.vsRematchTip'),
-    }), 1200);
+    }));
   }
 
   /* ------------------------------ MUUR -------------------------------- */
@@ -11977,7 +12020,7 @@ class Game {
       else if (paceDelta != null && paceDelta < -3) tip = t('result.wallBehindPace');
       else if (paceDelta != null && paceDelta >= 3) tip = t('result.wallGoodPace');
     }
-    setTimeout(() => UI.showResult(true, {
+    scheduleGameResult(this, 1200, () => UI.showResult(true, {
       title: isRecord ? t('result.wallRecord') : t('result.wallTime'),
       detail: t('result.wallDetail', {
         score: this.score, pace, best, combo: this.maxCombo || 0,
@@ -11986,7 +12029,7 @@ class Game {
       }),
       xp: this.sessionXP, mode: 'wall', win: true,
       tip,
-    }), 1200);
+    }));
   }
 
   /* ------------------------ MATS · MUNTJES BONUS ----------------------- */
@@ -12084,7 +12127,7 @@ class Game {
     AudioSys.sfx(isRecord ? 'win' : 'bonus');
     this.banner(t('banner.bonusDone'), 1.4, '#7cfc8a', 40);
     const wallet = petCoinsBalance();
-    setTimeout(() => UI.showResult(true, {
+    scheduleGameResult(this, 1200, () => UI.showResult(true, {
       title: isRecord ? t('result.matsRecord') : t('result.matsDone'),
       detail: t('result.matsDetail', {
         n, best,
@@ -12097,7 +12140,7 @@ class Game {
       tip: petEarned > 0
         ? t('result.matsPetTip')
         : t('result.matsControlTip'),
-    }), 1200);
+    }));
   }
 
   drawCoinRunLayer(c) {
@@ -14690,6 +14733,7 @@ const UI = {
         return;
       }
       if (active === 'pauseScreen' && game) {
+        try { Input.releaseAll(); } catch (_) {}
         state = 'play';
         AudioSys.setPaused(false);
         if (save.music && AudioSys.desiredSong) AudioSys.play(AudioSys.desiredSong);
@@ -14697,6 +14741,7 @@ const UI = {
         return;
       }
       if (active === 'gambleScreen') {
+        try { cancelGambleStart(); } catch (_) {}
         this.show('levelScreen');
         return;
       }
@@ -14752,6 +14797,8 @@ const UI = {
 
   goMenu() {
     try {
+      try { clearGameResultTimer(game); } catch (_) {}
+      try { cancelGambleStart(); } catch (_) {}
       try { Input.releaseAll(); } catch (_) {}
       game = null;
       state = 'menu';
@@ -15133,8 +15180,8 @@ const UI = {
     document.querySelectorAll('[data-hub-stat]').forEach((el) => {
       el.textContent = hubTileStatLine(el.dataset.hubStat);
     });
-    document.getElementById('togMusic').classList.toggle('off', !save.music);
-    document.getElementById('togSfx').classList.toggle('off', !save.sfx);
+    document.getElementById('togMusic')?.classList.toggle('off', !save.music);
+    document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const verLine = document.getElementById('menuVerLine');
     if (verLine) verLine.textContent = 'v' + APP_VERSION + ' · arcade · SW v' + SW_CACHE_REV;
     const missEl = document.getElementById('menuDailyHint');
@@ -16290,15 +16337,19 @@ const UI = {
   },
 
   showResult(win, data) {
+    if (state === 'menu' || !data) return;
     this.lastResult = data;
     state = 'result';
     scheduleResize();
-    document.getElementById('pauseBtn').classList.remove('show');
+    document.getElementById('pauseBtn')?.classList.remove('show');
     const title = document.getElementById('resTitle');
+    if (!title) return;
     title.textContent = data.title;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
-    document.getElementById('resDetail').textContent = data.detail;
-    document.getElementById('resXp').textContent = t('result.xp', {
+    const detailEl = document.getElementById('resDetail');
+    if (detailEl) detailEl.textContent = data.detail;
+    const xpEl = document.getElementById('resXp');
+    if (xpEl) xpEl.textContent = t('result.xp', {
       xp: data.xp, lvl: save.lvl, cur: save.xp, need: xpNeed(save.lvl),
     });
     const tipEl = document.getElementById('resTip');
@@ -16850,6 +16901,7 @@ if (pauseVsRestart) {
 }
 bindPress(document.getElementById('resAgain'), () => {
   const d = UI.lastResult;
+  if (!d || !d.mode) return;
   AudioSys.sfx('select');
   if (d.mode === 'adventure') gokGooiStartLevel(d.level);
   else if (d.mode === 'versus') {
@@ -17353,7 +17405,7 @@ function bootGame() {
       if (window.__sfLoopErr) return;
       const err = ev.error || new Error(ev.message || 'unknown');
       sfReportError('window', err);
-      if (state === 'play') {
+      if (state === 'play' || state === 'pause' || state === 'result') {
         try { recoverToMenu(); } catch (_) {}
       }
     });
@@ -17362,7 +17414,7 @@ function bootGame() {
       const r = ev.reason;
       const err = r instanceof Error ? r : new Error(String(r != null ? r : 'async reject'));
       sfReportError('async', err, 'Actie mislukt — probeer opnieuw');
-      if (state === 'play') {
+      if (state === 'play' || state === 'pause' || state === 'result') {
         try { recoverToMenu(); } catch (_) {}
       }
     });
