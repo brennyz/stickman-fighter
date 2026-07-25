@@ -430,7 +430,20 @@ function relayoutTouchPads() {
 function primePlayInput(dual) {
   Input.releaseAll();
   Input.dualMode = !!dual;
+  // Kort suppress-venster: menu-tap ghost mag niet meteen Input.onDown raken.
+  // playInputSuppressed MOET bestaan — anders ReferenceError → window error → recoverToMenu.
+  Input.suppressUntil = performance.now() + (IS_TOUCH ? 400 : 140);
+  Input.lastMoveTap = 0;
+  Input.lastMoveDir = 0;
+  if (typeof InputP2 !== 'undefined' && InputP2) {
+    InputP2.lastMoveTap = 0;
+    InputP2.lastMoveDir = 0;
+  }
   relayoutTouchPads();
+}
+
+function playInputSuppressed() {
+  return !!(Input.suppressUntil && performance.now() < Input.suppressUntil);
 }
 
 /** Voorkom dat scroll/slide over menu-tegels meteen selecteert (iPad). */

@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.56';
+const APP_VERSION = '1.18.57';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 266;
+const SW_CACHE_REV = 267;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -12557,7 +12557,20 @@ function relayoutTouchPads() {
 function primePlayInput(dual) {
   Input.releaseAll();
   Input.dualMode = !!dual;
+  // Kort suppress-venster: menu-tap ghost mag niet meteen Input.onDown raken.
+  // playInputSuppressed MOET bestaan — anders ReferenceError → window error → recoverToMenu.
+  Input.suppressUntil = performance.now() + (IS_TOUCH ? 400 : 140);
+  Input.lastMoveTap = 0;
+  Input.lastMoveDir = 0;
+  if (typeof InputP2 !== 'undefined' && InputP2) {
+    InputP2.lastMoveTap = 0;
+    InputP2.lastMoveDir = 0;
+  }
   relayoutTouchPads();
+}
+
+function playInputSuppressed() {
+  return !!(Input.suppressUntil && performance.now() < Input.suppressUntil);
 }
 
 /** Voorkom dat scroll/slide over menu-tegels meteen selecteert (iPad). */
@@ -28339,7 +28352,10 @@ function bootGame() {
       if (window.__sfLoopErr) return;
       const err = ev.error || new Error(ev.message || 'unknown');
       sfReportError('window', err);
+      // Adventure/play: niet meteen startscherm bij elke transient error
+      // (bv. mist helper → ReferenceError). Alleen herstellen als geen game meer.
       if (state === 'play' || state === 'pause' || state === 'result') {
+        if (game) return;
         try { recoverToMenu(); } catch (_) {}
       }
     });
@@ -28349,6 +28365,7 @@ function bootGame() {
       const err = r instanceof Error ? r : new Error(String(r != null ? r : 'async reject'));
       sfReportError('async', err, 'Actie mislukt — probeer opnieuw');
       if (state === 'play' || state === 'pause' || state === 'result') {
+        if (game) return;
         try { recoverToMenu(); } catch (_) {}
       }
     });

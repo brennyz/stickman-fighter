@@ -621,7 +621,10 @@ function bootGame() {
       if (window.__sfLoopErr) return;
       const err = ev.error || new Error(ev.message || 'unknown');
       sfReportError('window', err);
+      // Adventure/play: niet meteen startscherm bij elke transient error
+      // (bv. mist helper → ReferenceError). Alleen herstellen als geen game meer.
       if (state === 'play' || state === 'pause' || state === 'result') {
+        if (game) return;
         try { recoverToMenu(); } catch (_) {}
       }
     });
@@ -631,6 +634,7 @@ function bootGame() {
       const err = r instanceof Error ? r : new Error(String(r != null ? r : 'async reject'));
       sfReportError('async', err, 'Actie mislukt — probeer opnieuw');
       if (state === 'play' || state === 'pause' || state === 'result') {
+        if (game) return;
         try { recoverToMenu(); } catch (_) {}
       }
     });

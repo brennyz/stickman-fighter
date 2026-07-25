@@ -13,16 +13,16 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.56",
-    "swCache": "stickfighter-app-v266",
-    "gameJsQuery": "game.js?v=266",
-    "cssQuery": "styles/main.css?v=266",
-    "featureBranch": "cursor/wiggum-d20-categorie-n-564a",
+    "appVersion": "1.18.57",
+    "swCache": "stickfighter-app-v267",
+    "gameJsQuery": "game.js?v=267",
+    "cssQuery": "styles/main.css?v=267",
+    "featureBranch": "cursor/adventure-tap-menu-2125",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "d9 touch c5 pointerup guard + joy pulse · v1.18.56"
+    "note": "adventure tap→menu: playInputSuppressed restore · v1.18.57"
   },
   "userWishlist": [
     {
@@ -70,6 +70,10 @@
     "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md."
   ],
   "sessionLog": [
+    {
+      "at": "2026-07-25T20:15:00Z",
+      "summary": "Adventure tap→startscherm: restore playInputSuppressed + soft window-error guard · v1.18.57"
+    },
     {
       "at": "2026-07-25T20:03:22Z",
       "summary": "d9 c5: pointerup scroll-guard, joy pulse, 2P neutral strip · v1.18.56"
