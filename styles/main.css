@@ -953,6 +953,69 @@
   .skill-card .claim-btn { width:100%; margin-top:10px; justify-content:center; flex:1 1 100%;
     background:linear-gradient(180deg,#ffe259,#c97a20); color:#2a1a00; min-height:46px; font-size:16px; font-weight:900; }
   .skill-card .upgrade-empty { width:min(92vw,480px); text-align:center; opacity:.88; line-height:1.45; }
+  /* d20 polish #3 — Upgrade-kaart orbs & schaduwen */
+  .upgrade-polish-card {
+    position: relative;
+    box-shadow:
+      0 6px 0 rgba(0,0,0,.34),
+      0 10px 22px rgba(0,0,0,.28),
+      inset 0 1px 0 rgba(255,255,255,.12),
+      inset 0 0 0 1px rgba(200,160,255,.22);
+    background:
+      radial-gradient(ellipse at 12% 18%, rgba(180,120,255,.18), transparent 46%),
+      rgba(255,255,255,.04);
+  }
+  .upgrade-polish-card.claimable {
+    box-shadow:
+      0 6px 0 rgba(120,70,10,.45),
+      0 0 0 1px rgba(255,215,94,.28),
+      0 12px 26px rgba(255,180,40,.12),
+      inset 0 1px 0 rgba(255,255,255,.14);
+  }
+  .upgrade-polish-card.sel {
+    box-shadow:
+      0 6px 0 rgba(0,0,0,.34),
+      0 0 0 2px rgba(124,245,255,.45),
+      inset 0 1px 0 rgba(255,255,255,.16);
+  }
+  .upgrade-icon-orb {
+    position: relative;
+    width: 64px; height: 64px; flex: 0 0 64px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(circle at 35% 30%, rgba(255,255,255,.35), transparent 42%),
+      radial-gradient(circle at 50% 55%, rgba(160,100,220,.55), #0a0814 72%);
+    box-shadow:
+      0 4px 0 rgba(0,0,0,.35),
+      0 0 0 2px rgba(200,150,255,.4),
+      inset 0 0 10px rgba(180,120,255,.3);
+  }
+  .upgrade-icon-orb canvas { position: relative; z-index: 1; width: 56px; height: 56px; }
+  .upgrade-icon-orb.skill-orb-swatch { width: 52px; height: 52px; flex-basis: 52px; }
+  .upgrade-swatch-core {
+    width: 22px; height: 22px; border-radius: 50%;
+    box-shadow: 0 0 10px rgba(255,255,255,.35), inset 0 0 0 2px rgba(255,255,255,.35);
+  }
+  .upgrade-orb-row {
+    flex: 1 1 100%;
+    display: flex; gap: 5px; flex-wrap: wrap;
+    margin-top: 8px; padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,.08);
+  }
+  .upgrade-orb {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: rgba(255,255,255,.08);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), 0 1px 0 rgba(0,0,0,.35);
+  }
+  .upgrade-orb.lit {
+    background: radial-gradient(circle at 35% 30%, #fff8dc, var(--orb-c, #ffd75e) 55%, #8a5a10);
+    box-shadow:
+      0 0 6px rgba(255,215,94,.55),
+      inset 0 0 0 1px rgba(255,255,255,.35),
+      0 1px 0 rgba(0,0,0,.3);
+  }
+  body.reduced-motion .upgrade-polish-card.claimable { box-shadow: 0 4px 0 rgba(0,0,0,.3), inset 0 0 0 1px rgba(255,215,94,.35); }
   .upgrade-shard-hint { width:min(92vw,480px); font-size:11px; opacity:.72; text-align:center; margin:-4px 0 10px; line-height:1.4; }
   body.reduced-motion .skill-card.claimable { box-shadow:none; }
   .mission-card.claimable { border-color: rgba(255,215,94,.55); background: rgba(255,215,94,.1);

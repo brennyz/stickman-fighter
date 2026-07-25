@@ -76,19 +76,40 @@ function drawUpgradeItemIcon(cat, id, cv) {
   }
 }
 
+function appendUpgradeOrbRow(el, lv, max, color) {
+  const row = document.createElement('div');
+  row.className = 'upgrade-orb-row';
+  row.setAttribute('aria-hidden', 'true');
+  const n = Math.min(Math.max(Number(max) || 0, 0), 8);
+  const filled = Math.min(Math.max(Number(lv) || 0, 0), n);
+  for (let i = 0; i < n; i++) {
+    const orb = document.createElement('span');
+    orb.className = 'upgrade-orb' + (i < filled ? ' lit' : '');
+    if (i < filled) orb.style.setProperty('--orb-c', color || '#ffd75e');
+    row.appendChild(orb);
+  }
+  el.appendChild(row);
+}
+
 function buildUpgradeItemCard(cat, id, color, rerender) {
   const card = itemUpgradeCardParts(cat, id, color);
   const el = document.createElement('div');
-  el.className = 'card skill-card' + (card.canUp ? ' claimable' : '') + (card.lv >= card.max ? ' claimed' : '');
+  el.className = 'card skill-card upgrade-polish-card' + (card.canUp ? ' claimable' : '') + (card.lv >= card.max ? ' claimed' : '');
   el.style.borderColor = color + '88';
+  el.style.setProperty('--up-accent', color || '#c792ff');
+  const iconWrap = document.createElement('div');
+  iconWrap.className = 'upgrade-icon-orb';
+  iconWrap.style.setProperty('--orb-c', color || '#c792ff');
   const cv = document.createElement('canvas');
   cv.width = 64;
   cv.height = 64;
   drawUpgradeItemIcon(cat, id, cv);
-  el.appendChild(cv);
+  iconWrap.appendChild(cv);
+  el.appendChild(iconWrap);
   const wrap = document.createElement('div');
   wrap.innerHTML = card.html;
   while (wrap.firstChild) el.appendChild(wrap.firstChild);
+  appendUpgradeOrbRow(el, card.lv, card.max, color);
   appendItemUpgradeButton(el, cat, id, rerender);
   return el;
 }
@@ -2374,8 +2395,9 @@ const UI = {
         const equipped = def.group === 'jutsu' && activeJutsuId() === id;
         const unlocked = def.group === 'jutsu' ? jutsuSkillUnlocked(id) : (lv >= 1 || id === 'rasengan');
         const el = document.createElement('div');
-        el.className = 'card skill-card' + (canUp ? ' claimable' : '') + (lv >= maxLv ? ' claimed' : '') + (equipped ? ' sel' : '');
+        el.className = 'card skill-card upgrade-polish-card' + (canUp ? ' claimable' : '') + (lv >= maxLv ? ' claimed' : '') + (equipped ? ' sel' : '');
         el.style.borderColor = def.color + (equipped ? '' : '88');
+        el.style.setProperty('--up-accent', def.color);
         const name = skillLabel(id);
         const now = skillUpgradeSummary(id);
         const next = skillNextStepPreview(id);
@@ -2387,6 +2409,8 @@ const UI = {
           ? (equipped ? t('ui.skillEquipped') : (unlocked ? t('ui.skillEquipHint') : t('ui.skillLocked', { lv: 1 })))
           : (lv >= 1 ? t('ui.skillPassiveActive') : t('ui.skillPassiveLocked', { lv: 1 }));
         el.innerHTML =
+          `<div class="upgrade-icon-orb skill-orb-swatch" style="--orb-c:${def.color}" aria-hidden="true">` +
+          `<span class="upgrade-swatch-core" style="background:${def.color}"></span></div>` +
           `<div class="skill-card-body"><div class="cname" style="color:${def.color}">${name} ` +
           `<span class="rar-pill" style="color:${def.color};border-color:${def.color}">${t('ui.skillLevel', { lv, max: maxLv })}</span>` +
           (equipped ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.skillEquipped')}</span>` : '') +
@@ -2398,6 +2422,7 @@ const UI = {
           (next ? `<div class="cinfo" style="opacity:.75;font-size:11px;margin-top:3px"><b>${t('ui.skillNext')}:</b> ${next}</div>` : '') +
           (def.group === 'jutsu' ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:4px">${equipped ? t('ui.jutsuEquipped') : t('ui.jutsuTapEquip')}</div>` : '') +
           `</div>`;
+        appendUpgradeOrbRow(el, lv, maxLv, def.color);
         if (def.group === 'jutsu' && unlocked && !equipped) {
           const eqBtn = document.createElement('button');
           eqBtn.type = 'button';
