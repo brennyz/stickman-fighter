@@ -659,8 +659,8 @@ function ketsbamHitTest(x, y, g) {
   const ui = touchUiScale(W, H);
   const { cx, cy, w, h } = ketsbamPromptLayout(g);
   const slop = btnHitSlop();
-  const hw = w * 0.5 + slop;
-  const hh = h * 0.5 + slop + 10 * ui;
+  const hw = w * 0.5 + slop + 14 * ui; // include ready-dot to the right
+  const hh = h * 0.5 + slop + 14 * ui; // include KETS label above bar
   return Math.abs(x - cx) <= hw && Math.abs(y - cy) <= hh;
 }
 
