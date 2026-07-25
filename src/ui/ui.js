@@ -24,37 +24,137 @@ function initSkillScreenChrome() {
   UI.skillBehaviorFilter = 'all';
   UI.skillSortMode = 'level';
   UI.skillPreviewId = save.skill || 'rasengan';
+
   const sagaBar = document.getElementById('skillSagaBar');
-  if (sagaBar) {
-    sagaBar.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-saga]');
-      if (!btn) return;
-      UI.skillSagaFilter = btn.dataset.saga || 'all';
-      sagaBar.querySelectorAll('[data-saga]').forEach(b => b.classList.toggle('active', b === btn));
-      AudioSys.sfx('select');
-      UI.renderSkills();
+  if (sagaBar && !sagaBar.dataset.sfSkillSagaBound) {
+    sagaBar.dataset.sfSkillSagaBound = '1';
+    sagaBar.querySelectorAll('[data-saga]').forEach((btn) => {
+      bindPress(btn, () => {
+        AudioSys.sfx('select');
+        UI.skillSagaFilter = btn.dataset.saga || 'all';
+        UI.renderSkills();
+      });
     });
   }
   const behBar = document.getElementById('skillBehaviorBar');
-  if (behBar) {
-    behBar.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-behavior]');
-      if (!btn) return;
-      UI.skillBehaviorFilter = btn.dataset.behavior || 'all';
-      behBar.querySelectorAll('[data-behavior]').forEach(b => b.classList.toggle('active', b === btn));
-      AudioSys.sfx('select');
-      UI.renderSkills();
+  if (behBar && !behBar.dataset.sfSkillBehBound) {
+    behBar.dataset.sfSkillBehBound = '1';
+    behBar.querySelectorAll('[data-behavior]').forEach((btn) => {
+      bindPress(btn, () => {
+        AudioSys.sfx('select');
+        UI.skillBehaviorFilter = btn.dataset.behavior || 'all';
+        UI.renderSkills();
+      });
     });
   }
   const sortBtn = document.getElementById('btnSkillSort');
-  if (sortBtn) {
-    sortBtn.addEventListener('click', () => {
+  if (sortBtn && !sortBtn.dataset.sfSkillSortBound) {
+    sortBtn.dataset.sfSkillSortBound = '1';
+    bindPress(sortBtn, () => {
       const modes = ['level', 'dmg', 'name'];
       const cur = UI.skillSortMode || 'level';
       UI.skillSortMode = modes[(modes.indexOf(cur) + 1) % modes.length];
       AudioSys.sfx('select');
       UI.renderSkills();
     });
+  }
+
+  const previewHost = document.getElementById('skillPreview');
+  if (previewHost && !previewHost.dataset.sfSkillPreviewBound) {
+    previewHost.dataset.sfSkillPreviewBound = '1';
+    let lastEquip = 0;
+    const runEquip = () => {
+      const now = Date.now();
+      if (now - lastEquip < 320) return;
+      lastEquip = now;
+      if (!uiTapAllowed()) return;
+      equipSkill(UI.skillPreviewId);
+    };
+    previewHost.addEventListener('click', (e) => {
+      if (!e.target.closest('#skillEquipBtn')) return;
+      runEquip();
+    });
+    previewHost.addEventListener('touchend', (e) => {
+      if (!e.target.closest('#skillEquipBtn')) return;
+      if (!uiTapAllowed()) return;
+      if (e.cancelable) e.preventDefault();
+      runEquip();
+    }, { passive: false });
+  }
+
+  const grid = document.getElementById('skillGrid');
+  if (grid && !grid.dataset.sfSkillGridBound) {
+    grid.dataset.sfSkillGridBound = '1';
+    let lastPick = 0;
+    const runCard = (card, equip) => {
+      if (!card || !card.dataset.id) return;
+      const now = Date.now();
+      if (now - lastPick < 320) return;
+      lastPick = now;
+      runSkillCard(card, equip);
+    };
+    grid.addEventListener('click', (e) => {
+      const card = e.target.closest('.skill-card');
+      if (!card) return;
+      if (!uiTapAllowed()) {
+        pickSkillPreview(card.dataset.id, true);
+        return;
+      }
+      runCard(card, true);
+    });
+    grid.addEventListener('touchend', (e) => {
+      const card = touchEndedOnSelector(e, '.skill-card');
+      if (!card) return;
+      if (e.cancelable) e.preventDefault();
+      runCard(card, true);
+    }, { passive: false });
+    grid.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const card = e.target.closest('.skill-card');
+      if (!card || card.classList.contains('locked')) return;
+      e.preventDefault();
+      runCard(card, true);
+    });
+    if (!IS_TOUCH) {
+      grid.addEventListener('pointerover', (e) => {
+        const card = e.target.closest('.skill-card');
+        if (!card || !card.dataset.id) return;
+        if (UI.skillPreviewId === card.dataset.id) return;
+        pickSkillPreview(card.dataset.id, true);
+      });
+    }
+  }
+}
+
+function equipSkill(id) {
+  if (!id || !uiTapAllowed()) return;
+  const sk = skillById(id);
+  if (!skillUnlocked(sk)) return;
+  if (save.skill === id) return;
+  safeUiAction(() => {
+    save.skill = id;
+    if (!persistOrToast('skill')) return;
+    AudioSys.sfx(skillSfxId(sk));
+    UI.renderSkills();
+    UI.renderMenu();
+    UI.renderModeHub();
+    UI.toast(t('toast.skillEquipped', { name: skillLabel(sk) }), 2200);
+  }, 'pickSkill/' + id, 'Skill kiezen mislukt');
+}
+
+function runSkillCard(card, equip) {
+  if (!card || !card.dataset.id) return;
+  const id = card.dataset.id;
+  const sk = skillById(id);
+  pickSkillPreview(id, true);
+  if (equip && skillUnlocked(sk)) {
+    equipSkill(id);
+    return;
+  }
+  const now = Date.now();
+  if (now - (UI._skillPreviewSfxT || 0) > 420) {
+    UI._skillPreviewSfxT = now;
+    try { AudioSys.init(); AudioSys.sfx(id); } catch (_) {}
   }
 }
 
@@ -109,23 +209,10 @@ function updateSkillPreview() {
     drawJutsuOrb(cc, 0, 0, 30, performance.now() * 0.001 * 3, sk.id, ok ? 1 : 0.42);
   }
   const equipBtn = document.getElementById('skillEquipBtn');
-  if (equipBtn) {
-    equipBtn.addEventListener('click', () => {
-      if (!uiTapAllowed()) return;
-      safeUiAction(() => {
-        save.skill = sk.id;
-        if (!persistOrToast('skill')) return;
-        AudioSys.sfx('select');
-        UI.renderSkills();
-        UI.renderMenu();
-        UI.renderModeHub();
-        UI.toast(t('toast.skillEquipped', { name: skillLabel(sk) }), 2200);
-      }, 'pickSkill/' + sk.id, 'Skill kiezen mislukt');
-    });
-  }
+  if (equipBtn) equipBtn.type = 'button';
 }
 
-function pickSkillPreview(id) {
+function pickSkillPreview(id, silent) {
   if (!id) return;
   UI.skillPreviewId = id;
   updateSkillPreview();
@@ -136,7 +223,7 @@ function pickSkillPreview(id) {
     });
   }
   const now = Date.now();
-  if (now - (UI._skillPreviewSfxT || 0) > 420) {
+  if (!silent && now - (UI._skillPreviewSfxT || 0) > 420) {
     UI._skillPreviewSfxT = now;
     try { AudioSys.init(); AudioSys.sfx(id); } catch (_) {}
   }
@@ -385,7 +472,7 @@ const UI = {
   resetInnerScrolls(screenEl) {
     if (!screenEl) return;
     const scrollables = screenEl.querySelectorAll(
-      '.char-grid-scroll, .menu-landing-scroll, .mode-hub-body, .island-bar, .grid, #weaponList, [data-scroll-reset]'
+      '.char-grid-scroll, .menu-landing-scroll, .mode-hub-body, .island-bar, .grid, #weaponList, .skill-grid-scroll, [data-scroll-reset]'
     );
     scrollables.forEach((el) => {
       try {
@@ -437,6 +524,9 @@ const UI = {
           this.renderPauseToggles();
         }
         if (id === 'helpScreen') this.renderHelp();
+        if (id === 'skillScreen') {
+          this.skillPreviewId = save.skill || 'rasengan';
+        }
         if (id === 'levelScreen') {
           if (!this.advIslandPick) this.advIslandPick = currentAdvIsland();
           applyIslandOnboarding();
@@ -2133,22 +2223,9 @@ const UI = {
       sub.style.marginTop = '4px';
       sub.textContent = ok ? (save.skill === sk.id ? t('ui.skillActive') : t('ui.skillPick'))
         : (skillSkillGated(sk) ? t('ui.skillIslandGate', { lvl: sk.needLvl }) : skillLabel(sk, 'hint'));
+      el.setAttribute('role', 'button');
+      el.tabIndex = ok ? 0 : -1;
       el.appendChild(sub);
-      el.addEventListener('pointerover', () => pickSkillPreview(sk.id));
-      el.addEventListener('click', () => {
-        pickSkillPreview(sk.id);
-        if (!ok || !uiTapAllowed()) return;
-        if (save.skill === sk.id) return;
-        safeUiAction(() => {
-          save.skill = sk.id;
-          if (!persistOrToast('skill')) return;
-          AudioSys.sfx('select');
-          this.renderSkills();
-          this.renderMenu();
-          this.renderModeHub();
-          UI.toast(t('toast.skillEquipped', { name: skillLabel(sk) }), 2200);
-        }, 'pickSkill/' + sk.id, 'Skill kiezen mislukt');
-      });
       grid.appendChild(el);
     }
     requestAnimationFrame(() => {

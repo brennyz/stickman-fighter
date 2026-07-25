@@ -28,7 +28,8 @@
         linear-gradient(180deg, #151b33 0%, #0a0d18 70%);
       color:#fff; z-index:20; pointer-events:auto; touch-action:pan-y; overscroll-behavior:contain; }
   .screen button, .screen .btn, .screen .lvl, .screen .char-card, .screen .hub-tile,
-  .screen .island-tab, .screen .tog, .screen .wrow, .screen .style-card { touch-action:manipulation; }
+  .screen .island-tab, .screen .tog, .screen .wrow, .screen .style-card,
+  .screen .skill-card, .screen .dex-filter-btn { touch-action:manipulation; }
   .screen.active { display:flex; animation: fadeIn .25s ease; }
   @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
   @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.04); } }
@@ -482,7 +483,7 @@
   .skill-grid-scroll { width:min(94vw,680px); max-height:min(38vh,320px); overflow-y:auto;
       overflow-x:hidden; margin:8px auto 12px; padding:4px 6px 8px; -webkit-overflow-scrolling:touch;
       scroll-behavior:smooth; border-radius:18px; border:1px solid rgba(255,255,255,.08);
-      background:rgba(0,0,0,.16); }
+      background:rgba(0,0,0,.16); touch-action:pan-y; overscroll-behavior:contain; }
   .skill-grid { width:100%; margin:0; }
   .skill-preview-card { width:min(92vw,640px); margin:0 auto 12px; padding:14px 16px;
       border-color:rgba(124,245,255,.28); background:linear-gradient(165deg,rgba(124,245,255,.08),rgba(0,0,0,.22)); }
