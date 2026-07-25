@@ -109,6 +109,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-25 | — | **Assets hub:** SVG-iconen adventure/arcade/versus/collect/continue → `assets/buttons/hub/`, wire-in startmenu. Volgende: chrome-dock → modes → harden. v1.18.48 / SW v258. |
 | 2026-07-25 | — | **Menu UI harden:** stage hide tijdens play (`syncMenuHubStage` + CSS), lite-fx/a11y glass, focus/touch, `smoke:menu`. v1.18.47 / SW v257. |
 | 2026-07-25 | — | **Menu UI fase 1:** full-bleed omgeving-canvas + translucent titel/tiles/meta/talen (`.menu-video-overhaul`). Video-assets later. v1.18.46 / SW v256. |
 | 2026-07-25 | **5** | Performance (cyclus 4 af): geen canvas-draw tijdens pauze (hidden canvas); missie-claim/dagbonus atomisch met rollback; tide-battle monsters guard; fighter takeDamage floater guards. v1.18.45 / SW v255. **Cyclus 4 vol.** |

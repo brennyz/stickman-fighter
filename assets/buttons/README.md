@@ -6,7 +6,7 @@
 
 | Pad | Inhoud |
 |-----|--------|
-| `hub/` | Hoofdmenu tegels: adventure, arcade, versus, collect |
+| `hub/` | Hoofdmenu tegels: adventure, arcade, versus, collect (+ continue) |
 | `modes/` | Mode-rijen: training, wall, mats, weapons, pets, style, skills, upgrades, dex |
 | `chrome/` | Navigatie & acties: home, back, claim, bonus, pause, settings |
 
@@ -18,4 +18,10 @@
 
 ## Status
 
-Leeg tot de eerste asset-batch. Agent vult bestanden zodra de user vraagt om knoppen te maken.
+| Set | Status |
+|-----|--------|
+| **hub** | Live — `adventure`, `arcade`, `versus`, `collect`, `continue` |
+| modes | Nog niet — volgende batch |
+| chrome | Nog niet — dock (muziek/missies/opties/tips/verse) na modes |
+
+Volgorde voor afmaken: **hub → chrome (startscherm-dock) → modes** · daarna harden-pass.

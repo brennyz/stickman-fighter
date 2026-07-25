@@ -58,4 +58,13 @@ const rev = storage.match(/SW_CACHE_REV\s*=\s*(\d+)/);
 const cache = sw.match(/stickfighter-app-v(\d+)/);
 must(rev && cache && rev[1] === cache[1], `SW mismatch storage=${rev && rev[1]} sw=${cache && cache[1]}`);
 
-console.log('SMOKE_OK menu hub layout + play-safe stage');
+
+// Hub file icons (ASSET-STYLE batch)
+const hubIcons = ['adventure', 'arcade', 'versus', 'collect', 'continue'];
+for (const name of hubIcons) {
+  const rel = `assets/buttons/hub/${name}.svg`;
+  must(fs.existsSync(path.join(root, rel)), `missing ${rel}`);
+  must(html.includes(rel), `index.html missing <img> for ${rel}`);
+}
+
+console.log('SMOKE_OK menu hub layout + play-safe stage + hub SVGs');
