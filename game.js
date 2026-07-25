@@ -133,9 +133,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.65';
+const APP_VERSION = '1.17.76';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 191;
+const SW_CACHE_REV = 202;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -926,6 +926,7 @@ const I18N = {
       resume: 'Verder spelen', music: 'Muziek', sfx: 'Geluid', quit: 'Stop & hoofdmenu',
       vsRestart: 'Herstart match', vsRestartSub: '0-0 · zelfde vechters',
       audioHint: 'Volume in pauze — sliders sync met Instellingen',
+      audioMuteAll: 'Alles uit', audioRestore: 'Standaard', audioSfxOnly: 'Alleen geluid',
     },
     result: { again: 'Opnieuw', next: 'Volgend level', menu: 'Hoofdmenu', rematch: 'Rematch', rematchSub: 'Zelfde vechters',
       xp: '+{xp} XP verdiend · nu Lv {lvl} ({cur}/{need} XP)' },
@@ -960,7 +961,12 @@ const I18N = {
       progress: 'Eiland {cur}/5 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
     },
     rarity: { common: 'Gewoon', uncommon: 'Ongewoon', rare: 'Zeldzaam', epic: 'Episch', legendary: 'Legendarisch', mythic: 'Mythisch' },
-    audio: { musicOff: 'Muziek uit', sfxOff: 'Geluid uit', musicPct: 'Muziek {pct}%', sfxPct: 'SFX {pct}%' },
+    audio: {
+      musicOff: 'Muziek uit', sfxOff: 'Geluid uit', musicPct: 'Muziek {pct}%', sfxPct: 'SFX {pct}%',
+      allMuted: 'Alles stil', pauseDuck: 'BGM zacht', pauseTrack: 'Track: {track}',
+      track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
+        battle: 'Gevecht', elite: 'Elite', boss: 'Baas', wall: 'Muur', training: 'Training', coinrun: 'Mats' },
+    },
   },
   en: {
     back: { menu: '← Menu', collect: '← Collection', levels: '← Levels' },
@@ -991,6 +997,7 @@ const I18N = {
       resume: 'Resume', music: 'Music', sfx: 'Sound', quit: 'Quit to menu',
       vsRestart: 'Restart match', vsRestartSub: '0-0 · same fighters',
       audioHint: 'Volume in pause — sliders sync with Settings',
+      audioMuteAll: 'Mute all', audioRestore: 'Default', audioSfxOnly: 'SFX only',
     },
     result: { again: 'Again', next: 'Next level', menu: 'Main menu', rematch: 'Rematch', rematchSub: 'Same fighters',
       xp: '+{xp} XP earned · now Lv {lvl} ({cur}/{need} XP)' },
@@ -1025,7 +1032,12 @@ const I18N = {
       progress: 'Island {cur}/5 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
     },
     rarity: { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary', mythic: 'Mythic' },
-    audio: { musicOff: 'Music off', sfxOff: 'Sound off', musicPct: 'Music {pct}%', sfxPct: 'SFX {pct}%' },
+    audio: {
+      musicOff: 'Music off', sfxOff: 'Sound off', musicPct: 'Music {pct}%', sfxPct: 'SFX {pct}%',
+      allMuted: 'All muted', pauseDuck: 'BGM ducked', pauseTrack: 'Track: {track}',
+      track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
+        battle: 'Battle', elite: 'Elite', boss: 'Boss', wall: 'Wall', training: 'Training', coinrun: 'Mats' },
+    },
   },
   de: {
     back: { menu: '← Menü', collect: '← Sammlung', levels: '← Level' },
@@ -1454,6 +1466,15 @@ function applyLangStaticScreens() {
     if (ico) el.appendChild(ico);
     el.appendChild(document.createTextNode(label));
   });
+  const pausePresets = [
+    ['pauseAudioMuteAll', 'pause.audioMuteAll'],
+    ['pauseAudioRestore', 'pause.audioRestore'],
+    ['pauseAudioSfxOnly', 'pause.audioSfxOnly'],
+  ];
+  for (const [id, key] of pausePresets) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = t(key);
+  }
 
   const resAgain = document.getElementById('resAgain');
   if (resAgain) resAgain.querySelector('div').textContent = t('result.again');
@@ -6430,6 +6451,7 @@ const AudioSys = {
   desiredSong: null,
   song: null, step: 0, bar: 0, nextTime: 0,
   paused: false,
+  _lastPauseMix: false,
   _sfxVar: 0,
   _sfxPan: 0,
   _combatHeat: 0,
@@ -6526,12 +6548,13 @@ const AudioSys = {
     return true;
   },
 
-  _setGain(g, v) {
+  _setGain(g, v, ramp) {
     if (!g) return;
     try {
       const t = this.ctx ? this.ctx.currentTime : 0;
       if (g.gain.cancelScheduledValues) g.gain.cancelScheduledValues(t);
-      if (g.gain.setTargetAtTime) g.gain.setTargetAtTime(v, t, 0.04);
+      const tc = ramp != null ? ramp : 0.04;
+      if (g.gain.setTargetAtTime) g.gain.setTargetAtTime(v, t, tc);
       else g.gain.value = v;
     } catch (_) {
       try { g.gain.value = v; } catch (_) {}
@@ -6545,14 +6568,16 @@ const AudioSys = {
     const id = (this.song && this.song.id) || this.desiredSong;
     const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
     const inPause = this.paused || state === 'pause';
-    let baseM = (id === 'menu') ? 0.24 : 0.32;
+    let baseM = (id === 'menu' || (id && String(id).startsWith('menu'))) ? 0.24 : 0.32;
     if (lite) baseM *= 0.88;
-    // Duck BGM in pauze / result — SFX blijft hoorbaar (iets harder in pauze voor knoppen)
     if (inPause) baseM *= 0.26;
     else if (state === 'result') baseM *= 0.5;
     const sfxMul = (lite ? 0.68 : 0.74) * (inPause ? 1.1 : 1);
-    this._setGain(this.musicGain, baseM * mv);
-    this._setGain(this.sfxGain, sfxMul * sv);
+    const musicRamp = inPause !== this._lastPauseMix ? 0.14 : 0.05;
+    const sfxRamp = 0.05;
+    this._lastPauseMix = inPause;
+    this._setGain(this.musicGain, baseM * mv, musicRamp);
+    this._setGain(this.sfxGain, sfxMul * sv, sfxRamp);
     this.syncContextPower();
   },
 
@@ -7197,6 +7222,17 @@ const AudioSys = {
     this.applyVolumes();
   },
 
+  previewMusicVol() {
+    if (!this.ctx || !save.music) return;
+    const mv = clamp(Number(save.musicVol) || 0.85, 0, 1);
+    if (mv <= 0.01) return;
+    this.tone(392, 523, 0.07, 'sine', 0.05 * mv, this.musicGain);
+  },
+
+  currentSongId() {
+    return (this.song && this.song.id) || this.desiredSong || '';
+  },
+
   tick() {
     if (!this.ctx || !this.song || !save.music) return;
     if (typeof document !== 'undefined' && document.hidden) return;
@@ -7465,6 +7501,17 @@ let menuBgmIdx = 0;
 function playMenuBgm(fromGame) {
   if (fromGame) menuBgmIdx = (menuBgmIdx + 1) % MENU_BGM_TRACKS.length;
   AudioSys.play(MENU_BGM_TRACKS[menuBgmIdx]);
+}
+
+const SONG_LABELS = {
+  menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
+  battle: 'Gevecht', elite: 'Elite', boss: 'Baas', wall: 'Muur', training: 'Training', coinrun: 'Mats',
+};
+function songLabel(id) {
+  if (!id) return '';
+  return (typeof t === 'function' && t('audio.track.' + id) !== 'audio.track.' + id)
+    ? t('audio.track.' + id)
+    : (SONG_LABELS[id] || id);
 }
 
 /* --- src/systems/input.js --- */
@@ -14494,10 +14541,21 @@ function audioMixStatusLine(inPause) {
   const mPct = volPct(save.musicVol, 0.85);
   const sPct = volPct(save.sfxVol, 1);
   const bits = [];
+  if (!save.music && !save.sfx) {
+    bits.push(t('audio.allMuted'));
+    return bits.join(' · ');
+  }
   if (!save.music) bits.push(t('audio.musicOff'));
-  else bits.push(t('audio.musicPct', { pct: mPct }) + (inPause ? ' · BGM ~75%' : ''));
+  else {
+    bits.push(t('audio.musicPct', { pct: mPct }));
+    if (inPause) bits.push(t('audio.pauseDuck'));
+  }
   if (!save.sfx) bits.push(t('audio.sfxOff'));
   else bits.push(t('audio.sfxPct', { pct: sPct }));
+  if (inPause && save.music && typeof AudioSys !== 'undefined') {
+    const track = songLabel(AudioSys.currentSongId());
+    if (track) bits.push(t('audio.pauseTrack', { track }));
+  }
   return bits.join(' · ');
 }
 
@@ -16614,6 +16672,15 @@ function bindSettingsControls() {
         if (save.sfx && (Number(save.sfxVol) || 0) > 0.01) AudioSys.sfx('select');
       });
     }
+    if (id === 'pauseMusicVol') {
+      let previewT = 0;
+      el.addEventListener('input', () => {
+        const now = Date.now();
+        if (now - previewT < 180) return;
+        previewT = now;
+        if (save.music && (Number(save.musicVol) || 0) > 0.02) AudioSys.previewMusicVol();
+      });
+    }
   };
   onVol('setMusicVol', 'setMusicVolLbl', 'musicVol');
   onVol('setSfxVol', 'setSfxVolLbl', 'sfxVol');
@@ -16801,6 +16868,35 @@ bindPress(pauseTogSfx, () => {
   AudioSys.setSfxOn(!save.sfx);
   UI.renderPauseToggles();
   AudioSys.sfx('select');
+});
+const bindPauseAudioPreset = (id, fn) => {
+  const el = document.getElementById(id);
+  if (!el || el.dataset.bound) return;
+  el.dataset.bound = '1';
+  bindPress(el, () => {
+    AudioSys.init();
+    fn();
+    persist();
+    AudioSys.applyVolumes();
+    UI.renderPauseToggles();
+    if (save.sfx) AudioSys.sfx('select');
+  });
+};
+bindPauseAudioPreset('pauseAudioMuteAll', () => {
+  AudioSys.setMusicOn(false);
+  AudioSys.setSfxOn(false);
+});
+bindPauseAudioPreset('pauseAudioRestore', () => {
+  save.musicVol = 0.85;
+  save.sfxVol = 1;
+  AudioSys.setMusicOn(true);
+  AudioSys.setSfxOn(true);
+  if (state === 'pause' && AudioSys.desiredSong) AudioSys.play(AudioSys.desiredSong);
+});
+bindPauseAudioPreset('pauseAudioSfxOnly', () => {
+  AudioSys.setMusicOn(false);
+  AudioSys.setSfxOn(true);
+  if ((Number(save.sfxVol) || 0) < 0.5) save.sfxVol = 1;
 });
 bindPress(document.getElementById('pauseResume'), () => {
   state = 'play';

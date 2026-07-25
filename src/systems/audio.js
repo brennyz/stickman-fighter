@@ -4,6 +4,7 @@ const AudioSys = {
   desiredSong: null,
   song: null, step: 0, bar: 0, nextTime: 0,
   paused: false,
+  _lastPauseMix: false,
   _sfxVar: 0,
   _sfxPan: 0,
   _combatHeat: 0,
@@ -100,12 +101,13 @@ const AudioSys = {
     return true;
   },
 
-  _setGain(g, v) {
+  _setGain(g, v, ramp) {
     if (!g) return;
     try {
       const t = this.ctx ? this.ctx.currentTime : 0;
       if (g.gain.cancelScheduledValues) g.gain.cancelScheduledValues(t);
-      if (g.gain.setTargetAtTime) g.gain.setTargetAtTime(v, t, 0.04);
+      const tc = ramp != null ? ramp : 0.04;
+      if (g.gain.setTargetAtTime) g.gain.setTargetAtTime(v, t, tc);
       else g.gain.value = v;
     } catch (_) {
       try { g.gain.value = v; } catch (_) {}
@@ -119,14 +121,16 @@ const AudioSys = {
     const id = (this.song && this.song.id) || this.desiredSong;
     const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
     const inPause = this.paused || state === 'pause';
-    let baseM = (id === 'menu') ? 0.24 : 0.32;
+    let baseM = (id === 'menu' || (id && String(id).startsWith('menu'))) ? 0.24 : 0.32;
     if (lite) baseM *= 0.88;
-    // Duck BGM in pauze / result — SFX blijft hoorbaar (iets harder in pauze voor knoppen)
     if (inPause) baseM *= 0.26;
     else if (state === 'result') baseM *= 0.5;
     const sfxMul = (lite ? 0.68 : 0.74) * (inPause ? 1.1 : 1);
-    this._setGain(this.musicGain, baseM * mv);
-    this._setGain(this.sfxGain, sfxMul * sv);
+    const musicRamp = inPause !== this._lastPauseMix ? 0.14 : 0.05;
+    const sfxRamp = 0.05;
+    this._lastPauseMix = inPause;
+    this._setGain(this.musicGain, baseM * mv, musicRamp);
+    this._setGain(this.sfxGain, sfxMul * sv, sfxRamp);
     this.syncContextPower();
   },
 
@@ -771,6 +775,17 @@ const AudioSys = {
     this.applyVolumes();
   },
 
+  previewMusicVol() {
+    if (!this.ctx || !save.music) return;
+    const mv = clamp(Number(save.musicVol) || 0.85, 0, 1);
+    if (mv <= 0.01) return;
+    this.tone(392, 523, 0.07, 'sine', 0.05 * mv, this.musicGain);
+  },
+
+  currentSongId() {
+    return (this.song && this.song.id) || this.desiredSong || '';
+  },
+
   tick() {
     if (!this.ctx || !this.song || !save.music) return;
     if (typeof document !== 'undefined' && document.hidden) return;
@@ -1039,5 +1054,16 @@ let menuBgmIdx = 0;
 function playMenuBgm(fromGame) {
   if (fromGame) menuBgmIdx = (menuBgmIdx + 1) % MENU_BGM_TRACKS.length;
   AudioSys.play(MENU_BGM_TRACKS[menuBgmIdx]);
+}
+
+const SONG_LABELS = {
+  menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
+  battle: 'Gevecht', elite: 'Elite', boss: 'Baas', wall: 'Muur', training: 'Training', coinrun: 'Mats',
+};
+function songLabel(id) {
+  if (!id) return '';
+  return (typeof t === 'function' && t('audio.track.' + id) !== 'audio.track.' + id)
+    ? t('audio.track.' + id)
+    : (SONG_LABELS[id] || id);
 }
 

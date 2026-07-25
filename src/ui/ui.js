@@ -215,10 +215,21 @@ function audioMixStatusLine(inPause) {
   const mPct = volPct(save.musicVol, 0.85);
   const sPct = volPct(save.sfxVol, 1);
   const bits = [];
+  if (!save.music && !save.sfx) {
+    bits.push(t('audio.allMuted'));
+    return bits.join(' · ');
+  }
   if (!save.music) bits.push(t('audio.musicOff'));
-  else bits.push(t('audio.musicPct', { pct: mPct }) + (inPause ? ' · BGM ~75%' : ''));
+  else {
+    bits.push(t('audio.musicPct', { pct: mPct }));
+    if (inPause) bits.push(t('audio.pauseDuck'));
+  }
   if (!save.sfx) bits.push(t('audio.sfxOff'));
   else bits.push(t('audio.sfxPct', { pct: sPct }));
+  if (inPause && save.music && typeof AudioSys !== 'undefined') {
+    const track = songLabel(AudioSys.currentSongId());
+    if (track) bits.push(t('audio.pauseTrack', { track }));
+  }
   return bits.join(' · ');
 }
 

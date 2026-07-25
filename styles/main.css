@@ -500,6 +500,8 @@
   .pause-audio-vol label { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:6px 0; flex-wrap:wrap; }
   .pause-audio-vol input[type=range] { flex:1; min-width:100px; accent-color:#7cf5ff; }
   .pause-audio-hint { font-size:11px; opacity:.72; line-height:1.4; margin:8px 0 2px; text-align:center; color:#a8b8e8; }
+  .pause-audio-quick { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:10px 0 2px; }
+  .pause-audio-quick .btn.tog { flex:1 1 30%; min-width:92px; min-height:40px; font-size:12px; padding:8px 10px; justify-content:center; }
   .settings-card .tog { width:100%; margin-top:8px; justify-content:center; }
 
   .char-grid-scroll { width:min(94vw, 720px); max-height:min(42vh, 340px); overflow-y:auto;

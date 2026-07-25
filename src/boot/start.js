@@ -304,6 +304,15 @@ function bindSettingsControls() {
         if (save.sfx && (Number(save.sfxVol) || 0) > 0.01) AudioSys.sfx('select');
       });
     }
+    if (id === 'pauseMusicVol') {
+      let previewT = 0;
+      el.addEventListener('input', () => {
+        const now = Date.now();
+        if (now - previewT < 180) return;
+        previewT = now;
+        if (save.music && (Number(save.musicVol) || 0) > 0.02) AudioSys.previewMusicVol();
+      });
+    }
   };
   onVol('setMusicVol', 'setMusicVolLbl', 'musicVol');
   onVol('setSfxVol', 'setSfxVolLbl', 'sfxVol');
@@ -491,6 +500,35 @@ bindPress(pauseTogSfx, () => {
   AudioSys.setSfxOn(!save.sfx);
   UI.renderPauseToggles();
   AudioSys.sfx('select');
+});
+const bindPauseAudioPreset = (id, fn) => {
+  const el = document.getElementById(id);
+  if (!el || el.dataset.bound) return;
+  el.dataset.bound = '1';
+  bindPress(el, () => {
+    AudioSys.init();
+    fn();
+    persist();
+    AudioSys.applyVolumes();
+    UI.renderPauseToggles();
+    if (save.sfx) AudioSys.sfx('select');
+  });
+};
+bindPauseAudioPreset('pauseAudioMuteAll', () => {
+  AudioSys.setMusicOn(false);
+  AudioSys.setSfxOn(false);
+});
+bindPauseAudioPreset('pauseAudioRestore', () => {
+  save.musicVol = 0.85;
+  save.sfxVol = 1;
+  AudioSys.setMusicOn(true);
+  AudioSys.setSfxOn(true);
+  if (state === 'pause' && AudioSys.desiredSong) AudioSys.play(AudioSys.desiredSong);
+});
+bindPauseAudioPreset('pauseAudioSfxOnly', () => {
+  AudioSys.setMusicOn(false);
+  AudioSys.setSfxOn(true);
+  if ((Number(save.sfxVol) || 0) < 0.5) save.sfxVol = 1;
 });
 bindPress(document.getElementById('pauseResume'), () => {
   state = 'play';

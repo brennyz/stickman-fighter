@@ -7,7 +7,6 @@
     3,
     4,
     5,
-    6,
     9,
     11,
     12,
@@ -17,10 +16,10 @@
     19
   ],
   "lastRoll": {
-    "face": 10,
-    "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
-    "rolledAt": "2026-07-24T21:35:10Z",
-    "remainingCount": 12,
+    "face": 6,
+    "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+    "rolledAt": "2026-07-25T07:18:19Z",
+    "remainingCount": 10,
     "cycle": 4
   },
   "pending": null,
@@ -576,6 +575,13 @@
       "note": "OS sync, calm ketsbam, HC char select, CSS MQ",
       "version": "1.17.64",
       "doneAt": "2026-07-24T21:36:16Z",
+      "cycle": 4
+    },
+    {
+      "face": 6,
+      "note": "Pauze presets + duck ramp + track status",
+      "version": "1.17.76",
+      "doneAt": "2026-07-25T07:19:46Z",
       "cycle": 4
     }
   ],
@@ -1749,6 +1755,13 @@
       "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
       "rolledAt": "2026-07-24T21:35:10Z",
       "remainingCount": 12,
+      "cycle": 4
+    },
+    {
+      "face": 6,
+      "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+      "rolledAt": "2026-07-25T07:18:19Z",
+      "remainingCount": 10,
       "cycle": 4
     }
   ],
