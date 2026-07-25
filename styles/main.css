@@ -588,6 +588,47 @@
   .card .cinfo { font-size:13px; color:#9db1e3; margin-top:2px; }
   .card canvas { flex:0 0 auto; border-radius:10px; background:rgba(0,0,0,.25); }
   .card .right { margin-left:auto; text-align:right; font-size:13px; color:#ffd75e; font-weight:800; }
+
+  /* d20 polish #1 — wapen-preview glow in collectie */
+  .weapon-preview {
+    width: min(92vw, 640px); display: flex; gap: 14px; align-items: center;
+    padding: 12px 14px; margin: 6px 0 10px; border-radius: 16px;
+    border: 2px solid rgba(255,255,255,.12); background: rgba(8,10,18,.55);
+    position: relative; overflow: hidden; flex-shrink: 0;
+  }
+  .weapon-preview[hidden] { display: none !important; }
+  .weapon-preview.is-glow {
+    border-color: var(--wp-color, #ffd75e);
+    box-shadow: 0 0 0 1px rgba(255,215,94,.28), 0 0 28px var(--wp-glow, rgba(255,215,94,.35));
+  }
+  .weapon-preview.is-glow::before {
+    content: ''; position: absolute; inset: -30% -10%;
+    background: radial-gradient(ellipse at 22% 50%, var(--wp-glow, rgba(255,215,94,.4)), transparent 55%);
+    opacity: .85; pointer-events: none; z-index: 0;
+    animation: weaponPreviewPulse 2s ease-in-out infinite;
+  }
+  @keyframes weaponPreviewPulse {
+    0%, 100% { opacity: .55; transform: scale(1); }
+    50% { opacity: .95; transform: scale(1.04); }
+  }
+  body.reduced-motion .weapon-preview.is-glow::before { animation: none; opacity: .7; }
+  .weapon-preview > * { position: relative; z-index: 1; }
+  .weapon-preview-canvas {
+    width: 96px; height: 96px; border-radius: 14px; flex: 0 0 auto;
+    background: rgba(0,0,0,.4);
+    box-shadow: 0 0 22px var(--wp-glow, transparent);
+  }
+  .weapon-preview-meta { flex: 1; min-width: 0; }
+  .weapon-preview-name { font-size: 20px; font-weight: 900; letter-spacing: .02em; }
+  .weapon-preview-rar { margin-top: 4px; }
+  .weapon-preview-stats { margin-top: 6px; font-size: 13px; color: #9db1e3; line-height: 1.4; }
+  .card.weapon-glow canvas {
+    box-shadow: 0 0 16px var(--wp-glow, rgba(255,215,94,.45));
+  }
+  .card.dex-glow {
+    box-shadow: 0 0 18px var(--dex-glow, rgba(255,215,94,.35));
+  }
+
   .dex-mini-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; max-width:min(52vw,340px); }
   .dex-mini-stat { flex:1 1 88px; min-width:72px; }
   .dex-mini-l { display:block; font-size:10px; font-weight:800; color:#9db1e3; margin-bottom:3px; letter-spacing:.04em; }

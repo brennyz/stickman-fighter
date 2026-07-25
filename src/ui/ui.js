@@ -857,6 +857,7 @@ const UI = {
   skillBehaviorFilter: 'all',
   skillSortMode: 'level',
   skillPreviewId: 'rasengan',
+  weaponPreviewId: null,
   charSortMode: 'name',
   charPreviewHoverId: null,
   dexRarityFilter: 'all',
@@ -2221,6 +2222,8 @@ const UI = {
           '<div style="font-size:11px;opacity:.65;margin-top:6px">Tiers: Leerling → Virtuoos (3) → Meester (10) → Legende (25)</div>';
       }
     }
+    const previewId = this.weaponPreviewId || save.weapon || 'vuist';
+    this.paintWeaponPreview(previewId);
     const list = document.getElementById('weaponList');
     if (!list) return;
     list.innerHTML = '';
@@ -2230,14 +2233,26 @@ const UI = {
       const islandLocked = weaponSkillGated(base);
       const locked = lvlLocked;
       const rar = rarityOf(w.rarity);
+      const selected = save.weapon === w.id;
+      const previewing = previewId === w.id;
       const el = document.createElement('div');
-      el.className = 'card rar-' + w.rarity + (save.weapon === w.id ? ' sel' : '') +
-        (locked ? ' locked' : '') + (islandLocked && !lvlLocked ? ' island-gated' : '');
-      el.style.borderColor = rar.color + (save.weapon === w.id ? '' : '66');
+      el.className = 'card rar-' + w.rarity + (selected ? ' sel' : '') +
+        (locked ? ' locked' : '') + (islandLocked && !lvlLocked ? ' island-gated' : '') +
+        ((selected || previewing) && !locked ? ' weapon-glow' : '');
+      el.style.borderColor = rar.color + (selected ? '' : '66');
+      el.style.setProperty('--wp-glow', rar.glow);
       if (w.summoned) el.style.boxShadow = `0 0 14px ${rar.glow}`;
       const cv = document.createElement('canvas');
       cv.width = 64; cv.height = 64;
       const cc = cv.getContext('2d');
+      if (!locked && rar.order >= 3 && !motionReduced()) {
+        cc.save();
+        cc.fillStyle = rar.glow;
+        cc.beginPath();
+        cc.arc(32, 32, 26, 0, TAU);
+        cc.fill();
+        cc.restore();
+      }
       cc.translate(10, 40); cc.rotate(-0.6);
       if (w.id === 'vuist') {
         cc.strokeStyle = '#f2f5ff'; cc.lineWidth = 5; cc.lineCap = 'round';
@@ -2287,12 +2302,19 @@ const UI = {
         ? `${SVG_LOCK_ICON} Lv ${base.unlock}`
         : (islandLocked
           ? t('ui.weaponIslandCapShort', { cap: adventureWeaponCap() })
-          : (save.weapon === w.id ? '&#10004; gekozen' : 'kies'));
+          : (selected ? '&#10004; gekozen' : 'kies'));
       el.appendChild(right);
+      el.addEventListener('pointerenter', () => {
+        if (locked) return;
+        if (this.weaponPreviewId === w.id) return;
+        this.weaponPreviewId = w.id;
+        this.paintWeaponPreview(w.id);
+      });
       if (!locked) bindPress(el, () => {
         if (!uiTapAllowed()) return;
         safeUiAction(() => {
           save.weapon = w.id;
+          this.weaponPreviewId = w.id;
           if (!persistOrToast('wapen')) return;
           playWeaponPickFeedback(w.id);
           if (islandLocked) UI.toast(t('toast.weaponIslandCap', { cap: adventureWeaponCap() }), 2800);
@@ -2301,6 +2323,75 @@ const UI = {
       });
       list.appendChild(el);
     }
+  },
+
+  paintWeaponPreview(weaponId) {
+    const host = document.getElementById('weaponPreview');
+    const cv = document.getElementById('weaponPreviewCanvas');
+    const nameEl = document.getElementById('weaponPreviewName');
+    const rarEl = document.getElementById('weaponPreviewRar');
+    const statsEl = document.getElementById('weaponPreviewStats');
+    if (!host || !cv) return;
+    const base = WEAPONS.find(w => w.id === weaponId) || WEAPONS[0];
+    if (!base) { host.hidden = true; return; }
+    const w = applySummonTier(base);
+    const rar = rarityOf(w.rarity);
+    const locked = !weaponUnlockedByLevel(base);
+    host.hidden = false;
+    host.classList.toggle('is-glow', !locked);
+    host.style.setProperty('--wp-glow', rar.glow);
+    host.style.setProperty('--wp-color', rar.color);
+    if (nameEl) {
+      nameEl.textContent = locked ? '???' : weaponLabel(w);
+      nameEl.style.color = locked ? '#8fa3d9' : '#fff';
+    }
+    if (rarEl) {
+      rarEl.innerHTML = locked
+        ? `<span class="rar-pill" style="color:#8fa3d9;border-color:#8fa3d9">Lv ${base.unlock}</span>`
+        : `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>` +
+          (save.weapon === w.id ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Actief</span>' : '');
+    }
+    if (statsEl) {
+      statsEl.textContent = locked
+        ? 'Nog vergrendeld — level verder in avontuur'
+        : `${weaponDesc(w)} · x${w.dmg} dmg · bereik ${w.range} · spd x${w.speed}`;
+    }
+    const c = cv.getContext('2d');
+    if (!c) return;
+    c.clearRect(0, 0, cv.width, cv.height);
+    c.imageSmoothingEnabled = true;
+    if (!locked) {
+      const g = c.createRadialGradient(60, 62, 8, 60, 62, 52);
+      g.addColorStop(0, rar.glow);
+      g.addColorStop(0.55, 'rgba(0,0,0,0)');
+      c.fillStyle = g;
+      c.fillRect(0, 0, 120, 120);
+      if (!motionReduced() && rar.order >= 2) {
+        c.strokeStyle = rar.color;
+        c.globalAlpha = 0.35;
+        c.lineWidth = 2;
+        c.beginPath();
+        c.arc(60, 62, 40, 0, TAU);
+        c.stroke();
+        c.globalAlpha = 1;
+      }
+    } else {
+      c.fillStyle = 'rgba(20,24,36,.55)';
+      c.fillRect(8, 8, 104, 104);
+    }
+    c.save();
+    c.translate(28, 78);
+    c.rotate(-0.55);
+    c.scale(1.55, 1.55);
+    if (locked) c.globalAlpha = 0.35;
+    if (w.id === 'vuist') {
+      c.strokeStyle = '#f2f5ff'; c.lineWidth = 5; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(2, 8); c.lineTo(24, -6); c.stroke();
+      c.fillStyle = '#f2f5ff'; c.beginPath(); c.arc(28, -9, 7, 0, TAU); c.fill();
+    } else if (typeof drawWeaponShape === 'function') {
+      drawWeaponShape(c, w.id, performance.now() / 1000);
+    }
+    c.restore();
   },
 
   openUpgrades(tab) {
@@ -2589,8 +2680,10 @@ const UI = {
       const unlockLv = UNLOCK_AT[id];
       const canMeet = !kills && unlockLv != null && unlockLv <= save.unlocked;
       const el = document.createElement('div');
-      el.className = 'card' + (kills ? '' : ' locked') + (canMeet ? ' dex-available' : '');
+      el.className = 'card' + (kills ? '' : ' locked') + (canMeet ? ' dex-available' : '') +
+        (kills && rar.order >= 3 ? ' dex-glow' : '');
       el.style.borderColor = kills ? rar.color : (canMeet ? '#7cf5ff88' : undefined);
+      if (kills && rar.order >= 3) el.style.setProperty('--dex-glow', rar.glow);
       const cv = document.createElement('canvas');
       cv.width = 64; cv.height = 64;
       const cc = cv.getContext('2d');

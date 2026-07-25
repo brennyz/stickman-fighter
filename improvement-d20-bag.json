@@ -7,26 +7,18 @@
     4,
     5,
     9,
-    12,
     13,
     19
   ],
   "lastRoll": {
-    "face": 15,
-    "category": "Onboarding \u2014 tips, eerste speelminuut, help",
-    "rolledAt": "2026-07-25T08:15:02Z",
-    "remainingCount": 10,
+    "face": 12,
+    "category": "Content \u2014 monsters, wapens, rariteit, dex",
+    "rolledAt": "2026-07-25T13:58:29Z",
+    "remainingCount": 6,
     "cycle": 4
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 17,
-      "note": "Error recovery + save import",
-      "version": "1.8.5",
-      "doneAt": "2026-07-23T13:36:46Z",
-      "cycle": 0
-    },
     {
       "face": 3,
       "note": "Versus HUD timer/rematch/spawn reset",
@@ -578,6 +570,13 @@
       "note": "hint pill not toast, help chips, missions inline",
       "version": "1.17.72",
       "doneAt": "2026-07-25T08:16:37Z",
+      "cycle": 4
+    },
+    {
+      "face": 12,
+      "note": "weapon preview rarity glow + dex epic+ aura",
+      "version": "1.18.29",
+      "doneAt": "2026-07-25T14:01:25Z",
       "cycle": 4
     }
   ],
@@ -1765,6 +1764,13 @@
       "category": "Onboarding \u2014 tips, eerste speelminuut, help",
       "rolledAt": "2026-07-25T08:15:02Z",
       "remainingCount": 10,
+      "cycle": 4
+    },
+    {
+      "face": 12,
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
+      "rolledAt": "2026-07-25T13:58:29Z",
+      "remainingCount": 6,
       "cycle": 4
     }
   ],
