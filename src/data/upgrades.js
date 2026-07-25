@@ -419,3 +419,34 @@ function totalItemUpgradeLevels() {
 function totalAllUpgradeLevels() {
   return totalSkillLevels() + totalItemUpgradeLevels();
 }
+
+function countSkillUpgradesReady() {
+  let n = 0;
+  for (const id of SKILL_IDS) if (skillCanUpgrade(id)) n++;
+  return n;
+}
+
+function countItemUpgradesReady(cat) {
+  let n = 0;
+  if (cat === 'weapon') {
+    for (const w of WEAPONS) {
+      if (weaponUpgradeEligible(w) && itemCanUpgrade('weapon', w.id)) n++;
+    }
+  } else if (cat === 'pet') {
+    for (const p of PET_ROSTER) {
+      if (petUpgradeEligible(p) && itemCanUpgrade('pet', p.id)) n++;
+    }
+  } else if (cat === 'style') {
+    for (const st of STYLES) {
+      if (styleUpgradeEligible(st) && itemCanUpgrade('style', st.id)) n++;
+    }
+  }
+  return n;
+}
+
+function countAllUpgradesReady() {
+  return countSkillUpgradesReady()
+    + countItemUpgradesReady('weapon')
+    + countItemUpgradesReady('pet')
+    + countItemUpgradesReady('style');
+}

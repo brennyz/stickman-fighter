@@ -242,13 +242,15 @@
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
 </div>
 
-<div id="skillScreen" class="screen">
+<div id="skillScreen" class="screen upgrade-screen">
   <button class="btn back-btn" data-back>&#8592; Terug</button>
   <h2 class="head" id="skillScreenHead">Upgrades</h2>
   <div class="subtitle" id="skillScreenSub">Shards in avontuur · skills, wapens, pets &amp; stijl</div>
-  <div id="upgradeTabBar" class="dex-filter-bar" style="margin-bottom:10px"></div>
-  <div id="skillSummary" class="statbar" style="display:none"></div>
-  <div id="skillList"></div>
+  <div id="upgradeTabBar" class="dex-filter-bar upgrade-tab-bar" role="tablist" aria-label="Upgrade categorieën"></div>
+  <div id="skillSummary" class="statbar upgrade-summary" style="display:none"></div>
+  <div id="upgradeListScroll" class="upgrade-list-scroll">
+    <div id="skillList" class="upgrade-list" role="tabpanel"></div>
+  </div>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
 </div>
 

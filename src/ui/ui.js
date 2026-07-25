@@ -33,12 +33,64 @@ function itemUpgradeCardParts(cat, id, color) {
   return {
     canUp, lv, max,
     html:
-      `<div class="cname" style="color:${color}">${itemUpgradeLabel(cat, id)} ` +
+      `<div class="skill-card-body"><div class="cname" style="color:${color}">${itemUpgradeLabel(cat, id)} ` +
       `<span class="rar-pill" style="color:${color};border-color:${color}">${t('ui.itemLevel', { lv, max })}</span></div>` +
       `<div class="cinfo">${shardLine}</div>` +
       `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:4px"><b>${t('ui.itemNow')}:</b> ${now}</div>` +
-      (next ? `<div class="cinfo" style="opacity:.75;font-size:11px;margin-top:3px"><b>${t('ui.itemNext')}:</b> ${next}</div>` : ''),
+      (next ? `<div class="cinfo" style="opacity:.75;font-size:11px;margin-top:3px"><b>${t('ui.itemNext')}:</b> ${next}</div>` : '') +
+      `</div>`,
   };
+}
+
+function drawUpgradeItemIcon(cat, id, cv) {
+  if (!cv) return;
+  const cc = cv.getContext('2d');
+  if (!cc) return;
+  cc.clearRect(0, 0, cv.width, cv.height);
+  if (cat === 'weapon') {
+    const w = WEAPONS.find((x) => x.id === id);
+    if (!w) return;
+    cc.translate(10, 40);
+    cc.rotate(-0.6);
+    if (w.id === 'vuist') {
+      cc.strokeStyle = '#f2f5ff'; cc.lineWidth = 5; cc.lineCap = 'round';
+      cc.beginPath(); cc.moveTo(2, 8); cc.lineTo(24, -6); cc.stroke();
+      cc.fillStyle = '#f2f5ff'; cc.beginPath(); cc.arc(28, -9, 7, 0, TAU); cc.fill();
+    } else {
+      drawWeaponShape(cc, w.id, 0.2);
+    }
+  } else if (cat === 'pet') {
+    const p = petDef(id);
+    const sp = p ? SPECIES[p.speciesId] : null;
+    if (!sp) return;
+    cc.translate(32, 38);
+    cc.scale(0.55, 0.55);
+    drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
+  } else if (cat === 'style') {
+    const st = styleById(id);
+    cc.translate(36, 58);
+    cc.scale(0.85, 0.85);
+    const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9 });
+    preview.animT = 0.4;
+    preview.draw(cc);
+  }
+}
+
+function buildUpgradeItemCard(cat, id, color, rerender) {
+  const card = itemUpgradeCardParts(cat, id, color);
+  const el = document.createElement('div');
+  el.className = 'card skill-card' + (card.canUp ? ' claimable' : '') + (card.lv >= card.max ? ' claimed' : '');
+  el.style.borderColor = color + '88';
+  const cv = document.createElement('canvas');
+  cv.width = 64;
+  cv.height = 64;
+  drawUpgradeItemIcon(cat, id, cv);
+  el.appendChild(cv);
+  const wrap = document.createElement('div');
+  wrap.innerHTML = card.html;
+  while (wrap.firstChild) el.appendChild(wrap.firstChild);
+  appendItemUpgradeButton(el, cat, id, rerender);
+  return el;
 }
 
 function pickVsRosterId(id) {
@@ -826,7 +878,10 @@ const UI = {
     } else if (this.modeHubId === 'collect') {
       setStat('hubStatWeapons', `${weaponUnlockedCount()}/${WEAPONS.length} vrij`);
       const skillLv = totalAllUpgradeLevels();
-      setStat('hubStatSkills', skillLv > 0 ? `Lv ${skillLv} totaal` : 'Shards in avontuur');
+      const ready = countAllUpgradesReady();
+      setStat('hubStatSkills', ready > 0
+        ? t('ui.upgradeReady', { n: ready })
+        : (skillLv > 0 ? `Lv ${skillLv} totaal` : 'Shards in avontuur'));
       const petsN = petTamedCount();
       const eggsN = eggOwnedCount();
       const pc = petCoinsBalance();
@@ -1495,8 +1550,15 @@ const UI = {
     }
   },
 
-  renderSkills() {
+  renderSkills(tab) {
+    if (tab) this.upgradeTab = tab;
     this.renderUpgrades();
+  },
+
+  openUpgrades(tab) {
+    this.upgradeTab = tab || 'skills';
+    this.renderUpgrades();
+    this.show('skillScreen');
   },
 
   renderUpgrades() {
@@ -1504,17 +1566,26 @@ const UI = {
     const head = document.getElementById('skillScreenHead');
     const sub = document.getElementById('skillScreenSub');
     if (head) head.textContent = t('ui.skillHead');
-    if (sub) sub.textContent = t('ui.skillSub');
+    const subKeys = {
+      skills: 'ui.upgradeSubSkills',
+      weapon: 'ui.upgradeSubWeapons',
+      pet: 'ui.upgradeSubPets',
+      style: 'ui.upgradeSubStyle',
+    };
+    if (sub) sub.textContent = t(subKeys[tab] || 'ui.skillSub');
     const bar = document.getElementById('upgradeTabBar');
     if (bar) {
       const tabs = [
-        { id: 'skills', label: t('ui.skillTabSkills') },
-        { id: 'weapon', label: t('ui.skillTabWeapons') },
-        { id: 'pet', label: t('ui.skillTabPets') },
-        { id: 'style', label: t('ui.skillTabStyle') },
+        { id: 'skills', label: t('ui.skillTabSkills'), ready: countSkillUpgradesReady() },
+        { id: 'weapon', label: t('ui.skillTabWeapons'), ready: countItemUpgradesReady('weapon') },
+        { id: 'pet', label: t('ui.skillTabPets'), ready: countItemUpgradesReady('pet') },
+        { id: 'style', label: t('ui.skillTabStyle'), ready: countItemUpgradesReady('style') },
       ];
       bar.innerHTML = tabs.map((tb) =>
-        `<button type="button" class="dex-filter-btn${tab === tb.id ? ' active' : ''}" data-upgrade-tab="${tb.id}">${tb.label}</button>`
+        `<button type="button" role="tab" aria-selected="${tab === tb.id ? 'true' : 'false'}" ` +
+        `class="dex-filter-btn${tab === tb.id ? ' active' : ''}" data-upgrade-tab="${tb.id}">${tb.label}` +
+        (tb.ready > 0 ? `<span class="upgrade-tab-badge">${tb.ready}</span>` : '') +
+        `</button>`
       ).join('');
       if (!bar.dataset.bound) {
         bar.dataset.bound = '1';
@@ -1531,11 +1602,14 @@ const UI = {
     if (sumEl) {
       const skillShards = save.stats?.skillShards || 0;
       const itemShards = save.stats?.itemShards || 0;
+      const ready = countAllUpgradesReady();
       sumEl.style.display = 'block';
       sumEl.innerHTML =
         `Totaal <b>${totalAllUpgradeLevels()}</b> upgrade-levels · ` +
         `<b>${skillShards}</b> skill · <b>${itemShards}</b> item shards` +
-        `<div style="font-size:11px;opacity:.72;margin-top:6px">Standaard max Lv ${UPGRADE_MAX_STANDARD} · mythische/extreme max Lv ${UPGRADE_MAX_EXTREME}</div>`;
+        (ready > 0 ? ` · <b style="color:#ffd75e">${t('ui.upgradeReady', { n: ready })}</b>` : '') +
+        `<div class="upgrade-shard-hint">${t('ui.upgradeShardHint')}</div>` +
+        `<div style="font-size:11px;opacity:.72;margin-top:4px">Standaard max Lv ${UPGRADE_MAX_STANDARD} · mythische/extreme max Lv ${UPGRADE_MAX_EXTREME}</div>`;
     }
     if (tab === 'skills') this.renderUpgradeSkills();
     else this.renderUpgradeItems(tab);
@@ -1570,12 +1644,15 @@ const UI = {
         const shardLine = cost != null
           ? t('ui.skillShards', { cur: shards, cost })
           : t('ui.skillMax');
+        const desc = skillDesc(id);
         el.innerHTML =
-          `<div class="cname" style="color:${def.color}">${name} ` +
+          `<div class="skill-card-body"><div class="cname" style="color:${def.color}">${name} ` +
           `<span class="rar-pill" style="color:${def.color};border-color:${def.color}">${t('ui.skillLevel', { lv, max: maxLv })}</span></div>` +
+          (desc ? `<div class="cinfo" style="opacity:.82;font-size:12px">${desc}</div>` : '') +
           `<div class="cinfo">${shardLine}</div>` +
           `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:4px"><b>${t('ui.skillNow')}:</b> ${now}</div>` +
-          (next ? `<div class="cinfo" style="opacity:.75;font-size:11px;margin-top:3px"><b>${t('ui.skillNext')}:</b> ${next}</div>` : '');
+          (next ? `<div class="cinfo" style="opacity:.75;font-size:11px;margin-top:3px"><b>${t('ui.skillNext')}:</b> ${next}</div>` : '') +
+          `</div>`;
         if (canUp) {
           const btn = document.createElement('button');
           btn.type = 'button';
@@ -1620,22 +1697,18 @@ const UI = {
     items.sort((a, b) => itemUpgradeLevel(cat, b.id) - itemUpgradeLevel(cat, a.id));
     if (!items.length) {
       const empty = document.createElement('div');
-      empty.className = 'step-card';
-      empty.style.width = 'min(92vw,480px)';
-      empty.textContent = cat === 'weapon'
-        ? 'Unlock eerst wapens via level.'
-        : (cat === 'pet' ? 'Tem eerst een pet via monsterboek of pet coins.' : 'Unlock eerst stijlen via level, training of dex.');
+      empty.className = 'step-card upgrade-empty';
+      const emptyKeys = {
+        weapon: 'ui.upgradeEmptyWeapons',
+        pet: 'ui.upgradeEmptyPets',
+        style: 'ui.upgradeEmptyStyle',
+      };
+      empty.textContent = t(emptyKeys[cat] || 'ui.skillSub');
       list.appendChild(empty);
       return;
     }
     for (const it of items) {
-      const card = itemUpgradeCardParts(cat, it.id, it.color);
-      const el = document.createElement('div');
-      el.className = 'card skill-card' + (card.canUp ? ' claimable' : '') + (card.lv >= card.max ? ' claimed' : '');
-      el.style.borderColor = it.color + '88';
-      el.innerHTML = card.html;
-      appendItemUpgradeButton(el, cat, it.id, () => this.renderUpgrades());
-      list.appendChild(el);
+      list.appendChild(buildUpgradeItemCard(cat, it.id, it.color, () => this.renderUpgrades()));
     }
   },
 

@@ -678,7 +678,24 @@
 
   .skill-group-head { width:min(92vw,480px); font-size:12px; font-weight:900; color:#ffd75e;
     letter-spacing:.06em; text-transform:uppercase; margin:14px 0 8px; }
-  .skill-card.claimable { border-color:rgba(255,215,94,.55) !important; }
+  .upgrade-screen.active { overflow:hidden; }
+  .upgrade-screen .upgrade-tab-bar { width:min(92vw,520px); margin:0 auto 10px; flex:0 0 auto; }
+  .upgrade-tab-badge { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px;
+    padding:0 5px; margin-left:6px; border-radius:999px; font-size:10px; font-weight:900; color:#2a1a00;
+    background:linear-gradient(180deg,#ffe259,#c97a20); vertical-align:middle; }
+  .dex-filter-btn.active .upgrade-tab-badge { box-shadow:0 0 0 1px rgba(255,255,255,.35); }
+  .upgrade-list-scroll { width:100%; flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden;
+    -webkit-overflow-scrolling:touch; padding:0 0 8px; display:flex; flex-direction:column; align-items:center; }
+  .upgrade-list { width:100%; display:flex; flex-direction:column; align-items:center; padding-bottom:12px; }
+  .skill-card { flex-wrap:wrap; align-items:flex-start; }
+  .skill-card .skill-card-body { flex:1 1 180px; min-width:0; }
+  .skill-card.claimable { border-color:rgba(255,215,94,.55) !important; background:rgba(255,215,94,.06); }
+  .skill-card.claimed { opacity:.88; }
+  .skill-card .claim-btn { width:100%; margin-top:10px; justify-content:center; flex:1 1 100%;
+    background:linear-gradient(180deg,#ffe259,#c97a20); color:#2a1a00; min-height:46px; font-size:16px; font-weight:900; }
+  .skill-card .upgrade-empty { width:min(92vw,480px); text-align:center; opacity:.88; line-height:1.45; }
+  .upgrade-shard-hint { width:min(92vw,480px); font-size:11px; opacity:.72; text-align:center; margin:-4px 0 10px; line-height:1.4; }
+  body.reduced-motion .skill-card.claimable { box-shadow:none; }
   .mission-card.claimable { border-color: rgba(255,215,94,.55); background: rgba(255,215,94,.1);
       box-shadow: 0 0 0 1px rgba(255,215,94,.2); }
   .mission-card.claimed { opacity: .78; }

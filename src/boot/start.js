@@ -147,7 +147,7 @@ bindPress(document.getElementById('btnWeapons'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderWeapons(); UI.show('weaponScreen');
 });
 bindPress(document.getElementById('btnSkills'), () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.renderSkills(); UI.show('skillScreen');
+  AudioSys.init(); AudioSys.sfx('select'); UI.openUpgrades('skills');
 });
 bindPress(document.getElementById('btnPets'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderPets(); UI.show('petScreen');
