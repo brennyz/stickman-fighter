@@ -1310,12 +1310,19 @@ function forcePlayCanvasVisible(where) {
   clearScreensForPlay();
   applyPlayLayerStyles(true);
   const canvas = document.getElementById('game');
-  if (canvas) {
-    canvas.style.setProperty('visibility', 'visible', 'important');
-    canvas.style.setProperty('opacity', '1', 'important');
-    canvas.style.setProperty('z-index', '40', 'important');
-    canvas.style.setProperty('display', 'block', 'important');
-    canvas.style.setProperty('pointer-events', 'auto', 'important');
+  if (canvas && canvas.style) {
+    const st = canvas.style;
+    const setImp = (prop, val) => {
+      try {
+        if (typeof st.setProperty === 'function') st.setProperty(prop, val, 'important');
+        else st[prop.replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = val;
+      } catch (_) {}
+    };
+    setImp('visibility', 'visible');
+    setImp('opacity', '1');
+    setImp('z-index', '40');
+    setImp('display', 'block');
+    setImp('pointer-events', 'auto');
   }
   document.body.classList.add('is-playing');
   const pb = document.getElementById('pauseBtn');

@@ -3344,28 +3344,43 @@ function applyPlayLayerStyles(canvasHits) {
   const el = document.getElementById('game');
   if (!el) return;
   if (canvasHits) clearScreensForPlay();
+  const st = el.style;
+  const setImp = (prop, val) => {
+    try {
+      if (typeof st.setProperty === 'function') st.setProperty(prop, val, 'important');
+      else st[prop.replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = val;
+    } catch (_) {
+      try { st[prop] = val; } catch (__) {}
+    }
+  };
+  const clearImp = (prop, camel) => {
+    try {
+      if (typeof st.removeProperty === 'function') st.removeProperty(prop);
+      else if (camel) st[camel] = '';
+    } catch (_) {}
+  };
   if (canvasHits) {
     // Important: overschrijf eerdere inline hides (race met gok-flash / guard)
-    el.style.setProperty('pointer-events', 'auto', 'important');
-    el.style.setProperty('visibility', 'visible', 'important');
-    el.style.setProperty('opacity', '1', 'important');
-    el.style.setProperty('z-index', '40', 'important');
-    el.style.setProperty('display', 'block', 'important');
-    el.style.touchAction = 'none';
+    setImp('pointer-events', 'auto');
+    setImp('visibility', 'visible');
+    setImp('opacity', '1');
+    setImp('z-index', '40');
+    setImp('display', 'block');
+    st.touchAction = 'none';
     document.body.classList.add('is-playing');
     document.body.style.overflow = 'hidden';
   } else {
-    el.style.removeProperty('pointer-events');
-    el.style.removeProperty('visibility');
-    el.style.removeProperty('opacity');
-    el.style.removeProperty('z-index');
-    el.style.removeProperty('display');
-    el.style.pointerEvents = 'none';
-    el.style.visibility = 'hidden';
-    el.style.opacity = '';
-    el.style.zIndex = '';
-    el.style.display = '';
-    el.style.touchAction = 'manipulation';
+    clearImp('pointer-events', 'pointerEvents');
+    clearImp('visibility', 'visibility');
+    clearImp('opacity', 'opacity');
+    clearImp('z-index', 'zIndex');
+    clearImp('display', 'display');
+    st.pointerEvents = 'none';
+    st.visibility = 'hidden';
+    st.opacity = '';
+    st.zIndex = '';
+    st.display = '';
+    st.touchAction = 'manipulation';
     document.body.classList.remove('is-playing');
     document.body.style.overflow = '';
   }
@@ -3404,12 +3419,19 @@ function forcePlayCanvasVisible(where) {
   clearScreensForPlay();
   applyPlayLayerStyles(true);
   const canvas = document.getElementById('game');
-  if (canvas) {
-    canvas.style.setProperty('visibility', 'visible', 'important');
-    canvas.style.setProperty('opacity', '1', 'important');
-    canvas.style.setProperty('z-index', '40', 'important');
-    canvas.style.setProperty('display', 'block', 'important');
-    canvas.style.setProperty('pointer-events', 'auto', 'important');
+  if (canvas && canvas.style) {
+    const st = canvas.style;
+    const setImp = (prop, val) => {
+      try {
+        if (typeof st.setProperty === 'function') st.setProperty(prop, val, 'important');
+        else st[prop.replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = val;
+      } catch (_) {}
+    };
+    setImp('visibility', 'visible');
+    setImp('opacity', '1');
+    setImp('z-index', '40');
+    setImp('display', 'block');
+    setImp('pointer-events', 'auto');
   }
   document.body.classList.add('is-playing');
   const pb = document.getElementById('pauseBtn');
