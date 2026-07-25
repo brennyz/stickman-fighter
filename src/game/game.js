@@ -123,6 +123,7 @@ class Game {
 
   /* --------------------------- AVONTUUR ------------------------------- */
   initAdventure(n, gamble) {
+    try { Input.dualMode = false; } catch (_) {}
     this.level = buildLevel(n);
     this.theme = this.level.theme;
     this.waveIdx = -1;
@@ -2157,6 +2158,10 @@ class Game {
   }
 
   update(dt) {
+    // Solo-modes: nooit 2P-pads (primePlayInput(mode-string) was een regressie)
+    if (this.mode !== 'versus' && typeof Input !== 'undefined' && Input.dualMode) {
+      try { Input.dualMode = false; Input.layout(W, H); } catch (_) {}
+    }
     if (this.playerHurtCd > 0) this.playerHurtCd -= dt;
     if (this.ketsbamChargeT > 0) {
       if (this.over || !this.player?.alive) {
@@ -2187,7 +2192,17 @@ class Game {
             this.burst(px, this.player.y + 2, cCol2, 2, { kind: 'ring' });
           }
         }
-        if (this.ketsbamChargeT <= 0) this.player.finishKetsbam(this);
+        if (this.ketsbamChargeT <= 0) {
+          try {
+            this.player.finishKetsbam(this);
+          } catch (ketsErr) {
+            // Charge klaar → finish mag nooit update laten crashen → startscherm
+            try { sfReportError('ketsbam/finish', ketsErr); } catch (_) {}
+            this.ketsbamChargeT = 0;
+            this.inputLocked = false;
+            this.ketsbamShow = false;
+          }
+        }
         return;
       }
     }

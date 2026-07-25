@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.60';
+const APP_VERSION = '1.18.61';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 270;
+const SW_CACHE_REV = 271;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -12569,10 +12569,12 @@ function relayoutTouchPads() {
   } catch (_) {}
 }
 
-/** Reset touch pads before versus / after pause — voorkomt spook-vingers. */
+/** Reset touch pads before versus / after pause — voorkomt spook-vingers.
+ *  `dual` must be boolean true — NEVER pass mode string ('adventure' is truthy!). */
 function primePlayInput(dual) {
   Input.releaseAll();
-  Input.dualMode = !!dual;
+  // Strict: alleen echte `true` → 2P. Mode-strings als 'adventure'/'training' mogen NOOIT dual aan.
+  Input.dualMode = dual === true;
   // Kort suppress-venster: menu-tap ghost mag niet meteen Input.onDown raken.
   // playInputSuppressed MOET bestaan — anders ReferenceError → window error → recoverToMenu.
   Input.suppressUntil = performance.now() + (IS_TOUCH ? 400 : 140);
@@ -14485,7 +14487,11 @@ class Fighter {
     game.ketsbamChargeT = 0;
     game.inputLocked = false;
     game.ketsbamSuperT = Math.max(game.ketsbamSuperT, KETSBAM_SUPER_ARMOR);
-    finishEquippedSuper(this, game);
+    try {
+      finishEquippedSuper(this, game);
+    } catch (err) {
+      try { sfReportError('finishEquippedSuper', err); } catch (_) {}
+    }
   }
 
   intent(dt, game) {
@@ -18993,6 +18999,7 @@ class Game {
 
   /* --------------------------- AVONTUUR ------------------------------- */
   initAdventure(n, gamble) {
+    try { Input.dualMode = false; } catch (_) {}
     this.level = buildLevel(n);
     this.theme = this.level.theme;
     this.waveIdx = -1;
@@ -21027,6 +21034,10 @@ class Game {
   }
 
   update(dt) {
+    // Solo-modes: nooit 2P-pads (primePlayInput(mode-string) was een regressie)
+    if (this.mode !== 'versus' && typeof Input !== 'undefined' && Input.dualMode) {
+      try { Input.dualMode = false; Input.layout(W, H); } catch (_) {}
+    }
     if (this.playerHurtCd > 0) this.playerHurtCd -= dt;
     if (this.ketsbamChargeT > 0) {
       if (this.over || !this.player?.alive) {
@@ -21057,7 +21068,17 @@ class Game {
             this.burst(px, this.player.y + 2, cCol2, 2, { kind: 'ring' });
           }
         }
-        if (this.ketsbamChargeT <= 0) this.player.finishKetsbam(this);
+        if (this.ketsbamChargeT <= 0) {
+          try {
+            this.player.finishKetsbam(this);
+          } catch (ketsErr) {
+            // Charge klaar → finish mag nooit update laten crashen → startscherm
+            try { sfReportError('ketsbam/finish', ketsErr); } catch (_) {}
+            this.ketsbamChargeT = 0;
+            this.inputLocked = false;
+            this.ketsbamShow = false;
+          }
+        }
         return;
       }
     }
@@ -27200,7 +27221,11 @@ function startGame(mode, opts) {
     return;
   }
   state = 'play';
-  primePlayInput(mode);
+  // Alleen versus = dual pads. Mode-string is truthy → was per ongeluk 2P in adventure.
+  primePlayInput(mode === 'versus');
+  if (mode !== 'versus') {
+    try { Input.dualMode = false; } catch (_) {}
+  }
   try {
     if (typeof forceGameResize === 'function') forceGameResize();
     else scheduleResize();
