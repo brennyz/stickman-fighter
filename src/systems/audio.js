@@ -846,13 +846,6 @@ const AudioSys = {
     this.applyVolumes();
   },
 
-  previewMusicVol() {
-    if (!this.ctx || !save.music) return;
-    const mv = clamp(Number(save.musicVol) || 0.85, 0, 1);
-    if (mv <= 0.01) return;
-    this.tone(392, 523, 0.07, 'sine', 0.05 * mv, this.musicGain);
-  },
-
   currentSongId() {
     return (this.song && this.song.id) || this.desiredSong || '';
   },

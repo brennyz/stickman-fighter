@@ -241,9 +241,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.4';
+const APP_VERSION = '1.18.5';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 214;
+const SW_CACHE_REV = 215;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -11161,13 +11161,6 @@ const AudioSys = {
   setSfxOn(on) {
     save.sfx = !!on; persist();
     this.applyVolumes();
-  },
-
-  previewMusicVol() {
-    if (!this.ctx || !save.music) return;
-    const mv = clamp(Number(save.musicVol) || 0.85, 0, 1);
-    if (mv <= 0.01) return;
-    this.tone(392, 523, 0.07, 'sine', 0.05 * mv, this.musicGain);
   },
 
   currentSongId() {
@@ -22983,6 +22976,18 @@ const UI = {
     }
     const a11yEl = document.getElementById('a11yStatusLine');
     if (a11yEl) a11yEl.textContent = a11yStatusText();
+  },
+
+  renderPausePerfStrip() {
+    const el = document.getElementById('pausePerfStrip');
+    if (!el) return;
+    if (!game || state !== 'pause') {
+      el.style.display = 'none';
+      el.textContent = '';
+      return;
+    }
+    el.textContent = formatPerfStripLine();
+    el.style.display = 'block';
   },
 
   renderPauseToggles() {

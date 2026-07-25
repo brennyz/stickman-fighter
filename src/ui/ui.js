@@ -3101,6 +3101,18 @@ const UI = {
     if (a11yEl) a11yEl.textContent = a11yStatusText();
   },
 
+  renderPausePerfStrip() {
+    const el = document.getElementById('pausePerfStrip');
+    if (!el) return;
+    if (!game || state !== 'pause') {
+      el.style.display = 'none';
+      el.textContent = '';
+      return;
+    }
+    el.textContent = formatPerfStripLine();
+    el.style.display = 'block';
+  },
+
   renderPauseToggles() {
     const togM = document.getElementById('pauseTogMusic');
     const togS = document.getElementById('pauseTogSfx');
