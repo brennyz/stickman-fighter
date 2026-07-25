@@ -233,13 +233,38 @@
   .hub-tile-ico { width: 1.85em; height: 1.85em; display: flex; align-items: center; justify-content: center;
     border-radius: 9px; background: rgba(0,0,0,.2); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
   .hub-tile-ico svg { width: 1.15em; height: 1.15em; }
+  .hub-tile-ico img {
+    display: block; width: 40px; height: 40px; pointer-events: none;
+    image-rendering: pixelated; image-rendering: crisp-edges;
+  }
   .hub-tile-title { font-weight: 800; font-size: min(4vw, 16px); line-height: 1.1; }
   .hub-tile-sub { font-size: 10px; font-weight: 600; opacity: .72; line-height: 1.3; }
   .hub-tile-stat {
     margin-top: auto; font-size: 9px; font-weight: 800; letter-spacing: .04em;
     padding: 2px 7px; border-radius: 999px; background: rgba(0,0,0,.22); color: #cfe0ff;
   }
-  .hub-tile-adventure { border-color: rgba(78,207,106,.22); }
+  /* Adventure hub — pixel countryside art (ASSET-STYLE / COUNTRY_PAL) */
+  .hub-tile-adventure {
+    border: 2px solid rgba(78,207,106,.38);
+    background:
+      linear-gradient(135deg, rgba(184,154,92,.16), transparent 46%),
+      rgba(255,255,255,.04);
+    box-shadow:
+      0 3px 0 rgba(0,0,0,.26),
+      inset 0 0 0 1px rgba(184,154,92,.14),
+      inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  .hub-tile-adventure .hub-tile-ico {
+    width: 40px; height: 40px; padding: 0; overflow: hidden;
+    border-radius: 8px; background: #2a3430;
+    box-shadow: inset 0 0 0 1px rgba(184,154,92,.28), 0 1px 0 rgba(0,0,0,.35);
+  }
+  .hub-tile-adventure .hub-tile-ico img { width: 40px; height: 40px; }
+  .hub-tile-adventure .hub-tile-stat {
+    background: rgba(36,52,40,.55);
+    color: #d8ecc8;
+    box-shadow: inset 0 0 0 1px rgba(122,207,106,.28);
+  }
   .hub-tile-arcade { border-color: rgba(90,140,255,.22); }
   .hub-tile-versus { border-color: rgba(255,90,138,.22); }
   /* d20 polish #15 — Collectie hub tegel borders (pixel corners + tint) */

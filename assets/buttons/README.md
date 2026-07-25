@@ -12,10 +12,12 @@
 
 ## Regels
 
-- Alleen **SVG**, `viewBox="0 0 24 24"`, stroke-first, geen emoji.
+- **Hub:** pixel-fill SVG, `viewBox="0 0 48 48"`, `COUNTRY_PAL` / scène-idee per tegel (`ASSET-STYLE.md`).
+- **Chrome / dock:** stroke-first, `viewBox="0 0 24 24"`, geen emoji.
 - Bestandsnaam = rol (`adventure.svg`), overschrijven bij update.
-- Wire-in: vervang inline SVG in `index.html` (zie ASSET-STYLE inventaris).
+- Wire-in: vervang inline SVG in `index.html`; CSS `image-rendering: pixelated`.
 
 ## Status
 
-Leeg tot de eerste asset-batch. Agent vult bestanden zodra de user vraagt om knoppen te maken.
+- `hub/adventure.svg` — pixel countryside (eerste ship-test)
+- Overige hub/modes/chrome — nog inline tot batch gevraagd

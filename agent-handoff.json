@@ -13,21 +13,21 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.35",
-    "swCache": "stickfighter-app-v245",
-    "gameJsQuery": "game.js?v=245",
-    "featureBranch": "cursor/debug-black-screen-2125",
+    "appVersion": "1.18.36",
+    "swCache": "stickfighter-app-v246",
+    "gameJsQuery": "game.js?v=246",
+    "featureBranch": "cursor/asset-adventure-svg-2125",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "debug black screen: ?sfdebug=1 + __sf.debug + adventure start harden · v1.18.35"
+    "note": "ASSET-STYLE pixel countryside + hub adventure.svg smoke · v1.18.36"
   },
   "userWishlist": [
     {
       "id": "w-20260725T141500",
       "from": "user",
-      "text": "ASSET-STYLE.md leidend voor knoppen/beelden: agent leest doc → SVG in assets/buttons → vervangt inline iconen. Eerste batch later: hub of modes.",
+      "text": "ASSET-STYLE.md leidend voor knoppen/beelden (pixel countryside / COUNTRY_PAL). Eerste test: hub adventure.svg. Rest hub/modes later.",
       "status": "active",
       "updated": "2026-07-25"
     },
@@ -69,6 +69,10 @@
     "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md."
   ],
   "sessionLog": [
+    {
+      "at": "2026-07-25T14:30:00Z",
+      "summary": "ASSET-STYLE pixel countryside + hub adventure.svg smoke · v1.18.36 / SW v246"
+    },
     {
       "at": "2026-07-25T14:16:00Z",
       "summary": "ASSET-STYLE.md + assets/buttons folders — leidend knop/beeld polish doc"

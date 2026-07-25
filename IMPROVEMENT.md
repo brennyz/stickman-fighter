@@ -127,6 +127,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-24 | **7** | Save (cyclus 4): schema v3 meta pets/ei/stijl; readSaveJson pets+egg merge; sync backup knop; export download; drift pets/ei; import repair-toast; stale-save hint — SAVE_KEY vast. v1.17.49 / SW v175. |
 | 2026-07-24 | **7** | Save (cyclus 3): sanitize-reparatie hints (boot + import), export meta summary, live import-preview, drift-detail bij backup, stijl-unlock check op dex-prestaties — SAVE_KEY vast. v1.17.10 / SW v137. |
 | 2026-07-24 | **12** | Content (cyclus 3): monsterboek type-filter + sort (boek/rariteit/unlock/kills), rariteit-tellers, volgende-dex-prestatie tracker, Top jager badge; wapens verzamel-strip. v1.17.9 / SW v136. |
+| 2026-07-25 | — | **Assets:** ASSET-STYLE → pixel countryside (`COUNTRY_PAL`); hub `adventure.svg` wired + tile polish. v1.18.36 / SW v246. |
 | 2026-07-25 | — | **Debug zwart/blauw scherm:** `DEBUG-BLACK-SCREEN.md` + `?sfdebug=1` overlay + `__sf.debug()` / `{fix:true}`; harden adventure start (hide roll-flash, force is-playing). v1.18.35 / SW v245. |
 | 2026-07-25 | — | **User: ASSET-STYLE.md.** Leidend doc voor één knop/beeld-stijl + `assets/buttons/{hub,modes,chrome}/`. Workflow: lees doc → SVG → vervang inline iconen. Nog geen massale knop-batch. |
 | 2026-07-25 | **13** | Missies (cyclus 4): claim-pad copy naar dagbonus, claim-call strip, almost-tag ≥75%, claim/bonus pulse, streak in dagbonus-toast — geen grind×. v1.18.34 / SW v244. |
