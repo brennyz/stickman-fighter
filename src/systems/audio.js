@@ -737,6 +737,18 @@ const AudioSys = {
         T(880, 180, 0.38, 'sawtooth', 0.2, now + 0.72);
         N(0.22, 0.26, 650, true, now + 0.88);
         break;
+      case 'tideBattleIntro':
+        T(220, 48, 0.38, 'sine', 0.3, now);
+        N(0.28, 0.22, 180, false, now);
+        T(110, 52, 0.22, 'triangle', 0.24, now + 0.06);
+        [220, 262, 311, 370, 440, 523, 659].forEach((f, i) => E(f, f * 1.05, 0.095, 'triangle', 0.13, now + 0.14 + i * 0.068, 0.058, 0.45));
+        T(880, 165, 0.32, 'sawtooth', 0.2, now + 0.58);
+        if (!lite) {
+          [784, 988, 1175, 1319].forEach((f, i) => T(f, f * 0.998, 0.075, 'sine', 0.1, now + 0.68 + i * 0.048));
+          T(55, 28, 0.34, 'square', 0.24, now + 0.82);
+          N(0.2, 0.26, 420, true, now + 0.88);
+        }
+        break;
       case 'masterSword':
         [523, 659, 784, 988, 1175, 1568].forEach((f, i) => E(f, f * 1.02, 0.09, 'sine', 0.12, now + i * 0.048, 0.055, 0.4));
         T(880, 1760, 0.28, 'triangle', 0.14, now + 0.12);
@@ -814,10 +826,10 @@ const AudioSys = {
       this.tone(midi(L), midi(L) * 0.995, spb * 1.6, 'square', lv, mg, t);
       if (!lite && i % 2 === 0) this.tone(midi(L + 7), midi(L + 7) * 0.998, spb * 1.1, 'triangle', 0.05 + heat * 0.03, mg, t + spb * 0.12);
     }
-    if ((s.id === 'battle' || s.id === 'elite' || s.id === 'boss') && heat > 0.35 && !lite && i === 8 && bar % 2 === 0) {
+    if ((s.id === 'battle' || s.id === 'elite' || s.id === 'boss' || s.id === 'tideBattle') && heat > 0.35 && !lite && i === 8 && bar % 2 === 0) {
       this.tone(midi(84), midi(79), spb * 0.9, 'square', 0.04 + heat * 0.04, mg, t);
     }
-    if (s.id === 'battle' || s.id === 'elite' || s.id === 'boss') {
+    if (s.id === 'battle' || s.id === 'elite' || s.id === 'boss' || s.id === 'tideBattle') {
       if (i === 0 && bar % 4 === 0 && !lite) {
         this.tone(midi(60), midi(60), spb * 3.6, 'sine', 0.05, mg, t);
         this.tone(midi(64), midi(64), spb * 3.4, 'triangle', 0.04, mg, t);
@@ -829,6 +841,18 @@ const AudioSys = {
       if (i === 15 && bar % 8 === 7 && !lite) {
         this.noise(0.08, 0.17, 7800, true, mg, t);
         this.tone(midi(84), midi(67), spb * 0.75, 'square', 0.08, mg, t);
+      }
+    }
+    if (s.id === 'tideBattle' && !lite) {
+      if ([2, 6, 10, 14].includes(i)) {
+        this.tone(midi([67, 71, 74, 79][i / 4 | 0]), midi([67, 71, 74, 79][i / 4 | 0]), spb * 0.55, 'triangle', 0.06, mg, t);
+      }
+      if (i === 4 && bar % 2 === 0) {
+        this.tone(midi(48), midi(44), spb * 2.2, 'sine', 0.09, mg, t);
+      }
+      if (i === 0 && bar % 8 === 4) {
+        this.noise(0.06, 0.14, 5200, true, mg, t);
+        this.tone(midi(91), midi(84), spb * 0.85, 'square', 0.07, mg, t);
       }
     }
     const menuIds = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero', 'menuDream'];
@@ -988,6 +1012,18 @@ const SONGS = {
     lead: [
       [74,null,75,74, null,70,74,null, 77,null,75,74, null,72,70,null],
       [74,null,77,79, null,77,75,null, 74,null,72,70, 69,null,70,null],
+    ],
+  },
+  /** Tide Battle — epische oceaangolf / summon-clash (eigen track) */
+  tideBattle: {
+    bpm: 164,
+    kick: [0, 4, 7, 8, 12, 14], snare: [4, 12], hat: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+    bass: [36,36,null,34, 36,36,null,31, 33,null,36,null, 34,null,31,null],
+    lead: [
+      [67,null,71,74, null,71,67,null, 74,null,77,79, null,77,74,null],
+      [79,null,77,74, null,71,74,null, 79,null,83,86, null,83,79,null],
+      [74,null,77,81, null,79,77,null, 74,null,71,67, null,71,74,null],
+      [86,null,83,79, null,77,74,null, 71,null,74,77, null,79,83,null],
     ],
   },
   /** Training vs RabbitRobot — strak, metallig, minder zwaar dan baas */

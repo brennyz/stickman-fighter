@@ -114,6 +114,7 @@ class Game {
     this.tideBattleActive = false;
     this.tideBattleBossId = null;
     this.tideBattleMon = null;
+    this.tideBattlePrevSong = null;
     applyGambleToStage(this, gamble);
     this.banner(t('banner.levelStart', { n }), 1.4, '#ffd75e', 54);
     if (masterBuffActive(n)) {
@@ -421,6 +422,7 @@ class Game {
     this.tideBattleActive = false;
     this.tideBattleBossId = null;
     this.tideBattleMon = null;
+    restoreTideBattleMusic(this);
     this.deactivateMasterSword(true);
     this.over = true;
     this.inputLocked = true;
@@ -610,10 +612,10 @@ class Game {
   finishTideBattle(won, m) {
     if (!this.tideBattleActive) return;
     const sp = m && m.sp ? m.sp : (SPECIES[this.tideBattleBossId] || null);
-    const name = sp ? sp.name : 'Tide';
     this.tideBattleActive = false;
     this.tideBattleBossId = null;
     this.tideBattleMon = null;
+    restoreTideBattleMusic(this);
     if (!won) return;
     const xp = tideBattleRewardXp(this);
     const coins = tideBattleRewardCoins();
