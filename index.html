@@ -256,6 +256,7 @@
   <h2 class="head" id="skillScreenHead">Skills</h2>
   <div class="subtitle" id="skillScreenSub">Chakra-specials — level unlocks · avontuur/training/muur/mats</div>
   <div id="skillSummary" class="statbar" style="display:none"></div>
+  <div id="skillNextUnlock" class="statbar skill-next-strip" style="display:none"></div>
   <div class="char-saga-bar" id="skillSagaBar" role="tablist" aria-label="Saga filter">
     <button type="button" data-saga="all" class="active">Alle</button>
     <button type="button" data-saga="scroll">Scroll</button>
@@ -265,7 +266,21 @@
     <button type="button" data-saga="cape">Cape</button>
     <button type="button" data-saga="dawn">Dawn</button>
   </div>
-  <div class="style-grid" id="skillGrid"></div>
+  <div id="skillSagaBlurb" class="subtitle skill-saga-blurb" style="margin-top:0;margin-bottom:8px"></div>
+  <div class="dex-filter-bar" id="skillBehaviorBar" role="tablist" aria-label="Type filter">
+    <button type="button" data-behavior="all" class="dex-filter-btn active">Alle types</button>
+    <button type="button" data-behavior="orb" class="dex-filter-btn">Orb</button>
+    <button type="button" data-behavior="dash" class="dex-filter-btn">Dash</button>
+    <button type="button" data-behavior="beam" class="dex-filter-btn">Beam</button>
+    <button type="button" data-behavior="disc" class="dex-filter-btn">Disc</button>
+    <button type="button" data-behavior="pull" class="dex-filter-btn">Pull</button>
+    <button type="button" data-behavior="meteor" class="dex-filter-btn">Meteor</button>
+  </div>
+  <button type="button" class="btn tog big-touch" id="btnSkillSort" style="margin:0 auto 10px;display:block;font-size:12px;min-height:40px;padding:8px 16px">Sort: level</button>
+  <div class="step-card skill-preview-card" id="skillPreview"></div>
+  <div class="skill-grid-scroll" id="skillGridScroll" data-scroll-reset>
+    <div class="style-grid skill-grid" id="skillGrid"></div>
+  </div>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
 </div>
 
@@ -475,7 +490,7 @@
 </script>
 
 <script src="tunnel-check.js?v=204"></script>
-<script src="game.js?v=204"></script>
+<script src="game.js?v=205"></script>
 
 
 

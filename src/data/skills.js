@@ -190,3 +190,71 @@ function skillHudColor(sk) {
 function skillCombatLine(sk) {
   return sk.bonus || sk.hint || '';
 }
+
+const SKILL_BEHAVIORS = ['orb', 'dash', 'beam', 'disc', 'pull', 'meteor'];
+const SKILL_SAGA_ORDER = ['scroll', 'ki', 'tide', 'fighter', 'cape', 'dawn'];
+
+function skillsForFilters(saga, behavior) {
+  let list = SKILLS.slice();
+  if (saga && saga !== 'all') list = list.filter(s => s.saga === saga);
+  if (behavior && behavior !== 'all') list = list.filter(s => s.behavior === behavior);
+  return list;
+}
+
+function skillSagaCounts(saga) {
+  const list = saga === 'all' ? SKILLS : SKILLS.filter(s => s.saga === saga);
+  return { unlocked: list.filter(skillUnlocked).length, total: list.length };
+}
+
+function skillNextUnlock() {
+  const pending = SKILLS.filter(s => !skillUnlocked(s))
+    .sort((a, b) => (a.needLvl || 999) - (b.needLvl || 999));
+  return pending[0] || null;
+}
+
+function sortSkills(list, mode) {
+  const arr = list.slice();
+  if (mode === 'dmg') arr.sort((a, b) => (b.dmgMul || 0) - (a.dmgMul || 0) || (a.needLvl || 0) - (b.needLvl || 0));
+  else if (mode === 'name') arr.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  else arr.sort((a, b) => (a.needLvl || 0) - (b.needLvl || 0) || String(a.name).localeCompare(String(b.name)));
+  return arr;
+}
+
+function skillBehaviorLabelI18n(sk) {
+  const beh = sk && sk.behavior ? sk.behavior : 'orb';
+  const k = 'skill.behavior.' + beh;
+  const v = typeof t === 'function' ? t(k) : '';
+  if (v && v !== k) return v;
+  return skillBehaviorLabel(sk);
+}
+
+function skillSagaBlurb(saga) {
+  if (!saga || saga === 'all') return typeof t === 'function' ? t('ui.skillBlurbAll') : '';
+  const k = 'skill.saga.' + saga + '.blurb';
+  const v = typeof t === 'function' ? t(k) : '';
+  if (v && v !== k) return v;
+  const meta = typeof vsSagaMeta === 'function' ? vsSagaMeta(saga) : null;
+  return meta ? meta.blurb : '';
+}
+
+function skillStatRows(sk) {
+  if (!sk) return [];
+  const maxDmg = 3.6;
+  const maxSpd = 720;
+  const maxKb = 720;
+  const maxWind = 0.75;
+  return [
+    { key: 'dmg', pct: clamp((sk.dmgMul || 2) / maxDmg, 0.08, 1), text: '×' + (sk.dmgMul || 2).toFixed(2) },
+    { key: 'wind', pct: clamp(1 - (sk.windup || 0.5) / maxWind, 0.08, 1), text: ((sk.windup || 0) * 1000 | 0) + 'ms' },
+    { key: 'spd', pct: clamp((sk.speed || 400) / maxSpd, 0.08, 1), text: String(sk.speed || 0) },
+    { key: 'kb', pct: clamp((sk.kb || 480) / maxKb, 0.08, 1), text: String(sk.kb || 0) },
+  ];
+}
+
+function skillTags(sk) {
+  if (!sk) return [];
+  const tags = [skillBehaviorLabelI18n(sk)];
+  if (sk.pierce) tags.push(typeof t === 'function' ? t('skill.tag.pierce') : 'Pierce');
+  if (sk.pull) tags.push(typeof t === 'function' ? t('skill.tag.pull') : 'Pull');
+  return tags;
+}

@@ -308,7 +308,19 @@ function seedNlGameStrings() {
     skillSummarySub: 'Kies je chakra-special voor avontuur & solo-modi. Versus gebruikt roster-specials.',
     skillActive: 'Actief',
     skillPick: 'Tik om uit te rusten',
+    skillEquipBtn: 'Uitrusten',
     skillIslandGate: 'Eiland-skill Lv {lvl}',
+    skillNeedLvl: 'Unlock op Lv {lvl}',
+    skillGateLine: 'eiland-gate Lv {cap}',
+    skillBlurbAll: '24 chakra-specials — filter op saga of type · preview + stats',
+    skillEmptyFilter: 'Geen skills in deze filter — wijzig saga of type',
+    skillNextUnlock: 'Volgende unlock: <b>{name}</b> op Lv {lvl} · nog {need} level(s)',
+    skillNextUnlockSoon: 'Volgende: <b>{name}</b> (Lv {lvl}) — bijna klaar',
+    skillNextIsland: 'Volgende: <b>{name}</b> — eiland-gate tot Lv {cap} in avontuur',
+    skillBehAll: 'Alle types',
+    skillSort_level: 'Sort: level',
+    skillSort_dmg: 'Sort: schade',
+    skillSort_name: 'Sort: naam',
     weaponHead: 'Wapens',
     weaponSub: 'Summons zijn echt · eiland-skill gate: alleen wapens tot je huidige eiland-cap in avontuur',
     helpFirstMinute: 'Eerste minuut — per modus één korte hint bovenin het gevecht (geen toast-stapel). Avontuur: joystick + knoppen · groen = HP · vol chakra = SUPER-knop. Training = Robot · Muur = combo · 2 spelers = links/rechts.',
@@ -397,6 +409,23 @@ function seedNlFromRuntime() {
   if (typeof STYLES !== 'undefined') {
     if (!I18N.nl.style) I18N.nl.style = {};
     for (const s of STYLES) I18N.nl.style[s.id] = { name: s.name, hint: s.hint, tooltip: s.tooltip, bonus: s.bonus };
+  }
+  if (typeof SKILLS !== 'undefined') {
+    if (!I18N.nl.skill) I18N.nl.skill = {};
+    for (const s of SKILLS) I18N.nl.skill[s.id] = { name: s.name, hint: s.hint, tooltip: s.tooltip, bonus: s.bonus };
+    Object.assign(I18N.nl.skill, {
+      behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor' },
+      stat: { dmg: 'Schade', wind: 'Windup', spd: 'Snelheid', kb: 'Knockback' },
+      tag: { pierce: 'Pierce', pull: 'Pull' },
+      saga: {
+        scroll: { blurb: 'Ninja-scroll — Rasengan, Chidori, Rinnegan & gravity specials.' },
+        ki: { blurb: 'Ki-golven — Kamehameha, discs, Spirit Bomb & blitz dashes.' },
+        tide: { blurb: 'Tide-straal — Getsuga, Cero & Bankai flash.' },
+        fighter: { blurb: 'Street stretch — Gum-Gum dash & Gear Second steam.' },
+        cape: { blurb: 'Hero specials — Thunder Palm & Serious Series.' },
+        dawn: { blurb: 'Dawn palm — solar orbs & lunar pull control.' },
+      },
+    });
   }
   if (typeof PICKUP_META !== 'undefined') {
     if (!I18N.nl.pickup) I18N.nl.pickup = {};
@@ -737,7 +766,19 @@ const CATALOG_EN = {
     skillSummarySub: 'Pick your chakra special for adventure & solo modes. Versus uses roster specials.',
     skillActive: 'Active',
     skillPick: 'Tap to equip',
+    skillEquipBtn: 'Equip',
     skillIslandGate: 'Island skill Lv {lvl}',
+    skillNeedLvl: 'Unlocks at Lv {lvl}',
+    skillGateLine: 'island gate Lv {cap}',
+    skillBlurbAll: '24 chakra specials — filter by saga or type · preview + stats',
+    skillEmptyFilter: 'No skills in this filter — change saga or type',
+    skillNextUnlock: 'Next unlock: <b>{name}</b> at Lv {lvl} · {need} level(s) to go',
+    skillNextUnlockSoon: 'Next: <b>{name}</b> (Lv {lvl}) — almost ready',
+    skillNextIsland: 'Next: <b>{name}</b> — island gate until Lv {cap} in adventure',
+    skillBehAll: 'All types',
+    skillSort_level: 'Sort: level',
+    skillSort_dmg: 'Sort: damage',
+    skillSort_name: 'Sort: name',
     weaponHead: 'Weapons',
     weaponSub: 'Summons are real · island skill gate: adventure weapons up to your island cap',
     helpFirstMinute: 'First minute — one short hint per mode at top (no toast stack). Adventure: joystick + buttons · green = HP · full chakra = SUPER. Training = Robot · Wall = combo · 2P = left/right.',
@@ -768,6 +809,19 @@ const CATALOG_EN = {
     shield: 'Shield!', parry: 'PARRY!', block: 'BLOCK!', miss: 'MISS!',
   },
   egg: { dailyReady: 'Daily egg ready', advBonus: 'Bonus egg: win 1× adventure', tomorrow: 'Egg again tomorrow' },
+  skill: {
+    behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor' },
+    stat: { dmg: 'Damage', wind: 'Windup', spd: 'Speed', kb: 'Knockback' },
+    tag: { pierce: 'Pierce', pull: 'Pull' },
+    saga: {
+      scroll: { blurb: 'Ninja scroll — Rasengan, Chidori, Rinnegan & gravity specials.' },
+      ki: { blurb: 'Ki waves — Kamehameha, discs, Spirit Bomb & blitz dashes.' },
+      tide: { blurb: 'Tide beams — Getsuga, Cero & Bankai flash.' },
+      fighter: { blurb: 'Street stretch — Gum-Gum dash & Gear Second steam.' },
+      cape: { blurb: 'Hero specials — Thunder Palm & Serious Series.' },
+      dawn: { blurb: 'Dawn palm — solar orbs & lunar pull control.' },
+    },
+  },
   pet: {
     active: 'Pet · active', tamed: 'Pet · tamed', buy: 'Pet · buy {cost} 🪙',
     killsNeed: 'Pet · {need} kills', killsProgress: 'Pet · {cur}/{need} kills',

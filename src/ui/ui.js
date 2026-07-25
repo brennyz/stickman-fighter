@@ -21,15 +21,118 @@ function initSkillScreenChrome() {
   if (window.__sfSkillChrome) return;
   window.__sfSkillChrome = true;
   UI.skillSagaFilter = 'all';
-  const bar = document.getElementById('skillSagaBar');
-  if (!bar) return;
-  bar.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-saga]');
-    if (!btn) return;
-    UI.skillSagaFilter = btn.dataset.saga || 'all';
-    bar.querySelectorAll('[data-saga]').forEach(b => b.classList.toggle('active', b === btn));
-    AudioSys.sfx('select');
-    UI.renderSkills();
+  UI.skillBehaviorFilter = 'all';
+  UI.skillSortMode = 'level';
+  UI.skillPreviewId = save.skill || 'rasengan';
+  const sagaBar = document.getElementById('skillSagaBar');
+  if (sagaBar) {
+    sagaBar.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-saga]');
+      if (!btn) return;
+      UI.skillSagaFilter = btn.dataset.saga || 'all';
+      sagaBar.querySelectorAll('[data-saga]').forEach(b => b.classList.toggle('active', b === btn));
+      AudioSys.sfx('select');
+      UI.renderSkills();
+    });
+  }
+  const behBar = document.getElementById('skillBehaviorBar');
+  if (behBar) {
+    behBar.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-behavior]');
+      if (!btn) return;
+      UI.skillBehaviorFilter = btn.dataset.behavior || 'all';
+      behBar.querySelectorAll('[data-behavior]').forEach(b => b.classList.toggle('active', b === btn));
+      AudioSys.sfx('select');
+      UI.renderSkills();
+    });
+  }
+  const sortBtn = document.getElementById('btnSkillSort');
+  if (sortBtn) {
+    sortBtn.addEventListener('click', () => {
+      const modes = ['level', 'dmg', 'name'];
+      const cur = UI.skillSortMode || 'level';
+      UI.skillSortMode = modes[(modes.indexOf(cur) + 1) % modes.length];
+      AudioSys.sfx('select');
+      UI.renderSkills();
+    });
+  }
+}
+
+function updateSkillPreview() {
+  const host = document.getElementById('skillPreview');
+  if (!host) return;
+  const id = UI.skillPreviewId || save.skill || 'rasengan';
+  const sk = skillById(id);
+  const ok = skillUnlocked(sk);
+  const active = save.skill === sk.id;
+  const statLabels = {
+    dmg: t('skill.stat.dmg'),
+    wind: t('skill.stat.wind'),
+    spd: t('skill.stat.spd'),
+    kb: t('skill.stat.kb'),
+  };
+  const statRows = skillStatRows(sk).map(row =>
+    `<div class="skill-stat-row">${statLabels[row.key] || row.key}
+      <span class="skill-stat-val">${row.text}</span>
+      <span class="skill-stat-track"><i style="width:${Math.round(row.pct * 100)}%;background:${sk.color}"></i></span></div>`
+  ).join('');
+  const tags = skillTags(sk).map(tag =>
+    `<span class="skill-tag" style="border-color:${sk.color}66;color:${sk.color}">${tag}</span>`
+  ).join('');
+  let lockLine = '';
+  if (!ok) {
+    lockLine = skillSkillGated(sk)
+      ? t('ui.skillIslandGate', { lvl: sk.needLvl })
+      : (sk.needLvl ? t('ui.skillNeedLvl', { lvl: sk.needLvl }) : skillLabel(sk, 'hint'));
+  }
+  const foot = ok
+    ? (active
+      ? `<span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.skillActive')}</span>`
+      : `<button type="button" class="btn mode-btn b-skills" id="skillEquipBtn" style="min-height:44px;padding:10px 18px">${t('ui.skillEquipBtn')}</button>`)
+    : `<span class="skill-preview-lock">${lockLine}</span>`;
+  host.innerHTML =
+    `<div class="skill-preview-top">` +
+    `<div class="skill-preview-orb"><canvas id="skillPreviewCanvas" width="88" height="88"></canvas></div>` +
+    `<div class="skill-preview-body">` +
+    `<div class="skill-preview-name" style="color:${sk.color}">${skillLabel(sk)}</div>` +
+    `<div class="skill-preview-banner">${sk.banner || ''} · ${vsSagaMeta(sk.saga).label}</div>` +
+    `<div class="skill-tag-row">${tags}</div>` +
+    `<div class="skill-preview-tip">${skillLabel(sk, 'tooltip') || skillCombatLine(sk)}</div>` +
+    `</div></div>` +
+    `<div class="skill-stat-grid">${statRows}</div>` +
+    `<div class="skill-preview-foot">${foot}</div>`;
+  const cv = document.getElementById('skillPreviewCanvas');
+  if (cv && typeof drawJutsuOrb === 'function') {
+    const cc = cv.getContext('2d');
+    cc.clearRect(0, 0, 88, 88);
+    cc.translate(44, 46);
+    drawJutsuOrb(cc, 0, 0, 30, performance.now() * 0.001 * 3, sk.id, ok ? 1 : 0.42);
+  }
+  const equipBtn = document.getElementById('skillEquipBtn');
+  if (equipBtn) {
+    equipBtn.addEventListener('click', () => {
+      if (!uiTapAllowed()) return;
+      safeUiAction(() => {
+        save.skill = sk.id;
+        if (!persistOrToast('skill')) return;
+        AudioSys.sfx('select');
+        UI.renderSkills();
+        UI.renderMenu();
+        UI.renderModeHub();
+        UI.toast(t('toast.skillEquipped', { name: skillLabel(sk) }), 2200);
+      }, 'pickSkill/' + sk.id, 'Skill kiezen mislukt');
+    });
+  }
+}
+
+function pickSkillPreview(id) {
+  if (!id) return;
+  UI.skillPreviewId = id;
+  updateSkillPreview();
+  const grid = document.getElementById('skillGrid');
+  if (!grid) return;
+  grid.querySelectorAll('.skill-card').forEach(c => {
+    c.classList.toggle('preview-hov', c.dataset.id === id);
   });
 }
 
@@ -243,6 +346,10 @@ const UI = {
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
+  skillSagaFilter: 'all',
+  skillBehaviorFilter: 'all',
+  skillSortMode: 'level',
+  skillPreviewId: 'rasengan',
   charSortMode: 'name',
   charPreviewHoverId: null,
   dexRarityFilter: 'all',
@@ -829,7 +936,9 @@ const UI = {
     const profileEl = document.getElementById('menuProfileBar');
     if (profileEl) {
       profileEl.innerHTML =
-        `<span class="prof-row"><b>Lv ${save.lvl}</b><span>${weaponLabel(w)}</span><span style="color:${st.accent}">${styleLabel(st)}</span></span>` +
+        `<span class="prof-row"><b>Lv ${save.lvl}</b><span>${weaponLabel(w)}</span>` +
+        `<span style="color:${(skillById(save.skill || 'rasengan').color)}">${skillLabel(skillById(save.skill || 'rasengan'))}</span>` +
+        `<span style="color:${st.accent}">${styleLabel(st)}</span></span>` +
         `<span style="display:block;margin-top:3px;opacity:.82;font-size:11px">${adventureProgressLine()}</span>` +
         `<span class="prof-xp" aria-hidden="true"><span style="width:${pct}%"></span></span>` +
         `<span class="prof-foot">${save.xp}/${need} XP${missAlert ? ' · ' + t('ui.menuMissionReady') : ''}</span>`;
@@ -1886,20 +1995,100 @@ const UI = {
     if (sumEl) {
       const unlocked = skillUnlockedCount();
       const active = skillById(save.skill || 'rasengan');
+      const sagaChips = SKILL_SAGA_ORDER.map(sid => {
+        const c = skillSagaCounts(sid);
+        const meta = vsSagaMeta(sid);
+        return `<span class="rar-pill" style="color:#cfe0ff;border-color:rgba(255,255,255,.22);margin:2px">${meta.label} ${c.unlocked}/${c.total}</span>`;
+      }).join(' ');
       sumEl.style.display = 'block';
       sumEl.innerHTML =
-        `${t('ui.skillSummaryHead')} <b>${unlocked}/${SKILLS.length}</b> · ${t('ui.skillSummaryActive')} <b style="color:${active.color}">${skillLabel(active)}</b>` +
+        `${t('ui.skillSummaryHead')} <b>${unlocked}/${SKILLS.length}</b> · ${t('ui.skillSummaryActive')} ` +
+        `<b style="color:${active.color}">${skillLabel(active)}</b> · ${t('ui.skillGateLine', { cap: adventureWeaponCap() })}` +
+        `<div style="margin-top:6px;line-height:1.7">${sagaChips}</div>` +
         `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.skillSummarySub')}</div>`;
     }
+    const nextEl = document.getElementById('skillNextUnlock');
+    if (nextEl) {
+      const next = skillNextUnlock();
+      if (next && !skillUnlocked(next)) {
+        nextEl.style.display = 'block';
+        const need = Math.max(0, (next.needLvl || 1) - save.lvl);
+        if (skillSkillGated(next) && save.lvl >= (next.needLvl || 1)) {
+          nextEl.innerHTML = t('ui.skillNextIsland', { name: skillLabel(next), cap: adventureWeaponCap() });
+        } else if (need > 0) {
+          nextEl.innerHTML = t('ui.skillNextUnlock', { name: skillLabel(next), lvl: next.needLvl, need });
+        } else {
+          nextEl.innerHTML = t('ui.skillNextUnlockSoon', { name: skillLabel(next), lvl: next.needLvl });
+        }
+      } else {
+        nextEl.style.display = 'none';
+        nextEl.innerHTML = '';
+      }
+    }
+    const saga = UI.skillSagaFilter || 'all';
+    const behavior = UI.skillBehaviorFilter || 'all';
+    const blurbEl = document.getElementById('skillSagaBlurb');
+    if (blurbEl) blurbEl.textContent = skillSagaBlurb(saga);
+    const sagaBar = document.getElementById('skillSagaBar');
+    if (sagaBar) {
+      sagaBar.querySelectorAll('[data-saga]').forEach((btn) => {
+        const sid = btn.dataset.saga || 'all';
+        btn.classList.toggle('active', sid === saga);
+        const c = skillSagaCounts(sid);
+        let badge = btn.querySelector('.saga-count');
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'saga-count';
+          btn.appendChild(badge);
+        }
+        badge.textContent = ` (${c.unlocked}/${c.total})`;
+      });
+    }
+    const behBar = document.getElementById('skillBehaviorBar');
+    if (behBar) {
+      const behLabels = {
+        all: t('ui.skillBehAll'),
+        orb: t('skill.behavior.orb'),
+        dash: t('skill.behavior.dash'),
+        beam: t('skill.behavior.beam'),
+        disc: t('skill.behavior.disc'),
+        pull: t('skill.behavior.pull'),
+        meteor: t('skill.behavior.meteor'),
+      };
+      behBar.querySelectorAll('[data-behavior]').forEach((btn) => {
+        const id = btn.dataset.behavior || 'all';
+        if (behLabels[id]) btn.textContent = behLabels[id];
+        btn.classList.toggle('active', id === behavior);
+      });
+    }
+    const sortBtn = document.getElementById('btnSkillSort');
+    if (sortBtn) {
+      const mode = UI.skillSortMode || 'level';
+      sortBtn.textContent = t('ui.skillSort_' + mode);
+    }
+    const previewId = UI.skillPreviewId || save.skill || 'rasengan';
+    const filtered = sortSkills(skillsForFilters(saga, behavior), UI.skillSortMode || 'level');
+    if (!filtered.some(s => s.id === previewId)) {
+      UI.skillPreviewId = filtered[0] ? filtered[0].id : (save.skill || 'rasengan');
+    }
+    updateSkillPreview();
     const grid = document.getElementById('skillGrid');
     if (!grid) return;
-    const saga = UI.skillSagaFilter || 'all';
     grid.innerHTML = '';
-    const list = saga === 'all' ? SKILLS : SKILLS.filter(sk => sk.saga === saga);
-    for (const sk of list) {
+    if (!filtered.length) {
+      const empty = document.createElement('div');
+      empty.className = 'char-grid-empty';
+      empty.style.gridColumn = '1 / -1';
+      empty.textContent = t('ui.skillEmptyFilter');
+      grid.appendChild(empty);
+      return;
+    }
+    for (const sk of filtered) {
       const ok = skillUnlocked(sk);
       const el = document.createElement('div');
-      el.className = 'style-card' + (save.skill === sk.id ? ' sel' : '') + (ok ? '' : ' locked');
+      el.className = 'style-card skill-card' + (save.skill === sk.id ? ' sel' : '') + (ok ? '' : ' locked') +
+        (UI.skillPreviewId === sk.id ? ' preview-hov' : '');
+      el.dataset.id = sk.id;
       el.style.borderColor = ok ? sk.color + '88' : '';
       el.title = skillLabel(sk, 'tooltip') || skillLabel(sk, 'hint') || skillLabel(sk);
       const cv = document.createElement('canvas');
@@ -1918,21 +2107,19 @@ const UI = {
       cap.style.color = sk.color;
       cap.textContent = skillLabel(sk);
       el.appendChild(cap);
+      const beh = document.createElement('div');
+      beh.className = 'skill-beh-badge';
+      beh.style.color = sk.color;
+      beh.textContent = skillBehaviorLabelI18n(sk) + ' · ×' + (sk.dmgMul || 2).toFixed(1);
+      el.appendChild(beh);
       const bonus = document.createElement('div');
       bonus.style.fontSize = '11px';
       bonus.style.fontWeight = '800';
       bonus.style.color = ok ? '#7cf5ff' : '#8fa3d9';
       bonus.style.marginTop = '3px';
-      bonus.textContent = skillCombatLine(sk) + ' · ' + skillBehaviorLabel(sk);
+      bonus.textContent = skillCombatLine(sk);
       bonus.style.opacity = ok ? '1' : '0.55';
       el.appendChild(bonus);
-      const tip = document.createElement('div');
-      tip.style.fontSize = '10px';
-      tip.style.opacity = '0.72';
-      tip.style.marginTop = '4px';
-      tip.style.lineHeight = '1.35';
-      tip.textContent = skillLabel(sk, 'tooltip') || skillLabel(sk, 'hint');
-      el.appendChild(tip);
       const sub = document.createElement('div');
       sub.style.fontSize = '11px';
       sub.style.fontWeight = '600';
@@ -1941,22 +2128,27 @@ const UI = {
       sub.textContent = ok ? (save.skill === sk.id ? t('ui.skillActive') : t('ui.skillPick'))
         : (skillSkillGated(sk) ? t('ui.skillIslandGate', { lvl: sk.needLvl }) : skillLabel(sk, 'hint'));
       el.appendChild(sub);
-      if (ok) {
-        el.addEventListener('click', () => {
-          if (!uiTapAllowed()) return;
-          safeUiAction(() => {
-            save.skill = sk.id;
-            if (!persistOrToast('skill')) return;
-            AudioSys.sfx('select');
-            this.renderSkills();
-            this.renderMenu();
-            this.renderModeHub();
-            UI.toast(t('toast.skillEquipped', { name: skillLabel(sk) }), 2200);
-          }, 'pickSkill/' + sk.id, 'Skill kiezen mislukt');
-        });
-      }
+      el.addEventListener('pointerover', () => pickSkillPreview(sk.id));
+      el.addEventListener('click', () => {
+        pickSkillPreview(sk.id);
+        if (!ok || !uiTapAllowed()) return;
+        if (save.skill === sk.id) return;
+        safeUiAction(() => {
+          save.skill = sk.id;
+          if (!persistOrToast('skill')) return;
+          AudioSys.sfx('select');
+          this.renderSkills();
+          this.renderMenu();
+          this.renderModeHub();
+          UI.toast(t('toast.skillEquipped', { name: skillLabel(sk) }), 2200);
+        }, 'pickSkill/' + sk.id, 'Skill kiezen mislukt');
+      });
       grid.appendChild(el);
     }
+    requestAnimationFrame(() => {
+      const pick = grid.querySelector('.skill-card.preview-hov, .skill-card.sel');
+      if (pick) pick.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
   },
 
   renderSettings() {
