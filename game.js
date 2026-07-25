@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.55';
+const APP_VERSION = '1.18.56';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 265;
+const SW_CACHE_REV = 266;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -1833,8 +1833,11 @@ function applyLangStaticScreens() {
   const charIpadCard = document.getElementById('charIpadTipCard');
   if (charIpadCard) charIpadCard.innerHTML = t('ui.charIpadTip');
 
-  const charFightBtn = document.getElementById('btnCharFight');
-  if (charFightBtn) charFightBtn.textContent = t('ui.charFight');
+  try { if (typeof syncCharFightBtn === 'function') syncCharFightBtn(); }
+  catch (_) {
+    const charFightBtn = document.getElementById('btnCharFight');
+    if (charFightBtn) charFightBtn.textContent = t('ui.charFight');
+  }
 
   setText('pauseHead', 'pause.title');
   setText('pauseSub', 'pause.sub');
@@ -9141,7 +9144,7 @@ function seedNlGameStrings() {
     charFightReady: 'START · {p1} vs {p2}',
     charPickNow1: 'P1',
     charPickNow2: 'P2',
-    charIpadTip: 'iPad: speler 1 gebruikt de linker helft van het scherm (joystick + knoppen), speler 2 de rechter helft. Draai je iPad liggend voor het meeste ruimte.',
+    charIpadTip: '<b>iPad:</b> speler 1 gebruikt de <b>linker helft</b> van het scherm (joystick + knoppen), speler 2 de <b>rechter helft</b>. Draai je iPad liggend voor het meeste ruimte.',
     levelHead: 'Kies een eiland',
     levelSub: '5 eilanden × 10 levels · Tik level = Gooi & start · lang indrukken = zonder gok',
     gambleSub: 'Twee dobbelstenen: pech = super-baas in een willekeurige golf · geluk = sterke bondgenoot (buff alleen dit level)',
@@ -9854,7 +9857,7 @@ const CATALOG_EN = {
     charFightReady: 'START · {p1} vs {p2}',
     charPickNow1: 'P1',
     charPickNow2: 'P2',
-    charIpadTip: 'iPad: player 1 uses the left half (joystick + buttons), player 2 the right half. Landscape works best.',
+    charIpadTip: '<b>iPad:</b> player 1 uses the <b>left half</b> (joystick + buttons), player 2 the <b>right half</b>. Landscape works best.',
     levelHead: 'Pick an island',
     levelSub: '5 islands × 10 levels · Tap level = Roll & start · long press = no gamble',
     gambleSub: 'Two dice: bad luck = super-boss in a random wave · lucky = strong ally (buff this level only)',
@@ -10024,6 +10027,10 @@ const CATALOG_EN = {
     weaponComboHint: 'Weapon 3× = ①②③ · hit ①+② → golden ③',
     gambleOnboardTouch: 'First gamble: low sum = super-boss · high sum = ally · Skip = normal level',
     gambleOnboardKb: 'First time: sum ≤5 super-boss · sum ≥9 ally buff · Skip = no gamble',
+    ketsbamOnboardTouch: 'Surrounded? Tap the center symbol — Ketsbam escape · 9s cooldown',
+    ketsbamOnboardKb: 'Surrounded? E or center symbol = Ketsbam · 9s cooldown',
+    tideBattleOnboardTouch: 'First Tide Battle: defeat {name} — no other waves until done',
+    tideBattleOnboardKb: 'First Tide Battle: defeat {name} — waves pause until done',
     langSwitchFail: 'Language switch failed',
   },
   fighter: {
@@ -23612,8 +23619,27 @@ function scrollCharFightIntoView() {
 
 function syncCharFightBtn() {
   const fightBtn = document.getElementById('btnCharFight');
+  const sumEl = document.getElementById('charFightSummary');
   if (!fightBtn) return;
   const ready = charSelectFightReady();
+  const e1 = vsRosterEntry(vsSelect.p1);
+  const e2 = vsRosterEntry(vsSelect.p2);
+  const p1 = e1?.name || '—';
+  const p2 = e2?.name || '—';
+  let summary = t('ui.charFightSummary', { p1, p2 });
+  let label = t('ui.charFight');
+  if ((UI.charPickStep || 1) === 1) {
+    summary = t('ui.charFightNeedP1');
+  } else if (!ready) {
+    if (vsSelect.p1 === vsSelect.p2) summary = t('toast.charPickDifferent');
+    else summary = t('ui.charFightNeedP2', { p1 });
+  } else {
+    summary = t('ui.charFightSummary', { p1, p2 });
+    label = t('ui.charFightReady', { p1, p2 });
+  }
+  if (sumEl) sumEl.textContent = summary;
+  fightBtn.textContent = label;
+  fightBtn.disabled = !ready;
   fightBtn.classList.toggle('char-fight-ready', ready);
   fightBtn.classList.toggle('char-fight-off', !ready);
   fightBtn.setAttribute('aria-disabled', ready ? 'false' : 'true');
@@ -24711,9 +24737,10 @@ const UI = {
     initCharSelectChrome();
     this.charPickStep = this.charPickStep || 1;
     const filter = this.charSagaFilter || 'all';
+    // d18 c5: keep locked hover for stats preview; only clear if filtered out of saga
     if (this.charPreviewHoverId) {
       const h = vsRosterEntry(this.charPreviewHoverId);
-      if (!vsUnlocked(h) || (filter !== 'all' && (h.saga || 'scroll') !== filter)) {
+      if (!h || (filter !== 'all' && (h.saga || 'scroll') !== filter)) {
         this.charPreviewHoverId = null;
       }
     }
@@ -24832,7 +24859,7 @@ const UI = {
         const mini = document.createElement('div');
         mini.className = 'char-mini-stat';
         const st = vsFighterStats(r);
-        mini.textContent = `STR ${st.str} · RNG ${st.rng} · mDPS ${st.meleeDps} · rDPS ${st.rangeDps}`;
+        mini.textContent = `TOT ${vsOverallRating(st)} · STR ${st.str} · RNG ${st.rng} · mDPS ${st.meleeDps} · rDPS ${st.rangeDps}`;
         el.appendChild(mini);
       }
       grid.appendChild(el);
@@ -24844,11 +24871,7 @@ const UI = {
       );
       if (pick) pick.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     });
-    const fightBtn = document.getElementById('btnCharFight');
-    if (fightBtn) {
-      fightBtn.disabled = !(vsSelect.p1 && vsSelect.p2);
-      fightBtn.setAttribute('aria-disabled', fightBtn.disabled ? 'true' : 'false');
-    }
+    syncCharFightBtn();
     const backBtn = document.getElementById('charSelectBack');
     if (backBtn) {
       backBtn.textContent = this.charPickStep === 2 ? t('ui.charBackP1') : t('ui.charBackMenu');
@@ -24873,9 +24896,9 @@ const UI = {
       swapBtn.dataset.bound = '1';
       bindPress(swapBtn, () => {
         AudioSys.sfx('select');
-        const t = vsSelect.p1;
+        const tmp = vsSelect.p1;
         vsSelect.p1 = vsSelect.p2;
-        vsSelect.p2 = t;
+        vsSelect.p2 = tmp;
         this.renderCharSelect();
         UI.toast(t('toast.charSwap'), 1800);
       });
@@ -24891,8 +24914,13 @@ const UI = {
           return;
         }
         const a = choice(pool);
-        let b = choice(pool);
-        for (let i = 0; i < 8 && b.id === a.id; i++) b = choice(pool);
+        // d18 c5: hard-distinct P2 (no same-id duo)
+        const rest = pool.filter((x) => x.id !== a.id);
+        const b = rest.length ? choice(rest) : null;
+        if (!b) {
+          UI.toast(t('toast.charNotEnough'), 2400);
+          return;
+        }
         vsSelect.p1 = a.id;
         vsSelect.p2 = b.id;
         this.charPickStep = 2;

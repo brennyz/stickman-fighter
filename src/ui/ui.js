@@ -133,8 +133,27 @@ function scrollCharFightIntoView() {
 
 function syncCharFightBtn() {
   const fightBtn = document.getElementById('btnCharFight');
+  const sumEl = document.getElementById('charFightSummary');
   if (!fightBtn) return;
   const ready = charSelectFightReady();
+  const e1 = vsRosterEntry(vsSelect.p1);
+  const e2 = vsRosterEntry(vsSelect.p2);
+  const p1 = e1?.name || '—';
+  const p2 = e2?.name || '—';
+  let summary = t('ui.charFightSummary', { p1, p2 });
+  let label = t('ui.charFight');
+  if ((UI.charPickStep || 1) === 1) {
+    summary = t('ui.charFightNeedP1');
+  } else if (!ready) {
+    if (vsSelect.p1 === vsSelect.p2) summary = t('toast.charPickDifferent');
+    else summary = t('ui.charFightNeedP2', { p1 });
+  } else {
+    summary = t('ui.charFightSummary', { p1, p2 });
+    label = t('ui.charFightReady', { p1, p2 });
+  }
+  if (sumEl) sumEl.textContent = summary;
+  fightBtn.textContent = label;
+  fightBtn.disabled = !ready;
   fightBtn.classList.toggle('char-fight-ready', ready);
   fightBtn.classList.toggle('char-fight-off', !ready);
   fightBtn.setAttribute('aria-disabled', ready ? 'false' : 'true');
@@ -1232,9 +1251,10 @@ const UI = {
     initCharSelectChrome();
     this.charPickStep = this.charPickStep || 1;
     const filter = this.charSagaFilter || 'all';
+    // d18 c5: keep locked hover for stats preview; only clear if filtered out of saga
     if (this.charPreviewHoverId) {
       const h = vsRosterEntry(this.charPreviewHoverId);
-      if (!vsUnlocked(h) || (filter !== 'all' && (h.saga || 'scroll') !== filter)) {
+      if (!h || (filter !== 'all' && (h.saga || 'scroll') !== filter)) {
         this.charPreviewHoverId = null;
       }
     }
@@ -1353,7 +1373,7 @@ const UI = {
         const mini = document.createElement('div');
         mini.className = 'char-mini-stat';
         const st = vsFighterStats(r);
-        mini.textContent = `STR ${st.str} · RNG ${st.rng} · mDPS ${st.meleeDps} · rDPS ${st.rangeDps}`;
+        mini.textContent = `TOT ${vsOverallRating(st)} · STR ${st.str} · RNG ${st.rng} · mDPS ${st.meleeDps} · rDPS ${st.rangeDps}`;
         el.appendChild(mini);
       }
       grid.appendChild(el);
@@ -1365,11 +1385,7 @@ const UI = {
       );
       if (pick) pick.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     });
-    const fightBtn = document.getElementById('btnCharFight');
-    if (fightBtn) {
-      fightBtn.disabled = !(vsSelect.p1 && vsSelect.p2);
-      fightBtn.setAttribute('aria-disabled', fightBtn.disabled ? 'true' : 'false');
-    }
+    syncCharFightBtn();
     const backBtn = document.getElementById('charSelectBack');
     if (backBtn) {
       backBtn.textContent = this.charPickStep === 2 ? t('ui.charBackP1') : t('ui.charBackMenu');
@@ -1394,9 +1410,9 @@ const UI = {
       swapBtn.dataset.bound = '1';
       bindPress(swapBtn, () => {
         AudioSys.sfx('select');
-        const t = vsSelect.p1;
+        const tmp = vsSelect.p1;
         vsSelect.p1 = vsSelect.p2;
-        vsSelect.p2 = t;
+        vsSelect.p2 = tmp;
         this.renderCharSelect();
         UI.toast(t('toast.charSwap'), 1800);
       });
@@ -1412,8 +1428,13 @@ const UI = {
           return;
         }
         const a = choice(pool);
-        let b = choice(pool);
-        for (let i = 0; i < 8 && b.id === a.id; i++) b = choice(pool);
+        // d18 c5: hard-distinct P2 (no same-id duo)
+        const rest = pool.filter((x) => x.id !== a.id);
+        const b = rest.length ? choice(rest) : null;
+        if (!b) {
+          UI.toast(t('toast.charNotEnough'), 2400);
+          return;
+        }
         vsSelect.p1 = a.id;
         vsSelect.p2 = b.id;
         this.charPickStep = 2;

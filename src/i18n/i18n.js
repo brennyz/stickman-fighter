@@ -592,8 +592,11 @@ function applyLangStaticScreens() {
   const charIpadCard = document.getElementById('charIpadTipCard');
   if (charIpadCard) charIpadCard.innerHTML = t('ui.charIpadTip');
 
-  const charFightBtn = document.getElementById('btnCharFight');
-  if (charFightBtn) charFightBtn.textContent = t('ui.charFight');
+  try { if (typeof syncCharFightBtn === 'function') syncCharFightBtn(); }
+  catch (_) {
+    const charFightBtn = document.getElementById('btnCharFight');
+    if (charFightBtn) charFightBtn.textContent = t('ui.charFight');
+  }
 
   setText('pauseHead', 'pause.title');
   setText('pauseSub', 'pause.sub');
