@@ -70,6 +70,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-25T16:06:18Z",
+      "summary": "Gamble timer race fix — cancelGambleStart op skip/back/hold/recover/startGame · v1.18.39"
+    },
+    {
       "at": "2026-07-25T15:20:00Z",
       "summary": "Adventure blue/black lid harden · v1.18.38 / SW v248"
     },

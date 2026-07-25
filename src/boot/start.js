@@ -3,6 +3,7 @@ let state = 'menu';
 
 function startGame(mode, opts) {
   opts = opts || {};
+  try { cancelGambleStart(); } catch (_) {}
   const allowed = { adventure: 1, training: 1, wall: 1, versus: 1, coinrun: 1 };
   if (!allowed[mode]) {
     try { UI.toast('Onbekende modus', 2200); } catch (_) {}
@@ -130,11 +131,13 @@ bindPress(document.getElementById('menuProfileBar'), () => {
 bindPress(document.getElementById('btnGambleGooiStart'), () => gokGooiStartFromScreen());
 bindPress(document.getElementById('btnGambleSkip'), () => {
   AudioSys.sfx('select');
+  try { cancelGambleStart(); } catch (_) {}
   startAdventureFromGamble(true);
 });
 document.querySelectorAll('[data-back-gamble]').forEach((b) => {
   bindPress(b, () => {
     AudioSys.sfx('select');
+    try { cancelGambleStart(); } catch (_) {}
     UI.safeOpen('levelScreen', () => UI.renderLevels());
   });
 });
