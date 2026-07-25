@@ -138,14 +138,9 @@ houd kleuren/stroke volgens ASSET-STYLE, geen emoji, daarna build+smoke.
 |-----|------------|---------|
 | Hub tiles (4) | `index.html` `.hub-tile-ico` file SVG | `assets/buttons/hub/` |
 | Mode-rijen | `index.html` collect/arcade | `assets/buttons/modes/` |
-| Chrome (home/claim/…) | `index.html` toggles + bars | `assets/buttons/chrome/` |
-| Saga / eilanden / prestaties / sterren | `index.html` + `src/ui/ui.js` + `versus.js` | `assets/ui/` |
-| Mode-rijen | `index.html` `.mode-btn .ico` inline SVG | `assets/buttons/modes/` |
-| Terug / home | `index.html` `.sub-home-btn` / `.back-btn` | `assets/buttons/chrome/` |
-| Missies claim / bonus | `index.html` `#dailyClaimAllBtn` e.d. | `assets/buttons/chrome/` |
-| Pauze / result / settings | `index.html` + JS strings | `assets/buttons/chrome/` |
+| Chrome (home/claim/back/swap/…) | `index.html` toggles + bars | `assets/buttons/chrome/` |
+| Saga / eilanden / prestaties / sterren / pause | `index.html` + `src/ui/ui.js` + `versus.js` | `assets/ui/` |
 | Touch vechtknoppen | `src/core/storage.js` `drawTouchBtnIcon` | **code**, geen PNG (tenzij later gevraagd) |
-| Prestatie / saga | `ACH_ICON_SVG` / `SAGA_ICON_SVG` in JS | optioneel later → `assets/ui/` |
 | PWA icons | `icons/icon-*.png` | blijf hier |
 
 ---
