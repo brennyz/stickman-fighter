@@ -137,8 +137,7 @@ function paintMenuHeroCanvas(t) {
   c.arc(0, 0, 72, 0, TAU);
   c.fill();
   c.restore();
-  c.fillStyle = 'rgba(30,25,45,.9)';
-  c.fillRect(0, Hs * 0.72, Ws, Hs * 0.28);
+  drawMenuHeroPixelGround(c, Ws, Hs, Hs * 0.72, t);
   const bounce = Math.sin(t * 3.5) * 4;
   const drawMenuStick = (x, face, col) => {
     c.save();

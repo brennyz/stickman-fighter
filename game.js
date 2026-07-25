@@ -241,9 +241,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.1';
+const APP_VERSION = '1.18.2';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 211;
+const SW_CACHE_REV = 212;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -8462,6 +8462,28 @@ function seedNlGameStrings() {
     'Instellingen: grote knoppen, minder schok, combo-HUD — handig op iPad.',
     'Komt eraan: Mat co-op assist — korte buff als je zijn bonus haalt.',
   ];
+  I18N.nl.menu.d20Polish = [
+    'Wapen-preview glow in collectie',
+    'Monster-aura vormen in gevecht',
+    'Upgrade-kaart orbs & schaduwen',
+    'Touch-knop press-animatie',
+    'Menu-tegel rand & hover',
+    'Skill-picker kaart frames',
+    'Character-select portret frames',
+    'Menu hero — pixel grondstrip',
+    'Pause-scherm pixel backdrop',
+    'Combo-HUD pixel accenten',
+    'Jutsu-aura (Rasengan/Chidori) polish',
+    'Baas fase-2 kleurflits',
+    'Muur-modus tegel texture',
+    'Versus VS-banner pixels',
+    'Collectie hub tegel borders',
+    'Pet/summon spawn sparkles',
+    'Level-select sterren & locks',
+    'Schade-floaters pixel font',
+    'Joystick ring pixel art',
+    'Laadscherm / splash strip',
+  ];
   I18N.nl.menu.tips = [
     'Kies een tegel — Avontuur · Arcade · 2P · Collectie',
     '5 eilanden — baas Lv 10/20/30/40/50 opent volgend eiland',
@@ -9425,6 +9447,27 @@ const CATALOG_EN = {
     'Random duo on character select: 🎲 picks two different fighters.',
     'Settings: big buttons, less shake, combo HUD — handy on iPad.',
     'Coming: Mat co-op assist — short buff when you clear his bonus.',
+  ], d20Polish: [
+    'Weapon preview glow in collection',
+    'Monster aura shapes in combat',
+    'Upgrade card orbs & shadows',
+    'Touch button press animation',
+    'Menu tile border & hover',
+    'Skill picker card frames',
+    'Character select portrait frames',
+    'Menu hero — pixel ground strip',
+    'Pause screen pixel backdrop',
+    'Combo HUD pixel accents',
+    'Jutsu aura (Rasengan/Chidori) polish',
+    'Boss phase-2 color flash',
+    'Wall mode tile texture',
+    'Versus VS banner pixels',
+    'Collection hub tile borders',
+    'Pet/summon spawn sparkles',
+    'Level select stars & locks',
+    'Damage floater pixel font',
+    'Joystick ring pixel art',
+    'Loading / splash strip',
   ] },
   combat: {
     counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
@@ -9968,6 +10011,13 @@ function rollD20Entry() {
   if (!tips.length) return { n: 1, text: menuTipAt(0) };
   const n = 1 + Math.floor(Math.random() * tips.length);
   return { n, text: tips[n - 1] };
+}
+
+function rollD20Polish() {
+  const topics = i18nList('menu.d20Polish');
+  if (!topics.length) return rollD20Entry();
+  const n = 1 + Math.floor(Math.random() * topics.length);
+  return { n, text: topics[n - 1], polish: true };
 }
 
 function dailyModeLabel(mode) {
@@ -15132,6 +15182,63 @@ function drawThemeWeather(c, themeName, t, ground, scroll) {
   }
   c.restore();
   c.globalAlpha = 1;
+}
+
+/** Menu hero — pixel grondstrip (d20 polish #8), chunky look + donkere menu-tint. */
+function drawMenuHeroPixelGround(c, w, h, groundY, t) {
+  const gh = h - groundY;
+  if (gh <= 0) return;
+  const px = 3;
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  const gy = Math.round(groundY);
+
+  for (let y = 0; y < gh; y += px) {
+    const pr = y / gh;
+    c.fillStyle = pr < 0.32 ? '#3a3250' : pr < 0.68 ? '#2a2438' : '#181422';
+    c.fillRect(0, gy + y, w, px);
+  }
+
+  c.fillStyle = '#3d7a4a';
+  c.fillRect(0, gy, w, px);
+  for (let x = 0; x < w; x += px * 2) {
+    c.fillStyle = '#4a9460';
+    c.fillRect(x, gy - px, px, px);
+    c.fillStyle = '#2d5a3a';
+    c.fillRect(x + px, gy - px, px, px);
+  }
+  c.fillStyle = 'rgba(120,200,140,.32)';
+  c.fillRect(0, gy, w, 1);
+
+  const span = 47;
+  const off = (((t * 18) % span) + span) % span;
+  for (let x = -span; x < w + span; x += span) {
+    c.fillStyle = 'rgba(255,255,255,.08)';
+    c.fillRect(Math.round(x + off + 6), gy + 14, px, px);
+    c.fillStyle = 'rgba(0,0,0,.14)';
+    c.fillRect(Math.round(x + off + 28), gy + 28, px, px);
+    c.fillRect(Math.round(x + off + 40), gy + 18, px, px);
+  }
+
+  const tuftSpan = 38;
+  const tuftOff = (((t * 8) % tuftSpan) + tuftSpan) % tuftSpan;
+  for (let x = -tuftSpan; x < w + tuftSpan; x += tuftSpan) {
+    const tx = Math.round(x + tuftOff + 10);
+    c.fillStyle = '#356848';
+    c.fillRect(tx, gy - px * 2, px, px);
+    c.fillRect(tx - px, gy - px, px, px);
+    c.fillRect(tx + px, gy - px, px, px);
+  }
+
+  const stripeSpan = 56;
+  const stripeOff = (((t * 12) % stripeSpan) + stripeSpan) % stripeSpan;
+  c.fillStyle = 'rgba(0,0,0,.11)';
+  for (let x = -stripeSpan; x < w + stripeSpan; x += stripeSpan) {
+    c.fillRect(Math.round(x + stripeOff + 8), gy + px * 4, px * 5, px);
+    c.fillRect(Math.round(x + stripeOff + 32), gy + px * 7, px * 3, px);
+  }
+
+  c.imageSmoothingEnabled = prev;
 }
 
 /** Pixel-art laag tekenen: getild, smoothing uit, parallax-offset. */
@@ -23649,8 +23756,7 @@ function paintMenuHeroCanvas(t) {
   c.arc(0, 0, 72, 0, TAU);
   c.fill();
   c.restore();
-  c.fillStyle = 'rgba(30,25,45,.9)';
-  c.fillRect(0, Hs * 0.72, Ws, Hs * 0.28);
+  drawMenuHeroPixelGround(c, Ws, Hs, Hs * 0.72, t);
   const bounce = Math.sin(t * 3.5) * 4;
   const drawMenuStick = (x, face, col) => {
     c.save();

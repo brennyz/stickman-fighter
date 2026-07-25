@@ -297,6 +297,63 @@ function drawThemeWeather(c, themeName, t, ground, scroll) {
   c.globalAlpha = 1;
 }
 
+/** Menu hero — pixel grondstrip (d20 polish #8), chunky look + donkere menu-tint. */
+function drawMenuHeroPixelGround(c, w, h, groundY, t) {
+  const gh = h - groundY;
+  if (gh <= 0) return;
+  const px = 3;
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  const gy = Math.round(groundY);
+
+  for (let y = 0; y < gh; y += px) {
+    const pr = y / gh;
+    c.fillStyle = pr < 0.32 ? '#3a3250' : pr < 0.68 ? '#2a2438' : '#181422';
+    c.fillRect(0, gy + y, w, px);
+  }
+
+  c.fillStyle = '#3d7a4a';
+  c.fillRect(0, gy, w, px);
+  for (let x = 0; x < w; x += px * 2) {
+    c.fillStyle = '#4a9460';
+    c.fillRect(x, gy - px, px, px);
+    c.fillStyle = '#2d5a3a';
+    c.fillRect(x + px, gy - px, px, px);
+  }
+  c.fillStyle = 'rgba(120,200,140,.32)';
+  c.fillRect(0, gy, w, 1);
+
+  const span = 47;
+  const off = (((t * 18) % span) + span) % span;
+  for (let x = -span; x < w + span; x += span) {
+    c.fillStyle = 'rgba(255,255,255,.08)';
+    c.fillRect(Math.round(x + off + 6), gy + 14, px, px);
+    c.fillStyle = 'rgba(0,0,0,.14)';
+    c.fillRect(Math.round(x + off + 28), gy + 28, px, px);
+    c.fillRect(Math.round(x + off + 40), gy + 18, px, px);
+  }
+
+  const tuftSpan = 38;
+  const tuftOff = (((t * 8) % tuftSpan) + tuftSpan) % tuftSpan;
+  for (let x = -tuftSpan; x < w + tuftSpan; x += tuftSpan) {
+    const tx = Math.round(x + tuftOff + 10);
+    c.fillStyle = '#356848';
+    c.fillRect(tx, gy - px * 2, px, px);
+    c.fillRect(tx - px, gy - px, px, px);
+    c.fillRect(tx + px, gy - px, px, px);
+  }
+
+  const stripeSpan = 56;
+  const stripeOff = (((t * 12) % stripeSpan) + stripeSpan) % stripeSpan;
+  c.fillStyle = 'rgba(0,0,0,.11)';
+  for (let x = -stripeSpan; x < w + stripeSpan; x += stripeSpan) {
+    c.fillRect(Math.round(x + stripeOff + 8), gy + px * 4, px * 5, px);
+    c.fillRect(Math.round(x + stripeOff + 32), gy + px * 7, px * 3, px);
+  }
+
+  c.imageSmoothingEnabled = prev;
+}
+
 /** Pixel-art laag tekenen: getild, smoothing uit, parallax-offset. */
 function drawSceneryTile(c, tile, y, scroll, rate, scale) {
   if (!tile) return;
