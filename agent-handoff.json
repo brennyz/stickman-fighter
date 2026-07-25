@@ -13,16 +13,16 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.41",
-    "swCache": "stickfighter-app-v251",
-    "gameJsQuery": "game.js?v=251",
-    "cssQuery": "styles/main.css?v=251",
-    "featureBranch": "cursor/adventure-blue-audio-2125",
+    "appVersion": "1.18.42",
+    "swCache": "stickfighter-app-v252",
+    "gameJsQuery": "game.js?v=252",
+    "cssQuery": "styles/main.css?v=252",
+    "featureBranch": "cursor/play-layer-harden-2125",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "blue+audio = lid over canvas; nuclear killUiLids + freeUi fix · v1.18.41"
+    "note": "beginPlaySession ordered phases + UI.show guards + watchdog · v1.18.42"
   },
   "userWishlist": [
     {

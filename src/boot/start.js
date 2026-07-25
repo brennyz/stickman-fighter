@@ -22,47 +22,51 @@ function startGame(mode, opts) {
     }
     try { primePlayInput(true); } catch (_) {}
   }
-  // Lock + lids weg VÓÓR Game-construct — voorkomt freeUi/sync die canvas hidet terwijl audio al start
-  window.__sfPlayLock = true;
+
+  // ——— Fase lock: lids weg vóór construct (volgorde = veiligheid) ———
   try {
-    document.body.classList.add('is-playing');
-    if (typeof killUiLidsForPlay === 'function') killUiLidsForPlay();
+    if (typeof beginPlaySession === 'function') beginPlaySession('lock', 'start/' + mode);
     else {
-      try { clearScreensForPlay(); } catch (_) {}
-      try { UI.hideGambleRollFlash(); } catch (_) {}
+      window.__sfPlayLock = true;
+      document.body.classList.add('is-playing');
+      if (typeof killUiLidsForPlay === 'function') killUiLidsForPlay();
     }
-  } catch (_) {}
+  } catch (_) {
+    window.__sfPlayLock = true;
+  }
+
   try {
     game = new Game(mode, opts);
   } catch (err) {
-    window.__sfPlayLock = false;
+    try { if (typeof beginPlaySession === 'function') beginPlaySession('end', 'startFail'); } catch (_) {
+      window.__sfPlayLock = false;
+    }
     sfReportError('start/' + mode, err);
     recoverToMenu({ force: true });
     return;
   }
   if (!game || !game.player) {
-    window.__sfPlayLock = false;
+    try { if (typeof beginPlaySession === 'function') beginPlaySession('end', 'startIncomplete'); } catch (_) {
+      window.__sfPlayLock = false;
+    }
     sfReportError('start/' + mode, new Error('game incomplete'));
     recoverToMenu({ force: true });
     return;
   }
+
   state = 'play';
   primePlayInput(mode);
-  try {
-    if (typeof forceGameResize === 'function') forceGameResize();
-    else scheduleResize();
-  } catch (_) { try { scheduleResize(); } catch (__) {} }
-  try { AudioSys.setPaused(false); } catch (_) {}
   try { recordLastPlay(mode, opts); } catch (_) {}
   try { applyModeOnboarding(mode, game); } catch (_) {}
+  try { AudioSys.setPaused(false); } catch (_) {}
+
+  // ——— Fase armed: canvas + lids vóór audio ———
   try { UI.show(null); } catch (_) {}
   try {
-    if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('startGame/' + mode);
-    else syncPlayLayer();
+    if (typeof beginPlaySession === 'function') beginPlaySession('armed', 'start/' + mode);
+    else if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('startGame/' + mode);
   } catch (_) { try { syncPlayLayer(); } catch (__) {} }
-  try {
-    if (ctx && game && typeof game.draw === 'function') game.draw(ctx);
-  } catch (_) {}
+
   try {
     AudioSys.init();
     const modeSting = { adventure: 'modeAdventure', training: 'modeTraining', versus: 'modeVersus', wall: 'modeWall', coinrun: 'modeMats' };
@@ -76,15 +80,13 @@ function startGame(mode, opts) {
     else if (mode === 'wall') AudioSys.play('wall');
     else AudioSys.play('battle');
   } catch (_) {}
-  // Na audio nogmaals — freeUi/pointer kan tussendoor styles strippen
+
+  // ——— Fase live: na audio + timed reassert ———
   try {
-    if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('startGame-postAudio/' + mode);
+    if (typeof beginPlaySession === 'function') beginPlaySession('live', 'start/' + mode);
+    else if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('startGame-live/' + mode);
   } catch (_) {}
   try { if (typeof blackScreenGuard === 'function') blackScreenGuard('startGame/' + mode); } catch (_) {}
-  window.__sfPlayLock = false;
-  try {
-    if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('startGame-unlock/' + mode);
-  } catch (_) {}
 }
 
 /** iPad: touchend + click zonder dubbel-vuur (preventDefault stopt ghost-click). */
@@ -576,6 +578,10 @@ bindPress(document.getElementById('pauseResume'), () => {
     try { primePlayInput(true); } catch (_) {}
   }
   UI.show(null);
+  try {
+    if (typeof beginPlaySession === 'function') beginPlaySession('live', 'pauseResume');
+    else if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('pauseResume');
+  } catch (_) {}
 });
 bindPress(document.getElementById('pauseQuit'), () => { UI.goMenu(); });
 const pauseVsRestart = document.getElementById('pauseVsRestart');

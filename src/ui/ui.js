@@ -966,6 +966,16 @@ const UI = {
 
   show(id) {
     try {
+      // Veiligheid: tijdens gevecht geen menu/level/settings-deksel openen
+      if (id && typeof isFighting === 'function' && isFighting() && state === 'play') {
+        if (!isPlayAllowedScreen(id)) {
+          console.warn('[Stickman] UI.show blocked during play:', id);
+          try {
+            if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('showBlock/' + id);
+          } catch (_) {}
+          return;
+        }
+      }
       if (!id) {
         if (state === 'play' && !game) {
           sfReportError('UI.show/play', new Error('no game ref'), 'Gevecht niet geladen — terug naar menu');
@@ -974,13 +984,30 @@ const UI = {
           return;
         }
         try { clearScreensForPlay(); } catch (_) {}
+        if (typeof isFighting === 'function' && isFighting()) {
+          try { if (typeof killUiLidsForPlay === 'function') killUiLidsForPlay(); } catch (_) {}
+        }
       } else {
+        // Opening een UI-scherm: play-inline hides op dit scherm wissen
         const target = document.getElementById(id);
         if (!target) {
           sfReportError('UI.show/' + id, new Error('missing screen DOM'), 'Scherm niet gevonden — terug naar menu');
           try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
           syncPlayLayer();
           return;
+        }
+        try {
+          if (typeof clearStyleImportant === 'function') {
+            clearStyleImportant(target, 'display');
+            clearStyleImportant(target, 'visibility');
+            clearStyleImportant(target, 'pointer-events');
+            clearStyleImportant(target, 'opacity');
+            clearStyleImportant(target, 'z-index');
+          }
+        } catch (_) {}
+        // Pauze: body.is-playing uit zodat pauseScreen zichtbaar is
+        if (id === 'pauseScreen') {
+          try { document.body.classList.remove('is-playing'); } catch (_) {}
         }
         target.classList.add('active');
       }
@@ -1026,7 +1053,15 @@ const UI = {
       sfReportError('UI.show/' + (id || 'play'), err, 'Schermwissel mislukt — terug naar menu');
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
     }
-    syncPlayLayer();
+    // Tijdens play: sync = force lids weg. Tijdens pause/menu: normale sync.
+    if (!id && typeof isFighting === 'function' && isFighting() && state === 'play') {
+      try {
+        if (typeof forcePlayCanvasVisible === 'function') forcePlayCanvasVisible('UI.show/null');
+        else syncPlayLayer();
+      } catch (_) { syncPlayLayer(); }
+    } else {
+      syncPlayLayer();
+    }
     if (id) ensureVisibleScreen();
   },
 
