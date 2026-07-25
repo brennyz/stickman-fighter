@@ -267,7 +267,7 @@ document.addEventListener('visibilitychange', () => {
       state = 'pause';
       AudioSys.setPaused(true);
       try {
-        UI.safeOpen('pauseScreen', () => UI.renderPauseToggles(), { renderBeforeShow: true });
+        UI.show('pauseScreen');
       } catch (_) { ensureVisibleScreen(); }
     } else {
       try { AudioSys.syncContextPower(); } catch (_) {}
@@ -508,6 +508,7 @@ function bootGame() {
   }, 'titleSting');
   requestAnimationFrame(loop);
   if (state === 'menu') safeCall(() => UI.show('menuScreen'), 'showMenu');
+  safeCall(() => blackScreenGuard('boot'), 'blackGuard');
   setTimeout(() => {
     try {
       const hub = document.querySelector('[data-hub]');
@@ -538,11 +539,11 @@ function bootGame() {
       setTimeout(() => {
         try {
           if (mode === 'adventure') {
-            UI.safeOpen('levelScreen', () => UI.renderLevels(), { renderBeforeShow: true });
+            UI.safeOpen('levelScreen', () => UI.renderLevels());
           } else if (mode === 'training') startGame('training');
           else if (mode === 'versus') {
             UI.charPickStep = 1;
-            UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { renderBeforeShow: true });
+            UI.safeOpen('charSelectScreen', () => UI.renderCharSelect());
           } else if (mode === 'wall') startGame('wall');
           else if (mode === 'coinrun') startGame('coinrun');
         } catch (err) {
@@ -580,12 +581,12 @@ function bindUiLayerWatch() {
   const tick = () => {
     try {
       syncPlayLayer();
-      ensureVisibleScreen();
+      blackScreenGuard('uiWatch');
       if (typeof window.sfTunnelNukeOverlay === 'function') window.sfTunnelNukeOverlay();
     } catch (_) {}
   };
   document.addEventListener('touchstart', tick, { passive: true, capture: true });
   document.addEventListener('pointerdown', tick, { passive: true, capture: true });
-  setInterval(tick, 8000);
+  setInterval(tick, 2000);
 }
 bindUiLayerWatch();

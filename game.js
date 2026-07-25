@@ -241,9 +241,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.6';
+const APP_VERSION = '1.18.7';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 216;
+const SW_CACHE_REV = 217;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -2114,7 +2114,7 @@ function goDailyPlayTarget(taskId) {
     AudioSys.init();
     AudioSys.sfx('select');
     if (t.mode === 'adventure') {
-      UI.safeOpen('levelScreen', () => UI.renderLevels(), { renderBeforeShow: true });
+      UI.safeOpen('levelScreen', () => UI.renderLevels());
     } else if (t.mode === 'training') {
       startGame('training');
     } else if (t.mode === 'wall') {
@@ -3274,26 +3274,95 @@ function syncPlayLayer() {
   try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
 }
 
-function ensureMenuScreenActive() {
-  if (state !== 'menu') return;
-  const active = document.querySelector('.screen.active');
-  if (!active) {
-    try { UI.show('menuScreen'); } catch (_) {
+function activeScreenEl() {
+  if (typeof UI !== 'undefined' && UI.screens) {
+    for (const sid of UI.screens) {
+      const el = document.getElementById(sid);
+      if (el && el.classList.contains('active')) return el;
+    }
+  }
+  return document.querySelector('.screen.active');
+}
+
+function isUiVisible() {
+  if (activeScreenEl()) return true;
+  if (state === 'play' && game) {
+    const el = document.getElementById('game');
+    return !!(el && el.style.visibility !== 'hidden' && document.body.classList.contains('is-playing'));
+  }
+  return false;
+}
+
+/** Detecteer en herstel volledig zwart scherm (geen UI, geen canvas). */
+function blackScreenGuard(where) {
+  if (window.__sfBlackGuardBusy) return;
+  if (isUiVisible()) return;
+  window.__sfBlackGuardBusy = true;
+  try {
+    console.warn('[Stickman] black screen guard:', where || '?', 'state=', state);
+    if (state === 'play') {
+      if (game) {
+        syncPlayLayerWithoutGuard();
+        if (isUiVisible()) return;
+      }
+      state = 'menu';
+      game = null;
+    }
+    ensureVisibleScreen();
+    if (!isUiVisible()) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById('menuScreen')?.classList.add('active');
-      syncPlayLayer();
+      syncPlayLayerWithoutGuard();
     }
+    if (!window.__sfBlackGuardToast || Date.now() - window.__sfBlackGuardToast > 5000) {
+      window.__sfBlackGuardToast = Date.now();
+      userToast('Scherm hersteld — tik opnieuw als iets hapert', 3800);
+    }
+  } finally {
+    window.__sfBlackGuardBusy = false;
+  }
+}
+
+function syncPlayLayerWithoutGuard() {
+  const el = document.getElementById('game');
+  if (!el) return;
+  const canvasHits = state === 'play' && !!game;
+  el.style.pointerEvents = canvasHits ? 'auto' : 'none';
+  el.style.visibility = canvasHits ? 'visible' : 'hidden';
+  el.style.touchAction = canvasHits ? 'none' : 'manipulation';
+  document.body.classList.toggle('is-playing', canvasHits);
+  document.body.style.overflow = canvasHits ? 'hidden' : '';
+  try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
+}
+
+function ensureMenuScreenActive() {
+  if (state !== 'menu') return;
+  if (activeScreenEl()) return;
+  try { UI.show('menuScreen'); } catch (_) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('menuScreen')?.classList.add('active');
+    syncPlayLayerWithoutGuard();
   }
 }
 
 /** Voorkom zwart scherm wanneer geen .screen.active (menu/pauze/result). */
 function ensureVisibleScreen() {
-  if (document.querySelector('.screen.active')) return;
-  if (state === 'play') return;
+  if (activeScreenEl()) return;
+  if (state === 'play') {
+    if (game) {
+      syncPlayLayerWithoutGuard();
+      return;
+    }
+    state = 'menu';
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('menuScreen')?.classList.add('active');
+    syncPlayLayerWithoutGuard();
+    return;
+  }
   if (state === 'pause') {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('pauseScreen')?.classList.add('active');
-    syncPlayLayer();
+    syncPlayLayerWithoutGuard();
     return;
   }
   if (state === 'result') {
@@ -3304,7 +3373,7 @@ function ensureVisibleScreen() {
       state = 'menu';
       document.getElementById('menuScreen')?.classList.add('active');
     }
-    syncPlayLayer();
+    syncPlayLayerWithoutGuard();
     return;
   }
   ensureMenuScreenActive();
@@ -7347,14 +7416,16 @@ const BOSS_AT = {
 };
 
 function weightedPick(pool, n) {
-  const weights = pool.map(id => {
+  const safe = (pool || []).filter((id) => SPECIES[id]);
+  const use = safe.length ? safe : ['slymo'];
+  const weights = use.map(id => {
     const o = rarityOf(SPECIES[id].rarity).order;
     return Math.max(0.3, 1.5 - o * 0.22 + Math.min(n, 45) * 0.012 * o);
   });
   const sum = weights.reduce((a, b) => a + b, 0);
   let r = Math.random() * sum;
-  for (let i = 0; i < pool.length; i++) { r -= weights[i]; if (r <= 0) return pool[i]; }
-  return pool[pool.length - 1];
+  for (let i = 0; i < use.length; i++) { r -= weights[i]; if (r <= 0) return use[i]; }
+  return use[use.length - 1];
 }
 const STAR_HP = { three: 0.72, two: 0.38 };
 function starsFromHpPct(hpPct) {
@@ -7450,6 +7521,7 @@ function buildLevel(n) {
     const list = [];
     for (let i = 0; i < perWave; i++) {
       const sp = weightedPick(pool, n);
+      if (!SPECIES[sp]) continue;
       const rareElite = rarityOf(SPECIES[sp].rarity).order >= 3 && Math.random() < 0.14;
       list.push({ sp, elite: rareElite, giant: rollWaveGiant(n, rareElite) });
     }
@@ -20850,14 +20922,8 @@ const UI = {
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
       return;
     }
-    if (opts.renderBeforeShow && renderFn) {
-      try { renderFn(); } catch (err) {
-        sfReportError(renderFn.name || screenId, err, opts.msg || 'Scherm laden mislukt');
-        return;
-      }
-    }
     this.show(screenId);
-    if (!opts.renderBeforeShow && renderFn) {
+    if (renderFn) {
       try { renderFn(); } catch (err) {
         sfReportError(renderFn.name || screenId, err, opts.msg || 'Scherm laden mislukt — herlaad via Verse versie');
       }
@@ -20866,7 +20932,14 @@ const UI = {
 
   show(id) {
     try {
-      if (id) {
+      if (!id) {
+        if (state === 'play' && !game) {
+          sfReportError('UI.show/play', new Error('no game ref'), 'Gevecht niet geladen — terug naar menu');
+          try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
+          syncPlayLayer();
+          return;
+        }
+      } else {
         const target = document.getElementById(id);
         if (!target) {
           sfReportError('UI.show/' + id, new Error('missing screen DOM'), 'Scherm niet gevonden — terug naar menu');
@@ -20874,14 +20947,15 @@ const UI = {
           syncPlayLayer();
           return;
         }
+        target.classList.add('active');
       }
       for (const s of this.screens) {
+        if (id && s === id) continue;
         const scr = document.getElementById(s);
         if (scr) scr.classList.remove('active');
       }
       if (id) {
         const el = document.getElementById(id);
-        el.classList.add('active');
         requestAnimationFrame(() => {
           try {
             this.scrollNavTop(el);
@@ -20994,7 +21068,7 @@ const UI = {
       }
       if (active === 'gambleScreen') {
         try { cancelGambleStart(); } catch (_) {}
-        this.safeOpen('levelScreen', () => this.renderLevels(), { renderBeforeShow: true });
+        this.safeOpen('levelScreen', () => this.renderLevels());
         return;
       }
       if (active === 'modeHubScreen') {
@@ -21359,10 +21433,7 @@ const UI = {
   openModeHub(id) {
     if (!MODE_HUB_META[id]) return;
     this.modeHubId = id;
-    this.safeOpen('modeHubScreen', () => this.renderModeHub(), {
-      renderBeforeShow: true,
-      msg: 'Hub laden mislukt',
-    });
+    this.safeOpen('modeHubScreen', () => this.renderModeHub(), { msg: 'Hub laden mislukt' });
   },
 
   renderModeHub() {
@@ -21865,6 +21936,7 @@ const UI = {
   },
 
   renderLevels() {
+    try {
     const bar = document.getElementById('levelIslandBar');
     const info = document.getElementById('levelIslandInfo');
     const grid = document.getElementById('levelGrid');
@@ -21997,6 +22069,9 @@ const UI = {
         });
       }
       grid.appendChild(el);
+    }
+    } catch (err) {
+      sfReportError('renderLevels', err, 'Level-overzicht laden mislukt — herlaad via Verse versie');
     }
   },
 
@@ -23331,17 +23406,17 @@ function bindPress(el, handler) {
 
 bindPress(document.getElementById('btnAdventure'), () => {
   AudioSys.init(); AudioSys.sfx('select');
-  UI.safeOpen('levelScreen', () => UI.renderLevels(), { renderBeforeShow: true, msg: 'Avontuur laden mislukt' });
+  UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: 'Avontuur laden mislukt' });
 });
 document.querySelectorAll('[data-hub]').forEach((el) => {
   bindPress(el, () => {
     AudioSys.init(); AudioSys.sfx('select');
     const hub = el.dataset.hub;
     if (hub === 'adventure') {
-      UI.safeOpen('levelScreen', () => UI.renderLevels(), { renderBeforeShow: true, msg: 'Avontuur laden mislukt' });
+      UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: 'Avontuur laden mislukt' });
     } else if (hub === 'versus') {
       UI.charPickStep = 1;
-      UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { renderBeforeShow: true, msg: 'Kies karakter mislukt' });
+      UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { msg: 'Kies karakter mislukt' });
     } else {
       UI.openModeHub(hub);
     }
@@ -23361,7 +23436,7 @@ bindPress(document.getElementById('btnGambleSkip'), () => {
 document.querySelectorAll('[data-back-gamble]').forEach((b) => {
   bindPress(b, () => {
     AudioSys.sfx('select');
-    UI.safeOpen('levelScreen', () => UI.renderLevels(), { renderBeforeShow: true });
+    UI.safeOpen('levelScreen', () => UI.renderLevels());
   });
 });
 const btnContinue = document.getElementById('btnContinue');
@@ -23380,7 +23455,7 @@ const btnVersus = document.getElementById('btnVersus');
 bindPress(btnVersus, () => {
   AudioSys.init(); AudioSys.sfx('select');
   UI.charPickStep = 1;
-  UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { renderBeforeShow: true, msg: 'Kies karakter mislukt' });
+  UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { msg: 'Kies karakter mislukt' });
 });
 const charPickBackP1 = document.getElementById('charPickBackP1');
 bindPress(charPickBackP1, () => {
@@ -23427,7 +23502,7 @@ bindPress(btnSettings, () => {
   UI.safeOpen('settingsScreen', () => {
     UI.renderSettings();
     UI.renderHosting();
-  }, { renderBeforeShow: true, msg: 'Instellingen laden mislukt' });
+  }, { msg: 'Instellingen laden mislukt' });
 });
 const btnMissions = document.getElementById('btnMissions');
 bindPress(btnMissions, () => {
@@ -23657,7 +23732,7 @@ bindSettingsControls();
 const btnHelp = document.getElementById('btnHelp');
 bindPress(btnHelp, () => {
   AudioSys.init(); AudioSys.sfx('select');
-  UI.safeOpen('helpScreen', () => UI.renderHelp(), { renderBeforeShow: true, msg: 'Help laden mislukt' });
+  UI.safeOpen('helpScreen', () => UI.renderHelp(), { msg: 'Help laden mislukt' });
 });
 function runForceFreshVersion() {
   safeAsync(runVersionUpdateWithSavePrompt(), 'forceFresh', t('versionUpdate.fail'));
@@ -23667,7 +23742,7 @@ bindPress(document.getElementById('btnForceFresh'), runForceFreshVersion);
 const btnIslandHelp = document.getElementById('btnIslandHelp');
 bindPress(btnIslandHelp, () => {
   AudioSys.sfx('select');
-  UI.safeOpen('helpScreen', () => UI.renderHelp(), { renderBeforeShow: true, msg: 'Help laden mislukt' });
+  UI.safeOpen('helpScreen', () => UI.renderHelp(), { msg: 'Help laden mislukt' });
 });
 const helpOk = document.getElementById('helpOk');
 bindPress(helpOk, () => { AudioSys.sfx('select'); UI.goMenu(); });
@@ -23730,7 +23805,7 @@ bindPress(document.getElementById('pauseBtn'), () => {
     try { Input.releaseAll(); } catch (_) {}
     state = 'pause';
     AudioSys.setPaused(true);
-    UI.safeOpen('pauseScreen', () => UI.renderPauseToggles(), { renderBeforeShow: true });
+    UI.show('pauseScreen');
   }
 });
 const pauseTogMusic = document.getElementById('pauseTogMusic');
@@ -24101,7 +24176,7 @@ document.addEventListener('visibilitychange', () => {
       state = 'pause';
       AudioSys.setPaused(true);
       try {
-        UI.safeOpen('pauseScreen', () => UI.renderPauseToggles(), { renderBeforeShow: true });
+        UI.show('pauseScreen');
       } catch (_) { ensureVisibleScreen(); }
     } else {
       try { AudioSys.syncContextPower(); } catch (_) {}
@@ -24342,6 +24417,7 @@ function bootGame() {
   }, 'titleSting');
   requestAnimationFrame(loop);
   if (state === 'menu') safeCall(() => UI.show('menuScreen'), 'showMenu');
+  safeCall(() => blackScreenGuard('boot'), 'blackGuard');
   setTimeout(() => {
     try {
       const hub = document.querySelector('[data-hub]');
@@ -24372,11 +24448,11 @@ function bootGame() {
       setTimeout(() => {
         try {
           if (mode === 'adventure') {
-            UI.safeOpen('levelScreen', () => UI.renderLevels(), { renderBeforeShow: true });
+            UI.safeOpen('levelScreen', () => UI.renderLevels());
           } else if (mode === 'training') startGame('training');
           else if (mode === 'versus') {
             UI.charPickStep = 1;
-            UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { renderBeforeShow: true });
+            UI.safeOpen('charSelectScreen', () => UI.renderCharSelect());
           } else if (mode === 'wall') startGame('wall');
           else if (mode === 'coinrun') startGame('coinrun');
         } catch (err) {
@@ -24414,12 +24490,12 @@ function bindUiLayerWatch() {
   const tick = () => {
     try {
       syncPlayLayer();
-      ensureVisibleScreen();
+      blackScreenGuard('uiWatch');
       if (typeof window.sfTunnelNukeOverlay === 'function') window.sfTunnelNukeOverlay();
     } catch (_) {}
   };
   document.addEventListener('touchstart', tick, { passive: true, capture: true });
   document.addEventListener('pointerdown', tick, { passive: true, capture: true });
-  setInterval(tick, 8000);
+  setInterval(tick, 2000);
 }
 bindUiLayerWatch();

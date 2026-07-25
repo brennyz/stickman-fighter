@@ -934,14 +934,8 @@ const UI = {
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
       return;
     }
-    if (opts.renderBeforeShow && renderFn) {
-      try { renderFn(); } catch (err) {
-        sfReportError(renderFn.name || screenId, err, opts.msg || 'Scherm laden mislukt');
-        return;
-      }
-    }
     this.show(screenId);
-    if (!opts.renderBeforeShow && renderFn) {
+    if (renderFn) {
       try { renderFn(); } catch (err) {
         sfReportError(renderFn.name || screenId, err, opts.msg || 'Scherm laden mislukt — herlaad via Verse versie');
       }
@@ -950,7 +944,14 @@ const UI = {
 
   show(id) {
     try {
-      if (id) {
+      if (!id) {
+        if (state === 'play' && !game) {
+          sfReportError('UI.show/play', new Error('no game ref'), 'Gevecht niet geladen — terug naar menu');
+          try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
+          syncPlayLayer();
+          return;
+        }
+      } else {
         const target = document.getElementById(id);
         if (!target) {
           sfReportError('UI.show/' + id, new Error('missing screen DOM'), 'Scherm niet gevonden — terug naar menu');
@@ -958,14 +959,15 @@ const UI = {
           syncPlayLayer();
           return;
         }
+        target.classList.add('active');
       }
       for (const s of this.screens) {
+        if (id && s === id) continue;
         const scr = document.getElementById(s);
         if (scr) scr.classList.remove('active');
       }
       if (id) {
         const el = document.getElementById(id);
-        el.classList.add('active');
         requestAnimationFrame(() => {
           try {
             this.scrollNavTop(el);
@@ -1078,7 +1080,7 @@ const UI = {
       }
       if (active === 'gambleScreen') {
         try { cancelGambleStart(); } catch (_) {}
-        this.safeOpen('levelScreen', () => this.renderLevels(), { renderBeforeShow: true });
+        this.safeOpen('levelScreen', () => this.renderLevels());
         return;
       }
       if (active === 'modeHubScreen') {
@@ -1443,10 +1445,7 @@ const UI = {
   openModeHub(id) {
     if (!MODE_HUB_META[id]) return;
     this.modeHubId = id;
-    this.safeOpen('modeHubScreen', () => this.renderModeHub(), {
-      renderBeforeShow: true,
-      msg: 'Hub laden mislukt',
-    });
+    this.safeOpen('modeHubScreen', () => this.renderModeHub(), { msg: 'Hub laden mislukt' });
   },
 
   renderModeHub() {
@@ -1949,6 +1948,7 @@ const UI = {
   },
 
   renderLevels() {
+    try {
     const bar = document.getElementById('levelIslandBar');
     const info = document.getElementById('levelIslandInfo');
     const grid = document.getElementById('levelGrid');
@@ -2081,6 +2081,9 @@ const UI = {
         });
       }
       grid.appendChild(el);
+    }
+    } catch (err) {
+      sfReportError('renderLevels', err, 'Level-overzicht laden mislukt — herlaad via Verse versie');
     }
   },
 

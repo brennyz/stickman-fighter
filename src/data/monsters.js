@@ -250,14 +250,16 @@ const BOSS_AT = {
 };
 
 function weightedPick(pool, n) {
-  const weights = pool.map(id => {
+  const safe = (pool || []).filter((id) => SPECIES[id]);
+  const use = safe.length ? safe : ['slymo'];
+  const weights = use.map(id => {
     const o = rarityOf(SPECIES[id].rarity).order;
     return Math.max(0.3, 1.5 - o * 0.22 + Math.min(n, 45) * 0.012 * o);
   });
   const sum = weights.reduce((a, b) => a + b, 0);
   let r = Math.random() * sum;
-  for (let i = 0; i < pool.length; i++) { r -= weights[i]; if (r <= 0) return pool[i]; }
-  return pool[pool.length - 1];
+  for (let i = 0; i < use.length; i++) { r -= weights[i]; if (r <= 0) return use[i]; }
+  return use[use.length - 1];
 }
 const STAR_HP = { three: 0.72, two: 0.38 };
 function starsFromHpPct(hpPct) {
@@ -353,6 +355,7 @@ function buildLevel(n) {
     const list = [];
     for (let i = 0; i < perWave; i++) {
       const sp = weightedPick(pool, n);
+      if (!SPECIES[sp]) continue;
       const rareElite = rarityOf(SPECIES[sp].rarity).order >= 3 && Math.random() < 0.14;
       list.push({ sp, elite: rareElite, giant: rollWaveGiant(n, rareElite) });
     }

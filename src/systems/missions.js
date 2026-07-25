@@ -36,7 +36,7 @@ function goDailyPlayTarget(taskId) {
     AudioSys.init();
     AudioSys.sfx('select');
     if (t.mode === 'adventure') {
-      UI.safeOpen('levelScreen', () => UI.renderLevels(), { renderBeforeShow: true });
+      UI.safeOpen('levelScreen', () => UI.renderLevels());
     } else if (t.mode === 'training') {
       startGame('training');
     } else if (t.mode === 'wall') {
@@ -1196,26 +1196,95 @@ function syncPlayLayer() {
   try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
 }
 
-function ensureMenuScreenActive() {
-  if (state !== 'menu') return;
-  const active = document.querySelector('.screen.active');
-  if (!active) {
-    try { UI.show('menuScreen'); } catch (_) {
+function activeScreenEl() {
+  if (typeof UI !== 'undefined' && UI.screens) {
+    for (const sid of UI.screens) {
+      const el = document.getElementById(sid);
+      if (el && el.classList.contains('active')) return el;
+    }
+  }
+  return document.querySelector('.screen.active');
+}
+
+function isUiVisible() {
+  if (activeScreenEl()) return true;
+  if (state === 'play' && game) {
+    const el = document.getElementById('game');
+    return !!(el && el.style.visibility !== 'hidden' && document.body.classList.contains('is-playing'));
+  }
+  return false;
+}
+
+/** Detecteer en herstel volledig zwart scherm (geen UI, geen canvas). */
+function blackScreenGuard(where) {
+  if (window.__sfBlackGuardBusy) return;
+  if (isUiVisible()) return;
+  window.__sfBlackGuardBusy = true;
+  try {
+    console.warn('[Stickman] black screen guard:', where || '?', 'state=', state);
+    if (state === 'play') {
+      if (game) {
+        syncPlayLayerWithoutGuard();
+        if (isUiVisible()) return;
+      }
+      state = 'menu';
+      game = null;
+    }
+    ensureVisibleScreen();
+    if (!isUiVisible()) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById('menuScreen')?.classList.add('active');
-      syncPlayLayer();
+      syncPlayLayerWithoutGuard();
     }
+    if (!window.__sfBlackGuardToast || Date.now() - window.__sfBlackGuardToast > 5000) {
+      window.__sfBlackGuardToast = Date.now();
+      userToast('Scherm hersteld — tik opnieuw als iets hapert', 3800);
+    }
+  } finally {
+    window.__sfBlackGuardBusy = false;
+  }
+}
+
+function syncPlayLayerWithoutGuard() {
+  const el = document.getElementById('game');
+  if (!el) return;
+  const canvasHits = state === 'play' && !!game;
+  el.style.pointerEvents = canvasHits ? 'auto' : 'none';
+  el.style.visibility = canvasHits ? 'visible' : 'hidden';
+  el.style.touchAction = canvasHits ? 'none' : 'manipulation';
+  document.body.classList.toggle('is-playing', canvasHits);
+  document.body.style.overflow = canvasHits ? 'hidden' : '';
+  try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
+}
+
+function ensureMenuScreenActive() {
+  if (state !== 'menu') return;
+  if (activeScreenEl()) return;
+  try { UI.show('menuScreen'); } catch (_) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('menuScreen')?.classList.add('active');
+    syncPlayLayerWithoutGuard();
   }
 }
 
 /** Voorkom zwart scherm wanneer geen .screen.active (menu/pauze/result). */
 function ensureVisibleScreen() {
-  if (document.querySelector('.screen.active')) return;
-  if (state === 'play') return;
+  if (activeScreenEl()) return;
+  if (state === 'play') {
+    if (game) {
+      syncPlayLayerWithoutGuard();
+      return;
+    }
+    state = 'menu';
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('menuScreen')?.classList.add('active');
+    syncPlayLayerWithoutGuard();
+    return;
+  }
   if (state === 'pause') {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('pauseScreen')?.classList.add('active');
-    syncPlayLayer();
+    syncPlayLayerWithoutGuard();
     return;
   }
   if (state === 'result') {
@@ -1226,7 +1295,7 @@ function ensureVisibleScreen() {
       state = 'menu';
       document.getElementById('menuScreen')?.classList.add('active');
     }
-    syncPlayLayer();
+    syncPlayLayerWithoutGuard();
     return;
   }
   ensureMenuScreenActive();

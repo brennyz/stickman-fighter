@@ -86,17 +86,17 @@ function bindPress(el, handler) {
 
 bindPress(document.getElementById('btnAdventure'), () => {
   AudioSys.init(); AudioSys.sfx('select');
-  UI.safeOpen('levelScreen', () => UI.renderLevels(), { renderBeforeShow: true, msg: 'Avontuur laden mislukt' });
+  UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: 'Avontuur laden mislukt' });
 });
 document.querySelectorAll('[data-hub]').forEach((el) => {
   bindPress(el, () => {
     AudioSys.init(); AudioSys.sfx('select');
     const hub = el.dataset.hub;
     if (hub === 'adventure') {
-      UI.safeOpen('levelScreen', () => UI.renderLevels(), { renderBeforeShow: true, msg: 'Avontuur laden mislukt' });
+      UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: 'Avontuur laden mislukt' });
     } else if (hub === 'versus') {
       UI.charPickStep = 1;
-      UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { renderBeforeShow: true, msg: 'Kies karakter mislukt' });
+      UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { msg: 'Kies karakter mislukt' });
     } else {
       UI.openModeHub(hub);
     }
@@ -116,7 +116,7 @@ bindPress(document.getElementById('btnGambleSkip'), () => {
 document.querySelectorAll('[data-back-gamble]').forEach((b) => {
   bindPress(b, () => {
     AudioSys.sfx('select');
-    UI.safeOpen('levelScreen', () => UI.renderLevels(), { renderBeforeShow: true });
+    UI.safeOpen('levelScreen', () => UI.renderLevels());
   });
 });
 const btnContinue = document.getElementById('btnContinue');
@@ -135,7 +135,7 @@ const btnVersus = document.getElementById('btnVersus');
 bindPress(btnVersus, () => {
   AudioSys.init(); AudioSys.sfx('select');
   UI.charPickStep = 1;
-  UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { renderBeforeShow: true, msg: 'Kies karakter mislukt' });
+  UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { msg: 'Kies karakter mislukt' });
 });
 const charPickBackP1 = document.getElementById('charPickBackP1');
 bindPress(charPickBackP1, () => {
@@ -182,7 +182,7 @@ bindPress(btnSettings, () => {
   UI.safeOpen('settingsScreen', () => {
     UI.renderSettings();
     UI.renderHosting();
-  }, { renderBeforeShow: true, msg: 'Instellingen laden mislukt' });
+  }, { msg: 'Instellingen laden mislukt' });
 });
 const btnMissions = document.getElementById('btnMissions');
 bindPress(btnMissions, () => {
@@ -412,7 +412,7 @@ bindSettingsControls();
 const btnHelp = document.getElementById('btnHelp');
 bindPress(btnHelp, () => {
   AudioSys.init(); AudioSys.sfx('select');
-  UI.safeOpen('helpScreen', () => UI.renderHelp(), { renderBeforeShow: true, msg: 'Help laden mislukt' });
+  UI.safeOpen('helpScreen', () => UI.renderHelp(), { msg: 'Help laden mislukt' });
 });
 function runForceFreshVersion() {
   safeAsync(runVersionUpdateWithSavePrompt(), 'forceFresh', t('versionUpdate.fail'));
@@ -422,7 +422,7 @@ bindPress(document.getElementById('btnForceFresh'), runForceFreshVersion);
 const btnIslandHelp = document.getElementById('btnIslandHelp');
 bindPress(btnIslandHelp, () => {
   AudioSys.sfx('select');
-  UI.safeOpen('helpScreen', () => UI.renderHelp(), { renderBeforeShow: true, msg: 'Help laden mislukt' });
+  UI.safeOpen('helpScreen', () => UI.renderHelp(), { msg: 'Help laden mislukt' });
 });
 const helpOk = document.getElementById('helpOk');
 bindPress(helpOk, () => { AudioSys.sfx('select'); UI.goMenu(); });
@@ -485,7 +485,7 @@ bindPress(document.getElementById('pauseBtn'), () => {
     try { Input.releaseAll(); } catch (_) {}
     state = 'pause';
     AudioSys.setPaused(true);
-    UI.safeOpen('pauseScreen', () => UI.renderPauseToggles(), { renderBeforeShow: true });
+    UI.show('pauseScreen');
   }
 });
 const pauseTogMusic = document.getElementById('pauseTogMusic');
