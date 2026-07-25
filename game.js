@@ -727,7 +727,8 @@ function readSaveJson(raw) {
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
     if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;
     if (typeof parsed.activeJutsu === 'string') merged.activeJutsu = parsed.activeJutsu;
-    if (typeof parsed.lang === 'string' && SUPPORTED_LANGS.includes(parsed.lang)) merged.lang = parsed.lang;
+    // lang: copy raw — SUPPORTED_LANGS may not exist yet (storage loads before i18n)
+    if (typeof parsed.lang === 'string') merged.lang = parsed.lang;
     return merged;
   } catch (e) {
     return null;
@@ -11916,9 +11917,6 @@ function uiTapAllowed(e) {
   return true;
 }
 
-/** True tijdens/na scroll-slide — blokkeert tap én long-press (iPad level-tegels). */
-function uiGestureMoved() { return !!_uiTap.moved || _uiLastGestureScroll; }
-
 function initUiTapScrollGuard() {
   if (window.__sfUiTapGuard) return;
   window.__sfUiTapGuard = true;
@@ -21785,6 +21783,8 @@ const UI = {
         el.title = levelTileTip(n, pick, infoLv, boss, best, fails);
         let holdT = null;
         let holdSkip = false;
+        let holdX = 0;
+        let holdY = 0;
         el.addEventListener('pointerdown', (e) => {
           const tapId = e.pointerId;
           holdSkip = false;
@@ -22988,7 +22988,8 @@ const UI = {
     if (!title) return;
     title.textContent = data.title;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
-    document.getElementById('resDetail').textContent = data.detail;
+    const detailEl = document.getElementById('resDetail');
+    if (detailEl) detailEl.textContent = data.detail;
     const lootEl = document.getElementById('resLoot');
     if (lootEl) {
       const html = formatRunLootHtml(game && game.runLoot, data.mode);
@@ -23000,9 +23001,12 @@ const UI = {
         lootEl.style.display = 'none';
       }
     }
-    document.getElementById('resXp').textContent = t('result.xp', {
-      xp: data.xp, lvl: save.lvl, cur: save.xp, need: xpNeed(save.lvl),
-    });
+    const xpEl = document.getElementById('resXp');
+    if (xpEl) {
+      xpEl.textContent = t('result.xp', {
+        xp: data.xp, lvl: save.lvl, cur: save.xp, need: xpNeed(save.lvl),
+      });
+    }
     const tipEl = document.getElementById('resTip');
     if (tipEl) tipEl.textContent = data.tip || '';
     const starsEl = document.getElementById('resStars');
