@@ -152,7 +152,7 @@ class Fighter {
 
   /** Nood-super (Kets-slot): omringd/stunlock → tik midden-symbool of druk E. */
   doKetsbam(game) {
-    if (!this.isPlayer || !this.alive || !game) return false;
+    if (!this.isPlayer || !this.alive || !game || game.over) return false;
     if (game.ketsbamCd > 0 || game.ketsbamChargeT > 0 || game.inputLocked || game.traveling) return false;
     const near = game.countNearbyMonsters(KETSBAM_DETECT_R);
     const stuck = this.hurtT > 0 && near >= 2;
@@ -164,10 +164,15 @@ class Fighter {
 
     game.ketsbamCd = superCooldown(sp);
     game.ketsbamSuperT = KETSBAM_SUPER_ARMOR + chargeDur;
+    // Thermometer schoon → 2e Kets voelt als frisse opbouw, niet halfvolle bar
     game.ketsbamShow = false;
+    game.ketsbamBuildT = 0;
+    game.ketsbamBuildProg = 0;
+    game.ketsbamPulse = 0;
     game.ketsbamChargeT = chargeDur;
     game.ketsbamChargeDur = chargeDur;
     game.ketsbamChargePulse = 0;
+    game.ketsbamChargeAcc = 0;
     game.inputLocked = true;
     this.hurtT = 0;
     this.attack = null;
@@ -184,10 +189,19 @@ class Fighter {
   }
 
   finishKetsbam(game) {
-    if (!this.isPlayer || !this.alive || !game) return;
+    if (!game) return;
+    // Altijd charge/lock opruimen — ook bij dood — anders blijft 2e Kets/input vast
     game.ketsbamChargeT = 0;
+    game.ketsbamShow = false;
+    game.ketsbamBuildT = 0;
+    game.ketsbamBuildProg = 0;
+    if (game.over) {
+      game.inputLocked = true;
+      return;
+    }
     game.inputLocked = false;
-    game.ketsbamSuperT = Math.max(game.ketsbamSuperT, KETSBAM_SUPER_ARMOR);
+    if (!this.isPlayer || !this.alive) return;
+    game.ketsbamSuperT = Math.max(game.ketsbamSuperT || 0, KETSBAM_SUPER_ARMOR);
     try {
       finishEquippedSuper(this, game);
     } catch (err) {

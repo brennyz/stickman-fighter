@@ -2185,11 +2185,15 @@ class Game {
       try { Input.dualMode = false; Input.layout(W, H); } catch (_) {}
     }
     if (this.playerHurtCd > 0) this.playerHurtCd -= dt;
+    let ketsJustFinished = false;
     if (this.ketsbamChargeT > 0) {
       if (this.over || !this.player?.alive) {
         this.ketsbamChargeT = 0;
-        this.inputLocked = false;
         this.ketsbamShow = false;
+        this.ketsbamBuildT = 0;
+        this.ketsbamBuildProg = 0;
+        // Bij level-einde lock houden; anders altijd ontgrendelen
+        this.inputLocked = !!this.over;
       } else {
         if (this.ketsbamCd > 0) this.ketsbamCd -= dt;
         if (this.ketsbamSuperT > 0) this.ketsbamSuperT -= dt;
@@ -2223,14 +2227,36 @@ class Game {
             this.ketsbamChargeT = 0;
             this.inputLocked = false;
             this.ketsbamShow = false;
+            this.ketsbamBuildT = 0;
+            this.ketsbamBuildProg = 0;
           }
+          // Zelfde frame door → wave-clear / Next voelt direct na 1e én 2e Kets
+          ketsJustFinished = true;
+        } else {
+          return;
         }
-        return;
       }
     }
-    if (this.freezeT > 0) { this.freezeT -= dt; return; }
+    if (this.freezeT > 0 && !ketsJustFinished) {
+      this.freezeT -= dt;
+      this.t += dt;
+      this.shakeT = Math.max(0, this.shakeT - dt);
+      // Soft hit-stop: FX + adventure mogen door (2e Kets → golf/level-einde soepel)
+      if (this.mode === 'adventure') {
+        try { tickSuperFx(this, dt); } catch (_) {}
+        if (!this.over && this.player?.alive) {
+          try { this.updateAdventure(dt); } catch (_) {}
+        }
+      }
+      for (const m of this.monsters) {
+        try { if (!m.alive) m.update(dt, this); } catch (_) {}
+      }
+      this.monsters = this.monsters.filter(m => m.alive || m.deadT < 1);
+      return;
+    }
+    if (ketsJustFinished && this.freezeT > 0) this.freezeT = Math.max(0, this.freezeT - dt);
     if (this.mode === 'adventure') this.updateKetsbam(dt);
-    this.t += dt;
+    if (!ketsJustFinished) this.t += dt;
     if (this.hint > 0) this.hint -= dt;
     this.shakeT = Math.max(0, this.shakeT - dt);
     if (this.bossPhase2Flash > 0) this.bossPhase2Flash -= dt;
@@ -3579,12 +3605,21 @@ class Game {
       this.ketsbamShow = false;
       return;
     }
-    if (this.ketsbamCd > 0) this.ketsbamCd -= dt;
+    if (this.ketsbamCd > 0) {
+      this.ketsbamCd -= dt;
+      // Tijdens CD: thermometer leeg houden — klaar = frisse fill voor 2e Kets
+      this.ketsbamBuildT = 0;
+      this.ketsbamBuildProg = 0;
+      this.ketsbamShow = false;
+      this.ketsbamPulse = 0;
+      if (this.ketsbamSuperT > 0) this.ketsbamSuperT -= dt;
+      return;
+    }
     if (this.ketsbamSuperT > 0) this.ketsbamSuperT -= dt;
     const near = this.countNearbyMonsters(KETSBAM_DETECT_R);
     const stuck = this.player.hurtT > 0 && near >= 2;
     const swarmed = near >= KETSBAM_NEAR_MIN;
-    const eligible = this.ketsbamCd <= 0 && !this.inputLocked && !this.traveling && (swarmed || stuck);
+    const eligible = !this.inputLocked && !this.traveling && (swarmed || stuck);
     if (eligible) {
       this.ketsbamBuildT = Math.min(KETSBAM_BUILD_DUR, (this.ketsbamBuildT || 0) + dt);
     } else {
@@ -3605,8 +3640,19 @@ class Game {
   }
 
   tryKetsbam() {
-    if (this.ketsbamChargeT > 0 || !this.ketsbamShow || !this.player?.alive || this.over) return false;
-    return this.player.doKetsbam(this);
+    try {
+      if (this.ketsbamChargeT > 0 || !this.ketsbamShow || !this.player?.alive || this.over) return false;
+      if (this.inputLocked || this.traveling) return false;
+      return !!this.player.doKetsbam(this);
+    } catch (err) {
+      try { sfReportError('tryKetsbam', err); } catch (_) {}
+      try {
+        this.ketsbamChargeT = 0;
+        this.ketsbamShow = false;
+        this.inputLocked = !!this.over;
+      } catch (_) {}
+      return false;
+    }
   }
 
   drawKetsbamChargeAura(c) {
