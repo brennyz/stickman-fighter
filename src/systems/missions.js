@@ -1658,9 +1658,11 @@ function scheduleGameResult(gameRef, delayMs, showFn) {
   setTimeout(() => {
     safeUiAction(() => {
       if (!gameRef || gameRef._resultToken !== token) return;
-      // Na over: resultaat tonen ook als goMenu() game=null zette tijdens delay
-      if (game !== gameRef && !gameRef.over) return;
+      // Nieuw gevecht gestart → oude timer negeren (ook na over)
+      if (game && game !== gameRef) return;
+      // Pauze→menu vóór einde → geen resultaat
       if (state === 'menu' && !gameRef.over) return;
+      // Na over: resultaat tonen ook als goMenu() game=null zette tijdens delay
       gameRef._pendingResult = false;
       showFn();
     }, 'scheduleGameResult', 'Resultaat laden mislukt — tik Menu of Opnieuw');

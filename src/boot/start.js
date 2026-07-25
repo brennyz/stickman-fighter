@@ -23,6 +23,7 @@ function startGame(mode, opts) {
     }
     try { primePlayInput(true); } catch (_) {}
   }
+  try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
   try {
     game = new Game(mode, opts);
   } catch (err) {

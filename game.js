@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.67';
+const APP_VERSION = '1.18.68';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 277;
+const SW_CACHE_REV = 278;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -3789,9 +3789,11 @@ function scheduleGameResult(gameRef, delayMs, showFn) {
   setTimeout(() => {
     safeUiAction(() => {
       if (!gameRef || gameRef._resultToken !== token) return;
-      // Na over: resultaat tonen ook als goMenu() game=null zette tijdens delay
-      if (game !== gameRef && !gameRef.over) return;
+      // Nieuw gevecht gestart → oude timer negeren (ook na over)
+      if (game && game !== gameRef) return;
+      // Pauze→menu vóór einde → geen resultaat
       if (state === 'menu' && !gameRef.over) return;
+      // Na over: resultaat tonen ook als goMenu() game=null zette tijdens delay
       gameRef._pendingResult = false;
       showFn();
     }, 'scheduleGameResult', 'Resultaat laden mislukt — tik Menu of Opnieuw');
@@ -20168,7 +20170,7 @@ class Game {
         : (save.trainWins === 3 ? 'Nieuwe stijl vrij: Chakra gloed — Instellingen → Stijl!' : 'Unlock stijlen door meer train-wins!'))
       : onceResultTip('training', 'loss', 'Spring tijdens CHIDORI-telegraph — robot mist · duck oor-lasers')
         || 'Tip: duck lasers · chakra vol → Rasengan';
-    setTimeout(() => UI.showResult(win, {
+    scheduleGameResult(this, 1400, () => UI.showResult(win, {
       title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
       detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · max combo ×${trainBest}` +
         (win ? ` · ${save.trainWins}x gewonnen` : ''),
@@ -24974,6 +24976,7 @@ const UI = {
         return;
       }
       if (active === 'levelScreen') {
+        try { cancelGambleStart(); } catch (_) {}
         this.show('menuScreen');
         return;
       }
@@ -27287,6 +27290,8 @@ const UI = {
 
   showResult(win, data) {
     if (!data) return;
+    // Actief gevecht → geen stale resultaat over nieuwe run heen
+    if (state === 'play' && game && !game.over) return;
     // Na win/lose: altijd resultaat — ook na pauze→menu terwijl gameRef nog pending was
     if (state === 'menu' && game && !game.over) return;
     try {
@@ -27397,6 +27402,7 @@ function startGame(mode, opts) {
     }
     try { primePlayInput(true); } catch (_) {}
   }
+  try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
   try {
     game = new Game(mode, opts);
   } catch (err) {

@@ -1149,6 +1149,7 @@ const UI = {
         return;
       }
       if (active === 'levelScreen') {
+        try { cancelGambleStart(); } catch (_) {}
         this.show('menuScreen');
         return;
       }
@@ -3462,6 +3463,8 @@ const UI = {
 
   showResult(win, data) {
     if (!data) return;
+    // Actief gevecht → geen stale resultaat over nieuwe run heen
+    if (state === 'play' && game && !game.over) return;
     // Na win/lose: altijd resultaat — ook na pauze→menu terwijl gameRef nog pending was
     if (state === 'menu' && game && !game.over) return;
     try {
