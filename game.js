@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.64';
+const APP_VERSION = '1.18.65';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 274;
+const SW_CACHE_REV = 275;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -3785,13 +3785,16 @@ function scheduleGameResult(gameRef, delayMs, showFn) {
   if (!gameRef || typeof showFn !== 'function') return;
   const token = (gameRef._resultToken || 0) + 1;
   gameRef._resultToken = token;
+  gameRef._pendingResult = true;
   setTimeout(() => {
     safeUiAction(() => {
       if (!gameRef || gameRef._resultToken !== token) return;
-      if (state === 'menu') return;
       if (game !== gameRef) return;
+      // Alleen skippen als speler bewust naar menu ging vóór einde
+      if (state === 'menu' && !gameRef.over) return;
+      gameRef._pendingResult = false;
       showFn();
-    }, 'scheduleGameResult', 'Resultaat laden mislukt — terug naar menu');
+    }, 'scheduleGameResult', 'Resultaat laden mislukt — tik Menu of Opnieuw');
   }, Math.max(0, delayMs || 0));
 }
 
@@ -5419,9 +5422,9 @@ function applySummonTier(w) {
 }
 const playerWeapon = () => applyWeaponUpgrades(applySummonTier(weaponById(save.weapon)));
 
-/** 2% per avontuur-level: zwaard → Master Sword (Zelda) — 15s, ×2 dmg, groot bereik, unblockable. */
+/** 2% per avontuur-level: zwaard → Master Sword — UIT (zorgde voor plotselinge run-breaks). */
 const MASTER_SWORD_DURATION = 15;
-const MASTER_SWORD_CHANCE = 0.02;
+const MASTER_SWORD_CHANCE = 0;
 function canMasterSwordRoll(w) {
   if (!w || w.id === 'vuist' || w.id === 'master_sword' || isThrowWeapon(w.id)) return false;
   const fam = weaponMoveFamily(w.id);
@@ -5441,10 +5444,8 @@ function buildMasterSwordWeapon(base) {
   });
 }
 function rollSummonChance(elite) {
-  const since = save.stats.killsSinceSummon || 0;
-  // Basis ~0,7% per kill; zachte pity-ramp (+0,004%/kill, max +2%); elites ×2,5
-  const chance = (0.007 + Math.min(0.02, since * 0.00004)) * (elite ? 2.5 : 1);
-  return Math.random() < chance;
+  // UIT: zeldzame summon-ascend (epic/legendary) crashte runs midden in combo-spam
+  return false;
 }
 
 /** Swing-SFX per wapen (procedureel) — geen generieke “swing” voor alles. */
@@ -8258,8 +8259,8 @@ let lastGambleRoll = null;
 
 /* --- src/data/tide-battle.js --- */
 /* ============================== TIDE BATTLE ============================== */
-/** Zeldzame tide-boss per kill — herkenbare summons, generieke namen (geen IP). */
-const TIDE_BATTLE_CHANCE = 0.0005;
+/** Tide-boss per kill — UIT (zeldzame interrupt brak avontuur-flow). */
+const TIDE_BATTLE_CHANCE = 0;
 const TIDE_BOSS_IDS = [
   'tideKyuu', 'tideManda', 'tideGama', 'tideKatsu',
   'tideShuka', 'tideGyuu', 'tideEnma', 'tideGaruda', 'tideCerber',
@@ -8287,8 +8288,7 @@ function tideBattleCanRoll(game) {
 }
 
 function rollTideBattleChance(game) {
-  if (!tideBattleCanRoll(game)) return false;
-  return Math.random() < TIDE_BATTLE_CHANCE;
+  return false;
 }
 
 function tideBossSpawnOpts(game) {
@@ -8756,6 +8756,7 @@ function seedNlGameStrings() {
     waveClear: 'Golf gewist +{heal} HP',
     waveN: 'GOLF {n}/{total}',
     fight: 'VECHT!',
+    levelClear: 'LEVEL {n} KLAAR!',
     won: 'GEWONNEN!',
     lost: 'VERSLAGEN...',
     round: 'RONDE {n}',
@@ -9656,7 +9657,7 @@ const CATALOG_EN = {
     bossWave: 'BOSS WAVE!', eliteWave: 'ELITE WAVE', superBossWave: 'SUPER-BOSS WAVE',
     flyerWave: 'FLYER WAVE', rushWave: 'RUSH WAVE', eliteTraitWave: 'ELITE WAVE', tideWave: 'TIDE WAVE',
     waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
-    fight: 'FIGHT!', won: 'VICTORY!', lost: 'DEFEATED...',
+    fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'DEFEATED...',
     round: 'ROUND {n}', roundDecisive: 'ROUND {n} · decisive round', roundMatchPoint: 'ROUND {n} · match point',
     roundWon: 'ROUND WON!', roundLost: 'ROUND LOST',
     p1RoundWin: 'P1 WINS ROUND!', p2RoundWin: 'P2 WINS ROUND!',
@@ -10339,7 +10340,7 @@ const CATALOG_DE = {
   },
   banner: {
     levelUp: 'LEVEL UP! Lv {lvl}', masterBuff: 'MEISTER-BUFF +20%', bossWave: 'BOSS-WELLE!',
-    fight: 'KÄMPF!', won: 'GEWONNEN!', lost: 'VERLOREN...', summon: '✦ SUMMON! ✦',
+    fight: 'KÄMPF!', levelClear: 'LEVEL {n} FERTIG!', won: 'GEWONNEN!', lost: 'VERLOREN...', summon: '✦ SUMMON! ✦',
     matsStart: 'MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
     kets: 'KABLAM…', ketsBam: 'KABLAM!',
   },
@@ -10437,7 +10438,7 @@ const CATALOG_FR = {
   },
   banner: {
     levelUp: 'LEVEL UP ! Lv {lvl}', masterBuff: 'BUFF MAÎTRE +20 %', bossWave: 'VAGUE BOSS !',
-    fight: 'COMBAT !', won: 'VICTOIRE !', lost: 'DÉFAITE...', summon: '✦ INVOCATION ! ✦',
+    fight: 'COMBAT !', levelClear: 'NIVEAU {n} TERMINÉ !', won: 'VICTOIRE !', lost: 'DÉFAITE...', summon: '✦ INVOCATION ! ✦',
     matsStart: 'BONUS PIÈCES', wallStart: 'CASSE LE MUR !', bonusDone: 'BONUS TERMINÉ !',
     kets: 'KABLAM…', ketsBam: 'KABLAM !',
   },
@@ -10535,7 +10536,7 @@ const CATALOG_ES = {
   },
   banner: {
     levelUp: '¡SUBIDA DE NIVEL! Lv {lvl}', masterBuff: 'BUFF MAESTRO +20%', bossWave: '¡OLA JEFE!',
-    fight: '¡LUCHA!', won: '¡VICTORIA!', lost: 'DERROTA...', summon: '✦ ¡INVOCACIÓN! ✦',
+    fight: '¡LUCHA!', levelClear: '¡NIVEL {n} LISTO!', won: '¡VICTORIA!', lost: 'DERROTA...', summon: '✦ ¡INVOCACIÓN! ✦',
     matsStart: 'BONUS MONEDAS', wallStart: '¡ROMPE EL MURO!', bonusDone: '¡BONUS LISTO!',
     kets: '¡KABLAM…', ketsBam: '¡KABLAM!',
   },
@@ -19110,48 +19111,53 @@ class Game {
       }, 2400);
     }
     this.allyAssistT = this.stageAlly ? 2.2 : 0;
-    setTimeout(() => { try { if (!this.over) this.maybeRollMasterSword(); } catch (_) {} }, 900);
+    // Master Sword roll UIT — geen zeldzame interrupt midden in level
     AudioSys.play(this.level.boss ? 'boss' : 'battle');
   }
 
   maybeRollMasterSword() {
-    if (this.mode !== 'adventure' || this.over || !this.player || !this.player.alive) return;
-    if (this.masterSwordT > 0) return;
-    const w = this.player.weapon;
-    if (!canMasterSwordRoll(w)) return;
-    if (Math.random() >= MASTER_SWORD_CHANCE) return;
-    this.activateMasterSword();
+    return; // UIT
   }
 
   activateMasterSword() {
-    const p = this.player;
-    if (!p || !canMasterSwordRoll(p.weapon)) return;
-    this._savedMasterWeapon = p.weapon;
-    p.weapon = buildMasterSwordWeapon(p.weapon);
-    this.masterSwordT = MASTER_SWORD_DURATION;
-    resetWeaponCombo(p);
-    this.banner(t('banner.masterSword'), 2.4, '#7cf5ff', 52);
-    this.floater(p.x, p.y - 132, t('combat.masterSwordGain'), '#ffd75e', 16);
-    if (!fxLite() && !motionReduced()) {
-      this.burst(p.x + p.face * 18, p.y - 52, '#6fd7ff', 14, { kind: 'spark', size: 2.8 });
-      spawnFxRing(this, p.x, p.y - 48, '#7cf5ff', 12);
+    try {
+      const p = this.player;
+      if (!p || !canMasterSwordRoll(p.weapon)) return;
+      this._savedMasterWeapon = p.weapon;
+      p.weapon = buildMasterSwordWeapon(p.weapon);
+      this.masterSwordT = MASTER_SWORD_DURATION;
+      resetWeaponCombo(p);
+      this.banner(t('banner.masterSword'), 2.4, '#7cf5ff', 52);
+      this.floater(p.x, p.y - 132, t('combat.masterSwordGain'), '#ffd75e', 16);
+      if (!fxLite() && !motionReduced()) {
+        this.burst(p.x + p.face * 18, p.y - 52, '#6fd7ff', 14, { kind: 'spark', size: 2.8 });
+        spawnFxRing(this, p.x, p.y - 48, '#7cf5ff', 12);
+      }
+      try { AudioSys.sting('masterSword'); AudioSys.sfx('masterSword'); } catch (_) {}
+      haptic(26);
+    } catch (err) {
+      try { sfReportError('masterSword/on', err, 'Master Sword hiccup — speel door'); } catch (_) {}
     }
-    try { AudioSys.sting('masterSword'); AudioSys.sfx('masterSword'); } catch (_) {}
-    haptic(26);
   }
 
   deactivateMasterSword(silent) {
-    if (!this._savedMasterWeapon || !this.player) {
+    try {
+      if (!this._savedMasterWeapon || !this.player) {
+        this.masterSwordT = 0;
+        this._savedMasterWeapon = null;
+        return;
+      }
+      this.player.weapon = this._savedMasterWeapon;
+      this._savedMasterWeapon = null;
+      this.masterSwordT = 0;
+      resetWeaponCombo(this.player);
+      if (!silent) {
+        this.floater(this.player.x, this.player.y - 120, t('combat.masterSwordFade'), '#9db1e3', 14);
+      }
+    } catch (err) {
       this.masterSwordT = 0;
       this._savedMasterWeapon = null;
-      return;
-    }
-    this.player.weapon = this._savedMasterWeapon;
-    this._savedMasterWeapon = null;
-    this.masterSwordT = 0;
-    resetWeaponCombo(this.player);
-    if (!silent) {
-      this.floater(this.player.x, this.player.y - 120, t('combat.masterSwordFade'), '#9db1e3', 14);
+      try { sfReportError('masterSword/off', err); } catch (_) {}
     }
   }
 
@@ -19244,6 +19250,7 @@ class Game {
     this.stagePart = part;
     this.partFlashT = motionReduced() ? 0.22 : 0.55;
     this.floater(W / 2, 96, t('combat.checkpoint', { part }), '#7cf5ff', 17);
+    try { this.banner(t('combat.checkpoint', { part }), 1.15, '#7cf5ff', 40); } catch (_) {}
     const tw = Math.min(320, W * 0.5);
     const orbX = W / 2 - tw / 2 + clamp(this.progressSmooth || 0, 0, 1) * tw;
     if (!fxLite()) this.burst(orbX, 44, '#7cf5ff', motionReduced() ? 6 : 14, { kind: 'spark', size: 2.4 });
@@ -19466,9 +19473,23 @@ class Game {
       if (!this.wavePause && !this.partGate) {
         const nextIsBoss = isBossWave(this.level, this.waveIdx + 1);
         const total = this.level.waves.length;
+        const isLastWave = this.waveIdx >= total - 1;
         const boundary = partBoundaryWaveIdx(total, this.stagePart || 1);
         if (this.stagePart < 3 && this.waveIdx === boundary) {
           this.startPartGate();
+        } else if (isLastWave) {
+          // Duidelijk einde vóór resultaat-scherm (start → stage klaar)
+          this.wavePause = motionReduced() ? 1.1 : 2.35;
+          this.wavePauseTotal = this.wavePause;
+          this._levelClearPending = true;
+          try {
+            this.banner(t('banner.levelClear', { n: this.level.n }), 2.1, '#7cfc8a', 52);
+            AudioSys.sfx('win');
+            if (!fxLite() && !motionReduced()) {
+              this.burst(W * 0.5, this.ground - 70, '#7cfc8a', 18, { kind: 'spark', size: 2.6 });
+              spawnFxRing(this, W * 0.5, this.ground - 70, '#ffd75e', 16);
+            }
+          } catch (_) {}
         } else {
           this.wavePause = nextIsBoss ? 2.15 : 1.55;
           this.wavePauseTotal = this.wavePause;
@@ -19552,8 +19573,14 @@ class Game {
         }, 1200);
       }
       checkAchievements();
-      AudioSys.sfx('win');
-      this.banner(t('banner.won'), 2, '#7cfc8a', 56);
+      if (this._levelClearPending) {
+        // Banner al getoond bij laatste golf — korte nabranding
+        this._levelClearPending = false;
+        try { AudioSys.sfx('bonus'); } catch (_) {}
+      } else {
+        AudioSys.sfx('win');
+        this.banner(t('banner.levelClear', { n: lv }), 2, '#7cfc8a', 52);
+      }
     } else {
       if (!save.advFails || typeof save.advFails !== 'object') save.advFails = {};
       const hadMaster = save.advMasterBuff === lv;
@@ -19567,7 +19594,8 @@ class Game {
       AudioSys.sfx('lose');
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
-    scheduleGameResult(this, 1400, () => UI.showResult(win, {
+    // Resultaat-scherm altijd tonen (Volgende level / Opnieuw) — niet stil naar menu
+    scheduleGameResult(this, win ? 1600 : 1400, () => UI.showResult(win, {
       title: win ? t('result.advWin') : t('result.advLose'),
       detail: (() => {
         const finishers = this.runFinishers ? t('result.finishersLine', { n: this.runFinishers }) : '';
@@ -19725,18 +19753,16 @@ class Game {
       try { this.finishTideBattle(true, m); } catch (_) {}
       return;
     }
-    try { this.maybeSummon(m); } catch (sumErr) {
-      try { sfReportError('maybeSummon', sumErr, 'Summon hiccup — speel door'); } catch (_) {}
-    }
-    try { this.maybeTideBattle(m); } catch (tideErr) {
-      try { sfReportError('maybeTideBattle', tideErr, 'Tide hiccup — speel door'); } catch (_) {}
-    }
+    // summon / tide / master-sword rolls UIT — stabiele adventure flow
   }
 
   maybeTideBattle(m) {
-    if (m && m.tideBoss) return;
-    if (!rollTideBattleChance(this)) return;
-    this.startTideBattle(pickTideBossId());
+    return; // UIT — geen zeldzame tide-interrupt
+  }
+
+  /** Summon-ascend UIT — geen epic/legendary rariteit-rolls midden in gevecht. */
+  maybeSummon(m) {
+    return;
   }
 
   startTideBattle(spId) {
@@ -19818,68 +19844,6 @@ class Game {
       console.error('[TideBattle] finish', err);
       clearTideBattleState(this, { restoreMusic: true });
       sfReportError('tideBattle/finish', err, 'Tide Battle beloning mislukt — voortgang veilig');
-    }
-  }
-
-  /** Zeldzame summon-ascend (~0.7%+/kill) — mag nooit de run killen. */
-  maybeSummon(m) {
-    try {
-      if (!save.stats) save.stats = {};
-      save.stats.killsSinceSummon = (save.stats.killsSinceSummon || 0) + 1;
-      const eligible = typeof summonEligibleWeapons === 'function' ? summonEligibleWeapons() : [];
-      if (!eligible.length) { persist(); return; }
-      if (!rollSummonChance(!!(m && m.elite))) { persist(); return; }
-      const pick = eligible[Math.floor(Math.random() * eligible.length)];
-      if (!pick || !pick.id) { persist(); return; }
-      const wasEpic = summonTierOf(pick.id) === 'epic';
-      const tier = (wasEpic || Math.random() < 0.15) ? 'legendary' : 'epic';
-      if (!save.summons || typeof save.summons !== 'object') save.summons = {};
-      save.summons[pick.id] = tier;
-      save.stats.summonCount = (save.stats.summonCount || 0) + 1;
-      save.stats.killsSinceSummon = 0;
-      try { noteRunLootSummon(this.runLoot, pick.id, tier); } catch (_) {}
-      persist();
-      const rar = rarityOf(tier);
-      let asc = null;
-      try {
-        const base = weaponById(pick.id);
-        if (base) asc = applyWeaponUpgrades(applySummonTier(base));
-      } catch (_) {}
-      if (this.player && this.player.weapon && this.player.weapon.id === pick.id) {
-        try {
-          this.player.weapon = playerWeapon();
-          const st = playerStats();
-          this.player.baseDmg = st.dmg;
-        } catch (_) {}
-      }
-      try { AudioSys.sfx('summon'); } catch (_) {}
-      setTimeout(() => { try { AudioSys.sfx('bonus'); } catch (_) {} }, 280);
-      this.freezeT = Math.max(this.freezeT || 0, 0.1);
-      try { this.shake(9, 0.35); } catch (_) {}
-      const px = this.player ? this.player.x : W * 0.5;
-      const py = this.player ? this.player.y : this.ground;
-      try {
-        if (typeof spawnCompanionSparkles === 'function') {
-          spawnCompanionSparkles(this, px, py - 70, rar.color, { color2: '#fff8dc', big: true });
-        } else {
-          this.burst(px, py - 70, rar.color, fxLite() ? 14 : 30);
-          this.burst(px, py - 70, '#fff', fxLite() ? 6 : 12);
-        }
-      } catch (_) {}
-      try { this.banner(t('banner.summon'), 2.2, rar.color, 44); } catch (_) {}
-      const wName = typeof weaponLabel === 'function' ? weaponLabel(pick) : pick.id;
-      setTimeout(() => {
-        try {
-          if (this.over) return;
-          this.banner(t('banner.summonAscend', { name: wName, rar: rar.name }), 2.4, rar.color, 30);
-        } catch (_) {}
-      }, 1100);
-      try { this.floater(px, py - 130, `${wName} ✦ ${rar.name}`, rar.color, 17); } catch (_) {}
-      try {
-        UI.toast(t('toast.summon', { name: wName, rar: rar.name, dmg: (asc && asc.dmg) || pick.dmg || '?' }), 4200);
-      } catch (_) {}
-    } catch (err) {
-      try { sfReportError('maybeSummon', err, 'Summon hiccup — speel door'); } catch (_) {}
     }
   }
 
@@ -27255,7 +27219,9 @@ const UI = {
   },
 
   showResult(win, data) {
-    if (state === 'menu' || !data) return;
+    if (!data) return;
+    // Na win/lose: altijd resultaat tonen (ook als state kort menu was)
+    if (state === 'menu' && !(game && game.over)) return;
     try {
     this.lastResult = data;
     const title = document.getElementById('resTitle');
@@ -27943,6 +27909,7 @@ bindPress(document.getElementById('resAgain'), () => {
   const d = UI.lastResult;
   if (!d || !d.mode) return;
   AudioSys.sfx('select');
+  try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
   if (d.mode === 'adventure') gokGooiStartLevel(d.level);
   else if (d.mode === 'versus') {
     const p1 = d.p1 || vsSelect.p1;
@@ -27958,9 +27925,13 @@ bindPress(document.getElementById('resNext'), () => {
   const d = UI.lastResult;
   if (!d || d.mode !== 'adventure' || !d.win) return;
   AudioSys.sfx('select');
+  try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
   gokGooiStartLevel(Math.min(MAX_LEVEL, d.level + 1));
 });
-bindPress(document.getElementById('resMenu'), () => { UI.goMenu(); });
+bindPress(document.getElementById('resMenu'), () => {
+  try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
+  UI.goMenu();
+});
 /* --- src/boot/loop.js --- */
 /* ============================= HOOFDLUS ================================ */
 let lastTime = performance.now();
