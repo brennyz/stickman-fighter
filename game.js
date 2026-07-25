@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.48';
+const APP_VERSION = '1.18.49';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 258;
+const SW_CACHE_REV = 259;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -3419,6 +3419,22 @@ function syncMenuHubStage() {
   } else {
     stage.hidden = true;
   }
+}
+
+/** ASSET-STYLE file icons: mark broken loads without killing the button. */
+function hardenButtonIcons(root) {
+  try {
+    const scope = root && root.querySelectorAll ? root : document;
+    scope.querySelectorAll('img[src*="assets/buttons/"]').forEach((img) => {
+      if (img.dataset.sfIconHard) return;
+      img.dataset.sfIconHard = '1';
+      img.decoding = img.decoding || 'async';
+      img.draggable = false;
+      img.addEventListener('error', () => {
+        img.classList.add('sf-icon-broken');
+      }, { once: true });
+    });
+  } catch (_) {}
 }
 
 function syncPlayLayerWithoutGuard() {
@@ -28078,6 +28094,7 @@ function bootGame() {
     forcePlay: () => (typeof forcePlayCanvasVisible === 'function' ? forcePlayCanvasVisible('__sf') : null),
   };
   safeCall(wireSfDebugTools, 'sfDebug');
+  safeCall(hardenButtonIcons, 'buttonIcons');
 
   (function handleLaunchShortcut() {
     try {

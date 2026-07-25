@@ -1309,6 +1309,22 @@ function syncMenuHubStage() {
   }
 }
 
+/** ASSET-STYLE file icons: mark broken loads without killing the button. */
+function hardenButtonIcons(root) {
+  try {
+    const scope = root && root.querySelectorAll ? root : document;
+    scope.querySelectorAll('img[src*="assets/buttons/"]').forEach((img) => {
+      if (img.dataset.sfIconHard) return;
+      img.dataset.sfIconHard = '1';
+      img.decoding = img.decoding || 'async';
+      img.draggable = false;
+      img.addEventListener('error', () => {
+        img.classList.add('sf-icon-broken');
+      }, { once: true });
+    });
+  } catch (_) {}
+}
+
 function syncPlayLayerWithoutGuard() {
   syncPlayLayer();
 }

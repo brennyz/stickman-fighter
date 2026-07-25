@@ -669,6 +669,7 @@ function bootGame() {
     forcePlay: () => (typeof forcePlayCanvasVisible === 'function' ? forcePlayCanvasVisible('__sf') : null),
   };
   safeCall(wireSfDebugTools, 'sfDebug');
+  safeCall(hardenButtonIcons, 'buttonIcons');
 
   (function handleLaunchShortcut() {
     try {
