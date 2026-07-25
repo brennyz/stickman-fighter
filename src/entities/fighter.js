@@ -188,7 +188,11 @@ class Fighter {
     game.ketsbamChargeT = 0;
     game.inputLocked = false;
     game.ketsbamSuperT = Math.max(game.ketsbamSuperT, KETSBAM_SUPER_ARMOR);
-    finishEquippedSuper(this, game);
+    try {
+      finishEquippedSuper(this, game);
+    } catch (err) {
+      try { sfReportError('finishEquippedSuper', err); } catch (_) {}
+    }
   }
 
   intent(dt, game) {

@@ -36,7 +36,11 @@ function startGame(mode, opts) {
     return;
   }
   state = 'play';
-  primePlayInput(mode);
+  // Alleen versus = dual pads. Mode-string is truthy → was per ongeluk 2P in adventure.
+  primePlayInput(mode === 'versus');
+  if (mode !== 'versus') {
+    try { Input.dualMode = false; } catch (_) {}
+  }
   try {
     if (typeof forceGameResize === 'function') forceGameResize();
     else scheduleResize();

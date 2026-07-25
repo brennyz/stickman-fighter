@@ -426,10 +426,12 @@ function relayoutTouchPads() {
   } catch (_) {}
 }
 
-/** Reset touch pads before versus / after pause — voorkomt spook-vingers. */
+/** Reset touch pads before versus / after pause — voorkomt spook-vingers.
+ *  `dual` must be boolean true — NEVER pass mode string ('adventure' is truthy!). */
 function primePlayInput(dual) {
   Input.releaseAll();
-  Input.dualMode = !!dual;
+  // Strict: alleen echte `true` → 2P. Mode-strings als 'adventure'/'training' mogen NOOIT dual aan.
+  Input.dualMode = dual === true;
   // Kort suppress-venster: menu-tap ghost mag niet meteen Input.onDown raken.
   // playInputSuppressed MOET bestaan — anders ReferenceError → window error → recoverToMenu.
   Input.suppressUntil = performance.now() + (IS_TOUCH ? 400 : 140);
