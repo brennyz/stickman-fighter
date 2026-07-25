@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.27';
+const APP_VERSION = '1.18.28';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 237;
+const SW_CACHE_REV = 238;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -13980,14 +13980,19 @@ class Fighter {
     if (this.y >= game.ground) {
       const hardLand = !this.onGround && this.vy > 300;
       if (hardLand) AudioSys.sfx('land');
-      // bos: kick photo-sampled leaf/twig pixels (stickfight grit)
-      if (!this.onGround && this.vy > 180 && game.theme === 'bos' && !fxLite()
+      // bos: kick photo-sampled leaf/twig pixels (players only — stickfight grit)
+      if (!this.onGround && this.vy > 220 && game.theme === 'bos'
+          && (this.isPlayer || this.playerSlot)
+          && !fxLite() && !(typeof Perf !== 'undefined' && Perf.tier >= 2)
           && typeof forestFloorKickColors === 'function') {
         const cols = forestFloorKickColors();
-        const n = motionReduced() ? 2 : (this.vy > 500 ? 7 : 4);
-        for (let i = 0; i < n; i++) {
-          game.burst(this.x + rand(-14, 14), this.y - 2, cols[i % cols.length], 1, {
-            kind: 'spark', size: 1.6 + (i % 3) * 0.4,
+        const n = motionReduced() ? 2 : (this.vy > 520 ? 6 : 4);
+        const c0 = cols[((this.x | 0) + (n * 3)) % cols.length];
+        const c1 = cols[(n + 2) % cols.length];
+        game.burst(this.x, this.y - 2, c0, n, { kind: 'spark', size: 2 });
+        if (!motionReduced() && n >= 4) {
+          game.burst(this.x + (this.face || 1) * 10, this.y - 1, c1, Math.ceil(n * 0.5), {
+            kind: 'spark', size: 1.7,
           });
         }
       }
@@ -17374,7 +17379,7 @@ const FF_COLS = [
 ];
 
 /**
- * Packed 16×8 patches — each char is a hex nibble into FF_COLS (0–f, g→16, h→17).
+ * Packed 16×8 patches — each char indexes FF_COLS (0–9, a–h).
  * Patterns mimic photo structure: tan leaf mats, twig grids, ivy clusters, soil+pebbles.
  */
 const FOREST_FLOOR_PATCH_STRS = [
@@ -17417,8 +17422,17 @@ const FOREST_FLOOR_PATCH_STRS = [
 ];
 
 const FF_PX = 3;
+const FF_TILE_W = 16;
+const FF_TILE_H = 8;
 let _ffTiles = null;
 let _ffThicket = null;
+let _ffStrip = null;
+let _ffStripRows = 0;
+
+function ffWrap(v, span) {
+  if (!span) return 0;
+  return ((v % span) + span) % span;
+}
 
 function ffCharToIdx(ch) {
   if (ch >= '0' && ch <= '9') return ch.charCodeAt(0) - 48;
@@ -17426,31 +17440,42 @@ function ffCharToIdx(ch) {
   return 0;
 }
 
+function ffLiteMode() {
+  return (typeof fxLite === 'function' && fxLite())
+    || (typeof Perf !== 'undefined' && Perf.tier >= 2)
+    || (typeof save !== 'undefined' && save && save.liteFx);
+}
+
 function buildForestFloorTiles() {
   if (_ffTiles) return _ffTiles;
-  _ffTiles = FOREST_FLOOR_PATCH_STRS.map((str, pi) => {
+  _ffTiles = [];
+  for (let pi = 0; pi < FOREST_FLOOR_PATCH_STRS.length; pi++) {
+    const str = FOREST_FLOOR_PATCH_STRS[pi];
     const cv = document.createElement('canvas');
-    cv.width = 16;
-    cv.height = 8;
+    cv.width = FF_TILE_W;
+    cv.height = FF_TILE_H;
     const c = cv.getContext('2d');
+    if (!c) continue;
     c.imageSmoothingEnabled = false;
-    for (let i = 0; i < 128; i++) {
+    for (let i = 0; i < FF_TILE_W * FF_TILE_H; i++) {
       const idx = ffCharToIdx(str[i] || '0');
       c.fillStyle = FF_COLS[idx] || FF_COLS[0];
-      c.fillRect(i % 16, (i / 16) | 0, 1, 1);
+      c.fillRect(i % FF_TILE_W, (i / FF_TILE_W) | 0, 1, 1);
     }
-    // micro variance so tiles don’t look stamped
-    const img = c.getImageData(0, 0, 16, 8);
-    const d = img.data;
-    for (let i = 0; i < d.length; i += 4) {
-      const n = ((i * 17 + pi * 91) % 7) - 3;
-      d[i] = Math.max(0, Math.min(255, d[i] + n));
-      d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + n));
-      d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + (n >> 1)));
-    }
-    c.putImageData(img, 0, 0);
-    return cv;
-  });
+    // micro variance so tiles don’t look stamped (skip if getImageData blocked)
+    try {
+      const img = c.getImageData(0, 0, FF_TILE_W, FF_TILE_H);
+      const d = img.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const n = ((i * 17 + pi * 91) % 7) - 3;
+        d[i] = Math.max(0, Math.min(255, d[i] + n));
+        d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + n));
+        d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + (n >> 1)));
+      }
+      c.putImageData(img, 0, 0);
+    } catch (_) {}
+    _ffTiles.push(cv);
+  }
   return _ffTiles;
 }
 
@@ -17460,6 +17485,7 @@ function buildForestFloorThicket() {
   cv.width = 64;
   cv.height = 40;
   const c = cv.getContext('2d');
+  if (!c) return null;
   c.imageSmoothingEnabled = false;
   const P = FOREST_FLOOR_PAL;
   // stick lattice — stickfight DNA from photo twigs
@@ -17477,6 +17503,7 @@ function buildForestFloorThicket() {
   for (const [x0, y0, x1, y1, col] of sticks) {
     c.strokeStyle = col;
     c.lineWidth = 2;
+    c.lineCap = 'round';
     c.beginPath();
     c.moveTo(x0, y0);
     c.lineTo(x1, y1);
@@ -17497,24 +17524,77 @@ function buildForestFloorThicket() {
   return cv;
 }
 
+/** Pre-bake a repeating strip so fights don’t stamp dozens of 16×8 drawImage calls. */
+function ensureForestFloorStrip(needH) {
+  const tiles = buildForestFloorTiles();
+  if (!tiles.length) return null;
+  const tw = FF_TILE_W * FF_PX;
+  const th = FF_TILE_H * FF_PX;
+  const rows = Math.max(2, Math.min(6, Math.ceil(needH / th) + 1));
+  if (_ffStrip && _ffStripRows === rows) return _ffStrip;
+  const cols = 4;
+  const cv = document.createElement('canvas');
+  cv.width = tw * cols;
+  cv.height = th * rows;
+  const c = cv.getContext('2d');
+  if (!c) return null;
+  c.imageSmoothingEnabled = false;
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const ti = ffWrap(col + row * 3, tiles.length);
+      c.drawImage(tiles[ti], col * tw, row * th, tw, th);
+    }
+  }
+  _ffStrip = cv;
+  _ffStripRows = rows;
+  return cv;
+}
+
+/** Fast banded fill for lite / high Perf.tier — keeps palette, skips atlas. */
+function drawForestFloorGroundLite(c, ground) {
+  const P = FOREST_FLOOR_PAL;
+  const h = Math.max(8, H - ground);
+  const bands = [
+    [0.00, 0.18, P.leafTan],
+    [0.18, 0.38, P.leafOchre],
+    [0.38, 0.58, P.soilLite],
+    [0.58, 0.78, P.soilMid],
+    [0.78, 1.01, P.soil],
+  ];
+  for (const [a, b, col] of bands) {
+    c.fillStyle = col;
+    c.fillRect(0, ground + h * a, W, Math.ceil(h * (b - a)) + 1);
+  }
+  c.fillStyle = 'rgba(196,164,106,.18)';
+  c.fillRect(0, ground, W, 2);
+}
+
 /** Fight floor: stamp photo-sampled leaf/soil tiles under the fighters. */
 function drawForestFloorGround(c, ground, scroll) {
-  const tiles = buildForestFloorTiles();
-  if (!tiles || !tiles.length) return;
+  if (ground >= H - 2) return;
   const prev = c.imageSmoothingEnabled;
   c.imageSmoothingEnabled = false;
-  const tw = 16 * FF_PX;
-  const th = 8 * FF_PX;
-  const wrap = (v, span) => ((v % span) + span) % span;
-  const off = wrap(-scroll, tw);
-  const rows = Math.ceil((H - ground) / th) + 1;
-  for (let row = 0; row < rows; row++) {
-    const y = ground + row * th;
-    const tile = tiles[(row + ((scroll / tw) | 0)) % tiles.length];
-    for (let x = off - tw; x < W + tw; x += tw) {
-      const t2 = tiles[(((x / tw) | 0) + row * 3) % tiles.length];
-      c.drawImage(t2 || tile, Math.round(x), y, tw, th);
-    }
+
+  if (ffLiteMode()) {
+    drawForestFloorGroundLite(c, ground);
+    c.imageSmoothingEnabled = prev;
+    return;
+  }
+
+  const needH = Math.max(24, H - ground);
+  const strip = ensureForestFloorStrip(needH);
+  if (!strip) {
+    drawForestFloorGroundLite(c, ground);
+    c.imageSmoothingEnabled = prev;
+    return;
+  }
+
+  const sw = strip.width;
+  const sh = Math.min(strip.height, needH + FF_TILE_H * FF_PX);
+  const off = ffWrap(-scroll, sw);
+  // 2–3 drawImage calls instead of rows×cols stamps
+  for (let x = off - sw; x < W + sw; x += sw) {
+    c.drawImage(strip, 0, 0, sw, sh, Math.round(x), ground, sw, sh);
   }
   // soft seam at fight line
   c.fillStyle = 'rgba(196,164,106,.2)';
@@ -17526,21 +17606,25 @@ function drawForestFloorGround(c, ground, scroll) {
 
 /** Mid-layer stick thicket (parallax) — photo twigs as stickfight scenery. */
 function drawForestFloorThicket(c, ground, scroll, t) {
+  if (ffLiteMode()) return;
   const tile = buildForestFloorThicket();
   if (!tile) return;
   const prev = c.imageSmoothingEnabled;
   c.imageSmoothingEnabled = false;
   const calm = typeof motionReduced === 'function' && motionReduced();
   const sway = calm ? 0 : Math.sin((t || 0) * 0.9) * 2;
-  const wrap = (v, span) => ((v % span) + span) % span;
-  const span = 140;
-  const off = wrap(-scroll * 0.55 + sway, span);
-  const scale = 2.2;
+  const span = typeof Perf !== 'undefined' && Perf.tier >= 1 ? 180 : 140;
+  const off = ffWrap(-scroll * 0.55 + sway, span);
+  const scale = typeof Perf !== 'undefined' && Perf.tier >= 1 ? 1.9 : 2.2;
   const tw = tile.width * scale;
   const th = tile.height * scale;
-  c.globalAlpha = 0.85;
-  for (let x = off - span; x < W + span; x += span) {
-    c.drawImage(tile, Math.round(x), Math.round(ground - th + 6), tw, th);
+  const y = Math.round(ground - th + 6);
+  c.globalAlpha = 0.82;
+  let drawn = 0;
+  const maxDraw = typeof Perf !== 'undefined' && Perf.tier >= 1 ? 4 : 6;
+  for (let x = off - span; x < W + span && drawn < maxDraw; x += span) {
+    c.drawImage(tile, Math.round(x), y, tw, th);
+    drawn++;
   }
   c.globalAlpha = 1;
   c.imageSmoothingEnabled = prev;
@@ -17887,7 +17971,8 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   // weer per thema (art-upgrade 4/4): blaadjes/bloesem/sintels/regen/stof
   drawThemeWeather(c, themeName, t, ground, scroll);
   // pixel-speckles op de grond (art-upgrade 1/4) — deterministisch, scroll-vast
-  if (!fxLite()) {
+  // bos: skip — photo-sampled floor tiles already carry grit
+  if (!fxLite() && themeName !== 'bos') {
     const spSpan = 61;
     const spOff = wrap(-scroll, spSpan);
     c.fillStyle = 'rgba(255,255,255,.08)';

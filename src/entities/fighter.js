@@ -349,14 +349,19 @@ class Fighter {
     if (this.y >= game.ground) {
       const hardLand = !this.onGround && this.vy > 300;
       if (hardLand) AudioSys.sfx('land');
-      // bos: kick photo-sampled leaf/twig pixels (stickfight grit)
-      if (!this.onGround && this.vy > 180 && game.theme === 'bos' && !fxLite()
+      // bos: kick photo-sampled leaf/twig pixels (players only — stickfight grit)
+      if (!this.onGround && this.vy > 220 && game.theme === 'bos'
+          && (this.isPlayer || this.playerSlot)
+          && !fxLite() && !(typeof Perf !== 'undefined' && Perf.tier >= 2)
           && typeof forestFloorKickColors === 'function') {
         const cols = forestFloorKickColors();
-        const n = motionReduced() ? 2 : (this.vy > 500 ? 7 : 4);
-        for (let i = 0; i < n; i++) {
-          game.burst(this.x + rand(-14, 14), this.y - 2, cols[i % cols.length], 1, {
-            kind: 'spark', size: 1.6 + (i % 3) * 0.4,
+        const n = motionReduced() ? 2 : (this.vy > 520 ? 6 : 4);
+        const c0 = cols[((this.x | 0) + (n * 3)) % cols.length];
+        const c1 = cols[(n + 2) % cols.length];
+        game.burst(this.x, this.y - 2, c0, n, { kind: 'spark', size: 2 });
+        if (!motionReduced() && n >= 4) {
+          game.burst(this.x + (this.face || 1) * 10, this.y - 1, c1, Math.ceil(n * 0.5), {
+            kind: 'spark', size: 1.7,
           });
         }
       }

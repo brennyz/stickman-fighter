@@ -333,7 +333,8 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   // weer per thema (art-upgrade 4/4): blaadjes/bloesem/sintels/regen/stof
   drawThemeWeather(c, themeName, t, ground, scroll);
   // pixel-speckles op de grond (art-upgrade 1/4) — deterministisch, scroll-vast
-  if (!fxLite()) {
+  // bos: skip — photo-sampled floor tiles already carry grit
+  if (!fxLite() && themeName !== 'bos') {
     const spSpan = 61;
     const spOff = wrap(-scroll, spSpan);
     c.fillStyle = 'rgba(255,255,255,.08)';
