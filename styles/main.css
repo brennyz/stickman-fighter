@@ -73,7 +73,7 @@
     border-top: none;
     background: linear-gradient(180deg, rgba(255,80,40,.12) 0%, rgba(0,0,0,.5) 100%);
   }
-  .menu-hero-canvas { display: block; width: 100%; height: auto; aspect-ratio: 520/200; background: #0c0a14; }
+  .menu-hero-canvas { display: block; width: 100%; height: auto; aspect-ratio: 640/280; background: #5aade6; image-rendering: pixelated; }
   .arcade-title-block { text-align: center; padding: 6px 12px 14px;
       background: linear-gradient(180deg, rgba(0,0,0,.35), rgba(20,12,40,.85)); }
   .arcade-pre {
@@ -121,10 +121,15 @@
     justify-content: flex-start;
   }
   #menuScreen.menu-hub-landing .arcade-stage {
-    width: min(100vw, 520px); margin: 0 auto 4px;
+    width: min(100vw, 560px); margin: 0 auto 4px;
     box-shadow: 0 8px 24px rgba(0,0,0,.35);
+    border-color: rgba(255,248,220,.28);
+    background: linear-gradient(180deg, rgba(90,173,230,.2) 0%, rgba(0,0,0,.35) 100%);
   }
-  #menuScreen.menu-hub-landing .menu-hero-canvas { aspect-ratio: 520/160; max-height: 160px; }
+  #menuScreen.menu-hub-landing .menu-hero-canvas {
+    aspect-ratio: 640/280; max-height: min(42vw, 240px);
+    image-rendering: pixelated;
+  }
   #menuScreen.menu-hub-landing h1.title.arcade-logo {
     font-size: min(8.5vw, 42px);
     -webkit-text-stroke: 1.5px #c02020;

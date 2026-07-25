@@ -502,8 +502,199 @@ function drawLandwegPixelmap(c, w, h, t, opts) {
   return { groundY, roadX, fieldW };
 }
 
+/** Pixel-eik (canopy clusters) voor semi-2.5D menu-vista. */
+function drawPixelOakTree(c, cx, baseY, scale, sway) {
+  const s = Math.max(1.2, scale || 1);
+  const trunkW = Math.round(10 * s);
+  const trunkH = Math.round(42 * s);
+  const swayX = Math.round(sway || 0);
+  c.fillStyle = '#3a2818';
+  c.fillRect(cx - trunkW / 2, baseY - trunkH, trunkW, trunkH);
+  c.fillStyle = '#5a3c24';
+  c.fillRect(cx - trunkW / 2, baseY - trunkH, Math.max(2, Math.round(3 * s)), trunkH);
+  c.fillStyle = '#2e2010';
+  c.fillRect(cx - Math.round(18 * s) + swayX, baseY - trunkH + Math.round(6 * s), Math.round(16 * s), Math.round(3 * s));
+  c.fillRect(cx + Math.round(2 * s) + swayX, baseY - trunkH + Math.round(10 * s), Math.round(14 * s), Math.round(3 * s));
+  const clusters = [
+    [0, -trunkH - 8 * s, 28 * s, 22 * s, '#1e6a30'],
+    [-16 * s, -trunkH + 2 * s, 22 * s, 18 * s, '#246838'],
+    [14 * s, -trunkH + 4 * s, 20 * s, 16 * s, '#246838'],
+    [-6 * s, -trunkH - 18 * s, 24 * s, 16 * s, '#2f8a42'],
+    [8 * s, -trunkH - 14 * s, 18 * s, 14 * s, '#3a9a4e'],
+    [-2 * s, -trunkH - 26 * s, 14 * s, 10 * s, '#4aad5e'],
+  ];
+  for (const [ox, oy, cw, ch, col] of clusters) {
+    c.fillStyle = col;
+    c.beginPath();
+    c.ellipse(cx + ox + swayX, baseY + oy, cw / 2, ch / 2, 0, 0, TAU);
+    c.fill();
+  }
+  c.fillStyle = '#6ecf7a';
+  c.fillRect(cx - Math.round(4 * s) + swayX, baseY - trunkH - Math.round(22 * s), 3, 3);
+  c.fillRect(cx + Math.round(8 * s) + swayX, baseY - trunkH - Math.round(16 * s), 3, 3);
+  c.fillRect(cx - Math.round(12 * s) + swayX, baseY - trunkH - Math.round(8 * s), 2, 2);
+}
+
+/**
+ * Startscherm semi-2.5D pixel-vista (foto: gouden akker + eik + hek + weg).
+ * Lagen met parallax: sky → bos → eik → akker/hek → weg.
+ */
+function drawMenuSemi25dVista(c, w, h, t, opts) {
+  opts = opts || {};
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  const lite = !!opts.lite;
+  const calm = motionReduced();
+  const px = 3;
+  const roadH = Math.round(h * 0.18);
+  const fieldH = Math.round(h * 0.28);
+  const roadY = h - roadH;
+  const fieldY = roadY - fieldH;
+  const horizonY = fieldY;
+
+  const pSky = calm ? 0 : t * 4;
+  const pFar = calm ? 0 : t * 9;
+  const pMid = calm ? 0 : t * 16;
+  const pNear = calm ? 0 : t * 28;
+  const wrap = (v, span) => ((v % span) + span) % span;
+
+  // —— L0: sky ——
+  const sky = c.createLinearGradient(0, 0, 0, horizonY);
+  sky.addColorStop(0, '#2f8fd6');
+  sky.addColorStop(0.45, '#5aade6');
+  sky.addColorStop(1, '#a8d4f0');
+  c.fillStyle = sky;
+  c.fillRect(0, 0, w, horizonY);
+
+  const cloudN = lite ? 3 : 5;
+  for (let i = 0; i < cloudN; i++) {
+    const cw = 36 + (i % 3) * 14;
+    const cx = wrap(i * 0.31 * w + pSky * (0.6 + i * 0.1), w + cw) - cw * 0.5;
+    const cy = 8 + (i % 3) * 14 + (i === 2 ? 6 : 0);
+    c.fillStyle = '#ffffff';
+    c.fillRect(Math.round(cx), cy + 8, cw, 10);
+    c.fillRect(Math.round(cx + 8), cy, cw - 14, 12);
+    c.fillRect(Math.round(cx + 16), cy - 4, Math.round(cw * 0.35), 8);
+    c.fillStyle = '#e4eef8';
+    c.fillRect(Math.round(cx + 4), cy + 16, cw - 8, 4);
+  }
+
+  // —— L1: bosrij + schuurtje ——
+  const farOff = Math.round(wrap(-pFar, 48) - 24);
+  c.fillStyle = '#1a4a28';
+  c.fillRect(0, horizonY - 18, w, 20);
+  for (let i = -1; i < 14; i++) {
+    const tx = Math.round(i * 42 + farOff);
+    const th = 28 + ((i * 17) % 22);
+    c.fillStyle = i % 2 ? '#163e22' : '#1e5230';
+    c.fillRect(tx, horizonY - th, 28, th);
+    c.fillStyle = '#2a6a3c';
+    c.fillRect(tx + 4, horizonY - th - 8, 20, 12);
+    c.fillStyle = '#3a8250';
+    c.fillRect(tx + 8, horizonY - th - 14, 12, 8);
+  }
+  const bldgX = Math.round(w * 0.14 + farOff * 0.35);
+  c.fillStyle = '#6a6e72';
+  c.fillRect(bldgX, horizonY - 26, 28, 26);
+  c.fillStyle = '#4a4e52';
+  c.beginPath();
+  c.moveTo(bldgX - 3, horizonY - 26);
+  c.lineTo(bldgX + 14, horizonY - 38);
+  c.lineTo(bldgX + 31, horizonY - 26);
+  c.closePath();
+  c.fill();
+  c.fillStyle = '#3a3e42';
+  c.fillRect(bldgX + 10, horizonY - 14, 8, 14);
+
+  // —— L2: gouden akker ——
+  const midOff = Math.round(wrap(-pMid, 20));
+  for (let y = fieldY; y < roadY; y += px) {
+    const pr = (y - fieldY) / Math.max(1, fieldH);
+    c.fillStyle = pr < 0.35 ? '#e0c45c' : pr < 0.7 ? '#c9a848' : '#a88834';
+    c.fillRect(0, y, w, px);
+  }
+  for (let x = -20; x < w + 20; x += 8) {
+    const xx = x + midOff;
+    for (let y = fieldY + 4; y < roadY - 2; y += 7) {
+      const bit = ((xx + y * 3) & 7);
+      c.fillStyle = bit < 2 ? 'rgba(255,240,180,.28)' : bit > 5 ? 'rgba(90,60,20,.18)' : 'rgba(180,140,50,.12)';
+      c.fillRect(xx, y, 3, 3);
+    }
+  }
+  for (let i = 0; i < 16; i++) {
+    const gx = Math.round(wrap(i * 38 + midOff * 1.2, w + 40) - 20);
+    c.fillStyle = '#b89238';
+    c.fillRect(gx, roadY - 10, 2, 8);
+    c.fillRect(gx + 3, roadY - 7, 2, 5);
+    c.fillRect(gx - 3, roadY - 6, 2, 4);
+  }
+
+  // —— L2b: hek ——
+  const fenceY = fieldY + Math.round(fieldH * 0.42);
+  c.strokeStyle = 'rgba(50,50,48,.55)';
+  c.lineWidth = 1;
+  c.beginPath();
+  c.moveTo(0, fenceY);
+  c.lineTo(w, fenceY);
+  c.moveTo(0, fenceY + 8);
+  c.lineTo(w, fenceY + 8);
+  c.stroke();
+  for (let i = 0; i < 9; i++) {
+    const pxPost = Math.round(wrap(i * (w / 8) + midOff * 0.6, w + 30) - 15);
+    c.fillStyle = '#6a5438';
+    c.fillRect(pxPost, fenceY - 4, 4, 22);
+    c.fillStyle = '#8a7450';
+    c.fillRect(pxPost, fenceY - 4, 2, 22);
+  }
+
+  // —— L3: eik ——
+  const sway = calm ? 0 : Math.sin(t * 0.9) * 2.5;
+  const treeX = Math.round(w * 0.58 + (calm ? 0 : Math.sin(t * 0.35) * 3));
+  drawPixelOakTree(c, treeX, roadY - 2, Math.min(w, h) / 140, sway);
+
+  // —— L4: weg ——
+  for (let y = roadY; y < h; y += px) {
+    const pr = (y - roadY) / Math.max(1, roadH);
+    c.fillStyle = pr < 0.25 ? '#9a9a96' : pr < 0.65 ? '#7e7e7a' : '#5e5e5a';
+    c.fillRect(0, y, w, px);
+  }
+  c.fillStyle = 'rgba(255,255,255,.14)';
+  c.fillRect(0, roadY, w, 3);
+  c.fillStyle = 'rgba(0,0,0,.18)';
+  c.fillRect(0, roadY + 3, w, 2);
+  const nearOff = Math.round(wrap(-pNear, 32));
+  for (let x = -32; x < w + 32; x += 32) {
+    const xx = x + nearOff;
+    c.fillStyle = 'rgba(255,255,255,.16)';
+    c.fillRect(xx + 4, roadY + 10, 3, 3);
+    c.fillRect(xx + 18, roadY + 18, 2, 2);
+    c.fillStyle = 'rgba(20,20,18,.22)';
+    c.fillRect(xx + 10, roadY + 14, 3, 3);
+    c.fillRect(xx + 24, roadY + 8, 2, 2);
+  }
+
+  const vig = c.createLinearGradient(0, 0, 0, h);
+  vig.addColorStop(0, 'rgba(20,40,70,.12)');
+  vig.addColorStop(0.5, 'rgba(0,0,0,0)');
+  vig.addColorStop(1, 'rgba(20,16,10,.18)');
+  c.fillStyle = vig;
+  c.fillRect(0, 0, w, h);
+
+  if (opts.caption !== false) {
+    c.fillStyle = 'rgba(12,18,28,.5)';
+    c.fillRect(6, 6, 132, 14);
+    c.fillStyle = 'rgba(255,248,220,.88)';
+    c.font = '900 9px -apple-system, sans-serif';
+    c.textAlign = 'left';
+    c.fillText('semi-2.5D · pixel vista', 10, 16);
+  }
+
+  c.imageSmoothingEnabled = prev;
+  return { roadY, fieldY, treeX, horizonY };
+}
+
 function drawMenuHeroPixelGround(c, w, h, groundY, t) {
-  // Legacy hook — menu gebruikt nu drawLandwegPixelmap; fallback grasstrook
+  // Legacy hook — menu gebruikt semi-2.5D vista; fallback grasstrook
   const gh = h - groundY;
   if (gh <= 0) return;
   const px = 3;

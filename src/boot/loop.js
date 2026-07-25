@@ -104,14 +104,21 @@ function paintMenuHeroCanvas(t) {
   const c = cv.getContext('2d');
   if (!c) return;
   const lite = save.liteFx || Perf.tier >= 1;
+  // Hogere interne resolutie voor chunky pixel-vista
+  if (cv.width !== 640 || cv.height !== 280) {
+    cv.width = 640;
+    cv.height = 280;
+  }
   const Ws = cv.width;
   const Hs = cv.height;
   c.clearRect(0, 0, Ws, Hs);
 
-  // Onverwacht: arcade-titel is een vakantie-pixelmap van de landweg-foto
-  let map = { groundY: Hs * 0.62, roadX: Ws * 0.4 };
-  if (typeof drawLandwegPixelmap === 'function') {
+  let map = { roadY: Hs * 0.82 };
+  if (typeof drawMenuSemi25dVista === 'function') {
+    map = drawMenuSemi25dVista(c, Ws, Hs, t, { lite, caption: true }) || map;
+  } else if (typeof drawLandwegPixelmap === 'function') {
     map = drawLandwegPixelmap(c, Ws, Hs, t, { lite, caption: true, groundY: Hs * 0.58 }) || map;
+    map.roadY = (map.groundY || Hs * 0.58) + 8;
   } else {
     const sky = c.createLinearGradient(0, 0, 0, Hs);
     sky.addColorStop(0, '#4ea6e8');
@@ -121,44 +128,44 @@ function paintMenuHeroCanvas(t) {
     drawMenuHeroPixelGround(c, Ws, Hs, Hs * 0.62, t);
   }
 
-  const roadY = (map.groundY || Hs * 0.58) + 8;
-  const walk = motionReduced() ? 0 : Math.sin(t * 3.2) * 3;
-  const stroll = motionReduced() ? 0 : Math.sin(t * 0.7) * (Ws * 0.04);
-  const drawTourist = (x, face, col) => {
+  const roadY = map.roadY || Hs * 0.82;
+  const walk = motionReduced() ? 0 : Math.sin(t * 3.2) * 2;
+  const stroll = motionReduced() ? 0 : Math.sin(t * 0.55) * (Ws * 0.03);
+  const drawTourist = (x, face, col, scale) => {
+    const sc = scale || 1;
     c.save();
-    c.translate(x + stroll * face, roadY + walk * (face > 0 ? 1 : 0.5));
-    c.scale(face, 1);
+    c.translate(x + stroll * face, roadY + walk * (face > 0 ? 1 : 0.5) - 2);
+    c.scale(face * sc, sc);
     c.strokeStyle = col;
     c.lineWidth = 4;
     c.lineCap = 'round';
     c.beginPath();
     c.moveTo(0, 0);
-    c.lineTo(0, -36);
+    c.lineTo(0, -34);
     c.stroke();
-    // wandelende benen
-    const leg = motionReduced() ? 0 : Math.sin(t * 5 + face) * 8;
+    const leg = motionReduced() ? 0 : Math.sin(t * 5 + face) * 7;
     c.beginPath();
     c.moveTo(0, 0);
-    c.lineTo(-6, 10 + leg * 0.3);
+    c.lineTo(-6, 9 + leg * 0.3);
     c.moveTo(0, 0);
-    c.lineTo(6, 10 - leg * 0.3);
+    c.lineTo(6, 9 - leg * 0.3);
     c.stroke();
     c.fillStyle = col;
     c.beginPath();
-    c.arc(0, -46, 10, 0, TAU);
+    c.arc(0, -44, 9, 0, TAU);
     c.fill();
-    // "camera" / vuist als toerist-gimmick
     c.fillStyle = '#ffd75e';
     c.beginPath();
-    c.arc(14, -28, 6, 0, TAU);
+    c.arc(12, -26, 5, 0, TAU);
     c.fill();
     c.restore();
   };
-  drawTourist(Ws * 0.55, 1, '#eef5ff');
-  drawTourist(Ws * 0.78, -1, '#ff8a9a');
-  // Absurde VS-banner midden in de vakantiefoto
-  if (typeof drawPixelVsBanner === 'function') {
-    drawPixelVsBanner(c, Ws * 0.5, Hs * 0.42, 2.4, t);
+  // Stickmen op de voorgrond-weg (semi-2.5D: dichter = groter)
+  drawTourist(Ws * 0.22, 1, '#eef5ff', 0.85);
+  drawTourist(Ws * 0.38, -1, '#ff8a9a', 1);
+  // Subtiele VS-chip, niet over de eik
+  if (typeof drawPixelVsBanner === 'function' && !lite) {
+    drawPixelVsBanner(c, Ws * 0.18, Hs * 0.28, 1.8, t);
   }
 }
 
