@@ -369,9 +369,11 @@ const UI = {
     html += modes.map((m) => {
       const seen = modeOnboardingSeen(m.id);
       const highlight = next && next.id === m.id ? ' border-color:rgba(124,245,255,.5)' : '';
+      const firstMin = modeFirstMinuteLine(m.id);
       return `<div class="step-card" style="margin:6px 0;padding:10px 12px${highlight}">` +
         `<b>${m.label}</b>${seen ? ` <span style="color:#7cfc8a;font-size:11px">${t('ui.helpHintSeen')}</span>` : ` <span style="color:#ffd75e;font-size:11px">${t('ui.helpHintNot')}</span>`}` +
-        `<div style="opacity:.88;margin-top:4px">${m.tip} · ${touch}</div></div>`;
+        `<div style="opacity:.92;margin-top:4px;color:#ffd75e;font-size:12px">${firstMin}</div>` +
+        `<div style="opacity:.75;margin-top:4px;font-size:11px">${m.tip} · ${touch}</div></div>`;
     }).join('');
     host.innerHTML = html;
   },
@@ -424,6 +426,10 @@ const UI = {
         return;
       }
       if (active === 'missionsScreen' || active === 'settingsScreen' || active === 'helpScreen' || active === 'installScreen') {
+        if (active === 'missionsScreen' && !save.missionsIntroSeen) {
+          save.missionsIntroSeen = true;
+          persist();
+        }
         this.show('menuScreen');
         return;
       }
@@ -459,6 +465,11 @@ const UI = {
 
   goMenu() {
     try {
+      const active = this.screens.find(sid => document.getElementById(sid)?.classList.contains('active'));
+      if (active === 'missionsScreen' && !save.missionsIntroSeen) {
+        save.missionsIntroSeen = true;
+        persist();
+      }
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
@@ -908,6 +919,16 @@ const UI = {
       if (pct > nextUpPct) { nextUpPct = pct; nextUpId = t.id; }
     }
     const sub = document.getElementById('missionsSub');
+    const introEl = document.getElementById('missionsIntroLine');
+    if (introEl) {
+      if (!save.missionsIntroSeen) {
+        introEl.style.display = 'block';
+        introEl.textContent = t('missionsUi.introLine');
+      } else {
+        introEl.style.display = 'none';
+        introEl.textContent = '';
+      }
+    }
     const step = dailyFlowStep();
     if (sub) {
       const streak = dailyStreakLine();
@@ -1316,6 +1337,17 @@ const UI = {
     if (ctx) {
       const cap = adventureWeaponCapForLevel(levelN);
       ctx.textContent = t('ui.gambleCtx', { cap });
+    }
+    const onboardEl = document.getElementById('gambleOnboardLine');
+    if (onboardEl) {
+      const hint = gambleOnboardHintLine();
+      if (hint) {
+        onboardEl.style.display = 'block';
+        onboardEl.textContent = hint;
+      } else {
+        onboardEl.style.display = 'none';
+        onboardEl.textContent = '';
+      }
     }
     const g = lastGambleRoll;
     const face = (d) => ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][d - 1] || '?';

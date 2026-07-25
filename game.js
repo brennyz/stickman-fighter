@@ -133,9 +133,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.71';
+const APP_VERSION = '1.17.72';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 197;
+const SW_CACHE_REV = 198;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -3095,19 +3095,12 @@ function adventureIslandHintLine() {
   return 'Eerste keer avontuur: 5×10 levels · skill gate per eiland · Meester-buff na 5× verlies op één level';
 }
 
-/** Eén hint per modus: in-gevecht regel, geen extra toast (geen stapel met welcome). */
-function applyModeOnboarding(mode, g) {
-  if (!g || !mode) return;
-  ensureTipsSeen();
-  const key = 'onboard_' + mode;
-  if (save.tipsSeen[key]) return;
-  save.tipsSeen[key] = 1;
-  save.tipsSeen['mode_' + mode] = 1;
-  save.tipsSeen['hint_' + mode] = 1;
-  if (mode === 'adventure' || mode === 'training') save.tipsSeen.chakra = 1;
-  if (mode === 'coinrun') save.tipsSeen.hint_coinrun = 1;
-  persist();
+/** Eerste-minuut regel per modus — gedeeld door HUD-hint, Tips-scherm en help-chips. */
+function modeFirstMinuteLine(mode) {
   const touch = IS_TOUCH;
+  const key = 'ui.firstMinute' + (mode ? mode.charAt(0).toUpperCase() + mode.slice(1) : 'Adventure');
+  const localized = typeof t === 'function' ? t(key) : '';
+  if (localized && localized !== key) return localized;
   const lines = {
     adventure: touch
       ? 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol chakra = SUPER'
@@ -3125,15 +3118,44 @@ function applyModeOnboarding(mode, g) {
       ? '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel'
       : 'Munten pakken · joy ↑ = hoger mikken · max 3 shuriken snel',
   };
-  g.modeHintLine = lines[mode] || lines.adventure;
+  return lines[mode] || lines.adventure;
+}
+
+/** Eén hint per modus: in-gevecht regel, geen extra toast (geen stapel met welcome). */
+function applyModeOnboarding(mode, g) {
+  if (!g || !mode) return;
+  ensureTipsSeen();
+  const key = 'onboard_' + mode;
+  if (save.tipsSeen[key]) return;
+  save.tipsSeen[key] = 1;
+  save.tipsSeen['mode_' + mode] = 1;
+  save.tipsSeen['hint_' + mode] = 1;
+  if (mode === 'adventure' || mode === 'training') save.tipsSeen.chakra = 1;
+  if (mode === 'coinrun') save.tipsSeen.hint_coinrun = 1;
+  persist();
+  g.modeHintLine = modeFirstMinuteLine(mode);
   g.hint = 8;
+}
+
+/** Eén regel op gok-scherm — geen toast. */
+function gambleOnboardHintLine() {
+  ensureTipsSeen();
+  if (save.tipsSeen.gambleHint) return '';
+  save.tipsSeen.gambleHint = 1;
+  persist();
+  const key = IS_TOUCH ? 'ui.gambleOnboardTouch' : 'ui.gambleOnboardKb';
+  const line = typeof t === 'function' ? t(key) : '';
+  return (line && line !== key) ? line
+    : (IS_TOUCH
+      ? 'Eerste keer gok: lage som = super-baas · hoge som = bondgenoot · Overslaan = normaal level'
+      : 'Eerste keer: sum ≤5 super-baas · sum ≥9 ally buff · Skip = geen gok');
 }
 
 function maybeWelcomeToast() {
   ensureTipsSeen();
   if (save.tipsSeen.welcome) return;
   const prog = onboardingProgress();
-  if (prog.seen > 0 || save.lvl > 1) {
+  if (prog.seen > 0 || save.lvl > 1 || save.missionsIntroSeen) {
     save.tipsSeen.welcome = 1;
     persist();
     return;
@@ -3142,6 +3164,7 @@ function maybeWelcomeToast() {
   persist();
   setTimeout(() => {
     if (state === 'play') return;
+    if (onboardingProgress().seen > 0) return;
     userToast(t('toast.welcome'), 3800);
   }, 2800);
 }
@@ -3786,13 +3809,23 @@ function weaponMasteryTopList(limit) {
   return list.slice(0, limit || 3);
 }
 
-function weaponComboTipOnce() {
+function weaponComboTipOnce(gameRef) {
   if (typeof save === 'undefined') return;
   if (!save.tipsSeen || typeof save.tipsSeen !== 'object') save.tipsSeen = {};
   if (save.tipsSeen.weaponCombo) return;
   save.tipsSeen.weaponCombo = 1;
   if (typeof persist === 'function') persist();
-  try { UI.toast('Wapen 3× tikken = ①②③ · raak met ①+② voor gouden finisher ③', 4200); } catch (_) {}
+  const tip = (typeof t === 'function' && t('ui.weaponComboHint') !== 'ui.weaponComboHint')
+    ? t('ui.weaponComboHint')
+    : 'Wapen 3× = ①②③ · ①+② raken → gouden ③';
+  if (gameRef && gameRef.hint > 0) {
+    if (!gameRef.modeHintLine || gameRef.modeHintLine.indexOf('①') < 0) {
+      gameRef.modeHintLine = gameRef.modeHintLine
+        ? gameRef.modeHintLine + ' · ' + tip
+        : tip;
+    }
+    gameRef.hint = Math.max(gameRef.hint, 6);
+  }
 }
 
 function trackWeaponFinisher(weaponId, gameRef) {
@@ -3813,9 +3846,6 @@ function trackWeaponFinisher(weaponId, gameRef) {
     const w = weaponById(weaponId);
     const tier = WEAPON_MASTERY_TIERS[newTierIdx];
     try { UI.toast(`${w.name}: ${tier.name}!`, 3200); } catch (_) {}
-  }
-  if (prevTotal === 0 && typeof UI !== 'undefined') {
-    try { UI.toast('Eerste finisher! Raak ① én ②, dan is ③ goud.', 3600); } catch (_) {}
   }
   if (typeof checkAchievements === 'function') checkAchievements();
 }
@@ -5580,6 +5610,7 @@ function seedNlGameStrings() {
     badgeNew: 'nieuw', badgeNear: 'bijna', stillOpen: 'nog open',
     streakDone: '{n}× dagbonus · Vastberaden!',
     streakLine: '{n}× dagbonus streak',
+    introLine: 'Missies: Speel → claim XP → dagbonus — licht, geen grind. Geen extra toast; alles staat op dit scherm.',
     statusDone: 'Vandaag klaar{streak} · {ach}/{total} prestaties · morgen nieuwe missies',
     statusStep2: 'Stap 2: claim XP',
     statusStep3: 'Stap 3: dagbonus +80 XP',
@@ -5690,6 +5721,14 @@ function seedNlGameStrings() {
     modeWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing',
     modeVersus: 'P1 links P2 rechts · best-of-3 · rematch in pauze',
     modeCoinrun: '45s munten · 2 munten = 1 pet coin · mik ↑ · vliegers +3',
+    firstMinuteAdventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol chakra = SUPER',
+    firstMinuteTraining: 'Eerste minuut: ontwijk rode laser · blokkeer dichtbij · chakra vol → SUPER',
+    firstMinuteWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
+    firstMinuteVersus: 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best',
+    firstMinuteCoinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
+    weaponComboHint: 'Wapen 3× = ①②③ · ①+② raken → gouden ③',
+    gambleOnboardTouch: 'Eerste keer gok: lage som = super-baas · hoge som = bondgenoot · Overslaan = normaal level',
+    gambleOnboardKb: 'Eerste keer: sum ≤5 super-baas · sum ≥9 ally buff · Skip = geen gok',
     langSwitchFail: 'Taal wisselen mislukt',
   });
   if (!I18N.nl.hud) I18N.nl.hud = {};
@@ -6035,6 +6074,7 @@ const CATALOG_EN = {
     badgeNew: 'new', badgeNear: 'almost', stillOpen: 'still open',
     streakDone: '{n}× daily bonus · Determined!',
     streakLine: '{n}× daily bonus streak',
+    introLine: 'Missions: Play → claim XP → daily bonus — light, no grind. No extra toast; everything is on this screen.',
     statusDone: 'Done today{streak} · {ach}/{total} achievements · new missions tomorrow',
     statusStep2: 'Step 2: claim XP',
     statusStep3: 'Step 3: daily bonus +80 XP',
@@ -6113,6 +6153,14 @@ const CATALOG_EN = {
     modeWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD · 5s warning',
     modeVersus: 'P1 left P2 right · best-of-3 · rematch in pause',
     modeCoinrun: '45s coins · 2 coins = 1 pet coin · aim ↑ · flyers +3',
+    firstMinuteAdventure: 'First minute: move left · punch right · joy ↑ aim flyers · full chakra = SUPER',
+    firstMinuteTraining: 'First minute: dodge red laser · block up close · full chakra → SUPER',
+    firstMinuteWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD',
+    firstMinuteVersus: 'First minute: P1 left · P2 right · landscape iPad works best',
+    firstMinuteCoinrun: '45s coins · joy ↑ aim · pink flyer = +3 · max 3 shuriken fast',
+    weaponComboHint: 'Weapon 3× = ①②③ · hit ①+② → golden ③',
+    gambleOnboardTouch: 'First gamble: low sum = super-boss · high sum = ally · Skip = normal level',
+    gambleOnboardKb: 'First time: sum ≤5 super-boss · sum ≥9 ally buff · Skip = no gamble',
     langSwitchFail: 'Language switch failed',
   },
   fighter: {
@@ -9514,7 +9562,7 @@ class Fighter {
       AudioSys.sfx(weaponSwingSfx(this.weapon, kind));
     }
     if (kind === 'weapon' && !isThrowWeapon(this.weapon.id)) {
-      if (this.isPlayer || this.playerSlot) weaponComboTipOnce();
+      if (this.isPlayer || this.playerSlot) weaponComboTipOnce(game);
       const sameWep = this._lastWeaponKind === this.weapon.id;
       if (this._weaponComboPrimed && this.weaponComboT > 0 && sameWep) {
         this.weaponComboIdx = (this.weaponComboIdx + 1) % 3;
@@ -15397,9 +15445,11 @@ const UI = {
     html += modes.map((m) => {
       const seen = modeOnboardingSeen(m.id);
       const highlight = next && next.id === m.id ? ' border-color:rgba(124,245,255,.5)' : '';
+      const firstMin = modeFirstMinuteLine(m.id);
       return `<div class="step-card" style="margin:6px 0;padding:10px 12px${highlight}">` +
         `<b>${m.label}</b>${seen ? ` <span style="color:#7cfc8a;font-size:11px">${t('ui.helpHintSeen')}</span>` : ` <span style="color:#ffd75e;font-size:11px">${t('ui.helpHintNot')}</span>`}` +
-        `<div style="opacity:.88;margin-top:4px">${m.tip} · ${touch}</div></div>`;
+        `<div style="opacity:.92;margin-top:4px;color:#ffd75e;font-size:12px">${firstMin}</div>` +
+        `<div style="opacity:.75;margin-top:4px;font-size:11px">${m.tip} · ${touch}</div></div>`;
     }).join('');
     host.innerHTML = html;
   },
@@ -15452,6 +15502,10 @@ const UI = {
         return;
       }
       if (active === 'missionsScreen' || active === 'settingsScreen' || active === 'helpScreen' || active === 'installScreen') {
+        if (active === 'missionsScreen' && !save.missionsIntroSeen) {
+          save.missionsIntroSeen = true;
+          persist();
+        }
         this.show('menuScreen');
         return;
       }
@@ -15936,6 +15990,16 @@ const UI = {
       if (pct > nextUpPct) { nextUpPct = pct; nextUpId = t.id; }
     }
     const sub = document.getElementById('missionsSub');
+    const introEl = document.getElementById('missionsIntroLine');
+    if (introEl) {
+      if (!save.missionsIntroSeen) {
+        introEl.style.display = 'block';
+        introEl.textContent = t('missionsUi.introLine');
+      } else {
+        introEl.style.display = 'none';
+        introEl.textContent = '';
+      }
+    }
     const step = dailyFlowStep();
     if (sub) {
       const streak = dailyStreakLine();
@@ -16344,6 +16408,17 @@ const UI = {
     if (ctx) {
       const cap = adventureWeaponCapForLevel(levelN);
       ctx.textContent = t('ui.gambleCtx', { cap });
+    }
+    const onboardEl = document.getElementById('gambleOnboardLine');
+    if (onboardEl) {
+      const hint = gambleOnboardHintLine();
+      if (hint) {
+        onboardEl.style.display = 'block';
+        onboardEl.textContent = hint;
+      } else {
+        onboardEl.style.display = 'none';
+        onboardEl.textContent = '';
+      }
     }
     const g = lastGambleRoll;
     const face = (d) => ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][d - 1] || '?';
@@ -17224,18 +17299,6 @@ bindPress(btnMissions, () => {
   AudioSys.init(); AudioSys.sfx('select');
   UI.renderMissions();
   UI.show('missionsScreen');
-  if (!save.missionsIntroSeen) {
-    save.missionsIntroSeen = true;
-    persist();
-    setTimeout(() => UI.toast('Missies: Speel → claim XP → dagbonus — licht, geen grind', 4000), 280);
-    return;
-  }
-  const n = claimableDailyTasks().length;
-  if (n > 0) {
-    setTimeout(() => UI.toast(n === 1 ? '1 missie klaar om te claimen' : `${n} missies klaar om te claimen`, 2600), 200);
-  } else if (save.daily && save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed) {
-    setTimeout(() => UI.toast('Dagbonus +80 XP staat klaar', 2600), 200);
-  }
 });
 const dailyClaimAllBtn = document.getElementById('dailyClaimAllBtn');
 if (dailyClaimAllBtn) dailyClaimAllBtn.addEventListener('click', () => {

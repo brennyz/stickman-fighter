@@ -165,18 +165,6 @@ bindPress(btnMissions, () => {
   AudioSys.init(); AudioSys.sfx('select');
   UI.renderMissions();
   UI.show('missionsScreen');
-  if (!save.missionsIntroSeen) {
-    save.missionsIntroSeen = true;
-    persist();
-    setTimeout(() => UI.toast('Missies: Speel → claim XP → dagbonus — licht, geen grind', 4000), 280);
-    return;
-  }
-  const n = claimableDailyTasks().length;
-  if (n > 0) {
-    setTimeout(() => UI.toast(n === 1 ? '1 missie klaar om te claimen' : `${n} missies klaar om te claimen`, 2600), 200);
-  } else if (save.daily && save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed) {
-    setTimeout(() => UI.toast('Dagbonus +80 XP staat klaar', 2600), 200);
-  }
 });
 const dailyClaimAllBtn = document.getElementById('dailyClaimAllBtn');
 if (dailyClaimAllBtn) dailyClaimAllBtn.addEventListener('click', () => {

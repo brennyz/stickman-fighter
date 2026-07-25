@@ -1441,19 +1441,12 @@ function adventureIslandHintLine() {
   return 'Eerste keer avontuur: 5×10 levels · skill gate per eiland · Meester-buff na 5× verlies op één level';
 }
 
-/** Eén hint per modus: in-gevecht regel, geen extra toast (geen stapel met welcome). */
-function applyModeOnboarding(mode, g) {
-  if (!g || !mode) return;
-  ensureTipsSeen();
-  const key = 'onboard_' + mode;
-  if (save.tipsSeen[key]) return;
-  save.tipsSeen[key] = 1;
-  save.tipsSeen['mode_' + mode] = 1;
-  save.tipsSeen['hint_' + mode] = 1;
-  if (mode === 'adventure' || mode === 'training') save.tipsSeen.chakra = 1;
-  if (mode === 'coinrun') save.tipsSeen.hint_coinrun = 1;
-  persist();
+/** Eerste-minuut regel per modus — gedeeld door HUD-hint, Tips-scherm en help-chips. */
+function modeFirstMinuteLine(mode) {
   const touch = IS_TOUCH;
+  const key = 'ui.firstMinute' + (mode ? mode.charAt(0).toUpperCase() + mode.slice(1) : 'Adventure');
+  const localized = typeof t === 'function' ? t(key) : '';
+  if (localized && localized !== key) return localized;
   const lines = {
     adventure: touch
       ? 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol chakra = SUPER'
@@ -1471,15 +1464,44 @@ function applyModeOnboarding(mode, g) {
       ? '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel'
       : 'Munten pakken · joy ↑ = hoger mikken · max 3 shuriken snel',
   };
-  g.modeHintLine = lines[mode] || lines.adventure;
+  return lines[mode] || lines.adventure;
+}
+
+/** Eén hint per modus: in-gevecht regel, geen extra toast (geen stapel met welcome). */
+function applyModeOnboarding(mode, g) {
+  if (!g || !mode) return;
+  ensureTipsSeen();
+  const key = 'onboard_' + mode;
+  if (save.tipsSeen[key]) return;
+  save.tipsSeen[key] = 1;
+  save.tipsSeen['mode_' + mode] = 1;
+  save.tipsSeen['hint_' + mode] = 1;
+  if (mode === 'adventure' || mode === 'training') save.tipsSeen.chakra = 1;
+  if (mode === 'coinrun') save.tipsSeen.hint_coinrun = 1;
+  persist();
+  g.modeHintLine = modeFirstMinuteLine(mode);
   g.hint = 8;
+}
+
+/** Eén regel op gok-scherm — geen toast. */
+function gambleOnboardHintLine() {
+  ensureTipsSeen();
+  if (save.tipsSeen.gambleHint) return '';
+  save.tipsSeen.gambleHint = 1;
+  persist();
+  const key = IS_TOUCH ? 'ui.gambleOnboardTouch' : 'ui.gambleOnboardKb';
+  const line = typeof t === 'function' ? t(key) : '';
+  return (line && line !== key) ? line
+    : (IS_TOUCH
+      ? 'Eerste keer gok: lage som = super-baas · hoge som = bondgenoot · Overslaan = normaal level'
+      : 'Eerste keer: sum ≤5 super-baas · sum ≥9 ally buff · Skip = geen gok');
 }
 
 function maybeWelcomeToast() {
   ensureTipsSeen();
   if (save.tipsSeen.welcome) return;
   const prog = onboardingProgress();
-  if (prog.seen > 0 || save.lvl > 1) {
+  if (prog.seen > 0 || save.lvl > 1 || save.missionsIntroSeen) {
     save.tipsSeen.welcome = 1;
     persist();
     return;
@@ -1488,6 +1510,7 @@ function maybeWelcomeToast() {
   persist();
   setTimeout(() => {
     if (state === 'play') return;
+    if (onboardingProgress().seen > 0) return;
     userToast(t('toast.welcome'), 3800);
   }, 2800);
 }

@@ -91,7 +91,7 @@ class Fighter {
       AudioSys.sfx(weaponSwingSfx(this.weapon, kind));
     }
     if (kind === 'weapon' && !isThrowWeapon(this.weapon.id)) {
-      if (this.isPlayer || this.playerSlot) weaponComboTipOnce();
+      if (this.isPlayer || this.playerSlot) weaponComboTipOnce(game);
       const sameWep = this._lastWeaponKind === this.weapon.id;
       if (this._weaponComboPrimed && this.weaponComboT > 0 && sameWep) {
         this.weaponComboIdx = (this.weaponComboIdx + 1) % 3;

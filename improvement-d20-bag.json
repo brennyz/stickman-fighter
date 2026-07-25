@@ -12,25 +12,17 @@
     11,
     12,
     13,
-    15,
     19
   ],
   "lastRoll": {
-    "face": 17,
-    "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
-    "rolledAt": "2026-07-25T08:11:44Z",
-    "remainingCount": 11,
+    "face": 15,
+    "category": "Onboarding \u2014 tips, eerste speelminuut, help",
+    "rolledAt": "2026-07-25T08:15:02Z",
+    "remainingCount": 10,
     "cycle": 4
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 2,
-      "note": "Chidori telegraph + ronde HUD",
-      "version": "1.8.4",
-      "doneAt": "2026-07-23T13:35:30Z",
-      "cycle": 0
-    },
     {
       "face": 17,
       "note": "Error recovery + save import",
@@ -582,6 +574,13 @@
       "note": "tideBattle toasts + import file picker + persistOrToast",
       "version": "1.17.71",
       "doneAt": "2026-07-25T08:14:10Z",
+      "cycle": 4
+    },
+    {
+      "face": 15,
+      "note": "hint pill not toast, help chips, missions inline",
+      "version": "1.17.72",
+      "doneAt": "2026-07-25T08:16:37Z",
       "cycle": 4
     }
   ],
@@ -1762,6 +1761,13 @@
       "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
       "rolledAt": "2026-07-25T08:11:44Z",
       "remainingCount": 11,
+      "cycle": 4
+    },
+    {
+      "face": 15,
+      "category": "Onboarding \u2014 tips, eerste speelminuut, help",
+      "rolledAt": "2026-07-25T08:15:02Z",
+      "remainingCount": 10,
       "cycle": 4
     }
   ],
