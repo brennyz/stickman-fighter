@@ -597,8 +597,7 @@
     }
     var c = document.getElementById('game');
     if (!c) return;
-    var playing = document.body.classList.contains('is-playing')
-      || window.__sfPlayLock
+    var playing = window.__sfPlayLock
       || (typeof state !== 'undefined' && state === 'play' && typeof game !== 'undefined' && game);
     if (playing) {
       // Nooit canvas verbergen tijdens gevecht (blauw deksel + wél geluid)
