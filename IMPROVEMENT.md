@@ -109,6 +109,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-25 | **4** | Avontuur c4: wave-trait pips op level-tegels, eiland sterren-balk, HUD golf-trait label, result +★ delta. d20 mark-done verify. v1.17.84 / SW v202. |
 | 2026-07-25 | **6** | Audio c4: setPaused resume alleen bij audio aan, syncContextPower tab/menu/result, muziek-slider preview, i18n BGM-gedempt, d20 bag verify in preflight. v1.17.83 / SW v201. |
 | 2026-07-25 | **2** | Training c4: match point/beslissende ronde banners, spawn+round-end countdown, timer bar, TIME=HP%, round-log, low-HP mercy (lasers/AI) — geen one-shots. v1.17.82 / SW v200. |
 | 2026-07-25 | **9** | Touch c4: level long-press scroll-guard, uiGestureMoved, knop-haptic + held ring, joy release bij orientatie. Bug: skip-gok tijdens scroll. v1.17.80 / SW v198. |

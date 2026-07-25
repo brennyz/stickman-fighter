@@ -19,21 +19,8 @@
     "remainingCount": 8,
     "cycle": 4
   },
-  "pending": {
-    "face": 4,
-    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
-    "rolledAt": "2026-07-24T18:30:45Z",
-    "remainingCount": 8,
-    "cycle": 4
-  },
+  "pending": null,
   "implemented": [
-    {
-      "face": 3,
-      "note": "Versus HUD timer/rematch/spawn reset",
-      "version": "1.8.6",
-      "doneAt": "2026-07-23T13:38:12Z",
-      "cycle": 0
-    },
     {
       "face": 13,
       "note": "Daily claim UX + claim-all + status copy",
@@ -585,6 +572,13 @@
       "note": "pause mute ctx fix, music preview, bag verify",
       "version": "1.17.83",
       "doneAt": "2026-07-25T10:04:24Z",
+      "cycle": 4
+    },
+    {
+      "face": 4,
+      "note": "wave trait pips, island stars bar, result star delta",
+      "version": "1.17.84",
+      "doneAt": "2026-07-25T11:04:01Z",
       "cycle": 4
     }
   ],
