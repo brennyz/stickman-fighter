@@ -464,19 +464,51 @@
 
   #tunnelBootOverlay { position:fixed; inset:0; z-index:9999; display:flex; flex-direction:column;
       align-items:center; justify-content:center; padding:24px; text-align:center;
-      background:linear-gradient(180deg,rgba(15,20,40,.92) 0%,rgba(10,13,24,.88) 100%); color:#d5e0ff;
+      background:linear-gradient(180deg,#1a2228 0%,#12161a 55%,#0c1012 100%); color:#c8d0d6;
       pointer-events:none; }
   #tunnelBootOverlay button { pointer-events:auto; touch-action:manipulation; }
   #tunnelBootOverlay[hidden] { display:none !important; pointer-events:none !important; }
-  #tunnelBootOverlay .boot-spinner { width:48px; height:48px; border:4px solid rgba(255,215,94,.25);
-      border-top-color:#ffd75e; border-radius:50%; animation: spin .9s linear infinite; margin-bottom:20px; }
+  #tunnelBootOverlay .boot-spinner { width:40px; height:40px; border:3px solid rgba(168,140,80,.22);
+      border-top-color:#a88850; border-radius:50%; animation: spin .9s linear infinite; margin:14px 0 16px; }
   @keyframes spin { to { transform:rotate(360deg); } }
-  #tunnelBootTitle { font-family:'Bangers',cursive; font-size:min(8vw,36px); color:#ffd75e;
-      letter-spacing:2px; margin-bottom:10px; }
-  #tunnelBootDetail { font-size:15px; line-height:1.5; max-width:420px; white-space:pre-wrap; color:#8fa3d9; }
+  #tunnelBootTitle { font-family:'Bangers',cursive; font-size:min(8vw,34px); color:#d8c9a0;
+      letter-spacing:2px; margin-bottom:10px; text-shadow:2px 2px 0 #2a2418; }
+  #tunnelBootDetail { font-size:14px; line-height:1.5; max-width:420px; white-space:pre-wrap; color:#8a98a4; }
   #tunnelBootRetry { margin-top:20px; display:none; width:min(86vw,320px); padding:14px 18px;
-      font-size:18px; background:linear-gradient(180deg,#5a8cff,#2a52c8); border:none; border-radius:16px;
+      font-size:18px; background:linear-gradient(180deg,#5a6a78,#3a4a56); border:none; border-radius:16px;
       color:#fff; font-weight:800; cursor:pointer; box-shadow:0 6px 0 rgba(0,0,0,.35); }
+
+  /* d20 #20 — pixel splash / laadscherm strip */
+  .sf-splash {
+    position:fixed; inset:0; z-index:10050; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:12px; padding:24px;
+    background:linear-gradient(180deg,#1c242a 0%,#12161a 50%,#0c1012 100%);
+    transition: opacity .35s ease, visibility .35s ease;
+  }
+  .sf-splash.is-done { opacity:0; visibility:hidden; pointer-events:none; }
+  .sf-splash-canvas {
+    display:block; width:min(92vw,480px); height:auto; aspect-ratio:480/140;
+    image-rendering:pixelated; border:2px solid rgba(168,140,80,.28);
+    box-shadow:0 10px 28px rgba(0,0,0,.45); background:#4a6a82;
+  }
+  .tunnel-boot-strip { aspect-ratio:480/100; margin-bottom:4px; }
+  .sf-splash-title {
+    font-family:'Bangers', cursive; font-size:min(9vw,40px); letter-spacing:2px;
+    color:#d8c9a0; text-shadow:3px 3px 0 #2a2418; margin:0;
+  }
+  .sf-splash-bar {
+    width:min(78vw,320px); height:12px; border-radius:2px; overflow:hidden;
+    background:#1a1e22; border:2px solid rgba(168,140,80,.35);
+    image-rendering:pixelated;
+  }
+  .sf-splash-bar > i {
+    display:block; height:100%; width:0%;
+    background:repeating-linear-gradient(90deg, #a88850 0 6px, #8a6e40 6px 8px);
+    transition: width .08s linear;
+  }
+  .sf-splash-sub { font-size:12px; font-weight:700; color:#8a98a4; letter-spacing:.04em; }
+  body.reduced-motion .sf-splash { transition: none; }
+  body.reduced-motion #tunnelBootOverlay .boot-spinner { animation-duration: 1.4s; }
 
   .back-btn { position:sticky; top:max(8px, env(safe-area-inset-top)); align-self:flex-start;
       z-index:6; margin:0 0 10px; left:auto;

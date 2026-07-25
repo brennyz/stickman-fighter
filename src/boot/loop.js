@@ -475,9 +475,81 @@ function wireNetStatusTap() {
   });
 }
 
+/** d20 #20 — pixel splash / laadscherm strip (boot). */
+function dismissSplashOverlay() {
+  const root = document.getElementById('sfSplash');
+  if (!root || root.classList.contains('is-done')) return;
+  root.classList.add('is-done');
+  root.setAttribute('aria-busy', 'false');
+  const calm = typeof motionReduced === 'function' && motionReduced();
+  setTimeout(() => {
+    try { root.remove(); } catch (_) {
+      try { root.style.display = 'none'; } catch (__) {}
+    }
+  }, calm ? 0 : 380);
+}
+
+function paintSplashTargets(t, progress) {
+  if (typeof paintSplashStripCanvas !== 'function') return;
+  const main = document.getElementById('sfSplashCanvas');
+  if (main) paintSplashStripCanvas(main, t, { progress });
+  const tunnel = document.getElementById('tunnelBootStrip');
+  const ov = document.getElementById('tunnelBootOverlay');
+  if (tunnel && ov && !ov.hidden) {
+    paintSplashStripCanvas(tunnel, t, { progress, compact: true });
+  }
+}
+
+function runSplashIntro() {
+  if (window.__sfSplashRan) return;
+  window.__sfSplashRan = true;
+  const root = document.getElementById('sfSplash');
+  if (!root) return;
+  const fill = document.getElementById('sfSplashFill');
+  const bar = document.getElementById('sfSplashBar');
+  const sub = document.getElementById('sfSplashSub');
+  const calm = typeof motionReduced === 'function' && motionReduced();
+  const dur = calm ? 220 : 1050;
+  const t0 = performance.now();
+  let finished = false;
+  const labels = ['Laden…', 'Pixelmap…', 'Arena…', 'Klaar'];
+
+  // First paint immediately so the canvas isn’t blank while CSS shows
+  try { paintSplashTargets(0, 0); } catch (_) {}
+
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    if (fill) fill.style.width = '100%';
+    if (bar) bar.setAttribute('aria-valuenow', '100');
+    if (sub) sub.textContent = 'Klaar';
+    try { paintSplashTargets(dur / 1000, 1); } catch (_) {}
+    dismissSplashOverlay();
+  };
+
+  const tick = (now) => {
+    if (finished) return;
+    const u = Math.min(1, (now - t0) / dur);
+    const ease = 1 - Math.pow(1 - u, 2.35);
+    const pct = Math.round(ease * 100);
+    if (fill) fill.style.width = pct + '%';
+    if (bar) bar.setAttribute('aria-valuenow', String(pct));
+    if (sub) {
+      sub.textContent = labels[Math.min(labels.length - 1, Math.floor(u * labels.length))];
+    }
+    try { paintSplashTargets((now - t0) / 1000, ease); } catch (_) {}
+    if (u < 1) requestAnimationFrame(tick);
+    else finish();
+  };
+  requestAnimationFrame(tick);
+  // Hard failsafe — never leave splash blocking the menu
+  setTimeout(finish, dur + 900);
+}
+
 function bootGame() {
   if (window.__sfBooted) return;
   window.__sfBooted = true;
+  safeCall(runSplashIntro, 'splash');
   initUiTapScrollGuard();
   try {
     const hadCorruptPrimary = saveStorageDiagnostics().primaryCorrupt;
@@ -602,6 +674,9 @@ function bootGame() {
     } catch (_) {}
   })();
 }
+
+// d20 #20 — start splash as soon as game.js is live (don’t wait on tunnel)
+safeCall(runSplashIntro, 'splashEarly');
 
 const tunnelReady = window.sfTunnelBoot || Promise.resolve();
 tunnelReady.then(bootGame).catch(() => { try { bootGame(); } catch (_) {} });

@@ -1196,6 +1196,191 @@ function startPausePixelBackdropLoop() {
   window.__sfPauseBgRaf = requestAnimationFrame(tick);
 }
 
+/**
+ * d20 polish #20 — Laadscherm / splash strip.
+ * Compact countryside pixel strip (COUNTRY_PAL) for boot + tunnel overlay.
+ */
+function paintSplashStripCanvas(cv, t, opts) {
+  if (!cv) return;
+  opts = opts || {};
+  const c = cv.getContext('2d');
+  if (!c) return;
+  const w = cv.width | 0;
+  const h = cv.height | 0;
+  if (w < 8 || h < 8) return;
+  const P = typeof COUNTRY_PAL !== 'undefined' ? COUNTRY_PAL : null;
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  const calm = typeof motionReduced === 'function' && motionReduced();
+  const px = 3;
+  const wrap = (v, span) => ((v % span) + span) % span;
+  const scroll = calm ? 0 : (t || 0) * 20;
+  const progress = opts.progress != null ? Math.max(0, Math.min(1, opts.progress)) : 1;
+  const compact = !!opts.compact;
+
+  const skyTop = P ? P.skyTop : '#4a6a82';
+  const skyMid = P ? P.skyMid : '#7a94a6';
+  const skyLow = P ? P.skyLow : '#b4c2cc';
+  const fieldHi = P ? P.fieldHi : '#b89a5c';
+  const fieldMid = P ? P.fieldMid : '#9a7e48';
+  const fieldLo = P ? P.fieldLo : '#7a6438';
+  const forest = P ? P.forestMid : '#2e4034';
+  const roadHi = P ? P.roadHi : '#7a7874';
+  const roadMid = P ? P.roadMid : '#5e5c58';
+  const roadLo = P ? P.roadLo : '#484642';
+  const straw = P ? P.straw : '#a88850';
+
+  const roadH = Math.max(14, Math.round(h * (compact ? 0.22 : 0.2)));
+  const fieldH = Math.max(16, Math.round(h * (compact ? 0.26 : 0.3)));
+  const roadY = h - roadH;
+  const fieldY = roadY - fieldH;
+  const horizonY = fieldY;
+
+  // Sky bands
+  for (let y = 0; y < horizonY; y += px) {
+    const pr = y / Math.max(1, horizonY);
+    c.fillStyle = pr < 0.4 ? skyTop : pr < 0.75 ? skyMid : skyLow;
+    c.fillRect(0, y, w, px);
+  }
+
+  // Soft clouds (parallax)
+  const cloudOff = wrap(-scroll * 0.35, 64);
+  c.fillStyle = P ? P.cloud : '#e8eef2';
+  for (let i = 0; i < 5; i++) {
+    const cx = Math.round(wrap(cloudOff + i * 96 + i * 17, w + 80) - 40);
+    const cy = 10 + (i % 3) * 8;
+    c.fillRect(cx, cy, 22, 6);
+    c.fillRect(cx + 6, cy - 4, 14, 5);
+    c.fillStyle = P ? P.cloudShade : '#c8d2da';
+    c.fillRect(cx + 4, cy + 4, 16, 3);
+    c.fillStyle = P ? P.cloud : '#e8eef2';
+  }
+
+  // Far forest silhouette
+  const farOff = wrap(-scroll * 0.55, 40);
+  c.fillStyle = forest;
+  for (let x = farOff - 40; x < w + 40; x += 18) {
+    const th = 10 + ((Math.round(x) * 13) % 14);
+    c.fillRect(Math.round(x), horizonY - th, 12, th);
+    c.fillRect(Math.round(x) + 3, horizonY - th - 6, 8, 8);
+  }
+
+  // Field bands
+  for (let y = fieldY; y < roadY; y += px) {
+    const pr = (y - fieldY) / Math.max(1, fieldH);
+    c.fillStyle = pr < 0.35 ? fieldHi : pr < 0.7 ? fieldMid : fieldLo;
+    c.fillRect(0, y, w, px);
+  }
+  // Straw rows
+  const strawOff = wrap(-scroll * 0.9, 11);
+  c.fillStyle = 'rgba(0,0,0,.12)';
+  for (let x = strawOff - 11; x < w + 11; x += 11) {
+    c.fillRect(Math.round(x), fieldY + 6, 1, fieldH - 10);
+  }
+
+  // Mini oak (left) — reuse canopy clusters when available
+  const oakX = Math.round(w * 0.18);
+  const oakBase = roadY - 2;
+  if (typeof drawPixelOakTree === 'function' && !compact) {
+    const sway = calm ? 0 : Math.sin((t || 0) * 1.4) * 1.5;
+    drawPixelOakTree(c, oakX, oakBase, 0.55, sway);
+  } else {
+    c.fillStyle = '#3a3024';
+    c.fillRect(oakX - 3, oakBase - 28, 6, 28);
+    c.fillStyle = P ? P.oakMid : '#354a38';
+    c.beginPath();
+    c.ellipse(oakX, oakBase - 34, 16, 12, 0, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = P ? P.oakLite : '#465a46';
+    c.beginPath();
+    c.ellipse(oakX - 6, oakBase - 40, 10, 8, 0, 0, Math.PI * 2);
+    c.fill();
+  }
+
+  // Fence posts along field edge
+  const fenceOff = wrap(-scroll * 1.1, 28);
+  for (let x = fenceOff - 28; x < w + 28; x += 28) {
+    const fx = Math.round(x);
+    c.fillStyle = P ? P.log : '#5c4a38';
+    c.fillRect(fx, fieldY + 4, 3, roadY - fieldY - 6);
+    c.fillStyle = P ? P.logLite : '#7a6448';
+    c.fillRect(fx, fieldY + 10, 14, 2);
+  }
+
+  // Road
+  for (let y = roadY; y < h; y += px) {
+    const pr = (y - roadY) / Math.max(1, roadH);
+    c.fillStyle = pr < 0.28 ? roadHi : pr < 0.62 ? roadMid : roadLo;
+    c.fillRect(0, y, w, px);
+  }
+  c.fillStyle = 'rgba(220,214,200,.14)';
+  c.fillRect(0, roadY, w, 2);
+  // Center dashes
+  const dashOff = wrap(-scroll * 1.6, 22);
+  c.fillStyle = straw;
+  for (let x = dashOff - 22; x < w + 22; x += 22) {
+    c.fillRect(Math.round(x), roadY + Math.round(roadH * 0.42), 10, 2);
+  }
+  // Progress gleam along road (load fill metaphor)
+  if (progress < 1 || opts.progress != null) {
+    const gw = Math.round(w * progress);
+    c.fillStyle = 'rgba(216,201,160,.22)';
+    c.fillRect(0, roadY, gw, 3);
+    c.fillStyle = 'rgba(168,140,80,.35)';
+    c.fillRect(Math.max(0, gw - 4), roadY, 4, roadH);
+  }
+
+  // Stickmen strolling on the road
+  const footY = roadY + Math.round(roadH * 0.55);
+  const walk = calm ? 0 : Math.sin((t || 0) * 5) * 1.5;
+  const drawSplashStick = (x, face, col, sc) => {
+    const s = sc || 1;
+    c.save();
+    c.translate(x, footY + walk * (face > 0 ? 1 : 0.6));
+    c.scale(face * s, s);
+    c.strokeStyle = col;
+    c.lineWidth = 2.5;
+    c.lineCap = 'round';
+    c.beginPath();
+    c.moveTo(0, 0);
+    c.lineTo(0, -18);
+    c.stroke();
+    const leg = calm ? 0 : Math.sin((t || 0) * 7 + face) * 3.5;
+    c.beginPath();
+    c.moveTo(0, 0);
+    c.lineTo(-3, 5 + leg * 0.3);
+    c.moveTo(0, 0);
+    c.lineTo(3, 5 - leg * 0.3);
+    c.stroke();
+    c.beginPath();
+    c.moveTo(0, -12);
+    c.lineTo(-5, -6);
+    c.moveTo(0, -12);
+    c.lineTo(5, -8);
+    c.stroke();
+    c.fillStyle = col;
+    c.beginPath();
+    c.arc(0, -22, 4.5, 0, Math.PI * 2);
+    c.fill();
+    c.restore();
+  };
+  const stroll = calm ? 0 : Math.sin((t || 0) * 0.7) * 10;
+  drawSplashStick(w * 0.58 + stroll, 1, '#d0d4da', compact ? 0.85 : 1);
+  drawSplashStick(w * 0.72 + stroll * 0.6, -1, '#c09098', compact ? 0.9 : 1.05);
+
+  // Soft caption bar (non-compact)
+  if (!compact) {
+    c.fillStyle = P ? P.captionBg : 'rgba(18,22,26,.55)';
+    c.fillRect(0, h - 14, w, 14);
+    c.fillStyle = P ? P.captionFg : 'rgba(220,214,200,.82)';
+    c.font = 'bold 9px monospace';
+    c.textAlign = 'left';
+    c.fillText('LANDWEG · MONSTER ARENA', 8, h - 4);
+  }
+
+  c.imageSmoothingEnabled = prev;
+}
+
 /** Pixel-art laag tekenen: getild, smoothing uit, parallax-offset. */
 function drawSceneryTile(c, tile, y, scroll, rate, scale) {
   if (!tile) return;
