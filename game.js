@@ -241,9 +241,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.8';
+const APP_VERSION = '1.18.9';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 218;
+const SW_CACHE_REV = 219;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -18410,30 +18410,116 @@ class Game {
   }
 
   drawWall(c) {
+    const lite = fxLite() || motionReduced() || (typeof Perf !== 'undefined' && Perf.tier >= 2);
+    const prevSmooth = c.imageSmoothingEnabled;
+    c.imageSmoothingEnabled = false;
     for (const b of this.bricks) {
       if (b.hp <= 0) continue;
-      const dmg = 1 - b.hp / b.maxhp;
-      c.fillStyle = `hsl(${b.hue}, 42%, ${48 - dmg * 12}%)`;
-      c.fillRect(b.x, b.y, b.w, b.h);
-      c.fillStyle = 'rgba(255,255,255,.14)';
-      c.fillRect(b.x, b.y, b.w, 4);
-      c.fillStyle = 'rgba(0,0,0,.2)';
-      c.fillRect(b.x, b.y + b.h - 4, b.w, 4);
-      if (b.bonus) {
-        drawStarShape(c, b.x + b.w / 2, b.y + b.h / 2, 7, '#ffd75e', true);
+      this.drawWallBrickTile(c, b, lite);
+    }
+    c.imageSmoothingEnabled = prevSmooth;
+  }
+
+  /** d20 polish #13 — Muur-modus tegel texture (pixel mortar + chips). */
+  drawWallBrickTile(c, b, lite) {
+    const dmg = 1 - b.hp / b.maxhp;
+    const px = 3;
+    const x = Math.round(b.x);
+    const y = Math.round(b.y);
+    const w = Math.round(b.w);
+    const h = Math.round(b.h);
+    const hue = b.hue || 18;
+    const L = 48 - dmg * 14;
+
+    // Mortar frame
+    c.fillStyle = `hsl(${hue}, 18%, ${22 - dmg * 4}%)`;
+    c.fillRect(x - 1, y - 1, w + 2, h + 2);
+
+    // Base tile body
+    c.fillStyle = `hsl(${hue}, 42%, ${L}%)`;
+    c.fillRect(x, y, w, h);
+
+    // Pixel highlight rim (top + left)
+    c.fillStyle = `hsla(${hue}, 50%, ${Math.min(72, L + 18)}%, .55)`;
+    c.fillRect(x, y, w, px);
+    c.fillRect(x, y, px, h);
+    // Shadow rim (bottom + right)
+    c.fillStyle = 'rgba(0,0,0,.28)';
+    c.fillRect(x, y + h - px, w, px);
+    c.fillRect(x + w - px, y, px, h);
+
+    // Sub-tile mortar grooves (2×2 mini bricks)
+    if (!lite) {
+      const midX = x + Math.floor(w / 2);
+      const midY = y + Math.floor(h / 2);
+      c.fillStyle = 'rgba(0,0,0,.22)';
+      c.fillRect(midX - 1, y + 1, 2, h - 2);
+      c.fillRect(x + 1, midY - 1, w - 2, 2);
+      // Subtle face variation per quadrant
+      const seed = b.seed | 0;
+      c.fillStyle = `hsla(${hue}, 38%, ${L + 6}%, .18)`;
+      if (seed & 1) c.fillRect(x + px, y + px, midX - x - px * 2, midY - y - px * 2);
+      if (seed & 2) c.fillRect(midX + 2, y + px, x + w - midX - px - 2, midY - y - px * 2);
+      if (seed & 4) c.fillStyle = 'rgba(0,0,0,.12)';
+      if (seed & 4) c.fillRect(x + px, midY + 2, midX - x - px * 2, y + h - midY - px - 2);
+    }
+
+    // Speckle grit (deterministic from seed)
+    if (!lite) {
+      const seed = b.seed | 0;
+      for (let i = 0; i < 5; i++) {
+        const sx = x + px + ((seed * (i + 3) * 17) % Math.max(1, w - px * 2));
+        const sy = y + px + ((seed * (i + 5) * 13) % Math.max(1, h - px * 2));
+        c.fillStyle = i % 2 ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.16)';
+        c.fillRect(sx, sy, px, px);
       }
-      // barsten
-      if (dmg > 0.25) {
-        c.strokeStyle = 'rgba(0,0,0,.45)'; c.lineWidth = 1.5;
-        const cx = b.x + (b.seed % b.w), cy = b.y + ((b.seed * 3) % b.h);
-        const n = dmg > 0.65 ? 4 : 2;
-        for (let i = 0; i < n; i++) {
-          const a = (b.seed + i * 2.4) % TAU;
-          c.beginPath(); c.moveTo(cx, cy);
-          c.lineTo(cx + Math.cos(a) * b.w * 0.4, cy + Math.sin(a) * b.h * 0.5);
-          c.stroke();
-        }
+    }
+
+    // Damage chips — pixel corners/chunks missing
+    if (dmg > 0.2) {
+      c.fillStyle = `hsl(${hue}, 12%, ${14}%)`;
+      const chips = dmg > 0.7 ? 5 : dmg > 0.4 ? 3 : 2;
+      const seed = b.seed | 0;
+      for (let i = 0; i < chips; i++) {
+        const cx = x + ((seed * (i + 11) * 19) % Math.max(1, w - px));
+        const cy = y + ((seed * (i + 7) * 23) % Math.max(1, h - px));
+        c.fillRect(cx, cy, px + (i % 2), px);
       }
+    }
+
+    // Crack lines (kept, slightly thicker for pixel look)
+    if (dmg > 0.25) {
+      c.strokeStyle = 'rgba(0,0,0,.5)';
+      c.lineWidth = 2;
+      c.lineCap = 'square';
+      const cx = x + (b.seed % Math.max(1, w));
+      const cy = y + ((b.seed * 3) % Math.max(1, h));
+      const n = dmg > 0.65 ? 4 : 2;
+      for (let i = 0; i < n; i++) {
+        const a = (b.seed + i * 2.4) % TAU;
+        c.beginPath();
+        c.moveTo(Math.round(cx), Math.round(cy));
+        c.lineTo(
+          Math.round(cx + Math.cos(a) * w * 0.4),
+          Math.round(cy + Math.sin(a) * h * 0.5)
+        );
+        c.stroke();
+      }
+    }
+
+    // Bonus gold pixel frame + star
+    if (b.bonus) {
+      c.fillStyle = 'rgba(255,215,94,.55)';
+      c.fillRect(x, y, w, 2);
+      c.fillRect(x, y + h - 2, w, 2);
+      c.fillRect(x, y, 2, h);
+      c.fillRect(x + w - 2, y, 2, h);
+      for (let i = 0; i < w; i += px * 2) {
+        c.fillStyle = '#ffd75e';
+        c.fillRect(x + i, y, px, px);
+        c.fillRect(x + i, y + h - px, px, px);
+      }
+      drawStarShape(c, x + w / 2, y + h / 2, 7, '#ffd75e', true);
     }
   }
 
