@@ -354,6 +354,7 @@ class Game {
           const dmg = Math.round(this.player.baseDmg * 0.38 * (this.stageDmgMul || 1));
           tgt.takeDamage(dmg, Math.sign(tgt.x - this.player.x) * 140, this);
           this.floater(tgt.x, tgt.y - tgt.size - 22, t('combat.allyHit', { name: this.stageAlly.name, dmg }), this.stageAlly.color || '#7cf5ff', 12);
+          try { AudioSys.sfxAt(typeof jutsuSwooshSfx === 'function' ? jutsuSwooshSfx('rasengan') : 'skillSwoosh', tgt.x); } catch (_) {}
           if (!fxLite()) this.burst(tgt.x, tgt.y - tgt.size * 0.4, this.stageAlly.color || '#7cf5ff', 6, { kind: 'spark', size: 2 });
         }
       }
@@ -419,6 +420,9 @@ class Game {
           const heal = Math.max(8, Math.round(this.player.maxhp * this.stageHealBetween));
           this.player.hp = Math.min(this.player.maxhp, this.player.hp + heal);
           this.floater(this.player.x, this.player.y - 108, t('combat.allyHeal', { heal }), '#6ee06e', 14);
+          if (this.stageAlly && this.stageAlly.id === 'tide') {
+            try { AudioSys.sfx('tideSurge'); } catch (_) {}
+          }
         }
         try { AudioSys.sfx('waveClear'); } catch (_) {}
         if ((this.killStreak || 0) >= 5) {
@@ -548,9 +552,21 @@ class Game {
     if (Math.random() < dropChance) this.spawnPickup(m.x, m.y - m.size * 0.5);
     if (this.mode === 'adventure') {
       const skillId = rollSkillShardDrop(m);
-      if (skillId) this.spawnPickup(m.x + rand(-18, 18), m.y - m.size * 0.35, { skillId });
+      if (skillId) {
+        let dropTier = 'normal';
+        if (m.superBoss) dropTier = 'superBoss';
+        else if (m.elite) dropTier = 'elite';
+        else if (m.giant) dropTier = 'giant';
+        this.spawnPickup(m.x + rand(-18, 18), m.y - m.size * 0.35, { skillId, dropTier });
+      }
       const itemDrop = rollItemShardDrop(m);
-      if (itemDrop) this.spawnPickup(m.x + rand(-22, 22), m.y - m.size * 0.45, { itemCat: itemDrop.cat, itemId: itemDrop.id });
+      if (itemDrop) {
+        let dropTier = 'normal';
+        if (m.superBoss) dropTier = 'superBoss';
+        else if (m.elite) dropTier = 'elite';
+        else if (m.giant) dropTier = 'giant';
+        this.spawnPickup(m.x + rand(-22, 22), m.y - m.size * 0.45, { itemCat: itemDrop.cat, itemId: itemDrop.id, dropTier });
+      }
     }
     bumpStat('kills', 1);
     bumpDaily('kills', 1);
@@ -640,16 +656,22 @@ class Game {
     opts = opts || {};
     if (opts.skillId && SKILL_DEFS[opts.skillId]) {
       this.pickups.push({
-        x, y, kind: 'skill_shard', skillId: opts.skillId,
+        x, y, kind: 'skill_shard', skillId: opts.skillId, dropTier: opts.dropTier || 'normal',
         t: rand(0, TAU), life: 18, bob: 0,
       });
+      if (opts.dropTier && opts.dropTier !== 'normal') {
+        try { AudioSys.sfxAt('bell', x); } catch (_) {}
+      }
       return;
     }
     if (opts.itemCat && opts.itemId && itemUpgradeEligible(opts.itemCat, opts.itemId)) {
       this.pickups.push({
-        x, y, kind: 'item_shard', itemCat: opts.itemCat, itemId: opts.itemId,
+        x, y, kind: 'item_shard', itemCat: opts.itemCat, itemId: opts.itemId, dropTier: opts.dropTier || 'normal',
         t: rand(0, TAU), life: 18, bob: 0,
       });
+      if (opts.dropTier && opts.dropTier !== 'normal') {
+        try { AudioSys.sfxAt('bell', x); } catch (_) {}
+      }
       return;
     }
     const kind = choice(PICKUP_TYPES);
@@ -661,8 +683,19 @@ class Game {
     pk._got = true;
     const meta = PICKUP_META[pk.kind] || PICKUP_META.heal;
     const p = this.player;
-    AudioSys.sfx('pickup');
-    haptic(20);
+    const rareDrop = pk.dropTier === 'superBoss' || pk.dropTier === 'elite' || pk.dropTier === 'giant';
+    if (pk.kind === 'skill_shard' || pk.kind === 'item_shard') {
+      if (rareDrop) {
+        try { AudioSys.sfx('megaDrop'); } catch (_) {}
+        haptic(pk.dropTier === 'superBoss' ? 28 : 18);
+      } else {
+        AudioSys.sfx('pickup');
+        haptic(20);
+      }
+    } else {
+      AudioSys.sfx('pickup');
+      haptic(20);
+    }
     switch (pk.kind) {
       case 'skill_shard': {
         const sid = pk.skillId;
@@ -1376,6 +1409,11 @@ class Game {
       AudioSys.sfx('rasengan');
       if (f.isPlayer || f.playerSlot) haptic(22);
     }
+    try {
+      const swoosh = typeof jutsuSwooshSfx === 'function' ? jutsuSwooshSfx(jutsu) : 'skillSwoosh';
+      if (this.mode === 'versus' && f.vsSaga === 'tide') AudioSys.sfx('tideSurge');
+      AudioSys.sfxAt(swoosh, f.x + f.face * 40);
+    } catch (_) {}
     const extra = (atk && atk.extraShot) || jb.extraShot || 0;
     if (extra > 0 && Math.random() < extra) {
       fireProj(f.face * 12, rand(-8, 8), 0.72);

@@ -401,6 +401,9 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
   if (firstOfWave) {
     try {
       if (tier === 'superBoss') {
+        if (game.gambleBossWave > 0) {
+          try { AudioSys.sfx('bossTurn'); } catch (_) {}
+        }
         AudioSys.sting('superBossIntro');
         AudioSys.play('boss');
         game.banner(`SUPER BAAS — ${name}!`, 2.0, col, 44);

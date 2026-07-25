@@ -275,3 +275,11 @@ function totalSkillLevels() {
   for (const id of SKILL_IDS) n += skillLevel(id);
   return n;
 }
+
+/** SFX key for jutsu release swoosh — scales with skill level / jutsu tier. */
+function jutsuSwooshSfx(jutsu) {
+  const lv = skillLevel(jutsu) || 0;
+  if (jutsu === 'rinnegan' || lv >= 4) return 'skillSwooshEpic';
+  if (jutsu === 'chidori' || jutsu === 'rasengan' || lv >= 2) return 'skillSwoosh';
+  return 'whoosh';
+}

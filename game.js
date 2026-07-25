@@ -135,9 +135,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.83';
+const APP_VERSION = '1.17.84';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 201;
+const SW_CACHE_REV = 202;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -4537,6 +4537,14 @@ function totalSkillLevels() {
   for (const id of SKILL_IDS) n += skillLevel(id);
   return n;
 }
+
+/** SFX key for jutsu release swoosh — scales with skill level / jutsu tier. */
+function jutsuSwooshSfx(jutsu) {
+  const lv = skillLevel(jutsu) || 0;
+  if (jutsu === 'rinnegan' || lv >= 4) return 'skillSwooshEpic';
+  if (jutsu === 'chidori' || jutsu === 'rasengan' || lv >= 2) return 'skillSwoosh';
+  return 'whoosh';
+}
 /* --- src/data/summons.js --- */
 /* ============================ SUMMONS ================================== */
 /* Hele kleine kans bij een kill: een Summon ascendeert een lager wapen
@@ -5332,6 +5340,7 @@ function buildVsFighter(entry, x, slot) {
     style: st,
     isRobot: !!entry.isRobot,
     vsSpecial: entry.special || 'rasengan',
+    vsSaga: entry.saga || 'scroll',
     rosterId: entry.id,
     bald: !!entry.bald,
     gi: entry.gi || null,
@@ -5871,6 +5880,9 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
   if (firstOfWave) {
     try {
       if (tier === 'superBoss') {
+        if (game.gambleBossWave > 0) {
+          try { AudioSys.sfx('bossTurn'); } catch (_) {}
+        }
         AudioSys.sting('superBossIntro');
         AudioSys.play('boss');
         game.banner(`SUPER BAAS — ${name}!`, 2.0, col, 44);
@@ -7543,6 +7555,11 @@ const SFX_SAMPLE_MAP = {
   brick: { pack: 'impact', vol: 0.7, files: ['impactPlank_medium_002.ogg', 'impactWood_light_002.ogg', 'impactGeneric_light_004.ogg'] },
   crack: { pack: 'impact', vol: 0.65, files: ['impactGlass_light_002.ogg', 'impactWood_light_003.ogg'] },
   whoosh: { pack: 'digital', vol: 0.45, files: ['lowDown.ogg', 'lowRandom.ogg', 'phaseJump1.ogg'] },
+  skillSwoosh: { pack: 'digital', vol: 0.62, files: ['lowDown.ogg', 'phaseJump2.ogg', 'lowRandom.ogg'] },
+  skillSwooshEpic: { pack: 'digital', vol: 0.78, files: ['phaseJump5.ogg', 'laser8.ogg', 'highUp.ogg'] },
+  megaDrop: { pack: 'digital', vol: 0.88, files: ['phaseJump5.ogg', 'pepSound5.ogg', 'bong_001.ogg'] },
+  tideSurge: { pack: 'digital', vol: 0.65, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'laser4.ogg'] },
+  bossTurn: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactBell_heavy_001.ogg'] },
   checkpoint: { pack: 'ui', vol: 0.72, files: ['confirmation_002.ogg', 'bong_001.ogg'] },
   bossArrive: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_003.ogg'] },
   bossWait: { pack: 'impact', vol: 0.6, files: ['impactSoft_medium_003.ogg', 'creak1.ogg'] },
@@ -8187,6 +8204,49 @@ const AudioSys = {
       case 'whoosh':
         N(0.09, 0.15, 4300, true, now);
         T(260, 1280, 0.13, 'sine', 0.11, now);
+        break;
+      case 'skillSwoosh':
+        N(0.11, 0.2, 5200, true, now);
+        T(180, 1680, 0.16, 'sine', 0.14, now);
+        E(920, 2200, 0.07, 'triangle', 0.1, now + 0.04, 0.05, 0.4);
+        if (!lite) N(0.04, 0.1, 7800, true, now + 0.08);
+        break;
+      case 'skillSwooshEpic':
+        N(0.14, 0.22, 4800, true, now);
+        D(220, 2200, 0.18, 'sawtooth', 0.13, now, 16);
+        E(680, 2640, 0.09, 'sine', 0.12, now + 0.05, 0.06, 0.45);
+        if (!lite) {
+          C([880, 1047, 1175], 'triangle', 0.1, 0.04, now + 0.1);
+          S([1568, 1760], now + 0.14);
+        }
+        break;
+      case 'megaDrop':
+        C([784, 988, 1175, 1319, 1568], 'triangle', 0.17, 0.055, now);
+        N(0.1, 0.18, 2400, true, now + 0.08);
+        if (!lite) {
+          S([1760, 2093, 2349, 2637], now + 0.22);
+          E(1040, 520, 0.12, 'sine', 0.14, now + 0.15, 0.07, 0.5);
+          T(105, 38, 0.18, 'sine', 0.16, now + 0.28);
+        }
+        break;
+      case 'tideSurge':
+        N(0.12, 0.14, 1800, true, now);
+        T(280, 880, 0.2, 'sine', 0.12, now);
+        T(880, 1320, 0.14, 'triangle', 0.1, now + 0.08);
+        if (!lite) {
+          T(520, 1040, 0.1, 'sine', 0.08, now + 0.16);
+          E(660, 1180, 0.08, 'sine', 0.09, now + 0.1, 0.06, 0.38);
+        }
+        break;
+      case 'bossTurn':
+        T(55, 28, 0.28, 'sawtooth', 0.26, now);
+        N(0.2, 0.24, 420, false, now);
+        C([311, 370, 494, 622, 784], 'square', 0.14, 0.07, now + 0.1);
+        if (!lite) {
+          S([988, 1175, 1319, 1568, 1760], now + 0.25);
+          T(880, 180, 0.32, 'sawtooth', 0.18, now + 0.35);
+          N(0.14, 0.16, 900, true, now + 0.4);
+        }
         break;
       case 'travel':
         N(0.06, 0.12, 3200, true, now);
@@ -12464,6 +12524,7 @@ class Game {
           const dmg = Math.round(this.player.baseDmg * 0.38 * (this.stageDmgMul || 1));
           tgt.takeDamage(dmg, Math.sign(tgt.x - this.player.x) * 140, this);
           this.floater(tgt.x, tgt.y - tgt.size - 22, t('combat.allyHit', { name: this.stageAlly.name, dmg }), this.stageAlly.color || '#7cf5ff', 12);
+          try { AudioSys.sfxAt(typeof jutsuSwooshSfx === 'function' ? jutsuSwooshSfx('rasengan') : 'skillSwoosh', tgt.x); } catch (_) {}
           if (!fxLite()) this.burst(tgt.x, tgt.y - tgt.size * 0.4, this.stageAlly.color || '#7cf5ff', 6, { kind: 'spark', size: 2 });
         }
       }
@@ -12529,6 +12590,9 @@ class Game {
           const heal = Math.max(8, Math.round(this.player.maxhp * this.stageHealBetween));
           this.player.hp = Math.min(this.player.maxhp, this.player.hp + heal);
           this.floater(this.player.x, this.player.y - 108, t('combat.allyHeal', { heal }), '#6ee06e', 14);
+          if (this.stageAlly && this.stageAlly.id === 'tide') {
+            try { AudioSys.sfx('tideSurge'); } catch (_) {}
+          }
         }
         try { AudioSys.sfx('waveClear'); } catch (_) {}
         if ((this.killStreak || 0) >= 5) {
@@ -12658,9 +12722,21 @@ class Game {
     if (Math.random() < dropChance) this.spawnPickup(m.x, m.y - m.size * 0.5);
     if (this.mode === 'adventure') {
       const skillId = rollSkillShardDrop(m);
-      if (skillId) this.spawnPickup(m.x + rand(-18, 18), m.y - m.size * 0.35, { skillId });
+      if (skillId) {
+        let dropTier = 'normal';
+        if (m.superBoss) dropTier = 'superBoss';
+        else if (m.elite) dropTier = 'elite';
+        else if (m.giant) dropTier = 'giant';
+        this.spawnPickup(m.x + rand(-18, 18), m.y - m.size * 0.35, { skillId, dropTier });
+      }
       const itemDrop = rollItemShardDrop(m);
-      if (itemDrop) this.spawnPickup(m.x + rand(-22, 22), m.y - m.size * 0.45, { itemCat: itemDrop.cat, itemId: itemDrop.id });
+      if (itemDrop) {
+        let dropTier = 'normal';
+        if (m.superBoss) dropTier = 'superBoss';
+        else if (m.elite) dropTier = 'elite';
+        else if (m.giant) dropTier = 'giant';
+        this.spawnPickup(m.x + rand(-22, 22), m.y - m.size * 0.45, { itemCat: itemDrop.cat, itemId: itemDrop.id, dropTier });
+      }
     }
     bumpStat('kills', 1);
     bumpDaily('kills', 1);
@@ -12750,16 +12826,22 @@ class Game {
     opts = opts || {};
     if (opts.skillId && SKILL_DEFS[opts.skillId]) {
       this.pickups.push({
-        x, y, kind: 'skill_shard', skillId: opts.skillId,
+        x, y, kind: 'skill_shard', skillId: opts.skillId, dropTier: opts.dropTier || 'normal',
         t: rand(0, TAU), life: 18, bob: 0,
       });
+      if (opts.dropTier && opts.dropTier !== 'normal') {
+        try { AudioSys.sfxAt('bell', x); } catch (_) {}
+      }
       return;
     }
     if (opts.itemCat && opts.itemId && itemUpgradeEligible(opts.itemCat, opts.itemId)) {
       this.pickups.push({
-        x, y, kind: 'item_shard', itemCat: opts.itemCat, itemId: opts.itemId,
+        x, y, kind: 'item_shard', itemCat: opts.itemCat, itemId: opts.itemId, dropTier: opts.dropTier || 'normal',
         t: rand(0, TAU), life: 18, bob: 0,
       });
+      if (opts.dropTier && opts.dropTier !== 'normal') {
+        try { AudioSys.sfxAt('bell', x); } catch (_) {}
+      }
       return;
     }
     const kind = choice(PICKUP_TYPES);
@@ -12771,8 +12853,19 @@ class Game {
     pk._got = true;
     const meta = PICKUP_META[pk.kind] || PICKUP_META.heal;
     const p = this.player;
-    AudioSys.sfx('pickup');
-    haptic(20);
+    const rareDrop = pk.dropTier === 'superBoss' || pk.dropTier === 'elite' || pk.dropTier === 'giant';
+    if (pk.kind === 'skill_shard' || pk.kind === 'item_shard') {
+      if (rareDrop) {
+        try { AudioSys.sfx('megaDrop'); } catch (_) {}
+        haptic(pk.dropTier === 'superBoss' ? 28 : 18);
+      } else {
+        AudioSys.sfx('pickup');
+        haptic(20);
+      }
+    } else {
+      AudioSys.sfx('pickup');
+      haptic(20);
+    }
     switch (pk.kind) {
       case 'skill_shard': {
         const sid = pk.skillId;
@@ -13486,6 +13579,11 @@ class Game {
       AudioSys.sfx('rasengan');
       if (f.isPlayer || f.playerSlot) haptic(22);
     }
+    try {
+      const swoosh = typeof jutsuSwooshSfx === 'function' ? jutsuSwooshSfx(jutsu) : 'skillSwoosh';
+      if (this.mode === 'versus' && f.vsSaga === 'tide') AudioSys.sfx('tideSurge');
+      AudioSys.sfxAt(swoosh, f.x + f.face * 40);
+    } catch (_) {}
     const extra = (atk && atk.extraShot) || jb.extraShot || 0;
     if (extra > 0 && Math.random() < extra) {
       fireProj(f.face * 12, rand(-8, 8), 0.72);

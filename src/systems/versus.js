@@ -266,6 +266,7 @@ function buildVsFighter(entry, x, slot) {
     style: st,
     isRobot: !!entry.isRobot,
     vsSpecial: entry.special || 'rasengan',
+    vsSaga: entry.saga || 'scroll',
     rosterId: entry.id,
     bald: !!entry.bald,
     gi: entry.gi || null,
