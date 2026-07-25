@@ -109,6 +109,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-25 | — | **Menu UI fase 1:** full-bleed omgeving-canvas + translucent titel/tiles/meta/talen (`.menu-video-overhaul`). Video-assets later. v1.18.46 / SW v256. |
 | 2026-07-25 | **5** | Performance (cyclus 4 af): geen canvas-draw tijdens pauze (hidden canvas); missie-claim/dagbonus atomisch met rollback; tide-battle monsters guard; fighter takeDamage floater guards. v1.18.45 / SW v255. **Cyclus 4 vol.** |
 | 2026-07-25 | **4** | Avontuur (cyclus 4): actieve golf-trait chip, sterren-buffer strip (2★/3★ drempels), volgende-golf trait-ring; stabiliteit: ketsbamPromptCenter→layout, chargePulse aura, sanitizeSave SPECIES/SKILL_IDS/dailyDef/VS_ROSTER guards. v1.18.36 / SW v246. |
 | 2026-07-25 | **17** | Stabiliteit (cron): KETS-BAM charge aura `pulse`/`innerR` ReferenceError; sanitizeSave guards voor SUPPORTED_LANGS/ACHIEVEMENTS; i18n/menu child-DOM null checks. v1.18.31 / SW v241. |
