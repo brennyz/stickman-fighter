@@ -562,14 +562,14 @@ function applyLangStaticScreens() {
   setText('gambleSub', 'ui.gambleSub');
   setText('styleScreenHead', 'ui.styleHead');
   setText('styleScreenSub', 'ui.styleSub');
-  setText('skillScreenHead', 'ui.skillHead');
+  setText('skillScreenHead', 'ui.skillSummaryHead');
   setText('skillScreenSub', 'ui.skillSub');
+  setText('upgradeScreenHead', 'ui.skillHead');
+  setText('upgradeScreenSub', 'ui.skillSub');
   setText('superSectionHead', 'ui.superHead');
   setText('superSectionSub', 'ui.superSub');
   setText('weaponScreenHead', 'ui.weaponHead');
   setText('weaponScreenSub', 'ui.weaponSub');
-  setText('skillScreenHead', 'ui.skillHead');
-  setText('skillScreenSub', 'ui.skillSub');
   setText('helpFirstMinute', 'ui.helpFirstMinute');
 
   const gambleStartLbl = document.getElementById('gambleStartLbl');
@@ -638,6 +638,7 @@ function applyLangStaticScreens() {
     petScreen: t('back.collect'),
     styleScreen: t('back.collect'),
     skillScreen: t('back.collect'),
+    upgradeScreen: t('back.collect'),
     dexScreen: t('back.collect'),
     charSelectScreen: t('back.menu'),
     missionsScreen: t('back.menu'),

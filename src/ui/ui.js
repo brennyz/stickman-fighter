@@ -199,6 +199,9 @@ function equipSkill(id) {
   try {
     safeUiAction(() => {
       save.skill = id;
+      if (typeof JUTSU_SKILL_IDS !== 'undefined' && JUTSU_SKILL_IDS.includes(id)) {
+        save.activeJutsu = id;
+      }
       if (!persistOrToast('skill')) return;
       AudioSys.sfx(skillSfxId(sk));
       UI.renderSkills();
@@ -731,7 +734,7 @@ function levelTileTip(n, pick, infoLv, boss, best, fails) {
 }
 
 const UI = {
-  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
+  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'upgradeScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
@@ -964,7 +967,7 @@ const UI = {
         this.show('menuScreen');
         return;
       }
-      if (active === 'weaponScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'skillScreen' || active === 'dexScreen') {
+      if (active === 'weaponScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'skillScreen' || active === 'upgradeScreen' || active === 'dexScreen') {
         this.openModeHub('collect');
         return;
       }
@@ -1359,7 +1362,7 @@ const UI = {
       setStat('hubStatWeapons', t('ui.hubStatWeapons', { n: weaponUnlockedCount(), total: WEAPONS.length }));
       const skillLv = totalAllUpgradeLevels();
       const ready = countAllUpgradesReady();
-      setStat('hubStatSkills', ready > 0
+      setStat('hubStatUpgrades', ready > 0
         ? t('ui.upgradeReady', { n: ready })
         : (skillLv > 0 ? t('ui.hubStatSkillLv', { n: skillLv }) : t('ui.hubStatSkillShards')));
       const petsN = petTamedCount();
@@ -2137,21 +2140,16 @@ const UI = {
     }
   },
 
-  renderSkills(tab) {
-    if (tab) this.upgradeTab = tab;
-    this.renderUpgrades();
-  },
-
   openUpgrades(tab) {
     this.upgradeTab = tab || 'skills';
     this.renderUpgrades();
-    this.show('skillScreen');
+    this.show('upgradeScreen');
   },
 
   renderUpgrades() {
     const tab = this.upgradeTab || 'skills';
-    const head = document.getElementById('skillScreenHead');
-    const sub = document.getElementById('skillScreenSub');
+    const head = document.getElementById('upgradeScreenHead');
+    const sub = document.getElementById('upgradeScreenSub');
     if (head) head.textContent = t('ui.skillHead');
     const subKeys = {
       skills: 'ui.upgradeSubSkills',
@@ -2185,7 +2183,7 @@ const UI = {
         });
       }
     }
-    const sumEl = document.getElementById('skillSummary');
+    const sumEl = document.getElementById('upgradeSummary');
     if (sumEl) {
       const skillShards = save.stats?.skillShards || 0;
       const itemShards = save.stats?.itemShards || 0;

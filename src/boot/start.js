@@ -151,6 +151,9 @@ bindPress(document.getElementById('btnWeapons'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderWeapons(); UI.show('weaponScreen');
 });
 bindPress(document.getElementById('btnSkills'), () => {
+  AudioSys.init(); AudioSys.sfx('select'); UI.renderSkills(); UI.show('skillScreen');
+});
+bindPress(document.getElementById('btnUpgrades'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.openUpgrades('skills');
 });
 bindPress(document.getElementById('btnPets'), () => {
@@ -162,10 +165,6 @@ bindPress(document.getElementById('btnDex'), () => {
 const btnStyle = document.getElementById('btnStyle');
 bindPress(btnStyle, () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderStyle(); UI.show('styleScreen');
-});
-const btnSkills = document.getElementById('btnSkills');
-bindPress(btnSkills, () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.renderSkills(); UI.show('skillScreen');
 });
 const btnSettings = document.getElementById('btnSettings');
 bindPress(btnSettings, () => {

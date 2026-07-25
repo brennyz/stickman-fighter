@@ -241,9 +241,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.0';
+const APP_VERSION = '1.18.1';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 210;
+const SW_CACHE_REV = 211;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -1780,14 +1780,14 @@ function applyLangStaticScreens() {
   setText('gambleSub', 'ui.gambleSub');
   setText('styleScreenHead', 'ui.styleHead');
   setText('styleScreenSub', 'ui.styleSub');
-  setText('skillScreenHead', 'ui.skillHead');
+  setText('skillScreenHead', 'ui.skillSummaryHead');
   setText('skillScreenSub', 'ui.skillSub');
+  setText('upgradeScreenHead', 'ui.skillHead');
+  setText('upgradeScreenSub', 'ui.skillSub');
   setText('superSectionHead', 'ui.superHead');
   setText('superSectionSub', 'ui.superSub');
   setText('weaponScreenHead', 'ui.weaponHead');
   setText('weaponScreenSub', 'ui.weaponSub');
-  setText('skillScreenHead', 'ui.skillHead');
-  setText('skillScreenSub', 'ui.skillSub');
   setText('helpFirstMinute', 'ui.helpFirstMinute');
 
   const gambleStartLbl = document.getElementById('gambleStartLbl');
@@ -1856,6 +1856,7 @@ function applyLangStaticScreens() {
     petScreen: t('back.collect'),
     styleScreen: t('back.collect'),
     skillScreen: t('back.collect'),
+    upgradeScreen: t('back.collect'),
     dexScreen: t('back.collect'),
     charSelectScreen: t('back.menu'),
     missionsScreen: t('back.menu'),
@@ -5658,6 +5659,7 @@ function ensureActiveJutsuValid(preferred) {
 function setActiveJutsu(id, silent) {
   if (!jutsuSkillUnlocked(id)) return false;
   save.activeJutsu = id;
+  if (skillExists(id)) save.skill = id;
   persist();
   if (!silent) {
     try { UI.toast(t('toast.jutsuEquipped', { name: skillLabel(id) }), 2800); } catch (_) {}
@@ -5898,7 +5900,8 @@ function fighterEquippedSkill(f) {
     return skillById(vs) || skillById('rasengan');
   }
   if (f.isPlayer && !f.playerSlot) {
-    const eq = skillById(save.skill || 'rasengan');
+    const skillId = save.skill || (typeof activeJutsuId === 'function' ? activeJutsuId() : 'rasengan') || 'rasengan';
+    const eq = skillById(skillId);
     return skillUnlocked(eq) ? eq : skillById('rasengan');
   }
   if (f.vsSpecial) return skillById(f.vsSpecial) || skillById('rasengan');
@@ -19959,6 +19962,9 @@ function equipSkill(id) {
   try {
     safeUiAction(() => {
       save.skill = id;
+      if (typeof JUTSU_SKILL_IDS !== 'undefined' && JUTSU_SKILL_IDS.includes(id)) {
+        save.activeJutsu = id;
+      }
       if (!persistOrToast('skill')) return;
       AudioSys.sfx(skillSfxId(sk));
       UI.renderSkills();
@@ -20491,7 +20497,7 @@ function levelTileTip(n, pick, infoLv, boss, best, fails) {
 }
 
 const UI = {
-  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
+  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'upgradeScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
@@ -20724,7 +20730,7 @@ const UI = {
         this.show('menuScreen');
         return;
       }
-      if (active === 'weaponScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'skillScreen' || active === 'dexScreen') {
+      if (active === 'weaponScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'skillScreen' || active === 'upgradeScreen' || active === 'dexScreen') {
         this.openModeHub('collect');
         return;
       }
@@ -21119,7 +21125,7 @@ const UI = {
       setStat('hubStatWeapons', t('ui.hubStatWeapons', { n: weaponUnlockedCount(), total: WEAPONS.length }));
       const skillLv = totalAllUpgradeLevels();
       const ready = countAllUpgradesReady();
-      setStat('hubStatSkills', ready > 0
+      setStat('hubStatUpgrades', ready > 0
         ? t('ui.upgradeReady', { n: ready })
         : (skillLv > 0 ? t('ui.hubStatSkillLv', { n: skillLv }) : t('ui.hubStatSkillShards')));
       const petsN = petTamedCount();
@@ -21897,21 +21903,16 @@ const UI = {
     }
   },
 
-  renderSkills(tab) {
-    if (tab) this.upgradeTab = tab;
-    this.renderUpgrades();
-  },
-
   openUpgrades(tab) {
     this.upgradeTab = tab || 'skills';
     this.renderUpgrades();
-    this.show('skillScreen');
+    this.show('upgradeScreen');
   },
 
   renderUpgrades() {
     const tab = this.upgradeTab || 'skills';
-    const head = document.getElementById('skillScreenHead');
-    const sub = document.getElementById('skillScreenSub');
+    const head = document.getElementById('upgradeScreenHead');
+    const sub = document.getElementById('upgradeScreenSub');
     if (head) head.textContent = t('ui.skillHead');
     const subKeys = {
       skills: 'ui.upgradeSubSkills',
@@ -21945,7 +21946,7 @@ const UI = {
         });
       }
     }
-    const sumEl = document.getElementById('skillSummary');
+    const sumEl = document.getElementById('upgradeSummary');
     if (sumEl) {
       const skillShards = save.stats?.skillShards || 0;
       const itemShards = save.stats?.itemShards || 0;
@@ -23085,6 +23086,9 @@ bindPress(document.getElementById('btnWeapons'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderWeapons(); UI.show('weaponScreen');
 });
 bindPress(document.getElementById('btnSkills'), () => {
+  AudioSys.init(); AudioSys.sfx('select'); UI.renderSkills(); UI.show('skillScreen');
+});
+bindPress(document.getElementById('btnUpgrades'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.openUpgrades('skills');
 });
 bindPress(document.getElementById('btnPets'), () => {
@@ -23096,10 +23100,6 @@ bindPress(document.getElementById('btnDex'), () => {
 const btnStyle = document.getElementById('btnStyle');
 bindPress(btnStyle, () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderStyle(); UI.show('styleScreen');
-});
-const btnSkills = document.getElementById('btnSkills');
-bindPress(btnSkills, () => {
-  AudioSys.init(); AudioSys.sfx('select'); UI.renderSkills(); UI.show('skillScreen');
 });
 const btnSettings = document.getElementById('btnSettings');
 bindPress(btnSettings, () => {

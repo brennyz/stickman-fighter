@@ -288,6 +288,7 @@ function ensureActiveJutsuValid(preferred) {
 function setActiveJutsu(id, silent) {
   if (!jutsuSkillUnlocked(id)) return false;
   save.activeJutsu = id;
+  if (skillExists(id)) save.skill = id;
   persist();
   if (!silent) {
     try { UI.toast(t('toast.jutsuEquipped', { name: skillLabel(id) }), 2800); } catch (_) {}
@@ -528,7 +529,8 @@ function fighterEquippedSkill(f) {
     return skillById(vs) || skillById('rasengan');
   }
   if (f.isPlayer && !f.playerSlot) {
-    const eq = skillById(save.skill || 'rasengan');
+    const skillId = save.skill || (typeof activeJutsuId === 'function' ? activeJutsuId() : 'rasengan') || 'rasengan';
+    const eq = skillById(skillId);
     return skillUnlocked(eq) ? eq : skillById('rasengan');
   }
   if (f.vsSpecial) return skillById(f.vsSpecial) || skillById('rasengan');
