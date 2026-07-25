@@ -391,6 +391,8 @@ class Game {
             elite: !!(def.elite || def.superBoss),
             superBoss: !!def.superBoss,
             giant: !!def.giant,
+            bossCore: !!def.bossCore,
+            levelN: this.level.n,
             hpMul: this.level.hpMul,
             dmgMul: this.level.dmgMul,
           });
@@ -1412,6 +1414,41 @@ class Game {
 
   spawnWave(f) { this.spawnJutsu(f, f.attackSpec('special')); }
 
+  spawnEnemyJutsu(m) {
+    const p = this.player;
+    if (!p || !p.alive || !m.enemyJutsu || !m.alive) return;
+    const dir = Math.sign(p.x - m.x) || m.face || 1;
+    const j = m.enemyJutsu;
+    const dmg = Math.round(m.dmg * (j === 'kamehame' ? 2.15 : j === 'chidori' ? 1.75 : 1.55));
+    const y0 = m.y - m.size * 0.55;
+    const lbl = j === 'chidori' ? 'CHIDORI!' : j === 'kamehame' ? 'KAMEHAME!' : 'RASENGAN!';
+    const col = j === 'chidori' ? '#a8e0ff' : j === 'kamehame' ? '#7cf5ff' : '#7cf5ff';
+    try {
+      this.floater(m.x, m.y - m.size - 24, lbl, col, 14);
+    } catch (_) {}
+    if (j === 'rasengan') {
+      this.spawnProjectile({
+        x: m.x + dir * m.size, y: y0, vx: dir * 360, vy: 0, r: 22, dmg,
+        from: 'enemy', kind: 'rasengan', life: 1.15, spin: 0, hitSet: new Set(),
+      });
+      try { AudioSys.sfx('rasengan'); } catch (_) {}
+    } else if (j === 'chidori') {
+      this.spawnProjectile({
+        x: m.x + dir * m.size, y: y0, vx: dir * 500, vy: 0, r: 17, dmg,
+        from: 'enemy', kind: 'chidori', life: 0.34, hitSet: new Set(),
+      });
+      try { AudioSys.sfx('chidori'); } catch (_) {}
+    } else {
+      const a = Math.atan2((p.y - 42) - y0, p.x - m.x);
+      this.spawnProjectile({
+        x: m.x + Math.cos(a) * m.size, y: y0 + Math.sin(a) * m.size,
+        vx: Math.cos(a) * 400, vy: Math.sin(a) * 400, r: 28, dmg,
+        from: 'enemy', kind: 'kamehame', life: 1.05, spin: 0, hitSet: new Set(),
+      });
+      try { this.shake(7, 0.22); AudioSys.sfx('rasengan'); } catch (_) {}
+    }
+  }
+
   spawnProjectile(p) {
     this.projectiles.push(Object.assign({ life: 3, grav: 0, spin: 0 }, p));
   }
@@ -1695,6 +1732,16 @@ class Game {
           }
         }
       }
+      if (p.kind === 'kamehame') {
+        p.r = Math.min(44, (p.r || 28) + dt * 18);
+        if (!motionReduced() && !fxLite()) {
+          p._trailAcc = (p._trailAcc || 0) + dt;
+          if (p._trailAcc >= 0.04) {
+            p._trailAcc = 0;
+            this.burst(p.x, p.y, '#7cf5ff', 1, { kind: 'spark', size: 2.6 });
+          }
+        }
+      }
       if (p.from === 'enemy') {
         const pl = this.player;
         if (pl && pl.alive && this.playerHurtCd <= 0
@@ -1706,6 +1753,11 @@ class Game {
           this.floater(pl.x, pl.y - 115, '-' + hit.dmg, '#ff8080', 16);
           if (hit.crit) applyCritFx(this, pl.x, pl.y);
           if (p.kind === 'chidori') this.burst(p.x, p.y, '#a8e0ff', 16);
+          if (p.kind === 'rasengan') spawnJutsuImpactFx(this, p.x, p.y, 'rasengan', 'small');
+          if (p.kind === 'kamehame') {
+            this.burst(p.x, p.y, '#7cf5ff', fxLite() ? 8 : 14);
+            try { this.shake(5, 0.15); } catch (_) {}
+          }
           p.life = 0;
           this.burst(p.x, p.y, p.kind === 'chidori' ? '#a8e0ff' : '#ff9a3d', 8);
         }
@@ -1784,9 +1836,9 @@ class Game {
       if (p.y > this.ground + 10 || p.x < -60 || p.x > W + 60) p.life = 0;
     }
     for (const p of this.projectiles) {
-      if (p.life <= 0 && !p._impactFx && (p.kind === 'rasengan' || p.kind === 'rinnegan' || p.kind === 'chidori')) {
+      if (p.life <= 0 && !p._impactFx && (p.kind === 'rasengan' || p.kind === 'rinnegan' || p.kind === 'chidori' || p.kind === 'kamehame')) {
         p._impactFx = true;
-        spawnJutsuImpactFx(this, p.x, p.y, p.kind, 'small');
+        spawnJutsuImpactFx(this, p.x, p.y, p.kind === 'kamehame' ? 'rasengan' : p.kind, 'small');
       }
     }
     this.projectiles = this.projectiles.filter(p => p.life > 0);
@@ -2073,6 +2125,23 @@ class Game {
         drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'rasengan', 1);
       } else if (p.kind === 'chidori') {
         drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'chidori', 1);
+      } else if (p.kind === 'kamehame') {
+        c.save();
+        c.globalAlpha = 0.55 + Math.sin((p.spin || 0) * 3) * 0.15;
+        const grad = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+        grad.addColorStop(0, '#ffffff');
+        grad.addColorStop(0.35, '#7cf5ff');
+        grad.addColorStop(1, 'rgba(60,180,255,0)');
+        c.fillStyle = grad;
+        c.beginPath();
+        c.ellipse(p.x, p.y, p.r, p.r * 0.72, Math.atan2(p.vy, p.vx), 0, TAU);
+        c.fill();
+        c.strokeStyle = '#a8e0ff';
+        c.lineWidth = 3;
+        c.beginPath();
+        c.ellipse(p.x, p.y, p.r * 0.92, p.r * 0.66, Math.atan2(p.vy, p.vx), 0, TAU);
+        c.stroke();
+        c.restore();
       } else if (p.kind === 'rinnegan') {
         drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'rinnegan', 1);
       } else if (p.kind === 'shuriken') {

@@ -37,12 +37,17 @@ class Monster {
     this.enraged = false;
     this.introT = 0;
     this.introTier = null;
+    this.safetyT = (opts.bossCore || opts.superBoss) ? BOSS_SAFETY_DUR : 0;
+    this.enemyJutsu = pickEnemyJutsu(spId, opts.levelN || 1);
+    this.jutsuCD = rand(2.8, 5.2);
+    this.jutsuTelegraphT = 0;
   }
   get alive() { return this.hp > 0; }
 
   update(dt, game) {
     this.t += dt;
     if (this.introT > 0) this.introT -= dt;
+    if (this.safetyT > 0) this.safetyT -= dt;
     if (this.flashT > 0) this.flashT -= dt;
     if (!this.alive) { this.deadT += dt; return; }
     const p = game.player;
@@ -123,6 +128,8 @@ class Monster {
     }
     this.x = clamp(this.x, game.minX - 20, game.maxX + 20);
 
+    this.tryEnemyJutsu(dt, game, p, dist);
+
     // contactschade
     if (this.atkCD <= 0 || this.dashT > 0) {
       if (game.playerHurtCd > 0) { /* stunlock-guard */ }
@@ -140,6 +147,23 @@ class Monster {
     }
   }
 
+  tryEnemyJutsu(dt, game, p, dist) {
+    if (!this.enemyJutsu || !p || !p.alive || this.introT > 0 || game.inputLocked) return;
+    this.jutsuCD -= dt;
+    if (this.jutsuTelegraphT > 0) {
+      this.jutsuTelegraphT -= dt;
+      if (this.jutsuTelegraphT <= 0) game.spawnEnemyJutsu(this);
+      return;
+    }
+    if (this.jutsuCD > 0 || dist < 130 || dist > 520) return;
+    if (this.dashT > 0 || this.telegraphT > 0) return;
+    this.jutsuTelegraphT = this.enemyJutsu === 'kamehame' ? 0.9 : 0.5;
+    this.jutsuCD = rand(5, 8.5) / (this.enraged ? 1.2 : 1);
+    try {
+      AudioSys.sfx(this.enemyJutsu === 'kamehame' ? 'ketsbamCharge' : 'roar');
+    } catch (_) {}
+  }
+
   takeDamage(dmg, kbx, game, opts) {
     opts = opts || {};
     if (!this.alive) return;
@@ -152,6 +176,7 @@ class Monster {
       game.shake(9, 0.28);
       haptic(28);
     }
+    if (this.safetyT > 0 && this.hp - dmg < 1) dmg = Math.max(0, this.hp - 1);
     this.hp -= dmg;
     this.flashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.14 : opts.crit ? 0.12 : 0.1);
     const kb = scaleKnockback(kbx, dmg, { crit: opts.crit, kind: opts.kind });
@@ -223,6 +248,17 @@ class Monster {
       c.beginPath(); c.ellipse(0, this.size * 0.82, this.size * 1.28, this.size * 0.24, 0, 0, TAU); c.stroke();
       c.restore();
     }
+    if (this.safetyT > 0 && this.alive) {
+      c.save();
+      const pulse = 0.35 + Math.sin(this.t * 12) * 0.12;
+      c.globalAlpha = pulse;
+      c.strokeStyle = '#7cf5ff';
+      c.lineWidth = 3;
+      c.beginPath();
+      c.arc(0, 0, this.size * (1.45 + Math.sin(this.t * 8) * 0.05), 0, TAU);
+      c.stroke();
+      c.restore();
+    }
     c.scale(this.face < 0 ? 1 : -1, 1); // art kijkt standaard naar links
     drawMonsterArt(c, this.sp, this.size, this.t, this.flashT > 0, this.telegraphT > 0);
     if (this.enraged && this.alive) {
@@ -230,6 +266,17 @@ class Monster {
       c.globalAlpha = 0.35 + Math.sin(this.t * 10) * 0.15;
       c.strokeStyle = '#ff6b6b'; c.lineWidth = 3;
       c.beginPath(); c.arc(0, 0, this.size * 1.35, 0, TAU); c.stroke();
+      c.restore();
+    }
+    if (this.jutsuTelegraphT > 0 && this.alive) {
+      c.save();
+      const prog = 1 - this.jutsuTelegraphT / (this.enemyJutsu === 'kamehame' ? 0.9 : 0.5);
+      c.globalAlpha = 0.4 + prog * 0.35;
+      c.strokeStyle = this.enemyJutsu === 'chidori' ? '#a8e0ff' : '#7cf5ff';
+      c.lineWidth = 2.5 + prog * 2;
+      c.beginPath();
+      c.arc(0, 0, this.size * (1.2 + prog * 0.35), 0, TAU);
+      c.stroke();
       c.restore();
     }
     c.restore();

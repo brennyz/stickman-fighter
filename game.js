@@ -159,7 +159,7 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.86';
+const APP_VERSION = '1.17.87';
 /** Keep in sync with sw.js CACHE suffix */
 const SW_CACHE_REV = 193;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
@@ -5736,6 +5736,26 @@ const SPECIES_ORDER = Object.keys(SPECIES).sort((a, b) =>
   (rarityOf(SPECIES[a].rarity).order - rarityOf(SPECIES[b].rarity).order) || SPECIES[a].name.localeCompare(SPECIES[b].name)
 );
 
+function speciesPowerScore(spId) {
+  const sp = SPECIES[spId];
+  if (!sp) return 0;
+  return rarityOf(sp.rarity).order * 100 + sp.hp + sp.dmg * 5;
+}
+
+let _speciesTop10Threshold = null;
+function speciesTop10Threshold() {
+  if (_speciesTop10Threshold != null) return _speciesTop10Threshold;
+  const scores = Object.keys(SPECIES).map(speciesPowerScore).sort((a, b) => a - b);
+  _speciesTop10Threshold = scores[Math.floor(scores.length * 0.9)] ?? scores[scores.length - 1];
+  return _speciesTop10Threshold;
+}
+
+function pickEnemyJutsu(spId, levelN) {
+  if (levelN < ENEMY_JUTSU_MIN_LEVEL) return null;
+  if (speciesPowerScore(spId) < speciesTop10Threshold()) return null;
+  return ENEMY_JUTSU_KINDS[Math.floor(Math.random() * ENEMY_JUTSU_KINDS.length)];
+}
+
 const WORLD_THEMES = [
   'veld','veld','veld','bos','bos',
   'bos','grot','grot','grot','vulkaan',
@@ -5781,6 +5801,11 @@ const KETSBAM_CD = 9;
 const KETSBAM_CHARGE_DUR = 2;
 const KETSBAM_INVULN = 1.15;
 const KETSBAM_SUPER_ARMOR = 0.95;
+/** Top-10 baas-golven: flagship bazen overleven minstens 3s. */
+const BOSS_SAFETY_DUR = 3;
+/** Vanaf dit level mogen top-10% soorten vijandelijke jutsu gebruiken. */
+const ENEMY_JUTSU_MIN_LEVEL = 20;
+const ENEMY_JUTSU_KINDS = ['rasengan', 'chidori', 'kamehame'];
 /** Min. gap tussen speler-hits door contact/projectiles — anti stunlock-keten */
 const PLAYER_HURT_CHAIN_CD = 0.42;
 const BOSS_AT = {
@@ -5919,7 +5944,7 @@ function buildLevel(n) {
     waveMeta.push(meta);
   }
   if (BOSS_AT[n]) {
-    const bossWave = BOSS_AT[n].map(x => Object.assign({}, x));
+    const bossWave = BOSS_AT[n].map(x => Object.assign({}, x, { bossCore: !!x.elite }));
     const hordePad = Math.min(3 + Math.floor(n / 8), 10);
     for (let i = 0; i < hordePad; i++) {
       const elite = Math.random() < 0.1;
@@ -6068,6 +6093,7 @@ function applyGambleToStage(game, g) {
       sp,
       elite: true,
       superBoss: g.outcome === 'superBoss',
+      bossCore: g.outcome === 'superBoss',
     });
     game.gambleBossWave = wi + 1;
   }
@@ -11085,12 +11111,17 @@ class Monster {
     this.enraged = false;
     this.introT = 0;
     this.introTier = null;
+    this.safetyT = (opts.bossCore || opts.superBoss) ? BOSS_SAFETY_DUR : 0;
+    this.enemyJutsu = pickEnemyJutsu(spId, opts.levelN || 1);
+    this.jutsuCD = rand(2.8, 5.2);
+    this.jutsuTelegraphT = 0;
   }
   get alive() { return this.hp > 0; }
 
   update(dt, game) {
     this.t += dt;
     if (this.introT > 0) this.introT -= dt;
+    if (this.safetyT > 0) this.safetyT -= dt;
     if (this.flashT > 0) this.flashT -= dt;
     if (!this.alive) { this.deadT += dt; return; }
     const p = game.player;
@@ -11171,6 +11202,8 @@ class Monster {
     }
     this.x = clamp(this.x, game.minX - 20, game.maxX + 20);
 
+    this.tryEnemyJutsu(dt, game, p, dist);
+
     // contactschade
     if (this.atkCD <= 0 || this.dashT > 0) {
       if (game.playerHurtCd > 0) { /* stunlock-guard */ }
@@ -11188,6 +11221,23 @@ class Monster {
     }
   }
 
+  tryEnemyJutsu(dt, game, p, dist) {
+    if (!this.enemyJutsu || !p || !p.alive || this.introT > 0 || game.inputLocked) return;
+    this.jutsuCD -= dt;
+    if (this.jutsuTelegraphT > 0) {
+      this.jutsuTelegraphT -= dt;
+      if (this.jutsuTelegraphT <= 0) game.spawnEnemyJutsu(this);
+      return;
+    }
+    if (this.jutsuCD > 0 || dist < 130 || dist > 520) return;
+    if (this.dashT > 0 || this.telegraphT > 0) return;
+    this.jutsuTelegraphT = this.enemyJutsu === 'kamehame' ? 0.9 : 0.5;
+    this.jutsuCD = rand(5, 8.5) / (this.enraged ? 1.2 : 1);
+    try {
+      AudioSys.sfx(this.enemyJutsu === 'kamehame' ? 'ketsbamCharge' : 'roar');
+    } catch (_) {}
+  }
+
   takeDamage(dmg, kbx, game, opts) {
     opts = opts || {};
     if (!this.alive) return;
@@ -11200,6 +11250,7 @@ class Monster {
       game.shake(9, 0.28);
       haptic(28);
     }
+    if (this.safetyT > 0 && this.hp - dmg < 1) dmg = Math.max(0, this.hp - 1);
     this.hp -= dmg;
     this.flashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.14 : opts.crit ? 0.12 : 0.1);
     const kb = scaleKnockback(kbx, dmg, { crit: opts.crit, kind: opts.kind });
@@ -11271,6 +11322,17 @@ class Monster {
       c.beginPath(); c.ellipse(0, this.size * 0.82, this.size * 1.28, this.size * 0.24, 0, 0, TAU); c.stroke();
       c.restore();
     }
+    if (this.safetyT > 0 && this.alive) {
+      c.save();
+      const pulse = 0.35 + Math.sin(this.t * 12) * 0.12;
+      c.globalAlpha = pulse;
+      c.strokeStyle = '#7cf5ff';
+      c.lineWidth = 3;
+      c.beginPath();
+      c.arc(0, 0, this.size * (1.45 + Math.sin(this.t * 8) * 0.05), 0, TAU);
+      c.stroke();
+      c.restore();
+    }
     c.scale(this.face < 0 ? 1 : -1, 1); // art kijkt standaard naar links
     drawMonsterArt(c, this.sp, this.size, this.t, this.flashT > 0, this.telegraphT > 0);
     if (this.enraged && this.alive) {
@@ -11278,6 +11340,17 @@ class Monster {
       c.globalAlpha = 0.35 + Math.sin(this.t * 10) * 0.15;
       c.strokeStyle = '#ff6b6b'; c.lineWidth = 3;
       c.beginPath(); c.arc(0, 0, this.size * 1.35, 0, TAU); c.stroke();
+      c.restore();
+    }
+    if (this.jutsuTelegraphT > 0 && this.alive) {
+      c.save();
+      const prog = 1 - this.jutsuTelegraphT / (this.enemyJutsu === 'kamehame' ? 0.9 : 0.5);
+      c.globalAlpha = 0.4 + prog * 0.35;
+      c.strokeStyle = this.enemyJutsu === 'chidori' ? '#a8e0ff' : '#7cf5ff';
+      c.lineWidth = 2.5 + prog * 2;
+      c.beginPath();
+      c.arc(0, 0, this.size * (1.2 + prog * 0.35), 0, TAU);
+      c.stroke();
       c.restore();
     }
     c.restore();
@@ -12661,6 +12734,8 @@ class Game {
             elite: !!(def.elite || def.superBoss),
             superBoss: !!def.superBoss,
             giant: !!def.giant,
+            bossCore: !!def.bossCore,
+            levelN: this.level.n,
             hpMul: this.level.hpMul,
             dmgMul: this.level.dmgMul,
           });
@@ -13682,6 +13757,41 @@ class Game {
 
   spawnWave(f) { this.spawnJutsu(f, f.attackSpec('special')); }
 
+  spawnEnemyJutsu(m) {
+    const p = this.player;
+    if (!p || !p.alive || !m.enemyJutsu || !m.alive) return;
+    const dir = Math.sign(p.x - m.x) || m.face || 1;
+    const j = m.enemyJutsu;
+    const dmg = Math.round(m.dmg * (j === 'kamehame' ? 2.15 : j === 'chidori' ? 1.75 : 1.55));
+    const y0 = m.y - m.size * 0.55;
+    const lbl = j === 'chidori' ? 'CHIDORI!' : j === 'kamehame' ? 'KAMEHAME!' : 'RASENGAN!';
+    const col = j === 'chidori' ? '#a8e0ff' : j === 'kamehame' ? '#7cf5ff' : '#7cf5ff';
+    try {
+      this.floater(m.x, m.y - m.size - 24, lbl, col, 14);
+    } catch (_) {}
+    if (j === 'rasengan') {
+      this.spawnProjectile({
+        x: m.x + dir * m.size, y: y0, vx: dir * 360, vy: 0, r: 22, dmg,
+        from: 'enemy', kind: 'rasengan', life: 1.15, spin: 0, hitSet: new Set(),
+      });
+      try { AudioSys.sfx('rasengan'); } catch (_) {}
+    } else if (j === 'chidori') {
+      this.spawnProjectile({
+        x: m.x + dir * m.size, y: y0, vx: dir * 500, vy: 0, r: 17, dmg,
+        from: 'enemy', kind: 'chidori', life: 0.34, hitSet: new Set(),
+      });
+      try { AudioSys.sfx('chidori'); } catch (_) {}
+    } else {
+      const a = Math.atan2((p.y - 42) - y0, p.x - m.x);
+      this.spawnProjectile({
+        x: m.x + Math.cos(a) * m.size, y: y0 + Math.sin(a) * m.size,
+        vx: Math.cos(a) * 400, vy: Math.sin(a) * 400, r: 28, dmg,
+        from: 'enemy', kind: 'kamehame', life: 1.05, spin: 0, hitSet: new Set(),
+      });
+      try { this.shake(7, 0.22); AudioSys.sfx('rasengan'); } catch (_) {}
+    }
+  }
+
   spawnProjectile(p) {
     this.projectiles.push(Object.assign({ life: 3, grav: 0, spin: 0 }, p));
   }
@@ -13965,6 +14075,16 @@ class Game {
           }
         }
       }
+      if (p.kind === 'kamehame') {
+        p.r = Math.min(44, (p.r || 28) + dt * 18);
+        if (!motionReduced() && !fxLite()) {
+          p._trailAcc = (p._trailAcc || 0) + dt;
+          if (p._trailAcc >= 0.04) {
+            p._trailAcc = 0;
+            this.burst(p.x, p.y, '#7cf5ff', 1, { kind: 'spark', size: 2.6 });
+          }
+        }
+      }
       if (p.from === 'enemy') {
         const pl = this.player;
         if (pl && pl.alive && this.playerHurtCd <= 0
@@ -13976,6 +14096,11 @@ class Game {
           this.floater(pl.x, pl.y - 115, '-' + hit.dmg, '#ff8080', 16);
           if (hit.crit) applyCritFx(this, pl.x, pl.y);
           if (p.kind === 'chidori') this.burst(p.x, p.y, '#a8e0ff', 16);
+          if (p.kind === 'rasengan') spawnJutsuImpactFx(this, p.x, p.y, 'rasengan', 'small');
+          if (p.kind === 'kamehame') {
+            this.burst(p.x, p.y, '#7cf5ff', fxLite() ? 8 : 14);
+            try { this.shake(5, 0.15); } catch (_) {}
+          }
           p.life = 0;
           this.burst(p.x, p.y, p.kind === 'chidori' ? '#a8e0ff' : '#ff9a3d', 8);
         }
@@ -14054,9 +14179,9 @@ class Game {
       if (p.y > this.ground + 10 || p.x < -60 || p.x > W + 60) p.life = 0;
     }
     for (const p of this.projectiles) {
-      if (p.life <= 0 && !p._impactFx && (p.kind === 'rasengan' || p.kind === 'rinnegan' || p.kind === 'chidori')) {
+      if (p.life <= 0 && !p._impactFx && (p.kind === 'rasengan' || p.kind === 'rinnegan' || p.kind === 'chidori' || p.kind === 'kamehame')) {
         p._impactFx = true;
-        spawnJutsuImpactFx(this, p.x, p.y, p.kind, 'small');
+        spawnJutsuImpactFx(this, p.x, p.y, p.kind === 'kamehame' ? 'rasengan' : p.kind, 'small');
       }
     }
     this.projectiles = this.projectiles.filter(p => p.life > 0);
@@ -14343,6 +14468,23 @@ class Game {
         drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'rasengan', 1);
       } else if (p.kind === 'chidori') {
         drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'chidori', 1);
+      } else if (p.kind === 'kamehame') {
+        c.save();
+        c.globalAlpha = 0.55 + Math.sin((p.spin || 0) * 3) * 0.15;
+        const grad = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+        grad.addColorStop(0, '#ffffff');
+        grad.addColorStop(0.35, '#7cf5ff');
+        grad.addColorStop(1, 'rgba(60,180,255,0)');
+        c.fillStyle = grad;
+        c.beginPath();
+        c.ellipse(p.x, p.y, p.r, p.r * 0.72, Math.atan2(p.vy, p.vx), 0, TAU);
+        c.fill();
+        c.strokeStyle = '#a8e0ff';
+        c.lineWidth = 3;
+        c.beginPath();
+        c.ellipse(p.x, p.y, p.r * 0.92, p.r * 0.66, Math.atan2(p.vy, p.vx), 0, TAU);
+        c.stroke();
+        c.restore();
       } else if (p.kind === 'rinnegan') {
         drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'rinnegan', 1);
       } else if (p.kind === 'shuriken') {
