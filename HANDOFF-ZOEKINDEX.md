@@ -1,6 +1,6 @@
 # HANDOFF zoekindex (voor agents & `git grep`)
 
-**handoff** · **agent-handoff** · **Mats** · **mikken** · **character select** · **deel 1** · **deel 2** · **coinrun** · **d20**
+**handoff** · **agent-handoff** · **Mats** · **mikken** · **character select** · **deel 1** · **deel 2** · **coinrun** · **d20** · **ASSET-STYLE** · **buttons**
 
 > Tot push staat dit **alleen** in lokale main / patch. GitHub `main` = `60423e4` (v1.7).
 
@@ -12,13 +12,14 @@ git log --grep=handoff -i --oneline
 git log --grep=Mats -i --oneline
 git log --grep=mik -i --oneline
 git log --grep="deel 2" -i --oneline
-rg -l "handoff|coinrun|projAimVelocity|charSelectScreen" .
+rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 ```
 
 ## Feature → versie → commit → code
 
 | Gebruiker vroeg | Versie | Commit | Waar in code |
 |-----------------|--------|--------|----------------|
+| **Asset / knop-stijl (leidend)** | docs | — | `ASSET-STYLE.md`, `assets/buttons/` |
 | Character select **deel 1** | 1.11.1 | `09b7dc2` | `index.html` `#charSelectScreen`, `game.js` charPickStep |
 | Character select **deel 2** | 1.11.2 | `7d236c1` | `#charIconRow`, `#btnCharSagaClash`, saga strip |
 | **Mats** muntjes bonus | 1.12.0 | `f6c86bf` | `coinrun`, `#btnMatsCoins`, `initCoinRun` |
