@@ -40,6 +40,7 @@ Stickman Fighter wordt door **meerdere cloud-agent runs** aangepast (iPad-app, M
 | **`IMPROVEMENT.md`** | d20-loop (`npm run roll`), agent log, veilig wijzigen |
 | **`ASSET-STYLE.md`** | **Leidend** voor knoppen/beelden: tokens, mappen, vervang-workflow |
 | **`DEBUG-BLACK-SCREEN.md`** | Zwart/blauw scherm bij Avontuur — debug-overlay + dump |
+| **`MENU-VIDEO-OVERHAUL.md`** | Startmenu: full-bleed omgeving-video + translucent UI-zones (plan) |
 | **`IPAD-GEEN-COMMANDO.txt`** | Wat Mats op iPad wél/niet doet |
 
 ### Play-laag (Avontuur) — canonieke route
