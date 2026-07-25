@@ -3,9 +3,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.74';
+const APP_VERSION = '1.17.75';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 192;
+const SW_CACHE_REV = 193;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -16,8 +16,8 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, skillShards: 0 },
-  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {} };
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, skillShards: 0, itemShards: 0 },
+  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {} };
 
 const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
@@ -336,6 +336,9 @@ function rollHitDamage(attacker, spec, mult) {
   }
   if (attacker.isPlayer && typeof game !== 'undefined' && game && game.styleCritBonus) {
     critChance += game.styleCritBonus;
+  }
+  if (attacker.isPlayer && k === 'weapon' && attacker.weapon && attacker.weapon.upgradeCrit) {
+    critChance += attacker.weapon.upgradeCrit;
   }
   critChance = clamp(critChance, 0, 0.48);
   let dmg = spec.dmg * rand(0.9, 1.15) * mult;
@@ -706,11 +709,32 @@ function sanitizeSave(s) {
   for (const id of skillIds) {
     const raw = (out.skillUpgrades || {})[id];
     const entry = (raw && typeof raw === 'object') ? raw : {};
-    const lv = clamp(Math.floor(Number(entry.level) || 0), 0, SKILL_MAX_LEVEL);
+    const maxLv = typeof skillMaxLevel === 'function' ? skillMaxLevel(id) : SKILL_MAX_LEVEL;
+    const lv = clamp(Math.floor(Number(entry.level) || 0), 0, maxLv);
     const shards = clamp(Math.floor(Number(entry.shards) || 0), 0, 9999);
     if (lv > 0 || shards > 0) cleanSkills[id] = { level: lv, shards };
   }
   out.skillUpgrades = cleanSkills;
+
+  const cleanItems = { weapon: {}, pet: {}, style: {} };
+  const rawItems = (out.itemUpgrades && typeof out.itemUpgrades === 'object') ? out.itemUpgrades : {};
+  for (const cat of ['weapon', 'pet', 'style']) {
+    const bag = (rawItems[cat] && typeof rawItems[cat] === 'object') ? rawItems[cat] : {};
+    for (const [id, raw] of Object.entries(bag)) {
+      const entry = (raw && typeof raw === 'object') ? raw : {};
+      let ok = false;
+      let maxLv = UPGRADE_MAX_STANDARD;
+      if (cat === 'weapon') ok = WEAPONS.some(w => w.id === id);
+      else if (cat === 'pet') ok = !!petDef(id);
+      else if (cat === 'style') ok = STYLES.some(s => s.id === id);
+      if (!ok) continue;
+      if (typeof itemUpgradeMax === 'function') maxLv = itemUpgradeMax(cat, id);
+      const lv = clamp(Math.floor(Number(entry.level) || 0), 0, maxLv);
+      const shards = clamp(Math.floor(Number(entry.shards) || 0), 0, 9999);
+      if (lv > 0 || shards > 0) cleanItems[cat][id] = { level: lv, shards };
+    }
+  }
+  out.itemUpgrades = cleanItems;
 
   out.petCoins = clamp(Math.floor(Number(out.petCoins) || 0), 0, 999999);
   if (out.lang != null && !SUPPORTED_LANGS.includes(out.lang)) out.lang = null;
@@ -771,5 +795,6 @@ const PICKUP_META = {
   chakra: { color: '#7cf5ff', label: 'CHAKRA' },
   shield: { color: '#9fd8ff', label: 'SCHILD' },
   skill_shard: { color: '#ffd75e', label: 'SKILL' },
+  item_shard: { color: '#c792ff', label: 'ITEM' },
 };
 

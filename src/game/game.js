@@ -530,6 +530,8 @@ class Game {
     if (this.mode === 'adventure') {
       const skillId = rollSkillShardDrop(m);
       if (skillId) this.spawnPickup(m.x + rand(-18, 18), m.y - m.size * 0.35, { skillId });
+      const itemDrop = rollItemShardDrop(m);
+      if (itemDrop) this.spawnPickup(m.x + rand(-22, 22), m.y - m.size * 0.45, { itemCat: itemDrop.cat, itemId: itemDrop.id });
     }
     bumpStat('kills', 1);
     bumpDaily('kills', 1);
@@ -595,7 +597,7 @@ class Game {
     save.stats.killsSinceSummon = 0;
     persist();
     const rar = rarityOf(tier);
-    const asc = applySummonTier(weaponById(pick.id));
+    const asc = applyWeaponUpgrades(applySummonTier(weaponById(pick.id)));
     if (this.player && this.player.weapon && this.player.weapon.id === pick.id) {
       this.player.weapon = playerWeapon();
       const st = playerStats();
@@ -624,6 +626,13 @@ class Game {
       });
       return;
     }
+    if (opts.itemCat && opts.itemId) {
+      this.pickups.push({
+        x, y, kind: 'item_shard', itemCat: opts.itemCat, itemId: opts.itemId,
+        t: rand(0, TAU), life: 18, bob: 0,
+      });
+      return;
+    }
     const kind = choice(PICKUP_TYPES);
     this.pickups.push({ x, y, kind, t: rand(0, TAU), life: 16, bob: 0 });
   }
@@ -648,6 +657,20 @@ class Game {
         }
         break;
       }
+      case 'item_shard': {
+        const cat = pk.itemCat;
+        const iid = pk.itemId;
+        if (cat && iid) {
+          addItemShards(cat, iid, 1);
+          const lbl = itemUpgradeLabel(cat, iid);
+          const col = itemUpgradeColor(cat, iid);
+          this.floater(p.x, p.y - 100, t('combat.pickupItemShard', { name: lbl }), col, 15);
+          if (itemCanUpgrade(cat, iid)) {
+            try { UI.toast(t('toast.itemUpgradeReady', { name: lbl }), 2800); } catch (_) {}
+          }
+        }
+        break;
+      }
       case 'heal':
         p.hp = Math.min(p.maxhp, p.hp + Math.round(p.maxhp * 0.28));
         this.floater(p.x, p.y - 100, t('combat.pickupHp'), meta.color, 16);
@@ -666,8 +689,14 @@ class Game {
         this.floater(p.x, p.y - 100, t('combat.pickupShield'), meta.color, 16);
         break;
     }
-    this.banner(pickupLabel(pk.kind, pk.skillId), 0.9, (pk.kind === 'skill_shard' && SKILL_DEFS[pk.skillId]) ? SKILL_DEFS[pk.skillId].color : meta.color, 28);
-    this.burst(pk.x, pk.y, (pk.kind === 'skill_shard' && SKILL_DEFS[pk.skillId]) ? SKILL_DEFS[pk.skillId].color : meta.color, 14);
+    this.banner(pickupLabel(pk.kind, pk.skillId, pk.itemCat, pk.itemId), 0.9,
+      (pk.kind === 'skill_shard' && SKILL_DEFS[pk.skillId]) ? SKILL_DEFS[pk.skillId].color
+        : (pk.kind === 'item_shard' && pk.itemCat && pk.itemId) ? itemUpgradeColor(pk.itemCat, pk.itemId)
+          : meta.color, 28);
+    this.burst(pk.x, pk.y,
+      (pk.kind === 'skill_shard' && SKILL_DEFS[pk.skillId]) ? SKILL_DEFS[pk.skillId].color
+        : (pk.kind === 'item_shard' && pk.itemCat && pk.itemId) ? itemUpgradeColor(pk.itemCat, pk.itemId)
+          : meta.color, 14);
     bumpStat('pickups', 1);
     bumpDaily('pickups', 1);
     pk.life = 0;
@@ -1878,7 +1907,10 @@ class Game {
       for (const pk of this.pickups) {
         const meta = PICKUP_META[pk.kind] || PICKUP_META.heal;
         const pkCol = (pk.kind === 'skill_shard' && pk.skillId && SKILL_DEFS[pk.skillId])
-          ? SKILL_DEFS[pk.skillId].color : meta.color;
+          ? SKILL_DEFS[pk.skillId].color
+          : (pk.kind === 'item_shard' && pk.itemCat && pk.itemId)
+            ? itemUpgradeColor(pk.itemCat, pk.itemId)
+            : meta.color;
         const y = pk.y + (pk.bob || 0);
         c.save();
         const pkBlur = (save.liteFx || Perf.tier >= 1 || motionReduced()) ? 0 : 14;
@@ -1887,7 +1919,7 @@ class Game {
         c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.fill();
         c.strokeStyle = '#fff'; c.lineWidth = 2;
         c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.stroke();
-        drawPickupIcon(c, pk.kind, pk.x, y);
+        drawPickupIcon(c, pk.kind, pk.x, y, pkCol);
         c.restore();
       }
     }

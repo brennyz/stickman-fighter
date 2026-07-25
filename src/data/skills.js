@@ -1,9 +1,13 @@
 /* ========================== SKILL UPGRADES ============================= */
-/** Permanent skill upgrades via adventure shard drops.
- *  Future: weapons/styles will use UPGRADE_PHASE_MAX (3) in a separate save track. */
-const UPGRADE_PHASE_MAX = 3;
+/** Permanent skill upgrades via adventure shard drops. */
 const SKILL_MAX_LEVEL = 5;
 const SKILL_SHARD_COSTS = [3, 5, 8, 12, 18];
+
+function skillMaxLevel(id) {
+  const def = SKILL_DEFS[id];
+  if (!def) return UPGRADE_MAX_STANDARD;
+  return def.group === 'jutsu' ? UPGRADE_MAX_EXTREME : UPGRADE_MAX_STANDARD;
+}
 
 const SKILL_DEFS = {
   rasengan: {
@@ -80,7 +84,7 @@ function skillEntry(id) {
 function skillLevel(id) {
   const def = SKILL_DEFS[id];
   if (!def) return 0;
-  return clamp(Math.floor(Number(skillEntry(id).level) || 0), 0, SKILL_MAX_LEVEL);
+  return clamp(Math.floor(Number(skillEntry(id).level) || 0), 0, skillMaxLevel(id));
 }
 
 function skillShards(id) {
@@ -90,7 +94,8 @@ function skillShards(id) {
 
 function skillUpgradeCost(id) {
   const lv = skillLevel(id);
-  if (lv >= SKILL_MAX_LEVEL) return null;
+  const max = skillMaxLevel(id);
+  if (lv >= max) return null;
   return SKILL_SHARD_COSTS[lv] || SKILL_SHARD_COSTS[SKILL_SHARD_COSTS.length - 1];
 }
 
@@ -181,7 +186,7 @@ function rollSkillShardDrop(monster) {
   for (const id of SKILL_IDS) {
     let w = 1;
     if (SKILL_DEFS[id].group === 'jutsu') w = id === 'rasengan' ? 2.2 : 0.85;
-    if (skillLevel(id) >= SKILL_MAX_LEVEL) w *= 0.35;
+    if (skillLevel(id) >= skillMaxLevel(id)) w *= 0.35;
     weights.push({ id, w });
   }
   let total = 0;
@@ -206,14 +211,14 @@ function skillUpgradeSummary(id) {
   if (b.extraShot > 0) parts.push(`${Math.round(b.extraShot * 100)}% extra shot`);
   if (b.pierceRepeat > 0) parts.push(`${Math.round(b.pierceRepeat * 100)}% re-hit`);
   if (b.windupMul < 0.999) parts.push(`sneller cast`);
-  if (lv >= SKILL_MAX_LEVEL) parts.push('MAX');
+  if (lv >= skillMaxLevel(id)) parts.push('MAX');
   return parts.length ? parts.join(' · ') : (lv ? 'Lv ' + lv : '—');
 }
 
 function skillNextStepPreview(id) {
   const lv = skillLevel(id);
   const def = SKILL_DEFS[id];
-  if (!def || lv >= SKILL_MAX_LEVEL) return '';
+  if (!def || lv >= skillMaxLevel(id)) return '';
   const s = def.steps[lv];
   if (!s) return '';
   const parts = [];

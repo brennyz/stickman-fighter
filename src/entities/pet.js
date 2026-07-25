@@ -9,6 +9,7 @@ class Pet {
     this.face = 1;
     this.t = Math.random() * 6;
     this.assistT = 1.8;
+    this.assistCd = (def.cd || 5) * (petUpgradeBonuses(def.id).cdMul || 1);
     this.size = Math.max(9, Math.round((this.sp?.size || 14) * 0.52));
     this.flashT = 0;
   }
@@ -34,7 +35,8 @@ class Pet {
     if (inTrain && (!g.robot || !g.robot.alive)) return;
     this.assistT -= dt;
     if (this.assistT > 0) return;
-    this.assistT = this.def.cd || 5;
+    this.assistCd = (this.def.cd || 5) * (petUpgradeBonuses(this.def.id).cdMul || 1);
+    this.assistT = this.assistCd;
 
     let tgt = null;
     let best = 1e9;
@@ -50,7 +52,8 @@ class Pet {
     }
     if (!tgt || best > 420) return;
 
-    const mul = (this.def.assistMul || 0.3) * (g.stageDmgMul || 1) * (g.petDmgMul || 1);
+    const up = petUpgradeBonuses(this.def.id);
+    const mul = (this.def.assistMul || 0.3) * (up.assistMul || 1) * (g.stageDmgMul || 1) * (g.petDmgMul || 1);
     const dmg = Math.max(4, Math.round(p.baseDmg * mul));
     const kb = Math.sign(tgt.x - this.x || p.face) * (120 + dmg * 2.2);
     tgt.takeDamage(dmg, kb, g);
