@@ -46,6 +46,8 @@ function seedNlGameStrings() {
     ketsBam: 'KETS-BAM!',
     wallTime: 'TIJD!',
     wallNewWall: 'MUUR GESLOOPT! Nieuwe muur...',
+    tideBattle: 'TIDE BATTLE — {name}!',
+    tideBattleWin: 'TIDE BATTLE GEWONNEN!',
   });
   if (!I18N.nl.result) I18N.nl.result = {};
   Object.assign(I18N.nl.result, {
@@ -135,6 +137,8 @@ function seedNlGameStrings() {
     styleUnlockCrystal: 'Nieuwe stijl: Kristallijn!',
     styleUnlock: 'Nieuwe stijl: {name}!',
     summon: '✦ Summon! {name} is nu {rar} — schade ×{dmg}',
+    tideBattle: 'Tide Battle! {name} verschijnt — versla de baas!',
+    tideBattleWin: 'Tide Battle gewonnen! +{xp} XP · +{coins} pet coins',
     shurikenWait: 'Werpwapen even wachten…',
     shurikenSpam: 'Niet spammen — max 3 snel achter elkaar',
     missionDone: 'Missie klaar: {text}',
@@ -332,6 +336,7 @@ function seedNlGameStrings() {
     nextWave: 'Volgende golf', eggPet: 'Ei · {name}', petActive: 'Pet · {name}',
     petDefault: 'Metgezel', cosmetic: 'Cosmetisch',
     gambleBoss: 'Super-baas mogelijk · golf {n}', starZone: ' · 3★ zone',
+    tideBattle: '⚔ Tide Battle — versla {name}!', tideBattleShort: '⚔ Tide Battle',
     star2: ' · 2★ bij >{pct}% HP', star3: ' · 3★ bij >{pct}% HP', hpPct: '{pct}% HP{hint}',
     enemiesLeft1: 'Nog 1 vijand in deze golf', enemiesLeftN: 'Nog {n} vijanden in deze golf',
     toBoss: 'Op weg naar de baas — {sec}s', walkNext: 'Verder lopen… volgende golf {sec}s',
@@ -544,6 +549,7 @@ const CATALOG_EN = {
     newDex: 'New {rar}: {name}! +{hp} max HP', pet: 'PET! {name}',
     matsStart: 'MATS · COIN BONUS', wallStart: 'SMASH THE WALL!', bonusDone: 'BONUS DONE!',
     kets: 'KETS!', ketsBam: 'KETS-BAM!', wallTime: 'TIME!', wallNewWall: 'WALL SMASHED! New wall...',
+    tideBattle: 'TIDE BATTLE — {name}!', tideBattleWin: 'TIDE BATTLE WON!',
   },
   help: { tips: [
     'Power-ups: defeated monsters sometimes drop orbs — HP, rage, chakra, shield.',
@@ -587,6 +593,8 @@ const CATALOG_EN = {
     styleUnlockCrystal: 'New style: Crystalline!',
     styleUnlock: 'New style: {name}!',
     summon: '✦ Summon! {name} is now {rar} — damage ×{dmg}',
+    tideBattle: 'Tide Battle! {name} appears — defeat the boss!',
+    tideBattleWin: 'Tide Battle won! +{xp} XP · +{coins} pet coins',
     shurikenWait: 'Throw weapon on cooldown…',
     shurikenSpam: "Don't spam — max 3 rapid throws",
     missionDone: 'Mission complete: {text}',
@@ -796,6 +804,7 @@ const CATALOG_EN = {
     nextWave: 'Next wave', eggPet: 'Egg · {name}', petActive: 'Pet · {name}',
     petDefault: 'Companion', cosmetic: 'Cosmetic',
     gambleBoss: 'Super-boss possible · wave {n}', starZone: ' · 3★ zone',
+    tideBattle: '⚔ Tide Battle — defeat {name}!', tideBattleShort: '⚔ Tide Battle',
     star2: ' · 2★ at >{pct}% HP', star3: ' · 3★ at >{pct}% HP', hpPct: '{pct}% HP{hint}',
     enemiesLeft1: '1 enemy left this wave', enemiesLeftN: '{n} enemies left this wave',
     toBoss: 'Heading to boss — {sec}s', walkNext: 'Walking on… next wave {sec}s',

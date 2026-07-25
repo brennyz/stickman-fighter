@@ -111,6 +111,9 @@ class Game {
     this.ketsbamChargeT = 0;
     this.ketsbamChargeDur = 0;
     this.ketsbamChargePulse = 0;
+    this.tideBattleActive = false;
+    this.tideBattleBossId = null;
+    this.tideBattleMon = null;
     applyGambleToStage(this, gamble);
     this.banner(t('banner.levelStart', { n }), 1.4, '#ffd75e', 54);
     if (masterBuffActive(n)) {
@@ -415,6 +418,9 @@ class Game {
 
   finishAdventure(win) {
     if (this.over) return;
+    this.tideBattleActive = false;
+    this.tideBattleBossId = null;
+    this.tideBattleMon = null;
     this.deactivateMasterSword(true);
     this.over = true;
     this.inputLocked = true;
@@ -574,6 +580,52 @@ class Game {
       }
     }
     this.maybeSummon(m);
+    if (m.tideBoss && this.tideBattleActive) {
+      this.finishTideBattle(true, m);
+      return;
+    }
+    this.maybeTideBattle(m);
+  }
+
+  maybeTideBattle(m) {
+    if (m && m.tideBoss) return;
+    if (!rollTideBattleChance(this)) return;
+    this.startTideBattle(pickTideBossId());
+  }
+
+  startTideBattle(spId) {
+    if (this.mode !== 'adventure' || this.over || !SPECIES[spId]) return;
+    if (this.tideBattleActive) return;
+    this.tideBattleActive = true;
+    this.tideBattleBossId = spId;
+    const spawnX = clamp(this.player ? this.player.x + rand(140, 220) : W * 0.72, 80, this.maxX || W - 80);
+    const mon = new Monster(spId, spawnX, this, tideBossSpawnOpts(this));
+    this.monsters.push(mon);
+    this.tideBattleMon = mon;
+    triggerTideBattleIntro(this, mon);
+    UI.toast(t('toast.tideBattle', { name: mon.sp.name }), 4000);
+    this.floater(W / 2, Math.max(100, (this.advHudBottom || 120) + 24), t('hud.tideBattleShort'), '#4a9fff', 18);
+  }
+
+  finishTideBattle(won, m) {
+    if (!this.tideBattleActive) return;
+    const sp = m && m.sp ? m.sp : (SPECIES[this.tideBattleBossId] || null);
+    const name = sp ? sp.name : 'Tide';
+    this.tideBattleActive = false;
+    this.tideBattleBossId = null;
+    this.tideBattleMon = null;
+    if (!won) return;
+    const xp = tideBattleRewardXp(this);
+    const coins = tideBattleRewardCoins();
+    this.grantXP(xp);
+    save.petCoins = (save.petCoins || 0) + coins;
+    save.stats.tideBattleWins = (save.stats.tideBattleWins || 0) + 1;
+    persist();
+    this.banner(t('banner.tideBattleWin'), 2.2, '#4a9fff', 44);
+    UI.toast(t('toast.tideBattleWin', { xp, coins }), 4200);
+    this.floater(W / 2, 140, `+${xp} XP · +${coins} 🪙`, '#4a9fff', 17);
+    AudioSys.sfx('win');
+    checkAchievements();
   }
 
   /** Hele kleine kans: Summon ascendeert een lager wapen naar Episch/Legendarisch. */
@@ -2733,8 +2785,16 @@ class Game {
 
       hy = this.drawStageProgress(c, hy + 4) + 10;
 
-      const bossAlive = this.monsters.find(m => m.elite && m.alive);
-      if (!bossAlive) {
+      const bossAlive = this.monsters.find(m => m.alive && (m.tideBoss || m.elite));
+      if (this.tideBattleActive && this.tideBattleBossId) {
+        const tideName = (SPECIES[this.tideBattleBossId] && SPECIES[this.tideBattleBossId].name) || 'Tide';
+        c.font = '700 11px sans-serif';
+        c.fillStyle = '#4a9fff';
+        const txt = t('hud.tideBattle', { name: tideName });
+        c.fillText(txt, W / 2 + 7, hy);
+        drawMiniDie(c, W / 2 - c.measureText(txt).width / 2 - 3, hy - 3.5, 10, '#4a9fff');
+        hy += 14;
+      } else if (!bossAlive) {
         let ctxTxt = null;
         let ctxCol = null;
         let ctxDie = false;

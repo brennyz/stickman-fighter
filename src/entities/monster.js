@@ -37,6 +37,7 @@ class Monster {
     this.enraged = false;
     this.introT = 0;
     this.introTier = null;
+    this.tideBoss = !!opts.tideBoss;
   }
   get alive() { return this.hp > 0; }
 
@@ -191,7 +192,7 @@ class Monster {
       const p = clamp(this.introT / 1.6, 0, 1);
       const pulse = 1 + Math.sin(this.t * 14) * 0.08;
       c.globalAlpha = 0.25 + p * 0.45;
-      c.strokeStyle = this.introTier === 'superBoss' ? '#ffd75e' : (this.introTier === 'boss' ? '#ff6b6b' : '#c47aff');
+      c.strokeStyle = this.introTier === 'tideBoss' ? '#4a9fff' : (this.introTier === 'superBoss' ? '#ffd75e' : (this.introTier === 'boss' ? '#ff6b6b' : '#c47aff'));
       c.lineWidth = 4 + p * 4;
       c.beginPath();
       c.ellipse(0, 0, this.size * (1.7 + (1 - p) * 0.9) * pulse, this.size * (1.35 + (1 - p) * 0.7) * pulse, 0, 0, TAU);
@@ -207,7 +208,7 @@ class Monster {
     }
     if (rar.order >= 2 && this.alive) {
       c.save();
-      c.strokeStyle = this.superBoss ? '#ffd75e' : rar.glow; c.lineWidth = 3 + rar.order * 0.4;
+      c.strokeStyle = this.tideBoss ? '#4a9fff' : (this.superBoss ? '#ffd75e' : rar.glow); c.lineWidth = 3 + rar.order * 0.4;
       c.beginPath(); c.ellipse(0, 0, this.size * 1.55, this.size * 1.2, 0, 0, TAU); c.stroke();
       if (rar.order >= 4) {
         c.globalAlpha = 0.25 + Math.sin(this.t * 6) * 0.1;
@@ -382,6 +383,169 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
       c.fillStyle = '#ffe9c9';
       c.beginPath(); c.moveTo(-r * 0.75, -r * 1.05); c.lineTo(-r * 0.65, -r * 1.5); c.lineTo(-r * 0.5, -r * 1.0); c.closePath(); c.fill();
       eye(-r * 1.0, -r * 0.85, r * 0.13);
+      break;
+    }
+    case 'tideFox': {
+      c.fillStyle = body;
+      for (let i = 0; i < 9; i++) {
+        const a = (i / 9) * TAU - Math.PI / 2;
+        const wag = Math.sin(t * 5 + i * 0.7) * 0.12;
+        c.save();
+        c.rotate(a + wag);
+        c.beginPath();
+        c.moveTo(r * 0.2, 0);
+        c.quadraticCurveTo(r * 1.5, -r * 0.15, r * 2.1, r * 0.08);
+        c.lineTo(r * 1.85, r * 0.22);
+        c.quadraticCurveTo(r * 1.2, r * 0.05, r * 0.2, 0);
+        c.fill();
+        c.restore();
+      }
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+      c.fillStyle = dark;
+      c.beginPath(); c.moveTo(-r * 0.55, -r * 0.55); c.lineTo(-r * 0.8, -r * 1.2); c.lineTo(-r * 0.1, -r * 0.65); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(r * 0.15, -r * 0.58); c.lineTo(r * 0.05, -r * 1.25); c.lineTo(r * 0.62, -r * 0.62); c.closePath(); c.fill();
+      c.fillStyle = '#ff2020';
+      c.beginPath(); c.arc(-r * 0.42, -r * 0.18, r * 0.11, 0, TAU); c.fill();
+      c.beginPath(); c.arc(r * 0.08, -r * 0.2, r * 0.1, 0, TAU); c.fill();
+      c.fillStyle = '#fff';
+      c.beginPath(); c.arc(-r * 0.45, -r * 0.2, r * 0.04, 0, TAU); c.fill();
+      c.beginPath(); c.arc(r * 0.05, -r * 0.22, r * 0.035, 0, TAU); c.fill();
+      c.fillStyle = '#1a1020';
+      c.beginPath(); c.moveTo(-r * 0.08, r * 0.08); c.lineTo(-r * 0.02, r * 0.35); c.lineTo(r * 0.12, r * 0.06); c.closePath(); c.fill();
+      break;
+    }
+    case 'tideSnake': {
+      c.strokeStyle = body; c.lineWidth = r * 0.42; c.lineCap = 'round';
+      c.beginPath();
+      for (let i = 0; i <= 12; i++) {
+        const px = -r * 1.4 + i * r * 0.24;
+        const py = Math.sin(t * 4 + i * 0.55) * r * 0.22;
+        if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
+      }
+      c.stroke();
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(-r * 1.35, Math.sin(t * 4) * r * 0.15, r * 0.55, r * 0.42, -0.3, 0, TAU); c.fill();
+      c.fillStyle = '#ffd75e';
+      c.beginPath(); c.arc(-r * 1.55, -r * 0.08 + Math.sin(t * 4) * r * 0.15, r * 0.08, 0, TAU); c.fill();
+      c.beginPath(); c.arc(-r * 1.42, -r * 0.08 + Math.sin(t * 4) * r * 0.15, r * 0.08, 0, TAU); c.fill();
+      c.fillStyle = '#202830';
+      c.beginPath(); c.ellipse(-r * 1.62, Math.sin(t * 4) * r * 0.12, r * 0.05, r * 0.07, 0, 0, TAU); c.fill();
+      c.fillStyle = dark;
+      c.beginPath(); c.moveTo(-r * 1.72, -r * 0.02); c.lineTo(-r * 1.95, r * 0.08); c.lineTo(-r * 1.68, r * 0.12); c.closePath(); c.fill();
+      break;
+    }
+    case 'tideToad': {
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(0, r * 0.15, r * 1.15, r * 0.85, 0, 0, TAU); c.fill();
+      c.fillStyle = dark;
+      c.beginPath(); c.ellipse(-r * 0.55, -r * 0.35, r * 0.35, r * 0.55, -0.2, 0, TAU); c.fill();
+      c.beginPath(); c.ellipse(r * 0.55, -r * 0.35, r * 0.35, r * 0.55, 0.2, 0, TAU); c.fill();
+      c.fillStyle = '#c8e0a0';
+      c.beginPath(); c.ellipse(0, r * 0.05, r * 0.75, r * 0.55, 0, 0, TAU); c.fill();
+      eye(-r * 0.35, -r * 0.15, r * 0.16);
+      eye(r * 0.35, -r * 0.15, r * 0.16);
+      c.fillStyle = '#ffd75e';
+      c.beginPath(); c.arc(0, r * 0.22, r * 0.08, 0, TAU); c.fill();
+      break;
+    }
+    case 'tideSlug': {
+      c.fillStyle = body;
+      c.beginPath();
+      c.ellipse(0, 0, r * 1.1, r * 0.65, 0, 0, TAU);
+      c.fill();
+      c.fillStyle = 'rgba(255,255,255,.25)';
+      for (let i = 0; i < 4; i++) {
+        c.beginPath(); c.ellipse(-r * 0.5 + i * r * 0.35, -r * 0.15, r * 0.12, r * 0.08, 0, 0, TAU); c.fill();
+      }
+      c.fillStyle = dark;
+      c.strokeStyle = dark; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(r * 0.95, -r * 0.05); c.quadraticCurveTo(r * 1.25, 0, r * 0.95, r * 0.12); c.stroke();
+      eye(-r * 0.25, -r * 0.08, r * 0.14);
+      eye(r * 0.15, -r * 0.08, r * 0.12);
+      break;
+    }
+    case 'tideTanuki': {
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(0, 0, r, r * 0.78, 0, 0, TAU); c.fill();
+      c.fillStyle = dark;
+      c.beginPath(); c.ellipse(0, r * 0.55, r * 0.55, r * 0.35, 0, 0, TAU); c.fill();
+      for (const sx of [-1, 1]) {
+        c.beginPath(); c.ellipse(sx * r * 0.55, -r * 0.55, r * 0.22, r * 0.35, sx * 0.3, 0, TAU); c.fill();
+      }
+      c.fillStyle = '#202830';
+      c.beginPath(); c.ellipse(0, -r * 0.05, r * 0.35, r * 0.28, 0, 0, TAU); c.fill();
+      eye(-r * 0.28, -r * 0.18, r * 0.12);
+      eye(r * 0.18, -r * 0.18, r * 0.11);
+      c.strokeStyle = body; c.lineWidth = 3;
+      c.beginPath(); c.arc(0, r * 0.85, r * 0.45, Math.PI * 0.15, Math.PI * 0.85); c.stroke();
+      break;
+    }
+    case 'tideOx': {
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(0, 0, r, r * 0.75, 0, 0, TAU); c.fill();
+      c.fillStyle = dark;
+      c.beginPath(); c.ellipse(-r * 0.15, -r * 0.72, r * 0.42, r * 0.28, -0.2, 0, TAU); c.fill();
+      c.beginPath(); c.ellipse(r * 0.25, -r * 0.72, r * 0.42, r * 0.28, 0.2, 0, TAU); c.fill();
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * TAU + t * 0.6;
+        c.strokeStyle = '#4a9fff'; c.lineWidth = r * 0.14; c.lineCap = 'round';
+        c.beginPath();
+        c.moveTo(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.45);
+        c.lineTo(Math.cos(a) * r * 1.35, Math.sin(a) * r * 1.05);
+        c.stroke();
+      }
+      eye(-r * 0.32, -r * 0.12, r * 0.13);
+      eye(r * 0.12, -r * 0.12, r * 0.12);
+      break;
+    }
+    case 'tideMonkey': {
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(0, 0, r * 0.85, r * 0.95, 0, 0, TAU); c.fill();
+      c.fillStyle = '#ffe9c9';
+      c.beginPath(); c.ellipse(0, r * 0.05, r * 0.55, r * 0.5, 0, 0, TAU); c.fill();
+      c.fillStyle = dark;
+      c.beginPath(); c.arc(0, -r * 0.72, r * 0.38, Math.PI, 0); c.fill();
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(-r * 0.75, r * 0.05, r * 0.35, r * 0.55, -0.3, 0, TAU); c.fill();
+      c.beginPath(); c.ellipse(r * 0.75, r * 0.05, r * 0.35, r * 0.55, 0.3, 0, TAU); c.fill();
+      c.fillStyle = '#ffd75e';
+      c.beginPath(); c.moveTo(-r * 0.15, -r * 1.05); c.lineTo(0, -r * 1.35); c.lineTo(r * 0.15, -r * 1.05); c.closePath(); c.fill();
+      eye(-r * 0.22, -r * 0.15, r * 0.12);
+      eye(r * 0.12, -r * 0.15, r * 0.11);
+      break;
+    }
+    case 'tideHawk': {
+      const flap = Math.sin(t * 10) * 0.55;
+      c.fillStyle = dark;
+      for (const s of [-1, 1]) {
+        c.save(); c.translate(s * r * 0.15, -r * 0.1); c.rotate(s * (0.65 + flap));
+        c.beginPath(); c.moveTo(0, 0); c.lineTo(s * r * 1.8, -r * 0.55); c.lineTo(s * r * 1.5, r * 0.2); c.closePath(); c.fill();
+        c.restore();
+      }
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(0, 0, r * 0.75, r * 0.55, 0, 0, TAU); c.fill();
+      c.fillStyle = '#ffe9c9';
+      c.beginPath(); c.moveTo(-r * 0.85, -r * 0.05); c.lineTo(-r * 1.15, r * 0.05); c.lineTo(-r * 0.75, r * 0.12); c.closePath(); c.fill();
+      c.fillStyle = '#ffd75e';
+      c.beginPath(); c.moveTo(-r * 0.95, -r * 0.08); c.lineTo(-r * 1.05, -r * 0.22); c.lineTo(-r * 0.85, -r * 0.15); c.closePath(); c.fill();
+      eye(-r * 0.35, -r * 0.08, r * 0.1);
+      break;
+    }
+    case 'tideHound': {
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(0, r * 0.1, r * 0.95, r * 0.65, 0, 0, TAU); c.fill();
+      for (const hx of [-0.55, 0, 0.55]) {
+        c.fillStyle = body;
+        c.beginPath(); c.ellipse(hx * r, -r * 0.45, r * 0.38, r * 0.42, 0, 0, TAU); c.fill();
+        c.fillStyle = dark;
+        c.beginPath(); c.moveTo((hx - 0.12) * r, -r * 0.72); c.lineTo(hx * r, -r * 1.05); c.lineTo((hx + 0.12) * r, -r * 0.72); c.closePath(); c.fill();
+        c.fillStyle = '#ff5050';
+        c.beginPath(); c.arc((hx - 0.08) * r, -r * 0.48, r * 0.06, 0, TAU); c.fill();
+        c.beginPath(); c.arc((hx + 0.05) * r, -r * 0.5, r * 0.055, 0, TAU); c.fill();
+      }
+      c.fillStyle = '#202830';
+      c.beginPath(); c.ellipse(0, r * 0.05, r * 0.25, r * 0.18, 0, 0, TAU); c.fill();
       break;
     }
   }

@@ -133,9 +133,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.67';
+const APP_VERSION = '1.17.68';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 193;
+const SW_CACHE_REV = 194;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -146,7 +146,7 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0 },
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {} };
 
 const MAX_LEVEL = 50;
@@ -4434,6 +4434,16 @@ const SPECIES = {
     chaoswyrm: { name: 'Chaoswyrm', art: 'dragon', size: 32, hp: 225, dmg: 22, speed: 88, type: 'dragon', xp: 42, rarity: 'legendary', c1: '#b06ae0', c2: '#5a2080' },
     prismewyrm: { name: 'Prismewyrm', art: 'dragon', size: 33, hp: 240, dmg: 23, speed: 90, type: 'dragon', xp: 48, rarity: 'legendary', c1: '#7cf5ff', c2: '#ff6b9d' },
     apexwyrm: { name: 'Apexwyrm', art: 'dragon', size: 35, hp: 285, dmg: 25, speed: 95, type: 'dragon', xp: 58, rarity: 'mythic', c1: '#ffe259', c2: '#e04f4f' },
+    /* Tide Battle — alleen via 0.05% kill-roll, nooit in normale golven */
+    tideKyuu: { name: 'Negenstaart Vos', art: 'tideFox', size: 38, hp: 340, dmg: 26, speed: 88, type: 'charge', xp: 120, rarity: 'mythic', c1: '#ff7a20', c2: '#8a2010' },
+    tideManda: { name: 'Paarse Reuzenslang', art: 'tideSnake', size: 36, hp: 320, dmg: 24, speed: 72, type: 'shoot', xp: 115, rarity: 'mythic', c1: '#9b59d4', c2: '#4a2080' },
+    tideGama: { name: 'Bergpad Kolos', art: 'tideToad', size: 40, hp: 380, dmg: 28, speed: 58, type: 'tank', xp: 125, rarity: 'mythic', c1: '#6a8a4a', c2: '#3a5028' },
+    tideKatsu: { name: 'Slak Matriarch', art: 'tideSlug', size: 34, hp: 360, dmg: 22, speed: 48, type: 'tank', xp: 118, rarity: 'mythic', c1: '#d4a8ff', c2: '#7a5090' },
+    tideShuka: { name: 'Zandgeest Tanuki', art: 'tideTanuki', size: 37, hp: 350, dmg: 25, speed: 65, type: 'tank', xp: 122, rarity: 'mythic', c1: '#e8c98a', c2: '#8a6830' },
+    tideGyuu: { name: 'Octo-Ox Ravager', art: 'tideOx', size: 39, hp: 400, dmg: 30, speed: 70, type: 'charge', xp: 130, rarity: 'mythic', c1: '#8a3030', c2: '#402020' },
+    tideEnma: { name: 'Wijze Aap Heer', art: 'tideMonkey', size: 35, hp: 330, dmg: 27, speed: 95, type: 'charge', xp: 120, rarity: 'mythic', c1: '#c97a20', c2: '#6a4010' },
+    tideGaruda: { name: 'Stormarend', art: 'tideHawk', size: 34, hp: 310, dmg: 26, speed: 110, type: 'fly', xp: 118, rarity: 'mythic', c1: '#7cf5ff', c2: '#2a6090' },
+    tideCerber: { name: 'Driekoppige Jachthond', art: 'tideHound', size: 36, hp: 345, dmg: 29, speed: 92, type: 'charge', xp: 124, rarity: 'mythic', c1: '#505868', c2: '#202830' },
 };
 const SPECIES_ORDER = Object.keys(SPECIES).sort((a, b) =>
   (rarityOf(SPECIES[a].rarity).order - rarityOf(SPECIES[b].rarity).order) || SPECIES[a].name.localeCompare(SPECIES[b].name)
@@ -4779,6 +4789,72 @@ function applyGambleToStage(game, g) {
 let pendingAdvLevel = null;
 let lastGambleRoll = null;
 
+/* --- src/data/tide-battle.js --- */
+/* ============================== TIDE BATTLE ============================== */
+/** Zeldzame tide-boss per kill — herkenbare summons, generieke namen (geen IP). */
+const TIDE_BATTLE_CHANCE = 0.0005;
+const TIDE_BOSS_IDS = [
+  'tideKyuu', 'tideManda', 'tideGama', 'tideKatsu',
+  'tideShuka', 'tideGyuu', 'tideEnma', 'tideGaruda', 'tideCerber',
+];
+
+function isTideBossId(id) {
+  return TIDE_BOSS_IDS.includes(id);
+}
+
+function pickTideBossId() {
+  return TIDE_BOSS_IDS[Math.floor(Math.random() * TIDE_BOSS_IDS.length)];
+}
+
+function rollTideBattleChance(game) {
+  if (!game || game.mode !== 'adventure' || game.over) return false;
+  if (game.tideBattleActive) return false;
+  if (!game.player || !game.player.alive) return false;
+  return Math.random() < TIDE_BATTLE_CHANCE;
+}
+
+function tideBossSpawnOpts(game) {
+  const lv = game.level ? game.level.n : 1;
+  return {
+    elite: true,
+    superBoss: true,
+    tideBoss: true,
+    hpMul: (game.level?.hpMul || 1) * (1 + lv * 0.012),
+    dmgMul: game.level?.dmgMul || 1,
+  };
+}
+
+function triggerTideBattleIntro(game, monster) {
+  if (!game || !monster) return;
+  const name = (monster.sp && monster.sp.name) || 'Tide';
+  monster.introT = 2.6;
+  monster.introTier = 'tideBoss';
+  try {
+    AudioSys.sting('superBossIntro');
+    AudioSys.play('boss');
+    game.banner(t('banner.tideBattle', { name }), 2.4, '#4a9fff', 46);
+    AudioSys.sfx('roar');
+  } catch (_) {}
+  const x = monster.x;
+  const y = monster.y - (monster.size || 40) * 0.4;
+  try {
+    game.burst(x, y, '#4a9fff', motionReduced() || fxLite() ? 10 : 26);
+    game.burst(x, y, '#ffd75e', 12);
+    spawnFxRing(game, x, y, '#4a9fff', 24);
+    game.shake(14, 0.45);
+    game.freezeT = Math.max(game.freezeT || 0, 0.18);
+    haptic(30);
+  } catch (_) {}
+}
+
+function tideBattleRewardXp(game) {
+  const n = game.level ? game.level.n : 1;
+  return 140 + n * 12;
+}
+
+function tideBattleRewardCoins() {
+  return 22;
+}
 /* --- src/data/pets.js --- */
 /* ============================== DEX PETS ================================ */
 /** Getemde mini-monsters — unlock via monsterboek-kills (deel 2 pets). */
@@ -5130,6 +5206,8 @@ function seedNlGameStrings() {
     ketsBam: 'KETS-BAM!',
     wallTime: 'TIJD!',
     wallNewWall: 'MUUR GESLOOPT! Nieuwe muur...',
+    tideBattle: 'TIDE BATTLE — {name}!',
+    tideBattleWin: 'TIDE BATTLE GEWONNEN!',
   });
   if (!I18N.nl.result) I18N.nl.result = {};
   Object.assign(I18N.nl.result, {
@@ -5219,6 +5297,8 @@ function seedNlGameStrings() {
     styleUnlockCrystal: 'Nieuwe stijl: Kristallijn!',
     styleUnlock: 'Nieuwe stijl: {name}!',
     summon: '✦ Summon! {name} is nu {rar} — schade ×{dmg}',
+    tideBattle: 'Tide Battle! {name} verschijnt — versla de baas!',
+    tideBattleWin: 'Tide Battle gewonnen! +{xp} XP · +{coins} pet coins',
     shurikenWait: 'Werpwapen even wachten…',
     shurikenSpam: 'Niet spammen — max 3 snel achter elkaar',
     missionDone: 'Missie klaar: {text}',
@@ -5416,6 +5496,7 @@ function seedNlGameStrings() {
     nextWave: 'Volgende golf', eggPet: 'Ei · {name}', petActive: 'Pet · {name}',
     petDefault: 'Metgezel', cosmetic: 'Cosmetisch',
     gambleBoss: 'Super-baas mogelijk · golf {n}', starZone: ' · 3★ zone',
+    tideBattle: '⚔ Tide Battle — versla {name}!', tideBattleShort: '⚔ Tide Battle',
     star2: ' · 2★ bij >{pct}% HP', star3: ' · 3★ bij >{pct}% HP', hpPct: '{pct}% HP{hint}',
     enemiesLeft1: 'Nog 1 vijand in deze golf', enemiesLeftN: 'Nog {n} vijanden in deze golf',
     toBoss: 'Op weg naar de baas — {sec}s', walkNext: 'Verder lopen… volgende golf {sec}s',
@@ -5628,6 +5709,7 @@ const CATALOG_EN = {
     newDex: 'New {rar}: {name}! +{hp} max HP', pet: 'PET! {name}',
     matsStart: 'MATS · COIN BONUS', wallStart: 'SMASH THE WALL!', bonusDone: 'BONUS DONE!',
     kets: 'KETS!', ketsBam: 'KETS-BAM!', wallTime: 'TIME!', wallNewWall: 'WALL SMASHED! New wall...',
+    tideBattle: 'TIDE BATTLE — {name}!', tideBattleWin: 'TIDE BATTLE WON!',
   },
   help: { tips: [
     'Power-ups: defeated monsters sometimes drop orbs — HP, rage, chakra, shield.',
@@ -5671,6 +5753,8 @@ const CATALOG_EN = {
     styleUnlockCrystal: 'New style: Crystalline!',
     styleUnlock: 'New style: {name}!',
     summon: '✦ Summon! {name} is now {rar} — damage ×{dmg}',
+    tideBattle: 'Tide Battle! {name} appears — defeat the boss!',
+    tideBattleWin: 'Tide Battle won! +{xp} XP · +{coins} pet coins',
     shurikenWait: 'Throw weapon on cooldown…',
     shurikenSpam: "Don't spam — max 3 rapid throws",
     missionDone: 'Mission complete: {text}',
@@ -5880,6 +5964,7 @@ const CATALOG_EN = {
     nextWave: 'Next wave', eggPet: 'Egg · {name}', petActive: 'Pet · {name}',
     petDefault: 'Companion', cosmetic: 'Cosmetic',
     gambleBoss: 'Super-boss possible · wave {n}', starZone: ' · 3★ zone',
+    tideBattle: '⚔ Tide Battle — defeat {name}!', tideBattleShort: '⚔ Tide Battle',
     star2: ' · 2★ at >{pct}% HP', star3: ' · 3★ at >{pct}% HP', hpPct: '{pct}% HP{hint}',
     enemiesLeft1: '1 enemy left this wave', enemiesLeftN: '{n} enemies left this wave',
     toBoss: 'Heading to boss — {sec}s', walkNext: 'Walking on… next wave {sec}s',
@@ -9731,6 +9816,7 @@ class Monster {
     this.enraged = false;
     this.introT = 0;
     this.introTier = null;
+    this.tideBoss = !!opts.tideBoss;
   }
   get alive() { return this.hp > 0; }
 
@@ -9885,7 +9971,7 @@ class Monster {
       const p = clamp(this.introT / 1.6, 0, 1);
       const pulse = 1 + Math.sin(this.t * 14) * 0.08;
       c.globalAlpha = 0.25 + p * 0.45;
-      c.strokeStyle = this.introTier === 'superBoss' ? '#ffd75e' : (this.introTier === 'boss' ? '#ff6b6b' : '#c47aff');
+      c.strokeStyle = this.introTier === 'tideBoss' ? '#4a9fff' : (this.introTier === 'superBoss' ? '#ffd75e' : (this.introTier === 'boss' ? '#ff6b6b' : '#c47aff'));
       c.lineWidth = 4 + p * 4;
       c.beginPath();
       c.ellipse(0, 0, this.size * (1.7 + (1 - p) * 0.9) * pulse, this.size * (1.35 + (1 - p) * 0.7) * pulse, 0, 0, TAU);
@@ -9901,7 +9987,7 @@ class Monster {
     }
     if (rar.order >= 2 && this.alive) {
       c.save();
-      c.strokeStyle = this.superBoss ? '#ffd75e' : rar.glow; c.lineWidth = 3 + rar.order * 0.4;
+      c.strokeStyle = this.tideBoss ? '#4a9fff' : (this.superBoss ? '#ffd75e' : rar.glow); c.lineWidth = 3 + rar.order * 0.4;
       c.beginPath(); c.ellipse(0, 0, this.size * 1.55, this.size * 1.2, 0, 0, TAU); c.stroke();
       if (rar.order >= 4) {
         c.globalAlpha = 0.25 + Math.sin(this.t * 6) * 0.1;
@@ -10076,6 +10162,169 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
       c.fillStyle = '#ffe9c9';
       c.beginPath(); c.moveTo(-r * 0.75, -r * 1.05); c.lineTo(-r * 0.65, -r * 1.5); c.lineTo(-r * 0.5, -r * 1.0); c.closePath(); c.fill();
       eye(-r * 1.0, -r * 0.85, r * 0.13);
+      break;
+    }
+    case 'tideFox': {
+      c.fillStyle = body;
+      for (let i = 0; i < 9; i++) {
+        const a = (i / 9) * TAU - Math.PI / 2;
+        const wag = Math.sin(t * 5 + i * 0.7) * 0.12;
+        c.save();
+        c.rotate(a + wag);
+        c.beginPath();
+        c.moveTo(r * 0.2, 0);
+        c.quadraticCurveTo(r * 1.5, -r * 0.15, r * 2.1, r * 0.08);
+        c.lineTo(r * 1.85, r * 0.22);
+        c.quadraticCurveTo(r * 1.2, r * 0.05, r * 0.2, 0);
+        c.fill();
+        c.restore();
+      }
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+      c.fillStyle = dark;
+      c.beginPath(); c.moveTo(-r * 0.55, -r * 0.55); c.lineTo(-r * 0.8, -r * 1.2); c.lineTo(-r * 0.1, -r * 0.65); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(r * 0.15, -r * 0.58); c.lineTo(r * 0.05, -r * 1.25); c.lineTo(r * 0.62, -r * 0.62); c.closePath(); c.fill();
+      c.fillStyle = '#ff2020';
+      c.beginPath(); c.arc(-r * 0.42, -r * 0.18, r * 0.11, 0, TAU); c.fill();
+      c.beginPath(); c.arc(r * 0.08, -r * 0.2, r * 0.1, 0, TAU); c.fill();
+      c.fillStyle = '#fff';
+      c.beginPath(); c.arc(-r * 0.45, -r * 0.2, r * 0.04, 0, TAU); c.fill();
+      c.beginPath(); c.arc(r * 0.05, -r * 0.22, r * 0.035, 0, TAU); c.fill();
+      c.fillStyle = '#1a1020';
+      c.beginPath(); c.moveTo(-r * 0.08, r * 0.08); c.lineTo(-r * 0.02, r * 0.35); c.lineTo(r * 0.12, r * 0.06); c.closePath(); c.fill();
+      break;
+    }
+    case 'tideSnake': {
+      c.strokeStyle = body; c.lineWidth = r * 0.42; c.lineCap = 'round';
+      c.beginPath();
+      for (let i = 0; i <= 12; i++) {
+        const px = -r * 1.4 + i * r * 0.24;
+        const py = Math.sin(t * 4 + i * 0.55) * r * 0.22;
+        if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
+      }
+      c.stroke();
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(-r * 1.35, Math.sin(t * 4) * r * 0.15, r * 0.55, r * 0.42, -0.3, 0, TAU); c.fill();
+      c.fillStyle = '#ffd75e';
+      c.beginPath(); c.arc(-r * 1.55, -r * 0.08 + Math.sin(t * 4) * r * 0.15, r * 0.08, 0, TAU); c.fill();
+      c.beginPath(); c.arc(-r * 1.42, -r * 0.08 + Math.sin(t * 4) * r * 0.15, r * 0.08, 0, TAU); c.fill();
+      c.fillStyle = '#202830';
+      c.beginPath(); c.ellipse(-r * 1.62, Math.sin(t * 4) * r * 0.12, r * 0.05, r * 0.07, 0, 0, TAU); c.fill();
+      c.fillStyle = dark;
+      c.beginPath(); c.moveTo(-r * 1.72, -r * 0.02); c.lineTo(-r * 1.95, r * 0.08); c.lineTo(-r * 1.68, r * 0.12); c.closePath(); c.fill();
+      break;
+    }
+    case 'tideToad': {
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(0, r * 0.15, r * 1.15, r * 0.85, 0, 0, TAU); c.fill();
+      c.fillStyle = dark;
+      c.beginPath(); c.ellipse(-r * 0.55, -r * 0.35, r * 0.35, r * 0.55, -0.2, 0, TAU); c.fill();
+      c.beginPath(); c.ellipse(r * 0.55, -r * 0.35, r * 0.35, r * 0.55, 0.2, 0, TAU); c.fill();
+      c.fillStyle = '#c8e0a0';
+      c.beginPath(); c.ellipse(0, r * 0.05, r * 0.75, r * 0.55, 0, 0, TAU); c.fill();
+      eye(-r * 0.35, -r * 0.15, r * 0.16);
+      eye(r * 0.35, -r * 0.15, r * 0.16);
+      c.fillStyle = '#ffd75e';
+      c.beginPath(); c.arc(0, r * 0.22, r * 0.08, 0, TAU); c.fill();
+      break;
+    }
+    case 'tideSlug': {
+      c.fillStyle = body;
+      c.beginPath();
+      c.ellipse(0, 0, r * 1.1, r * 0.65, 0, 0, TAU);
+      c.fill();
+      c.fillStyle = 'rgba(255,255,255,.25)';
+      for (let i = 0; i < 4; i++) {
+        c.beginPath(); c.ellipse(-r * 0.5 + i * r * 0.35, -r * 0.15, r * 0.12, r * 0.08, 0, 0, TAU); c.fill();
+      }
+      c.fillStyle = dark;
+      c.strokeStyle = dark; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(r * 0.95, -r * 0.05); c.quadraticCurveTo(r * 1.25, 0, r * 0.95, r * 0.12); c.stroke();
+      eye(-r * 0.25, -r * 0.08, r * 0.14);
+      eye(r * 0.15, -r * 0.08, r * 0.12);
+      break;
+    }
+    case 'tideTanuki': {
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(0, 0, r, r * 0.78, 0, 0, TAU); c.fill();
+      c.fillStyle = dark;
+      c.beginPath(); c.ellipse(0, r * 0.55, r * 0.55, r * 0.35, 0, 0, TAU); c.fill();
+      for (const sx of [-1, 1]) {
+        c.beginPath(); c.ellipse(sx * r * 0.55, -r * 0.55, r * 0.22, r * 0.35, sx * 0.3, 0, TAU); c.fill();
+      }
+      c.fillStyle = '#202830';
+      c.beginPath(); c.ellipse(0, -r * 0.05, r * 0.35, r * 0.28, 0, 0, TAU); c.fill();
+      eye(-r * 0.28, -r * 0.18, r * 0.12);
+      eye(r * 0.18, -r * 0.18, r * 0.11);
+      c.strokeStyle = body; c.lineWidth = 3;
+      c.beginPath(); c.arc(0, r * 0.85, r * 0.45, Math.PI * 0.15, Math.PI * 0.85); c.stroke();
+      break;
+    }
+    case 'tideOx': {
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(0, 0, r, r * 0.75, 0, 0, TAU); c.fill();
+      c.fillStyle = dark;
+      c.beginPath(); c.ellipse(-r * 0.15, -r * 0.72, r * 0.42, r * 0.28, -0.2, 0, TAU); c.fill();
+      c.beginPath(); c.ellipse(r * 0.25, -r * 0.72, r * 0.42, r * 0.28, 0.2, 0, TAU); c.fill();
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * TAU + t * 0.6;
+        c.strokeStyle = '#4a9fff'; c.lineWidth = r * 0.14; c.lineCap = 'round';
+        c.beginPath();
+        c.moveTo(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.45);
+        c.lineTo(Math.cos(a) * r * 1.35, Math.sin(a) * r * 1.05);
+        c.stroke();
+      }
+      eye(-r * 0.32, -r * 0.12, r * 0.13);
+      eye(r * 0.12, -r * 0.12, r * 0.12);
+      break;
+    }
+    case 'tideMonkey': {
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(0, 0, r * 0.85, r * 0.95, 0, 0, TAU); c.fill();
+      c.fillStyle = '#ffe9c9';
+      c.beginPath(); c.ellipse(0, r * 0.05, r * 0.55, r * 0.5, 0, 0, TAU); c.fill();
+      c.fillStyle = dark;
+      c.beginPath(); c.arc(0, -r * 0.72, r * 0.38, Math.PI, 0); c.fill();
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(-r * 0.75, r * 0.05, r * 0.35, r * 0.55, -0.3, 0, TAU); c.fill();
+      c.beginPath(); c.ellipse(r * 0.75, r * 0.05, r * 0.35, r * 0.55, 0.3, 0, TAU); c.fill();
+      c.fillStyle = '#ffd75e';
+      c.beginPath(); c.moveTo(-r * 0.15, -r * 1.05); c.lineTo(0, -r * 1.35); c.lineTo(r * 0.15, -r * 1.05); c.closePath(); c.fill();
+      eye(-r * 0.22, -r * 0.15, r * 0.12);
+      eye(r * 0.12, -r * 0.15, r * 0.11);
+      break;
+    }
+    case 'tideHawk': {
+      const flap = Math.sin(t * 10) * 0.55;
+      c.fillStyle = dark;
+      for (const s of [-1, 1]) {
+        c.save(); c.translate(s * r * 0.15, -r * 0.1); c.rotate(s * (0.65 + flap));
+        c.beginPath(); c.moveTo(0, 0); c.lineTo(s * r * 1.8, -r * 0.55); c.lineTo(s * r * 1.5, r * 0.2); c.closePath(); c.fill();
+        c.restore();
+      }
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(0, 0, r * 0.75, r * 0.55, 0, 0, TAU); c.fill();
+      c.fillStyle = '#ffe9c9';
+      c.beginPath(); c.moveTo(-r * 0.85, -r * 0.05); c.lineTo(-r * 1.15, r * 0.05); c.lineTo(-r * 0.75, r * 0.12); c.closePath(); c.fill();
+      c.fillStyle = '#ffd75e';
+      c.beginPath(); c.moveTo(-r * 0.95, -r * 0.08); c.lineTo(-r * 1.05, -r * 0.22); c.lineTo(-r * 0.85, -r * 0.15); c.closePath(); c.fill();
+      eye(-r * 0.35, -r * 0.08, r * 0.1);
+      break;
+    }
+    case 'tideHound': {
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(0, r * 0.1, r * 0.95, r * 0.65, 0, 0, TAU); c.fill();
+      for (const hx of [-0.55, 0, 0.55]) {
+        c.fillStyle = body;
+        c.beginPath(); c.ellipse(hx * r, -r * 0.45, r * 0.38, r * 0.42, 0, 0, TAU); c.fill();
+        c.fillStyle = dark;
+        c.beginPath(); c.moveTo((hx - 0.12) * r, -r * 0.72); c.lineTo(hx * r, -r * 1.05); c.lineTo((hx + 0.12) * r, -r * 0.72); c.closePath(); c.fill();
+        c.fillStyle = '#ff5050';
+        c.beginPath(); c.arc((hx - 0.08) * r, -r * 0.48, r * 0.06, 0, TAU); c.fill();
+        c.beginPath(); c.arc((hx + 0.05) * r, -r * 0.5, r * 0.055, 0, TAU); c.fill();
+      }
+      c.fillStyle = '#202830';
+      c.beginPath(); c.ellipse(0, r * 0.05, r * 0.25, r * 0.18, 0, 0, TAU); c.fill();
       break;
     }
   }
@@ -11024,6 +11273,9 @@ class Game {
     this.ketsbamChargeT = 0;
     this.ketsbamChargeDur = 0;
     this.ketsbamChargePulse = 0;
+    this.tideBattleActive = false;
+    this.tideBattleBossId = null;
+    this.tideBattleMon = null;
     applyGambleToStage(this, gamble);
     this.banner(t('banner.levelStart', { n }), 1.4, '#ffd75e', 54);
     if (masterBuffActive(n)) {
@@ -11328,6 +11580,9 @@ class Game {
 
   finishAdventure(win) {
     if (this.over) return;
+    this.tideBattleActive = false;
+    this.tideBattleBossId = null;
+    this.tideBattleMon = null;
     this.deactivateMasterSword(true);
     this.over = true;
     this.inputLocked = true;
@@ -11487,6 +11742,52 @@ class Game {
       }
     }
     this.maybeSummon(m);
+    if (m.tideBoss && this.tideBattleActive) {
+      this.finishTideBattle(true, m);
+      return;
+    }
+    this.maybeTideBattle(m);
+  }
+
+  maybeTideBattle(m) {
+    if (m && m.tideBoss) return;
+    if (!rollTideBattleChance(this)) return;
+    this.startTideBattle(pickTideBossId());
+  }
+
+  startTideBattle(spId) {
+    if (this.mode !== 'adventure' || this.over || !SPECIES[spId]) return;
+    if (this.tideBattleActive) return;
+    this.tideBattleActive = true;
+    this.tideBattleBossId = spId;
+    const spawnX = clamp(this.player ? this.player.x + rand(140, 220) : W * 0.72, 80, this.maxX || W - 80);
+    const mon = new Monster(spId, spawnX, this, tideBossSpawnOpts(this));
+    this.monsters.push(mon);
+    this.tideBattleMon = mon;
+    triggerTideBattleIntro(this, mon);
+    UI.toast(t('toast.tideBattle', { name: mon.sp.name }), 4000);
+    this.floater(W / 2, Math.max(100, (this.advHudBottom || 120) + 24), t('hud.tideBattleShort'), '#4a9fff', 18);
+  }
+
+  finishTideBattle(won, m) {
+    if (!this.tideBattleActive) return;
+    const sp = m && m.sp ? m.sp : (SPECIES[this.tideBattleBossId] || null);
+    const name = sp ? sp.name : 'Tide';
+    this.tideBattleActive = false;
+    this.tideBattleBossId = null;
+    this.tideBattleMon = null;
+    if (!won) return;
+    const xp = tideBattleRewardXp(this);
+    const coins = tideBattleRewardCoins();
+    this.grantXP(xp);
+    save.petCoins = (save.petCoins || 0) + coins;
+    save.stats.tideBattleWins = (save.stats.tideBattleWins || 0) + 1;
+    persist();
+    this.banner(t('banner.tideBattleWin'), 2.2, '#4a9fff', 44);
+    UI.toast(t('toast.tideBattleWin', { xp, coins }), 4200);
+    this.floater(W / 2, 140, `+${xp} XP · +${coins} 🪙`, '#4a9fff', 17);
+    AudioSys.sfx('win');
+    checkAchievements();
   }
 
   /** Hele kleine kans: Summon ascendeert een lager wapen naar Episch/Legendarisch. */
@@ -13646,8 +13947,16 @@ class Game {
 
       hy = this.drawStageProgress(c, hy + 4) + 10;
 
-      const bossAlive = this.monsters.find(m => m.elite && m.alive);
-      if (!bossAlive) {
+      const bossAlive = this.monsters.find(m => m.alive && (m.tideBoss || m.elite));
+      if (this.tideBattleActive && this.tideBattleBossId) {
+        const tideName = (SPECIES[this.tideBattleBossId] && SPECIES[this.tideBattleBossId].name) || 'Tide';
+        c.font = '700 11px sans-serif';
+        c.fillStyle = '#4a9fff';
+        const txt = t('hud.tideBattle', { name: tideName });
+        c.fillText(txt, W / 2 + 7, hy);
+        drawMiniDie(c, W / 2 - c.measureText(txt).width / 2 - 3, hy - 3.5, 10, '#4a9fff');
+        hy += 14;
+      } else if (!bossAlive) {
         let ctxTxt = null;
         let ctxCol = null;
         let ctxDie = false;

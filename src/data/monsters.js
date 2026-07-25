@@ -116,6 +116,16 @@ const SPECIES = {
     chaoswyrm: { name: 'Chaoswyrm', art: 'dragon', size: 32, hp: 225, dmg: 22, speed: 88, type: 'dragon', xp: 42, rarity: 'legendary', c1: '#b06ae0', c2: '#5a2080' },
     prismewyrm: { name: 'Prismewyrm', art: 'dragon', size: 33, hp: 240, dmg: 23, speed: 90, type: 'dragon', xp: 48, rarity: 'legendary', c1: '#7cf5ff', c2: '#ff6b9d' },
     apexwyrm: { name: 'Apexwyrm', art: 'dragon', size: 35, hp: 285, dmg: 25, speed: 95, type: 'dragon', xp: 58, rarity: 'mythic', c1: '#ffe259', c2: '#e04f4f' },
+    /* Tide Battle — alleen via 0.05% kill-roll, nooit in normale golven */
+    tideKyuu: { name: 'Negenstaart Vos', art: 'tideFox', size: 38, hp: 340, dmg: 26, speed: 88, type: 'charge', xp: 120, rarity: 'mythic', c1: '#ff7a20', c2: '#8a2010' },
+    tideManda: { name: 'Paarse Reuzenslang', art: 'tideSnake', size: 36, hp: 320, dmg: 24, speed: 72, type: 'shoot', xp: 115, rarity: 'mythic', c1: '#9b59d4', c2: '#4a2080' },
+    tideGama: { name: 'Bergpad Kolos', art: 'tideToad', size: 40, hp: 380, dmg: 28, speed: 58, type: 'tank', xp: 125, rarity: 'mythic', c1: '#6a8a4a', c2: '#3a5028' },
+    tideKatsu: { name: 'Slak Matriarch', art: 'tideSlug', size: 34, hp: 360, dmg: 22, speed: 48, type: 'tank', xp: 118, rarity: 'mythic', c1: '#d4a8ff', c2: '#7a5090' },
+    tideShuka: { name: 'Zandgeest Tanuki', art: 'tideTanuki', size: 37, hp: 350, dmg: 25, speed: 65, type: 'tank', xp: 122, rarity: 'mythic', c1: '#e8c98a', c2: '#8a6830' },
+    tideGyuu: { name: 'Octo-Ox Ravager', art: 'tideOx', size: 39, hp: 400, dmg: 30, speed: 70, type: 'charge', xp: 130, rarity: 'mythic', c1: '#8a3030', c2: '#402020' },
+    tideEnma: { name: 'Wijze Aap Heer', art: 'tideMonkey', size: 35, hp: 330, dmg: 27, speed: 95, type: 'charge', xp: 120, rarity: 'mythic', c1: '#c97a20', c2: '#6a4010' },
+    tideGaruda: { name: 'Stormarend', art: 'tideHawk', size: 34, hp: 310, dmg: 26, speed: 110, type: 'fly', xp: 118, rarity: 'mythic', c1: '#7cf5ff', c2: '#2a6090' },
+    tideCerber: { name: 'Driekoppige Jachthond', art: 'tideHound', size: 36, hp: 345, dmg: 29, speed: 92, type: 'charge', xp: 124, rarity: 'mythic', c1: '#505868', c2: '#202830' },
 };
 const SPECIES_ORDER = Object.keys(SPECIES).sort((a, b) =>
   (rarityOf(SPECIES[a].rarity).order - rarityOf(SPECIES[b].rarity).order) || SPECIES[a].name.localeCompare(SPECIES[b].name)
