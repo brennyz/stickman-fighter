@@ -154,6 +154,7 @@
 
 <div id="charSelectScreen" class="screen char-select-arena">
   <div class="char-arena-bg" aria-hidden="true"></div>
+  <div class="char-arena-body">
   <div class="char-arena-inner">
   <button class="btn back-btn" data-back id="charSelectBack">&#8592; Terug</button>
   <div class="char-arena-title-block">
@@ -181,7 +182,7 @@
   <div id="charSagaBlurb" class="subtitle" style="margin-top:0"></div>
   <div class="char-icon-row char-arena-featured" id="charIconRow"></div>
   <div class="step-card char-arena-preview" id="charStatPreview"></div>
-  <div class="char-grid-scroll char-arena-grid-wrap" id="charGridScroll" data-scroll-reset>
+  <div class="char-grid-scroll char-arena-grid-wrap" id="charGridScroll" data-scroll-reset data-char-scroll>
     <div class="char-grid" id="charGrid"></div>
   </div>
   <button type="button" class="btn mode-btn b-gray big-touch" id="charPickBackP1" style="display:none;width:min(86vw,480px)">&#8592; Andere P1 kiezen</button>
@@ -191,12 +192,16 @@
     <button type="button" class="btn tog big-touch" id="btnCharRandomFair" style="flex:1 1 200px;margin:0"><span class="tog-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h16"/><path d="M8 10l4-6 4 6"/><path d="M12 4v16"/></svg></span>Fair duo (ΔTOT)</button>
     <button type="button" class="btn tog big-touch" id="btnCharSwap" style="flex:1 1 160px;margin:0">&#8644; Wissel P1/P2</button>
   </div>
-  <button type="button" class="btn char-fight-btn" id="btnCharFight">VECHT! (best-of-3)</button>
   <div class="step-card char-arena-tip" id="charIpadTipCard">
     <b>iPad:</b> speler 1 gebruikt de <b>linker helft</b> van het scherm (joystick + knoppen),
     speler 2 de <b>rechter helft</b>. Draai je iPad liggend voor het meeste ruimte.
   </div>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>Terug naar menu</button></div>
+  </div>
+  </div>
+  <div class="char-arena-footer">
+    <div id="charFightSummary" class="char-fight-summary" aria-live="polite">Kies Speler 1 en 2</div>
+    <button type="button" class="btn char-fight-btn big-touch" id="btnCharFight">VECHT! (best-of-3)</button>
   </div>
 </div>
 
@@ -455,7 +460,7 @@
 </script>
 
 <script src="tunnel-check.js?v=204"></script>
-<script src="game.js?v=188"></script>
+<script src="game.js?v=200"></script>
 
 
 

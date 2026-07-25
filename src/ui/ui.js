@@ -17,6 +17,43 @@ function pickVsRosterId(id) {
   }
 }
 
+function bindCharPickSurface(root, selector, onPick) {
+  if (!root || root.dataset.sfPickBound) return;
+  root.dataset.sfPickBound = '1';
+  let active = null;
+  const scrollEl = () => root.closest('[data-char-scroll]') || root.closest('.char-grid-scroll') || root.closest('.char-icon-strip') || root;
+  root.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const card = e.target.closest(selector);
+    if (!card) return;
+    const sc = scrollEl();
+    active = {
+      id: e.pointerId,
+      card,
+      x: e.clientX,
+      y: e.clientY,
+      scrollTop: sc ? sc.scrollTop : 0,
+      scrollLeft: sc ? sc.scrollLeft : 0,
+    };
+  }, { passive: true });
+  const finish = (e) => {
+    if (!active || active.id !== e.pointerId) return;
+    const slop = IS_TOUCH ? 18 : 10;
+    const moved = Math.hypot(e.clientX - active.x, e.clientY - active.y) > slop;
+    const sc = scrollEl();
+    const scrolled = sc && (
+      Math.abs(sc.scrollTop - active.scrollTop) > 3 ||
+      Math.abs(sc.scrollLeft - active.scrollLeft) > 3
+    );
+    const card = active.card;
+    active = null;
+    if (moved || scrolled || !card || card.classList.contains('locked')) return;
+    onPick(card);
+  };
+  root.addEventListener('pointerup', finish, { passive: true });
+  root.addEventListener('pointercancel', () => { active = null; }, { passive: true });
+}
+
 function initCharSelectChrome() {
   if (window.__sfCharChrome) return;
   window.__sfCharChrome = true;
@@ -27,17 +64,7 @@ function initCharSelectChrome() {
     pickVsRosterId(card.dataset.id);
   };
   if (grid) {
-    let lastCharPick = 0;
-    grid.addEventListener('click', (e) => { runPick(e.target.closest('.char-card')); });
-    grid.addEventListener('touchend', (e) => {
-      const card = touchEndedOnSelector(e, '.char-card');
-      if (!card || card.classList.contains('locked')) return;
-      const now = Date.now();
-      if (now - lastCharPick < 320) return;
-      lastCharPick = now;
-      if (e.cancelable) e.preventDefault();
-      runPick(card);
-    }, { passive: false });
+    bindCharPickSurface(grid, '.char-card', runPick);
     grid.addEventListener('pointerover', (e) => {
       const card = e.target.closest('.char-card');
       if (!card || !card.dataset.id) return;
@@ -100,21 +127,9 @@ function initCharSelectChrome() {
   const iconRow = document.getElementById('charIconRow');
   if (iconRow && !iconRow.dataset.sfIconBound) {
     iconRow.dataset.sfIconBound = '1';
-    let lastIconPick = 0;
-    iconRow.addEventListener('click', (e) => {
-      const chip = e.target.closest('.char-icon-chip:not(.locked)');
-      if (!chip || !chip.dataset.id) return;
-      pickVsRosterId(chip.dataset.id);
+    bindCharPickSurface(iconRow, '.char-icon-chip:not(.locked)', (chip) => {
+      if (chip.dataset.id) pickVsRosterId(chip.dataset.id);
     });
-    iconRow.addEventListener('touchend', (e) => {
-      const chip = touchEndedOnSelector(e, '.char-icon-chip');
-      if (!chip || chip.classList.contains('locked') || !chip.dataset.id) return;
-      const now = Date.now();
-      if (now - lastIconPick < 320) return;
-      lastIconPick = now;
-      if (e.cancelable) e.preventDefault();
-      pickVsRosterId(chip.dataset.id);
-    }, { passive: false });
   }
   const clashBtn = document.getElementById('btnCharSagaClash');
   bindPress(clashBtn, () => {
@@ -495,6 +510,11 @@ const UI = {
       }
     }
     const sagaMeta = vsSagaMeta(filter);
+    const screen = document.getElementById('charSelectScreen');
+    if (screen) {
+      screen.classList.toggle('pick-step-1', this.charPickStep === 1);
+      screen.classList.toggle('pick-step-2', this.charPickStep === 2);
+    }
     const stepEl = document.getElementById('charPickStep');
     const stepBadge = document.getElementById('charPickStepBadge');
     if (stepEl) {
@@ -529,12 +549,14 @@ const UI = {
     const e1 = vsRosterEntry(vsSelect.p1);
     const e2 = vsRosterEntry(vsSelect.p2);
     if (p1Lbl) {
-      p1Lbl.textContent = 'P1: ' + e1.name;
+      p1Lbl.textContent = (this.charPickStep === 1 ? '▶ ' : '') + 'P1: ' + e1.name;
       p1Lbl.classList.toggle('active', this.charPickStep === 1);
+      p1Lbl.setAttribute('aria-pressed', this.charPickStep === 1 ? 'true' : 'false');
     }
     if (p2Lbl) {
-      p2Lbl.textContent = 'P2: ' + e2.name;
+      p2Lbl.textContent = (this.charPickStep === 2 ? '▶ ' : '') + 'P2: ' + e2.name;
       p2Lbl.classList.toggle('active', this.charPickStep === 2);
+      p2Lbl.setAttribute('aria-pressed', this.charPickStep === 2 ? 'true' : 'false');
     }
     const statEl = document.getElementById('charStatPreview');
     if (statEl) updateCharStatPreview();
@@ -586,6 +608,18 @@ const UI = {
       flair.className = 'char-flair';
       flair.textContent = ok ? rosterFlair(r) : vsUnlockHint(r);
       el.appendChild(flair);
+      if (sel1 || sel2) {
+        const pickBadge = document.createElement('div');
+        pickBadge.className = 'char-pick-badge' + (sel1 && sel2 ? ' both' : sel1 ? ' p1' : ' p2');
+        pickBadge.textContent = sel1 && sel2 ? 'P1+P2' : (sel1 ? 'P1' : 'P2');
+        el.appendChild(pickBadge);
+      }
+      if (ok && focus) {
+        const nowBadge = document.createElement('div');
+        nowBadge.className = 'char-pick-now';
+        nowBadge.textContent = this.charPickStep === 1 ? t('ui.charPickNow1') : t('ui.charPickNow2');
+        el.appendChild(nowBadge);
+      }
       if (ok) {
         const mini = document.createElement('div');
         mini.className = 'char-mini-stat';
@@ -603,7 +637,23 @@ const UI = {
       if (pick) pick.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     });
     const fightBtn = document.getElementById('btnCharFight');
-    if (fightBtn) fightBtn.disabled = !(vsSelect.p1 && vsSelect.p2);
+    const fightSummary = document.getElementById('charFightSummary');
+    const ready = !!(vsSelect.p1 && vsSelect.p2);
+    if (fightSummary) {
+      if (ready) {
+        fightSummary.textContent = t('ui.charFightSummary', { p1: e1.name, p2: e2.name });
+      } else if (this.charPickStep === 1) {
+        fightSummary.textContent = t('ui.charFightNeedP1');
+      } else {
+        fightSummary.textContent = t('ui.charFightNeedP2', { p1: e1.name });
+      }
+    }
+    if (fightBtn) {
+      fightBtn.disabled = !ready;
+      fightBtn.textContent = ready
+        ? t('ui.charFightReady', { p1: e1.name, p2: e2.name })
+        : t('ui.charFight');
+    }
     const backBtn = document.getElementById('charSelectBack');
     if (backBtn) {
       backBtn.textContent = this.charPickStep === 2 ? t('ui.charBackP1') : t('ui.charBackMenu');
@@ -709,6 +759,7 @@ const UI = {
     row.appendChild(hint);
     const strip = document.createElement('div');
     strip.className = 'char-icon-strip';
+    strip.setAttribute('data-char-scroll', '');
     for (const id of VS_FEATURED_IDS) {
       const r = vsRosterEntry(id);
       const ok = vsUnlocked(r);
