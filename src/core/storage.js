@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.30';
+const APP_VERSION = '1.18.31';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 240;
+const SW_CACHE_REV = 241;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -920,7 +920,9 @@ function sanitizeSave(s) {
   if (itemSnap && typeof restoreLostItemUpgrades === 'function') restoreLostItemUpgrades(itemSnap, out);
 
   out.petCoins = clamp(Math.floor(Number(out.petCoins) || 0), 0, 999999);
-  if (out.lang != null && !SUPPORTED_LANGS.includes(out.lang)) out.lang = null;
+  if (out.lang != null && typeof SUPPORTED_LANGS !== 'undefined' && !SUPPORTED_LANGS.includes(out.lang)) {
+    out.lang = null;
+  }
 
   out.stats = Object.assign({}, DEFAULT_SAVE.stats, out.stats || {});
   const cleanStats = {};
@@ -931,7 +933,9 @@ function sanitizeSave(s) {
 
   const cleanAch = {};
   for (const [k, v] of Object.entries(out.achievements || {})) {
-    if (ACHIEVEMENTS.some(a => a.id === k) && typeof v === 'string') cleanAch[k] = v.slice(0, 32);
+    if (typeof ACHIEVEMENTS !== 'undefined' && ACHIEVEMENTS.some(a => a.id === k) && typeof v === 'string') {
+      cleanAch[k] = v.slice(0, 32);
+    }
   }
   out.achievements = cleanAch;
 

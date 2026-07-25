@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.30';
+const APP_VERSION = '1.18.31';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 240;
+const SW_CACHE_REV = 241;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -1158,7 +1158,9 @@ function sanitizeSave(s) {
   if (itemSnap && typeof restoreLostItemUpgrades === 'function') restoreLostItemUpgrades(itemSnap, out);
 
   out.petCoins = clamp(Math.floor(Number(out.petCoins) || 0), 0, 999999);
-  if (out.lang != null && !SUPPORTED_LANGS.includes(out.lang)) out.lang = null;
+  if (out.lang != null && typeof SUPPORTED_LANGS !== 'undefined' && !SUPPORTED_LANGS.includes(out.lang)) {
+    out.lang = null;
+  }
 
   out.stats = Object.assign({}, DEFAULT_SAVE.stats, out.stats || {});
   const cleanStats = {};
@@ -1169,7 +1171,9 @@ function sanitizeSave(s) {
 
   const cleanAch = {};
   for (const [k, v] of Object.entries(out.achievements || {})) {
-    if (ACHIEVEMENTS.some(a => a.id === k) && typeof v === 'string') cleanAch[k] = v.slice(0, 32);
+    if (typeof ACHIEVEMENTS !== 'undefined' && ACHIEVEMENTS.some(a => a.id === k) && typeof v === 'string') {
+      cleanAch[k] = v.slice(0, 32);
+    }
   }
   out.achievements = cleanAch;
 
@@ -1820,9 +1824,15 @@ function applyLangStaticScreens() {
   setText('pauseHead', 'pause.title');
   setText('pauseSub', 'pause.sub');
   const pauseResume = document.getElementById('pauseResume');
-  if (pauseResume) pauseResume.querySelector('div').textContent = t('pause.resume');
+  if (pauseResume) {
+    const d = pauseResume.querySelector('div');
+    if (d) d.textContent = t('pause.resume');
+  }
   const pauseQuit = document.getElementById('pauseQuit');
-  if (pauseQuit) pauseQuit.querySelector('div').textContent = t('pause.quit');
+  if (pauseQuit) {
+    const d = pauseQuit.querySelector('div');
+    if (d) d.textContent = t('pause.quit');
+  }
   const pauseVs = document.getElementById('pauseVsRestart');
   if (pauseVs) {
     const d = pauseVs.querySelector('div');
@@ -1848,13 +1858,25 @@ function applyLangStaticScreens() {
   }
 
   const resAgain = document.getElementById('resAgain');
-  if (resAgain) resAgain.querySelector('div').textContent = t('result.again');
+  if (resAgain) {
+    const d = resAgain.querySelector('div');
+    if (d) d.textContent = t('result.again');
+  }
   const resNext = document.getElementById('resNext');
-  if (resNext) resNext.querySelector('div').textContent = t('result.next');
+  if (resNext) {
+    const d = resNext.querySelector('div');
+    if (d) d.textContent = t('result.next');
+  }
   const resMenu = document.getElementById('resMenu');
-  if (resMenu) resMenu.querySelector('div').textContent = t('result.menu');
+  if (resMenu) {
+    const d = resMenu.querySelector('div');
+    if (d) d.textContent = t('result.menu');
+  }
   const helpOk = document.getElementById('helpOk');
-  if (helpOk) helpOk.querySelector('div').textContent = t('common.ok');
+  if (helpOk) {
+    const d = helpOk.querySelector('div');
+    if (d) d.textContent = t('common.ok');
+  }
 
   UI.pauseSubDefault = t('pause.sub');
   if (!UI.BACK_LABELS) UI.BACK_LABELS = {};
@@ -21588,6 +21610,7 @@ class Game {
     const lite = fxLite() || calm;
     const col = sp.color || '#ffd75e';
     const col2 = sp.color2 || '#ff9a3d';
+    const pulse = calm ? 0 : (this.ketsbamPulse || 0);
 
     c.save();
     const ringR = calm ? (28 + prog * 88) : (28 + prog * 88 + Math.sin(pulse * 11) * 7);
@@ -21615,7 +21638,7 @@ class Game {
       c.strokeStyle = i % 2 ? '#fff8dc' : col2;
       c.lineWidth = 2 + prog * 2;
       c.beginPath();
-      c.arc(px, py, innerR + 18 + prog * 28, 0, TAU);
+      c.arc(px, py, r + 18 + prog * 28, 0, TAU);
       c.stroke();
     }
 
@@ -24233,8 +24256,10 @@ const UI = {
           training: t('modes.training'), wall: t('modes.wall'), versus: t('modes.versus'), coinrun: t('modes.coinrun'),
         };
         cont.style.display = 'flex';
-        cont.querySelector('div').innerHTML =
-          `${t('menu.continue')}<small>${labels[lp.mode] || lp.mode}</small>`;
+        const contDiv = cont.querySelector('div');
+        if (contDiv) {
+          contDiv.innerHTML = `${t('menu.continue')}<small>${labels[lp.mode] || lp.mode}</small>`;
+        }
       } else cont.style.display = 'none';
     }
     document.querySelectorAll('[data-hub]').forEach((el) => {

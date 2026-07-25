@@ -598,9 +598,15 @@ function applyLangStaticScreens() {
   setText('pauseHead', 'pause.title');
   setText('pauseSub', 'pause.sub');
   const pauseResume = document.getElementById('pauseResume');
-  if (pauseResume) pauseResume.querySelector('div').textContent = t('pause.resume');
+  if (pauseResume) {
+    const d = pauseResume.querySelector('div');
+    if (d) d.textContent = t('pause.resume');
+  }
   const pauseQuit = document.getElementById('pauseQuit');
-  if (pauseQuit) pauseQuit.querySelector('div').textContent = t('pause.quit');
+  if (pauseQuit) {
+    const d = pauseQuit.querySelector('div');
+    if (d) d.textContent = t('pause.quit');
+  }
   const pauseVs = document.getElementById('pauseVsRestart');
   if (pauseVs) {
     const d = pauseVs.querySelector('div');
@@ -626,13 +632,25 @@ function applyLangStaticScreens() {
   }
 
   const resAgain = document.getElementById('resAgain');
-  if (resAgain) resAgain.querySelector('div').textContent = t('result.again');
+  if (resAgain) {
+    const d = resAgain.querySelector('div');
+    if (d) d.textContent = t('result.again');
+  }
   const resNext = document.getElementById('resNext');
-  if (resNext) resNext.querySelector('div').textContent = t('result.next');
+  if (resNext) {
+    const d = resNext.querySelector('div');
+    if (d) d.textContent = t('result.next');
+  }
   const resMenu = document.getElementById('resMenu');
-  if (resMenu) resMenu.querySelector('div').textContent = t('result.menu');
+  if (resMenu) {
+    const d = resMenu.querySelector('div');
+    if (d) d.textContent = t('result.menu');
+  }
   const helpOk = document.getElementById('helpOk');
-  if (helpOk) helpOk.querySelector('div').textContent = t('common.ok');
+  if (helpOk) {
+    const d = helpOk.querySelector('div');
+    if (d) d.textContent = t('common.ok');
+  }
 
   UI.pauseSubDefault = t('pause.sub');
   if (!UI.BACK_LABELS) UI.BACK_LABELS = {};
