@@ -356,6 +356,20 @@ function rollStageGamble() {
   return { d1, d2, sum, outcome, allyId };
 }
 
+function gambleDiceFace(d) {
+  return ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][d - 1] || '?';
+}
+
+function gambleRollToastLine(g) {
+  if (!g) return '';
+  const faces = `${gambleDiceFace(g.d1)} ${gambleDiceFace(g.d2)} = ${g.sum}`;
+  if (g.outcome === 'neutral') return `${faces} · normaal level`;
+  const label = typeof gambleOutcomeLabelFromKey === 'function'
+    ? gambleOutcomeLabelFromKey(g).replace(/^[^!]+!?\s*/, '').slice(0, 40)
+    : '';
+  return label ? `${faces} · ${label}` : faces;
+}
+
 function gambleOutcomeLabel(g) {
   if (!g) return '';
   if (g.outcome === 'superBoss') return 'Pech! Super-baas in een willekeurige golf';

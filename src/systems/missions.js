@@ -966,21 +966,30 @@ function playGambleRollSfx(g) {
   }, delay);
 }
 
-/** Instant: level-tik → dobbel + vecht (geen tussen-scherm). */
+/** Instant: level-tik → dobbel-flash → vecht (geen tussen-scherm). */
 function gokGooiStartLevel(n) {
   if (gokStartBusy) return;
+  cancelGambleStart();
   gokStartBusy = true;
   try {
     pendingAdvLevel = n;
     AudioSys.init();
     lastGambleRoll = rollStageGamble();
     playGambleRollSfx(lastGambleRoll);
+    try {
+      const line = typeof gambleRollToastLine === 'function' ? gambleRollToastLine(lastGambleRoll) : '';
+      if (line) UI.toast(line, motionReduced() ? 900 : 1400);
+    } catch (_) {}
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
-    startAdventureFromGamble(false);
+    const delay = motionReduced() ? 80 : 420;
+    gokScreenTimer = setTimeout(() => {
+      gokScreenTimer = null;
+      gokStartBusy = false;
+      startAdventureFromGamble(false);
+    }, delay);
   } catch (err) {
+    cancelGambleStart();
     sfReportError('gokStart', err, 'Gok start mislukt — probeer opnieuw');
-  } finally {
-    gokStartBusy = false;
   }
 }
 
