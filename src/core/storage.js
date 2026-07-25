@@ -489,7 +489,8 @@ function readSaveJson(raw) {
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
     if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;
     if (typeof parsed.activeJutsu === 'string') merged.activeJutsu = parsed.activeJutsu;
-    if (typeof parsed.lang === 'string' && SUPPORTED_LANGS.includes(parsed.lang)) merged.lang = parsed.lang;
+    // lang: copy raw — SUPPORTED_LANGS may not exist yet (storage loads before i18n)
+    if (typeof parsed.lang === 'string') merged.lang = parsed.lang;
     return merged;
   } catch (e) {
     return null;
