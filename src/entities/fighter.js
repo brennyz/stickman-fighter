@@ -209,7 +209,7 @@ class Fighter {
     game.burst(px, py, '#ffd75e', fxLite() ? 22 : 40, { kind: 'spark', size: 3.2 });
     game.burst(px, py, '#ff7043', fxLite() ? 14 : 26);
     spawnFxRing(game, px, py, '#ffe259', fxLite() ? 10 : 18);
-    game.floater(px, py - 80, 'KETS-BAM!', '#ffd75e', 20);
+    game.floater(px, py - 80, 'KETS-BAM!', '#ffd75e', 20, 'fx');
     if (save.haptics !== false) haptic(32);
   }
 
@@ -453,7 +453,7 @@ class Fighter {
     if (!this.alive) return 0;
     if ((this.isPlayer || this.playerSlot) && game && game.ketsbamSuperT > 0) return 0;
     if (this.invulnT > 0) {
-      if (game) game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13);
+      game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13, 'fx');
       return 0;
     }
     if (this.blocking && !opts.unblockable) {
@@ -462,7 +462,7 @@ class Fighter {
       AudioSys.sfx('block');
       const atk = opts.attacker && opts.attacker.attack;
       const parry = atk && atk.t >= atk.windup && atk.t <= atk.windup + 0.16;
-      game.floater(this.x, this.y - 115, parry ? 'PARRY!' : 'BLOK!', parry ? '#ffd75e' : '#9fd8ff', 14);
+      game.floater(this.x, this.y - 115, parry ? 'PARRY!' : 'BLOK!', parry ? '#ffd75e' : '#9fd8ff', 14, 'fx');
       if (game) {
         applyHitStop(game, { kind: 'punch' }, { chip: true });
         if (parry) game.freezeT = Math.max(game.freezeT, 0.032);
@@ -474,7 +474,7 @@ class Fighter {
     }
     if (this.isPlayer && game && game.playerShieldT > 0) {
       dmg = Math.max(1, Math.round(dmg * 0.32));
-      game.floater(this.x, this.y - 115, 'Schild!', '#9fd8ff', 13);
+      game.floater(this.x, this.y - 115, 'Schild!', '#9fd8ff', 13, 'fx');
     }
     dmg = Math.round(dmg);
     if (this.isPlayer && game && game.styleDefMul && game.styleDefMul !== 1) {

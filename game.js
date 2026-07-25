@@ -176,6 +176,65 @@ const volPct = (v, d) => Math.round((Number(v ?? d)) * 100);
 const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
 
+/** Combat floaters: spreid over lagen zodat BAM/KETS/schade niet op elkaar stapelen. */
+const FLOATER_LANE_H = 22;
+const FLOATER_LANE_W = 32;
+const FLOATER_CLUSTER_R = 88;
+
+function floaterLayerBase(layer) {
+  switch (layer) {
+    case 'style': return { x: 0, y: -40, laneH: 20 };
+    case 'fx': return { x: 0, y: -58, laneH: 24 };
+    case 'hud': return { x: 0, y: 0, laneH: 28, clusterR: 160 };
+    default: return { x: 0, y: 0 };
+  }
+}
+
+function floaterTextHalfW(txt, size) {
+  const len = String(txt || '').length;
+  const fs = size || 15;
+  return Math.max(18, fs * Math.min(len, 9) * 0.38);
+}
+
+function layoutFloaterPos(game, x, y, txt, size, layer) {
+  layer = layer || 'dmg';
+  const base = floaterLayerBase(layer);
+  const laneH = base.laneH || FLOATER_LANE_H;
+  const clusterR = base.clusterR || FLOATER_CLUSTER_R;
+  x += base.x;
+  y += base.y;
+  const halfW = floaterTextHalfW(txt, size);
+  const list = game && game.floaters ? game.floaters : [];
+  const sameLayer = (fl) => (fl.layer || 'dmg') === layer;
+
+  for (let lane = 0; lane < 8; lane++) {
+    const sign = lane <= 0 ? 0 : (lane % 2 === 1 ? -1 : 1);
+    const spread = lane <= 0 ? 0 : Math.ceil(lane / 2) * FLOATER_LANE_W * sign;
+    const ty = y - lane * laneH;
+    const tx = x + spread;
+    let hit = false;
+    for (const fl of list) {
+      if (fl.life <= 0.2 || !sameLayer(fl)) continue;
+      const dx = fl.x - tx;
+      const dy = fl.y - ty;
+      if (dx * dx + dy * dy > clusterR * clusterR) continue;
+      const flHalf = floaterTextHalfW(fl.txt, fl.size);
+      if (Math.abs(dx) < halfW + flHalf + 6 && Math.abs(dy) < laneH * 0.85) {
+        hit = true;
+        break;
+      }
+    }
+    if (!hit) return { x: tx, y: ty, lane, layer };
+  }
+  const lane = list.filter(sameLayer).length % 8;
+  return {
+    x: x + Math.sin(lane * 0.9) * FLOATER_LANE_W * 1.4,
+    y: y - lane * laneH,
+    lane,
+    layer,
+  };
+}
+
 /* --- src/core/storage.js --- */
 /* ============================== OPSLAG ================================= */
 const SAVE_KEY = 'stickfighter_save_v1';
@@ -184,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.73';
+const APP_VERSION = '1.17.69';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 193;
+const SW_CACHE_REV = 195;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null, activeJutsu: 'rasengan',
 
@@ -538,7 +597,7 @@ function projCritMeta(f) {
 
 function applyCritFx(game, x, y) {
   if (!game) return;
-  game.floater(x, y - 132, 'CRIT!', '#ffd75e', 18);
+  game.floater(x, y - 132, 'CRIT!', '#ffd75e', 18, 'fx');
   try { AudioSys.sfx('crit'); } catch (_) {}
   if (save.haptics !== false) haptic(10);
   spawnFxRing(game, x, y - 42, '#ffd75e', fxLite() ? 9 : 15);
@@ -10702,7 +10761,7 @@ class Fighter {
     game.burst(px, py, '#ffd75e', fxLite() ? 22 : 40, { kind: 'spark', size: 3.2 });
     game.burst(px, py, '#ff7043', fxLite() ? 14 : 26);
     spawnFxRing(game, px, py, '#ffe259', fxLite() ? 10 : 18);
-    game.floater(px, py - 80, 'KETS-BAM!', '#ffd75e', 20);
+    game.floater(px, py - 80, 'KETS-BAM!', '#ffd75e', 20, 'fx');
     if (save.haptics !== false) haptic(32);
   }
 
@@ -10946,7 +11005,7 @@ class Fighter {
     if (!this.alive) return 0;
     if ((this.isPlayer || this.playerSlot) && game && game.ketsbamSuperT > 0) return 0;
     if (this.invulnT > 0) {
-      if (game) game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13);
+      game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13, 'fx');
       return 0;
     }
     if (this.blocking && !opts.unblockable) {
@@ -10955,7 +11014,7 @@ class Fighter {
       AudioSys.sfx('block');
       const atk = opts.attacker && opts.attacker.attack;
       const parry = atk && atk.t >= atk.windup && atk.t <= atk.windup + 0.16;
-      game.floater(this.x, this.y - 115, parry ? 'PARRY!' : 'BLOK!', parry ? '#ffd75e' : '#9fd8ff', 14);
+      game.floater(this.x, this.y - 115, parry ? 'PARRY!' : 'BLOK!', parry ? '#ffd75e' : '#9fd8ff', 14, 'fx');
       if (game) {
         applyHitStop(game, { kind: 'punch' }, { chip: true });
         if (parry) game.freezeT = Math.max(game.freezeT, 0.032);
@@ -10967,7 +11026,7 @@ class Fighter {
     }
     if (this.isPlayer && game && game.playerShieldT > 0) {
       dmg = Math.max(1, Math.round(dmg * 0.32));
-      game.floater(this.x, this.y - 115, 'Schild!', '#9fd8ff', 13);
+      game.floater(this.x, this.y - 115, 'Schild!', '#9fd8ff', 13, 'fx');
     }
     dmg = Math.round(dmg);
     if (this.isPlayer && game && game.styleDefMul && game.styleDefMul !== 1) {
@@ -12776,7 +12835,7 @@ class Game {
         try {
           if (this.over) return;
           this.banner(t('banner.masterBuff'), 2, '#c47aff', 40);
-          this.floater(W * 0.5, 132, t('combat.masterBuffFloater'), '#c47aff', 14);
+          this.floater(W * 0.5, 132, t('combat.masterBuffFloater'), '#c47aff', 14, 'hud');
         } catch (_) {}
       }, 1500);
     }
@@ -12785,7 +12844,7 @@ class Game {
       setTimeout(() => {
         try {
           if (this.over) return;
-          this.floater(W * 0.5, 148, t('combat.skillGate', { cap: wCap }), '#ffd75e', 13);
+          this.floater(W * 0.5, 148, t('combat.skillGate', { cap: wCap }), '#ffd75e', 13, 'hud');
         } catch (_) {}
       }, masterBuffActive(n) ? 2800 : 1500);
     }
@@ -12798,10 +12857,10 @@ class Game {
       }, 1600);
     }
     if (this.gambleBossWave > 0) {
-      this.floater(W * 0.5, 100, t('combat.gambleSuperBoss', { n: this.gambleBossWave }), '#ffb0b8', 14);
+      this.floater(W * 0.5, 100, t('combat.gambleSuperBoss', { n: this.gambleBossWave }), '#ffb0b8', 14, 'hud');
     }
     if (this.stageAlly) {
-      this.floater(W * 0.5, 118, t('combat.allyHelps', { name: this.stageAlly.name }), this.stageAlly.color || '#7cf5ff', 15);
+      this.floater(W * 0.5, 118, t('combat.allyHelps', { name: this.stageAlly.name }), this.stageAlly.color || '#7cf5ff', 15, 'hud');
     }
     this.allyAssistT = this.stageAlly ? 2.2 : 0;
     setTimeout(() => { try { if (!this.over) this.maybeRollMasterSword(); } catch (_) {} }, 900);
@@ -12891,7 +12950,7 @@ class Game {
       if (trait) {
         this.banner(trait.text, 1.2, trait.color, trait.size);
         if (meta.trait === 'flyers') {
-          try { this.floater(W * 0.5, 108, t('combat.aimUp'), '#c47aff', 13); } catch (_) {}
+          try { this.floater(W * 0.5, 108, t('combat.aimUp'), '#c47aff', 13, 'hud'); } catch (_) {}
         }
       } else {
         this.banner(t('banner.waveN', { n: this.waveIdx + 1, total: this.level.waves.length }), 1.1, '#cfe0ff', 38);
@@ -12953,7 +13012,7 @@ class Game {
       if (f > 0.45) {
         this.bossBeatPlayed = true;
         try { AudioSys.sfx('bossWait'); } catch (_) {}
-        this.floater(W / 2, 120, t('combat.bossWaits'), '#ff8a9a', 15);
+        this.floater(W / 2, 120, t('combat.bossWaits'), '#ff8a9a', 15, 'hud');
       }
     }
     if (this.partFlashT > 0) this.partFlashT -= dt;
@@ -12963,7 +13022,7 @@ class Game {
     if (part > (this.stagePart || 1)) {
       this.stagePart = part;
       this.partFlashT = motionReduced() ? 0.22 : 0.5;
-      this.floater(W / 2, 96, t('combat.checkpoint', { part }), '#7cf5ff', 17);
+      this.floater(W / 2, 96, t('combat.checkpoint', { part }), '#7cf5ff', 17, 'hud');
       const orbX = W / 2 - Math.min(320, W * 0.5) / 2 + clamp(this.progressSmooth || 0, 0, 1) * Math.min(320, W * 0.5);
       if (!fxLite()) this.burst(orbX, 44, '#7cf5ff', motionReduced() ? 6 : 14, { kind: 'spark', size: 2.4 });
       try { AudioSys.sfx('checkpoint'); } catch (_) {}
@@ -13066,7 +13125,7 @@ class Game {
         }
         try { AudioSys.sfx('waveClear'); } catch (_) {}
         if ((this.killStreak || 0) >= 5) {
-          this.floater(W / 2, 112, t('combat.streakHold', { n: this.killStreak }), '#ffd75e', 15);
+          this.floater(W / 2, 112, t('combat.streakHold', { n: this.killStreak }), '#ffd75e', 15, 'hud');
         }
       }
       this.wavePause -= dt;
@@ -13176,7 +13235,7 @@ class Game {
     trackKillStreak(ks);
     if ([3, 5, 8, 12].includes(ks)) {
       const msgs = { 3: t('combat.streak3'), 5: t('combat.streak5'), 8: t('combat.streak8'), 12: t('combat.streak12') };
-      this.floater(W / 2, 128, msgs[ks], ks >= 8 ? '#ff7a4d' : '#ffd75e', 17);
+      this.floater(W / 2, 128, msgs[ks], ks >= 8 ? '#ff7a4d' : '#ffd75e', 17, 'hud');
       AudioSys.sfx(ks >= 8 ? 'comboEpic' : 'combo');
       if (!motionReduced() && !fxLite()) spawnFxRing(this, m.x, m.y - m.size * 0.35, ks >= 8 ? '#ff7a4d' : '#ffd75e', 7 + ks * 0.35);
       haptic(8 + Math.min(ks, 12));
@@ -13430,7 +13489,7 @@ class Game {
       1.1, decisive ? '#ff9a9a' : '#ffd75e', 52,
     );
     if (this.round === 1) {
-      this.floater(W / 2, 148, t('combat.trainIntro'), '#7cf5ff', 16);
+      this.floater(W / 2, 148, t('combat.trainIntro'), '#7cf5ff', 16, 'hud');
     }
     AudioSys.sfx('bell');
   }
@@ -13491,7 +13550,7 @@ class Game {
     } else if (this.phase === 'fight') {
       if (this.trainDummyGrace > 0) {
         this.trainDummyGrace -= dt;
-        if (this.trainDummyGrace <= 0) this.floater(W / 2, 132, t('combat.robotActive'), '#ff9a9a', 15);
+        if (this.trainDummyGrace <= 0) this.floater(W / 2, 132, t('combat.robotActive'), '#ff9a9a', 15, 'hud');
       }
       if (this.comboT > 0) {
         this.comboT -= dt;
@@ -13523,7 +13582,7 @@ class Game {
         }
         this.banner(msg, 1.6, pWin ? '#7cfc8a' : '#ff6b6b', 40);
         if (roundCombo >= 3) {
-          this.floater(W / 2, 118, t('combat.roundCombo', { n: roundCombo }), '#ffd75e', 14);
+          this.floater(W / 2, 118, t('combat.roundCombo', { n: roundCombo }), '#ffd75e', 14, 'hud');
         }
         AudioSys.sfx(pWin ? 'win' : 'lose');
       }
@@ -13818,41 +13877,41 @@ class Game {
     const hints = this.wallHints || (this.wallHints = {});
     if (!hints.half && prevTimer > 30 && this.wallTimer <= 30) {
       hints.half = true;
-      this.floater(W / 2, 108, t('combat.wallHalf'), '#7cf5ff', 15);
+      this.floater(W / 2, 108, t('combat.wallHalf'), '#7cf5ff', 15, 'hud');
     }
     if (!hints.quarter && prevTimer > 15 && this.wallTimer <= 15) {
       hints.quarter = true;
-      this.floater(W / 2, 108, t('combat.wallLast15'), '#ffd75e', 15);
+      this.floater(W / 2, 108, t('combat.wallLast15'), '#ffd75e', 15, 'hud');
       if (this.wallTimer < 10) AudioSys.sfx('bonus');
     }
     if (!hints.five && prevTimer > 5 && this.wallTimer <= 5) {
       hints.five = true;
-      this.floater(W / 2, 108, t('combat.wallLast5'), '#ff6b6b', 15);
+      this.floater(W / 2, 108, t('combat.wallLast5'), '#ff6b6b', 15, 'hud');
       AudioSys.sfx('bonus');
     }
     const elapsed = (this.wallDuration || 60) - this.wallTimer;
     if (!hints.startCombo && elapsed > 2.5 && elapsed < 9 && this.combo === 0) {
       hints.startCombo = true;
-      this.floater(W / 2, 132, t('combat.wallComboTipShort'), '#7cf5ff', 14);
+      this.floater(W / 2, 132, t('combat.wallComboTipShort'), '#7cf5ff', 14, 'hud');
     }
     const prevComboT = this.comboT;
     this.comboT -= dt;
     if (this.comboT <= 0) {
       if (this.combo >= 4 && !hints.lostCombo) {
         hints.lostCombo = true;
-        this.floater(W / 2, 120, t('combat.wallComboLost'), '#ff9a9a', 14);
+        this.floater(W / 2, 120, t('combat.wallComboLost'), '#ff9a9a', 14, 'hud');
       }
       this.combo = 0;
     } else if (!hints.comboWarn && this.combo >= 3 && prevComboT > 0.35 && this.comboT <= 0.35) {
       hints.comboWarn = true;
-      this.floater(W / 2, 120, t('combat.wallComboLow'), '#ff9a9a', 13);
+      this.floater(W / 2, 120, t('combat.wallComboLow'), '#ff9a9a', 13, 'hud');
     }
     const bestSaved = save.bestWall || 0;
     if (!hints.nearRec && bestSaved > 0 && this.score > 0) {
       const gap = bestSaved - this.score;
       if (gap > 0 && gap <= 5) {
         hints.nearRec = true;
-        this.floater(W / 2, 94, t('combat.wallNearRec', { gap }), '#7cfc8a', 16);
+        this.floater(W / 2, 94, t('combat.wallNearRec', { gap }), '#7cfc8a', 16, 'hud');
         haptic(12);
       }
     }
@@ -14220,20 +14279,20 @@ class Game {
             const wh = this.wallHints || {};
             if (this.combo === 3 && !wh.combo3) {
               wh.combo3 = true;
-              this.floater(W * 0.5, 136, t('combat.wallCombo3', { pct: wallComboDmgPct(3) }), '#7cf5ff', 15);
+              this.floater(W * 0.5, 136, t('combat.wallCombo3', { pct: wallComboDmgPct(3) }), '#7cf5ff', 15, 'hud');
             } else if (this.combo === 5 && !wh.combo5) {
               wh.combo5 = true;
-              this.floater(W * 0.5, 136, t('combat.wallCombo5', { pct: wallComboDmgPct(5) }), '#7cf5ff', 16);
+              this.floater(W * 0.5, 136, t('combat.wallCombo5', { pct: wallComboDmgPct(5) }), '#7cf5ff', 16, 'hud');
               AudioSys.sfx('combo');
             } else if (this.combo === 8 && !wh.combo8) {
               wh.combo8 = true;
-              this.floater(W * 0.5, 136, t('combat.wallCombo8', { pct: wallComboDmgPct(8) }), '#ffd75e', 17);
+              this.floater(W * 0.5, 136, t('combat.wallCombo8', { pct: wallComboDmgPct(8) }), '#ffd75e', 17, 'hud');
               AudioSys.sfx('combo');
               haptic(14);
             }
             if (!this.wallRecordToast && this.score > save.bestWall) {
               this.wallRecordToast = true;
-              this.floater(W * 0.5, 118, t('combat.wallRecord'), '#ffd75e', 22);
+              this.floater(W * 0.5, 118, t('combat.wallRecord'), '#ffd75e', 22, 'hud');
               haptic(18);
               AudioSys.sfx('bonus');
             }
@@ -14274,7 +14333,7 @@ class Game {
           trackCombo(this.combo);
           if (this.combo === 3 || this.combo === 6 || this.combo === 10) {
             AudioSys.sfx('combo');
-            this.floater(f.x + f.face * 30, f.y - 120, t('combat.comboN', { n: this.combo }), '#ffd75e', 17);
+            this.floater(f.x + f.face * 30, f.y - 120, t('combat.comboN', { n: this.combo }), '#ffd75e', 17, 'fx');
           }
         }
         const buff = f.isPlayer ? (this.dmgBuffMul || 1) * (this.stageDmgMul || 1) * (this.styleAdvDmgMul || 1) : 1;
@@ -14300,7 +14359,7 @@ class Game {
           if (labels && labels[idx]) {
             const txt = finisher ? labels[idx] + '!' : labels[idx];
             const col = finisher ? '#ffb830' : (idx === 2 ? '#ffd75e' : 'rgba(255,255,255,.88)');
-            this.floater(f.x + f.face * 24, f.y - (118 + idx * 5), txt, col, finisher ? 15 : (idx === 2 ? 13 : 11));
+            this.floater(f.x + f.face * 24, f.y - (118 + idx * 5), txt, col, finisher ? 15 : (idx === 2 ? 13 : 11), 'style');
           }
           if (finisher) {
             trackWeaponFinisher(f.weapon.id, this);
@@ -14347,7 +14406,7 @@ class Game {
               8: t('combat.combo8'),
               10: t('combat.combo10'),
             };
-            this.floater(f.x + f.face * 30, f.y - 130, labels[this.combo], '#ffd75e', 16);
+            this.floater(f.x + f.face * 30, f.y - 130, labels[this.combo], '#ffd75e', 16, 'fx');
             haptic(8 + this.combo);
           }
         }
@@ -14372,7 +14431,7 @@ class Game {
           const idx = spec.moveIdx || 0;
           if (labels && labels[idx]) {
             const txt = finisher ? labels[idx] + '!' : labels[idx];
-            this.floater(f.x + f.face * 24, f.y - (118 + idx * 5), txt, finisher ? '#ffb830' : '#ffd75e', finisher ? 14 : 11);
+            this.floater(f.x + f.face * 24, f.y - (118 + idx * 5), txt, finisher ? '#ffb830' : '#ffd75e', finisher ? 14 : 11, 'style');
           }
           if (finisher) {
             trackWeaponFinisher(f.weapon.id, this);
@@ -14591,7 +14650,11 @@ class Game {
       }
     }
     this.particles = this.particles.filter(p => p.life > 0);
-    for (const fl of this.floaters) { fl.life -= dt; fl.y -= 40 * dt; }
+    for (const fl of this.floaters) {
+      fl.life -= dt;
+      fl.y -= (fl.vy || 40) * dt;
+      if (fl.drift && !motionReduced()) fl.x += fl.drift * dt;
+    }
     this.floaters = this.floaters.filter(f => f.life > 0);
     for (const b of this.banners) b.t += dt;
     this.banners = this.banners.filter(b => b.t < b.dur);
@@ -14618,11 +14681,11 @@ class Game {
     if (this.mode === 'wall' && (this.combo === 5 || this.combo === 8 || this.combo === 10)) {
       AudioSys.sfx(comboSfx(this.combo));
       const msg = this.combo === 8 ? t('combat.wallTempo') : t('combat.comboN', { n: this.combo });
-      this.floater(W * 0.5, 130, msg, '#7cf5ff', 18);
+      this.floater(W * 0.5, 130, msg, '#7cf5ff', 18, 'hud');
     }
     if (this.mode === 'adventure' && (this.combo === 6 || this.combo === 10)) {
       AudioSys.sfx(comboSfx(this.combo));
-      this.floater(W * 0.5, 118, t('combat.comboN', { n: this.combo }), '#ffd75e', 16);
+      this.floater(W * 0.5, 118, t('combat.comboN', { n: this.combo }), '#ffd75e', 16, 'hud');
     }
     if ([5, 10, 15].includes(this.combo) && this.player && !motionReduced()) {
       const col = this.combo >= 10 ? '#ffd75e' : '#7cf5ff';
@@ -14668,12 +14731,19 @@ class Game {
       });
     }
   }
-  floater(x, y, txt, color, size) {
+  floater(x, y, txt, color, size, layer) {
     if (!perfFxBudgetAllow(this, 1)) return;
     if (perfFxRoom(this, 'floater') <= 0) return;
     const cap = fxCaps();
     if (this.floaters.length >= cap.floaters) this.floaters.shift();
-    this.floaters.push({ x, y, txt, color, size: size || 15, life: 1.0 });
+    const slot = layoutFloaterPos(this, x, y, txt, size, layer);
+    this.floaters.push({
+      x: slot.x, y: slot.y, txt, color,
+      size: size || 15, life: 1.0,
+      lane: slot.lane, layer: slot.layer,
+      vy: 36 + slot.lane * 5,
+      drift: slot.lane % 2 ? (slot.lane % 4 === 1 ? -14 : 14) : 0,
+    });
   }
   banner(txt, dur, color, size) {
     if (!perfFxBudgetAllow(this, 1)) return;
@@ -14945,13 +15015,21 @@ class Game {
     }
     c.globalAlpha = 1;
 
-    // zwevende tekstjes
+    // zwevende tekstjes — sorteer op diepte, outline voor leesbaarheid
     c.textAlign = 'center';
-    for (const fl of this.floaters) {
+    const flDraw = this.floaters.slice().sort((a, b) => a.y - b.y);
+    for (const fl of flDraw) {
       c.globalAlpha = clamp(fl.life * 1.6, 0, 1);
       c.font = `800 ${fl.size}px -apple-system, sans-serif`;
-      c.fillStyle = fl.color;
-      c.fillText(fl.txt, fl.x, fl.y);
+      if (a11yHighContrast() && typeof fillHudText === 'function') {
+        fillHudText(c, fl.txt, fl.x, fl.y, { fill: fl.color, stroke: 'rgba(0,0,0,.9)', strokeW: 3 });
+      } else {
+        c.lineWidth = Math.max(3, fl.size * 0.22);
+        c.strokeStyle = 'rgba(0,0,0,.52)';
+        c.strokeText(fl.txt, fl.x, fl.y);
+        c.fillStyle = fl.color;
+        c.fillText(fl.txt, fl.x, fl.y);
+      }
     }
     c.globalAlpha = 1;
     c.restore();
