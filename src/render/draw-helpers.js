@@ -269,30 +269,29 @@ function spawnFxRing(game, x, y, color, baseR) {
 /** Jutsu impact burst — Lite FX capped; scale 'small' for projectile fade-out. */
 function spawnJutsuImpactFx(game, x, y, kind, scale) {
   if (!game || motionReduced()) return;
+  const sk = skillById(kind);
+  const col = sk.color || '#7cf5ff';
   const lite = fxLite();
   const small = scale === 'small';
-  if (kind === 'rasengan') {
-    game.burst(x, y, '#7cf5ff', lite ? (small ? 4 : 6) : (small ? 8 : 14), { kind: 'spark', size: small ? 2.2 : 2.8 });
-    spawnFxRing(game, x, y, '#a8ecff', lite ? 6 : (small ? 8 : 14));
-    if (!lite && !small) spawnFxRing(game, x, y, '#5ad0ff', 7);
-  } else if (kind === 'chidori') {
-    game.burst(x, y, '#a8e0ff', lite ? 8 : 14);
-    spawnFxRing(game, x, y, '#c8f0ff', lite ? 7 : 11);
-  } else if (kind === 'rinnegan') {
-    game.burst(x, y, '#c47aff', lite ? 6 : 12);
-    spawnFxRing(game, x, y, '#e0a8ff', lite ? 7 : 10);
-    if (!lite && !small) spawnFxRing(game, x, y, '#ff6b9d', 6);
+  const n = lite ? (small ? 4 : 6) : (small ? 8 : 14);
+  game.burst(x, y, col, n, { kind: 'spark', size: small ? 2.2 : 2.8 });
+  spawnFxRing(game, x, y, col, lite ? 6 : (small ? 8 : 14));
+  if (!lite && !small && (sk.behavior === 'pull' || sk.behavior === 'meteor')) {
+    game.burst(x, y, '#ff6b9d', 6);
   }
 }
 
 function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
+  const sk = skillById(kind);
+  const behavior = sk.behavior || 'orb';
+  const col = sk.color || '#7cf5ff';
   const lite = fxLite();
   c.save();
   c.translate(x, y);
   c.globalAlpha = alpha == null ? 1 : alpha;
-  if (kind === 'chidori') {
-    c.shadowColor = '#a8e0ff'; c.shadowBlur = lite ? 8 : 18;
-    c.fillStyle = 'rgba(200,240,255,.55)';
+  if (behavior === 'dash') {
+    c.shadowColor = col; c.shadowBlur = lite ? 8 : 18;
+    c.fillStyle = col.length === 7 ? col + '88' : 'rgba(200,240,255,.55)';
     c.beginPath(); c.arc(0, 0, r * 0.9, 0, TAU); c.fill();
     c.strokeStyle = '#e8f7ff'; c.lineWidth = 2;
     const bolts = lite ? 4 : 7;
@@ -303,13 +302,19 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
       c.lineTo(Math.cos(a + 0.4) * r * 1.3, Math.sin(a + 0.4) * r * 1.3);
       c.stroke();
     }
-  } else if (kind === 'rinnegan') {
-    c.shadowColor = '#c47aff'; c.shadowBlur = lite ? 10 : 24;
+  } else if (behavior === 'beam' || behavior === 'disc') {
+    c.shadowColor = col; c.shadowBlur = lite ? 8 : 16;
+    c.fillStyle = col;
+    c.globalAlpha = (alpha == null ? 1 : alpha) * 0.75;
+    c.beginPath(); c.ellipse(0, 0, r * 1.35, r * (behavior === 'disc' ? 0.55 : 0.75), spin * 0.2, 0, TAU); c.fill();
+    c.strokeStyle = '#fff'; c.lineWidth = 2;
+    c.beginPath(); c.ellipse(0, 0, r * 1.2, r * (behavior === 'disc' ? 0.45 : 0.65), spin * 0.2, 0, TAU); c.stroke();
+  } else if (behavior === 'pull' || behavior === 'meteor') {
+    c.shadowColor = col; c.shadowBlur = lite ? 10 : 24;
     const grd = c.createRadialGradient(0, 0, 0, 0, 0, r);
-    grd.addColorStop(0, 'rgba(40,10,60,.95)');
-    grd.addColorStop(0.35, 'rgba(120,40,180,.85)');
-    grd.addColorStop(0.7, 'rgba(200,80,255,.45)');
-    grd.addColorStop(1, 'rgba(80,20,120,.1)');
+    grd.addColorStop(0, col + 'ee');
+    grd.addColorStop(0.5, col + '99');
+    grd.addColorStop(1, col + '22');
     c.fillStyle = grd;
     c.beginPath(); c.arc(0, 0, r, 0, TAU); c.fill();
     c.strokeStyle = 'rgba(255,120,160,.85)'; c.lineWidth = 2;
@@ -318,24 +323,25 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
       c.arc(0, 0, r * (0.35 + ring * 0.18), spin * (1 + ring * 0.2), spin * (1 + ring * 0.2) + Math.PI * 1.35);
       c.stroke();
     }
-    c.fillStyle = 'rgba(255,90,120,.9)';
-    const tomoe = lite ? 3 : 6;
-    for (let i = 0; i < tomoe; i++) {
-      const a = spin * 2 + i * (TAU / tomoe);
-      c.beginPath();
-      c.arc(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55, r * 0.12, 0, TAU);
-      c.fill();
+    if (kind === 'rinnegan') {
+      c.fillStyle = 'rgba(255,90,120,.9)';
+      const tomoe = lite ? 3 : 6;
+      for (let i = 0; i < tomoe; i++) {
+        const a = spin * 2 + i * (TAU / tomoe);
+        c.beginPath();
+        c.arc(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55, r * 0.12, 0, TAU);
+        c.fill();
+      }
     }
   } else {
-    // Rasengan: chakra-bol + draaiende buitenringen
-    c.shadowColor = '#3db8ff'; c.shadowBlur = lite ? 8 : 22;
+    c.shadowColor = col; c.shadowBlur = lite ? 8 : 22;
     const grd = c.createRadialGradient(0, 0, 0, 0, 0, r);
-    grd.addColorStop(0, 'rgba(220,250,255,.95)');
-    grd.addColorStop(0.45, 'rgba(80,190,255,.75)');
-    grd.addColorStop(1, 'rgba(30,120,255,.15)');
+    grd.addColorStop(0, 'rgba(255,255,255,.92)');
+    grd.addColorStop(0.45, col + 'cc');
+    grd.addColorStop(1, col + '22');
     c.fillStyle = grd;
     c.beginPath(); c.arc(0, 0, r, 0, TAU); c.fill();
-    c.strokeStyle = 'rgba(180,235,255,.9)'; c.lineWidth = 2;
+    c.strokeStyle = col; c.lineWidth = 2;
     const ellipses = lite ? 2 : 5;
     for (let i = 0; i < ellipses; i++) {
       const a0 = spin + i * 1.1;
@@ -343,22 +349,12 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
       c.ellipse(0, 0, r * 0.95, r * (0.35 + (i % 3) * 0.12), a0, 0, TAU);
       c.stroke();
     }
-    // Outer chakra arcs (juice) — één boog in Lite FX
-    c.strokeStyle = 'rgba(124,245,255,.8)';
+    c.strokeStyle = col;
     c.lineWidth = lite ? 2 : 2.6;
     c.lineCap = 'round';
     c.beginPath();
     c.arc(0, 0, r * 1.14, spin, spin + Math.PI * 1.35);
     c.stroke();
-    if (!lite) {
-      c.strokeStyle = 'rgba(160,230,255,.55)';
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.arc(0, 0, r * 1.28, -spin * 1.35, -spin * 1.35 + Math.PI * 1.05);
-      c.stroke();
-    }
-    c.fillStyle = 'rgba(255,255,255,.85)';
-    c.beginPath(); c.arc(-r * 0.2, -r * 0.2, r * 0.18, 0, TAU); c.fill();
   }
   c.restore();
 }

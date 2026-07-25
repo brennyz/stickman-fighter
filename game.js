@@ -245,9 +245,9 @@ const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
 const APP_VERSION = '1.17.84';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 202;
-const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
-  eggPets: {}, activeEggPet: null, eggDaily: null, activeJutsu: 'rasengan',
+const SW_CACHE_REV = 210;
+const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', skill: 'rasengan', super: 'ketsbam', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
+  eggPets: {}, activeEggPet: null, eggDaily: null,
 
 
 
@@ -341,26 +341,23 @@ function wallRecordPaceDelta(g) {
 function wallComboDmgPct(combo) { return Math.min(combo, 12) * 4; }
 let save = loadSave();
 function fighterJutsuKind(f) {
-  if (!f) return 'rasengan';
-  if (f.vsSpecial === 'rinnegan') return 'rinnegan';
-  if (f.isRobot || f.vsSpecial === 'chidori') return 'chidori';
-  if (f.isPlayer && typeof activeJutsuId === 'function') return activeJutsuId();
-  return 'rasengan';
+  return fighterEquippedSkill(f).id;
 }
 function jutsuHudLabel(kind) {
-  if (kind === 'chidori') return 'CHIDORI!';
-  if (kind === 'rinnegan') return 'RINNEGAN!';
-  return 'RASENGAN!';
+  const sk = skillById(kind);
+  return sk.banner || 'SPECIAL!';
 }
 
 /** Klein getekend jutsu-icoon (bliksem/oog/orb) voor HUD-markers. */
 function drawJutsuMiniIcon(c, kind, x, y, color) {
+  const sk = skillById(kind);
+  const behavior = sk.behavior || 'orb';
   c.save();
   c.translate(x, y);
-  c.strokeStyle = color;
-  c.fillStyle = color;
+  c.strokeStyle = color || sk.color || '#7cf5ff';
+  c.fillStyle = c.strokeStyle;
   c.lineWidth = 1.4;
-  if (kind === 'chidori') {
+  if (behavior === 'dash') {
     c.beginPath();
     c.moveTo(2, -5.5);
     c.lineTo(-2.5, 1);
@@ -370,9 +367,13 @@ function drawJutsuMiniIcon(c, kind, x, y, color) {
     c.lineTo(0.7, -1);
     c.closePath();
     c.fill();
-  } else if (kind === 'rinnegan') {
+  } else if (behavior === 'pull' || behavior === 'meteor') {
     c.beginPath(); c.ellipse(0, 0, 5.2, 3.2, 0, 0, TAU); c.stroke();
     c.beginPath(); c.arc(0, 0, 1.7, 0, TAU); c.fill();
+  } else if (behavior === 'beam' || behavior === 'disc') {
+    c.beginPath(); c.ellipse(0, 0, 6, 2.8, 0, 0, TAU); c.stroke();
+    c.fillStyle = c.strokeStyle;
+    c.beginPath(); c.arc(0, 0, 1.4, 0, TAU); c.fill();
   } else {
     c.beginPath(); c.arc(0, 0, 4.6, 0, TAU); c.stroke();
     c.beginPath(); c.arc(0, 0, 2, 0, TAU); c.fill();
@@ -439,7 +440,9 @@ function drawTouchBtnIcon(c, id, x, y, r, jutsuKind) {
       break;
     }
     case 'special': {
-      if (jutsuKind === 'chidori') {
+      const sk = skillById(jutsuKind);
+      const behavior = sk.behavior || 'orb';
+      if (behavior === 'dash') {
         c.beginPath();
         c.moveTo(s * 0.35, -s);
         c.lineTo(-s * 0.55, s * 0.15);
@@ -449,9 +452,12 @@ function drawTouchBtnIcon(c, id, x, y, r, jutsuKind) {
         c.lineTo(s * 0.1, -s * 0.2);
         c.closePath();
         c.fill();
-      } else if (jutsuKind === 'rinnegan') {
+      } else if (behavior === 'pull' || behavior === 'meteor') {
         c.beginPath(); c.ellipse(0, 0, s, s * 0.62, 0, 0, TAU); c.stroke();
         c.beginPath(); c.arc(0, 0, s * 0.3, 0, TAU); c.fill();
+      } else if (behavior === 'beam' || behavior === 'disc') {
+        c.beginPath(); c.ellipse(0, 0, s * 1.05, s * 0.45, 0, 0, TAU); c.stroke();
+        c.beginPath(); c.arc(0, 0, s * 0.25, 0, TAU); c.fill();
       } else {
         // rasengan: orb + spiraal
         c.beginPath(); c.arc(0, 0, s * 0.95, 0, TAU); c.stroke();
@@ -501,8 +507,8 @@ function drawTouchBtnIcon(c, id, x, y, r, jutsuKind) {
 }
 
 function jutsuAccentColor(kind, p2Slot) {
-  if (kind === 'chidori') return p2Slot ? '#ffb0b8' : '#a8e0ff';
-  if (kind === 'rinnegan') return p2Slot ? '#ffb0b8' : '#c47aff';
+  const sk = SKILLS.find(s => s.id === kind);
+  if (sk) return p2Slot ? '#ffb0b8' : sk.color;
   return p2Slot ? '#ffb0b8' : '#7cf5ff';
 }
 
@@ -567,7 +573,8 @@ function rollHitDamage(attacker, spec, mult) {
   if (k === 'punch') critChance += sig.punchCrit || 0;
   if (k === 'special' || spec.jutsu) {
     critChance += sig.jutsuCrit || 0;
-    if (spec.jutsu === 'rinnegan') critChance += 0.05;
+    const jsk = SKILLS.find(s => s.id === spec.jutsu);
+    if (jsk && (jsk.id === 'rinnegan' || jsk.behavior === 'pull')) critChance += 0.05;
   }
   if (attacker.isPlayer && typeof game !== 'undefined' && game && game.stageCritBonus) {
     critChance += game.stageCritBonus;
@@ -592,7 +599,8 @@ function projCritMeta(f) {
   const prof = combatEntryFor(f);
   const sig = SIG_MODS[prof.sig] || {};
   let critChance = prof.crit + (sig.critAdd || 0) + (sig.jutsuCrit || 0);
-  if (fighterJutsuKind(f) === 'rinnegan') critChance += 0.05;
+  const eqSk = fighterEquippedSkill(f);
+  if (eqSk && (eqSk.id === 'rinnegan' || eqSk.behavior === 'pull')) critChance += 0.05;
   return { critChance: clamp(critChance, 0, 0.42), critMul: prof.critMul };
 }
 
@@ -638,22 +646,19 @@ function resolveProjHit(p) {
 function projStrikeFighter(game, p, tgt, col) {
   if (!tgt || !tgt.alive) return;
   const hit = resolveProjHit(p);
-  const kb = Math.sign(p.vx || 1) * (p.kind === 'rinnegan' ? 300 : 260);
+  const sk = skillById(p.kind);
+  const kbBase = sk.kb || (sk.behavior === 'pull' || sk.behavior === 'meteor' ? 300 : 260);
+  const kb = Math.sign(p.vx || 1) * kbBase;
   const dealt = tgt.takeDamage(hit.dmg, kb, game);
   if (dealt > 0) {
-    const kind = p.kind === 'rasengan' || p.kind === 'rinnegan' || p.kind === 'chidori' ? 'special' : 'punch';
-    applyHitStop(game, { kind, dmg: hit.dmg }, { crit: hit.crit, heavy: hit.dmg >= 18 });
+    applyHitStop(game, { kind: sk ? 'special' : 'punch', dmg: hit.dmg }, { crit: hit.crit, heavy: hit.dmg >= 18 });
   }
   game.floater(tgt.x, tgt.y - 115, '-' + dealt, col, 16);
   if (hit.crit) applyCritFx(game, tgt.x, tgt.y);
-  if (p.kind === 'rinnegan' && p.pull) tgt.vx += Math.sign(p.vx || 1) * 160;
-  if (p.kind === 'rasengan') {
-    spawnJutsuImpactFx(game, p.x, p.y, 'rasengan', 'full');
-    if (!fxLite() && !motionReduced()) game.freezeT = Math.max(game.freezeT || 0, 0.045);
-  } else if (p.kind === 'chidori') {
-    spawnJutsuImpactFx(game, p.x, p.y, 'chidori', 'full');
-  } else if (p.kind === 'rinnegan') {
-    spawnJutsuImpactFx(game, p.x, p.y, 'rinnegan', 'full');
+  if (p.pull) tgt.vx += Math.sign(p.vx || 1) * 160;
+  spawnJutsuImpactFx(game, p.x, p.y, p.kind, 'full');
+  if (sk.behavior === 'orb' && sk.id === 'rasengan' && !fxLite() && !motionReduced()) {
+    game.freezeT = Math.max(game.freezeT || 0, 0.045);
   }
   if (p.hitSet) p.hitSet.add(tgt);
   else if (!p.pierce) p.life = 0;
@@ -1081,6 +1086,16 @@ function sanitizeSave(s) {
       dexCountFromSave(out) >= Math.ceil(SPECIES_ORDER.length / 2)) styleOk = true;
   if (!styleOk) out.style = 'classic';
 
+  const skPick = skillById(out.skill);
+  let skillOk = skPick.id === 'rasengan';
+  if (skPick.needLvl && out.lvl >= skPick.needLvl && !(skPick.needLvl > adventureWeaponCapForLevel(out.unlocked || 1))) skillOk = true;
+  out.skill = skillOk ? skPick.id : 'rasengan';
+
+  const spPick = superById(out.super);
+  let superOk = spPick.id === 'ketsbam';
+  if (spPick.needLvl && out.lvl >= spPick.needLvl && !(spPick.needLvl > adventureWeaponCapForLevel(out.unlocked || 1))) superOk = true;
+  out.super = superOk ? spPick.id : 'ketsbam';
+
   const cleanStars = {};
   for (const [k, v] of Object.entries(out.stars || {})) {
     const n = parseInt(k, 10);
@@ -1228,7 +1243,8 @@ const I18N = {
       weapons: 'Wapens', weaponsSub: '26 wapens · summon ascends',
       pets: 'Pets', petsSub: 'Muntjes · dex temmen · ei arcade',
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
-      dex: 'Monsterboek', dexSub: '126 soorten · rariteit = HP',
+      skills: 'Skills', skillsSub: 'Chakra specials · Rasengan · Kamehameha',
+      dex: 'Monsterboek', dexSub: '114 soorten · rariteit = HP',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
     },
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
@@ -1302,7 +1318,8 @@ const I18N = {
       weapons: 'Weapons', weaponsSub: '26 weapons · summon ascends',
       pets: 'Pets', petsSub: 'Coins · dex tame · egg arcade',
       style: 'Style', styleSub: 'Bandana & outfit unlocks',
-      dex: 'Monster book', dexSub: '126 species · rarity = HP',
+      skills: 'Skills', skillsSub: 'Chakra specials · Rasengan · Kamehameha',
+      dex: 'Monster book', dexSub: '114 species · rarity = HP',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
     },
     modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Coins' },
@@ -1376,7 +1393,8 @@ const I18N = {
       weapons: 'Waffen', weaponsSub: '26 Waffen · Summons',
       pets: 'Pets', petsSub: 'Münzen · Dex zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
-      dex: 'Monsterbuch', dexSub: '126 Arten · Seltenheit = HP',
+      skills: 'Skills', skillsSub: 'Chakra-Specials · Rasengan · Kamehameha',
+      dex: 'Monsterbuch', dexSub: '114 Arten · Seltenheit = HP',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
     },
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
@@ -1437,7 +1455,8 @@ const I18N = {
       weapons: 'Armes', weaponsSub: '26 armes · invocations',
       pets: 'Pets', petsSub: 'Pièces · dex · œufs',
       style: 'Style', styleSub: 'Déblocages tenues',
-      dex: 'Bestiaire', dexSub: '126 espèces · rareté = PV',
+      skills: 'Skills', skillsSub: 'Spéciaux chakra · Rasengan · Kamehameha',
+      dex: 'Bestiaire', dexSub: '114 espèces · rareté = PV',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
     },
     modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Pièces' },
@@ -1498,7 +1517,8 @@ const I18N = {
       weapons: 'Armas', weaponsSub: '26 armas · invocaciones',
       pets: 'Pets', petsSub: 'Monedas · dex · huevos',
       style: 'Estilo', styleSub: 'Desbloqueos de outfit',
-      dex: 'Bestiario', dexSub: '126 especies · rareza = HP',
+      skills: 'Skills', skillsSub: 'Especiales chakra · Rasengan · Kamehameha',
+      dex: 'Bestiario', dexSub: '114 especies · rareza = HP',
       modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
     },
     modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Monedas' },
@@ -1676,6 +1696,7 @@ function applyLangStaticScreens() {
     ['btnWeapons', 'hub.weapons', 'hub.weaponsSub'],
     ['btnPets', 'hub.pets', 'hub.petsSub'],
     ['btnStyle', 'hub.style', 'hub.styleSub'],
+    ['btnSkills', 'hub.skills', 'hub.skillsSub'],
     ['btnDex', 'hub.dex', 'hub.dexSub'],
   ];
   for (const [id, titleKey, subKey] of modeRows) {
@@ -1761,6 +1782,10 @@ function applyLangStaticScreens() {
   setText('gambleSub', 'ui.gambleSub');
   setText('styleScreenHead', 'ui.styleHead');
   setText('styleScreenSub', 'ui.styleSub');
+  setText('skillScreenHead', 'ui.skillHead');
+  setText('skillScreenSub', 'ui.skillSub');
+  setText('superSectionHead', 'ui.superHead');
+  setText('superSectionSub', 'ui.superSub');
   setText('weaponScreenHead', 'ui.weaponHead');
   setText('weaponScreenSub', 'ui.weaponSub');
   setText('skillScreenHead', 'ui.skillHead');
@@ -1832,6 +1857,7 @@ function applyLangStaticScreens() {
     weaponScreen: t('back.collect'),
     petScreen: t('back.collect'),
     styleScreen: t('back.collect'),
+    skillScreen: t('back.collect'),
     dexScreen: t('back.collect'),
     charSelectScreen: t('back.menu'),
     missionsScreen: t('back.menu'),
@@ -1887,6 +1913,7 @@ function applyLang() {
     else if (active === 'helpScreen' && typeof UI.renderHelp === 'function') UI.renderHelp();
     else if (active === 'weaponScreen' && typeof UI.renderWeapons === 'function') UI.renderWeapons();
     else if (active === 'styleScreen' && typeof UI.renderStyle === 'function') UI.renderStyle();
+    else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'charSelectScreen' && typeof UI.renderCharSelect === 'function') UI.renderCharSelect();
     else if (active === 'levelScreen' && typeof UI.renderLevels === 'function') UI.renderLevels();
     else if (active === 'gambleScreen' && typeof UI.renderGamble === 'function' && pendingAdvLevel) {
@@ -5749,6 +5776,1063 @@ function drawWeaponStylePips(c, x, y, fighter) {
   }
 }
 
+/* --- src/data/styles.js --- */
+/* ============================== STIJLEN ================================ */
+const STYLES = [
+  { id: 'classic', name: 'Klassiek', body: '#f2f5ff', accent: '#3db8ff', bandana: null,
+    needLvl: 1, hint: 'Standaard ninja',
+    tooltip: 'Basis ninja — geen bonus, wel de snelste unlock.',
+    bonus: 'Geen combat-bonus' },
+  { id: 'konoha', name: 'Konoha bandana', body: '#f2f5ff', accent: '#43b25b', bandana: '#2d6b36', plate: '#dfe8ff',
+    needLvl: 5, hint: 'Unlock op Lv 5',
+    tooltip: 'Leaf-dorp headband. Iets meer max HP — standvastig in lange levels.',
+    bonus: '+5 max HP', mods: { maxHp: 5 } },
+  { id: 'chakra', name: 'Chakra gloed', body: '#e8f4ff', accent: '#7cf5ff', bandana: '#3db8ff', glow: true,
+    needTrain: 3, hint: 'Win 3× training',
+    tooltip: 'Blauwe chakra-aura. Chakra laadt sneller — vaker Rasengan/Chidori.',
+    bonus: '+8% chakra-regen', mods: { energyMul: 1.08 } },
+  { id: 'akatsuki', name: 'Rode mantel', body: '#1a1424', accent: '#e04f4f', bandana: '#e04f4f', coat: true,
+    needLvl: 12, hint: 'Unlock op Lv 12',
+    tooltip: 'Rode mantel — agressieve slagen. Meer schade op melee en wapens.',
+    bonus: '+4% schade', mods: { dmgMul: 1.04 } },
+  { id: 'shadow', name: 'Schaduw-ninja', body: '#8fa3d9', accent: '#b06ae0', bandana: '#2a1840',
+    needLvl: 15, hint: 'Unlock op Lv 15',
+    tooltip: 'Schaduw-stappen. Extra crit-kans op alle hits.',
+    bonus: '+3% crit', mods: { critBonus: 0.03 } },
+  { id: 'guvve', name: 'Guvvedukkie', body: '#43b25b', accent: '#ffe259', bandana: '#2a8a38', duck: true,
+    needDex: 8, hint: '8 monsters in boek',
+    tooltip: 'Quack-cosplay. Bonus XP bij avontuur-kills — licht, geen grind.',
+    bonus: '+6% avontuur-XP', mods: { xpMul: 1.06 } },
+  { id: 'gold', name: 'Legendarisch', body: '#ffd75e', accent: '#c97a20', bandana: '#ffb830', glow: true,
+    needLvl: 25, hint: 'Unlock op Lv 25',
+    tooltip: 'Gouden outline + gloed. Sterkere knockback op kicks en specials.',
+    bonus: '+10% knockback', mods: { kbMul: 1.1 } },
+  { id: 'sand', name: 'Woestijn', body: '#e8c98a', accent: '#c97a20', bandana: '#8a6030',
+    needLvl: 8, hint: 'Unlock op Lv 8',
+    tooltip: 'Zandmantel — minder schade bij hits én sterker blok. Tank-stijl voor omringing.',
+    bonus: '−14% schade · blok −25% chip', mods: { defMul: 0.86, blockMul: 0.75 } },
+  { id: 'samurai', name: 'Samurai', body: '#2a2a35', accent: '#e04f4f', bandana: '#1a1a22', topknot: true,
+    needLvl: 20, hint: 'Unlock op Lv 20',
+    tooltip: 'Topknot + katana-houding. Wapen-combo’s raken iets verder.',
+    bonus: '+8% wapen-reach', mods: { weaponRange: 1.08 } },
+  { id: 'cyber', name: 'Cyber-ninja', body: '#1a2040', accent: '#7cf5ff', bandana: '#4ecf6a', visor: true, lightning: true,
+    needLvl: 18, hint: 'Unlock op Lv 18',
+    tooltip: 'Neon-visier + bliksem-flits bij melee. Snellere chakra en visuele chain-sparks.',
+    bonus: 'Lightning FX · +6% chakra', mods: { energyMul: 1.06, lightning: true, dmgMul: 1.02 } },
+  { id: 'fox', name: 'Vossen-ninja', body: '#ff8c42', accent: '#ffe259', bandana: '#d05a1e', fox: true,
+    needDex: 12, hint: '12 monsters in boek',
+    tooltip: 'Vossenoren — sneller op de grond. Ideaal voor kiting en shuriken.',
+    bonus: '+5% loopsnelheid', mods: { speedMul: 1.05 } },
+  { id: 'storm', name: 'Stormgeest', body: '#dfe8ff', accent: '#6fd7ff', bandana: '#2a7fc0', glow: true, lightning: true,
+    needTrain: 5, hint: 'Win 5× training',
+    tooltip: 'Storm-aura + zachte bliksem. Extra shield bij start van elke golf.',
+    bonus: 'Lightning gloed · +0.8s shield/golf', mods: { shieldWave: 0.8, lightning: true } },
+  { id: 'void', name: 'Void-waker', body: '#2a1840', accent: '#ff6b9d', bandana: '#5a1040', coat: true,
+    needLvl: 40, hint: 'Unlock op Lv 40',
+    tooltip: 'Void-mantel — zwaardere jutsu. Specials (Rasengan/Chidori/Rinnegan) raken harder.',
+    bonus: '+8% jutsu-schade', mods: { jutsuMul: 1.08 } },
+  { id: 'hunter', name: 'Jagerlook', body: '#6b5344', accent: '#5ad06a', bandana: '#3d5c32', hunter: true,
+    needDexKills: 75, hint: '75 kills in monsterboek',
+    tooltip: 'Jager-cape + groene accenten. Bonus schade vs monsters in avontuur.',
+    bonus: '+6% vs monsters', mods: { advDmgMul: 1.06 } },
+  { id: 'crystal', name: 'Kristallijn', body: '#e8f7ff', accent: '#6fd7ff', bandana: '#2f7fc0', glow: true, crystal: true,
+    needDexTiers: 4, hint: '4 rariteiten in monsterboek',
+    tooltip: 'Kristallen shard — reflecterende gloed. Korte shield elke golf.',
+    bonus: '+1.0s shield/golf', mods: { shieldWave: 1.0 } },
+  { id: 'tome', name: 'Boekmeester', body: '#f5efe6', accent: '#c98850', bandana: '#6b5344', tome: true,
+    needDexHalf: true, hint: 'Helft van het monsterboek',
+    tooltip: 'Monsterboek op je rug. Meer HP-bonus bij nieuwe dex-ontdekkingen (visueel + klein HP-top-up).',
+    bonus: '+4 max HP · boek-wijsheid', mods: { maxHp: 4, dexHpBonus: 1 } },
+];
+const styleById = id => STYLES.find(s => s.id === id) || STYLES[0];
+
+function styleMods(st) {
+  return (st && st.mods) ? st.mods : {};
+}
+
+function styleCombatLine(st) {
+  return st.bonus || st.hint || '';
+}
+
+function styleUnlocked(st) {
+  if (st.id === 'classic') return true;
+  if (styleSkillGated(st)) return false;
+  if (st.needLvl && save.lvl >= st.needLvl) return true;
+  if (st.needTrain && save.trainWins >= st.needTrain) return true;
+  if (st.needDex && dexCount() >= st.needDex) return true;
+  if (st.needDexKills && dexTotalKills() >= st.needDexKills) return true;
+  if (st.needDexTiers && dexRarityTierCount() >= st.needDexTiers) return true;
+  if (st.needDexHalf && typeof SPECIES_ORDER !== 'undefined' &&
+      dexCount() >= Math.ceil(SPECIES_ORDER.length / 2)) return true;
+  return false;
+}
+
+function applyStyleBonusesToPlayer(game, player) {
+  if (!player) return;
+  const st = styleById(save.style || 'classic');
+  const m = styleMods(st);
+  game.styleDefMul = m.defMul || 1;
+  game.styleDmgMul = m.dmgMul || 1;
+  game.styleAdvDmgMul = m.advDmgMul || 1;
+  game.styleEnergyMul = m.energyMul || 1;
+  game.styleCritBonus = m.critBonus || 0;
+  game.styleKbMul = m.kbMul || 1;
+  game.styleJutsuMul = m.jutsuMul || 1;
+  game.styleShieldWave = m.shieldWave || 0;
+  game.styleBlockMul = m.blockMul || 1;
+  game.styleXpMul = m.xpMul || 1;
+  game.styleLightning = !!(st.lightning || m.lightning);
+  if (m.maxHp) {
+    player.maxhp += m.maxHp;
+    player.hp += m.maxHp;
+  }
+  if (m.speedMul && m.speedMul !== 1) {
+    player.speed = Math.round(player.speed * m.speedMul);
+  }
+  if (m.weaponRange && m.weaponRange !== 1) {
+    game.styleWeaponRange = m.weaponRange;
+  } else {
+    game.styleWeaponRange = 1;
+  }
+}
+
+function applyPlayerStyle(fighter) {
+  const st = styleById(save.style || 'classic');
+  if (!styleUnlocked(st)) { save.style = 'classic'; persist(); }
+  fighter.color = styleById(save.style).body;
+  fighter.style = styleById(save.style);
+  fighter.lineW = st.id === 'gold' ? 5 : 4.5;
+}
+
+function applyStyleToSpec(fighter, spec) {
+  if (!spec || !fighter || !fighter.isPlayer) return spec;
+  const m = styleMods(fighter.style);
+  if (m.dmgMul && m.dmgMul !== 1) spec.dmg = Math.round(spec.dmg * m.dmgMul);
+  if (m.kbMul && m.kbMul !== 1) spec.kb = (spec.kb || 0) * m.kbMul;
+  if (m.weaponRange && spec.kind === 'weapon') {
+    spec.range = (spec.range || 40) * m.weaponRange;
+    spec.r = (spec.r || 24) * Math.sqrt(m.weaponRange);
+  }
+  if (m.jutsuMul && spec.kind === 'special') spec.dmg = Math.round(spec.dmg * m.jutsuMul);
+  return spec;
+}
+/* --- src/data/skills.js --- */
+/* ============================== SKILLS ================================= */
+/** Chakra-specials — equip via Collectie → Skills (avontuur/training/muur/mats). */
+const SKILLS = [
+  { id: 'rasengan', name: 'Rasengan', saga: 'scroll', needLvl: 1,
+    behavior: 'orb', dmgMul: 2.85, windup: 0.48, speed: 420, radius: 28, pierce: true, life: 1.4,
+    color: '#7cf5ff', sfx: 'rasengan', banner: 'RASENGAN!', kb: 520,
+    hint: 'Standaard', tooltip: 'Draaiende chakra-bol — pierce door meerdere vijanden.',
+    bonus: 'Piercing orb' },
+  { id: 'fireball_jutsu', name: 'Vuurbol', saga: 'scroll', needLvl: 4,
+    behavior: 'orb', dmgMul: 2.65, windup: 0.42, speed: 380, radius: 26, pierce: false, life: 1.1,
+    color: '#ff8c42', sfx: 'rasengan', banner: 'VUURBOL!', kb: 480,
+    hint: 'Lv 4', tooltip: 'Katon-stijl vuurprojectiel — korter maar sneller te laden.',
+    bonus: 'Snelle fire orb' },
+  { id: 'chidori', name: 'Chidori', saga: 'scroll', needLvl: 6,
+    behavior: 'dash', dmgMul: 2.72, windup: 0.48, speed: 620, radius: 22, pierce: false, life: 0.35,
+    dashVx: 380, color: '#a8e0ff', sfx: 'chidori', banner: 'CHIDORI!', kb: 540,
+    hint: 'Lv 6', tooltip: 'Bliksem-dash vooruit — korte maar heftige burst.',
+    bonus: 'Lightning dash' },
+  { id: 'shadow_clone_burst', name: 'Schaduw-clones', saga: 'scroll', needLvl: 8,
+    behavior: 'dash', dmgMul: 2.58, windup: 0.44, speed: 540, radius: 24, pierce: true, life: 0.42,
+    dashVx: 320, color: '#cfe0ff', sfx: 'chidori', banner: 'CLONE RUSH!', kb: 460,
+    hint: 'Lv 8', tooltip: 'Dash met pierce-slagen — mobiel en breed.',
+    bonus: 'Pierce dash' },
+  { id: 'gentle_palm', name: 'Zachte palm', saga: 'scroll', needLvl: 10,
+    behavior: 'orb', dmgMul: 2.45, windup: 0.38, speed: 340, radius: 32, pierce: false, life: 0.55,
+    color: '#b8ffc8', sfx: 'rasengan', banner: 'PALM STRIKE!', kb: 620,
+    hint: 'Lv 10', tooltip: 'Interne schade-burst op korte afstand — hoge knockback.',
+    bonus: 'Heavy knockback' },
+  { id: 'rinnegan', name: 'Rinnegan', saga: 'scroll', needLvl: 22,
+    behavior: 'pull', dmgMul: 2.55, windup: 0.52, speed: 340, radius: 30, pierce: true, life: 1.05,
+    pull: true, color: '#c47aff', sfx: 'rinnegan', banner: 'RINNEGAN!', kb: 460,
+    hint: 'Lv 22', tooltip: 'Traag oog-orb met pull — trekt vijanden mee.',
+    bonus: 'Pull + pierce' },
+  { id: 'eight_gates', name: '8 poorten', saga: 'scroll', needLvl: 24,
+    behavior: 'dash', dmgMul: 3.05, windup: 0.55, speed: 680, radius: 26, pierce: true, life: 0.38,
+    dashVx: 420, color: '#ff6b6b', sfx: 'chidori', banner: '8 GATES!', kb: 580,
+    hint: 'Lv 24', tooltip: 'Rood-blitz dash — hoogste scroll dash-schade.',
+    bonus: 'Power dash' },
+  { id: 'black_hole', name: 'Zwart gat', saga: 'scroll', needLvl: 38,
+    behavior: 'meteor', dmgMul: 3.2, windup: 0.62, speed: 220, radius: 36, pierce: true, life: 1.35,
+    pull: true, color: '#6a4aff', sfx: 'rinnegan', banner: 'BLACK HOLE!', kb: 500,
+    hint: 'Lv 38', tooltip: 'Gravity-orb — langzaam, trekt alles naar binnen.',
+    bonus: 'Gravity meteor' },
+
+  { id: 'kamehameha', name: 'Kamehameha', saga: 'ki', needLvl: 7,
+    behavior: 'beam', dmgMul: 3.0, windup: 0.58, speed: 520, radius: 34, pierce: true, life: 1.15,
+    color: '#5ad0ff', sfx: 'rasengan', banner: 'KAMEHAMEHA!', kb: 540,
+    hint: 'Lv 7', tooltip: 'Brede ki-straal — pierce door de hele golf.',
+    bonus: 'Classic beam' },
+  { id: 'galick_gun', name: 'Galick Gun', saga: 'ki', needLvl: 13,
+    behavior: 'beam', dmgMul: 2.92, windup: 0.52, speed: 480, radius: 30, pierce: true, life: 1.0,
+    color: '#b06ae0', sfx: 'rinnegan', banner: 'GALICK GUN!', kb: 520,
+    hint: 'Lv 13', tooltip: 'Paarse ki-beam — iets sneller windup.',
+    bonus: 'Purple beam' },
+  { id: 'destructo_disc', name: 'Destructo Disc', saga: 'ki', needLvl: 16,
+    behavior: 'disc', dmgMul: 2.78, windup: 0.5, speed: 560, radius: 18, pierce: true, life: 1.25,
+    color: '#ffe259', sfx: 'rasengan', banner: 'DISC!', kb: 380,
+    hint: 'Lv 16', tooltip: 'Dunne snijschijf — snel en pierce.',
+    bonus: 'Pierce disc' },
+  { id: 'instant_dash', name: 'Instant Move', saga: 'ki', needLvl: 11,
+    behavior: 'dash', dmgMul: 2.48, windup: 0.36, speed: 700, radius: 20, pierce: false, life: 0.28,
+    dashVx: 440, color: '#7cf5ff', sfx: 'chidori', banner: 'TELEPORT STRIKE!', kb: 420,
+    hint: 'Lv 11', tooltip: 'Ultra-korte windup dash — surprise opener.',
+    bonus: 'Fast dash' },
+  { id: 'final_flash', name: 'Final Flash', saga: 'ki', needLvl: 28,
+    behavior: 'beam', dmgMul: 3.35, windup: 0.68, speed: 580, radius: 38, pierce: true, life: 1.3,
+    color: '#ffe080', sfx: 'rasengan', banner: 'FINAL FLASH!', kb: 600,
+    hint: 'Lv 28', tooltip: 'Massieve gele beam — lang windup, extreme schade.',
+    bonus: 'Mega beam' },
+  { id: 'spirit_bomb', name: 'Spirit Bomb', saga: 'ki', needLvl: 32,
+    behavior: 'meteor', dmgMul: 3.4, windup: 0.72, speed: 180, radius: 40, pierce: true, life: 1.6,
+    pull: true, color: '#a8ecff', sfx: 'rinnegan', banner: 'SPIRIT BOMB!', kb: 480,
+    hint: 'Lv 32', tooltip: 'Gigantische ki-orb — langzaam, alles trekt mee.',
+    bonus: 'Ultimate orb' },
+
+  { id: 'getsuga', name: 'Getsuga', saga: 'tide', needLvl: 9,
+    behavior: 'beam', dmgMul: 2.75, windup: 0.46, speed: 500, radius: 26, pierce: true, life: 0.95,
+    color: '#6fd7ff', sfx: 'rasengan', banner: 'GETSUGA!', kb: 500,
+    hint: 'Lv 9', tooltip: 'Cyan maanslag-golf — snelle horizontale slash.',
+    bonus: 'Moon slash' },
+  { id: 'cero', name: 'Cero', saga: 'tide', needLvl: 15,
+    behavior: 'beam', dmgMul: 2.88, windup: 0.54, speed: 510, radius: 32, pierce: true, life: 1.05,
+    color: '#ff4040', sfx: 'rinnegan', banner: 'CERO!', kb: 560,
+    hint: 'Lv 15', tooltip: 'Rode hollow-straal — brede tide beam.',
+    bonus: 'Red beam' },
+  { id: 'bankai_slash', name: 'Bankai Flash', saga: 'tide', needLvl: 26,
+    behavior: 'dash', dmgMul: 3.1, windup: 0.5, speed: 640, radius: 28, pierce: true, life: 0.45,
+    dashVx: 400, color: '#9db8ff', sfx: 'chidori', banner: 'BANKAI!', kb: 580,
+    hint: 'Lv 26', tooltip: 'Blauwe blitz na release — pierce dash.',
+    bonus: 'Bankai dash' },
+
+  { id: 'gum_rocket', name: 'Gum-Gum Rocket', saga: 'fighter', needLvl: 5,
+    behavior: 'dash', dmgMul: 2.52, windup: 0.4, speed: 580, radius: 24, pierce: false, life: 0.32,
+    dashVx: 360, color: '#ffb0b8', sfx: 'chidori', banner: 'GUM ROCKET!', kb: 500,
+    hint: 'Lv 5', tooltip: 'Rubber-arm dash — vroeg unlock street-fighter vibe.',
+    bonus: 'Stretch dash' },
+  { id: 'gear_second', name: 'Gear Second', saga: 'fighter', needLvl: 14,
+    behavior: 'orb', dmgMul: 2.95, windup: 0.42, speed: 480, radius: 26, pierce: true, life: 1.0,
+    color: '#ff6b6b', sfx: 'rasengan', banner: 'GEAR 2!', kb: 540,
+    hint: 'Lv 14', tooltip: 'Steam-orb — snelle pierce special.',
+    bonus: 'Speed orb' },
+
+  { id: 'thunder_palm', name: 'Thunder Palm', saga: 'cape', needLvl: 12,
+    behavior: 'dash', dmgMul: 2.68, windup: 0.45, speed: 600, radius: 24, pierce: false, life: 0.34,
+    dashVx: 370, color: '#ffe259', sfx: 'chidori', banner: 'THUNDER!', kb: 520,
+    hint: 'Lv 12', tooltip: 'Bliksem-palm dash — cape saga special.',
+    bonus: 'Hero dash' },
+  { id: 'serious_punch', name: 'Serious Punch', saga: 'cape', needLvl: 30,
+    behavior: 'orb', dmgMul: 3.5, windup: 0.55, speed: 460, radius: 34, pierce: true, life: 0.7,
+    color: '#ff4040', sfx: 'rasengan', banner: 'SERIOUS PUNCH!', kb: 720,
+    hint: 'Lv 30', tooltip: 'One-hit orb — korte range, extreme schade.',
+    bonus: 'Serious hit' },
+  { id: 'serious_blast', name: 'Serious Blast', saga: 'cape', needLvl: 42,
+    behavior: 'beam', dmgMul: 3.55, windup: 0.65, speed: 550, radius: 36, pierce: true, life: 1.2,
+    color: '#ff8080', sfx: 'rasengan', banner: 'SERIOUS BLAST!', kb: 640,
+    hint: 'Lv 42', tooltip: 'Serious Series beam — endgame cape ultimate.',
+    bonus: 'Serious beam' },
+
+  { id: 'sun_palm', name: 'Sun Palm', saga: 'dawn', needLvl: 10,
+    behavior: 'orb', dmgMul: 2.7, windup: 0.44, speed: 400, radius: 30, pierce: false, life: 1.0,
+    color: '#ffd75e', sfx: 'rasengan', banner: 'SUN PALM!', kb: 490,
+    hint: 'Lv 10', tooltip: 'Gouden palm-orb — dawn saga balanced special.',
+    bonus: 'Solar orb' },
+  { id: 'moon_pull', name: 'Moon Pull', saga: 'dawn', needLvl: 18,
+    behavior: 'pull', dmgMul: 2.62, windup: 0.5, speed: 300, radius: 28, pierce: true, life: 1.0,
+    pull: true, color: '#e0a8ff', sfx: 'rinnegan', banner: 'MOON PULL!', kb: 440,
+    hint: 'Lv 18', tooltip: 'Maankracht-orb met pull — controle-special.',
+    bonus: 'Lunar pull' },
+];
+
+const skillById = id => SKILLS.find(s => s.id === id) || SKILLS[0];
+
+function skillExists(id) {
+  return SKILLS.some(s => s.id === id);
+}
+
+function skillBehaviorLabel(sk) {
+  const map = { orb: 'Orb', dash: 'Dash', pull: 'Pull', beam: 'Beam', disc: 'Disc', meteor: 'Meteor' };
+  return map[sk && sk.behavior] || 'Special';
+}
+
+function skillSkillGated(sk) {
+  return !!(sk.needLvl && sk.needLvl > adventureWeaponCap());
+}
+
+function skillUnlocked(sk) {
+  if (!sk) return false;
+  if (sk.id === 'rasengan') return true;
+  if (skillSkillGated(sk)) return false;
+  if (sk.needLvl && save.lvl >= sk.needLvl) return true;
+  if (sk.needTrain && save.trainWins >= sk.needTrain) return true;
+  if (sk.needDex && dexCount() >= sk.needDex) return true;
+  if (sk.needDexKills && dexTotalKills() >= sk.needDexKills) return true;
+  return false;
+}
+
+function skillUnlockedCount() {
+  return SKILLS.filter(skillUnlocked).length;
+}
+
+function fighterEquippedSkill(f) {
+  if (!f) return skillById('rasengan');
+  if (f.isRobot) return skillById('chidori');
+  if (f.playerSlot === 2 || (f.playerSlot && f.playerSlot !== 1)) {
+    const vs = f.vsSpecial || 'rasengan';
+    return skillById(vs) || skillById('rasengan');
+  }
+  if (f.isPlayer && !f.playerSlot) {
+    const eq = skillById(save.skill || 'rasengan');
+    return skillUnlocked(eq) ? eq : skillById('rasengan');
+  }
+  if (f.vsSpecial) return skillById(f.vsSpecial) || skillById('rasengan');
+  return skillById('rasengan');
+}
+
+function applyPlayerSkill(fighter) {
+  if (!fighter || !fighter.isPlayer || fighter.playerSlot) return;
+  const sk = fighterEquippedSkill(fighter);
+  fighter.vsSpecial = sk.id;
+}
+
+function skillBanner(sk) {
+  return (sk && sk.banner) || 'SPECIAL!';
+}
+
+function skillHudColor(sk) {
+  return (sk && sk.color) || '#7cf5ff';
+}
+
+function skillSfxId(sk) {
+  if (!sk) return 'rasengan';
+  return sk.id || sk.sfx || 'rasengan';
+}
+
+function skillCombatLine(sk) {
+  return sk.bonus || sk.hint || '';
+}
+
+const SKILL_BEHAVIORS = ['orb', 'dash', 'beam', 'disc', 'pull', 'meteor'];
+const SKILL_SAGA_ORDER = ['scroll', 'ki', 'tide', 'fighter', 'cape', 'dawn'];
+
+function skillsForFilters(saga, behavior) {
+  let list = SKILLS.slice();
+  if (saga && saga !== 'all') list = list.filter(s => s.saga === saga);
+  if (behavior && behavior !== 'all') list = list.filter(s => s.behavior === behavior);
+  return list;
+}
+
+function skillSagaCounts(saga) {
+  const list = saga === 'all' ? SKILLS : SKILLS.filter(s => s.saga === saga);
+  return { unlocked: list.filter(skillUnlocked).length, total: list.length };
+}
+
+function skillNextUnlock() {
+  const pending = SKILLS.filter(s => !skillUnlocked(s))
+    .sort((a, b) => (a.needLvl || 999) - (b.needLvl || 999));
+  return pending[0] || null;
+}
+
+function sortSkills(list, mode) {
+  const arr = list.slice();
+  if (mode === 'dmg') arr.sort((a, b) => (b.dmgMul || 0) - (a.dmgMul || 0) || (a.needLvl || 0) - (b.needLvl || 0));
+  else if (mode === 'name') arr.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  else arr.sort((a, b) => (a.needLvl || 0) - (b.needLvl || 0) || String(a.name).localeCompare(String(b.name)));
+  return arr;
+}
+
+function skillBehaviorLabelI18n(sk) {
+  const beh = sk && sk.behavior ? sk.behavior : 'orb';
+  const k = 'skill.behavior.' + beh;
+  const v = typeof t === 'function' ? t(k) : '';
+  if (v && v !== k) return v;
+  return skillBehaviorLabel(sk);
+}
+
+function skillSagaBlurb(saga) {
+  if (!saga || saga === 'all') return typeof t === 'function' ? t('ui.skillBlurbAll') : '';
+  const k = 'skill.saga.' + saga + '.blurb';
+  const v = typeof t === 'function' ? t(k) : '';
+  if (v && v !== k) return v;
+  const meta = typeof vsSagaMeta === 'function' ? vsSagaMeta(saga) : null;
+  return meta ? meta.blurb : '';
+}
+
+function skillStatRows(sk) {
+  if (!sk) return [];
+  const maxDmg = 3.6;
+  const maxSpd = 720;
+  const maxKb = 720;
+  const maxWind = 0.75;
+  return [
+    { key: 'dmg', pct: clamp((sk.dmgMul || 2) / maxDmg, 0.08, 1), text: '×' + (sk.dmgMul || 2).toFixed(2) },
+    { key: 'wind', pct: clamp(1 - (sk.windup || 0.5) / maxWind, 0.08, 1), text: ((sk.windup || 0) * 1000 | 0) + 'ms' },
+    { key: 'spd', pct: clamp((sk.speed || 400) / maxSpd, 0.08, 1), text: String(sk.speed || 0) },
+    { key: 'kb', pct: clamp((sk.kb || 480) / maxKb, 0.08, 1), text: String(sk.kb || 0) },
+  ];
+}
+
+function skillTags(sk) {
+  if (!sk) return [];
+  const tags = [skillBehaviorLabelI18n(sk)];
+  if (sk.pierce) tags.push(typeof t === 'function' ? t('skill.tag.pierce') : 'Pierce');
+  if (sk.pull) tags.push(typeof t === 'function' ? t('skill.tag.pull') : 'Pull');
+  return tags;
+}
+/* --- src/data/supers.js --- */
+/* ============================== SUPERS ================================= */
+/** Nood-super (Kets-slot) — vervangbaar via Collectie → Skills · alleen avontuur. */
+const SUPERS = [
+  { id: 'ketsbam', name: 'KETS-BAM', needLvl: 1,
+    behavior: 'blast', icon: 'star',
+    color: '#ffd75e', color2: '#ff7043',
+    chargeBanner: 'KETS!', finishBanner: 'KETS-BAM!',
+    chargeSfx: 'ketsbamCharge', finishSfx: 'ketsbam',
+    cd: 9, chargeDur: 2, blastR: 192, power: 5,
+    hint: 'Standaard', tooltip: 'Omringd? Laad op en knal alles weg — klassieke nood-ontsnapping.',
+    bonus: 'AOE schade-blast', tags: ['blast', 'knockback'] },
+  { id: 'iron_shield', name: 'IJzeren schild', needLvl: 5,
+    behavior: 'shield', icon: 'shield',
+    color: '#9fd8ff', color2: '#5a9fd4',
+    chargeBanner: 'SCHILD!', finishBanner: 'BLOKADE!',
+    chargeSfx: 'super_shield_charge', finishSfx: 'super_shield',
+    shieldDur: 9, shieldMul: 0.18, cd: 9, chargeDur: 2.1, blastR: 168, power: 3,
+    hint: 'Lv 5', tooltip: 'Trek een ijzeren koepel — langdurige schade-reductie + kleine shockwave.',
+    bonus: 'Lang schild + push', tags: ['defense', 'push'] },
+  { id: 'heal_wave', name: 'Genezingsgolf', needLvl: 8,
+    behavior: 'heal', icon: 'heart',
+    color: '#6ee06e', color2: '#43b25b',
+    chargeBanner: 'HEAL!', finishBanner: 'GENEZING!',
+    chargeSfx: 'super_heal_charge', finishSfx: 'super_heal',
+    healPct: 0.38, cd: 9, chargeDur: 1.9, blastR: 176, power: 3,
+    hint: 'Lv 8', tooltip: 'Chakra-golf herstelt HP en ruimt vijanden licht weg.',
+    bonus: 'HP + lichte push', tags: ['heal', 'push'] },
+  { id: 'sharingan', name: 'Sharingan', needLvl: 12,
+    behavior: 'sharingan', icon: 'eye',
+    color: '#e04040', color2: '#8b0000',
+    chargeBanner: 'SHARINGAN!', finishBanner: 'GENJUTSU!',
+    chargeSfx: 'super_sharingan_charge', finishSfx: 'super_sharingan',
+    slowDur: 1.5, slowMul: 0.22, cd: 9, chargeDur: 2, blastR: 188, power: 4,
+    hint: 'Lv 12', tooltip: 'Oog-genjutsu: vertraagt vijanden, trekt ze naar je toe en slaat hard toe.',
+    bonus: 'Slow + pull + hit', tags: ['genjutsu', 'pull', 'slow'] },
+  { id: 'lightning_storm', name: 'Bliksemstorm', needLvl: 15,
+    behavior: 'lightning', icon: 'bolt',
+    color: '#a8e0ff', color2: '#5ad0ff',
+    chargeBanner: 'STORM!', finishBanner: 'RAIJIN!',
+    chargeSfx: 'super_lightning_charge', finishSfx: 'super_lightning',
+    strikes: 8, cd: 9, chargeDur: 1.85, blastR: 200, power: 4,
+    hint: 'Lv 15', tooltip: 'Ultra-snelle bliksemslagen op alle nabije vijanden — één voor één.',
+    bonus: 'Multi-bolt spam', tags: ['lightning', 'multi-hit'] },
+  { id: 'meteor_strike', name: 'Meteoorregen', needLvl: 18,
+    behavior: 'meteor', icon: 'meteor',
+    color: '#ff8c42', color2: '#ff7043',
+    chargeBanner: 'METEOR!', finishBanner: 'METEOR REGEN!',
+    chargeSfx: 'super_meteor_charge', finishSfx: 'super_meteor',
+    meteors: 6, cd: 9, chargeDur: 2.05, blastR: 204, power: 4,
+    hint: 'Lv 18', tooltip: 'Vallende meteoren op het slagveld — brede zone-schade.',
+    bonus: 'Zone meteors', tags: ['meteor', 'zone'] },
+  { id: 'berserk_rage', name: 'Berserk', needLvl: 20,
+    behavior: 'rage', icon: 'rage',
+    color: '#ff7a4d', color2: '#ff3d3d',
+    chargeBanner: 'RAGE!', finishBanner: 'BERSERK!',
+    chargeSfx: 'super_rage_charge', finishSfx: 'super_rage',
+    rageDur: 10, rageMul: 1.48, cd: 9, chargeDur: 1.95, blastR: 180, power: 4,
+    hint: 'Lv 20', tooltip: 'Ontketen woede — langdurige schade-boost + shockwave.',
+    bonus: 'Schade-buff + push', tags: ['buff', 'push'] },
+  { id: 'timestop', name: 'Tijd-stil', needLvl: 22,
+    behavior: 'timestop', icon: 'clock',
+    color: '#c47aff', color2: '#7cf5ff',
+    chargeBanner: 'TIJD!', finishBanner: 'STILSTAND!',
+    chargeSfx: 'super_time_charge', finishSfx: 'super_time',
+    freezeDur: 0.26, slowDur: 2.6, slowMul: 0.06, cd: 9, chargeDur: 2.15, blastR: 208, power: 5,
+    hint: 'Lv 22', tooltip: 'Bevriest het slagveld — vijanden stokken vast en nemen zware schade.',
+    bonus: 'Freeze + burst', tags: ['freeze', 'burst'] },
+  { id: 'shadow_clones', name: 'Schaduw-clones', needLvl: 25,
+    behavior: 'clones', icon: 'clone',
+    color: '#cfe0ff', color2: '#7cf5ff',
+    chargeBanner: 'CLONES!', finishBanner: 'CLONE RUSH!',
+    chargeSfx: 'super_clone_charge', finishSfx: 'super_clone',
+    cloneHits: 5, cd: 9, chargeDur: 1.9, blastR: 196, power: 4,
+    hint: 'Lv 25', tooltip: 'Clones slaan van alle kanten — meerdere hits op nabije vijanden.',
+    bonus: 'Multi-hit rush', tags: ['multi-hit', 'rush'] },
+  { id: 'void_pulse', name: 'Void-puls', needLvl: 30,
+    behavior: 'void', icon: 'void',
+    color: '#6a4aff', color2: '#2a1050',
+    chargeBanner: 'VOID!', finishBanner: 'VOID PULSE!',
+    chargeSfx: 'super_void_charge', finishSfx: 'super_void',
+    cd: 9, chargeDur: 2.1, blastR: 210, power: 5,
+    hint: 'Lv 30', tooltip: 'Donkere puls trekt alles naar binnen en explodeert.',
+    bonus: 'Pull + void burst', tags: ['pull', 'void'] },
+];
+
+const SUPER_BEHAVIORS = ['blast', 'shield', 'heal', 'sharingan', 'lightning', 'meteor', 'rage', 'timestop', 'clones', 'void'];
+
+const superById = id => SUPERS.find(s => s.id === id) || SUPERS[0];
+
+function superExists(id) {
+  return SUPERS.some(s => s.id === id);
+}
+
+function superBehaviorLabel(sp) {
+  const map = {
+    blast: 'Blast', shield: 'Schild', heal: 'Heal', sharingan: 'Genjutsu',
+    lightning: 'Bliksem', meteor: 'Meteor', rage: 'Rage', timestop: 'Tijd',
+    clones: 'Clones', void: 'Void',
+  };
+  return map[sp && sp.behavior] || 'Super';
+}
+
+function superBehaviorLabelI18n(sp) {
+  const beh = sp && sp.behavior ? sp.behavior : 'blast';
+  const k = 'super.behavior.' + beh;
+  const v = typeof t === 'function' ? t(k) : '';
+  if (v && v !== k) return v;
+  return superBehaviorLabel(sp);
+}
+
+function superSkillGated(sp) {
+  return !!(sp.needLvl && sp.needLvl > adventureWeaponCap());
+}
+
+function superUnlocked(sp) {
+  if (!sp) return false;
+  if (sp.id === 'ketsbam') return true;
+  if (superSkillGated(sp)) return false;
+  if (sp.needLvl && save.lvl >= sp.needLvl) return true;
+  return false;
+}
+
+function superUnlockedCount() {
+  return SUPERS.filter(superUnlocked).length;
+}
+
+function equippedSuper() {
+  const eq = superById(save.super || 'ketsbam');
+  return superUnlocked(eq) ? eq : superById('ketsbam');
+}
+
+function superChargeBanner(sp) {
+  if (!sp) return 'KETS!';
+  const k = 'super.' + sp.id + '.charge';
+  const v = typeof t === 'function' ? t(k) : '';
+  if (v && v !== k) return v;
+  return sp.chargeBanner || 'KETS!';
+}
+
+function superFinishBanner(sp) {
+  if (!sp) return 'KETS-BAM!';
+  const k = 'super.' + sp.id + '.finish';
+  const v = typeof t === 'function' ? t(k) : '';
+  if (v && v !== k) return v;
+  return sp.finishBanner || 'KETS-BAM!';
+}
+
+function superSfxId(sp, phase) {
+  if (!sp) return phase === 'charge' ? 'ketsbamCharge' : 'ketsbam';
+  return phase === 'charge' ? (sp.chargeSfx || 'ketsbamCharge') : (sp.finishSfx || 'ketsbam');
+}
+
+function superNextUnlock() {
+  const pending = SUPERS.filter(s => !superUnlocked(s))
+    .sort((a, b) => (a.needLvl || 999) - (b.needLvl || 999));
+  return pending[0] || null;
+}
+
+function superCombatLine(sp) {
+  return sp.bonus || sp.hint || '';
+}
+
+function superChargeDur(sp) {
+  return sp && sp.chargeDur ? sp.chargeDur : KETSBAM_CHARGE_DUR;
+}
+
+function superCooldown(sp) {
+  return sp && sp.cd ? sp.cd : KETSBAM_CD;
+}
+
+function superBlastRadius(sp) {
+  return sp && sp.blastR ? sp.blastR : KETSBAM_BLAST_R;
+}
+
+function superStatRows(sp) {
+  if (!sp) return [];
+  const maxPow = 5;
+  const maxR = 220;
+  const maxCd = 12;
+  const maxCharge = 2.2;
+  return [
+    { key: 'pow', pct: clamp((sp.power || 3) / maxPow, 0.1, 1), text: '★'.repeat(sp.power || 3) },
+    { key: 'rad', pct: clamp((sp.blastR || KETSBAM_BLAST_R) / maxR, 0.1, 1), text: String(sp.blastR || KETSBAM_BLAST_R) },
+    { key: 'cd', pct: clamp(1 - (sp.cd || KETSBAM_CD) / maxCd, 0.1, 1), text: (sp.cd || KETSBAM_CD) + 's' },
+    { key: 'charge', pct: clamp(1 - (sp.chargeDur || KETSBAM_CHARGE_DUR) / maxCharge, 0.1, 1),
+      text: ((sp.chargeDur || KETSBAM_CHARGE_DUR) * 1000 | 0) + 'ms' },
+  ];
+}
+
+function superTags(sp) {
+  if (!sp) return [];
+  const tags = [superBehaviorLabelI18n(sp)];
+  for (const tag of sp.tags || []) {
+    const k = 'super.tag.' + tag;
+    const v = typeof t === 'function' ? t(k) : '';
+    tags.push(v && v !== k ? v : tag);
+  }
+  return tags.slice(0, 4);
+}
+
+function applySuperMonsterSlow(m, dur, strength) {
+  if (!m || !m.alive) return;
+  m.superSlowT = Math.max(m.superSlowT || 0, dur || 1.2);
+  m.superSlowMul = Math.min(m.superSlowMul || 1, strength != null ? strength : 0.25);
+}
+
+function queueSuperFx(game, fx) {
+  if (!game) return;
+  if (!game.superFx) game.superFx = [];
+  game.superFx.push(fx);
+}
+
+function tickSuperFx(game, dt) {
+  if (!game || !game.superFx || !game.superFx.length) return;
+  const fighter = game.player;
+  const lite = fxLite();
+  for (let i = game.superFx.length - 1; i >= 0; i--) {
+    const fx = game.superFx[i];
+    fx.t = (fx.t || 0) + dt;
+    if (fx.delay && fx.t < fx.delay) continue;
+    if (fx.kind === 'lightning' && !fx.done) {
+      fx.done = true;
+      const m = fx.target;
+      if (m && m.alive) {
+        const tx = fx.x != null ? fx.x : m.x;
+        const ty = fx.y != null ? fx.y : m.y - 90;
+        if (!lite) {
+          cDrawLightningBolt(game, tx, ty, m.x, m.y - 40, fx.color || '#a8e0ff');
+        }
+        game.burst(tx, ty, fx.color || '#a8e0ff', lite ? 5 : 10, { kind: 'spark', size: 2.4 });
+        if (!lite) game.burst(m.x, m.y - 40, '#fff', 4);
+        m.takeDamage(fx.dmg || 12, fx.kb || 320, game);
+      }
+      fx.life = 0.12;
+    }
+    if (fx.kind === 'meteor' && !fx.done) {
+      fx.done = true;
+      const mx = fx.x, my = fx.y;
+      if (!lite) {
+        for (let t = 0; t < 3; t++) {
+          game.burst(mx + rand(-8, 8), my - 60 - t * 22, fx.color2 || '#ffe259', 2);
+        }
+      }
+      game.burst(mx, my, fx.color || '#ff8c42', lite ? 8 : 16, { kind: 'spark', size: 3 });
+      if (!lite) spawnFxRing(game, mx, my, fx.color2 || '#ffe259', 5);
+      for (const m of game.monsters) {
+        if (!m.alive) continue;
+        if (Math.hypot(m.x - mx, m.y - my) > (fx.r || 58)) continue;
+        m.takeDamage(fx.dmg || 10, Math.sign(m.x - mx || fighter?.face || 1) * (fx.kb || 360), game);
+      }
+      fx.life = 0.15;
+    }
+    if (fx.kind === 'clone' && !fx.done) {
+      fx.done = true;
+      const m = fx.target;
+      if (m && m.alive) {
+        game.burst(fx.x, fx.y - 40, fx.color || '#cfe0ff', lite ? 3 : 6);
+        m.takeDamage(fx.dmg || 8, fx.kb || 260, game);
+      }
+      fx.life = 0.1;
+    }
+    fx.life = (fx.life != null ? fx.life : 0.2) - dt;
+    if (fx.life <= 0) game.superFx.splice(i, 1);
+  }
+}
+
+/** Teken bliksem-segment (wereld-coords via game.burst-trail hack — simpele lijn-FX). */
+function cDrawLightningBolt(game, x0, y0, x1, y1, col) {
+  if (!game._superBoltSeg) game._superBoltSeg = [];
+  game._superBoltSeg.push({ x0, y0, x1, y1, col, life: 0.14 });
+}
+
+function drawSuperFxLayer(game, c) {
+  if (!game) return;
+  if (game._superBoltSeg && game._superBoltSeg.length) {
+    for (let i = game._superBoltSeg.length - 1; i >= 0; i--) {
+      const b = game._superBoltSeg[i];
+      b.life -= 0.016;
+      if (b.life <= 0) { game._superBoltSeg.splice(i, 1); continue; }
+      c.save();
+      c.globalAlpha = clamp(b.life / 0.14, 0, 1);
+      c.strokeStyle = b.col || '#a8e0ff';
+      c.lineWidth = 2.5;
+      c.beginPath();
+      c.moveTo(b.x0, b.y0);
+      const midX = (b.x0 + b.x1) / 2 + rand(-12, 12);
+      const midY = (b.y0 + b.y1) / 2 + rand(-8, 8);
+      c.lineTo(midX, midY);
+      c.lineTo(b.x1, b.y1);
+      c.stroke();
+      c.restore();
+    }
+  }
+}
+
+function drawSuperShieldBubble(game, c, f) {
+  if (!f || !f.alive || !game.playerShieldT || game.playerShieldT <= 0) return;
+  const sp = equippedSuper();
+  const pulse = game.t || 0;
+  const calm = motionReduced();
+  const r = 34 + (calm ? 0 : Math.sin(pulse * 8) * 3);
+  c.save();
+  c.globalAlpha = 0.22 + (calm ? 0 : Math.sin(pulse * 6) * 0.08);
+  c.strokeStyle = sp.behavior === 'shield' ? sp.color : '#9fd8ff';
+  c.lineWidth = 2.5;
+  c.beginPath();
+  c.ellipse(f.x, f.y - 48, r, r * 0.72, 0, 0, TAU);
+  c.stroke();
+  c.globalAlpha = 0.08;
+  c.fillStyle = sp.behavior === 'shield' ? sp.color : '#9fd8ff';
+  c.fill();
+  c.restore();
+}
+
+function finishSuperBlast(fighter, game, sp, px, py, blastR, dmgMul, kbBase) {
+  for (const m of game.monsters) {
+    if (!m.alive) continue;
+    const dx = m.x - px, dy = m.y - py;
+    const dist = Math.hypot(dx, dy);
+    if (dist > blastR) continue;
+    const falloff = 1 - dist / blastR;
+    const dmg = Math.max(10, Math.round(fighter.baseDmg * (dmgMul + falloff * 1.1)));
+    const kb = Math.sign(dx || fighter.face || 1) * (kbBase + falloff * 120);
+    m.takeDamage(dmg, kb, game);
+  }
+}
+
+function finishEquippedSuper(fighter, game) {
+  if (!fighter || !game) return;
+  const sp = equippedSuper();
+  const px = fighter.x, py = fighter.y - 42;
+  const blastR = superBlastRadius(sp);
+  const banner = superFinishBanner(sp);
+  const lite = fxLite();
+
+  game.shake(sp.behavior === 'shield' ? 8 : 14, sp.behavior === 'timestop' ? 0.28 : 0.38);
+  game.freezeT = Math.max(game.freezeT, sp.behavior === 'timestop' ? (sp.freezeDur || 0.26) : 0.06);
+  game.banner(banner, 0.85, sp.color, 42);
+  try { AudioSys.sfx(superSfxId(sp, 'finish')); } catch (_) {}
+
+  switch (sp.behavior) {
+    case 'shield':
+      game.playerShieldT = Math.max(game.playerShieldT, sp.shieldDur || 9);
+      game.superShieldFrom = sp.id;
+      finishSuperBlast(fighter, game, sp, px, py, blastR * 0.72, 0.85, 280);
+      game.burst(px, py, sp.color, lite ? 16 : 28, { kind: 'ring' });
+      spawnFxRing(game, px, py, sp.color2 || sp.color, lite ? 8 : 14);
+      game.floater(px, py - 80, banner, sp.color, 20);
+      break;
+
+    case 'heal': {
+      const maxHp = fighter.maxHp || 100;
+      const heal = Math.round(maxHp * (sp.healPct || 0.38));
+      fighter.hp = Math.min(maxHp, fighter.hp + heal);
+      finishSuperBlast(fighter, game, sp, px, py, blastR * 0.65, 0.75, 240);
+      game.burst(px, py, sp.color, lite ? 18 : 32, { kind: 'spark', size: 2.4 });
+      if (!lite) {
+        for (let i = 0; i < 5; i++) {
+          game.burst(px + rand(-40, 40), py + rand(-20, 30), sp.color2 || sp.color, 2);
+        }
+      }
+      game.floater(px, py - 80, '+' + heal + ' HP', sp.color, 18);
+      game.floater(px, py - 102, banner, sp.color2 || sp.color, 16);
+      break;
+    }
+
+    case 'sharingan': {
+      for (const m of game.monsters) {
+        if (!m.alive) continue;
+        const dx = px - m.x, dy = py - m.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > blastR) continue;
+        applySuperMonsterSlow(m, sp.slowDur || 1.5, sp.slowMul || 0.22);
+        const falloff = 1 - dist / blastR;
+        const pullF = 0.35 + falloff * 0.55;
+        m.x += (dx / (dist || 1)) * pullF * 52;
+        m.y += (dy / (dist || 1)) * pullF * 20;
+        const dmg = Math.max(10, Math.round(fighter.baseDmg * (1.45 + falloff * 0.95)));
+        m.takeDamage(dmg, Math.sign(m.x - px || fighter.face || 1) * (320 + falloff * 100), game);
+      }
+      if (!lite) spawnFxRing(game, px, py - 20, sp.color, 14);
+      game.burst(px, py, sp.color, lite ? 20 : 36, { kind: 'spark', size: 2.8 });
+      game.burst(px, py - 18, sp.color2 || '#fff', lite ? 10 : 18);
+      game.floater(px, py - 80, banner, sp.color, 20);
+      break;
+    }
+
+    case 'void': {
+      for (const m of game.monsters) {
+        if (!m.alive) continue;
+        const dx = px - m.x, dy = py - m.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > blastR) continue;
+        applySuperMonsterSlow(m, 0.85, 0.35);
+        const falloff = 1 - dist / blastR;
+        m.x += (dx / (dist || 1)) * (0.45 + falloff * 0.65) * 58;
+        m.y += (dy / (dist || 1)) * (0.45 + falloff * 0.65) * 22;
+        const dmg = Math.max(12, Math.round(fighter.baseDmg * (1.55 + falloff * 1.05)));
+        m.takeDamage(dmg, Math.sign(m.x - px || fighter.face || 1) * (340 + falloff * 110), game);
+      }
+      game.burst(px, py, sp.color, lite ? 22 : 40, { kind: 'ring' });
+      game.burst(px, py, sp.color2 || '#2a1050', lite ? 12 : 22);
+      spawnFxRing(game, px, py, sp.color, lite ? 12 : 18);
+      game.floater(px, py - 80, banner, sp.color, 20);
+      break;
+    }
+
+    case 'lightning': {
+      const targets = game.monsters.filter(m => m.alive && Math.hypot(m.x - px, m.y - py) <= blastR);
+      const strikes = sp.strikes || 8;
+      for (let i = 0; i < strikes; i++) {
+        const m = targets[i % Math.max(1, targets.length)];
+        if (!m) break;
+        const falloff = 1 - Math.hypot(m.x - px, m.y - py) / blastR;
+        queueSuperFx(game, {
+          kind: 'lightning',
+          target: m,
+          x: m.x + rand(-14, 14),
+          y: m.y - 92 + rand(-16, 8),
+          color: sp.color,
+          dmg: Math.max(12, Math.round(fighter.baseDmg * (1.32 + falloff * 0.85))),
+          kb: Math.sign(m.x - px || fighter.face || 1) * (360 + falloff * 80),
+          delay: i * 0.07,
+          t: 0,
+        });
+      }
+      game.floater(px, py - 80, banner, sp.color, 20);
+      break;
+    }
+
+    case 'meteor': {
+      const count = sp.meteors || 6;
+      for (let i = 0; i < count; i++) {
+        const ang = (i / count) * TAU + rand(-0.25, 0.25);
+        const dist = rand(blastR * 0.18, blastR * 0.94);
+        const mx = px + Math.cos(ang) * dist;
+        const my = py + Math.sin(ang) * dist * 0.35;
+        queueSuperFx(game, {
+          kind: 'meteor',
+          x: mx, y: my,
+          color: sp.color,
+          color2: sp.color2 || '#ffe259',
+          dmg: Math.max(10, Math.round(fighter.baseDmg * (1.15 + rand(0, 0.65)))),
+          kb: rand(300, 440),
+          r: 58,
+          delay: i * 0.09,
+          t: 0,
+        });
+      }
+      game.shake(10, 0.22);
+      game.floater(px, py - 80, banner, sp.color, 20);
+      break;
+    }
+
+    case 'rage':
+      game.dmgBuffT = Math.max(game.dmgBuffT, sp.rageDur || 10);
+      game.dmgBuffMul = Math.max(game.dmgBuffMul || 1, sp.rageMul || 1.48);
+      finishSuperBlast(fighter, game, sp, px, py, blastR * 0.78, 1.05, 300);
+      game.burst(px, py, sp.color, lite ? 18 : 30);
+      if (!lite) game.burst(px, py - 30, sp.color2 || '#ff3d3d', 12);
+      game.floater(px, py - 80, banner, sp.color, 20);
+      break;
+
+    case 'timestop': {
+      game.freezeT = Math.max(game.freezeT, sp.freezeDur || 0.26);
+      for (const m of game.monsters) {
+        if (!m.alive) continue;
+        if (Math.hypot(m.x - px, m.y - py) > blastR * 1.05) continue;
+        applySuperMonsterSlow(m, sp.slowDur || 2.6, sp.slowMul || 0.06);
+      }
+      finishSuperBlast(fighter, game, sp, px, py, blastR * 1.05, 1.55, 340);
+      game.burst(px, py, sp.color, lite ? 22 : 38, { kind: 'ring' });
+      game.burst(px, py, sp.color2 || '#fff', lite ? 12 : 20);
+      if (!lite) spawnFxRing(game, px, py - 24, sp.color2 || '#7cf5ff', 12);
+      game.floater(px, py - 80, banner, sp.color, 20);
+      break;
+    }
+
+    case 'clones': {
+      const hits = sp.cloneHits || 5;
+      const nearby = game.monsters.filter(m => m.alive && Math.hypot(m.x - px, m.y - py) <= blastR);
+      let delay = 0;
+      for (const m of nearby) {
+        for (let h = 0; h < hits; h++) {
+          const off = (h - (hits - 1) / 2) * 26;
+          queueSuperFx(game, {
+            kind: 'clone',
+            target: m,
+            x: m.x + off,
+            y: m.y,
+            color: sp.color,
+            dmg: Math.max(8, Math.round(fighter.baseDmg * (0.38 + h * 0.09))),
+            kb: Math.sign(m.x - px + off || fighter.face || 1) * (250 + h * 42),
+            delay: delay,
+            t: 0,
+          });
+          delay += 0.045;
+        }
+      }
+      game.burst(px, py, sp.color, lite ? 16 : 26);
+      game.floater(px, py - 80, banner, sp.color, 20);
+      break;
+    }
+
+    case 'blast':
+    default:
+      finishSuperBlast(fighter, game, sp, px, py, blastR, 1.65, 380);
+      game.burst(px, py, sp.color, lite ? 22 : 40, { kind: 'spark', size: 3.2 });
+      game.burst(px, py, sp.color2 || '#ff7043', lite ? 14 : 26);
+      spawnFxRing(game, px, py, '#ffe259', lite ? 10 : 18);
+      game.floater(px, py - 80, banner, sp.color, 20);
+      break;
+  }
+
+  if (save.haptics !== false) haptic(sp.behavior === 'shield' ? 18 : 32);
+}
+
+/** Prompt/charge icoon op canvas. */
+function drawSuperIcon(c, icon, r, color, color2) {
+  c.fillStyle = color || '#ffd75e';
+  c.strokeStyle = color2 || '#ff7043';
+  c.lineWidth = 2.5;
+  switch (icon) {
+    case 'shield':
+      c.beginPath();
+      c.moveTo(0, -r * 0.82);
+      c.lineTo(r * 0.72, -r * 0.35);
+      c.lineTo(r * 0.72, r * 0.25);
+      c.quadraticCurveTo(0, r * 0.92, -r * 0.72, r * 0.25);
+      c.lineTo(-r * 0.72, -r * 0.35);
+      c.closePath();
+      c.fill();
+      c.stroke();
+      break;
+    case 'eye':
+      c.beginPath();
+      c.ellipse(0, 0, r * 0.82, r * 0.48, 0, 0, TAU);
+      c.fill();
+      c.stroke();
+      c.fillStyle = '#fff';
+      c.beginPath();
+      c.arc(0, 0, r * 0.22, 0, TAU);
+      c.fill();
+      c.fillStyle = color2 || '#8b0000';
+      c.beginPath();
+      c.arc(0, 0, r * 0.12, 0, TAU);
+      c.fill();
+      for (let i = 0; i < 3; i++) {
+        c.strokeStyle = color;
+        c.lineWidth = 1.2;
+        c.beginPath();
+        c.arc(0, 0, r * (0.32 + i * 0.18), 0, TAU);
+        c.stroke();
+      }
+      break;
+    case 'bolt':
+      c.beginPath();
+      c.moveTo(r * 0.12, -r * 0.88);
+      c.lineTo(-r * 0.28, r * 0.05);
+      c.lineTo(r * 0.05, r * 0.05);
+      c.lineTo(-r * 0.18, r * 0.88);
+      c.lineTo(r * 0.38, -r * 0.08);
+      c.lineTo(r * 0.02, -r * 0.08);
+      c.closePath();
+      c.fill();
+      c.stroke();
+      break;
+    case 'heart':
+      c.beginPath();
+      c.moveTo(0, r * 0.32);
+      c.bezierCurveTo(-r * 0.9, -r * 0.2, -r * 0.45, -r * 0.88, 0, -r * 0.42);
+      c.bezierCurveTo(r * 0.45, -r * 0.88, r * 0.9, -r * 0.2, 0, r * 0.32);
+      c.fill();
+      c.stroke();
+      break;
+    case 'meteor':
+      c.beginPath();
+      c.arc(0, 0, r * 0.55, 0, TAU);
+      c.fill();
+      c.stroke();
+      c.strokeStyle = color;
+      c.lineWidth = 2;
+      c.beginPath();
+      c.moveTo(-r * 0.15, -r * 0.75);
+      c.lineTo(r * 0.35, r * 0.75);
+      c.stroke();
+      break;
+    case 'clock':
+      c.beginPath();
+      c.arc(0, 0, r * 0.72, 0, TAU);
+      c.fill();
+      c.stroke();
+      c.strokeStyle = '#fff';
+      c.beginPath();
+      c.moveTo(0, 0);
+      c.lineTo(0, -r * 0.42);
+      c.moveTo(0, 0);
+      c.lineTo(r * 0.32, 0);
+      c.stroke();
+      break;
+    case 'rage':
+      c.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * TAU - Math.PI / 2;
+        const rr = i % 2 ? r * 0.45 : r * 0.88;
+        const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
+        if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
+      }
+      c.closePath();
+      c.fill();
+      c.stroke();
+      break;
+    case 'clone':
+      c.globalAlpha *= 0.55;
+      c.beginPath();
+      c.arc(-r * 0.28, 0, r * 0.42, 0, TAU);
+      c.fill();
+      c.globalAlpha /= 0.55;
+      c.beginPath();
+      c.arc(r * 0.28, 0, r * 0.42, 0, TAU);
+      c.fill();
+      c.stroke();
+      break;
+    case 'void':
+      c.beginPath();
+      c.arc(0, 0, r * 0.72, 0, TAU);
+      c.fill();
+      c.stroke();
+      c.fillStyle = '#0a0d18';
+      c.beginPath();
+      c.arc(0, 0, r * 0.38, 0, TAU);
+      c.fill();
+      c.strokeStyle = color;
+      c.stroke();
+      break;
+    case 'star':
+    default:
+      c.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * TAU - Math.PI / 2;
+        const rr = i % 2 ? r * 0.42 : r * 0.88;
+        const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
+        if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
+      }
+      c.closePath();
+      c.fill();
+      c.stroke();
+      break;
+  }
+}
 /* --- src/systems/versus.js --- */
 /* ========================== VERSUS / 2 SPELERS ========================== */
 /** Saga-hints: parodie-vibes, geen officiële manga/IP-namen. */
@@ -7085,6 +8169,10 @@ function seedNlGameStrings() {
     eggNone: 'Geen actief ei-pet',
     eggFloat: '{name} zweeft nu mee!',
     styleEquipped: '{name} uitgerust',
+    skillUnlock: 'Nieuwe skill: {name}!',
+    skillEquipped: '{name} uitgerust als special',
+    superEquipped: '{name} uitgerust als nood-super',
+    superUnlock: 'Nieuwe nood-super: {name}!',
     welcome: 'Welkom! Menu → Tips · per modus één korte hint bovenin (geen toast-stapel)',
   });
   if (!I18N.nl.gamble) I18N.nl.gamble = {};
@@ -7271,6 +8359,46 @@ function seedNlGameStrings() {
     styleActive: 'Actief',
     stylePick: 'Tik om te kiezen',
     styleIslandGate: 'Eiland-skill Lv {lvl}',
+    skillHead: 'Skills',
+    skillSub: 'Chakra-specials — level unlocks · avontuur/training/muur/mats',
+    skillSummaryHead: 'Skills',
+    skillSummaryActive: 'actief',
+    skillSummarySub: 'Kies je chakra-special voor avontuur & solo-modi. Versus gebruikt roster-specials.',
+    skillActive: 'Actief',
+    skillPick: 'Tik om uit te rusten',
+    skillPickHint: 'Tik = preview · nogmaals = uitrusten',
+    skillEquipBtn: 'Uitrusten',
+    skillIslandGate: 'Eiland-skill Lv {lvl}',
+    skillNeedLvl: 'Unlock op Lv {lvl}',
+    skillGateLine: 'eiland-gate Lv {cap}',
+    skillBlurbAll: '24 chakra-specials — filter op saga of type · preview + stats',
+    skillEmptyFilter: 'Geen skills in deze filter — wijzig saga of type',
+    skillNextUnlock: 'Volgende unlock: <b>{name}</b> op Lv {lvl} · nog {need} level(s)',
+    skillNextUnlockSoon: 'Volgende: <b>{name}</b> (Lv {lvl}) — bijna klaar',
+    skillNextIsland: 'Volgende: <b>{name}</b> — eiland-gate tot Lv {cap} in avontuur',
+    skillBehAll: 'Alle types',
+    skillSort_level: 'Sort: level',
+    skillSort_dmg: 'Sort: schade',
+    skillSort_name: 'Sort: naam',
+    superHead: 'Nood-super (Kets-slot)',
+    superSub: 'Omringd in avontuur — tik midden-symbool of druk E · vervangt KETS-BAM',
+    superSummaryHead: 'Nood-super',
+    superSummaryActive: 'actief',
+    superSummarySub: 'Alleen avontuur — verschijnt als je omsingeld of vastzit.',
+    superActive: 'Actief',
+    superPick: 'Tik om uit te rusten',
+    superPickHint: 'Tik = preview · nogmaals = uitrusten',
+    superEquipBtn: 'Uitrusten',
+    superIslandGate: 'Eiland-skill Lv {lvl}',
+    superNeedLvl: 'Unlock op Lv {lvl}',
+    superNextUnlock: 'Volgende super: <b>{name}</b> op Lv {lvl} · nog {need} level(s)',
+    superNextUnlockSoon: 'Volgende super: <b>{name}</b> (Lv {lvl}) — bijna klaar',
+    superNextIsland: 'Volgende super: <b>{name}</b> — eiland-gate tot Lv {cap} in avontuur',
+    superStat_pow: 'Kracht',
+    superStat_rad: 'Radius',
+    superStat_cd: 'Cooldown',
+    superStat_charge: 'Laden',
+    superHudCd: 'Nood-super {n}s',
     weaponHead: 'Wapens',
     weaponSub: 'Summons zijn echt · eiland-skill gate: alleen wapens tot je huidige eiland-cap in avontuur',
     skillHead: 'Upgrades',
@@ -7447,6 +8575,46 @@ function seedNlFromRuntime() {
   if (typeof STYLES !== 'undefined') {
     if (!I18N.nl.style) I18N.nl.style = {};
     for (const s of STYLES) I18N.nl.style[s.id] = { name: s.name, hint: s.hint, tooltip: s.tooltip, bonus: s.bonus };
+  }
+  if (typeof SKILLS !== 'undefined') {
+    if (!I18N.nl.skill) I18N.nl.skill = {};
+    for (const s of SKILLS) I18N.nl.skill[s.id] = { name: s.name, hint: s.hint, tooltip: s.tooltip, bonus: s.bonus };
+    Object.assign(I18N.nl.skill, {
+      behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor' },
+      stat: { dmg: 'Schade', wind: 'Windup', spd: 'Snelheid', kb: 'Knockback' },
+      tag: { pierce: 'Pierce', pull: 'Pull' },
+      saga: {
+        scroll: { blurb: 'Ninja-scroll — Rasengan, Chidori, Rinnegan & gravity specials.' },
+        ki: { blurb: 'Ki-golven — Kamehameha, discs, Spirit Bomb & blitz dashes.' },
+        tide: { blurb: 'Tide-straal — Getsuga, Cero & Bankai flash.' },
+        fighter: { blurb: 'Street stretch — Gum-Gum dash & Gear Second steam.' },
+        cape: { blurb: 'Hero specials — Thunder Palm & Serious Series.' },
+        dawn: { blurb: 'Dawn palm — solar orbs & lunar pull control.' },
+      },
+    });
+  }
+  if (typeof SUPERS !== 'undefined') {
+    if (!I18N.nl.super) I18N.nl.super = {};
+    for (const s of SUPERS) {
+      I18N.nl.super[s.id] = {
+        name: s.name, hint: s.hint, tooltip: s.tooltip, bonus: s.bonus,
+        charge: s.chargeBanner, finish: s.finishBanner,
+      };
+    }
+    Object.assign(I18N.nl.super, {
+      behavior: {
+        blast: 'Blast', shield: 'Schild', heal: 'Heal', sharingan: 'Genjutsu',
+        lightning: 'Bliksem', meteor: 'Meteor', rage: 'Rage', timestop: 'Tijd',
+        clones: 'Clones', void: 'Void',
+      },
+      stat: { pow: 'Kracht', rad: 'Radius', cd: 'Cooldown', charge: 'Laden' },
+      tag: {
+        blast: 'Blast', knockback: 'Knockback', defense: 'Verdediging', push: 'Push',
+        heal: 'Heal', genjutsu: 'Genjutsu', pull: 'Pull', slow: 'Slow',
+        lightning: 'Bliksem', 'multi-hit': 'Multi-hit', meteor: 'Meteor', zone: 'Zone',
+        buff: 'Buff', freeze: 'Freeze', burst: 'Burst', rush: 'Rush', void: 'Void',
+      },
+    });
   }
   if (typeof PICKUP_META !== 'undefined') {
     if (!I18N.nl.pickup) I18N.nl.pickup = {};
@@ -7714,7 +8882,10 @@ const CATALOG_EN = {
     eggNone: 'No active egg pet',
     eggFloat: '{name} floats along now!',
     styleEquipped: '{name} equipped',
-    welcome: 'Welcome! Menu → Tips · one short hint per mode (no toast stack)',
+    skillUnlock: 'New skill: {name}!',
+    skillEquipped: '{name} equipped as special',
+    superEquipped: '{name} equipped as emergency super',
+    superUnlock: 'New emergency super: {name}!',
   },
   versionUpdate: {
     beforeTitle: 'Fetch new version',
@@ -7858,6 +9029,46 @@ const CATALOG_EN = {
     styleActive: 'Active',
     stylePick: 'Tap to equip',
     styleIslandGate: 'Island skill Lv {lvl}',
+    skillHead: 'Skills',
+    skillSub: 'Chakra specials — level unlocks · adventure/training/wall/mats',
+    skillSummaryHead: 'Skills',
+    skillSummaryActive: 'active',
+    skillSummarySub: 'Pick your chakra special for adventure & solo modes. Versus uses roster specials.',
+    skillActive: 'Active',
+    skillPick: 'Tap to equip',
+    skillPickHint: 'Tap = preview · tap again = equip',
+    skillEquipBtn: 'Equip',
+    skillIslandGate: 'Island skill Lv {lvl}',
+    skillNeedLvl: 'Unlocks at Lv {lvl}',
+    skillGateLine: 'island gate Lv {cap}',
+    skillBlurbAll: '24 chakra specials — filter by saga or type · preview + stats',
+    skillEmptyFilter: 'No skills in this filter — change saga or type',
+    skillNextUnlock: 'Next unlock: <b>{name}</b> at Lv {lvl} · {need} level(s) to go',
+    skillNextUnlockSoon: 'Next: <b>{name}</b> (Lv {lvl}) — almost ready',
+    skillNextIsland: 'Next: <b>{name}</b> — island gate until Lv {cap} in adventure',
+    skillBehAll: 'All types',
+    skillSort_level: 'Sort: level',
+    skillSort_dmg: 'Sort: damage',
+    skillSort_name: 'Sort: name',
+    superHead: 'Emergency super (Kets slot)',
+    superSub: 'Swarmed in adventure — tap center symbol or press E · replaces KETS-BAM',
+    superSummaryHead: 'Emergency super',
+    superSummaryActive: 'active',
+    superSummarySub: 'Adventure only — appears when swarmed or stuck.',
+    superActive: 'Active',
+    superPick: 'Tap to equip',
+    superPickHint: 'Tap = preview · tap again = equip',
+    superEquipBtn: 'Equip',
+    superIslandGate: 'Island skill Lv {lvl}',
+    superNeedLvl: 'Unlocks at Lv {lvl}',
+    superNextUnlock: 'Next super: <b>{name}</b> at Lv {lvl} · {need} level(s) to go',
+    superNextUnlockSoon: 'Next super: <b>{name}</b> (Lv {lvl}) — almost ready',
+    superNextIsland: 'Next super: <b>{name}</b> — island gate until Lv {cap} in adventure',
+    superStat_pow: 'Power',
+    superStat_rad: 'Radius',
+    superStat_cd: 'Cooldown',
+    superStat_charge: 'Charge',
+    superHudCd: 'Emergency super {n}s',
     weaponHead: 'Weapons',
     weaponSub: 'Summons are real · island skill gate: adventure weapons up to your island cap',
     skillHead: 'Upgrades',
@@ -7964,6 +9175,33 @@ const CATALOG_EN = {
     shield: 'Shield!', parry: 'PARRY!', block: 'BLOCK!', miss: 'MISS!',
   },
   egg: { dailyReady: 'Daily egg ready', advBonus: 'Bonus egg: win 1× adventure', tomorrow: 'Egg again tomorrow' },
+  skill: {
+    behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor' },
+    stat: { dmg: 'Damage', wind: 'Windup', spd: 'Speed', kb: 'Knockback' },
+    tag: { pierce: 'Pierce', pull: 'Pull' },
+    saga: {
+      scroll: { blurb: 'Ninja scroll — Rasengan, Chidori, Rinnegan & gravity specials.' },
+      ki: { blurb: 'Ki waves — Kamehameha, discs, Spirit Bomb & blitz dashes.' },
+      tide: { blurb: 'Tide beams — Getsuga, Cero & Bankai flash.' },
+      fighter: { blurb: 'Street stretch — Gum-Gum dash & Gear Second steam.' },
+      cape: { blurb: 'Hero specials — Thunder Palm & Serious Series.' },
+      dawn: { blurb: 'Dawn palm — solar orbs & lunar pull control.' },
+    },
+  },
+  super: {
+    behavior: {
+      blast: 'Blast', shield: 'Shield', heal: 'Heal', sharingan: 'Genjutsu',
+      lightning: 'Lightning', meteor: 'Meteor', rage: 'Rage', timestop: 'Time',
+      clones: 'Clones', void: 'Void',
+    },
+    stat: { pow: 'Power', rad: 'Radius', cd: 'Cooldown', charge: 'Charge' },
+    tag: {
+      blast: 'Blast', knockback: 'Knockback', defense: 'Defense', push: 'Push',
+      heal: 'Heal', genjutsu: 'Genjutsu', pull: 'Pull', slow: 'Slow',
+      lightning: 'Lightning', 'multi-hit': 'Multi-hit', meteor: 'Meteor', zone: 'Zone',
+      buff: 'Buff', freeze: 'Freeze', burst: 'Burst', rush: 'Rush', void: 'Void',
+    },
+  },
   pet: {
     active: 'Pet · active', tamed: 'Pet · tamed', buy: 'Pet · buy {cost} 🪙',
     killsNeed: 'Pet · {need} kills', killsProgress: 'Pet · {cur}/{need} kills',
@@ -8381,6 +9619,26 @@ function styleLabel(st, field) {
   return ss && ss[field] != null ? ss[field] : '';
 }
 
+function skillLabel(sk, field) {
+  field = field || 'name';
+  const id = typeof sk === 'string' ? sk : (sk && sk.id);
+  const k = 'skill.' + id + '.' + field;
+  const v = t(k);
+  if (v && v !== k) return v;
+  const ss = typeof sk === 'object' && sk ? sk : (typeof skillById === 'function' ? skillById(id) : null);
+  return ss && ss[field] != null ? ss[field] : '';
+}
+
+function superLabel(sp, field) {
+  field = field || 'name';
+  const id = typeof sp === 'string' ? sp : (sp && sp.id);
+  const k = 'super.' + id + '.' + field;
+  const v = t(k);
+  if (v && v !== k) return v;
+  const ss = typeof sp === 'object' && sp ? sp : (typeof superById === 'function' ? superById(id) : null);
+  return ss && ss[field] != null ? ss[field] : '';
+}
+
 function dailyText(id) {
   const k = 'daily.' + id + '.text';
   const v = t(k);
@@ -8545,9 +9803,6 @@ const SFX_SAMPLE_MAP = {
   shuriken: { pack: 'digital', vol: 0.55, files: ['laser1.ogg', 'laser2.ogg', 'lowDown.ogg'] },
   shoot: { pack: 'digital', vol: 0.62, files: ['laser4.ogg', 'laser5.ogg'] },
   laser: { pack: 'digital', vol: 0.68, files: ['laser6.ogg', 'laser7.ogg', 'laser8.ogg', 'laser9.ogg'] },
-  rasengan: { pack: 'digital', vol: 0.72, files: ['phaseJump2.ogg', 'phaseJump3.ogg', 'pepSound3.ogg'] },
-  chidori: { pack: 'digital', vol: 0.75, files: ['laser2.ogg', 'laser3.ogg', 'highUp.ogg'] },
-  rinnegan: { pack: 'digital', vol: 0.78, files: ['lowThreeTone.ogg', 'phaseJump4.ogg', 'laser1.ogg'] },
   special: { pack: 'digital', vol: 0.7, files: ['phaseJump3.ogg', 'pepSound4.ogg'] },
   subst: { pack: 'rpg', vol: 0.65, files: ['cloth4.ogg', 'clothBelt2.ogg', 'dropLeather.ogg'] },
   dash: { pack: 'digital', vol: 0.5, files: ['phaseJump1.ogg', 'lowDown.ogg', 'lowRandom.ogg'] },
@@ -8578,6 +9833,166 @@ const SFX_SAMPLE_MAP = {
   ketsbamCharge: { pack: 'digital', vol: 0.55, rate: 0.88, files: ['lowRandom.ogg', 'lowThreeTone.ogg'] },
 };
 
+/** Per-skill Kenney CC0 samples — each skill id maps to its own file set. */
+const SKILL_SFX_SAMPLES = {
+  rasengan: { pack: 'digital', vol: 0.72, files: ['phaseJump2.ogg', 'phaseJump3.ogg', 'pepSound3.ogg'] },
+  fireball_jutsu: { pack: 'digital', vol: 0.74, rate: 1.06, files: ['laser5.ogg', 'pepSound1.ogg', 'highUp.ogg'] },
+  chidori: { pack: 'digital', vol: 0.75, files: ['laser2.ogg', 'laser3.ogg', 'highUp.ogg'] },
+  shadow_clone_burst: { pack: 'rpg', vol: 0.68, files: ['cloth4.ogg', 'dropLeather.ogg', 'clothBelt2.ogg'] },
+  gentle_palm: { pack: 'impact', vol: 0.7, files: ['impactSoft_medium_001.ogg', 'impactGeneric_light_002.ogg'] },
+  rinnegan: { pack: 'digital', vol: 0.78, files: ['lowThreeTone.ogg', 'phaseJump4.ogg', 'laser1.ogg'] },
+  eight_gates: { pack: 'impact', vol: 0.82, rate: 1.08, files: ['impactPunch_heavy_001.ogg', 'impactPunch_heavy_002.ogg', 'impactMetal_heavy_001.ogg'] },
+  black_hole: { pack: 'digital', vol: 0.8, rate: 0.86, files: ['lowThreeTone.ogg', 'lowRandom.ogg', 'phaseJump4.ogg'] },
+  kamehameha: { pack: 'digital', vol: 0.8, files: ['laser8.ogg', 'laser9.ogg', 'pepSound4.ogg'] },
+  galick_gun: { pack: 'digital', vol: 0.76, rate: 0.94, files: ['laser6.ogg', 'laser7.ogg', 'lowDown.ogg'] },
+  destructo_disc: { pack: 'digital', vol: 0.72, rate: 1.12, files: ['laser1.ogg', 'laser2.ogg', 'phaseJump1.ogg'] },
+  instant_dash: { pack: 'digital', vol: 0.7, rate: 1.18, files: ['phaseJump1.ogg', 'highUp.ogg', 'lowRandom.ogg'] },
+  final_flash: { pack: 'digital', vol: 0.84, files: ['laser8.ogg', 'phaseJump5.ogg', 'pepSound5.ogg'] },
+  spirit_bomb: { pack: 'digital', vol: 0.85, rate: 0.82, files: ['lowThreeTone.ogg', 'phaseJump2.ogg', 'pepSound3.ogg'] },
+  getsuga: { pack: 'digital', vol: 0.74, files: ['laser3.ogg', 'laser4.ogg', 'pepSound2.ogg'] },
+  cero: { pack: 'digital', vol: 0.78, files: ['laser5.ogg', 'laser6.ogg', 'laser7.ogg'] },
+  bankai_slash: { pack: 'rpg', vol: 0.76, rate: 1.05, files: ['drawKnife3.ogg', 'chop.ogg', 'footstep04.ogg'] },
+  gum_rocket: { pack: 'digital', vol: 0.68, rate: 1.04, files: ['lowRandom.ogg', 'phaseJump2.ogg', 'pepSound1.ogg'] },
+  gear_second: { pack: 'digital', vol: 0.74, rate: 1.1, files: ['pepSound2.ogg', 'pepSound3.ogg', 'highUp.ogg'] },
+  thunder_palm: { pack: 'impact', vol: 0.78, files: ['impactBell_heavy_001.ogg', 'impactBell_heavy_002.ogg'] },
+  serious_punch: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_004.ogg', 'impactPunch_heavy_003.ogg'] },
+  serious_blast: { pack: 'digital', vol: 0.86, files: ['laser9.ogg', 'laser8.ogg', 'phaseJump5.ogg'] },
+  sun_palm: { pack: 'impact', vol: 0.72, files: ['impactBell_heavy_002.ogg', 'impactSoft_medium_002.ogg'] },
+  moon_pull: { pack: 'digital', vol: 0.76, rate: 0.95, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'laser1.ogg'] },
+};
+
+/** Per-super Kenney CC0 samples — charge + finish pairs. */
+const SUPER_SFX_SAMPLES = {
+  super_shield_charge: { pack: 'impact', vol: 0.62, rate: 0.92, files: ['impactMetal_light_001.ogg', 'impactWood_medium_001.ogg'] },
+  super_shield: { pack: 'impact', vol: 0.88, files: ['impactBell_heavy_002.ogg', 'impactMetal_heavy_003.ogg'] },
+  super_heal_charge: { pack: 'ui', vol: 0.62, files: ['confirmation_002.ogg', 'drop_003.ogg'] },
+  super_heal: { pack: 'ui', vol: 0.78, files: ['confirmation_004.ogg', 'bong_001.ogg'] },
+  super_sharingan_charge: { pack: 'digital', vol: 0.68, rate: 0.9, files: ['lowThreeTone.ogg', 'lowRandom.ogg'] },
+  super_sharingan: { pack: 'digital', vol: 0.82, files: ['laser2.ogg', 'phaseJump4.ogg', 'highUp.ogg'] },
+  super_lightning_charge: { pack: 'digital', vol: 0.72, files: ['laser1.ogg', 'laser2.ogg', 'lowRandom.ogg'] },
+  super_lightning: { pack: 'digital', vol: 0.9, files: ['laser7.ogg', 'laser8.ogg', 'laser9.ogg'] },
+  super_meteor_charge: { pack: 'impact', vol: 0.65, rate: 0.85, files: ['impactWood_heavy_001.ogg', 'creak1.ogg'] },
+  super_meteor: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactGlass_heavy_004.ogg'] },
+  super_rage_charge: { pack: 'digital', vol: 0.7, rate: 0.95, files: ['lowRandom.ogg', 'pepSound1.ogg'] },
+  super_rage: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_003.ogg', 'impactMetal_heavy_004.ogg'] },
+  super_time_charge: { pack: 'digital', vol: 0.66, rate: 0.88, files: ['lowThreeTone.ogg', 'phaseJump1.ogg'] },
+  super_time: { pack: 'digital', vol: 0.84, files: ['phaseJump5.ogg', 'pepSound5.ogg', 'laser3.ogg'] },
+  super_clone_charge: { pack: 'rpg', vol: 0.64, files: ['cloth4.ogg', 'dropLeather.ogg'] },
+  super_clone: { pack: 'rpg', vol: 0.76, files: ['clothBelt2.ogg', 'chop.ogg', 'drawKnife2.ogg'] },
+  super_void_charge: { pack: 'digital', vol: 0.68, rate: 0.86, files: ['lowDown.ogg', 'lowRandom.ogg'] },
+  super_void: { pack: 'impact', vol: 0.92, files: ['impactGlass_heavy_003.ogg', 'impactMetal_heavy_002.ogg'] },
+};
+
+Object.assign(SFX_SAMPLE_MAP, SKILL_SFX_SAMPLES, SUPER_SFX_SAMPLES);
+
+function isSkillSfxId(name) {
+  return !!(name && SKILL_SFX_SAMPLES[name]);
+}
+
+function isSuperSfxId(name) {
+  return !!(name && SUPER_SFX_SAMPLES[name]);
+}
+
+function skillSynthSeed(id) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+/** Procedural fallback when Kenney samples offline — unique per skill id. */
+function playSkillSynthFallback(name, h) {
+  if (!isSkillSfxId(name)) return false;
+  const sk = typeof skillById === 'function' ? skillById(name) : null;
+  if (!sk || sk.id !== name) return false;
+  const { T, D, N, S, now, lite } = h;
+  const seed = skillSynthSeed(name);
+  const det = 1 + (seed % 21) * 0.007;
+  const mul = (f) => f * det;
+  const beh = sk.behavior || 'orb';
+  if (beh === 'dash') {
+    T(mul(920), mul(1580), 0.16, 'sine', 0.14, now);
+    N(0.12, 0.11, 5200 + (seed % 800), true, now);
+    T(mul(1400), mul(920), 0.06, 'triangle', 0.1, now + 0.05);
+    if (!lite) T(mul(180 + seed % 40), mul(90), 0.07, 'sine', 0.08, now + 0.02);
+  } else if (beh === 'beam') {
+    T(mul(280), mul(920), 0.2, 'sine', 0.13, now);
+    D(mul(520), mul(1220), 0.14, 'triangle', 0.11, now + 0.04, 10 + seed % 6);
+    N(0.1, 0.09, 3800 + (seed % 600), true, now);
+    if (!lite) S([mul(880), mul(1047), mul(1175)], now + 0.08);
+  } else if (beh === 'disc') {
+    T(mul(680), mul(420), 0.12, 'triangle', 0.13, now);
+    T(mul(980), mul(680), 0.08, 'sine', 0.1, now + 0.04);
+    N(0.08, 0.1, 4400 + (seed % 500), true, now);
+  } else if (beh === 'pull' || beh === 'meteor') {
+    T(mul(240), mul(760), 0.14, 'sine', 0.14, now);
+    T(mul(760), mul(480), 0.15, 'triangle', 0.12, now + 0.04);
+    T(mul(980), mul(1320), 0.08, 'sine', 0.11, now + 0.1);
+    N(0.1, 0.11, 1900 + (seed % 400), true, now + 0.02);
+    if (!lite) T(mul(55), mul(32), 0.16, 'sawtooth', 0.09, now + 0.05);
+  } else {
+    T(mul(320), mul(1040), 0.2, 'sine', 0.13, now);
+    D(mul(580), mul(1220), 0.16, 'triangle', 0.11, now + 0.04, 10);
+    N(0.12, 0.1, 3600 + (seed % 700), true, now);
+    if (!lite) S([mul(880), mul(1047), mul(1175)], now + 0.1);
+  }
+  return true;
+}
+
+function playSkillSuperReadySynth(kind, h) {
+  if (!kind || !isSkillSfxId(kind)) return false;
+  const sk = typeof skillById === 'function' ? skillById(kind) : null;
+  if (!sk || sk.id !== kind) return false;
+  const { T, N, now, lite } = h;
+  const seed = skillSynthSeed(kind);
+  const det = 1 + (seed % 15) * 0.006;
+  const mul = (f) => f * det;
+  const beh = sk.behavior || 'orb';
+  if (beh === 'dash') {
+    T(mul(920), mul(1480), 0.14, 'sine', 0.16, now);
+    N(0.1, 0.14, 5400, true, now);
+    T(mul(1200), mul(920), 0.06, 'triangle', 0.1, now + 0.08);
+  } else if (beh === 'pull' || beh === 'meteor') {
+    T(mul(360), mul(660), 0.12, 'sine', 0.16, now);
+    T(mul(880), mul(1180), 0.1, 'triangle', 0.12, now + 0.05);
+    T(mul(110), mul(60), 0.14, 'sine', 0.09, now + 0.03);
+  } else if (beh === 'beam' || beh === 'disc') {
+    T(mul(520), mul(980), 0.12, 'sine', 0.15, now);
+    T(mul(880), mul(1320), 0.09, 'triangle', 0.12, now + 0.05);
+    if (!lite) T(mul(1320), mul(880), 0.07, 'sine', 0.08, now + 0.1);
+  } else {
+    T(mul(720), mul(1180), 0.1, 'sine', 0.14, now);
+    T(mul(980), mul(1320), 0.09, 'triangle', 0.12, now + 0.05);
+    T(mul(1320), mul(880), 0.07, 'sine', 0.08, now + 0.1);
+  }
+  return true;
+}
+
+/** Procedural fallback for super charge/finish sfx when offline. */
+function playSuperSynthFallback(name, h) {
+  if (!isSuperSfxId(name)) return false;
+  const { T, N, C, now, lite } = h;
+  const charge = name.endsWith('_charge');
+  if (charge) {
+    T(88, charge ? 220 : 52, charge ? 1.6 : 0.4, 'sawtooth', 0.18, now);
+    N(charge ? 1.5 : 0.3, 0.14, 720, false, now);
+  } else if (name.includes('lightning')) {
+    for (let i = 0; i < (lite ? 3 : 6); i++) {
+      T(880 + i * 120, 220, 0.06, 'square', 0.12, now + i * 0.05);
+      N(0.04, 0.1, 4000 + i * 400, true, now + i * 0.05);
+    }
+  } else if (name.includes('heal')) {
+    C([523, 659, 784, 988], 'sine', 0.12, 0.08, now);
+  } else if (name.includes('shield')) {
+    T(220, 440, 0.2, 'triangle', 0.16, now);
+    N(0.12, 0.12, 1200, false, now);
+  } else {
+    N(0.3, 0.32, 400, false, now);
+    T(52, 20, 0.36, 'sawtooth', 0.28, now);
+    if (!lite) C([196, 247, 330, 392], 'square', 0.1, 0.05, now + 0.08);
+  }
+  return true;
+}
+
 function collectSampleUrls() {
   const urls = [];
   const seen = new Set();
@@ -8591,7 +10006,7 @@ function collectSampleUrls() {
 }
 
 function sampleMapForSfx(name) {
-  return SFX_SAMPLE_MAP[name] || null;
+  return SFX_SAMPLE_MAP[name] || SKILL_SFX_SAMPLES[name] || SUPER_SFX_SAMPLES[name] || null;
 }
 /* --- src/systems/audio.js --- */
 /* =============================== AUDIO ================================= */
@@ -8902,6 +10317,9 @@ const AudioSys = {
       freqs.forEach((f, i) => T(f, f * 1.1, 0.045, 'sine', 0.075, w + i * 0.02));
     };
     const now = this.ctx.currentTime;
+    const skillSynthH = { T, D, E, N, S, I, C, now, lite, v, d, P };
+    if (typeof playSuperSynthFallback === 'function' && playSuperSynthFallback(name, skillSynthH)) return;
+    if (typeof playSkillSynthFallback === 'function' && playSkillSynthFallback(name, skillSynthH)) return;
     switch (name) {
       case 'swing':
         N(0.05, 0.22, 3400, true, now);
@@ -9063,24 +10481,10 @@ const AudioSys = {
         S([1560, 1870, 2093], now + 0.05);
         break;
       case 'special':
-      case 'rasengan':
         T(320, 1040, 0.2, 'sine', 0.13, now);
         D(580, 1220, 0.16, 'triangle', 0.11, now + 0.04, 10);
         N(0.12, 0.1, 3600, true, now);
         if (!lite) S([880, 1047, 1175], now + 0.1);
-        break;
-      case 'chidori':
-        T(920, 1580, 0.18, 'sine', 0.14, now);
-        N(0.14, 0.12, 5600, true, now);
-        T(1400, 920, 0.06, 'triangle', 0.1, now + 0.06);
-        if (!lite) T(180, 90, 0.08, 'sine', 0.08, now + 0.02);
-        break;
-      case 'rinnegan':
-        T(240, 760, 0.14, 'sine', 0.14, now);
-        T(760, 480, 0.15, 'triangle', 0.12, now + 0.04);
-        T(980, 1320, 0.08, 'sine', 0.11, now + 0.1);
-        N(0.1, 0.11, 1900, true, now + 0.02);
-        if (!lite) T(55, 32, 0.18, 'sawtooth', 0.1, now + 0.05);
         break;
       case 'subst':
         N(0.1, 0.24, 1300, true, now);
@@ -9367,19 +10771,11 @@ const AudioSys = {
         if (!lite) S([1175, 1319], now + 0.24);
         break;
       case 'superReady':
-        if (kind === 'chidori') {
-          T(920, 1480, 0.14, 'sine', 0.16, now);
-          N(0.1, 0.14, 5400, true, now);
-          T(1200, 920, 0.06, 'triangle', 0.1, now + 0.08);
-        } else if (kind === 'rinnegan') {
-          T(360, 660, 0.12, 'sine', 0.16, now);
-          T(880, 1180, 0.1, 'triangle', 0.12, now + 0.05);
-          T(110, 60, 0.14, 'sine', 0.09, now + 0.03);
-        } else {
-          T(720, 1180, 0.1, 'sine', 0.14, now);
-          T(980, 1320, 0.09, 'triangle', 0.12, now + 0.05);
-          T(1320, 880, 0.07, 'sine', 0.08, now + 0.1);
-        }
+        if (typeof playSkillSuperReadySynth === 'function' &&
+            playSkillSuperReadySynth(kind, { T, N, now, lite })) break;
+        T(720, 1180, 0.1, 'sine', 0.14, now);
+        T(980, 1320, 0.09, 'triangle', 0.12, now + 0.05);
+        T(1320, 880, 0.07, 'sine', 0.08, now + 0.1);
         break;
       case 'eliteIntro':
         T(95, 50, 0.24, 'sawtooth', 0.23, now);
@@ -11111,30 +12507,29 @@ function spawnFxRing(game, x, y, color, baseR) {
 /** Jutsu impact burst — Lite FX capped; scale 'small' for projectile fade-out. */
 function spawnJutsuImpactFx(game, x, y, kind, scale) {
   if (!game || motionReduced()) return;
+  const sk = skillById(kind);
+  const col = sk.color || '#7cf5ff';
   const lite = fxLite();
   const small = scale === 'small';
-  if (kind === 'rasengan') {
-    game.burst(x, y, '#7cf5ff', lite ? (small ? 4 : 6) : (small ? 8 : 14), { kind: 'spark', size: small ? 2.2 : 2.8 });
-    spawnFxRing(game, x, y, '#a8ecff', lite ? 6 : (small ? 8 : 14));
-    if (!lite && !small) spawnFxRing(game, x, y, '#5ad0ff', 7);
-  } else if (kind === 'chidori') {
-    game.burst(x, y, '#a8e0ff', lite ? 8 : 14);
-    spawnFxRing(game, x, y, '#c8f0ff', lite ? 7 : 11);
-  } else if (kind === 'rinnegan') {
-    game.burst(x, y, '#c47aff', lite ? 6 : 12);
-    spawnFxRing(game, x, y, '#e0a8ff', lite ? 7 : 10);
-    if (!lite && !small) spawnFxRing(game, x, y, '#ff6b9d', 6);
+  const n = lite ? (small ? 4 : 6) : (small ? 8 : 14);
+  game.burst(x, y, col, n, { kind: 'spark', size: small ? 2.2 : 2.8 });
+  spawnFxRing(game, x, y, col, lite ? 6 : (small ? 8 : 14));
+  if (!lite && !small && (sk.behavior === 'pull' || sk.behavior === 'meteor')) {
+    game.burst(x, y, '#ff6b9d', 6);
   }
 }
 
 function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
+  const sk = skillById(kind);
+  const behavior = sk.behavior || 'orb';
+  const col = sk.color || '#7cf5ff';
   const lite = fxLite();
   c.save();
   c.translate(x, y);
   c.globalAlpha = alpha == null ? 1 : alpha;
-  if (kind === 'chidori') {
-    c.shadowColor = '#a8e0ff'; c.shadowBlur = lite ? 8 : 18;
-    c.fillStyle = 'rgba(200,240,255,.55)';
+  if (behavior === 'dash') {
+    c.shadowColor = col; c.shadowBlur = lite ? 8 : 18;
+    c.fillStyle = col.length === 7 ? col + '88' : 'rgba(200,240,255,.55)';
     c.beginPath(); c.arc(0, 0, r * 0.9, 0, TAU); c.fill();
     c.strokeStyle = '#e8f7ff'; c.lineWidth = 2;
     const bolts = lite ? 4 : 7;
@@ -11145,13 +12540,19 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
       c.lineTo(Math.cos(a + 0.4) * r * 1.3, Math.sin(a + 0.4) * r * 1.3);
       c.stroke();
     }
-  } else if (kind === 'rinnegan') {
-    c.shadowColor = '#c47aff'; c.shadowBlur = lite ? 10 : 24;
+  } else if (behavior === 'beam' || behavior === 'disc') {
+    c.shadowColor = col; c.shadowBlur = lite ? 8 : 16;
+    c.fillStyle = col;
+    c.globalAlpha = (alpha == null ? 1 : alpha) * 0.75;
+    c.beginPath(); c.ellipse(0, 0, r * 1.35, r * (behavior === 'disc' ? 0.55 : 0.75), spin * 0.2, 0, TAU); c.fill();
+    c.strokeStyle = '#fff'; c.lineWidth = 2;
+    c.beginPath(); c.ellipse(0, 0, r * 1.2, r * (behavior === 'disc' ? 0.45 : 0.65), spin * 0.2, 0, TAU); c.stroke();
+  } else if (behavior === 'pull' || behavior === 'meteor') {
+    c.shadowColor = col; c.shadowBlur = lite ? 10 : 24;
     const grd = c.createRadialGradient(0, 0, 0, 0, 0, r);
-    grd.addColorStop(0, 'rgba(40,10,60,.95)');
-    grd.addColorStop(0.35, 'rgba(120,40,180,.85)');
-    grd.addColorStop(0.7, 'rgba(200,80,255,.45)');
-    grd.addColorStop(1, 'rgba(80,20,120,.1)');
+    grd.addColorStop(0, col + 'ee');
+    grd.addColorStop(0.5, col + '99');
+    grd.addColorStop(1, col + '22');
     c.fillStyle = grd;
     c.beginPath(); c.arc(0, 0, r, 0, TAU); c.fill();
     c.strokeStyle = 'rgba(255,120,160,.85)'; c.lineWidth = 2;
@@ -11160,24 +12561,25 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
       c.arc(0, 0, r * (0.35 + ring * 0.18), spin * (1 + ring * 0.2), spin * (1 + ring * 0.2) + Math.PI * 1.35);
       c.stroke();
     }
-    c.fillStyle = 'rgba(255,90,120,.9)';
-    const tomoe = lite ? 3 : 6;
-    for (let i = 0; i < tomoe; i++) {
-      const a = spin * 2 + i * (TAU / tomoe);
-      c.beginPath();
-      c.arc(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55, r * 0.12, 0, TAU);
-      c.fill();
+    if (kind === 'rinnegan') {
+      c.fillStyle = 'rgba(255,90,120,.9)';
+      const tomoe = lite ? 3 : 6;
+      for (let i = 0; i < tomoe; i++) {
+        const a = spin * 2 + i * (TAU / tomoe);
+        c.beginPath();
+        c.arc(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55, r * 0.12, 0, TAU);
+        c.fill();
+      }
     }
   } else {
-    // Rasengan: chakra-bol + draaiende buitenringen
-    c.shadowColor = '#3db8ff'; c.shadowBlur = lite ? 8 : 22;
+    c.shadowColor = col; c.shadowBlur = lite ? 8 : 22;
     const grd = c.createRadialGradient(0, 0, 0, 0, 0, r);
-    grd.addColorStop(0, 'rgba(220,250,255,.95)');
-    grd.addColorStop(0.45, 'rgba(80,190,255,.75)');
-    grd.addColorStop(1, 'rgba(30,120,255,.15)');
+    grd.addColorStop(0, 'rgba(255,255,255,.92)');
+    grd.addColorStop(0.45, col + 'cc');
+    grd.addColorStop(1, col + '22');
     c.fillStyle = grd;
     c.beginPath(); c.arc(0, 0, r, 0, TAU); c.fill();
-    c.strokeStyle = 'rgba(180,235,255,.9)'; c.lineWidth = 2;
+    c.strokeStyle = col; c.lineWidth = 2;
     const ellipses = lite ? 2 : 5;
     for (let i = 0; i < ellipses; i++) {
       const a0 = spin + i * 1.1;
@@ -11185,22 +12587,12 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
       c.ellipse(0, 0, r * 0.95, r * (0.35 + (i % 3) * 0.12), a0, 0, TAU);
       c.stroke();
     }
-    // Outer chakra arcs (juice) — één boog in Lite FX
-    c.strokeStyle = 'rgba(124,245,255,.8)';
+    c.strokeStyle = col;
     c.lineWidth = lite ? 2 : 2.6;
     c.lineCap = 'round';
     c.beginPath();
     c.arc(0, 0, r * 1.14, spin, spin + Math.PI * 1.35);
     c.stroke();
-    if (!lite) {
-      c.strokeStyle = 'rgba(160,230,255,.55)';
-      c.lineWidth = 1.8;
-      c.beginPath();
-      c.arc(0, 0, r * 1.28, -spin * 1.35, -spin * 1.35 + Math.PI * 1.05);
-      c.stroke();
-    }
-    c.fillStyle = 'rgba(255,255,255,.85)';
-    c.beginPath(); c.arc(-r * 0.2, -r * 0.2, r * 0.18, 0, TAU); c.fill();
   }
   c.restore();
 }
@@ -11263,14 +12655,11 @@ class Fighter {
         break;
       }
       case 'special': {
-        const j = fighterJutsuKind(this);
-        const jb = jutsuSkillBonuses(j);
-        const jMul = (j === 'rinnegan' ? 2.55 : j === 'chidori' ? (this.isRobot ? 2.35 : 2.72) : 2.85) * jb.dmgMul;
-        const windup = (j === 'rinnegan' ? 0.52 : 0.48) * jb.windupMul;
+        const sk = fighterEquippedSkill(this);
         spec = {
-          kind, windup, active: 0.12, recover: 0.28, range: 62 + jb.radius, r: 44 + jb.radius * 0.5,
-          dmg: this.baseDmg * jMul, kb: j === 'rinnegan' ? 460 : 520, jutsu: j,
-          extraShot: jb.extraShot, pierceRepeat: jb.pierceRepeat, pullMul: jb.pullMul,
+          kind, windup: sk.windup || 0.48, active: 0.12, recover: sk.recover || 0.28,
+          range: 62, r: sk.radius || 44,
+          dmg: this.baseDmg * (sk.dmgMul || 2.8), kb: sk.kb || 520, jutsu: sk.id,
         };
         break;
       }
@@ -11292,12 +12681,11 @@ class Fighter {
         if (this.isPlayer) game.floater(this.x, this.y - 110, 'Chakra niet vol!', '#7cf5ff', 13);
         return;
       }
-      this.energy = Math.max(0, this.energy - chakraCost);
-      AudioSys.sfx(jKind === 'chidori' ? 'chidori' : jKind === 'rinnegan' ? 'rinnegan' : 'rasengan');
+      this.energy = 0;
+      const sk = fighterEquippedSkill(this);
+      AudioSys.sfx(skillSfxId(sk));
       if (this.isPlayer || this.playerSlot) {
-        const lbl = jKind === 'chidori' ? 'CHIDORI!' : jKind === 'rinnegan' ? 'RINNEGAN!' : 'RASENGAN!';
-        const col = jKind === 'chidori' ? '#a8e0ff' : jKind === 'rinnegan' ? '#c47aff' : '#7cf5ff';
-        game.banner(lbl, 0.7, col, 40);
+        game.banner(skillBanner(sk), 0.7, skillHudColor(sk), 40);
       }
     } else {
       AudioSys.sfx(weaponSwingSfx(this.weapon, kind));
@@ -11362,7 +12750,7 @@ class Fighter {
     game.floater(this.x, this.y - 92, 'Dash!', '#7cf5ff', 12);
   }
 
-  /** Nood-KABLAM: omringd/stunlock → tik midden-symbool of druk E. */
+  /** Nood-super (Kets-slot): omringd/stunlock → tik midden-symbool of druk E. */
   doKetsbam(game) {
     if (!this.isPlayer || !this.alive || !game) return false;
     if (game.ketsbamCd > 0 || game.ketsbamChargeT > 0 || game.inputLocked || game.traveling) return false;
@@ -11371,14 +12759,14 @@ class Fighter {
     const swarmed = near >= KETSBAM_NEAR_MIN;
     if (!swarmed && !stuck) return false;
 
-    if (!game.ketsbamStickPick) game.ketsbamStickPick = pickKablamStickFace();
-    game.ketsbamCd = KETSBAM_CD;
-    game.ketsbamSuperT = KETSBAM_SUPER_ARMOR + KETSBAM_CHARGE_DUR;
+    const sp = equippedSuper();
+    const chargeDur = superChargeDur(sp);
+
+    game.ketsbamCd = superCooldown(sp);
+    game.ketsbamSuperT = KETSBAM_SUPER_ARMOR + chargeDur;
     game.ketsbamShow = false;
-    game.ketsbamBuildT = 0;
-    game.ketsbamBuildProg = 0;
-    game.ketsbamChargeT = KETSBAM_CHARGE_DUR;
-    game.ketsbamChargeDur = KETSBAM_CHARGE_DUR;
+    game.ketsbamChargeT = chargeDur;
+    game.ketsbamChargeDur = chargeDur;
     game.ketsbamChargePulse = 0;
     game.inputLocked = true;
     this.hurtT = 0;
@@ -11386,11 +12774,11 @@ class Fighter {
     this.blocking = false;
     this.vx = 0;
     this.vy = 0;
-    this.invulnT = Math.max(this.invulnT, KETSBAM_INVULN + KETSBAM_CHARGE_DUR);
+    this.invulnT = Math.max(this.invulnT, KETSBAM_INVULN + chargeDur);
     resetWeaponCombo(this);
 
-    game.banner(t('banner.kets'), KETSBAM_CHARGE_DUR, '#ffd75e', 44);
-    try { AudioSys.sfx('ketsbamCharge'); } catch (_) {}
+    game.banner(superChargeBanner(sp), chargeDur, sp.color || '#ffd75e', 44);
+    try { AudioSys.sfx(superSfxId(sp, 'charge')); } catch (_) {}
     if (save.haptics !== false) haptic(12);
     return true;
   }
@@ -11400,28 +12788,7 @@ class Fighter {
     game.ketsbamChargeT = 0;
     game.inputLocked = false;
     game.ketsbamSuperT = Math.max(game.ketsbamSuperT, KETSBAM_SUPER_ARMOR);
-
-    game.shake(16, 0.32);
-    game.freezeT = Math.max(game.freezeT, 0.05);
-    game.banner('KETS-BAM!', 0.7, '#ffd75e', 44);
-    try { AudioSys.sfx('ketsbam'); } catch (_) {}
-
-    const px = this.x, py = this.y - 42;
-    for (const m of game.monsters) {
-      if (!m.alive) continue;
-      const dx = m.x - px, dy = m.y - py;
-      const dist = Math.hypot(dx, dy);
-      if (dist > KETSBAM_BLAST_R) continue;
-      const falloff = 1 - dist / KETSBAM_BLAST_R;
-      const dmg = Math.max(10, Math.round(this.baseDmg * (1.65 + falloff * 1.1)));
-      const kb = Math.sign(dx || this.face || 1) * (380 + falloff * 120);
-      m.takeDamage(dmg, kb, game);
-    }
-    game.burst(px, py, '#ffd75e', fxLite() ? 12 : 22, { kind: 'spark', size: 3.6 });
-    game.burst(px, py, '#ff7043', fxLite() ? 8 : 14);
-    spawnFxRing(game, px, py, '#ffe259', fxLite() ? 12 : 20);
-    game.floater(px, py - 80, 'KETS-BAM!', '#ffd75e', 20);
-    if (save.haptics !== false) haptic(32);
+    finishEquippedSuper(this, game);
   }
 
   intent(dt, game) {
@@ -12144,7 +13511,9 @@ class Monster {
     const dx = p.x - this.x, dir = Math.sign(dx) || 1, dist = Math.abs(dx);
     this.face = dir;
     this.atkCD -= dt; this.shootCD -= dt;
-    const spdMul = this.enraged ? 1.32 : 1;
+    if (this.superSlowT > 0) this.superSlowT -= dt;
+    const genjutsuMul = (this.superSlowT > 0) ? (this.superSlowMul || 0.25) : 1;
+    const spdMul = (this.enraged ? 1.32 : 1) * genjutsuMul;
     const type = this.sp.type;
 
     if (type === 'hop') {
@@ -12351,6 +13720,18 @@ class Monster {
         c.ellipse(0, 0, this.size * 1.9 * pulse, this.size * 1.5 * pulse, 0, 0, TAU);
         c.fill();
       }
+      c.restore();
+    }
+    if (this.superSlowT > 0 && this.alive && !motionReduced()) {
+      c.save();
+      c.globalAlpha = 0.35 + Math.sin(this.t * 9) * 0.12;
+      c.strokeStyle = '#c47aff';
+      c.lineWidth = 2;
+      c.setLineDash([4, 5]);
+      c.beginPath();
+      c.arc(0, -this.size * 0.35, this.size * 0.55, 0, TAU);
+      c.stroke();
+      c.setLineDash([]);
       c.restore();
     }
     if (rar.order >= 2 && this.alive) {
@@ -13677,6 +15058,7 @@ class Game {
       });
       applyPlayerStyle(this.player);
       applyStyleBonusesToPlayer(this, this.player);
+      applyPlayerSkill(this.player);
       this.petDmgMul = 1;
       this.petEnergyMul = 1;
       this.petCritBonus = 0;
@@ -13755,7 +15137,8 @@ class Game {
     this.ketsbamChargeT = 0;
     this.ketsbamChargeDur = 0;
     this.ketsbamChargePulse = 0;
-    this.ketsbamStickPick = null;
+    this.superFx = [];
+    this._superBoltSeg = [];
     applyGambleToStage(this, gamble);
     this.banner(t('banner.levelStart', { n }), 1.4, '#ffd75e', 54);
     if (masterBuffActive(n)) {
@@ -15135,65 +16518,76 @@ class Game {
       }
       const newStyle = STYLES.find(s => s.needLvl === save.lvl && styleUnlocked(s));
       if (newStyle) UI.toast(t('toast.styleUnlock', { name: styleLabel(newStyle) }), 3500);
+      const newSkill = SKILLS.find(s => s.needLvl === save.lvl && skillUnlocked(s));
+      if (newSkill) UI.toast(t('toast.skillUnlock', { name: skillLabel(newSkill) }), 3500);
+      const newSuper = SUPERS.find(s => s.needLvl === save.lvl && superUnlocked(s));
+      if (newSuper) UI.toast(t('toast.superUnlock', { name: superLabel(newSuper) }), 3500);
     }
     persist();
   }
 
   spawnJutsu(f, atk) {
-    const jutsu = (atk && atk.jutsu) || fighterJutsuKind(f);
-    const jb = jutsuSkillBonuses(jutsu);
-    const dmg = (atk ? atk.dmg : f.baseDmg * 2.8);
+    const sk = skillById((atk && atk.jutsu) || fighterJutsuKind(f));
+    const dmg = atk ? atk.dmg : f.baseDmg * (sk.dmgMul || 2.8);
     const from = this.projFrom(f);
     const critMeta = projCritMeta(f);
-    const baseSpd = jutsu === 'chidori' ? 620 : jutsu === 'rinnegan' ? 340 : 420;
-    const aim = projAimVelocity(f, baseSpd * jb.speedMul);
+    const behavior = sk.behavior || 'orb';
+    const speed = sk.speed || 420;
+    const aim = projAimVelocity(f, behavior === 'dash' ? speed : speed * 0.9);
     const y0 = f.y - 50 + clamp(aim.ny, -1, 0.5) * 36;
-    const fireProj = (offX, offY, scale) => {
-      const sc = scale || 1;
-      if (jutsu === 'chidori') {
-        this.spawnProjectile(Object.assign({
-          x: f.x + f.face * (36 + offX), y: y0 + offY,
-          vx: aim.vx, vy: aim.vy * 0.85, r: (22 + jb.radius) * sc, dmg: dmg * sc,
-          life: 0.35 * jb.lifeMul, from, kind: 'chidori', pierce: false, hitSet: new Set(),
-          pierceRepeat: jb.pierceRepeat,
-        }, critMeta));
-      } else if (jutsu === 'rinnegan') {
-        this.spawnProjectile(Object.assign({
-          x: f.x + f.face * (38 + offX), y: y0 + offY,
-          vx: aim.vx, vy: aim.vy * 0.9, r: (30 + jb.radius) * sc, dmg: dmg * sc,
-          from, kind: 'rinnegan', pierce: true, hitSet: new Set(), life: 1.05 * jb.lifeMul,
-          spin: 0, pull: true, pullMul: jb.pullMul || 1, extraShot: jb.extraShot,
-        }, critMeta));
-      } else {
-        const face = f.face || 1;
-        this.spawnProjectile(Object.assign({
-          x: f.x + face * (40 + offX), y: y0 + offY,
-          vx: face * baseSpd * jb.speedMul, vy: 0, r: (28 + jb.radius) * sc, dmg: dmg * sc,
-          from, kind: 'rasengan', pierce: true, hitSet: new Set(), life: 1.4 * jb.lifeMul,
-          spin: 0, extraShot: jb.extraShot,
-        }, critMeta));
-      }
-    };
-    if (jutsu === 'chidori') {
-      fireProj(0, 0, 1);
-      f.vx = f.face * 380 * jb.speedMul;
+    const face = f.face || 1;
+    const col = sk.color || '#7cf5ff';
+
+    if (behavior === 'dash') {
+      this.spawnProjectile(Object.assign({
+        x: f.x + face * 36, y: y0,
+        vx: aim.vx, vy: aim.vy * 0.85, r: sk.radius || 22, dmg, life: sk.life || 0.35,
+        from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(),
+      }, critMeta));
+      f.vx = face * (sk.dashVx || 380);
       this.shake(7, 0.2);
-      AudioSys.sfx('chidori');
-    } else if (jutsu === 'rinnegan') {
-      fireProj(0, 0, 1);
-      this.burst(f.x + f.face * 28, y0, '#c47aff', 22);
-      this.burst(f.x + f.face * 28, y0, '#ff6b9d', 10);
-      this.shake(8, 0.24);
-      this.freezeT = Math.max(this.freezeT, 0.05);
-      AudioSys.sfx('rinnegan');
+      AudioSys.sfx(skillSfxId(sk));
+    } else if (behavior === 'pull' || behavior === 'meteor') {
+      const sp = behavior === 'meteor' ? speed * 0.55 : speed;
+      this.spawnProjectile(Object.assign({
+        x: f.x + face * 38, y: y0,
+        vx: aim.vx * (sp / speed), vy: aim.vy * 0.9, r: sk.radius || 30, dmg,
+        from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(), life: sk.life || 1.05,
+        spin: 0, pull: !!sk.pull,
+      }, critMeta));
+      this.burst(f.x + face * 28, y0, col, behavior === 'meteor' ? 18 : 14);
+      this.burst(f.x + face * 28, y0, '#ff6b9d', 8);
+      this.shake(behavior === 'meteor' ? 10 : 8, 0.24);
+      this.freezeT = Math.max(this.freezeT, behavior === 'meteor' ? 0.07 : 0.05);
+      AudioSys.sfx(skillSfxId(sk));
       if (f.isPlayer || f.playerSlot) haptic(20);
+    } else if (behavior === 'beam' || behavior === 'disc') {
+      const beamSpeed = speed;
+      const rx = behavior === 'disc' ? (sk.radius || 18) : (sk.radius || 32);
+      this.spawnProjectile(Object.assign({
+        x: f.x + face * 42, y: y0,
+        vx: aim.vx || face * beamSpeed, vy: (aim.vy || 0) * 0.35, r: rx, dmg,
+        from, kind: sk.id, pierce: sk.pierce !== false, hitSet: new Set(), life: sk.life || 1.1,
+        spin: behavior === 'disc' ? 0.4 : 0,
+      }, critMeta));
+      this.burst(f.x + face * 34, y0, col, fxLite() ? 8 : 14);
+      spawnFxRing(this, f.x + face * 38, y0, col, 12);
+      this.shake(8, 0.26);
+      this.freezeT = Math.max(this.freezeT, 0.05);
+      AudioSys.sfx(skillSfxId(sk));
+      if (f.isPlayer || f.playerSlot) haptic(18);
     } else {
-      fireProj(0, 0, 1);
-      this.burst(f.x + f.face * 30, y0, '#7cf5ff', fxLite() ? 8 : 16);
-      spawnFxRing(this, f.x + f.face * 34, y0, '#7cf5ff', 10);
+      this.spawnProjectile(Object.assign({
+        x: f.x + face * 40, y: y0,
+        vx: aim.vx || face * speed, vy: aim.vy || 0, r: sk.radius || 28, dmg,
+        from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(), life: sk.life || 1.4,
+        spin: 0,
+      }, critMeta));
+      this.burst(f.x + face * 30, y0, col, fxLite() ? 8 : 16);
+      spawnFxRing(this, f.x + face * 34, y0, col, 10);
       this.shake(9, 0.28);
       this.freezeT = Math.max(this.freezeT, 0.06);
-      AudioSys.sfx('rasengan');
+      AudioSys.sfx(skillSfxId(sk));
       if (f.isPlayer || f.playerSlot) haptic(22);
     }
     try {
@@ -15490,12 +16884,18 @@ class Game {
       this.ketsbamChargeAcc = (this.ketsbamChargeAcc || 0) + dt;
       const dur = this.ketsbamChargeDur || KETSBAM_CHARGE_DUR;
       const prog = 1 - this.ketsbamChargeT / dur;
-      if (this.ketsbamChargeAcc >= 0.11 && !motionReduced() && prog > 0.2) {
+      const chargeSp = equippedSuper();
+      const cCol = chargeSp.color || '#ffd75e';
+      const cCol2 = chargeSp.color2 || '#ff9a3d';
+      if (this.ketsbamChargeAcc >= 0.07 && !motionReduced()) {
         this.ketsbamChargeAcc = 0;
         const px = this.player.x;
-        const py = this.player.y - 52;
-        this.burst(px + rand(-6, 6), py + rand(-8, 4), prog > 0.65 ? '#fff8dc' : '#ffd75e',
-          fxLite() ? 1 : 2, { kind: 'spark', size: 2.5 + prog * 1.5 });
+        const py = this.player.y - 50;
+        this.burst(px + rand(-20, 20), py + rand(-30, 10), prog > 0.6 ? '#fff8dc' : cCol,
+          fxLite() ? 2 : 4, { kind: 'spark', size: 2 + prog * 2 });
+        if (prog > 0.45 && !fxLite()) {
+          this.burst(px, this.player.y + 2, cCol2, 2, { kind: 'ring' });
+        }
       }
       if (this.ketsbamChargeT <= 0 && this.player?.alive) this.player.finishKetsbam(this);
       return;
@@ -15519,16 +16919,22 @@ class Game {
 
     for (const m of this.monsters) m.update(dt, this);
     this.monsters = this.monsters.filter(m => m.alive || m.deadT < 1);
+    if (this.mode === 'adventure') tickSuperFx(this, dt);
 
     // projectielen
     for (const p of this.projectiles) {
+      const skProj = skillExists(p.kind) ? skillById(p.kind) : null;
       p.life -= dt;
-      p.spin = (p.spin || 0) + dt * (p.kind === 'rasengan' ? 22 : p.kind === 'rinnegan' ? 16 : p.kind === 'shuriken' ? 28 : 12);
+      const spinRate = skProj
+        ? (skProj.behavior === 'pull' || skProj.behavior === 'meteor' ? 16
+          : skProj.behavior === 'dash' ? 20 : skProj.behavior === 'disc' ? 24 : 22)
+        : (p.kind === 'shuriken' ? 28 : 12);
+      p.spin = (p.spin || 0) + dt * spinRate;
       p.vy += (p.grav || 0) * dt;
       p.x += p.vx * dt; p.y += p.vy * dt;
-      if (p.kind === 'rasengan') {
-        p.r = Math.min(34, (p.r || 26) + dt * 4);
-        // Capte chakra-trail — minder frequent bij Lite FX / lag
+      if (skProj && (skProj.behavior === 'orb' || skProj.behavior === 'pull' || skProj.behavior === 'meteor')) {
+        const grow = (skProj.behavior === 'pull' || skProj.behavior === 'meteor') ? 2.5 : 4;
+        p.r = Math.min((skProj.radius || 28) + 8, (p.r || skProj.radius) + dt * grow);
         if (!motionReduced()) {
           p._trailAcc = (p._trailAcc || 0) + dt;
           const interval = (save.liteFx || Perf.tier >= 1) ? 0.07 : 0.032;
@@ -15536,17 +16942,7 @@ class Game {
             p._trailAcc = 0;
             const n = (save.liteFx || Perf.tier >= 1) ? 1 : 2;
             const back = Math.sign(p.vx || 1) * 10;
-            this.burst(p.x - back, p.y + rand(-4, 4), '#7cf5ff', n, { kind: 'spark', size: 2.4 });
-          }
-        }
-      }
-      if (p.kind === 'rinnegan') {
-        p.r = Math.min(36, (p.r || 30) + dt * 2.5);
-        if (!motionReduced() && !fxLite()) {
-          p._trailAcc = (p._trailAcc || 0) + dt;
-          if (p._trailAcc >= 0.055) {
-            p._trailAcc = 0;
-            this.burst(p.x, p.y, '#c47aff', 1, { kind: 'spark', size: 2.2 });
+            this.burst(p.x - back, p.y + rand(-4, 4), skProj.color || '#7cf5ff', n, { kind: 'spark', size: 2.4 });
           }
         }
       }
@@ -15566,18 +16962,13 @@ class Game {
             && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
           const hit = resolveProjHit(p);
           pl.takeDamage(hit.dmg, Math.sign(p.vx) * 260, this);
-          applyHitStop(this, { kind: p.kind === 'chidori' ? 'special' : 'punch', dmg: hit.dmg },
+          applyHitStop(this, { kind: skProj && skProj.behavior === 'dash' ? 'special' : 'punch', dmg: hit.dmg },
             { crit: hit.crit, heavy: hit.dmg >= 18, playerHurt: true });
           this.floater(pl.x, pl.y - 115, '-' + hit.dmg, '#ff8080', 16);
           if (hit.crit) applyCritFx(this, pl.x, pl.y);
-          if (p.kind === 'chidori') this.burst(p.x, p.y, '#a8e0ff', 16);
-          if (p.kind === 'rasengan') spawnJutsuImpactFx(this, p.x, p.y, 'rasengan', 'small');
-          if (p.kind === 'kamehame') {
-            this.burst(p.x, p.y, '#7cf5ff', fxLite() ? 8 : 14);
-            try { this.shake(5, 0.15); } catch (_) {}
-          }
+          if (skProj) this.burst(p.x, p.y, skProj.color || '#a8e0ff', 16);
           p.life = 0;
-          this.burst(p.x, p.y, p.kind === 'chidori' ? '#a8e0ff' : '#ff9a3d', 8);
+          this.burst(p.x, p.y, skProj ? (skProj.color || '#a8e0ff') : '#ff9a3d', 8);
         }
       } else if (p.from === 'p2' && this.p2) {
         const pl = this.player;
@@ -15598,21 +16989,8 @@ class Game {
             const hit = resolveProjHit(p);
             m.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this);
             if (hit.crit) applyCritFx(this, m.x, m.y);
-            if (p.kind === 'rasengan') {
-              spawnJutsuImpactFx(this, p.x, p.y, 'rasengan', 'full');
-            }
-            if (p.kind === 'rinnegan') this.burst(p.x, p.y, '#c47aff', 10);
-            if (allowRehit) {
-              if (p._rehit) p._rehit.delete(m);
-              if (p.hitSet) p.hitSet.add(m);
-            } else if (p.hitSet) {
-              if (p.pierceRepeat > 0 && Math.random() < p.pierceRepeat) {
-                if (!p._rehit) p._rehit = new Set();
-                p._rehit.add(m);
-              } else {
-                p.hitSet.add(m);
-              }
-            } else p.life = 0;
+            if (skProj) spawnJutsuImpactFx(this, p.x, p.y, p.kind, 'full');
+            if (p.hitSet) p.hitSet.add(m); else p.life = 0;
           }
         }
         if (this.robot && this.robot.alive && !(p.hitSet && p.hitSet.has(this.robot))) {
@@ -15654,7 +17032,7 @@ class Game {
       if (p.y > this.ground + 10 || p.x < -60 || p.x > W + 60) p.life = 0;
     }
     for (const p of this.projectiles) {
-      if (p.life <= 0 && !p._impactFx && (p.kind === 'rasengan' || p.kind === 'rinnegan' || p.kind === 'chidori' || p.kind === 'kamehame')) {
+      if (p.life <= 0 && !p._impactFx && skillExists(p.kind)) {
         p._impactFx = true;
         spawnJutsuImpactFx(this, p.x, p.y, p.kind === 'kamehame' ? 'rasengan' : p.kind, 'small');
       }
@@ -15935,44 +17313,25 @@ class Game {
     if (this.p2) this.p2.draw(c);
     if (this.eggPet) this.eggPet.draw(c);
     if (this.pet) this.pet.draw(c);
+    if (this.mode === 'adventure') drawSuperShieldBubble(this, c, this.player);
     this.player.draw(c);
 
     // projectielen
     for (const p of this.projectiles) {
       c.save();
-      if (p.kind === 'rasengan') {
-        if (!fxLite() && !motionReduced()) {
+      if (skillExists(p.kind)) {
+        const skDraw = skillById(p.kind);
+        if (!fxLite() && !motionReduced() && skDraw.behavior === 'orb') {
           c.save();
           c.globalAlpha = 0.28 + Math.sin((p.spin || 0) * 2.1) * 0.12;
-          c.strokeStyle = '#7cf5ff';
+          c.strokeStyle = skDraw.color || '#7cf5ff';
           c.lineWidth = 2;
           c.beginPath();
           c.arc(p.x, p.y, p.r * (1.22 + Math.sin(p.spin * 1.4) * 0.06), 0, TAU);
           c.stroke();
           c.restore();
         }
-        drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'rasengan', 1);
-      } else if (p.kind === 'chidori') {
-        drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'chidori', 1);
-      } else if (p.kind === 'kamehame') {
-        c.save();
-        c.globalAlpha = 0.55 + Math.sin((p.spin || 0) * 3) * 0.15;
-        const grad = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
-        grad.addColorStop(0, '#ffffff');
-        grad.addColorStop(0.35, '#7cf5ff');
-        grad.addColorStop(1, 'rgba(60,180,255,0)');
-        c.fillStyle = grad;
-        c.beginPath();
-        c.ellipse(p.x, p.y, p.r, p.r * 0.72, Math.atan2(p.vy, p.vx), 0, TAU);
-        c.fill();
-        c.strokeStyle = '#a8e0ff';
-        c.lineWidth = 3;
-        c.beginPath();
-        c.ellipse(p.x, p.y, p.r * 0.92, p.r * 0.66, Math.atan2(p.vy, p.vx), 0, TAU);
-        c.stroke();
-        c.restore();
-      } else if (p.kind === 'rinnegan') {
-        drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'rinnegan', 1);
+        drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, p.kind, 1);
       } else if (p.kind === 'shuriken') {
         c.translate(p.x, p.y); c.rotate(p.spin || 0);
         const big = p.throwId === 'fuuma';
@@ -16061,6 +17420,7 @@ class Game {
     c.restore();
 
     this.drawChakraReadyFx(c);
+    if (this.mode === 'adventure') drawSuperFxLayer(this, c);
     if (this.mode === 'adventure') this.drawKetsbamChargeAura(c);
 
     this.drawHUD(c);
@@ -16567,16 +17927,20 @@ class Game {
   drawKetsbamChargeAura(c) {
     if (this.ketsbamChargeT <= 0 || !this.player?.alive) return;
     const f = this.player;
+    const sp = equippedSuper();
     const dur = this.ketsbamChargeDur || KETSBAM_CHARGE_DUR;
     const prog = clamp(1 - this.ketsbamChargeT / dur, 0, 1);
     const px = f.x, py = f.y - 52;
-    const lite = fxLite() || motionReduced();
+    const calm = motionReduced();
+    const lite = fxLite() || calm;
+    const col = sp.color || '#ffd75e';
+    const col2 = sp.color2 || '#ff9a3d';
 
     c.save();
-    const ringR = 32 + prog * 92;
-    c.globalAlpha = 0.35 + prog * 0.4;
-    c.strokeStyle = '#ffd75e';
-    c.lineWidth = 4 + prog * 4;
+    const ringR = calm ? (28 + prog * 88) : (28 + prog * 88 + Math.sin(pulse * 11) * 7);
+    c.globalAlpha = 0.22 + prog * 0.38;
+    c.strokeStyle = col;
+    c.lineWidth = 2.5 + prog * 3.5;
     c.beginPath();
     c.ellipse(px, f.y + 3, ringR, ringR * 0.22, 0, 0, TAU);
     c.stroke();
@@ -16589,73 +17953,78 @@ class Game {
     c.fillStyle = grad;
     c.fillRect(px - 18 - prog * 10, f.y - h, 36 + prog * 20, h);
 
-    const innerR = 38 + prog * 48;
-    c.globalAlpha = 0.55 + prog * 0.3;
-    c.strokeStyle = '#fff8dc';
-    c.lineWidth = 3 + prog * 2.5;
-    c.beginPath();
-    c.arc(px, py, innerR, 0, TAU);
-    c.stroke();
-
-    if (!lite && prog > 0.35) {
-      c.globalAlpha = 0.5 + prog * 0.25;
-      c.strokeStyle = '#ff7043';
-      c.lineWidth = 2.5;
+    const rings = lite ? 2 : 4;
+    for (let i = 0; i < rings; i++) {
+      const r = calm
+        ? (34 + i * 13 + prog * 22)
+        : (34 + i * 13 + prog * 22 + Math.sin(pulse * 10 + i * 1.4) * 5);
+      c.globalAlpha = (0.3 + prog * 0.28) * (1 - i * 0.17);
+      c.strokeStyle = i % 2 ? '#fff8dc' : col2;
+      c.lineWidth = 2 + prog * 2;
       c.beginPath();
       c.arc(px, py, innerR + 18 + prog * 28, 0, TAU);
       c.stroke();
     }
 
-    const labelSize = 22 + prog * 10;
-    c.globalAlpha = 1;
-    c.font = `900 ${labelSize}px -apple-system, sans-serif`;
+    if (!lite) {
+      c.globalAlpha = 0.45 + prog * 0.35;
+      c.strokeStyle = '#fff';
+      c.lineWidth = 2;
+      const spikes = calm ? 4 : 7;
+      for (let i = 0; i < spikes; i++) {
+        const a = pulse * 9 + i * (TAU / spikes);
+        const len = 22 + prog * 44;
+        c.beginPath();
+        c.moveTo(px + Math.cos(a) * 18, py + Math.sin(a) * 10);
+        c.lineTo(px + Math.cos(a) * len, py + Math.sin(a) * len * 0.55 - prog * 24);
+        c.stroke();
+      }
+    }
+
+    const chargeTxt = superChargeBanner(sp);
+    c.globalAlpha = 0.85;
+    c.font = `900 ${18 + prog * 8}px -apple-system, sans-serif`;
     c.textAlign = 'center';
-    c.textBaseline = 'middle';
-    c.fillStyle = '#ffd75e';
-    c.strokeStyle = 'rgba(0,0,0,.7)';
-    c.lineWidth = 6;
-    c.strokeText(t('banner.kets'), px, py - 52 - prog * 18);
-    c.fillText(t('banner.kets'), px, py - 52 - prog * 18);
+    c.fillStyle = col;
+    c.strokeStyle = 'rgba(0,0,0,.55)';
+    c.lineWidth = 4;
+    c.strokeText(chargeTxt, px, py - 58 - prog * 24);
+    c.fillText(chargeTxt, px, py - 58 - prog * 24);
     c.restore();
   }
 
   drawKetsbamPrompt(c) {
-    const prog = this.ketsbamBuildProg || 0;
-    if (prog <= 0 || !this.player?.alive) return;
+    if (!this.ketsbamShow || !this.player?.alive) return;
+    const sp = equippedSuper();
     const ui = touchUiScale(W, H);
     const { cx, cy } = ketsbamPromptCenter();
-    const pulse = motionReduced() ? 1 : (0.96 + Math.sin((this.ketsbamPulse || 0) * 5) * 0.04);
-    const r = 44 * ui * pulse;
+    const calm = motionReduced();
+    const pulse = calm ? 1 : (0.9 + Math.sin((this.ketsbamPulse || 0) * 10) * 0.1);
+    const r = 46 * ui * pulse;
+    const col = sp.color || '#ffd75e';
+    const col2 = sp.color2 || '#ff7043';
     c.save();
     c.globalAlpha = 0.94;
     c.fillStyle = 'rgba(8,12,28,.82)';
     c.beginPath();
     c.arc(cx, cy, r + 12 * ui, 0, TAU);
     c.fill();
-    c.strokeStyle = '#ffd75e';
-    c.lineWidth = 4 * ui;
-    c.stroke();
-    c.strokeStyle = 'rgba(255,112,67,.75)';
-    c.lineWidth = 2 * ui;
-    c.beginPath();
-    c.arc(cx, cy, r + 6 * ui, 0, TAU);
+    c.strokeStyle = col + '88';
+    c.lineWidth = 3 * ui;
     c.stroke();
     c.translate(cx, cy);
-    c.fillStyle = '#ffd75e';
-    c.strokeStyle = '#c01828';
-    c.lineWidth = 3.5 * ui;
-    c.beginPath();
-    c.arc(0, 0, r * 0.72, 0, TAU);
-    c.fill();
-    c.stroke();
-    c.font = `900 ${Math.round(20 * ui)}px -apple-system,sans-serif`;
+    if (!calm) c.rotate((this.ketsbamPulse || 0) * 2.2);
+    drawSuperIcon(c, sp.icon || 'star', r, col, col2);
+    if (!calm) c.rotate(-(this.ketsbamPulse || 0) * 2.2);
+    c.font = `900 ${Math.round(17 * ui)}px -apple-system,sans-serif`;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
-    c.lineWidth = 6 * ui;
-    c.strokeStyle = 'rgba(0,0,0,.65)';
-    c.strokeText(t('banner.kets'), 0, 1);
+    c.lineWidth = 5 * ui;
+    c.strokeStyle = 'rgba(0,0,0,.55)';
+    const promptTxt = superChargeBanner(sp).replace(/!$/, '');
+    c.strokeText(promptTxt, 0, 2);
     c.fillStyle = '#fff';
-    c.fillText(t('banner.kets'), 0, 1);
+    c.fillText(promptTxt, 0, 2);
     c.restore();
     c.textBaseline = 'alphabetic';
     c.textAlign = 'left';
@@ -16769,6 +18138,20 @@ class Game {
       }
       const wFam = weaponMoveFamily(p.weapon.id);
       if (wFam) drawWeaponStylePips(c, bx + 10, by + 38, p);
+      const eqSp = equippedSuper();
+      c.save();
+      c.translate(bx + 6, by + 44);
+      c.scale(0.19, 0.19);
+      drawSuperIcon(c, eqSp.icon || 'star', 16, eqSp.color, eqSp.color2);
+      c.restore();
+      c.font = '700 9px -apple-system,sans-serif';
+      c.fillStyle = eqSp.color;
+      c.textAlign = 'left';
+      c.fillText(superLabel(eqSp), bx + 16, by + 48);
+      if (this.ketsbamCd > 0) {
+        c.fillStyle = 'rgba(255,255,255,.62)';
+        c.fillText(Math.ceil(this.ketsbamCd) + 's', bx + bw - 20, by + 48);
+      }
     }
 
     c.textAlign = 'center';
@@ -17597,41 +18980,471 @@ function pickVsRosterId(id) {
   }
 }
 
-function bindCharPickSurface(root, selector, onPick) {
-  if (!root || root.dataset.sfPickBound) return;
-  root.dataset.sfPickBound = '1';
-  const actives = new Map();
-  const scrollEl = () => root.closest('[data-char-scroll]') || root.closest('.char-grid-scroll') || root.closest('.char-icon-strip') || root;
-  root.addEventListener('pointerdown', (e) => {
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
-    const card = e.target.closest(selector);
-    if (!card) return;
-    const sc = scrollEl();
-    actives.set(e.pointerId, {
-      card,
-      x: e.clientX,
-      y: e.clientY,
-      scrollTop: sc ? sc.scrollTop : 0,
-      scrollLeft: sc ? sc.scrollLeft : 0,
-    });
-  }, { passive: true });
-  const finish = (e) => {
-    const active = actives.get(e.pointerId);
-    if (!active) return;
-    actives.delete(e.pointerId);
-    const slop = IS_TOUCH ? 18 : 10;
-    const moved = Math.hypot(e.clientX - active.x, e.clientY - active.y) > slop;
-    const sc = scrollEl();
-    const scrolled = sc && (
-      Math.abs(sc.scrollTop - active.scrollTop) > 3 ||
-      Math.abs(sc.scrollLeft - active.scrollLeft) > 3
-    );
-    const card = active.card;
-    if (moved || scrolled || !card || card.classList.contains('locked')) return;
-    onPick(card);
+function bindCollectionPickGrid(grid, opts) {
+  if (!grid || grid.dataset.sfPickGridBound) return;
+  grid.dataset.sfPickGridBound = '1';
+  const sel = opts.selector;
+  let lastPick = 0;
+  let lastTouchAt = 0;
+  const debounce = opts.debounceMs || 320;
+  const fire = (card) => {
+    if (!card || !card.dataset.id) return;
+    const now = Date.now();
+    if (now - lastPick < debounce) return;
+    lastPick = now;
+    opts.onPick(card, { scrollGesture: !uiTapAllowed() });
   };
-  root.addEventListener('pointerup', finish, { passive: true });
-  root.addEventListener('pointercancel', (e) => { actives.delete(e.pointerId); }, { passive: true });
+  grid.addEventListener('click', (e) => {
+    if (Date.now() - lastTouchAt < 480) return;
+    const card = e.target.closest(sel);
+    if (!card) return;
+    fire(card);
+  });
+  grid.addEventListener('touchend', (e) => {
+    const card = touchEndedOnSelector(e, sel);
+    if (!card) return;
+    if (e.cancelable) e.preventDefault();
+    lastTouchAt = Date.now();
+    fire(card);
+  }, { passive: false });
+  grid.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const card = e.target.closest(sel);
+    if (!card || card.classList.contains('locked')) return;
+    e.preventDefault();
+    fire(card);
+  });
+  if (!IS_TOUCH && opts.onHover) {
+    grid.addEventListener('pointerover', (e) => {
+      const card = e.target.closest(sel);
+      if (!card || !card.dataset.id) return;
+      opts.onHover(card.dataset.id);
+    });
+  }
+}
+
+function bindPreviewEquipHost(host, opts) {
+  if (!host || host.dataset.sfEquipHostBound) return;
+  host.dataset.sfEquipHostBound = '1';
+  let lastEquip = 0;
+  let lastTouchAt = 0;
+  const debounce = opts.debounceMs || 320;
+  const runEquip = () => {
+    const now = Date.now();
+    if (now - lastEquip < debounce) return;
+    if (!uiTapAllowed()) return;
+    lastEquip = now;
+    opts.onEquip();
+  };
+  host.addEventListener('click', (e) => {
+    if (Date.now() - lastTouchAt < 480) return;
+    if (!e.target.closest(opts.btnSelector)) return;
+    runEquip();
+  });
+  host.addEventListener('touchend', (e) => {
+    if (!e.target.closest(opts.btnSelector)) return;
+    if (!uiTapAllowed()) return;
+    if (e.cancelable) e.preventDefault();
+    lastTouchAt = Date.now();
+    runEquip();
+  }, { passive: false });
+}
+
+function initSkillScreenChrome() {
+  if (window.__sfSkillChrome) return;
+  window.__sfSkillChrome = true;
+  UI.skillSagaFilter = 'all';
+  UI.skillBehaviorFilter = 'all';
+  UI.skillSortMode = 'level';
+  UI.skillPreviewId = save.skill || 'rasengan';
+  UI.superPreviewId = save.super || 'ketsbam';
+
+  const sagaBar = document.getElementById('skillSagaBar');
+  if (sagaBar && !sagaBar.dataset.sfSkillSagaBound) {
+    sagaBar.dataset.sfSkillSagaBound = '1';
+    sagaBar.querySelectorAll('[data-saga]').forEach((btn) => {
+      bindPress(btn, () => {
+        AudioSys.sfx('select');
+        UI.skillSagaFilter = btn.dataset.saga || 'all';
+        UI.renderSkills();
+      });
+    });
+  }
+  const behBar = document.getElementById('skillBehaviorBar');
+  if (behBar && !behBar.dataset.sfSkillBehBound) {
+    behBar.dataset.sfSkillBehBound = '1';
+    behBar.querySelectorAll('[data-behavior]').forEach((btn) => {
+      bindPress(btn, () => {
+        AudioSys.sfx('select');
+        UI.skillBehaviorFilter = btn.dataset.behavior || 'all';
+        UI.renderSkills();
+      });
+    });
+  }
+  const sortBtn = document.getElementById('btnSkillSort');
+  if (sortBtn && !sortBtn.dataset.sfSkillSortBound) {
+    sortBtn.dataset.sfSkillSortBound = '1';
+    bindPress(sortBtn, () => {
+      const modes = ['level', 'dmg', 'name'];
+      const cur = UI.skillSortMode || 'level';
+      UI.skillSortMode = modes[(modes.indexOf(cur) + 1) % modes.length];
+      AudioSys.sfx('select');
+      UI.renderSkills();
+    });
+  }
+
+  bindPreviewEquipHost(document.getElementById('skillPreview'), {
+    btnSelector: '#skillEquipBtn',
+    onEquip: () => equipSkill(UI.skillPreviewId),
+  });
+
+  bindCollectionPickGrid(document.getElementById('skillGrid'), {
+    selector: '.skill-card',
+    onPick: (card, meta) => runSkillCard(card, meta),
+    onHover: (id) => {
+      if (UI.skillPreviewId === id) return;
+      pickSkillPreview(id, true);
+    },
+  });
+
+  bindCollectionPickGrid(document.getElementById('superGrid'), {
+    selector: '.super-card',
+    onPick: (card, meta) => runSuperCard(card, meta),
+    onHover: (id) => {
+      if (UI.superPreviewId === id) return;
+      pickSuperPreview(id, true);
+    },
+  });
+
+  bindPreviewEquipHost(document.getElementById('superPreview'), {
+    btnSelector: '#superEquipBtn',
+    onEquip: () => equipSuper(UI.superPreviewId),
+  });
+}
+
+function equipSkill(id) {
+  if (!id || !uiTapAllowed() || UI._skillEquipBusy) return;
+  const sk = skillById(id);
+  if (!skillUnlocked(sk)) return;
+  if (save.skill === id) return;
+  UI._skillEquipBusy = true;
+  try {
+    safeUiAction(() => {
+      save.skill = id;
+      if (!persistOrToast('skill')) return;
+      AudioSys.sfx(skillSfxId(sk));
+      UI.renderSkills();
+      UI.renderMenu();
+      UI.renderModeHub();
+      UI.toast(t('toast.skillEquipped', { name: skillLabel(sk) }), 2200);
+      UI._skillArmId = null;
+    }, 'pickSkill/' + id, 'Skill kiezen mislukt');
+  } finally {
+    UI._skillEquipBusy = false;
+  }
+}
+
+function pickSuperPreview(id, silent) {
+  if (!id) return;
+  UI.superPreviewId = id;
+  updateSuperPreview();
+  if (!silent) {
+    const sp = superById(id);
+    if (sp) try { AudioSys.init(); AudioSys.sfx(superSfxId(sp, 'finish')); } catch (_) {}
+  }
+}
+
+function equipSuper(id) {
+  if (!id || !uiTapAllowed() || UI._superEquipBusy) return;
+  const sp = superById(id);
+  if (!superUnlocked(sp)) return;
+  if (save.super === id) return;
+  UI._superEquipBusy = true;
+  try {
+    safeUiAction(() => {
+      save.super = id;
+      if (!persistOrToast('super')) return;
+      AudioSys.sfx(superSfxId(sp, 'finish'));
+      UI.renderSkills();
+      UI.renderMenu();
+      UI.renderModeHub();
+      UI.toast(t('toast.superEquipped', { name: superLabel(sp) }), 2200);
+      UI._superArmId = null;
+    }, 'pickSuper/' + id, 'Super kiezen mislukt');
+  } finally {
+    UI._superEquipBusy = false;
+  }
+}
+
+function playSkillPreviewSfx(id) {
+  const now = Date.now();
+  if (now - (UI._skillPreviewSfxT || 0) <= 420) return;
+  UI._skillPreviewSfxT = now;
+  try { AudioSys.init(); AudioSys.sfx(id); } catch (_) {}
+}
+
+function playSuperPreviewSfx(sp) {
+  const now = Date.now();
+  if (now - (UI._superPreviewSfxT || 0) <= 420) return;
+  UI._superPreviewSfxT = now;
+  try { AudioSys.init(); AudioSys.sfx(superSfxId(sp, 'charge')); } catch (_) {}
+}
+
+function runSuperCard(card, meta) {
+  if (!card || !card.dataset.id) return;
+  const id = card.dataset.id;
+  const sp = superById(id);
+  const now = Date.now();
+  pickSuperPreview(id, true);
+  if (meta && meta.scrollGesture) {
+    playSuperPreviewSfx(sp);
+    return;
+  }
+  if (!superUnlocked(sp)) {
+    playSuperPreviewSfx(sp);
+    return;
+  }
+  const armed = UI._superArmId === id && (now - (UI._superArmT || 0)) < 520;
+  UI._superArmId = id;
+  UI._superArmT = now;
+  if (armed && save.super !== id) {
+    equipSuper(id);
+    return;
+  }
+  playSuperPreviewSfx(sp);
+}
+
+function updateSuperPreview() {
+  const host = document.getElementById('superPreview');
+  if (!host) return;
+  const id = UI.superPreviewId || save.super || 'ketsbam';
+  const sp = superById(id);
+  const ok = superUnlocked(sp);
+  const active = save.super === sp.id;
+  let lockLine = '';
+  if (!ok) {
+    lockLine = superSkillGated(sp)
+      ? t('ui.superIslandGate', { lvl: sp.needLvl })
+      : (sp.needLvl ? t('ui.superNeedLvl', { lvl: sp.needLvl }) : superLabel(sp, 'hint'));
+  }
+  const foot = ok
+    ? (active
+      ? `<span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.superActive')}</span>`
+      : `<button type="button" class="btn mode-btn b-skills" id="superEquipBtn" style="min-height:44px;padding:10px 18px">${t('ui.superEquipBtn')}</button>`)
+    : `<span class="skill-preview-lock">${lockLine}</span>`;
+  const statLabels = {
+    pow: t('super.stat.pow'),
+    rad: t('super.stat.rad'),
+    cd: t('super.stat.cd'),
+    charge: t('super.stat.charge'),
+  };
+  const statRows = superStatRows(sp).map(row =>
+    `<div class="skill-stat-row">${statLabels[row.key] || row.key}
+      <span class="skill-stat-val">${row.text}</span>
+      <span class="skill-stat-track"><i style="width:${Math.round(row.pct * 100)}%;background:${sp.color}"></i></span></div>`
+  ).join('');
+  const tags = superTags(sp).map(tag =>
+    `<span class="skill-tag" style="border-color:${sp.color}66;color:${sp.color}">${tag}</span>`
+  ).join('');
+  host.innerHTML =
+    `<div class="skill-preview-top">` +
+    `<div class="skill-preview-orb"><canvas id="superPreviewCanvas" width="88" height="88"></canvas></div>` +
+    `<div class="skill-preview-body">` +
+    `<div class="skill-preview-name" style="color:${sp.color}">${superLabel(sp)}</div>` +
+    `<div class="skill-preview-banner">${superFinishBanner(sp)} · ${superBehaviorLabelI18n(sp)}</div>` +
+    `<div class="skill-tag-row">${tags}</div>` +
+    `<div class="skill-preview-tip">${superLabel(sp, 'tooltip') || superCombatLine(sp)}</div>` +
+    `</div></div>` +
+    `<div class="skill-stat-grid">${statRows}</div>` +
+    `<div class="skill-preview-foot">${foot}</div>`;
+  const cv = document.getElementById('superPreviewCanvas');
+  if (cv) {
+    const cc = cv.getContext('2d');
+    cc.clearRect(0, 0, 88, 88);
+    cc.save();
+    cc.translate(44, 44);
+    drawSuperIcon(cc, sp.icon || 'star', 28, sp.color, sp.color2);
+    cc.restore();
+  }
+}
+
+function renderSupers() {
+  const sumEl = document.getElementById('superSummary');
+  if (sumEl) {
+    const unlocked = superUnlockedCount();
+    const active = equippedSuper();
+    sumEl.style.display = 'block';
+    sumEl.innerHTML =
+      `${t('ui.superSummaryHead')} <b>${unlocked}/${SUPERS.length}</b> · ${t('ui.superSummaryActive')} ` +
+      `<b style="color:${active.color}">${superLabel(active)}</b>` +
+      `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.superSummarySub')}</div>`;
+  }
+  const nextEl = document.getElementById('superNextUnlock');
+  if (nextEl) {
+    const next = superNextUnlock();
+    if (next && !superUnlocked(next)) {
+      nextEl.style.display = 'block';
+      const need = Math.max(0, (next.needLvl || 1) - save.lvl);
+      if (superSkillGated(next) && save.lvl >= (next.needLvl || 1)) {
+        nextEl.innerHTML = t('ui.superNextIsland', { name: superLabel(next), cap: adventureWeaponCap() });
+      } else if (need > 0) {
+        nextEl.innerHTML = t('ui.superNextUnlock', { name: superLabel(next), lvl: next.needLvl, need });
+      } else {
+        nextEl.innerHTML = t('ui.superNextUnlockSoon', { name: superLabel(next), lvl: next.needLvl });
+      }
+    } else {
+      nextEl.style.display = 'none';
+      nextEl.innerHTML = '';
+    }
+  }
+  const previewId = UI.superPreviewId || save.super || 'ketsbam';
+  if (!SUPERS.some(s => s.id === previewId)) UI.superPreviewId = save.super || 'ketsbam';
+  updateSuperPreview();
+  const grid = document.getElementById('superGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  for (const sp of SUPERS) {
+    const ok = superUnlocked(sp);
+    const el = document.createElement('div');
+    el.className = 'style-card skill-card super-card' + (save.super === sp.id ? ' sel' : '') + (ok ? '' : ' locked') +
+      (UI.superPreviewId === sp.id ? ' preview-hov' : '');
+    el.dataset.id = sp.id;
+    el.style.borderColor = ok ? sp.color + '88' : '';
+    el.title = superLabel(sp, 'tooltip') || superLabel(sp, 'hint') || superLabel(sp);
+    const cv = document.createElement('canvas');
+    cv.width = 72; cv.height = 72;
+    const cc = cv.getContext('2d');
+    cc.save();
+    if (!ok) cc.globalAlpha = 0.45;
+    cc.translate(36, 38);
+    drawSuperIcon(cc, sp.icon || 'star', 22, sp.color, sp.color2);
+    cc.restore();
+    el.appendChild(cv);
+    const cap = document.createElement('div');
+    cap.style.fontSize = '13px';
+    cap.style.color = sp.color;
+    cap.textContent = superLabel(sp);
+    el.appendChild(cap);
+    const beh = document.createElement('div');
+    beh.className = 'skill-beh-badge';
+    beh.style.color = sp.color;
+    beh.textContent = superBehaviorLabelI18n(sp) + ' · Lv ' + (sp.needLvl || 1);
+    el.appendChild(beh);
+    const bonus = document.createElement('div');
+    bonus.style.fontSize = '11px';
+    bonus.style.fontWeight = '800';
+    bonus.style.color = ok ? '#ffd75e' : '#8fa3d9';
+    bonus.style.marginTop = '3px';
+    bonus.textContent = superCombatLine(sp);
+    bonus.style.opacity = ok ? '1' : '0.55';
+    el.appendChild(bonus);
+    const sub = document.createElement('div');
+    sub.style.fontSize = '11px';
+    sub.style.fontWeight = '600';
+    sub.style.opacity = '0.75';
+    sub.style.marginTop = '4px';
+      sub.textContent = ok ? (save.super === sp.id ? t('ui.superActive') : t('ui.superPickHint'))
+      : (superSkillGated(sp) ? t('ui.superIslandGate', { lvl: sp.needLvl }) : superLabel(sp, 'hint'));
+    el.setAttribute('role', 'button');
+    el.tabIndex = ok ? 0 : -1;
+    el.appendChild(sub);
+    grid.appendChild(el);
+  }
+}
+
+function runSkillCard(card, meta) {
+  if (!card || !card.dataset.id) return;
+  const id = card.dataset.id;
+  const sk = skillById(id);
+  const now = Date.now();
+  pickSkillPreview(id, true);
+  if (meta && meta.scrollGesture) {
+    playSkillPreviewSfx(id);
+    return;
+  }
+  if (!skillUnlocked(sk)) {
+    playSkillPreviewSfx(id);
+    return;
+  }
+  const armed = UI._skillArmId === id && (now - (UI._skillArmT || 0)) < 520;
+  UI._skillArmId = id;
+  UI._skillArmT = now;
+  if (armed && save.skill !== id) {
+    equipSkill(id);
+    return;
+  }
+  playSkillPreviewSfx(id);
+}
+
+function updateSkillPreview() {
+  const host = document.getElementById('skillPreview');
+  if (!host) return;
+  const id = UI.skillPreviewId || save.skill || 'rasengan';
+  const sk = skillById(id);
+  const ok = skillUnlocked(sk);
+  const active = save.skill === sk.id;
+  const statLabels = {
+    dmg: t('skill.stat.dmg'),
+    wind: t('skill.stat.wind'),
+    spd: t('skill.stat.spd'),
+    kb: t('skill.stat.kb'),
+  };
+  const statRows = skillStatRows(sk).map(row =>
+    `<div class="skill-stat-row">${statLabels[row.key] || row.key}
+      <span class="skill-stat-val">${row.text}</span>
+      <span class="skill-stat-track"><i style="width:${Math.round(row.pct * 100)}%;background:${sk.color}"></i></span></div>`
+  ).join('');
+  const tags = skillTags(sk).map(tag =>
+    `<span class="skill-tag" style="border-color:${sk.color}66;color:${sk.color}">${tag}</span>`
+  ).join('');
+  let lockLine = '';
+  if (!ok) {
+    lockLine = skillSkillGated(sk)
+      ? t('ui.skillIslandGate', { lvl: sk.needLvl })
+      : (sk.needLvl ? t('ui.skillNeedLvl', { lvl: sk.needLvl }) : skillLabel(sk, 'hint'));
+  }
+  const foot = ok
+    ? (active
+      ? `<span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.skillActive')}</span>`
+      : `<button type="button" class="btn mode-btn b-skills" id="skillEquipBtn" style="min-height:44px;padding:10px 18px">${t('ui.skillEquipBtn')}</button>`)
+    : `<span class="skill-preview-lock">${lockLine}</span>`;
+  host.innerHTML =
+    `<div class="skill-preview-top">` +
+    `<div class="skill-preview-orb"><canvas id="skillPreviewCanvas" width="88" height="88"></canvas></div>` +
+    `<div class="skill-preview-body">` +
+    `<div class="skill-preview-name" style="color:${sk.color}">${skillLabel(sk)}</div>` +
+    `<div class="skill-preview-banner">${sk.banner || ''} · ${vsSagaMeta(sk.saga).label}</div>` +
+    `<div class="skill-tag-row">${tags}</div>` +
+    `<div class="skill-preview-tip">${skillLabel(sk, 'tooltip') || skillCombatLine(sk)}</div>` +
+    `</div></div>` +
+    `<div class="skill-stat-grid">${statRows}</div>` +
+    `<div class="skill-preview-foot">${foot}</div>`;
+  const cv = document.getElementById('skillPreviewCanvas');
+  if (cv && typeof drawJutsuOrb === 'function') {
+    const cc = cv.getContext('2d');
+    cc.clearRect(0, 0, 88, 88);
+    cc.translate(44, 46);
+    drawJutsuOrb(cc, 0, 0, 30, performance.now() * 0.001 * 3, sk.id, ok ? 1 : 0.42);
+  }
+  const equipBtn = document.getElementById('skillEquipBtn');
+  if (equipBtn) equipBtn.type = 'button';
+}
+
+function pickSkillPreview(id, silent) {
+  if (!id) return;
+  UI.skillPreviewId = id;
+  updateSkillPreview();
+  const grid = document.getElementById('skillGrid');
+  if (grid) {
+    grid.querySelectorAll('.skill-card').forEach(c => {
+      c.classList.toggle('preview-hov', c.dataset.id === id);
+    });
+  }
+  const now = Date.now();
+  if (!silent && now - (UI._skillPreviewSfxT || 0) > 420) {
+    UI._skillPreviewSfxT = now;
+    try { AudioSys.init(); AudioSys.sfx(id); } catch (_) {}
+  }
 }
 
 function initCharSelectChrome() {
@@ -17850,10 +19663,14 @@ function levelTileTip(n, pick, infoLv, boss, best, fails) {
 }
 
 const UI = {
-  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'skillScreen', 'petScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
+  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
+  skillSagaFilter: 'all',
+  skillBehaviorFilter: 'all',
+  skillSortMode: 'level',
+  skillPreviewId: 'rasengan',
   charSortMode: 'name',
   charPreviewHoverId: null,
   dexRarityFilter: 'all',
@@ -17883,7 +19700,7 @@ const UI = {
   resetInnerScrolls(screenEl) {
     if (!screenEl) return;
     const scrollables = screenEl.querySelectorAll(
-      '.char-grid-scroll, .char-arena-body, .menu-landing-scroll, .mode-hub-body, .island-bar, .grid, #weaponList, #dailyList, #achList, #petList, #eggList, #dexList, [data-scroll-reset]'
+      '.char-grid-scroll, .menu-landing-scroll, .mode-hub-body, .island-bar, .grid, #weaponList, .skill-grid-scroll, [data-scroll-reset]'
     );
     scrollables.forEach((el) => {
       try {
@@ -17967,6 +19784,10 @@ const UI = {
           this.renderPausePerfStrip();
         }
         if (id === 'helpScreen') this.renderHelp();
+        if (id === 'skillScreen') {
+          this.skillPreviewId = save.skill || 'rasengan';
+          this.superPreviewId = save.super || 'ketsbam';
+        }
         if (id === 'levelScreen') {
           if (!this.advIslandPick) this.advIslandPick = currentAdvIsland();
           applyIslandOnboarding();
@@ -18073,7 +19894,7 @@ const UI = {
         this.show('menuScreen');
         return;
       }
-      if (active === 'weaponScreen' || active === 'skillScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'dexScreen') {
+      if (active === 'weaponScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'skillScreen' || active === 'dexScreen') {
         this.openModeHub('collect');
         return;
       }
@@ -18498,8 +20319,14 @@ const UI = {
         ? t('ui.hubStatPetsFull', { pets: petsN, total: PET_ROSTER.length, coins: pc, eggs: eggsN, eggTotal: EGG_ROSTER.length })
         : t('ui.hubStatPetsEmpty', { total: PET_ROSTER.length }));
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
-      setStat('hubStatStyle', t('ui.hubStatStyle', { n: stylesN, total: STYLES.length }));
-      setStat('hubStatDex', t('ui.hubStatDex', { n: dexCount(), total: SPECIES_ORDER.length }));
+      setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
+      const skillsN = skillUnlockedCount();
+      const activeSk = skillById(save.skill || 'rasengan');
+      const activeSp = equippedSuper();
+      setStat('hubStatSkills', skillsN > 0
+        ? `${skillsN}/${SKILLS.length} · ${skillLabel(activeSk)} · ${superLabel(activeSp)}`
+        : `${SKILLS.length} specials`);
+      setStat('hubStatDex', `${dexCount()}/${SPECIES_ORDER.length} · +max HP`);
     }
   },
 
@@ -18518,7 +20345,10 @@ const UI = {
     const profileEl = document.getElementById('menuProfileBar');
     if (profileEl) {
       profileEl.innerHTML =
-        `<span class="prof-row"><b>Lv ${save.lvl}</b><span>${weaponLabel(w)}</span><span style="color:${st.accent}">${styleLabel(st)}</span></span>` +
+        `<span class="prof-row"><b>Lv ${save.lvl}</b><span>${weaponLabel(w)}</span>` +
+        `<span style="color:${(skillById(save.skill || 'rasengan').color)}">${skillLabel(skillById(save.skill || 'rasengan'))}</span>` +
+        `<span style="color:${equippedSuper().color}">${superLabel(equippedSuper())}</span>` +
+        `<span style="color:${st.accent}">${styleLabel(st)}</span></span>` +
         `<span style="display:block;margin-top:3px;opacity:.82;font-size:11px">${adventureProgressLine()}</span>` +
         `<span class="prof-xp" aria-hidden="true"><span style="width:${pct}%"></span></span>` +
         `<span class="prof-foot">${save.xp}/${need} XP${missAlert ? ' · ' + t('ui.menuMissionReady') : ''}</span>`;
@@ -19860,6 +21690,160 @@ const UI = {
     }
   },
 
+  renderSkills() {
+    initSkillScreenChrome();
+    renderSupers();
+    const sumEl = document.getElementById('skillSummary');
+    if (sumEl) {
+      const unlocked = skillUnlockedCount();
+      const active = skillById(save.skill || 'rasengan');
+      const sagaChips = SKILL_SAGA_ORDER.map(sid => {
+        const c = skillSagaCounts(sid);
+        const meta = vsSagaMeta(sid);
+        return `<span class="rar-pill" style="color:#cfe0ff;border-color:rgba(255,255,255,.22);margin:2px">${meta.label} ${c.unlocked}/${c.total}</span>`;
+      }).join(' ');
+      sumEl.style.display = 'block';
+      sumEl.innerHTML =
+        `${t('ui.skillSummaryHead')} <b>${unlocked}/${SKILLS.length}</b> · ${t('ui.skillSummaryActive')} ` +
+        `<b style="color:${active.color}">${skillLabel(active)}</b> · ${t('ui.skillGateLine', { cap: adventureWeaponCap() })}` +
+        `<div style="margin-top:6px;line-height:1.7">${sagaChips}</div>` +
+        `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.skillSummarySub')}</div>`;
+    }
+    const nextEl = document.getElementById('skillNextUnlock');
+    if (nextEl) {
+      const next = skillNextUnlock();
+      if (next && !skillUnlocked(next)) {
+        nextEl.style.display = 'block';
+        const need = Math.max(0, (next.needLvl || 1) - save.lvl);
+        if (skillSkillGated(next) && save.lvl >= (next.needLvl || 1)) {
+          nextEl.innerHTML = t('ui.skillNextIsland', { name: skillLabel(next), cap: adventureWeaponCap() });
+        } else if (need > 0) {
+          nextEl.innerHTML = t('ui.skillNextUnlock', { name: skillLabel(next), lvl: next.needLvl, need });
+        } else {
+          nextEl.innerHTML = t('ui.skillNextUnlockSoon', { name: skillLabel(next), lvl: next.needLvl });
+        }
+      } else {
+        nextEl.style.display = 'none';
+        nextEl.innerHTML = '';
+      }
+    }
+    const saga = UI.skillSagaFilter || 'all';
+    const behavior = UI.skillBehaviorFilter || 'all';
+    const blurbEl = document.getElementById('skillSagaBlurb');
+    if (blurbEl) blurbEl.textContent = skillSagaBlurb(saga);
+    const sagaBar = document.getElementById('skillSagaBar');
+    if (sagaBar) {
+      sagaBar.querySelectorAll('[data-saga]').forEach((btn) => {
+        const sid = btn.dataset.saga || 'all';
+        btn.classList.toggle('active', sid === saga);
+        const c = skillSagaCounts(sid);
+        let badge = btn.querySelector('.saga-count');
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'saga-count';
+          btn.appendChild(badge);
+        }
+        badge.textContent = ` (${c.unlocked}/${c.total})`;
+      });
+    }
+    const behBar = document.getElementById('skillBehaviorBar');
+    if (behBar) {
+      const behLabels = {
+        all: t('ui.skillBehAll'),
+        orb: t('skill.behavior.orb'),
+        dash: t('skill.behavior.dash'),
+        beam: t('skill.behavior.beam'),
+        disc: t('skill.behavior.disc'),
+        pull: t('skill.behavior.pull'),
+        meteor: t('skill.behavior.meteor'),
+      };
+      behBar.querySelectorAll('[data-behavior]').forEach((btn) => {
+        const id = btn.dataset.behavior || 'all';
+        if (behLabels[id]) btn.textContent = behLabels[id];
+        btn.classList.toggle('active', id === behavior);
+      });
+    }
+    const sortBtn = document.getElementById('btnSkillSort');
+    if (sortBtn) {
+      const mode = UI.skillSortMode || 'level';
+      sortBtn.textContent = t('ui.skillSort_' + mode);
+    }
+    const previewId = UI.skillPreviewId || save.skill || 'rasengan';
+    const filtered = sortSkills(skillsForFilters(saga, behavior), UI.skillSortMode || 'level');
+    if (!filtered.some(s => s.id === previewId)) {
+      UI.skillPreviewId = filtered[0] ? filtered[0].id : (save.skill || 'rasengan');
+    }
+    updateSkillPreview();
+    const grid = document.getElementById('skillGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    if (!filtered.length) {
+      const empty = document.createElement('div');
+      empty.className = 'char-grid-empty';
+      empty.style.gridColumn = '1 / -1';
+      empty.textContent = t('ui.skillEmptyFilter');
+      grid.appendChild(empty);
+      return;
+    }
+    for (const sk of filtered) {
+      const ok = skillUnlocked(sk);
+      const el = document.createElement('div');
+      el.className = 'style-card skill-card' + (save.skill === sk.id ? ' sel' : '') + (ok ? '' : ' locked') +
+        (UI.skillPreviewId === sk.id ? ' preview-hov' : '');
+      el.dataset.id = sk.id;
+      el.style.borderColor = ok ? sk.color + '88' : '';
+      el.title = skillLabel(sk, 'tooltip') || skillLabel(sk, 'hint') || skillLabel(sk);
+      const cv = document.createElement('canvas');
+      cv.width = 72; cv.height = 72;
+      const cc = cv.getContext('2d');
+      cc.translate(36, 38);
+      if (typeof drawJutsuOrb === 'function') {
+        drawJutsuOrb(cc, 0, 0, 22, 0.6, sk.id, ok ? 1 : 0.45);
+      } else {
+        cc.fillStyle = sk.color;
+        cc.beginPath(); cc.arc(0, 0, 20, 0, TAU); cc.fill();
+      }
+      el.appendChild(cv);
+      const cap = document.createElement('div');
+      cap.style.fontSize = '13px';
+      cap.style.color = sk.color;
+      cap.textContent = skillLabel(sk);
+      el.appendChild(cap);
+      const beh = document.createElement('div');
+      beh.className = 'skill-beh-badge';
+      beh.style.color = sk.color;
+      beh.textContent = skillBehaviorLabelI18n(sk) + ' · ×' + (sk.dmgMul || 2).toFixed(1);
+      el.appendChild(beh);
+      const bonus = document.createElement('div');
+      bonus.style.fontSize = '11px';
+      bonus.style.fontWeight = '800';
+      bonus.style.color = ok ? '#7cf5ff' : '#8fa3d9';
+      bonus.style.marginTop = '3px';
+      bonus.textContent = skillCombatLine(sk);
+      bonus.style.opacity = ok ? '1' : '0.55';
+      el.appendChild(bonus);
+      const sub = document.createElement('div');
+      sub.style.fontSize = '11px';
+      sub.style.fontWeight = '600';
+      sub.style.opacity = '0.75';
+      sub.style.marginTop = '4px';
+      sub.textContent = ok ? (save.skill === sk.id ? t('ui.skillActive') : t('ui.skillPickHint'))
+        : (skillSkillGated(sk) ? t('ui.skillIslandGate', { lvl: sk.needLvl }) : skillLabel(sk, 'hint'));
+      el.setAttribute('role', 'button');
+      el.tabIndex = ok ? 0 : -1;
+      el.appendChild(sub);
+      grid.appendChild(el);
+    }
+    requestAnimationFrame(() => {
+      const fKey = (UI.skillSagaFilter || 'all') + '|' + (UI.skillBehaviorFilter || 'all') + '|' + (UI.skillSortMode || 'level');
+      const shouldScroll = UI._skillScrollFilterKey !== fKey;
+      UI._skillScrollFilterKey = fKey;
+      if (!shouldScroll) return;
+      const pick = grid.querySelector('.skill-card.preview-hov, .skill-card.sel');
+      if (pick) pick.scrollIntoView({ block: 'nearest', behavior: IS_TOUCH ? 'auto' : 'smooth' });
+    });
+  },
+
   renderSettings() {
     renderLangSwitch();
     const verEl = document.getElementById('setAppVersion');
@@ -20290,6 +22274,10 @@ bindPress(document.getElementById('btnDex'), () => {
 const btnStyle = document.getElementById('btnStyle');
 bindPress(btnStyle, () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderStyle(); UI.show('styleScreen');
+});
+const btnSkills = document.getElementById('btnSkills');
+bindPress(btnSkills, () => {
+  AudioSys.init(); AudioSys.sfx('select'); UI.renderSkills(); UI.show('skillScreen');
 });
 const btnSettings = document.getElementById('btnSettings');
 bindPress(btnSettings, () => {

@@ -56,6 +56,7 @@ class Game {
       });
       applyPlayerStyle(this.player);
       applyStyleBonusesToPlayer(this, this.player);
+      applyPlayerSkill(this.player);
       this.petDmgMul = 1;
       this.petEnergyMul = 1;
       this.petCritBonus = 0;
@@ -134,7 +135,8 @@ class Game {
     this.ketsbamChargeT = 0;
     this.ketsbamChargeDur = 0;
     this.ketsbamChargePulse = 0;
-    this.ketsbamStickPick = null;
+    this.superFx = [];
+    this._superBoltSeg = [];
     applyGambleToStage(this, gamble);
     this.banner(t('banner.levelStart', { n }), 1.4, '#ffd75e', 54);
     if (masterBuffActive(n)) {
@@ -1514,65 +1516,76 @@ class Game {
       }
       const newStyle = STYLES.find(s => s.needLvl === save.lvl && styleUnlocked(s));
       if (newStyle) UI.toast(t('toast.styleUnlock', { name: styleLabel(newStyle) }), 3500);
+      const newSkill = SKILLS.find(s => s.needLvl === save.lvl && skillUnlocked(s));
+      if (newSkill) UI.toast(t('toast.skillUnlock', { name: skillLabel(newSkill) }), 3500);
+      const newSuper = SUPERS.find(s => s.needLvl === save.lvl && superUnlocked(s));
+      if (newSuper) UI.toast(t('toast.superUnlock', { name: superLabel(newSuper) }), 3500);
     }
     persist();
   }
 
   spawnJutsu(f, atk) {
-    const jutsu = (atk && atk.jutsu) || fighterJutsuKind(f);
-    const jb = jutsuSkillBonuses(jutsu);
-    const dmg = (atk ? atk.dmg : f.baseDmg * 2.8);
+    const sk = skillById((atk && atk.jutsu) || fighterJutsuKind(f));
+    const dmg = atk ? atk.dmg : f.baseDmg * (sk.dmgMul || 2.8);
     const from = this.projFrom(f);
     const critMeta = projCritMeta(f);
-    const baseSpd = jutsu === 'chidori' ? 620 : jutsu === 'rinnegan' ? 340 : 420;
-    const aim = projAimVelocity(f, baseSpd * jb.speedMul);
+    const behavior = sk.behavior || 'orb';
+    const speed = sk.speed || 420;
+    const aim = projAimVelocity(f, behavior === 'dash' ? speed : speed * 0.9);
     const y0 = f.y - 50 + clamp(aim.ny, -1, 0.5) * 36;
-    const fireProj = (offX, offY, scale) => {
-      const sc = scale || 1;
-      if (jutsu === 'chidori') {
-        this.spawnProjectile(Object.assign({
-          x: f.x + f.face * (36 + offX), y: y0 + offY,
-          vx: aim.vx, vy: aim.vy * 0.85, r: (22 + jb.radius) * sc, dmg: dmg * sc,
-          life: 0.35 * jb.lifeMul, from, kind: 'chidori', pierce: false, hitSet: new Set(),
-          pierceRepeat: jb.pierceRepeat,
-        }, critMeta));
-      } else if (jutsu === 'rinnegan') {
-        this.spawnProjectile(Object.assign({
-          x: f.x + f.face * (38 + offX), y: y0 + offY,
-          vx: aim.vx, vy: aim.vy * 0.9, r: (30 + jb.radius) * sc, dmg: dmg * sc,
-          from, kind: 'rinnegan', pierce: true, hitSet: new Set(), life: 1.05 * jb.lifeMul,
-          spin: 0, pull: true, pullMul: jb.pullMul || 1, extraShot: jb.extraShot,
-        }, critMeta));
-      } else {
-        const face = f.face || 1;
-        this.spawnProjectile(Object.assign({
-          x: f.x + face * (40 + offX), y: y0 + offY,
-          vx: face * baseSpd * jb.speedMul, vy: 0, r: (28 + jb.radius) * sc, dmg: dmg * sc,
-          from, kind: 'rasengan', pierce: true, hitSet: new Set(), life: 1.4 * jb.lifeMul,
-          spin: 0, extraShot: jb.extraShot,
-        }, critMeta));
-      }
-    };
-    if (jutsu === 'chidori') {
-      fireProj(0, 0, 1);
-      f.vx = f.face * 380 * jb.speedMul;
+    const face = f.face || 1;
+    const col = sk.color || '#7cf5ff';
+
+    if (behavior === 'dash') {
+      this.spawnProjectile(Object.assign({
+        x: f.x + face * 36, y: y0,
+        vx: aim.vx, vy: aim.vy * 0.85, r: sk.radius || 22, dmg, life: sk.life || 0.35,
+        from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(),
+      }, critMeta));
+      f.vx = face * (sk.dashVx || 380);
       this.shake(7, 0.2);
-      AudioSys.sfx('chidori');
-    } else if (jutsu === 'rinnegan') {
-      fireProj(0, 0, 1);
-      this.burst(f.x + f.face * 28, y0, '#c47aff', 22);
-      this.burst(f.x + f.face * 28, y0, '#ff6b9d', 10);
-      this.shake(8, 0.24);
-      this.freezeT = Math.max(this.freezeT, 0.05);
-      AudioSys.sfx('rinnegan');
+      AudioSys.sfx(skillSfxId(sk));
+    } else if (behavior === 'pull' || behavior === 'meteor') {
+      const sp = behavior === 'meteor' ? speed * 0.55 : speed;
+      this.spawnProjectile(Object.assign({
+        x: f.x + face * 38, y: y0,
+        vx: aim.vx * (sp / speed), vy: aim.vy * 0.9, r: sk.radius || 30, dmg,
+        from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(), life: sk.life || 1.05,
+        spin: 0, pull: !!sk.pull,
+      }, critMeta));
+      this.burst(f.x + face * 28, y0, col, behavior === 'meteor' ? 18 : 14);
+      this.burst(f.x + face * 28, y0, '#ff6b9d', 8);
+      this.shake(behavior === 'meteor' ? 10 : 8, 0.24);
+      this.freezeT = Math.max(this.freezeT, behavior === 'meteor' ? 0.07 : 0.05);
+      AudioSys.sfx(skillSfxId(sk));
       if (f.isPlayer || f.playerSlot) haptic(20);
+    } else if (behavior === 'beam' || behavior === 'disc') {
+      const beamSpeed = speed;
+      const rx = behavior === 'disc' ? (sk.radius || 18) : (sk.radius || 32);
+      this.spawnProjectile(Object.assign({
+        x: f.x + face * 42, y: y0,
+        vx: aim.vx || face * beamSpeed, vy: (aim.vy || 0) * 0.35, r: rx, dmg,
+        from, kind: sk.id, pierce: sk.pierce !== false, hitSet: new Set(), life: sk.life || 1.1,
+        spin: behavior === 'disc' ? 0.4 : 0,
+      }, critMeta));
+      this.burst(f.x + face * 34, y0, col, fxLite() ? 8 : 14);
+      spawnFxRing(this, f.x + face * 38, y0, col, 12);
+      this.shake(8, 0.26);
+      this.freezeT = Math.max(this.freezeT, 0.05);
+      AudioSys.sfx(skillSfxId(sk));
+      if (f.isPlayer || f.playerSlot) haptic(18);
     } else {
-      fireProj(0, 0, 1);
-      this.burst(f.x + f.face * 30, y0, '#7cf5ff', fxLite() ? 8 : 16);
-      spawnFxRing(this, f.x + f.face * 34, y0, '#7cf5ff', 10);
+      this.spawnProjectile(Object.assign({
+        x: f.x + face * 40, y: y0,
+        vx: aim.vx || face * speed, vy: aim.vy || 0, r: sk.radius || 28, dmg,
+        from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(), life: sk.life || 1.4,
+        spin: 0,
+      }, critMeta));
+      this.burst(f.x + face * 30, y0, col, fxLite() ? 8 : 16);
+      spawnFxRing(this, f.x + face * 34, y0, col, 10);
       this.shake(9, 0.28);
       this.freezeT = Math.max(this.freezeT, 0.06);
-      AudioSys.sfx('rasengan');
+      AudioSys.sfx(skillSfxId(sk));
       if (f.isPlayer || f.playerSlot) haptic(22);
     }
     try {
@@ -1869,12 +1882,18 @@ class Game {
       this.ketsbamChargeAcc = (this.ketsbamChargeAcc || 0) + dt;
       const dur = this.ketsbamChargeDur || KETSBAM_CHARGE_DUR;
       const prog = 1 - this.ketsbamChargeT / dur;
-      if (this.ketsbamChargeAcc >= 0.11 && !motionReduced() && prog > 0.2) {
+      const chargeSp = equippedSuper();
+      const cCol = chargeSp.color || '#ffd75e';
+      const cCol2 = chargeSp.color2 || '#ff9a3d';
+      if (this.ketsbamChargeAcc >= 0.07 && !motionReduced()) {
         this.ketsbamChargeAcc = 0;
         const px = this.player.x;
-        const py = this.player.y - 52;
-        this.burst(px + rand(-6, 6), py + rand(-8, 4), prog > 0.65 ? '#fff8dc' : '#ffd75e',
-          fxLite() ? 1 : 2, { kind: 'spark', size: 2.5 + prog * 1.5 });
+        const py = this.player.y - 50;
+        this.burst(px + rand(-20, 20), py + rand(-30, 10), prog > 0.6 ? '#fff8dc' : cCol,
+          fxLite() ? 2 : 4, { kind: 'spark', size: 2 + prog * 2 });
+        if (prog > 0.45 && !fxLite()) {
+          this.burst(px, this.player.y + 2, cCol2, 2, { kind: 'ring' });
+        }
       }
       if (this.ketsbamChargeT <= 0 && this.player?.alive) this.player.finishKetsbam(this);
       return;
@@ -1898,16 +1917,22 @@ class Game {
 
     for (const m of this.monsters) m.update(dt, this);
     this.monsters = this.monsters.filter(m => m.alive || m.deadT < 1);
+    if (this.mode === 'adventure') tickSuperFx(this, dt);
 
     // projectielen
     for (const p of this.projectiles) {
+      const skProj = skillExists(p.kind) ? skillById(p.kind) : null;
       p.life -= dt;
-      p.spin = (p.spin || 0) + dt * (p.kind === 'rasengan' ? 22 : p.kind === 'rinnegan' ? 16 : p.kind === 'shuriken' ? 28 : 12);
+      const spinRate = skProj
+        ? (skProj.behavior === 'pull' || skProj.behavior === 'meteor' ? 16
+          : skProj.behavior === 'dash' ? 20 : skProj.behavior === 'disc' ? 24 : 22)
+        : (p.kind === 'shuriken' ? 28 : 12);
+      p.spin = (p.spin || 0) + dt * spinRate;
       p.vy += (p.grav || 0) * dt;
       p.x += p.vx * dt; p.y += p.vy * dt;
-      if (p.kind === 'rasengan') {
-        p.r = Math.min(34, (p.r || 26) + dt * 4);
-        // Capte chakra-trail — minder frequent bij Lite FX / lag
+      if (skProj && (skProj.behavior === 'orb' || skProj.behavior === 'pull' || skProj.behavior === 'meteor')) {
+        const grow = (skProj.behavior === 'pull' || skProj.behavior === 'meteor') ? 2.5 : 4;
+        p.r = Math.min((skProj.radius || 28) + 8, (p.r || skProj.radius) + dt * grow);
         if (!motionReduced()) {
           p._trailAcc = (p._trailAcc || 0) + dt;
           const interval = (save.liteFx || Perf.tier >= 1) ? 0.07 : 0.032;
@@ -1915,17 +1940,7 @@ class Game {
             p._trailAcc = 0;
             const n = (save.liteFx || Perf.tier >= 1) ? 1 : 2;
             const back = Math.sign(p.vx || 1) * 10;
-            this.burst(p.x - back, p.y + rand(-4, 4), '#7cf5ff', n, { kind: 'spark', size: 2.4 });
-          }
-        }
-      }
-      if (p.kind === 'rinnegan') {
-        p.r = Math.min(36, (p.r || 30) + dt * 2.5);
-        if (!motionReduced() && !fxLite()) {
-          p._trailAcc = (p._trailAcc || 0) + dt;
-          if (p._trailAcc >= 0.055) {
-            p._trailAcc = 0;
-            this.burst(p.x, p.y, '#c47aff', 1, { kind: 'spark', size: 2.2 });
+            this.burst(p.x - back, p.y + rand(-4, 4), skProj.color || '#7cf5ff', n, { kind: 'spark', size: 2.4 });
           }
         }
       }
@@ -1945,18 +1960,13 @@ class Game {
             && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
           const hit = resolveProjHit(p);
           pl.takeDamage(hit.dmg, Math.sign(p.vx) * 260, this);
-          applyHitStop(this, { kind: p.kind === 'chidori' ? 'special' : 'punch', dmg: hit.dmg },
+          applyHitStop(this, { kind: skProj && skProj.behavior === 'dash' ? 'special' : 'punch', dmg: hit.dmg },
             { crit: hit.crit, heavy: hit.dmg >= 18, playerHurt: true });
           this.floater(pl.x, pl.y - 115, '-' + hit.dmg, '#ff8080', 16);
           if (hit.crit) applyCritFx(this, pl.x, pl.y);
-          if (p.kind === 'chidori') this.burst(p.x, p.y, '#a8e0ff', 16);
-          if (p.kind === 'rasengan') spawnJutsuImpactFx(this, p.x, p.y, 'rasengan', 'small');
-          if (p.kind === 'kamehame') {
-            this.burst(p.x, p.y, '#7cf5ff', fxLite() ? 8 : 14);
-            try { this.shake(5, 0.15); } catch (_) {}
-          }
+          if (skProj) this.burst(p.x, p.y, skProj.color || '#a8e0ff', 16);
           p.life = 0;
-          this.burst(p.x, p.y, p.kind === 'chidori' ? '#a8e0ff' : '#ff9a3d', 8);
+          this.burst(p.x, p.y, skProj ? (skProj.color || '#a8e0ff') : '#ff9a3d', 8);
         }
       } else if (p.from === 'p2' && this.p2) {
         const pl = this.player;
@@ -1977,21 +1987,8 @@ class Game {
             const hit = resolveProjHit(p);
             m.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this);
             if (hit.crit) applyCritFx(this, m.x, m.y);
-            if (p.kind === 'rasengan') {
-              spawnJutsuImpactFx(this, p.x, p.y, 'rasengan', 'full');
-            }
-            if (p.kind === 'rinnegan') this.burst(p.x, p.y, '#c47aff', 10);
-            if (allowRehit) {
-              if (p._rehit) p._rehit.delete(m);
-              if (p.hitSet) p.hitSet.add(m);
-            } else if (p.hitSet) {
-              if (p.pierceRepeat > 0 && Math.random() < p.pierceRepeat) {
-                if (!p._rehit) p._rehit = new Set();
-                p._rehit.add(m);
-              } else {
-                p.hitSet.add(m);
-              }
-            } else p.life = 0;
+            if (skProj) spawnJutsuImpactFx(this, p.x, p.y, p.kind, 'full');
+            if (p.hitSet) p.hitSet.add(m); else p.life = 0;
           }
         }
         if (this.robot && this.robot.alive && !(p.hitSet && p.hitSet.has(this.robot))) {
@@ -2033,7 +2030,7 @@ class Game {
       if (p.y > this.ground + 10 || p.x < -60 || p.x > W + 60) p.life = 0;
     }
     for (const p of this.projectiles) {
-      if (p.life <= 0 && !p._impactFx && (p.kind === 'rasengan' || p.kind === 'rinnegan' || p.kind === 'chidori' || p.kind === 'kamehame')) {
+      if (p.life <= 0 && !p._impactFx && skillExists(p.kind)) {
         p._impactFx = true;
         spawnJutsuImpactFx(this, p.x, p.y, p.kind === 'kamehame' ? 'rasengan' : p.kind, 'small');
       }
@@ -2314,44 +2311,25 @@ class Game {
     if (this.p2) this.p2.draw(c);
     if (this.eggPet) this.eggPet.draw(c);
     if (this.pet) this.pet.draw(c);
+    if (this.mode === 'adventure') drawSuperShieldBubble(this, c, this.player);
     this.player.draw(c);
 
     // projectielen
     for (const p of this.projectiles) {
       c.save();
-      if (p.kind === 'rasengan') {
-        if (!fxLite() && !motionReduced()) {
+      if (skillExists(p.kind)) {
+        const skDraw = skillById(p.kind);
+        if (!fxLite() && !motionReduced() && skDraw.behavior === 'orb') {
           c.save();
           c.globalAlpha = 0.28 + Math.sin((p.spin || 0) * 2.1) * 0.12;
-          c.strokeStyle = '#7cf5ff';
+          c.strokeStyle = skDraw.color || '#7cf5ff';
           c.lineWidth = 2;
           c.beginPath();
           c.arc(p.x, p.y, p.r * (1.22 + Math.sin(p.spin * 1.4) * 0.06), 0, TAU);
           c.stroke();
           c.restore();
         }
-        drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'rasengan', 1);
-      } else if (p.kind === 'chidori') {
-        drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'chidori', 1);
-      } else if (p.kind === 'kamehame') {
-        c.save();
-        c.globalAlpha = 0.55 + Math.sin((p.spin || 0) * 3) * 0.15;
-        const grad = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
-        grad.addColorStop(0, '#ffffff');
-        grad.addColorStop(0.35, '#7cf5ff');
-        grad.addColorStop(1, 'rgba(60,180,255,0)');
-        c.fillStyle = grad;
-        c.beginPath();
-        c.ellipse(p.x, p.y, p.r, p.r * 0.72, Math.atan2(p.vy, p.vx), 0, TAU);
-        c.fill();
-        c.strokeStyle = '#a8e0ff';
-        c.lineWidth = 3;
-        c.beginPath();
-        c.ellipse(p.x, p.y, p.r * 0.92, p.r * 0.66, Math.atan2(p.vy, p.vx), 0, TAU);
-        c.stroke();
-        c.restore();
-      } else if (p.kind === 'rinnegan') {
-        drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, 'rinnegan', 1);
+        drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, p.kind, 1);
       } else if (p.kind === 'shuriken') {
         c.translate(p.x, p.y); c.rotate(p.spin || 0);
         const big = p.throwId === 'fuuma';
@@ -2440,6 +2418,7 @@ class Game {
     c.restore();
 
     this.drawChakraReadyFx(c);
+    if (this.mode === 'adventure') drawSuperFxLayer(this, c);
     if (this.mode === 'adventure') this.drawKetsbamChargeAura(c);
 
     this.drawHUD(c);
@@ -2946,16 +2925,20 @@ class Game {
   drawKetsbamChargeAura(c) {
     if (this.ketsbamChargeT <= 0 || !this.player?.alive) return;
     const f = this.player;
+    const sp = equippedSuper();
     const dur = this.ketsbamChargeDur || KETSBAM_CHARGE_DUR;
     const prog = clamp(1 - this.ketsbamChargeT / dur, 0, 1);
     const px = f.x, py = f.y - 52;
-    const lite = fxLite() || motionReduced();
+    const calm = motionReduced();
+    const lite = fxLite() || calm;
+    const col = sp.color || '#ffd75e';
+    const col2 = sp.color2 || '#ff9a3d';
 
     c.save();
-    const ringR = 32 + prog * 92;
-    c.globalAlpha = 0.35 + prog * 0.4;
-    c.strokeStyle = '#ffd75e';
-    c.lineWidth = 4 + prog * 4;
+    const ringR = calm ? (28 + prog * 88) : (28 + prog * 88 + Math.sin(pulse * 11) * 7);
+    c.globalAlpha = 0.22 + prog * 0.38;
+    c.strokeStyle = col;
+    c.lineWidth = 2.5 + prog * 3.5;
     c.beginPath();
     c.ellipse(px, f.y + 3, ringR, ringR * 0.22, 0, 0, TAU);
     c.stroke();
@@ -2968,73 +2951,78 @@ class Game {
     c.fillStyle = grad;
     c.fillRect(px - 18 - prog * 10, f.y - h, 36 + prog * 20, h);
 
-    const innerR = 38 + prog * 48;
-    c.globalAlpha = 0.55 + prog * 0.3;
-    c.strokeStyle = '#fff8dc';
-    c.lineWidth = 3 + prog * 2.5;
-    c.beginPath();
-    c.arc(px, py, innerR, 0, TAU);
-    c.stroke();
-
-    if (!lite && prog > 0.35) {
-      c.globalAlpha = 0.5 + prog * 0.25;
-      c.strokeStyle = '#ff7043';
-      c.lineWidth = 2.5;
+    const rings = lite ? 2 : 4;
+    for (let i = 0; i < rings; i++) {
+      const r = calm
+        ? (34 + i * 13 + prog * 22)
+        : (34 + i * 13 + prog * 22 + Math.sin(pulse * 10 + i * 1.4) * 5);
+      c.globalAlpha = (0.3 + prog * 0.28) * (1 - i * 0.17);
+      c.strokeStyle = i % 2 ? '#fff8dc' : col2;
+      c.lineWidth = 2 + prog * 2;
       c.beginPath();
       c.arc(px, py, innerR + 18 + prog * 28, 0, TAU);
       c.stroke();
     }
 
-    const labelSize = 22 + prog * 10;
-    c.globalAlpha = 1;
-    c.font = `900 ${labelSize}px -apple-system, sans-serif`;
+    if (!lite) {
+      c.globalAlpha = 0.45 + prog * 0.35;
+      c.strokeStyle = '#fff';
+      c.lineWidth = 2;
+      const spikes = calm ? 4 : 7;
+      for (let i = 0; i < spikes; i++) {
+        const a = pulse * 9 + i * (TAU / spikes);
+        const len = 22 + prog * 44;
+        c.beginPath();
+        c.moveTo(px + Math.cos(a) * 18, py + Math.sin(a) * 10);
+        c.lineTo(px + Math.cos(a) * len, py + Math.sin(a) * len * 0.55 - prog * 24);
+        c.stroke();
+      }
+    }
+
+    const chargeTxt = superChargeBanner(sp);
+    c.globalAlpha = 0.85;
+    c.font = `900 ${18 + prog * 8}px -apple-system, sans-serif`;
     c.textAlign = 'center';
-    c.textBaseline = 'middle';
-    c.fillStyle = '#ffd75e';
-    c.strokeStyle = 'rgba(0,0,0,.7)';
-    c.lineWidth = 6;
-    c.strokeText(t('banner.kets'), px, py - 52 - prog * 18);
-    c.fillText(t('banner.kets'), px, py - 52 - prog * 18);
+    c.fillStyle = col;
+    c.strokeStyle = 'rgba(0,0,0,.55)';
+    c.lineWidth = 4;
+    c.strokeText(chargeTxt, px, py - 58 - prog * 24);
+    c.fillText(chargeTxt, px, py - 58 - prog * 24);
     c.restore();
   }
 
   drawKetsbamPrompt(c) {
-    const prog = this.ketsbamBuildProg || 0;
-    if (prog <= 0 || !this.player?.alive) return;
+    if (!this.ketsbamShow || !this.player?.alive) return;
+    const sp = equippedSuper();
     const ui = touchUiScale(W, H);
     const { cx, cy } = ketsbamPromptCenter();
-    const pulse = motionReduced() ? 1 : (0.96 + Math.sin((this.ketsbamPulse || 0) * 5) * 0.04);
-    const r = 44 * ui * pulse;
+    const calm = motionReduced();
+    const pulse = calm ? 1 : (0.9 + Math.sin((this.ketsbamPulse || 0) * 10) * 0.1);
+    const r = 46 * ui * pulse;
+    const col = sp.color || '#ffd75e';
+    const col2 = sp.color2 || '#ff7043';
     c.save();
     c.globalAlpha = 0.94;
     c.fillStyle = 'rgba(8,12,28,.82)';
     c.beginPath();
     c.arc(cx, cy, r + 12 * ui, 0, TAU);
     c.fill();
-    c.strokeStyle = '#ffd75e';
-    c.lineWidth = 4 * ui;
-    c.stroke();
-    c.strokeStyle = 'rgba(255,112,67,.75)';
-    c.lineWidth = 2 * ui;
-    c.beginPath();
-    c.arc(cx, cy, r + 6 * ui, 0, TAU);
+    c.strokeStyle = col + '88';
+    c.lineWidth = 3 * ui;
     c.stroke();
     c.translate(cx, cy);
-    c.fillStyle = '#ffd75e';
-    c.strokeStyle = '#c01828';
-    c.lineWidth = 3.5 * ui;
-    c.beginPath();
-    c.arc(0, 0, r * 0.72, 0, TAU);
-    c.fill();
-    c.stroke();
-    c.font = `900 ${Math.round(20 * ui)}px -apple-system,sans-serif`;
+    if (!calm) c.rotate((this.ketsbamPulse || 0) * 2.2);
+    drawSuperIcon(c, sp.icon || 'star', r, col, col2);
+    if (!calm) c.rotate(-(this.ketsbamPulse || 0) * 2.2);
+    c.font = `900 ${Math.round(17 * ui)}px -apple-system,sans-serif`;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
-    c.lineWidth = 6 * ui;
-    c.strokeStyle = 'rgba(0,0,0,.65)';
-    c.strokeText(t('banner.kets'), 0, 1);
+    c.lineWidth = 5 * ui;
+    c.strokeStyle = 'rgba(0,0,0,.55)';
+    const promptTxt = superChargeBanner(sp).replace(/!$/, '');
+    c.strokeText(promptTxt, 0, 2);
     c.fillStyle = '#fff';
-    c.fillText(t('banner.kets'), 0, 1);
+    c.fillText(promptTxt, 0, 2);
     c.restore();
     c.textBaseline = 'alphabetic';
     c.textAlign = 'left';
@@ -3148,6 +3136,20 @@ class Game {
       }
       const wFam = weaponMoveFamily(p.weapon.id);
       if (wFam) drawWeaponStylePips(c, bx + 10, by + 38, p);
+      const eqSp = equippedSuper();
+      c.save();
+      c.translate(bx + 6, by + 44);
+      c.scale(0.19, 0.19);
+      drawSuperIcon(c, eqSp.icon || 'star', 16, eqSp.color, eqSp.color2);
+      c.restore();
+      c.font = '700 9px -apple-system,sans-serif';
+      c.fillStyle = eqSp.color;
+      c.textAlign = 'left';
+      c.fillText(superLabel(eqSp), bx + 16, by + 48);
+      if (this.ketsbamCd > 0) {
+        c.fillStyle = 'rgba(255,255,255,.62)';
+        c.fillText(Math.ceil(this.ketsbamCd) + 's', bx + bw - 20, by + 48);
+      }
     }
 
     c.textAlign = 'center';

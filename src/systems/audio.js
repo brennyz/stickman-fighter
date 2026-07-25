@@ -306,6 +306,9 @@ const AudioSys = {
       freqs.forEach((f, i) => T(f, f * 1.1, 0.045, 'sine', 0.075, w + i * 0.02));
     };
     const now = this.ctx.currentTime;
+    const skillSynthH = { T, D, E, N, S, I, C, now, lite, v, d, P };
+    if (typeof playSuperSynthFallback === 'function' && playSuperSynthFallback(name, skillSynthH)) return;
+    if (typeof playSkillSynthFallback === 'function' && playSkillSynthFallback(name, skillSynthH)) return;
     switch (name) {
       case 'swing':
         N(0.05, 0.22, 3400, true, now);
@@ -467,24 +470,10 @@ const AudioSys = {
         S([1560, 1870, 2093], now + 0.05);
         break;
       case 'special':
-      case 'rasengan':
         T(320, 1040, 0.2, 'sine', 0.13, now);
         D(580, 1220, 0.16, 'triangle', 0.11, now + 0.04, 10);
         N(0.12, 0.1, 3600, true, now);
         if (!lite) S([880, 1047, 1175], now + 0.1);
-        break;
-      case 'chidori':
-        T(920, 1580, 0.18, 'sine', 0.14, now);
-        N(0.14, 0.12, 5600, true, now);
-        T(1400, 920, 0.06, 'triangle', 0.1, now + 0.06);
-        if (!lite) T(180, 90, 0.08, 'sine', 0.08, now + 0.02);
-        break;
-      case 'rinnegan':
-        T(240, 760, 0.14, 'sine', 0.14, now);
-        T(760, 480, 0.15, 'triangle', 0.12, now + 0.04);
-        T(980, 1320, 0.08, 'sine', 0.11, now + 0.1);
-        N(0.1, 0.11, 1900, true, now + 0.02);
-        if (!lite) T(55, 32, 0.18, 'sawtooth', 0.1, now + 0.05);
         break;
       case 'subst':
         N(0.1, 0.24, 1300, true, now);
@@ -771,19 +760,11 @@ const AudioSys = {
         if (!lite) S([1175, 1319], now + 0.24);
         break;
       case 'superReady':
-        if (kind === 'chidori') {
-          T(920, 1480, 0.14, 'sine', 0.16, now);
-          N(0.1, 0.14, 5400, true, now);
-          T(1200, 920, 0.06, 'triangle', 0.1, now + 0.08);
-        } else if (kind === 'rinnegan') {
-          T(360, 660, 0.12, 'sine', 0.16, now);
-          T(880, 1180, 0.1, 'triangle', 0.12, now + 0.05);
-          T(110, 60, 0.14, 'sine', 0.09, now + 0.03);
-        } else {
-          T(720, 1180, 0.1, 'sine', 0.14, now);
-          T(980, 1320, 0.09, 'triangle', 0.12, now + 0.05);
-          T(1320, 880, 0.07, 'sine', 0.08, now + 0.1);
-        }
+        if (typeof playSkillSuperReadySynth === 'function' &&
+            playSkillSuperReadySynth(kind, { T, N, now, lite })) break;
+        T(720, 1180, 0.1, 'sine', 0.14, now);
+        T(980, 1320, 0.09, 'triangle', 0.12, now + 0.05);
+        T(1320, 880, 0.07, 'sine', 0.08, now + 0.1);
         break;
       case 'eliteIntro':
         T(95, 50, 0.24, 'sawtooth', 0.23, now);

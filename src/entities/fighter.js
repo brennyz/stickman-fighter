@@ -55,14 +55,11 @@ class Fighter {
         break;
       }
       case 'special': {
-        const j = fighterJutsuKind(this);
-        const jb = jutsuSkillBonuses(j);
-        const jMul = (j === 'rinnegan' ? 2.55 : j === 'chidori' ? (this.isRobot ? 2.35 : 2.72) : 2.85) * jb.dmgMul;
-        const windup = (j === 'rinnegan' ? 0.52 : 0.48) * jb.windupMul;
+        const sk = fighterEquippedSkill(this);
         spec = {
-          kind, windup, active: 0.12, recover: 0.28, range: 62 + jb.radius, r: 44 + jb.radius * 0.5,
-          dmg: this.baseDmg * jMul, kb: j === 'rinnegan' ? 460 : 520, jutsu: j,
-          extraShot: jb.extraShot, pierceRepeat: jb.pierceRepeat, pullMul: jb.pullMul,
+          kind, windup: sk.windup || 0.48, active: 0.12, recover: sk.recover || 0.28,
+          range: 62, r: sk.radius || 44,
+          dmg: this.baseDmg * (sk.dmgMul || 2.8), kb: sk.kb || 520, jutsu: sk.id,
         };
         break;
       }
@@ -84,12 +81,11 @@ class Fighter {
         if (this.isPlayer) game.floater(this.x, this.y - 110, 'Chakra niet vol!', '#7cf5ff', 13);
         return;
       }
-      this.energy = Math.max(0, this.energy - chakraCost);
-      AudioSys.sfx(jKind === 'chidori' ? 'chidori' : jKind === 'rinnegan' ? 'rinnegan' : 'rasengan');
+      this.energy = 0;
+      const sk = fighterEquippedSkill(this);
+      AudioSys.sfx(skillSfxId(sk));
       if (this.isPlayer || this.playerSlot) {
-        const lbl = jKind === 'chidori' ? 'CHIDORI!' : jKind === 'rinnegan' ? 'RINNEGAN!' : 'RASENGAN!';
-        const col = jKind === 'chidori' ? '#a8e0ff' : jKind === 'rinnegan' ? '#c47aff' : '#7cf5ff';
-        game.banner(lbl, 0.7, col, 40);
+        game.banner(skillBanner(sk), 0.7, skillHudColor(sk), 40);
       }
     } else {
       AudioSys.sfx(weaponSwingSfx(this.weapon, kind));
@@ -154,7 +150,7 @@ class Fighter {
     game.floater(this.x, this.y - 92, 'Dash!', '#7cf5ff', 12);
   }
 
-  /** Nood-KABLAM: omringd/stunlock → tik midden-symbool of druk E. */
+  /** Nood-super (Kets-slot): omringd/stunlock → tik midden-symbool of druk E. */
   doKetsbam(game) {
     if (!this.isPlayer || !this.alive || !game) return false;
     if (game.ketsbamCd > 0 || game.ketsbamChargeT > 0 || game.inputLocked || game.traveling) return false;
@@ -163,14 +159,14 @@ class Fighter {
     const swarmed = near >= KETSBAM_NEAR_MIN;
     if (!swarmed && !stuck) return false;
 
-    if (!game.ketsbamStickPick) game.ketsbamStickPick = pickKablamStickFace();
-    game.ketsbamCd = KETSBAM_CD;
-    game.ketsbamSuperT = KETSBAM_SUPER_ARMOR + KETSBAM_CHARGE_DUR;
+    const sp = equippedSuper();
+    const chargeDur = superChargeDur(sp);
+
+    game.ketsbamCd = superCooldown(sp);
+    game.ketsbamSuperT = KETSBAM_SUPER_ARMOR + chargeDur;
     game.ketsbamShow = false;
-    game.ketsbamBuildT = 0;
-    game.ketsbamBuildProg = 0;
-    game.ketsbamChargeT = KETSBAM_CHARGE_DUR;
-    game.ketsbamChargeDur = KETSBAM_CHARGE_DUR;
+    game.ketsbamChargeT = chargeDur;
+    game.ketsbamChargeDur = chargeDur;
     game.ketsbamChargePulse = 0;
     game.inputLocked = true;
     this.hurtT = 0;
@@ -178,11 +174,11 @@ class Fighter {
     this.blocking = false;
     this.vx = 0;
     this.vy = 0;
-    this.invulnT = Math.max(this.invulnT, KETSBAM_INVULN + KETSBAM_CHARGE_DUR);
+    this.invulnT = Math.max(this.invulnT, KETSBAM_INVULN + chargeDur);
     resetWeaponCombo(this);
 
-    game.banner(t('banner.kets'), KETSBAM_CHARGE_DUR, '#ffd75e', 44);
-    try { AudioSys.sfx('ketsbamCharge'); } catch (_) {}
+    game.banner(superChargeBanner(sp), chargeDur, sp.color || '#ffd75e', 44);
+    try { AudioSys.sfx(superSfxId(sp, 'charge')); } catch (_) {}
     if (save.haptics !== false) haptic(12);
     return true;
   }
@@ -192,28 +188,7 @@ class Fighter {
     game.ketsbamChargeT = 0;
     game.inputLocked = false;
     game.ketsbamSuperT = Math.max(game.ketsbamSuperT, KETSBAM_SUPER_ARMOR);
-
-    game.shake(16, 0.32);
-    game.freezeT = Math.max(game.freezeT, 0.05);
-    game.banner('KETS-BAM!', 0.7, '#ffd75e', 44);
-    try { AudioSys.sfx('ketsbam'); } catch (_) {}
-
-    const px = this.x, py = this.y - 42;
-    for (const m of game.monsters) {
-      if (!m.alive) continue;
-      const dx = m.x - px, dy = m.y - py;
-      const dist = Math.hypot(dx, dy);
-      if (dist > KETSBAM_BLAST_R) continue;
-      const falloff = 1 - dist / KETSBAM_BLAST_R;
-      const dmg = Math.max(10, Math.round(this.baseDmg * (1.65 + falloff * 1.1)));
-      const kb = Math.sign(dx || this.face || 1) * (380 + falloff * 120);
-      m.takeDamage(dmg, kb, game);
-    }
-    game.burst(px, py, '#ffd75e', fxLite() ? 12 : 22, { kind: 'spark', size: 3.6 });
-    game.burst(px, py, '#ff7043', fxLite() ? 8 : 14);
-    spawnFxRing(game, px, py, '#ffe259', fxLite() ? 12 : 20);
-    game.floater(px, py - 80, 'KETS-BAM!', '#ffd75e', 20);
-    if (save.haptics !== false) haptic(32);
+    finishEquippedSuper(this, game);
   }
 
   intent(dt, game) {

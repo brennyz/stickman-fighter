@@ -207,6 +207,10 @@ function seedNlGameStrings() {
     eggNone: 'Geen actief ei-pet',
     eggFloat: '{name} zweeft nu mee!',
     styleEquipped: '{name} uitgerust',
+    skillUnlock: 'Nieuwe skill: {name}!',
+    skillEquipped: '{name} uitgerust als special',
+    superEquipped: '{name} uitgerust als nood-super',
+    superUnlock: 'Nieuwe nood-super: {name}!',
     welcome: 'Welkom! Menu → Tips · per modus één korte hint bovenin (geen toast-stapel)',
   });
   if (!I18N.nl.gamble) I18N.nl.gamble = {};
@@ -394,6 +398,46 @@ function seedNlGameStrings() {
     styleActive: 'Actief',
     stylePick: 'Tik om te kiezen',
     styleIslandGate: 'Eiland-skill Lv {lvl}',
+    skillHead: 'Skills',
+    skillSub: 'Chakra-specials — level unlocks · avontuur/training/muur/mats',
+    skillSummaryHead: 'Skills',
+    skillSummaryActive: 'actief',
+    skillSummarySub: 'Kies je chakra-special voor avontuur & solo-modi. Versus gebruikt roster-specials.',
+    skillActive: 'Actief',
+    skillPick: 'Tik om uit te rusten',
+    skillPickHint: 'Tik = preview · nogmaals = uitrusten',
+    skillEquipBtn: 'Uitrusten',
+    skillIslandGate: 'Eiland-skill Lv {lvl}',
+    skillNeedLvl: 'Unlock op Lv {lvl}',
+    skillGateLine: 'eiland-gate Lv {cap}',
+    skillBlurbAll: '24 chakra-specials — filter op saga of type · preview + stats',
+    skillEmptyFilter: 'Geen skills in deze filter — wijzig saga of type',
+    skillNextUnlock: 'Volgende unlock: <b>{name}</b> op Lv {lvl} · nog {need} level(s)',
+    skillNextUnlockSoon: 'Volgende: <b>{name}</b> (Lv {lvl}) — bijna klaar',
+    skillNextIsland: 'Volgende: <b>{name}</b> — eiland-gate tot Lv {cap} in avontuur',
+    skillBehAll: 'Alle types',
+    skillSort_level: 'Sort: level',
+    skillSort_dmg: 'Sort: schade',
+    skillSort_name: 'Sort: naam',
+    superHead: 'Nood-super (Kets-slot)',
+    superSub: 'Omringd in avontuur — tik midden-symbool of druk E · vervangt KETS-BAM',
+    superSummaryHead: 'Nood-super',
+    superSummaryActive: 'actief',
+    superSummarySub: 'Alleen avontuur — verschijnt als je omsingeld of vastzit.',
+    superActive: 'Actief',
+    superPick: 'Tik om uit te rusten',
+    superPickHint: 'Tik = preview · nogmaals = uitrusten',
+    superEquipBtn: 'Uitrusten',
+    superIslandGate: 'Eiland-skill Lv {lvl}',
+    superNeedLvl: 'Unlock op Lv {lvl}',
+    superNextUnlock: 'Volgende super: <b>{name}</b> op Lv {lvl} · nog {need} level(s)',
+    superNextUnlockSoon: 'Volgende super: <b>{name}</b> (Lv {lvl}) — bijna klaar',
+    superNextIsland: 'Volgende super: <b>{name}</b> — eiland-gate tot Lv {cap} in avontuur',
+    superStat_pow: 'Kracht',
+    superStat_rad: 'Radius',
+    superStat_cd: 'Cooldown',
+    superStat_charge: 'Laden',
+    superHudCd: 'Nood-super {n}s',
     weaponHead: 'Wapens',
     weaponSub: 'Summons zijn echt · eiland-skill gate: alleen wapens tot je huidige eiland-cap in avontuur',
     skillHead: 'Upgrades',
@@ -570,6 +614,46 @@ function seedNlFromRuntime() {
   if (typeof STYLES !== 'undefined') {
     if (!I18N.nl.style) I18N.nl.style = {};
     for (const s of STYLES) I18N.nl.style[s.id] = { name: s.name, hint: s.hint, tooltip: s.tooltip, bonus: s.bonus };
+  }
+  if (typeof SKILLS !== 'undefined') {
+    if (!I18N.nl.skill) I18N.nl.skill = {};
+    for (const s of SKILLS) I18N.nl.skill[s.id] = { name: s.name, hint: s.hint, tooltip: s.tooltip, bonus: s.bonus };
+    Object.assign(I18N.nl.skill, {
+      behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor' },
+      stat: { dmg: 'Schade', wind: 'Windup', spd: 'Snelheid', kb: 'Knockback' },
+      tag: { pierce: 'Pierce', pull: 'Pull' },
+      saga: {
+        scroll: { blurb: 'Ninja-scroll — Rasengan, Chidori, Rinnegan & gravity specials.' },
+        ki: { blurb: 'Ki-golven — Kamehameha, discs, Spirit Bomb & blitz dashes.' },
+        tide: { blurb: 'Tide-straal — Getsuga, Cero & Bankai flash.' },
+        fighter: { blurb: 'Street stretch — Gum-Gum dash & Gear Second steam.' },
+        cape: { blurb: 'Hero specials — Thunder Palm & Serious Series.' },
+        dawn: { blurb: 'Dawn palm — solar orbs & lunar pull control.' },
+      },
+    });
+  }
+  if (typeof SUPERS !== 'undefined') {
+    if (!I18N.nl.super) I18N.nl.super = {};
+    for (const s of SUPERS) {
+      I18N.nl.super[s.id] = {
+        name: s.name, hint: s.hint, tooltip: s.tooltip, bonus: s.bonus,
+        charge: s.chargeBanner, finish: s.finishBanner,
+      };
+    }
+    Object.assign(I18N.nl.super, {
+      behavior: {
+        blast: 'Blast', shield: 'Schild', heal: 'Heal', sharingan: 'Genjutsu',
+        lightning: 'Bliksem', meteor: 'Meteor', rage: 'Rage', timestop: 'Tijd',
+        clones: 'Clones', void: 'Void',
+      },
+      stat: { pow: 'Kracht', rad: 'Radius', cd: 'Cooldown', charge: 'Laden' },
+      tag: {
+        blast: 'Blast', knockback: 'Knockback', defense: 'Verdediging', push: 'Push',
+        heal: 'Heal', genjutsu: 'Genjutsu', pull: 'Pull', slow: 'Slow',
+        lightning: 'Bliksem', 'multi-hit': 'Multi-hit', meteor: 'Meteor', zone: 'Zone',
+        buff: 'Buff', freeze: 'Freeze', burst: 'Burst', rush: 'Rush', void: 'Void',
+      },
+    });
   }
   if (typeof PICKUP_META !== 'undefined') {
     if (!I18N.nl.pickup) I18N.nl.pickup = {};
@@ -837,7 +921,10 @@ const CATALOG_EN = {
     eggNone: 'No active egg pet',
     eggFloat: '{name} floats along now!',
     styleEquipped: '{name} equipped',
-    welcome: 'Welcome! Menu → Tips · one short hint per mode (no toast stack)',
+    skillUnlock: 'New skill: {name}!',
+    skillEquipped: '{name} equipped as special',
+    superEquipped: '{name} equipped as emergency super',
+    superUnlock: 'New emergency super: {name}!',
   },
   versionUpdate: {
     beforeTitle: 'Fetch new version',
@@ -981,6 +1068,46 @@ const CATALOG_EN = {
     styleActive: 'Active',
     stylePick: 'Tap to equip',
     styleIslandGate: 'Island skill Lv {lvl}',
+    skillHead: 'Skills',
+    skillSub: 'Chakra specials — level unlocks · adventure/training/wall/mats',
+    skillSummaryHead: 'Skills',
+    skillSummaryActive: 'active',
+    skillSummarySub: 'Pick your chakra special for adventure & solo modes. Versus uses roster specials.',
+    skillActive: 'Active',
+    skillPick: 'Tap to equip',
+    skillPickHint: 'Tap = preview · tap again = equip',
+    skillEquipBtn: 'Equip',
+    skillIslandGate: 'Island skill Lv {lvl}',
+    skillNeedLvl: 'Unlocks at Lv {lvl}',
+    skillGateLine: 'island gate Lv {cap}',
+    skillBlurbAll: '24 chakra specials — filter by saga or type · preview + stats',
+    skillEmptyFilter: 'No skills in this filter — change saga or type',
+    skillNextUnlock: 'Next unlock: <b>{name}</b> at Lv {lvl} · {need} level(s) to go',
+    skillNextUnlockSoon: 'Next: <b>{name}</b> (Lv {lvl}) — almost ready',
+    skillNextIsland: 'Next: <b>{name}</b> — island gate until Lv {cap} in adventure',
+    skillBehAll: 'All types',
+    skillSort_level: 'Sort: level',
+    skillSort_dmg: 'Sort: damage',
+    skillSort_name: 'Sort: name',
+    superHead: 'Emergency super (Kets slot)',
+    superSub: 'Swarmed in adventure — tap center symbol or press E · replaces KETS-BAM',
+    superSummaryHead: 'Emergency super',
+    superSummaryActive: 'active',
+    superSummarySub: 'Adventure only — appears when swarmed or stuck.',
+    superActive: 'Active',
+    superPick: 'Tap to equip',
+    superPickHint: 'Tap = preview · tap again = equip',
+    superEquipBtn: 'Equip',
+    superIslandGate: 'Island skill Lv {lvl}',
+    superNeedLvl: 'Unlocks at Lv {lvl}',
+    superNextUnlock: 'Next super: <b>{name}</b> at Lv {lvl} · {need} level(s) to go',
+    superNextUnlockSoon: 'Next super: <b>{name}</b> (Lv {lvl}) — almost ready',
+    superNextIsland: 'Next super: <b>{name}</b> — island gate until Lv {cap} in adventure',
+    superStat_pow: 'Power',
+    superStat_rad: 'Radius',
+    superStat_cd: 'Cooldown',
+    superStat_charge: 'Charge',
+    superHudCd: 'Emergency super {n}s',
     weaponHead: 'Weapons',
     weaponSub: 'Summons are real · island skill gate: adventure weapons up to your island cap',
     skillHead: 'Upgrades',
@@ -1087,6 +1214,33 @@ const CATALOG_EN = {
     shield: 'Shield!', parry: 'PARRY!', block: 'BLOCK!', miss: 'MISS!',
   },
   egg: { dailyReady: 'Daily egg ready', advBonus: 'Bonus egg: win 1× adventure', tomorrow: 'Egg again tomorrow' },
+  skill: {
+    behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor' },
+    stat: { dmg: 'Damage', wind: 'Windup', spd: 'Speed', kb: 'Knockback' },
+    tag: { pierce: 'Pierce', pull: 'Pull' },
+    saga: {
+      scroll: { blurb: 'Ninja scroll — Rasengan, Chidori, Rinnegan & gravity specials.' },
+      ki: { blurb: 'Ki waves — Kamehameha, discs, Spirit Bomb & blitz dashes.' },
+      tide: { blurb: 'Tide beams — Getsuga, Cero & Bankai flash.' },
+      fighter: { blurb: 'Street stretch — Gum-Gum dash & Gear Second steam.' },
+      cape: { blurb: 'Hero specials — Thunder Palm & Serious Series.' },
+      dawn: { blurb: 'Dawn palm — solar orbs & lunar pull control.' },
+    },
+  },
+  super: {
+    behavior: {
+      blast: 'Blast', shield: 'Shield', heal: 'Heal', sharingan: 'Genjutsu',
+      lightning: 'Lightning', meteor: 'Meteor', rage: 'Rage', timestop: 'Time',
+      clones: 'Clones', void: 'Void',
+    },
+    stat: { pow: 'Power', rad: 'Radius', cd: 'Cooldown', charge: 'Charge' },
+    tag: {
+      blast: 'Blast', knockback: 'Knockback', defense: 'Defense', push: 'Push',
+      heal: 'Heal', genjutsu: 'Genjutsu', pull: 'Pull', slow: 'Slow',
+      lightning: 'Lightning', 'multi-hit': 'Multi-hit', meteor: 'Meteor', zone: 'Zone',
+      buff: 'Buff', freeze: 'Freeze', burst: 'Burst', rush: 'Rush', void: 'Void',
+    },
+  },
   pet: {
     active: 'Pet · active', tamed: 'Pet · tamed', buy: 'Pet · buy {cost} 🪙',
     killsNeed: 'Pet · {need} kills', killsProgress: 'Pet · {cur}/{need} kills',
@@ -1501,6 +1655,26 @@ function styleLabel(st, field) {
   const v = t(k);
   if (v && v !== k) return v;
   const ss = typeof st === 'object' && st ? st : (typeof styleById === 'function' ? styleById(id) : null);
+  return ss && ss[field] != null ? ss[field] : '';
+}
+
+function skillLabel(sk, field) {
+  field = field || 'name';
+  const id = typeof sk === 'string' ? sk : (sk && sk.id);
+  const k = 'skill.' + id + '.' + field;
+  const v = t(k);
+  if (v && v !== k) return v;
+  const ss = typeof sk === 'object' && sk ? sk : (typeof skillById === 'function' ? skillById(id) : null);
+  return ss && ss[field] != null ? ss[field] : '';
+}
+
+function superLabel(sp, field) {
+  field = field || 'name';
+  const id = typeof sp === 'string' ? sp : (sp && sp.id);
+  const k = 'super.' + id + '.' + field;
+  const v = t(k);
+  if (v && v !== k) return v;
+  const ss = typeof sp === 'object' && sp ? sp : (typeof superById === 'function' ? superById(id) : null);
   return ss && ss[field] != null ? ss[field] : '';
 }
 

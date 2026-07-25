@@ -23,7 +23,8 @@ const I18N = {
       weapons: 'Wapens', weaponsSub: '26 wapens · summon ascends',
       pets: 'Pets', petsSub: 'Muntjes · dex temmen · ei arcade',
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
-      dex: 'Monsterboek', dexSub: '126 soorten · rariteit = HP',
+      skills: 'Skills', skillsSub: 'Chakra specials · Rasengan · Kamehameha',
+      dex: 'Monsterboek', dexSub: '114 soorten · rariteit = HP',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
     },
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
@@ -97,7 +98,8 @@ const I18N = {
       weapons: 'Weapons', weaponsSub: '26 weapons · summon ascends',
       pets: 'Pets', petsSub: 'Coins · dex tame · egg arcade',
       style: 'Style', styleSub: 'Bandana & outfit unlocks',
-      dex: 'Monster book', dexSub: '126 species · rarity = HP',
+      skills: 'Skills', skillsSub: 'Chakra specials · Rasengan · Kamehameha',
+      dex: 'Monster book', dexSub: '114 species · rarity = HP',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
     },
     modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Coins' },
@@ -171,7 +173,8 @@ const I18N = {
       weapons: 'Waffen', weaponsSub: '26 Waffen · Summons',
       pets: 'Pets', petsSub: 'Münzen · Dex zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
-      dex: 'Monsterbuch', dexSub: '126 Arten · Seltenheit = HP',
+      skills: 'Skills', skillsSub: 'Chakra-Specials · Rasengan · Kamehameha',
+      dex: 'Monsterbuch', dexSub: '114 Arten · Seltenheit = HP',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
     },
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
@@ -232,7 +235,8 @@ const I18N = {
       weapons: 'Armes', weaponsSub: '26 armes · invocations',
       pets: 'Pets', petsSub: 'Pièces · dex · œufs',
       style: 'Style', styleSub: 'Déblocages tenues',
-      dex: 'Bestiaire', dexSub: '126 espèces · rareté = PV',
+      skills: 'Skills', skillsSub: 'Spéciaux chakra · Rasengan · Kamehameha',
+      dex: 'Bestiaire', dexSub: '114 espèces · rareté = PV',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
     },
     modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Pièces' },
@@ -293,7 +297,8 @@ const I18N = {
       weapons: 'Armas', weaponsSub: '26 armas · invocaciones',
       pets: 'Pets', petsSub: 'Monedas · dex · huevos',
       style: 'Estilo', styleSub: 'Desbloqueos de outfit',
-      dex: 'Bestiario', dexSub: '126 especies · rareza = HP',
+      skills: 'Skills', skillsSub: 'Especiales chakra · Rasengan · Kamehameha',
+      dex: 'Bestiario', dexSub: '114 especies · rareza = HP',
       modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
     },
     modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Monedas' },
@@ -471,6 +476,7 @@ function applyLangStaticScreens() {
     ['btnWeapons', 'hub.weapons', 'hub.weaponsSub'],
     ['btnPets', 'hub.pets', 'hub.petsSub'],
     ['btnStyle', 'hub.style', 'hub.styleSub'],
+    ['btnSkills', 'hub.skills', 'hub.skillsSub'],
     ['btnDex', 'hub.dex', 'hub.dexSub'],
   ];
   for (const [id, titleKey, subKey] of modeRows) {
@@ -556,6 +562,10 @@ function applyLangStaticScreens() {
   setText('gambleSub', 'ui.gambleSub');
   setText('styleScreenHead', 'ui.styleHead');
   setText('styleScreenSub', 'ui.styleSub');
+  setText('skillScreenHead', 'ui.skillHead');
+  setText('skillScreenSub', 'ui.skillSub');
+  setText('superSectionHead', 'ui.superHead');
+  setText('superSectionSub', 'ui.superSub');
   setText('weaponScreenHead', 'ui.weaponHead');
   setText('weaponScreenSub', 'ui.weaponSub');
   setText('skillScreenHead', 'ui.skillHead');
@@ -627,6 +637,7 @@ function applyLangStaticScreens() {
     weaponScreen: t('back.collect'),
     petScreen: t('back.collect'),
     styleScreen: t('back.collect'),
+    skillScreen: t('back.collect'),
     dexScreen: t('back.collect'),
     charSelectScreen: t('back.menu'),
     missionsScreen: t('back.menu'),
@@ -682,6 +693,7 @@ function applyLang() {
     else if (active === 'helpScreen' && typeof UI.renderHelp === 'function') UI.renderHelp();
     else if (active === 'weaponScreen' && typeof UI.renderWeapons === 'function') UI.renderWeapons();
     else if (active === 'styleScreen' && typeof UI.renderStyle === 'function') UI.renderStyle();
+    else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'charSelectScreen' && typeof UI.renderCharSelect === 'function') UI.renderCharSelect();
     else if (active === 'levelScreen' && typeof UI.renderLevels === 'function') UI.renderLevels();
     else if (active === 'gambleScreen' && typeof UI.renderGamble === 'function' && pendingAdvLevel) {
