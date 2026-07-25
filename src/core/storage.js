@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.83';
+const APP_VERSION = '1.17.84';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 201;
+const SW_CACHE_REV = 202;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -19,7 +19,7 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
-  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {} };
+  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeJutsu: 'rasengan' };
 
 const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
@@ -106,6 +106,7 @@ function fighterJutsuKind(f) {
   if (!f) return 'rasengan';
   if (f.vsSpecial === 'rinnegan') return 'rinnegan';
   if (f.isRobot || f.vsSpecial === 'chidori') return 'chidori';
+  if (f.isPlayer && typeof activeJutsuId === 'function') return activeJutsuId();
   return 'rasengan';
 }
 function jutsuHudLabel(kind) {
@@ -804,6 +805,16 @@ function sanitizeSave(s) {
     if (fixed) cleanSkills[id] = fixed;
   }
   out.skillUpgrades = cleanSkills;
+
+  let aj = typeof out.activeJutsu === 'string' ? out.activeJutsu : 'rasengan';
+  if (typeof JUTSU_SKILL_IDS !== 'undefined' && !JUTSU_SKILL_IDS.includes(aj)) aj = 'rasengan';
+  if (typeof jutsuSkillUnlocked === 'function' && !jutsuSkillUnlocked(aj, out)) {
+    aj = 'rasengan';
+    for (const jid of JUTSU_SKILL_IDS) {
+      if (jutsuSkillUnlocked(jid, out)) { aj = jid; break; }
+    }
+  }
+  out.activeJutsu = aj;
 
   const cleanItems = { weapon: {}, pet: {}, style: {} };
   for (const cat of (typeof ITEM_UPGRADE_CATS !== 'undefined' ? ITEM_UPGRADE_CATS : ['weapon', 'pet', 'style'])) {

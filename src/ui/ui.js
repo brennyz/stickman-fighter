@@ -1656,9 +1656,11 @@ const UI = {
         const shards = skillShards(id);
         const cost = skillUpgradeCost(id);
         const canUp = skillCanUpgrade(id);
+        const equipped = def.group === 'jutsu' && activeJutsuId() === id;
+        const unlocked = def.group === 'jutsu' ? jutsuSkillUnlocked(id) : (lv >= 1 || id === 'rasengan');
         const el = document.createElement('div');
-        el.className = 'card skill-card' + (canUp ? ' claimable' : '') + (lv >= maxLv ? ' claimed' : '');
-        el.style.borderColor = def.color + '88';
+        el.className = 'card skill-card' + (canUp ? ' claimable' : '') + (lv >= maxLv ? ' claimed' : '') + (equipped ? ' sel' : '');
+        el.style.borderColor = def.color + (equipped ? '' : '88');
         const name = skillLabel(id);
         const now = skillUpgradeSummary(id);
         const next = skillNextStepPreview(id);
@@ -1666,14 +1668,35 @@ const UI = {
           ? t('ui.skillShards', { cur: shards, cost })
           : t('ui.skillMax');
         const desc = skillDesc(id);
+        const statusLine = def.group === 'jutsu'
+          ? (equipped ? t('ui.skillEquipped') : (unlocked ? t('ui.skillEquipHint') : t('ui.skillLocked', { lv: 1 })))
+          : (lv >= 1 ? t('ui.skillPassiveActive') : t('ui.skillPassiveLocked', { lv: 1 }));
         el.innerHTML =
           `<div class="skill-card-body"><div class="cname" style="color:${def.color}">${name} ` +
-          `<span class="rar-pill" style="color:${def.color};border-color:${def.color}">${t('ui.skillLevel', { lv, max: maxLv })}</span></div>` +
+          `<span class="rar-pill" style="color:${def.color};border-color:${def.color}">${t('ui.skillLevel', { lv, max: maxLv })}</span>` +
+          (equipped ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.skillEquipped')}</span>` : '') +
+          `</div>` +
           (desc ? `<div class="cinfo" style="opacity:.82;font-size:12px">${desc}</div>` : '') +
           `<div class="cinfo">${shardLine}</div>` +
+          `<div class="cinfo" style="opacity:.78;font-size:11px;margin-top:3px">${statusLine}</div>` +
           `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:4px"><b>${t('ui.skillNow')}:</b> ${now}</div>` +
           (next ? `<div class="cinfo" style="opacity:.75;font-size:11px;margin-top:3px"><b>${t('ui.skillNext')}:</b> ${next}</div>` : '') +
           `</div>`;
+        if (def.group === 'jutsu' && unlocked && !equipped) {
+          const eqBtn = document.createElement('button');
+          eqBtn.type = 'button';
+          eqBtn.className = 'btn claim-btn';
+          eqBtn.textContent = t('ui.skillEquip');
+          eqBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            safeUiAction(() => {
+              if (!setActiveJutsu(id)) return;
+              AudioSys.sfx('select');
+              this.renderUpgrades();
+            }, 'equipJutsu/' + id, 'Jutsu kiezen mislukt');
+          });
+          el.appendChild(eqBtn);
+        }
         if (canUp) {
           const btn = document.createElement('button');
           btn.type = 'button';
