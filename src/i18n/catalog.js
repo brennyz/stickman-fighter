@@ -42,8 +42,8 @@ function seedNlGameStrings() {
     matsStart: 'MUNTJES BONUS',
     wallStart: 'SLOOP DE MUUR!',
     bonusDone: 'BONUS KLAAR!',
-    kets: 'KETS!',
-    ketsBam: 'KETS-BAM!',
+    kets: 'KABLAM…',
+    ketsBam: 'KABLAM!',
     wallTime: 'TIJD!',
     wallNewWall: 'MUUR GESLOOPT! Nieuwe muur...',
   });
@@ -406,7 +406,7 @@ function seedNlGameStrings() {
     installSub: 'Verschijnt als icoon — net als een echte app',
     boss: 'BAAS',
     topHunter: 'Top jager',
-    modeAdventure: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok vóór level',
+    modeAdventure: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok · omringd = KABLAM!',
     modeTraining: 'Combo-trainer ×5/×8/×10 · 3s dummy · lasers · Chidori',
     modeWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing',
     modeVersus: 'P1 links P2 rechts · best-of-3 · rematch in pauze',
@@ -451,7 +451,7 @@ function seedNlGameStrings() {
     hintDualKb: 'P1: A/D · W · J/K/L/U · Shift  |  P2: pijltjes · 1/2/3/4/5',
     hintTouch: 'Links: joystick om te lopen · Rechts: aanvalsknoppen',
     hintKb: 'A/D lopen · W springen · J stomp · K trap · L wapen · U speciaal',
-    ketsTap: 'Tik!', ketsKey: 'E / tik',
+    ketsTap: 'Tik KABLAM!', ketsKey: 'E · KABLAM',
   });
 }
 
@@ -637,7 +637,7 @@ const CATALOG_EN = {
     summon: '✦ SUMMON! ✦', summonAscend: '{name} → {rar}!',
     newDex: 'New {rar}: {name}! +{hp} max HP', pet: 'PET! {name}',
     matsStart: 'COIN BONUS', wallStart: 'SMASH THE WALL!', bonusDone: 'BONUS DONE!',
-    kets: 'KETS!', ketsBam: 'KETS-BAM!', wallTime: 'TIME!', wallNewWall: 'WALL SMASHED! New wall...',
+    kets: 'KABLAM…', ketsBam: 'KABLAM!', wallTime: 'TIME!', wallNewWall: 'WALL SMASHED! New wall...',
   },
   help: { tips: [
     'Power-ups: defeated monsters sometimes drop orbs — HP, rage, chakra, shield.',
@@ -916,7 +916,7 @@ const CATALOG_EN = {
     installSub: 'Shows as an icon — like a real app',
     boss: 'BOSS',
     topHunter: 'Top hunter',
-    modeAdventure: '5 islands × 10 levels · skill gate weapons · Master buff after 5× loss · gamble roll before level',
+    modeAdventure: '5 islands × 10 levels · skill gate weapons · Master buff after 5× loss · gamble roll · swarmed = KABLAM!',
     modeTraining: 'Combo trainer ×5/×8/×10 · 3s dummy · lasers · Chidori',
     modeWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD · 5s warning',
     modeVersus: 'P1 left P2 right · best-of-3 · rematch in pause',
@@ -1003,7 +1003,7 @@ const CATALOG_EN = {
     hintDualKb: 'P1: A/D · W · J/K/L/U · Shift  |  P2: arrows · 1/2/3/4/5',
     hintTouch: 'Left: joystick to walk · Right: attack buttons',
     hintKb: 'A/D walk · W jump · J punch · K kick · L weapon · U special',
-    ketsTap: 'Tap!', ketsKey: 'E / tap',
+    ketsTap: 'Tap KABLAM!', ketsKey: 'E · KABLAM',
   },
   jutsu: { rasengan: 'RASENGAN!', chidori: 'CHIDORI!', rinnegan: 'RINNEGAN!' },
   skill: {
@@ -1096,7 +1096,7 @@ const CATALOG_DE = {
     levelUp: 'LEVEL UP! Lv {lvl}', masterBuff: 'MEISTER-BUFF +20%', bossWave: 'BOSS-WELLE!',
     fight: 'KÄMPF!', won: 'GEWONNEN!', lost: 'VERLOREN...', summon: '✦ SUMMON! ✦',
     matsStart: 'MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
-    kets: 'KETS!', ketsBam: 'KETS-BAM!',
+    kets: 'KABLAM…', ketsBam: 'KABLAM!',
   },
   help: { tips: [
     'Power-ups: besiegte Monster lassen manchmal Kugeln fallen — HP, Rage, Chakra, Schild.',
@@ -1194,7 +1194,7 @@ const CATALOG_FR = {
     levelUp: 'LEVEL UP ! Lv {lvl}', masterBuff: 'BUFF MAÎTRE +20 %', bossWave: 'VAGUE BOSS !',
     fight: 'COMBAT !', won: 'VICTOIRE !', lost: 'DÉFAITE...', summon: '✦ INVOCATION ! ✦',
     matsStart: 'BONUS PIÈCES', wallStart: 'CASSE LE MUR !', bonusDone: 'BONUS TERMINÉ !',
-    kets: 'KETS !', ketsBam: 'KETS-BAM !',
+    kets: 'KABLAM…', ketsBam: 'KABLAM !',
   },
   help: { tips: [
     'Power-ups : les monstres vaincus laissent parfois des orbes — PV, rage, chakra, bouclier.',
@@ -1292,7 +1292,7 @@ const CATALOG_ES = {
     levelUp: '¡SUBIDA DE NIVEL! Lv {lvl}', masterBuff: 'BUFF MAESTRO +20%', bossWave: '¡OLA JEFE!',
     fight: '¡LUCHA!', won: '¡VICTORIA!', lost: 'DERROTA...', summon: '✦ ¡INVOCACIÓN! ✦',
     matsStart: 'BONUS MONEDAS', wallStart: '¡ROMPE EL MURO!', bonusDone: '¡BONUS LISTO!',
-    kets: '¡KETS!', ketsBam: '¡KETS-BAM!',
+    kets: '¡KABLAM…', ketsBam: '¡KABLAM!',
   },
   help: { tips: [
     'Power-ups: monstruos derrotados sueltan orbes — HP, furia, chakra, escudo.',

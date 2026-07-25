@@ -135,9 +135,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.86';
+const APP_VERSION = '1.17.88';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 204;
+const SW_CACHE_REV = 206;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -5636,7 +5636,7 @@ const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
 const GIANT_DMG_MUL = 1.14;
 const GIANT_XP_MUL = 1.3;
-/** Nood-ontsnapping als je omringd / stunlocked bent — tik midden-KETS! */
+/** Nood-ontsnapping als je omringd / stunlocked bent — tik midden-KABLAM! */
 const KETSBAM_DETECT_R = 148;
 const KETSBAM_NEAR_MIN = 3;
 const KETSBAM_BLAST_R = 192;
@@ -6142,8 +6142,8 @@ function seedNlGameStrings() {
     matsStart: 'MUNTJES BONUS',
     wallStart: 'SLOOP DE MUUR!',
     bonusDone: 'BONUS KLAAR!',
-    kets: 'KETS!',
-    ketsBam: 'KETS-BAM!',
+    kets: 'KABLAM…',
+    ketsBam: 'KABLAM!',
     wallTime: 'TIJD!',
     wallNewWall: 'MUUR GESLOOPT! Nieuwe muur...',
   });
@@ -6506,7 +6506,7 @@ function seedNlGameStrings() {
     installSub: 'Verschijnt als icoon — net als een echte app',
     boss: 'BAAS',
     topHunter: 'Top jager',
-    modeAdventure: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok vóór level',
+    modeAdventure: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok · omringd = KABLAM!',
     modeTraining: 'Combo-trainer ×5/×8/×10 · 3s dummy · lasers · Chidori',
     modeWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing',
     modeVersus: 'P1 links P2 rechts · best-of-3 · rematch in pauze',
@@ -6551,7 +6551,7 @@ function seedNlGameStrings() {
     hintDualKb: 'P1: A/D · W · J/K/L/U · Shift  |  P2: pijltjes · 1/2/3/4/5',
     hintTouch: 'Links: joystick om te lopen · Rechts: aanvalsknoppen',
     hintKb: 'A/D lopen · W springen · J stomp · K trap · L wapen · U speciaal',
-    ketsTap: 'Tik!', ketsKey: 'E / tik',
+    ketsTap: 'Tik KABLAM!', ketsKey: 'E · KABLAM',
   });
 }
 
@@ -6737,7 +6737,7 @@ const CATALOG_EN = {
     summon: '✦ SUMMON! ✦', summonAscend: '{name} → {rar}!',
     newDex: 'New {rar}: {name}! +{hp} max HP', pet: 'PET! {name}',
     matsStart: 'COIN BONUS', wallStart: 'SMASH THE WALL!', bonusDone: 'BONUS DONE!',
-    kets: 'KETS!', ketsBam: 'KETS-BAM!', wallTime: 'TIME!', wallNewWall: 'WALL SMASHED! New wall...',
+    kets: 'KABLAM…', ketsBam: 'KABLAM!', wallTime: 'TIME!', wallNewWall: 'WALL SMASHED! New wall...',
   },
   help: { tips: [
     'Power-ups: defeated monsters sometimes drop orbs — HP, rage, chakra, shield.',
@@ -7016,7 +7016,7 @@ const CATALOG_EN = {
     installSub: 'Shows as an icon — like a real app',
     boss: 'BOSS',
     topHunter: 'Top hunter',
-    modeAdventure: '5 islands × 10 levels · skill gate weapons · Master buff after 5× loss · gamble roll before level',
+    modeAdventure: '5 islands × 10 levels · skill gate weapons · Master buff after 5× loss · gamble roll · swarmed = KABLAM!',
     modeTraining: 'Combo trainer ×5/×8/×10 · 3s dummy · lasers · Chidori',
     modeWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD · 5s warning',
     modeVersus: 'P1 left P2 right · best-of-3 · rematch in pause',
@@ -7103,7 +7103,7 @@ const CATALOG_EN = {
     hintDualKb: 'P1: A/D · W · J/K/L/U · Shift  |  P2: arrows · 1/2/3/4/5',
     hintTouch: 'Left: joystick to walk · Right: attack buttons',
     hintKb: 'A/D walk · W jump · J punch · K kick · L weapon · U special',
-    ketsTap: 'Tap!', ketsKey: 'E / tap',
+    ketsTap: 'Tap KABLAM!', ketsKey: 'E · KABLAM',
   },
   jutsu: { rasengan: 'RASENGAN!', chidori: 'CHIDORI!', rinnegan: 'RINNEGAN!' },
   skill: {
@@ -7196,7 +7196,7 @@ const CATALOG_DE = {
     levelUp: 'LEVEL UP! Lv {lvl}', masterBuff: 'MEISTER-BUFF +20%', bossWave: 'BOSS-WELLE!',
     fight: 'KÄMPF!', won: 'GEWONNEN!', lost: 'VERLOREN...', summon: '✦ SUMMON! ✦',
     matsStart: 'MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
-    kets: 'KETS!', ketsBam: 'KETS-BAM!',
+    kets: 'KABLAM…', ketsBam: 'KABLAM!',
   },
   help: { tips: [
     'Power-ups: besiegte Monster lassen manchmal Kugeln fallen — HP, Rage, Chakra, Schild.',
@@ -7294,7 +7294,7 @@ const CATALOG_FR = {
     levelUp: 'LEVEL UP ! Lv {lvl}', masterBuff: 'BUFF MAÎTRE +20 %', bossWave: 'VAGUE BOSS !',
     fight: 'COMBAT !', won: 'VICTOIRE !', lost: 'DÉFAITE...', summon: '✦ INVOCATION ! ✦',
     matsStart: 'BONUS PIÈCES', wallStart: 'CASSE LE MUR !', bonusDone: 'BONUS TERMINÉ !',
-    kets: 'KETS !', ketsBam: 'KETS-BAM !',
+    kets: 'KABLAM…', ketsBam: 'KABLAM !',
   },
   help: { tips: [
     'Power-ups : les monstres vaincus laissent parfois des orbes — PV, rage, chakra, bouclier.',
@@ -7392,7 +7392,7 @@ const CATALOG_ES = {
     levelUp: '¡SUBIDA DE NIVEL! Lv {lvl}', masterBuff: 'BUFF MAESTRO +20%', bossWave: '¡OLA JEFE!',
     fight: '¡LUCHA!', won: '¡VICTORIA!', lost: 'DERROTA...', summon: '✦ ¡INVOCACIÓN! ✦',
     matsStart: 'BONUS MONEDAS', wallStart: '¡ROMPE EL MURO!', bonusDone: '¡BONUS LISTO!',
-    kets: '¡KETS!', ketsBam: '¡KETS-BAM!',
+    kets: '¡KABLAM…', ketsBam: '¡KABLAM!',
   },
   help: { tips: [
     'Power-ups: monstruos derrotados sueltan orbes — HP, furia, chakra, escudo.',
@@ -9280,7 +9280,7 @@ function ketsbamHitTest(x, y, g) {
   if (!g || !g.ketsbamShow) return false;
   const ui = touchUiScale(W, H);
   const { cx, cy } = ketsbamPromptCenter();
-  const r = 58 * ui + btnHitSlop();
+  const r = kablamPromptHitRadius(ui);
   return (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
 }
 
@@ -10243,7 +10243,7 @@ class Fighter {
     game.floater(this.x, this.y - 92, 'Dash!', '#7cf5ff', 12);
   }
 
-  /** Nood-KETS-BAM: omringd/stunlock → tik midden-symbool of druk E. */
+  /** Nood-KABLAM: omringd/stunlock → tik midden-symbool of druk E. */
   doKetsbam(game) {
     if (!this.isPlayer || !this.alive || !game) return false;
     if (game.ketsbamCd > 0 || game.ketsbamChargeT > 0 || game.inputLocked || game.traveling) return false;
@@ -10252,6 +10252,7 @@ class Fighter {
     const swarmed = near >= KETSBAM_NEAR_MIN;
     if (!swarmed && !stuck) return false;
 
+    if (!game.ketsbamStickPick) game.ketsbamStickPick = pickKablamStickFace();
     game.ketsbamCd = KETSBAM_CD;
     game.ketsbamSuperT = KETSBAM_SUPER_ARMOR + KETSBAM_CHARGE_DUR;
     game.ketsbamShow = false;
@@ -10267,7 +10268,7 @@ class Fighter {
     this.invulnT = Math.max(this.invulnT, KETSBAM_INVULN + KETSBAM_CHARGE_DUR);
     resetWeaponCombo(this);
 
-    game.banner('KETS!', KETSBAM_CHARGE_DUR, '#ffd75e', 44);
+    game.banner(t('banner.kets'), KETSBAM_CHARGE_DUR, '#ffd75e', 44);
     try { AudioSys.sfx('ketsbamCharge'); } catch (_) {}
     if (save.haptics !== false) haptic(12);
     return true;
@@ -10281,7 +10282,7 @@ class Fighter {
 
     game.shake(14, 0.38);
     game.freezeT = Math.max(game.freezeT, 0.06);
-    game.banner('KETS-BAM!', 0.85, '#ffd75e', 42);
+    game.banner(t('banner.ketsBam'), 0.85, '#ffd75e', 42);
     try { AudioSys.sfx('ketsbam'); } catch (_) {}
 
     const px = this.x, py = this.y - 42;
@@ -10298,7 +10299,8 @@ class Fighter {
     game.burst(px, py, '#ffd75e', fxLite() ? 22 : 40, { kind: 'spark', size: 3.2 });
     game.burst(px, py, '#ff7043', fxLite() ? 14 : 26);
     spawnFxRing(game, px, py, '#ffe259', fxLite() ? 10 : 18);
-    game.floater(px, py - 80, 'KETS-BAM!', '#ffd75e', 20);
+    game.floater(px, py - 80, t('banner.ketsBam'), '#ffd75e', 20);
+    game.ketsbamStickPick = null;
     if (save.haptics !== false) haptic(32);
   }
 
@@ -12186,6 +12188,169 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   }
 }
 
+/* --- src/game/kablam-ui.js --- */
+/** KABLAM! nood-ontsnapping UI — vecht-poep cursor + random stickman-smile. */
+const KABLAM_PROMPT_R_BASE = 46;
+const KABLAM_HIT_PAD = 12;
+const KABLAM_SMILE_STYLES = ['grin', 'smirk', 'toothy', 'beam', 'wink'];
+
+function kablamPromptRadius(ui, pulse) {
+  return KABLAM_PROMPT_R_BASE * ui * (pulse || 1);
+}
+
+function kablamPromptHitRadius(ui) {
+  return kablamPromptRadius(ui, 1) + 10 * ui + btnHitSlop() + KABLAM_HIT_PAD;
+}
+
+function pickKablamStickFace() {
+  const pool = (typeof VS_ROSTER !== 'undefined' ? VS_ROSTER : []).filter((r) => !r.isRobot);
+  const entry = pool[Math.floor(Math.random() * pool.length)] || pool[0] || { bodyColor: '#eef5ff' };
+  const style = KABLAM_SMILE_STYLES[Math.floor(Math.random() * KABLAM_SMILE_STYLES.length)];
+  return { color: entry.bodyColor || '#eef5ff', style, bald: !!entry.bald };
+}
+
+function drawKablamPoopCursor(c, s) {
+  c.save();
+  c.fillStyle = '#7a4f2a';
+  c.strokeStyle = '#4a3018';
+  c.lineWidth = 2.2 * s;
+  c.lineJoin = 'round';
+
+  const blob = (bx, by, rx, ry) => {
+    c.beginPath();
+    c.ellipse(bx, by, rx, ry, 0, 0, TAU);
+    c.fill();
+    c.stroke();
+  };
+  blob(0, 10 * s, 15 * s, 11 * s);
+  blob(0, -2 * s, 12 * s, 10 * s);
+  blob(0, -13 * s, 9 * s, 8 * s);
+  c.strokeStyle = '#5a3818';
+  c.lineWidth = 1.8 * s;
+  c.beginPath();
+  c.arc(0, -15 * s, 3.2 * s, 0, TAU * 1.25);
+  c.stroke();
+
+  const fist = (fx, fy) => {
+    c.fillStyle = '#ffd75e';
+    c.strokeStyle = '#c05820';
+    c.lineWidth = 2 * s;
+    c.beginPath();
+    c.arc(fx, fy, 5.5 * s, 0, TAU);
+    c.fill();
+    c.stroke();
+    c.strokeStyle = '#8a4010';
+    c.lineWidth = 1.4 * s;
+    c.beginPath();
+    c.moveTo(fx - 3 * s, fy - 1 * s);
+    c.lineTo(fx + 3 * s, fy - 1 * s);
+    c.stroke();
+  };
+  fist(-18 * s, 4 * s);
+  fist(18 * s, -1 * s);
+
+  c.fillStyle = '#fff8ef';
+  c.strokeStyle = '#2a2018';
+  c.lineWidth = 1.6 * s;
+  c.beginPath();
+  c.moveTo(11 * s, 16 * s);
+  c.lineTo(24 * s, 30 * s);
+  c.lineTo(15 * s, 21 * s);
+  c.lineTo(8 * s, 27 * s);
+  c.closePath();
+  c.fill();
+  c.stroke();
+  c.restore();
+}
+
+function drawKablamStickSmile(c, face, s, pulse) {
+  if (!face) return;
+  const bob = Math.sin(pulse * 8) * 1.5 * s;
+  const hx = 30 * s;
+  const hy = -24 * s + bob;
+  c.save();
+  c.strokeStyle = face.color;
+  c.fillStyle = face.color;
+  c.lineWidth = 2.4 * s;
+  c.lineCap = 'round';
+
+  if (face.bald) {
+    c.fillStyle = '#ffe8c8';
+    c.beginPath();
+    c.arc(hx, hy, 8.5 * s, 0, TAU);
+    c.fill();
+    c.strokeStyle = face.color;
+    c.stroke();
+  } else {
+    c.beginPath();
+    c.arc(hx, hy, 8.5 * s, 0, TAU);
+    c.stroke();
+  }
+
+  c.strokeStyle = '#1a2030';
+  c.lineWidth = 1.6 * s;
+  const eyeY = hy - 1.5 * s;
+  if (face.style === 'wink') {
+    c.beginPath();
+    c.arc(hx - 3 * s, eyeY, 1.2 * s, 0, TAU);
+    c.fill();
+    c.beginPath();
+    c.moveTo(hx + 2 * s, eyeY);
+    c.lineTo(hx + 4.5 * s, eyeY);
+    c.stroke();
+  } else {
+    c.fillStyle = '#1a2030';
+    c.beginPath();
+    c.arc(hx - 3 * s, eyeY, 1.1 * s, 0, TAU);
+    c.arc(hx + 3 * s, eyeY, 1.1 * s, 0, TAU);
+    c.fill();
+  }
+
+  c.strokeStyle = '#1a2030';
+  c.lineWidth = 1.8 * s;
+  c.beginPath();
+  if (face.style === 'grin' || face.style === 'beam') {
+    c.arc(hx, hy + 2 * s, 4.5 * s, 0.12 * Math.PI, 0.88 * Math.PI);
+  } else if (face.style === 'smirk') {
+    c.arc(hx + 1.5 * s, hy + 2.5 * s, 4 * s, 0.05 * Math.PI, 0.72 * Math.PI);
+  } else if (face.style === 'toothy') {
+    c.arc(hx, hy + 1.5 * s, 4 * s, 0.18 * Math.PI, 0.82 * Math.PI);
+    c.stroke();
+    c.lineWidth = 1.2 * s;
+    for (let i = -1; i <= 1; i++) {
+      c.beginPath();
+      c.moveTo(hx + i * 2.2 * s, hy + 4 * s);
+      c.lineTo(hx + i * 2.2 * s, hy + 5.6 * s);
+      c.stroke();
+    }
+    c.restore();
+    return;
+  } else {
+    c.arc(hx, hy + 2 * s, 4 * s, 0.15 * Math.PI, 0.85 * Math.PI);
+  }
+  c.stroke();
+  c.restore();
+}
+
+function drawKablamIcon(c, scale, pulse, calm, face, spin) {
+  if (!calm && spin) c.rotate(spin);
+  drawKablamPoopCursor(c, scale);
+  drawKablamStickSmile(c, face, scale, pulse);
+  if (!calm && spin) c.rotate(-spin);
+}
+
+function drawKablamLabel(c, text, x, y, size, fill) {
+  c.save();
+  c.font = `900 ${size}px "Black Ops One", Bangers, sans-serif`;
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.lineWidth = Math.max(3, size * 0.28);
+  c.strokeStyle = 'rgba(0,0,0,.55)';
+  c.strokeText(text, x, y);
+  c.fillStyle = fill || '#fff';
+  c.fillText(text, x, y);
+  c.restore();
+}
 /* --- src/game/game.js --- */
 /* ================================ GAME ================================= */
 let game = null;
@@ -12316,6 +12481,7 @@ class Game {
     this.ketsbamChargeT = 0;
     this.ketsbamChargeDur = 0;
     this.ketsbamChargePulse = 0;
+    this.ketsbamStickPick = null;
     applyGambleToStage(this, gamble);
     this.banner(t('banner.levelStart', { n }), 1.4, '#ffd75e', 54);
     if (masterBuffActive(n)) {
@@ -14797,7 +14963,10 @@ class Game {
     const near = this.countNearbyMonsters(KETSBAM_DETECT_R);
     const stuck = this.player.hurtT > 0 && near >= 2;
     const swarmed = near >= KETSBAM_NEAR_MIN;
+    const wasShow = this.ketsbamShow;
     this.ketsbamShow = this.ketsbamCd <= 0 && !this.inputLocked && !this.traveling && (swarmed || stuck);
+    if (this.ketsbamShow && !wasShow) this.ketsbamStickPick = pickKablamStickFace();
+    if (!this.ketsbamShow && this.ketsbamChargeT <= 0) this.ketsbamStickPick = null;
     if (this.ketsbamShow) this.ketsbamPulse = (this.ketsbamPulse || 0) + dt;
     else this.ketsbamPulse = 0;
   }
@@ -14863,13 +15032,15 @@ class Game {
     }
 
     c.globalAlpha = 0.85;
-    c.font = `900 ${18 + prog * 8}px -apple-system, sans-serif`;
-    c.textAlign = 'center';
-    c.fillStyle = '#ffd75e';
-    c.strokeStyle = 'rgba(0,0,0,.55)';
-    c.lineWidth = 4;
-    c.strokeText(t('banner.kets'), px, py - 58 - prog * 24);
-    c.fillText(t('banner.kets'), px, py - 58 - prog * 24);
+    drawKablamLabel(c, t('banner.kets'), px, py - 58 - prog * 24, 18 + prog * 8, '#ffd75e');
+
+    if (this.ketsbamStickPick) {
+      c.save();
+      c.translate(px, py - 18);
+      c.scale(0.55 + prog * 0.2, 0.55 + prog * 0.2);
+      drawKablamIcon(c, 1, pulse, calm, this.ketsbamStickPick, calm ? 0 : pulse * 1.6);
+      c.restore();
+    }
     c.restore();
   }
 
@@ -14879,7 +15050,7 @@ class Game {
     const { cx, cy } = ketsbamPromptCenter();
     const calm = motionReduced();
     const pulse = calm ? 1 : (0.9 + Math.sin((this.ketsbamPulse || 0) * 10) * 0.1);
-    const r = 46 * ui * pulse;
+    const r = kablamPromptRadius(ui, pulse);
     c.save();
     c.globalAlpha = 0.92;
     c.fillStyle = 'rgba(6,10,24,.72)';
@@ -14889,36 +15060,14 @@ class Game {
     c.strokeStyle = 'rgba(255,215,94,.55)';
     c.lineWidth = 3 * ui;
     c.stroke();
-    // ster/kets-symbool
     c.translate(cx, cy);
-    if (!calm) c.rotate((this.ketsbamPulse || 0) * 2.2);
-    c.fillStyle = '#ffd75e';
-    c.strokeStyle = '#ff7043';
-    c.lineWidth = 2.5 * ui;
-    c.beginPath();
-    for (let i = 0; i < 8; i++) {
-      const a = (i / 8) * TAU - Math.PI / 2;
-      const rr = i % 2 ? r * 0.42 : r * 0.88;
-      const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
-      if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
-    }
-    c.closePath();
-    c.fill();
-    c.stroke();
-    if (!calm) c.rotate(-(this.ketsbamPulse || 0) * 2.2);
-    c.font = `900 ${Math.round(17 * ui)}px -apple-system,sans-serif`;
-    c.textAlign = 'center';
-    c.textBaseline = 'middle';
-    c.lineWidth = 5 * ui;
-    c.strokeStyle = 'rgba(0,0,0,.55)';
-    c.strokeText(t('banner.kets'), 0, 2);
-    c.fillStyle = '#fff';
-    c.fillText(t('banner.kets'), 0, 2);
+    drawKablamIcon(c, ui * pulse * 0.92, this.ketsbamPulse || 0, calm, this.ketsbamStickPick, calm ? 0 : (this.ketsbamPulse || 0) * 2.2);
     c.restore();
+    drawKablamLabel(c, t('banner.ketsBam'), cx, cy + r + 14 * ui, Math.round(17 * ui), '#ffd75e');
     c.font = `700 ${Math.round(12 * ui)}px -apple-system,sans-serif`;
     c.textAlign = 'center';
     c.fillStyle = 'rgba(255,255,255,.85)';
-    c.fillText(IS_TOUCH ? t('hud.ketsTap') : t('hud.ketsKey'), cx, cy + r + 18 * ui);
+    c.fillText(IS_TOUCH ? t('hud.ketsTap') : t('hud.ketsKey'), cx, cy + r + 34 * ui);
     c.textAlign = 'left';
   }
 
