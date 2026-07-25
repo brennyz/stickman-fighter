@@ -266,6 +266,48 @@ function spawnFxRing(game, x, y, color, baseR) {
   });
 }
 
+/**
+ * Pet / egg-pet / summon appear sparkles — rings + sparks + twinkle stars.
+ * opts: { color2, big }
+ */
+function spawnCompanionSparkles(game, x, y, color, opts) {
+  if (!game || typeof game.burst !== 'function') return;
+  if (motionReduced()) {
+    game.burst(x, y, color || '#7cf5ff', 4, { kind: 'spark', size: 2 });
+    return;
+  }
+  opts = opts || {};
+  const lite = fxLite();
+  const col = color || '#7cf5ff';
+  const col2 = opts.color2 || '#ffffff';
+  const big = !!opts.big;
+  const n = lite ? (big ? 8 : 5) : (big ? 18 : 11);
+  game.burst(x, y, col, n, { kind: 'spark', size: big ? 2.6 : 2.1 });
+  game.burst(x, y, col2, Math.max(2, Math.ceil(n * 0.4)), { kind: 'spark', size: big ? 2.0 : 1.55 });
+  spawnFxRing(game, x, y, col, lite ? 7 : (big ? 16 : 11));
+  if (!lite && big) spawnFxRing(game, x, y - 10, col2, 9);
+  if (lite || !ensureParticleRoom(game, 3)) return;
+  if (!perfFxBudgetAllow(game, 2) || perfFxRoom(game, 'particle') <= 0) return;
+  const stars = big ? 7 : 4;
+  for (let i = 0; i < stars; i++) {
+    if (perfFxRoom(game, 'particle') <= 0) break;
+    const a = (i / stars) * TAU + Math.random() * 0.5;
+    const sp = 35 + Math.random() * (big ? 70 : 45);
+    game.particles.push({
+      x: x + Math.cos(a) * 6,
+      y: y + Math.sin(a) * 4,
+      vx: Math.cos(a) * sp,
+      vy: Math.sin(a) * sp * 0.7 - 55,
+      life: 0.32 + Math.random() * 0.22,
+      maxLife: 0.55,
+      color: i % 2 ? col2 : col,
+      size: (big ? 3.2 : 2.6) + Math.random() * 2.2,
+      kind: 'star',
+      grav: 90,
+    });
+  }
+}
+
 /** Jutsu impact burst — Lite FX capped; scale 'small' for projectile fade-out. */
 function spawnJutsuImpactFx(game, x, y, kind, scale) {
   if (!game || motionReduced()) return;

@@ -149,6 +149,7 @@ class EggPet {
     this.y = game.player ? game.player.y - 48 : game.ground - 48;
     this.t = Math.random() * 6;
     this.size = 11;
+    this.spawnT = motionReduced() ? 0 : 0.5;
   }
 
   update(dt) {
@@ -156,6 +157,7 @@ class EggPet {
     const p = g.player;
     if (!p || !p.alive) return;
     this.t += dt;
+    if (this.spawnT > 0) this.spawnT = Math.max(0, this.spawnT - dt);
     const bob = Math.sin(this.t * 4.5) * 3;
     const tx = p.x + p.face * (IS_TOUCH ? 26 : 30);
     const ty = p.y - 46 + bob;
@@ -165,7 +167,23 @@ class EggPet {
   }
 
   draw(c) {
-    drawEggPetArt(c, this.def, this.size, this.t, this.x, this.y, false);
+    const appear = this.spawnT > 0 ? clamp(1 - this.spawnT / 0.5, 0, 1) : 1;
+    const sc = 0.2 + appear * 0.8;
+    c.save();
+    if (appear < 1 && !fxLite() && !motionReduced()) {
+      const rar = rarityOf(this.def.rarity);
+      c.globalAlpha = (1 - appear) * 0.6;
+      c.strokeStyle = rar.color || '#ffd75e';
+      c.lineWidth = 2;
+      c.beginPath();
+      c.arc(this.x, this.y, this.size * (1.5 + (1 - appear) * 2), 0, TAU);
+      c.stroke();
+    }
+    c.translate(this.x, this.y);
+    c.scale(sc, sc);
+    c.globalAlpha = 0.45 + appear * 0.55;
+    drawEggPetArt(c, this.def, this.size, this.t, 0, 0, false);
+    c.restore();
   }
 }
 
@@ -175,4 +193,10 @@ function spawnGameEggPet(game) {
   const def = activeEggPetDef();
   if (!def) return;
   game.eggPet = new EggPet(def, game);
+  const rar = rarityOf(def.rarity);
+  if (typeof spawnCompanionSparkles === 'function') {
+    spawnCompanionSparkles(game, game.eggPet.x, game.eggPet.y, rar.color || def.c1 || '#ffd75e', {
+      color2: def.c1 || '#fff8dc',
+    });
+  }
 }

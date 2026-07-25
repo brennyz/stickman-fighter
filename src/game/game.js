@@ -873,8 +873,12 @@ class Game {
     this.shake(9, 0.35);
     const px = this.player ? this.player.x : W * 0.5;
     const py = this.player ? this.player.y : this.ground;
-    this.burst(px, py - 70, rar.color, fxLite() ? 14 : 30);
-    this.burst(px, py - 70, '#fff', fxLite() ? 6 : 12);
+    if (typeof spawnCompanionSparkles === 'function') {
+      spawnCompanionSparkles(this, px, py - 70, rar.color, { color2: '#fff8dc', big: true });
+    } else {
+      this.burst(px, py - 70, rar.color, fxLite() ? 14 : 30);
+      this.burst(px, py - 70, '#fff', fxLite() ? 6 : 12);
+    }
     this.banner(t('banner.summon'), 2.2, rar.color, 44);
     setTimeout(() => this.banner(t('banner.summonAscend', { name: weaponLabel(pick), rar: rar.name }), 2.4, rar.color, 30), 1100);
     this.floater(px, py - 130, `${weaponLabel(pick)} ✦ ${rar.name}`, rar.color, 17);
@@ -2574,6 +2578,14 @@ class Game {
         c.beginPath();
         c.arc(pt.x, pt.y, pt.size, 0, TAU);
         c.fill();
+      } else if (pt.kind === 'star') {
+        if (typeof drawStarShape === 'function') {
+          drawStarShape(c, pt.x, pt.y, pt.size, pt.color, true);
+        } else {
+          c.beginPath();
+          c.arc(pt.x, pt.y, pt.size * 0.45, 0, TAU);
+          c.fill();
+        }
       } else {
         c.fillRect(pt.x - pt.size / 2, pt.y - pt.size / 2, pt.size, pt.size);
       }

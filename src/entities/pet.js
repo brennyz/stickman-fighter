@@ -12,6 +12,7 @@ class Pet {
     this.assistCd = (def.cd || 5) * (petUpgradeBonuses(def.id).cdMul || 1);
     this.size = Math.max(9, Math.round((this.sp?.size || 14) * 0.52));
     this.flashT = 0;
+    this.spawnT = motionReduced() ? 0 : 0.55;
   }
 
   update(dt) {
@@ -20,6 +21,7 @@ class Pet {
     if (!p || !p.alive) return;
     this.t += dt;
     if (this.flashT > 0) this.flashT -= dt;
+    if (this.spawnT > 0) this.spawnT = Math.max(0, this.spawnT - dt);
     const bob = Math.sin(this.t * 6) * 2;
     const tx = p.x - p.face * (IS_TOUCH ? 34 : 38);
     const ty = p.y - 6 + bob * 0.25;
@@ -66,14 +68,29 @@ class Pet {
 
   draw(c) {
     if (!this.sp) return;
+    const appear = this.spawnT > 0 ? clamp(1 - this.spawnT / 0.55, 0, 1) : 1;
+    const sc = 0.25 + appear * 0.75;
     c.save();
     c.translate(this.x, this.y - this.size * 0.35);
     if (this.face < 0) { c.scale(-1, 1); }
-    c.globalAlpha = 0.94;
+    c.scale(sc, sc);
+    c.globalAlpha = 0.55 + appear * 0.39;
+    if (appear < 1 && !fxLite() && !motionReduced()) {
+      const col = this.sp.c1 || '#7cf5ff';
+      c.save();
+      c.globalAlpha = (1 - appear) * 0.55;
+      c.strokeStyle = col;
+      c.lineWidth = 2;
+      c.beginPath();
+      c.arc(0, 0, this.size * (1.4 + (1 - appear) * 1.8), 0, TAU);
+      c.stroke();
+      c.restore();
+    }
     drawMonsterArt(c, this.sp, this.size, this.t, this.flashT > 0, false);
     c.globalAlpha = 1;
     c.restore();
     c.save();
+    c.globalAlpha = 0.5 + appear * 0.25;
     c.fillStyle = 'rgba(124,245,255,.75)';
     c.beginPath();
     c.arc(this.x, this.y - this.size * 1.15, 2.2, 0, TAU);
@@ -88,6 +105,12 @@ function spawnGamePet(game) {
   const def = activePetDef();
   if (!def) return;
   game.pet = new Pet(def, game);
+  const sp = SPECIES[def.speciesId];
+  const col = sp?.c1 || '#7cf5ff';
+  const col2 = sp?.c2 || '#ffffff';
+  if (typeof spawnCompanionSparkles === 'function') {
+    spawnCompanionSparkles(game, game.pet.x, game.pet.y - game.pet.size * 0.6, col, { color2: col2 });
+  }
 }
 
 function applyPetBonusesToPlayer(game, player) {

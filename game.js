@@ -241,9 +241,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.15';
+const APP_VERSION = '1.18.16';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 225;
+const SW_CACHE_REV = 226;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -12979,6 +12979,48 @@ function spawnFxRing(game, x, y, color, baseR) {
   });
 }
 
+/**
+ * Pet / egg-pet / summon appear sparkles — rings + sparks + twinkle stars.
+ * opts: { color2, big }
+ */
+function spawnCompanionSparkles(game, x, y, color, opts) {
+  if (!game || typeof game.burst !== 'function') return;
+  if (motionReduced()) {
+    game.burst(x, y, color || '#7cf5ff', 4, { kind: 'spark', size: 2 });
+    return;
+  }
+  opts = opts || {};
+  const lite = fxLite();
+  const col = color || '#7cf5ff';
+  const col2 = opts.color2 || '#ffffff';
+  const big = !!opts.big;
+  const n = lite ? (big ? 8 : 5) : (big ? 18 : 11);
+  game.burst(x, y, col, n, { kind: 'spark', size: big ? 2.6 : 2.1 });
+  game.burst(x, y, col2, Math.max(2, Math.ceil(n * 0.4)), { kind: 'spark', size: big ? 2.0 : 1.55 });
+  spawnFxRing(game, x, y, col, lite ? 7 : (big ? 16 : 11));
+  if (!lite && big) spawnFxRing(game, x, y - 10, col2, 9);
+  if (lite || !ensureParticleRoom(game, 3)) return;
+  if (!perfFxBudgetAllow(game, 2) || perfFxRoom(game, 'particle') <= 0) return;
+  const stars = big ? 7 : 4;
+  for (let i = 0; i < stars; i++) {
+    if (perfFxRoom(game, 'particle') <= 0) break;
+    const a = (i / stars) * TAU + Math.random() * 0.5;
+    const sp = 35 + Math.random() * (big ? 70 : 45);
+    game.particles.push({
+      x: x + Math.cos(a) * 6,
+      y: y + Math.sin(a) * 4,
+      vx: Math.cos(a) * sp,
+      vy: Math.sin(a) * sp * 0.7 - 55,
+      life: 0.32 + Math.random() * 0.22,
+      maxLife: 0.55,
+      color: i % 2 ? col2 : col,
+      size: (big ? 3.2 : 2.6) + Math.random() * 2.2,
+      kind: 'star',
+      grav: 90,
+    });
+  }
+}
+
 /** Jutsu impact burst — Lite FX capped; scale 'small' for projectile fade-out. */
 function spawnJutsuImpactFx(game, x, y, kind, scale) {
   if (!game || motionReduced()) return;
@@ -14945,6 +14987,7 @@ class Pet {
     this.assistCd = (def.cd || 5) * (petUpgradeBonuses(def.id).cdMul || 1);
     this.size = Math.max(9, Math.round((this.sp?.size || 14) * 0.52));
     this.flashT = 0;
+    this.spawnT = motionReduced() ? 0 : 0.55;
   }
 
   update(dt) {
@@ -14953,6 +14996,7 @@ class Pet {
     if (!p || !p.alive) return;
     this.t += dt;
     if (this.flashT > 0) this.flashT -= dt;
+    if (this.spawnT > 0) this.spawnT = Math.max(0, this.spawnT - dt);
     const bob = Math.sin(this.t * 6) * 2;
     const tx = p.x - p.face * (IS_TOUCH ? 34 : 38);
     const ty = p.y - 6 + bob * 0.25;
@@ -14999,14 +15043,29 @@ class Pet {
 
   draw(c) {
     if (!this.sp) return;
+    const appear = this.spawnT > 0 ? clamp(1 - this.spawnT / 0.55, 0, 1) : 1;
+    const sc = 0.25 + appear * 0.75;
     c.save();
     c.translate(this.x, this.y - this.size * 0.35);
     if (this.face < 0) { c.scale(-1, 1); }
-    c.globalAlpha = 0.94;
+    c.scale(sc, sc);
+    c.globalAlpha = 0.55 + appear * 0.39;
+    if (appear < 1 && !fxLite() && !motionReduced()) {
+      const col = this.sp.c1 || '#7cf5ff';
+      c.save();
+      c.globalAlpha = (1 - appear) * 0.55;
+      c.strokeStyle = col;
+      c.lineWidth = 2;
+      c.beginPath();
+      c.arc(0, 0, this.size * (1.4 + (1 - appear) * 1.8), 0, TAU);
+      c.stroke();
+      c.restore();
+    }
     drawMonsterArt(c, this.sp, this.size, this.t, this.flashT > 0, false);
     c.globalAlpha = 1;
     c.restore();
     c.save();
+    c.globalAlpha = 0.5 + appear * 0.25;
     c.fillStyle = 'rgba(124,245,255,.75)';
     c.beginPath();
     c.arc(this.x, this.y - this.size * 1.15, 2.2, 0, TAU);
@@ -15021,6 +15080,12 @@ function spawnGamePet(game) {
   const def = activePetDef();
   if (!def) return;
   game.pet = new Pet(def, game);
+  const sp = SPECIES[def.speciesId];
+  const col = sp?.c1 || '#7cf5ff';
+  const col2 = sp?.c2 || '#ffffff';
+  if (typeof spawnCompanionSparkles === 'function') {
+    spawnCompanionSparkles(game, game.pet.x, game.pet.y - game.pet.size * 0.6, col, { color2: col2 });
+  }
 }
 
 function applyPetBonusesToPlayer(game, player) {
@@ -15193,6 +15258,7 @@ class EggPet {
     this.y = game.player ? game.player.y - 48 : game.ground - 48;
     this.t = Math.random() * 6;
     this.size = 11;
+    this.spawnT = motionReduced() ? 0 : 0.5;
   }
 
   update(dt) {
@@ -15200,6 +15266,7 @@ class EggPet {
     const p = g.player;
     if (!p || !p.alive) return;
     this.t += dt;
+    if (this.spawnT > 0) this.spawnT = Math.max(0, this.spawnT - dt);
     const bob = Math.sin(this.t * 4.5) * 3;
     const tx = p.x + p.face * (IS_TOUCH ? 26 : 30);
     const ty = p.y - 46 + bob;
@@ -15209,7 +15276,23 @@ class EggPet {
   }
 
   draw(c) {
-    drawEggPetArt(c, this.def, this.size, this.t, this.x, this.y, false);
+    const appear = this.spawnT > 0 ? clamp(1 - this.spawnT / 0.5, 0, 1) : 1;
+    const sc = 0.2 + appear * 0.8;
+    c.save();
+    if (appear < 1 && !fxLite() && !motionReduced()) {
+      const rar = rarityOf(this.def.rarity);
+      c.globalAlpha = (1 - appear) * 0.6;
+      c.strokeStyle = rar.color || '#ffd75e';
+      c.lineWidth = 2;
+      c.beginPath();
+      c.arc(this.x, this.y, this.size * (1.5 + (1 - appear) * 2), 0, TAU);
+      c.stroke();
+    }
+    c.translate(this.x, this.y);
+    c.scale(sc, sc);
+    c.globalAlpha = 0.45 + appear * 0.55;
+    drawEggPetArt(c, this.def, this.size, this.t, 0, 0, false);
+    c.restore();
   }
 }
 
@@ -15219,6 +15302,12 @@ function spawnGameEggPet(game) {
   const def = activeEggPetDef();
   if (!def) return;
   game.eggPet = new EggPet(def, game);
+  const rar = rarityOf(def.rarity);
+  if (typeof spawnCompanionSparkles === 'function') {
+    spawnCompanionSparkles(game, game.eggPet.x, game.eggPet.y, rar.color || def.c1 || '#ffd75e', {
+      color2: def.c1 || '#fff8dc',
+    });
+  }
 }
 /* --- src/render/scenery.js --- */
 /* ============== SCENERY ART — pixel-art lagen (upgrade 1/4) ============ */
@@ -17027,8 +17116,12 @@ class Game {
     this.shake(9, 0.35);
     const px = this.player ? this.player.x : W * 0.5;
     const py = this.player ? this.player.y : this.ground;
-    this.burst(px, py - 70, rar.color, fxLite() ? 14 : 30);
-    this.burst(px, py - 70, '#fff', fxLite() ? 6 : 12);
+    if (typeof spawnCompanionSparkles === 'function') {
+      spawnCompanionSparkles(this, px, py - 70, rar.color, { color2: '#fff8dc', big: true });
+    } else {
+      this.burst(px, py - 70, rar.color, fxLite() ? 14 : 30);
+      this.burst(px, py - 70, '#fff', fxLite() ? 6 : 12);
+    }
     this.banner(t('banner.summon'), 2.2, rar.color, 44);
     setTimeout(() => this.banner(t('banner.summonAscend', { name: weaponLabel(pick), rar: rar.name }), 2.4, rar.color, 30), 1100);
     this.floater(px, py - 130, `${weaponLabel(pick)} ✦ ${rar.name}`, rar.color, 17);
@@ -18728,6 +18821,14 @@ class Game {
         c.beginPath();
         c.arc(pt.x, pt.y, pt.size, 0, TAU);
         c.fill();
+      } else if (pt.kind === 'star') {
+        if (typeof drawStarShape === 'function') {
+          drawStarShape(c, pt.x, pt.y, pt.size, pt.color, true);
+        } else {
+          c.beginPath();
+          c.arc(pt.x, pt.y, pt.size * 0.45, 0, TAU);
+          c.fill();
+        }
       } else {
         c.fillRect(pt.x - pt.size / 2, pt.y - pt.size / 2, pt.size, pt.size);
       }
