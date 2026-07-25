@@ -29,7 +29,7 @@
       color:#fff; z-index:20; pointer-events:auto; touch-action:pan-y; overscroll-behavior:contain; }
   .screen button, .screen .btn, .screen .lvl, .screen .char-card, .screen .hub-tile,
   .screen .island-tab, .screen .tog, .screen .wrow, .screen .style-card,
-  .screen .skill-card, .screen .dex-filter-btn { touch-action:manipulation; }
+  .screen .skill-card, .screen .super-card, .screen .dex-filter-btn { touch-action:manipulation; }
   .screen.active { display:flex; animation: fadeIn .25s ease; }
   @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
   @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.04); } }
@@ -505,12 +505,16 @@
   .skill-preview-foot { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:12px; }
   .skill-preview-lock { font-size:12px; font-weight:800; color:#ffb0b8; }
   .skill-card.preview-hov { outline:2px solid rgba(124,245,255,.45); outline-offset:2px; }
+  .skill-card, .super-card { -webkit-tap-highlight-color:transparent; user-select:none; }
   .skill-super-section { width:min(94vw,680px); margin:0 auto 14px; padding:12px 0 4px; }
   .skill-super-head { font-size:17px; font-weight:900; color:#ffd75e; margin:0 0 4px; letter-spacing:.02em; }
   .skill-super-sub { margin-top:0 !important; margin-bottom:10px !important; font-size:12px; opacity:.88; }
   .super-preview-card { border-color:rgba(255,215,94,.32); background:linear-gradient(165deg,rgba(255,215,94,.1),rgba(0,0,0,.22)); }
-  .super-grid-scroll { max-height:min(22vh,200px); margin-bottom:10px; }
-  .super-grid .super-card { min-height:118px; touch-action:manipulation; }
+  .super-grid-scroll { max-height:min(22vh,200px); margin-bottom:10px; touch-action:pan-y; overscroll-behavior:contain; }
+  .super-grid .super-card { min-height:118px; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+  .skill-preview-card, .super-preview-card { touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+  #skillScreen { overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; touch-action:pan-y; overscroll-behavior:contain; }
+  #skillScreen .char-saga-bar button, #skillScreen .dex-filter-btn, #skillScreen #btnSkillSort { touch-action:manipulation; min-height:44px; }
   .skill-section-divider { width:min(88vw,620px); margin:6px auto 14px; border:none; border-top:1px solid rgba(255,255,255,.1); }
   .skill-card .skill-beh-badge { font-size:9px; font-weight:900; opacity:.75; margin-top:2px; }
   .skill-next-strip { border-color:rgba(255,215,94,.35); background:rgba(255,215,94,.08); }

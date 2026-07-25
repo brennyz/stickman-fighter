@@ -17,6 +17,76 @@ function pickVsRosterId(id) {
   }
 }
 
+function bindCollectionPickGrid(grid, opts) {
+  if (!grid || grid.dataset.sfPickGridBound) return;
+  grid.dataset.sfPickGridBound = '1';
+  const sel = opts.selector;
+  let lastPick = 0;
+  let lastTouchAt = 0;
+  const debounce = opts.debounceMs || 320;
+  const fire = (card) => {
+    if (!card || !card.dataset.id) return;
+    const now = Date.now();
+    if (now - lastPick < debounce) return;
+    lastPick = now;
+    opts.onPick(card, { scrollGesture: !uiTapAllowed() });
+  };
+  grid.addEventListener('click', (e) => {
+    if (Date.now() - lastTouchAt < 480) return;
+    const card = e.target.closest(sel);
+    if (!card) return;
+    fire(card);
+  });
+  grid.addEventListener('touchend', (e) => {
+    const card = touchEndedOnSelector(e, sel);
+    if (!card) return;
+    if (e.cancelable) e.preventDefault();
+    lastTouchAt = Date.now();
+    fire(card);
+  }, { passive: false });
+  grid.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const card = e.target.closest(sel);
+    if (!card || card.classList.contains('locked')) return;
+    e.preventDefault();
+    fire(card);
+  });
+  if (!IS_TOUCH && opts.onHover) {
+    grid.addEventListener('pointerover', (e) => {
+      const card = e.target.closest(sel);
+      if (!card || !card.dataset.id) return;
+      opts.onHover(card.dataset.id);
+    });
+  }
+}
+
+function bindPreviewEquipHost(host, opts) {
+  if (!host || host.dataset.sfEquipHostBound) return;
+  host.dataset.sfEquipHostBound = '1';
+  let lastEquip = 0;
+  let lastTouchAt = 0;
+  const debounce = opts.debounceMs || 320;
+  const runEquip = () => {
+    const now = Date.now();
+    if (now - lastEquip < debounce) return;
+    if (!uiTapAllowed()) return;
+    lastEquip = now;
+    opts.onEquip();
+  };
+  host.addEventListener('click', (e) => {
+    if (Date.now() - lastTouchAt < 480) return;
+    if (!e.target.closest(opts.btnSelector)) return;
+    runEquip();
+  });
+  host.addEventListener('touchend', (e) => {
+    if (!e.target.closest(opts.btnSelector)) return;
+    if (!uiTapAllowed()) return;
+    if (e.cancelable) e.preventDefault();
+    lastTouchAt = Date.now();
+    runEquip();
+  }, { passive: false });
+}
+
 function initSkillScreenChrome() {
   if (window.__sfSkillChrome) return;
   window.__sfSkillChrome = true;
@@ -60,153 +130,55 @@ function initSkillScreenChrome() {
     });
   }
 
-  const previewHost = document.getElementById('skillPreview');
-  if (previewHost && !previewHost.dataset.sfSkillPreviewBound) {
-    previewHost.dataset.sfSkillPreviewBound = '1';
-    let lastEquip = 0;
-    const runEquip = () => {
-      const now = Date.now();
-      if (now - lastEquip < 320) return;
-      lastEquip = now;
-      if (!uiTapAllowed()) return;
-      equipSkill(UI.skillPreviewId);
-    };
-    previewHost.addEventListener('click', (e) => {
-      if (!e.target.closest('#skillEquipBtn')) return;
-      runEquip();
-    });
-    previewHost.addEventListener('touchend', (e) => {
-      if (!e.target.closest('#skillEquipBtn')) return;
-      if (!uiTapAllowed()) return;
-      if (e.cancelable) e.preventDefault();
-      runEquip();
-    }, { passive: false });
-  }
+  bindPreviewEquipHost(document.getElementById('skillPreview'), {
+    btnSelector: '#skillEquipBtn',
+    onEquip: () => equipSkill(UI.skillPreviewId),
+  });
 
-  const grid = document.getElementById('skillGrid');
-  if (grid && !grid.dataset.sfSkillGridBound) {
-    grid.dataset.sfSkillGridBound = '1';
-    let lastPick = 0;
-    const runCard = (card, equip) => {
-      if (!card || !card.dataset.id) return;
-      const now = Date.now();
-      if (now - lastPick < 320) return;
-      lastPick = now;
-      runSkillCard(card, equip);
-    };
-    grid.addEventListener('click', (e) => {
-      const card = e.target.closest('.skill-card');
-      if (!card) return;
-      if (!uiTapAllowed()) {
-        pickSkillPreview(card.dataset.id, true);
-        return;
-      }
-      runCard(card, true);
-    });
-    grid.addEventListener('touchend', (e) => {
-      const card = touchEndedOnSelector(e, '.skill-card');
-      if (!card) return;
-      if (e.cancelable) e.preventDefault();
-      runCard(card, true);
-    }, { passive: false });
-    grid.addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter' && e.key !== ' ') return;
-      const card = e.target.closest('.skill-card');
-      if (!card || card.classList.contains('locked')) return;
-      e.preventDefault();
-      runCard(card, true);
-    });
-    if (!IS_TOUCH) {
-      grid.addEventListener('pointerover', (e) => {
-        const card = e.target.closest('.skill-card');
-        if (!card || !card.dataset.id) return;
-        if (UI.skillPreviewId === card.dataset.id) return;
-        pickSkillPreview(card.dataset.id, true);
-      });
-    }
-  }
+  bindCollectionPickGrid(document.getElementById('skillGrid'), {
+    selector: '.skill-card',
+    onPick: (card, meta) => runSkillCard(card, meta),
+    onHover: (id) => {
+      if (UI.skillPreviewId === id) return;
+      pickSkillPreview(id, true);
+    },
+  });
 
-  const superGrid = document.getElementById('superGrid');
-  if (superGrid && !superGrid.dataset.sfSuperGridBound) {
-    superGrid.dataset.sfSuperGridBound = '1';
-    let lastPick = 0;
-    const runCard = (card, equip) => {
-      if (!card || !card.dataset.id) return;
-      const now = Date.now();
-      if (now - lastPick < 320) return;
-      lastPick = now;
-      runSuperCard(card, equip);
-    };
-    superGrid.addEventListener('click', (e) => {
-      const card = e.target.closest('.super-card');
-      if (!card) return;
-      if (!uiTapAllowed()) {
-        pickSuperPreview(card.dataset.id, true);
-        return;
-      }
-      runCard(card, true);
-    });
-    superGrid.addEventListener('touchend', (e) => {
-      const card = touchEndedOnSelector(e, '.super-card');
-      if (!card) return;
-      if (e.cancelable) e.preventDefault();
-      runCard(card, true);
-    }, { passive: false });
-    superGrid.addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter' && e.key !== ' ') return;
-      const card = e.target.closest('.super-card');
-      if (!card || card.classList.contains('locked')) return;
-      e.preventDefault();
-      runCard(card, true);
-    });
-    if (!IS_TOUCH) {
-      superGrid.addEventListener('pointerover', (e) => {
-        const card = e.target.closest('.super-card');
-        if (!card || !card.dataset.id) return;
-        if (UI.superPreviewId === card.dataset.id) return;
-        pickSuperPreview(card.dataset.id, true);
-      });
-    }
-  }
+  bindCollectionPickGrid(document.getElementById('superGrid'), {
+    selector: '.super-card',
+    onPick: (card, meta) => runSuperCard(card, meta),
+    onHover: (id) => {
+      if (UI.superPreviewId === id) return;
+      pickSuperPreview(id, true);
+    },
+  });
 
-  const superPreviewHost = document.getElementById('superPreview');
-  if (superPreviewHost && !superPreviewHost.dataset.sfSuperPreviewBound) {
-    superPreviewHost.dataset.sfSuperPreviewBound = '1';
-    let lastEquip = 0;
-    const runEquip = () => {
-      const now = Date.now();
-      if (now - lastEquip < 320) return;
-      lastEquip = now;
-      if (!uiTapAllowed()) return;
-      equipSuper(UI.superPreviewId);
-    };
-    superPreviewHost.addEventListener('click', (e) => {
-      if (!e.target.closest('#superEquipBtn')) return;
-      runEquip();
-    });
-    superPreviewHost.addEventListener('touchend', (e) => {
-      if (!e.target.closest('#superEquipBtn')) return;
-      if (!uiTapAllowed()) return;
-      if (e.cancelable) e.preventDefault();
-      runEquip();
-    }, { passive: false });
-  }
+  bindPreviewEquipHost(document.getElementById('superPreview'), {
+    btnSelector: '#superEquipBtn',
+    onEquip: () => equipSuper(UI.superPreviewId),
+  });
 }
 
 function equipSkill(id) {
-  if (!id || !uiTapAllowed()) return;
+  if (!id || !uiTapAllowed() || UI._skillEquipBusy) return;
   const sk = skillById(id);
   if (!skillUnlocked(sk)) return;
   if (save.skill === id) return;
-  safeUiAction(() => {
-    save.skill = id;
-    if (!persistOrToast('skill')) return;
-    AudioSys.sfx(skillSfxId(sk));
-    UI.renderSkills();
-    UI.renderMenu();
-    UI.renderModeHub();
-    UI.toast(t('toast.skillEquipped', { name: skillLabel(sk) }), 2200);
-  }, 'pickSkill/' + id, 'Skill kiezen mislukt');
+  UI._skillEquipBusy = true;
+  try {
+    safeUiAction(() => {
+      save.skill = id;
+      if (!persistOrToast('skill')) return;
+      AudioSys.sfx(skillSfxId(sk));
+      UI.renderSkills();
+      UI.renderMenu();
+      UI.renderModeHub();
+      UI.toast(t('toast.skillEquipped', { name: skillLabel(sk) }), 2200);
+      UI._skillArmId = null;
+    }, 'pickSkill/' + id, 'Skill kiezen mislukt');
+  } finally {
+    UI._skillEquipBusy = false;
+  }
 }
 
 function pickSuperPreview(id, silent) {
@@ -220,35 +192,63 @@ function pickSuperPreview(id, silent) {
 }
 
 function equipSuper(id) {
-  if (!id || !uiTapAllowed()) return;
+  if (!id || !uiTapAllowed() || UI._superEquipBusy) return;
   const sp = superById(id);
   if (!superUnlocked(sp)) return;
   if (save.super === id) return;
-  safeUiAction(() => {
-    save.super = id;
-    if (!persistOrToast('super')) return;
-    AudioSys.sfx(superSfxId(sp, 'finish'));
-    UI.renderSkills();
-    UI.renderMenu();
-    UI.renderModeHub();
-    UI.toast(t('toast.superEquipped', { name: superLabel(sp) }), 2200);
-  }, 'pickSuper/' + id, 'Super kiezen mislukt');
+  UI._superEquipBusy = true;
+  try {
+    safeUiAction(() => {
+      save.super = id;
+      if (!persistOrToast('super')) return;
+      AudioSys.sfx(superSfxId(sp, 'finish'));
+      UI.renderSkills();
+      UI.renderMenu();
+      UI.renderModeHub();
+      UI.toast(t('toast.superEquipped', { name: superLabel(sp) }), 2200);
+      UI._superArmId = null;
+    }, 'pickSuper/' + id, 'Super kiezen mislukt');
+  } finally {
+    UI._superEquipBusy = false;
+  }
 }
 
-function runSuperCard(card, equip) {
+function playSkillPreviewSfx(id) {
+  const now = Date.now();
+  if (now - (UI._skillPreviewSfxT || 0) <= 420) return;
+  UI._skillPreviewSfxT = now;
+  try { AudioSys.init(); AudioSys.sfx(id); } catch (_) {}
+}
+
+function playSuperPreviewSfx(sp) {
+  const now = Date.now();
+  if (now - (UI._superPreviewSfxT || 0) <= 420) return;
+  UI._superPreviewSfxT = now;
+  try { AudioSys.init(); AudioSys.sfx(superSfxId(sp, 'charge')); } catch (_) {}
+}
+
+function runSuperCard(card, meta) {
   if (!card || !card.dataset.id) return;
   const id = card.dataset.id;
   const sp = superById(id);
+  const now = Date.now();
   pickSuperPreview(id, true);
-  if (equip && superUnlocked(sp)) {
+  if (meta && meta.scrollGesture) {
+    playSuperPreviewSfx(sp);
+    return;
+  }
+  if (!superUnlocked(sp)) {
+    playSuperPreviewSfx(sp);
+    return;
+  }
+  const armed = UI._superArmId === id && (now - (UI._superArmT || 0)) < 520;
+  UI._superArmId = id;
+  UI._superArmT = now;
+  if (armed && save.super !== id) {
     equipSuper(id);
     return;
   }
-  const now = Date.now();
-  if (now - (UI._superPreviewSfxT || 0) > 420) {
-    UI._superPreviewSfxT = now;
-    try { AudioSys.init(); AudioSys.sfx(superSfxId(sp, 'charge')); } catch (_) {}
-  }
+  playSuperPreviewSfx(sp);
 }
 
 function updateSuperPreview() {
@@ -380,7 +380,7 @@ function renderSupers() {
     sub.style.fontWeight = '600';
     sub.style.opacity = '0.75';
     sub.style.marginTop = '4px';
-    sub.textContent = ok ? (save.super === sp.id ? t('ui.superActive') : t('ui.superPick'))
+      sub.textContent = ok ? (save.super === sp.id ? t('ui.superActive') : t('ui.superPickHint'))
       : (superSkillGated(sp) ? t('ui.superIslandGate', { lvl: sp.needLvl }) : superLabel(sp, 'hint'));
     el.setAttribute('role', 'button');
     el.tabIndex = ok ? 0 : -1;
@@ -389,20 +389,28 @@ function renderSupers() {
   }
 }
 
-function runSkillCard(card, equip) {
+function runSkillCard(card, meta) {
   if (!card || !card.dataset.id) return;
   const id = card.dataset.id;
   const sk = skillById(id);
+  const now = Date.now();
   pickSkillPreview(id, true);
-  if (equip && skillUnlocked(sk)) {
+  if (meta && meta.scrollGesture) {
+    playSkillPreviewSfx(id);
+    return;
+  }
+  if (!skillUnlocked(sk)) {
+    playSkillPreviewSfx(id);
+    return;
+  }
+  const armed = UI._skillArmId === id && (now - (UI._skillArmT || 0)) < 520;
+  UI._skillArmId = id;
+  UI._skillArmT = now;
+  if (armed && save.skill !== id) {
     equipSkill(id);
     return;
   }
-  const now = Date.now();
-  if (now - (UI._skillPreviewSfxT || 0) > 420) {
-    UI._skillPreviewSfxT = now;
-    try { AudioSys.init(); AudioSys.sfx(id); } catch (_) {}
-  }
+  playSkillPreviewSfx(id);
 }
 
 function updateSkillPreview() {
@@ -2472,7 +2480,7 @@ const UI = {
       sub.style.fontWeight = '600';
       sub.style.opacity = '0.75';
       sub.style.marginTop = '4px';
-      sub.textContent = ok ? (save.skill === sk.id ? t('ui.skillActive') : t('ui.skillPick'))
+      sub.textContent = ok ? (save.skill === sk.id ? t('ui.skillActive') : t('ui.skillPickHint'))
         : (skillSkillGated(sk) ? t('ui.skillIslandGate', { lvl: sk.needLvl }) : skillLabel(sk, 'hint'));
       el.setAttribute('role', 'button');
       el.tabIndex = ok ? 0 : -1;
@@ -2480,8 +2488,12 @@ const UI = {
       grid.appendChild(el);
     }
     requestAnimationFrame(() => {
+      const fKey = (UI.skillSagaFilter || 'all') + '|' + (UI.skillBehaviorFilter || 'all') + '|' + (UI.skillSortMode || 'level');
+      const shouldScroll = UI._skillScrollFilterKey !== fKey;
+      UI._skillScrollFilterKey = fKey;
+      if (!shouldScroll) return;
       const pick = grid.querySelector('.skill-card.preview-hov, .skill-card.sel');
-      if (pick) pick.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      if (pick) pick.scrollIntoView({ block: 'nearest', behavior: IS_TOUCH ? 'auto' : 'smooth' });
     });
   },
 
