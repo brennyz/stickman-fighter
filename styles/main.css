@@ -1025,7 +1025,7 @@
   .lvl-wave-dot.trait-fly { background:rgba(196,122,255,.88); box-shadow:0 0 3px rgba(196,122,255,.4); }
   .lvl-wave-dot.trait-rush { background:rgba(255,176,106,.92); }
   .lvl-wave-dot.trait-elite { background:rgba(255,176,184,.92); box-shadow:0 0 3px rgba(255,138,154,.35); }
-  .lvl-stars { display:block; font-size:11px; color:#ffd75e; letter-spacing:1px; margin-top:3px; }
+  .lvl-stars { display:flex; justify-content:center; gap:1px; flex-wrap:nowrap; font-size:11px; color:#ffd75e; margin-top:3px; }
   .lvl-fails { position:absolute; top:6px; right:8px; font-size:10px; font-weight:800; color:#ffb0b8; opacity:.9; }
   .lvl-master { display:block; font-size:10px; font-weight:800; color:#c47aff; margin-top:2px; letter-spacing:.04em; }
   .lvl.master-buff:not(.locked) { outline:2px solid rgba(196,122,255,.75); box-shadow:0 0 10px rgba(196,122,255,.25), 0 5px 0 rgba(0,0,0,.35); }
@@ -1042,7 +1042,7 @@
   .island-info { width:min(92vw,640px); text-align:left; font-size:13px; color:#9db1e3; margin:0 0 12px; line-height:1.45;
       background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:16px; padding:12px 14px; }
   .island-info-head { display:flex; align-items:center; gap:12px; }
-  .island-info-ico svg { width:36px; height:36px; display:block; }
+  .island-info-ico svg, .island-info-ico img { width:36px; height:36px; display:block; }
   .island-info-sub { font-size:12px; margin-top:4px; opacity:.92; }
   .island-info-prog { margin-top:10px; height:7px; }
   .island-info-chips { margin-top:8px; display:flex; flex-wrap:wrap; gap:6px; }
@@ -1055,8 +1055,22 @@
   .stars-big.stars-improved { color:#ffd75e; }
   .stars-big .stars-delta { display:block; font-size:14px; font-weight:800; color:#7cfc8a; margin-top:4px; letter-spacing:0; }
   .stars-big.stars-perfect { text-shadow:0 0 12px rgba(255,215,94,.45); }
+
+  /* assets/ui file icons */
+  .ui-ico { display:inline-block; vertical-align:-0.2em; width:1.15em; height:1.15em; object-fit:contain; flex:0 0 auto; }
+  .ui-ico--ach { width:1.25em; height:1.25em; margin-right:3px; }
+  .ui-ico--saga { width:1.05em; height:1.05em; margin-right:3px; vertical-align:-0.18em; }
+  .ui-ico--star { width:14px; height:14px; margin:0 1px; vertical-align:-1px; }
+  .ui-ico--pause { display:block; width:22px; height:22px; margin:0 auto; }
+  .ui-ico--island { width:28px; height:28px; display:block; }
+  .stars-big { display:flex; justify-content:center; align-items:center; gap:4px; flex-wrap:wrap; }
+  .stars-big .ui-ico--star { width:28px; height:28px; }
+  .back-ico { display:inline-flex; margin-right:4px; vertical-align:-0.2em; }
+  .back-ico img { width:1.1em; height:1.1em; }
+  #pauseBtn { line-height:0; }
+
   .island-tab-ico { line-height:0; margin-bottom:2px; }
-  .island-tab-ico svg { width:28px; height:28px; display:block; }
+  .island-tab-ico svg, .island-tab-ico img { width:28px; height:28px; display:block; }
   .island-tab-prog { margin-top:6px; max-width:100%; }
   .island-help-btn { position:absolute; top:max(12px, env(safe-area-inset-top)); right:max(12px, env(safe-area-inset-right));
       width:44px; height:44px; min-height:44px; padding:0; border-radius:50%; font-size:20px; font-weight:900;
@@ -1067,7 +1081,7 @@
   .help-island-row { display:flex; gap:10px; align-items:flex-start; padding:8px 10px; border-radius:12px; background:rgba(0,0,0,.2); }
   .help-island-row.cur { outline:1px solid rgba(124,245,255,.45); }
   .help-island-row.locked { opacity:.55; }
-  .help-island-ico svg { width:32px; height:32px; display:block; flex:0 0 auto; }
+  .help-island-ico svg, .help-island-ico img { width:32px; height:32px; display:block; flex:0 0 auto; }
   .help-island-body { flex:1; min-width:0; font-size:13px; }
   .help-island-sub { font-size:11px; opacity:.85; margin-top:3px; margin-bottom:6px; }
   .island-grid { grid-template-columns:repeat(5, minmax(56px, 1fr)); max-width:min(92vw, 520px); }
@@ -1119,6 +1133,7 @@
   body.big-touch #pauseBtn { width:56px; height:56px; font-size:20px; }
   body.big-touch #pauseBtn::before { inset:-18px; }
   #pauseBtn.show { display:block; }
+  #pauseBtn img { display:block; margin:10px auto 0; width:22px; height:22px; pointer-events:none; }
   /* Boven canvas (z40) tijdens gevecht — anders verdwijnt pauze onder het speelveld */
   body.is-playing #pauseBtn.show {
     z-index:50 !important; display:block !important; pointer-events:auto !important;

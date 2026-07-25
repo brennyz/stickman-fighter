@@ -136,7 +136,10 @@ houd kleuren/stroke volgens ASSET-STYLE, geen emoji, daarna build+smoke.
 
 | Set | Locatie nu | Doelmap |
 |-----|------------|---------|
-| Hub tiles (4) | `index.html` `.hub-tile-ico` inline SVG | `assets/buttons/hub/` |
+| Hub tiles (4) | `index.html` `.hub-tile-ico` file SVG | `assets/buttons/hub/` |
+| Mode-rijen | `index.html` collect/arcade | `assets/buttons/modes/` |
+| Chrome (home/claim/…) | `index.html` toggles + bars | `assets/buttons/chrome/` |
+| Saga / eilanden / prestaties / sterren | `index.html` + `src/ui/ui.js` + `versus.js` | `assets/ui/` |
 | Mode-rijen | `index.html` `.mode-btn .ico` inline SVG | `assets/buttons/modes/` |
 | Terug / home | `index.html` `.sub-home-btn` / `.back-btn` | `assets/buttons/chrome/` |
 | Missies claim / bonus | `index.html` `#dailyClaimAllBtn` e.d. | `assets/buttons/chrome/` |

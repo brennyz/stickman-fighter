@@ -65,4 +65,41 @@ const svgCount = fs.readdirSync(path.join(root, 'assets/buttons/hub')).filter((f
   + fs.readdirSync(path.join(root, 'assets/buttons/chrome')).filter((f) => f.endsWith('.svg')).length;
 must(svgCount >= 40, `expected ≥40 button SVGs, got ${svgCount}`);
 
-console.log(`SMOKE_OK menu + ${svgCount} button SVGs wired & precached`);
+
+// assets/ui — saga / islands / ach / chrome helpers
+const uiRoot = path.join(root, 'assets/ui');
+must(fs.existsSync(uiRoot), 'missing assets/ui');
+const saga = ['all', 'fighter', 'ki', 'scroll', 'tide', 'cape', 'dawn'];
+for (const name of saga) {
+  const rel = `assets/ui/saga/${name}.svg`;
+  must(fs.existsSync(path.join(root, rel)), `missing ${rel}`);
+  must(html.includes(rel), `index.html missing saga ${rel}`);
+  must(sw.includes(`./${rel}`) || sw.includes(rel), `sw missing ${rel}`);
+}
+const islands = ['east', 'fire', 'neon', 'temple', 'finale'];
+for (const name of islands) {
+  const rel = `assets/ui/islands/${name}.svg`;
+  must(fs.existsSync(path.join(root, rel)), `missing ${rel}`);
+  must(storage.includes(rel), `storage.js missing island ${rel}`);
+  must(sw.includes(`./${rel}`) || sw.includes(rel), `sw missing ${rel}`);
+}
+for (const name of ['lock', 'check', 'star', 'star-empty', 'pause', 'dice-d20', 'coin']) {
+  const rel = `assets/ui/${name}.svg`;
+  must(fs.existsSync(path.join(root, rel)), `missing ${rel}`);
+  must(sw.includes(`./${rel}`) || sw.includes(rel), `sw missing ${rel}`);
+}
+must(html.includes('assets/ui/pause.svg'), 'pauseBtn should use pause.svg');
+must(html.includes('assets/ui/dice-d20.svg'), 'btnD20Roll should use dice-d20.svg');
+must(html.includes('assets/buttons/chrome/back.svg'), 'back buttons should use back.svg');
+must(html.includes('assets/buttons/chrome/swap.svg'), 'swap should use swap.svg');
+must(!/<div class="char-saga-bar" id="charSagaBar"[\s\S]*?<svg /.test(html), 'charSagaBar still has inline SVG');
+const uiJs = fs.readFileSync(path.join(root, 'src/ui/ui.js'), 'utf8');
+must(/function achIconSvg/.test(uiJs) && /assets\/ui\/ach\//.test(uiJs), 'achIconSvg should load assets/ui/ach');
+must(/function islandIconHtml/.test(uiJs), 'missing islandIconHtml');
+must(/function starGlyphs/.test(uiJs), 'missing starGlyphs');
+const vsJs = fs.readFileSync(path.join(root, 'src/systems/versus.js'), 'utf8');
+must(/assets\/ui\/saga\//.test(vsJs), 'sagaIconSvg should load assets/ui/saga');
+const achCount = fs.readdirSync(path.join(root, 'assets/ui/ach')).filter((f) => f.endsWith('.svg')).length;
+must(achCount >= 20, `expected ≥20 ach SVGs, got ${achCount}`);
+
+console.log(`SMOKE_OK menu + ${svgCount} button SVGs + ${achCount} ach SVGs wired & precached`);
