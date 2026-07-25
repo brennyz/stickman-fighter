@@ -135,9 +135,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.85';
+const APP_VERSION = '1.17.86';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 203;
+const SW_CACHE_REV = 204;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -1036,7 +1036,7 @@ const I18N = {
       weapons: 'Wapens', weaponsSub: '26 wapens · summon ascends',
       pets: 'Pets', petsSub: 'Mats coins · dex temmen · ei arcade',
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
-      dex: 'Monsterboek', dexSub: '114 soorten · rariteit = HP',
+      dex: 'Monsterboek', dexSub: '126 soorten · rariteit = HP',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
     },
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Mats · munten' },
@@ -1101,7 +1101,7 @@ const I18N = {
       weapons: 'Weapons', weaponsSub: '26 weapons · summon ascends',
       pets: 'Pets', petsSub: 'Mats coins · dex tame · egg arcade',
       style: 'Style', styleSub: 'Bandana & outfit unlocks',
-      dex: 'Monster book', dexSub: '114 species · rarity = HP',
+      dex: 'Monster book', dexSub: '126 species · rarity = HP',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
     },
     modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Mats · coins' },
@@ -1166,7 +1166,7 @@ const I18N = {
       weapons: 'Waffen', weaponsSub: '26 Waffen · Summons',
       pets: 'Pets', petsSub: 'Mats-Coins · Dex zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
-      dex: 'Monsterbuch', dexSub: '114 Arten · Seltenheit = HP',
+      dex: 'Monsterbuch', dexSub: '126 Arten · Seltenheit = HP',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
     },
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Mats · Münzen' },
@@ -1224,7 +1224,7 @@ const I18N = {
       weapons: 'Armes', weaponsSub: '26 armes · invocations',
       pets: 'Pets', petsSub: 'Pièces Mats · dex · œufs',
       style: 'Style', styleSub: 'Déblocages tenues',
-      dex: 'Bestiaire', dexSub: '114 espèces · rareté = PV',
+      dex: 'Bestiaire', dexSub: '126 espèces · rareté = PV',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
     },
     modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Mats · pièces' },
@@ -1282,7 +1282,7 @@ const I18N = {
       weapons: 'Armas', weaponsSub: '26 armas · invocaciones',
       pets: 'Pets', petsSub: 'Monedas Mats · dex · huevos',
       style: 'Estilo', styleSub: 'Desbloqueos de outfit',
-      dex: 'Bestiario', dexSub: '114 especies · rareza = HP',
+      dex: 'Bestiario', dexSub: '126 especies · rareza = HP',
       modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
     },
     modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Mats · monedas' },
@@ -5614,6 +5614,21 @@ const SPECIES = {
     chaoswyrm: { name: 'Chaoswyrm', art: 'dragon', size: 32, hp: 225, dmg: 22, speed: 88, type: 'dragon', xp: 42, rarity: 'legendary', c1: '#b06ae0', c2: '#5a2080' },
     prismewyrm: { name: 'Prismewyrm', art: 'dragon', size: 33, hp: 240, dmg: 23, speed: 90, type: 'dragon', xp: 48, rarity: 'legendary', c1: '#7cf5ff', c2: '#ff6b9d' },
     apexwyrm: { name: 'Apexwyrm', art: 'dragon', size: 35, hp: 285, dmg: 25, speed: 95, type: 'dragon', xp: 58, rarity: 'mythic', c1: '#ffe259', c2: '#e04f4f' },
+  /* --- Tide zee-expansie: haaien & octo's --- */
+  rifhaai: { name: 'Rifhaai', art: 'shark', size: 18, hp: 34, dmg: 8, speed: 118, type: 'swim', xp: 10, rarity: 'common', c1: '#6a9fc8', c2: '#2a5080' },
+  snelvin: { name: 'Snelvin', art: 'shark', size: 17, hp: 32, dmg: 7, speed: 128, type: 'swim', xp: 11, rarity: 'common', c1: '#8fb8d8', c2: '#3a6088' },
+  hamerkop: { name: 'Hamerkop', art: 'shark', size: 19, hp: 42, dmg: 10, speed: 105, type: 'swim', xp: 13, rarity: 'uncommon', c1: '#7aa8cf', c2: '#2f6088' },
+  tijvin: { name: 'Tijvin', art: 'shark', size: 20, hp: 52, dmg: 12, speed: 115, type: 'swim', xp: 17, rarity: 'rare', c1: '#5a8fd4', c2: '#1a4080' },
+  neonhaai: { name: 'Neonhaai', art: 'shark', size: 22, hp: 68, dmg: 14, speed: 120, type: 'swim', xp: 26, rarity: 'epic', c1: '#7cf5ff', c2: '#2a7fc0' },
+  abysshaai: { name: 'Abysshaai', art: 'shark', size: 24, hp: 95, dmg: 16, speed: 122, type: 'swim', xp: 38, rarity: 'legendary', c1: '#2a5080', c2: '#0a1830' },
+  levihaai: { name: 'Levihaai', art: 'shark', size: 26, hp: 120, dmg: 18, speed: 108, type: 'swim', xp: 52, rarity: 'mythic', c1: '#4a9fff', c2: '#0a2040' },
+  octo: { name: 'Octo', art: 'octo', size: 16, hp: 30, dmg: 6, speed: 52, type: 'swim', xp: 9, rarity: 'common', c1: '#c47aff', c2: '#5a2080' },
+  inktvissie: { name: 'Inktvissie', art: 'octo', size: 17, hp: 36, dmg: 7, speed: 48, type: 'swim', xp: 11, rarity: 'uncommon', c1: '#b06ae0', c2: '#4a1870' },
+  koraalocto: { name: 'Koraalocto', art: 'octo', size: 18, hp: 44, dmg: 9, speed: 50, type: 'swim', xp: 14, rarity: 'uncommon', c1: '#ff9ad5', c2: '#8a3060' },
+  dieptocto: { name: 'Dieptocto', art: 'octo', size: 19, hp: 58, dmg: 11, speed: 46, type: 'swim', xp: 20, rarity: 'rare', c1: '#6b5cff', c2: '#2e2266' },
+  stormocto: { name: 'Stormocto', art: 'octo', size: 21, hp: 72, dmg: 13, speed: 54, type: 'swim', xp: 28, rarity: 'epic', c1: '#7cf5ff', c2: '#2a7fc0' },
+  krakenling: { name: 'Krakenling', art: 'octo', size: 28, hp: 155, dmg: 17, speed: 42, type: 'swim', xp: 48, rarity: 'legendary', c1: '#2a1840', c2: '#6ee06e' },
+  voidocto: { name: 'Voidocto', art: 'octo', size: 24, hp: 98, dmg: 15, speed: 50, type: 'swim', xp: 42, rarity: 'mythic', c1: '#5a1040', c2: '#ff6b9d' },
 };
 const SPECIES_ORDER = Object.keys(SPECIES).sort((a, b) =>
   (rarityOf(SPECIES[a].rarity).order - rarityOf(SPECIES[b].rarity).order) || SPECIES[a].name.localeCompare(SPECIES[b].name)
@@ -5645,9 +5660,10 @@ const UNLOCK_AT = {
   obsidianaut: 33, titanbonk: 34, zeewyrm: 36, voidsly: 38, neondrake: 40,
   etherwyrm: 43, omegadrake: 46,
   kleiply: 1, spinbub: 2, hongerly: 4, parelsly: 6, modderblob: 4, crystalbub: 6, chaosly: 8, zwerm: 10, karmijnvleerm: 7, echovleerm: 9, spiegelvleerm: 11, voidvleerm: 13, duskwing: 11, glimwing: 13, bronzenstek: 15, koperstek: 17, froststek: 14, kolossstek: 16, thornox: 18, spineclaw: 20, quillfang: 18, spookvlam: 20, koudspook: 22, spiraalgeest: 24, wispgeest: 21, nexusgeest: 23, mistwraith: 25, palewraith: 27, olieblik: 25, batterijkan: 27, schrootblik: 29, turboblok: 30, ionkan: 28, quantumkan: 30, omegacan: 32, zilvervos: 34, maanvos: 32, jadevos: 34, stellarvos: 36, kosmischvos: 37, emberfox: 35, shadowfox: 37, leisteen: 39, marmerbonk: 41, koraalbonk: 39, barnsteen: 41, adamantbonk: 43, basaltbonk: 44, titanrock: 42, mistwyrm: 44, sandwyrm: 46, frostwyrm: 48, chaoswyrm: 46, prismewyrm: 48, apexwyrm: 50,
+  rifhaai: 8, snelvin: 9, octo: 8, inktvissie: 10, hamerkop: 12, koraalocto: 14, tijvin: 16, dieptocto: 18, stormocto: 22, neonhaai: 24, abysshaai: 32, krakenling: 38, levihaai: 44, voidocto: 40,
 
 };
-/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (114 soorten). */
+/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (126 soorten). */
 const ADVENTURE_HORDE_MUL = 6;
 const ADVENTURE_HORDE_MAX_PER_WAVE = 36;
 const ADVENTURE_MAX_ALIVE = IS_TOUCH ? 54 : 78;
@@ -5656,6 +5672,23 @@ const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
 const GIANT_DMG_MUL = 1.14;
 const GIANT_XP_MUL = 1.3;
+
+const SEA_ARTS = new Set(['shark', 'octo']);
+
+function seaSpeciesPool(levelN, maxRarityOrder) {
+  return Object.keys(UNLOCK_AT).filter((id) => {
+    const sp = SPECIES[id];
+    if (!sp || !SEA_ARTS.has(sp.art)) return false;
+    if (UNLOCK_AT[id] > levelN) return false;
+    return rarityOf(sp.rarity).order <= maxRarityOrder;
+  });
+}
+
+function tideWaveSeaPick(seaPool, levelN, maxRarityOrder) {
+  if (!seaPool || !seaPool.length) return null;
+  return weightedPick(seaPool, levelN);
+}
+
 /** Nood-ontsnapping als je omringd / stunlocked bent — tik midden-KETS! */
 const KETSBAM_DETECT_R = 148;
 const KETSBAM_NEAR_MIN = 3;
@@ -5796,6 +5829,12 @@ function buildLevel(n) {
       meta.trait = 'tide';
       meta.spawnMul = 0.84;
       meta.label = 'tide';
+      const seaPool = seaSpeciesPool(n, maxRarity);
+      if (seaPool.length) {
+        for (let i = 0; i < list.length; i++) {
+          if (Math.random() < 0.58) list[i].sp = tideWaveSeaPick(seaPool, n, maxRarity);
+        }
+      }
     } else if (n >= 7 && roll < 0.54) {
       const sp = weightedPick(pool, n);
       list.push({ sp, elite: true, giant: rollWaveGiant(n, true) });
@@ -5981,13 +6020,24 @@ function applyGambleToStage(game, g) {
     game.stageHealBetween = (ally.healBetweenWaves || 0) * pot;
     game.stageShieldPerWave = (ally.shieldStart || 0) * pot;
     game.stageCritBonus = (ally.critBonus || 0) * pot;
-    if (ally.id === 'tide' && game.level && game.level.waveMeta) {
+    if (ally.id === 'tide' && game.level && game.level.waveMeta && game.level.waves) {
       const slots = game.level.waveMeta.map((m, i) => ({ m, i })).filter((x) => x.m.trait !== 'boss');
       if (slots.length) {
         const pick = slots[Math.floor(Math.random() * slots.length)];
         pick.m.trait = 'tide';
         pick.m.spawnMul = Math.min(pick.m.spawnMul || 1, 0.82);
         pick.m.label = 'tide';
+        const maxOrd = rarityOf(game.level.rarityCap || 'mythic').order;
+        const seaPool = seaSpeciesPool(game.level.n, maxOrd);
+        const wave = game.level.waves[pick.i];
+        if (seaPool.length && wave) {
+          for (let j = 0; j < wave.length; j++) {
+            if (Math.random() < 0.62) {
+              const sp = tideWaveSeaPick(seaPool, game.level.n, maxOrd);
+              if (sp) wave[j].sp = sp;
+            }
+          }
+        }
       }
     }
   }
@@ -11026,6 +11076,7 @@ class Monster {
     this.speed = sp.speed;
     this.x = x;
     this.flying = sp.type === 'fly' || sp.type === 'dragon';
+    this.swimming = sp.type === 'swim';
     this.y = this.flying ? game.ground - rand(90, 160) : game.ground - this.size;
     this.vx = 0; this.vy = 0;
     this.t = rand(0, 10); this.flashT = 0; this.deadT = -1;
@@ -11118,6 +11169,39 @@ class Monster {
           vx: Math.cos(a) * 260, vy: Math.sin(a) * 260, r: 10, dmg: this.dmg, from: 'enemy', kind: 'fire', grav: 60 });
         AudioSys.sfx('roar');
       }
+    } else if (type === 'swim') {
+      const bob = Math.sin(this.t * 3.4) * 6;
+      this.y = game.ground - this.size + bob;
+      if (this.sp.art === 'shark') {
+        if (this.dashT > 0) {
+          this.dashT -= dt;
+          this.x += this.vx * dt;
+        } else if (this.telegraphT > 0) {
+          this.telegraphT -= dt;
+          if (this.telegraphT <= 0) {
+            this.dashT = 0.42;
+            this.vx = dir * this.speed * spdMul * 3.9;
+            try { AudioSys.sfx('swing'); } catch (_) {}
+          }
+        } else {
+          this.x += dir * this.speed * spdMul * dt * 0.78;
+          if (dist < 230 && this.atkCD <= 0) {
+            this.telegraphT = this.enraged ? 0.2 : 0.36;
+            this.atkCD = rand(1.35, 2.1) / (this.enraged ? 1.25 : 1);
+          }
+        }
+      } else {
+        if (dist < 200) this.x -= dir * this.speed * spdMul * dt * 0.45;
+        else if (dist > 340) this.x += dir * this.speed * spdMul * dt * 0.65;
+        if (this.shootCD <= 0 && dist < 540) {
+          this.shootCD = rand(1.9, 2.8);
+          game.spawnProjectile({
+            x: this.x + dir * this.size, y: this.y - 8,
+            vx: dir * 250, vy: rand(-50, 50), r: 9, dmg: this.dmg, from: 'enemy', kind: 'ink',
+          });
+          try { AudioSys.sfx('shoot'); } catch (_) {}
+        }
+      }
     }
     this.x = clamp(this.x, game.minX - 20, game.maxX + 20);
 
@@ -11178,7 +11262,7 @@ class Monster {
       c.scale(1 + k * 0.6, Math.max(0.05, 1 - k));
     }
     // schaduw
-    if (!this.flying) {
+    if (!this.flying && !this.swimming) {
       c.save(); c.fillStyle = 'rgba(0,0,0,.28)';
       c.beginPath(); c.ellipse(0, this.size - 2, this.size, this.size * 0.24, 0, 0, TAU); c.fill(); c.restore();
     }
@@ -11380,6 +11464,72 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
       c.fillStyle = '#ffe9c9';
       c.beginPath(); c.moveTo(-r * 0.75, -r * 1.05); c.lineTo(-r * 0.65, -r * 1.5); c.lineTo(-r * 0.5, -r * 1.0); c.closePath(); c.fill();
       eye(-r * 1.0, -r * 0.85, r * 0.13);
+      break;
+    }
+    case 'shark': {
+      const wag = Math.sin(t * 5.5) * 0.12;
+      c.fillStyle = body;
+      c.beginPath();
+      c.ellipse(0, 0, r * 1.15, r * 0.62, wag, 0, TAU);
+      c.fill();
+      c.fillStyle = dark;
+      c.beginPath();
+      c.moveTo(0, -r * 0.72);
+      c.lineTo(r * 0.08, -r * 1.15);
+      c.lineTo(r * 0.22, -r * 0.55);
+      c.closePath();
+      c.fill();
+      c.fillStyle = body;
+      c.beginPath();
+      c.moveTo(r * 0.95, 0);
+      c.quadraticCurveTo(r * 1.55, r * 0.35 + Math.sin(t * 4) * r * 0.08, r * 1.35, -r * 0.15);
+      c.lineTo(r * 0.75, 0);
+      c.closePath();
+      c.fill();
+      if (sp.name === 'Hamerkop') {
+        c.fillStyle = dark;
+        c.beginPath();
+        c.ellipse(-r * 0.15, -r * 0.55, r * 0.55, r * 0.18, 0, 0, TAU);
+        c.fill();
+      }
+      c.fillStyle = 'rgba(255,255,255,.28)';
+      c.beginPath();
+      c.ellipse(-r * 0.35, -r * 0.12, r * 0.42, r * 0.14, -0.2, 0, TAU);
+      c.fill();
+      eye(-r * 0.55, -r * 0.08, r * 0.16);
+      c.strokeStyle = dark;
+      c.lineWidth = 1.5;
+      for (const gx of [-0.28, -0.12]) {
+        c.beginPath();
+        c.moveTo(r * gx, -r * 0.05);
+        c.lineTo(r * (gx - 0.08), r * 0.12);
+        c.stroke();
+      }
+      break;
+    }
+    case 'octo': {
+      c.fillStyle = body;
+      c.beginPath();
+      c.arc(-r * 0.1, -r * 0.15, r * 0.82, 0, TAU);
+      c.fill();
+      c.fillStyle = dark;
+      for (let i = 0; i < 8; i++) {
+        const baseA = Math.PI * 0.35 + (i / 7) * Math.PI * 1.35;
+        const len = r * (1.05 + (i % 2) * 0.12);
+        const wob = Math.sin(t * 4 + i * 1.1) * r * 0.14;
+        const x0 = Math.cos(baseA) * r * 0.55;
+        const y0 = Math.sin(baseA) * r * 0.55;
+        const x1 = Math.cos(baseA) * len + wob;
+        const y1 = Math.sin(baseA) * len + r * 0.35;
+        c.lineWidth = r * 0.14;
+        c.lineCap = 'round';
+        c.beginPath();
+        c.moveTo(x0, y0);
+        c.quadraticCurveTo(x0 + wob, (y0 + y1) * 0.55, x1, y1);
+        c.stroke();
+      }
+      eye(-r * 0.35, -r * 0.28, r * 0.22);
+      if (r >= 20) eye(r * 0.05, -r * 0.22, r * 0.14);
       break;
     }
   }
@@ -14312,6 +14462,11 @@ class Game {
       } else if (p.kind === 'orb') {
         c.fillStyle = 'rgba(180,140,255,.9)';
         c.beginPath(); c.arc(p.x, p.y, p.r, 0, TAU); c.fill();
+      } else if (p.kind === 'ink') {
+        c.fillStyle = 'rgba(42,24,64,.88)';
+        c.beginPath(); c.arc(p.x, p.y, p.r, 0, TAU); c.fill();
+        c.fillStyle = 'rgba(180,120,255,.55)';
+        c.beginPath(); c.arc(p.x - p.vx * 0.012, p.y - p.vy * 0.012, p.r * 0.55, 0, TAU); c.fill();
       } else { // laser / robolaser
         c.strokeStyle = p.kind === 'robolaser' ? '#ff5d5d' : '#7cf5ff'; c.lineWidth = 5; c.lineCap = 'round';
         c.beginPath(); c.moveTo(p.x - p.vx * 0.05, p.y - p.vy * 0.05); c.lineTo(p.x, p.y); c.stroke();

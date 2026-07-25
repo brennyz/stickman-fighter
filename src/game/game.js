@@ -2092,6 +2092,11 @@ class Game {
       } else if (p.kind === 'orb') {
         c.fillStyle = 'rgba(180,140,255,.9)';
         c.beginPath(); c.arc(p.x, p.y, p.r, 0, TAU); c.fill();
+      } else if (p.kind === 'ink') {
+        c.fillStyle = 'rgba(42,24,64,.88)';
+        c.beginPath(); c.arc(p.x, p.y, p.r, 0, TAU); c.fill();
+        c.fillStyle = 'rgba(180,120,255,.55)';
+        c.beginPath(); c.arc(p.x - p.vx * 0.012, p.y - p.vy * 0.012, p.r * 0.55, 0, TAU); c.fill();
       } else { // laser / robolaser
         c.strokeStyle = p.kind === 'robolaser' ? '#ff5d5d' : '#7cf5ff'; c.lineWidth = 5; c.lineCap = 'round';
         c.beginPath(); c.moveTo(p.x - p.vx * 0.05, p.y - p.vy * 0.05); c.lineTo(p.x, p.y); c.stroke();
