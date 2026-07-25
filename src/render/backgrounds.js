@@ -141,7 +141,7 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
       c.beginPath(); c.moveTo(x, ground - 4); c.lineTo(x, ground + 4); c.stroke();
     }
   } else if (th.deco === 'struik') {
-    // landweg: rode struik + gouden grasplukken (foto-inspiratie)
+    // landweg: rode struik + gouden grasplukken + houtstapel (steenhuis-foto)
     for (let i = 0; i < 5; i++) {
       const x = dX((i * 0.22 + 0.08) * dSpan);
       const tall = i % 2 === 0;
@@ -159,6 +159,10 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
       c.fillStyle = '#c9a24a';
       c.fillRect(x - 2, ground - 10, 3, 10);
       c.fillRect(x + 3, ground - 7, 2, 7);
+    }
+    if (typeof drawPixelLogWall === 'function' && Perf.tier < 2) {
+      const lx = dX(0.55 * dSpan);
+      drawPixelLogWall(c, lx - 40, ground - 16, 80, 16);
     }
   }
 

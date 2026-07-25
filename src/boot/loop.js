@@ -98,13 +98,27 @@ function drawMenuBackdrop(c, t) {
   c.globalAlpha = 1;
 }
 
+let _menuVistaBufA = null;
+let _menuVistaBufB = null;
+
+function ensureMenuVistaBuf(w, h) {
+  if (!_menuVistaBufA || _menuVistaBufA.width !== w || _menuVistaBufA.height !== h) {
+    _menuVistaBufA = document.createElement('canvas');
+    _menuVistaBufA.width = w;
+    _menuVistaBufA.height = h;
+    _menuVistaBufB = document.createElement('canvas');
+    _menuVistaBufB.width = w;
+    _menuVistaBufB.height = h;
+  }
+  return { a: _menuVistaBufA, b: _menuVistaBufB };
+}
+
 function paintMenuHeroCanvas(t) {
   const cv = document.getElementById('menuHeroCanvas');
   if (!cv) return;
   const c = cv.getContext('2d');
   if (!c) return;
   const lite = save.liteFx || Perf.tier >= 1;
-  // Hogere interne resolutie voor chunky pixel-vista
   if (cv.width !== 640 || cv.height !== 280) {
     cv.width = 640;
     cv.height = 280;
@@ -113,8 +127,52 @@ function paintMenuHeroCanvas(t) {
   const Hs = cv.height;
   c.clearRect(0, 0, Ws, Hs);
 
+  // Foto-album: eik ↔ steenhuis met zachte crossfade
+  const SLOT = motionReduced() ? 12 : 8;
+  const FADE = motionReduced() ? 0.01 : 1.35;
+  const u = t % (SLOT * 2);
+  const inSlot = u % SLOT;
+  let aOak = 1;
+  let aStone = 0;
+  if (u < SLOT) {
+    if (inSlot > SLOT - FADE) {
+      const f = (inSlot - (SLOT - FADE)) / FADE;
+      aOak = 1 - f;
+      aStone = f;
+    } else {
+      aOak = 1;
+      aStone = 0;
+    }
+  } else if (inSlot > SLOT - FADE) {
+    const f = (inSlot - (SLOT - FADE)) / FADE;
+    aStone = 1 - f;
+    aOak = f;
+  } else {
+    aOak = 0;
+    aStone = 1;
+  }
+
   let map = { roadY: Hs * 0.82 };
-  if (typeof drawMenuSemi25dVista === 'function') {
+  const hasOak = typeof drawMenuSemi25dVista === 'function';
+  const hasStone = typeof drawMenuStonehouseVista === 'function';
+
+  if (hasOak && hasStone && (aOak > 0.02 && aStone > 0.02)) {
+    const buf = ensureMenuVistaBuf(Ws, Hs);
+    const ca = buf.a.getContext('2d');
+    const cb = buf.b.getContext('2d');
+    ca.clearRect(0, 0, Ws, Hs);
+    cb.clearRect(0, 0, Ws, Hs);
+    const mOak = drawMenuSemi25dVista(ca, Ws, Hs, t, { lite, caption: true }) || map;
+    const mStone = drawMenuStonehouseVista(cb, Ws, Hs, t, { lite, caption: true }) || map;
+    c.globalAlpha = aOak;
+    c.drawImage(buf.a, 0, 0);
+    c.globalAlpha = aStone;
+    c.drawImage(buf.b, 0, 0);
+    c.globalAlpha = 1;
+    map = aStone > aOak ? mStone : mOak;
+  } else if (hasStone && aStone >= aOak) {
+    map = drawMenuStonehouseVista(c, Ws, Hs, t, { lite, caption: true }) || map;
+  } else if (hasOak) {
     map = drawMenuSemi25dVista(c, Ws, Hs, t, { lite, caption: true }) || map;
   } else if (typeof drawLandwegPixelmap === 'function') {
     map = drawLandwegPixelmap(c, Ws, Hs, t, { lite, caption: true, groundY: Hs * 0.58 }) || map;
@@ -160,11 +218,9 @@ function paintMenuHeroCanvas(t) {
     c.fill();
     c.restore();
   };
-  // Stickmen op de voorgrond-weg (semi-2.5D: dichter = groter)
   drawTourist(Ws * 0.22, 1, '#eef5ff', 0.85);
   drawTourist(Ws * 0.38, -1, '#ff8a9a', 1);
-  // Subtiele VS-chip, niet over de eik
-  if (typeof drawPixelVsBanner === 'function' && !lite) {
+  if (typeof drawPixelVsBanner === 'function' && !lite && aOak > 0.5) {
     drawPixelVsBanner(c, Ws * 0.18, Hs * 0.28, 1.8, t);
   }
 }

@@ -686,11 +686,247 @@ function drawMenuSemi25dVista(c, w, h, t, opts) {
     c.fillStyle = 'rgba(255,248,220,.88)';
     c.font = '900 9px -apple-system, sans-serif';
     c.textAlign = 'left';
-    c.fillText('semi-2.5D · pixel vista', 10, 16);
+    c.fillText('1/2 · eik · pixel vista', 10, 16);
   }
 
   c.imageSmoothingEnabled = prev;
-  return { roadY, fieldY, treeX, horizonY };
+  return { roadY, fieldY, treeX, horizonY, id: 'oak' };
+}
+
+/** Gestapelde houtblokken-muur (foto-inspiratie). */
+function drawPixelLogWall(c, x0, y0, w, h) {
+  const rowH = 5;
+  const logW = 7;
+  for (let y = 0; y < h; y += rowH) {
+    const odd = ((y / rowH) | 0) % 2;
+    for (let x = odd * -3; x < w; x += logW) {
+      const lx = x0 + x;
+      const ly = y0 + y;
+      c.fillStyle = ((x + y) % 14 === 0) ? '#5a4838' : '#7a6248';
+      c.fillRect(lx, ly, logW - 1, rowH - 1);
+      c.fillStyle = '#9a8260';
+      c.fillRect(lx + 1, ly, 2, rowH - 1);
+      c.fillStyle = '#3a2e22';
+      c.fillRect(lx + logW - 2, ly + 1, 1, rowH - 2);
+      // kopse kant ring
+      c.fillStyle = '#c4a878';
+      c.fillRect(lx + 2, ly + 1, 2, 2);
+    }
+  }
+}
+
+/** Steenhuis + serre + wit bijgebouw. */
+function drawPixelStoneHouse(c, hx, baseY, scale) {
+  const s = Math.max(1, scale || 1);
+  const hw = Math.round(58 * s);
+  const hh = Math.round(48 * s);
+  // Serre / zonnekamer links
+  const sx = hx - Math.round(28 * s);
+  c.fillStyle = '#8a9aaa';
+  c.fillRect(sx, baseY - Math.round(22 * s), Math.round(28 * s), Math.round(22 * s));
+  c.fillStyle = '#6a7a88';
+  c.beginPath();
+  c.moveTo(sx - 2, baseY - Math.round(22 * s));
+  c.lineTo(sx + Math.round(14 * s), baseY - Math.round(32 * s));
+  c.lineTo(sx + Math.round(30 * s), baseY - Math.round(22 * s));
+  c.closePath();
+  c.fill();
+  c.fillStyle = 'rgba(180,220,255,.35)';
+  for (let i = 0; i < 3; i++) {
+    c.fillRect(sx + 4 + i * 8 * s, baseY - Math.round(18 * s), Math.round(5 * s), Math.round(12 * s));
+  }
+  // Steenhuis
+  c.fillStyle = '#6e5e52';
+  c.fillRect(hx, baseY - hh, hw, hh);
+  // steen-dither
+  for (let yy = 0; yy < hh; yy += 5) {
+    for (let xx = 0; xx < hw; xx += 6) {
+      if (((xx + yy) / 2 | 0) % 3 === 0) {
+        c.fillStyle = '#5a4a40';
+        c.fillRect(hx + xx, baseY - hh + yy, 4, 3);
+      } else if (((xx * 3 + yy) | 0) % 5 === 0) {
+        c.fillStyle = '#8a7a6c';
+        c.fillRect(hx + xx + 1, baseY - hh + yy + 1, 3, 2);
+      }
+    }
+  }
+  // Dak
+  c.fillStyle = '#3a3834';
+  c.beginPath();
+  c.moveTo(hx - 4, baseY - hh);
+  c.lineTo(hx + hw / 2, baseY - hh - Math.round(16 * s));
+  c.lineTo(hx + hw + 4, baseY - hh);
+  c.closePath();
+  c.fill();
+  c.fillStyle = '#2a2824';
+  c.fillRect(hx + Math.round(hw * 0.42), baseY - hh - Math.round(18 * s), Math.round(6 * s), Math.round(10 * s));
+  // Ramen
+  c.fillStyle = '#1a2430';
+  c.fillRect(hx + Math.round(8 * s), baseY - hh + Math.round(12 * s), Math.round(10 * s), Math.round(10 * s));
+  c.fillRect(hx + Math.round(40 * s), baseY - hh + Math.round(12 * s), Math.round(10 * s), Math.round(10 * s));
+  c.fillRect(hx + Math.round(8 * s), baseY - Math.round(22 * s), Math.round(10 * s), Math.round(10 * s));
+  c.fillRect(hx + Math.round(40 * s), baseY - Math.round(22 * s), Math.round(10 * s), Math.round(10 * s));
+  c.fillStyle = 'rgba(200,230,255,.4)';
+  c.fillRect(hx + Math.round(9 * s), baseY - hh + Math.round(13 * s), Math.round(8 * s), Math.round(4 * s));
+  c.fillRect(hx + Math.round(41 * s), baseY - hh + Math.round(13 * s), Math.round(8 * s), Math.round(4 * s));
+  // Deur
+  c.fillStyle = '#2e2418';
+  c.fillRect(hx + Math.round(24 * s), baseY - Math.round(18 * s), Math.round(10 * s), Math.round(18 * s));
+  // Wit bijgebouw rechts
+  const wx = hx + hw + Math.round(6 * s);
+  c.fillStyle = '#f0f0ec';
+  c.fillRect(wx, baseY - Math.round(28 * s), Math.round(26 * s), Math.round(28 * s));
+  c.fillStyle = '#2e2e2a';
+  c.beginPath();
+  c.moveTo(wx - 2, baseY - Math.round(28 * s));
+  c.lineTo(wx + Math.round(13 * s), baseY - Math.round(38 * s));
+  c.lineTo(wx + Math.round(28 * s), baseY - Math.round(28 * s));
+  c.closePath();
+  c.fill();
+  c.fillStyle = '#1a2430';
+  c.fillRect(wx + Math.round(8 * s), baseY - Math.round(18 * s), Math.round(8 * s), Math.round(8 * s));
+}
+
+/**
+ * Startscherm vista 2 — steenhuis + houtstapel + gouden gras (foto).
+ * Lagen: sky → bos → huis → houtmuur → gras → bladframe.
+ */
+function drawMenuStonehouseVista(c, w, h, t, opts) {
+  opts = opts || {};
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  const lite = !!opts.lite;
+  const calm = motionReduced();
+  const px = 3;
+  const grassH = Math.round(h * 0.32);
+  const grassY = h - grassH;
+  const wallH = Math.round(18 * (h / 280));
+  const wallY = grassY - wallH + 4;
+  const horizonY = wallY - Math.round(h * 0.08);
+
+  const pSky = calm ? 0 : t * 3.5;
+  const pFar = calm ? 0 : t * 7;
+  const pMid = calm ? 0 : t * 12;
+  const pNear = calm ? 0 : t * 22;
+  const wrap = (v, span) => ((v % span) + span) % span;
+
+  // —— sky ——
+  const sky = c.createLinearGradient(0, 0, 0, horizonY);
+  sky.addColorStop(0, '#6eb4e8');
+  sky.addColorStop(0.5, '#9ecced');
+  sky.addColorStop(1, '#d0e8f6');
+  c.fillStyle = sky;
+  c.fillRect(0, 0, w, Math.max(horizonY, 1));
+
+  const cloudN = lite ? 3 : 5;
+  for (let i = 0; i < cloudN; i++) {
+    const cw = 40 + (i % 3) * 16;
+    const cx = wrap(i * 0.29 * w + pSky * (0.5 + i * 0.08), w + cw) - cw * 0.5;
+    const cy = 6 + (i % 3) * 12;
+    c.fillStyle = '#ffffff';
+    c.fillRect(Math.round(cx), cy + 8, cw, 10);
+    c.fillRect(Math.round(cx + 10), cy, cw - 16, 12);
+    c.fillStyle = '#e8f0f8';
+    c.fillRect(Math.round(cx + 6), cy + 16, cw - 10, 3);
+  }
+
+  // —— verre dennenrij ——
+  const farOff = Math.round(wrap(-pFar, 40) - 20);
+  for (let i = -1; i < 16; i++) {
+    const tx = Math.round(i * 38 + farOff);
+    const th = 34 + ((i * 13) % 20);
+    c.fillStyle = i % 2 ? '#1a3e24' : '#224a2c';
+    c.beginPath();
+    c.moveTo(tx + 10, horizonY - th);
+    c.lineTo(tx, horizonY);
+    c.lineTo(tx + 20, horizonY);
+    c.closePath();
+    c.fill();
+    c.fillStyle = '#2a5a36';
+    c.beginPath();
+    c.moveTo(tx + 10, horizonY - th + 10);
+    c.lineTo(tx + 3, horizonY - 8);
+    c.lineTo(tx + 17, horizonY - 8);
+    c.closePath();
+    c.fill();
+  }
+
+  // —— mid: tuinstruiken + huis ——
+  const midOff = Math.round((calm ? 0 : Math.sin(t * 0.25) * 2));
+  // grasstrook achter muur
+  c.fillStyle = '#3a7a40';
+  c.fillRect(0, horizonY, w, wallY - horizonY + 4);
+  for (let i = 0; i < 10; i++) {
+    const bx = Math.round(wrap(i * 58 + midOff * 2, w + 40) - 20);
+    c.fillStyle = i % 2 ? '#2f6a38' : '#4a8a48';
+    c.beginPath();
+    c.ellipse(bx, wallY - 4, 14, 10, 0, 0, TAU);
+    c.fill();
+  }
+
+  const houseX = Math.round(w * 0.38 + midOff);
+  drawPixelStoneHouse(c, houseX, wallY + 2, Math.min(w, h) / 260);
+
+  // —— houtstapel-muur ——
+  drawPixelLogWall(c, 0, wallY, w, wallH);
+  c.fillStyle = 'rgba(0,0,0,.18)';
+  c.fillRect(0, wallY + wallH - 2, w, 2);
+
+  // —— gouden gras voorgrond ——
+  for (let y = grassY; y < h; y += px) {
+    const pr = (y - grassY) / Math.max(1, grassH);
+    c.fillStyle = pr < 0.3 ? '#e3c565' : pr < 0.65 ? '#d4af37' : '#b8922e';
+    c.fillRect(0, y, w, px);
+  }
+  const nearOff = Math.round(wrap(-pNear, 14));
+  for (let x = -14; x < w + 14; x += 5) {
+    const xx = x + nearOff;
+    const sway = calm ? 0 : Math.sin(t * 2.2 + x * 0.08) * 2;
+    c.fillStyle = ((x / 5) | 0) % 3 === 0 ? '#c9a040' : '#e8d070';
+    c.fillRect(Math.round(xx + sway), grassY + 4, 2, grassH - 10);
+    c.fillRect(Math.round(xx + 2 - sway), grassY + 10, 1, grassH - 16);
+  }
+
+  // —— framing blad (links/rechts, snelste laag) ——
+  if (!lite) {
+    const leafOff = calm ? 0 : Math.sin(t * 1.4) * 3;
+    c.fillStyle = '#2d5a27';
+    for (let i = 0; i < 6; i++) {
+      const ly = 10 + i * 28 + leafOff;
+      c.beginPath();
+      c.ellipse(8 + (i % 2) * 6, ly, 18, 12, -0.4, 0, TAU);
+      c.fill();
+      c.beginPath();
+      c.ellipse(w - 10 - (i % 2) * 5, ly + 8, 16, 11, 0.4, 0, TAU);
+      c.fill();
+    }
+    c.fillStyle = '#4f7942';
+    c.beginPath();
+    c.ellipse(14, 40 + leafOff, 10, 7, -0.3, 0, TAU);
+    c.fill();
+    c.beginPath();
+    c.ellipse(w - 16, 55 - leafOff, 10, 7, 0.3, 0, TAU);
+    c.fill();
+  }
+
+  const vig = c.createLinearGradient(0, 0, 0, h);
+  vig.addColorStop(0, 'rgba(40,70,100,.1)');
+  vig.addColorStop(0.55, 'rgba(0,0,0,0)');
+  vig.addColorStop(1, 'rgba(40,30,10,.2)');
+  c.fillStyle = vig;
+  c.fillRect(0, 0, w, h);
+
+  if (opts.caption !== false) {
+    c.fillStyle = 'rgba(12,18,28,.5)';
+    c.fillRect(6, 6, 148, 14);
+    c.fillStyle = 'rgba(255,248,220,.88)';
+    c.font = '900 9px -apple-system, sans-serif';
+    c.textAlign = 'left';
+    c.fillText('2/2 · steenhuis · pixel vista', 10, 16);
+  }
+
+  c.imageSmoothingEnabled = prev;
+  return { roadY: grassY + Math.round(grassH * 0.55), fieldY: grassY, horizonY, id: 'stonehouse' };
 }
 
 function drawMenuHeroPixelGround(c, w, h, groundY, t) {
