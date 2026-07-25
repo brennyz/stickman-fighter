@@ -70,6 +70,7 @@ const get = (id) => {
   'menuDailyHint', 'menuTipLine', 'menuPlayLink', 'togMusic', 'togSfx',
   'btnAdventure', 'btnTraining', 'btnWall', 'btnMatsCoins', 'btnWeapons', 'btnDex', 'btnVersus',
   'btnContinue', 'btnStyle', 'btnSkills', 'btnSettings', 'btnMissions', 'btnMissionsLbl', 'btnHelp', 'helpOk',
+  'skillPreview', 'skillGrid', 'skillGridScroll', 'skillSagaBlurb', 'skillBehaviorBar', 'btnSkillSort', 'skillNextUnlock',
   'btnGuvve', 'pauseResume', 'pauseQuit', 'resAgain', 'resNext', 'resMenu',
   'pauseTogMusic', 'pauseTogSfx', 'pauseMusicVol', 'pauseSfxVol', 'tunnelBootOverlay', 'charPickStep', 'charGrid',
   'charGridScroll', 'charStatPreview', 'charP1Label', 'charP2Label', 'btnCharFight',
