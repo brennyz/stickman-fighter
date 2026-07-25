@@ -2224,6 +2224,7 @@ const UI = {
       el.style.removeProperty('pointer-events');
     } catch (_) {}
     el.hidden = false;
+    el.removeAttribute('hidden');
     el.setAttribute('aria-hidden', 'false');
     el.classList.add('visible');
   },

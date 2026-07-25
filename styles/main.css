@@ -703,11 +703,19 @@
   .help-island-sub { font-size:11px; opacity:.85; margin-top:3px; margin-bottom:6px; }
   .island-grid { grid-template-columns:repeat(5, minmax(56px, 1fr)); max-width:min(92vw, 520px); }
   #gambleIslandCtx { width:min(86vw,420px); text-align:center; font-size:12px; color:#9db1e3; margin:-4px auto 10px; line-height:1.4; }
-  .level-roll-flash { position:fixed; inset:0; z-index:35; display:flex; align-items:center; justify-content:center;
+  /* Dobbel-flash: standaard HARD weg — display:flex + [hidden] race op Safari liet blauw deksel staan */
+  .level-roll-flash { position:fixed; inset:0; z-index:35; display:none; align-items:center; justify-content:center;
       background:rgba(10,13,24,.88); backdrop-filter:blur(6px); pointer-events:none; opacity:0; transition:opacity .12s ease; }
-  .level-roll-flash.visible { opacity:1; pointer-events:auto; }
+  .level-roll-flash[hidden],
+  .level-roll-flash:not(.visible) {
+    display:none !important; opacity:0 !important; visibility:hidden !important; pointer-events:none !important;
+  }
+  .level-roll-flash.visible {
+    display:flex !important; opacity:1; pointer-events:auto; visibility:visible;
+  }
   body.is-playing .level-roll-flash,
-  body.is-playing .level-roll-flash.visible {
+  body.is-playing .level-roll-flash.visible,
+  body.is-playing #levelRollFlash {
     display:none !important; opacity:0 !important; visibility:hidden !important; pointer-events:none !important;
   }
   .level-roll-flash-card { text-align:center; padding:24px 28px; border-radius:20px; background:rgba(15,20,40,.95);
