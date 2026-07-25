@@ -109,6 +109,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-25 | **11** | Menu nav (cyclus 4): sticky char-select footer (VECHT + P1 terug), `scrollNavTop` op goBack/show/pill-tap, bredere scroll-reset voor missies/wapens. v1.17.66 / SW v192. |
 | 2026-07-24 | **ship** | Alles live: dex/pets, egg pets, combat styles, save backup, combat harden, weapon combos, char select, hosting, code health, PWA offline, kill streak + combo-trainer. v1.17.56 / SW v182. |
 | 2026-07-24 | — | **Feel #2+#3:** kill streak (STREAK juice, record, BGM heat, achievements) + combo-trainer (dummy 3s, goals, record, bonus XP). |
 | 2026-07-24 | **8** | PWA (cyclus 4): SW + LIVE-LINK precache, shell-check (JS+HTML+CSS) voor offline-klaar, pauze offline-hint, branded fallback Pages-link. |

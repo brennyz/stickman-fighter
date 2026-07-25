@@ -133,8 +133,7 @@ bindPress(btnVersus, () => {
 const charPickBackP1 = document.getElementById('charPickBackP1');
 bindPress(charPickBackP1, () => {
   AudioSys.sfx('select');
-  UI.charPickStep = 1;
-  UI.renderCharSelect();
+  UI.charSelectBackToP1();
 });
 bindPress(document.getElementById('btnWall'), () => {
   AudioSys.init(); AudioSys.sfx('select'); startGame('wall');
