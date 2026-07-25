@@ -1521,15 +1521,12 @@ class Game {
       this.ketsbamChargeAcc = (this.ketsbamChargeAcc || 0) + dt;
       const dur = this.ketsbamChargeDur || KETSBAM_CHARGE_DUR;
       const prog = 1 - this.ketsbamChargeT / dur;
-      if (this.ketsbamChargeAcc >= 0.07 && !motionReduced()) {
+      if (this.ketsbamChargeAcc >= 0.11 && !motionReduced() && prog > 0.2) {
         this.ketsbamChargeAcc = 0;
         const px = this.player.x;
-        const py = this.player.y - 50;
-        this.burst(px + rand(-20, 20), py + rand(-30, 10), prog > 0.6 ? '#fff8dc' : '#ffd75e',
-          fxLite() ? 2 : 4, { kind: 'spark', size: 2 + prog * 2 });
-        if (prog > 0.45 && !fxLite()) {
-          this.burst(px, this.player.y + 2, '#ff9a3d', 2, { kind: 'ring' });
-        }
+        const py = this.player.y - 52;
+        this.burst(px + rand(-6, 6), py + rand(-8, 4), prog > 0.65 ? '#fff8dc' : '#ffd75e',
+          fxLite() ? 1 : 2, { kind: 'spark', size: 2.5 + prog * 1.5 });
       }
       if (this.ketsbamChargeT <= 0 && this.player?.alive) this.player.finishKetsbam(this);
       return;
@@ -2496,64 +2493,53 @@ class Game {
     const f = this.player;
     const dur = this.ketsbamChargeDur || KETSBAM_CHARGE_DUR;
     const prog = clamp(1 - this.ketsbamChargeT / dur, 0, 1);
-    const pulse = this.ketsbamChargePulse || 0;
     const px = f.x, py = f.y - 52;
-    const calm = motionReduced();
-    const lite = fxLite() || calm;
+    const lite = fxLite() || motionReduced();
 
     c.save();
-    const ringR = calm ? (28 + prog * 88) : (28 + prog * 88 + Math.sin(pulse * 11) * 7);
-    c.globalAlpha = 0.22 + prog * 0.38;
+    const ringR = 32 + prog * 92;
+    c.globalAlpha = 0.35 + prog * 0.4;
     c.strokeStyle = '#ffd75e';
-    c.lineWidth = 2.5 + prog * 3.5;
+    c.lineWidth = 4 + prog * 4;
     c.beginPath();
-    c.ellipse(px, f.y + 3, ringR, ringR * 0.26, 0, 0, TAU);
+    c.ellipse(px, f.y + 3, ringR, ringR * 0.22, 0, 0, TAU);
     c.stroke();
 
-    const h = 70 + prog * 170;
+    const h = 80 + prog * 150;
     const grad = c.createLinearGradient(px, f.y, px, f.y - h);
-    grad.addColorStop(0, `rgba(255,154,61,${0.12 + prog * 0.22})`);
-    grad.addColorStop(0.45, `rgba(255,232,120,${0.18 + prog * 0.32})`);
+    grad.addColorStop(0, `rgba(255,120,50,${0.2 + prog * 0.28})`);
+    grad.addColorStop(0.5, `rgba(255,215,94,${0.28 + prog * 0.35})`);
     grad.addColorStop(1, 'rgba(255,255,255,0)');
     c.fillStyle = grad;
-    c.fillRect(px - 16 - prog * 14, f.y - h, 32 + prog * 28, h);
+    c.fillRect(px - 18 - prog * 10, f.y - h, 36 + prog * 20, h);
 
-    const rings = lite ? 2 : 4;
-    for (let i = 0; i < rings; i++) {
-      const r = calm
-        ? (34 + i * 13 + prog * 22)
-        : (34 + i * 13 + prog * 22 + Math.sin(pulse * 10 + i * 1.4) * 5);
-      c.globalAlpha = (0.3 + prog * 0.28) * (1 - i * 0.17);
-      c.strokeStyle = i % 2 ? '#fff8dc' : '#ff9a3d';
-      c.lineWidth = 2 + prog * 2;
+    const innerR = 38 + prog * 48;
+    c.globalAlpha = 0.55 + prog * 0.3;
+    c.strokeStyle = '#fff8dc';
+    c.lineWidth = 3 + prog * 2.5;
+    c.beginPath();
+    c.arc(px, py, innerR, 0, TAU);
+    c.stroke();
+
+    if (!lite && prog > 0.35) {
+      c.globalAlpha = 0.5 + prog * 0.25;
+      c.strokeStyle = '#ff7043';
+      c.lineWidth = 2.5;
       c.beginPath();
-      c.arc(px, py, r, 0, TAU);
+      c.arc(px, py, innerR + 18 + prog * 28, 0, TAU);
       c.stroke();
     }
 
-    if (!lite) {
-      c.globalAlpha = 0.45 + prog * 0.35;
-      c.strokeStyle = '#fff';
-      c.lineWidth = 2;
-      const spikes = calm ? 4 : 7;
-      for (let i = 0; i < spikes; i++) {
-        const a = pulse * 9 + i * (TAU / spikes);
-        const len = 22 + prog * 44;
-        c.beginPath();
-        c.moveTo(px + Math.cos(a) * 18, py + Math.sin(a) * 10);
-        c.lineTo(px + Math.cos(a) * len, py + Math.sin(a) * len * 0.55 - prog * 24);
-        c.stroke();
-      }
-    }
-
-    c.globalAlpha = 0.85;
-    c.font = `900 ${18 + prog * 8}px -apple-system, sans-serif`;
+    const labelSize = 22 + prog * 10;
+    c.globalAlpha = 1;
+    c.font = `900 ${labelSize}px -apple-system, sans-serif`;
     c.textAlign = 'center';
+    c.textBaseline = 'middle';
     c.fillStyle = '#ffd75e';
-    c.strokeStyle = 'rgba(0,0,0,.55)';
-    c.lineWidth = 4;
-    c.strokeText(t('banner.kets'), px, py - 58 - prog * 24);
-    c.fillText(t('banner.kets'), px, py - 58 - prog * 24);
+    c.strokeStyle = 'rgba(0,0,0,.7)';
+    c.lineWidth = 6;
+    c.strokeText(t('banner.kets'), px, py - 52 - prog * 18);
+    c.fillText(t('banner.kets'), px, py - 52 - prog * 18);
     c.restore();
   }
 
@@ -2561,43 +2547,38 @@ class Game {
     if (!this.ketsbamShow || !this.player?.alive) return;
     const ui = touchUiScale(W, H);
     const { cx, cy } = ketsbamPromptCenter();
-    const calm = motionReduced();
-    const pulse = calm ? 1 : (0.9 + Math.sin((this.ketsbamPulse || 0) * 10) * 0.1);
-    const r = 46 * ui * pulse;
+    const pulse = motionReduced() ? 1 : (0.96 + Math.sin((this.ketsbamPulse || 0) * 5) * 0.04);
+    const r = 44 * ui * pulse;
     c.save();
-    c.globalAlpha = 0.92;
-    c.fillStyle = 'rgba(6,10,24,.72)';
+    c.globalAlpha = 0.94;
+    c.fillStyle = 'rgba(8,12,28,.82)';
     c.beginPath();
-    c.arc(cx, cy, r + 10 * ui, 0, TAU);
+    c.arc(cx, cy, r + 12 * ui, 0, TAU);
     c.fill();
-    c.strokeStyle = 'rgba(255,215,94,.55)';
-    c.lineWidth = 3 * ui;
+    c.strokeStyle = '#ffd75e';
+    c.lineWidth = 4 * ui;
     c.stroke();
-    // ster/kets-symbool
+    c.strokeStyle = 'rgba(255,112,67,.75)';
+    c.lineWidth = 2 * ui;
+    c.beginPath();
+    c.arc(cx, cy, r + 6 * ui, 0, TAU);
+    c.stroke();
     c.translate(cx, cy);
-    if (!calm) c.rotate((this.ketsbamPulse || 0) * 2.2);
     c.fillStyle = '#ffd75e';
-    c.strokeStyle = '#ff7043';
-    c.lineWidth = 2.5 * ui;
+    c.strokeStyle = '#c01828';
+    c.lineWidth = 3.5 * ui;
     c.beginPath();
-    for (let i = 0; i < 8; i++) {
-      const a = (i / 8) * TAU - Math.PI / 2;
-      const rr = i % 2 ? r * 0.42 : r * 0.88;
-      const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
-      if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
-    }
-    c.closePath();
+    c.arc(0, 0, r * 0.72, 0, TAU);
     c.fill();
     c.stroke();
-    if (!calm) c.rotate(-(this.ketsbamPulse || 0) * 2.2);
-    c.font = `900 ${Math.round(17 * ui)}px -apple-system,sans-serif`;
+    c.font = `900 ${Math.round(20 * ui)}px -apple-system,sans-serif`;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
-    c.lineWidth = 5 * ui;
-    c.strokeStyle = 'rgba(0,0,0,.55)';
-    c.strokeText(t('banner.kets'), 0, 2);
+    c.lineWidth = 6 * ui;
+    c.strokeStyle = 'rgba(0,0,0,.65)';
+    c.strokeText(t('banner.kets'), 0, 1);
     c.fillStyle = '#fff';
-    c.fillText(t('banner.kets'), 0, 2);
+    c.fillText(t('banner.kets'), 0, 1);
     c.restore();
     c.font = `700 ${Math.round(12 * ui)}px -apple-system,sans-serif`;
     c.textAlign = 'center';

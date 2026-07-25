@@ -182,9 +182,9 @@ class Fighter {
     game.inputLocked = false;
     game.ketsbamSuperT = Math.max(game.ketsbamSuperT, KETSBAM_SUPER_ARMOR);
 
-    game.shake(14, 0.38);
-    game.freezeT = Math.max(game.freezeT, 0.06);
-    game.banner('KETS-BAM!', 0.85, '#ffd75e', 42);
+    game.shake(16, 0.32);
+    game.freezeT = Math.max(game.freezeT, 0.05);
+    game.banner('KETS-BAM!', 0.7, '#ffd75e', 44);
     try { AudioSys.sfx('ketsbam'); } catch (_) {}
 
     const px = this.x, py = this.y - 42;
@@ -198,9 +198,9 @@ class Fighter {
       const kb = Math.sign(dx || this.face || 1) * (380 + falloff * 120);
       m.takeDamage(dmg, kb, game);
     }
-    game.burst(px, py, '#ffd75e', fxLite() ? 22 : 40, { kind: 'spark', size: 3.2 });
-    game.burst(px, py, '#ff7043', fxLite() ? 14 : 26);
-    spawnFxRing(game, px, py, '#ffe259', fxLite() ? 10 : 18);
+    game.burst(px, py, '#ffd75e', fxLite() ? 12 : 22, { kind: 'spark', size: 3.6 });
+    game.burst(px, py, '#ff7043', fxLite() ? 8 : 14);
+    spawnFxRing(game, px, py, '#ffe259', fxLite() ? 12 : 20);
     game.floater(px, py - 80, 'KETS-BAM!', '#ffd75e', 20);
     if (save.haptics !== false) haptic(32);
   }
