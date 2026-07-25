@@ -159,11 +159,11 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.87';
+const APP_VERSION = '1.17.84';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 193;
+const SW_CACHE_REV = 202;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
-  eggPets: {}, activeEggPet: null, eggDaily: null,
+  eggPets: {}, activeEggPet: null, eggDaily: null, activeJutsu: 'rasengan',
 
 
 
@@ -604,6 +604,7 @@ function readSaveJson(raw) {
     if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
     if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;
+    if (typeof parsed.activeJutsu === 'string') merged.activeJutsu = parsed.activeJutsu;
     if (typeof parsed.lang === 'string' && SUPPORTED_LANGS.includes(parsed.lang)) merged.lang = parsed.lang;
     return merged;
   } catch (e) {
@@ -908,6 +909,12 @@ function sanitizeSave(s) {
   out.eggPets = cleanEggs;
   if (out.activeEggPet && !cleanEggs[out.activeEggPet]) out.activeEggPet = null;
   else if (out.activeEggPet && typeof EGG_BY_ID !== 'undefined' && !EGG_BY_ID[out.activeEggPet]) out.activeEggPet = null;
+
+  if (typeof JUTSU_SKILL_IDS !== 'undefined' && JUTSU_SKILL_IDS.includes(out.activeJutsu)) {
+    /* keep */
+  } else {
+    out.activeJutsu = 'rasengan';
+  }
   if (out.eggDaily && typeof out.eggDaily === 'object') {
     const dk = typeof out.eggDaily.date === 'string' ? out.eggDaily.date.slice(0, 10) : todayKey();
     out.eggDaily = {
@@ -4441,6 +4448,18 @@ const SKILL_DEFS = {
 const SKILL_IDS = Object.keys(SKILL_DEFS);
 const JUTSU_SKILL_IDS = SKILL_IDS.filter((id) => SKILL_DEFS[id].group === 'jutsu');
 
+function activeJutsuId() {
+  const raw = (typeof save !== 'undefined' && save && save.activeJutsu) || 'rasengan';
+  return JUTSU_SKILL_IDS.includes(raw) ? raw : 'rasengan';
+}
+
+function equipJutsu(id) {
+  if (!JUTSU_SKILL_IDS.includes(id)) return false;
+  save.activeJutsu = id;
+  persist();
+  return true;
+}
+
 function skillEntry(id) {
   if (!SKILL_DEFS[id]) return null;
   if (!save.skillUpgrades || typeof save.skillUpgrades !== 'object') save.skillUpgrades = {};
@@ -4630,7 +4649,7 @@ function rollSkillShardDrop(monster) {
   const weights = [];
   for (const id of SKILL_IDS) {
     let w = 1;
-    if (SKILL_DEFS[id].group === 'jutsu') w = id === 'rasengan' ? 2.2 : 0.85;
+    if (SKILL_DEFS[id].group === 'jutsu') w = id === activeJutsuId() ? 2.2 : 0.85;
     if (skillLevel(id) >= skillMaxLevel(id)) w *= 0.35;
     weights.push({ id, w });
   }
@@ -6423,6 +6442,7 @@ function seedNlGameStrings() {
     charFair: 'Fair duo: {a} vs {b} · TOT Δ{diff}',
     skillUpgradeReady: '{name} kan upgraden — Collectie → Upgrades',
     skillUpgraded: '{name} Lv {lv}! {detail}',
+    jutsuEquipped: '{name} is nu je SUPER!',
     itemUpgradeReady: '{name} kan upgraden — Collectie → Upgrades',
     itemUpgraded: '{name} Lv {lv}! {detail}',
     skipGamble: 'Zonder gok',
@@ -6618,6 +6638,12 @@ function seedNlGameStrings() {
     skillNext: 'Volgende',
     skillGroupJutsu: 'Jutsu',
     skillGroupUtility: 'Utility',
+    jutsuActive: 'Actief jutsu: {name}',
+    jutsuActiveBadge: 'ACTIEF',
+    jutsuEquip: 'Uitrusten',
+    jutsuEquipped: 'SUPER in avontuur & training',
+    jutsuTapEquip: 'Tik Uitrusten voor SUPER in avontuur',
+    jutsuSelectHint: 'Kies je SUPER (Rasengan/Chidori/Rinnegan) · skill-shards vallen vaker voor actief jutsu',
     helpFirstMinute: 'Eerste minuut — per modus één korte hint bovenin het gevecht (geen toast-stapel). Avontuur: joystick + knoppen · groen = HP · vol chakra = SUPER-knop. Training = Robot · Muur = combo · 2 spelers = links/rechts.',
     helpOnboardHead: 'Eerste-minuut hints: {seen}/{total} modi gezien · max één regel bovenin per modus',
     helpTryNext: 'Probeer als volgende: {mode}',
@@ -6946,6 +6972,7 @@ const CATALOG_EN = {
     charFair: 'Fair duo: {a} vs {b} · TOT Δ{diff}',
     skillUpgradeReady: '{name} ready to upgrade — Collection → Upgrades',
     skillUpgraded: '{name} Lv {lv}! {detail}',
+    jutsuEquipped: '{name} is nu je SUPER!',
     itemUpgradeReady: '{name} ready to upgrade — Collection → Upgrades',
     itemUpgraded: '{name} Lv {lv}! {detail}',
     skipGamble: 'No gamble',
@@ -7107,6 +7134,12 @@ const CATALOG_EN = {
     skillNext: 'Next',
     skillGroupJutsu: 'Jutsu',
     skillGroupUtility: 'Utility',
+    jutsuActive: 'Active jutsu: {name}',
+    jutsuActiveBadge: 'ACTIVE',
+    jutsuEquip: 'Equip',
+    jutsuEquipped: 'SUPER in adventure & training',
+    jutsuTapEquip: 'Tap Equip for SUPER in adventure',
+    jutsuSelectHint: 'Pick your SUPER (Rasengan/Chidori/Rinnegan) · skill shards drop more for active jutsu',
     helpFirstMinute: 'First minute — one short hint per mode at top (no toast stack). Adventure: joystick + buttons · green = HP · full chakra = SUPER. Training = Robot · Wall = combo · 2P = left/right.',
     helpOnboardHead: 'First-minute hints: {seen}/{total} modes seen · max one line per mode at top',
     helpTryNext: 'Try next: {mode}',
@@ -12391,6 +12424,7 @@ class Game {
         weapon: wpn, color: '#f2f5ff',
         speed: Math.round(260 * (pst.speedMul || 1)),
         rosterId: 'hero',
+        vsSpecial: activeJutsuId(),
       });
       applyPlayerStyle(this.player);
       applyStyleBonusesToPlayer(this, this.player);
@@ -17664,12 +17698,24 @@ const UI = {
       const itemShards = save.stats?.itemShards || 0;
       const ready = countAllUpgradesReady();
       sumEl.style.display = 'block';
-      sumEl.innerHTML =
-        `Totaal <b>${totalAllUpgradeLevels()}</b> upgrade-levels · ` +
-        `<b>${skillShards}</b> skill · <b>${itemShards}</b> item shards` +
-        (ready > 0 ? ` · <b style="color:#ffd75e">${t('ui.upgradeReady', { n: ready })}</b>` : '') +
-        `<div class="upgrade-shard-hint">${t('ui.upgradeShardHint')}</div>` +
-        `<div style="font-size:11px;opacity:.72;margin-top:4px">Standaard max Lv ${UPGRADE_MAX_STANDARD} · mythische/extreme max Lv ${UPGRADE_MAX_EXTREME}</div>`;
+      if (tab === 'skills') {
+        const activeJ = activeJutsuId();
+        const activeName = `<b style="color:${SKILL_DEFS[activeJ]?.color || '#7cf5ff'}">${skillLabel(activeJ)}</b>`;
+        sumEl.innerHTML =
+          `${t('ui.jutsuActive', { name: activeName })} · ` +
+          `Totaal <b>${totalAllUpgradeLevels()}</b> upgrade-levels · ` +
+          `<b>${skillShards}</b> skill · <b>${itemShards}</b> item shards` +
+          (ready > 0 ? ` · <b style="color:#ffd75e">${t('ui.upgradeReady', { n: ready })}</b>` : '') +
+          `<div class="upgrade-shard-hint">${t('ui.upgradeShardHint')}</div>` +
+          `<div style="font-size:11px;opacity:.72;margin-top:4px">${t('ui.jutsuSelectHint')}</div>`;
+      } else {
+        sumEl.innerHTML =
+          `Totaal <b>${totalAllUpgradeLevels()}</b> upgrade-levels · ` +
+          `<b>${skillShards}</b> skill · <b>${itemShards}</b> item shards` +
+          (ready > 0 ? ` · <b style="color:#ffd75e">${t('ui.upgradeReady', { n: ready })}</b>` : '') +
+          `<div class="upgrade-shard-hint">${t('ui.upgradeShardHint')}</div>` +
+          `<div style="font-size:11px;opacity:.72;margin-top:4px">Standaard max Lv ${UPGRADE_MAX_STANDARD} · mythische/extreme max Lv ${UPGRADE_MAX_EXTREME}</div>`;
+      }
     }
     if (tab === 'skills') this.renderUpgradeSkills();
     else this.renderUpgradeItems(tab);
@@ -17695,8 +17741,10 @@ const UI = {
         const shards = skillShards(id);
         const cost = skillUpgradeCost(id);
         const canUp = skillCanUpgrade(id);
+        const isJutsu = g.id === 'jutsu';
+        const active = isJutsu && activeJutsuId() === id;
         const el = document.createElement('div');
-        el.className = 'card skill-card' + (canUp ? ' claimable' : '') + (lv >= maxLv ? ' claimed' : '');
+        el.className = 'card skill-card' + (canUp ? ' claimable' : '') + (lv >= maxLv ? ' claimed' : '') + (active ? ' sel' : '');
         el.style.borderColor = def.color + '88';
         const name = skillLabel(id);
         const now = skillUpgradeSummary(id);
@@ -17705,14 +17753,32 @@ const UI = {
           ? t('ui.skillShards', { cur: shards, cost })
           : t('ui.skillMax');
         const desc = skillDesc(id);
+        const activeBadge = active ? ` <span class="rar-pill" style="color:#7cf5ff;border-color:#7cf5ff">${t('ui.jutsuActiveBadge')}</span>` : '';
         el.innerHTML =
           `<div class="skill-card-body"><div class="cname" style="color:${def.color}">${name} ` +
-          `<span class="rar-pill" style="color:${def.color};border-color:${def.color}">${t('ui.skillLevel', { lv, max: maxLv })}</span></div>` +
+          `<span class="rar-pill" style="color:${def.color};border-color:${def.color}">${t('ui.skillLevel', { lv, max: maxLv })}</span>${activeBadge}</div>` +
           (desc ? `<div class="cinfo" style="opacity:.82;font-size:12px">${desc}</div>` : '') +
           `<div class="cinfo">${shardLine}</div>` +
           `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:4px"><b>${t('ui.skillNow')}:</b> ${now}</div>` +
           (next ? `<div class="cinfo" style="opacity:.75;font-size:11px;margin-top:3px"><b>${t('ui.skillNext')}:</b> ${next}</div>` : '') +
+          (isJutsu ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:4px">${active ? t('ui.jutsuEquipped') : t('ui.jutsuTapEquip')}</div>` : '') +
           `</div>`;
+        if (isJutsu && !active) {
+          const equipBtn = document.createElement('button');
+          equipBtn.type = 'button';
+          equipBtn.className = 'btn claim-btn';
+          equipBtn.textContent = t('ui.jutsuEquip');
+          equipBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            safeUiAction(() => {
+              if (!equipJutsu(id)) return;
+              AudioSys.sfx('select');
+              UI.toast(t('toast.jutsuEquipped', { name }), 2200);
+              this.renderUpgrades();
+            }, 'equipJutsu/' + id, 'Jutsu kiezen mislukt');
+          });
+          el.appendChild(equipBtn);
+        }
         if (canUp) {
           const btn = document.createElement('button');
           btn.type = 'button';
