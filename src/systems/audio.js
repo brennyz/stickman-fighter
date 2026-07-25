@@ -280,6 +280,7 @@ const AudioSys = {
     };
     const now = this.ctx.currentTime;
     const skillSynthH = { T, D, E, N, S, I, C, now, lite, v, d, P };
+    if (typeof playSuperSynthFallback === 'function' && playSuperSynthFallback(name, skillSynthH)) return;
     if (typeof playSkillSynthFallback === 'function' && playSkillSynthFallback(name, skillSynthH)) return;
     switch (name) {
       case 'swing':

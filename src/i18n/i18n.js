@@ -527,6 +527,8 @@ function applyLangStaticScreens() {
   setText('styleScreenSub', 'ui.styleSub');
   setText('skillScreenHead', 'ui.skillHead');
   setText('skillScreenSub', 'ui.skillSub');
+  setText('superSectionHead', 'ui.superHead');
+  setText('superSectionSub', 'ui.superSub');
   setText('weaponScreenHead', 'ui.weaponHead');
   setText('weaponScreenSub', 'ui.weaponSub');
   setText('helpFirstMinute', 'ui.helpFirstMinute');

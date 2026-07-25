@@ -9,6 +9,7 @@
   "src/data/summons.js",
   "src/data/styles.js",
   "src/data/skills.js",
+  "src/data/supers.js",
   "src/systems/versus.js",
   "src/data/monsters.js",
   "src/data/pets.js",

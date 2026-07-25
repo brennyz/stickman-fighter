@@ -2503,17 +2503,20 @@ class Game {
   drawKetsbamChargeAura(c) {
     if (this.ketsbamChargeT <= 0 || !this.player?.alive) return;
     const f = this.player;
+    const sp = equippedSuper();
     const dur = this.ketsbamChargeDur || KETSBAM_CHARGE_DUR;
     const prog = clamp(1 - this.ketsbamChargeT / dur, 0, 1);
     const pulse = this.ketsbamChargePulse || 0;
     const px = f.x, py = f.y - 52;
     const calm = motionReduced();
     const lite = fxLite() || calm;
+    const col = sp.color || '#ffd75e';
+    const col2 = sp.color2 || '#ff9a3d';
 
     c.save();
     const ringR = calm ? (28 + prog * 88) : (28 + prog * 88 + Math.sin(pulse * 11) * 7);
     c.globalAlpha = 0.22 + prog * 0.38;
-    c.strokeStyle = '#ffd75e';
+    c.strokeStyle = col;
     c.lineWidth = 2.5 + prog * 3.5;
     c.beginPath();
     c.ellipse(px, f.y + 3, ringR, ringR * 0.26, 0, 0, TAU);
@@ -2533,7 +2536,7 @@ class Game {
         ? (34 + i * 13 + prog * 22)
         : (34 + i * 13 + prog * 22 + Math.sin(pulse * 10 + i * 1.4) * 5);
       c.globalAlpha = (0.3 + prog * 0.28) * (1 - i * 0.17);
-      c.strokeStyle = i % 2 ? '#fff8dc' : '#ff9a3d';
+      c.strokeStyle = i % 2 ? '#fff8dc' : col2;
       c.lineWidth = 2 + prog * 2;
       c.beginPath();
       c.arc(px, py, r, 0, TAU);
@@ -2555,58 +2558,50 @@ class Game {
       }
     }
 
+    const chargeTxt = superChargeBanner(sp);
     c.globalAlpha = 0.85;
     c.font = `900 ${18 + prog * 8}px -apple-system, sans-serif`;
     c.textAlign = 'center';
-    c.fillStyle = '#ffd75e';
+    c.fillStyle = col;
     c.strokeStyle = 'rgba(0,0,0,.55)';
     c.lineWidth = 4;
-    c.strokeText(t('banner.kets'), px, py - 58 - prog * 24);
-    c.fillText(t('banner.kets'), px, py - 58 - prog * 24);
+    c.strokeText(chargeTxt, px, py - 58 - prog * 24);
+    c.fillText(chargeTxt, px, py - 58 - prog * 24);
     c.restore();
   }
 
   drawKetsbamPrompt(c) {
     if (!this.ketsbamShow || !this.player?.alive) return;
+    const sp = equippedSuper();
     const ui = touchUiScale(W, H);
     const { cx, cy } = ketsbamPromptCenter();
     const calm = motionReduced();
     const pulse = calm ? 1 : (0.9 + Math.sin((this.ketsbamPulse || 0) * 10) * 0.1);
     const r = 46 * ui * pulse;
+    const col = sp.color || '#ffd75e';
+    const col2 = sp.color2 || '#ff7043';
     c.save();
     c.globalAlpha = 0.92;
     c.fillStyle = 'rgba(6,10,24,.72)';
     c.beginPath();
     c.arc(cx, cy, r + 10 * ui, 0, TAU);
     c.fill();
-    c.strokeStyle = 'rgba(255,215,94,.55)';
+    c.strokeStyle = col + '88';
     c.lineWidth = 3 * ui;
     c.stroke();
-    // ster/kets-symbool
     c.translate(cx, cy);
     if (!calm) c.rotate((this.ketsbamPulse || 0) * 2.2);
-    c.fillStyle = '#ffd75e';
-    c.strokeStyle = '#ff7043';
-    c.lineWidth = 2.5 * ui;
-    c.beginPath();
-    for (let i = 0; i < 8; i++) {
-      const a = (i / 8) * TAU - Math.PI / 2;
-      const rr = i % 2 ? r * 0.42 : r * 0.88;
-      const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
-      if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
-    }
-    c.closePath();
-    c.fill();
-    c.stroke();
+    drawSuperIcon(c, sp.icon || 'star', r, col, col2);
     if (!calm) c.rotate(-(this.ketsbamPulse || 0) * 2.2);
     c.font = `900 ${Math.round(17 * ui)}px -apple-system,sans-serif`;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
     c.lineWidth = 5 * ui;
     c.strokeStyle = 'rgba(0,0,0,.55)';
-    c.strokeText(t('banner.kets'), 0, 2);
+    const promptTxt = superChargeBanner(sp).replace(/!$/, '');
+    c.strokeText(promptTxt, 0, 2);
     c.fillStyle = '#fff';
-    c.fillText(t('banner.kets'), 0, 2);
+    c.fillText(promptTxt, 0, 2);
     c.restore();
     c.font = `700 ${Math.round(12 * ui)}px -apple-system,sans-serif`;
     c.textAlign = 'center';

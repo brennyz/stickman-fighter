@@ -133,10 +133,10 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.81';
+const APP_VERSION = '1.17.82';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 207;
-const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', skill: 'rasengan', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
+const SW_CACHE_REV = 208;
+const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', skill: 'rasengan', super: 'ketsbam', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
 
@@ -813,6 +813,16 @@ function sanitizeSave(s) {
       dexCountFromSave(out) >= Math.ceil(SPECIES_ORDER.length / 2)) styleOk = true;
   if (!styleOk) out.style = 'classic';
 
+  const skPick = skillById(out.skill);
+  let skillOk = skPick.id === 'rasengan';
+  if (skPick.needLvl && out.lvl >= skPick.needLvl && !(skPick.needLvl > adventureWeaponCapForLevel(out.unlocked || 1))) skillOk = true;
+  out.skill = skillOk ? skPick.id : 'rasengan';
+
+  const spPick = superById(out.super);
+  let superOk = spPick.id === 'ketsbam';
+  if (spPick.needLvl && out.lvl >= spPick.needLvl && !(spPick.needLvl > adventureWeaponCapForLevel(out.unlocked || 1))) superOk = true;
+  out.super = superOk ? spPick.id : 'ketsbam';
+
   const cleanStars = {};
   for (const [k, v] of Object.entries(out.stars || {})) {
     const n = parseInt(k, 10);
@@ -1427,6 +1437,8 @@ function applyLangStaticScreens() {
   setText('styleScreenSub', 'ui.styleSub');
   setText('skillScreenHead', 'ui.skillHead');
   setText('skillScreenSub', 'ui.skillSub');
+  setText('superSectionHead', 'ui.superHead');
+  setText('superSectionSub', 'ui.superSub');
   setText('weaponScreenHead', 'ui.weaponHead');
   setText('weaponScreenSub', 'ui.weaponSub');
   setText('helpFirstMinute', 'ui.helpFirstMinute');
@@ -4198,6 +4210,433 @@ function skillTags(sk) {
   if (sk.pull) tags.push(typeof t === 'function' ? t('skill.tag.pull') : 'Pull');
   return tags;
 }
+/* --- src/data/supers.js --- */
+/* ============================== SUPERS ================================= */
+/** Nood-super (Kets-slot) — vervangbaar via Collectie → Skills · alleen avontuur. */
+const SUPERS = [
+  { id: 'ketsbam', name: 'KETS-BAM', needLvl: 1,
+    behavior: 'blast', icon: 'star',
+    color: '#ffd75e', color2: '#ff7043',
+    chargeBanner: 'KETS!', finishBanner: 'KETS-BAM!',
+    chargeSfx: 'ketsbamCharge', finishSfx: 'ketsbam',
+    hint: 'Standaard', tooltip: 'Omringd? Laad op en knal alles weg — klassieke nood-ontsnapping.',
+    bonus: 'AOE schade-blast' },
+  { id: 'iron_shield', name: 'IJzeren schild', needLvl: 5,
+    behavior: 'shield', icon: 'shield',
+    color: '#9fd8ff', color2: '#5a9fd4',
+    chargeBanner: 'SCHILD!', finishBanner: 'BLOKADE!',
+    chargeSfx: 'super_shield_charge', finishSfx: 'super_shield',
+    shieldDur: 9, shieldMul: 0.18,
+    hint: 'Lv 5', tooltip: 'Trek een ijzeren koepel — langdurige schade-reductie + kleine shockwave.',
+    bonus: 'Lang schild + push' },
+  { id: 'heal_wave', name: 'Genezingsgolf', needLvl: 8,
+    behavior: 'heal', icon: 'heart',
+    color: '#6ee06e', color2: '#43b25b',
+    chargeBanner: 'HEAL!', finishBanner: 'GENEZING!',
+    chargeSfx: 'super_heal_charge', finishSfx: 'super_heal',
+    healPct: 0.38,
+    hint: 'Lv 8', tooltip: 'Chakra-golf herstelt HP en ruimt vijanden licht weg.',
+    bonus: 'HP + lichte push' },
+  { id: 'sharingan', name: 'Sharingan', needLvl: 12,
+    behavior: 'sharingan', icon: 'eye',
+    color: '#e04040', color2: '#8b0000',
+    chargeBanner: 'SHARINGAN!', finishBanner: 'GENJUTSU!',
+    chargeSfx: 'super_sharingan_charge', finishSfx: 'super_sharingan',
+    hint: 'Lv 12', tooltip: 'Oog-genjutsu: trekt vijanden naar je toe en slaat hard toe.',
+    bonus: 'Pull + genjutsu-hit' },
+  { id: 'lightning_storm', name: 'Bliksemstorm', needLvl: 15,
+    behavior: 'lightning', icon: 'bolt',
+    color: '#a8e0ff', color2: '#5ad0ff',
+    chargeBanner: 'STORM!', finishBanner: 'RAIJIN!',
+    chargeSfx: 'super_lightning_charge', finishSfx: 'super_lightning',
+    strikes: 7,
+    hint: 'Lv 15', tooltip: 'Ultra-snelle bliksemslagen op alle nabije vijanden.',
+    bonus: 'Multi-bolt spam' },
+  { id: 'meteor_strike', name: 'Meteoorregen', needLvl: 18,
+    behavior: 'meteor', icon: 'meteor',
+    color: '#ff8c42', color2: '#ff7043',
+    chargeBanner: 'METEOR!', finishBanner: 'METEOR REGEN!',
+    chargeSfx: 'super_meteor_charge', finishSfx: 'super_meteor',
+    meteors: 5,
+    hint: 'Lv 18', tooltip: 'Vallende meteoren op het slagveld — brede zone-schade.',
+    bonus: 'Zone meteors' },
+  { id: 'berserk_rage', name: 'Berserk', needLvl: 20,
+    behavior: 'rage', icon: 'rage',
+    color: '#ff7a4d', color2: '#ff3d3d',
+    chargeBanner: 'RAGE!', finishBanner: 'BERSERK!',
+    chargeSfx: 'super_rage_charge', finishSfx: 'super_rage',
+    rageDur: 10, rageMul: 1.48,
+    hint: 'Lv 20', tooltip: 'Ontketen woede — langdurige schade-boost + shockwave.',
+    bonus: 'Schade-buff + push' },
+  { id: 'timestop', name: 'Tijd-stil', needLvl: 22,
+    behavior: 'timestop', icon: 'clock',
+    color: '#c47aff', color2: '#7cf5ff',
+    chargeBanner: 'TIJD!', finishBanner: 'STILSTAND!',
+    chargeSfx: 'super_time_charge', finishSfx: 'super_time',
+    freezeDur: 0.22,
+    hint: 'Lv 22', tooltip: 'Bevriest het slagveld kort — alle vijanden nemen zware schade.',
+    bonus: 'Freeze + burst' },
+  { id: 'shadow_clones', name: 'Schaduw-clones', needLvl: 25,
+    behavior: 'clones', icon: 'clone',
+    color: '#cfe0ff', color2: '#7cf5ff',
+    chargeBanner: 'CLONES!', finishBanner: 'CLONE RUSH!',
+    chargeSfx: 'super_clone_charge', finishSfx: 'super_clone',
+    cloneHits: 4,
+    hint: 'Lv 25', tooltip: 'Clones slaan van alle kanten — meerdere hits op nabije vijanden.',
+    bonus: 'Multi-hit rush' },
+  { id: 'void_pulse', name: 'Void-puls', needLvl: 30,
+    behavior: 'void', icon: 'void',
+    color: '#6a4aff', color2: '#2a1050',
+    chargeBanner: 'VOID!', finishBanner: 'VOID PULSE!',
+    chargeSfx: 'super_void_charge', finishSfx: 'super_void',
+    hint: 'Lv 30', tooltip: 'Donkere puls trekt alles naar binnen en explodeert.',
+    bonus: 'Pull + void burst' },
+];
+
+const superById = id => SUPERS.find(s => s.id === id) || SUPERS[0];
+
+function superExists(id) {
+  return SUPERS.some(s => s.id === id);
+}
+
+function superSkillGated(sp) {
+  return !!(sp.needLvl && sp.needLvl > adventureWeaponCap());
+}
+
+function superUnlocked(sp) {
+  if (!sp) return false;
+  if (sp.id === 'ketsbam') return true;
+  if (superSkillGated(sp)) return false;
+  if (sp.needLvl && save.lvl >= sp.needLvl) return true;
+  return false;
+}
+
+function superUnlockedCount() {
+  return SUPERS.filter(superUnlocked).length;
+}
+
+function equippedSuper() {
+  const eq = superById(save.super || 'ketsbam');
+  return superUnlocked(eq) ? eq : superById('ketsbam');
+}
+
+function superChargeBanner(sp) {
+  if (!sp) return 'KETS!';
+  const k = 'super.' + sp.id + '.charge';
+  const v = typeof t === 'function' ? t(k) : '';
+  if (v && v !== k) return v;
+  return sp.chargeBanner || 'KETS!';
+}
+
+function superFinishBanner(sp) {
+  if (!sp) return 'KETS-BAM!';
+  const k = 'super.' + sp.id + '.finish';
+  const v = typeof t === 'function' ? t(k) : '';
+  if (v && v !== k) return v;
+  return sp.finishBanner || 'KETS-BAM!';
+}
+
+function superSfxId(sp, phase) {
+  if (!sp) return phase === 'charge' ? 'ketsbamCharge' : 'ketsbam';
+  return phase === 'charge' ? (sp.chargeSfx || 'ketsbamCharge') : (sp.finishSfx || 'ketsbam');
+}
+
+function superNextUnlock() {
+  const pending = SUPERS.filter(s => !superUnlocked(s))
+    .sort((a, b) => (a.needLvl || 999) - (b.needLvl || 999));
+  return pending[0] || null;
+}
+
+function superCombatLine(sp) {
+  return sp.bonus || sp.hint || '';
+}
+
+function superChargeDur(sp) {
+  return sp && sp.chargeDur ? sp.chargeDur : KETSBAM_CHARGE_DUR;
+}
+
+function superBlastRadius(sp) {
+  return sp && sp.blastR ? sp.blastR : KETSBAM_BLAST_R;
+}
+
+function finishSuperBlast(fighter, game, sp, px, py, blastR, dmgMul, kbBase) {
+  for (const m of game.monsters) {
+    if (!m.alive) continue;
+    const dx = m.x - px, dy = m.y - py;
+    const dist = Math.hypot(dx, dy);
+    if (dist > blastR) continue;
+    const falloff = 1 - dist / blastR;
+    const dmg = Math.max(10, Math.round(fighter.baseDmg * (dmgMul + falloff * 1.1)));
+    const kb = Math.sign(dx || fighter.face || 1) * (kbBase + falloff * 120);
+    m.takeDamage(dmg, kb, game);
+  }
+}
+
+function finishEquippedSuper(fighter, game) {
+  if (!fighter || !game) return;
+  const sp = equippedSuper();
+  const px = fighter.x, py = fighter.y - 42;
+  const blastR = superBlastRadius(sp);
+  const banner = superFinishBanner(sp);
+  const lite = fxLite();
+
+  game.shake(sp.behavior === 'shield' ? 8 : 14, sp.behavior === 'timestop' ? 0.28 : 0.38);
+  game.freezeT = Math.max(game.freezeT, sp.behavior === 'timestop' ? (sp.freezeDur || 0.22) : 0.06);
+  game.banner(banner, 0.85, sp.color, 42);
+  try { AudioSys.sfx(superSfxId(sp, 'finish')); } catch (_) {}
+
+  switch (sp.behavior) {
+    case 'shield':
+      game.playerShieldT = Math.max(game.playerShieldT, sp.shieldDur || 9);
+      finishSuperBlast(fighter, game, sp, px, py, blastR * 0.72, 0.85, 280);
+      game.burst(px, py, sp.color, lite ? 16 : 28, { kind: 'ring' });
+      spawnFxRing(game, px, py, sp.color2 || sp.color, lite ? 8 : 14);
+      game.floater(px, py - 80, banner, sp.color, 20);
+      break;
+
+    case 'heal': {
+      const maxHp = fighter.maxHp || 100;
+      const heal = Math.round(maxHp * (sp.healPct || 0.38));
+      fighter.hp = Math.min(maxHp, fighter.hp + heal);
+      finishSuperBlast(fighter, game, sp, px, py, blastR * 0.65, 0.75, 240);
+      game.burst(px, py, sp.color, lite ? 18 : 32, { kind: 'spark', size: 2.4 });
+      game.floater(px, py - 80, '+' + heal + ' HP', sp.color, 18);
+      game.floater(px, py - 102, banner, sp.color2 || sp.color, 16);
+      break;
+    }
+
+    case 'sharingan':
+    case 'void': {
+      const pull = sp.behavior === 'void' ? 1.35 : 1.0;
+      for (const m of game.monsters) {
+        if (!m.alive) continue;
+        const dx = px - m.x, dy = py - m.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > blastR) continue;
+        const falloff = 1 - dist / blastR;
+        const pullF = (0.35 + falloff * 0.55) * pull;
+        m.x += (dx / (dist || 1)) * pullF * 48;
+        m.y += (dy / (dist || 1)) * pullF * 18;
+        const dmg = Math.max(10, Math.round(fighter.baseDmg * (1.45 + falloff * 0.95)));
+        const kb = Math.sign(m.x - px || fighter.face || 1) * (320 + falloff * 100);
+        m.takeDamage(dmg, kb, game);
+      }
+      game.burst(px, py, sp.color, lite ? 20 : 36, { kind: 'spark', size: 2.8 });
+      game.burst(px, py, sp.color2 || '#fff', lite ? 10 : 18);
+      spawnFxRing(game, px, py, sp.color, lite ? 10 : 16);
+      game.floater(px, py - 80, banner, sp.color, 20);
+      break;
+    }
+
+    case 'lightning': {
+      const targets = game.monsters.filter(m => m.alive && Math.hypot(m.x - px, m.y - py) <= blastR);
+      const strikes = sp.strikes || 7;
+      for (let i = 0; i < strikes; i++) {
+        const m = targets[i % Math.max(1, targets.length)];
+        if (!m) break;
+        const tx = m.x + rand(-18, 18);
+        const ty = m.y - 90 + rand(-20, 10);
+        game.burst(tx, ty, sp.color, lite ? 6 : 12, { kind: 'spark', size: 2.2 });
+        if (!lite) game.burst(tx, ty + 40, '#fff', 4);
+        const falloff = 1 - Math.hypot(m.x - px, m.y - py) / blastR;
+        const dmg = Math.max(12, Math.round(fighter.baseDmg * (1.35 + falloff * 0.8)));
+        m.takeDamage(dmg, Math.sign(m.x - px || fighter.face || 1) * (360 + falloff * 80), game);
+      }
+      game.floater(px, py - 80, banner, sp.color, 20);
+      break;
+    }
+
+    case 'meteor': {
+      const count = sp.meteors || 5;
+      for (let i = 0; i < count; i++) {
+        const ang = (i / count) * TAU + rand(-0.2, 0.2);
+        const dist = rand(blastR * 0.2, blastR * 0.92);
+        const mx = px + Math.cos(ang) * dist;
+        const my = py + Math.sin(ang) * dist * 0.35;
+        game.burst(mx, my, sp.color, lite ? 10 : 18, { kind: 'spark', size: 3 });
+        if (!lite) spawnFxRing(game, mx, my, sp.color2 || '#ffe259', 6);
+        for (const m of game.monsters) {
+          if (!m.alive) continue;
+          if (Math.hypot(m.x - mx, m.y - my) > 56) continue;
+          const dmg = Math.max(10, Math.round(fighter.baseDmg * (1.2 + rand(0, 0.6))));
+          m.takeDamage(dmg, Math.sign(m.x - mx || fighter.face || 1) * rand(280, 420), game);
+        }
+      }
+      game.floater(px, py - 80, banner, sp.color, 20);
+      break;
+    }
+
+    case 'rage':
+      game.dmgBuffT = Math.max(game.dmgBuffT, sp.rageDur || 10);
+      game.dmgBuffMul = Math.max(game.dmgBuffMul || 1, sp.rageMul || 1.48);
+      finishSuperBlast(fighter, game, sp, px, py, blastR * 0.78, 1.05, 300);
+      game.burst(px, py, sp.color, lite ? 18 : 30);
+      game.floater(px, py - 80, banner, sp.color, 20);
+      break;
+
+    case 'timestop':
+      game.freezeT = Math.max(game.freezeT, sp.freezeDur || 0.22);
+      finishSuperBlast(fighter, game, sp, px, py, blastR * 1.05, 1.55, 340);
+      game.burst(px, py, sp.color, lite ? 22 : 38, { kind: 'ring' });
+      game.burst(px, py, sp.color2 || '#fff', lite ? 12 : 20);
+      game.floater(px, py - 80, banner, sp.color, 20);
+      break;
+
+    case 'clones': {
+      const hits = sp.cloneHits || 4;
+      const nearby = game.monsters.filter(m => m.alive && Math.hypot(m.x - px, m.y - py) <= blastR);
+      for (const m of nearby) {
+        for (let h = 0; h < hits; h++) {
+          const off = (h - (hits - 1) / 2) * 28;
+          const dmg = Math.max(8, Math.round(fighter.baseDmg * (0.42 + h * 0.08)));
+          m.takeDamage(dmg, Math.sign(m.x - px + off || fighter.face || 1) * (260 + h * 40), game);
+          if (!lite && h === 0) game.burst(m.x + off, m.y - 40, sp.color, 4);
+        }
+      }
+      game.burst(px, py, sp.color, lite ? 16 : 26);
+      game.floater(px, py - 80, banner, sp.color, 20);
+      break;
+    }
+
+    case 'blast':
+    default:
+      finishSuperBlast(fighter, game, sp, px, py, blastR, 1.65, 380);
+      game.burst(px, py, sp.color, lite ? 22 : 40, { kind: 'spark', size: 3.2 });
+      game.burst(px, py, sp.color2 || '#ff7043', lite ? 14 : 26);
+      spawnFxRing(game, px, py, '#ffe259', lite ? 10 : 18);
+      game.floater(px, py - 80, banner, sp.color, 20);
+      break;
+  }
+
+  if (save.haptics !== false) haptic(sp.behavior === 'shield' ? 18 : 32);
+}
+
+/** Prompt/charge icoon op canvas. */
+function drawSuperIcon(c, icon, r, color, color2) {
+  c.fillStyle = color || '#ffd75e';
+  c.strokeStyle = color2 || '#ff7043';
+  c.lineWidth = 2.5;
+  switch (icon) {
+    case 'shield':
+      c.beginPath();
+      c.moveTo(0, -r * 0.82);
+      c.lineTo(r * 0.72, -r * 0.35);
+      c.lineTo(r * 0.72, r * 0.25);
+      c.quadraticCurveTo(0, r * 0.92, -r * 0.72, r * 0.25);
+      c.lineTo(-r * 0.72, -r * 0.35);
+      c.closePath();
+      c.fill();
+      c.stroke();
+      break;
+    case 'eye':
+      c.beginPath();
+      c.ellipse(0, 0, r * 0.82, r * 0.48, 0, 0, TAU);
+      c.fill();
+      c.stroke();
+      c.fillStyle = '#fff';
+      c.beginPath();
+      c.arc(0, 0, r * 0.22, 0, TAU);
+      c.fill();
+      c.fillStyle = color2 || '#8b0000';
+      c.beginPath();
+      c.arc(0, 0, r * 0.12, 0, TAU);
+      c.fill();
+      break;
+    case 'bolt':
+      c.beginPath();
+      c.moveTo(r * 0.12, -r * 0.88);
+      c.lineTo(-r * 0.28, r * 0.05);
+      c.lineTo(r * 0.05, r * 0.05);
+      c.lineTo(-r * 0.18, r * 0.88);
+      c.lineTo(r * 0.38, -r * 0.08);
+      c.lineTo(r * 0.02, -r * 0.08);
+      c.closePath();
+      c.fill();
+      c.stroke();
+      break;
+    case 'heart':
+      c.beginPath();
+      c.moveTo(0, r * 0.32);
+      c.bezierCurveTo(-r * 0.9, -r * 0.2, -r * 0.45, -r * 0.88, 0, -r * 0.42);
+      c.bezierCurveTo(r * 0.45, -r * 0.88, r * 0.9, -r * 0.2, 0, r * 0.32);
+      c.fill();
+      c.stroke();
+      break;
+    case 'meteor':
+      c.beginPath();
+      c.arc(0, 0, r * 0.55, 0, TAU);
+      c.fill();
+      c.stroke();
+      c.strokeStyle = color;
+      c.lineWidth = 2;
+      c.beginPath();
+      c.moveTo(-r * 0.15, -r * 0.75);
+      c.lineTo(r * 0.35, r * 0.75);
+      c.stroke();
+      break;
+    case 'clock':
+      c.beginPath();
+      c.arc(0, 0, r * 0.72, 0, TAU);
+      c.fill();
+      c.stroke();
+      c.strokeStyle = '#fff';
+      c.beginPath();
+      c.moveTo(0, 0);
+      c.lineTo(0, -r * 0.42);
+      c.moveTo(0, 0);
+      c.lineTo(r * 0.32, 0);
+      c.stroke();
+      break;
+    case 'rage':
+      c.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * TAU - Math.PI / 2;
+        const rr = i % 2 ? r * 0.45 : r * 0.88;
+        const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
+        if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
+      }
+      c.closePath();
+      c.fill();
+      c.stroke();
+      break;
+    case 'clone':
+      c.globalAlpha *= 0.55;
+      c.beginPath();
+      c.arc(-r * 0.28, 0, r * 0.42, 0, TAU);
+      c.fill();
+      c.globalAlpha /= 0.55;
+      c.beginPath();
+      c.arc(r * 0.28, 0, r * 0.42, 0, TAU);
+      c.fill();
+      c.stroke();
+      break;
+    case 'void':
+      c.beginPath();
+      c.arc(0, 0, r * 0.72, 0, TAU);
+      c.fill();
+      c.stroke();
+      c.fillStyle = '#0a0d18';
+      c.beginPath();
+      c.arc(0, 0, r * 0.38, 0, TAU);
+      c.fill();
+      c.strokeStyle = color;
+      c.stroke();
+      break;
+    case 'star':
+    default:
+      c.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * TAU - Math.PI / 2;
+        const rr = i % 2 ? r * 0.42 : r * 0.88;
+        const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
+        if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
+      }
+      c.closePath();
+      c.fill();
+      c.stroke();
+      break;
+  }
+}
 /* --- src/systems/versus.js --- */
 /* ========================== VERSUS / 2 SPELERS ========================== */
 /** Saga-hints: parodie-vibes, geen officiële manga/IP-namen. */
@@ -5537,6 +5976,7 @@ function seedNlGameStrings() {
     styleEquipped: '{name} uitgerust',
     skillUnlock: 'Nieuwe skill: {name}!',
     skillEquipped: '{name} uitgerust als special',
+    superEquipped: '{name} uitgerust als nood-super',
     welcome: 'Welkom! Menu → Tips · per modus één korte hint bovenin (geen toast-stapel)',
   });
   if (!I18N.nl.missionsUi) I18N.nl.missionsUi = {};
@@ -5687,6 +6127,19 @@ function seedNlGameStrings() {
     skillSort_level: 'Sort: level',
     skillSort_dmg: 'Sort: schade',
     skillSort_name: 'Sort: naam',
+    superHead: 'Nood-super (Kets-slot)',
+    superSub: 'Omringd in avontuur — tik midden-symbool of druk E · vervangt KETS-BAM',
+    superSummaryHead: 'Nood-super',
+    superSummaryActive: 'actief',
+    superSummarySub: 'Alleen avontuur — verschijnt als je omsingeld of vastzit.',
+    superActive: 'Actief',
+    superPick: 'Tik om uit te rusten',
+    superEquipBtn: 'Uitrusten',
+    superIslandGate: 'Eiland-skill Lv {lvl}',
+    superNeedLvl: 'Unlock op Lv {lvl}',
+    superNextUnlock: 'Volgende super: <b>{name}</b> op Lv {lvl} · nog {need} level(s)',
+    superNextUnlockSoon: 'Volgende super: <b>{name}</b> (Lv {lvl}) — bijna klaar',
+    superNextIsland: 'Volgende super: <b>{name}</b> — eiland-gate tot Lv {cap} in avontuur',
     weaponHead: 'Wapens',
     weaponSub: 'Summons zijn echt · eiland-skill gate: alleen wapens tot je huidige eiland-cap in avontuur',
     helpFirstMinute: 'Eerste minuut — per modus één korte hint bovenin het gevecht (geen toast-stapel). Avontuur: joystick + knoppen · groen = HP · vol chakra = SUPER-knop. Training = Robot · Muur = combo · 2 spelers = links/rechts.',
@@ -6028,7 +6481,7 @@ const CATALOG_EN = {
     styleEquipped: '{name} equipped',
     skillUnlock: 'New skill: {name}!',
     skillEquipped: '{name} equipped as special',
-    welcome: 'Welcome! Menu → Tips · one short hint per mode (no toast stack)',
+    superEquipped: '{name} equipped as emergency super',
   },
   missionsUi: {
     flowDone: '✓ Day complete — 3 new missions tomorrow (midnight)',
@@ -6145,6 +6598,19 @@ const CATALOG_EN = {
     skillSort_level: 'Sort: level',
     skillSort_dmg: 'Sort: damage',
     skillSort_name: 'Sort: name',
+    superHead: 'Emergency super (Kets slot)',
+    superSub: 'Swarmed in adventure — tap center symbol or press E · replaces KETS-BAM',
+    superSummaryHead: 'Emergency super',
+    superSummaryActive: 'active',
+    superSummarySub: 'Adventure only — appears when swarmed or stuck.',
+    superActive: 'Active',
+    superPick: 'Tap to equip',
+    superEquipBtn: 'Equip',
+    superIslandGate: 'Island skill Lv {lvl}',
+    superNeedLvl: 'Unlocks at Lv {lvl}',
+    superNextUnlock: 'Next super: <b>{name}</b> at Lv {lvl} · {need} level(s) to go',
+    superNextUnlockSoon: 'Next super: <b>{name}</b> (Lv {lvl}) — almost ready',
+    superNextIsland: 'Next super: <b>{name}</b> — island gate until Lv {cap} in adventure',
     weaponHead: 'Weapons',
     weaponSub: 'Summons are real · island skill gate: adventure weapons up to your island cap',
     helpFirstMinute: 'First minute — one short hint per mode at top (no toast stack). Adventure: joystick + buttons · green = HP · full chakra = SUPER. Training = Robot · Wall = combo · 2P = left/right.',
@@ -6605,6 +7071,16 @@ function skillLabel(sk, field) {
   return ss && ss[field] != null ? ss[field] : '';
 }
 
+function superLabel(sp, field) {
+  field = field || 'name';
+  const id = typeof sp === 'string' ? sp : (sp && sp.id);
+  const k = 'super.' + id + '.' + field;
+  const v = t(k);
+  if (v && v !== k) return v;
+  const ss = typeof sp === 'object' && sp ? sp : (typeof superById === 'function' ? superById(id) : null);
+  return ss && ss[field] != null ? ss[field] : '';
+}
+
 function dailyText(id) {
   const k = 'daily.' + id + '.text';
   const v = t(k);
@@ -6799,10 +7275,36 @@ const SKILL_SFX_SAMPLES = {
   moon_pull: { pack: 'digital', vol: 0.76, rate: 0.95, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'laser1.ogg'] },
 };
 
-Object.assign(SFX_SAMPLE_MAP, SKILL_SFX_SAMPLES);
+/** Per-super Kenney CC0 samples — charge + finish pairs. */
+const SUPER_SFX_SAMPLES = {
+  super_shield_charge: { pack: 'impact', vol: 0.62, rate: 0.92, files: ['impactMetal_light_001.ogg', 'impactWood_medium_001.ogg'] },
+  super_shield: { pack: 'impact', vol: 0.88, files: ['impactBell_heavy_002.ogg', 'impactMetal_heavy_003.ogg'] },
+  super_heal_charge: { pack: 'ui', vol: 0.62, files: ['confirmation_002.ogg', 'drop_003.ogg'] },
+  super_heal: { pack: 'ui', vol: 0.78, files: ['confirmation_004.ogg', 'bong_001.ogg'] },
+  super_sharingan_charge: { pack: 'digital', vol: 0.68, rate: 0.9, files: ['lowThreeTone.ogg', 'lowRandom.ogg'] },
+  super_sharingan: { pack: 'digital', vol: 0.82, files: ['laser2.ogg', 'phaseJump4.ogg', 'highUp.ogg'] },
+  super_lightning_charge: { pack: 'digital', vol: 0.72, files: ['laser1.ogg', 'laser2.ogg', 'lowRandom.ogg'] },
+  super_lightning: { pack: 'digital', vol: 0.9, files: ['laser7.ogg', 'laser8.ogg', 'laser9.ogg'] },
+  super_meteor_charge: { pack: 'impact', vol: 0.65, rate: 0.85, files: ['impactWood_heavy_001.ogg', 'creak1.ogg'] },
+  super_meteor: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactGlass_heavy_004.ogg'] },
+  super_rage_charge: { pack: 'digital', vol: 0.7, rate: 0.95, files: ['lowRandom.ogg', 'pepSound1.ogg'] },
+  super_rage: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_003.ogg', 'impactMetal_heavy_004.ogg'] },
+  super_time_charge: { pack: 'digital', vol: 0.66, rate: 0.88, files: ['lowThreeTone.ogg', 'phaseJump1.ogg'] },
+  super_time: { pack: 'digital', vol: 0.84, files: ['phaseJump5.ogg', 'pepSound5.ogg', 'laser3.ogg'] },
+  super_clone_charge: { pack: 'rpg', vol: 0.64, files: ['cloth4.ogg', 'dropLeather.ogg'] },
+  super_clone: { pack: 'rpg', vol: 0.76, files: ['clothBelt2.ogg', 'chop.ogg', 'drawKnife2.ogg'] },
+  super_void_charge: { pack: 'digital', vol: 0.68, rate: 0.86, files: ['lowDown.ogg', 'lowRandom.ogg'] },
+  super_void: { pack: 'impact', vol: 0.92, files: ['impactGlass_heavy_003.ogg', 'impactMetal_heavy_002.ogg'] },
+};
+
+Object.assign(SFX_SAMPLE_MAP, SKILL_SFX_SAMPLES, SUPER_SFX_SAMPLES);
 
 function isSkillSfxId(name) {
   return !!(name && SKILL_SFX_SAMPLES[name]);
+}
+
+function isSuperSfxId(name) {
+  return !!(name && SUPER_SFX_SAMPLES[name]);
 }
 
 function skillSynthSeed(id) {
@@ -6879,6 +7381,32 @@ function playSkillSuperReadySynth(kind, h) {
   return true;
 }
 
+/** Procedural fallback for super charge/finish sfx when offline. */
+function playSuperSynthFallback(name, h) {
+  if (!isSuperSfxId(name)) return false;
+  const { T, N, C, now, lite } = h;
+  const charge = name.endsWith('_charge');
+  if (charge) {
+    T(88, charge ? 220 : 52, charge ? 1.6 : 0.4, 'sawtooth', 0.18, now);
+    N(charge ? 1.5 : 0.3, 0.14, 720, false, now);
+  } else if (name.includes('lightning')) {
+    for (let i = 0; i < (lite ? 3 : 6); i++) {
+      T(880 + i * 120, 220, 0.06, 'square', 0.12, now + i * 0.05);
+      N(0.04, 0.1, 4000 + i * 400, true, now + i * 0.05);
+    }
+  } else if (name.includes('heal')) {
+    C([523, 659, 784, 988], 'sine', 0.12, 0.08, now);
+  } else if (name.includes('shield')) {
+    T(220, 440, 0.2, 'triangle', 0.16, now);
+    N(0.12, 0.12, 1200, false, now);
+  } else {
+    N(0.3, 0.32, 400, false, now);
+    T(52, 20, 0.36, 'sawtooth', 0.28, now);
+    if (!lite) C([196, 247, 330, 392], 'square', 0.1, 0.05, now + 0.08);
+  }
+  return true;
+}
+
 function collectSampleUrls() {
   const urls = [];
   const seen = new Set();
@@ -6892,7 +7420,7 @@ function collectSampleUrls() {
 }
 
 function sampleMapForSfx(name) {
-  return SFX_SAMPLE_MAP[name] || SKILL_SFX_SAMPLES[name] || null;
+  return SFX_SAMPLE_MAP[name] || SKILL_SFX_SAMPLES[name] || SUPER_SFX_SAMPLES[name] || null;
 }
 /* --- src/systems/audio.js --- */
 /* =============================== AUDIO ================================= */
@@ -7177,6 +7705,7 @@ const AudioSys = {
     };
     const now = this.ctx.currentTime;
     const skillSynthH = { T, D, E, N, S, I, C, now, lite, v, d, P };
+    if (typeof playSuperSynthFallback === 'function' && playSuperSynthFallback(name, skillSynthH)) return;
     if (typeof playSkillSynthFallback === 'function' && playSkillSynthFallback(name, skillSynthH)) return;
     switch (name) {
       case 'swing':
@@ -9417,7 +9946,7 @@ class Fighter {
     game.floater(this.x, this.y - 92, 'Dash!', '#7cf5ff', 12);
   }
 
-  /** Nood-KETS-BAM: omringd/stunlock → tik midden-symbool of druk E. */
+  /** Nood-super (Kets-slot): omringd/stunlock → tik midden-symbool of druk E. */
   doKetsbam(game) {
     if (!this.isPlayer || !this.alive || !game) return false;
     if (game.ketsbamCd > 0 || game.ketsbamChargeT > 0 || game.inputLocked || game.traveling) return false;
@@ -9426,11 +9955,14 @@ class Fighter {
     const swarmed = near >= KETSBAM_NEAR_MIN;
     if (!swarmed && !stuck) return false;
 
+    const sp = equippedSuper();
+    const chargeDur = superChargeDur(sp);
+
     game.ketsbamCd = KETSBAM_CD;
-    game.ketsbamSuperT = KETSBAM_SUPER_ARMOR + KETSBAM_CHARGE_DUR;
+    game.ketsbamSuperT = KETSBAM_SUPER_ARMOR + chargeDur;
     game.ketsbamShow = false;
-    game.ketsbamChargeT = KETSBAM_CHARGE_DUR;
-    game.ketsbamChargeDur = KETSBAM_CHARGE_DUR;
+    game.ketsbamChargeT = chargeDur;
+    game.ketsbamChargeDur = chargeDur;
     game.ketsbamChargePulse = 0;
     game.inputLocked = true;
     this.hurtT = 0;
@@ -9438,11 +9970,11 @@ class Fighter {
     this.blocking = false;
     this.vx = 0;
     this.vy = 0;
-    this.invulnT = Math.max(this.invulnT, KETSBAM_INVULN + KETSBAM_CHARGE_DUR);
+    this.invulnT = Math.max(this.invulnT, KETSBAM_INVULN + chargeDur);
     resetWeaponCombo(this);
 
-    game.banner('KETS!', KETSBAM_CHARGE_DUR, '#ffd75e', 44);
-    try { AudioSys.sfx('ketsbamCharge'); } catch (_) {}
+    game.banner(superChargeBanner(sp), chargeDur, sp.color || '#ffd75e', 44);
+    try { AudioSys.sfx(superSfxId(sp, 'charge')); } catch (_) {}
     if (save.haptics !== false) haptic(12);
     return true;
   }
@@ -9452,28 +9984,7 @@ class Fighter {
     game.ketsbamChargeT = 0;
     game.inputLocked = false;
     game.ketsbamSuperT = Math.max(game.ketsbamSuperT, KETSBAM_SUPER_ARMOR);
-
-    game.shake(14, 0.38);
-    game.freezeT = Math.max(game.freezeT, 0.06);
-    game.banner('KETS-BAM!', 0.85, '#ffd75e', 42);
-    try { AudioSys.sfx('ketsbam'); } catch (_) {}
-
-    const px = this.x, py = this.y - 42;
-    for (const m of game.monsters) {
-      if (!m.alive) continue;
-      const dx = m.x - px, dy = m.y - py;
-      const dist = Math.hypot(dx, dy);
-      if (dist > KETSBAM_BLAST_R) continue;
-      const falloff = 1 - dist / KETSBAM_BLAST_R;
-      const dmg = Math.max(10, Math.round(this.baseDmg * (1.65 + falloff * 1.1)));
-      const kb = Math.sign(dx || this.face || 1) * (380 + falloff * 120);
-      m.takeDamage(dmg, kb, game);
-    }
-    game.burst(px, py, '#ffd75e', fxLite() ? 22 : 40, { kind: 'spark', size: 3.2 });
-    game.burst(px, py, '#ff7043', fxLite() ? 14 : 26);
-    spawnFxRing(game, px, py, '#ffe259', fxLite() ? 10 : 18);
-    game.floater(px, py - 80, 'KETS-BAM!', '#ffd75e', 20);
-    if (save.haptics !== false) haptic(32);
+    finishEquippedSuper(this, game);
   }
 
   intent(dt, game) {
@@ -13861,17 +14372,20 @@ class Game {
   drawKetsbamChargeAura(c) {
     if (this.ketsbamChargeT <= 0 || !this.player?.alive) return;
     const f = this.player;
+    const sp = equippedSuper();
     const dur = this.ketsbamChargeDur || KETSBAM_CHARGE_DUR;
     const prog = clamp(1 - this.ketsbamChargeT / dur, 0, 1);
     const pulse = this.ketsbamChargePulse || 0;
     const px = f.x, py = f.y - 52;
     const calm = motionReduced();
     const lite = fxLite() || calm;
+    const col = sp.color || '#ffd75e';
+    const col2 = sp.color2 || '#ff9a3d';
 
     c.save();
     const ringR = calm ? (28 + prog * 88) : (28 + prog * 88 + Math.sin(pulse * 11) * 7);
     c.globalAlpha = 0.22 + prog * 0.38;
-    c.strokeStyle = '#ffd75e';
+    c.strokeStyle = col;
     c.lineWidth = 2.5 + prog * 3.5;
     c.beginPath();
     c.ellipse(px, f.y + 3, ringR, ringR * 0.26, 0, 0, TAU);
@@ -13891,7 +14405,7 @@ class Game {
         ? (34 + i * 13 + prog * 22)
         : (34 + i * 13 + prog * 22 + Math.sin(pulse * 10 + i * 1.4) * 5);
       c.globalAlpha = (0.3 + prog * 0.28) * (1 - i * 0.17);
-      c.strokeStyle = i % 2 ? '#fff8dc' : '#ff9a3d';
+      c.strokeStyle = i % 2 ? '#fff8dc' : col2;
       c.lineWidth = 2 + prog * 2;
       c.beginPath();
       c.arc(px, py, r, 0, TAU);
@@ -13913,58 +14427,50 @@ class Game {
       }
     }
 
+    const chargeTxt = superChargeBanner(sp);
     c.globalAlpha = 0.85;
     c.font = `900 ${18 + prog * 8}px -apple-system, sans-serif`;
     c.textAlign = 'center';
-    c.fillStyle = '#ffd75e';
+    c.fillStyle = col;
     c.strokeStyle = 'rgba(0,0,0,.55)';
     c.lineWidth = 4;
-    c.strokeText(t('banner.kets'), px, py - 58 - prog * 24);
-    c.fillText(t('banner.kets'), px, py - 58 - prog * 24);
+    c.strokeText(chargeTxt, px, py - 58 - prog * 24);
+    c.fillText(chargeTxt, px, py - 58 - prog * 24);
     c.restore();
   }
 
   drawKetsbamPrompt(c) {
     if (!this.ketsbamShow || !this.player?.alive) return;
+    const sp = equippedSuper();
     const ui = touchUiScale(W, H);
     const { cx, cy } = ketsbamPromptCenter();
     const calm = motionReduced();
     const pulse = calm ? 1 : (0.9 + Math.sin((this.ketsbamPulse || 0) * 10) * 0.1);
     const r = 46 * ui * pulse;
+    const col = sp.color || '#ffd75e';
+    const col2 = sp.color2 || '#ff7043';
     c.save();
     c.globalAlpha = 0.92;
     c.fillStyle = 'rgba(6,10,24,.72)';
     c.beginPath();
     c.arc(cx, cy, r + 10 * ui, 0, TAU);
     c.fill();
-    c.strokeStyle = 'rgba(255,215,94,.55)';
+    c.strokeStyle = col + '88';
     c.lineWidth = 3 * ui;
     c.stroke();
-    // ster/kets-symbool
     c.translate(cx, cy);
     if (!calm) c.rotate((this.ketsbamPulse || 0) * 2.2);
-    c.fillStyle = '#ffd75e';
-    c.strokeStyle = '#ff7043';
-    c.lineWidth = 2.5 * ui;
-    c.beginPath();
-    for (let i = 0; i < 8; i++) {
-      const a = (i / 8) * TAU - Math.PI / 2;
-      const rr = i % 2 ? r * 0.42 : r * 0.88;
-      const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
-      if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
-    }
-    c.closePath();
-    c.fill();
-    c.stroke();
+    drawSuperIcon(c, sp.icon || 'star', r, col, col2);
     if (!calm) c.rotate(-(this.ketsbamPulse || 0) * 2.2);
     c.font = `900 ${Math.round(17 * ui)}px -apple-system,sans-serif`;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
     c.lineWidth = 5 * ui;
     c.strokeStyle = 'rgba(0,0,0,.55)';
-    c.strokeText(t('banner.kets'), 0, 2);
+    const promptTxt = superChargeBanner(sp).replace(/!$/, '');
+    c.strokeText(promptTxt, 0, 2);
     c.fillStyle = '#fff';
-    c.fillText(t('banner.kets'), 0, 2);
+    c.fillText(promptTxt, 0, 2);
     c.restore();
     c.font = `700 ${Math.round(12 * ui)}px -apple-system,sans-serif`;
     c.textAlign = 'center';
@@ -14757,6 +15263,7 @@ function initSkillScreenChrome() {
   UI.skillBehaviorFilter = 'all';
   UI.skillSortMode = 'level';
   UI.skillPreviewId = save.skill || 'rasengan';
+  UI.superPreviewId = save.super || 'ketsbam';
 
   const sagaBar = document.getElementById('skillSagaBar');
   if (sagaBar && !sagaBar.dataset.sfSkillSagaBound) {
@@ -14841,6 +15348,13 @@ function initSkillScreenChrome() {
       if (e.cancelable) e.preventDefault();
       runCard(card, true);
     }, { passive: false });
+    grid.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const card = e.target.closest('.skill-card');
+      if (!card || card.classList.contains('locked')) return;
+      e.preventDefault();
+      runCard(card, true);
+    });
     if (!IS_TOUCH) {
       grid.addEventListener('pointerover', (e) => {
         const card = e.target.closest('.skill-card');
@@ -14849,6 +15363,72 @@ function initSkillScreenChrome() {
         pickSkillPreview(card.dataset.id, true);
       });
     }
+  }
+
+  const superGrid = document.getElementById('superGrid');
+  if (superGrid && !superGrid.dataset.sfSuperGridBound) {
+    superGrid.dataset.sfSuperGridBound = '1';
+    let lastPick = 0;
+    const runCard = (card, equip) => {
+      if (!card || !card.dataset.id) return;
+      const now = Date.now();
+      if (now - lastPick < 320) return;
+      lastPick = now;
+      runSuperCard(card, equip);
+    };
+    superGrid.addEventListener('click', (e) => {
+      const card = e.target.closest('.super-card');
+      if (!card) return;
+      if (!uiTapAllowed()) {
+        pickSuperPreview(card.dataset.id, true);
+        return;
+      }
+      runCard(card, true);
+    });
+    superGrid.addEventListener('touchend', (e) => {
+      const card = touchEndedOnSelector(e, '.super-card');
+      if (!card) return;
+      if (e.cancelable) e.preventDefault();
+      runCard(card, true);
+    }, { passive: false });
+    superGrid.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const card = e.target.closest('.super-card');
+      if (!card || card.classList.contains('locked')) return;
+      e.preventDefault();
+      runCard(card, true);
+    });
+    if (!IS_TOUCH) {
+      superGrid.addEventListener('pointerover', (e) => {
+        const card = e.target.closest('.super-card');
+        if (!card || !card.dataset.id) return;
+        if (UI.superPreviewId === card.dataset.id) return;
+        pickSuperPreview(card.dataset.id, true);
+      });
+    }
+  }
+
+  const superPreviewHost = document.getElementById('superPreview');
+  if (superPreviewHost && !superPreviewHost.dataset.sfSuperPreviewBound) {
+    superPreviewHost.dataset.sfSuperPreviewBound = '1';
+    let lastEquip = 0;
+    const runEquip = () => {
+      const now = Date.now();
+      if (now - lastEquip < 320) return;
+      lastEquip = now;
+      if (!uiTapAllowed()) return;
+      equipSuper(UI.superPreviewId);
+    };
+    superPreviewHost.addEventListener('click', (e) => {
+      if (!e.target.closest('#superEquipBtn')) return;
+      runEquip();
+    });
+    superPreviewHost.addEventListener('touchend', (e) => {
+      if (!e.target.closest('#superEquipBtn')) return;
+      if (!uiTapAllowed()) return;
+      if (e.cancelable) e.preventDefault();
+      runEquip();
+    }, { passive: false });
   }
 }
 
@@ -14860,7 +15440,7 @@ function equipSkill(id) {
   safeUiAction(() => {
     save.skill = id;
     if (!persistOrToast('skill')) return;
-    AudioSys.sfx('select');
+    AudioSys.sfx(skillSfxId(sk));
     UI.renderSkills();
     UI.renderMenu();
     UI.renderModeHub();
@@ -14868,11 +15448,184 @@ function equipSkill(id) {
   }, 'pickSkill/' + id, 'Skill kiezen mislukt');
 }
 
+function pickSuperPreview(id, silent) {
+  if (!id) return;
+  UI.superPreviewId = id;
+  updateSuperPreview();
+  if (!silent) {
+    const sp = superById(id);
+    if (sp) try { AudioSys.init(); AudioSys.sfx(superSfxId(sp, 'finish')); } catch (_) {}
+  }
+}
+
+function equipSuper(id) {
+  if (!id || !uiTapAllowed()) return;
+  const sp = superById(id);
+  if (!superUnlocked(sp)) return;
+  if (save.super === id) return;
+  safeUiAction(() => {
+    save.super = id;
+    if (!persistOrToast('super')) return;
+    AudioSys.sfx(superSfxId(sp, 'finish'));
+    UI.renderSkills();
+    UI.renderMenu();
+    UI.renderModeHub();
+    UI.toast(t('toast.superEquipped', { name: superLabel(sp) }), 2200);
+  }, 'pickSuper/' + id, 'Super kiezen mislukt');
+}
+
+function runSuperCard(card, equip) {
+  if (!card || !card.dataset.id) return;
+  const id = card.dataset.id;
+  const sp = superById(id);
+  pickSuperPreview(id, true);
+  if (equip && superUnlocked(sp)) {
+    equipSuper(id);
+    return;
+  }
+  const now = Date.now();
+  if (now - (UI._superPreviewSfxT || 0) > 420) {
+    UI._superPreviewSfxT = now;
+    try { AudioSys.init(); AudioSys.sfx(superSfxId(sp, 'charge')); } catch (_) {}
+  }
+}
+
+function updateSuperPreview() {
+  const host = document.getElementById('superPreview');
+  if (!host) return;
+  const id = UI.superPreviewId || save.super || 'ketsbam';
+  const sp = superById(id);
+  const ok = superUnlocked(sp);
+  const active = save.super === sp.id;
+  let lockLine = '';
+  if (!ok) {
+    lockLine = superSkillGated(sp)
+      ? t('ui.superIslandGate', { lvl: sp.needLvl })
+      : (sp.needLvl ? t('ui.superNeedLvl', { lvl: sp.needLvl }) : superLabel(sp, 'hint'));
+  }
+  const foot = ok
+    ? (active
+      ? `<span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.superActive')}</span>`
+      : `<button type="button" class="btn mode-btn b-skills" id="superEquipBtn" style="min-height:44px;padding:10px 18px">${t('ui.superEquipBtn')}</button>`)
+    : `<span class="skill-preview-lock">${lockLine}</span>`;
+  host.innerHTML =
+    `<div class="skill-preview-top">` +
+    `<div class="skill-preview-orb"><canvas id="superPreviewCanvas" width="88" height="88"></canvas></div>` +
+    `<div class="skill-preview-body">` +
+    `<div class="skill-preview-name" style="color:${sp.color}">${superLabel(sp)}</div>` +
+    `<div class="skill-preview-banner">${sp.finishBanner || ''} · ${superCombatLine(sp)}</div>` +
+    `<div class="skill-preview-tip">${superLabel(sp, 'tooltip') || superCombatLine(sp)}</div>` +
+    `</div></div>` +
+    `<div class="skill-preview-foot">${foot}</div>`;
+  const cv = document.getElementById('superPreviewCanvas');
+  if (cv) {
+    const cc = cv.getContext('2d');
+    cc.clearRect(0, 0, 88, 88);
+    cc.save();
+    cc.translate(44, 44);
+    drawSuperIcon(cc, sp.icon || 'star', 28, sp.color, sp.color2);
+    cc.restore();
+  }
+}
+
+function renderSupers() {
+  const sumEl = document.getElementById('superSummary');
+  if (sumEl) {
+    const unlocked = superUnlockedCount();
+    const active = equippedSuper();
+    sumEl.style.display = 'block';
+    sumEl.innerHTML =
+      `${t('ui.superSummaryHead')} <b>${unlocked}/${SUPERS.length}</b> · ${t('ui.superSummaryActive')} ` +
+      `<b style="color:${active.color}">${superLabel(active)}</b>` +
+      `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.superSummarySub')}</div>`;
+  }
+  const nextEl = document.getElementById('superNextUnlock');
+  if (nextEl) {
+    const next = superNextUnlock();
+    if (next && !superUnlocked(next)) {
+      nextEl.style.display = 'block';
+      const need = Math.max(0, (next.needLvl || 1) - save.lvl);
+      if (superSkillGated(next) && save.lvl >= (next.needLvl || 1)) {
+        nextEl.innerHTML = t('ui.superNextIsland', { name: superLabel(next), cap: adventureWeaponCap() });
+      } else if (need > 0) {
+        nextEl.innerHTML = t('ui.superNextUnlock', { name: superLabel(next), lvl: next.needLvl, need });
+      } else {
+        nextEl.innerHTML = t('ui.superNextUnlockSoon', { name: superLabel(next), lvl: next.needLvl });
+      }
+    } else {
+      nextEl.style.display = 'none';
+      nextEl.innerHTML = '';
+    }
+  }
+  const previewId = UI.superPreviewId || save.super || 'ketsbam';
+  if (!SUPERS.some(s => s.id === previewId)) UI.superPreviewId = save.super || 'ketsbam';
+  updateSuperPreview();
+  const grid = document.getElementById('superGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  for (const sp of SUPERS) {
+    const ok = superUnlocked(sp);
+    const el = document.createElement('div');
+    el.className = 'style-card skill-card super-card' + (save.super === sp.id ? ' sel' : '') + (ok ? '' : ' locked') +
+      (UI.superPreviewId === sp.id ? ' preview-hov' : '');
+    el.dataset.id = sp.id;
+    el.style.borderColor = ok ? sp.color + '88' : '';
+    el.title = superLabel(sp, 'tooltip') || superLabel(sp, 'hint') || superLabel(sp);
+    const cv = document.createElement('canvas');
+    cv.width = 72; cv.height = 72;
+    const cc = cv.getContext('2d');
+    cc.save();
+    if (!ok) cc.globalAlpha = 0.45;
+    cc.translate(36, 38);
+    drawSuperIcon(cc, sp.icon || 'star', 22, sp.color, sp.color2);
+    cc.restore();
+    el.appendChild(cv);
+    const cap = document.createElement('div');
+    cap.style.fontSize = '13px';
+    cap.style.color = sp.color;
+    cap.textContent = superLabel(sp);
+    el.appendChild(cap);
+    const beh = document.createElement('div');
+    beh.className = 'skill-beh-badge';
+    beh.style.color = sp.color;
+    beh.textContent = (sp.behavior || 'blast').toUpperCase() + ' · Lv ' + (sp.needLvl || 1);
+    el.appendChild(beh);
+    const bonus = document.createElement('div');
+    bonus.style.fontSize = '11px';
+    bonus.style.fontWeight = '800';
+    bonus.style.color = ok ? '#ffd75e' : '#8fa3d9';
+    bonus.style.marginTop = '3px';
+    bonus.textContent = superCombatLine(sp);
+    bonus.style.opacity = ok ? '1' : '0.55';
+    el.appendChild(bonus);
+    const sub = document.createElement('div');
+    sub.style.fontSize = '11px';
+    sub.style.fontWeight = '600';
+    sub.style.opacity = '0.75';
+    sub.style.marginTop = '4px';
+    sub.textContent = ok ? (save.super === sp.id ? t('ui.superActive') : t('ui.superPick'))
+      : (superSkillGated(sp) ? t('ui.superIslandGate', { lvl: sp.needLvl }) : superLabel(sp, 'hint'));
+    el.setAttribute('role', 'button');
+    el.tabIndex = ok ? 0 : -1;
+    el.appendChild(sub);
+    grid.appendChild(el);
+  }
+}
+
 function runSkillCard(card, equip) {
   if (!card || !card.dataset.id) return;
   const id = card.dataset.id;
-  pickSkillPreview(id, !equip);
-  if (equip) equipSkill(id);
+  const sk = skillById(id);
+  pickSkillPreview(id, true);
+  if (equip && skillUnlocked(sk)) {
+    equipSkill(id);
+    return;
+  }
+  const now = Date.now();
+  if (now - (UI._skillPreviewSfxT || 0) > 420) {
+    UI._skillPreviewSfxT = now;
+    try { AudioSys.init(); AudioSys.sfx(id); } catch (_) {}
+  }
 }
 
 function updateSkillPreview() {
@@ -15189,7 +15942,7 @@ const UI = {
   resetInnerScrolls(screenEl) {
     if (!screenEl) return;
     const scrollables = screenEl.querySelectorAll(
-      '.char-grid-scroll, .menu-landing-scroll, .mode-hub-body, .island-bar, .grid, #weaponList, [data-scroll-reset]'
+      '.char-grid-scroll, .menu-landing-scroll, .mode-hub-body, .island-bar, .grid, #weaponList, .skill-grid-scroll, [data-scroll-reset]'
     );
     scrollables.forEach((el) => {
       try {
@@ -15243,6 +15996,7 @@ const UI = {
         if (id === 'helpScreen') this.renderHelp();
         if (id === 'skillScreen') {
           this.skillPreviewId = save.skill || 'rasengan';
+          this.superPreviewId = save.super || 'ketsbam';
         }
         if (id === 'levelScreen') {
           if (!this.advIslandPick) this.advIslandPick = currentAdvIsland();
@@ -15729,8 +16483,9 @@ const UI = {
       setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
       const skillsN = skillUnlockedCount();
       const activeSk = skillById(save.skill || 'rasengan');
+      const activeSp = equippedSuper();
       setStat('hubStatSkills', skillsN > 0
-        ? `${skillsN}/${SKILLS.length} · ${skillLabel(activeSk)}`
+        ? `${skillsN}/${SKILLS.length} · ${skillLabel(activeSk)} · ${superLabel(activeSp)}`
         : `${SKILLS.length} specials`);
       setStat('hubStatDex', `${dexCount()}/${SPECIES_ORDER.length} · +max HP`);
     }
@@ -16804,6 +17559,7 @@ const UI = {
 
   renderSkills() {
     initSkillScreenChrome();
+    renderSupers();
     const sumEl = document.getElementById('skillSummary');
     if (sumEl) {
       const unlocked = skillUnlockedCount();

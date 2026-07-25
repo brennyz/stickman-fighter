@@ -144,7 +144,7 @@ class Fighter {
     game.floater(this.x, this.y - 92, 'Dash!', '#7cf5ff', 12);
   }
 
-  /** Nood-KETS-BAM: omringd/stunlock → tik midden-symbool of druk E. */
+  /** Nood-super (Kets-slot): omringd/stunlock → tik midden-symbool of druk E. */
   doKetsbam(game) {
     if (!this.isPlayer || !this.alive || !game) return false;
     if (game.ketsbamCd > 0 || game.ketsbamChargeT > 0 || game.inputLocked || game.traveling) return false;
@@ -153,11 +153,14 @@ class Fighter {
     const swarmed = near >= KETSBAM_NEAR_MIN;
     if (!swarmed && !stuck) return false;
 
+    const sp = equippedSuper();
+    const chargeDur = superChargeDur(sp);
+
     game.ketsbamCd = KETSBAM_CD;
-    game.ketsbamSuperT = KETSBAM_SUPER_ARMOR + KETSBAM_CHARGE_DUR;
+    game.ketsbamSuperT = KETSBAM_SUPER_ARMOR + chargeDur;
     game.ketsbamShow = false;
-    game.ketsbamChargeT = KETSBAM_CHARGE_DUR;
-    game.ketsbamChargeDur = KETSBAM_CHARGE_DUR;
+    game.ketsbamChargeT = chargeDur;
+    game.ketsbamChargeDur = chargeDur;
     game.ketsbamChargePulse = 0;
     game.inputLocked = true;
     this.hurtT = 0;
@@ -165,11 +168,11 @@ class Fighter {
     this.blocking = false;
     this.vx = 0;
     this.vy = 0;
-    this.invulnT = Math.max(this.invulnT, KETSBAM_INVULN + KETSBAM_CHARGE_DUR);
+    this.invulnT = Math.max(this.invulnT, KETSBAM_INVULN + chargeDur);
     resetWeaponCombo(this);
 
-    game.banner('KETS!', KETSBAM_CHARGE_DUR, '#ffd75e', 44);
-    try { AudioSys.sfx('ketsbamCharge'); } catch (_) {}
+    game.banner(superChargeBanner(sp), chargeDur, sp.color || '#ffd75e', 44);
+    try { AudioSys.sfx(superSfxId(sp, 'charge')); } catch (_) {}
     if (save.haptics !== false) haptic(12);
     return true;
   }
@@ -179,28 +182,7 @@ class Fighter {
     game.ketsbamChargeT = 0;
     game.inputLocked = false;
     game.ketsbamSuperT = Math.max(game.ketsbamSuperT, KETSBAM_SUPER_ARMOR);
-
-    game.shake(14, 0.38);
-    game.freezeT = Math.max(game.freezeT, 0.06);
-    game.banner('KETS-BAM!', 0.85, '#ffd75e', 42);
-    try { AudioSys.sfx('ketsbam'); } catch (_) {}
-
-    const px = this.x, py = this.y - 42;
-    for (const m of game.monsters) {
-      if (!m.alive) continue;
-      const dx = m.x - px, dy = m.y - py;
-      const dist = Math.hypot(dx, dy);
-      if (dist > KETSBAM_BLAST_R) continue;
-      const falloff = 1 - dist / KETSBAM_BLAST_R;
-      const dmg = Math.max(10, Math.round(this.baseDmg * (1.65 + falloff * 1.1)));
-      const kb = Math.sign(dx || this.face || 1) * (380 + falloff * 120);
-      m.takeDamage(dmg, kb, game);
-    }
-    game.burst(px, py, '#ffd75e', fxLite() ? 22 : 40, { kind: 'spark', size: 3.2 });
-    game.burst(px, py, '#ff7043', fxLite() ? 14 : 26);
-    spawnFxRing(game, px, py, '#ffe259', fxLite() ? 10 : 18);
-    game.floater(px, py - 80, 'KETS-BAM!', '#ffd75e', 20);
-    if (save.haptics !== false) haptic(32);
+    finishEquippedSuper(this, game);
   }
 
   intent(dt, game) {

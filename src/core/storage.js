@@ -3,10 +3,10 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.81';
+const APP_VERSION = '1.17.82';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 207;
-const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', skill: 'rasengan', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
+const SW_CACHE_REV = 208;
+const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', skill: 'rasengan', super: 'ketsbam', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
 
@@ -682,6 +682,16 @@ function sanitizeSave(s) {
   if (stPick.needDexHalf && typeof SPECIES_ORDER !== 'undefined' &&
       dexCountFromSave(out) >= Math.ceil(SPECIES_ORDER.length / 2)) styleOk = true;
   if (!styleOk) out.style = 'classic';
+
+  const skPick = skillById(out.skill);
+  let skillOk = skPick.id === 'rasengan';
+  if (skPick.needLvl && out.lvl >= skPick.needLvl && !(skPick.needLvl > adventureWeaponCapForLevel(out.unlocked || 1))) skillOk = true;
+  out.skill = skillOk ? skPick.id : 'rasengan';
+
+  const spPick = superById(out.super);
+  let superOk = spPick.id === 'ketsbam';
+  if (spPick.needLvl && out.lvl >= spPick.needLvl && !(spPick.needLvl > adventureWeaponCapForLevel(out.unlocked || 1))) superOk = true;
+  out.super = superOk ? spPick.id : 'ketsbam';
 
   const cleanStars = {};
   for (const [k, v] of Object.entries(out.stars || {})) {

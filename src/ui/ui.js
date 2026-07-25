@@ -24,6 +24,7 @@ function initSkillScreenChrome() {
   UI.skillBehaviorFilter = 'all';
   UI.skillSortMode = 'level';
   UI.skillPreviewId = save.skill || 'rasengan';
+  UI.superPreviewId = save.super || 'ketsbam';
 
   const sagaBar = document.getElementById('skillSagaBar');
   if (sagaBar && !sagaBar.dataset.sfSkillSagaBound) {
@@ -124,6 +125,72 @@ function initSkillScreenChrome() {
       });
     }
   }
+
+  const superGrid = document.getElementById('superGrid');
+  if (superGrid && !superGrid.dataset.sfSuperGridBound) {
+    superGrid.dataset.sfSuperGridBound = '1';
+    let lastPick = 0;
+    const runCard = (card, equip) => {
+      if (!card || !card.dataset.id) return;
+      const now = Date.now();
+      if (now - lastPick < 320) return;
+      lastPick = now;
+      runSuperCard(card, equip);
+    };
+    superGrid.addEventListener('click', (e) => {
+      const card = e.target.closest('.super-card');
+      if (!card) return;
+      if (!uiTapAllowed()) {
+        pickSuperPreview(card.dataset.id, true);
+        return;
+      }
+      runCard(card, true);
+    });
+    superGrid.addEventListener('touchend', (e) => {
+      const card = touchEndedOnSelector(e, '.super-card');
+      if (!card) return;
+      if (e.cancelable) e.preventDefault();
+      runCard(card, true);
+    }, { passive: false });
+    superGrid.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const card = e.target.closest('.super-card');
+      if (!card || card.classList.contains('locked')) return;
+      e.preventDefault();
+      runCard(card, true);
+    });
+    if (!IS_TOUCH) {
+      superGrid.addEventListener('pointerover', (e) => {
+        const card = e.target.closest('.super-card');
+        if (!card || !card.dataset.id) return;
+        if (UI.superPreviewId === card.dataset.id) return;
+        pickSuperPreview(card.dataset.id, true);
+      });
+    }
+  }
+
+  const superPreviewHost = document.getElementById('superPreview');
+  if (superPreviewHost && !superPreviewHost.dataset.sfSuperPreviewBound) {
+    superPreviewHost.dataset.sfSuperPreviewBound = '1';
+    let lastEquip = 0;
+    const runEquip = () => {
+      const now = Date.now();
+      if (now - lastEquip < 320) return;
+      lastEquip = now;
+      if (!uiTapAllowed()) return;
+      equipSuper(UI.superPreviewId);
+    };
+    superPreviewHost.addEventListener('click', (e) => {
+      if (!e.target.closest('#superEquipBtn')) return;
+      runEquip();
+    });
+    superPreviewHost.addEventListener('touchend', (e) => {
+      if (!e.target.closest('#superEquipBtn')) return;
+      if (!uiTapAllowed()) return;
+      if (e.cancelable) e.preventDefault();
+      runEquip();
+    }, { passive: false });
+  }
 }
 
 function equipSkill(id) {
@@ -140,6 +207,170 @@ function equipSkill(id) {
     UI.renderModeHub();
     UI.toast(t('toast.skillEquipped', { name: skillLabel(sk) }), 2200);
   }, 'pickSkill/' + id, 'Skill kiezen mislukt');
+}
+
+function pickSuperPreview(id, silent) {
+  if (!id) return;
+  UI.superPreviewId = id;
+  updateSuperPreview();
+  if (!silent) {
+    const sp = superById(id);
+    if (sp) try { AudioSys.init(); AudioSys.sfx(superSfxId(sp, 'finish')); } catch (_) {}
+  }
+}
+
+function equipSuper(id) {
+  if (!id || !uiTapAllowed()) return;
+  const sp = superById(id);
+  if (!superUnlocked(sp)) return;
+  if (save.super === id) return;
+  safeUiAction(() => {
+    save.super = id;
+    if (!persistOrToast('super')) return;
+    AudioSys.sfx(superSfxId(sp, 'finish'));
+    UI.renderSkills();
+    UI.renderMenu();
+    UI.renderModeHub();
+    UI.toast(t('toast.superEquipped', { name: superLabel(sp) }), 2200);
+  }, 'pickSuper/' + id, 'Super kiezen mislukt');
+}
+
+function runSuperCard(card, equip) {
+  if (!card || !card.dataset.id) return;
+  const id = card.dataset.id;
+  const sp = superById(id);
+  pickSuperPreview(id, true);
+  if (equip && superUnlocked(sp)) {
+    equipSuper(id);
+    return;
+  }
+  const now = Date.now();
+  if (now - (UI._superPreviewSfxT || 0) > 420) {
+    UI._superPreviewSfxT = now;
+    try { AudioSys.init(); AudioSys.sfx(superSfxId(sp, 'charge')); } catch (_) {}
+  }
+}
+
+function updateSuperPreview() {
+  const host = document.getElementById('superPreview');
+  if (!host) return;
+  const id = UI.superPreviewId || save.super || 'ketsbam';
+  const sp = superById(id);
+  const ok = superUnlocked(sp);
+  const active = save.super === sp.id;
+  let lockLine = '';
+  if (!ok) {
+    lockLine = superSkillGated(sp)
+      ? t('ui.superIslandGate', { lvl: sp.needLvl })
+      : (sp.needLvl ? t('ui.superNeedLvl', { lvl: sp.needLvl }) : superLabel(sp, 'hint'));
+  }
+  const foot = ok
+    ? (active
+      ? `<span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.superActive')}</span>`
+      : `<button type="button" class="btn mode-btn b-skills" id="superEquipBtn" style="min-height:44px;padding:10px 18px">${t('ui.superEquipBtn')}</button>`)
+    : `<span class="skill-preview-lock">${lockLine}</span>`;
+  host.innerHTML =
+    `<div class="skill-preview-top">` +
+    `<div class="skill-preview-orb"><canvas id="superPreviewCanvas" width="88" height="88"></canvas></div>` +
+    `<div class="skill-preview-body">` +
+    `<div class="skill-preview-name" style="color:${sp.color}">${superLabel(sp)}</div>` +
+    `<div class="skill-preview-banner">${sp.finishBanner || ''} · ${superCombatLine(sp)}</div>` +
+    `<div class="skill-preview-tip">${superLabel(sp, 'tooltip') || superCombatLine(sp)}</div>` +
+    `</div></div>` +
+    `<div class="skill-preview-foot">${foot}</div>`;
+  const cv = document.getElementById('superPreviewCanvas');
+  if (cv) {
+    const cc = cv.getContext('2d');
+    cc.clearRect(0, 0, 88, 88);
+    cc.save();
+    cc.translate(44, 44);
+    drawSuperIcon(cc, sp.icon || 'star', 28, sp.color, sp.color2);
+    cc.restore();
+  }
+}
+
+function renderSupers() {
+  const sumEl = document.getElementById('superSummary');
+  if (sumEl) {
+    const unlocked = superUnlockedCount();
+    const active = equippedSuper();
+    sumEl.style.display = 'block';
+    sumEl.innerHTML =
+      `${t('ui.superSummaryHead')} <b>${unlocked}/${SUPERS.length}</b> · ${t('ui.superSummaryActive')} ` +
+      `<b style="color:${active.color}">${superLabel(active)}</b>` +
+      `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.superSummarySub')}</div>`;
+  }
+  const nextEl = document.getElementById('superNextUnlock');
+  if (nextEl) {
+    const next = superNextUnlock();
+    if (next && !superUnlocked(next)) {
+      nextEl.style.display = 'block';
+      const need = Math.max(0, (next.needLvl || 1) - save.lvl);
+      if (superSkillGated(next) && save.lvl >= (next.needLvl || 1)) {
+        nextEl.innerHTML = t('ui.superNextIsland', { name: superLabel(next), cap: adventureWeaponCap() });
+      } else if (need > 0) {
+        nextEl.innerHTML = t('ui.superNextUnlock', { name: superLabel(next), lvl: next.needLvl, need });
+      } else {
+        nextEl.innerHTML = t('ui.superNextUnlockSoon', { name: superLabel(next), lvl: next.needLvl });
+      }
+    } else {
+      nextEl.style.display = 'none';
+      nextEl.innerHTML = '';
+    }
+  }
+  const previewId = UI.superPreviewId || save.super || 'ketsbam';
+  if (!SUPERS.some(s => s.id === previewId)) UI.superPreviewId = save.super || 'ketsbam';
+  updateSuperPreview();
+  const grid = document.getElementById('superGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  for (const sp of SUPERS) {
+    const ok = superUnlocked(sp);
+    const el = document.createElement('div');
+    el.className = 'style-card skill-card super-card' + (save.super === sp.id ? ' sel' : '') + (ok ? '' : ' locked') +
+      (UI.superPreviewId === sp.id ? ' preview-hov' : '');
+    el.dataset.id = sp.id;
+    el.style.borderColor = ok ? sp.color + '88' : '';
+    el.title = superLabel(sp, 'tooltip') || superLabel(sp, 'hint') || superLabel(sp);
+    const cv = document.createElement('canvas');
+    cv.width = 72; cv.height = 72;
+    const cc = cv.getContext('2d');
+    cc.save();
+    if (!ok) cc.globalAlpha = 0.45;
+    cc.translate(36, 38);
+    drawSuperIcon(cc, sp.icon || 'star', 22, sp.color, sp.color2);
+    cc.restore();
+    el.appendChild(cv);
+    const cap = document.createElement('div');
+    cap.style.fontSize = '13px';
+    cap.style.color = sp.color;
+    cap.textContent = superLabel(sp);
+    el.appendChild(cap);
+    const beh = document.createElement('div');
+    beh.className = 'skill-beh-badge';
+    beh.style.color = sp.color;
+    beh.textContent = (sp.behavior || 'blast').toUpperCase() + ' · Lv ' + (sp.needLvl || 1);
+    el.appendChild(beh);
+    const bonus = document.createElement('div');
+    bonus.style.fontSize = '11px';
+    bonus.style.fontWeight = '800';
+    bonus.style.color = ok ? '#ffd75e' : '#8fa3d9';
+    bonus.style.marginTop = '3px';
+    bonus.textContent = superCombatLine(sp);
+    bonus.style.opacity = ok ? '1' : '0.55';
+    el.appendChild(bonus);
+    const sub = document.createElement('div');
+    sub.style.fontSize = '11px';
+    sub.style.fontWeight = '600';
+    sub.style.opacity = '0.75';
+    sub.style.marginTop = '4px';
+    sub.textContent = ok ? (save.super === sp.id ? t('ui.superActive') : t('ui.superPick'))
+      : (superSkillGated(sp) ? t('ui.superIslandGate', { lvl: sp.needLvl }) : superLabel(sp, 'hint'));
+    el.setAttribute('role', 'button');
+    el.tabIndex = ok ? 0 : -1;
+    el.appendChild(sub);
+    grid.appendChild(el);
+  }
 }
 
 function runSkillCard(card, equip) {
@@ -526,6 +757,7 @@ const UI = {
         if (id === 'helpScreen') this.renderHelp();
         if (id === 'skillScreen') {
           this.skillPreviewId = save.skill || 'rasengan';
+          this.superPreviewId = save.super || 'ketsbam';
         }
         if (id === 'levelScreen') {
           if (!this.advIslandPick) this.advIslandPick = currentAdvIsland();
@@ -1012,8 +1244,9 @@ const UI = {
       setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
       const skillsN = skillUnlockedCount();
       const activeSk = skillById(save.skill || 'rasengan');
+      const activeSp = equippedSuper();
       setStat('hubStatSkills', skillsN > 0
-        ? `${skillsN}/${SKILLS.length} · ${skillLabel(activeSk)}`
+        ? `${skillsN}/${SKILLS.length} · ${skillLabel(activeSk)} · ${superLabel(activeSp)}`
         : `${SKILLS.length} specials`);
       setStat('hubStatDex', `${dexCount()}/${SPECIES_ORDER.length} · +max HP`);
     }
@@ -2087,6 +2320,7 @@ const UI = {
 
   renderSkills() {
     initSkillScreenChrome();
+    renderSupers();
     const sumEl = document.getElementById('skillSummary');
     if (sumEl) {
       const unlocked = skillUnlockedCount();

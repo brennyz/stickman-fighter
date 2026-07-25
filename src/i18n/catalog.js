@@ -171,6 +171,7 @@ function seedNlGameStrings() {
     styleEquipped: '{name} uitgerust',
     skillUnlock: 'Nieuwe skill: {name}!',
     skillEquipped: '{name} uitgerust als special',
+    superEquipped: '{name} uitgerust als nood-super',
     welcome: 'Welkom! Menu → Tips · per modus één korte hint bovenin (geen toast-stapel)',
   });
   if (!I18N.nl.missionsUi) I18N.nl.missionsUi = {};
@@ -321,6 +322,19 @@ function seedNlGameStrings() {
     skillSort_level: 'Sort: level',
     skillSort_dmg: 'Sort: schade',
     skillSort_name: 'Sort: naam',
+    superHead: 'Nood-super (Kets-slot)',
+    superSub: 'Omringd in avontuur — tik midden-symbool of druk E · vervangt KETS-BAM',
+    superSummaryHead: 'Nood-super',
+    superSummaryActive: 'actief',
+    superSummarySub: 'Alleen avontuur — verschijnt als je omsingeld of vastzit.',
+    superActive: 'Actief',
+    superPick: 'Tik om uit te rusten',
+    superEquipBtn: 'Uitrusten',
+    superIslandGate: 'Eiland-skill Lv {lvl}',
+    superNeedLvl: 'Unlock op Lv {lvl}',
+    superNextUnlock: 'Volgende super: <b>{name}</b> op Lv {lvl} · nog {need} level(s)',
+    superNextUnlockSoon: 'Volgende super: <b>{name}</b> (Lv {lvl}) — bijna klaar',
+    superNextIsland: 'Volgende super: <b>{name}</b> — eiland-gate tot Lv {cap} in avontuur',
     weaponHead: 'Wapens',
     weaponSub: 'Summons zijn echt · eiland-skill gate: alleen wapens tot je huidige eiland-cap in avontuur',
     helpFirstMinute: 'Eerste minuut — per modus één korte hint bovenin het gevecht (geen toast-stapel). Avontuur: joystick + knoppen · groen = HP · vol chakra = SUPER-knop. Training = Robot · Muur = combo · 2 spelers = links/rechts.',
@@ -662,7 +676,7 @@ const CATALOG_EN = {
     styleEquipped: '{name} equipped',
     skillUnlock: 'New skill: {name}!',
     skillEquipped: '{name} equipped as special',
-    welcome: 'Welcome! Menu → Tips · one short hint per mode (no toast stack)',
+    superEquipped: '{name} equipped as emergency super',
   },
   missionsUi: {
     flowDone: '✓ Day complete — 3 new missions tomorrow (midnight)',
@@ -779,6 +793,19 @@ const CATALOG_EN = {
     skillSort_level: 'Sort: level',
     skillSort_dmg: 'Sort: damage',
     skillSort_name: 'Sort: name',
+    superHead: 'Emergency super (Kets slot)',
+    superSub: 'Swarmed in adventure — tap center symbol or press E · replaces KETS-BAM',
+    superSummaryHead: 'Emergency super',
+    superSummaryActive: 'active',
+    superSummarySub: 'Adventure only — appears when swarmed or stuck.',
+    superActive: 'Active',
+    superPick: 'Tap to equip',
+    superEquipBtn: 'Equip',
+    superIslandGate: 'Island skill Lv {lvl}',
+    superNeedLvl: 'Unlocks at Lv {lvl}',
+    superNextUnlock: 'Next super: <b>{name}</b> at Lv {lvl} · {need} level(s) to go',
+    superNextUnlockSoon: 'Next super: <b>{name}</b> (Lv {lvl}) — almost ready',
+    superNextIsland: 'Next super: <b>{name}</b> — island gate until Lv {cap} in adventure',
     weaponHead: 'Weapons',
     weaponSub: 'Summons are real · island skill gate: adventure weapons up to your island cap',
     helpFirstMinute: 'First minute — one short hint per mode at top (no toast stack). Adventure: joystick + buttons · green = HP · full chakra = SUPER. Training = Robot · Wall = combo · 2P = left/right.',
@@ -1236,6 +1263,16 @@ function skillLabel(sk, field) {
   const v = t(k);
   if (v && v !== k) return v;
   const ss = typeof sk === 'object' && sk ? sk : (typeof skillById === 'function' ? skillById(id) : null);
+  return ss && ss[field] != null ? ss[field] : '';
+}
+
+function superLabel(sp, field) {
+  field = field || 'name';
+  const id = typeof sp === 'string' ? sp : (sp && sp.id);
+  const k = 'super.' + id + '.' + field;
+  const v = t(k);
+  if (v && v !== k) return v;
+  const ss = typeof sp === 'object' && sp ? sp : (typeof superById === 'function' ? superById(id) : null);
   return ss && ss[field] != null ? ss[field] : '';
 }
 

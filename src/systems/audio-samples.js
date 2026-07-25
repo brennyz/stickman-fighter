@@ -109,10 +109,36 @@ const SKILL_SFX_SAMPLES = {
   moon_pull: { pack: 'digital', vol: 0.76, rate: 0.95, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'laser1.ogg'] },
 };
 
-Object.assign(SFX_SAMPLE_MAP, SKILL_SFX_SAMPLES);
+/** Per-super Kenney CC0 samples — charge + finish pairs. */
+const SUPER_SFX_SAMPLES = {
+  super_shield_charge: { pack: 'impact', vol: 0.62, rate: 0.92, files: ['impactMetal_light_001.ogg', 'impactWood_medium_001.ogg'] },
+  super_shield: { pack: 'impact', vol: 0.88, files: ['impactBell_heavy_002.ogg', 'impactMetal_heavy_003.ogg'] },
+  super_heal_charge: { pack: 'ui', vol: 0.62, files: ['confirmation_002.ogg', 'drop_003.ogg'] },
+  super_heal: { pack: 'ui', vol: 0.78, files: ['confirmation_004.ogg', 'bong_001.ogg'] },
+  super_sharingan_charge: { pack: 'digital', vol: 0.68, rate: 0.9, files: ['lowThreeTone.ogg', 'lowRandom.ogg'] },
+  super_sharingan: { pack: 'digital', vol: 0.82, files: ['laser2.ogg', 'phaseJump4.ogg', 'highUp.ogg'] },
+  super_lightning_charge: { pack: 'digital', vol: 0.72, files: ['laser1.ogg', 'laser2.ogg', 'lowRandom.ogg'] },
+  super_lightning: { pack: 'digital', vol: 0.9, files: ['laser7.ogg', 'laser8.ogg', 'laser9.ogg'] },
+  super_meteor_charge: { pack: 'impact', vol: 0.65, rate: 0.85, files: ['impactWood_heavy_001.ogg', 'creak1.ogg'] },
+  super_meteor: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactGlass_heavy_004.ogg'] },
+  super_rage_charge: { pack: 'digital', vol: 0.7, rate: 0.95, files: ['lowRandom.ogg', 'pepSound1.ogg'] },
+  super_rage: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_003.ogg', 'impactMetal_heavy_004.ogg'] },
+  super_time_charge: { pack: 'digital', vol: 0.66, rate: 0.88, files: ['lowThreeTone.ogg', 'phaseJump1.ogg'] },
+  super_time: { pack: 'digital', vol: 0.84, files: ['phaseJump5.ogg', 'pepSound5.ogg', 'laser3.ogg'] },
+  super_clone_charge: { pack: 'rpg', vol: 0.64, files: ['cloth4.ogg', 'dropLeather.ogg'] },
+  super_clone: { pack: 'rpg', vol: 0.76, files: ['clothBelt2.ogg', 'chop.ogg', 'drawKnife2.ogg'] },
+  super_void_charge: { pack: 'digital', vol: 0.68, rate: 0.86, files: ['lowDown.ogg', 'lowRandom.ogg'] },
+  super_void: { pack: 'impact', vol: 0.92, files: ['impactGlass_heavy_003.ogg', 'impactMetal_heavy_002.ogg'] },
+};
+
+Object.assign(SFX_SAMPLE_MAP, SKILL_SFX_SAMPLES, SUPER_SFX_SAMPLES);
 
 function isSkillSfxId(name) {
   return !!(name && SKILL_SFX_SAMPLES[name]);
+}
+
+function isSuperSfxId(name) {
+  return !!(name && SUPER_SFX_SAMPLES[name]);
 }
 
 function skillSynthSeed(id) {
@@ -189,6 +215,32 @@ function playSkillSuperReadySynth(kind, h) {
   return true;
 }
 
+/** Procedural fallback for super charge/finish sfx when offline. */
+function playSuperSynthFallback(name, h) {
+  if (!isSuperSfxId(name)) return false;
+  const { T, N, C, now, lite } = h;
+  const charge = name.endsWith('_charge');
+  if (charge) {
+    T(88, charge ? 220 : 52, charge ? 1.6 : 0.4, 'sawtooth', 0.18, now);
+    N(charge ? 1.5 : 0.3, 0.14, 720, false, now);
+  } else if (name.includes('lightning')) {
+    for (let i = 0; i < (lite ? 3 : 6); i++) {
+      T(880 + i * 120, 220, 0.06, 'square', 0.12, now + i * 0.05);
+      N(0.04, 0.1, 4000 + i * 400, true, now + i * 0.05);
+    }
+  } else if (name.includes('heal')) {
+    C([523, 659, 784, 988], 'sine', 0.12, 0.08, now);
+  } else if (name.includes('shield')) {
+    T(220, 440, 0.2, 'triangle', 0.16, now);
+    N(0.12, 0.12, 1200, false, now);
+  } else {
+    N(0.3, 0.32, 400, false, now);
+    T(52, 20, 0.36, 'sawtooth', 0.28, now);
+    if (!lite) C([196, 247, 330, 392], 'square', 0.1, 0.05, now + 0.08);
+  }
+  return true;
+}
+
 function collectSampleUrls() {
   const urls = [];
   const seen = new Set();
@@ -202,5 +254,5 @@ function collectSampleUrls() {
 }
 
 function sampleMapForSfx(name) {
-  return SFX_SAMPLE_MAP[name] || SKILL_SFX_SAMPLES[name] || null;
+  return SFX_SAMPLE_MAP[name] || SKILL_SFX_SAMPLES[name] || SUPER_SFX_SAMPLES[name] || null;
 }
