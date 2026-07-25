@@ -212,39 +212,35 @@ const SceneryArt = {
         break;
       }
       case 'landweg': {
-        // Foto-pixelmap: verre heuvels, boomlijn, bakstenen huis, rode struik
+        // Foto fight-bg: heldere heuvels, loofboomlijn, grijs huis + zonnepanelen
         for (let x = 0; x < W0; x += 2) {
-          const h = 10 + Math.sin(x * 0.04 + 1.2) * 5 + Math.sin(x * 0.09) * 3;
-          px(x, base - h, 2, h, '#4a8f52');
-          if ((x >> 1) % 2 === 0) px(x, base - h - 1, 1, 1, '#5aa860');
+          const h = 12 + Math.sin(x * 0.035 + 0.8) * 6 + Math.sin(x * 0.08) * 3;
+          px(x, base - h, 2, h, '#3a6a42');
+          if ((x >> 1) % 2 === 0) px(x, base - h - 1, 1, 1, '#4a7a50');
         }
-        // boomlijn / haag
-        for (let i = 0; i < 8; i++) {
-          const tx = 48 + i * 12 + Math.floor(r() * 3);
-          const th = 14 + Math.floor(r() * 10);
-          px(tx, base - th, 10, th, '#1e5a2c');
-          px(tx + 2, base - th - 4, 6, 6, '#2a7040');
+        for (let i = 0; i < 9; i++) {
+          const tx = 40 + i * 13 + Math.floor(r() * 3);
+          const th = 16 + Math.floor(r() * 12);
+          px(tx, base - th, 11, th, '#1e4a28');
+          px(tx + 2, base - th - 5, 7, 7, '#2a5834');
+          px(tx + 3, base - th - 9, 5, 5, '#3a7044');
         }
-        // bakstenen huis met donker dak
-        const hx = 72, hw = 22, hh = 18;
-        px(hx, base - hh, hw, hh, '#a85a48');
-        px(hx + 1, base - hh + 2, hw - 2, 2, '#8a4838');
-        px(hx + 1, base - hh + 8, hw - 2, 2, '#8a4838');
-        px(hx - 2, base - hh - 5, hw + 4, 5, '#3a3a40');
-        px(hx + 2, base - hh - 8, hw - 4, 3, '#2e2e34');
-        px(hx + 8, base - 10, 4, 10, '#4a3028');
-        px(hx + 4, base - 14, 3, 3, '#7cf5ff88');
-        px(hx + 14, base - 14, 3, 3, '#7cf5ff88');
-        // schuur rechts
-        px(108, base - 10, 16, 10, '#8a6a48');
-        px(106, base - 13, 20, 3, '#5a4a38');
-        // rode struik links
-        px(14, base - 12, 18, 12, '#6e2430');
-        px(16, base - 18, 14, 10, '#8a2e3a');
-        px(20, base - 22, 8, 6, '#a84852');
-        // gouden akker-pixels onderaan
-        for (let x = 0; x < 52; x += 2) {
-          px(x, base - 2, 2, 2, x % 4 ? '#d4b45e' : '#c4a04a');
+        // modern grey house + solar
+        const hx = 78, hw = 26, hh = 20;
+        px(hx, base - hh, hw, hh, '#6a7078');
+        px(hx + 2, base - hh + 4, 6, 6, '#3a4048');
+        px(hx + 16, base - hh + 4, 6, 6, '#3a4048');
+        px(hx - 2, base - hh - 6, hw + 4, 6, '#3a3e44');
+        px(hx + 4, base - hh - 10, 8, 5, '#1a2840');
+        px(hx + 14, base - hh - 9, 8, 5, '#1a2840');
+        px(hx + 10, base - 10, 5, 10, '#2a2e34');
+        // green bush left
+        px(10, base - 14, 22, 14, '#1e4a28');
+        px(14, base - 20, 16, 12, '#2a5834');
+        px(18, base - 26, 10, 8, '#3a7044');
+        // berm gold
+        for (let x = 0; x < 48; x += 2) {
+          px(x, base - 2, 2, 2, x % 4 ? '#c4a85a' : '#a88850');
         }
         break;
       }

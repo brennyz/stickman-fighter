@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.25';
+const APP_VERSION = '1.18.26';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 235;
+const SW_CACHE_REV = 236;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -15596,39 +15596,35 @@ const SceneryArt = {
         break;
       }
       case 'landweg': {
-        // Foto-pixelmap: verre heuvels, boomlijn, bakstenen huis, rode struik
+        // Foto fight-bg: heldere heuvels, loofboomlijn, grijs huis + zonnepanelen
         for (let x = 0; x < W0; x += 2) {
-          const h = 10 + Math.sin(x * 0.04 + 1.2) * 5 + Math.sin(x * 0.09) * 3;
-          px(x, base - h, 2, h, '#4a8f52');
-          if ((x >> 1) % 2 === 0) px(x, base - h - 1, 1, 1, '#5aa860');
+          const h = 12 + Math.sin(x * 0.035 + 0.8) * 6 + Math.sin(x * 0.08) * 3;
+          px(x, base - h, 2, h, '#3a6a42');
+          if ((x >> 1) % 2 === 0) px(x, base - h - 1, 1, 1, '#4a7a50');
         }
-        // boomlijn / haag
-        for (let i = 0; i < 8; i++) {
-          const tx = 48 + i * 12 + Math.floor(r() * 3);
-          const th = 14 + Math.floor(r() * 10);
-          px(tx, base - th, 10, th, '#1e5a2c');
-          px(tx + 2, base - th - 4, 6, 6, '#2a7040');
+        for (let i = 0; i < 9; i++) {
+          const tx = 40 + i * 13 + Math.floor(r() * 3);
+          const th = 16 + Math.floor(r() * 12);
+          px(tx, base - th, 11, th, '#1e4a28');
+          px(tx + 2, base - th - 5, 7, 7, '#2a5834');
+          px(tx + 3, base - th - 9, 5, 5, '#3a7044');
         }
-        // bakstenen huis met donker dak
-        const hx = 72, hw = 22, hh = 18;
-        px(hx, base - hh, hw, hh, '#a85a48');
-        px(hx + 1, base - hh + 2, hw - 2, 2, '#8a4838');
-        px(hx + 1, base - hh + 8, hw - 2, 2, '#8a4838');
-        px(hx - 2, base - hh - 5, hw + 4, 5, '#3a3a40');
-        px(hx + 2, base - hh - 8, hw - 4, 3, '#2e2e34');
-        px(hx + 8, base - 10, 4, 10, '#4a3028');
-        px(hx + 4, base - 14, 3, 3, '#7cf5ff88');
-        px(hx + 14, base - 14, 3, 3, '#7cf5ff88');
-        // schuur rechts
-        px(108, base - 10, 16, 10, '#8a6a48');
-        px(106, base - 13, 20, 3, '#5a4a38');
-        // rode struik links
-        px(14, base - 12, 18, 12, '#6e2430');
-        px(16, base - 18, 14, 10, '#8a2e3a');
-        px(20, base - 22, 8, 6, '#a84852');
-        // gouden akker-pixels onderaan
-        for (let x = 0; x < 52; x += 2) {
-          px(x, base - 2, 2, 2, x % 4 ? '#d4b45e' : '#c4a04a');
+        // modern grey house + solar
+        const hx = 78, hw = 26, hh = 20;
+        px(hx, base - hh, hw, hh, '#6a7078');
+        px(hx + 2, base - hh + 4, 6, 6, '#3a4048');
+        px(hx + 16, base - hh + 4, 6, 6, '#3a4048');
+        px(hx - 2, base - hh - 6, hw + 4, 6, '#3a3e44');
+        px(hx + 4, base - hh - 10, 8, 5, '#1a2840');
+        px(hx + 14, base - hh - 9, 8, 5, '#1a2840');
+        px(hx + 10, base - 10, 5, 10, '#2a2e34');
+        // green bush left
+        px(10, base - 14, 22, 14, '#1e4a28');
+        px(14, base - 20, 16, 12, '#2a5834');
+        px(18, base - 26, 10, 8, '#3a7044');
+        // berm gold
+        for (let x = 0; x < 48; x += 2) {
+          px(x, base - 2, 2, 2, x % 4 ? '#c4a85a' : '#a88850');
         }
         break;
       }
@@ -17301,7 +17297,7 @@ function drawSceneryTile(c, tile, y, scroll, rate, scale) {
 /* ========================== ACHTERGRONDEN ============================== */
 const THEMES = {
   veld:    { sky1: '#7ec8ff', sky2: '#cfeeff', hill: '#5cb85c', hill2: '#3f9b47', ground: '#4c8f3f', gtop: '#66b356', deco: 'bloem' },
-  landweg: { sky1: '#5a7fa0', sky2: '#b0c0cc', hill: '#3a4e3c', hill2: '#2e3e30', ground: '#7a6848', gtop: '#9a8458', deco: 'struik' },
+  landweg: { sky1: '#4a9adf', sky2: '#c5e0f5', hill: '#3a6a42', hill2: '#2a5030', ground: '#7a6848', gtop: '#9a8458', deco: 'struik' },
   bos:     { sky1: '#5aa9d6', sky2: '#bfe6d0', hill: '#2f7a45', hill2: '#215c33', ground: '#3c6b33', gtop: '#4c8543', deco: 'boom' },
   grot:    { sky1: '#232840', sky2: '#3a4265', hill: '#2a3050', hill2: '#1d2340', ground: '#3d4056', gtop: '#4d5170', deco: 'stalag' },
   vulkaan: { sky1: '#3a1f28', sky2: '#7a3020', hill: '#552430', hill2: '#3a1820', ground: '#4a2a28', gtop: '#5e3630', deco: 'lava' },
@@ -17309,6 +17305,116 @@ const THEMES = {
   dojo:    { sky1: '#3a2d24', sky2: '#6a5240', hill: '#4a3a2c', hill2: '#3a2d22', ground: '#7a5c3c', gtop: '#8f6f4a', deco: 'lampion' },
   sloop:   { sky1: '#8fb6d0', sky2: '#d8e8f0', hill: '#7a8794', hill2: '#5f6b78', ground: '#6f7684', gtop: '#848b99', deco: 'kraan' },
 };
+
+/**
+ * Landweg fight decor from countryside curve photo:
+ * dense left hedge + metal signpost, solar house mid, ZONE 30 sign, green crowns.
+ */
+function drawLandwegFightDecor(c, ground, scroll, t, dX, dSpan) {
+  const calm = typeof motionReduced === 'function' && motionReduced();
+  const lite = (typeof fxLite === 'function' && fxLite()) || (typeof Perf !== 'undefined' && Perf.tier >= 2);
+  const sway = calm ? 0 : Math.sin(t * 1.3) * 1.5;
+
+  // Dense green hedge / bush clusters (photo left + roadside)
+  const bushN = lite ? 3 : 5;
+  for (let i = 0; i < bushN; i++) {
+    const x = dX((i * 0.2 + 0.04) * dSpan);
+    const tall = i % 2 === 0;
+    c.fillStyle = tall ? '#1e4a28' : '#2a5834';
+    c.beginPath();
+    c.ellipse(x + sway * 0.3, ground - (tall ? 28 : 18), tall ? 34 : 22, tall ? 32 : 20, 0, 0, TAU);
+    c.fill();
+    c.fillStyle = '#3a7044';
+    c.beginPath();
+    c.ellipse(x - 10 + sway, ground - (tall ? 36 : 24), tall ? 18 : 12, tall ? 14 : 10, -0.15, 0, TAU);
+    c.fill();
+    c.fillStyle = '#4a8854';
+    c.beginPath();
+    c.ellipse(x + 8, ground - (tall ? 40 : 26), tall ? 14 : 10, tall ? 12 : 8, 0.1, 0, TAU);
+    c.fill();
+  }
+
+  // Metal signpost (back of sign) — tall grey pole with plate silhouette
+  const postX = dX(0.12 * dSpan);
+  c.fillStyle = '#6a7076';
+  c.fillRect(Math.round(postX) - 2, ground - 78, 4, 78);
+  c.fillStyle = '#8a9096';
+  c.fillRect(Math.round(postX) - 2, ground - 78, 2, 78);
+  c.fillStyle = '#4a5056';
+  c.fillRect(Math.round(postX) - 14, ground - 86, 28, 16);
+  c.fillStyle = '#3a4046';
+  c.fillRect(Math.round(postX) - 12, ground - 84, 24, 12);
+
+  // Modern gabled house + solar panels (peeking behind trees)
+  if (!lite) {
+    const hx = dX(0.42 * dSpan);
+    const baseY = ground - 8;
+    // body
+    c.fillStyle = '#6a7078';
+    c.fillRect(Math.round(hx), baseY - 36, 48, 36);
+    c.fillStyle = '#525860';
+    c.fillRect(Math.round(hx) + 2, baseY - 34, 10, 12);
+    c.fillRect(Math.round(hx) + 34, baseY - 34, 10, 12);
+    // gable roof
+    c.fillStyle = '#3a3e44';
+    c.beginPath();
+    c.moveTo(hx - 4, baseY - 36);
+    c.lineTo(hx + 24, baseY - 54);
+    c.lineTo(hx + 52, baseY - 36);
+    c.closePath();
+    c.fill();
+    // solar panels (dark blue rectangles on roof slope)
+    c.fillStyle = '#1a2840';
+    c.fillRect(Math.round(hx) + 6, baseY - 48, 14, 8);
+    c.fillRect(Math.round(hx) + 22, baseY - 46, 14, 8);
+    c.fillStyle = '#2a4060';
+    c.fillRect(Math.round(hx) + 7, baseY - 47, 5, 2);
+    c.fillRect(Math.round(hx) + 23, baseY - 45, 5, 2);
+    // door
+    c.fillStyle = '#2a2e34';
+    c.fillRect(Math.round(hx) + 18, baseY - 16, 10, 16);
+    // tree screen in front of house
+    c.fillStyle = '#2a5834';
+    c.beginPath();
+    c.ellipse(hx + 8, baseY - 20, 16, 18, 0, 0, TAU);
+    c.fill();
+    c.beginPath();
+    c.ellipse(hx + 40, baseY - 22, 14, 16, 0, 0, TAU);
+    c.fill();
+  }
+
+  // ZONE 30 traffic sign (white disc, red rim)
+  const sx = dX(0.72 * dSpan);
+  const sy = ground - 52;
+  c.fillStyle = '#6a7076';
+  c.fillRect(Math.round(sx) - 2, sy, 4, 52);
+  c.fillStyle = '#c02020';
+  c.beginPath();
+  c.arc(sx, sy - 2, 16, 0, TAU);
+  c.fill();
+  c.fillStyle = '#f4f4f0';
+  c.beginPath();
+  c.arc(sx, sy - 2, 12, 0, TAU);
+  c.fill();
+  c.fillStyle = '#1a1a1a';
+  c.font = 'bold 11px -apple-system, sans-serif';
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillText('30', sx, sy - 5);
+  c.font = 'bold 6px -apple-system, sans-serif';
+  c.fillText('ZONE', sx, sy + 5);
+  c.textBaseline = 'alphabetic';
+
+  // Straw / dry grass tufts along berm
+  for (let i = 0; i < 8; i++) {
+    const x = dX((i * 0.12 + 0.02) * dSpan);
+    c.fillStyle = '#a88850';
+    c.fillRect(x - 2, ground - 10, 3, 10);
+    c.fillRect(x + 3, ground - 7, 2, 7);
+    c.fillStyle = '#8a9a58';
+    c.fillRect(x + 6, ground - 9, 2, 9);
+  }
+}
 
 function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   scroll = scroll || 0;
@@ -17441,29 +17547,8 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
       c.beginPath(); c.moveTo(x, ground - 4); c.lineTo(x, ground + 4); c.stroke();
     }
   } else if (th.deco === 'struik') {
-    // landweg: gedempte struik + stro + houtstapel
-    for (let i = 0; i < 5; i++) {
-      const x = dX((i * 0.22 + 0.08) * dSpan);
-      const tall = i % 2 === 0;
-      c.fillStyle = tall ? '#5a3840' : '#4a2e34';
-      c.beginPath();
-      c.ellipse(x, ground - (tall ? 22 : 14), tall ? 28 : 18, tall ? 26 : 16, 0, 0, TAU);
-      c.fill();
-      c.fillStyle = '#6e4850';
-      c.beginPath();
-      c.ellipse(x - 6, ground - (tall ? 28 : 18), tall ? 12 : 8, tall ? 10 : 7, 0, 0, TAU);
-      c.fill();
-    }
-    for (let i = 0; i < 7; i++) {
-      const x = dX((i * 0.14 + 0.02) * dSpan);
-      c.fillStyle = '#9a8458';
-      c.fillRect(x - 2, ground - 10, 3, 10);
-      c.fillRect(x + 3, ground - 7, 2, 7);
-    }
-    if (typeof drawPixelLogWall === 'function' && Perf.tier < 2) {
-      const lx = dX(0.55 * dSpan);
-      drawPixelLogWall(c, lx - 40, ground - 16, 80, 16);
-    }
+    // landweg fight — foto: bocht, groene haag, bordpaal, huis+zon, ZONE 30
+    drawLandwegFightDecor(c, ground, scroll, t, dX, dSpan);
   }
 
   // grond
@@ -17473,16 +17558,25 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   c.fillStyle = 'rgba(255,255,255,.12)';
   c.fillRect(0, ground, W, 3);
 
-  // landweg: grindpad over de akker
+  // landweg: asfaltweg + gouden berm (fight floor)
   if (themeName === 'landweg') {
-    const roadY = ground + 6;
-    const roadH = Math.max(28, (H - ground) * 0.42);
+    const roadY = ground + 4;
+    const roadH = Math.max(30, (H - ground) * 0.48);
+    // golden grass shoulders
+    c.fillStyle = '#c4a85a';
+    c.fillRect(0, ground, W, 8);
+    c.fillStyle = '#a88850';
+    c.fillRect(0, ground + 6, W, 4);
+    // asphalt band
     c.fillStyle = '#5e5c58';
     c.fillRect(0, roadY, W, roadH);
     c.fillStyle = '#7a7874';
     c.fillRect(0, roadY, W, 5);
     c.fillStyle = '#484642';
-    c.fillRect(0, roadY + roadH - 4, W, 4);
+    c.fillRect(0, roadY + roadH - 5, W, 5);
+    // soft edge highlight
+    c.fillStyle = 'rgba(220,214,200,.12)';
+    c.fillRect(0, roadY, W, 2);
     if (!fxLite()) {
       const wrapSp = 37;
       const offR = wrap(-scroll * 1.05, wrapSp);
@@ -17494,18 +17588,35 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
         c.fillRect(x + 12, roadY + 16, 3, 3);
         c.fillRect(x + 26, roadY + 8, 2, 2);
       }
+      // center dashes
+      const dashSp = 48;
+      const dashOff = wrap(-scroll * 1.2, dashSp);
+      c.fillStyle = '#a88850';
+      for (let x = dashOff - dashSp; x < W + dashSp; x += dashSp) {
+        c.fillRect(Math.round(x), roadY + Math.round(roadH * 0.42), 14, 3);
+      }
     }
-    c.fillStyle = 'rgba(154,132,88,.45)';
-    c.fillRect(0, ground, W * 0.38, 8);
   }
 
   // grondstrepen — lopen mee met de wereld (loop-gevoel)
-  c.fillStyle = 'rgba(0,0,0,.14)';
-  const span = 92;
-  const off = wrap(-scroll, span);
-  for (let x = off - span; x < W + span; x += span) {
-    c.fillRect(x, ground + 10, 36, 4);
-    c.fillRect(x + 52, ground + 26, 20, 3);
+  if (themeName !== 'landweg') {
+    c.fillStyle = 'rgba(0,0,0,.14)';
+    const span = 92;
+    const off = wrap(-scroll, span);
+    for (let x = off - span; x < W + span; x += span) {
+      c.fillRect(x, ground + 10, 36, 4);
+      c.fillRect(x + 52, ground + 26, 20, 3);
+    }
+  } else {
+    // landweg: soft berm tufts instead of dirt stripes
+    c.fillStyle = '#8a9a58';
+    const span = 54;
+    const off = wrap(-scroll * 0.9, span);
+    for (let x = off - span; x < W + span; x += span) {
+      c.fillRect(x + 6, ground - 6, 2, 8);
+      c.fillRect(x + 10, ground - 4, 1, 6);
+      c.fillRect(x + 28, ground - 5, 2, 7);
+    }
   }
   // weer per thema (art-upgrade 4/4): blaadjes/bloesem/sintels/regen/stof
   drawThemeWeather(c, themeName, t, ground, scroll);
