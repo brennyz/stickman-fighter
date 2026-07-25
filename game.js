@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.35';
+const APP_VERSION = '1.18.36';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 245;
+const SW_CACHE_REV = 246;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -1108,7 +1108,8 @@ function sanitizeSave(s) {
   // Bewaar kill-counts (Jager-prestatie); clamp corrupte waarden — nooit hard op 1 zetten
   const cleanDex = {};
   for (const [k, v] of Object.entries(out.dex || {})) {
-    if (!SPECIES[k]) continue;
+    if (typeof SPECIES !== 'undefined' && !SPECIES[k]) continue;
+    if (typeof SPECIES === 'undefined') break;
     const n = Math.floor(Number(v) || 0);
     if (n > 0) cleanDex[k] = clamp(n, 1, 999999);
   }
@@ -1123,11 +1124,13 @@ function sanitizeSave(s) {
   out.weaponMastery = cleanMastery;
 
   const cleanSkills = {};
-  for (const id of SKILL_IDS) {
-    const fixed = typeof sanitizeSkillUpgradeEntry === 'function'
-      ? sanitizeSkillUpgradeEntry(id, (out.skillUpgrades || {})[id])
-      : null;
-    if (fixed) cleanSkills[id] = fixed;
+  if (typeof SKILL_IDS !== 'undefined') {
+    for (const id of SKILL_IDS) {
+      const fixed = typeof sanitizeSkillUpgradeEntry === 'function'
+        ? sanitizeSkillUpgradeEntry(id, (out.skillUpgrades || {})[id])
+        : null;
+      if (fixed) cleanSkills[id] = fixed;
+    }
   }
   out.skillUpgrades = cleanSkills;
 
@@ -1182,7 +1185,7 @@ function sanitizeSave(s) {
     const tasks = Array.isArray(out.daily.tasks) ? out.daily.tasks : [];
     out.daily = {
       date: dk,
-      tasks: tasks.filter(t => t && dailyDef(t.id)).map(t => ({
+      tasks: tasks.filter(t => t && typeof dailyDef === 'function' && dailyDef(t.id)).map(t => ({
         id: t.id,
         progress: clamp(Math.floor(Number(t.progress) || 0), 0, 99999),
         done: !!t.done,
@@ -1198,7 +1201,7 @@ function sanitizeSave(s) {
   for (const raw of out.vsPlayedIds) {
     if (typeof raw !== 'string') continue;
     const id = migrateVsRosterId(raw);
-    if (VS_ROSTER.some(r => r.id === id) && !played.includes(id)) played.push(id);
+    if (typeof VS_ROSTER !== 'undefined' && VS_ROSTER.some(r => r.id === id) && !played.includes(id)) played.push(id);
   }
   out.vsPlayedIds = played.slice(0, 32);
 
@@ -21548,6 +21551,63 @@ class Game {
     }
   }
 
+  /** d4 c4: huidige golf-trait pill (flyers/rush/elite) — zichtbaar tijdens gevecht. */
+  drawAdvTraitChip(c, cx, cy, meta) {
+    if (!meta || !meta.trait || meta.trait === 'boss') return cy;
+    const banner = typeof waveTraitBanner === 'function' ? waveTraitBanner(meta.trait) : null;
+    const label = (banner && banner.text) || meta.label;
+    if (!label) return cy;
+    const col = (banner && banner.color) || '#ffd75e';
+    c.save();
+    c.font = '800 10px -apple-system, sans-serif';
+    const tw = c.measureText(label).width;
+    const padX = 8;
+    const w = tw + padX * 2;
+    const h = 16;
+    const x = cx - w / 2;
+    const y = cy - h / 2;
+    c.fillStyle = 'rgba(0,0,0,.45)';
+    this.rr(c, x, y, w, h, 8);
+    c.fill();
+    c.strokeStyle = col + 'aa';
+    c.lineWidth = 1.5;
+    this.rr(c, x, y, w, h, 8);
+    c.stroke();
+    c.fillStyle = col;
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText(label, cx, cy + 0.5);
+    c.restore();
+    c.textBaseline = 'alphabetic';
+    c.textAlign = 'left';
+    return cy + h / 2 + 6;
+  }
+
+  /** d4 c4: sterren-buffer strip — HP% t.o.v. 2★/3★ drempels (hoek rechtsboven). */
+  drawAdvStarBuffer(c, x, y, hpPct) {
+    const barW = 50;
+    const barH = 4;
+    const pct = clamp(hpPct, 0, 1);
+    c.save();
+    c.fillStyle = 'rgba(0,0,0,.45)';
+    this.rr(c, x, y, barW, barH, 2);
+    c.fill();
+    const fillCol = pct > STAR_HP.three ? '#6ee06e' : (pct > STAR_HP.two ? '#ffd75e' : '#ff8a9a');
+    c.fillStyle = fillCol;
+    this.rr(c, x, y, barW * pct, barH, 2);
+    c.fill();
+    c.strokeStyle = 'rgba(255,215,94,.65)';
+    c.lineWidth = 1;
+    for (const frac of [STAR_HP.two, STAR_HP.three]) {
+      const tx = x + barW * frac;
+      c.beginPath();
+      c.moveTo(tx, y - 1);
+      c.lineTo(tx, y + barH + 1);
+      c.stroke();
+    }
+    c.restore();
+  }
+
   /** Deel 2: volgende golf komt als silhouetten aanlopen tijdens de reis. */
   drawApproachingWave(c) {
     if (!(this.wavePause > 0) || !this.level) return;
@@ -21608,11 +21668,21 @@ class Game {
       const cx = x0 + i * gap;
       const flying = sp.type === 'fly' || sp.type === 'dragon';
       const col = def.superBoss ? '#ffd75e' : (def.elite ? '#ffb0b8' : (sp.c2 || '#8899bb'));
+      const traitCol = meta && meta.trait === 'flyers' ? '#c47aff'
+        : (meta && meta.trait === 'rush' ? '#ffb06a'
+          : (meta && meta.trait === 'elite' ? '#ffb0b8' : null));
       c.fillStyle = col;
       c.globalAlpha = 0.75;
       c.beginPath();
       c.arc(cx, y + (flying ? -5 : 0), 6 + (def.elite ? 1.5 : 0), 0, TAU);
       c.fill();
+      if (traitCol && i === 0) {
+        c.strokeStyle = traitCol;
+        c.lineWidth = 1.8;
+        c.beginPath();
+        c.arc(cx, y + (flying ? -5 : 0), 9 + (def.elite ? 1 : 0), 0, TAU);
+        c.stroke();
+      }
       if (flying) {
         c.strokeStyle = 'rgba(196,122,255,.7)';
         c.lineWidth = 1.2;
@@ -21952,7 +22022,7 @@ class Game {
     const lite = fxLite() || calm;
     const col = sp.color || '#ffd75e';
     const col2 = sp.color2 || '#ff9a3d';
-    const pulse = calm ? 0 : (this.ketsbamPulse || 0);
+    const pulse = calm ? 0 : (this.ketsbamChargePulse || this.ketsbamPulse || 0);
 
     c.save();
     const ringR = calm ? (28 + prog * 88) : (28 + prog * 88 + Math.sin(pulse * 11) * 7);
@@ -22015,7 +22085,7 @@ class Game {
     if (!this.ketsbamShow || !this.player?.alive) return;
     const sp = equippedSuper();
     const ui = touchUiScale(W, H);
-    const { cx, cy } = ketsbamPromptCenter();
+    const { cx, cy } = ketsbamPromptLayout(this);
     const calm = motionReduced();
     const pulse = calm ? 1 : (0.9 + Math.sin((this.ketsbamPulse || 0) * 10) * 0.1);
     const r = 46 * ui * pulse;
@@ -22193,6 +22263,11 @@ class Game {
       c.globalAlpha = 1;
       hy += 14;
 
+      if (this.waveIdx >= 0 && this.wavePause <= 0) {
+        const curMeta = this.level.waveMeta && this.level.waveMeta[this.waveIdx];
+        hy = this.drawAdvTraitChip(c, W / 2, hy + 8, curMeta);
+      }
+
       hy = this.drawStageProgress(c, hy + 4) + 10;
 
       const bossAlive = this.monsters.find(m => m.alive && (m.tideBoss || m.elite));
@@ -22255,6 +22330,7 @@ class Game {
         for (let i = 0; i < 3; i++) {
           drawStarShape(c, W - 52 + i * 19, starY, 8, '#ffd75e', i < proj);
         }
+        this.drawAdvStarBuffer(c, W - 58, starY + 13, hpPct);
       }
 
       const rightX = W - Math.max(14, readSafeInsets().right + 8);

@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.35';
+const APP_VERSION = '1.18.36';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 245;
+const SW_CACHE_REV = 246;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -870,7 +870,8 @@ function sanitizeSave(s) {
   // Bewaar kill-counts (Jager-prestatie); clamp corrupte waarden — nooit hard op 1 zetten
   const cleanDex = {};
   for (const [k, v] of Object.entries(out.dex || {})) {
-    if (!SPECIES[k]) continue;
+    if (typeof SPECIES !== 'undefined' && !SPECIES[k]) continue;
+    if (typeof SPECIES === 'undefined') break;
     const n = Math.floor(Number(v) || 0);
     if (n > 0) cleanDex[k] = clamp(n, 1, 999999);
   }
@@ -885,11 +886,13 @@ function sanitizeSave(s) {
   out.weaponMastery = cleanMastery;
 
   const cleanSkills = {};
-  for (const id of SKILL_IDS) {
-    const fixed = typeof sanitizeSkillUpgradeEntry === 'function'
-      ? sanitizeSkillUpgradeEntry(id, (out.skillUpgrades || {})[id])
-      : null;
-    if (fixed) cleanSkills[id] = fixed;
+  if (typeof SKILL_IDS !== 'undefined') {
+    for (const id of SKILL_IDS) {
+      const fixed = typeof sanitizeSkillUpgradeEntry === 'function'
+        ? sanitizeSkillUpgradeEntry(id, (out.skillUpgrades || {})[id])
+        : null;
+      if (fixed) cleanSkills[id] = fixed;
+    }
   }
   out.skillUpgrades = cleanSkills;
 
@@ -944,7 +947,7 @@ function sanitizeSave(s) {
     const tasks = Array.isArray(out.daily.tasks) ? out.daily.tasks : [];
     out.daily = {
       date: dk,
-      tasks: tasks.filter(t => t && dailyDef(t.id)).map(t => ({
+      tasks: tasks.filter(t => t && typeof dailyDef === 'function' && dailyDef(t.id)).map(t => ({
         id: t.id,
         progress: clamp(Math.floor(Number(t.progress) || 0), 0, 99999),
         done: !!t.done,
@@ -960,7 +963,7 @@ function sanitizeSave(s) {
   for (const raw of out.vsPlayedIds) {
     if (typeof raw !== 'string') continue;
     const id = migrateVsRosterId(raw);
-    if (VS_ROSTER.some(r => r.id === id) && !played.includes(id)) played.push(id);
+    if (typeof VS_ROSTER !== 'undefined' && VS_ROSTER.some(r => r.id === id) && !played.includes(id)) played.push(id);
   }
   out.vsPlayedIds = played.slice(0, 32);
 
