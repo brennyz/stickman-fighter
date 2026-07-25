@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.57';
+const APP_VERSION = '1.18.58';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 267;
+const SW_CACHE_REV = 268;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -12562,7 +12562,20 @@ function relayoutTouchPads() {
 function primePlayInput(dual) {
   Input.releaseAll();
   Input.dualMode = !!dual;
+  // Kort suppress-venster: menu-tap ghost mag niet meteen Input.onDown raken
+  // (mist playInputSuppressed → ReferenceError → window error → recoverToMenu).
+  Input.suppressUntil = performance.now() + (IS_TOUCH ? 400 : 140);
+  Input.lastMoveTap = 0;
+  Input.lastMoveDir = 0;
+  if (typeof InputP2 !== 'undefined' && InputP2) {
+    InputP2.lastMoveTap = 0;
+    InputP2.lastMoveDir = 0;
+  }
   relayoutTouchPads();
+}
+
+function playInputSuppressed() {
+  return !!(Input.suppressUntil && performance.now() < Input.suppressUntil);
 }
 
 /** Voorkom dat scroll/slide over menu-tegels meteen selecteert (iPad). */

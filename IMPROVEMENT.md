@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-25 | — | **Fix adventure tap→menu:** missing `playInputSuppressed` threw on first touch → window error handler `recoverToMenu`. Restore helper + suppress window in `primePlayInput`. v1.18.58 / SW v268. |
 | 2026-07-25 | — | **Dex count:** live totaal 137 (land+zee+tide); i18n/HTML 114/126 weg; dexCount alleen bekende SPECIES. v1.18.57 / SW v267. |
 | 2026-07-25 | **9** | iPad touch c5: pointerup scroll-guard (id mismatch fix), joy held pulse, 2P neutral zone strip. v1.18.56 / SW v266. |
 | 2026-07-25 | **15** | Onboarding c5: pauze eerste-minuut chip, Ketsbam/Tide inline hints, eerste Tide zonder toast. v1.18.55 / SW v265. |
