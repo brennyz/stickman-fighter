@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "purpose": "E\u00e9n gedeelde to-do- en contextlaag voor alle Cursor-agents (iPad, Mac, web). Lees dit bestand aan het begin; schrijf user-wensen en afgerond werk terug v\u00f3\u00f3r commit.",
+  "purpose": "Eén gedeelde to-do- en contextlaag voor alle Cursor-agents (iPad, Mac, web). Lees dit bestand aan het begin; schrijf user-wensen en afgerond werk terug vóór commit.",
   "canonicalAgent": {
     "name": "Stickman vechtspel ipad",
     "url": "https://cursor.com/agents/bc-019f8b30-9e12-7645-8d43-eb8ec5a0b75e",
@@ -22,20 +22,20 @@
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "d17 stabiliteit cron \u2192 MERGE"
+    "note": "d17 stabiliteit cron → MERGE"
   },
   "userWishlist": [
     {
       "id": "w-20260725T141500",
       "from": "user",
-      "text": "ASSET-STYLE.md leidend voor knoppen/beelden: agent leest doc \u2192 SVG in assets/buttons \u2192 vervangt inline iconen. Eerste batch later: hub of modes.",
+      "text": "ASSET-STYLE.md leidend voor knoppen/beelden: agent leest doc → SVG in assets/buttons → vervangt inline iconen. Eerste batch later: hub of modes.",
       "status": "active",
       "updated": "2026-07-25"
     },
     {
       "id": "w-20260725T083800",
       "from": "user",
-      "text": "Elke 2 uur automatisch code scannen op bugs/optimalisaties en fixen, volledig autonoom. Opzet via Cursor Automation (cron 0 */2 * * *) \u2014 zie AUTOMATION-BUGFIX.md. Automation is door gebruiker aangezet in dashboard (2026-07-25).",
+      "text": "Elke 2 uur automatisch code scannen op bugs/optimalisaties en fixen, volledig autonoom. Opzet via Cursor Automation (cron 0 */2 * * *) — zie AUTOMATION-BUGFIX.md. Automation is door gebruiker aangezet in dashboard (2026-07-25).",
       "status": "active",
       "updated": "2026-07-25"
     },
@@ -56,59 +56,63 @@
     {
       "id": "char-screens",
       "from": "iPad/mobile",
-      "text": "Character screens \u2014 bedoelde 2P char select deel 1+2 (v1.11.1\u20131.11.2). Bevestig op iPad via menu \u2192 2 spelers.",
+      "text": "Character screens — bedoelde 2P char select deel 1+2 (v1.11.1–1.11.2). Bevestig op iPad via menu → 2 spelers.",
       "status": "done-in-code",
       "updated": "2026-07-23"
     }
   ],
   "agentRules": [
-    "Lees AGENTS.md + IMPROVEMENT.md + dit bestand v\u00f3\u00f3r grote wijzigingen.",
-    "Als git log origin/main..main leeg is maar GitHub nog v1.7.0: werk zit in andere agent-VM \u2014 vraag patch via tunnel dist/push-naar-github.patch of push vanaf oude run.",
+    "Lees AGENTS.md + IMPROVEMENT.md + dit bestand vóór grote wijzigingen.",
+    "Als git log origin/main..main leeg is maar GitHub nog v1.7.0: werk zit in andere agent-VM — vraag patch via tunnel dist/push-naar-github.patch of push vanaf oude run.",
     "Voeg nieuwe iPad/Mac-wensen toe aan userWishlist (max 12 open items; archiveer done).",
-    "E\u00e9n thema per sessie waar mogelijk; d20 via scripts/roll-improvement-d20.sh.",
+    "Eén thema per sessie waar mogelijk; d20 via scripts/roll-improvement-d20.sh.",
     "Commit niet health.json / hosting.json / LIVE-LINK.txt tenzij bewust deploy-doc.",
     "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md."
   ],
   "sessionLog": [
     {
+      "at": "2026-07-25T22:05:34Z",
+      "summary": "d17 stabiliteit: char swap t() crash, adventure result na pauze→menu · v1.18.67"
+    },
+    {
       "at": "2026-07-25T22:05:00Z",
-      "summary": "d17 stabiliteit: char swap t() crash, adventure result na pauze\u2192menu \u00b7 v1.18.67"
+      "summary": "d17 stabiliteit: char swap t() crash, adventure result na pauze→menu · v1.18.67"
     },
     {
       "at": "2026-07-25T21:35:00Z",
-      "summary": "Extra krachten UIT (summon/MS/tide) + LEVEL KLAAR eindflow \u00b7 v1.18.65"
+      "summary": "Extra krachten UIT (summon/MS/tide) + LEVEL KLAAR eindflow · v1.18.65"
     },
     {
       "at": "2026-07-25T21:07:50Z",
-      "summary": "Stabiliteit: char select crash, claim batch, gamble race, lastPlay \u00b7 v1.18.60"
+      "summary": "Stabiliteit: char select crash, claim batch, gamble race, lastPlay · v1.18.60"
     },
     {
       "at": "2026-07-25T21:05:00Z",
-      "summary": "Stabiliteit: char select crash, claim batch, gamble race, lastPlay \u00b7 v1.18.60"
+      "summary": "Stabiliteit: char select crash, claim batch, gamble race, lastPlay · v1.18.60"
     },
     {
       "at": "2026-07-25T20:15:00Z",
-      "summary": "Adventure tap\u2192startscherm: restore playInputSuppressed + soft window-error guard \u00b7 v1.18.57"
+      "summary": "Adventure tap→startscherm: restore playInputSuppressed + soft window-error guard · v1.18.57"
     },
     {
       "at": "2026-07-25T20:03:22Z",
-      "summary": "d9 c5: pointerup scroll-guard, joy pulse, 2P neutral strip \u00b7 v1.18.56"
+      "summary": "d9 c5: pointerup scroll-guard, joy pulse, 2P neutral strip · v1.18.56"
     },
     {
       "at": "2026-07-25T19:04:23Z",
-      "summary": "Stabiliteit: tide guard, ketsbam death, todayKey \u00b7 d15 c5 onboard hints \u00b7 v1.18.55"
+      "summary": "Stabiliteit: tide guard, ketsbam death, todayKey · d15 c5 onboard hints · v1.18.55"
     },
     {
       "at": "2026-07-25T18:00:00Z",
-      "summary": "d17 stabiliteit: goMenu tide cleanup, tide reward rollback, daily sanitize \u00b7 v1.18.46"
+      "summary": "d17 stabiliteit: goMenu tide cleanup, tide reward rollback, daily sanitize · v1.18.46"
     },
     {
       "at": "2026-07-25T17:05:53Z",
-      "summary": "d5 c4: pause draw skip, claim rollback, tide/fighter guards \u00b7 v1.18.45"
+      "summary": "d5 c4: pause draw skip, claim rollback, tide/fighter guards · v1.18.45"
     },
     {
       "at": "2026-07-25T15:20:00Z",
-      "summary": "Adventure blue/black lid harden \u00b7 v1.18.38 / SW v248"
+      "summary": "Adventure blue/black lid harden · v1.18.38 / SW v248"
     },
     {
       "at": "2026-07-25T15:05:00Z",
@@ -116,7 +120,7 @@
     },
     {
       "at": "2026-07-25T14:35:00Z",
-      "summary": "Fix settings blue-lid stuck + orphan pause \u00b7 v1.18.37"
+      "summary": "Fix settings blue-lid stuck + orphan pause · v1.18.37"
     },
     {
       "at": "2026-07-25T14:14:09Z",
@@ -165,14 +169,6 @@
     {
       "at": "2026-07-23T17:50:56Z",
       "summary": "Commit dist/gitignore + handoff: local main voor GitHub push, niet merge op verse clone."
-    },
-    {
-      "at": "2026-07-23T17:32:49Z",
-      "summary": "v1.12.2 speel.html share landing + agent-status/log scripts"
-    },
-    {
-      "at": "2026-07-23T17:10:00Z",
-      "summary": "agent-handoff.json + AGENTS.md toegevoegd; uitleg iPad vs \u00e9\u00e9n agent-run; env repos:null \u2192 push fix in dashboard."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
