@@ -3524,8 +3524,22 @@ const UI = {
     playMenuBgm(true);
     AudioSys.applyVolumes();
     } catch (err) {
-      sfReportError('showResult', err, 'Resultaat laden mislukt — terug naar menu');
-      try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
+      sfReportError('showResult', err, 'Resultaat hiccup — probeer Opnieuw / Menu');
+      // NOOIT stil naar startscherm: forceer result-screen best-effort
+      try {
+        state = 'result';
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const rs = document.getElementById('resultScreen');
+        if (rs) {
+          rs.classList.add('active');
+          const title = document.getElementById('resTitle');
+          if (title && data && data.title) title.textContent = data.title;
+        } else {
+          ensureVisibleScreen();
+        }
+      } catch (_) {
+        try { ensureVisibleScreen(); } catch (__) {}
+      }
     }
   },
 };

@@ -583,15 +583,24 @@ function unlockAchievement(id) {
   save.achievements[id] = todayKey();
   const ach = ACHIEVEMENTS.find(a => a.id === id);
   persist();
-  AudioSys.sfx('newmonster');
-  UI.toast(t('toast.achievementUnlock', { name: ach ? achLabel(ach, 'name') : id }), 4000);
-  if (UI.renderMissions) UI.renderMissions();
+  try { AudioSys.sfx('newmonster'); } catch (_) {}
+  try { UI.toast(t('toast.achievementUnlock', { name: ach ? achLabel(ach, 'name') : id }), 4000); } catch (_) {}
+  // Nooit missions-DOM rebuilden midden in een gevecht
+  try {
+    if (state === 'menu' && UI.renderMissions) UI.renderMissions();
+  } catch (_) {}
 }
 
 function checkAchievements() {
-  for (const ach of ACHIEVEMENTS) {
-    if (!save.achievements[ach.id] && ach.test(save)) unlockAchievement(ach.id);
-  }
+  try {
+    for (const ach of ACHIEVEMENTS) {
+      try {
+        if (!save.achievements[ach.id] && ach.test(save)) unlockAchievement(ach.id);
+      } catch (err) {
+        try { sfReportError('ach/' + (ach && ach.id), err); } catch (_) {}
+      }
+    }
+  } catch (_) {}
 }
 
 function bumpStat(key, n) {
@@ -1253,7 +1262,8 @@ function sfReportError(where, err, userMsg) {
   const now = Date.now();
   if (!window.__sfErrToastT || now - window.__sfErrToastT > 4500) {
     window.__sfErrToastT = now;
-    userToast(userMsg || 'Er ging iets mis — terug naar menu');
+    // Default mag NOOIT "terug naar menu" beloven — fight blijft vaak staan
+    userToast(userMsg || 'Hiccup — spel gaat door');
   }
 }
 /** Tijdens gevecht: strip .screen.active — ochtend-aanpak: geen !important display-kills. */

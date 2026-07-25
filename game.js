@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.63';
+const APP_VERSION = '1.18.64';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 273;
+const SW_CACHE_REV = 274;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -2714,15 +2714,24 @@ function unlockAchievement(id) {
   save.achievements[id] = todayKey();
   const ach = ACHIEVEMENTS.find(a => a.id === id);
   persist();
-  AudioSys.sfx('newmonster');
-  UI.toast(t('toast.achievementUnlock', { name: ach ? achLabel(ach, 'name') : id }), 4000);
-  if (UI.renderMissions) UI.renderMissions();
+  try { AudioSys.sfx('newmonster'); } catch (_) {}
+  try { UI.toast(t('toast.achievementUnlock', { name: ach ? achLabel(ach, 'name') : id }), 4000); } catch (_) {}
+  // Nooit missions-DOM rebuilden midden in een gevecht
+  try {
+    if (state === 'menu' && UI.renderMissions) UI.renderMissions();
+  } catch (_) {}
 }
 
 function checkAchievements() {
-  for (const ach of ACHIEVEMENTS) {
-    if (!save.achievements[ach.id] && ach.test(save)) unlockAchievement(ach.id);
-  }
+  try {
+    for (const ach of ACHIEVEMENTS) {
+      try {
+        if (!save.achievements[ach.id] && ach.test(save)) unlockAchievement(ach.id);
+      } catch (err) {
+        try { sfReportError('ach/' + (ach && ach.id), err); } catch (_) {}
+      }
+    }
+  } catch (_) {}
 }
 
 function bumpStat(key, n) {
@@ -3384,7 +3393,8 @@ function sfReportError(where, err, userMsg) {
   const now = Date.now();
   if (!window.__sfErrToastT || now - window.__sfErrToastT > 4500) {
     window.__sfErrToastT = now;
-    userToast(userMsg || 'Er ging iets mis — terug naar menu');
+    // Default mag NOOIT "terug naar menu" beloven — fight blijft vaak staan
+    userToast(userMsg || 'Hiccup — spel gaat door');
   }
 }
 /** Tijdens gevecht: strip .screen.active — ochtend-aanpak: geen !important display-kills. */
@@ -19591,99 +19601,136 @@ class Game {
   }
 
   onMonsterKilled(m) {
+    // Kill-rewards + zeldzame rolls (summon/tide/dex-rariteit) mogen NOOIT de run crashen
+    try {
+      this._onMonsterKilledInner(m);
+    } catch (err) {
+      try { sfReportError('onMonsterKilled', err, 'Kill-reward hiccup — gevecht gaat door'); } catch (_) {}
+    }
+  }
+
+  _onMonsterKilledInner(m) {
+    if (!m) return;
     this.kills++;
     this.killStreak = (this.killStreak || 0) + 1;
     const ks = this.killStreak;
     if ([3, 5, 8, 12].includes(ks)) {
       const msgs = { 3: 'STREAK ×3', 5: 'ON FIRE!', 8: 'RAMPAGE!', 12: 'UNSTOPPABLE!' };
-      this.floater(W / 2, 128, msgs[ks], ks >= 8 ? '#ff7a4d' : '#ffd75e', 17);
-      AudioSys.sfx(ks >= 8 ? 'comboEpic' : 'combo');
-      if (!motionReduced() && !fxLite()) spawnFxRing(this, m.x, m.y - m.size * 0.35, ks >= 8 ? '#ff7a4d' : '#ffd75e', 7 + ks * 0.35);
-      haptic(8 + Math.min(ks, 12));
+      try { this.floater(W / 2, 128, msgs[ks], ks >= 8 ? '#ff7a4d' : '#ffd75e', 17); } catch (_) {}
+      try { AudioSys.sfx(ks >= 8 ? 'comboEpic' : 'combo'); } catch (_) {}
+      if (!motionReduced() && !fxLite()) {
+        try { spawnFxRing(this, m.x, m.y - m.size * 0.35, ks >= 8 ? '#ff7a4d' : '#ffd75e', 7 + ks * 0.35); } catch (_) {}
+      }
+      try { haptic(8 + Math.min(ks, 12)); } catch (_) {}
     }
-    this.freezeT = Math.max(this.freezeT, 0.045 + Math.min(ks, 12) * 0.002);
-    this.shake(5, 0.18);
-    haptic(12);
-    const rar = rarityOf(m.sp.rarity);
+    this.freezeT = Math.max(this.freezeT || 0, 0.045 + Math.min(ks, 12) * 0.002);
+    try { this.shake(5, 0.18); } catch (_) {}
+    try { haptic(12); } catch (_) {}
+    const sp = m.sp || {};
+    const rar = rarityOf(sp.rarity);
     const killRingR = m.superBoss ? 18 : (m.elite ? 14 : (m.giant ? 12 : 9));
-    spawnFxRing(this, m.x, m.y - m.size * 0.32, rar.color, killRingR);
+    try { spawnFxRing(this, m.x, m.y - m.size * 0.32, rar.color, killRingR); } catch (_) {}
     if (!fxLite() && m.elite && !motionReduced()) {
-      this.burst(m.x, m.y - m.size * 0.2, '#fff', 4, { kind: 'spark', size: 2.2 });
+      try { this.burst(m.x, m.y - m.size * 0.2, '#fff', 4, { kind: 'spark', size: 2.2 }); } catch (_) {}
     }
     const dropChance = m.elite ? 0.42 : 0.22;
-    if (Math.random() < dropChance) this.spawnPickup(m.x, m.y - m.size * 0.5);
-    if (this.mode === 'adventure') {
-      const skillId = rollSkillShardDrop(m);
-      if (skillId) {
-        let dropTier = 'normal';
-        if (m.superBoss) dropTier = 'superBoss';
-        else if (m.elite) dropTier = 'elite';
-        else if (m.giant) dropTier = 'giant';
-        this.spawnPickup(m.x + rand(-18, 18), m.y - m.size * 0.35, { skillId, dropTier });
-      }
-      const itemDrop = rollItemShardDrop(m);
-      if (itemDrop) {
-        let dropTier = 'normal';
-        if (m.superBoss) dropTier = 'superBoss';
-        else if (m.elite) dropTier = 'elite';
-        else if (m.giant) dropTier = 'giant';
-        this.spawnPickup(m.x + rand(-22, 22), m.y - m.size * 0.45, { itemCat: itemDrop.cat, itemId: itemDrop.id, dropTier });
-      }
+    if (Math.random() < dropChance) {
+      try { this.spawnPickup(m.x, m.y - m.size * 0.5); } catch (_) {}
     }
-    bumpStat('kills', 1);
-    bumpDaily('kills', 1);
+    if (this.mode === 'adventure') {
+      try {
+        const skillId = rollSkillShardDrop(m);
+        if (skillId) {
+          let dropTier = 'normal';
+          if (m.superBoss) dropTier = 'superBoss';
+          else if (m.elite) dropTier = 'elite';
+          else if (m.giant) dropTier = 'giant';
+          this.spawnPickup(m.x + rand(-18, 18), m.y - m.size * 0.35, { skillId, dropTier });
+        }
+      } catch (_) {}
+      try {
+        const itemDrop = rollItemShardDrop(m);
+        if (itemDrop) {
+          let dropTier = 'normal';
+          if (m.superBoss) dropTier = 'superBoss';
+          else if (m.elite) dropTier = 'elite';
+          else if (m.giant) dropTier = 'giant';
+          this.spawnPickup(m.x + rand(-22, 22), m.y - m.size * 0.45, { itemCat: itemDrop.cat, itemId: itemDrop.id, dropTier });
+        }
+      } catch (_) {}
+    }
+    try { bumpStat('kills', 1); } catch (_) {}
+    try { bumpDaily('kills', 1); } catch (_) {}
     if (m.elite) {
-      bumpStat('bossKills', 1);
-      bumpDaily('bossKill', 1);
+      try { bumpStat('bossKills', 1); } catch (_) {}
+      try { bumpDaily('bossKill', 1); } catch (_) {}
     }
     const lvlScale = 1 + (this.level ? (this.level.n - 1) * 0.1 : 0);
-    const rarMul = 1 + rar.order * 0.15;
+    const rarMul = 1 + (rar.order || 0) * 0.15;
     const giantMul = m.giant ? GIANT_XP_MUL : 1;
-    const xp = Math.round(m.sp.xp * lvlScale * rarMul * (m.elite ? 2 : 1) * giantMul);
-    this.grantXP(xp);
-    this.floater(m.x, m.y - m.size - 30, `+${xp} XP`, rar.color, 16);
-    if (rar.order >= 3) this.floater(m.x, m.y - m.size - 50, rar.name.toUpperCase(), rar.color, 13);
-    this.player.energy = clamp(this.player.energy + 12 + rar.order * 2, 0, 100);
-    const tiersBefore = dexRarityTierCount();
-    const countBefore = dexCount();
-    if (!save.dex[m.spId]) {
+    const xp = Math.round((sp.xp || 8) * lvlScale * rarMul * (m.elite ? 2 : 1) * giantMul);
+    try { this.grantXP(xp); } catch (_) {}
+    try { this.floater(m.x, m.y - m.size - 30, `+${xp} XP`, rar.color, 16); } catch (_) {}
+    if ((rar.order || 0) >= 3) {
+      try { this.floater(m.x, m.y - m.size - 50, String(rar.name || 'EPIC').toUpperCase(), rar.color, 13); } catch (_) {}
+    }
+    if (this.player) {
+      this.player.energy = clamp((this.player.energy || 0) + 12 + (rar.order || 0) * 2, 0, 100);
+    }
+    const tiersBefore = typeof dexRarityTierCount === 'function' ? dexRarityTierCount() : 0;
+    const countBefore = typeof dexCount === 'function' ? dexCount() : 0;
+    if (m.spId && save.dex && !save.dex[m.spId]) {
       save.dex[m.spId] = 0;
-      persist();
-      AudioSys.sfx('newmonster');
-      const hpB = rarityHpBonus(m.sp.rarity);
-      noteRunLootDex(this.runLoot, m.sp, hpB);
-      this.banner(t('banner.newDex', { rar: rarityLabel(m.sp.rarity), name: m.sp.name, hp: hpB }), 2.0, rar.color, 28);
-      this.player.maxhp += hpB; this.player.hp += hpB;
-      UI.toast(t('toast.dexDiscover', { rar: rarityLabel(m.sp.rarity), name: m.sp.name, hp: hpB }), 3200);
-    }
-    save.dex[m.spId]++;
-    persist();
-    const tame = maybeTamePet(m.spId);
-    if (tame) {
-      save.stats.petsTamed = petTamedCount();
-      persist();
-      spawnGamePet(this);
-      noteRunLootPet(this.runLoot, tame.sp.name);
-      this.banner(t('banner.pet', { name: tame.sp.name }), 2.2, tame.sp.c1, 36);
-      UI.toast(t('toast.petTamed', { name: tame.sp.name, cur: tame.kills, need: tame.need }), 4200);
-    }
-    checkAchievements();
-    // Cosmetics die op dex-drempels unlocken (geen combat-wijziging)
-    if (countBefore < dexCount()) {
-      const half = Math.ceil(SPECIES_ORDER.length / 2);
-      if (countBefore < half && dexCount() >= half) {
-        UI.toast(t('toast.styleUnlockTome'), 3500);
+      try { persist(); } catch (_) {}
+      try { AudioSys.sfx('newmonster'); } catch (_) {}
+      const hpB = rarityHpBonus(sp.rarity);
+      try { noteRunLootDex(this.runLoot, sp, hpB); } catch (_) {}
+      try {
+        this.banner(t('banner.newDex', { rar: rarityLabel(sp.rarity), name: sp.name || m.spId, hp: hpB }), 2.0, rar.color, 28);
+      } catch (_) {}
+      if (this.player) {
+        this.player.maxhp += hpB;
+        this.player.hp += hpB;
       }
-      if (tiersBefore < 4 && dexRarityTierCount() >= 4) {
-        UI.toast(t('toast.styleUnlockCrystal'), 3500);
-      }
+      try { UI.toast(t('toast.dexDiscover', { rar: rarityLabel(sp.rarity), name: sp.name || m.spId, hp: hpB }), 3200); } catch (_) {}
     }
+    if (m.spId && save.dex) {
+      save.dex[m.spId] = (save.dex[m.spId] || 0) + 1;
+      try { persist(); } catch (_) {}
+    }
+    try {
+      const tame = maybeTamePet(m.spId);
+      if (tame) {
+        save.stats.petsTamed = petTamedCount();
+        persist();
+        spawnGamePet(this);
+        noteRunLootPet(this.runLoot, tame.sp.name);
+        this.banner(t('banner.pet', { name: tame.sp.name }), 2.2, tame.sp.c1, 36);
+        UI.toast(t('toast.petTamed', { name: tame.sp.name, cur: tame.kills, need: tame.need }), 4200);
+      }
+    } catch (_) {}
+    try { checkAchievements(); } catch (_) {}
+    try {
+      if (countBefore < dexCount()) {
+        const half = Math.ceil(SPECIES_ORDER.length / 2);
+        if (countBefore < half && dexCount() >= half) {
+          UI.toast(t('toast.styleUnlockTome'), 3500);
+        }
+        if (tiersBefore < 4 && dexRarityTierCount() >= 4) {
+          UI.toast(t('toast.styleUnlockCrystal'), 3500);
+        }
+      }
+    } catch (_) {}
     if (m.tideBoss && this.tideBattleActive) {
-      this.finishTideBattle(true, m);
+      try { this.finishTideBattle(true, m); } catch (_) {}
       return;
     }
-    this.maybeSummon(m);
-    this.maybeTideBattle(m);
+    try { this.maybeSummon(m); } catch (sumErr) {
+      try { sfReportError('maybeSummon', sumErr, 'Summon hiccup — speel door'); } catch (_) {}
+    }
+    try { this.maybeTideBattle(m); } catch (tideErr) {
+      try { sfReportError('maybeTideBattle', tideErr, 'Tide hiccup — speel door'); } catch (_) {}
+    }
   }
 
   maybeTideBattle(m) {
@@ -19774,44 +19821,66 @@ class Game {
     }
   }
 
-  /** Hele kleine kans: Summon ascendeert een lager wapen naar Episch/Legendarisch. */
+  /** Zeldzame summon-ascend (~0.7%+/kill) — mag nooit de run killen. */
   maybeSummon(m) {
-    save.stats.killsSinceSummon = (save.stats.killsSinceSummon || 0) + 1;
-    const eligible = summonEligibleWeapons();
-    if (!eligible.length) { persist(); return; }
-    if (!rollSummonChance(!!(m && m.elite))) { persist(); return; }
-    const pick = eligible[Math.floor(Math.random() * eligible.length)];
-    const wasEpic = summonTierOf(pick.id) === 'epic';
-    const tier = (wasEpic || Math.random() < 0.15) ? 'legendary' : 'epic';
-    if (!save.summons || typeof save.summons !== 'object') save.summons = {};
-    save.summons[pick.id] = tier;
-    save.stats.summonCount = (save.stats.summonCount || 0) + 1;
-    save.stats.killsSinceSummon = 0;
-    noteRunLootSummon(this.runLoot, pick.id, tier);
-    persist();
-    const rar = rarityOf(tier);
-    const asc = applyWeaponUpgrades(applySummonTier(weaponById(pick.id)));
-    if (this.player && this.player.weapon && this.player.weapon.id === pick.id) {
-      this.player.weapon = playerWeapon();
-      const st = playerStats();
-      this.player.baseDmg = st.dmg;
+    try {
+      if (!save.stats) save.stats = {};
+      save.stats.killsSinceSummon = (save.stats.killsSinceSummon || 0) + 1;
+      const eligible = typeof summonEligibleWeapons === 'function' ? summonEligibleWeapons() : [];
+      if (!eligible.length) { persist(); return; }
+      if (!rollSummonChance(!!(m && m.elite))) { persist(); return; }
+      const pick = eligible[Math.floor(Math.random() * eligible.length)];
+      if (!pick || !pick.id) { persist(); return; }
+      const wasEpic = summonTierOf(pick.id) === 'epic';
+      const tier = (wasEpic || Math.random() < 0.15) ? 'legendary' : 'epic';
+      if (!save.summons || typeof save.summons !== 'object') save.summons = {};
+      save.summons[pick.id] = tier;
+      save.stats.summonCount = (save.stats.summonCount || 0) + 1;
+      save.stats.killsSinceSummon = 0;
+      try { noteRunLootSummon(this.runLoot, pick.id, tier); } catch (_) {}
+      persist();
+      const rar = rarityOf(tier);
+      let asc = null;
+      try {
+        const base = weaponById(pick.id);
+        if (base) asc = applyWeaponUpgrades(applySummonTier(base));
+      } catch (_) {}
+      if (this.player && this.player.weapon && this.player.weapon.id === pick.id) {
+        try {
+          this.player.weapon = playerWeapon();
+          const st = playerStats();
+          this.player.baseDmg = st.dmg;
+        } catch (_) {}
+      }
+      try { AudioSys.sfx('summon'); } catch (_) {}
+      setTimeout(() => { try { AudioSys.sfx('bonus'); } catch (_) {} }, 280);
+      this.freezeT = Math.max(this.freezeT || 0, 0.1);
+      try { this.shake(9, 0.35); } catch (_) {}
+      const px = this.player ? this.player.x : W * 0.5;
+      const py = this.player ? this.player.y : this.ground;
+      try {
+        if (typeof spawnCompanionSparkles === 'function') {
+          spawnCompanionSparkles(this, px, py - 70, rar.color, { color2: '#fff8dc', big: true });
+        } else {
+          this.burst(px, py - 70, rar.color, fxLite() ? 14 : 30);
+          this.burst(px, py - 70, '#fff', fxLite() ? 6 : 12);
+        }
+      } catch (_) {}
+      try { this.banner(t('banner.summon'), 2.2, rar.color, 44); } catch (_) {}
+      const wName = typeof weaponLabel === 'function' ? weaponLabel(pick) : pick.id;
+      setTimeout(() => {
+        try {
+          if (this.over) return;
+          this.banner(t('banner.summonAscend', { name: wName, rar: rar.name }), 2.4, rar.color, 30);
+        } catch (_) {}
+      }, 1100);
+      try { this.floater(px, py - 130, `${wName} ✦ ${rar.name}`, rar.color, 17); } catch (_) {}
+      try {
+        UI.toast(t('toast.summon', { name: wName, rar: rar.name, dmg: (asc && asc.dmg) || pick.dmg || '?' }), 4200);
+      } catch (_) {}
+    } catch (err) {
+      try { sfReportError('maybeSummon', err, 'Summon hiccup — speel door'); } catch (_) {}
     }
-    AudioSys.sfx('summon');
-    setTimeout(() => { try { AudioSys.sfx('bonus'); } catch (_) {} }, 280);
-    this.freezeT = Math.max(this.freezeT, 0.1);
-    this.shake(9, 0.35);
-    const px = this.player ? this.player.x : W * 0.5;
-    const py = this.player ? this.player.y : this.ground;
-    if (typeof spawnCompanionSparkles === 'function') {
-      spawnCompanionSparkles(this, px, py - 70, rar.color, { color2: '#fff8dc', big: true });
-    } else {
-      this.burst(px, py - 70, rar.color, fxLite() ? 14 : 30);
-      this.burst(px, py - 70, '#fff', fxLite() ? 6 : 12);
-    }
-    this.banner(t('banner.summon'), 2.2, rar.color, 44);
-    setTimeout(() => this.banner(t('banner.summonAscend', { name: weaponLabel(pick), rar: rar.name }), 2.4, rar.color, 30), 1100);
-    this.floater(px, py - 130, `${weaponLabel(pick)} ✦ ${rar.name}`, rar.color, 17);
-    UI.toast(t('toast.summon', { name: weaponLabel(pick), rar: rar.name, dmg: asc.dmg }), 4200);
   }
 
   spawnPickup(x, y, opts) {
@@ -21735,9 +21804,10 @@ class Game {
       c.globalAlpha = clamp(this.hint, 0, 1);
       let hintTxt = this.modeHintLine;
       if (!hintTxt) {
-        if (Input.dualMode && IS_TOUCH) {
+        const dualOk = Input.dualMode && this.mode === 'versus';
+        if (dualOk && IS_TOUCH) {
           hintTxt = t('hud.hintDualTouch');
-        } else if (Input.dualMode) {
+        } else if (dualOk) {
           hintTxt = t('hud.hintDualKb');
         } else if (IS_TOUCH) {
           hintTxt = t('hud.hintTouch');
@@ -27248,8 +27318,22 @@ const UI = {
     playMenuBgm(true);
     AudioSys.applyVolumes();
     } catch (err) {
-      sfReportError('showResult', err, 'Resultaat laden mislukt — terug naar menu');
-      try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
+      sfReportError('showResult', err, 'Resultaat hiccup — probeer Opnieuw / Menu');
+      // NOOIT stil naar startscherm: forceer result-screen best-effort
+      try {
+        state = 'result';
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const rs = document.getElementById('resultScreen');
+        if (rs) {
+          rs.classList.add('active');
+          const title = document.getElementById('resTitle');
+          if (title && data && data.title) title.textContent = data.title;
+        } else {
+          ensureVisibleScreen();
+        }
+      } catch (_) {
+        try { ensureVisibleScreen(); } catch (__) {}
+      }
     }
   },
 };
