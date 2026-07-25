@@ -98,6 +98,8 @@ const ACHIEVEMENTS = [
     test: s => (s.stats.dailyBonusCount || 0) >= 7 },
   { id: 'vs5', name: 'Duelist', desc: '5× 2-speler duel gespeeld', icon: '🥊',
     test: s => (s.stats.vsMatches || 0) >= 5 },
+  { id: 'vsFatality1', name: 'Afronden!', desc: 'Land een versus fatality op match-KO', icon: '💀',
+    test: s => (s.stats.vsFatalities || 0) >= 1 },
   { id: 'vs_roster', name: 'Vol roster', desc: 'Speel met 10+ verschillende vechters (2P)', icon: '🎭',
     test: s => (s.vsPlayedIds || []).length >= 10 },
   { id: 'saga_icons', name: 'Saga-legends', desc: 'Speel 2P met alle 7 legend picks', icon: '🌟',
@@ -335,6 +337,7 @@ function achievementProgressFrac(ach) {
     case 'lv50': return Math.min(s.unlocked, 50) / 50;
     case 'daily7': return Math.min(s.stats.dailyBonusCount || 0, 7) / 7;
     case 'vs5': return Math.min(s.stats.vsMatches || 0, 5) / 5;
+    case 'vsFatality1': return Math.min(s.stats.vsFatalities || 0, 1);
     case 'vs_roster': return Math.min((s.vsPlayedIds || []).length, 10) / 10;
     case 'saga_icons': {
       const need = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
@@ -375,6 +378,7 @@ function achievementProgressHint(ach) {
     case 'lv50': return `Unlock Lv ${Math.min(s.unlocked, 50)}/50`;
     case 'daily7': return `${Math.min(s.stats.dailyBonusCount || 0, 7)}/7 dagbonussen`;
     case 'vs5': return `${Math.min(s.stats.vsMatches || 0, 5)}/5 duels`;
+    case 'vsFatality1': return `${Math.min(s.stats.vsFatalities || 0, 1)}/1 fatality`;
     case 'vs_roster': return `${(s.vsPlayedIds || []).length}/10 vechters gespeeld`;
     case 'saga_icons': {
       const need = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];

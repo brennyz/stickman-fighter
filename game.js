@@ -184,9 +184,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.76';
+const APP_VERSION = '1.17.66';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 202;
+const SW_CACHE_REV = 192;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null, activeJutsu: 'rasengan',
 
@@ -197,8 +197,8 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
-  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {} };
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, vsFatalities: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0 },
+  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {} };
 
 const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
@@ -1956,6 +1956,8 @@ const ACHIEVEMENTS = [
     test: s => (s.stats.dailyBonusCount || 0) >= 7 },
   { id: 'vs5', name: 'Duelist', desc: '5× 2-speler duel gespeeld', icon: '🥊',
     test: s => (s.stats.vsMatches || 0) >= 5 },
+  { id: 'vsFatality1', name: 'Afronden!', desc: 'Land een versus fatality op match-KO', icon: '💀',
+    test: s => (s.stats.vsFatalities || 0) >= 1 },
   { id: 'vs_roster', name: 'Vol roster', desc: 'Speel met 10+ verschillende vechters (2P)', icon: '🎭',
     test: s => (s.vsPlayedIds || []).length >= 10 },
   { id: 'saga_icons', name: 'Saga-legends', desc: 'Speel 2P met alle 7 legend picks', icon: '🌟',
@@ -2193,6 +2195,7 @@ function achievementProgressFrac(ach) {
     case 'lv50': return Math.min(s.unlocked, 50) / 50;
     case 'daily7': return Math.min(s.stats.dailyBonusCount || 0, 7) / 7;
     case 'vs5': return Math.min(s.stats.vsMatches || 0, 5) / 5;
+    case 'vsFatality1': return Math.min(s.stats.vsFatalities || 0, 1);
     case 'vs_roster': return Math.min((s.vsPlayedIds || []).length, 10) / 10;
     case 'saga_icons': {
       const need = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
@@ -2233,6 +2236,7 @@ function achievementProgressHint(ach) {
     case 'lv50': return `Unlock Lv ${Math.min(s.unlocked, 50)}/50`;
     case 'daily7': return `${Math.min(s.stats.dailyBonusCount || 0, 7)}/7 dagbonussen`;
     case 'vs5': return `${Math.min(s.stats.vsMatches || 0, 5)}/5 duels`;
+    case 'vsFatality1': return `${Math.min(s.stats.vsFatalities || 0, 1)}/1 fatality`;
     case 'vs_roster': return `${(s.vsPlayedIds || []).length}/10 vechters gespeeld`;
     case 'saga_icons': {
       const need = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
@@ -6450,6 +6454,9 @@ function seedNlGameStrings() {
     ketsBam: 'KETS-BAM!',
     wallTime: 'TIJD!',
     wallNewWall: 'MUUR GESLOOPT! Nieuwe muur...',
+    vsFatality: 'FATALITY!',
+    vsFatalityShout: 'FATALITY!',
+    vsFatalityWin: '{msg} · STYL-FINISH!',
   });
   if (!I18N.nl.result) I18N.nl.result = {};
   Object.assign(I18N.nl.result, {
@@ -6468,6 +6475,7 @@ function seedNlGameStrings() {
     trainLossTip: 'Spring tijdens CHIDORI-telegraph — robot mist · duck oor-lasers',
     trainTipDefault: 'Tip: duck lasers · chakra vol → Rasengan',
     vsRematchTip: 'Opnieuw = rematch · Pauze → Herstart match (0-0)',
+    vsFatalityLine: ' · fatality',
     wallRecordShare: 'Nieuw record — share met een vriend!',
     wallComboTip: 'Tip: hou combo vast voor snellere sloop',
     wallGapTip: 'Nog {gap} stenen tot je record — combo helpt!',
@@ -6843,6 +6851,7 @@ function seedNlGameStrings() {
     petCoins: 'Pet coins: +{pending} · wallet {wallet}',
     matsHint: 'Joystick ↑ mik · slag/gooi hoger · shuriken op roze vliegers',
     spawnFair: 'Spawn · eerlijk start', nextRound: 'Volgende ronde',
+    vsFatalityHint: 'Tik wapen/slag/trap voor styl-finish · auto skip',
     p1Line: 'P1 · {name} · {pct}%', p2Line: '{pct}% · {name} · P2',
     decisiveRound: 'Beslissende ronde · {s}-{r}',
     timeHpWin: 'TIME = hoogste HP % wint',
@@ -6927,6 +6936,7 @@ const CATALOG_EN = {
     lv50: { name: 'Legend', desc: 'Unlock level 50' },
     daily7: { name: 'Determined', desc: 'Claim 7 daily bonuses' },
     vs5: { name: 'Duelist', desc: 'Play 5× 2-player duels' },
+    vsFatality1: { name: 'Finish him!', desc: 'Land a versus fatality on match KO' },
     vs_roster: { name: 'Full roster', desc: 'Play 10+ different fighters (2P)' },
     saga_icons: { name: 'Saga legends', desc: 'Play 2P with all 7 legend picks' },
   },
@@ -7003,6 +7013,7 @@ const CATALOG_EN = {
     trainLossTip: 'Jump during CHIDORI telegraph — robot misses · duck ear-lasers',
     trainTipDefault: 'Tip: duck lasers · full chakra → Rasengan',
     vsRematchTip: 'Again = rematch · Pause → Restart match (0-0)',
+    vsFatalityLine: ' · fatality',
     wallRecordShare: 'New record — share with a friend!',
     wallComboTip: 'Tip: keep combo for faster smash',
     wallGapTip: '{gap} bricks to your record — combo helps!',
@@ -7050,6 +7061,7 @@ const CATALOG_EN = {
     newDex: 'New {rar}: {name}! +{hp} max HP', pet: 'PET! {name}',
     matsStart: 'MATS · COIN BONUS', wallStart: 'SMASH THE WALL!', bonusDone: 'BONUS DONE!',
     kets: 'KETS!', ketsBam: 'KETS-BAM!', wallTime: 'TIME!', wallNewWall: 'WALL SMASHED! New wall...',
+    vsFatality: 'FATALITY!', vsFatalityShout: 'FATALITY!', vsFatalityWin: '{msg} · STYL-FINISH!',
   },
   help: { tips: [
     'Power-ups: defeated monsters sometimes drop orbs — HP, rage, chakra, shield.',
@@ -7060,6 +7072,7 @@ const CATALOG_EN = {
     'Substitution: smoke cloud + dodge (button or Shift). Brief invulnerability.',
     'Weapon combo: tap weapon 3× fast — each weapon has 3 moves (①②③). Hit with ① and ②, then ③ is a finisher (+damage, +chakra). Mastery: Virtuoso 3× · Master 10× · Legend 25× per weapon.',
     '2 players: roster with 5 saga-icons (Ki/Scroll/Tide/Cape/Dawn parody) + filters · best-of-3.',
+    'Versus fatality: match-winning KO → FATALITY window — tap weapon/punch/kick for styl-finish (skips after 3.5s).',
     'RabbitRobot: uses Chidori (lightning) — wait until he opens up.',
     'Wall: 60s timer · combo bar (+4% smash per hit) · milestones ×3/×5/×8 · record pace in HUD · bomb/gold bonus bricks.',
     'Rarities: Common → Uncommon → Rare → Epic → Legendary → Mythic. Rarer = more XP & max HP.',
@@ -7401,6 +7414,7 @@ const CATALOG_EN = {
     petCoins: 'Pet coins: +{pending} · wallet {wallet}',
     matsHint: 'Joystick ↑ aim · melee/throw higher · shuriken on pink flyers',
     spawnFair: 'Spawn · fair start', nextRound: 'Next round',
+    vsFatalityHint: 'Tap weapon/punch/kick for styl-finish · auto skip',
     p1Line: 'P1 · {name} · {pct}%', p2Line: '{pct}% · {name} · P2',
     decisiveRound: 'Decisive round · {s}-{r}',
     timeHpWin: 'TIME = highest HP % wins',
@@ -12602,6 +12616,7 @@ class Game {
     this.combo = 0;
     this.comboT = 0;
     this.runFinishers = 0;
+    this.matchFatality = false;
 
     const st = playerStats();
     if (mode !== 'versus') {
@@ -13519,6 +13534,8 @@ class Game {
     vsSelect.p2 = this.p2Pick;
     trackVsRosterUse(this.p1Pick, this.p2Pick);
     applyVsArenaBounds(this);
+    this.matchFatality = false;
+    this.pendingVsP1Win = null;
     this.player = buildVsFighter(vsRosterEntry(this.p1Pick), vsSpawnX(1), 1);
     this.p2 = buildVsFighter(vsRosterEntry(this.p2Pick), vsSpawnX(2), 2);
     this.startVsRound();
@@ -13554,22 +13571,41 @@ class Game {
         const timedOut = !p1d && !p2d && this.roundTimer <= 0;
         if (p2d && !p1d) p1Win = true;
         else if (p1d && !p2d) p1Win = false;
-        else p1Win = (this.player.hp / Math.max(1, this.player.maxhp)) >= (this.p2.hp / Math.max(1, this.p2.maxhp));
-        if (p1Win) this.roundsP1++; else this.roundsP2++;
-        this.vsRoundLog = this.vsRoundLog || [];
-        this.vsRoundLog.push(p1Win ? 'p1' : 'p2');
-        this.phase = 'roundend';
-        this.phaseT = 0;
-        this.inputLocked = true;
-        let msg = p1Win ? t('banner.p1RoundWin') : t('banner.p2RoundWin');
-        if (timedOut) {
-          const hp1 = Math.round(this.player.hp / Math.max(1, this.player.maxhp) * 100);
-          const hp2 = Math.round(this.p2.hp / Math.max(1, this.p2.maxhp) * 100);
-          msg = t('banner.timeHpVs', { hp1, hp2, msg });
+        else p1Win = (this.player.hp / this.player.maxhp) >= (this.p2.hp / this.p2.maxhp);
+        const newP1 = p1Win ? this.roundsP1 + 1 : this.roundsP1;
+        const newP2 = p1Win ? this.roundsP2 : this.roundsP2 + 1;
+        const matchWin = newP1 >= 2 || newP2 >= 2;
+        const koFinish = (p1d || p2d) && !timedOut && matchWin && !motionReduced();
+        if (koFinish) {
+          this.pendingVsP1Win = p1Win;
+          this.fatalityWinner = p1Win ? this.player : this.p2;
+          this.fatalityLoser = p1Win ? this.p2 : this.player;
+          this.fatalityPerformed = false;
+          this.fatalityStrikeT = 0;
+          this.phase = 'fatality';
+          this.phaseT = 0;
+          this.inputLocked = true;
+          this.banner(t('banner.vsFatality'), 2.8, '#ff3040', 54);
+          AudioSys.sfx('roar');
+        } else {
+          if (p1Win) this.roundsP1++; else this.roundsP2++;
+          this.vsRoundLog = this.vsRoundLog || [];
+          this.vsRoundLog.push(p1Win ? 'p1' : 'p2');
+          this.phase = 'roundend';
+          this.phaseT = 0;
+          this.inputLocked = true;
+          let msg = p1Win ? t('banner.p1RoundWin') : t('banner.p2RoundWin');
+          if (timedOut) {
+            const hp1 = Math.round(this.player.hp / this.player.maxhp * 100);
+            const hp2 = Math.round(this.p2.hp / this.p2.maxhp * 100);
+            msg = t('banner.timeHpVs', { hp1, hp2, msg });
+          }
+          this.banner(msg, 1.5, p1Win ? '#7cf5ff' : '#ffb0b8', 38);
+          AudioSys.sfx(p1Win ? 'win' : 'lose');
         }
-        this.banner(msg, 1.5, p1Win ? '#7cf5ff' : '#ffb0b8', 38);
-        AudioSys.sfx(p1Win ? 'win' : 'lose');
       }
+    } else if (this.phase === 'fatality') {
+      this.updateFatality(dt);
     } else if (this.phase === 'roundend') {
       if (this.phaseT > 2.2) {
         if (this.roundsP1 >= 2 || this.roundsP2 >= 2) this.finishVersus(this.roundsP1 >= 2);
@@ -13577,6 +13613,80 @@ class Game {
       }
     }
     if (this.p2) this.p2.update(dt, this);
+  }
+
+  updateFatality(dt) {
+    this.phaseT += dt;
+    if (this.fatalityStrikeT > 0) {
+      this.fatalityStrikeT -= dt;
+      if (this.fatalityStrikeT <= 0) this.endVsFatality();
+      return;
+    }
+    if (this.phaseT > 3.5) {
+      this.endVsFatality();
+      return;
+    }
+    if (this.phaseT < 0.12) return;
+    const win = this.fatalityWinner;
+    if (!win) { this.endVsFatality(); return; }
+    const pad = win.playerSlot === 2 ? InputP2 : Input;
+    if (!pad) return;
+    const strike = pad.take('weapon') || pad.take('punch') || pad.take('kick') || pad.take('special');
+    if (strike) this.playVsFatality(win, this.fatalityLoser);
+  }
+
+  playVsFatality(winner, loser) {
+    if (!winner || !loser || this.fatalityStrikeT > 0) return;
+    this.fatalityPerformed = true;
+    this.matchFatality = true;
+    this.fatalityStrikeT = 1.55;
+    winner.face = winner.x <= loser.x ? 1 : -1;
+    winner.weaponComboIdx = 2;
+    const wid = winner.weapon?.id || 'vuist';
+    const labels = weaponMoveLabels(wid);
+    const moveLabel = labels && labels[2] ? labels[2] : 'Finisher';
+    const spec = winner.attackSpec(isThrowWeapon(wid) ? 'punch' : 'weapon');
+    if (spec) {
+      winner.attack = Object.assign({ t: 0, hasHit: true, fired: false, fatality: true }, spec);
+      winner.attack.moveIdx = 2;
+    }
+    const hx = loser.x;
+    const hy = loser.bodyY || loser.y - 45;
+    this.floater(hx, hy - 92, t('banner.vsFatalityShout'), '#ff3040', 52);
+    this.floater(winner.x + winner.face * 24, winner.y - 128, moveLabel + '!', '#ffb830', 18);
+    try { AudioSys.sfx(weaponSwingSfx(winner.weapon, 'weapon')); } catch (_) {}
+    try { AudioSys.sfx('comboEpic'); } catch (_) {}
+    try { AudioSys.sfx('ketsbam'); } catch (_) {}
+    this.shake(9, 0.22);
+    if (!motionReduced()) this.freezeT = Math.max(this.freezeT || 0, 0.14);
+    if (!fxLite()) {
+      this.burst(hx, hy, '#ff3040', 14, { kind: 'spark', size: 3 });
+      this.burst(hx, hy, '#ffb830', 10);
+      spawnFxRing(this, hx, hy, '#ff3040', 16);
+      spawnFxRing(this, hx, hy - 18, '#ffb830', 12);
+    }
+    if (save.haptics !== false) haptic(28);
+    bumpStat('vsFatalities', 1);
+    checkAchievements();
+  }
+
+  endVsFatality() {
+    const p1Win = !!this.pendingVsP1Win;
+    if (p1Win) this.roundsP1++; else this.roundsP2++;
+    this.vsRoundLog = this.vsRoundLog || [];
+    this.vsRoundLog.push(p1Win ? 'p1' : 'p2');
+    this.phase = 'roundend';
+    this.phaseT = 0;
+    this.inputLocked = true;
+    let msg = p1Win ? t('banner.p1RoundWin') : t('banner.p2RoundWin');
+    if (this.fatalityPerformed) msg = t('banner.vsFatalityWin', { msg });
+    this.banner(msg, 1.5, p1Win ? '#7cf5ff' : '#ffb0b8', 40);
+    AudioSys.sfx(p1Win ? 'win' : 'lose');
+    this.fatalityWinner = null;
+    this.fatalityLoser = null;
+    this.pendingVsP1Win = null;
+    this.fatalityPerformed = false;
+    this.fatalityStrikeT = 0;
   }
 
   finishVersus(p1Win) {
@@ -13592,6 +13702,7 @@ class Game {
       title: p1Win ? t('result.vsP1Win') : t('result.vsP2Win'),
       detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}` +
         ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : '') +
+        (this.matchFatality ? t('result.vsFatalityLine') : '') +
         (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
       xp: this.sessionXP, mode: 'versus', win: p1Win, p1: this.p1Pick, p2: this.p2Pick,
       tip: t('result.vsRematchTip'),
@@ -16021,6 +16132,19 @@ class Game {
         c.fillStyle = '#7cf5ff';
         this.rr(c, W / 2 - barW / 2, H * 0.38 + 34, barW * clamp(left / 2.2, 0, 1), 5, 3);
         c.fill();
+      } else if (this.phase === 'fatality') {
+        c.font = '900 44px sans-serif';
+        c.fillStyle = '#ff3040';
+        c.fillText(t('banner.vsFatalityShout'), W / 2, H * 0.34);
+        c.font = '700 14px sans-serif';
+        c.fillStyle = 'rgba(255,255,255,.78)';
+        c.fillText(t('hud.vsFatalityHint'), W / 2, H * 0.34 + 30);
+        if (this.fatalityStrikeT <= 0) {
+          const left = Math.max(0, 3.5 - this.phaseT);
+          c.font = '800 12px sans-serif';
+          c.fillStyle = 'rgba(255,255,255,.55)';
+          c.fillText(String(Math.ceil(left)), W / 2, H * 0.34 + 52);
+        }
       }
       c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, bx - 4, byVs - 4, half + 8, 44, 10); c.fill();
       c.fillStyle = '#333c55'; this.rr(c, bx, byVs, half, 14, 6); c.fill();
