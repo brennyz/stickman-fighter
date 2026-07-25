@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.74';
+const APP_VERSION = '1.17.77';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 200;
+const SW_CACHE_REV = 203;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null, activeJutsu: 'rasengan',
 
@@ -9605,27 +9605,19 @@ function relayoutTouchPads() {
   } catch (_) {}
 }
 
-/** Level-start / na pause: joycon + knoppen resetten (fix sticky input tot unpause). */
-function primePlayInput(mode) {
-  Input.dualMode = mode === 'versus';
-  try { Input.releaseAll(); } catch (_) {}
-  try {
-    if (typeof forceGameResize === 'function') forceGameResize();
-    else relayoutTouchPads();
-  } catch (_) {
-    try { relayoutTouchPads(); } catch (_) {}
-  }
-  requestAnimationFrame(() => {
-    try { relayoutTouchPads(); Input.releaseAll(); } catch (_) {}
-    requestAnimationFrame(() => { try { Input.releaseAll(); } catch (_) {} });
-  });
+/** Reset touch pads before versus / after pause — voorkomt spook-vingers. */
+function primePlayInput(dual) {
+  Input.releaseAll();
+  Input.dualMode = !!dual;
+  relayoutTouchPads();
 }
 
 /** Voorkom dat scroll/slide over menu-tegels meteen selecteert (iPad). */
 const TAP_SLOP_PX = IS_TOUCH ? 12 : 8;
-const _uiTap = { id: null, x: 0, y: 0, moved: false, scrolls: [] };
-let _uiLastGestureScroll = false;
+const _uiTaps = new Map();
+const _uiTapBlocked = new Set();
 let _uiBlockClickAfterScroll = false;
+const MAX_PAD_POINTERS = IS_TOUCH ? 8 : 12;
 
 function uiTapScrollParents(fromEl) {
   const out = [];
@@ -9644,27 +9636,45 @@ function uiTapSlopPx() {
   return TAP_SLOP_PX;
 }
 
-function uiTapGuardMove(x, y) {
-  if (_uiTap.id == null) return;
-  if (Math.hypot(x - _uiTap.x, y - _uiTap.y) > uiTapSlopPx()) _uiTap.moved = true;
-  if (_uiTap.moved) return;
-  for (const s of _uiTap.scrolls) {
+function uiTapPointerId(e) {
+  if (e && e.pointerId != null) return e.pointerId;
+  const t = e && e.changedTouches && e.changedTouches[0];
+  return t ? t.identifier : null;
+}
+
+function uiTapGuardMove(id, x, y) {
+  const tap = _uiTaps.get(id);
+  if (!tap) return;
+  if (Math.hypot(x - tap.x, y - tap.y) > uiTapSlopPx()) tap.moved = true;
+  if (tap.moved) return;
+  for (const s of tap.scrolls) {
     if (Math.abs(s.el.scrollTop - s.top) > 1 || Math.abs(s.el.scrollLeft - s.left) > 1) {
-      _uiTap.moved = true;
+      tap.moved = true;
       break;
     }
   }
 }
 
-function uiTapGuardFinish(cancelled) {
-  const tap = !cancelled && _uiTap.id != null && !_uiTap.moved;
-  _uiLastGestureScroll = !tap;
-  if (!tap) _uiBlockClickAfterScroll = true;
-  _uiTap.id = null;
-  _uiTap.scrolls = [];
+function uiTapGuardFinish(cancelled, id) {
+  const tap = _uiTaps.get(id);
+  if (!tap) return;
+  if (cancelled || tap.moved) _uiTapBlocked.add(id);
+  else _uiTapBlocked.delete(id);
+  if (cancelled || tap.moved) _uiBlockClickAfterScroll = true;
+  _uiTaps.delete(id);
 }
 
-function uiTapAllowed() { return !_uiLastGestureScroll; }
+function uiTapAllowed(e) {
+  const id = uiTapPointerId(e);
+  if (id == null) return true;
+  if (_uiTapBlocked.has(id)) {
+    _uiTapBlocked.delete(id);
+    return false;
+  }
+  const tap = _uiTaps.get(id);
+  if (tap) return !tap.moved;
+  return true;
+}
 
 /** True tijdens/na scroll-slide — blokkeert tap én long-press (iPad level-tegels). */
 function uiGestureMoved() { return !!_uiTap.moved || _uiLastGestureScroll; }
@@ -9674,24 +9684,25 @@ function initUiTapScrollGuard() {
   window.__sfUiTapGuard = true;
   document.addEventListener('pointerdown', (e) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    _uiTap.id = e.pointerId;
-    _uiTap.x = e.clientX;
-    _uiTap.y = e.clientY;
-    _uiTap.moved = false;
-    _uiTap.scrolls = uiTapScrollParents(e.target);
-    _uiLastGestureScroll = false;
+    _uiTaps.set(e.pointerId, {
+      x: e.clientX,
+      y: e.clientY,
+      moved: false,
+      scrolls: uiTapScrollParents(e.target),
+    });
+    _uiTapBlocked.delete(e.pointerId);
   }, { passive: true, capture: true });
   document.addEventListener('pointermove', (e) => {
-    if (_uiTap.id !== e.pointerId) return;
-    uiTapGuardMove(e.clientX, e.clientY);
+    if (!_uiTaps.has(e.pointerId)) return;
+    uiTapGuardMove(e.pointerId, e.clientX, e.clientY);
   }, { passive: true, capture: true });
   document.addEventListener('pointerup', (e) => {
-    if (_uiTap.id !== e.pointerId) return;
-    uiTapGuardFinish(false);
+    if (!_uiTaps.has(e.pointerId)) return;
+    uiTapGuardFinish(false, e.pointerId);
   }, { passive: true, capture: true });
   document.addEventListener('pointercancel', (e) => {
-    if (_uiTap.id !== e.pointerId) return;
-    uiTapGuardFinish(true);
+    if (!_uiTaps.has(e.pointerId)) return;
+    uiTapGuardFinish(true, e.pointerId);
   }, { passive: true, capture: true });
   document.addEventListener('click', (e) => {
     if (!_uiBlockClickAfterScroll) return;
@@ -9703,7 +9714,7 @@ function initUiTapScrollGuard() {
 }
 
 function touchEndedOnSelector(e, selector) {
-  if (!uiTapAllowed()) return null;
+  if (!uiTapAllowed(e)) return null;
   const t = e.changedTouches && e.changedTouches[0];
   const fromTarget = e.target && e.target.closest ? e.target.closest(selector) : null;
   if (!fromTarget) return null;
@@ -9947,6 +9958,7 @@ function makePad(side) {
     },
     onDown(x, y, id, dual) {
       if (!this.ownsTouch(x, y, dual)) return false;
+      if (this.activePointers.size >= MAX_PAD_POINTERS && !this.activePointers.has(id)) return false;
       this.activePointers.add(id);
       if (dual) this.pointerPads[id] = this.side;
       const b = this.hitButton(x, y);
@@ -10034,6 +10046,7 @@ Object.assign(Input, {
       _padP1Methods.onDown.call(this, x, y, id, true);
       return;
     }
+    if (this.activePointers.size >= MAX_PAD_POINTERS && !this.activePointers.has(id)) return;
     this.activePointers.add(id);
     const b = hitTouchButton(this.buttons, x, y);
     if (b) {
@@ -13944,8 +13957,7 @@ class Game {
 
   initVersus(opts) {
     opts = opts || {};
-    Input.dualMode = true;
-    Input.layout(W, H);
+    primePlayInput(true);
     this.theme = 'dojo';
     this.roundsP1 = 0;
     this.roundsP2 = 0;
@@ -16859,24 +16871,25 @@ function pickVsRosterId(id) {
 function bindCharPickSurface(root, selector, onPick) {
   if (!root || root.dataset.sfPickBound) return;
   root.dataset.sfPickBound = '1';
-  let active = null;
+  const actives = new Map();
   const scrollEl = () => root.closest('[data-char-scroll]') || root.closest('.char-grid-scroll') || root.closest('.char-icon-strip') || root;
   root.addEventListener('pointerdown', (e) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     const card = e.target.closest(selector);
     if (!card) return;
     const sc = scrollEl();
-    active = {
-      id: e.pointerId,
+    actives.set(e.pointerId, {
       card,
       x: e.clientX,
       y: e.clientY,
       scrollTop: sc ? sc.scrollTop : 0,
       scrollLeft: sc ? sc.scrollLeft : 0,
-    };
+    });
   }, { passive: true });
   const finish = (e) => {
-    if (!active || active.id !== e.pointerId) return;
+    const active = actives.get(e.pointerId);
+    if (!active) return;
+    actives.delete(e.pointerId);
     const slop = IS_TOUCH ? 18 : 10;
     const moved = Math.hypot(e.clientX - active.x, e.clientY - active.y) > slop;
     const sc = scrollEl();
@@ -16885,12 +16898,11 @@ function bindCharPickSurface(root, selector, onPick) {
       Math.abs(sc.scrollLeft - active.scrollLeft) > 3
     );
     const card = active.card;
-    active = null;
     if (moved || scrolled || !card || card.classList.contains('locked')) return;
     onPick(card);
   };
   root.addEventListener('pointerup', finish, { passive: true });
-  root.addEventListener('pointercancel', () => { active = null; }, { passive: true });
+  root.addEventListener('pointercancel', (e) => { actives.delete(e.pointerId); }, { passive: true });
 }
 
 function initCharSelectChrome() {
@@ -18281,15 +18293,14 @@ const UI = {
         el.title = levelTileTip(n, pick, infoLv, boss, best, fails);
         let holdT = null;
         let holdSkip = false;
-        let holdX = 0;
-        let holdY = 0;
         el.addEventListener('pointerdown', (e) => {
+          const tapId = e.pointerId;
           holdSkip = false;
           holdX = e.clientX;
           holdY = e.clientY;
           holdT = setTimeout(() => {
             holdT = null;
-            if (!uiTapAllowed() || (typeof uiGestureMoved === 'function' && uiGestureMoved())) return;
+            if (!uiTapAllowed({ pointerId: tapId })) return;
             holdSkip = true;
             safeUiAction(() => {
               AudioSys.sfx('select');
@@ -18308,10 +18319,10 @@ const UI = {
         }, { passive: true });
         el.addEventListener('pointerup', cancelHold);
         el.addEventListener('pointercancel', cancelHold);
-        el.addEventListener('click', () => {
+        el.addEventListener('click', (e) => {
           if (holdSkip) { holdSkip = false; return; }
-          if (!uiTapAllowed()) return;
-          safeUiAction(() => gokGooiStartLevel(n), 'gokStart/' + n, t('ui.errLevelStart'));
+          if (!uiTapAllowed(e)) return;
+          safeUiAction(() => gokGooiStartLevel(n), 'gokStart/' + n, 'Level starten mislukt');
         });
       }
       grid.appendChild(el);
@@ -18478,8 +18489,8 @@ const UI = {
           ? `Avontuur Lv ${base.unlock}`
           : (save.weapon === w.id ? '&#10004; gekozen' : 'kies'));
       el.appendChild(right);
-      if (!locked) el.addEventListener('click', () => {
-        if (!uiTapAllowed()) return;
+      if (!locked) el.addEventListener('click', (e) => {
+        if (!uiTapAllowed(e)) return;
         safeUiAction(() => {
           save.weapon = w.id;
           if (!persistOrToast('wapen')) return;
@@ -18920,9 +18931,8 @@ const UI = {
       }
       el.appendChild(right);
       if (tamed) {
-        appendItemUpgradeButton(el, 'pet', def.id, () => this.renderPets());
-        el.addEventListener('click', () => {
-          if (!uiTapAllowed()) return;
+        el.addEventListener('click', (e) => {
+          if (!uiTapAllowed(e)) return;
           safeUiAction(() => {
             if (active) {
               equipPet(null);
@@ -18936,8 +18946,8 @@ const UI = {
           }, 'equipPet/' + def.id, 'Pet kiezen mislukt');
         });
       } else if (canBuy) {
-        el.addEventListener('click', () => {
-          if (!uiTapAllowed()) return;
+        el.addEventListener('click', (e) => {
+          if (!uiTapAllowed(e)) return;
           safeUiAction(() => {
             const res = buyPetWithCoins(def.id);
             if (!res) {
@@ -18973,8 +18983,8 @@ const UI = {
         `<div>Dag-ei openen<small>Gratis arcade-pull · vandaag</small></div>`;
       if (!crackBtn.dataset.bound) {
         crackBtn.dataset.bound = '1';
-        crackBtn.addEventListener('click', () => {
-          if (!uiTapAllowed()) return;
+        crackBtn.addEventListener('click', (e) => {
+          if (!uiTapAllowed(e)) return;
           safeUiAction(() => {
             const res = crackDailyEgg();
             if (!res) {
@@ -19024,8 +19034,8 @@ const UI = {
       }
       el.appendChild(right);
       if (owned) {
-        el.addEventListener('click', () => {
-          if (!uiTapAllowed()) return;
+        el.addEventListener('click', (e) => {
+          if (!uiTapAllowed(e)) return;
           safeUiAction(() => {
             if (active) {
               equipEggPet(null);
@@ -19099,20 +19109,8 @@ const UI = {
         : (styleSkillGated(st) ? t('ui.styleIslandGate', { lvl: st.needLvl }) : styleLabel(st, 'hint'));
       el.appendChild(sub);
       if (ok) {
-        const upLv = itemUpgradeLevel('style', st.id);
-        const upMax = itemUpgradeMax('style', st.id);
-        if (upLv > 0 || itemUpgradeShards('style', st.id) > 0) {
-          const up = document.createElement('div');
-          up.style.fontSize = '10px';
-          up.style.fontWeight = '700';
-          up.style.color = '#ffd75e';
-          up.style.marginTop = '4px';
-          up.textContent = `↑ Lv ${upLv}/${upMax} · ${styleUpgradeSummary(st.id)}`;
-          el.appendChild(up);
-        }
-        appendItemUpgradeButton(el, 'style', st.id, () => this.renderStyle());
-        el.addEventListener('click', () => {
-          if (!uiTapAllowed()) return;
+        el.addEventListener('click', (e) => {
+          if (!uiTapAllowed(e)) return;
           safeUiAction(() => {
             save.style = st.id;
             if (!persistOrToast('stijl')) return;
@@ -19406,6 +19404,7 @@ function startGame(mode, opts) {
     } catch (_) {
       opts.p1 = 'ryu'; opts.p2 = 'ken';
     }
+    try { primePlayInput(true); } catch (_) {}
   }
   try {
     game = new Game(mode, opts);
@@ -19456,7 +19455,7 @@ function bindPress(el, handler) {
   };
   el.addEventListener('click', run);
   el.addEventListener('touchend', (e) => {
-    if (!uiTapAllowed()) return;
+    if (!uiTapAllowed(e)) return;
     const t = e.changedTouches && e.changedTouches[0];
     if (t) {
       try {
@@ -19927,7 +19926,9 @@ bindPress(document.getElementById('pauseResume'), () => {
   state = 'play';
   AudioSys.setPaused(false);
   if (save.music && AudioSys.desiredSong) AudioSys.play(AudioSys.desiredSong);
-  try { primePlayInput(game && game.mode); } catch (_) {}
+  if (game && game.mode === 'versus') {
+    try { primePlayInput(true); } catch (_) {}
+  }
   UI.show(null);
 });
 bindPress(document.getElementById('pauseQuit'), () => { UI.goMenu(); });

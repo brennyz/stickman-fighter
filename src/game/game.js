@@ -943,8 +943,7 @@ class Game {
 
   initVersus(opts) {
     opts = opts || {};
-    Input.dualMode = true;
-    Input.layout(W, H);
+    primePlayInput(true);
     this.theme = 'dojo';
     this.roundsP1 = 0;
     this.roundsP2 = 0;

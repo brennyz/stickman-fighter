@@ -380,27 +380,19 @@ function relayoutTouchPads() {
   } catch (_) {}
 }
 
-/** Level-start / na pause: joycon + knoppen resetten (fix sticky input tot unpause). */
-function primePlayInput(mode) {
-  Input.dualMode = mode === 'versus';
-  try { Input.releaseAll(); } catch (_) {}
-  try {
-    if (typeof forceGameResize === 'function') forceGameResize();
-    else relayoutTouchPads();
-  } catch (_) {
-    try { relayoutTouchPads(); } catch (_) {}
-  }
-  requestAnimationFrame(() => {
-    try { relayoutTouchPads(); Input.releaseAll(); } catch (_) {}
-    requestAnimationFrame(() => { try { Input.releaseAll(); } catch (_) {} });
-  });
+/** Reset touch pads before versus / after pause — voorkomt spook-vingers. */
+function primePlayInput(dual) {
+  Input.releaseAll();
+  Input.dualMode = !!dual;
+  relayoutTouchPads();
 }
 
 /** Voorkom dat scroll/slide over menu-tegels meteen selecteert (iPad). */
 const TAP_SLOP_PX = IS_TOUCH ? 12 : 8;
-const _uiTap = { id: null, x: 0, y: 0, moved: false, scrolls: [] };
-let _uiLastGestureScroll = false;
+const _uiTaps = new Map();
+const _uiTapBlocked = new Set();
 let _uiBlockClickAfterScroll = false;
+const MAX_PAD_POINTERS = IS_TOUCH ? 8 : 12;
 
 function uiTapScrollParents(fromEl) {
   const out = [];
@@ -419,27 +411,45 @@ function uiTapSlopPx() {
   return TAP_SLOP_PX;
 }
 
-function uiTapGuardMove(x, y) {
-  if (_uiTap.id == null) return;
-  if (Math.hypot(x - _uiTap.x, y - _uiTap.y) > uiTapSlopPx()) _uiTap.moved = true;
-  if (_uiTap.moved) return;
-  for (const s of _uiTap.scrolls) {
+function uiTapPointerId(e) {
+  if (e && e.pointerId != null) return e.pointerId;
+  const t = e && e.changedTouches && e.changedTouches[0];
+  return t ? t.identifier : null;
+}
+
+function uiTapGuardMove(id, x, y) {
+  const tap = _uiTaps.get(id);
+  if (!tap) return;
+  if (Math.hypot(x - tap.x, y - tap.y) > uiTapSlopPx()) tap.moved = true;
+  if (tap.moved) return;
+  for (const s of tap.scrolls) {
     if (Math.abs(s.el.scrollTop - s.top) > 1 || Math.abs(s.el.scrollLeft - s.left) > 1) {
-      _uiTap.moved = true;
+      tap.moved = true;
       break;
     }
   }
 }
 
-function uiTapGuardFinish(cancelled) {
-  const tap = !cancelled && _uiTap.id != null && !_uiTap.moved;
-  _uiLastGestureScroll = !tap;
-  if (!tap) _uiBlockClickAfterScroll = true;
-  _uiTap.id = null;
-  _uiTap.scrolls = [];
+function uiTapGuardFinish(cancelled, id) {
+  const tap = _uiTaps.get(id);
+  if (!tap) return;
+  if (cancelled || tap.moved) _uiTapBlocked.add(id);
+  else _uiTapBlocked.delete(id);
+  if (cancelled || tap.moved) _uiBlockClickAfterScroll = true;
+  _uiTaps.delete(id);
 }
 
-function uiTapAllowed() { return !_uiLastGestureScroll; }
+function uiTapAllowed(e) {
+  const id = uiTapPointerId(e);
+  if (id == null) return true;
+  if (_uiTapBlocked.has(id)) {
+    _uiTapBlocked.delete(id);
+    return false;
+  }
+  const tap = _uiTaps.get(id);
+  if (tap) return !tap.moved;
+  return true;
+}
 
 /** True tijdens/na scroll-slide — blokkeert tap én long-press (iPad level-tegels). */
 function uiGestureMoved() { return !!_uiTap.moved || _uiLastGestureScroll; }
@@ -449,24 +459,25 @@ function initUiTapScrollGuard() {
   window.__sfUiTapGuard = true;
   document.addEventListener('pointerdown', (e) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    _uiTap.id = e.pointerId;
-    _uiTap.x = e.clientX;
-    _uiTap.y = e.clientY;
-    _uiTap.moved = false;
-    _uiTap.scrolls = uiTapScrollParents(e.target);
-    _uiLastGestureScroll = false;
+    _uiTaps.set(e.pointerId, {
+      x: e.clientX,
+      y: e.clientY,
+      moved: false,
+      scrolls: uiTapScrollParents(e.target),
+    });
+    _uiTapBlocked.delete(e.pointerId);
   }, { passive: true, capture: true });
   document.addEventListener('pointermove', (e) => {
-    if (_uiTap.id !== e.pointerId) return;
-    uiTapGuardMove(e.clientX, e.clientY);
+    if (!_uiTaps.has(e.pointerId)) return;
+    uiTapGuardMove(e.pointerId, e.clientX, e.clientY);
   }, { passive: true, capture: true });
   document.addEventListener('pointerup', (e) => {
-    if (_uiTap.id !== e.pointerId) return;
-    uiTapGuardFinish(false);
+    if (!_uiTaps.has(e.pointerId)) return;
+    uiTapGuardFinish(false, e.pointerId);
   }, { passive: true, capture: true });
   document.addEventListener('pointercancel', (e) => {
-    if (_uiTap.id !== e.pointerId) return;
-    uiTapGuardFinish(true);
+    if (!_uiTaps.has(e.pointerId)) return;
+    uiTapGuardFinish(true, e.pointerId);
   }, { passive: true, capture: true });
   document.addEventListener('click', (e) => {
     if (!_uiBlockClickAfterScroll) return;
@@ -478,7 +489,7 @@ function initUiTapScrollGuard() {
 }
 
 function touchEndedOnSelector(e, selector) {
-  if (!uiTapAllowed()) return null;
+  if (!uiTapAllowed(e)) return null;
   const t = e.changedTouches && e.changedTouches[0];
   const fromTarget = e.target && e.target.closest ? e.target.closest(selector) : null;
   if (!fromTarget) return null;
@@ -722,6 +733,7 @@ function makePad(side) {
     },
     onDown(x, y, id, dual) {
       if (!this.ownsTouch(x, y, dual)) return false;
+      if (this.activePointers.size >= MAX_PAD_POINTERS && !this.activePointers.has(id)) return false;
       this.activePointers.add(id);
       if (dual) this.pointerPads[id] = this.side;
       const b = this.hitButton(x, y);
@@ -809,6 +821,7 @@ Object.assign(Input, {
       _padP1Methods.onDown.call(this, x, y, id, true);
       return;
     }
+    if (this.activePointers.size >= MAX_PAD_POINTERS && !this.activePointers.has(id)) return;
     this.activePointers.add(id);
     const b = hitTouchButton(this.buttons, x, y);
     if (b) {
