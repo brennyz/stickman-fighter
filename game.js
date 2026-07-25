@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.55';
+const APP_VERSION = '1.18.56';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 265;
+const SW_CACHE_REV = 266;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -1040,24 +1040,41 @@ function sanitizeSave(s) {
   out.summons = cleanSummons;
 
   const cleanPets = {};
-  for (const [k, v] of Object.entries(out.pets || {})) {
-    if (typeof PET_BY_ID !== 'undefined' && !PET_BY_ID[k]) continue;
-    if (typeof PET_BY_ID === 'undefined') continue;
-    const entry = (v && typeof v === 'object') ? v : {};
-    cleanPets[k] = {
-      kills: clamp(Math.floor(Number(entry.kills) || 0), 0, 999999),
-    };
+  const petsIn = out.pets || {};
+  if (typeof PET_BY_ID === 'undefined') {
+    // Registry not ready — keep raw map (clamp only) so load-order never wipes pets
+    for (const [k, v] of Object.entries(petsIn)) {
+      if (typeof k !== 'string' || !k) continue;
+      const entry = (v && typeof v === 'object') ? v : {};
+      cleanPets[k] = { kills: clamp(Math.floor(Number(entry.kills) || 0), 0, 999999) };
+    }
+  } else {
+    for (const [k, v] of Object.entries(petsIn)) {
+      if (!PET_BY_ID[k]) continue;
+      const entry = (v && typeof v === 'object') ? v : {};
+      cleanPets[k] = {
+        kills: clamp(Math.floor(Number(entry.kills) || 0), 0, 999999),
+      };
+    }
   }
   out.pets = cleanPets;
   if (out.activePet && !cleanPets[out.activePet]) out.activePet = null;
   else if (out.activePet && typeof PET_BY_ID !== 'undefined' && !PET_BY_ID[out.activePet]) out.activePet = null;
 
   const cleanEggs = {};
-  for (const [k, v] of Object.entries(out.eggPets || {})) {
-    if (typeof EGG_BY_ID !== 'undefined' && !EGG_BY_ID[k]) continue;
-    if (typeof EGG_BY_ID === 'undefined') continue;
-    const entry = (v && typeof v === 'object') ? v : {};
-    cleanEggs[k] = { src: typeof entry.src === 'string' ? entry.src.slice(0, 12) : 'daily' };
+  const eggsIn = out.eggPets || {};
+  if (typeof EGG_BY_ID === 'undefined') {
+    for (const [k, v] of Object.entries(eggsIn)) {
+      if (typeof k !== 'string' || !k) continue;
+      const entry = (v && typeof v === 'object') ? v : {};
+      cleanEggs[k] = { src: typeof entry.src === 'string' ? entry.src.slice(0, 12) : 'daily' };
+    }
+  } else {
+    for (const [k, v] of Object.entries(eggsIn)) {
+      if (!EGG_BY_ID[k]) continue;
+      const entry = (v && typeof v === 'object') ? v : {};
+      cleanEggs[k] = { src: typeof entry.src === 'string' ? entry.src.slice(0, 12) : 'daily' };
+    }
   }
   out.eggPets = cleanEggs;
   if (out.activeEggPet && !cleanEggs[out.activeEggPet]) out.activeEggPet = null;
@@ -1187,13 +1204,14 @@ function sanitizeSave(s) {
       ? out.daily.date.slice(0, 10)
       : (typeof todayKey === 'function' ? todayKey() : new Date().toISOString().slice(0, 10));
     const tasks = Array.isArray(out.daily.tasks) ? out.daily.tasks : [];
+    const hasDailyDef = typeof dailyDef === 'function';
     out.daily = {
       date: dk,
-      tasks: tasks.filter(t => t && typeof dailyDef === 'function' && dailyDef(t.id)).map(t => {
-        const def = dailyDef(t.id);
-        const goal = def ? def.goal : 99999;
+      tasks: tasks.filter(t => t && t.id && (!hasDailyDef || dailyDef(t.id))).map(t => {
+        const def = hasDailyDef ? dailyDef(t.id) : null;
+        const goal = def ? def.goal : Math.max(1, Math.floor(Number(t.goal) || 99999));
         const progress = clamp(Math.floor(Number(t.progress) || 0), 0, goal);
-        const done = def ? progress >= goal : false;
+        const done = def ? progress >= goal : !!t.done;
         let claimed = !!t.claimed;
         if (claimed && !done) claimed = false;
         return {
@@ -2270,7 +2288,14 @@ function bumpDaily(type, amount) {
     if (task.progress >= def.goal) { task.progress = def.goal; task.done = true; changed = true; UI.toast(t('toast.missionDone', { text: dailyText(def.id) }), 2800); }
     else changed = true;
   }
-  if (changed) { persist(); checkAchievements(); if (UI.renderMissions) UI.renderMissions(); }
+  if (changed) {
+    persist();
+    try { checkAchievements(); } catch (_) {}
+    // Never let missions UI crash mid-fight finish
+    if (UI.renderMissions && state === 'menu') {
+      try { UI.renderMissions(); } catch (_) {}
+    }
+  }
 }
 
 function claimableDailyTasks() {
@@ -3899,14 +3924,20 @@ function resumeLastPlay() {
 }
 
 function startAdventureFromGamble(skipGamble) {
+  const level = pendingAdvLevel || save.unlocked || 1;
+  const gamble = skipGamble ? null : lastGambleRoll;
   try {
     cancelGambleStart();
-    const level = pendingAdvLevel || save.unlocked || 1;
-    const gamble = skipGamble ? null : lastGambleRoll;
-    pendingAdvLevel = null;
     try { UI.hideGambleRollFlash(); } catch (_) {}
     startGame('adventure', { level, gamble });
+    if (state !== 'play' || !game) {
+      // startGame already toasted + recovered; keep level for retry
+      pendingAdvLevel = level;
+      return;
+    }
+    pendingAdvLevel = null;
   } catch (err) {
+    pendingAdvLevel = level;
     sfReportError('gambleStart', err, 'Avontuur starten mislukt — kies level opnieuw');
   }
 }
@@ -10024,6 +10055,10 @@ const CATALOG_EN = {
     weaponComboHint: 'Weapon 3× = ①②③ · hit ①+② → golden ③',
     gambleOnboardTouch: 'First gamble: low sum = super-boss · high sum = ally · Skip = normal level',
     gambleOnboardKb: 'First time: sum ≤5 super-boss · sum ≥9 ally buff · Skip = no gamble',
+    ketsbamOnboardTouch: 'Surrounded? Tap the center symbol — Ketsbam escape · 9s cooldown',
+    ketsbamOnboardKb: 'Surrounded? E or center symbol = Ketsbam · 9s cooldown',
+    tideBattleOnboardTouch: 'First Tide Battle: defeat {name} — no other waves until done',
+    tideBattleOnboardKb: 'First Tide Battle: defeat {name} — waves pause until done',
     langSwitchFail: 'Language switch failed',
   },
   fighter: {
@@ -19357,96 +19392,113 @@ class Game {
 
   finishAdventure(win) {
     if (this.over) return;
-    clearTideBattleState(this, { restoreMusic: true });
-    this.deactivateMasterSword(true);
-    this.over = true;
-    this.inputLocked = true;
-    let stars = 0;
-    const lv = this.level.n;
-    const prevStars = save.stars[lv] || 0;
-    if (win) {
-      const bonus = 30 + lv * 10;
-      this.grantXP(bonus);
-      if (lv === save.unlocked && save.unlocked < MAX_LEVEL) { save.unlocked++; persist(); }
-      if (lv % LEVELS_PER_ISLAND === 0) {
-        save.advIsland = Math.min(5, lv / LEVELS_PER_ISLAND);
-        persist();
-        if (lv < MAX_LEVEL) {
-          const nCap = adventureWeaponCapForLevel(lv + 1);
+    try {
+      clearTideBattleState(this, { restoreMusic: true });
+      this.deactivateMasterSword(true);
+      this.over = true;
+      this.inputLocked = true;
+      let stars = 0;
+      const lv = this.level.n;
+      const prevStars = save.stars[lv] || 0;
+      if (win) {
+        const bonus = 30 + lv * 10;
+        this.grantXP(bonus);
+        if (lv === save.unlocked && save.unlocked < MAX_LEVEL) { save.unlocked++; persist(); }
+        if (lv % LEVELS_PER_ISLAND === 0) {
+          save.advIsland = Math.min(5, lv / LEVELS_PER_ISLAND);
+          persist();
+          if (lv < MAX_LEVEL) {
+            const nCap = adventureWeaponCapForLevel(lv + 1);
+            setTimeout(() => {
+              try { UI.toast(t('toast.islandUnlock', { name: islandLabel(islandFromLevel(lv + 1), 'name'), cap: nCap }), 4200); } catch (_) {}
+            }, 1700);
+          }
+        }
+        if (save.advMasterBuff === lv) {
+          save.advMasterBuff = null;
+          persist();
+        }
+        const hpPct = this.player.hp / Math.max(1, this.player.maxhp);
+        stars = starsFromHpPct(hpPct);
+        if (stars > prevStars) { save.stars[lv] = stars; persist(); }
+        bumpStat('advWins', 1);
+        try { bumpDaily('advWin', 1); } catch (err) {
+          sfReportError('finishAdv/daily', err, 'Dagmissie bijwerken mislukt — XP wel veilig');
+        }
+        const eggBonus = maybeAdvEggBonus();
+        if (eggBonus) {
+          spawnGameEggPet(this);
+          noteRunLootEgg(this.runLoot, eggBonus.def.name, eggBonus.duplicate);
+          const rar = rarityOf(eggBonus.def.rarity);
           setTimeout(() => {
-            try { UI.toast(t('toast.islandUnlock', { name: islandLabel(islandFromLevel(lv + 1), 'name'), cap: nCap }), 4200); } catch (_) {}
-          }, 1700);
+            try {
+              UI.toast(eggBonus.duplicate
+                ? t('toast.eggDuplicate', { name: eggBonus.def.name })
+                : t('toast.eggNew', { name: eggBonus.def.name, rar: rarityLabel(eggBonus.def.rarity) }), 3800);
+            } catch (_) {}
+          }, 1200);
         }
-      }
-      if (save.advMasterBuff === lv) {
-        save.advMasterBuff = null;
+        try { checkAchievements(); } catch (_) {}
+        try { AudioSys.sfx('win'); } catch (_) {}
+        this.banner(t('banner.won'), 2, '#7cfc8a', 56);
+      } else {
+        if (!save.advFails || typeof save.advFails !== 'object') save.advFails = {};
+        const hadMaster = save.advMasterBuff === lv;
+        save.advFails[lv] = (save.advFails[lv] || 0) + 1;
+        const gotMaster = save.advFails[lv] >= 5 && !hadMaster;
+        if (gotMaster) save.advMasterBuff = lv;
         persist();
-      }
-      const hpPct = this.player.hp / Math.max(1, this.player.maxhp);
-      stars = starsFromHpPct(hpPct);
-      if (stars > prevStars) { save.stars[lv] = stars; persist(); }
-      bumpStat('advWins', 1);
-      bumpDaily('advWin', 1);
-      const eggBonus = maybeAdvEggBonus();
-      if (eggBonus) {
-        spawnGameEggPet(this);
-        noteRunLootEgg(this.runLoot, eggBonus.def.name, eggBonus.duplicate);
-        const rar = rarityOf(eggBonus.def.rarity);
-        setTimeout(() => {
-          try {
-            UI.toast(eggBonus.duplicate
-              ? t('toast.eggDuplicate', { name: eggBonus.def.name })
-              : t('toast.eggNew', { name: eggBonus.def.name, rar: rarityLabel(eggBonus.def.rarity) }), 3800);
-          } catch (_) {}
-        }, 1200);
-      }
-      checkAchievements();
-      AudioSys.sfx('win');
-      this.banner(t('banner.won'), 2, '#7cfc8a', 56);
-    } else {
-      if (!save.advFails || typeof save.advFails !== 'object') save.advFails = {};
-      const hadMaster = save.advMasterBuff === lv;
-      save.advFails[lv] = (save.advFails[lv] || 0) + 1;
-      const gotMaster = save.advFails[lv] >= 5 && !hadMaster;
-      if (gotMaster) save.advMasterBuff = lv;
-      persist();
-      if (gotMaster) {
-        setTimeout(() => { try { UI.toast(t('toast.masterBuffGain'), 3800); } catch (_) {} }, 1500);
-      }
-      AudioSys.sfx('lose');
-      this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
-    }
-    scheduleGameResult(this, 1400, () => UI.showResult(win, {
-      title: win ? t('result.advWin') : t('result.advLose'),
-      detail: (() => {
-        const finishers = this.runFinishers ? t('result.finishersLine', { n: this.runFinishers }) : '';
-        const streak = (this.sessionBestKillStreak || 0) >= 3
-          ? t('result.streakLine', { n: this.sessionBestKillStreak }) : '';
-        let base = win
-          ? t('result.advDetailWin', { lv, kills: this.kills, stars, combo: this.maxCombo || 0, finishers, streak })
-          : t('result.advDetailLose', { lv, kills: this.kills, combo: this.maxCombo || 0, finishers, streak });
-        if (masterBuffActive(lv) && !win) base += t('result.masterBuffActive');
-        if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
-          base += t('result.gambleLine', {
-            text: gambleOutcomeLabelFromKey(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48),
-          });
+        if (gotMaster) {
+          setTimeout(() => { try { UI.toast(t('toast.masterBuffGain'), 3800); } catch (_) {} }, 1500);
         }
-        return base;
-      })(),
-      xp: this.sessionXP,
-      mode: 'adventure', level: this.level.n, win, stars, prevStars,
-      tip: win ? (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
-        ? t('result.starImproved', { stars, prev: prevStars })
-        : t('result.pickupsHelp', { hint: starHintLine() }))) : (() => {
-        const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : 'start';
-        const base = this.player.hp <= 0
-          ? t('result.lossBlockTip', { prog })
-          : t('result.lossOrbTip', { prog });
-        const once = onceResultTip('adventure', 'loss',
-          t('result.lossGambleTip'));
-        return once ? `${once} · ${base}` : base;
-      })(),
-    }));
+        try { AudioSys.sfx('lose'); } catch (_) {}
+        this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
+      }
+      scheduleGameResult(this, 1400, () => UI.showResult(win, {
+        title: win ? t('result.advWin') : t('result.advLose'),
+        detail: (() => {
+          const finishers = this.runFinishers ? t('result.finishersLine', { n: this.runFinishers }) : '';
+          const streak = (this.sessionBestKillStreak || 0) >= 3
+            ? t('result.streakLine', { n: this.sessionBestKillStreak }) : '';
+          let base = win
+            ? t('result.advDetailWin', { lv, kills: this.kills, stars, combo: this.maxCombo || 0, finishers, streak })
+            : t('result.advDetailLose', { lv, kills: this.kills, combo: this.maxCombo || 0, finishers, streak });
+          if (masterBuffActive(lv) && !win) base += t('result.masterBuffActive');
+          if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
+            base += t('result.gambleLine', {
+              text: gambleOutcomeLabelFromKey(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48),
+            });
+          }
+          return base;
+        })(),
+        xp: this.sessionXP,
+        mode: 'adventure', level: this.level.n, win, stars, prevStars,
+        tip: win ? (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
+          ? t('result.starImproved', { stars, prev: prevStars })
+          : t('result.pickupsHelp', { hint: starHintLine() }))) : (() => {
+          const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : 'start';
+          const base = this.player.hp <= 0
+            ? t('result.lossBlockTip', { prog })
+            : t('result.lossOrbTip', { prog });
+          const once = onceResultTip('adventure', 'loss',
+            t('result.lossGambleTip'));
+          return once ? `${once} · ${base}` : base;
+        })(),
+      }));
+    } catch (err) {
+      console.error('[Adventure] finish', err);
+      this.over = true;
+      this.inputLocked = true;
+      try { clearTideBattleState(this, { restoreMusic: true }); } catch (_) {}
+      sfReportError('finishAdventure', err, 'Avontuur afronden mislukt — terug naar menu');
+      try {
+        scheduleGameResult(this, 400, () => {
+          try { UI.goMenu(); } catch (_) { recoverToMenu({ force: true }); }
+        });
+      } catch (_) {
+        try { recoverToMenu({ force: true }); } catch (__) {}
+      }
+    }
   }
 
   onMonsterKilled(m) {
@@ -19951,35 +20003,48 @@ class Game {
 
   finishTraining(win) {
     if (this.over) return;
-    this.over = true; this.inputLocked = true;
-    let xp = 0;
-    if (win) {
-      save.trainWins++;
-      persist();
-      xp = 70 + Math.min(save.trainWins, 12) * 20;
-      const best = this.trainComboBest || 0;
-      if (best >= 10) xp += 30;
-      else if (best >= 8) xp += 20;
-      else if (best >= 5) xp += 10;
-      this.grantXP(xp);
-      bumpDaily('trainWin', 1);
-      checkAchievements();
+    try {
+      this.over = true; this.inputLocked = true;
+      let xp = 0;
+      if (win) {
+        save.trainWins++;
+        persist();
+        xp = 70 + Math.min(save.trainWins, 12) * 20;
+        const best = this.trainComboBest || 0;
+        if (best >= 10) xp += 30;
+        else if (best >= 8) xp += 20;
+        else if (best >= 5) xp += 10;
+        this.grantXP(xp);
+        try { bumpDaily('trainWin', 1); } catch (_) {}
+        try { checkAchievements(); } catch (_) {}
+      }
+      else { xp = 15; this.grantXP(xp); }
+      const trainBest = this.trainComboBest || 0;
+      const trainTip = win
+        ? (trainBest >= 8
+          ? `Combo-trainer: max ×${trainBest} — bonus XP!`
+          : (save.trainWins === 3 ? 'Nieuwe stijl vrij: Chakra gloed — Instellingen → Stijl!' : 'Unlock stijlen door meer train-wins!'))
+        : onceResultTip('training', 'loss', 'Spring tijdens CHIDORI-telegraph — robot mist · duck oor-lasers')
+          || 'Tip: duck lasers · chakra vol → Rasengan';
+      scheduleGameResult(this, 900, () => UI.showResult(win, {
+        title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
+        detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · max combo ×${trainBest}` +
+          (win ? ` · ${save.trainWins}x gewonnen` : ''),
+        xp: this.sessionXP, mode: 'training', win,
+        tip: trainTip,
+      }));
+    } catch (err) {
+      this.over = true;
+      this.inputLocked = true;
+      sfReportError('finishTraining', err, 'Training afronden mislukt — terug naar menu');
+      try {
+        scheduleGameResult(this, 300, () => {
+          try { UI.goMenu(); } catch (_) { recoverToMenu({ force: true }); }
+        });
+      } catch (_) {
+        try { recoverToMenu({ force: true }); } catch (__) {}
+      }
     }
-    else { xp = 15; this.grantXP(xp); }
-    const trainBest = this.trainComboBest || 0;
-    const trainTip = win
-      ? (trainBest >= 8
-        ? `Combo-trainer: max ×${trainBest} — bonus XP!`
-        : (save.trainWins === 3 ? 'Nieuwe stijl vrij: Chakra gloed — Instellingen → Stijl!' : 'Unlock stijlen door meer train-wins!'))
-      : onceResultTip('training', 'loss', 'Spring tijdens CHIDORI-telegraph — robot mist · duck oor-lasers')
-        || 'Tip: duck lasers · chakra vol → Rasengan';
-    setTimeout(() => UI.showResult(win, {
-      title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
-      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · max combo ×${trainBest}` +
-        (win ? ` · ${save.trainWins}x gewonnen` : ''),
-      xp: this.sessionXP, mode: 'training', win,
-      tip: trainTip,
-    }));
   }
 
   initVersus(opts) {
@@ -25646,44 +25711,48 @@ const UI = {
   },
 
   renderGamble(levelN) {
-    const head = document.getElementById('gambleHead');
-    const diceRow = document.getElementById('gambleDiceRow');
-    const sumLine = document.getElementById('gambleSumLine');
-    const outEl = document.getElementById('gambleOutcome');
-    if (head) head.textContent = t('ui.gambleHead', { island: islandLabel(islandFromLevel(levelN), 'name'), level: levelN });
-    const ctx = document.getElementById('gambleIslandCtx');
-    if (ctx) {
-      const cap = adventureWeaponCapForLevel(levelN);
-      ctx.textContent = t('ui.gambleCtx', { cap });
-    }
-    const onboardEl = document.getElementById('gambleOnboardLine');
-    if (onboardEl) {
-      const hint = gambleOnboardHintLine();
-      if (hint) {
-        onboardEl.style.display = 'block';
-        onboardEl.textContent = hint;
+    try {
+      const head = document.getElementById('gambleHead');
+      const diceRow = document.getElementById('gambleDiceRow');
+      const sumLine = document.getElementById('gambleSumLine');
+      const outEl = document.getElementById('gambleOutcome');
+      if (head) head.textContent = t('ui.gambleHead', { island: islandLabel(islandFromLevel(levelN), 'name'), level: levelN });
+      const ctx = document.getElementById('gambleIslandCtx');
+      if (ctx) {
+        const cap = adventureWeaponCapForLevel(levelN);
+        ctx.textContent = t('ui.gambleCtx', { cap });
+      }
+      const onboardEl = document.getElementById('gambleOnboardLine');
+      if (onboardEl) {
+        const hint = gambleOnboardHintLine();
+        if (hint) {
+          onboardEl.style.display = 'block';
+          onboardEl.textContent = hint;
+        } else {
+          onboardEl.style.display = 'none';
+          onboardEl.textContent = '';
+        }
+      }
+      const g = lastGambleRoll;
+      const face = (d) => (typeof gambleDiceFace === 'function' ? gambleDiceFace(d) : '?');
+      if (g && diceRow) {
+        diceRow.textContent = `${face(g.d1)} ${face(g.d2)}`;
+        if (sumLine) sumLine.textContent = t('ui.gambleSumRoll', { d1: g.d1, d2: g.d2, sum: g.sum });
       } else {
-        onboardEl.style.display = 'none';
-        onboardEl.textContent = '';
+        if (diceRow) diceRow.textContent = '? ?';
+        if (sumLine) sumLine.textContent = t('ui.gambleSumDefault');
       }
-    }
-    const g = lastGambleRoll;
-    const face = (d) => (typeof gambleDiceFace === 'function' ? gambleDiceFace(d) : '?');
-    if (g && diceRow) {
-      diceRow.textContent = `${face(g.d1)} ${face(g.d2)}`;
-      if (sumLine) sumLine.textContent = t('ui.gambleSumRoll', { d1: g.d1, d2: g.d2, sum: g.sum });
-    } else {
-      if (diceRow) diceRow.textContent = '? ?';
-      if (sumLine) sumLine.textContent = t('ui.gambleSumDefault');
-    }
-    if (outEl) {
-      if (!g) outEl.textContent = t('ui.gamblePreview');
-      else {
-        outEl.textContent = gambleOutcomeLabelFromKey(g);
-        const col = g.outcome === 'superBoss' || g.outcome === 'miniBoss' ? '#ffb0b8'
-          : (g.outcome === 'superAlly' || g.outcome === 'ally') ? (GAMBLE_ALLIES[g.allyId]?.color || '#7cf5ff') : '#8fa3d9';
-        outEl.style.color = col;
+      if (outEl) {
+        if (!g) outEl.textContent = t('ui.gamblePreview');
+        else {
+          outEl.textContent = gambleOutcomeLabelFromKey(g);
+          const col = g.outcome === 'superBoss' || g.outcome === 'miniBoss' ? '#ffb0b8'
+            : (g.outcome === 'superAlly' || g.outcome === 'ally') ? (GAMBLE_ALLIES[g.allyId]?.color || '#7cf5ff') : '#8fa3d9';
+          outEl.style.color = col;
+        }
       }
+    } catch (err) {
+      sfReportError('renderGamble', err, 'Gok-scherm laden mislukt — terug naar levels');
     }
   },
 
@@ -27017,12 +27086,18 @@ function startGame(mode, opts) {
   try {
     game = new Game(mode, opts);
   } catch (err) {
-    sfReportError('start/' + mode, err);
+    sfReportError('start/' + mode, err,
+      mode === 'adventure'
+        ? 'Avontuur starten mislukt — kies level opnieuw'
+        : 'Spel starten mislukt — terug naar menu');
     recoverToMenu({ force: true });
     return;
   }
   if (!game || !game.player) {
-    sfReportError('start/' + mode, new Error('game incomplete'));
+    sfReportError('start/' + mode, new Error('game incomplete'),
+      mode === 'adventure'
+        ? 'Avontuur starten mislukt — kies level opnieuw'
+        : 'Spel starten mislukt — terug naar menu');
     recoverToMenu({ force: true });
     return;
   }
@@ -27108,17 +27183,23 @@ bindPress(document.getElementById('menuProfileBar'), () => {
     msg: 'Missies laden mislukt — herlaad via Verse versie',
   });
 });
-bindPress(document.getElementById('btnGambleGooiStart'), () => gokGooiStartFromScreen());
+bindPress(document.getElementById('btnGambleGooiStart'), () => {
+  safeUiAction(() => gokGooiStartFromScreen(), 'gambleGooi', 'Gok starten mislukt — kies level opnieuw');
+});
 bindPress(document.getElementById('btnGambleSkip'), () => {
-  AudioSys.sfx('select');
-  try { cancelGambleStart(); } catch (_) {}
-  startAdventureFromGamble(true);
+  safeUiAction(() => {
+    AudioSys.sfx('select');
+    try { cancelGambleStart(); } catch (_) {}
+    startAdventureFromGamble(true);
+  }, 'gambleSkip', 'Overslaan mislukt — kies level opnieuw');
 });
 document.querySelectorAll('[data-back-gamble]').forEach((b) => {
   bindPress(b, () => {
-    AudioSys.sfx('select');
-    try { cancelGambleStart(); } catch (_) {}
-    UI.safeOpen('levelScreen', () => UI.renderLevels());
+    safeUiAction(() => {
+      AudioSys.sfx('select');
+      try { cancelGambleStart(); } catch (_) {}
+      UI.safeOpen('levelScreen', () => UI.renderLevels());
+    }, 'gambleBack', 'Terug naar levels mislukt');
   });
 });
 const btnContinue = document.getElementById('btnContinue');

@@ -26,12 +26,18 @@ function startGame(mode, opts) {
   try {
     game = new Game(mode, opts);
   } catch (err) {
-    sfReportError('start/' + mode, err);
+    sfReportError('start/' + mode, err,
+      mode === 'adventure'
+        ? 'Avontuur starten mislukt — kies level opnieuw'
+        : 'Spel starten mislukt — terug naar menu');
     recoverToMenu({ force: true });
     return;
   }
   if (!game || !game.player) {
-    sfReportError('start/' + mode, new Error('game incomplete'));
+    sfReportError('start/' + mode, new Error('game incomplete'),
+      mode === 'adventure'
+        ? 'Avontuur starten mislukt — kies level opnieuw'
+        : 'Spel starten mislukt — terug naar menu');
     recoverToMenu({ force: true });
     return;
   }
@@ -117,17 +123,23 @@ bindPress(document.getElementById('menuProfileBar'), () => {
     msg: 'Missies laden mislukt — herlaad via Verse versie',
   });
 });
-bindPress(document.getElementById('btnGambleGooiStart'), () => gokGooiStartFromScreen());
+bindPress(document.getElementById('btnGambleGooiStart'), () => {
+  safeUiAction(() => gokGooiStartFromScreen(), 'gambleGooi', 'Gok starten mislukt — kies level opnieuw');
+});
 bindPress(document.getElementById('btnGambleSkip'), () => {
-  AudioSys.sfx('select');
-  try { cancelGambleStart(); } catch (_) {}
-  startAdventureFromGamble(true);
+  safeUiAction(() => {
+    AudioSys.sfx('select');
+    try { cancelGambleStart(); } catch (_) {}
+    startAdventureFromGamble(true);
+  }, 'gambleSkip', 'Overslaan mislukt — kies level opnieuw');
 });
 document.querySelectorAll('[data-back-gamble]').forEach((b) => {
   bindPress(b, () => {
-    AudioSys.sfx('select');
-    try { cancelGambleStart(); } catch (_) {}
-    UI.safeOpen('levelScreen', () => UI.renderLevels());
+    safeUiAction(() => {
+      AudioSys.sfx('select');
+      try { cancelGambleStart(); } catch (_) {}
+      UI.safeOpen('levelScreen', () => UI.renderLevels());
+    }, 'gambleBack', 'Terug naar levels mislukt');
   });
 });
 const btnContinue = document.getElementById('btnContinue');

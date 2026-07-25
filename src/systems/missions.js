@@ -146,7 +146,14 @@ function bumpDaily(type, amount) {
     if (task.progress >= def.goal) { task.progress = def.goal; task.done = true; changed = true; UI.toast(t('toast.missionDone', { text: dailyText(def.id) }), 2800); }
     else changed = true;
   }
-  if (changed) { persist(); checkAchievements(); if (UI.renderMissions) UI.renderMissions(); }
+  if (changed) {
+    persist();
+    try { checkAchievements(); } catch (_) {}
+    // Never let missions UI crash mid-fight finish
+    if (UI.renderMissions && state === 'menu') {
+      try { UI.renderMissions(); } catch (_) {}
+    }
+  }
 }
 
 function claimableDailyTasks() {
@@ -1775,14 +1782,20 @@ function resumeLastPlay() {
 }
 
 function startAdventureFromGamble(skipGamble) {
+  const level = pendingAdvLevel || save.unlocked || 1;
+  const gamble = skipGamble ? null : lastGambleRoll;
   try {
     cancelGambleStart();
-    const level = pendingAdvLevel || save.unlocked || 1;
-    const gamble = skipGamble ? null : lastGambleRoll;
-    pendingAdvLevel = null;
     try { UI.hideGambleRollFlash(); } catch (_) {}
     startGame('adventure', { level, gamble });
+    if (state !== 'play' || !game) {
+      // startGame already toasted + recovered; keep level for retry
+      pendingAdvLevel = level;
+      return;
+    }
+    pendingAdvLevel = null;
   } catch (err) {
+    pendingAdvLevel = level;
     sfReportError('gambleStart', err, 'Avontuur starten mislukt — kies level opnieuw');
   }
 }

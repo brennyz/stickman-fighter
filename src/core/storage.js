@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.55';
+const APP_VERSION = '1.18.56';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 265;
+const SW_CACHE_REV = 266;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -802,24 +802,41 @@ function sanitizeSave(s) {
   out.summons = cleanSummons;
 
   const cleanPets = {};
-  for (const [k, v] of Object.entries(out.pets || {})) {
-    if (typeof PET_BY_ID !== 'undefined' && !PET_BY_ID[k]) continue;
-    if (typeof PET_BY_ID === 'undefined') continue;
-    const entry = (v && typeof v === 'object') ? v : {};
-    cleanPets[k] = {
-      kills: clamp(Math.floor(Number(entry.kills) || 0), 0, 999999),
-    };
+  const petsIn = out.pets || {};
+  if (typeof PET_BY_ID === 'undefined') {
+    // Registry not ready — keep raw map (clamp only) so load-order never wipes pets
+    for (const [k, v] of Object.entries(petsIn)) {
+      if (typeof k !== 'string' || !k) continue;
+      const entry = (v && typeof v === 'object') ? v : {};
+      cleanPets[k] = { kills: clamp(Math.floor(Number(entry.kills) || 0), 0, 999999) };
+    }
+  } else {
+    for (const [k, v] of Object.entries(petsIn)) {
+      if (!PET_BY_ID[k]) continue;
+      const entry = (v && typeof v === 'object') ? v : {};
+      cleanPets[k] = {
+        kills: clamp(Math.floor(Number(entry.kills) || 0), 0, 999999),
+      };
+    }
   }
   out.pets = cleanPets;
   if (out.activePet && !cleanPets[out.activePet]) out.activePet = null;
   else if (out.activePet && typeof PET_BY_ID !== 'undefined' && !PET_BY_ID[out.activePet]) out.activePet = null;
 
   const cleanEggs = {};
-  for (const [k, v] of Object.entries(out.eggPets || {})) {
-    if (typeof EGG_BY_ID !== 'undefined' && !EGG_BY_ID[k]) continue;
-    if (typeof EGG_BY_ID === 'undefined') continue;
-    const entry = (v && typeof v === 'object') ? v : {};
-    cleanEggs[k] = { src: typeof entry.src === 'string' ? entry.src.slice(0, 12) : 'daily' };
+  const eggsIn = out.eggPets || {};
+  if (typeof EGG_BY_ID === 'undefined') {
+    for (const [k, v] of Object.entries(eggsIn)) {
+      if (typeof k !== 'string' || !k) continue;
+      const entry = (v && typeof v === 'object') ? v : {};
+      cleanEggs[k] = { src: typeof entry.src === 'string' ? entry.src.slice(0, 12) : 'daily' };
+    }
+  } else {
+    for (const [k, v] of Object.entries(eggsIn)) {
+      if (!EGG_BY_ID[k]) continue;
+      const entry = (v && typeof v === 'object') ? v : {};
+      cleanEggs[k] = { src: typeof entry.src === 'string' ? entry.src.slice(0, 12) : 'daily' };
+    }
   }
   out.eggPets = cleanEggs;
   if (out.activeEggPet && !cleanEggs[out.activeEggPet]) out.activeEggPet = null;
@@ -949,13 +966,14 @@ function sanitizeSave(s) {
       ? out.daily.date.slice(0, 10)
       : (typeof todayKey === 'function' ? todayKey() : new Date().toISOString().slice(0, 10));
     const tasks = Array.isArray(out.daily.tasks) ? out.daily.tasks : [];
+    const hasDailyDef = typeof dailyDef === 'function';
     out.daily = {
       date: dk,
-      tasks: tasks.filter(t => t && typeof dailyDef === 'function' && dailyDef(t.id)).map(t => {
-        const def = dailyDef(t.id);
-        const goal = def ? def.goal : 99999;
+      tasks: tasks.filter(t => t && t.id && (!hasDailyDef || dailyDef(t.id))).map(t => {
+        const def = hasDailyDef ? dailyDef(t.id) : null;
+        const goal = def ? def.goal : Math.max(1, Math.floor(Number(t.goal) || 99999));
         const progress = clamp(Math.floor(Number(t.progress) || 0), 0, goal);
-        const done = def ? progress >= goal : false;
+        const done = def ? progress >= goal : !!t.done;
         let claimed = !!t.claimed;
         if (claimed && !done) claimed = false;
         return {

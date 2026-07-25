@@ -13,16 +13,16 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.55",
-    "swCache": "stickfighter-app-v265",
-    "gameJsQuery": "game.js?v=265",
-    "cssQuery": "styles/main.css?v=265",
-    "featureBranch": "cursor/wiggum-d20-categorie-n-b7f1",
+    "appVersion": "1.18.56",
+    "swCache": "stickfighter-app-v266",
+    "gameJsQuery": "game.js?v=266",
+    "cssQuery": "styles/main.css?v=266",
+    "featureBranch": "cursor/d17-stability-gamble-play-2125",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "stability + d15 onboard c5 · v1.18.55"
+    "note": "d17 c5: gamble/play finish guards + sanitize no-wipe · v1.18.56"
   },
   "userWishlist": [
     {
@@ -70,6 +70,12 @@
     "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md."
   ],
   "sessionLog": [
+    {
+      "when": "2026-07-25",
+      "summary": "d17 stabiliteit c5: finishAdventure/training toast guards, gamble retain level, sanitize pets/daily · v1.18.56",
+      "version": "1.18.56",
+      "d": 17
+    },
     {
       "at": "2026-07-25T19:04:23Z",
       "summary": "Stabiliteit: tide guard, ketsbam death, todayKey · d15 c5 onboard hints · v1.18.55"

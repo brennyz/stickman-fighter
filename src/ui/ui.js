@@ -2167,44 +2167,48 @@ const UI = {
   },
 
   renderGamble(levelN) {
-    const head = document.getElementById('gambleHead');
-    const diceRow = document.getElementById('gambleDiceRow');
-    const sumLine = document.getElementById('gambleSumLine');
-    const outEl = document.getElementById('gambleOutcome');
-    if (head) head.textContent = t('ui.gambleHead', { island: islandLabel(islandFromLevel(levelN), 'name'), level: levelN });
-    const ctx = document.getElementById('gambleIslandCtx');
-    if (ctx) {
-      const cap = adventureWeaponCapForLevel(levelN);
-      ctx.textContent = t('ui.gambleCtx', { cap });
-    }
-    const onboardEl = document.getElementById('gambleOnboardLine');
-    if (onboardEl) {
-      const hint = gambleOnboardHintLine();
-      if (hint) {
-        onboardEl.style.display = 'block';
-        onboardEl.textContent = hint;
+    try {
+      const head = document.getElementById('gambleHead');
+      const diceRow = document.getElementById('gambleDiceRow');
+      const sumLine = document.getElementById('gambleSumLine');
+      const outEl = document.getElementById('gambleOutcome');
+      if (head) head.textContent = t('ui.gambleHead', { island: islandLabel(islandFromLevel(levelN), 'name'), level: levelN });
+      const ctx = document.getElementById('gambleIslandCtx');
+      if (ctx) {
+        const cap = adventureWeaponCapForLevel(levelN);
+        ctx.textContent = t('ui.gambleCtx', { cap });
+      }
+      const onboardEl = document.getElementById('gambleOnboardLine');
+      if (onboardEl) {
+        const hint = gambleOnboardHintLine();
+        if (hint) {
+          onboardEl.style.display = 'block';
+          onboardEl.textContent = hint;
+        } else {
+          onboardEl.style.display = 'none';
+          onboardEl.textContent = '';
+        }
+      }
+      const g = lastGambleRoll;
+      const face = (d) => (typeof gambleDiceFace === 'function' ? gambleDiceFace(d) : '?');
+      if (g && diceRow) {
+        diceRow.textContent = `${face(g.d1)} ${face(g.d2)}`;
+        if (sumLine) sumLine.textContent = t('ui.gambleSumRoll', { d1: g.d1, d2: g.d2, sum: g.sum });
       } else {
-        onboardEl.style.display = 'none';
-        onboardEl.textContent = '';
+        if (diceRow) diceRow.textContent = '? ?';
+        if (sumLine) sumLine.textContent = t('ui.gambleSumDefault');
       }
-    }
-    const g = lastGambleRoll;
-    const face = (d) => (typeof gambleDiceFace === 'function' ? gambleDiceFace(d) : '?');
-    if (g && diceRow) {
-      diceRow.textContent = `${face(g.d1)} ${face(g.d2)}`;
-      if (sumLine) sumLine.textContent = t('ui.gambleSumRoll', { d1: g.d1, d2: g.d2, sum: g.sum });
-    } else {
-      if (diceRow) diceRow.textContent = '? ?';
-      if (sumLine) sumLine.textContent = t('ui.gambleSumDefault');
-    }
-    if (outEl) {
-      if (!g) outEl.textContent = t('ui.gamblePreview');
-      else {
-        outEl.textContent = gambleOutcomeLabelFromKey(g);
-        const col = g.outcome === 'superBoss' || g.outcome === 'miniBoss' ? '#ffb0b8'
-          : (g.outcome === 'superAlly' || g.outcome === 'ally') ? (GAMBLE_ALLIES[g.allyId]?.color || '#7cf5ff') : '#8fa3d9';
-        outEl.style.color = col;
+      if (outEl) {
+        if (!g) outEl.textContent = t('ui.gamblePreview');
+        else {
+          outEl.textContent = gambleOutcomeLabelFromKey(g);
+          const col = g.outcome === 'superBoss' || g.outcome === 'miniBoss' ? '#ffb0b8'
+            : (g.outcome === 'superAlly' || g.outcome === 'ally') ? (GAMBLE_ALLIES[g.allyId]?.color || '#7cf5ff') : '#8fa3d9';
+          outEl.style.color = col;
+        }
       }
+    } catch (err) {
+      sfReportError('renderGamble', err, 'Gok-scherm laden mislukt — terug naar levels');
     }
   },
 

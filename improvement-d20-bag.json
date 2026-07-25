@@ -19,26 +19,18 @@
     4,
     18,
     11,
-    17,
     8,
     3
   ],
   "lastRoll": {
-    "face": 15,
-    "category": "Onboarding \u2014 tips, eerste speelminuut, help",
-    "rolledAt": "2026-07-25T19:03:04Z",
-    "remainingCount": 19,
+    "face": 17,
+    "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
+    "rolledAt": "2026-07-25T19:47:10Z",
+    "remainingCount": 18,
     "cycle": 5
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 12,
-      "note": "dex rariteit-chips + Kristallijn/Boekmeester + 3 prestaties",
-      "version": "1.9.9",
-      "doneAt": "2026-07-23T15:07:21Z",
-      "cycle": 1
-    },
     {
       "face": 18,
       "note": "Deel 1: saga filters/UI/touch \u00b7 Deel 2: 5 saga-icon sticks (Ki/Scroll/Tide/Cape/Dawn parodie)",
@@ -591,6 +583,13 @@
       "version": "1.18.55",
       "doneAt": "2026-07-25T19:04:17Z",
       "cycle": 5
+    },
+    {
+      "face": 17,
+      "note": "finishAdventure/training try+toast, gamble start retain level, sanitize pets/daily no wipe",
+      "version": "1.18.56",
+      "doneAt": "2026-07-25T19:50:10Z",
+      "cycle": 5
     }
   ],
   "userFeatureLog": [
@@ -979,13 +978,6 @@
     }
   ],
   "history": [
-    {
-      "face": 19,
-      "category": "Muur & minigames \u2014 combo, timer, record",
-      "rolledAt": "2026-07-23T13:25:13Z",
-      "remainingCount": 17,
-      "cycle": 0
-    },
     {
       "face": 12,
       "category": "Content \u2014 monsters, wapens, rariteit, dex",
@@ -1819,6 +1811,13 @@
       "category": "Onboarding \u2014 tips, eerste speelminuut, help",
       "rolledAt": "2026-07-25T19:03:04Z",
       "remainingCount": 19,
+      "cycle": 5
+    },
+    {
+      "face": 17,
+      "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
+      "rolledAt": "2026-07-25T19:47:10Z",
+      "remainingCount": 18,
       "cycle": 5
     }
   ],
