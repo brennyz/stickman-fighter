@@ -187,6 +187,11 @@ function skillHudColor(sk) {
   return (sk && sk.color) || '#7cf5ff';
 }
 
+function skillSfxId(sk) {
+  if (!sk) return 'rasengan';
+  return sk.id || sk.sfx || 'rasengan';
+}
+
 function skillCombatLine(sk) {
   return sk.bonus || sk.hint || '';
 }

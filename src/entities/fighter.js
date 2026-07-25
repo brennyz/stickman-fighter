@@ -81,7 +81,7 @@ class Fighter {
       }
       this.energy = 0;
       const sk = fighterEquippedSkill(this);
-      AudioSys.sfx(sk.sfx || 'rasengan');
+      AudioSys.sfx(skillSfxId(sk));
       if (this.isPlayer || this.playerSlot) {
         game.banner(skillBanner(sk), 0.7, skillHudColor(sk), 40);
       }

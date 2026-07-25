@@ -130,10 +130,16 @@ function pickSkillPreview(id) {
   UI.skillPreviewId = id;
   updateSkillPreview();
   const grid = document.getElementById('skillGrid');
-  if (!grid) return;
-  grid.querySelectorAll('.skill-card').forEach(c => {
-    c.classList.toggle('preview-hov', c.dataset.id === id);
-  });
+  if (grid) {
+    grid.querySelectorAll('.skill-card').forEach(c => {
+      c.classList.toggle('preview-hov', c.dataset.id === id);
+    });
+  }
+  const now = Date.now();
+  if (now - (UI._skillPreviewSfxT || 0) > 420) {
+    UI._skillPreviewSfxT = now;
+    try { AudioSys.init(); AudioSys.sfx(id); } catch (_) {}
+  }
 }
 
 function initCharSelectChrome() {

@@ -133,9 +133,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.79';
+const APP_VERSION = '1.17.80';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 205;
+const SW_CACHE_REV = 206;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', skill: 'rasengan', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -4122,6 +4122,11 @@ function skillHudColor(sk) {
   return (sk && sk.color) || '#7cf5ff';
 }
 
+function skillSfxId(sk) {
+  if (!sk) return 'rasengan';
+  return sk.id || sk.sfx || 'rasengan';
+}
+
 function skillCombatLine(sk) {
   return sk.bonus || sk.hint || '';
 }
@@ -6741,9 +6746,6 @@ const SFX_SAMPLE_MAP = {
   shuriken: { pack: 'digital', vol: 0.55, files: ['laser1.ogg', 'laser2.ogg', 'lowDown.ogg'] },
   shoot: { pack: 'digital', vol: 0.62, files: ['laser4.ogg', 'laser5.ogg'] },
   laser: { pack: 'digital', vol: 0.68, files: ['laser6.ogg', 'laser7.ogg', 'laser8.ogg', 'laser9.ogg'] },
-  rasengan: { pack: 'digital', vol: 0.72, files: ['phaseJump2.ogg', 'phaseJump3.ogg', 'pepSound3.ogg'] },
-  chidori: { pack: 'digital', vol: 0.75, files: ['laser2.ogg', 'laser3.ogg', 'highUp.ogg'] },
-  rinnegan: { pack: 'digital', vol: 0.78, files: ['lowThreeTone.ogg', 'phaseJump4.ogg', 'laser1.ogg'] },
   special: { pack: 'digital', vol: 0.7, files: ['phaseJump3.ogg', 'pepSound4.ogg'] },
   subst: { pack: 'rpg', vol: 0.65, files: ['cloth4.ogg', 'clothBelt2.ogg', 'dropLeather.ogg'] },
   dash: { pack: 'digital', vol: 0.5, files: ['phaseJump1.ogg', 'lowDown.ogg', 'lowRandom.ogg'] },
@@ -6769,6 +6771,114 @@ const SFX_SAMPLE_MAP = {
   ketsbamCharge: { pack: 'digital', vol: 0.55, rate: 0.88, files: ['lowRandom.ogg', 'lowThreeTone.ogg'] },
 };
 
+/** Per-skill Kenney CC0 samples — each skill id maps to its own file set. */
+const SKILL_SFX_SAMPLES = {
+  rasengan: { pack: 'digital', vol: 0.72, files: ['phaseJump2.ogg', 'phaseJump3.ogg', 'pepSound3.ogg'] },
+  fireball_jutsu: { pack: 'digital', vol: 0.74, rate: 1.06, files: ['laser5.ogg', 'pepSound1.ogg', 'highUp.ogg'] },
+  chidori: { pack: 'digital', vol: 0.75, files: ['laser2.ogg', 'laser3.ogg', 'highUp.ogg'] },
+  shadow_clone_burst: { pack: 'rpg', vol: 0.68, files: ['cloth4.ogg', 'dropLeather.ogg', 'clothBelt2.ogg'] },
+  gentle_palm: { pack: 'impact', vol: 0.7, files: ['impactSoft_medium_001.ogg', 'impactGeneric_light_002.ogg'] },
+  rinnegan: { pack: 'digital', vol: 0.78, files: ['lowThreeTone.ogg', 'phaseJump4.ogg', 'laser1.ogg'] },
+  eight_gates: { pack: 'impact', vol: 0.82, rate: 1.08, files: ['impactPunch_heavy_001.ogg', 'impactPunch_heavy_002.ogg', 'impactMetal_heavy_001.ogg'] },
+  black_hole: { pack: 'digital', vol: 0.8, rate: 0.86, files: ['lowThreeTone.ogg', 'lowRandom.ogg', 'phaseJump4.ogg'] },
+  kamehameha: { pack: 'digital', vol: 0.8, files: ['laser8.ogg', 'laser9.ogg', 'pepSound4.ogg'] },
+  galick_gun: { pack: 'digital', vol: 0.76, rate: 0.94, files: ['laser6.ogg', 'laser7.ogg', 'lowDown.ogg'] },
+  destructo_disc: { pack: 'digital', vol: 0.72, rate: 1.12, files: ['laser1.ogg', 'laser2.ogg', 'phaseJump1.ogg'] },
+  instant_dash: { pack: 'digital', vol: 0.7, rate: 1.18, files: ['phaseJump1.ogg', 'highUp.ogg', 'lowRandom.ogg'] },
+  final_flash: { pack: 'digital', vol: 0.84, files: ['laser8.ogg', 'phaseJump5.ogg', 'pepSound5.ogg'] },
+  spirit_bomb: { pack: 'digital', vol: 0.85, rate: 0.82, files: ['lowThreeTone.ogg', 'phaseJump2.ogg', 'pepSound3.ogg'] },
+  getsuga: { pack: 'digital', vol: 0.74, files: ['laser3.ogg', 'laser4.ogg', 'pepSound2.ogg'] },
+  cero: { pack: 'digital', vol: 0.78, files: ['laser5.ogg', 'laser6.ogg', 'laser7.ogg'] },
+  bankai_slash: { pack: 'rpg', vol: 0.76, rate: 1.05, files: ['drawKnife3.ogg', 'chop.ogg', 'footstep04.ogg'] },
+  gum_rocket: { pack: 'digital', vol: 0.68, rate: 1.04, files: ['lowRandom.ogg', 'phaseJump2.ogg', 'pepSound1.ogg'] },
+  gear_second: { pack: 'digital', vol: 0.74, rate: 1.1, files: ['pepSound2.ogg', 'pepSound3.ogg', 'highUp.ogg'] },
+  thunder_palm: { pack: 'impact', vol: 0.78, files: ['impactBell_heavy_001.ogg', 'impactBell_heavy_002.ogg'] },
+  serious_punch: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_004.ogg', 'impactPunch_heavy_003.ogg'] },
+  serious_blast: { pack: 'digital', vol: 0.86, files: ['laser9.ogg', 'laser8.ogg', 'phaseJump5.ogg'] },
+  sun_palm: { pack: 'impact', vol: 0.72, files: ['impactBell_heavy_002.ogg', 'impactSoft_medium_002.ogg'] },
+  moon_pull: { pack: 'digital', vol: 0.76, rate: 0.95, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'laser1.ogg'] },
+};
+
+Object.assign(SFX_SAMPLE_MAP, SKILL_SFX_SAMPLES);
+
+function isSkillSfxId(name) {
+  return !!(name && SKILL_SFX_SAMPLES[name]);
+}
+
+function skillSynthSeed(id) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+/** Procedural fallback when Kenney samples offline — unique per skill id. */
+function playSkillSynthFallback(name, h) {
+  if (!isSkillSfxId(name)) return false;
+  const sk = typeof skillById === 'function' ? skillById(name) : null;
+  if (!sk || sk.id !== name) return false;
+  const { T, D, N, S, now, lite } = h;
+  const seed = skillSynthSeed(name);
+  const det = 1 + (seed % 21) * 0.007;
+  const mul = (f) => f * det;
+  const beh = sk.behavior || 'orb';
+  if (beh === 'dash') {
+    T(mul(920), mul(1580), 0.16, 'sine', 0.14, now);
+    N(0.12, 0.11, 5200 + (seed % 800), true, now);
+    T(mul(1400), mul(920), 0.06, 'triangle', 0.1, now + 0.05);
+    if (!lite) T(mul(180 + seed % 40), mul(90), 0.07, 'sine', 0.08, now + 0.02);
+  } else if (beh === 'beam') {
+    T(mul(280), mul(920), 0.2, 'sine', 0.13, now);
+    D(mul(520), mul(1220), 0.14, 'triangle', 0.11, now + 0.04, 10 + seed % 6);
+    N(0.1, 0.09, 3800 + (seed % 600), true, now);
+    if (!lite) S([mul(880), mul(1047), mul(1175)], now + 0.08);
+  } else if (beh === 'disc') {
+    T(mul(680), mul(420), 0.12, 'triangle', 0.13, now);
+    T(mul(980), mul(680), 0.08, 'sine', 0.1, now + 0.04);
+    N(0.08, 0.1, 4400 + (seed % 500), true, now);
+  } else if (beh === 'pull' || beh === 'meteor') {
+    T(mul(240), mul(760), 0.14, 'sine', 0.14, now);
+    T(mul(760), mul(480), 0.15, 'triangle', 0.12, now + 0.04);
+    T(mul(980), mul(1320), 0.08, 'sine', 0.11, now + 0.1);
+    N(0.1, 0.11, 1900 + (seed % 400), true, now + 0.02);
+    if (!lite) T(mul(55), mul(32), 0.16, 'sawtooth', 0.09, now + 0.05);
+  } else {
+    T(mul(320), mul(1040), 0.2, 'sine', 0.13, now);
+    D(mul(580), mul(1220), 0.16, 'triangle', 0.11, now + 0.04, 10);
+    N(0.12, 0.1, 3600 + (seed % 700), true, now);
+    if (!lite) S([mul(880), mul(1047), mul(1175)], now + 0.1);
+  }
+  return true;
+}
+
+function playSkillSuperReadySynth(kind, h) {
+  if (!kind || !isSkillSfxId(kind)) return false;
+  const sk = typeof skillById === 'function' ? skillById(kind) : null;
+  if (!sk || sk.id !== kind) return false;
+  const { T, N, now, lite } = h;
+  const seed = skillSynthSeed(kind);
+  const det = 1 + (seed % 15) * 0.006;
+  const mul = (f) => f * det;
+  const beh = sk.behavior || 'orb';
+  if (beh === 'dash') {
+    T(mul(920), mul(1480), 0.14, 'sine', 0.16, now);
+    N(0.1, 0.14, 5400, true, now);
+    T(mul(1200), mul(920), 0.06, 'triangle', 0.1, now + 0.08);
+  } else if (beh === 'pull' || beh === 'meteor') {
+    T(mul(360), mul(660), 0.12, 'sine', 0.16, now);
+    T(mul(880), mul(1180), 0.1, 'triangle', 0.12, now + 0.05);
+    T(mul(110), mul(60), 0.14, 'sine', 0.09, now + 0.03);
+  } else if (beh === 'beam' || beh === 'disc') {
+    T(mul(520), mul(980), 0.12, 'sine', 0.15, now);
+    T(mul(880), mul(1320), 0.09, 'triangle', 0.12, now + 0.05);
+    if (!lite) T(mul(1320), mul(880), 0.07, 'sine', 0.08, now + 0.1);
+  } else {
+    T(mul(720), mul(1180), 0.1, 'sine', 0.14, now);
+    T(mul(980), mul(1320), 0.09, 'triangle', 0.12, now + 0.05);
+    T(mul(1320), mul(880), 0.07, 'sine', 0.08, now + 0.1);
+  }
+  return true;
+}
+
 function collectSampleUrls() {
   const urls = [];
   const seen = new Set();
@@ -6782,7 +6892,7 @@ function collectSampleUrls() {
 }
 
 function sampleMapForSfx(name) {
-  return SFX_SAMPLE_MAP[name] || null;
+  return SFX_SAMPLE_MAP[name] || SKILL_SFX_SAMPLES[name] || null;
 }
 /* --- src/systems/audio.js --- */
 /* =============================== AUDIO ================================= */
@@ -7066,6 +7176,8 @@ const AudioSys = {
       freqs.forEach((f, i) => T(f, f * 1.1, 0.045, 'sine', 0.075, w + i * 0.02));
     };
     const now = this.ctx.currentTime;
+    const skillSynthH = { T, D, E, N, S, I, C, now, lite, v, d, P };
+    if (typeof playSkillSynthFallback === 'function' && playSkillSynthFallback(name, skillSynthH)) return;
     switch (name) {
       case 'swing':
         N(0.05, 0.22, 3400, true, now);
@@ -7227,24 +7339,10 @@ const AudioSys = {
         S([1560, 1870, 2093], now + 0.05);
         break;
       case 'special':
-      case 'rasengan':
         T(320, 1040, 0.2, 'sine', 0.13, now);
         D(580, 1220, 0.16, 'triangle', 0.11, now + 0.04, 10);
         N(0.12, 0.1, 3600, true, now);
         if (!lite) S([880, 1047, 1175], now + 0.1);
-        break;
-      case 'chidori':
-        T(920, 1580, 0.18, 'sine', 0.14, now);
-        N(0.14, 0.12, 5600, true, now);
-        T(1400, 920, 0.06, 'triangle', 0.1, now + 0.06);
-        if (!lite) T(180, 90, 0.08, 'sine', 0.08, now + 0.02);
-        break;
-      case 'rinnegan':
-        T(240, 760, 0.14, 'sine', 0.14, now);
-        T(760, 480, 0.15, 'triangle', 0.12, now + 0.04);
-        T(980, 1320, 0.08, 'sine', 0.11, now + 0.1);
-        N(0.1, 0.11, 1900, true, now + 0.02);
-        if (!lite) T(55, 32, 0.18, 'sawtooth', 0.1, now + 0.05);
         break;
       case 'subst':
         N(0.1, 0.24, 1300, true, now);
@@ -7488,19 +7586,11 @@ const AudioSys = {
         if (!lite) S([1175, 1319], now + 0.24);
         break;
       case 'superReady':
-        if (kind === 'chidori') {
-          T(920, 1480, 0.14, 'sine', 0.16, now);
-          N(0.1, 0.14, 5400, true, now);
-          T(1200, 920, 0.06, 'triangle', 0.1, now + 0.08);
-        } else if (kind === 'rinnegan') {
-          T(360, 660, 0.12, 'sine', 0.16, now);
-          T(880, 1180, 0.1, 'triangle', 0.12, now + 0.05);
-          T(110, 60, 0.14, 'sine', 0.09, now + 0.03);
-        } else {
-          T(720, 1180, 0.1, 'sine', 0.14, now);
-          T(980, 1320, 0.09, 'triangle', 0.12, now + 0.05);
-          T(1320, 880, 0.07, 'sine', 0.08, now + 0.1);
-        }
+        if (typeof playSkillSuperReadySynth === 'function' &&
+            playSkillSuperReadySynth(kind, { T, N, now, lite })) break;
+        T(720, 1180, 0.1, 'sine', 0.14, now);
+        T(980, 1320, 0.09, 'triangle', 0.12, now + 0.05);
+        T(1320, 880, 0.07, 'sine', 0.08, now + 0.1);
         break;
       case 'eliteIntro':
         T(95, 50, 0.24, 'sawtooth', 0.23, now);
@@ -9264,7 +9354,7 @@ class Fighter {
       }
       this.energy = 0;
       const sk = fighterEquippedSkill(this);
-      AudioSys.sfx(sk.sfx || 'rasengan');
+      AudioSys.sfx(skillSfxId(sk));
       if (this.isPlayer || this.playerSlot) {
         game.banner(skillBanner(sk), 0.7, skillHudColor(sk), 40);
       }
@@ -12515,7 +12605,7 @@ class Game {
       }, critMeta));
       f.vx = face * (sk.dashVx || 380);
       this.shake(7, 0.2);
-      AudioSys.sfx(sk.sfx || 'chidori');
+      AudioSys.sfx(skillSfxId(sk));
     } else if (behavior === 'pull' || behavior === 'meteor') {
       const sp = behavior === 'meteor' ? speed * 0.55 : speed;
       this.spawnProjectile(Object.assign({
@@ -12528,7 +12618,7 @@ class Game {
       this.burst(f.x + face * 28, y0, '#ff6b9d', 8);
       this.shake(behavior === 'meteor' ? 10 : 8, 0.24);
       this.freezeT = Math.max(this.freezeT, behavior === 'meteor' ? 0.07 : 0.05);
-      AudioSys.sfx(sk.sfx || 'rinnegan');
+      AudioSys.sfx(skillSfxId(sk));
       if (f.isPlayer || f.playerSlot) haptic(20);
     } else if (behavior === 'beam' || behavior === 'disc') {
       const beamSpeed = speed;
@@ -12543,7 +12633,7 @@ class Game {
       spawnFxRing(this, f.x + face * 38, y0, col, 12);
       this.shake(8, 0.26);
       this.freezeT = Math.max(this.freezeT, 0.05);
-      AudioSys.sfx(sk.sfx || 'rasengan');
+      AudioSys.sfx(skillSfxId(sk));
       if (f.isPlayer || f.playerSlot) haptic(18);
     } else {
       this.spawnProjectile(Object.assign({
@@ -12556,7 +12646,7 @@ class Game {
       spawnFxRing(this, f.x + face * 34, y0, col, 10);
       this.shake(9, 0.28);
       this.freezeT = Math.max(this.freezeT, 0.06);
-      AudioSys.sfx(sk.sfx || 'rasengan');
+      AudioSys.sfx(skillSfxId(sk));
       if (f.isPlayer || f.playerSlot) haptic(22);
     }
   }
@@ -14773,10 +14863,16 @@ function pickSkillPreview(id) {
   UI.skillPreviewId = id;
   updateSkillPreview();
   const grid = document.getElementById('skillGrid');
-  if (!grid) return;
-  grid.querySelectorAll('.skill-card').forEach(c => {
-    c.classList.toggle('preview-hov', c.dataset.id === id);
-  });
+  if (grid) {
+    grid.querySelectorAll('.skill-card').forEach(c => {
+      c.classList.toggle('preview-hov', c.dataset.id === id);
+    });
+  }
+  const now = Date.now();
+  if (now - (UI._skillPreviewSfxT || 0) > 420) {
+    UI._skillPreviewSfxT = now;
+    try { AudioSys.init(); AudioSys.sfx(id); } catch (_) {}
+  }
 }
 
 function initCharSelectChrome() {

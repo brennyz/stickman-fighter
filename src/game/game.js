@@ -1247,7 +1247,7 @@ class Game {
       }, critMeta));
       f.vx = face * (sk.dashVx || 380);
       this.shake(7, 0.2);
-      AudioSys.sfx(sk.sfx || 'chidori');
+      AudioSys.sfx(skillSfxId(sk));
     } else if (behavior === 'pull' || behavior === 'meteor') {
       const sp = behavior === 'meteor' ? speed * 0.55 : speed;
       this.spawnProjectile(Object.assign({
@@ -1260,7 +1260,7 @@ class Game {
       this.burst(f.x + face * 28, y0, '#ff6b9d', 8);
       this.shake(behavior === 'meteor' ? 10 : 8, 0.24);
       this.freezeT = Math.max(this.freezeT, behavior === 'meteor' ? 0.07 : 0.05);
-      AudioSys.sfx(sk.sfx || 'rinnegan');
+      AudioSys.sfx(skillSfxId(sk));
       if (f.isPlayer || f.playerSlot) haptic(20);
     } else if (behavior === 'beam' || behavior === 'disc') {
       const beamSpeed = speed;
@@ -1275,7 +1275,7 @@ class Game {
       spawnFxRing(this, f.x + face * 38, y0, col, 12);
       this.shake(8, 0.26);
       this.freezeT = Math.max(this.freezeT, 0.05);
-      AudioSys.sfx(sk.sfx || 'rasengan');
+      AudioSys.sfx(skillSfxId(sk));
       if (f.isPlayer || f.playerSlot) haptic(18);
     } else {
       this.spawnProjectile(Object.assign({
@@ -1288,7 +1288,7 @@ class Game {
       spawnFxRing(this, f.x + face * 34, y0, col, 10);
       this.shake(9, 0.28);
       this.freezeT = Math.max(this.freezeT, 0.06);
-      AudioSys.sfx(sk.sfx || 'rasengan');
+      AudioSys.sfx(skillSfxId(sk));
       if (f.isPlayer || f.playerSlot) haptic(22);
     }
   }
