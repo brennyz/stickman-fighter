@@ -1209,8 +1209,37 @@
   .super-grid-scroll { max-height:min(22vh,200px); margin-bottom:10px; touch-action:pan-y; overscroll-behavior:contain; }
   .super-grid .super-card { min-height:118px; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
   .skill-preview-card, .super-preview-card { touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
-  #skillScreen { overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; touch-action:pan-y; overscroll-behavior:contain; }
-  #skillScreen .char-saga-bar button, #skillScreen .dex-filter-btn, #skillScreen #btnSkillSort { touch-action:manipulation; min-height:44px; }
+  /*
+   * Skills + nood-supers: nested .skill-grid-scroll + touch-action:manipulation
+   * blocked Android/iPad pan. One scroll surface = #skillScreen (speciale Kets zichtbaar).
+   */
+  #skillScreen {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+  }
+  #skillScreen .skill-grid-scroll,
+  #skillScreen .super-grid-scroll {
+    max-height: none;
+    overflow: visible;
+    touch-action: pan-y;
+    overscroll-behavior: auto;
+    scroll-behavior: auto;
+  }
+  #skillScreen .skill-card,
+  #skillScreen .super-card,
+  #skillScreen .skill-preview-card,
+  #skillScreen .super-preview-card {
+    touch-action: pan-y;
+  }
+  #skillScreen .char-saga-bar button,
+  #skillScreen .dex-filter-btn,
+  #skillScreen #btnSkillSort {
+    touch-action: manipulation;
+    min-height: 44px;
+  }
   .skill-section-divider { width:min(88vw,620px); margin:6px auto 14px; border:none; border-top:1px solid rgba(255,255,255,.1); }
   .skill-card .skill-beh-badge { font-size:9px; font-weight:900; opacity:.75; margin-top:2px; }
   .skill-next-strip { border-color:rgba(255,215,94,.35); background:rgba(255,215,94,.08); }

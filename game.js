@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.61';
+const APP_VERSION = '1.18.62';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 271;
+const SW_CACHE_REV = 272;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -7861,7 +7861,7 @@ function tideWaveSeaPick(seaPool, levelN, maxRarityOrder) {
   return weightedPick(seaPool, levelN);
 }
 
-/** Nood-ontsnapping als je omringd / stunlocked bent — tik midden-KETS! */
+/** Nood-ontsnapping als je omringd / stunlocked bent — thermometer boven special-knop. */
 const KETSBAM_DETECT_R = 148;
 const KETSBAM_NEAR_MIN = 3;
 const KETSBAM_BLAST_R = 192;
@@ -12876,8 +12876,8 @@ function ketsbamHitTest(x, y, g) {
   const ui = touchUiScale(W, H);
   const { cx, cy, w, h } = ketsbamPromptLayout(g);
   const slop = btnHitSlop();
-  const hw = w * 0.5 + slop;
-  const hh = h * 0.5 + slop + 10 * ui;
+  const hw = w * 0.5 + slop + 14 * ui; // include ready-dot to the right
+  const hh = h * 0.5 + slop + 14 * ui; // include KETS/super label above bar
   return Math.abs(x - cx) <= hw && Math.abs(y - cy) <= hh;
 }
 
@@ -22524,37 +22524,74 @@ class Game {
   }
 
   drawKetsbamPrompt(c) {
-    if (!this.ketsbamShow || !this.player?.alive) return;
-    const sp = equippedSuper();
+    // Thermometer boven special-knop tijdens build + ready (speciale supers zichtbaar via kleur/label)
+    const prog = this.ketsbamBuildProg || 0;
+    if (prog <= 0 || !this.player?.alive) return;
+    const sp = typeof equippedSuper === 'function' ? equippedSuper() : null;
     const ui = touchUiScale(W, H);
-    const { cx, cy } = ketsbamPromptLayout(this);
+    const { cx, cy, w, h } = ketsbamPromptLayout(this);
+    const ready = !!this.ketsbamShow;
     const calm = motionReduced();
-    const pulse = calm ? 1 : (0.9 + Math.sin((this.ketsbamPulse || 0) * 10) * 0.1);
-    const r = 46 * ui * pulse;
-    const col = sp.color || '#ffd75e';
-    const col2 = sp.color2 || '#ff7043';
+    const pulse = this.ketsbamPulse || 0;
+    const x = cx - w * 0.5;
+    const y = cy - h * 0.5;
+    const fillW = Math.max(2, w * prog);
+    const col = (sp && sp.color) || '#ffd75e';
+    const col2 = (sp && sp.color2) || '#ffb347';
+
     c.save();
-    c.globalAlpha = 0.94;
-    c.fillStyle = 'rgba(8,12,28,.82)';
-    c.beginPath();
-    c.arc(cx, cy, r + 12 * ui, 0, TAU);
+    c.globalAlpha = ready ? 0.98 : 0.88;
+    c.fillStyle = 'rgba(6,10,24,.78)';
+    c.strokeStyle = ready ? (col + 'aa') : 'rgba(255,215,94,.45)';
+    c.lineWidth = 2 * ui;
+    this.rr(c, x, y, w, h, h * 0.45);
     c.fill();
-    c.strokeStyle = col + '88';
-    c.lineWidth = 3 * ui;
     c.stroke();
-    c.translate(cx, cy);
-    if (!calm) c.rotate((this.ketsbamPulse || 0) * 2.2);
-    drawSuperIcon(c, sp.icon || 'star', r, col, col2);
-    if (!calm) c.rotate(-(this.ketsbamPulse || 0) * 2.2);
-    c.font = `900 ${Math.round(17 * ui)}px -apple-system,sans-serif`;
-    c.textAlign = 'center';
-    c.textBaseline = 'middle';
-    c.lineWidth = 5 * ui;
-    c.strokeStyle = 'rgba(0,0,0,.55)';
-    const promptTxt = superChargeBanner(sp).replace(/!$/, '');
-    c.strokeText(promptTxt, 0, 2);
-    c.fillStyle = '#fff';
-    c.fillText(promptTxt, 0, 2);
+
+    if (fillW > 1) {
+      c.save();
+      this.rr(c, x + 1.5, y + 1.5, w - 3, h - 3, (h - 3) * 0.42);
+      c.clip();
+      const grad = c.createLinearGradient(x, y, x + fillW, y);
+      grad.addColorStop(0, col2);
+      grad.addColorStop(0.55, col);
+      grad.addColorStop(1, '#fff3a8');
+      c.fillStyle = grad;
+      c.fillRect(x + 1.5, y + 1.5, fillW - 3, h - 3);
+      c.restore();
+    }
+
+    if (ready) {
+      const dotR = Math.max(5, h * 0.42);
+      const dotX = x + w + dotR * 0.55;
+      const dotY = cy;
+      const blink = calm ? 1 : (0.45 + Math.abs(Math.sin(pulse * 9)) * 0.55);
+      c.globalAlpha = blink;
+      c.fillStyle = '#ff3344';
+      c.strokeStyle = '#fff';
+      c.lineWidth = 1.5 * ui;
+      c.beginPath();
+      c.arc(dotX, dotY, dotR, 0, TAU);
+      c.fill();
+      c.stroke();
+      c.globalAlpha = 0.95;
+      c.font = `900 ${Math.round(10 * ui)}px -apple-system,sans-serif`;
+      c.textAlign = 'center';
+      c.textBaseline = 'bottom';
+      const label = (typeof superChargeBanner === 'function'
+        ? superChargeBanner(sp)
+        : 'KETS!').replace(/!$/, '');
+      c.fillStyle = col;
+      c.strokeStyle = 'rgba(0,0,0,.55)';
+      c.lineWidth = 3 * ui;
+      c.strokeText(label, cx, y - 3 * ui);
+      c.fillText(label, cx, y - 3 * ui);
+    } else if (prog > 0.08 && !calm) {
+      c.globalAlpha = 0.35 + prog * 0.25;
+      c.fillStyle = col;
+      c.fillRect(x + fillW - 2, y + 2, 2, h - 4);
+    }
+
     c.restore();
     c.textBaseline = 'alphabetic';
     c.textAlign = 'left';
