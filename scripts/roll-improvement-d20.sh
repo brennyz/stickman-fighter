@@ -2,13 +2,14 @@
 # Ralph Wiggum d20 v3 — roll één verbeter-thema (geen herhaling binnen cyclus).
 #
 # Commands:
-#   ./scripts/roll-improvement-d20.sh           # roll (preflight; open pending → terug in zak + nieuwe roll)
+#   ./scripts/roll-improvement-d20.sh           # roll (preflight; open pending → backlog + nieuwe roll)
 #   ./scripts/roll-improvement-d20.sh status
 #   ./scripts/roll-improvement-d20.sh history
 #   ./scripts/roll-improvement-d20.sh unroll    # zet pending terug in de zak (geen nieuwe roll)
 #   ./scripts/roll-improvement-d20.sh backlog   # wachtrij: gerold maar nog niet uitgewerkt
 #   ./scripts/roll-improvement-d20.sh pick 11   # zet d11 uit backlog als PENDING (geen roll)
-#   ./scripts/roll-improvement-d20.sh preflight # node --check + smoke load
+#   ./scripts/roll-improvement-d20.sh preflight # node --check + smokes + bag verify
+#   ./scripts/roll-improvement-d20.sh doctor    # diepere gezondheidscheck (HTML/versie/SW/handshake)
 #   ./scripts/roll-improvement-d20.sh verify    # bag integrity (geen overlap pending/remaining)
 #
 set -euo pipefail
@@ -25,11 +26,28 @@ run_preflight() {
     return 1
   fi
   echo "OK  node --check game.js"
+  if ! node --check "$ROOT/install.js"; then
+    echo "FAIL: node --check install.js"
+    return 1
+  fi
+  echo "OK  node --check install.js"
+  if ! node --check "$ROOT/sw.js"; then
+    echo "FAIL: node --check sw.js"
+    return 1
+  fi
+  echo "OK  node --check sw.js"
   if ! node "$ROOT/scripts/smoke-load-game.mjs"; then
     echo "FAIL: smoke-load-game.mjs — game.js crasht bij load (handlers binden niet)"
     return 1
   fi
   echo "OK  smoke-load-game.mjs"
+  if [[ -f "$ROOT/scripts/smoke-html-structure.mjs" ]]; then
+    if ! node "$ROOT/scripts/smoke-html-structure.mjs"; then
+      echo "FAIL: smoke-html-structure — canvas#game nested / tag balance"
+      return 1
+    fi
+    echo "OK  smoke-html-structure.mjs"
+  fi
   local ver sw gsw
   ver="$(rg -o "APP_VERSION = '[^']+'" "$ROOT/src/core/storage.js" | head -1 || rg -o "APP_VERSION = '[^']+'" "$ROOT/game.js" | head -1 || true)"
   sw="$(rg -o "stickfighter-app-v[0-9]+" "$ROOT/sw.js" | head -1 || true)"
@@ -39,7 +57,18 @@ run_preflight() {
     echo "FAIL: SW mismatch game.js SW_CACHE_REV=$gsw vs sw.js $sw"
     return 1
   fi
-  echo "App: ${ver:-?} · SW: ${sw:-?}"
+  local expect html_rev
+  expect="$(rg -o "__SF_EXPECT_REV = [0-9]+" "$ROOT/index.html" | head -1 | rg -o "[0-9]+$" || true)"
+  html_rev="$(rg -o "game\\.js\\?v=[0-9]+" "$ROOT/index.html" | head -1 | rg -o "[0-9]+$" || true)"
+  if [[ -n "$gsw" && -n "$expect" && "$gsw" != "$expect" ]]; then
+    echo "FAIL: handshake mismatch SW_CACHE_REV=$gsw vs __SF_EXPECT_REV=$expect"
+    return 1
+  fi
+  if [[ -n "$gsw" && -n "$html_rev" && "$gsw" != "$html_rev" ]]; then
+    echo "FAIL: index.html game.js?v=$html_rev ≠ SW_CACHE_REV=$gsw"
+    return 1
+  fi
+  echo "App: ${ver:-?} · SW: ${sw:-?} · HTML expect: ${expect:-?}"
   if ! python3 - "$ROOT/improvement-d20-bag.json" <<'PYVERIFY'
 import json, sys
 from pathlib import Path
@@ -76,8 +105,68 @@ PYVERIFY
   echo ""
 }
 
+run_doctor() {
+  echo ""
+  echo "RALPH d20 — DOCTOR"
+  local fail=0
+  run_preflight || fail=1
+  if ! rg -q "function gamblePending" "$ROOT/src/systems/missions.js"; then
+    echo "FAIL: gamblePending() ontbreekt — dobbel→menu races komen terug"
+    fail=1
+  else
+    echo "OK  gamblePending guard"
+  fi
+  if ! rg -q "__sfSafeToReload" "$ROOT/src/boot/loop.js"; then
+    echo "FAIL: __sfSafeToReload ontbreekt — SW kan midden in flow herladen"
+    fail=1
+  else
+    echo "OK  __sfSafeToReload"
+  fi
+  if ! rg -q "needsFreshJs" "$ROOT/install.js"; then
+    echo "FAIL: needsFreshJs ontbreekt in install.js"
+    fail=1
+  else
+    echo "OK  needsFreshJs (alleen herladen bij échte JS-mismatch)"
+  fi
+  if ! rg -q "safeToReload" "$ROOT/install.js"; then
+    echo "FAIL: safeToReload ontbreekt in install.js"
+    fail=1
+  else
+    echo "OK  safeToReload (geen reload tijdens play/dobbel)"
+  fi
+  # Beide bekende reloads: nukeSwAndReload (expliciet Verse versie) + tryReload (na safeToReload).
+  local reload_n
+  reload_n="$(rg -c "location\\.reload\\(\\)" "$ROOT/install.js" || true)"
+  if [[ "${reload_n:-0}" -eq 2 ]]; then
+    echo "OK  location.reload ×2 (nuke + idle) — play-safe pad"
+  else
+    echo "WARN: install.js heeft $reload_n× location.reload (verwacht 2)"
+  fi
+  if [[ -f "$ROOT/scripts/smoke-menu-hub.mjs" ]]; then
+    if node "$ROOT/scripts/smoke-menu-hub.mjs"; then
+      echo "OK  smoke-menu-hub"
+    else
+      echo "FAIL: smoke-menu-hub"
+      fail=1
+    fi
+  fi
+  echo ""
+  if [[ "$fail" -ne 0 ]]; then
+    echo "DOCTOR FAIL — fix bovenstaande vóór roll/ship"
+    return 1
+  fi
+  echo "DOCTOR OK — klaar voor roll / ship"
+  echo ""
+  return 0
+}
+
 if [[ "$SF_MODE" == "preflight" ]]; then
   run_preflight
+  exit $?
+fi
+
+if [[ "$SF_MODE" == "doctor" ]]; then
+  run_doctor
   exit $?
 fi
 
@@ -130,17 +219,17 @@ focus = {
     5: "Caps/debounce/DPR — meet vóór nieuwe FX.",
     6: "Volumes/mute in pauze — geen grote nieuwe assets.",
     7: "sanitizeSave/export hints — SAVE_KEY frozen.",
-    8: "SW bump + offline banner — network-first HTML.",
+    8: "SW bump + offline + no mid-play reload — network-first HTML.",
     9: "touch-action, hit slop, dual pad — menu blijft klikbaar.",
     10: "prefers-reduced-motion + contrast — geen flits-FX.",
-    11: "goBack/scroll/grote knoppen — één flow-fix.",
+    11: "goBack/scroll/screen-transities — één flow-fix; geen recover tijdens dobbel.",
     12: "Dex/cosmetic/achievement — geen 50 levels.",
     13: "Daily/claim UX copy — geen grind ×10.",
     14: "Particle cap + 1 juice — respecteer Lite FX.",
     15: "Max 1 toast/modus — help tekst, geen spam.",
     16: "hosting.json/Pages link — tunnel niet primair.",
-    17: "try/catch + user toast — geen silent fail.",
-    18: "Char select UI — stats preview, geen dmg tweak.",
+    17: "try/catch + user toast — guards tijdens gamble/play; geen silent fail.",
+    18: "Char select UI — stats preview, geen dmg tweak; HTML tags sluiten.",
     19: "Muur feedback/record — timer/combo hints.",
     20: "Rename/comments/dead code — zero gedrag wijzigen.",
 }
@@ -252,7 +341,7 @@ def print_status(bag):
     rem = bag.get("remaining") or []
     pending = bag.get("pending")
     print("")
-    print("RALPH d20 — STATUS (v3)")
+    print("RALPH d20 — STATUS (v4 tooling · bag v3)")
     print("Cyclus:", bag.get("cyclesCompleted", 0))
     print("Nog in zak:", len(rem), "/20")
     if pending:
@@ -276,6 +365,11 @@ def print_status(bag):
         print("Backlog (uit te werken):", ", ".join("d" + str(x.get("face")) for x in bl[:8]))
         if len(bl) > 8:
             print("  … +" + str(len(bl) - 8) + " meer · pick d# · ./scripts/roll-improvement-d20.sh backlog")
+    print("Doctor: ./scripts/roll-improvement-d20.sh doctor  ·  Preflight: … preflight")
+    print("Handoff-tips (recente hard-bugs):")
+    print("  · canvas#game moet directe <body>-child zijn (smoke:html)")
+    print("  · SW mag NIET herladen tijdens play/dobbel (__sfSafeToReload)")
+    print("  · KETSBAM_BUILD_DUR moet bestaan (adventure update crash → blauw)")
     print("")
 
 def print_backlog(bag):
@@ -403,7 +497,7 @@ if mode == "verify":
     sys.exit(0)
 
 if mode not in ("roll", "force"):
-    print("Usage: roll | status | history | backlog | pick <d#> | unroll | force | preflight | verify", file=sys.stderr)
+    print("Usage: roll | status | history | backlog | pick <d#> | unroll | force | preflight | doctor | verify", file=sys.stderr)
     sys.exit(1)
 
 pending = bag.get("pending")
@@ -449,7 +543,7 @@ bag["history"] = bag["history"][-120:]
 save_bag(bag)
 
 print("")
-print("RALPH WIGGUM d20 — IMPROVEMENT (v3)")
+print("RALPH WIGGUM d20 — IMPROVEMENT (v4 tooling)")
 print("Rol: d" + str(face))
 print("Thema: " + categories[face])
 print("Focus: " + focus.get(face, "Kleine diff · checklist IMPROVEMENT.md"))
@@ -459,7 +553,7 @@ bln = len(bag.get("rollBacklog") or [])
 if bln:
     print("Backlog:", bln, "thema('s) wachten · ./scripts/roll-improvement-d20.sh backlog")
 print("")
-print("Checklist: menu klikbaar · geen balance-bom · SW bump · node --check + smoke")
+print("Checklist: menu klikbaar · geen balance-bom · SW bump · doctor OK · smoke:html")
 print("Na afloop: ./scripts/mark-d20-done.sh", face, '"korte note"', "1.x.y")
 print("Agent log + IMPROVEMENT.md bijwerken.")
 print("")

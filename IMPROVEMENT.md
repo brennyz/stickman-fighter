@@ -15,9 +15,10 @@ Elk gezicht = één thema. **Roll** = kies willekeurig uit wat nog in de zak zit
 
 ```bash
 npm run roll                              # = ./scripts/roll-improvement-d20.sh
+npm run roll:doctor                       # HTML/versie/SW/handshake + play-safe guards
 chmod +x scripts/roll-improvement-d20.sh scripts/mark-d20-done.sh
-./scripts/roll-improvement-d20.sh status      # zak + PENDING
-./scripts/roll-improvement-d20.sh            # roll (preflight; open pending → zak + nieuwe roll)
+./scripts/roll-improvement-d20.sh status      # zak + PENDING + hard-bug handoff
+./scripts/roll-improvement-d20.sh            # roll (preflight; open pending → backlog + nieuwe roll)
 ./scripts/roll-improvement-d20.sh unroll     # pending terug in zak (geen nieuwe roll)
 ./scripts/roll-improvement-d20.sh backlog   # wachtrij uit te werken
 ./scripts/roll-improvement-d20.sh pick 11   # d11 uit backlog → PENDING
@@ -25,6 +26,8 @@ chmod +x scripts/roll-improvement-d20.sh scripts/mark-d20-done.sh
 ```
 
 Staat: `improvement-d20-bag.json` (commit na roll + na afronden).
+
+**d20 v4 tooling** (bag blijft schema v3): `doctor` + strengere preflight (`smoke:html`, `__SF_EXPECT_REV`, install/sw syntax) · status toont hard-bug handoff · focus voor SW/play-safe & screen-transities.
 
 **d20 v3:** open roll = **PENDING** · **`rollBacklog`** = gerold maar nog niet uitgewerkt (blijft bewaard bij re-roll) · **`userFeatureLog`** = user-wensen zonder roll · handoff → `HANDOFF-ZOEKINDEX.md`
 
@@ -112,6 +115,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-25 | — | **Ship:** gamble timer cancel op skip/back/recover (uit #141) mee naar live. v1.18.51 / SW v261. |
 | 2026-07-25 | — | **Ship live:** menu full-bleed glass UI + 47 button SVGs + visibility funnel docs. v1.18.50 / SW v260. |
 | 2026-07-25 | — | **Assets harden:** hub+modes+chrome SVG’s in app, SW precache, CSS HC/sizes, `hardenButtonIcons`, 0 inline ico/tog SVG. v1.18.49 / SW v259. |
+| 2026-07-25 | — | **SW play-safe + d20 v4 tooling:** geen mid-flow reload tijdens dobbel/level/play (`__sfSafeToReload`/`needsFreshJs`); blackScreenGuard/uiWatch skip bij `gamblePending`; Ralph `doctor` + strengere preflight. v1.18.55 / SW v265. |
 | 2026-07-25 | — | **Assets hub:** SVG-iconen adventure/arcade/versus/collect/continue → `assets/buttons/hub/`, wire-in startmenu. Volgende: chrome-dock → modes → harden. v1.18.48 / SW v258. |
 | 2026-07-25 | — | **Menu UI harden:** stage hide tijdens play (`syncMenuHubStage` + CSS), lite-fx/a11y glass, focus/touch, `smoke:menu`. v1.18.47 / SW v257. |
 | 2026-07-25 | — | **Menu UI fase 1:** full-bleed omgeving-canvas + translucent titel/tiles/meta/talen (`.menu-video-overhaul`). Video-assets later. v1.18.46 / SW v256. |

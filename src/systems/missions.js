@@ -1527,6 +1527,10 @@ function wireSfDebugTools() {
 /** Detecteer en herstel volledig zwart scherm (geen UI, geen canvas). */
 function blackScreenGuard(where) {
   if (window.__sfBlackGuardBusy) return;
+  // Dobbel-flash / Gooi & start: nooit recover — dat annuleert de timer → startscherm.
+  try {
+    if (typeof gamblePending === 'function' && gamblePending()) return;
+  } catch (_) {}
   // Play met game: altijd canvas vrijmaken van UI-deksel / wees-pauseBtn
   if (state === 'play' && game) {
     if (playLayerBroken()) {
@@ -1569,6 +1573,9 @@ function blackScreenGuard(where) {
 
 function ensureMenuScreenActive() {
   if (state !== 'menu') return;
+  try {
+    if (typeof gamblePending === 'function' && gamblePending()) return;
+  } catch (_) {}
   const active = activeScreenEl();
   if (active && screenLooksUsable(active)) {
     // Gezond submenu (settings/missies/…) mag blijven — alleen kapot deksel forceren
@@ -1777,6 +1784,11 @@ function startAdventureFromGamble(skipGamble) {
 
 let gokStartBusy = false;
 let gokScreenTimer = null;
+
+/** Dobbelworp loopt → geen herlaad/update mag hier tussen komen. */
+function gamblePending() {
+  return !!gokScreenTimer || gokStartBusy;
+}
 
 function cancelGambleStart() {
   if (gokScreenTimer) {

@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.54';
+const APP_VERSION = '1.18.55';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 264;
+const SW_CACHE_REV = 265;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -3647,6 +3647,10 @@ function wireSfDebugTools() {
 /** Detecteer en herstel volledig zwart scherm (geen UI, geen canvas). */
 function blackScreenGuard(where) {
   if (window.__sfBlackGuardBusy) return;
+  // Dobbel-flash / Gooi & start: nooit recover — dat annuleert de timer → startscherm.
+  try {
+    if (typeof gamblePending === 'function' && gamblePending()) return;
+  } catch (_) {}
   // Play met game: altijd canvas vrijmaken van UI-deksel / wees-pauseBtn
   if (state === 'play' && game) {
     if (playLayerBroken()) {
@@ -3689,6 +3693,9 @@ function blackScreenGuard(where) {
 
 function ensureMenuScreenActive() {
   if (state !== 'menu') return;
+  try {
+    if (typeof gamblePending === 'function' && gamblePending()) return;
+  } catch (_) {}
   const active = activeScreenEl();
   if (active && screenLooksUsable(active)) {
     // Gezond submenu (settings/missies/…) mag blijven — alleen kapot deksel forceren
@@ -3897,6 +3904,11 @@ function startAdventureFromGamble(skipGamble) {
 
 let gokStartBusy = false;
 let gokScreenTimer = null;
+
+/** Dobbelworp loopt → geen herlaad/update mag hier tussen komen. */
+function gamblePending() {
+  return !!gokScreenTimer || gokStartBusy;
+}
 
 function cancelGambleStart() {
   if (gokScreenTimer) {
@@ -28155,11 +28167,27 @@ function bootGame() {
   window.__sf = {
     get game() { return game; },
     get version() { return APP_VERSION; },
+    get state() { return state; },
+    get swRev() { return SW_CACHE_REV; },
     startGame, save, Game, UI, recoverToMenu, syncPlayLayer,
     debug: typeof sfDebugScreen === 'function' ? sfDebugScreen : null,
     fixPlayLayer: () => (typeof sfDebugScreen === 'function' ? sfDebugScreen({ fix: true }) : null),
     goMenu: () => recoverToMenu({ force: true }),
     forcePlay: () => (typeof forcePlayCanvasVisible === 'function' ? forcePlayCanvasVisible('__sf') : null),
+  };
+  // install.js mag hierop pas herladen: nooit tijdens gevecht, level-keuze of dobbelworp.
+  window.__sfSafeToReload = () => {
+    try {
+      if (state !== 'menu' || game) return false;
+      if (typeof gamblePending === 'function' && gamblePending()) return false;
+      if (document.body.classList.contains('is-playing')) return false;
+      const active = document.querySelector('.screen.active');
+      if (active && active.id !== 'menuScreen') return false;
+      const menu = document.getElementById('menuScreen');
+      return !!(menu && menu.classList.contains('active'));
+    } catch (_) {
+      return false;
+    }
   };
   safeCall(wireSfDebugTools, 'sfDebug');
   safeCall(hardenButtonIcons, 'buttonIcons');
@@ -28216,6 +28244,8 @@ window.addEventListener('unhandledrejection', (e) => {
 function bindUiLayerWatch() {
   const tick = () => {
     try {
+      // Tijdens dobbel → geen sync/guard die flash of timer weggooit
+      if (typeof gamblePending === 'function' && gamblePending()) return;
       if (state === 'play' && game) {
         if (typeof playLayerBroken === 'function' && playLayerBroken()) {
           forcePlayCanvasVisible('uiWatch');

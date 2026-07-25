@@ -676,11 +676,27 @@ function bootGame() {
   window.__sf = {
     get game() { return game; },
     get version() { return APP_VERSION; },
+    get state() { return state; },
+    get swRev() { return SW_CACHE_REV; },
     startGame, save, Game, UI, recoverToMenu, syncPlayLayer,
     debug: typeof sfDebugScreen === 'function' ? sfDebugScreen : null,
     fixPlayLayer: () => (typeof sfDebugScreen === 'function' ? sfDebugScreen({ fix: true }) : null),
     goMenu: () => recoverToMenu({ force: true }),
     forcePlay: () => (typeof forcePlayCanvasVisible === 'function' ? forcePlayCanvasVisible('__sf') : null),
+  };
+  // install.js mag hierop pas herladen: nooit tijdens gevecht, level-keuze of dobbelworp.
+  window.__sfSafeToReload = () => {
+    try {
+      if (state !== 'menu' || game) return false;
+      if (typeof gamblePending === 'function' && gamblePending()) return false;
+      if (document.body.classList.contains('is-playing')) return false;
+      const active = document.querySelector('.screen.active');
+      if (active && active.id !== 'menuScreen') return false;
+      const menu = document.getElementById('menuScreen');
+      return !!(menu && menu.classList.contains('active'));
+    } catch (_) {
+      return false;
+    }
   };
   safeCall(wireSfDebugTools, 'sfDebug');
   safeCall(hardenButtonIcons, 'buttonIcons');
@@ -737,6 +753,8 @@ window.addEventListener('unhandledrejection', (e) => {
 function bindUiLayerWatch() {
   const tick = () => {
     try {
+      // Tijdens dobbel → geen sync/guard die flash of timer weggooit
+      if (typeof gamblePending === 'function' && gamblePending()) return;
       if (state === 'play' && game) {
         if (typeof playLayerBroken === 'function' && playLayerBroken()) {
           forcePlayCanvasVisible('uiWatch');
