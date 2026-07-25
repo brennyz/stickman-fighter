@@ -133,9 +133,9 @@ const SAVE_KEY = 'stickfighter_save_v1';
 const SAVE_BACKUP_KEY = 'stickfighter_save_backup_v1';
 const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.17.65';
+const APP_VERSION = '1.17.74';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 191;
+const SW_CACHE_REV = 192;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -146,8 +146,8 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0 },
-  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {} };
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, skillShards: 0 },
+  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {} };
 
 const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
@@ -831,6 +831,17 @@ function sanitizeSave(s) {
   }
   out.weaponMastery = cleanMastery;
 
+  const cleanSkills = {};
+  const skillIds = ['rasengan', 'chidori', 'rinnegan', 'subst', 'dash', 'chakra'];
+  for (const id of skillIds) {
+    const raw = (out.skillUpgrades || {})[id];
+    const entry = (raw && typeof raw === 'object') ? raw : {};
+    const lv = clamp(Math.floor(Number(entry.level) || 0), 0, SKILL_MAX_LEVEL);
+    const shards = clamp(Math.floor(Number(entry.shards) || 0), 0, 9999);
+    if (lv > 0 || shards > 0) cleanSkills[id] = { level: lv, shards };
+  }
+  out.skillUpgrades = cleanSkills;
+
   out.petCoins = clamp(Math.floor(Number(out.petCoins) || 0), 0, 999999);
   if (out.lang != null && !SUPPORTED_LANGS.includes(out.lang)) out.lang = null;
 
@@ -889,6 +900,7 @@ const PICKUP_META = {
   rage:   { color: '#ff7a4d', label: 'RAGE' },
   chakra: { color: '#7cf5ff', label: 'CHAKRA' },
   shield: { color: '#9fd8ff', label: 'SCHILD' },
+  skill_shard: { color: '#ffd75e', label: 'SKILL' },
 };
 
 /* --- src/i18n/i18n.js --- */
@@ -1415,6 +1427,8 @@ function applyLangStaticScreens() {
   setText('styleScreenSub', 'ui.styleSub');
   setText('weaponScreenHead', 'ui.weaponHead');
   setText('weaponScreenSub', 'ui.weaponSub');
+  setText('skillScreenHead', 'ui.skillHead');
+  setText('skillScreenSub', 'ui.skillSub');
   setText('helpFirstMinute', 'ui.helpFirstMinute');
 
   const gambleStartLbl = document.getElementById('gambleStartLbl');
@@ -1577,6 +1591,19 @@ function drawPickupIcon(c, kind, x, y) {
       const sx = Math.cos(a) * rr, sy = Math.sin(a) * rr;
       if (a === 0) c.moveTo(sx, sy); else c.lineTo(sx, sy);
     }
+    c.stroke();
+  } else if (kind === 'skill_shard') {
+    c.fillStyle = '#ffd75e';
+    c.beginPath();
+    c.moveTo(0, -7);
+    c.lineTo(6.5, -1);
+    c.lineTo(4, 7);
+    c.lineTo(-4, 7);
+    c.lineTo(-6.5, -1);
+    c.closePath();
+    c.fill();
+    c.strokeStyle = '#0a0d18';
+    c.lineWidth = 1.6;
     c.stroke();
   } else {
     c.beginPath();
@@ -3776,6 +3803,241 @@ function drawWeaponStylePips(c, x, y, fighter) {
   }
 }
 
+/* --- src/data/skills.js --- */
+/* ========================== SKILL UPGRADES ============================= */
+/** Permanent skill upgrades via adventure shard drops.
+ *  Future: weapons/styles will use UPGRADE_PHASE_MAX (3) in a separate save track. */
+const UPGRADE_PHASE_MAX = 3;
+const SKILL_MAX_LEVEL = 5;
+const SKILL_SHARD_COSTS = [3, 5, 8, 12, 18];
+
+const SKILL_DEFS = {
+  rasengan: {
+    id: 'rasengan', group: 'jutsu', color: '#7cf5ff',
+    steps: [
+      { dmgMul: 1.08, radius: 2 },
+      { dmgMul: 1.08, speedMul: 1.06, energySave: 5 },
+      { dmgMul: 1.1, radius: 2, extraShot: 0.14 },
+      { dmgMul: 1.1, lifeMul: 1.12, windupMul: 0.92 },
+      { dmgMul: 1.12, radius: 3, energySave: 8, extraShot: 0.1 },
+    ],
+  },
+  chidori: {
+    id: 'chidori', group: 'jutsu', color: '#a8e0ff',
+    steps: [
+      { dmgMul: 1.1, radius: 1 },
+      { dmgMul: 1.08, speedMul: 1.08, energySave: 5 },
+      { dmgMul: 1.1, windupMul: 0.9, dashMul: 1.1 },
+      { dmgMul: 1.12, radius: 2, lifeMul: 1.08 },
+      { dmgMul: 1.14, energySave: 10, pierceRepeat: 0.22 },
+    ],
+  },
+  rinnegan: {
+    id: 'rinnegan', group: 'jutsu', color: '#c47aff',
+    steps: [
+      { dmgMul: 1.08, radius: 2 },
+      { dmgMul: 1.08, lifeMul: 1.1, energySave: 5 },
+      { dmgMul: 1.1, radius: 2, pullMul: 1.15 },
+      { dmgMul: 1.1, extraShot: 0.12, windupMul: 0.92 },
+      { dmgMul: 1.12, radius: 3, energySave: 8, lifeMul: 1.1 },
+    ],
+  },
+  subst: {
+    id: 'subst', group: 'utility', color: '#c9a66b',
+    steps: [
+      { cdMul: 0.92 },
+      { cdMul: 0.92, invulnAdd: 0.04 },
+      { cdMul: 0.9, dashDistMul: 1.1 },
+      { cdMul: 0.9, invulnAdd: 0.05 },
+      { cdMul: 0.88, dashDistMul: 1.12 },
+    ],
+  },
+  dash: {
+    id: 'dash', group: 'utility', color: '#7cf5ff',
+    steps: [
+      { cdMul: 0.9 },
+      { cdMul: 0.92, dashDistMul: 1.1 },
+      { cdMul: 0.9, dashSpeedMul: 1.12 },
+      { cdMul: 0.92, dashDistMul: 1.08 },
+      { cdMul: 0.88, dashSpeedMul: 1.15 },
+    ],
+  },
+  chakra: {
+    id: 'chakra', group: 'utility', color: '#ffd75e',
+    steps: [
+      { regenMul: 1.12, energySave: 3 },
+      { regenMul: 1.1, energySave: 4 },
+      { regenMul: 1.15 },
+      { energySave: 5, regenMul: 1.1 },
+      { regenMul: 1.18, energySave: 6 },
+    ],
+  },
+};
+
+const SKILL_IDS = Object.keys(SKILL_DEFS);
+const JUTSU_SKILL_IDS = SKILL_IDS.filter((id) => SKILL_DEFS[id].group === 'jutsu');
+
+function skillEntry(id) {
+  if (!save.skillUpgrades || typeof save.skillUpgrades !== 'object') save.skillUpgrades = {};
+  if (!save.skillUpgrades[id]) save.skillUpgrades[id] = { level: 0, shards: 0 };
+  return save.skillUpgrades[id];
+}
+
+function skillLevel(id) {
+  const def = SKILL_DEFS[id];
+  if (!def) return 0;
+  return clamp(Math.floor(Number(skillEntry(id).level) || 0), 0, SKILL_MAX_LEVEL);
+}
+
+function skillShards(id) {
+  if (!SKILL_DEFS[id]) return 0;
+  return clamp(Math.floor(Number(skillEntry(id).shards) || 0), 0, 9999);
+}
+
+function skillUpgradeCost(id) {
+  const lv = skillLevel(id);
+  if (lv >= SKILL_MAX_LEVEL) return null;
+  return SKILL_SHARD_COSTS[lv] || SKILL_SHARD_COSTS[SKILL_SHARD_COSTS.length - 1];
+}
+
+function skillCanUpgrade(id) {
+  const cost = skillUpgradeCost(id);
+  if (cost == null) return false;
+  return skillShards(id) >= cost;
+}
+
+function skillBonuses(id) {
+  const def = SKILL_DEFS[id];
+  const b = {
+    dmgMul: 1, radius: 0, speedMul: 1, lifeMul: 1, windupMul: 1, energySave: 0,
+    regenMul: 1, cdMul: 1, dashDistMul: 1, dashSpeedMul: 1, invulnAdd: 0,
+    extraShot: 0, pierceRepeat: 0, pullMul: 1,
+  };
+  if (!def) return b;
+  const lv = skillLevel(id);
+  for (let i = 0; i < lv; i++) {
+    const s = def.steps[i];
+    if (!s) continue;
+    if (s.dmgMul) b.dmgMul *= s.dmgMul;
+    if (s.radius) b.radius += s.radius;
+    if (s.speedMul) b.speedMul *= s.speedMul;
+    if (s.lifeMul) b.lifeMul *= s.lifeMul;
+    if (s.windupMul) b.windupMul *= s.windupMul;
+    if (s.energySave) b.energySave += s.energySave;
+    if (s.regenMul) b.regenMul *= s.regenMul;
+    if (s.cdMul) b.cdMul *= s.cdMul;
+    if (s.dashDistMul) b.dashDistMul *= s.dashDistMul;
+    if (s.dashSpeedMul) b.dashSpeedMul *= s.dashSpeedMul;
+    if (s.invulnAdd) b.invulnAdd += s.invulnAdd;
+    if (s.extraShot) b.extraShot = Math.min(0.45, b.extraShot + s.extraShot);
+    if (s.pierceRepeat) b.pierceRepeat = Math.min(0.4, b.pierceRepeat + s.pierceRepeat);
+    if (s.pullMul) b.pullMul *= s.pullMul;
+  }
+  return b;
+}
+
+function jutsuSkillBonuses(kind) {
+  return skillBonuses(kind && SKILL_DEFS[kind] ? kind : 'rasengan');
+}
+
+function utilitySkillBonuses() {
+  return {
+    subst: skillBonuses('subst'),
+    dash: skillBonuses('dash'),
+    chakra: skillBonuses('chakra'),
+  };
+}
+
+function skillChakraCost(jutsuKind) {
+  const j = jutsuSkillBonuses(jutsuKind || 'rasengan');
+  const c = utilitySkillBonuses().chakra;
+  return clamp(100 - (j.energySave || 0) - (c.energySave || 0), 72, 100);
+}
+
+function addSkillShards(id, n) {
+  if (!SKILL_DEFS[id] || n <= 0) return 0;
+  const e = skillEntry(id);
+  e.shards = clamp((e.shards || 0) + n, 0, 9999);
+  save.stats = save.stats || {};
+  save.stats.skillShards = (save.stats.skillShards || 0) + n;
+  persist();
+  return n;
+}
+
+function trySkillUpgrade(id) {
+  if (!SKILL_DEFS[id] || !skillCanUpgrade(id)) return false;
+  const cost = skillUpgradeCost(id);
+  const e = skillEntry(id);
+  e.shards -= cost;
+  e.level = skillLevel(id) + 1;
+  persist();
+  return true;
+}
+
+function rollSkillShardDrop(monster) {
+  const elite = !!(monster && monster.elite);
+  const giant = !!(monster && monster.giant);
+  const superBoss = !!(monster && monster.superBoss);
+  let chance = 0.1;
+  if (superBoss) chance = 0.55;
+  else if (elite) chance = 0.28;
+  else if (giant) chance = 0.16;
+  if (Math.random() >= chance) return null;
+  const weights = [];
+  for (const id of SKILL_IDS) {
+    let w = 1;
+    if (SKILL_DEFS[id].group === 'jutsu') w = id === 'rasengan' ? 2.2 : 0.85;
+    if (skillLevel(id) >= SKILL_MAX_LEVEL) w *= 0.35;
+    weights.push({ id, w });
+  }
+  let total = 0;
+  for (const x of weights) total += x.w;
+  let r = Math.random() * total;
+  for (const x of weights) {
+    r -= x.w;
+    if (r <= 0) return x.id;
+  }
+  return weights[0]?.id || 'rasengan';
+}
+
+function skillUpgradeSummary(id) {
+  const lv = skillLevel(id);
+  const b = skillBonuses(id);
+  const parts = [];
+  if (b.dmgMul > 1.001) parts.push(`DMG ×${b.dmgMul.toFixed(2)}`);
+  if (b.radius > 0) parts.push(`+${b.radius} radius`);
+  if (b.energySave > 0) parts.push(`−${b.energySave} chakra`);
+  if (b.regenMul > 1.001) parts.push(`regen ×${b.regenMul.toFixed(2)}`);
+  if (b.cdMul < 0.999) parts.push(`CD ×${b.cdMul.toFixed(2)}`);
+  if (b.extraShot > 0) parts.push(`${Math.round(b.extraShot * 100)}% extra shot`);
+  if (b.pierceRepeat > 0) parts.push(`${Math.round(b.pierceRepeat * 100)}% re-hit`);
+  if (b.windupMul < 0.999) parts.push(`sneller cast`);
+  if (lv >= SKILL_MAX_LEVEL) parts.push('MAX');
+  return parts.length ? parts.join(' · ') : (lv ? 'Lv ' + lv : '—');
+}
+
+function skillNextStepPreview(id) {
+  const lv = skillLevel(id);
+  const def = SKILL_DEFS[id];
+  if (!def || lv >= SKILL_MAX_LEVEL) return '';
+  const s = def.steps[lv];
+  if (!s) return '';
+  const parts = [];
+  if (s.dmgMul) parts.push(`DMG +${Math.round((s.dmgMul - 1) * 100)}%`);
+  if (s.radius) parts.push(`+${s.radius} radius`);
+  if (s.energySave) parts.push(`−${s.energySave} chakra`);
+  if (s.regenMul) parts.push(`regen +${Math.round((s.regenMul - 1) * 100)}%`);
+  if (s.cdMul) parts.push(`CD −${Math.round((1 - s.cdMul) * 100)}%`);
+  if (s.extraShot) parts.push(`+${Math.round(s.extraShot * 100)}% extra`);
+  if (s.pierceRepeat) parts.push(`+${Math.round(s.pierceRepeat * 100)}% re-hit`);
+  return parts.join(' · ');
+}
+
+function totalSkillLevels() {
+  let n = 0;
+  for (const id of SKILL_IDS) n += skillLevel(id);
+  return n;
+}
 /* --- src/data/styles.js --- */
 /* ============================== STIJLEN ================================ */
 const STYLES = [
@@ -5180,6 +5442,7 @@ function seedNlGameStrings() {
     combo3: 'Combo ×3 — door!', combo5: 'Combo ×5 — netjes!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — meester!', comboN: 'COMBO ×{n}!',
     pickupHp: '+HP', pickupRage: 'RAGE ×1.4', pickupChakra: 'Vol chakra!', pickupShield: 'Schild!',
+    pickupSkillShard: '+1 {name} shard',
     giant: 'REUS!', wallCombo3: 'Combo ×3 · sloop +{pct}%',
     wallCombo5: 'Combo ×5 · sloop +{pct}%', wallCombo8: 'Combo ×8 · sloop +{pct}%',
     wallTempo: 'MUUR-TEMPO!', wallRecord: 'NIEUW RECORD!', bonus5: 'BONUS +5',
@@ -5241,6 +5504,8 @@ function seedNlGameStrings() {
     charNotEnough: 'Niet genoeg unlocked vechters in deze saga',
     charRandom: '{a} vs {b} · HP {hp1}/{hp2} · TOT {tot1}/{tot2}',
     charFair: 'Fair duo: {a} vs {b} · TOT Δ{diff}',
+    skillUpgradeReady: '{name} kan upgraden — Collectie → Skills',
+    skillUpgraded: '{name} Lv {lv}! {detail}',
     skipGamble: 'Zonder gok',
     weaponIslandCap: 'Klaar voor training — in avontuur max Lv {cap}',
     petNone: 'Geen actieve pet',
@@ -5385,6 +5650,17 @@ function seedNlGameStrings() {
     styleIslandGate: 'Eiland-skill Lv {lvl}',
     weaponHead: 'Wapens',
     weaponSub: 'Summons zijn echt · eiland-skill gate: alleen wapens tot je huidige eiland-cap in avontuur',
+    skillHead: 'Skills',
+    skillSub: 'Shards droppen in avontuur · upgrade dmg, cooldown, radius & chakra',
+    skillUpgrade: 'Upgrade',
+    skillMax: 'MAX',
+    skillShards: '{cur}/{cost} shards',
+    skillShardsOnly: '{n} shards',
+    skillLevel: 'Lv {lv}/{max}',
+    skillNow: 'Nu',
+    skillNext: 'Volgende',
+    skillGroupJutsu: 'Jutsu',
+    skillGroupUtility: 'Utility',
     helpFirstMinute: 'Eerste minuut — per modus één korte hint bovenin het gevecht (geen toast-stapel). Avontuur: joystick + knoppen · groen = HP · vol chakra = SUPER-knop. Training = Robot · Muur = combo · 2 spelers = links/rechts.',
     helpOnboardHead: 'Eerste-minuut hints: {seen}/{total} modi gezien · max één regel bovenin per modus',
     helpTryNext: 'Probeer als volgende: {mode}',
@@ -5407,6 +5683,11 @@ function seedNlGameStrings() {
     modeVersus: 'P1 links P2 rechts · best-of-3 · rematch in pauze',
     modeCoinrun: '45s munten · 2 munten = 1 pet coin · mik ↑ · vliegers +3',
     langSwitchFail: 'Taal wisselen mislukt',
+  });
+  if (!I18N.nl.skill) I18N.nl.skill = {};
+  Object.assign(I18N.nl.skill, {
+    rasengan: 'Rasengan', chidori: 'Chidori', rinnegan: 'Rinnegan',
+    subst: 'Substitutie', dash: 'Dash', chakra: 'Chakra',
   });
   if (!I18N.nl.hud) I18N.nl.hud = {};
   Object.assign(I18N.nl.hud, {
@@ -5693,6 +5974,8 @@ const CATALOG_EN = {
     charNotEnough: 'Not enough unlocked fighters in this saga',
     charRandom: '{a} vs {b} · HP {hp1}/{hp2} · TOT {tot1}/{tot2}',
     charFair: 'Fair duo: {a} vs {b} · TOT Δ{diff}',
+    skillUpgradeReady: '{name} ready to upgrade — Collection → Skills',
+    skillUpgraded: '{name} Lv {lv}! {detail}',
     skipGamble: 'No gamble',
     weaponIslandCap: 'Ready for training — in adventure max Lv {cap}',
     petNone: 'No active pet',
@@ -5804,6 +6087,17 @@ const CATALOG_EN = {
     styleIslandGate: 'Island skill Lv {lvl}',
     weaponHead: 'Weapons',
     weaponSub: 'Summons are real · island skill gate: adventure weapons up to your island cap',
+    skillHead: 'Skills',
+    skillSub: 'Shards drop in adventure · upgrade dmg, cooldown, radius & chakra',
+    skillUpgrade: 'Upgrade',
+    skillMax: 'MAX',
+    skillShards: '{cur}/{cost} shards',
+    skillShardsOnly: '{n} shards',
+    skillLevel: 'Lv {lv}/{max}',
+    skillNow: 'Now',
+    skillNext: 'Next',
+    skillGroupJutsu: 'Jutsu',
+    skillGroupUtility: 'Utility',
     helpFirstMinute: 'First minute — one short hint per mode at top (no toast stack). Adventure: joystick + buttons · green = HP · full chakra = SUPER. Training = Robot · Wall = combo · 2P = left/right.',
     helpOnboardHead: 'First-minute hints: {seen}/{total} modes seen · max one line per mode at top',
     helpTryNext: 'Try next: {mode}',
@@ -5853,6 +6147,7 @@ const CATALOG_EN = {
     combo3: 'Combo ×3 — keep going!', combo5: 'Combo ×5 — nice!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — master!', comboN: 'COMBO ×{n}!',
     pickupHp: '+HP', pickupRage: 'RAGE ×1.4', pickupChakra: 'Full chakra!', pickupShield: 'Shield!',
+    pickupSkillShard: '+1 {name} shard',
     giant: 'GIANT!', wallCombo3: 'Combo ×3 · smash +{pct}%',
     wallCombo5: 'Combo ×5 · smash +{pct}%', wallCombo8: 'Combo ×8 · smash +{pct}%',
     wallTempo: 'WALL TEMPO!', wallRecord: 'NEW RECORD!', bonus5: 'BONUS +5',
@@ -5908,6 +6203,10 @@ const CATALOG_EN = {
     ketsTap: 'Tap!', ketsKey: 'E / tap',
   },
   jutsu: { rasengan: 'RASENGAN!', chidori: 'CHIDORI!', rinnegan: 'RINNEGAN!' },
+  skill: {
+    rasengan: 'Rasengan', chidori: 'Chidori', rinnegan: 'Rinnegan',
+    subst: 'Substitution', dash: 'Dash', chakra: 'Chakra',
+  },
   gamble: {
     superBoss: 'Bad luck! Super-boss in a random wave',
     miniBoss: 'Risk: extra elite in a wave',
@@ -6254,11 +6553,31 @@ function dailyHint(id) {
   return (typeof DAILY_PLAY_HINTS !== 'undefined' && DAILY_PLAY_HINTS[id]) || '';
 }
 
-function pickupLabel(kind) {
+function pickupLabel(kind, skillId) {
+  if (kind === 'skill_shard' && skillId) {
+    return t('combat.pickupSkillShard', { name: skillLabel(skillId) });
+  }
   const k = 'pickup.' + kind;
   const v = t(k);
   if (v && v !== k) return v;
   return (typeof PICKUP_META !== 'undefined' && PICKUP_META[kind] && PICKUP_META[kind].label) || kind;
+}
+
+function skillLabel(id) {
+  const k = 'skill.' + (id || 'rasengan');
+  const v = t(k);
+  if (v && v !== k) return v;
+  if (id === 'subst') return 'Substitutie';
+  if (id === 'dash') return 'Dash';
+  if (id === 'chakra') return 'Chakra';
+  return jutsuLabel(id);
+}
+
+function skillDesc(id) {
+  const k = 'skillDesc.' + id;
+  const v = t(k);
+  if (v && v !== k) return v;
+  return '';
 }
 
 function jutsuLabel(kind) {
@@ -8882,10 +9201,13 @@ class Fighter {
       }
       case 'special': {
         const j = fighterJutsuKind(this);
-        const jMul = j === 'rinnegan' ? 2.55 : j === 'chidori' ? (this.isRobot ? 2.35 : 2.72) : 2.85;
+        const jb = jutsuSkillBonuses(j);
+        const jMul = (j === 'rinnegan' ? 2.55 : j === 'chidori' ? (this.isRobot ? 2.35 : 2.72) : 2.85) * jb.dmgMul;
+        const windup = (j === 'rinnegan' ? 0.52 : 0.48) * jb.windupMul;
         spec = {
-          kind, windup: j === 'rinnegan' ? 0.52 : 0.48, active: 0.12, recover: 0.28, range: 62, r: 44,
+          kind, windup, active: 0.12, recover: 0.28, range: 62 + jb.radius, r: 44 + jb.radius * 0.5,
           dmg: this.baseDmg * jMul, kb: j === 'rinnegan' ? 460 : 520, jutsu: j,
+          extraShot: jb.extraShot, pierceRepeat: jb.pierceRepeat, pullMul: jb.pullMul,
         };
         break;
       }
@@ -8901,12 +9223,13 @@ class Fighter {
   startAttack(kind, game) {
     if (this.attack || this.state === 'hurt' || !this.alive || this.invulnT > 0 && kind !== 'special') return;
     if (kind === 'special') {
-      if (this.energy < 100) {
+      const jKind = fighterJutsuKind(this);
+      const chakraCost = skillChakraCost(jKind);
+      if (this.energy < chakraCost) {
         if (this.isPlayer) game.floater(this.x, this.y - 110, 'Chakra niet vol!', '#7cf5ff', 13);
         return;
       }
-      this.energy = 0;
-      const jKind = fighterJutsuKind(this);
+      this.energy = Math.max(0, this.energy - chakraCost);
       AudioSys.sfx(jKind === 'chidori' ? 'chidori' : jKind === 'rinnegan' ? 'rinnegan' : 'rasengan');
       if (this.isPlayer || this.playerSlot) {
         const lbl = jKind === 'chidori' ? 'CHIDORI!' : jKind === 'rinnegan' ? 'RINNEGAN!' : 'RASENGAN!';
@@ -8941,9 +9264,10 @@ class Fighter {
 
   doSubstitution(game) {
     if (!this.alive || this.substCd > 0 || this.attack || this.invulnT > 0) return;
+    const sb = skillBonuses('subst');
     resetWeaponCombo(this);
-    this.substCd = 1.35;
-    this.invulnT = 0.28;
+    this.substCd = 1.35 * sb.cdMul;
+    this.invulnT = 0.28 + (sb.invulnAdd || 0);
     AudioSys.sfx('subst');
     // rookwolk + afterimage (substitutie / Kawarimi)
     game.burst(this.x, this.y - 40, '#c9a66b', 16);
@@ -8952,8 +9276,9 @@ class Fighter {
     const dir = this.face || 1;
     const pad = this.playerSlot === 2 ? InputP2 : Input;
     const dashDir = Math.abs(pad.move) > 0.2 ? Math.sign(pad.move) : dir;
-    this.x = clampFighterX(this, game, this.x + dashDir * 140);
-    this.vx = dashDir * 420;
+    const dist = 140 * (sb.dashDistMul || 1);
+    this.x = clampFighterX(this, game, this.x + dashDir * dist);
+    this.vx = dashDir * 420 * (sb.dashDistMul || 1);
     game.floater(this.x, this.y - 100, 'Substitutie!', '#c9a66b', 14);
     game.shake(2, 0.08);
   }
@@ -8962,12 +9287,14 @@ class Fighter {
     if (!this.alive || this.dashCd > 0 || Math.abs(dir) < 0.1) return;
     if (this.attack && this.hurtT <= 0) return;
     if (this.hurtT > 0) this.hurtT = 0;
+    const db = skillBonuses('dash');
     resetWeaponCombo(this);
-    this.dashCd = 0.85;
+    this.dashCd = 0.85 * db.cdMul;
     this.invulnT = Math.max(this.invulnT, 0.14);
     AudioSys.sfx('dash');
-    this.x = clampFighterX(this, game, this.x + dir * 98);
-    this.vx = dir * 340;
+    const dist = 98 * (db.dashDistMul || 1);
+    this.x = clampFighterX(this, game, this.x + dir * dist);
+    this.vx = dir * 340 * (db.dashSpeedMul || 1);
     game.burst(this.x, this.y - 38, this.style?.accent || '#7cf5ff', 8);
     game.floater(this.x, this.y - 92, 'Dash!', '#7cf5ff', 12);
   }
@@ -9239,7 +9566,8 @@ class Fighter {
       const stageMul = (typeof game !== 'undefined' && game && game.stageEnergyMul) ? game.stageEnergyMul : 1;
       const petMul = (typeof game !== 'undefined' && game && game.petEnergyMul) ? game.petEnergyMul : 1;
       const styleMul = (typeof game !== 'undefined' && game && game.styleEnergyMul) ? game.styleEnergyMul : 1;
-      const rate = (this.attack ? 4.2 : 2.8) * stageMul * petMul * styleMul;
+      const chakraMul = (this.isPlayer || this.playerSlot) ? skillBonuses('chakra').regenMul : 1;
+      const rate = (this.attack ? 4.2 : 2.8) * stageMul * petMul * styleMul * chakraMul;
       const prevE = this._energyPrev == null ? this.energy : this._energyPrev;
       this.energy = clamp(this.energy + dt * rate, 0, 100);
       if (this.energy >= 100 && prevE < 100) {
@@ -11440,6 +11768,10 @@ class Game {
     }
     const dropChance = m.elite ? 0.42 : 0.22;
     if (Math.random() < dropChance) this.spawnPickup(m.x, m.y - m.size * 0.5);
+    if (this.mode === 'adventure') {
+      const skillId = rollSkillShardDrop(m);
+      if (skillId) this.spawnPickup(m.x + rand(-18, 18), m.y - m.size * 0.35, { skillId });
+    }
     bumpStat('kills', 1);
     bumpDaily('kills', 1);
     if (m.elite) {
@@ -11524,7 +11856,15 @@ class Game {
     UI.toast(t('toast.summon', { name: weaponLabel(pick), rar: rar.name, dmg: asc.dmg }), 4200);
   }
 
-  spawnPickup(x, y) {
+  spawnPickup(x, y, opts) {
+    opts = opts || {};
+    if (opts.skillId && SKILL_DEFS[opts.skillId]) {
+      this.pickups.push({
+        x, y, kind: 'skill_shard', skillId: opts.skillId,
+        t: rand(0, TAU), life: 18, bob: 0,
+      });
+      return;
+    }
     const kind = choice(PICKUP_TYPES);
     this.pickups.push({ x, y, kind, t: rand(0, TAU), life: 16, bob: 0 });
   }
@@ -11532,11 +11872,23 @@ class Game {
   collectPickup(pk) {
     if (pk._got) return;
     pk._got = true;
-    const meta = PICKUP_META[pk.kind];
+    const meta = PICKUP_META[pk.kind] || PICKUP_META.heal;
     const p = this.player;
     AudioSys.sfx('pickup');
     haptic(20);
     switch (pk.kind) {
+      case 'skill_shard': {
+        const sid = pk.skillId || 'rasengan';
+        addSkillShards(sid, 1);
+        const def = SKILL_DEFS[sid];
+        const col = def ? def.color : meta.color;
+        const lbl = skillLabel(sid);
+        this.floater(p.x, p.y - 100, t('combat.pickupSkillShard', { name: lbl }), col, 15);
+        if (skillCanUpgrade(sid)) {
+          try { UI.toast(t('toast.skillUpgradeReady', { name: lbl }), 2800); } catch (_) {}
+        }
+        break;
+      }
       case 'heal':
         p.hp = Math.min(p.maxhp, p.hp + Math.round(p.maxhp * 0.28));
         this.floater(p.x, p.y - 100, t('combat.pickupHp'), meta.color, 16);
@@ -11555,8 +11907,8 @@ class Game {
         this.floater(p.x, p.y - 100, t('combat.pickupShield'), meta.color, 16);
         break;
     }
-    this.banner(pickupLabel(pk.kind), 0.9, meta.color, 28);
-    this.burst(pk.x, pk.y, meta.color, 14);
+    this.banner(pickupLabel(pk.kind, pk.skillId), 0.9, (pk.kind === 'skill_shard' && SKILL_DEFS[pk.skillId]) ? SKILL_DEFS[pk.skillId].color : meta.color, 28);
+    this.burst(pk.x, pk.y, (pk.kind === 'skill_shard' && SKILL_DEFS[pk.skillId]) ? SKILL_DEFS[pk.skillId].color : meta.color, 14);
     bumpStat('pickups', 1);
     bumpDaily('pickups', 1);
     pk.life = 0;
@@ -12139,27 +12491,46 @@ class Game {
 
   spawnJutsu(f, atk) {
     const jutsu = (atk && atk.jutsu) || fighterJutsuKind(f);
-    const dmg = atk ? atk.dmg : f.baseDmg * 2.8;
+    const jb = jutsuSkillBonuses(jutsu);
+    const dmg = (atk ? atk.dmg : f.baseDmg * 2.8);
     const from = this.projFrom(f);
     const critMeta = projCritMeta(f);
-    const aim = projAimVelocity(f, jutsu === 'chidori' ? 620 : jutsu === 'rinnegan' ? 340 : 420);
+    const baseSpd = jutsu === 'chidori' ? 620 : jutsu === 'rinnegan' ? 340 : 420;
+    const aim = projAimVelocity(f, baseSpd * jb.speedMul);
     const y0 = f.y - 50 + clamp(aim.ny, -1, 0.5) * 36;
+    const fireProj = (offX, offY, scale) => {
+      const sc = scale || 1;
+      if (jutsu === 'chidori') {
+        this.spawnProjectile(Object.assign({
+          x: f.x + f.face * (36 + offX), y: y0 + offY,
+          vx: aim.vx, vy: aim.vy * 0.85, r: (22 + jb.radius) * sc, dmg: dmg * sc,
+          life: 0.35 * jb.lifeMul, from, kind: 'chidori', pierce: false, hitSet: new Set(),
+          pierceRepeat: jb.pierceRepeat,
+        }, critMeta));
+      } else if (jutsu === 'rinnegan') {
+        this.spawnProjectile(Object.assign({
+          x: f.x + f.face * (38 + offX), y: y0 + offY,
+          vx: aim.vx, vy: aim.vy * 0.9, r: (30 + jb.radius) * sc, dmg: dmg * sc,
+          from, kind: 'rinnegan', pierce: true, hitSet: new Set(), life: 1.05 * jb.lifeMul,
+          spin: 0, pull: true, pullMul: jb.pullMul || 1, extraShot: jb.extraShot,
+        }, critMeta));
+      } else {
+        const face = f.face || 1;
+        this.spawnProjectile(Object.assign({
+          x: f.x + face * (40 + offX), y: y0 + offY,
+          vx: face * baseSpd * jb.speedMul, vy: 0, r: (28 + jb.radius) * sc, dmg: dmg * sc,
+          from, kind: 'rasengan', pierce: true, hitSet: new Set(), life: 1.4 * jb.lifeMul,
+          spin: 0, extraShot: jb.extraShot,
+        }, critMeta));
+      }
+    };
     if (jutsu === 'chidori') {
-      this.spawnProjectile(Object.assign({
-        x: f.x + f.face * 36, y: y0,
-        vx: aim.vx, vy: aim.vy * 0.85, r: 22, dmg, life: 0.35,
-        from, kind: 'chidori', pierce: false, hitSet: new Set(),
-      }, critMeta));
-      f.vx = f.face * 380;
+      fireProj(0, 0, 1);
+      f.vx = f.face * 380 * jb.speedMul;
       this.shake(7, 0.2);
       AudioSys.sfx('chidori');
     } else if (jutsu === 'rinnegan') {
-      this.spawnProjectile(Object.assign({
-        x: f.x + f.face * 38, y: y0,
-        vx: aim.vx, vy: aim.vy * 0.9, r: 30, dmg,
-        from, kind: 'rinnegan', pierce: true, hitSet: new Set(), life: 1.05,
-        spin: 0, pull: true,
-      }, critMeta));
+      fireProj(0, 0, 1);
       this.burst(f.x + f.face * 28, y0, '#c47aff', 22);
       this.burst(f.x + f.face * 28, y0, '#ff6b9d', 10);
       this.shake(8, 0.24);
@@ -12167,22 +12538,17 @@ class Game {
       AudioSys.sfx('rinnegan');
       if (f.isPlayer || f.playerSlot) haptic(20);
     } else {
-      // Rasengan: horizontale chakra-bol
-      const face = f.face || 1;
-      const speed = 420;
-      const y0 = f.y - 50;
-      this.spawnProjectile(Object.assign({
-        x: f.x + face * 40, y: y0,
-        vx: face * speed, vy: 0, r: 28, dmg,
-        from, kind: 'rasengan', pierce: true, hitSet: new Set(), life: 1.4,
-        spin: 0,
-      }, critMeta));
+      fireProj(0, 0, 1);
       this.burst(f.x + f.face * 30, y0, '#7cf5ff', fxLite() ? 8 : 16);
       spawnFxRing(this, f.x + f.face * 34, y0, '#7cf5ff', 10);
       this.shake(9, 0.28);
       this.freezeT = Math.max(this.freezeT, 0.06);
       AudioSys.sfx('rasengan');
       if (f.isPlayer || f.playerSlot) haptic(22);
+    }
+    const extra = (atk && atk.extraShot) || jb.extraShot || 0;
+    if (extra > 0 && Math.random() < extra) {
+      fireProj(f.face * 12, rand(-8, 8), 0.72);
     }
   }
 
@@ -12522,7 +12888,9 @@ class Game {
         }
       } else {
         for (const m of this.monsters) {
-          if (!m.alive || (p.hitSet && p.hitSet.has(m))) continue;
+          if (!m.alive) continue;
+          const allowRehit = p._rehit && p._rehit.has(m);
+          if (p.hitSet && p.hitSet.has(m) && !allowRehit) continue;
           if ((p.x - m.x) ** 2 + (p.y - m.y) ** 2 < (p.r + m.size) ** 2) {
             const hit = resolveProjHit(p);
             m.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this);
@@ -12531,7 +12899,17 @@ class Game {
               spawnJutsuImpactFx(this, p.x, p.y, 'rasengan', 'full');
             }
             if (p.kind === 'rinnegan') this.burst(p.x, p.y, '#c47aff', 10);
-            if (p.hitSet) p.hitSet.add(m); else p.life = 0;
+            if (allowRehit) {
+              if (p._rehit) p._rehit.delete(m);
+              if (p.hitSet) p.hitSet.add(m);
+            } else if (p.hitSet) {
+              if (p.pierceRepeat > 0 && Math.random() < p.pierceRepeat) {
+                if (!p._rehit) p._rehit = new Set();
+                p._rehit.add(m);
+              } else {
+                p.hitSet.add(m);
+              }
+            } else p.life = 0;
           }
         }
         if (this.robot && this.robot.alive && !(p.hitSet && p.hitSet.has(this.robot))) {
@@ -12739,12 +13117,14 @@ class Game {
 
     if (this.mode === 'adventure' && this.pickups) {
       for (const pk of this.pickups) {
-        const meta = PICKUP_META[pk.kind];
+        const meta = PICKUP_META[pk.kind] || PICKUP_META.heal;
+        const pkCol = (pk.kind === 'skill_shard' && pk.skillId && SKILL_DEFS[pk.skillId])
+          ? SKILL_DEFS[pk.skillId].color : meta.color;
         const y = pk.y + (pk.bob || 0);
         c.save();
         const pkBlur = (save.liteFx || Perf.tier >= 1 || motionReduced()) ? 0 : 14;
-        c.shadowColor = meta.color; c.shadowBlur = pkBlur;
-        c.fillStyle = meta.color;
+        c.shadowColor = pkCol; c.shadowBlur = pkBlur;
+        c.fillStyle = pkCol;
         c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.fill();
         c.strokeStyle = '#fff'; c.lineWidth = 2;
         c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.stroke();
@@ -14502,7 +14882,7 @@ function audioMixStatusLine(inPause) {
 }
 
 const UI = {
-  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
+  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'skillScreen', 'petScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
@@ -14698,7 +15078,7 @@ const UI = {
         this.show('menuScreen');
         return;
       }
-      if (active === 'weaponScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'dexScreen') {
+      if (active === 'weaponScreen' || active === 'skillScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'dexScreen') {
         this.openModeHub('collect');
         return;
       }
@@ -15062,6 +15442,8 @@ const UI = {
         : 'Munten → pet coins');
     } else if (this.modeHubId === 'collect') {
       setStat('hubStatWeapons', `${weaponUnlockedCount()}/${WEAPONS.length} vrij`);
+      const skillLv = totalSkillLevels();
+      setStat('hubStatSkills', skillLv > 0 ? `Lv ${skillLv} totaal` : 'Shards in avontuur');
       const petsN = petTamedCount();
       const eggsN = eggOwnedCount();
       const pc = petCoinsBalance();
@@ -15717,6 +16099,74 @@ const UI = {
         }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt');
       });
       list.appendChild(el);
+    }
+  },
+
+  renderSkills() {
+    const head = document.getElementById('skillScreenHead');
+    const sub = document.getElementById('skillScreenSub');
+    if (head) head.textContent = t('ui.skillHead');
+    if (sub) sub.textContent = t('ui.skillSub');
+    const sumEl = document.getElementById('skillSummary');
+    if (sumEl) {
+      const totalShards = save.stats?.skillShards || 0;
+      sumEl.style.display = 'block';
+      sumEl.innerHTML =
+        `Totaal <b>${totalSkillLevels()}</b> skill-levels · <b>${totalShards}</b> shards verzameld` +
+        `<div style="font-size:11px;opacity:.72;margin-top:6px">Wapens & stijl krijgen later ${UPGRADE_PHASE_MAX} upgrade-fases.</div>`;
+    }
+    const list = document.getElementById('skillList');
+    if (!list) return;
+    list.innerHTML = '';
+    const groups = [
+      { id: 'jutsu', title: t('ui.skillGroupJutsu'), ids: JUTSU_SKILL_IDS },
+      { id: 'utility', title: t('ui.skillGroupUtility'), ids: SKILL_IDS.filter((id) => SKILL_DEFS[id].group === 'utility') },
+    ];
+    for (const g of groups) {
+      const hdr = document.createElement('div');
+      hdr.className = 'skill-group-head';
+      hdr.textContent = g.title;
+      list.appendChild(hdr);
+      for (const id of g.ids) {
+        const def = SKILL_DEFS[id];
+        const lv = skillLevel(id);
+        const shards = skillShards(id);
+        const cost = skillUpgradeCost(id);
+        const canUp = skillCanUpgrade(id);
+        const el = document.createElement('div');
+        el.className = 'card skill-card' + (canUp ? ' claimable' : '') + (lv >= SKILL_MAX_LEVEL ? ' claimed' : '');
+        el.style.borderColor = def.color + '88';
+        const name = skillLabel(id);
+        const now = skillUpgradeSummary(id);
+        const next = skillNextStepPreview(id);
+        const shardLine = cost != null
+          ? t('ui.skillShards', { cur: shards, cost })
+          : t('ui.skillMax');
+        el.innerHTML =
+          `<div class="cname" style="color:${def.color}">${name} ` +
+          `<span class="rar-pill" style="color:${def.color};border-color:${def.color}">${t('ui.skillLevel', { lv, max: SKILL_MAX_LEVEL })}</span></div>` +
+          `<div class="cinfo">${shardLine}</div>` +
+          `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:4px"><b>${t('ui.skillNow')}:</b> ${now}</div>` +
+          (next ? `<div class="cinfo" style="opacity:.75;font-size:11px;margin-top:3px"><b>${t('ui.skillNext')}:</b> ${next}</div>` : '');
+        if (canUp) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn claim-btn';
+          btn.textContent = t('ui.skillUpgrade') + ` (${cost})`;
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            safeUiAction(() => {
+              if (!trySkillUpgrade(id)) return;
+              AudioSys.sfx('levelup');
+              const nlv = skillLevel(id);
+              UI.toast(t('toast.skillUpgraded', { name, lv: nlv, detail: skillUpgradeSummary(id) }), 3200);
+              this.renderSkills();
+            }, 'skillUp/' + id, 'Upgrade mislukt');
+          });
+          el.appendChild(btn);
+        }
+        list.appendChild(el);
+      }
     }
   },
 
@@ -16455,6 +16905,9 @@ bindPress(btnMatsCoins, () => {
 });
 bindPress(document.getElementById('btnWeapons'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderWeapons(); UI.show('weaponScreen');
+});
+bindPress(document.getElementById('btnSkills'), () => {
+  AudioSys.init(); AudioSys.sfx('select'); UI.renderSkills(); UI.show('skillScreen');
 });
 bindPress(document.getElementById('btnPets'), () => {
   AudioSys.init(); AudioSys.sfx('select'); UI.renderPets(); UI.show('petScreen');

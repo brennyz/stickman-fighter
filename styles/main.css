@@ -676,7 +676,9 @@
     .subtitle { font-size: min(3.8vw, 15px); }
   }
 
-  .mission-card { width:min(92vw,480px); position:relative; }
+  .skill-group-head { width:min(92vw,480px); font-size:12px; font-weight:900; color:#ffd75e;
+    letter-spacing:.06em; text-transform:uppercase; margin:14px 0 8px; }
+  .skill-card.claimable { border-color:rgba(255,215,94,.55) !important; }
   .mission-card.claimable { border-color: rgba(255,215,94,.55); background: rgba(255,215,94,.1);
       box-shadow: 0 0 0 1px rgba(255,215,94,.2); }
   .mission-card.claimed { opacity: .78; }

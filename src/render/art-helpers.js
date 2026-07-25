@@ -33,6 +33,19 @@ function drawPickupIcon(c, kind, x, y) {
       if (a === 0) c.moveTo(sx, sy); else c.lineTo(sx, sy);
     }
     c.stroke();
+  } else if (kind === 'skill_shard') {
+    c.fillStyle = '#ffd75e';
+    c.beginPath();
+    c.moveTo(0, -7);
+    c.lineTo(6.5, -1);
+    c.lineTo(4, 7);
+    c.lineTo(-4, 7);
+    c.lineTo(-6.5, -1);
+    c.closePath();
+    c.fill();
+    c.strokeStyle = '#0a0d18';
+    c.lineWidth = 1.6;
+    c.stroke();
   } else {
     c.beginPath();
     c.moveTo(0, -8);

@@ -223,7 +223,7 @@ function audioMixStatusLine(inPause) {
 }
 
 const UI = {
-  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
+  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'skillScreen', 'petScreen', 'styleScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
@@ -419,7 +419,7 @@ const UI = {
         this.show('menuScreen');
         return;
       }
-      if (active === 'weaponScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'dexScreen') {
+      if (active === 'weaponScreen' || active === 'skillScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'dexScreen') {
         this.openModeHub('collect');
         return;
       }
@@ -783,6 +783,8 @@ const UI = {
         : 'Munten → pet coins');
     } else if (this.modeHubId === 'collect') {
       setStat('hubStatWeapons', `${weaponUnlockedCount()}/${WEAPONS.length} vrij`);
+      const skillLv = totalSkillLevels();
+      setStat('hubStatSkills', skillLv > 0 ? `Lv ${skillLv} totaal` : 'Shards in avontuur');
       const petsN = petTamedCount();
       const eggsN = eggOwnedCount();
       const pc = petCoinsBalance();
@@ -1438,6 +1440,74 @@ const UI = {
         }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt');
       });
       list.appendChild(el);
+    }
+  },
+
+  renderSkills() {
+    const head = document.getElementById('skillScreenHead');
+    const sub = document.getElementById('skillScreenSub');
+    if (head) head.textContent = t('ui.skillHead');
+    if (sub) sub.textContent = t('ui.skillSub');
+    const sumEl = document.getElementById('skillSummary');
+    if (sumEl) {
+      const totalShards = save.stats?.skillShards || 0;
+      sumEl.style.display = 'block';
+      sumEl.innerHTML =
+        `Totaal <b>${totalSkillLevels()}</b> skill-levels · <b>${totalShards}</b> shards verzameld` +
+        `<div style="font-size:11px;opacity:.72;margin-top:6px">Wapens & stijl krijgen later ${UPGRADE_PHASE_MAX} upgrade-fases.</div>`;
+    }
+    const list = document.getElementById('skillList');
+    if (!list) return;
+    list.innerHTML = '';
+    const groups = [
+      { id: 'jutsu', title: t('ui.skillGroupJutsu'), ids: JUTSU_SKILL_IDS },
+      { id: 'utility', title: t('ui.skillGroupUtility'), ids: SKILL_IDS.filter((id) => SKILL_DEFS[id].group === 'utility') },
+    ];
+    for (const g of groups) {
+      const hdr = document.createElement('div');
+      hdr.className = 'skill-group-head';
+      hdr.textContent = g.title;
+      list.appendChild(hdr);
+      for (const id of g.ids) {
+        const def = SKILL_DEFS[id];
+        const lv = skillLevel(id);
+        const shards = skillShards(id);
+        const cost = skillUpgradeCost(id);
+        const canUp = skillCanUpgrade(id);
+        const el = document.createElement('div');
+        el.className = 'card skill-card' + (canUp ? ' claimable' : '') + (lv >= SKILL_MAX_LEVEL ? ' claimed' : '');
+        el.style.borderColor = def.color + '88';
+        const name = skillLabel(id);
+        const now = skillUpgradeSummary(id);
+        const next = skillNextStepPreview(id);
+        const shardLine = cost != null
+          ? t('ui.skillShards', { cur: shards, cost })
+          : t('ui.skillMax');
+        el.innerHTML =
+          `<div class="cname" style="color:${def.color}">${name} ` +
+          `<span class="rar-pill" style="color:${def.color};border-color:${def.color}">${t('ui.skillLevel', { lv, max: SKILL_MAX_LEVEL })}</span></div>` +
+          `<div class="cinfo">${shardLine}</div>` +
+          `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:4px"><b>${t('ui.skillNow')}:</b> ${now}</div>` +
+          (next ? `<div class="cinfo" style="opacity:.75;font-size:11px;margin-top:3px"><b>${t('ui.skillNext')}:</b> ${next}</div>` : '');
+        if (canUp) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn claim-btn';
+          btn.textContent = t('ui.skillUpgrade') + ` (${cost})`;
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            safeUiAction(() => {
+              if (!trySkillUpgrade(id)) return;
+              AudioSys.sfx('levelup');
+              const nlv = skillLevel(id);
+              UI.toast(t('toast.skillUpgraded', { name, lv: nlv, detail: skillUpgradeSummary(id) }), 3200);
+              this.renderSkills();
+            }, 'skillUp/' + id, 'Upgrade mislukt');
+          });
+          el.appendChild(btn);
+        }
+        list.appendChild(el);
+      }
     }
   },
 

@@ -96,6 +96,7 @@ function seedNlGameStrings() {
     combo3: 'Combo ×3 — door!', combo5: 'Combo ×5 — netjes!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — meester!', comboN: 'COMBO ×{n}!',
     pickupHp: '+HP', pickupRage: 'RAGE ×1.4', pickupChakra: 'Vol chakra!', pickupShield: 'Schild!',
+    pickupSkillShard: '+1 {name} shard',
     giant: 'REUS!', wallCombo3: 'Combo ×3 · sloop +{pct}%',
     wallCombo5: 'Combo ×5 · sloop +{pct}%', wallCombo8: 'Combo ×8 · sloop +{pct}%',
     wallTempo: 'MUUR-TEMPO!', wallRecord: 'NIEUW RECORD!', bonus5: 'BONUS +5',
@@ -157,6 +158,8 @@ function seedNlGameStrings() {
     charNotEnough: 'Niet genoeg unlocked vechters in deze saga',
     charRandom: '{a} vs {b} · HP {hp1}/{hp2} · TOT {tot1}/{tot2}',
     charFair: 'Fair duo: {a} vs {b} · TOT Δ{diff}',
+    skillUpgradeReady: '{name} kan upgraden — Collectie → Skills',
+    skillUpgraded: '{name} Lv {lv}! {detail}',
     skipGamble: 'Zonder gok',
     weaponIslandCap: 'Klaar voor training — in avontuur max Lv {cap}',
     petNone: 'Geen actieve pet',
@@ -301,6 +304,17 @@ function seedNlGameStrings() {
     styleIslandGate: 'Eiland-skill Lv {lvl}',
     weaponHead: 'Wapens',
     weaponSub: 'Summons zijn echt · eiland-skill gate: alleen wapens tot je huidige eiland-cap in avontuur',
+    skillHead: 'Skills',
+    skillSub: 'Shards droppen in avontuur · upgrade dmg, cooldown, radius & chakra',
+    skillUpgrade: 'Upgrade',
+    skillMax: 'MAX',
+    skillShards: '{cur}/{cost} shards',
+    skillShardsOnly: '{n} shards',
+    skillLevel: 'Lv {lv}/{max}',
+    skillNow: 'Nu',
+    skillNext: 'Volgende',
+    skillGroupJutsu: 'Jutsu',
+    skillGroupUtility: 'Utility',
     helpFirstMinute: 'Eerste minuut — per modus één korte hint bovenin het gevecht (geen toast-stapel). Avontuur: joystick + knoppen · groen = HP · vol chakra = SUPER-knop. Training = Robot · Muur = combo · 2 spelers = links/rechts.',
     helpOnboardHead: 'Eerste-minuut hints: {seen}/{total} modi gezien · max één regel bovenin per modus',
     helpTryNext: 'Probeer als volgende: {mode}',
@@ -323,6 +337,11 @@ function seedNlGameStrings() {
     modeVersus: 'P1 links P2 rechts · best-of-3 · rematch in pauze',
     modeCoinrun: '45s munten · 2 munten = 1 pet coin · mik ↑ · vliegers +3',
     langSwitchFail: 'Taal wisselen mislukt',
+  });
+  if (!I18N.nl.skill) I18N.nl.skill = {};
+  Object.assign(I18N.nl.skill, {
+    rasengan: 'Rasengan', chidori: 'Chidori', rinnegan: 'Rinnegan',
+    subst: 'Substitutie', dash: 'Dash', chakra: 'Chakra',
   });
   if (!I18N.nl.hud) I18N.nl.hud = {};
   Object.assign(I18N.nl.hud, {
@@ -609,6 +628,8 @@ const CATALOG_EN = {
     charNotEnough: 'Not enough unlocked fighters in this saga',
     charRandom: '{a} vs {b} · HP {hp1}/{hp2} · TOT {tot1}/{tot2}',
     charFair: 'Fair duo: {a} vs {b} · TOT Δ{diff}',
+    skillUpgradeReady: '{name} ready to upgrade — Collection → Skills',
+    skillUpgraded: '{name} Lv {lv}! {detail}',
     skipGamble: 'No gamble',
     weaponIslandCap: 'Ready for training — in adventure max Lv {cap}',
     petNone: 'No active pet',
@@ -720,6 +741,17 @@ const CATALOG_EN = {
     styleIslandGate: 'Island skill Lv {lvl}',
     weaponHead: 'Weapons',
     weaponSub: 'Summons are real · island skill gate: adventure weapons up to your island cap',
+    skillHead: 'Skills',
+    skillSub: 'Shards drop in adventure · upgrade dmg, cooldown, radius & chakra',
+    skillUpgrade: 'Upgrade',
+    skillMax: 'MAX',
+    skillShards: '{cur}/{cost} shards',
+    skillShardsOnly: '{n} shards',
+    skillLevel: 'Lv {lv}/{max}',
+    skillNow: 'Now',
+    skillNext: 'Next',
+    skillGroupJutsu: 'Jutsu',
+    skillGroupUtility: 'Utility',
     helpFirstMinute: 'First minute — one short hint per mode at top (no toast stack). Adventure: joystick + buttons · green = HP · full chakra = SUPER. Training = Robot · Wall = combo · 2P = left/right.',
     helpOnboardHead: 'First-minute hints: {seen}/{total} modes seen · max one line per mode at top',
     helpTryNext: 'Try next: {mode}',
@@ -769,6 +801,7 @@ const CATALOG_EN = {
     combo3: 'Combo ×3 — keep going!', combo5: 'Combo ×5 — nice!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — master!', comboN: 'COMBO ×{n}!',
     pickupHp: '+HP', pickupRage: 'RAGE ×1.4', pickupChakra: 'Full chakra!', pickupShield: 'Shield!',
+    pickupSkillShard: '+1 {name} shard',
     giant: 'GIANT!', wallCombo3: 'Combo ×3 · smash +{pct}%',
     wallCombo5: 'Combo ×5 · smash +{pct}%', wallCombo8: 'Combo ×8 · smash +{pct}%',
     wallTempo: 'WALL TEMPO!', wallRecord: 'NEW RECORD!', bonus5: 'BONUS +5',
@@ -824,6 +857,10 @@ const CATALOG_EN = {
     ketsTap: 'Tap!', ketsKey: 'E / tap',
   },
   jutsu: { rasengan: 'RASENGAN!', chidori: 'CHIDORI!', rinnegan: 'RINNEGAN!' },
+  skill: {
+    rasengan: 'Rasengan', chidori: 'Chidori', rinnegan: 'Rinnegan',
+    subst: 'Substitution', dash: 'Dash', chakra: 'Chakra',
+  },
   gamble: {
     superBoss: 'Bad luck! Super-boss in a random wave',
     miniBoss: 'Risk: extra elite in a wave',
@@ -1170,11 +1207,31 @@ function dailyHint(id) {
   return (typeof DAILY_PLAY_HINTS !== 'undefined' && DAILY_PLAY_HINTS[id]) || '';
 }
 
-function pickupLabel(kind) {
+function pickupLabel(kind, skillId) {
+  if (kind === 'skill_shard' && skillId) {
+    return t('combat.pickupSkillShard', { name: skillLabel(skillId) });
+  }
   const k = 'pickup.' + kind;
   const v = t(k);
   if (v && v !== k) return v;
   return (typeof PICKUP_META !== 'undefined' && PICKUP_META[kind] && PICKUP_META[kind].label) || kind;
+}
+
+function skillLabel(id) {
+  const k = 'skill.' + (id || 'rasengan');
+  const v = t(k);
+  if (v && v !== k) return v;
+  if (id === 'subst') return 'Substitutie';
+  if (id === 'dash') return 'Dash';
+  if (id === 'chakra') return 'Chakra';
+  return jutsuLabel(id);
+}
+
+function skillDesc(id) {
+  const k = 'skillDesc.' + id;
+  const v = t(k);
+  if (v && v !== k) return v;
+  return '';
 }
 
 function jutsuLabel(kind) {

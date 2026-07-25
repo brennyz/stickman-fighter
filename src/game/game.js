@@ -527,6 +527,10 @@ class Game {
     }
     const dropChance = m.elite ? 0.42 : 0.22;
     if (Math.random() < dropChance) this.spawnPickup(m.x, m.y - m.size * 0.5);
+    if (this.mode === 'adventure') {
+      const skillId = rollSkillShardDrop(m);
+      if (skillId) this.spawnPickup(m.x + rand(-18, 18), m.y - m.size * 0.35, { skillId });
+    }
     bumpStat('kills', 1);
     bumpDaily('kills', 1);
     if (m.elite) {
@@ -611,7 +615,15 @@ class Game {
     UI.toast(t('toast.summon', { name: weaponLabel(pick), rar: rar.name, dmg: asc.dmg }), 4200);
   }
 
-  spawnPickup(x, y) {
+  spawnPickup(x, y, opts) {
+    opts = opts || {};
+    if (opts.skillId && SKILL_DEFS[opts.skillId]) {
+      this.pickups.push({
+        x, y, kind: 'skill_shard', skillId: opts.skillId,
+        t: rand(0, TAU), life: 18, bob: 0,
+      });
+      return;
+    }
     const kind = choice(PICKUP_TYPES);
     this.pickups.push({ x, y, kind, t: rand(0, TAU), life: 16, bob: 0 });
   }
@@ -619,11 +631,23 @@ class Game {
   collectPickup(pk) {
     if (pk._got) return;
     pk._got = true;
-    const meta = PICKUP_META[pk.kind];
+    const meta = PICKUP_META[pk.kind] || PICKUP_META.heal;
     const p = this.player;
     AudioSys.sfx('pickup');
     haptic(20);
     switch (pk.kind) {
+      case 'skill_shard': {
+        const sid = pk.skillId || 'rasengan';
+        addSkillShards(sid, 1);
+        const def = SKILL_DEFS[sid];
+        const col = def ? def.color : meta.color;
+        const lbl = skillLabel(sid);
+        this.floater(p.x, p.y - 100, t('combat.pickupSkillShard', { name: lbl }), col, 15);
+        if (skillCanUpgrade(sid)) {
+          try { UI.toast(t('toast.skillUpgradeReady', { name: lbl }), 2800); } catch (_) {}
+        }
+        break;
+      }
       case 'heal':
         p.hp = Math.min(p.maxhp, p.hp + Math.round(p.maxhp * 0.28));
         this.floater(p.x, p.y - 100, t('combat.pickupHp'), meta.color, 16);
@@ -642,8 +666,8 @@ class Game {
         this.floater(p.x, p.y - 100, t('combat.pickupShield'), meta.color, 16);
         break;
     }
-    this.banner(pickupLabel(pk.kind), 0.9, meta.color, 28);
-    this.burst(pk.x, pk.y, meta.color, 14);
+    this.banner(pickupLabel(pk.kind, pk.skillId), 0.9, (pk.kind === 'skill_shard' && SKILL_DEFS[pk.skillId]) ? SKILL_DEFS[pk.skillId].color : meta.color, 28);
+    this.burst(pk.x, pk.y, (pk.kind === 'skill_shard' && SKILL_DEFS[pk.skillId]) ? SKILL_DEFS[pk.skillId].color : meta.color, 14);
     bumpStat('pickups', 1);
     bumpDaily('pickups', 1);
     pk.life = 0;
@@ -1226,27 +1250,46 @@ class Game {
 
   spawnJutsu(f, atk) {
     const jutsu = (atk && atk.jutsu) || fighterJutsuKind(f);
-    const dmg = atk ? atk.dmg : f.baseDmg * 2.8;
+    const jb = jutsuSkillBonuses(jutsu);
+    const dmg = (atk ? atk.dmg : f.baseDmg * 2.8);
     const from = this.projFrom(f);
     const critMeta = projCritMeta(f);
-    const aim = projAimVelocity(f, jutsu === 'chidori' ? 620 : jutsu === 'rinnegan' ? 340 : 420);
+    const baseSpd = jutsu === 'chidori' ? 620 : jutsu === 'rinnegan' ? 340 : 420;
+    const aim = projAimVelocity(f, baseSpd * jb.speedMul);
     const y0 = f.y - 50 + clamp(aim.ny, -1, 0.5) * 36;
+    const fireProj = (offX, offY, scale) => {
+      const sc = scale || 1;
+      if (jutsu === 'chidori') {
+        this.spawnProjectile(Object.assign({
+          x: f.x + f.face * (36 + offX), y: y0 + offY,
+          vx: aim.vx, vy: aim.vy * 0.85, r: (22 + jb.radius) * sc, dmg: dmg * sc,
+          life: 0.35 * jb.lifeMul, from, kind: 'chidori', pierce: false, hitSet: new Set(),
+          pierceRepeat: jb.pierceRepeat,
+        }, critMeta));
+      } else if (jutsu === 'rinnegan') {
+        this.spawnProjectile(Object.assign({
+          x: f.x + f.face * (38 + offX), y: y0 + offY,
+          vx: aim.vx, vy: aim.vy * 0.9, r: (30 + jb.radius) * sc, dmg: dmg * sc,
+          from, kind: 'rinnegan', pierce: true, hitSet: new Set(), life: 1.05 * jb.lifeMul,
+          spin: 0, pull: true, pullMul: jb.pullMul || 1, extraShot: jb.extraShot,
+        }, critMeta));
+      } else {
+        const face = f.face || 1;
+        this.spawnProjectile(Object.assign({
+          x: f.x + face * (40 + offX), y: y0 + offY,
+          vx: face * baseSpd * jb.speedMul, vy: 0, r: (28 + jb.radius) * sc, dmg: dmg * sc,
+          from, kind: 'rasengan', pierce: true, hitSet: new Set(), life: 1.4 * jb.lifeMul,
+          spin: 0, extraShot: jb.extraShot,
+        }, critMeta));
+      }
+    };
     if (jutsu === 'chidori') {
-      this.spawnProjectile(Object.assign({
-        x: f.x + f.face * 36, y: y0,
-        vx: aim.vx, vy: aim.vy * 0.85, r: 22, dmg, life: 0.35,
-        from, kind: 'chidori', pierce: false, hitSet: new Set(),
-      }, critMeta));
-      f.vx = f.face * 380;
+      fireProj(0, 0, 1);
+      f.vx = f.face * 380 * jb.speedMul;
       this.shake(7, 0.2);
       AudioSys.sfx('chidori');
     } else if (jutsu === 'rinnegan') {
-      this.spawnProjectile(Object.assign({
-        x: f.x + f.face * 38, y: y0,
-        vx: aim.vx, vy: aim.vy * 0.9, r: 30, dmg,
-        from, kind: 'rinnegan', pierce: true, hitSet: new Set(), life: 1.05,
-        spin: 0, pull: true,
-      }, critMeta));
+      fireProj(0, 0, 1);
       this.burst(f.x + f.face * 28, y0, '#c47aff', 22);
       this.burst(f.x + f.face * 28, y0, '#ff6b9d', 10);
       this.shake(8, 0.24);
@@ -1254,22 +1297,17 @@ class Game {
       AudioSys.sfx('rinnegan');
       if (f.isPlayer || f.playerSlot) haptic(20);
     } else {
-      // Rasengan: horizontale chakra-bol
-      const face = f.face || 1;
-      const speed = 420;
-      const y0 = f.y - 50;
-      this.spawnProjectile(Object.assign({
-        x: f.x + face * 40, y: y0,
-        vx: face * speed, vy: 0, r: 28, dmg,
-        from, kind: 'rasengan', pierce: true, hitSet: new Set(), life: 1.4,
-        spin: 0,
-      }, critMeta));
+      fireProj(0, 0, 1);
       this.burst(f.x + f.face * 30, y0, '#7cf5ff', fxLite() ? 8 : 16);
       spawnFxRing(this, f.x + f.face * 34, y0, '#7cf5ff', 10);
       this.shake(9, 0.28);
       this.freezeT = Math.max(this.freezeT, 0.06);
       AudioSys.sfx('rasengan');
       if (f.isPlayer || f.playerSlot) haptic(22);
+    }
+    const extra = (atk && atk.extraShot) || jb.extraShot || 0;
+    if (extra > 0 && Math.random() < extra) {
+      fireProj(f.face * 12, rand(-8, 8), 0.72);
     }
   }
 
@@ -1609,7 +1647,9 @@ class Game {
         }
       } else {
         for (const m of this.monsters) {
-          if (!m.alive || (p.hitSet && p.hitSet.has(m))) continue;
+          if (!m.alive) continue;
+          const allowRehit = p._rehit && p._rehit.has(m);
+          if (p.hitSet && p.hitSet.has(m) && !allowRehit) continue;
           if ((p.x - m.x) ** 2 + (p.y - m.y) ** 2 < (p.r + m.size) ** 2) {
             const hit = resolveProjHit(p);
             m.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this);
@@ -1618,7 +1658,17 @@ class Game {
               spawnJutsuImpactFx(this, p.x, p.y, 'rasengan', 'full');
             }
             if (p.kind === 'rinnegan') this.burst(p.x, p.y, '#c47aff', 10);
-            if (p.hitSet) p.hitSet.add(m); else p.life = 0;
+            if (allowRehit) {
+              if (p._rehit) p._rehit.delete(m);
+              if (p.hitSet) p.hitSet.add(m);
+            } else if (p.hitSet) {
+              if (p.pierceRepeat > 0 && Math.random() < p.pierceRepeat) {
+                if (!p._rehit) p._rehit = new Set();
+                p._rehit.add(m);
+              } else {
+                p.hitSet.add(m);
+              }
+            } else p.life = 0;
           }
         }
         if (this.robot && this.robot.alive && !(p.hitSet && p.hitSet.has(this.robot))) {
@@ -1826,12 +1876,14 @@ class Game {
 
     if (this.mode === 'adventure' && this.pickups) {
       for (const pk of this.pickups) {
-        const meta = PICKUP_META[pk.kind];
+        const meta = PICKUP_META[pk.kind] || PICKUP_META.heal;
+        const pkCol = (pk.kind === 'skill_shard' && pk.skillId && SKILL_DEFS[pk.skillId])
+          ? SKILL_DEFS[pk.skillId].color : meta.color;
         const y = pk.y + (pk.bob || 0);
         c.save();
         const pkBlur = (save.liteFx || Perf.tier >= 1 || motionReduced()) ? 0 : 14;
-        c.shadowColor = meta.color; c.shadowBlur = pkBlur;
-        c.fillStyle = meta.color;
+        c.shadowColor = pkCol; c.shadowBlur = pkBlur;
+        c.fillStyle = pkCol;
         c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.fill();
         c.strokeStyle = '#fff'; c.lineWidth = 2;
         c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.stroke();

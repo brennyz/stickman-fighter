@@ -56,10 +56,13 @@ class Fighter {
       }
       case 'special': {
         const j = fighterJutsuKind(this);
-        const jMul = j === 'rinnegan' ? 2.55 : j === 'chidori' ? (this.isRobot ? 2.35 : 2.72) : 2.85;
+        const jb = jutsuSkillBonuses(j);
+        const jMul = (j === 'rinnegan' ? 2.55 : j === 'chidori' ? (this.isRobot ? 2.35 : 2.72) : 2.85) * jb.dmgMul;
+        const windup = (j === 'rinnegan' ? 0.52 : 0.48) * jb.windupMul;
         spec = {
-          kind, windup: j === 'rinnegan' ? 0.52 : 0.48, active: 0.12, recover: 0.28, range: 62, r: 44,
+          kind, windup, active: 0.12, recover: 0.28, range: 62 + jb.radius, r: 44 + jb.radius * 0.5,
           dmg: this.baseDmg * jMul, kb: j === 'rinnegan' ? 460 : 520, jutsu: j,
+          extraShot: jb.extraShot, pierceRepeat: jb.pierceRepeat, pullMul: jb.pullMul,
         };
         break;
       }
@@ -75,12 +78,13 @@ class Fighter {
   startAttack(kind, game) {
     if (this.attack || this.state === 'hurt' || !this.alive || this.invulnT > 0 && kind !== 'special') return;
     if (kind === 'special') {
-      if (this.energy < 100) {
+      const jKind = fighterJutsuKind(this);
+      const chakraCost = skillChakraCost(jKind);
+      if (this.energy < chakraCost) {
         if (this.isPlayer) game.floater(this.x, this.y - 110, 'Chakra niet vol!', '#7cf5ff', 13);
         return;
       }
-      this.energy = 0;
-      const jKind = fighterJutsuKind(this);
+      this.energy = Math.max(0, this.energy - chakraCost);
       AudioSys.sfx(jKind === 'chidori' ? 'chidori' : jKind === 'rinnegan' ? 'rinnegan' : 'rasengan');
       if (this.isPlayer || this.playerSlot) {
         const lbl = jKind === 'chidori' ? 'CHIDORI!' : jKind === 'rinnegan' ? 'RINNEGAN!' : 'RASENGAN!';
@@ -115,9 +119,10 @@ class Fighter {
 
   doSubstitution(game) {
     if (!this.alive || this.substCd > 0 || this.attack || this.invulnT > 0) return;
+    const sb = skillBonuses('subst');
     resetWeaponCombo(this);
-    this.substCd = 1.35;
-    this.invulnT = 0.28;
+    this.substCd = 1.35 * sb.cdMul;
+    this.invulnT = 0.28 + (sb.invulnAdd || 0);
     AudioSys.sfx('subst');
     // rookwolk + afterimage (substitutie / Kawarimi)
     game.burst(this.x, this.y - 40, '#c9a66b', 16);
@@ -126,8 +131,9 @@ class Fighter {
     const dir = this.face || 1;
     const pad = this.playerSlot === 2 ? InputP2 : Input;
     const dashDir = Math.abs(pad.move) > 0.2 ? Math.sign(pad.move) : dir;
-    this.x = clampFighterX(this, game, this.x + dashDir * 140);
-    this.vx = dashDir * 420;
+    const dist = 140 * (sb.dashDistMul || 1);
+    this.x = clampFighterX(this, game, this.x + dashDir * dist);
+    this.vx = dashDir * 420 * (sb.dashDistMul || 1);
     game.floater(this.x, this.y - 100, 'Substitutie!', '#c9a66b', 14);
     game.shake(2, 0.08);
   }
@@ -136,12 +142,14 @@ class Fighter {
     if (!this.alive || this.dashCd > 0 || Math.abs(dir) < 0.1) return;
     if (this.attack && this.hurtT <= 0) return;
     if (this.hurtT > 0) this.hurtT = 0;
+    const db = skillBonuses('dash');
     resetWeaponCombo(this);
-    this.dashCd = 0.85;
+    this.dashCd = 0.85 * db.cdMul;
     this.invulnT = Math.max(this.invulnT, 0.14);
     AudioSys.sfx('dash');
-    this.x = clampFighterX(this, game, this.x + dir * 98);
-    this.vx = dir * 340;
+    const dist = 98 * (db.dashDistMul || 1);
+    this.x = clampFighterX(this, game, this.x + dir * dist);
+    this.vx = dir * 340 * (db.dashSpeedMul || 1);
     game.burst(this.x, this.y - 38, this.style?.accent || '#7cf5ff', 8);
     game.floater(this.x, this.y - 92, 'Dash!', '#7cf5ff', 12);
   }
@@ -413,7 +421,8 @@ class Fighter {
       const stageMul = (typeof game !== 'undefined' && game && game.stageEnergyMul) ? game.stageEnergyMul : 1;
       const petMul = (typeof game !== 'undefined' && game && game.petEnergyMul) ? game.petEnergyMul : 1;
       const styleMul = (typeof game !== 'undefined' && game && game.styleEnergyMul) ? game.styleEnergyMul : 1;
-      const rate = (this.attack ? 4.2 : 2.8) * stageMul * petMul * styleMul;
+      const chakraMul = (this.isPlayer || this.playerSlot) ? skillBonuses('chakra').regenMul : 1;
+      const rate = (this.attack ? 4.2 : 2.8) * stageMul * petMul * styleMul * chakraMul;
       const prevE = this._energyPrev == null ? this.energy : this._energyPrev;
       this.energy = clamp(this.energy + dt * rate, 0, 100);
       if (this.energy >= 100 && prevE < 100) {
