@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.108';
+const APP_VERSION = '1.18.109';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 318;
+const SW_CACHE_REV = 319;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   zoneWeapons: {},
@@ -1725,6 +1725,7 @@ const I18N = {
     audio: {
       musicOff: 'Muziek uit', sfxOff: 'Geluid uit', musicPct: 'Muziek {pct}%', sfxPct: 'SFX {pct}%',
       allMuted: 'Alles stil', pauseDuck: 'BGM zacht', pauseTrack: 'Track: {track}',
+      ctxSuspended: 'Tik slider voor geluid (iPad)',
       track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Gevecht', elite: 'Elite', boss: 'Baas', wall: 'Muur', training: 'Training', coinrun: 'Mats' },
     },
@@ -1804,6 +1805,7 @@ const I18N = {
     audio: {
       musicOff: 'Music off', sfxOff: 'Sound off', musicPct: 'Music {pct}%', sfxPct: 'SFX {pct}%',
       allMuted: 'All muted', pauseDuck: 'BGM ducked', pauseTrack: 'Track: {track}',
+      ctxSuspended: 'Tap slider to wake audio (iPad)',
       track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Battle', elite: 'Elite', boss: 'Boss', wall: 'Wall', training: 'Training', coinrun: 'Mats' },
     },
@@ -12660,6 +12662,13 @@ const AudioSys = {
   _sfxVar: 0,
   _sfxPan: 0,
   _combatHeat: 0,
+  /** UI feedback SFX allowed while paused (combat hits blocked). */
+  _pauseUiSfx: new Set([
+    'select', 'bell', 'levelup', 'summon', 'diceRoll', 'claim', 'achieve',
+    'bonus', 'win', 'pickup', 'gamble', 'gambleWin', 'newmonster', 'checkpoint',
+    'modeAdventure', 'modeTraining', 'modeVersus', 'modeWall', 'modeMats',
+    'gambleRoll', 'import', 'export', 'install', 'share',
+  ]),
   _samples: {},
   _sampleLoadStarted: false,
   _sampleCount: 0,
@@ -12825,10 +12834,16 @@ const AudioSys = {
     this.tone(660, 880, 0.11, 'sine', vol, this.musicGain);
   },
 
+  _sfxBlockedInPause(name) {
+    const inPause = this.paused || state === 'pause';
+    return inPause && !this._pauseUiSfx.has(name);
+  },
+
   setPaused(on) {
     this.paused = !!on;
     const needAudio = !!(save.music || save.sfx);
     if (on) {
+      this.setCombatHeat(0);
       try { this.init(); } catch (_) {}
       if (needAudio) {
         try { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
@@ -12905,7 +12920,7 @@ const AudioSys = {
 
   /** Pan SFX by world/screen X (0…W → left…right) */
   sfxAt(name, screenX) {
-    if (!this.ctx || !save.sfx) return;
+    if (!this.ctx || !save.sfx || this._sfxBlockedInPause(name)) return;
     if (typeof screenX === 'number' && typeof W !== 'undefined' && W > 0) {
       this._sfxPan = clamp((screenX / W) * 2 - 1, -1, 1) * 0.82;
     }
@@ -12947,7 +12962,7 @@ const AudioSys = {
   },
 
   sfx(name) {
-    if (!this.ctx || !save.sfx) return;
+    if (!this.ctx || !save.sfx || this._sfxBlockedInPause(name)) return;
     try { if (this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
     if (this._playSample(name)) return;
     const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
@@ -28990,7 +29005,27 @@ function audioMixStatusLine(inPause) {
     const track = songLabel(AudioSys.currentSongId());
     if (track) bits.push(t('audio.pauseTrack', { track }));
   }
+  if (inPause && typeof AudioSys !== 'undefined' && AudioSys.ctx && AudioSys.ctx.state === 'suspended') {
+    bits.push(t('audio.ctxSuspended'));
+  }
   return bits.join(' · ');
+}
+
+/** Keep pause + settings volume sliders in sync (presets, import, pause open). */
+function syncAudioVolSliders(skipActive = true) {
+  const rows = [
+    ['setMusicVol', 'setMusicVolLbl', 'musicVol', 0.85],
+    ['pauseMusicVol', 'pauseMusicVolLbl', 'musicVol', 0.85],
+    ['setSfxVol', 'setSfxVolLbl', 'sfxVol', 1],
+    ['pauseSfxVol', 'pauseSfxVolLbl', 'sfxVol', 1],
+  ];
+  for (const [id, lid, key, def] of rows) {
+    const el = document.getElementById(id);
+    const lbl = document.getElementById(lid);
+    const pct = volPct(save[key], def);
+    if (el && (!skipActive || document.activeElement !== el)) el.value = String(pct);
+    if (lbl) lbl.textContent = pct + '%';
+  }
 }
 
 function levelTileTip(n, pick, infoLv, boss, best, fails) {
@@ -31628,16 +31663,7 @@ const UI = {
     if (togS) togS.setAttribute('aria-pressed', save.sfx ? 'true' : 'false');
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
-    const pm = document.getElementById('pauseMusicVol');
-    const ps = document.getElementById('pauseSfxVol');
-    const pmL = document.getElementById('pauseMusicVolLbl');
-    const psL = document.getElementById('pauseSfxVolLbl');
-    const mPct = volPct(save.musicVol, 0.85);
-    const sPct = volPct(save.sfxVol, 1);
-    if (pm && document.activeElement !== pm) pm.value = String(mPct);
-    if (ps && document.activeElement !== ps) ps.value = String(sPct);
-    if (pmL) pmL.textContent = mPct + '%';
-    if (psL) psL.textContent = sPct + '%';
+    syncAudioVolSliders();
     const statusEl = document.getElementById('pauseAudioStatus');
     if (statusEl) {
       let line = audioMixStatusLine(true);
@@ -32824,6 +32850,7 @@ document.addEventListener('visibilitychange', () => {
       state = 'pause';
       AudioSys.setPaused(true);
       try {
+        UI.renderPauseToggles();
         UI.show('pauseScreen');
       } catch (_) { ensureVisibleScreen(); }
     } else {

@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | **6** | Audio c5: pauze reset combat-heat (BGM lead rustig), combat-SFX geblokkeerd (UI allowlist), syncAudioVolSliders pause↔instellingen, iPad ctx-suspended hint. v1.18.108 / SW v318. |
 | 2026-07-26 | — | **Zone-wapens wire:** drops + on-hit effects + burn-tick aangesloten; Nightmare 2.0/Hell 3.0 drops overal; UI zone/effect badges. v1.18.107 / SW v317. |
 | 2026-07-26 | — | **Model deepen:** Nightmare 2.0 / Hell 3.0 — enrageMul wired, ember/pain golven, sterkere vuur/lava visuals, unlock Lv70, petcoin bonus, UI-blurb. v1.18.106 / SW v316. |
 | 2026-07-26 | — | **LIVE fix:** Nightmare 2.0 / Hell 3.0 + herstel Nachtmerrie/Hel eilanden (Lv51–70) & zone-wapens. v1.18.105 / SW v315. |
@@ -124,6 +125,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-26 | — | **User:** monster diversiteit ~2× (137→281): +60 boerderij-op-hol +84 dierentuin-uitbraak (24 arts, grote sizes), ranch/safari golven, vaker reuzen. v1.18.101 / SW v311. |
 | 2026-07-26 | **12** | Content c5: weapon/pet rarity chips n/tot, volgende-wapen unlock hint, hub icon SVG data-URI fallback bij stale SW. v1.18.100 / SW v310. |
 | 2026-07-26 | **8** | PWA c5: speel.html SW register + offline share cache; SW canonical puts voor speel/ipad/android; install/loop shell check incl. speel; smoke-pwa-shell in test+doctor. v1.18.99 / SW v309. |
+| 2026-07-26 | **6** | Merge d6 pause-duck van main; pause UI allowlist +bonus/win/pickup/gamble; versie na dual-108 → v1.18.109 / SW v319. |
 | 2026-07-26 | — | Merge main: audio diversity PR + zone weapons/grote bazen — playFightBgm behouden, colossal banners behouden. v1.18.108 / SW v318. |
 | 2026-07-26 | **6** | Top-SFX polish: `hit` samples + priority load, rijkere punch/hit/select/combo synth, battle/menu lead×2 + groove layers. v1.18.104 / SW v314. |
 | 2026-07-26 | **6** | Audio diversiteit ×2: Kenney SFX samples ~311→685 (~6/id), battle/elite/boss/tide BGM-pools + `playFightBgm` rotatie, bredere pitch/synth-alt. v1.18.103 / SW v313. |

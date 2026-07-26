@@ -854,7 +854,27 @@ function audioMixStatusLine(inPause) {
     const track = songLabel(AudioSys.currentSongId());
     if (track) bits.push(t('audio.pauseTrack', { track }));
   }
+  if (inPause && typeof AudioSys !== 'undefined' && AudioSys.ctx && AudioSys.ctx.state === 'suspended') {
+    bits.push(t('audio.ctxSuspended'));
+  }
   return bits.join(' · ');
+}
+
+/** Keep pause + settings volume sliders in sync (presets, import, pause open). */
+function syncAudioVolSliders(skipActive = true) {
+  const rows = [
+    ['setMusicVol', 'setMusicVolLbl', 'musicVol', 0.85],
+    ['pauseMusicVol', 'pauseMusicVolLbl', 'musicVol', 0.85],
+    ['setSfxVol', 'setSfxVolLbl', 'sfxVol', 1],
+    ['pauseSfxVol', 'pauseSfxVolLbl', 'sfxVol', 1],
+  ];
+  for (const [id, lid, key, def] of rows) {
+    const el = document.getElementById(id);
+    const lbl = document.getElementById(lid);
+    const pct = volPct(save[key], def);
+    if (el && (!skipActive || document.activeElement !== el)) el.value = String(pct);
+    if (lbl) lbl.textContent = pct + '%';
+  }
 }
 
 function levelTileTip(n, pick, infoLv, boss, best, fails) {
@@ -3492,16 +3512,7 @@ const UI = {
     if (togS) togS.setAttribute('aria-pressed', save.sfx ? 'true' : 'false');
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
-    const pm = document.getElementById('pauseMusicVol');
-    const ps = document.getElementById('pauseSfxVol');
-    const pmL = document.getElementById('pauseMusicVolLbl');
-    const psL = document.getElementById('pauseSfxVolLbl');
-    const mPct = volPct(save.musicVol, 0.85);
-    const sPct = volPct(save.sfxVol, 1);
-    if (pm && document.activeElement !== pm) pm.value = String(mPct);
-    if (ps && document.activeElement !== ps) ps.value = String(sPct);
-    if (pmL) pmL.textContent = mPct + '%';
-    if (psL) psL.textContent = sPct + '%';
+    syncAudioVolSliders();
     const statusEl = document.getElementById('pauseAudioStatus');
     if (statusEl) {
       let line = audioMixStatusLine(true);
