@@ -9,7 +9,143 @@ const THEMES = {
   cyber:   { sky1: '#0a1030', sky2: '#252a60', hill: '#1c2350', hill2: '#131840', ground: '#20264a', gtop: '#2c3468', deco: 'neon' },
   dojo:    { sky1: '#3a2d24', sky2: '#6a5240', hill: '#4a3a2c', hill2: '#3a2d22', ground: '#7a5c3c', gtop: '#8f6f4a', deco: 'lampion' },
   sloop:   { sky1: '#8fb6d0', sky2: '#d8e8f0', hill: '#7a8794', hill2: '#5f6b78', ground: '#6f7684', gtop: '#848b99', deco: 'kraan' },
+  nightmare: { sky1: '#2a0808', sky2: '#7a2810', hill: '#4a1410', hill2: '#30100c', ground: '#3a1812', gtop: '#5a2820', deco: 'fire' },
+  hell:    { sky1: '#140404', sky2: '#4a0a08', hill: '#2e0a0a', hill2: '#1a0606', ground: '#220808', gtop: '#3a100c', deco: 'hell' },
 };
+
+/**
+ * Nightmare: vuurzuilen + embers op de achtergrond.
+ */
+function drawNightmareFireDecor(c, ground, scroll, t, dX, dSpan) {
+  const calm = typeof motionReduced === 'function' && motionReduced();
+  const lite = (typeof fxLite === 'function' && fxLite()) || (typeof Perf !== 'undefined' && Perf.tier >= 2);
+  const n = lite ? 4 : 7;
+  for (let i = 0; i < n; i++) {
+    const x = dX((i * 0.14 + 0.06) * dSpan);
+    const flicker = calm ? 0.7 : (0.55 + Math.sin(t * 7 + i * 1.7) * 0.45);
+    const h = 42 + (i % 3) * 18 + flicker * 22;
+    const g = c.createLinearGradient(x, ground - h, x, ground);
+    g.addColorStop(0, 'rgba(255,220,80,' + (0.15 + flicker * 0.35) + ')');
+    g.addColorStop(0.45, 'rgba(255,90,30,' + (0.35 + flicker * 0.35) + ')');
+    g.addColorStop(1, 'rgba(120,20,10,0.05)');
+    c.fillStyle = g;
+    c.beginPath();
+    c.moveTo(x - 10 - flicker * 4, ground);
+    c.quadraticCurveTo(x - 6, ground - h * 0.55, x, ground - h);
+    c.quadraticCurveTo(x + 6, ground - h * 0.55, x + 10 + flicker * 4, ground);
+    c.closePath();
+    c.fill();
+  }
+  if (!lite) {
+    c.fillStyle = 'rgba(255,140,40,.55)';
+    const embers = 10;
+    for (let i = 0; i < embers; i++) {
+      const x = dX(((i * 0.11 + (t * 0.08)) % 1) * dSpan);
+      const y = ground - 20 - ((t * 38 + i * 29) % (ground * 0.55));
+      const s = 1.5 + (i % 3);
+      c.globalAlpha = 0.35 + Math.sin(t * 5 + i) * 0.25;
+      c.fillRect(x, y, s, s);
+    }
+    c.globalAlpha = 1;
+  }
+  // warme glow over horizon
+  const haze = c.createLinearGradient(0, ground - 90, 0, ground);
+  haze.addColorStop(0, 'rgba(255,60,20,0)');
+  haze.addColorStop(1, 'rgba(255,40,10,0.18)');
+  c.fillStyle = haze;
+  c.fillRect(0, ground - 90, W, 90);
+}
+
+/**
+ * Hell: lava-plassen + stickmensilhouetten die schreeuwen van pijn.
+ */
+function drawHellPainDecor(c, ground, scroll, t, dX, dSpan) {
+  const calm = typeof motionReduced === 'function' && motionReduced();
+  const lite = (typeof fxLite === 'function' && fxLite()) || (typeof Perf !== 'undefined' && Perf.tier >= 2);
+  // lava pools
+  const pools = lite ? 3 : 5;
+  for (let i = 0; i < pools; i++) {
+    const x = dX((i * 0.2 + 0.08) * dSpan);
+    const wob = calm ? 0 : Math.sin(t * 2.4 + i) * 3;
+    c.fillStyle = '#5a1008';
+    c.beginPath();
+    c.ellipse(x, ground - 2, 34 + wob, 10, 0, 0, TAU);
+    c.fill();
+    c.fillStyle = '#ff5a18';
+    c.beginPath();
+    c.ellipse(x, ground - 4, 24 + wob * 0.5, 6, 0, 0, TAU);
+    c.fill();
+    c.fillStyle = '#ffd75e';
+    c.globalAlpha = 0.55 + Math.sin(t * 4 + i) * 0.25;
+    c.beginPath();
+    c.ellipse(x - 4, ground - 5, 8, 2.5, 0, 0, TAU);
+    c.fill();
+    c.globalAlpha = 1;
+  }
+  // screaming stickman silhouettes
+  const figs = lite ? 3 : 5;
+  for (let i = 0; i < figs; i++) {
+    const x = dX((i * 0.18 + 0.12) * dSpan);
+    const shake = calm ? 0 : Math.sin(t * 14 + i * 2.1) * 1.8;
+    const armUp = calm ? -1.1 : (-1.05 + Math.sin(t * 9 + i) * 0.25);
+    drawScreamingStickman(c, x + shake, ground, armUp, t + i);
+  }
+  // heat shimmer / red vignette
+  const vig = c.createRadialGradient(W * 0.5, ground * 0.45, 40, W * 0.5, ground * 0.5, Math.max(W, ground) * 0.72);
+  vig.addColorStop(0, 'rgba(255,40,20,0)');
+  vig.addColorStop(0.7, 'rgba(180,10,5,0.08)');
+  vig.addColorStop(1, 'rgba(40,0,0,0.35)');
+  c.fillStyle = vig;
+  c.fillRect(0, 0, W, ground + 4);
+}
+
+function drawScreamingStickman(c, x, ground, armAngle, t) {
+  const y = ground;
+  c.save();
+  c.strokeStyle = 'rgba(20,4,4,.88)';
+  c.fillStyle = 'rgba(20,4,4,.88)';
+  c.lineWidth = 2.4;
+  c.lineCap = 'round';
+  c.lineJoin = 'round';
+  // legs
+  c.beginPath();
+  c.moveTo(x, y - 28);
+  c.lineTo(x - 7, y);
+  c.moveTo(x, y - 28);
+  c.lineTo(x + 8, y);
+  c.stroke();
+  // body
+  c.beginPath();
+  c.moveTo(x, y - 28);
+  c.lineTo(x, y - 52);
+  c.stroke();
+  // arms raised in pain
+  c.beginPath();
+  c.moveTo(x, y - 46);
+  c.lineTo(x - 14, y - 46 + Math.cos(armAngle) * 16);
+  c.moveTo(x, y - 46);
+  c.lineTo(x + 14, y - 46 + Math.cos(armAngle + 0.4) * 16);
+  c.stroke();
+  // head
+  c.beginPath();
+  c.arc(x, y - 60, 7, 0, TAU);
+  c.fill();
+  // open screaming mouth
+  c.fillStyle = 'rgba(255,80,60,.75)';
+  c.beginPath();
+  c.ellipse(x, y - 58, 2.4, 3.2 + Math.abs(Math.sin(t * 11)) * 1.2, 0, 0, TAU);
+  c.fill();
+  // pain lines
+  c.strokeStyle = 'rgba(255,90,50,.35)';
+  c.lineWidth = 1.2;
+  c.beginPath();
+  c.moveTo(x + 10, y - 68);
+  c.lineTo(x + 16, y - 74);
+  c.moveTo(x - 10, y - 68);
+  c.lineTo(x - 16, y - 74);
+  c.stroke();
+  c.restore();
+}
 
 /**
  * Landweg fight decor from countryside curve photo:
@@ -129,8 +265,8 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   c.fillStyle = g; c.fillRect(0, 0, W, ground);
   const wrap = (x, span) => ((x % span) + span) % span;
 
-  if (themeName === 'grot' || themeName === 'cyber') {
-    c.fillStyle = 'rgba(255,255,255,.5)';
+  if (themeName === 'grot' || themeName === 'cyber' || themeName === 'nightmare' || themeName === 'hell') {
+    c.fillStyle = themeName === 'hell' || themeName === 'nightmare' ? 'rgba(255,160,80,.45)' : 'rgba(255,255,255,.5)';
     const starN = Perf.tier >= 1 ? 14 : 26;
     for (let i = 0; i < starN; i++) {
       const x = wrap(i * 137.5 - scroll * 0.08, W), y = (i * 61.3) % (ground * 0.7);
@@ -223,6 +359,10 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
       const bub = Math.max(0, Math.sin(t * 3 + i * 2.2)) * 5;
       c.beginPath(); c.arc(x, ground - 8, 4 + bub, 0, TAU); c.fill();
     }
+  } else if (th.deco === 'fire') {
+    drawNightmareFireDecor(c, ground, scroll, t, dX, dSpan);
+  } else if (th.deco === 'hell') {
+    drawHellPainDecor(c, ground, scroll, t, dX, dSpan);
   } else if (th.deco === 'neon') {
     for (let i = 0; i < 6; i++) {
       const x = dX((i * 0.18 + 0.03) * dSpan), h = 110 + (i % 3) * 60;

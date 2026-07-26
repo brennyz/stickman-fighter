@@ -1076,6 +1076,21 @@
   .lvl-master { display:block; font-size:10px; font-weight:800; color:#c47aff; margin-top:2px; letter-spacing:.04em; }
   .lvl.master-buff:not(.locked) { outline:2px solid rgba(196,122,255,.75); box-shadow:0 0 10px rgba(196,122,255,.25), 0 5px 0 rgba(0,0,0,.35); }
   .island-bar { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:min(92vw,640px); margin:8px 0 10px; }
+  .diff-bar { display:flex; flex-wrap:nowrap; gap:8px; justify-content:center; width:min(92vw,480px); margin:4px auto 6px; }
+  .diff-tab { flex:1 1 0; min-width:0; padding:10px 8px; border-radius:14px; border:2px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg,#3a4258,#262c3d); color:#cdd8f5; cursor:pointer; font-weight:800; position:relative;
+      display:flex; align-items:center; justify-content:center; gap:4px; transition:border-color .15s, transform .1s; }
+  .diff-tab.active { border-color:var(--diff-accent, #ffd75e); background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(0,0,0,.28));
+      box-shadow:0 0 0 1px color-mix(in srgb, var(--diff-accent, #ffd75e) 45%, transparent), 0 0 14px color-mix(in srgb, var(--diff-accent, #ffd75e) 22%, transparent); }
+  .diff-tab.locked { opacity:.42; cursor:not-allowed; }
+  .diff-tab-name { font-size:12px; letter-spacing:.04em; text-transform:uppercase; color:var(--diff-accent, #ffd75e); }
+  .diff-tab-lock { position:absolute; top:4px; right:6px; line-height:0; opacity:.85; }
+  .diff-tab-lock svg { width:12px; height:12px; display:block; }
+  .lvl.lvl-nightmare:not(.locked) { background:linear-gradient(180deg,#8a3a28,#5a2018); }
+  .lvl.lvl-hell:not(.locked) { background:linear-gradient(180deg,#6a1818,#3a0808); }
+  .lvl.lvl-nightmare.boss, .lvl.lvl-hell.boss { background:linear-gradient(180deg,#c04030,#701818); }
+  .island-grid.diff-nightmare .lvl:not(.locked):not(.boss) { box-shadow:0 5px 0 rgba(0,0,0,.35), 0 0 10px rgba(255,100,40,.18); }
+  .island-grid.diff-hell .lvl:not(.locked):not(.boss) { box-shadow:0 5px 0 rgba(0,0,0,.35), 0 0 12px rgba(255,40,30,.22); }
   .island-tab { flex:1 1 88px; min-width:72px; max-width:120px; padding:10px 8px; border-radius:14px; border:2px solid rgba(255,255,255,.12);
       background:linear-gradient(180deg,#3a4258,#262c3d); color:#cdd8f5; cursor:pointer; font-weight:800; position:relative;
       display:flex; flex-direction:column; align-items:center; gap:2px; transition:border-color .15s, transform .1s; }

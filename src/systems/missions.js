@@ -1956,7 +1956,10 @@ function exportSaveFilename() {
 function recordLastPlay(mode, opts) {
   opts = opts || {};
   const lp = { mode };
-  if (mode === 'adventure') lp.level = opts.level || (game && game.level && game.level.n) || save.unlocked;
+  if (mode === 'adventure') {
+    lp.level = opts.level || (game && game.level && game.level.n) || advUnlockedLevel();
+    lp.difficulty = opts.difficulty || (game && game.advDiff) || currentAdvDiff();
+  }
   if (mode === 'versus') { lp.p1 = opts.p1 || vsSelect.p1; lp.p2 = opts.p2 || vsSelect.p2; }
   save.lastPlay = lp;
   persist();
@@ -1967,6 +1970,7 @@ function resumeLastPlay() {
   if (!lp || !lp.mode) return false;
   try {
     if (lp.mode === 'adventure') {
+      if (lp.difficulty && advDiffAvailable(lp.difficulty)) setAdvDiff(lp.difficulty);
       gokGooiStartLevel(lp.level || 1);
     } else if (lp.mode === 'versus') {
       startGame('versus', { p1: lp.p1, p2: lp.p2 });
@@ -1982,12 +1986,13 @@ function resumeLastPlay() {
 
 function startAdventureFromGamble(skipGamble) {
   try {
-    const level = pendingAdvLevel || save.unlocked || 1;
+    const diff = currentAdvDiff();
+    const level = pendingAdvLevel || advUnlockedLevel(diff) || 1;
     const gamble = skipGamble ? null : lastGambleRoll;
     pendingAdvLevel = null;
     // Busy pas vrijgeven via cancel ná startGame (startGame roept cancel zelf)
     try { UI.hideGambleRollFlash(); } catch (_) {}
-    startGame('adventure', { level, gamble });
+    startGame('adventure', { level, gamble, difficulty: diff });
   } catch (err) {
     cancelGambleStart();
     sfReportError('gambleStart', err, 'Avontuur starten mislukt — kies level opnieuw');
@@ -2051,7 +2056,7 @@ function gokGooiStartLevel(n) {
   gokStartBusy = true;
   const startGen = gambleStartGen;
   try {
-    pendingAdvLevel = Math.max(1, Math.min(MAX_LEVEL, Number(n) || save.unlocked || 1));
+    pendingAdvLevel = Math.max(1, Math.min(MAX_LEVEL, Number(n) || advUnlockedLevel() || 1));
     AudioSys.init();
     lastGambleRoll = rollStageGamble();
     playGambleRollSfx(lastGambleRoll);
@@ -2087,11 +2092,11 @@ function gokGooiStartFromScreen() {
   gokStartBusy = true;
   const startGen = gambleStartGen;
   try {
-    if (pendingAdvLevel == null) pendingAdvLevel = save.unlocked || 1;
+    if (pendingAdvLevel == null) pendingAdvLevel = advUnlockedLevel() || 1;
     AudioSys.init();
     lastGambleRoll = rollStageGamble();
     playGambleRollSfx(lastGambleRoll);
-    try { UI.renderGamble(pendingAdvLevel || save.unlocked || 1); } catch (_) {}
+    try { UI.renderGamble(pendingAdvLevel || advUnlockedLevel() || 1); } catch (_) {}
     const sumLine = document.getElementById('gambleSumLine');
     if (sumLine) sumLine.textContent = t('ui.gambleGoStart');
     try { UI.showGambleRollFlash(lastGambleRoll); } catch (_) {}
