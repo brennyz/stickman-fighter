@@ -1,6 +1,10 @@
 /* ================================ GAME ================================= */
 let game = null;
 
+/** Pickup lifetime (sec) — shards langer zodat je ze kunt teruglopen. */
+const SHARD_PICKUP_LIFE = 36;
+const GENERIC_PICKUP_LIFE = 22;
+
 /** Deferred UI (toast/banner) — negeer na menu-exit of nieuw gevecht. */
 function gameUiTimerOk(ref, opts) {
   opts = opts || {};
