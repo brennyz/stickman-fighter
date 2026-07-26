@@ -13,16 +13,16 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.97",
-    "swCache": "stickfighter-app-v307",
-    "gameJsQuery": "game.js?v=307",
-    "cssQuery": "styles/main.css?v=307",
-    "featureBranch": "cursor/wiggum-d20-categorie-n-bd89",
+    "appVersion": "1.18.98",
+    "swCache": "stickfighter-app-v308",
+    "gameJsQuery": "game.js?v=308",
+    "cssQuery": "styles/main.css?v=308",
+    "featureBranch": "cursor/svg-afbeeldingen-vervanging-f73e",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": "d8bc670",
     "remoteMainHead": "d8bc670",
-    "note": "smoke static server fix · MERGE main"
+    "note": "ASSET-STYLE assets/ui SVG restore+wire · PR pending"
   },
   "userWishlist": [
     {
@@ -36,7 +36,7 @@
       "id": "w-20260726T090059",
       "from": "user",
       "text": "Missende afbeeldingen — adventure icoon leeg, meer van dit",
-      "status": "open",
+      "status": "done-in-code",
       "updated": "2026-07-26"
     },
     {
@@ -85,8 +85,8 @@
       "id": "w-20260725T141500",
       "from": "user",
       "text": "ASSET-STYLE.md leidend voor knoppen/beelden: agent leest doc → SVG in assets/buttons → vervangt inline iconen. Eerste batch later: hub of modes.",
-      "status": "active",
-      "updated": "2026-07-25"
+      "status": "done-in-code",
+      "updated": "2026-07-26"
     },
     {
       "id": "w-20260725T083800",
@@ -126,6 +126,18 @@
     "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md."
   ],
   "sessionLog": [
+    {
+      "at": "2026-07-26T16:03:32Z",
+      "summary": "ASSET-STYLE ui SVG batch live"
+    },
+    {
+      "at": "2026-07-26T16:03:29Z",
+      "summary": "--help"
+    },
+    {
+      "at": "2026-07-26T16:03:27Z",
+      "summary": "ASSET-STYLE: assets/ui SVG restore+wire (saga/ach/lock/island) · v1.18.98"
+    },
     {
       "at": "2026-07-26T15:04:45Z",
       "summary": "Stabiliteit: smoke Puppeteer bootstrap static server · npm test groen · v1.18.97"
@@ -213,18 +225,6 @@
     {
       "at": "2026-07-26T04:06:38Z",
       "summary": "d17 stabiliteit: gamble screen guard, tab-hide cancel, tipsSeen array fix · v1.18.73"
-    },
-    {
-      "at": "2026-07-26T03:07:23Z",
-      "summary": "d17 stabiliteit: tab-hide pause na over, sanitizeTipsSeen, gamble startGen guard · v1.18.72"
-    },
-    {
-      "at": "2026-07-26T02:05:36Z",
-      "summary": "d17+d11: goMenu gamble/result fix, pause over guard, sanitize tipsSeen/missionsIntroSeen · v1.18.71"
-    },
-    {
-      "at": "2026-07-26T01:01:43Z",
-      "summary": "d10 a11y c5: calm joy/special meter, HC gamble flash CSS · v1.18.70"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
