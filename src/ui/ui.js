@@ -3219,6 +3219,7 @@ const UI = {
         disc: t('skill.behavior.disc'),
         pull: t('skill.behavior.pull'),
         meteor: t('skill.behavior.meteor'),
+        slash: t('skill.behavior.slash'),
       };
       behBar.querySelectorAll('[data-behavior]').forEach((btn) => {
         const id = btn.dataset.behavior || 'all';

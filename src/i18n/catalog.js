@@ -726,11 +726,11 @@ function seedNlFromRuntime() {
     if (!I18N.nl.skill) I18N.nl.skill = {};
     for (const s of SKILLS) I18N.nl.skill[s.id] = { name: s.name, hint: s.hint, tooltip: s.tooltip, bonus: s.bonus };
     Object.assign(I18N.nl.skill, {
-      behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor' },
+      behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor', slash: 'Slash' },
       stat: { dmg: 'Schade', wind: 'Windup', spd: 'Snelheid', kb: 'Knockback' },
       tag: { pierce: 'Pierce', pull: 'Pull' },
       saga: {
-        scroll: { blurb: 'Ninja-scroll — Rasengan, Chidori, Rinnegan & gravity specials.' },
+        scroll: { blurb: 'Ninja-scroll — Rasengan, Chidori, Rinnegan-lichtschits & gravity specials.' },
         ki: { blurb: 'Ki-golven — Kamehameha, discs, Spirit Bomb & blitz dashes.' },
         tide: { blurb: 'Tide-straal — Getsuga, Cero & Bankai flash.' },
         fighter: { blurb: 'Street stretch — Gum-Gum dash & Gear Second steam.' },
@@ -1362,11 +1362,11 @@ const CATALOG_EN = {
   },
   egg: { dailyReady: 'Daily egg ready', advBonus: 'Bonus egg: win 1× adventure', tomorrow: 'Egg again tomorrow' },
   skill: {
-    behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor' },
+    behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor', slash: 'Slash' },
     stat: { dmg: 'Damage', wind: 'Windup', spd: 'Speed', kb: 'Knockback' },
     tag: { pierce: 'Pierce', pull: 'Pull' },
     saga: {
-      scroll: { blurb: 'Ninja scroll — Rasengan, Chidori, Rinnegan & gravity specials.' },
+      scroll: { blurb: 'Ninja scroll — Rasengan, Chidori, Rinnegan lightning slash & gravity specials.' },
       ki: { blurb: 'Ki waves — Kamehameha, discs, Spirit Bomb & blitz dashes.' },
       tide: { blurb: 'Tide beams — Getsuga, Cero & Bankai flash.' },
       fighter: { blurb: 'Street stretch — Gum-Gum dash & Gear Second steam.' },
