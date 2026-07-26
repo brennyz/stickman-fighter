@@ -533,7 +533,12 @@ class Game {
       pk.life -= dt;
       if (!p.alive) continue;
       const dy = (p.y - 48) - pk.y;
-      if ((p.x - pk.x) ** 2 + dy ** 2 < 44 * 44) this.collectPickup(pk);
+      if ((p.x - pk.x) ** 2 + dy ** 2 < 44 * 44) {
+        try { this.collectPickup(pk); } catch (pickErr) {
+          try { sfReportError('pickup', pickErr, 'Pickup hiccup — gevecht gaat door'); } catch (_) {}
+          pk.life = 0;
+        }
+      }
     }
     this.pickups = this.pickups.filter(pk => pk.life > 0);
     if (this.betweenT > 0) {
@@ -1839,30 +1844,38 @@ class Game {
     this.sessionXP += n;
     save.xp += n;
     while (save.xp >= xpNeed(save.lvl)) {
-      save.xp -= xpNeed(save.lvl);
-      save.lvl++;
-      noteRunLootLevelUp(this.runLoot, save.lvl);
-      AudioSys.sfx('levelup');
-      this.banner(t('banner.levelUp', { lvl: save.lvl }), 1.8, '#ffd75e', 40);
-      const st = playerStats();
-      this.player.maxhp = st.maxhp;
-      this.player.baseDmg = st.dmg;
-      this.player.hp = Math.min(this.player.maxhp, this.player.hp + Math.round(this.player.maxhp * 0.45));
-      const unlockedW = WEAPONS.find(w => w.unlock === save.lvl);
-      if (unlockedW) {
-        const self = this;
-        setTimeout(() => {
-          if (!gameUiTimerOk(self)) return;
-          self.banner(t('banner.newWeapon', { name: weaponLabel(unlockedW) }), 2, '#c792ff', 32);
-        }, 900);
-        AudioSys.sfx('newmonster');
+      try {
+        if (!this.player) break;
+        save.xp -= xpNeed(save.lvl);
+        save.lvl++;
+        noteRunLootLevelUp(this.runLoot, save.lvl);
+        try { AudioSys.sfx('levelup'); } catch (_) {}
+        this.banner(t('banner.levelUp', { lvl: save.lvl }), 1.8, '#ffd75e', 40);
+        const st = playerStats();
+        this.player.maxhp = st.maxhp;
+        this.player.baseDmg = st.dmg;
+        this.player.hp = Math.min(this.player.maxhp, this.player.hp + Math.round(this.player.maxhp * 0.45));
+        const unlockedW = WEAPONS.find(w => w.unlock === save.lvl);
+        if (unlockedW) {
+          const self = this;
+          setTimeout(() => {
+            try {
+              if (!gameUiTimerOk(self)) return;
+              self.banner(t('banner.newWeapon', { name: weaponLabel(unlockedW) }), 2, '#c792ff', 32);
+            } catch (_) {}
+          }, 900);
+          try { AudioSys.sfx('newmonster'); } catch (_) {}
+        }
+        const newStyle = STYLES.find(s => s.needLvl === save.lvl && styleUnlocked(s));
+        if (newStyle) { try { UI.toast(t('toast.styleUnlock', { name: styleLabel(newStyle) }), 3500); } catch (_) {} }
+        const newSkill = SKILLS.find(s => s.needLvl === save.lvl && skillUnlocked(s));
+        if (newSkill) { try { UI.toast(t('toast.skillUnlock', { name: skillLabel(newSkill) }), 3500); } catch (_) {} }
+        const newSuper = SUPERS.find(s => s.needLvl === save.lvl && superUnlocked(s));
+        if (newSuper) { try { UI.toast(t('toast.superUnlock', { name: superLabel(newSuper) }), 3500); } catch (_) {} }
+      } catch (lvlErr) {
+        try { sfReportError('grantXP/level', lvlErr, 'Level-up hiccup — gevecht gaat door'); } catch (_) {}
+        break;
       }
-      const newStyle = STYLES.find(s => s.needLvl === save.lvl && styleUnlocked(s));
-      if (newStyle) UI.toast(t('toast.styleUnlock', { name: styleLabel(newStyle) }), 3500);
-      const newSkill = SKILLS.find(s => s.needLvl === save.lvl && skillUnlocked(s));
-      if (newSkill) UI.toast(t('toast.skillUnlock', { name: skillLabel(newSkill) }), 3500);
-      const newSuper = SUPERS.find(s => s.needLvl === save.lvl && superUnlocked(s));
-      if (newSuper) UI.toast(t('toast.superUnlock', { name: superLabel(newSuper) }), 3500);
     }
     if (!opts.deferPersist) persist();
   }

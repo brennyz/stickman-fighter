@@ -258,7 +258,8 @@ function loop(now) {
         // NOOIT recoverToMenu tijdens live fight (Kets/charge crashte → startscherm)
         try { sfReportError('update', updateErr, 'Hiccup in gevecht — speel door'); } catch (_) {}
         try {
-          if (game) {
+          if (typeof recoverFightHiccup === 'function') recoverFightHiccup(game);
+          else if (game) {
             game.inputLocked = !!game.over;
             game.ketsbamChargeT = 0;
             game.ketsbamShow = false;
@@ -267,7 +268,7 @@ function loop(now) {
           }
         } catch (_) {}
         try { if (typeof Input !== 'undefined') Input.dualMode = false; } catch (_) {}
-        return;
+        // Geen return — draw + endFrame moeten door; anders bevriest het gevecht na 1 hiccup.
       }
       // Mid-fight: herstel wees-pause / verborgen canvas (training rabbit e.d.)
       if (typeof playLayerBroken === 'function' && playLayerBroken()) {
@@ -296,7 +297,10 @@ function loop(now) {
           game.draw(ctx);
         } catch (drawErr) {
           try { sfReportError('draw', drawErr, 'Tekenen hiccup — speel door'); } catch (_) {}
-          return;
+          try {
+            ctx.fillStyle = '#0a0d18';
+            ctx.fillRect(0, 0, W, H);
+          } catch (_) {}
         }
       } else if (!game) {
         try { ctx.fillStyle = '#0a0d18'; ctx.fillRect(0, 0, W, H); } catch (_) {}

@@ -22,7 +22,7 @@
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "dice roll → always start adventure \u00b7 MERGE"
+    "note": "dice roll → always start adventure · MERGE"
   },
   "userWishlist": [
     {
@@ -71,8 +71,12 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T07:00:24Z",
+      "summary": "Pages live v1.18.76: dice→start fix al op main via PR #179"
+    },
+    {
       "at": "2026-07-26T06:55:00Z",
-      "summary": "HOTFIX dice\u2192start: remove levelScreen guard, flash outside screen \u00b7 v1.18.76"
+      "summary": "HOTFIX dice→start: remove levelScreen guard, flash outside screen · v1.18.76"
     },
     {
       "at": "2026-07-26T06:04:26Z",
@@ -165,14 +169,6 @@
     {
       "at": "2026-07-25T14:12:00Z",
       "summary": "d3 versus c4: spawn pads, match-point/HP lead, round-skip, rematch tips v1.18.33"
-    },
-    {
-      "at": "2026-07-25T14:07:40Z",
-      "summary": "d19 muur c4: chase meter, pace 45/20, combo re-arm, near-miss tip v1.18.32"
-    },
-    {
-      "at": "2026-07-25T14:05:51Z",
-      "summary": "Stabiliteit cron: ketsbam pulse crash, sanitizeSave guards, i18n DOM v1.18.31"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

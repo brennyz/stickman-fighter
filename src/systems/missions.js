@@ -1266,6 +1266,18 @@ function sfReportError(where, err, userMsg) {
     userToast(userMsg || 'Hiccup — spel gaat door');
   }
 }
+
+/** Na update-hiccup: input/Kets niet laten hangen — gevecht moet door kunnen. */
+function recoverFightHiccup(g) {
+  if (!g) return;
+  try {
+    g.inputLocked = !!g.over;
+    g.ketsbamChargeT = 0;
+    g.ketsbamShow = false;
+    g.ketsbamBuildT = 0;
+    g.ketsbamBuildProg = 0;
+  } catch (_) {}
+}
 /** Tijdens gevecht: strip .screen.active — ochtend-aanpak: geen !important display-kills. */
 function clearScreensForPlay() {
   document.querySelectorAll('.screen.active').forEach((s) => s.classList.remove('active'));

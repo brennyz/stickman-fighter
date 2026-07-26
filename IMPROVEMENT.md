@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | **17** | Fight hiccup-freeze: loop tekent/input na update-crash door; grantXP level-up + pickup guarded; recoverFightHiccup. v1.18.77 / SW v287. |
 | 2026-07-26 | — | **HOTFIX dice→start:** Continue/level rolled dice maar startte niet (levelScreenActive-guard + flash in display:none). Flash buiten screen; start altijd na roll. v1.18.76 / SW v286. |
 | 2026-07-26 | **16** | Hosting c5: shareCacheRevFor max(SW, hosting.json); speel.html QR sync via index rev; settings refresh hosting. v1.18.75 / SW v285. |
 | 2026-07-26 | **17** | Stabiliteit cron: gameUiTimerOk op deferred toast/banner; dexBag() guard tegen corrupt save.dex. v1.18.74 / SW v284. |
