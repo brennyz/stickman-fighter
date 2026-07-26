@@ -13,16 +13,16 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.91",
-    "swCache": "stickfighter-app-v301",
-    "gameJsQuery": "game.js?v=301",
-    "cssQuery": "styles/main.css?v=301",
-    "featureBranch": "cursor/collect-icons-arcade-d226",
+    "appVersion": "1.18.93",
+    "swCache": "stickfighter-app-v303",
+    "gameJsQuery": "game.js?v=303",
+    "cssQuery": "styles/main.css?v=303",
+    "featureBranch": "cursor/svg-afbeeldingen-vervanging-c96d",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "collectie arcade icons + adventure utf8 · MERGE"
+    "note": "assets/ui saga/ach/lock/island SVG structural · v1.18.93"
   },
   "userWishlist": [
     {
@@ -36,7 +36,7 @@
       "id": "w-20260726T090059",
       "from": "user",
       "text": "Missende afbeeldingen — adventure icoon leeg, meer van dit",
-      "status": "open",
+      "status": "done-in-code",
       "updated": "2026-07-26"
     },
     {
@@ -85,8 +85,8 @@
       "id": "w-20260725T141500",
       "from": "user",
       "text": "ASSET-STYLE.md leidend voor knoppen/beelden: agent leest doc → SVG in assets/buttons → vervangt inline iconen. Eerste batch later: hub of modes.",
-      "status": "active",
-      "updated": "2026-07-25"
+      "status": "done-in-code",
+      "updated": "2026-07-26"
     },
     {
       "id": "w-20260725T083800",
@@ -126,6 +126,10 @@
     "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md."
   ],
   "sessionLog": [
+    {
+      "at": "2026-07-26T11:04:30Z",
+      "summary": "ASSET-STYLE structureel: saga/ach/lock/island → assets/ui SVGs · v1.18.93"
+    },
     {
       "at": "2026-07-26T10:22:00Z",
       "summary": "Collectie-iconen arcade ASSET-STYLE live-push · v1.18.91"
@@ -221,18 +225,6 @@
     {
       "at": "2026-07-25T22:05:00Z",
       "summary": "d17 stabiliteit: char swap t() crash, adventure result na pauze→menu · v1.18.67"
-    },
-    {
-      "at": "2026-07-25T21:35:00Z",
-      "summary": "Extra krachten UIT (summon/MS/tide) + LEVEL KLAAR eindflow · v1.18.65"
-    },
-    {
-      "at": "2026-07-25T21:07:50Z",
-      "summary": "Stabiliteit: char select crash, claim batch, gamble race, lastPlay · v1.18.60"
-    },
-    {
-      "at": "2026-07-25T21:05:00Z",
-      "summary": "Stabiliteit: char select crash, claim batch, gamble race, lastPlay · v1.18.60"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
