@@ -2417,7 +2417,11 @@ const xpNeed = (lvl) => {
   const pace = 1.15 + Math.min(0.35, (lvl - 1) * 0.02);
   return Math.round(base * pace / 5) * 5;
 };
-const dexCount = () => Object.keys(save.dex).length;
+function dexBag() {
+  const d = save.dex;
+  return (d && typeof d === 'object' && !Array.isArray(d)) ? d : {};
+}
+const dexCount = () => Object.keys(dexBag()).length;
 function dexCountFromSave(s) {
   return Object.keys((s && s.dex) || {}).length;
 }
@@ -2539,7 +2543,8 @@ function dexCosmeticProgressLines() {
 }
 const dexTotalKills = () => {
   let n = 0;
-  for (const id of Object.keys(save.dex)) n += save.dex[id] || 0;
+  const bag = dexBag();
+  for (const id of Object.keys(bag)) n += bag[id] || 0;
   return n;
 };
 function dexTotalKillsFromSave(s) {
@@ -2558,7 +2563,7 @@ function dexMiniStat(label, val, max, color) {
 }
 function dexHpBonus() {
   let bonus = 0;
-  for (const id of Object.keys(save.dex)) {
+  for (const id of Object.keys(dexBag())) {
     const sp = SPECIES[id];
     if (sp) bonus += rarityHpBonus(sp.rarity);
   }

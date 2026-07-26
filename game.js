@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.73';
+const APP_VERSION = '1.18.74';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 283;
+const SW_CACHE_REV = 284;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -4560,7 +4560,11 @@ const xpNeed = (lvl) => {
   const pace = 1.15 + Math.min(0.35, (lvl - 1) * 0.02);
   return Math.round(base * pace / 5) * 5;
 };
-const dexCount = () => Object.keys(save.dex).length;
+function dexBag() {
+  const d = save.dex;
+  return (d && typeof d === 'object' && !Array.isArray(d)) ? d : {};
+}
+const dexCount = () => Object.keys(dexBag()).length;
 function dexCountFromSave(s) {
   return Object.keys((s && s.dex) || {}).length;
 }
@@ -4682,7 +4686,8 @@ function dexCosmeticProgressLines() {
 }
 const dexTotalKills = () => {
   let n = 0;
-  for (const id of Object.keys(save.dex)) n += save.dex[id] || 0;
+  const bag = dexBag();
+  for (const id of Object.keys(bag)) n += bag[id] || 0;
   return n;
 };
 function dexTotalKillsFromSave(s) {
@@ -4701,7 +4706,7 @@ function dexMiniStat(label, val, max, color) {
 }
 function dexHpBonus() {
   let bonus = 0;
-  for (const id of Object.keys(save.dex)) {
+  for (const id of Object.keys(dexBag())) {
     const sp = SPECIES[id];
     if (sp) bonus += rarityHpBonus(sp.rarity);
   }
@@ -18970,6 +18975,15 @@ function drawKablamLabel(c, text, x, y, size, fill) {
 /* ================================ GAME ================================= */
 let game = null;
 
+/** Deferred UI (toast/banner) — negeer na menu-exit of nieuw gevecht. */
+function gameUiTimerOk(ref, opts) {
+  opts = opts || {};
+  if (state === 'menu') return false;
+  if (ref && game && game !== ref) return false;
+  if (!opts.allowOver && ref && ref.over) return false;
+  return true;
+}
+
 function adventureTelegraphHud(m) {
   if (!m || !m.alive) return null;
   if (m.telegraphT > 0) {
@@ -19130,28 +19144,31 @@ class Game {
     applyGambleToStage(this, gamble);
     this.banner(t('banner.levelStart', { n }), 1.4, '#ffd75e', 54);
     if (masterBuffActive(n)) {
+      const self = this;
       setTimeout(() => {
         try {
-          if (this.over) return;
-          this.banner(t('banner.masterBuff'), 2, '#c47aff', 40);
-          this.floater(W * 0.5, 132, t('combat.masterBuffFloater'), '#c47aff', 14, 'hud');
+          if (!gameUiTimerOk(self)) return;
+          self.banner(t('banner.masterBuff'), 2, '#c47aff', 40);
+          self.floater(W * 0.5, 132, t('combat.masterBuffFloater'), '#c47aff', 14, 'hud');
         } catch (_) {}
       }, 1500);
     }
     const wCap = adventureWeaponCapForLevel(n);
     if (playerWeapon().unlock > wCap) {
+      const self = this;
       setTimeout(() => {
         try {
-          if (this.over) return;
-          this.floater(W * 0.5, 148, t('combat.skillGate', { cap: wCap }), '#ffd75e', 13, 'hud');
+          if (!gameUiTimerOk(self)) return;
+          self.floater(W * 0.5, 148, t('combat.skillGate', { cap: wCap }), '#ffd75e', 13, 'hud');
         } catch (_) {}
       }, masterBuffActive(n) ? 2800 : 1500);
     }
     if (gamble && gamble.outcome !== 'neutral') {
+      const self = this;
       setTimeout(() => {
         try {
-          if (this.over) return;
-          this.banner(gambleOutcomeLabelFromKey(gamble).slice(0, 42), 2.2, '#7cf5ff', 34);
+          if (!gameUiTimerOk(self)) return;
+          self.banner(gambleOutcomeLabelFromKey(gamble).slice(0, 42), 2.2, '#7cf5ff', 34);
         } catch (_) {}
       }, 1600);
     }
@@ -19166,10 +19183,11 @@ class Game {
     }
     ensureTipsSeen();
     if (!save.tipsSeen.partGate && n <= 8) {
+      const self = this;
       setTimeout(() => {
         try {
-          if (this.over) return;
-          this.floater(W * 0.5, 124, t('combat.partGateIntro'), '#7cf5ff', 13);
+          if (!gameUiTimerOk(self)) return;
+          self.floater(W * 0.5, 124, t('combat.partGateIntro'), '#7cf5ff', 13);
         } catch (_) {}
       }, 2400);
     }
@@ -19608,8 +19626,12 @@ class Game {
         persist();
         if (lv < MAX_LEVEL) {
           const nCap = adventureWeaponCapForLevel(lv + 1);
+          const self = this;
           setTimeout(() => {
-            try { UI.toast(t('toast.islandUnlock', { name: islandLabel(islandFromLevel(lv + 1), 'name'), cap: nCap }), 4200); } catch (_) {}
+            try {
+              if (!gameUiTimerOk(self, { allowOver: true })) return;
+              UI.toast(t('toast.islandUnlock', { name: islandLabel(islandFromLevel(lv + 1), 'name'), cap: nCap }), 4200);
+            } catch (_) {}
           }, 1700);
         }
       }
@@ -19627,8 +19649,10 @@ class Game {
         spawnGameEggPet(this);
         noteRunLootEgg(this.runLoot, eggBonus.def.name, eggBonus.duplicate);
         const rar = rarityOf(eggBonus.def.rarity);
+        const self = this;
         setTimeout(() => {
           try {
+            if (!gameUiTimerOk(self, { allowOver: true })) return;
             UI.toast(eggBonus.duplicate
               ? t('toast.eggDuplicate', { name: eggBonus.def.name })
               : t('toast.eggNew', { name: eggBonus.def.name, rar: rarityLabel(eggBonus.def.rarity) }), 3800);
@@ -19652,7 +19676,13 @@ class Game {
       if (gotMaster) save.advMasterBuff = lv;
       persist();
       if (gotMaster) {
-        setTimeout(() => { try { UI.toast(t('toast.masterBuffGain'), 3800); } catch (_) {} }, 1500);
+        const self = this;
+        setTimeout(() => {
+          try {
+            if (!gameUiTimerOk(self, { allowOver: true })) return;
+            UI.toast(t('toast.masterBuffGain'), 3800);
+          } catch (_) {}
+        }, 1500);
       }
       AudioSys.sfx('lose');
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
@@ -20794,7 +20824,11 @@ class Game {
       this.player.hp = Math.min(this.player.maxhp, this.player.hp + Math.round(this.player.maxhp * 0.45));
       const unlockedW = WEAPONS.find(w => w.unlock === save.lvl);
       if (unlockedW) {
-        setTimeout(() => this.banner(t('banner.newWeapon', { name: weaponLabel(unlockedW) }), 2, '#c792ff', 32), 900);
+        const self = this;
+        setTimeout(() => {
+          if (!gameUiTimerOk(self)) return;
+          self.banner(t('banner.newWeapon', { name: weaponLabel(unlockedW) }), 2, '#c792ff', 32);
+        }, 900);
         AudioSys.sfx('newmonster');
       }
       const newStyle = STYLES.find(s => s.needLvl === save.lvl && styleUnlocked(s));
