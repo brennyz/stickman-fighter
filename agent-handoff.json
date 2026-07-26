@@ -17,12 +17,12 @@
     "swCache": "stickfighter-app-v313",
     "gameJsQuery": "game.js?v=313",
     "cssQuery": "styles/main.css?v=313",
-    "featureBranch": "cursor/nightmare-hell-wapens-d705",
+    "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "Nachtmerrie/Hel zone-wapens merge main · v1.18.103"
+    "note": "Nachtmerrie/Hel zone-wapens MERGE main · v1.18.103"
   },
   "userWishlist": [
     {
@@ -155,8 +155,16 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T18:51:13Z",
+      "summary": "Dubbelcheck + merge main · Nachtmerrie/Hel zone-wapens · v1.18.103"
+    },
+    {
       "at": "2026-07-26T18:49:50Z",
       "summary": "Nachtmerrie/Hel zone-wapens merge-ready · v1.18.103"
+    },
+    {
+      "at": "2026-07-26T18:49:22Z",
+      "summary": "Merged Rinnegan slash naar main · v1.18.102"
     },
     {
       "at": "2026-07-26T18:48:24Z",
@@ -245,14 +253,6 @@
     {
       "at": "2026-07-26T07:37:41Z",
       "summary": "Golf 1/2 vast: geen checkpoint korte levels + lijken weg · v1.18.81"
-    },
-    {
-      "at": "2026-07-26T07:32:58Z",
-      "summary": "Stabiliteit: slice-guards, check:critical, save-fuzz · v1.18.80"
-    },
-    {
-      "at": "2026-07-26T07:30:00Z",
-      "summary": "Menu opaque hub icons/tiles + stickmen top-band · v1.18.79"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
