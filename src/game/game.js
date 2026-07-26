@@ -639,6 +639,8 @@ class Game {
             dmgMul: this.level.dmgMul,
             speedMul: this.level.speedMul || 1,
             advDiff: this.advDiff || this.level.diff || 'normal',
+            enrageMul: this.level.enrageMul || 1,
+            enrageAt: this.level.enrageAt != null ? this.level.enrageAt : 0.5,
           });
           this.monsters.push(mon);
           if (def.superBoss) {
@@ -728,6 +730,14 @@ class Game {
     if (win) {
       const bonus = Math.round((30 + lv * 10) * advXpMul(diff));
       this.grantXP(bonus);
+      if (diff !== 'normal') {
+        const coinN = Math.max(1, Math.round((3 + Math.floor(lv / 8)) * (typeof advPetCoinMul === 'function' ? advPetCoinMul(diff) : 1)));
+        try {
+          save.petCoins = (typeof petCoinsBalance === 'function' ? petCoinsBalance() : (save.petCoins || 0)) + coinN;
+          this.petCoinsThisRun = (this.petCoinsThisRun || 0) + coinN;
+          persist();
+        } catch (_) {}
+      }
       const unlocked = advUnlockedLevel(diff);
       if (lv === unlocked && unlocked < MAX_LEVEL) {
         setAdvUnlockedLevel(unlocked + 1, diff);
