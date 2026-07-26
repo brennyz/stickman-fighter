@@ -13,17 +13,17 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.125",
-    "swCache": "stickfighter-app-v335",
-    "gameJsQuery": "game.js?v=335",
-    "cssQuery": "styles/main.css?v=335",
-    "featureBranch": "main",
+    "appVersion": "1.18.126",
+    "swCache": "stickfighter-app-v336",
+    "gameJsQuery": "game.js?v=336",
+    "cssQuery": "styles/main.css?v=336",
+    "featureBranch": "cursor/svg-afbeeldingen-vervanging-6aaf",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "d18 char fight dock + boot toast fix LIVE · v1.18.125",
-    "updated": "2026-07-26T22:10:00Z"
+    "note": "ASSET-STYLE island SVGs restored + wired · v1.18.126",
+    "updated": "2026-07-26T23:04:23Z"
   },
   "userWishlist": [
     {
@@ -204,7 +204,8 @@
       "from": "user",
       "text": "ASSET-STYLE.md leidend voor knoppen/beelden: agent leest doc → SVG in assets/buttons → vervangt inline iconen. Eerste batch later: hub of modes.",
       "status": "active",
-      "updated": "2026-07-25"
+      "updated": "2026-07-26",
+      "notes": "Hub/modes/chrome/saga/ach/ui/islands live as file SVGs; cron re-applies islands after merges"
     },
     {
       "id": "w-20260725T083800",
@@ -296,6 +297,14 @@
       "text": "Zone-wapens goed koppelen, checken, harden en mergen",
       "status": "done-in-code",
       "updated": "2026-07-26"
+    },
+    {
+      "id": "w-20260726T230408",
+      "from": "automation-cron",
+      "text": "Check waar afbeeldingen zijn en of ze svg zijn volgens asset md en vervang ze structureel",
+      "status": "done-in-code",
+      "updated": "2026-07-26",
+      "notes": "Restored 7 island-*.svg + wired ADVENTURE_ISLANDS to file icons; SW v336"
     }
   ],
   "agentRules": [

@@ -115,6 +115,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | — | **ASSET SVG:** adventure island icons terug als `assets/ui/island-*.svg` (file `<img>`), SW precache + smoke; inline eiland-SVG weg. v1.18.126 / SW v336. |
 | 2026-07-26 | — | **Summons mp4 play:** SW bypass Range/.mp4, hub preload, langere load-timeout, smoke currentTime. v1.18.123 / SW v333. |
 | 2026-07-26 | — | **Summons video:** echte Gemini-share mp4 (10s) i.p.v. placeholder + true fullscreen (`has-video`). v1.18.122 / SW v332. |
 | 2026-07-26 | — | **Summons:** 10× random/dag, fullscreen pull (`is-pulling`), geen spoiler-toast, nice 14% + mid 30%. v1.18.121 / SW v331. |
