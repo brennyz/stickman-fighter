@@ -1,5 +1,5 @@
 /* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 5 */
-const CACHE = 'stickfighter-app-v325';
+const CACHE = 'stickfighter-app-v326';
 
 
 
@@ -63,6 +63,7 @@ const ASSETS = [
   './assets/buttons/hub/collect.svg',
   './assets/buttons/hub/continue.svg',
   './assets/buttons/hub/summons.svg',
+  './assets/summon/reveal.mp4',
   './assets/buttons/hub/versus.svg',
   './assets/buttons/modes/dex.svg',
   './assets/buttons/modes/mats.svg',

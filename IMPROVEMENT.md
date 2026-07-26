@@ -113,6 +113,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | — | **Summons video:** `assets/summon/reveal.mp4` (4s stickman tree→chest) wired + SW precache. Gemini share was login-walled; replace file anytime. v1.18.116 / SW v326. |
 | 2026-07-26 | — | **LIVE merge:** daily summons harden (menu-kist, center-card last 2s, save quota fix, smoke) zonder conflict op main. v1.18.115 / SW v325. |
 | 2026-07-26 | — | **Summons harden:** where-from/where-see strip, center-card laatste 2s (video of fallback), rarity FX shell, geen open tijdens play, save null→5 fix, smoke-summon. |
 | 2026-07-26 | — | **User fix harden+merge:** wapen-upgrades ownership-only (expliciete zone-gate + belt in add/try); smoke banked-shards cheat. v1.18.114 / SW v324. |
