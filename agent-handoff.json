@@ -43,7 +43,7 @@
       "id": "w-20260726T090059",
       "from": "user",
       "text": "Missende afbeeldingen — adventure icoon leeg, meer van dit",
-      "status": "open",
+      "status": "done-in-code",
       "updated": "2026-07-26"
     },
     {
@@ -133,6 +133,10 @@
     "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md."
   ],
   "sessionLog": [
+    {
+      "at": "2026-07-26T14:04:17Z",
+      "summary": "assets/ui SVG wire: saga/ach/lock/island structureel vervangen · v1.18.96"
+    },
     {
       "at": "2026-07-26T13:03:47Z",
       "summary": "d7 save: upgrade Lv export/import/drift + readSaveJson merge · v1.18.95"
@@ -228,10 +232,6 @@
     {
       "at": "2026-07-26T00:04:11Z",
       "summary": "d17 stabiliteit: level hold stale timer, gamble SFX cancel, petCoinCost guard · v1.18.69"
-    },
-    {
-      "at": "2026-07-25T23:03:12Z",
-      "summary": "d17 stabiliteit: stale result timer, training scheduleGameResult, gamble cancel level terug · v1.18.68"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
