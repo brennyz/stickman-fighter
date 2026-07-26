@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.82';
+const APP_VERSION = '1.18.83';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 292;
+const SW_CACHE_REV = 293;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -710,10 +710,26 @@ function loadSave() {
   return best || Object.assign({}, DEFAULT_SAVE);
 }
 
+/** Version-stash / export envelope: { schema, save: { lvl… } } → flat save object. */
+function unwrapSavePayload(parsed) {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return parsed;
+  const inner = parsed.save;
+  if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
+    const meta = Object.assign({}, parsed._exportMeta || {}, {
+      schema: parsed.schema,
+      app: parsed.fromApp || parsed.app,
+      exportedAt: parsed.stashedAt || parsed.exportedAt,
+      summary: parsed.summary,
+    });
+    return Object.assign({}, inner, { _exportMeta: meta });
+  }
+  return parsed;
+}
+
 function readSaveJson(raw) {
   try {
     if (!raw || raw.length > 180000) return null;
-    const parsed = JSON.parse(raw);
+    const parsed = unwrapSavePayload(JSON.parse(raw));
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
     const merged = Object.assign({}, DEFAULT_SAVE, parsed);
     merged.stats = Object.assign({}, DEFAULT_SAVE.stats, parsed.stats || {});
@@ -3446,6 +3462,7 @@ function previewImportSave(text) {
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error('Ongeldige save-structuur');
   }
+  parsed = unwrapSavePayload(parsed);
   const meta = parsed._exportMeta;
   delete parsed._exportMeta;
   const clean = sanitizeSave(Object.assign({}, DEFAULT_SAVE, parsed));
@@ -4055,7 +4072,7 @@ let gambleSfxT2 = null;
 
 /** Dobbelworp loopt → geen herlaad/update mag hier tussen komen. */
 function gamblePending() {
-  return !!gokScreenTimer || gokStartBusy;
+  return !!gokScreenTimer || gokStartBusy || !!window.__sfStartGameBusy;
 }
 
 function cancelGambleStart() {
@@ -19707,6 +19724,7 @@ class Game {
         this.spawnTimer = (bossWave ? 0.92 : 0.38) * spawnMul * intervalMul;
         for (let b = 0; b < batch && this.spawnQueue.length && this.monsters.filter((m) => m.alive).length < ADVENTURE_MAX_ALIVE; b++) {
           const def = this.spawnQueue.shift();
+          if (!def || !def.sp || !SPECIES[def.sp]) continue;
           const side = Math.random() < 0.75 ? 1 : -1;
           const x = (side > 0 ? W + 40 : -40) + b * side * 32;
           const mon = new Monster(def.sp, x, this, {
@@ -27750,6 +27768,8 @@ let state = 'menu';
 
 function startGame(mode, opts) {
   opts = opts || {};
+  window.__sfStartGameBusy = true;
+  try {
   try { cancelGambleStart(); } catch (_) {}
   const allowed = { adventure: 1, training: 1, wall: 1, versus: 1, coinrun: 1 };
   if (!allowed[mode]) {
@@ -27815,6 +27835,10 @@ function startGame(mode, opts) {
     else if (mode === 'wall') AudioSys.play('wall');
     else AudioSys.play('battle');
   } catch (_) {}
+  } finally {
+    window.__sfStartGameBusy = false;
+    gokStartBusy = false;
+  }
 }
 
 /** iPad: pointerup + click — zelfde pointerId als scroll-guard (d9 c5); geen dubbel-vuur. */

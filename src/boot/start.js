@@ -3,6 +3,8 @@ let state = 'menu';
 
 function startGame(mode, opts) {
   opts = opts || {};
+  window.__sfStartGameBusy = true;
+  try {
   try { cancelGambleStart(); } catch (_) {}
   const allowed = { adventure: 1, training: 1, wall: 1, versus: 1, coinrun: 1 };
   if (!allowed[mode]) {
@@ -68,6 +70,10 @@ function startGame(mode, opts) {
     else if (mode === 'wall') AudioSys.play('wall');
     else AudioSys.play('battle');
   } catch (_) {}
+  } finally {
+    window.__sfStartGameBusy = false;
+    gokStartBusy = false;
+  }
 }
 
 /** iPad: pointerup + click — zelfde pointerId als scroll-guard (d9 c5); geen dubbel-vuur. */

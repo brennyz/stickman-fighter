@@ -97,4 +97,27 @@ for (let i = 0; i < mutators.length; i++) {
   }
 }
 
-console.log(`SMOKE_OK save-fuzz ${ok}/${mutators.length} corrupt saves repaired`);
+// Version-stash envelope must unwrap to real progress
+try {
+  const env = {
+    schema: 3,
+    fromApp: '1.18.0',
+    stashedAt: '2026-01-01T00:00:00Z',
+    save: Object.assign({}, base, { lvl: 22, unlocked: 18 }),
+    summary: 'Lv 22',
+  };
+  const loaded = ctx.readSaveJson(JSON.stringify(env));
+  if (!loaded || loaded.lvl !== 22 || loaded.unlocked !== 18) {
+    throw new Error('envelope unwrap failed: lvl=' + (loaded && loaded.lvl));
+  }
+  if (typeof ctx.previewImportSave === 'function') {
+    const { save: imported } = ctx.previewImportSave(JSON.stringify(env));
+    if (!imported || imported.lvl !== 22) throw new Error('previewImportSave envelope failed');
+  }
+  ok++;
+} catch (e) {
+  console.error('SMOKE_FAIL save-fuzz envelope', e.message || e);
+  process.exit(1);
+}
+
+console.log(`SMOKE_OK save-fuzz ${ok}/${mutators.length + 1} corrupt saves repaired`);

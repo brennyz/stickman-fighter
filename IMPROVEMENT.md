@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | **17** | Stabiliteit: save envelope unwrap (import + readSaveJson), gamble `__sfStartGameBusy` reload guard, spawn queue invalid-species guard. v1.18.83 / SW v293. |
 | 2026-07-26 | **17** | Rasengan hiccup: `spawnJutsu` jb/jutsu/fireProj regressie na skill-refactor — ReferenceError elke cast; orbs opruimen bij wave-clear. v1.18.82 / SW v292. |
 | 2026-07-26 | **17** | Golf 1/2 vast: geen checkpoint op korte levels (<4 golven); lijken weg; partGate touch/vx fix. v1.18.81 / SW v291. |
 | 2026-07-26 | **17** | Wave-clear hiccup: ontbrekende `partBoundaryWaveIdx` + `playerWalkInput` na module-split (checkpoint golf 1/2 + pet Slymo). v1.18.79 / SW v289. |

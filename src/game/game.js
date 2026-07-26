@@ -618,6 +618,7 @@ class Game {
         this.spawnTimer = (bossWave ? 0.92 : 0.38) * spawnMul * intervalMul;
         for (let b = 0; b < batch && this.spawnQueue.length && this.monsters.filter((m) => m.alive).length < ADVENTURE_MAX_ALIVE; b++) {
           const def = this.spawnQueue.shift();
+          if (!def || !def.sp || !SPECIES[def.sp]) continue;
           const side = Math.random() < 0.75 ? 1 : -1;
           const x = (side > 0 ? W + 40 : -40) + b * side * 32;
           const mon = new Monster(def.sp, x, this, {

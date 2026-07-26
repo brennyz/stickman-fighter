@@ -1303,6 +1303,7 @@ function previewImportSave(text) {
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error('Ongeldige save-structuur');
   }
+  parsed = unwrapSavePayload(parsed);
   const meta = parsed._exportMeta;
   delete parsed._exportMeta;
   const clean = sanitizeSave(Object.assign({}, DEFAULT_SAVE, parsed));
@@ -1912,7 +1913,7 @@ let gambleSfxT2 = null;
 
 /** Dobbelworp loopt → geen herlaad/update mag hier tussen komen. */
 function gamblePending() {
-  return !!gokScreenTimer || gokStartBusy;
+  return !!gokScreenTimer || gokStartBusy || !!window.__sfStartGameBusy;
 }
 
 function cancelGambleStart() {
