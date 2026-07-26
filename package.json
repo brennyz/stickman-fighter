@@ -1,7 +1,7 @@
 {
   "name": "stickman-fighter",
   "private": true,
-  "version": "1.18.108",
+  "version": "1.18.109",
   "description": "Stickman Fighter — Monster Arena PWA",
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -24,9 +24,10 @@
     "smoke:rasengan": "node scripts/smoke-rasengan-cast.mjs",
     "smoke:boomerang": "node scripts/smoke-boomerang-return.mjs",
     "smoke:weapons": "node scripts/smoke-weapon-silhouettes.mjs",
+    "smoke:zone": "node scripts/smoke-zone-weapons.mjs",
     "smoke:cave": "node scripts/smoke-cave-scenery.mjs",
     "smoke:pwa": "node scripts/smoke-pwa-shell.mjs",
-    "test": "npm run build && npm run check && npm run check:critical && npm run smoke && npm run smoke:upgrades && npm run smoke:menu && npm run smoke:html && npm run smoke:pwa && npm run smoke:gamble && npm run smoke:levelup && npm run smoke:petwave && npm run smoke:wave12 && npm run smoke:rasengan && npm run smoke:boomerang && npm run smoke:weapons && npm run smoke:cave && npm run smoke:adventure && npm run smoke:save",
+    "test": "npm run build && npm run check && npm run check:critical && npm run smoke && npm run smoke:upgrades && npm run smoke:menu && npm run smoke:html && npm run smoke:pwa && npm run smoke:gamble && npm run smoke:levelup && npm run smoke:petwave && npm run smoke:wave12 && npm run smoke:rasengan && npm run smoke:boomerang && npm run smoke:weapons && npm run smoke:zone && npm run smoke:cave && npm run smoke:adventure && npm run smoke:save",
     "roll": "bash scripts/roll-improvement-d20.sh",
     "roll:status": "bash scripts/roll-improvement-d20.sh status",
     "roll:verify": "bash scripts/roll-improvement-d20.sh verify",

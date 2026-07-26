@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.108';
+const APP_VERSION = '1.18.109';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 318;
+const SW_CACHE_REV = 319;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   zoneWeapons: {},
@@ -528,12 +528,16 @@ function masterBuffActive(levelN, diff) {
 function bestWeaponForAdventureCap(cap) {
   let best = weaponById('vuist');
   for (const base of WEAPONS) {
-    if (save.lvl >= base.unlock && base.unlock <= cap && base.unlock >= best.unlock) best = base;
+    if (base.dropZone) continue; // zone-wapens nooit via level-cap auto-pick
+    if (!weaponUnlockedByLevel(base)) continue;
+    if (base.unlock <= cap && base.unlock >= best.unlock) best = base;
   }
   return applySummonTier(best);
 }
 function playerWeaponForAdventure(levelN) {
   const w = playerWeapon();
+  // Zone-wapens: zodra unlocked, altijd meenemen in avontuur
+  if (w && w.dropZone && weaponUnlockedByLevel(w)) return w;
   const cap = adventureWeaponCapForLevel(levelN);
   if (w.unlock <= cap) return w;
   return bestWeaponForAdventureCap(cap);
@@ -3451,6 +3455,7 @@ function runLootSummaryShort(loot) {
   if (pickN) parts.push(`💊${pickN}`);
   if (loot.finishers) parts.push(`③${loot.finishers}`);
   if (loot.levelUps) parts.push(`↑${loot.levelUps}`);
+  if (loot.weapons && loot.weapons.length) parts.push(`⚔${loot.weapons.length}`);
   if (loot.petCoins) parts.push(`🪙${loot.petCoins}`);
   return parts.join(' · ');
 }
@@ -5588,11 +5593,15 @@ function grantZoneWeapon(weaponId, opts) {
     try {
       const zone = weaponDropZoneOf(w);
       const col = zone ? zone.color : '#c47aff';
-      UI.toast(`${zone ? zone.name : 'Zone'}: ${weaponLabel(w)}!`, 3800);
+      if (typeof UI !== 'undefined' && UI && typeof UI.toast === 'function') {
+        UI.toast(`${zone ? zone.name : 'Zone'}: ${weaponLabel(w)}!`, 3800);
+      }
       if (typeof game !== 'undefined' && game && typeof game.banner === 'function') {
         game.banner(weaponLabel(w), 2.1, col, 34);
       }
-      AudioSys.sfx('newmonster');
+      if (typeof AudioSys !== 'undefined' && AudioSys && typeof AudioSys.sfx === 'function') {
+        AudioSys.sfx('newmonster');
+      }
     } catch (_) {}
   }
   return true;
@@ -5645,8 +5654,12 @@ function grantZoneBossClearWeapon(levelN, diffId) {
 /* —— On-hit effecten voor zone-wapens —— */
 function applyWeaponOnHitEffect(game, fighter, target, hit) {
   if (!game || !fighter || !target || !target.alive) return;
+  // Alleen monsters (niet versus/training fighters) — burn/bleed verwachten size/sp
+  if (!target.sp || !(target.size > 0)) return;
   const w = fighter.weapon;
   if (!w || !w.effect) return;
+  // DoT / splash-rehit mag geen nieuwe effect-keten starten
+  if (hit && (hit.kind === 'dot' || hit.skipEffect)) return;
   const effect = w.effect;
   const dmg = (hit && hit.dmg) || 10;
   const finisher = !!(hit && hit.finisher);
@@ -5739,7 +5752,7 @@ function applyWeaponOnHitEffect(game, fighter, target, hit) {
         if (dist2 > r * r) continue;
         const splash = Math.max(3, Math.round(dmg * aoeMul * (m === target ? 0.35 : 1)));
         if (m !== target) {
-          try { m.takeDamage(splash, (fighter.face || 1) * 120, game, { kind: 'weapon' }); } catch (_) {}
+          try { m.takeDamage(splash, (fighter.face || 1) * 120, game, { kind: 'weapon', skipHitSfx: true, quiet: true }); } catch (_) {}
         }
       }
       try {
@@ -5808,7 +5821,7 @@ function tickWeaponStatusEffects(game, dt) {
       if (m.wpnBurnTick <= 0) {
         m.wpnBurnTick = 0.55;
         const d = Math.max(1, m.wpnBurnDmg || 2);
-        try { m.takeDamage(d, 0, game, { kind: 'weapon' }); } catch (_) {}
+        try { m.takeDamage(d, 0, game, { kind: 'dot', skipHitSfx: true, quiet: true }); } catch (_) {}
         try { game.burst(m.x, m.y - m.size * 0.4, '#ff6a3d', 3, { kind: 'spark', size: 1.5 }); } catch (_) {}
       }
     }
@@ -5818,7 +5831,7 @@ function tickWeaponStatusEffects(game, dt) {
       if (m.wpnBleedTick <= 0) {
         m.wpnBleedTick = 0.45;
         const d = Math.max(1, m.wpnBleedDmg || 2);
-        try { m.takeDamage(d, 0, game, { kind: 'weapon' }); } catch (_) {}
+        try { m.takeDamage(d, 0, game, { kind: 'dot', skipHitSfx: true, quiet: true }); } catch (_) {}
       }
     }
   }
@@ -5831,7 +5844,7 @@ function tickWeaponStatusEffects(game, dt) {
         game._wpnFlutterQueue.splice(i, 1);
         continue;
       }
-      try { q.target.takeDamage(q.dmg, q.face * 40, game, { kind: 'weapon' }); } catch (_) {}
+      try { q.target.takeDamage(q.dmg, q.face * 40, game, { kind: 'dot', skipHitSfx: true, quiet: true }); } catch (_) {}
       try { game.burst(q.target.x, q.target.y - q.target.size * 0.3, '#c47aff', 4, { kind: 'spark', size: 1.8 }); } catch (_) {}
       q.left -= 1;
       q.t = 0.1;
@@ -18040,8 +18053,10 @@ class Monster {
     this.flashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.14 : opts.crit ? 0.12 : 0.1);
     const kb = scaleKnockback(kbx, dmg, { crit: opts.crit, kind: opts.kind });
     this.x += Math.sign(kb || 1) * clamp(Math.abs(kb) * 0.038, 5, 26);
-    game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
-    game.burst(this.x, this.y, this.sp.c1, dmg >= 18 ? 9 : 6);
+    if (!opts.quiet) {
+      game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
+      game.burst(this.x, this.y, this.sp.c1, dmg >= 18 ? 9 : 6);
+    }
     if (opts.crit) spawnFxRing(game, this.x, this.y - this.size * 0.4, '#ffd75e', fxLite() ? 5 : 8);
     if (this.hp <= 0) {
       this.hp = 0; this.deadT = 0;
@@ -30402,15 +30417,30 @@ const UI = {
       nameEl.style.color = locked ? '#8fa3d9' : '#fff';
     }
     if (rarEl) {
-      rarEl.innerHTML = locked
-        ? `<span class="rar-pill" style="color:#8fa3d9;border-color:#8fa3d9">Lv ${base.unlock}</span>`
-        : `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>` +
+      const zone = base.dropZone ? weaponDropZoneOf(base) : null;
+      if (locked) {
+        rarEl.innerHTML = zone
+          ? `<span class="rar-pill" style="color:${zone.color};border-color:${zone.color}">${zone.name}</span>`
+          : `<span class="rar-pill" style="color:#8fa3d9;border-color:#8fa3d9">Lv ${base.unlock}</span>`;
+      } else {
+        rarEl.innerHTML =
+          `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>` +
+          (zone ? ` <span class="rar-pill" style="color:${zone.color};border-color:${zone.color}">${zone.name}</span>` : '') +
           (save.weapon === w.id ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Actief</span>' : '');
+      }
     }
     if (statsEl) {
-      statsEl.textContent = locked
-        ? 'Nog vergrendeld — level verder in avontuur'
-        : `${weaponDesc(w)} · x${w.dmg} dmg · bereik ${w.range} · spd x${w.speed}`;
+      const effectTxt = weaponEffectLabel(base);
+      if (locked) {
+        const zone = base.dropZone ? weaponDropZoneOf(base) : null;
+        statsEl.textContent = zone
+          ? `Drop in ${zone.name}-zone of Nightmare 2.0 / Hell 3.0`
+          : 'Nog vergrendeld — level verder in avontuur';
+      } else {
+        statsEl.textContent =
+          `${weaponDesc(w)} · x${w.dmg} dmg · bereik ${w.range} · spd x${w.speed}` +
+          (effectTxt ? ` · ${effectTxt}` : '');
+      }
     }
     const c = cv.getContext('2d');
     if (!c) return;
