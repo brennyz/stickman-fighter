@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | **20** | Code health c5: skillLabel duplicate merge (object+flat i18n), dead code prune (syncPlayLayerWithoutGuard, syncCharFightBtn, eggDailyLine, rollD20Polish, playerWalkRightInput, utilitySkillActive, ensureActiveJutsuValid). v1.18.96 / SW v306. |
 | 2026-07-26 | **7** | Save c5: skill/item upgrade Lv in export meta, import preview, drift detail; progress score tie-break; readSaveJson merge. v1.18.95 / SW v305. |
 | 2026-07-26 | **5** | Performance c5: projectile spawn via perfFx budget/room, verborgen-tab loop ~2 Hz, SceneryArt cache cap per tier. v1.18.94 / SW v304. |
 | 2026-07-26 | **1** | Combat feel c5: avontuur counter-hit op monster telegraph/dash/jutsu (geen dmg×) + dup btnAdventure hub-fix + monster art fallback. v1.18.93 / SW v303. |
