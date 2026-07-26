@@ -1976,9 +1976,10 @@ class Game {
         }, critMeta));
       } else if (behavior === 'slash') {
         // Lichtschits-golf: expandeert links én rechts, strook tapert met afstand
-        const r0 = ((sk.radius || 42) + jb.radius) * sc;
+        // jb.radius = skill-upgrades → duidelijk dikkere strook per level
+        const r0 = ((sk.radius || 42) + jb.radius * 1.35) * sc;
         const expand = (sk.speed || 720) * jb.speedMul * sc;
-        const maxReach = (460 + jb.radius * 10) * sc;
+        const maxReach = (460 + jb.radius * 8) * sc;
         this.spawnProjectile(Object.assign({
           x: f.x + ox, y: y0 + oy,
           vx: 0, vy: 0, r: r0, r0, dmg: dmg * sc,

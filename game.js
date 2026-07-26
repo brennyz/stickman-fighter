@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.101';
+const APP_VERSION = '1.18.102';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 311;
+const SW_CACHE_REV = 312;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -6446,11 +6446,11 @@ const SKILL_DEFS = {
   rinnegan: {
     id: 'rinnegan', group: 'jutsu', color: '#c47aff',
     steps: [
-      { dmgMul: 1.1, radius: 2 },
-      { dmgMul: 1.08, speedMul: 1.08, energySave: 5 },
-      { dmgMul: 1.1, radius: 3, lifeMul: 1.1 },
-      { dmgMul: 1.12, windupMul: 0.9, speedMul: 1.06 },
-      { dmgMul: 1.14, radius: 3, energySave: 8, pierceRepeat: 0.15 },
+      { dmgMul: 1.1, radius: 5 },
+      { dmgMul: 1.08, speedMul: 1.08, energySave: 5, radius: 4 },
+      { dmgMul: 1.1, radius: 6, lifeMul: 1.1 },
+      { dmgMul: 1.12, windupMul: 0.9, speedMul: 1.06, radius: 5 },
+      { dmgMul: 1.14, radius: 7, energySave: 8, pierceRepeat: 0.15 },
     ],
   },
   subst: {
@@ -6809,8 +6809,8 @@ const SKILLS = [
   { id: 'rinnegan', name: 'Rinnegan', saga: 'scroll', needLvl: 22,
     behavior: 'slash', dmgMul: 2.95, windup: 0.42, speed: 720, radius: 42, pierce: true, life: 0.68,
     color: '#c47aff', sfx: 'rinnegan', banner: 'RINNEGAN!', kb: 580,
-    hint: 'Lv 22', tooltip: 'Lichtschits-explosie links én rechts — strook dik bij jou, dun verderop.',
-    bonus: '2-richting slash · taper' },
+    hint: 'Lv 22', tooltip: 'Lichtschits-explosie links én rechts — strook dik bij jou, dun verderop. Upgrades = dikkere strook.',
+    bonus: '2-richting slash · taper · dikker per Lv' },
   { id: 'eight_gates', name: '8 poorten', saga: 'scroll', needLvl: 24,
     behavior: 'dash', dmgMul: 3.05, windup: 0.55, speed: 680, radius: 26, pierce: true, life: 0.38,
     dashVx: 420, color: '#ff6b6b', sfx: 'chidori', banner: '8 GATES!', kb: 580,
@@ -22251,9 +22251,10 @@ class Game {
         }, critMeta));
       } else if (behavior === 'slash') {
         // Lichtschits-golf: expandeert links én rechts, strook tapert met afstand
-        const r0 = ((sk.radius || 42) + jb.radius) * sc;
+        // jb.radius = skill-upgrades → duidelijk dikkere strook per level
+        const r0 = ((sk.radius || 42) + jb.radius * 1.35) * sc;
         const expand = (sk.speed || 720) * jb.speedMul * sc;
-        const maxReach = (460 + jb.radius * 10) * sc;
+        const maxReach = (460 + jb.radius * 8) * sc;
         this.spawnProjectile(Object.assign({
           x: f.x + ox, y: y0 + oy,
           vx: 0, vy: 0, r: r0, r0, dmg: dmg * sc,

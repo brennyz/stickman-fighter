@@ -108,6 +108,23 @@ async function run() {
     const kbL = projKnockDir(wave || { slashWave: true, x: 200 }, 50);
     const kbR = projKnockDir(wave || { slashWave: true, x: 200 }, 350);
 
+    // Upgrade → dikkere strook (Lv0 < Lv3 < Lv5)
+    const measure = (lv) => {
+      save.skillUpgrades = save.skillUpgrades || {};
+      save.skillUpgrades.rinnegan = { level: lv, shards: 0 };
+      game.projectiles = [];
+      game.spawnJutsu(p, { jutsu: 'rinnegan', dmg: 40 });
+      const w = game.projectiles.find((pr) => pr.slashWave);
+      return w ? { r0: w.r0, maxReach: w.slashMaxReach, jbR: jutsuSkillBonuses('rinnegan').radius } : null;
+    };
+    const u0 = measure(0);
+    const u3 = measure(3);
+    const u5 = measure(5);
+    const upgradeThicker = !!(u0 && u3 && u5
+      && u5.r0 > u3.r0 + 4
+      && u3.r0 > u0.r0 + 4
+      && u5.r0 >= u0.r0 * 1.35);
+
     return {
       ok: !!(
         sk.behavior === 'slash'
@@ -123,6 +140,7 @@ async function run() {
         && kbL < 0
         && kbR > 0
         && typeof drawRinneganSlashWave === 'function'
+        && upgradeThicker
         && errors.length === 0
       ),
       behavior: sk.behavior,
@@ -139,6 +157,10 @@ async function run() {
       kbL,
       kbR,
       hasDraw: typeof drawRinneganSlashWave === 'function',
+      upgradeThicker,
+      u0,
+      u3,
+      u5,
       errors,
     };
   });
