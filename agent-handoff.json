@@ -314,6 +314,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T20:25:16Z",
+      "summary": "Merge main + Satan harden (conflicts opgelost) · v1.18.122"
+    },
+    {
       "at": "2026-07-26T20:18:19Z",
       "summary": "Merge origin/main + Satan harden/SVG · v1.18.122"
     },
@@ -408,10 +412,6 @@
     {
       "at": "2026-07-26T19:05:55Z",
       "summary": "Merge d6 pause-duck van main + audio diversity · check gekke dingen"
-    },
-    {
-      "at": "2026-07-26T19:05:49Z",
-      "summary": "Zone-wapens gekoppeld/gecheckt/geharden · live v1.18.109"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
