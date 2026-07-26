@@ -22,7 +22,7 @@
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "rasengan spawnJutsu fix + wave-clear orb purge · PR pending"
+    "note": "rasengan + wave-clear fixes + menu polish merged · PR ready"
   },
   "userWishlist": [
     {
@@ -118,12 +118,12 @@
       "summary": "Stabiliteit: slice-guards, check:critical, save-fuzz · v1.18.80"
     },
     {
-      "at": "2026-07-26T07:19:14Z",
-      "summary": "Wave-clear hiccup: partBoundaryWaveIdx terug na module-split · v1.18.79"
+      "at": "2026-07-26T07:30:00Z",
+      "summary": "Menu opaque hub icons/tiles + stickmen top-band · v1.18.79"
     },
     {
-      "at": "2026-07-26T08:00:00Z",
-      "summary": "Wave-clear hiccup: herstel partBoundaryWaveIdx + playerWalkInput na module-split · v1.18.79"
+      "at": "2026-07-26T07:19:14Z",
+      "summary": "Wave-clear hiccup: partBoundaryWaveIdx terug na module-split · v1.18.79"
     },
     {
       "at": "2026-07-26T07:10:13Z",
