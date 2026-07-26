@@ -113,6 +113,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T10:03:19Z",
+      "summary": "ASSET-STYLE: inventaris + assets/ui saga/ach/lock/island SVGs structureel; buttons al live · v1.18.90"
+    },
+    {
       "at": "2026-07-26T09:31:28Z",
       "summary": "ASSET-STYLE: saga/ach/lock/eiland → assets/ui SVGs; hub/modes/chrome compliance; v1.18.89"
     },
@@ -207,10 +211,6 @@
     {
       "at": "2026-07-25T21:05:00Z",
       "summary": "Stabiliteit: char select crash, claim batch, gamble race, lastPlay · v1.18.60"
-    },
-    {
-      "at": "2026-07-25T20:15:00Z",
-      "summary": "Adventure tap→startscherm: restore playInputSuppressed + soft window-error guard · v1.18.57"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
