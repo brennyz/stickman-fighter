@@ -11,20 +11,19 @@ const VS_SAGAS = {
 };
 function vsSagaMeta(id) { return VS_SAGAS[id] || VS_SAGAS.scroll; }
 
-/** Saga-iconen als inline SVG (art-upgrade 4/4) — vervangt emoji-chips. */
-const SAGA_ICON_SVG = {
-  all: '<path d="M12 3l2 6h6l-5 4 2 6-5-3.6L7 19l2-6-5-4h6z" fill="currentColor" stroke="none"/>',
-  ki: '<path d="M12 3c3 3.5 5.5 6 5.5 10a5.5 5.5 0 01-11 0c0-2 .8-3.6 2-5.4.4 1.4 1 2.2 2 2.9C10.2 8 10.8 5.5 12 3z" fill="currentColor" stroke="none"/>',
-  scroll: '<path d="M7 4h11v14H7z"/><path d="M7 4a2 2 0 00-2 2v12a2 2 0 002 2h11"/><path d="M10 8h5M10 12h5"/>',
-  tide: '<path d="M3 12c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/><path d="M3 17c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/>',
-  cape: '<path d="M12 3l7 4-2 13-5 2-5-2L5 7z"/><path d="M12 3v19"/>',
-  fighter: '<path d="M8 4h8v4H8zM6 8h12v12H6z"/><path d="M9 12h6M9 16h6"/>',
-  dawn: '<circle cx="12" cy="14" r="4.5"/><path d="M12 5.5V3M5.5 8L4 6.5M18.5 8L20 6.5M3 14h2M19 14h2"/>',
+/** Saga-iconen als ASSET-STYLE files in assets/ui/ (vervangt inline SVG). */
+const SAGA_ICON_SRC = {
+  all: 'assets/ui/saga-all.svg',
+  fighter: 'assets/ui/saga-fighter.svg',
+  ki: 'assets/ui/saga-ki.svg',
+  scroll: 'assets/ui/saga-scroll.svg',
+  tide: 'assets/ui/saga-tide.svg',
+  cape: 'assets/ui/saga-cape.svg',
+  dawn: 'assets/ui/saga-dawn.svg',
 };
 function sagaIconSvg(id) {
-  const body = SAGA_ICON_SVG[id] || SAGA_ICON_SVG.all;
-  return '<svg viewBox="0 0 24 24" style="width:1.05em;height:1.05em;vertical-align:-0.16em" ' +
-    'fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg>';
+  const src = SAGA_ICON_SRC[id] || SAGA_ICON_SRC.all;
+  return '<img class="saga-ico" src="' + src + '" alt="" width="16" height="16" decoding="async" draggable="false">';
 }
 function rosterFlair(r) { return r.flair || r.tag; }
 
