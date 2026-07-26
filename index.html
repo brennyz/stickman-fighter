@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=285">
+<link rel="stylesheet" href="styles/main.css?v=286">
 
 
 
@@ -23,6 +23,15 @@
 </head>
 <body>
 <button id="pauseBtn" aria-label="Pauze">&#10074;&#10074;</button>
+<!-- Dobbel-flash buiten .screen — zichtbaar bij Continue én level-tik -->
+<div id="levelRollFlash" class="level-roll-flash" hidden aria-hidden="true">
+  <div class="level-roll-flash-card">
+    <div id="levelRollDice" class="level-roll-dice">? ?</div>
+    <div id="levelRollSum" class="level-roll-sum"></div>
+    <div id="levelRollOutcome" class="level-roll-outcome"></div>
+  </div>
+</div>
+
 <div id="toastHost"></div>
 <div id="versionUpdateOverlay" class="version-update-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="versionUpdateTitle">
   <div class="version-update-card">
@@ -85,7 +94,7 @@
       <div class="arcade-pre" id="menuArcadePre">KIES JE PAD</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine">insert coin</p>
-      <div class="subtitle" id="menuVerLine">v1.18.75 · arcade</div>
+      <div class="subtitle" id="menuVerLine">v1.18.76 · arcade</div>
     </header>
     <div class="arcade-menu-body menu-landing-body">
       <div class="menu-landing-scroll">
@@ -255,14 +264,6 @@
   <div id="levelIslandInfo" class="island-info"></div>
   <div class="grid island-grid" id="levelGrid"></div>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><img src="assets/buttons/chrome/home.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><span class="sub-home-label">Terug naar menu</span></button></div>
-  <!-- Flash IN levelScreen: mee-hidden als .screen niet active (ochtend-aanpak) -->
-  <div id="levelRollFlash" class="level-roll-flash" hidden aria-hidden="true">
-    <div class="level-roll-flash-card">
-      <div id="levelRollDice" class="level-roll-dice">? ?</div>
-      <div id="levelRollSum" class="level-roll-sum"></div>
-      <div id="levelRollOutcome" class="level-roll-outcome"></div>
-    </div>
-  </div>
 </div>
 
 <div id="gambleScreen" class="screen">
@@ -590,12 +591,12 @@
 
 <script>
 /* HTML↔JS handshake: als oude SW nog oude game.js serveert terwijl menu-HTML nieuw is. */
-window.__SF_EXPECT_REV = 285;
-window.__SF_EXPECT_APP = '1.18.75';
+window.__SF_EXPECT_REV = 286;
+window.__SF_EXPECT_APP = '1.18.76';
 </script>
-<script src="tunnel-check.js?v=285"></script>
-<script src="game.js?v=285"></script>
-<script src="install.js?v=285"></script>
+<script src="tunnel-check.js?v=286"></script>
+<script src="game.js?v=286"></script>
+<script src="install.js?v=286"></script>
 <script>
 (function () {
   function nukeStale(reason) {

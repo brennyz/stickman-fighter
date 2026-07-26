@@ -91,4 +91,15 @@ if (stillOpen > 0 || screenStack.length > 0) {
   fail(`<canvas id="game"> is nested ${screenStack.length} div(s) deep (${stillOpen} .screen) — must be a direct <body> child`);
 }
 
+// Dobbel-flash moet BUITEN .screen staan — anders display:none bij Continue vanaf menu
+{
+  const flashIdx = html.indexOf('id="levelRollFlash"');
+  if (flashIdx === -1) fail('missing #levelRollFlash');
+  const levelOpen = html.indexOf('id="levelScreen"');
+  const levelCloseGuess = html.indexOf('id="gambleScreen"');
+  if (levelOpen !== -1 && levelCloseGuess !== -1 && flashIdx > levelOpen && flashIdx < levelCloseGuess) {
+    fail('#levelRollFlash is inside #levelScreen — Continue dice flash is invisible & start aborted');
+  }
+}
+
 console.log(`SMOKE_OK index.html balanced · canvas#game direct in <body> · ${openScreens} screens before it`);
