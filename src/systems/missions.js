@@ -1877,6 +1877,10 @@ function gokGooiStartLevel(n) {
       gokScreenTimer = null;
       if (startGen !== gambleSfxGen) { gokStartBusy = false; return; }
       if ((state === 'play' && game) || state === 'result') { gokStartBusy = false; return; }
+      if (typeof levelScreenActive === 'function' && !levelScreenActive()) {
+        gokStartBusy = false;
+        return;
+      }
       try { UI.hideGambleRollFlash(); } catch (_) {}
       startAdventureFromGamble(false);
     }, delay);
@@ -1904,6 +1908,11 @@ function gokGooiStartFromScreen() {
       gokScreenTimer = null;
       if (startGen !== gambleSfxGen) { gokStartBusy = false; return; }
       if ((state === 'play' && game) || state === 'result') { gokStartBusy = false; return; }
+      const gambleEl = document.getElementById('gambleScreen');
+      if (!gambleEl || !gambleEl.classList.contains('active')) {
+        gokStartBusy = false;
+        return;
+      }
       startAdventureFromGamble(false);
     }, delay);
   } catch (err) {
@@ -2227,7 +2236,9 @@ function headLiveFromPage() {
 }
 
 function ensureTipsSeen() {
-  if (!save.tipsSeen || typeof save.tipsSeen !== 'object') save.tipsSeen = {};
+  if (!save.tipsSeen || typeof save.tipsSeen !== 'object' || Array.isArray(save.tipsSeen)) {
+    save.tipsSeen = typeof sanitizeTipsSeen === 'function' ? sanitizeTipsSeen(save.tipsSeen) : {};
+  }
 }
 
 function modeOnboardingSeen(mode) {

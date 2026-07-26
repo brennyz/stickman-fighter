@@ -993,6 +993,14 @@ const UI = {
 
   safeOpen(screenId, renderFn, opts) {
     opts = opts || {};
+    if (screenId !== 'levelScreen' && screenId !== 'gambleScreen') {
+      try {
+        if (typeof gamblePending === 'function' && gamblePending()) {
+          bumpLevelHoldGen();
+          cancelGambleStart();
+        }
+      } catch (_) {}
+    }
     const el = document.getElementById(screenId);
     if (!el) {
       sfReportError('safeOpen/' + screenId, new Error('missing screen DOM'), 'Scherm niet gevonden — terug naar menu');

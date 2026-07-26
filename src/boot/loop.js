@@ -324,6 +324,7 @@ function loop(now) {
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
+    try { cancelGambleStart(); } catch (_) {}
     if (state === 'play' && game && !game.over) {
       try { Input.releaseAll(); } catch (_) {}
       state = 'pause';
@@ -460,6 +461,7 @@ window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
 window.addEventListener('pageshow', (ev) => {
   if (ev.persisted) {
+    try { cancelGambleStart(); } catch (_) {}
     try { Input.releaseAll(); } catch (_) {}
     if (state === 'play' && game && !game.over) {
       state = 'pause';

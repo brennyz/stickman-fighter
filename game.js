@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.72';
+const APP_VERSION = '1.18.73';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 282;
+const SW_CACHE_REV = 283;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -4020,6 +4020,10 @@ function gokGooiStartLevel(n) {
       gokScreenTimer = null;
       if (startGen !== gambleSfxGen) { gokStartBusy = false; return; }
       if ((state === 'play' && game) || state === 'result') { gokStartBusy = false; return; }
+      if (typeof levelScreenActive === 'function' && !levelScreenActive()) {
+        gokStartBusy = false;
+        return;
+      }
       try { UI.hideGambleRollFlash(); } catch (_) {}
       startAdventureFromGamble(false);
     }, delay);
@@ -4047,6 +4051,11 @@ function gokGooiStartFromScreen() {
       gokScreenTimer = null;
       if (startGen !== gambleSfxGen) { gokStartBusy = false; return; }
       if ((state === 'play' && game) || state === 'result') { gokStartBusy = false; return; }
+      const gambleEl = document.getElementById('gambleScreen');
+      if (!gambleEl || !gambleEl.classList.contains('active')) {
+        gokStartBusy = false;
+        return;
+      }
       startAdventureFromGamble(false);
     }, delay);
   } catch (err) {
@@ -4370,7 +4379,9 @@ function headLiveFromPage() {
 }
 
 function ensureTipsSeen() {
-  if (!save.tipsSeen || typeof save.tipsSeen !== 'object') save.tipsSeen = {};
+  if (!save.tipsSeen || typeof save.tipsSeen !== 'object' || Array.isArray(save.tipsSeen)) {
+    save.tipsSeen = typeof sanitizeTipsSeen === 'function' ? sanitizeTipsSeen(save.tipsSeen) : {};
+  }
 }
 
 function modeOnboardingSeen(mode) {
@@ -19153,7 +19164,7 @@ class Game {
         : t('combat.allyHelps', { name: this.stageAlly.name });
       this.floater(W * 0.5, 118, intro, this.stageAlly.color || '#7cf5ff', 15);
     }
-    if (!save.tipsSeen) save.tipsSeen = {};
+    ensureTipsSeen();
     if (!save.tipsSeen.partGate && n <= 8) {
       setTimeout(() => {
         try {
@@ -24852,6 +24863,14 @@ const UI = {
 
   safeOpen(screenId, renderFn, opts) {
     opts = opts || {};
+    if (screenId !== 'levelScreen' && screenId !== 'gambleScreen') {
+      try {
+        if (typeof gamblePending === 'function' && gamblePending()) {
+          bumpLevelHoldGen();
+          cancelGambleStart();
+        }
+      } catch (_) {}
+    }
     const el = document.getElementById(screenId);
     if (!el) {
       sfReportError('safeOpen/' + screenId, new Error('missing screen DOM'), 'Scherm niet gevonden — terug naar menu');
@@ -28385,6 +28404,7 @@ function loop(now) {
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
+    try { cancelGambleStart(); } catch (_) {}
     if (state === 'play' && game && !game.over) {
       try { Input.releaseAll(); } catch (_) {}
       state = 'pause';
@@ -28521,6 +28541,7 @@ window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
 window.addEventListener('pageshow', (ev) => {
   if (ev.persisted) {
+    try { cancelGambleStart(); } catch (_) {}
     try { Input.releaseAll(); } catch (_) {}
     if (state === 'play' && game && !game.over) {
       state = 'pause';

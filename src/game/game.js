@@ -195,7 +195,7 @@ class Game {
         : t('combat.allyHelps', { name: this.stageAlly.name });
       this.floater(W * 0.5, 118, intro, this.stageAlly.color || '#7cf5ff', 15);
     }
-    if (!save.tipsSeen) save.tipsSeen = {};
+    ensureTipsSeen();
     if (!save.tipsSeen.partGate && n <= 8) {
       setTimeout(() => {
         try {
