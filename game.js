@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.78';
+const APP_VERSION = '1.18.79';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 288;
+const SW_CACHE_REV = 289;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -28456,7 +28456,8 @@ function paintMenuHeroCanvas(t) {
   if (typeof drawMenuPixelGroundStrip === 'function') {
     drawMenuPixelGroundStrip(c, Ws, Hs, t);
   }
-  const footY = Hs - Math.max(18, Math.round(Hs * 0.09)) + 2;
+  // Stickmen in bovenste band (niet achter hub-tegels)
+  const footY = Math.round(Hs * 0.72);
   const walk = motionReduced() ? 0 : Math.sin(t * 3.2) * 2;
   const stroll = motionReduced() ? 0 : Math.sin(t * 0.55) * (Ws * 0.03);
   const drawTourist = (x, face, col, scale) => {
@@ -28488,9 +28489,8 @@ function paintMenuHeroCanvas(t) {
     c.fill();
     c.restore();
   };
-  // Muted stickmen — less neon
-  drawTourist(Ws * 0.24, 1, '#d0d4da', 0.85);
-  drawTourist(Ws * 0.40, -1, '#c09098', 1);
+  drawTourist(Ws * 0.28, 1, '#e8ecf2', 0.9);
+  drawTourist(Ws * 0.46, -1, '#e0a8b0', 1.05);
 }
 
 function loop(now) {

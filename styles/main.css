@@ -194,35 +194,39 @@
     #menuScreen.menu-hub-landing h1.title.arcade-logo { font-size: min(7.5vw, 36px); }
   }
 
-  /* —— Menu video overhaul (fase 1): full-bleed stage + glass zones —— */
+  /* —— Menu video overhaul (fase 1): top-band stage + opaque tiles —— */
   #menuScreen.menu-video-overhaul {
-    --menu-glass-title: rgba(8, 12, 22, 0.55);
-    --menu-glass-tile: rgba(8, 12, 22, 0.28);
-    --menu-glass-meta: rgba(8, 12, 22, 0.42);
-    --menu-glass-lang: rgba(8, 12, 22, 0.35);
-    --menu-glass-blur: 10px;
+    --menu-glass-title: rgba(12, 18, 28, 0.92);
+    --menu-tile-solid: #162033;
+    --menu-tile-solid-hi: #1c2940;
+    --menu-glass-meta: rgba(12, 18, 28, 0.94);
+    --menu-glass-lang: rgba(12, 18, 28, 0.9);
+    --menu-glass-blur: 0px;
     --menu-ink: #f2efe6;
-    --menu-ink-muted: rgba(242, 239, 230, 0.78);
+    --menu-ink-muted: #c8d0dc;
     --menu-accent: #7cf5aa;
-    --menu-edge: rgba(255, 255, 255, 0.14);
+    --menu-edge: rgba(255, 255, 255, 0.16);
     background: #0a1218;
     padding: 0;
     justify-content: flex-start;
   }
   #menuScreen.menu-video-overhaul::before { display: none; }
   #menuScreen.menu-video-overhaul > * { position: relative; z-index: 1; }
+  /* Stickman-scène alleen boven — niet achter de knoppen */
   #menuScreen.menu-video-overhaul .menu-stage {
     position: fixed;
     top: var(--vv-top, 0);
     left: var(--vv-left, 0);
     width: var(--vv-w, 100%);
-    height: var(--vv-h, 100dvh);
+    height: min(38dvh, 280px);
     z-index: 0;
     pointer-events: none;
     overflow: hidden;
     background:
-      radial-gradient(ellipse 90% 60% at 50% 20%, rgba(90, 140, 160, 0.28), transparent 60%),
-      linear-gradient(180deg, #3a5a72 0%, #1a2834 55%, #0a1218 100%);
+      radial-gradient(ellipse 90% 70% at 50% 30%, rgba(90, 140, 160, 0.32), transparent 65%),
+      linear-gradient(180deg, #3a5a72 0%, #1a2834 70%, #0a1218 100%);
+    -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
   }
   #menuScreen.menu-video-overhaul .menu-hero-canvas,
   #menuScreen.menu-video-overhaul .menu-hero-fallback {
@@ -233,7 +237,7 @@
     max-height: none;
     aspect-ratio: auto;
     object-fit: cover;
-    object-position: center 42%;
+    object-position: center 58%;
     image-rendering: pixelated;
     background: transparent;
   }
@@ -261,15 +265,15 @@
     color: var(--menu-ink);
     background: var(--menu-glass-title);
     border: 1px solid var(--menu-edge);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    -webkit-backdrop-filter: blur(var(--menu-glass-blur));
-    backdrop-filter: blur(var(--menu-glass-blur));
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
     animation: menuGlassIn 0.45s ease both;
   }
   #menuScreen.menu-video-overhaul .arcade-pre {
     color: var(--menu-ink-muted);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
-    opacity: 0.9;
+    opacity: 1;
     letter-spacing: 0.28em;
   }
   #menuScreen.menu-video-overhaul h1.title.arcade-logo {
@@ -287,7 +291,7 @@
     color: rgba(255, 196, 170, 0.92);
     font-size: 11px;
     margin: 8px 0 0;
-    opacity: 0.95;
+    opacity: 1;
   }
   #menuScreen.menu-video-overhaul .press-start { display: none; }
   #menuScreen.menu-video-overhaul .menu-landing-body {
@@ -305,13 +309,15 @@
     align-items: center;
     padding: 0 0 10px;
   }
+  /* Hub-tegels: 0 doorzichtigheid — iconen en knoppen solid */
   #menuScreen.menu-video-overhaul .hub-tile {
-    background: var(--menu-glass-tile);
+    background: var(--menu-tile-solid);
     border-color: var(--menu-edge);
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    -webkit-backdrop-filter: blur(calc(var(--menu-glass-blur) * 0.7));
-    backdrop-filter: blur(calc(var(--menu-glass-blur) * 0.7));
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
     color: var(--menu-ink);
+    opacity: 1;
     animation: menuTileIn 0.4s ease both;
   }
   #menuScreen.menu-video-overhaul .hub-tile:nth-child(1) { animation-delay: 0.05s; }
@@ -321,26 +327,51 @@
   #menuScreen.menu-video-overhaul .hub-tile-title { color: var(--menu-ink); opacity: 1; }
   #menuScreen.menu-video-overhaul .hub-tile-sub { color: var(--menu-ink-muted); opacity: 1; }
   #menuScreen.menu-video-overhaul .hub-tile-stat {
-    background: rgba(0, 0, 0, 0.28);
+    background: rgba(0, 0, 0, 0.45);
     color: #e8f0ff;
+    opacity: 1;
   }
   #menuScreen.menu-video-overhaul .hub-tile-ico {
-    background: rgba(0, 0, 0, 0.22);
+    background: #0c1422;
+    opacity: 1;
+  }
+  #menuScreen.menu-video-overhaul .hub-tile-ico img {
+    opacity: 1 !important;
+    filter: none;
   }
   #menuScreen.menu-video-overhaul .hub-tile-collect {
     background:
-      linear-gradient(135deg, rgba(176, 106, 224, 0.12), transparent 42%),
-      var(--menu-glass-tile);
+      linear-gradient(135deg, rgba(176, 106, 224, 0.22), transparent 42%),
+      var(--menu-tile-solid);
+  }
+  #menuScreen.menu-video-overhaul .hub-tile-adventure {
+    background:
+      linear-gradient(135deg, rgba(78, 207, 106, 0.18), transparent 45%),
+      var(--menu-tile-solid);
+  }
+  #menuScreen.menu-video-overhaul .hub-tile-arcade {
+    background:
+      linear-gradient(135deg, rgba(90, 140, 255, 0.18), transparent 45%),
+      var(--menu-tile-solid);
+  }
+  #menuScreen.menu-video-overhaul .hub-tile-versus {
+    background:
+      linear-gradient(135deg, rgba(255, 90, 138, 0.18), transparent 45%),
+      var(--menu-tile-solid);
   }
   #menuScreen.menu-video-overhaul .menu-profile-bar,
   #menuScreen.menu-video-overhaul .menu-landing-inner > .btn.mode-btn.b-continue {
-    background: var(--menu-glass-tile);
+    background: var(--menu-tile-solid-hi);
     border-color: var(--menu-edge);
-    -webkit-backdrop-filter: blur(calc(var(--menu-glass-blur) * 0.7));
-    backdrop-filter: blur(calc(var(--menu-glass-blur) * 0.7));
-    color: var(--menu-ink-muted);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    color: var(--menu-ink);
+    opacity: 1;
   }
-  #menuScreen.menu-video-overhaul .menu-hub-hint { color: var(--menu-ink-muted); }
+  #menuScreen.menu-video-overhaul .menu-landing-inner > .btn.mode-btn.b-continue .ico img {
+    opacity: 1 !important;
+  }
+  #menuScreen.menu-video-overhaul .menu-hub-hint { color: var(--menu-ink-muted); opacity: 1; }
   #menuScreen.menu-video-overhaul .menu-utility-row {
     width: min(92vw, 520px);
     margin: auto auto 0;
@@ -392,18 +423,28 @@
     background: var(--menu-glass-meta);
     border: 1px solid var(--menu-edge);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    -webkit-backdrop-filter: blur(var(--menu-glass-blur));
-    backdrop-filter: blur(var(--menu-glass-blur));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
   #menuScreen.menu-video-overhaul .menu-meta-dock .btn.tog {
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--menu-tile-solid);
     color: var(--menu-ink);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    opacity: 1;
+  }
+  #menuScreen.menu-video-overhaul .menu-meta-dock .btn.tog .tog-ico img {
+    opacity: 1 !important;
   }
   #menuScreen.menu-video-overhaul .menu-meta-cluster .btn.b-install {
     width: 100%;
     margin: 0;
-    opacity: 0.92;
+    opacity: 1;
+    background: var(--menu-tile-solid-hi);
+  }
+  #menuScreen.menu-video-overhaul .menu-lang-compact .dex-filter-btn {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    opacity: 1;
   }
   @keyframes menuGlassIn {
     from { opacity: 0; transform: translateY(-8px); }
@@ -415,10 +456,11 @@
   }
   body.reduced-motion #menuScreen.menu-video-overhaul {
     --menu-glass-blur: 0px;
-    --menu-glass-title: rgba(8, 12, 22, 0.72);
-    --menu-glass-tile: rgba(8, 12, 22, 0.48);
-    --menu-glass-meta: rgba(8, 12, 22, 0.58);
-    --menu-glass-lang: rgba(8, 12, 22, 0.52);
+    --menu-glass-title: #101828;
+    --menu-tile-solid: #162033;
+    --menu-tile-solid-hi: #1c2940;
+    --menu-glass-meta: #121a28;
+    --menu-glass-lang: #121a28;
   }
   body.reduced-motion #menuScreen.menu-video-overhaul .menu-title-glass,
   body.reduced-motion #menuScreen.menu-video-overhaul .hub-tile {
@@ -426,10 +468,11 @@
   }
   body.high-contrast #menuScreen.menu-video-overhaul {
     --menu-glass-blur: 0px;
-    --menu-glass-title: rgba(0, 0, 0, 0.82);
-    --menu-glass-tile: rgba(0, 0, 0, 0.75);
-    --menu-glass-meta: rgba(0, 0, 0, 0.78);
-    --menu-glass-lang: rgba(0, 0, 0, 0.78);
+    --menu-glass-title: #000000;
+    --menu-tile-solid: #0a0a0a;
+    --menu-tile-solid-hi: #121212;
+    --menu-glass-meta: #000000;
+    --menu-glass-lang: #000000;
     --menu-edge: rgba(255, 255, 255, 0.45);
   }
   @media (max-height: 720px) {
@@ -487,19 +530,21 @@
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     #menuScreen.menu-video-overhaul {
       --menu-glass-blur: 0px;
-      --menu-glass-title: rgba(8, 12, 22, 0.78);
-      --menu-glass-tile: rgba(8, 12, 22, 0.62);
-      --menu-glass-meta: rgba(8, 12, 22, 0.7);
-      --menu-glass-lang: rgba(8, 12, 22, 0.66);
+      --menu-glass-title: #101828;
+      --menu-tile-solid: #162033;
+      --menu-tile-solid-hi: #1c2940;
+      --menu-glass-meta: #121a28;
+      --menu-glass-lang: #121a28;
     }
   }
   @media (prefers-reduced-motion: reduce) {
     #menuScreen.menu-video-overhaul {
       --menu-glass-blur: 0px;
-      --menu-glass-title: rgba(8, 12, 22, 0.72);
-      --menu-glass-tile: rgba(8, 12, 22, 0.48);
-      --menu-glass-meta: rgba(8, 12, 22, 0.58);
-      --menu-glass-lang: rgba(8, 12, 22, 0.52);
+      --menu-glass-title: #101828;
+      --menu-tile-solid: #162033;
+      --menu-tile-solid-hi: #1c2940;
+      --menu-glass-meta: #121a28;
+      --menu-glass-lang: #121a28;
     }
     #menuScreen.menu-video-overhaul .menu-title-glass,
     #menuScreen.menu-video-overhaul .hub-tile {
@@ -508,10 +553,11 @@
   }
   body.lite-fx #menuScreen.menu-video-overhaul {
     --menu-glass-blur: 0px;
-    --menu-glass-title: rgba(8, 12, 22, 0.7);
-    --menu-glass-tile: rgba(8, 12, 22, 0.5);
-    --menu-glass-meta: rgba(8, 12, 22, 0.58);
-    --menu-glass-lang: rgba(8, 12, 22, 0.54);
+    --menu-glass-title: #101828;
+    --menu-tile-solid: #162033;
+    --menu-tile-solid-hi: #1c2940;
+    --menu-glass-meta: #121a28;
+    --menu-glass-lang: #121a28;
   }
   body.lite-fx #menuScreen.menu-video-overhaul .menu-title-glass,
   body.lite-fx #menuScreen.menu-video-overhaul .hub-tile {
