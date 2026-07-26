@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.81';
+const APP_VERSION = '1.18.82';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 291;
+const SW_CACHE_REV = 292;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -19515,6 +19515,12 @@ class Game {
     this.monsters = this.monsters.filter((m) => m && m.alive);
   }
 
+  /** Speler-jutsu orbs tussen golven opruimen — geen zwevende Rasengan na wave-clear. */
+  purgePlayerProjectiles() {
+    if (!this.projectiles?.length) return;
+    this.projectiles = this.projectiles.filter((p) => p && p.from !== 'player' && p.from !== 'p1');
+  }
+
   updatePartGate(dt) {
     if (!this.partGate || !this.player?.alive) {
       this.partGate = null;
@@ -19727,6 +19733,7 @@ class Game {
     } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive) && this.player?.alive) {
       if (!this.wavePause && !this.partGate) {
         this.purgeDeadMonsters();
+        this.purgePlayerProjectiles();
         const nextIsBoss = isBossWave(this.level, this.waveIdx + 1);
         const total = this.level.waves.length;
         const isLastWave = this.waveIdx >= total - 1;
@@ -21026,34 +21033,64 @@ class Game {
   }
 
   spawnJutsu(f, atk) {
-    const sk = skillById((atk && atk.jutsu) || fighterJutsuKind(f));
-    const dmg = atk ? atk.dmg : f.baseDmg * (sk.dmgMul || 2.8);
+    const jutsu = (atk && atk.jutsu) || fighterJutsuKind(f);
+    const sk = skillById(jutsu);
+    const jb = jutsuSkillBonuses(jutsu);
+    const dmg = (atk ? atk.dmg : f.baseDmg * (sk.dmgMul || 2.8)) * jb.dmgMul;
     const from = this.projFrom(f);
     const critMeta = projCritMeta(f);
     const behavior = sk.behavior || 'orb';
-    const speed = sk.speed || 420;
+    const speed = (sk.speed || 420) * jb.speedMul;
     const aim = projAimVelocity(f, behavior === 'dash' ? speed : speed * 0.9);
     const y0 = f.y - 50 + clamp(aim.ny, -1, 0.5) * 36;
     const face = f.face || 1;
     const col = sk.color || '#7cf5ff';
 
+    const fireProj = (offX, offY, scale) => {
+      const sc = scale || 1;
+      const ox = offX || 0;
+      const oy = offY || 0;
+      if (behavior === 'dash') {
+        this.spawnProjectile(Object.assign({
+          x: f.x + face * (36 + ox), y: y0 + oy,
+          vx: aim.vx, vy: aim.vy * 0.85, r: ((sk.radius || 22) + jb.radius) * sc, dmg: dmg * sc,
+          life: (sk.life || 0.35) * jb.lifeMul * sc, from, kind: sk.id, pierce: !!sk.pierce,
+          hitSet: new Set(), pierceRepeat: jb.pierceRepeat,
+        }, critMeta));
+      } else if (behavior === 'pull' || behavior === 'meteor') {
+        const sp = behavior === 'meteor' ? speed * 0.55 : speed;
+        this.spawnProjectile(Object.assign({
+          x: f.x + face * (38 + ox), y: y0 + oy,
+          vx: aim.vx * (sp / speed), vy: aim.vy * 0.9, r: ((sk.radius || 30) + jb.radius) * sc, dmg: dmg * sc,
+          from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(), life: (sk.life || 1.05) * jb.lifeMul * sc,
+          spin: 0, pull: !!sk.pull, pullMul: jb.pullMul || 1,
+        }, critMeta));
+      } else if (behavior === 'beam' || behavior === 'disc') {
+        const beamSpeed = speed;
+        const rx = behavior === 'disc' ? (sk.radius || 18) : (sk.radius || 32);
+        this.spawnProjectile(Object.assign({
+          x: f.x + face * (42 + ox), y: y0 + oy,
+          vx: aim.vx || face * beamSpeed, vy: (aim.vy || 0) * 0.35, r: (rx + jb.radius) * sc, dmg: dmg * sc,
+          from, kind: sk.id, pierce: sk.pierce !== false, hitSet: new Set(), life: (sk.life || 1.1) * jb.lifeMul * sc,
+          spin: behavior === 'disc' ? 0.4 : 0,
+        }, critMeta));
+      } else {
+        this.spawnProjectile(Object.assign({
+          x: f.x + face * (40 + ox), y: y0 + oy,
+          vx: aim.vx || face * speed, vy: aim.vy || 0, r: ((sk.radius || 28) + jb.radius) * sc, dmg: dmg * sc,
+          from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(), life: (sk.life || 1.4) * jb.lifeMul * sc,
+          spin: 0, pierceRepeat: jb.pierceRepeat,
+        }, critMeta));
+      }
+    };
+
     if (behavior === 'dash') {
-      this.spawnProjectile(Object.assign({
-        x: f.x + face * 36, y: y0,
-        vx: aim.vx, vy: aim.vy * 0.85, r: sk.radius || 22, dmg, life: sk.life || 0.35,
-        from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(),
-      }, critMeta));
-      f.vx = face * (sk.dashVx || 380);
+      fireProj(0, 0, 1);
+      f.vx = face * (sk.dashVx || 380) * jb.speedMul;
       this.shake(7, 0.2);
       AudioSys.sfx(skillSfxId(sk));
     } else if (behavior === 'pull' || behavior === 'meteor') {
-      const sp = behavior === 'meteor' ? speed * 0.55 : speed;
-      this.spawnProjectile(Object.assign({
-        x: f.x + face * 38, y: y0,
-        vx: aim.vx * (sp / speed), vy: aim.vy * 0.9, r: sk.radius || 30, dmg,
-        from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(), life: sk.life || 1.05,
-        spin: 0, pull: !!sk.pull,
-      }, critMeta));
+      fireProj(0, 0, 1);
       this.burst(f.x + face * 28, y0, col, behavior === 'meteor' ? 18 : 14);
       this.burst(f.x + face * 28, y0, '#ff6b9d', 8);
       this.shake(behavior === 'meteor' ? 10 : 8, 0.24);
@@ -21061,14 +21098,7 @@ class Game {
       AudioSys.sfx(skillSfxId(sk));
       if (f.isPlayer || f.playerSlot) haptic(20);
     } else if (behavior === 'beam' || behavior === 'disc') {
-      const beamSpeed = speed;
-      const rx = behavior === 'disc' ? (sk.radius || 18) : (sk.radius || 32);
-      this.spawnProjectile(Object.assign({
-        x: f.x + face * 42, y: y0,
-        vx: aim.vx || face * beamSpeed, vy: (aim.vy || 0) * 0.35, r: rx, dmg,
-        from, kind: sk.id, pierce: sk.pierce !== false, hitSet: new Set(), life: sk.life || 1.1,
-        spin: behavior === 'disc' ? 0.4 : 0,
-      }, critMeta));
+      fireProj(0, 0, 1);
       this.burst(f.x + face * 34, y0, col, fxLite() ? 8 : 14);
       spawnFxRing(this, f.x + face * 38, y0, col, 12);
       this.shake(8, 0.26);
@@ -21076,12 +21106,7 @@ class Game {
       AudioSys.sfx(skillSfxId(sk));
       if (f.isPlayer || f.playerSlot) haptic(18);
     } else {
-      this.spawnProjectile(Object.assign({
-        x: f.x + face * 40, y: y0,
-        vx: aim.vx || face * speed, vy: aim.vy || 0, r: sk.radius || 28, dmg,
-        from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(), life: sk.life || 1.4,
-        spin: 0,
-      }, critMeta));
+      fireProj(0, 0, 1);
       this.burst(f.x + face * 30, y0, col, fxLite() ? 8 : 16);
       spawnFxRing(this, f.x + face * 34, y0, col, 10);
       this.shake(9, 0.28);
@@ -21096,7 +21121,7 @@ class Game {
     } catch (_) {}
     const extra = (atk && atk.extraShot) || jb.extraShot || 0;
     if (extra > 0 && Math.random() < extra) {
-      fireProj(f.face * 12, rand(-8, 8), 0.72);
+      fireProj(face * 12, rand(-8, 8), 0.72);
     }
   }
 
@@ -21494,6 +21519,7 @@ class Game {
     if (this.mode === 'adventure') tickSuperFx(this, dt);
 
     // projectielen
+    try {
     for (const p of this.projectiles) {
       const skProj = skillExists(p.kind) ? skillById(p.kind) : null;
       p.life -= dt;
@@ -21603,6 +21629,9 @@ class Game {
         }
       }
       if (p.y > this.ground + 10 || p.x < -60 || p.x > W + 60) p.life = 0;
+    }
+    } catch (projErr) {
+      try { sfReportError('projectile/update', projErr, 'Projectiel hiccup — speel door'); } catch (_) {}
     }
     for (const p of this.projectiles) {
       if (p.life <= 0 && !p._impactFx && skillExists(p.kind)) {
