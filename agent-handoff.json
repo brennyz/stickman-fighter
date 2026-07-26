@@ -204,6 +204,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T19:06:15Z",
+      "summary": "Gekke dingen: d6 pause-duck gemerged, pause allowlist, versie 109"
+    },
+    {
       "at": "2026-07-26T19:05:55Z",
       "summary": "Merge d6 pause-duck van main + audio diversity · check gekke dingen"
     },
@@ -298,10 +302,6 @@
     {
       "at": "2026-07-26T18:44:55Z",
       "summary": "Merged boerderij/dierentuin monsters naar main · v1.18.101"
-    },
-    {
-      "at": "2026-07-26T18:39:32Z",
-      "summary": "Rinnegan: pull-orb → tweerichtings lichtschits-slash (taper) · v1.18.101"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
