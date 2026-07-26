@@ -1,10 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
      stroke="#9db8ff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"
      aria-hidden="true">
-  <!-- arcade pad -->
-  <rect x="3.5" y="8" width="17" height="11" rx="3"/>
-  <path d="M8 8V6.5a4 4 0 018 0V8" opacity=".85"/>
+  <rect x="5" y="8" width="14" height="11" rx="2.2"/>
+  <path d="M8 8V6.5a4 4 0 018 0V8"/>
   <circle cx="9" cy="13.5" r="1.7" fill="#7cf5ff" stroke="none"/>
   <circle cx="15" cy="13.5" r="1.7" fill="#ff6b6b" stroke="none"/>
-  <path d="M11.2 16.8h1.6M18.2 12.2v2.6M19.5 13.5h-2.6" opacity=".75"/>
+  <path d="M11.2 16.8h1.6M18.2 12.2v2.6M19.5 13.5h-2.6"/>
 </svg>
