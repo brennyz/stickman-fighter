@@ -271,7 +271,10 @@ class Game {
     }
     this.allyAssistT = this.stageAlly ? 2.2 : 0;
     // Master Sword roll UIT — geen zeldzame interrupt midden in level
-    AudioSys.play(this.level.boss ? 'boss' : 'battle');
+    try {
+      if (typeof playFightBgm === 'function') playFightBgm(this.level.boss ? 'boss' : 'battle');
+      else AudioSys.play(this.level.boss ? 'boss' : 'battle');
+    } catch (_) {}
   }
 
   maybeRollMasterSword() {
@@ -345,7 +348,8 @@ class Game {
     if (bossWave) {
       try {
         this.banner(t('banner.bossWave'), 2.2, '#ff6b6b', 58);
-        AudioSys.play('boss');
+        if (typeof playFightBgm === 'function') playFightBgm('boss');
+        else AudioSys.play('boss');
         AudioSys.sfx('roar');
       } catch (_) {}
       try {
@@ -357,7 +361,8 @@ class Game {
       const hasSuper = wave.some(s => s.superBoss);
       try {
         this.banner(hasSuper ? t('banner.superBossWave') : t('banner.eliteWave'), 1.35, hasSuper ? '#ffd75e' : '#ffb0b8', 40);
-        AudioSys.play(hasSuper ? 'boss' : 'elite');
+        if (typeof playFightBgm === 'function') playFightBgm(hasSuper ? 'boss' : 'elite');
+        else AudioSys.play(hasSuper ? 'boss' : 'elite');
         AudioSys.sfx('roar');
       } catch (_) {}
     } else {

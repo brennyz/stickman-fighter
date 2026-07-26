@@ -792,7 +792,8 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
           try { AudioSys.sfx('bossTurn'); } catch (_) {}
         }
         AudioSys.sting('superBossIntro');
-        AudioSys.play('boss');
+        if (typeof playFightBgm === 'function') playFightBgm('boss');
+        else AudioSys.play('boss');
         const title = typeof t === 'function' ? t('banner.superBossTitle') : 'SUPER BAAS';
         game.banner(title, 2.8, col, bigBoss ? 68 : 44);
         game.banner(colossal
@@ -800,7 +801,8 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
           : (typeof t === 'function' ? t('banner.bossName', { name }) : name), 2.5, '#fff', bigBoss ? 52 : 40);
       } else if (tier === 'boss') {
         AudioSys.sting('bossIntro');
-        AudioSys.play('boss');
+        if (typeof playFightBgm === 'function') playFightBgm('boss');
+        else AudioSys.play('boss');
         if (bigBoss) {
           const title = typeof t === 'function' ? t('banner.bossTitle') : 'BAAS';
           game.banner(title, 2.6, col, 64);
@@ -812,7 +814,8 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
         }
       } else {
         AudioSys.sting('eliteIntro');
-        AudioSys.play('elite');
+        if (typeof playFightBgm === 'function') playFightBgm('elite');
+        else AudioSys.play('elite');
         game.banner(typeof t === 'function' ? t('banner.eliteNamed', { name }) : `ELITE — ${name}!`, 1.5, col, 38);
       }
     } catch (_) {}
