@@ -108,7 +108,9 @@ function weaponSwingSfx(weaponOrId, attackKind) {
 }
 
 function weaponThrowSfx(id) {
-  return id === 'fuuma' ? 'wFuuma' : 'shuriken';
+  if (id === 'fuuma') return 'wFuuma';
+  if (id === 'boemerang') return 'wBoemerang';
+  return 'shuriken';
 }
 
 function weaponFinisherSfx(weaponOrId) {
@@ -129,7 +131,8 @@ function weaponHitSfx(weaponOrId, dmg) {
   if (id === 'hamer' || id === 'knuppel' || id === 'guvve' || id === 'bostaf') return 'hitHeavy';
   if (id === 'zwaard' || id === 'ketting' || id === 'kunai' || id === 'tanto' || id === 'sai' || id === 'kama' || id === 'zeis' || id === 'drietand' || id === 'nunchaku' || id === 'tonfa' || id === 'speer') return 'hitMetal';
   if (id === 'shuriken' || id === 'fuuma') return 'hitMetal';
-  if (id === 'waaier' || id === 'boemerang') return 'hit2';
+  if (id === 'boemerang') return 'hit2';
+  if (id === 'waaier') return 'hit2';
   if (dmg > 22) return 'hit2';
   return 'hit';
 }
@@ -143,7 +146,7 @@ function playWeaponPickFeedback(id) {
 }
 
 function isThrowWeapon(id) {
-  return id === 'shuriken' || id === 'fuuma';
+  return id === 'shuriken' || id === 'fuuma' || id === 'boemerang';
 }
 
 /** Per wapen: 3 opeenvolgende melee-bewegingen (combo-ketting ~1,4s). */
@@ -352,7 +355,7 @@ function weaponMoveFamily(id) {
   if (isThrowWeapon(id) || id === 'vuist') return null;
   if (id === 'speer' || id === 'drietand' || id === 'bostaf') return 'spear';
   if (id === 'knuppel' || id === 'hamer' || id === 'tonfa' || id === 'guvve' || id === 'donder') return 'blunt';
-  if (id === 'nunchaku' || id === 'ketting' || id === 'vlamzweep' || id === 'boemerang') return 'chain';
+  if (id === 'nunchaku' || id === 'ketting' || id === 'vlamzweep') return 'chain';
   if (id === 'kama' || id === 'zeis') return 'hook';
   if (id === 'waaier') return 'fan';
   if (id === 'sai') return 'dual';
