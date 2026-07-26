@@ -14,87 +14,127 @@ const THEMES = {
 };
 
 /**
- * Nightmare: vuurzuilen + embers op de achtergrond.
+ * Nightmare 2.0: dichte vuurzuilen, as, brandende wrakken.
  */
 function drawNightmareFireDecor(c, ground, scroll, t, dX, dSpan) {
   const calm = typeof motionReduced === 'function' && motionReduced();
   const lite = (typeof fxLite === 'function' && fxLite()) || (typeof Perf !== 'undefined' && Perf.tier >= 2);
-  const n = lite ? 4 : 7;
+  // scorched silhouettes / wreck posts
+  const wrecks = lite ? 2 : 4;
+  for (let i = 0; i < wrecks; i++) {
+    const x = dX((i * 0.24 + 0.1) * dSpan);
+    c.fillStyle = '#1a0806';
+    c.fillRect(Math.round(x) - 3, ground - 46 - (i % 2) * 14, 6, 46 + (i % 2) * 14);
+    c.fillStyle = '#2a100c';
+    c.fillRect(Math.round(x) - 16, ground - 52 - (i % 2) * 10, 32, 8);
+  }
+  const n = lite ? 5 : 9;
   for (let i = 0; i < n; i++) {
-    const x = dX((i * 0.14 + 0.06) * dSpan);
-    const flicker = calm ? 0.7 : (0.55 + Math.sin(t * 7 + i * 1.7) * 0.45);
-    const h = 42 + (i % 3) * 18 + flicker * 22;
+    const x = dX((i * 0.12 + 0.04) * dSpan);
+    const flicker = calm ? 0.75 : (0.5 + Math.sin(t * 8 + i * 1.9) * 0.5);
+    const h = 52 + (i % 4) * 20 + flicker * 28;
     const g = c.createLinearGradient(x, ground - h, x, ground);
-    g.addColorStop(0, 'rgba(255,220,80,' + (0.15 + flicker * 0.35) + ')');
-    g.addColorStop(0.45, 'rgba(255,90,30,' + (0.35 + flicker * 0.35) + ')');
-    g.addColorStop(1, 'rgba(120,20,10,0.05)');
+    g.addColorStop(0, 'rgba(255,240,120,' + (0.2 + flicker * 0.4) + ')');
+    g.addColorStop(0.35, 'rgba(255,110,30,' + (0.4 + flicker * 0.4) + ')');
+    g.addColorStop(0.75, 'rgba(200,30,10,' + (0.25 + flicker * 0.2) + ')');
+    g.addColorStop(1, 'rgba(80,10,5,0)');
     c.fillStyle = g;
     c.beginPath();
-    c.moveTo(x - 10 - flicker * 4, ground);
-    c.quadraticCurveTo(x - 6, ground - h * 0.55, x, ground - h);
-    c.quadraticCurveTo(x + 6, ground - h * 0.55, x + 10 + flicker * 4, ground);
+    c.moveTo(x - 12 - flicker * 5, ground);
+    c.quadraticCurveTo(x - 8, ground - h * 0.5, x, ground - h);
+    c.quadraticCurveTo(x + 8, ground - h * 0.5, x + 12 + flicker * 5, ground);
     c.closePath();
     c.fill();
   }
   if (!lite) {
-    c.fillStyle = 'rgba(255,140,40,.55)';
-    const embers = 10;
-    for (let i = 0; i < embers; i++) {
-      const x = dX(((i * 0.11 + (t * 0.08)) % 1) * dSpan);
-      const y = ground - 20 - ((t * 38 + i * 29) % (ground * 0.55));
-      const s = 1.5 + (i % 3);
-      c.globalAlpha = 0.35 + Math.sin(t * 5 + i) * 0.25;
+    // rising embers + ash
+    for (let i = 0; i < 16; i++) {
+      const x = dX(((i * 0.09 + (t * 0.07)) % 1) * dSpan);
+      const y = ground - 12 - ((t * (28 + (i % 5) * 8) + i * 37) % (ground * 0.7));
+      const s = 1.2 + (i % 3);
+      c.fillStyle = i % 3 === 0 ? 'rgba(180,160,140,.4)' : 'rgba(255,140,40,.6)';
+      c.globalAlpha = 0.3 + Math.sin(t * 6 + i) * 0.25;
       c.fillRect(x, y, s, s);
     }
     c.globalAlpha = 1;
   }
-  // warme glow over horizon
-  const haze = c.createLinearGradient(0, ground - 90, 0, ground);
-  haze.addColorStop(0, 'rgba(255,60,20,0)');
-  haze.addColorStop(1, 'rgba(255,40,10,0.18)');
+  const haze = c.createLinearGradient(0, 0, 0, ground);
+  haze.addColorStop(0, 'rgba(255,50,10,0.08)');
+  haze.addColorStop(0.55, 'rgba(255,40,10,0)');
+  haze.addColorStop(1, 'rgba(255,30,5,0.22)');
   c.fillStyle = haze;
-  c.fillRect(0, ground - 90, W, 90);
+  c.fillRect(0, 0, W, ground);
 }
 
 /**
- * Hell: lava-plassen + stickmensilhouetten die schreeuwen van pijn.
+ * Hell 3.0: lava-rivier, asregen, schreeuwende stickmans in pijn.
  */
 function drawHellPainDecor(c, ground, scroll, t, dX, dSpan) {
   const calm = typeof motionReduced === 'function' && motionReduced();
   const lite = (typeof fxLite === 'function' && fxLite()) || (typeof Perf !== 'undefined' && Perf.tier >= 2);
+  // lava river band behind fighters
+  const riverY = ground - 8;
+  const lava = c.createLinearGradient(0, riverY - 10, 0, riverY + 14);
+  lava.addColorStop(0, 'rgba(255,80,20,0)');
+  lava.addColorStop(0.4, 'rgba(255,70,15,0.55)');
+  lava.addColorStop(0.7, 'rgba(180,20,5,0.7)');
+  lava.addColorStop(1, 'rgba(40,5,0,0.15)');
+  c.fillStyle = lava;
+  c.fillRect(0, riverY - 10, W, 24);
+  if (!lite) {
+    for (let i = 0; i < 10; i++) {
+      const x = ((i * 97 + scroll * 0.9 + t * 40) % (W + 40)) - 20;
+      const bub = Math.max(0, Math.sin(t * 5 + i * 1.7)) * 4;
+      c.fillStyle = '#ffd75e';
+      c.globalAlpha = 0.45 + bub * 0.08;
+      c.beginPath();
+      c.ellipse(x, riverY + 2, 5 + bub, 2.5, 0, 0, TAU);
+      c.fill();
+    }
+    c.globalAlpha = 1;
+  }
   // lava pools
-  const pools = lite ? 3 : 5;
+  const pools = lite ? 4 : 6;
   for (let i = 0; i < pools; i++) {
-    const x = dX((i * 0.2 + 0.08) * dSpan);
-    const wob = calm ? 0 : Math.sin(t * 2.4 + i) * 3;
-    c.fillStyle = '#5a1008';
+    const x = dX((i * 0.17 + 0.06) * dSpan);
+    const wob = calm ? 0 : Math.sin(t * 2.8 + i) * 4;
+    c.fillStyle = '#4a0808';
     c.beginPath();
-    c.ellipse(x, ground - 2, 34 + wob, 10, 0, 0, TAU);
+    c.ellipse(x, ground - 2, 38 + wob, 12, 0, 0, TAU);
     c.fill();
-    c.fillStyle = '#ff5a18';
+    c.fillStyle = '#ff4a14';
     c.beginPath();
-    c.ellipse(x, ground - 4, 24 + wob * 0.5, 6, 0, 0, TAU);
+    c.ellipse(x, ground - 5, 28 + wob * 0.5, 7, 0, 0, TAU);
     c.fill();
-    c.fillStyle = '#ffd75e';
-    c.globalAlpha = 0.55 + Math.sin(t * 4 + i) * 0.25;
+    c.fillStyle = '#ffe080';
+    c.globalAlpha = 0.55 + Math.sin(t * 4.5 + i) * 0.3;
     c.beginPath();
-    c.ellipse(x - 4, ground - 5, 8, 2.5, 0, 0, TAU);
+    c.ellipse(x - 5, ground - 6, 10, 3, 0, 0, TAU);
     c.fill();
     c.globalAlpha = 1;
   }
-  // screaming stickman silhouettes
-  const figs = lite ? 3 : 5;
+  // screaming stickman silhouettes — denser in 3.0
+  const figs = lite ? 4 : 7;
   for (let i = 0; i < figs; i++) {
-    const x = dX((i * 0.18 + 0.12) * dSpan);
-    const shake = calm ? 0 : Math.sin(t * 14 + i * 2.1) * 1.8;
-    const armUp = calm ? -1.1 : (-1.05 + Math.sin(t * 9 + i) * 0.25);
-    drawScreamingStickman(c, x + shake, ground, armUp, t + i);
+    const x = dX((i * 0.14 + 0.08) * dSpan);
+    const shake = calm ? 0 : Math.sin(t * 16 + i * 2.3) * 2.4;
+    const armUp = calm ? -1.15 : (-1.1 + Math.sin(t * 11 + i) * 0.35);
+    drawScreamingStickman(c, x + shake, ground, armUp, t + i * 1.3);
+  }
+  // falling ash
+  if (!lite && !calm) {
+    c.fillStyle = 'rgba(120,90,80,.45)';
+    for (let i = 0; i < 14; i++) {
+      const x = ((i * 73 + scroll * 0.4) % (W + 20)) - 10;
+      const y = ((t * 55 + i * 41) % (ground + 20));
+      c.fillRect(x, y, 2, 2);
+    }
   }
   // heat shimmer / red vignette
-  const vig = c.createRadialGradient(W * 0.5, ground * 0.45, 40, W * 0.5, ground * 0.5, Math.max(W, ground) * 0.72);
+  const vig = c.createRadialGradient(W * 0.5, ground * 0.4, 30, W * 0.5, ground * 0.5, Math.max(W, ground) * 0.78);
   vig.addColorStop(0, 'rgba(255,40,20,0)');
-  vig.addColorStop(0.7, 'rgba(180,10,5,0.08)');
-  vig.addColorStop(1, 'rgba(40,0,0,0.35)');
+  vig.addColorStop(0.55, 'rgba(200,10,5,0.1)');
+  vig.addColorStop(1, 'rgba(30,0,0,0.45)');
   c.fillStyle = vig;
   c.fillRect(0, 0, W, ground + 4);
 }
@@ -102,47 +142,55 @@ function drawHellPainDecor(c, ground, scroll, t, dX, dSpan) {
 function drawScreamingStickman(c, x, ground, armAngle, t) {
   const y = ground;
   c.save();
-  c.strokeStyle = 'rgba(20,4,4,.88)';
-  c.fillStyle = 'rgba(20,4,4,.88)';
-  c.lineWidth = 2.4;
+  c.strokeStyle = 'rgba(12,2,2,.92)';
+  c.fillStyle = 'rgba(12,2,2,.92)';
+  c.lineWidth = 2.6;
   c.lineCap = 'round';
   c.lineJoin = 'round';
   // legs
   c.beginPath();
   c.moveTo(x, y - 28);
-  c.lineTo(x - 7, y);
+  c.lineTo(x - 8, y);
   c.moveTo(x, y - 28);
-  c.lineTo(x + 8, y);
+  c.lineTo(x + 9, y);
   c.stroke();
   // body
   c.beginPath();
   c.moveTo(x, y - 28);
-  c.lineTo(x, y - 52);
+  c.lineTo(x, y - 54);
   c.stroke();
   // arms raised in pain
   c.beginPath();
   c.moveTo(x, y - 46);
-  c.lineTo(x - 14, y - 46 + Math.cos(armAngle) * 16);
+  c.lineTo(x - 16, y - 46 + Math.cos(armAngle) * 18);
   c.moveTo(x, y - 46);
-  c.lineTo(x + 14, y - 46 + Math.cos(armAngle + 0.4) * 16);
+  c.lineTo(x + 16, y - 46 + Math.cos(armAngle + 0.35) * 18);
   c.stroke();
   // head
   c.beginPath();
-  c.arc(x, y - 60, 7, 0, TAU);
+  c.arc(x, y - 62, 7.5, 0, TAU);
+  c.fill();
+  // glowing pain eyes
+  c.fillStyle = 'rgba(255,60,40,.85)';
+  c.beginPath();
+  c.arc(x - 2.5, y - 63, 1.4, 0, TAU);
+  c.arc(x + 2.5, y - 63, 1.4, 0, TAU);
   c.fill();
   // open screaming mouth
-  c.fillStyle = 'rgba(255,80,60,.75)';
+  c.fillStyle = 'rgba(255,90,60,.85)';
   c.beginPath();
-  c.ellipse(x, y - 58, 2.4, 3.2 + Math.abs(Math.sin(t * 11)) * 1.2, 0, 0, TAU);
+  c.ellipse(x, y - 59, 2.8, 3.6 + Math.abs(Math.sin(t * 12)) * 1.6, 0, 0, TAU);
   c.fill();
-  // pain lines
-  c.strokeStyle = 'rgba(255,90,50,.35)';
-  c.lineWidth = 1.2;
+  // pain lines / scream marks
+  c.strokeStyle = 'rgba(255,80,40,.4)';
+  c.lineWidth = 1.3;
   c.beginPath();
-  c.moveTo(x + 10, y - 68);
-  c.lineTo(x + 16, y - 74);
-  c.moveTo(x - 10, y - 68);
-  c.lineTo(x - 16, y - 74);
+  c.moveTo(x + 11, y - 70);
+  c.lineTo(x + 18, y - 78);
+  c.moveTo(x - 11, y - 70);
+  c.lineTo(x - 18, y - 78);
+  c.moveTo(x + 9, y - 66);
+  c.lineTo(x + 17, y - 70);
   c.stroke();
   c.restore();
 }
@@ -295,7 +343,9 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
     }
   }
   // pixel-art skyline per thema (art-upgrade 1/4) — traagste parallax-laag
-  const farTile = SceneryArt.get(themeName, 'far');
+  // Nightmare/Hell: eigen deco, geen groene landweg-tiles
+  const hardTheme = themeName === 'nightmare' || themeName === 'hell';
+  const farTile = !hardTheme && SceneryArt.get(themeName, 'far');
   if (farTile && Perf.tier < 2) {
     drawSceneryTile(c, farTile, ground - 52 - farTile.height * SCENERY_SCALE, scroll, 0.18);
   }

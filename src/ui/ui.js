@@ -2114,8 +2114,10 @@ const UI = {
         btn.style.setProperty('--diff-accent', meta.accent);
         btn.setAttribute('role', 'tab');
         btn.setAttribute('aria-selected', activeDiff === meta.id ? 'true' : 'false');
-        const label = t('ui.diff.' + meta.id);
-        btn.innerHTML = `<span class="diff-tab-name">${label}</span>` +
+        const label = advDiffLabel(meta.id);
+        const modelTag = meta.model && meta.model !== '1.0'
+          ? `<span class="diff-tab-model">${meta.model}</span>` : '';
+        btn.innerHTML = `<span class="diff-tab-name">${t('ui.diff.' + meta.id)}</span>${modelTag}` +
           (ok ? '' : `<span class="diff-tab-lock">${SVG_LOCK_ICON}</span>`);
         btn.title = ok
           ? (meta.id === 'normal' ? t('ui.diffTipNormal') : t('ui.diffTipHard', { name: label }))
@@ -2174,7 +2176,7 @@ const UI = {
         `<div class="island-info-text">` +
         `<b style="color:${islMeta.accent}">${islandLabel(islMeta.id, 'name')}</b> · ${islandLabel(islMeta.id, 'sub')}` +
         `<div class="island-info-sub">${t('ui.islandInfoSub', { cap: wCap, cleared: prog.cleared, total: prog.total, stars: prog.stars })}` +
-        (activeDiff !== 'normal' ? t('ui.islandDiffTag', { diff: t('ui.diff.' + activeDiff) }) : '') +
+        (activeDiff !== 'normal' ? t('ui.islandDiffTag', { diff: advDiffLabel(activeDiff) }) : '') +
         (pick < 5 ? t('ui.islandBossGate', { lv: pick * LEVELS_PER_ISLAND }) : '') +
         `</div></div></div>` +
         `<div class="island-prog-track island-info-prog" title="${t('island.levelsProg')}"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +

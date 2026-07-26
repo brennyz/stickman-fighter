@@ -112,7 +112,9 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-| 2026-07-26 | — | **Endgame diffs:** Normal / Nightmare / Hell na adventure clear (Epic Seven-stijl). Harder HP/DMG + wildere rariteiten; Nightmare vuur-bg; Hell lava + schreeuwende stickmans. v1.18.101 / SW v311. |
+| 2026-07-26 | — | **Nightmare 2.0 / Hell 3.0:** model-labels, sterkere vuur/lava/schreeuw-visuals, HUD-chip, snellere vijanden + aura, merge boerderij/dierentuin. v1.18.102 / SW v312. |
+| 2026-07-26 | — | **Endgame diffs:** Normal / Nightmare 2.0 / Hell 3.0 na adventure clear. Harder HP/DMG + wildere rariteiten; Nightmare vuur-bg; Hell lava + schreeuwende stickmans. |
+| 2026-07-26 | — | **User:** monster diversiteit ~2× (137→281): +60 boerderij-op-hol +84 dierentuin-uitbraak (24 arts, grote sizes), ranch/safari golven, vaker reuzen. v1.18.101 / SW v311. |
 | 2026-07-26 | **12** | Content c5: weapon/pet rarity chips n/tot, volgende-wapen unlock hint, hub icon SVG data-URI fallback bij stale SW. v1.18.100 / SW v310. |
 | 2026-07-26 | **8** | PWA c5: speel.html SW register + offline share cache; SW canonical puts voor speel/ipad/android; install/loop shell check incl. speel; smoke-pwa-shell in test+doctor. v1.18.99 / SW v309. |
 | 2026-07-26 | **3** | Versus 2P c5: pause Wissel kant (swapVsSides), TOT rating chip in HUD + pauze, swap.svg chrome. v1.18.98 / SW v308. |

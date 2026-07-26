@@ -219,7 +219,7 @@ class Game {
     const diffMeta = advDiffMeta(diff);
     const startLabel = diff === 'normal'
       ? t('banner.levelStart', { n })
-      : t('banner.levelStartDiff', { n, diff: t('ui.diff.' + diff) });
+      : t('banner.levelStartDiff', { n, diff: advDiffLabel(diff) });
     this.banner(startLabel, 1.4, diffMeta.accent || '#ffd75e', 54);
     if (masterBuffActive(n, diff)) {
       const self = this;
@@ -637,6 +637,8 @@ class Game {
             levelN: this.level.n,
             hpMul: this.level.hpMul,
             dmgMul: this.level.dmgMul,
+            speedMul: this.level.speedMul || 1,
+            advDiff: this.advDiff || this.level.diff || 'normal',
           });
           this.monsters.push(mon);
           if (def.superBoss) {
@@ -823,7 +825,7 @@ class Game {
           ? t('result.advDetailWin', { lv, kills: this.kills, stars, combo: this.maxCombo || 0, finishers, streak })
           : t('result.advDetailLose', { lv, kills: this.kills, combo: this.maxCombo || 0, finishers, streak });
         if (diff !== 'normal') {
-          base = t('result.advDiffLine', { diff: t('ui.diff.' + diff) }) + base;
+          base = t('result.advDiffLine', { diff: advDiffLabel(diff) }) + base;
         }
         if (masterBuffActive(lv, diff) && !win) base += t('result.masterBuffActive');
         if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
@@ -4317,6 +4319,22 @@ class Game {
         fill: a11yHighContrast() ? '#fff' : 'rgba(255,255,255,.9)',
       });
       hy += 17;
+
+      if (this.advDiff && this.advDiff !== 'normal') {
+        const dm = advDiffMeta(this.advDiff);
+        const chip = advDiffShort(this.advDiff);
+        c.font = '900 11px -apple-system, sans-serif';
+        const tw = c.measureText(chip).width;
+        const cx = W / 2;
+        c.fillStyle = 'rgba(0,0,0,.45)';
+        this.rr(c, cx - tw / 2 - 8, hy - 10, tw + 16, 14, 7); c.fill();
+        c.strokeStyle = dm.accent;
+        c.lineWidth = 1.5;
+        this.rr(c, cx - tw / 2 - 8, hy - 10, tw + 16, 14, 7); c.stroke();
+        c.fillStyle = dm.accent;
+        c.fillText(chip, cx, hy);
+        hy += 16;
+      }
 
       c.font = '700 11px -apple-system, sans-serif';
       c.fillStyle = isl.accent;

@@ -25,7 +25,8 @@ class Monster {
       this.hp = this.maxhp;
       this.dmg = Math.round(this.dmg * GIANT_DMG_MUL);
     }
-    this.speed = sp.speed;
+    this.speed = sp.speed * (opts.speedMul || 1);
+    this.advDiff = opts.advDiff || 'normal';
     this.x = x;
     this.flying = sp.type === 'fly' || sp.type === 'dragon';
     this.swimming = sp.type === 'swim';
@@ -258,6 +259,24 @@ class Monster {
     }
     // rariteit-aura
     const rar = rarityOf(this.sp.rarity);
+    if (this.alive && (this.advDiff === 'nightmare' || this.advDiff === 'hell') && !motionReduced()) {
+      c.save();
+      const pulse = 0.55 + Math.sin(this.t * (this.advDiff === 'hell' ? 10 : 7)) * 0.2;
+      c.globalAlpha = 0.18 + pulse * 0.2;
+      c.strokeStyle = this.advDiff === 'hell' ? '#ff3a2a' : '#ff8a30';
+      c.lineWidth = this.advDiff === 'hell' ? 3.2 : 2.4;
+      c.beginPath();
+      c.ellipse(0, -this.size * 0.15, this.size * 1.35, this.size * 1.15, 0, 0, TAU);
+      c.stroke();
+      if (this.advDiff === 'hell') {
+        c.globalAlpha = 0.12 + pulse * 0.1;
+        c.fillStyle = '#ff2a18';
+        c.beginPath();
+        c.ellipse(0, -this.size * 0.1, this.size * 1.15, this.size * 0.95, 0, 0, TAU);
+        c.fill();
+      }
+      c.restore();
+    }
     if (this.introT > 0 && this.alive) {
       c.save();
       const p = clamp(this.introT / 1.6, 0, 1);
@@ -625,6 +644,41 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
       if (typeof drawTideBossArt === 'function') {
         try { drawTideBossArt(c, sp.art, r, t, body, dark, flash, telegraph); } catch (err) {
           console.error('[TideArt]', sp.art, err);
+          c.fillStyle = body;
+          c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+        }
+      } else {
+        c.fillStyle = body;
+        c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+      }
+      break;
+    case 'cow':
+    case 'pig':
+    case 'chicken':
+    case 'sheep':
+    case 'horse':
+    case 'goat':
+    case 'duck':
+    case 'rooster':
+    case 'donkey':
+    case 'goose':
+    case 'elephant':
+    case 'lion':
+    case 'tiger':
+    case 'giraffe':
+    case 'hippo':
+    case 'rhino':
+    case 'gorilla':
+    case 'zebra':
+    case 'bear':
+    case 'croc':
+    case 'kangaroo':
+    case 'panda':
+    case 'flamingo':
+    case 'camel':
+      if (typeof drawBeastArt === 'function') {
+        try { drawBeastArt(c, sp.art, r, t, body, dark, flash, telegraph); } catch (err) {
+          console.error('[BeastArt]', sp.art, err);
           c.fillStyle = body;
           c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
         }

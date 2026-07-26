@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.101';
+const APP_VERSION = '1.18.102';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 311;
+const SW_CACHE_REV = 312;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -33,9 +33,9 @@ const LEVELS_PER_ISLAND = 10;
 const ISLAND_WEAPON_CAPS = [10, 20, 30, 40, 48];
 /** Avontuur moeilijkheidsgraden — Normal eerst; Nightmare/Hell na clear. */
 const ADV_DIFFS = [
-  { id: 'normal', order: 0, accent: '#5ad06a', hpMul: 1, dmgMul: 1, rarityBoost: 0, eliteBonus: 0, giantBonus: 0, theme: null, xpMul: 1, dropMul: 1 },
-  { id: 'nightmare', order: 1, accent: '#ff7a4d', hpMul: 1.38, dmgMul: 1.28, rarityBoost: 1, eliteBonus: 0.1, giantBonus: 0.06, theme: 'nightmare', xpMul: 1.22, dropMul: 1.28 },
-  { id: 'hell', order: 2, accent: '#ff4a4a', hpMul: 1.78, dmgMul: 1.58, rarityBoost: 2, eliteBonus: 0.18, giantBonus: 0.1, theme: 'hell', xpMul: 1.45, dropMul: 1.55 },
+  { id: 'normal', order: 0, model: '1.0', accent: '#5ad06a', hpMul: 1, dmgMul: 1, rarityBoost: 0, eliteBonus: 0, giantBonus: 0, theme: null, xpMul: 1, dropMul: 1, speedMul: 1, enrageMul: 1 },
+  { id: 'nightmare', order: 1, model: '2.0', accent: '#ff7a4d', hpMul: 1.42, dmgMul: 1.32, rarityBoost: 1, eliteBonus: 0.12, giantBonus: 0.08, theme: 'nightmare', xpMul: 1.28, dropMul: 1.35, speedMul: 1.06, enrageMul: 1.1 },
+  { id: 'hell', order: 2, model: '3.0', accent: '#ff4a4a', hpMul: 1.85, dmgMul: 1.65, rarityBoost: 2, eliteBonus: 0.22, giantBonus: 0.12, theme: 'hell', xpMul: 1.55, dropMul: 1.65, speedMul: 1.12, enrageMul: 1.2 },
 ];
 const ADV_DIFF_IDS = ADV_DIFFS.map((d) => d.id);
 function emptyAdvHardBag() {
@@ -64,6 +64,17 @@ function advDiffAvailable(id) {
   if (d === 'nightmare') return !!cleared.normal;
   if (d === 'hell') return !!cleared.nightmare;
   return false;
+}
+function advDiffLabel(id) {
+  const meta = advDiffMeta(id);
+  const name = typeof t === 'function' ? t('ui.diff.' + meta.id) : meta.id;
+  return meta.model && meta.model !== '1.0' ? (name + ' ' + meta.model) : name;
+}
+function advDiffShort(id) {
+  const meta = advDiffMeta(id);
+  if (meta.id === 'nightmare') return 'NM 2.0';
+  if (meta.id === 'hell') return 'HELL 3.0';
+  return 'NORMAL';
 }
 function advDiffUnlockHint(id) {
   const d = normalizeAdvDiffId(id);

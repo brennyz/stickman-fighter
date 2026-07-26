@@ -1084,6 +1084,8 @@
       box-shadow:0 0 0 1px color-mix(in srgb, var(--diff-accent, #ffd75e) 45%, transparent), 0 0 14px color-mix(in srgb, var(--diff-accent, #ffd75e) 22%, transparent); }
   .diff-tab.locked { opacity:.42; cursor:not-allowed; }
   .diff-tab-name { font-size:12px; letter-spacing:.04em; text-transform:uppercase; color:var(--diff-accent, #ffd75e); }
+  .diff-tab-model { font-size:10px; font-weight:900; letter-spacing:.06em; color:#fff; opacity:.9;
+      background:color-mix(in srgb, var(--diff-accent, #ffd75e) 35%, transparent); border-radius:6px; padding:1px 5px; margin-left:2px; }
   .diff-tab-lock { position:absolute; top:4px; right:6px; line-height:0; opacity:.85; }
   .diff-tab-lock svg { width:12px; height:12px; display:block; }
   .lvl.lvl-nightmare:not(.locked) { background:linear-gradient(180deg,#8a3a28,#5a2018); }
