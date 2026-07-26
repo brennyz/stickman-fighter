@@ -1,5 +1,5 @@
 /* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 2 */
-const CACHE = 'stickfighter-app-v304';
+const CACHE = 'stickfighter-app-v305';
 
 
 
@@ -68,7 +68,37 @@ const ASSETS = [
   './assets/buttons/modes/training.svg',
   './assets/buttons/modes/upgrades.svg',
   './assets/buttons/modes/wall.svg',
-  './assets/buttons/modes/weapons.svg'
+  './assets/buttons/modes/weapons.svg',
+  './assets/ui/ach-combo8.svg',
+  './assets/ui/ach-daily7.svg',
+  './assets/ui/ach-dex-full.svg',
+  './assets/ui/ach-dex-half.svg',
+  './assets/ui/ach-dex-mythic.svg',
+  './assets/ui/ach-dex-tiers.svg',
+  './assets/ui/ach-dex10.svg',
+  './assets/ui/ach-dex100.svg',
+  './assets/ui/ach-first-win.svg',
+  './assets/ui/ach-lv10.svg',
+  './assets/ui/ach-lv50.svg',
+  './assets/ui/ach-saga-icons.svg',
+  './assets/ui/ach-train5.svg',
+  './assets/ui/ach-vs-roster.svg',
+  './assets/ui/ach-vs5.svg',
+  './assets/ui/ach-wall100.svg',
+  './assets/ui/check.svg',
+  './assets/ui/island-cyber.svg',
+  './assets/ui/island-dojo.svg',
+  './assets/ui/island-finale.svg',
+  './assets/ui/island-landweg.svg',
+  './assets/ui/island-vulkaan.svg',
+  './assets/ui/lock.svg',
+  './assets/ui/saga-all.svg',
+  './assets/ui/saga-cape.svg',
+  './assets/ui/saga-dawn.svg',
+  './assets/ui/saga-fighter.svg',
+  './assets/ui/saga-ki.svg',
+  './assets/ui/saga-scroll.svg',
+  './assets/ui/saga-tide.svg'
 ];
 
 function offlineFallbackHtml() {

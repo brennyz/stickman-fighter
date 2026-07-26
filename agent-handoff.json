@@ -13,18 +13,25 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.94",
-    "swCache": "stickfighter-app-v304",
-    "gameJsQuery": "game.js?v=304",
-    "cssQuery": "styles/main.css?v=304",
-    "featureBranch": "cursor/wiggum-d20-categorie-n-bb7b",
+    "appVersion": "1.18.95",
+    "swCache": "stickfighter-app-v305",
+    "gameJsQuery": "game.js?v=305",
+    "cssQuery": "styles/main.css?v=305",
+    "featureBranch": "cursor/svg-afbeeldingen-vervanging-f56a",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": "a23eb3e",
     "remoteMainHead": "a23eb3e",
-    "note": "d5 perf projectile budget + hidden tab + scenery cache · MERGE main"
+    "note": "ASSET-STYLE assets/ui SVG set wired · v1.18.95"
   },
   "userWishlist": [
+    {
+      "id": "w-20260726T130025",
+      "from": "automation",
+      "text": "Check afbeeldingen vs ASSET-STYLE.md en vervang structureel (SVG files).",
+      "status": "done-in-code",
+      "updated": "2026-07-26"
+    },
     {
       "id": "w-20260726T092311",
       "from": "user",
@@ -36,8 +43,9 @@
       "id": "w-20260726T090059",
       "from": "user",
       "text": "Missende afbeeldingen — adventure icoon leeg, meer van dit",
-      "status": "open",
-      "updated": "2026-07-26"
+      "status": "done-in-code",
+      "updated": "2026-07-26",
+      "note": "Adventure hub SVG + assets/ui island/saga/ach wired; empty-icon class via hardenButtonIcons."
     },
     {
       "id": "w-20260726T080453",
@@ -84,9 +92,9 @@
     {
       "id": "w-20260725T141500",
       "from": "user",
-      "text": "ASSET-STYLE.md leidend voor knoppen/beelden: agent leest doc → SVG in assets/buttons → vervangt inline iconen. Eerste batch later: hub of modes.",
-      "status": "active",
-      "updated": "2026-07-25"
+      "text": "ASSET-STYLE.md leidend: hub/modes/chrome buttons + assets/ui (saga/ach/lock/island) als SVG files wired.",
+      "status": "done-in-code",
+      "updated": "2026-07-26"
     },
     {
       "id": "w-20260725T083800",
@@ -126,6 +134,10 @@
     "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md."
   ],
   "sessionLog": [
+    {
+      "at": "2026-07-26T13:03:02Z",
+      "summary": "ASSET-STYLE assets/ui SVG set (saga/ach/lock/island) wired · v1.18.95"
+    },
     {
       "at": "2026-07-26T12:05:30Z",
       "summary": "d5 perf: projectile budget + hidden tab throttle + scenery cache cap · v1.18.94"
@@ -221,10 +233,6 @@
     {
       "at": "2026-07-25T23:03:12Z",
       "summary": "d17 stabiliteit: stale result timer, training scheduleGameResult, gamble cancel level terug · v1.18.68"
-    },
-    {
-      "at": "2026-07-25T22:05:34Z",
-      "summary": "d17 stabiliteit: char swap t() crash, adventure result na pauze→menu · v1.18.67"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
