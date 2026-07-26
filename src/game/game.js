@@ -89,11 +89,6 @@ function playerWalkInput() {
   return mv;
 }
 
-function playerWalkRightInput() {
-  const mv = playerWalkInput();
-  return mv > 0.05 ? mv : 0;
-}
-
 class Game {
   constructor(mode, opts) {
     opts = opts || {};

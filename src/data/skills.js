@@ -284,11 +284,6 @@ function jutsuSkillUnlocked(id, st) {
   return skillLevel(id, st) >= 1;
 }
 
-function utilitySkillActive(id, st) {
-  if (!SKILL_DEFS[id] || SKILL_DEFS[id].group !== 'utility') return false;
-  return skillLevel(id, st) >= 1;
-}
-
 function activeJutsuId(preferred, st) {
   const bag = st || save;
   const pick = (preferred && JUTSU_SKILL_IDS.includes(preferred)) ? preferred : (bag.activeJutsu || 'rasengan');
@@ -297,12 +292,6 @@ function activeJutsuId(preferred, st) {
     if (jutsuSkillUnlocked(jid, bag)) return jid;
   }
   return 'rasengan';
-}
-
-function ensureActiveJutsuValid(preferred) {
-  const id = activeJutsuId(preferred);
-  save.activeJutsu = id;
-  return id;
 }
 
 function setActiveJutsu(id, silent) {

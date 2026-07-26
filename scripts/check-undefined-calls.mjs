@@ -13,7 +13,7 @@ const manifest = JSON.parse(fs.readFileSync(path.join(root, 'src', 'manifest.jso
 const bundle = manifest.map((rel) => fs.readFileSync(path.join(root, rel), 'utf8')).join('\n');
 
 const REGRESSION_MUST_DEFINE = [
-  'partBoundaryWaveIdx', 'playerWalkInput', 'playerWalkRightInput',
+  'partBoundaryWaveIdx', 'playerWalkInput',
   'recoverFightHiccup', 'playInputSuppressed', 'rollStageGamble',
   'applyGambleToStage', 'gameUiTimerOk', 'syncPlayLayer', 'forcePlayCanvasVisible',
 ];

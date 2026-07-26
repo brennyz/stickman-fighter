@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.95';
+const APP_VERSION = '1.18.96';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 305;
+const SW_CACHE_REV = 306;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -3692,10 +3692,6 @@ function hardenButtonIcons(root) {
   } catch (_) {}
 }
 
-function syncPlayLayerWithoutGuard() {
-  syncPlayLayer();
-}
-
 function playLayerBroken() {
   if (!(state === 'play' && game)) return false;
   if (activeScreenEl()) return true;
@@ -3931,7 +3927,7 @@ function blackScreenGuard(where) {
       if (!isUiVisible()) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById('menuScreen')?.classList.add('active');
-        syncPlayLayerWithoutGuard();
+        syncPlayLayer();
       }
     }
     if (!window.__sfBlackGuardToast || Date.now() - window.__sfBlackGuardToast > 5000) {
@@ -3957,7 +3953,7 @@ function ensureMenuScreenActive() {
   try { UI.show('menuScreen'); } catch (_) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('menuScreen')?.classList.add('active');
-    syncPlayLayerWithoutGuard();
+    syncPlayLayer();
   }
 }
 
@@ -3966,19 +3962,19 @@ function ensureVisibleScreen() {
   if (isUiVisible()) return;
   if (state === 'play') {
     if (game) {
-      syncPlayLayerWithoutGuard();
+      syncPlayLayer();
       return;
     }
     state = 'menu';
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('menuScreen')?.classList.add('active');
-    syncPlayLayerWithoutGuard();
+    syncPlayLayer();
     return;
   }
   if (state === 'pause') {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('pauseScreen')?.classList.add('active');
-    syncPlayLayerWithoutGuard();
+    syncPlayLayer();
     return;
   }
   if (state === 'result') {
@@ -3989,7 +3985,7 @@ function ensureVisibleScreen() {
       state = 'menu';
       document.getElementById('menuScreen')?.classList.add('active');
     }
-    syncPlayLayerWithoutGuard();
+    syncPlayLayer();
     return;
   }
   ensureMenuScreenActive();
@@ -6555,11 +6551,6 @@ function jutsuSkillUnlocked(id, st) {
   return skillLevel(id, st) >= 1;
 }
 
-function utilitySkillActive(id, st) {
-  if (!SKILL_DEFS[id] || SKILL_DEFS[id].group !== 'utility') return false;
-  return skillLevel(id, st) >= 1;
-}
-
 function activeJutsuId(preferred, st) {
   const bag = st || save;
   const pick = (preferred && JUTSU_SKILL_IDS.includes(preferred)) ? preferred : (bag.activeJutsu || 'rasengan');
@@ -6568,12 +6559,6 @@ function activeJutsuId(preferred, st) {
     if (jutsuSkillUnlocked(jid, bag)) return jid;
   }
   return 'rasengan';
-}
-
-function ensureActiveJutsuValid(preferred) {
-  const id = activeJutsuId(preferred);
-  save.activeJutsu = id;
-  return id;
 }
 
 function setActiveJutsu(id, silent) {
@@ -10934,11 +10919,21 @@ function styleLabel(st, field) {
 function skillLabel(sk, field) {
   field = field || 'name';
   const id = typeof sk === 'string' ? sk : (sk && sk.id);
+  if (field === 'name') {
+    const flatK = 'skill.' + (id || 'rasengan');
+    const flatV = t(flatK);
+    if (flatV && flatV !== flatK) return flatV;
+    if (id === 'subst') return 'Substitutie';
+    if (id === 'dash') return 'Dash';
+    if (id === 'chakra') return 'Chakra';
+  }
   const k = 'skill.' + id + '.' + field;
   const v = t(k);
   if (v && v !== k) return v;
   const ss = typeof sk === 'object' && sk ? sk : (typeof skillById === 'function' ? skillById(id) : null);
-  return ss && ss[field] != null ? ss[field] : '';
+  if (ss && ss[field] != null) return ss[field];
+  if (field === 'name') return jutsuLabel(id);
+  return '';
 }
 
 function superLabel(sp, field) {
@@ -10979,16 +10974,6 @@ function pickupLabel(kind, skillId, itemCat, itemId) {
   return (typeof PICKUP_META !== 'undefined' && PICKUP_META[kind] && PICKUP_META[kind].label) || kind;
 }
 
-function skillLabel(id) {
-  const k = 'skill.' + (id || 'rasengan');
-  const v = t(k);
-  if (v && v !== k) return v;
-  if (id === 'subst') return 'Substitutie';
-  if (id === 'dash') return 'Dash';
-  if (id === 'chakra') return 'Chakra';
-  return jutsuLabel(id);
-}
-
 function skillDesc(id) {
   const k = 'skillDesc.' + id;
   const v = t(k);
@@ -11002,14 +10987,6 @@ function jutsuLabel(kind) {
   if (v && v !== k) return v;
   if (typeof jutsuHudLabel === 'function') return jutsuHudLabel(kind);
   return String(kind || '').toUpperCase();
-}
-
-function eggDailyLine(key) {
-  const k = 'egg.' + key;
-  const v = t(k);
-  if (v && v !== k) return v;
-  const nl = { dailyReady: 'Dag-ei klaar', advBonus: 'Bonus-ei: win 1× avontuur', tomorrow: 'Morgen weer ei' };
-  return nl[key] || key;
 }
 
 function gambleOutcomeLabelFromKey(g) {
@@ -11064,13 +11041,6 @@ function rollD20Entry() {
   if (!tips.length) return { n: 1, text: menuTipAt(0) };
   const n = 1 + Math.floor(Math.random() * tips.length);
   return { n, text: tips[n - 1] };
-}
-
-function rollD20Polish() {
-  const topics = i18nList('menu.d20Polish');
-  if (!topics.length) return rollD20Entry();
-  const n = 1 + Math.floor(Math.random() * topics.length);
-  return { n, text: topics[n - 1], polish: true };
 }
 
 function dailyModeLabel(mode) {
@@ -19567,11 +19537,6 @@ function playerWalkInput() {
   return mv;
 }
 
-function playerWalkRightInput() {
-  const mv = playerWalkInput();
-  return mv > 0.05 ? mv : 0;
-}
-
 class Game {
   constructor(mode, opts) {
     opts = opts || {};
@@ -24847,15 +24812,6 @@ function scrollCharFightIntoView() {
       (dock || btn)?.scrollIntoView({ block: 'end', behavior: 'smooth' });
     } catch (_) {}
   });
-}
-
-function syncCharFightBtn() {
-  const fightBtn = document.getElementById('btnCharFight');
-  if (!fightBtn) return;
-  const ready = charSelectFightReady();
-  fightBtn.classList.toggle('char-fight-ready', ready);
-  fightBtn.classList.toggle('char-fight-off', !ready);
-  fightBtn.setAttribute('aria-disabled', ready ? 'false' : 'true');
 }
 
 function pickVsRosterId(id) {

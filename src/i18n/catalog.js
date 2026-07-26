@@ -1871,11 +1871,21 @@ function styleLabel(st, field) {
 function skillLabel(sk, field) {
   field = field || 'name';
   const id = typeof sk === 'string' ? sk : (sk && sk.id);
+  if (field === 'name') {
+    const flatK = 'skill.' + (id || 'rasengan');
+    const flatV = t(flatK);
+    if (flatV && flatV !== flatK) return flatV;
+    if (id === 'subst') return 'Substitutie';
+    if (id === 'dash') return 'Dash';
+    if (id === 'chakra') return 'Chakra';
+  }
   const k = 'skill.' + id + '.' + field;
   const v = t(k);
   if (v && v !== k) return v;
   const ss = typeof sk === 'object' && sk ? sk : (typeof skillById === 'function' ? skillById(id) : null);
-  return ss && ss[field] != null ? ss[field] : '';
+  if (ss && ss[field] != null) return ss[field];
+  if (field === 'name') return jutsuLabel(id);
+  return '';
 }
 
 function superLabel(sp, field) {
@@ -1916,16 +1926,6 @@ function pickupLabel(kind, skillId, itemCat, itemId) {
   return (typeof PICKUP_META !== 'undefined' && PICKUP_META[kind] && PICKUP_META[kind].label) || kind;
 }
 
-function skillLabel(id) {
-  const k = 'skill.' + (id || 'rasengan');
-  const v = t(k);
-  if (v && v !== k) return v;
-  if (id === 'subst') return 'Substitutie';
-  if (id === 'dash') return 'Dash';
-  if (id === 'chakra') return 'Chakra';
-  return jutsuLabel(id);
-}
-
 function skillDesc(id) {
   const k = 'skillDesc.' + id;
   const v = t(k);
@@ -1939,14 +1939,6 @@ function jutsuLabel(kind) {
   if (v && v !== k) return v;
   if (typeof jutsuHudLabel === 'function') return jutsuHudLabel(kind);
   return String(kind || '').toUpperCase();
-}
-
-function eggDailyLine(key) {
-  const k = 'egg.' + key;
-  const v = t(k);
-  if (v && v !== k) return v;
-  const nl = { dailyReady: 'Dag-ei klaar', advBonus: 'Bonus-ei: win 1× avontuur', tomorrow: 'Morgen weer ei' };
-  return nl[key] || key;
 }
 
 function gambleOutcomeLabelFromKey(g) {
@@ -2001,13 +1993,6 @@ function rollD20Entry() {
   if (!tips.length) return { n: 1, text: menuTipAt(0) };
   const n = 1 + Math.floor(Math.random() * tips.length);
   return { n, text: tips[n - 1] };
-}
-
-function rollD20Polish() {
-  const topics = i18nList('menu.d20Polish');
-  if (!topics.length) return rollD20Entry();
-  const n = 1 + Math.floor(Math.random() * topics.length);
-  return { n, text: topics[n - 1], polish: true };
 }
 
 function dailyModeLabel(mode) {

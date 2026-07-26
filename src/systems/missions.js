@@ -1501,10 +1501,6 @@ function hardenButtonIcons(root) {
   } catch (_) {}
 }
 
-function syncPlayLayerWithoutGuard() {
-  syncPlayLayer();
-}
-
 function playLayerBroken() {
   if (!(state === 'play' && game)) return false;
   if (activeScreenEl()) return true;
@@ -1740,7 +1736,7 @@ function blackScreenGuard(where) {
       if (!isUiVisible()) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById('menuScreen')?.classList.add('active');
-        syncPlayLayerWithoutGuard();
+        syncPlayLayer();
       }
     }
     if (!window.__sfBlackGuardToast || Date.now() - window.__sfBlackGuardToast > 5000) {
@@ -1766,7 +1762,7 @@ function ensureMenuScreenActive() {
   try { UI.show('menuScreen'); } catch (_) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('menuScreen')?.classList.add('active');
-    syncPlayLayerWithoutGuard();
+    syncPlayLayer();
   }
 }
 
@@ -1775,19 +1771,19 @@ function ensureVisibleScreen() {
   if (isUiVisible()) return;
   if (state === 'play') {
     if (game) {
-      syncPlayLayerWithoutGuard();
+      syncPlayLayer();
       return;
     }
     state = 'menu';
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('menuScreen')?.classList.add('active');
-    syncPlayLayerWithoutGuard();
+    syncPlayLayer();
     return;
   }
   if (state === 'pause') {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('pauseScreen')?.classList.add('active');
-    syncPlayLayerWithoutGuard();
+    syncPlayLayer();
     return;
   }
   if (state === 'result') {
@@ -1798,7 +1794,7 @@ function ensureVisibleScreen() {
       state = 'menu';
       document.getElementById('menuScreen')?.classList.add('active');
     }
-    syncPlayLayerWithoutGuard();
+    syncPlayLayer();
     return;
   }
   ensureMenuScreenActive();

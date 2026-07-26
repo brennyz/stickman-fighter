@@ -5,7 +5,6 @@
   "remaining": [
     19,
     12,
-    20,
     6,
     2,
     4,
@@ -14,21 +13,14 @@
     3
   ],
   "lastRoll": {
-    "face": 7,
-    "category": "Save & backup \u2014 import/export, corruptie, migratie",
-    "rolledAt": "2026-07-24T17:02:36Z",
-    "remainingCount": 9,
+    "face": 20,
+    "category": "Code health \u2014 kleine refactors, geen gameplay-break",
+    "rolledAt": "2026-07-24T18:30:43Z",
+    "remainingCount": 8,
     "cycle": 5
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 5,
-      "note": "menu throttle DPR resize perf HUD",
-      "version": "1.12.8",
-      "doneAt": "2026-07-23T18:14:08Z",
-      "cycle": 1
-    },
     {
       "face": 19,
       "note": "Muur HUD: timer/combo bars, record chase, tempo/projectie, muur\u00d7",
@@ -581,6 +573,13 @@
       "version": "1.18.95",
       "doneAt": "2026-07-26T13:03:27Z",
       "cycle": 5
+    },
+    {
+      "face": 20,
+      "note": "skillLabel merge + dead code prune (syncPlayLayerWithoutGuard, syncCharFightBtn, eggDailyLine, rollD20Polish, playerWalkRightInput, utilitySkillActive, ensureActiveJutsuValid)",
+      "version": "1.18.96",
+      "doneAt": "2026-07-26T14:04:40Z",
+      "cycle": 5
     }
   ],
   "userFeatureLog": [
@@ -969,13 +968,6 @@
     }
   ],
   "history": [
-    {
-      "face": 17,
-      "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
-      "rolledAt": "2026-07-23T13:35:44Z",
-      "remainingCount": 7,
-      "cycle": 0
-    },
     {
       "face": 6,
       "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
@@ -1809,6 +1801,13 @@
       "category": "Save & backup \u2014 import/export, corruptie, migratie",
       "rolledAt": "2026-07-24T17:02:36Z",
       "remainingCount": 9,
+      "cycle": 5
+    },
+    {
+      "face": 20,
+      "category": "Code health \u2014 kleine refactors, geen gameplay-break",
+      "rolledAt": "2026-07-24T18:30:43Z",
+      "remainingCount": 8,
       "cycle": 5
     }
   ],
