@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.79';
+const APP_VERSION = '1.18.82';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 289;
+const SW_CACHE_REV = 292;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -3495,6 +3495,7 @@ function recoverFightHiccup(g) {
     g.ketsbamShow = false;
     g.ketsbamBuildT = 0;
     g.ketsbamBuildProg = 0;
+    if (g.player?.attack && !g.over) g.player.attack = null;
   } catch (_) {}
 }
 /** Tijdens gevecht: strip .screen.active — ochtend-aanpak: geen !important display-kills. */
@@ -19134,6 +19135,50 @@ function drawTelegraphBar(c, game, tele, y) {
   c.fill();
 }
 
+/** Seconden actief naar rechts lopen om checkpoint-deel te unlocken. */
+const PART_GATE_WALK_SEC = 3.35;
+const PART_GATE_DECAY_MUL = 1.5;
+const PART_GATE_IDLE_HINT = 1.35;
+const PART_GATE_PLAYER_X = 0.28;
+
+function partBoundaryWaveIdx(totalWaves, currentPart) {
+  if (totalWaves < 1) return -1;
+  // Korte levels (≤3 golven): geen checkpoint-tunnel tussen golf 1/2 en 2/2 — direct door.
+  if (totalWaves < 4) return -1;
+  const b1 = Math.max(0, Math.ceil(totalWaves / 3) - 1);
+  if (currentPart === 1) return b1;
+  if (currentPart === 2) {
+    const b2 = Math.max(0, Math.ceil((2 * totalWaves) / 3) - 1);
+    return Math.max(b1 + 1, b2);
+  }
+  return -1;
+}
+
+/** Checkpoint: joystick, toetsen én daadwerkelijke loop-rechts (vx) tellen mee. */
+function partGateMoveSignal(g) {
+  let mv = playerWalkInput();
+  if (mv > 0.05) return mv;
+  const p = g && g.player;
+  if (p && (p.vx || 0) > 32) return Math.min(1, (p.vx || 0) / Math.max(80, p.speed || 260));
+  if (typeof Input !== 'undefined' && Input.keys && (Input.keys.d || Input.keys.arrowright)) return 1;
+  return mv;
+}
+
+function playerWalkInput() {
+  if (typeof Input === 'undefined' || Input.dualMode) return 0;
+  let mv = Input.move || 0;
+  if (Math.abs(mv) < 0.08) {
+    if (Input.keys.d || Input.keys.arrowright) mv = 1;
+    else if (Input.keys.a || Input.keys.arrowleft) mv = -1;
+  }
+  return mv;
+}
+
+function playerWalkRightInput() {
+  const mv = playerWalkInput();
+  return mv > 0.05 ? mv : 0;
+}
+
 class Game {
   constructor(mode, opts) {
     opts = opts || {};
@@ -19379,9 +19424,11 @@ class Game {
       this.playerShieldT = Math.max(this.playerShieldT, this.styleShieldWave);
     }
     if (bossWave) {
-      this.banner(t('banner.bossWave'), 1.8, '#ff6b6b', 50);
-      AudioSys.play('boss');
-      AudioSys.sfx('roar');
+      try {
+        this.banner(t('banner.bossWave'), 1.8, '#ff6b6b', 50);
+        AudioSys.play('boss');
+        AudioSys.sfx('roar');
+      } catch (_) {}
       try {
         this.shake(8, 0.3);
         this.burst(W * 0.5, this.ground - 80, '#ff6b6b', fxLite() ? 12 : 22);
@@ -19389,9 +19436,11 @@ class Game {
       } catch (_) {}
     } else if (wave.some(s => s.elite || s.superBoss)) {
       const hasSuper = wave.some(s => s.superBoss);
-      this.banner(hasSuper ? t('banner.superBossWave') : t('banner.eliteWave'), 1.35, hasSuper ? '#ffd75e' : '#ffb0b8', 40);
-      AudioSys.play(hasSuper ? 'boss' : 'elite');
-      AudioSys.sfx('roar');
+      try {
+        this.banner(hasSuper ? t('banner.superBossWave') : t('banner.eliteWave'), 1.35, hasSuper ? '#ffd75e' : '#ffb0b8', 40);
+        AudioSys.play(hasSuper ? 'boss' : 'elite');
+        AudioSys.sfx('roar');
+      } catch (_) {}
     } else {
       const meta = this.level.waveMeta && this.level.waveMeta[this.waveIdx];
       const trait = meta && meta.trait && (typeof waveTraitBanner === 'function' ? waveTraitBanner(meta.trait) : null);
@@ -19460,13 +19509,25 @@ class Game {
     }
   }
 
+  /** Dode vijanden direct van het veld — geen vastgelopen dood-animatie tussen golven. */
+  purgeDeadMonsters() {
+    if (!this.monsters || !this.monsters.length) return;
+    this.monsters = this.monsters.filter((m) => m && m.alive);
+  }
+
+  /** Speler-jutsu orbs tussen golven opruimen — geen zwevende Rasengan na wave-clear. */
+  purgePlayerProjectiles() {
+    if (!this.projectiles?.length) return;
+    this.projectiles = this.projectiles.filter((p) => p && p.from !== 'player' && p.from !== 'p1');
+  }
+
   updatePartGate(dt) {
     if (!this.partGate || !this.player?.alive) {
       this.partGate = null;
       return;
     }
     const pg = this.partGate;
-    const move = playerWalkInput();
+    const move = partGateMoveSignal(this);
     pg.t = (pg.t || 0) + dt;
     pg.walking = move > 0.05;
     if (pg.walking) {
@@ -19671,6 +19732,8 @@ class Game {
       }
     } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive) && this.player?.alive) {
       if (!this.wavePause && !this.partGate) {
+        this.purgeDeadMonsters();
+        this.purgePlayerProjectiles();
         const nextIsBoss = isBossWave(this.level, this.waveIdx + 1);
         const total = this.level.waves.length;
         const isLastWave = this.waveIdx >= total - 1;
@@ -19941,6 +20004,7 @@ class Game {
     try {
       const tame = maybeTamePet(m.spId);
       if (tame) {
+        save.stats = save.stats || {};
         save.stats.petsTamed = petTamedCount();
         persist();
         spawnGamePet(this);
@@ -20969,34 +21033,64 @@ class Game {
   }
 
   spawnJutsu(f, atk) {
-    const sk = skillById((atk && atk.jutsu) || fighterJutsuKind(f));
-    const dmg = atk ? atk.dmg : f.baseDmg * (sk.dmgMul || 2.8);
+    const jutsu = (atk && atk.jutsu) || fighterJutsuKind(f);
+    const sk = skillById(jutsu);
+    const jb = jutsuSkillBonuses(jutsu);
+    const dmg = (atk ? atk.dmg : f.baseDmg * (sk.dmgMul || 2.8)) * jb.dmgMul;
     const from = this.projFrom(f);
     const critMeta = projCritMeta(f);
     const behavior = sk.behavior || 'orb';
-    const speed = sk.speed || 420;
+    const speed = (sk.speed || 420) * jb.speedMul;
     const aim = projAimVelocity(f, behavior === 'dash' ? speed : speed * 0.9);
     const y0 = f.y - 50 + clamp(aim.ny, -1, 0.5) * 36;
     const face = f.face || 1;
     const col = sk.color || '#7cf5ff';
 
+    const fireProj = (offX, offY, scale) => {
+      const sc = scale || 1;
+      const ox = offX || 0;
+      const oy = offY || 0;
+      if (behavior === 'dash') {
+        this.spawnProjectile(Object.assign({
+          x: f.x + face * (36 + ox), y: y0 + oy,
+          vx: aim.vx, vy: aim.vy * 0.85, r: ((sk.radius || 22) + jb.radius) * sc, dmg: dmg * sc,
+          life: (sk.life || 0.35) * jb.lifeMul * sc, from, kind: sk.id, pierce: !!sk.pierce,
+          hitSet: new Set(), pierceRepeat: jb.pierceRepeat,
+        }, critMeta));
+      } else if (behavior === 'pull' || behavior === 'meteor') {
+        const sp = behavior === 'meteor' ? speed * 0.55 : speed;
+        this.spawnProjectile(Object.assign({
+          x: f.x + face * (38 + ox), y: y0 + oy,
+          vx: aim.vx * (sp / speed), vy: aim.vy * 0.9, r: ((sk.radius || 30) + jb.radius) * sc, dmg: dmg * sc,
+          from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(), life: (sk.life || 1.05) * jb.lifeMul * sc,
+          spin: 0, pull: !!sk.pull, pullMul: jb.pullMul || 1,
+        }, critMeta));
+      } else if (behavior === 'beam' || behavior === 'disc') {
+        const beamSpeed = speed;
+        const rx = behavior === 'disc' ? (sk.radius || 18) : (sk.radius || 32);
+        this.spawnProjectile(Object.assign({
+          x: f.x + face * (42 + ox), y: y0 + oy,
+          vx: aim.vx || face * beamSpeed, vy: (aim.vy || 0) * 0.35, r: (rx + jb.radius) * sc, dmg: dmg * sc,
+          from, kind: sk.id, pierce: sk.pierce !== false, hitSet: new Set(), life: (sk.life || 1.1) * jb.lifeMul * sc,
+          spin: behavior === 'disc' ? 0.4 : 0,
+        }, critMeta));
+      } else {
+        this.spawnProjectile(Object.assign({
+          x: f.x + face * (40 + ox), y: y0 + oy,
+          vx: aim.vx || face * speed, vy: aim.vy || 0, r: ((sk.radius || 28) + jb.radius) * sc, dmg: dmg * sc,
+          from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(), life: (sk.life || 1.4) * jb.lifeMul * sc,
+          spin: 0, pierceRepeat: jb.pierceRepeat,
+        }, critMeta));
+      }
+    };
+
     if (behavior === 'dash') {
-      this.spawnProjectile(Object.assign({
-        x: f.x + face * 36, y: y0,
-        vx: aim.vx, vy: aim.vy * 0.85, r: sk.radius || 22, dmg, life: sk.life || 0.35,
-        from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(),
-      }, critMeta));
-      f.vx = face * (sk.dashVx || 380);
+      fireProj(0, 0, 1);
+      f.vx = face * (sk.dashVx || 380) * jb.speedMul;
       this.shake(7, 0.2);
       AudioSys.sfx(skillSfxId(sk));
     } else if (behavior === 'pull' || behavior === 'meteor') {
-      const sp = behavior === 'meteor' ? speed * 0.55 : speed;
-      this.spawnProjectile(Object.assign({
-        x: f.x + face * 38, y: y0,
-        vx: aim.vx * (sp / speed), vy: aim.vy * 0.9, r: sk.radius || 30, dmg,
-        from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(), life: sk.life || 1.05,
-        spin: 0, pull: !!sk.pull,
-      }, critMeta));
+      fireProj(0, 0, 1);
       this.burst(f.x + face * 28, y0, col, behavior === 'meteor' ? 18 : 14);
       this.burst(f.x + face * 28, y0, '#ff6b9d', 8);
       this.shake(behavior === 'meteor' ? 10 : 8, 0.24);
@@ -21004,14 +21098,7 @@ class Game {
       AudioSys.sfx(skillSfxId(sk));
       if (f.isPlayer || f.playerSlot) haptic(20);
     } else if (behavior === 'beam' || behavior === 'disc') {
-      const beamSpeed = speed;
-      const rx = behavior === 'disc' ? (sk.radius || 18) : (sk.radius || 32);
-      this.spawnProjectile(Object.assign({
-        x: f.x + face * 42, y: y0,
-        vx: aim.vx || face * beamSpeed, vy: (aim.vy || 0) * 0.35, r: rx, dmg,
-        from, kind: sk.id, pierce: sk.pierce !== false, hitSet: new Set(), life: sk.life || 1.1,
-        spin: behavior === 'disc' ? 0.4 : 0,
-      }, critMeta));
+      fireProj(0, 0, 1);
       this.burst(f.x + face * 34, y0, col, fxLite() ? 8 : 14);
       spawnFxRing(this, f.x + face * 38, y0, col, 12);
       this.shake(8, 0.26);
@@ -21019,12 +21106,7 @@ class Game {
       AudioSys.sfx(skillSfxId(sk));
       if (f.isPlayer || f.playerSlot) haptic(18);
     } else {
-      this.spawnProjectile(Object.assign({
-        x: f.x + face * 40, y: y0,
-        vx: aim.vx || face * speed, vy: aim.vy || 0, r: sk.radius || 28, dmg,
-        from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(), life: sk.life || 1.4,
-        spin: 0,
-      }, critMeta));
+      fireProj(0, 0, 1);
       this.burst(f.x + face * 30, y0, col, fxLite() ? 8 : 16);
       spawnFxRing(this, f.x + face * 34, y0, col, 10);
       this.shake(9, 0.28);
@@ -21039,7 +21121,7 @@ class Game {
     } catch (_) {}
     const extra = (atk && atk.extraShot) || jb.extraShot || 0;
     if (extra > 0 && Math.random() < extra) {
-      fireProj(f.face * 12, rand(-8, 8), 0.72);
+      fireProj(face * 12, rand(-8, 8), 0.72);
     }
   }
 
@@ -21392,21 +21474,52 @@ class Game {
     if (this.bossPhase2Flash > 0) this.bossPhase2Flash -= dt;
 
     if (!this.player) return;
-    this.player.update(dt, this);
-    if (this.pet) this.pet.update(dt);
-    if (this.eggPet) this.eggPet.update(dt);
+    try { this.player.update(dt, this); } catch (plErr) {
+      try { sfReportError('player/update', plErr, 'Speler hiccup — speel door'); } catch (_) {}
+    }
+    if (this.pet) {
+      try { this.pet.update(dt); } catch (petErr) {
+        try { sfReportError('pet/update', petErr, 'Pet hiccup — speel door'); } catch (_) {}
+      }
+    }
+    if (this.eggPet) {
+      try { this.eggPet.update(dt); } catch (eggErr) {
+        try { sfReportError('eggPet/update', eggErr, 'Ei-pet hiccup — speel door'); } catch (_) {}
+      }
+    }
 
-    if (this.mode === 'adventure') this.updateAdventure(dt);
-    else if (this.mode === 'training') this.updateTraining(dt);
-    else if (this.mode === 'versus') this.updateVersus(dt);
-    else if (this.mode === 'wall') this.updateWall(dt);
-    else if (this.mode === 'coinrun') this.updateCoinRun(dt);
+    if (this.mode === 'adventure') {
+      try { this.updateAdventure(dt); } catch (advErr) {
+        try { sfReportError('adventure/update', advErr, 'Avontuur hiccup — speel door'); } catch (_) {}
+      }
+    } else if (this.mode === 'training') {
+      try { this.updateTraining(dt); } catch (trErr) {
+        try { sfReportError('training/update', trErr, 'Training hiccup — speel door'); } catch (_) {}
+      }
+    } else if (this.mode === 'versus') {
+      try { this.updateVersus(dt); } catch (vsErr) {
+        try { sfReportError('versus/update', vsErr, 'Versus hiccup — speel door'); } catch (_) {}
+      }
+    } else if (this.mode === 'wall') {
+      try { this.updateWall(dt); } catch (wErr) {
+        try { sfReportError('wall/update', wErr, 'Muur hiccup — speel door'); } catch (_) {}
+      }
+    } else if (this.mode === 'coinrun') {
+      try { this.updateCoinRun(dt); } catch (crErr) {
+        try { sfReportError('coinrun/update', crErr, 'Mats hiccup — speel door'); } catch (_) {}
+      }
+    }
 
-    for (const m of this.monsters) m.update(dt, this);
+    for (const m of this.monsters) {
+      try { m.update(dt, this); } catch (monErr) {
+        try { sfReportError('monster/update', monErr, 'Vijand hiccup — speel door'); } catch (_) {}
+      }
+    }
     this.monsters = this.monsters.filter(m => m.alive || m.deadT < 1);
     if (this.mode === 'adventure') tickSuperFx(this, dt);
 
     // projectielen
+    try {
     for (const p of this.projectiles) {
       const skProj = skillExists(p.kind) ? skillById(p.kind) : null;
       p.life -= dt;
@@ -21516,6 +21629,9 @@ class Game {
         }
       }
       if (p.y > this.ground + 10 || p.x < -60 || p.x > W + 60) p.life = 0;
+    }
+    } catch (projErr) {
+      try { sfReportError('projectile/update', projErr, 'Projectiel hiccup — speel door'); } catch (_) {}
     }
     for (const p of this.projectiles) {
       if (p.life <= 0 && !p._impactFx && skillExists(p.kind)) {

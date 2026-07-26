@@ -30,6 +30,16 @@ if (/\bplayInputSuppressed\s*\(/.test(code) && !/function\s+playInputSuppressed\
   }
 }
 
+// Regressie v1.18.79: module-split miste checkpoint-helpers → wave-clear ReferenceError.
+if (/\bpartBoundaryWaveIdx\s*\(/.test(code) && !/function\s+partBoundaryWaveIdx\s*\(/.test(code)) {
+  console.error('SMOKE_FAIL partBoundaryWaveIdx used but not defined — wave clear hiccup');
+  process.exit(1);
+}
+if (/\bplayerWalkInput\s*\(/.test(code) && !/function\s+playerWalkInput\s*\(/.test(code)) {
+  console.error('SMOKE_FAIL playerWalkInput used but not defined — part gate hiccup');
+  process.exit(1);
+}
+
 function makeEl(id) {
   return {
     id,
