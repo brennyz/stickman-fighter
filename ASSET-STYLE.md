@@ -136,13 +136,13 @@ houd kleuren/stroke volgens ASSET-STYLE, geen emoji, daarna build+smoke.
 
 | Set | Locatie nu | Doelmap |
 |-----|------------|---------|
-| Hub tiles (4) | `index.html` `.hub-tile-ico` inline SVG | `assets/buttons/hub/` |
-| Mode-rijen | `index.html` `.mode-btn .ico` inline SVG | `assets/buttons/modes/` |
-| Terug / home | `index.html` `.sub-home-btn` / `.back-btn` | `assets/buttons/chrome/` |
-| Missies claim / bonus | `index.html` `#dailyClaimAllBtn` e.d. | `assets/buttons/chrome/` |
-| Pauze / result / settings | `index.html` + JS strings | `assets/buttons/chrome/` |
+| Hub tiles (4) | `index.html` `.hub-tile-ico` → `<img>` | `assets/buttons/hub/` **live** |
+| Mode-rijen | `index.html` `.mode-btn .ico` → `<img>` | `assets/buttons/modes/` **live** |
+| Terug / home | `index.html` `.sub-home-btn` → `<img>` | `assets/buttons/chrome/` **live** |
+| Missies claim / bonus | `index.html` `#dailyClaimAllBtn` e.d. | `assets/buttons/chrome/` **live** |
+| Pauze / result / settings | `index.html` + JS strings | `assets/buttons/chrome/` **live** |
 | Touch vechtknoppen | `src/core/storage.js` `drawTouchBtnIcon` | **code**, geen PNG (tenzij later gevraagd) |
-| Prestatie / saga | `ACH_ICON_SVG` / `SAGA_ICON_SVG` in JS | optioneel later → `assets/ui/` |
+| Prestatie / saga / lock / eiland | `achIconSvg` / `sagaIconSvg` / `SVG_LOCK` / `ADVENTURE_ISLANDS` | `assets/ui/` **live** |
 | PWA icons | `icons/icon-*.png` | blijf hier |
 
 ---
