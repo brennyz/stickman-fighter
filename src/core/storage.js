@@ -5,16 +5,16 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.100';
+const APP_VERSION = '1.18.101';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 310;
+const SW_CACHE_REV = 311;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
 
 
 
-  advIsland: 0, advFails: {}, advMasterBuff: null,
+  advIsland: 0, advFails: {}, advMasterBuff: null, advSatanAt: {},
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
@@ -91,6 +91,9 @@ function playerWeaponForAdventure(levelN) {
   return bestWeaponForAdventureCap(cap);
 }
 function advFailCount(levelN) { return (save.advFails && save.advFails[levelN]) || 0; }
+function advSatanReady(levelN) {
+  return typeof shouldTriggerSatan === 'function' ? shouldTriggerSatan(levelN) : false;
+}
 function wallRecordPaceDelta(g) {
   const best = save.bestWall || 0;
   if (!g || best <= 0) return null;
@@ -527,6 +530,7 @@ function readSaveJson(raw) {
     }
     merged.tipsSeen = sanitizeTipsSeen(parsed.tipsSeen);
     merged.advFails = Object.assign({}, parsed.advFails || {});
+    merged.advSatanAt = Object.assign({}, parsed.advSatanAt || {});
     if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
     if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;
@@ -801,6 +805,12 @@ function sanitizeSave(s) {
     if (n >= 1 && n <= maxLevel) cleanFails[n] = clamp(Math.floor(Number(v) || 0), 0, 99);
   }
   out.advFails = cleanFails;
+  const cleanSatanAt = {};
+  for (const [k, v] of Object.entries(out.advSatanAt || {})) {
+    const n = parseInt(k, 10);
+    if (n >= 1 && n <= maxLevel) cleanSatanAt[n] = clamp(Math.floor(Number(v) || 0), 0, 99);
+  }
+  out.advSatanAt = cleanSatanAt;
   const mb = parseInt(out.advMasterBuff, 10);
   out.advMasterBuff = (Number.isFinite(mb) && mb >= 1 && mb <= maxLevel) ? mb : null;
   if (!out.advIsland && out.unlocked > 1) {

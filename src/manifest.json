@@ -14,6 +14,7 @@
   "src/systems/versus.js",
   "src/data/monsters.js",
   "src/data/tide-battle.js",
+  "src/data/satan-encounter.js",
   "src/data/pets.js",
   "src/data/egg-pets.js",
   "src/i18n/catalog.js",

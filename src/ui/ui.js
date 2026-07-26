@@ -864,6 +864,7 @@ function levelTileTip(n, pick, infoLv, boss, best, fails) {
   if (fails > 0) {
     tip += t('ui.levelTipFails', { n: fails });
     if (fails >= 5) tip += t('ui.levelTipMasterActive');
+    if (fails >= 10) tip += t('ui.levelTipSatan');
   }
   tip += t('ui.levelTipTap');
   return tip;
@@ -1240,6 +1241,7 @@ const UI = {
         } catch (_) {
           try { if (typeof cancelTideBattleMusicPending === 'function') cancelTideBattleMusicPending(game); } catch (_) {}
         }
+        try { if (typeof clearSatanState === 'function') clearSatanState(game); } catch (_) {}
       }
       game = null;
       state = 'menu';
@@ -1267,6 +1269,7 @@ const UI = {
         } catch (_) {
           try { if (typeof cancelTideBattleMusicPending === 'function') cancelTideBattleMusicPending(game); } catch (_) {}
         }
+        try { if (typeof clearSatanState === 'function') clearSatanState(game); } catch (_) {}
       }
       game = null;
       state = 'menu';

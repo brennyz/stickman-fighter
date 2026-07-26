@@ -131,6 +131,8 @@ const SPECIES = {
   stormocto: { name: 'Stormocto', art: 'octo', size: 21, hp: 72, dmg: 13, speed: 54, type: 'swim', xp: 28, rarity: 'epic', c1: '#7cf5ff', c2: '#2a7fc0' },
   krakenling: { name: 'Krakenling', art: 'octo', size: 28, hp: 155, dmg: 17, speed: 42, type: 'swim', xp: 48, rarity: 'legendary', c1: '#2a1840', c2: '#6ee06e' },
   voidocto: { name: 'Voidocto', art: 'octo', size: 24, hp: 98, dmg: 15, speed: 50, type: 'swim', xp: 42, rarity: 'mythic', c1: '#5a1040', c2: '#ff6b9d' },
+  /* Satan — stall-baas na 10× falen; nooit in normale golven */
+  satan: { name: 'Satan', art: 'satan', size: 42, hp: 220, dmg: 18, speed: 78, type: 'charge', xp: 160, rarity: 'mythic', c1: '#ff3040', c2: '#2a0810' },
     /* Tide Battle — alleen via 0.05% kill-roll, nooit in normale golven */
     tideKyuu: { name: 'Negenstaart Vos', art: 'tideFox', size: 38, hp: 340, dmg: 26, speed: 88, type: 'charge', xp: 120, rarity: 'mythic', c1: '#ff7a20', c2: '#8a2010' },
     tideManda: { name: 'Paarse Reuzenslang', art: 'tideSnake', size: 36, hp: 320, dmg: 24, speed: 72, type: 'shoot', xp: 115, rarity: 'mythic', c1: '#9b59d4', c2: '#4a2080' },
@@ -430,6 +432,7 @@ const GAMBLE_ALLY_IDS = Object.keys(GAMBLE_ALLIES);
 
 function pickSuperBossSpecies(levelN) {
   const pool = SPECIES_ORDER.filter((id) => {
+    if (id === 'satan' || (typeof isTideBossId === 'function' && isTideBossId(id))) return false;
     const o = rarityOf(SPECIES[id].rarity).order;
     return o >= 3 && (UNLOCK_AT[id] == null || UNLOCK_AT[id] <= levelN);
   });
