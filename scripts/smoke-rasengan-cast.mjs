@@ -124,12 +124,44 @@ async function run() {
       && lv8.some((o) => o.curl > 0)
       && lv8.every((o) => Math.abs(o.vx) > 50);
 
+    // Cooldown per skill-level: Lv1–2=2s · Lv3–7=3s · Lv8=5s
+    const cdOk = rasenganCooldownSec(1) === 2
+      && rasenganCooldownSec(2) === 2
+      && rasenganCooldownSec(3) === 3
+      && rasenganCooldownSec(7) === 3
+      && rasenganCooldownSec(8) === 5
+      && rasenganCooldownSec(0) === 2;
+
+    // Cast zet specialCd; tweede cast tijdens CD faalt
+    save.skillUpgrades.rasengan = { level: 8, shards: 0 };
+    startGame('adventure', { level: 1, gamble: null });
+    const p = game.player;
+    p.energy = 100;
+    p.specialCd = 0;
+    game.inputLocked = false;
+    game.projectiles = [];
+    p.startAttack('special', game);
+    const cdRightAfter = p.specialCd || 0;
+    const cdSetOk = cdRightAfter > 4.9 && cdRightAfter <= 5.01;
+    for (let i = 0; i < 45; i++) {
+      try { game.update(DT); } catch (e) { errors.push(String(e)); }
+      if (p.attack?.fired) break;
+    }
+    p.energy = 100;
+    const beforeN = game.projectiles.filter((x) => x.kind === 'rasengan').length;
+    const hadAttack = !!p.attack;
+    p.startAttack('special', game); // moet blokkeren door CD
+    const blockedOk = (p.specialCd || 0) > 0
+      && game.projectiles.filter((x) => x.kind === 'rasengan').length === beforeN
+      && (!!p.attack) === hadAttack;
+
     return {
       ok: errors.length === 0 && horiz && noAimTilt && dualOk && curled && tripleOk && downSurvived
         && rasenganShotMode(0) === 'single'
         && rasenganShotMode(4) === 'dual'
         && rasenganShotMode(8) === 'triple'
-        && skillMaxLevel('rasengan') >= 8,
+        && skillMaxLevel('rasengan') >= 8
+        && cdOk && cdSetOk && blockedOk,
       errors: errors.slice(0, 5),
       lv0: lv0.length,
       lv4: lv4.length,
@@ -142,6 +174,11 @@ async function run() {
       downSurvived,
       sawSplit,
       modes: [rasenganShotMode(0), rasenganShotMode(4), rasenganShotMode(8)],
+      cdOk,
+      cdSetOk,
+      blockedOk,
+      cdRightAfter,
+      cds: [rasenganCooldownSec(1), rasenganCooldownSec(3), rasenganCooldownSec(8)],
     };
   });
 

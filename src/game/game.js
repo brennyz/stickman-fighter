@@ -3604,6 +3604,7 @@ class Game {
     for (const f of fighters) {
       if (!f || !f.alive || f.energy < 100) continue;
       const kind = fighterJutsuKind(f);
+      if (kind === 'rasengan' && (f.specialCd || 0) > 0) continue;
       if (calm) {
         c.save();
         c.globalAlpha = 0.42;
@@ -5278,6 +5279,18 @@ class Game {
       c.globalAlpha = 0.35;
       c.fillStyle = '#000';
       c.beginPath(); c.arc(0, 0, b.r, 0, TAU); c.fill();
+    }
+    if (b.id === 'special' && fighter && fighter.specialCd > 0
+        && fighterJutsuKind(fighter) === 'rasengan') {
+      c.globalAlpha = 0.4;
+      c.fillStyle = '#000';
+      c.beginPath(); c.arc(0, 0, b.r, 0, TAU); c.fill();
+      c.globalAlpha = 0.95;
+      c.fillStyle = '#7cf5ff';
+      c.font = `800 ${Math.max(11, b.r * 0.42)}px sans-serif`;
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText(Math.ceil(fighter.specialCd) + 's', 0, 1);
     }
     c.restore();
   }

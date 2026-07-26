@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.116';
+const APP_VERSION = '1.18.117';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 326;
+const SW_CACHE_REV = 327;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -7459,6 +7459,18 @@ function rasenganShotModeLabel(mode) {
   return 'Horizontale Rasengan';
 }
 
+/**
+ * Rasengan cast-cooldown (seconden) op skill-level:
+ * Lv1–2 → 2s · Lv3–7 → 3s · Lv8 → 5s
+ * (skillLevel 0 = basis = Lv1-gedrag)
+ */
+function rasenganCooldownSec(lv) {
+  const n = Math.floor(Number(lv) || 0);
+  if (n >= 8) return 5;
+  if (n >= 3) return 3;
+  return 2;
+}
+
 function utilitySkillBonuses() {
   return {
     subst: skillBonuses('subst'),
@@ -7561,7 +7573,10 @@ function skillUpgradeSummary(id) {
   const lv = skillLevel(id);
   const b = skillBonuses(id);
   const parts = [];
-  if (id === 'rasengan') parts.push(rasenganShotModeLabel(rasenganShotMode(lv)));
+  if (id === 'rasengan') {
+    parts.push(rasenganShotModeLabel(rasenganShotMode(lv)));
+    parts.push('CD ' + rasenganCooldownSec(lv) + 's');
+  }
   if (b.dmgMul > 1.001) parts.push(`DMG ×${b.dmgMul.toFixed(2)}`);
   if (b.radius > 0) parts.push(`+${b.radius} radius`);
   if (b.energySave > 0) parts.push(`−${b.energySave} chakra`);
@@ -7605,8 +7620,8 @@ const SKILLS = [
   { id: 'rasengan', name: 'Rasengan', saga: 'scroll', needLvl: 1,
     behavior: 'orb', dmgMul: 2.85, windup: 0.48, speed: 420, radius: 28, pierce: true, life: 1.4,
     color: '#7cf5ff', sfx: 'rasengan', banner: 'RASENGAN!', kb: 520,
-    hint: 'Standaard', tooltip: 'Altijd horizontaal. Lv4: dubbele krul ↑↓. Lv8: driedubbel ultimate →↑↓.',
-    bonus: 'Horizontaal · dual/triple' },
+    hint: 'Standaard', tooltip: 'Altijd horizontaal. Lv4: dubbele krul ↑↓. Lv8: driedubbel ultimate →↑↓. Cooldown: Lv1–2 = 2s · Lv3 = 3s · Lv8 = 5s.',
+    bonus: 'Horizontaal · dual/triple · CD 2/3/5s' },
   { id: 'fireball_jutsu', name: 'Vuurbol', saga: 'scroll', needLvl: 4,
     behavior: 'orb', dmgMul: 2.65, windup: 0.42, speed: 380, radius: 26, pierce: false, life: 1.1,
     color: '#ff8c42', sfx: 'rasengan', banner: 'VUURBOL!', kb: 480,
@@ -10927,6 +10942,7 @@ function seedNlGameStrings() {
     vsHpLeadP2: 'P2 leidt +{n}% HP',
     vsHpEven: 'HP gelijk — TIME telt!',
     coinPlus1: '+1 munt', coinPlus3: '+3 munten',
+    rasenganCd: 'Rasengan CD {s}s',
   });
   if (!I18N.nl.toast) I18N.nl.toast = {};
   Object.assign(I18N.nl.toast, {
@@ -12280,6 +12296,7 @@ const CATALOG_EN = {
     vsHpLeadP2: 'P2 leads +{n}% HP',
     vsHpEven: 'HP even — TIME matters!',
     coinPlus1: '+1 coin', coinPlus3: '+3 coins',
+    rasenganCd: 'Rasengan CD {s}s',
   },
   hud: {
     super: 'SUPER', masterShort: 'MASTER +20%', masterSword: 'MASTER SWORD {n}s',
@@ -17637,7 +17654,7 @@ class Fighter {
       weapon: weaponById('vuist'), speed: 260, jumpV: 620,
       ai: null, aiTimer: 0, aiMove: 0, aiCd: 2,
       name: 'Stickman',
-      substCd: 0, invulnT: 0, hitFlashT: 0, afterimages: [], dashCd: 0,
+      substCd: 0, specialCd: 0, invulnT: 0, hitFlashT: 0, afterimages: [], dashCd: 0,
       weaponComboIdx: 0, weaponComboT: 0, _lastWeaponKind: null, _weaponComboPrimed: false, _weaponComboHits: 0,
       style: null, playerSlot: 0, vsSpecial: 'rasengan',
     }, opts);
@@ -17703,12 +17720,30 @@ class Fighter {
     if (this.attack || this.state === 'hurt' || !this.alive || this.invulnT > 0 && kind !== 'special') return;
     if (kind === 'special') {
       const jKind = fighterJutsuKind(this);
+      if (jKind === 'rasengan' && (this.specialCd || 0) > 0) {
+        if (this.isPlayer || this.playerSlot) {
+          const left = Math.max(0.1, this.specialCd);
+          try {
+            game.floater(this.x, this.y - 110,
+              (typeof t === 'function' ? t('combat.rasenganCd', { s: left.toFixed(1) }) : null)
+                || ('CD ' + left.toFixed(1) + 's'),
+              '#7cf5ff', 13);
+          } catch (_) {
+            game.floater(this.x, this.y - 110, 'CD ' + left.toFixed(1) + 's', '#7cf5ff', 13);
+          }
+        }
+        return;
+      }
       const chakraCost = skillChakraCost(jKind);
       if (this.energy < chakraCost) {
         if (this.isPlayer) game.floater(this.x, this.y - 110, 'Chakra niet vol!', '#7cf5ff', 13);
         return;
       }
       this.energy = 0;
+      if (jKind === 'rasengan' && typeof rasenganCooldownSec === 'function') {
+        const lv = typeof skillLevel === 'function' ? skillLevel('rasengan') : 0;
+        this.specialCd = rasenganCooldownSec(lv);
+      }
       const sk = fighterEquippedSkill(this);
       AudioSys.sfx(skillSfxId(sk));
       if (this.isPlayer || this.playerSlot) {
@@ -17963,6 +17998,7 @@ class Fighter {
     }
     if (this.substCd > 0) this.substCd -= dt;
     if (this.dashCd > 0) this.dashCd -= dt;
+    if (this.specialCd > 0) this.specialCd -= dt;
     if (this.weaponComboT > 0) {
       this.weaponComboT -= dt;
       if (this.weaponComboT <= 0) resetWeaponCombo(this);
@@ -26784,6 +26820,7 @@ class Game {
     for (const f of fighters) {
       if (!f || !f.alive || f.energy < 100) continue;
       const kind = fighterJutsuKind(f);
+      if (kind === 'rasengan' && (f.specialCd || 0) > 0) continue;
       if (calm) {
         c.save();
         c.globalAlpha = 0.42;
@@ -28458,6 +28495,18 @@ class Game {
       c.globalAlpha = 0.35;
       c.fillStyle = '#000';
       c.beginPath(); c.arc(0, 0, b.r, 0, TAU); c.fill();
+    }
+    if (b.id === 'special' && fighter && fighter.specialCd > 0
+        && fighterJutsuKind(fighter) === 'rasengan') {
+      c.globalAlpha = 0.4;
+      c.fillStyle = '#000';
+      c.beginPath(); c.arc(0, 0, b.r, 0, TAU); c.fill();
+      c.globalAlpha = 0.95;
+      c.fillStyle = '#7cf5ff';
+      c.font = `800 ${Math.max(11, b.r * 0.42)}px sans-serif`;
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText(Math.ceil(fighter.specialCd) + 's', 0, 1);
     }
     c.restore();
   }

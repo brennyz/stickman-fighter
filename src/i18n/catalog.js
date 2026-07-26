@@ -187,6 +187,7 @@ function seedNlGameStrings() {
     vsHpLeadP2: 'P2 leidt +{n}% HP',
     vsHpEven: 'HP gelijk — TIME telt!',
     coinPlus1: '+1 munt', coinPlus3: '+3 munten',
+    rasenganCd: 'Rasengan CD {s}s',
   });
   if (!I18N.nl.toast) I18N.nl.toast = {};
   Object.assign(I18N.nl.toast, {
@@ -1540,6 +1541,7 @@ const CATALOG_EN = {
     vsHpLeadP2: 'P2 leads +{n}% HP',
     vsHpEven: 'HP even — TIME matters!',
     coinPlus1: '+1 coin', coinPlus3: '+3 coins',
+    rasenganCd: 'Rasengan CD {s}s',
   },
   hud: {
     super: 'SUPER', masterShort: 'MASTER +20%', masterSword: 'MASTER SWORD {n}s',

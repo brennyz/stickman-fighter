@@ -13,19 +13,26 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.116",
-    "swCache": "stickfighter-app-v326",
-    "gameJsQuery": "game.js?v=326",
-    "cssQuery": "styles/main.css?v=326",
-    "featureBranch": "cursor/summon-reveal-video-c62d",
+    "appVersion": "1.18.117",
+    "swCache": "stickfighter-app-v327",
+    "gameJsQuery": "game.js?v=327",
+    "cssQuery": "styles/main.css?v=327",
+    "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "Summon reveal.mp4 shipped · v1.18.116",
+    "note": "Rasengan CD 2/3/5s · MERGE main · v1.18.117",
     "updated": "2026-07-26T19:35:00Z"
   },
   "userWishlist": [
+    {
+      "id": "w-20260726T191900",
+      "from": "user",
+      "text": "De rasengan moet naar 5 seconden cooldown voor stage 8, 3 bij 3 en 2 bij lvl1 en 2",
+      "status": "done-in-code",
+      "updated": "2026-07-26"
+    },
     {
       "id": "w-20260726T185514",
       "from": "user",
@@ -256,6 +263,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T19:59:00Z",
+      "summary": "Rasengan CD LIVE: Lv1–2=2s · Lv3–7=3s · Lv8=5s · v1.18.117"
+    },
+    {
       "at": "2026-07-26T19:34:31Z",
       "summary": "Summons reveal.mp4 toegevoegd (stickman tree→chest) · v1.18.116"
     },
@@ -350,10 +361,6 @@
     {
       "at": "2026-07-26T18:54:37Z",
       "summary": "Restore Nachtmerrie/Hel eilanden + 2.0/3.0 diffs live · v1.18.105"
-    },
-    {
-      "at": "2026-07-26T18:52:33Z",
-      "summary": "Nightmare 2.0 + Hell 3.0 LIVE op Pages · v1.18.104"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
