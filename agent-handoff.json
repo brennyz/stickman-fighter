@@ -13,22 +13,29 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.102",
-    "swCache": "stickfighter-app-v312",
-    "gameJsQuery": "game.js?v=312",
-    "cssQuery": "styles/main.css?v=312",
+    "appVersion": "1.18.103",
+    "swCache": "stickfighter-app-v313",
+    "gameJsQuery": "game.js?v=313",
+    "cssQuery": "styles/main.css?v=313",
     "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "localMainHead": "af3fc40",
-    "remoteMainHead": "af3fc40",
-    "note": "grootste bazen + boerderij/dierentuin · MERGE main · v1.18.102"
+    "localMainHead": "8951644",
+    "remoteMainHead": "8951644",
+    "note": "grootste bazen + Rinnegan + boerderij/dierentuin · MERGE main · v1.18.103"
   },
   "userWishlist": [
     {
       "id": "w-20260726T183600",
       "from": "user",
       "text": "De grootste bazen moeten meer intro krijgen, met een grote tekst in beeld en ze zijn ook soms wel 2x groter dan nu, met veel meer hitpoints.",
+      "status": "done-in-code",
+      "updated": "2026-07-26"
+    },
+    {
+      "id": "w-20260726T184800",
+      "from": "user",
+      "text": "Rinnegan is erg slecht vergeleken rasengan, rinnegan moet beter een soort lichtschits explosie dat twee kanten op gaat, en hoe verder hoe minder groot de strook is.",
       "status": "done-in-code",
       "updated": "2026-07-26"
     },
@@ -141,16 +148,32 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T18:51:00Z",
+      "summary": "Merge Rinnegan + grootste bazen op main · v1.18.103"
+    },
+    {
       "at": "2026-07-26T18:49:35Z",
       "summary": "Merged grootste bazen naar main · v1.18.102"
+    },
+    {
+      "at": "2026-07-26T18:49:22Z",
+      "summary": "Merged Rinnegan slash naar main · v1.18.102"
     },
     {
       "at": "2026-07-26T18:48:44Z",
       "summary": "Merge main: grootste bazen intro/colossaal + boerderij/dierentuin · v1.18.102"
     },
     {
+      "at": "2026-07-26T18:48:24Z",
+      "summary": "Rinnegan slash check: upgrade dikker (r0 42→78) · merge main v1.18.102"
+    },
+    {
       "at": "2026-07-26T18:44:55Z",
       "summary": "Merged boerderij/dierentuin monsters naar main · v1.18.101"
+    },
+    {
+      "at": "2026-07-26T18:39:32Z",
+      "summary": "Rinnegan: pull-orb → tweerichtings lichtschits-slash (taper) · v1.18.101"
     },
     {
       "at": "2026-07-26T18:39:09Z",
@@ -223,22 +246,6 @@
     {
       "at": "2026-07-26T07:37:41Z",
       "summary": "Golf 1/2 vast: geen checkpoint korte levels + lijken weg · v1.18.81"
-    },
-    {
-      "at": "2026-07-26T07:32:58Z",
-      "summary": "Stabiliteit: slice-guards, check:critical, save-fuzz · v1.18.80"
-    },
-    {
-      "at": "2026-07-26T07:30:00Z",
-      "summary": "Menu opaque hub icons/tiles + stickmen top-band · v1.18.79"
-    },
-    {
-      "at": "2026-07-26T07:19:14Z",
-      "summary": "Wave-clear hiccup: partBoundaryWaveIdx terug na module-split · v1.18.79"
-    },
-    {
-      "at": "2026-07-26T07:10:13Z",
-      "summary": "Fight hiccup-freeze fix: loop door na crash, grantXP guarded · v1.18.78"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.102';
+const APP_VERSION = '1.18.103';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 312;
+const SW_CACHE_REV = 313;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -376,6 +376,17 @@ function drawJutsuMiniIcon(c, kind, x, y, color) {
     c.lineTo(0.7, -1);
     c.closePath();
     c.fill();
+  } else if (behavior === 'slash') {
+    c.beginPath();
+    c.moveTo(-6, 0);
+    c.lineTo(-2, -2.5);
+    c.lineTo(0, 0);
+    c.lineTo(2, 2.5);
+    c.lineTo(6, 0);
+    c.stroke();
+    c.beginPath();
+    c.arc(0, 0, 1.6, 0, TAU);
+    c.fill();
   } else if (behavior === 'pull' || behavior === 'meteor') {
     c.beginPath(); c.ellipse(0, 0, 5.2, 3.2, 0, 0, TAU); c.stroke();
     c.beginPath(); c.arc(0, 0, 1.7, 0, TAU); c.fill();
@@ -460,6 +471,22 @@ function drawTouchBtnIcon(c, id, x, y, r, jutsuKind) {
         c.lineTo(s * 0.65, -s * 0.2);
         c.lineTo(s * 0.1, -s * 0.2);
         c.closePath();
+        c.fill();
+      } else if (behavior === 'slash') {
+        c.beginPath();
+        c.moveTo(-s, 0);
+        c.lineTo(-s * 0.35, -s * 0.35);
+        c.lineTo(0, 0);
+        c.lineTo(s * 0.35, s * 0.35);
+        c.lineTo(s, 0);
+        c.stroke();
+        c.beginPath();
+        c.moveTo(-s * 0.85, s * 0.25);
+        c.lineTo(0, 0);
+        c.lineTo(s * 0.85, -s * 0.25);
+        c.stroke();
+        c.beginPath();
+        c.arc(0, 0, s * 0.22, 0, TAU);
         c.fill();
       } else if (behavior === 'pull' || behavior === 'meteor') {
         c.beginPath(); c.ellipse(0, 0, s, s * 0.62, 0, 0, TAU); c.stroke();
@@ -583,7 +610,7 @@ function rollHitDamage(attacker, spec, mult) {
   if (k === 'special' || spec.jutsu) {
     critChance += sig.jutsuCrit || 0;
     const jsk = SKILLS.find(s => s.id === spec.jutsu);
-    if (jsk && (jsk.id === 'rinnegan' || jsk.behavior === 'pull')) critChance += 0.05;
+    if (jsk && (jsk.id === 'rinnegan' || jsk.behavior === 'pull' || jsk.behavior === 'slash')) critChance += 0.05;
   }
   if (attacker.isPlayer && typeof game !== 'undefined' && game && game.stageCritBonus) {
     critChance += game.stageCritBonus;
@@ -609,7 +636,7 @@ function projCritMeta(f) {
   const sig = SIG_MODS[prof.sig] || {};
   let critChance = prof.crit + (sig.critAdd || 0) + (sig.jutsuCrit || 0);
   const eqSk = fighterEquippedSkill(f);
-  if (eqSk && (eqSk.id === 'rinnegan' || eqSk.behavior === 'pull')) critChance += 0.05;
+  if (eqSk && (eqSk.id === 'rinnegan' || eqSk.behavior === 'pull' || eqSk.behavior === 'slash')) critChance += 0.05;
   return { critChance: clamp(critChance, 0, 0.42), critMul: prof.critMul };
 }
 
@@ -658,11 +685,38 @@ function resolveProjHit(p) {
   return { dmg: Math.max(1, Math.round(dmg)), crit };
 }
 
+/** Rinnegan lichtschits: horizontale strook L+R, dikte tapert met afstand tot centrum. */
+function slashWaveHalfHeight(p, dist) {
+  const r0 = p.r0 || p.r || 42;
+  const maxR = Math.max(1, p.slashMaxReach || 460);
+  const t = clamp(Math.abs(dist) / maxR, 0, 1);
+  return Math.max(5, r0 * (1 - t * 0.82));
+}
+
+function projHitsTarget(p, tx, ty, tr) {
+  if (p.slashWave) {
+    const dx = tx - p.x;
+    const dy = ty - p.y;
+    const reach = p.slashReach || 0;
+    if (Math.abs(dx) > reach + tr) return false;
+    const halfH = slashWaveHalfHeight(p, dx);
+    return Math.abs(dy) <= halfH + tr * 0.9;
+  }
+  return (p.x - tx) ** 2 + (p.y - ty) ** 2 < (p.r + tr) ** 2;
+}
+
+function projKnockDir(p, tgtX) {
+  if (p.slashWave) return Math.sign((tgtX || 0) - p.x) || 1;
+  return Math.sign(p.vx || 1) || 1;
+}
+
 function projStrikeFighter(game, p, tgt, col) {
   if (!tgt || !tgt.alive) return;
   const sk = (typeof skillExists === 'function' && skillExists(p.kind)) ? skillById(p.kind) : null;
   const hit = resolveProjHit(p);
-  const kb = Math.sign(p.vx || 1) * (p.kind === 'rinnegan' ? 300 : 260);
+  const dir = projKnockDir(p, tgt.x);
+  const kbBase = p.kind === 'rinnegan' ? 340 : 260;
+  const kb = dir * kbBase * (p.kbMul || 1);
   const dealt = tgt.takeDamage(hit.dmg, kb, game, {
     projWeaponId: (p.kind === 'shuriken' || p.kind === 'boemerang') ? (p.throwId || p.kind) : null,
   });
@@ -671,10 +725,13 @@ function projStrikeFighter(game, p, tgt, col) {
   }
   game.floater(tgt.x, tgt.y - 115, '-' + dealt, col, 16);
   if (hit.crit) applyCritFx(game, tgt.x, tgt.y);
-  if (p.pull) tgt.vx += Math.sign(p.vx || 1) * 160;
-  spawnJutsuImpactFx(game, p.x, p.y, p.kind, 'full');
+  if (p.pull) tgt.vx += dir * 160;
+  spawnJutsuImpactFx(game, p.x + (p.slashWave ? dir * Math.min(40, p.slashReach || 0) : 0), p.y, p.kind, 'full');
   if (sk && sk.behavior === 'orb' && sk.id === 'rasengan' && !fxLite() && !motionReduced()) {
     game.freezeT = Math.max(game.freezeT || 0, 0.045);
+  }
+  if (sk && sk.behavior === 'slash' && !fxLite() && !motionReduced()) {
+    game.freezeT = Math.max(game.freezeT || 0, 0.04);
   }
   if (p.hitSet) p.hitSet.add(tgt);
   else if (!p.pierce) p.life = 0;
@@ -6389,11 +6446,11 @@ const SKILL_DEFS = {
   rinnegan: {
     id: 'rinnegan', group: 'jutsu', color: '#c47aff',
     steps: [
-      { dmgMul: 1.08, radius: 2 },
-      { dmgMul: 1.08, lifeMul: 1.1, energySave: 5 },
-      { dmgMul: 1.1, radius: 2, pullMul: 1.15 },
-      { dmgMul: 1.1, extraShot: 0.12, windupMul: 0.92 },
-      { dmgMul: 1.12, radius: 3, energySave: 8, lifeMul: 1.1 },
+      { dmgMul: 1.1, radius: 5 },
+      { dmgMul: 1.08, speedMul: 1.08, energySave: 5, radius: 4 },
+      { dmgMul: 1.1, radius: 6, lifeMul: 1.1 },
+      { dmgMul: 1.12, windupMul: 0.9, speedMul: 1.06, radius: 5 },
+      { dmgMul: 1.14, radius: 7, energySave: 8, pierceRepeat: 0.15 },
     ],
   },
   subst: {
@@ -6750,10 +6807,10 @@ const SKILLS = [
     hint: 'Lv 10', tooltip: 'Interne schade-burst op korte afstand — hoge knockback.',
     bonus: 'Heavy knockback' },
   { id: 'rinnegan', name: 'Rinnegan', saga: 'scroll', needLvl: 22,
-    behavior: 'pull', dmgMul: 2.55, windup: 0.52, speed: 340, radius: 30, pierce: true, life: 1.05,
-    pull: true, color: '#c47aff', sfx: 'rinnegan', banner: 'RINNEGAN!', kb: 460,
-    hint: 'Lv 22', tooltip: 'Traag oog-orb met pull — trekt vijanden mee.',
-    bonus: 'Pull + pierce' },
+    behavior: 'slash', dmgMul: 2.95, windup: 0.42, speed: 720, radius: 42, pierce: true, life: 0.68,
+    color: '#c47aff', sfx: 'rinnegan', banner: 'RINNEGAN!', kb: 580,
+    hint: 'Lv 22', tooltip: 'Lichtschits-explosie links én rechts — strook dik bij jou, dun verderop. Upgrades = dikkere strook.',
+    bonus: '2-richting slash · taper · dikker per Lv' },
   { id: 'eight_gates', name: '8 poorten', saga: 'scroll', needLvl: 24,
     behavior: 'dash', dmgMul: 3.05, windup: 0.55, speed: 680, radius: 26, pierce: true, life: 0.38,
     dashVx: 420, color: '#ff6b6b', sfx: 'chidori', banner: '8 GATES!', kb: 580,
@@ -6858,7 +6915,10 @@ function skillExists(id) {
 }
 
 function skillBehaviorLabel(sk) {
-  const map = { orb: 'Orb', dash: 'Dash', pull: 'Pull', beam: 'Beam', disc: 'Disc', meteor: 'Meteor' };
+  const map = {
+    orb: 'Orb', dash: 'Dash', pull: 'Pull', beam: 'Beam', disc: 'Disc',
+    meteor: 'Meteor', slash: 'Slash',
+  };
   return map[sk && sk.behavior] || 'Special';
 }
 
@@ -6920,7 +6980,7 @@ function skillCombatLine(sk) {
   return sk.bonus || sk.hint || '';
 }
 
-const SKILL_BEHAVIORS = ['orb', 'dash', 'beam', 'disc', 'pull', 'meteor'];
+const SKILL_BEHAVIORS = ['orb', 'dash', 'beam', 'disc', 'pull', 'meteor', 'slash'];
 const SKILL_SAGA_ORDER = ['scroll', 'ki', 'tide', 'fighter', 'cape', 'dawn'];
 
 function skillsForFilters(saga, behavior) {
@@ -10136,11 +10196,11 @@ function seedNlFromRuntime() {
     if (!I18N.nl.skill) I18N.nl.skill = {};
     for (const s of SKILLS) I18N.nl.skill[s.id] = { name: s.name, hint: s.hint, tooltip: s.tooltip, bonus: s.bonus };
     Object.assign(I18N.nl.skill, {
-      behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor' },
+      behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor', slash: 'Slash' },
       stat: { dmg: 'Schade', wind: 'Windup', spd: 'Snelheid', kb: 'Knockback' },
       tag: { pierce: 'Pierce', pull: 'Pull' },
       saga: {
-        scroll: { blurb: 'Ninja-scroll — Rasengan, Chidori, Rinnegan & gravity specials.' },
+        scroll: { blurb: 'Ninja-scroll — Rasengan, Chidori, Rinnegan-lichtschits & gravity specials.' },
         ki: { blurb: 'Ki-golven — Kamehameha, discs, Spirit Bomb & blitz dashes.' },
         tide: { blurb: 'Tide-straal — Getsuga, Cero & Bankai flash.' },
         fighter: { blurb: 'Street stretch — Gum-Gum dash & Gear Second steam.' },
@@ -10779,11 +10839,11 @@ const CATALOG_EN = {
   },
   egg: { dailyReady: 'Daily egg ready', advBonus: 'Bonus egg: win 1× adventure', tomorrow: 'Egg again tomorrow' },
   skill: {
-    behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor' },
+    behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor', slash: 'Slash' },
     stat: { dmg: 'Damage', wind: 'Windup', spd: 'Speed', kb: 'Knockback' },
     tag: { pierce: 'Pierce', pull: 'Pull' },
     saga: {
-      scroll: { blurb: 'Ninja scroll — Rasengan, Chidori, Rinnegan & gravity specials.' },
+      scroll: { blurb: 'Ninja scroll — Rasengan, Chidori, Rinnegan lightning slash & gravity specials.' },
       ki: { blurb: 'Ki waves — Kamehameha, discs, Spirit Bomb & blitz dashes.' },
       tide: { blurb: 'Tide beams — Getsuga, Cero & Bankai flash.' },
       fighter: { blurb: 'Street stretch — Gum-Gum dash & Gear Second steam.' },
@@ -14559,6 +14619,10 @@ function spawnJutsuImpactFx(game, x, y, kind, scale) {
   if (!lite && !small && (kind === 'chidori' || sk.behavior === 'dash')) {
     game.burst(x, y, '#e8f7ff', 8, { kind: 'spark', size: 1.8 });
   }
+  if (!lite && !small && (kind === 'rinnegan' || sk.behavior === 'slash')) {
+    game.burst(x, y, '#e8d0ff', 10, { kind: 'spark', size: 2.4 });
+    spawnFxRing(game, x, y, '#ffffff', 12);
+  }
 }
 
 /**
@@ -14623,7 +14687,38 @@ function drawJutsuChargeAura(c, hx, hy, g, animT, kind) {
         c.stroke();
       }
     }
-  } else if (behavior === 'pull' || behavior === 'meteor' || kind === 'rinnegan') {
+  } else if (behavior === 'slash' || kind === 'rinnegan') {
+    // Rinnegan — horizontale bliksem-schede beide kanten (charge preview)
+    const halo = c.createRadialGradient(ox, oy, 2, ox, oy, 24 + g * 30);
+    halo.addColorStop(0, `rgba(255,255,255,${0.4 + g * 0.4})`);
+    halo.addColorStop(0.4, `rgba(196,122,255,${0.28 + g * 0.35})`);
+    halo.addColorStop(1, 'rgba(120,40,180,0)');
+    c.fillStyle = halo;
+    c.beginPath();
+    c.arc(ox, oy, 24 + g * 30, 0, TAU);
+    c.fill();
+
+    c.lineCap = 'round';
+    c.lineJoin = 'round';
+    const reach = 18 + g * 36;
+    const bolts = lite ? 2 : 4;
+    for (const dir of [-1, 1]) {
+      for (let i = 0; i < bolts; i++) {
+        const yOff = (i - (bolts - 1) / 2) * (4 + g * 3);
+        const jagged = calm ? 0 : Math.sin(animT * 30 + i * 2.1 + dir) * (3 + g * 2);
+        c.strokeStyle = i % 2
+          ? `rgba(255,255,255,${0.45 + g * 0.4})`
+          : `rgba(196,122,255,${0.4 + g * 0.45})`;
+        c.lineWidth = i % 2 ? 1.3 : 2.4;
+        c.beginPath();
+        c.moveTo(ox, oy + yOff * 0.3);
+        c.lineTo(ox + dir * reach * 0.4, oy + yOff + jagged);
+        c.lineTo(ox + dir * reach * 0.7, oy + yOff * 0.5 - jagged * 0.6);
+        c.lineTo(ox + dir * reach, oy + yOff * 0.2);
+        c.stroke();
+      }
+    }
+  } else if (behavior === 'pull' || behavior === 'meteor') {
     c.strokeStyle = `rgba(196,122,255,${0.4 + g * 0.45})`;
     c.lineWidth = 2;
     for (let ring = 0; ring < (lite ? 2 : 3); ring++) {
@@ -14728,6 +14823,39 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
     c.beginPath(); c.ellipse(0, 0, r * 1.35, r * (behavior === 'disc' ? 0.55 : 0.75), spin * 0.2, 0, TAU); c.fill();
     c.strokeStyle = '#fff'; c.lineWidth = 2;
     c.beginPath(); c.ellipse(0, 0, r * 1.2, r * (behavior === 'disc' ? 0.45 : 0.65), spin * 0.2, 0, TAU); c.stroke();
+  } else if (behavior === 'slash') {
+    // Preview-icoon: korte tweerichtings-bliksem
+    c.shadowColor = col; c.shadowBlur = lite ? 8 : 20;
+    c.lineCap = 'round';
+    c.lineJoin = 'round';
+    const reach = r * 1.55;
+    for (const dir of [-1, 1]) {
+      c.strokeStyle = 'rgba(255,255,255,.9)';
+      c.lineWidth = Math.max(2, r * 0.22);
+      c.beginPath();
+      c.moveTo(0, 0);
+      c.lineTo(dir * reach * 0.45, Math.sin(spin * 4 + dir) * r * 0.2);
+      c.lineTo(dir * reach * 0.75, -Math.sin(spin * 5 + dir) * r * 0.15);
+      c.lineTo(dir * reach, Math.sin(spin * 3) * r * 0.08);
+      c.stroke();
+      c.strokeStyle = col;
+      c.lineWidth = Math.max(3.5, r * 0.38);
+      c.globalAlpha = (alpha == null ? 1 : alpha) * 0.55;
+      c.beginPath();
+      c.moveTo(0, -r * 0.55);
+      c.lineTo(dir * reach * 0.95, -r * 0.12);
+      c.lineTo(dir * reach * 0.95, r * 0.12);
+      c.lineTo(0, r * 0.55);
+      c.closePath();
+      c.stroke();
+      c.globalAlpha = alpha == null ? 1 : alpha;
+    }
+    const core = c.createRadialGradient(0, 0, 0, 0, 0, r * 0.7);
+    core.addColorStop(0, 'rgba(255,255,255,.95)');
+    core.addColorStop(0.5, col + 'cc');
+    core.addColorStop(1, col + '22');
+    c.fillStyle = core;
+    c.beginPath(); c.arc(0, 0, r * 0.55, 0, TAU); c.fill();
   } else if (behavior === 'pull' || behavior === 'meteor') {
     c.shadowColor = col; c.shadowBlur = lite ? 10 : 24;
     const grd = c.createRadialGradient(0, 0, 0, 0, 0, r);
@@ -14741,16 +14869,6 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
       c.beginPath();
       c.arc(0, 0, r * (0.35 + ring * 0.18), spin * (1 + ring * 0.2), spin * (1 + ring * 0.2) + Math.PI * 1.35);
       c.stroke();
-    }
-    if (kind === 'rinnegan') {
-      c.fillStyle = 'rgba(255,90,120,.9)';
-      const tomoe = lite ? 3 : 6;
-      for (let i = 0; i < tomoe; i++) {
-        const a = spin * 2 + i * (TAU / tomoe);
-        c.beginPath();
-        c.arc(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55, r * 0.12, 0, TAU);
-        c.fill();
-      }
     }
   } else {
     c.shadowColor = col; c.shadowBlur = lite ? 8 : 24;
@@ -14800,6 +14918,110 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
       c.stroke();
     }
   }
+  c.restore();
+}
+
+/**
+ * Rinnegan in-flight: tweerichtings lichtschits-strook.
+ * Dik bij centrum, smaller naar de tips (taper met afstand).
+ */
+function drawRinneganSlashWave(c, p) {
+  if (!p) return;
+  const col = (typeof skillById === 'function' ? (skillById(p.kind) || {}).color : null) || '#c47aff';
+  const reach = Math.max(8, p.slashReach || 0);
+  const r0 = p.r0 || 42;
+  const maxR = Math.max(1, p.slashMaxReach || 460);
+  const lite = fxLite();
+  const calm = motionReduced();
+  const spin = p.spin || 0;
+  const lifeFade = clamp((p.life || 0.2) / 0.25, 0.35, 1);
+
+  c.save();
+  c.globalAlpha = lifeFade;
+  c.lineCap = 'round';
+  c.lineJoin = 'round';
+
+  // Kernflits in het midden
+  const coreR = r0 * (0.55 + Math.sin(spin * 2.2) * 0.08);
+  const core = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, coreR * 1.4);
+  core.addColorStop(0, 'rgba(255,255,255,.95)');
+  core.addColorStop(0.35, 'rgba(232,208,255,.85)');
+  core.addColorStop(0.7, col + '88');
+  core.addColorStop(1, col + '00');
+  c.fillStyle = core;
+  c.beginPath();
+  c.arc(p.x, p.y, coreR * 1.35, 0, TAU);
+  c.fill();
+
+  for (const dir of [-1, 1]) {
+    const tipX = p.x + dir * reach;
+    const tipT = clamp(reach / maxR, 0, 1);
+    const tipH = Math.max(3, r0 * (1 - tipT * 0.82) * 0.35);
+    const midH = r0 * (1 - tipT * 0.4) * 0.7;
+
+    // Glow-fill van de strook (taperende diamant)
+    c.shadowColor = col;
+    c.shadowBlur = lite ? 6 : 18;
+    const grad = c.createLinearGradient(p.x, p.y, tipX, p.y);
+    grad.addColorStop(0, 'rgba(255,255,255,.75)');
+    grad.addColorStop(0.25, col + 'cc');
+    grad.addColorStop(0.75, col + '66');
+    grad.addColorStop(1, col + '18');
+    c.fillStyle = grad;
+    c.beginPath();
+    c.moveTo(p.x, p.y - r0 * 0.95);
+    c.lineTo(p.x + dir * reach * 0.45, p.y - midH);
+    c.lineTo(tipX, p.y - tipH);
+    c.lineTo(tipX, p.y + tipH);
+    c.lineTo(p.x + dir * reach * 0.45, p.y + midH);
+    c.lineTo(p.x, p.y + r0 * 0.95);
+    c.closePath();
+    c.fill();
+    c.shadowBlur = 0;
+
+    // Jagged lightning core
+    const segs = lite ? 5 : 9;
+    c.strokeStyle = 'rgba(255,255,255,.92)';
+    c.lineWidth = lite ? 2.2 : 3.2;
+    c.beginPath();
+    c.moveTo(p.x, p.y);
+    for (let i = 1; i <= segs; i++) {
+      const t = i / segs;
+      const x = p.x + dir * reach * t;
+      const wob = calm ? 0 : Math.sin(spin * 9 + i * 1.7 + dir) * (6 * (1 - t) + 2);
+      const y = p.y + wob * (i % 2 ? 1 : -1);
+      c.lineTo(x, y);
+    }
+    c.stroke();
+
+    if (!lite) {
+      c.strokeStyle = col;
+      c.lineWidth = 5.5;
+      c.globalAlpha = lifeFade * 0.45;
+      c.beginPath();
+      c.moveTo(p.x, p.y);
+      for (let i = 1; i <= segs; i++) {
+        const t = i / segs;
+        const x = p.x + dir * reach * t;
+        const wob = calm ? 0 : Math.sin(spin * 7 + i * 2.1 + dir * 0.5) * (8 * (1 - t) + 1);
+        c.lineTo(x, p.y + wob * (i % 2 ? -1 : 1));
+      }
+      c.stroke();
+      c.globalAlpha = lifeFade;
+
+      // Rand-stroken (boven/onder) die mee-taperen
+      c.strokeStyle = 'rgba(232,208,255,.55)';
+      c.lineWidth = 1.4;
+      for (const side of [-1, 1]) {
+        c.beginPath();
+        c.moveTo(p.x, p.y + side * r0 * 0.75);
+        c.lineTo(p.x + dir * reach * 0.5, p.y + side * midH * 0.85);
+        c.lineTo(tipX, p.y + side * tipH * 0.9);
+        c.stroke();
+      }
+    }
+  }
+
   c.restore();
 }
 
@@ -22868,9 +23090,10 @@ class Game {
     const aim = projAimVelocity(f, behavior === 'dash' ? speed : speed * 0.9);
     const face = f.face || 1;
     const col = sk.color || '#7cf5ff';
-    // Rasengan: altijd horizontaal (geen aim-tilt); overige jutsu behouden aim
+    // Rasengan: altijd horizontaal (geen aim-tilt); Rinnegan-slash ook op torso-hoogte
     const rasenHoriz = jutsu === 'rasengan';
-    const y0 = rasenHoriz
+    const slashFlat = behavior === 'slash';
+    const y0 = (rasenHoriz || slashFlat)
       ? (f.y - 50)
       : (f.y - 50 + clamp(aim.ny, -1, 0.5) * 36);
 
@@ -22885,6 +23108,21 @@ class Game {
           vx: aim.vx, vy: aim.vy * 0.85, r: ((sk.radius || 22) + jb.radius) * sc, dmg: dmg * sc,
           life: (sk.life || 0.35) * jb.lifeMul * sc, from, kind: sk.id, pierce: !!sk.pierce,
           hitSet: new Set(), pierceRepeat: jb.pierceRepeat,
+        }, critMeta));
+      } else if (behavior === 'slash') {
+        // Lichtschits-golf: expandeert links én rechts, strook tapert met afstand
+        // jb.radius = skill-upgrades → duidelijk dikkere strook per level
+        const r0 = ((sk.radius || 42) + jb.radius * 1.35) * sc;
+        const expand = (sk.speed || 720) * jb.speedMul * sc;
+        const maxReach = (460 + jb.radius * 8) * sc;
+        this.spawnProjectile(Object.assign({
+          x: f.x + ox, y: y0 + oy,
+          vx: 0, vy: 0, r: r0, r0, dmg: dmg * sc,
+          from, kind: sk.id, pierce: sk.pierce !== false, hitSet: new Set(),
+          life: (sk.life || 0.68) * jb.lifeMul * sc,
+          spin: 0, slashWave: true, slashReach: 0, slashMaxReach: maxReach,
+          slashExpand: expand, pierceRepeat: jb.pierceRepeat,
+          kbMul: (sk.kb || 580) / 300,
         }, critMeta));
       } else if (behavior === 'pull' || behavior === 'meteor') {
         const sp = behavior === 'meteor' ? speed * 0.55 : speed;
@@ -22965,6 +23203,19 @@ class Game {
       f.vx = face * (sk.dashVx || 380) * jb.speedMul;
       this.shake(7, 0.2);
       AudioSys.sfx(skillSfxId(sk));
+    } else if (behavior === 'slash') {
+      fireProj(0, 0, 1);
+      const liteCast = fxLite();
+      this.burst(f.x, y0, col, liteCast ? 12 : 22);
+      this.burst(f.x, y0, '#e8d0ff', liteCast ? 6 : 12, { kind: 'spark', size: 2.8 });
+      this.burst(f.x - 28, y0, col, liteCast ? 5 : 10, { kind: 'spark', size: 2.2 });
+      this.burst(f.x + 28, y0, col, liteCast ? 5 : 10, { kind: 'spark', size: 2.2 });
+      spawnFxRing(this, f.x, y0, col, liteCast ? 10 : 16);
+      spawnFxRing(this, f.x, y0, '#ffffff', liteCast ? 6 : 10);
+      this.shake(11, 0.3);
+      this.freezeT = Math.max(this.freezeT, 0.07);
+      AudioSys.sfx(skillSfxId(sk));
+      if (f.isPlayer || f.playerSlot) haptic(26);
     } else if (behavior === 'pull' || behavior === 'meteor') {
       fireProj(0, 0, 1);
       this.burst(f.x + face * 28, y0, col, behavior === 'meteor' ? 18 : 14);
@@ -23434,6 +23685,7 @@ class Game {
       p.life -= dt;
       const spinRate = skProj
         ? (skProj.behavior === 'pull' || skProj.behavior === 'meteor' ? 16
+          : skProj.behavior === 'slash' ? 28
           : skProj.behavior === 'dash' ? 20 : skProj.behavior === 'disc' ? 24 : 22)
         : (p.kind === 'shuriken' ? 28 : p.kind === 'boemerang' ? 34 : 12);
       p.spin = (p.spin || 0) + dt * spinRate;
@@ -23444,6 +23696,27 @@ class Game {
         const lim = p.curlMaxVy || 280;
         if (p.vy > lim) p.vy = lim;
         if (p.vy < -lim) p.vy = -lim;
+      }
+      // Rinnegan lichtschits: expandeert links/rechts i.p.v. te vliegen
+      if (p.slashWave) {
+        const maxR = p.slashMaxReach || 460;
+        p.slashReach = Math.min(maxR, (p.slashReach || 0) + (p.slashExpand || 720) * dt);
+        // Tip-dikte: hoe verder, hoe smaller de strook
+        const taper = clamp((p.slashReach || 0) / Math.max(1, maxR), 0, 1);
+        p.r = Math.max(5, (p.r0 || 42) * (1 - taper * 0.82));
+        if (!motionReduced()) {
+          p._trailAcc = (p._trailAcc || 0) + dt;
+          const interval = (save.liteFx || Perf.tier >= 1) ? 0.06 : 0.028;
+          if (p._trailAcc >= interval) {
+            p._trailAcc = 0;
+            const col = (skProj && skProj.color) || '#c47aff';
+            const reach = p.slashReach || 0;
+            const tipH = Math.max(4, (p.r0 || 42) * (1 - taper * 0.82) * 0.55);
+            const n = (save.liteFx || Perf.tier >= 1) ? 1 : 2;
+            this.burst(p.x + reach, p.y + rand(-tipH, tipH), col, n, { kind: 'spark', size: 2.2 });
+            this.burst(p.x - reach, p.y + rand(-tipH, tipH), col, n, { kind: 'spark', size: 2.2 });
+          }
+        }
       }
       // Boemerang: uitgooien → terugkeren naar thrower (kan opnieuw raken)
       if (p.kind === 'boemerang') {
@@ -23529,10 +23802,10 @@ class Game {
       if (p.from === 'enemy') {
         const pl = this.player;
         if (pl && pl.alive && this.playerHurtCd <= 0
-            && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
+            && projHitsTarget(p, pl.bodyX, pl.bodyY, pl.bodyR * 0.8)) {
           const hit = resolveProjHit(p);
-          pl.takeDamage(hit.dmg, Math.sign(p.vx) * 260, this);
-          applyHitStop(this, { kind: skProj && skProj.behavior === 'dash' ? 'special' : 'punch', dmg: hit.dmg },
+          pl.takeDamage(hit.dmg, projKnockDir(p, pl.x) * 260, this);
+          applyHitStop(this, { kind: skProj && (skProj.behavior === 'dash' || skProj.behavior === 'slash') ? 'special' : 'punch', dmg: hit.dmg },
             { crit: hit.crit, heavy: hit.dmg >= 18, playerHurt: true });
           this.floater(pl.x, pl.y - 115, '-' + hit.dmg, '#ff8080', 16);
           if (hit.crit) applyCritFx(this, pl.x, pl.y);
@@ -23542,12 +23815,12 @@ class Game {
         }
       } else if (p.from === 'p2' && this.p2) {
         const pl = this.player;
-        if (pl && pl.alive && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
+        if (pl && pl.alive && projHitsTarget(p, pl.bodyX, pl.bodyY, pl.bodyR * 0.8)) {
           projStrikeFighter(this, p, pl, '#ff8080');
         }
       } else if (p.from === 'p1' && this.p2) {
         const pl = this.p2;
-        if (pl.alive && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
+        if (pl.alive && projHitsTarget(p, pl.bodyX, pl.bodyY, pl.bodyR * 0.8)) {
           projStrikeFighter(this, p, pl, '#ffb0b8');
         }
       } else {
@@ -23555,20 +23828,21 @@ class Game {
           if (!m.alive) continue;
           const allowRehit = p._rehit && p._rehit.has(m);
           if (p.hitSet && p.hitSet.has(m) && !allowRehit) continue;
-          if ((p.x - m.x) ** 2 + (p.y - m.y) ** 2 < (p.r + m.size) ** 2) {
+          if (projHitsTarget(p, m.x, m.y, m.size)) {
             const hit = resolveProjHit(p);
+            const dir = projKnockDir(p, m.x);
             try { AudioSys.sfxAt(weaponHitSfx(p.throwId || 'shuriken', hit.dmg), m.x); } catch (_) {}
-            m.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this, { skipHitSfx: true, crit: hit.crit });
+            m.takeDamage(hit.dmg, dir * 300 * (p.kbMul || 1), this, { skipHitSfx: true, crit: hit.crit });
             if (hit.crit) applyCritFx(this, m.x, m.y);
-            if (skProj) spawnJutsuImpactFx(this, p.x, p.y, p.kind, 'full');
+            if (skProj) spawnJutsuImpactFx(this, m.x, m.y, p.kind, 'full');
             if (p.hitSet) p.hitSet.add(m); else p.life = 0;
           }
         }
         if (this.robot && this.robot.alive && !(p.hitSet && p.hitSet.has(this.robot))) {
           const rb = this.robot;
-          if ((p.x - rb.bodyX) ** 2 + (p.y - rb.bodyY) ** 2 < (p.r + rb.bodyR) ** 2) {
+          if (projHitsTarget(p, rb.bodyX, rb.bodyY, rb.bodyR)) {
             const hit = resolveProjHit(p);
-            const d = rb.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this);
+            const d = rb.takeDamage(hit.dmg, projKnockDir(p, rb.x) * 300 * (p.kbMul || 1), this);
             this.floater(rb.x, rb.y - 115, '-' + d, '#ffe680', 16);
             if (hit.crit) applyCritFx(this, rb.x, rb.y);
             if (p.hitSet) p.hitSet.add(rb); else p.life = 0;
@@ -23577,7 +23851,11 @@ class Game {
         if (this.mode === 'wall' && this.bricks) {
           for (const b of this.bricks) {
             if (b.hp <= 0) continue;
-            if (p.x + p.r > b.x && p.x - p.r < b.x + b.w && p.y + p.r > b.y && p.y - p.r < b.y + b.h) {
+            const bx = b.x + b.w * 0.5, by = b.y + b.h * 0.5;
+            const hitBrick = p.slashWave
+              ? projHitsTarget(p, bx, by, Math.max(b.w, b.h) * 0.45)
+              : (p.x + p.r > b.x && p.x - p.r < b.x + b.w && p.y + p.r > b.y && p.y - p.r < b.y + b.h);
+            if (hitBrick) {
               b.hp -= p.dmg;
               if (b.hp <= 0) { this.score++; AudioSys.sfx('brick'); this.burst(p.x, p.y, `hsl(${b.hue},50%,45%)`, 12); }
               if (!p.pierce) p.life = 0;
@@ -23603,6 +23881,11 @@ class Game {
       if (p.kind === 'boemerang') {
         if (p.returning && (p.x < -100 || p.x > W + 100 || p.y > this.ground + 50)) {
           p.life = 0;
+        }
+      } else if (p.slashWave) {
+        // Expanderende golf: blijft op plek tot life op is
+        if ((p.slashReach || 0) >= (p.slashMaxReach || 460) && p.life > 0.12) {
+          p.life = Math.min(p.life, 0.12);
         }
       } else if (p.kind === 'rasengan') {
         // Alleen zijranden — grond wordt hierboven afgehandeld
@@ -23973,7 +24256,11 @@ class Game {
             c.restore();
           }
         }
-        drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, p.kind, 1);
+        if (p.slashWave || skDraw.behavior === 'slash') {
+          drawRinneganSlashWave(c, p);
+        } else {
+          drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, p.kind, 1);
+        }
       } else if (p.kind === 'shuriken') {
         c.translate(p.x, p.y); c.rotate(p.spin || 0);
         const big = p.throwId === 'fuuma';
@@ -24399,18 +24686,21 @@ class Game {
       } else if (kind === 'rinnegan') {
         c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : '#c47aff';
         c.lineWidth = 3;
-        for (let ring = 0; ring < 3; ring++) {
+        c.lineCap = 'round';
+        // Tweerichtings lichtschits-pulse (klaar-signaal)
+        for (const dir of [-1, 1]) {
+          const len = 34 + Math.sin(this.t * 10) * 6;
           c.beginPath();
-          c.arc(f.x, f.y - 55, 34 + ring * 8 + Math.sin(this.t * 8 + ring) * 3, this.t * (1.5 + ring * 0.3), this.t * (1.5 + ring * 0.3) + Math.PI * 1.25);
+          c.moveTo(f.x, f.y - 55);
+          c.lineTo(f.x + dir * len * 0.4, f.y - 55 + Math.sin(this.t * 14 + dir) * 4);
+          c.lineTo(f.x + dir * len * 0.7, f.y - 55 - Math.sin(this.t * 11 + dir) * 3);
+          c.lineTo(f.x + dir * len, f.y - 55);
           c.stroke();
         }
-        c.fillStyle = '#ff6b9d';
-        for (let i = 0; i < 3; i++) {
-          const a = this.t * 5 + i * (TAU / 3);
-          c.beginPath();
-          c.arc(f.x + Math.cos(a) * 28, f.y - 55 + Math.sin(a) * 10, 4, 0, TAU);
-          c.fill();
-        }
+        c.fillStyle = '#e8d0ff';
+        c.beginPath();
+        c.arc(f.x, f.y - 55, 5 + Math.sin(this.t * 8) * 1.5, 0, TAU);
+        c.fill();
       } else {
         c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : '#7cf5ff';
         c.lineWidth = 3;
@@ -29373,6 +29663,7 @@ const UI = {
         disc: t('skill.behavior.disc'),
         pull: t('skill.behavior.pull'),
         meteor: t('skill.behavior.meteor'),
+        slash: t('skill.behavior.slash'),
       };
       behBar.querySelectorAll('[data-behavior]').forEach((btn) => {
         const id = btn.dataset.behavior || 'all';
