@@ -8,14 +8,6 @@ function levelScreenActive() {
   return !!(el && el.classList.contains('active'));
 }
 
-/** Dobbel-flash start: menu (verder), level-tik of result (opnieuw/volgende). */
-function gambleFlashStartOk() {
-  const active = document.querySelector('.screen.active');
-  const id = active && active.id;
-  if (!id) return true;
-  return id === 'levelScreen' || id === 'menuScreen' || id === 'resultScreen';
-}
-
 function appendItemUpgradeButton(el, cat, id, rerender) {
   if (!itemUpgradeEligible(cat, id) || !itemCanUpgrade(cat, id)) return;
   const cost = itemUpgradeCost(cat, id);
@@ -1797,7 +1789,11 @@ const UI = {
         `<div class="mission-plan-next"><b>${t('missionsUi.planNow')}</b> ${next}</div>` +
         `<div class="mission-plan-xp">${t('missionsUi.planEarned', { earned, max: maxXp })}` +
         (step === 0 ? ` · ${t('missionsUi.planReset', { reset: dailyResetCountdown() })}` : '') +
-        '</div>';
+        '</div>' +
+        (maxXp > 0
+          ? `<div class="mission-plan-xpbar xpline" style="margin-top:8px;height:8px"><div style="width:${Math.min(100, Math.round(earned / maxXp * 100))}%"></div></div>` +
+            `<div class="mission-plan-xpbar-label">${t('missionsUi.planXpPct', { pct: Math.min(100, Math.round(earned / maxXp * 100)) })}</div>`
+          : '');
     }
     const sum = document.getElementById('missionsSummary');
     if (sum) {
@@ -1936,9 +1932,10 @@ const UI = {
     const achSpot = document.getElementById('achSpotlight');
     if (achSpot) {
       const near = nearestAchievement();
-      const showSpot = step === 0 && near;
+      const showSpot = near && (step === 0 || step === 1);
       if (showSpot) {
         const pct = Math.min(100, Math.round(near.frac * 100));
+        const playTarget = achievementPlayTarget(near.ach);
         achSpot.style.display = 'block';
         achSpot.innerHTML =
           `<div class="mission-spot-title">${t('missionsUi.spotlightTitle')}</div>` +
@@ -1946,6 +1943,14 @@ const UI = {
           `<div class="mission-spot-desc">${achLabel(near.ach, 'desc')}${near.hint ? ` · ${near.hint}` : ''}</div>` +
           `<div class="xpline" style="margin-top:8px;height:6px"><div style="width:${pct}%"></div></div>` +
           `<div class="mission-spot-foot">${t('missionsUi.spotlightFoot', { pct })}</div>`;
+        if (playTarget) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn mission-spot-btn';
+          btn.textContent = t('missionsUi.spotlightPlayBtn', { mode: dailyModeLabel(playTarget.mode) });
+          bindPress(btn, () => safeUiAction(() => goAchievementPlayTarget(near.ach), 'achSpotPlay/' + near.ach.id, 'Kon modus niet openen'));
+          achSpot.appendChild(btn);
+        }
       } else {
         achSpot.style.display = 'none';
         achSpot.innerHTML = '';

@@ -108,7 +108,9 @@ function weaponSwingSfx(weaponOrId, attackKind) {
 }
 
 function weaponThrowSfx(id) {
-  return id === 'fuuma' ? 'wFuuma' : 'shuriken';
+  if (id === 'fuuma') return 'wFuuma';
+  if (id === 'boemerang') return 'wBoemerang';
+  return 'shuriken';
 }
 
 function weaponFinisherSfx(weaponOrId) {
@@ -129,7 +131,8 @@ function weaponHitSfx(weaponOrId, dmg) {
   if (id === 'hamer' || id === 'knuppel' || id === 'guvve' || id === 'bostaf') return 'hitHeavy';
   if (id === 'zwaard' || id === 'ketting' || id === 'kunai' || id === 'tanto' || id === 'sai' || id === 'kama' || id === 'zeis' || id === 'drietand' || id === 'nunchaku' || id === 'tonfa' || id === 'speer') return 'hitMetal';
   if (id === 'shuriken' || id === 'fuuma') return 'hitMetal';
-  if (id === 'waaier' || id === 'boemerang') return 'hit2';
+  if (id === 'boemerang') return 'hit2';
+  if (id === 'waaier') return 'hit2';
   if (dmg > 22) return 'hit2';
   return 'hit';
 }
@@ -143,17 +146,17 @@ function playWeaponPickFeedback(id) {
 }
 
 function isThrowWeapon(id) {
-  return id === 'shuriken' || id === 'fuuma';
+  return id === 'shuriken' || id === 'fuuma' || id === 'boemerang';
 }
 
 /** Per wapen: 3 opeenvolgende melee-bewegingen (combo-ketting ~1,4s). */
 const WEAPON_MOVE_FAMILIES = {
   slash: {
-    labels: ['Horizontale snede', 'Opwaartse kling', 'Doorsteek'],
+    labels: ['Horizontale snede', 'Opwaartse kling', 'Overhead-finisher'],
     moves: [
       { pose: 'slash', rangeMul: 1, dmgMul: 1, kbMul: 1, hitY: 0, windupMul: 1, activeMul: 1 },
       { pose: 'upper', rangeMul: 0.96, dmgMul: 1.04, kbMul: 1.08, hitY: -22, windupMul: 0.94, activeMul: 0.95 },
-      { pose: 'thrust', rangeMul: 1.1, dmgMul: 1.06, kbMul: 1.12, hitY: -6, windupMul: 1.05, activeMul: 1.04 },
+      { pose: 'overhead', rangeMul: 1.06, dmgMul: 1.1, kbMul: 1.16, hitY: -10, windupMul: 1.06, activeMul: 0.98 },
     ],
   },
   spear: {
@@ -181,11 +184,11 @@ const WEAPON_MOVE_FAMILIES = {
     ],
   },
   hook: {
-    labels: ['Haak', 'Lage rippen', 'Opstoot'],
+    labels: ['Haak', 'Lage rippen', 'Opwaartse sikkel'],
     moves: [
       { pose: 'hook', rangeMul: 1, dmgMul: 1, kbMul: 1.08, hitY: 4, windupMul: 0.96, activeMul: 1 },
       { pose: 'sweep', rangeMul: 1.04, dmgMul: 1.02, kbMul: 1.05, hitY: 16, windupMul: 0.94, activeMul: 0.98 },
-      { pose: 'thrust', rangeMul: 1.08, dmgMul: 1.08, kbMul: 1.12, hitY: -8, windupMul: 1.06, activeMul: 1.04 },
+      { pose: 'upper', rangeMul: 1.06, dmgMul: 1.1, kbMul: 1.14, hitY: -16, windupMul: 1.04, activeMul: 1 },
     ],
   },
   fan: {
@@ -199,16 +202,16 @@ const WEAPON_MOVE_FAMILIES = {
   dual: {
     labels: ['Kruis-stoot', 'Parry-snap', 'Dubbel-slagen'],
     moves: [
-      { pose: 'thrust', rangeMul: 1, dmgMul: 1, kbMul: 1, hitY: -2, windupMul: 0.92, activeMul: 0.95 },
+      { pose: 'slash', rangeMul: 1, dmgMul: 1, kbMul: 1, hitY: -2, windupMul: 0.92, activeMul: 0.95 },
       { pose: 'hook', rangeMul: 0.98, dmgMul: 1.04, kbMul: 1.06, hitY: 6, windupMul: 0.9, activeMul: 0.92 },
       { pose: 'spin', rangeMul: 1.08, dmgMul: 1.08, kbMul: 1.12, hitY: -4, windupMul: 1.02, activeMul: 1.04 },
     ],
   },
   energy: {
-    labels: ['Energie-zwaai', 'Focus-stoot', 'Nova-sweep'],
+    labels: ['Energie-zwaai', 'Opwaartse focus', 'Nova-sweep'],
     moves: [
       { pose: 'slash', rangeMul: 1, dmgMul: 1, kbMul: 1.02, hitY: -4, windupMul: 0.94, activeMul: 0.98 },
-      { pose: 'thrust', rangeMul: 1.1, dmgMul: 1.06, kbMul: 1.1, hitY: -8, windupMul: 1.04, activeMul: 1.05 },
+      { pose: 'upper', rangeMul: 1.06, dmgMul: 1.06, kbMul: 1.1, hitY: -16, windupMul: 1.02, activeMul: 1 },
       { pose: 'spin', rangeMul: 1.06, dmgMul: 1.08, kbMul: 1.14, hitY: 0, windupMul: 1.06, activeMul: 1.02 },
     ],
   },
@@ -217,19 +220,19 @@ const WEAPON_MOVE_FAMILIES = {
 /** Per wapen: eigen 1-2-3 stijl (labels + optionele move-tweaks; stats erven anders van family). */
 const WEAPON_COMBOS = {
   kunai: {
-    labels: ['Kunai-steek', 'Ruk-terug', 'Kruis-snede'],
+    labels: ['Kunai-snit', 'Ruk-terug', 'Kruis-snede'],
     moves: [
-      { pose: 'thrust', rangeMul: 1.04, dmgMul: 1, kbMul: 1, hitY: -4, windupMul: 0.9, activeMul: 0.92 },
+      { pose: 'slash', rangeMul: 1.02, dmgMul: 1, kbMul: 1, hitY: -2, windupMul: 0.9, activeMul: 0.92 },
       { pose: 'hook', rangeMul: 0.98, dmgMul: 1.02, kbMul: 1.04, hitY: 2, windupMul: 0.88, activeMul: 0.9 },
-      { pose: 'slash', rangeMul: 1.02, dmgMul: 1.04, kbMul: 1.06, hitY: 0, windupMul: 0.94, activeMul: 0.96 },
+      { pose: 'slash', rangeMul: 1.04, dmgMul: 1.06, kbMul: 1.08, hitY: 0, windupMul: 0.94, activeMul: 0.96 },
     ],
   },
   tanto: {
-    labels: ['Quick-draw', 'Omkeer-priem', 'Lethale punctie'],
+    labels: ['Quick-draw', 'Omkeer-haak', 'Diepe snede'],
     moves: [
       { pose: 'slash', rangeMul: 0.98, dmgMul: 1, kbMul: 0.98, hitY: 0, windupMul: 0.82, activeMul: 0.88 },
       { pose: 'hook', rangeMul: 1, dmgMul: 1.02, kbMul: 1.04, hitY: 4, windupMul: 0.86, activeMul: 0.9 },
-      { pose: 'thrust', rangeMul: 1.06, dmgMul: 1.08, kbMul: 1.1, hitY: -6, windupMul: 0.98, activeMul: 1 },
+      { pose: 'upper', rangeMul: 1.04, dmgMul: 1.08, kbMul: 1.12, hitY: -14, windupMul: 0.98, activeMul: 1 },
     ],
   },
   zwaard: {
@@ -265,11 +268,11 @@ const WEAPON_COMBOS = {
     labels: ['Return-slag', 'Boomer-sweep', 'Spin-out'],
   },
   zeis: {
-    labels: ['Schaduw-sweep', 'Rip-sikkel', 'Zeis-doorsteek'],
+    labels: ['Schaduw-sweep', 'Rip-sikkel', 'Zeis-ophaal'],
     moves: [
       { pose: 'sweep', rangeMul: 1.08, dmgMul: 1, kbMul: 1.02, hitY: 12, windupMul: 0.96, activeMul: 1.02 },
       { pose: 'hook', rangeMul: 1.04, dmgMul: 1.04, kbMul: 1.08, hitY: 6, windupMul: 0.94, activeMul: 1 },
-      { pose: 'thrust', rangeMul: 1.12, dmgMul: 1.1, kbMul: 1.14, hitY: -8, windupMul: 1.08, activeMul: 1.04 },
+      { pose: 'upper', rangeMul: 1.1, dmgMul: 1.12, kbMul: 1.16, hitY: -14, windupMul: 1.06, activeMul: 1.02 },
     ],
   },
   hamer: {
@@ -326,11 +329,11 @@ const WEAPON_COMBOS = {
     ],
   },
   master_sword: {
-    labels: ['Licht-slice', 'Zwaard-dans', 'Triforce-stoot'],
+    labels: ['Licht-slice', 'Zwaard-dans', 'Triforce-hak'],
     moves: [
       { pose: 'slash', rangeMul: 1.06, dmgMul: 1.04, kbMul: 1.06, hitY: 0, windupMul: 0.92, activeMul: 0.96 },
       { pose: 'spin', rangeMul: 1.1, dmgMul: 1.08, kbMul: 1.12, hitY: -4, windupMul: 0.98, activeMul: 1.02 },
-      { pose: 'thrust', rangeMul: 1.16, dmgMul: 1.12, kbMul: 1.18, hitY: -8, windupMul: 1.04, activeMul: 1.06 },
+      { pose: 'overhead', rangeMul: 1.12, dmgMul: 1.14, kbMul: 1.2, hitY: -12, windupMul: 1.06, activeMul: 1 },
     ],
   },
 };
@@ -352,12 +355,38 @@ function weaponMoveFamily(id) {
   if (isThrowWeapon(id) || id === 'vuist') return null;
   if (id === 'speer' || id === 'drietand' || id === 'bostaf') return 'spear';
   if (id === 'knuppel' || id === 'hamer' || id === 'tonfa' || id === 'guvve' || id === 'donder') return 'blunt';
-  if (id === 'nunchaku' || id === 'ketting' || id === 'vlamzweep' || id === 'boemerang') return 'chain';
+  if (id === 'nunchaku' || id === 'ketting' || id === 'vlamzweep') return 'chain';
   if (id === 'kama' || id === 'zeis') return 'hook';
   if (id === 'waaier') return 'fan';
   if (id === 'sai') return 'dual';
   if (id === 'laser' || id === 'void' || id === 'kristal' || id === 'sterkling') return 'energy';
   return 'slash';
+}
+
+/** Idle grip: speer horizontaal, rest diagonaal/omhoog — voorkomt “alles is speer”. */
+function weaponIdleAngle(id) {
+  const fam = weaponMoveFamily(id);
+  if (!fam) return -0.45;
+  if (fam === 'spear') return -0.1;
+  if (fam === 'blunt') return -1.05;
+  if (fam === 'hook') return -0.9;
+  if (fam === 'chain') return -0.78;
+  if (fam === 'fan') return -0.32;
+  if (fam === 'dual') return -0.58;
+  if (fam === 'energy') return -0.5;
+  return -0.72;
+}
+
+/** Extra rotatie t.o.v. onderarm — alleen thrust/spear blijft speer-uitgelijnd. */
+function weaponGripBias(id, move) {
+  const pose = (move && move.pose) || '';
+  const fam = weaponMoveFamily(id);
+  if (fam === 'spear' || pose === 'thrust') return 0;
+  if (pose === 'overhead' || pose === 'upper') return -0.42;
+  if (pose === 'slash' || pose === 'spin') return -0.55;
+  if (pose === 'sweep' || pose === 'hook') return -0.35;
+  if (fam === 'blunt') return -0.65;
+  return -0.4;
 }
 
 function weaponMoveDef(id, idx) {

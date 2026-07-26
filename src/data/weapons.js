@@ -12,7 +12,7 @@ const WEAPONS = [
   { id: 'tonfa',     name: 'Tonfa',           dmg: 1.52, range: 50, speed: 1.28, unlock: 12, rarity: 'rare',      desc: 'Zijhandvat · flurry' },
   { id: 'nunchaku',  name: 'Nunchaku',        dmg: 1.3,  range: 48, speed: 1.4,  unlock: 13, rarity: 'rare',      desc: 'Bliksemsnel' },
   { id: 'kama',      name: 'Kama',            dmg: 1.68, range: 54, speed: 1.14, unlock: 15, rarity: 'rare',      desc: 'Sikkel · haak-slagen' },
-  { id: 'boemerang', name: 'Boemerang',       dmg: 1.7,  range: 70, speed: 1.05, unlock: 16, rarity: 'rare',      desc: 'Komt terug' },
+  { id: 'boemerang', name: 'Boemerang',       dmg: 1.7,  range: 70, speed: 1.05, unlock: 16, rarity: 'rare',      desc: 'Gooi · komt terug' },
   { id: 'zeis',      name: 'Schaduwzeis',     dmg: 1.95, range: 74, speed: 0.82, unlock: 18, rarity: 'rare',      desc: 'Lange boog · duister' },
   { id: 'hamer',     name: 'Mokerhamer',      dmg: 2.6,  range: 52, speed: 0.55, unlock: 20, rarity: 'epic',      desc: 'Sloopt alles' },
   { id: 'drietand',  name: 'Drietand',        dmg: 2.05, range: 76, speed: 0.88, unlock: 22, rarity: 'epic',      desc: 'Drie punten · prikken' },

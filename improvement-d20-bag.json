@@ -7,7 +7,6 @@
     12,
     20,
     5,
-    13,
     14,
     6,
     7,
@@ -19,21 +18,14 @@
     3
   ],
   "lastRoll": {
-    "face": 16,
-    "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
-    "rolledAt": "2026-07-26T06:03:42Z",
-    "remainingCount": 14,
+    "face": 13,
+    "category": "Missies & achievements \u2014 daily loop, beloningen",
+    "rolledAt": "2026-07-24T17:02:47Z",
+    "remainingCount": 13,
     "cycle": 5
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 1,
-      "note": "scaled hit-stop + proj/block feedback",
-      "version": "1.11.4",
-      "doneAt": "2026-07-23T15:51:45Z",
-      "cycle": 1
-    },
     {
       "face": 13,
       "note": "daily hints + claim UX copy",
@@ -586,6 +578,13 @@
       "version": "1.18.75",
       "doneAt": "2026-07-26T06:04:26Z",
       "cycle": 5
+    },
+    {
+      "face": 13,
+      "note": "in-play mission floater, XP bar, ach spotlight play btn",
+      "version": "1.18.77",
+      "doneAt": "2026-07-26T07:02:40Z",
+      "cycle": 5
     }
   ],
   "userFeatureLog": [
@@ -974,13 +973,6 @@
     }
   ],
   "history": [
-    {
-      "face": 10,
-      "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
-      "rolledAt": "2026-07-23T13:30:02Z",
-      "remainingCount": 12,
-      "cycle": 0
-    },
     {
       "face": 4,
       "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
@@ -1814,6 +1806,13 @@
       "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
       "rolledAt": "2026-07-26T06:03:42Z",
       "remainingCount": 14,
+      "cycle": 5
+    },
+    {
+      "face": 13,
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
+      "rolledAt": "2026-07-24T17:02:47Z",
+      "remainingCount": 13,
       "cycle": 5
     }
   ],

@@ -143,7 +143,12 @@ function bumpDaily(type, amount) {
     } else {
       task.progress += amount;
     }
-    if (task.progress >= def.goal) { task.progress = def.goal; task.done = true; changed = true; UI.toast(t('toast.missionDone', { text: dailyText(def.id) }), 2800); }
+    if (task.progress >= def.goal) {
+      task.progress = def.goal;
+      task.done = true;
+      changed = true;
+      notifyDailyMissionDone(def.id);
+    }
     else changed = true;
   }
   if (changed) { persist(); checkAchievements(); if (UI.renderMissions) UI.renderMissions(); }
@@ -366,6 +371,77 @@ function dailyClaimPathHint(claimedN, readyN) {
   return left === 1
     ? t('missionsUi.claimPathAfter1')
     : t('missionsUi.claimPathAfterN', { n: left });
+}
+
+/** d13 c5: geen toast-stack midden in gevecht — floater in play, toast in menu. */
+function notifyDailyMissionDone(taskId) {
+  const text = dailyText(taskId);
+  const msg = t('toast.missionDone', { text });
+  if (state === 'play' && game && typeof game.floater === 'function') {
+    try {
+      const short = t('missionsUi.missionDoneFloater', { text });
+      game.floater(typeof W !== 'undefined' ? W * 0.5 : 400, 72, short, '#ffd75e', 13, 'hud');
+    } catch (_) {
+      UI.toast(msg, 2400);
+    }
+    return;
+  }
+  UI.toast(msg, 2800);
+}
+
+function achievementPlayTarget(ach) {
+  if (!ach) return null;
+  switch (ach.id) {
+    case 'first_win':
+    case 'combo8':
+    case 'streak10':
+    case 'finisher1':
+    case 'finisher10':
+    case 'finisher50':
+    case 'weaponMaster25':
+    case 'dex10':
+    case 'dexFull':
+    case 'dex100':
+    case 'dexHalf':
+    case 'dexTiers':
+    case 'dexMythic':
+    case 'lv10':
+    case 'lv50':
+      return { mode: 'adventure' };
+    case 'train5':
+    case 'trainCombo10':
+      return { mode: 'training' };
+    case 'wall100':
+      return { mode: 'wall' };
+    case 'vs5':
+    case 'vsFatality1':
+    case 'vs_roster':
+    case 'saga_icons':
+      return { mode: 'versus' };
+    default:
+      return null;
+  }
+}
+
+function goAchievementPlayTarget(ach) {
+  const target = achievementPlayTarget(ach);
+  if (!target) return;
+  try {
+    AudioSys.init();
+    AudioSys.sfx('select');
+    if (target.mode === 'adventure') {
+      UI.safeOpen('levelScreen', () => UI.renderLevels());
+    } else if (target.mode === 'training') {
+      startGame('training');
+    } else if (target.mode === 'wall') {
+      startGame('wall');
+    } else if (target.mode === 'versus') {
+      UI.charPickStep = 1;
+      UI.safeOpen('charSelectScreen', () => UI.renderCharSelect());
+    }
+  } catch (err) {
+    sfReportError('achPlay/' + (ach && ach.id), err, 'Kon modus niet openen — kies handmatig in menu');
+  }
 }
 
 function achievementProgressFrac(ach) {
@@ -1227,6 +1303,7 @@ function previewImportSave(text) {
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error('Ongeldige save-structuur');
   }
+  parsed = unwrapSavePayload(parsed);
   const meta = parsed._exportMeta;
   delete parsed._exportMeta;
   const clean = sanitizeSave(Object.assign({}, DEFAULT_SAVE, parsed));
@@ -1265,6 +1342,19 @@ function sfReportError(where, err, userMsg) {
     // Default mag NOOIT "terug naar menu" beloven — fight blijft vaak staan
     userToast(userMsg || 'Hiccup — spel gaat door');
   }
+}
+
+/** Na update-hiccup: input/Kets niet laten hangen — gevecht moet door kunnen. */
+function recoverFightHiccup(g) {
+  if (!g) return;
+  try {
+    g.inputLocked = !!g.over;
+    g.ketsbamChargeT = 0;
+    g.ketsbamShow = false;
+    g.ketsbamBuildT = 0;
+    g.ketsbamBuildProg = 0;
+    if (g.player?.attack && !g.over) g.player.attack = null;
+  } catch (_) {}
 }
 /** Tijdens gevecht: strip .screen.active — ochtend-aanpak: geen !important display-kills. */
 function clearScreensForPlay() {
@@ -1801,29 +1891,33 @@ function resumeLastPlay() {
 
 function startAdventureFromGamble(skipGamble) {
   try {
-    cancelGambleStart();
     const level = pendingAdvLevel || save.unlocked || 1;
     const gamble = skipGamble ? null : lastGambleRoll;
     pendingAdvLevel = null;
+    // Busy pas vrijgeven via cancel ná startGame (startGame roept cancel zelf)
     try { UI.hideGambleRollFlash(); } catch (_) {}
     startGame('adventure', { level, gamble });
   } catch (err) {
+    cancelGambleStart();
     sfReportError('gambleStart', err, 'Avontuur starten mislukt — kies level opnieuw');
   }
 }
 
+/** Monotonic start-token — apart van SFX zodat cancel écht annuleert, niet per ongeluk. */
 let gokStartBusy = false;
 let gokScreenTimer = null;
+let gambleStartGen = 0;
 let gambleSfxGen = 0;
 let gambleSfxT1 = null;
 let gambleSfxT2 = null;
 
 /** Dobbelworp loopt → geen herlaad/update mag hier tussen komen. */
 function gamblePending() {
-  return !!gokScreenTimer || gokStartBusy;
+  return !!gokScreenTimer || gokStartBusy || !!window.__sfStartGameBusy;
 }
 
 function cancelGambleStart() {
+  gambleStartGen++;
   gambleSfxGen++;
   if (gambleSfxT1) { clearTimeout(gambleSfxT1); gambleSfxT1 = null; }
   if (gambleSfxT2) { clearTimeout(gambleSfxT2); gambleSfxT2 = null; }
@@ -1855,13 +1949,18 @@ function playGambleRollSfx(g) {
   }, delay);
 }
 
-/** Instant: level-tik → dobbel-flash → vecht (geen tussen-scherm). */
+/**
+ * Level-tik of Continue → dobbel-flash → vecht.
+ * NOOIT afbreken omdat levelScreen niet open staat (Continue komt van menu).
+ * Alleen cancelGambleStart() (token bump) mag de start killen.
+ */
 function gokGooiStartLevel(n) {
   if (gokStartBusy) return;
   cancelGambleStart();
   gokStartBusy = true;
+  const startGen = gambleStartGen;
   try {
-    pendingAdvLevel = n;
+    pendingAdvLevel = Math.max(1, Math.min(MAX_LEVEL, Number(n) || save.unlocked || 1));
     AudioSys.init();
     lastGambleRoll = rollStageGamble();
     playGambleRollSfx(lastGambleRoll);
@@ -1872,17 +1971,18 @@ function gokGooiStartLevel(n) {
     try { UI.showGambleRollFlash(lastGambleRoll); } catch (_) {}
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
     const delay = motionReduced() ? 80 : 420;
-    const startGen = gambleSfxGen;
     gokScreenTimer = setTimeout(() => {
       gokScreenTimer = null;
-      if (startGen !== gambleSfxGen) { gokStartBusy = false; return; }
-      if (state === 'play' && game && !game.over) { gokStartBusy = false; return; }
-      if (typeof gambleFlashStartOk === 'function' && !gambleFlashStartOk()) {
-        gokStartBusy = false;
-        return;
-      }
+      // Alleen annuleren als gebruiker bewust cancelde (Terug / ander scherm)
+      if (startGen !== gambleStartGen) { gokStartBusy = false; return; }
+      if (state === 'play' && game) { gokStartBusy = false; return; }
       try { UI.hideGambleRollFlash(); } catch (_) {}
-      startAdventureFromGamble(false);
+      try {
+        startAdventureFromGamble(false);
+      } catch (err) {
+        cancelGambleStart();
+        sfReportError('gokStart/timer', err, t('toast.errGambleStart'));
+      }
     }, delay);
   } catch (err) {
     cancelGambleStart();
@@ -1894,26 +1994,29 @@ function gokGooiStartFromScreen() {
   if (gokStartBusy) return;
   cancelGambleStart();
   gokStartBusy = true;
+  const startGen = gambleStartGen;
   try {
+    if (pendingAdvLevel == null) pendingAdvLevel = save.unlocked || 1;
     AudioSys.init();
     lastGambleRoll = rollStageGamble();
     playGambleRollSfx(lastGambleRoll);
-    UI.renderGamble(pendingAdvLevel || save.unlocked || 1);
+    try { UI.renderGamble(pendingAdvLevel || save.unlocked || 1); } catch (_) {}
     const sumLine = document.getElementById('gambleSumLine');
     if (sumLine) sumLine.textContent = t('ui.gambleGoStart');
+    try { UI.showGambleRollFlash(lastGambleRoll); } catch (_) {}
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
     const delay = motionReduced() ? 50 : 140;
-    const startGen = gambleSfxGen;
     gokScreenTimer = setTimeout(() => {
       gokScreenTimer = null;
-      if (startGen !== gambleSfxGen) { gokStartBusy = false; return; }
-      if (state === 'play' && game && !game.over) { gokStartBusy = false; return; }
-      const gambleEl = document.getElementById('gambleScreen');
-      if (!gambleEl || !gambleEl.classList.contains('active')) {
-        gokStartBusy = false;
-        return;
+      if (startGen !== gambleStartGen) { gokStartBusy = false; return; }
+      if (state === 'play' && game) { gokStartBusy = false; return; }
+      try { UI.hideGambleRollFlash(); } catch (_) {}
+      try {
+        startAdventureFromGamble(false);
+      } catch (err) {
+        cancelGambleStart();
+        sfReportError('gokGooi/timer', err, t('toast.errGambleStart'));
       }
-      startAdventureFromGamble(false);
     }, delay);
   } catch (err) {
     cancelGambleStart();
@@ -1924,7 +2027,6 @@ function gokGooiStartFromScreen() {
 function vsWeaponRangeFactor(w) {
   if (!w) return 0.25;
   if (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) return 1;
-  if (w.id === 'boemerang') return 0.88;
   if (w.range >= 74) return 0.72;
   if (w.range >= 58) return 0.48;
   return 0.22;
@@ -1939,8 +2041,7 @@ function vsFighterStats(entry) {
   const critPct = Math.round(crit * 100);
   const str = Math.round(Math.min(100, dmg * (w.dmg || 1) * (0.72 + crit * critMul * 0.35)));
   const rng = Math.round(Math.min(100, ((w.range || 38) / 78) * 100));
-  const meleeScale = (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) ? 0.38
-    : (w.id === 'boemerang' ? 0.52 : 1);
+  const meleeScale = (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) ? 0.38 : 1;
   const meleeDps = Math.round(Math.min(100, (dmg * (w.speed || 1) * spd) / 88 * meleeScale));
   const rangeDps = Math.round(Math.min(100, (dmg * (w.speed || 1) * rng) / 72 * vsWeaponRangeFactor(w) * (0.82 + crit * 0.9)));
   let special = 'Rasengan';

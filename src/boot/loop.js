@@ -196,7 +196,8 @@ function paintMenuHeroCanvas(t) {
   if (typeof drawMenuPixelGroundStrip === 'function') {
     drawMenuPixelGroundStrip(c, Ws, Hs, t);
   }
-  const footY = Hs - Math.max(18, Math.round(Hs * 0.09)) + 2;
+  // Stickmen in bovenste band (niet achter hub-tegels)
+  const footY = Math.round(Hs * 0.72);
   const walk = motionReduced() ? 0 : Math.sin(t * 3.2) * 2;
   const stroll = motionReduced() ? 0 : Math.sin(t * 0.55) * (Ws * 0.03);
   const drawTourist = (x, face, col, scale) => {
@@ -228,9 +229,8 @@ function paintMenuHeroCanvas(t) {
     c.fill();
     c.restore();
   };
-  // Muted stickmen — less neon
-  drawTourist(Ws * 0.24, 1, '#d0d4da', 0.85);
-  drawTourist(Ws * 0.40, -1, '#c09098', 1);
+  drawTourist(Ws * 0.28, 1, '#e8ecf2', 0.9);
+  drawTourist(Ws * 0.46, -1, '#e0a8b0', 1.05);
 }
 
 function loop(now) {
@@ -258,7 +258,8 @@ function loop(now) {
         // NOOIT recoverToMenu tijdens live fight (Kets/charge crashte → startscherm)
         try { sfReportError('update', updateErr, 'Hiccup in gevecht — speel door'); } catch (_) {}
         try {
-          if (game) {
+          if (typeof recoverFightHiccup === 'function') recoverFightHiccup(game);
+          else if (game) {
             game.inputLocked = !!game.over;
             game.ketsbamChargeT = 0;
             game.ketsbamShow = false;
@@ -267,7 +268,7 @@ function loop(now) {
           }
         } catch (_) {}
         try { if (typeof Input !== 'undefined') Input.dualMode = false; } catch (_) {}
-        return;
+        // Geen return — draw + endFrame moeten door; anders bevriest het gevecht na 1 hiccup.
       }
       // Mid-fight: herstel wees-pause / verborgen canvas (training rabbit e.d.)
       if (typeof playLayerBroken === 'function' && playLayerBroken()) {
@@ -296,7 +297,10 @@ function loop(now) {
           game.draw(ctx);
         } catch (drawErr) {
           try { sfReportError('draw', drawErr, 'Tekenen hiccup — speel door'); } catch (_) {}
-          return;
+          try {
+            ctx.fillStyle = '#0a0d18';
+            ctx.fillRect(0, 0, W, H);
+          } catch (_) {}
         }
       } else if (!game) {
         try { ctx.fillStyle = '#0a0d18'; ctx.fillRect(0, 0, W, H); } catch (_) {}
@@ -324,7 +328,7 @@ function loop(now) {
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
-    try { cancelGambleStart(); } catch (_) {}
+    // NIET cancelGambleStart — tab-blink / iPad audio-unlock killde dice→start
     if (state === 'play' && game && !game.over) {
       try { Input.releaseAll(); } catch (_) {}
       state = 'pause';

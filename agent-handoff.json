@@ -13,23 +13,58 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.76",
-    "swCache": "stickfighter-app-v286",
-    "gameJsQuery": "game.js?v=286",
-    "cssQuery": "styles/main.css?v=286",
-    "featureBranch": "cursor/fix-gamble-dice-start-d226",
+    "appVersion": "1.18.86",
+    "swCache": "stickfighter-app-v296",
+    "gameJsQuery": "game.js?v=294",
+    "cssQuery": "styles/main.css?v=294",
+    "featureBranch": "cursor/rasengan-multi-shot-2125",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "localMainHead": "b59ac74",
-    "remoteMainHead": "b59ac74",
-    "note": "d16 share rev max SW cron → main"
+    "localMainHead": null,
+    "remoteMainHead": null,
+    "note": "rasengan horizontal dual/triple \u00b7 MERGE"
   },
   "userWishlist": [
     {
-      "id": "w-20260726T070000",
+      "id": "w-20260726T080453",
       "from": "user",
-      "text": "Bug: dobbelstenen rollen bij Verder/level-start maar spel start niet (gamble timer guard te streng sinds v1.18.73).",
+      "text": "Elke 2 uur automatisch code scannen op bugs/optimalisaties en fixen, volledig autonoom.",
+      "status": "open",
+      "updated": "2026-07-26"
+    },
+    {
+      "id": "w-20260726T083700",
+      "from": "user",
+      "text": "Rasengan: hiccup + bevroren orb in lucht (ook 2e cast) bij golf 1/2 einde.",
       "status": "done-in-code",
+      "updated": "2026-07-26"
+    },
+    {
+      "id": "w-20260726T073000",
+      "from": "user",
+      "text": "Out-of-the-box ideeën voor stabielere/bug-free game; implementeren wat kan.",
+      "status": "done-in-code",
+      "updated": "2026-07-26"
+    },
+    {
+      "id": "w-20260726T080000",
+      "from": "user",
+      "text": "Hiccup na pet Slymo + einde golf 1/2 — patroon na beloning of stage-overgang; diepere bug.",
+      "status": "done-in-code",
+      "updated": "2026-07-26"
+    },
+    {
+      "id": "w-20260726T071500",
+      "from": "user",
+      "text": "Bug avontuur: hiccup-toast + paars wapen-banner (Lv7 knuppel) → gevecht bevriest, kan niet verder spelen.",
+      "status": "done-in-code",
+      "updated": "2026-07-26"
+    },
+    {
+      "id": "w-20260726T070240",
+      "from": "user",
+      "text": "Elke 2 uur automatisch code scannen op bugs/optimalisaties en fixen, volledig autonoom.",
+      "status": "open",
       "updated": "2026-07-26"
     },
     {
@@ -77,6 +112,42 @@
     "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md."
   ],
   "sessionLog": [
+    {
+      "at": "2026-07-26T08:05:00Z",
+      "summary": "Stabiliteit: save envelope unwrap, gamble start guard, spawn guard · v1.18.83"
+    },
+    {
+      "at": "2026-07-26T07:40:53Z",
+      "summary": "Rasengan spawnJutsu jb/jutsu fix + orb purge bij wave-clear · v1.18.82"
+    },
+    {
+      "at": "2026-07-26T07:37:41Z",
+      "summary": "Golf 1/2 vast: geen checkpoint korte levels + lijken weg · v1.18.81"
+    },
+    {
+      "at": "2026-07-26T07:32:58Z",
+      "summary": "Stabiliteit: slice-guards, check:critical, save-fuzz · v1.18.80"
+    },
+    {
+      "at": "2026-07-26T07:30:00Z",
+      "summary": "Menu opaque hub icons/tiles + stickmen top-band · v1.18.79"
+    },
+    {
+      "at": "2026-07-26T07:19:14Z",
+      "summary": "Wave-clear hiccup: partBoundaryWaveIdx terug na module-split · v1.18.79"
+    },
+    {
+      "at": "2026-07-26T07:10:13Z",
+      "summary": "Fight hiccup-freeze fix: loop door na crash, grantXP guarded · v1.18.78"
+    },
+    {
+      "at": "2026-07-26T07:02:40Z",
+      "summary": "d13 missies c5: in-play floater, XP bar, ach spotlight shortcut · v1.18.77"
+    },
+    {
+      "at": "2026-07-26T06:55:00Z",
+      "summary": "HOTFIX dice→start: remove levelScreen guard, flash outside screen · v1.18.76"
+    },
     {
       "at": "2026-07-26T06:04:26Z",
       "summary": "d16 hosting: shareCacheRev max SW, speel QR sync, settings renderHosting · v1.18.75"
@@ -140,42 +211,6 @@
     {
       "at": "2026-07-25T19:04:23Z",
       "summary": "Stabiliteit: tide guard, ketsbam death, todayKey · d15 c5 onboard hints · v1.18.55"
-    },
-    {
-      "at": "2026-07-25T18:00:00Z",
-      "summary": "d17 stabiliteit: goMenu tide cleanup, tide reward rollback, daily sanitize · v1.18.46"
-    },
-    {
-      "at": "2026-07-25T17:05:53Z",
-      "summary": "d5 c4: pause draw skip, claim rollback, tide/fighter guards · v1.18.45"
-    },
-    {
-      "at": "2026-07-25T15:20:00Z",
-      "summary": "Adventure blue/black lid harden · v1.18.38 / SW v248"
-    },
-    {
-      "at": "2026-07-25T15:05:00Z",
-      "summary": "Stabiliteit + d4 c4: ketsbam crash, sanitizeSave guards, trait chip + star buffer v1.18.36"
-    },
-    {
-      "at": "2026-07-25T14:35:00Z",
-      "summary": "Fix settings blue-lid stuck + orphan pause · v1.18.37"
-    },
-    {
-      "at": "2026-07-25T14:14:09Z",
-      "summary": "d13 missions c4: claim path copy, almost tag, streak bonus toast v1.18.34"
-    },
-    {
-      "at": "2026-07-25T14:12:00Z",
-      "summary": "d3 versus c4: spawn pads, match-point/HP lead, round-skip, rematch tips v1.18.33"
-    },
-    {
-      "at": "2026-07-25T14:07:40Z",
-      "summary": "d19 muur c4: chase meter, pace 45/20, combo re-arm, near-miss tip v1.18.32"
-    },
-    {
-      "at": "2026-07-25T14:05:51Z",
-      "summary": "Stabiliteit cron: ketsbam pulse crash, sanitizeSave guards, i18n DOM v1.18.31"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

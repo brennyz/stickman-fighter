@@ -689,12 +689,17 @@ class Fighter {
     c.fillStyle = this.color;
     c.beginPath(); c.arc(hx, hy, 3.4, 0, TAU); c.fill();
 
-    if (this.isPlayer && this.weapon.id !== 'vuist' && !(this.attack && this.attack.kind === 'special')) {
+    if (this.isPlayer && this.weapon.id !== 'vuist' && !this._boomerOut && !(this.attack && this.attack.kind === 'special')) {
       const aimLift = (this._aimAtAttack && (this.attack?.kind === 'weapon' || this.attack?.kind === 'punch' || this.attack?.kind === 'kick'))
         ? clamp(this._aimAtAttack.ny, -1, 0.4) * 0.85
         : 0;
-      const wAng = this.attack && this.attack.kind === 'weapon' ? P.arms[1][1] + aimLift : -0.5 + aimLift * 0.25;
-      if (this.attack && this.attack.kind === 'weapon' && this.attack.move && !motionReduced() && !fxLite()) {
+      const attacking = this.attack && this.attack.kind === 'weapon';
+      const grip = attacking ? weaponGripBias(this.weapon.id, this.attack.move) : 0;
+      const idle = (typeof weaponIdleAngle === 'function') ? weaponIdleAngle(this.weapon.id) : -0.5;
+      const wAng = attacking
+        ? P.arms[1][1] + grip + aimLift
+        : idle + aimLift * 0.25;
+      if (attacking && this.attack.move && !motionReduced() && !fxLite()) {
         const a = this.attack;
         if (a.t >= a.windup && a.t <= a.windup + a.active) {
           const ext = clamp((a.t - a.windup) / Math.max(0.01, a.active), 0, 1);

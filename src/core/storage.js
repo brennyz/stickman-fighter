@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.76';
+const APP_VERSION = '1.18.86';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 286;
+const SW_CACHE_REV = 296;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -411,7 +411,7 @@ function projStrikeFighter(game, p, tgt, col) {
   const hit = resolveProjHit(p);
   const kb = Math.sign(p.vx || 1) * (p.kind === 'rinnegan' ? 300 : 260);
   const dealt = tgt.takeDamage(hit.dmg, kb, game, {
-    projWeaponId: p.kind === 'shuriken' ? (p.throwId || 'shuriken') : null,
+    projWeaponId: (p.kind === 'shuriken' || p.kind === 'boemerang') ? (p.throwId || p.kind) : null,
   });
   if (dealt > 0) {
     applyHitStop(game, { kind: sk ? 'special' : 'punch', dmg: hit.dmg }, { crit: hit.crit, heavy: hit.dmg >= 18 });
@@ -472,10 +472,26 @@ function loadSave() {
   return best || Object.assign({}, DEFAULT_SAVE);
 }
 
+/** Version-stash / export envelope: { schema, save: { lvl… } } → flat save object. */
+function unwrapSavePayload(parsed) {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return parsed;
+  const inner = parsed.save;
+  if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
+    const meta = Object.assign({}, parsed._exportMeta || {}, {
+      schema: parsed.schema,
+      app: parsed.fromApp || parsed.app,
+      exportedAt: parsed.stashedAt || parsed.exportedAt,
+      summary: parsed.summary,
+    });
+    return Object.assign({}, inner, { _exportMeta: meta });
+  }
+  return parsed;
+}
+
 function readSaveJson(raw) {
   try {
     if (!raw || raw.length > 180000) return null;
-    const parsed = JSON.parse(raw);
+    const parsed = unwrapSavePayload(JSON.parse(raw));
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
     const merged = Object.assign({}, DEFAULT_SAVE, parsed);
     merged.stats = Object.assign({}, DEFAULT_SAVE.stats, parsed.stats || {});

@@ -112,7 +112,15 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-| 2026-07-26 | **17** | Fix gamble-start: dobbel-flash startte niet na Verder (menu) of result opnieuw — `gambleFlashStartOk` i.p.v. alleen `levelScreenActive`. Smoke `smoke:gamble`. v1.18.76 / SW v286. |
+| 2026-07-26 | — | **Rasengan:** altijd horizontaal; Lv4+ dual krul ↑↓; Lv8 triple ultimate (→↑↓). Max Lv8. v1.18.84 / SW v294. |
+| 2026-07-26 | **17** | Stabiliteit: save envelope unwrap (import + readSaveJson), gamble `__sfStartGameBusy` reload guard, spawn queue invalid-species guard. v1.18.83 / SW v293. |
+| 2026-07-26 | **17** | Rasengan hiccup: `spawnJutsu` jb/jutsu/fireProj regressie na skill-refactor — ReferenceError elke cast; orbs opruimen bij wave-clear. v1.18.82 / SW v292. |
+| 2026-07-26 | **17** | Golf 1/2 vast: geen checkpoint op korte levels (<4 golven); lijken weg; partGate touch/vx fix. v1.18.81 / SW v291. |
+| 2026-07-26 | **17** | Wave-clear hiccup: ontbrekende `partBoundaryWaveIdx` + `playerWalkInput` na module-split (checkpoint golf 1/2 + pet Slymo). v1.18.79 / SW v289. |
+| 2026-07-26 | — | **Menu polish:** hub-iconen 0 transparantie; tegels solid; stickmen alleen in top-band (niet achter knoppen). v1.18.79 / SW v289. |
+| 2026-07-26 | **17** | Fight hiccup-freeze: loop tekent/input na update-crash door; grantXP level-up + pickup guarded; recoverFightHiccup. v1.18.78 / SW v288. |
+| 2026-07-26 | **13** | Missies c5: in-play mission floater (geen toast-stack), XP-voortgangsbalk vandaag, achievement spotlight Speel-knop. v1.18.77 / SW v287. |
+| 2026-07-26 | — | **HOTFIX dice→start:** Continue/level rolled dice maar startte niet (levelScreenActive-guard + flash in display:none). Flash buiten screen; start altijd na roll. v1.18.76 / SW v286. |
 | 2026-07-26 | **16** | Hosting c5: shareCacheRevFor max(SW, hosting.json); speel.html QR sync via index rev; settings refresh hosting. v1.18.75 / SW v285. |
 | 2026-07-26 | **17** | Stabiliteit cron: gameUiTimerOk op deferred toast/banner; dexBag() guard tegen corrupt save.dex. v1.18.74 / SW v284. |
 | 2026-07-26 | **17** | Stabiliteit cron: gamble timer screen-guard (level/gamble), safeOpen cancel, tab-hide/bfcache cancelGambleStart, ensureTipsSeen array. v1.18.73 / SW v283. |
