@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.100';
+const APP_VERSION = '1.18.101';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 310;
+const SW_CACHE_REV = 311;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -8300,6 +8300,16 @@ const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
 const GIANT_DMG_MUL = 1.14;
 const GIANT_XP_MUL = 1.3;
+/** Flagship baas (BOSS_AT elite / super-baas): groter + tankier. */
+const BOSS_CORE_SIZE_MUL = 1.25;
+const BOSS_CORE_HP_MUL = 2.85;
+const BOSS_CORE_DMG_MUL = 1.18;
+/** Soms ~2× zo groot als huidige baas, met extra HP. */
+const COLOSSAL_CHANCE = 0.42;
+const COLOSSAL_SIZE_MUL = 2.0;
+const COLOSSAL_HP_MUL = 1.9;
+const COLOSSAL_DMG_MUL = 1.12;
+const COLOSSAL_XP_MUL = 1.45;
 
 const SEA_ARTS = new Set(['shark', 'octo']);
 
@@ -8578,14 +8588,19 @@ function gambleOutcomeLabel(g) {
 /** Intro-lied + FX voor elite / baas / super-baas (avontuur). */
 function triggerSpecialEnemyIntro(game, monster, kind) {
   if (!game || !monster) return;
-  const tier = kind || (monster.superBoss ? 'superBoss' : (monster.elite ? 'elite' : 'boss'));
+  const tier = kind || (monster.superBoss ? 'superBoss' : (monster.bossCore ? 'boss' : (monster.elite ? 'elite' : 'boss')));
   const name = (monster.sp && monster.sp.name) || 'Baas';
   const rar = rarityOf(monster.sp?.rarity || 'rare');
+  const bigBoss = !!(monster.bossCore || monster.superBoss || tier === 'superBoss');
+  const colossal = !!monster.colossal;
   const col = tier === 'superBoss' ? '#ffd75e' : (tier === 'boss' ? '#ff6b6b' : (rar.color || '#ffb0b8'));
-  monster.introT = tier === 'superBoss' ? 2.4 : (tier === 'boss' ? 2.0 : 1.55);
+  let introDur = tier === 'superBoss' ? 2.4 : (tier === 'boss' ? 2.0 : 1.55);
+  if (bigBoss) introDur = colossal ? 3.6 : (tier === 'superBoss' ? 3.2 : 2.85);
+  monster.introDur = introDur;
+  monster.introT = introDur;
   monster.introTier = tier;
-  const waveKey = `${game.mode || 'x'}:${game.waveIdx}:${tier === 'superBoss' ? 'super' : 'special'}`;
-  const firstOfWave = tier === 'superBoss' || game._specialIntroKey !== waveKey;
+  const waveKey = `${game.mode || 'x'}:${game.waveIdx}:${tier === 'superBoss' ? 'super' : (bigBoss ? 'bossCore' : 'special')}`;
+  const firstOfWave = tier === 'superBoss' || bigBoss || game._specialIntroKey !== waveKey;
   if (firstOfWave) game._specialIntroKey = waveKey;
 
   if (firstOfWave) {
@@ -8596,15 +8611,27 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
         }
         AudioSys.sting('superBossIntro');
         AudioSys.play('boss');
-        game.banner(`SUPER BAAS — ${name}!`, 2.0, col, 44);
+        const title = typeof t === 'function' ? t('banner.superBossTitle') : 'SUPER BAAS';
+        game.banner(title, 2.8, col, bigBoss ? 68 : 44);
+        game.banner(colossal
+          ? (typeof t === 'function' ? t('banner.colossalBossName', { name }) : `COLOSSALE ${name}!`)
+          : (typeof t === 'function' ? t('banner.bossName', { name }) : name), 2.5, '#fff', bigBoss ? 52 : 40);
       } else if (tier === 'boss') {
         AudioSys.sting('bossIntro');
         AudioSys.play('boss');
-        game.banner(`BAAS — ${name}!`, 1.8, col, 42);
+        if (bigBoss) {
+          const title = typeof t === 'function' ? t('banner.bossTitle') : 'BAAS';
+          game.banner(title, 2.6, col, 64);
+          game.banner(colossal
+            ? (typeof t === 'function' ? t('banner.colossalBossName', { name }) : `COLOSSALE ${name}!`)
+            : (typeof t === 'function' ? t('banner.bossName', { name }) : `${name}!`), 2.35, '#fff', 50);
+        } else {
+          game.banner(typeof t === 'function' ? t('banner.bossNamed', { name }) : `BAAS — ${name}!`, 1.8, col, 42);
+        }
       } else {
         AudioSys.sting('eliteIntro');
         AudioSys.play('elite');
-        game.banner(`ELITE — ${name}!`, 1.5, col, 38);
+        game.banner(typeof t === 'function' ? t('banner.eliteNamed', { name }) : `ELITE — ${name}!`, 1.5, col, 38);
       }
     } catch (_) {}
     try { AudioSys.sfx('roar'); } catch (_) {}
@@ -8615,16 +8642,19 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
   const x = monster.x, y = monster.y - (monster.size || 40) * 0.4;
   const burstN = motionReduced() || fxLite()
     ? 8
-    : (firstOfWave ? (tier === 'superBoss' ? 28 : 18) : 8);
+    : (firstOfWave ? (tier === 'superBoss' || colossal ? 34 : (bigBoss ? 26 : 18)) : 8);
   try {
     game.burst(x, y, col, burstN);
     if (firstOfWave) {
       game.burst(x, y, '#fff', Math.ceil(burstN * 0.35));
-      spawnFxRing(game, x, y, col, tier === 'superBoss' ? 22 : 14);
-      if (tier !== 'elite') spawnFxRing(game, x, y - 20, '#fff', 10);
-      game.shake(tier === 'superBoss' ? 12 : (tier === 'boss' ? 9 : 6), tier === 'superBoss' ? 0.42 : 0.28);
-      game.freezeT = Math.max(game.freezeT || 0, tier === 'superBoss' ? 0.16 : 0.1);
-      haptic(tier === 'superBoss' ? 28 : 16);
+      spawnFxRing(game, x, y, col, tier === 'superBoss' || colossal ? 26 : (bigBoss ? 20 : 14));
+      if (tier !== 'elite') spawnFxRing(game, x, y - 20, '#fff', bigBoss ? 14 : 10);
+      if (colossal) spawnFxRing(game, x, y - 36, '#ffd75e', 16);
+      const shakeAmt = colossal ? 16 : (tier === 'superBoss' ? 14 : (bigBoss ? 11 : (tier === 'boss' ? 9 : 6)));
+      const shakeDur = colossal ? 0.55 : (tier === 'superBoss' ? 0.48 : (bigBoss ? 0.38 : (tier === 'boss' ? 0.28 : 0.22)));
+      game.shake(shakeAmt, shakeDur);
+      game.freezeT = Math.max(game.freezeT || 0, colossal ? 0.22 : (tier === 'superBoss' ? 0.18 : (bigBoss ? 0.14 : 0.1)));
+      haptic(colossal ? 36 : (tier === 'superBoss' ? 28 : (bigBoss ? 22 : 16)));
     }
   } catch (_) {}
 }
@@ -9182,6 +9212,12 @@ function seedNlGameStrings() {
     bossWave: 'BAAS-GOLF!',
     eliteWave: 'ELITE-GOLF',
     superBossWave: 'SUPER-BAAS GOLF',
+    bossTitle: 'BAAS',
+    superBossTitle: 'SUPER BAAS',
+    bossName: '{name}!',
+    colossalBossName: 'COLOSSALE {name}!',
+    bossNamed: 'BAAS — {name}!',
+    eliteNamed: 'ELITE — {name}!',
     flyerWave: 'VLIEGER-GOLF',
     rushWave: 'RUSH-GOLF',
     eliteTraitWave: 'ELITE-GOLF',
@@ -9297,6 +9333,9 @@ function seedNlGameStrings() {
     masterSwordGain: 'Hyrules legendarische kling — 15s!',
     masterSwordFade: 'Master Sword vervaagt…',
     bossWaits: 'DE BAAS WACHT…',
+    bossTag: 'BAAS',
+    superBossTag: 'SUPER BAAS',
+    colossalTag: 'COLOSSAAL',
     checkpoint: 'CHECKPOINT — DEEL {part}/3',
     allyHeal: '+{heal} bondgenoot',
     allyHit: '{name} −{dmg}',
@@ -10097,6 +10136,12 @@ const CATALOG_EN = {
     levelUp: 'LEVEL UP! Lv {lvl}', newWeapon: 'New weapon: {name}!', masterBuff: 'MASTER BUFF +20%',
     masterSword: 'MASTER SWORD!',
     bossWave: 'BOSS WAVE!', eliteWave: 'ELITE WAVE', superBossWave: 'SUPER-BOSS WAVE',
+    bossTitle: 'BOSS',
+    superBossTitle: 'SUPER BOSS',
+    bossName: '{name}!',
+    colossalBossName: 'COLOSSAL {name}!',
+    bossNamed: 'BOSS — {name}!',
+    eliteNamed: 'ELITE — {name}!',
     flyerWave: 'FLYER WAVE', rushWave: 'RUSH WAVE', eliteTraitWave: 'ELITE WAVE', tideWave: 'TIDE WAVE',
     waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
     fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'DEFEATED...', rasenganTriple: 'TRIPLE RASENGAN!', rasenganDual: 'DUAL RASENGAN!',
@@ -10619,6 +10664,9 @@ const CATALOG_EN = {
     masterSwordGain: "Hyrule's legendary blade — 15s!",
     masterSwordFade: 'Master Sword fades…',
     bossWaits: 'THE BOSS AWAITS…',
+    bossTag: 'BOSS',
+    superBossTag: 'SUPER BOSS',
+    colossalTag: 'COLOSSAL',
     checkpoint: 'CHECKPOINT — PART {part}/3',
     allyHeal: '+{heal} ally', allyHit: '{name} −{dmg}',
     tideAllyIntro: '{name} — tide heal between waves',
@@ -15775,6 +15823,8 @@ class Monster {
     this.spId = spId; this.sp = sp;
     this.elite = !!opts.elite;
     this.superBoss = !!opts.superBoss;
+    this.bossCore = !!(opts.bossCore || opts.superBoss);
+    this.colossal = false;
     this.size = sp.size * (opts.elite ? 1.5 : 1);
     this.maxhp = Math.round(sp.hp * (opts.hpMul || 1) * eliteMul);
     this.hp = this.maxhp;
@@ -15786,7 +15836,27 @@ class Monster {
       this.dmg = Math.round(this.dmg * 1.42);
       this.size *= 1.32;
     }
-    if (opts.giant && !this.superBoss) {
+    if (this.bossCore) {
+      if (this.superBoss) {
+        // Super-baas is al zwaar gebufft — lichte extra + kans op colossaal.
+        this.size = Math.round(this.size * 1.12);
+        this.maxhp = Math.round(this.maxhp * 1.35);
+        this.hp = this.maxhp;
+      } else {
+        this.size = Math.round(this.size * BOSS_CORE_SIZE_MUL);
+        this.maxhp = Math.round(this.maxhp * BOSS_CORE_HP_MUL);
+        this.hp = this.maxhp;
+        this.dmg = Math.round(this.dmg * BOSS_CORE_DMG_MUL);
+      }
+      if (Math.random() < COLOSSAL_CHANCE) {
+        this.colossal = true;
+        this.size = Math.round(this.size * COLOSSAL_SIZE_MUL);
+        this.maxhp = Math.round(this.maxhp * COLOSSAL_HP_MUL);
+        this.hp = this.maxhp;
+        this.dmg = Math.round(this.dmg * COLOSSAL_DMG_MUL);
+      }
+    }
+    if (opts.giant && !this.superBoss && !this.bossCore) {
       this.giant = true;
       this.size = Math.round(this.size * GIANT_SIZE_MUL);
       this.maxhp = Math.round(this.maxhp * GIANT_HP_MUL);
@@ -15806,8 +15876,12 @@ class Monster {
     this.enraged = false;
     this.phase2FlashT = 0;
     this.introT = 0;
+    this.introDur = 0;
     this.introTier = null;
     this.tideBoss = !!opts.tideBoss;
+    if (this.bossCore && typeof BOSS_SAFETY_DUR === 'number') {
+      this.safetyT = BOSS_SAFETY_DUR * (this.colossal ? 1.35 : 1);
+    }
   }
   get alive() { return this.hp > 0; }
 
@@ -16028,11 +16102,12 @@ class Monster {
     const rar = rarityOf(this.sp.rarity);
     if (this.introT > 0 && this.alive) {
       c.save();
-      const p = clamp(this.introT / 1.6, 0, 1);
+      const p = clamp(this.introT / Math.max(0.6, this.introDur || 1.6), 0, 1);
       const pulse = 1 + Math.sin(this.t * 14) * 0.08;
+      const bigIntro = !!(this.bossCore || this.superBoss || this.colossal);
       c.globalAlpha = 0.25 + p * 0.45;
-      c.strokeStyle = this.introTier === 'tideBoss' ? '#4a9fff' : (this.introTier === 'superBoss' ? '#ffd75e' : (this.introTier === 'boss' ? '#ff6b6b' : '#c47aff'));
-      c.lineWidth = 4 + p * 4;
+      c.strokeStyle = this.introTier === 'tideBoss' ? '#4a9fff' : (this.introTier === 'superBoss' || this.colossal ? '#ffd75e' : (this.introTier === 'boss' ? '#ff6b6b' : '#c47aff'));
+      c.lineWidth = (bigIntro ? 5 : 4) + p * (bigIntro ? 6 : 4);
       c.beginPath();
       c.ellipse(0, 0, this.size * (1.7 + (1 - p) * 0.9) * pulse, this.size * (1.35 + (1 - p) * 0.7) * pulse, 0, 0, TAU);
       c.stroke();
@@ -16042,6 +16117,29 @@ class Monster {
         c.beginPath();
         c.ellipse(0, 0, this.size * 1.9 * pulse, this.size * 1.5 * pulse, 0, 0, TAU);
         c.fill();
+      }
+      if (bigIntro && p > 0.12) {
+        const label = (this.sp && this.sp.name) || 'BAAS';
+        const tag = this.colossal
+          ? (typeof t === 'function' ? t('combat.colossalTag') : 'COLOSSAAL')
+          : (this.superBoss
+            ? (typeof t === 'function' ? t('combat.superBossTag') : 'SUPER BAAS')
+            : (typeof t === 'function' ? t('combat.bossTag') : 'BAAS'));
+        const fs = Math.max(18, Math.min(this.colossal ? 42 : 34, this.size * 0.55));
+        c.globalAlpha = Math.min(1, 0.35 + p * 0.75);
+        c.font = `900 ${fs}px -apple-system, sans-serif`;
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        const ty = -this.size * (this.flying ? 1.15 : 1.35) - fs * 0.35;
+        c.lineWidth = Math.max(4, fs * 0.18);
+        c.strokeStyle = 'rgba(0,0,0,.72)';
+        c.fillStyle = this.colossal || this.superBoss ? '#ffd75e' : '#ff8a9a';
+        c.strokeText(tag, 0, ty - fs * 0.85);
+        c.fillText(tag, 0, ty - fs * 0.85);
+        c.font = `900 ${Math.round(fs * 1.15)}px -apple-system, sans-serif`;
+        c.fillStyle = '#fff';
+        c.strokeText(label, 0, ty);
+        c.fillText(label, 0, ty);
       }
       c.restore();
     }
@@ -16080,10 +16178,11 @@ class Monster {
       }
       c.restore();
     }
-    if (this.giant && this.alive) {
+    if ((this.giant || this.colossal) && this.alive) {
       c.save();
       c.globalAlpha = 0.35 + Math.sin(this.t * 4) * 0.08;
-      c.strokeStyle = '#ffd75e'; c.lineWidth = 2.5;
+      c.strokeStyle = this.colossal ? '#ffb06a' : '#ffd75e';
+      c.lineWidth = this.colossal ? 3.4 : 2.5;
       c.beginPath(); c.ellipse(0, this.size * 0.82, this.size * 1.28, this.size * 0.24, 0, 0, TAU); c.stroke();
       c.restore();
     }
@@ -20388,14 +20487,14 @@ class Game {
     }
     if (bossWave) {
       try {
-        this.banner(t('banner.bossWave'), 1.8, '#ff6b6b', 50);
+        this.banner(t('banner.bossWave'), 2.2, '#ff6b6b', 58);
         AudioSys.play('boss');
         AudioSys.sfx('roar');
       } catch (_) {}
       try {
-        this.shake(8, 0.3);
-        this.burst(W * 0.5, this.ground - 80, '#ff6b6b', fxLite() ? 12 : 22);
-        spawnFxRing(this, W * 0.5, this.ground - 80, '#ffd75e', 18);
+        this.shake(10, 0.36);
+        this.burst(W * 0.5, this.ground - 80, '#ff6b6b', fxLite() ? 12 : 26);
+        spawnFxRing(this, W * 0.5, this.ground - 80, '#ffd75e', 20);
       } catch (_) {}
     } else if (wave.some(s => s.elite || s.superBoss)) {
       const hasSuper = wave.some(s => s.superBoss);
@@ -20685,7 +20784,9 @@ class Game {
           this.monsters.push(mon);
           if (def.superBoss) {
             triggerSpecialEnemyIntro(this, mon, 'superBoss');
-          } else if (def.elite || bossWave) {
+          } else if (def.bossCore) {
+            triggerSpecialEnemyIntro(this, mon, 'boss');
+          } else if (def.elite) {
             triggerSpecialEnemyIntro(this, mon, bossWave ? 'boss' : 'elite');
           } else if (def.giant && !fxLite()) {
             this.floater(mon.x, mon.y - mon.size - 28, t('combat.giant'), '#ffd75e', 13);
@@ -20935,7 +21036,8 @@ class Game {
     const lvlScale = 1 + (this.level ? (this.level.n - 1) * 0.1 : 0);
     const rarMul = 1 + (rar.order || 0) * 0.15;
     const giantMul = m.giant ? GIANT_XP_MUL : 1;
-    const xp = Math.round((sp.xp || 8) * lvlScale * rarMul * (m.elite ? 2 : 1) * giantMul);
+    const bossMul = m.colossal ? COLOSSAL_XP_MUL : (m.bossCore ? 1.25 : 1);
+    const xp = Math.round((sp.xp || 8) * lvlScale * rarMul * (m.elite ? 2 : 1) * giantMul * bossMul);
     try { this.grantXP(xp); } catch (_) {}
     try { this.floater(m.x, m.y - m.size - 30, `+${xp} XP`, rar.color, 16); } catch (_) {}
     if ((rar.order || 0) >= 3) {

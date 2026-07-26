@@ -335,14 +335,14 @@ class Game {
     }
     if (bossWave) {
       try {
-        this.banner(t('banner.bossWave'), 1.8, '#ff6b6b', 50);
+        this.banner(t('banner.bossWave'), 2.2, '#ff6b6b', 58);
         AudioSys.play('boss');
         AudioSys.sfx('roar');
       } catch (_) {}
       try {
-        this.shake(8, 0.3);
-        this.burst(W * 0.5, this.ground - 80, '#ff6b6b', fxLite() ? 12 : 22);
-        spawnFxRing(this, W * 0.5, this.ground - 80, '#ffd75e', 18);
+        this.shake(10, 0.36);
+        this.burst(W * 0.5, this.ground - 80, '#ff6b6b', fxLite() ? 12 : 26);
+        spawnFxRing(this, W * 0.5, this.ground - 80, '#ffd75e', 20);
       } catch (_) {}
     } else if (wave.some(s => s.elite || s.superBoss)) {
       const hasSuper = wave.some(s => s.superBoss);
@@ -632,7 +632,9 @@ class Game {
           this.monsters.push(mon);
           if (def.superBoss) {
             triggerSpecialEnemyIntro(this, mon, 'superBoss');
-          } else if (def.elite || bossWave) {
+          } else if (def.bossCore) {
+            triggerSpecialEnemyIntro(this, mon, 'boss');
+          } else if (def.elite) {
             triggerSpecialEnemyIntro(this, mon, bossWave ? 'boss' : 'elite');
           } else if (def.giant && !fxLite()) {
             this.floater(mon.x, mon.y - mon.size - 28, t('combat.giant'), '#ffd75e', 13);
@@ -882,7 +884,8 @@ class Game {
     const lvlScale = 1 + (this.level ? (this.level.n - 1) * 0.1 : 0);
     const rarMul = 1 + (rar.order || 0) * 0.15;
     const giantMul = m.giant ? GIANT_XP_MUL : 1;
-    const xp = Math.round((sp.xp || 8) * lvlScale * rarMul * (m.elite ? 2 : 1) * giantMul);
+    const bossMul = m.colossal ? COLOSSAL_XP_MUL : (m.bossCore ? 1.25 : 1);
+    const xp = Math.round((sp.xp || 8) * lvlScale * rarMul * (m.elite ? 2 : 1) * giantMul * bossMul);
     try { this.grantXP(xp); } catch (_) {}
     try { this.floater(m.x, m.y - m.size - 30, `+${xp} XP`, rar.color, 16); } catch (_) {}
     if ((rar.order || 0) >= 3) {
