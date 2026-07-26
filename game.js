@@ -28812,6 +28812,9 @@ const UI = {
         else if (trait === 'flyers') cls += ' trait-fly';
         else if (trait === 'rush') cls += ' trait-rush';
         else if (trait === 'elite') cls += ' trait-elite';
+        else if (trait === 'ranch') cls += ' trait-ranch';
+        else if (trait === 'safari') cls += ' trait-safari';
+        else if (trait === 'tide') cls += ' trait-tide';
         return `<i class="${cls}"></i>`;
       }).join('');
       el.innerHTML = locked
