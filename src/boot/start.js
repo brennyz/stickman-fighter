@@ -517,7 +517,7 @@ bindPress(btnSharePlay, () => {
   AudioSys.init(); AudioSys.sfx('select'); sharePlayLink();
 });
 bindPress(document.getElementById('pauseBtn'), () => {
-  if (state === 'play') {
+  if (state === 'play' && game && !game.over) {
     try { Input.releaseAll(); } catch (_) {}
     state = 'pause';
     AudioSys.setPaused(true);

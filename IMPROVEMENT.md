@@ -112,7 +112,8 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-| 2026-07-26 | **17** | Stabiliteit cron: level long-press stale timer, gamble SFX cancel gen, petCoinCost SPECIES guard. v1.18.69 / SW v279. |
+| 2026-07-26 | **11** | Menu nav c5: goMenu cancelGamble+bumpResult, goBack renderMenu refresh, pause hidden na over. v1.18.71 / SW v281. |
+| 2026-07-26 | **17** | Stabiliteit cron: scheduleGameResult menu-guard, sanitize tipsSeen/missionsIntroSeen. v1.18.71 / SW v281. |
 | 2026-07-25 | **17** | Stabiliteit cron: stale result timer (d17 regressie), training→scheduleGameResult, gamble cancel op level terug. v1.18.68 / SW v278. |
 | 2026-07-25 | **17** | Stabiliteit cron: char swap `t()` shadow crash; adventure win→pauze→menu laat resultaat zien. v1.18.67 / SW v277. |
 | 2026-07-26 | **10** | d10 a11y c5: calm joy/special meter + rarity glow, HC gamble flash CSS. v1.18.70 / SW v280. |

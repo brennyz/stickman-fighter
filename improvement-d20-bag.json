@@ -16,26 +16,18 @@
     1,
     4,
     18,
-    11,
     8,
     3
   ],
   "lastRoll": {
-    "face": 10,
-    "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
-    "rolledAt": "2026-07-24T18:01:13Z",
-    "remainingCount": 16,
+    "face": 11,
+    "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
+    "rolledAt": "2026-07-24T18:00:38Z",
+    "remainingCount": 15,
     "cycle": 5
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 18,
-      "note": "Deel 2: saga-icon strip, saga clash duo, filter random, prestatie",
-      "version": "1.11.2",
-      "doneAt": "2026-07-23T15:49:32Z",
-      "cycle": 1
-    },
     {
       "face": 11,
       "note": "sticky menu bar + scroll reset",
@@ -588,6 +580,13 @@
       "version": "1.18.70",
       "doneAt": "2026-07-26T01:01:40Z",
       "cycle": 5
+    },
+    {
+      "face": 11,
+      "note": "goMenu gamble/result cleanup, pause over guard, menu goBack refresh",
+      "version": "1.18.71",
+      "doneAt": "2026-07-26T02:05:36Z",
+      "cycle": 5
     }
   ],
   "userFeatureLog": [
@@ -976,13 +975,6 @@
     }
   ],
   "history": [
-    {
-      "face": 5,
-      "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
-      "rolledAt": "2026-07-23T13:27:30Z",
-      "remainingCount": 14,
-      "cycle": 0
-    },
     {
       "face": 16,
       "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
@@ -1816,6 +1808,13 @@
       "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
       "rolledAt": "2026-07-24T18:01:13Z",
       "remainingCount": 16,
+      "cycle": 5
+    },
+    {
+      "face": 11,
+      "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
+      "rolledAt": "2026-07-24T18:00:38Z",
+      "remainingCount": 15,
       "cycle": 5
     }
   ],

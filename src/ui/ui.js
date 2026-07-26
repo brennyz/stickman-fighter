@@ -1064,7 +1064,7 @@ const UI = {
         try { this.refreshPauseSubtitle(); } catch (_) {}
       }
       const pauseBtn = document.getElementById('pauseBtn');
-      if (pauseBtn) pauseBtn.classList.toggle('show', !id && !!game && state !== 'result');
+      if (pauseBtn) pauseBtn.classList.toggle('show', !id && !!game && !game.over && state !== 'result');
     } catch (err) {
       sfReportError('UI.show/' + (id || 'play'), err, 'Schermwissel mislukt — terug naar menu');
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
@@ -1154,16 +1154,19 @@ const UI = {
         return;
       }
       if (active === 'modeHubScreen') {
+        this.renderMenu();
         this.show('menuScreen');
         return;
       }
       if (active === 'levelScreen') {
         bumpLevelHoldGen();
         try { cancelGambleStart(); } catch (_) {}
+        this.renderMenu();
         this.show('menuScreen');
         return;
       }
       if (active === 'charSelectScreen') {
+        this.renderMenu();
         this.show('menuScreen');
         return;
       }
@@ -1176,6 +1179,7 @@ const UI = {
           save.missionsIntroSeen = true;
           persist();
         }
+        this.renderMenu();
         this.show('menuScreen');
         return;
       }
@@ -1211,12 +1215,16 @@ const UI = {
 
   goMenu() {
     try {
+      try { cancelGambleStart(); } catch (_) {}
+      bumpLevelHoldGen();
       const active = this.screens.find(sid => document.getElementById(sid)?.classList.contains('active'));
       if (active === 'missionsScreen' && !save.missionsIntroSeen) {
         save.missionsIntroSeen = true;
         persist();
       }
       if (game) {
+        game._resultToken = (game._resultToken || 0) + 1;
+        game._pendingResult = false;
         try {
           if (typeof clearTideBattleState === 'function') clearTideBattleState(game, { restoreMusic: true });
         } catch (_) {

@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.70';
+const APP_VERSION = '1.18.71';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 280;
+const SW_CACHE_REV = 281;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -486,7 +486,8 @@ function readSaveJson(raw) {
     merged.pets = Object.assign({}, parsed.pets || {});
     merged.eggPets = Object.assign({}, parsed.eggPets || {});
     merged.weaponMastery = Object.assign({}, DEFAULT_SAVE.weaponMastery || {}, parsed.weaponMastery || {});
-    merged.tipsSeen = Object.assign({}, parsed.tipsSeen || {});
+    merged.tipsSeen = (parsed.tipsSeen && typeof parsed.tipsSeen === 'object' && !Array.isArray(parsed.tipsSeen))
+      ? Object.assign({}, parsed.tipsSeen) : {};
     merged.advFails = Object.assign({}, parsed.advFails || {});
     if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
@@ -775,7 +776,9 @@ function sanitizeSave(s) {
   out.reducedMotion = !!out.reducedMotion;
   out.liteFx = !!out.liteFx;
   out.highContrast = !!out.highContrast;
-  out.tipsSeen = (out.tipsSeen && typeof out.tipsSeen === 'object') ? out.tipsSeen : {};
+  out.tipsSeen = (out.tipsSeen && typeof out.tipsSeen === 'object' && !Array.isArray(out.tipsSeen))
+    ? out.tipsSeen : {};
+  out.missionsIntroSeen = !!out.missionsIntroSeen;
   if (out.lastPlay && typeof out.lastPlay === 'object') {
     const lp = out.lastPlay;
     if (!['adventure', 'training', 'wall', 'versus', 'coinrun'].includes(lp.mode)) out.lastPlay = null;

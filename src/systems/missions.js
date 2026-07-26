@@ -1307,7 +1307,7 @@ function syncPlayLayer() {
   document.body.style.overflow = canvasHits ? 'hidden' : '';
   try {
     const pb = document.getElementById('pauseBtn');
-    if (pb) pb.classList.toggle('show', !!(canvasHits && state === 'play' && game));
+    if (pb) pb.classList.toggle('show', !!(canvasHits && state === 'play' && game && !game.over));
   } catch (_) {}
   try { syncMenuHubStage(); } catch (_) {}
   try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
@@ -1660,9 +1660,8 @@ function scheduleGameResult(gameRef, delayMs, showFn) {
       if (!gameRef || gameRef._resultToken !== token) return;
       // Nieuw gevecht gestart → oude timer negeren (ook na over)
       if (game && game !== gameRef) return;
-      // Pauze→menu vóór einde → geen resultaat
-      if (state === 'menu' && !gameRef.over) return;
-      // Na over: resultaat tonen ook als goMenu() game=null zette tijdens delay
+      // Menu = expliciete exit (pauze→stop, home, result→menu) — geen vertraagd resultaat
+      if (state === 'menu') return;
       gameRef._pendingResult = false;
       showFn();
     }, 'scheduleGameResult', 'Resultaat laden mislukt — tik Menu of Opnieuw');
