@@ -124,8 +124,14 @@ function weaponDropZoneOf(w) {
   return (id && WEAPON_DROP_ZONES[id]) || null;
 }
 
-function adventureDropZoneForLevel(levelN) {
+function adventureDropZoneForLevel(levelN, diffId) {
   const n = Math.floor(Number(levelN) || 0);
+  const diff = typeof normalizeAdvDiffId === 'function'
+    ? normalizeAdvDiffId(diffId)
+    : (diffId || 'normal');
+  // Difficulty modes 2.0 / 3.0: drops volgen de tab, niet alleen eiland 6–7
+  if (diff === 'hell') return 'hell';
+  if (diff === 'nightmare') return 'nightmare';
   if (n >= 61 && n <= 70) return 'hell';
   if (n >= 51 && n <= 60) return 'nightmare';
   return null;
@@ -178,7 +184,8 @@ function grantZoneWeapon(weaponId, opts) {
 
 function rollZoneWeaponDrop(game, monster) {
   if (!game || game.mode !== 'adventure' || !game.level) return null;
-  const zone = adventureDropZoneForLevel(game.level.n);
+  const diff = (game.advDiff || (game.level && game.level.diff) || 'normal');
+  const zone = adventureDropZoneForLevel(game.level.n, diff);
   if (!zone) return null;
   const pool = zoneWeaponsFor(zone).filter(w => !weaponZoneUnlocked(w));
   if (!pool.length) return null;
@@ -189,17 +196,29 @@ function rollZoneWeaponDrop(game, monster) {
     else if (monster.giant) chance = 0.09;
   }
   if (game.level.boss && monster && monster.elite) chance = Math.max(chance, 0.28);
+  // Nightmare 2.0 / Hell 3.0: dropMul versnelt zone-collectie
+  if (typeof advDropChanceMul === 'function') {
+    chance = Math.min(0.72, chance * advDropChanceMul(diff));
+  }
   if (Math.random() > chance) return null;
   const pick = pool[Math.floor(Math.random() * pool.length)];
   if (grantZoneWeapon(pick.id)) return pick;
   return null;
 }
 
-/** Garantie-drop bij eilandbaas-clear (Lv 60 / 70). */
-function grantZoneBossClearWeapon(levelN) {
-  const zone = adventureDropZoneForLevel(levelN);
+/** Garantie-drop bij eilandbaas-clear (Lv 60 / 70) of hard-diff eilandbaas (10/20/…/70). */
+function grantZoneBossClearWeapon(levelN, diffId) {
+  const n = Math.floor(Number(levelN) || 0);
+  const diff = typeof normalizeAdvDiffId === 'function'
+    ? normalizeAdvDiffId(diffId)
+    : (diffId || 'normal');
+  const zone = adventureDropZoneForLevel(n, diff);
   if (!zone) return null;
-  if (levelN !== 60 && levelN !== 70) return null;
+  const isIslandBoss = n > 0 && n % 10 === 0;
+  const isLegacyZoneBoss = n === 60 || n === 70;
+  // Normal: alleen zone-eilandbazen 60/70. Hard diffs: elke eilandbaas.
+  if (diff === 'normal' && !isLegacyZoneBoss) return null;
+  if (diff !== 'normal' && !isIslandBoss) return null;
   const pool = zoneWeaponsFor(zone).filter(w => !weaponZoneUnlocked(w));
   if (!pool.length) return null;
   const pick = pool[Math.floor(Math.random() * pool.length)];

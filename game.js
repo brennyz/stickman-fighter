@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.106';
+const APP_VERSION = '1.18.107';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 316;
+const SW_CACHE_REV = 317;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   zoneWeapons: {},
@@ -510,7 +510,11 @@ function adventureWeaponCapForLevel(levelN) {
   return ISLAND_WEAPON_CAPS[idx];
 }
 function adventureWeaponCap() { return adventureWeaponCapForLevel(advUnlockedLevel('normal') || 1); }
-function weaponSkillGated(w) { return w.unlock > adventureWeaponCap(); }
+function weaponSkillGated(w) {
+  // Zone-drops (Nightmare/Hel): bruikbaar zodra verzameld — geen eiland-skill gate
+  if (w && w.dropZone) return false;
+  return w.unlock > adventureWeaponCap();
+}
 function weaponUnlockedByLevel(w) {
   if (!w) return false;
   if (w.dropZone) return typeof weaponZoneUnlocked === 'function' ? weaponZoneUnlocked(w) : !!(save.zoneWeapons && save.zoneWeapons[w.id]);
@@ -821,6 +825,7 @@ function rollHitDamage(attacker, spec, mult) {
   if (attacker.isPlayer && k === 'weapon' && attacker.weapon && attacker.weapon.upgradeCrit) {
     critChance += attacker.weapon.upgradeCrit;
   }
+  if (attacker._wpnCritSurgeT > 0) critChance += 0.18;
   critChance = clamp(critChance, 0, 0.48);
   let dmg = spec.dmg * rand(0.9, 1.15) * mult;
   const crit = Math.random() < critChance;
@@ -5533,8 +5538,14 @@ function weaponDropZoneOf(w) {
   return (id && WEAPON_DROP_ZONES[id]) || null;
 }
 
-function adventureDropZoneForLevel(levelN) {
+function adventureDropZoneForLevel(levelN, diffId) {
   const n = Math.floor(Number(levelN) || 0);
+  const diff = typeof normalizeAdvDiffId === 'function'
+    ? normalizeAdvDiffId(diffId)
+    : (diffId || 'normal');
+  // Difficulty modes 2.0 / 3.0: drops volgen de tab, niet alleen eiland 6–7
+  if (diff === 'hell') return 'hell';
+  if (diff === 'nightmare') return 'nightmare';
   if (n >= 61 && n <= 70) return 'hell';
   if (n >= 51 && n <= 60) return 'nightmare';
   return null;
@@ -5587,7 +5598,8 @@ function grantZoneWeapon(weaponId, opts) {
 
 function rollZoneWeaponDrop(game, monster) {
   if (!game || game.mode !== 'adventure' || !game.level) return null;
-  const zone = adventureDropZoneForLevel(game.level.n);
+  const diff = (game.advDiff || (game.level && game.level.diff) || 'normal');
+  const zone = adventureDropZoneForLevel(game.level.n, diff);
   if (!zone) return null;
   const pool = zoneWeaponsFor(zone).filter(w => !weaponZoneUnlocked(w));
   if (!pool.length) return null;
@@ -5598,17 +5610,29 @@ function rollZoneWeaponDrop(game, monster) {
     else if (monster.giant) chance = 0.09;
   }
   if (game.level.boss && monster && monster.elite) chance = Math.max(chance, 0.28);
+  // Nightmare 2.0 / Hell 3.0: dropMul versnelt zone-collectie
+  if (typeof advDropChanceMul === 'function') {
+    chance = Math.min(0.72, chance * advDropChanceMul(diff));
+  }
   if (Math.random() > chance) return null;
   const pick = pool[Math.floor(Math.random() * pool.length)];
   if (grantZoneWeapon(pick.id)) return pick;
   return null;
 }
 
-/** Garantie-drop bij eilandbaas-clear (Lv 60 / 70). */
-function grantZoneBossClearWeapon(levelN) {
-  const zone = adventureDropZoneForLevel(levelN);
+/** Garantie-drop bij eilandbaas-clear (Lv 60 / 70) of hard-diff eilandbaas (10/20/…/70). */
+function grantZoneBossClearWeapon(levelN, diffId) {
+  const n = Math.floor(Number(levelN) || 0);
+  const diff = typeof normalizeAdvDiffId === 'function'
+    ? normalizeAdvDiffId(diffId)
+    : (diffId || 'normal');
+  const zone = adventureDropZoneForLevel(n, diff);
   if (!zone) return null;
-  if (levelN !== 60 && levelN !== 70) return null;
+  const isIslandBoss = n > 0 && n % 10 === 0;
+  const isLegacyZoneBoss = n === 60 || n === 70;
+  // Normal: alleen zone-eilandbazen 60/70. Hard diffs: elke eilandbaas.
+  if (diff === 'normal' && !isLegacyZoneBoss) return null;
+  if (diff !== 'normal' && !isIslandBoss) return null;
   const pool = zoneWeaponsFor(zone).filter(w => !weaponZoneUnlocked(w));
   if (!pool.length) return null;
   const pick = pool[Math.floor(Math.random() * pool.length)];
@@ -23185,6 +23209,12 @@ class Game {
       if (stars > prevStars) { setAdvStarsFor(lv, stars, diff); persist(); }
       bumpStat('advWins', 1);
       bumpDaily('advWin', 1);
+      try {
+        const zwBoss = grantZoneBossClearWeapon(lv, diff);
+        if (zwBoss) {
+          try { noteRunLootWeapon(this.runLoot, zwBoss.id); } catch (_) {}
+        }
+      } catch (_) {}
       const eggBonus = maybeAdvEggBonus();
       if (eggBonus) {
         spawnGameEggPet(this);
@@ -23320,6 +23350,12 @@ class Game {
           else if (m.elite) dropTier = 'elite';
           else if (m.giant) dropTier = 'giant';
           this.spawnPickup(m.x + rand(-22, 22), m.y - m.size * 0.45, { itemCat: itemDrop.cat, itemId: itemDrop.id, dropTier });
+        }
+      } catch (_) {}
+      try {
+        const zw = rollZoneWeaponDrop(this, m);
+        if (zw) {
+          try { noteRunLootWeapon(this.runLoot, zw.id); } catch (_) {}
         }
       } catch (_) {}
     }
@@ -24760,6 +24796,11 @@ class Game {
         }
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
+        if (spec.kind === 'weapon' && typeof applyWeaponOnHitEffect === 'function') {
+          try {
+            applyWeaponOnHitEffect(this, f, m, { dmg: hitRoll.dmg, crit: hitRoll.crit, finisher });
+          } catch (_) {}
+        }
         if (counter) this.freezeT = Math.max(this.freezeT, 0.016);
         applyHitConfirmFx(this, hx, hy, spec);
         if (f.isPlayer && this.styleLightning && !fxLite()) {
@@ -24991,6 +25032,9 @@ class Game {
         try { sfReportError('monster/update', monErr, 'Vijand hiccup — speel door'); } catch (_) {}
       }
     }
+    try { if (typeof tickWeaponStatusEffects === 'function') tickWeaponStatusEffects(this, dt); } catch (_) {}
+    if (this.player && this.player._wpnCritSurgeT > 0) this.player._wpnCritSurgeT -= dt;
+    if (this.p2 && this.p2._wpnCritSurgeT > 0) this.p2._wpnCritSurgeT -= dt;
     this.monsters = this.monsters.filter(m => m.alive || m.deadT < 1);
     if (this.mode === 'adventure') tickSuperFx(this, dt);
 
@@ -25150,6 +25194,14 @@ class Game {
             try { AudioSys.sfxAt(weaponHitSfx(p.throwId || 'shuriken', hit.dmg), m.x); } catch (_) {}
             m.takeDamage(hit.dmg, dir * 300 * (p.kbMul || 1), this, { skipHitSfx: true, crit: hit.crit });
             if (hit.crit) applyCritFx(this, m.x, m.y);
+            if (p.throwId && typeof applyWeaponOnHitEffect === 'function') {
+              const owner = this.player;
+              if (owner && owner.weapon && owner.weapon.id === p.throwId && owner.weapon.effect) {
+                try {
+                  applyWeaponOnHitEffect(this, owner, m, { dmg: hit.dmg, crit: hit.crit, finisher: false });
+                } catch (_) {}
+              }
+            }
             if (skProj) spawnJutsuImpactFx(this, m.x, m.y, p.kind, 'full');
             if (p.hitSet) p.hitSet.add(m); else p.life = 0;
           }
@@ -30247,17 +30299,29 @@ const UI = {
       const islandLine = islandLocked && !lvlLocked
         ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:#ffd75e">${t('ui.weaponIslandPick', { cap: adventureWeaponCap() })}</div>`
         : '';
-      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${summonBadge}${tierBadge}${upBadge}</div>
+      const zoneMeta = base.dropZone ? weaponDropZoneOf(base) : null;
+      const effectTxt = weaponEffectLabel(base);
+      const zoneBadge = zoneMeta
+        ? ` <span class="rar-pill" style="color:${zoneMeta.color};border-color:${zoneMeta.color}">${zoneMeta.name}</span>`
+        : '';
+      const effectLine = effectTxt
+        ? `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:3px;color:${zoneMeta ? zoneMeta.color : '#ffb0b8'}">${effectTxt}</div>`
+        : '';
+      const zoneLockLine = lvlLocked && zoneMeta
+        ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:${zoneMeta.color}">Drop in ${zoneMeta.name}-zone / Nightmare·Hell modus</div>`
+        : '';
+      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${zoneBadge}${summonBadge}${tierBadge}${upBadge}</div>
         <div class="cinfo">${statLine}</div>` +
         upLine +
+        effectLine +
         (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '') +
-        islandLine;
+        islandLine + zoneLockLine;
       el.appendChild(info);
       if (weaponUpgradeEligible(base)) appendItemUpgradeButton(el, 'weapon', w.id, () => this.renderWeapons());
       const right = document.createElement('div');
       right.className = 'right';
       right.innerHTML = lvlLocked
-        ? `${SVG_LOCK_ICON} Lv ${base.unlock}`
+        ? (zoneMeta ? `${SVG_LOCK_ICON} ${zoneMeta.name}` : `${SVG_LOCK_ICON} Lv ${base.unlock}`)
         : (islandLocked
           ? t('ui.weaponIslandCapShort', { cap: adventureWeaponCap() })
           : (selected ? '&#10004; gekozen' : 'kies'));
