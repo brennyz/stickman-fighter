@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.102';
+const APP_VERSION = '1.18.103';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 312;
+const SW_CACHE_REV = 313;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   zoneWeapons: {},
@@ -140,6 +140,17 @@ function drawJutsuMiniIcon(c, kind, x, y, color) {
     c.lineTo(0.7, -1);
     c.closePath();
     c.fill();
+  } else if (behavior === 'slash') {
+    c.beginPath();
+    c.moveTo(-6, 0);
+    c.lineTo(-2, -2.5);
+    c.lineTo(0, 0);
+    c.lineTo(2, 2.5);
+    c.lineTo(6, 0);
+    c.stroke();
+    c.beginPath();
+    c.arc(0, 0, 1.6, 0, TAU);
+    c.fill();
   } else if (behavior === 'pull' || behavior === 'meteor') {
     c.beginPath(); c.ellipse(0, 0, 5.2, 3.2, 0, 0, TAU); c.stroke();
     c.beginPath(); c.arc(0, 0, 1.7, 0, TAU); c.fill();
@@ -224,6 +235,22 @@ function drawTouchBtnIcon(c, id, x, y, r, jutsuKind) {
         c.lineTo(s * 0.65, -s * 0.2);
         c.lineTo(s * 0.1, -s * 0.2);
         c.closePath();
+        c.fill();
+      } else if (behavior === 'slash') {
+        c.beginPath();
+        c.moveTo(-s, 0);
+        c.lineTo(-s * 0.35, -s * 0.35);
+        c.lineTo(0, 0);
+        c.lineTo(s * 0.35, s * 0.35);
+        c.lineTo(s, 0);
+        c.stroke();
+        c.beginPath();
+        c.moveTo(-s * 0.85, s * 0.25);
+        c.lineTo(0, 0);
+        c.lineTo(s * 0.85, -s * 0.25);
+        c.stroke();
+        c.beginPath();
+        c.arc(0, 0, s * 0.22, 0, TAU);
         c.fill();
       } else if (behavior === 'pull' || behavior === 'meteor') {
         c.beginPath(); c.ellipse(0, 0, s, s * 0.62, 0, 0, TAU); c.stroke();
@@ -347,7 +374,7 @@ function rollHitDamage(attacker, spec, mult) {
   if (k === 'special' || spec.jutsu) {
     critChance += sig.jutsuCrit || 0;
     const jsk = SKILLS.find(s => s.id === spec.jutsu);
-    if (jsk && (jsk.id === 'rinnegan' || jsk.behavior === 'pull')) critChance += 0.05;
+    if (jsk && (jsk.id === 'rinnegan' || jsk.behavior === 'pull' || jsk.behavior === 'slash')) critChance += 0.05;
   }
   if (attacker.isPlayer && typeof game !== 'undefined' && game && game.stageCritBonus) {
     critChance += game.stageCritBonus;
@@ -374,7 +401,7 @@ function projCritMeta(f) {
   const sig = SIG_MODS[prof.sig] || {};
   let critChance = prof.crit + (sig.critAdd || 0) + (sig.jutsuCrit || 0);
   const eqSk = fighterEquippedSkill(f);
-  if (eqSk && (eqSk.id === 'rinnegan' || eqSk.behavior === 'pull')) critChance += 0.05;
+  if (eqSk && (eqSk.id === 'rinnegan' || eqSk.behavior === 'pull' || eqSk.behavior === 'slash')) critChance += 0.05;
   return { critChance: clamp(critChance, 0, 0.42), critMul: prof.critMul };
 }
 
@@ -423,11 +450,38 @@ function resolveProjHit(p) {
   return { dmg: Math.max(1, Math.round(dmg)), crit };
 }
 
+/** Rinnegan lichtschits: horizontale strook L+R, dikte tapert met afstand tot centrum. */
+function slashWaveHalfHeight(p, dist) {
+  const r0 = p.r0 || p.r || 42;
+  const maxR = Math.max(1, p.slashMaxReach || 460);
+  const t = clamp(Math.abs(dist) / maxR, 0, 1);
+  return Math.max(5, r0 * (1 - t * 0.82));
+}
+
+function projHitsTarget(p, tx, ty, tr) {
+  if (p.slashWave) {
+    const dx = tx - p.x;
+    const dy = ty - p.y;
+    const reach = p.slashReach || 0;
+    if (Math.abs(dx) > reach + tr) return false;
+    const halfH = slashWaveHalfHeight(p, dx);
+    return Math.abs(dy) <= halfH + tr * 0.9;
+  }
+  return (p.x - tx) ** 2 + (p.y - ty) ** 2 < (p.r + tr) ** 2;
+}
+
+function projKnockDir(p, tgtX) {
+  if (p.slashWave) return Math.sign((tgtX || 0) - p.x) || 1;
+  return Math.sign(p.vx || 1) || 1;
+}
+
 function projStrikeFighter(game, p, tgt, col) {
   if (!tgt || !tgt.alive) return;
   const sk = (typeof skillExists === 'function' && skillExists(p.kind)) ? skillById(p.kind) : null;
   const hit = resolveProjHit(p);
-  const kb = Math.sign(p.vx || 1) * (p.kind === 'rinnegan' ? 300 : 260);
+  const dir = projKnockDir(p, tgt.x);
+  const kbBase = p.kind === 'rinnegan' ? 340 : 260;
+  const kb = dir * kbBase * (p.kbMul || 1);
   const dealt = tgt.takeDamage(hit.dmg, kb, game, {
     projWeaponId: (p.kind === 'shuriken' || p.kind === 'boemerang') ? (p.throwId || p.kind) : null,
   });
@@ -436,10 +490,13 @@ function projStrikeFighter(game, p, tgt, col) {
   }
   game.floater(tgt.x, tgt.y - 115, '-' + dealt, col, 16);
   if (hit.crit) applyCritFx(game, tgt.x, tgt.y);
-  if (p.pull) tgt.vx += Math.sign(p.vx || 1) * 160;
-  spawnJutsuImpactFx(game, p.x, p.y, p.kind, 'full');
+  if (p.pull) tgt.vx += dir * 160;
+  spawnJutsuImpactFx(game, p.x + (p.slashWave ? dir * Math.min(40, p.slashReach || 0) : 0), p.y, p.kind, 'full');
   if (sk && sk.behavior === 'orb' && sk.id === 'rasengan' && !fxLite() && !motionReduced()) {
     game.freezeT = Math.max(game.freezeT || 0, 0.045);
+  }
+  if (sk && sk.behavior === 'slash' && !fxLite() && !motionReduced()) {
+    game.freezeT = Math.max(game.freezeT || 0, 0.04);
   }
   if (p.hitSet) p.hitSet.add(tgt);
   else if (!p.pierce) p.life = 0;

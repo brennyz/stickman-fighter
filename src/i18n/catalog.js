@@ -26,6 +26,8 @@ function seedNlGameStrings() {
     rushWave: 'RUSH-GOLF',
     eliteTraitWave: 'ELITE-GOLF',
     tideWave: 'TIDE-GOLF',
+    ranchWave: 'BOERDERIJ OP HOL',
+    safariWave: 'DIERENTUIN-UITBRAAK',
     waveClear: 'Golf gewist +{heal} HP',
     waveN: 'GOLF {n}/{total}',
     fight: 'VECHT!',
@@ -726,11 +728,11 @@ function seedNlFromRuntime() {
     if (!I18N.nl.skill) I18N.nl.skill = {};
     for (const s of SKILLS) I18N.nl.skill[s.id] = { name: s.name, hint: s.hint, tooltip: s.tooltip, bonus: s.bonus };
     Object.assign(I18N.nl.skill, {
-      behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor' },
+      behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor', slash: 'Slash' },
       stat: { dmg: 'Schade', wind: 'Windup', spd: 'Snelheid', kb: 'Knockback' },
       tag: { pierce: 'Pierce', pull: 'Pull' },
       saga: {
-        scroll: { blurb: 'Ninja-scroll — Rasengan, Chidori, Rinnegan & gravity specials.' },
+        scroll: { blurb: 'Ninja-scroll — Rasengan, Chidori, Rinnegan-lichtschits & gravity specials.' },
         ki: { blurb: 'Ki-golven — Kamehameha, discs, Spirit Bomb & blitz dashes.' },
         tide: { blurb: 'Tide-straal — Getsuga, Cero & Bankai flash.' },
         fighter: { blurb: 'Street stretch — Gum-Gum dash & Gear Second steam.' },
@@ -940,6 +942,7 @@ const CATALOG_EN = {
     masterSword: 'MASTER SWORD!',
     bossWave: 'BOSS WAVE!', eliteWave: 'ELITE WAVE', superBossWave: 'SUPER-BOSS WAVE',
     flyerWave: 'FLYER WAVE', rushWave: 'RUSH WAVE', eliteTraitWave: 'ELITE WAVE', tideWave: 'TIDE WAVE',
+    ranchWave: 'FARM RAMPAGE', safariWave: 'ZOO BREAKOUT',
     waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
     fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'DEFEATED...', rasenganTriple: 'TRIPLE RASENGAN!', rasenganDual: 'DUAL RASENGAN!',
     round: 'ROUND {n}', roundDecisive: 'ROUND {n} · decisive round', roundMatchPoint: 'ROUND {n} · match point',
@@ -1364,11 +1367,11 @@ const CATALOG_EN = {
   },
   egg: { dailyReady: 'Daily egg ready', advBonus: 'Bonus egg: win 1× adventure', tomorrow: 'Egg again tomorrow' },
   skill: {
-    behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor' },
+    behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor', slash: 'Slash' },
     stat: { dmg: 'Damage', wind: 'Windup', spd: 'Speed', kb: 'Knockback' },
     tag: { pierce: 'Pierce', pull: 'Pull' },
     saga: {
-      scroll: { blurb: 'Ninja scroll — Rasengan, Chidori, Rinnegan & gravity specials.' },
+      scroll: { blurb: 'Ninja scroll — Rasengan, Chidori, Rinnegan lightning slash & gravity specials.' },
       ki: { blurb: 'Ki waves — Kamehameha, discs, Spirit Bomb & blitz dashes.' },
       tide: { blurb: 'Tide beams — Getsuga, Cero & Bankai flash.' },
       fighter: { blurb: 'Street stretch — Gum-Gum dash & Gear Second steam.' },
