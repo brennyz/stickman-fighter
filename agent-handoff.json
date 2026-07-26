@@ -17,13 +17,13 @@
     "swCache": "stickfighter-app-v331",
     "gameJsQuery": "game.js?v=331",
     "cssQuery": "styles/main.css?v=331",
-    "featureBranch": "cursor/summon-10-random-nospoil-c62d",
+    "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "Summons 10× random, fullscreen pull, no spoiler toast, better odds · v1.18.121",
-    "updated": "2026-07-26T20:11:45Z"
+    "note": "Summons 10× random + nospoil LIVE · v1.18.121",
+    "updated": "2026-07-26T20:12:23Z"
   },
   "userWishlist": [
     {
