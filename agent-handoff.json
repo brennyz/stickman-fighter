@@ -134,6 +134,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T18:44:55Z",
+      "summary": "Merged boerderij/dierentuin monsters naar main · v1.18.101"
+    },
+    {
       "at": "2026-07-26T18:39:09Z",
       "summary": "Monster diversiteit ~2×: +144 boerderij/dierentuin (281 totaal), ranch/safari golven · v1.18.101"
     },
@@ -228,10 +232,6 @@
     {
       "at": "2026-07-26T06:04:26Z",
       "summary": "d16 hosting: shareCacheRev max SW, speel QR sync, settings renderHosting · v1.18.75"
-    },
-    {
-      "at": "2026-07-26T05:04:28Z",
-      "summary": "d17 stabiliteit: gameUiTimerOk deferred UI, dexBag corrupt save guard · v1.18.74"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
