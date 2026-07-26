@@ -684,6 +684,41 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
         c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
       }
       break;
+    case 'cow':
+    case 'pig':
+    case 'chicken':
+    case 'sheep':
+    case 'horse':
+    case 'goat':
+    case 'duck':
+    case 'rooster':
+    case 'donkey':
+    case 'goose':
+    case 'elephant':
+    case 'lion':
+    case 'tiger':
+    case 'giraffe':
+    case 'hippo':
+    case 'rhino':
+    case 'gorilla':
+    case 'zebra':
+    case 'bear':
+    case 'croc':
+    case 'kangaroo':
+    case 'panda':
+    case 'flamingo':
+    case 'camel':
+      if (typeof drawBeastArt === 'function') {
+        try { drawBeastArt(c, sp.art, r, t, body, dark, flash, telegraph); } catch (err) {
+          console.error('[BeastArt]', sp.art, err);
+          c.fillStyle = body;
+          c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+        }
+      } else {
+        c.fillStyle = body;
+        c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+      }
+      break;
     default:
       c.fillStyle = body;
       c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
