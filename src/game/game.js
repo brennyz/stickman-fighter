@@ -110,9 +110,12 @@ class Game {
     this.runLoot = createRunLoot();
 
     const st = playerStats();
+    if (mode === 'adventure') {
+      this.advDiff = normalizeAdvDiffId(opts.difficulty || currentAdvDiff());
+    }
     if (mode !== 'versus') {
       const advLevel = mode === 'adventure' ? (opts.level || 1) : 0;
-      const mb = mode === 'adventure' && masterBuffActive(advLevel);
+      const mb = mode === 'adventure' && masterBuffActive(advLevel, this.advDiff);
       const pst = mode === 'adventure' ? playerStats({ masterBuff: mb }) : st;
       const wpn = mode === 'adventure' ? playerWeaponForAdventure(advLevel) : playerWeapon();
       this.player = new Fighter({
@@ -151,7 +154,7 @@ class Game {
       this.gambleBossWave = 0;
       this.masterSwordT = 0;
       this._savedMasterWeapon = null;
-      this.initAdventure(opts.level || 1, opts.gamble);
+      this.initAdventure(opts.level || 1, opts.gamble, opts.difficulty);
     } else if (mode === 'training') this.initTraining();
     else if (mode === 'wall') this.initWall();
     else if (mode === 'coinrun') this.initCoinRun();
@@ -174,9 +177,11 @@ class Game {
   }
 
   /* --------------------------- AVONTUUR ------------------------------- */
-  initAdventure(n, gamble) {
+  initAdventure(n, gamble, difficulty) {
     try { Input.dualMode = false; } catch (_) {}
-    this.level = buildLevel(n);
+    const diff = normalizeAdvDiffId(difficulty || currentAdvDiff());
+    this.advDiff = diff;
+    this.level = buildLevel(n, diff);
     this.theme = this.level.theme;
     this.waveIdx = -1;
     this.spawnQueue = [];
@@ -216,8 +221,12 @@ class Game {
     this.satanMon = null;
     this.satanDelayT = 0;
     applyGambleToStage(this, gamble);
-    this.banner(t('banner.levelStart', { n }), 1.4, '#ffd75e', 54);
-    if (typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(n)) {
+    const diffMeta = advDiffMeta(diff);
+    const startLabel = diff === 'normal'
+      ? t('banner.levelStart', { n })
+      : t('banner.levelStartDiff', { n, diff: advDiffLabel(diff) });
+    this.banner(startLabel, 1.4, diffMeta.accent || '#ffd75e', 54);
+    if (typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(n, diff)) {
       this.satanPending = true;
       this.satanDelayT = 2.4;
       this.betweenT = 99;
@@ -230,7 +239,7 @@ class Game {
         } catch (_) {}
       }, 900);
     }
-    if (masterBuffActive(n)) {
+    if (masterBuffActive(n, diff)) {
       const self = this;
       setTimeout(() => {
         try {
@@ -248,7 +257,7 @@ class Game {
           if (!gameUiTimerOk(self)) return;
           self.floater(W * 0.5, 148, t('combat.skillGate', { cap: wCap }), '#ffd75e', 13, 'hud');
         } catch (_) {}
-      }, masterBuffActive(n) ? 2800 : 1500);
+      }, masterBuffActive(n, diff) ? 2800 : 1500);
     }
     if (gamble && gamble.outcome !== 'neutral') {
       const self = this;
@@ -280,7 +289,10 @@ class Game {
     }
     this.allyAssistT = this.stageAlly ? 2.2 : 0;
     // Master Sword roll UIT — geen zeldzame interrupt midden in level
-    AudioSys.play(this.level.boss ? 'boss' : 'battle');
+    try {
+      if (typeof playFightBgm === 'function') playFightBgm(this.level.boss ? 'boss' : 'battle');
+      else AudioSys.play(this.level.boss ? 'boss' : 'battle');
+    } catch (_) {}
   }
 
   maybeRollMasterSword() {
@@ -353,20 +365,22 @@ class Game {
     }
     if (bossWave) {
       try {
-        this.banner(t('banner.bossWave'), 1.8, '#ff6b6b', 50);
-        AudioSys.play('boss');
+        this.banner(t('banner.bossWave'), 2.2, '#ff6b6b', 58);
+        if (typeof playFightBgm === 'function') playFightBgm('boss');
+        else AudioSys.play('boss');
         AudioSys.sfx('roar');
       } catch (_) {}
       try {
-        this.shake(8, 0.3);
-        this.burst(W * 0.5, this.ground - 80, '#ff6b6b', fxLite() ? 12 : 22);
-        spawnFxRing(this, W * 0.5, this.ground - 80, '#ffd75e', 18);
+        this.shake(10, 0.36);
+        this.burst(W * 0.5, this.ground - 80, '#ff6b6b', fxLite() ? 12 : 26);
+        spawnFxRing(this, W * 0.5, this.ground - 80, '#ffd75e', 20);
       } catch (_) {}
     } else if (wave.some(s => s.elite || s.superBoss)) {
       const hasSuper = wave.some(s => s.superBoss);
       try {
         this.banner(hasSuper ? t('banner.superBossWave') : t('banner.eliteWave'), 1.35, hasSuper ? '#ffd75e' : '#ffb0b8', 40);
-        AudioSys.play(hasSuper ? 'boss' : 'elite');
+        if (typeof playFightBgm === 'function') playFightBgm(hasSuper ? 'boss' : 'elite');
+        else AudioSys.play(hasSuper ? 'boss' : 'elite');
         AudioSys.sfx('roar');
       } catch (_) {}
     } else {
@@ -664,11 +678,17 @@ class Game {
             levelN: this.level.n,
             hpMul: this.level.hpMul,
             dmgMul: this.level.dmgMul,
+            speedMul: this.level.speedMul || 1,
+            advDiff: this.advDiff || this.level.diff || 'normal',
+            enrageMul: this.level.enrageMul || 1,
+            enrageAt: this.level.enrageAt != null ? this.level.enrageAt : 0.5,
           });
           this.monsters.push(mon);
           if (def.superBoss) {
             triggerSpecialEnemyIntro(this, mon, 'superBoss');
-          } else if (def.elite || bossWave) {
+          } else if (def.bossCore) {
+            triggerSpecialEnemyIntro(this, mon, 'boss');
+          } else if (def.elite) {
             triggerSpecialEnemyIntro(this, mon, bossWave ? 'boss' : 'elite');
           } else if (def.giant && !fxLite()) {
             this.floater(mon.x, mon.y - mon.size - 28, t('combat.giant'), '#ffd75e', 13);
@@ -747,14 +767,30 @@ class Game {
     this.inputLocked = true;
     let stars = 0;
     const lv = this.level.n;
-    const prevStars = save.stars[lv] || 0;
+    const diff = normalizeAdvDiffId(this.advDiff || (this.level && this.level.diff) || currentAdvDiff());
+    this.advDiff = diff;
+    const prevStars = advStarsFor(lv, diff);
     if (win) {
-      const bonus = 30 + lv * 10;
+      const bonus = Math.round((30 + lv * 10) * advXpMul(diff));
       this.grantXP(bonus);
-      if (lv === save.unlocked && save.unlocked < MAX_LEVEL) { save.unlocked++; persist(); }
-      if (lv % LEVELS_PER_ISLAND === 0) {
-        save.advIsland = Math.min(5, lv / LEVELS_PER_ISLAND);
+      if (diff !== 'normal') {
+        const coinN = Math.max(1, Math.round((3 + Math.floor(lv / 8)) * (typeof advPetCoinMul === 'function' ? advPetCoinMul(diff) : 1)));
+        try {
+          save.petCoins = (typeof petCoinsBalance === 'function' ? petCoinsBalance() : (save.petCoins || 0)) + coinN;
+          this.petCoinsThisRun = (this.petCoinsThisRun || 0) + coinN;
+          persist();
+        } catch (_) {}
+      }
+      const unlocked = advUnlockedLevel(diff);
+      if (lv === unlocked && unlocked < MAX_LEVEL) {
+        setAdvUnlockedLevel(unlocked + 1, diff);
         persist();
+      }
+      if (lv % LEVELS_PER_ISLAND === 0) {
+        if (diff === 'normal') {
+          save.advIsland = Math.min(islandCount(), lv / LEVELS_PER_ISLAND);
+          persist();
+        }
         if (lv < MAX_LEVEL) {
           const nCap = adventureWeaponCapForLevel(lv + 1);
           const self = this;
@@ -766,16 +802,38 @@ class Game {
           }, 1700);
         }
       }
-      if (save.advMasterBuff === lv) {
-        save.advMasterBuff = null;
+      if (lv === MAX_LEVEL) {
+        const already = !!(save.advCleared && save.advCleared[diff]);
+        markAdvDiffCleared(diff);
+        persist();
+        if (!already) {
+          const self = this;
+          setTimeout(() => {
+            try {
+              if (!gameUiTimerOk(self, { allowOver: true })) return;
+              if (diff === 'normal') UI.toast(t('toast.diffUnlockNightmare'), 4800);
+              else if (diff === 'nightmare') UI.toast(t('toast.diffUnlockHell'), 4800);
+              else UI.toast(t('toast.diffHellCleared'), 4200);
+            } catch (_) {}
+          }, 1900);
+        }
+      }
+      if (masterBuffLevel(diff) === lv) {
+        setMasterBuffLevel(null, diff);
         persist();
       }
-      if (typeof clearSatanEncounterProgress === 'function') clearSatanEncounterProgress(lv);
+      if (typeof clearSatanEncounterProgress === 'function') clearSatanEncounterProgress(lv, diff);
       const hpPct = this.player.hp / Math.max(1, this.player.maxhp);
       stars = starsFromHpPct(hpPct);
-      if (stars > prevStars) { save.stars[lv] = stars; persist(); }
+      if (stars > prevStars) { setAdvStarsFor(lv, stars, diff); persist(); }
       bumpStat('advWins', 1);
       bumpDaily('advWin', 1);
+      try {
+        const zwBoss = grantZoneBossClearWeapon(lv, diff);
+        if (zwBoss) {
+          try { noteRunLootWeapon(this.runLoot, zwBoss.id); } catch (_) {}
+        }
+      } catch (_) {}
       const eggBonus = maybeAdvEggBonus();
       if (eggBonus) {
         spawnGameEggPet(this);
@@ -801,14 +859,12 @@ class Game {
         this.banner(t('banner.levelClear', { n: lv }), 2, '#7cfc8a', 52);
       }
     } else {
-      if (!save.advFails || typeof save.advFails !== 'object') save.advFails = {};
-      const hadMaster = save.advMasterBuff === lv;
-      save.advFails[lv] = (save.advFails[lv] || 0) + 1;
-      const failsNow = save.advFails[lv];
+      const hadMaster = masterBuffLevel(diff) === lv;
+      const failsNow = bumpAdvFail(lv, diff);
       const gotMaster = failsNow >= 5 && !hadMaster;
-      if (gotMaster) save.advMasterBuff = lv;
+      if (gotMaster) setMasterBuffLevel(lv, diff);
       const satanSoon = failsNow === SATAN_FAIL_THRESHOLD
-        || (typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv));
+        || (typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff));
       const heatDanger = failsNow === SATAN_DANGER_FAILS;
       persist();
       if (gotMaster) {
@@ -850,7 +906,10 @@ class Game {
         let base = win
           ? t('result.advDetailWin', { lv, kills: this.kills, stars, combo: this.maxCombo || 0, finishers, streak })
           : t('result.advDetailLose', { lv, kills: this.kills, combo: this.maxCombo || 0, finishers, streak });
-        if (masterBuffActive(lv) && !win) base += t('result.masterBuffActive');
+        if (diff !== 'normal') {
+          base = t('result.advDiffLine', { diff: advDiffLabel(diff) }) + base;
+        }
+        if (masterBuffActive(lv, diff) && !win) base += t('result.masterBuffActive');
         if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
           base += t('result.gambleLine', {
             text: gambleOutcomeLabelFromKey(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48),
@@ -859,14 +918,14 @@ class Game {
         return base;
       })(),
       xp: this.sessionXP,
-      mode: 'adventure', level: this.level.n, win, stars, prevStars,
-        tip: win ? (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
+      mode: 'adventure', level: this.level.n, win, stars, prevStars, difficulty: diff,
+      tip: win ? (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
         ? t('result.starImproved', { stars, prev: prevStars })
         : t('result.pickupsHelp', { hint: starHintLine() }))) : (() => {
         const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : 'start';
-        const failsNow = advFailCount(lv);
+        const failsNow = advFailCount(lv, diff);
         let heatTip = '';
-        if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv)) {
+        if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff)) {
           heatTip = t('result.heatSatanNext');
         } else if (failsNow >= SATAN_DANGER_FAILS) {
           heatTip = t('result.heatDanger');
@@ -942,6 +1001,12 @@ class Game {
           this.spawnPickup(m.x + rand(-22, 22), m.y - m.size * 0.45, { itemCat: itemDrop.cat, itemId: itemDrop.id, dropTier });
         }
       } catch (_) {}
+      try {
+        const zw = rollZoneWeaponDrop(this, m);
+        if (zw) {
+          try { noteRunLootWeapon(this.runLoot, zw.id); } catch (_) {}
+        }
+      } catch (_) {}
     }
     try { bumpStat('kills', 1); } catch (_) {}
     try { bumpDaily('kills', 1); } catch (_) {}
@@ -952,7 +1017,8 @@ class Game {
     const lvlScale = 1 + (this.level ? (this.level.n - 1) * 0.1 : 0);
     const rarMul = 1 + (rar.order || 0) * 0.15;
     const giantMul = m.giant ? GIANT_XP_MUL : 1;
-    const xp = Math.round((sp.xp || 8) * lvlScale * rarMul * (m.elite ? 2 : 1) * giantMul);
+    const bossMul = m.colossal ? COLOSSAL_XP_MUL : (m.bossCore ? 1.25 : 1);
+    const xp = Math.round((sp.xp || 8) * lvlScale * rarMul * (m.elite ? 2 : 1) * giantMul * bossMul);
     try { this.grantXP(xp); } catch (_) {}
     try { this.floater(m.x, m.y - m.size - 30, `+${xp} XP`, rar.color, 16); } catch (_) {}
     if ((rar.order || 0) >= 3) {
@@ -1035,7 +1101,7 @@ class Game {
       this.satanPending = false;
       this.satanDelayT = 0;
       this.satanActive = true;
-      markSatanEncounterStarted(this.level.n);
+      markSatanEncounterStarted(this.level.n, this.advDiff);
       // Ruim veld leeg — pure Satan-duel
       this.spawnQueue = [];
       this.monsters = this.monsters.filter((m) => m && m.satanBoss);
@@ -2113,9 +2179,10 @@ class Game {
     const aim = projAimVelocity(f, behavior === 'dash' ? speed : speed * 0.9);
     const face = f.face || 1;
     const col = sk.color || '#7cf5ff';
-    // Rasengan: altijd horizontaal (geen aim-tilt); overige jutsu behouden aim
+    // Rasengan: altijd horizontaal (geen aim-tilt); Rinnegan-slash ook op torso-hoogte
     const rasenHoriz = jutsu === 'rasengan';
-    const y0 = rasenHoriz
+    const slashFlat = behavior === 'slash';
+    const y0 = (rasenHoriz || slashFlat)
       ? (f.y - 50)
       : (f.y - 50 + clamp(aim.ny, -1, 0.5) * 36);
 
@@ -2130,6 +2197,21 @@ class Game {
           vx: aim.vx, vy: aim.vy * 0.85, r: ((sk.radius || 22) + jb.radius) * sc, dmg: dmg * sc,
           life: (sk.life || 0.35) * jb.lifeMul * sc, from, kind: sk.id, pierce: !!sk.pierce,
           hitSet: new Set(), pierceRepeat: jb.pierceRepeat,
+        }, critMeta));
+      } else if (behavior === 'slash') {
+        // Lichtschits-golf: expandeert links én rechts, strook tapert met afstand
+        // jb.radius = skill-upgrades → duidelijk dikkere strook per level
+        const r0 = ((sk.radius || 42) + jb.radius * 1.35) * sc;
+        const expand = (sk.speed || 720) * jb.speedMul * sc;
+        const maxReach = (460 + jb.radius * 8) * sc;
+        this.spawnProjectile(Object.assign({
+          x: f.x + ox, y: y0 + oy,
+          vx: 0, vy: 0, r: r0, r0, dmg: dmg * sc,
+          from, kind: sk.id, pierce: sk.pierce !== false, hitSet: new Set(),
+          life: (sk.life || 0.68) * jb.lifeMul * sc,
+          spin: 0, slashWave: true, slashReach: 0, slashMaxReach: maxReach,
+          slashExpand: expand, pierceRepeat: jb.pierceRepeat,
+          kbMul: (sk.kb || 580) / 300,
         }, critMeta));
       } else if (behavior === 'pull' || behavior === 'meteor') {
         const sp = behavior === 'meteor' ? speed * 0.55 : speed;
@@ -2210,6 +2292,19 @@ class Game {
       f.vx = face * (sk.dashVx || 380) * jb.speedMul;
       this.shake(7, 0.2);
       AudioSys.sfx(skillSfxId(sk));
+    } else if (behavior === 'slash') {
+      fireProj(0, 0, 1);
+      const liteCast = fxLite();
+      this.burst(f.x, y0, col, liteCast ? 12 : 22);
+      this.burst(f.x, y0, '#e8d0ff', liteCast ? 6 : 12, { kind: 'spark', size: 2.8 });
+      this.burst(f.x - 28, y0, col, liteCast ? 5 : 10, { kind: 'spark', size: 2.2 });
+      this.burst(f.x + 28, y0, col, liteCast ? 5 : 10, { kind: 'spark', size: 2.2 });
+      spawnFxRing(this, f.x, y0, col, liteCast ? 10 : 16);
+      spawnFxRing(this, f.x, y0, '#ffffff', liteCast ? 6 : 10);
+      this.shake(11, 0.3);
+      this.freezeT = Math.max(this.freezeT, 0.07);
+      AudioSys.sfx(skillSfxId(sk));
+      if (f.isPlayer || f.playerSlot) haptic(26);
     } else if (behavior === 'pull' || behavior === 'meteor') {
       fireProj(0, 0, 1);
       this.burst(f.x + face * 28, y0, col, behavior === 'meteor' ? 18 : 14);
@@ -2438,6 +2533,11 @@ class Game {
         }
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
+        if (spec.kind === 'weapon' && typeof applyWeaponOnHitEffect === 'function') {
+          try {
+            applyWeaponOnHitEffect(this, f, m, { dmg: hitRoll.dmg, crit: hitRoll.crit, finisher });
+          } catch (_) {}
+        }
         if (counter) this.freezeT = Math.max(this.freezeT, 0.016);
         applyHitConfirmFx(this, hx, hy, spec);
         if (f.isPlayer && this.styleLightning && !fxLite()) {
@@ -2669,6 +2769,9 @@ class Game {
         try { sfReportError('monster/update', monErr, 'Vijand hiccup — speel door'); } catch (_) {}
       }
     }
+    try { if (typeof tickWeaponStatusEffects === 'function') tickWeaponStatusEffects(this, dt); } catch (_) {}
+    if (this.player && this.player._wpnCritSurgeT > 0) this.player._wpnCritSurgeT -= dt;
+    if (this.p2 && this.p2._wpnCritSurgeT > 0) this.p2._wpnCritSurgeT -= dt;
     this.monsters = this.monsters.filter(m => m.alive || m.deadT < 1);
     if (this.mode === 'adventure') tickSuperFx(this, dt);
 
@@ -2679,6 +2782,7 @@ class Game {
       p.life -= dt;
       const spinRate = skProj
         ? (skProj.behavior === 'pull' || skProj.behavior === 'meteor' ? 16
+          : skProj.behavior === 'slash' ? 28
           : skProj.behavior === 'dash' ? 20 : skProj.behavior === 'disc' ? 24 : 22)
         : (p.kind === 'shuriken' ? 28 : p.kind === 'boemerang' ? 34 : 12);
       p.spin = (p.spin || 0) + dt * spinRate;
@@ -2689,6 +2793,27 @@ class Game {
         const lim = p.curlMaxVy || 280;
         if (p.vy > lim) p.vy = lim;
         if (p.vy < -lim) p.vy = -lim;
+      }
+      // Rinnegan lichtschits: expandeert links/rechts i.p.v. te vliegen
+      if (p.slashWave) {
+        const maxR = p.slashMaxReach || 460;
+        p.slashReach = Math.min(maxR, (p.slashReach || 0) + (p.slashExpand || 720) * dt);
+        // Tip-dikte: hoe verder, hoe smaller de strook
+        const taper = clamp((p.slashReach || 0) / Math.max(1, maxR), 0, 1);
+        p.r = Math.max(5, (p.r0 || 42) * (1 - taper * 0.82));
+        if (!motionReduced()) {
+          p._trailAcc = (p._trailAcc || 0) + dt;
+          const interval = (save.liteFx || Perf.tier >= 1) ? 0.06 : 0.028;
+          if (p._trailAcc >= interval) {
+            p._trailAcc = 0;
+            const col = (skProj && skProj.color) || '#c47aff';
+            const reach = p.slashReach || 0;
+            const tipH = Math.max(4, (p.r0 || 42) * (1 - taper * 0.82) * 0.55);
+            const n = (save.liteFx || Perf.tier >= 1) ? 1 : 2;
+            this.burst(p.x + reach, p.y + rand(-tipH, tipH), col, n, { kind: 'spark', size: 2.2 });
+            this.burst(p.x - reach, p.y + rand(-tipH, tipH), col, n, { kind: 'spark', size: 2.2 });
+          }
+        }
       }
       // Boemerang: uitgooien → terugkeren naar thrower (kan opnieuw raken)
       if (p.kind === 'boemerang') {
@@ -2774,10 +2899,10 @@ class Game {
       if (p.from === 'enemy') {
         const pl = this.player;
         if (pl && pl.alive && this.playerHurtCd <= 0
-            && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
+            && projHitsTarget(p, pl.bodyX, pl.bodyY, pl.bodyR * 0.8)) {
           const hit = resolveProjHit(p);
-          pl.takeDamage(hit.dmg, Math.sign(p.vx) * 260, this);
-          applyHitStop(this, { kind: skProj && skProj.behavior === 'dash' ? 'special' : 'punch', dmg: hit.dmg },
+          pl.takeDamage(hit.dmg, projKnockDir(p, pl.x) * 260, this);
+          applyHitStop(this, { kind: skProj && (skProj.behavior === 'dash' || skProj.behavior === 'slash') ? 'special' : 'punch', dmg: hit.dmg },
             { crit: hit.crit, heavy: hit.dmg >= 18, playerHurt: true });
           this.floater(pl.x, pl.y - 115, '-' + hit.dmg, '#ff8080', 16);
           if (hit.crit) applyCritFx(this, pl.x, pl.y);
@@ -2787,12 +2912,12 @@ class Game {
         }
       } else if (p.from === 'p2' && this.p2) {
         const pl = this.player;
-        if (pl && pl.alive && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
+        if (pl && pl.alive && projHitsTarget(p, pl.bodyX, pl.bodyY, pl.bodyR * 0.8)) {
           projStrikeFighter(this, p, pl, '#ff8080');
         }
       } else if (p.from === 'p1' && this.p2) {
         const pl = this.p2;
-        if (pl.alive && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
+        if (pl.alive && projHitsTarget(p, pl.bodyX, pl.bodyY, pl.bodyR * 0.8)) {
           projStrikeFighter(this, p, pl, '#ffb0b8');
         }
       } else {
@@ -2800,20 +2925,29 @@ class Game {
           if (!m.alive) continue;
           const allowRehit = p._rehit && p._rehit.has(m);
           if (p.hitSet && p.hitSet.has(m) && !allowRehit) continue;
-          if ((p.x - m.x) ** 2 + (p.y - m.y) ** 2 < (p.r + m.size) ** 2) {
+          if (projHitsTarget(p, m.x, m.y, m.size)) {
             const hit = resolveProjHit(p);
+            const dir = projKnockDir(p, m.x);
             try { AudioSys.sfxAt(weaponHitSfx(p.throwId || 'shuriken', hit.dmg), m.x); } catch (_) {}
-            m.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this, { skipHitSfx: true, crit: hit.crit });
+            m.takeDamage(hit.dmg, dir * 300 * (p.kbMul || 1), this, { skipHitSfx: true, crit: hit.crit });
             if (hit.crit) applyCritFx(this, m.x, m.y);
-            if (skProj) spawnJutsuImpactFx(this, p.x, p.y, p.kind, 'full');
+            if (p.throwId && typeof applyWeaponOnHitEffect === 'function') {
+              const owner = this.player;
+              if (owner && owner.weapon && owner.weapon.id === p.throwId && owner.weapon.effect) {
+                try {
+                  applyWeaponOnHitEffect(this, owner, m, { dmg: hit.dmg, crit: hit.crit, finisher: false });
+                } catch (_) {}
+              }
+            }
+            if (skProj) spawnJutsuImpactFx(this, m.x, m.y, p.kind, 'full');
             if (p.hitSet) p.hitSet.add(m); else p.life = 0;
           }
         }
         if (this.robot && this.robot.alive && !(p.hitSet && p.hitSet.has(this.robot))) {
           const rb = this.robot;
-          if ((p.x - rb.bodyX) ** 2 + (p.y - rb.bodyY) ** 2 < (p.r + rb.bodyR) ** 2) {
+          if (projHitsTarget(p, rb.bodyX, rb.bodyY, rb.bodyR)) {
             const hit = resolveProjHit(p);
-            const d = rb.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this);
+            const d = rb.takeDamage(hit.dmg, projKnockDir(p, rb.x) * 300 * (p.kbMul || 1), this);
             this.floater(rb.x, rb.y - 115, '-' + d, '#ffe680', 16);
             if (hit.crit) applyCritFx(this, rb.x, rb.y);
             if (p.hitSet) p.hitSet.add(rb); else p.life = 0;
@@ -2822,7 +2956,11 @@ class Game {
         if (this.mode === 'wall' && this.bricks) {
           for (const b of this.bricks) {
             if (b.hp <= 0) continue;
-            if (p.x + p.r > b.x && p.x - p.r < b.x + b.w && p.y + p.r > b.y && p.y - p.r < b.y + b.h) {
+            const bx = b.x + b.w * 0.5, by = b.y + b.h * 0.5;
+            const hitBrick = p.slashWave
+              ? projHitsTarget(p, bx, by, Math.max(b.w, b.h) * 0.45)
+              : (p.x + p.r > b.x && p.x - p.r < b.x + b.w && p.y + p.r > b.y && p.y - p.r < b.y + b.h);
+            if (hitBrick) {
               b.hp -= p.dmg;
               if (b.hp <= 0) { this.score++; AudioSys.sfx('brick'); this.burst(p.x, p.y, `hsl(${b.hue},50%,45%)`, 12); }
               if (!p.pierce) p.life = 0;
@@ -2848,6 +2986,11 @@ class Game {
       if (p.kind === 'boemerang') {
         if (p.returning && (p.x < -100 || p.x > W + 100 || p.y > this.ground + 50)) {
           p.life = 0;
+        }
+      } else if (p.slashWave) {
+        // Expanderende golf: blijft op plek tot life op is
+        if ((p.slashReach || 0) >= (p.slashMaxReach || 460) && p.life > 0.12) {
+          p.life = Math.min(p.life, 0.12);
         }
       } else if (p.kind === 'rasengan') {
         // Alleen zijranden — grond wordt hierboven afgehandeld
@@ -3218,7 +3361,11 @@ class Game {
             c.restore();
           }
         }
-        drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, p.kind, 1);
+        if (p.slashWave || skDraw.behavior === 'slash') {
+          drawRinneganSlashWave(c, p);
+        } else {
+          drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, p.kind, 1);
+        }
       } else if (p.kind === 'shuriken') {
         c.translate(p.x, p.y); c.rotate(p.spin || 0);
         const big = p.throwId === 'fuuma';
@@ -3644,18 +3791,21 @@ class Game {
       } else if (kind === 'rinnegan') {
         c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : '#c47aff';
         c.lineWidth = 3;
-        for (let ring = 0; ring < 3; ring++) {
+        c.lineCap = 'round';
+        // Tweerichtings lichtschits-pulse (klaar-signaal)
+        for (const dir of [-1, 1]) {
+          const len = 34 + Math.sin(this.t * 10) * 6;
           c.beginPath();
-          c.arc(f.x, f.y - 55, 34 + ring * 8 + Math.sin(this.t * 8 + ring) * 3, this.t * (1.5 + ring * 0.3), this.t * (1.5 + ring * 0.3) + Math.PI * 1.25);
+          c.moveTo(f.x, f.y - 55);
+          c.lineTo(f.x + dir * len * 0.4, f.y - 55 + Math.sin(this.t * 14 + dir) * 4);
+          c.lineTo(f.x + dir * len * 0.7, f.y - 55 - Math.sin(this.t * 11 + dir) * 3);
+          c.lineTo(f.x + dir * len, f.y - 55);
           c.stroke();
         }
-        c.fillStyle = '#ff6b9d';
-        for (let i = 0; i < 3; i++) {
-          const a = this.t * 5 + i * (TAU / 3);
-          c.beginPath();
-          c.arc(f.x + Math.cos(a) * 28, f.y - 55 + Math.sin(a) * 10, 4, 0, TAU);
-          c.fill();
-        }
+        c.fillStyle = '#e8d0ff';
+        c.beginPath();
+        c.arc(f.x, f.y - 55, 5 + Math.sin(this.t * 8) * 1.5, 0, TAU);
+        c.fill();
       } else {
         c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : '#7cf5ff';
         c.lineWidth = 3;
@@ -4346,7 +4496,7 @@ class Game {
       c.fillStyle = '#333c55'; this.rr(c, bx, by, bw, 15, 6); c.fill();
       c.fillStyle = p.hp / p.maxhp > 0.35 ? '#6ee06e' : '#ff6b6b';
       this.rr(c, bx, by, bw * clamp(p.hp / p.maxhp, 0, 1), 15, 6); c.fill();
-      if (this.mode === 'adventure' && masterBuffActive(this.level.n)) {
+      if (this.mode === 'adventure' && masterBuffActive(this.level.n, this.advDiff)) {
         c.fillStyle = 'rgba(196,122,255,.28)';
         this.rr(c, bx - 2, by - 16, bw + 4, 13, 5); c.fill();
         c.font = '800 9px -apple-system, sans-serif';
@@ -4440,6 +4590,22 @@ class Game {
         fill: a11yHighContrast() ? '#fff' : 'rgba(255,255,255,.9)',
       });
       hy += 17;
+
+      if (this.advDiff && this.advDiff !== 'normal') {
+        const dm = advDiffMeta(this.advDiff);
+        const chip = advDiffShort(this.advDiff);
+        c.font = '900 11px -apple-system, sans-serif';
+        const tw = c.measureText(chip).width;
+        const cx = W / 2;
+        c.fillStyle = 'rgba(0,0,0,.45)';
+        this.rr(c, cx - tw / 2 - 8, hy - 10, tw + 16, 14, 7); c.fill();
+        c.strokeStyle = dm.accent;
+        c.lineWidth = 1.5;
+        this.rr(c, cx - tw / 2 - 8, hy - 10, tw + 16, 14, 7); c.stroke();
+        c.fillStyle = dm.accent;
+        c.fillText(chip, cx, hy);
+        hy += 16;
+      }
 
       c.font = '700 11px -apple-system, sans-serif';
       c.fillStyle = isl.accent;

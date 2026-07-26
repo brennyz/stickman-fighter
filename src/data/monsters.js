@@ -133,6 +133,152 @@ const SPECIES = {
   voidocto: { name: 'Voidocto', art: 'octo', size: 24, hp: 98, dmg: 15, speed: 50, type: 'swim', xp: 42, rarity: 'mythic', c1: '#5a1040', c2: '#ff6b9d' },
   /* Satan — stall-baas na 10× falen; nooit in normale golven */
   satan: { name: 'Satan', art: 'satan', size: 42, hp: 220, dmg: 18, speed: 78, type: 'charge', xp: 160, rarity: 'mythic', c1: '#ff3040', c2: '#2a0810' },
+  /* --- Boerderij op hol: reuzen-boerderijdieren --- */
+  holkoe: { name: 'Holkoe', art: 'cow', size: 34, hp: 57, dmg: 8, speed: 38, type: 'tank', xp: 10, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
+  razendeholkoe: { name: 'Razende Holkoe', art: 'cow', size: 35, hp: 90, dmg: 11, speed: 41, type: 'tank', xp: 18, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
+  stampkoe: { name: 'Stampkoe', art: 'cow', size: 36, hp: 122, dmg: 13, speed: 44, type: 'tank', xp: 26, rarity: 'rare', c1: '#ff9ad5', c2: '#8a3060' },
+  melkkolos: { name: 'Melkkolos', art: 'cow', size: 37, hp: 154, dmg: 16, speed: 47, type: 'tank', xp: 34, rarity: 'epic', c1: '#43b25b', c2: '#1e4a28' },
+  boerenbonk: { name: 'Boerenbonk', art: 'cow', size: 38, hp: 186, dmg: 18, speed: 50, type: 'tank', xp: 42, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+  woesteholkoe: { name: 'Woeste Holkoe', art: 'cow', size: 39, hp: 218, dmg: 21, speed: 53, type: 'tank', xp: 50, rarity: 'mythic', c1: '#c47aff', c2: '#5a2080' },
+  razendzwijn: { name: 'Razend Zwijn', art: 'pig', size: 30, hp: 50, dmg: 8, speed: 95, type: 'charge', xp: 10, rarity: 'common', c1: '#7ad06a', c2: '#2a6030' },
+  modderzwijn: { name: 'Modderzwijn', art: 'pig', size: 31, hp: 78, dmg: 11, speed: 103, type: 'charge', xp: 18, rarity: 'uncommon', c1: '#ff7043', c2: '#8a2020' },
+  stootzwijn: { name: 'Stootzwijn', art: 'pig', size: 32, hp: 106, dmg: 13, speed: 111, type: 'charge', xp: 26, rarity: 'rare', c1: '#ffb0b8', c2: '#8a3040' },
+  spekzwaai: { name: 'Spekzwaai', art: 'pig', size: 33, hp: 134, dmg: 16, speed: 119, type: 'charge', xp: 34, rarity: 'epic', c1: '#e04f4f', c2: '#8a2020' },
+  knorbonker: { name: 'Knorbonker', art: 'pig', size: 34, hp: 162, dmg: 18, speed: 127, type: 'charge', xp: 42, rarity: 'legendary', c1: '#505868', c2: '#202830' },
+  reuzenzwijn: { name: 'Reuzenzwijn', art: 'pig', size: 35, hp: 190, dmg: 21, speed: 135, type: 'charge', xp: 50, rarity: 'mythic', c1: '#9a917f', c2: '#4a4038' },
+  kipophol: { name: 'Kip op Hol', art: 'chicken', size: 28, hp: 50, dmg: 8, speed: 95, type: 'fly', xp: 10, rarity: 'common', c1: '#43b25b', c2: '#1e4a28' },
+  vliegkip: { name: 'Vliegkip', art: 'chicken', size: 29, hp: 78, dmg: 11, speed: 99, type: 'fly', xp: 18, rarity: 'uncommon', c1: '#ffd75e', c2: '#8a6020' },
+  pikstorm: { name: 'Pikstorm', art: 'chicken', size: 30, hp: 106, dmg: 13, speed: 103, type: 'fly', xp: 26, rarity: 'rare', c1: '#c47aff', c2: '#5a2080' },
+  kippenkolos: { name: 'Kippenkolos', art: 'chicken', size: 31, hp: 134, dmg: 16, speed: 107, type: 'fly', xp: 34, rarity: 'epic', c1: '#c98850', c2: '#6b4a28' },
+  woestekip: { name: 'Woeste Kip', art: 'chicken', size: 32, hp: 162, dmg: 18, speed: 111, type: 'fly', xp: 42, rarity: 'legendary', c1: '#d4a574', c2: '#6b4a28' },
+  snavelstorm: { name: 'Snavelstorm', art: 'chicken', size: 33, hp: 190, dmg: 21, speed: 115, type: 'fly', xp: 50, rarity: 'mythic', c1: '#ff9ad5', c2: '#8a3060' },
+  razendeschaap: { name: 'Razende Schaap', art: 'sheep', size: 32, hp: 57, dmg: 8, speed: 38, type: 'tank', xp: 10, rarity: 'common', c1: '#e04f4f', c2: '#8a2020' },
+  wolkolos: { name: 'Wolkolos', art: 'sheep', size: 33, hp: 90, dmg: 11, speed: 41, type: 'tank', xp: 18, rarity: 'uncommon', c1: '#505868', c2: '#202830' },
+  stampwol: { name: 'Stampwol', art: 'sheep', size: 34, hp: 122, dmg: 13, speed: 44, type: 'tank', xp: 26, rarity: 'rare', c1: '#9a917f', c2: '#4a4038' },
+  boerenschrik: { name: 'Boerenschrik', art: 'sheep', size: 35, hp: 154, dmg: 16, speed: 47, type: 'tank', xp: 34, rarity: 'epic', c1: '#7ad06a', c2: '#2a6030' },
+  donsbeest: { name: 'Donsbeest', art: 'sheep', size: 36, hp: 186, dmg: 18, speed: 50, type: 'tank', xp: 42, rarity: 'legendary', c1: '#ff7043', c2: '#8a2020' },
+  schaaptitan: { name: 'Schaap Titan', art: 'sheep', size: 37, hp: 218, dmg: 21, speed: 53, type: 'tank', xp: 50, rarity: 'mythic', c1: '#ffb0b8', c2: '#8a3040' },
+  holpaard: { name: 'Holpaard', art: 'horse', size: 36, hp: 50, dmg: 8, speed: 95, type: 'charge', xp: 10, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
+  galopgevaar: { name: 'Galopgevaar', art: 'horse', size: 37, hp: 78, dmg: 11, speed: 103, type: 'charge', xp: 18, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
+  stampveulen: { name: 'Stampveulen', art: 'horse', size: 38, hp: 106, dmg: 13, speed: 111, type: 'charge', xp: 26, rarity: 'rare', c1: '#ff9ad5', c2: '#8a3060' },
+  renkolos: { name: 'Renkolos', art: 'horse', size: 39, hp: 134, dmg: 16, speed: 119, type: 'charge', xp: 34, rarity: 'epic', c1: '#43b25b', c2: '#1e4a28' },
+  boerenrenner: { name: 'Boerenrenner', art: 'horse', size: 40, hp: 162, dmg: 18, speed: 127, type: 'charge', xp: 42, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+  stormhengst: { name: 'Stormhengst', art: 'horse', size: 41, hp: 190, dmg: 21, speed: 135, type: 'charge', xp: 50, rarity: 'mythic', c1: '#c47aff', c2: '#5a2080' },
+  kopstootgeit: { name: 'Kopstootgeit', art: 'goat', size: 30, hp: 50, dmg: 8, speed: 95, type: 'charge', xp: 10, rarity: 'common', c1: '#7ad06a', c2: '#2a6030' },
+  berggeitboos: { name: 'Berggeit Boos', art: 'goat', size: 31, hp: 78, dmg: 11, speed: 103, type: 'charge', xp: 18, rarity: 'uncommon', c1: '#ff7043', c2: '#8a2020' },
+  hoornram: { name: 'Hoornram', art: 'goat', size: 32, hp: 106, dmg: 13, speed: 111, type: 'charge', xp: 26, rarity: 'rare', c1: '#ffb0b8', c2: '#8a3040' },
+  geitenkolos: { name: 'Geitenkolos', art: 'goat', size: 33, hp: 134, dmg: 16, speed: 119, type: 'charge', xp: 34, rarity: 'epic', c1: '#e04f4f', c2: '#8a2020' },
+  razendebok: { name: 'Razende Bok', art: 'goat', size: 34, hp: 162, dmg: 18, speed: 127, type: 'charge', xp: 42, rarity: 'legendary', c1: '#505868', c2: '#202830' },
+  steenbokstorm: { name: 'Steenbok Storm', art: 'goat', size: 35, hp: 190, dmg: 21, speed: 135, type: 'charge', xp: 50, rarity: 'mythic', c1: '#9a917f', c2: '#4a4038' },
+  kwakophol: { name: 'Kwak op Hol', art: 'duck', size: 28, hp: 50, dmg: 8, speed: 62, type: 'hop', xp: 10, rarity: 'common', c1: '#43b25b', c2: '#1e4a28' },
+  razendeeend: { name: 'Razende Eend', art: 'duck', size: 29, hp: 78, dmg: 11, speed: 66, type: 'hop', xp: 18, rarity: 'uncommon', c1: '#ffd75e', c2: '#8a6020' },
+  vlotkwak: { name: 'Vlotkwak', art: 'duck', size: 30, hp: 106, dmg: 13, speed: 70, type: 'hop', xp: 26, rarity: 'rare', c1: '#c47aff', c2: '#5a2080' },
+  eendenkolos: { name: 'Eendenkolos', art: 'duck', size: 31, hp: 134, dmg: 16, speed: 74, type: 'hop', xp: 34, rarity: 'epic', c1: '#c98850', c2: '#6b4a28' },
+  snavelduiker: { name: 'Snavelduiker', art: 'duck', size: 32, hp: 162, dmg: 18, speed: 78, type: 'hop', xp: 42, rarity: 'legendary', c1: '#d4a574', c2: '#6b4a28' },
+  kwaktitan: { name: 'Kwak Titan', art: 'duck', size: 33, hp: 190, dmg: 21, speed: 82, type: 'hop', xp: 50, rarity: 'mythic', c1: '#ff9ad5', c2: '#8a3060' },
+  haanophol: { name: 'Haan op Hol', art: 'rooster', size: 29, hp: 50, dmg: 8, speed: 95, type: 'fly', xp: 10, rarity: 'common', c1: '#e04f4f', c2: '#8a2020' },
+  kraairoep: { name: 'Kraairoep', art: 'rooster', size: 30, hp: 78, dmg: 11, speed: 99, type: 'fly', xp: 18, rarity: 'uncommon', c1: '#505868', c2: '#202830' },
+  kamstoot: { name: 'Kamstoot', art: 'rooster', size: 31, hp: 106, dmg: 13, speed: 103, type: 'fly', xp: 26, rarity: 'rare', c1: '#9a917f', c2: '#4a4038' },
+  hanenkolos: { name: 'Hanenkolos', art: 'rooster', size: 32, hp: 134, dmg: 16, speed: 107, type: 'fly', xp: 34, rarity: 'epic', c1: '#7ad06a', c2: '#2a6030' },
+  vuurhaan: { name: 'Vuurhaan', art: 'rooster', size: 33, hp: 162, dmg: 18, speed: 111, type: 'fly', xp: 42, rarity: 'legendary', c1: '#ff7043', c2: '#8a2020' },
+  zonnekam: { name: 'Zonnekam', art: 'rooster', size: 34, hp: 190, dmg: 21, speed: 115, type: 'fly', xp: 50, rarity: 'mythic', c1: '#ffb0b8', c2: '#8a3040' },
+  koppigeezel: { name: 'Koppige Ezel', art: 'donkey', size: 33, hp: 57, dmg: 8, speed: 38, type: 'tank', xp: 10, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
+  stampzel: { name: 'Stampzel', art: 'donkey', size: 34, hp: 90, dmg: 11, speed: 41, type: 'tank', xp: 18, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
+  boerenezel: { name: 'Boerenezel', art: 'donkey', size: 35, hp: 122, dmg: 13, speed: 44, type: 'tank', xp: 26, rarity: 'rare', c1: '#ff9ad5', c2: '#8a3060' },
+  ezelkolos: { name: 'Ezelkolos', art: 'donkey', size: 36, hp: 154, dmg: 16, speed: 47, type: 'tank', xp: 34, rarity: 'epic', c1: '#43b25b', c2: '#1e4a28' },
+  hardhoofd: { name: 'Hardhoofd', art: 'donkey', size: 37, hp: 186, dmg: 18, speed: 50, type: 'tank', xp: 42, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+  molenzwaai: { name: 'Molenzwaai', art: 'donkey', size: 38, hp: 218, dmg: 21, speed: 53, type: 'tank', xp: 50, rarity: 'mythic', c1: '#c47aff', c2: '#5a2080' },
+  gansophol: { name: 'Gans op Hol', art: 'goose', size: 30, hp: 50, dmg: 8, speed: 95, type: 'charge', xp: 10, rarity: 'common', c1: '#7ad06a', c2: '#2a6030' },
+  sissendegans: { name: 'Sissende Gans', art: 'goose', size: 31, hp: 78, dmg: 11, speed: 103, type: 'charge', xp: 18, rarity: 'uncommon', c1: '#ff7043', c2: '#8a2020' },
+  vleugelram: { name: 'Vleugelram', art: 'goose', size: 32, hp: 106, dmg: 13, speed: 111, type: 'charge', xp: 26, rarity: 'rare', c1: '#ffb0b8', c2: '#8a3040' },
+  ganzenkolos: { name: 'Ganzenkolos', art: 'goose', size: 33, hp: 134, dmg: 16, speed: 119, type: 'charge', xp: 34, rarity: 'epic', c1: '#e04f4f', c2: '#8a2020' },
+  nesthoeder: { name: 'Nesthoeder', art: 'goose', size: 34, hp: 162, dmg: 18, speed: 127, type: 'charge', xp: 42, rarity: 'legendary', c1: '#505868', c2: '#202830' },
+  stormgans: { name: 'Stormgans', art: 'goose', size: 35, hp: 190, dmg: 21, speed: 135, type: 'charge', xp: 50, rarity: 'mythic', c1: '#9a917f', c2: '#4a4038' },
+  /* --- Dierentuin-uitbraak: reuzen-dierentuindieren --- */
+  reuzenolifant: { name: 'Reuzenolifant', art: 'elephant', size: 43, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#43b25b', c2: '#1e4a28' },
+  stampolifant: { name: 'Stampolifant', art: 'elephant', size: 44, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#ffd75e', c2: '#8a6020' },
+  slurfkolos: { name: 'Slurfkolos', art: 'elephant', size: 45, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#c47aff', c2: '#5a2080' },
+  ivoiretitan: { name: 'Ivoire Titan', art: 'elephant', size: 46, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#c98850', c2: '#6b4a28' },
+  woesteolifant: { name: 'Woeste Olifant', art: 'elephant', size: 47, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#d4a574', c2: '#6b4a28' },
+  mammoetstorm: { name: 'Mammoetstorm', art: 'elephant', size: 48, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#ff9ad5', c2: '#8a3060' },
+  razendeleeuw: { name: 'Razende Leeuw', art: 'lion', size: 37, hp: 60, dmg: 10, speed: 95, type: 'charge', xp: 14, rarity: 'common', c1: '#e04f4f', c2: '#8a2020' },
+  manenstorm: { name: 'Manenstorm', art: 'lion', size: 38, hp: 88, dmg: 13, speed: 103, type: 'charge', xp: 22, rarity: 'uncommon', c1: '#505868', c2: '#202830' },
+  savannekoning: { name: 'Savannekoning', art: 'lion', size: 39, hp: 116, dmg: 15, speed: 111, type: 'charge', xp: 30, rarity: 'rare', c1: '#9a917f', c2: '#4a4038' },
+  leeuwenkolos: { name: 'Leeuwenkolos', art: 'lion', size: 40, hp: 144, dmg: 18, speed: 119, type: 'charge', xp: 38, rarity: 'epic', c1: '#7ad06a', c2: '#2a6030' },
+  woestemanen: { name: 'Woeste Manen', art: 'lion', size: 41, hp: 172, dmg: 20, speed: 127, type: 'charge', xp: 46, rarity: 'legendary', c1: '#ff7043', c2: '#8a2020' },
+  koningsklauw: { name: 'Koningsklauw', art: 'lion', size: 42, hp: 200, dmg: 23, speed: 135, type: 'charge', xp: 54, rarity: 'mythic', c1: '#ffb0b8', c2: '#8a3040' },
+  razendetijger: { name: 'Razende Tijger', art: 'tiger', size: 36, hp: 60, dmg: 10, speed: 95, type: 'charge', xp: 14, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
+  streepstorm: { name: 'Streepstorm', art: 'tiger', size: 37, hp: 88, dmg: 13, speed: 103, type: 'charge', xp: 22, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
+  jungleklauw: { name: 'Jungleklauw', art: 'tiger', size: 38, hp: 116, dmg: 15, speed: 111, type: 'charge', xp: 30, rarity: 'rare', c1: '#ff9ad5', c2: '#8a3060' },
+  tijgerkolos: { name: 'Tijgerkolos', art: 'tiger', size: 39, hp: 144, dmg: 18, speed: 119, type: 'charge', xp: 38, rarity: 'epic', c1: '#43b25b', c2: '#1e4a28' },
+  nachtstreep: { name: 'Nachtstreep', art: 'tiger', size: 40, hp: 172, dmg: 20, speed: 127, type: 'charge', xp: 46, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+  vuurtijger: { name: 'Vuurtijger', art: 'tiger', size: 41, hp: 200, dmg: 23, speed: 135, type: 'charge', xp: 54, rarity: 'mythic', c1: '#c47aff', c2: '#5a2080' },
+  langegiraffe: { name: 'Lange Giraffe', art: 'giraffe', size: 41, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#7ad06a', c2: '#2a6030' },
+  nekkolos: { name: 'Nekkolos', art: 'giraffe', size: 42, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#ff7043', c2: '#8a2020' },
+  savannetoren: { name: 'Savanne Toren', art: 'giraffe', size: 43, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#ffb0b8', c2: '#8a3040' },
+  giraffenreus: { name: 'Giraffenreus', art: 'giraffe', size: 44, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#e04f4f', c2: '#8a2020' },
+  hoogkijk: { name: 'Hoogkijk', art: 'giraffe', size: 45, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#505868', c2: '#202830' },
+  wolkennek: { name: 'Wolkennek', art: 'giraffe', size: 46, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#9a917f', c2: '#4a4038' },
+  razendnijlpaard: { name: 'Razend Nijlpaard', art: 'hippo', size: 41, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#43b25b', c2: '#1e4a28' },
+  rivierkolos: { name: 'Rivierkolos', art: 'hippo', size: 42, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#ffd75e', c2: '#8a6020' },
+  gapendekaak: { name: 'Gapende Kaak', art: 'hippo', size: 43, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#c47aff', c2: '#5a2080' },
+  nijltitan: { name: 'Nijl Titan', art: 'hippo', size: 44, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#c98850', c2: '#6b4a28' },
+  modderhip: { name: 'Modderhip', art: 'hippo', size: 45, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#d4a574', c2: '#6b4a28' },
+  waterton: { name: 'Waterton', art: 'hippo', size: 46, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#ff9ad5', c2: '#8a3060' },
+  razendeneushoorn: { name: 'Razende Neushoorn', art: 'rhino', size: 39, hp: 60, dmg: 10, speed: 95, type: 'charge', xp: 14, rarity: 'common', c1: '#e04f4f', c2: '#8a2020' },
+  hoornram2: { name: 'Hoornram', art: 'rhino', size: 40, hp: 88, dmg: 13, speed: 103, type: 'charge', xp: 22, rarity: 'uncommon', c1: '#505868', c2: '#202830' },
+  pantserstoot: { name: 'Pantserstoot', art: 'rhino', size: 41, hp: 116, dmg: 15, speed: 111, type: 'charge', xp: 30, rarity: 'rare', c1: '#9a917f', c2: '#4a4038' },
+  rhinokolos: { name: 'Rhino Kolos', art: 'rhino', size: 42, hp: 144, dmg: 18, speed: 119, type: 'charge', xp: 38, rarity: 'epic', c1: '#7ad06a', c2: '#2a6030' },
+  ijzervel: { name: 'IJzervel', art: 'rhino', size: 43, hp: 172, dmg: 20, speed: 127, type: 'charge', xp: 46, rarity: 'legendary', c1: '#ff7043', c2: '#8a2020' },
+  stampneus: { name: 'Stampneus', art: 'rhino', size: 44, hp: 200, dmg: 23, speed: 135, type: 'charge', xp: 54, rarity: 'mythic', c1: '#ffb0b8', c2: '#8a3040' },
+  woestegorilla: { name: 'Woeste Gorilla', art: 'gorilla', size: 38, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
+  vuistberg: { name: 'Vuistberg', art: 'gorilla', size: 39, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
+  junglereus: { name: 'Jungle Reus', art: 'gorilla', size: 40, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#ff9ad5', c2: '#8a3060' },
+  apenkolos: { name: 'Apenkolos', art: 'gorilla', size: 41, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#43b25b', c2: '#1e4a28' },
+  zilverrug: { name: 'Zilverrug', art: 'gorilla', size: 42, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+  trommelborst: { name: 'Trommelborst', art: 'gorilla', size: 43, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#c47aff', c2: '#5a2080' },
+  razendezebra: { name: 'Razende Zebra', art: 'zebra', size: 35, hp: 60, dmg: 10, speed: 95, type: 'charge', xp: 14, rarity: 'common', c1: '#7ad06a', c2: '#2a6030' },
+  streepgalop: { name: 'Streepgalop', art: 'zebra', size: 36, hp: 88, dmg: 13, speed: 103, type: 'charge', xp: 22, rarity: 'uncommon', c1: '#ff7043', c2: '#8a2020' },
+  savanneren: { name: 'Savanne Ren', art: 'zebra', size: 37, hp: 116, dmg: 15, speed: 111, type: 'charge', xp: 30, rarity: 'rare', c1: '#ffb0b8', c2: '#8a3040' },
+  zebrakolos: { name: 'Zebra Kolos', art: 'zebra', size: 38, hp: 144, dmg: 18, speed: 119, type: 'charge', xp: 38, rarity: 'epic', c1: '#e04f4f', c2: '#8a2020' },
+  zwartwitstorm: { name: 'Zwartwit Storm', art: 'zebra', size: 39, hp: 172, dmg: 20, speed: 127, type: 'charge', xp: 46, rarity: 'legendary', c1: '#505868', c2: '#202830' },
+  hoefstamp: { name: 'Hoefstamp', art: 'zebra', size: 40, hp: 200, dmg: 23, speed: 135, type: 'charge', xp: 54, rarity: 'mythic', c1: '#9a917f', c2: '#4a4038' },
+  razendebeer: { name: 'Razende Beer', art: 'bear', size: 39, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#43b25b', c2: '#1e4a28' },
+  klauwberg: { name: 'Klauwberg', art: 'bear', size: 40, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#ffd75e', c2: '#8a6020' },
+  bosreus: { name: 'Bosreus', art: 'bear', size: 41, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#c47aff', c2: '#5a2080' },
+  berenkolos: { name: 'Berenkolos', art: 'bear', size: 42, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#c98850', c2: '#6b4a28' },
+  honingslok: { name: 'Honingslok', art: 'bear', size: 43, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#d4a574', c2: '#6b4a28' },
+  winterklauw: { name: 'Winterklauw', art: 'bear', size: 44, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#ff9ad5', c2: '#8a3060' },
+  razendekrokodil: { name: 'Razende Krokodil', art: 'croc', size: 37, hp: 60, dmg: 10, speed: 88, type: 'swim', xp: 14, rarity: 'common', c1: '#e04f4f', c2: '#8a2020' },
+  kaakklem: { name: 'Kaakklem', art: 'croc', size: 38, hp: 88, dmg: 13, speed: 93, type: 'swim', xp: 22, rarity: 'uncommon', c1: '#505868', c2: '#202830' },
+  rivierschrik: { name: 'Rivierschrik', art: 'croc', size: 39, hp: 116, dmg: 15, speed: 98, type: 'swim', xp: 30, rarity: 'rare', c1: '#9a917f', c2: '#4a4038' },
+  krokodiltitan: { name: 'Krokodil Titan', art: 'croc', size: 40, hp: 144, dmg: 18, speed: 103, type: 'swim', xp: 38, rarity: 'epic', c1: '#7ad06a', c2: '#2a6030' },
+  schubbenmuil: { name: 'Schubbenmuil', art: 'croc', size: 41, hp: 172, dmg: 20, speed: 108, type: 'swim', xp: 46, rarity: 'legendary', c1: '#ff7043', c2: '#8a2020' },
+  snapkrokodil: { name: 'Snapkrokodil', art: 'croc', size: 42, hp: 200, dmg: 23, speed: 113, type: 'swim', xp: 54, rarity: 'mythic', c1: '#ffb0b8', c2: '#8a3040' },
+  razendekangoeroe: { name: 'Razende Kangoeroe', art: 'kangaroo', size: 35, hp: 60, dmg: 10, speed: 95, type: 'charge', xp: 14, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
+  sprongstoot: { name: 'Sprongstoot', art: 'kangaroo', size: 36, hp: 88, dmg: 13, speed: 103, type: 'charge', xp: 22, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
+  buidelbonk: { name: 'Buidelbonk', art: 'kangaroo', size: 37, hp: 116, dmg: 15, speed: 111, type: 'charge', xp: 30, rarity: 'rare', c1: '#ff9ad5', c2: '#8a3060' },
+  kangokolos: { name: 'Kango Kolos', art: 'kangaroo', size: 38, hp: 144, dmg: 18, speed: 119, type: 'charge', xp: 38, rarity: 'epic', c1: '#43b25b', c2: '#1e4a28' },
+  hopklauw: { name: 'Hopklauw', art: 'kangaroo', size: 39, hp: 172, dmg: 20, speed: 127, type: 'charge', xp: 46, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+  outbackram: { name: 'Outback Ram', art: 'kangaroo', size: 40, hp: 200, dmg: 23, speed: 135, type: 'charge', xp: 54, rarity: 'mythic', c1: '#c47aff', c2: '#5a2080' },
+  woestepanda: { name: 'Woeste Panda', art: 'panda', size: 36, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#7ad06a', c2: '#2a6030' },
+  bamboebonk: { name: 'Bamboe Bonk', art: 'panda', size: 37, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#ff7043', c2: '#8a2020' },
+  zwartwitreus: { name: 'Zwartwit Reus', art: 'panda', size: 38, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#ffb0b8', c2: '#8a3040' },
+  pandakolos: { name: 'Panda Kolos', art: 'panda', size: 39, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#e04f4f', c2: '#8a2020' },
+  rolbeer: { name: 'Rolbeer', art: 'panda', size: 40, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#505868', c2: '#202830' },
+  tempelpanda: { name: 'Tempelpanda', art: 'panda', size: 41, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#9a917f', c2: '#4a4038' },
+  razendeflamingo: { name: 'Razende Flamingo', art: 'flamingo', size: 33, hp: 60, dmg: 10, speed: 95, type: 'fly', xp: 14, rarity: 'common', c1: '#43b25b', c2: '#1e4a28' },
+  rozestorm: { name: 'Roze Storm', art: 'flamingo', size: 34, hp: 88, dmg: 13, speed: 99, type: 'fly', xp: 22, rarity: 'uncommon', c1: '#ffd75e', c2: '#8a6020' },
+  eenpoot: { name: 'Eenpoot', art: 'flamingo', size: 35, hp: 116, dmg: 15, speed: 103, type: 'fly', xp: 30, rarity: 'rare', c1: '#c47aff', c2: '#5a2080' },
+  flamingokolos: { name: 'Flamingo Kolos', art: 'flamingo', size: 36, hp: 144, dmg: 18, speed: 107, type: 'fly', xp: 38, rarity: 'epic', c1: '#c98850', c2: '#6b4a28' },
+  lagunevlam: { name: 'Lagune Vlam', art: 'flamingo', size: 37, hp: 172, dmg: 20, speed: 111, type: 'fly', xp: 46, rarity: 'legendary', c1: '#d4a574', c2: '#6b4a28' },
+  nekzwaai: { name: 'Nekzwaai', art: 'flamingo', size: 38, hp: 200, dmg: 23, speed: 115, type: 'fly', xp: 54, rarity: 'mythic', c1: '#ff9ad5', c2: '#8a3060' },
+  razendekameel: { name: 'Razende Kameel', art: 'camel', size: 37, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#e04f4f', c2: '#8a2020' },
+  bultbonk: { name: 'Bultbonk', art: 'camel', size: 38, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#505868', c2: '#202830' },
+  woestijnreus: { name: 'Woestijnreus', art: 'camel', size: 39, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#9a917f', c2: '#4a4038' },
+  kameelkolos: { name: 'Kameel Kolos', art: 'camel', size: 40, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#7ad06a', c2: '#2a6030' },
+  zandgalop: { name: 'Zandgalop', art: 'camel', size: 41, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#ff7043', c2: '#8a2020' },
+  oasestamp: { name: 'Oase Stamp', art: 'camel', size: 42, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#ffb0b8', c2: '#8a3040' },
     /* Tide Battle — alleen via 0.05% kill-roll, nooit in normale golven */
     tideKyuu: { name: 'Negenstaart Vos', art: 'tideFox', size: 38, hp: 340, dmg: 26, speed: 88, type: 'charge', xp: 120, rarity: 'mythic', c1: '#ff7a20', c2: '#8a2010' },
     tideManda: { name: 'Paarse Reuzenslang', art: 'tideSnake', size: 36, hp: 320, dmg: 24, speed: 72, type: 'shoot', xp: 115, rarity: 'mythic', c1: '#9b59d4', c2: '#4a2080' },
@@ -179,6 +325,12 @@ const WORLD_THEMES = [
   'cyber','vulkaan','dojo','cyber','cyber',
   'cyber','vulkaan','dojo','cyber','cyber',
   'cyber','cyber','cyber','cyber','cyber',
+  /* Nachtmerrie 51–60 */
+  'nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie',
+  'nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie',
+  /* Hel 61–70 */
+  'hel','hel','hel','hel','hel',
+  'hel','hel','hel','hel','hel',
 ];
 const UNLOCK_AT = {
   slymo: 1, bubbel: 1, flapper: 2, piepvleugel: 5, stekelra: 3, ijzerstek: 9,
@@ -195,9 +347,13 @@ const UNLOCK_AT = {
   etherwyrm: 43, omegadrake: 46,
   kleiply: 1, spinbub: 2, hongerly: 4, parelsly: 6, modderblob: 4, crystalbub: 6, chaosly: 8, zwerm: 10, karmijnvleerm: 7, echovleerm: 9, spiegelvleerm: 11, voidvleerm: 13, duskwing: 11, glimwing: 13, bronzenstek: 15, koperstek: 17, froststek: 14, kolossstek: 16, thornox: 18, spineclaw: 20, quillfang: 18, spookvlam: 20, koudspook: 22, spiraalgeest: 24, wispgeest: 21, nexusgeest: 23, mistwraith: 25, palewraith: 27, olieblik: 25, batterijkan: 27, schrootblik: 29, turboblok: 30, ionkan: 28, quantumkan: 30, omegacan: 32, zilvervos: 34, maanvos: 32, jadevos: 34, stellarvos: 36, kosmischvos: 37, emberfox: 35, shadowfox: 37, leisteen: 39, marmerbonk: 41, koraalbonk: 39, barnsteen: 41, adamantbonk: 43, basaltbonk: 44, titanrock: 42, mistwyrm: 44, sandwyrm: 46, frostwyrm: 48, chaoswyrm: 46, prismewyrm: 48, apexwyrm: 50,
   rifhaai: 8, snelvin: 9, octo: 8, inktvissie: 10, hamerkop: 12, koraalocto: 14, tijvin: 16, dieptocto: 18, stormocto: 22, neonhaai: 24, abysshaai: 32, krakenling: 38, levihaai: 44, voidocto: 40,
+  /* boerderij op hol */
+  holkoe: 1, razendeholkoe: 6, stampkoe: 11, melkkolos: 17, boerenbonk: 22, woesteholkoe: 27, razendzwijn: 3, modderzwijn: 8, stootzwijn: 13, spekzwaai: 19, knorbonker: 24, reuzenzwijn: 29, kipophol: 1, vliegkip: 6, pikstorm: 11, kippenkolos: 17, woestekip: 22, snavelstorm: 27, razendeschaap: 3, wolkolos: 8, stampwol: 13, boerenschrik: 19, donsbeest: 24, schaaptitan: 29, holpaard: 1, galopgevaar: 6, stampveulen: 11, renkolos: 17, boerenrenner: 22, stormhengst: 27, kopstootgeit: 3, berggeitboos: 8, hoornram: 13, geitenkolos: 19, razendebok: 24, steenbokstorm: 29, kwakophol: 1, razendeeend: 6, vlotkwak: 11, eendenkolos: 17, snavelduiker: 22, kwaktitan: 27, haanophol: 3, kraairoep: 8, kamstoot: 13, hanenkolos: 19, vuurhaan: 24, zonnekam: 29, koppigeezel: 1, stampzel: 6, boerenezel: 11, ezelkolos: 17, hardhoofd: 22, molenzwaai: 27, gansophol: 3, sissendegans: 8, vleugelram: 13, ganzenkolos: 19, nesthoeder: 24, stormgans: 29,
+  /* dierentuin-uitbraak */
+  reuzenolifant: 10, stampolifant: 16, slurfkolos: 23, ivoiretitan: 29, woesteolifant: 36, mammoetstorm: 42, razendeleeuw: 9, manenstorm: 15, savannekoning: 22, leeuwenkolos: 28, woestemanen: 30, koningsklauw: 36, razendetijger: 7, streepstorm: 13, jungleklauw: 20, tijgerkolos: 26, nachtstreep: 33, vuurtijger: 39, langegiraffe: 14, nekkolos: 20, savannetoren: 22, giraffenreus: 28, hoogkijk: 35, wolkennek: 41, razendnijlpaard: 8, rivierkolos: 14, gapendekaak: 21, nijltitan: 27, modderhip: 34, waterton: 40, razendeneushoorn: 6, hoornram2: 12, pantserstoot: 19, rhinokolos: 25, ijzervel: 32, stampneus: 38, woestegorilla: 9, vuistberg: 15, junglereus: 22, apenkolos: 28, zilverrug: 30, trommelborst: 36, razendezebra: 7, streepgalop: 13, savanneren: 20, zebrakolos: 26, zwartwitstorm: 33, hoefstamp: 39, razendebeer: 10, klauwberg: 16, bosreus: 18, berenkolos: 24, honingslok: 31, winterklauw: 37, razendekrokodil: 8, kaakklem: 14, rivierschrik: 21, krokodiltitan: 27, schubbenmuil: 34, snapkrokodil: 40, razendekangoeroe: 6, sprongstoot: 12, buidelbonk: 19, kangokolos: 25, hopklauw: 32, outbackram: 38, woestepanda: 9, bamboebonk: 15, zwartwitreus: 22, pandakolos: 28, rolbeer: 30, tempelpanda: 36, razendeflamingo: 7, rozestorm: 13, eenpoot: 20, flamingokolos: 26, lagunevlam: 33, nekzwaai: 39, razendekameel: 10, bultbonk: 16, woestijnreus: 18, kameelkolos: 24, zandgalop: 31, oasestamp: 37,
 
 };
-/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (126 soorten). */
+/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (~2× diversiteit: boerderij + dierentuin). */
 const ADVENTURE_HORDE_MUL = 6;
 const ADVENTURE_HORDE_MAX_PER_WAVE = 36;
 const ADVENTURE_MAX_ALIVE = IS_TOUCH ? 54 : 78;
@@ -206,8 +362,42 @@ const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
 const GIANT_DMG_MUL = 1.14;
 const GIANT_XP_MUL = 1.3;
+/** Flagship baas (BOSS_AT elite / super-baas): groter + tankier. */
+const BOSS_CORE_SIZE_MUL = 1.25;
+const BOSS_CORE_HP_MUL = 2.85;
+const BOSS_CORE_DMG_MUL = 1.18;
+/** Soms ~2× zo groot als huidige baas, met extra HP. */
+const COLOSSAL_CHANCE = 0.42;
+const COLOSSAL_SIZE_MUL = 2.0;
+const COLOSSAL_HP_MUL = 1.9;
+const COLOSSAL_DMG_MUL = 1.12;
+const COLOSSAL_XP_MUL = 1.45;
 
 const SEA_ARTS = new Set(['shark', 'octo']);
+const FARM_ARTS = new Set(['cow', 'pig', 'chicken', 'sheep', 'horse', 'goat', 'duck', 'rooster', 'donkey', 'goose']);
+const ZOO_ARTS = new Set(['elephant', 'lion', 'tiger', 'giraffe', 'hippo', 'rhino', 'gorilla', 'zebra', 'bear', 'croc', 'kangaroo', 'panda', 'flamingo', 'camel']);
+const BEAST_SIZE_ARTS = new Set([...FARM_ARTS, ...ZOO_ARTS]);
+/** Boerderij/dierentuin: vaker reuzen-variant (al groot, nog groter). */
+const BEAST_GIANT_BONUS = 0.28;
+
+function farmSpeciesPool(levelN, maxRarityOrder) {
+  return Object.keys(UNLOCK_AT).filter((id) => {
+    const sp = SPECIES[id];
+    if (!sp || !FARM_ARTS.has(sp.art)) return false;
+    if (UNLOCK_AT[id] > levelN) return false;
+    return rarityOf(sp.rarity).order <= maxRarityOrder;
+  });
+}
+
+function zooSpeciesPool(levelN, maxRarityOrder) {
+  return Object.keys(UNLOCK_AT).filter((id) => {
+    const sp = SPECIES[id];
+    if (!sp || !ZOO_ARTS.has(sp.art)) return false;
+    if (UNLOCK_AT[id] > levelN) return false;
+    return rarityOf(sp.rarity).order <= maxRarityOrder;
+  });
+}
+
 
 function seaSpeciesPool(levelN, maxRarityOrder) {
   return Object.keys(UNLOCK_AT).filter((id) => {
@@ -251,14 +441,19 @@ const BOSS_AT = {
   40: [{ sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst' }],
   45: [{ sp: 'voidkonijn', elite: true }, { sp: 'guvvedrak' }],
   50: [{ sp: 'guvvedrak', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst', elite: true }],
+  55: [{ sp: 'voidkonijn', elite: true }, { sp: 'neondrake', elite: true }, { sp: 'schaduwvorst' }],
+  60: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'voidkonijn', elite: true }],
+  65: [{ sp: 'omegadrake', elite: true }, { sp: 'etherwyrm', elite: true }, { sp: 'neondrake' }],
+  70: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'apexwyrm', elite: true }, { sp: 'voidkonijn', elite: true }],
 };
 
-function weightedPick(pool, n) {
+function weightedPick(pool, n, rarityBias) {
   const safe = (pool || []).filter((id) => SPECIES[id]);
   const use = safe.length ? safe : ['slymo'];
+  const bias = Number(rarityBias) || 0;
   const weights = use.map(id => {
     const o = rarityOf(SPECIES[id].rarity).order;
-    return Math.max(0.3, 1.5 - o * 0.22 + Math.min(n, 45) * 0.012 * o);
+    return Math.max(0.3, 1.5 - o * 0.22 + Math.min(n, 45) * 0.012 * o + bias * o * 0.35);
   });
   const sum = weights.reduce((a, b) => a + b, 0);
   let r = Math.random() * sum;
@@ -332,15 +527,39 @@ function isBossWave(level, waveIdx) {
   return !!(level && level.boss && waveIdx === level.waves.length - 1);
 }
 
-function rollWaveGiant(n, elite) {
+function rollWaveGiant(n, elite, spId, giantBonus) {
   if (elite || n < 2) return false;
-  return Math.random() < GIANT_SPAWN_CHANCE;
+  let chance = GIANT_SPAWN_CHANCE + (Number(giantBonus) || 0);
+  const sp = spId && SPECIES[spId];
+  if (sp && typeof BEAST_SIZE_ARTS !== 'undefined' && BEAST_SIZE_ARTS.has(sp.art)) {
+    chance = Math.min(0.55, chance + BEAST_GIANT_BONUS);
+  }
+  return Math.random() < chance;
 }
 
-function buildLevel(n) {
-  const hpMul = 1 + (n - 1) * 0.14;
-  const dmgMul = 1 + (n - 1) * 0.08;
-  const maxRarity = n >= 45 ? 5 : n >= 32 ? 4 : n >= 20 ? 3 : n >= 10 ? 2 : n >= 4 ? 1 : 0;
+function maxRarityForAdvLevel(n, diff) {
+  const meta = typeof advDiffMeta === 'function' ? advDiffMeta(diff) : { order: 0, rarityBoost: 0 };
+  let maxRarity = n >= 61 ? 7 : n >= 51 ? 6 : n >= 45 ? 5 : n >= 32 ? 4 : n >= 20 ? 3 : n >= 10 ? 2 : n >= 4 ? 1 : 0;
+  maxRarity = Math.min(7, maxRarity + (meta.rarityBoost || 0));
+  if ((meta.order || 0) >= 1) {
+    maxRarity = Math.max(maxRarity, Math.min(7, meta.order + Math.floor((n - 1) / 8)));
+  }
+  if ((meta.order || 0) >= 2) {
+    maxRarity = Math.max(maxRarity, Math.min(7, 2 + Math.floor((n - 1) / 6)));
+  }
+  return maxRarity;
+}
+
+function buildLevel(n, diffId) {
+  const diff = typeof advDiffMeta === 'function' ? advDiffMeta(diffId) : {
+    id: 'normal', order: 0, hpMul: 1, dmgMul: 1, rarityBoost: 0, eliteBonus: 0, giantBonus: 0,
+    theme: null, speedMul: 1, enrageMul: 1, enrageAt: 0.5, hordeMul: 1, model: '1.0',
+  };
+  const hpMul = (1 + (n - 1) * 0.14) * (diff.hpMul || 1);
+  const dmgMul = (1 + (n - 1) * 0.08) * (diff.dmgMul || 1);
+  const maxRarity = maxRarityForAdvLevel(n, diff.id);
+  const rarityBias = diff.order || 0;
+  const eliteChance = 0.14 + (diff.eliteBonus || 0);
   const fightPool = Object.keys(UNLOCK_AT).filter(id => {
     const sp = SPECIES[id];
     return sp && UNLOCK_AT[id] <= n && rarityOf(sp.rarity).order <= maxRarity && id !== 'guvvedrak';
@@ -352,21 +571,49 @@ function buildLevel(n) {
   });
   const waves = [];
   const waveMeta = [];
-  const waveCount = Math.min(2 + Math.floor(n / 5), 5);
+  const waveCount = Math.min(2 + Math.floor(n / 5) + (diff.order >= 2 ? 1 : 0), 6);
   const basePerWave = 2 + Math.floor(n / 4);
-  const perWave = Math.min(Math.max(2, Math.ceil(basePerWave * ADVENTURE_HORDE_MUL)), ADVENTURE_HORDE_MAX_PER_WAVE);
+  const hordeScale = (diff.hordeMul || 1);
+  const perWave = Math.min(
+    Math.max(2, Math.ceil(basePerWave * ADVENTURE_HORDE_MUL * hordeScale)),
+    ADVENTURE_HORDE_MAX_PER_WAVE
+  );
   for (let w = 0; w < waveCount; w++) {
     const list = [];
     for (let i = 0; i < perWave; i++) {
-      const sp = weightedPick(pool, n);
+      const sp = weightedPick(pool, n, rarityBias);
       if (!SPECIES[sp]) continue;
-      const rareElite = rarityOf(SPECIES[sp].rarity).order >= 3 && Math.random() < 0.14;
-      list.push({ sp, elite: rareElite, giant: rollWaveGiant(n, rareElite) });
+      const rareElite = rarityOf(SPECIES[sp].rarity).order >= 3 && Math.random() < eliteChance;
+      list.push({ sp, elite: rareElite, giant: rollWaveGiant(n, rareElite, sp, diff.giantBonus) });
     }
     const meta = { trait: null, spawnMul: 1, label: '' };
     const roll = Math.random();
-    if (flyPool.length && n >= 3 && roll < 0.22) {
-      list[Math.floor(Math.random() * list.length)].sp = weightedPick(flyPool, n);
+    // Model 3.0: pijn-golf — meer elites + reuzen
+    if (diff.order >= 2 && roll < 0.26) {
+      meta.trait = 'pain';
+      meta.spawnMul = 0.78;
+      meta.label = 'pain';
+      for (let i = 0; i < list.length; i++) {
+        if (Math.random() < 0.45) list[i].elite = true;
+        if (Math.random() < 0.35) {
+          list[i].giant = true;
+        }
+      }
+      if (list.length) {
+        const sp = weightedPick(pool, n, rarityBias + 1);
+        list.push({ sp, elite: true, giant: rollWaveGiant(n, true, sp, (diff.giantBonus || 0) + 0.1) });
+      }
+    // Model 2.0+: ember/rush — snellere spawn + vuur-druk
+    } else if (diff.order >= 1 && roll < 0.34) {
+      meta.trait = 'ember';
+      meta.spawnMul = 0.68;
+      meta.label = 'ember';
+      for (let i = 0; i < Math.min(3, list.length); i++) {
+        const ix = Math.floor(Math.random() * list.length);
+        list[ix].elite = list[ix].elite || Math.random() < 0.4;
+      }
+    } else if (flyPool.length && n >= 3 && roll < 0.22) {
+      list[Math.floor(Math.random() * list.length)].sp = weightedPick(flyPool, n, rarityBias);
       meta.trait = 'flyers';
       meta.label = 'Vliegers — mik omhoog!';
     } else if (roll < 0.36) {
@@ -383,9 +630,37 @@ function buildLevel(n) {
           if (Math.random() < 0.58) list[i].sp = tideWaveSeaPick(seaPool, n, maxRarity);
         }
       }
-    } else if (n >= 7 && roll < 0.54) {
-      const sp = weightedPick(pool, n);
-      list.push({ sp, elite: true, giant: rollWaveGiant(n, true) });
+    } else if (n >= 3 && roll < 0.58) {
+      meta.trait = 'ranch';
+      meta.spawnMul = 0.88;
+      meta.label = 'ranch';
+      const farmPool = farmSpeciesPool(n, maxRarity);
+      if (farmPool.length) {
+        for (let i = 0; i < list.length; i++) {
+          if (Math.random() < 0.72) {
+            const fp = weightedPick(farmPool, n, rarityBias);
+            list[i].sp = fp;
+            list[i].giant = list[i].giant || rollWaveGiant(n, !!list[i].elite, fp, diff.giantBonus);
+          }
+        }
+      }
+    } else if (n >= 5 && roll < 0.70) {
+      meta.trait = 'safari';
+      meta.spawnMul = 0.86;
+      meta.label = 'safari';
+      const zooPool = zooSpeciesPool(n, maxRarity);
+      if (zooPool.length) {
+        for (let i = 0; i < list.length; i++) {
+          if (Math.random() < 0.72) {
+            const zp = weightedPick(zooPool, n, rarityBias);
+            list[i].sp = zp;
+            list[i].giant = true; // dierentuin: altijd grote grote versies
+          }
+        }
+      }
+    } else if (n >= 7 && roll < 0.76) {
+      const sp = weightedPick(pool, n, rarityBias);
+      list.push({ sp, elite: true, giant: rollWaveGiant(n, true, sp, diff.giantBonus) });
       meta.trait = 'elite';
       meta.label = 'Extra elite';
     }
@@ -394,17 +669,26 @@ function buildLevel(n) {
   }
   if (BOSS_AT[n]) {
     const bossWave = BOSS_AT[n].map(x => Object.assign({}, x, { bossCore: !!x.elite }));
-    const hordePad = Math.min(3 + Math.floor(n / 8), 10);
+    const hordePad = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, 12);
     for (let i = 0; i < hordePad; i++) {
-      const elite = Math.random() < 0.1;
-      bossWave.push({ sp: weightedPick(pool, n), elite, giant: rollWaveGiant(n, elite) });
+      const elite = Math.random() < (0.1 + (diff.eliteBonus || 0) * 0.5);
+      const bsp = weightedPick(pool, n, rarityBias);
+      bossWave.push({ sp: bsp, elite, giant: rollWaveGiant(n, elite, bsp, diff.giantBonus) });
     }
     waves.push(bossWave);
     waveMeta.push({ trait: 'boss', spawnMul: 1, label: 'Baas-golf' });
   }
-  const theme = WORLD_THEMES[n - 1] || 'cyber';
-  const rarityCap = ['common','uncommon','rare','epic','legendary','mythic'][maxRarity];
-  return { n, waves, waveMeta, hpMul, dmgMul, theme, boss: !!BOSS_AT[n], rarityCap };
+  let theme = WORLD_THEMES[n - 1] || (n >= 61 ? 'hel' : (n >= 51 ? 'nachtmerrie' : 'cyber'));
+  if (diff.theme) theme = diff.theme;
+  const rarityCap = ['common','uncommon','rare','epic','legendary','mythic','nightmare','hell'][maxRarity] || 'mythic';
+  return {
+    n, waves, waveMeta, hpMul, dmgMul, theme, boss: !!BOSS_AT[n], rarityCap,
+    diff: diff.id || 'normal',
+    speedMul: diff.speedMul || 1,
+    model: diff.model || '1.0',
+    enrageMul: diff.enrageMul || 1,
+    enrageAt: diff.enrageAt != null ? diff.enrageAt : 0.5,
+  };
 }
 
 const WAVE_TRAIT_BANNER = {
@@ -412,6 +696,10 @@ const WAVE_TRAIT_BANNER = {
   rush: { key: 'banner.rushWave', color: '#ffb06a', size: 40 },
   elite: { key: 'banner.eliteTraitWave', color: '#ffb0b8', size: 40 },
   tide: { key: 'banner.tideWave', color: '#6ee06e', size: 40 },
+  ranch: { key: 'banner.ranchWave', color: '#e8c98a', size: 40 },
+  safari: { key: 'banner.safariWave', color: '#43b25b', size: 40 },
+  ember: { key: 'banner.emberWave', color: '#ff7a4d', size: 42 },
+  pain: { key: 'banner.painWave', color: '#ff3a2a', size: 44 },
 };
 
 function waveTraitBanner(trait) {
@@ -485,14 +773,19 @@ function gambleOutcomeLabel(g) {
 /** Intro-lied + FX voor elite / baas / super-baas (avontuur). */
 function triggerSpecialEnemyIntro(game, monster, kind) {
   if (!game || !monster) return;
-  const tier = kind || (monster.superBoss ? 'superBoss' : (monster.elite ? 'elite' : 'boss'));
+  const tier = kind || (monster.superBoss ? 'superBoss' : (monster.bossCore ? 'boss' : (monster.elite ? 'elite' : 'boss')));
   const name = (monster.sp && monster.sp.name) || 'Baas';
   const rar = rarityOf(monster.sp?.rarity || 'rare');
+  const bigBoss = !!(monster.bossCore || monster.superBoss || tier === 'superBoss');
+  const colossal = !!monster.colossal;
   const col = tier === 'superBoss' ? '#ffd75e' : (tier === 'boss' ? '#ff6b6b' : (rar.color || '#ffb0b8'));
-  monster.introT = tier === 'superBoss' ? 2.4 : (tier === 'boss' ? 2.0 : 1.55);
+  let introDur = tier === 'superBoss' ? 2.4 : (tier === 'boss' ? 2.0 : 1.55);
+  if (bigBoss) introDur = colossal ? 3.6 : (tier === 'superBoss' ? 3.2 : 2.85);
+  monster.introDur = introDur;
+  monster.introT = introDur;
   monster.introTier = tier;
-  const waveKey = `${game.mode || 'x'}:${game.waveIdx}:${tier === 'superBoss' ? 'super' : 'special'}`;
-  const firstOfWave = tier === 'superBoss' || game._specialIntroKey !== waveKey;
+  const waveKey = `${game.mode || 'x'}:${game.waveIdx}:${tier === 'superBoss' ? 'super' : (bigBoss ? 'bossCore' : 'special')}`;
+  const firstOfWave = tier === 'superBoss' || bigBoss || game._specialIntroKey !== waveKey;
   if (firstOfWave) game._specialIntroKey = waveKey;
 
   if (firstOfWave) {
@@ -502,16 +795,31 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
           try { AudioSys.sfx('bossTurn'); } catch (_) {}
         }
         AudioSys.sting('superBossIntro');
-        AudioSys.play('boss');
-        game.banner(`SUPER BAAS — ${name}!`, 2.0, col, 44);
+        if (typeof playFightBgm === 'function') playFightBgm('boss');
+        else AudioSys.play('boss');
+        const title = typeof t === 'function' ? t('banner.superBossTitle') : 'SUPER BAAS';
+        game.banner(title, 2.8, col, bigBoss ? 68 : 44);
+        game.banner(colossal
+          ? (typeof t === 'function' ? t('banner.colossalBossName', { name }) : `COLOSSALE ${name}!`)
+          : (typeof t === 'function' ? t('banner.bossName', { name }) : name), 2.5, '#fff', bigBoss ? 52 : 40);
       } else if (tier === 'boss') {
         AudioSys.sting('bossIntro');
-        AudioSys.play('boss');
-        game.banner(`BAAS — ${name}!`, 1.8, col, 42);
+        if (typeof playFightBgm === 'function') playFightBgm('boss');
+        else AudioSys.play('boss');
+        if (bigBoss) {
+          const title = typeof t === 'function' ? t('banner.bossTitle') : 'BAAS';
+          game.banner(title, 2.6, col, 64);
+          game.banner(colossal
+            ? (typeof t === 'function' ? t('banner.colossalBossName', { name }) : `COLOSSALE ${name}!`)
+            : (typeof t === 'function' ? t('banner.bossName', { name }) : `${name}!`), 2.35, '#fff', 50);
+        } else {
+          game.banner(typeof t === 'function' ? t('banner.bossNamed', { name }) : `BAAS — ${name}!`, 1.8, col, 42);
+        }
       } else {
         AudioSys.sting('eliteIntro');
-        AudioSys.play('elite');
-        game.banner(`ELITE — ${name}!`, 1.5, col, 38);
+        if (typeof playFightBgm === 'function') playFightBgm('elite');
+        else AudioSys.play('elite');
+        game.banner(typeof t === 'function' ? t('banner.eliteNamed', { name }) : `ELITE — ${name}!`, 1.5, col, 38);
       }
     } catch (_) {}
     try { AudioSys.sfx('roar'); } catch (_) {}
@@ -522,16 +830,19 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
   const x = monster.x, y = monster.y - (monster.size || 40) * 0.4;
   const burstN = motionReduced() || fxLite()
     ? 8
-    : (firstOfWave ? (tier === 'superBoss' ? 28 : 18) : 8);
+    : (firstOfWave ? (tier === 'superBoss' || colossal ? 34 : (bigBoss ? 26 : 18)) : 8);
   try {
     game.burst(x, y, col, burstN);
     if (firstOfWave) {
       game.burst(x, y, '#fff', Math.ceil(burstN * 0.35));
-      spawnFxRing(game, x, y, col, tier === 'superBoss' ? 22 : 14);
-      if (tier !== 'elite') spawnFxRing(game, x, y - 20, '#fff', 10);
-      game.shake(tier === 'superBoss' ? 12 : (tier === 'boss' ? 9 : 6), tier === 'superBoss' ? 0.42 : 0.28);
-      game.freezeT = Math.max(game.freezeT || 0, tier === 'superBoss' ? 0.16 : 0.1);
-      haptic(tier === 'superBoss' ? 28 : 16);
+      spawnFxRing(game, x, y, col, tier === 'superBoss' || colossal ? 26 : (bigBoss ? 20 : 14));
+      if (tier !== 'elite') spawnFxRing(game, x, y - 20, '#fff', bigBoss ? 14 : 10);
+      if (colossal) spawnFxRing(game, x, y - 36, '#ffd75e', 16);
+      const shakeAmt = colossal ? 16 : (tier === 'superBoss' ? 14 : (bigBoss ? 11 : (tier === 'boss' ? 9 : 6)));
+      const shakeDur = colossal ? 0.55 : (tier === 'superBoss' ? 0.48 : (bigBoss ? 0.38 : (tier === 'boss' ? 0.28 : 0.22)));
+      game.shake(shakeAmt, shakeDur);
+      game.freezeT = Math.max(game.freezeT || 0, colossal ? 0.22 : (tier === 'superBoss' ? 0.18 : (bigBoss ? 0.14 : 0.1)));
+      haptic(colossal ? 36 : (tier === 'superBoss' ? 28 : (bigBoss ? 22 : 16)));
     }
   } catch (_) {}
 }

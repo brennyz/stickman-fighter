@@ -64,10 +64,14 @@ function startGame(mode, opts) {
   } catch (_) {}
   try {
     if (mode === 'training') AudioSys.play('training');
-    else if (mode === 'adventure') AudioSys.play(game.level && game.level.boss ? 'boss' : 'battle');
+    else if (mode === 'adventure') {
+      if (typeof playFightBgm === 'function') playFightBgm(game.level && game.level.boss ? 'boss' : 'battle');
+      else AudioSys.play(game.level && game.level.boss ? 'boss' : 'battle');
+    }
     else if (mode === 'versus') AudioSys.play('versus');
     else if (mode === 'coinrun') AudioSys.play('mats');
     else if (mode === 'wall') AudioSys.play('wall');
+    else if (typeof playFightBgm === 'function') playFightBgm('battle');
     else AudioSys.play('battle');
   } catch (_) {}
   } finally {

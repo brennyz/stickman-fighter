@@ -1,5 +1,5 @@
 /* ============================== SATAN ENCOUNTER ======================== */
-/** Na 10× falen op hetzelfde level verschijnt Satan (reflect-baas). */
+/** Na 10× falen op hetzelfde level (per moeilijkheid) verschijnt Satan. */
 const SATAN_FAIL_THRESHOLD = 10;
 /** UI-danger: één fail vóór Satan (9× = rood + !). */
 const SATAN_DANGER_FAILS = 9;
@@ -10,20 +10,36 @@ const SATAN_SPECIES_ID = 'satan';
 const SATAN_HP_VS_PLAYER = 1.35;
 const SATAN_DIRECT_DMG_MUL = 0.55;
 
-function satanFailCount(levelN) {
-  return typeof advFailCount === 'function' ? advFailCount(levelN) : 0;
+function satanDiffId(diff) {
+  return typeof normalizeAdvDiffId === 'function'
+    ? normalizeAdvDiffId(diff || (typeof currentAdvDiff === 'function' ? currentAdvDiff() : 'normal'))
+    : (diff || 'normal');
 }
 
-function satanLastAt(levelN) {
-  if (!save || !save.advSatanAt || typeof save.advSatanAt !== 'object') return 0;
-  const n = Math.floor(Number(save.advSatanAt[levelN]) || 0);
-  return n > 0 ? n : 0;
+function satanFailCount(levelN, diff) {
+  if (typeof advFailCount === 'function') return advFailCount(levelN, satanDiffId(diff));
+  return (save && save.advFails && save.advFails[levelN]) || 0;
 }
 
-function shouldTriggerSatan(levelN) {
-  const fails = satanFailCount(levelN);
+function satanLastAt(levelN, diff) {
+  const d = satanDiffId(diff);
+  const n = Math.floor(Number(levelN) || 0);
+  if (d === 'normal') {
+    if (!save || !save.advSatanAt || typeof save.advSatanAt !== 'object') return 0;
+    const v = Math.floor(Number(save.advSatanAt[n]) || 0);
+    return v > 0 ? v : 0;
+  }
+  if (typeof ensureAdvHardBag !== 'function') return 0;
+  const bag = ensureAdvHardBag(d);
+  if (!bag.satanAt || typeof bag.satanAt !== 'object') return 0;
+  const v = Math.floor(Number(bag.satanAt[n]) || 0);
+  return v > 0 ? v : 0;
+}
+
+function shouldTriggerSatan(levelN, diff) {
+  const fails = satanFailCount(levelN, diff);
   if (fails < SATAN_FAIL_THRESHOLD) return false;
-  const last = satanLastAt(levelN);
+  const last = satanLastAt(levelN, diff);
   if (!last) return true;
   return fails >= last + SATAN_REAPPEAR_GAP;
 }
@@ -47,12 +63,14 @@ function satanHeatPct(fails) {
   return clamp(Math.round((n / SATAN_FAIL_THRESHOLD) * 100), 0, 100);
 }
 
-function satanHeatForLevel(levelN) {
-  const fails = satanFailCount(levelN);
+function satanHeatForLevel(levelN, diff) {
+  const d = satanDiffId(diff);
+  const fails = satanFailCount(levelN, d);
   const tier = satanHeatTier(fails);
-  const pending = typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(levelN);
+  const pending = shouldTriggerSatan(levelN, d);
   return {
     levelN: levelN,
+    diff: d,
     fails,
     tier,
     pct: satanHeatPct(fails),
@@ -64,18 +82,20 @@ function satanHeatForLevel(levelN) {
 }
 
 /** Hoogste hitte op een eiland (voor info-paneel). */
-function satanHeatForIsland(islandId) {
+function satanHeatForIsland(islandId, diff) {
+  const d = satanDiffId(diff);
   const range = typeof islandLevelRange === 'function'
     ? islandLevelRange(islandId)
     : { start: 1, end: 10 };
   let best = null;
   for (let n = range.start; n <= range.end; n++) {
-    const h = satanHeatForLevel(n);
+    const h = satanHeatForLevel(n, d);
     if (!best || h.fails > best.fails || (h.fails === best.fails && h.satanReady && !best.satanReady)) {
       best = h;
     }
   }
-  return best || satanHeatForLevel(save && save.unlocked ? save.unlocked : 1);
+  const unlocked = typeof advUnlockedLevel === 'function' ? advUnlockedLevel(d) : (save && save.unlocked) || 1;
+  return best || satanHeatForLevel(unlocked, d);
 }
 
 function satanHeatLabel(heat) {
@@ -104,17 +124,40 @@ function satanHeatTip(heat) {
   return t('ui.heatTipIdle');
 }
 
-function markSatanEncounterStarted(levelN) {
+function markSatanEncounterStarted(levelN, diff) {
   if (!save) return;
-  if (!save.advSatanAt || typeof save.advSatanAt !== 'object') save.advSatanAt = {};
-  save.advSatanAt[levelN] = satanFailCount(levelN);
+  const d = satanDiffId(diff);
+  const n = Math.floor(Number(levelN) || 0);
+  const fails = satanFailCount(n, d);
+  if (d === 'normal') {
+    if (!save.advSatanAt || typeof save.advSatanAt !== 'object') save.advSatanAt = {};
+    save.advSatanAt[n] = fails;
+  } else if (typeof ensureAdvHardBag === 'function') {
+    const bag = ensureAdvHardBag(d);
+    if (!bag.satanAt || typeof bag.satanAt !== 'object') bag.satanAt = {};
+    bag.satanAt[n] = fails;
+  }
   try { persist(); } catch (_) {}
 }
 
-function clearSatanEncounterProgress(levelN) {
-  if (!save || !save.advSatanAt || typeof save.advSatanAt !== 'object') return;
-  if (save.advSatanAt[levelN] != null) {
-    delete save.advSatanAt[levelN];
+function clearSatanEncounterProgress(levelN, diff) {
+  if (!save) return;
+  const d = satanDiffId(diff);
+  const n = Math.floor(Number(levelN) || 0);
+  let changed = false;
+  if (d === 'normal') {
+    if (save.advSatanAt && typeof save.advSatanAt === 'object' && save.advSatanAt[n] != null) {
+      delete save.advSatanAt[n];
+      changed = true;
+    }
+  } else if (typeof ensureAdvHardBag === 'function') {
+    const bag = ensureAdvHardBag(d);
+    if (bag.satanAt && bag.satanAt[n] != null) {
+      delete bag.satanAt[n];
+      changed = true;
+    }
+  }
+  if (changed) {
     try { persist(); } catch (_) {}
   }
 }
