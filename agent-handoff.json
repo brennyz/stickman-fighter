@@ -197,6 +197,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T19:05:49Z",
+      "summary": "Zone-wapens gekoppeld/gecheckt/geharden · live v1.18.109"
+    },
+    {
       "at": "2026-07-26T19:03:57Z",
       "summary": "d6 audio: pause heat reset, combat SFX block, slider sync · v1.18.108"
     },
@@ -291,10 +295,6 @@
     {
       "at": "2026-07-26T16:05:31Z",
       "summary": "d3 versus c5: pause side-swap + TOT HUD · npm test groen · v1.18.98"
-    },
-    {
-      "at": "2026-07-26T15:04:45Z",
-      "summary": "Stabiliteit: smoke Puppeteer bootstrap static server · npm test groen · v1.18.97"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
