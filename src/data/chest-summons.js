@@ -19,6 +19,32 @@ const SUMMON_CARD_LAST_MS = 2000;
 const SUMMON_VIDEO_SRC = 'assets/summon/reveal.mp4';
 let _summonVideoOk = null;
 
+function summonVideoUrl() {
+  const base = (typeof SUMMON_VIDEO_SRC === 'string' && SUMMON_VIDEO_SRC)
+    ? SUMMON_VIDEO_SRC
+    : 'assets/summon/reveal.mp4';
+  const rev = (typeof SW_CACHE_REV !== 'undefined') ? SW_CACHE_REV : 0;
+  return base + (base.includes('?') ? '&' : '?') + 'v=' + rev;
+}
+
+/** Warm the mp4 while the hub is open so pull isn't racing a cold download. */
+function ensureSummonVideoPreloaded() {
+  try {
+    const vid = document.getElementById('summonVideo');
+    if (!vid) return;
+    vid.muted = true;
+    vid.defaultMuted = true;
+    vid.setAttribute('muted', '');
+    vid.setAttribute('playsinline', '');
+    vid.setAttribute('webkit-playsinline', '');
+    const src = summonVideoUrl();
+    if (vid.getAttribute('src') !== src) {
+      vid.setAttribute('src', src);
+      try { vid.load(); } catch (_) {}
+    }
+  } catch (_) {}
+}
+
 /** @deprecated kept for older UI strings — use CHEST_DAILY_TOTAL */
 const CHEST_DAILY_WEAPON = CHEST_DAILY_TOTAL;
 const CHEST_DAILY_PET = CHEST_DAILY_TOTAL;
