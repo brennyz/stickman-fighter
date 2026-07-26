@@ -110,7 +110,13 @@ function ensureChestDaily() {
 
 function chestSummonsLeft() {
   const d = ensureChestDaily();
-  return d ? d.left : 0;
+  if (!d) return 0;
+  try {
+    if (typeof UI !== 'undefined' && UI._chestPullBusy && UI._chestPullLeftSnap != null) {
+      return UI._chestPullLeftSnap;
+    }
+  } catch (_) {}
+  return d.left;
 }
 
 /** @deprecated alias — shared pool */

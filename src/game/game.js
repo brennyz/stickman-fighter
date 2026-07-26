@@ -1254,6 +1254,8 @@ class Game {
     this.trainLaserTelegraph = 0;
     this.trainComboBest = 0;
     this.trainComboGoals = {};
+    this.trainRoundBest = 0;
+    this.trainDummyGrace = 0;
     this.startRound();
     AudioSys.play('training');
   }
@@ -1278,6 +1280,8 @@ class Game {
     this.trainTelegraphKind = null;
     this.combo = 0;
     this.comboT = 0;
+    this.trainRoundBest = 0;
+    this.trainDummyGrace = 3;
     this.banner(`RONDE ${this.round}`, 1.1, '#ffd75e', 52);
     AudioSys.sfx('bell');
   }
@@ -1336,6 +1340,9 @@ class Game {
       if (this.phaseT > 1.2 && this.phaseT - dt <= 1.2) this.banner(t('banner.fight'), 0.8, '#ff6b6b', 60);
       if (this.phaseT > 1.6) { this.phase = 'fight'; this.inputLocked = false; }
     } else if (this.phase === 'fight') {
+      if ((this.trainDummyGrace || 0) > 0) {
+        this.trainDummyGrace = Math.max(0, this.trainDummyGrace - dt);
+      }
       if (this.comboT > 0) {
         this.comboT -= dt;
         if (this.comboT <= 0) this.combo = 0;
@@ -2016,10 +2023,13 @@ class Game {
     const jutsu = (atk && atk.jutsu) || fighterJutsuKind(f);
     const sk = skillById(jutsu);
     const jb = jutsuSkillBonuses(jutsu);
-    const dmg = (atk ? atk.dmg : f.baseDmg * (sk.dmgMul || 2.8)) * jb.dmgMul;
+    const behavior = sk.behavior || 'orb';
+    let dmg = (atk ? atk.dmg : f.baseDmg * (sk.dmgMul || 2.8)) * jb.dmgMul;
+    if (this.mode === 'training' && f.isRobot && behavior === 'dash' && this.player) {
+      dmg = Math.min(dmg, Math.round(this.player.maxhp * 0.32));
+    }
     const from = this.projFrom(f);
     const critMeta = projCritMeta(f);
-    const behavior = sk.behavior || 'orb';
     const speed = (sk.speed || 420) * jb.speedMul;
     const aim = projAimVelocity(f, behavior === 'dash' ? speed : speed * 0.9);
     const face = f.face || 1;
@@ -2439,6 +2449,7 @@ class Game {
           this.combo = Math.min(12, this.combo + 1);
           f._chainKind = spec.kind;
           this.comboT = 1.55;
+          this.trainRoundBest = Math.max(this.trainRoundBest || 0, this.combo);
           this.trainComboBest = Math.max(this.trainComboBest || 0, this.combo);
           trackCombo(this.combo);
           const goals = this.trainComboGoals || (this.trainComboGoals = {});

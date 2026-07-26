@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.125';
+const APP_VERSION = '1.18.126';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 335;
+const SW_CACHE_REV = 336;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -10565,7 +10565,13 @@ function ensureChestDaily() {
 
 function chestSummonsLeft() {
   const d = ensureChestDaily();
-  return d ? d.left : 0;
+  if (!d) return 0;
+  try {
+    if (typeof UI !== 'undefined' && UI._chestPullBusy && UI._chestPullLeftSnap != null) {
+      return UI._chestPullLeftSnap;
+    }
+  } catch (_) {}
+  return d.left;
 }
 
 /** @deprecated alias — shared pool */
@@ -18111,6 +18117,13 @@ class Fighter {
     let diff = this.aiDiff || 1;
     if (game.mode === 'training' && p.hp / Math.max(1, p.maxhp) < 0.32) diff *= 0.84;
     const pAir = !p.onGround;
+    const trainGrace = game.mode === 'training' && (game.trainDummyGrace || 0) > 0;
+    const pLowTrain = game.mode === 'training' && p.hp / Math.max(1, p.maxhp) < 0.32;
+
+    if (trainGrace) {
+      this.aiMove = 0;
+      return out;
+    }
 
     // reactief blokkeren als de speler aanvalt en dichtbij is
     if (p.attack && p.attack.t < p.attack.windup + p.attack.active && dist < 130 && !this.attack) {
@@ -18122,12 +18135,18 @@ class Fighter {
       this.aiTimer = rand(0.22, 0.55) / diff;
       if (dist > 240) {
         this.aiMove = dir;
-        if (this.aiCd <= 0 && dist > 105 && !pAir && Math.random() < 0.3) { out.special = true; this.aiCd = rand(2.6, 4.2) / diff; }
+        const chidoriChance = pLowTrain ? 0.12 : 0.3;
+        const chidoriMinDist = pLowTrain ? 160 : 105;
+        if (this.aiCd <= 0 && dist > chidoriMinDist && !pAir && Math.random() < chidoriChance) {
+          out.special = true; this.aiCd = rand(2.6, 4.2) / diff;
+        }
         if (Math.random() < 0.12) out.jump = true;
       } else if (dist > 110) {
         const r = Math.random();
         if (r < 0.55) this.aiMove = dir;
-        else if (r < 0.72 && this.aiCd <= 0 && dist > 120 && !pAir) { out.special = true; this.aiCd = rand(2.6, 4.2) / diff; }
+        else if (r < 0.72 && this.aiCd <= 0 && dist > (pLowTrain ? 160 : 120) && !pAir) {
+          out.special = true; this.aiCd = rand(2.6, 4.2) / diff;
+        }
         else this.aiMove = -dir * 0.6;
       } else {
         const trainFair = game.mode === 'training';
@@ -24668,6 +24687,8 @@ class Game {
     this.trainLaserTelegraph = 0;
     this.trainComboBest = 0;
     this.trainComboGoals = {};
+    this.trainRoundBest = 0;
+    this.trainDummyGrace = 0;
     this.startRound();
     AudioSys.play('training');
   }
@@ -24692,6 +24713,8 @@ class Game {
     this.trainTelegraphKind = null;
     this.combo = 0;
     this.comboT = 0;
+    this.trainRoundBest = 0;
+    this.trainDummyGrace = 3;
     this.banner(`RONDE ${this.round}`, 1.1, '#ffd75e', 52);
     AudioSys.sfx('bell');
   }
@@ -24750,6 +24773,9 @@ class Game {
       if (this.phaseT > 1.2 && this.phaseT - dt <= 1.2) this.banner(t('banner.fight'), 0.8, '#ff6b6b', 60);
       if (this.phaseT > 1.6) { this.phase = 'fight'; this.inputLocked = false; }
     } else if (this.phase === 'fight') {
+      if ((this.trainDummyGrace || 0) > 0) {
+        this.trainDummyGrace = Math.max(0, this.trainDummyGrace - dt);
+      }
       if (this.comboT > 0) {
         this.comboT -= dt;
         if (this.comboT <= 0) this.combo = 0;
@@ -25430,10 +25456,13 @@ class Game {
     const jutsu = (atk && atk.jutsu) || fighterJutsuKind(f);
     const sk = skillById(jutsu);
     const jb = jutsuSkillBonuses(jutsu);
-    const dmg = (atk ? atk.dmg : f.baseDmg * (sk.dmgMul || 2.8)) * jb.dmgMul;
+    const behavior = sk.behavior || 'orb';
+    let dmg = (atk ? atk.dmg : f.baseDmg * (sk.dmgMul || 2.8)) * jb.dmgMul;
+    if (this.mode === 'training' && f.isRobot && behavior === 'dash' && this.player) {
+      dmg = Math.min(dmg, Math.round(this.player.maxhp * 0.32));
+    }
     const from = this.projFrom(f);
     const critMeta = projCritMeta(f);
-    const behavior = sk.behavior || 'orb';
     const speed = (sk.speed || 420) * jb.speedMul;
     const aim = projAimVelocity(f, behavior === 'dash' ? speed : speed * 0.9);
     const face = f.face || 1;
@@ -25853,6 +25882,7 @@ class Game {
           this.combo = Math.min(12, this.combo + 1);
           f._chainKind = spec.kind;
           this.comboT = 1.55;
+          this.trainRoundBest = Math.max(this.trainRoundBest || 0, this.combo);
           this.trainComboBest = Math.max(this.trainComboBest || 0, this.combo);
           trackCombo(this.combo);
           const goals = this.trainComboGoals || (this.trainComboGoals = {});
@@ -30784,6 +30814,7 @@ const UI = {
       if (state === 'pause' || state === 'result') state = 'menu';
       this.clearSummonRevealTimers();
       this._chestPullBusy = false;
+      this._chestPullLeftSnap = null;
       try { if (typeof _summonVideoOk !== 'undefined') _summonVideoOk = null; } catch (_) {}
       this.safeOpen('summonScreen', () => {
         this.renderSummon();
@@ -30927,6 +30958,7 @@ const UI = {
       }, cardAt);
       this._summonDoneTimer = setTimeout(() => {
         this._chestPullBusy = false;
+        this._chestPullLeftSnap = null;
         try {
           const sc = document.getElementById('summonScreen');
           if (sc) {
@@ -31038,6 +31070,13 @@ const UI = {
       try { this.renderSummon(); } catch (_) {}
 
       const res = openChestSummon(kind === 'weapon' || kind === 'pet' ? kind : 'random');
+      if (res && res.ok) {
+        this._chestPullLeftSnap = (res.left && res.left.total != null)
+          ? res.left.total
+          : (typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : null);
+      } else {
+        this._chestPullLeftSnap = null;
+      }
       const text = document.getElementById('summonRevealText');
       const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : 'Mislukt');
       // Never spoil via toast/text during the open — only after card
@@ -31046,6 +31085,7 @@ const UI = {
 
       if (!res || !res.ok) {
         this._chestPullBusy = false;
+        this._chestPullLeftSnap = null;
         this._summonPendingMsg = null;
         try {
           const sc = document.getElementById('summonScreen');

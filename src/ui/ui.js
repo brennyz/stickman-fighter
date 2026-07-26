@@ -1882,6 +1882,7 @@ const UI = {
       if (state === 'pause' || state === 'result') state = 'menu';
       this.clearSummonRevealTimers();
       this._chestPullBusy = false;
+      this._chestPullLeftSnap = null;
       try { if (typeof _summonVideoOk !== 'undefined') _summonVideoOk = null; } catch (_) {}
       this.safeOpen('summonScreen', () => {
         this.renderSummon();
@@ -2025,6 +2026,7 @@ const UI = {
       }, cardAt);
       this._summonDoneTimer = setTimeout(() => {
         this._chestPullBusy = false;
+        this._chestPullLeftSnap = null;
         try {
           const sc = document.getElementById('summonScreen');
           if (sc) {
@@ -2136,6 +2138,13 @@ const UI = {
       try { this.renderSummon(); } catch (_) {}
 
       const res = openChestSummon(kind === 'weapon' || kind === 'pet' ? kind : 'random');
+      if (res && res.ok) {
+        this._chestPullLeftSnap = (res.left && res.left.total != null)
+          ? res.left.total
+          : (typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : null);
+      } else {
+        this._chestPullLeftSnap = null;
+      }
       const text = document.getElementById('summonRevealText');
       const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : 'Mislukt');
       // Never spoil via toast/text during the open — only after card
@@ -2144,6 +2153,7 @@ const UI = {
 
       if (!res || !res.ok) {
         this._chestPullBusy = false;
+        this._chestPullLeftSnap = null;
         this._summonPendingMsg = null;
         try {
           const sc = document.getElementById('summonScreen');

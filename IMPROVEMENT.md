@@ -115,7 +115,8 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-| 2026-07-26 | — | **Summons mp4 play:** SW bypass Range/.mp4, hub preload, langere load-timeout, smoke currentTime. v1.18.123 / SW v333. |
+| 2026-07-26 | **2** | Training c5: 3s dummy grace wired, Chidori cap 32% HP + low-HP mercy AI, trainRoundBest per ronde, summon counter snap tijdens reveal. v1.18.126 / SW v336. |
+| 2026-07-26 | **18** | Char select c5: fight dock + replay duo + boot toast fix. v1.18.125 / SW v335. |
 | 2026-07-26 | — | **Summons video:** echte Gemini-share mp4 (10s) i.p.v. placeholder + true fullscreen (`has-video`). v1.18.122 / SW v332. |
 | 2026-07-26 | — | **Summons:** 10× random/dag, fullscreen pull (`is-pulling`), geen spoiler-toast, nice 14% + mid 30%. v1.18.121 / SW v331. |
 | 2026-07-26 | — | **Summons spectacle LIVE:** 5s reveal.mp4, ui-rail-wide stage-first, arcade chest, rarity rays, video display:block fix. v1.18.120 / SW v330. |

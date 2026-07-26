@@ -2,17 +2,21 @@
   "version": 3,
   "cyclesCompleted": 5,
   "rollFirst": [],
-  "remaining": [
-    2
-  ],
+  "remaining": [],
   "lastRoll": {
-    "face": 18,
-    "category": "Character select \u2014 roster UI, stats, random duo",
-    "rolledAt": "2026-07-26T22:05:08Z",
-    "remainingCount": 1,
+    "face": 2,
+    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
+    "rolledAt": "2026-07-26T23:03:19Z",
+    "remainingCount": 0,
     "cycle": 5
   },
-  "pending": null,
+  "pending": {
+    "face": 2,
+    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
+    "rolledAt": "2026-07-26T23:03:19Z",
+    "remainingCount": 0,
+    "cycle": 5
+  },
   "implemented": [
     {
       "face": 14,
@@ -968,13 +972,6 @@
   ],
   "history": [
     {
-      "face": 14,
-      "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
-      "rolledAt": "2026-07-23T15:04:37Z",
-      "remainingCount": 0,
-      "cycle": 0
-    },
-    {
       "face": 12,
       "category": "Content \u2014 monsters, wapens, rariteit, dex",
       "rolledAt": "2026-07-23T15:06:05Z",
@@ -1807,6 +1804,13 @@
       "category": "Character select \u2014 roster UI, stats, random duo",
       "rolledAt": "2026-07-26T22:05:08Z",
       "remainingCount": 1,
+      "cycle": 5
+    },
+    {
+      "face": 2,
+      "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
+      "rolledAt": "2026-07-26T23:03:19Z",
+      "remainingCount": 0,
       "cycle": 5
     }
   ],

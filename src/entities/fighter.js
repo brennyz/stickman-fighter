@@ -269,6 +269,13 @@ class Fighter {
     let diff = this.aiDiff || 1;
     if (game.mode === 'training' && p.hp / Math.max(1, p.maxhp) < 0.32) diff *= 0.84;
     const pAir = !p.onGround;
+    const trainGrace = game.mode === 'training' && (game.trainDummyGrace || 0) > 0;
+    const pLowTrain = game.mode === 'training' && p.hp / Math.max(1, p.maxhp) < 0.32;
+
+    if (trainGrace) {
+      this.aiMove = 0;
+      return out;
+    }
 
     // reactief blokkeren als de speler aanvalt en dichtbij is
     if (p.attack && p.attack.t < p.attack.windup + p.attack.active && dist < 130 && !this.attack) {
@@ -280,12 +287,18 @@ class Fighter {
       this.aiTimer = rand(0.22, 0.55) / diff;
       if (dist > 240) {
         this.aiMove = dir;
-        if (this.aiCd <= 0 && dist > 105 && !pAir && Math.random() < 0.3) { out.special = true; this.aiCd = rand(2.6, 4.2) / diff; }
+        const chidoriChance = pLowTrain ? 0.12 : 0.3;
+        const chidoriMinDist = pLowTrain ? 160 : 105;
+        if (this.aiCd <= 0 && dist > chidoriMinDist && !pAir && Math.random() < chidoriChance) {
+          out.special = true; this.aiCd = rand(2.6, 4.2) / diff;
+        }
         if (Math.random() < 0.12) out.jump = true;
       } else if (dist > 110) {
         const r = Math.random();
         if (r < 0.55) this.aiMove = dir;
-        else if (r < 0.72 && this.aiCd <= 0 && dist > 120 && !pAir) { out.special = true; this.aiCd = rand(2.6, 4.2) / diff; }
+        else if (r < 0.72 && this.aiCd <= 0 && dist > (pLowTrain ? 160 : 120) && !pAir) {
+          out.special = true; this.aiCd = rand(2.6, 4.2) / diff;
+        }
         else this.aiMove = -dir * 0.6;
       } else {
         const trainFair = game.mode === 'training';
