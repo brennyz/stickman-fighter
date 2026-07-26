@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.100';
+const APP_VERSION = '1.18.101';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 310;
+const SW_CACHE_REV = 311;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -8227,6 +8227,152 @@ const SPECIES = {
   stormocto: { name: 'Stormocto', art: 'octo', size: 21, hp: 72, dmg: 13, speed: 54, type: 'swim', xp: 28, rarity: 'epic', c1: '#7cf5ff', c2: '#2a7fc0' },
   krakenling: { name: 'Krakenling', art: 'octo', size: 28, hp: 155, dmg: 17, speed: 42, type: 'swim', xp: 48, rarity: 'legendary', c1: '#2a1840', c2: '#6ee06e' },
   voidocto: { name: 'Voidocto', art: 'octo', size: 24, hp: 98, dmg: 15, speed: 50, type: 'swim', xp: 42, rarity: 'mythic', c1: '#5a1040', c2: '#ff6b9d' },
+  /* --- Boerderij op hol: reuzen-boerderijdieren --- */
+  holkoe: { name: 'Holkoe', art: 'cow', size: 34, hp: 57, dmg: 8, speed: 38, type: 'tank', xp: 10, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
+  razendeholkoe: { name: 'Razende Holkoe', art: 'cow', size: 35, hp: 90, dmg: 11, speed: 41, type: 'tank', xp: 18, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
+  stampkoe: { name: 'Stampkoe', art: 'cow', size: 36, hp: 122, dmg: 13, speed: 44, type: 'tank', xp: 26, rarity: 'rare', c1: '#ff9ad5', c2: '#8a3060' },
+  melkkolos: { name: 'Melkkolos', art: 'cow', size: 37, hp: 154, dmg: 16, speed: 47, type: 'tank', xp: 34, rarity: 'epic', c1: '#43b25b', c2: '#1e4a28' },
+  boerenbonk: { name: 'Boerenbonk', art: 'cow', size: 38, hp: 186, dmg: 18, speed: 50, type: 'tank', xp: 42, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+  woesteholkoe: { name: 'Woeste Holkoe', art: 'cow', size: 39, hp: 218, dmg: 21, speed: 53, type: 'tank', xp: 50, rarity: 'mythic', c1: '#c47aff', c2: '#5a2080' },
+  razendzwijn: { name: 'Razend Zwijn', art: 'pig', size: 30, hp: 50, dmg: 8, speed: 95, type: 'charge', xp: 10, rarity: 'common', c1: '#7ad06a', c2: '#2a6030' },
+  modderzwijn: { name: 'Modderzwijn', art: 'pig', size: 31, hp: 78, dmg: 11, speed: 103, type: 'charge', xp: 18, rarity: 'uncommon', c1: '#ff7043', c2: '#8a2020' },
+  stootzwijn: { name: 'Stootzwijn', art: 'pig', size: 32, hp: 106, dmg: 13, speed: 111, type: 'charge', xp: 26, rarity: 'rare', c1: '#ffb0b8', c2: '#8a3040' },
+  spekzwaai: { name: 'Spekzwaai', art: 'pig', size: 33, hp: 134, dmg: 16, speed: 119, type: 'charge', xp: 34, rarity: 'epic', c1: '#e04f4f', c2: '#8a2020' },
+  knorbonker: { name: 'Knorbonker', art: 'pig', size: 34, hp: 162, dmg: 18, speed: 127, type: 'charge', xp: 42, rarity: 'legendary', c1: '#505868', c2: '#202830' },
+  reuzenzwijn: { name: 'Reuzenzwijn', art: 'pig', size: 35, hp: 190, dmg: 21, speed: 135, type: 'charge', xp: 50, rarity: 'mythic', c1: '#9a917f', c2: '#4a4038' },
+  kipophol: { name: 'Kip op Hol', art: 'chicken', size: 28, hp: 50, dmg: 8, speed: 95, type: 'fly', xp: 10, rarity: 'common', c1: '#43b25b', c2: '#1e4a28' },
+  vliegkip: { name: 'Vliegkip', art: 'chicken', size: 29, hp: 78, dmg: 11, speed: 99, type: 'fly', xp: 18, rarity: 'uncommon', c1: '#ffd75e', c2: '#8a6020' },
+  pikstorm: { name: 'Pikstorm', art: 'chicken', size: 30, hp: 106, dmg: 13, speed: 103, type: 'fly', xp: 26, rarity: 'rare', c1: '#c47aff', c2: '#5a2080' },
+  kippenkolos: { name: 'Kippenkolos', art: 'chicken', size: 31, hp: 134, dmg: 16, speed: 107, type: 'fly', xp: 34, rarity: 'epic', c1: '#c98850', c2: '#6b4a28' },
+  woestekip: { name: 'Woeste Kip', art: 'chicken', size: 32, hp: 162, dmg: 18, speed: 111, type: 'fly', xp: 42, rarity: 'legendary', c1: '#d4a574', c2: '#6b4a28' },
+  snavelstorm: { name: 'Snavelstorm', art: 'chicken', size: 33, hp: 190, dmg: 21, speed: 115, type: 'fly', xp: 50, rarity: 'mythic', c1: '#ff9ad5', c2: '#8a3060' },
+  razendeschaap: { name: 'Razende Schaap', art: 'sheep', size: 32, hp: 57, dmg: 8, speed: 38, type: 'tank', xp: 10, rarity: 'common', c1: '#e04f4f', c2: '#8a2020' },
+  wolkolos: { name: 'Wolkolos', art: 'sheep', size: 33, hp: 90, dmg: 11, speed: 41, type: 'tank', xp: 18, rarity: 'uncommon', c1: '#505868', c2: '#202830' },
+  stampwol: { name: 'Stampwol', art: 'sheep', size: 34, hp: 122, dmg: 13, speed: 44, type: 'tank', xp: 26, rarity: 'rare', c1: '#9a917f', c2: '#4a4038' },
+  boerenschrik: { name: 'Boerenschrik', art: 'sheep', size: 35, hp: 154, dmg: 16, speed: 47, type: 'tank', xp: 34, rarity: 'epic', c1: '#7ad06a', c2: '#2a6030' },
+  donsbeest: { name: 'Donsbeest', art: 'sheep', size: 36, hp: 186, dmg: 18, speed: 50, type: 'tank', xp: 42, rarity: 'legendary', c1: '#ff7043', c2: '#8a2020' },
+  schaaptitan: { name: 'Schaap Titan', art: 'sheep', size: 37, hp: 218, dmg: 21, speed: 53, type: 'tank', xp: 50, rarity: 'mythic', c1: '#ffb0b8', c2: '#8a3040' },
+  holpaard: { name: 'Holpaard', art: 'horse', size: 36, hp: 50, dmg: 8, speed: 95, type: 'charge', xp: 10, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
+  galopgevaar: { name: 'Galopgevaar', art: 'horse', size: 37, hp: 78, dmg: 11, speed: 103, type: 'charge', xp: 18, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
+  stampveulen: { name: 'Stampveulen', art: 'horse', size: 38, hp: 106, dmg: 13, speed: 111, type: 'charge', xp: 26, rarity: 'rare', c1: '#ff9ad5', c2: '#8a3060' },
+  renkolos: { name: 'Renkolos', art: 'horse', size: 39, hp: 134, dmg: 16, speed: 119, type: 'charge', xp: 34, rarity: 'epic', c1: '#43b25b', c2: '#1e4a28' },
+  boerenrenner: { name: 'Boerenrenner', art: 'horse', size: 40, hp: 162, dmg: 18, speed: 127, type: 'charge', xp: 42, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+  stormhengst: { name: 'Stormhengst', art: 'horse', size: 41, hp: 190, dmg: 21, speed: 135, type: 'charge', xp: 50, rarity: 'mythic', c1: '#c47aff', c2: '#5a2080' },
+  kopstootgeit: { name: 'Kopstootgeit', art: 'goat', size: 30, hp: 50, dmg: 8, speed: 95, type: 'charge', xp: 10, rarity: 'common', c1: '#7ad06a', c2: '#2a6030' },
+  berggeitboos: { name: 'Berggeit Boos', art: 'goat', size: 31, hp: 78, dmg: 11, speed: 103, type: 'charge', xp: 18, rarity: 'uncommon', c1: '#ff7043', c2: '#8a2020' },
+  hoornram: { name: 'Hoornram', art: 'goat', size: 32, hp: 106, dmg: 13, speed: 111, type: 'charge', xp: 26, rarity: 'rare', c1: '#ffb0b8', c2: '#8a3040' },
+  geitenkolos: { name: 'Geitenkolos', art: 'goat', size: 33, hp: 134, dmg: 16, speed: 119, type: 'charge', xp: 34, rarity: 'epic', c1: '#e04f4f', c2: '#8a2020' },
+  razendebok: { name: 'Razende Bok', art: 'goat', size: 34, hp: 162, dmg: 18, speed: 127, type: 'charge', xp: 42, rarity: 'legendary', c1: '#505868', c2: '#202830' },
+  steenbokstorm: { name: 'Steenbok Storm', art: 'goat', size: 35, hp: 190, dmg: 21, speed: 135, type: 'charge', xp: 50, rarity: 'mythic', c1: '#9a917f', c2: '#4a4038' },
+  kwakophol: { name: 'Kwak op Hol', art: 'duck', size: 28, hp: 50, dmg: 8, speed: 62, type: 'hop', xp: 10, rarity: 'common', c1: '#43b25b', c2: '#1e4a28' },
+  razendeeend: { name: 'Razende Eend', art: 'duck', size: 29, hp: 78, dmg: 11, speed: 66, type: 'hop', xp: 18, rarity: 'uncommon', c1: '#ffd75e', c2: '#8a6020' },
+  vlotkwak: { name: 'Vlotkwak', art: 'duck', size: 30, hp: 106, dmg: 13, speed: 70, type: 'hop', xp: 26, rarity: 'rare', c1: '#c47aff', c2: '#5a2080' },
+  eendenkolos: { name: 'Eendenkolos', art: 'duck', size: 31, hp: 134, dmg: 16, speed: 74, type: 'hop', xp: 34, rarity: 'epic', c1: '#c98850', c2: '#6b4a28' },
+  snavelduiker: { name: 'Snavelduiker', art: 'duck', size: 32, hp: 162, dmg: 18, speed: 78, type: 'hop', xp: 42, rarity: 'legendary', c1: '#d4a574', c2: '#6b4a28' },
+  kwaktitan: { name: 'Kwak Titan', art: 'duck', size: 33, hp: 190, dmg: 21, speed: 82, type: 'hop', xp: 50, rarity: 'mythic', c1: '#ff9ad5', c2: '#8a3060' },
+  haanophol: { name: 'Haan op Hol', art: 'rooster', size: 29, hp: 50, dmg: 8, speed: 95, type: 'fly', xp: 10, rarity: 'common', c1: '#e04f4f', c2: '#8a2020' },
+  kraairoep: { name: 'Kraairoep', art: 'rooster', size: 30, hp: 78, dmg: 11, speed: 99, type: 'fly', xp: 18, rarity: 'uncommon', c1: '#505868', c2: '#202830' },
+  kamstoot: { name: 'Kamstoot', art: 'rooster', size: 31, hp: 106, dmg: 13, speed: 103, type: 'fly', xp: 26, rarity: 'rare', c1: '#9a917f', c2: '#4a4038' },
+  hanenkolos: { name: 'Hanenkolos', art: 'rooster', size: 32, hp: 134, dmg: 16, speed: 107, type: 'fly', xp: 34, rarity: 'epic', c1: '#7ad06a', c2: '#2a6030' },
+  vuurhaan: { name: 'Vuurhaan', art: 'rooster', size: 33, hp: 162, dmg: 18, speed: 111, type: 'fly', xp: 42, rarity: 'legendary', c1: '#ff7043', c2: '#8a2020' },
+  zonnekam: { name: 'Zonnekam', art: 'rooster', size: 34, hp: 190, dmg: 21, speed: 115, type: 'fly', xp: 50, rarity: 'mythic', c1: '#ffb0b8', c2: '#8a3040' },
+  koppigeezel: { name: 'Koppige Ezel', art: 'donkey', size: 33, hp: 57, dmg: 8, speed: 38, type: 'tank', xp: 10, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
+  stampzel: { name: 'Stampzel', art: 'donkey', size: 34, hp: 90, dmg: 11, speed: 41, type: 'tank', xp: 18, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
+  boerenezel: { name: 'Boerenezel', art: 'donkey', size: 35, hp: 122, dmg: 13, speed: 44, type: 'tank', xp: 26, rarity: 'rare', c1: '#ff9ad5', c2: '#8a3060' },
+  ezelkolos: { name: 'Ezelkolos', art: 'donkey', size: 36, hp: 154, dmg: 16, speed: 47, type: 'tank', xp: 34, rarity: 'epic', c1: '#43b25b', c2: '#1e4a28' },
+  hardhoofd: { name: 'Hardhoofd', art: 'donkey', size: 37, hp: 186, dmg: 18, speed: 50, type: 'tank', xp: 42, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+  molenzwaai: { name: 'Molenzwaai', art: 'donkey', size: 38, hp: 218, dmg: 21, speed: 53, type: 'tank', xp: 50, rarity: 'mythic', c1: '#c47aff', c2: '#5a2080' },
+  gansophol: { name: 'Gans op Hol', art: 'goose', size: 30, hp: 50, dmg: 8, speed: 95, type: 'charge', xp: 10, rarity: 'common', c1: '#7ad06a', c2: '#2a6030' },
+  sissendegans: { name: 'Sissende Gans', art: 'goose', size: 31, hp: 78, dmg: 11, speed: 103, type: 'charge', xp: 18, rarity: 'uncommon', c1: '#ff7043', c2: '#8a2020' },
+  vleugelram: { name: 'Vleugelram', art: 'goose', size: 32, hp: 106, dmg: 13, speed: 111, type: 'charge', xp: 26, rarity: 'rare', c1: '#ffb0b8', c2: '#8a3040' },
+  ganzenkolos: { name: 'Ganzenkolos', art: 'goose', size: 33, hp: 134, dmg: 16, speed: 119, type: 'charge', xp: 34, rarity: 'epic', c1: '#e04f4f', c2: '#8a2020' },
+  nesthoeder: { name: 'Nesthoeder', art: 'goose', size: 34, hp: 162, dmg: 18, speed: 127, type: 'charge', xp: 42, rarity: 'legendary', c1: '#505868', c2: '#202830' },
+  stormgans: { name: 'Stormgans', art: 'goose', size: 35, hp: 190, dmg: 21, speed: 135, type: 'charge', xp: 50, rarity: 'mythic', c1: '#9a917f', c2: '#4a4038' },
+  /* --- Dierentuin-uitbraak: reuzen-dierentuindieren --- */
+  reuzenolifant: { name: 'Reuzenolifant', art: 'elephant', size: 43, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#43b25b', c2: '#1e4a28' },
+  stampolifant: { name: 'Stampolifant', art: 'elephant', size: 44, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#ffd75e', c2: '#8a6020' },
+  slurfkolos: { name: 'Slurfkolos', art: 'elephant', size: 45, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#c47aff', c2: '#5a2080' },
+  ivoiretitan: { name: 'Ivoire Titan', art: 'elephant', size: 46, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#c98850', c2: '#6b4a28' },
+  woesteolifant: { name: 'Woeste Olifant', art: 'elephant', size: 47, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#d4a574', c2: '#6b4a28' },
+  mammoetstorm: { name: 'Mammoetstorm', art: 'elephant', size: 48, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#ff9ad5', c2: '#8a3060' },
+  razendeleeuw: { name: 'Razende Leeuw', art: 'lion', size: 37, hp: 60, dmg: 10, speed: 95, type: 'charge', xp: 14, rarity: 'common', c1: '#e04f4f', c2: '#8a2020' },
+  manenstorm: { name: 'Manenstorm', art: 'lion', size: 38, hp: 88, dmg: 13, speed: 103, type: 'charge', xp: 22, rarity: 'uncommon', c1: '#505868', c2: '#202830' },
+  savannekoning: { name: 'Savannekoning', art: 'lion', size: 39, hp: 116, dmg: 15, speed: 111, type: 'charge', xp: 30, rarity: 'rare', c1: '#9a917f', c2: '#4a4038' },
+  leeuwenkolos: { name: 'Leeuwenkolos', art: 'lion', size: 40, hp: 144, dmg: 18, speed: 119, type: 'charge', xp: 38, rarity: 'epic', c1: '#7ad06a', c2: '#2a6030' },
+  woestemanen: { name: 'Woeste Manen', art: 'lion', size: 41, hp: 172, dmg: 20, speed: 127, type: 'charge', xp: 46, rarity: 'legendary', c1: '#ff7043', c2: '#8a2020' },
+  koningsklauw: { name: 'Koningsklauw', art: 'lion', size: 42, hp: 200, dmg: 23, speed: 135, type: 'charge', xp: 54, rarity: 'mythic', c1: '#ffb0b8', c2: '#8a3040' },
+  razendetijger: { name: 'Razende Tijger', art: 'tiger', size: 36, hp: 60, dmg: 10, speed: 95, type: 'charge', xp: 14, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
+  streepstorm: { name: 'Streepstorm', art: 'tiger', size: 37, hp: 88, dmg: 13, speed: 103, type: 'charge', xp: 22, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
+  jungleklauw: { name: 'Jungleklauw', art: 'tiger', size: 38, hp: 116, dmg: 15, speed: 111, type: 'charge', xp: 30, rarity: 'rare', c1: '#ff9ad5', c2: '#8a3060' },
+  tijgerkolos: { name: 'Tijgerkolos', art: 'tiger', size: 39, hp: 144, dmg: 18, speed: 119, type: 'charge', xp: 38, rarity: 'epic', c1: '#43b25b', c2: '#1e4a28' },
+  nachtstreep: { name: 'Nachtstreep', art: 'tiger', size: 40, hp: 172, dmg: 20, speed: 127, type: 'charge', xp: 46, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+  vuurtijger: { name: 'Vuurtijger', art: 'tiger', size: 41, hp: 200, dmg: 23, speed: 135, type: 'charge', xp: 54, rarity: 'mythic', c1: '#c47aff', c2: '#5a2080' },
+  langegiraffe: { name: 'Lange Giraffe', art: 'giraffe', size: 41, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#7ad06a', c2: '#2a6030' },
+  nekkolos: { name: 'Nekkolos', art: 'giraffe', size: 42, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#ff7043', c2: '#8a2020' },
+  savannetoren: { name: 'Savanne Toren', art: 'giraffe', size: 43, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#ffb0b8', c2: '#8a3040' },
+  giraffenreus: { name: 'Giraffenreus', art: 'giraffe', size: 44, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#e04f4f', c2: '#8a2020' },
+  hoogkijk: { name: 'Hoogkijk', art: 'giraffe', size: 45, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#505868', c2: '#202830' },
+  wolkennek: { name: 'Wolkennek', art: 'giraffe', size: 46, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#9a917f', c2: '#4a4038' },
+  razendnijlpaard: { name: 'Razend Nijlpaard', art: 'hippo', size: 41, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#43b25b', c2: '#1e4a28' },
+  rivierkolos: { name: 'Rivierkolos', art: 'hippo', size: 42, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#ffd75e', c2: '#8a6020' },
+  gapendekaak: { name: 'Gapende Kaak', art: 'hippo', size: 43, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#c47aff', c2: '#5a2080' },
+  nijltitan: { name: 'Nijl Titan', art: 'hippo', size: 44, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#c98850', c2: '#6b4a28' },
+  modderhip: { name: 'Modderhip', art: 'hippo', size: 45, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#d4a574', c2: '#6b4a28' },
+  waterton: { name: 'Waterton', art: 'hippo', size: 46, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#ff9ad5', c2: '#8a3060' },
+  razendeneushoorn: { name: 'Razende Neushoorn', art: 'rhino', size: 39, hp: 60, dmg: 10, speed: 95, type: 'charge', xp: 14, rarity: 'common', c1: '#e04f4f', c2: '#8a2020' },
+  hoornram2: { name: 'Hoornram', art: 'rhino', size: 40, hp: 88, dmg: 13, speed: 103, type: 'charge', xp: 22, rarity: 'uncommon', c1: '#505868', c2: '#202830' },
+  pantserstoot: { name: 'Pantserstoot', art: 'rhino', size: 41, hp: 116, dmg: 15, speed: 111, type: 'charge', xp: 30, rarity: 'rare', c1: '#9a917f', c2: '#4a4038' },
+  rhinokolos: { name: 'Rhino Kolos', art: 'rhino', size: 42, hp: 144, dmg: 18, speed: 119, type: 'charge', xp: 38, rarity: 'epic', c1: '#7ad06a', c2: '#2a6030' },
+  ijzervel: { name: 'IJzervel', art: 'rhino', size: 43, hp: 172, dmg: 20, speed: 127, type: 'charge', xp: 46, rarity: 'legendary', c1: '#ff7043', c2: '#8a2020' },
+  stampneus: { name: 'Stampneus', art: 'rhino', size: 44, hp: 200, dmg: 23, speed: 135, type: 'charge', xp: 54, rarity: 'mythic', c1: '#ffb0b8', c2: '#8a3040' },
+  woestegorilla: { name: 'Woeste Gorilla', art: 'gorilla', size: 38, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
+  vuistberg: { name: 'Vuistberg', art: 'gorilla', size: 39, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
+  junglereus: { name: 'Jungle Reus', art: 'gorilla', size: 40, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#ff9ad5', c2: '#8a3060' },
+  apenkolos: { name: 'Apenkolos', art: 'gorilla', size: 41, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#43b25b', c2: '#1e4a28' },
+  zilverrug: { name: 'Zilverrug', art: 'gorilla', size: 42, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+  trommelborst: { name: 'Trommelborst', art: 'gorilla', size: 43, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#c47aff', c2: '#5a2080' },
+  razendezebra: { name: 'Razende Zebra', art: 'zebra', size: 35, hp: 60, dmg: 10, speed: 95, type: 'charge', xp: 14, rarity: 'common', c1: '#7ad06a', c2: '#2a6030' },
+  streepgalop: { name: 'Streepgalop', art: 'zebra', size: 36, hp: 88, dmg: 13, speed: 103, type: 'charge', xp: 22, rarity: 'uncommon', c1: '#ff7043', c2: '#8a2020' },
+  savanneren: { name: 'Savanne Ren', art: 'zebra', size: 37, hp: 116, dmg: 15, speed: 111, type: 'charge', xp: 30, rarity: 'rare', c1: '#ffb0b8', c2: '#8a3040' },
+  zebrakolos: { name: 'Zebra Kolos', art: 'zebra', size: 38, hp: 144, dmg: 18, speed: 119, type: 'charge', xp: 38, rarity: 'epic', c1: '#e04f4f', c2: '#8a2020' },
+  zwartwitstorm: { name: 'Zwartwit Storm', art: 'zebra', size: 39, hp: 172, dmg: 20, speed: 127, type: 'charge', xp: 46, rarity: 'legendary', c1: '#505868', c2: '#202830' },
+  hoefstamp: { name: 'Hoefstamp', art: 'zebra', size: 40, hp: 200, dmg: 23, speed: 135, type: 'charge', xp: 54, rarity: 'mythic', c1: '#9a917f', c2: '#4a4038' },
+  razendebeer: { name: 'Razende Beer', art: 'bear', size: 39, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#43b25b', c2: '#1e4a28' },
+  klauwberg: { name: 'Klauwberg', art: 'bear', size: 40, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#ffd75e', c2: '#8a6020' },
+  bosreus: { name: 'Bosreus', art: 'bear', size: 41, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#c47aff', c2: '#5a2080' },
+  berenkolos: { name: 'Berenkolos', art: 'bear', size: 42, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#c98850', c2: '#6b4a28' },
+  honingslok: { name: 'Honingslok', art: 'bear', size: 43, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#d4a574', c2: '#6b4a28' },
+  winterklauw: { name: 'Winterklauw', art: 'bear', size: 44, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#ff9ad5', c2: '#8a3060' },
+  razendekrokodil: { name: 'Razende Krokodil', art: 'croc', size: 37, hp: 60, dmg: 10, speed: 88, type: 'swim', xp: 14, rarity: 'common', c1: '#e04f4f', c2: '#8a2020' },
+  kaakklem: { name: 'Kaakklem', art: 'croc', size: 38, hp: 88, dmg: 13, speed: 93, type: 'swim', xp: 22, rarity: 'uncommon', c1: '#505868', c2: '#202830' },
+  rivierschrik: { name: 'Rivierschrik', art: 'croc', size: 39, hp: 116, dmg: 15, speed: 98, type: 'swim', xp: 30, rarity: 'rare', c1: '#9a917f', c2: '#4a4038' },
+  krokodiltitan: { name: 'Krokodil Titan', art: 'croc', size: 40, hp: 144, dmg: 18, speed: 103, type: 'swim', xp: 38, rarity: 'epic', c1: '#7ad06a', c2: '#2a6030' },
+  schubbenmuil: { name: 'Schubbenmuil', art: 'croc', size: 41, hp: 172, dmg: 20, speed: 108, type: 'swim', xp: 46, rarity: 'legendary', c1: '#ff7043', c2: '#8a2020' },
+  snapkrokodil: { name: 'Snapkrokodil', art: 'croc', size: 42, hp: 200, dmg: 23, speed: 113, type: 'swim', xp: 54, rarity: 'mythic', c1: '#ffb0b8', c2: '#8a3040' },
+  razendekangoeroe: { name: 'Razende Kangoeroe', art: 'kangaroo', size: 35, hp: 60, dmg: 10, speed: 95, type: 'charge', xp: 14, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
+  sprongstoot: { name: 'Sprongstoot', art: 'kangaroo', size: 36, hp: 88, dmg: 13, speed: 103, type: 'charge', xp: 22, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
+  buidelbonk: { name: 'Buidelbonk', art: 'kangaroo', size: 37, hp: 116, dmg: 15, speed: 111, type: 'charge', xp: 30, rarity: 'rare', c1: '#ff9ad5', c2: '#8a3060' },
+  kangokolos: { name: 'Kango Kolos', art: 'kangaroo', size: 38, hp: 144, dmg: 18, speed: 119, type: 'charge', xp: 38, rarity: 'epic', c1: '#43b25b', c2: '#1e4a28' },
+  hopklauw: { name: 'Hopklauw', art: 'kangaroo', size: 39, hp: 172, dmg: 20, speed: 127, type: 'charge', xp: 46, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+  outbackram: { name: 'Outback Ram', art: 'kangaroo', size: 40, hp: 200, dmg: 23, speed: 135, type: 'charge', xp: 54, rarity: 'mythic', c1: '#c47aff', c2: '#5a2080' },
+  woestepanda: { name: 'Woeste Panda', art: 'panda', size: 36, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#7ad06a', c2: '#2a6030' },
+  bamboebonk: { name: 'Bamboe Bonk', art: 'panda', size: 37, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#ff7043', c2: '#8a2020' },
+  zwartwitreus: { name: 'Zwartwit Reus', art: 'panda', size: 38, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#ffb0b8', c2: '#8a3040' },
+  pandakolos: { name: 'Panda Kolos', art: 'panda', size: 39, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#e04f4f', c2: '#8a2020' },
+  rolbeer: { name: 'Rolbeer', art: 'panda', size: 40, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#505868', c2: '#202830' },
+  tempelpanda: { name: 'Tempelpanda', art: 'panda', size: 41, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#9a917f', c2: '#4a4038' },
+  razendeflamingo: { name: 'Razende Flamingo', art: 'flamingo', size: 33, hp: 60, dmg: 10, speed: 95, type: 'fly', xp: 14, rarity: 'common', c1: '#43b25b', c2: '#1e4a28' },
+  rozestorm: { name: 'Roze Storm', art: 'flamingo', size: 34, hp: 88, dmg: 13, speed: 99, type: 'fly', xp: 22, rarity: 'uncommon', c1: '#ffd75e', c2: '#8a6020' },
+  eenpoot: { name: 'Eenpoot', art: 'flamingo', size: 35, hp: 116, dmg: 15, speed: 103, type: 'fly', xp: 30, rarity: 'rare', c1: '#c47aff', c2: '#5a2080' },
+  flamingokolos: { name: 'Flamingo Kolos', art: 'flamingo', size: 36, hp: 144, dmg: 18, speed: 107, type: 'fly', xp: 38, rarity: 'epic', c1: '#c98850', c2: '#6b4a28' },
+  lagunevlam: { name: 'Lagune Vlam', art: 'flamingo', size: 37, hp: 172, dmg: 20, speed: 111, type: 'fly', xp: 46, rarity: 'legendary', c1: '#d4a574', c2: '#6b4a28' },
+  nekzwaai: { name: 'Nekzwaai', art: 'flamingo', size: 38, hp: 200, dmg: 23, speed: 115, type: 'fly', xp: 54, rarity: 'mythic', c1: '#ff9ad5', c2: '#8a3060' },
+  razendekameel: { name: 'Razende Kameel', art: 'camel', size: 37, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#e04f4f', c2: '#8a2020' },
+  bultbonk: { name: 'Bultbonk', art: 'camel', size: 38, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#505868', c2: '#202830' },
+  woestijnreus: { name: 'Woestijnreus', art: 'camel', size: 39, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#9a917f', c2: '#4a4038' },
+  kameelkolos: { name: 'Kameel Kolos', art: 'camel', size: 40, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#7ad06a', c2: '#2a6030' },
+  zandgalop: { name: 'Zandgalop', art: 'camel', size: 41, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#ff7043', c2: '#8a2020' },
+  oasestamp: { name: 'Oase Stamp', art: 'camel', size: 42, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#ffb0b8', c2: '#8a3040' },
     /* Tide Battle — alleen via 0.05% kill-roll, nooit in normale golven */
     tideKyuu: { name: 'Negenstaart Vos', art: 'tideFox', size: 38, hp: 340, dmg: 26, speed: 88, type: 'charge', xp: 120, rarity: 'mythic', c1: '#ff7a20', c2: '#8a2010' },
     tideManda: { name: 'Paarse Reuzenslang', art: 'tideSnake', size: 36, hp: 320, dmg: 24, speed: 72, type: 'shoot', xp: 115, rarity: 'mythic', c1: '#9b59d4', c2: '#4a2080' },
@@ -8289,9 +8435,13 @@ const UNLOCK_AT = {
   etherwyrm: 43, omegadrake: 46,
   kleiply: 1, spinbub: 2, hongerly: 4, parelsly: 6, modderblob: 4, crystalbub: 6, chaosly: 8, zwerm: 10, karmijnvleerm: 7, echovleerm: 9, spiegelvleerm: 11, voidvleerm: 13, duskwing: 11, glimwing: 13, bronzenstek: 15, koperstek: 17, froststek: 14, kolossstek: 16, thornox: 18, spineclaw: 20, quillfang: 18, spookvlam: 20, koudspook: 22, spiraalgeest: 24, wispgeest: 21, nexusgeest: 23, mistwraith: 25, palewraith: 27, olieblik: 25, batterijkan: 27, schrootblik: 29, turboblok: 30, ionkan: 28, quantumkan: 30, omegacan: 32, zilvervos: 34, maanvos: 32, jadevos: 34, stellarvos: 36, kosmischvos: 37, emberfox: 35, shadowfox: 37, leisteen: 39, marmerbonk: 41, koraalbonk: 39, barnsteen: 41, adamantbonk: 43, basaltbonk: 44, titanrock: 42, mistwyrm: 44, sandwyrm: 46, frostwyrm: 48, chaoswyrm: 46, prismewyrm: 48, apexwyrm: 50,
   rifhaai: 8, snelvin: 9, octo: 8, inktvissie: 10, hamerkop: 12, koraalocto: 14, tijvin: 16, dieptocto: 18, stormocto: 22, neonhaai: 24, abysshaai: 32, krakenling: 38, levihaai: 44, voidocto: 40,
+  /* boerderij op hol */
+  holkoe: 1, razendeholkoe: 6, stampkoe: 11, melkkolos: 17, boerenbonk: 22, woesteholkoe: 27, razendzwijn: 3, modderzwijn: 8, stootzwijn: 13, spekzwaai: 19, knorbonker: 24, reuzenzwijn: 29, kipophol: 1, vliegkip: 6, pikstorm: 11, kippenkolos: 17, woestekip: 22, snavelstorm: 27, razendeschaap: 3, wolkolos: 8, stampwol: 13, boerenschrik: 19, donsbeest: 24, schaaptitan: 29, holpaard: 1, galopgevaar: 6, stampveulen: 11, renkolos: 17, boerenrenner: 22, stormhengst: 27, kopstootgeit: 3, berggeitboos: 8, hoornram: 13, geitenkolos: 19, razendebok: 24, steenbokstorm: 29, kwakophol: 1, razendeeend: 6, vlotkwak: 11, eendenkolos: 17, snavelduiker: 22, kwaktitan: 27, haanophol: 3, kraairoep: 8, kamstoot: 13, hanenkolos: 19, vuurhaan: 24, zonnekam: 29, koppigeezel: 1, stampzel: 6, boerenezel: 11, ezelkolos: 17, hardhoofd: 22, molenzwaai: 27, gansophol: 3, sissendegans: 8, vleugelram: 13, ganzenkolos: 19, nesthoeder: 24, stormgans: 29,
+  /* dierentuin-uitbraak */
+  reuzenolifant: 10, stampolifant: 16, slurfkolos: 23, ivoiretitan: 29, woesteolifant: 36, mammoetstorm: 42, razendeleeuw: 9, manenstorm: 15, savannekoning: 22, leeuwenkolos: 28, woestemanen: 30, koningsklauw: 36, razendetijger: 7, streepstorm: 13, jungleklauw: 20, tijgerkolos: 26, nachtstreep: 33, vuurtijger: 39, langegiraffe: 14, nekkolos: 20, savannetoren: 22, giraffenreus: 28, hoogkijk: 35, wolkennek: 41, razendnijlpaard: 8, rivierkolos: 14, gapendekaak: 21, nijltitan: 27, modderhip: 34, waterton: 40, razendeneushoorn: 6, hoornram2: 12, pantserstoot: 19, rhinokolos: 25, ijzervel: 32, stampneus: 38, woestegorilla: 9, vuistberg: 15, junglereus: 22, apenkolos: 28, zilverrug: 30, trommelborst: 36, razendezebra: 7, streepgalop: 13, savanneren: 20, zebrakolos: 26, zwartwitstorm: 33, hoefstamp: 39, razendebeer: 10, klauwberg: 16, bosreus: 18, berenkolos: 24, honingslok: 31, winterklauw: 37, razendekrokodil: 8, kaakklem: 14, rivierschrik: 21, krokodiltitan: 27, schubbenmuil: 34, snapkrokodil: 40, razendekangoeroe: 6, sprongstoot: 12, buidelbonk: 19, kangokolos: 25, hopklauw: 32, outbackram: 38, woestepanda: 9, bamboebonk: 15, zwartwitreus: 22, pandakolos: 28, rolbeer: 30, tempelpanda: 36, razendeflamingo: 7, rozestorm: 13, eenpoot: 20, flamingokolos: 26, lagunevlam: 33, nekzwaai: 39, razendekameel: 10, bultbonk: 16, woestijnreus: 18, kameelkolos: 24, zandgalop: 31, oasestamp: 37,
 
 };
-/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (126 soorten). */
+/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (~2× diversiteit: boerderij + dierentuin). */
 const ADVENTURE_HORDE_MUL = 6;
 const ADVENTURE_HORDE_MAX_PER_WAVE = 36;
 const ADVENTURE_MAX_ALIVE = IS_TOUCH ? 54 : 78;
@@ -8302,6 +8452,30 @@ const GIANT_DMG_MUL = 1.14;
 const GIANT_XP_MUL = 1.3;
 
 const SEA_ARTS = new Set(['shark', 'octo']);
+const FARM_ARTS = new Set(['cow', 'pig', 'chicken', 'sheep', 'horse', 'goat', 'duck', 'rooster', 'donkey', 'goose']);
+const ZOO_ARTS = new Set(['elephant', 'lion', 'tiger', 'giraffe', 'hippo', 'rhino', 'gorilla', 'zebra', 'bear', 'croc', 'kangaroo', 'panda', 'flamingo', 'camel']);
+const BEAST_SIZE_ARTS = new Set([...FARM_ARTS, ...ZOO_ARTS]);
+/** Boerderij/dierentuin: vaker reuzen-variant (al groot, nog groter). */
+const BEAST_GIANT_BONUS = 0.28;
+
+function farmSpeciesPool(levelN, maxRarityOrder) {
+  return Object.keys(UNLOCK_AT).filter((id) => {
+    const sp = SPECIES[id];
+    if (!sp || !FARM_ARTS.has(sp.art)) return false;
+    if (UNLOCK_AT[id] > levelN) return false;
+    return rarityOf(sp.rarity).order <= maxRarityOrder;
+  });
+}
+
+function zooSpeciesPool(levelN, maxRarityOrder) {
+  return Object.keys(UNLOCK_AT).filter((id) => {
+    const sp = SPECIES[id];
+    if (!sp || !ZOO_ARTS.has(sp.art)) return false;
+    if (UNLOCK_AT[id] > levelN) return false;
+    return rarityOf(sp.rarity).order <= maxRarityOrder;
+  });
+}
+
 
 function seaSpeciesPool(levelN, maxRarityOrder) {
   return Object.keys(UNLOCK_AT).filter((id) => {
@@ -8426,9 +8600,14 @@ function isBossWave(level, waveIdx) {
   return !!(level && level.boss && waveIdx === level.waves.length - 1);
 }
 
-function rollWaveGiant(n, elite) {
+function rollWaveGiant(n, elite, spId) {
   if (elite || n < 2) return false;
-  return Math.random() < GIANT_SPAWN_CHANCE;
+  let chance = GIANT_SPAWN_CHANCE;
+  const sp = spId && SPECIES[spId];
+  if (sp && typeof BEAST_SIZE_ARTS !== 'undefined' && BEAST_SIZE_ARTS.has(sp.art)) {
+    chance = Math.min(0.55, chance + BEAST_GIANT_BONUS);
+  }
+  return Math.random() < chance;
 }
 
 function buildLevel(n) {
@@ -8455,7 +8634,7 @@ function buildLevel(n) {
       const sp = weightedPick(pool, n);
       if (!SPECIES[sp]) continue;
       const rareElite = rarityOf(SPECIES[sp].rarity).order >= 3 && Math.random() < 0.14;
-      list.push({ sp, elite: rareElite, giant: rollWaveGiant(n, rareElite) });
+      list.push({ sp, elite: rareElite, giant: rollWaveGiant(n, rareElite, sp) });
     }
     const meta = { trait: null, spawnMul: 1, label: '' };
     const roll = Math.random();
@@ -8477,9 +8656,37 @@ function buildLevel(n) {
           if (Math.random() < 0.58) list[i].sp = tideWaveSeaPick(seaPool, n, maxRarity);
         }
       }
-    } else if (n >= 7 && roll < 0.54) {
+    } else if (n >= 3 && roll < 0.58) {
+      meta.trait = 'ranch';
+      meta.spawnMul = 0.88;
+      meta.label = 'ranch';
+      const farmPool = farmSpeciesPool(n, maxRarity);
+      if (farmPool.length) {
+        for (let i = 0; i < list.length; i++) {
+          if (Math.random() < 0.72) {
+            const fp = weightedPick(farmPool, n);
+            list[i].sp = fp;
+            list[i].giant = list[i].giant || rollWaveGiant(n, !!list[i].elite, fp);
+          }
+        }
+      }
+    } else if (n >= 5 && roll < 0.70) {
+      meta.trait = 'safari';
+      meta.spawnMul = 0.86;
+      meta.label = 'safari';
+      const zooPool = zooSpeciesPool(n, maxRarity);
+      if (zooPool.length) {
+        for (let i = 0; i < list.length; i++) {
+          if (Math.random() < 0.72) {
+            const zp = weightedPick(zooPool, n);
+            list[i].sp = zp;
+            list[i].giant = true; // dierentuin: altijd grote grote versies
+          }
+        }
+      }
+    } else if (n >= 7 && roll < 0.76) {
       const sp = weightedPick(pool, n);
-      list.push({ sp, elite: true, giant: rollWaveGiant(n, true) });
+      list.push({ sp, elite: true, giant: rollWaveGiant(n, true, sp) });
       meta.trait = 'elite';
       meta.label = 'Extra elite';
     }
@@ -8491,7 +8698,7 @@ function buildLevel(n) {
     const hordePad = Math.min(3 + Math.floor(n / 8), 10);
     for (let i = 0; i < hordePad; i++) {
       const elite = Math.random() < 0.1;
-      bossWave.push({ sp: weightedPick(pool, n), elite, giant: rollWaveGiant(n, elite) });
+      const bsp = weightedPick(pool, n); bossWave.push({ sp: bsp, elite, giant: rollWaveGiant(n, elite, bsp) });
     }
     waves.push(bossWave);
     waveMeta.push({ trait: 'boss', spawnMul: 1, label: 'Baas-golf' });
@@ -8506,6 +8713,8 @@ const WAVE_TRAIT_BANNER = {
   rush: { key: 'banner.rushWave', color: '#ffb06a', size: 40 },
   elite: { key: 'banner.eliteTraitWave', color: '#ffb0b8', size: 40 },
   tide: { key: 'banner.tideWave', color: '#6ee06e', size: 40 },
+  ranch: { key: 'banner.ranchWave', color: '#e8c98a', size: 40 },
+  safari: { key: 'banner.safariWave', color: '#43b25b', size: 40 },
 };
 
 function waveTraitBanner(trait) {
@@ -9186,6 +9395,8 @@ function seedNlGameStrings() {
     rushWave: 'RUSH-GOLF',
     eliteTraitWave: 'ELITE-GOLF',
     tideWave: 'TIDE-GOLF',
+    ranchWave: 'BOERDERIJ OP HOL',
+    safariWave: 'DIERENTUIN-UITBRAAK',
     waveClear: 'Golf gewist +{heal} HP',
     waveN: 'GOLF {n}/{total}',
     fight: 'VECHT!',
@@ -10098,6 +10309,7 @@ const CATALOG_EN = {
     masterSword: 'MASTER SWORD!',
     bossWave: 'BOSS WAVE!', eliteWave: 'ELITE WAVE', superBossWave: 'SUPER-BOSS WAVE',
     flyerWave: 'FLYER WAVE', rushWave: 'RUSH WAVE', eliteTraitWave: 'ELITE WAVE', tideWave: 'TIDE WAVE',
+    ranchWave: 'FARM RAMPAGE', safariWave: 'ZOO BREAKOUT',
     waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
     fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'DEFEATED...', rasenganTriple: 'TRIPLE RASENGAN!', rasenganDual: 'DUAL RASENGAN!',
     round: 'ROUND {n}', roundDecisive: 'ROUND {n} · decisive round', roundMatchPoint: 'ROUND {n} · match point',
@@ -14879,6 +15091,517 @@ function drawTideHound(c, r, t, body, dark) {
   c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 2;
   c.beginPath(); c.moveTo(-r * 0.12, r * 0.18); c.lineTo(0, r * 0.32); c.lineTo(r * 0.12, r * 0.18); c.stroke();
 }
+/* --- src/render/beast-art.js --- */
+/* ============================== FARM / ZOO BEAST ART =================== */
+/** Reuzen-boerderij- & dierentuindieren (arcade silhouetten). */
+
+const BEAST_ARTS = new Set([
+  'cow', 'pig', 'chicken', 'sheep', 'horse', 'goat', 'duck', 'rooster', 'donkey', 'goose',
+  'elephant', 'lion', 'tiger', 'giraffe', 'hippo', 'rhino', 'gorilla', 'zebra', 'bear', 'croc',
+  'kangaroo', 'panda', 'flamingo', 'camel',
+]);
+
+function beastEye(c, x, y, s) {
+  c.fillStyle = '#fff';
+  c.beginPath(); c.arc(x, y, s, 0, TAU); c.fill();
+  c.fillStyle = '#1a1a2a';
+  c.beginPath(); c.arc(x - s * 0.28, y, s * 0.48, 0, TAU); c.fill();
+}
+
+function drawBeastArt(c, art, r, t, body, dark, flash, telegraph) {
+  if (!c || !art) return;
+  r = clamp(Number(r) || 28, 8, 120);
+  t = Number(t) || 0;
+  body = body || '#c98850';
+  dark = dark || '#6b4a28';
+  try {
+    switch (art) {
+      case 'cow': drawBeastCow(c, r, t, body, dark, telegraph); break;
+      case 'pig': drawBeastPig(c, r, t, body, dark); break;
+      case 'chicken': drawBeastChicken(c, r, t, body, dark); break;
+      case 'sheep': drawBeastSheep(c, r, t, body, dark); break;
+      case 'horse': drawBeastHorse(c, r, t, body, dark, telegraph); break;
+      case 'goat': drawBeastGoat(c, r, t, body, dark, telegraph); break;
+      case 'duck': drawBeastDuck(c, r, t, body, dark); break;
+      case 'rooster': drawBeastRooster(c, r, t, body, dark); break;
+      case 'donkey': drawBeastDonkey(c, r, t, body, dark); break;
+      case 'goose': drawBeastGoose(c, r, t, body, dark); break;
+      case 'elephant': drawBeastElephant(c, r, t, body, dark, telegraph); break;
+      case 'lion': drawBeastLion(c, r, t, body, dark); break;
+      case 'tiger': drawBeastTiger(c, r, t, body, dark); break;
+      case 'giraffe': drawBeastGiraffe(c, r, t, body, dark); break;
+      case 'hippo': drawBeastHippo(c, r, t, body, dark, telegraph); break;
+      case 'rhino': drawBeastRhino(c, r, t, body, dark, telegraph); break;
+      case 'gorilla': drawBeastGorilla(c, r, t, body, dark, telegraph); break;
+      case 'zebra': drawBeastZebra(c, r, t, body, dark); break;
+      case 'bear': drawBeastBear(c, r, t, body, dark, telegraph); break;
+      case 'croc': drawBeastCroc(c, r, t, body, dark); break;
+      case 'kangaroo': drawBeastKangaroo(c, r, t, body, dark, telegraph); break;
+      case 'panda': drawBeastPanda(c, r, t, body, dark); break;
+      case 'flamingo': drawBeastFlamingo(c, r, t, body, dark); break;
+      case 'camel': drawBeastCamel(c, r, t, body, dark); break;
+      default: break;
+    }
+  } catch (err) {
+    console.error('[BeastArt]', art, err);
+    c.fillStyle = body;
+    c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+  }
+}
+
+function drawBeastCow(c, r, t, body, dark, telegraph) {
+  const stomp = telegraph ? -r * 0.06 : Math.sin(t * 4) * r * 0.02;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, stomp, r * 1.15, r * 0.72, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.ellipse(-r * 0.95, -r * 0.15 + stomp, r * 0.48, r * 0.42, -0.2, 0, TAU); c.fill();
+  for (const sx of [-1, 1]) {
+    c.beginPath();
+    c.moveTo(sx * r * 0.15 - r * 0.95, -r * 0.45 + stomp);
+    c.lineTo(sx * r * 0.55 - r * 0.95, -r * 0.95 + stomp);
+    c.lineTo(sx * r * 0.05 - r * 0.95, -r * 0.55 + stomp);
+    c.closePath(); c.fill();
+  }
+  c.fillStyle = '#ffe9c9';
+  c.beginPath(); c.ellipse(-r * 1.25, r * 0.05 + stomp, r * 0.22, r * 0.16, 0, 0, TAU); c.fill();
+  c.fillStyle = '#ff8aa0';
+  c.beginPath(); c.ellipse(r * 0.55, r * 0.35 + stomp, r * 0.28, r * 0.22, 0, 0, TAU); c.fill();
+  beastEye(c, -r * 1.05, -r * 0.25 + stomp, r * 0.12);
+}
+
+function drawBeastPig(c, r, t, body, dark) {
+  const bounce = Math.sin(t * 5) * r * 0.03;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, bounce, r * 1.05, r * 0.78, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.ellipse(-r * 0.95, bounce, r * 0.42, r * 0.38, 0, 0, TAU); c.fill();
+  c.fillStyle = '#ff9ab8';
+  c.beginPath(); c.ellipse(-r * 1.28, r * 0.08 + bounce, r * 0.28, r * 0.2, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.arc(-r * 1.35, r * 0.02 + bounce, r * 0.06, 0, TAU); c.fill();
+  c.beginPath(); c.arc(-r * 1.22, r * 0.08 + bounce, r * 0.06, 0, TAU); c.fill();
+  c.strokeStyle = dark; c.lineWidth = Math.max(2, r * 0.1); c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(r * 0.85, 0 + bounce);
+  c.quadraticCurveTo(r * 1.35, -r * 0.35 + Math.sin(t * 8) * 4, r * 1.15, r * 0.25 + bounce);
+  c.stroke();
+  beastEye(c, -r * 0.95, -r * 0.15 + bounce, r * 0.12);
+}
+
+function drawBeastChicken(c, r, t, body, dark) {
+  const flap = Math.sin(t * 10) * 0.35;
+  c.fillStyle = dark;
+  for (const s of [-1, 1]) {
+    c.save(); c.translate(s * r * 0.15, -r * 0.1); c.rotate(s * (0.4 + flap));
+    c.beginPath(); c.ellipse(s * r * 0.55, 0, r * 0.55, r * 0.22, 0, 0, TAU); c.fill();
+    c.restore();
+  }
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.15, r * 0.72, r * 0.65, 0, 0, TAU); c.fill();
+  c.beginPath(); c.arc(-r * 0.55, -r * 0.35, r * 0.38, 0, TAU); c.fill();
+  c.fillStyle = '#e04f4f';
+  c.beginPath();
+  c.moveTo(-r * 0.55, -r * 0.7); c.lineTo(-r * 0.7, -r * 1.05); c.lineTo(-r * 0.4, -r * 0.72);
+  c.lineTo(-r * 0.55, -r * 1.15); c.lineTo(-r * 0.35, -r * 0.7);
+  c.closePath(); c.fill();
+  c.fillStyle = '#ff9a42';
+  c.beginPath(); c.moveTo(-r * 0.9, -r * 0.3); c.lineTo(-r * 1.2, -r * 0.2); c.lineTo(-r * 0.88, -r * 0.12); c.closePath(); c.fill();
+  beastEye(c, -r * 0.65, -r * 0.4, r * 0.1);
+}
+
+function drawBeastSheep(c, r, t, body, dark) {
+  const puff = 1 + Math.sin(t * 3) * 0.03;
+  c.fillStyle = body;
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * TAU;
+    c.beginPath();
+    c.arc(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.4, r * 0.42 * puff, 0, TAU);
+    c.fill();
+  }
+  c.beginPath(); c.ellipse(0, 0, r * 0.95 * puff, r * 0.72 * puff, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.ellipse(-r * 0.95, -r * 0.05, r * 0.38, r * 0.36, 0, 0, TAU); c.fill();
+  beastEye(c, -r * 1.05, -r * 0.12, r * 0.1);
+}
+
+function drawBeastHorse(c, r, t, body, dark, telegraph) {
+  const rear = telegraph ? -0.12 : Math.sin(t * 6) * 0.03;
+  c.save(); c.rotate(rear);
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0.1 * r, 0.1 * r, r * 1.1, r * 0.58, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.95, -r * 0.35, r * 0.42, r * 0.55, -0.35, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 1.25, -r * 0.55, r * 0.38, r * 0.32, -0.2, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath();
+  c.moveTo(-r * 1.15, -r * 0.85); c.lineTo(-r * 1.05, -r * 1.25); c.lineTo(-r * 0.85, -r * 0.78);
+  c.closePath(); c.fill();
+  c.strokeStyle = dark; c.lineWidth = Math.max(2, r * 0.16); c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(r * 0.9, 0);
+  c.quadraticCurveTo(r * 1.4, -r * 0.4 + Math.sin(t * 7) * 5, r * 1.55, r * 0.15);
+  c.stroke();
+  beastEye(c, -r * 1.3, -r * 0.6, r * 0.1);
+  c.restore();
+}
+
+function drawBeastGoat(c, r, t, body, dark, telegraph) {
+  const tilt = telegraph ? -0.15 : Math.sin(t * 5) * 0.04;
+  c.save(); c.rotate(tilt);
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.08, r * 0.95, r * 0.62, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.9, -r * 0.2, r * 0.4, r * 0.38, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  for (const sx of [-1, 1]) {
+    c.beginPath();
+    c.moveTo(sx * r * 0.12 - r * 0.9, -r * 0.45);
+    c.quadraticCurveTo(sx * r * 0.55 - r * 0.9, -r * 1.15, sx * r * 0.2 - r * 0.9, -r * 0.55);
+    c.closePath(); c.fill();
+  }
+  c.fillStyle = '#ffe9c9';
+  c.beginPath(); c.ellipse(-r * 1.15, r * 0.05, r * 0.16, r * 0.12, 0, 0, TAU); c.fill();
+  beastEye(c, -r * 0.95, -r * 0.28, r * 0.1);
+  c.restore();
+}
+
+function drawBeastDuck(c, r, t, body, dark) {
+  const bob = Math.sin(t * 4) * r * 0.04;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.15 + bob, r * 0.85, r * 0.5, 0, 0, TAU); c.fill();
+  c.beginPath(); c.arc(-r * 0.55, -r * 0.25 + bob, r * 0.32, 0, TAU); c.fill();
+  c.fillStyle = '#ff9a42';
+  c.beginPath(); c.moveTo(-r * 0.85, -r * 0.22 + bob); c.lineTo(-r * 1.25, -r * 0.15 + bob); c.lineTo(-r * 0.85, -r * 0.08 + bob); c.closePath(); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.ellipse(r * 0.55, r * 0.05 + bob, r * 0.35, r * 0.18, 0.3, 0, TAU); c.fill();
+  beastEye(c, -r * 0.6, -r * 0.32 + bob, r * 0.09);
+}
+
+function drawBeastRooster(c, r, t, body, dark) {
+  const flap = Math.sin(t * 11) * 0.45;
+  c.fillStyle = dark;
+  for (const s of [-1, 1]) {
+    c.save(); c.translate(s * r * 0.1, -r * 0.05); c.rotate(s * (0.5 + flap));
+    c.beginPath(); c.moveTo(0, 0); c.lineTo(s * r * 1.2, -r * 0.55); c.lineTo(s * r * 0.9, r * 0.2); c.closePath(); c.fill();
+    c.restore();
+  }
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.1, r * 0.7, r * 0.62, 0, 0, TAU); c.fill();
+  c.beginPath(); c.arc(-r * 0.5, -r * 0.4, r * 0.36, 0, TAU); c.fill();
+  c.fillStyle = '#e04f4f';
+  for (let i = 0; i < 3; i++) {
+    const x = -r * 0.65 + i * r * 0.16;
+    c.beginPath();
+    c.moveTo(x, -r * 0.7); c.lineTo(x - r * 0.08, -r * 1.15); c.lineTo(x + r * 0.1, -r * 0.7);
+    c.closePath(); c.fill();
+  }
+  c.fillStyle = '#ff9a42';
+  c.beginPath(); c.moveTo(-r * 0.85, -r * 0.35); c.lineTo(-r * 1.2, -r * 0.25); c.lineTo(-r * 0.82, -r * 0.15); c.closePath(); c.fill();
+  c.fillStyle = dark;
+  c.beginPath();
+  c.moveTo(r * 0.55, 0);
+  c.lineTo(r * 1.15, -r * 0.35 + Math.sin(t * 6) * 4);
+  c.lineTo(r * 0.95, r * 0.25);
+  c.closePath(); c.fill();
+  beastEye(c, -r * 0.58, -r * 0.45, r * 0.1);
+}
+
+function drawBeastDonkey(c, r, t, body, dark) {
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.1, r * 1.0, r * 0.58, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.9, -r * 0.25, r * 0.4, r * 0.48, -0.25, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  for (const sx of [-1, 1]) {
+    c.beginPath();
+    c.moveTo(sx * r * 0.12 - r * 0.85, -r * 0.55);
+    c.lineTo(sx * r * 0.08 - r * 0.85, -r * 1.2);
+    c.lineTo(sx * r * 0.28 - r * 0.85, -r * 0.55);
+    c.closePath(); c.fill();
+  }
+  c.strokeStyle = dark; c.lineWidth = Math.max(2, r * 0.12); c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(r * 0.85, 0);
+  c.quadraticCurveTo(r * 1.25, r * 0.2 + Math.sin(t * 5) * 3, r * 1.15, r * 0.4);
+  c.stroke();
+  beastEye(c, -r * 1.0, -r * 0.35, r * 0.1);
+}
+
+function drawBeastGoose(c, r, t, body, dark) {
+  const bob = Math.sin(t * 3.5) * r * 0.03;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0.1 * r, r * 0.2 + bob, r * 0.9, r * 0.48, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.35, -r * 0.35 + bob, r * 0.28, r * 0.55, -0.4, 0, TAU); c.fill();
+  c.beginPath(); c.arc(-r * 0.65, -r * 0.75 + bob, r * 0.28, 0, TAU); c.fill();
+  c.fillStyle = '#ff9a42';
+  c.beginPath(); c.moveTo(-r * 0.9, -r * 0.72 + bob); c.lineTo(-r * 1.25, -r * 0.68 + bob); c.lineTo(-r * 0.9, -r * 0.58 + bob); c.closePath(); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.ellipse(r * 0.7, r * 0.05 + bob, r * 0.32, r * 0.16, 0.25, 0, TAU); c.fill();
+  beastEye(c, -r * 0.7, -r * 0.8 + bob, r * 0.09);
+}
+
+function drawBeastElephant(c, r, t, body, dark, telegraph) {
+  const sway = telegraph ? r * 0.08 : Math.sin(t * 2.5) * r * 0.03;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0.1 * r, 0.05 * r, r * 1.15, r * 0.85, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.85, -r * 0.35, r * 0.55, r * 0.5, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  for (const sx of [-1, 1]) {
+    c.beginPath(); c.ellipse(sx * r * 0.55 - r * 0.85, -r * 0.55, r * 0.28, r * 0.38, sx * 0.2, 0, TAU); c.fill();
+  }
+  c.strokeStyle = body; c.lineWidth = Math.max(3, r * 0.22); c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(-r * 1.15, -r * 0.15);
+  c.quadraticCurveTo(-r * 1.55 + sway, r * 0.35, -r * 1.25 + sway * 0.5, r * 0.85);
+  c.stroke();
+  c.fillStyle = '#ffe9c9';
+  c.beginPath();
+  c.moveTo(-r * 1.15, r * 0.05); c.lineTo(-r * 1.55, r * 0.35); c.lineTo(-r * 1.05, r * 0.25);
+  c.closePath(); c.fill();
+  beastEye(c, -r * 0.95, -r * 0.4, r * 0.1);
+}
+
+function drawBeastLion(c, r, t, body, dark) {
+  const mane = 1 + Math.sin(t * 4) * 0.04;
+  c.fillStyle = dark;
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * TAU;
+    c.beginPath();
+    c.moveTo(Math.cos(a) * r * 0.45, Math.sin(a) * r * 0.4 - r * 0.15);
+    c.lineTo(Math.cos(a) * r * 1.15 * mane, Math.sin(a) * r * 1.0 * mane - r * 0.15);
+    c.lineTo(Math.cos(a + 0.35) * r * 0.45, Math.sin(a + 0.35) * r * 0.4 - r * 0.15);
+    c.closePath(); c.fill();
+  }
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0.15 * r, r * 0.25, r * 0.95, r * 0.55, 0, 0, TAU); c.fill();
+  c.beginPath(); c.arc(-r * 0.55, -r * 0.15, r * 0.48, 0, TAU); c.fill();
+  c.fillStyle = '#ffe9c9';
+  c.beginPath(); c.ellipse(-r * 0.7, r * 0.05, r * 0.22, r * 0.16, 0, 0, TAU); c.fill();
+  beastEye(c, -r * 0.7, -r * 0.25, r * 0.11);
+}
+
+function drawBeastTiger(c, r, t, body, dark) {
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.08, r * 1.1, r * 0.58, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.95, -r * 0.2, r * 0.45, r * 0.42, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  for (let i = 0; i < 5; i++) {
+    const x = -r * 0.5 + i * r * 0.32;
+    c.fillRect(x, -r * 0.25, r * 0.1, r * 0.7);
+  }
+  c.beginPath();
+  c.moveTo(-r * 0.7, -r * 0.55); c.lineTo(-r * 0.85, -r * 1.0); c.lineTo(-r * 0.5, -r * 0.55);
+  c.closePath(); c.fill();
+  c.beginPath();
+  c.moveTo(-r * 1.05, -r * 0.5); c.lineTo(-r * 1.15, -r * 0.95); c.lineTo(-r * 0.85, -r * 0.5);
+  c.closePath(); c.fill();
+  c.strokeStyle = dark; c.lineWidth = Math.max(2, r * 0.14); c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(r * 0.95, 0);
+  c.quadraticCurveTo(r * 1.45, -r * 0.25 + Math.sin(t * 6) * 4, r * 1.35, r * 0.2);
+  c.stroke();
+  beastEye(c, -r * 1.05, -r * 0.3, r * 0.1);
+}
+
+function drawBeastGiraffe(c, r, t, body, dark) {
+  const sway = Math.sin(t * 2) * 0.05;
+  c.save(); c.rotate(sway);
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0.2 * r, r * 0.45, r * 0.85, r * 0.45, 0, 0, TAU); c.fill();
+  c.fillRect(-r * 0.35, -r * 0.95, r * 0.35, r * 1.35);
+  c.beginPath(); c.ellipse(-r * 0.45, -r * 1.05, r * 0.38, r * 0.28, -0.2, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  for (let i = 0; i < 4; i++) {
+    c.beginPath();
+    c.arc(-r * 0.1 + (i % 2) * r * 0.15, -r * 0.2 + i * r * 0.28, r * 0.12, 0, TAU);
+    c.fill();
+  }
+  c.beginPath();
+  c.moveTo(-r * 0.55, -r * 1.25); c.lineTo(-r * 0.5, -r * 1.45); c.lineTo(-r * 0.35, -r * 1.22);
+  c.closePath(); c.fill();
+  beastEye(c, -r * 0.55, -r * 1.08, r * 0.08);
+  c.restore();
+}
+
+function drawBeastHippo(c, r, t, body, dark, telegraph) {
+  const open = telegraph ? 0.25 : 0.08 + Math.sin(t * 2) * 0.04;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, 0, r * 1.15, r * 0.78, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.95, r * 0.1, r * 0.55, r * 0.42, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.ellipse(-r * 1.25, r * 0.2 + open * r, r * 0.4, r * 0.18, 0, 0, TAU); c.fill();
+  c.fillStyle = '#fff';
+  c.fillRect(-r * 1.35, r * 0.05, r * 0.1, r * 0.18);
+  c.fillRect(-r * 1.15, r * 0.05, r * 0.1, r * 0.18);
+  beastEye(c, -r * 0.85, -r * 0.2, r * 0.1);
+}
+
+function drawBeastRhino(c, r, t, body, dark, telegraph) {
+  const charge = telegraph ? -0.12 : Math.sin(t * 3) * 0.02;
+  c.save(); c.rotate(charge);
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.05, r * 1.15, r * 0.7, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.95, -r * 0.1, r * 0.5, r * 0.45, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath();
+  c.moveTo(-r * 1.25, -r * 0.15); c.lineTo(-r * 1.75, -r * 0.55); c.lineTo(-r * 1.15, r * 0.05);
+  c.closePath(); c.fill();
+  c.beginPath();
+  c.moveTo(-r * 1.05, -r * 0.35); c.lineTo(-r * 1.25, -r * 0.7); c.lineTo(-r * 0.9, -r * 0.3);
+  c.closePath(); c.fill();
+  beastEye(c, -r * 1.0, -r * 0.25, r * 0.1);
+  c.restore();
+}
+
+function drawBeastGorilla(c, r, t, body, dark, telegraph) {
+  const raise = telegraph ? -r * 0.2 : Math.sin(t * 2.5) * r * 0.03;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.15 + raise * 0.3, r * 0.95, r * 0.85, 0, 0, TAU); c.fill();
+  c.beginPath(); c.arc(0, -r * 0.55 + raise, r * 0.5, 0, TAU); c.fill();
+  c.fillStyle = '#ffe9c9';
+  c.beginPath(); c.ellipse(0, -r * 0.35 + raise, r * 0.35, r * 0.32, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  for (const sx of [-1, 1]) {
+    c.beginPath(); c.ellipse(sx * r * 0.95, r * 0.25 + raise * 0.5, r * 0.35, r * 0.55, sx * 0.25, 0, TAU); c.fill();
+  }
+  beastEye(c, -r * 0.15, -r * 0.55 + raise, r * 0.1);
+  beastEye(c, r * 0.15, -r * 0.55 + raise, r * 0.1);
+}
+
+function drawBeastZebra(c, r, t, body, dark) {
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.1, r * 1.05, r * 0.55, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.95, -r * 0.3, r * 0.4, r * 0.5, -0.3, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  for (let i = 0; i < 6; i++) {
+    const x = -r * 0.7 + i * r * 0.28;
+    c.beginPath();
+    c.moveTo(x, -r * 0.35); c.lineTo(x + r * 0.1, r * 0.55); c.lineTo(x + r * 0.2, -r * 0.35);
+    c.closePath(); c.fill();
+  }
+  c.beginPath();
+  c.moveTo(-r * 1.05, -r * 0.7); c.lineTo(-r * 1.0, -r * 1.15); c.lineTo(-r * 0.8, -r * 0.7);
+  c.closePath(); c.fill();
+  c.strokeStyle = dark; c.lineWidth = Math.max(2, r * 0.12); c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(r * 0.9, 0);
+  c.quadraticCurveTo(r * 1.35, -r * 0.2 + Math.sin(t * 6) * 3, r * 1.25, r * 0.2);
+  c.stroke();
+  beastEye(c, -r * 1.05, -r * 0.4, r * 0.09);
+}
+
+function drawBeastBear(c, r, t, body, dark, telegraph) {
+  const up = telegraph ? -r * 0.12 : 0;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.1 + up * 0.3, r * 1.0, r * 0.8, 0, 0, TAU); c.fill();
+  c.beginPath(); c.arc(-r * 0.15, -r * 0.45 + up, r * 0.55, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.arc(-r * 0.5, -r * 0.85 + up, r * 0.2, 0, TAU); c.fill();
+  c.beginPath(); c.arc(r * 0.2, -r * 0.85 + up, r * 0.2, 0, TAU); c.fill();
+  c.fillStyle = '#ffe9c9';
+  c.beginPath(); c.ellipse(-r * 0.15, -r * 0.25 + up, r * 0.28, r * 0.22, 0, 0, TAU); c.fill();
+  for (const sx of [-1, 1]) {
+    c.fillStyle = body;
+    c.beginPath(); c.ellipse(sx * r * 0.95, r * 0.15 + up * 0.4, r * 0.32, r * 0.48, sx * 0.2, 0, TAU); c.fill();
+  }
+  beastEye(c, -r * 0.35, -r * 0.55 + up, r * 0.1);
+  beastEye(c, r * 0.05, -r * 0.55 + up, r * 0.1);
+}
+
+function drawBeastCroc(c, r, t, body, dark) {
+  const wag = Math.sin(t * 4) * 0.06;
+  c.save(); c.rotate(wag);
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, 0, r * 1.25, r * 0.48, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 1.15, 0, r * 0.55, r * 0.32, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  for (let i = 0; i < 5; i++) {
+    const x = -r * 0.6 + i * r * 0.3;
+    c.beginPath();
+    c.moveTo(x, -r * 0.35); c.lineTo(x + r * 0.08, -r * 0.55); c.lineTo(x + r * 0.16, -r * 0.35);
+    c.closePath(); c.fill();
+  }
+  c.fillStyle = '#fff';
+  for (let i = 0; i < 4; i++) {
+    c.fillRect(-r * 1.45 + i * r * 0.14, -r * 0.05, r * 0.08, r * 0.12);
+  }
+  c.strokeStyle = body; c.lineWidth = Math.max(3, r * 0.2); c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(r * 1.1, 0);
+  c.quadraticCurveTo(r * 1.6, Math.sin(t * 5) * r * 0.15, r * 1.85, 0);
+  c.stroke();
+  beastEye(c, -r * 1.2, -r * 0.15, r * 0.1);
+  c.restore();
+}
+
+function drawBeastKangaroo(c, r, t, body, dark, telegraph) {
+  const hop = telegraph ? -r * 0.15 : Math.sin(t * 6) * r * 0.05;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0.1 * r, r * 0.15 + hop, r * 0.7, r * 0.85, 0.15, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.35, -r * 0.55 + hop, r * 0.4, r * 0.38, -0.2, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath();
+  c.moveTo(-r * 0.45, -r * 0.85 + hop); c.lineTo(-r * 0.55, -r * 1.25 + hop); c.lineTo(-r * 0.25, -r * 0.85 + hop);
+  c.closePath(); c.fill();
+  c.beginPath();
+  c.moveTo(-r * 0.2, -r * 0.85 + hop); c.lineTo(-r * 0.15, -r * 1.22 + hop); c.lineTo(0, -r * 0.85 + hop);
+  c.closePath(); c.fill();
+  c.fillStyle = '#ffe9c9';
+  c.beginPath(); c.ellipse(0.15 * r, r * 0.35 + hop, r * 0.28, r * 0.32, 0, 0, TAU); c.fill();
+  c.strokeStyle = body; c.lineWidth = Math.max(3, r * 0.18); c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(r * 0.45, r * 0.4 + hop);
+  c.quadraticCurveTo(r * 1.0, r * 0.7 + hop, r * 0.85, r * 1.0 + hop);
+  c.stroke();
+  beastEye(c, -r * 0.45, -r * 0.6 + hop, r * 0.09);
+}
+
+function drawBeastPanda(c, r, t, body, dark) {
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.2, r * 0.95, r * 0.8, 0, 0, TAU); c.fill();
+  c.beginPath(); c.arc(0, -r * 0.4, r * 0.55, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.arc(-r * 0.4, -r * 0.85, r * 0.22, 0, TAU); c.fill();
+  c.beginPath(); c.arc(r * 0.4, -r * 0.85, r * 0.22, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.22, -r * 0.45, r * 0.2, r * 0.16, -0.3, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(r * 0.22, -r * 0.45, r * 0.2, r * 0.16, 0.3, 0, TAU); c.fill();
+  for (const sx of [-1, 1]) {
+    c.beginPath(); c.ellipse(sx * r * 0.85, r * 0.25, r * 0.28, r * 0.4, sx * 0.25, 0, TAU); c.fill();
+  }
+  c.fillStyle = '#fff';
+  c.beginPath(); c.arc(-r * 0.22, -r * 0.45, r * 0.08, 0, TAU); c.fill();
+  c.beginPath(); c.arc(r * 0.22, -r * 0.45, r * 0.08, 0, TAU); c.fill();
+  c.fillStyle = '#1a1a2a';
+  c.beginPath(); c.arc(-r * 0.24, -r * 0.45, r * 0.04, 0, TAU); c.fill();
+  c.beginPath(); c.arc(r * 0.2, -r * 0.45, r * 0.04, 0, TAU); c.fill();
+}
+
+function drawBeastFlamingo(c, r, t, body, dark) {
+  const bob = Math.sin(t * 3) * r * 0.04;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0.15 * r, r * 0.35 + bob, r * 0.55, r * 0.35, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.15, -r * 0.25 + bob, r * 0.18, r * 0.55, -0.35, 0, TAU); c.fill();
+  c.beginPath(); c.arc(-r * 0.45, -r * 0.7 + bob, r * 0.26, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.moveTo(-r * 0.7, -r * 0.7 + bob); c.lineTo(-r * 1.1, -r * 0.55 + bob); c.lineTo(-r * 0.7, -r * 0.55 + bob); c.closePath(); c.fill();
+  c.strokeStyle = '#ffe259'; c.lineWidth = Math.max(2, r * 0.1);
+  c.beginPath(); c.moveTo(0, r * 0.55 + bob); c.lineTo(r * 0.1, r * 1.15 + bob); c.stroke();
+  beastEye(c, -r * 0.5, -r * 0.75 + bob, r * 0.07);
+}
+
+function drawBeastCamel(c, r, t, body, dark) {
+  const sway = Math.sin(t * 2.2) * 0.03;
+  c.save(); c.rotate(sway);
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.2, r * 1.1, r * 0.5, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.15, -r * 0.25, r * 0.4, r * 0.45, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(r * 0.35, -r * 0.15, r * 0.35, r * 0.4, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.95, -r * 0.25, r * 0.38, r * 0.48, -0.25, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 1.25, -r * 0.45, r * 0.32, r * 0.28, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath();
+  c.moveTo(-r * 1.3, -r * 0.7); c.lineTo(-r * 1.25, -r * 1.05); c.lineTo(-r * 1.1, -r * 0.68);
+  c.closePath(); c.fill();
+  beastEye(c, -r * 1.3, -r * 0.5, r * 0.09);
+  c.restore();
+}
 /* --- src/entities/fighter.js --- */
 /* ============================== VECHTER ================================ */
 class Fighter {
@@ -16393,6 +17116,41 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
       if (typeof drawTideBossArt === 'function') {
         try { drawTideBossArt(c, sp.art, r, t, body, dark, flash, telegraph); } catch (err) {
           console.error('[TideArt]', sp.art, err);
+          c.fillStyle = body;
+          c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+        }
+      } else {
+        c.fillStyle = body;
+        c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+      }
+      break;
+    case 'cow':
+    case 'pig':
+    case 'chicken':
+    case 'sheep':
+    case 'horse':
+    case 'goat':
+    case 'duck':
+    case 'rooster':
+    case 'donkey':
+    case 'goose':
+    case 'elephant':
+    case 'lion':
+    case 'tiger':
+    case 'giraffe':
+    case 'hippo':
+    case 'rhino':
+    case 'gorilla':
+    case 'zebra':
+    case 'bear':
+    case 'croc':
+    case 'kangaroo':
+    case 'panda':
+    case 'flamingo':
+    case 'camel':
+      if (typeof drawBeastArt === 'function') {
+        try { drawBeastArt(c, sp.art, r, t, body, dark, flash, telegraph); } catch (err) {
+          console.error('[BeastArt]', sp.art, err);
           c.fillStyle = body;
           c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
         }
