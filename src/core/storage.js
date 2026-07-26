@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.92';
+const APP_VERSION = '1.18.93';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 302;
+const SW_CACHE_REV = 303;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -396,6 +396,12 @@ function applyHitConfirmFx(game, x, y, spec) {
 function isCounterHitWindow(target) {
   const a = target && target.attack;
   return !!(a && a.t < a.windup * 0.92);
+}
+
+/** Avontuur: monster in telegraph/dash/jutsu windup — counter-hit zonder dmg×. */
+function isMonsterCounterWindow(m) {
+  if (!m || !m.alive) return false;
+  return (m.telegraphT > 0) || (m.dashT > 0) || (m.jutsuTelegraphT > 0);
 }
 
 function resolveProjHit(p) {

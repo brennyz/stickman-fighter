@@ -124,10 +124,6 @@ function bindPress(el, handler) {
   }
 }
 
-bindPress(document.getElementById('btnAdventure'), () => {
-  AudioSys.init(); AudioSys.sfx('select');
-  UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: 'Avontuur laden mislukt' });
-});
 document.querySelectorAll('[data-hub]').forEach((el) => {
   bindPress(el, () => {
     AudioSys.init(); AudioSys.sfx('select');

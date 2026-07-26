@@ -2270,11 +2270,20 @@ class Game {
         }
         const buff = f.isPlayer ? (this.dmgBuffMul || 1) * (this.stageDmgMul || 1) * (this.styleAdvDmgMul || 1) : 1;
         const finisher = spec.kind === 'weapon' && isWeaponFinisher(f, spec);
+        const counter = f.isPlayer && isMonsterCounterWindow(m);
         const hitRoll = rollHitDamage(f, spec, comboMul * buff * (finisher ? WEAPON_FINISHER_MUL.dmg : 1));
         if (hitRoll.crit) applyCritFx(this, m.x, m.y);
         const kbHit = scaleKnockback(f.face * spec.kb * (finisher ? WEAPON_FINISHER_MUL.kb : 1), hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
+        if (counter) {
+          this.comboT = Math.min(2.2, this.comboT + 0.14);
+          this.floater(m.x, m.y - m.size - 24, t('combat.counter'), '#ffd75e', 15, 'fx');
+          if (m.jutsuTelegraphT > 0) m.jutsuTelegraphT = 0;
+          if (m.telegraphT > 0) m.telegraphT = 0;
+          if (m.dashT > 0) { m.dashT = 0; m.vx *= 0.35; }
+        }
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
+        if (counter) this.freezeT = Math.max(this.freezeT, 0.016);
         applyHitConfirmFx(this, hx, hy, spec);
         if (f.isPlayer && this.styleLightning && !fxLite()) {
           this.burst(m.x, m.y - m.size * 0.5, f.style?.accent || '#7cf5ff', 5, { kind: 'spark', size: 2 });

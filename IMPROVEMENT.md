@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | **1** | Combat feel c5: avontuur counter-hit op monster telegraph/dash/jutsu (geen dmg×) + dup btnAdventure hub-fix + monster art fallback. v1.18.93 / SW v303. |
 | 2026-07-26 | **17** | HOTFIX: pickup life constants terug + shark/octo draw (drops + onzichtbare zwemmers). v1.18.92 / SW v302. |
 | 2026-07-26 | **15** | Collectie-iconen live: soft → arcade ASSET-STYLE (cachebust v1.18.91 / SW v301). |
 | 2026-07-26 | **15** | Collectie-iconen: soft/kinderachtig → ASSET-STYLE arcade (wapens/pets/stijl/skills/upgrades/dex/collect/ei). v1.18.90 / SW v300. |

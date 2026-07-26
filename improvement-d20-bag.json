@@ -10,28 +10,20 @@
     6,
     7,
     2,
-    1,
     4,
     18,
     8,
     3
   ],
   "lastRoll": {
-    "face": 14,
-    "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
-    "rolledAt": "2026-07-26T09:02:39Z",
-    "remainingCount": 12,
+    "face": 1,
+    "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
+    "rolledAt": "2026-07-26T11:06:16Z",
+    "remainingCount": 11,
     "cycle": 5
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 10,
-      "note": "calmer banners/chakra; OS prefers-contrast",
-      "version": "1.12.5",
-      "doneAt": "2026-07-23T18:09:57Z",
-      "cycle": 1
-    },
     {
       "face": 2,
       "note": "oor-laser telegraph + AI range",
@@ -584,6 +576,13 @@
       "version": "1.18.88",
       "doneAt": "2026-07-26T09:03:31Z",
       "cycle": 5
+    },
+    {
+      "face": 1,
+      "note": "adventure counter-hit telegraph + dup hub fix + monster art fallback",
+      "version": "1.18.93",
+      "doneAt": "2026-07-26T11:07:17Z",
+      "cycle": 5
     }
   ],
   "userFeatureLog": [
@@ -972,13 +971,6 @@
     }
   ],
   "history": [
-    {
-      "face": 1,
-      "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
-      "rolledAt": "2026-07-23T13:32:25Z",
-      "remainingCount": 10,
-      "cycle": 0
-    },
     {
       "face": 15,
       "category": "Onboarding \u2014 tips, eerste speelminuut, help",
@@ -1812,6 +1804,13 @@
       "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
       "rolledAt": "2026-07-26T09:02:39Z",
       "remainingCount": 12,
+      "cycle": 5
+    },
+    {
+      "face": 1,
+      "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
+      "rolledAt": "2026-07-26T11:06:16Z",
+      "remainingCount": 11,
       "cycle": 5
     }
   ],

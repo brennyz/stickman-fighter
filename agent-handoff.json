@@ -43,7 +43,7 @@
       "id": "w-20260726T080453",
       "from": "user",
       "text": "Elke 2 uur automatisch code scannen op bugs/optimalisaties en fixen, volledig autonoom.",
-      "status": "open",
+      "status": "done-in-code",
       "updated": "2026-07-26"
     },
     {
@@ -126,6 +126,10 @@
     "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md."
   ],
   "sessionLog": [
+    {
+      "at": "2026-07-26T11:07:21Z",
+      "summary": "d1 combat counter-hit + dup Avontuur hub-fix · v1.18.93"
+    },
     {
       "at": "2026-07-26T10:22:00Z",
       "summary": "Collectie-iconen arcade ASSET-STYLE live-push · v1.18.91"
@@ -221,18 +225,6 @@
     {
       "at": "2026-07-25T22:05:00Z",
       "summary": "d17 stabiliteit: char swap t() crash, adventure result na pauze→menu · v1.18.67"
-    },
-    {
-      "at": "2026-07-25T21:35:00Z",
-      "summary": "Extra krachten UIT (summon/MS/tide) + LEVEL KLAAR eindflow · v1.18.65"
-    },
-    {
-      "at": "2026-07-25T21:07:50Z",
-      "summary": "Stabiliteit: char select crash, claim batch, gamble race, lastPlay · v1.18.60"
-    },
-    {
-      "at": "2026-07-25T21:05:00Z",
-      "summary": "Stabiliteit: char select crash, claim batch, gamble race, lastPlay · v1.18.60"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

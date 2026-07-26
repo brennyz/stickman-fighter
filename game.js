@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.92';
+const APP_VERSION = '1.18.93';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 302;
+const SW_CACHE_REV = 303;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -634,6 +634,12 @@ function applyHitConfirmFx(game, x, y, spec) {
 function isCounterHitWindow(target) {
   const a = target && target.attack;
   return !!(a && a.t < a.windup * 0.92);
+}
+
+/** Avontuur: monster in telegraph/dash/jutsu windup — counter-hit zonder dmg×. */
+function isMonsterCounterWindow(m) {
+  if (!m || !m.alive) return false;
+  return (m.telegraphT > 0) || (m.dashT > 0) || (m.jutsuTelegraphT > 0);
 }
 
 function resolveProjHit(p) {
@@ -16214,6 +16220,13 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
         c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
       }
       break;
+    default:
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+      c.strokeStyle = dark;
+      c.lineWidth = Math.max(2, r * 0.08);
+      c.stroke();
+      break;
   }
 }
 
@@ -21630,11 +21643,20 @@ class Game {
         }
         const buff = f.isPlayer ? (this.dmgBuffMul || 1) * (this.stageDmgMul || 1) * (this.styleAdvDmgMul || 1) : 1;
         const finisher = spec.kind === 'weapon' && isWeaponFinisher(f, spec);
+        const counter = f.isPlayer && isMonsterCounterWindow(m);
         const hitRoll = rollHitDamage(f, spec, comboMul * buff * (finisher ? WEAPON_FINISHER_MUL.dmg : 1));
         if (hitRoll.crit) applyCritFx(this, m.x, m.y);
         const kbHit = scaleKnockback(f.face * spec.kb * (finisher ? WEAPON_FINISHER_MUL.kb : 1), hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
+        if (counter) {
+          this.comboT = Math.min(2.2, this.comboT + 0.14);
+          this.floater(m.x, m.y - m.size - 24, t('combat.counter'), '#ffd75e', 15, 'fx');
+          if (m.jutsuTelegraphT > 0) m.jutsuTelegraphT = 0;
+          if (m.telegraphT > 0) m.telegraphT = 0;
+          if (m.dashT > 0) { m.dashT = 0; m.vx *= 0.35; }
+        }
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
+        if (counter) this.freezeT = Math.max(this.freezeT, 0.016);
         applyHitConfirmFx(this, hx, hy, spec);
         if (f.isPlayer && this.styleLightning && !fxLite()) {
           this.burst(m.x, m.y - m.size * 0.5, f.style?.accent || '#7cf5ff', 5, { kind: 'spark', size: 2 });
@@ -28304,10 +28326,6 @@ function bindPress(el, handler) {
   }
 }
 
-bindPress(document.getElementById('btnAdventure'), () => {
-  AudioSys.init(); AudioSys.sfx('select');
-  UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: 'Avontuur laden mislukt' });
-});
 document.querySelectorAll('[data-hub]').forEach((el) => {
   bindPress(el, () => {
     AudioSys.init(); AudioSys.sfx('select');

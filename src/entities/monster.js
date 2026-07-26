@@ -633,6 +633,13 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
         c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
       }
       break;
+    default:
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+      c.strokeStyle = dark;
+      c.lineWidth = Math.max(2, r * 0.08);
+      c.stroke();
+      break;
   }
 }
 
