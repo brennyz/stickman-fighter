@@ -41,14 +41,15 @@ const AudioSys = {
     }
   },
 
-  /** Fetch Kenney CC0 samples (jsDelivr) — batched; procedural fallback until ready. */
+  /** Fetch Kenney CC0 samples (jsDelivr) — batched; procedural fallback until ready.
+   *  Priority SFX (hits/UI) load first via collectSampleUrls order. */
   loadSamples() {
     if (!this.ctx || this._sampleLoadStarted || typeof collectSampleUrls !== 'function') return;
     this._sampleLoadStarted = true;
     const urls = collectSampleUrls();
     if (!urls.length) return;
     let idx = 0;
-    const batch = 8;
+    const batch = 10;
     const loadOne = async (url) => {
       try {
         const res = await fetch(url, { mode: 'cors', cache: 'force-cache' });
@@ -57,7 +58,7 @@ const AudioSys = {
         const buf = await this.ctx.decodeAudioData(ab);
         this._samples[url] = buf;
         this._sampleCount++;
-        if (this._sampleCount >= 12) this._samplesReady = true;
+        if (this._sampleCount >= 8) this._samplesReady = true;
       } catch (_) {}
     };
     const pump = () => {
@@ -65,7 +66,7 @@ const AudioSys = {
       const chunk = urls.slice(idx, idx + batch);
       idx += batch;
       Promise.all(chunk.map(u => loadOne(u))).then(() => {
-        if (idx < urls.length) setTimeout(pump, 16);
+        if (idx < urls.length) setTimeout(pump, 12);
         else if (this._sampleCount > 0) this._samplesReady = true;
       });
     };
@@ -88,9 +89,15 @@ const AudioSys = {
     const t = this.ctx.currentTime;
     const src = this.ctx.createBufferSource();
     src.buffer = buf;
-    const rate = (cfg.rate || 1) * (0.88 + Math.random() * 0.24);
+    /** Spammy combat/UI: tighter pitch; rare stingers: wider variety. */
+    const spammy = name === 'select' || name === 'step' || name === 'punch' || name === 'kick'
+      || name === 'swing' || name === 'hit' || name === 'hit2' || name === 'hitMetal'
+      || name === 'jump' || name === 'land' || name === 'dash' || name === 'block'
+      || name === 'shuriken' || (name && name.charAt(0) === 'w');
+    const rateJitter = spammy ? (0.95 + Math.random() * 0.1) : (0.88 + Math.random() * 0.24);
+    const rate = (cfg.rate || 1) * rateJitter;
     src.playbackRate.value = rate;
-    const dur = Math.min(buf.duration / rate, 2.8);
+    const dur = Math.min(buf.duration / rate, spammy ? 1.4 : 2.8);
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + dur);
@@ -319,23 +326,32 @@ const AudioSys = {
     switch (name) {
       case 'swing': {
         const a = A();
-        N(0.05, 0.22, 3400 + a * 400, true, now);
-        T(420 + a * 60, 160 + a * 30, 0.07, a === 1 ? 'triangle' : 'sine', 0.11, now);
-        if (!lite) N(0.025, 0.08, 6200 + a * 300, true, now + 0.015);
+        N(0.055, 0.24, 3200 + a * 500, true, now);
+        T(440 + a * 70, 150 + a * 25, 0.075, a === 1 ? 'triangle' : 'sine', 0.12, now);
+        if (!lite) {
+          N(0.028, 0.09, 6400 + a * 280, true, now + 0.012);
+          T(880 + a * 40, 420, 0.035, 'sine', 0.06, now + 0.03);
+        }
         break;
       }
       case 'punch': {
         const a = A();
-        I(220 + a * 40, 2800 + a * 400, now);
-        T(480 + a * 60, 820 + a * 80, 0.04, a === 2 ? 'sine' : 'triangle', 0.1, now + 0.02);
-        if (!lite && a === 1) N(0.03, 0.09, 4800, true, now + 0.03);
+        I(200 + a * 50, 2600 + a * 500, now);
+        T(460 + a * 70, 780 + a * 100, 0.045, a === 2 ? 'sine' : 'triangle', 0.11, now + 0.015);
+        if (!lite) {
+          N(0.028, 0.1, 4200 + a * 400, true, now + 0.02);
+          if (a) T(160 + a * 20, 70, 0.04, 'sine', 0.08, now + 0.035);
+        }
         break;
       }
       case 'kick': {
         const a = A();
-        I(260 + a * 35, 2400 + a * 350, now);
-        T(400 + a * 40, 130 + a * 20, 0.07, 'triangle', 0.12, now + 0.02);
-        if (!lite && a) T(180, 70, 0.05, 'sine', 0.08, now + 0.04);
+        I(250 + a * 40, 2200 + a * 400, now);
+        T(380 + a * 50, 120 + a * 25, 0.08, 'triangle', 0.13, now + 0.018);
+        if (!lite) {
+          T(170 + a * 15, 55, 0.055, 'sine', 0.1, now + 0.035);
+          N(0.04, 0.1, 1800 + a * 200, false, now + 0.03);
+        }
         break;
       }
       case 'wKunai':
@@ -418,49 +434,65 @@ const AudioSys = {
         break;
       case 'hit': {
         const a = A();
-        I(160 + a * 30, 1200 + a * 300, now);
-        T(820 + a * 80, 380 + a * 40, 0.05, a ? 'sine' : 'triangle', 0.1, now + 0.015);
+        I(150 + a * 35, 1100 + a * 350, now);
+        T(780 + a * 90, 340 + a * 50, 0.055, a ? 'sine' : 'triangle', 0.11, now + 0.012);
+        if (!lite) N(0.03, 0.1, 3600 + a * 400, true, now + 0.02);
         break;
       }
       case 'hit2': {
         const a = A();
-        I(120 + a * 20, 850 + a * 120, now);
-        T(140 + a * 20, 50 + a * 10, 0.09, 'square', 0.24, now);
-        N(0.07, 0.26, 600 + a * 80, false, now);
-        T(300 + a * 30, 130 + a * 20, 0.06, 'triangle', 0.12, now + 0.025);
+        I(115 + a * 25, 800 + a * 140, now);
+        T(135 + a * 25, 48 + a * 12, 0.095, 'square', 0.25, now);
+        N(0.075, 0.27, 580 + a * 90, false, now);
+        T(290 + a * 35, 120 + a * 25, 0.065, 'triangle', 0.13, now + 0.022);
+        if (!lite) S(a ? [740, 880] : [660, 820], now + 0.04);
         break;
       }
       case 'hitMetal': {
         const a = A();
-        I(500 + a * 40, 3600 + a * 300, now);
-        E(960 + a * 40, 440 + a * 30, 0.06, 'triangle', 0.13, now + 0.01, 0.035, 0.45);
-        T(230 + a * 20, 90 + a * 10, 0.07, 'sine', 0.11, now);
+        I(480 + a * 50, 3400 + a * 350, now);
+        E(940 + a * 50, 420 + a * 40, 0.07, 'triangle', 0.14, now + 0.008, 0.032, 0.48);
+        T(220 + a * 25, 85 + a * 12, 0.075, 'sine', 0.12, now);
+        if (!lite) T(1320 + a * 60, 880, 0.04, 'sine', 0.07, now + 0.04);
         break;
       }
       case 'hitHeavy': {
         const a = A();
-        I(100 + a * 20, 600 + a * 80, now);
-        T(120 + a * 15, 40 + a * 6, 0.13, 'sine', 0.24, now);
-        if (!lite) N(0.1, 0.22, 520 + a * 60, false, now + 0.04);
+        I(95 + a * 25, 560 + a * 100, now);
+        T(115 + a * 18, 38 + a * 8, 0.14, 'sine', 0.26, now);
+        if (!lite) {
+          N(0.11, 0.24, 500 + a * 70, false, now + 0.035);
+          T(220 + a * 20, 90, 0.06, 'triangle', 0.1, now + 0.05);
+        }
         break;
       }
       case 'hitEnergy': {
         const a = A();
-        T(740 + a * 40, 260 + a * 30, 0.09, 'sine', 0.15, now);
-        D(1100 + a * 40, 500 + a * 30, 0.07, 'triangle', 0.11, now, 10);
-        N(0.05, 0.13, 4200 + a * 300, true, now);
-        if (!lite) S(a ? [932, 1109] : [880, 1047], now + 0.04);
+        T(720 + a * 50, 240 + a * 35, 0.1, 'sine', 0.16, now);
+        D(1080 + a * 50, 480 + a * 35, 0.075, 'triangle', 0.12, now, 11);
+        N(0.055, 0.14, 4000 + a * 350, true, now);
+        if (!lite) {
+          S(a ? [932, 1109, 1245] : [880, 1047, 1175], now + 0.035);
+          E(980, 520, 0.06, 'sine', 0.08, now + 0.05, 0.04, 0.4);
+        }
         break;
       }
-      case 'jump':
-        T(220, 620, 0.11, 'sine', 0.16, now);
-        T(620, 880, 0.07, 'triangle', 0.1, now + 0.04);
-        if (!lite) N(0.025, 0.07, 5200, true, now);
+      case 'jump': {
+        const a = A();
+        T(200 + a * 30, 600 + a * 40, 0.12, 'sine', 0.17, now);
+        T(600 + a * 40, 900 + a * 50, 0.075, 'triangle', 0.11, now + 0.035);
+        if (!lite) N(0.028, 0.08, 5000 + a * 400, true, now);
         break;
-      case 'land':
-        I(95, 480, now);
-        if (!lite) T(180, 70, 0.05, 'sine', 0.08, now + 0.02);
+      }
+      case 'land': {
+        const a = A();
+        I(90 + a * 15, 450 + a * 80, now);
+        if (!lite) {
+          T(170 + a * 20, 65, 0.055, 'sine', 0.09, now + 0.018);
+          N(0.03, 0.08, 1200 + a * 200, false, now + 0.01);
+        }
         break;
+      }
       case 'hurt':
         T(380, 120, 0.12, 'triangle', 0.18, now);
         T(220, 90, 0.08, 'sawtooth', 0.12, now + 0.03);
@@ -496,11 +528,35 @@ const AudioSys = {
         N(0.06, 0.2, 2100, false, now);
         T(720, 280, 0.05, 'triangle', 0.1, now);
         break;
-      case 'block':
-        T(980, 760, 0.07, 'sine', 0.14, now);
-        N(0.045, 0.15, 5000, true, now);
-        T(620, 820, 0.05, 'triangle', 0.1, now + 0.025);
+      case 'select': {
+        const a = A();
+        T(640 + a * 40, 860 + a * 50, 0.048, 'sine', 0.11, now);
+        T(860 + a * 40, 1040 + a * 40, 0.055, 'triangle', 0.1, now + 0.022);
+        if (!lite && a === 1) S([1175], now + 0.05);
         break;
+      }
+      case 'combo': {
+        const a = A();
+        T(500 + a * 40, 860 + a * 40, 0.07, 'triangle', 0.15, now);
+        T(860 + a * 40, 1060 + a * 40, 0.08, 'sine', 0.13, now + 0.028);
+        if (!lite) S(a ? [1109, 1245, 1397] : [1040, 1175, 1319], now + 0.05);
+        break;
+      }
+      case 'dash': {
+        const a = A();
+        N(0.065, 0.17, 3400 + a * 400, true, now);
+        T(400 + a * 40, 840 + a * 60, 0.085, 'sine', 0.12, now);
+        if (!lite) T(1000 + a * 40, 620, 0.055, 'triangle', 0.09, now + 0.035);
+        break;
+      }
+      case 'block': {
+        const a = A();
+        T(960 + a * 40, 740 + a * 30, 0.075, 'sine', 0.15, now);
+        N(0.05, 0.16, 4800 + a * 400, true, now);
+        T(600 + a * 40, 840 + a * 40, 0.055, 'triangle', 0.11, now + 0.022);
+        if (!lite) E(880, 660, 0.05, 'sine', 0.07, now + 0.04, 0.035, 0.4);
+        break;
+      }
       case 'crit':
         I(520, 4200, now);
         D(1040, 1560, 0.07, 'triangle', 0.16, now + 0.02, 12);
@@ -533,31 +589,23 @@ const AudioSys = {
           N(0.16, 0.15, 1100, true, now + 0.14);
         }
         break;
-      case 'select':
-        T(660, 880, 0.045, 'sine', 0.1, now);
-        T(880, 1040, 0.055, 'triangle', 0.09, now + 0.025);
-        break;
-      case 'combo':
-        T(520, 880, 0.065, 'triangle', 0.14, now);
-        T(880, 1040, 0.075, 'sine', 0.12, now + 0.03);
-        if (!lite) S([1040, 1175, 1319], now + 0.05);
-        break;
-      case 'dash':
-        N(0.06, 0.16, 3600, true, now);
-        T(420, 820, 0.08, 'sine', 0.11, now);
-        if (!lite) T(980, 620, 0.05, 'triangle', 0.08, now + 0.04);
-        break;
       case 'pickup':
-        C([784, 988, 1175], 'sine', 0.14, 0.045, now);
-        if (!lite) S([1319, 1568], now + 0.12);
+        C([784, 988, 1175], 'sine', 0.15, 0.042, now);
+        if (!lite) {
+          S([1319, 1568], now + 0.11);
+          T(1175, 1568, 0.06, 'triangle', 0.08, now + 0.16);
+        }
         break;
       case 'bell':
         D(1319, 1240, 0.5, 'triangle', 0.22, now, 6);
         T(988, 988, 0.35, 'sine', 0.08, now + 0.05);
         break;
       case 'bonus':
-        C([880, 1109, 1320], 'square', 0.15, 0.065, now);
-        if (!lite) S([1568, 1760], now + 0.14);
+        C([880, 1109, 1320], 'square', 0.16, 0.06, now);
+        if (!lite) {
+          S([1568, 1760], now + 0.13);
+          E(1320, 1760, 0.08, 'sine', 0.09, now + 0.1, 0.05, 0.4);
+        }
         break;
       case 'levelup':
         C([523, 659, 784, 1047], 'triangle', 0.16, 0.065, now);
@@ -694,10 +742,13 @@ const AudioSys = {
         T(180, 520, 0.14, 'sine', 0.1, now);
         if (!lite) T(520, 880, 0.08, 'triangle', 0.08, now + 0.06);
         break;
-      case 'step':
-        N(0.025, 0.08, 900, false, now);
-        T(120, 70, 0.04, 'sine', 0.09, now);
+      case 'step': {
+        const a = A();
+        N(0.022, 0.075, 850 + a * 120, false, now);
+        T(110 + a * 20, 65 + a * 10, 0.038, 'sine', 0.09, now);
+        if (!lite && a === 2) N(0.015, 0.04, 2200, true, now + 0.01);
         break;
+      }
       case 'checkpoint':
         C([523, 659, 784], 'sine', 0.14, 0.055, now);
         E(988, 1175, 0.1, 'triangle', 0.11, now + 0.12, 0.06, 0.42);
@@ -934,6 +985,17 @@ const AudioSys = {
         this.noise(0.08, 0.17, 7800, true, mg, t);
         this.tone(midi(84), midi(67), spb * 0.75, 'square', 0.08, mg, t);
       }
+      /** Punchier groove on common fight tracks */
+      if (!lite && (i === 6 || i === 14) && bar % 2 === 0) {
+        this.tone(midi(55), midi(48), spb * 0.7, 'triangle', 0.045, mg, t);
+      }
+      if (!lite && i === 4 && bar % 4 === 2) {
+        this.noise(0.035, 0.1, 4800, true, mg, t);
+        this.tone(midi(79), midi(76), spb * 0.85, 'square', 0.05, mg, t);
+      }
+      if (!lite && heat > 0.55 && (i === 2 || i === 10)) {
+        this.tone(midi(88), midi(84), spb * 0.45, 'sine', 0.03 + heat * 0.025, mg, t);
+      }
     }
     if ((s.id === 'tideBattle' || s.id === 'tideBattle2' || s.id === 'tideBattleSurge') && !lite) {
       if ([2, 6, 10, 14].includes(i)) {
@@ -969,6 +1031,13 @@ const AudioSys = {
       }
       if (i === 0 && bar % 2 === 0) {
         this.tone(midi(57), midi(57), spb * 3.8, 'sine', 0.06, mg, t);
+      }
+      /** Soft counter-melody so long menu sessions feel less looped */
+      if (!lite && i === 6 && bar % 4 === 1) {
+        this.tone(midi(69), midi(72), spb * 1.5, 'sine', 0.045, mg, t);
+      }
+      if (!lite && i === 14 && bar % 4 === 3) {
+        this.tone(midi(74), midi(71), spb * 1.2, 'triangle', 0.04, mg, t);
       }
     }
     if (s.id === 'menu2') {
@@ -1045,6 +1114,8 @@ const SONGS = {
     lead: [
       [69,null,72,null, 76,null,72,null, 74,null,71,null, 69,null,64,null],
       [69,null,72,null, 76,null,79,null, 77,null,74,null, 72,null,71,null],
+      [72,null,76,null, 79,null,76,null, 74,null,72,null, 69,null,67,null],
+      [67,null,69,null, 72,null,76,null, 74,null,71,null, 69,null,72,null],
     ],
   },
   /** Menu variant — sneller, helderder */
@@ -1104,6 +1175,8 @@ const SONGS = {
     lead: [
       [76,null,79,76, null,74,76,null, 71,null,74,71, null,69,71,74],
       [76,null,79,81, null,79,76,null, 74,null,76,74, 71,null,69,null],
+      [79,null,81,79, null,76,74,null, 71,null,74,76, null,74,71,null],
+      [74,null,76,79, null,81,79,null, 76,null,74,71, 69,null,71,74],
     ],
   },
   /** Battle variant — syncopisch / scherp */
@@ -1163,6 +1236,8 @@ const SONGS = {
     lead: [
       [77,null,80,77, null,75,77,null, 72,null,75,72, null,70,72,75],
       [77,null,80,82, null,80,77,null, 75,null,77,75, 72,null,70,null],
+      [80,null,82,80, null,77,75,null, 72,null,75,77, null,75,72,null],
+      [75,null,77,80, null,82,80,null, 77,null,75,72, 70,null,72,75],
     ],
   },
   /** Elite variant — hoger / scherper */
@@ -1192,6 +1267,8 @@ const SONGS = {
     lead: [
       [74,null,75,74, null,70,74,null, 77,null,75,74, null,72,70,null],
       [74,null,77,79, null,77,75,null, 74,null,72,70, 69,null,70,null],
+      [77,null,79,77, null,74,72,null, 70,null,74,77, null,75,74,null],
+      [79,null,77,74, null,72,70,null, 69,null,70,72, 74,null,75,null],
     ],
   },
   /** Boss variant — lager / dreigender */

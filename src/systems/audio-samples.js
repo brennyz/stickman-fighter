@@ -37,6 +37,8 @@ const SFX_SAMPLE_MAP = {
   comboMega: { pack: 'digital', vol: 0.85, files: ['phaseJump5.ogg', 'pepSound5.ogg', 'powerUp3.ogg', 'threeTone1.ogg', 'laser9.ogg', 'pepSound4.ogg'] },
   punch: { pack: 'impact', vol: 0.82, files: ['impactPunch_medium_001.ogg', 'impactPunch_medium_002.ogg', 'impactPunch_medium_003.ogg', 'impactPunch_medium_004.ogg', 'impactGeneric_light_001.ogg', 'impactGeneric_light_002.ogg', 'impactSoft_medium_001.ogg', 'impactSoft_medium_003.ogg'] },
   kick: { pack: 'impact', vol: 0.88, files: ['impactPunch_heavy_001.ogg', 'impactSoft_medium_002.ogg', 'impactPunch_medium_004.ogg', 'impactSoft_medium_004.ogg', 'impactSoft_heavy_001.ogg', 'impactPunch_heavy_002.ogg', 'impactWood_medium_001.ogg'] },
+  /** Default weapon hit — most common combat SFX (was missing → always synth). */
+  hit: { pack: 'impact', vol: 0.78, files: ['impactGeneric_light_001.ogg', 'impactGeneric_light_002.ogg', 'impactGeneric_light_003.ogg', 'impactGeneric_light_004.ogg', 'impactSoft_medium_001.ogg', 'impactSoft_medium_003.ogg', 'impactPunch_medium_001.ogg', 'impactPunch_medium_002.ogg'] },
   hit2: { pack: 'impact', vol: 0.75, files: ['impactGeneric_light_002.ogg', 'impactGeneric_light_003.ogg', 'impactGeneric_light_004.ogg', 'impactSoft_medium_001.ogg', 'impactSoft_medium_003.ogg', 'impactWood_light_001.ogg', 'impactPlank_medium_003.ogg'] },
   hitHeavy: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_002.ogg', 'impactPunch_heavy_003.ogg', 'impactPunch_heavy_004.ogg', 'impactMetal_heavy_001.ogg', 'impactSoft_heavy_001.ogg', 'impactSoft_heavy_002.ogg', 'impactWood_heavy_003.ogg'] },
   hitMetal: { pack: 'impact', vol: 0.85, files: ['impactMetal_medium_001.ogg', 'impactMetal_medium_002.ogg', 'impactMetal_medium_003.ogg', 'impactMetal_medium_004.ogg', 'impactMetal_light_003.ogg', 'impactMetal_light_004.ogg', 'impactMetal_heavy_001.ogg'] },
@@ -257,12 +259,21 @@ function playSuperSynthFallback(name, h) {
 function collectSampleUrls() {
   const urls = [];
   const seen = new Set();
-  for (const cfg of Object.values(SFX_SAMPLE_MAP)) {
+  /** Most-heard SFX first so combat/UI sounds unlock ASAP. */
+  const PRIORITY = [
+    'select', 'punch', 'kick', 'swing', 'hit', 'hit2', 'hitMetal', 'hitHeavy', 'hitEnergy',
+    'combo', 'comboEpic', 'jump', 'land', 'step', 'block', 'dash', 'shuriken',
+    'roar', 'win', 'lose', 'bonus', 'pickup', 'bell', 'levelup', 'crit',
+  ];
+  const pushCfg = (cfg) => {
+    if (!cfg) return;
     for (const f of cfg.files || []) {
       const u = sampleUrl(cfg.pack, f);
       if (u && !seen.has(u)) { seen.add(u); urls.push(u); }
     }
-  }
+  };
+  for (const id of PRIORITY) pushCfg(SFX_SAMPLE_MAP[id]);
+  for (const cfg of Object.values(SFX_SAMPLE_MAP)) pushCfg(cfg);
   return urls;
 }
 
