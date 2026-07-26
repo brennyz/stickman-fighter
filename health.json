@@ -1,9 +1,1 @@
-{
-  "ok": true,
-  "url": "https://brennyz.github.io/stickman-fighter/",
-  "ts": "2026-07-23T16:00:00Z",
-  "provider": "github-pages",
-  "fallbackTunnel": "https://stickfighter-ipad-b75e.loca.lt/ipad.html",
-  "bookmarkTunnel": "https://stickfighter-ipad-b75e.loca.lt/ipad.html",
-  "note": "Repo default = Pages. Lokaal: keep-tunnel.sh zet health op loca.lt — bookmark URL wijzigt niet."
-}
+{"ok":true,"url":"https://stickfighter-ipad-b75e.loca.lt","ts":"2026-07-26T06:56:36Z","provider":"localtunnel","subdomain":"stickfighter-ipad-b75e"}

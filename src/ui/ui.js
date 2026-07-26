@@ -8,6 +8,14 @@ function levelScreenActive() {
   return !!(el && el.classList.contains('active'));
 }
 
+/** Dobbel-flash start: menu (verder), level-tik of result (opnieuw/volgende). */
+function gambleFlashStartOk() {
+  const active = document.querySelector('.screen.active');
+  const id = active && active.id;
+  if (!id) return true;
+  return id === 'levelScreen' || id === 'menuScreen' || id === 'resultScreen';
+}
+
 function appendItemUpgradeButton(el, cat, id, rerender) {
   if (!itemUpgradeEligible(cat, id) || !itemCanUpgrade(cat, id)) return;
   const cost = itemUpgradeCost(cat, id);

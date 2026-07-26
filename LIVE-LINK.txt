@@ -1,4 +1,5 @@
 https://brennyz.github.io/stickman-fighter/speel.html
 
-Primair: GitHub Pages — bookmark speel.html op iPad (Safari → Delen → Zet op beginscherm).
-Dev tunnel: alleen thuis via ./start-local.sh --tunnel (niet delen; zie hosting.json → tunnel).
+Primair: GitHub Pages — bookmark speel.html op iPad.
+Dev tunnel (niet delen): https://stickfighter-ipad-b75e.loca.lt/ipad.html
+Start tunnel: ./start-local.sh --tunnel

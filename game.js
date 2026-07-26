@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.75';
+const APP_VERSION = '1.18.76';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 285;
+const SW_CACHE_REV = 286;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -4019,8 +4019,8 @@ function gokGooiStartLevel(n) {
     gokScreenTimer = setTimeout(() => {
       gokScreenTimer = null;
       if (startGen !== gambleSfxGen) { gokStartBusy = false; return; }
-      if ((state === 'play' && game) || state === 'result') { gokStartBusy = false; return; }
-      if (typeof levelScreenActive === 'function' && !levelScreenActive()) {
+      if (state === 'play' && game && !game.over) { gokStartBusy = false; return; }
+      if (typeof gambleFlashStartOk === 'function' && !gambleFlashStartOk()) {
         gokStartBusy = false;
         return;
       }
@@ -4050,7 +4050,7 @@ function gokGooiStartFromScreen() {
     gokScreenTimer = setTimeout(() => {
       gokScreenTimer = null;
       if (startGen !== gambleSfxGen) { gokStartBusy = false; return; }
-      if ((state === 'play' && game) || state === 'result') { gokStartBusy = false; return; }
+      if (state === 'play' && game && !game.over) { gokStartBusy = false; return; }
       const gambleEl = document.getElementById('gambleScreen');
       if (!gambleEl || !gambleEl.classList.contains('active')) {
         gokStartBusy = false;
@@ -23917,6 +23917,14 @@ function levelHoldGenStale(gen) { return gen !== _levelHoldGen; }
 function levelScreenActive() {
   const el = document.getElementById('levelScreen');
   return !!(el && el.classList.contains('active'));
+}
+
+/** Dobbel-flash start: menu (verder), level-tik of result (opnieuw/volgende). */
+function gambleFlashStartOk() {
+  const active = document.querySelector('.screen.active');
+  const id = active && active.id;
+  if (!id) return true;
+  return id === 'levelScreen' || id === 'menuScreen' || id === 'resultScreen';
 }
 
 function appendItemUpgradeButton(el, cat, id, rerender) {

@@ -26,7 +26,12 @@
   },
   "userWishlist": [
     {
-      "id": "w-20260725T141500",
+      "id": "w-20260726T070000",
+      "from": "user",
+      "text": "Bug: dobbelstenen rollen bij Verder/level-start maar spel start niet (gamble timer guard te streng sinds v1.18.73).",
+      "status": "active",
+      "updated": "2026-07-26"
+    },
       "from": "user",
       "text": "ASSET-STYLE.md leidend voor knoppen/beelden: agent leest doc → SVG in assets/buttons → vervangt inline iconen. Eerste batch later: hub of modes.",
       "status": "active",

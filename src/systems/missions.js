@@ -1876,8 +1876,8 @@ function gokGooiStartLevel(n) {
     gokScreenTimer = setTimeout(() => {
       gokScreenTimer = null;
       if (startGen !== gambleSfxGen) { gokStartBusy = false; return; }
-      if ((state === 'play' && game) || state === 'result') { gokStartBusy = false; return; }
-      if (typeof levelScreenActive === 'function' && !levelScreenActive()) {
+      if (state === 'play' && game && !game.over) { gokStartBusy = false; return; }
+      if (typeof gambleFlashStartOk === 'function' && !gambleFlashStartOk()) {
         gokStartBusy = false;
         return;
       }
@@ -1907,7 +1907,7 @@ function gokGooiStartFromScreen() {
     gokScreenTimer = setTimeout(() => {
       gokScreenTimer = null;
       if (startGen !== gambleSfxGen) { gokStartBusy = false; return; }
-      if ((state === 'play' && game) || state === 'result') { gokStartBusy = false; return; }
+      if (state === 'play' && game && !game.over) { gokStartBusy = false; return; }
       const gambleEl = document.getElementById('gambleScreen');
       if (!gambleEl || !gambleEl.classList.contains('active')) {
         gokStartBusy = false;
