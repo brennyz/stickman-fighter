@@ -16,6 +16,7 @@
     "smoke:levelup": "node scripts/smoke-levelup-fight.mjs",
     "smoke:petwave": "node scripts/smoke-pet-wave.mjs",
     "smoke:adventure": "node scripts/smoke-adventure-run.mjs",
+    "smoke:soak": "node scripts/smoke-soak-minimal.mjs",
     "e2e:adventure": "node scripts/e2e-adventure-blue.mjs",
     "test": "npm run build && npm run check && npm run smoke && npm run smoke:upgrades && npm run smoke:menu && npm run smoke:html && npm run smoke:gamble && npm run smoke:levelup && npm run smoke:petwave && npm run smoke:adventure",
     "roll": "bash scripts/roll-improvement-d20.sh",
