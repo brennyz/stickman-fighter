@@ -277,6 +277,14 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T20:06:48Z",
+      "summary": "Arcade UI icons LIVE op main · v1.18.119 / SW v329"
+    },
+    {
+      "at": "2026-07-26T20:06:43Z",
+      "summary": "Arcade UI icons LIVE op main · v1.18.119 / SW v329"
+    },
+    {
       "at": "2026-07-26T20:06:38Z",
       "summary": "Arcade UI icons LIVE gemerged · v1.18.119"
     },
@@ -367,14 +375,6 @@
     {
       "at": "2026-07-26T19:01:08Z",
       "summary": "Zone-wapens Nightmare/Hel aangesloten op drops+effects+2.0/3.0 · v1.18.107"
-    },
-    {
-      "at": "2026-07-26T18:58:20Z",
-      "summary": "Nightmare 2.0 / Hell 3.0 verder uitgewerkt en live · v1.18.106"
-    },
-    {
-      "at": "2026-07-26T18:57:27Z",
-      "summary": "Top SFX (hit/select/combat) + battle/menu muziek polish · v1.18.104"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
