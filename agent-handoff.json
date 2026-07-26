@@ -20,9 +20,9 @@
     "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "localMainHead": null,
-    "remoteMainHead": null,
-    "note": "Achterstallig audio LIVE · diversity+top-SFX+d6 pause · v1.18.112"
+    "localMainHead": "1577ea5",
+    "remoteMainHead": "1577ea5",
+    "note": "Achterstallig audio LIVE op main · v1.18.112"
   },
   "userWishlist": [
     {
@@ -232,6 +232,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T19:18:40Z",
+      "summary": "Achterstallig audio gemerged naar main · v1.18.112 LIVE"
+    },
+    {
       "at": "2026-07-26T19:18:04Z",
       "summary": "Merge achterstallig audio naar main · diversity+top-SFX"
     },
@@ -326,10 +330,6 @@
     {
       "at": "2026-07-26T18:49:50Z",
       "summary": "Nachtmerrie/Hel zone-wapens merge-ready · v1.18.103"
-    },
-    {
-      "at": "2026-07-26T18:49:35Z",
-      "summary": "Merged grootste bazen naar main · v1.18.102"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
