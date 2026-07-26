@@ -8,25 +8,17 @@
     6,
     2,
     4,
-    18,
-    8
+    18
   ],
   "lastRoll": {
-    "face": 3,
-    "category": "Versus 2P \u2014 split controls, rematch, char balance",
-    "rolledAt": "2026-07-24T18:01:29Z",
-    "remainingCount": 7,
+    "face": 8,
+    "category": "PWA & offline \u2014 SW cache, install, standalone",
+    "rolledAt": "2026-07-24T17:02:44Z",
+    "remainingCount": 6,
     "cycle": 5
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 16,
-      "note": "Pages primair in hosting.json/LIVE-LINK + instellingen UI",
-      "version": "1.12.10",
-      "doneAt": "2026-07-23T18:16:50Z",
-      "cycle": 1
-    },
     {
       "face": 8,
       "note": "Offline banner + SW v75 network-first manifest",
@@ -579,6 +571,13 @@
       "version": "1.18.98",
       "doneAt": "2026-07-26T16:05:25Z",
       "cycle": 5
+    },
+    {
+      "face": 8,
+      "note": "speel SW+canonical cache, smoke-pwa-shell, offline share",
+      "version": "1.18.99",
+      "doneAt": "2026-07-26T17:04:50Z",
+      "cycle": 5
     }
   ],
   "userFeatureLog": [
@@ -967,13 +966,6 @@
     }
   ],
   "history": [
-    {
-      "face": 3,
-      "category": "Versus 2P \u2014 split controls, rematch, char balance",
-      "rolledAt": "2026-07-23T13:37:18Z",
-      "remainingCount": 5,
-      "cycle": 0
-    },
     {
       "face": 13,
       "category": "Missies & achievements \u2014 daily loop, beloningen",
@@ -1807,6 +1799,13 @@
       "category": "Versus 2P \u2014 split controls, rematch, char balance",
       "rolledAt": "2026-07-24T18:01:29Z",
       "remainingCount": 7,
+      "cycle": 5
+    },
+    {
+      "face": 8,
+      "category": "PWA & offline \u2014 SW cache, install, standalone",
+      "rolledAt": "2026-07-24T17:02:44Z",
+      "remainingCount": 6,
       "cycle": 5
     }
   ],

@@ -150,6 +150,14 @@ run_doctor() {
       fail=1
     fi
   fi
+  if [[ -f "$ROOT/scripts/smoke-pwa-shell.mjs" ]]; then
+    if node "$ROOT/scripts/smoke-pwa-shell.mjs"; then
+      echo "OK  smoke-pwa-shell"
+    else
+      echo "FAIL: smoke-pwa-shell"
+      fail=1
+    fi
+  fi
   echo ""
   if [[ "$fail" -ne 0 ]]; then
     echo "DOCTOR FAIL — fix bovenstaande vóór roll/ship"

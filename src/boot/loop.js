@@ -457,8 +457,9 @@ function updateNetStatus(ev) {
       caches.match('./game.js', { ignoreSearch: true }),
       caches.match('./index.html', { ignoreSearch: true }),
       caches.match('./styles/main.css', { ignoreSearch: true }),
-    ]).then(([js, html, css]) => {
-      if (!js || !html || !css || window.__sfOfflineReadyShown) return;
+      caches.match('./speel.html', { ignoreSearch: true }),
+    ]).then(([js, html, css, speel]) => {
+      if (!js || !html || !css || !speel || window.__sfOfflineReadyShown) return;
       window.__sfOfflineReadyShown = 1;
         const el2 = document.getElementById('netStatus');
         if (!el2 || window.__sfSwUpdateReady || !navigator.onLine) return;

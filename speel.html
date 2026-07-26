@@ -39,6 +39,8 @@
     background:rgba(124,245,255,.08); color:#7cf5ff; font-weight:700; font-size:14px; cursor:pointer; }
   .hide { display:none !important; }
   footer { margin-top:26px; font-size:12px; color:#5a6a9a; }
+  .offline-hint { margin-top:12px; padding:10px 14px; border-radius:12px; font-size:13px;
+    background:rgba(255,120,80,.12); border:1px solid rgba(255,160,100,.35); color:#ffc9a8; max-width:420px; }
 </style>
 </head>
 <body>
@@ -81,13 +83,31 @@
   </div>
 
   <footer>PWA · offline na 1× online · save blijft op je eigen apparaat</footer>
+  <p class="offline-hint hide" id="offlineHint">Offline — deel-link uit cache · SPELEN opent het spel uit app-cache</p>
 
 <script>
 (function () {
+  var DEFAULT_SHARE = 'https://brennyz.github.io/stickman-fighter/speel.html';
   var shareUrl = location.href.split('?')[0].split('#')[0];
   var ua = navigator.userAgent;
   var isAndroid = /Android/i.test(ua);
   var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  if ('serviceWorker' in navigator && location.protocol !== 'file:' && !/[?&](ipad|nosw)=1\b/.test(location.search)) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' }).catch(function () {});
+    });
+  }
+
+  function paintOfflineHint() {
+    var hint = document.getElementById('offlineHint');
+    if (!hint) return;
+    if (navigator.onLine === false) hint.classList.remove('hide');
+    else hint.classList.add('hide');
+  }
+  window.addEventListener('online', paintOfflineHint);
+  window.addEventListener('offline', paintOfflineHint);
+  paintOfflineHint();
 
   function withRev(u, rev) {
     if (!u || /loca\.lt/i.test(u)) return u;
@@ -100,6 +120,7 @@
   function applyShareUrl(u, rev) {
     if (!u || /loca\.lt/i.test(u)) return;
     shareUrl = withRev(u, rev);
+    try { sessionStorage.setItem('sf_share_url', shareUrl); } catch (_) {}
     document.getElementById('linkline').textContent = shareUrl.replace(/^https:\/\//, '');
     var qr = document.getElementById('qrimg');
     qr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=380x380&margin=2&data=' + encodeURIComponent(shareUrl);
@@ -111,6 +132,14 @@
     document.getElementById('stepsIos').classList.remove('hide');
   }
 
+  function cachedShareUrl() {
+    try {
+      var c = sessionStorage.getItem('sf_share_url');
+      if (c && /^https?:\/\//.test(c)) return c;
+    } catch (_) {}
+    return DEFAULT_SHARE;
+  }
+
   function liveShareRev(fallback) {
     return fetch('./index.html', { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (html) {
       var m = html.match(/__SF_EXPECT_REV\s*=\s*(\d+)/);
@@ -119,14 +148,18 @@
   }
 
   applyShareUrl(shareUrl);
-  fetch('./hosting.json').then(function (r) { return r.json(); }).then(function (j) {
-    var baseRev = Number(j.shareCacheRev) || 0;
-    return liveShareRev(baseRev).then(function (rev) {
-      applyShareUrl(j.bookmarkShare || j.pagesSpeel || shareUrl, rev);
+  if (navigator.onLine === false) {
+    applyShareUrl(cachedShareUrl());
+  } else {
+    fetch('./hosting.json').then(function (r) { return r.json(); }).then(function (j) {
+      var baseRev = Number(j.shareCacheRev) || 0;
+      return liveShareRev(baseRev).then(function (rev) {
+        applyShareUrl(j.bookmarkShare || j.pagesSpeel || shareUrl, rev);
+      });
+    }).catch(function () {
+      liveShareRev(0).then(function (rev) { applyShareUrl(cachedShareUrl(), rev); });
     });
-  }).catch(function () {
-    liveShareRev(0).then(function (rev) { applyShareUrl(shareUrl, rev); });
-  });
+  }
 
   var qr = document.getElementById('qrimg');
   qr.onerror = function () { document.getElementById('qrbox').classList.add('hide'); };

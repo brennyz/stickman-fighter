@@ -53,8 +53,10 @@
         caches.match('./game.js', { ignoreSearch: true }),
         caches.match('./index.html', { ignoreSearch: true }),
         caches.match('./styles/main.css', { ignoreSearch: true }),
-      ]).then(([js, html, css]) => {
-        if (js && html && css) line = 'Offline-shell compleet — JS, menu & CSS in cache';
+        caches.match('./speel.html', { ignoreSearch: true }),
+      ]).then(([js, html, css, speel]) => {
+        if (js && html && css && speel) line = 'Offline-shell compleet — spel + deelpagina in cache';
+        else if (js && html && css) line = 'Offline-shell compleet — JS, menu & CSS in cache';
         else if (swOk) line = 'Cache laden… — even online blijven voor volledige shell';
         finish();
       }).catch(finish);

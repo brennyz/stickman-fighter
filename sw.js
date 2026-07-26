@@ -1,5 +1,5 @@
-/* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 2 */
-const CACHE = 'stickfighter-app-v308';
+/* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 5 */
+const CACHE = 'stickfighter-app-v309';
 
 
 
@@ -171,6 +171,9 @@ self.addEventListener('fetch', (event) => {
               if (path.endsWith('/game.js')) await c.put('./game.js', forCanon);
               else if (path.endsWith('/styles/main.css')) await c.put('./styles/main.css', forCanon);
               else if (path.endsWith('/install.js')) await c.put('./install.js', forCanon);
+              else if (path.endsWith('/speel.html')) await c.put('./speel.html', forCanon);
+              else if (path.endsWith('/ipad.html')) await c.put('./ipad.html', forCanon);
+              else if (path.endsWith('/android.html')) await c.put('./android.html', forCanon);
               else if (path.endsWith('/index.html') || /\/stickman-fighter\/?$/.test(path) || path.endsWith('/')) {
                 await c.put('./index.html', forCanon);
               }

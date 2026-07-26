@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.98';
+const APP_VERSION = '1.18.99';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 308;
+const SW_CACHE_REV = 309;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -1559,6 +1559,7 @@ const I18N = {
       title: 'Pause', sub: 'Rasengan prêt — go ! · progrès sur cet appareil',
       resume: 'Reprendre', music: 'Musique', sfx: 'Son', quit: 'Quitter au menu',
       vsRestart: 'Recommencer', vsRestartSub: '0-0 · mêmes combattants',
+      vsSwap: 'Changer de côté', vsSwapSub: 'P1 ↔ P2 · même score',
       audioHint: 'Volume en pause — sync avec Options',
     },
     result: { again: 'Rejouer', next: 'Niveau suivant', menu: 'Menu principal', rematch: 'Revanche', rematchSub: 'Mêmes combattants',
@@ -1622,6 +1623,7 @@ const I18N = {
       title: 'Pausa', sub: 'Rasengan listo — ¡ya! · progreso en este dispositivo',
       resume: 'Seguir', music: 'Música', sfx: 'Sonido', quit: 'Salir al menú',
       vsRestart: 'Reiniciar partida', vsRestartSub: '0-0 · mismos luchadores',
+      vsSwap: 'Cambiar lado', vsSwapSub: 'P1 ↔ P2 · mismo marcador',
       audioHint: 'Volumen en pausa — sync con Opciones',
     },
     result: { again: 'Otra vez', next: 'Siguiente nivel', menu: 'Menú principal', rematch: 'Revancha', rematchSub: 'Mismos luchadores',
@@ -29932,8 +29934,9 @@ function updateNetStatus(ev) {
       caches.match('./game.js', { ignoreSearch: true }),
       caches.match('./index.html', { ignoreSearch: true }),
       caches.match('./styles/main.css', { ignoreSearch: true }),
-    ]).then(([js, html, css]) => {
-      if (!js || !html || !css || window.__sfOfflineReadyShown) return;
+      caches.match('./speel.html', { ignoreSearch: true }),
+    ]).then(([js, html, css, speel]) => {
+      if (!js || !html || !css || !speel || window.__sfOfflineReadyShown) return;
       window.__sfOfflineReadyShown = 1;
         const el2 = document.getElementById('netStatus');
         if (!el2 || window.__sfSwUpdateReady || !navigator.onLine) return;
