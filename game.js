@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.94';
+const APP_VERSION = '1.18.95';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 304;
+const SW_CACHE_REV = 305;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -694,8 +694,16 @@ function saveProgressScore(s) {
   const statSum = (st.advWins || 0) + (st.kills || 0) + (st.vsWins || 0) + (st.bossKills || 0);
   let starSum = 0;
   for (const v of Object.values(s.stars || {})) starSum += Math.floor(Number(v) || 0);
+  let skUp = 0;
+  for (const v of Object.values(s.skillUpgrades || {})) skUp += Math.floor(Number(v && v.level) || 0);
+  let itUp = 0;
+  for (const bag of Object.values(s.itemUpgrades || {})) {
+    if (!bag || typeof bag !== 'object') continue;
+    for (const v of Object.values(bag)) itUp += Math.floor(Number(v && v.level) || 0);
+  }
+  const petCoins = Math.floor(Number(s.petCoins) || 0);
   return unlocked * 1e12 + lvl * 1e9 + xp * 1e6 + ach * 1e5 + dex * 1e4
-    + dexKills * 1e3 + starSum * 1e2 + statSum;
+    + dexKills * 1e3 + starSum * 1e2 + statSum + skUp * 15 + itUp * 12 + petCoins;
 }
 
 function pickBestSave(primary, backup) {
@@ -755,6 +763,15 @@ function readSaveJson(raw) {
     merged.pets = Object.assign({}, parsed.pets || {});
     merged.eggPets = Object.assign({}, parsed.eggPets || {});
     merged.weaponMastery = Object.assign({}, DEFAULT_SAVE.weaponMastery || {}, parsed.weaponMastery || {});
+    merged.skillUpgrades = (parsed.skillUpgrades && typeof parsed.skillUpgrades === 'object' && !Array.isArray(parsed.skillUpgrades))
+      ? Object.assign({}, parsed.skillUpgrades) : {};
+    merged.itemUpgrades = { weapon: {}, pet: {}, style: {} };
+    if (parsed.itemUpgrades && typeof parsed.itemUpgrades === 'object' && !Array.isArray(parsed.itemUpgrades)) {
+      for (const cat of ['weapon', 'pet', 'style']) {
+        const bag = parsed.itemUpgrades[cat];
+        if (bag && typeof bag === 'object' && !Array.isArray(bag)) merged.itemUpgrades[cat] = Object.assign({}, bag);
+      }
+    }
     merged.tipsSeen = sanitizeTipsSeen(parsed.tipsSeen);
     merged.advFails = Object.assign({}, parsed.advFails || {});
     if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
@@ -2949,6 +2966,17 @@ function saveDriftDetail() {
     if (pe !== be) parts.push(`ei ${pe} vs ${be}`);
   }
   if (p.style !== b.style) parts.push('stijl verschilt');
+  if (typeof countSkillUpgradeLevels === 'function') {
+    const ps = countSkillUpgradeLevels(p), bs = countSkillUpgradeLevels(b);
+    if (ps !== bs) parts.push(`skill-up ${ps} vs ${bs} Lv`);
+  }
+  if (typeof countItemUpgradeLevels === 'function') {
+    const pi = countItemUpgradeLevels(p), bi = countItemUpgradeLevels(b);
+    if (pi !== bi) parts.push(`item-up ${pi} vs ${bi} Lv`);
+  }
+  const ppc = Math.max(0, Math.floor(Number(p.petCoins) || 0));
+  const bpc = Math.max(0, Math.floor(Number(b.petCoins) || 0));
+  if (ppc !== bpc) parts.push(`pet coins ${ppc} vs ${bpc}`);
   return parts.join(' · ');
 }
 
@@ -2961,6 +2989,14 @@ function saveExportSummaryLine(s) {
   if (summons) line += ` · ✦ ${summons} summon`;
   if (pets) line += ` · pet ${pets}`;
   if (eggs) line += ` · ei ${eggs}`;
+  if (typeof countSkillUpgradeLevels === 'function') {
+    const sk = countSkillUpgradeLevels(st);
+    if (sk) line += ` · skill +${sk} Lv`;
+  }
+  if (typeof countItemUpgradeLevels === 'function') {
+    const it = countItemUpgradeLevels(st);
+    if (it) line += ` · item +${it} Lv`;
+  }
   const pc = Math.max(0, Math.floor(Number(st.petCoins) || 0));
   if (pc) line += ` · ${pc} pet coins`;
   return line;
@@ -3374,6 +3410,9 @@ function exportSaveJson() {
         pets: petCountFromSave(clean),
         eggs: eggCountFromSave(clean),
         style: clean.style || 'classic',
+        skillUpLv: typeof countSkillUpgradeLevels === 'function' ? countSkillUpgradeLevels(clean) : 0,
+        itemUpLv: typeof countItemUpgradeLevels === 'function' ? countItemUpgradeLevels(clean) : 0,
+        petCoins: Math.max(0, Math.floor(Number(clean.petCoins) || 0)),
       },
       note: 'Stickman Fighter save — plak in Instellingen → Import (2× tikken). Wissel van URL? Export vóór en import ná.',
     },
@@ -3445,6 +3484,9 @@ function importPreviewWarnings(next, meta) {
     if (s.summons) sum += ` · ✦ ${s.summons}`;
     if (s.pets) sum += ` · pet ${s.pets}`;
     if (s.eggs) sum += ` · ei ${s.eggs}`;
+    if (s.skillUpLv) sum += ` · skill +${s.skillUpLv} Lv`;
+    if (s.itemUpLv) sum += ` · item +${s.itemUpLv} Lv`;
+    if (s.petCoins) sum += ` · ${s.petCoins} pet coins`;
     if (s.style && s.style !== 'classic') sum += ` · stijl ${s.style}`;
     lines.push(sum);
   }
@@ -3460,6 +3502,22 @@ function importPreviewWarnings(next, meta) {
   const curEggN = eggCountFromSave(save);
   if (eggN > curEggN) lines.push(`+${eggN - curEggN} ei-pet(s) in import`);
   else if (eggN < curEggN) lines.push(`Minder ei-pets dan nu (${eggN} vs ${curEggN})`);
+  if (typeof countSkillUpgradeLevels === 'function') {
+    const skN = countSkillUpgradeLevels(next);
+    const curSkN = countSkillUpgradeLevels(save);
+    if (skN > curSkN) lines.push(`+${skN - curSkN} skill-upgrade Lv in import`);
+    else if (skN < curSkN) lines.push(`Minder skill-upgrades (${skN} vs ${curSkN} Lv)`);
+  }
+  if (typeof countItemUpgradeLevels === 'function') {
+    const itN = countItemUpgradeLevels(next);
+    const curItN = countItemUpgradeLevels(save);
+    if (itN > curItN) lines.push(`+${itN - curItN} item-upgrade Lv in import`);
+    else if (itN < curItN) lines.push(`Minder item-upgrades (${itN} vs ${curItN} Lv)`);
+  }
+  const impCoins = Math.max(0, Math.floor(Number(next.petCoins) || 0));
+  const curCoins = Math.max(0, Math.floor(Number(save.petCoins) || 0));
+  if (impCoins > curCoins) lines.push(`+${impCoins - curCoins} pet coins in import`);
+  else if (impCoins < curCoins) lines.push(`Minder pet coins (${impCoins} vs ${curCoins})`);
   if (next.style !== save.style) {
     lines.push(`Stijl ${save.style || 'classic'} → ${next.style || 'classic'}`);
   }
@@ -3492,6 +3550,16 @@ function previewImportSave(text) {
   clean.summons = Object.assign({}, parsed.summons || {});
   clean.pets = Object.assign({}, parsed.pets || {});
   clean.eggPets = Object.assign({}, parsed.eggPets || {});
+  if (parsed.skillUpgrades && typeof parsed.skillUpgrades === 'object' && !Array.isArray(parsed.skillUpgrades)) {
+    clean.skillUpgrades = Object.assign({}, parsed.skillUpgrades);
+  }
+  if (parsed.itemUpgrades && typeof parsed.itemUpgrades === 'object' && !Array.isArray(parsed.itemUpgrades)) {
+    clean.itemUpgrades = { weapon: {}, pet: {}, style: {} };
+    for (const cat of ['weapon', 'pet', 'style']) {
+      const bag = parsed.itemUpgrades[cat];
+      if (bag && typeof bag === 'object' && !Array.isArray(bag)) clean.itemUpgrades[cat] = Object.assign({}, bag);
+    }
+  }
   if (parsed.eggDaily && typeof parsed.eggDaily === 'object') clean.eggDaily = Object.assign({}, parsed.eggDaily);
   if (typeof parsed.activePet === 'string') clean.activePet = parsed.activePet;
   if (typeof parsed.activeEggPet === 'string') clean.activeEggPet = parsed.activeEggPet;
@@ -3505,6 +3573,16 @@ function previewImportSave(text) {
   rawMerged.summons = Object.assign({}, parsed.summons || {});
   rawMerged.pets = Object.assign({}, parsed.pets || {});
   rawMerged.eggPets = Object.assign({}, parsed.eggPets || {});
+  if (parsed.skillUpgrades && typeof parsed.skillUpgrades === 'object' && !Array.isArray(parsed.skillUpgrades)) {
+    rawMerged.skillUpgrades = Object.assign({}, parsed.skillUpgrades);
+  }
+  if (parsed.itemUpgrades && typeof parsed.itemUpgrades === 'object' && !Array.isArray(parsed.itemUpgrades)) {
+    rawMerged.itemUpgrades = { weapon: {}, pet: {}, style: {} };
+    for (const cat of ['weapon', 'pet', 'style']) {
+      const bag = parsed.itemUpgrades[cat];
+      if (bag && typeof bag === 'object' && !Array.isArray(bag)) rawMerged.itemUpgrades[cat] = Object.assign({}, bag);
+    }
+  }
   if (parsed.eggDaily && typeof parsed.eggDaily === 'object') rawMerged.eggDaily = Object.assign({}, parsed.eggDaily);
   if (typeof parsed.activePet === 'string') rawMerged.activePet = parsed.activePet;
   if (typeof parsed.activeEggPet === 'string') rawMerged.activeEggPet = parsed.activeEggPet;

@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.94';
+const APP_VERSION = '1.18.95';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 304;
+const SW_CACHE_REV = 305;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -447,8 +447,16 @@ function saveProgressScore(s) {
   const statSum = (st.advWins || 0) + (st.kills || 0) + (st.vsWins || 0) + (st.bossKills || 0);
   let starSum = 0;
   for (const v of Object.values(s.stars || {})) starSum += Math.floor(Number(v) || 0);
+  let skUp = 0;
+  for (const v of Object.values(s.skillUpgrades || {})) skUp += Math.floor(Number(v && v.level) || 0);
+  let itUp = 0;
+  for (const bag of Object.values(s.itemUpgrades || {})) {
+    if (!bag || typeof bag !== 'object') continue;
+    for (const v of Object.values(bag)) itUp += Math.floor(Number(v && v.level) || 0);
+  }
+  const petCoins = Math.floor(Number(s.petCoins) || 0);
   return unlocked * 1e12 + lvl * 1e9 + xp * 1e6 + ach * 1e5 + dex * 1e4
-    + dexKills * 1e3 + starSum * 1e2 + statSum;
+    + dexKills * 1e3 + starSum * 1e2 + statSum + skUp * 15 + itUp * 12 + petCoins;
 }
 
 function pickBestSave(primary, backup) {
@@ -508,6 +516,15 @@ function readSaveJson(raw) {
     merged.pets = Object.assign({}, parsed.pets || {});
     merged.eggPets = Object.assign({}, parsed.eggPets || {});
     merged.weaponMastery = Object.assign({}, DEFAULT_SAVE.weaponMastery || {}, parsed.weaponMastery || {});
+    merged.skillUpgrades = (parsed.skillUpgrades && typeof parsed.skillUpgrades === 'object' && !Array.isArray(parsed.skillUpgrades))
+      ? Object.assign({}, parsed.skillUpgrades) : {};
+    merged.itemUpgrades = { weapon: {}, pet: {}, style: {} };
+    if (parsed.itemUpgrades && typeof parsed.itemUpgrades === 'object' && !Array.isArray(parsed.itemUpgrades)) {
+      for (const cat of ['weapon', 'pet', 'style']) {
+        const bag = parsed.itemUpgrades[cat];
+        if (bag && typeof bag === 'object' && !Array.isArray(bag)) merged.itemUpgrades[cat] = Object.assign({}, bag);
+      }
+    }
     merged.tipsSeen = sanitizeTipsSeen(parsed.tipsSeen);
     merged.advFails = Object.assign({}, parsed.advFails || {});
     if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);

@@ -7,7 +7,6 @@
     12,
     20,
     6,
-    7,
     2,
     4,
     18,
@@ -15,21 +14,14 @@
     3
   ],
   "lastRoll": {
-    "face": 5,
-    "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
-    "rolledAt": "2026-07-26T12:04:08Z",
-    "remainingCount": 10,
+    "face": 7,
+    "category": "Save & backup \u2014 import/export, corruptie, migratie",
+    "rolledAt": "2026-07-24T17:02:36Z",
+    "remainingCount": 9,
     "cycle": 5
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 4,
-      "note": "star HUD + wave pause countdown",
-      "version": "1.12.7",
-      "doneAt": "2026-07-23T18:12:54Z",
-      "cycle": 1
-    },
     {
       "face": 5,
       "note": "menu throttle DPR resize perf HUD",
@@ -582,6 +574,13 @@
       "version": "1.18.94",
       "doneAt": "2026-07-26T12:05:12Z",
       "cycle": 5
+    },
+    {
+      "face": 7,
+      "note": "upgrade Lv in export/import/drift + readSaveJson merge",
+      "version": "1.18.95",
+      "doneAt": "2026-07-26T13:03:27Z",
+      "cycle": 5
     }
   ],
   "userFeatureLog": [
@@ -970,13 +969,6 @@
     }
   ],
   "history": [
-    {
-      "face": 2,
-      "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
-      "rolledAt": "2026-07-23T13:34:50Z",
-      "remainingCount": 7,
-      "cycle": 0
-    },
     {
       "face": 17,
       "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
@@ -1810,6 +1802,13 @@
       "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
       "rolledAt": "2026-07-26T12:04:08Z",
       "remainingCount": 10,
+      "cycle": 5
+    },
+    {
+      "face": 7,
+      "category": "Save & backup \u2014 import/export, corruptie, migratie",
+      "rolledAt": "2026-07-24T17:02:36Z",
+      "remainingCount": 9,
       "cycle": 5
     }
   ],

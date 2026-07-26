@@ -80,6 +80,10 @@ const mutators = [
   (s) => { s.tipsSeen = 'yes'; },
   (s) => { delete s.lvl; delete s.xp; },
   (s) => { s.musicVol = 'loud'; s.sfxVol = Infinity; },
+  (s) => {
+    s.skillUpgrades = { rasengan: { level: 'max', shards: null }, fake: 42 };
+    s.itemUpgrades = { weapon: { katana: { level: -3, shards: 'x' } }, hacker: { x: 1 } };
+  },
 ];
 
 let ok = 0;
