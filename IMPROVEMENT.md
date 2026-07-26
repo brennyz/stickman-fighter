@@ -115,7 +115,8 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-26 | **17** | Stabiliteit cron: level long-press stale timer, gamble SFX cancel gen, petCoinCost SPECIES guard. v1.18.69 / SW v279. |
 | 2026-07-25 | **17** | Stabiliteit cron: stale result timer (d17 regressie), training→scheduleGameResult, gamble cancel op level terug. v1.18.68 / SW v278. |
 | 2026-07-25 | **17** | Stabiliteit cron: char swap `t()` shadow crash; adventure win→pauze→menu laat resultaat zien. v1.18.67 / SW v277. |
-| 2026-07-25 | — | **HOTFIX Kets smooth:** 1e/2e Kets → unlock altijd, snellere charge, fall-through na finish, soft freeze (FX+wave). v1.18.66 / SW v276. |
+| 2026-07-26 | **10** | d10 a11y c5: calm joy/special meter + rarity glow, HC gamble flash CSS. v1.18.70 / SW v280. |
+| 2026-07-26 | **17** | d17 stabiliteit: stale level hold, gamble SFX cancel, petCoinCost guard. v1.18.69 / SW v279. |
 | 2026-07-25 | — | **HOTFIX:** zeldzame extra krachten UIT (summon/Master Sword/tide); level-einde → LEVEL KLAAR + betrouwbaar resultaat/Volgende. v1.18.65 / SW v275. |
 | 2026-07-25 | — | **HOTFIX rariteit:** kill/summon/tide/masterSword + showResult hardened — zeldzame rolls crashen run niet meer. v1.18.64 / SW v274. |
 | 2026-07-25 | — | **HOTFIX adventure flow:** dual pads alleen versus; update/draw crash → geen menu; Kets finish hardened. v1.18.63 / SW v273. |

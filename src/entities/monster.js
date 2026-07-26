@@ -294,7 +294,7 @@ class Monster {
       c.strokeStyle = this.tideBoss ? '#4a9fff' : (this.superBoss ? '#ffd75e' : rar.glow); c.lineWidth = 3 + rar.order * 0.4;
       c.beginPath(); c.ellipse(0, 0, this.size * 1.55, this.size * 1.2, 0, 0, TAU); c.stroke();
       if (rar.order >= 4) {
-        c.globalAlpha = 0.25 + Math.sin(this.t * 6) * 0.1;
+        c.globalAlpha = motionReduced() ? 0.25 : (0.25 + Math.sin(this.t * 6) * 0.1);
         c.fillStyle = rar.color;
         c.beginPath(); c.ellipse(0, 0, this.size * 1.7, this.size * 1.35, 0, 0, TAU); c.fill();
       }
@@ -302,7 +302,7 @@ class Monster {
     }
     if (this.tideBoss && this.alive) {
       c.save();
-      c.globalAlpha = 0.28 + Math.sin(this.t * 5) * 0.1;
+      c.globalAlpha = motionReduced() ? 0.28 : (0.28 + Math.sin(this.t * 5) * 0.1);
       c.strokeStyle = '#4a9fff'; c.lineWidth = 3.5;
       c.beginPath(); c.ellipse(0, 0, this.size * 1.62, this.size * 1.28, 0, 0, TAU); c.stroke();
       if (!motionReduced() && !fxLite()) {

@@ -4716,8 +4716,9 @@ class Game {
     c.strokeStyle = '#1a2030';
     c.lineWidth = 6;
     c.beginPath(); c.arc(0, 0, ring, 0, TAU); c.stroke();
+    const calm = motionReduced();
     if (pct > 0.02) {
-      c.globalAlpha = kind === 'chidori' ? 0.75 + Math.sin(this.t * 18) * 0.12 : 0.82;
+      c.globalAlpha = calm ? 0.82 : (kind === 'chidori' ? 0.75 + Math.sin(this.t * 18) * 0.12 : 0.82);
       c.strokeStyle = kind === 'chidori' ? '#7ec8ff' : kind === 'rinnegan' ? '#b06ae0' : accent || '#3db8ff';
       c.lineWidth = 5;
       c.lineCap = 'round';
@@ -4730,7 +4731,7 @@ class Game {
       c.strokeStyle = kind === 'chidori' ? '#a8e0ff' : kind === 'rinnegan' ? '#c47aff' : '#7cf5ff';
       c.lineWidth = 3;
       c.beginPath();
-      c.arc(0, 0, ring + 5 + Math.sin(this.t * 8) * 2, 0, TAU);
+      c.arc(0, 0, ring + 5 + (calm ? 0 : Math.sin(this.t * 8) * 2), 0, TAU);
       c.stroke();
     }
     c.restore();
@@ -4820,11 +4821,12 @@ class Game {
     }
     if (j.active) {
       c.save();
-      c.globalAlpha = 0.32 + Math.sin(this.t * 14) * 0.1;
+      const calm = motionReduced();
+      c.globalAlpha = calm ? 0.35 : (0.32 + Math.sin(this.t * 14) * 0.1);
       c.strokeStyle = '#7cf5ff';
       c.lineWidth = 2.5;
       c.beginPath();
-      c.arc(jx, jy, joyOuter + 7 + Math.sin(this.t * 11) * 2, 0, TAU);
+      c.arc(jx, jy, joyOuter + 7 + (calm ? 0 : Math.sin(this.t * 11) * 2), 0, TAU);
       c.stroke();
       c.restore();
     }
@@ -4865,11 +4867,12 @@ class Game {
     }
     if (j.active) {
       c.save();
-      c.globalAlpha = 0.38 + Math.sin(this.t * 14) * 0.12;
+      const calm = motionReduced();
+      c.globalAlpha = calm ? 0.4 : (0.38 + Math.sin(this.t * 14) * 0.12);
       c.strokeStyle = accent;
       c.lineWidth = 2;
       c.beginPath();
-      c.arc(jx, jy, joyOuter + 6 + Math.sin(this.t * 11) * 2, 0, TAU);
+      c.arc(jx, jy, joyOuter + 6 + (calm ? 0 : Math.sin(this.t * 11) * 2), 0, TAU);
       c.stroke();
       c.restore();
     }

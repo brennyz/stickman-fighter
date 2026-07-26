@@ -4,7 +4,6 @@
   "rollFirst": [],
   "remaining": [
     16,
-    10,
     19,
     12,
     20,
@@ -22,21 +21,14 @@
     3
   ],
   "lastRoll": {
-    "face": 17,
-    "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
-    "rolledAt": "2026-07-24T18:01:11Z",
-    "remainingCount": 17,
+    "face": 10,
+    "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
+    "rolledAt": "2026-07-24T18:01:13Z",
+    "remainingCount": 16,
     "cycle": 5
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 18,
-      "note": "Deel 1: step badge, unlock hints, saga bindPress, pick scroll",
-      "version": "1.11.1",
-      "doneAt": "2026-07-23T15:48:23Z",
-      "cycle": 1
-    },
     {
       "face": 18,
       "note": "Deel 2: saga-icon strip, saga clash duo, filter random, prestatie",
@@ -589,6 +581,13 @@
       "version": "1.18.67",
       "doneAt": "2026-07-25T22:05:21Z",
       "cycle": 5
+    },
+    {
+      "face": 10,
+      "note": "calm joy/special meter, HC gamble CSS",
+      "version": "1.18.70",
+      "doneAt": "2026-07-26T01:01:40Z",
+      "cycle": 5
     }
   ],
   "userFeatureLog": [
@@ -977,13 +976,6 @@
     }
   ],
   "history": [
-    {
-      "face": 18,
-      "category": "Character select \u2014 roster UI, stats, random duo",
-      "rolledAt": "2026-07-23T13:26:56Z",
-      "remainingCount": 15,
-      "cycle": 0
-    },
     {
       "face": 5,
       "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
@@ -1817,6 +1809,13 @@
       "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
       "rolledAt": "2026-07-24T18:01:11Z",
       "remainingCount": 17,
+      "cycle": 5
+    },
+    {
+      "face": 10,
+      "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
+      "rolledAt": "2026-07-24T18:01:13Z",
+      "remainingCount": 16,
       "cycle": 5
     }
   ],

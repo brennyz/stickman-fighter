@@ -1500,6 +1500,15 @@
   body.reduced-motion #netStatus.online-flash { animation: none; }
   body.reduced-motion .toast { animation: none; }
   body.reduced-motion .level-roll-flash-card { animation: none; }
+  body.reduced-motion .level-roll-flash {
+    backdrop-filter: none;
+    background: rgba(10, 13, 24, .94);
+    transition: none;
+  }
+  body.reduced-motion .level-roll-flash-card { transform: none; }
+  body.high-contrast .level-roll-sum,
+  body.high-contrast .level-roll-outcome { color: #e8f0ff; font-weight: 800; }
+  body.high-contrast .level-roll-flash-card { border-width: 3px; border-color: #ffd75e; }
   body.high-contrast .hub-tile { border-width: 2px; }
 
   @media (pointer: coarse) {
@@ -1653,6 +1662,10 @@
     .char-arena-preview { border-width: 2px; border-color: rgba(255,255,255,.35); }
     #menuLangBar .dex-filter-btn { border-width: 2px; font-weight: 900; }
     .char-fight-btn { border: 2px solid rgba(255,255,255,.45); }
+    .level-roll-sum, .level-roll-outcome { color: #e8f0ff; font-weight: 800; }
+    .level-roll-flash-card { border-width: 3px; border-color: rgba(255,215,94,.75); }
+    .mission-card .cinfo { color: #d0daf0; }
+    .tog.off { opacity: .55; border: 1px solid rgba(255,255,255,.28); }
   }
   body.high-contrast .char-arena-head { text-shadow: none; color: #ffe566; }
   body.high-contrast .char-arena-sub,

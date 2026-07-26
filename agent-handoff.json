@@ -71,6 +71,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T01:01:43Z",
+      "summary": "d10 a11y c5: calm joy/special meter, HC gamble flash CSS · v1.18.70"
+    },
+    {
       "at": "2026-07-26T00:04:11Z",
       "summary": "d17 stabiliteit: level hold stale timer, gamble SFX cancel, petCoinCost guard · v1.18.69"
     },
@@ -165,10 +169,6 @@
     {
       "at": "2026-07-25T10:02:38Z",
       "summary": "d6 audio c4: pause ctx/mute fix, music preview, d20 bag verify v1.17.83"
-    },
-    {
-      "at": "2026-07-25T08:54:13Z",
-      "summary": "d9 touch: scroll-guard bugfix, haptic+held ring, orient release v1.17.80"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

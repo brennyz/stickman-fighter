@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.69';
+const APP_VERSION = '1.18.70';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 279;
+const SW_CACHE_REV = 280;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -15096,7 +15096,7 @@ class Fighter {
     }
     if (this.invulnT > 0) {
       c.save();
-      c.globalAlpha = 0.35 + Math.sin(this.animT * 40) * 0.15;
+      c.globalAlpha = motionReduced() ? 0.35 : (0.35 + Math.sin(this.animT * 40) * 0.15);
       c.strokeStyle = '#fff'; c.lineWidth = 2;
       c.beginPath(); c.ellipse(this.x, this.y - 40, 28, 48, 0, 0, TAU); c.stroke();
       c.restore();
@@ -15108,7 +15108,7 @@ class Fighter {
     if (st.glow) {
       c.save();
       c.shadowColor = st.accent;
-      c.shadowBlur = 10 + Math.sin(this.animT * 5) * 4;
+      c.shadowBlur = motionReduced() ? 10 : (10 + Math.sin(this.animT * 5) * 4);
       c.strokeStyle = st.accent;
       c.lineWidth = 2;
       c.beginPath(); c.arc(hx, hy, 12, 0, TAU); c.stroke();
@@ -15521,7 +15521,7 @@ class Monster {
       c.strokeStyle = this.tideBoss ? '#4a9fff' : (this.superBoss ? '#ffd75e' : rar.glow); c.lineWidth = 3 + rar.order * 0.4;
       c.beginPath(); c.ellipse(0, 0, this.size * 1.55, this.size * 1.2, 0, 0, TAU); c.stroke();
       if (rar.order >= 4) {
-        c.globalAlpha = 0.25 + Math.sin(this.t * 6) * 0.1;
+        c.globalAlpha = motionReduced() ? 0.25 : (0.25 + Math.sin(this.t * 6) * 0.1);
         c.fillStyle = rar.color;
         c.beginPath(); c.ellipse(0, 0, this.size * 1.7, this.size * 1.35, 0, 0, TAU); c.fill();
       }
@@ -15529,7 +15529,7 @@ class Monster {
     }
     if (this.tideBoss && this.alive) {
       c.save();
-      c.globalAlpha = 0.28 + Math.sin(this.t * 5) * 0.1;
+      c.globalAlpha = motionReduced() ? 0.28 : (0.28 + Math.sin(this.t * 5) * 0.1);
       c.strokeStyle = '#4a9fff'; c.lineWidth = 3.5;
       c.beginPath(); c.ellipse(0, 0, this.size * 1.62, this.size * 1.28, 0, 0, TAU); c.stroke();
       if (!motionReduced() && !fxLite()) {
@@ -23657,8 +23657,9 @@ class Game {
     c.strokeStyle = '#1a2030';
     c.lineWidth = 6;
     c.beginPath(); c.arc(0, 0, ring, 0, TAU); c.stroke();
+    const calm = motionReduced();
     if (pct > 0.02) {
-      c.globalAlpha = kind === 'chidori' ? 0.75 + Math.sin(this.t * 18) * 0.12 : 0.82;
+      c.globalAlpha = calm ? 0.82 : (kind === 'chidori' ? 0.75 + Math.sin(this.t * 18) * 0.12 : 0.82);
       c.strokeStyle = kind === 'chidori' ? '#7ec8ff' : kind === 'rinnegan' ? '#b06ae0' : accent || '#3db8ff';
       c.lineWidth = 5;
       c.lineCap = 'round';
@@ -23671,7 +23672,7 @@ class Game {
       c.strokeStyle = kind === 'chidori' ? '#a8e0ff' : kind === 'rinnegan' ? '#c47aff' : '#7cf5ff';
       c.lineWidth = 3;
       c.beginPath();
-      c.arc(0, 0, ring + 5 + Math.sin(this.t * 8) * 2, 0, TAU);
+      c.arc(0, 0, ring + 5 + (calm ? 0 : Math.sin(this.t * 8) * 2), 0, TAU);
       c.stroke();
     }
     c.restore();
@@ -23761,11 +23762,12 @@ class Game {
     }
     if (j.active) {
       c.save();
-      c.globalAlpha = 0.32 + Math.sin(this.t * 14) * 0.1;
+      const calm = motionReduced();
+      c.globalAlpha = calm ? 0.35 : (0.32 + Math.sin(this.t * 14) * 0.1);
       c.strokeStyle = '#7cf5ff';
       c.lineWidth = 2.5;
       c.beginPath();
-      c.arc(jx, jy, joyOuter + 7 + Math.sin(this.t * 11) * 2, 0, TAU);
+      c.arc(jx, jy, joyOuter + 7 + (calm ? 0 : Math.sin(this.t * 11) * 2), 0, TAU);
       c.stroke();
       c.restore();
     }
@@ -23806,11 +23808,12 @@ class Game {
     }
     if (j.active) {
       c.save();
-      c.globalAlpha = 0.38 + Math.sin(this.t * 14) * 0.12;
+      const calm = motionReduced();
+      c.globalAlpha = calm ? 0.4 : (0.38 + Math.sin(this.t * 14) * 0.12);
       c.strokeStyle = accent;
       c.lineWidth = 2;
       c.beginPath();
-      c.arc(jx, jy, joyOuter + 6 + Math.sin(this.t * 11) * 2, 0, TAU);
+      c.arc(jx, jy, joyOuter + 6 + (calm ? 0 : Math.sin(this.t * 11) * 2), 0, TAU);
       c.stroke();
       c.restore();
     }

@@ -746,7 +746,7 @@ class Fighter {
     }
     if (this.invulnT > 0) {
       c.save();
-      c.globalAlpha = 0.35 + Math.sin(this.animT * 40) * 0.15;
+      c.globalAlpha = motionReduced() ? 0.35 : (0.35 + Math.sin(this.animT * 40) * 0.15);
       c.strokeStyle = '#fff'; c.lineWidth = 2;
       c.beginPath(); c.ellipse(this.x, this.y - 40, 28, 48, 0, 0, TAU); c.stroke();
       c.restore();
@@ -758,7 +758,7 @@ class Fighter {
     if (st.glow) {
       c.save();
       c.shadowColor = st.accent;
-      c.shadowBlur = 10 + Math.sin(this.animT * 5) * 4;
+      c.shadowBlur = motionReduced() ? 10 : (10 + Math.sin(this.animT * 5) * 4);
       c.strokeStyle = st.accent;
       c.lineWidth = 2;
       c.beginPath(); c.arc(hx, hy, 12, 0, TAU); c.stroke();
