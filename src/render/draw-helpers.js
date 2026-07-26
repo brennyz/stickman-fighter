@@ -443,6 +443,10 @@ function spawnJutsuImpactFx(game, x, y, kind, scale) {
   if (!lite && !small && (kind === 'chidori' || sk.behavior === 'dash')) {
     game.burst(x, y, '#e8f7ff', 8, { kind: 'spark', size: 1.8 });
   }
+  if (!lite && !small && (kind === 'rinnegan' || sk.behavior === 'slash')) {
+    game.burst(x, y, '#e8d0ff', 10, { kind: 'spark', size: 2.4 });
+    spawnFxRing(game, x, y, '#ffffff', 12);
+  }
 }
 
 /**
@@ -507,7 +511,38 @@ function drawJutsuChargeAura(c, hx, hy, g, animT, kind) {
         c.stroke();
       }
     }
-  } else if (behavior === 'pull' || behavior === 'meteor' || kind === 'rinnegan') {
+  } else if (behavior === 'slash' || kind === 'rinnegan') {
+    // Rinnegan — horizontale bliksem-schede beide kanten (charge preview)
+    const halo = c.createRadialGradient(ox, oy, 2, ox, oy, 24 + g * 30);
+    halo.addColorStop(0, `rgba(255,255,255,${0.4 + g * 0.4})`);
+    halo.addColorStop(0.4, `rgba(196,122,255,${0.28 + g * 0.35})`);
+    halo.addColorStop(1, 'rgba(120,40,180,0)');
+    c.fillStyle = halo;
+    c.beginPath();
+    c.arc(ox, oy, 24 + g * 30, 0, TAU);
+    c.fill();
+
+    c.lineCap = 'round';
+    c.lineJoin = 'round';
+    const reach = 18 + g * 36;
+    const bolts = lite ? 2 : 4;
+    for (const dir of [-1, 1]) {
+      for (let i = 0; i < bolts; i++) {
+        const yOff = (i - (bolts - 1) / 2) * (4 + g * 3);
+        const jagged = calm ? 0 : Math.sin(animT * 30 + i * 2.1 + dir) * (3 + g * 2);
+        c.strokeStyle = i % 2
+          ? `rgba(255,255,255,${0.45 + g * 0.4})`
+          : `rgba(196,122,255,${0.4 + g * 0.45})`;
+        c.lineWidth = i % 2 ? 1.3 : 2.4;
+        c.beginPath();
+        c.moveTo(ox, oy + yOff * 0.3);
+        c.lineTo(ox + dir * reach * 0.4, oy + yOff + jagged);
+        c.lineTo(ox + dir * reach * 0.7, oy + yOff * 0.5 - jagged * 0.6);
+        c.lineTo(ox + dir * reach, oy + yOff * 0.2);
+        c.stroke();
+      }
+    }
+  } else if (behavior === 'pull' || behavior === 'meteor') {
     c.strokeStyle = `rgba(196,122,255,${0.4 + g * 0.45})`;
     c.lineWidth = 2;
     for (let ring = 0; ring < (lite ? 2 : 3); ring++) {
@@ -612,6 +647,39 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
     c.beginPath(); c.ellipse(0, 0, r * 1.35, r * (behavior === 'disc' ? 0.55 : 0.75), spin * 0.2, 0, TAU); c.fill();
     c.strokeStyle = '#fff'; c.lineWidth = 2;
     c.beginPath(); c.ellipse(0, 0, r * 1.2, r * (behavior === 'disc' ? 0.45 : 0.65), spin * 0.2, 0, TAU); c.stroke();
+  } else if (behavior === 'slash') {
+    // Preview-icoon: korte tweerichtings-bliksem
+    c.shadowColor = col; c.shadowBlur = lite ? 8 : 20;
+    c.lineCap = 'round';
+    c.lineJoin = 'round';
+    const reach = r * 1.55;
+    for (const dir of [-1, 1]) {
+      c.strokeStyle = 'rgba(255,255,255,.9)';
+      c.lineWidth = Math.max(2, r * 0.22);
+      c.beginPath();
+      c.moveTo(0, 0);
+      c.lineTo(dir * reach * 0.45, Math.sin(spin * 4 + dir) * r * 0.2);
+      c.lineTo(dir * reach * 0.75, -Math.sin(spin * 5 + dir) * r * 0.15);
+      c.lineTo(dir * reach, Math.sin(spin * 3) * r * 0.08);
+      c.stroke();
+      c.strokeStyle = col;
+      c.lineWidth = Math.max(3.5, r * 0.38);
+      c.globalAlpha = (alpha == null ? 1 : alpha) * 0.55;
+      c.beginPath();
+      c.moveTo(0, -r * 0.55);
+      c.lineTo(dir * reach * 0.95, -r * 0.12);
+      c.lineTo(dir * reach * 0.95, r * 0.12);
+      c.lineTo(0, r * 0.55);
+      c.closePath();
+      c.stroke();
+      c.globalAlpha = alpha == null ? 1 : alpha;
+    }
+    const core = c.createRadialGradient(0, 0, 0, 0, 0, r * 0.7);
+    core.addColorStop(0, 'rgba(255,255,255,.95)');
+    core.addColorStop(0.5, col + 'cc');
+    core.addColorStop(1, col + '22');
+    c.fillStyle = core;
+    c.beginPath(); c.arc(0, 0, r * 0.55, 0, TAU); c.fill();
   } else if (behavior === 'pull' || behavior === 'meteor') {
     c.shadowColor = col; c.shadowBlur = lite ? 10 : 24;
     const grd = c.createRadialGradient(0, 0, 0, 0, 0, r);
@@ -625,16 +693,6 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
       c.beginPath();
       c.arc(0, 0, r * (0.35 + ring * 0.18), spin * (1 + ring * 0.2), spin * (1 + ring * 0.2) + Math.PI * 1.35);
       c.stroke();
-    }
-    if (kind === 'rinnegan') {
-      c.fillStyle = 'rgba(255,90,120,.9)';
-      const tomoe = lite ? 3 : 6;
-      for (let i = 0; i < tomoe; i++) {
-        const a = spin * 2 + i * (TAU / tomoe);
-        c.beginPath();
-        c.arc(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55, r * 0.12, 0, TAU);
-        c.fill();
-      }
     }
   } else {
     c.shadowColor = col; c.shadowBlur = lite ? 8 : 24;
@@ -684,6 +742,110 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
       c.stroke();
     }
   }
+  c.restore();
+}
+
+/**
+ * Rinnegan in-flight: tweerichtings lichtschits-strook.
+ * Dik bij centrum, smaller naar de tips (taper met afstand).
+ */
+function drawRinneganSlashWave(c, p) {
+  if (!p) return;
+  const col = (typeof skillById === 'function' ? (skillById(p.kind) || {}).color : null) || '#c47aff';
+  const reach = Math.max(8, p.slashReach || 0);
+  const r0 = p.r0 || 42;
+  const maxR = Math.max(1, p.slashMaxReach || 460);
+  const lite = fxLite();
+  const calm = motionReduced();
+  const spin = p.spin || 0;
+  const lifeFade = clamp((p.life || 0.2) / 0.25, 0.35, 1);
+
+  c.save();
+  c.globalAlpha = lifeFade;
+  c.lineCap = 'round';
+  c.lineJoin = 'round';
+
+  // Kernflits in het midden
+  const coreR = r0 * (0.55 + Math.sin(spin * 2.2) * 0.08);
+  const core = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, coreR * 1.4);
+  core.addColorStop(0, 'rgba(255,255,255,.95)');
+  core.addColorStop(0.35, 'rgba(232,208,255,.85)');
+  core.addColorStop(0.7, col + '88');
+  core.addColorStop(1, col + '00');
+  c.fillStyle = core;
+  c.beginPath();
+  c.arc(p.x, p.y, coreR * 1.35, 0, TAU);
+  c.fill();
+
+  for (const dir of [-1, 1]) {
+    const tipX = p.x + dir * reach;
+    const tipT = clamp(reach / maxR, 0, 1);
+    const tipH = Math.max(3, r0 * (1 - tipT * 0.82) * 0.35);
+    const midH = r0 * (1 - tipT * 0.4) * 0.7;
+
+    // Glow-fill van de strook (taperende diamant)
+    c.shadowColor = col;
+    c.shadowBlur = lite ? 6 : 18;
+    const grad = c.createLinearGradient(p.x, p.y, tipX, p.y);
+    grad.addColorStop(0, 'rgba(255,255,255,.75)');
+    grad.addColorStop(0.25, col + 'cc');
+    grad.addColorStop(0.75, col + '66');
+    grad.addColorStop(1, col + '18');
+    c.fillStyle = grad;
+    c.beginPath();
+    c.moveTo(p.x, p.y - r0 * 0.95);
+    c.lineTo(p.x + dir * reach * 0.45, p.y - midH);
+    c.lineTo(tipX, p.y - tipH);
+    c.lineTo(tipX, p.y + tipH);
+    c.lineTo(p.x + dir * reach * 0.45, p.y + midH);
+    c.lineTo(p.x, p.y + r0 * 0.95);
+    c.closePath();
+    c.fill();
+    c.shadowBlur = 0;
+
+    // Jagged lightning core
+    const segs = lite ? 5 : 9;
+    c.strokeStyle = 'rgba(255,255,255,.92)';
+    c.lineWidth = lite ? 2.2 : 3.2;
+    c.beginPath();
+    c.moveTo(p.x, p.y);
+    for (let i = 1; i <= segs; i++) {
+      const t = i / segs;
+      const x = p.x + dir * reach * t;
+      const wob = calm ? 0 : Math.sin(spin * 9 + i * 1.7 + dir) * (6 * (1 - t) + 2);
+      const y = p.y + wob * (i % 2 ? 1 : -1);
+      c.lineTo(x, y);
+    }
+    c.stroke();
+
+    if (!lite) {
+      c.strokeStyle = col;
+      c.lineWidth = 5.5;
+      c.globalAlpha = lifeFade * 0.45;
+      c.beginPath();
+      c.moveTo(p.x, p.y);
+      for (let i = 1; i <= segs; i++) {
+        const t = i / segs;
+        const x = p.x + dir * reach * t;
+        const wob = calm ? 0 : Math.sin(spin * 7 + i * 2.1 + dir * 0.5) * (8 * (1 - t) + 1);
+        c.lineTo(x, p.y + wob * (i % 2 ? -1 : 1));
+      }
+      c.stroke();
+      c.globalAlpha = lifeFade;
+
+      // Rand-stroken (boven/onder) die mee-taperen
+      c.strokeStyle = 'rgba(232,208,255,.55)';
+      c.lineWidth = 1.4;
+      for (const side of [-1, 1]) {
+        c.beginPath();
+        c.moveTo(p.x, p.y + side * r0 * 0.75);
+        c.lineTo(p.x + dir * reach * 0.5, p.y + side * midH * 0.85);
+        c.lineTo(tipX, p.y + side * tipH * 0.9);
+        c.stroke();
+      }
+    }
+  }
+
   c.restore();
 }
 

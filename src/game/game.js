@@ -1955,9 +1955,10 @@ class Game {
     const aim = projAimVelocity(f, behavior === 'dash' ? speed : speed * 0.9);
     const face = f.face || 1;
     const col = sk.color || '#7cf5ff';
-    // Rasengan: altijd horizontaal (geen aim-tilt); overige jutsu behouden aim
+    // Rasengan: altijd horizontaal (geen aim-tilt); Rinnegan-slash ook op torso-hoogte
     const rasenHoriz = jutsu === 'rasengan';
-    const y0 = rasenHoriz
+    const slashFlat = behavior === 'slash';
+    const y0 = (rasenHoriz || slashFlat)
       ? (f.y - 50)
       : (f.y - 50 + clamp(aim.ny, -1, 0.5) * 36);
 
@@ -1972,6 +1973,21 @@ class Game {
           vx: aim.vx, vy: aim.vy * 0.85, r: ((sk.radius || 22) + jb.radius) * sc, dmg: dmg * sc,
           life: (sk.life || 0.35) * jb.lifeMul * sc, from, kind: sk.id, pierce: !!sk.pierce,
           hitSet: new Set(), pierceRepeat: jb.pierceRepeat,
+        }, critMeta));
+      } else if (behavior === 'slash') {
+        // Lichtschits-golf: expandeert links én rechts, strook tapert met afstand
+        // jb.radius = skill-upgrades → duidelijk dikkere strook per level
+        const r0 = ((sk.radius || 42) + jb.radius * 1.35) * sc;
+        const expand = (sk.speed || 720) * jb.speedMul * sc;
+        const maxReach = (460 + jb.radius * 8) * sc;
+        this.spawnProjectile(Object.assign({
+          x: f.x + ox, y: y0 + oy,
+          vx: 0, vy: 0, r: r0, r0, dmg: dmg * sc,
+          from, kind: sk.id, pierce: sk.pierce !== false, hitSet: new Set(),
+          life: (sk.life || 0.68) * jb.lifeMul * sc,
+          spin: 0, slashWave: true, slashReach: 0, slashMaxReach: maxReach,
+          slashExpand: expand, pierceRepeat: jb.pierceRepeat,
+          kbMul: (sk.kb || 580) / 300,
         }, critMeta));
       } else if (behavior === 'pull' || behavior === 'meteor') {
         const sp = behavior === 'meteor' ? speed * 0.55 : speed;
@@ -2052,6 +2068,19 @@ class Game {
       f.vx = face * (sk.dashVx || 380) * jb.speedMul;
       this.shake(7, 0.2);
       AudioSys.sfx(skillSfxId(sk));
+    } else if (behavior === 'slash') {
+      fireProj(0, 0, 1);
+      const liteCast = fxLite();
+      this.burst(f.x, y0, col, liteCast ? 12 : 22);
+      this.burst(f.x, y0, '#e8d0ff', liteCast ? 6 : 12, { kind: 'spark', size: 2.8 });
+      this.burst(f.x - 28, y0, col, liteCast ? 5 : 10, { kind: 'spark', size: 2.2 });
+      this.burst(f.x + 28, y0, col, liteCast ? 5 : 10, { kind: 'spark', size: 2.2 });
+      spawnFxRing(this, f.x, y0, col, liteCast ? 10 : 16);
+      spawnFxRing(this, f.x, y0, '#ffffff', liteCast ? 6 : 10);
+      this.shake(11, 0.3);
+      this.freezeT = Math.max(this.freezeT, 0.07);
+      AudioSys.sfx(skillSfxId(sk));
+      if (f.isPlayer || f.playerSlot) haptic(26);
     } else if (behavior === 'pull' || behavior === 'meteor') {
       fireProj(0, 0, 1);
       this.burst(f.x + face * 28, y0, col, behavior === 'meteor' ? 18 : 14);
@@ -2521,6 +2550,7 @@ class Game {
       p.life -= dt;
       const spinRate = skProj
         ? (skProj.behavior === 'pull' || skProj.behavior === 'meteor' ? 16
+          : skProj.behavior === 'slash' ? 28
           : skProj.behavior === 'dash' ? 20 : skProj.behavior === 'disc' ? 24 : 22)
         : (p.kind === 'shuriken' ? 28 : p.kind === 'boemerang' ? 34 : 12);
       p.spin = (p.spin || 0) + dt * spinRate;
@@ -2531,6 +2561,27 @@ class Game {
         const lim = p.curlMaxVy || 280;
         if (p.vy > lim) p.vy = lim;
         if (p.vy < -lim) p.vy = -lim;
+      }
+      // Rinnegan lichtschits: expandeert links/rechts i.p.v. te vliegen
+      if (p.slashWave) {
+        const maxR = p.slashMaxReach || 460;
+        p.slashReach = Math.min(maxR, (p.slashReach || 0) + (p.slashExpand || 720) * dt);
+        // Tip-dikte: hoe verder, hoe smaller de strook
+        const taper = clamp((p.slashReach || 0) / Math.max(1, maxR), 0, 1);
+        p.r = Math.max(5, (p.r0 || 42) * (1 - taper * 0.82));
+        if (!motionReduced()) {
+          p._trailAcc = (p._trailAcc || 0) + dt;
+          const interval = (save.liteFx || Perf.tier >= 1) ? 0.06 : 0.028;
+          if (p._trailAcc >= interval) {
+            p._trailAcc = 0;
+            const col = (skProj && skProj.color) || '#c47aff';
+            const reach = p.slashReach || 0;
+            const tipH = Math.max(4, (p.r0 || 42) * (1 - taper * 0.82) * 0.55);
+            const n = (save.liteFx || Perf.tier >= 1) ? 1 : 2;
+            this.burst(p.x + reach, p.y + rand(-tipH, tipH), col, n, { kind: 'spark', size: 2.2 });
+            this.burst(p.x - reach, p.y + rand(-tipH, tipH), col, n, { kind: 'spark', size: 2.2 });
+          }
+        }
       }
       // Boemerang: uitgooien → terugkeren naar thrower (kan opnieuw raken)
       if (p.kind === 'boemerang') {
@@ -2616,10 +2667,10 @@ class Game {
       if (p.from === 'enemy') {
         const pl = this.player;
         if (pl && pl.alive && this.playerHurtCd <= 0
-            && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
+            && projHitsTarget(p, pl.bodyX, pl.bodyY, pl.bodyR * 0.8)) {
           const hit = resolveProjHit(p);
-          pl.takeDamage(hit.dmg, Math.sign(p.vx) * 260, this);
-          applyHitStop(this, { kind: skProj && skProj.behavior === 'dash' ? 'special' : 'punch', dmg: hit.dmg },
+          pl.takeDamage(hit.dmg, projKnockDir(p, pl.x) * 260, this);
+          applyHitStop(this, { kind: skProj && (skProj.behavior === 'dash' || skProj.behavior === 'slash') ? 'special' : 'punch', dmg: hit.dmg },
             { crit: hit.crit, heavy: hit.dmg >= 18, playerHurt: true });
           this.floater(pl.x, pl.y - 115, '-' + hit.dmg, '#ff8080', 16);
           if (hit.crit) applyCritFx(this, pl.x, pl.y);
@@ -2629,12 +2680,12 @@ class Game {
         }
       } else if (p.from === 'p2' && this.p2) {
         const pl = this.player;
-        if (pl && pl.alive && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
+        if (pl && pl.alive && projHitsTarget(p, pl.bodyX, pl.bodyY, pl.bodyR * 0.8)) {
           projStrikeFighter(this, p, pl, '#ff8080');
         }
       } else if (p.from === 'p1' && this.p2) {
         const pl = this.p2;
-        if (pl.alive && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
+        if (pl.alive && projHitsTarget(p, pl.bodyX, pl.bodyY, pl.bodyR * 0.8)) {
           projStrikeFighter(this, p, pl, '#ffb0b8');
         }
       } else {
@@ -2642,20 +2693,21 @@ class Game {
           if (!m.alive) continue;
           const allowRehit = p._rehit && p._rehit.has(m);
           if (p.hitSet && p.hitSet.has(m) && !allowRehit) continue;
-          if ((p.x - m.x) ** 2 + (p.y - m.y) ** 2 < (p.r + m.size) ** 2) {
+          if (projHitsTarget(p, m.x, m.y, m.size)) {
             const hit = resolveProjHit(p);
+            const dir = projKnockDir(p, m.x);
             try { AudioSys.sfxAt(weaponHitSfx(p.throwId || 'shuriken', hit.dmg), m.x); } catch (_) {}
-            m.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this, { skipHitSfx: true, crit: hit.crit });
+            m.takeDamage(hit.dmg, dir * 300 * (p.kbMul || 1), this, { skipHitSfx: true, crit: hit.crit });
             if (hit.crit) applyCritFx(this, m.x, m.y);
-            if (skProj) spawnJutsuImpactFx(this, p.x, p.y, p.kind, 'full');
+            if (skProj) spawnJutsuImpactFx(this, m.x, m.y, p.kind, 'full');
             if (p.hitSet) p.hitSet.add(m); else p.life = 0;
           }
         }
         if (this.robot && this.robot.alive && !(p.hitSet && p.hitSet.has(this.robot))) {
           const rb = this.robot;
-          if ((p.x - rb.bodyX) ** 2 + (p.y - rb.bodyY) ** 2 < (p.r + rb.bodyR) ** 2) {
+          if (projHitsTarget(p, rb.bodyX, rb.bodyY, rb.bodyR)) {
             const hit = resolveProjHit(p);
-            const d = rb.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this);
+            const d = rb.takeDamage(hit.dmg, projKnockDir(p, rb.x) * 300 * (p.kbMul || 1), this);
             this.floater(rb.x, rb.y - 115, '-' + d, '#ffe680', 16);
             if (hit.crit) applyCritFx(this, rb.x, rb.y);
             if (p.hitSet) p.hitSet.add(rb); else p.life = 0;
@@ -2664,7 +2716,11 @@ class Game {
         if (this.mode === 'wall' && this.bricks) {
           for (const b of this.bricks) {
             if (b.hp <= 0) continue;
-            if (p.x + p.r > b.x && p.x - p.r < b.x + b.w && p.y + p.r > b.y && p.y - p.r < b.y + b.h) {
+            const bx = b.x + b.w * 0.5, by = b.y + b.h * 0.5;
+            const hitBrick = p.slashWave
+              ? projHitsTarget(p, bx, by, Math.max(b.w, b.h) * 0.45)
+              : (p.x + p.r > b.x && p.x - p.r < b.x + b.w && p.y + p.r > b.y && p.y - p.r < b.y + b.h);
+            if (hitBrick) {
               b.hp -= p.dmg;
               if (b.hp <= 0) { this.score++; AudioSys.sfx('brick'); this.burst(p.x, p.y, `hsl(${b.hue},50%,45%)`, 12); }
               if (!p.pierce) p.life = 0;
@@ -2690,6 +2746,11 @@ class Game {
       if (p.kind === 'boemerang') {
         if (p.returning && (p.x < -100 || p.x > W + 100 || p.y > this.ground + 50)) {
           p.life = 0;
+        }
+      } else if (p.slashWave) {
+        // Expanderende golf: blijft op plek tot life op is
+        if ((p.slashReach || 0) >= (p.slashMaxReach || 460) && p.life > 0.12) {
+          p.life = Math.min(p.life, 0.12);
         }
       } else if (p.kind === 'rasengan') {
         // Alleen zijranden — grond wordt hierboven afgehandeld
@@ -3060,7 +3121,11 @@ class Game {
             c.restore();
           }
         }
-        drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, p.kind, 1);
+        if (p.slashWave || skDraw.behavior === 'slash') {
+          drawRinneganSlashWave(c, p);
+        } else {
+          drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, p.kind, 1);
+        }
       } else if (p.kind === 'shuriken') {
         c.translate(p.x, p.y); c.rotate(p.spin || 0);
         const big = p.throwId === 'fuuma';
@@ -3486,18 +3551,21 @@ class Game {
       } else if (kind === 'rinnegan') {
         c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : '#c47aff';
         c.lineWidth = 3;
-        for (let ring = 0; ring < 3; ring++) {
+        c.lineCap = 'round';
+        // Tweerichtings lichtschits-pulse (klaar-signaal)
+        for (const dir of [-1, 1]) {
+          const len = 34 + Math.sin(this.t * 10) * 6;
           c.beginPath();
-          c.arc(f.x, f.y - 55, 34 + ring * 8 + Math.sin(this.t * 8 + ring) * 3, this.t * (1.5 + ring * 0.3), this.t * (1.5 + ring * 0.3) + Math.PI * 1.25);
+          c.moveTo(f.x, f.y - 55);
+          c.lineTo(f.x + dir * len * 0.4, f.y - 55 + Math.sin(this.t * 14 + dir) * 4);
+          c.lineTo(f.x + dir * len * 0.7, f.y - 55 - Math.sin(this.t * 11 + dir) * 3);
+          c.lineTo(f.x + dir * len, f.y - 55);
           c.stroke();
         }
-        c.fillStyle = '#ff6b9d';
-        for (let i = 0; i < 3; i++) {
-          const a = this.t * 5 + i * (TAU / 3);
-          c.beginPath();
-          c.arc(f.x + Math.cos(a) * 28, f.y - 55 + Math.sin(a) * 10, 4, 0, TAU);
-          c.fill();
-        }
+        c.fillStyle = '#e8d0ff';
+        c.beginPath();
+        c.arc(f.x, f.y - 55, 5 + Math.sin(this.t * 8) * 1.5, 0, TAU);
+        c.fill();
       } else {
         c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : '#7cf5ff';
         c.lineWidth = 3;
