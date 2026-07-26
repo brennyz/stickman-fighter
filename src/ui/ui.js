@@ -1113,7 +1113,7 @@ const UI = {
     const prog = onboardingProgress();
     const next = nextUntriedMode();
     const modes = [
-      { id: 'adventure', label: 'Avontuur', tip: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok vóór level' },
+      { id: 'adventure', label: 'Avontuur', tip: '7 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok vóór level · Nachtmerrie/Hel zone-wapens' },
       { id: 'training', label: 'Training', tip: 'Combo-trainer ×5/×8/×10 · lasers · Chidori-telegraph' },
       { id: 'wall', label: 'Muur', tip: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing' },
       { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
@@ -2142,7 +2142,7 @@ const UI = {
         `<div class="island-info-text">` +
         `<b style="color:${islMeta.accent}">${islandLabel(islMeta.id, 'name')}</b> · ${islandLabel(islMeta.id, 'sub')}` +
         `<div class="island-info-sub">${t('ui.islandInfoSub', { cap: wCap, cleared: prog.cleared, total: prog.total, stars: prog.stars })}` +
-        (pick < 5 ? t('ui.islandBossGate', { lv: pick * LEVELS_PER_ISLAND }) : '') +
+        (pick < islandCount() ? t('ui.islandBossGate', { lv: pick * LEVELS_PER_ISLAND }) : '') +
         `</div></div></div>` +
         `<div class="island-prog-track island-info-prog" title="${t('island.levelsProg')}"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
         `<div class="island-prog-track island-info-stars" title="${t('island.starsProg')}"><i style="width:${Math.round(prog.stars / Math.max(1, prog.maxStars) * 100)}%"></i></div>` +
@@ -2395,6 +2395,14 @@ const UI = {
       const summonBadge = w.summoned
         ? ` <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">✦ Summon</span>`
         : '';
+      const zone = weaponDropZoneOf(base);
+      const zoneBadge = zone
+        ? ` <span class="rar-pill weapon-zone-pill" style="color:${zone.color};border-color:${zone.color}">${zone.name}</span>`
+        : '';
+      const effectTxt = weaponEffectLabel(base);
+      const effectBadge = effectTxt && !locked
+        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">⚡ ${effectTxt}</span>`
+        : '';
       const statLine = w.summoned
         ? `${weaponDesc(w)} · schade x${base.dmg} → <b style="color:${rar.color}">x${w.dmg}</b> · bereik ${w.range} · snelheid x${w.speed}`
         : `${weaponDesc(w)} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}`;
@@ -2420,17 +2428,24 @@ const UI = {
       const islandLine = islandLocked && !lvlLocked
         ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:#ffd75e">${t('ui.weaponIslandPick', { cap: adventureWeaponCap() })}</div>`
         : '';
-      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${summonBadge}${tierBadge}${upBadge}</div>
+      const zoneLine = zone && locked
+        ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:${zone.color}">Alleen drop in ${zone.name} (Lv ${zone.minLevel}–${zone.maxLevel})</div>`
+        : (zone && effectTxt
+          ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:${zone.color}">Zone-drop · effect: ${effectTxt}</div>`
+          : '');
+      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${zoneBadge}${effectBadge}${summonBadge}${tierBadge}${upBadge}</div>
         <div class="cinfo">${statLine}</div>` +
         upLine +
         (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '') +
-        islandLine;
+        islandLine + zoneLine;
       el.appendChild(info);
       if (weaponUpgradeEligible(base)) appendItemUpgradeButton(el, 'weapon', w.id, () => this.renderWeapons());
       const right = document.createElement('div');
       right.className = 'right';
       right.innerHTML = lvlLocked
-        ? `${SVG_LOCK_ICON} Lv ${base.unlock}`
+        ? (base.dropZone
+          ? `${SVG_LOCK_ICON} ${weaponDropZoneOf(base)?.name || 'Zone'}`
+          : `${SVG_LOCK_ICON} Lv ${base.unlock}`)
         : (islandLocked
           ? t('ui.weaponIslandCapShort', { cap: adventureWeaponCap() })
           : (selected ? '&#10004; gekozen' : 'kies'));
@@ -2477,15 +2492,25 @@ const UI = {
       nameEl.style.color = locked ? '#8fa3d9' : '#fff';
     }
     if (rarEl) {
+      const zone = weaponDropZoneOf(base);
+      const effectTxt = weaponEffectLabel(base);
       rarEl.innerHTML = locked
-        ? `<span class="rar-pill" style="color:#8fa3d9;border-color:#8fa3d9">Lv ${base.unlock}</span>`
+        ? (zone
+          ? `<span class="rar-pill" style="color:${zone.color};border-color:${zone.color}">${zone.name}</span>`
+          : `<span class="rar-pill" style="color:#8fa3d9;border-color:#8fa3d9">Lv ${base.unlock}</span>`)
         : `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>` +
+          (zone ? ` <span class="rar-pill" style="color:${zone.color};border-color:${zone.color}">${zone.name}</span>` : '') +
+          (effectTxt ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">⚡ ${effectTxt}</span>` : '') +
           (save.weapon === w.id ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Actief</span>' : '');
     }
     if (statsEl) {
+      const zone = weaponDropZoneOf(base);
       statsEl.textContent = locked
-        ? 'Nog vergrendeld — level verder in avontuur'
-        : `${weaponDesc(w)} · x${w.dmg} dmg · bereik ${w.range} · spd x${w.speed}`;
+        ? (zone
+          ? `Alleen drop in ${zone.name} (avontuur Lv ${zone.minLevel}–${zone.maxLevel})`
+          : 'Nog vergrendeld — level verder in avontuur')
+        : `${weaponDesc(w)} · x${w.dmg} dmg · bereik ${w.range} · spd x${w.speed}` +
+          (weaponEffectLabel(base) ? ` · ⚡ ${weaponEffectLabel(base)}` : '');
     }
     const c = cv.getContext('2d');
     if (!c) return;

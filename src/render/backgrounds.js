@@ -7,6 +7,8 @@ const THEMES = {
   grot:    { sky1: '#07090e', sky2: '#1a2028', hill: '#2a323c', hill2: '#141820', ground: '#1a2028', gtop: '#3a4450', deco: 'stalag' },
   vulkaan: { sky1: '#3a1f28', sky2: '#7a3020', hill: '#552430', hill2: '#3a1820', ground: '#4a2a28', gtop: '#5e3630', deco: 'lava' },
   cyber:   { sky1: '#0a1030', sky2: '#252a60', hill: '#1c2350', hill2: '#131840', ground: '#20264a', gtop: '#2c3468', deco: 'neon' },
+  nachtmerrie: { sky1: '#12081c', sky2: '#2a1040', hill: '#1a0a28', hill2: '#0e0618', ground: '#1c1028', gtop: '#3a2050', deco: 'neon' },
+  hel:     { sky1: '#2a0808', sky2: '#6a2010', hill: '#4a1010', hill2: '#2a0808', ground: '#3a1010', gtop: '#5a1810', deco: 'lava' },
   dojo:    { sky1: '#3a2d24', sky2: '#6a5240', hill: '#4a3a2c', hill2: '#3a2d22', ground: '#7a5c3c', gtop: '#8f6f4a', deco: 'lampion' },
   sloop:   { sky1: '#8fb6d0', sky2: '#d8e8f0', hill: '#7a8794', hill2: '#5f6b78', ground: '#6f7684', gtop: '#848b99', deco: 'kraan' },
 };

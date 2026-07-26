@@ -252,11 +252,12 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.100';
+const APP_VERSION = '1.18.102';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 310;
+const SW_CACHE_REV = 312;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
+  zoneWeapons: {},
 
 
 
@@ -268,9 +269,10 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeJutsu: 'rasengan', skill: 'rasengan', super: 'ketsbam', missionsIntroSeen: false };
 
-const MAX_LEVEL = 50;
+const MAX_LEVEL = 70;
 const LEVELS_PER_ISLAND = 10;
-const ISLAND_WEAPON_CAPS = [10, 20, 30, 40, 48];
+const ISLAND_COUNT = 7;
+const ISLAND_WEAPON_CAPS = [10, 20, 30, 40, 48, 60, 70];
 const ADVENTURE_ISLANDS = [
   { id: 1, name: 'Oost-eiland', sub: 'Lv 1–10 · landweg', accent: '#5ad06a', theme: 'landweg',
     icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20" stroke="#5ad06a" stroke-width="2" stroke-linecap="round"/><path d="M5 20V13l5-8 5 8v7" fill="#43b25b" stroke="#2d8a3e" stroke-width="1"/><circle cx="18" cy="7" r="2.5" fill="#7cf5ff" opacity=".75"/></svg>' },
@@ -282,8 +284,13 @@ const ADVENTURE_ISLANDS = [
     icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 L17 8 H7 Z" fill="#ffd75e"/><rect x="10" y="8" width="4" height="12" fill="#c97a20"/><path d="M6 11 H18 M7 14 H17 M8 17 H16" stroke="#ffd75e" stroke-width="1.4" stroke-linecap="round"/><rect x="4" y="20" width="16" height="2" rx="1" fill="#8a6030"/></svg>' },
   { id: 5, name: 'Finale-eiland', sub: 'Lv 41–50', accent: '#ff6b9d', theme: 'cyber',
     icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18 L7 10 L12 14 L17 10 L20 18 Z" fill="#ff6b9d" stroke="#ffd75e" stroke-width="1"/><circle cx="12" cy="8" r="2.8" fill="#ffd75e"/><path d="M12 2 v2 M12 20 v2 M2 12 h2 M20 12 h2" stroke="#ffd75e" stroke-width="1.2" opacity=".7"/></svg>' },
+  { id: 6, name: 'Nachtmerrie', sub: 'Lv 51–60 · droomchaos', accent: '#c47aff', theme: 'nachtmerrie',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18c2-6 6-10 8-10s6 4 8 10" fill="none" stroke="#c47aff" stroke-width="1.6"/><circle cx="9" cy="10" r="2.2" fill="#2a1840" stroke="#c47aff" stroke-width="1"/><circle cx="15" cy="10" r="2.2" fill="#2a1840" stroke="#c47aff" stroke-width="1"/><path d="M8 15c1.2 1.4 2.8 2 4 2s2.8-.6 4-2" stroke="#ff6b9d" stroke-width="1.4" fill="none"/></svg>' },
+  { id: 7, name: 'Hel', sub: 'Lv 61–70 · zwavel & lava', accent: '#ff6a3d', theme: 'hel',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 L8 10 L12 16 L16 8 L20 20 Z" fill="#ff6a3d" stroke="#ffd75e" stroke-width="1"/><path d="M9 10c0-3 1.5-5 3-5s3 2 3 5" fill="#ffd75e" opacity=".85"/><ellipse cx="12" cy="20" rx="9" ry="1.6" fill="#5a1010" opacity=".7"/></svg>' },
 ];
 function islandMeta(id) { return ADVENTURE_ISLANDS.find(i => i.id === id) || ADVENTURE_ISLANDS[0]; }
+function islandCount() { return ADVENTURE_ISLANDS.length || ISLAND_COUNT; }
 function islandProgress(islandId) {
   const { start, end } = islandLevelRange(islandId);
   const total = end - start + 1;
@@ -304,7 +311,7 @@ function adventureProgressLine() {
     unlocked: save.unlocked, max: MAX_LEVEL,
   });
 }
-function islandFromLevel(n) { return Math.min(5, Math.max(1, Math.ceil(n / LEVELS_PER_ISLAND))); }
+function islandFromLevel(n) { return Math.min(islandCount(), Math.max(1, Math.ceil(n / LEVELS_PER_ISLAND))); }
 function islandLevelRange(islandId) {
   const start = (islandId - 1) * LEVELS_PER_ISLAND + 1;
   return { start, end: Math.min(MAX_LEVEL, start + LEVELS_PER_ISLAND - 1) };
@@ -320,7 +327,11 @@ function adventureWeaponCapForLevel(levelN) {
 }
 function adventureWeaponCap() { return adventureWeaponCapForLevel(save.unlocked || 1); }
 function weaponSkillGated(w) { return w.unlock > adventureWeaponCap(); }
-function weaponUnlockedByLevel(w) { return save.lvl >= w.unlock; }
+function weaponUnlockedByLevel(w) {
+  if (!w) return false;
+  if (w.dropZone) return typeof weaponZoneUnlocked === 'function' ? weaponZoneUnlocked(w) : !!(save.zoneWeapons && save.zoneWeapons[w.id]);
+  return save.lvl >= w.unlock;
+}
 function weaponUsableNow(w) { return weaponUnlockedByLevel(w) && !weaponSkillGated(w); }
 function styleSkillGated(st) { return !!(st.needLvl && st.needLvl > adventureWeaponCap()); }
 function masterBuffActive(levelN) { return save.advMasterBuff === levelN; }
@@ -597,7 +608,8 @@ function rollHitDamage(attacker, spec, mult) {
   if (attacker.isPlayer && k === 'weapon' && attacker.weapon && attacker.weapon.upgradeCrit) {
     critChance += attacker.weapon.upgradeCrit;
   }
-  critChance = clamp(critChance, 0, 0.48);
+  if (attacker._wpnCritSurgeT > 0) critChance += 0.18;
+  critChance = clamp(critChance, 0, 0.55);
   let dmg = spec.dmg * rand(0.9, 1.15) * mult;
   const crit = Math.random() < critChance;
   if (crit) dmg *= critMul;
@@ -1033,7 +1045,8 @@ function sanitizeTipsSeen(raw) {
 /** Corrupte / gemanipuleerde saves veilig maken (localStorage + import). */
 function sanitizeSave(s) {
   // Literal max — nooit TDZ op MAX_LEVEL (anders crashen alle click-handlers)
-  const maxLevel = 50;
+  const maxLevel = 70;
+  const maxIsland = 7;
   const skillSnap = typeof snapshotSkillUpgradeTracks === 'function' ? snapshotSkillUpgradeTracks(s) : null;
   const itemSnap = typeof snapshotItemUpgradeTracks === 'function' ? snapshotItemUpgradeTracks(s) : null;
   const out = Object.assign({}, DEFAULT_SAVE, s);
@@ -1041,7 +1054,7 @@ function sanitizeSave(s) {
   out.lvl = clamp(Math.floor(Number(out.lvl) || 1), 1, 500);
   out.xp = clamp(Math.floor(Number(out.xp) || 0), 0, 999999);
   out.unlocked = clamp(Math.floor(Number(out.unlocked) || 1), 1, maxLevel);
-  out.advIsland = clamp(Math.floor(Number(out.advIsland) || 0), 0, 5);
+  out.advIsland = clamp(Math.floor(Number(out.advIsland) || 0), 0, maxIsland);
   const cleanFails = {};
   for (const [k, v] of Object.entries(out.advFails || {})) {
     const n = parseInt(k, 10);
@@ -1051,7 +1064,7 @@ function sanitizeSave(s) {
   const mb = parseInt(out.advMasterBuff, 10);
   out.advMasterBuff = (Number.isFinite(mb) && mb >= 1 && mb <= maxLevel) ? mb : null;
   if (!out.advIsland && out.unlocked > 1) {
-    out.advIsland = Math.min(5, Math.floor((out.unlocked - 1) / LEVELS_PER_ISLAND));
+    out.advIsland = Math.min(maxIsland, Math.floor((out.unlocked - 1) / LEVELS_PER_ISLAND));
   }
   out.trainWins = clamp(Math.floor(Number(out.trainWins) || 0), 0, 9999);
   out.bestWall = clamp(Math.floor(Number(out.bestWall) || 0), 0, 999999);
@@ -1095,12 +1108,21 @@ function sanitizeSave(s) {
   } else out.lastPlay = null;
   if (!WEAPONS.some(w => w.id === out.weapon)) out.weapon = 'vuist';
 
+  // Zone-wapens (Nachtmerrie / Hel drops)
+  const cleanZone = {};
+  for (const [k, v] of Object.entries(out.zoneWeapons || {})) {
+    if (!v) continue;
+    const w = WEAPONS.find(x => x.id === k);
+    if (w && w.dropZone) cleanZone[k] = 1;
+  }
+  out.zoneWeapons = cleanZone;
+
   // Summons: alleen bekende wapens, geldige tiers, en alleen echte upgrades
   const cleanSummons = {};
   for (const [k, v] of Object.entries(out.summons || {})) {
     const w = WEAPONS.find(x => x.id === k);
     if (!w || (v !== 'epic' && v !== 'legendary')) continue;
-    const wOrder = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4, mythic: 5 }[w.rarity] || 0;
+    const wOrder = rarityOf(w.rarity).order;
     const tOrder = v === 'legendary' ? 4 : 3;
     if (tOrder > wOrder) cleanSummons[k] = v;
   }
@@ -1378,9 +1400,11 @@ const I18N = {
       1: { name: 'Oost-eiland', sub: 'Lv 1–10' }, 2: { name: 'Vuur-eiland', sub: 'Lv 11–20' },
       3: { name: 'Neon-eiland', sub: 'Lv 21–30' }, 4: { name: 'Tempel-eiland', sub: 'Lv 31–40' },
       5: { name: 'Finale-eiland', sub: 'Lv 41–50' },
-      progress: 'Eiland {cur}/5 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
+      6: { name: 'Nachtmerrie', sub: 'Lv 51–60' },
+      7: { name: 'Hel', sub: 'Lv 61–70' },
+      progress: 'Eiland {cur}/7 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
     },
-    rarity: { common: 'Gewoon', uncommon: 'Ongewoon', rare: 'Zeldzaam', epic: 'Episch', legendary: 'Legendarisch', mythic: 'Mythisch' },
+    rarity: { common: 'Gewoon', uncommon: 'Ongewoon', rare: 'Zeldzaam', epic: 'Episch', legendary: 'Legendarisch', mythic: 'Mythisch', nightmare: 'Nachtmerrie', hell: 'Hel' },
     audio: {
       musicOff: 'Muziek uit', sfxOff: 'Geluid uit', musicPct: 'Muziek {pct}%', sfxPct: 'SFX {pct}%',
       allMuted: 'Alles stil', pauseDuck: 'BGM zacht', pauseTrack: 'Track: {track}',
@@ -1455,9 +1479,11 @@ const I18N = {
       1: { name: 'East island', sub: 'Lv 1–10' }, 2: { name: 'Fire island', sub: 'Lv 11–20' },
       3: { name: 'Neon island', sub: 'Lv 21–30' }, 4: { name: 'Temple island', sub: 'Lv 31–40' },
       5: { name: 'Final island', sub: 'Lv 41–50' },
-      progress: 'Island {cur}/5 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
+      6: { name: 'Nightmare', sub: 'Lv 51–60' },
+      7: { name: 'Hell', sub: 'Lv 61–70' },
+      progress: 'Island {cur}/7 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
     },
-    rarity: { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary', mythic: 'Mythic' },
+    rarity: { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary', mythic: 'Mythic', nightmare: 'Nightmare', hell: 'Hell' },
     audio: {
       musicOff: 'Music off', sfxOff: 'Sound off', musicPct: 'Music {pct}%', sfxPct: 'SFX {pct}%',
       allMuted: 'All muted', pauseDuck: 'BGM ducked', pauseTrack: 'Track: {track}',
@@ -1524,9 +1550,11 @@ const I18N = {
       1: { name: 'Ost-Insel', sub: 'Lv 1–10' }, 2: { name: 'Feuer-Insel', sub: 'Lv 11–20' },
       3: { name: 'Neon-Insel', sub: 'Lv 21–30' }, 4: { name: 'Tempel-Insel', sub: 'Lv 31–40' },
       5: { name: 'Finale-Insel', sub: 'Lv 41–50' },
-      progress: 'Insel {cur}/5 · {name} · {cleared}/{total} · Lv {unlocked}/{max}',
+      6: { name: 'Albtraum', sub: 'Lv 51–60' },
+      7: { name: 'Hölle', sub: 'Lv 61–70' },
+      progress: 'Insel {cur}/7 · {name} · {cleared}/{total} · Lv {unlocked}/{max}',
     },
-    rarity: { common: 'Gewöhnlich', uncommon: 'Ungewöhnlich', rare: 'Selten', epic: 'Episch', legendary: 'Legendär', mythic: 'Mythisch' },
+    rarity: { common: 'Gewöhnlich', uncommon: 'Ungewöhnlich', rare: 'Selten', epic: 'Episch', legendary: 'Legendär', mythic: 'Mythisch', nightmare: 'Albtraum', hell: 'Hölle' },
     audio: { musicOff: 'Musik aus', sfxOff: 'Sound aus', musicPct: 'Musik {pct}%', sfxPct: 'SFX {pct}%', bgmDuckPause: ' · BGM gedämpft' },
   },
   fr: {
@@ -1588,9 +1616,11 @@ const I18N = {
       1: { name: 'Île de l\'Est', sub: 'Lv 1–10' }, 2: { name: 'Île de Feu', sub: 'Lv 11–20' },
       3: { name: 'Île Néon', sub: 'Lv 21–30' }, 4: { name: 'Île Temple', sub: 'Lv 31–40' },
       5: { name: 'Île Finale', sub: 'Lv 41–50' },
-      progress: 'Île {cur}/5 · {name} · {cleared}/{total} · Lv {unlocked}/{max}',
+      6: { name: 'Cauchemar', sub: 'Lv 51–60' },
+      7: { name: 'Enfer', sub: 'Lv 61–70' },
+      progress: 'Île {cur}/7 · {name} · {cleared}/{total} · Lv {unlocked}/{max}',
     },
-    rarity: { common: 'Commun', uncommon: 'Peu commun', rare: 'Rare', epic: 'Épique', legendary: 'Légendaire', mythic: 'Mythique' },
+    rarity: { common: 'Commun', uncommon: 'Peu commun', rare: 'Rare', epic: 'Épique', legendary: 'Légendaire', mythic: 'Mythique', nightmare: 'Cauchemar', hell: 'Enfer' },
     audio: { musicOff: 'Musique off', sfxOff: 'Son off', musicPct: 'Musique {pct}%', sfxPct: 'SFX {pct}%', bgmDuckPause: ' · BGM atténué' },
   },
   es: {
@@ -1652,9 +1682,11 @@ const I18N = {
       1: { name: 'Isla Este', sub: 'Lv 1–10' }, 2: { name: 'Isla Fuego', sub: 'Lv 11–20' },
       3: { name: 'Isla Neón', sub: 'Lv 21–30' }, 4: { name: 'Isla Templo', sub: 'Lv 31–40' },
       5: { name: 'Isla Final', sub: 'Lv 41–50' },
-      progress: 'Isla {cur}/5 · {name} · {cleared}/{total} · Lv {unlocked}/{max}',
+      6: { name: 'Pesadilla', sub: 'Lv 51–60' },
+      7: { name: 'Infierno', sub: 'Lv 61–70' },
+      progress: 'Isla {cur}/7 · {name} · {cleared}/{total} · Lv {unlocked}/{max}',
     },
-    rarity: { common: 'Común', uncommon: 'Poco común', rare: 'Raro', epic: 'Épico', legendary: 'Legendario', mythic: 'Mítico' },
+    rarity: { common: 'Común', uncommon: 'Poco común', rare: 'Raro', epic: 'Épico', legendary: 'Legendario', mythic: 'Mítico', nightmare: 'Pesadilla', hell: 'Infierno' },
     audio: { musicOff: 'Música off', sfxOff: 'Sonido off', musicPct: 'Música {pct}%', sfxPct: 'SFX {pct}%', bgmDuckPause: ' · BGM atenuado' },
   },
 };
@@ -2294,6 +2326,10 @@ const ACHIEVEMENTS = [
     test: s => (s.stats.trainMaxCombo || 0) >= 10 },
   { id: 'lv50', name: 'Legende', desc: 'Unlock level 50', icon: '👑',
     test: s => s.unlocked >= 50 },
+  { id: 'lv70', name: 'Hel-legende', desc: 'Unlock level 70 (Hel)', icon: '🔥',
+    test: s => s.unlocked >= 70 },
+  { id: 'zoneWeapons10', name: 'Zone-verzamelaar', desc: 'Verzamel 10 Nachtmerrie/Hel-wapens', icon: '⚔️',
+    test: s => Object.keys(s.zoneWeapons || {}).length >= 10 },
   { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd', icon: '📅',
     test: s => (s.stats.dailyBonusCount || 0) >= 7 },
   { id: 'vs5', name: 'Duelist', desc: '5× 2-speler duel gespeeld', icon: '🥊',
@@ -3069,6 +3105,10 @@ function noteRunLootLevelUp(loot, newLvl) {
   loot.levelUps++;
   const w = WEAPONS.find(x => x.unlock === newLvl);
   if (w) loot.weapons.push(w.id);
+}
+function noteRunLootWeapon(loot, weaponId) {
+  if (!loot || !weaponId || !loot.weapons) return;
+  if (!loot.weapons.includes(weaponId)) loot.weapons.push(weaponId);
 }
 
 function runLootHasItems(loot) {
@@ -4959,6 +4999,17 @@ function weaponNextUnlockHtml() {
   }
   if (!next) return '';
   const rar = rarityOf(next.rarity);
+  const zone = weaponDropZoneOf(next);
+  if (zone) {
+    const owned = zoneWeaponsFor(zone.id).filter(w => weaponZoneUnlocked(w)).length;
+    const tot = zoneWeaponsFor(zone.id).length;
+    const pct = Math.min(100, Math.round((owned / Math.max(1, tot)) * 100));
+    return `<div class="dex-ach-next" style="margin-top:10px;padding:8px 10px;border-radius:12px;background:rgba(196,122,255,.08);border:1px solid ${zone.color}55">` +
+      `<div style="font-size:11px;font-weight:800;color:${zone.color};margin-bottom:4px">Zone-drop · ${weaponLabel(next)}</div>` +
+      `<div style="font-size:12px;opacity:.85"><span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(next.rarity)}</span>` +
+      ` · alleen in <b>${zone.name}</b> (Lv ${zone.minLevel}–${zone.maxLevel}) · ${owned}/${tot}</div>` +
+      `<div class="xpline" style="margin-top:6px;height:6px"><div style="width:${pct}%;background:${zone.color}"></div></div></div>`;
+  }
   const need = Math.max(0, next.unlock - save.lvl);
   const pct = Math.min(100, Math.round((save.lvl / next.unlock) * 100));
   return `<div class="dex-ach-next" style="margin-top:10px;padding:8px 10px;border-radius:12px;background:rgba(124,245,255,.06);border:1px solid rgba(124,245,255,.22)">` +
@@ -5030,10 +5081,14 @@ const RARITIES = {
   epic:      { id: 'epic',      name: 'Episch',     color: '#b06ae0', glow: 'rgba(176,106,224,.5)', order: 3 },
   legendary: { id: 'legendary', name: 'Legendarisch', color: '#ffd75e', glow: 'rgba(255,215,94,.55)', order: 4 },
   mythic:    { id: 'mythic',    name: 'Mythisch',   color: '#ff6b9d', glow: 'rgba(255,107,157,.6)', order: 5 },
+  nightmare: { id: 'nightmare', name: 'Nachtmerrie', color: '#c47aff', glow: 'rgba(196,122,255,.65)', order: 6 },
+  hell:      { id: 'hell',      name: 'Hel',        color: '#ff6a3d', glow: 'rgba(255,106,61,.7)', order: 7 },
 };
 const rarityOf = id => RARITIES[id] || RARITIES.common;
-const rarityHpBonus = r => ({ common: 3, uncommon: 5, rare: 8, epic: 12, legendary: 18, mythic: 25 }[r] || 5);
-
+const rarityHpBonus = r => ({
+  common: 3, uncommon: 5, rare: 8, epic: 12, legendary: 18, mythic: 25,
+  nightmare: 32, hell: 40,
+}[r] || 5);
 /* --- src/data/weapons.js --- */
 /* ============================== WAPENS ================================= */
 const WEAPONS = [
@@ -5063,9 +5118,384 @@ const WEAPONS = [
   { id: 'void',      name: 'Voidklaauw',      dmg: 2.5,  range: 64, speed: 1.25, unlock: 40, rarity: 'mythic',    desc: 'Mythische klauw' },
   { id: 'sterkling', name: 'Sterkling',       dmg: 2.75, range: 66, speed: 1.12, unlock: 44, rarity: 'mythic',    desc: 'Hemelmetaal · krits' },
   { id: 'guvve',     name: 'Guvvedukkie-stok', dmg: 3.1,  range: 66, speed: 1.0,  unlock: 48, rarity: 'mythic',    desc: 'Quak. Bitte. Boom.' },
+
+  /* —— Nachtmerrie-only (eiland 6 · Lv 51–60) —— */
+  { id: 'nachtkaars', name: 'Nachtkaars', dmg: 3.2, range: 58, speed: 1.08, unlock: 51, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'burn', effectLabel: 'Brandende angst',
+    desc: 'Drippy wax · brand DoT' },
+  { id: 'droomprikker', name: 'Droomprikker', dmg: 3.05, range: 62, speed: 1.22, unlock: 52, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'drowsy', effectLabel: 'Slaperige prik',
+    desc: 'Naald van slapeloosheid' },
+  { id: 'spooklepel', name: 'Spooklepel', dmg: 3.15, range: 54, speed: 1.18, unlock: 52, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'flipkb', effectLabel: 'Omgekeerde klap',
+    desc: 'Eet je bang · flip-kb' },
+  { id: 'nachtmerriesok', name: 'Nachtmerrie-sok', dmg: 3.0, range: 50, speed: 1.32, unlock: 53, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'confuse', effectLabel: 'Sok-slap',
+    desc: 'Natte sok · verwarring' },
+  { id: 'echotrompet', name: 'Echo-trompet', dmg: 3.25, range: 72, speed: 0.95, unlock: 54, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'echo', effectLabel: 'Echo-boom',
+    desc: 'Blaast een schaduw-echo' },
+  { id: 'schaduwbanaan', name: 'Schaduw-banaan', dmg: 3.1, range: 60, speed: 1.2, unlock: 54, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'slip', effectLabel: 'Schil-slip',
+    desc: 'Valpartij verzekerd' },
+  { id: 'voidvork', name: 'Void-vork', dmg: 3.35, range: 56, speed: 1.1, unlock: 55, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'lifesteal', effectLabel: 'Leegte-hap',
+    desc: 'Steelt HP uit de leegte' },
+  { id: 'angstaccordeon', name: 'Angst-accordeon', dmg: 3.2, range: 70, speed: 0.9, unlock: 56, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'pull', effectLabel: 'Zuig-akkoord',
+    desc: 'Trekt monsters dichterbij' },
+  { id: 'slaapkussen', name: 'Slaap-kussen', dmg: 3.4, range: 52, speed: 0.85, unlock: 56, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'freeze', effectLabel: 'Kussen-knockout',
+    desc: 'Pluizig · korte freeze' },
+  { id: 'spooktoaster', name: 'Spook-toaster', dmg: 3.45, range: 58, speed: 1.05, unlock: 57, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'popburn', effectLabel: 'Toast-pop',
+    desc: 'Pop! · brand + knal' },
+  { id: 'droomspiegel', name: 'Droomspiegel', dmg: 3.3, range: 64, speed: 1.15, unlock: 58, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'critsurge', effectLabel: 'Spiegel-krit',
+    desc: 'Weerspiegelt krits' },
+  { id: 'nachtuilvleugel', name: 'Nachtuil-vleugel', dmg: 3.15, range: 68, speed: 1.28, unlock: 58, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'flutter', effectLabel: 'Vleugel-flurry',
+    desc: 'Fladder-multi-hit' },
+  { id: 'waanballon', name: 'Waanballon', dmg: 3.5, range: 55, speed: 1.0, unlock: 59, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'balloon', effectLabel: 'POP-finisher',
+    desc: 'Finisher = knal' },
+  { id: 'schriktandwiel', name: 'Schrik-tandwiel', dmg: 3.55, range: 62, speed: 0.92, unlock: 60, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'bleed', effectLabel: 'Tandwiel-bleed',
+    desc: 'Rammelende DoT' },
+
+  /* —— Hel-only (eiland 7 · Lv 61–70) —— */
+  { id: 'hellevork', name: 'Hellevork', dmg: 3.7, range: 66, speed: 1.05, unlock: 61, rarity: 'hell',
+    dropZone: 'hell', effect: 'inferno', effectLabel: 'Zwavel-brand',
+    desc: 'Drie hete tanden' },
+  { id: 'lavalepel', name: 'Lava-lepel', dmg: 3.65, range: 58, speed: 1.12, unlock: 62, rarity: 'hell',
+    dropZone: 'hell', effect: 'magma', effectLabel: 'Magma-plas',
+    desc: 'Schept lava onder voeten' },
+  { id: 'duiveltrommel', name: 'Duivel-trommel', dmg: 3.8, range: 70, speed: 0.82, unlock: 62, rarity: 'hell',
+    dropZone: 'hell', effect: 'quake', effectLabel: 'Hel-beuk',
+    desc: 'AOE aardbeving' },
+  { id: 'zwavelzeep', name: 'Zwavel-zeep', dmg: 3.55, range: 52, speed: 1.3, unlock: 63, rarity: 'hell',
+    dropZone: 'hell', effect: 'soapburn', effectLabel: 'Glad + heet',
+    desc: 'Uitglijden in de hel' },
+  { id: 'infernoijsje', name: 'Inferno-ijsje', dmg: 3.75, range: 54, speed: 1.15, unlock: 64, rarity: 'hell',
+    dropZone: 'hell', effect: 'frostfire', effectLabel: 'IJs → vuur',
+    desc: 'Eerst koud, dan heet' },
+  { id: 'helhamsterwiel', name: 'Hel-hamsterwiel', dmg: 3.6, range: 64, speed: 1.25, unlock: 64, rarity: 'hell',
+    dropZone: 'hell', effect: 'spinchaos', effectLabel: 'Wiel-chaos',
+    desc: 'Rolt over alles' },
+  { id: 'brimstonebanaan', name: 'Brimstone-banaan', dmg: 3.7, range: 60, speed: 1.18, unlock: 65, rarity: 'hell',
+    dropZone: 'hell', effect: 'explodepeel', effectLabel: 'Explosieve schil',
+    desc: 'Banaan die knalt' },
+  { id: 'demondoekje', name: 'Demon-doekje', dmg: 3.85, range: 50, speed: 1.35, unlock: 66, rarity: 'hell',
+    dropZone: 'hell', effect: 'execute', effectLabel: 'Wipe-execute',
+    desc: 'Veegt lage HP weg' },
+  { id: 'asaccordeon', name: 'As-accordeon', dmg: 3.8, range: 74, speed: 0.88, unlock: 66, rarity: 'hell',
+    dropZone: 'hell', effect: 'ashpull', effectLabel: 'As-zuiging',
+    desc: 'Trekt + brandt' },
+  { id: 'chiliketting', name: 'Chili-ketting', dmg: 3.75, range: 76, speed: 1.08, unlock: 67, rarity: 'hell',
+    dropZone: 'hell', effect: 'chainburn', effectLabel: 'Chili-ketting',
+    desc: 'Brand springt over' },
+  { id: 'helgitaar', name: 'Hel-gitaar', dmg: 3.9, range: 72, speed: 0.95, unlock: 68, rarity: 'hell',
+    dropZone: 'hell', effect: 'sonic', effectLabel: 'Sonic-solo',
+    desc: 'Powerchord-AOE' },
+  { id: 'pyroeend', name: 'Pyro-eend', dmg: 4.0, range: 68, speed: 1.02, unlock: 69, rarity: 'hell',
+    dropZone: 'hell', effect: 'quakboom', effectLabel: 'QUAK-BOOM',
+    desc: 'Guvve’s hel-cousin' },
+  { id: 'apocalypslepel', name: 'Apocalyps-lepel', dmg: 4.2, range: 70, speed: 0.78, unlock: 70, rarity: 'hell',
+    dropZone: 'hell', effect: 'meteor', effectLabel: 'Lepel-meteor',
+    desc: 'Eet de wereld leeg' },
 ];
 const weaponById = id => WEAPONS.find(w => w.id === id) || WEAPONS[0];
 
+const WEAPON_DROP_ZONES = {
+  nightmare: { id: 'nightmare', name: 'Nachtmerrie', minLevel: 51, maxLevel: 60, color: '#c47aff', accent: '#2a1840' },
+  hell: { id: 'hell', name: 'Hel', minLevel: 61, maxLevel: 70, color: '#ff6a3d', accent: '#5a1010' },
+};
+
+function weaponDropZoneOf(w) {
+  const id = typeof w === 'string' ? w : (w && w.dropZone);
+  return (id && WEAPON_DROP_ZONES[id]) || null;
+}
+
+function adventureDropZoneForLevel(levelN) {
+  const n = Math.floor(Number(levelN) || 0);
+  if (n >= 61 && n <= 70) return 'hell';
+  if (n >= 51 && n <= 60) return 'nightmare';
+  return null;
+}
+
+function isZoneWeapon(w) {
+  const base = typeof w === 'string' ? weaponById(w) : w;
+  return !!(base && base.dropZone);
+}
+
+function zoneWeaponsFor(zone) {
+  return WEAPONS.filter(w => w.dropZone === zone);
+}
+
+function weaponEffectLabel(w) {
+  const base = typeof w === 'string' ? weaponById(w) : w;
+  if (!base || !base.effect) return '';
+  if (base.effectLabel) return base.effectLabel;
+  return String(base.effect);
+}
+
+/** Zone-wapens: alleen via drop in Nachtmerrie/Hel (save.zoneWeapons). */
+function weaponZoneUnlocked(w) {
+  const base = typeof w === 'string' ? weaponById(w) : w;
+  if (!base || !base.dropZone) return true;
+  return !!(typeof save !== 'undefined' && save.zoneWeapons && save.zoneWeapons[base.id]);
+}
+
+function grantZoneWeapon(weaponId, opts) {
+  opts = opts || {};
+  const w = weaponById(weaponId);
+  if (!w || !w.dropZone) return false;
+  if (!save.zoneWeapons || typeof save.zoneWeapons !== 'object') save.zoneWeapons = {};
+  if (save.zoneWeapons[w.id]) return false;
+  save.zoneWeapons[w.id] = 1;
+  try { persist(); } catch (_) {}
+  if (!opts.silent) {
+    try {
+      const zone = weaponDropZoneOf(w);
+      const col = zone ? zone.color : '#c47aff';
+      UI.toast(`${zone ? zone.name : 'Zone'}: ${weaponLabel(w)}!`, 3800);
+      if (typeof game !== 'undefined' && game && typeof game.banner === 'function') {
+        game.banner(weaponLabel(w), 2.1, col, 34);
+      }
+      AudioSys.sfx('newmonster');
+    } catch (_) {}
+  }
+  return true;
+}
+
+function rollZoneWeaponDrop(game, monster) {
+  if (!game || game.mode !== 'adventure' || !game.level) return null;
+  const zone = adventureDropZoneForLevel(game.level.n);
+  if (!zone) return null;
+  const pool = zoneWeaponsFor(zone).filter(w => !weaponZoneUnlocked(w));
+  if (!pool.length) return null;
+  let chance = 0.045;
+  if (monster) {
+    if (monster.superBoss) chance = 0.55;
+    else if (monster.elite) chance = 0.18;
+    else if (monster.giant) chance = 0.09;
+  }
+  if (game.level.boss && monster && monster.elite) chance = Math.max(chance, 0.28);
+  if (Math.random() > chance) return null;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  if (grantZoneWeapon(pick.id)) return pick;
+  return null;
+}
+
+/** Garantie-drop bij eilandbaas-clear (Lv 60 / 70). */
+function grantZoneBossClearWeapon(levelN) {
+  const zone = adventureDropZoneForLevel(levelN);
+  if (!zone) return null;
+  if (levelN !== 60 && levelN !== 70) return null;
+  const pool = zoneWeaponsFor(zone).filter(w => !weaponZoneUnlocked(w));
+  if (!pool.length) return null;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  if (grantZoneWeapon(pick.id)) return pick;
+  return null;
+}
+
+/* —— On-hit effecten voor zone-wapens —— */
+function applyWeaponOnHitEffect(game, fighter, target, hit) {
+  if (!game || !fighter || !target || !target.alive) return;
+  const w = fighter.weapon;
+  if (!w || !w.effect) return;
+  const effect = w.effect;
+  const dmg = (hit && hit.dmg) || 10;
+  const finisher = !!(hit && hit.finisher);
+  const x = target.x, y = target.y - (target.size || 20) * 0.4;
+  const label = weaponEffectLabel(w);
+  const floater = (txt, col) => {
+    try { game.floater(x, y - 18, txt, col || '#ff6b9d', 13, 'fx'); } catch (_) {}
+  };
+
+  switch (effect) {
+    case 'burn':
+    case 'inferno':
+    case 'popburn':
+    case 'magma':
+    case 'soapburn':
+    case 'chainburn':
+    case 'ashpull': {
+      const ticks = effect === 'inferno' ? 5 : (effect === 'magma' ? 4 : 3);
+      const tickDmg = Math.max(2, Math.round(dmg * (effect === 'inferno' ? 0.22 : 0.14)));
+      target.wpnBurnT = Math.max(target.wpnBurnT || 0, ticks * 0.55);
+      target.wpnBurnDmg = Math.max(target.wpnBurnDmg || 0, tickDmg);
+      target.wpnBurnTick = 0.55;
+      if (effect === 'popburn' || effect === 'magma') {
+        try { game.burst(x, y, '#ff6a3d', 10, { kind: 'spark', size: 2.4 }); } catch (_) {}
+      }
+      if (effect === 'soapburn' || effect === 'ashpull') {
+        try { applySuperMonsterSlow(target, 1.1, 0.45); } catch (_) {}
+      }
+      if (effect === 'chainburn' || effect === 'ashpull') {
+        for (const m of game.monsters || []) {
+          if (!m.alive || m === target) continue;
+          if ((m.x - target.x) ** 2 + (m.y - target.y) ** 2 < 140 * 140) {
+            m.wpnBurnT = Math.max(m.wpnBurnT || 0, 1.4);
+            m.wpnBurnDmg = Math.max(m.wpnBurnDmg || 0, Math.round(tickDmg * 0.7));
+            m.wpnBurnTick = 0.5;
+          }
+        }
+      }
+      if (effect === 'ashpull' || effect === 'pull') {
+        const dir = Math.sign(fighter.x - target.x) || 1;
+        target.vx = (target.vx || 0) + dir * 180;
+      }
+      floater(label || '🔥', '#ff6a3d');
+      break;
+    }
+    case 'drowsy':
+    case 'slip':
+    case 'freeze':
+    case 'frostfire': {
+      const slow = effect === 'freeze' ? 0.08 : 0.35;
+      const dur = effect === 'freeze' ? 1.35 : 1.05;
+      try { applySuperMonsterSlow(target, dur, slow); } catch (_) {}
+      if (effect === 'freeze') {
+        try { game.freezeT = Math.max(game.freezeT || 0, 0.04); } catch (_) {}
+        try { game.burst(x, y, '#7cf5ff', 8, { kind: 'spark', size: 2 }); } catch (_) {}
+      }
+      if (effect === 'frostfire') {
+        target.wpnBurnT = Math.max(target.wpnBurnT || 0, 2.0);
+        target.wpnBurnDmg = Math.max(target.wpnBurnDmg || 0, Math.round(dmg * 0.16));
+        target.wpnBurnTick = 0.5;
+      }
+      floater(label || '💤', effect === 'frostfire' ? '#ff8c42' : '#7cf5ff');
+      break;
+    }
+    case 'flipkb':
+    case 'confuse':
+    case 'spinchaos': {
+      target.face = -(target.face || 1);
+      target.vx = -(target.vx || 0) * 1.35 - (fighter.face || 1) * 90;
+      if (effect === 'spinchaos') {
+        target.superSlowT = Math.max(target.superSlowT || 0, 0.7);
+        target.superSlowMul = Math.min(target.superSlowMul || 1, 0.4);
+      }
+      floater(label || '‽', '#c47aff');
+      break;
+    }
+    case 'echo':
+    case 'quake':
+    case 'sonic':
+    case 'meteor':
+    case 'quakboom':
+    case 'explodepeel':
+    case 'balloon': {
+      const r = effect === 'meteor' ? 170 : (effect === 'quake' || effect === 'sonic' ? 150 : 120);
+      const aoeMul = effect === 'meteor' ? 0.55 : (effect === 'balloon' && !finisher ? 0.2 : 0.38);
+      if (effect === 'balloon' && !finisher) break;
+      for (const m of game.monsters || []) {
+        if (!m.alive) continue;
+        const dist2 = (m.x - target.x) ** 2 + (m.y - target.y) ** 2;
+        if (dist2 > r * r) continue;
+        const splash = Math.max(3, Math.round(dmg * aoeMul * (m === target ? 0.35 : 1)));
+        if (m !== target) {
+          try { m.takeDamage(splash, (fighter.face || 1) * 120, game, { kind: 'weapon' }); } catch (_) {}
+        }
+      }
+      try {
+        const col = effect === 'quakboom' ? '#ffe259' : (effect === 'sonic' ? '#ff6b9d' : '#ff6a3d');
+        game.burst(x, y, col, effect === 'meteor' ? 22 : 14, { kind: 'spark', size: 3 });
+        spawnFxRing(game, x, y, col, r * 0.35);
+      } catch (_) {}
+      floater(label || 'BOOM', '#ffd75e');
+      break;
+    }
+    case 'lifesteal': {
+      if (fighter.isPlayer || fighter.playerSlot) {
+        const heal = Math.max(2, Math.round(dmg * 0.18));
+        fighter.hp = Math.min(fighter.maxhp, (fighter.hp || 0) + heal);
+        floater(`+${heal}`, '#6ee06e');
+      }
+      break;
+    }
+    case 'pull': {
+      const dir = Math.sign(fighter.x - target.x) || 1;
+      target.vx = (target.vx || 0) + dir * 220;
+      floater(label || '←', '#b06ae0');
+      break;
+    }
+    case 'critsurge': {
+      fighter._wpnCritSurgeT = Math.max(fighter._wpnCritSurgeT || 0, 2.4);
+      floater(label || 'CRIT↑', '#ffd75e');
+      break;
+    }
+    case 'flutter': {
+      if (!game._wpnFlutterQueue) game._wpnFlutterQueue = [];
+      game._wpnFlutterQueue.push({
+        t: 0.12, left: 2, target, dmg: Math.max(2, Math.round(dmg * 0.28)), face: fighter.face || 1, owner: fighter,
+      });
+      floater(label || '···', '#c47aff');
+      break;
+    }
+    case 'bleed': {
+      target.wpnBleedT = Math.max(target.wpnBleedT || 0, 2.6);
+      target.wpnBleedDmg = Math.max(target.wpnBleedDmg || 0, Math.round(dmg * 0.12));
+      target.wpnBleedTick = 0.45;
+      floater(label || '🩸', '#ff4d6d');
+      break;
+    }
+    case 'execute': {
+      const pct = target.hp / Math.max(1, target.maxhp);
+      if (pct <= 0.18) {
+        try { target.takeDamage(target.hp + 1, (fighter.face || 1) * 200, game, { kind: 'weapon', crit: true }); } catch (_) {}
+        floater('WIPE!', '#ff6a3d');
+        try { game.burst(x, y, '#ff6a3d', 16, { kind: 'spark', size: 3 }); } catch (_) {}
+      }
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+function tickWeaponStatusEffects(game, dt) {
+  if (!game || !game.monsters) return;
+  for (const m of game.monsters) {
+    if (!m.alive) continue;
+    if (m.wpnBurnT > 0) {
+      m.wpnBurnT -= dt;
+      m.wpnBurnTick = (m.wpnBurnTick || 0) - dt;
+      if (m.wpnBurnTick <= 0) {
+        m.wpnBurnTick = 0.55;
+        const d = Math.max(1, m.wpnBurnDmg || 2);
+        try { m.takeDamage(d, 0, game, { kind: 'weapon' }); } catch (_) {}
+        try { game.burst(m.x, m.y - m.size * 0.4, '#ff6a3d', 3, { kind: 'spark', size: 1.5 }); } catch (_) {}
+      }
+    }
+    if (m.wpnBleedT > 0) {
+      m.wpnBleedT -= dt;
+      m.wpnBleedTick = (m.wpnBleedTick || 0) - dt;
+      if (m.wpnBleedTick <= 0) {
+        m.wpnBleedTick = 0.45;
+        const d = Math.max(1, m.wpnBleedDmg || 2);
+        try { m.takeDamage(d, 0, game, { kind: 'weapon' }); } catch (_) {}
+      }
+    }
+  }
+  if (game._wpnFlutterQueue && game._wpnFlutterQueue.length) {
+    for (let i = game._wpnFlutterQueue.length - 1; i >= 0; i--) {
+      const q = game._wpnFlutterQueue[i];
+      q.t -= dt;
+      if (q.t > 0) continue;
+      if (!q.target || !q.target.alive || q.left <= 0) {
+        game._wpnFlutterQueue.splice(i, 1);
+        continue;
+      }
+      try { q.target.takeDamage(q.dmg, q.face * 40, game, { kind: 'weapon' }); } catch (_) {}
+      try { game.burst(q.target.x, q.target.y - q.target.size * 0.3, '#c47aff', 4, { kind: 'spark', size: 1.8 }); } catch (_) {}
+      q.left -= 1;
+      q.t = 0.1;
+      if (q.left <= 0) game._wpnFlutterQueue.splice(i, 1);
+    }
+  }
+}
 /* --- src/data/styles.js --- */
 /* ============================== STIJLEN ================================ */
 const STYLES = [
@@ -5870,6 +6300,12 @@ function weaponHitSfx(weaponOrId, dmg) {
   if (id === 'shuriken' || id === 'fuuma') return 'hitMetal';
   if (id === 'boemerang') return 'hit2';
   if (id === 'waaier') return 'hit2';
+  const w = typeof weaponOrId === 'object' && weaponOrId ? weaponOrId : (typeof weaponById === 'function' ? weaponById(id) : null);
+  if (w && (w.rarity === 'nightmare' || w.rarity === 'hell')) {
+    if (w.effect === 'quake' || w.effect === 'meteor' || w.effect === 'quakboom') return 'hitHeavy';
+    if (w.effect === 'burn' || w.effect === 'inferno' || w.effect === 'sonic') return 'hitEnergy';
+    return 'hit2';
+  }
   if (dmg > 22) return 'hit2';
   return 'hit';
 }
@@ -6065,6 +6501,33 @@ const WEAPON_COMBOS = {
       { pose: 'upper', rangeMul: 1.06, dmgMul: 1.18, kbMul: 1.28, hitY: -14, windupMul: 1.1, activeMul: 0.96 },
     ],
   },
+  nachtkaars: { labels: ['Wax-snit', 'Drip-stoot', 'Kaars-finisher'] },
+  droomprikker: { labels: ['Prik', 'Droom-haak', 'Slapeloos'] },
+  spooklepel: { labels: ['Lepel-slap', 'Omkeer', 'Spook-scoop'] },
+  nachtmerriesok: { labels: ['Sok-slap', 'Nat-zwiep', 'Was-finisher'] },
+  echotrompet: { labels: ['Blaas', 'Echo-sweep', 'Fanfare'] },
+  schaduwbanaan: { labels: ['Schil', 'Slip-stoot', 'Banaan-boom'] },
+  voidvork: { labels: ['Vork-prik', 'Leegte-hap', 'Drie-tand'] },
+  angstaccordeon: { labels: ['Zuig-akkoord', 'Pomp', 'Angst-crescendo'] },
+  slaapkussen: { labels: ['Pluis-klop', 'Kussen-slam', 'Nacht-uit'] },
+  spooktoaster: { labels: ['Toast-in', 'Pop!', 'Verbrand'] },
+  droomspiegel: { labels: ['Spiegel-snit', 'Reflect', 'Krit-nova'] },
+  nachtuilvleugel: { labels: ['Fladder', 'Uil-sweep', 'Nachtvlucht'] },
+  waanballon: { labels: ['Opblazen', 'Wobble', 'POP!'] },
+  schriktandwiel: { labels: ['Rammel', 'Tand-hak', 'Gear-grind'] },
+  hellevork: { labels: ['Zwavel-prik', 'Hel-stoot', 'Drie-vlam'] },
+  lavalepel: { labels: ['Schep-lava', 'Plas-slam', 'Magma-scoop'] },
+  duiveltrommel: { labels: ['Beuk', 'Rol-slag', 'Hel-solo'] },
+  zwavelzeep: { labels: ['Glad', 'Schuim-stoot', 'Zeep-boom'] },
+  infernoijsje: { labels: ['Lik-koud', 'Smelt', 'Inferno-dip'] },
+  helhamsterwiel: { labels: ['Rol', 'Chaos-spin', 'Wiel-crash'] },
+  brimstonebanaan: { labels: ['Schil', 'Brim-slip', 'Knal-banaan'] },
+  demondoekje: { labels: ['Veeg', 'Wipe', 'EXECUTE'] },
+  asaccordeon: { labels: ['As-zuig', 'Pomp-vuur', 'Crescendo'] },
+  chiliketting: { labels: ['Chili-flurry', 'Kettingsmaak', 'Brand-regen'] },
+  helgitaar: { labels: ['Riff', 'Powerchord', 'Solo-finisher'] },
+  pyroeend: { labels: ['QUAK', 'Vlam-eend', 'BOOM-eend'] },
+  apocalypslepel: { labels: ['Wereld-schep', 'Meteor-scoop', 'EINDE'] },
   master_sword: {
     labels: ['Licht-slice', 'Zwaard-dans', 'Triforce-hak'],
     moves: [
@@ -6090,13 +6553,18 @@ function weaponComboSet(id) {
 function weaponMoveFamily(id) {
   if (id === 'master_sword') return 'slash';
   if (isThrowWeapon(id) || id === 'vuist') return null;
-  if (id === 'speer' || id === 'drietand' || id === 'bostaf') return 'spear';
-  if (id === 'knuppel' || id === 'hamer' || id === 'tonfa' || id === 'guvve' || id === 'donder') return 'blunt';
-  if (id === 'nunchaku' || id === 'ketting' || id === 'vlamzweep') return 'chain';
-  if (id === 'kama' || id === 'zeis') return 'hook';
-  if (id === 'waaier') return 'fan';
-  if (id === 'sai') return 'dual';
-  if (id === 'laser' || id === 'void' || id === 'kristal' || id === 'sterkling') return 'energy';
+  if (id === 'speer' || id === 'drietand' || id === 'bostaf' || id === 'echotrompet' || id === 'helgitaar') return 'spear';
+  if (id === 'knuppel' || id === 'hamer' || id === 'tonfa' || id === 'guvve' || id === 'donder'
+    || id === 'slaapkussen' || id === 'duiveltrommel' || id === 'apocalypslepel' || id === 'pyroeend') return 'blunt';
+  if (id === 'nunchaku' || id === 'ketting' || id === 'vlamzweep' || id === 'chiliketting'
+    || id === 'angstaccordeon' || id === 'asaccordeon' || id === 'helhamsterwiel') return 'chain';
+  if (id === 'kama' || id === 'zeis' || id === 'voidvork' || id === 'hellevork' || id === 'droomprikker') return 'hook';
+  if (id === 'waaier' || id === 'nachtuilvleugel' || id === 'demondoekje') return 'fan';
+  if (id === 'sai' || id === 'nachtmerriesok' || id === 'zwavelzeep') return 'dual';
+  if (id === 'laser' || id === 'void' || id === 'kristal' || id === 'sterkling'
+    || id === 'nachtkaars' || id === 'spooktoaster' || id === 'droomspiegel' || id === 'waanballon'
+    || id === 'lavalepel' || id === 'infernoijsje' || id === 'brimstonebanaan') return 'energy';
+  if (id === 'spooklepel' || id === 'schaduwbanaan' || id === 'schriktandwiel') return 'slash';
   return 'slash';
 }
 
@@ -8273,6 +8741,12 @@ const WORLD_THEMES = [
   'cyber','vulkaan','dojo','cyber','cyber',
   'cyber','vulkaan','dojo','cyber','cyber',
   'cyber','cyber','cyber','cyber','cyber',
+  /* Nachtmerrie 51–60 */
+  'nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie',
+  'nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie',
+  /* Hel 61–70 */
+  'hel','hel','hel','hel','hel',
+  'hel','hel','hel','hel','hel',
 ];
 const UNLOCK_AT = {
   slymo: 1, bubbel: 1, flapper: 2, piepvleugel: 5, stekelra: 3, ijzerstek: 9,
@@ -8345,6 +8819,10 @@ const BOSS_AT = {
   40: [{ sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst' }],
   45: [{ sp: 'voidkonijn', elite: true }, { sp: 'guvvedrak' }],
   50: [{ sp: 'guvvedrak', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst', elite: true }],
+  55: [{ sp: 'voidkonijn', elite: true }, { sp: 'neondrake', elite: true }, { sp: 'schaduwvorst' }],
+  60: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'voidkonijn', elite: true }],
+  65: [{ sp: 'omegadrake', elite: true }, { sp: 'etherwyrm', elite: true }, { sp: 'neondrake' }],
+  70: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'apexwyrm', elite: true }, { sp: 'voidkonijn', elite: true }],
 };
 
 function weightedPick(pool, n) {
@@ -8434,7 +8912,7 @@ function rollWaveGiant(n, elite) {
 function buildLevel(n) {
   const hpMul = 1 + (n - 1) * 0.14;
   const dmgMul = 1 + (n - 1) * 0.08;
-  const maxRarity = n >= 45 ? 5 : n >= 32 ? 4 : n >= 20 ? 3 : n >= 10 ? 2 : n >= 4 ? 1 : 0;
+  const maxRarity = n >= 61 ? 7 : n >= 51 ? 6 : n >= 45 ? 5 : n >= 32 ? 4 : n >= 20 ? 3 : n >= 10 ? 2 : n >= 4 ? 1 : 0;
   const fightPool = Object.keys(UNLOCK_AT).filter(id => {
     const sp = SPECIES[id];
     return sp && UNLOCK_AT[id] <= n && rarityOf(sp.rarity).order <= maxRarity && id !== 'guvvedrak';
@@ -8496,8 +8974,8 @@ function buildLevel(n) {
     waves.push(bossWave);
     waveMeta.push({ trait: 'boss', spawnMul: 1, label: 'Baas-golf' });
   }
-  const theme = WORLD_THEMES[n - 1] || 'cyber';
-  const rarityCap = ['common','uncommon','rare','epic','legendary','mythic'][maxRarity];
+  const theme = WORLD_THEMES[n - 1] || (n >= 61 ? 'hel' : (n >= 51 ? 'nachtmerrie' : 'cyber'));
+  const rarityCap = ['common','uncommon','rare','epic','legendary','mythic','nightmare','hell'][maxRarity];
   return { n, waves, waveMeta, hpMul, dmgMul, theme, boss: !!BOSS_AT[n], rarityCap };
 }
 
@@ -9527,7 +10005,7 @@ function seedNlGameStrings() {
     '<b>RabbitRobot:</b> hij gebruikt <b>Chidori</b> (bliksem) — wacht tot hij open is.',
     '<b>Muur:</b> 60s timer · combo-balk (+4% sloop per hit) · milestones ×3/×5/×8 · record-tempo in HUD · bom/goud bonusstenen.',
     '<b>Rariteiten:</b> Gewoon → Ongewoon → Zeldzaam → Episch → Legendarisch → Mythisch. Zeldzamer = meer XP & meer max HP.',
-    '<b>50 levels:</b> <b>5 eilanden × 10 levels</b> — skill gate wapens per eiland · baas Lv 10/20/30/40/50 opent volgend eiland · 5× verlies = Meester-buff (+20%).',
+    '<b>70 levels:</b> <b>7 eilanden × 10 levels</b> — skill gate wapens per eiland · baas Lv 10/20/30/40/50/60/70 opent volgend eiland · Nachtmerrie/Hel droppen zone-wapens · 5× verlies = Meester-buff (+20%).',
     '<b>Backup:</b> elke save wordt dubbel opgeslagen — bij problemen: <b>Instellingen → Herstel save uit backup</b>.',
     '<b>Delen:</b> menu → <b>Deel link</b> — vrienden op Android openen in Chrome → Zet in app-lade. Zie ANDROID-DELEN.txt op GitHub.',
     '<b>Offline:</b> na 1× online openen cache’t de app HTML+JS — banner onderaan bij geen net. Tunnel-link heeft internet nodig; GitHub Pages + app-lade = stabielst.',
@@ -9579,7 +10057,7 @@ function seedNlGameStrings() {
   ];
   I18N.nl.menu.tips = [
     'Kies een tegel — Avontuur · Arcade · 2P · Collectie',
-    '5 eilanden — baas Lv 10/20/30/40/50 opent volgend eiland',
+    '7 eilanden — baas Lv 10/20/30/40/50/60/70 opent volgend eiland · Nachtmerrie & Hel droppen gekke wapens',
     'Skill gate — max wapen per eiland in avontuur',
     '5× verlies op één level = Meester-buff +20%',
     'Training = solo · Versus = 2P lokaal op iPad',
@@ -9622,7 +10100,7 @@ function seedNlGameStrings() {
     charPickNow2: 'P2',
     charIpadTip: 'iPad: speler 1 gebruikt de linker helft van het scherm (joystick + knoppen), speler 2 de rechter helft. Draai je iPad liggend voor het meeste ruimte.',
     levelHead: 'Kies een eiland',
-    levelSub: '5 eilanden × 10 levels · Tik level = Gooi & start · lang indrukken = zonder gok',
+    levelSub: '7 eilanden × 10 levels · Tik level = Gooi & start · lang indrukken = zonder gok',
     gambleSub: 'Twee dobbelstenen: pech = super-baas in een willekeurige golf · geluk = sterke bondgenoot (buff alleen dit level)',
     gambleSumDefault: 'Tik Gooi & start — of overslaan zonder gok',
     gambleSumRoll: 'Som: {d1} + {d2} = {sum}',
@@ -9684,7 +10162,7 @@ function seedNlGameStrings() {
     superStat_charge: 'Laden',
     superHudCd: 'Nood-super {n}s',
     weaponHead: 'Wapens',
-    weaponSub: 'Summons zijn echt · eiland-skill gate: alleen wapens tot je huidige eiland-cap in avontuur',
+    weaponSub: 'Summons · eiland-skill gate · Nachtmerrie/Hel zone-drops met gekke effecten',
     skillHead: 'Upgrades',
     skillSub: 'Shards in avontuur · skills, wapens, pets & stijl · meestal max Lv 3 · zeldzaam Lv 5',
     skillTabSkills: 'Skills',
@@ -9736,7 +10214,7 @@ function seedNlGameStrings() {
     helpTouch: 'touch',
     helpKeyboard: 'toetsenbord',
     helpIslandTitle: 'Eilanden & skill gate',
-    helpIslandIntro: 'avontuur is 5×10 levels. Per eiland geldt een wapen-cap (nu Lv {cap} op eiland {cur}).',
+    helpIslandIntro: 'avontuur is 7×10 levels. Per eiland geldt een wapen-cap (nu Lv {cap} op eiland {cur}). Nachtmerrie/Hel droppen zone-wapens.',
     helpMasterBuff: 'Meester-buff: 5× verlies op hetzelfde level → +20% HP, snelheid & schade tot je wint. Baas op Lv 10/20/30/40/50 opent het volgende eiland.',
     helpIslandLocked: 'Vergrendeld — versla baas Lv {lv}',
     helpIslandProg: '{cleared}/{total} levels · {stars}/{maxStars}★ · skill gate wapens Lv {cap}',
@@ -9777,7 +10255,7 @@ function seedNlGameStrings() {
     installSub: 'Verschijnt als icoon — net als een echte app',
     boss: 'BAAS',
     topHunter: 'Top jager',
-    modeAdventure: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok · omringd = KABLAM!',
+    modeAdventure: '7 eilanden × 10 levels · skill gate · Nachtmerrie/Hel zone-wapens · Meester-buff · dobbel-gok · KABLAM!',
     modeTraining: 'Combo-trainer ×5/×8/×10 · 3s dummy · lasers · Chidori',
     modeWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing',
     modeVersus: 'P1 links P2 rechts · best-of-3 · rematch in pauze',
@@ -9960,6 +10438,8 @@ const CATALOG_EN = {
     streak10: { name: 'Unstoppable', desc: 'Kill streak ×10 in adventure' },
     trainCombo10: { name: 'Dummy master', desc: 'Training combo ×10' },
     lv50: { name: 'Legend', desc: 'Unlock level 50' },
+    lv70: { name: 'Hell legend', desc: 'Unlock level 70 (Hell)' },
+    zoneWeapons10: { name: 'Zone collector', desc: 'Collect 10 Nightmare/Hell weapons' },
     daily7: { name: 'Determined', desc: 'Claim 7 daily bonuses' },
     vs5: { name: 'Duelist', desc: 'Play 5× 2-player duels' },
     vsFatality1: { name: 'Finish him!', desc: 'Land a versus fatality on match KO' },
@@ -10123,7 +10603,7 @@ const CATALOG_EN = {
     'RabbitRobot: uses Chidori (lightning) — wait until he opens up.',
     'Wall: 60s timer · combo bar (+4% smash per hit) · milestones ×3/×5/×8 · record pace in HUD · bomb/gold bonus bricks.',
     'Rarities: Common → Uncommon → Rare → Epic → Legendary → Mythic. Rarer = more XP & max HP.',
-    '50 levels: 5 islands × 10 levels — skill gate weapons per island · boss Lv 10/20/30/40/50 opens next island · 5× loss = Master buff (+20%).',
+    '70 levels: 7 islands × 10 levels — skill gate weapons · Nightmare/Hell zone weapon drops · boss Lv 10…70 · 5× loss = Master buff (+20%).',
     'Backup: every save is stored twice — if needed: Settings → Restore save from backup.',
     'Share: menu → Share link — friends on Android open in Chrome → Add to home screen. See ANDROID-DELEN.txt on GitHub.',
     'Offline: after opening online once the app caches HTML+JS — banner at bottom when offline. Tunnel links need internet; GitHub Pages + home screen = most stable.',
@@ -10342,7 +10822,7 @@ const CATALOG_EN = {
     charPickNow2: 'P2',
     charIpadTip: 'iPad: player 1 uses the left half (joystick + buttons), player 2 the right half. Landscape works best.',
     levelHead: 'Pick an island',
-    levelSub: '5 islands × 10 levels · Tap level = Roll & start · long press = no gamble',
+    levelSub: '7 islands × 10 levels · Tap level = Roll & start · long press = no gamble',
     gambleSub: 'Two dice: bad luck = super-boss in a random wave · lucky = strong ally (buff this level only)',
     gambleSumDefault: 'Tap Roll & start — or skip with no gamble',
     gambleSumRoll: 'Sum: {d1} + {d2} = {sum}',
@@ -10404,7 +10884,7 @@ const CATALOG_EN = {
     superStat_charge: 'Charge',
     superHudCd: 'Emergency super {n}s',
     weaponHead: 'Weapons',
-    weaponSub: 'Summons are real · island skill gate: adventure weapons up to your island cap',
+    weaponSub: 'Summons · island skill gate · Nightmare/Hell zone drops with wild effects',
     skillHead: 'Upgrades',
     skillSub: 'Adventure shards · skills, weapons, pets & style · usually max Lv 3 · rare Lv 5',
     skillTabSkills: 'Skills',
@@ -10456,7 +10936,7 @@ const CATALOG_EN = {
     helpTouch: 'touch',
     helpKeyboard: 'keyboard',
     helpIslandTitle: 'Islands & skill gate',
-    helpIslandIntro: 'adventure is 5×10 levels. Each island has a weapon cap (now Lv {cap} on island {cur}).',
+    helpIslandIntro: 'adventure is 7×10 levels. Each island has a weapon cap (now Lv {cap} on island {cur}). Nightmare/Hell drop zone weapons.',
     helpMasterBuff: 'Master buff: 5× loss on same level → +20% HP, speed & damage until you win. Boss Lv 10/20/30/40/50 opens next island.',
     helpIslandLocked: 'Locked — beat boss Lv {lv}',
     helpIslandProg: '{cleared}/{total} levels · {stars}/{maxStars}★ · skill gate weapons Lv {cap}',
@@ -10497,7 +10977,7 @@ const CATALOG_EN = {
     installSub: 'Shows as an icon — like a real app',
     boss: 'BOSS',
     topHunter: 'Top hunter',
-    modeAdventure: '5 islands × 10 levels · skill gate weapons · Master buff after 5× loss · gamble roll · swarmed = KABLAM!',
+    modeAdventure: '7 islands × 10 levels · skill gate · Nightmare/Hell zone weapons · Master buff · gamble · KABLAM!',
     modeTraining: 'Combo trainer ×5/×8/×10 · 3s dummy · lasers · Chidori',
     modeWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD · 5s warning',
     modeVersus: 'P1 left P2 right · best-of-3 · rematch in pause',
@@ -10554,7 +11034,7 @@ const CATALOG_EN = {
   },
   menu: { tips: [
     'Pick a tile — Adventure · Arcade · 2P · Collection',
-    '5 islands — boss Lv 10/20/30/40/50 opens next island',
+    '7 islands — boss Lv 10/20/30/40/50/60/70 opens next island · Nightmare & Hell drop wild weapons',
     'Skill gate — max weapon per island in adventure',
     '5× loss on one level = Master buff +20%',
     'Training = solo · Versus = 2P local on iPad',
@@ -14193,6 +14673,143 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.fillStyle = '#222'; c.beginPath(); c.arc(50, -3, 2.5, 0, TAU); c.fill();
       c.strokeStyle = '#ff8c42'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(58, 2); c.lineTo(70, 6); c.stroke();
       break;
+    case 'nachtkaars':
+      c.strokeStyle = '#c47aff'; c.lineWidth = 5; c.beginPath(); c.moveTo(0, 0); c.lineTo(28, 0); c.stroke();
+      c.fillStyle = '#2a1840'; c.fillRect(26, -8, 14, 16);
+      c.fillStyle = '#ffd75e'; c.beginPath(); c.moveTo(33, -8); c.lineTo(36, -20); c.lineTo(39, -8); c.fill();
+      break;
+    case 'droomprikker':
+      c.strokeStyle = '#8a70c0'; c.lineWidth = 3; c.beginPath(); c.moveTo(0, 0); c.lineTo(44, 0); c.stroke();
+      c.fillStyle = '#e8d0ff'; c.beginPath(); c.moveTo(42, -5); c.lineTo(58, 0); c.lineTo(42, 5); c.fill();
+      break;
+    case 'spooklepel':
+    case 'lavalepel':
+    case 'apocalypslepel': {
+      const col = id === 'apocalypslepel' ? '#ff6a3d' : (id === 'lavalepel' ? '#ff8c42' : '#c47aff');
+      c.strokeStyle = '#5a4030'; c.lineWidth = 4; c.beginPath(); c.moveTo(0, 0); c.lineTo(30, 0); c.stroke();
+      c.fillStyle = col;
+      c.beginPath(); c.ellipse(44, 0, 16, 10, 0, 0, TAU); c.fill();
+      c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(44, -2, 8, 4, 0, 0, TAU); c.fill();
+      break;
+    }
+    case 'nachtmerriesok':
+      c.fillStyle = '#6a40a0'; c.beginPath(); c.moveTo(4, -6); c.lineTo(28, -8); c.lineTo(36, 2); c.lineTo(28, 10); c.lineTo(4, 8); c.fill();
+      c.fillStyle = '#ff6b9d'; c.fillRect(28, -4, 14, 10);
+      break;
+    case 'echotrompet':
+    case 'helgitaar': {
+      c.strokeStyle = id === 'helgitaar' ? '#ff6a3d' : '#c47aff';
+      c.lineWidth = 5; c.beginPath(); c.moveTo(0, 0); c.lineTo(26, 0); c.stroke();
+      c.fillStyle = id === 'helgitaar' ? '#8a2020' : '#2a1840';
+      c.beginPath(); c.moveTo(24, -12); c.lineTo(52, -6); c.lineTo(52, 6); c.lineTo(24, 12); c.fill();
+      if (id === 'helgitaar') {
+        c.strokeStyle = '#ffd75e'; c.lineWidth = 1.5;
+        c.beginPath(); c.moveTo(28, -4); c.lineTo(48, -2); c.moveTo(28, 4); c.lineTo(48, 2); c.stroke();
+      }
+      break;
+    }
+    case 'schaduwbanaan':
+    case 'brimstonebanaan': {
+      const col = id === 'brimstonebanaan' ? '#ff6a3d' : '#a060e0';
+      c.strokeStyle = col; c.lineWidth = 10; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(8, 10); c.quadraticCurveTo(28, -18, 50, 4); c.stroke();
+      c.strokeStyle = '#ffe259'; c.lineWidth = 3;
+      c.beginPath(); c.moveTo(12, 6); c.quadraticCurveTo(28, -10, 46, 2); c.stroke();
+      break;
+    }
+    case 'voidvork':
+    case 'hellevork': {
+      const col = id === 'hellevork' ? '#ff6a3d' : '#ff6b9d';
+      c.strokeStyle = '#4a3040'; c.lineWidth = 4; c.beginPath(); c.moveTo(0, 0); c.lineTo(34, 0); c.stroke();
+      c.strokeStyle = col; c.lineWidth = 3;
+      c.beginPath(); c.moveTo(34, 0); c.lineTo(56, 0); c.moveTo(34, -2); c.lineTo(52, -12); c.moveTo(34, 2); c.lineTo(52, 12); c.stroke();
+      break;
+    }
+    case 'angstaccordeon':
+    case 'asaccordeon': {
+      const col = id === 'asaccordeon' ? '#ff6a3d' : '#c47aff';
+      c.fillStyle = col;
+      for (let i = 0; i < 5; i++) c.fillRect(8 + i * 8, -12 + (i % 2) * 3, 6, 24 - (i % 2) * 4);
+      c.strokeStyle = '#2a1840'; c.lineWidth = 3; c.strokeRect(6, -14, 44, 28);
+      break;
+    }
+    case 'slaapkussen':
+      c.fillStyle = '#e8d0ff'; c.beginPath(); c.ellipse(28, 0, 26, 16, 0, 0, TAU); c.fill();
+      c.strokeStyle = '#c47aff'; c.lineWidth = 2; c.stroke();
+      break;
+    case 'spooktoaster':
+      c.fillStyle = '#6a5080'; c.fillRect(8, -14, 36, 28);
+      c.fillStyle = '#ff6b9d'; c.fillRect(14, -8, 10, 16); c.fillRect(28, -8, 10, 16);
+      c.fillStyle = '#ffd75e'; c.fillRect(16, -18, 6, 8); c.fillRect(30, -20, 6, 10);
+      break;
+    case 'droomspiegel':
+      c.strokeStyle = '#c47aff'; c.lineWidth = 4; c.beginPath(); c.moveTo(4, 0); c.lineTo(18, 0); c.stroke();
+      c.fillStyle = 'rgba(124,245,255,.45)'; c.beginPath(); c.moveTo(18, -14); c.lineTo(52, -10); c.lineTo(52, 10); c.lineTo(18, 14); c.fill();
+      c.strokeStyle = '#e8ffff'; c.lineWidth = 2; c.stroke();
+      break;
+    case 'nachtuilvleugel':
+      c.fillStyle = '#2a1840';
+      c.beginPath(); c.moveTo(4, 0); c.quadraticCurveTo(28, -22, 54, -4); c.quadraticCurveTo(28, -6, 4, 0); c.fill();
+      c.fillStyle = '#c47aff';
+      c.beginPath(); c.moveTo(4, 0); c.quadraticCurveTo(26, 18, 50, 6); c.quadraticCurveTo(26, 4, 4, 0); c.fill();
+      break;
+    case 'waanballon':
+      c.fillStyle = '#ff6b9d'; c.beginPath(); c.arc(34, -4, 18, 0, TAU); c.fill();
+      c.strokeStyle = '#c47aff'; c.lineWidth = 2; c.beginPath(); c.moveTo(34, 14); c.lineTo(34, 28); c.stroke();
+      break;
+    case 'schriktandwiel':
+      c.save(); c.translate(30, 0); c.rotate(spin * 8);
+      c.fillStyle = '#6a40a0';
+      for (let i = 0; i < 8; i++) {
+        c.rotate(Math.PI / 4);
+        c.fillRect(10, -3, 12, 6);
+      }
+      c.beginPath(); c.arc(0, 0, 12, 0, TAU); c.fill();
+      c.fillStyle = '#ff6b9d'; c.beginPath(); c.arc(0, 0, 5, 0, TAU); c.fill();
+      c.restore();
+      break;
+    case 'duiveltrommel':
+      c.fillStyle = '#8a2020'; c.beginPath(); c.ellipse(30, 0, 22, 16, 0, 0, TAU); c.fill();
+      c.strokeStyle = '#ffd75e'; c.lineWidth = 2; c.stroke();
+      c.strokeStyle = '#5a1010'; c.lineWidth = 4; c.beginPath(); c.moveTo(0, 0); c.lineTo(12, 0); c.stroke();
+      break;
+    case 'zwavelzeep':
+      c.fillStyle = '#ffd75e';
+      c.beginPath();
+      c.moveTo(14, -10); c.lineTo(42, -10); c.lineTo(46, -4); c.lineTo(46, 8); c.lineTo(42, 10); c.lineTo(14, 10); c.lineTo(10, 8); c.lineTo(10, -4);
+      c.closePath(); c.fill();
+      c.fillStyle = '#ff6a3d'; c.font = '900 9px sans-serif'; c.textAlign = 'center'; c.fillText('S', 28, 3);
+      break;
+    case 'infernoijsje':
+      c.fillStyle = '#7cf5ff'; c.beginPath(); c.moveTo(16, -4); c.lineTo(40, -4); c.lineTo(28, 22); c.fill();
+      c.fillStyle = '#ff6a3d'; c.beginPath(); c.arc(28, -10, 14, 0, TAU); c.fill();
+      break;
+    case 'helhamsterwiel':
+      c.save(); c.translate(28, 0); c.rotate(spin * 10);
+      c.strokeStyle = '#ff6a3d'; c.lineWidth = 4; c.beginPath(); c.arc(0, 0, 18, 0, TAU); c.stroke();
+      c.beginPath(); c.moveTo(-12, 0); c.lineTo(12, 0); c.moveTo(0, -12); c.lineTo(0, 12); c.stroke();
+      c.restore();
+      break;
+    case 'demondoekje':
+      c.fillStyle = '#5a1010'; c.fillRect(6, -12, 40, 24);
+      c.strokeStyle = '#ff6a3d'; c.lineWidth = 2;
+      for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(10 + i * 10, -10); c.lineTo(10 + i * 10, 10); c.stroke(); }
+      break;
+    case 'chiliketting':
+      c.strokeStyle = '#ff6a3d'; c.lineWidth = 3;
+      for (let i = 0; i < 6; i++) {
+        c.beginPath(); c.arc(8 + i * 9, Math.sin(i + spin * 6) * 4, 4, 0, TAU); c.stroke();
+      }
+      c.fillStyle = '#ffe259'; c.beginPath(); c.moveTo(58, -6); c.lineTo(70, 0); c.lineTo(58, 6); c.fill();
+      break;
+    case 'pyroeend':
+      c.strokeStyle = '#ff6a3d'; c.lineWidth = 6; c.beginPath(); c.moveTo(0, 0); c.lineTo(30, 0); c.stroke();
+      c.fillStyle = '#ffd75e'; c.beginPath(); c.ellipse(46, 0, 16, 12, 0, 0, TAU); c.fill();
+      c.fillStyle = '#222'; c.beginPath(); c.arc(50, -3, 2.5, 0, TAU); c.fill();
+      c.save(); c.shadowColor = '#ff6a3d'; c.shadowBlur = 10;
+      c.strokeStyle = '#ff8c42'; c.lineWidth = 3; c.beginPath(); c.moveTo(58, 2); c.lineTo(72, 8); c.stroke();
+      c.restore();
+      break;
     default:
       // Fallback: korte stok (nooit speer-punt)
       c.strokeStyle = '#7a5c34'; c.lineWidth = 5;
@@ -16961,6 +17578,30 @@ const SceneryArt = {
         }
         break;
       }
+      case 'nachtmerrie': {
+        for (let i = 0; i < 5; i++) {
+          const cx = 20 + i * 36 + r() * 8;
+          const h = 28 + Math.floor(r() * 28);
+          px(cx - 8, base - h, 16, h, '#1a0a28');
+          px(cx - 6, base - h - 4, 12, 6, '#2a1040');
+          if (r() < 0.6) px(cx - 2, base - h + 8, 4, 4, '#c47aff');
+        }
+        for (let i = 0; i < 8; i++) px(r() * W0, base - 6 - r() * 20, 3, 2, 'rgba(196,122,255,.35)');
+        break;
+      }
+      case 'hel': {
+        const cones = [[28, 48], [90, 60], [145, 40]];
+        for (const [cx, h] of cones) {
+          for (let yy = 0; yy < h; yy += 2) {
+            const w = 5 + (yy / h) * (h * 0.95);
+            px(cx - w / 2, base - h + yy, w, 2, '#2a0808');
+          }
+          px(cx - 4, base - h, 8, 3, '#ff6a3d');
+          px(cx - 2, base - h - 2, 4, 2, '#ffd75e');
+        }
+        for (let i = 0; i < 12; i++) px(r() * W0, base - 1 - r() * 5, 3, 1, '#5a1010');
+        break;
+      }
       case 'dojo': {
         // pagode-silhouet + torii-poort
         const pag = (cx, s) => {
@@ -17104,14 +17745,25 @@ function drawThemeWeather(c, themeName, t, ground, scroll) {
         c.save(); c.translate(x, y); c.rotate(t * 1.6 + i * 2); c.fillRect(-2.4, -1.4, 4.8, 2.8); c.restore();
         break;
       }
-      case 'vulkaan': {
+      case 'vulkaan':
+      case 'hel': {
         // opstijgende sintels met flikker
         const rise = 30 + (i % 4) * 12;
         const x = wrapW(seed * 3.3 + Math.sin(t * 1.7 + i * 2.1) * 18 - scroll * 0.3, W + 30) - 15;
         const y = ground - wrapW(seed * 1.9 + t * rise, ground + 20);
         const fl = 0.35 + Math.max(0, Math.sin(t * 6 + i * 1.7)) * 0.4;
-        c.fillStyle = `rgba(255,${120 + (i % 3) * 30},48,${fl.toFixed(2)})`;
+        const hot = themeName === 'hel';
+        c.fillStyle = hot
+          ? `rgba(255,${90 + (i % 3) * 40},40,${fl.toFixed(2)})`
+          : `rgba(255,${120 + (i % 3) * 30},48,${fl.toFixed(2)})`;
         c.fillRect(x, y, 3, 3);
+        break;
+      }
+      case 'nachtmerrie': {
+        const x = wrapW(seed * 4.2 + Math.sin(t * 1.1 + i) * 40 - scroll * 0.25, W + 40) - 20;
+        const y = wrapW(seed * 2.1 + t * 16, ground + 30) - 15;
+        c.fillStyle = i % 2 ? 'rgba(196,122,255,.45)' : 'rgba(255,107,157,.35)';
+        c.beginPath(); c.arc(x, y, 2.2 + (i % 3) * 0.6, 0, Math.PI * 2); c.fill();
         break;
       }
       case 'cyber': {
@@ -19485,6 +20137,8 @@ const THEMES = {
   grot:    { sky1: '#07090e', sky2: '#1a2028', hill: '#2a323c', hill2: '#141820', ground: '#1a2028', gtop: '#3a4450', deco: 'stalag' },
   vulkaan: { sky1: '#3a1f28', sky2: '#7a3020', hill: '#552430', hill2: '#3a1820', ground: '#4a2a28', gtop: '#5e3630', deco: 'lava' },
   cyber:   { sky1: '#0a1030', sky2: '#252a60', hill: '#1c2350', hill2: '#131840', ground: '#20264a', gtop: '#2c3468', deco: 'neon' },
+  nachtmerrie: { sky1: '#12081c', sky2: '#2a1040', hill: '#1a0a28', hill2: '#0e0618', ground: '#1c1028', gtop: '#3a2050', deco: 'neon' },
+  hel:     { sky1: '#2a0808', sky2: '#6a2010', hill: '#4a1010', hill2: '#2a0808', ground: '#3a1010', gtop: '#5a1810', deco: 'lava' },
   dojo:    { sky1: '#3a2d24', sky2: '#6a5240', hill: '#4a3a2c', hill2: '#3a2d22', ground: '#7a5c3c', gtop: '#8f6f4a', deco: 'lampion' },
   sloop:   { sky1: '#8fb6d0', sky2: '#d8e8f0', hill: '#7a8794', hill2: '#5f6b78', ground: '#6f7684', gtop: '#848b99', deco: 'kraan' },
 };
@@ -20768,7 +21422,7 @@ class Game {
       this.grantXP(bonus);
       if (lv === save.unlocked && save.unlocked < MAX_LEVEL) { save.unlocked++; persist(); }
       if (lv % LEVELS_PER_ISLAND === 0) {
-        save.advIsland = Math.min(5, lv / LEVELS_PER_ISLAND);
+        save.advIsland = Math.min(islandCount(), lv / LEVELS_PER_ISLAND);
         persist();
         if (lv < MAX_LEVEL) {
           const nCap = adventureWeaponCapForLevel(lv + 1);
@@ -20780,6 +21434,10 @@ class Game {
             } catch (_) {}
           }, 1700);
         }
+        try {
+          const zw = grantZoneBossClearWeapon(lv);
+          if (zw) noteRunLootWeapon(this.runLoot, zw.id);
+        } catch (_) {}
       }
       if (save.advMasterBuff === lv) {
         save.advMasterBuff = null;
@@ -20924,6 +21582,10 @@ class Game {
           else if (m.giant) dropTier = 'giant';
           this.spawnPickup(m.x + rand(-22, 22), m.y - m.size * 0.45, { itemCat: itemDrop.cat, itemId: itemDrop.id, dropTier });
         }
+      } catch (_) {}
+      try {
+        const zw = rollZoneWeaponDrop(this, m);
+        if (zw) noteRunLootWeapon(this.runLoot, zw.id);
       } catch (_) {}
     }
     try { bumpStat('kills', 1); } catch (_) {}
@@ -22335,6 +22997,9 @@ class Game {
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         if (counter) this.freezeT = Math.max(this.freezeT, 0.016);
         applyHitConfirmFx(this, hx, hy, spec);
+        if (f.isPlayer && spec.kind === 'weapon') {
+          try { applyWeaponOnHitEffect(this, f, m, { dmg: hitRoll.dmg, finisher, crit: hitRoll.crit }); } catch (_) {}
+        }
         if (f.isPlayer && this.styleLightning && !fxLite()) {
           this.burst(m.x, m.y - m.size * 0.5, f.style?.accent || '#7cf5ff', 5, { kind: 'spark', size: 2 });
           if (f.style?.id === 'cyber') spawnFxRing(this, m.x, m.y - m.size * 0.3, '#4ecf6a', 6);
@@ -22521,6 +23186,9 @@ class Game {
     if (this.hint > 0) this.hint -= dt;
     this.shakeT = Math.max(0, this.shakeT - dt);
     if (this.bossPhase2Flash > 0) this.bossPhase2Flash -= dt;
+    try { tickWeaponStatusEffects(this, dt); } catch (_) {}
+    if (this.player && this.player._wpnCritSurgeT > 0) this.player._wpnCritSurgeT -= dt;
+    if (this.p2 && this.p2._wpnCritSurgeT > 0) this.p2._wpnCritSurgeT -= dt;
 
     if (!this.player) return;
     try { this.player.update(dt, this); } catch (plErr) {
@@ -26407,7 +27075,7 @@ const UI = {
     const prog = onboardingProgress();
     const next = nextUntriedMode();
     const modes = [
-      { id: 'adventure', label: 'Avontuur', tip: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok vóór level' },
+      { id: 'adventure', label: 'Avontuur', tip: '7 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok vóór level · Nachtmerrie/Hel zone-wapens' },
       { id: 'training', label: 'Training', tip: 'Combo-trainer ×5/×8/×10 · lasers · Chidori-telegraph' },
       { id: 'wall', label: 'Muur', tip: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing' },
       { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
@@ -27436,7 +28104,7 @@ const UI = {
         `<div class="island-info-text">` +
         `<b style="color:${islMeta.accent}">${islandLabel(islMeta.id, 'name')}</b> · ${islandLabel(islMeta.id, 'sub')}` +
         `<div class="island-info-sub">${t('ui.islandInfoSub', { cap: wCap, cleared: prog.cleared, total: prog.total, stars: prog.stars })}` +
-        (pick < 5 ? t('ui.islandBossGate', { lv: pick * LEVELS_PER_ISLAND }) : '') +
+        (pick < islandCount() ? t('ui.islandBossGate', { lv: pick * LEVELS_PER_ISLAND }) : '') +
         `</div></div></div>` +
         `<div class="island-prog-track island-info-prog" title="${t('island.levelsProg')}"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
         `<div class="island-prog-track island-info-stars" title="${t('island.starsProg')}"><i style="width:${Math.round(prog.stars / Math.max(1, prog.maxStars) * 100)}%"></i></div>` +
@@ -27689,6 +28357,14 @@ const UI = {
       const summonBadge = w.summoned
         ? ` <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">✦ Summon</span>`
         : '';
+      const zone = weaponDropZoneOf(base);
+      const zoneBadge = zone
+        ? ` <span class="rar-pill weapon-zone-pill" style="color:${zone.color};border-color:${zone.color}">${zone.name}</span>`
+        : '';
+      const effectTxt = weaponEffectLabel(base);
+      const effectBadge = effectTxt && !locked
+        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">⚡ ${effectTxt}</span>`
+        : '';
       const statLine = w.summoned
         ? `${weaponDesc(w)} · schade x${base.dmg} → <b style="color:${rar.color}">x${w.dmg}</b> · bereik ${w.range} · snelheid x${w.speed}`
         : `${weaponDesc(w)} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}`;
@@ -27714,17 +28390,24 @@ const UI = {
       const islandLine = islandLocked && !lvlLocked
         ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:#ffd75e">${t('ui.weaponIslandPick', { cap: adventureWeaponCap() })}</div>`
         : '';
-      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${summonBadge}${tierBadge}${upBadge}</div>
+      const zoneLine = zone && locked
+        ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:${zone.color}">Alleen drop in ${zone.name} (Lv ${zone.minLevel}–${zone.maxLevel})</div>`
+        : (zone && effectTxt
+          ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:${zone.color}">Zone-drop · effect: ${effectTxt}</div>`
+          : '');
+      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${zoneBadge}${effectBadge}${summonBadge}${tierBadge}${upBadge}</div>
         <div class="cinfo">${statLine}</div>` +
         upLine +
         (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '') +
-        islandLine;
+        islandLine + zoneLine;
       el.appendChild(info);
       if (weaponUpgradeEligible(base)) appendItemUpgradeButton(el, 'weapon', w.id, () => this.renderWeapons());
       const right = document.createElement('div');
       right.className = 'right';
       right.innerHTML = lvlLocked
-        ? `${SVG_LOCK_ICON} Lv ${base.unlock}`
+        ? (base.dropZone
+          ? `${SVG_LOCK_ICON} ${weaponDropZoneOf(base)?.name || 'Zone'}`
+          : `${SVG_LOCK_ICON} Lv ${base.unlock}`)
         : (islandLocked
           ? t('ui.weaponIslandCapShort', { cap: adventureWeaponCap() })
           : (selected ? '&#10004; gekozen' : 'kies'));
@@ -27771,15 +28454,25 @@ const UI = {
       nameEl.style.color = locked ? '#8fa3d9' : '#fff';
     }
     if (rarEl) {
+      const zone = weaponDropZoneOf(base);
+      const effectTxt = weaponEffectLabel(base);
       rarEl.innerHTML = locked
-        ? `<span class="rar-pill" style="color:#8fa3d9;border-color:#8fa3d9">Lv ${base.unlock}</span>`
+        ? (zone
+          ? `<span class="rar-pill" style="color:${zone.color};border-color:${zone.color}">${zone.name}</span>`
+          : `<span class="rar-pill" style="color:#8fa3d9;border-color:#8fa3d9">Lv ${base.unlock}</span>`)
         : `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>` +
+          (zone ? ` <span class="rar-pill" style="color:${zone.color};border-color:${zone.color}">${zone.name}</span>` : '') +
+          (effectTxt ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">⚡ ${effectTxt}</span>` : '') +
           (save.weapon === w.id ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Actief</span>' : '');
     }
     if (statsEl) {
+      const zone = weaponDropZoneOf(base);
       statsEl.textContent = locked
-        ? 'Nog vergrendeld — level verder in avontuur'
-        : `${weaponDesc(w)} · x${w.dmg} dmg · bereik ${w.range} · spd x${w.speed}`;
+        ? (zone
+          ? `Alleen drop in ${zone.name} (avontuur Lv ${zone.minLevel}–${zone.maxLevel})`
+          : 'Nog vergrendeld — level verder in avontuur')
+        : `${weaponDesc(w)} · x${w.dmg} dmg · bereik ${w.range} · spd x${w.speed}` +
+          (weaponEffectLabel(base) ? ` · ⚡ ${weaponEffectLabel(base)}` : '');
     }
     const c = cv.getContext('2d');
     if (!c) return;
