@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | — | **iPad/mobile scale:** fluid `--ui-rail` / type tokens, tablet≥768 + iPad landscape + phone-landscape density, saga touch floors, leesbaarheid clamp. v1.18.111 / SW v321. |
 | 2026-07-26 | — | **Menu SVG nav LIVE:** back/pause chrome, saga-*.svg, preview sheet. v1.18.110 / SW v320. |
 | 2026-07-26 | — | **Zone-wapens harden:** adventure keep-equipped fix, DoT quiet/skipHitSfx, smoke:zone, regressie-guards. v1.18.109 / SW v319. |
 | 2026-07-26 | **6** | Audio c5: pauze reset combat-heat (BGM lead rustig), combat-SFX geblokkeerd (UI allowlist), syncAudioVolSliders pause↔instellingen, iPad ctx-suspended hint. v1.18.108 / SW v318. |
