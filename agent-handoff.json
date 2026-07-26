@@ -26,6 +26,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260726T090059",
+      "from": "user",
+      "text": "Missende afbeeldingen — adventure icoon leeg, meer van dit",
+      "status": "open",
+      "updated": "2026-07-26"
+    },
+    {
       "id": "w-20260726T080453",
       "from": "user",
       "text": "Elke 2 uur automatisch code scannen op bugs/optimalisaties en fixen, volledig autonoom.",
@@ -112,6 +119,10 @@
     "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md."
   ],
   "sessionLog": [
+    {
+      "at": "2026-07-26T09:00:59Z",
+      "summary": "Avontuur hub-icoon: UTF-8 fix + duidelijker map-SVG · v1.18.89"
+    },
     {
       "at": "2026-07-26T09:03:38Z",
       "summary": "d14 FX: training combo dup fix, Rasengan rings, lite ring fill · v1.18.88"
@@ -207,10 +218,6 @@
     {
       "at": "2026-07-25T20:15:00Z",
       "summary": "Adventure tap→startscherm: restore playInputSuppressed + soft window-error guard · v1.18.57"
-    },
-    {
-      "at": "2026-07-25T20:03:22Z",
-      "summary": "d9 c5: pointerup scroll-guard, joy pulse, 2P neutral strip · v1.18.56"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
