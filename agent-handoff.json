@@ -13,16 +13,16 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.89",
-    "swCache": "stickfighter-app-v299",
-    "gameJsQuery": "game.js?v=299",
-    "cssQuery": "styles/main.css?v=299",
-    "featureBranch": "cursor/svg-afbeeldingen-vervanging-ae5b",
+    "appVersion": "1.18.90",
+    "swCache": "stickfighter-app-v300",
+    "gameJsQuery": "game.js?v=300",
+    "cssQuery": "styles/main.css?v=300",
+    "featureBranch": "cursor/svg-afbeeldingen-vervanging-c404",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "ASSET-STYLE assets/ui saga/ach/lock/island + buttons compliance · PR"
+    "note": "ASSET-STYLE: buttons hub/modes/chrome + assets/ui saga/ach/lock/island SVGs · PR"
   },
   "userWishlist": [
     {
