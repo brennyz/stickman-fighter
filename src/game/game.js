@@ -2036,8 +2036,14 @@ class Game {
       } else {
         fireProj(0, 0, 1, { curl: 0 });
       }
-      this.burst(f.x + face * 30, y0, col, fxLite() ? 8 : 16);
+      const liteCast = fxLite();
+      this.burst(f.x + face * 30, y0, col, liteCast ? 8 : 16);
       spawnFxRing(this, f.x + face * 34, y0, col, mode === 'triple' ? 14 : 10);
+      if (mode === 'dual' || mode === 'triple') {
+        spawnFxRing(this, f.x + face * 38, y0, '#ffffff', liteCast ? 6 : 9);
+        if (!liteCast) spawnFxRing(this, f.x + face * 44, y0, col, mode === 'triple' ? 18 : 13);
+        this.burst(f.x + face * 32, y0 - 6, '#e8faff', liteCast ? 4 : 8, { kind: 'spark', size: 2.2 });
+      }
       this.shake(mode === 'triple' ? 11 : 9, 0.28);
       this.freezeT = Math.max(this.freezeT, mode === 'triple' ? 0.08 : 0.06);
       AudioSys.sfx(skillSfxId(sk));
@@ -3106,12 +3112,20 @@ class Game {
       if (pt.kind === 'ring') {
         const maxL = pt.maxLife || 0.34;
         const t = 1 - clamp(pt.life / maxL, 0, 1);
+        const rr = pt.size * (1 + t * 1.1);
         c.strokeStyle = pt.color;
         c.lineWidth = 2.2 * (1 - t * 0.45);
         c.globalAlpha = clamp(pt.life * 3.2, 0, 0.88);
         c.beginPath();
-        c.arc(pt.x, pt.y, pt.size * (1 + t * 1.1), 0, TAU);
+        c.arc(pt.x, pt.y, rr, 0, TAU);
         c.stroke();
+        if (fxLite() && t < 0.4) {
+          c.globalAlpha = clamp(pt.life * 1.4, 0, 0.22);
+          c.fillStyle = pt.color;
+          c.beginPath();
+          c.arc(pt.x, pt.y, rr * 0.72, 0, TAU);
+          c.fill();
+        }
         if (!fxLite() && t < 0.55) {
           c.globalAlpha = clamp(pt.life * 1.8, 0, 0.35);
           c.lineWidth = 1.2;
@@ -4648,27 +4662,6 @@ class Game {
         c.fill();
         c.fillStyle = col;
         this.rr(c, 16, barY, barW * clamp(this.comboT / 1.55, 0, 1), 4, 2);
-        c.fill();
-        c.textAlign = 'center';
-      }
-      if (this.combo > 0 && this.comboT > 0 && save.comboHud !== false) {
-        const col = this.combo >= 8 ? '#ff7a4d' : '#ffd75e';
-        const nextGoal = this.combo < 5 ? 5 : this.combo < 8 ? 8 : this.combo < 10 ? 10 : 0;
-        c.textAlign = 'left';
-        c.font = '800 13px sans-serif';
-        c.fillStyle = col;
-        c.fillText(`COMBO ×${this.combo}`, 16, 118);
-        if (nextGoal) {
-          c.font = '700 10px sans-serif';
-          c.fillStyle = 'rgba(255,255,255,.65)';
-          c.fillText(`doel ×${nextGoal}`, 16, 132);
-        }
-        const barW = Math.min(120, W * 0.28);
-        c.fillStyle = 'rgba(255,255,255,.15)';
-        this.rr(c, 16, 138, barW, 4, 2);
-        c.fill();
-        c.fillStyle = col;
-        this.rr(c, 16, 138, barW * clamp(this.comboT / 1.55, 0, 1), 4, 2);
         c.fill();
         c.textAlign = 'center';
       }
