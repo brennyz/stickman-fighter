@@ -26,6 +26,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260726T191800",
+      "from": "user",
+      "text": "Je kunt al wapens upgraden die niet eens in bezit zijn — mag niet",
+      "status": "done-in-code",
+      "updated": "2026-07-26"
+    },
+    {
       "id": "w-20260726T190000",
       "from": "user",
       "text": "Zone-wapens Nightmare/Hel goed integreren met 2.0/3.0 modus (drops + effects)",
@@ -232,6 +239,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T19:10:16Z",
+      "summary": "Wapen-upgrades alleen bij bezit (weaponUnlockedByLevel) · v1.18.113"
+    },
+    {
       "at": "2026-07-26T19:18:40Z",
       "summary": "Achterstallig audio gemerged naar main · v1.18.112 LIVE"
     },
@@ -326,10 +337,6 @@
     {
       "at": "2026-07-26T18:51:00Z",
       "summary": "Merge Rinnegan + grootste bazen op main · v1.18.103"
-    },
-    {
-      "at": "2026-07-26T18:49:50Z",
-      "summary": "Nachtmerrie/Hel zone-wapens merge-ready · v1.18.103"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
