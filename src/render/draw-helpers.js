@@ -86,11 +86,32 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.restore();
       c.strokeStyle = '#39404f'; c.lineWidth = 6; c.beginPath(); c.moveTo(-4, 0); c.lineTo(6, 0); c.stroke();
       break;
-    case 'boemerang':
-      c.strokeStyle = '#c98850'; c.lineWidth = 5;
-      c.beginPath(); c.arc(22, 0, 18, -2.2, 0.5); c.stroke();
-      c.beginPath(); c.arc(22, 0, 10, -2.0, 0.3); c.stroke();
+    case 'boemerang': {
+      // Klassieke L/V-boemerang (niet speer-achtig); spin roteert in hand & als projectiel.
+      c.save();
+      c.translate(24, 0);
+      c.rotate((spin || 0) * 12);
+      c.strokeStyle = '#a86a30';
+      c.lineWidth = 8;
+      c.lineCap = 'round';
+      c.lineJoin = 'round';
+      c.beginPath();
+      c.moveTo(-20, -18);
+      c.quadraticCurveTo(-6, -20, 0, 0);
+      c.quadraticCurveTo(6, 20, 20, 18);
+      c.stroke();
+      c.strokeStyle = '#e0a868';
+      c.lineWidth = 3.2;
+      c.beginPath();
+      c.moveTo(-16, -14);
+      c.quadraticCurveTo(-4, -15, 0, 0);
+      c.quadraticCurveTo(4, 15, 16, 14);
+      c.stroke();
+      c.fillStyle = '#6a4020';
+      c.beginPath(); c.arc(0, 0, 3.2, 0, TAU); c.fill();
+      c.restore();
       break;
+    }
     case 'ketting':
       c.strokeStyle = '#8899aa'; c.lineWidth = 3;
       for (let i = 0; i < 5; i++) { c.beginPath(); c.arc(8 + i * 10, Math.sin(i + spin * 8) * 2, 4, 0, TAU); c.stroke(); }

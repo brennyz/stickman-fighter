@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.84';
+const APP_VERSION = '1.18.85';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 294;
+const SW_CACHE_REV = 295;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -649,7 +649,7 @@ function projStrikeFighter(game, p, tgt, col) {
   const hit = resolveProjHit(p);
   const kb = Math.sign(p.vx || 1) * (p.kind === 'rinnegan' ? 300 : 260);
   const dealt = tgt.takeDamage(hit.dmg, kb, game, {
-    projWeaponId: p.kind === 'shuriken' ? (p.throwId || 'shuriken') : null,
+    projWeaponId: (p.kind === 'shuriken' || p.kind === 'boemerang') ? (p.throwId || p.kind) : null,
   });
   if (dealt > 0) {
     applyHitStop(game, { kind: sk ? 'special' : 'punch', dmg: hit.dmg }, { crit: hit.crit, heavy: hit.dmg >= 18 });
@@ -4186,7 +4186,6 @@ function gokGooiStartFromScreen() {
 function vsWeaponRangeFactor(w) {
   if (!w) return 0.25;
   if (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) return 1;
-  if (w.id === 'boemerang') return 0.88;
   if (w.range >= 74) return 0.72;
   if (w.range >= 58) return 0.48;
   return 0.22;
@@ -4201,8 +4200,7 @@ function vsFighterStats(entry) {
   const critPct = Math.round(crit * 100);
   const str = Math.round(Math.min(100, dmg * (w.dmg || 1) * (0.72 + crit * critMul * 0.35)));
   const rng = Math.round(Math.min(100, ((w.range || 38) / 78) * 100));
-  const meleeScale = (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) ? 0.38
-    : (w.id === 'boemerang' ? 0.52 : 1);
+  const meleeScale = (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) ? 0.38 : 1;
   const meleeDps = Math.round(Math.min(100, (dmg * (w.speed || 1) * spd) / 88 * meleeScale));
   const rangeDps = Math.round(Math.min(100, (dmg * (w.speed || 1) * rng) / 72 * vsWeaponRangeFactor(w) * (0.82 + crit * 0.9)));
   let special = 'Rasengan';
@@ -4877,7 +4875,7 @@ const WEAPONS = [
   { id: 'tonfa',     name: 'Tonfa',           dmg: 1.52, range: 50, speed: 1.28, unlock: 12, rarity: 'rare',      desc: 'Zijhandvat · flurry' },
   { id: 'nunchaku',  name: 'Nunchaku',        dmg: 1.3,  range: 48, speed: 1.4,  unlock: 13, rarity: 'rare',      desc: 'Bliksemsnel' },
   { id: 'kama',      name: 'Kama',            dmg: 1.68, range: 54, speed: 1.14, unlock: 15, rarity: 'rare',      desc: 'Sikkel · haak-slagen' },
-  { id: 'boemerang', name: 'Boemerang',       dmg: 1.7,  range: 70, speed: 1.05, unlock: 16, rarity: 'rare',      desc: 'Komt terug' },
+  { id: 'boemerang', name: 'Boemerang',       dmg: 1.7,  range: 70, speed: 1.05, unlock: 16, rarity: 'rare',      desc: 'Gooi · komt terug' },
   { id: 'zeis',      name: 'Schaduwzeis',     dmg: 1.95, range: 74, speed: 0.82, unlock: 18, rarity: 'rare',      desc: 'Lange boog · duister' },
   { id: 'hamer',     name: 'Mokerhamer',      dmg: 2.6,  range: 52, speed: 0.55, unlock: 20, rarity: 'epic',      desc: 'Sloopt alles' },
   { id: 'drietand',  name: 'Drietand',        dmg: 2.05, range: 76, speed: 0.88, unlock: 22, rarity: 'epic',      desc: 'Drie punten · prikken' },
@@ -5673,7 +5671,9 @@ function weaponSwingSfx(weaponOrId, attackKind) {
 }
 
 function weaponThrowSfx(id) {
-  return id === 'fuuma' ? 'wFuuma' : 'shuriken';
+  if (id === 'fuuma') return 'wFuuma';
+  if (id === 'boemerang') return 'wBoemerang';
+  return 'shuriken';
 }
 
 function weaponFinisherSfx(weaponOrId) {
@@ -5694,7 +5694,8 @@ function weaponHitSfx(weaponOrId, dmg) {
   if (id === 'hamer' || id === 'knuppel' || id === 'guvve' || id === 'bostaf') return 'hitHeavy';
   if (id === 'zwaard' || id === 'ketting' || id === 'kunai' || id === 'tanto' || id === 'sai' || id === 'kama' || id === 'zeis' || id === 'drietand' || id === 'nunchaku' || id === 'tonfa' || id === 'speer') return 'hitMetal';
   if (id === 'shuriken' || id === 'fuuma') return 'hitMetal';
-  if (id === 'waaier' || id === 'boemerang') return 'hit2';
+  if (id === 'boemerang') return 'hit2';
+  if (id === 'waaier') return 'hit2';
   if (dmg > 22) return 'hit2';
   return 'hit';
 }
@@ -5708,7 +5709,7 @@ function playWeaponPickFeedback(id) {
 }
 
 function isThrowWeapon(id) {
-  return id === 'shuriken' || id === 'fuuma';
+  return id === 'shuriken' || id === 'fuuma' || id === 'boemerang';
 }
 
 /** Per wapen: 3 opeenvolgende melee-bewegingen (combo-ketting ~1,4s). */
@@ -5917,7 +5918,7 @@ function weaponMoveFamily(id) {
   if (isThrowWeapon(id) || id === 'vuist') return null;
   if (id === 'speer' || id === 'drietand' || id === 'bostaf') return 'spear';
   if (id === 'knuppel' || id === 'hamer' || id === 'tonfa' || id === 'guvve' || id === 'donder') return 'blunt';
-  if (id === 'nunchaku' || id === 'ketting' || id === 'vlamzweep' || id === 'boemerang') return 'chain';
+  if (id === 'nunchaku' || id === 'ketting' || id === 'vlamzweep') return 'chain';
   if (id === 'kama' || id === 'zeis') return 'hook';
   if (id === 'waaier') return 'fan';
   if (id === 'sai') return 'dual';
@@ -9752,7 +9753,7 @@ const CATALOG_EN = {
     tonfa: { name: 'Tonfa', desc: 'Side handle · flurry' },
     nunchaku: { name: 'Nunchaku', desc: 'Lightning fast' },
     kama: { name: 'Kama', desc: 'Sickle · hook strikes' },
-    boemerang: { name: 'Boomerang', desc: 'Comes back' },
+    boemerang: { name: 'Boomerang', desc: 'Throw · comes back' },
     zeis: { name: 'Shadow scythe', desc: 'Long arc · dark' },
     hamer: { name: 'Sledgehammer', desc: 'Smashes everything' },
     drietand: { name: 'Trident', desc: 'Three points · thrust' },
@@ -10515,7 +10516,7 @@ const CATALOG_DE = {
     knuppel: { name: 'Knüppel', desc: 'Rohe Schlagkraft' }, waaier: { name: 'Kriegsfächer', desc: 'Fächer-Schnitt · stilvoll' },
     speer: { name: 'Speer', desc: 'Enorme Reichweite' }, tonfa: { name: 'Tonfa', desc: 'Seitengriff · Flurry' },
     nunchaku: { name: 'Nunchaku', desc: 'Blitzschnell' }, kama: { name: 'Kama', desc: 'Sichel · Haken-Schläge' },
-    boemerang: { name: 'Bumerang', desc: 'Kommt zurück' }, zeis: { name: 'Schattensense', desc: 'Langer Bogen · dunkel' },
+    boemerang: { name: 'Bumerang', desc: 'Werfen · kommt zurück' }, zeis: { name: 'Schattensense', desc: 'Langer Bogen · dunkel' },
     hamer: { name: 'Vorschlaghammer', desc: 'Zerstört alles' }, drietand: { name: 'Dreizack', desc: 'Drei Spitzen · stechen' },
     ketting: { name: 'Kettenklinge', desc: 'Reichweite + Druck' }, bostaf: { name: 'Bo-Stab', desc: 'Langer Stab · Tempo' },
     laser: { name: 'Chakra-Klinge', desc: 'Blau brennende Klinge' }, fuuma: { name: 'Fūma-Shuriken', desc: 'Großer Wurfstern' },
@@ -10613,7 +10614,7 @@ const CATALOG_FR = {
     knuppel: { name: 'Massue', desc: 'Force brute' }, waaier: { name: 'Éventail de guerre', desc: 'Entaille stylée' },
     speer: { name: 'Lance', desc: 'Grande portée' }, tonfa: { name: 'Tonfa', desc: 'Poignée latérale' },
     nunchaku: { name: 'Nunchaku', desc: 'Ultra rapide' }, kama: { name: 'Kama', desc: 'Faucille · crochet' },
-    boemerang: { name: 'Boomerang', desc: 'Revient en arrière' }, zeis: { name: 'Faux de l\'ombre', desc: 'Long arc · sombre' },
+    boemerang: { name: 'Boomerang', desc: 'Lancer · revient' }, zeis: { name: 'Faux de l\'ombre', desc: 'Long arc · sombre' },
     hamer: { name: 'Masse', desc: 'Tout détruit' }, drietand: { name: 'Trident', desc: 'Trois pointes' },
     ketting: { name: 'Lame chaîne', desc: 'Portée + pression' }, bostaf: { name: 'Bô', desc: 'Long bâton' },
     laser: { name: 'Lame chakra', desc: 'Lame bleue ardente' }, fuuma: { name: 'Shuriken Fūma', desc: 'Grande étoile' },
@@ -10711,7 +10712,7 @@ const CATALOG_ES = {
     knuppel: { name: 'Garrote', desc: 'Fuerza bruta' }, waaier: { name: 'Abanico de guerra', desc: 'Corte con estilo' },
     speer: { name: 'Lanza', desc: 'Gran alcance' }, tonfa: { name: 'Tonfa', desc: 'Empuñadura lateral' },
     nunchaku: { name: 'Nunchaku', desc: 'Ultrarrápido' }, kama: { name: 'Kama', desc: 'Hoz · gancho' },
-    boemerang: { name: 'Bumerán', desc: 'Vuelve atrás' }, zeis: { name: 'Guadaña sombra', desc: 'Arco largo · oscuro' },
+    boemerang: { name: 'Bumerán', desc: 'Lanza · vuelve' }, zeis: { name: 'Guadaña sombra', desc: 'Arco largo · oscuro' },
     hamer: { name: 'Mazo', desc: 'Lo destroza todo' }, drietand: { name: 'Tridente', desc: 'Tres puntas' },
     ketting: { name: 'Espada cadena', desc: 'Alcance + presión' }, bostaf: { name: 'Bastón bo', desc: 'Bastón largo' },
     laser: { name: 'Hoja chakra', desc: 'Filo azul ardiente' }, fuuma: { name: 'Shuriken Fūma', desc: 'Estrella grande' },
@@ -12507,6 +12508,7 @@ function meleeHitPoint(f, spec) {
 
 function canThrowShuriken(f, game) {
   if (!f || f._shurikenCd > 0) return false;
+  if (f._boomerOut) return false;
   const t = game ? game.t : 0;
   f._shurikenBurst = (f._shurikenBurst || []).filter(x => t - x < SHURIKEN_BURST_WINDOW);
   return f._shurikenBurst.length < SHURIKEN_BURST_MAX;
@@ -13715,11 +13717,32 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.restore();
       c.strokeStyle = '#39404f'; c.lineWidth = 6; c.beginPath(); c.moveTo(-4, 0); c.lineTo(6, 0); c.stroke();
       break;
-    case 'boemerang':
-      c.strokeStyle = '#c98850'; c.lineWidth = 5;
-      c.beginPath(); c.arc(22, 0, 18, -2.2, 0.5); c.stroke();
-      c.beginPath(); c.arc(22, 0, 10, -2.0, 0.3); c.stroke();
+    case 'boemerang': {
+      // Klassieke L/V-boemerang (niet speer-achtig); spin roteert in hand & als projectiel.
+      c.save();
+      c.translate(24, 0);
+      c.rotate((spin || 0) * 12);
+      c.strokeStyle = '#a86a30';
+      c.lineWidth = 8;
+      c.lineCap = 'round';
+      c.lineJoin = 'round';
+      c.beginPath();
+      c.moveTo(-20, -18);
+      c.quadraticCurveTo(-6, -20, 0, 0);
+      c.quadraticCurveTo(6, 20, 20, 18);
+      c.stroke();
+      c.strokeStyle = '#e0a868';
+      c.lineWidth = 3.2;
+      c.beginPath();
+      c.moveTo(-16, -14);
+      c.quadraticCurveTo(-4, -15, 0, 0);
+      c.quadraticCurveTo(4, 15, 16, 14);
+      c.stroke();
+      c.fillStyle = '#6a4020';
+      c.beginPath(); c.arc(0, 0, 3.2, 0, TAU); c.fill();
+      c.restore();
       break;
+    }
     case 'ketting':
       c.strokeStyle = '#8899aa'; c.lineWidth = 3;
       for (let i = 0; i < 5; i++) { c.beginPath(); c.arc(8 + i * 10, Math.sin(i + spin * 8) * 2, 4, 0, TAU); c.stroke(); }
@@ -15228,7 +15251,7 @@ class Fighter {
     c.fillStyle = this.color;
     c.beginPath(); c.arc(hx, hy, 3.4, 0, TAU); c.fill();
 
-    if (this.isPlayer && this.weapon.id !== 'vuist' && !(this.attack && this.attack.kind === 'special')) {
+    if (this.isPlayer && this.weapon.id !== 'vuist' && !this._boomerOut && !(this.attack && this.attack.kind === 'special')) {
       const aimLift = (this._aimAtAttack && (this.attack?.kind === 'weapon' || this.attack?.kind === 'punch' || this.attack?.kind === 'kick'))
         ? clamp(this._aimAtAttack.ny, -1, 0.4) * 0.85
         : 0;
@@ -21215,7 +21238,7 @@ class Game {
       if (!this._shurikenWarnT || this.t - this._shurikenWarnT > 0.9) {
         this._shurikenWarnT = this.t;
         try {
-          UI.toast(f._shurikenCd > 0 ? t('toast.shurikenWait') : t('toast.shurikenSpam'), 1600);
+          UI.toast(f._shurikenCd > 0 || f._boomerOut ? t('toast.shurikenWait') : t('toast.shurikenSpam'), 1600);
         } catch (_) {}
       }
       return;
@@ -21223,9 +21246,28 @@ class Game {
     noteShurikenThrow(f, this);
     const w = f.weapon;
     AudioSys.sfx(weaponThrowSfx(w.id));
+    const boom = w.id === 'boemerang';
     const big = w.id === 'fuuma';
     const critMeta = projCritMeta(f);
-    const aim = projAimVelocity(f, big ? 500 : 560);
+    const aim = projAimVelocity(f, boom ? 480 : (big ? 500 : 560));
+    if (boom) {
+      f._boomerOut = true;
+      f._shurikenCd = Math.max(f._shurikenCd || 0, 0.55);
+      this.spawnProjectile(Object.assign({
+        x: f.x + (f.face || 1) * 24,
+        y: f.y - 52 + clamp(aim.ny, -1, 0.5) * 30,
+        vx: aim.vx, vy: aim.vy, r: 16,
+        dmg: f.baseDmg * w.dmg * 0.95,
+        from: this.projFrom(f), kind: 'boemerang', life: 2.5, spin: 0,
+        throwId: 'boemerang',
+        hitSet: new Set(),
+        returning: false,
+        outT: 0,
+        originX: f.x,
+        originY: f.y - 52,
+      }, critMeta));
+      return;
+    }
     this.spawnProjectile(Object.assign({
       x: f.x + (f.face || 1) * 24,
       y: f.y - 52 + clamp(aim.ny, -1, 0.5) * 30,
@@ -21611,7 +21653,7 @@ class Game {
       const spinRate = skProj
         ? (skProj.behavior === 'pull' || skProj.behavior === 'meteor' ? 16
           : skProj.behavior === 'dash' ? 20 : skProj.behavior === 'disc' ? 24 : 22)
-        : (p.kind === 'shuriken' ? 28 : 12);
+        : (p.kind === 'shuriken' ? 28 : p.kind === 'boemerang' ? 34 : 12);
       p.spin = (p.spin || 0) + dt * spinRate;
       p.vy += (p.grav || 0) * dt;
       // Rasengan-krul: vanuit horizontaal omhoog/omlaag buigen
@@ -21620,6 +21662,37 @@ class Game {
         const lim = p.curlMaxVy || 240;
         if (p.vy > lim) p.vy = lim;
         if (p.vy < -lim) p.vy = -lim;
+      }
+      // Boemerang: uitgooien → terugkeren naar thrower (kan opnieuw raken)
+      if (p.kind === 'boemerang') {
+        p.outT = (p.outT || 0) + dt;
+        const owner = p.from === 'p2' ? this.p2
+          : (p.from === 'player' || p.from === 'p1') ? this.player : null;
+        if (!p.returning) {
+          const ox = p.originX != null ? p.originX : p.x;
+          const oy = p.originY != null ? p.originY : p.y;
+          const dist = Math.hypot(p.x - ox, p.y - oy);
+          if (p.outT >= 0.42 || dist >= 270
+              || p.x < 12 || p.x > W - 12 || p.y < 10 || p.y > this.ground + 6) {
+            p.returning = true;
+            p.hitSet = new Set();
+            try { AudioSys.sfx('wBoemerang'); } catch (_) {}
+          }
+        } else if (owner && owner.alive) {
+          const tx = owner.x + (owner.face || 1) * 6;
+          const ty = owner.y - 52;
+          const dx = tx - p.x, dy = ty - p.y;
+          const d = Math.hypot(dx, dy) || 1;
+          const spd = 560;
+          p.vx = (dx / d) * spd;
+          p.vy = (dy / d) * spd;
+          if (d < 30) {
+            p.life = 0;
+            owner._boomerOut = false;
+          }
+        } else {
+          p.life = 0;
+        }
       }
       p.x += p.vx * dt; p.y += p.vy * dt;
       if (skProj && (skProj.behavior === 'orb' || skProj.behavior === 'pull' || skProj.behavior === 'meteor')) {
@@ -21704,7 +21777,7 @@ class Game {
             }
           }
         }
-        if (this.mode === 'coinrun' && this.flyers && p.kind === 'shuriken' && p.from === 'player') {
+        if (this.mode === 'coinrun' && this.flyers && (p.kind === 'shuriken' || p.kind === 'boemerang') && p.from === 'player') {
           for (const fl of this.flyers) {
             if (fl.hp <= 0) continue;
             if ((p.x - fl.x) ** 2 + (p.y - fl.y) ** 2 < (p.r + fl.r) ** 2) {
@@ -21720,12 +21793,23 @@ class Game {
           }
         }
       }
-      if (p.y > this.ground + 10 || p.x < -60 || p.x > W + 60) p.life = 0;
+      if (p.kind === 'boemerang') {
+        if (p.returning && (p.x < -100 || p.x > W + 100 || p.y > this.ground + 50)) {
+          p.life = 0;
+        }
+      } else if (p.y > this.ground + 10 || p.x < -60 || p.x > W + 60) {
+        p.life = 0;
+      }
     }
     } catch (projErr) {
       try { sfReportError('projectile/update', projErr, 'Projectiel hiccup — speel door'); } catch (_) {}
     }
     for (const p of this.projectiles) {
+      if (p.life <= 0 && p.kind === 'boemerang') {
+        const owner = p.from === 'p2' ? this.p2
+          : (p.from === 'player' || p.from === 'p1') ? this.player : null;
+        if (owner) owner._boomerOut = false;
+      }
       if (p.life <= 0 && !p._impactFx && skillExists(p.kind)) {
         p._impactFx = true;
         spawnJutsuImpactFx(this, p.x, p.y, p.kind === 'kamehame' ? 'rasengan' : p.kind, 'small');
@@ -22092,6 +22176,25 @@ class Game {
         if (big) {
           c.fillStyle = '#3a4560'; c.beginPath(); c.arc(0, 0, 4, 0, TAU); c.fill();
         }
+      } else if (p.kind === 'boemerang') {
+        c.translate(p.x, p.y);
+        c.rotate(p.spin || 0);
+        c.strokeStyle = '#a86a30';
+        c.lineWidth = 7;
+        c.lineCap = 'round';
+        c.lineJoin = 'round';
+        c.beginPath();
+        c.moveTo(-16, -14);
+        c.quadraticCurveTo(-4, -16, 0, 0);
+        c.quadraticCurveTo(4, 16, 16, 14);
+        c.stroke();
+        c.strokeStyle = '#e0a868';
+        c.lineWidth = 2.6;
+        c.beginPath();
+        c.moveTo(-12, -10);
+        c.quadraticCurveTo(-3, -12, 0, 0);
+        c.quadraticCurveTo(3, 12, 12, 10);
+        c.stroke();
       } else if (p.kind === 'wave') {
         c.shadowColor = '#ffd75e'; c.shadowBlur = 16;
         c.fillStyle = 'rgba(255,215,94,.9)';

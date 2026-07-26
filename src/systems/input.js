@@ -132,6 +132,7 @@ function meleeHitPoint(f, spec) {
 
 function canThrowShuriken(f, game) {
   if (!f || f._shurikenCd > 0) return false;
+  if (f._boomerOut) return false;
   const t = game ? game.t : 0;
   f._shurikenBurst = (f._shurikenBurst || []).filter(x => t - x < SHURIKEN_BURST_WINDOW);
   return f._shurikenBurst.length < SHURIKEN_BURST_MAX;

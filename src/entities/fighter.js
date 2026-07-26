@@ -689,7 +689,7 @@ class Fighter {
     c.fillStyle = this.color;
     c.beginPath(); c.arc(hx, hy, 3.4, 0, TAU); c.fill();
 
-    if (this.isPlayer && this.weapon.id !== 'vuist' && !(this.attack && this.attack.kind === 'special')) {
+    if (this.isPlayer && this.weapon.id !== 'vuist' && !this._boomerOut && !(this.attack && this.attack.kind === 'special')) {
       const aimLift = (this._aimAtAttack && (this.attack?.kind === 'weapon' || this.attack?.kind === 'punch' || this.attack?.kind === 'kick'))
         ? clamp(this._aimAtAttack.ny, -1, 0.4) * 0.85
         : 0;

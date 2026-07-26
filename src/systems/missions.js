@@ -2027,7 +2027,6 @@ function gokGooiStartFromScreen() {
 function vsWeaponRangeFactor(w) {
   if (!w) return 0.25;
   if (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) return 1;
-  if (w.id === 'boemerang') return 0.88;
   if (w.range >= 74) return 0.72;
   if (w.range >= 58) return 0.48;
   return 0.22;
@@ -2042,8 +2041,7 @@ function vsFighterStats(entry) {
   const critPct = Math.round(crit * 100);
   const str = Math.round(Math.min(100, dmg * (w.dmg || 1) * (0.72 + crit * critMul * 0.35)));
   const rng = Math.round(Math.min(100, ((w.range || 38) / 78) * 100));
-  const meleeScale = (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) ? 0.38
-    : (w.id === 'boemerang' ? 0.52 : 1);
+  const meleeScale = (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) ? 0.38 : 1;
   const meleeDps = Math.round(Math.min(100, (dmg * (w.speed || 1) * spd) / 88 * meleeScale));
   const rangeDps = Math.round(Math.min(100, (dmg * (w.speed || 1) * rng) / 72 * vsWeaponRangeFactor(w) * (0.82 + crit * 0.9)));
   let special = 'Rasengan';

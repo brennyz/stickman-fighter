@@ -2085,7 +2085,7 @@ class Game {
       if (!this._shurikenWarnT || this.t - this._shurikenWarnT > 0.9) {
         this._shurikenWarnT = this.t;
         try {
-          UI.toast(f._shurikenCd > 0 ? t('toast.shurikenWait') : t('toast.shurikenSpam'), 1600);
+          UI.toast(f._shurikenCd > 0 || f._boomerOut ? t('toast.shurikenWait') : t('toast.shurikenSpam'), 1600);
         } catch (_) {}
       }
       return;
@@ -2093,9 +2093,28 @@ class Game {
     noteShurikenThrow(f, this);
     const w = f.weapon;
     AudioSys.sfx(weaponThrowSfx(w.id));
+    const boom = w.id === 'boemerang';
     const big = w.id === 'fuuma';
     const critMeta = projCritMeta(f);
-    const aim = projAimVelocity(f, big ? 500 : 560);
+    const aim = projAimVelocity(f, boom ? 480 : (big ? 500 : 560));
+    if (boom) {
+      f._boomerOut = true;
+      f._shurikenCd = Math.max(f._shurikenCd || 0, 0.55);
+      this.spawnProjectile(Object.assign({
+        x: f.x + (f.face || 1) * 24,
+        y: f.y - 52 + clamp(aim.ny, -1, 0.5) * 30,
+        vx: aim.vx, vy: aim.vy, r: 16,
+        dmg: f.baseDmg * w.dmg * 0.95,
+        from: this.projFrom(f), kind: 'boemerang', life: 2.5, spin: 0,
+        throwId: 'boemerang',
+        hitSet: new Set(),
+        returning: false,
+        outT: 0,
+        originX: f.x,
+        originY: f.y - 52,
+      }, critMeta));
+      return;
+    }
     this.spawnProjectile(Object.assign({
       x: f.x + (f.face || 1) * 24,
       y: f.y - 52 + clamp(aim.ny, -1, 0.5) * 30,
@@ -2481,7 +2500,7 @@ class Game {
       const spinRate = skProj
         ? (skProj.behavior === 'pull' || skProj.behavior === 'meteor' ? 16
           : skProj.behavior === 'dash' ? 20 : skProj.behavior === 'disc' ? 24 : 22)
-        : (p.kind === 'shuriken' ? 28 : 12);
+        : (p.kind === 'shuriken' ? 28 : p.kind === 'boemerang' ? 34 : 12);
       p.spin = (p.spin || 0) + dt * spinRate;
       p.vy += (p.grav || 0) * dt;
       // Rasengan-krul: vanuit horizontaal omhoog/omlaag buigen
@@ -2491,7 +2510,49 @@ class Game {
         if (p.vy > lim) p.vy = lim;
         if (p.vy < -lim) p.vy = -lim;
       }
+      // Boemerang: uitgooien → terugkeren naar thrower (kan opnieuw raken)
+      if (p.kind === 'boemerang') {
+        p.outT = (p.outT || 0) + dt;
+        const owner = p.from === 'p2' ? this.p2
+          : (p.from === 'player' || p.from === 'p1') ? this.player : null;
+        if (!p.returning) {
+          const ox = p.originX != null ? p.originX : p.x;
+          const oy = p.originY != null ? p.originY : p.y;
+          const dist = Math.hypot(p.x - ox, p.y - oy);
+          if (p.outT >= 0.42 || dist >= 270
+              || p.x < 12 || p.x > W - 12 || p.y < 10 || p.y > this.ground + 6) {
+            p.returning = true;
+            p.hitSet = new Set();
+            try { AudioSys.sfx('wBoemerang'); } catch (_) {}
+          }
+        }
+        if (p.returning) {
+          if (owner && owner.alive) {
+            const tx = owner.x + (owner.face || 1) * 6;
+            const ty = owner.y - 52;
+            const dx = tx - p.x, dy = ty - p.y;
+            const d = Math.hypot(dx, dy) || 1;
+            const spd = 560;
+            p.vx = (dx / d) * spd;
+            p.vy = (dy / d) * spd;
+          } else {
+            p.life = 0;
+          }
+        }
+      }
       p.x += p.vx * dt; p.y += p.vy * dt;
+      if (p.kind === 'boemerang' && p.returning && p.life > 0) {
+        const owner = p.from === 'p2' ? this.p2
+          : (p.from === 'player' || p.from === 'p1') ? this.player : null;
+        if (owner && owner.alive) {
+          const tx = owner.x + (owner.face || 1) * 6;
+          const ty = owner.y - 52;
+          if (Math.hypot(p.x - tx, p.y - ty) < 30) {
+            p.life = 0;
+            owner._boomerOut = false;
+          }
+        }
+      }
       if (skProj && (skProj.behavior === 'orb' || skProj.behavior === 'pull' || skProj.behavior === 'meteor')) {
         const grow = (skProj.behavior === 'pull' || skProj.behavior === 'meteor') ? 2.5 : 4;
         p.r = Math.min((skProj.radius || 28) + 8, (p.r || skProj.radius) + dt * grow);
@@ -2574,7 +2635,7 @@ class Game {
             }
           }
         }
-        if (this.mode === 'coinrun' && this.flyers && p.kind === 'shuriken' && p.from === 'player') {
+        if (this.mode === 'coinrun' && this.flyers && (p.kind === 'shuriken' || p.kind === 'boemerang') && p.from === 'player') {
           for (const fl of this.flyers) {
             if (fl.hp <= 0) continue;
             if ((p.x - fl.x) ** 2 + (p.y - fl.y) ** 2 < (p.r + fl.r) ** 2) {
@@ -2590,12 +2651,23 @@ class Game {
           }
         }
       }
-      if (p.y > this.ground + 10 || p.x < -60 || p.x > W + 60) p.life = 0;
+      if (p.kind === 'boemerang') {
+        if (p.returning && (p.x < -100 || p.x > W + 100 || p.y > this.ground + 50)) {
+          p.life = 0;
+        }
+      } else if (p.y > this.ground + 10 || p.x < -60 || p.x > W + 60) {
+        p.life = 0;
+      }
     }
     } catch (projErr) {
       try { sfReportError('projectile/update', projErr, 'Projectiel hiccup — speel door'); } catch (_) {}
     }
     for (const p of this.projectiles) {
+      if (p.life <= 0 && p.kind === 'boemerang') {
+        const owner = p.from === 'p2' ? this.p2
+          : (p.from === 'player' || p.from === 'p1') ? this.player : null;
+        if (owner) owner._boomerOut = false;
+      }
       if (p.life <= 0 && !p._impactFx && skillExists(p.kind)) {
         p._impactFx = true;
         spawnJutsuImpactFx(this, p.x, p.y, p.kind === 'kamehame' ? 'rasengan' : p.kind, 'small');
@@ -2962,6 +3034,25 @@ class Game {
         if (big) {
           c.fillStyle = '#3a4560'; c.beginPath(); c.arc(0, 0, 4, 0, TAU); c.fill();
         }
+      } else if (p.kind === 'boemerang') {
+        c.translate(p.x, p.y);
+        c.rotate(p.spin || 0);
+        c.strokeStyle = '#a86a30';
+        c.lineWidth = 7;
+        c.lineCap = 'round';
+        c.lineJoin = 'round';
+        c.beginPath();
+        c.moveTo(-16, -14);
+        c.quadraticCurveTo(-4, -16, 0, 0);
+        c.quadraticCurveTo(4, 16, 16, 14);
+        c.stroke();
+        c.strokeStyle = '#e0a868';
+        c.lineWidth = 2.6;
+        c.beginPath();
+        c.moveTo(-12, -10);
+        c.quadraticCurveTo(-3, -12, 0, 0);
+        c.quadraticCurveTo(3, 12, 12, 10);
+        c.stroke();
       } else if (p.kind === 'wave') {
         c.shadowColor = '#ffd75e'; c.shadowBlur = 16;
         c.fillStyle = 'rgba(255,215,94,.9)';
