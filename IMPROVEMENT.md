@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | **user** | Satan harden: adventure hitte-meter, gevaar-rood + ! bij 9×, copy/help/result tips. v1.18.102 / SW v312. |
 | 2026-07-26 | **user** | Satan stall-baas: na 10× falen op zelfde level → Satan met 85% reflect; win → Tide Battle pet-duel. v1.18.101 / SW v311. |
 | 2026-07-26 | **12** | Content c5: weapon/pet rarity chips n/tot, volgende-wapen unlock hint, hub icon SVG data-URI fallback bij stale SW. v1.18.100 / SW v310. |
 | 2026-07-26 | **8** | PWA c5: speel.html SW register + offline share cache; SW canonical puts voor speel/ipad/android; install/loop shell check incl. speel; smoke-pwa-shell in test+doctor. v1.18.99 / SW v309. |

@@ -864,10 +864,40 @@ function levelTileTip(n, pick, infoLv, boss, best, fails) {
   if (fails > 0) {
     tip += t('ui.levelTipFails', { n: fails });
     if (fails >= 5) tip += t('ui.levelTipMasterActive');
-    if (fails >= 10) tip += t('ui.levelTipSatan');
+    if (fails >= SATAN_DANGER_FAILS) tip += t('ui.levelTipSatanDanger');
+    else if (fails >= 7) tip += t('ui.levelTipSatanRising');
   }
   tip += t('ui.levelTipTap');
   return tip;
+}
+
+function renderAdvHeatMeter(heat, opts) {
+  opts = opts || {};
+  if (!heat || typeof satanHeatLabel !== 'function') return '';
+  const compact = !!opts.compact;
+  const label = satanHeatLabel(heat);
+  const tip = typeof satanHeatTip === 'function' ? satanHeatTip(heat) : '';
+  const bang = heat.bang
+    ? `<span class="adv-heat-bang" aria-hidden="true">!</span>`
+    : '';
+  const cls = [
+    compact ? 'lvl-heat' : 'adv-heat',
+    heat.tier !== 'none' ? 'tier-' + heat.tier : '',
+    heat.danger ? 'danger' : '',
+    heat.satanReady ? 'satan-ready' : '',
+  ].filter(Boolean).join(' ');
+  const count = `${heat.fails}/${SATAN_FAIL_THRESHOLD}`;
+  if (compact) {
+    return `<span class="${cls}" title="${tip || label}">` +
+      `<i class="lvl-heat-fill" style="width:${heat.pct}%"></i>` +
+      `<span class="lvl-heat-n">${count}</span>${bang}</span>`;
+  }
+  return `<div class="${cls}" title="${tip}" role="meter" aria-valuemin="0" aria-valuemax="${SATAN_FAIL_THRESHOLD}" aria-valuenow="${heat.fails}" aria-label="${label}">` +
+    `<div class="adv-heat-head"><span class="adv-heat-title">${t('ui.heatTitle')}</span>` +
+    `<span class="adv-heat-label">${label}${bang}</span>` +
+    `<span class="adv-heat-count">${count}</span></div>` +
+    `<div class="adv-heat-track"><i class="adv-heat-fill" style="width:${heat.pct}%"></i></div>` +
+    `<div class="adv-heat-sub">${tip}</div></div>`;
 }
 
 const UI = {
@@ -1107,14 +1137,15 @@ const UI = {
         `<div class="step-card help-island-card">` +
         `<b>${t('ui.helpIslandTitle')}</b> — ${t('ui.helpIslandIntro', { cap, cur })}` +
         `<div class="help-island-grid">${rows}</div>` +
-        `<div style="margin-top:10px;opacity:.88;line-height:1.45">${t('ui.helpMasterBuff')}</div></div>`;
+        `<div style="margin-top:10px;opacity:.88;line-height:1.45">${t('ui.helpMasterBuff')}</div>` +
+        `<div style="margin-top:8px;opacity:.88;line-height:1.45">${t('ui.helpSatanHeat')}</div></div>`;
     }
     if (!host) return;
     const touch = IS_TOUCH ? t('ui.helpTouch') : t('ui.helpKeyboard');
     const prog = onboardingProgress();
     const next = nextUntriedMode();
     const modes = [
-      { id: 'adventure', label: 'Avontuur', tip: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok vóór level' },
+      { id: 'adventure', label: 'Avontuur', tip: t('ui.modeAdventure') },
       { id: 'training', label: 'Training', tip: 'Combo-trainer ×5/×8/×10 · lasers · Chidori-telegraph' },
       { id: 'wall', label: 'Muur', tip: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing' },
       { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
@@ -2139,6 +2170,17 @@ const UI = {
     const pct = Math.round(prog.cleared / prog.total * 100);
     if (info) {
       const mb = save.advMasterBuff;
+      const heat = typeof satanHeatForIsland === 'function'
+        ? satanHeatForIsland(pick)
+        : null;
+      const curLv = Math.min(Math.max(save.unlocked || 1, range.start), range.end);
+      const curHeat = typeof satanHeatForLevel === 'function'
+        ? satanHeatForLevel(curLv)
+        : heat;
+      // Altijd tonen: spelers moeten weten dat hitte/Satan bestaat
+      const meterHeat = (curHeat && curHeat.fails >= (heat && heat.fails ? heat.fails : 0))
+        ? curHeat
+        : (heat || curHeat);
       info.innerHTML =
         `<div class="island-info-head">` +
         `<span class="island-info-ico">${islMeta.icon}</span>` +
@@ -2149,14 +2191,21 @@ const UI = {
         `</div></div></div>` +
         `<div class="island-prog-track island-info-prog" title="${t('island.levelsProg')}"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
         `<div class="island-prog-track island-info-stars" title="${t('island.starsProg')}"><i style="width:${Math.round(prog.stars / Math.max(1, prog.maxStars) * 100)}%"></i></div>` +
+        (meterHeat ? renderAdvHeatMeter(meterHeat) : '') +
         (() => {
           const onboard = adventureIslandHintLine();
           const mbLine = mb && mb >= range.start && mb <= range.end
             ? `<span class="island-info-chip master">${t('ui.masterBuffChip', { lv: mb })}</span>`
             : '';
+          const satanChip = meterHeat && meterHeat.satanReady
+            ? `<span class="island-info-chip satan">${t('ui.heatChipSatan')}</span>`
+            : (meterHeat && meterHeat.tier === 'danger'
+              ? `<span class="island-info-chip satan-danger">${t('ui.heatChipDanger')}</span>`
+              : '');
           const chips = [
             onboard ? `<span class="island-info-chip onboard">${onboard}</span>` : '',
             mbLine,
+            satanChip,
           ].filter(Boolean).join('');
           return chips ? `<div class="island-info-chips">${chips}</div>` : '';
         })();
@@ -2169,9 +2218,12 @@ const UI = {
       const infoLv = buildLevel(n);
       const rar = rarityOf(infoLv.rarityCap);
       const fails = advFailCount(n);
+      const heat = !locked && typeof satanHeatForLevel === 'function' ? satanHeatForLevel(n) : null;
       el.className = 'lvl' + (boss ? ' boss' : '') + (locked ? ' locked' : '') + (n < save.unlocked ? ' cleared' : '') +
         (!locked && n === save.unlocked ? ' lvl-current' : '') +
-        (save.advMasterBuff === n ? ' master-buff' : '');
+        (save.advMasterBuff === n ? ' master-buff' : '') +
+        (heat && heat.tier === 'danger' ? ' heat-danger' : '') +
+        (heat && heat.satanReady ? ' satan-ready' : '');
       el.style.boxShadow = locked ? 'none' : `0 5px 0 rgba(0,0,0,.35), 0 0 0 2px ${rar.color}55`;
       const waveStrip = infoLv.waves.map((_, wi) => {
         const meta = infoLv.waveMeta && infoLv.waveMeta[wi];
@@ -2184,12 +2236,13 @@ const UI = {
         else if (trait === 'elite') cls += ' trait-elite';
         return `<i class="${cls}"></i>`;
       }).join('');
+      const heatHtml = (heat && heat.fails > 0 && !locked) ? renderAdvHeatMeter(heat, { compact: true }) : '';
       el.innerHTML = locked
         ? SVG_LOCK_ICON
         : `${n}${boss ? `<small>${t('ui.boss')}</small>` : `<small style="color:${rar.color}">${rarityLabel(infoLv.rarityCap)}</small>`}` +
           `<span class="lvl-wave-strip" aria-hidden="true">${waveStrip}</span>` +
           (save.stars[n] ? `<span class="lvl-stars">${'★'.repeat(save.stars[n])}</span>` : '') +
-          (fails > 0 && !locked ? `<span class="lvl-fails">${fails}/5</span>` : '') +
+          heatHtml +
           (save.advMasterBuff === n ? '<span class="lvl-master">+20%</span>' : '');
       if (!locked) {
         const best = save.stars[n] || 0;

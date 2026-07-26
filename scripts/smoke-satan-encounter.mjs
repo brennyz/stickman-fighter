@@ -44,9 +44,37 @@ async function run() {
       if (typeof SATAN_REFLECT_RATIO !== 'number' || SATAN_REFLECT_RATIO < 0.8) {
         throw new Error('SATAN_REFLECT_RATIO invalid');
       }
+      if (typeof satanHeatTier !== 'function' || satanHeatTier(9) !== 'danger') {
+        throw new Error('satanHeatTier(9) should be danger');
+      }
+      if (satanHeatTier(10) !== 'satan') throw new Error('satanHeatTier(10) should be satan');
+      if (!satanHeatForLevel) throw new Error('satanHeatForLevel missing');
+
       save.advFails = save.advFails || {};
-      save.advFails[1] = 10;
+      save.advFails[1] = 9;
       save.advSatanAt = {};
+      persist();
+      const heat9 = satanHeatForLevel(1);
+      if (!heat9.bang || heat9.tier !== 'danger' || !heat9.danger) {
+        throw new Error('heat at 9 fails not danger: ' + JSON.stringify(heat9));
+      }
+      if (typeof UI !== 'undefined' && typeof renderAdvHeatMeter === 'function') {
+        const html = renderAdvHeatMeter(heat9);
+        if (!html.includes('adv-heat') || !html.includes('adv-heat-bang') || !html.includes('!')) {
+          throw new Error('heat meter HTML missing danger bang');
+        }
+        UI.advIslandPick = 1;
+        try { UI.renderLevels(); } catch (e) { throw new Error('renderLevels: ' + e); }
+        const info = document.getElementById('levelIslandInfo');
+        if (!info || !info.innerHTML.includes('adv-heat')) {
+          throw new Error('levelIslandInfo missing heat meter');
+        }
+        if (!info.innerHTML.includes('adv-heat-bang')) {
+          throw new Error('levelIslandInfo missing danger bang at 9 fails');
+        }
+      }
+
+      save.advFails[1] = 10;
       persist();
       if (!shouldTriggerSatan(1)) throw new Error('shouldTriggerSatan(1) false at 10 fails');
 
@@ -82,6 +110,7 @@ async function run() {
         reflectLost: lost,
         satanHp: mon.maxhp,
         playerMax: game.player.maxhp,
+        heatTier9: heat9.tier,
         errors,
       };
     } catch (err) {

@@ -804,10 +804,12 @@ class Game {
       if (!save.advFails || typeof save.advFails !== 'object') save.advFails = {};
       const hadMaster = save.advMasterBuff === lv;
       save.advFails[lv] = (save.advFails[lv] || 0) + 1;
-      const gotMaster = save.advFails[lv] >= 5 && !hadMaster;
+      const failsNow = save.advFails[lv];
+      const gotMaster = failsNow >= 5 && !hadMaster;
       if (gotMaster) save.advMasterBuff = lv;
-      const satanSoon = save.advFails[lv] === SATAN_FAIL_THRESHOLD
-        || (typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv) && save.advFails[lv] >= SATAN_FAIL_THRESHOLD);
+      const satanSoon = failsNow === SATAN_FAIL_THRESHOLD
+        || (typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv));
+      const heatDanger = failsNow === SATAN_DANGER_FAILS;
       persist();
       if (gotMaster) {
         const self = this;
@@ -818,7 +820,15 @@ class Game {
           } catch (_) {}
         }, 1500);
       }
-      if (satanSoon) {
+      if (heatDanger) {
+        const self = this;
+        setTimeout(() => {
+          try {
+            if (!gameUiTimerOk(self, { allowOver: true })) return;
+            UI.toast(t('toast.satanHeatDanger'), 4200);
+          } catch (_) {}
+        }, gotMaster ? 3200 : 1500);
+      } else if (satanSoon) {
         const self = this;
         setTimeout(() => {
           try {
@@ -850,16 +860,26 @@ class Game {
       })(),
       xp: this.sessionXP,
       mode: 'adventure', level: this.level.n, win, stars, prevStars,
-      tip: win ? (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
+        tip: win ? (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
         ? t('result.starImproved', { stars, prev: prevStars })
         : t('result.pickupsHelp', { hint: starHintLine() }))) : (() => {
         const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : 'start';
+        const failsNow = advFailCount(lv);
+        let heatTip = '';
+        if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv)) {
+          heatTip = t('result.heatSatanNext');
+        } else if (failsNow >= SATAN_DANGER_FAILS) {
+          heatTip = t('result.heatDanger');
+        } else if (failsNow >= 7) {
+          heatTip = t('result.heatRising', { n: failsNow, max: SATAN_FAIL_THRESHOLD });
+        }
         const base = this.player.hp <= 0
           ? t('result.lossBlockTip', { prog })
           : t('result.lossOrbTip', { prog });
         const once = onceResultTip('adventure', 'loss',
           t('result.lossGambleTip'));
-        return once ? `${once} · ${base}` : base;
+        const core = once ? `${once} · ${base}` : base;
+        return heatTip ? `${heatTip} · ${core}` : core;
       })(),
     }));
   }

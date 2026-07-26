@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.101';
+const APP_VERSION = '1.18.102';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 311;
+const SW_CACHE_REV = 312;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -8872,6 +8872,8 @@ function tideBattleSpawnX(game) {
 /* ============================== SATAN ENCOUNTER ======================== */
 /** Na 10× falen op hetzelfde level verschijnt Satan (reflect-baas). */
 const SATAN_FAIL_THRESHOLD = 10;
+/** UI-danger: één fail vóór Satan (9× = rood + !). */
+const SATAN_DANGER_FAILS = 9;
 const SATAN_REAPPEAR_GAP = 5;
 const SATAN_REFLECT_RATIO = 0.85;
 const SATAN_SPECIES_ID = 'satan';
@@ -8895,6 +8897,82 @@ function shouldTriggerSatan(levelN) {
   const last = satanLastAt(levelN);
   if (!last) return true;
   return fails >= last + SATAN_REAPPEAR_GAP;
+}
+
+/**
+ * Hitte-tier voor adventure-UI (temperatuur-meter).
+ * cool → warm → hot (meester) → danger (9) → satan (10+ / klaar).
+ */
+function satanHeatTier(fails) {
+  const n = clamp(Math.floor(Number(fails) || 0), 0, 99);
+  if (n >= SATAN_FAIL_THRESHOLD) return 'satan';
+  if (n >= SATAN_DANGER_FAILS) return 'danger';
+  if (n >= 5) return 'hot';
+  if (n >= 3) return 'warm';
+  if (n >= 1) return 'cool';
+  return 'none';
+}
+
+function satanHeatPct(fails) {
+  const n = clamp(Math.floor(Number(fails) || 0), 0, 99);
+  return clamp(Math.round((n / SATAN_FAIL_THRESHOLD) * 100), 0, 100);
+}
+
+function satanHeatForLevel(levelN) {
+  const fails = satanFailCount(levelN);
+  const tier = satanHeatTier(fails);
+  const pending = typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(levelN);
+  return {
+    levelN: levelN,
+    fails,
+    tier,
+    pct: satanHeatPct(fails),
+    danger: tier === 'danger' || tier === 'satan' || pending,
+    bang: fails >= SATAN_DANGER_FAILS || pending,
+    satanReady: pending || tier === 'satan',
+    master: fails >= 5,
+  };
+}
+
+/** Hoogste hitte op een eiland (voor info-paneel). */
+function satanHeatForIsland(islandId) {
+  const range = typeof islandLevelRange === 'function'
+    ? islandLevelRange(islandId)
+    : { start: 1, end: 10 };
+  let best = null;
+  for (let n = range.start; n <= range.end; n++) {
+    const h = satanHeatForLevel(n);
+    if (!best || h.fails > best.fails || (h.fails === best.fails && h.satanReady && !best.satanReady)) {
+      best = h;
+    }
+  }
+  return best || satanHeatForLevel(save && save.unlocked ? save.unlocked : 1);
+}
+
+function satanHeatLabel(heat) {
+  if (!heat) return '';
+  if (typeof t !== 'function') {
+    if (heat.satanReady) return 'Satan komt';
+    if (heat.tier === 'danger') return 'Gevaar!';
+    if (heat.tier === 'hot') return 'Hitte';
+    if (heat.tier === 'warm') return 'Warm';
+    if (heat.tier === 'cool') return 'Koel';
+    return 'Hitte';
+  }
+  if (heat.satanReady) return t('ui.heatSatanReady');
+  if (heat.tier === 'danger') return t('ui.heatDanger');
+  if (heat.tier === 'hot') return t('ui.heatHot');
+  if (heat.tier === 'warm') return t('ui.heatWarm');
+  if (heat.tier === 'cool') return t('ui.heatCool');
+  return t('ui.heatIdle');
+}
+
+function satanHeatTip(heat) {
+  if (!heat || typeof t !== 'function') return '';
+  if (heat.satanReady) return t('ui.heatTipSatan', { lv: heat.levelN, n: heat.fails });
+  if (heat.tier === 'danger') return t('ui.heatTipDanger', { lv: heat.levelN, n: heat.fails });
+  if (heat.fails > 0) return t('ui.heatTipFails', { lv: heat.levelN, n: heat.fails, max: SATAN_FAIL_THRESHOLD });
+  return t('ui.heatTipIdle');
 }
 
 function markSatanEncounterStarted(levelN) {
@@ -9393,6 +9471,9 @@ function seedNlGameStrings() {
     lossBlockTip: 'Tip: blokkeer · mik omhoog op vliegers · {prog}',
     lossOrbTip: 'Tip: pak groene orbs · vul SUPER vóór baas · {prog}',
     lossGambleTip: 'Eerste nederlaag: vóór elk level kun je dobbelen — bondgenoot helpt tussen golven.',
+    heatRising: 'Hitte {n}/{max} — bij 9 gevaar, bij 10 Satan',
+    heatDanger: 'GEVAAR! Hitte rood — nog 1 verlies en Satan komt',
+    heatSatanNext: 'Satan staat klaar bij de volgende start van dit level',
     trainComboRecord: 'Combo-trainer: ×{n}{rec}',
     trainComboNewRec: ' — nieuw record!',
     trainStyleUnlock: 'Nieuwe stijl vrij: Chakra gloed — Instellingen → Stijl!',
@@ -9517,6 +9598,7 @@ function seedNlGameStrings() {
     tideBattleWin: 'Tide Battle gewonnen! +{xp} XP · +{coins} pet coins',
     satanIncoming: 'Satan verschijnt — 10× vastgelopen!',
     satanComingNext: '10× verloren — volgende poging: Satan komt langs…',
+    satanHeatDanger: 'Gevaar! 9× verloren — hitte rood · nog 1× en Satan komt!',
     satanReflectHint: 'Satan kaatst 85% schade terug — let op je HP!',
     satanWinTide: 'Satan verslagen! Beloning: Tide Battle pet!',
     satanTideDone: 'Tide-beloning klaar — avontuur gaat verder',
@@ -9700,7 +9782,7 @@ function seedNlGameStrings() {
     '<b>RabbitRobot:</b> hij gebruikt <b>Chidori</b> (bliksem) — wacht tot hij open is.',
     '<b>Muur:</b> 60s timer · combo-balk (+4% sloop per hit) · milestones ×3/×5/×8 · record-tempo in HUD · bom/goud bonusstenen.',
     '<b>Rariteiten:</b> Gewoon → Ongewoon → Zeldzaam → Episch → Legendarisch → Mythisch. Zeldzamer = meer XP & meer max HP.',
-    '<b>50 levels:</b> <b>5 eilanden × 10 levels</b> — skill gate wapens per eiland · baas Lv 10/20/30/40/50 opent volgend eiland · 5× verlies = Meester-buff (+20%).',
+    '<b>50 levels:</b> <b>5 eilanden × 10 levels</b> — skill gate wapens per eiland · baas Lv 10/20/30/40/50 opent volgend eiland · hitte-meter: 5× = Meester-buff · 9× = gevaar! · 10× = Satan.',
     '<b>Backup:</b> elke save wordt dubbel opgeslagen — bij problemen: <b>Instellingen → Herstel save uit backup</b>.',
     '<b>Delen:</b> menu → <b>Deel link</b> — vrienden op Android openen in Chrome → Zet in app-lade. Zie ANDROID-DELEN.txt op GitHub.',
     '<b>Offline:</b> na 1× online openen cache’t de app HTML+JS — banner onderaan bij geen net. Tunnel-link heeft internet nodig; GitHub Pages + app-lade = stabielst.',
@@ -9795,7 +9877,7 @@ function seedNlGameStrings() {
     charPickNow2: 'P2',
     charIpadTip: 'iPad: speler 1 gebruikt de linker helft van het scherm (joystick + knoppen), speler 2 de rechter helft. Draai je iPad liggend voor het meeste ruimte.',
     levelHead: 'Kies een eiland',
-    levelSub: '5 eilanden × 10 levels · Tik level = Gooi & start · lang indrukken = zonder gok',
+    levelSub: '5 eilanden × 10 levels · hitte-meter · 9× verlies = gevaar! · 10× = Satan',
     gambleSub: 'Twee dobbelstenen: pech = super-baas in een willekeurige golf · geluk = sterke bondgenoot (buff alleen dit level)',
     gambleSumDefault: 'Tik Gooi & start — of overslaan zonder gok',
     gambleSumRoll: 'Som: {d1} + {d2} = {sum}',
@@ -9917,7 +9999,7 @@ function seedNlGameStrings() {
     islandInfoSub: 'Skill gate: wapens tot Lv {cap} · {cleared}/{total} levels · {stars}★',
     islandBossGate: ' · baas Lv {lv} → volgend eiland',
     masterBuffChip: 'Meester-buff Lv {lv} · +20%',
-    islandFirstHint: 'Eerste keer avontuur: 5×10 levels · skill gate per eiland · Meester-buff na 5× verlies op één level',
+    islandFirstHint: 'Hitte-meter: 5× verlies = Meester-buff · 9× = gevaar! · 10× = Satan (reflect)',
     starHint: '3★ >{three}% HP · 2★ >{two}% · 1★ = win',
     levelTipWaves: '{waves} golven · {starHint}',
     levelTipIslandBoss: ' · eiland-baas — opent volgend eiland',
@@ -9926,7 +10008,23 @@ function seedNlGameStrings() {
     levelTipFails: ' · {n}× verloren',
     levelTipMasterActive: ' · Meester-buff actief',
     levelTipSatan: ' · 10×+ = Satan (reflect)',
+    levelTipSatanDanger: ' · GEVAAR! bijna Satan',
+    levelTipSatanRising: ' · hitte stijgt → Satan bij 10',
     levelTipTap: ' · Tik = Gooi & start · Lang = zonder gok',
+    heatTitle: 'Hitte',
+    heatIdle: 'Koel',
+    heatCool: 'Koel',
+    heatWarm: 'Warm',
+    heatHot: 'Heet',
+    heatDanger: 'Gevaar!',
+    heatSatanReady: 'Satan komt',
+    heatTipIdle: 'Verlies op dit level vult de hitte-meter — bij 10 komt Satan.',
+    heatTipFails: 'Lv {lv}: {n}/{max} verliezen · 5 = Meester · 9 = gevaar · 10 = Satan',
+    heatTipDanger: 'Lv {lv}: {n}/10 — GEVAAR! Nog 1 verlies en Satan komt langs.',
+    heatTipSatan: 'Lv {lv}: {n}/10 — Satan staat klaar bij de volgende start.',
+    heatChipSatan: 'Satan klaar · volgende start',
+    heatChipDanger: 'Gevaar! · 9× verloren',
+    helpSatanHeat: 'Hitte-meter: verliezen op één level stapelen. 5× = Meester-buff (+20%). 9× = rood gevaar!. 10× = Satan (85% reflect); win Satan → Tide Battle pet.',
     errPickIsland: 'Eiland kiezen mislukt',
     errStart: 'Start mislukt',
     errLevelStart: 'Level starten mislukt',
@@ -9951,7 +10049,7 @@ function seedNlGameStrings() {
     installSub: 'Verschijnt als icoon — net als een echte app',
     boss: 'BAAS',
     topHunter: 'Top jager',
-    modeAdventure: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok · omringd = KABLAM!',
+    modeAdventure: '5 eilanden × 10 levels · hitte-meter · 9× = gevaar! · 10× = Satan · Meester-buff · dobbel-gok',
     modeTraining: 'Combo-trainer ×5/×8/×10 · 3s dummy · lasers · Chidori',
     modeWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing',
     modeVersus: 'P1 links P2 rechts · best-of-3 · rematch in pauze',
@@ -10209,6 +10307,9 @@ const CATALOG_EN = {
     lossBlockTip: 'Tip: block · aim up at flyers · {prog}',
     lossOrbTip: 'Tip: grab green orbs · fill SUPER before boss · {prog}',
     lossGambleTip: 'First loss: before each level you can gamble — ally helps between waves.',
+    heatRising: 'Heat {n}/{max} — danger at 9, Satan at 10',
+    heatDanger: 'DANGER! Heat red — one more loss and Satan appears',
+    heatSatanNext: 'Satan is ready on the next start of this level',
     trainComboRecord: 'Combo trainer: ×{n}{rec}',
     trainComboNewRec: ' — new record!',
     trainStyleUnlock: 'New style unlocked: Chakra glow — Settings → Style!',
@@ -10301,7 +10402,7 @@ const CATALOG_EN = {
     'RabbitRobot: uses Chidori (lightning) — wait until he opens up.',
     'Wall: 60s timer · combo bar (+4% smash per hit) · milestones ×3/×5/×8 · record pace in HUD · bomb/gold bonus bricks.',
     'Rarities: Common → Uncommon → Rare → Epic → Legendary → Mythic. Rarer = more XP & max HP.',
-    '50 levels: 5 islands × 10 levels — skill gate weapons per island · boss Lv 10/20/30/40/50 opens next island · 5× loss = Master buff (+20%).',
+    '50 levels: 5 islands × 10 levels — skill gate weapons per island · boss Lv 10/20/30/40/50 opens next island · heat meter: 5× = Master buff · 9× = danger! · 10× = Satan.',
     'Backup: every save is stored twice — if needed: Settings → Restore save from backup.',
     'Share: menu → Share link — friends on Android open in Chrome → Add to home screen. See ANDROID-DELEN.txt on GitHub.',
     'Offline: after opening online once the app caches HTML+JS — banner at bottom when offline. Tunnel links need internet; GitHub Pages + home screen = most stable.',
@@ -10335,6 +10436,7 @@ const CATALOG_EN = {
     tideBattleWin: 'Tide Battle won! +{xp} XP · +{coins} pet coins',
     satanIncoming: 'Satan appears — stuck 10×!',
     satanComingNext: 'Lost 10× — next attempt: Satan shows up…',
+    satanHeatDanger: 'Danger! Lost 9× — heat red · one more and Satan comes!',
     satanReflectHint: 'Satan reflects 85% damage — watch your HP!',
     satanWinTide: 'Satan defeated! Reward: Tide Battle pet!',
     satanTideDone: 'Tide reward done — adventure continues',
@@ -10525,7 +10627,7 @@ const CATALOG_EN = {
     charPickNow2: 'P2',
     charIpadTip: 'iPad: player 1 uses the left half (joystick + buttons), player 2 the right half. Landscape works best.',
     levelHead: 'Pick an island',
-    levelSub: '5 islands × 10 levels · Tap level = Roll & start · long press = no gamble',
+    levelSub: '5 islands × 10 levels · heat meter · 9× loss = danger! · 10× = Satan',
     gambleSub: 'Two dice: bad luck = super-boss in a random wave · lucky = strong ally (buff this level only)',
     gambleSumDefault: 'Tap Roll & start — or skip with no gamble',
     gambleSumRoll: 'Sum: {d1} + {d2} = {sum}',
@@ -10647,7 +10749,7 @@ const CATALOG_EN = {
     islandInfoSub: 'Skill gate: weapons up to Lv {cap} · {cleared}/{total} levels · {stars}★',
     islandBossGate: ' · boss Lv {lv} → next island',
     masterBuffChip: 'Master buff Lv {lv} · +20%',
-    islandFirstHint: 'First adventure run: 5×10 levels · skill gate per island · Master buff after 5× loss on one level',
+    islandFirstHint: 'Heat meter: 5× loss = Master buff · 9× = danger! · 10× = Satan (reflect)',
     starHint: '3★ >{three}% HP · 2★ >{two}% · 1★ = win',
     levelTipWaves: '{waves} waves · {starHint}',
     levelTipIslandBoss: ' · island boss — opens next island',
@@ -10656,7 +10758,23 @@ const CATALOG_EN = {
     levelTipFails: ' · {n}× lost',
     levelTipMasterActive: ' · Master buff active',
     levelTipSatan: ' · 10×+ = Satan (reflect)',
+    levelTipSatanDanger: ' · DANGER! almost Satan',
+    levelTipSatanRising: ' · heat rising → Satan at 10',
     levelTipTap: ' · Tap = Roll & start · Hold = skip gamble',
+    heatTitle: 'Heat',
+    heatIdle: 'Cool',
+    heatCool: 'Cool',
+    heatWarm: 'Warm',
+    heatHot: 'Hot',
+    heatDanger: 'Danger!',
+    heatSatanReady: 'Satan incoming',
+    heatTipIdle: 'Losses on this level fill the heat meter — Satan at 10.',
+    heatTipFails: 'Lv {lv}: {n}/{max} losses · 5 = Master · 9 = danger · 10 = Satan',
+    heatTipDanger: 'Lv {lv}: {n}/10 — DANGER! One more loss and Satan appears.',
+    heatTipSatan: 'Lv {lv}: {n}/10 — Satan is ready on the next start.',
+    heatChipSatan: 'Satan ready · next start',
+    heatChipDanger: 'Danger! · lost 9×',
+    helpSatanHeat: 'Heat meter: losses stack on one level. 5× = Master buff (+20%). 9× = red danger!. 10× = Satan (85% reflect); beat Satan → Tide Battle pet.',
     errPickIsland: 'Could not pick island',
     errStart: 'Start failed',
     errLevelStart: 'Could not start level',
@@ -10681,7 +10799,7 @@ const CATALOG_EN = {
     installSub: 'Shows as an icon — like a real app',
     boss: 'BOSS',
     topHunter: 'Top hunter',
-    modeAdventure: '5 islands × 10 levels · skill gate weapons · Master buff after 5× loss · gamble roll · swarmed = KABLAM!',
+    modeAdventure: '5 islands × 10 levels · heat meter · 9× = danger! · 10× = Satan · Master buff · gamble',
     modeTraining: 'Combo trainer ×5/×8/×10 · 3s dummy · lasers · Chidori',
     modeWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD · 5s warning',
     modeVersus: 'P1 left P2 right · best-of-3 · rematch in pause',
@@ -21107,10 +21225,12 @@ class Game {
       if (!save.advFails || typeof save.advFails !== 'object') save.advFails = {};
       const hadMaster = save.advMasterBuff === lv;
       save.advFails[lv] = (save.advFails[lv] || 0) + 1;
-      const gotMaster = save.advFails[lv] >= 5 && !hadMaster;
+      const failsNow = save.advFails[lv];
+      const gotMaster = failsNow >= 5 && !hadMaster;
       if (gotMaster) save.advMasterBuff = lv;
-      const satanSoon = save.advFails[lv] === SATAN_FAIL_THRESHOLD
-        || (typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv) && save.advFails[lv] >= SATAN_FAIL_THRESHOLD);
+      const satanSoon = failsNow === SATAN_FAIL_THRESHOLD
+        || (typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv));
+      const heatDanger = failsNow === SATAN_DANGER_FAILS;
       persist();
       if (gotMaster) {
         const self = this;
@@ -21121,7 +21241,15 @@ class Game {
           } catch (_) {}
         }, 1500);
       }
-      if (satanSoon) {
+      if (heatDanger) {
+        const self = this;
+        setTimeout(() => {
+          try {
+            if (!gameUiTimerOk(self, { allowOver: true })) return;
+            UI.toast(t('toast.satanHeatDanger'), 4200);
+          } catch (_) {}
+        }, gotMaster ? 3200 : 1500);
+      } else if (satanSoon) {
         const self = this;
         setTimeout(() => {
           try {
@@ -21153,16 +21281,26 @@ class Game {
       })(),
       xp: this.sessionXP,
       mode: 'adventure', level: this.level.n, win, stars, prevStars,
-      tip: win ? (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
+        tip: win ? (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
         ? t('result.starImproved', { stars, prev: prevStars })
         : t('result.pickupsHelp', { hint: starHintLine() }))) : (() => {
         const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : 'start';
+        const failsNow = advFailCount(lv);
+        let heatTip = '';
+        if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv)) {
+          heatTip = t('result.heatSatanNext');
+        } else if (failsNow >= SATAN_DANGER_FAILS) {
+          heatTip = t('result.heatDanger');
+        } else if (failsNow >= 7) {
+          heatTip = t('result.heatRising', { n: failsNow, max: SATAN_FAIL_THRESHOLD });
+        }
         const base = this.player.hp <= 0
           ? t('result.lossBlockTip', { prog })
           : t('result.lossOrbTip', { prog });
         const once = onceResultTip('adventure', 'loss',
           t('result.lossGambleTip'));
-        return once ? `${once} · ${base}` : base;
+        const core = once ? `${once} · ${base}` : base;
+        return heatTip ? `${heatTip} · ${core}` : core;
       })(),
     }));
   }
@@ -26557,10 +26695,40 @@ function levelTileTip(n, pick, infoLv, boss, best, fails) {
   if (fails > 0) {
     tip += t('ui.levelTipFails', { n: fails });
     if (fails >= 5) tip += t('ui.levelTipMasterActive');
-    if (fails >= 10) tip += t('ui.levelTipSatan');
+    if (fails >= SATAN_DANGER_FAILS) tip += t('ui.levelTipSatanDanger');
+    else if (fails >= 7) tip += t('ui.levelTipSatanRising');
   }
   tip += t('ui.levelTipTap');
   return tip;
+}
+
+function renderAdvHeatMeter(heat, opts) {
+  opts = opts || {};
+  if (!heat || typeof satanHeatLabel !== 'function') return '';
+  const compact = !!opts.compact;
+  const label = satanHeatLabel(heat);
+  const tip = typeof satanHeatTip === 'function' ? satanHeatTip(heat) : '';
+  const bang = heat.bang
+    ? `<span class="adv-heat-bang" aria-hidden="true">!</span>`
+    : '';
+  const cls = [
+    compact ? 'lvl-heat' : 'adv-heat',
+    heat.tier !== 'none' ? 'tier-' + heat.tier : '',
+    heat.danger ? 'danger' : '',
+    heat.satanReady ? 'satan-ready' : '',
+  ].filter(Boolean).join(' ');
+  const count = `${heat.fails}/${SATAN_FAIL_THRESHOLD}`;
+  if (compact) {
+    return `<span class="${cls}" title="${tip || label}">` +
+      `<i class="lvl-heat-fill" style="width:${heat.pct}%"></i>` +
+      `<span class="lvl-heat-n">${count}</span>${bang}</span>`;
+  }
+  return `<div class="${cls}" title="${tip}" role="meter" aria-valuemin="0" aria-valuemax="${SATAN_FAIL_THRESHOLD}" aria-valuenow="${heat.fails}" aria-label="${label}">` +
+    `<div class="adv-heat-head"><span class="adv-heat-title">${t('ui.heatTitle')}</span>` +
+    `<span class="adv-heat-label">${label}${bang}</span>` +
+    `<span class="adv-heat-count">${count}</span></div>` +
+    `<div class="adv-heat-track"><i class="adv-heat-fill" style="width:${heat.pct}%"></i></div>` +
+    `<div class="adv-heat-sub">${tip}</div></div>`;
 }
 
 const UI = {
@@ -26800,14 +26968,15 @@ const UI = {
         `<div class="step-card help-island-card">` +
         `<b>${t('ui.helpIslandTitle')}</b> — ${t('ui.helpIslandIntro', { cap, cur })}` +
         `<div class="help-island-grid">${rows}</div>` +
-        `<div style="margin-top:10px;opacity:.88;line-height:1.45">${t('ui.helpMasterBuff')}</div></div>`;
+        `<div style="margin-top:10px;opacity:.88;line-height:1.45">${t('ui.helpMasterBuff')}</div>` +
+        `<div style="margin-top:8px;opacity:.88;line-height:1.45">${t('ui.helpSatanHeat')}</div></div>`;
     }
     if (!host) return;
     const touch = IS_TOUCH ? t('ui.helpTouch') : t('ui.helpKeyboard');
     const prog = onboardingProgress();
     const next = nextUntriedMode();
     const modes = [
-      { id: 'adventure', label: 'Avontuur', tip: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok vóór level' },
+      { id: 'adventure', label: 'Avontuur', tip: t('ui.modeAdventure') },
       { id: 'training', label: 'Training', tip: 'Combo-trainer ×5/×8/×10 · lasers · Chidori-telegraph' },
       { id: 'wall', label: 'Muur', tip: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing' },
       { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
@@ -27832,6 +28001,17 @@ const UI = {
     const pct = Math.round(prog.cleared / prog.total * 100);
     if (info) {
       const mb = save.advMasterBuff;
+      const heat = typeof satanHeatForIsland === 'function'
+        ? satanHeatForIsland(pick)
+        : null;
+      const curLv = Math.min(Math.max(save.unlocked || 1, range.start), range.end);
+      const curHeat = typeof satanHeatForLevel === 'function'
+        ? satanHeatForLevel(curLv)
+        : heat;
+      // Altijd tonen: spelers moeten weten dat hitte/Satan bestaat
+      const meterHeat = (curHeat && curHeat.fails >= (heat && heat.fails ? heat.fails : 0))
+        ? curHeat
+        : (heat || curHeat);
       info.innerHTML =
         `<div class="island-info-head">` +
         `<span class="island-info-ico">${islMeta.icon}</span>` +
@@ -27842,14 +28022,21 @@ const UI = {
         `</div></div></div>` +
         `<div class="island-prog-track island-info-prog" title="${t('island.levelsProg')}"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
         `<div class="island-prog-track island-info-stars" title="${t('island.starsProg')}"><i style="width:${Math.round(prog.stars / Math.max(1, prog.maxStars) * 100)}%"></i></div>` +
+        (meterHeat ? renderAdvHeatMeter(meterHeat) : '') +
         (() => {
           const onboard = adventureIslandHintLine();
           const mbLine = mb && mb >= range.start && mb <= range.end
             ? `<span class="island-info-chip master">${t('ui.masterBuffChip', { lv: mb })}</span>`
             : '';
+          const satanChip = meterHeat && meterHeat.satanReady
+            ? `<span class="island-info-chip satan">${t('ui.heatChipSatan')}</span>`
+            : (meterHeat && meterHeat.tier === 'danger'
+              ? `<span class="island-info-chip satan-danger">${t('ui.heatChipDanger')}</span>`
+              : '');
           const chips = [
             onboard ? `<span class="island-info-chip onboard">${onboard}</span>` : '',
             mbLine,
+            satanChip,
           ].filter(Boolean).join('');
           return chips ? `<div class="island-info-chips">${chips}</div>` : '';
         })();
@@ -27862,9 +28049,12 @@ const UI = {
       const infoLv = buildLevel(n);
       const rar = rarityOf(infoLv.rarityCap);
       const fails = advFailCount(n);
+      const heat = !locked && typeof satanHeatForLevel === 'function' ? satanHeatForLevel(n) : null;
       el.className = 'lvl' + (boss ? ' boss' : '') + (locked ? ' locked' : '') + (n < save.unlocked ? ' cleared' : '') +
         (!locked && n === save.unlocked ? ' lvl-current' : '') +
-        (save.advMasterBuff === n ? ' master-buff' : '');
+        (save.advMasterBuff === n ? ' master-buff' : '') +
+        (heat && heat.tier === 'danger' ? ' heat-danger' : '') +
+        (heat && heat.satanReady ? ' satan-ready' : '');
       el.style.boxShadow = locked ? 'none' : `0 5px 0 rgba(0,0,0,.35), 0 0 0 2px ${rar.color}55`;
       const waveStrip = infoLv.waves.map((_, wi) => {
         const meta = infoLv.waveMeta && infoLv.waveMeta[wi];
@@ -27877,12 +28067,13 @@ const UI = {
         else if (trait === 'elite') cls += ' trait-elite';
         return `<i class="${cls}"></i>`;
       }).join('');
+      const heatHtml = (heat && heat.fails > 0 && !locked) ? renderAdvHeatMeter(heat, { compact: true }) : '';
       el.innerHTML = locked
         ? SVG_LOCK_ICON
         : `${n}${boss ? `<small>${t('ui.boss')}</small>` : `<small style="color:${rar.color}">${rarityLabel(infoLv.rarityCap)}</small>`}` +
           `<span class="lvl-wave-strip" aria-hidden="true">${waveStrip}</span>` +
           (save.stars[n] ? `<span class="lvl-stars">${'★'.repeat(save.stars[n])}</span>` : '') +
-          (fails > 0 && !locked ? `<span class="lvl-fails">${fails}/5</span>` : '') +
+          heatHtml +
           (save.advMasterBuff === n ? '<span class="lvl-master">+20%</span>' : '');
       if (!locked) {
         const best = save.stars[n] || 0;

@@ -1,6 +1,8 @@
 /* ============================== SATAN ENCOUNTER ======================== */
 /** Na 10× falen op hetzelfde level verschijnt Satan (reflect-baas). */
 const SATAN_FAIL_THRESHOLD = 10;
+/** UI-danger: één fail vóór Satan (9× = rood + !). */
+const SATAN_DANGER_FAILS = 9;
 const SATAN_REAPPEAR_GAP = 5;
 const SATAN_REFLECT_RATIO = 0.85;
 const SATAN_SPECIES_ID = 'satan';
@@ -24,6 +26,82 @@ function shouldTriggerSatan(levelN) {
   const last = satanLastAt(levelN);
   if (!last) return true;
   return fails >= last + SATAN_REAPPEAR_GAP;
+}
+
+/**
+ * Hitte-tier voor adventure-UI (temperatuur-meter).
+ * cool → warm → hot (meester) → danger (9) → satan (10+ / klaar).
+ */
+function satanHeatTier(fails) {
+  const n = clamp(Math.floor(Number(fails) || 0), 0, 99);
+  if (n >= SATAN_FAIL_THRESHOLD) return 'satan';
+  if (n >= SATAN_DANGER_FAILS) return 'danger';
+  if (n >= 5) return 'hot';
+  if (n >= 3) return 'warm';
+  if (n >= 1) return 'cool';
+  return 'none';
+}
+
+function satanHeatPct(fails) {
+  const n = clamp(Math.floor(Number(fails) || 0), 0, 99);
+  return clamp(Math.round((n / SATAN_FAIL_THRESHOLD) * 100), 0, 100);
+}
+
+function satanHeatForLevel(levelN) {
+  const fails = satanFailCount(levelN);
+  const tier = satanHeatTier(fails);
+  const pending = typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(levelN);
+  return {
+    levelN: levelN,
+    fails,
+    tier,
+    pct: satanHeatPct(fails),
+    danger: tier === 'danger' || tier === 'satan' || pending,
+    bang: fails >= SATAN_DANGER_FAILS || pending,
+    satanReady: pending || tier === 'satan',
+    master: fails >= 5,
+  };
+}
+
+/** Hoogste hitte op een eiland (voor info-paneel). */
+function satanHeatForIsland(islandId) {
+  const range = typeof islandLevelRange === 'function'
+    ? islandLevelRange(islandId)
+    : { start: 1, end: 10 };
+  let best = null;
+  for (let n = range.start; n <= range.end; n++) {
+    const h = satanHeatForLevel(n);
+    if (!best || h.fails > best.fails || (h.fails === best.fails && h.satanReady && !best.satanReady)) {
+      best = h;
+    }
+  }
+  return best || satanHeatForLevel(save && save.unlocked ? save.unlocked : 1);
+}
+
+function satanHeatLabel(heat) {
+  if (!heat) return '';
+  if (typeof t !== 'function') {
+    if (heat.satanReady) return 'Satan komt';
+    if (heat.tier === 'danger') return 'Gevaar!';
+    if (heat.tier === 'hot') return 'Hitte';
+    if (heat.tier === 'warm') return 'Warm';
+    if (heat.tier === 'cool') return 'Koel';
+    return 'Hitte';
+  }
+  if (heat.satanReady) return t('ui.heatSatanReady');
+  if (heat.tier === 'danger') return t('ui.heatDanger');
+  if (heat.tier === 'hot') return t('ui.heatHot');
+  if (heat.tier === 'warm') return t('ui.heatWarm');
+  if (heat.tier === 'cool') return t('ui.heatCool');
+  return t('ui.heatIdle');
+}
+
+function satanHeatTip(heat) {
+  if (!heat || typeof t !== 'function') return '';
+  if (heat.satanReady) return t('ui.heatTipSatan', { lv: heat.levelN, n: heat.fails });
+  if (heat.tier === 'danger') return t('ui.heatTipDanger', { lv: heat.levelN, n: heat.fails });
+  if (heat.fails > 0) return t('ui.heatTipFails', { lv: heat.levelN, n: heat.fails, max: SATAN_FAIL_THRESHOLD });
+  return t('ui.heatTipIdle');
 }
 
 function markSatanEncounterStarted(levelN) {
