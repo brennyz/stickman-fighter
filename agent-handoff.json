@@ -29,7 +29,7 @@
       "id": "w-20260726T183500",
       "from": "user",
       "text": "Meer monster diversiteit verdubbelen — boerderijdieren op hol + dierentuindieren, grote grote versies",
-      "status": "active",
+      "status": "done-in-code",
       "updated": "2026-07-26"
     },
     {
@@ -134,6 +134,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T18:39:09Z",
+      "summary": "Monster diversiteit ~2×: +144 boerderij/dierentuin (281 totaal), ranch/safari golven · v1.18.101"
+    },
+    {
       "at": "2026-07-26T18:03:15Z",
       "summary": "d12 content: weapon/pet rarity n/tot + icon fallback · v1.18.100"
     },
@@ -228,10 +232,6 @@
     {
       "at": "2026-07-26T05:04:28Z",
       "summary": "d17 stabiliteit: gameUiTimerOk deferred UI, dexBag corrupt save guard · v1.18.74"
-    },
-    {
-      "at": "2026-07-26T04:06:38Z",
-      "summary": "d17 stabiliteit: gamble screen guard, tab-hide cancel, tipsSeen array fix · v1.18.73"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
