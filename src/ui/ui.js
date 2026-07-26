@@ -1,4 +1,13 @@
 /* ================================= UI ================================== */
+/** Long-press skip-gamble timers — bump gen on re-render / leave level screen. */
+let _levelHoldGen = 0;
+function bumpLevelHoldGen() { _levelHoldGen++; }
+function levelHoldGenStale(gen) { return gen !== _levelHoldGen; }
+function levelScreenActive() {
+  const el = document.getElementById('levelScreen');
+  return !!(el && el.classList.contains('active'));
+}
+
 function appendItemUpgradeButton(el, cat, id, rerender) {
   if (!itemUpgradeEligible(cat, id) || !itemCanUpgrade(cat, id)) return;
   const cost = itemUpgradeCost(cat, id);
@@ -1149,6 +1158,7 @@ const UI = {
         return;
       }
       if (active === 'levelScreen') {
+        bumpLevelHoldGen();
         try { cancelGambleStart(); } catch (_) {}
         this.show('menuScreen');
         return;
@@ -2049,6 +2059,7 @@ const UI = {
 
   renderLevels() {
     try {
+    bumpLevelHoldGen();
     const bar = document.getElementById('levelIslandBar');
     const info = document.getElementById('levelIslandInfo');
     const grid = document.getElementById('levelGrid');
@@ -2150,11 +2161,13 @@ const UI = {
         let holdY = 0;
         el.addEventListener('pointerdown', (e) => {
           const tapId = e.pointerId;
+          const holdGen = _levelHoldGen;
           holdSkip = false;
           holdX = e.clientX;
           holdY = e.clientY;
           holdT = setTimeout(() => {
             holdT = null;
+            if (levelHoldGenStale(holdGen) || !levelScreenActive()) return;
             if (!uiTapAllowed({ pointerId: tapId })) return;
             holdSkip = true;
             safeUiAction(() => {

@@ -13,6 +13,7 @@ function petCoinCost(petId) {
   const def = petDef(petId);
   if (!def) return 999;
   const sp = SPECIES[def.speciesId];
+  if (!sp) return 999;
   return PET_COIN_COST[sp.rarity] || 30;
 }
 

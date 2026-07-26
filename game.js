@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.68';
+const APP_VERSION = '1.18.69';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 278;
+const SW_CACHE_REV = 279;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -3946,6 +3946,9 @@ function startAdventureFromGamble(skipGamble) {
 
 let gokStartBusy = false;
 let gokScreenTimer = null;
+let gambleSfxGen = 0;
+let gambleSfxT1 = null;
+let gambleSfxT2 = null;
 
 /** Dobbelworp loopt → geen herlaad/update mag hier tussen komen. */
 function gamblePending() {
@@ -3953,6 +3956,9 @@ function gamblePending() {
 }
 
 function cancelGambleStart() {
+  gambleSfxGen++;
+  if (gambleSfxT1) { clearTimeout(gambleSfxT1); gambleSfxT1 = null; }
+  if (gambleSfxT2) { clearTimeout(gambleSfxT2); gambleSfxT2 = null; }
   if (gokScreenTimer) {
     clearTimeout(gokScreenTimer);
     gokScreenTimer = null;
@@ -3962,13 +3968,18 @@ function cancelGambleStart() {
 }
 
 function playGambleRollSfx(g) {
+  const gen = gambleSfxGen;
   try { AudioSys.sfx('diceRoll'); } catch (_) {}
-  setTimeout(() => {
+  gambleSfxT1 = setTimeout(() => {
+    gambleSfxT1 = null;
+    if (gen !== gambleSfxGen) return;
     try { AudioSys.sfx('gamble'); } catch (_) {}
   }, motionReduced() ? 40 : 120);
   if (!g) return;
   const delay = motionReduced() ? 60 : 220;
-  setTimeout(() => {
+  gambleSfxT2 = setTimeout(() => {
+    gambleSfxT2 = null;
+    if (gen !== gambleSfxGen) return;
     try {
       if (g.outcome === 'superAlly' || g.outcome === 'ally') AudioSys.sfx('gambleWin');
       else if (g.outcome === 'superBoss' || g.outcome === 'miniBoss') AudioSys.sfx('gambleBoss');
@@ -8444,6 +8455,7 @@ function petCoinCost(petId) {
   const def = petDef(petId);
   if (!def) return 999;
   const sp = SPECIES[def.speciesId];
+  if (!sp) return 999;
   return PET_COIN_COST[sp.rarity] || 30;
 }
 
@@ -23826,6 +23838,15 @@ class Game {
 
 /* --- src/ui/ui.js --- */
 /* ================================= UI ================================== */
+/** Long-press skip-gamble timers — bump gen on re-render / leave level screen. */
+let _levelHoldGen = 0;
+function bumpLevelHoldGen() { _levelHoldGen++; }
+function levelHoldGenStale(gen) { return gen !== _levelHoldGen; }
+function levelScreenActive() {
+  const el = document.getElementById('levelScreen');
+  return !!(el && el.classList.contains('active'));
+}
+
 function appendItemUpgradeButton(el, cat, id, rerender) {
   if (!itemUpgradeEligible(cat, id) || !itemCanUpgrade(cat, id)) return;
   const cost = itemUpgradeCost(cat, id);
@@ -24976,6 +24997,7 @@ const UI = {
         return;
       }
       if (active === 'levelScreen') {
+        bumpLevelHoldGen();
         try { cancelGambleStart(); } catch (_) {}
         this.show('menuScreen');
         return;
@@ -25876,6 +25898,7 @@ const UI = {
 
   renderLevels() {
     try {
+    bumpLevelHoldGen();
     const bar = document.getElementById('levelIslandBar');
     const info = document.getElementById('levelIslandInfo');
     const grid = document.getElementById('levelGrid');
@@ -25977,11 +26000,13 @@ const UI = {
         let holdY = 0;
         el.addEventListener('pointerdown', (e) => {
           const tapId = e.pointerId;
+          const holdGen = _levelHoldGen;
           holdSkip = false;
           holdX = e.clientX;
           holdY = e.clientY;
           holdT = setTimeout(() => {
             holdT = null;
+            if (levelHoldGenStale(holdGen) || !levelScreenActive()) return;
             if (!uiTapAllowed({ pointerId: tapId })) return;
             holdSkip = true;
             safeUiAction(() => {

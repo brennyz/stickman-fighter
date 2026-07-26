@@ -71,6 +71,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T00:04:11Z",
+      "summary": "d17 stabiliteit: level hold stale timer, gamble SFX cancel, petCoinCost guard · v1.18.69"
+    },
+    {
       "at": "2026-07-25T23:03:12Z",
       "summary": "d17 stabiliteit: stale result timer, training scheduleGameResult, gamble cancel level terug · v1.18.68"
     },
@@ -165,14 +169,6 @@
     {
       "at": "2026-07-25T08:54:13Z",
       "summary": "d9 touch: scroll-guard bugfix, haptic+held ring, orient release v1.17.80"
-    },
-    {
-      "at": "2026-07-23T17:51:34Z",
-      "summary": "Alles op main gecommit; nieuwe agent pusht via patch (NIEUWE-AGENT-PUSH.md)."
-    },
-    {
-      "at": "2026-07-23T17:50:56Z",
-      "summary": "Commit dist/gitignore + handoff: local main voor GitHub push, niet merge op verse clone."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

@@ -1815,6 +1815,9 @@ function startAdventureFromGamble(skipGamble) {
 
 let gokStartBusy = false;
 let gokScreenTimer = null;
+let gambleSfxGen = 0;
+let gambleSfxT1 = null;
+let gambleSfxT2 = null;
 
 /** Dobbelworp loopt → geen herlaad/update mag hier tussen komen. */
 function gamblePending() {
@@ -1822,6 +1825,9 @@ function gamblePending() {
 }
 
 function cancelGambleStart() {
+  gambleSfxGen++;
+  if (gambleSfxT1) { clearTimeout(gambleSfxT1); gambleSfxT1 = null; }
+  if (gambleSfxT2) { clearTimeout(gambleSfxT2); gambleSfxT2 = null; }
   if (gokScreenTimer) {
     clearTimeout(gokScreenTimer);
     gokScreenTimer = null;
@@ -1831,13 +1837,18 @@ function cancelGambleStart() {
 }
 
 function playGambleRollSfx(g) {
+  const gen = gambleSfxGen;
   try { AudioSys.sfx('diceRoll'); } catch (_) {}
-  setTimeout(() => {
+  gambleSfxT1 = setTimeout(() => {
+    gambleSfxT1 = null;
+    if (gen !== gambleSfxGen) return;
     try { AudioSys.sfx('gamble'); } catch (_) {}
   }, motionReduced() ? 40 : 120);
   if (!g) return;
   const delay = motionReduced() ? 60 : 220;
-  setTimeout(() => {
+  gambleSfxT2 = setTimeout(() => {
+    gambleSfxT2 = null;
+    if (gen !== gambleSfxGen) return;
     try {
       if (g.outcome === 'superAlly' || g.outcome === 'ally') AudioSys.sfx('gambleWin');
       else if (g.outcome === 'superBoss' || g.outcome === 'miniBoss') AudioSys.sfx('gambleBoss');
