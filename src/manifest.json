@@ -16,6 +16,7 @@
   "src/data/tide-battle.js",
   "src/data/pets.js",
   "src/data/egg-pets.js",
+  "src/data/chest-summons.js",
   "src/i18n/catalog.js",
   "src/systems/audio-samples.js",
   "src/systems/audio.js",

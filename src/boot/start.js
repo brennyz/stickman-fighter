@@ -137,6 +137,8 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
     } else if (hub === 'versus') {
       UI.charPickStep = 1;
       UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { msg: 'Kies karakter mislukt' });
+    } else if (hub === 'summon') {
+      UI.openSummonHub();
     } else {
       UI.openModeHub(hub);
     }
@@ -209,6 +211,28 @@ bindPress(document.getElementById('btnUpgrades'), () => {
   UI.openUpgrades('skills');
 });
 bindPress(document.getElementById('btnPets'), () => {
+  openCollectionScreen('petScreen', () => UI.renderPets());
+});
+bindPress(document.getElementById('btnChestWeapon'), () => {
+  AudioSys.init();
+  UI.doChestPull('weapon');
+});
+bindPress(document.getElementById('btnChestPet'), () => {
+  AudioSys.init();
+  UI.doChestPull('pet');
+});
+bindPress(document.getElementById('btnSummonGotoWeapons'), () => {
+  AudioSys.init(); AudioSys.sfx('select');
+  if (state === 'play' && game) return;
+  UI.clearSummonRevealTimers();
+  UI._chestPullBusy = false;
+  openCollectionScreen('weaponScreen', () => UI.renderWeapons());
+});
+bindPress(document.getElementById('btnSummonGotoPets'), () => {
+  AudioSys.init(); AudioSys.sfx('select');
+  if (state === 'play' && game) return;
+  UI.clearSummonRevealTimers();
+  UI._chestPullBusy = false;
   openCollectionScreen('petScreen', () => UI.renderPets());
 });
 bindPress(document.getElementById('btnDex'), () => {

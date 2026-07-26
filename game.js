@@ -252,11 +252,12 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.114';
+const APP_VERSION = '1.18.115';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 324;
+const SW_CACHE_REV = 325;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
+  chestDaily: null, chestWeapons: {},
   zoneWeapons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
   /** Normal / Nightmare / Hell — Epic Seven-stijl endgame tiers */
@@ -514,6 +515,7 @@ function weaponSkillGated(w) {
 function weaponUnlockedByLevel(w) {
   if (!w) return false;
   if (w.dropZone) return typeof weaponZoneUnlocked === 'function' ? weaponZoneUnlocked(w) : !!(save.zoneWeapons && save.zoneWeapons[w.id]);
+  if (save.chestWeapons && save.chestWeapons[w.id]) return true;
   return save.lvl >= w.unlock;
 }
 function weaponUsableNow(w) { return weaponUnlockedByLevel(w) && !weaponSkillGated(w); }
@@ -1034,6 +1036,8 @@ function readSaveJson(raw) {
     merged.tipsSeen = sanitizeTipsSeen(parsed.tipsSeen);
     merged.advFails = Object.assign({}, parsed.advFails || {});
     merged.zoneWeapons = Object.assign({}, parsed.zoneWeapons || {});
+    merged.chestWeapons = Object.assign({}, parsed.chestWeapons || {});
+    if (parsed.chestDaily && typeof parsed.chestDaily === 'object') merged.chestDaily = Object.assign({}, parsed.chestDaily);
     merged.advCleared = Object.assign(
       { normal: false, nightmare: false, hell: false },
       (parsed.advCleared && typeof parsed.advCleared === 'object') ? parsed.advCleared : {}
@@ -1434,6 +1438,10 @@ function sanitizeSave(s) {
   }
   out.zoneWeapons = cleanZone;
 
+  out.chestWeapons = typeof sanitizeChestWeapons === 'function'
+    ? sanitizeChestWeapons(out.chestWeapons)
+    : {};
+
   // Summons: alleen bekende wapens, geldige tiers, en alleen echte upgrades
   const cleanSummons = {};
   for (const [k, v] of Object.entries(out.summons || {})) {
@@ -1450,9 +1458,13 @@ function sanitizeSave(s) {
     if (typeof PET_BY_ID !== 'undefined' && !PET_BY_ID[k]) continue;
     if (typeof PET_BY_ID === 'undefined') continue;
     const entry = (v && typeof v === 'object') ? v : {};
-    cleanPets[k] = {
+    const row = {
       kills: clamp(Math.floor(Number(entry.kills) || 0), 0, 999999),
     };
+    if (typeof entry.src === 'string') row.src = entry.src.slice(0, 12);
+    if (typeof entry.skill === 'string') row.skill = entry.skill.slice(0, 48);
+    if (entry.coins != null) row.coins = clamp(Math.floor(Number(entry.coins) || 0), 0, 999999);
+    cleanPets[k] = row;
   }
   out.pets = cleanPets;
   if (out.activePet && !cleanPets[out.activePet]) out.activePet = null;
@@ -1484,6 +1496,20 @@ function sanitizeSave(s) {
       advBonus: !!out.eggDaily.advBonus,
     };
   } else out.eggDaily = null;
+
+  {
+    const today = typeof todayKey === 'function' ? todayKey() : new Date().toISOString().slice(0, 10);
+    if (typeof sanitizeChestDaily === 'function') {
+      out.chestDaily = sanitizeChestDaily(out.chestDaily, today);
+    } else if (out.chestDaily && typeof out.chestDaily === 'object') {
+      out.chestDaily = {
+        date: today,
+        wLeft: Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.wLeft) || 0))),
+        pLeft: Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.pLeft) || 0))),
+        pulls: [],
+      };
+    } else out.chestDaily = null;
+  }
 
   const stPick = STYLES.find(st => st.id === out.style) || STYLES[0];
   let styleOk = stPick.id === 'classic';
@@ -1657,6 +1683,7 @@ const I18N = {
       continue: 'Verder spelen', adventure: 'Avontuur', adventureSub: 'Verhaal · eilanden · bazen',
       arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal · iPad liggend',
       collect: 'Collectie', collectSub: 'Wapens · stijl · boek', music: 'Muziek', missions: 'Missies',
+      summons: 'Summons', summonsSub: 'Dagelijkse kist · wapen & pet',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon op je beginscherm',
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
       choosePath: 'KIES JE PAD',
@@ -1737,6 +1764,7 @@ const I18N = {
       continue: 'Continue', adventure: 'Adventure', adventureSub: 'Story · islands · bosses',
       arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local · iPad landscape',
       collect: 'Collection', collectSub: 'Weapons · style · book', music: 'Music', missions: 'Missions',
+      summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
       options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add to home screen', installSub: 'One icon on your device',
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
       choosePath: 'CHOOSE YOUR PATH',
@@ -2327,6 +2355,7 @@ function applyLangStaticScreens() {
     modeHubScreen: t('back.menu'),
     levelScreen: t('back.menu'),
     gambleScreen: t('back.levels'),
+    summonScreen: t('back.menu'),
     weaponScreen: t('back.collect'),
     petScreen: t('back.collect'),
     styleScreen: t('back.collect'),
@@ -4052,6 +4081,7 @@ const BUTTON_ICON_FALLBACKS = {
   arcade: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#9db8ff" stroke-width="1.9"><rect x="5" y="8" width="14" height="11" rx="2.2"/><circle cx="9" cy="13.5" r="1.7" fill="#7cf5ff" stroke="none"/><circle cx="15" cy="13.5" r="1.7" fill="#ff6b6b" stroke="none"/></svg>',
   versus: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ff9ab8" stroke-width="2"><circle cx="7.5" cy="8" r="2.4" fill="#7cf5ff"/><circle cx="16.5" cy="8" r="2.4" fill="#ff788c"/></svg>',
   collect: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#c792ff" stroke-width="2"><path d="M5 4.5h9.5L18.5 8v11.5H5z" fill="rgba(199,146,255,.18)"/></svg>',
+  summons: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ffd75e" stroke-width="2"><path d="M4.5 10.5h15v8.2a1.5 1.5 0 0 1-1.5 1.5h-12a1.5 1.5 0 0 1-1.5-1.5z" fill="rgba(255,215,94,.22)"/><path d="M12 10.5v9.7"/></svg>',
   continue: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#7cf5ff" stroke-width="2"><path d="M5 12h12M13 8l4 4-4 4"/></svg>',
 };
 function buttonIconFallbackUri(src) {
@@ -10328,6 +10358,384 @@ function eggProgressSummary() {
     activeName: active ? active.name : 'geen',
     daily: eggDailyStatusLine(),
   };
+}
+/* --- src/data/chest-summons.js --- */
+/* ===================== DAILY CHEST SUMMONS ============================ */
+/** Menu-kist: 5 wapen + 5 pet pulls per dag. 5% kans op “leuk” resultaat.
+ *  Save-shape (sanitize + UI moeten dit strikt afvangen):
+ *    save.chestDaily = { date, wLeft, pLeft, pulls[] }
+ *    save.chestWeapons = { weaponId: { skill?, at? } }  // early unlock
+ *  Bestaande save.summons (ascend epic/legendary) blijft apart. */
+
+const CHEST_DAILY_WEAPON = 5;
+const CHEST_DAILY_PET = 5;
+const CHEST_NICE_CHANCE = 0.05;
+const CHEST_PULL_LOG_MAX = 12;
+const CHEST_SKILL_MAX = 48;
+/** Reveal timeline: card pops in for the last 2 seconds (video or CSS fallback). */
+const SUMMON_REVEAL_TOTAL_MS = 4000;
+const SUMMON_CARD_LAST_MS = 2000;
+const SUMMON_VIDEO_SRC = 'assets/summon/reveal.mp4';
+let _summonVideoOk = null;
+
+const CHEST_WEAPON_SKILLS = [
+  'Schaduwsteek — crit na dash',
+  'Klingdans — finisher +8%',
+  'IJzeren Grip — minder knockback',
+  'Vonklijn — hit-sparks langer',
+  'Echo-slag — 2e tick 20%',
+  'Stormritme — sneller combo-venster',
+];
+
+const CHEST_PET_SKILLS = [
+  'Fluf-Schild — korte shield-pulse',
+  'Snack-Boost — +pet-assist 1 golf',
+  'Blink-Dash — snellere pet-CD',
+  'Lucky Paw — +2% crit voor jou',
+  'Koester — +4 max HP',
+  'Cheer — chakra +6% regen',
+];
+
+function chestSkillPick(kind) {
+  const pool = kind === 'pet' ? CHEST_PET_SKILLS : CHEST_WEAPON_SKILLS;
+  return pool[Math.floor(Math.random() * pool.length)] || pool[0];
+}
+
+function clampChestLeft(n, max) {
+  if (n == null || n === '') return max;
+  const v = Math.floor(Number(n));
+  if (!Number.isFinite(v)) return max;
+  return Math.max(0, Math.min(max, v));
+}
+
+function ensureChestDaily() {
+  if (typeof save === 'undefined' || !save) return null;
+  const dk = typeof todayKey === 'function' ? todayKey() : new Date().toISOString().slice(0, 10);
+  if (!save.chestDaily || typeof save.chestDaily !== 'object' || save.chestDaily.date !== dk) {
+    save.chestDaily = {
+      date: dk,
+      wLeft: CHEST_DAILY_WEAPON,
+      pLeft: CHEST_DAILY_PET,
+      pulls: [],
+    };
+  } else {
+    save.chestDaily.wLeft = clampChestLeft(save.chestDaily.wLeft, CHEST_DAILY_WEAPON);
+    save.chestDaily.pLeft = clampChestLeft(save.chestDaily.pLeft, CHEST_DAILY_PET);
+    if (!Array.isArray(save.chestDaily.pulls)) save.chestDaily.pulls = [];
+  }
+  return save.chestDaily;
+}
+
+function chestWeaponLeft() {
+  const d = ensureChestDaily();
+  return d ? d.wLeft : 0;
+}
+
+function chestPetLeft() {
+  const d = ensureChestDaily();
+  return d ? d.pLeft : 0;
+}
+
+function chestSummonsLeft() {
+  return chestWeaponLeft() + chestPetLeft();
+}
+
+function chestHasSummonsLeft() {
+  return chestSummonsLeft() > 0;
+}
+
+function chestWeaponUnlocked(id) {
+  return !!(save.chestWeapons && save.chestWeapons[id]);
+}
+
+function grantChestWeaponUnlock(weaponId, skill) {
+  if (!save.chestWeapons || typeof save.chestWeapons !== 'object') save.chestWeapons = {};
+  const sk = typeof skill === 'string' ? skill.slice(0, CHEST_SKILL_MAX) : chestSkillPick('weapon');
+  save.chestWeapons[weaponId] = { skill: sk, at: Date.now() };
+  return sk;
+}
+
+function chestWeaponSkillOf(weaponId) {
+  const e = save.chestWeapons && save.chestWeapons[weaponId];
+  return (e && typeof e.skill === 'string') ? e.skill : null;
+}
+
+function chestBaseWeaponPool() {
+  return WEAPONS.filter(w =>
+    w && !w.dropZone && w.id !== 'vuist' && w.id !== 'master_sword' &&
+    !(typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)));
+}
+
+function pushChestPull(entry) {
+  const d = ensureChestDaily();
+  if (!d) return;
+  const row = Object.assign({ at: Date.now() }, entry || {});
+  d.pulls = (Array.isArray(d.pulls) ? d.pulls : []).concat([row]).slice(-CHEST_PULL_LOG_MAX);
+}
+
+function grantChestConsolation(kind) {
+  const roll = Math.random();
+  if (roll < 0.45) {
+    const coins = 6 + Math.floor(Math.random() * 12);
+    save.petCoins = (typeof petCoinsBalance === 'function' ? petCoinsBalance() : 0) + coins;
+    return { type: 'coins', kind, amount: coins, nice: false };
+  }
+  if (roll < 0.8) {
+    const xp = 18 + Math.floor(Math.random() * 28);
+    if (typeof grantMetaXP === 'function') grantMetaXP(xp);
+    else save.xp = (save.xp || 0) + xp;
+    return { type: 'xp', kind, amount: xp, nice: false };
+  }
+  return {
+    type: 'junk',
+    kind,
+    nice: false,
+    label: kind === 'pet' ? 'Een pluisje… niks nuttigs' : 'Roestig schroot… niks nuttigs',
+  };
+}
+
+function grantNiceChestWeapon() {
+  const pool = chestBaseWeaponPool();
+  const lockedNice = pool.filter(w =>
+    rarityOf(w.rarity).order >= 3 &&
+    !weaponUnlockedByLevel(w) &&
+    w.unlock <= (save.lvl || 1) + 14);
+  if (lockedNice.length) {
+    const w = lockedNice[Math.floor(Math.random() * lockedNice.length)];
+    const skill = grantChestWeaponUnlock(w.id, chestSkillPick('weapon'));
+    return {
+      type: 'weapon_unlock', kind: 'weapon', nice: true,
+      weaponId: w.id, rarity: w.rarity, skill, name: w.name,
+    };
+  }
+
+  const elig = typeof summonEligibleWeapons === 'function' ? summonEligibleWeapons() : [];
+  if (elig.length) {
+    const w = elig[Math.floor(Math.random() * elig.length)];
+    const tier = Math.random() < 0.4 ? 'legendary' : 'epic';
+    if (!save.summons || typeof save.summons !== 'object') save.summons = {};
+    const prev = save.summons[w.id];
+    if (prev !== 'legendary') save.summons[w.id] = tier;
+    const skill = grantChestWeaponUnlock(w.id, chestSkillPick('weapon'));
+    return {
+      type: 'weapon_ascend', kind: 'weapon', nice: true,
+      weaponId: w.id, rarity: save.summons[w.id] || tier, skill, name: w.name,
+    };
+  }
+
+  // Alle high-tier al binnen — geef alsnog early unlock van hoogste locked
+  const anyLocked = pool.filter(w => !weaponUnlockedByLevel(w) && w.unlock <= (save.lvl || 1) + 20);
+  if (anyLocked.length) {
+    anyLocked.sort((a, b) => rarityOf(b.rarity).order - rarityOf(a.rarity).order);
+    const w = anyLocked[0];
+    const skill = grantChestWeaponUnlock(w.id, chestSkillPick('weapon'));
+    return {
+      type: 'weapon_unlock', kind: 'weapon', nice: true,
+      weaponId: w.id, rarity: w.rarity, skill, name: w.name,
+    };
+  }
+
+  return grantChestConsolation('weapon');
+}
+
+function grantNiceChestPet() {
+  const untamed = PET_ROSTER.filter(p => !isPetTamed(p.id));
+  const nice = untamed.filter(p => {
+    const sp = SPECIES[p.speciesId];
+    return sp && rarityOf(sp.rarity).order >= 3;
+  });
+  const pool = nice.length ? nice : untamed.filter(p => {
+    const sp = SPECIES[p.speciesId];
+    return sp && rarityOf(sp.rarity).order >= 2;
+  });
+  if (pool.length) {
+    const def = pool[Math.floor(Math.random() * pool.length)];
+    const skill = chestSkillPick('pet');
+    if (!save.pets || typeof save.pets !== 'object') save.pets = {};
+    save.pets[def.id] = { at: Date.now(), src: 'chest', skill, kills: 0 };
+    if (!save.activePet) save.activePet = def.id;
+    save.stats = save.stats || {};
+    save.stats.petsTamed = (save.stats.petsTamed || 0) + 1;
+    const sp = SPECIES[def.speciesId];
+    return {
+      type: 'pet_unlock', kind: 'pet', nice: true,
+      petId: def.id, rarity: sp ? sp.rarity : 'rare', skill,
+      name: sp ? sp.name : def.id,
+    };
+  }
+  // Alles al getemd → mythic-achtig ei of coins
+  if (typeof hatchEggPet === 'function') {
+    const res = hatchEggPet('chest');
+    return {
+      type: 'egg', kind: 'pet', nice: true,
+      eggId: res.def && res.def.id, rarity: res.def && res.def.rarity,
+      name: res.def && res.def.name, duplicate: !!res.duplicate,
+      skill: chestSkillPick('pet'),
+    };
+  }
+  return grantChestConsolation('pet');
+}
+
+function grantCommonChestPet() {
+  if (typeof hatchEggPet === 'function' && Math.random() < 0.55) {
+    const res = hatchEggPet('chest');
+    return {
+      type: 'egg', kind: 'pet', nice: false,
+      eggId: res.def && res.def.id, rarity: res.def && res.def.rarity,
+      name: res.def && res.def.name, duplicate: !!res.duplicate,
+    };
+  }
+  return grantChestConsolation('pet');
+}
+
+/**
+ * Atomisch genoeg: counters eerst valideren, daarna reward; bij throw rollback counter.
+ * @param {'weapon'|'pet'} kind
+ */
+function openChestSummon(kind) {
+  if (kind !== 'weapon' && kind !== 'pet') return { ok: false, reason: 'bad_kind' };
+  const d = ensureChestDaily();
+  if (!d) return { ok: false, reason: 'no_save' };
+
+  const key = kind === 'weapon' ? 'wLeft' : 'pLeft';
+  if (clampChestLeft(d[key], kind === 'weapon' ? CHEST_DAILY_WEAPON : CHEST_DAILY_PET) <= 0) {
+    return { ok: false, reason: 'empty', kind };
+  }
+
+  const before = {
+    wLeft: d.wLeft,
+    pLeft: d.pLeft,
+    pullsLen: Array.isArray(d.pulls) ? d.pulls.length : 0,
+  };
+  d[key] = clampChestLeft(d[key] - 1, kind === 'weapon' ? CHEST_DAILY_WEAPON : CHEST_DAILY_PET);
+
+  let result;
+  try {
+    const nice = Math.random() < CHEST_NICE_CHANCE;
+    if (kind === 'weapon') result = nice ? grantNiceChestWeapon() : grantChestConsolation('weapon');
+    else result = nice ? grantNiceChestPet() : grantCommonChestPet();
+    if (!result || typeof result !== 'object') result = grantChestConsolation(kind);
+    result.ok = true;
+    result.kind = kind;
+    result.nice = !!result.nice;
+    result.left = { weapon: chestWeaponLeft(), pet: chestPetLeft() };
+    pushChestPull({
+      kind,
+      type: result.type,
+      nice: result.nice,
+      id: result.weaponId || result.petId || result.eggId || null,
+      rarity: result.rarity || null,
+    });
+    save.stats = save.stats || {};
+    save.stats.summonCount = (save.stats.summonCount || 0) + 1;
+    if (typeof persist === 'function') persist();
+    try { AudioSys.sfx(result.nice ? 'summon' : 'select'); } catch (_) {}
+    return result;
+  } catch (err) {
+    d.wLeft = before.wLeft;
+    d.pLeft = before.pLeft;
+    if (Array.isArray(d.pulls) && d.pulls.length > before.pullsLen) {
+      d.pulls = d.pulls.slice(0, before.pullsLen);
+    }
+    try { console.warn('[chest-summon]', err); } catch (_) {}
+    return { ok: false, reason: 'error', kind };
+  }
+}
+
+function sanitizeChestDaily(raw, today) {
+  if (!raw || typeof raw !== 'object') {
+    return {
+      date: today,
+      wLeft: CHEST_DAILY_WEAPON,
+      pLeft: CHEST_DAILY_PET,
+      pulls: [],
+    };
+  }
+  const dk = (typeof raw.date === 'string' ? raw.date.slice(0, 10) : null) || today;
+  const out = {
+    date: dk,
+    wLeft: clampChestLeft(raw.wLeft, CHEST_DAILY_WEAPON),
+    pLeft: clampChestLeft(raw.pLeft, CHEST_DAILY_PET),
+    pulls: [],
+  };
+  // Als date ≠ vandaag: reset pulls + full quota (nieuwe dag)
+  if (dk !== today) {
+    out.date = today;
+    out.wLeft = CHEST_DAILY_WEAPON;
+    out.pLeft = CHEST_DAILY_PET;
+    return out;
+  }
+  if (Array.isArray(raw.pulls)) {
+    for (const p of raw.pulls.slice(-CHEST_PULL_LOG_MAX)) {
+      if (!p || typeof p !== 'object') continue;
+      const kind = p.kind === 'pet' ? 'pet' : (p.kind === 'weapon' ? 'weapon' : null);
+      if (!kind) continue;
+      out.pulls.push({
+        kind,
+        type: typeof p.type === 'string' ? p.type.slice(0, 24) : 'junk',
+        nice: !!p.nice,
+        id: typeof p.id === 'string' ? p.id.slice(0, 32) : null,
+        rarity: typeof p.rarity === 'string' ? p.rarity.slice(0, 16) : null,
+        at: Math.floor(Number(p.at) || 0) || undefined,
+      });
+    }
+  }
+  return out;
+}
+
+function sanitizeChestWeapons(raw) {
+  const clean = {};
+  if (!raw || typeof raw !== 'object') return clean;
+  for (const [k, v] of Object.entries(raw)) {
+    const w = typeof weaponById === 'function' ? weaponById(k) : null;
+    if (!w || w.dropZone || w.id === 'vuist' || w.id === 'master_sword') continue;
+    const entry = (v && typeof v === 'object') ? v : {};
+    clean[k] = {
+      skill: typeof entry.skill === 'string' ? entry.skill.slice(0, CHEST_SKILL_MAX) : undefined,
+      at: Math.floor(Number(entry.at) || 0) || undefined,
+    };
+    if (!clean[k].skill) delete clean[k].skill;
+    if (!clean[k].at) delete clean[k].at;
+  }
+  return clean;
+}
+
+function chestResultToast(res) {
+  if (!res || !res.ok) {
+    if (res && res.reason === 'empty') {
+      return res.kind === 'pet' ? 'Geen pet-summons meer vandaag' : 'Geen wapen-summons meer vandaag';
+    }
+    return 'Summon mislukt — probeer opnieuw';
+  }
+  if (res.type === 'weapon_unlock') {
+    return `✦ ${res.name} ontgrendeld! · ${rarityLabel(res.rarity)}${res.skill ? ' · ' + res.skill : ''}`;
+  }
+  if (res.type === 'weapon_ascend') {
+    return `✦ ${res.name} → ${rarityLabel(res.rarity)}!${res.skill ? ' · ' + res.skill : ''}`;
+  }
+  if (res.type === 'pet_unlock') {
+    return `✦ Pet ${res.name}! · ${rarityLabel(res.rarity)}${res.skill ? ' · ' + res.skill : ''}`;
+  }
+  if (res.type === 'egg') {
+    const dup = res.duplicate ? ' (dup +XP)' : '';
+    return `Ei: ${res.name || '?'}${dup}`;
+  }
+  if (res.type === 'coins') return `+${res.amount} pet coins`;
+  if (res.type === 'xp') return `+${res.amount} XP`;
+  return res.label || 'Niks bijzonders…';
+}
+
+function chestResultRarityId(res) {
+  if (!res || !res.ok) return 'common';
+  if (res.rarity && typeof rarityOf === 'function') return rarityOf(res.rarity).id || res.rarity;
+  if (res.nice) return 'legendary';
+  if (res.type === 'coins' || res.type === 'xp') return 'uncommon';
+  return 'common';
+}
+
+function summonRevealCardDelayMs(totalMs) {
+  const total = Math.max(SUMMON_CARD_LAST_MS + 400, Number(totalMs) || SUMMON_REVEAL_TOTAL_MS);
+  return Math.max(0, total - SUMMON_CARD_LAST_MS);
 }
 /* --- src/i18n/catalog.js --- */
 /* ============================== I18N CATALOG ========================== */
@@ -29010,6 +29418,17 @@ function hubTileStatLine(hub) {
     }
     case 'collect':
       return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ${petCoinsBalance()} pet 🪙`;
+    case 'summon': {
+      try {
+        ensureChestDaily();
+        const w = chestWeaponLeft();
+        const p = chestPetLeft();
+        if (w + p <= 0) return 'Op · morgen weer';
+        return `${w} wapen · ${p} pet`;
+      } catch (_) {
+        return '5+5 vandaag';
+      }
+    }
     default:
       return '';
   }
@@ -29070,7 +29489,7 @@ function levelTileTip(n, pick, infoLv, boss, best, fails) {
 }
 
 const UI = {
-  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'upgradeScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
+  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'summonScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'upgradeScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
@@ -29368,6 +29787,13 @@ const UI = {
         this.show('menuScreen');
         return;
       }
+      if (active === 'summonScreen') {
+        this.clearSummonRevealTimers();
+        this._chestPullBusy = false;
+        this.renderMenu();
+        this.show('menuScreen');
+        return;
+      }
       if (active === 'levelScreen') {
         bumpLevelHoldGen();
         try { cancelGambleStart(); } catch (_) {}
@@ -29444,6 +29870,8 @@ const UI = {
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
+      try { this.clearSummonRevealTimers(); } catch (_) {}
+      this._chestPullBusy = false;
       try { Input.releaseAll(); } catch (_) {}
       Input.dualMode = false;
       Input.layout(W, H);
@@ -29865,6 +30293,15 @@ const UI = {
     document.querySelectorAll('[data-hub-stat]').forEach((el) => {
       el.textContent = hubTileStatLine(el.dataset.hubStat);
     });
+    const summonTile = document.getElementById('btnSummons');
+    if (summonTile) {
+      let left = 0;
+      try { left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
+      summonTile.classList.toggle('has-summons', left > 0);
+      summonTile.setAttribute('aria-label', left > 0
+        ? `Summons · ${left} over vandaag`
+        : 'Summons · op voor vandaag');
+    }
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const verLine = document.getElementById('menuVerLine');
@@ -29919,6 +30356,298 @@ const UI = {
     if (typeof renderLangSwitch === 'function') renderLangSwitch();
     } catch (err) {
       sfReportError('renderMenu', err, 'Menu kon niet ververst worden');
+    }
+  },
+
+  renderSummon() {
+    try {
+      // Menu-UI only — never leave play canvas competing with this screen
+      if (typeof state !== 'undefined' && state === 'play' && game) {
+        try { UI.toast('Eerst gevecht afmaken of pauzeren', 2200); } catch (_) {}
+        return;
+      }
+      if (typeof state !== 'undefined' && state === 'play' && !game) state = 'menu';
+      ensureChestDaily();
+      const wLeft = chestWeaponLeft();
+      const pLeft = chestPetLeft();
+      const quota = document.getElementById('summonQuota');
+      if (quota) {
+        quota.textContent = `Vandaag: ${wLeft}/${CHEST_DAILY_WEAPON} wapen · ${pLeft}/${CHEST_DAILY_PET} pet · 5% jackpot`;
+      }
+      const wBtn = document.getElementById('btnChestWeapon');
+      const pBtn = document.getElementById('btnChestPet');
+      const wLbl = document.getElementById('chestWeaponLbl');
+      const pLbl = document.getElementById('chestPetLbl');
+      if (wLbl) wLbl.textContent = wLeft > 0 ? `${wLeft} over` : 'Op';
+      if (pLbl) pLbl.textContent = pLeft > 0 ? `${pLeft} over` : 'Op';
+      if (wBtn) wBtn.disabled = wLeft <= 0 || !!this._chestPullBusy;
+      if (pBtn) pBtn.disabled = pLeft <= 0 || !!this._chestPullBusy;
+
+      const logEl = document.getElementById('summonLog');
+      if (logEl) {
+        const pulls = (save.chestDaily && Array.isArray(save.chestDaily.pulls))
+          ? save.chestDaily.pulls.slice().reverse() : [];
+        if (!pulls.length) {
+          logEl.textContent = 'Nog geen pulls vandaag.';
+        } else {
+          logEl.innerHTML = pulls.slice(0, 8).map((p) => {
+            const tag = p.nice ? '✦' : '·';
+            const rar = p.rarity ? ` ${p.rarity}` : '';
+            return `<div>${tag} ${p.kind} ${p.type || ''}${rar}</div>`;
+          }).join('');
+        }
+      }
+      try { syncPlayLayer(); } catch (_) {}
+      try { hardenButtonIcons(document.getElementById('summonScreen')); } catch (_) {}
+    } catch (err) {
+      sfReportError('renderSummon', err, 'Summons laden mislukt');
+      try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
+    }
+  },
+
+  clearSummonRevealTimers() {
+    if (this._summonCardTimer) {
+      clearTimeout(this._summonCardTimer);
+      this._summonCardTimer = null;
+    }
+    if (this._summonDoneTimer) {
+      clearTimeout(this._summonDoneTimer);
+      this._summonDoneTimer = null;
+    }
+    try {
+      const vid = document.getElementById('summonVideo');
+      if (vid) {
+        vid.onloadedmetadata = null;
+        vid.onended = null;
+        vid.onerror = null;
+        try { vid.pause(); } catch (_) {}
+      }
+    } catch (_) {}
+  },
+
+  /** Open summons hub — never mid-fight (blue-screen guard). */
+  openSummonHub() {
+    try {
+      if (state === 'play' && game) {
+        UI.toast('Eerst gevecht afmaken of pauzeren', 2400);
+        return;
+      }
+      if (state === 'play' && !game) state = 'menu';
+      if (state === 'pause' || state === 'result') state = 'menu';
+      this.clearSummonRevealTimers();
+      this._chestPullBusy = false;
+      this.safeOpen('summonScreen', () => this.renderSummon(), { msg: 'Summons laden mislukt' });
+    } catch (err) {
+      sfReportError('openSummonHub', err, 'Summons openen mislukt');
+      try { this.goMenu(); } catch (_) {}
+    }
+  },
+
+  paintSummonCenterCard(res) {
+    const cv = document.getElementById('summonCardCanvas');
+    const nameEl = document.getElementById('summonCardName');
+    const rarEl = document.getElementById('summonCardRar');
+    const skEl = document.getElementById('summonCardSkill');
+    const card = document.getElementById('summonCenterCard');
+    if (!cv || !nameEl) return;
+    const cc = cv.getContext('2d');
+    cc.clearRect(0, 0, cv.width, cv.height);
+    const rarId = typeof chestResultRarityId === 'function' ? chestResultRarityId(res) : 'common';
+    const rar = typeof rarityOf === 'function' ? rarityOf(rarId) : { color: '#9db1e3', name: rarId };
+    let title = '…';
+    let skill = '';
+    try {
+      if (res && res.weaponId && typeof drawWeaponShape === 'function') {
+        cc.save();
+        cc.translate(28, 78);
+        cc.rotate(-0.55);
+        if (rar.order >= 3 && !motionReduced()) {
+          cc.fillStyle = rar.glow || 'rgba(255,215,94,.35)';
+          cc.beginPath(); cc.arc(26, -6, 28, 0, Math.PI * 2); cc.fill();
+        }
+        drawWeaponShape(cc, res.weaponId, 0.28);
+        cc.restore();
+        title = res.name || (typeof weaponLabel === 'function' ? weaponLabel(res.weaponId) : res.weaponId);
+        skill = res.skill || '';
+      } else if (res && res.petId && typeof drawMonsterArt === 'function') {
+        const def = typeof petDef === 'function' ? petDef(res.petId) : null;
+        const sp = def && SPECIES[def.speciesId];
+        if (sp) {
+          cc.save();
+          cc.translate(60, 72);
+          cc.scale(0.72, 0.72);
+          drawMonsterArt(cc, sp, sp.size || 28, 1.15, false, false);
+          cc.restore();
+        }
+        title = res.name || (sp && sp.name) || res.petId;
+        skill = res.skill || '';
+      } else if (res && res.type === 'egg') {
+        cc.fillStyle = rar.color || '#ffd75e';
+        cc.beginPath(); cc.ellipse(60, 62, 28, 36, 0, 0, Math.PI * 2); cc.fill();
+        title = res.name ? ('Ei · ' + res.name) : 'Ei';
+      } else if (res && res.type === 'coins') {
+        cc.fillStyle = '#ffd75e';
+        cc.beginPath(); cc.arc(60, 60, 28, 0, Math.PI * 2); cc.fill();
+        cc.fillStyle = '#c97a20';
+        cc.font = 'bold 22px sans-serif';
+        cc.textAlign = 'center';
+        cc.fillText('🪙', 60, 68);
+        title = '+' + (res.amount || 0) + ' pet coins';
+      } else if (res && res.type === 'xp') {
+        cc.fillStyle = '#7cf5ff';
+        cc.font = 'bold 28px sans-serif';
+        cc.textAlign = 'center';
+        cc.fillText('XP', 60, 70);
+        title = '+' + (res.amount || 0) + ' XP';
+      } else {
+        cc.strokeStyle = '#9db1e3';
+        cc.lineWidth = 3;
+        cc.strokeRect(30, 30, 60, 60);
+        title = (res && res.label) || 'Niks bijzonders';
+      }
+    } catch (_) {
+      title = (res && res.name) || 'Summon';
+    }
+    nameEl.textContent = title;
+    if (rarEl) {
+      rarEl.textContent = typeof rarityLabel === 'function' ? rarityLabel(rarId) : rarId;
+      rarEl.style.color = rar.color || '#9db1e3';
+    }
+    if (skEl) {
+      skEl.textContent = skill || '';
+      skEl.style.display = skill ? '' : 'none';
+    }
+    if (card) card.setAttribute('aria-hidden', 'true');
+  },
+
+  showSummonCenterCard() {
+    const reveal = document.getElementById('summonReveal');
+    const card = document.getElementById('summonCenterCard');
+    if (reveal) reveal.classList.add('is-card-show');
+    if (card) card.setAttribute('aria-hidden', 'false');
+  },
+
+  /**
+   * Play optional Gemini video; always schedule center-card for last 2s.
+   * No video file → CSS fallback stage (no 404 spam after first fail).
+   */
+  runSummonRevealTimeline(res) {
+    this.clearSummonRevealTimers();
+    const reveal = document.getElementById('summonReveal');
+    const fallback = document.getElementById('summonStageFallback');
+    const vid = document.getElementById('summonVideo');
+    const rarId = typeof chestResultRarityId === 'function' ? chestResultRarityId(res) : 'common';
+    if (reveal) {
+      reveal.dataset.rarity = rarId;
+      reveal.classList.toggle('is-nice', !!(res && res.nice));
+      reveal.classList.remove('is-card-show', 'is-shake');
+      void reveal.offsetWidth;
+      reveal.classList.add('is-shake');
+    }
+    this.paintSummonCenterCard(res);
+
+    const startTimers = (totalMs) => {
+      const cardAt = typeof summonRevealCardDelayMs === 'function'
+        ? summonRevealCardDelayMs(totalMs)
+        : Math.max(0, (totalMs || SUMMON_REVEAL_TOTAL_MS) - SUMMON_CARD_LAST_MS);
+      this._summonCardTimer = setTimeout(() => {
+        try { this.showSummonCenterCard(); } catch (_) {}
+      }, cardAt);
+      this._summonDoneTimer = setTimeout(() => {
+        this._chestPullBusy = false;
+        try { this.renderSummon(); } catch (_) {}
+      }, totalMs || SUMMON_REVEAL_TOTAL_MS);
+    };
+
+    const useFallback = () => {
+      if (vid) {
+        vid.style.display = 'none';
+        try { vid.removeAttribute('src'); vid.load(); } catch (_) {}
+      }
+      if (fallback) fallback.style.display = '';
+      startTimers(SUMMON_REVEAL_TOTAL_MS);
+    };
+
+    if (_summonVideoOk === false || !vid) {
+      useFallback();
+      return;
+    }
+
+    const src = vid.getAttribute('data-src') || SUMMON_VIDEO_SRC;
+    let settled = false;
+    const settleFallback = () => {
+      if (settled) return;
+      settled = true;
+      _summonVideoOk = false;
+      useFallback();
+    };
+    vid.onerror = settleFallback;
+    vid.onloadedmetadata = () => {
+      if (settled) return;
+      settled = true;
+      _summonVideoOk = true;
+      if (fallback) fallback.style.display = 'none';
+      vid.style.display = '';
+      const durMs = Math.max(2500, (vid.duration || 4) * 1000);
+      startTimers(durMs);
+      try {
+        vid.currentTime = 0;
+        const p = vid.play();
+        if (p && p.catch) p.catch(() => {});
+      } catch (_) {}
+    };
+    try {
+      if (fallback) fallback.style.display = '';
+      vid.style.display = '';
+      if (!vid.getAttribute('src') || vid.getAttribute('src') !== src) {
+        vid.setAttribute('src', src);
+      }
+      vid.load();
+      // If metadata never fires (missing file), fall back
+      setTimeout(() => {
+        if (!settled) settleFallback();
+      }, 900);
+    } catch (_) {
+      settleFallback();
+    }
+  },
+
+  doChestPull(kind) {
+    try {
+      if (this._chestPullBusy) return;
+      if (state === 'play' && game) {
+        UI.toast('Niet tijdens gevecht', 2000);
+        return;
+      }
+      const screen = document.getElementById('summonScreen');
+      if (!screen || !screen.classList.contains('active')) {
+        this.openSummonHub();
+      }
+      this._chestPullBusy = true;
+      try { this.renderSummon(); } catch (_) {}
+
+      const res = openChestSummon(kind);
+      const text = document.getElementById('summonRevealText');
+      const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : 'Mislukt');
+      if (text) text.textContent = msg;
+
+      if (!res || !res.ok) {
+        this._chestPullBusy = false;
+        try { UI.toast(msg, 2200); } catch (_) {}
+        try { this.renderSummon(); } catch (_) {}
+        try { this.renderMenu(); } catch (_) {}
+        return;
+      }
+
+      try { UI.toast(msg, res.nice ? 3800 : 2400); } catch (_) {}
+      this.runSummonRevealTimeline(res);
+      try { this.renderMenu(); } catch (_) {}
+      try { syncPlayLayer(); } catch (_) {}
+    } catch (err) {
+      this._chestPullBusy = false;
+      this.clearSummonRevealTimers();
+      sfReportError('doChestPull', err, 'Summon mislukt');
+      try { ensureVisibleScreen(); } catch (_) {}
     }
   },
 
@@ -30646,6 +31375,13 @@ const UI = {
       const summonBadge = w.summoned
         ? ` <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">✦ Summon</span>`
         : '';
+      const chestSk = typeof chestWeaponSkillOf === 'function' ? chestWeaponSkillOf(w.id) : null;
+      const chestBadge = chestSk
+        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Kist</span>`
+        : '';
+      const chestSkillLine = chestSk
+        ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestSk}</div>`
+        : '';
       const statLine = w.summoned
         ? `${weaponDesc(w)} · schade x${base.dmg} → <b style="color:${rar.color}">x${w.dmg}</b> · bereik ${w.range} · snelheid x${w.speed}`
         : `${weaponDesc(w)} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}`;
@@ -30682,8 +31418,9 @@ const UI = {
       const zoneLockLine = lvlLocked && zoneMeta
         ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:${zoneMeta.color}">Drop in ${zoneMeta.name}-zone / Nightmare·Hell modus</div>`
         : '';
-      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${zoneBadge}${summonBadge}${tierBadge}${upBadge}</div>
+      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${zoneBadge}${summonBadge}${chestBadge}${tierBadge}${upBadge}</div>
         <div class="cinfo">${statLine}</div>` +
+        chestSkillLine +
         upLine +
         effectLine +
         (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '') +
@@ -31219,8 +31956,14 @@ const UI = {
       const upLv = tamed ? itemUpgradeLevel('pet', def.id) : 0;
       const upMax = tamed ? itemUpgradeMax('pet', def.id) : 0;
       const upBadge = upLv > 0 ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">↑ Lv ${upLv}/${upMax}</span>` : '';
-      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${upBadge}</div>` +
+      const petEntry = tamed && save.pets ? save.pets[def.id] : null;
+      const chestPetSk = petEntry && typeof petEntry.skill === 'string' ? petEntry.skill : null;
+      const chestPetBadge = chestPetSk
+        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Kist</span>`
+        : '';
+      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${chestPetBadge}${upBadge}</div>` +
         `<div class="cinfo">${def.perk}</div>` +
+        (chestPetSk ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestPetSk}</div>` : '') +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
           ? 'Getemd · assist in avontuur'
           : (canBuy
@@ -32022,6 +32765,8 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
     } else if (hub === 'versus') {
       UI.charPickStep = 1;
       UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { msg: 'Kies karakter mislukt' });
+    } else if (hub === 'summon') {
+      UI.openSummonHub();
     } else {
       UI.openModeHub(hub);
     }
@@ -32094,6 +32839,28 @@ bindPress(document.getElementById('btnUpgrades'), () => {
   UI.openUpgrades('skills');
 });
 bindPress(document.getElementById('btnPets'), () => {
+  openCollectionScreen('petScreen', () => UI.renderPets());
+});
+bindPress(document.getElementById('btnChestWeapon'), () => {
+  AudioSys.init();
+  UI.doChestPull('weapon');
+});
+bindPress(document.getElementById('btnChestPet'), () => {
+  AudioSys.init();
+  UI.doChestPull('pet');
+});
+bindPress(document.getElementById('btnSummonGotoWeapons'), () => {
+  AudioSys.init(); AudioSys.sfx('select');
+  if (state === 'play' && game) return;
+  UI.clearSummonRevealTimers();
+  UI._chestPullBusy = false;
+  openCollectionScreen('weaponScreen', () => UI.renderWeapons());
+});
+bindPress(document.getElementById('btnSummonGotoPets'), () => {
+  AudioSys.init(); AudioSys.sfx('select');
+  if (state === 'play' && game) return;
+  UI.clearSummonRevealTimers();
+  UI._chestPullBusy = false;
   openCollectionScreen('petScreen', () => UI.renderPets());
 });
 bindPress(document.getElementById('btnDex'), () => {

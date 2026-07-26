@@ -370,6 +370,11 @@
       linear-gradient(135deg, rgba(255, 90, 138, 0.18), transparent 45%),
       var(--menu-tile-solid);
   }
+  #menuScreen.menu-video-overhaul .hub-tile-summon {
+    background:
+      linear-gradient(135deg, rgba(255, 215, 94, 0.2), transparent 45%),
+      var(--menu-tile-solid);
+  }
   #menuScreen.menu-video-overhaul .menu-profile-bar,
   #menuScreen.menu-video-overhaul .menu-landing-inner > .btn.mode-btn.b-continue {
     background: var(--menu-tile-solid-hi);
@@ -702,6 +707,194 @@
     background: rgba(90,40,140,.45);
     color: #f0d8ff;
     box-shadow: inset 0 0 0 1px rgba(216,168,255,.28);
+  }
+  .hub-tile-summon {
+    grid-column: 1 / -1;
+    border: 2px solid rgba(255,215,94,.4);
+    background:
+      linear-gradient(135deg, rgba(255,215,94,.14), transparent 42%),
+      rgba(255,255,255,.04);
+    box-shadow:
+      0 3px 0 rgba(0,0,0,.26),
+      inset 0 0 0 1px rgba(255,230,160,.14),
+      inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  .hub-tile-summon .hub-tile-stat {
+    background: rgba(120,70,10,.45);
+    color: #ffe9a8;
+    box-shadow: inset 0 0 0 1px rgba(255,215,94,.28);
+  }
+  .hub-tile-summon.has-summons {
+    animation: summonChestFlash 1.35s ease-in-out infinite;
+  }
+  .hub-tile-summon.has-summons .hub-tile-ico {
+    animation: summonChestBob 1.35s ease-in-out infinite;
+  }
+  @keyframes summonChestFlash {
+    0%, 100% {
+      border-color: rgba(255,215,94,.38);
+      box-shadow:
+        0 3px 0 rgba(0,0,0,.26),
+        0 0 0 0 rgba(255,215,94,0),
+        inset 0 0 0 1px rgba(255,230,160,.14);
+    }
+    50% {
+      border-color: rgba(255,215,94,.85);
+      box-shadow:
+        0 3px 0 rgba(0,0,0,.26),
+        0 0 18px rgba(255,215,94,.45),
+        inset 0 0 0 1px rgba(255,230,160,.3);
+    }
+  }
+  @keyframes summonChestBob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px) scale(1.06); }
+  }
+  body.reduced-motion .hub-tile-summon.has-summons,
+  body.reduced-motion .hub-tile-summon.has-summons .hub-tile-ico {
+    animation: none;
+  }
+  body.reduced-motion .hub-tile-summon.has-summons {
+    border-color: rgba(255,215,94,.75);
+    box-shadow: 0 0 0 2px rgba(255,215,94,.35);
+  }
+  .summon-actions {
+    display: flex; flex-direction: column; gap: 10px;
+    width: min(92vw, 420px); margin: 10px auto 0;
+  }
+  .summon-pull-btn:disabled { opacity: .45; filter: grayscale(.35); }
+  .summon-where {
+    width: min(92vw, 420px); margin: 8px auto 0; padding: 10px 12px;
+    border-radius: 12px; border: 1px solid rgba(255,215,94,.2);
+    background: rgba(0,0,0,.2); font-size: 11px; line-height: 1.45; color: #c8d6f0;
+  }
+  .summon-where b { color: #ffd75e; font-weight: 800; }
+  .summon-reveal {
+    width: min(92vw, 420px); margin: 14px auto 0; padding: 10px;
+    border-radius: 14px; border: 1px solid rgba(255,215,94,.22);
+    background: rgba(0,0,0,.22); text-align: center;
+  }
+  .summon-reveal.is-nice {
+    border-color: rgba(255,215,94,.7);
+    box-shadow: 0 0 22px rgba(255,215,94,.28);
+  }
+  .summon-stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #1a2744 0%, #0c1222 100%);
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .summon-video {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; display: none; background: #0b1020;
+  }
+  .summon-stage-fallback {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .summon-chest-visual {
+    width: 64px; height: 50px;
+    border-radius: 8px 8px 6px 6px;
+    background:
+      linear-gradient(180deg, #c97a20 0 38%, #8a5010 38% 42%, #a86818 42% 100%);
+    box-shadow: inset 0 0 0 2px rgba(255,215,94,.35);
+    position: relative;
+  }
+  .summon-chest-visual::after {
+    content: ''; position: absolute; left: 50%; top: 55%;
+    width: 10px; height: 8px; transform: translate(-50%, -50%);
+    border-radius: 2px; background: #ffd75e;
+  }
+  .summon-rarity-fx {
+    pointer-events: none;
+    position: absolute; inset: 0;
+    opacity: .2;
+    background: radial-gradient(ellipse at center, rgba(157,177,227,.35), transparent 62%);
+    transition: opacity .35s ease, background .35s ease;
+  }
+  .summon-reveal[data-rarity="common"] .summon-rarity-fx {
+    opacity: .12; filter: grayscale(.55);
+    background: radial-gradient(ellipse at center, rgba(157,177,227,.25), transparent 65%);
+  }
+  .summon-reveal[data-rarity="uncommon"] .summon-rarity-fx {
+    opacity: .28;
+    background: radial-gradient(ellipse at center, rgba(90,208,106,.35), transparent 62%);
+  }
+  .summon-reveal[data-rarity="rare"] .summon-rarity-fx {
+    opacity: .38;
+    background: radial-gradient(ellipse at center, rgba(74,159,255,.4), transparent 60%);
+  }
+  .summon-reveal[data-rarity="epic"] .summon-rarity-fx {
+    opacity: .48;
+    background: radial-gradient(ellipse at center, rgba(176,106,224,.5), transparent 58%);
+  }
+  .summon-reveal[data-rarity="legendary"] .summon-rarity-fx,
+  .summon-reveal[data-rarity="mythic"] .summon-rarity-fx {
+    opacity: .62;
+    background:
+      radial-gradient(ellipse at center, rgba(255,215,94,.55), transparent 55%),
+      radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.2), transparent 40%);
+  }
+  .summon-reveal.is-nice .summon-rarity-fx { opacity: .72; }
+  /* Center card — last 2s of reveal (video or fallback) */
+  .summon-center-card {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: min(42%, 150px);
+    transform: translate(-50%, -50%) scale(.92);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 3;
+    padding: 8px 6px 10px;
+    border-radius: 12px;
+    background: rgba(10, 14, 26, .88);
+    border: 2px solid rgba(255,215,94,.45);
+    box-shadow: 0 8px 24px rgba(0,0,0,.45);
+    transition: opacity .4s ease, transform .4s ease;
+  }
+  .summon-reveal.is-card-show .summon-center-card {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .summon-card-canvas {
+    display: block; width: 72px; height: 72px; margin: 0 auto 4px;
+  }
+  .summon-card-name {
+    font-size: 12px; font-weight: 800; color: #e8f0ff; line-height: 1.2;
+  }
+  .summon-card-rar {
+    font-size: 10px; font-weight: 800; margin-top: 2px; letter-spacing: .03em;
+  }
+  .summon-card-skill {
+    font-size: 9px; font-weight: 600; color: #ffd75e; margin-top: 4px; line-height: 1.25;
+    opacity: .95;
+  }
+  .summon-reveal.is-shake .summon-chest-visual,
+  .summon-reveal.is-shake .summon-stage-fallback {
+    animation: summonChestShake .45s ease-in-out;
+  }
+  @keyframes summonChestShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px) rotate(-2deg); }
+    75% { transform: translateX(4px) rotate(2deg); }
+  }
+  body.reduced-motion .summon-reveal.is-shake .summon-chest-visual,
+  body.reduced-motion .summon-reveal.is-shake .summon-stage-fallback { animation: none; }
+  body.reduced-motion .summon-center-card { transition: none; }
+  .summon-reveal-text {
+    margin-top: 10px;
+    font-size: 13px; font-weight: 700; color: #e8f0ff; line-height: 1.35;
+  }
+  .summon-goto-row {
+    display: flex; flex-direction: column; gap: 8px;
+    width: min(92vw, 420px); margin: 12px auto 0;
+  }
+  .summon-log {
+    width: min(92vw, 420px); margin: 10px auto 0;
+    font-size: 11px; opacity: .78; line-height: 1.45; color: #b8c8ef;
   }
   .menu-profile-bar {
     width: 100%; margin: 0; padding: 10px 14px; border-radius: 13px; cursor: pointer;

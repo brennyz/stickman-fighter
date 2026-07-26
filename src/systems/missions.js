@@ -1500,6 +1500,7 @@ const BUTTON_ICON_FALLBACKS = {
   arcade: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#9db8ff" stroke-width="1.9"><rect x="5" y="8" width="14" height="11" rx="2.2"/><circle cx="9" cy="13.5" r="1.7" fill="#7cf5ff" stroke="none"/><circle cx="15" cy="13.5" r="1.7" fill="#ff6b6b" stroke="none"/></svg>',
   versus: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ff9ab8" stroke-width="2"><circle cx="7.5" cy="8" r="2.4" fill="#7cf5ff"/><circle cx="16.5" cy="8" r="2.4" fill="#ff788c"/></svg>',
   collect: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#c792ff" stroke-width="2"><path d="M5 4.5h9.5L18.5 8v11.5H5z" fill="rgba(199,146,255,.18)"/></svg>',
+  summons: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ffd75e" stroke-width="2"><path d="M4.5 10.5h15v8.2a1.5 1.5 0 0 1-1.5 1.5h-12a1.5 1.5 0 0 1-1.5-1.5z" fill="rgba(255,215,94,.22)"/><path d="M12 10.5v9.7"/></svg>',
   continue: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#7cf5ff" stroke-width="2"><path d="M5 12h12M13 8l4 4-4 4"/></svg>',
 };
 function buttonIconFallbackUri(src) {

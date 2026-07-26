@@ -113,6 +113,8 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | — | **LIVE merge:** daily summons harden (menu-kist, center-card last 2s, save quota fix, smoke) zonder conflict op main. v1.18.115 / SW v325. |
+| 2026-07-26 | — | **Summons harden:** where-from/where-see strip, center-card laatste 2s (video of fallback), rarity FX shell, geen open tijdens play, save null→5 fix, smoke-summon. |
 | 2026-07-26 | — | **User fix harden+merge:** wapen-upgrades ownership-only (expliciete zone-gate + belt in add/try); smoke banked-shards cheat. v1.18.114 / SW v324. |
 | 2026-07-26 | — | **User fix:** wapen-upgrades alleen voor bezit (`weaponUnlockedByLevel`) — geen zone/locked wapens meer upgraden. v1.18.113 / SW v323. |
 | 2026-07-26 | — | **iPad/mobile scale:** fluid `--ui-rail` / type tokens, tablet≥768 + iPad landscape + phone-landscape density, saga touch floors, leesbaarheid clamp. v1.18.111 / SW v321. |
