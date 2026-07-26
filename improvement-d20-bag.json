@@ -3,19 +3,24 @@
   "cyclesCompleted": 5,
   "rollFirst": [],
   "remaining": [
-    19,
     2,
     4,
     18
   ],
   "lastRoll": {
-    "face": 6,
-    "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
-    "rolledAt": "2026-07-24T17:02:50Z",
-    "remainingCount": 4,
+    "face": 19,
+    "category": "Muur & minigames \u2014 combo, timer, record",
+    "rolledAt": "2026-07-26T20:03:52Z",
+    "remainingCount": 3,
     "cycle": 5
   },
-  "pending": null,
+  "pending": {
+    "face": 19,
+    "category": "Muur & minigames \u2014 combo, timer, record",
+    "rolledAt": "2026-07-26T20:03:52Z",
+    "remainingCount": 3,
+    "cycle": 5
+  },
   "implemented": [
     {
       "face": 17,
@@ -971,13 +976,6 @@
   ],
   "history": [
     {
-      "face": 7,
-      "category": "Save & backup \u2014 import/export, corruptie, migratie",
-      "rolledAt": "2026-07-23T14:21:52Z",
-      "remainingCount": 3,
-      "cycle": 0
-    },
-    {
       "face": 6,
       "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
       "rolledAt": "2026-07-23T15:00:11Z",
@@ -1810,6 +1808,13 @@
       "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
       "rolledAt": "2026-07-24T17:02:50Z",
       "remainingCount": 4,
+      "cycle": 5
+    },
+    {
+      "face": 19,
+      "category": "Muur & minigames \u2014 combo, timer, record",
+      "rolledAt": "2026-07-26T20:03:52Z",
+      "remainingCount": 3,
       "cycle": 5
     }
   ],

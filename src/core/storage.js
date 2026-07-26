@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.117';
+const APP_VERSION = '1.18.118';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 327;
+const SW_CACHE_REV = 328;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -304,6 +304,24 @@ function wallRecordPaceDelta(g) {
   return Math.round(g.score - expected);
 }
 function wallComboDmgPct(combo) { return Math.min(combo, 12) * 4; }
+function wallPauseSubtitle(g) {
+  if (!g || g.mode !== 'wall') return '';
+  const tLeft = Math.ceil(Math.max(0, g.wallTimer || 0));
+  const stones = g.score || 0;
+  const combo = g.combo || 0;
+  const best = save.bestWall || 0;
+  const paceDelta = wallRecordPaceDelta(g);
+  const parts = [t('pause.wallTime', { n: tLeft }), t('pause.wallStones', { n: stones })];
+  if (combo > 1) parts.push(t('pause.wallCombo', { n: combo }));
+  if (best > 0 && paceDelta != null) {
+    parts.push(paceDelta >= 0
+      ? t('pause.wallPaceAhead', { n: paceDelta })
+      : t('pause.wallPaceBehind', { n: Math.abs(paceDelta) }));
+  } else if (best > 0 && stones < best) {
+    parts.push(t('pause.wallGap', { gap: best - stones }));
+  }
+  return parts.join(' · ');
+}
 let save = loadSave();
 function fighterJutsuKind(f) {
   return fighterEquippedSkill(f).id;

@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.117';
+const APP_VERSION = '1.18.118';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 327;
+const SW_CACHE_REV = 328;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -551,6 +551,24 @@ function wallRecordPaceDelta(g) {
   return Math.round(g.score - expected);
 }
 function wallComboDmgPct(combo) { return Math.min(combo, 12) * 4; }
+function wallPauseSubtitle(g) {
+  if (!g || g.mode !== 'wall') return '';
+  const tLeft = Math.ceil(Math.max(0, g.wallTimer || 0));
+  const stones = g.score || 0;
+  const combo = g.combo || 0;
+  const best = save.bestWall || 0;
+  const paceDelta = wallRecordPaceDelta(g);
+  const parts = [t('pause.wallTime', { n: tLeft }), t('pause.wallStones', { n: stones })];
+  if (combo > 1) parts.push(t('pause.wallCombo', { n: combo }));
+  if (best > 0 && paceDelta != null) {
+    parts.push(paceDelta >= 0
+      ? t('pause.wallPaceAhead', { n: paceDelta })
+      : t('pause.wallPaceBehind', { n: Math.abs(paceDelta) }));
+  } else if (best > 0 && stones < best) {
+    parts.push(t('pause.wallGap', { gap: best - stones }));
+  }
+  return parts.join(' · ');
+}
 let save = loadSave();
 function fighterJutsuKind(f) {
   return fighterEquippedSkill(f).id;
@@ -1705,6 +1723,9 @@ const I18N = {
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
     pause: {
       title: 'Pauze', sub: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
+      wallTime: '{n}s resterend', wallStones: '{n} stenen', wallCombo: 'combo ×{n}',
+      wallPaceAhead: '+{n} vs record-tempo', wallPaceBehind: '−{n} vs record-tempo',
+      wallGap: 'nog {gap} tot record',
       resume: 'Verder spelen', music: 'Muziek', sfx: 'Geluid', quit: 'Stop & hoofdmenu',
       vsRestart: 'Herstart match', vsRestartSub: '0-0 · zelfde vechters',
       vsSwap: 'Wissel kant', vsSwapSub: 'P1 ↔ P2 · zelfde score',
@@ -1786,6 +1807,9 @@ const I18N = {
     modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Coins' },
     pause: {
       title: 'Paused', sub: 'Rasengan ready — go! · progress stays on this device',
+      wallTime: '{n}s left', wallStones: '{n} bricks', wallCombo: 'combo ×{n}',
+      wallPaceAhead: '+{n} vs record pace', wallPaceBehind: '−{n} vs record pace',
+      wallGap: '{gap} to record',
       resume: 'Resume', music: 'Music', sfx: 'Sound', quit: 'Quit to menu',
       vsRestart: 'Restart match', vsRestartSub: '0-0 · same fighters',
       vsSwap: 'Swap sides', vsSwapSub: 'P1 ↔ P2 · same score',
@@ -10900,6 +10924,7 @@ function seedNlGameStrings() {
     pickupItemShard: '+1 {name} item-shard',
     giant: 'REUS!', wallCombo3: 'Combo ×3 · sloop +{pct}%',
     wallCombo5: 'Combo ×5 · sloop +{pct}%', wallCombo8: 'Combo ×8 · sloop +{pct}%',
+    wallCombo10: 'Combo ×10 · sloop +{pct}% — meester-tempo!',
     wallTempo: 'MUUR-TEMPO!', wallRecord: 'NIEUW RECORD!', bonus5: 'BONUS +5',
     masterSwordGain: 'Hyrules legendarische kling — 15s!',
     masterSwordFade: 'Master Sword vervaagt…',
@@ -12260,6 +12285,7 @@ const CATALOG_EN = {
     pickupItemShard: '+1 {name} item-shard',
     giant: 'GIANT!', wallCombo3: 'Combo ×3 · smash +{pct}%',
     wallCombo5: 'Combo ×5 · smash +{pct}%', wallCombo8: 'Combo ×8 · smash +{pct}%',
+    wallCombo10: 'Combo ×10 · smash +{pct}% — master tempo!',
     wallTempo: 'WALL TEMPO!', wallRecord: 'NEW RECORD!', bonus5: 'BONUS +5',
     masterSwordGain: "Hyrule's legendary blade — 15s!",
     masterSwordFade: 'Master Sword fades…',
@@ -24879,7 +24905,7 @@ class Game {
     this.wallHints = {
       half: false, quarter: false, five: false, comboWarn: false,
       nearRec: false, lostCombo: false, startCombo: false,
-      combo3: false, combo5: false, combo8: false,
+      combo3: false, combo5: false, combo8: false, combo10: false,
       pace45: false, pace20: false, nearRec2: false,
     };
     this.layoutWall(true);
@@ -25530,6 +25556,11 @@ class Game {
               this.floater(W * 0.5, 136, t('combat.wallCombo8', { pct: wallComboDmgPct(8) }), '#ffd75e', 17, 'hud');
               AudioSys.sfx('combo');
               haptic(14);
+            } else if (this.combo === 10 && !wh.combo10) {
+              wh.combo10 = true;
+              this.floater(W * 0.5, 132, t('combat.wallCombo10', { pct: wallComboDmgPct(10) }), '#ffd75e', 18, 'hud');
+              AudioSys.sfx('comboEpic');
+              haptic(16);
             }
             if (!this.wallRecordToast && this.score > save.bestWall) {
               this.wallRecordToast = true;
@@ -29641,6 +29672,8 @@ const UI = {
           : ` · TOT ${tot.r1}-${tot.r2} (Δ${tot.diff})`;
       }
       sub.textContent = `2P ${game.roundsP1}-${game.roundsP2} · ronde ${game.round} · ${a} vs ${b}${tag}${totTag}`;
+    } else if (game?.mode === 'wall' && typeof wallPauseSubtitle === 'function') {
+      sub.textContent = wallPauseSubtitle(game);
     } else {
       sub.textContent = this.pauseSubDefault;
     }

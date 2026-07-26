@@ -1663,7 +1663,7 @@ class Game {
     this.wallHints = {
       half: false, quarter: false, five: false, comboWarn: false,
       nearRec: false, lostCombo: false, startCombo: false,
-      combo3: false, combo5: false, combo8: false,
+      combo3: false, combo5: false, combo8: false, combo10: false,
       pace45: false, pace20: false, nearRec2: false,
     };
     this.layoutWall(true);
@@ -2314,6 +2314,11 @@ class Game {
               this.floater(W * 0.5, 136, t('combat.wallCombo8', { pct: wallComboDmgPct(8) }), '#ffd75e', 17, 'hud');
               AudioSys.sfx('combo');
               haptic(14);
+            } else if (this.combo === 10 && !wh.combo10) {
+              wh.combo10 = true;
+              this.floater(W * 0.5, 132, t('combat.wallCombo10', { pct: wallComboDmgPct(10) }), '#ffd75e', 18, 'hud');
+              AudioSys.sfx('comboEpic');
+              haptic(16);
             }
             if (!this.wallRecordToast && this.score > save.bestWall) {
               this.wallRecordToast = true;

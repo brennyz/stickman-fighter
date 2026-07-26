@@ -1004,6 +1004,8 @@ const UI = {
           : ` · TOT ${tot.r1}-${tot.r2} (Δ${tot.diff})`;
       }
       sub.textContent = `2P ${game.roundsP1}-${game.roundsP2} · ronde ${game.round} · ${a} vs ${b}${tag}${totTag}`;
+    } else if (game?.mode === 'wall' && typeof wallPauseSubtitle === 'function') {
+      sub.textContent = wallPauseSubtitle(game);
     } else {
       sub.textContent = this.pauseSubDefault;
     }

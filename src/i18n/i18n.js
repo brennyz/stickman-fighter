@@ -32,6 +32,9 @@ const I18N = {
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
     pause: {
       title: 'Pauze', sub: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
+      wallTime: '{n}s resterend', wallStones: '{n} stenen', wallCombo: 'combo ×{n}',
+      wallPaceAhead: '+{n} vs record-tempo', wallPaceBehind: '−{n} vs record-tempo',
+      wallGap: 'nog {gap} tot record',
       resume: 'Verder spelen', music: 'Muziek', sfx: 'Geluid', quit: 'Stop & hoofdmenu',
       vsRestart: 'Herstart match', vsRestartSub: '0-0 · zelfde vechters',
       vsSwap: 'Wissel kant', vsSwapSub: 'P1 ↔ P2 · zelfde score',
@@ -113,6 +116,9 @@ const I18N = {
     modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Coins' },
     pause: {
       title: 'Paused', sub: 'Rasengan ready — go! · progress stays on this device',
+      wallTime: '{n}s left', wallStones: '{n} bricks', wallCombo: 'combo ×{n}',
+      wallPaceAhead: '+{n} vs record pace', wallPaceBehind: '−{n} vs record pace',
+      wallGap: '{gap} to record',
       resume: 'Resume', music: 'Music', sfx: 'Sound', quit: 'Quit to menu',
       vsRestart: 'Restart match', vsRestartSub: '0-0 · same fighters',
       vsSwap: 'Swap sides', vsSwapSub: 'P1 ↔ P2 · same score',
