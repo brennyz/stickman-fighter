@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.122';
+const APP_VERSION = '1.18.123';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 332;
+const SW_CACHE_REV = 333;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -10819,8 +10819,8 @@ const CHEST_NICE_CHANCE = 0.14;
 const CHEST_GOOD_CHANCE = 0.30;
 const CHEST_PULL_LOG_MAX = 12;
 const CHEST_SKILL_MAX = 48;
-/** Reveal timeline: 5s spectacle; card pops in for the last 2 seconds. */
-const SUMMON_REVEAL_TOTAL_MS = 5000;
+/** Reveal timeline: matches Gemini clip (~10s); card last 2s. */
+const SUMMON_REVEAL_TOTAL_MS = 10000;
 const SUMMON_CARD_LAST_MS = 2000;
 const SUMMON_VIDEO_SRC = 'assets/summon/reveal.mp4';
 let _summonVideoOk = null;
@@ -31399,7 +31399,10 @@ const UI = {
     }
     try {
       const screen = document.getElementById('summonScreen');
-      if (screen) screen.classList.remove('is-pulling');
+      if (screen) {
+        screen.classList.remove('is-pulling');
+        screen.classList.remove('has-video');
+      }
     } catch (_) {}
     try {
       const vid = document.getElementById('summonVideo');
@@ -31569,13 +31572,19 @@ const UI = {
         this._chestPullBusy = false;
         try {
           const sc = document.getElementById('summonScreen');
-          if (sc) sc.classList.remove('is-pulling');
+          if (sc) {
+            sc.classList.remove('is-pulling');
+            sc.classList.remove('has-video');
+          }
         } catch (_) {}
         try { this.renderSummon(); } catch (_) {}
       }, totalMs || SUMMON_REVEAL_TOTAL_MS);
     };
 
     const useFallback = () => {
+      try {
+        if (screen) screen.classList.remove('has-video');
+      } catch (_) {}
       if (vid) {
         vid.style.display = 'none';
         try { vid.removeAttribute('src'); vid.load(); } catch (_) {}
@@ -31605,9 +31614,10 @@ const UI = {
       if (fallback) fallback.style.display = 'none';
       // Must be 'block' — stylesheet sets .summon-video { display:none }
       vid.style.display = 'block';
+      try { if (screen) screen.classList.add('has-video'); } catch (_) {}
       const durMs = Math.max(
-        SUMMON_REVEAL_TOTAL_MS,
-        Math.round((vid.duration || 5) * 1000)
+        4000,
+        Math.round((vid.duration || 10) * 1000)
       );
       startTimers(durMs);
       try {

@@ -13,17 +13,17 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.122",
-    "swCache": "stickfighter-app-v332",
-    "gameJsQuery": "game.js?v=332",
-    "cssQuery": "styles/main.css?v=332",
+    "appVersion": "1.18.123",
+    "swCache": "stickfighter-app-v333",
+    "gameJsQuery": "game.js?v=333",
+    "cssQuery": "styles/main.css?v=333",
     "featureBranch": "cursor/satan-stall-boss-7b0e",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "Merge main + Satan harden · v1.18.122 · PR #206",
-    "updated": "2026-07-26T20:25:10Z"
+    "note": "Merge Gemini video main + Satan harden · v1.18.123 · PR #206",
+    "updated": "2026-07-26T20:25:52Z"
   },
   "userWishlist": [
     {
@@ -314,12 +314,12 @@
   ],
   "sessionLog": [
     {
-      "at": "2026-07-26T20:25:16Z",
-      "summary": "Merge main + Satan harden (conflicts opgelost) · v1.18.122"
+      "at": "2026-07-26T20:25:52Z",
+      "summary": "Merge Gemini video main + Satan harden · v1.18.123"
     },
     {
-      "at": "2026-07-26T20:18:19Z",
-      "summary": "Merge origin/main + Satan harden/SVG · v1.18.122"
+      "at": "2026-07-26T20:21:40Z",
+      "summary": "Echte Gemini summon-video + fullscreen has-video · v1.18.122"
     },
     {
       "at": "2026-07-26T20:12:11Z",

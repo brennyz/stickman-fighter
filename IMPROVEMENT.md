@@ -113,6 +113,8 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | **merge** | Satan × main (Gemini video + summons/UI) + harden · v1.18.123 / SW v333. |
+| 2026-07-26 | — | **Summons video:** echte Gemini-share mp4 (10s) i.p.v. placeholder + true fullscreen (`has-video`). v1.18.122 / SW v332. |
 | 2026-07-26 | **merge** | Satan branch × main (summons/UI): conflicts opgelost + harden · v1.18.122 / SW v332. |
 | 2026-07-26 | **user** | Satan dikke SVG + ~half-scherm combat, adventure portrait-card + na-clear hint. v1.18.114 / SW v324. |
 | 2026-07-26 | — | **Summons:** 10× random/dag, fullscreen pull (`is-pulling`), geen spoiler-toast, nice 14% + mid 30%. v1.18.121 / SW v331. |
