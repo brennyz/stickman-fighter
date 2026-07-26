@@ -324,7 +324,7 @@ function loop(now) {
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
-    if (state === 'play') {
+    if (state === 'play' && game && !game.over) {
       try { Input.releaseAll(); } catch (_) {}
       state = 'pause';
       AudioSys.setPaused(true);
@@ -461,7 +461,7 @@ window.addEventListener('offline', updateNetStatus);
 window.addEventListener('pageshow', (ev) => {
   if (ev.persisted) {
     try { Input.releaseAll(); } catch (_) {}
-    if (state === 'play' && game) {
+    if (state === 'play' && game && !game.over) {
       state = 'pause';
       try { AudioSys.setPaused(true); } catch (_) {}
       try { UI.renderPauseToggles(); UI.show('pauseScreen'); } catch (_) {}

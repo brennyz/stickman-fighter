@@ -1872,8 +1872,11 @@ function gokGooiStartLevel(n) {
     try { UI.showGambleRollFlash(lastGambleRoll); } catch (_) {}
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
     const delay = motionReduced() ? 80 : 420;
+    const startGen = gambleSfxGen;
     gokScreenTimer = setTimeout(() => {
       gokScreenTimer = null;
+      if (startGen !== gambleSfxGen) { gokStartBusy = false; return; }
+      if ((state === 'play' && game) || state === 'result') { gokStartBusy = false; return; }
       try { UI.hideGambleRollFlash(); } catch (_) {}
       startAdventureFromGamble(false);
     }, delay);
@@ -1896,8 +1899,11 @@ function gokGooiStartFromScreen() {
     if (sumLine) sumLine.textContent = t('ui.gambleGoStart');
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
     const delay = motionReduced() ? 50 : 140;
+    const startGen = gambleSfxGen;
     gokScreenTimer = setTimeout(() => {
       gokScreenTimer = null;
+      if (startGen !== gambleSfxGen) { gokStartBusy = false; return; }
+      if ((state === 'play' && game) || state === 'result') { gokStartBusy = false; return; }
       startAdventureFromGamble(false);
     }, delay);
   } catch (err) {

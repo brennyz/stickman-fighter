@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.71';
+const APP_VERSION = '1.18.72';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 281;
+const SW_CACHE_REV = 282;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -486,8 +486,7 @@ function readSaveJson(raw) {
     merged.pets = Object.assign({}, parsed.pets || {});
     merged.eggPets = Object.assign({}, parsed.eggPets || {});
     merged.weaponMastery = Object.assign({}, DEFAULT_SAVE.weaponMastery || {}, parsed.weaponMastery || {});
-    merged.tipsSeen = (parsed.tipsSeen && typeof parsed.tipsSeen === 'object' && !Array.isArray(parsed.tipsSeen))
-      ? Object.assign({}, parsed.tipsSeen) : {};
+    merged.tipsSeen = sanitizeTipsSeen(parsed.tipsSeen);
     merged.advFails = Object.assign({}, parsed.advFails || {});
     if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
@@ -734,6 +733,17 @@ function syncBackupFromPrimary() {
   }
 }
 
+/** tipsSeen flags → 0/1 (corrupt imports met [] of strings breken onboarding). */
+function sanitizeTipsSeen(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const out = {};
+  for (const k of Object.keys(raw)) {
+    if (typeof k !== 'string') continue;
+    out[k.slice(0, 48)] = raw[k] ? 1 : 0;
+  }
+  return out;
+}
+
 /** Corrupte / gemanipuleerde saves veilig maken (localStorage + import). */
 function sanitizeSave(s) {
   // Literal max — nooit TDZ op MAX_LEVEL (anders crashen alle click-handlers)
@@ -776,8 +786,7 @@ function sanitizeSave(s) {
   out.reducedMotion = !!out.reducedMotion;
   out.liteFx = !!out.liteFx;
   out.highContrast = !!out.highContrast;
-  out.tipsSeen = (out.tipsSeen && typeof out.tipsSeen === 'object' && !Array.isArray(out.tipsSeen))
-    ? out.tipsSeen : {};
+  out.tipsSeen = sanitizeTipsSeen(out.tipsSeen);
   out.missionsIntroSeen = !!out.missionsIntroSeen;
   if (out.lastPlay && typeof out.lastPlay === 'object') {
     const lp = out.lastPlay;
