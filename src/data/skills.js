@@ -41,11 +41,11 @@ const SKILL_DEFS = {
   rinnegan: {
     id: 'rinnegan', group: 'jutsu', color: '#c47aff',
     steps: [
-      { dmgMul: 1.08, radius: 2 },
-      { dmgMul: 1.08, lifeMul: 1.1, energySave: 5 },
-      { dmgMul: 1.1, radius: 2, pullMul: 1.15 },
-      { dmgMul: 1.1, extraShot: 0.12, windupMul: 0.92 },
-      { dmgMul: 1.12, radius: 3, energySave: 8, lifeMul: 1.1 },
+      { dmgMul: 1.1, radius: 5 },
+      { dmgMul: 1.08, speedMul: 1.08, energySave: 5, radius: 4 },
+      { dmgMul: 1.1, radius: 6, lifeMul: 1.1 },
+      { dmgMul: 1.12, windupMul: 0.9, speedMul: 1.06, radius: 5 },
+      { dmgMul: 1.14, radius: 7, energySave: 8, pierceRepeat: 0.15 },
     ],
   },
   subst: {
@@ -313,6 +313,11 @@ function rollSkillShardDrop(monster) {
   if (superBoss) chance = 0.55;
   else if (elite) chance = 0.28;
   else if (giant) chance = 0.16;
+  try {
+    if (typeof game !== 'undefined' && game && game.mode === 'adventure') {
+      chance = Math.min(0.92, chance * advDropChanceMul(game.advDiff));
+    }
+  } catch (_) {}
   if (Math.random() >= chance) return null;
   const weights = [];
   for (const id of SKILL_IDS) {
@@ -402,10 +407,10 @@ const SKILLS = [
     hint: 'Lv 10', tooltip: 'Interne schade-burst op korte afstand — hoge knockback.',
     bonus: 'Heavy knockback' },
   { id: 'rinnegan', name: 'Rinnegan', saga: 'scroll', needLvl: 22,
-    behavior: 'pull', dmgMul: 2.55, windup: 0.52, speed: 340, radius: 30, pierce: true, life: 1.05,
-    pull: true, color: '#c47aff', sfx: 'rinnegan', banner: 'RINNEGAN!', kb: 460,
-    hint: 'Lv 22', tooltip: 'Traag oog-orb met pull — trekt vijanden mee.',
-    bonus: 'Pull + pierce' },
+    behavior: 'slash', dmgMul: 2.95, windup: 0.42, speed: 720, radius: 42, pierce: true, life: 0.68,
+    color: '#c47aff', sfx: 'rinnegan', banner: 'RINNEGAN!', kb: 580,
+    hint: 'Lv 22', tooltip: 'Lichtschits-explosie links én rechts — strook dik bij jou, dun verderop. Upgrades = dikkere strook.',
+    bonus: '2-richting slash · taper · dikker per Lv' },
   { id: 'eight_gates', name: '8 poorten', saga: 'scroll', needLvl: 24,
     behavior: 'dash', dmgMul: 3.05, windup: 0.55, speed: 680, radius: 26, pierce: true, life: 0.38,
     dashVx: 420, color: '#ff6b6b', sfx: 'chidori', banner: '8 GATES!', kb: 580,
@@ -510,7 +515,10 @@ function skillExists(id) {
 }
 
 function skillBehaviorLabel(sk) {
-  const map = { orb: 'Orb', dash: 'Dash', pull: 'Pull', beam: 'Beam', disc: 'Disc', meteor: 'Meteor' };
+  const map = {
+    orb: 'Orb', dash: 'Dash', pull: 'Pull', beam: 'Beam', disc: 'Disc',
+    meteor: 'Meteor', slash: 'Slash',
+  };
   return map[sk && sk.behavior] || 'Special';
 }
 
@@ -572,7 +580,7 @@ function skillCombatLine(sk) {
   return sk.bonus || sk.hint || '';
 }
 
-const SKILL_BEHAVIORS = ['orb', 'dash', 'beam', 'disc', 'pull', 'meteor'];
+const SKILL_BEHAVIORS = ['orb', 'dash', 'beam', 'disc', 'pull', 'meteor', 'slash'];
 const SKILL_SAGA_ORDER = ['scroll', 'ki', 'tide', 'fighter', 'cape', 'dawn'];
 
 function skillsForFilters(saga, behavior) {

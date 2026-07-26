@@ -112,7 +112,19 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-| 2026-07-26 | — | **Menu SVG nav:** back/pause chrome, saga-*.svg in `assets/ui`, wire back-btn/#pauseBtn/char-swap/d20; wall polish; preview sheet `assets/buttons/_preview/all.png`. v1.18.101 / SW v311. |
+| 2026-07-26 | — | **Menu SVG nav LIVE:** back/pause chrome, saga-*.svg, preview sheet. v1.18.110 / SW v320. |
+| 2026-07-26 | — | **Zone-wapens harden:** adventure keep-equipped fix, DoT quiet/skipHitSfx, smoke:zone, regressie-guards. v1.18.109 / SW v319. |
+| 2026-07-26 | **6** | Audio c5: pauze reset combat-heat (BGM lead rustig), combat-SFX geblokkeerd (UI allowlist), syncAudioVolSliders pause↔instellingen, iPad ctx-suspended hint. v1.18.108 / SW v318. |
+| 2026-07-26 | — | **Zone-wapens wire:** drops + on-hit effects + burn-tick aangesloten; Nightmare 2.0/Hell 3.0 drops overal; UI zone/effect badges. v1.18.107 / SW v317. |
+| 2026-07-26 | — | **Model deepen:** Nightmare 2.0 / Hell 3.0 — enrageMul wired, ember/pain golven, sterkere vuur/lava visuals, unlock Lv70, petcoin bonus, UI-blurb. v1.18.106 / SW v316. |
+| 2026-07-26 | — | **LIVE fix:** Nightmare 2.0 / Hell 3.0 + herstel Nachtmerrie/Hel eilanden (Lv51–70) & zone-wapens. v1.18.105 / SW v315. |
+| 2026-07-26 | — | **User: Nachtmerrie/Hel wapens.** +2 eilanden (Lv 51–70), +27 ludieke zone-only wapens met on-hit effecten, rariteiten nightmare/hell, weapons-UI zone/effect badges. v1.18.104 / SW v314. |
+| 2026-07-26 | — | **User:** grootste bazen (bossCore/super) — grotere intro-tekst + naamplaat, soms colossaal ×2 size, veel meer HP. v1.18.103 / SW v313 (na merge Rinnegan+boerderij). |
+| 2026-07-26 | — | **Rinnegan check:** upgrade-strook dikker (Lv0 r0 42 → Lv5 ~78), smoke + merge main. v1.18.102 / SW v312. |
+| 2026-07-26 | — | **Rinnegan:** pull-orb → tweerichtings lichtschits-explosie (slash), strook tapert met afstand; dmg/kb omhoog. v1.18.101 / SW v311. |
+| 2026-07-26 | — | **Nightmare 2.0 / Hell 3.0:** model-labels, sterkere vuur/lava/schreeuw-visuals, HUD-chip, snellere vijanden + aura, merge boerderij/dierentuin. v1.18.102 / SW v312. |
+| 2026-07-26 | — | **Endgame diffs:** Normal / Nightmare 2.0 / Hell 3.0 na adventure clear. Harder HP/DMG + wildere rariteiten; Nightmare vuur-bg; Hell lava + schreeuwende stickmans. |
+| 2026-07-26 | — | **User:** monster diversiteit ~2× (137→281): +60 boerderij-op-hol +84 dierentuin-uitbraak (24 arts, grote sizes), ranch/safari golven, vaker reuzen. v1.18.101 / SW v311. |
 | 2026-07-26 | **12** | Content c5: weapon/pet rarity chips n/tot, volgende-wapen unlock hint, hub icon SVG data-URI fallback bij stale SW. v1.18.100 / SW v310. |
 | 2026-07-26 | **8** | PWA c5: speel.html SW register + offline share cache; SW canonical puts voor speel/ipad/android; install/loop shell check incl. speel; smoke-pwa-shell in test+doctor. v1.18.99 / SW v309. |
 | 2026-07-26 | **3** | Versus 2P c5: pause Wissel kant (swapVsSides), TOT rating chip in HUD + pauze, swap.svg chrome. v1.18.98 / SW v308. |

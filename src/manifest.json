@@ -23,6 +23,7 @@
   "src/core/canvas.js",
   "src/render/draw-helpers.js",
   "src/render/tide-art.js",
+  "src/render/beast-art.js",
   "src/entities/fighter.js",
   "src/entities/monster.js",
   "src/entities/pet.js",

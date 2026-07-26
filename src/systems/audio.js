@@ -8,6 +8,12 @@ const AudioSys = {
   _sfxVar: 0,
   _sfxPan: 0,
   _combatHeat: 0,
+  /** UI feedback SFX allowed while paused (combat hits blocked). */
+  _pauseUiSfx: new Set([
+    'select', 'bell', 'levelup', 'summon', 'diceRoll', 'claim', 'achieve',
+    'modeAdventure', 'modeTraining', 'modeVersus', 'modeWall', 'modeMats',
+    'gambleRoll', 'import', 'export', 'install', 'share',
+  ]),
   _samples: {},
   _sampleLoadStarted: false,
   _sampleCount: 0,
@@ -166,10 +172,16 @@ const AudioSys = {
     this.tone(660, 880, 0.11, 'sine', vol, this.musicGain);
   },
 
+  _sfxBlockedInPause(name) {
+    const inPause = this.paused || state === 'pause';
+    return inPause && !this._pauseUiSfx.has(name);
+  },
+
   setPaused(on) {
     this.paused = !!on;
     const needAudio = !!(save.music || save.sfx);
     if (on) {
+      this.setCombatHeat(0);
       try { this.init(); } catch (_) {}
       if (needAudio) {
         try { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
@@ -246,7 +258,7 @@ const AudioSys = {
 
   /** Pan SFX by world/screen X (0…W → left…right) */
   sfxAt(name, screenX) {
-    if (!this.ctx || !save.sfx) return;
+    if (!this.ctx || !save.sfx || this._sfxBlockedInPause(name)) return;
     if (typeof screenX === 'number' && typeof W !== 'undefined' && W > 0) {
       this._sfxPan = clamp((screenX / W) * 2 - 1, -1, 1) * 0.82;
     }
@@ -282,7 +294,7 @@ const AudioSys = {
   },
 
   sfx(name) {
-    if (!this.ctx || !save.sfx) return;
+    if (!this.ctx || !save.sfx || this._sfxBlockedInPause(name)) return;
     try { if (this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
     if (this._playSample(name)) return;
     const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);

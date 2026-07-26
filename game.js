@@ -252,25 +252,203 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.101';
-/** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 311;
+const APP_VERSION = '1.18.110';
+const SW_CACHE_REV = 320;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
-
-
-
-
+  zoneWeapons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null,
+  /** Normal / Nightmare / Hell — Epic Seven-stijl endgame tiers */
+  advDiff: 'normal',
+  advCleared: { normal: false, nightmare: false, hell: false },
+  advHard: {
+    nightmare: { unlocked: 1, stars: {}, fails: {}, masterBuff: null },
+    hell: { unlocked: 1, stars: {}, fails: {}, masterBuff: null },
+  },
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeJutsu: 'rasengan', skill: 'rasengan', super: 'ketsbam', missionsIntroSeen: false };
 
-const MAX_LEVEL = 50;
+const MAX_LEVEL = 70;
 const LEVELS_PER_ISLAND = 10;
-const ISLAND_WEAPON_CAPS = [10, 20, 30, 40, 48];
+const ISLAND_COUNT = 7;
+const ISLAND_WEAPON_CAPS = [10, 20, 30, 40, 48, 60, 70];
+/** Avontuur moeilijkheidsgraden — Normal eerst; Nightmare 2.0 / Hell 3.0 na clear. */
+const ADV_DIFFS = [
+  {
+    id: 'normal', order: 0, model: '1.0', accent: '#5ad06a',
+    hpMul: 1, dmgMul: 1, rarityBoost: 0, eliteBonus: 0, giantBonus: 0,
+    theme: null, xpMul: 1, dropMul: 1, speedMul: 1,
+    enrageMul: 1, enrageAt: 0.5, hordeMul: 1, petCoinMul: 1,
+  },
+  {
+    id: 'nightmare', order: 1, model: '2.0', accent: '#ff7a4d',
+    hpMul: 1.48, dmgMul: 1.38, rarityBoost: 1, eliteBonus: 0.16, giantBonus: 0.1,
+    theme: 'nightmare', xpMul: 1.35, dropMul: 1.42, speedMul: 1.09,
+    enrageMul: 1.18, enrageAt: 0.58, hordeMul: 1.08, petCoinMul: 1.15,
+  },
+  {
+    id: 'hell', order: 2, model: '3.0', accent: '#ff4a4a',
+    hpMul: 1.95, dmgMul: 1.78, rarityBoost: 2, eliteBonus: 0.28, giantBonus: 0.16,
+    theme: 'hell', xpMul: 1.7, dropMul: 1.8, speedMul: 1.16,
+    enrageMul: 1.32, enrageAt: 0.68, hordeMul: 1.16, petCoinMul: 1.35,
+  },
+];
+const ADV_DIFF_IDS = ADV_DIFFS.map((d) => d.id);
+function emptyAdvHardBag() {
+  return { unlocked: 1, stars: {}, fails: {}, masterBuff: null };
+}
+function advDiffMeta(id) {
+  return ADV_DIFFS.find((d) => d.id === id) || ADV_DIFFS[0];
+}
+function normalizeAdvDiffId(id) {
+  return ADV_DIFF_IDS.includes(id) ? id : 'normal';
+}
+function currentAdvDiff() {
+  return normalizeAdvDiffId(save && save.advDiff);
+}
+function setAdvDiff(id) {
+  const next = normalizeAdvDiffId(id);
+  if (!advDiffAvailable(next)) return false;
+  save.advDiff = next;
+  persist();
+  return true;
+}
+function advDiffAvailable(id) {
+  const d = normalizeAdvDiffId(id);
+  if (d === 'normal') return true;
+  const cleared = (save && save.advCleared) || {};
+  if (d === 'nightmare') return !!cleared.normal;
+  if (d === 'hell') return !!cleared.nightmare;
+  return false;
+}
+function advDiffLabel(id) {
+  const meta = advDiffMeta(id);
+  const name = typeof t === 'function' ? t('ui.diff.' + meta.id) : meta.id;
+  return meta.model && meta.model !== '1.0' ? (name + ' ' + meta.model) : name;
+}
+function advDiffShort(id) {
+  const meta = advDiffMeta(id);
+  if (meta.id === 'nightmare') return 'NM 2.0';
+  if (meta.id === 'hell') return 'HELL 3.0';
+  return 'NORMAL';
+}
+function advDiffUnlockHint(id) {
+  const d = normalizeAdvDiffId(id);
+  if (d === 'nightmare') return typeof t === 'function' ? t('ui.diffUnlockNightmare') : ('Clear Normal Lv ' + MAX_LEVEL);
+  if (d === 'hell') return typeof t === 'function' ? t('ui.diffUnlockHell') : ('Clear Nightmare Lv ' + MAX_LEVEL);
+  return '';
+}
+function advDiffBlurb(id) {
+  const d = normalizeAdvDiffId(id);
+  if (typeof t === 'function') {
+    if (d === 'nightmare') return t('ui.diffBlurbNightmare');
+    if (d === 'hell') return t('ui.diffBlurbHell');
+    return t('ui.diffBlurbNormal');
+  }
+  if (d === 'nightmare') return 'Fire arena · earlier enrage · wilder rarities';
+  if (d === 'hell') return 'Lava · screaming pain · mythic hordes';
+  return 'Standard adventure';
+}
+function advPetCoinMul(diff) {
+  return advDiffMeta(diff || currentAdvDiff()).petCoinMul || 1;
+}
+function ensureAdvHardBag(diff) {
+  const d = normalizeAdvDiffId(diff);
+  if (d === 'normal') return null;
+  if (!save.advHard || typeof save.advHard !== 'object') save.advHard = {};
+  if (!save.advHard[d] || typeof save.advHard[d] !== 'object') save.advHard[d] = emptyAdvHardBag();
+  const bag = save.advHard[d];
+  if (!bag.stars || typeof bag.stars !== 'object') bag.stars = {};
+  if (!bag.fails || typeof bag.fails !== 'object') bag.fails = {};
+  return bag;
+}
+function advUnlockedLevel(diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
+  if (d === 'normal') return clamp(Math.floor(Number(save.unlocked) || 1), 1, MAX_LEVEL);
+  const bag = ensureAdvHardBag(d);
+  return clamp(Math.floor(Number(bag.unlocked) || 1), 1, MAX_LEVEL);
+}
+function setAdvUnlockedLevel(n, diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
+  const lv = clamp(Math.floor(Number(n) || 1), 1, MAX_LEVEL);
+  if (d === 'normal') save.unlocked = lv;
+  else ensureAdvHardBag(d).unlocked = lv;
+}
+function advStarsFor(levelN, diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
+  const n = Math.floor(Number(levelN) || 0);
+  if (d === 'normal') return (save.stars && save.stars[n]) || 0;
+  const bag = ensureAdvHardBag(d);
+  return (bag.stars && bag.stars[n]) || 0;
+}
+function setAdvStarsFor(levelN, stars, diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
+  const n = Math.floor(Number(levelN) || 0);
+  const s = clamp(Math.floor(Number(stars) || 0), 0, 3);
+  if (d === 'normal') {
+    if (!save.stars || typeof save.stars !== 'object') save.stars = {};
+    save.stars[n] = s;
+  } else {
+    const bag = ensureAdvHardBag(d);
+    bag.stars[n] = s;
+  }
+}
+function advFailCountFor(levelN, diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
+  const n = Math.floor(Number(levelN) || 0);
+  if (d === 'normal') return (save.advFails && save.advFails[n]) || 0;
+  const bag = ensureAdvHardBag(d);
+  return (bag.fails && bag.fails[n]) || 0;
+}
+function bumpAdvFail(levelN, diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
+  const n = Math.floor(Number(levelN) || 0);
+  if (d === 'normal') {
+    if (!save.advFails || typeof save.advFails !== 'object') save.advFails = {};
+    save.advFails[n] = (save.advFails[n] || 0) + 1;
+    return save.advFails[n];
+  }
+  const bag = ensureAdvHardBag(d);
+  bag.fails[n] = (bag.fails[n] || 0) + 1;
+  return bag.fails[n];
+}
+function masterBuffLevel(diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
+  if (d === 'normal') return save.advMasterBuff || null;
+  return ensureAdvHardBag(d).masterBuff || null;
+}
+function setMasterBuffLevel(levelN, diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
+  const mb = levelN == null ? null : clamp(Math.floor(Number(levelN) || 0), 1, MAX_LEVEL);
+  if (d === 'normal') save.advMasterBuff = mb;
+  else ensureAdvHardBag(d).masterBuff = mb;
+}
+function isAdvLevelCleared(n, diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
+  const unlocked = advUnlockedLevel(d);
+  if (n < unlocked) return true;
+  if (n === MAX_LEVEL && unlocked >= MAX_LEVEL) {
+    if (advStarsFor(MAX_LEVEL, d) > 0) return true;
+    if (save.advCleared && save.advCleared[d]) return true;
+  }
+  return false;
+}
+function markAdvDiffCleared(diff) {
+  const d = normalizeAdvDiffId(diff);
+  if (!save.advCleared || typeof save.advCleared !== 'object') {
+    save.advCleared = { normal: false, nightmare: false, hell: false };
+  }
+  save.advCleared[d] = true;
+}
+function advDropChanceMul(diff) {
+  return advDiffMeta(diff || currentAdvDiff()).dropMul || 1;
+}
+function advXpMul(diff) {
+  return advDiffMeta(diff || currentAdvDiff()).xpMul || 1;
+}
 const ADVENTURE_ISLANDS = [
   { id: 1, name: 'Oost-eiland', sub: 'Lv 1–10 · landweg', accent: '#5ad06a', theme: 'landweg',
     icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20" stroke="#5ad06a" stroke-width="2" stroke-linecap="round"/><path d="M5 20V13l5-8 5 8v7" fill="#43b25b" stroke="#2d8a3e" stroke-width="1"/><circle cx="18" cy="7" r="2.5" fill="#7cf5ff" opacity=".75"/></svg>' },
@@ -282,16 +460,22 @@ const ADVENTURE_ISLANDS = [
     icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 L17 8 H7 Z" fill="#ffd75e"/><rect x="10" y="8" width="4" height="12" fill="#c97a20"/><path d="M6 11 H18 M7 14 H17 M8 17 H16" stroke="#ffd75e" stroke-width="1.4" stroke-linecap="round"/><rect x="4" y="20" width="16" height="2" rx="1" fill="#8a6030"/></svg>' },
   { id: 5, name: 'Finale-eiland', sub: 'Lv 41–50', accent: '#ff6b9d', theme: 'cyber',
     icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18 L7 10 L12 14 L17 10 L20 18 Z" fill="#ff6b9d" stroke="#ffd75e" stroke-width="1"/><circle cx="12" cy="8" r="2.8" fill="#ffd75e"/><path d="M12 2 v2 M12 20 v2 M2 12 h2 M20 12 h2" stroke="#ffd75e" stroke-width="1.2" opacity=".7"/></svg>' },
+  { id: 6, name: 'Nachtmerrie', sub: 'Lv 51–60 · droomchaos', accent: '#c47aff', theme: 'nachtmerrie',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18c2-6 6-10 8-10s6 4 8 10" fill="none" stroke="#c47aff" stroke-width="1.6"/><circle cx="9" cy="10" r="2.2" fill="#2a1840" stroke="#c47aff" stroke-width="1"/><circle cx="15" cy="10" r="2.2" fill="#2a1840" stroke="#c47aff" stroke-width="1"/><path d="M8 15c1.2 1.4 2.8 2 4 2s2.8-.6 4-2" stroke="#ff6b9d" stroke-width="1.4" fill="none"/></svg>' },
+  { id: 7, name: 'Hel', sub: 'Lv 61–70 · zwavel & lava', accent: '#ff6a3d', theme: 'hel',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 L8 10 L12 16 L16 8 L20 20 Z" fill="#ff6a3d" stroke="#ffd75e" stroke-width="1"/><path d="M9 10c0-3 1.5-5 3-5s3 2 3 5" fill="#ffd75e" opacity=".85"/><ellipse cx="12" cy="20" rx="9" ry="1.6" fill="#5a1010" opacity=".7"/></svg>' },
 ];
 function islandMeta(id) { return ADVENTURE_ISLANDS.find(i => i.id === id) || ADVENTURE_ISLANDS[0]; }
-function islandProgress(islandId) {
+function islandCount() { return ADVENTURE_ISLANDS.length || ISLAND_COUNT; }
+function islandProgress(islandId, diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
   const { start, end } = islandLevelRange(islandId);
   const total = end - start + 1;
   let cleared = 0;
   let stars = 0;
   for (let n = start; n <= end; n++) {
-    if (n < save.unlocked) cleared++;
-    stars += save.stars[n] || 0;
+    if (isAdvLevelCleared(n, d)) cleared++;
+    stars += advStarsFor(n, d);
   }
   return { cleared, total, stars, maxStars: total * 3 };
 }
@@ -301,43 +485,59 @@ function adventureProgressLine() {
   const isl = islandMeta(cur);
   return t('island.progress', {
     cur, name: islandLabel(cur, 'name'), cleared: prog.cleared, total: prog.total,
-    unlocked: save.unlocked, max: MAX_LEVEL,
+    unlocked: advUnlockedLevel(), max: MAX_LEVEL,
   });
 }
-function islandFromLevel(n) { return Math.min(5, Math.max(1, Math.ceil(n / LEVELS_PER_ISLAND))); }
+function islandFromLevel(n) { return Math.min(islandCount(), Math.max(1, Math.ceil(n / LEVELS_PER_ISLAND))); }
 function islandLevelRange(islandId) {
   const start = (islandId - 1) * LEVELS_PER_ISLAND + 1;
   return { start, end: Math.min(MAX_LEVEL, start + LEVELS_PER_ISLAND - 1) };
 }
-function currentAdvIsland() { return islandFromLevel(save.unlocked || 1); }
-function islandUnlocked(islandId) {
+function currentAdvIsland(diff) {
+  return islandFromLevel(advUnlockedLevel(diff || currentAdvDiff()) || 1);
+}
+function islandUnlocked(islandId, diff) {
   if (islandId <= 1) return true;
-  return (save.unlocked || 1) > (islandId - 1) * LEVELS_PER_ISLAND;
+  return advUnlockedLevel(diff || currentAdvDiff()) > (islandId - 1) * LEVELS_PER_ISLAND;
 }
 function adventureWeaponCapForLevel(levelN) {
   const idx = Math.min(ISLAND_WEAPON_CAPS.length - 1, Math.max(0, Math.ceil(levelN / LEVELS_PER_ISLAND) - 1));
   return ISLAND_WEAPON_CAPS[idx];
 }
-function adventureWeaponCap() { return adventureWeaponCapForLevel(save.unlocked || 1); }
-function weaponSkillGated(w) { return w.unlock > adventureWeaponCap(); }
-function weaponUnlockedByLevel(w) { return save.lvl >= w.unlock; }
+function adventureWeaponCap() { return adventureWeaponCapForLevel(advUnlockedLevel('normal') || 1); }
+function weaponSkillGated(w) {
+  // Zone-drops (Nightmare/Hel): bruikbaar zodra verzameld — geen eiland-skill gate
+  if (w && w.dropZone) return false;
+  return w.unlock > adventureWeaponCap();
+}
+function weaponUnlockedByLevel(w) {
+  if (!w) return false;
+  if (w.dropZone) return typeof weaponZoneUnlocked === 'function' ? weaponZoneUnlocked(w) : !!(save.zoneWeapons && save.zoneWeapons[w.id]);
+  return save.lvl >= w.unlock;
+}
 function weaponUsableNow(w) { return weaponUnlockedByLevel(w) && !weaponSkillGated(w); }
 function styleSkillGated(st) { return !!(st.needLvl && st.needLvl > adventureWeaponCap()); }
-function masterBuffActive(levelN) { return save.advMasterBuff === levelN; }
+function masterBuffActive(levelN, diff) {
+  return masterBuffLevel(diff || currentAdvDiff()) === levelN;
+}
 function bestWeaponForAdventureCap(cap) {
   let best = weaponById('vuist');
   for (const base of WEAPONS) {
-    if (save.lvl >= base.unlock && base.unlock <= cap && base.unlock >= best.unlock) best = base;
+    if (base.dropZone) continue; // zone-wapens nooit via level-cap auto-pick
+    if (!weaponUnlockedByLevel(base)) continue;
+    if (base.unlock <= cap && base.unlock >= best.unlock) best = base;
   }
   return applySummonTier(best);
 }
 function playerWeaponForAdventure(levelN) {
   const w = playerWeapon();
+  // Zone-wapens: zodra unlocked, altijd meenemen in avontuur
+  if (w && w.dropZone && weaponUnlockedByLevel(w)) return w;
   const cap = adventureWeaponCapForLevel(levelN);
   if (w.unlock <= cap) return w;
   return bestWeaponForAdventureCap(cap);
 }
-function advFailCount(levelN) { return (save.advFails && save.advFails[levelN]) || 0; }
+function advFailCount(levelN, diff) { return advFailCountFor(levelN, diff || currentAdvDiff()); }
 function wallRecordPaceDelta(g) {
   const best = save.bestWall || 0;
   if (!g || best <= 0) return null;
@@ -375,6 +575,17 @@ function drawJutsuMiniIcon(c, kind, x, y, color) {
     c.lineTo(3.5, -1);
     c.lineTo(0.7, -1);
     c.closePath();
+    c.fill();
+  } else if (behavior === 'slash') {
+    c.beginPath();
+    c.moveTo(-6, 0);
+    c.lineTo(-2, -2.5);
+    c.lineTo(0, 0);
+    c.lineTo(2, 2.5);
+    c.lineTo(6, 0);
+    c.stroke();
+    c.beginPath();
+    c.arc(0, 0, 1.6, 0, TAU);
     c.fill();
   } else if (behavior === 'pull' || behavior === 'meteor') {
     c.beginPath(); c.ellipse(0, 0, 5.2, 3.2, 0, 0, TAU); c.stroke();
@@ -460,6 +671,22 @@ function drawTouchBtnIcon(c, id, x, y, r, jutsuKind) {
         c.lineTo(s * 0.65, -s * 0.2);
         c.lineTo(s * 0.1, -s * 0.2);
         c.closePath();
+        c.fill();
+      } else if (behavior === 'slash') {
+        c.beginPath();
+        c.moveTo(-s, 0);
+        c.lineTo(-s * 0.35, -s * 0.35);
+        c.lineTo(0, 0);
+        c.lineTo(s * 0.35, s * 0.35);
+        c.lineTo(s, 0);
+        c.stroke();
+        c.beginPath();
+        c.moveTo(-s * 0.85, s * 0.25);
+        c.lineTo(0, 0);
+        c.lineTo(s * 0.85, -s * 0.25);
+        c.stroke();
+        c.beginPath();
+        c.arc(0, 0, s * 0.22, 0, TAU);
         c.fill();
       } else if (behavior === 'pull' || behavior === 'meteor') {
         c.beginPath(); c.ellipse(0, 0, s, s * 0.62, 0, 0, TAU); c.stroke();
@@ -583,7 +810,7 @@ function rollHitDamage(attacker, spec, mult) {
   if (k === 'special' || spec.jutsu) {
     critChance += sig.jutsuCrit || 0;
     const jsk = SKILLS.find(s => s.id === spec.jutsu);
-    if (jsk && (jsk.id === 'rinnegan' || jsk.behavior === 'pull')) critChance += 0.05;
+    if (jsk && (jsk.id === 'rinnegan' || jsk.behavior === 'pull' || jsk.behavior === 'slash')) critChance += 0.05;
   }
   if (attacker.isPlayer && typeof game !== 'undefined' && game && game.stageCritBonus) {
     critChance += game.stageCritBonus;
@@ -597,6 +824,7 @@ function rollHitDamage(attacker, spec, mult) {
   if (attacker.isPlayer && k === 'weapon' && attacker.weapon && attacker.weapon.upgradeCrit) {
     critChance += attacker.weapon.upgradeCrit;
   }
+  if (attacker._wpnCritSurgeT > 0) critChance += 0.18;
   critChance = clamp(critChance, 0, 0.48);
   let dmg = spec.dmg * rand(0.9, 1.15) * mult;
   const crit = Math.random() < critChance;
@@ -609,7 +837,7 @@ function projCritMeta(f) {
   const sig = SIG_MODS[prof.sig] || {};
   let critChance = prof.crit + (sig.critAdd || 0) + (sig.jutsuCrit || 0);
   const eqSk = fighterEquippedSkill(f);
-  if (eqSk && (eqSk.id === 'rinnegan' || eqSk.behavior === 'pull')) critChance += 0.05;
+  if (eqSk && (eqSk.id === 'rinnegan' || eqSk.behavior === 'pull' || eqSk.behavior === 'slash')) critChance += 0.05;
   return { critChance: clamp(critChance, 0, 0.42), critMul: prof.critMul };
 }
 
@@ -658,11 +886,38 @@ function resolveProjHit(p) {
   return { dmg: Math.max(1, Math.round(dmg)), crit };
 }
 
+/** Rinnegan lichtschits: horizontale strook L+R, dikte tapert met afstand tot centrum. */
+function slashWaveHalfHeight(p, dist) {
+  const r0 = p.r0 || p.r || 42;
+  const maxR = Math.max(1, p.slashMaxReach || 460);
+  const t = clamp(Math.abs(dist) / maxR, 0, 1);
+  return Math.max(5, r0 * (1 - t * 0.82));
+}
+
+function projHitsTarget(p, tx, ty, tr) {
+  if (p.slashWave) {
+    const dx = tx - p.x;
+    const dy = ty - p.y;
+    const reach = p.slashReach || 0;
+    if (Math.abs(dx) > reach + tr) return false;
+    const halfH = slashWaveHalfHeight(p, dx);
+    return Math.abs(dy) <= halfH + tr * 0.9;
+  }
+  return (p.x - tx) ** 2 + (p.y - ty) ** 2 < (p.r + tr) ** 2;
+}
+
+function projKnockDir(p, tgtX) {
+  if (p.slashWave) return Math.sign((tgtX || 0) - p.x) || 1;
+  return Math.sign(p.vx || 1) || 1;
+}
+
 function projStrikeFighter(game, p, tgt, col) {
   if (!tgt || !tgt.alive) return;
   const sk = (typeof skillExists === 'function' && skillExists(p.kind)) ? skillById(p.kind) : null;
   const hit = resolveProjHit(p);
-  const kb = Math.sign(p.vx || 1) * (p.kind === 'rinnegan' ? 300 : 260);
+  const dir = projKnockDir(p, tgt.x);
+  const kbBase = p.kind === 'rinnegan' ? 340 : 260;
+  const kb = dir * kbBase * (p.kbMul || 1);
   const dealt = tgt.takeDamage(hit.dmg, kb, game, {
     projWeaponId: (p.kind === 'shuriken' || p.kind === 'boemerang') ? (p.throwId || p.kind) : null,
   });
@@ -671,10 +926,13 @@ function projStrikeFighter(game, p, tgt, col) {
   }
   game.floater(tgt.x, tgt.y - 115, '-' + dealt, col, 16);
   if (hit.crit) applyCritFx(game, tgt.x, tgt.y);
-  if (p.pull) tgt.vx += Math.sign(p.vx || 1) * 160;
-  spawnJutsuImpactFx(game, p.x, p.y, p.kind, 'full');
+  if (p.pull) tgt.vx += dir * 160;
+  spawnJutsuImpactFx(game, p.x + (p.slashWave ? dir * Math.min(40, p.slashReach || 0) : 0), p.y, p.kind, 'full');
   if (sk && sk.behavior === 'orb' && sk.id === 'rasengan' && !fxLite() && !motionReduced()) {
     game.freezeT = Math.max(game.freezeT || 0, 0.045);
+  }
+  if (sk && sk.behavior === 'slash' && !fxLite() && !motionReduced()) {
+    game.freezeT = Math.max(game.freezeT || 0, 0.04);
   }
   if (p.hitSet) p.hitSet.add(tgt);
   else if (!p.pierce) p.life = 0;
@@ -774,6 +1032,16 @@ function readSaveJson(raw) {
     }
     merged.tipsSeen = sanitizeTipsSeen(parsed.tipsSeen);
     merged.advFails = Object.assign({}, parsed.advFails || {});
+    merged.zoneWeapons = Object.assign({}, parsed.zoneWeapons || {});
+    merged.advCleared = Object.assign(
+      { normal: false, nightmare: false, hell: false },
+      (parsed.advCleared && typeof parsed.advCleared === 'object') ? parsed.advCleared : {}
+    );
+    merged.advHard = {
+      nightmare: Object.assign(emptyAdvHardBag(), (parsed.advHard && parsed.advHard.nightmare) || {}),
+      hell: Object.assign(emptyAdvHardBag(), (parsed.advHard && parsed.advHard.hell) || {}),
+    };
+    if (typeof parsed.advDiff === 'string') merged.advDiff = parsed.advDiff;
     if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
     if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;
@@ -1033,7 +1301,8 @@ function sanitizeTipsSeen(raw) {
 /** Corrupte / gemanipuleerde saves veilig maken (localStorage + import). */
 function sanitizeSave(s) {
   // Literal max — nooit TDZ op MAX_LEVEL (anders crashen alle click-handlers)
-  const maxLevel = 50;
+  const maxLevel = 70;
+  const maxIsland = 7;
   const skillSnap = typeof snapshotSkillUpgradeTracks === 'function' ? snapshotSkillUpgradeTracks(s) : null;
   const itemSnap = typeof snapshotItemUpgradeTracks === 'function' ? snapshotItemUpgradeTracks(s) : null;
   const out = Object.assign({}, DEFAULT_SAVE, s);
@@ -1041,7 +1310,64 @@ function sanitizeSave(s) {
   out.lvl = clamp(Math.floor(Number(out.lvl) || 1), 1, 500);
   out.xp = clamp(Math.floor(Number(out.xp) || 0), 0, 999999);
   out.unlocked = clamp(Math.floor(Number(out.unlocked) || 1), 1, maxLevel);
-  out.advIsland = clamp(Math.floor(Number(out.advIsland) || 0), 0, 5);
+  out.advIsland = clamp(Math.floor(Number(out.advIsland) || 0), 0, maxIsland);
+  out.advDiff = normalizeAdvDiffId(out.advDiff);
+  const clearedIn = (out.advCleared && typeof out.advCleared === 'object') ? out.advCleared : {};
+  out.advCleared = {
+    normal: !!clearedIn.normal,
+    nightmare: !!clearedIn.nightmare,
+    hell: !!clearedIn.hell,
+  };
+  // Migratie: campagne-einde gehaald (Lv70 of legacy Lv50) → Nightmare vrij
+  if (!out.advCleared.normal) {
+    const stars = out.stars || {};
+    const sFinal = Number(stars[maxLevel]) || 0;
+    const sLegacy = Number(stars[50]) || 0;
+    if ((out.unlocked >= maxLevel && sFinal > 0) || (out.unlocked >= 50 && sLegacy > 0)) {
+      out.advCleared.normal = true;
+    }
+  }
+  const sanitizeHardBag = (raw) => {
+    const bag = emptyAdvHardBag();
+    const src = (raw && typeof raw === 'object') ? raw : {};
+    bag.unlocked = clamp(Math.floor(Number(src.unlocked) || 1), 1, maxLevel);
+    const stars = {};
+    for (const [k, v] of Object.entries(src.stars || {})) {
+      const n = parseInt(k, 10);
+      if (n >= 1 && n <= maxLevel) stars[n] = clamp(Math.floor(Number(v) || 0), 0, 3);
+    }
+    bag.stars = stars;
+    const fails = {};
+    for (const [k, v] of Object.entries(src.fails || {})) {
+      const n = parseInt(k, 10);
+      if (n >= 1 && n <= maxLevel) fails[n] = clamp(Math.floor(Number(v) || 0), 0, 99);
+    }
+    bag.fails = fails;
+    const mb = parseInt(src.masterBuff, 10);
+    bag.masterBuff = (Number.isFinite(mb) && mb >= 1 && mb <= maxLevel) ? mb : null;
+    return bag;
+  };
+  const hardIn = (out.advHard && typeof out.advHard === 'object') ? out.advHard : {};
+  out.advHard = {
+    nightmare: sanitizeHardBag(hardIn.nightmare),
+    hell: sanitizeHardBag(hardIn.hell),
+  };
+  const hardCleared = (bag) => {
+    if (!bag) return false;
+    if (bag.unlocked >= maxLevel && (bag.stars[maxLevel] || 0) > 0) return true;
+    // legacy: oude eindbaas Lv50
+    if (bag.unlocked >= 50 && (bag.stars[50] || 0) > 0) return true;
+    return false;
+  };
+  if (hardCleared(out.advHard.nightmare)) out.advCleared.nightmare = true;
+  if (hardCleared(out.advHard.hell)) out.advCleared.hell = true;
+  const canPickDiff = (id) => {
+    if (id === 'normal') return true;
+    if (id === 'nightmare') return !!out.advCleared.normal;
+    if (id === 'hell') return !!out.advCleared.nightmare;
+    return false;
+  };
+  if (!canPickDiff(out.advDiff)) out.advDiff = 'normal';
   const cleanFails = {};
   for (const [k, v] of Object.entries(out.advFails || {})) {
     const n = parseInt(k, 10);
@@ -1051,7 +1377,7 @@ function sanitizeSave(s) {
   const mb = parseInt(out.advMasterBuff, 10);
   out.advMasterBuff = (Number.isFinite(mb) && mb >= 1 && mb <= maxLevel) ? mb : null;
   if (!out.advIsland && out.unlocked > 1) {
-    out.advIsland = Math.min(5, Math.floor((out.unlocked - 1) / LEVELS_PER_ISLAND));
+    out.advIsland = Math.min(maxIsland, Math.floor((out.unlocked - 1) / LEVELS_PER_ISLAND));
   }
   out.trainWins = clamp(Math.floor(Number(out.trainWins) || 0), 0, 9999);
   out.bestWall = clamp(Math.floor(Number(out.bestWall) || 0), 0, 999999);
@@ -1078,22 +1404,34 @@ function sanitizeSave(s) {
     const lp = out.lastPlay;
     if (!['adventure', 'training', 'wall', 'versus', 'coinrun'].includes(lp.mode)) out.lastPlay = null;
     else {
-      const advCap = lp.mode === 'adventure' ? out.unlocked : maxLevel;
+      const advCap = maxLevel;
       let p1 = typeof lp.p1 === 'string' ? lp.p1.slice(0, 24) : undefined;
       let p2 = typeof lp.p2 === 'string' ? lp.p2.slice(0, 24) : undefined;
       if (typeof VS_ROSTER !== 'undefined') {
         if (p1 && !VS_ROSTER.some(r => r.id === p1)) p1 = undefined;
         if (p2 && !VS_ROSTER.some(r => r.id === p2)) p2 = undefined;
       }
+      const diffId = (lp.mode === 'adventure' && ADV_DIFF_IDS.includes(lp.difficulty))
+        ? lp.difficulty : undefined;
       out.lastPlay = {
         mode: lp.mode,
         level: clamp(Math.floor(Number(lp.level) || 1), 1, advCap),
         p1,
         p2,
       };
+      if (diffId) out.lastPlay.difficulty = diffId;
     }
   } else out.lastPlay = null;
   if (!WEAPONS.some(w => w.id === out.weapon)) out.weapon = 'vuist';
+
+  // Zone-wapens (Nachtmerrie / Hel drops)
+  const cleanZone = {};
+  for (const [k, v] of Object.entries(out.zoneWeapons || {})) {
+    if (!v) continue;
+    const w = WEAPONS.find(x => x.id === k);
+    if (w && w.dropZone) cleanZone[k] = 1;
+  }
+  out.zoneWeapons = cleanZone;
 
   // Summons: alleen bekende wapens, geldige tiers, en alleen echte upgrades
   const cleanSummons = {};
@@ -1378,12 +1716,15 @@ const I18N = {
       1: { name: 'Oost-eiland', sub: 'Lv 1–10' }, 2: { name: 'Vuur-eiland', sub: 'Lv 11–20' },
       3: { name: 'Neon-eiland', sub: 'Lv 21–30' }, 4: { name: 'Tempel-eiland', sub: 'Lv 31–40' },
       5: { name: 'Finale-eiland', sub: 'Lv 41–50' },
-      progress: 'Eiland {cur}/5 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
+      6: { name: 'Nachtmerrie', sub: 'Lv 51–60' },
+      7: { name: 'Hel', sub: 'Lv 61–70' },
+      progress: 'Eiland {cur}/7 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
     },
-    rarity: { common: 'Gewoon', uncommon: 'Ongewoon', rare: 'Zeldzaam', epic: 'Episch', legendary: 'Legendarisch', mythic: 'Mythisch' },
+    rarity: { common: 'Gewoon', uncommon: 'Ongewoon', rare: 'Zeldzaam', epic: 'Episch', legendary: 'Legendarisch', mythic: 'Mythisch', nightmare: 'Nachtmerrie', hell: 'Hel' },
     audio: {
       musicOff: 'Muziek uit', sfxOff: 'Geluid uit', musicPct: 'Muziek {pct}%', sfxPct: 'SFX {pct}%',
       allMuted: 'Alles stil', pauseDuck: 'BGM zacht', pauseTrack: 'Track: {track}',
+      ctxSuspended: 'Tik slider voor geluid (iPad)',
       track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Gevecht', elite: 'Elite', boss: 'Baas', wall: 'Muur', training: 'Training', coinrun: 'Mats' },
     },
@@ -1455,12 +1796,15 @@ const I18N = {
       1: { name: 'East island', sub: 'Lv 1–10' }, 2: { name: 'Fire island', sub: 'Lv 11–20' },
       3: { name: 'Neon island', sub: 'Lv 21–30' }, 4: { name: 'Temple island', sub: 'Lv 31–40' },
       5: { name: 'Final island', sub: 'Lv 41–50' },
-      progress: 'Island {cur}/5 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
+      6: { name: 'Nightmare', sub: 'Lv 51–60' },
+      7: { name: 'Hell', sub: 'Lv 61–70' },
+      progress: 'Island {cur}/7 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
     },
-    rarity: { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary', mythic: 'Mythic' },
+    rarity: { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary', mythic: 'Mythic', nightmare: 'Nightmare', hell: 'Hell' },
     audio: {
       musicOff: 'Music off', sfxOff: 'Sound off', musicPct: 'Music {pct}%', sfxPct: 'SFX {pct}%',
       allMuted: 'All muted', pauseDuck: 'BGM ducked', pauseTrack: 'Track: {track}',
+      ctxSuspended: 'Tap slider to wake audio (iPad)',
       track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Battle', elite: 'Elite', boss: 'Boss', wall: 'Wall', training: 'Training', coinrun: 'Mats' },
     },
@@ -1524,9 +1868,11 @@ const I18N = {
       1: { name: 'Ost-Insel', sub: 'Lv 1–10' }, 2: { name: 'Feuer-Insel', sub: 'Lv 11–20' },
       3: { name: 'Neon-Insel', sub: 'Lv 21–30' }, 4: { name: 'Tempel-Insel', sub: 'Lv 31–40' },
       5: { name: 'Finale-Insel', sub: 'Lv 41–50' },
-      progress: 'Insel {cur}/5 · {name} · {cleared}/{total} · Lv {unlocked}/{max}',
+      6: { name: 'Albtraum', sub: 'Lv 51–60' },
+      7: { name: 'Hölle', sub: 'Lv 61–70' },
+      progress: 'Insel {cur}/7 · {name} · {cleared}/{total} · Lv {unlocked}/{max}',
     },
-    rarity: { common: 'Gewöhnlich', uncommon: 'Ungewöhnlich', rare: 'Selten', epic: 'Episch', legendary: 'Legendär', mythic: 'Mythisch' },
+    rarity: { common: 'Gewöhnlich', uncommon: 'Ungewöhnlich', rare: 'Selten', epic: 'Episch', legendary: 'Legendär', mythic: 'Mythisch', nightmare: 'Albtraum', hell: 'Hölle' },
     audio: { musicOff: 'Musik aus', sfxOff: 'Sound aus', musicPct: 'Musik {pct}%', sfxPct: 'SFX {pct}%', bgmDuckPause: ' · BGM gedämpft' },
   },
   fr: {
@@ -1588,9 +1934,11 @@ const I18N = {
       1: { name: 'Île de l\'Est', sub: 'Lv 1–10' }, 2: { name: 'Île de Feu', sub: 'Lv 11–20' },
       3: { name: 'Île Néon', sub: 'Lv 21–30' }, 4: { name: 'Île Temple', sub: 'Lv 31–40' },
       5: { name: 'Île Finale', sub: 'Lv 41–50' },
-      progress: 'Île {cur}/5 · {name} · {cleared}/{total} · Lv {unlocked}/{max}',
+      6: { name: 'Cauchemar', sub: 'Lv 51–60' },
+      7: { name: 'Enfer', sub: 'Lv 61–70' },
+      progress: 'Île {cur}/7 · {name} · {cleared}/{total} · Lv {unlocked}/{max}',
     },
-    rarity: { common: 'Commun', uncommon: 'Peu commun', rare: 'Rare', epic: 'Épique', legendary: 'Légendaire', mythic: 'Mythique' },
+    rarity: { common: 'Commun', uncommon: 'Peu commun', rare: 'Rare', epic: 'Épique', legendary: 'Légendaire', mythic: 'Mythique', nightmare: 'Cauchemar', hell: 'Enfer' },
     audio: { musicOff: 'Musique off', sfxOff: 'Son off', musicPct: 'Musique {pct}%', sfxPct: 'SFX {pct}%', bgmDuckPause: ' · BGM atténué' },
   },
   es: {
@@ -1652,9 +2000,11 @@ const I18N = {
       1: { name: 'Isla Este', sub: 'Lv 1–10' }, 2: { name: 'Isla Fuego', sub: 'Lv 11–20' },
       3: { name: 'Isla Neón', sub: 'Lv 21–30' }, 4: { name: 'Isla Templo', sub: 'Lv 31–40' },
       5: { name: 'Isla Final', sub: 'Lv 41–50' },
-      progress: 'Isla {cur}/5 · {name} · {cleared}/{total} · Lv {unlocked}/{max}',
+      6: { name: 'Pesadilla', sub: 'Lv 51–60' },
+      7: { name: 'Infierno', sub: 'Lv 61–70' },
+      progress: 'Isla {cur}/7 · {name} · {cleared}/{total} · Lv {unlocked}/{max}',
     },
-    rarity: { common: 'Común', uncommon: 'Poco común', rare: 'Raro', epic: 'Épico', legendary: 'Legendario', mythic: 'Mítico' },
+    rarity: { common: 'Común', uncommon: 'Poco común', rare: 'Raro', epic: 'Épico', legendary: 'Legendario', mythic: 'Mítico', nightmare: 'Pesadilla', hell: 'Infierno' },
     audio: { musicOff: 'Música off', sfxOff: 'Sonido off', musicPct: 'Música {pct}%', sfxPct: 'SFX {pct}%', bgmDuckPause: ' · BGM atenuado' },
   },
 };
@@ -2294,6 +2644,10 @@ const ACHIEVEMENTS = [
     test: s => (s.stats.trainMaxCombo || 0) >= 10 },
   { id: 'lv50', name: 'Legende', desc: 'Unlock level 50', icon: '👑',
     test: s => s.unlocked >= 50 },
+  { id: 'lv70', name: 'Hel-legende', desc: 'Unlock level 70 (Hel)', icon: '🔥',
+    test: s => s.unlocked >= 70 },
+  { id: 'zoneWeapons10', name: 'Zone-verzamelaar', desc: 'Verzamel 10 Nachtmerrie/Hel-wapens', icon: '⚔️',
+    test: s => Object.keys(s.zoneWeapons || {}).length >= 10 },
   { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd', icon: '📅',
     test: s => (s.stats.dailyBonusCount || 0) >= 7 },
   { id: 'vs5', name: 'Duelist', desc: '5× 2-speler duel gespeeld', icon: '🥊',
@@ -3070,6 +3424,10 @@ function noteRunLootLevelUp(loot, newLvl) {
   const w = WEAPONS.find(x => x.unlock === newLvl);
   if (w) loot.weapons.push(w.id);
 }
+function noteRunLootWeapon(loot, weaponId) {
+  if (!loot || !weaponId || !loot.weapons) return;
+  if (!loot.weapons.includes(weaponId)) loot.weapons.push(weaponId);
+}
 
 function runLootHasItems(loot) {
   if (!loot) return false;
@@ -3092,6 +3450,7 @@ function runLootSummaryShort(loot) {
   if (pickN) parts.push(`💊${pickN}`);
   if (loot.finishers) parts.push(`③${loot.finishers}`);
   if (loot.levelUps) parts.push(`↑${loot.levelUps}`);
+  if (loot.weapons && loot.weapons.length) parts.push(`⚔${loot.weapons.length}`);
   if (loot.petCoins) parts.push(`🪙${loot.petCoins}`);
   return parts.join(' · ');
 }
@@ -4157,7 +4516,10 @@ function exportSaveFilename() {
 function recordLastPlay(mode, opts) {
   opts = opts || {};
   const lp = { mode };
-  if (mode === 'adventure') lp.level = opts.level || (game && game.level && game.level.n) || save.unlocked;
+  if (mode === 'adventure') {
+    lp.level = opts.level || (game && game.level && game.level.n) || advUnlockedLevel();
+    lp.difficulty = opts.difficulty || (game && game.advDiff) || currentAdvDiff();
+  }
   if (mode === 'versus') { lp.p1 = opts.p1 || vsSelect.p1; lp.p2 = opts.p2 || vsSelect.p2; }
   save.lastPlay = lp;
   persist();
@@ -4168,6 +4530,7 @@ function resumeLastPlay() {
   if (!lp || !lp.mode) return false;
   try {
     if (lp.mode === 'adventure') {
+      if (lp.difficulty && advDiffAvailable(lp.difficulty)) setAdvDiff(lp.difficulty);
       gokGooiStartLevel(lp.level || 1);
     } else if (lp.mode === 'versus') {
       startGame('versus', { p1: lp.p1, p2: lp.p2 });
@@ -4183,12 +4546,13 @@ function resumeLastPlay() {
 
 function startAdventureFromGamble(skipGamble) {
   try {
-    const level = pendingAdvLevel || save.unlocked || 1;
+    const diff = currentAdvDiff();
+    const level = pendingAdvLevel || advUnlockedLevel(diff) || 1;
     const gamble = skipGamble ? null : lastGambleRoll;
     pendingAdvLevel = null;
     // Busy pas vrijgeven via cancel ná startGame (startGame roept cancel zelf)
     try { UI.hideGambleRollFlash(); } catch (_) {}
-    startGame('adventure', { level, gamble });
+    startGame('adventure', { level, gamble, difficulty: diff });
   } catch (err) {
     cancelGambleStart();
     sfReportError('gambleStart', err, 'Avontuur starten mislukt — kies level opnieuw');
@@ -4252,7 +4616,7 @@ function gokGooiStartLevel(n) {
   gokStartBusy = true;
   const startGen = gambleStartGen;
   try {
-    pendingAdvLevel = Math.max(1, Math.min(MAX_LEVEL, Number(n) || save.unlocked || 1));
+    pendingAdvLevel = Math.max(1, Math.min(MAX_LEVEL, Number(n) || advUnlockedLevel() || 1));
     AudioSys.init();
     lastGambleRoll = rollStageGamble();
     playGambleRollSfx(lastGambleRoll);
@@ -4288,11 +4652,11 @@ function gokGooiStartFromScreen() {
   gokStartBusy = true;
   const startGen = gambleStartGen;
   try {
-    if (pendingAdvLevel == null) pendingAdvLevel = save.unlocked || 1;
+    if (pendingAdvLevel == null) pendingAdvLevel = advUnlockedLevel() || 1;
     AudioSys.init();
     lastGambleRoll = rollStageGamble();
     playGambleRollSfx(lastGambleRoll);
-    try { UI.renderGamble(pendingAdvLevel || save.unlocked || 1); } catch (_) {}
+    try { UI.renderGamble(pendingAdvLevel || advUnlockedLevel() || 1); } catch (_) {}
     const sumLine = document.getElementById('gambleSumLine');
     if (sumLine) sumLine.textContent = t('ui.gambleGoStart');
     try { UI.showGambleRollFlash(lastGambleRoll); } catch (_) {}
@@ -4959,6 +5323,17 @@ function weaponNextUnlockHtml() {
   }
   if (!next) return '';
   const rar = rarityOf(next.rarity);
+  const zone = weaponDropZoneOf(next);
+  if (zone) {
+    const owned = zoneWeaponsFor(zone.id).filter(w => weaponZoneUnlocked(w)).length;
+    const tot = zoneWeaponsFor(zone.id).length;
+    const pct = Math.min(100, Math.round((owned / Math.max(1, tot)) * 100));
+    return `<div class="dex-ach-next" style="margin-top:10px;padding:8px 10px;border-radius:12px;background:rgba(196,122,255,.08);border:1px solid ${zone.color}55">` +
+      `<div style="font-size:11px;font-weight:800;color:${zone.color};margin-bottom:4px">Zone-drop · ${weaponLabel(next)}</div>` +
+      `<div style="font-size:12px;opacity:.85"><span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(next.rarity)}</span>` +
+      ` · alleen in <b>${zone.name}</b> (Lv ${zone.minLevel}–${zone.maxLevel}) · ${owned}/${tot}</div>` +
+      `<div class="xpline" style="margin-top:6px;height:6px"><div style="width:${pct}%;background:${zone.color}"></div></div></div>`;
+  }
   const need = Math.max(0, next.unlock - save.lvl);
   const pct = Math.min(100, Math.round((save.lvl / next.unlock) * 100));
   return `<div class="dex-ach-next" style="margin-top:10px;padding:8px 10px;border-radius:12px;background:rgba(124,245,255,.06);border:1px solid rgba(124,245,255,.22)">` +
@@ -5030,10 +5405,14 @@ const RARITIES = {
   epic:      { id: 'epic',      name: 'Episch',     color: '#b06ae0', glow: 'rgba(176,106,224,.5)', order: 3 },
   legendary: { id: 'legendary', name: 'Legendarisch', color: '#ffd75e', glow: 'rgba(255,215,94,.55)', order: 4 },
   mythic:    { id: 'mythic',    name: 'Mythisch',   color: '#ff6b9d', glow: 'rgba(255,107,157,.6)', order: 5 },
+  nightmare: { id: 'nightmare', name: 'Nachtmerrie', color: '#c47aff', glow: 'rgba(196,122,255,.65)', order: 6 },
+  hell:      { id: 'hell',      name: 'Hel',        color: '#ff6a3d', glow: 'rgba(255,106,61,.7)', order: 7 },
 };
 const rarityOf = id => RARITIES[id] || RARITIES.common;
-const rarityHpBonus = r => ({ common: 3, uncommon: 5, rare: 8, epic: 12, legendary: 18, mythic: 25 }[r] || 5);
-
+const rarityHpBonus = r => ({
+  common: 3, uncommon: 5, rare: 8, epic: 12, legendary: 18, mythic: 25,
+  nightmare: 32, hell: 40,
+}[r] || 5);
 /* --- src/data/weapons.js --- */
 /* ============================== WAPENS ================================= */
 const WEAPONS = [
@@ -5063,9 +5442,411 @@ const WEAPONS = [
   { id: 'void',      name: 'Voidklaauw',      dmg: 2.5,  range: 64, speed: 1.25, unlock: 40, rarity: 'mythic',    desc: 'Mythische klauw' },
   { id: 'sterkling', name: 'Sterkling',       dmg: 2.75, range: 66, speed: 1.12, unlock: 44, rarity: 'mythic',    desc: 'Hemelmetaal · krits' },
   { id: 'guvve',     name: 'Guvvedukkie-stok', dmg: 3.1,  range: 66, speed: 1.0,  unlock: 48, rarity: 'mythic',    desc: 'Quak. Bitte. Boom.' },
+
+  /* —— Nachtmerrie-only (eiland 6 · Lv 51–60) —— */
+  { id: 'nachtkaars', name: 'Nachtkaars', dmg: 3.2, range: 58, speed: 1.08, unlock: 51, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'burn', effectLabel: 'Brandende angst',
+    desc: 'Drippy wax · brand DoT' },
+  { id: 'droomprikker', name: 'Droomprikker', dmg: 3.05, range: 62, speed: 1.22, unlock: 52, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'drowsy', effectLabel: 'Slaperige prik',
+    desc: 'Naald van slapeloosheid' },
+  { id: 'spooklepel', name: 'Spooklepel', dmg: 3.15, range: 54, speed: 1.18, unlock: 52, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'flipkb', effectLabel: 'Omgekeerde klap',
+    desc: 'Eet je bang · flip-kb' },
+  { id: 'nachtmerriesok', name: 'Nachtmerrie-sok', dmg: 3.0, range: 50, speed: 1.32, unlock: 53, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'confuse', effectLabel: 'Sok-slap',
+    desc: 'Natte sok · verwarring' },
+  { id: 'echotrompet', name: 'Echo-trompet', dmg: 3.25, range: 72, speed: 0.95, unlock: 54, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'echo', effectLabel: 'Echo-boom',
+    desc: 'Blaast een schaduw-echo' },
+  { id: 'schaduwbanaan', name: 'Schaduw-banaan', dmg: 3.1, range: 60, speed: 1.2, unlock: 54, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'slip', effectLabel: 'Schil-slip',
+    desc: 'Valpartij verzekerd' },
+  { id: 'voidvork', name: 'Void-vork', dmg: 3.35, range: 56, speed: 1.1, unlock: 55, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'lifesteal', effectLabel: 'Leegte-hap',
+    desc: 'Steelt HP uit de leegte' },
+  { id: 'angstaccordeon', name: 'Angst-accordeon', dmg: 3.2, range: 70, speed: 0.9, unlock: 56, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'pull', effectLabel: 'Zuig-akkoord',
+    desc: 'Trekt monsters dichterbij' },
+  { id: 'slaapkussen', name: 'Slaap-kussen', dmg: 3.4, range: 52, speed: 0.85, unlock: 56, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'freeze', effectLabel: 'Kussen-knockout',
+    desc: 'Pluizig · korte freeze' },
+  { id: 'spooktoaster', name: 'Spook-toaster', dmg: 3.45, range: 58, speed: 1.05, unlock: 57, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'popburn', effectLabel: 'Toast-pop',
+    desc: 'Pop! · brand + knal' },
+  { id: 'droomspiegel', name: 'Droomspiegel', dmg: 3.3, range: 64, speed: 1.15, unlock: 58, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'critsurge', effectLabel: 'Spiegel-krit',
+    desc: 'Weerspiegelt krits' },
+  { id: 'nachtuilvleugel', name: 'Nachtuil-vleugel', dmg: 3.15, range: 68, speed: 1.28, unlock: 58, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'flutter', effectLabel: 'Vleugel-flurry',
+    desc: 'Fladder-multi-hit' },
+  { id: 'waanballon', name: 'Waanballon', dmg: 3.5, range: 55, speed: 1.0, unlock: 59, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'balloon', effectLabel: 'POP-finisher',
+    desc: 'Finisher = knal' },
+  { id: 'schriktandwiel', name: 'Schrik-tandwiel', dmg: 3.55, range: 62, speed: 0.92, unlock: 60, rarity: 'nightmare',
+    dropZone: 'nightmare', effect: 'bleed', effectLabel: 'Tandwiel-bleed',
+    desc: 'Rammelende DoT' },
+
+  /* —— Hel-only (eiland 7 · Lv 61–70) —— */
+  { id: 'hellevork', name: 'Hellevork', dmg: 3.7, range: 66, speed: 1.05, unlock: 61, rarity: 'hell',
+    dropZone: 'hell', effect: 'inferno', effectLabel: 'Zwavel-brand',
+    desc: 'Drie hete tanden' },
+  { id: 'lavalepel', name: 'Lava-lepel', dmg: 3.65, range: 58, speed: 1.12, unlock: 62, rarity: 'hell',
+    dropZone: 'hell', effect: 'magma', effectLabel: 'Magma-plas',
+    desc: 'Schept lava onder voeten' },
+  { id: 'duiveltrommel', name: 'Duivel-trommel', dmg: 3.8, range: 70, speed: 0.82, unlock: 62, rarity: 'hell',
+    dropZone: 'hell', effect: 'quake', effectLabel: 'Hel-beuk',
+    desc: 'AOE aardbeving' },
+  { id: 'zwavelzeep', name: 'Zwavel-zeep', dmg: 3.55, range: 52, speed: 1.3, unlock: 63, rarity: 'hell',
+    dropZone: 'hell', effect: 'soapburn', effectLabel: 'Glad + heet',
+    desc: 'Uitglijden in de hel' },
+  { id: 'infernoijsje', name: 'Inferno-ijsje', dmg: 3.75, range: 54, speed: 1.15, unlock: 64, rarity: 'hell',
+    dropZone: 'hell', effect: 'frostfire', effectLabel: 'IJs → vuur',
+    desc: 'Eerst koud, dan heet' },
+  { id: 'helhamsterwiel', name: 'Hel-hamsterwiel', dmg: 3.6, range: 64, speed: 1.25, unlock: 64, rarity: 'hell',
+    dropZone: 'hell', effect: 'spinchaos', effectLabel: 'Wiel-chaos',
+    desc: 'Rolt over alles' },
+  { id: 'brimstonebanaan', name: 'Brimstone-banaan', dmg: 3.7, range: 60, speed: 1.18, unlock: 65, rarity: 'hell',
+    dropZone: 'hell', effect: 'explodepeel', effectLabel: 'Explosieve schil',
+    desc: 'Banaan die knalt' },
+  { id: 'demondoekje', name: 'Demon-doekje', dmg: 3.85, range: 50, speed: 1.35, unlock: 66, rarity: 'hell',
+    dropZone: 'hell', effect: 'execute', effectLabel: 'Wipe-execute',
+    desc: 'Veegt lage HP weg' },
+  { id: 'asaccordeon', name: 'As-accordeon', dmg: 3.8, range: 74, speed: 0.88, unlock: 66, rarity: 'hell',
+    dropZone: 'hell', effect: 'ashpull', effectLabel: 'As-zuiging',
+    desc: 'Trekt + brandt' },
+  { id: 'chiliketting', name: 'Chili-ketting', dmg: 3.75, range: 76, speed: 1.08, unlock: 67, rarity: 'hell',
+    dropZone: 'hell', effect: 'chainburn', effectLabel: 'Chili-ketting',
+    desc: 'Brand springt over' },
+  { id: 'helgitaar', name: 'Hel-gitaar', dmg: 3.9, range: 72, speed: 0.95, unlock: 68, rarity: 'hell',
+    dropZone: 'hell', effect: 'sonic', effectLabel: 'Sonic-solo',
+    desc: 'Powerchord-AOE' },
+  { id: 'pyroeend', name: 'Pyro-eend', dmg: 4.0, range: 68, speed: 1.02, unlock: 69, rarity: 'hell',
+    dropZone: 'hell', effect: 'quakboom', effectLabel: 'QUAK-BOOM',
+    desc: 'Guvve’s hel-cousin' },
+  { id: 'apocalypslepel', name: 'Apocalyps-lepel', dmg: 4.2, range: 70, speed: 0.78, unlock: 70, rarity: 'hell',
+    dropZone: 'hell', effect: 'meteor', effectLabel: 'Lepel-meteor',
+    desc: 'Eet de wereld leeg' },
 ];
 const weaponById = id => WEAPONS.find(w => w.id === id) || WEAPONS[0];
 
+const WEAPON_DROP_ZONES = {
+  nightmare: { id: 'nightmare', name: 'Nachtmerrie', minLevel: 51, maxLevel: 60, color: '#c47aff', accent: '#2a1840' },
+  hell: { id: 'hell', name: 'Hel', minLevel: 61, maxLevel: 70, color: '#ff6a3d', accent: '#5a1010' },
+};
+
+function weaponDropZoneOf(w) {
+  const id = typeof w === 'string' ? w : (w && w.dropZone);
+  return (id && WEAPON_DROP_ZONES[id]) || null;
+}
+
+function adventureDropZoneForLevel(levelN, diffId) {
+  const n = Math.floor(Number(levelN) || 0);
+  const diff = typeof normalizeAdvDiffId === 'function'
+    ? normalizeAdvDiffId(diffId)
+    : (diffId || 'normal');
+  // Difficulty modes 2.0 / 3.0: drops volgen de tab, niet alleen eiland 6–7
+  if (diff === 'hell') return 'hell';
+  if (diff === 'nightmare') return 'nightmare';
+  if (n >= 61 && n <= 70) return 'hell';
+  if (n >= 51 && n <= 60) return 'nightmare';
+  return null;
+}
+
+function isZoneWeapon(w) {
+  const base = typeof w === 'string' ? weaponById(w) : w;
+  return !!(base && base.dropZone);
+}
+
+function zoneWeaponsFor(zone) {
+  return WEAPONS.filter(w => w.dropZone === zone);
+}
+
+function weaponEffectLabel(w) {
+  const base = typeof w === 'string' ? weaponById(w) : w;
+  if (!base || !base.effect) return '';
+  if (base.effectLabel) return base.effectLabel;
+  return String(base.effect);
+}
+
+/** Zone-wapens: alleen via drop in Nachtmerrie/Hel (save.zoneWeapons). */
+function weaponZoneUnlocked(w) {
+  const base = typeof w === 'string' ? weaponById(w) : w;
+  if (!base || !base.dropZone) return true;
+  return !!(typeof save !== 'undefined' && save.zoneWeapons && save.zoneWeapons[base.id]);
+}
+
+function grantZoneWeapon(weaponId, opts) {
+  opts = opts || {};
+  const w = weaponById(weaponId);
+  if (!w || !w.dropZone) return false;
+  if (!save.zoneWeapons || typeof save.zoneWeapons !== 'object') save.zoneWeapons = {};
+  if (save.zoneWeapons[w.id]) return false;
+  save.zoneWeapons[w.id] = 1;
+  try { persist(); } catch (_) {}
+  if (!opts.silent) {
+    try {
+      const zone = weaponDropZoneOf(w);
+      const col = zone ? zone.color : '#c47aff';
+      if (typeof UI !== 'undefined' && UI && typeof UI.toast === 'function') {
+        UI.toast(`${zone ? zone.name : 'Zone'}: ${weaponLabel(w)}!`, 3800);
+      }
+      if (typeof game !== 'undefined' && game && typeof game.banner === 'function') {
+        game.banner(weaponLabel(w), 2.1, col, 34);
+      }
+      if (typeof AudioSys !== 'undefined' && AudioSys && typeof AudioSys.sfx === 'function') {
+        AudioSys.sfx('newmonster');
+      }
+    } catch (_) {}
+  }
+  return true;
+}
+
+function rollZoneWeaponDrop(game, monster) {
+  if (!game || game.mode !== 'adventure' || !game.level) return null;
+  const diff = (game.advDiff || (game.level && game.level.diff) || 'normal');
+  const zone = adventureDropZoneForLevel(game.level.n, diff);
+  if (!zone) return null;
+  const pool = zoneWeaponsFor(zone).filter(w => !weaponZoneUnlocked(w));
+  if (!pool.length) return null;
+  let chance = 0.045;
+  if (monster) {
+    if (monster.superBoss) chance = 0.55;
+    else if (monster.elite) chance = 0.18;
+    else if (monster.giant) chance = 0.09;
+  }
+  if (game.level.boss && monster && monster.elite) chance = Math.max(chance, 0.28);
+  // Nightmare 2.0 / Hell 3.0: dropMul versnelt zone-collectie
+  if (typeof advDropChanceMul === 'function') {
+    chance = Math.min(0.72, chance * advDropChanceMul(diff));
+  }
+  if (Math.random() > chance) return null;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  if (grantZoneWeapon(pick.id)) return pick;
+  return null;
+}
+
+/** Garantie-drop bij eilandbaas-clear (Lv 60 / 70) of hard-diff eilandbaas (10/20/…/70). */
+function grantZoneBossClearWeapon(levelN, diffId) {
+  const n = Math.floor(Number(levelN) || 0);
+  const diff = typeof normalizeAdvDiffId === 'function'
+    ? normalizeAdvDiffId(diffId)
+    : (diffId || 'normal');
+  const zone = adventureDropZoneForLevel(n, diff);
+  if (!zone) return null;
+  const isIslandBoss = n > 0 && n % 10 === 0;
+  const isLegacyZoneBoss = n === 60 || n === 70;
+  // Normal: alleen zone-eilandbazen 60/70. Hard diffs: elke eilandbaas.
+  if (diff === 'normal' && !isLegacyZoneBoss) return null;
+  if (diff !== 'normal' && !isIslandBoss) return null;
+  const pool = zoneWeaponsFor(zone).filter(w => !weaponZoneUnlocked(w));
+  if (!pool.length) return null;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  if (grantZoneWeapon(pick.id)) return pick;
+  return null;
+}
+
+/* —— On-hit effecten voor zone-wapens —— */
+function applyWeaponOnHitEffect(game, fighter, target, hit) {
+  if (!game || !fighter || !target || !target.alive) return;
+  // Alleen monsters (niet versus/training fighters) — burn/bleed verwachten size/sp
+  if (!target.sp || !(target.size > 0)) return;
+  const w = fighter.weapon;
+  if (!w || !w.effect) return;
+  // DoT / splash-rehit mag geen nieuwe effect-keten starten
+  if (hit && (hit.kind === 'dot' || hit.skipEffect)) return;
+  const effect = w.effect;
+  const dmg = (hit && hit.dmg) || 10;
+  const finisher = !!(hit && hit.finisher);
+  const x = target.x, y = target.y - (target.size || 20) * 0.4;
+  const label = weaponEffectLabel(w);
+  const floater = (txt, col) => {
+    try { game.floater(x, y - 18, txt, col || '#ff6b9d', 13, 'fx'); } catch (_) {}
+  };
+
+  switch (effect) {
+    case 'burn':
+    case 'inferno':
+    case 'popburn':
+    case 'magma':
+    case 'soapburn':
+    case 'chainburn':
+    case 'ashpull': {
+      const ticks = effect === 'inferno' ? 5 : (effect === 'magma' ? 4 : 3);
+      const tickDmg = Math.max(2, Math.round(dmg * (effect === 'inferno' ? 0.22 : 0.14)));
+      target.wpnBurnT = Math.max(target.wpnBurnT || 0, ticks * 0.55);
+      target.wpnBurnDmg = Math.max(target.wpnBurnDmg || 0, tickDmg);
+      target.wpnBurnTick = 0.55;
+      if (effect === 'popburn' || effect === 'magma') {
+        try { game.burst(x, y, '#ff6a3d', 10, { kind: 'spark', size: 2.4 }); } catch (_) {}
+      }
+      if (effect === 'soapburn' || effect === 'ashpull') {
+        try { applySuperMonsterSlow(target, 1.1, 0.45); } catch (_) {}
+      }
+      if (effect === 'chainburn' || effect === 'ashpull') {
+        for (const m of game.monsters || []) {
+          if (!m.alive || m === target) continue;
+          if ((m.x - target.x) ** 2 + (m.y - target.y) ** 2 < 140 * 140) {
+            m.wpnBurnT = Math.max(m.wpnBurnT || 0, 1.4);
+            m.wpnBurnDmg = Math.max(m.wpnBurnDmg || 0, Math.round(tickDmg * 0.7));
+            m.wpnBurnTick = 0.5;
+          }
+        }
+      }
+      if (effect === 'ashpull' || effect === 'pull') {
+        const dir = Math.sign(fighter.x - target.x) || 1;
+        target.vx = (target.vx || 0) + dir * 180;
+      }
+      floater(label || '🔥', '#ff6a3d');
+      break;
+    }
+    case 'drowsy':
+    case 'slip':
+    case 'freeze':
+    case 'frostfire': {
+      const slow = effect === 'freeze' ? 0.08 : 0.35;
+      const dur = effect === 'freeze' ? 1.35 : 1.05;
+      try { applySuperMonsterSlow(target, dur, slow); } catch (_) {}
+      if (effect === 'freeze') {
+        try { game.freezeT = Math.max(game.freezeT || 0, 0.04); } catch (_) {}
+        try { game.burst(x, y, '#7cf5ff', 8, { kind: 'spark', size: 2 }); } catch (_) {}
+      }
+      if (effect === 'frostfire') {
+        target.wpnBurnT = Math.max(target.wpnBurnT || 0, 2.0);
+        target.wpnBurnDmg = Math.max(target.wpnBurnDmg || 0, Math.round(dmg * 0.16));
+        target.wpnBurnTick = 0.5;
+      }
+      floater(label || '💤', effect === 'frostfire' ? '#ff8c42' : '#7cf5ff');
+      break;
+    }
+    case 'flipkb':
+    case 'confuse':
+    case 'spinchaos': {
+      target.face = -(target.face || 1);
+      target.vx = -(target.vx || 0) * 1.35 - (fighter.face || 1) * 90;
+      if (effect === 'spinchaos') {
+        target.superSlowT = Math.max(target.superSlowT || 0, 0.7);
+        target.superSlowMul = Math.min(target.superSlowMul || 1, 0.4);
+      }
+      floater(label || '‽', '#c47aff');
+      break;
+    }
+    case 'echo':
+    case 'quake':
+    case 'sonic':
+    case 'meteor':
+    case 'quakboom':
+    case 'explodepeel':
+    case 'balloon': {
+      const r = effect === 'meteor' ? 170 : (effect === 'quake' || effect === 'sonic' ? 150 : 120);
+      const aoeMul = effect === 'meteor' ? 0.55 : (effect === 'balloon' && !finisher ? 0.2 : 0.38);
+      if (effect === 'balloon' && !finisher) break;
+      for (const m of game.monsters || []) {
+        if (!m.alive) continue;
+        const dist2 = (m.x - target.x) ** 2 + (m.y - target.y) ** 2;
+        if (dist2 > r * r) continue;
+        const splash = Math.max(3, Math.round(dmg * aoeMul * (m === target ? 0.35 : 1)));
+        if (m !== target) {
+          try { m.takeDamage(splash, (fighter.face || 1) * 120, game, { kind: 'weapon', skipHitSfx: true, quiet: true }); } catch (_) {}
+        }
+      }
+      try {
+        const col = effect === 'quakboom' ? '#ffe259' : (effect === 'sonic' ? '#ff6b9d' : '#ff6a3d');
+        game.burst(x, y, col, effect === 'meteor' ? 22 : 14, { kind: 'spark', size: 3 });
+        spawnFxRing(game, x, y, col, r * 0.35);
+      } catch (_) {}
+      floater(label || 'BOOM', '#ffd75e');
+      break;
+    }
+    case 'lifesteal': {
+      if (fighter.isPlayer || fighter.playerSlot) {
+        const heal = Math.max(2, Math.round(dmg * 0.18));
+        fighter.hp = Math.min(fighter.maxhp, (fighter.hp || 0) + heal);
+        floater(`+${heal}`, '#6ee06e');
+      }
+      break;
+    }
+    case 'pull': {
+      const dir = Math.sign(fighter.x - target.x) || 1;
+      target.vx = (target.vx || 0) + dir * 220;
+      floater(label || '←', '#b06ae0');
+      break;
+    }
+    case 'critsurge': {
+      fighter._wpnCritSurgeT = Math.max(fighter._wpnCritSurgeT || 0, 2.4);
+      floater(label || 'CRIT↑', '#ffd75e');
+      break;
+    }
+    case 'flutter': {
+      if (!game._wpnFlutterQueue) game._wpnFlutterQueue = [];
+      game._wpnFlutterQueue.push({
+        t: 0.12, left: 2, target, dmg: Math.max(2, Math.round(dmg * 0.28)), face: fighter.face || 1, owner: fighter,
+      });
+      floater(label || '···', '#c47aff');
+      break;
+    }
+    case 'bleed': {
+      target.wpnBleedT = Math.max(target.wpnBleedT || 0, 2.6);
+      target.wpnBleedDmg = Math.max(target.wpnBleedDmg || 0, Math.round(dmg * 0.12));
+      target.wpnBleedTick = 0.45;
+      floater(label || '🩸', '#ff4d6d');
+      break;
+    }
+    case 'execute': {
+      const pct = target.hp / Math.max(1, target.maxhp);
+      if (pct <= 0.18) {
+        try { target.takeDamage(target.hp + 1, (fighter.face || 1) * 200, game, { kind: 'weapon', crit: true }); } catch (_) {}
+        floater('WIPE!', '#ff6a3d');
+        try { game.burst(x, y, '#ff6a3d', 16, { kind: 'spark', size: 3 }); } catch (_) {}
+      }
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+function tickWeaponStatusEffects(game, dt) {
+  if (!game || !game.monsters) return;
+  for (const m of game.monsters) {
+    if (!m.alive) continue;
+    if (m.wpnBurnT > 0) {
+      m.wpnBurnT -= dt;
+      m.wpnBurnTick = (m.wpnBurnTick || 0) - dt;
+      if (m.wpnBurnTick <= 0) {
+        m.wpnBurnTick = 0.55;
+        const d = Math.max(1, m.wpnBurnDmg || 2);
+        try { m.takeDamage(d, 0, game, { kind: 'dot', skipHitSfx: true, quiet: true }); } catch (_) {}
+        try { game.burst(m.x, m.y - m.size * 0.4, '#ff6a3d', 3, { kind: 'spark', size: 1.5 }); } catch (_) {}
+      }
+    }
+    if (m.wpnBleedT > 0) {
+      m.wpnBleedT -= dt;
+      m.wpnBleedTick = (m.wpnBleedTick || 0) - dt;
+      if (m.wpnBleedTick <= 0) {
+        m.wpnBleedTick = 0.45;
+        const d = Math.max(1, m.wpnBleedDmg || 2);
+        try { m.takeDamage(d, 0, game, { kind: 'dot', skipHitSfx: true, quiet: true }); } catch (_) {}
+      }
+    }
+  }
+  if (game._wpnFlutterQueue && game._wpnFlutterQueue.length) {
+    for (let i = game._wpnFlutterQueue.length - 1; i >= 0; i--) {
+      const q = game._wpnFlutterQueue[i];
+      q.t -= dt;
+      if (q.t > 0) continue;
+      if (!q.target || !q.target.alive || q.left <= 0) {
+        game._wpnFlutterQueue.splice(i, 1);
+        continue;
+      }
+      try { q.target.takeDamage(q.dmg, q.face * 40, game, { kind: 'dot', skipHitSfx: true, quiet: true }); } catch (_) {}
+      try { game.burst(q.target.x, q.target.y - q.target.size * 0.3, '#c47aff', 4, { kind: 'spark', size: 1.8 }); } catch (_) {}
+      q.left -= 1;
+      q.t = 0.1;
+      if (q.left <= 0) game._wpnFlutterQueue.splice(i, 1);
+    }
+  }
+}
 /* --- src/data/styles.js --- */
 /* ============================== STIJLEN ================================ */
 const STYLES = [
@@ -5612,6 +6393,11 @@ function rollItemShardDrop(monster) {
   if (superBoss) chance = 0.42;
   else if (elite) chance = 0.18;
   else if (giant) chance = 0.11;
+  try {
+    if (typeof game !== 'undefined' && game && game.mode === 'adventure') {
+      chance = Math.min(0.9, chance * advDropChanceMul(game.advDiff));
+    }
+  } catch (_) {}
   if (Math.random() >= chance) return null;
 
   const pool = [];
@@ -5870,6 +6656,12 @@ function weaponHitSfx(weaponOrId, dmg) {
   if (id === 'shuriken' || id === 'fuuma') return 'hitMetal';
   if (id === 'boemerang') return 'hit2';
   if (id === 'waaier') return 'hit2';
+  const w = typeof weaponOrId === 'object' && weaponOrId ? weaponOrId : (typeof weaponById === 'function' ? weaponById(id) : null);
+  if (w && (w.rarity === 'nightmare' || w.rarity === 'hell')) {
+    if (w.effect === 'quake' || w.effect === 'meteor' || w.effect === 'quakboom') return 'hitHeavy';
+    if (w.effect === 'burn' || w.effect === 'inferno' || w.effect === 'sonic') return 'hitEnergy';
+    return 'hit2';
+  }
   if (dmg > 22) return 'hit2';
   return 'hit';
 }
@@ -6065,6 +6857,33 @@ const WEAPON_COMBOS = {
       { pose: 'upper', rangeMul: 1.06, dmgMul: 1.18, kbMul: 1.28, hitY: -14, windupMul: 1.1, activeMul: 0.96 },
     ],
   },
+  nachtkaars: { labels: ['Wax-snit', 'Drip-stoot', 'Kaars-finisher'] },
+  droomprikker: { labels: ['Prik', 'Droom-haak', 'Slapeloos'] },
+  spooklepel: { labels: ['Lepel-slap', 'Omkeer', 'Spook-scoop'] },
+  nachtmerriesok: { labels: ['Sok-slap', 'Nat-zwiep', 'Was-finisher'] },
+  echotrompet: { labels: ['Blaas', 'Echo-sweep', 'Fanfare'] },
+  schaduwbanaan: { labels: ['Schil', 'Slip-stoot', 'Banaan-boom'] },
+  voidvork: { labels: ['Vork-prik', 'Leegte-hap', 'Drie-tand'] },
+  angstaccordeon: { labels: ['Zuig-akkoord', 'Pomp', 'Angst-crescendo'] },
+  slaapkussen: { labels: ['Pluis-klop', 'Kussen-slam', 'Nacht-uit'] },
+  spooktoaster: { labels: ['Toast-in', 'Pop!', 'Verbrand'] },
+  droomspiegel: { labels: ['Spiegel-snit', 'Reflect', 'Krit-nova'] },
+  nachtuilvleugel: { labels: ['Fladder', 'Uil-sweep', 'Nachtvlucht'] },
+  waanballon: { labels: ['Opblazen', 'Wobble', 'POP!'] },
+  schriktandwiel: { labels: ['Rammel', 'Tand-hak', 'Gear-grind'] },
+  hellevork: { labels: ['Zwavel-prik', 'Hel-stoot', 'Drie-vlam'] },
+  lavalepel: { labels: ['Schep-lava', 'Plas-slam', 'Magma-scoop'] },
+  duiveltrommel: { labels: ['Beuk', 'Rol-slag', 'Hel-solo'] },
+  zwavelzeep: { labels: ['Glad', 'Schuim-stoot', 'Zeep-boom'] },
+  infernoijsje: { labels: ['Lik-koud', 'Smelt', 'Inferno-dip'] },
+  helhamsterwiel: { labels: ['Rol', 'Chaos-spin', 'Wiel-crash'] },
+  brimstonebanaan: { labels: ['Schil', 'Brim-slip', 'Knal-banaan'] },
+  demondoekje: { labels: ['Veeg', 'Wipe', 'EXECUTE'] },
+  asaccordeon: { labels: ['As-zuig', 'Pomp-vuur', 'Crescendo'] },
+  chiliketting: { labels: ['Chili-flurry', 'Kettingsmaak', 'Brand-regen'] },
+  helgitaar: { labels: ['Riff', 'Powerchord', 'Solo-finisher'] },
+  pyroeend: { labels: ['QUAK', 'Vlam-eend', 'BOOM-eend'] },
+  apocalypslepel: { labels: ['Wereld-schep', 'Meteor-scoop', 'EINDE'] },
   master_sword: {
     labels: ['Licht-slice', 'Zwaard-dans', 'Triforce-hak'],
     moves: [
@@ -6090,13 +6909,18 @@ function weaponComboSet(id) {
 function weaponMoveFamily(id) {
   if (id === 'master_sword') return 'slash';
   if (isThrowWeapon(id) || id === 'vuist') return null;
-  if (id === 'speer' || id === 'drietand' || id === 'bostaf') return 'spear';
-  if (id === 'knuppel' || id === 'hamer' || id === 'tonfa' || id === 'guvve' || id === 'donder') return 'blunt';
-  if (id === 'nunchaku' || id === 'ketting' || id === 'vlamzweep') return 'chain';
-  if (id === 'kama' || id === 'zeis') return 'hook';
-  if (id === 'waaier') return 'fan';
-  if (id === 'sai') return 'dual';
-  if (id === 'laser' || id === 'void' || id === 'kristal' || id === 'sterkling') return 'energy';
+  if (id === 'speer' || id === 'drietand' || id === 'bostaf' || id === 'echotrompet' || id === 'helgitaar') return 'spear';
+  if (id === 'knuppel' || id === 'hamer' || id === 'tonfa' || id === 'guvve' || id === 'donder'
+    || id === 'slaapkussen' || id === 'duiveltrommel' || id === 'apocalypslepel' || id === 'pyroeend') return 'blunt';
+  if (id === 'nunchaku' || id === 'ketting' || id === 'vlamzweep' || id === 'chiliketting'
+    || id === 'angstaccordeon' || id === 'asaccordeon' || id === 'helhamsterwiel') return 'chain';
+  if (id === 'kama' || id === 'zeis' || id === 'voidvork' || id === 'hellevork' || id === 'droomprikker') return 'hook';
+  if (id === 'waaier' || id === 'nachtuilvleugel' || id === 'demondoekje') return 'fan';
+  if (id === 'sai' || id === 'nachtmerriesok' || id === 'zwavelzeep') return 'dual';
+  if (id === 'laser' || id === 'void' || id === 'kristal' || id === 'sterkling'
+    || id === 'nachtkaars' || id === 'spooktoaster' || id === 'droomspiegel' || id === 'waanballon'
+    || id === 'lavalepel' || id === 'infernoijsje' || id === 'brimstonebanaan') return 'energy';
+  if (id === 'spooklepel' || id === 'schaduwbanaan' || id === 'schriktandwiel') return 'slash';
   return 'slash';
 }
 
@@ -6389,11 +7213,11 @@ const SKILL_DEFS = {
   rinnegan: {
     id: 'rinnegan', group: 'jutsu', color: '#c47aff',
     steps: [
-      { dmgMul: 1.08, radius: 2 },
-      { dmgMul: 1.08, lifeMul: 1.1, energySave: 5 },
-      { dmgMul: 1.1, radius: 2, pullMul: 1.15 },
-      { dmgMul: 1.1, extraShot: 0.12, windupMul: 0.92 },
-      { dmgMul: 1.12, radius: 3, energySave: 8, lifeMul: 1.1 },
+      { dmgMul: 1.1, radius: 5 },
+      { dmgMul: 1.08, speedMul: 1.08, energySave: 5, radius: 4 },
+      { dmgMul: 1.1, radius: 6, lifeMul: 1.1 },
+      { dmgMul: 1.12, windupMul: 0.9, speedMul: 1.06, radius: 5 },
+      { dmgMul: 1.14, radius: 7, energySave: 8, pierceRepeat: 0.15 },
     ],
   },
   subst: {
@@ -6661,6 +7485,11 @@ function rollSkillShardDrop(monster) {
   if (superBoss) chance = 0.55;
   else if (elite) chance = 0.28;
   else if (giant) chance = 0.16;
+  try {
+    if (typeof game !== 'undefined' && game && game.mode === 'adventure') {
+      chance = Math.min(0.92, chance * advDropChanceMul(game.advDiff));
+    }
+  } catch (_) {}
   if (Math.random() >= chance) return null;
   const weights = [];
   for (const id of SKILL_IDS) {
@@ -6750,10 +7579,10 @@ const SKILLS = [
     hint: 'Lv 10', tooltip: 'Interne schade-burst op korte afstand — hoge knockback.',
     bonus: 'Heavy knockback' },
   { id: 'rinnegan', name: 'Rinnegan', saga: 'scroll', needLvl: 22,
-    behavior: 'pull', dmgMul: 2.55, windup: 0.52, speed: 340, radius: 30, pierce: true, life: 1.05,
-    pull: true, color: '#c47aff', sfx: 'rinnegan', banner: 'RINNEGAN!', kb: 460,
-    hint: 'Lv 22', tooltip: 'Traag oog-orb met pull — trekt vijanden mee.',
-    bonus: 'Pull + pierce' },
+    behavior: 'slash', dmgMul: 2.95, windup: 0.42, speed: 720, radius: 42, pierce: true, life: 0.68,
+    color: '#c47aff', sfx: 'rinnegan', banner: 'RINNEGAN!', kb: 580,
+    hint: 'Lv 22', tooltip: 'Lichtschits-explosie links én rechts — strook dik bij jou, dun verderop. Upgrades = dikkere strook.',
+    bonus: '2-richting slash · taper · dikker per Lv' },
   { id: 'eight_gates', name: '8 poorten', saga: 'scroll', needLvl: 24,
     behavior: 'dash', dmgMul: 3.05, windup: 0.55, speed: 680, radius: 26, pierce: true, life: 0.38,
     dashVx: 420, color: '#ff6b6b', sfx: 'chidori', banner: '8 GATES!', kb: 580,
@@ -6858,7 +7687,10 @@ function skillExists(id) {
 }
 
 function skillBehaviorLabel(sk) {
-  const map = { orb: 'Orb', dash: 'Dash', pull: 'Pull', beam: 'Beam', disc: 'Disc', meteor: 'Meteor' };
+  const map = {
+    orb: 'Orb', dash: 'Dash', pull: 'Pull', beam: 'Beam', disc: 'Disc',
+    meteor: 'Meteor', slash: 'Slash',
+  };
   return map[sk && sk.behavior] || 'Special';
 }
 
@@ -6920,7 +7752,7 @@ function skillCombatLine(sk) {
   return sk.bonus || sk.hint || '';
 }
 
-const SKILL_BEHAVIORS = ['orb', 'dash', 'beam', 'disc', 'pull', 'meteor'];
+const SKILL_BEHAVIORS = ['orb', 'dash', 'beam', 'disc', 'pull', 'meteor', 'slash'];
 const SKILL_SAGA_ORDER = ['scroll', 'ki', 'tide', 'fighter', 'cape', 'dawn'];
 
 function skillsForFilters(saga, behavior) {
@@ -8227,6 +9059,152 @@ const SPECIES = {
   stormocto: { name: 'Stormocto', art: 'octo', size: 21, hp: 72, dmg: 13, speed: 54, type: 'swim', xp: 28, rarity: 'epic', c1: '#7cf5ff', c2: '#2a7fc0' },
   krakenling: { name: 'Krakenling', art: 'octo', size: 28, hp: 155, dmg: 17, speed: 42, type: 'swim', xp: 48, rarity: 'legendary', c1: '#2a1840', c2: '#6ee06e' },
   voidocto: { name: 'Voidocto', art: 'octo', size: 24, hp: 98, dmg: 15, speed: 50, type: 'swim', xp: 42, rarity: 'mythic', c1: '#5a1040', c2: '#ff6b9d' },
+  /* --- Boerderij op hol: reuzen-boerderijdieren --- */
+  holkoe: { name: 'Holkoe', art: 'cow', size: 34, hp: 57, dmg: 8, speed: 38, type: 'tank', xp: 10, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
+  razendeholkoe: { name: 'Razende Holkoe', art: 'cow', size: 35, hp: 90, dmg: 11, speed: 41, type: 'tank', xp: 18, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
+  stampkoe: { name: 'Stampkoe', art: 'cow', size: 36, hp: 122, dmg: 13, speed: 44, type: 'tank', xp: 26, rarity: 'rare', c1: '#ff9ad5', c2: '#8a3060' },
+  melkkolos: { name: 'Melkkolos', art: 'cow', size: 37, hp: 154, dmg: 16, speed: 47, type: 'tank', xp: 34, rarity: 'epic', c1: '#43b25b', c2: '#1e4a28' },
+  boerenbonk: { name: 'Boerenbonk', art: 'cow', size: 38, hp: 186, dmg: 18, speed: 50, type: 'tank', xp: 42, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+  woesteholkoe: { name: 'Woeste Holkoe', art: 'cow', size: 39, hp: 218, dmg: 21, speed: 53, type: 'tank', xp: 50, rarity: 'mythic', c1: '#c47aff', c2: '#5a2080' },
+  razendzwijn: { name: 'Razend Zwijn', art: 'pig', size: 30, hp: 50, dmg: 8, speed: 95, type: 'charge', xp: 10, rarity: 'common', c1: '#7ad06a', c2: '#2a6030' },
+  modderzwijn: { name: 'Modderzwijn', art: 'pig', size: 31, hp: 78, dmg: 11, speed: 103, type: 'charge', xp: 18, rarity: 'uncommon', c1: '#ff7043', c2: '#8a2020' },
+  stootzwijn: { name: 'Stootzwijn', art: 'pig', size: 32, hp: 106, dmg: 13, speed: 111, type: 'charge', xp: 26, rarity: 'rare', c1: '#ffb0b8', c2: '#8a3040' },
+  spekzwaai: { name: 'Spekzwaai', art: 'pig', size: 33, hp: 134, dmg: 16, speed: 119, type: 'charge', xp: 34, rarity: 'epic', c1: '#e04f4f', c2: '#8a2020' },
+  knorbonker: { name: 'Knorbonker', art: 'pig', size: 34, hp: 162, dmg: 18, speed: 127, type: 'charge', xp: 42, rarity: 'legendary', c1: '#505868', c2: '#202830' },
+  reuzenzwijn: { name: 'Reuzenzwijn', art: 'pig', size: 35, hp: 190, dmg: 21, speed: 135, type: 'charge', xp: 50, rarity: 'mythic', c1: '#9a917f', c2: '#4a4038' },
+  kipophol: { name: 'Kip op Hol', art: 'chicken', size: 28, hp: 50, dmg: 8, speed: 95, type: 'fly', xp: 10, rarity: 'common', c1: '#43b25b', c2: '#1e4a28' },
+  vliegkip: { name: 'Vliegkip', art: 'chicken', size: 29, hp: 78, dmg: 11, speed: 99, type: 'fly', xp: 18, rarity: 'uncommon', c1: '#ffd75e', c2: '#8a6020' },
+  pikstorm: { name: 'Pikstorm', art: 'chicken', size: 30, hp: 106, dmg: 13, speed: 103, type: 'fly', xp: 26, rarity: 'rare', c1: '#c47aff', c2: '#5a2080' },
+  kippenkolos: { name: 'Kippenkolos', art: 'chicken', size: 31, hp: 134, dmg: 16, speed: 107, type: 'fly', xp: 34, rarity: 'epic', c1: '#c98850', c2: '#6b4a28' },
+  woestekip: { name: 'Woeste Kip', art: 'chicken', size: 32, hp: 162, dmg: 18, speed: 111, type: 'fly', xp: 42, rarity: 'legendary', c1: '#d4a574', c2: '#6b4a28' },
+  snavelstorm: { name: 'Snavelstorm', art: 'chicken', size: 33, hp: 190, dmg: 21, speed: 115, type: 'fly', xp: 50, rarity: 'mythic', c1: '#ff9ad5', c2: '#8a3060' },
+  razendeschaap: { name: 'Razende Schaap', art: 'sheep', size: 32, hp: 57, dmg: 8, speed: 38, type: 'tank', xp: 10, rarity: 'common', c1: '#e04f4f', c2: '#8a2020' },
+  wolkolos: { name: 'Wolkolos', art: 'sheep', size: 33, hp: 90, dmg: 11, speed: 41, type: 'tank', xp: 18, rarity: 'uncommon', c1: '#505868', c2: '#202830' },
+  stampwol: { name: 'Stampwol', art: 'sheep', size: 34, hp: 122, dmg: 13, speed: 44, type: 'tank', xp: 26, rarity: 'rare', c1: '#9a917f', c2: '#4a4038' },
+  boerenschrik: { name: 'Boerenschrik', art: 'sheep', size: 35, hp: 154, dmg: 16, speed: 47, type: 'tank', xp: 34, rarity: 'epic', c1: '#7ad06a', c2: '#2a6030' },
+  donsbeest: { name: 'Donsbeest', art: 'sheep', size: 36, hp: 186, dmg: 18, speed: 50, type: 'tank', xp: 42, rarity: 'legendary', c1: '#ff7043', c2: '#8a2020' },
+  schaaptitan: { name: 'Schaap Titan', art: 'sheep', size: 37, hp: 218, dmg: 21, speed: 53, type: 'tank', xp: 50, rarity: 'mythic', c1: '#ffb0b8', c2: '#8a3040' },
+  holpaard: { name: 'Holpaard', art: 'horse', size: 36, hp: 50, dmg: 8, speed: 95, type: 'charge', xp: 10, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
+  galopgevaar: { name: 'Galopgevaar', art: 'horse', size: 37, hp: 78, dmg: 11, speed: 103, type: 'charge', xp: 18, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
+  stampveulen: { name: 'Stampveulen', art: 'horse', size: 38, hp: 106, dmg: 13, speed: 111, type: 'charge', xp: 26, rarity: 'rare', c1: '#ff9ad5', c2: '#8a3060' },
+  renkolos: { name: 'Renkolos', art: 'horse', size: 39, hp: 134, dmg: 16, speed: 119, type: 'charge', xp: 34, rarity: 'epic', c1: '#43b25b', c2: '#1e4a28' },
+  boerenrenner: { name: 'Boerenrenner', art: 'horse', size: 40, hp: 162, dmg: 18, speed: 127, type: 'charge', xp: 42, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+  stormhengst: { name: 'Stormhengst', art: 'horse', size: 41, hp: 190, dmg: 21, speed: 135, type: 'charge', xp: 50, rarity: 'mythic', c1: '#c47aff', c2: '#5a2080' },
+  kopstootgeit: { name: 'Kopstootgeit', art: 'goat', size: 30, hp: 50, dmg: 8, speed: 95, type: 'charge', xp: 10, rarity: 'common', c1: '#7ad06a', c2: '#2a6030' },
+  berggeitboos: { name: 'Berggeit Boos', art: 'goat', size: 31, hp: 78, dmg: 11, speed: 103, type: 'charge', xp: 18, rarity: 'uncommon', c1: '#ff7043', c2: '#8a2020' },
+  hoornram: { name: 'Hoornram', art: 'goat', size: 32, hp: 106, dmg: 13, speed: 111, type: 'charge', xp: 26, rarity: 'rare', c1: '#ffb0b8', c2: '#8a3040' },
+  geitenkolos: { name: 'Geitenkolos', art: 'goat', size: 33, hp: 134, dmg: 16, speed: 119, type: 'charge', xp: 34, rarity: 'epic', c1: '#e04f4f', c2: '#8a2020' },
+  razendebok: { name: 'Razende Bok', art: 'goat', size: 34, hp: 162, dmg: 18, speed: 127, type: 'charge', xp: 42, rarity: 'legendary', c1: '#505868', c2: '#202830' },
+  steenbokstorm: { name: 'Steenbok Storm', art: 'goat', size: 35, hp: 190, dmg: 21, speed: 135, type: 'charge', xp: 50, rarity: 'mythic', c1: '#9a917f', c2: '#4a4038' },
+  kwakophol: { name: 'Kwak op Hol', art: 'duck', size: 28, hp: 50, dmg: 8, speed: 62, type: 'hop', xp: 10, rarity: 'common', c1: '#43b25b', c2: '#1e4a28' },
+  razendeeend: { name: 'Razende Eend', art: 'duck', size: 29, hp: 78, dmg: 11, speed: 66, type: 'hop', xp: 18, rarity: 'uncommon', c1: '#ffd75e', c2: '#8a6020' },
+  vlotkwak: { name: 'Vlotkwak', art: 'duck', size: 30, hp: 106, dmg: 13, speed: 70, type: 'hop', xp: 26, rarity: 'rare', c1: '#c47aff', c2: '#5a2080' },
+  eendenkolos: { name: 'Eendenkolos', art: 'duck', size: 31, hp: 134, dmg: 16, speed: 74, type: 'hop', xp: 34, rarity: 'epic', c1: '#c98850', c2: '#6b4a28' },
+  snavelduiker: { name: 'Snavelduiker', art: 'duck', size: 32, hp: 162, dmg: 18, speed: 78, type: 'hop', xp: 42, rarity: 'legendary', c1: '#d4a574', c2: '#6b4a28' },
+  kwaktitan: { name: 'Kwak Titan', art: 'duck', size: 33, hp: 190, dmg: 21, speed: 82, type: 'hop', xp: 50, rarity: 'mythic', c1: '#ff9ad5', c2: '#8a3060' },
+  haanophol: { name: 'Haan op Hol', art: 'rooster', size: 29, hp: 50, dmg: 8, speed: 95, type: 'fly', xp: 10, rarity: 'common', c1: '#e04f4f', c2: '#8a2020' },
+  kraairoep: { name: 'Kraairoep', art: 'rooster', size: 30, hp: 78, dmg: 11, speed: 99, type: 'fly', xp: 18, rarity: 'uncommon', c1: '#505868', c2: '#202830' },
+  kamstoot: { name: 'Kamstoot', art: 'rooster', size: 31, hp: 106, dmg: 13, speed: 103, type: 'fly', xp: 26, rarity: 'rare', c1: '#9a917f', c2: '#4a4038' },
+  hanenkolos: { name: 'Hanenkolos', art: 'rooster', size: 32, hp: 134, dmg: 16, speed: 107, type: 'fly', xp: 34, rarity: 'epic', c1: '#7ad06a', c2: '#2a6030' },
+  vuurhaan: { name: 'Vuurhaan', art: 'rooster', size: 33, hp: 162, dmg: 18, speed: 111, type: 'fly', xp: 42, rarity: 'legendary', c1: '#ff7043', c2: '#8a2020' },
+  zonnekam: { name: 'Zonnekam', art: 'rooster', size: 34, hp: 190, dmg: 21, speed: 115, type: 'fly', xp: 50, rarity: 'mythic', c1: '#ffb0b8', c2: '#8a3040' },
+  koppigeezel: { name: 'Koppige Ezel', art: 'donkey', size: 33, hp: 57, dmg: 8, speed: 38, type: 'tank', xp: 10, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
+  stampzel: { name: 'Stampzel', art: 'donkey', size: 34, hp: 90, dmg: 11, speed: 41, type: 'tank', xp: 18, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
+  boerenezel: { name: 'Boerenezel', art: 'donkey', size: 35, hp: 122, dmg: 13, speed: 44, type: 'tank', xp: 26, rarity: 'rare', c1: '#ff9ad5', c2: '#8a3060' },
+  ezelkolos: { name: 'Ezelkolos', art: 'donkey', size: 36, hp: 154, dmg: 16, speed: 47, type: 'tank', xp: 34, rarity: 'epic', c1: '#43b25b', c2: '#1e4a28' },
+  hardhoofd: { name: 'Hardhoofd', art: 'donkey', size: 37, hp: 186, dmg: 18, speed: 50, type: 'tank', xp: 42, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+  molenzwaai: { name: 'Molenzwaai', art: 'donkey', size: 38, hp: 218, dmg: 21, speed: 53, type: 'tank', xp: 50, rarity: 'mythic', c1: '#c47aff', c2: '#5a2080' },
+  gansophol: { name: 'Gans op Hol', art: 'goose', size: 30, hp: 50, dmg: 8, speed: 95, type: 'charge', xp: 10, rarity: 'common', c1: '#7ad06a', c2: '#2a6030' },
+  sissendegans: { name: 'Sissende Gans', art: 'goose', size: 31, hp: 78, dmg: 11, speed: 103, type: 'charge', xp: 18, rarity: 'uncommon', c1: '#ff7043', c2: '#8a2020' },
+  vleugelram: { name: 'Vleugelram', art: 'goose', size: 32, hp: 106, dmg: 13, speed: 111, type: 'charge', xp: 26, rarity: 'rare', c1: '#ffb0b8', c2: '#8a3040' },
+  ganzenkolos: { name: 'Ganzenkolos', art: 'goose', size: 33, hp: 134, dmg: 16, speed: 119, type: 'charge', xp: 34, rarity: 'epic', c1: '#e04f4f', c2: '#8a2020' },
+  nesthoeder: { name: 'Nesthoeder', art: 'goose', size: 34, hp: 162, dmg: 18, speed: 127, type: 'charge', xp: 42, rarity: 'legendary', c1: '#505868', c2: '#202830' },
+  stormgans: { name: 'Stormgans', art: 'goose', size: 35, hp: 190, dmg: 21, speed: 135, type: 'charge', xp: 50, rarity: 'mythic', c1: '#9a917f', c2: '#4a4038' },
+  /* --- Dierentuin-uitbraak: reuzen-dierentuindieren --- */
+  reuzenolifant: { name: 'Reuzenolifant', art: 'elephant', size: 43, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#43b25b', c2: '#1e4a28' },
+  stampolifant: { name: 'Stampolifant', art: 'elephant', size: 44, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#ffd75e', c2: '#8a6020' },
+  slurfkolos: { name: 'Slurfkolos', art: 'elephant', size: 45, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#c47aff', c2: '#5a2080' },
+  ivoiretitan: { name: 'Ivoire Titan', art: 'elephant', size: 46, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#c98850', c2: '#6b4a28' },
+  woesteolifant: { name: 'Woeste Olifant', art: 'elephant', size: 47, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#d4a574', c2: '#6b4a28' },
+  mammoetstorm: { name: 'Mammoetstorm', art: 'elephant', size: 48, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#ff9ad5', c2: '#8a3060' },
+  razendeleeuw: { name: 'Razende Leeuw', art: 'lion', size: 37, hp: 60, dmg: 10, speed: 95, type: 'charge', xp: 14, rarity: 'common', c1: '#e04f4f', c2: '#8a2020' },
+  manenstorm: { name: 'Manenstorm', art: 'lion', size: 38, hp: 88, dmg: 13, speed: 103, type: 'charge', xp: 22, rarity: 'uncommon', c1: '#505868', c2: '#202830' },
+  savannekoning: { name: 'Savannekoning', art: 'lion', size: 39, hp: 116, dmg: 15, speed: 111, type: 'charge', xp: 30, rarity: 'rare', c1: '#9a917f', c2: '#4a4038' },
+  leeuwenkolos: { name: 'Leeuwenkolos', art: 'lion', size: 40, hp: 144, dmg: 18, speed: 119, type: 'charge', xp: 38, rarity: 'epic', c1: '#7ad06a', c2: '#2a6030' },
+  woestemanen: { name: 'Woeste Manen', art: 'lion', size: 41, hp: 172, dmg: 20, speed: 127, type: 'charge', xp: 46, rarity: 'legendary', c1: '#ff7043', c2: '#8a2020' },
+  koningsklauw: { name: 'Koningsklauw', art: 'lion', size: 42, hp: 200, dmg: 23, speed: 135, type: 'charge', xp: 54, rarity: 'mythic', c1: '#ffb0b8', c2: '#8a3040' },
+  razendetijger: { name: 'Razende Tijger', art: 'tiger', size: 36, hp: 60, dmg: 10, speed: 95, type: 'charge', xp: 14, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
+  streepstorm: { name: 'Streepstorm', art: 'tiger', size: 37, hp: 88, dmg: 13, speed: 103, type: 'charge', xp: 22, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
+  jungleklauw: { name: 'Jungleklauw', art: 'tiger', size: 38, hp: 116, dmg: 15, speed: 111, type: 'charge', xp: 30, rarity: 'rare', c1: '#ff9ad5', c2: '#8a3060' },
+  tijgerkolos: { name: 'Tijgerkolos', art: 'tiger', size: 39, hp: 144, dmg: 18, speed: 119, type: 'charge', xp: 38, rarity: 'epic', c1: '#43b25b', c2: '#1e4a28' },
+  nachtstreep: { name: 'Nachtstreep', art: 'tiger', size: 40, hp: 172, dmg: 20, speed: 127, type: 'charge', xp: 46, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+  vuurtijger: { name: 'Vuurtijger', art: 'tiger', size: 41, hp: 200, dmg: 23, speed: 135, type: 'charge', xp: 54, rarity: 'mythic', c1: '#c47aff', c2: '#5a2080' },
+  langegiraffe: { name: 'Lange Giraffe', art: 'giraffe', size: 41, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#7ad06a', c2: '#2a6030' },
+  nekkolos: { name: 'Nekkolos', art: 'giraffe', size: 42, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#ff7043', c2: '#8a2020' },
+  savannetoren: { name: 'Savanne Toren', art: 'giraffe', size: 43, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#ffb0b8', c2: '#8a3040' },
+  giraffenreus: { name: 'Giraffenreus', art: 'giraffe', size: 44, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#e04f4f', c2: '#8a2020' },
+  hoogkijk: { name: 'Hoogkijk', art: 'giraffe', size: 45, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#505868', c2: '#202830' },
+  wolkennek: { name: 'Wolkennek', art: 'giraffe', size: 46, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#9a917f', c2: '#4a4038' },
+  razendnijlpaard: { name: 'Razend Nijlpaard', art: 'hippo', size: 41, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#43b25b', c2: '#1e4a28' },
+  rivierkolos: { name: 'Rivierkolos', art: 'hippo', size: 42, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#ffd75e', c2: '#8a6020' },
+  gapendekaak: { name: 'Gapende Kaak', art: 'hippo', size: 43, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#c47aff', c2: '#5a2080' },
+  nijltitan: { name: 'Nijl Titan', art: 'hippo', size: 44, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#c98850', c2: '#6b4a28' },
+  modderhip: { name: 'Modderhip', art: 'hippo', size: 45, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#d4a574', c2: '#6b4a28' },
+  waterton: { name: 'Waterton', art: 'hippo', size: 46, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#ff9ad5', c2: '#8a3060' },
+  razendeneushoorn: { name: 'Razende Neushoorn', art: 'rhino', size: 39, hp: 60, dmg: 10, speed: 95, type: 'charge', xp: 14, rarity: 'common', c1: '#e04f4f', c2: '#8a2020' },
+  hoornram2: { name: 'Hoornram', art: 'rhino', size: 40, hp: 88, dmg: 13, speed: 103, type: 'charge', xp: 22, rarity: 'uncommon', c1: '#505868', c2: '#202830' },
+  pantserstoot: { name: 'Pantserstoot', art: 'rhino', size: 41, hp: 116, dmg: 15, speed: 111, type: 'charge', xp: 30, rarity: 'rare', c1: '#9a917f', c2: '#4a4038' },
+  rhinokolos: { name: 'Rhino Kolos', art: 'rhino', size: 42, hp: 144, dmg: 18, speed: 119, type: 'charge', xp: 38, rarity: 'epic', c1: '#7ad06a', c2: '#2a6030' },
+  ijzervel: { name: 'IJzervel', art: 'rhino', size: 43, hp: 172, dmg: 20, speed: 127, type: 'charge', xp: 46, rarity: 'legendary', c1: '#ff7043', c2: '#8a2020' },
+  stampneus: { name: 'Stampneus', art: 'rhino', size: 44, hp: 200, dmg: 23, speed: 135, type: 'charge', xp: 54, rarity: 'mythic', c1: '#ffb0b8', c2: '#8a3040' },
+  woestegorilla: { name: 'Woeste Gorilla', art: 'gorilla', size: 38, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
+  vuistberg: { name: 'Vuistberg', art: 'gorilla', size: 39, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
+  junglereus: { name: 'Jungle Reus', art: 'gorilla', size: 40, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#ff9ad5', c2: '#8a3060' },
+  apenkolos: { name: 'Apenkolos', art: 'gorilla', size: 41, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#43b25b', c2: '#1e4a28' },
+  zilverrug: { name: 'Zilverrug', art: 'gorilla', size: 42, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+  trommelborst: { name: 'Trommelborst', art: 'gorilla', size: 43, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#c47aff', c2: '#5a2080' },
+  razendezebra: { name: 'Razende Zebra', art: 'zebra', size: 35, hp: 60, dmg: 10, speed: 95, type: 'charge', xp: 14, rarity: 'common', c1: '#7ad06a', c2: '#2a6030' },
+  streepgalop: { name: 'Streepgalop', art: 'zebra', size: 36, hp: 88, dmg: 13, speed: 103, type: 'charge', xp: 22, rarity: 'uncommon', c1: '#ff7043', c2: '#8a2020' },
+  savanneren: { name: 'Savanne Ren', art: 'zebra', size: 37, hp: 116, dmg: 15, speed: 111, type: 'charge', xp: 30, rarity: 'rare', c1: '#ffb0b8', c2: '#8a3040' },
+  zebrakolos: { name: 'Zebra Kolos', art: 'zebra', size: 38, hp: 144, dmg: 18, speed: 119, type: 'charge', xp: 38, rarity: 'epic', c1: '#e04f4f', c2: '#8a2020' },
+  zwartwitstorm: { name: 'Zwartwit Storm', art: 'zebra', size: 39, hp: 172, dmg: 20, speed: 127, type: 'charge', xp: 46, rarity: 'legendary', c1: '#505868', c2: '#202830' },
+  hoefstamp: { name: 'Hoefstamp', art: 'zebra', size: 40, hp: 200, dmg: 23, speed: 135, type: 'charge', xp: 54, rarity: 'mythic', c1: '#9a917f', c2: '#4a4038' },
+  razendebeer: { name: 'Razende Beer', art: 'bear', size: 39, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#43b25b', c2: '#1e4a28' },
+  klauwberg: { name: 'Klauwberg', art: 'bear', size: 40, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#ffd75e', c2: '#8a6020' },
+  bosreus: { name: 'Bosreus', art: 'bear', size: 41, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#c47aff', c2: '#5a2080' },
+  berenkolos: { name: 'Berenkolos', art: 'bear', size: 42, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#c98850', c2: '#6b4a28' },
+  honingslok: { name: 'Honingslok', art: 'bear', size: 43, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#d4a574', c2: '#6b4a28' },
+  winterklauw: { name: 'Winterklauw', art: 'bear', size: 44, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#ff9ad5', c2: '#8a3060' },
+  razendekrokodil: { name: 'Razende Krokodil', art: 'croc', size: 37, hp: 60, dmg: 10, speed: 88, type: 'swim', xp: 14, rarity: 'common', c1: '#e04f4f', c2: '#8a2020' },
+  kaakklem: { name: 'Kaakklem', art: 'croc', size: 38, hp: 88, dmg: 13, speed: 93, type: 'swim', xp: 22, rarity: 'uncommon', c1: '#505868', c2: '#202830' },
+  rivierschrik: { name: 'Rivierschrik', art: 'croc', size: 39, hp: 116, dmg: 15, speed: 98, type: 'swim', xp: 30, rarity: 'rare', c1: '#9a917f', c2: '#4a4038' },
+  krokodiltitan: { name: 'Krokodil Titan', art: 'croc', size: 40, hp: 144, dmg: 18, speed: 103, type: 'swim', xp: 38, rarity: 'epic', c1: '#7ad06a', c2: '#2a6030' },
+  schubbenmuil: { name: 'Schubbenmuil', art: 'croc', size: 41, hp: 172, dmg: 20, speed: 108, type: 'swim', xp: 46, rarity: 'legendary', c1: '#ff7043', c2: '#8a2020' },
+  snapkrokodil: { name: 'Snapkrokodil', art: 'croc', size: 42, hp: 200, dmg: 23, speed: 113, type: 'swim', xp: 54, rarity: 'mythic', c1: '#ffb0b8', c2: '#8a3040' },
+  razendekangoeroe: { name: 'Razende Kangoeroe', art: 'kangaroo', size: 35, hp: 60, dmg: 10, speed: 95, type: 'charge', xp: 14, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
+  sprongstoot: { name: 'Sprongstoot', art: 'kangaroo', size: 36, hp: 88, dmg: 13, speed: 103, type: 'charge', xp: 22, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
+  buidelbonk: { name: 'Buidelbonk', art: 'kangaroo', size: 37, hp: 116, dmg: 15, speed: 111, type: 'charge', xp: 30, rarity: 'rare', c1: '#ff9ad5', c2: '#8a3060' },
+  kangokolos: { name: 'Kango Kolos', art: 'kangaroo', size: 38, hp: 144, dmg: 18, speed: 119, type: 'charge', xp: 38, rarity: 'epic', c1: '#43b25b', c2: '#1e4a28' },
+  hopklauw: { name: 'Hopklauw', art: 'kangaroo', size: 39, hp: 172, dmg: 20, speed: 127, type: 'charge', xp: 46, rarity: 'legendary', c1: '#ffd75e', c2: '#8a6020' },
+  outbackram: { name: 'Outback Ram', art: 'kangaroo', size: 40, hp: 200, dmg: 23, speed: 135, type: 'charge', xp: 54, rarity: 'mythic', c1: '#c47aff', c2: '#5a2080' },
+  woestepanda: { name: 'Woeste Panda', art: 'panda', size: 36, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#7ad06a', c2: '#2a6030' },
+  bamboebonk: { name: 'Bamboe Bonk', art: 'panda', size: 37, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#ff7043', c2: '#8a2020' },
+  zwartwitreus: { name: 'Zwartwit Reus', art: 'panda', size: 38, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#ffb0b8', c2: '#8a3040' },
+  pandakolos: { name: 'Panda Kolos', art: 'panda', size: 39, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#e04f4f', c2: '#8a2020' },
+  rolbeer: { name: 'Rolbeer', art: 'panda', size: 40, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#505868', c2: '#202830' },
+  tempelpanda: { name: 'Tempelpanda', art: 'panda', size: 41, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#9a917f', c2: '#4a4038' },
+  razendeflamingo: { name: 'Razende Flamingo', art: 'flamingo', size: 33, hp: 60, dmg: 10, speed: 95, type: 'fly', xp: 14, rarity: 'common', c1: '#43b25b', c2: '#1e4a28' },
+  rozestorm: { name: 'Roze Storm', art: 'flamingo', size: 34, hp: 88, dmg: 13, speed: 99, type: 'fly', xp: 22, rarity: 'uncommon', c1: '#ffd75e', c2: '#8a6020' },
+  eenpoot: { name: 'Eenpoot', art: 'flamingo', size: 35, hp: 116, dmg: 15, speed: 103, type: 'fly', xp: 30, rarity: 'rare', c1: '#c47aff', c2: '#5a2080' },
+  flamingokolos: { name: 'Flamingo Kolos', art: 'flamingo', size: 36, hp: 144, dmg: 18, speed: 107, type: 'fly', xp: 38, rarity: 'epic', c1: '#c98850', c2: '#6b4a28' },
+  lagunevlam: { name: 'Lagune Vlam', art: 'flamingo', size: 37, hp: 172, dmg: 20, speed: 111, type: 'fly', xp: 46, rarity: 'legendary', c1: '#d4a574', c2: '#6b4a28' },
+  nekzwaai: { name: 'Nekzwaai', art: 'flamingo', size: 38, hp: 200, dmg: 23, speed: 115, type: 'fly', xp: 54, rarity: 'mythic', c1: '#ff9ad5', c2: '#8a3060' },
+  razendekameel: { name: 'Razende Kameel', art: 'camel', size: 37, hp: 69, dmg: 10, speed: 38, type: 'tank', xp: 14, rarity: 'common', c1: '#e04f4f', c2: '#8a2020' },
+  bultbonk: { name: 'Bultbonk', art: 'camel', size: 38, hp: 101, dmg: 13, speed: 41, type: 'tank', xp: 22, rarity: 'uncommon', c1: '#505868', c2: '#202830' },
+  woestijnreus: { name: 'Woestijnreus', art: 'camel', size: 39, hp: 133, dmg: 15, speed: 44, type: 'tank', xp: 30, rarity: 'rare', c1: '#9a917f', c2: '#4a4038' },
+  kameelkolos: { name: 'Kameel Kolos', art: 'camel', size: 40, hp: 166, dmg: 18, speed: 47, type: 'tank', xp: 38, rarity: 'epic', c1: '#7ad06a', c2: '#2a6030' },
+  zandgalop: { name: 'Zandgalop', art: 'camel', size: 41, hp: 198, dmg: 20, speed: 50, type: 'tank', xp: 46, rarity: 'legendary', c1: '#ff7043', c2: '#8a2020' },
+  oasestamp: { name: 'Oase Stamp', art: 'camel', size: 42, hp: 230, dmg: 23, speed: 53, type: 'tank', xp: 54, rarity: 'mythic', c1: '#ffb0b8', c2: '#8a3040' },
     /* Tide Battle — alleen via 0.05% kill-roll, nooit in normale golven */
     tideKyuu: { name: 'Negenstaart Vos', art: 'tideFox', size: 38, hp: 340, dmg: 26, speed: 88, type: 'charge', xp: 120, rarity: 'mythic', c1: '#ff7a20', c2: '#8a2010' },
     tideManda: { name: 'Paarse Reuzenslang', art: 'tideSnake', size: 36, hp: 320, dmg: 24, speed: 72, type: 'shoot', xp: 115, rarity: 'mythic', c1: '#9b59d4', c2: '#4a2080' },
@@ -8273,6 +9251,12 @@ const WORLD_THEMES = [
   'cyber','vulkaan','dojo','cyber','cyber',
   'cyber','vulkaan','dojo','cyber','cyber',
   'cyber','cyber','cyber','cyber','cyber',
+  /* Nachtmerrie 51–60 */
+  'nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie',
+  'nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie',
+  /* Hel 61–70 */
+  'hel','hel','hel','hel','hel',
+  'hel','hel','hel','hel','hel',
 ];
 const UNLOCK_AT = {
   slymo: 1, bubbel: 1, flapper: 2, piepvleugel: 5, stekelra: 3, ijzerstek: 9,
@@ -8289,9 +9273,13 @@ const UNLOCK_AT = {
   etherwyrm: 43, omegadrake: 46,
   kleiply: 1, spinbub: 2, hongerly: 4, parelsly: 6, modderblob: 4, crystalbub: 6, chaosly: 8, zwerm: 10, karmijnvleerm: 7, echovleerm: 9, spiegelvleerm: 11, voidvleerm: 13, duskwing: 11, glimwing: 13, bronzenstek: 15, koperstek: 17, froststek: 14, kolossstek: 16, thornox: 18, spineclaw: 20, quillfang: 18, spookvlam: 20, koudspook: 22, spiraalgeest: 24, wispgeest: 21, nexusgeest: 23, mistwraith: 25, palewraith: 27, olieblik: 25, batterijkan: 27, schrootblik: 29, turboblok: 30, ionkan: 28, quantumkan: 30, omegacan: 32, zilvervos: 34, maanvos: 32, jadevos: 34, stellarvos: 36, kosmischvos: 37, emberfox: 35, shadowfox: 37, leisteen: 39, marmerbonk: 41, koraalbonk: 39, barnsteen: 41, adamantbonk: 43, basaltbonk: 44, titanrock: 42, mistwyrm: 44, sandwyrm: 46, frostwyrm: 48, chaoswyrm: 46, prismewyrm: 48, apexwyrm: 50,
   rifhaai: 8, snelvin: 9, octo: 8, inktvissie: 10, hamerkop: 12, koraalocto: 14, tijvin: 16, dieptocto: 18, stormocto: 22, neonhaai: 24, abysshaai: 32, krakenling: 38, levihaai: 44, voidocto: 40,
+  /* boerderij op hol */
+  holkoe: 1, razendeholkoe: 6, stampkoe: 11, melkkolos: 17, boerenbonk: 22, woesteholkoe: 27, razendzwijn: 3, modderzwijn: 8, stootzwijn: 13, spekzwaai: 19, knorbonker: 24, reuzenzwijn: 29, kipophol: 1, vliegkip: 6, pikstorm: 11, kippenkolos: 17, woestekip: 22, snavelstorm: 27, razendeschaap: 3, wolkolos: 8, stampwol: 13, boerenschrik: 19, donsbeest: 24, schaaptitan: 29, holpaard: 1, galopgevaar: 6, stampveulen: 11, renkolos: 17, boerenrenner: 22, stormhengst: 27, kopstootgeit: 3, berggeitboos: 8, hoornram: 13, geitenkolos: 19, razendebok: 24, steenbokstorm: 29, kwakophol: 1, razendeeend: 6, vlotkwak: 11, eendenkolos: 17, snavelduiker: 22, kwaktitan: 27, haanophol: 3, kraairoep: 8, kamstoot: 13, hanenkolos: 19, vuurhaan: 24, zonnekam: 29, koppigeezel: 1, stampzel: 6, boerenezel: 11, ezelkolos: 17, hardhoofd: 22, molenzwaai: 27, gansophol: 3, sissendegans: 8, vleugelram: 13, ganzenkolos: 19, nesthoeder: 24, stormgans: 29,
+  /* dierentuin-uitbraak */
+  reuzenolifant: 10, stampolifant: 16, slurfkolos: 23, ivoiretitan: 29, woesteolifant: 36, mammoetstorm: 42, razendeleeuw: 9, manenstorm: 15, savannekoning: 22, leeuwenkolos: 28, woestemanen: 30, koningsklauw: 36, razendetijger: 7, streepstorm: 13, jungleklauw: 20, tijgerkolos: 26, nachtstreep: 33, vuurtijger: 39, langegiraffe: 14, nekkolos: 20, savannetoren: 22, giraffenreus: 28, hoogkijk: 35, wolkennek: 41, razendnijlpaard: 8, rivierkolos: 14, gapendekaak: 21, nijltitan: 27, modderhip: 34, waterton: 40, razendeneushoorn: 6, hoornram2: 12, pantserstoot: 19, rhinokolos: 25, ijzervel: 32, stampneus: 38, woestegorilla: 9, vuistberg: 15, junglereus: 22, apenkolos: 28, zilverrug: 30, trommelborst: 36, razendezebra: 7, streepgalop: 13, savanneren: 20, zebrakolos: 26, zwartwitstorm: 33, hoefstamp: 39, razendebeer: 10, klauwberg: 16, bosreus: 18, berenkolos: 24, honingslok: 31, winterklauw: 37, razendekrokodil: 8, kaakklem: 14, rivierschrik: 21, krokodiltitan: 27, schubbenmuil: 34, snapkrokodil: 40, razendekangoeroe: 6, sprongstoot: 12, buidelbonk: 19, kangokolos: 25, hopklauw: 32, outbackram: 38, woestepanda: 9, bamboebonk: 15, zwartwitreus: 22, pandakolos: 28, rolbeer: 30, tempelpanda: 36, razendeflamingo: 7, rozestorm: 13, eenpoot: 20, flamingokolos: 26, lagunevlam: 33, nekzwaai: 39, razendekameel: 10, bultbonk: 16, woestijnreus: 18, kameelkolos: 24, zandgalop: 31, oasestamp: 37,
 
 };
-/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (126 soorten). */
+/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (~2× diversiteit: boerderij + dierentuin). */
 const ADVENTURE_HORDE_MUL = 6;
 const ADVENTURE_HORDE_MAX_PER_WAVE = 36;
 const ADVENTURE_MAX_ALIVE = IS_TOUCH ? 54 : 78;
@@ -8300,8 +9288,42 @@ const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
 const GIANT_DMG_MUL = 1.14;
 const GIANT_XP_MUL = 1.3;
+/** Flagship baas (BOSS_AT elite / super-baas): groter + tankier. */
+const BOSS_CORE_SIZE_MUL = 1.25;
+const BOSS_CORE_HP_MUL = 2.85;
+const BOSS_CORE_DMG_MUL = 1.18;
+/** Soms ~2× zo groot als huidige baas, met extra HP. */
+const COLOSSAL_CHANCE = 0.42;
+const COLOSSAL_SIZE_MUL = 2.0;
+const COLOSSAL_HP_MUL = 1.9;
+const COLOSSAL_DMG_MUL = 1.12;
+const COLOSSAL_XP_MUL = 1.45;
 
 const SEA_ARTS = new Set(['shark', 'octo']);
+const FARM_ARTS = new Set(['cow', 'pig', 'chicken', 'sheep', 'horse', 'goat', 'duck', 'rooster', 'donkey', 'goose']);
+const ZOO_ARTS = new Set(['elephant', 'lion', 'tiger', 'giraffe', 'hippo', 'rhino', 'gorilla', 'zebra', 'bear', 'croc', 'kangaroo', 'panda', 'flamingo', 'camel']);
+const BEAST_SIZE_ARTS = new Set([...FARM_ARTS, ...ZOO_ARTS]);
+/** Boerderij/dierentuin: vaker reuzen-variant (al groot, nog groter). */
+const BEAST_GIANT_BONUS = 0.28;
+
+function farmSpeciesPool(levelN, maxRarityOrder) {
+  return Object.keys(UNLOCK_AT).filter((id) => {
+    const sp = SPECIES[id];
+    if (!sp || !FARM_ARTS.has(sp.art)) return false;
+    if (UNLOCK_AT[id] > levelN) return false;
+    return rarityOf(sp.rarity).order <= maxRarityOrder;
+  });
+}
+
+function zooSpeciesPool(levelN, maxRarityOrder) {
+  return Object.keys(UNLOCK_AT).filter((id) => {
+    const sp = SPECIES[id];
+    if (!sp || !ZOO_ARTS.has(sp.art)) return false;
+    if (UNLOCK_AT[id] > levelN) return false;
+    return rarityOf(sp.rarity).order <= maxRarityOrder;
+  });
+}
+
 
 function seaSpeciesPool(levelN, maxRarityOrder) {
   return Object.keys(UNLOCK_AT).filter((id) => {
@@ -8345,14 +9367,19 @@ const BOSS_AT = {
   40: [{ sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst' }],
   45: [{ sp: 'voidkonijn', elite: true }, { sp: 'guvvedrak' }],
   50: [{ sp: 'guvvedrak', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst', elite: true }],
+  55: [{ sp: 'voidkonijn', elite: true }, { sp: 'neondrake', elite: true }, { sp: 'schaduwvorst' }],
+  60: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'voidkonijn', elite: true }],
+  65: [{ sp: 'omegadrake', elite: true }, { sp: 'etherwyrm', elite: true }, { sp: 'neondrake' }],
+  70: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'apexwyrm', elite: true }, { sp: 'voidkonijn', elite: true }],
 };
 
-function weightedPick(pool, n) {
+function weightedPick(pool, n, rarityBias) {
   const safe = (pool || []).filter((id) => SPECIES[id]);
   const use = safe.length ? safe : ['slymo'];
+  const bias = Number(rarityBias) || 0;
   const weights = use.map(id => {
     const o = rarityOf(SPECIES[id].rarity).order;
-    return Math.max(0.3, 1.5 - o * 0.22 + Math.min(n, 45) * 0.012 * o);
+    return Math.max(0.3, 1.5 - o * 0.22 + Math.min(n, 45) * 0.012 * o + bias * o * 0.35);
   });
   const sum = weights.reduce((a, b) => a + b, 0);
   let r = Math.random() * sum;
@@ -8426,15 +9453,39 @@ function isBossWave(level, waveIdx) {
   return !!(level && level.boss && waveIdx === level.waves.length - 1);
 }
 
-function rollWaveGiant(n, elite) {
+function rollWaveGiant(n, elite, spId, giantBonus) {
   if (elite || n < 2) return false;
-  return Math.random() < GIANT_SPAWN_CHANCE;
+  let chance = GIANT_SPAWN_CHANCE + (Number(giantBonus) || 0);
+  const sp = spId && SPECIES[spId];
+  if (sp && typeof BEAST_SIZE_ARTS !== 'undefined' && BEAST_SIZE_ARTS.has(sp.art)) {
+    chance = Math.min(0.55, chance + BEAST_GIANT_BONUS);
+  }
+  return Math.random() < chance;
 }
 
-function buildLevel(n) {
-  const hpMul = 1 + (n - 1) * 0.14;
-  const dmgMul = 1 + (n - 1) * 0.08;
-  const maxRarity = n >= 45 ? 5 : n >= 32 ? 4 : n >= 20 ? 3 : n >= 10 ? 2 : n >= 4 ? 1 : 0;
+function maxRarityForAdvLevel(n, diff) {
+  const meta = typeof advDiffMeta === 'function' ? advDiffMeta(diff) : { order: 0, rarityBoost: 0 };
+  let maxRarity = n >= 61 ? 7 : n >= 51 ? 6 : n >= 45 ? 5 : n >= 32 ? 4 : n >= 20 ? 3 : n >= 10 ? 2 : n >= 4 ? 1 : 0;
+  maxRarity = Math.min(7, maxRarity + (meta.rarityBoost || 0));
+  if ((meta.order || 0) >= 1) {
+    maxRarity = Math.max(maxRarity, Math.min(7, meta.order + Math.floor((n - 1) / 8)));
+  }
+  if ((meta.order || 0) >= 2) {
+    maxRarity = Math.max(maxRarity, Math.min(7, 2 + Math.floor((n - 1) / 6)));
+  }
+  return maxRarity;
+}
+
+function buildLevel(n, diffId) {
+  const diff = typeof advDiffMeta === 'function' ? advDiffMeta(diffId) : {
+    id: 'normal', order: 0, hpMul: 1, dmgMul: 1, rarityBoost: 0, eliteBonus: 0, giantBonus: 0,
+    theme: null, speedMul: 1, enrageMul: 1, enrageAt: 0.5, hordeMul: 1, model: '1.0',
+  };
+  const hpMul = (1 + (n - 1) * 0.14) * (diff.hpMul || 1);
+  const dmgMul = (1 + (n - 1) * 0.08) * (diff.dmgMul || 1);
+  const maxRarity = maxRarityForAdvLevel(n, diff.id);
+  const rarityBias = diff.order || 0;
+  const eliteChance = 0.14 + (diff.eliteBonus || 0);
   const fightPool = Object.keys(UNLOCK_AT).filter(id => {
     const sp = SPECIES[id];
     return sp && UNLOCK_AT[id] <= n && rarityOf(sp.rarity).order <= maxRarity && id !== 'guvvedrak';
@@ -8446,21 +9497,49 @@ function buildLevel(n) {
   });
   const waves = [];
   const waveMeta = [];
-  const waveCount = Math.min(2 + Math.floor(n / 5), 5);
+  const waveCount = Math.min(2 + Math.floor(n / 5) + (diff.order >= 2 ? 1 : 0), 6);
   const basePerWave = 2 + Math.floor(n / 4);
-  const perWave = Math.min(Math.max(2, Math.ceil(basePerWave * ADVENTURE_HORDE_MUL)), ADVENTURE_HORDE_MAX_PER_WAVE);
+  const hordeScale = (diff.hordeMul || 1);
+  const perWave = Math.min(
+    Math.max(2, Math.ceil(basePerWave * ADVENTURE_HORDE_MUL * hordeScale)),
+    ADVENTURE_HORDE_MAX_PER_WAVE
+  );
   for (let w = 0; w < waveCount; w++) {
     const list = [];
     for (let i = 0; i < perWave; i++) {
-      const sp = weightedPick(pool, n);
+      const sp = weightedPick(pool, n, rarityBias);
       if (!SPECIES[sp]) continue;
-      const rareElite = rarityOf(SPECIES[sp].rarity).order >= 3 && Math.random() < 0.14;
-      list.push({ sp, elite: rareElite, giant: rollWaveGiant(n, rareElite) });
+      const rareElite = rarityOf(SPECIES[sp].rarity).order >= 3 && Math.random() < eliteChance;
+      list.push({ sp, elite: rareElite, giant: rollWaveGiant(n, rareElite, sp, diff.giantBonus) });
     }
     const meta = { trait: null, spawnMul: 1, label: '' };
     const roll = Math.random();
-    if (flyPool.length && n >= 3 && roll < 0.22) {
-      list[Math.floor(Math.random() * list.length)].sp = weightedPick(flyPool, n);
+    // Model 3.0: pijn-golf — meer elites + reuzen
+    if (diff.order >= 2 && roll < 0.26) {
+      meta.trait = 'pain';
+      meta.spawnMul = 0.78;
+      meta.label = 'pain';
+      for (let i = 0; i < list.length; i++) {
+        if (Math.random() < 0.45) list[i].elite = true;
+        if (Math.random() < 0.35) {
+          list[i].giant = true;
+        }
+      }
+      if (list.length) {
+        const sp = weightedPick(pool, n, rarityBias + 1);
+        list.push({ sp, elite: true, giant: rollWaveGiant(n, true, sp, (diff.giantBonus || 0) + 0.1) });
+      }
+    // Model 2.0+: ember/rush — snellere spawn + vuur-druk
+    } else if (diff.order >= 1 && roll < 0.34) {
+      meta.trait = 'ember';
+      meta.spawnMul = 0.68;
+      meta.label = 'ember';
+      for (let i = 0; i < Math.min(3, list.length); i++) {
+        const ix = Math.floor(Math.random() * list.length);
+        list[ix].elite = list[ix].elite || Math.random() < 0.4;
+      }
+    } else if (flyPool.length && n >= 3 && roll < 0.22) {
+      list[Math.floor(Math.random() * list.length)].sp = weightedPick(flyPool, n, rarityBias);
       meta.trait = 'flyers';
       meta.label = 'Vliegers — mik omhoog!';
     } else if (roll < 0.36) {
@@ -8477,9 +9556,37 @@ function buildLevel(n) {
           if (Math.random() < 0.58) list[i].sp = tideWaveSeaPick(seaPool, n, maxRarity);
         }
       }
-    } else if (n >= 7 && roll < 0.54) {
-      const sp = weightedPick(pool, n);
-      list.push({ sp, elite: true, giant: rollWaveGiant(n, true) });
+    } else if (n >= 3 && roll < 0.58) {
+      meta.trait = 'ranch';
+      meta.spawnMul = 0.88;
+      meta.label = 'ranch';
+      const farmPool = farmSpeciesPool(n, maxRarity);
+      if (farmPool.length) {
+        for (let i = 0; i < list.length; i++) {
+          if (Math.random() < 0.72) {
+            const fp = weightedPick(farmPool, n, rarityBias);
+            list[i].sp = fp;
+            list[i].giant = list[i].giant || rollWaveGiant(n, !!list[i].elite, fp, diff.giantBonus);
+          }
+        }
+      }
+    } else if (n >= 5 && roll < 0.70) {
+      meta.trait = 'safari';
+      meta.spawnMul = 0.86;
+      meta.label = 'safari';
+      const zooPool = zooSpeciesPool(n, maxRarity);
+      if (zooPool.length) {
+        for (let i = 0; i < list.length; i++) {
+          if (Math.random() < 0.72) {
+            const zp = weightedPick(zooPool, n, rarityBias);
+            list[i].sp = zp;
+            list[i].giant = true; // dierentuin: altijd grote grote versies
+          }
+        }
+      }
+    } else if (n >= 7 && roll < 0.76) {
+      const sp = weightedPick(pool, n, rarityBias);
+      list.push({ sp, elite: true, giant: rollWaveGiant(n, true, sp, diff.giantBonus) });
       meta.trait = 'elite';
       meta.label = 'Extra elite';
     }
@@ -8488,17 +9595,26 @@ function buildLevel(n) {
   }
   if (BOSS_AT[n]) {
     const bossWave = BOSS_AT[n].map(x => Object.assign({}, x, { bossCore: !!x.elite }));
-    const hordePad = Math.min(3 + Math.floor(n / 8), 10);
+    const hordePad = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, 12);
     for (let i = 0; i < hordePad; i++) {
-      const elite = Math.random() < 0.1;
-      bossWave.push({ sp: weightedPick(pool, n), elite, giant: rollWaveGiant(n, elite) });
+      const elite = Math.random() < (0.1 + (diff.eliteBonus || 0) * 0.5);
+      const bsp = weightedPick(pool, n, rarityBias);
+      bossWave.push({ sp: bsp, elite, giant: rollWaveGiant(n, elite, bsp, diff.giantBonus) });
     }
     waves.push(bossWave);
     waveMeta.push({ trait: 'boss', spawnMul: 1, label: 'Baas-golf' });
   }
-  const theme = WORLD_THEMES[n - 1] || 'cyber';
-  const rarityCap = ['common','uncommon','rare','epic','legendary','mythic'][maxRarity];
-  return { n, waves, waveMeta, hpMul, dmgMul, theme, boss: !!BOSS_AT[n], rarityCap };
+  let theme = WORLD_THEMES[n - 1] || (n >= 61 ? 'hel' : (n >= 51 ? 'nachtmerrie' : 'cyber'));
+  if (diff.theme) theme = diff.theme;
+  const rarityCap = ['common','uncommon','rare','epic','legendary','mythic','nightmare','hell'][maxRarity] || 'mythic';
+  return {
+    n, waves, waveMeta, hpMul, dmgMul, theme, boss: !!BOSS_AT[n], rarityCap,
+    diff: diff.id || 'normal',
+    speedMul: diff.speedMul || 1,
+    model: diff.model || '1.0',
+    enrageMul: diff.enrageMul || 1,
+    enrageAt: diff.enrageAt != null ? diff.enrageAt : 0.5,
+  };
 }
 
 const WAVE_TRAIT_BANNER = {
@@ -8506,6 +9622,10 @@ const WAVE_TRAIT_BANNER = {
   rush: { key: 'banner.rushWave', color: '#ffb06a', size: 40 },
   elite: { key: 'banner.eliteTraitWave', color: '#ffb0b8', size: 40 },
   tide: { key: 'banner.tideWave', color: '#6ee06e', size: 40 },
+  ranch: { key: 'banner.ranchWave', color: '#e8c98a', size: 40 },
+  safari: { key: 'banner.safariWave', color: '#43b25b', size: 40 },
+  ember: { key: 'banner.emberWave', color: '#ff7a4d', size: 42 },
+  pain: { key: 'banner.painWave', color: '#ff3a2a', size: 44 },
 };
 
 function waveTraitBanner(trait) {
@@ -8578,14 +9698,19 @@ function gambleOutcomeLabel(g) {
 /** Intro-lied + FX voor elite / baas / super-baas (avontuur). */
 function triggerSpecialEnemyIntro(game, monster, kind) {
   if (!game || !monster) return;
-  const tier = kind || (monster.superBoss ? 'superBoss' : (monster.elite ? 'elite' : 'boss'));
+  const tier = kind || (monster.superBoss ? 'superBoss' : (monster.bossCore ? 'boss' : (monster.elite ? 'elite' : 'boss')));
   const name = (monster.sp && monster.sp.name) || 'Baas';
   const rar = rarityOf(monster.sp?.rarity || 'rare');
+  const bigBoss = !!(monster.bossCore || monster.superBoss || tier === 'superBoss');
+  const colossal = !!monster.colossal;
   const col = tier === 'superBoss' ? '#ffd75e' : (tier === 'boss' ? '#ff6b6b' : (rar.color || '#ffb0b8'));
-  monster.introT = tier === 'superBoss' ? 2.4 : (tier === 'boss' ? 2.0 : 1.55);
+  let introDur = tier === 'superBoss' ? 2.4 : (tier === 'boss' ? 2.0 : 1.55);
+  if (bigBoss) introDur = colossal ? 3.6 : (tier === 'superBoss' ? 3.2 : 2.85);
+  monster.introDur = introDur;
+  monster.introT = introDur;
   monster.introTier = tier;
-  const waveKey = `${game.mode || 'x'}:${game.waveIdx}:${tier === 'superBoss' ? 'super' : 'special'}`;
-  const firstOfWave = tier === 'superBoss' || game._specialIntroKey !== waveKey;
+  const waveKey = `${game.mode || 'x'}:${game.waveIdx}:${tier === 'superBoss' ? 'super' : (bigBoss ? 'bossCore' : 'special')}`;
+  const firstOfWave = tier === 'superBoss' || bigBoss || game._specialIntroKey !== waveKey;
   if (firstOfWave) game._specialIntroKey = waveKey;
 
   if (firstOfWave) {
@@ -8596,15 +9721,27 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
         }
         AudioSys.sting('superBossIntro');
         AudioSys.play('boss');
-        game.banner(`SUPER BAAS — ${name}!`, 2.0, col, 44);
+        const title = typeof t === 'function' ? t('banner.superBossTitle') : 'SUPER BAAS';
+        game.banner(title, 2.8, col, bigBoss ? 68 : 44);
+        game.banner(colossal
+          ? (typeof t === 'function' ? t('banner.colossalBossName', { name }) : `COLOSSALE ${name}!`)
+          : (typeof t === 'function' ? t('banner.bossName', { name }) : name), 2.5, '#fff', bigBoss ? 52 : 40);
       } else if (tier === 'boss') {
         AudioSys.sting('bossIntro');
         AudioSys.play('boss');
-        game.banner(`BAAS — ${name}!`, 1.8, col, 42);
+        if (bigBoss) {
+          const title = typeof t === 'function' ? t('banner.bossTitle') : 'BAAS';
+          game.banner(title, 2.6, col, 64);
+          game.banner(colossal
+            ? (typeof t === 'function' ? t('banner.colossalBossName', { name }) : `COLOSSALE ${name}!`)
+            : (typeof t === 'function' ? t('banner.bossName', { name }) : `${name}!`), 2.35, '#fff', 50);
+        } else {
+          game.banner(typeof t === 'function' ? t('banner.bossNamed', { name }) : `BAAS — ${name}!`, 1.8, col, 42);
+        }
       } else {
         AudioSys.sting('eliteIntro');
         AudioSys.play('elite');
-        game.banner(`ELITE — ${name}!`, 1.5, col, 38);
+        game.banner(typeof t === 'function' ? t('banner.eliteNamed', { name }) : `ELITE — ${name}!`, 1.5, col, 38);
       }
     } catch (_) {}
     try { AudioSys.sfx('roar'); } catch (_) {}
@@ -8615,16 +9752,19 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
   const x = monster.x, y = monster.y - (monster.size || 40) * 0.4;
   const burstN = motionReduced() || fxLite()
     ? 8
-    : (firstOfWave ? (tier === 'superBoss' ? 28 : 18) : 8);
+    : (firstOfWave ? (tier === 'superBoss' || colossal ? 34 : (bigBoss ? 26 : 18)) : 8);
   try {
     game.burst(x, y, col, burstN);
     if (firstOfWave) {
       game.burst(x, y, '#fff', Math.ceil(burstN * 0.35));
-      spawnFxRing(game, x, y, col, tier === 'superBoss' ? 22 : 14);
-      if (tier !== 'elite') spawnFxRing(game, x, y - 20, '#fff', 10);
-      game.shake(tier === 'superBoss' ? 12 : (tier === 'boss' ? 9 : 6), tier === 'superBoss' ? 0.42 : 0.28);
-      game.freezeT = Math.max(game.freezeT || 0, tier === 'superBoss' ? 0.16 : 0.1);
-      haptic(tier === 'superBoss' ? 28 : 16);
+      spawnFxRing(game, x, y, col, tier === 'superBoss' || colossal ? 26 : (bigBoss ? 20 : 14));
+      if (tier !== 'elite') spawnFxRing(game, x, y - 20, '#fff', bigBoss ? 14 : 10);
+      if (colossal) spawnFxRing(game, x, y - 36, '#ffd75e', 16);
+      const shakeAmt = colossal ? 16 : (tier === 'superBoss' ? 14 : (bigBoss ? 11 : (tier === 'boss' ? 9 : 6)));
+      const shakeDur = colossal ? 0.55 : (tier === 'superBoss' ? 0.48 : (bigBoss ? 0.38 : (tier === 'boss' ? 0.28 : 0.22)));
+      game.shake(shakeAmt, shakeDur);
+      game.freezeT = Math.max(game.freezeT || 0, colossal ? 0.22 : (tier === 'superBoss' ? 0.18 : (bigBoss ? 0.14 : 0.1)));
+      haptic(colossal ? 36 : (tier === 'superBoss' ? 28 : (bigBoss ? 22 : 16)));
     }
   } catch (_) {}
 }
@@ -9175,6 +10315,7 @@ function seedNlGameStrings() {
   if (!I18N.nl.banner) I18N.nl.banner = {};
   Object.assign(I18N.nl.banner, {
     levelStart: 'LEVEL {n}',
+    levelStartDiff: '{diff} · LEVEL {n}',
     levelUp: 'LEVEL OMHOOG! Lv {lvl}',
     newWeapon: 'Nieuw wapen: {name}!',
     masterBuff: 'MEESTER-BUFF +20%',
@@ -9182,10 +10323,20 @@ function seedNlGameStrings() {
     bossWave: 'BAAS-GOLF!',
     eliteWave: 'ELITE-GOLF',
     superBossWave: 'SUPER-BAAS GOLF',
+    bossTitle: 'BAAS',
+    superBossTitle: 'SUPER BAAS',
+    bossName: '{name}!',
+    colossalBossName: 'COLOSSALE {name}!',
+    bossNamed: 'BAAS — {name}!',
+    eliteNamed: 'ELITE — {name}!',
     flyerWave: 'VLIEGER-GOLF',
     rushWave: 'RUSH-GOLF',
     eliteTraitWave: 'ELITE-GOLF',
     tideWave: 'TIDE-GOLF',
+    ranchWave: 'BOERDERIJ OP HOL',
+    safariWave: 'DIERENTUIN-UITBRAAK',
+    emberWave: 'EMBER-GOLF · 2.0',
+    painWave: 'PIJN-GOLF · 3.0',
     waveClear: 'Golf gewist +{heal} HP',
     waveN: 'GOLF {n}/{total}',
     fight: 'VECHT!',
@@ -9260,6 +10411,7 @@ function seedNlGameStrings() {
     matsFlyers: ' · vliegers = +3 per hit',
     advDetailWin: 'Level {lv} · {kills} monsters · {stars}★ · max combo ×{combo}{finishers}{streak}',
     advDetailLose: 'Level {lv} · {kills} monsters · max combo ×{combo}{finishers}{streak}',
+    advDiffLine: '{diff} · ',
     streakLine: ' · streak ×{n}',
     gambleLine: ' · gok: {text}',
     starGain: '+{n}★',
@@ -9297,6 +10449,9 @@ function seedNlGameStrings() {
     masterSwordGain: 'Hyrules legendarische kling — 15s!',
     masterSwordFade: 'Master Sword vervaagt…',
     bossWaits: 'DE BAAS WACHT…',
+    bossTag: 'BAAS',
+    superBossTag: 'SUPER BAAS',
+    colossalTag: 'COLOSSAAL',
     checkpoint: 'CHECKPOINT — DEEL {part}/3',
     allyHeal: '+{heal} bondgenoot',
     allyHit: '{name} −{dmg}',
@@ -9336,6 +10491,9 @@ function seedNlGameStrings() {
   if (!I18N.nl.toast) I18N.nl.toast = {};
   Object.assign(I18N.nl.toast, {
     islandUnlock: '{name} ontgrendeld! Skill gate: wapens tot Lv {cap}',
+    diffUnlockNightmare: 'Nightmare 2.0 ontgrendeld! Vuur · wildere rariteiten · snellere vijanden',
+    diffUnlockHell: 'Hell 3.0 ontgrendeld! Lava · pijn · mythische hordes',
+    diffHellCleared: 'Hell 3.0 uitgespeeld — je bent een legende!',
     masterBuffGain: 'Meester-buff! +20% HP, snelheid & schade tot je wint',
     eggDuplicate: 'Bonus-ei dubbel: {name} (+10 XP)',
     eggNew: 'Bonus-ei! {name} ({rar})',
@@ -9622,7 +10780,16 @@ function seedNlGameStrings() {
     charPickNow2: 'P2',
     charIpadTip: 'iPad: speler 1 gebruikt de linker helft van het scherm (joystick + knoppen), speler 2 de rechter helft. Draai je iPad liggend voor het meeste ruimte.',
     levelHead: 'Kies een eiland',
-    levelSub: '5 eilanden × 10 levels · Tik level = Gooi & start · lang indrukken = zonder gok',
+    levelSub: 'Normal → Nightmare 2.0 → Hell 3.0 · 7 eilanden × 10 levels · Tik level = Gooi & start',
+    diff: { normal: 'Normal', nightmare: 'Nightmare', hell: 'Hell' },
+    diffTipNormal: 'Standaard avontuur · model 1.0',
+    diffTipHard: '{name} — zwaardere vijanden, hogere rariteiten & eigen arena',
+    diffUnlockNightmare: 'Versla Normal Lv 70 om Nightmare 2.0 te openen',
+    diffUnlockHell: 'Versla Nightmare Lv 70 om Hell 3.0 te openen',
+    diffBlurbNormal: 'Model 1.0 — klassiek avontuur',
+    diffBlurbNightmare: 'Model 2.0 — vuur-arena · eerdere rasernie · ember-golven · wildere drops',
+    diffBlurbHell: 'Model 3.0 — lava · schreeuwende pijn · pijn-golven · mythische hordes',
+    islandDiffTag: ' · {diff}',
     gambleSub: 'Twee dobbelstenen: pech = super-baas in een willekeurige golf · geluk = sterke bondgenoot (buff alleen dit level)',
     gambleSumDefault: 'Tik Gooi & start — of overslaan zonder gok',
     gambleSumRoll: 'Som: {d1} + {d2} = {sum}',
@@ -9736,7 +10903,7 @@ function seedNlGameStrings() {
     helpTouch: 'touch',
     helpKeyboard: 'toetsenbord',
     helpIslandTitle: 'Eilanden & skill gate',
-    helpIslandIntro: 'avontuur is 5×10 levels. Per eiland geldt een wapen-cap (nu Lv {cap} op eiland {cur}).',
+    helpIslandIntro: 'avontuur is 5×10 levels × Normal/Nightmare/Hell. Per eiland geldt een wapen-cap (nu Lv {cap} op eiland {cur}). Na Normal Lv 50 openen Nightmare & Hell.',
     helpMasterBuff: 'Meester-buff: 5× verlies op hetzelfde level → +20% HP, snelheid & schade tot je wint. Baas op Lv 10/20/30/40/50 opent het volgende eiland.',
     helpIslandLocked: 'Vergrendeld — versla baas Lv {lv}',
     helpIslandProg: '{cleared}/{total} levels · {stars}/{maxStars}★ · skill gate wapens Lv {cap}',
@@ -9886,11 +11053,11 @@ function seedNlFromRuntime() {
     if (!I18N.nl.skill) I18N.nl.skill = {};
     for (const s of SKILLS) I18N.nl.skill[s.id] = { name: s.name, hint: s.hint, tooltip: s.tooltip, bonus: s.bonus };
     Object.assign(I18N.nl.skill, {
-      behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor' },
+      behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor', slash: 'Slash' },
       stat: { dmg: 'Schade', wind: 'Windup', spd: 'Snelheid', kb: 'Knockback' },
       tag: { pierce: 'Pierce', pull: 'Pull' },
       saga: {
-        scroll: { blurb: 'Ninja-scroll — Rasengan, Chidori, Rinnegan & gravity specials.' },
+        scroll: { blurb: 'Ninja-scroll — Rasengan, Chidori, Rinnegan-lichtschits & gravity specials.' },
         ki: { blurb: 'Ki-golven — Kamehameha, discs, Spirit Bomb & blitz dashes.' },
         tide: { blurb: 'Tide-straal — Getsuga, Cero & Bankai flash.' },
         fighter: { blurb: 'Street stretch — Gum-Gum dash & Gear Second steam.' },
@@ -10066,6 +11233,7 @@ const CATALOG_EN = {
     matsFlyers: ' · flyers = +3 per hit',
     advDetailWin: 'Level {lv} · {kills} monsters · {stars}★ · max combo ×{combo}{finishers}{streak}',
     advDetailLose: 'Level {lv} · {kills} monsters · max combo ×{combo}{finishers}{streak}',
+    advDiffLine: '{diff} · ',
     streakLine: ' · streak ×{n}',
     gambleLine: ' · gamble: {text}',
     starGain: '+{n}★',
@@ -10094,10 +11262,19 @@ const CATALOG_EN = {
   },
   banner: {
     levelStart: 'LEVEL {n}',
+    levelStartDiff: '{diff} · LEVEL {n}',
     levelUp: 'LEVEL UP! Lv {lvl}', newWeapon: 'New weapon: {name}!', masterBuff: 'MASTER BUFF +20%',
     masterSword: 'MASTER SWORD!',
     bossWave: 'BOSS WAVE!', eliteWave: 'ELITE WAVE', superBossWave: 'SUPER-BOSS WAVE',
+    bossTitle: 'BOSS',
+    superBossTitle: 'SUPER BOSS',
+    bossName: '{name}!',
+    colossalBossName: 'COLOSSAL {name}!',
+    bossNamed: 'BOSS — {name}!',
+    eliteNamed: 'ELITE — {name}!',
     flyerWave: 'FLYER WAVE', rushWave: 'RUSH WAVE', eliteTraitWave: 'ELITE WAVE', tideWave: 'TIDE WAVE',
+    ranchWave: 'FARM RAMPAGE', safariWave: 'ZOO BREAKOUT',
+    emberWave: 'EMBER WAVE · 2.0', painWave: 'PAIN WAVE · 3.0',
     waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
     fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'DEFEATED...', rasenganTriple: 'TRIPLE RASENGAN!', rasenganDual: 'DUAL RASENGAN!',
     round: 'ROUND {n}', roundDecisive: 'ROUND {n} · decisive round', roundMatchPoint: 'ROUND {n} · match point',
@@ -10144,6 +11321,9 @@ const CATALOG_EN = {
     exportCopied: 'Save copied + download · {summary} (~{size})',
     exportBox: 'Save in box + download · {summary} (~{size})',
     islandUnlock: '{name} unlocked! Skill gate: weapons up to Lv {cap}',
+    diffUnlockNightmare: 'Nightmare 2.0 unlocked! Fire · wilder rarities · faster foes',
+    diffUnlockHell: 'Hell 3.0 unlocked! Lava · pain · mythic hordes',
+    diffHellCleared: 'Hell 3.0 cleared — you are a legend!',
     masterBuffGain: 'Master buff! +20% HP, speed & damage until you win',
     eggDuplicate: 'Bonus egg duplicate: {name} (+10 XP)',
     eggNew: 'Bonus egg! {name} ({rar})',
@@ -10342,7 +11522,16 @@ const CATALOG_EN = {
     charPickNow2: 'P2',
     charIpadTip: 'iPad: player 1 uses the left half (joystick + buttons), player 2 the right half. Landscape works best.',
     levelHead: 'Pick an island',
-    levelSub: '5 islands × 10 levels · Tap level = Roll & start · long press = no gamble',
+    levelSub: 'Normal → Nightmare 2.0 → Hell 3.0 · 7 islands × 10 levels · Tap level = Roll & start',
+    diff: { normal: 'Normal', nightmare: 'Nightmare', hell: 'Hell' },
+    diffTipNormal: 'Standard adventure · model 1.0',
+    diffTipHard: '{name} — tougher foes, higher rarities & own arena',
+    diffUnlockNightmare: 'Beat Normal Lv 70 to unlock Nightmare 2.0',
+    diffUnlockHell: 'Beat Nightmare Lv 70 to unlock Hell 3.0',
+    diffBlurbNormal: 'Model 1.0 — classic adventure',
+    diffBlurbNightmare: 'Model 2.0 — fire arena · earlier enrage · ember waves · wilder drops',
+    diffBlurbHell: 'Model 3.0 — lava · screaming pain · pain waves · mythic hordes',
+    islandDiffTag: ' · {diff}',
     gambleSub: 'Two dice: bad luck = super-boss in a random wave · lucky = strong ally (buff this level only)',
     gambleSumDefault: 'Tap Roll & start — or skip with no gamble',
     gambleSumRoll: 'Sum: {d1} + {d2} = {sum}',
@@ -10456,7 +11645,7 @@ const CATALOG_EN = {
     helpTouch: 'touch',
     helpKeyboard: 'keyboard',
     helpIslandTitle: 'Islands & skill gate',
-    helpIslandIntro: 'adventure is 5×10 levels. Each island has a weapon cap (now Lv {cap} on island {cur}).',
+    helpIslandIntro: 'adventure is 5×10 levels × Normal/Nightmare/Hell. Each island has a weapon cap (now Lv {cap} on island {cur}). Beat Normal Lv 50 to open Nightmare & Hell.',
     helpMasterBuff: 'Master buff: 5× loss on same level → +20% HP, speed & damage until you win. Boss Lv 10/20/30/40/50 opens next island.',
     helpIslandLocked: 'Locked — beat boss Lv {lv}',
     helpIslandProg: '{cleared}/{total} levels · {stars}/{maxStars}★ · skill gate weapons Lv {cap}',
@@ -10522,11 +11711,11 @@ const CATALOG_EN = {
   },
   egg: { dailyReady: 'Daily egg ready', advBonus: 'Bonus egg: win 1× adventure', tomorrow: 'Egg again tomorrow' },
   skill: {
-    behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor' },
+    behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor', slash: 'Slash' },
     stat: { dmg: 'Damage', wind: 'Windup', spd: 'Speed', kb: 'Knockback' },
     tag: { pierce: 'Pierce', pull: 'Pull' },
     saga: {
-      scroll: { blurb: 'Ninja scroll — Rasengan, Chidori, Rinnegan & gravity specials.' },
+      scroll: { blurb: 'Ninja scroll — Rasengan, Chidori, Rinnegan lightning slash & gravity specials.' },
       ki: { blurb: 'Ki waves — Kamehameha, discs, Spirit Bomb & blitz dashes.' },
       tide: { blurb: 'Tide beams — Getsuga, Cero & Bankai flash.' },
       fighter: { blurb: 'Street stretch — Gum-Gum dash & Gear Second steam.' },
@@ -10619,6 +11808,9 @@ const CATALOG_EN = {
     masterSwordGain: "Hyrule's legendary blade — 15s!",
     masterSwordFade: 'Master Sword fades…',
     bossWaits: 'THE BOSS AWAITS…',
+    bossTag: 'BOSS',
+    superBossTag: 'SUPER BOSS',
+    colossalTag: 'COLOSSAL',
     checkpoint: 'CHECKPOINT — PART {part}/3',
     allyHeal: '+{heal} ally', allyHit: '{name} −{dmg}',
     tideAllyIntro: '{name} — tide heal between waves',
@@ -11451,6 +12643,12 @@ const AudioSys = {
   _sfxVar: 0,
   _sfxPan: 0,
   _combatHeat: 0,
+  /** UI feedback SFX allowed while paused (combat hits blocked). */
+  _pauseUiSfx: new Set([
+    'select', 'bell', 'levelup', 'summon', 'diceRoll', 'claim', 'achieve',
+    'modeAdventure', 'modeTraining', 'modeVersus', 'modeWall', 'modeMats',
+    'gambleRoll', 'import', 'export', 'install', 'share',
+  ]),
   _samples: {},
   _sampleLoadStarted: false,
   _sampleCount: 0,
@@ -11609,10 +12807,16 @@ const AudioSys = {
     this.tone(660, 880, 0.11, 'sine', vol, this.musicGain);
   },
 
+  _sfxBlockedInPause(name) {
+    const inPause = this.paused || state === 'pause';
+    return inPause && !this._pauseUiSfx.has(name);
+  },
+
   setPaused(on) {
     this.paused = !!on;
     const needAudio = !!(save.music || save.sfx);
     if (on) {
+      this.setCombatHeat(0);
       try { this.init(); } catch (_) {}
       if (needAudio) {
         try { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
@@ -11689,7 +12893,7 @@ const AudioSys = {
 
   /** Pan SFX by world/screen X (0…W → left…right) */
   sfxAt(name, screenX) {
-    if (!this.ctx || !save.sfx) return;
+    if (!this.ctx || !save.sfx || this._sfxBlockedInPause(name)) return;
     if (typeof screenX === 'number' && typeof W !== 'undefined' && W > 0) {
       this._sfxPan = clamp((screenX / W) * 2 - 1, -1, 1) * 0.82;
     }
@@ -11725,7 +12929,7 @@ const AudioSys = {
   },
 
   sfx(name) {
-    if (!this.ctx || !save.sfx) return;
+    if (!this.ctx || !save.sfx || this._sfxBlockedInPause(name)) return;
     try { if (this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
     if (this._playSample(name)) return;
     const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
@@ -14193,6 +15397,143 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.fillStyle = '#222'; c.beginPath(); c.arc(50, -3, 2.5, 0, TAU); c.fill();
       c.strokeStyle = '#ff8c42'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(58, 2); c.lineTo(70, 6); c.stroke();
       break;
+    case 'nachtkaars':
+      c.strokeStyle = '#c47aff'; c.lineWidth = 5; c.beginPath(); c.moveTo(0, 0); c.lineTo(28, 0); c.stroke();
+      c.fillStyle = '#2a1840'; c.fillRect(26, -8, 14, 16);
+      c.fillStyle = '#ffd75e'; c.beginPath(); c.moveTo(33, -8); c.lineTo(36, -20); c.lineTo(39, -8); c.fill();
+      break;
+    case 'droomprikker':
+      c.strokeStyle = '#8a70c0'; c.lineWidth = 3; c.beginPath(); c.moveTo(0, 0); c.lineTo(44, 0); c.stroke();
+      c.fillStyle = '#e8d0ff'; c.beginPath(); c.moveTo(42, -5); c.lineTo(58, 0); c.lineTo(42, 5); c.fill();
+      break;
+    case 'spooklepel':
+    case 'lavalepel':
+    case 'apocalypslepel': {
+      const col = id === 'apocalypslepel' ? '#ff6a3d' : (id === 'lavalepel' ? '#ff8c42' : '#c47aff');
+      c.strokeStyle = '#5a4030'; c.lineWidth = 4; c.beginPath(); c.moveTo(0, 0); c.lineTo(30, 0); c.stroke();
+      c.fillStyle = col;
+      c.beginPath(); c.ellipse(44, 0, 16, 10, 0, 0, TAU); c.fill();
+      c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(44, -2, 8, 4, 0, 0, TAU); c.fill();
+      break;
+    }
+    case 'nachtmerriesok':
+      c.fillStyle = '#6a40a0'; c.beginPath(); c.moveTo(4, -6); c.lineTo(28, -8); c.lineTo(36, 2); c.lineTo(28, 10); c.lineTo(4, 8); c.fill();
+      c.fillStyle = '#ff6b9d'; c.fillRect(28, -4, 14, 10);
+      break;
+    case 'echotrompet':
+    case 'helgitaar': {
+      c.strokeStyle = id === 'helgitaar' ? '#ff6a3d' : '#c47aff';
+      c.lineWidth = 5; c.beginPath(); c.moveTo(0, 0); c.lineTo(26, 0); c.stroke();
+      c.fillStyle = id === 'helgitaar' ? '#8a2020' : '#2a1840';
+      c.beginPath(); c.moveTo(24, -12); c.lineTo(52, -6); c.lineTo(52, 6); c.lineTo(24, 12); c.fill();
+      if (id === 'helgitaar') {
+        c.strokeStyle = '#ffd75e'; c.lineWidth = 1.5;
+        c.beginPath(); c.moveTo(28, -4); c.lineTo(48, -2); c.moveTo(28, 4); c.lineTo(48, 2); c.stroke();
+      }
+      break;
+    }
+    case 'schaduwbanaan':
+    case 'brimstonebanaan': {
+      const col = id === 'brimstonebanaan' ? '#ff6a3d' : '#a060e0';
+      c.strokeStyle = col; c.lineWidth = 10; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(8, 10); c.quadraticCurveTo(28, -18, 50, 4); c.stroke();
+      c.strokeStyle = '#ffe259'; c.lineWidth = 3;
+      c.beginPath(); c.moveTo(12, 6); c.quadraticCurveTo(28, -10, 46, 2); c.stroke();
+      break;
+    }
+    case 'voidvork':
+    case 'hellevork': {
+      const col = id === 'hellevork' ? '#ff6a3d' : '#ff6b9d';
+      c.strokeStyle = '#4a3040'; c.lineWidth = 4; c.beginPath(); c.moveTo(0, 0); c.lineTo(34, 0); c.stroke();
+      c.strokeStyle = col; c.lineWidth = 3;
+      c.beginPath(); c.moveTo(34, 0); c.lineTo(56, 0); c.moveTo(34, -2); c.lineTo(52, -12); c.moveTo(34, 2); c.lineTo(52, 12); c.stroke();
+      break;
+    }
+    case 'angstaccordeon':
+    case 'asaccordeon': {
+      const col = id === 'asaccordeon' ? '#ff6a3d' : '#c47aff';
+      c.fillStyle = col;
+      for (let i = 0; i < 5; i++) c.fillRect(8 + i * 8, -12 + (i % 2) * 3, 6, 24 - (i % 2) * 4);
+      c.strokeStyle = '#2a1840'; c.lineWidth = 3; c.strokeRect(6, -14, 44, 28);
+      break;
+    }
+    case 'slaapkussen':
+      c.fillStyle = '#e8d0ff'; c.beginPath(); c.ellipse(28, 0, 26, 16, 0, 0, TAU); c.fill();
+      c.strokeStyle = '#c47aff'; c.lineWidth = 2; c.stroke();
+      break;
+    case 'spooktoaster':
+      c.fillStyle = '#6a5080'; c.fillRect(8, -14, 36, 28);
+      c.fillStyle = '#ff6b9d'; c.fillRect(14, -8, 10, 16); c.fillRect(28, -8, 10, 16);
+      c.fillStyle = '#ffd75e'; c.fillRect(16, -18, 6, 8); c.fillRect(30, -20, 6, 10);
+      break;
+    case 'droomspiegel':
+      c.strokeStyle = '#c47aff'; c.lineWidth = 4; c.beginPath(); c.moveTo(4, 0); c.lineTo(18, 0); c.stroke();
+      c.fillStyle = 'rgba(124,245,255,.45)'; c.beginPath(); c.moveTo(18, -14); c.lineTo(52, -10); c.lineTo(52, 10); c.lineTo(18, 14); c.fill();
+      c.strokeStyle = '#e8ffff'; c.lineWidth = 2; c.stroke();
+      break;
+    case 'nachtuilvleugel':
+      c.fillStyle = '#2a1840';
+      c.beginPath(); c.moveTo(4, 0); c.quadraticCurveTo(28, -22, 54, -4); c.quadraticCurveTo(28, -6, 4, 0); c.fill();
+      c.fillStyle = '#c47aff';
+      c.beginPath(); c.moveTo(4, 0); c.quadraticCurveTo(26, 18, 50, 6); c.quadraticCurveTo(26, 4, 4, 0); c.fill();
+      break;
+    case 'waanballon':
+      c.fillStyle = '#ff6b9d'; c.beginPath(); c.arc(34, -4, 18, 0, TAU); c.fill();
+      c.strokeStyle = '#c47aff'; c.lineWidth = 2; c.beginPath(); c.moveTo(34, 14); c.lineTo(34, 28); c.stroke();
+      break;
+    case 'schriktandwiel':
+      c.save(); c.translate(30, 0); c.rotate(spin * 8);
+      c.fillStyle = '#6a40a0';
+      for (let i = 0; i < 8; i++) {
+        c.rotate(Math.PI / 4);
+        c.fillRect(10, -3, 12, 6);
+      }
+      c.beginPath(); c.arc(0, 0, 12, 0, TAU); c.fill();
+      c.fillStyle = '#ff6b9d'; c.beginPath(); c.arc(0, 0, 5, 0, TAU); c.fill();
+      c.restore();
+      break;
+    case 'duiveltrommel':
+      c.fillStyle = '#8a2020'; c.beginPath(); c.ellipse(30, 0, 22, 16, 0, 0, TAU); c.fill();
+      c.strokeStyle = '#ffd75e'; c.lineWidth = 2; c.stroke();
+      c.strokeStyle = '#5a1010'; c.lineWidth = 4; c.beginPath(); c.moveTo(0, 0); c.lineTo(12, 0); c.stroke();
+      break;
+    case 'zwavelzeep':
+      c.fillStyle = '#ffd75e';
+      c.beginPath();
+      c.moveTo(14, -10); c.lineTo(42, -10); c.lineTo(46, -4); c.lineTo(46, 8); c.lineTo(42, 10); c.lineTo(14, 10); c.lineTo(10, 8); c.lineTo(10, -4);
+      c.closePath(); c.fill();
+      c.fillStyle = '#ff6a3d'; c.font = '900 9px sans-serif'; c.textAlign = 'center'; c.fillText('S', 28, 3);
+      break;
+    case 'infernoijsje':
+      c.fillStyle = '#7cf5ff'; c.beginPath(); c.moveTo(16, -4); c.lineTo(40, -4); c.lineTo(28, 22); c.fill();
+      c.fillStyle = '#ff6a3d'; c.beginPath(); c.arc(28, -10, 14, 0, TAU); c.fill();
+      break;
+    case 'helhamsterwiel':
+      c.save(); c.translate(28, 0); c.rotate(spin * 10);
+      c.strokeStyle = '#ff6a3d'; c.lineWidth = 4; c.beginPath(); c.arc(0, 0, 18, 0, TAU); c.stroke();
+      c.beginPath(); c.moveTo(-12, 0); c.lineTo(12, 0); c.moveTo(0, -12); c.lineTo(0, 12); c.stroke();
+      c.restore();
+      break;
+    case 'demondoekje':
+      c.fillStyle = '#5a1010'; c.fillRect(6, -12, 40, 24);
+      c.strokeStyle = '#ff6a3d'; c.lineWidth = 2;
+      for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(10 + i * 10, -10); c.lineTo(10 + i * 10, 10); c.stroke(); }
+      break;
+    case 'chiliketting':
+      c.strokeStyle = '#ff6a3d'; c.lineWidth = 3;
+      for (let i = 0; i < 6; i++) {
+        c.beginPath(); c.arc(8 + i * 9, Math.sin(i + spin * 6) * 4, 4, 0, TAU); c.stroke();
+      }
+      c.fillStyle = '#ffe259'; c.beginPath(); c.moveTo(58, -6); c.lineTo(70, 0); c.lineTo(58, 6); c.fill();
+      break;
+    case 'pyroeend':
+      c.strokeStyle = '#ff6a3d'; c.lineWidth = 6; c.beginPath(); c.moveTo(0, 0); c.lineTo(30, 0); c.stroke();
+      c.fillStyle = '#ffd75e'; c.beginPath(); c.ellipse(46, 0, 16, 12, 0, 0, TAU); c.fill();
+      c.fillStyle = '#222'; c.beginPath(); c.arc(50, -3, 2.5, 0, TAU); c.fill();
+      c.save(); c.shadowColor = '#ff6a3d'; c.shadowBlur = 10;
+      c.strokeStyle = '#ff8c42'; c.lineWidth = 3; c.beginPath(); c.moveTo(58, 2); c.lineTo(72, 8); c.stroke();
+      c.restore();
+      break;
     default:
       // Fallback: korte stok (nooit speer-punt)
       c.strokeStyle = '#7a5c34'; c.lineWidth = 5;
@@ -14299,6 +15640,10 @@ function spawnJutsuImpactFx(game, x, y, kind, scale) {
   if (!lite && !small && (kind === 'chidori' || sk.behavior === 'dash')) {
     game.burst(x, y, '#e8f7ff', 8, { kind: 'spark', size: 1.8 });
   }
+  if (!lite && !small && (kind === 'rinnegan' || sk.behavior === 'slash')) {
+    game.burst(x, y, '#e8d0ff', 10, { kind: 'spark', size: 2.4 });
+    spawnFxRing(game, x, y, '#ffffff', 12);
+  }
 }
 
 /**
@@ -14363,7 +15708,38 @@ function drawJutsuChargeAura(c, hx, hy, g, animT, kind) {
         c.stroke();
       }
     }
-  } else if (behavior === 'pull' || behavior === 'meteor' || kind === 'rinnegan') {
+  } else if (behavior === 'slash' || kind === 'rinnegan') {
+    // Rinnegan — horizontale bliksem-schede beide kanten (charge preview)
+    const halo = c.createRadialGradient(ox, oy, 2, ox, oy, 24 + g * 30);
+    halo.addColorStop(0, `rgba(255,255,255,${0.4 + g * 0.4})`);
+    halo.addColorStop(0.4, `rgba(196,122,255,${0.28 + g * 0.35})`);
+    halo.addColorStop(1, 'rgba(120,40,180,0)');
+    c.fillStyle = halo;
+    c.beginPath();
+    c.arc(ox, oy, 24 + g * 30, 0, TAU);
+    c.fill();
+
+    c.lineCap = 'round';
+    c.lineJoin = 'round';
+    const reach = 18 + g * 36;
+    const bolts = lite ? 2 : 4;
+    for (const dir of [-1, 1]) {
+      for (let i = 0; i < bolts; i++) {
+        const yOff = (i - (bolts - 1) / 2) * (4 + g * 3);
+        const jagged = calm ? 0 : Math.sin(animT * 30 + i * 2.1 + dir) * (3 + g * 2);
+        c.strokeStyle = i % 2
+          ? `rgba(255,255,255,${0.45 + g * 0.4})`
+          : `rgba(196,122,255,${0.4 + g * 0.45})`;
+        c.lineWidth = i % 2 ? 1.3 : 2.4;
+        c.beginPath();
+        c.moveTo(ox, oy + yOff * 0.3);
+        c.lineTo(ox + dir * reach * 0.4, oy + yOff + jagged);
+        c.lineTo(ox + dir * reach * 0.7, oy + yOff * 0.5 - jagged * 0.6);
+        c.lineTo(ox + dir * reach, oy + yOff * 0.2);
+        c.stroke();
+      }
+    }
+  } else if (behavior === 'pull' || behavior === 'meteor') {
     c.strokeStyle = `rgba(196,122,255,${0.4 + g * 0.45})`;
     c.lineWidth = 2;
     for (let ring = 0; ring < (lite ? 2 : 3); ring++) {
@@ -14468,6 +15844,39 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
     c.beginPath(); c.ellipse(0, 0, r * 1.35, r * (behavior === 'disc' ? 0.55 : 0.75), spin * 0.2, 0, TAU); c.fill();
     c.strokeStyle = '#fff'; c.lineWidth = 2;
     c.beginPath(); c.ellipse(0, 0, r * 1.2, r * (behavior === 'disc' ? 0.45 : 0.65), spin * 0.2, 0, TAU); c.stroke();
+  } else if (behavior === 'slash') {
+    // Preview-icoon: korte tweerichtings-bliksem
+    c.shadowColor = col; c.shadowBlur = lite ? 8 : 20;
+    c.lineCap = 'round';
+    c.lineJoin = 'round';
+    const reach = r * 1.55;
+    for (const dir of [-1, 1]) {
+      c.strokeStyle = 'rgba(255,255,255,.9)';
+      c.lineWidth = Math.max(2, r * 0.22);
+      c.beginPath();
+      c.moveTo(0, 0);
+      c.lineTo(dir * reach * 0.45, Math.sin(spin * 4 + dir) * r * 0.2);
+      c.lineTo(dir * reach * 0.75, -Math.sin(spin * 5 + dir) * r * 0.15);
+      c.lineTo(dir * reach, Math.sin(spin * 3) * r * 0.08);
+      c.stroke();
+      c.strokeStyle = col;
+      c.lineWidth = Math.max(3.5, r * 0.38);
+      c.globalAlpha = (alpha == null ? 1 : alpha) * 0.55;
+      c.beginPath();
+      c.moveTo(0, -r * 0.55);
+      c.lineTo(dir * reach * 0.95, -r * 0.12);
+      c.lineTo(dir * reach * 0.95, r * 0.12);
+      c.lineTo(0, r * 0.55);
+      c.closePath();
+      c.stroke();
+      c.globalAlpha = alpha == null ? 1 : alpha;
+    }
+    const core = c.createRadialGradient(0, 0, 0, 0, 0, r * 0.7);
+    core.addColorStop(0, 'rgba(255,255,255,.95)');
+    core.addColorStop(0.5, col + 'cc');
+    core.addColorStop(1, col + '22');
+    c.fillStyle = core;
+    c.beginPath(); c.arc(0, 0, r * 0.55, 0, TAU); c.fill();
   } else if (behavior === 'pull' || behavior === 'meteor') {
     c.shadowColor = col; c.shadowBlur = lite ? 10 : 24;
     const grd = c.createRadialGradient(0, 0, 0, 0, 0, r);
@@ -14481,16 +15890,6 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
       c.beginPath();
       c.arc(0, 0, r * (0.35 + ring * 0.18), spin * (1 + ring * 0.2), spin * (1 + ring * 0.2) + Math.PI * 1.35);
       c.stroke();
-    }
-    if (kind === 'rinnegan') {
-      c.fillStyle = 'rgba(255,90,120,.9)';
-      const tomoe = lite ? 3 : 6;
-      for (let i = 0; i < tomoe; i++) {
-        const a = spin * 2 + i * (TAU / tomoe);
-        c.beginPath();
-        c.arc(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55, r * 0.12, 0, TAU);
-        c.fill();
-      }
     }
   } else {
     c.shadowColor = col; c.shadowBlur = lite ? 8 : 24;
@@ -14540,6 +15939,110 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
       c.stroke();
     }
   }
+  c.restore();
+}
+
+/**
+ * Rinnegan in-flight: tweerichtings lichtschits-strook.
+ * Dik bij centrum, smaller naar de tips (taper met afstand).
+ */
+function drawRinneganSlashWave(c, p) {
+  if (!p) return;
+  const col = (typeof skillById === 'function' ? (skillById(p.kind) || {}).color : null) || '#c47aff';
+  const reach = Math.max(8, p.slashReach || 0);
+  const r0 = p.r0 || 42;
+  const maxR = Math.max(1, p.slashMaxReach || 460);
+  const lite = fxLite();
+  const calm = motionReduced();
+  const spin = p.spin || 0;
+  const lifeFade = clamp((p.life || 0.2) / 0.25, 0.35, 1);
+
+  c.save();
+  c.globalAlpha = lifeFade;
+  c.lineCap = 'round';
+  c.lineJoin = 'round';
+
+  // Kernflits in het midden
+  const coreR = r0 * (0.55 + Math.sin(spin * 2.2) * 0.08);
+  const core = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, coreR * 1.4);
+  core.addColorStop(0, 'rgba(255,255,255,.95)');
+  core.addColorStop(0.35, 'rgba(232,208,255,.85)');
+  core.addColorStop(0.7, col + '88');
+  core.addColorStop(1, col + '00');
+  c.fillStyle = core;
+  c.beginPath();
+  c.arc(p.x, p.y, coreR * 1.35, 0, TAU);
+  c.fill();
+
+  for (const dir of [-1, 1]) {
+    const tipX = p.x + dir * reach;
+    const tipT = clamp(reach / maxR, 0, 1);
+    const tipH = Math.max(3, r0 * (1 - tipT * 0.82) * 0.35);
+    const midH = r0 * (1 - tipT * 0.4) * 0.7;
+
+    // Glow-fill van de strook (taperende diamant)
+    c.shadowColor = col;
+    c.shadowBlur = lite ? 6 : 18;
+    const grad = c.createLinearGradient(p.x, p.y, tipX, p.y);
+    grad.addColorStop(0, 'rgba(255,255,255,.75)');
+    grad.addColorStop(0.25, col + 'cc');
+    grad.addColorStop(0.75, col + '66');
+    grad.addColorStop(1, col + '18');
+    c.fillStyle = grad;
+    c.beginPath();
+    c.moveTo(p.x, p.y - r0 * 0.95);
+    c.lineTo(p.x + dir * reach * 0.45, p.y - midH);
+    c.lineTo(tipX, p.y - tipH);
+    c.lineTo(tipX, p.y + tipH);
+    c.lineTo(p.x + dir * reach * 0.45, p.y + midH);
+    c.lineTo(p.x, p.y + r0 * 0.95);
+    c.closePath();
+    c.fill();
+    c.shadowBlur = 0;
+
+    // Jagged lightning core
+    const segs = lite ? 5 : 9;
+    c.strokeStyle = 'rgba(255,255,255,.92)';
+    c.lineWidth = lite ? 2.2 : 3.2;
+    c.beginPath();
+    c.moveTo(p.x, p.y);
+    for (let i = 1; i <= segs; i++) {
+      const t = i / segs;
+      const x = p.x + dir * reach * t;
+      const wob = calm ? 0 : Math.sin(spin * 9 + i * 1.7 + dir) * (6 * (1 - t) + 2);
+      const y = p.y + wob * (i % 2 ? 1 : -1);
+      c.lineTo(x, y);
+    }
+    c.stroke();
+
+    if (!lite) {
+      c.strokeStyle = col;
+      c.lineWidth = 5.5;
+      c.globalAlpha = lifeFade * 0.45;
+      c.beginPath();
+      c.moveTo(p.x, p.y);
+      for (let i = 1; i <= segs; i++) {
+        const t = i / segs;
+        const x = p.x + dir * reach * t;
+        const wob = calm ? 0 : Math.sin(spin * 7 + i * 2.1 + dir * 0.5) * (8 * (1 - t) + 1);
+        c.lineTo(x, p.y + wob * (i % 2 ? -1 : 1));
+      }
+      c.stroke();
+      c.globalAlpha = lifeFade;
+
+      // Rand-stroken (boven/onder) die mee-taperen
+      c.strokeStyle = 'rgba(232,208,255,.55)';
+      c.lineWidth = 1.4;
+      for (const side of [-1, 1]) {
+        c.beginPath();
+        c.moveTo(p.x, p.y + side * r0 * 0.75);
+        c.lineTo(p.x + dir * reach * 0.5, p.y + side * midH * 0.85);
+        c.lineTo(tipX, p.y + side * tipH * 0.9);
+        c.stroke();
+      }
+    }
+  }
+
   c.restore();
 }
 
@@ -14878,6 +16381,517 @@ function drawTideHound(c, r, t, body, dark) {
   c.beginPath(); c.ellipse(0, r * 0.06, r * 0.28, r * 0.2, 0, 0, TAU); c.fill();
   c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 2;
   c.beginPath(); c.moveTo(-r * 0.12, r * 0.18); c.lineTo(0, r * 0.32); c.lineTo(r * 0.12, r * 0.18); c.stroke();
+}
+/* --- src/render/beast-art.js --- */
+/* ============================== FARM / ZOO BEAST ART =================== */
+/** Reuzen-boerderij- & dierentuindieren (arcade silhouetten). */
+
+const BEAST_ARTS = new Set([
+  'cow', 'pig', 'chicken', 'sheep', 'horse', 'goat', 'duck', 'rooster', 'donkey', 'goose',
+  'elephant', 'lion', 'tiger', 'giraffe', 'hippo', 'rhino', 'gorilla', 'zebra', 'bear', 'croc',
+  'kangaroo', 'panda', 'flamingo', 'camel',
+]);
+
+function beastEye(c, x, y, s) {
+  c.fillStyle = '#fff';
+  c.beginPath(); c.arc(x, y, s, 0, TAU); c.fill();
+  c.fillStyle = '#1a1a2a';
+  c.beginPath(); c.arc(x - s * 0.28, y, s * 0.48, 0, TAU); c.fill();
+}
+
+function drawBeastArt(c, art, r, t, body, dark, flash, telegraph) {
+  if (!c || !art) return;
+  r = clamp(Number(r) || 28, 8, 120);
+  t = Number(t) || 0;
+  body = body || '#c98850';
+  dark = dark || '#6b4a28';
+  try {
+    switch (art) {
+      case 'cow': drawBeastCow(c, r, t, body, dark, telegraph); break;
+      case 'pig': drawBeastPig(c, r, t, body, dark); break;
+      case 'chicken': drawBeastChicken(c, r, t, body, dark); break;
+      case 'sheep': drawBeastSheep(c, r, t, body, dark); break;
+      case 'horse': drawBeastHorse(c, r, t, body, dark, telegraph); break;
+      case 'goat': drawBeastGoat(c, r, t, body, dark, telegraph); break;
+      case 'duck': drawBeastDuck(c, r, t, body, dark); break;
+      case 'rooster': drawBeastRooster(c, r, t, body, dark); break;
+      case 'donkey': drawBeastDonkey(c, r, t, body, dark); break;
+      case 'goose': drawBeastGoose(c, r, t, body, dark); break;
+      case 'elephant': drawBeastElephant(c, r, t, body, dark, telegraph); break;
+      case 'lion': drawBeastLion(c, r, t, body, dark); break;
+      case 'tiger': drawBeastTiger(c, r, t, body, dark); break;
+      case 'giraffe': drawBeastGiraffe(c, r, t, body, dark); break;
+      case 'hippo': drawBeastHippo(c, r, t, body, dark, telegraph); break;
+      case 'rhino': drawBeastRhino(c, r, t, body, dark, telegraph); break;
+      case 'gorilla': drawBeastGorilla(c, r, t, body, dark, telegraph); break;
+      case 'zebra': drawBeastZebra(c, r, t, body, dark); break;
+      case 'bear': drawBeastBear(c, r, t, body, dark, telegraph); break;
+      case 'croc': drawBeastCroc(c, r, t, body, dark); break;
+      case 'kangaroo': drawBeastKangaroo(c, r, t, body, dark, telegraph); break;
+      case 'panda': drawBeastPanda(c, r, t, body, dark); break;
+      case 'flamingo': drawBeastFlamingo(c, r, t, body, dark); break;
+      case 'camel': drawBeastCamel(c, r, t, body, dark); break;
+      default: break;
+    }
+  } catch (err) {
+    console.error('[BeastArt]', art, err);
+    c.fillStyle = body;
+    c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+  }
+}
+
+function drawBeastCow(c, r, t, body, dark, telegraph) {
+  const stomp = telegraph ? -r * 0.06 : Math.sin(t * 4) * r * 0.02;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, stomp, r * 1.15, r * 0.72, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.ellipse(-r * 0.95, -r * 0.15 + stomp, r * 0.48, r * 0.42, -0.2, 0, TAU); c.fill();
+  for (const sx of [-1, 1]) {
+    c.beginPath();
+    c.moveTo(sx * r * 0.15 - r * 0.95, -r * 0.45 + stomp);
+    c.lineTo(sx * r * 0.55 - r * 0.95, -r * 0.95 + stomp);
+    c.lineTo(sx * r * 0.05 - r * 0.95, -r * 0.55 + stomp);
+    c.closePath(); c.fill();
+  }
+  c.fillStyle = '#ffe9c9';
+  c.beginPath(); c.ellipse(-r * 1.25, r * 0.05 + stomp, r * 0.22, r * 0.16, 0, 0, TAU); c.fill();
+  c.fillStyle = '#ff8aa0';
+  c.beginPath(); c.ellipse(r * 0.55, r * 0.35 + stomp, r * 0.28, r * 0.22, 0, 0, TAU); c.fill();
+  beastEye(c, -r * 1.05, -r * 0.25 + stomp, r * 0.12);
+}
+
+function drawBeastPig(c, r, t, body, dark) {
+  const bounce = Math.sin(t * 5) * r * 0.03;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, bounce, r * 1.05, r * 0.78, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.ellipse(-r * 0.95, bounce, r * 0.42, r * 0.38, 0, 0, TAU); c.fill();
+  c.fillStyle = '#ff9ab8';
+  c.beginPath(); c.ellipse(-r * 1.28, r * 0.08 + bounce, r * 0.28, r * 0.2, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.arc(-r * 1.35, r * 0.02 + bounce, r * 0.06, 0, TAU); c.fill();
+  c.beginPath(); c.arc(-r * 1.22, r * 0.08 + bounce, r * 0.06, 0, TAU); c.fill();
+  c.strokeStyle = dark; c.lineWidth = Math.max(2, r * 0.1); c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(r * 0.85, 0 + bounce);
+  c.quadraticCurveTo(r * 1.35, -r * 0.35 + Math.sin(t * 8) * 4, r * 1.15, r * 0.25 + bounce);
+  c.stroke();
+  beastEye(c, -r * 0.95, -r * 0.15 + bounce, r * 0.12);
+}
+
+function drawBeastChicken(c, r, t, body, dark) {
+  const flap = Math.sin(t * 10) * 0.35;
+  c.fillStyle = dark;
+  for (const s of [-1, 1]) {
+    c.save(); c.translate(s * r * 0.15, -r * 0.1); c.rotate(s * (0.4 + flap));
+    c.beginPath(); c.ellipse(s * r * 0.55, 0, r * 0.55, r * 0.22, 0, 0, TAU); c.fill();
+    c.restore();
+  }
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.15, r * 0.72, r * 0.65, 0, 0, TAU); c.fill();
+  c.beginPath(); c.arc(-r * 0.55, -r * 0.35, r * 0.38, 0, TAU); c.fill();
+  c.fillStyle = '#e04f4f';
+  c.beginPath();
+  c.moveTo(-r * 0.55, -r * 0.7); c.lineTo(-r * 0.7, -r * 1.05); c.lineTo(-r * 0.4, -r * 0.72);
+  c.lineTo(-r * 0.55, -r * 1.15); c.lineTo(-r * 0.35, -r * 0.7);
+  c.closePath(); c.fill();
+  c.fillStyle = '#ff9a42';
+  c.beginPath(); c.moveTo(-r * 0.9, -r * 0.3); c.lineTo(-r * 1.2, -r * 0.2); c.lineTo(-r * 0.88, -r * 0.12); c.closePath(); c.fill();
+  beastEye(c, -r * 0.65, -r * 0.4, r * 0.1);
+}
+
+function drawBeastSheep(c, r, t, body, dark) {
+  const puff = 1 + Math.sin(t * 3) * 0.03;
+  c.fillStyle = body;
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * TAU;
+    c.beginPath();
+    c.arc(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.4, r * 0.42 * puff, 0, TAU);
+    c.fill();
+  }
+  c.beginPath(); c.ellipse(0, 0, r * 0.95 * puff, r * 0.72 * puff, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.ellipse(-r * 0.95, -r * 0.05, r * 0.38, r * 0.36, 0, 0, TAU); c.fill();
+  beastEye(c, -r * 1.05, -r * 0.12, r * 0.1);
+}
+
+function drawBeastHorse(c, r, t, body, dark, telegraph) {
+  const rear = telegraph ? -0.12 : Math.sin(t * 6) * 0.03;
+  c.save(); c.rotate(rear);
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0.1 * r, 0.1 * r, r * 1.1, r * 0.58, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.95, -r * 0.35, r * 0.42, r * 0.55, -0.35, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 1.25, -r * 0.55, r * 0.38, r * 0.32, -0.2, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath();
+  c.moveTo(-r * 1.15, -r * 0.85); c.lineTo(-r * 1.05, -r * 1.25); c.lineTo(-r * 0.85, -r * 0.78);
+  c.closePath(); c.fill();
+  c.strokeStyle = dark; c.lineWidth = Math.max(2, r * 0.16); c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(r * 0.9, 0);
+  c.quadraticCurveTo(r * 1.4, -r * 0.4 + Math.sin(t * 7) * 5, r * 1.55, r * 0.15);
+  c.stroke();
+  beastEye(c, -r * 1.3, -r * 0.6, r * 0.1);
+  c.restore();
+}
+
+function drawBeastGoat(c, r, t, body, dark, telegraph) {
+  const tilt = telegraph ? -0.15 : Math.sin(t * 5) * 0.04;
+  c.save(); c.rotate(tilt);
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.08, r * 0.95, r * 0.62, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.9, -r * 0.2, r * 0.4, r * 0.38, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  for (const sx of [-1, 1]) {
+    c.beginPath();
+    c.moveTo(sx * r * 0.12 - r * 0.9, -r * 0.45);
+    c.quadraticCurveTo(sx * r * 0.55 - r * 0.9, -r * 1.15, sx * r * 0.2 - r * 0.9, -r * 0.55);
+    c.closePath(); c.fill();
+  }
+  c.fillStyle = '#ffe9c9';
+  c.beginPath(); c.ellipse(-r * 1.15, r * 0.05, r * 0.16, r * 0.12, 0, 0, TAU); c.fill();
+  beastEye(c, -r * 0.95, -r * 0.28, r * 0.1);
+  c.restore();
+}
+
+function drawBeastDuck(c, r, t, body, dark) {
+  const bob = Math.sin(t * 4) * r * 0.04;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.15 + bob, r * 0.85, r * 0.5, 0, 0, TAU); c.fill();
+  c.beginPath(); c.arc(-r * 0.55, -r * 0.25 + bob, r * 0.32, 0, TAU); c.fill();
+  c.fillStyle = '#ff9a42';
+  c.beginPath(); c.moveTo(-r * 0.85, -r * 0.22 + bob); c.lineTo(-r * 1.25, -r * 0.15 + bob); c.lineTo(-r * 0.85, -r * 0.08 + bob); c.closePath(); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.ellipse(r * 0.55, r * 0.05 + bob, r * 0.35, r * 0.18, 0.3, 0, TAU); c.fill();
+  beastEye(c, -r * 0.6, -r * 0.32 + bob, r * 0.09);
+}
+
+function drawBeastRooster(c, r, t, body, dark) {
+  const flap = Math.sin(t * 11) * 0.45;
+  c.fillStyle = dark;
+  for (const s of [-1, 1]) {
+    c.save(); c.translate(s * r * 0.1, -r * 0.05); c.rotate(s * (0.5 + flap));
+    c.beginPath(); c.moveTo(0, 0); c.lineTo(s * r * 1.2, -r * 0.55); c.lineTo(s * r * 0.9, r * 0.2); c.closePath(); c.fill();
+    c.restore();
+  }
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.1, r * 0.7, r * 0.62, 0, 0, TAU); c.fill();
+  c.beginPath(); c.arc(-r * 0.5, -r * 0.4, r * 0.36, 0, TAU); c.fill();
+  c.fillStyle = '#e04f4f';
+  for (let i = 0; i < 3; i++) {
+    const x = -r * 0.65 + i * r * 0.16;
+    c.beginPath();
+    c.moveTo(x, -r * 0.7); c.lineTo(x - r * 0.08, -r * 1.15); c.lineTo(x + r * 0.1, -r * 0.7);
+    c.closePath(); c.fill();
+  }
+  c.fillStyle = '#ff9a42';
+  c.beginPath(); c.moveTo(-r * 0.85, -r * 0.35); c.lineTo(-r * 1.2, -r * 0.25); c.lineTo(-r * 0.82, -r * 0.15); c.closePath(); c.fill();
+  c.fillStyle = dark;
+  c.beginPath();
+  c.moveTo(r * 0.55, 0);
+  c.lineTo(r * 1.15, -r * 0.35 + Math.sin(t * 6) * 4);
+  c.lineTo(r * 0.95, r * 0.25);
+  c.closePath(); c.fill();
+  beastEye(c, -r * 0.58, -r * 0.45, r * 0.1);
+}
+
+function drawBeastDonkey(c, r, t, body, dark) {
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.1, r * 1.0, r * 0.58, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.9, -r * 0.25, r * 0.4, r * 0.48, -0.25, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  for (const sx of [-1, 1]) {
+    c.beginPath();
+    c.moveTo(sx * r * 0.12 - r * 0.85, -r * 0.55);
+    c.lineTo(sx * r * 0.08 - r * 0.85, -r * 1.2);
+    c.lineTo(sx * r * 0.28 - r * 0.85, -r * 0.55);
+    c.closePath(); c.fill();
+  }
+  c.strokeStyle = dark; c.lineWidth = Math.max(2, r * 0.12); c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(r * 0.85, 0);
+  c.quadraticCurveTo(r * 1.25, r * 0.2 + Math.sin(t * 5) * 3, r * 1.15, r * 0.4);
+  c.stroke();
+  beastEye(c, -r * 1.0, -r * 0.35, r * 0.1);
+}
+
+function drawBeastGoose(c, r, t, body, dark) {
+  const bob = Math.sin(t * 3.5) * r * 0.03;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0.1 * r, r * 0.2 + bob, r * 0.9, r * 0.48, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.35, -r * 0.35 + bob, r * 0.28, r * 0.55, -0.4, 0, TAU); c.fill();
+  c.beginPath(); c.arc(-r * 0.65, -r * 0.75 + bob, r * 0.28, 0, TAU); c.fill();
+  c.fillStyle = '#ff9a42';
+  c.beginPath(); c.moveTo(-r * 0.9, -r * 0.72 + bob); c.lineTo(-r * 1.25, -r * 0.68 + bob); c.lineTo(-r * 0.9, -r * 0.58 + bob); c.closePath(); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.ellipse(r * 0.7, r * 0.05 + bob, r * 0.32, r * 0.16, 0.25, 0, TAU); c.fill();
+  beastEye(c, -r * 0.7, -r * 0.8 + bob, r * 0.09);
+}
+
+function drawBeastElephant(c, r, t, body, dark, telegraph) {
+  const sway = telegraph ? r * 0.08 : Math.sin(t * 2.5) * r * 0.03;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0.1 * r, 0.05 * r, r * 1.15, r * 0.85, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.85, -r * 0.35, r * 0.55, r * 0.5, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  for (const sx of [-1, 1]) {
+    c.beginPath(); c.ellipse(sx * r * 0.55 - r * 0.85, -r * 0.55, r * 0.28, r * 0.38, sx * 0.2, 0, TAU); c.fill();
+  }
+  c.strokeStyle = body; c.lineWidth = Math.max(3, r * 0.22); c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(-r * 1.15, -r * 0.15);
+  c.quadraticCurveTo(-r * 1.55 + sway, r * 0.35, -r * 1.25 + sway * 0.5, r * 0.85);
+  c.stroke();
+  c.fillStyle = '#ffe9c9';
+  c.beginPath();
+  c.moveTo(-r * 1.15, r * 0.05); c.lineTo(-r * 1.55, r * 0.35); c.lineTo(-r * 1.05, r * 0.25);
+  c.closePath(); c.fill();
+  beastEye(c, -r * 0.95, -r * 0.4, r * 0.1);
+}
+
+function drawBeastLion(c, r, t, body, dark) {
+  const mane = 1 + Math.sin(t * 4) * 0.04;
+  c.fillStyle = dark;
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * TAU;
+    c.beginPath();
+    c.moveTo(Math.cos(a) * r * 0.45, Math.sin(a) * r * 0.4 - r * 0.15);
+    c.lineTo(Math.cos(a) * r * 1.15 * mane, Math.sin(a) * r * 1.0 * mane - r * 0.15);
+    c.lineTo(Math.cos(a + 0.35) * r * 0.45, Math.sin(a + 0.35) * r * 0.4 - r * 0.15);
+    c.closePath(); c.fill();
+  }
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0.15 * r, r * 0.25, r * 0.95, r * 0.55, 0, 0, TAU); c.fill();
+  c.beginPath(); c.arc(-r * 0.55, -r * 0.15, r * 0.48, 0, TAU); c.fill();
+  c.fillStyle = '#ffe9c9';
+  c.beginPath(); c.ellipse(-r * 0.7, r * 0.05, r * 0.22, r * 0.16, 0, 0, TAU); c.fill();
+  beastEye(c, -r * 0.7, -r * 0.25, r * 0.11);
+}
+
+function drawBeastTiger(c, r, t, body, dark) {
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.08, r * 1.1, r * 0.58, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.95, -r * 0.2, r * 0.45, r * 0.42, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  for (let i = 0; i < 5; i++) {
+    const x = -r * 0.5 + i * r * 0.32;
+    c.fillRect(x, -r * 0.25, r * 0.1, r * 0.7);
+  }
+  c.beginPath();
+  c.moveTo(-r * 0.7, -r * 0.55); c.lineTo(-r * 0.85, -r * 1.0); c.lineTo(-r * 0.5, -r * 0.55);
+  c.closePath(); c.fill();
+  c.beginPath();
+  c.moveTo(-r * 1.05, -r * 0.5); c.lineTo(-r * 1.15, -r * 0.95); c.lineTo(-r * 0.85, -r * 0.5);
+  c.closePath(); c.fill();
+  c.strokeStyle = dark; c.lineWidth = Math.max(2, r * 0.14); c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(r * 0.95, 0);
+  c.quadraticCurveTo(r * 1.45, -r * 0.25 + Math.sin(t * 6) * 4, r * 1.35, r * 0.2);
+  c.stroke();
+  beastEye(c, -r * 1.05, -r * 0.3, r * 0.1);
+}
+
+function drawBeastGiraffe(c, r, t, body, dark) {
+  const sway = Math.sin(t * 2) * 0.05;
+  c.save(); c.rotate(sway);
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0.2 * r, r * 0.45, r * 0.85, r * 0.45, 0, 0, TAU); c.fill();
+  c.fillRect(-r * 0.35, -r * 0.95, r * 0.35, r * 1.35);
+  c.beginPath(); c.ellipse(-r * 0.45, -r * 1.05, r * 0.38, r * 0.28, -0.2, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  for (let i = 0; i < 4; i++) {
+    c.beginPath();
+    c.arc(-r * 0.1 + (i % 2) * r * 0.15, -r * 0.2 + i * r * 0.28, r * 0.12, 0, TAU);
+    c.fill();
+  }
+  c.beginPath();
+  c.moveTo(-r * 0.55, -r * 1.25); c.lineTo(-r * 0.5, -r * 1.45); c.lineTo(-r * 0.35, -r * 1.22);
+  c.closePath(); c.fill();
+  beastEye(c, -r * 0.55, -r * 1.08, r * 0.08);
+  c.restore();
+}
+
+function drawBeastHippo(c, r, t, body, dark, telegraph) {
+  const open = telegraph ? 0.25 : 0.08 + Math.sin(t * 2) * 0.04;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, 0, r * 1.15, r * 0.78, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.95, r * 0.1, r * 0.55, r * 0.42, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.ellipse(-r * 1.25, r * 0.2 + open * r, r * 0.4, r * 0.18, 0, 0, TAU); c.fill();
+  c.fillStyle = '#fff';
+  c.fillRect(-r * 1.35, r * 0.05, r * 0.1, r * 0.18);
+  c.fillRect(-r * 1.15, r * 0.05, r * 0.1, r * 0.18);
+  beastEye(c, -r * 0.85, -r * 0.2, r * 0.1);
+}
+
+function drawBeastRhino(c, r, t, body, dark, telegraph) {
+  const charge = telegraph ? -0.12 : Math.sin(t * 3) * 0.02;
+  c.save(); c.rotate(charge);
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.05, r * 1.15, r * 0.7, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.95, -r * 0.1, r * 0.5, r * 0.45, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath();
+  c.moveTo(-r * 1.25, -r * 0.15); c.lineTo(-r * 1.75, -r * 0.55); c.lineTo(-r * 1.15, r * 0.05);
+  c.closePath(); c.fill();
+  c.beginPath();
+  c.moveTo(-r * 1.05, -r * 0.35); c.lineTo(-r * 1.25, -r * 0.7); c.lineTo(-r * 0.9, -r * 0.3);
+  c.closePath(); c.fill();
+  beastEye(c, -r * 1.0, -r * 0.25, r * 0.1);
+  c.restore();
+}
+
+function drawBeastGorilla(c, r, t, body, dark, telegraph) {
+  const raise = telegraph ? -r * 0.2 : Math.sin(t * 2.5) * r * 0.03;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.15 + raise * 0.3, r * 0.95, r * 0.85, 0, 0, TAU); c.fill();
+  c.beginPath(); c.arc(0, -r * 0.55 + raise, r * 0.5, 0, TAU); c.fill();
+  c.fillStyle = '#ffe9c9';
+  c.beginPath(); c.ellipse(0, -r * 0.35 + raise, r * 0.35, r * 0.32, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  for (const sx of [-1, 1]) {
+    c.beginPath(); c.ellipse(sx * r * 0.95, r * 0.25 + raise * 0.5, r * 0.35, r * 0.55, sx * 0.25, 0, TAU); c.fill();
+  }
+  beastEye(c, -r * 0.15, -r * 0.55 + raise, r * 0.1);
+  beastEye(c, r * 0.15, -r * 0.55 + raise, r * 0.1);
+}
+
+function drawBeastZebra(c, r, t, body, dark) {
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.1, r * 1.05, r * 0.55, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.95, -r * 0.3, r * 0.4, r * 0.5, -0.3, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  for (let i = 0; i < 6; i++) {
+    const x = -r * 0.7 + i * r * 0.28;
+    c.beginPath();
+    c.moveTo(x, -r * 0.35); c.lineTo(x + r * 0.1, r * 0.55); c.lineTo(x + r * 0.2, -r * 0.35);
+    c.closePath(); c.fill();
+  }
+  c.beginPath();
+  c.moveTo(-r * 1.05, -r * 0.7); c.lineTo(-r * 1.0, -r * 1.15); c.lineTo(-r * 0.8, -r * 0.7);
+  c.closePath(); c.fill();
+  c.strokeStyle = dark; c.lineWidth = Math.max(2, r * 0.12); c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(r * 0.9, 0);
+  c.quadraticCurveTo(r * 1.35, -r * 0.2 + Math.sin(t * 6) * 3, r * 1.25, r * 0.2);
+  c.stroke();
+  beastEye(c, -r * 1.05, -r * 0.4, r * 0.09);
+}
+
+function drawBeastBear(c, r, t, body, dark, telegraph) {
+  const up = telegraph ? -r * 0.12 : 0;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.1 + up * 0.3, r * 1.0, r * 0.8, 0, 0, TAU); c.fill();
+  c.beginPath(); c.arc(-r * 0.15, -r * 0.45 + up, r * 0.55, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.arc(-r * 0.5, -r * 0.85 + up, r * 0.2, 0, TAU); c.fill();
+  c.beginPath(); c.arc(r * 0.2, -r * 0.85 + up, r * 0.2, 0, TAU); c.fill();
+  c.fillStyle = '#ffe9c9';
+  c.beginPath(); c.ellipse(-r * 0.15, -r * 0.25 + up, r * 0.28, r * 0.22, 0, 0, TAU); c.fill();
+  for (const sx of [-1, 1]) {
+    c.fillStyle = body;
+    c.beginPath(); c.ellipse(sx * r * 0.95, r * 0.15 + up * 0.4, r * 0.32, r * 0.48, sx * 0.2, 0, TAU); c.fill();
+  }
+  beastEye(c, -r * 0.35, -r * 0.55 + up, r * 0.1);
+  beastEye(c, r * 0.05, -r * 0.55 + up, r * 0.1);
+}
+
+function drawBeastCroc(c, r, t, body, dark) {
+  const wag = Math.sin(t * 4) * 0.06;
+  c.save(); c.rotate(wag);
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, 0, r * 1.25, r * 0.48, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 1.15, 0, r * 0.55, r * 0.32, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  for (let i = 0; i < 5; i++) {
+    const x = -r * 0.6 + i * r * 0.3;
+    c.beginPath();
+    c.moveTo(x, -r * 0.35); c.lineTo(x + r * 0.08, -r * 0.55); c.lineTo(x + r * 0.16, -r * 0.35);
+    c.closePath(); c.fill();
+  }
+  c.fillStyle = '#fff';
+  for (let i = 0; i < 4; i++) {
+    c.fillRect(-r * 1.45 + i * r * 0.14, -r * 0.05, r * 0.08, r * 0.12);
+  }
+  c.strokeStyle = body; c.lineWidth = Math.max(3, r * 0.2); c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(r * 1.1, 0);
+  c.quadraticCurveTo(r * 1.6, Math.sin(t * 5) * r * 0.15, r * 1.85, 0);
+  c.stroke();
+  beastEye(c, -r * 1.2, -r * 0.15, r * 0.1);
+  c.restore();
+}
+
+function drawBeastKangaroo(c, r, t, body, dark, telegraph) {
+  const hop = telegraph ? -r * 0.15 : Math.sin(t * 6) * r * 0.05;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0.1 * r, r * 0.15 + hop, r * 0.7, r * 0.85, 0.15, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.35, -r * 0.55 + hop, r * 0.4, r * 0.38, -0.2, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath();
+  c.moveTo(-r * 0.45, -r * 0.85 + hop); c.lineTo(-r * 0.55, -r * 1.25 + hop); c.lineTo(-r * 0.25, -r * 0.85 + hop);
+  c.closePath(); c.fill();
+  c.beginPath();
+  c.moveTo(-r * 0.2, -r * 0.85 + hop); c.lineTo(-r * 0.15, -r * 1.22 + hop); c.lineTo(0, -r * 0.85 + hop);
+  c.closePath(); c.fill();
+  c.fillStyle = '#ffe9c9';
+  c.beginPath(); c.ellipse(0.15 * r, r * 0.35 + hop, r * 0.28, r * 0.32, 0, 0, TAU); c.fill();
+  c.strokeStyle = body; c.lineWidth = Math.max(3, r * 0.18); c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(r * 0.45, r * 0.4 + hop);
+  c.quadraticCurveTo(r * 1.0, r * 0.7 + hop, r * 0.85, r * 1.0 + hop);
+  c.stroke();
+  beastEye(c, -r * 0.45, -r * 0.6 + hop, r * 0.09);
+}
+
+function drawBeastPanda(c, r, t, body, dark) {
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.2, r * 0.95, r * 0.8, 0, 0, TAU); c.fill();
+  c.beginPath(); c.arc(0, -r * 0.4, r * 0.55, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.arc(-r * 0.4, -r * 0.85, r * 0.22, 0, TAU); c.fill();
+  c.beginPath(); c.arc(r * 0.4, -r * 0.85, r * 0.22, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.22, -r * 0.45, r * 0.2, r * 0.16, -0.3, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(r * 0.22, -r * 0.45, r * 0.2, r * 0.16, 0.3, 0, TAU); c.fill();
+  for (const sx of [-1, 1]) {
+    c.beginPath(); c.ellipse(sx * r * 0.85, r * 0.25, r * 0.28, r * 0.4, sx * 0.25, 0, TAU); c.fill();
+  }
+  c.fillStyle = '#fff';
+  c.beginPath(); c.arc(-r * 0.22, -r * 0.45, r * 0.08, 0, TAU); c.fill();
+  c.beginPath(); c.arc(r * 0.22, -r * 0.45, r * 0.08, 0, TAU); c.fill();
+  c.fillStyle = '#1a1a2a';
+  c.beginPath(); c.arc(-r * 0.24, -r * 0.45, r * 0.04, 0, TAU); c.fill();
+  c.beginPath(); c.arc(r * 0.2, -r * 0.45, r * 0.04, 0, TAU); c.fill();
+}
+
+function drawBeastFlamingo(c, r, t, body, dark) {
+  const bob = Math.sin(t * 3) * r * 0.04;
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0.15 * r, r * 0.35 + bob, r * 0.55, r * 0.35, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.15, -r * 0.25 + bob, r * 0.18, r * 0.55, -0.35, 0, TAU); c.fill();
+  c.beginPath(); c.arc(-r * 0.45, -r * 0.7 + bob, r * 0.26, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath(); c.moveTo(-r * 0.7, -r * 0.7 + bob); c.lineTo(-r * 1.1, -r * 0.55 + bob); c.lineTo(-r * 0.7, -r * 0.55 + bob); c.closePath(); c.fill();
+  c.strokeStyle = '#ffe259'; c.lineWidth = Math.max(2, r * 0.1);
+  c.beginPath(); c.moveTo(0, r * 0.55 + bob); c.lineTo(r * 0.1, r * 1.15 + bob); c.stroke();
+  beastEye(c, -r * 0.5, -r * 0.75 + bob, r * 0.07);
+}
+
+function drawBeastCamel(c, r, t, body, dark) {
+  const sway = Math.sin(t * 2.2) * 0.03;
+  c.save(); c.rotate(sway);
+  c.fillStyle = body;
+  c.beginPath(); c.ellipse(0, r * 0.2, r * 1.1, r * 0.5, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.15, -r * 0.25, r * 0.4, r * 0.45, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(r * 0.35, -r * 0.15, r * 0.35, r * 0.4, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 0.95, -r * 0.25, r * 0.38, r * 0.48, -0.25, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(-r * 1.25, -r * 0.45, r * 0.32, r * 0.28, 0, 0, TAU); c.fill();
+  c.fillStyle = dark;
+  c.beginPath();
+  c.moveTo(-r * 1.3, -r * 0.7); c.lineTo(-r * 1.25, -r * 1.05); c.lineTo(-r * 1.1, -r * 0.68);
+  c.closePath(); c.fill();
+  beastEye(c, -r * 1.3, -r * 0.5, r * 0.09);
+  c.restore();
 }
 /* --- src/entities/fighter.js --- */
 /* ============================== VECHTER ================================ */
@@ -15775,6 +17789,8 @@ class Monster {
     this.spId = spId; this.sp = sp;
     this.elite = !!opts.elite;
     this.superBoss = !!opts.superBoss;
+    this.bossCore = !!(opts.bossCore || opts.superBoss);
+    this.colossal = false;
     this.size = sp.size * (opts.elite ? 1.5 : 1);
     this.maxhp = Math.round(sp.hp * (opts.hpMul || 1) * eliteMul);
     this.hp = this.maxhp;
@@ -15786,14 +17802,37 @@ class Monster {
       this.dmg = Math.round(this.dmg * 1.42);
       this.size *= 1.32;
     }
-    if (opts.giant && !this.superBoss) {
+    if (this.bossCore) {
+      if (this.superBoss) {
+        // Super-baas is al zwaar gebufft — lichte extra + kans op colossaal.
+        this.size = Math.round(this.size * 1.12);
+        this.maxhp = Math.round(this.maxhp * 1.35);
+        this.hp = this.maxhp;
+      } else {
+        this.size = Math.round(this.size * BOSS_CORE_SIZE_MUL);
+        this.maxhp = Math.round(this.maxhp * BOSS_CORE_HP_MUL);
+        this.hp = this.maxhp;
+        this.dmg = Math.round(this.dmg * BOSS_CORE_DMG_MUL);
+      }
+      if (Math.random() < COLOSSAL_CHANCE) {
+        this.colossal = true;
+        this.size = Math.round(this.size * COLOSSAL_SIZE_MUL);
+        this.maxhp = Math.round(this.maxhp * COLOSSAL_HP_MUL);
+        this.hp = this.maxhp;
+        this.dmg = Math.round(this.dmg * COLOSSAL_DMG_MUL);
+      }
+    }
+    if (opts.giant && !this.superBoss && !this.bossCore) {
       this.giant = true;
       this.size = Math.round(this.size * GIANT_SIZE_MUL);
       this.maxhp = Math.round(this.maxhp * GIANT_HP_MUL);
       this.hp = this.maxhp;
       this.dmg = Math.round(this.dmg * GIANT_DMG_MUL);
     }
-    this.speed = sp.speed;
+    this.speed = sp.speed * (opts.speedMul || 1);
+    this.advDiff = opts.advDiff || 'normal';
+    this.enrageMul = Number(opts.enrageMul) > 0 ? Number(opts.enrageMul) : 1;
+    this.enrageAt = Number.isFinite(Number(opts.enrageAt)) ? clamp(Number(opts.enrageAt), 0.25, 0.9) : 0.5;
     this.x = x;
     this.flying = sp.type === 'fly' || sp.type === 'dragon';
     this.swimming = sp.type === 'swim';
@@ -15806,8 +17845,12 @@ class Monster {
     this.enraged = false;
     this.phase2FlashT = 0;
     this.introT = 0;
+    this.introDur = 0;
     this.introTier = null;
     this.tideBoss = !!opts.tideBoss;
+    if (this.bossCore && typeof BOSS_SAFETY_DUR === 'number') {
+      this.safetyT = BOSS_SAFETY_DUR * (this.colossal ? 1.35 : 1);
+    }
   }
   get alive() { return this.hp > 0; }
 
@@ -15824,7 +17867,8 @@ class Monster {
     this.atkCD -= dt; this.shootCD -= dt;
     if (this.superSlowT > 0) this.superSlowT -= dt;
     const genjutsuMul = (this.superSlowT > 0) ? (this.superSlowMul || 0.25) : 1;
-    const spdMul = (this.enraged ? 1.32 : 1) * genjutsuMul;
+    const enrageSpd = this.enraged ? (1.32 * (this.enrageMul || 1)) : 1;
+    const spdMul = enrageSpd * genjutsuMul;
     const type = this.sp.type;
 
     if (type === 'hop') {
@@ -15970,18 +18014,26 @@ class Monster {
   takeDamage(dmg, kbx, game, opts) {
     opts = opts || {};
     if (!this.alive) return;
-    if (this.elite && !this.enraged && this.hp - dmg <= this.maxhp * 0.5) {
+    const canEnrage = this.elite || this.bossCore || this.advDiff === 'nightmare' || this.advDiff === 'hell';
+    const thresh = this.maxhp * (this.enrageAt != null ? this.enrageAt : 0.5);
+    if (canEnrage && !this.enraged && this.hp - dmg <= thresh) {
       this.enraged = true;
       this.phase2FlashT = motionReduced() ? 0.35 : 0.85;
-      this.speed = Math.round(this.speed * 1.28);
-      this.dmg = Math.round(this.dmg * 1.22);
-      game.banner(`${this.sp.name} — FASE 2!`, 1.6, '#ff6b6b', 36);
+      const em = this.enrageMul || 1;
+      this.speed = Math.round(this.speed * (1.28 * Math.min(em, 1.5)));
+      this.dmg = Math.round(this.dmg * (1.22 * Math.min(em, 1.45)));
+      const phaseLabel = this.advDiff === 'hell'
+        ? `${this.sp.name} — HEL-WOEDE!`
+        : (this.advDiff === 'nightmare'
+          ? `${this.sp.name} — VUUR-RASERNIE!`
+          : `${this.sp.name} — FASE 2!`);
+      game.banner(phaseLabel, 1.6, this.advDiff === 'hell' ? '#ff3a2a' : (this.advDiff === 'nightmare' ? '#ff7a4d' : '#ff6b6b'), 36);
       AudioSys.sfx('roar');
       game.shake(9, 0.28);
       haptic(28);
       // d20 polish #12 — baas fase-2 kleurflits
       game.bossPhase2Flash = motionReduced() ? 0.22 : 0.55;
-      game.bossPhase2Hue = this.sp?.c1 || '#ff6b6b';
+      game.bossPhase2Hue = this.advDiff === 'hell' ? '#ff2a18' : (this.sp?.c1 || '#ff6b6b');
       this.flashT = Math.max(this.flashT, motionReduced() ? 0.12 : 0.28);
       const lite = fxLite() || motionReduced();
       try {
@@ -15996,8 +18048,10 @@ class Monster {
     this.flashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.14 : opts.crit ? 0.12 : 0.1);
     const kb = scaleKnockback(kbx, dmg, { crit: opts.crit, kind: opts.kind });
     this.x += Math.sign(kb || 1) * clamp(Math.abs(kb) * 0.038, 5, 26);
-    game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
-    game.burst(this.x, this.y, this.sp.c1, dmg >= 18 ? 9 : 6);
+    if (!opts.quiet) {
+      game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
+      game.burst(this.x, this.y, this.sp.c1, dmg >= 18 ? 9 : 6);
+    }
     if (opts.crit) spawnFxRing(game, this.x, this.y - this.size * 0.4, '#ffd75e', fxLite() ? 5 : 8);
     if (this.hp <= 0) {
       this.hp = 0; this.deadT = 0;
@@ -16026,13 +18080,32 @@ class Monster {
     }
     // rariteit-aura
     const rar = rarityOf(this.sp.rarity);
+    if (this.alive && (this.advDiff === 'nightmare' || this.advDiff === 'hell') && !motionReduced()) {
+      c.save();
+      const pulse = 0.55 + Math.sin(this.t * (this.advDiff === 'hell' ? 10 : 7)) * 0.2;
+      c.globalAlpha = 0.18 + pulse * 0.2;
+      c.strokeStyle = this.advDiff === 'hell' ? '#ff3a2a' : '#ff8a30';
+      c.lineWidth = this.advDiff === 'hell' ? 3.2 : 2.4;
+      c.beginPath();
+      c.ellipse(0, -this.size * 0.15, this.size * 1.35, this.size * 1.15, 0, 0, TAU);
+      c.stroke();
+      if (this.advDiff === 'hell') {
+        c.globalAlpha = 0.12 + pulse * 0.1;
+        c.fillStyle = '#ff2a18';
+        c.beginPath();
+        c.ellipse(0, -this.size * 0.1, this.size * 1.15, this.size * 0.95, 0, 0, TAU);
+        c.fill();
+      }
+      c.restore();
+    }
     if (this.introT > 0 && this.alive) {
       c.save();
-      const p = clamp(this.introT / 1.6, 0, 1);
+      const p = clamp(this.introT / Math.max(0.6, this.introDur || 1.6), 0, 1);
       const pulse = 1 + Math.sin(this.t * 14) * 0.08;
+      const bigIntro = !!(this.bossCore || this.superBoss || this.colossal);
       c.globalAlpha = 0.25 + p * 0.45;
-      c.strokeStyle = this.introTier === 'tideBoss' ? '#4a9fff' : (this.introTier === 'superBoss' ? '#ffd75e' : (this.introTier === 'boss' ? '#ff6b6b' : '#c47aff'));
-      c.lineWidth = 4 + p * 4;
+      c.strokeStyle = this.introTier === 'tideBoss' ? '#4a9fff' : (this.introTier === 'superBoss' || this.colossal ? '#ffd75e' : (this.introTier === 'boss' ? '#ff6b6b' : '#c47aff'));
+      c.lineWidth = (bigIntro ? 5 : 4) + p * (bigIntro ? 6 : 4);
       c.beginPath();
       c.ellipse(0, 0, this.size * (1.7 + (1 - p) * 0.9) * pulse, this.size * (1.35 + (1 - p) * 0.7) * pulse, 0, 0, TAU);
       c.stroke();
@@ -16042,6 +18115,29 @@ class Monster {
         c.beginPath();
         c.ellipse(0, 0, this.size * 1.9 * pulse, this.size * 1.5 * pulse, 0, 0, TAU);
         c.fill();
+      }
+      if (bigIntro && p > 0.12) {
+        const label = (this.sp && this.sp.name) || 'BAAS';
+        const tag = this.colossal
+          ? (typeof t === 'function' ? t('combat.colossalTag') : 'COLOSSAAL')
+          : (this.superBoss
+            ? (typeof t === 'function' ? t('combat.superBossTag') : 'SUPER BAAS')
+            : (typeof t === 'function' ? t('combat.bossTag') : 'BAAS'));
+        const fs = Math.max(18, Math.min(this.colossal ? 42 : 34, this.size * 0.55));
+        c.globalAlpha = Math.min(1, 0.35 + p * 0.75);
+        c.font = `900 ${fs}px -apple-system, sans-serif`;
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        const ty = -this.size * (this.flying ? 1.15 : 1.35) - fs * 0.35;
+        c.lineWidth = Math.max(4, fs * 0.18);
+        c.strokeStyle = 'rgba(0,0,0,.72)';
+        c.fillStyle = this.colossal || this.superBoss ? '#ffd75e' : '#ff8a9a';
+        c.strokeText(tag, 0, ty - fs * 0.85);
+        c.fillText(tag, 0, ty - fs * 0.85);
+        c.font = `900 ${Math.round(fs * 1.15)}px -apple-system, sans-serif`;
+        c.fillStyle = '#fff';
+        c.strokeText(label, 0, ty);
+        c.fillText(label, 0, ty);
       }
       c.restore();
     }
@@ -16080,10 +18176,11 @@ class Monster {
       }
       c.restore();
     }
-    if (this.giant && this.alive) {
+    if ((this.giant || this.colossal) && this.alive) {
       c.save();
       c.globalAlpha = 0.35 + Math.sin(this.t * 4) * 0.08;
-      c.strokeStyle = '#ffd75e'; c.lineWidth = 2.5;
+      c.strokeStyle = this.colossal ? '#ffb06a' : '#ffd75e';
+      c.lineWidth = this.colossal ? 3.4 : 2.5;
       c.beginPath(); c.ellipse(0, this.size * 0.82, this.size * 1.28, this.size * 0.24, 0, 0, TAU); c.stroke();
       c.restore();
     }
@@ -16393,6 +18490,41 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
       if (typeof drawTideBossArt === 'function') {
         try { drawTideBossArt(c, sp.art, r, t, body, dark, flash, telegraph); } catch (err) {
           console.error('[TideArt]', sp.art, err);
+          c.fillStyle = body;
+          c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+        }
+      } else {
+        c.fillStyle = body;
+        c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+      }
+      break;
+    case 'cow':
+    case 'pig':
+    case 'chicken':
+    case 'sheep':
+    case 'horse':
+    case 'goat':
+    case 'duck':
+    case 'rooster':
+    case 'donkey':
+    case 'goose':
+    case 'elephant':
+    case 'lion':
+    case 'tiger':
+    case 'giraffe':
+    case 'hippo':
+    case 'rhino':
+    case 'gorilla':
+    case 'zebra':
+    case 'bear':
+    case 'croc':
+    case 'kangaroo':
+    case 'panda':
+    case 'flamingo':
+    case 'camel':
+      if (typeof drawBeastArt === 'function') {
+        try { drawBeastArt(c, sp.art, r, t, body, dark, flash, telegraph); } catch (err) {
+          console.error('[BeastArt]', sp.art, err);
           c.fillStyle = body;
           c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
         }
@@ -16961,6 +19093,30 @@ const SceneryArt = {
         }
         break;
       }
+      case 'nachtmerrie': {
+        for (let i = 0; i < 5; i++) {
+          const cx = 20 + i * 36 + r() * 8;
+          const h = 28 + Math.floor(r() * 28);
+          px(cx - 8, base - h, 16, h, '#1a0a28');
+          px(cx - 6, base - h - 4, 12, 6, '#2a1040');
+          if (r() < 0.6) px(cx - 2, base - h + 8, 4, 4, '#c47aff');
+        }
+        for (let i = 0; i < 8; i++) px(r() * W0, base - 6 - r() * 20, 3, 2, 'rgba(196,122,255,.35)');
+        break;
+      }
+      case 'hel': {
+        const cones = [[28, 48], [90, 60], [145, 40]];
+        for (const [cx, h] of cones) {
+          for (let yy = 0; yy < h; yy += 2) {
+            const w = 5 + (yy / h) * (h * 0.95);
+            px(cx - w / 2, base - h + yy, w, 2, '#2a0808');
+          }
+          px(cx - 4, base - h, 8, 3, '#ff6a3d');
+          px(cx - 2, base - h - 2, 4, 2, '#ffd75e');
+        }
+        for (let i = 0; i < 12; i++) px(r() * W0, base - 1 - r() * 5, 3, 1, '#5a1010');
+        break;
+      }
       case 'dojo': {
         // pagode-silhouet + torii-poort
         const pag = (cx, s) => {
@@ -17104,14 +19260,25 @@ function drawThemeWeather(c, themeName, t, ground, scroll) {
         c.save(); c.translate(x, y); c.rotate(t * 1.6 + i * 2); c.fillRect(-2.4, -1.4, 4.8, 2.8); c.restore();
         break;
       }
-      case 'vulkaan': {
+      case 'vulkaan':
+      case 'hel': {
         // opstijgende sintels met flikker
         const rise = 30 + (i % 4) * 12;
         const x = wrapW(seed * 3.3 + Math.sin(t * 1.7 + i * 2.1) * 18 - scroll * 0.3, W + 30) - 15;
         const y = ground - wrapW(seed * 1.9 + t * rise, ground + 20);
         const fl = 0.35 + Math.max(0, Math.sin(t * 6 + i * 1.7)) * 0.4;
-        c.fillStyle = `rgba(255,${120 + (i % 3) * 30},48,${fl.toFixed(2)})`;
+        const hot = themeName === 'hel';
+        c.fillStyle = hot
+          ? `rgba(255,${90 + (i % 3) * 40},40,${fl.toFixed(2)})`
+          : `rgba(255,${120 + (i % 3) * 30},48,${fl.toFixed(2)})`;
         c.fillRect(x, y, 3, 3);
+        break;
+      }
+      case 'nachtmerrie': {
+        const x = wrapW(seed * 4.2 + Math.sin(t * 1.1 + i) * 40 - scroll * 0.25, W + 40) - 20;
+        const y = wrapW(seed * 2.1 + t * 16, ground + 30) - 15;
+        c.fillStyle = i % 2 ? 'rgba(196,122,255,.45)' : 'rgba(255,107,157,.35)';
+        c.beginPath(); c.arc(x, y, 2.2 + (i % 3) * 0.6, 0, Math.PI * 2); c.fill();
         break;
       }
       case 'cyber': {
@@ -19485,9 +21652,232 @@ const THEMES = {
   grot:    { sky1: '#07090e', sky2: '#1a2028', hill: '#2a323c', hill2: '#141820', ground: '#1a2028', gtop: '#3a4450', deco: 'stalag' },
   vulkaan: { sky1: '#3a1f28', sky2: '#7a3020', hill: '#552430', hill2: '#3a1820', ground: '#4a2a28', gtop: '#5e3630', deco: 'lava' },
   cyber:   { sky1: '#0a1030', sky2: '#252a60', hill: '#1c2350', hill2: '#131840', ground: '#20264a', gtop: '#2c3468', deco: 'neon' },
+  nachtmerrie: { sky1: '#12081c', sky2: '#2a1040', hill: '#1a0a28', hill2: '#0e0618', ground: '#1c1028', gtop: '#3a2050', deco: 'neon' },
+  hel:     { sky1: '#2a0808', sky2: '#6a2010', hill: '#4a1010', hill2: '#2a0808', ground: '#3a1010', gtop: '#5a1810', deco: 'lava' },
   dojo:    { sky1: '#3a2d24', sky2: '#6a5240', hill: '#4a3a2c', hill2: '#3a2d22', ground: '#7a5c3c', gtop: '#8f6f4a', deco: 'lampion' },
   sloop:   { sky1: '#8fb6d0', sky2: '#d8e8f0', hill: '#7a8794', hill2: '#5f6b78', ground: '#6f7684', gtop: '#848b99', deco: 'kraan' },
+  nightmare: { sky1: '#2a0808', sky2: '#7a2810', hill: '#4a1410', hill2: '#30100c', ground: '#3a1812', gtop: '#5a2820', deco: 'fire' },
+  hell:    { sky1: '#140404', sky2: '#4a0a08', hill: '#2e0a0a', hill2: '#1a0606', ground: '#220808', gtop: '#3a100c', deco: 'hell' },
 };
+
+/**
+ * Nightmare 2.0: dichte vuurzuilen, as, brandende wrakken, hittegloed.
+ */
+function drawNightmareFireDecor(c, ground, scroll, t, dX, dSpan) {
+  const calm = typeof motionReduced === 'function' && motionReduced();
+  const lite = (typeof fxLite === 'function' && fxLite()) || (typeof Perf !== 'undefined' && Perf.tier >= 2);
+  // scorched silhouettes / wreck posts
+  const wrecks = lite ? 3 : 5;
+  for (let i = 0; i < wrecks; i++) {
+    const x = dX((i * 0.2 + 0.08) * dSpan);
+    c.fillStyle = '#1a0806';
+    c.fillRect(Math.round(x) - 3, ground - 46 - (i % 2) * 14, 6, 46 + (i % 2) * 14);
+    c.fillStyle = '#2a100c';
+    c.fillRect(Math.round(x) - 16, ground - 52 - (i % 2) * 10, 32, 8);
+    // roof flames on wrecks
+    if (!calm) {
+      const fl = 0.5 + Math.sin(t * 9 + i * 2) * 0.5;
+      c.fillStyle = 'rgba(255,120,30,' + (0.35 + fl * 0.35) + ')';
+      c.beginPath();
+      c.moveTo(x - 10, ground - 52 - (i % 2) * 10);
+      c.lineTo(x, ground - 68 - fl * 14 - (i % 2) * 8);
+      c.lineTo(x + 10, ground - 52 - (i % 2) * 10);
+      c.closePath();
+      c.fill();
+    }
+  }
+  const n = lite ? 6 : 11;
+  for (let i = 0; i < n; i++) {
+    const x = dX((i * 0.1 + 0.03) * dSpan);
+    const flicker = calm ? 0.75 : (0.5 + Math.sin(t * 8 + i * 1.9) * 0.5);
+    const h = 56 + (i % 4) * 22 + flicker * 32;
+    const g = c.createLinearGradient(x, ground - h, x, ground);
+    g.addColorStop(0, 'rgba(255,240,120,' + (0.22 + flicker * 0.42) + ')');
+    g.addColorStop(0.35, 'rgba(255,110,30,' + (0.42 + flicker * 0.4) + ')');
+    g.addColorStop(0.75, 'rgba(200,30,10,' + (0.28 + flicker * 0.22) + ')');
+    g.addColorStop(1, 'rgba(80,10,5,0)');
+    c.fillStyle = g;
+    c.beginPath();
+    c.moveTo(x - 13 - flicker * 6, ground);
+    c.quadraticCurveTo(x - 8, ground - h * 0.5, x, ground - h);
+    c.quadraticCurveTo(x + 8, ground - h * 0.5, x + 13 + flicker * 6, ground);
+    c.closePath();
+    c.fill();
+  }
+  if (!lite) {
+    // rising embers + ash
+    for (let i = 0; i < 22; i++) {
+      const x = dX(((i * 0.07 + (t * 0.08)) % 1) * dSpan);
+      const y = ground - 12 - ((t * (30 + (i % 5) * 9) + i * 37) % (ground * 0.75));
+      const s = 1.2 + (i % 3);
+      c.fillStyle = i % 3 === 0 ? 'rgba(180,160,140,.45)' : 'rgba(255,140,40,.65)';
+      c.globalAlpha = 0.32 + Math.sin(t * 6 + i) * 0.28;
+      c.fillRect(x, y, s, s);
+    }
+    c.globalAlpha = 1;
+    // heat shimmer bands
+    if (!calm) {
+      c.strokeStyle = 'rgba(255,160,80,.12)';
+      c.lineWidth = 2;
+      for (let i = 0; i < 4; i++) {
+        const y = ground * (0.25 + i * 0.12) + Math.sin(t * 3 + i) * 4;
+        c.beginPath();
+        for (let x = 0; x <= W; x += 24) {
+          const yy = y + Math.sin(x * 0.04 + t * 4 + i) * 3;
+          if (x === 0) c.moveTo(x, yy); else c.lineTo(x, yy);
+        }
+        c.stroke();
+      }
+    }
+  }
+  const haze = c.createLinearGradient(0, 0, 0, ground);
+  haze.addColorStop(0, 'rgba(255,50,10,0.12)');
+  haze.addColorStop(0.5, 'rgba(255,40,10,0.04)');
+  haze.addColorStop(1, 'rgba(255,30,5,0.28)');
+  c.fillStyle = haze;
+  c.fillRect(0, 0, W, ground);
+}
+
+/**
+ * Hell 3.0: lava-rivier, asregen, schreeuwende stickmans in pijn.
+ */
+function drawHellPainDecor(c, ground, scroll, t, dX, dSpan) {
+  const calm = typeof motionReduced === 'function' && motionReduced();
+  const lite = (typeof fxLite === 'function' && fxLite()) || (typeof Perf !== 'undefined' && Perf.tier >= 2);
+  // cracked scorched ground lines
+  if (!lite) {
+    c.strokeStyle = 'rgba(80,10,8,.55)';
+    c.lineWidth = 2;
+    for (let i = 0; i < 5; i++) {
+      const x0 = dX((i * 0.2 + 0.05) * dSpan);
+      c.beginPath();
+      c.moveTo(x0 - 30, ground - 2);
+      c.quadraticCurveTo(x0 - 8, ground - 10 - (i % 3) * 4, x0 + 28, ground - 1);
+      c.stroke();
+    }
+  }
+  // lava river band behind fighters
+  const riverY = ground - 8;
+  const lava = c.createLinearGradient(0, riverY - 12, 0, riverY + 16);
+  lava.addColorStop(0, 'rgba(255,80,20,0)');
+  lava.addColorStop(0.35, 'rgba(255,90,20,0.65)');
+  lava.addColorStop(0.65, 'rgba(200,25,5,0.78)');
+  lava.addColorStop(1, 'rgba(40,5,0,0.2)');
+  c.fillStyle = lava;
+  c.fillRect(0, riverY - 12, W, 28);
+  if (!lite) {
+    for (let i = 0; i < 14; i++) {
+      const x = ((i * 97 + scroll * 0.9 + t * 48) % (W + 40)) - 20;
+      const bub = Math.max(0, Math.sin(t * 5.5 + i * 1.7)) * 5;
+      c.fillStyle = '#ffd75e';
+      c.globalAlpha = 0.5 + bub * 0.08;
+      c.beginPath();
+      c.ellipse(x, riverY + 2, 6 + bub, 2.8, 0, 0, TAU);
+      c.fill();
+    }
+    c.globalAlpha = 1;
+  }
+  // lava pools
+  const pools = lite ? 5 : 8;
+  for (let i = 0; i < pools; i++) {
+    const x = dX((i * 0.14 + 0.05) * dSpan);
+    const wob = calm ? 0 : Math.sin(t * 2.8 + i) * 5;
+    c.fillStyle = '#4a0808';
+    c.beginPath();
+    c.ellipse(x, ground - 2, 40 + wob, 13, 0, 0, TAU);
+    c.fill();
+    c.fillStyle = '#ff4a14';
+    c.beginPath();
+    c.ellipse(x, ground - 5, 30 + wob * 0.5, 8, 0, 0, TAU);
+    c.fill();
+    c.fillStyle = '#ffe080';
+    c.globalAlpha = 0.55 + Math.sin(t * 4.5 + i) * 0.3;
+    c.beginPath();
+    c.ellipse(x - 5, ground - 6, 11, 3.2, 0, 0, TAU);
+    c.fill();
+    c.globalAlpha = 1;
+  }
+  // screaming stickman silhouettes — denser in 3.0
+  const figs = lite ? 5 : 9;
+  for (let i = 0; i < figs; i++) {
+    const x = dX((i * 0.12 + 0.06) * dSpan);
+    const shake = calm ? 0 : Math.sin(t * 18 + i * 2.3) * 3.2;
+    const armUp = calm ? -1.15 : (-1.15 + Math.sin(t * 12 + i) * 0.42);
+    drawScreamingStickman(c, x + shake, ground, armUp, t + i * 1.3);
+  }
+  // falling ash + cinders
+  if (!lite && !calm) {
+    for (let i = 0; i < 22; i++) {
+      const x = ((i * 73 + scroll * 0.45) % (W + 20)) - 10;
+      const y = ((t * 62 + i * 41) % (ground + 20));
+      c.fillStyle = i % 4 === 0 ? 'rgba(255,90,40,.5)' : 'rgba(120,90,80,.5)';
+      c.fillRect(x, y, 2 + (i % 2), 2);
+    }
+  }
+  // heat shimmer / red vignette
+  const vig = c.createRadialGradient(W * 0.5, ground * 0.4, 24, W * 0.5, ground * 0.5, Math.max(W, ground) * 0.8);
+  vig.addColorStop(0, 'rgba(255,40,20,0)');
+  vig.addColorStop(0.5, 'rgba(200,10,5,0.14)');
+  vig.addColorStop(1, 'rgba(20,0,0,0.55)');
+  c.fillStyle = vig;
+  c.fillRect(0, 0, W, ground + 4);
+}
+
+function drawScreamingStickman(c, x, ground, armAngle, t) {
+  const y = ground;
+  c.save();
+  c.strokeStyle = 'rgba(12,2,2,.92)';
+  c.fillStyle = 'rgba(12,2,2,.92)';
+  c.lineWidth = 2.6;
+  c.lineCap = 'round';
+  c.lineJoin = 'round';
+  // legs
+  c.beginPath();
+  c.moveTo(x, y - 28);
+  c.lineTo(x - 8, y);
+  c.moveTo(x, y - 28);
+  c.lineTo(x + 9, y);
+  c.stroke();
+  // body
+  c.beginPath();
+  c.moveTo(x, y - 28);
+  c.lineTo(x, y - 54);
+  c.stroke();
+  // arms raised in pain
+  c.beginPath();
+  c.moveTo(x, y - 46);
+  c.lineTo(x - 16, y - 46 + Math.cos(armAngle) * 18);
+  c.moveTo(x, y - 46);
+  c.lineTo(x + 16, y - 46 + Math.cos(armAngle + 0.35) * 18);
+  c.stroke();
+  // head
+  c.beginPath();
+  c.arc(x, y - 62, 7.5, 0, TAU);
+  c.fill();
+  // glowing pain eyes
+  c.fillStyle = 'rgba(255,60,40,.85)';
+  c.beginPath();
+  c.arc(x - 2.5, y - 63, 1.4, 0, TAU);
+  c.arc(x + 2.5, y - 63, 1.4, 0, TAU);
+  c.fill();
+  // open screaming mouth
+  c.fillStyle = 'rgba(255,90,60,.85)';
+  c.beginPath();
+  c.ellipse(x, y - 59, 2.8, 3.6 + Math.abs(Math.sin(t * 12)) * 1.6, 0, 0, TAU);
+  c.fill();
+  // pain lines / scream marks
+  c.strokeStyle = 'rgba(255,80,40,.4)';
+  c.lineWidth = 1.3;
+  c.beginPath();
+  c.moveTo(x + 11, y - 70);
+  c.lineTo(x + 18, y - 78);
+  c.moveTo(x - 11, y - 70);
+  c.lineTo(x - 18, y - 78);
+  c.moveTo(x + 9, y - 66);
+  c.lineTo(x + 17, y - 70);
+  c.stroke();
+  c.restore();
+}
 
 /**
  * Landweg fight decor from countryside curve photo:
@@ -19607,8 +21997,8 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   c.fillStyle = g; c.fillRect(0, 0, W, ground);
   const wrap = (x, span) => ((x % span) + span) % span;
 
-  if (themeName === 'grot' || themeName === 'cyber') {
-    c.fillStyle = 'rgba(255,255,255,.5)';
+  if (themeName === 'grot' || themeName === 'cyber' || themeName === 'nightmare' || themeName === 'hell') {
+    c.fillStyle = themeName === 'hell' || themeName === 'nightmare' ? 'rgba(255,160,80,.45)' : 'rgba(255,255,255,.5)';
     const starN = Perf.tier >= 1 ? 14 : 26;
     for (let i = 0; i < starN; i++) {
       const x = wrap(i * 137.5 - scroll * 0.08, W), y = (i * 61.3) % (ground * 0.7);
@@ -19637,7 +22027,9 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
     }
   }
   // pixel-art skyline per thema (art-upgrade 1/4) — traagste parallax-laag
-  const farTile = SceneryArt.get(themeName, 'far');
+  // Nightmare/Hell: eigen deco, geen groene landweg-tiles
+  const hardTheme = themeName === 'nightmare' || themeName === 'hell';
+  const farTile = !hardTheme && SceneryArt.get(themeName, 'far');
   if (farTile && Perf.tier < 2) {
     drawSceneryTile(c, farTile, ground - 52 - farTile.height * SCENERY_SCALE, scroll, 0.18);
   }
@@ -19701,6 +22093,10 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
       const bub = Math.max(0, Math.sin(t * 3 + i * 2.2)) * 5;
       c.beginPath(); c.arc(x, ground - 8, 4 + bub, 0, TAU); c.fill();
     }
+  } else if (th.deco === 'fire') {
+    drawNightmareFireDecor(c, ground, scroll, t, dX, dSpan);
+  } else if (th.deco === 'hell') {
+    drawHellPainDecor(c, ground, scroll, t, dX, dSpan);
   } else if (th.deco === 'neon') {
     for (let i = 0; i < 6; i++) {
       const x = dX((i * 0.18 + 0.03) * dSpan), h = 110 + (i % 3) * 60;
@@ -20163,9 +22559,12 @@ class Game {
     this.runLoot = createRunLoot();
 
     const st = playerStats();
+    if (mode === 'adventure') {
+      this.advDiff = normalizeAdvDiffId(opts.difficulty || currentAdvDiff());
+    }
     if (mode !== 'versus') {
       const advLevel = mode === 'adventure' ? (opts.level || 1) : 0;
-      const mb = mode === 'adventure' && masterBuffActive(advLevel);
+      const mb = mode === 'adventure' && masterBuffActive(advLevel, this.advDiff);
       const pst = mode === 'adventure' ? playerStats({ masterBuff: mb }) : st;
       const wpn = mode === 'adventure' ? playerWeaponForAdventure(advLevel) : playerWeapon();
       this.player = new Fighter({
@@ -20204,7 +22603,7 @@ class Game {
       this.gambleBossWave = 0;
       this.masterSwordT = 0;
       this._savedMasterWeapon = null;
-      this.initAdventure(opts.level || 1, opts.gamble);
+      this.initAdventure(opts.level || 1, opts.gamble, opts.difficulty);
     } else if (mode === 'training') this.initTraining();
     else if (mode === 'wall') this.initWall();
     else if (mode === 'coinrun') this.initCoinRun();
@@ -20227,9 +22626,11 @@ class Game {
   }
 
   /* --------------------------- AVONTUUR ------------------------------- */
-  initAdventure(n, gamble) {
+  initAdventure(n, gamble, difficulty) {
     try { Input.dualMode = false; } catch (_) {}
-    this.level = buildLevel(n);
+    const diff = normalizeAdvDiffId(difficulty || currentAdvDiff());
+    this.advDiff = diff;
+    this.level = buildLevel(n, diff);
     this.theme = this.level.theme;
     this.waveIdx = -1;
     this.spawnQueue = [];
@@ -20264,8 +22665,12 @@ class Game {
     this.tideBattlePrevSong = null;
     this.tideBattleMusicT = null;
     applyGambleToStage(this, gamble);
-    this.banner(t('banner.levelStart', { n }), 1.4, '#ffd75e', 54);
-    if (masterBuffActive(n)) {
+    const diffMeta = advDiffMeta(diff);
+    const startLabel = diff === 'normal'
+      ? t('banner.levelStart', { n })
+      : t('banner.levelStartDiff', { n, diff: advDiffLabel(diff) });
+    this.banner(startLabel, 1.4, diffMeta.accent || '#ffd75e', 54);
+    if (masterBuffActive(n, diff)) {
       const self = this;
       setTimeout(() => {
         try {
@@ -20283,7 +22688,7 @@ class Game {
           if (!gameUiTimerOk(self)) return;
           self.floater(W * 0.5, 148, t('combat.skillGate', { cap: wCap }), '#ffd75e', 13, 'hud');
         } catch (_) {}
-      }, masterBuffActive(n) ? 2800 : 1500);
+      }, masterBuffActive(n, diff) ? 2800 : 1500);
     }
     if (gamble && gamble.outcome !== 'neutral') {
       const self = this;
@@ -20388,14 +22793,14 @@ class Game {
     }
     if (bossWave) {
       try {
-        this.banner(t('banner.bossWave'), 1.8, '#ff6b6b', 50);
+        this.banner(t('banner.bossWave'), 2.2, '#ff6b6b', 58);
         AudioSys.play('boss');
         AudioSys.sfx('roar');
       } catch (_) {}
       try {
-        this.shake(8, 0.3);
-        this.burst(W * 0.5, this.ground - 80, '#ff6b6b', fxLite() ? 12 : 22);
-        spawnFxRing(this, W * 0.5, this.ground - 80, '#ffd75e', 18);
+        this.shake(10, 0.36);
+        this.burst(W * 0.5, this.ground - 80, '#ff6b6b', fxLite() ? 12 : 26);
+        spawnFxRing(this, W * 0.5, this.ground - 80, '#ffd75e', 20);
       } catch (_) {}
     } else if (wave.some(s => s.elite || s.superBoss)) {
       const hasSuper = wave.some(s => s.superBoss);
@@ -20681,11 +23086,17 @@ class Game {
             levelN: this.level.n,
             hpMul: this.level.hpMul,
             dmgMul: this.level.dmgMul,
+            speedMul: this.level.speedMul || 1,
+            advDiff: this.advDiff || this.level.diff || 'normal',
+            enrageMul: this.level.enrageMul || 1,
+            enrageAt: this.level.enrageAt != null ? this.level.enrageAt : 0.5,
           });
           this.monsters.push(mon);
           if (def.superBoss) {
             triggerSpecialEnemyIntro(this, mon, 'superBoss');
-          } else if (def.elite || bossWave) {
+          } else if (def.bossCore) {
+            triggerSpecialEnemyIntro(this, mon, 'boss');
+          } else if (def.elite) {
             triggerSpecialEnemyIntro(this, mon, bossWave ? 'boss' : 'elite');
           } else if (def.giant && !fxLite()) {
             this.floater(mon.x, mon.y - mon.size - 28, t('combat.giant'), '#ffd75e', 13);
@@ -20762,14 +23173,30 @@ class Game {
     this.inputLocked = true;
     let stars = 0;
     const lv = this.level.n;
-    const prevStars = save.stars[lv] || 0;
+    const diff = normalizeAdvDiffId(this.advDiff || (this.level && this.level.diff) || currentAdvDiff());
+    this.advDiff = diff;
+    const prevStars = advStarsFor(lv, diff);
     if (win) {
-      const bonus = 30 + lv * 10;
+      const bonus = Math.round((30 + lv * 10) * advXpMul(diff));
       this.grantXP(bonus);
-      if (lv === save.unlocked && save.unlocked < MAX_LEVEL) { save.unlocked++; persist(); }
-      if (lv % LEVELS_PER_ISLAND === 0) {
-        save.advIsland = Math.min(5, lv / LEVELS_PER_ISLAND);
+      if (diff !== 'normal') {
+        const coinN = Math.max(1, Math.round((3 + Math.floor(lv / 8)) * (typeof advPetCoinMul === 'function' ? advPetCoinMul(diff) : 1)));
+        try {
+          save.petCoins = (typeof petCoinsBalance === 'function' ? petCoinsBalance() : (save.petCoins || 0)) + coinN;
+          this.petCoinsThisRun = (this.petCoinsThisRun || 0) + coinN;
+          persist();
+        } catch (_) {}
+      }
+      const unlocked = advUnlockedLevel(diff);
+      if (lv === unlocked && unlocked < MAX_LEVEL) {
+        setAdvUnlockedLevel(unlocked + 1, diff);
         persist();
+      }
+      if (lv % LEVELS_PER_ISLAND === 0) {
+        if (diff === 'normal') {
+          save.advIsland = Math.min(islandCount(), lv / LEVELS_PER_ISLAND);
+          persist();
+        }
         if (lv < MAX_LEVEL) {
           const nCap = adventureWeaponCapForLevel(lv + 1);
           const self = this;
@@ -20781,15 +23208,37 @@ class Game {
           }, 1700);
         }
       }
-      if (save.advMasterBuff === lv) {
-        save.advMasterBuff = null;
+      if (lv === MAX_LEVEL) {
+        const already = !!(save.advCleared && save.advCleared[diff]);
+        markAdvDiffCleared(diff);
+        persist();
+        if (!already) {
+          const self = this;
+          setTimeout(() => {
+            try {
+              if (!gameUiTimerOk(self, { allowOver: true })) return;
+              if (diff === 'normal') UI.toast(t('toast.diffUnlockNightmare'), 4800);
+              else if (diff === 'nightmare') UI.toast(t('toast.diffUnlockHell'), 4800);
+              else UI.toast(t('toast.diffHellCleared'), 4200);
+            } catch (_) {}
+          }, 1900);
+        }
+      }
+      if (masterBuffLevel(diff) === lv) {
+        setMasterBuffLevel(null, diff);
         persist();
       }
       const hpPct = this.player.hp / Math.max(1, this.player.maxhp);
       stars = starsFromHpPct(hpPct);
-      if (stars > prevStars) { save.stars[lv] = stars; persist(); }
+      if (stars > prevStars) { setAdvStarsFor(lv, stars, diff); persist(); }
       bumpStat('advWins', 1);
       bumpDaily('advWin', 1);
+      try {
+        const zwBoss = grantZoneBossClearWeapon(lv, diff);
+        if (zwBoss) {
+          try { noteRunLootWeapon(this.runLoot, zwBoss.id); } catch (_) {}
+        }
+      } catch (_) {}
       const eggBonus = maybeAdvEggBonus();
       if (eggBonus) {
         spawnGameEggPet(this);
@@ -20815,11 +23264,10 @@ class Game {
         this.banner(t('banner.levelClear', { n: lv }), 2, '#7cfc8a', 52);
       }
     } else {
-      if (!save.advFails || typeof save.advFails !== 'object') save.advFails = {};
-      const hadMaster = save.advMasterBuff === lv;
-      save.advFails[lv] = (save.advFails[lv] || 0) + 1;
-      const gotMaster = save.advFails[lv] >= 5 && !hadMaster;
-      if (gotMaster) save.advMasterBuff = lv;
+      const hadMaster = masterBuffLevel(diff) === lv;
+      const fails = bumpAdvFail(lv, diff);
+      const gotMaster = fails >= 5 && !hadMaster;
+      if (gotMaster) setMasterBuffLevel(lv, diff);
       persist();
       if (gotMaster) {
         const self = this;
@@ -20843,7 +23291,10 @@ class Game {
         let base = win
           ? t('result.advDetailWin', { lv, kills: this.kills, stars, combo: this.maxCombo || 0, finishers, streak })
           : t('result.advDetailLose', { lv, kills: this.kills, combo: this.maxCombo || 0, finishers, streak });
-        if (masterBuffActive(lv) && !win) base += t('result.masterBuffActive');
+        if (diff !== 'normal') {
+          base = t('result.advDiffLine', { diff: advDiffLabel(diff) }) + base;
+        }
+        if (masterBuffActive(lv, diff) && !win) base += t('result.masterBuffActive');
         if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
           base += t('result.gambleLine', {
             text: gambleOutcomeLabelFromKey(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48),
@@ -20852,7 +23303,7 @@ class Game {
         return base;
       })(),
       xp: this.sessionXP,
-      mode: 'adventure', level: this.level.n, win, stars, prevStars,
+      mode: 'adventure', level: this.level.n, win, stars, prevStars, difficulty: diff,
       tip: win ? (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
         ? t('result.starImproved', { stars, prev: prevStars })
         : t('result.pickupsHelp', { hint: starHintLine() }))) : (() => {
@@ -20925,6 +23376,12 @@ class Game {
           this.spawnPickup(m.x + rand(-22, 22), m.y - m.size * 0.45, { itemCat: itemDrop.cat, itemId: itemDrop.id, dropTier });
         }
       } catch (_) {}
+      try {
+        const zw = rollZoneWeaponDrop(this, m);
+        if (zw) {
+          try { noteRunLootWeapon(this.runLoot, zw.id); } catch (_) {}
+        }
+      } catch (_) {}
     }
     try { bumpStat('kills', 1); } catch (_) {}
     try { bumpDaily('kills', 1); } catch (_) {}
@@ -20935,7 +23392,8 @@ class Game {
     const lvlScale = 1 + (this.level ? (this.level.n - 1) * 0.1 : 0);
     const rarMul = 1 + (rar.order || 0) * 0.15;
     const giantMul = m.giant ? GIANT_XP_MUL : 1;
-    const xp = Math.round((sp.xp || 8) * lvlScale * rarMul * (m.elite ? 2 : 1) * giantMul);
+    const bossMul = m.colossal ? COLOSSAL_XP_MUL : (m.bossCore ? 1.25 : 1);
+    const xp = Math.round((sp.xp || 8) * lvlScale * rarMul * (m.elite ? 2 : 1) * giantMul * bossMul);
     try { this.grantXP(xp); } catch (_) {}
     try { this.floater(m.x, m.y - m.size - 30, `+${xp} XP`, rar.color, 16); } catch (_) {}
     if ((rar.order || 0) >= 3) {
@@ -22008,9 +24466,10 @@ class Game {
     const aim = projAimVelocity(f, behavior === 'dash' ? speed : speed * 0.9);
     const face = f.face || 1;
     const col = sk.color || '#7cf5ff';
-    // Rasengan: altijd horizontaal (geen aim-tilt); overige jutsu behouden aim
+    // Rasengan: altijd horizontaal (geen aim-tilt); Rinnegan-slash ook op torso-hoogte
     const rasenHoriz = jutsu === 'rasengan';
-    const y0 = rasenHoriz
+    const slashFlat = behavior === 'slash';
+    const y0 = (rasenHoriz || slashFlat)
       ? (f.y - 50)
       : (f.y - 50 + clamp(aim.ny, -1, 0.5) * 36);
 
@@ -22025,6 +24484,21 @@ class Game {
           vx: aim.vx, vy: aim.vy * 0.85, r: ((sk.radius || 22) + jb.radius) * sc, dmg: dmg * sc,
           life: (sk.life || 0.35) * jb.lifeMul * sc, from, kind: sk.id, pierce: !!sk.pierce,
           hitSet: new Set(), pierceRepeat: jb.pierceRepeat,
+        }, critMeta));
+      } else if (behavior === 'slash') {
+        // Lichtschits-golf: expandeert links én rechts, strook tapert met afstand
+        // jb.radius = skill-upgrades → duidelijk dikkere strook per level
+        const r0 = ((sk.radius || 42) + jb.radius * 1.35) * sc;
+        const expand = (sk.speed || 720) * jb.speedMul * sc;
+        const maxReach = (460 + jb.radius * 8) * sc;
+        this.spawnProjectile(Object.assign({
+          x: f.x + ox, y: y0 + oy,
+          vx: 0, vy: 0, r: r0, r0, dmg: dmg * sc,
+          from, kind: sk.id, pierce: sk.pierce !== false, hitSet: new Set(),
+          life: (sk.life || 0.68) * jb.lifeMul * sc,
+          spin: 0, slashWave: true, slashReach: 0, slashMaxReach: maxReach,
+          slashExpand: expand, pierceRepeat: jb.pierceRepeat,
+          kbMul: (sk.kb || 580) / 300,
         }, critMeta));
       } else if (behavior === 'pull' || behavior === 'meteor') {
         const sp = behavior === 'meteor' ? speed * 0.55 : speed;
@@ -22105,6 +24579,19 @@ class Game {
       f.vx = face * (sk.dashVx || 380) * jb.speedMul;
       this.shake(7, 0.2);
       AudioSys.sfx(skillSfxId(sk));
+    } else if (behavior === 'slash') {
+      fireProj(0, 0, 1);
+      const liteCast = fxLite();
+      this.burst(f.x, y0, col, liteCast ? 12 : 22);
+      this.burst(f.x, y0, '#e8d0ff', liteCast ? 6 : 12, { kind: 'spark', size: 2.8 });
+      this.burst(f.x - 28, y0, col, liteCast ? 5 : 10, { kind: 'spark', size: 2.2 });
+      this.burst(f.x + 28, y0, col, liteCast ? 5 : 10, { kind: 'spark', size: 2.2 });
+      spawnFxRing(this, f.x, y0, col, liteCast ? 10 : 16);
+      spawnFxRing(this, f.x, y0, '#ffffff', liteCast ? 6 : 10);
+      this.shake(11, 0.3);
+      this.freezeT = Math.max(this.freezeT, 0.07);
+      AudioSys.sfx(skillSfxId(sk));
+      if (f.isPlayer || f.playerSlot) haptic(26);
     } else if (behavior === 'pull' || behavior === 'meteor') {
       fireProj(0, 0, 1);
       this.burst(f.x + face * 28, y0, col, behavior === 'meteor' ? 18 : 14);
@@ -22333,6 +24820,11 @@ class Game {
         }
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
+        if (spec.kind === 'weapon' && typeof applyWeaponOnHitEffect === 'function') {
+          try {
+            applyWeaponOnHitEffect(this, f, m, { dmg: hitRoll.dmg, crit: hitRoll.crit, finisher });
+          } catch (_) {}
+        }
         if (counter) this.freezeT = Math.max(this.freezeT, 0.016);
         applyHitConfirmFx(this, hx, hy, spec);
         if (f.isPlayer && this.styleLightning && !fxLite()) {
@@ -22564,6 +25056,9 @@ class Game {
         try { sfReportError('monster/update', monErr, 'Vijand hiccup — speel door'); } catch (_) {}
       }
     }
+    try { if (typeof tickWeaponStatusEffects === 'function') tickWeaponStatusEffects(this, dt); } catch (_) {}
+    if (this.player && this.player._wpnCritSurgeT > 0) this.player._wpnCritSurgeT -= dt;
+    if (this.p2 && this.p2._wpnCritSurgeT > 0) this.p2._wpnCritSurgeT -= dt;
     this.monsters = this.monsters.filter(m => m.alive || m.deadT < 1);
     if (this.mode === 'adventure') tickSuperFx(this, dt);
 
@@ -22574,6 +25069,7 @@ class Game {
       p.life -= dt;
       const spinRate = skProj
         ? (skProj.behavior === 'pull' || skProj.behavior === 'meteor' ? 16
+          : skProj.behavior === 'slash' ? 28
           : skProj.behavior === 'dash' ? 20 : skProj.behavior === 'disc' ? 24 : 22)
         : (p.kind === 'shuriken' ? 28 : p.kind === 'boemerang' ? 34 : 12);
       p.spin = (p.spin || 0) + dt * spinRate;
@@ -22584,6 +25080,27 @@ class Game {
         const lim = p.curlMaxVy || 280;
         if (p.vy > lim) p.vy = lim;
         if (p.vy < -lim) p.vy = -lim;
+      }
+      // Rinnegan lichtschits: expandeert links/rechts i.p.v. te vliegen
+      if (p.slashWave) {
+        const maxR = p.slashMaxReach || 460;
+        p.slashReach = Math.min(maxR, (p.slashReach || 0) + (p.slashExpand || 720) * dt);
+        // Tip-dikte: hoe verder, hoe smaller de strook
+        const taper = clamp((p.slashReach || 0) / Math.max(1, maxR), 0, 1);
+        p.r = Math.max(5, (p.r0 || 42) * (1 - taper * 0.82));
+        if (!motionReduced()) {
+          p._trailAcc = (p._trailAcc || 0) + dt;
+          const interval = (save.liteFx || Perf.tier >= 1) ? 0.06 : 0.028;
+          if (p._trailAcc >= interval) {
+            p._trailAcc = 0;
+            const col = (skProj && skProj.color) || '#c47aff';
+            const reach = p.slashReach || 0;
+            const tipH = Math.max(4, (p.r0 || 42) * (1 - taper * 0.82) * 0.55);
+            const n = (save.liteFx || Perf.tier >= 1) ? 1 : 2;
+            this.burst(p.x + reach, p.y + rand(-tipH, tipH), col, n, { kind: 'spark', size: 2.2 });
+            this.burst(p.x - reach, p.y + rand(-tipH, tipH), col, n, { kind: 'spark', size: 2.2 });
+          }
+        }
       }
       // Boemerang: uitgooien → terugkeren naar thrower (kan opnieuw raken)
       if (p.kind === 'boemerang') {
@@ -22669,10 +25186,10 @@ class Game {
       if (p.from === 'enemy') {
         const pl = this.player;
         if (pl && pl.alive && this.playerHurtCd <= 0
-            && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
+            && projHitsTarget(p, pl.bodyX, pl.bodyY, pl.bodyR * 0.8)) {
           const hit = resolveProjHit(p);
-          pl.takeDamage(hit.dmg, Math.sign(p.vx) * 260, this);
-          applyHitStop(this, { kind: skProj && skProj.behavior === 'dash' ? 'special' : 'punch', dmg: hit.dmg },
+          pl.takeDamage(hit.dmg, projKnockDir(p, pl.x) * 260, this);
+          applyHitStop(this, { kind: skProj && (skProj.behavior === 'dash' || skProj.behavior === 'slash') ? 'special' : 'punch', dmg: hit.dmg },
             { crit: hit.crit, heavy: hit.dmg >= 18, playerHurt: true });
           this.floater(pl.x, pl.y - 115, '-' + hit.dmg, '#ff8080', 16);
           if (hit.crit) applyCritFx(this, pl.x, pl.y);
@@ -22682,12 +25199,12 @@ class Game {
         }
       } else if (p.from === 'p2' && this.p2) {
         const pl = this.player;
-        if (pl && pl.alive && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
+        if (pl && pl.alive && projHitsTarget(p, pl.bodyX, pl.bodyY, pl.bodyR * 0.8)) {
           projStrikeFighter(this, p, pl, '#ff8080');
         }
       } else if (p.from === 'p1' && this.p2) {
         const pl = this.p2;
-        if (pl.alive && (p.x - pl.bodyX) ** 2 + (p.y - pl.bodyY) ** 2 < (p.r + pl.bodyR * 0.8) ** 2) {
+        if (pl.alive && projHitsTarget(p, pl.bodyX, pl.bodyY, pl.bodyR * 0.8)) {
           projStrikeFighter(this, p, pl, '#ffb0b8');
         }
       } else {
@@ -22695,20 +25212,29 @@ class Game {
           if (!m.alive) continue;
           const allowRehit = p._rehit && p._rehit.has(m);
           if (p.hitSet && p.hitSet.has(m) && !allowRehit) continue;
-          if ((p.x - m.x) ** 2 + (p.y - m.y) ** 2 < (p.r + m.size) ** 2) {
+          if (projHitsTarget(p, m.x, m.y, m.size)) {
             const hit = resolveProjHit(p);
+            const dir = projKnockDir(p, m.x);
             try { AudioSys.sfxAt(weaponHitSfx(p.throwId || 'shuriken', hit.dmg), m.x); } catch (_) {}
-            m.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this, { skipHitSfx: true, crit: hit.crit });
+            m.takeDamage(hit.dmg, dir * 300 * (p.kbMul || 1), this, { skipHitSfx: true, crit: hit.crit });
             if (hit.crit) applyCritFx(this, m.x, m.y);
-            if (skProj) spawnJutsuImpactFx(this, p.x, p.y, p.kind, 'full');
+            if (p.throwId && typeof applyWeaponOnHitEffect === 'function') {
+              const owner = this.player;
+              if (owner && owner.weapon && owner.weapon.id === p.throwId && owner.weapon.effect) {
+                try {
+                  applyWeaponOnHitEffect(this, owner, m, { dmg: hit.dmg, crit: hit.crit, finisher: false });
+                } catch (_) {}
+              }
+            }
+            if (skProj) spawnJutsuImpactFx(this, m.x, m.y, p.kind, 'full');
             if (p.hitSet) p.hitSet.add(m); else p.life = 0;
           }
         }
         if (this.robot && this.robot.alive && !(p.hitSet && p.hitSet.has(this.robot))) {
           const rb = this.robot;
-          if ((p.x - rb.bodyX) ** 2 + (p.y - rb.bodyY) ** 2 < (p.r + rb.bodyR) ** 2) {
+          if (projHitsTarget(p, rb.bodyX, rb.bodyY, rb.bodyR)) {
             const hit = resolveProjHit(p);
-            const d = rb.takeDamage(hit.dmg, Math.sign(p.vx) * 300, this);
+            const d = rb.takeDamage(hit.dmg, projKnockDir(p, rb.x) * 300 * (p.kbMul || 1), this);
             this.floater(rb.x, rb.y - 115, '-' + d, '#ffe680', 16);
             if (hit.crit) applyCritFx(this, rb.x, rb.y);
             if (p.hitSet) p.hitSet.add(rb); else p.life = 0;
@@ -22717,7 +25243,11 @@ class Game {
         if (this.mode === 'wall' && this.bricks) {
           for (const b of this.bricks) {
             if (b.hp <= 0) continue;
-            if (p.x + p.r > b.x && p.x - p.r < b.x + b.w && p.y + p.r > b.y && p.y - p.r < b.y + b.h) {
+            const bx = b.x + b.w * 0.5, by = b.y + b.h * 0.5;
+            const hitBrick = p.slashWave
+              ? projHitsTarget(p, bx, by, Math.max(b.w, b.h) * 0.45)
+              : (p.x + p.r > b.x && p.x - p.r < b.x + b.w && p.y + p.r > b.y && p.y - p.r < b.y + b.h);
+            if (hitBrick) {
               b.hp -= p.dmg;
               if (b.hp <= 0) { this.score++; AudioSys.sfx('brick'); this.burst(p.x, p.y, `hsl(${b.hue},50%,45%)`, 12); }
               if (!p.pierce) p.life = 0;
@@ -22743,6 +25273,11 @@ class Game {
       if (p.kind === 'boemerang') {
         if (p.returning && (p.x < -100 || p.x > W + 100 || p.y > this.ground + 50)) {
           p.life = 0;
+        }
+      } else if (p.slashWave) {
+        // Expanderende golf: blijft op plek tot life op is
+        if ((p.slashReach || 0) >= (p.slashMaxReach || 460) && p.life > 0.12) {
+          p.life = Math.min(p.life, 0.12);
         }
       } else if (p.kind === 'rasengan') {
         // Alleen zijranden — grond wordt hierboven afgehandeld
@@ -23113,7 +25648,11 @@ class Game {
             c.restore();
           }
         }
-        drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, p.kind, 1);
+        if (p.slashWave || skDraw.behavior === 'slash') {
+          drawRinneganSlashWave(c, p);
+        } else {
+          drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, p.kind, 1);
+        }
       } else if (p.kind === 'shuriken') {
         c.translate(p.x, p.y); c.rotate(p.spin || 0);
         const big = p.throwId === 'fuuma';
@@ -23539,18 +26078,21 @@ class Game {
       } else if (kind === 'rinnegan') {
         c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : '#c47aff';
         c.lineWidth = 3;
-        for (let ring = 0; ring < 3; ring++) {
+        c.lineCap = 'round';
+        // Tweerichtings lichtschits-pulse (klaar-signaal)
+        for (const dir of [-1, 1]) {
+          const len = 34 + Math.sin(this.t * 10) * 6;
           c.beginPath();
-          c.arc(f.x, f.y - 55, 34 + ring * 8 + Math.sin(this.t * 8 + ring) * 3, this.t * (1.5 + ring * 0.3), this.t * (1.5 + ring * 0.3) + Math.PI * 1.25);
+          c.moveTo(f.x, f.y - 55);
+          c.lineTo(f.x + dir * len * 0.4, f.y - 55 + Math.sin(this.t * 14 + dir) * 4);
+          c.lineTo(f.x + dir * len * 0.7, f.y - 55 - Math.sin(this.t * 11 + dir) * 3);
+          c.lineTo(f.x + dir * len, f.y - 55);
           c.stroke();
         }
-        c.fillStyle = '#ff6b9d';
-        for (let i = 0; i < 3; i++) {
-          const a = this.t * 5 + i * (TAU / 3);
-          c.beginPath();
-          c.arc(f.x + Math.cos(a) * 28, f.y - 55 + Math.sin(a) * 10, 4, 0, TAU);
-          c.fill();
-        }
+        c.fillStyle = '#e8d0ff';
+        c.beginPath();
+        c.arc(f.x, f.y - 55, 5 + Math.sin(this.t * 8) * 1.5, 0, TAU);
+        c.fill();
       } else {
         c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : '#7cf5ff';
         c.lineWidth = 3;
@@ -24241,7 +26783,7 @@ class Game {
       c.fillStyle = '#333c55'; this.rr(c, bx, by, bw, 15, 6); c.fill();
       c.fillStyle = p.hp / p.maxhp > 0.35 ? '#6ee06e' : '#ff6b6b';
       this.rr(c, bx, by, bw * clamp(p.hp / p.maxhp, 0, 1), 15, 6); c.fill();
-      if (this.mode === 'adventure' && masterBuffActive(this.level.n)) {
+      if (this.mode === 'adventure' && masterBuffActive(this.level.n, this.advDiff)) {
         c.fillStyle = 'rgba(196,122,255,.28)';
         this.rr(c, bx - 2, by - 16, bw + 4, 13, 5); c.fill();
         c.font = '800 9px -apple-system, sans-serif';
@@ -24335,6 +26877,22 @@ class Game {
         fill: a11yHighContrast() ? '#fff' : 'rgba(255,255,255,.9)',
       });
       hy += 17;
+
+      if (this.advDiff && this.advDiff !== 'normal') {
+        const dm = advDiffMeta(this.advDiff);
+        const chip = advDiffShort(this.advDiff);
+        c.font = '900 11px -apple-system, sans-serif';
+        const tw = c.measureText(chip).width;
+        const cx = W / 2;
+        c.fillStyle = 'rgba(0,0,0,.45)';
+        this.rr(c, cx - tw / 2 - 8, hy - 10, tw + 16, 14, 7); c.fill();
+        c.strokeStyle = dm.accent;
+        c.lineWidth = 1.5;
+        this.rr(c, cx - tw / 2 - 8, hy - 10, tw + 16, 14, 7); c.stroke();
+        c.fillStyle = dm.accent;
+        c.fillText(chip, cx, hy);
+        hy += 16;
+      }
 
       c.font = '700 11px -apple-system, sans-serif';
       c.fillStyle = isl.accent;
@@ -26148,7 +28706,27 @@ function audioMixStatusLine(inPause) {
     const track = songLabel(AudioSys.currentSongId());
     if (track) bits.push(t('audio.pauseTrack', { track }));
   }
+  if (inPause && typeof AudioSys !== 'undefined' && AudioSys.ctx && AudioSys.ctx.state === 'suspended') {
+    bits.push(t('audio.ctxSuspended'));
+  }
   return bits.join(' · ');
+}
+
+/** Keep pause + settings volume sliders in sync (presets, import, pause open). */
+function syncAudioVolSliders(skipActive = true) {
+  const rows = [
+    ['setMusicVol', 'setMusicVolLbl', 'musicVol', 0.85],
+    ['pauseMusicVol', 'pauseMusicVolLbl', 'musicVol', 0.85],
+    ['setSfxVol', 'setSfxVolLbl', 'sfxVol', 1],
+    ['pauseSfxVol', 'pauseSfxVolLbl', 'sfxVol', 1],
+  ];
+  for (const [id, lid, key, def] of rows) {
+    const el = document.getElementById(id);
+    const lbl = document.getElementById(lid);
+    const pct = volPct(save[key], def);
+    if (el && (!skipActive || document.activeElement !== el)) el.value = String(pct);
+    if (lbl) lbl.textContent = pct + '%';
+  }
 }
 
 function levelTileTip(n, pick, infoLv, boss, best, fails) {
@@ -27390,21 +29968,61 @@ const UI = {
   renderLevels() {
     try {
     bumpLevelHoldGen();
+    const diffBar = document.getElementById('levelDiffBar');
     const bar = document.getElementById('levelIslandBar');
     const info = document.getElementById('levelIslandInfo');
     const grid = document.getElementById('levelGrid');
     if (!grid) return;
-    const pick = this.advIslandPick || currentAdvIsland();
+    const wantDiff = currentAdvDiff();
+    const activeDiff = advDiffAvailable(wantDiff) ? wantDiff : 'normal';
+    if (activeDiff !== wantDiff) save.advDiff = activeDiff;
+    if (diffBar) {
+      diffBar.innerHTML = '';
+      for (const meta of ADV_DIFFS) {
+        const ok = advDiffAvailable(meta.id);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'diff-tab' + (activeDiff === meta.id ? ' active' : '') + (ok ? '' : ' locked');
+        btn.style.setProperty('--diff-accent', meta.accent);
+        btn.setAttribute('role', 'tab');
+        btn.setAttribute('aria-selected', activeDiff === meta.id ? 'true' : 'false');
+        const label = advDiffLabel(meta.id);
+        const modelTag = meta.model && meta.model !== '1.0'
+          ? `<span class="diff-tab-model">${meta.model}</span>` : '';
+        btn.innerHTML = `<span class="diff-tab-name">${t('ui.diff.' + meta.id)}</span>${modelTag}` +
+          (ok ? '' : `<span class="diff-tab-lock">${SVG_LOCK_ICON}</span>`);
+        btn.title = ok
+          ? (meta.id === 'normal' ? t('ui.diffTipNormal') : t('ui.diffTipHard', { name: label }))
+          : advDiffUnlockHint(meta.id);
+        if (ok) {
+          bindPress(btn, () => safeUiAction(() => {
+            AudioSys.sfx('select');
+            setAdvDiff(meta.id);
+            UI.advIslandPick = currentAdvIsland(meta.id);
+            UI.renderLevels();
+          }, 'pickDiff/' + meta.id, t('ui.errPickIsland')));
+        }
+        diffBar.appendChild(btn);
+      }
+    }
+    const blurbEl = document.getElementById('levelDiffBlurb');
+    if (blurbEl) {
+      const meta = advDiffMeta(activeDiff);
+      blurbEl.style.setProperty('--diff-accent', meta.accent);
+      blurbEl.className = 'diff-blurb' + (activeDiff !== 'normal' ? ' diff-blurb-' + activeDiff : '');
+      blurbEl.textContent = advDiffBlurb(activeDiff);
+    }
+    const pick = this.advIslandPick || currentAdvIsland(activeDiff);
     this.advIslandPick = pick;
     if (bar) {
       bar.innerHTML = '';
       for (const isl of ADVENTURE_ISLANDS) {
-        const ok = islandUnlocked(isl.id);
+        const ok = islandUnlocked(isl.id, activeDiff);
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'island-tab' + (pick === isl.id ? ' active' : '') + (ok ? '' : ' locked');
         btn.style.setProperty('--isl-accent', isl.accent);
-        const prog = islandProgress(isl.id);
+        const prog = islandProgress(isl.id, activeDiff);
         const pct = Math.round(prog.cleared / prog.total * 100);
         const islName = islandLabel(isl.id, 'name');
         const islSub = islandLabel(isl.id, 'sub');
@@ -27426,24 +30044,26 @@ const UI = {
     const islMeta = ADVENTURE_ISLANDS[pick - 1] || ADVENTURE_ISLANDS[0];
     const range = islandLevelRange(pick);
     const wCap = adventureWeaponCapForLevel(range.start);
-    const prog = islandProgress(pick);
+    const prog = islandProgress(pick, activeDiff);
     const pct = Math.round(prog.cleared / prog.total * 100);
+    const unlocked = advUnlockedLevel(activeDiff);
+    const masterLv = masterBuffLevel(activeDiff);
     if (info) {
-      const mb = save.advMasterBuff;
       info.innerHTML =
         `<div class="island-info-head">` +
         `<span class="island-info-ico">${islMeta.icon}</span>` +
         `<div class="island-info-text">` +
         `<b style="color:${islMeta.accent}">${islandLabel(islMeta.id, 'name')}</b> · ${islandLabel(islMeta.id, 'sub')}` +
         `<div class="island-info-sub">${t('ui.islandInfoSub', { cap: wCap, cleared: prog.cleared, total: prog.total, stars: prog.stars })}` +
-        (pick < 5 ? t('ui.islandBossGate', { lv: pick * LEVELS_PER_ISLAND }) : '') +
+        (activeDiff !== 'normal' ? t('ui.islandDiffTag', { diff: advDiffLabel(activeDiff) }) : '') +
+        (pick < islandCount() ? t('ui.islandBossGate', { lv: pick * LEVELS_PER_ISLAND }) : '') +
         `</div></div></div>` +
         `<div class="island-prog-track island-info-prog" title="${t('island.levelsProg')}"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
         `<div class="island-prog-track island-info-stars" title="${t('island.starsProg')}"><i style="width:${Math.round(prog.stars / Math.max(1, prog.maxStars) * 100)}%"></i></div>` +
         (() => {
           const onboard = adventureIslandHintLine();
-          const mbLine = mb && mb >= range.start && mb <= range.end
-            ? `<span class="island-info-chip master">${t('ui.masterBuffChip', { lv: mb })}</span>`
+          const mbLine = masterLv && masterLv >= range.start && masterLv <= range.end
+            ? `<span class="island-info-chip master">${t('ui.masterBuffChip', { lv: masterLv })}</span>`
             : '';
           const chips = [
             onboard ? `<span class="island-info-chip onboard">${onboard}</span>` : '',
@@ -27453,16 +30073,20 @@ const UI = {
         })();
     }
     grid.innerHTML = '';
+    grid.className = 'grid island-grid' + (activeDiff !== 'normal' ? ' diff-' + activeDiff : '');
     for (let n = range.start; n <= range.end; n++) {
       const el = document.createElement('div');
       const boss = !!BOSS_AT[n];
-      const locked = n > save.unlocked;
-      const infoLv = buildLevel(n);
+      const locked = n > unlocked;
+      const cleared = isAdvLevelCleared(n, activeDiff);
+      const infoLv = buildLevel(n, activeDiff);
       const rar = rarityOf(infoLv.rarityCap);
-      const fails = advFailCount(n);
-      el.className = 'lvl' + (boss ? ' boss' : '') + (locked ? ' locked' : '') + (n < save.unlocked ? ' cleared' : '') +
-        (!locked && n === save.unlocked ? ' lvl-current' : '') +
-        (save.advMasterBuff === n ? ' master-buff' : '');
+      const fails = advFailCount(n, activeDiff);
+      const starsN = advStarsFor(n, activeDiff);
+      el.className = 'lvl' + (boss ? ' boss' : '') + (locked ? ' locked' : '') + (cleared ? ' cleared' : '') +
+        (!locked && n === unlocked && !cleared ? ' lvl-current' : '') +
+        (masterLv === n ? ' master-buff' : '') +
+        (activeDiff !== 'normal' ? ' lvl-' + activeDiff : '');
       el.style.boxShadow = locked ? 'none' : `0 5px 0 rgba(0,0,0,.35), 0 0 0 2px ${rar.color}55`;
       const waveStrip = infoLv.waves.map((_, wi) => {
         const meta = infoLv.waveMeta && infoLv.waveMeta[wi];
@@ -27473,17 +30097,22 @@ const UI = {
         else if (trait === 'flyers') cls += ' trait-fly';
         else if (trait === 'rush') cls += ' trait-rush';
         else if (trait === 'elite') cls += ' trait-elite';
+        else if (trait === 'ranch') cls += ' trait-ranch';
+        else if (trait === 'safari') cls += ' trait-safari';
+        else if (trait === 'tide') cls += ' trait-tide';
+        else if (trait === 'ember') cls += ' trait-ember';
+        else if (trait === 'pain') cls += ' trait-pain';
         return `<i class="${cls}"></i>`;
       }).join('');
       el.innerHTML = locked
         ? SVG_LOCK_ICON
         : `${n}${boss ? `<small>${t('ui.boss')}</small>` : `<small style="color:${rar.color}">${rarityLabel(infoLv.rarityCap)}</small>`}` +
           `<span class="lvl-wave-strip" aria-hidden="true">${waveStrip}</span>` +
-          (save.stars[n] ? `<span class="lvl-stars">${'★'.repeat(save.stars[n])}</span>` : '') +
+          (starsN ? `<span class="lvl-stars">${'★'.repeat(starsN)}</span>` : '') +
           (fails > 0 && !locked ? `<span class="lvl-fails">${fails}/5</span>` : '') +
-          (save.advMasterBuff === n ? '<span class="lvl-master">+20%</span>' : '');
+          (masterLv === n ? '<span class="lvl-master">+20%</span>' : '');
       if (!locked) {
-        const best = save.stars[n] || 0;
+        const best = starsN || 0;
         el.title = levelTileTip(n, pick, infoLv, boss, best, fails);
         let holdT = null;
         let holdSkip = false;
@@ -27714,17 +30343,29 @@ const UI = {
       const islandLine = islandLocked && !lvlLocked
         ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:#ffd75e">${t('ui.weaponIslandPick', { cap: adventureWeaponCap() })}</div>`
         : '';
-      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${summonBadge}${tierBadge}${upBadge}</div>
+      const zoneMeta = base.dropZone ? weaponDropZoneOf(base) : null;
+      const effectTxt = weaponEffectLabel(base);
+      const zoneBadge = zoneMeta
+        ? ` <span class="rar-pill" style="color:${zoneMeta.color};border-color:${zoneMeta.color}">${zoneMeta.name}</span>`
+        : '';
+      const effectLine = effectTxt
+        ? `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:3px;color:${zoneMeta ? zoneMeta.color : '#ffb0b8'}">${effectTxt}</div>`
+        : '';
+      const zoneLockLine = lvlLocked && zoneMeta
+        ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:${zoneMeta.color}">Drop in ${zoneMeta.name}-zone / Nightmare·Hell modus</div>`
+        : '';
+      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${zoneBadge}${summonBadge}${tierBadge}${upBadge}</div>
         <div class="cinfo">${statLine}</div>` +
         upLine +
+        effectLine +
         (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '') +
-        islandLine;
+        islandLine + zoneLockLine;
       el.appendChild(info);
       if (weaponUpgradeEligible(base)) appendItemUpgradeButton(el, 'weapon', w.id, () => this.renderWeapons());
       const right = document.createElement('div');
       right.className = 'right';
       right.innerHTML = lvlLocked
-        ? `${SVG_LOCK_ICON} Lv ${base.unlock}`
+        ? (zoneMeta ? `${SVG_LOCK_ICON} ${zoneMeta.name}` : `${SVG_LOCK_ICON} Lv ${base.unlock}`)
         : (islandLocked
           ? t('ui.weaponIslandCapShort', { cap: adventureWeaponCap() })
           : (selected ? '&#10004; gekozen' : 'kies'));
@@ -27771,15 +30412,30 @@ const UI = {
       nameEl.style.color = locked ? '#8fa3d9' : '#fff';
     }
     if (rarEl) {
-      rarEl.innerHTML = locked
-        ? `<span class="rar-pill" style="color:#8fa3d9;border-color:#8fa3d9">Lv ${base.unlock}</span>`
-        : `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>` +
+      const zone = base.dropZone ? weaponDropZoneOf(base) : null;
+      if (locked) {
+        rarEl.innerHTML = zone
+          ? `<span class="rar-pill" style="color:${zone.color};border-color:${zone.color}">${zone.name}</span>`
+          : `<span class="rar-pill" style="color:#8fa3d9;border-color:#8fa3d9">Lv ${base.unlock}</span>`;
+      } else {
+        rarEl.innerHTML =
+          `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>` +
+          (zone ? ` <span class="rar-pill" style="color:${zone.color};border-color:${zone.color}">${zone.name}</span>` : '') +
           (save.weapon === w.id ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Actief</span>' : '');
+      }
     }
     if (statsEl) {
-      statsEl.textContent = locked
-        ? 'Nog vergrendeld — level verder in avontuur'
-        : `${weaponDesc(w)} · x${w.dmg} dmg · bereik ${w.range} · spd x${w.speed}`;
+      const effectTxt = weaponEffectLabel(base);
+      if (locked) {
+        const zone = base.dropZone ? weaponDropZoneOf(base) : null;
+        statsEl.textContent = zone
+          ? `Drop in ${zone.name}-zone of Nightmare 2.0 / Hell 3.0`
+          : 'Nog vergrendeld — level verder in avontuur';
+      } else {
+        statsEl.textContent =
+          `${weaponDesc(w)} · x${w.dmg} dmg · bereik ${w.range} · spd x${w.speed}` +
+          (effectTxt ? ` · ${effectTxt}` : '');
+      }
     }
     const c = cv.getContext('2d');
     if (!c) return;
@@ -28513,6 +31169,7 @@ const UI = {
         disc: t('skill.behavior.disc'),
         pull: t('skill.behavior.pull'),
         meteor: t('skill.behavior.meteor'),
+        slash: t('skill.behavior.slash'),
       };
       behBar.querySelectorAll('[data-behavior]').forEach((btn) => {
         const id = btn.dataset.behavior || 'all';
@@ -28722,16 +31379,7 @@ const UI = {
     if (togS) togS.setAttribute('aria-pressed', save.sfx ? 'true' : 'false');
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
-    const pm = document.getElementById('pauseMusicVol');
-    const ps = document.getElementById('pauseSfxVol');
-    const pmL = document.getElementById('pauseMusicVolLbl');
-    const psL = document.getElementById('pauseSfxVolLbl');
-    const mPct = volPct(save.musicVol, 0.85);
-    const sPct = volPct(save.sfxVol, 1);
-    if (pm && document.activeElement !== pm) pm.value = String(mPct);
-    if (ps && document.activeElement !== ps) ps.value = String(sPct);
-    if (pmL) pmL.textContent = mPct + '%';
-    if (psL) psL.textContent = sPct + '%';
+    syncAudioVolSliders();
     const statusEl = document.getElementById('pauseAudioStatus');
     if (statusEl) {
       let line = audioMixStatusLine(true);
@@ -29914,6 +32562,7 @@ document.addEventListener('visibilitychange', () => {
       state = 'pause';
       AudioSys.setPaused(true);
       try {
+        UI.renderPauseToggles();
         UI.show('pauseScreen');
       } catch (_) { ensureVisibleScreen(); }
     } else {

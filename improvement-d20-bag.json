@@ -4,27 +4,19 @@
   "rollFirst": [],
   "remaining": [
     19,
-    6,
     2,
     4,
     18
   ],
   "lastRoll": {
-    "face": 12,
-    "category": "Content \u2014 monsters, wapens, rariteit, dex",
-    "rolledAt": "2026-07-24T18:31:08Z",
-    "remainingCount": 5,
+    "face": 6,
+    "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+    "rolledAt": "2026-07-24T17:02:50Z",
+    "remainingCount": 4,
     "cycle": 5
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 3,
-      "note": "2P arena spawn/HUD/rematch pause herstart",
-      "version": "1.12.13",
-      "doneAt": "2026-07-23T18:28:29Z",
-      "cycle": 1
-    },
     {
       "face": 17,
       "note": "try/catch + toasts persist/import/loop/UI",
@@ -577,9 +569,22 @@
       "version": "1.18.100",
       "doneAt": "2026-07-26T18:02:58Z",
       "cycle": 5
+    },
+    {
+      "face": 6,
+      "note": "pause combat-heat reset + SFX guard + slider sync",
+      "version": "1.18.108",
+      "doneAt": "2026-07-26T19:03:57Z",
+      "cycle": 5
     }
   ],
   "userFeatureLog": [
+    {
+      "date": "2026-07-26",
+      "wish": "Monster diversiteit verdubbelen \u2014 boerderij op hol + dierentuin, grote versies",
+      "code": "+144 SPECIES (281 totaal), 24 beast arts, ranch/safari golven, BEAST_GIANT_BONUS \u00b7 v1.18.101 / SW v311",
+      "version": "1.18.101"
+    },
     {
       "id": "combat-hitbox-stunlock-rasengan-styles",
       "d20Face": null,
@@ -965,13 +970,6 @@
     }
   ],
   "history": [
-    {
-      "face": 8,
-      "category": "PWA & offline \u2014 SW cache, install, standalone",
-      "rolledAt": "2026-07-23T14:21:12Z",
-      "remainingCount": 4,
-      "cycle": 0
-    },
     {
       "face": 7,
       "category": "Save & backup \u2014 import/export, corruptie, migratie",
@@ -1805,6 +1803,13 @@
       "category": "Content \u2014 monsters, wapens, rariteit, dex",
       "rolledAt": "2026-07-24T18:31:08Z",
       "remainingCount": 5,
+      "cycle": 5
+    },
+    {
+      "face": 6,
+      "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+      "rolledAt": "2026-07-24T17:02:50Z",
+      "remainingCount": 4,
       "cycle": 5
     }
   ],

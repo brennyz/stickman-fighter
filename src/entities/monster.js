@@ -7,6 +7,8 @@ class Monster {
     this.spId = spId; this.sp = sp;
     this.elite = !!opts.elite;
     this.superBoss = !!opts.superBoss;
+    this.bossCore = !!(opts.bossCore || opts.superBoss);
+    this.colossal = false;
     this.size = sp.size * (opts.elite ? 1.5 : 1);
     this.maxhp = Math.round(sp.hp * (opts.hpMul || 1) * eliteMul);
     this.hp = this.maxhp;
@@ -18,14 +20,37 @@ class Monster {
       this.dmg = Math.round(this.dmg * 1.42);
       this.size *= 1.32;
     }
-    if (opts.giant && !this.superBoss) {
+    if (this.bossCore) {
+      if (this.superBoss) {
+        // Super-baas is al zwaar gebufft — lichte extra + kans op colossaal.
+        this.size = Math.round(this.size * 1.12);
+        this.maxhp = Math.round(this.maxhp * 1.35);
+        this.hp = this.maxhp;
+      } else {
+        this.size = Math.round(this.size * BOSS_CORE_SIZE_MUL);
+        this.maxhp = Math.round(this.maxhp * BOSS_CORE_HP_MUL);
+        this.hp = this.maxhp;
+        this.dmg = Math.round(this.dmg * BOSS_CORE_DMG_MUL);
+      }
+      if (Math.random() < COLOSSAL_CHANCE) {
+        this.colossal = true;
+        this.size = Math.round(this.size * COLOSSAL_SIZE_MUL);
+        this.maxhp = Math.round(this.maxhp * COLOSSAL_HP_MUL);
+        this.hp = this.maxhp;
+        this.dmg = Math.round(this.dmg * COLOSSAL_DMG_MUL);
+      }
+    }
+    if (opts.giant && !this.superBoss && !this.bossCore) {
       this.giant = true;
       this.size = Math.round(this.size * GIANT_SIZE_MUL);
       this.maxhp = Math.round(this.maxhp * GIANT_HP_MUL);
       this.hp = this.maxhp;
       this.dmg = Math.round(this.dmg * GIANT_DMG_MUL);
     }
-    this.speed = sp.speed;
+    this.speed = sp.speed * (opts.speedMul || 1);
+    this.advDiff = opts.advDiff || 'normal';
+    this.enrageMul = Number(opts.enrageMul) > 0 ? Number(opts.enrageMul) : 1;
+    this.enrageAt = Number.isFinite(Number(opts.enrageAt)) ? clamp(Number(opts.enrageAt), 0.25, 0.9) : 0.5;
     this.x = x;
     this.flying = sp.type === 'fly' || sp.type === 'dragon';
     this.swimming = sp.type === 'swim';
@@ -38,8 +63,12 @@ class Monster {
     this.enraged = false;
     this.phase2FlashT = 0;
     this.introT = 0;
+    this.introDur = 0;
     this.introTier = null;
     this.tideBoss = !!opts.tideBoss;
+    if (this.bossCore && typeof BOSS_SAFETY_DUR === 'number') {
+      this.safetyT = BOSS_SAFETY_DUR * (this.colossal ? 1.35 : 1);
+    }
   }
   get alive() { return this.hp > 0; }
 
@@ -56,7 +85,8 @@ class Monster {
     this.atkCD -= dt; this.shootCD -= dt;
     if (this.superSlowT > 0) this.superSlowT -= dt;
     const genjutsuMul = (this.superSlowT > 0) ? (this.superSlowMul || 0.25) : 1;
-    const spdMul = (this.enraged ? 1.32 : 1) * genjutsuMul;
+    const enrageSpd = this.enraged ? (1.32 * (this.enrageMul || 1)) : 1;
+    const spdMul = enrageSpd * genjutsuMul;
     const type = this.sp.type;
 
     if (type === 'hop') {
@@ -202,18 +232,26 @@ class Monster {
   takeDamage(dmg, kbx, game, opts) {
     opts = opts || {};
     if (!this.alive) return;
-    if (this.elite && !this.enraged && this.hp - dmg <= this.maxhp * 0.5) {
+    const canEnrage = this.elite || this.bossCore || this.advDiff === 'nightmare' || this.advDiff === 'hell';
+    const thresh = this.maxhp * (this.enrageAt != null ? this.enrageAt : 0.5);
+    if (canEnrage && !this.enraged && this.hp - dmg <= thresh) {
       this.enraged = true;
       this.phase2FlashT = motionReduced() ? 0.35 : 0.85;
-      this.speed = Math.round(this.speed * 1.28);
-      this.dmg = Math.round(this.dmg * 1.22);
-      game.banner(`${this.sp.name} — FASE 2!`, 1.6, '#ff6b6b', 36);
+      const em = this.enrageMul || 1;
+      this.speed = Math.round(this.speed * (1.28 * Math.min(em, 1.5)));
+      this.dmg = Math.round(this.dmg * (1.22 * Math.min(em, 1.45)));
+      const phaseLabel = this.advDiff === 'hell'
+        ? `${this.sp.name} — HEL-WOEDE!`
+        : (this.advDiff === 'nightmare'
+          ? `${this.sp.name} — VUUR-RASERNIE!`
+          : `${this.sp.name} — FASE 2!`);
+      game.banner(phaseLabel, 1.6, this.advDiff === 'hell' ? '#ff3a2a' : (this.advDiff === 'nightmare' ? '#ff7a4d' : '#ff6b6b'), 36);
       AudioSys.sfx('roar');
       game.shake(9, 0.28);
       haptic(28);
       // d20 polish #12 — baas fase-2 kleurflits
       game.bossPhase2Flash = motionReduced() ? 0.22 : 0.55;
-      game.bossPhase2Hue = this.sp?.c1 || '#ff6b6b';
+      game.bossPhase2Hue = this.advDiff === 'hell' ? '#ff2a18' : (this.sp?.c1 || '#ff6b6b');
       this.flashT = Math.max(this.flashT, motionReduced() ? 0.12 : 0.28);
       const lite = fxLite() || motionReduced();
       try {
@@ -228,8 +266,10 @@ class Monster {
     this.flashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.14 : opts.crit ? 0.12 : 0.1);
     const kb = scaleKnockback(kbx, dmg, { crit: opts.crit, kind: opts.kind });
     this.x += Math.sign(kb || 1) * clamp(Math.abs(kb) * 0.038, 5, 26);
-    game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
-    game.burst(this.x, this.y, this.sp.c1, dmg >= 18 ? 9 : 6);
+    if (!opts.quiet) {
+      game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
+      game.burst(this.x, this.y, this.sp.c1, dmg >= 18 ? 9 : 6);
+    }
     if (opts.crit) spawnFxRing(game, this.x, this.y - this.size * 0.4, '#ffd75e', fxLite() ? 5 : 8);
     if (this.hp <= 0) {
       this.hp = 0; this.deadT = 0;
@@ -258,13 +298,32 @@ class Monster {
     }
     // rariteit-aura
     const rar = rarityOf(this.sp.rarity);
+    if (this.alive && (this.advDiff === 'nightmare' || this.advDiff === 'hell') && !motionReduced()) {
+      c.save();
+      const pulse = 0.55 + Math.sin(this.t * (this.advDiff === 'hell' ? 10 : 7)) * 0.2;
+      c.globalAlpha = 0.18 + pulse * 0.2;
+      c.strokeStyle = this.advDiff === 'hell' ? '#ff3a2a' : '#ff8a30';
+      c.lineWidth = this.advDiff === 'hell' ? 3.2 : 2.4;
+      c.beginPath();
+      c.ellipse(0, -this.size * 0.15, this.size * 1.35, this.size * 1.15, 0, 0, TAU);
+      c.stroke();
+      if (this.advDiff === 'hell') {
+        c.globalAlpha = 0.12 + pulse * 0.1;
+        c.fillStyle = '#ff2a18';
+        c.beginPath();
+        c.ellipse(0, -this.size * 0.1, this.size * 1.15, this.size * 0.95, 0, 0, TAU);
+        c.fill();
+      }
+      c.restore();
+    }
     if (this.introT > 0 && this.alive) {
       c.save();
-      const p = clamp(this.introT / 1.6, 0, 1);
+      const p = clamp(this.introT / Math.max(0.6, this.introDur || 1.6), 0, 1);
       const pulse = 1 + Math.sin(this.t * 14) * 0.08;
+      const bigIntro = !!(this.bossCore || this.superBoss || this.colossal);
       c.globalAlpha = 0.25 + p * 0.45;
-      c.strokeStyle = this.introTier === 'tideBoss' ? '#4a9fff' : (this.introTier === 'superBoss' ? '#ffd75e' : (this.introTier === 'boss' ? '#ff6b6b' : '#c47aff'));
-      c.lineWidth = 4 + p * 4;
+      c.strokeStyle = this.introTier === 'tideBoss' ? '#4a9fff' : (this.introTier === 'superBoss' || this.colossal ? '#ffd75e' : (this.introTier === 'boss' ? '#ff6b6b' : '#c47aff'));
+      c.lineWidth = (bigIntro ? 5 : 4) + p * (bigIntro ? 6 : 4);
       c.beginPath();
       c.ellipse(0, 0, this.size * (1.7 + (1 - p) * 0.9) * pulse, this.size * (1.35 + (1 - p) * 0.7) * pulse, 0, 0, TAU);
       c.stroke();
@@ -274,6 +333,29 @@ class Monster {
         c.beginPath();
         c.ellipse(0, 0, this.size * 1.9 * pulse, this.size * 1.5 * pulse, 0, 0, TAU);
         c.fill();
+      }
+      if (bigIntro && p > 0.12) {
+        const label = (this.sp && this.sp.name) || 'BAAS';
+        const tag = this.colossal
+          ? (typeof t === 'function' ? t('combat.colossalTag') : 'COLOSSAAL')
+          : (this.superBoss
+            ? (typeof t === 'function' ? t('combat.superBossTag') : 'SUPER BAAS')
+            : (typeof t === 'function' ? t('combat.bossTag') : 'BAAS'));
+        const fs = Math.max(18, Math.min(this.colossal ? 42 : 34, this.size * 0.55));
+        c.globalAlpha = Math.min(1, 0.35 + p * 0.75);
+        c.font = `900 ${fs}px -apple-system, sans-serif`;
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        const ty = -this.size * (this.flying ? 1.15 : 1.35) - fs * 0.35;
+        c.lineWidth = Math.max(4, fs * 0.18);
+        c.strokeStyle = 'rgba(0,0,0,.72)';
+        c.fillStyle = this.colossal || this.superBoss ? '#ffd75e' : '#ff8a9a';
+        c.strokeText(tag, 0, ty - fs * 0.85);
+        c.fillText(tag, 0, ty - fs * 0.85);
+        c.font = `900 ${Math.round(fs * 1.15)}px -apple-system, sans-serif`;
+        c.fillStyle = '#fff';
+        c.strokeText(label, 0, ty);
+        c.fillText(label, 0, ty);
       }
       c.restore();
     }
@@ -312,10 +394,11 @@ class Monster {
       }
       c.restore();
     }
-    if (this.giant && this.alive) {
+    if ((this.giant || this.colossal) && this.alive) {
       c.save();
       c.globalAlpha = 0.35 + Math.sin(this.t * 4) * 0.08;
-      c.strokeStyle = '#ffd75e'; c.lineWidth = 2.5;
+      c.strokeStyle = this.colossal ? '#ffb06a' : '#ffd75e';
+      c.lineWidth = this.colossal ? 3.4 : 2.5;
       c.beginPath(); c.ellipse(0, this.size * 0.82, this.size * 1.28, this.size * 0.24, 0, 0, TAU); c.stroke();
       c.restore();
     }
@@ -625,6 +708,41 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
       if (typeof drawTideBossArt === 'function') {
         try { drawTideBossArt(c, sp.art, r, t, body, dark, flash, telegraph); } catch (err) {
           console.error('[TideArt]', sp.art, err);
+          c.fillStyle = body;
+          c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+        }
+      } else {
+        c.fillStyle = body;
+        c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+      }
+      break;
+    case 'cow':
+    case 'pig':
+    case 'chicken':
+    case 'sheep':
+    case 'horse':
+    case 'goat':
+    case 'duck':
+    case 'rooster':
+    case 'donkey':
+    case 'goose':
+    case 'elephant':
+    case 'lion':
+    case 'tiger':
+    case 'giraffe':
+    case 'hippo':
+    case 'rhino':
+    case 'gorilla':
+    case 'zebra':
+    case 'bear':
+    case 'croc':
+    case 'kangaroo':
+    case 'panda':
+    case 'flamingo':
+    case 'camel':
+      if (typeof drawBeastArt === 'function') {
+        try { drawBeastArt(c, sp.art, r, t, body, dark, flash, telegraph); } catch (err) {
+          console.error('[BeastArt]', sp.art, err);
           c.fillStyle = body;
           c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
         }
