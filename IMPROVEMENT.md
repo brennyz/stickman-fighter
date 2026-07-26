@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | — | **ASSET-STYLE ui wire:** `assets/ui/` saga/ach/lock/check/island SVGs (incl. Nachtmerrie/Hel) + HTML/JS helpers; SW precache + swap.svg; 0 inline `<svg>` in index.html. v1.18.108 / SW v318. |
 | 2026-07-26 | — | **Zone-wapens wire:** drops + on-hit effects + burn-tick aangesloten; Nightmare 2.0/Hell 3.0 drops overal; UI zone/effect badges. v1.18.107 / SW v317. |
 | 2026-07-26 | — | **Model deepen:** Nightmare 2.0 / Hell 3.0 — enrageMul wired, ember/pain golven, sterkere vuur/lava visuals, unlock Lv70, petcoin bonus, UI-blurb. v1.18.106 / SW v316. |
 | 2026-07-26 | — | **LIVE fix:** Nightmare 2.0 / Hell 3.0 + herstel Nachtmerrie/Hel eilanden (Lv51–70) & zone-wapens. v1.18.105 / SW v315. |

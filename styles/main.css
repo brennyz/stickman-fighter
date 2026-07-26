@@ -652,6 +652,54 @@
     outline: 1px dashed rgba(255,107,107,.55);
     outline-offset: 1px;
   }
+  /* —— assets/ui file icons (saga / ach / lock / island) —— */
+  .char-saga-bar img.saga-ico,
+  img.saga-ico {
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.15em;
+    display: inline-block;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  img.ach-ico {
+    width: 1.2em;
+    height: 1.2em;
+    vertical-align: -0.24em;
+    margin-right: 2px;
+    display: inline-block;
+    object-fit: contain;
+    pointer-events: none;
+  }
+  img.ui-ico,
+  img.lock-ico,
+  img.check-ico {
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.16em;
+    display: inline-block;
+    object-fit: contain;
+    pointer-events: none;
+  }
+  img.island-ico,
+  .island-tab-ico img,
+  .island-info-ico img,
+  .help-island-ico img {
+    width: 1.35em;
+    height: 1.35em;
+    display: inline-block;
+    object-fit: contain;
+    pointer-events: none;
+    vertical-align: -0.2em;
+  }
+  body.high-contrast img.saga-ico,
+  body.high-contrast img.ach-ico,
+  body.high-contrast img.ui-ico,
+  body.high-contrast img.island-ico {
+    filter: contrast(1.15) brightness(1.08);
+  }
   .hub-tile-title { font-weight: 800; font-size: min(4vw, 16px); line-height: 1.1; }
   .hub-tile-sub { font-size: 10px; font-weight: 600; opacity: .72; line-height: 1.3; }
   .hub-tile-stat {
@@ -1139,7 +1187,8 @@
   .help-island-row { display:flex; gap:10px; align-items:flex-start; padding:8px 10px; border-radius:12px; background:rgba(0,0,0,.2); }
   .help-island-row.cur { outline:1px solid rgba(124,245,255,.45); }
   .help-island-row.locked { opacity:.55; }
-  .help-island-ico svg { width:32px; height:32px; display:block; flex:0 0 auto; }
+  .help-island-ico svg,
+  .help-island-ico img { width:32px; height:32px; display:block; flex:0 0 auto; }
   .help-island-body { flex:1; min-width:0; font-size:13px; }
   .help-island-sub { font-size:11px; opacity:.85; margin-top:3px; margin-bottom:6px; }
   .island-grid { grid-template-columns:repeat(5, minmax(56px, 1fr)); max-width:min(92vw, 520px); }
