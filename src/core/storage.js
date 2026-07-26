@@ -5,11 +5,12 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.105';
+const APP_VERSION = '1.18.106';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 315;
+const SW_CACHE_REV = 316;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
+  chestDaily: null, chestWeapons: {},
   zoneWeapons: {},
 
 
@@ -238,6 +239,7 @@ function weaponSkillGated(w) { return w.unlock > adventureWeaponCap(); }
 function weaponUnlockedByLevel(w) {
   if (!w) return false;
   if (w.dropZone) return typeof weaponZoneUnlocked === 'function' ? weaponZoneUnlocked(w) : !!(save.zoneWeapons && save.zoneWeapons[w.id]);
+  if (save.chestWeapons && save.chestWeapons[w.id]) return true;
   return save.lvl >= w.unlock;
 }
 function weaponUsableNow(w) { return weaponUnlockedByLevel(w) && !weaponSkillGated(w); }
@@ -753,6 +755,8 @@ function readSaveJson(raw) {
     merged.tipsSeen = sanitizeTipsSeen(parsed.tipsSeen);
     merged.advFails = Object.assign({}, parsed.advFails || {});
     merged.zoneWeapons = Object.assign({}, parsed.zoneWeapons || {});
+    merged.chestWeapons = Object.assign({}, parsed.chestWeapons || {});
+    if (parsed.chestDaily && typeof parsed.chestDaily === 'object') merged.chestDaily = Object.assign({}, parsed.chestDaily);
     merged.advCleared = Object.assign(
       { normal: false, nightmare: false, hell: false },
       (parsed.advCleared && typeof parsed.advCleared === 'object') ? parsed.advCleared : {}
@@ -1146,6 +1150,10 @@ function sanitizeSave(s) {
   }
   out.zoneWeapons = cleanZone;
 
+  out.chestWeapons = typeof sanitizeChestWeapons === 'function'
+    ? sanitizeChestWeapons(out.chestWeapons)
+    : {};
+
   // Summons: alleen bekende wapens, geldige tiers, en alleen echte upgrades
   const cleanSummons = {};
   for (const [k, v] of Object.entries(out.summons || {})) {
@@ -1162,9 +1170,13 @@ function sanitizeSave(s) {
     if (typeof PET_BY_ID !== 'undefined' && !PET_BY_ID[k]) continue;
     if (typeof PET_BY_ID === 'undefined') continue;
     const entry = (v && typeof v === 'object') ? v : {};
-    cleanPets[k] = {
+    const row = {
       kills: clamp(Math.floor(Number(entry.kills) || 0), 0, 999999),
     };
+    if (typeof entry.src === 'string') row.src = entry.src.slice(0, 12);
+    if (typeof entry.skill === 'string') row.skill = entry.skill.slice(0, 48);
+    if (entry.coins != null) row.coins = clamp(Math.floor(Number(entry.coins) || 0), 0, 999999);
+    cleanPets[k] = row;
   }
   out.pets = cleanPets;
   if (out.activePet && !cleanPets[out.activePet]) out.activePet = null;
@@ -1196,6 +1208,20 @@ function sanitizeSave(s) {
       advBonus: !!out.eggDaily.advBonus,
     };
   } else out.eggDaily = null;
+
+  {
+    const today = typeof todayKey === 'function' ? todayKey() : new Date().toISOString().slice(0, 10);
+    if (typeof sanitizeChestDaily === 'function') {
+      out.chestDaily = sanitizeChestDaily(out.chestDaily, today);
+    } else if (out.chestDaily && typeof out.chestDaily === 'object') {
+      out.chestDaily = {
+        date: today,
+        wLeft: Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.wLeft) || 0))),
+        pLeft: Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.pLeft) || 0))),
+        pulls: [],
+      };
+    } else out.chestDaily = null;
+  }
 
   const stPick = STYLES.find(st => st.id === out.style) || STYLES[0];
   let styleOk = stPick.id === 'classic';

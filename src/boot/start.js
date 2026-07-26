@@ -133,6 +133,8 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
     } else if (hub === 'versus') {
       UI.charPickStep = 1;
       UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { msg: 'Kies karakter mislukt' });
+    } else if (hub === 'summon') {
+      UI.safeOpen('summonScreen', () => UI.renderSummon(), { msg: 'Summons laden mislukt' });
     } else {
       UI.openModeHub(hub);
     }
@@ -206,6 +208,14 @@ bindPress(document.getElementById('btnUpgrades'), () => {
 });
 bindPress(document.getElementById('btnPets'), () => {
   openCollectionScreen('petScreen', () => UI.renderPets());
+});
+bindPress(document.getElementById('btnChestWeapon'), () => {
+  AudioSys.init();
+  UI.doChestPull('weapon');
+});
+bindPress(document.getElementById('btnChestPet'), () => {
+  AudioSys.init();
+  UI.doChestPull('pet');
 });
 bindPress(document.getElementById('btnDex'), () => {
   openCollectionScreen('dexScreen', () => UI.renderDex());

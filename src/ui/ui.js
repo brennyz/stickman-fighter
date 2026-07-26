@@ -830,6 +830,17 @@ function hubTileStatLine(hub) {
     }
     case 'collect':
       return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ${petCoinsBalance()} pet 🪙`;
+    case 'summon': {
+      try {
+        ensureChestDaily();
+        const w = chestWeaponLeft();
+        const p = chestPetLeft();
+        if (w + p <= 0) return 'Op · morgen weer';
+        return `${w} wapen · ${p} pet`;
+      } catch (_) {
+        return '5+5 vandaag';
+      }
+    }
     default:
       return '';
   }
@@ -870,7 +881,7 @@ function levelTileTip(n, pick, infoLv, boss, best, fails) {
 }
 
 const UI = {
-  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'upgradeScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
+  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'summonScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'upgradeScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
@@ -1164,6 +1175,11 @@ const UI = {
         return;
       }
       if (active === 'modeHubScreen') {
+        this.renderMenu();
+        this.show('menuScreen');
+        return;
+      }
+      if (active === 'summonScreen') {
         this.renderMenu();
         this.show('menuScreen');
         return;
@@ -1665,6 +1681,15 @@ const UI = {
     document.querySelectorAll('[data-hub-stat]').forEach((el) => {
       el.textContent = hubTileStatLine(el.dataset.hubStat);
     });
+    const summonTile = document.getElementById('btnSummons');
+    if (summonTile) {
+      let left = 0;
+      try { left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
+      summonTile.classList.toggle('has-summons', left > 0);
+      summonTile.setAttribute('aria-label', left > 0
+        ? `Summons · ${left} over vandaag`
+        : 'Summons · op voor vandaag');
+    }
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const verLine = document.getElementById('menuVerLine');
@@ -1719,6 +1744,68 @@ const UI = {
     if (typeof renderLangSwitch === 'function') renderLangSwitch();
     } catch (err) {
       sfReportError('renderMenu', err, 'Menu kon niet ververst worden');
+    }
+  },
+
+  renderSummon() {
+    try {
+      ensureChestDaily();
+      const wLeft = chestWeaponLeft();
+      const pLeft = chestPetLeft();
+      const quota = document.getElementById('summonQuota');
+      if (quota) {
+        quota.textContent = `Vandaag: ${wLeft}/${CHEST_DAILY_WEAPON} wapen · ${pLeft}/${CHEST_DAILY_PET} pet · 5% jackpot`;
+      }
+      const wBtn = document.getElementById('btnChestWeapon');
+      const pBtn = document.getElementById('btnChestPet');
+      const wLbl = document.getElementById('chestWeaponLbl');
+      const pLbl = document.getElementById('chestPetLbl');
+      if (wLbl) wLbl.textContent = wLeft > 0 ? `${wLeft} over` : 'Op';
+      if (pLbl) pLbl.textContent = pLeft > 0 ? `${pLeft} over` : 'Op';
+      if (wBtn) wBtn.disabled = wLeft <= 0;
+      if (pBtn) pBtn.disabled = pLeft <= 0;
+
+      const logEl = document.getElementById('summonLog');
+      if (logEl) {
+        const pulls = (save.chestDaily && Array.isArray(save.chestDaily.pulls))
+          ? save.chestDaily.pulls.slice().reverse() : [];
+        if (!pulls.length) {
+          logEl.textContent = 'Nog geen pulls vandaag.';
+        } else {
+          logEl.innerHTML = pulls.slice(0, 8).map((p) => {
+            const tag = p.nice ? '✦' : '·';
+            const rar = p.rarity ? ` ${p.rarity}` : '';
+            return `<div>${tag} ${p.kind} ${p.type || ''}${rar}</div>`;
+          }).join('');
+        }
+      }
+    } catch (err) {
+      sfReportError('renderSummon', err, 'Summons laden mislukt');
+    }
+  },
+
+  doChestPull(kind) {
+    try {
+      const res = openChestSummon(kind);
+      const reveal = document.getElementById('summonReveal');
+      const text = document.getElementById('summonRevealText');
+      const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : 'Mislukt');
+      if (text) text.textContent = msg;
+      if (reveal) {
+        reveal.classList.toggle('is-nice', !!(res && res.ok && res.nice));
+        reveal.classList.remove('is-shake');
+        void reveal.offsetWidth;
+        reveal.classList.add('is-shake');
+      }
+      if (res && res.ok) {
+        try { UI.toast(msg, res.nice ? 3800 : 2400); } catch (_) {}
+      } else {
+        try { UI.toast(msg, 2200); } catch (_) {}
+      }
+      this.renderSummon();
+      this.renderMenu();
+    } catch (err) {
+      sfReportError('doChestPull', err, 'Summon mislukt');
     }
   },
 
@@ -2437,6 +2524,13 @@ const UI = {
       const summonBadge = w.summoned
         ? ` <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">✦ Summon</span>`
         : '';
+      const chestSk = typeof chestWeaponSkillOf === 'function' ? chestWeaponSkillOf(w.id) : null;
+      const chestBadge = chestSk
+        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Kist</span>`
+        : '';
+      const chestSkillLine = chestSk
+        ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestSk}</div>`
+        : '';
       const statLine = w.summoned
         ? `${weaponDesc(w)} · schade x${base.dmg} → <b style="color:${rar.color}">x${w.dmg}</b> · bereik ${w.range} · snelheid x${w.speed}`
         : `${weaponDesc(w)} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}`;
@@ -2462,8 +2556,9 @@ const UI = {
       const islandLine = islandLocked && !lvlLocked
         ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:#ffd75e">${t('ui.weaponIslandPick', { cap: adventureWeaponCap() })}</div>`
         : '';
-      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${summonBadge}${tierBadge}${upBadge}</div>
+      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${summonBadge}${chestBadge}${tierBadge}${upBadge}</div>
         <div class="cinfo">${statLine}</div>` +
+        chestSkillLine +
         upLine +
         (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '') +
         islandLine;
@@ -2983,8 +3078,14 @@ const UI = {
       const upLv = tamed ? itemUpgradeLevel('pet', def.id) : 0;
       const upMax = tamed ? itemUpgradeMax('pet', def.id) : 0;
       const upBadge = upLv > 0 ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">↑ Lv ${upLv}/${upMax}</span>` : '';
-      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${upBadge}</div>` +
+      const petEntry = tamed && save.pets ? save.pets[def.id] : null;
+      const chestPetSk = petEntry && typeof petEntry.skill === 'string' ? petEntry.skill : null;
+      const chestPetBadge = chestPetSk
+        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Kist</span>`
+        : '';
+      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${chestPetBadge}${upBadge}</div>` +
         `<div class="cinfo">${def.perk}</div>` +
+        (chestPetSk ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestPetSk}</div>` : '') +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
           ? 'Getemd · assist in avontuur'
           : (canBuy
