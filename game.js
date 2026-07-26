@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.85';
+const APP_VERSION = '1.18.86';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 295;
+const SW_CACHE_REV = 296;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -5715,11 +5715,11 @@ function isThrowWeapon(id) {
 /** Per wapen: 3 opeenvolgende melee-bewegingen (combo-ketting ~1,4s). */
 const WEAPON_MOVE_FAMILIES = {
   slash: {
-    labels: ['Horizontale snede', 'Opwaartse kling', 'Doorsteek'],
+    labels: ['Horizontale snede', 'Opwaartse kling', 'Overhead-finisher'],
     moves: [
       { pose: 'slash', rangeMul: 1, dmgMul: 1, kbMul: 1, hitY: 0, windupMul: 1, activeMul: 1 },
       { pose: 'upper', rangeMul: 0.96, dmgMul: 1.04, kbMul: 1.08, hitY: -22, windupMul: 0.94, activeMul: 0.95 },
-      { pose: 'thrust', rangeMul: 1.1, dmgMul: 1.06, kbMul: 1.12, hitY: -6, windupMul: 1.05, activeMul: 1.04 },
+      { pose: 'overhead', rangeMul: 1.06, dmgMul: 1.1, kbMul: 1.16, hitY: -10, windupMul: 1.06, activeMul: 0.98 },
     ],
   },
   spear: {
@@ -5747,11 +5747,11 @@ const WEAPON_MOVE_FAMILIES = {
     ],
   },
   hook: {
-    labels: ['Haak', 'Lage rippen', 'Opstoot'],
+    labels: ['Haak', 'Lage rippen', 'Opwaartse sikkel'],
     moves: [
       { pose: 'hook', rangeMul: 1, dmgMul: 1, kbMul: 1.08, hitY: 4, windupMul: 0.96, activeMul: 1 },
       { pose: 'sweep', rangeMul: 1.04, dmgMul: 1.02, kbMul: 1.05, hitY: 16, windupMul: 0.94, activeMul: 0.98 },
-      { pose: 'thrust', rangeMul: 1.08, dmgMul: 1.08, kbMul: 1.12, hitY: -8, windupMul: 1.06, activeMul: 1.04 },
+      { pose: 'upper', rangeMul: 1.06, dmgMul: 1.1, kbMul: 1.14, hitY: -16, windupMul: 1.04, activeMul: 1 },
     ],
   },
   fan: {
@@ -5765,16 +5765,16 @@ const WEAPON_MOVE_FAMILIES = {
   dual: {
     labels: ['Kruis-stoot', 'Parry-snap', 'Dubbel-slagen'],
     moves: [
-      { pose: 'thrust', rangeMul: 1, dmgMul: 1, kbMul: 1, hitY: -2, windupMul: 0.92, activeMul: 0.95 },
+      { pose: 'slash', rangeMul: 1, dmgMul: 1, kbMul: 1, hitY: -2, windupMul: 0.92, activeMul: 0.95 },
       { pose: 'hook', rangeMul: 0.98, dmgMul: 1.04, kbMul: 1.06, hitY: 6, windupMul: 0.9, activeMul: 0.92 },
       { pose: 'spin', rangeMul: 1.08, dmgMul: 1.08, kbMul: 1.12, hitY: -4, windupMul: 1.02, activeMul: 1.04 },
     ],
   },
   energy: {
-    labels: ['Energie-zwaai', 'Focus-stoot', 'Nova-sweep'],
+    labels: ['Energie-zwaai', 'Opwaartse focus', 'Nova-sweep'],
     moves: [
       { pose: 'slash', rangeMul: 1, dmgMul: 1, kbMul: 1.02, hitY: -4, windupMul: 0.94, activeMul: 0.98 },
-      { pose: 'thrust', rangeMul: 1.1, dmgMul: 1.06, kbMul: 1.1, hitY: -8, windupMul: 1.04, activeMul: 1.05 },
+      { pose: 'upper', rangeMul: 1.06, dmgMul: 1.06, kbMul: 1.1, hitY: -16, windupMul: 1.02, activeMul: 1 },
       { pose: 'spin', rangeMul: 1.06, dmgMul: 1.08, kbMul: 1.14, hitY: 0, windupMul: 1.06, activeMul: 1.02 },
     ],
   },
@@ -5783,19 +5783,19 @@ const WEAPON_MOVE_FAMILIES = {
 /** Per wapen: eigen 1-2-3 stijl (labels + optionele move-tweaks; stats erven anders van family). */
 const WEAPON_COMBOS = {
   kunai: {
-    labels: ['Kunai-steek', 'Ruk-terug', 'Kruis-snede'],
+    labels: ['Kunai-snit', 'Ruk-terug', 'Kruis-snede'],
     moves: [
-      { pose: 'thrust', rangeMul: 1.04, dmgMul: 1, kbMul: 1, hitY: -4, windupMul: 0.9, activeMul: 0.92 },
+      { pose: 'slash', rangeMul: 1.02, dmgMul: 1, kbMul: 1, hitY: -2, windupMul: 0.9, activeMul: 0.92 },
       { pose: 'hook', rangeMul: 0.98, dmgMul: 1.02, kbMul: 1.04, hitY: 2, windupMul: 0.88, activeMul: 0.9 },
-      { pose: 'slash', rangeMul: 1.02, dmgMul: 1.04, kbMul: 1.06, hitY: 0, windupMul: 0.94, activeMul: 0.96 },
+      { pose: 'slash', rangeMul: 1.04, dmgMul: 1.06, kbMul: 1.08, hitY: 0, windupMul: 0.94, activeMul: 0.96 },
     ],
   },
   tanto: {
-    labels: ['Quick-draw', 'Omkeer-priem', 'Lethale punctie'],
+    labels: ['Quick-draw', 'Omkeer-haak', 'Diepe snede'],
     moves: [
       { pose: 'slash', rangeMul: 0.98, dmgMul: 1, kbMul: 0.98, hitY: 0, windupMul: 0.82, activeMul: 0.88 },
       { pose: 'hook', rangeMul: 1, dmgMul: 1.02, kbMul: 1.04, hitY: 4, windupMul: 0.86, activeMul: 0.9 },
-      { pose: 'thrust', rangeMul: 1.06, dmgMul: 1.08, kbMul: 1.1, hitY: -6, windupMul: 0.98, activeMul: 1 },
+      { pose: 'upper', rangeMul: 1.04, dmgMul: 1.08, kbMul: 1.12, hitY: -14, windupMul: 0.98, activeMul: 1 },
     ],
   },
   zwaard: {
@@ -5831,11 +5831,11 @@ const WEAPON_COMBOS = {
     labels: ['Return-slag', 'Boomer-sweep', 'Spin-out'],
   },
   zeis: {
-    labels: ['Schaduw-sweep', 'Rip-sikkel', 'Zeis-doorsteek'],
+    labels: ['Schaduw-sweep', 'Rip-sikkel', 'Zeis-ophaal'],
     moves: [
       { pose: 'sweep', rangeMul: 1.08, dmgMul: 1, kbMul: 1.02, hitY: 12, windupMul: 0.96, activeMul: 1.02 },
       { pose: 'hook', rangeMul: 1.04, dmgMul: 1.04, kbMul: 1.08, hitY: 6, windupMul: 0.94, activeMul: 1 },
-      { pose: 'thrust', rangeMul: 1.12, dmgMul: 1.1, kbMul: 1.14, hitY: -8, windupMul: 1.08, activeMul: 1.04 },
+      { pose: 'upper', rangeMul: 1.1, dmgMul: 1.12, kbMul: 1.16, hitY: -14, windupMul: 1.06, activeMul: 1.02 },
     ],
   },
   hamer: {
@@ -5924,6 +5924,32 @@ function weaponMoveFamily(id) {
   if (id === 'sai') return 'dual';
   if (id === 'laser' || id === 'void' || id === 'kristal' || id === 'sterkling') return 'energy';
   return 'slash';
+}
+
+/** Idle grip: speer horizontaal, rest diagonaal/omhoog — voorkomt “alles is speer”. */
+function weaponIdleAngle(id) {
+  const fam = weaponMoveFamily(id);
+  if (!fam) return -0.45;
+  if (fam === 'spear') return -0.1;
+  if (fam === 'blunt') return -1.05;
+  if (fam === 'hook') return -0.9;
+  if (fam === 'chain') return -0.78;
+  if (fam === 'fan') return -0.32;
+  if (fam === 'dual') return -0.58;
+  if (fam === 'energy') return -0.5;
+  return -0.72;
+}
+
+/** Extra rotatie t.o.v. onderarm — alleen thrust/spear blijft speer-uitgelijnd. */
+function weaponGripBias(id, move) {
+  const pose = (move && move.pose) || '';
+  const fam = weaponMoveFamily(id);
+  if (fam === 'spear' || pose === 'thrust') return 0;
+  if (pose === 'overhead' || pose === 'upper') return -0.42;
+  if (pose === 'slash' || pose === 'spin') return -0.55;
+  if (pose === 'sweep' || pose === 'hook') return -0.35;
+  if (fam === 'blunt') return -0.65;
+  return -0.4;
 }
 
 function weaponMoveDef(id, idx) {
@@ -13643,9 +13669,13 @@ function drawWeaponShape(c, id, spin, moveIdx) {
   }
   switch (id) {
     case 'zwaard':
-      c.strokeStyle = '#c9d6e8'; c.lineWidth = 5; c.beginPath(); c.moveTo(4, 0); c.lineTo(46, 0); c.stroke();
-      c.strokeStyle = '#fff'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(8, -1); c.lineTo(42, -1); c.stroke();
-      c.strokeStyle = '#a67c2e'; c.lineWidth = 5; c.beginPath(); c.moveTo(4, -7); c.lineTo(4, 7); c.stroke();
+      // Brede kling + gevest — niet een dunne speerschacht
+      c.strokeStyle = '#9aa8bc'; c.lineWidth = 7; c.beginPath(); c.moveTo(8, 0); c.lineTo(48, 0); c.stroke();
+      c.strokeStyle = '#e8f0ff'; c.lineWidth = 2.2; c.beginPath(); c.moveTo(12, -1.2); c.lineTo(44, -1.2); c.stroke();
+      c.fillStyle = '#c9d6e8';
+      c.beginPath(); c.moveTo(46, -5); c.lineTo(56, 0); c.lineTo(46, 5); c.closePath(); c.fill();
+      c.strokeStyle = '#a67c2e'; c.lineWidth = 5; c.beginPath(); c.moveTo(4, -8); c.lineTo(4, 8); c.stroke();
+      c.strokeStyle = '#6a5030'; c.lineWidth = 4; c.beginPath(); c.moveTo(-2, 0); c.lineTo(8, 0); c.stroke();
       break;
     case 'master_sword':
       c.save();
@@ -13665,11 +13695,11 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.beginPath(); c.moveTo(11, -12); c.lineTo(11, 12); c.stroke();
       break;
     case 'kunai':
-      c.strokeStyle = '#7a8494'; c.lineWidth = 3; c.beginPath(); c.moveTo(0, 0); c.lineTo(34, 0); c.stroke();
+      c.strokeStyle = '#5a6474'; c.lineWidth = 3.4; c.beginPath(); c.moveTo(0, 0); c.lineTo(26, 0); c.stroke();
       c.fillStyle = '#c9d6e8';
-      c.beginPath(); c.moveTo(34, -7); c.lineTo(52, 0); c.lineTo(34, 7); c.closePath(); c.fill();
-      c.strokeStyle = '#a67c2e'; c.lineWidth = 2; c.beginPath(); c.moveTo(8, -5); c.lineTo(8, 5); c.stroke();
-      c.beginPath(); c.arc(2, 0, 3, 0, TAU); c.stroke();
+      c.beginPath(); c.moveTo(24, -8); c.lineTo(44, 0); c.lineTo(24, 8); c.closePath(); c.fill();
+      c.strokeStyle = '#a67c2e'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(8, -6); c.lineTo(8, 6); c.stroke();
+      c.beginPath(); c.arc(2, 0, 3.4, 0, TAU); c.stroke();
       break;
     case 'shuriken': {
       const rot = spin * 18;
@@ -13684,8 +13714,9 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       break;
     }
     case 'knuppel':
-      c.strokeStyle = '#8a5a30'; c.lineWidth = 6; c.beginPath(); c.moveTo(2, 0); c.lineTo(22, 0); c.stroke();
-      c.lineWidth = 11; c.beginPath(); c.moveTo(22, 0); c.lineTo(40, 0); c.stroke();
+      c.strokeStyle = '#6a4020'; c.lineWidth = 5; c.beginPath(); c.moveTo(2, 0); c.lineTo(18, 0); c.stroke();
+      c.strokeStyle = '#8a5a30'; c.lineWidth = 14; c.beginPath(); c.moveTo(18, 0); c.lineTo(40, 0); c.stroke();
+      c.strokeStyle = '#a07040'; c.lineWidth = 9; c.beginPath(); c.moveTo(22, 0); c.lineTo(36, 0); c.stroke();
       break;
     case 'speer':
       c.strokeStyle = '#a3763f'; c.lineWidth = 4; c.beginPath(); c.moveTo(-14, 0); c.lineTo(58, 0); c.stroke();
@@ -15255,8 +15286,13 @@ class Fighter {
       const aimLift = (this._aimAtAttack && (this.attack?.kind === 'weapon' || this.attack?.kind === 'punch' || this.attack?.kind === 'kick'))
         ? clamp(this._aimAtAttack.ny, -1, 0.4) * 0.85
         : 0;
-      const wAng = this.attack && this.attack.kind === 'weapon' ? P.arms[1][1] + aimLift : -0.5 + aimLift * 0.25;
-      if (this.attack && this.attack.kind === 'weapon' && this.attack.move && !motionReduced() && !fxLite()) {
+      const attacking = this.attack && this.attack.kind === 'weapon';
+      const grip = attacking ? weaponGripBias(this.weapon.id, this.attack.move) : 0;
+      const idle = (typeof weaponIdleAngle === 'function') ? weaponIdleAngle(this.weapon.id) : -0.5;
+      const wAng = attacking
+        ? P.arms[1][1] + grip + aimLift
+        : idle + aimLift * 0.25;
+      if (attacking && this.attack.move && !motionReduced() && !fxLite()) {
         const a = this.attack;
         if (a.t >= a.windup && a.t <= a.windup + a.active) {
           const ext = clamp((a.t - a.windup) / Math.max(0.01, a.active), 0, 1);
@@ -21678,23 +21714,34 @@ class Game {
             p.hitSet = new Set();
             try { AudioSys.sfx('wBoemerang'); } catch (_) {}
           }
-        } else if (owner && owner.alive) {
-          const tx = owner.x + (owner.face || 1) * 6;
-          const ty = owner.y - 52;
-          const dx = tx - p.x, dy = ty - p.y;
-          const d = Math.hypot(dx, dy) || 1;
-          const spd = 560;
-          p.vx = (dx / d) * spd;
-          p.vy = (dy / d) * spd;
-          if (d < 30) {
+        }
+        if (p.returning) {
+          if (owner && owner.alive) {
+            const tx = owner.x + (owner.face || 1) * 6;
+            const ty = owner.y - 52;
+            const dx = tx - p.x, dy = ty - p.y;
+            const d = Math.hypot(dx, dy) || 1;
+            const spd = 560;
+            p.vx = (dx / d) * spd;
+            p.vy = (dy / d) * spd;
+          } else {
             p.life = 0;
-            owner._boomerOut = false;
           }
-        } else {
-          p.life = 0;
         }
       }
       p.x += p.vx * dt; p.y += p.vy * dt;
+      if (p.kind === 'boemerang' && p.returning && p.life > 0) {
+        const owner = p.from === 'p2' ? this.p2
+          : (p.from === 'player' || p.from === 'p1') ? this.player : null;
+        if (owner && owner.alive) {
+          const tx = owner.x + (owner.face || 1) * 6;
+          const ty = owner.y - 52;
+          if (Math.hypot(p.x - tx, p.y - ty) < 30) {
+            p.life = 0;
+            owner._boomerOut = false;
+          }
+        }
+      }
       if (skProj && (skProj.behavior === 'orb' || skProj.behavior === 'pull' || skProj.behavior === 'meteor')) {
         const grow = (skProj.behavior === 'pull' || skProj.behavior === 'meteor') ? 2.5 : 4;
         p.r = Math.min((skProj.radius || 28) + 8, (p.r || skProj.radius) + dt * grow);

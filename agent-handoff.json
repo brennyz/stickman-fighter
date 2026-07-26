@@ -13,8 +13,8 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.85",
-    "swCache": "stickfighter-app-v295",
+    "appVersion": "1.18.86",
+    "swCache": "stickfighter-app-v296",
     "gameJsQuery": "game.js?v=294",
     "cssQuery": "styles/main.css?v=294",
     "featureBranch": "cursor/rasengan-multi-shot-2125",
