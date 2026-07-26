@@ -78,6 +78,13 @@ must(!/&#10074;/.test(html), 'HTML entity pause bars still present');
 
 must(!/class="(?:ico|tog-ico)"><svg/.test(html), 'inline ico/tog-ico SVG still present — should be file icons');
 
+// Hub tile stats use SVG_COIN_ICON HTML — must set via innerHTML, not textContent
+const uiSrc = fs.readFileSync(path.join(root, 'src/ui/ui.js'), 'utf8');
+must(/\[data-hub-stat\][\s\S]{0,120}innerHTML\s*=\s*hubTileStatLine/.test(uiSrc),
+  'hub-stat must use innerHTML=hubTileStatLine (textContent leaks raw <img>)');
+must(!/\[data-hub-stat\][\s\S]{0,120}textContent\s*=\s*hubTileStatLine/.test(uiSrc),
+  'hub-stat must not use textContent=hubTileStatLine');
+
 /** Invalid encoding (e.g. Windows-1252 en-dash) breaks Safari/iPad <img> SVG loads. */
 function assertUtf8Svgs(dir) {
   const abs = path.join(root, 'assets/buttons', dir);

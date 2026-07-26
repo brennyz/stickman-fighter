@@ -30450,7 +30450,8 @@ const UI = {
       el.classList.toggle('hub-tile-featured', el.dataset.hub === featHub);
     });
     document.querySelectorAll('[data-hub-stat]').forEach((el) => {
-      el.textContent = hubTileStatLine(el.dataset.hubStat);
+      // hubTileStatLine may include SVG_COIN_ICON <img> — must be HTML, not textContent
+      el.innerHTML = hubTileStatLine(el.dataset.hubStat);
     });
     const summonTile = document.getElementById('btnSummons');
     if (summonTile) {
