@@ -13,18 +13,25 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.102",
-    "swCache": "stickfighter-app-v312",
-    "gameJsQuery": "game.js?v=312",
-    "cssQuery": "styles/main.css?v=312",
-    "featureBranch": "main",
+    "appVersion": "1.18.103",
+    "swCache": "stickfighter-app-v313",
+    "gameJsQuery": "game.js?v=313",
+    "cssQuery": "styles/main.css?v=313",
+    "featureBranch": "cursor/sfx-battle-diversity-1588",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": "bf21c63",
     "remoteMainHead": "bf21c63",
-    "note": "Rinnegan slash + upgrade-dikte · MERGE main · v1.18.102"
+    "note": "SFX/battle diversiteit ×2 · v1.18.103"
   },
   "userWishlist": [
+    {
+      "id": "w-20260726T185452",
+      "from": "user",
+      "text": "Geluiden SFX en battle twee keer zo divers (later nog netjes polishen)",
+      "status": "done-in-code",
+      "updated": "2026-07-26"
+    },
     {
       "id": "w-20260726T184800",
       "from": "user",
@@ -141,6 +148,14 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T18:54:55Z",
+      "summary": "SFX/battle diversiteit ~2× klaar (samples+BGM) · v1.18.103"
+    },
+    {
+      "at": "2026-07-26T18:54:52Z",
+      "summary": "SFX/battle diversiteit ~2×: meer Kenney samples + fight BGM-varianten · v1.18.103"
+    },
+    {
       "at": "2026-07-26T18:49:22Z",
       "summary": "Merged Rinnegan slash naar main · v1.18.102"
     },
@@ -231,14 +246,6 @@
     {
       "at": "2026-07-26T07:30:00Z",
       "summary": "Menu opaque hub icons/tiles + stickmen top-band · v1.18.79"
-    },
-    {
-      "at": "2026-07-26T07:19:14Z",
-      "summary": "Wave-clear hiccup: partBoundaryWaveIdx terug na module-split · v1.18.79"
-    },
-    {
-      "at": "2026-07-26T07:10:13Z",
-      "summary": "Fight hiccup-freeze fix: loop door na crash, grantXP guarded · v1.18.78"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

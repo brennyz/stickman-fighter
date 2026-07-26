@@ -708,15 +708,18 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
           try { AudioSys.sfx('bossTurn'); } catch (_) {}
         }
         AudioSys.sting('superBossIntro');
-        AudioSys.play('boss');
+        if (typeof playFightBgm === 'function') playFightBgm('boss');
+        else AudioSys.play('boss');
         game.banner(`SUPER BAAS — ${name}!`, 2.0, col, 44);
       } else if (tier === 'boss') {
         AudioSys.sting('bossIntro');
-        AudioSys.play('boss');
+        if (typeof playFightBgm === 'function') playFightBgm('boss');
+        else AudioSys.play('boss');
         game.banner(`BAAS — ${name}!`, 1.8, col, 42);
       } else {
         AudioSys.sting('eliteIntro');
-        AudioSys.play('elite');
+        if (typeof playFightBgm === 'function') playFightBgm('elite');
+        else AudioSys.play('elite');
         game.banner(`ELITE — ${name}!`, 1.5, col, 38);
       }
     } catch (_) {}

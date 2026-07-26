@@ -88,7 +88,7 @@ const AudioSys = {
     const t = this.ctx.currentTime;
     const src = this.ctx.createBufferSource();
     src.buffer = buf;
-    const rate = (cfg.rate || 1) * (0.93 + Math.random() * 0.14);
+    const rate = (cfg.rate || 1) * (0.88 + Math.random() * 0.24);
     src.playbackRate.value = rate;
     const dur = Math.min(buf.duration / rate, 2.8);
     const g = this.ctx.createGain();
@@ -269,7 +269,13 @@ const AudioSys = {
   /** Micro pitch wobble so rapid SFX don't sound identical */
   _pitchVar() {
     this._sfxVar = (this._sfxVar + 1) % 97;
-    return 0.975 + (this._sfxVar % 6) * 0.01;
+    return 0.94 + (this._sfxVar % 11) * 0.012 + Math.random() * 0.02;
+  },
+
+  /** 0…2 — rotate procedural combat hit bodies for variety */
+  _sfxAlt() {
+    this._sfxVar = (this._sfxVar + 1) % 97;
+    return this._sfxVar % 3;
   },
 
   /** Short echo tail — arcade space without reverb node */
@@ -306,23 +312,32 @@ const AudioSys = {
       freqs.forEach((f, i) => T(f, f * 1.1, 0.045, 'sine', 0.075, w + i * 0.02));
     };
     const now = this.ctx.currentTime;
+    const A = () => this._sfxAlt();
     const skillSynthH = { T, D, E, N, S, I, C, now, lite, v, d, P };
     if (typeof playSuperSynthFallback === 'function' && playSuperSynthFallback(name, skillSynthH)) return;
     if (typeof playSkillSynthFallback === 'function' && playSkillSynthFallback(name, skillSynthH)) return;
     switch (name) {
-      case 'swing':
-        N(0.05, 0.22, 3400, true, now);
-        T(420, 160, 0.07, 'sine', 0.11, now);
-        if (!lite) N(0.025, 0.08, 6200, true, now + 0.015);
+      case 'swing': {
+        const a = A();
+        N(0.05, 0.22, 3400 + a * 400, true, now);
+        T(420 + a * 60, 160 + a * 30, 0.07, a === 1 ? 'triangle' : 'sine', 0.11, now);
+        if (!lite) N(0.025, 0.08, 6200 + a * 300, true, now + 0.015);
         break;
-      case 'punch':
-        I(240, 3200, now);
-        T(520, 880, 0.04, 'triangle', 0.1, now + 0.02);
+      }
+      case 'punch': {
+        const a = A();
+        I(220 + a * 40, 2800 + a * 400, now);
+        T(480 + a * 60, 820 + a * 80, 0.04, a === 2 ? 'sine' : 'triangle', 0.1, now + 0.02);
+        if (!lite && a === 1) N(0.03, 0.09, 4800, true, now + 0.03);
         break;
-      case 'kick':
-        I(280, 2600, now);
-        T(420, 140, 0.07, 'triangle', 0.12, now + 0.02);
+      }
+      case 'kick': {
+        const a = A();
+        I(260 + a * 35, 2400 + a * 350, now);
+        T(400 + a * 40, 130 + a * 20, 0.07, 'triangle', 0.12, now + 0.02);
+        if (!lite && a) T(180, 70, 0.05, 'sine', 0.08, now + 0.04);
         break;
+      }
       case 'wKunai':
         N(0.035, 0.15, 5400, true, now);
         T(1020, 380, 0.075, 'triangle', 0.13, now);
@@ -401,32 +416,42 @@ const AudioSys = {
         T(320, 180, 0.09, 'square', 0.15, now + 0.02);
         if (!lite) T(480, 260, 0.07, 'triangle', 0.11, now + 0.06);
         break;
-      case 'hit':
-        I(180, 1400, now);
-        T(880, 420, 0.05, 'triangle', 0.1, now + 0.015);
+      case 'hit': {
+        const a = A();
+        I(160 + a * 30, 1200 + a * 300, now);
+        T(820 + a * 80, 380 + a * 40, 0.05, a ? 'sine' : 'triangle', 0.1, now + 0.015);
         break;
-      case 'hit2':
-        I(130, 900, now);
-        T(150, 55, 0.09, 'square', 0.24, now);
-        N(0.07, 0.26, 650, false, now);
-        T(320, 140, 0.06, 'triangle', 0.12, now + 0.025);
+      }
+      case 'hit2': {
+        const a = A();
+        I(120 + a * 20, 850 + a * 120, now);
+        T(140 + a * 20, 50 + a * 10, 0.09, 'square', 0.24, now);
+        N(0.07, 0.26, 600 + a * 80, false, now);
+        T(300 + a * 30, 130 + a * 20, 0.06, 'triangle', 0.12, now + 0.025);
         break;
-      case 'hitMetal':
-        I(520, 3800, now);
-        E(980, 460, 0.06, 'triangle', 0.13, now + 0.01, 0.035, 0.45);
-        T(240, 95, 0.07, 'sine', 0.11, now);
+      }
+      case 'hitMetal': {
+        const a = A();
+        I(500 + a * 40, 3600 + a * 300, now);
+        E(960 + a * 40, 440 + a * 30, 0.06, 'triangle', 0.13, now + 0.01, 0.035, 0.45);
+        T(230 + a * 20, 90 + a * 10, 0.07, 'sine', 0.11, now);
         break;
-      case 'hitHeavy':
-        I(110, 650, now);
-        T(130, 42, 0.13, 'sine', 0.24, now);
-        if (!lite) N(0.1, 0.22, 550, false, now + 0.04);
+      }
+      case 'hitHeavy': {
+        const a = A();
+        I(100 + a * 20, 600 + a * 80, now);
+        T(120 + a * 15, 40 + a * 6, 0.13, 'sine', 0.24, now);
+        if (!lite) N(0.1, 0.22, 520 + a * 60, false, now + 0.04);
         break;
-      case 'hitEnergy':
-        T(760, 280, 0.09, 'sine', 0.15, now);
-        D(1120, 520, 0.07, 'triangle', 0.11, now, 10);
-        N(0.05, 0.13, 4400, true, now);
-        if (!lite) S([880, 1047], now + 0.04);
+      }
+      case 'hitEnergy': {
+        const a = A();
+        T(740 + a * 40, 260 + a * 30, 0.09, 'sine', 0.15, now);
+        D(1100 + a * 40, 500 + a * 30, 0.07, 'triangle', 0.11, now, 10);
+        N(0.05, 0.13, 4200 + a * 300, true, now);
+        if (!lite) S(a ? [932, 1109] : [880, 1047], now + 0.04);
         break;
+      }
       case 'jump':
         T(220, 620, 0.11, 'sine', 0.16, now);
         T(620, 880, 0.07, 'triangle', 0.1, now + 0.04);
@@ -893,10 +918,10 @@ const AudioSys = {
       this.tone(midi(L), midi(L) * 0.995, spb * 1.6, 'square', lv, mg, t);
       if (!lite && i % 2 === 0) this.tone(midi(L + 7), midi(L + 7) * 0.998, spb * 1.1, 'triangle', 0.05 + heat * 0.03, mg, t + spb * 0.12);
     }
-    if ((s.id === 'battle' || s.id === 'elite' || s.id === 'boss' || s.id === 'tideBattle') && heat > 0.35 && !lite && i === 8 && bar % 2 === 0) {
+    if ((isFightBgmId(s.id)) && heat > 0.35 && !lite && i === 8 && bar % 2 === 0) {
       this.tone(midi(84), midi(79), spb * 0.9, 'square', 0.04 + heat * 0.04, mg, t);
     }
-    if (s.id === 'battle' || s.id === 'elite' || s.id === 'boss' || s.id === 'tideBattle') {
+    if (isFightBgmId(s.id)) {
       if (i === 0 && bar % 4 === 0 && !lite) {
         this.tone(midi(60), midi(60), spb * 3.6, 'sine', 0.05, mg, t);
         this.tone(midi(64), midi(64), spb * 3.4, 'triangle', 0.04, mg, t);
@@ -910,7 +935,7 @@ const AudioSys = {
         this.tone(midi(84), midi(67), spb * 0.75, 'square', 0.08, mg, t);
       }
     }
-    if (s.id === 'tideBattle' && !lite) {
+    if ((s.id === 'tideBattle' || s.id === 'tideBattle2' || s.id === 'tideBattleSurge') && !lite) {
       if ([2, 6, 10, 14].includes(i)) {
         this.tone(midi([67, 71, 74, 79][i / 4 | 0]), midi([67, 71, 74, 79][i / 4 | 0]), spb * 0.55, 'triangle', 0.06, mg, t);
       }
@@ -920,6 +945,13 @@ const AudioSys = {
       if (i === 0 && bar % 8 === 4) {
         this.noise(0.06, 0.14, 5200, true, mg, t);
         this.tone(midi(91), midi(84), spb * 0.85, 'square', 0.07, mg, t);
+      }
+      if (s.id === 'tideBattle2' && (i === 3 || i === 11)) {
+        this.tone(midi(62), midi(55), spb * 0.9, 'triangle', 0.05, mg, t);
+      }
+      if (s.id === 'tideBattleSurge' && i === 8 && bar % 2 === 0) {
+        this.noise(0.05, 0.12, 6400, true, mg, t);
+        this.tone(midi(86), midi(79), spb * 1.1, 'square', 0.06, mg, t);
       }
     }
     const menuIds = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero', 'menuDream'];
@@ -967,13 +999,24 @@ const AudioSys = {
     if (s.id === 'mats' && !lite && i === 12 && bar % 4 === 2) {
       this.tone(midi(84), midi(79), spb * 1.1, 'triangle', 0.06, mg, t);
     }
-    if (s.id === 'elite' || s.id === 'boss') {
+    if (s.id === 'elite' || s.id === 'elite2' || s.id === 'elitePulse' || s.id === 'boss' || s.id === 'boss2' || s.id === 'bossFury') {
+      const bossish = s.id === 'boss' || s.id === 'boss2' || s.id === 'bossFury';
       if (i === 0 && bar % 2 === 0) {
-        this.tone(midi(s.id === 'boss' ? 50 : 55), midi(s.id === 'boss' ? 38 : 43), spb * 2.4, 'sawtooth', 0.07, mg, t);
+        this.tone(midi(bossish ? 50 : 55), midi(bossish ? 38 : 43), spb * 2.4, 'sawtooth', 0.07, mg, t);
       }
       if (i === 8 && bar % 4 === 1) {
         this.noise(0.06, 0.12, 2200, true, mg, t);
       }
+      if ((s.id === 'elitePulse' || s.id === 'bossFury') && !lite && (i === 2 || i === 10) && bar % 2 === 0) {
+        this.tone(midi(bossish ? 70 : 74), midi(bossish ? 65 : 69), spb * 0.7, 'square', 0.05, mg, t);
+      }
+    }
+    if ((s.id === 'battle2' || s.id === 'battle3' || s.id === 'battlePulse' || s.id === 'battleDrive' || s.id === 'battleRush') && !lite) {
+      if (s.id === 'battle2' && (i === 2 || i === 10)) this.tone(midi(71), midi(67), spb * 0.85, 'triangle', 0.05, mg, t);
+      if (s.id === 'battle3' && i === 0 && bar % 4 === 2) this.tone(midi(57), midi(50), spb * 2.8, 'sine', 0.06, mg, t);
+      if (s.id === 'battlePulse' && (i === 0 || i === 8)) this.noise(0.025, 0.09, 5600, true, mg, t);
+      if (s.id === 'battleDrive' && (i === 4 || i === 12) && bar % 2 === 0) this.tone(midi(79), midi(76), spb * 1.05, 'square', 0.055, mg, t);
+      if (s.id === 'battleRush' && [1, 5, 9, 13].includes(i)) this.noise(0.02, 0.08, 7200, true, mg, t);
     }
     if (s.id === 'training') {
       if (i === 0) this.tone(midi(64), midi(57), spb * 2.2, 'triangle', 0.08, mg, t);
@@ -1063,6 +1106,56 @@ const SONGS = {
       [76,null,79,81, null,79,76,null, 74,null,76,74, 71,null,69,null],
     ],
   },
+  /** Battle variant — syncopisch / scherp */
+  battle2: {
+    bpm: 142,
+    kick: [0, 3, 8, 11], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [41,null,41,null, 44,44,null,41, 38,null,41,null, 43,null,40,null],
+    lead: [
+      [77,null,80,77, null,76,74,null, 72,null,76,72, null,71,72,76],
+      [79,null,81,79, null,77,76,null, 74,null,72,71, 69,null,71,null],
+    ],
+  },
+  /** Battle variant — zwaarder / lagere lead */
+  battle3: {
+    bpm: 132,
+    kick: [0, 4, 8, 12, 14], snare: [4, 12], hat: [2,6,10,14],
+    bass: [38,38,null,38, 41,null,38,null, 43,43,null,41, 38,null,36,null],
+    lead: [
+      [72,null,74,72, null,71,69,null, 67,null,69,67, null,64,67,69],
+      [74,null,76,74, null,72,71,null, 69,null,67,64, 62,null,64,null],
+    ],
+  },
+  /** Battle variant — pulse / arcade */
+  battlePulse: {
+    bpm: 146,
+    kick: [0, 4, 8, 12], snare: [4, 10, 12], hat: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+    bass: [42,null,42,null, 45,null,42,null, 47,null,45,null, 42,null,40,null],
+    lead: [
+      [78,78,null,81, null,79,78,null, 74,74,null,76, null,74,71,null],
+      [81,null,83,81, null,79,78,null, 76,null,74,71, 69,null,71,74],
+    ],
+  },
+  /** Battle variant — drive / gallop */
+  battleDrive: {
+    bpm: 150,
+    kick: [0, 6, 8, 14], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [40,40,43,null, 40,null,45,null, 43,43,40,null, 38,null,40,null],
+    lead: [
+      [76,null,79,null, 81,79,76,null, 74,null,76,79, null,76,74,null],
+      [79,null,81,null, 84,81,79,null, 76,null,74,71, 74,null,76,null],
+    ],
+  },
+  /** Battle variant — rush / snelle hats */
+  battleRush: {
+    bpm: 154,
+    kick: [0, 4, 8, 12], snare: [4, 12], hat: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+    bass: [43,null,43,40, 45,null,43,null, 40,40,null,38, 40,null,43,null],
+    lead: [
+      [81,null,79,81, null,84,81,null, 79,null,76,79, null,74,76,79],
+      [84,null,81,79, null,81,84,null, 79,null,76,74, 76,null,79,null],
+    ],
+  },
   elite: {
     bpm: 148,
     kick: [0, 4, 8, 11, 12], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
@@ -1072,6 +1165,26 @@ const SONGS = {
       [77,null,80,82, null,80,77,null, 75,null,77,75, 72,null,70,null],
     ],
   },
+  /** Elite variant — hoger / scherper */
+  elite2: {
+    bpm: 152,
+    kick: [0, 3, 8, 11, 12], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [43,43,null,43, 46,null,43,null, 48,48,null,46, 43,null,41,null],
+    lead: [
+      [79,null,82,79, null,77,79,null, 74,null,77,74, null,72,74,77],
+      [79,null,82,84, null,82,79,null, 77,null,79,77, 74,null,72,null],
+    ],
+  },
+  /** Elite variant — pulse */
+  elitePulse: {
+    bpm: 156,
+    kick: [0, 4, 8, 12], snare: [4, 10, 12], hat: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+    bass: [42,null,42,null, 45,null,42,null, 47,null,45,null, 42,null,40,null],
+    lead: [
+      [80,80,null,83, null,81,80,null, 76,76,null,78, null,76,73,null],
+      [83,null,85,83, null,81,80,null, 78,null,76,73, 71,null,73,76],
+    ],
+  },
   boss: {
     bpm: 156,
     kick: [0, 4, 8, 12, 14], snare: [4, 12], hat: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
@@ -1079,6 +1192,26 @@ const SONGS = {
     lead: [
       [74,null,75,74, null,70,74,null, 77,null,75,74, null,72,70,null],
       [74,null,77,79, null,77,75,null, 74,null,72,70, 69,null,70,null],
+    ],
+  },
+  /** Boss variant — lager / dreigender */
+  boss2: {
+    bpm: 148,
+    kick: [0, 4, 8, 12], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [36,36,null,36, 37,null,36,null, 39,39,null,37, 36,null,34,null],
+    lead: [
+      [70,null,72,70, null,67,70,null, 74,null,72,70, null,69,67,null],
+      [72,null,74,77, null,74,72,null, 70,null,69,67, 65,null,67,null],
+    ],
+  },
+  /** Boss variant — fury / sneller */
+  bossFury: {
+    bpm: 164,
+    kick: [0, 3, 6, 8, 11, 12, 14], snare: [4, 12], hat: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+    bass: [38,38,null,41, 38,null,43,null, 41,41,null,38, 36,null,38,null],
+    lead: [
+      [77,null,79,77, null,74,77,null, 81,null,79,77, null,74,72,null],
+      [79,null,81,84, null,81,79,null, 77,null,74,72, 70,null,72,null],
     ],
   },
   /** Tide Battle — epische oceaangolf / summon-clash (eigen track) */
@@ -1091,6 +1224,28 @@ const SONGS = {
       [79,null,77,74, null,71,74,null, 79,null,83,86, null,83,79,null],
       [74,null,77,81, null,79,77,null, 74,null,71,67, null,71,74,null],
       [86,null,83,79, null,77,74,null, 71,null,74,77, null,79,83,null],
+    ],
+  },
+  /** Tide variant — dieper / golvender */
+  tideBattle2: {
+    bpm: 158,
+    kick: [0, 4, 8, 12, 14], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [34,34,null,33, 34,34,null,29, 31,null,34,null, 33,null,29,null],
+    lead: [
+      [64,null,67,71, null,67,64,null, 71,null,74,76, null,74,71,null],
+      [76,null,74,71, null,67,71,null, 76,null,79,83, null,79,76,null],
+      [71,null,74,77, null,76,74,null, 71,null,67,64, null,67,71,null],
+    ],
+  },
+  /** Tide variant — surge / sneller */
+  tideBattleSurge: {
+    bpm: 172,
+    kick: [0, 3, 6, 8, 11, 12, 14], snare: [4, 12], hat: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+    bass: [36,null,36,34, 38,null,36,null, 33,33,null,36, 34,null,31,null],
+    lead: [
+      [71,null,74,77, null,74,71,null, 79,null,83,86, null,83,79,null],
+      [83,null,81,77, null,74,77,null, 83,null,86,88, null,86,83,null],
+      [77,null,79,83, null,81,79,null, 77,null,74,71, null,74,77,null],
     ],
   },
   /** Training vs RabbitRobot — strak, metallig, minder zwaar dan baas */
@@ -1138,6 +1293,46 @@ const SONGS = {
 const MENU_BGM_TRACKS = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero', 'menuDream'];
 let menuBgmIdx = 0;
 
+/** Fight BGM pools — rotate variants so battle/elite/boss/tide stay fresh. */
+const BATTLE_BGM_TRACKS = ['battle', 'battle2', 'battle3', 'battlePulse', 'battleDrive', 'battleRush'];
+const ELITE_BGM_TRACKS = ['elite', 'elite2', 'elitePulse'];
+const BOSS_BGM_TRACKS = ['boss', 'boss2', 'bossFury'];
+const TIDE_BGM_TRACKS = ['tideBattle', 'tideBattle2', 'tideBattleSurge'];
+const FIGHT_BGM_IDS = new Set([
+  ...BATTLE_BGM_TRACKS, ...ELITE_BGM_TRACKS, ...BOSS_BGM_TRACKS, ...TIDE_BGM_TRACKS,
+]);
+const fightBgmIdx = { battle: 0, elite: 0, boss: 0, tideBattle: 0 };
+
+function isFightBgmId(id) {
+  return !!(id && FIGHT_BGM_IDS.has(id));
+}
+
+function isTideBgmId(id) {
+  return !!(id && TIDE_BGM_TRACKS.includes(id));
+}
+
+/** Pick next track in a fight pool (kind: battle|elite|boss|tideBattle).
+ *  Keeps current track if already in the same pool (avoids double-rotate on start). */
+function playFightBgm(kind) {
+  const pools = {
+    battle: BATTLE_BGM_TRACKS,
+    elite: ELITE_BGM_TRACKS,
+    boss: BOSS_BGM_TRACKS,
+    tideBattle: TIDE_BGM_TRACKS,
+  };
+  const key = pools[kind] ? kind : 'battle';
+  const pool = pools[key];
+  const cur = (typeof AudioSys !== 'undefined' && ((AudioSys.song && AudioSys.song.id) || AudioSys.desiredSong)) || '';
+  if (cur && pool.includes(cur)) {
+    AudioSys.play(cur);
+    return cur;
+  }
+  fightBgmIdx[key] = ((fightBgmIdx[key] || 0) + 1) % pool.length;
+  const id = pool[fightBgmIdx[key]];
+  AudioSys.play(id);
+  return id;
+}
+
 /** Rotate menu BGM when returning from a game; keep current track on boot/toggle. */
 function playMenuBgm(fromGame) {
   if (fromGame) menuBgmIdx = (menuBgmIdx + 1) % MENU_BGM_TRACKS.length;
@@ -1146,7 +1341,11 @@ function playMenuBgm(fromGame) {
 
 const SONG_LABELS = {
   menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
-  battle: 'Gevecht', elite: 'Elite', boss: 'Baas', wall: 'Muur', training: 'Training', coinrun: 'Mats',
+  battle: 'Gevecht', battle2: 'Gevecht 2', battle3: 'Gevecht 3', battlePulse: 'Pulse', battleDrive: 'Drive', battleRush: 'Rush',
+  elite: 'Elite', elite2: 'Elite 2', elitePulse: 'Elite Pulse',
+  boss: 'Baas', boss2: 'Baas 2', bossFury: 'Baas Fury',
+  tideBattle: 'Tide', tideBattle2: 'Tide 2', tideBattleSurge: 'Tide Surge',
+  wall: 'Muur', training: 'Training', coinrun: 'Mats',
 };
 function songLabel(id) {
   if (!id) return '';

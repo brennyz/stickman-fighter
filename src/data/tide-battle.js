@@ -55,9 +55,15 @@ function restoreTideBattleMusic(game) {
   cancelTideBattleMusicPending(game);
   const prev = game.tideBattlePrevSong;
   game.tideBattlePrevSong = null;
-  const fallback = (game.level && game.level.boss) ? 'boss' : 'battle';
-  const next = (prev && prev !== 'tideBattle' && SONGS[prev]) ? prev : fallback;
-  try { AudioSys.play(next); } catch (_) {}
+  const fallbackKind = (game.level && game.level.boss) ? 'boss' : 'battle';
+  const next = (prev && !(typeof isTideBgmId === 'function' ? isTideBgmId(prev) : prev === 'tideBattle') && SONGS[prev])
+    ? prev
+    : null;
+  try {
+    if (next) AudioSys.play(next);
+    else if (typeof playFightBgm === 'function') playFightBgm(fallbackKind);
+    else AudioSys.play(fallbackKind);
+  } catch (_) {}
 }
 
 function reportTideBattleRecover(reason, err) {
@@ -114,13 +120,17 @@ function beginTideBattleMusic(game) {
   if (!game) return;
   cancelTideBattleMusicPending(game);
   const cur = (AudioSys.song && AudioSys.song.id) || AudioSys.desiredSong;
-  game.tideBattlePrevSong = (cur && cur !== 'tideBattle' && SONGS[cur]) ? cur
+  const onTide = typeof isTideBgmId === 'function' ? isTideBgmId(cur) : (cur === 'tideBattle');
+  game.tideBattlePrevSong = (cur && !onTide && SONGS[cur]) ? cur
     : ((game.level && game.level.boss) ? 'boss' : 'battle');
   try { AudioSys.sting('tideBattleIntro'); } catch (_) {}
   game.tideBattleMusicT = setTimeout(() => {
     game.tideBattleMusicT = null;
     if (!game.tideBattleActive || game.over || game.mode !== 'adventure') return;
-    try { AudioSys.play('tideBattle'); } catch (_) {}
+    try {
+      if (typeof playFightBgm === 'function') playFightBgm('tideBattle');
+      else AudioSys.play('tideBattle');
+    } catch (_) {}
   }, 340);
 }
 

@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.102';
+const APP_VERSION = '1.18.103';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 312;
+const SW_CACHE_REV = 313;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -8864,15 +8864,18 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
           try { AudioSys.sfx('bossTurn'); } catch (_) {}
         }
         AudioSys.sting('superBossIntro');
-        AudioSys.play('boss');
+        if (typeof playFightBgm === 'function') playFightBgm('boss');
+        else AudioSys.play('boss');
         game.banner(`SUPER BAAS — ${name}!`, 2.0, col, 44);
       } else if (tier === 'boss') {
         AudioSys.sting('bossIntro');
-        AudioSys.play('boss');
+        if (typeof playFightBgm === 'function') playFightBgm('boss');
+        else AudioSys.play('boss');
         game.banner(`BAAS — ${name}!`, 1.8, col, 42);
       } else {
         AudioSys.sting('eliteIntro');
-        AudioSys.play('elite');
+        if (typeof playFightBgm === 'function') playFightBgm('elite');
+        else AudioSys.play('elite');
         game.banner(`ELITE — ${name}!`, 1.5, col, 38);
       }
     } catch (_) {}
@@ -9016,9 +9019,15 @@ function restoreTideBattleMusic(game) {
   cancelTideBattleMusicPending(game);
   const prev = game.tideBattlePrevSong;
   game.tideBattlePrevSong = null;
-  const fallback = (game.level && game.level.boss) ? 'boss' : 'battle';
-  const next = (prev && prev !== 'tideBattle' && SONGS[prev]) ? prev : fallback;
-  try { AudioSys.play(next); } catch (_) {}
+  const fallbackKind = (game.level && game.level.boss) ? 'boss' : 'battle';
+  const next = (prev && !(typeof isTideBgmId === 'function' ? isTideBgmId(prev) : prev === 'tideBattle') && SONGS[prev])
+    ? prev
+    : null;
+  try {
+    if (next) AudioSys.play(next);
+    else if (typeof playFightBgm === 'function') playFightBgm(fallbackKind);
+    else AudioSys.play(fallbackKind);
+  } catch (_) {}
 }
 
 function reportTideBattleRecover(reason, err) {
@@ -9075,13 +9084,17 @@ function beginTideBattleMusic(game) {
   if (!game) return;
   cancelTideBattleMusicPending(game);
   const cur = (AudioSys.song && AudioSys.song.id) || AudioSys.desiredSong;
-  game.tideBattlePrevSong = (cur && cur !== 'tideBattle' && SONGS[cur]) ? cur
+  const onTide = typeof isTideBgmId === 'function' ? isTideBgmId(cur) : (cur === 'tideBattle');
+  game.tideBattlePrevSong = (cur && !onTide && SONGS[cur]) ? cur
     : ((game.level && game.level.boss) ? 'boss' : 'battle');
   try { AudioSys.sting('tideBattleIntro'); } catch (_) {}
   game.tideBattleMusicT = setTimeout(() => {
     game.tideBattleMusicT = null;
     if (!game.tideBattleActive || game.over || game.mode !== 'adventure') return;
-    try { AudioSys.play('tideBattle'); } catch (_) {}
+    try {
+      if (typeof playFightBgm === 'function') playFightBgm('tideBattle');
+      else AudioSys.play('tideBattle');
+    } catch (_) {}
   }, 340);
 }
 
@@ -11446,7 +11459,8 @@ function dailyModeLabel(mode) {
 /* --- src/systems/audio-samples.js --- */
 /* ========================= ONLINE SFX SAMPLES (CC0) ======================
    Kenney.nl game audio — CC0 1.0 · mirror: ETdoFresh/kenney.nl via jsDelivr.
-   Loads on first AudioSys.init; procedural synth remains fallback offline. */
+   Loads on first AudioSys.init; procedural synth remains fallback offline.
+   Diversity pass: ~2× files per SFX id (random pick each play). */
 const KENNEY_CDN = 'https://cdn.jsdelivr.net/gh/ETdoFresh/kenney.nl@master';
 const SAMPLE_PACKS = {
   impact: `${KENNEY_CDN}/kenney_impactsounds/Audio`,
@@ -11464,127 +11478,127 @@ function sampleUrl(pack, file) {
 
 /** Multiple files per SFX id → random pick each play for variety. */
 const SFX_SAMPLE_MAP = {
-  select: { pack: 'ui', vol: 0.55, files: ['click_002.ogg', 'click_003.ogg', 'click_004.ogg', 'confirmation_001.ogg'] },
-  bonus: { pack: 'ui', vol: 0.7, files: ['confirmation_002.ogg', 'confirmation_003.ogg', 'confirmation_004.ogg'] },
-  bell: { pack: 'impact', vol: 0.75, files: ['impactBell_heavy_001.ogg', 'impactBell_heavy_002.ogg', 'impactBell_heavy_003.ogg'] },
-  pickup: { pack: 'ui', vol: 0.65, files: ['drop_002.ogg', 'drop_003.ogg', 'drop_004.ogg'] },
-  levelup: { pack: 'ui', vol: 0.8, files: ['confirmation_003.ogg', 'confirmation_004.ogg', 'bong_001.ogg'] },
-  win: { pack: 'ui', vol: 0.85, files: ['confirmation_004.ogg', 'bong_001.ogg'] },
-  lose: { pack: 'ui', vol: 0.7, files: ['error_002.ogg', 'error_003.ogg', 'back_003.ogg'] },
-  gamble: { pack: 'casino', vol: 0.65, files: ['chipLay1.ogg', 'chipLay2.ogg', 'cardSlide3.ogg'] },
-  gambleWin: { pack: 'casino', vol: 0.75, files: ['chipLay3.ogg', 'cardPlace2.ogg', 'cardPlace3.ogg'] },
-  gambleBoss: { pack: 'impact', vol: 0.9, files: ['impactPunch_heavy_003.ogg', 'impactMetal_heavy_002.ogg'] },
-  diceRoll: { pack: 'casino', vol: 0.6, files: ['cardShuffle.ogg', 'chipLay1.ogg', 'cardSlide1.ogg', 'cardSlide5.ogg'] },
-  summon: { pack: 'digital', vol: 0.75, files: ['phaseJump3.ogg', 'phaseJump4.ogg', 'pepSound3.ogg'] },
-  newmonster: { pack: 'rpg', vol: 0.7, files: ['bookOpen.ogg', 'doorOpen_1.ogg', 'creak2.ogg'] },
-  combo: { pack: 'digital', vol: 0.65, files: ['pepSound1.ogg', 'pepSound2.ogg', 'highUp.ogg'] },
-  comboEpic: { pack: 'digital', vol: 0.78, files: ['pepSound4.ogg', 'phaseJump5.ogg', 'highUp.ogg'] },
-  comboMega: { pack: 'digital', vol: 0.85, files: ['phaseJump5.ogg', 'pepSound5.ogg', 'bong_001.ogg'] },
-  punch: { pack: 'impact', vol: 0.82, files: ['impactPunch_medium_001.ogg', 'impactPunch_medium_002.ogg', 'impactPunch_medium_003.ogg', 'impactGeneric_light_001.ogg'] },
-  kick: { pack: 'impact', vol: 0.88, files: ['impactPunch_heavy_001.ogg', 'impactSoft_medium_002.ogg', 'impactPunch_medium_004.ogg'] },
-  hit2: { pack: 'impact', vol: 0.75, files: ['impactGeneric_light_002.ogg', 'impactGeneric_light_003.ogg', 'impactSoft_medium_001.ogg'] },
-  hitHeavy: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_002.ogg', 'impactPunch_heavy_003.ogg', 'impactMetal_heavy_001.ogg'] },
-  hitMetal: { pack: 'impact', vol: 0.85, files: ['impactMetal_medium_001.ogg', 'impactMetal_medium_002.ogg', 'impactMetal_light_003.ogg'] },
-  hitEnergy: { pack: 'digital', vol: 0.7, files: ['laser3.ogg', 'laser4.ogg', 'pepSound2.ogg'] },
-  crit: { pack: 'impact', vol: 0.9, files: ['impactGlass_heavy_001.ogg', 'impactGlass_heavy_002.ogg', 'impactMetal_heavy_003.ogg'] },
-  block: { pack: 'impact', vol: 0.7, files: ['impactMetal_light_001.ogg', 'impactMetal_light_002.ogg', 'impactWood_medium_001.ogg'] },
-  swing: { pack: 'rpg', vol: 0.55, files: ['chop.ogg', 'drawKnife1.ogg', 'drawKnife2.ogg', 'cloth2.ogg'] },
-  wKunai: { pack: 'rpg', vol: 0.5, files: ['drawKnife2.ogg', 'drawKnife3.ogg', 'cloth3.ogg'] },
-  wFuuma: { pack: 'rpg', vol: 0.58, files: ['drawKnife3.ogg', 'chop.ogg'] },
-  wBoemerang: { pack: 'digital', vol: 0.52, files: ['phaseJump1.ogg', 'lowDown.ogg', 'lowRandom.ogg'] },
-  wLaser: { pack: 'digital', vol: 0.65, files: ['laser5.ogg', 'laser6.ogg', 'laser7.ogg'] },
-  wZwaard: { pack: 'rpg', vol: 0.6, files: ['drawKnife1.ogg', 'chop.ogg', 'clothBelt.ogg'] },
-  wSpeer: { pack: 'rpg', vol: 0.58, files: ['drawKnife2.ogg', 'footstep04.ogg', 'chop.ogg'] },
-  wKnuppel: { pack: 'impact', vol: 0.8, files: ['impactWood_heavy_001.ogg', 'impactWood_medium_002.ogg'] },
-  wGuvve: { pack: 'impact', vol: 0.75, files: ['impactSoft_heavy_001.ogg', 'impactPlank_medium_001.ogg'] },
-  wKatana: { pack: 'rpg', vol: 0.62, files: ['chop.ogg', 'drawKnife3.ogg'] },
-  wMaster: { pack: 'digital', vol: 0.78, files: ['phaseJump4.ogg', 'laser8.ogg', 'highUp.ogg'] },
-  wNunchaku: { pack: 'rpg', vol: 0.52, files: ['cloth2.ogg', 'cloth3.ogg', 'cloth4.ogg'] },
-  wHamer: { pack: 'impact', vol: 0.88, files: ['impactWood_heavy_001.ogg', 'impactWood_heavy_002.ogg', 'impactPunch_heavy_002.ogg'] },
-  wKetting: { pack: 'impact', vol: 0.72, files: ['impactMetal_light_001.ogg', 'impactMetal_light_002.ogg', 'impactMetal_medium_001.ogg'] },
-  wDonder: { pack: 'impact', vol: 0.82, files: ['impactMetal_heavy_001.ogg', 'impactMetal_heavy_003.ogg', 'impactPunch_heavy_004.ogg'] },
-  wVoid: { pack: 'digital', vol: 0.68, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'phaseJump4.ogg'] },
-  wFan: { pack: 'rpg', vol: 0.48, files: ['clothBelt.ogg', 'clothBelt2.ogg', 'cloth2.ogg'] },
-  shuriken: { pack: 'digital', vol: 0.55, files: ['laser1.ogg', 'laser2.ogg', 'lowDown.ogg'] },
-  shoot: { pack: 'digital', vol: 0.62, files: ['laser4.ogg', 'laser5.ogg'] },
-  laser: { pack: 'digital', vol: 0.68, files: ['laser6.ogg', 'laser7.ogg', 'laser8.ogg', 'laser9.ogg'] },
-  special: { pack: 'digital', vol: 0.7, files: ['phaseJump3.ogg', 'pepSound4.ogg'] },
-  subst: { pack: 'rpg', vol: 0.65, files: ['cloth4.ogg', 'clothBelt2.ogg', 'dropLeather.ogg'] },
-  dash: { pack: 'digital', vol: 0.5, files: ['phaseJump1.ogg', 'lowDown.ogg', 'lowRandom.ogg'] },
-  jump: { pack: 'digital', vol: 0.58, files: ['phaseJump1.ogg', 'phaseJump2.ogg', 'highUp.ogg'] },
-  land: { pack: 'impact', vol: 0.55, files: ['footstep_concrete_001.ogg', 'footstep_concrete_002.ogg', 'footstep_grass_002.ogg'] },
-  step: { pack: 'impact', vol: 0.35, files: ['footstep_grass_001.ogg', 'footstep_grass_003.ogg', 'footstep_carpet_002.ogg'] },
-  travel: { pack: 'impact', vol: 0.4, files: ['footstep_carpet_001.ogg', 'footstep_carpet_003.ogg', 'footstep_wood_002.ogg'] },
-  hurt: { pack: 'ui', vol: 0.65, files: ['error_001.ogg', 'error_002.ogg'] },
-  die: { pack: 'impact', vol: 0.85, files: ['impactGlass_heavy_003.ogg', 'impactSoft_heavy_003.ogg', 'impactWood_heavy_002.ogg'] },
-  roar: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactSoft_heavy_004.ogg', 'impactMetal_heavy_004.ogg'] },
-  explode: { pack: 'impact', vol: 0.9, files: ['impactMetal_heavy_002.ogg', 'impactGlass_heavy_004.ogg', 'impactPunch_heavy_003.ogg'] },
-  brick: { pack: 'impact', vol: 0.7, files: ['impactPlank_medium_002.ogg', 'impactWood_light_002.ogg', 'impactGeneric_light_004.ogg'] },
-  crack: { pack: 'impact', vol: 0.65, files: ['impactGlass_light_002.ogg', 'impactWood_light_003.ogg'] },
-  whoosh: { pack: 'digital', vol: 0.45, files: ['lowDown.ogg', 'lowRandom.ogg', 'phaseJump1.ogg'] },
-  skillSwoosh: { pack: 'digital', vol: 0.62, files: ['lowDown.ogg', 'phaseJump2.ogg', 'lowRandom.ogg'] },
-  skillSwooshEpic: { pack: 'digital', vol: 0.78, files: ['phaseJump5.ogg', 'laser8.ogg', 'highUp.ogg'] },
-  megaDrop: { pack: 'digital', vol: 0.88, files: ['phaseJump5.ogg', 'pepSound5.ogg', 'bong_001.ogg'] },
-  tideSurge: { pack: 'digital', vol: 0.65, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'laser4.ogg'] },
-  bossTurn: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactBell_heavy_001.ogg'] },
-  checkpoint: { pack: 'ui', vol: 0.72, files: ['confirmation_002.ogg', 'bong_001.ogg'] },
-  bossArrive: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_003.ogg'] },
-  bossWait: { pack: 'impact', vol: 0.6, files: ['impactSoft_medium_003.ogg', 'creak1.ogg'] },
-  masterSword: { pack: 'digital', vol: 0.82, files: ['phaseJump5.ogg', 'laser8.ogg', 'highUp.ogg'] },
-  waveClear: { pack: 'ui', vol: 0.68, files: ['confirmation_003.ogg', 'confirmation_001.ogg'] },
-  hitstop: { pack: 'impact', vol: 0.45, files: ['impactGeneric_light_001.ogg', 'impactMetal_light_004.ogg'] },
-  ketsbam: { pack: 'impact', vol: 1, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactGlass_heavy_004.ogg'] },
-  ketsbamCharge: { pack: 'digital', vol: 0.55, rate: 0.88, files: ['lowRandom.ogg', 'lowThreeTone.ogg'] },
+  select: { pack: 'ui', vol: 0.55, files: ['click_001.ogg', 'click_002.ogg', 'click_003.ogg', 'click_004.ogg', 'click_005.ogg', 'confirmation_001.ogg', 'switch_001.ogg', 'pluck_001.ogg'] },
+  bonus: { pack: 'ui', vol: 0.7, files: ['confirmation_002.ogg', 'confirmation_003.ogg', 'confirmation_004.ogg', 'bong_001.ogg', 'pluck_002.ogg', 'drop_001.ogg'] },
+  bell: { pack: 'impact', vol: 0.75, files: ['impactBell_heavy_001.ogg', 'impactBell_heavy_002.ogg', 'impactBell_heavy_003.ogg', 'impactBell_heavy_004.ogg', 'impactMetal_medium_003.ogg', 'impactMetal_light_004.ogg'] },
+  pickup: { pack: 'ui', vol: 0.65, files: ['drop_001.ogg', 'drop_002.ogg', 'drop_003.ogg', 'drop_004.ogg', 'pluck_001.ogg', 'pluck_002.ogg', 'scroll_001.ogg'] },
+  levelup: { pack: 'ui', vol: 0.8, files: ['confirmation_003.ogg', 'confirmation_004.ogg', 'bong_001.ogg', 'confirmation_002.ogg', 'pluck_002.ogg', 'switch_002.ogg'] },
+  win: { pack: 'ui', vol: 0.85, files: ['confirmation_004.ogg', 'bong_001.ogg', 'confirmation_003.ogg', 'confirmation_002.ogg', 'pluck_001.ogg', 'drop_004.ogg'] },
+  lose: { pack: 'ui', vol: 0.7, files: ['error_002.ogg', 'error_003.ogg', 'error_004.ogg', 'error_005.ogg', 'back_001.ogg', 'back_002.ogg', 'back_003.ogg', 'back_004.ogg'] },
+  gamble: { pack: 'casino', vol: 0.65, files: ['chipLay1.ogg', 'chipLay2.ogg', 'cardSlide2.ogg', 'cardSlide3.ogg', 'cardSlide4.ogg', 'dieThrow1.ogg', 'chipsCollide1.ogg'] },
+  gambleWin: { pack: 'casino', vol: 0.75, files: ['chipLay3.ogg', 'cardPlace1.ogg', 'cardPlace2.ogg', 'cardPlace3.ogg', 'cardPlace4.ogg', 'chipsCollide2.ogg', 'dieThrow2.ogg'] },
+  gambleBoss: { pack: 'impact', vol: 0.9, files: ['impactPunch_heavy_003.ogg', 'impactMetal_heavy_002.ogg', 'impactPunch_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactGlass_heavy_003.ogg', 'impactSoft_heavy_002.ogg'] },
+  diceRoll: { pack: 'casino', vol: 0.6, files: ['cardShuffle.ogg', 'chipLay1.ogg', 'cardSlide1.ogg', 'cardSlide2.ogg', 'cardSlide5.ogg', 'dieThrow1.ogg', 'dieThrow2.ogg', 'dieThrow3.ogg'] },
+  summon: { pack: 'digital', vol: 0.75, files: ['phaseJump3.ogg', 'phaseJump4.ogg', 'pepSound3.ogg', 'powerUp1.ogg', 'powerUp2.ogg', 'threeTone1.ogg', 'zap1.ogg'] },
+  newmonster: { pack: 'rpg', vol: 0.7, files: ['bookOpen.ogg', 'doorOpen_1.ogg', 'doorClose_1.ogg', 'creak1.ogg', 'creak2.ogg', 'creak3.ogg', 'handleCoins.ogg'] },
+  combo: { pack: 'digital', vol: 0.65, files: ['pepSound1.ogg', 'pepSound2.ogg', 'highUp.ogg', 'powerUp1.ogg', 'tone1.ogg', 'zap2.ogg'] },
+  comboEpic: { pack: 'digital', vol: 0.78, files: ['pepSound4.ogg', 'phaseJump5.ogg', 'highUp.ogg', 'powerUp2.ogg', 'powerUp3.ogg', 'threeTone2.ogg'] },
+  comboMega: { pack: 'digital', vol: 0.85, files: ['phaseJump5.ogg', 'pepSound5.ogg', 'powerUp3.ogg', 'threeTone1.ogg', 'laser9.ogg', 'pepSound4.ogg'] },
+  punch: { pack: 'impact', vol: 0.82, files: ['impactPunch_medium_001.ogg', 'impactPunch_medium_002.ogg', 'impactPunch_medium_003.ogg', 'impactPunch_medium_004.ogg', 'impactGeneric_light_001.ogg', 'impactGeneric_light_002.ogg', 'impactSoft_medium_001.ogg', 'impactSoft_medium_003.ogg'] },
+  kick: { pack: 'impact', vol: 0.88, files: ['impactPunch_heavy_001.ogg', 'impactSoft_medium_002.ogg', 'impactPunch_medium_004.ogg', 'impactSoft_medium_004.ogg', 'impactSoft_heavy_001.ogg', 'impactPunch_heavy_002.ogg', 'impactWood_medium_001.ogg'] },
+  hit2: { pack: 'impact', vol: 0.75, files: ['impactGeneric_light_002.ogg', 'impactGeneric_light_003.ogg', 'impactGeneric_light_004.ogg', 'impactSoft_medium_001.ogg', 'impactSoft_medium_003.ogg', 'impactWood_light_001.ogg', 'impactPlank_medium_003.ogg'] },
+  hitHeavy: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_002.ogg', 'impactPunch_heavy_003.ogg', 'impactPunch_heavy_004.ogg', 'impactMetal_heavy_001.ogg', 'impactSoft_heavy_001.ogg', 'impactSoft_heavy_002.ogg', 'impactWood_heavy_003.ogg'] },
+  hitMetal: { pack: 'impact', vol: 0.85, files: ['impactMetal_medium_001.ogg', 'impactMetal_medium_002.ogg', 'impactMetal_medium_003.ogg', 'impactMetal_medium_004.ogg', 'impactMetal_light_003.ogg', 'impactMetal_light_004.ogg', 'impactMetal_heavy_001.ogg'] },
+  hitEnergy: { pack: 'digital', vol: 0.7, files: ['laser3.ogg', 'laser4.ogg', 'pepSound2.ogg', 'zap1.ogg', 'zap2.ogg', 'tone1.ogg', 'laser1.ogg'] },
+  crit: { pack: 'impact', vol: 0.9, files: ['impactGlass_heavy_001.ogg', 'impactGlass_heavy_002.ogg', 'impactGlass_heavy_003.ogg', 'impactMetal_heavy_003.ogg', 'impactGlass_light_003.ogg', 'impactPunch_heavy_004.ogg'] },
+  block: { pack: 'impact', vol: 0.7, files: ['impactMetal_light_001.ogg', 'impactMetal_light_002.ogg', 'impactMetal_light_004.ogg', 'impactWood_medium_001.ogg', 'impactWood_medium_003.ogg', 'impactMetal_medium_001.ogg'] },
+  swing: { pack: 'rpg', vol: 0.55, files: ['chop.ogg', 'drawKnife1.ogg', 'drawKnife2.ogg', 'cloth1.ogg', 'cloth2.ogg', 'knifeSlice.ogg', 'knifeSlice2.ogg'] },
+  wKunai: { pack: 'rpg', vol: 0.5, files: ['drawKnife2.ogg', 'drawKnife3.ogg', 'cloth3.ogg', 'knifeSlice.ogg', 'cloth1.ogg', 'metalClick.ogg'] },
+  wFuuma: { pack: 'rpg', vol: 0.58, files: ['drawKnife3.ogg', 'chop.ogg', 'knifeSlice2.ogg', 'cloth2.ogg', 'drawKnife1.ogg', 'metalClick.ogg'] },
+  wBoemerang: { pack: 'digital', vol: 0.52, files: ['phaseJump1.ogg', 'lowDown.ogg', 'lowRandom.ogg', 'highDown.ogg', 'spaceTrash1.ogg', 'zap1.ogg'] },
+  wLaser: { pack: 'digital', vol: 0.65, files: ['laser5.ogg', 'laser6.ogg', 'laser7.ogg', 'laser8.ogg', 'laser9.ogg', 'zap2.ogg', 'tone1.ogg'] },
+  wZwaard: { pack: 'rpg', vol: 0.6, files: ['drawKnife1.ogg', 'chop.ogg', 'clothBelt.ogg', 'knifeSlice.ogg', 'knifeSlice2.ogg', 'drawKnife2.ogg', 'metalClick.ogg'] },
+  wSpeer: { pack: 'rpg', vol: 0.58, files: ['drawKnife2.ogg', 'footstep04.ogg', 'chop.ogg', 'footstep00.ogg', 'footstep05.ogg', 'cloth3.ogg'] },
+  wKnuppel: { pack: 'impact', vol: 0.8, files: ['impactWood_heavy_001.ogg', 'impactWood_medium_002.ogg', 'impactWood_heavy_002.ogg', 'impactWood_heavy_003.ogg', 'impactWood_medium_001.ogg', 'impactWood_medium_003.ogg'] },
+  wGuvve: { pack: 'impact', vol: 0.75, files: ['impactSoft_heavy_001.ogg', 'impactPlank_medium_001.ogg', 'impactSoft_heavy_002.ogg', 'impactPlank_medium_003.ogg', 'impactSoft_medium_004.ogg', 'impactWood_medium_002.ogg'] },
+  wKatana: { pack: 'rpg', vol: 0.62, files: ['chop.ogg', 'drawKnife3.ogg', 'knifeSlice.ogg', 'knifeSlice2.ogg', 'drawKnife1.ogg', 'metalClick.ogg'] },
+  wMaster: { pack: 'digital', vol: 0.78, files: ['phaseJump4.ogg', 'laser8.ogg', 'highUp.ogg', 'powerUp2.ogg', 'phaseJump5.ogg', 'threeTone2.ogg', 'laser9.ogg'] },
+  wNunchaku: { pack: 'rpg', vol: 0.52, files: ['cloth2.ogg', 'cloth3.ogg', 'cloth4.ogg', 'cloth1.ogg', 'clothBelt.ogg', 'clothBelt2.ogg'] },
+  wHamer: { pack: 'impact', vol: 0.88, files: ['impactWood_heavy_001.ogg', 'impactWood_heavy_002.ogg', 'impactWood_heavy_003.ogg', 'impactPunch_heavy_002.ogg', 'impactPunch_heavy_003.ogg', 'impactSoft_heavy_001.ogg'] },
+  wKetting: { pack: 'impact', vol: 0.72, files: ['impactMetal_light_001.ogg', 'impactMetal_light_002.ogg', 'impactMetal_light_004.ogg', 'impactMetal_medium_001.ogg', 'impactMetal_medium_003.ogg', 'impactMetal_medium_004.ogg'] },
+  wDonder: { pack: 'impact', vol: 0.82, files: ['impactMetal_heavy_001.ogg', 'impactMetal_heavy_003.ogg', 'impactPunch_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactGlass_heavy_003.ogg', 'impactBell_heavy_004.ogg'] },
+  wVoid: { pack: 'digital', vol: 0.68, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'phaseJump4.ogg', 'lowRandom.ogg', 'highDown.ogg', 'spaceTrash2.ogg', 'threeTone1.ogg'] },
+  wFan: { pack: 'rpg', vol: 0.48, files: ['clothBelt.ogg', 'clothBelt2.ogg', 'cloth2.ogg', 'cloth1.ogg', 'cloth3.ogg', 'cloth4.ogg'] },
+  shuriken: { pack: 'digital', vol: 0.55, files: ['laser1.ogg', 'laser2.ogg', 'lowDown.ogg', 'zap1.ogg', 'highDown.ogg', 'spaceTrash1.ogg'] },
+  shoot: { pack: 'digital', vol: 0.62, files: ['laser4.ogg', 'laser5.ogg', 'laser3.ogg', 'laser6.ogg', 'zap2.ogg', 'tone1.ogg'] },
+  laser: { pack: 'digital', vol: 0.68, files: ['laser6.ogg', 'laser7.ogg', 'laser8.ogg', 'laser9.ogg', 'laser5.ogg', 'zap1.ogg', 'powerUp1.ogg'] },
+  special: { pack: 'digital', vol: 0.7, files: ['phaseJump3.ogg', 'pepSound4.ogg', 'powerUp2.ogg', 'threeTone2.ogg', 'phaseJump5.ogg', 'laser8.ogg'] },
+  subst: { pack: 'rpg', vol: 0.65, files: ['cloth4.ogg', 'clothBelt2.ogg', 'dropLeather.ogg', 'cloth1.ogg', 'cloth3.ogg', 'creak2.ogg'] },
+  dash: { pack: 'digital', vol: 0.5, files: ['phaseJump1.ogg', 'lowDown.ogg', 'lowRandom.ogg', 'highDown.ogg', 'spaceTrash1.ogg', 'zap2.ogg'] },
+  jump: { pack: 'digital', vol: 0.58, files: ['phaseJump1.ogg', 'phaseJump2.ogg', 'highUp.ogg', 'pepSound1.ogg', 'tone1.ogg', 'powerUp1.ogg'] },
+  land: { pack: 'impact', vol: 0.55, files: ['footstep_concrete_001.ogg', 'footstep_concrete_002.ogg', 'footstep_concrete_003.ogg', 'footstep_grass_002.ogg', 'footstep_wood_001.ogg', 'footstep_wood_003.ogg'] },
+  step: { pack: 'impact', vol: 0.35, files: ['footstep_grass_001.ogg', 'footstep_grass_003.ogg', 'footstep_grass_004.ogg', 'footstep_carpet_002.ogg', 'footstep_carpet_004.ogg', 'footstep_wood_002.ogg'] },
+  travel: { pack: 'impact', vol: 0.4, files: ['footstep_carpet_001.ogg', 'footstep_carpet_003.ogg', 'footstep_carpet_004.ogg', 'footstep_wood_001.ogg', 'footstep_wood_002.ogg', 'footstep_grass_001.ogg'] },
+  hurt: { pack: 'ui', vol: 0.65, files: ['error_001.ogg', 'error_002.ogg', 'error_003.ogg', 'error_004.ogg', 'back_002.ogg', 'back_003.ogg'] },
+  die: { pack: 'impact', vol: 0.85, files: ['impactGlass_heavy_003.ogg', 'impactSoft_heavy_003.ogg', 'impactWood_heavy_002.ogg', 'impactGlass_heavy_004.ogg', 'impactSoft_heavy_002.ogg', 'impactPunch_heavy_004.ogg'] },
+  roar: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactSoft_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactSoft_heavy_002.ogg', 'impactPunch_heavy_003.ogg', 'impactBell_heavy_004.ogg'] },
+  explode: { pack: 'impact', vol: 0.9, files: ['impactMetal_heavy_002.ogg', 'impactGlass_heavy_004.ogg', 'impactPunch_heavy_003.ogg', 'impactGlass_heavy_003.ogg', 'impactMetal_heavy_004.ogg', 'impactSoft_heavy_001.ogg'] },
+  brick: { pack: 'impact', vol: 0.7, files: ['impactPlank_medium_002.ogg', 'impactWood_light_002.ogg', 'impactGeneric_light_004.ogg', 'impactPlank_medium_003.ogg', 'impactWood_light_001.ogg', 'impactWood_medium_003.ogg'] },
+  crack: { pack: 'impact', vol: 0.65, files: ['impactGlass_light_002.ogg', 'impactWood_light_003.ogg', 'impactGlass_light_001.ogg', 'impactGlass_light_003.ogg', 'impactGlass_light_004.ogg', 'impactWood_light_001.ogg'] },
+  whoosh: { pack: 'digital', vol: 0.45, files: ['lowDown.ogg', 'lowRandom.ogg', 'phaseJump1.ogg', 'highDown.ogg', 'spaceTrash1.ogg', 'spaceTrash2.ogg'] },
+  skillSwoosh: { pack: 'digital', vol: 0.62, files: ['lowDown.ogg', 'phaseJump2.ogg', 'lowRandom.ogg', 'highDown.ogg', 'zap1.ogg', 'spaceTrash2.ogg'] },
+  skillSwooshEpic: { pack: 'digital', vol: 0.78, files: ['phaseJump5.ogg', 'laser8.ogg', 'highUp.ogg', 'powerUp3.ogg', 'threeTone2.ogg', 'laser9.ogg'] },
+  megaDrop: { pack: 'digital', vol: 0.88, files: ['phaseJump5.ogg', 'pepSound5.ogg', 'powerUp3.ogg', 'threeTone1.ogg', 'laser9.ogg', 'pepSound4.ogg'] },
+  tideSurge: { pack: 'digital', vol: 0.65, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'laser4.ogg', 'threeTone1.ogg', 'lowRandom.ogg', 'spaceTrash2.ogg', 'zap2.ogg'] },
+  bossTurn: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactBell_heavy_001.ogg', 'impactBell_heavy_004.ogg', 'impactSoft_heavy_002.ogg', 'impactGlass_heavy_003.ogg'] },
+  checkpoint: { pack: 'ui', vol: 0.72, files: ['confirmation_002.ogg', 'bong_001.ogg', 'confirmation_001.ogg', 'confirmation_003.ogg', 'pluck_001.ogg', 'switch_002.ogg'] },
+  bossArrive: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_003.ogg', 'impactMetal_heavy_004.ogg', 'impactBell_heavy_004.ogg', 'impactSoft_heavy_004.ogg', 'impactGlass_heavy_004.ogg'] },
+  bossWait: { pack: 'impact', vol: 0.6, files: ['impactSoft_medium_003.ogg', 'impactSoft_medium_004.ogg', 'impactWood_medium_001.ogg', 'impactSoft_heavy_001.ogg', 'impactWood_medium_003.ogg'] },
+  masterSword: { pack: 'digital', vol: 0.82, files: ['phaseJump5.ogg', 'laser8.ogg', 'highUp.ogg', 'powerUp2.ogg', 'threeTone2.ogg', 'laser9.ogg', 'pepSound5.ogg'] },
+  waveClear: { pack: 'ui', vol: 0.68, files: ['confirmation_003.ogg', 'confirmation_001.ogg', 'confirmation_002.ogg', 'bong_001.ogg', 'pluck_002.ogg', 'drop_002.ogg'] },
+  hitstop: { pack: 'impact', vol: 0.45, files: ['impactGeneric_light_001.ogg', 'impactMetal_light_004.ogg', 'impactGeneric_light_003.ogg', 'impactMetal_light_001.ogg', 'impactGlass_light_001.ogg'] },
+  ketsbam: { pack: 'impact', vol: 1, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactGlass_heavy_004.ogg', 'impactPunch_heavy_003.ogg', 'impactSoft_heavy_004.ogg', 'impactBell_heavy_004.ogg'] },
+  ketsbamCharge: { pack: 'digital', vol: 0.55, rate: 0.88, files: ['lowRandom.ogg', 'lowThreeTone.ogg', 'threeTone1.ogg', 'highDown.ogg', 'spaceTrash2.ogg', 'lowDown.ogg'] },
 };
 
 /** Per-skill Kenney CC0 samples — each skill id maps to its own file set. */
 const SKILL_SFX_SAMPLES = {
-  rasengan: { pack: 'digital', vol: 0.72, files: ['phaseJump2.ogg', 'phaseJump3.ogg', 'pepSound3.ogg'] },
-  fireball_jutsu: { pack: 'digital', vol: 0.74, rate: 1.06, files: ['laser5.ogg', 'pepSound1.ogg', 'highUp.ogg'] },
-  chidori: { pack: 'digital', vol: 0.75, files: ['laser2.ogg', 'laser3.ogg', 'highUp.ogg'] },
-  shadow_clone_burst: { pack: 'rpg', vol: 0.68, files: ['cloth4.ogg', 'dropLeather.ogg', 'clothBelt2.ogg'] },
-  gentle_palm: { pack: 'impact', vol: 0.7, files: ['impactSoft_medium_001.ogg', 'impactGeneric_light_002.ogg'] },
-  rinnegan: { pack: 'digital', vol: 0.78, files: ['lowThreeTone.ogg', 'phaseJump4.ogg', 'laser1.ogg'] },
-  eight_gates: { pack: 'impact', vol: 0.82, rate: 1.08, files: ['impactPunch_heavy_001.ogg', 'impactPunch_heavy_002.ogg', 'impactMetal_heavy_001.ogg'] },
-  black_hole: { pack: 'digital', vol: 0.8, rate: 0.86, files: ['lowThreeTone.ogg', 'lowRandom.ogg', 'phaseJump4.ogg'] },
-  kamehameha: { pack: 'digital', vol: 0.8, files: ['laser8.ogg', 'laser9.ogg', 'pepSound4.ogg'] },
-  galick_gun: { pack: 'digital', vol: 0.76, rate: 0.94, files: ['laser6.ogg', 'laser7.ogg', 'lowDown.ogg'] },
-  destructo_disc: { pack: 'digital', vol: 0.72, rate: 1.12, files: ['laser1.ogg', 'laser2.ogg', 'phaseJump1.ogg'] },
-  instant_dash: { pack: 'digital', vol: 0.7, rate: 1.18, files: ['phaseJump1.ogg', 'highUp.ogg', 'lowRandom.ogg'] },
-  final_flash: { pack: 'digital', vol: 0.84, files: ['laser8.ogg', 'phaseJump5.ogg', 'pepSound5.ogg'] },
-  spirit_bomb: { pack: 'digital', vol: 0.85, rate: 0.82, files: ['lowThreeTone.ogg', 'phaseJump2.ogg', 'pepSound3.ogg'] },
-  getsuga: { pack: 'digital', vol: 0.74, files: ['laser3.ogg', 'laser4.ogg', 'pepSound2.ogg'] },
-  cero: { pack: 'digital', vol: 0.78, files: ['laser5.ogg', 'laser6.ogg', 'laser7.ogg'] },
-  bankai_slash: { pack: 'rpg', vol: 0.76, rate: 1.05, files: ['drawKnife3.ogg', 'chop.ogg', 'footstep04.ogg'] },
-  gum_rocket: { pack: 'digital', vol: 0.68, rate: 1.04, files: ['lowRandom.ogg', 'phaseJump2.ogg', 'pepSound1.ogg'] },
-  gear_second: { pack: 'digital', vol: 0.74, rate: 1.1, files: ['pepSound2.ogg', 'pepSound3.ogg', 'highUp.ogg'] },
-  thunder_palm: { pack: 'impact', vol: 0.78, files: ['impactBell_heavy_001.ogg', 'impactBell_heavy_002.ogg'] },
-  serious_punch: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_004.ogg', 'impactPunch_heavy_003.ogg'] },
-  serious_blast: { pack: 'digital', vol: 0.86, files: ['laser9.ogg', 'laser8.ogg', 'phaseJump5.ogg'] },
-  sun_palm: { pack: 'impact', vol: 0.72, files: ['impactBell_heavy_002.ogg', 'impactSoft_medium_002.ogg'] },
-  moon_pull: { pack: 'digital', vol: 0.76, rate: 0.95, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'laser1.ogg'] },
+  rasengan: { pack: 'digital', vol: 0.72, files: ['phaseJump2.ogg', 'phaseJump3.ogg', 'pepSound3.ogg', 'powerUp1.ogg', 'tone1.ogg', 'zap1.ogg'] },
+  fireball_jutsu: { pack: 'digital', vol: 0.74, rate: 1.06, files: ['laser5.ogg', 'pepSound1.ogg', 'highUp.ogg', 'zap2.ogg', 'laser4.ogg', 'powerUp2.ogg'] },
+  chidori: { pack: 'digital', vol: 0.75, files: ['laser2.ogg', 'laser3.ogg', 'highUp.ogg', 'zap1.ogg', 'tone1.ogg', 'laser1.ogg'] },
+  shadow_clone_burst: { pack: 'rpg', vol: 0.68, files: ['cloth4.ogg', 'dropLeather.ogg', 'clothBelt2.ogg', 'cloth1.ogg', 'cloth3.ogg', 'creak2.ogg'] },
+  gentle_palm: { pack: 'impact', vol: 0.7, files: ['impactSoft_medium_001.ogg', 'impactGeneric_light_002.ogg', 'impactSoft_medium_003.ogg', 'impactGeneric_light_004.ogg', 'impactSoft_medium_004.ogg'] },
+  rinnegan: { pack: 'digital', vol: 0.78, files: ['lowThreeTone.ogg', 'phaseJump4.ogg', 'laser1.ogg', 'threeTone1.ogg', 'laser8.ogg', 'spaceTrash2.ogg'] },
+  eight_gates: { pack: 'impact', vol: 0.82, rate: 1.08, files: ['impactPunch_heavy_001.ogg', 'impactPunch_heavy_002.ogg', 'impactMetal_heavy_001.ogg', 'impactPunch_heavy_003.ogg', 'impactSoft_heavy_001.ogg', 'impactMetal_heavy_003.ogg'] },
+  black_hole: { pack: 'digital', vol: 0.8, rate: 0.86, files: ['lowThreeTone.ogg', 'lowRandom.ogg', 'phaseJump4.ogg', 'highDown.ogg', 'threeTone2.ogg', 'spaceTrash1.ogg'] },
+  kamehameha: { pack: 'digital', vol: 0.8, files: ['laser8.ogg', 'laser9.ogg', 'pepSound4.ogg', 'powerUp3.ogg', 'threeTone2.ogg', 'laser7.ogg'] },
+  galick_gun: { pack: 'digital', vol: 0.76, rate: 0.94, files: ['laser6.ogg', 'laser7.ogg', 'lowDown.ogg', 'zap2.ogg', 'laser5.ogg', 'highDown.ogg'] },
+  destructo_disc: { pack: 'digital', vol: 0.72, rate: 1.12, files: ['laser1.ogg', 'laser2.ogg', 'phaseJump1.ogg', 'zap1.ogg', 'highDown.ogg', 'spaceTrash1.ogg'] },
+  instant_dash: { pack: 'digital', vol: 0.7, rate: 1.18, files: ['phaseJump1.ogg', 'highUp.ogg', 'lowRandom.ogg', 'pepSound1.ogg', 'zap2.ogg', 'phaseJump2.ogg'] },
+  final_flash: { pack: 'digital', vol: 0.84, files: ['laser8.ogg', 'phaseJump5.ogg', 'pepSound5.ogg', 'powerUp3.ogg', 'laser9.ogg', 'threeTone1.ogg'] },
+  spirit_bomb: { pack: 'digital', vol: 0.85, rate: 0.82, files: ['lowThreeTone.ogg', 'phaseJump2.ogg', 'pepSound3.ogg', 'threeTone2.ogg', 'powerUp2.ogg', 'lowRandom.ogg'] },
+  getsuga: { pack: 'digital', vol: 0.74, files: ['laser3.ogg', 'laser4.ogg', 'pepSound2.ogg', 'zap1.ogg', 'laser2.ogg', 'tone1.ogg'] },
+  cero: { pack: 'digital', vol: 0.78, files: ['laser5.ogg', 'laser6.ogg', 'laser7.ogg', 'laser8.ogg', 'zap2.ogg', 'powerUp1.ogg'] },
+  bankai_slash: { pack: 'rpg', vol: 0.76, rate: 1.05, files: ['drawKnife3.ogg', 'chop.ogg', 'footstep04.ogg', 'knifeSlice.ogg', 'knifeSlice2.ogg', 'metalClick.ogg'] },
+  gum_rocket: { pack: 'digital', vol: 0.68, rate: 1.04, files: ['lowRandom.ogg', 'phaseJump2.ogg', 'pepSound1.ogg', 'highDown.ogg', 'zap1.ogg', 'spaceTrash1.ogg'] },
+  gear_second: { pack: 'digital', vol: 0.74, rate: 1.1, files: ['pepSound2.ogg', 'pepSound3.ogg', 'highUp.ogg', 'powerUp1.ogg', 'pepSound1.ogg', 'tone1.ogg'] },
+  thunder_palm: { pack: 'impact', vol: 0.78, files: ['impactBell_heavy_001.ogg', 'impactBell_heavy_002.ogg', 'impactBell_heavy_003.ogg', 'impactBell_heavy_004.ogg', 'impactMetal_heavy_001.ogg'] },
+  serious_punch: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_004.ogg', 'impactPunch_heavy_003.ogg', 'impactPunch_heavy_002.ogg', 'impactSoft_heavy_002.ogg', 'impactMetal_heavy_004.ogg'] },
+  serious_blast: { pack: 'digital', vol: 0.86, files: ['laser9.ogg', 'laser8.ogg', 'phaseJump5.ogg', 'powerUp3.ogg', 'threeTone2.ogg', 'pepSound5.ogg'] },
+  sun_palm: { pack: 'impact', vol: 0.72, files: ['impactBell_heavy_002.ogg', 'impactSoft_medium_002.ogg', 'impactBell_heavy_004.ogg', 'impactSoft_medium_004.ogg', 'impactGeneric_light_003.ogg'] },
+  moon_pull: { pack: 'digital', vol: 0.76, rate: 0.95, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'laser1.ogg', 'threeTone1.ogg', 'highDown.ogg', 'lowRandom.ogg'] },
 };
 
 /** Per-super Kenney CC0 samples — charge + finish pairs. */
 const SUPER_SFX_SAMPLES = {
-  super_shield_charge: { pack: 'impact', vol: 0.62, rate: 0.92, files: ['impactMetal_light_001.ogg', 'impactWood_medium_001.ogg'] },
-  super_shield: { pack: 'impact', vol: 0.88, files: ['impactBell_heavy_002.ogg', 'impactMetal_heavy_003.ogg'] },
-  super_heal_charge: { pack: 'ui', vol: 0.62, files: ['confirmation_002.ogg', 'drop_003.ogg'] },
-  super_heal: { pack: 'ui', vol: 0.78, files: ['confirmation_004.ogg', 'bong_001.ogg'] },
-  super_sharingan_charge: { pack: 'digital', vol: 0.68, rate: 0.9, files: ['lowThreeTone.ogg', 'lowRandom.ogg'] },
-  super_sharingan: { pack: 'digital', vol: 0.82, files: ['laser2.ogg', 'phaseJump4.ogg', 'highUp.ogg'] },
-  super_lightning_charge: { pack: 'digital', vol: 0.72, files: ['laser1.ogg', 'laser2.ogg', 'lowRandom.ogg'] },
-  super_lightning: { pack: 'digital', vol: 0.9, files: ['laser7.ogg', 'laser8.ogg', 'laser9.ogg'] },
-  super_meteor_charge: { pack: 'impact', vol: 0.65, rate: 0.85, files: ['impactWood_heavy_001.ogg', 'creak1.ogg'] },
-  super_meteor: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactGlass_heavy_004.ogg'] },
-  super_rage_charge: { pack: 'digital', vol: 0.7, rate: 0.95, files: ['lowRandom.ogg', 'pepSound1.ogg'] },
-  super_rage: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_003.ogg', 'impactMetal_heavy_004.ogg'] },
-  super_time_charge: { pack: 'digital', vol: 0.66, rate: 0.88, files: ['lowThreeTone.ogg', 'phaseJump1.ogg'] },
-  super_time: { pack: 'digital', vol: 0.84, files: ['phaseJump5.ogg', 'pepSound5.ogg', 'laser3.ogg'] },
-  super_clone_charge: { pack: 'rpg', vol: 0.64, files: ['cloth4.ogg', 'dropLeather.ogg'] },
-  super_clone: { pack: 'rpg', vol: 0.76, files: ['clothBelt2.ogg', 'chop.ogg', 'drawKnife2.ogg'] },
-  super_void_charge: { pack: 'digital', vol: 0.68, rate: 0.86, files: ['lowDown.ogg', 'lowRandom.ogg'] },
-  super_void: { pack: 'impact', vol: 0.92, files: ['impactGlass_heavy_003.ogg', 'impactMetal_heavy_002.ogg'] },
+  super_shield_charge: { pack: 'impact', vol: 0.62, rate: 0.92, files: ['impactMetal_light_001.ogg', 'impactWood_medium_001.ogg', 'impactMetal_light_004.ogg', 'impactWood_medium_003.ogg', 'impactMetal_medium_001.ogg'] },
+  super_shield: { pack: 'impact', vol: 0.88, files: ['impactBell_heavy_002.ogg', 'impactMetal_heavy_003.ogg', 'impactBell_heavy_004.ogg', 'impactMetal_heavy_001.ogg', 'impactMetal_medium_004.ogg'] },
+  super_heal_charge: { pack: 'ui', vol: 0.62, files: ['confirmation_002.ogg', 'drop_003.ogg', 'pluck_001.ogg', 'drop_001.ogg', 'scroll_001.ogg'] },
+  super_heal: { pack: 'ui', vol: 0.78, files: ['confirmation_004.ogg', 'bong_001.ogg', 'confirmation_003.ogg', 'pluck_002.ogg', 'confirmation_001.ogg'] },
+  super_sharingan_charge: { pack: 'digital', vol: 0.68, rate: 0.9, files: ['lowThreeTone.ogg', 'lowRandom.ogg', 'threeTone1.ogg', 'highDown.ogg', 'spaceTrash2.ogg'] },
+  super_sharingan: { pack: 'digital', vol: 0.82, files: ['laser2.ogg', 'phaseJump4.ogg', 'highUp.ogg', 'zap1.ogg', 'powerUp2.ogg', 'laser3.ogg'] },
+  super_lightning_charge: { pack: 'digital', vol: 0.72, files: ['laser1.ogg', 'laser2.ogg', 'lowRandom.ogg', 'zap1.ogg', 'tone1.ogg', 'zap2.ogg'] },
+  super_lightning: { pack: 'digital', vol: 0.9, files: ['laser7.ogg', 'laser8.ogg', 'laser9.ogg', 'zap2.ogg', 'powerUp3.ogg', 'phaseJump5.ogg'] },
+  super_meteor_charge: { pack: 'impact', vol: 0.65, rate: 0.85, files: ['impactWood_heavy_001.ogg', 'impactWood_heavy_003.ogg', 'impactSoft_heavy_001.ogg', 'impactPlank_medium_003.ogg', 'impactWood_medium_002.ogg'] },
+  super_meteor: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactGlass_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactGlass_heavy_003.ogg', 'impactSoft_heavy_004.ogg'] },
+  super_rage_charge: { pack: 'digital', vol: 0.7, rate: 0.95, files: ['lowRandom.ogg', 'pepSound1.ogg', 'highDown.ogg', 'tone1.ogg', 'spaceTrash1.ogg'] },
+  super_rage: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_003.ogg', 'impactMetal_heavy_004.ogg', 'impactPunch_heavy_004.ogg', 'impactSoft_heavy_002.ogg', 'impactBell_heavy_004.ogg'] },
+  super_time_charge: { pack: 'digital', vol: 0.66, rate: 0.88, files: ['lowThreeTone.ogg', 'phaseJump1.ogg', 'threeTone1.ogg', 'highDown.ogg', 'lowDown.ogg'] },
+  super_time: { pack: 'digital', vol: 0.84, files: ['phaseJump5.ogg', 'pepSound5.ogg', 'laser3.ogg', 'powerUp3.ogg', 'threeTone2.ogg', 'laser9.ogg'] },
+  super_clone_charge: { pack: 'rpg', vol: 0.64, files: ['cloth4.ogg', 'dropLeather.ogg', 'cloth1.ogg', 'cloth3.ogg', 'creak3.ogg'] },
+  super_clone: { pack: 'rpg', vol: 0.76, files: ['clothBelt2.ogg', 'chop.ogg', 'drawKnife2.ogg', 'cloth2.ogg', 'knifeSlice.ogg', 'metalClick.ogg'] },
+  super_void_charge: { pack: 'digital', vol: 0.68, rate: 0.86, files: ['lowDown.ogg', 'lowRandom.ogg', 'highDown.ogg', 'spaceTrash2.ogg', 'threeTone1.ogg'] },
+  super_void: { pack: 'impact', vol: 0.92, files: ['impactGlass_heavy_003.ogg', 'impactMetal_heavy_002.ogg', 'impactGlass_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactSoft_heavy_004.ogg'] },
 };
 
 Object.assign(SFX_SAMPLE_MAP, SKILL_SFX_SAMPLES, SUPER_SFX_SAMPLES);
@@ -11612,31 +11626,32 @@ function playSkillSynthFallback(name, h) {
   const seed = skillSynthSeed(name);
   const det = 1 + (seed % 21) * 0.007;
   const mul = (f) => f * det;
+  const alt = (seed + Math.floor(Math.random() * 3)) % 3;
   const beh = sk.behavior || 'orb';
   if (beh === 'dash') {
-    T(mul(920), mul(1580), 0.16, 'sine', 0.14, now);
-    N(0.12, 0.11, 5200 + (seed % 800), true, now);
+    T(mul(920 + alt * 40), mul(1580 + alt * 60), 0.16, 'sine', 0.14, now);
+    N(0.12, 0.11, 5200 + (seed % 800) + alt * 200, true, now);
     T(mul(1400), mul(920), 0.06, 'triangle', 0.1, now + 0.05);
     if (!lite) T(mul(180 + seed % 40), mul(90), 0.07, 'sine', 0.08, now + 0.02);
   } else if (beh === 'beam') {
-    T(mul(280), mul(920), 0.2, 'sine', 0.13, now);
+    T(mul(280 + alt * 30), mul(920 + alt * 40), 0.2, 'sine', 0.13, now);
     D(mul(520), mul(1220), 0.14, 'triangle', 0.11, now + 0.04, 10 + seed % 6);
-    N(0.1, 0.09, 3800 + (seed % 600), true, now);
+    N(0.1, 0.09, 3800 + (seed % 600) + alt * 150, true, now);
     if (!lite) S([mul(880), mul(1047), mul(1175)], now + 0.08);
   } else if (beh === 'disc') {
-    T(mul(680), mul(420), 0.12, 'triangle', 0.13, now);
+    T(mul(680 + alt * 35), mul(420), 0.12, 'triangle', 0.13, now);
     T(mul(980), mul(680), 0.08, 'sine', 0.1, now + 0.04);
-    N(0.08, 0.1, 4400 + (seed % 500), true, now);
+    N(0.08, 0.1, 4400 + (seed % 500) + alt * 180, true, now);
   } else if (beh === 'pull' || beh === 'meteor') {
-    T(mul(240), mul(760), 0.14, 'sine', 0.14, now);
+    T(mul(240 + alt * 20), mul(760), 0.14, 'sine', 0.14, now);
     T(mul(760), mul(480), 0.15, 'triangle', 0.12, now + 0.04);
     T(mul(980), mul(1320), 0.08, 'sine', 0.11, now + 0.1);
     N(0.1, 0.11, 1900 + (seed % 400), true, now + 0.02);
     if (!lite) T(mul(55), mul(32), 0.16, 'sawtooth', 0.09, now + 0.05);
   } else {
-    T(mul(320), mul(1040), 0.2, 'sine', 0.13, now);
+    T(mul(320 + alt * 25), mul(1040 + alt * 40), 0.2, 'sine', 0.13, now);
     D(mul(580), mul(1220), 0.16, 'triangle', 0.11, now + 0.04, 10);
-    N(0.12, 0.1, 3600 + (seed % 700), true, now);
+    N(0.12, 0.1, 3600 + (seed % 700) + alt * 120, true, now);
     if (!lite) S([mul(880), mul(1047), mul(1175)], now + 0.1);
   }
   return true;
@@ -11676,23 +11691,24 @@ function playSuperSynthFallback(name, h) {
   if (!isSuperSfxId(name)) return false;
   const { T, N, C, now, lite } = h;
   const charge = name.endsWith('_charge');
+  const alt = Math.floor(Math.random() * 2);
   if (charge) {
-    T(88, charge ? 220 : 52, charge ? 1.6 : 0.4, 'sawtooth', 0.18, now);
-    N(charge ? 1.5 : 0.3, 0.14, 720, false, now);
+    T(88 + alt * 12, charge ? 220 + alt * 20 : 52, charge ? 1.6 : 0.4, 'sawtooth', 0.18, now);
+    N(charge ? 1.5 : 0.3, 0.14, 720 + alt * 80, false, now);
   } else if (name.includes('lightning')) {
     for (let i = 0; i < (lite ? 3 : 6); i++) {
-      T(880 + i * 120, 220, 0.06, 'square', 0.12, now + i * 0.05);
+      T(880 + i * 120 + alt * 40, 220, 0.06, 'square', 0.12, now + i * 0.05);
       N(0.04, 0.1, 4000 + i * 400, true, now + i * 0.05);
     }
   } else if (name.includes('heal')) {
-    C([523, 659, 784, 988], 'sine', 0.12, 0.08, now);
+    C(alt ? [494, 622, 740, 932] : [523, 659, 784, 988], 'sine', 0.12, 0.08, now);
   } else if (name.includes('shield')) {
-    T(220, 440, 0.2, 'triangle', 0.16, now);
-    N(0.12, 0.12, 1200, false, now);
+    T(220 + alt * 30, 440 + alt * 40, 0.2, 'triangle', 0.16, now);
+    N(0.12, 0.12, 1200 + alt * 200, false, now);
   } else {
-    N(0.3, 0.32, 400, false, now);
+    N(0.3, 0.32, 400 + alt * 60, false, now);
     T(52, 20, 0.36, 'sawtooth', 0.28, now);
-    if (!lite) C([196, 247, 330, 392], 'square', 0.1, 0.05, now + 0.08);
+    if (!lite) C(alt ? [185, 233, 311, 370] : [196, 247, 330, 392], 'square', 0.1, 0.05, now + 0.08);
   }
   return true;
 }
@@ -11803,7 +11819,7 @@ const AudioSys = {
     const t = this.ctx.currentTime;
     const src = this.ctx.createBufferSource();
     src.buffer = buf;
-    const rate = (cfg.rate || 1) * (0.93 + Math.random() * 0.14);
+    const rate = (cfg.rate || 1) * (0.88 + Math.random() * 0.24);
     src.playbackRate.value = rate;
     const dur = Math.min(buf.duration / rate, 2.8);
     const g = this.ctx.createGain();
@@ -11984,7 +12000,13 @@ const AudioSys = {
   /** Micro pitch wobble so rapid SFX don't sound identical */
   _pitchVar() {
     this._sfxVar = (this._sfxVar + 1) % 97;
-    return 0.975 + (this._sfxVar % 6) * 0.01;
+    return 0.94 + (this._sfxVar % 11) * 0.012 + Math.random() * 0.02;
+  },
+
+  /** 0…2 — rotate procedural combat hit bodies for variety */
+  _sfxAlt() {
+    this._sfxVar = (this._sfxVar + 1) % 97;
+    return this._sfxVar % 3;
   },
 
   /** Short echo tail — arcade space without reverb node */
@@ -12021,23 +12043,32 @@ const AudioSys = {
       freqs.forEach((f, i) => T(f, f * 1.1, 0.045, 'sine', 0.075, w + i * 0.02));
     };
     const now = this.ctx.currentTime;
+    const A = () => this._sfxAlt();
     const skillSynthH = { T, D, E, N, S, I, C, now, lite, v, d, P };
     if (typeof playSuperSynthFallback === 'function' && playSuperSynthFallback(name, skillSynthH)) return;
     if (typeof playSkillSynthFallback === 'function' && playSkillSynthFallback(name, skillSynthH)) return;
     switch (name) {
-      case 'swing':
-        N(0.05, 0.22, 3400, true, now);
-        T(420, 160, 0.07, 'sine', 0.11, now);
-        if (!lite) N(0.025, 0.08, 6200, true, now + 0.015);
+      case 'swing': {
+        const a = A();
+        N(0.05, 0.22, 3400 + a * 400, true, now);
+        T(420 + a * 60, 160 + a * 30, 0.07, a === 1 ? 'triangle' : 'sine', 0.11, now);
+        if (!lite) N(0.025, 0.08, 6200 + a * 300, true, now + 0.015);
         break;
-      case 'punch':
-        I(240, 3200, now);
-        T(520, 880, 0.04, 'triangle', 0.1, now + 0.02);
+      }
+      case 'punch': {
+        const a = A();
+        I(220 + a * 40, 2800 + a * 400, now);
+        T(480 + a * 60, 820 + a * 80, 0.04, a === 2 ? 'sine' : 'triangle', 0.1, now + 0.02);
+        if (!lite && a === 1) N(0.03, 0.09, 4800, true, now + 0.03);
         break;
-      case 'kick':
-        I(280, 2600, now);
-        T(420, 140, 0.07, 'triangle', 0.12, now + 0.02);
+      }
+      case 'kick': {
+        const a = A();
+        I(260 + a * 35, 2400 + a * 350, now);
+        T(400 + a * 40, 130 + a * 20, 0.07, 'triangle', 0.12, now + 0.02);
+        if (!lite && a) T(180, 70, 0.05, 'sine', 0.08, now + 0.04);
         break;
+      }
       case 'wKunai':
         N(0.035, 0.15, 5400, true, now);
         T(1020, 380, 0.075, 'triangle', 0.13, now);
@@ -12116,32 +12147,42 @@ const AudioSys = {
         T(320, 180, 0.09, 'square', 0.15, now + 0.02);
         if (!lite) T(480, 260, 0.07, 'triangle', 0.11, now + 0.06);
         break;
-      case 'hit':
-        I(180, 1400, now);
-        T(880, 420, 0.05, 'triangle', 0.1, now + 0.015);
+      case 'hit': {
+        const a = A();
+        I(160 + a * 30, 1200 + a * 300, now);
+        T(820 + a * 80, 380 + a * 40, 0.05, a ? 'sine' : 'triangle', 0.1, now + 0.015);
         break;
-      case 'hit2':
-        I(130, 900, now);
-        T(150, 55, 0.09, 'square', 0.24, now);
-        N(0.07, 0.26, 650, false, now);
-        T(320, 140, 0.06, 'triangle', 0.12, now + 0.025);
+      }
+      case 'hit2': {
+        const a = A();
+        I(120 + a * 20, 850 + a * 120, now);
+        T(140 + a * 20, 50 + a * 10, 0.09, 'square', 0.24, now);
+        N(0.07, 0.26, 600 + a * 80, false, now);
+        T(300 + a * 30, 130 + a * 20, 0.06, 'triangle', 0.12, now + 0.025);
         break;
-      case 'hitMetal':
-        I(520, 3800, now);
-        E(980, 460, 0.06, 'triangle', 0.13, now + 0.01, 0.035, 0.45);
-        T(240, 95, 0.07, 'sine', 0.11, now);
+      }
+      case 'hitMetal': {
+        const a = A();
+        I(500 + a * 40, 3600 + a * 300, now);
+        E(960 + a * 40, 440 + a * 30, 0.06, 'triangle', 0.13, now + 0.01, 0.035, 0.45);
+        T(230 + a * 20, 90 + a * 10, 0.07, 'sine', 0.11, now);
         break;
-      case 'hitHeavy':
-        I(110, 650, now);
-        T(130, 42, 0.13, 'sine', 0.24, now);
-        if (!lite) N(0.1, 0.22, 550, false, now + 0.04);
+      }
+      case 'hitHeavy': {
+        const a = A();
+        I(100 + a * 20, 600 + a * 80, now);
+        T(120 + a * 15, 40 + a * 6, 0.13, 'sine', 0.24, now);
+        if (!lite) N(0.1, 0.22, 520 + a * 60, false, now + 0.04);
         break;
-      case 'hitEnergy':
-        T(760, 280, 0.09, 'sine', 0.15, now);
-        D(1120, 520, 0.07, 'triangle', 0.11, now, 10);
-        N(0.05, 0.13, 4400, true, now);
-        if (!lite) S([880, 1047], now + 0.04);
+      }
+      case 'hitEnergy': {
+        const a = A();
+        T(740 + a * 40, 260 + a * 30, 0.09, 'sine', 0.15, now);
+        D(1100 + a * 40, 500 + a * 30, 0.07, 'triangle', 0.11, now, 10);
+        N(0.05, 0.13, 4200 + a * 300, true, now);
+        if (!lite) S(a ? [932, 1109] : [880, 1047], now + 0.04);
         break;
+      }
       case 'jump':
         T(220, 620, 0.11, 'sine', 0.16, now);
         T(620, 880, 0.07, 'triangle', 0.1, now + 0.04);
@@ -12608,10 +12649,10 @@ const AudioSys = {
       this.tone(midi(L), midi(L) * 0.995, spb * 1.6, 'square', lv, mg, t);
       if (!lite && i % 2 === 0) this.tone(midi(L + 7), midi(L + 7) * 0.998, spb * 1.1, 'triangle', 0.05 + heat * 0.03, mg, t + spb * 0.12);
     }
-    if ((s.id === 'battle' || s.id === 'elite' || s.id === 'boss' || s.id === 'tideBattle') && heat > 0.35 && !lite && i === 8 && bar % 2 === 0) {
+    if ((isFightBgmId(s.id)) && heat > 0.35 && !lite && i === 8 && bar % 2 === 0) {
       this.tone(midi(84), midi(79), spb * 0.9, 'square', 0.04 + heat * 0.04, mg, t);
     }
-    if (s.id === 'battle' || s.id === 'elite' || s.id === 'boss' || s.id === 'tideBattle') {
+    if (isFightBgmId(s.id)) {
       if (i === 0 && bar % 4 === 0 && !lite) {
         this.tone(midi(60), midi(60), spb * 3.6, 'sine', 0.05, mg, t);
         this.tone(midi(64), midi(64), spb * 3.4, 'triangle', 0.04, mg, t);
@@ -12625,7 +12666,7 @@ const AudioSys = {
         this.tone(midi(84), midi(67), spb * 0.75, 'square', 0.08, mg, t);
       }
     }
-    if (s.id === 'tideBattle' && !lite) {
+    if ((s.id === 'tideBattle' || s.id === 'tideBattle2' || s.id === 'tideBattleSurge') && !lite) {
       if ([2, 6, 10, 14].includes(i)) {
         this.tone(midi([67, 71, 74, 79][i / 4 | 0]), midi([67, 71, 74, 79][i / 4 | 0]), spb * 0.55, 'triangle', 0.06, mg, t);
       }
@@ -12635,6 +12676,13 @@ const AudioSys = {
       if (i === 0 && bar % 8 === 4) {
         this.noise(0.06, 0.14, 5200, true, mg, t);
         this.tone(midi(91), midi(84), spb * 0.85, 'square', 0.07, mg, t);
+      }
+      if (s.id === 'tideBattle2' && (i === 3 || i === 11)) {
+        this.tone(midi(62), midi(55), spb * 0.9, 'triangle', 0.05, mg, t);
+      }
+      if (s.id === 'tideBattleSurge' && i === 8 && bar % 2 === 0) {
+        this.noise(0.05, 0.12, 6400, true, mg, t);
+        this.tone(midi(86), midi(79), spb * 1.1, 'square', 0.06, mg, t);
       }
     }
     const menuIds = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero', 'menuDream'];
@@ -12682,13 +12730,24 @@ const AudioSys = {
     if (s.id === 'mats' && !lite && i === 12 && bar % 4 === 2) {
       this.tone(midi(84), midi(79), spb * 1.1, 'triangle', 0.06, mg, t);
     }
-    if (s.id === 'elite' || s.id === 'boss') {
+    if (s.id === 'elite' || s.id === 'elite2' || s.id === 'elitePulse' || s.id === 'boss' || s.id === 'boss2' || s.id === 'bossFury') {
+      const bossish = s.id === 'boss' || s.id === 'boss2' || s.id === 'bossFury';
       if (i === 0 && bar % 2 === 0) {
-        this.tone(midi(s.id === 'boss' ? 50 : 55), midi(s.id === 'boss' ? 38 : 43), spb * 2.4, 'sawtooth', 0.07, mg, t);
+        this.tone(midi(bossish ? 50 : 55), midi(bossish ? 38 : 43), spb * 2.4, 'sawtooth', 0.07, mg, t);
       }
       if (i === 8 && bar % 4 === 1) {
         this.noise(0.06, 0.12, 2200, true, mg, t);
       }
+      if ((s.id === 'elitePulse' || s.id === 'bossFury') && !lite && (i === 2 || i === 10) && bar % 2 === 0) {
+        this.tone(midi(bossish ? 70 : 74), midi(bossish ? 65 : 69), spb * 0.7, 'square', 0.05, mg, t);
+      }
+    }
+    if ((s.id === 'battle2' || s.id === 'battle3' || s.id === 'battlePulse' || s.id === 'battleDrive' || s.id === 'battleRush') && !lite) {
+      if (s.id === 'battle2' && (i === 2 || i === 10)) this.tone(midi(71), midi(67), spb * 0.85, 'triangle', 0.05, mg, t);
+      if (s.id === 'battle3' && i === 0 && bar % 4 === 2) this.tone(midi(57), midi(50), spb * 2.8, 'sine', 0.06, mg, t);
+      if (s.id === 'battlePulse' && (i === 0 || i === 8)) this.noise(0.025, 0.09, 5600, true, mg, t);
+      if (s.id === 'battleDrive' && (i === 4 || i === 12) && bar % 2 === 0) this.tone(midi(79), midi(76), spb * 1.05, 'square', 0.055, mg, t);
+      if (s.id === 'battleRush' && [1, 5, 9, 13].includes(i)) this.noise(0.02, 0.08, 7200, true, mg, t);
     }
     if (s.id === 'training') {
       if (i === 0) this.tone(midi(64), midi(57), spb * 2.2, 'triangle', 0.08, mg, t);
@@ -12778,6 +12837,56 @@ const SONGS = {
       [76,null,79,81, null,79,76,null, 74,null,76,74, 71,null,69,null],
     ],
   },
+  /** Battle variant — syncopisch / scherp */
+  battle2: {
+    bpm: 142,
+    kick: [0, 3, 8, 11], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [41,null,41,null, 44,44,null,41, 38,null,41,null, 43,null,40,null],
+    lead: [
+      [77,null,80,77, null,76,74,null, 72,null,76,72, null,71,72,76],
+      [79,null,81,79, null,77,76,null, 74,null,72,71, 69,null,71,null],
+    ],
+  },
+  /** Battle variant — zwaarder / lagere lead */
+  battle3: {
+    bpm: 132,
+    kick: [0, 4, 8, 12, 14], snare: [4, 12], hat: [2,6,10,14],
+    bass: [38,38,null,38, 41,null,38,null, 43,43,null,41, 38,null,36,null],
+    lead: [
+      [72,null,74,72, null,71,69,null, 67,null,69,67, null,64,67,69],
+      [74,null,76,74, null,72,71,null, 69,null,67,64, 62,null,64,null],
+    ],
+  },
+  /** Battle variant — pulse / arcade */
+  battlePulse: {
+    bpm: 146,
+    kick: [0, 4, 8, 12], snare: [4, 10, 12], hat: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+    bass: [42,null,42,null, 45,null,42,null, 47,null,45,null, 42,null,40,null],
+    lead: [
+      [78,78,null,81, null,79,78,null, 74,74,null,76, null,74,71,null],
+      [81,null,83,81, null,79,78,null, 76,null,74,71, 69,null,71,74],
+    ],
+  },
+  /** Battle variant — drive / gallop */
+  battleDrive: {
+    bpm: 150,
+    kick: [0, 6, 8, 14], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [40,40,43,null, 40,null,45,null, 43,43,40,null, 38,null,40,null],
+    lead: [
+      [76,null,79,null, 81,79,76,null, 74,null,76,79, null,76,74,null],
+      [79,null,81,null, 84,81,79,null, 76,null,74,71, 74,null,76,null],
+    ],
+  },
+  /** Battle variant — rush / snelle hats */
+  battleRush: {
+    bpm: 154,
+    kick: [0, 4, 8, 12], snare: [4, 12], hat: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+    bass: [43,null,43,40, 45,null,43,null, 40,40,null,38, 40,null,43,null],
+    lead: [
+      [81,null,79,81, null,84,81,null, 79,null,76,79, null,74,76,79],
+      [84,null,81,79, null,81,84,null, 79,null,76,74, 76,null,79,null],
+    ],
+  },
   elite: {
     bpm: 148,
     kick: [0, 4, 8, 11, 12], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
@@ -12787,6 +12896,26 @@ const SONGS = {
       [77,null,80,82, null,80,77,null, 75,null,77,75, 72,null,70,null],
     ],
   },
+  /** Elite variant — hoger / scherper */
+  elite2: {
+    bpm: 152,
+    kick: [0, 3, 8, 11, 12], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [43,43,null,43, 46,null,43,null, 48,48,null,46, 43,null,41,null],
+    lead: [
+      [79,null,82,79, null,77,79,null, 74,null,77,74, null,72,74,77],
+      [79,null,82,84, null,82,79,null, 77,null,79,77, 74,null,72,null],
+    ],
+  },
+  /** Elite variant — pulse */
+  elitePulse: {
+    bpm: 156,
+    kick: [0, 4, 8, 12], snare: [4, 10, 12], hat: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+    bass: [42,null,42,null, 45,null,42,null, 47,null,45,null, 42,null,40,null],
+    lead: [
+      [80,80,null,83, null,81,80,null, 76,76,null,78, null,76,73,null],
+      [83,null,85,83, null,81,80,null, 78,null,76,73, 71,null,73,76],
+    ],
+  },
   boss: {
     bpm: 156,
     kick: [0, 4, 8, 12, 14], snare: [4, 12], hat: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
@@ -12794,6 +12923,26 @@ const SONGS = {
     lead: [
       [74,null,75,74, null,70,74,null, 77,null,75,74, null,72,70,null],
       [74,null,77,79, null,77,75,null, 74,null,72,70, 69,null,70,null],
+    ],
+  },
+  /** Boss variant — lager / dreigender */
+  boss2: {
+    bpm: 148,
+    kick: [0, 4, 8, 12], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [36,36,null,36, 37,null,36,null, 39,39,null,37, 36,null,34,null],
+    lead: [
+      [70,null,72,70, null,67,70,null, 74,null,72,70, null,69,67,null],
+      [72,null,74,77, null,74,72,null, 70,null,69,67, 65,null,67,null],
+    ],
+  },
+  /** Boss variant — fury / sneller */
+  bossFury: {
+    bpm: 164,
+    kick: [0, 3, 6, 8, 11, 12, 14], snare: [4, 12], hat: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+    bass: [38,38,null,41, 38,null,43,null, 41,41,null,38, 36,null,38,null],
+    lead: [
+      [77,null,79,77, null,74,77,null, 81,null,79,77, null,74,72,null],
+      [79,null,81,84, null,81,79,null, 77,null,74,72, 70,null,72,null],
     ],
   },
   /** Tide Battle — epische oceaangolf / summon-clash (eigen track) */
@@ -12806,6 +12955,28 @@ const SONGS = {
       [79,null,77,74, null,71,74,null, 79,null,83,86, null,83,79,null],
       [74,null,77,81, null,79,77,null, 74,null,71,67, null,71,74,null],
       [86,null,83,79, null,77,74,null, 71,null,74,77, null,79,83,null],
+    ],
+  },
+  /** Tide variant — dieper / golvender */
+  tideBattle2: {
+    bpm: 158,
+    kick: [0, 4, 8, 12, 14], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [34,34,null,33, 34,34,null,29, 31,null,34,null, 33,null,29,null],
+    lead: [
+      [64,null,67,71, null,67,64,null, 71,null,74,76, null,74,71,null],
+      [76,null,74,71, null,67,71,null, 76,null,79,83, null,79,76,null],
+      [71,null,74,77, null,76,74,null, 71,null,67,64, null,67,71,null],
+    ],
+  },
+  /** Tide variant — surge / sneller */
+  tideBattleSurge: {
+    bpm: 172,
+    kick: [0, 3, 6, 8, 11, 12, 14], snare: [4, 12], hat: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+    bass: [36,null,36,34, 38,null,36,null, 33,33,null,36, 34,null,31,null],
+    lead: [
+      [71,null,74,77, null,74,71,null, 79,null,83,86, null,83,79,null],
+      [83,null,81,77, null,74,77,null, 83,null,86,88, null,86,83,null],
+      [77,null,79,83, null,81,79,null, 77,null,74,71, null,74,77,null],
     ],
   },
   /** Training vs RabbitRobot — strak, metallig, minder zwaar dan baas */
@@ -12853,6 +13024,46 @@ const SONGS = {
 const MENU_BGM_TRACKS = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero', 'menuDream'];
 let menuBgmIdx = 0;
 
+/** Fight BGM pools — rotate variants so battle/elite/boss/tide stay fresh. */
+const BATTLE_BGM_TRACKS = ['battle', 'battle2', 'battle3', 'battlePulse', 'battleDrive', 'battleRush'];
+const ELITE_BGM_TRACKS = ['elite', 'elite2', 'elitePulse'];
+const BOSS_BGM_TRACKS = ['boss', 'boss2', 'bossFury'];
+const TIDE_BGM_TRACKS = ['tideBattle', 'tideBattle2', 'tideBattleSurge'];
+const FIGHT_BGM_IDS = new Set([
+  ...BATTLE_BGM_TRACKS, ...ELITE_BGM_TRACKS, ...BOSS_BGM_TRACKS, ...TIDE_BGM_TRACKS,
+]);
+const fightBgmIdx = { battle: 0, elite: 0, boss: 0, tideBattle: 0 };
+
+function isFightBgmId(id) {
+  return !!(id && FIGHT_BGM_IDS.has(id));
+}
+
+function isTideBgmId(id) {
+  return !!(id && TIDE_BGM_TRACKS.includes(id));
+}
+
+/** Pick next track in a fight pool (kind: battle|elite|boss|tideBattle).
+ *  Keeps current track if already in the same pool (avoids double-rotate on start). */
+function playFightBgm(kind) {
+  const pools = {
+    battle: BATTLE_BGM_TRACKS,
+    elite: ELITE_BGM_TRACKS,
+    boss: BOSS_BGM_TRACKS,
+    tideBattle: TIDE_BGM_TRACKS,
+  };
+  const key = pools[kind] ? kind : 'battle';
+  const pool = pools[key];
+  const cur = (typeof AudioSys !== 'undefined' && ((AudioSys.song && AudioSys.song.id) || AudioSys.desiredSong)) || '';
+  if (cur && pool.includes(cur)) {
+    AudioSys.play(cur);
+    return cur;
+  }
+  fightBgmIdx[key] = ((fightBgmIdx[key] || 0) + 1) % pool.length;
+  const id = pool[fightBgmIdx[key]];
+  AudioSys.play(id);
+  return id;
+}
+
 /** Rotate menu BGM when returning from a game; keep current track on boot/toggle. */
 function playMenuBgm(fromGame) {
   if (fromGame) menuBgmIdx = (menuBgmIdx + 1) % MENU_BGM_TRACKS.length;
@@ -12861,7 +13072,11 @@ function playMenuBgm(fromGame) {
 
 const SONG_LABELS = {
   menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
-  battle: 'Gevecht', elite: 'Elite', boss: 'Baas', wall: 'Muur', training: 'Training', coinrun: 'Mats',
+  battle: 'Gevecht', battle2: 'Gevecht 2', battle3: 'Gevecht 3', battlePulse: 'Pulse', battleDrive: 'Drive', battleRush: 'Rush',
+  elite: 'Elite', elite2: 'Elite 2', elitePulse: 'Elite Pulse',
+  boss: 'Baas', boss2: 'Baas 2', bossFury: 'Baas Fury',
+  tideBattle: 'Tide', tideBattle2: 'Tide 2', tideBattleSurge: 'Tide Surge',
+  wall: 'Muur', training: 'Training', coinrun: 'Mats',
 };
 function songLabel(id) {
   if (!id) return '';
@@ -21295,7 +21510,10 @@ class Game {
     }
     this.allyAssistT = this.stageAlly ? 2.2 : 0;
     // Master Sword roll UIT — geen zeldzame interrupt midden in level
-    AudioSys.play(this.level.boss ? 'boss' : 'battle');
+    try {
+      if (typeof playFightBgm === 'function') playFightBgm(this.level.boss ? 'boss' : 'battle');
+      else AudioSys.play(this.level.boss ? 'boss' : 'battle');
+    } catch (_) {}
   }
 
   maybeRollMasterSword() {
@@ -21369,7 +21587,8 @@ class Game {
     if (bossWave) {
       try {
         this.banner(t('banner.bossWave'), 1.8, '#ff6b6b', 50);
-        AudioSys.play('boss');
+        if (typeof playFightBgm === 'function') playFightBgm('boss');
+        else AudioSys.play('boss');
         AudioSys.sfx('roar');
       } catch (_) {}
       try {
@@ -21381,7 +21600,8 @@ class Game {
       const hasSuper = wave.some(s => s.superBoss);
       try {
         this.banner(hasSuper ? t('banner.superBossWave') : t('banner.eliteWave'), 1.35, hasSuper ? '#ffd75e' : '#ffb0b8', 40);
-        AudioSys.play(hasSuper ? 'boss' : 'elite');
+        if (typeof playFightBgm === 'function') playFightBgm(hasSuper ? 'boss' : 'elite');
+        else AudioSys.play(hasSuper ? 'boss' : 'elite');
         AudioSys.sfx('roar');
       } catch (_) {}
     } else {
@@ -30022,10 +30242,14 @@ function startGame(mode, opts) {
   } catch (_) {}
   try {
     if (mode === 'training') AudioSys.play('training');
-    else if (mode === 'adventure') AudioSys.play(game.level && game.level.boss ? 'boss' : 'battle');
+    else if (mode === 'adventure') {
+      if (typeof playFightBgm === 'function') playFightBgm(game.level && game.level.boss ? 'boss' : 'battle');
+      else AudioSys.play(game.level && game.level.boss ? 'boss' : 'battle');
+    }
     else if (mode === 'versus') AudioSys.play('versus');
     else if (mode === 'coinrun') AudioSys.play('mats');
     else if (mode === 'wall') AudioSys.play('wall');
+    else if (typeof playFightBgm === 'function') playFightBgm('battle');
     else AudioSys.play('battle');
   } catch (_) {}
   } finally {
