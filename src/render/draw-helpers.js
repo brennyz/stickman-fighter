@@ -12,9 +12,13 @@ function drawWeaponShape(c, id, spin, moveIdx) {
   }
   switch (id) {
     case 'zwaard':
-      c.strokeStyle = '#c9d6e8'; c.lineWidth = 5; c.beginPath(); c.moveTo(4, 0); c.lineTo(46, 0); c.stroke();
-      c.strokeStyle = '#fff'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(8, -1); c.lineTo(42, -1); c.stroke();
-      c.strokeStyle = '#a67c2e'; c.lineWidth = 5; c.beginPath(); c.moveTo(4, -7); c.lineTo(4, 7); c.stroke();
+      // Brede kling + gevest — niet een dunne speerschacht
+      c.strokeStyle = '#9aa8bc'; c.lineWidth = 7; c.beginPath(); c.moveTo(8, 0); c.lineTo(48, 0); c.stroke();
+      c.strokeStyle = '#e8f0ff'; c.lineWidth = 2.2; c.beginPath(); c.moveTo(12, -1.2); c.lineTo(44, -1.2); c.stroke();
+      c.fillStyle = '#c9d6e8';
+      c.beginPath(); c.moveTo(46, -5); c.lineTo(56, 0); c.lineTo(46, 5); c.closePath(); c.fill();
+      c.strokeStyle = '#a67c2e'; c.lineWidth = 5; c.beginPath(); c.moveTo(4, -8); c.lineTo(4, 8); c.stroke();
+      c.strokeStyle = '#6a5030'; c.lineWidth = 4; c.beginPath(); c.moveTo(-2, 0); c.lineTo(8, 0); c.stroke();
       break;
     case 'master_sword':
       c.save();
@@ -34,11 +38,11 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.beginPath(); c.moveTo(11, -12); c.lineTo(11, 12); c.stroke();
       break;
     case 'kunai':
-      c.strokeStyle = '#7a8494'; c.lineWidth = 3; c.beginPath(); c.moveTo(0, 0); c.lineTo(34, 0); c.stroke();
+      c.strokeStyle = '#5a6474'; c.lineWidth = 3.4; c.beginPath(); c.moveTo(0, 0); c.lineTo(26, 0); c.stroke();
       c.fillStyle = '#c9d6e8';
-      c.beginPath(); c.moveTo(34, -7); c.lineTo(52, 0); c.lineTo(34, 7); c.closePath(); c.fill();
-      c.strokeStyle = '#a67c2e'; c.lineWidth = 2; c.beginPath(); c.moveTo(8, -5); c.lineTo(8, 5); c.stroke();
-      c.beginPath(); c.arc(2, 0, 3, 0, TAU); c.stroke();
+      c.beginPath(); c.moveTo(24, -8); c.lineTo(44, 0); c.lineTo(24, 8); c.closePath(); c.fill();
+      c.strokeStyle = '#a67c2e'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(8, -6); c.lineTo(8, 6); c.stroke();
+      c.beginPath(); c.arc(2, 0, 3.4, 0, TAU); c.stroke();
       break;
     case 'shuriken': {
       const rot = spin * 18;
@@ -53,8 +57,9 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       break;
     }
     case 'knuppel':
-      c.strokeStyle = '#8a5a30'; c.lineWidth = 6; c.beginPath(); c.moveTo(2, 0); c.lineTo(22, 0); c.stroke();
-      c.lineWidth = 11; c.beginPath(); c.moveTo(22, 0); c.lineTo(40, 0); c.stroke();
+      c.strokeStyle = '#6a4020'; c.lineWidth = 5; c.beginPath(); c.moveTo(2, 0); c.lineTo(18, 0); c.stroke();
+      c.strokeStyle = '#8a5a30'; c.lineWidth = 14; c.beginPath(); c.moveTo(18, 0); c.lineTo(40, 0); c.stroke();
+      c.strokeStyle = '#a07040'; c.lineWidth = 9; c.beginPath(); c.moveTo(22, 0); c.lineTo(36, 0); c.stroke();
       break;
     case 'speer':
       c.strokeStyle = '#a3763f'; c.lineWidth = 4; c.beginPath(); c.moveTo(-14, 0); c.lineTo(58, 0); c.stroke();
