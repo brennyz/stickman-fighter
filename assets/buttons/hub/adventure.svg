@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
      stroke="#7cf5aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
      aria-hidden="true">
-  <!-- pad / eiland-avontuur — volledig opaque -->
+  <!-- path / island adventure — fully opaque -->
   <path d="M4 20c2.5-3 5-4.5 8-4.5S17.5 17 20 20"/>
   <path d="M12 3v9"/>
   <path d="M12 12l-5 7"/>

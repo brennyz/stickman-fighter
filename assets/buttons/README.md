@@ -25,3 +25,5 @@
 | **chrome** | Live (dock + home bars + settings + pause + gamble + claim) |
 
 Harden: SW precache alle `assets/buttons/**/*.svg`, CSS sizes/HC, `hardenButtonIcons()` error-class.
+
+Volgende UI-set (saga/ach/lock/eiland): zie [`../ui/README.md`](../ui/README.md).

@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | — | **ASSET-STYLE ui-batch:** saga/ach/lock/check/eiland → `assets/ui/*.svg`; wire-in HTML+JS; hub/modes/chrome compliance (UTF-8 adventure, stroke 1.8–2.2); SW precache. v1.18.89 / SW v299. |
 | 2026-07-26 | **14** | Visuele FX: training combo HUD dubbel-blok verwijderd; Rasengan dual/triple extra ring+spark (Lite FX capped); ring fill in Lite. v1.18.88 / SW v298. |
 | 2026-07-26 | — | **Rasengan:** altijd horizontaal; Lv4+ dual krul ↑↓; Lv8 triple ultimate (→↑↓). Max Lv8. v1.18.84 / SW v294. |
 | 2026-07-26 | **17** | Stabiliteit: save envelope unwrap (import + readSaveJson), gamble `__sfStartGameBusy` reload guard, spawn queue invalid-species guard. v1.18.83 / SW v293. |
