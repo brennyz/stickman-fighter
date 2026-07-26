@@ -112,7 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-| 2026-07-26 | **17** | Stabiliteit: slice-guards update (pet/adventure/monsters), check:critical symbol guard, save-fuzz, soak Lv11. v1.18.80 / SW v290. |
+| 2026-07-26 | **17** | Golf 1/2 vast: geen checkpoint op korte levels (<4 golven); lijken weg; partGate touch/vx fix. v1.18.81 / SW v291. |
 | 2026-07-26 | **17** | Wave-clear hiccup: ontbrekende `partBoundaryWaveIdx` + `playerWalkInput` na module-split (checkpoint golf 1/2 + pet Slymo). v1.18.79 / SW v289. |
 | 2026-07-26 | **17** | Fight hiccup-freeze: loop tekent/input na update-crash door; grantXP level-up + pickup guarded; recoverFightHiccup. v1.18.78 / SW v288. |
 | 2026-07-26 | **13** | Missies c5: in-play mission floater (geen toast-stack), XP-voortgangsbalk vandaag, achievement spotlight Speel-knop. v1.18.77 / SW v287. |

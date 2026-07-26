@@ -93,7 +93,7 @@ async function run() {
     const partGateStarted = !!g.partGate || (g.wavePause > 0 && g.stagePart === 1 && g.waveIdx === 0);
     return {
       ok: tamed && hasPet && !g.inputLocked && !g.over && state === 'play' && frames === 120
-        && updateThrows === 0 && (g.waveIdx >= 1 || partGateStarted),
+        && updateThrows === 0 && (g.waveIdx >= 1 || (g.wavePause > 0 && !g.partGate)),
       tamed,
       hasPet,
       activePet: save.activePet,

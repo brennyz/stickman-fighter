@@ -54,6 +54,8 @@ const PART_GATE_PLAYER_X = 0.28;
 
 function partBoundaryWaveIdx(totalWaves, currentPart) {
   if (totalWaves < 1) return -1;
+  // Korte levels (≤3 golven): geen checkpoint-tunnel tussen golf 1/2 en 2/2 — direct door.
+  if (totalWaves < 4) return -1;
   const b1 = Math.max(0, Math.ceil(totalWaves / 3) - 1);
   if (currentPart === 1) return b1;
   if (currentPart === 2) {
@@ -61,6 +63,16 @@ function partBoundaryWaveIdx(totalWaves, currentPart) {
     return Math.max(b1 + 1, b2);
   }
   return -1;
+}
+
+/** Checkpoint: joystick, toetsen én daadwerkelijke loop-rechts (vx) tellen mee. */
+function partGateMoveSignal(g) {
+  let mv = playerWalkInput();
+  if (mv > 0.05) return mv;
+  const p = g && g.player;
+  if (p && (p.vx || 0) > 32) return Math.min(1, (p.vx || 0) / Math.max(80, p.speed || 260));
+  if (typeof Input !== 'undefined' && Input.keys && (Input.keys.d || Input.keys.arrowright)) return 1;
+  return mv;
 }
 
 function playerWalkInput() {
@@ -408,13 +420,19 @@ class Game {
     }
   }
 
+  /** Dode vijanden direct van het veld — geen vastgelopen dood-animatie tussen golven. */
+  purgeDeadMonsters() {
+    if (!this.monsters || !this.monsters.length) return;
+    this.monsters = this.monsters.filter((m) => m && m.alive);
+  }
+
   updatePartGate(dt) {
     if (!this.partGate || !this.player?.alive) {
       this.partGate = null;
       return;
     }
     const pg = this.partGate;
-    const move = playerWalkInput();
+    const move = partGateMoveSignal(this);
     pg.t = (pg.t || 0) + dt;
     pg.walking = move > 0.05;
     if (pg.walking) {
@@ -619,6 +637,7 @@ class Game {
       }
     } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive) && this.player?.alive) {
       if (!this.wavePause && !this.partGate) {
+        this.purgeDeadMonsters();
         const nextIsBoss = isBossWave(this.level, this.waveIdx + 1);
         const total = this.level.waves.length;
         const isLastWave = this.waveIdx >= total - 1;
