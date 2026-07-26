@@ -7,6 +7,7 @@
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { ensureSmokeServer, smokeBaseUrl } from './smoke-static-server.mjs';
 
 const outDir = '/tmp/sf-adv-run';
 fs.mkdirSync(outDir, { recursive: true });
@@ -24,6 +25,9 @@ async function getPuppeteer() {
 }
 
 async function run() {
+  let server = null;
+  try { server = await ensureSmokeServer(8787); } catch (_) {}
+
   const puppeteer = await getPuppeteer();
   const browser = await puppeteer.default.launch({
     executablePath: chrome, headless: 'new', args: ['--no-sandbox', '--window-size=390,844'],
@@ -37,7 +41,7 @@ async function run() {
     }
   });
 
-  const base = process.argv[2] || 'http://127.0.0.1:8787/index.html';
+  const base = process.argv[2] || smokeBaseUrl(8787);
   const levelN = Number(process.argv[3]) || 1;
   await page.goto(base, { waitUntil: 'load', timeout: 30000 });
   await page.waitForFunction(() => window.__sfBooted, { timeout: 20000 });
@@ -171,6 +175,7 @@ async function run() {
   if (result.pageErrors.length) result.ok = false;
 
   await browser.close();
+  if (server) server.close();
   console.log(JSON.stringify(result, null, 2));
 
   if (!result.ok) {

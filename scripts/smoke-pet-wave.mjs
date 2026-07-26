@@ -3,6 +3,7 @@
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { ensureSmokeServer, smokeBaseUrl } from './smoke-static-server.mjs';
 
 const outDir = '/tmp/sf-petwave';
 fs.mkdirSync(outDir, { recursive: true });
@@ -20,6 +21,9 @@ async function getPuppeteer() {
 }
 
 async function run() {
+  let server = null;
+  try { server = await ensureSmokeServer(8787); } catch (_) {}
+
   const puppeteer = await getPuppeteer();
   const browser = await puppeteer.default.launch({
     executablePath: chrome, headless: 'new', args: ['--no-sandbox', '--window-size=390,844'],
@@ -28,7 +32,8 @@ async function run() {
   page.on('console', (msg) => {
     if (msg.type() === 'error') console.error('PAGE_ERR', msg.text());
   });
-  await page.goto('http://127.0.0.1:8787/index.html', { waitUntil: 'load' });
+  const base = process.argv[2] || smokeBaseUrl(8787);
+  await page.goto(base, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__sfBooted, { timeout: 20000 });
 
   const result = await page.evaluate(() => {
@@ -112,6 +117,7 @@ async function run() {
   });
 
   await browser.close();
+  if (server) server.close();
   console.log(JSON.stringify(result, null, 2));
   if (!result.ok) process.exit(1);
   console.log('SMOKE_OK pet-wave');

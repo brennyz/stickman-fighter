@@ -3,9 +3,9 @@
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { ensureSmokeServer, smokeBaseUrl } from './smoke-static-server.mjs';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const outDir = '/tmp/sf-gamble-smoke';
 fs.mkdirSync(outDir, { recursive: true });
 
@@ -29,6 +29,9 @@ async function getPuppeteer() {
 }
 
 async function run() {
+  let server = null;
+  try { server = await ensureSmokeServer(8787); } catch (_) {}
+
   const puppeteer = await getPuppeteer();
   const browser = await puppeteer.default.launch({
     executablePath: chrome,
@@ -36,7 +39,8 @@ async function run() {
     args: ['--no-sandbox', '--disable-gpu', '--window-size=390,844'],
   });
   const page = await browser.newPage();
-  await page.goto('http://127.0.0.1:8787/index.html', { waitUntil: 'load', timeout: 30000 });
+  const base = process.argv[2] || smokeBaseUrl(8787);
+  await page.goto(base, { waitUntil: 'load', timeout: 30000 });
   await page.waitForFunction(() => window.__sfBooted && typeof gokGooiStartLevel === 'function', { timeout: 20000 });
 
   const dump = async (label) => page.evaluate((label) => {
@@ -98,6 +102,7 @@ async function run() {
 
   console.log('SMOKE_OK gamble-start', JSON.stringify({ levelTap, menuContinue }));
   await browser.close();
+  if (server) server.close();
 }
 
 run().catch((err) => {
