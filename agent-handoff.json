@@ -13,16 +13,16 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.93",
-    "swCache": "stickfighter-app-v303",
-    "gameJsQuery": "game.js?v=303",
-    "cssQuery": "styles/main.css?v=303",
-    "featureBranch": "cursor/wiggum-d20-categorie-n-120c",
+    "appVersion": "1.18.94",
+    "swCache": "stickfighter-app-v304",
+    "gameJsQuery": "game.js?v=304",
+    "cssQuery": "styles/main.css?v=304",
+    "featureBranch": "cursor/wiggum-d20-categorie-n-bb7b",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "localMainHead": "55887af",
-    "remoteMainHead": "55887af",
-    "note": "d1 counter-hit + dup hub fix · MERGE main"
+    "localMainHead": "a23eb3e",
+    "remoteMainHead": "a23eb3e",
+    "note": "d5 perf projectile budget + hidden tab + scenery cache · MERGE main"
   },
   "userWishlist": [
     {
@@ -127,6 +127,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T12:05:30Z",
+      "summary": "d5 perf: projectile budget + hidden tab throttle + scenery cache cap · v1.18.94"
+    },
+    {
       "at": "2026-07-26T11:07:21Z",
       "summary": "d1 combat counter-hit + dup Avontuur hub-fix · v1.18.93"
     },
@@ -220,10 +224,6 @@
     },
     {
       "at": "2026-07-25T22:05:34Z",
-      "summary": "d17 stabiliteit: char swap t() crash, adventure result na pauze→menu · v1.18.67"
-    },
-    {
-      "at": "2026-07-25T22:05:00Z",
       "summary": "d17 stabiliteit: char swap t() crash, adventure result na pauze→menu · v1.18.67"
     }
   ],
