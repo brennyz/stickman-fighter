@@ -1514,7 +1514,7 @@ function repairBrokenButtonIcon(img) {
 function hardenButtonIcons(root) {
   try {
     const scope = root && root.querySelectorAll ? root : document;
-    scope.querySelectorAll('img[src*="assets/buttons/"]').forEach((img) => {
+    scope.querySelectorAll('img[src*="assets/buttons/"], img[src*="assets/ui/"]').forEach((img) => {
       if (img.dataset.sfIconHard) return;
       img.dataset.sfIconHard = '1';
       img.decoding = img.decoding || 'async';
