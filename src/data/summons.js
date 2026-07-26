@@ -363,13 +363,19 @@ function weaponMoveFamily(id) {
   return 'slash';
 }
 
-/** Idle grip: speer horizontaal, rest diagonaal/omhoog — voorkomt “alles is speer”. */
+/** Idle grip: speer horizontaal, zeis/kama meer rechtop — voorkomt “alles is speer”. */
 function weaponIdleAngle(id) {
+  if (id === 'zeis') return -1.2;
+  if (id === 'kama') return -1.05;
+  if (id === 'hamer' || id === 'donder') return -1.12;
+  if (id === 'tonfa') return -0.95;
+  if (id === 'void') return -0.55;
+  if (id === 'waaier') return -0.32;
   const fam = weaponMoveFamily(id);
   if (!fam) return -0.45;
   if (fam === 'spear') return -0.1;
   if (fam === 'blunt') return -1.05;
-  if (fam === 'hook') return -0.9;
+  if (fam === 'hook') return -0.95;
   if (fam === 'chain') return -0.78;
   if (fam === 'fan') return -0.32;
   if (fam === 'dual') return -0.58;
@@ -382,6 +388,11 @@ function weaponGripBias(id, move) {
   const pose = (move && move.pose) || '';
   const fam = weaponMoveFamily(id);
   if (fam === 'spear' || pose === 'thrust') return 0;
+  if (id === 'zeis' || id === 'kama') {
+    if (pose === 'overhead' || pose === 'upper') return -0.55;
+    if (pose === 'sweep' || pose === 'hook') return -0.48;
+    return -0.5;
+  }
   if (pose === 'overhead' || pose === 'upper') return -0.42;
   if (pose === 'slash' || pose === 'spin') return -0.55;
   if (pose === 'sweep' || pose === 'hook') return -0.35;
