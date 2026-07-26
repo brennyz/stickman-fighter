@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | **3** | Versus 2P c5: pause Wissel kant (swapVsSides), TOT rating chip in HUD + pauze, swap.svg chrome. v1.18.98 / SW v308. |
 | 2026-07-26 | **17** | Stabiliteit tooling: smoke Puppeteer-tests (gamble/levelup/petwave/wave12/adventure) starten nu eigen static server via `smoke-static-server.mjs` — `npm test` faalde in cloud VM met ERR_CONNECTION_REFUSED. v1.18.97. |
 | 2026-07-26 | **20** | Code health c5: skillLabel duplicate merge (object+flat i18n), dead code prune (syncPlayLayerWithoutGuard, syncCharFightBtn, eggDailyLine, rollD20Polish, playerWalkRightInput, utilitySkillActive, ensureActiveJutsuValid). v1.18.96 / SW v306. |
 | 2026-07-26 | **7** | Save c5: skill/item upgrade Lv in export meta, import preview, drift detail; progress score tie-break; readSaveJson merge. v1.18.95 / SW v305. |
