@@ -12,21 +12,8 @@
     "remainingCount": 1,
     "cycle": 5
   },
-  "pending": {
-    "face": 18,
-    "category": "Character select \u2014 roster UI, stats, random duo",
-    "rolledAt": "2026-07-26T22:05:08Z",
-    "remainingCount": 1,
-    "cycle": 5
-  },
+  "pending": null,
   "implemented": [
-    {
-      "face": 20,
-      "note": "dead onboarding wrappers + dup keydown dash",
-      "version": "1.12.16",
-      "doneAt": "2026-07-23T18:32:04Z",
-      "cycle": 1
-    },
     {
       "face": 14,
       "note": "Rasengan halo/impact ring + burst cap Lite FX",
@@ -578,6 +565,13 @@
       "note": "spawn funnel + star beat + stage clear runway + levelClear reset",
       "version": "1.18.124",
       "doneAt": "2026-07-26T21:04:33Z",
+      "cycle": 5
+    },
+    {
+      "face": 18,
+      "note": "fight dock + replay duo + boot toast",
+      "version": "1.18.125",
+      "doneAt": "2026-07-26T22:07:07Z",
       "cycle": 5
     }
   ],

@@ -308,6 +308,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T22:07:07Z",
+      "summary": "d18: fight dock + replay duo + boot toast fix · v1.18.125"
+    },
+    {
       "at": "2026-07-26T21:04:36Z",
       "summary": "d4 c5: spawn funnel + star beat + stage clear runway · v1.18.124"
     },
@@ -402,10 +406,6 @@
     {
       "at": "2026-07-26T19:11:28Z",
       "summary": "Menu SVG nav LIVE: back/pause/saga icons + preview · v1.18.110"
-    },
-    {
-      "at": "2026-07-26T19:06:15Z",
-      "summary": "Gekke dingen: d6 pause-duck gemerged, pause allowlist, versie 109"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
