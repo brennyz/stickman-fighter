@@ -106,6 +106,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T07:40:53Z",
+      "summary": "Rasengan spawnJutsu jb/jutsu fix + orb purge bij wave-clear · v1.18.82"
+    },
+    {
       "at": "2026-07-26T07:37:41Z",
       "summary": "Golf 1/2 vast: geen checkpoint korte levels + lijken weg · v1.18.81"
     },
@@ -200,10 +204,6 @@
     {
       "at": "2026-07-25T18:00:00Z",
       "summary": "d17 stabiliteit: goMenu tide cleanup, tide reward rollback, daily sanitize · v1.18.46"
-    },
-    {
-      "at": "2026-07-25T17:05:53Z",
-      "summary": "d5 c4: pause draw skip, claim rollback, tide/fighter guards · v1.18.45"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
