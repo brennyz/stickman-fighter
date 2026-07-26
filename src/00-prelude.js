@@ -68,6 +68,13 @@ const Perf = {
     if (typeof state === 'undefined' || state === 'play') return false;
     return !this.menuLandingVisible();
   },
+  /** Tab verborgen buiten play — langzamer rAF (~2 Hz) i.p.v. lege 60 Hz. */
+  hiddenLoopMs() {
+    if (typeof state !== 'undefined' && state === 'play') return 0;
+    if (save.liteFx || this.tier >= 2) return 520;
+    if (this.tier >= 1) return 420;
+    return 360;
+  },
 };
 function perfHordeLoad() {
   if (typeof game === 'undefined' || !game || game.mode !== 'adventure' || !game.monsters) {
@@ -101,10 +108,12 @@ function perfFxRoom(g, type) {
   const cap = fxCaps();
   const max = type === 'particle' ? cap.particles
     : type === 'floater' ? cap.floaters
-      : type === 'banner' ? cap.banners : 0;
+      : type === 'banner' ? cap.banners
+        : type === 'projectile' ? cap.projectiles : 0;
   const arr = type === 'particle' ? g.particles
     : type === 'floater' ? g.floaters
-      : type === 'banner' ? g.banners : null;
+      : type === 'banner' ? g.banners
+        : type === 'projectile' ? g.projectiles : null;
   if (!arr || !max) return 0;
   return Math.max(0, max - arr.length);
 }

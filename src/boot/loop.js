@@ -3,8 +3,26 @@ let lastTime = performance.now();
 let menuAnimT = 0;
 let menuHeroFrame = 0;
 let loopIdleFrames = 0;
+let loopHiddenTimer = null;
 let menuBgCache = null;
 let menuBgCacheKey = '';
+
+function scheduleNextLoop() {
+  if (loopHiddenTimer) {
+    clearTimeout(loopHiddenTimer);
+    loopHiddenTimer = null;
+  }
+  const hiddenMs = (typeof document !== 'undefined' && document.hidden
+    && typeof Perf !== 'undefined') ? Perf.hiddenLoopMs() : 0;
+  if (hiddenMs > 0) {
+    loopHiddenTimer = setTimeout(() => {
+      loopHiddenTimer = null;
+      requestAnimationFrame(loop);
+    }, hiddenMs);
+    return;
+  }
+  requestAnimationFrame(loop);
+}
 
 function menuHeroPaintSkip() {
   if (save.liteFx) return 2;
@@ -234,7 +252,7 @@ function paintMenuHeroCanvas(t) {
 }
 
 function loop(now) {
-  requestAnimationFrame(loop);
+  scheduleNextLoop();
   try {
     if (!ctx || !canvas) return;
     const hidden = typeof document !== 'undefined' && document.hidden;

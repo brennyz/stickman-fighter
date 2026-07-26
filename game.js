@@ -70,6 +70,13 @@ const Perf = {
     if (typeof state === 'undefined' || state === 'play') return false;
     return !this.menuLandingVisible();
   },
+  /** Tab verborgen buiten play — langzamer rAF (~2 Hz) i.p.v. lege 60 Hz. */
+  hiddenLoopMs() {
+    if (typeof state !== 'undefined' && state === 'play') return 0;
+    if (save.liteFx || this.tier >= 2) return 520;
+    if (this.tier >= 1) return 420;
+    return 360;
+  },
 };
 function perfHordeLoad() {
   if (typeof game === 'undefined' || !game || game.mode !== 'adventure' || !game.monsters) {
@@ -103,10 +110,12 @@ function perfFxRoom(g, type) {
   const cap = fxCaps();
   const max = type === 'particle' ? cap.particles
     : type === 'floater' ? cap.floaters
-      : type === 'banner' ? cap.banners : 0;
+      : type === 'banner' ? cap.banners
+        : type === 'projectile' ? cap.projectiles : 0;
   const arr = type === 'particle' ? g.particles
     : type === 'floater' ? g.floaters
-      : type === 'banner' ? g.banners : null;
+      : type === 'banner' ? g.banners
+        : type === 'projectile' ? g.projectiles : null;
   if (!arr || !max) return 0;
   return Math.max(0, max - arr.length);
 }
@@ -243,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.93';
+const APP_VERSION = '1.18.94';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 303;
+const SW_CACHE_REV = 304;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -16583,14 +16592,32 @@ function sceneryRng(seed) {
 
 const SCENERY_SCALE = 3;
 
+const SCENERY_CACHE_MAX = { lite: 12, tier2: 8, tier1: 16, full: 24 };
+
 const SceneryArt = {
   cache: {},
 
   clearCache() { this.cache = {}; },
 
+  cacheMax() {
+    if (typeof save !== 'undefined' && save.liteFx) return SCENERY_CACHE_MAX.lite;
+    if (typeof Perf !== 'undefined' && Perf.tier >= 2) return SCENERY_CACHE_MAX.tier2;
+    if (typeof Perf !== 'undefined' && Perf.tier >= 1) return SCENERY_CACHE_MAX.tier1;
+    return SCENERY_CACHE_MAX.full;
+  },
+
+  evictIfNeeded() {
+    const keys = Object.keys(this.cache);
+    const max = this.cacheMax();
+    if (keys.length < max) return;
+    const drop = keys.length - max + 4;
+    for (let i = 0; i < drop; i++) delete this.cache[keys[i]];
+  },
+
   get(themeName, kind) {
     const key = themeName + ':' + kind;
     if (key in this.cache) return this.cache[key];
+    this.evictIfNeeded();
     let cv = null;
     try { cv = this.render(themeName, kind); } catch (_) { cv = null; }
     this.cache[key] = cv;
@@ -21552,6 +21579,8 @@ class Game {
   }
 
   spawnProjectile(p) {
+    if (!perfFxBudgetAllow(this, 1)) return;
+    if (perfFxRoom(this, 'projectile') <= 0) return;
     this.projectiles.push(Object.assign({ life: 3, grav: 0, spin: 0 }, p));
   }
 
@@ -28836,8 +28865,26 @@ let lastTime = performance.now();
 let menuAnimT = 0;
 let menuHeroFrame = 0;
 let loopIdleFrames = 0;
+let loopHiddenTimer = null;
 let menuBgCache = null;
 let menuBgCacheKey = '';
+
+function scheduleNextLoop() {
+  if (loopHiddenTimer) {
+    clearTimeout(loopHiddenTimer);
+    loopHiddenTimer = null;
+  }
+  const hiddenMs = (typeof document !== 'undefined' && document.hidden
+    && typeof Perf !== 'undefined') ? Perf.hiddenLoopMs() : 0;
+  if (hiddenMs > 0) {
+    loopHiddenTimer = setTimeout(() => {
+      loopHiddenTimer = null;
+      requestAnimationFrame(loop);
+    }, hiddenMs);
+    return;
+  }
+  requestAnimationFrame(loop);
+}
 
 function menuHeroPaintSkip() {
   if (save.liteFx) return 2;
@@ -29067,7 +29114,7 @@ function paintMenuHeroCanvas(t) {
 }
 
 function loop(now) {
-  requestAnimationFrame(loop);
+  scheduleNextLoop();
   try {
     if (!ctx || !canvas) return;
     const hidden = typeof document !== 'undefined' && document.hidden;

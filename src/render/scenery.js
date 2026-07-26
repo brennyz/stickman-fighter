@@ -13,14 +13,32 @@ function sceneryRng(seed) {
 
 const SCENERY_SCALE = 3;
 
+const SCENERY_CACHE_MAX = { lite: 12, tier2: 8, tier1: 16, full: 24 };
+
 const SceneryArt = {
   cache: {},
 
   clearCache() { this.cache = {}; },
 
+  cacheMax() {
+    if (typeof save !== 'undefined' && save.liteFx) return SCENERY_CACHE_MAX.lite;
+    if (typeof Perf !== 'undefined' && Perf.tier >= 2) return SCENERY_CACHE_MAX.tier2;
+    if (typeof Perf !== 'undefined' && Perf.tier >= 1) return SCENERY_CACHE_MAX.tier1;
+    return SCENERY_CACHE_MAX.full;
+  },
+
+  evictIfNeeded() {
+    const keys = Object.keys(this.cache);
+    const max = this.cacheMax();
+    if (keys.length < max) return;
+    const drop = keys.length - max + 4;
+    for (let i = 0; i < drop; i++) delete this.cache[keys[i]];
+  },
+
   get(themeName, kind) {
     const key = themeName + ':' + kind;
     if (key in this.cache) return this.cache[key];
+    this.evictIfNeeded();
     let cv = null;
     try { cv = this.render(themeName, kind); } catch (_) { cv = null; }
     this.cache[key] = cv;

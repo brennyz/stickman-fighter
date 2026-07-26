@@ -2179,6 +2179,8 @@ class Game {
   }
 
   spawnProjectile(p) {
+    if (!perfFxBudgetAllow(this, 1)) return;
+    if (perfFxRoom(this, 'projectile') <= 0) return;
     this.projectiles.push(Object.assign({ life: 3, grav: 0, spin: 0 }, p));
   }
 
