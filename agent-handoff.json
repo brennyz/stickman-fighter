@@ -13,16 +13,16 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.100",
-    "swCache": "stickfighter-app-v310",
-    "gameJsQuery": "game.js?v=310",
-    "cssQuery": "styles/main.css?v=310",
-    "featureBranch": "cursor/wiggum-d20-categorie-n-3653",
+    "appVersion": "1.18.101",
+    "swCache": "stickfighter-app-v311",
+    "gameJsQuery": "game.js?v=311",
+    "cssQuery": "styles/main.css?v=311",
+    "featureBranch": "cursor/satan-stall-boss-7b0e",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": "ae5890e",
     "remoteMainHead": "ae5890e",
-    "note": "d12 content rarity n/tot + icon fallback · MERGE main"
+    "note": "Satan stall-baas reflect + Tide beloning · PR #206"
   },
   "userWishlist": [
     {
