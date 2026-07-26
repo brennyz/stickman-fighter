@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=300">
+<link rel="stylesheet" href="styles/main.css?v=301">
 
 
 
@@ -94,7 +94,7 @@
       <div class="arcade-pre" id="menuArcadePre">KIES JE PAD</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine">insert coin</p>
-      <div class="subtitle" id="menuVerLine">v1.18.90 · arcade</div>
+      <div class="subtitle" id="menuVerLine">v1.18.91 · arcade</div>
     </header>
     <div class="arcade-menu-body menu-landing-body">
       <div class="menu-landing-scroll">
@@ -105,7 +105,7 @@
           </button>
           <!-- C · game-menu glass tiles -->
           <div class="hub-tile-grid menu-game-grid" role="navigation" aria-label="Hoofdcategorieën">
-            <button type="button" class="hub-tile hub-tile-adventure" data-hub="adventure">
+            <button type="button" class="hub-tile hub-tile-adventure" id="btnAdventure" data-hub="adventure">
               <span class="hub-tile-ico"><img src="assets/buttons/hub/adventure.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
               <span class="hub-tile-title">Avontuur</span>
               <span class="hub-tile-sub">Verhaal · eilanden · bazen</span>
@@ -591,12 +591,12 @@
 
 <script>
 /* HTML↔JS handshake: als oude SW nog oude game.js serveert terwijl menu-HTML nieuw is. */
-window.__SF_EXPECT_REV = 300;
-window.__SF_EXPECT_APP = '1.18.90';
+window.__SF_EXPECT_REV = 301;
+window.__SF_EXPECT_APP = '1.18.91';
 </script>
-<script src="tunnel-check.js?v=300"></script>
-<script src="game.js?v=300"></script>
-<script src="install.js?v=300"></script>
+<script src="tunnel-check.js?v=301"></script>
+<script src="game.js?v=301"></script>
+<script src="install.js?v=301"></script>
 <script>
 (function () {
   function nukeStale(reason) {

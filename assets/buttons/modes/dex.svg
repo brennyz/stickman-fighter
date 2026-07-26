@@ -1,7 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-     stroke="#e8f0ff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"
+     stroke="#e8f0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
      aria-hidden="true">
-  <path d="M6 4h12v16H6z"/>
-  <path d="M8.2 8.2h7.6M8.2 12h7.6M8.2 15.8h5"/>
-  <path d="M16.5 3.2l3 2.8-3 2.8z" fill="#ffd75e" stroke="#c97a20" stroke-width="1.4"/>
+  <!-- Monsterboek: open bestiary -->
+  <path d="M4.5 5.5c2.2-.8 4.4-.8 6.5.2v13c-2.1-1-4.3-1-6.5-.2z" fill="rgba(232,240,255,.1)"/>
+  <path d="M19.5 5.5c-2.2-.8-4.4-.8-6.5.2v13c2.1-1 4.3-1 6.5-.2z" fill="rgba(124,245,255,.12)"/>
+  <path d="M11 5.8v13.2"/>
+  <circle cx="15.2" cy="11.5" r="1.6" fill="#ffd75e" stroke="#c97a20" stroke-width="1.4"/>
 </svg>
