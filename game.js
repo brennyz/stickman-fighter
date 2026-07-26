@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.89';
+const APP_VERSION = '1.18.90';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 299;
+const SW_CACHE_REV = 300;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -2505,6 +2505,8 @@ function dailyTaskRemainderText(task, def) {
 }
 
 function dailyClaimFollowUpToast() {
+  if (state === 'play' || state === 'pause') return;
+  if (typeof gamblePending === 'function' && gamblePending()) return;
   const left = claimableDailyTasks();
   if (left.length > 0) {
     const xp = left.reduce((n, task) => n + (dailyDef(task.id)?.xp || 0), 0);
@@ -3247,6 +3249,8 @@ function maybeOfferVersionUpdateSave() {
     return;
   }
   setTimeout(() => {
+    if (state !== 'menu' || game) return;
+    if (typeof gamblePending === 'function' && gamblePending()) return;
     try {
       UI.showVersionUpdateRestore({
         stash,
@@ -19678,9 +19682,9 @@ class Game {
       this.player.face = 1;
       this.player.vx = Math.max(this.player.vx, this.player.speed * 0.35);
     }
-    if (!save.tipsSeen) save.tipsSeen = {};
+    ensureTipsSeen();
     if (!save.tipsSeen.partGate) {
-      save.tipsSeen.partGate = true;
+      save.tipsSeen.partGate = 1;
       persist();
       this.modeHintLine = IS_TOUCH ? t('hud.partGateTouch') : t('hud.partGateKb');
       this.hint = 5.5;

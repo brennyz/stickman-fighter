@@ -387,9 +387,9 @@ class Game {
       this.player.face = 1;
       this.player.vx = Math.max(this.player.vx, this.player.speed * 0.35);
     }
-    if (!save.tipsSeen) save.tipsSeen = {};
+    ensureTipsSeen();
     if (!save.tipsSeen.partGate) {
-      save.tipsSeen.partGate = true;
+      save.tipsSeen.partGate = 1;
       persist();
       this.modeHintLine = IS_TOUCH ? t('hud.partGateTouch') : t('hud.partGateKb');
       this.hint = 5.5;

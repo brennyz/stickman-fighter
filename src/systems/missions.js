@@ -346,6 +346,8 @@ function dailyTaskRemainderText(task, def) {
 }
 
 function dailyClaimFollowUpToast() {
+  if (state === 'play' || state === 'pause') return;
+  if (typeof gamblePending === 'function' && gamblePending()) return;
   const left = claimableDailyTasks();
   if (left.length > 0) {
     const xp = left.reduce((n, task) => n + (dailyDef(task.id)?.xp || 0), 0);
@@ -1088,6 +1090,8 @@ function maybeOfferVersionUpdateSave() {
     return;
   }
   setTimeout(() => {
+    if (state !== 'menu' || game) return;
+    if (typeof gamblePending === 'function' && gamblePending()) return;
     try {
       UI.showVersionUpdateRestore({
         stash,
