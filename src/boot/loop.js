@@ -324,7 +324,7 @@ function loop(now) {
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
-    try { cancelGambleStart(); } catch (_) {}
+    // NIET cancelGambleStart — tab-blink / iPad audio-unlock killde dice→start
     if (state === 'play' && game && !game.over) {
       try { Input.releaseAll(); } catch (_) {}
       state = 'pause';

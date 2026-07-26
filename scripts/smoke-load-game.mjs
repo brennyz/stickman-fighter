@@ -15,6 +15,21 @@ if (/\bplayInputSuppressed\s*\(/.test(code) && !/function\s+playInputSuppressed\
   process.exit(1);
 }
 
+// Regressie v1.18.73: levelScreenActive()-guard in gokGooiStartLevel brak Continue
+// (menu → dice roll → abort omdat levelScreen niet open is).
+{
+  const fn = code.match(/function\s+gokGooiStartLevel\s*\([\s\S]*?\nfunction\s+\w+/);
+  const body = fn ? fn[0] : '';
+  if (/levelScreenActive\s*\(/.test(body)) {
+    console.error('SMOKE_FAIL gokGooiStartLevel must not gate on levelScreenActive — Continue never starts');
+    process.exit(1);
+  }
+  if (/gambleEl\.classList\.contains\s*\(\s*['\"]active['\"]\s*\)/.test(code.match(/function\s+gokGooiStartFromScreen\s*\([\s\S]*?\nfunction\s+\w+/)?.[0] || '')) {
+    console.error('SMOKE_FAIL gokGooiStartFromScreen must not abort when gambleScreen inactive');
+    process.exit(1);
+  }
+}
+
 function makeEl(id) {
   return {
     id,

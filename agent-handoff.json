@@ -13,16 +13,16 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.75",
-    "swCache": "stickfighter-app-v285",
-    "gameJsQuery": "game.js?v=285",
-    "cssQuery": "styles/main.css?v=285",
-    "featureBranch": "cursor/wiggum-d20-categorie-n-4c38",
+    "appVersion": "1.18.76",
+    "swCache": "stickfighter-app-v286",
+    "gameJsQuery": "game.js?v=286",
+    "cssQuery": "styles/main.css?v=286",
+    "featureBranch": "cursor/adventure-dice-start-fix-2125",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "localMainHead": "b59ac74",
-    "remoteMainHead": "b59ac74",
-    "note": "d16 share rev max SW cron → main"
+    "localMainHead": null,
+    "remoteMainHead": null,
+    "note": "dice roll → always start adventure \u00b7 MERGE"
   },
   "userWishlist": [
     {
@@ -70,6 +70,10 @@
     "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md."
   ],
   "sessionLog": [
+    {
+      "at": "2026-07-26T06:55:00Z",
+      "summary": "HOTFIX dice\u2192start: remove levelScreen guard, flash outside screen \u00b7 v1.18.76"
+    },
     {
       "at": "2026-07-26T06:04:26Z",
       "summary": "d16 hosting: shareCacheRev max SW, speel QR sync, settings renderHosting · v1.18.75"
