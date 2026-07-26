@@ -146,12 +146,28 @@ assert(run("!weaponUpgradeEligible(weaponById('nachtkaars'))"), 'lvl70 alone doe
 assert(run("!weaponUpgradeEligible(weaponById('hellevork'))"), 'lvl70 alone does not unlock hell weapon');
 assert(run("addItemShards('weapon', 'hellevork', 4) === 0"), 'shards refused for unowned hell weapon');
 assert(run("!tryItemUpgrade('weapon', 'nachtkaars')"), 'cannot upgrade unowned zone weapon');
+// Harden: banked shards / cheat save still cannot upgrade unowned zone weapons
+run("save.itemUpgrades = { weapon: { nachtkaars: { level: 0, shards: 99 }, hellevork: { level: 2, shards: 50 } }, pet: {}, style: {} }");
+assert(run("!weaponUpgradeEligible(weaponById('nachtkaars'))"), 'banked shards do not imply ownership');
+assert(run("addItemShards('weapon', 'nachtkaars', 1) === 0"), 'belt: no shard add with banked+unowned');
+assert(run("!tryItemUpgrade('weapon', 'nachtkaars')"), 'belt: tryItemUpgrade blocked with banked shards');
+assert(run("!itemCanUpgrade('weapon', 'nachtkaars')"), 'itemCanUpgrade false when unowned');
+assert(run("weaponUpgradeBonuses('nachtkaars').dmgMul === 1"), 'unowned zone weapon gets no combat bonus');
+assert(run("weaponUpgradeBonuses('hellevork').dmgMul === 1"), 'unowned hell weapon gets no combat bonus despite saved level');
+
+// All zone weapons blocked at high lvl without ownership
+assert(run("WEAPONS.filter((w) => w.dropZone).every((w) => !weaponUpgradeEligible(w))"), 'every zone weapon blocked without ownership');
+assert(run("WEAPONS.filter((w) => w.dropZone).every((w) => addItemShards('weapon', w.id, 1) === 0)"), 'every zone weapon shard-add blocked');
 
 setSave({ lvl: 55, zoneWeapons: { nachtkaars: 1 } });
 assert(run("weaponUpgradeEligible(weaponById('nachtkaars'))"), 'owned nachtkaars is upgrade-eligible');
 assert(run("!weaponUpgradeEligible(weaponById('hellevork'))"), 'unowned hell weapon still blocked');
 assert(run("addItemShards('weapon', 'nachtkaars', 3) === 3"), 'shards ok for owned zone weapon');
 assert(run("itemUpgradeShards('weapon', 'nachtkaars') === 3"), 'owned zone shard count');
+// Owned zone weapon with enough shards can upgrade
+run("save.itemUpgrades.weapon.nachtkaars = { level: 0, shards: itemUpgradeCost('weapon', 'nachtkaars') }");
+assert(run("tryItemUpgrade('weapon', 'nachtkaars')"), 'owned zone weapon upgrades with shards');
+assert(run("itemUpgradeLevel('weapon', 'nachtkaars') === 1"), 'owned zone upgrade level 1');
 
 setSave({ lvl: 70, zoneWeapons: { hellevork: 1, nachtkaars: 1 } });
 assert(run("weaponUpgradeEligible(weaponById('hellevork'))"), 'owned hellevork eligible');

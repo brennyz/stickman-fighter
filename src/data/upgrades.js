@@ -43,11 +43,16 @@ function itemUpgradeIdValid(cat, id) {
 }
 
 function weaponUpgradeEligible(w) {
-  // Alleen wapens die je echt bezit (character-unlock óf zone-drop), niet alleen Lv-getal.
+  // Alleen wapens die je echt bezit (character-unlock óf zone-drop), nooit “alleen Lv-getal”.
   if (!w || !w.id || w.id === 'vuist' || w.id === 'master_sword') return false;
   if (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) return false;
-  if (typeof weaponUnlockedByLevel === 'function') return weaponUnlockedByLevel(w);
-  return save.lvl >= w.unlock;
+  // Zone-drops: ownership-only — character-level mag nooit genoeg zijn.
+  if (w.dropZone) {
+    if (typeof weaponZoneUnlocked === 'function') return !!weaponZoneUnlocked(w);
+    return !!(save && save.zoneWeapons && save.zoneWeapons[w.id]);
+  }
+  if (typeof weaponUnlockedByLevel === 'function') return !!weaponUnlockedByLevel(w);
+  return !!(save && save.lvl >= (w.unlock || 1));
 }
 
 function petUpgradeEligible(p) {
@@ -220,6 +225,11 @@ function restoreLostItemUpgrades(snap, out) {
 
 function addItemShards(cat, id, n) {
   if (!itemUpgradeEligible(cat, id)) return 0;
+  // Extra belt: zone-wapens zonder ownership nooit shards (ook als eligibility drift).
+  if (cat === 'weapon') {
+    const w = WEAPONS.find((x) => x.id === id);
+    if (w && w.dropZone && !(save.zoneWeapons && save.zoneWeapons[w.id])) return 0;
+  }
   const add = clamp(Math.floor(Number(n) || 0), 1, ITEM_SHARD_ADD_CAP);
   const e = itemUpgradeEntry(cat, id);
   if (!e) return 0;
@@ -232,6 +242,10 @@ function addItemShards(cat, id, n) {
 
 function tryItemUpgrade(cat, id) {
   if (!itemUpgradeEligible(cat, id) || !itemCanUpgrade(cat, id)) return false;
+  if (cat === 'weapon') {
+    const w = WEAPONS.find((x) => x.id === id);
+    if (w && w.dropZone && !(save.zoneWeapons && save.zoneWeapons[w.id])) return false;
+  }
   const cost = itemUpgradeCost(cat, id);
   const e = itemUpgradeEntry(cat, id);
   if (!e || cost == null || itemUpgradeShards(cat, id) < cost) return false;
