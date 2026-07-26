@@ -3,7 +3,6 @@
   "cyclesCompleted": 5,
   "rollFirst": [],
   "remaining": [
-    16,
     19,
     12,
     20,
@@ -20,21 +19,14 @@
     3
   ],
   "lastRoll": {
-    "face": 11,
-    "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
-    "rolledAt": "2026-07-24T18:00:38Z",
-    "remainingCount": 15,
+    "face": 16,
+    "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
+    "rolledAt": "2026-07-26T06:03:42Z",
+    "remainingCount": 14,
     "cycle": 5
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 11,
-      "note": "sticky menu bar + scroll reset",
-      "version": "1.11.3",
-      "doneAt": "2026-07-23T15:50:58Z",
-      "cycle": 1
-    },
     {
       "face": 1,
       "note": "scaled hit-stop + proj/block feedback",
@@ -587,6 +579,13 @@
       "version": "1.18.71",
       "doneAt": "2026-07-26T02:05:36Z",
       "cycle": 5
+    },
+    {
+      "face": 16,
+      "note": "share rev max SW + speel QR sync + settings refresh",
+      "version": "1.18.75",
+      "doneAt": "2026-07-26T06:04:26Z",
+      "cycle": 5
     }
   ],
   "userFeatureLog": [
@@ -975,13 +974,6 @@
     }
   ],
   "history": [
-    {
-      "face": 16,
-      "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
-      "rolledAt": "2026-07-23T13:28:14Z",
-      "remainingCount": 13,
-      "cycle": 0
-    },
     {
       "face": 10,
       "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
@@ -1815,6 +1807,13 @@
       "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
       "rolledAt": "2026-07-24T18:00:38Z",
       "remainingCount": 15,
+      "cycle": 5
+    },
+    {
+      "face": 16,
+      "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
+      "rolledAt": "2026-07-26T06:03:42Z",
+      "remainingCount": 14,
       "cycle": 5
     }
   ],

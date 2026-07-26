@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | **16** | Hosting c5: shareCacheRevFor max(SW, hosting.json); speel.html QR sync via index rev; settings refresh hosting. v1.18.75 / SW v285. |
 | 2026-07-26 | **17** | Stabiliteit cron: gameUiTimerOk op deferred toast/banner; dexBag() guard tegen corrupt save.dex. v1.18.74 / SW v284. |
 | 2026-07-26 | **17** | Stabiliteit cron: gamble timer screen-guard (level/gamble), safeOpen cancel, tab-hide/bfcache cancelGambleStart, ensureTipsSeen array. v1.18.73 / SW v283. |
 | 2026-07-26 | **17** | Stabiliteit cron: tab-hide/bfcache geen pause na game.over; sanitizeTipsSeen 0/1; gamble timer startGen guard. v1.18.72 / SW v282. |

@@ -1705,10 +1705,11 @@ const UI = {
       } else if (!playLinkEl.dataset.loaded) {
         playLinkEl.dataset.loaded = '1';
         loadHostingBundle().then(({ hosting }) => {
-          const u = pickStablePlayUrl(hosting);
+          const base = pickStablePlayUrl(hosting) || canonicalPagesPlayUrl(hosting);
+          const u = base ? withShareRevParam(base, shareCacheRevFor(hosting)) : '';
           if (u) {
             playLinkEl.innerHTML =
-              `Deel met vrienden: <a href="${u}" style="color:#7cf5ff;font-weight:800">${u.replace(/^https:\/\//, '')}</a>`;
+              `Deel speel.html (Pages): <a href="${u}" style="color:#7cf5ff;font-weight:800">${u.replace(/^https:\/\//, '')}</a>`;
           }
         }).catch(() => {});
       }
@@ -1996,9 +1997,10 @@ const UI = {
     if (!linkEl) return;
     loadHostingBundle()
       .then(({ hosting, liveUrl }) => {
+        const rev = shareCacheRevFor(hosting);
         const stable = withShareRevParam(
           canonicalPagesPlayUrl(hosting) || (!isTunnelHostUrl(liveUrl) && liveUrl) || headLiveFromPage(),
-          (hosting && hosting.shareCacheRev) || SW_CACHE_REV,
+          rev,
         );
         const short = (u) => String(u || '').replace(/^https:\/\//, '');
         if (stable && !isTunnelHostUrl(stable)) {
@@ -2061,6 +2063,9 @@ const UI = {
         }
         if (onTunnel) {
           hint += ' Tunnel offline/503? Open de vaste GitHub Pages-link (primair).';
+        }
+        if (rev > (Number(hosting.shareCacheRev) || 0)) {
+          hint += ` Deel-link gebruikt SW v${rev} (vers cache-bust).`;
         }
         if (hosting.netlifyUrl && hosting.netlifyReadyAfter) {
           hint += ` Netlify (${hosting.netlifyUrl}) kan Forbidden geven tot ~${hosting.netlifyReadyAfter}.`;
@@ -3371,6 +3376,7 @@ const UI = {
     }
     const a11yEl = document.getElementById('a11yStatusLine');
     if (a11yEl) a11yEl.textContent = a11yStatusText();
+    try { this.renderHosting(); } catch (_) {}
   },
 
   renderPausePerfStrip() {

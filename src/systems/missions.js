@@ -2132,6 +2132,13 @@ function playHostKind() {
   return 'other';
 }
 
+/** Effective cache-bust rev — never below live SW (hosting.json shareCacheRev can lag). */
+function shareCacheRevFor(hosting) {
+  const fromJson = Number(hosting && hosting.shareCacheRev) || 0;
+  const live = typeof SW_CACHE_REV !== 'undefined' ? SW_CACHE_REV : 0;
+  return Math.max(fromJson, live);
+}
+
 /** Append ?v=SW rev on speel.html share links so friends skip stale PWA cache. */
 function withShareRevParam(url, rev) {
   if (!url || typeof url !== 'string') return url;
@@ -2203,7 +2210,7 @@ function githubPagesRootUrl() {
 
 async function resolveSharePlayUrl() {
   const { hosting, liveUrl } = await loadHostingBundle();
-  const rev = (hosting && hosting.shareCacheRev) || SW_CACHE_REV;
+  const rev = shareCacheRevFor(hosting);
   let url = '';
   if (hosting && hosting.shareOnlyPages) {
     const pagesOnly = canonicalPagesPlayUrl(hosting);

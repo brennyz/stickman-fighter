@@ -111,10 +111,22 @@
     document.getElementById('stepsIos').classList.remove('hide');
   }
 
+  function liveShareRev(fallback) {
+    return fetch('./index.html', { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (html) {
+      var m = html.match(/__SF_EXPECT_REV\s*=\s*(\d+)/);
+      return m ? Math.max(fallback || 0, parseInt(m[1], 10)) : (fallback || 0);
+    }).catch(function () { return fallback || 0; });
+  }
+
   applyShareUrl(shareUrl);
   fetch('./hosting.json').then(function (r) { return r.json(); }).then(function (j) {
-    applyShareUrl(j.bookmarkShare || j.pagesSpeel || shareUrl, j.shareCacheRev || 0);
-  }).catch(function () {});
+    var baseRev = Number(j.shareCacheRev) || 0;
+    return liveShareRev(baseRev).then(function (rev) {
+      applyShareUrl(j.bookmarkShare || j.pagesSpeel || shareUrl, rev);
+    });
+  }).catch(function () {
+    liveShareRev(0).then(function (rev) { applyShareUrl(shareUrl, rev); });
+  });
 
   var qr = document.getElementById('qrimg');
   qr.onerror = function () { document.getElementById('qrbox').classList.add('hide'); };

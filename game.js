@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.74';
+const APP_VERSION = '1.18.75';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 284;
+const SW_CACHE_REV = 285;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -4275,6 +4275,13 @@ function playHostKind() {
   return 'other';
 }
 
+/** Effective cache-bust rev — never below live SW (hosting.json shareCacheRev can lag). */
+function shareCacheRevFor(hosting) {
+  const fromJson = Number(hosting && hosting.shareCacheRev) || 0;
+  const live = typeof SW_CACHE_REV !== 'undefined' ? SW_CACHE_REV : 0;
+  return Math.max(fromJson, live);
+}
+
 /** Append ?v=SW rev on speel.html share links so friends skip stale PWA cache. */
 function withShareRevParam(url, rev) {
   if (!url || typeof url !== 'string') return url;
@@ -4346,7 +4353,7 @@ function githubPagesRootUrl() {
 
 async function resolveSharePlayUrl() {
   const { hosting, liveUrl } = await loadHostingBundle();
-  const rev = (hosting && hosting.shareCacheRev) || SW_CACHE_REV;
+  const rev = shareCacheRevFor(hosting);
   let url = '';
   if (hosting && hosting.shareOnlyPages) {
     const pagesOnly = canonicalPagesPlayUrl(hosting);
@@ -25609,10 +25616,11 @@ const UI = {
       } else if (!playLinkEl.dataset.loaded) {
         playLinkEl.dataset.loaded = '1';
         loadHostingBundle().then(({ hosting }) => {
-          const u = pickStablePlayUrl(hosting);
+          const base = pickStablePlayUrl(hosting) || canonicalPagesPlayUrl(hosting);
+          const u = base ? withShareRevParam(base, shareCacheRevFor(hosting)) : '';
           if (u) {
             playLinkEl.innerHTML =
-              `Deel met vrienden: <a href="${u}" style="color:#7cf5ff;font-weight:800">${u.replace(/^https:\/\//, '')}</a>`;
+              `Deel speel.html (Pages): <a href="${u}" style="color:#7cf5ff;font-weight:800">${u.replace(/^https:\/\//, '')}</a>`;
           }
         }).catch(() => {});
       }
@@ -25900,9 +25908,10 @@ const UI = {
     if (!linkEl) return;
     loadHostingBundle()
       .then(({ hosting, liveUrl }) => {
+        const rev = shareCacheRevFor(hosting);
         const stable = withShareRevParam(
           canonicalPagesPlayUrl(hosting) || (!isTunnelHostUrl(liveUrl) && liveUrl) || headLiveFromPage(),
-          (hosting && hosting.shareCacheRev) || SW_CACHE_REV,
+          rev,
         );
         const short = (u) => String(u || '').replace(/^https:\/\//, '');
         if (stable && !isTunnelHostUrl(stable)) {
@@ -25965,6 +25974,9 @@ const UI = {
         }
         if (onTunnel) {
           hint += ' Tunnel offline/503? Open de vaste GitHub Pages-link (primair).';
+        }
+        if (rev > (Number(hosting.shareCacheRev) || 0)) {
+          hint += ` Deel-link gebruikt SW v${rev} (vers cache-bust).`;
         }
         if (hosting.netlifyUrl && hosting.netlifyReadyAfter) {
           hint += ` Netlify (${hosting.netlifyUrl}) kan Forbidden geven tot ~${hosting.netlifyReadyAfter}.`;
@@ -27275,6 +27287,7 @@ const UI = {
     }
     const a11yEl = document.getElementById('a11yStatusLine');
     if (a11yEl) a11yEl.textContent = a11yStatusText();
+    try { this.renderHosting(); } catch (_) {}
   },
 
   renderPausePerfStrip() {
