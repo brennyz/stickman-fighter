@@ -16,6 +16,8 @@ const REGRESSION_MUST_DEFINE = [
   'partBoundaryWaveIdx', 'playerWalkInput',
   'recoverFightHiccup', 'playInputSuppressed', 'rollStageGamble',
   'applyGambleToStage', 'gameUiTimerOk', 'syncPlayLayer', 'forcePlayCanvasVisible',
+  'rollZoneWeaponDrop', 'grantZoneBossClearWeapon', 'applyWeaponOnHitEffect',
+  'tickWeaponStatusEffects', 'adventureDropZoneForLevel', 'weaponZoneUnlocked',
 ];
 
 const CRITICAL_FILES = /^src\/(game|boot|entities)\//;

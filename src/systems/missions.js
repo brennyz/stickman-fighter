@@ -899,6 +899,7 @@ function runLootSummaryShort(loot) {
   if (pickN) parts.push(`💊${pickN}`);
   if (loot.finishers) parts.push(`③${loot.finishers}`);
   if (loot.levelUps) parts.push(`↑${loot.levelUps}`);
+  if (loot.weapons && loot.weapons.length) parts.push(`⚔${loot.weapons.length}`);
   if (loot.petCoins) parts.push(`🪙${loot.petCoins}`);
   return parts.join(' · ');
 }
@@ -1522,7 +1523,7 @@ function repairBrokenButtonIcon(img) {
 function hardenButtonIcons(root) {
   try {
     const scope = root && root.querySelectorAll ? root : document;
-    scope.querySelectorAll('img[src*="assets/buttons/"]').forEach((img) => {
+    scope.querySelectorAll('img[src*="assets/buttons/"], img[src*="assets/ui/"]').forEach((img) => {
       if (img.dataset.sfIconHard) return;
       img.dataset.sfIconHard = '1';
       img.decoding = img.decoding || 'async';

@@ -172,11 +172,15 @@ function grantZoneWeapon(weaponId, opts) {
     try {
       const zone = weaponDropZoneOf(w);
       const col = zone ? zone.color : '#c47aff';
-      UI.toast(`${zone ? zone.name : 'Zone'}: ${weaponLabel(w)}!`, 3800);
+      if (typeof UI !== 'undefined' && UI && typeof UI.toast === 'function') {
+        UI.toast(`${zone ? zone.name : 'Zone'}: ${weaponLabel(w)}!`, 3800);
+      }
       if (typeof game !== 'undefined' && game && typeof game.banner === 'function') {
         game.banner(weaponLabel(w), 2.1, col, 34);
       }
-      AudioSys.sfx('newmonster');
+      if (typeof AudioSys !== 'undefined' && AudioSys && typeof AudioSys.sfx === 'function') {
+        AudioSys.sfx('newmonster');
+      }
     } catch (_) {}
   }
   return true;
@@ -229,8 +233,12 @@ function grantZoneBossClearWeapon(levelN, diffId) {
 /* —— On-hit effecten voor zone-wapens —— */
 function applyWeaponOnHitEffect(game, fighter, target, hit) {
   if (!game || !fighter || !target || !target.alive) return;
+  // Alleen monsters (niet versus/training fighters) — burn/bleed verwachten size/sp
+  if (!target.sp || !(target.size > 0)) return;
   const w = fighter.weapon;
   if (!w || !w.effect) return;
+  // DoT / splash-rehit mag geen nieuwe effect-keten starten
+  if (hit && (hit.kind === 'dot' || hit.skipEffect)) return;
   const effect = w.effect;
   const dmg = (hit && hit.dmg) || 10;
   const finisher = !!(hit && hit.finisher);
@@ -323,7 +331,7 @@ function applyWeaponOnHitEffect(game, fighter, target, hit) {
         if (dist2 > r * r) continue;
         const splash = Math.max(3, Math.round(dmg * aoeMul * (m === target ? 0.35 : 1)));
         if (m !== target) {
-          try { m.takeDamage(splash, (fighter.face || 1) * 120, game, { kind: 'weapon' }); } catch (_) {}
+          try { m.takeDamage(splash, (fighter.face || 1) * 120, game, { kind: 'weapon', skipHitSfx: true, quiet: true }); } catch (_) {}
         }
       }
       try {
@@ -392,7 +400,7 @@ function tickWeaponStatusEffects(game, dt) {
       if (m.wpnBurnTick <= 0) {
         m.wpnBurnTick = 0.55;
         const d = Math.max(1, m.wpnBurnDmg || 2);
-        try { m.takeDamage(d, 0, game, { kind: 'weapon' }); } catch (_) {}
+        try { m.takeDamage(d, 0, game, { kind: 'dot', skipHitSfx: true, quiet: true }); } catch (_) {}
         try { game.burst(m.x, m.y - m.size * 0.4, '#ff6a3d', 3, { kind: 'spark', size: 1.5 }); } catch (_) {}
       }
     }
@@ -402,7 +410,7 @@ function tickWeaponStatusEffects(game, dt) {
       if (m.wpnBleedTick <= 0) {
         m.wpnBleedTick = 0.45;
         const d = Math.max(1, m.wpnBleedDmg || 2);
-        try { m.takeDamage(d, 0, game, { kind: 'weapon' }); } catch (_) {}
+        try { m.takeDamage(d, 0, game, { kind: 'dot', skipHitSfx: true, quiet: true }); } catch (_) {}
       }
     }
   }
@@ -415,7 +423,7 @@ function tickWeaponStatusEffects(game, dt) {
         game._wpnFlutterQueue.splice(i, 1);
         continue;
       }
-      try { q.target.takeDamage(q.dmg, q.face * 40, game, { kind: 'weapon' }); } catch (_) {}
+      try { q.target.takeDamage(q.dmg, q.face * 40, game, { kind: 'dot', skipHitSfx: true, quiet: true }); } catch (_) {}
       try { game.burst(q.target.x, q.target.y - q.target.size * 0.3, '#c47aff', 4, { kind: 'spark', size: 1.8 }); } catch (_) {}
       q.left -= 1;
       q.t = 0.1;
