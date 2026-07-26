@@ -10,7 +10,7 @@ class Fighter {
       weapon: weaponById('vuist'), speed: 260, jumpV: 620,
       ai: null, aiTimer: 0, aiMove: 0, aiCd: 2,
       name: 'Stickman',
-      substCd: 0, invulnT: 0, hitFlashT: 0, afterimages: [], dashCd: 0,
+      substCd: 0, specialCd: 0, invulnT: 0, hitFlashT: 0, afterimages: [], dashCd: 0,
       weaponComboIdx: 0, weaponComboT: 0, _lastWeaponKind: null, _weaponComboPrimed: false, _weaponComboHits: 0,
       style: null, playerSlot: 0, vsSpecial: 'rasengan',
     }, opts);
@@ -76,12 +76,30 @@ class Fighter {
     if (this.attack || this.state === 'hurt' || !this.alive || this.invulnT > 0 && kind !== 'special') return;
     if (kind === 'special') {
       const jKind = fighterJutsuKind(this);
+      if (jKind === 'rasengan' && (this.specialCd || 0) > 0) {
+        if (this.isPlayer || this.playerSlot) {
+          const left = Math.max(0.1, this.specialCd);
+          try {
+            game.floater(this.x, this.y - 110,
+              (typeof t === 'function' ? t('combat.rasenganCd', { s: left.toFixed(1) }) : null)
+                || ('CD ' + left.toFixed(1) + 's'),
+              '#7cf5ff', 13);
+          } catch (_) {
+            game.floater(this.x, this.y - 110, 'CD ' + left.toFixed(1) + 's', '#7cf5ff', 13);
+          }
+        }
+        return;
+      }
       const chakraCost = skillChakraCost(jKind);
       if (this.energy < chakraCost) {
         if (this.isPlayer) game.floater(this.x, this.y - 110, 'Chakra niet vol!', '#7cf5ff', 13);
         return;
       }
       this.energy = 0;
+      if (jKind === 'rasengan' && typeof rasenganCooldownSec === 'function') {
+        const lv = typeof skillLevel === 'function' ? skillLevel('rasengan') : 0;
+        this.specialCd = rasenganCooldownSec(lv);
+      }
       const sk = fighterEquippedSkill(this);
       AudioSys.sfx(skillSfxId(sk));
       if (this.isPlayer || this.playerSlot) {
@@ -336,6 +354,7 @@ class Fighter {
     }
     if (this.substCd > 0) this.substCd -= dt;
     if (this.dashCd > 0) this.dashCd -= dt;
+    if (this.specialCd > 0) this.specialCd -= dt;
     if (this.weaponComboT > 0) {
       this.weaponComboT -= dt;
       if (this.weaponComboT <= 0) resetWeaponCombo(this);

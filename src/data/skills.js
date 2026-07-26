@@ -238,6 +238,18 @@ function rasenganShotModeLabel(mode) {
   return 'Horizontale Rasengan';
 }
 
+/**
+ * Rasengan cast-cooldown (seconden) op skill-level:
+ * Lv1–2 → 2s · Lv3–7 → 3s · Lv8 → 5s
+ * (skillLevel 0 = basis = Lv1-gedrag)
+ */
+function rasenganCooldownSec(lv) {
+  const n = Math.floor(Number(lv) || 0);
+  if (n >= 8) return 5;
+  if (n >= 3) return 3;
+  return 2;
+}
+
 function utilitySkillBonuses() {
   return {
     subst: skillBonuses('subst'),
@@ -340,7 +352,10 @@ function skillUpgradeSummary(id) {
   const lv = skillLevel(id);
   const b = skillBonuses(id);
   const parts = [];
-  if (id === 'rasengan') parts.push(rasenganShotModeLabel(rasenganShotMode(lv)));
+  if (id === 'rasengan') {
+    parts.push(rasenganShotModeLabel(rasenganShotMode(lv)));
+    parts.push('CD ' + rasenganCooldownSec(lv) + 's');
+  }
   if (b.dmgMul > 1.001) parts.push(`DMG ×${b.dmgMul.toFixed(2)}`);
   if (b.radius > 0) parts.push(`+${b.radius} radius`);
   if (b.energySave > 0) parts.push(`−${b.energySave} chakra`);
@@ -384,8 +399,8 @@ const SKILLS = [
   { id: 'rasengan', name: 'Rasengan', saga: 'scroll', needLvl: 1,
     behavior: 'orb', dmgMul: 2.85, windup: 0.48, speed: 420, radius: 28, pierce: true, life: 1.4,
     color: '#7cf5ff', sfx: 'rasengan', banner: 'RASENGAN!', kb: 520,
-    hint: 'Standaard', tooltip: 'Altijd horizontaal. Lv4: dubbele krul ↑↓. Lv8: driedubbel ultimate →↑↓.',
-    bonus: 'Horizontaal · dual/triple' },
+    hint: 'Standaard', tooltip: 'Altijd horizontaal. Lv4: dubbele krul ↑↓. Lv8: driedubbel ultimate →↑↓. Cooldown: Lv1–2 = 2s · Lv3 = 3s · Lv8 = 5s.',
+    bonus: 'Horizontaal · dual/triple · CD 2/3/5s' },
   { id: 'fireball_jutsu', name: 'Vuurbol', saga: 'scroll', needLvl: 4,
     behavior: 'orb', dmgMul: 2.65, windup: 0.42, speed: 380, radius: 26, pierce: false, life: 1.1,
     color: '#ff8c42', sfx: 'rasengan', banner: 'VUURBOL!', kb: 480,
