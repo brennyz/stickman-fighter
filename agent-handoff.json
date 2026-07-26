@@ -20,9 +20,9 @@
     "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "localMainHead": null,
-    "remoteMainHead": null,
-    "note": "Menu nav SVG LIVE · back/pause/saga · v1.18.110"
+    "localMainHead": "3966eb7",
+    "remoteMainHead": "3966eb7",
+    "note": "Menu nav SVG LIVE · back/pause/saga · MERGE main v1.18.110"
   },
   "userWishlist": [
     {
@@ -211,6 +211,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T19:12:22Z",
+      "summary": "Menu SVG nav LIVE op main · v1.18.110 / SW v320"
+    },
+    {
       "at": "2026-07-26T19:11:28Z",
       "summary": "Menu SVG nav LIVE: back/pause/saga icons + preview · v1.18.110"
     },
@@ -305,10 +309,6 @@
     {
       "at": "2026-07-26T18:05:00Z",
       "summary": "d12 content: weapon/pet rarity n/tot + next unlock + icon fallback · npm test groen · v1.18.100"
-    },
-    {
-      "at": "2026-07-26T18:03:15Z",
-      "summary": "d12 content: weapon/pet rarity n/tot + icon fallback · v1.18.100"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
