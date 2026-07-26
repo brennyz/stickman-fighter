@@ -94,11 +94,13 @@ async function run() {
       const toastMid = (document.getElementById('toastHost') || {}).textContent || '';
       const pulling = !!(document.getElementById('summonScreen') || {}).classList?.contains?.('is-pulling')
         || document.getElementById('summonScreen')?.classList.contains('is-pulling');
-      await new Promise((r) => setTimeout(r, 3400));
+      // Wait past card reveal (last 2s of ~10s Gemini clip)
+      await new Promise((r) => setTimeout(r, 8500));
       const reveal = document.getElementById('summonReveal');
       const card = document.getElementById('summonCenterCard');
       const stage = document.getElementById('summonStage');
       const rail = document.querySelector('.summon-rail');
+      const screen = document.getElementById('summonScreen');
       const actives = [...document.querySelectorAll('.screen.active')].map((s) => s.id);
       const stageRect = stage ? stage.getBoundingClientRect() : null;
       const railRect = rail ? rail.getBoundingClientRect() : null;
@@ -113,7 +115,10 @@ async function run() {
         isPlaying: document.body.classList.contains('is-playing'),
         rarity: reveal ? reveal.dataset.rarity : null,
         stageW: stageRect ? Math.round(stageRect.width) : 0,
+        stageH: stageRect ? Math.round(stageRect.height) : 0,
         railW: railRect ? Math.round(railRect.width) : 0,
+        hasVideo: !!(screen && screen.classList.contains('has-video')),
+        pulling: !!(screen && screen.classList.contains('is-pulling')),
         videoDisplay: (() => {
           const v = document.getElementById('summonVideo');
           return v ? getComputedStyle(v).display : null;
@@ -126,7 +131,6 @@ async function run() {
         toastMid,
         toastAfter,
         toastBefore,
-        pulling,
         endText: (document.getElementById('summonRevealText') || {}).textContent || '',
       };
     });
@@ -142,6 +146,10 @@ async function run() {
       'spoiler toast during reveal: ' + pullSnap.toastMid);
     must(pullSnap.stageW >= 280, 'summon stage too narrow: ' + pullSnap.stageW);
     must(pullSnap.videoDisplay === 'block' || pullSnap.fallbackOk, 'video not visible and no fallback: ' + JSON.stringify(pullSnap));
+    if (pullSnap.videoDisplay === 'block') {
+      must(pullSnap.hasVideo, 'expected has-video fullscreen class');
+      must(pullSnap.stageH >= 700, 'fullscreen video stage too short: ' + pullSnap.stageH);
+    }
 
     const playSnap = await page.evaluate(() => {
       UI.goMenu();

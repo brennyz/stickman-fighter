@@ -113,6 +113,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | — | **Summons video:** echte Gemini-share mp4 (10s) i.p.v. placeholder + true fullscreen (`has-video`). v1.18.122 / SW v332. |
 | 2026-07-26 | — | **Summons:** 10× random/dag, fullscreen pull (`is-pulling`), geen spoiler-toast, nice 14% + mid 30%. v1.18.121 / SW v331. |
 | 2026-07-26 | — | **Summons spectacle LIVE:** 5s reveal.mp4, ui-rail-wide stage-first, arcade chest, rarity rays, video display:block fix. v1.18.120 / SW v330. |
 | 2026-07-26 | — | **Arcade UI icons:** prestaties/lock/check/coin/warn + saga JS → `assets/ui/*.svg`; emoji uit ach/hub/loot. v1.18.119 / SW v329. |
