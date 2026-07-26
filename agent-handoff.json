@@ -20,8 +20,8 @@
     "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "localMainHead": null,
-    "remoteMainHead": null,
+    "localMainHead": "bf21c63",
+    "remoteMainHead": "bf21c63",
     "note": "Rinnegan slash + upgrade-dikte · MERGE main · v1.18.102"
   },
   "userWishlist": [
@@ -141,6 +141,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T18:49:22Z",
+      "summary": "Merged Rinnegan slash naar main · v1.18.102"
+    },
+    {
       "at": "2026-07-26T18:48:24Z",
       "summary": "Rinnegan slash check: upgrade dikker (r0 42→78) · merge main v1.18.102"
     },
@@ -235,10 +239,6 @@
     {
       "at": "2026-07-26T07:10:13Z",
       "summary": "Fight hiccup-freeze fix: loop door na crash, grantXP guarded · v1.18.78"
-    },
-    {
-      "at": "2026-07-26T07:02:40Z",
-      "summary": "d13 missies c5: in-play floater, XP bar, ach spotlight shortcut · v1.18.77"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
