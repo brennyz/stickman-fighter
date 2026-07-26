@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.83';
+const APP_VERSION = '1.18.84';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 293;
+const SW_CACHE_REV = 294;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -6139,9 +6139,12 @@ function drawWeaponStylePips(c, x, y, fighter) {
 const SKILL_MAX_LEVEL = 5;
 const SKILL_SHARD_CAP = 9999;
 const SKILL_SHARD_ADD_CAP = 8;
-const SKILL_SHARD_COSTS = [3, 5, 8, 12, 18];
+/** Shard-kosten per level-up (index 0 = Lv0→1 …). Rasengan gaat tot Lv8. */
+const SKILL_SHARD_COSTS = [3, 5, 8, 12, 18, 24, 32, 42];
+const RASENGAN_MAX_LEVEL = 8;
 
 function skillMaxLevel(id) {
+  if (id === 'rasengan') return RASENGAN_MAX_LEVEL;
   const def = SKILL_DEFS[id];
   if (!def) return UPGRADE_MAX_STANDARD;
   return def.group === 'jutsu' ? UPGRADE_MAX_EXTREME : UPGRADE_MAX_STANDARD;
@@ -6153,9 +6156,12 @@ const SKILL_DEFS = {
     steps: [
       { dmgMul: 1.08, radius: 2 },
       { dmgMul: 1.08, speedMul: 1.06, energySave: 5 },
-      { dmgMul: 1.1, radius: 2, extraShot: 0.14 },
-      { dmgMul: 1.1, lifeMul: 1.12, windupMul: 0.92 },
-      { dmgMul: 1.12, radius: 3, energySave: 8, extraShot: 0.1 },
+      { dmgMul: 1.1, radius: 2, windupMul: 0.94 },
+      { dmgMul: 1.06, radius: 1, multiShot: 'dual' }, // Lv4: dubbele krul
+      { dmgMul: 1.08, lifeMul: 1.08, energySave: 6 },
+      { dmgMul: 1.08, radius: 2, speedMul: 1.05 },
+      { dmgMul: 1.1, windupMul: 0.92, energySave: 6 },
+      { dmgMul: 1.1, radius: 2, multiShot: 'triple' }, // Lv8: driedubbel ultimate
     ],
   },
   chidori: {
@@ -6354,6 +6360,20 @@ function jutsuSkillBonuses(kind) {
   return skillBonuses(kind && SKILL_DEFS[kind] ? kind : 'rasengan');
 }
 
+/** Rasengan multi-shot: Lv1–3 single · Lv4–7 dual curl · Lv8+ triple ultimate. */
+function rasenganShotMode(lv) {
+  const n = Math.floor(Number(lv) || 0);
+  if (n >= 8) return 'triple';
+  if (n >= 4) return 'dual';
+  return 'single';
+}
+
+function rasenganShotModeLabel(mode) {
+  if (mode === 'triple') return 'Driedubbele Rasengan';
+  if (mode === 'dual') return 'Dubbele Rasengan';
+  return 'Horizontale Rasengan';
+}
+
 function utilitySkillBonuses() {
   return {
     subst: skillBonuses('subst'),
@@ -6462,6 +6482,7 @@ function skillUpgradeSummary(id) {
   const lv = skillLevel(id);
   const b = skillBonuses(id);
   const parts = [];
+  if (id === 'rasengan') parts.push(rasenganShotModeLabel(rasenganShotMode(lv)));
   if (b.dmgMul > 1.001) parts.push(`DMG ×${b.dmgMul.toFixed(2)}`);
   if (b.radius > 0) parts.push(`+${b.radius} radius`);
   if (b.energySave > 0) parts.push(`−${b.energySave} chakra`);
@@ -6481,6 +6502,8 @@ function skillNextStepPreview(id) {
   const s = def.steps[lv];
   if (!s) return '';
   const parts = [];
+  if (s.multiShot === 'dual') parts.push('Dubbele krul (↑+↓)');
+  if (s.multiShot === 'triple') parts.push('Driedubbel ultimate (→↑↓)');
   if (s.dmgMul) parts.push(`DMG +${Math.round((s.dmgMul - 1) * 100)}%`);
   if (s.radius) parts.push(`+${s.radius} radius`);
   if (s.energySave) parts.push(`−${s.energySave} chakra`);
@@ -6503,8 +6526,8 @@ const SKILLS = [
   { id: 'rasengan', name: 'Rasengan', saga: 'scroll', needLvl: 1,
     behavior: 'orb', dmgMul: 2.85, windup: 0.48, speed: 420, radius: 28, pierce: true, life: 1.4,
     color: '#7cf5ff', sfx: 'rasengan', banner: 'RASENGAN!', kb: 520,
-    hint: 'Standaard', tooltip: 'Draaiende chakra-bol — pierce door meerdere vijanden.',
-    bonus: 'Piercing orb' },
+    hint: 'Standaard', tooltip: 'Altijd horizontaal. Lv4: dubbele krul ↑↓. Lv8: driedubbel ultimate →↑↓.',
+    bonus: 'Horizontaal · dual/triple' },
   { id: 'fireball_jutsu', name: 'Vuurbol', saga: 'scroll', needLvl: 4,
     behavior: 'orb', dmgMul: 2.65, windup: 0.42, speed: 380, radius: 26, pierce: false, life: 1.1,
     color: '#ff8c42', sfx: 'rasengan', banner: 'VUURBOL!', kb: 480,
@@ -8937,6 +8960,7 @@ function seedNlGameStrings() {
     levelClear: 'LEVEL {n} KLAAR!',
     won: 'GEWONNEN!',
     lost: 'VERSLAGEN...',
+    rasenganTriple: 'TRIPLE RASENGAN!',
     round: 'RONDE {n}',
     roundDecisive: 'RONDE {n} · beslissende ronde',
     roundMatchPoint: 'RONDE {n} · match point',
@@ -9838,7 +9862,7 @@ const CATALOG_EN = {
     bossWave: 'BOSS WAVE!', eliteWave: 'ELITE WAVE', superBossWave: 'SUPER-BOSS WAVE',
     flyerWave: 'FLYER WAVE', rushWave: 'RUSH WAVE', eliteTraitWave: 'ELITE WAVE', tideWave: 'TIDE WAVE',
     waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
-    fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'DEFEATED...',
+    fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'DEFEATED...', rasenganTriple: 'TRIPLE RASENGAN!',
     round: 'ROUND {n}', roundDecisive: 'ROUND {n} · decisive round', roundMatchPoint: 'ROUND {n} · match point',
     roundWon: 'ROUND WON!', roundLost: 'ROUND LOST',
     p1RoundWin: 'P1 WINS ROUND!', p2RoundWin: 'P2 WINS ROUND!',
@@ -21060,14 +21084,19 @@ class Game {
     const behavior = sk.behavior || 'orb';
     const speed = (sk.speed || 420) * jb.speedMul;
     const aim = projAimVelocity(f, behavior === 'dash' ? speed : speed * 0.9);
-    const y0 = f.y - 50 + clamp(aim.ny, -1, 0.5) * 36;
     const face = f.face || 1;
     const col = sk.color || '#7cf5ff';
+    // Rasengan: altijd horizontaal (geen aim-tilt); overige jutsu behouden aim
+    const rasenHoriz = jutsu === 'rasengan';
+    const y0 = rasenHoriz
+      ? (f.y - 50)
+      : (f.y - 50 + clamp(aim.ny, -1, 0.5) * 36);
 
-    const fireProj = (offX, offY, scale) => {
+    const fireProj = (offX, offY, scale, opts) => {
       const sc = scale || 1;
       const ox = offX || 0;
       const oy = offY || 0;
+      opts = opts || {};
       if (behavior === 'dash') {
         this.spawnProjectile(Object.assign({
           x: f.x + face * (36 + ox), y: y0 + oy,
@@ -21092,6 +21121,18 @@ class Game {
           from, kind: sk.id, pierce: sk.pierce !== false, hitSet: new Set(), life: (sk.life || 1.1) * jb.lifeMul * sc,
           spin: behavior === 'disc' ? 0.4 : 0,
         }, critMeta));
+      } else if (rasenHoriz) {
+        // Volledig horizontaal + optionele krul (↑/↓) in-vlucht
+        const curl = opts.curl || 0;
+        this.spawnProjectile(Object.assign({
+          x: f.x + face * (40 + ox), y: y0 + oy,
+          vx: face * speed, vy: 0,
+          r: ((sk.radius || 28) + jb.radius) * sc, dmg: dmg * sc,
+          from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(),
+          life: (sk.life || 1.4) * jb.lifeMul * sc,
+          spin: 0, pierceRepeat: jb.pierceRepeat,
+          curl, curlAccel: curl ? (opts.curlAccel || 340) : 0, curlMaxVy: opts.curlMaxVy || 240,
+        }, critMeta));
       } else {
         this.spawnProjectile(Object.assign({
           x: f.x + face * (40 + ox), y: y0 + oy,
@@ -21102,7 +21143,30 @@ class Game {
       }
     };
 
-    if (behavior === 'dash') {
+    if (rasenHoriz && (f.isPlayer || f.playerSlot)) {
+      const mode = typeof rasenganShotMode === 'function'
+        ? rasenganShotMode(typeof skillLevel === 'function' ? skillLevel('rasengan') : 0)
+        : 'single';
+      if (mode === 'triple') {
+        fireProj(0, 0, 1, { curl: 0 });
+        fireProj(face * 6, -5, 0.9, { curl: -1, curlAccel: 360, curlMaxVy: 260 });
+        fireProj(face * 6, 5, 0.9, { curl: 1, curlAccel: 360, curlMaxVy: 260 });
+        try { this.banner(t('banner.rasenganTriple'), 1.1, col, 36); } catch (_) {
+          this.banner('TRIPLE RASENGAN!', 1.1, col, 36);
+        }
+      } else if (mode === 'dual') {
+        fireProj(face * 4, -4, 0.94, { curl: -1, curlAccel: 320, curlMaxVy: 230 });
+        fireProj(face * 4, 4, 0.94, { curl: 1, curlAccel: 320, curlMaxVy: 230 });
+      } else {
+        fireProj(0, 0, 1, { curl: 0 });
+      }
+      this.burst(f.x + face * 30, y0, col, fxLite() ? 8 : 16);
+      spawnFxRing(this, f.x + face * 34, y0, col, mode === 'triple' ? 14 : 10);
+      this.shake(mode === 'triple' ? 11 : 9, 0.28);
+      this.freezeT = Math.max(this.freezeT, mode === 'triple' ? 0.08 : 0.06);
+      AudioSys.sfx(skillSfxId(sk));
+      if (f.isPlayer || f.playerSlot) haptic(mode === 'triple' ? 28 : 22);
+    } else if (behavior === 'dash') {
       fireProj(0, 0, 1);
       f.vx = face * (sk.dashVx || 380) * jb.speedMul;
       this.shake(7, 0.2);
@@ -21137,9 +21201,12 @@ class Game {
       if (this.mode === 'versus' && f.vsSaga === 'tide') AudioSys.sfx('tideSurge');
       AudioSys.sfxAt(swoosh, f.x + f.face * 40);
     } catch (_) {}
-    const extra = (atk && atk.extraShot) || jb.extraShot || 0;
-    if (extra > 0 && Math.random() < extra) {
-      fireProj(face * 12, rand(-8, 8), 0.72);
+    // Rasengan multi-shot vervangt random extraShot
+    if (!(rasenHoriz && (f.isPlayer || f.playerSlot))) {
+      const extra = (atk && atk.extraShot) || jb.extraShot || 0;
+      if (extra > 0 && Math.random() < extra) {
+        fireProj(face * 12, rand(-8, 8), 0.72);
+      }
     }
   }
 
@@ -21547,6 +21614,13 @@ class Game {
         : (p.kind === 'shuriken' ? 28 : 12);
       p.spin = (p.spin || 0) + dt * spinRate;
       p.vy += (p.grav || 0) * dt;
+      // Rasengan-krul: vanuit horizontaal omhoog/omlaag buigen
+      if (p.curl) {
+        p.vy += p.curl * (p.curlAccel || 320) * dt;
+        const lim = p.curlMaxVy || 240;
+        if (p.vy > lim) p.vy = lim;
+        if (p.vy < -lim) p.vy = -lim;
+      }
       p.x += p.vx * dt; p.y += p.vy * dt;
       if (skProj && (skProj.behavior === 'orb' || skProj.behavior === 'pull' || skProj.behavior === 'meteor')) {
         const grow = (skProj.behavior === 'pull' || skProj.behavior === 'meteor') ? 2.5 : 4;

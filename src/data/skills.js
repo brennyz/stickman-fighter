@@ -3,9 +3,12 @@
 const SKILL_MAX_LEVEL = 5;
 const SKILL_SHARD_CAP = 9999;
 const SKILL_SHARD_ADD_CAP = 8;
-const SKILL_SHARD_COSTS = [3, 5, 8, 12, 18];
+/** Shard-kosten per level-up (index 0 = Lv0→1 …). Rasengan gaat tot Lv8. */
+const SKILL_SHARD_COSTS = [3, 5, 8, 12, 18, 24, 32, 42];
+const RASENGAN_MAX_LEVEL = 8;
 
 function skillMaxLevel(id) {
+  if (id === 'rasengan') return RASENGAN_MAX_LEVEL;
   const def = SKILL_DEFS[id];
   if (!def) return UPGRADE_MAX_STANDARD;
   return def.group === 'jutsu' ? UPGRADE_MAX_EXTREME : UPGRADE_MAX_STANDARD;
@@ -17,9 +20,12 @@ const SKILL_DEFS = {
     steps: [
       { dmgMul: 1.08, radius: 2 },
       { dmgMul: 1.08, speedMul: 1.06, energySave: 5 },
-      { dmgMul: 1.1, radius: 2, extraShot: 0.14 },
-      { dmgMul: 1.1, lifeMul: 1.12, windupMul: 0.92 },
-      { dmgMul: 1.12, radius: 3, energySave: 8, extraShot: 0.1 },
+      { dmgMul: 1.1, radius: 2, windupMul: 0.94 },
+      { dmgMul: 1.06, radius: 1, multiShot: 'dual' }, // Lv4: dubbele krul
+      { dmgMul: 1.08, lifeMul: 1.08, energySave: 6 },
+      { dmgMul: 1.08, radius: 2, speedMul: 1.05 },
+      { dmgMul: 1.1, windupMul: 0.92, energySave: 6 },
+      { dmgMul: 1.1, radius: 2, multiShot: 'triple' }, // Lv8: driedubbel ultimate
     ],
   },
   chidori: {
@@ -218,6 +224,20 @@ function jutsuSkillBonuses(kind) {
   return skillBonuses(kind && SKILL_DEFS[kind] ? kind : 'rasengan');
 }
 
+/** Rasengan multi-shot: Lv1–3 single · Lv4–7 dual curl · Lv8+ triple ultimate. */
+function rasenganShotMode(lv) {
+  const n = Math.floor(Number(lv) || 0);
+  if (n >= 8) return 'triple';
+  if (n >= 4) return 'dual';
+  return 'single';
+}
+
+function rasenganShotModeLabel(mode) {
+  if (mode === 'triple') return 'Driedubbele Rasengan';
+  if (mode === 'dual') return 'Dubbele Rasengan';
+  return 'Horizontale Rasengan';
+}
+
 function utilitySkillBonuses() {
   return {
     subst: skillBonuses('subst'),
@@ -326,6 +346,7 @@ function skillUpgradeSummary(id) {
   const lv = skillLevel(id);
   const b = skillBonuses(id);
   const parts = [];
+  if (id === 'rasengan') parts.push(rasenganShotModeLabel(rasenganShotMode(lv)));
   if (b.dmgMul > 1.001) parts.push(`DMG ×${b.dmgMul.toFixed(2)}`);
   if (b.radius > 0) parts.push(`+${b.radius} radius`);
   if (b.energySave > 0) parts.push(`−${b.energySave} chakra`);
@@ -345,6 +366,8 @@ function skillNextStepPreview(id) {
   const s = def.steps[lv];
   if (!s) return '';
   const parts = [];
+  if (s.multiShot === 'dual') parts.push('Dubbele krul (↑+↓)');
+  if (s.multiShot === 'triple') parts.push('Driedubbel ultimate (→↑↓)');
   if (s.dmgMul) parts.push(`DMG +${Math.round((s.dmgMul - 1) * 100)}%`);
   if (s.radius) parts.push(`+${s.radius} radius`);
   if (s.energySave) parts.push(`−${s.energySave} chakra`);
@@ -367,8 +390,8 @@ const SKILLS = [
   { id: 'rasengan', name: 'Rasengan', saga: 'scroll', needLvl: 1,
     behavior: 'orb', dmgMul: 2.85, windup: 0.48, speed: 420, radius: 28, pierce: true, life: 1.4,
     color: '#7cf5ff', sfx: 'rasengan', banner: 'RASENGAN!', kb: 520,
-    hint: 'Standaard', tooltip: 'Draaiende chakra-bol — pierce door meerdere vijanden.',
-    bonus: 'Piercing orb' },
+    hint: 'Standaard', tooltip: 'Altijd horizontaal. Lv4: dubbele krul ↑↓. Lv8: driedubbel ultimate →↑↓.',
+    bonus: 'Horizontaal · dual/triple' },
   { id: 'fireball_jutsu', name: 'Vuurbol', saga: 'scroll', needLvl: 4,
     behavior: 'orb', dmgMul: 2.65, windup: 0.42, speed: 380, radius: 26, pierce: false, life: 1.1,
     color: '#ff8c42', sfx: 'rasengan', banner: 'VUURBOL!', kb: 480,
