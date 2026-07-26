@@ -26,6 +26,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260726T185524",
+      "from": "user",
+      "text": "Dagelijkse 5 wapen + 5 pet summons met skill; Gemini summon-video + rarity overlay (common→legendary)",
+      "status": "open",
+      "updated": "2026-07-26"
+    },
+    {
       "id": "w-20260726T185000",
       "from": "user",
       "text": "Werk Nightmare 2.0 en Hell 3.0 verder uit en push naar live",
@@ -164,6 +171,14 @@
       "text": "De grootste bazen moeten meer intro krijgen, met een grote tekst in beeld en ze zijn ook soms wel 2x groter dan nu, met veel meer hitpoints.",
       "status": "done-in-code",
       "updated": "2026-07-26"
+    },
+    {
+      "id": "w-20260726T185514",
+      "from": "user",
+      "text": "Dagelijkse summons: 5× wapen + 5× pet met extra skill; Gemini summon-video + rarity-lagen (common saai → legendary/meester flitsend). Wacht op Gemini-filmpje van user.",
+      "status": "open",
+      "updated": "2026-07-26",
+      "notes": "Aanpak: 1 neutraal base-video + CSS/canvas rarity overlays (kleur/glow/particles/shake schalen met RARITIES.order). Skills later verzinnen bij implementatie."
     }
   ],
   "agentRules": [
@@ -175,6 +190,10 @@
     "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md."
   ],
   "sessionLog": [
+    {
+      "at": "2026-07-26T18:55:24Z",
+      "summary": "Plan: 5+5 daily summons + Gemini video rarity-lagen — wacht op filmpje"
+    },
     {
       "at": "2026-07-26T18:54:37Z",
       "summary": "Restore Nachtmerrie/Hel eilanden + 2.0/3.0 diffs live · v1.18.105"
@@ -270,10 +289,6 @@
     {
       "at": "2026-07-26T13:03:47Z",
       "summary": "d7 save: upgrade Lv export/import/drift + readSaveJson merge · v1.18.95"
-    },
-    {
-      "at": "2026-07-26T12:05:30Z",
-      "summary": "d5 perf: projectile budget + hidden tab throttle + scenery cache cap · v1.18.94"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
