@@ -1111,8 +1111,12 @@ class Game {
       const spawnX = satanSpawnX(this);
       const mon = new Monster(SATAN_SPECIES_ID, spawnX, this, satanSpawnOpts(this));
       if (!mon || !mon.sp) throw new Error('satan spawn invalid');
+      if (!(mon.size >= 70)) throw new Error('satan size too small');
+      mon.y = this.ground - mon.size;
+      mon.x = clamp(mon.x, mon.size * 0.55, (this.maxX || W) - mon.size * 0.55);
       this.monsters.push(mon);
       this.satanMon = mon;
+      try { ensureSatanSvg(); } catch (_) {}
       triggerSatanIntro(this, mon);
       this.floater(W / 2, Math.max(100, (this.advHudBottom || 120) + 24), t('hud.satanShort'), '#ff3040', 18);
       UI.toast(t('toast.satanReflectHint'), 4200);
@@ -1244,7 +1248,7 @@ class Game {
       }
       this.banner(t('banner.tideBattleWin'), 2.2, '#4a9fff', 44);
       UI.toast(t('toast.tideBattleWin', { xp, coins }), 4200);
-      this.floater(W / 2, 140, `+${xp} XP · +${coins} 🪙`, '#4a9fff', 17);
+      this.floater(W / 2, 140, `+${xp} XP · +${coins} PC`, '#4a9fff', 17);
       try { AudioSys.sfx('win'); } catch (_) {}
       checkAchievements();
       if (fromSatan && this.waveIdx < 0) {
@@ -1822,7 +1826,7 @@ class Game {
     this.wallHints = {
       half: false, quarter: false, five: false, comboWarn: false,
       nearRec: false, lostCombo: false, startCombo: false,
-      combo3: false, combo5: false, combo8: false,
+      combo3: false, combo5: false, combo8: false, combo10: false,
       pace45: false, pace20: false, nearRec2: false,
     };
     this.layoutWall(true);
@@ -2473,6 +2477,11 @@ class Game {
               this.floater(W * 0.5, 136, t('combat.wallCombo8', { pct: wallComboDmgPct(8) }), '#ffd75e', 17, 'hud');
               AudioSys.sfx('combo');
               haptic(14);
+            } else if (this.combo === 10 && !wh.combo10) {
+              wh.combo10 = true;
+              this.floater(W * 0.5, 132, t('combat.wallCombo10', { pct: wallComboDmgPct(10) }), '#ffd75e', 18, 'hud');
+              AudioSys.sfx('comboEpic');
+              haptic(16);
             }
             if (!this.wallRecordToast && this.score > save.bestWall) {
               this.wallRecordToast = true;
@@ -3763,6 +3772,7 @@ class Game {
     for (const f of fighters) {
       if (!f || !f.alive || f.energy < 100) continue;
       const kind = fighterJutsuKind(f);
+      if (kind === 'rasengan' && (f.specialCd || 0) > 0) continue;
       if (calm) {
         c.save();
         c.globalAlpha = 0.42;
@@ -5448,6 +5458,18 @@ class Game {
       c.globalAlpha = 0.35;
       c.fillStyle = '#000';
       c.beginPath(); c.arc(0, 0, b.r, 0, TAU); c.fill();
+    }
+    if (b.id === 'special' && fighter && fighter.specialCd > 0
+        && fighterJutsuKind(fighter) === 'rasengan') {
+      c.globalAlpha = 0.4;
+      c.fillStyle = '#000';
+      c.beginPath(); c.arc(0, 0, b.r, 0, TAU); c.fill();
+      c.globalAlpha = 0.95;
+      c.fillStyle = '#7cf5ff';
+      c.font = `800 ${Math.max(11, b.r * 0.42)}px sans-serif`;
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText(Math.ceil(fighter.specialCd) + 's', 0, 1);
     }
     c.restore();
   }

@@ -252,11 +252,12 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.114';
+const APP_VERSION = '1.18.122';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 324;
+const SW_CACHE_REV = 332;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
+  chestDaily: null, chestWeapons: {},
   zoneWeapons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null, advSatanAt: {},
   /** Normal / Nightmare / Hell — Epic Seven-stijl endgame tiers */
@@ -522,6 +523,7 @@ function weaponSkillGated(w) {
 function weaponUnlockedByLevel(w) {
   if (!w) return false;
   if (w.dropZone) return typeof weaponZoneUnlocked === 'function' ? weaponZoneUnlocked(w) : !!(save.zoneWeapons && save.zoneWeapons[w.id]);
+  if (save.chestWeapons && save.chestWeapons[w.id]) return true;
   return save.lvl >= w.unlock;
 }
 function weaponUsableNow(w) { return weaponUnlockedByLevel(w) && !weaponSkillGated(w); }
@@ -560,6 +562,24 @@ function wallRecordPaceDelta(g) {
   return Math.round(g.score - expected);
 }
 function wallComboDmgPct(combo) { return Math.min(combo, 12) * 4; }
+function wallPauseSubtitle(g) {
+  if (!g || g.mode !== 'wall') return '';
+  const tLeft = Math.ceil(Math.max(0, g.wallTimer || 0));
+  const stones = g.score || 0;
+  const combo = g.combo || 0;
+  const best = save.bestWall || 0;
+  const paceDelta = wallRecordPaceDelta(g);
+  const parts = [t('pause.wallTime', { n: tLeft }), t('pause.wallStones', { n: stones })];
+  if (combo > 1) parts.push(t('pause.wallCombo', { n: combo }));
+  if (best > 0 && paceDelta != null) {
+    parts.push(paceDelta >= 0
+      ? t('pause.wallPaceAhead', { n: paceDelta })
+      : t('pause.wallPaceBehind', { n: Math.abs(paceDelta) }));
+  } else if (best > 0 && stones < best) {
+    parts.push(t('pause.wallGap', { gap: best - stones }));
+  }
+  return parts.join(' · ');
+}
 let save = loadSave();
 function fighterJutsuKind(f) {
   return fighterEquippedSkill(f).id;
@@ -1046,6 +1066,8 @@ function readSaveJson(raw) {
     merged.advFails = Object.assign({}, parsed.advFails || {});
     merged.advSatanAt = Object.assign({}, parsed.advSatanAt || {});
     merged.zoneWeapons = Object.assign({}, parsed.zoneWeapons || {});
+    merged.chestWeapons = Object.assign({}, parsed.chestWeapons || {});
+    if (parsed.chestDaily && typeof parsed.chestDaily === 'object') merged.chestDaily = Object.assign({}, parsed.chestDaily);
     merged.advCleared = Object.assign(
       { normal: false, nightmare: false, hell: false },
       (parsed.advCleared && typeof parsed.advCleared === 'object') ? parsed.advCleared : {}
@@ -1458,6 +1480,10 @@ function sanitizeSave(s) {
   }
   out.zoneWeapons = cleanZone;
 
+  out.chestWeapons = typeof sanitizeChestWeapons === 'function'
+    ? sanitizeChestWeapons(out.chestWeapons)
+    : {};
+
   // Summons: alleen bekende wapens, geldige tiers, en alleen echte upgrades
   const cleanSummons = {};
   for (const [k, v] of Object.entries(out.summons || {})) {
@@ -1474,9 +1500,13 @@ function sanitizeSave(s) {
     if (typeof PET_BY_ID !== 'undefined' && !PET_BY_ID[k]) continue;
     if (typeof PET_BY_ID === 'undefined') continue;
     const entry = (v && typeof v === 'object') ? v : {};
-    cleanPets[k] = {
+    const row = {
       kills: clamp(Math.floor(Number(entry.kills) || 0), 0, 999999),
     };
+    if (typeof entry.src === 'string') row.src = entry.src.slice(0, 12);
+    if (typeof entry.skill === 'string') row.skill = entry.skill.slice(0, 48);
+    if (entry.coins != null) row.coins = clamp(Math.floor(Number(entry.coins) || 0), 0, 999999);
+    cleanPets[k] = row;
   }
   out.pets = cleanPets;
   if (out.activePet && !cleanPets[out.activePet]) out.activePet = null;
@@ -1508,6 +1538,22 @@ function sanitizeSave(s) {
       advBonus: !!out.eggDaily.advBonus,
     };
   } else out.eggDaily = null;
+
+  {
+    const today = typeof todayKey === 'function' ? todayKey() : new Date().toISOString().slice(0, 10);
+    if (typeof sanitizeChestDaily === 'function') {
+      out.chestDaily = sanitizeChestDaily(out.chestDaily, today);
+    } else if (out.chestDaily && typeof out.chestDaily === 'object') {
+      const w = Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.wLeft) || 0)));
+      const p = Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.pLeft) || 0)));
+      const leftRaw = out.chestDaily.left != null ? Number(out.chestDaily.left) : (w + p);
+      out.chestDaily = {
+        date: today,
+        left: Math.max(0, Math.min(10, Math.floor(Number.isFinite(leftRaw) ? leftRaw : 10))),
+        pulls: [],
+      };
+    } else out.chestDaily = null;
+  }
 
   const stPick = STYLES.find(st => st.id === out.style) || STYLES[0];
   let styleOk = stPick.id === 'classic';
@@ -1681,6 +1727,7 @@ const I18N = {
       continue: 'Verder spelen', adventure: 'Avontuur', adventureSub: 'Verhaal · eilanden · bazen',
       arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal · iPad liggend',
       collect: 'Collectie', collectSub: 'Wapens · stijl · boek', music: 'Muziek', missions: 'Missies',
+      summons: 'Summons', summonsSub: 'Dagelijkse kist · wapen & pet',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon op je beginscherm',
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
       choosePath: 'KIES JE PAD',
@@ -1702,6 +1749,9 @@ const I18N = {
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
     pause: {
       title: 'Pauze', sub: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
+      wallTime: '{n}s resterend', wallStones: '{n} stenen', wallCombo: 'combo ×{n}',
+      wallPaceAhead: '+{n} vs record-tempo', wallPaceBehind: '−{n} vs record-tempo',
+      wallGap: 'nog {gap} tot record',
       resume: 'Verder spelen', music: 'Muziek', sfx: 'Geluid', quit: 'Stop & hoofdmenu',
       vsRestart: 'Herstart match', vsRestartSub: '0-0 · zelfde vechters',
       vsSwap: 'Wissel kant', vsSwapSub: 'P1 ↔ P2 · zelfde score',
@@ -1761,6 +1811,7 @@ const I18N = {
       continue: 'Continue', adventure: 'Adventure', adventureSub: 'Story · islands · bosses',
       arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local · iPad landscape',
       collect: 'Collection', collectSub: 'Weapons · style · book', music: 'Music', missions: 'Missions',
+      summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
       options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add to home screen', installSub: 'One icon on your device',
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
       choosePath: 'CHOOSE YOUR PATH',
@@ -1782,6 +1833,9 @@ const I18N = {
     modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Coins' },
     pause: {
       title: 'Paused', sub: 'Rasengan ready — go! · progress stays on this device',
+      wallTime: '{n}s left', wallStones: '{n} bricks', wallCombo: 'combo ×{n}',
+      wallPaceAhead: '+{n} vs record pace', wallPaceBehind: '−{n} vs record pace',
+      wallGap: '{gap} to record',
       resume: 'Resume', music: 'Music', sfx: 'Sound', quit: 'Quit to menu',
       vsRestart: 'Restart match', vsRestartSub: '0-0 · same fighters',
       vsSwap: 'Swap sides', vsSwapSub: 'P1 ↔ P2 · same score',
@@ -2351,6 +2405,7 @@ function applyLangStaticScreens() {
     modeHubScreen: t('back.menu'),
     levelScreen: t('back.menu'),
     gambleScreen: t('back.levels'),
+    summonScreen: t('back.menu'),
     weaponScreen: t('back.collect'),
     petScreen: t('back.collect'),
     styleScreen: t('back.collect'),
@@ -2623,25 +2678,25 @@ function goDailyPlayTarget(taskId) {
   }
 }
 const ACHIEVEMENTS = [
-  { id: 'first_win', name: 'Eerste triomf', desc: 'Win je eerste level', icon: '🏆',
+  { id: 'first_win', name: 'Eerste triomf', desc: 'Win je eerste level',
     test: s => s.stats.advWins >= 1 },
-  { id: 'lv10', name: 'Groeiende ninja', desc: 'Bereik vechter Lv 10', icon: '⬆️',
+  { id: 'lv10', name: 'Groeiende ninja', desc: 'Bereik vechter Lv 10',
     test: s => s.lvl >= 10 },
-  { id: 'dex10', name: 'Monsterkenner', desc: '10 soorten in monsterboek', icon: '📖',
+  { id: 'dex10', name: 'Monsterkenner', desc: '10 soorten in monsterboek',
     test: s => Object.keys(s.dex).length >= 10 },
-  { id: 'dexFull', name: 'Encyclopedie', desc: 'Alle monster-soorten ontdekt', icon: '📚',
+  { id: 'dexFull', name: 'Encyclopedie', desc: 'Alle monster-soorten ontdekt',
     test: s => Object.keys(s.dex).length >= SPECIES_ORDER.length },
-  { id: 'dex100', name: 'Jager', desc: '100 monster-kills geregistreerd', icon: '🎯',
+  { id: 'dex100', name: 'Jager', desc: '100 monster-kills geregistreerd',
     test: s => {
       let n = 0;
       for (const v of Object.values(s.dex || {})) n += v || 0;
       return n >= 100;
     } },
-  { id: 'dexHalf', name: 'Veldgids', desc: 'Helft van alle soorten ontdekt', icon: '🧭',
+  { id: 'dexHalf', name: 'Veldgids', desc: 'Helft van alle soorten ontdekt',
     test: s => Object.keys(s.dex || {}).length >= Math.ceil(SPECIES_ORDER.length / 2) },
-  { id: 'dexTiers', name: 'Rariteitenjager', desc: '4 verschillende rariteiten in boek', icon: '💎',
+  { id: 'dexTiers', name: 'Rariteitenjager', desc: '4 verschillende rariteiten in boek',
     test: () => dexRarityTierCount() >= 4 },
-  { id: 'dexMythic', name: 'Mythe-zoeker', desc: 'Eén mythisch monster ontdekt', icon: '✨',
+  { id: 'dexMythic', name: 'Mythe-zoeker', desc: 'Eén mythisch monster ontdekt',
     test: s => {
       for (const id of Object.keys(s.dex || {})) {
         const sp = SPECIES[id];
@@ -2649,39 +2704,39 @@ const ACHIEVEMENTS = [
       }
       return false;
     } },
-  { id: 'train5', name: 'Robotbreker', desc: '5× training gewonnen', icon: '🤖',
+  { id: 'train5', name: 'Robotbreker', desc: '5× training gewonnen',
     test: s => s.trainWins >= 5 },
-  { id: 'wall100', name: 'Sloper', desc: 'Muurrecord 100+', icon: '🧱',
+  { id: 'wall100', name: 'Sloper', desc: 'Muurrecord 100+',
     test: s => s.bestWall >= 100 },
-  { id: 'combo8', name: 'Combo-koning', desc: 'Combo ×8 bereikt', icon: '⚡',
+  { id: 'combo8', name: 'Combo-koning', desc: 'Combo ×8 bereikt',
     test: s => s.stats.maxCombo >= 8 },
-  { id: 'finisher10', name: 'Stijl-meester', desc: '10 wapen-finishers geland', icon: '⚔',
+  { id: 'finisher10', name: 'Stijl-meester', desc: '10 wapen-finishers geland',
     test: s => (s.stats.weaponFinishers || 0) >= 10 },
-  { id: 'finisher1', name: 'Eerste stijl', desc: 'Land je eerste wapen-finisher', icon: '🗡',
+  { id: 'finisher1', name: 'Eerste stijl', desc: 'Land je eerste wapen-finisher',
     test: s => (s.stats.weaponFinishers || 0) >= 1 },
-  { id: 'weaponMaster25', name: 'Wapen-legende', desc: '25 finishers met één wapen', icon: '👑',
+  { id: 'weaponMaster25', name: 'Wapen-legende', desc: '25 finishers met één wapen',
     test: s => Object.values(s.weaponMastery || {}).some(m => (m.finishers || 0) >= 25) },
-  { id: 'finisher50', name: 'Combo-sensei', desc: '50 finishers totaal', icon: '✨',
+  { id: 'finisher50', name: 'Combo-sensei', desc: '50 finishers totaal',
     test: s => (s.stats.weaponFinishers || 0) >= 50 },
-  { id: 'streak10', name: 'Onstuitbaar', desc: 'Kill streak ×10 in avontuur', icon: '🔥',
+  { id: 'streak10', name: 'Onstuitbaar', desc: 'Kill streak ×10 in avontuur',
     test: s => (s.stats.maxKillStreak || 0) >= 10 },
-  { id: 'trainCombo10', name: 'Dummy-meester', desc: 'Training combo ×10', icon: '🎯',
+  { id: 'trainCombo10', name: 'Dummy-meester', desc: 'Training combo ×10',
     test: s => (s.stats.trainMaxCombo || 0) >= 10 },
-  { id: 'lv50', name: 'Legende', desc: 'Unlock level 50', icon: '👑',
+  { id: 'lv50', name: 'Legende', desc: 'Unlock level 50',
     test: s => s.unlocked >= 50 },
-  { id: 'lv70', name: 'Hel-legende', desc: 'Unlock level 70 (Hel)', icon: '🔥',
+  { id: 'lv70', name: 'Hel-legende', desc: 'Unlock level 70 (Hel)',
     test: s => s.unlocked >= 70 },
-  { id: 'zoneWeapons10', name: 'Zone-verzamelaar', desc: 'Verzamel 10 Nachtmerrie/Hel-wapens', icon: '⚔️',
+  { id: 'zoneWeapons10', name: 'Zone-verzamelaar', desc: 'Verzamel 10 Nachtmerrie/Hel-wapens',
     test: s => Object.keys(s.zoneWeapons || {}).length >= 10 },
-  { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd', icon: '📅',
+  { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd',
     test: s => (s.stats.dailyBonusCount || 0) >= 7 },
-  { id: 'vs5', name: 'Duelist', desc: '5× 2-speler duel gespeeld', icon: '🥊',
+  { id: 'vs5', name: 'Duelist', desc: '5× 2-speler duel gespeeld',
     test: s => (s.stats.vsMatches || 0) >= 5 },
-  { id: 'vsFatality1', name: 'Afronden!', desc: 'Land een versus fatality op match-KO', icon: '💀',
+  { id: 'vsFatality1', name: 'Afronden!', desc: 'Land een versus fatality op match-KO',
     test: s => (s.stats.vsFatalities || 0) >= 1 },
-  { id: 'vs_roster', name: 'Vol roster', desc: 'Speel met 10+ verschillende vechters (2P)', icon: '🎭',
+  { id: 'vs_roster', name: 'Vol roster', desc: 'Speel met 10+ verschillende vechters (2P)',
     test: s => (s.vsPlayedIds || []).length >= 10 },
-  { id: 'saga_icons', name: 'Saga-legends', desc: 'Speel 2P met alle 7 legend picks', icon: '🌟',
+  { id: 'saga_icons', name: 'Saga-legends', desc: 'Speel 2P met alle 7 legend picks',
     test: s => {
       const need = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
       const played = s.vsPlayedIds || [];
@@ -3476,7 +3531,7 @@ function runLootSummaryShort(loot) {
   if (loot.finishers) parts.push(`③${loot.finishers}`);
   if (loot.levelUps) parts.push(`↑${loot.levelUps}`);
   if (loot.weapons && loot.weapons.length) parts.push(`⚔${loot.weapons.length}`);
-  if (loot.petCoins) parts.push(`🪙${loot.petCoins}`);
+  if (loot.petCoins) parts.push(`PC${loot.petCoins}`);
   return parts.join(' · ');
 }
 
@@ -3522,7 +3577,7 @@ function formatRunLootHtml(loot, mode) {
       push('⚔', t('runLoot.weaponLine', { name: weaponLabel(weaponById(wid)) }), '#c792ff');
     }
   }
-  if (loot.petCoins) push('🪙', t('runLoot.petCoinsLine', { n: loot.petCoins }), '#ffd75e');
+  if (loot.petCoins) push('PC', t('runLoot.petCoinsLine', { n: loot.petCoins }), '#ffd75e');
   if (!rows.length) return '';
   const head = mode === 'adventure' ? t('runLoot.headAdv') : t('runLoot.head');
   return `<div class="run-loot-head">${escRunLootHtml(head)}</div><div class="run-loot-lines">${rows.join('')}</div>`;
@@ -4076,6 +4131,7 @@ const BUTTON_ICON_FALLBACKS = {
   arcade: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#9db8ff" stroke-width="1.9"><rect x="5" y="8" width="14" height="11" rx="2.2"/><circle cx="9" cy="13.5" r="1.7" fill="#7cf5ff" stroke="none"/><circle cx="15" cy="13.5" r="1.7" fill="#ff6b6b" stroke="none"/></svg>',
   versus: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ff9ab8" stroke-width="2"><circle cx="7.5" cy="8" r="2.4" fill="#7cf5ff"/><circle cx="16.5" cy="8" r="2.4" fill="#ff788c"/></svg>',
   collect: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#c792ff" stroke-width="2"><path d="M5 4.5h9.5L18.5 8v11.5H5z" fill="rgba(199,146,255,.18)"/></svg>',
+  summons: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ffd75e" stroke-width="2"><path d="M4.5 10.5h15v8.2a1.5 1.5 0 0 1-1.5 1.5h-12a1.5 1.5 0 0 1-1.5-1.5z" fill="rgba(255,215,94,.22)"/><path d="M12 10.5v9.7"/></svg>',
   continue: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#7cf5ff" stroke-width="2"><path d="M5 12h12M13 8l4 4-4 4"/></svg>',
 };
 function buttonIconFallbackUri(src) {
@@ -6072,7 +6128,16 @@ function itemUpgradeIdValid(cat, id) {
 }
 
 function weaponUpgradeEligible(w) {
-  return w && w.id && w.id !== 'vuist' && w.id !== 'master_sword' && save.lvl >= w.unlock && !isThrowWeapon(w.id);
+  // Alleen wapens die je echt bezit (character-unlock óf zone-drop), nooit “alleen Lv-getal”.
+  if (!w || !w.id || w.id === 'vuist' || w.id === 'master_sword') return false;
+  if (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) return false;
+  // Zone-drops: ownership-only — character-level mag nooit genoeg zijn.
+  if (w.dropZone) {
+    if (typeof weaponZoneUnlocked === 'function') return !!weaponZoneUnlocked(w);
+    return !!(save && save.zoneWeapons && save.zoneWeapons[w.id]);
+  }
+  if (typeof weaponUnlockedByLevel === 'function') return !!weaponUnlockedByLevel(w);
+  return !!(save && save.lvl >= (w.unlock || 1));
 }
 
 function petUpgradeEligible(p) {
@@ -6245,6 +6310,11 @@ function restoreLostItemUpgrades(snap, out) {
 
 function addItemShards(cat, id, n) {
   if (!itemUpgradeEligible(cat, id)) return 0;
+  // Extra belt: zone-wapens zonder ownership nooit shards (ook als eligibility drift).
+  if (cat === 'weapon') {
+    const w = WEAPONS.find((x) => x.id === id);
+    if (w && w.dropZone && !(save.zoneWeapons && save.zoneWeapons[w.id])) return 0;
+  }
   const add = clamp(Math.floor(Number(n) || 0), 1, ITEM_SHARD_ADD_CAP);
   const e = itemUpgradeEntry(cat, id);
   if (!e) return 0;
@@ -6257,6 +6327,10 @@ function addItemShards(cat, id, n) {
 
 function tryItemUpgrade(cat, id) {
   if (!itemUpgradeEligible(cat, id) || !itemCanUpgrade(cat, id)) return false;
+  if (cat === 'weapon') {
+    const w = WEAPONS.find((x) => x.id === id);
+    if (w && w.dropZone && !(save.zoneWeapons && save.zoneWeapons[w.id])) return false;
+  }
   const cost = itemUpgradeCost(cat, id);
   const e = itemUpgradeEntry(cat, id);
   if (!e || cost == null || itemUpgradeShards(cat, id) < cost) return false;
@@ -7437,6 +7511,18 @@ function rasenganShotModeLabel(mode) {
   return 'Horizontale Rasengan';
 }
 
+/**
+ * Rasengan cast-cooldown (seconden) op skill-level:
+ * Lv1–2 → 2s · Lv3–7 → 3s · Lv8 → 5s
+ * (skillLevel 0 = basis = Lv1-gedrag)
+ */
+function rasenganCooldownSec(lv) {
+  const n = Math.floor(Number(lv) || 0);
+  if (n >= 8) return 5;
+  if (n >= 3) return 3;
+  return 2;
+}
+
 function utilitySkillBonuses() {
   return {
     subst: skillBonuses('subst'),
@@ -7539,7 +7625,10 @@ function skillUpgradeSummary(id) {
   const lv = skillLevel(id);
   const b = skillBonuses(id);
   const parts = [];
-  if (id === 'rasengan') parts.push(rasenganShotModeLabel(rasenganShotMode(lv)));
+  if (id === 'rasengan') {
+    parts.push(rasenganShotModeLabel(rasenganShotMode(lv)));
+    parts.push('CD ' + rasenganCooldownSec(lv) + 's');
+  }
   if (b.dmgMul > 1.001) parts.push(`DMG ×${b.dmgMul.toFixed(2)}`);
   if (b.radius > 0) parts.push(`+${b.radius} radius`);
   if (b.energySave > 0) parts.push(`−${b.energySave} chakra`);
@@ -7583,8 +7672,8 @@ const SKILLS = [
   { id: 'rasengan', name: 'Rasengan', saga: 'scroll', needLvl: 1,
     behavior: 'orb', dmgMul: 2.85, windup: 0.48, speed: 420, radius: 28, pierce: true, life: 1.4,
     color: '#7cf5ff', sfx: 'rasengan', banner: 'RASENGAN!', kb: 520,
-    hint: 'Standaard', tooltip: 'Altijd horizontaal. Lv4: dubbele krul ↑↓. Lv8: driedubbel ultimate →↑↓.',
-    bonus: 'Horizontaal · dual/triple' },
+    hint: 'Standaard', tooltip: 'Altijd horizontaal. Lv4: dubbele krul ↑↓. Lv8: driedubbel ultimate →↑↓. Cooldown: Lv1–2 = 2s · Lv3 = 3s · Lv8 = 5s.',
+    bonus: 'Horizontaal · dual/triple · CD 2/3/5s' },
   { id: 'fireball_jutsu', name: 'Vuurbol', saga: 'scroll', needLvl: 4,
     behavior: 'orb', dmgMul: 2.65, windup: 0.42, speed: 380, radius: 26, pierce: false, life: 1.1,
     color: '#ff8c42', sfx: 'rasengan', banner: 'VUURBOL!', kb: 480,
@@ -8519,30 +8608,20 @@ function drawSuperIcon(c, icon, r, color, color2) {
 /* ========================== VERSUS / 2 SPELERS ========================== */
 /** Saga-hints: parodie-vibes, geen officiële manga/IP-namen. */
 const VS_SAGAS = {
-  all: { id: 'all', label: 'Alle', emoji: '⭐', blurb: 'Alle 20 vechters — kies P1, dan P2.' },
-  fighter: { id: 'fighter', label: 'Street', emoji: '🥋', blurb: 'Ryu & Ken — classic white/red gi duel.' },
-  ki: { id: 'ki', label: 'Ki', emoji: '🔥', blurb: 'Ki-golven & power spikes — Goku vibes.' },
-  scroll: { id: 'scroll', label: 'Scroll', emoji: '📜', blurb: 'Ninja & demon fox — headband hints.' },
-  tide: { id: 'tide', label: 'Tide', emoji: '🌊', blurb: 'Reach & crew — rubber stretch slagen.' },
-  cape: { id: 'cape', label: 'Cape', emoji: '🦸', blurb: 'Serious hero — bald one-punch blink.' },
-  dawn: { id: 'dawn', label: 'Dawn', emoji: '☀️', blurb: 'Holy lance & void sin aura.' },
+  all: { id: 'all', label: 'Alle', blurb: 'Alle 20 vechters — kies P1, dan P2.' },
+  fighter: { id: 'fighter', label: 'Street', blurb: 'Ryu & Ken — classic white/red gi duel.' },
+  ki: { id: 'ki', label: 'Ki', blurb: 'Ki-golven & power spikes — Goku vibes.' },
+  scroll: { id: 'scroll', label: 'Scroll', blurb: 'Ninja & demon fox — headband hints.' },
+  tide: { id: 'tide', label: 'Tide', blurb: 'Reach & crew — rubber stretch slagen.' },
+  cape: { id: 'cape', label: 'Cape', blurb: 'Serious hero — bald one-punch blink.' },
+  dawn: { id: 'dawn', label: 'Dawn', blurb: 'Holy lance & void sin aura.' },
 };
 function vsSagaMeta(id) { return VS_SAGAS[id] || VS_SAGAS.scroll; }
 
-/** Saga-iconen als inline SVG (art-upgrade 4/4) — vervangt emoji-chips. */
-const SAGA_ICON_SVG = {
-  all: '<path d="M12 3l2 6h6l-5 4 2 6-5-3.6L7 19l2-6-5-4h6z" fill="currentColor" stroke="none"/>',
-  ki: '<path d="M12 3c3 3.5 5.5 6 5.5 10a5.5 5.5 0 01-11 0c0-2 .8-3.6 2-5.4.4 1.4 1 2.2 2 2.9C10.2 8 10.8 5.5 12 3z" fill="currentColor" stroke="none"/>',
-  scroll: '<path d="M7 4h11v14H7z"/><path d="M7 4a2 2 0 00-2 2v12a2 2 0 002 2h11"/><path d="M10 8h5M10 12h5"/>',
-  tide: '<path d="M3 12c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/><path d="M3 17c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/>',
-  cape: '<path d="M12 3l7 4-2 13-5 2-5-2L5 7z"/><path d="M12 3v19"/>',
-  fighter: '<path d="M8 4h8v4H8zM6 8h12v12H6z"/><path d="M9 12h6M9 16h6"/>',
-  dawn: '<circle cx="12" cy="14" r="4.5"/><path d="M12 5.5V3M5.5 8L4 6.5M18.5 8L20 6.5M3 14h2M19 14h2"/>',
-};
+/** Saga-iconen via ASSET-STYLE files (assets/ui/saga-*.svg). */
 function sagaIconSvg(id) {
-  const body = SAGA_ICON_SVG[id] || SAGA_ICON_SVG.all;
-  return '<svg viewBox="0 0 24 24" style="width:1.05em;height:1.05em;vertical-align:-0.16em" ' +
-    'fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg>';
+  const key = (VS_SAGAS[id] ? id : 'all');
+  return `<img class="saga-ico" src="assets/ui/saga-${key}.svg" alt="" width="16" height="16" decoding="async" draggable="false">`;
 }
 function rosterFlair(r) { return r.flair || r.tag; }
 
@@ -10087,14 +10166,30 @@ function satanSvgReady() {
   );
 }
 
-/** Combat-radius zodat Satan ~halve schermhoogte vult. */
-function satanCombatSize() {
+/** Combat-radius zodat Satan ~halve schermhoogte vult (clamp tegen HUD/ground). */
+function satanCombatSize(game) {
   const ww = typeof W === 'number' && W > 0 ? W : 800;
   const hh = typeof H === 'number' && H > 0 ? H : 600;
   const m = Math.min(ww, hh);
-  const raw = Math.round(m * SATAN_SCREEN_FRAC);
+  let raw = Math.round(m * SATAN_SCREEN_FRAC);
+  // Half-screen art (~2.35×r) mag HUD + ground niet overschrijven
+  try {
+    const g = game && game.ground > 0 ? game.ground : (hh * 0.82);
+    const hud = (game && game.advHudBottom) || Math.max(88, hh * 0.12);
+    const room = Math.max(70, g - hud - 20);
+    raw = Math.min(raw, Math.floor(room / 1.55));
+  } catch (_) {}
   if (typeof clamp === 'function') return clamp(raw, SATAN_SIZE_MIN, SATAN_SIZE_MAX);
   return Math.max(SATAN_SIZE_MIN, Math.min(SATAN_SIZE_MAX, raw));
+}
+
+function satanEscAttr(s) {
+  // Geen regex-literals met quotes — die breken stripLiterals in check-undefined-calls.
+  return String(s == null ? '' : s)
+    .split('&').join('&amp;')
+    .split('"').join('&quot;')
+    .split('<').join('&lt;')
+    .split('>').join('&gt;');
 }
 
 /**
@@ -10129,7 +10224,7 @@ function satanPortraitHtml(opts) {
   const wh = compact
     ? 'width="18" height="18"'
     : 'width="72" height="90"';
-  return `<img class="${cls}" src="${src}" alt="" ${wh} decoding="async" draggable="false">`;
+  return `<img class="${cls}" src="${satanEscAttr(src)}" alt="" ${wh} decoding="async" draggable="false">`;
 }
 
 function satanDiffId(diff) {
@@ -10312,18 +10407,28 @@ function satanSpawnOpts(game) {
     targetHp,
     dmgMul: SATAN_DIRECT_DMG_MUL,
     hpMul: 1,
-    sizeOverride: satanCombatSize(),
+    sizeOverride: satanCombatSize(game),
   };
 }
 
 function satanSpawnX(game) {
   const px = game.player ? game.player.x : W * 0.5;
   const maxX = game.maxX || (typeof W === 'number' ? W - 80 : 600);
-  const gap = typeof satanCombatSize === 'function'
-    ? Math.max(180, satanCombatSize() * 1.6)
-    : 200;
+  const gap = Math.max(180, satanCombatSize(game) * 1.6);
   const side = px > maxX * 0.55 ? -1 : 1;
   return clamp(px + side * rand(gap * 0.85, gap * 1.15), 80, maxX);
+}
+
+/** Na resize: houd half-scherm footprint stabiel. */
+function refreshSatanCombatScale(game) {
+  if (!game || !game.satanActive || !game.satanMon || !game.satanMon.alive) return;
+  const mon = game.satanMon;
+  const next = satanCombatSize(game);
+  if (!(next > 0) || Math.abs(next - mon.size) < 2) return;
+  mon.size = next;
+  try {
+    if (!mon.flying && game.ground > 0) mon.y = game.ground - mon.size;
+  } catch (_) {}
 }
 
 function triggerSatanIntro(game, monster) {
@@ -10550,10 +10655,10 @@ function petProgressLine(speciesId) {
   if (!def) return '';
   if (isPetTamed(def.id)) return save.activePet === def.id ? 'Pet · actief' : 'Pet · getemd';
   const cost = petCoinCost(def.id);
-  if (canBuyPetWithCoins(def.id)) return `Pet · kopen ${cost} 🪙`;
+  if (canBuyPetWithCoins(def.id)) return `Pet · kopen ${cost} PC`;
   const need = petKillNeed(speciesId);
   const cur = save.dex[speciesId] || 0;
-  const coinHint = petCoinsBalance() > 0 ? ` · ${petCoinsBalance()}/${cost} 🪙` : '';
+  const coinHint = petCoinsBalance() > 0 ? ` · ${petCoinsBalance()}/${cost} PC` : '';
   if (cur <= 0) return `Pet · ${need} kills${coinHint}`;
   return `Pet · ${Math.min(cur, need)}/${need} kills${coinHint}`;
 }
@@ -10697,6 +10802,460 @@ function eggProgressSummary() {
     activeName: active ? active.name : 'geen',
     daily: eggDailyStatusLine(),
   };
+}
+/* --- src/data/chest-summons.js --- */
+/* ===================== DAILY CHEST SUMMONS ============================ */
+/** Menu-kist: 10 random pulls/dag (wapen óf pet). Betere drop-odds.
+ *  Save-shape (sanitize + UI moeten dit strikt afvangen):
+ *    save.chestDaily = { date, left, pulls[] }
+ *    (legacy wLeft/pLeft → gemigreerd naar left)
+ *    save.chestWeapons = { weaponId: { skill?, at? } }  // early unlock
+ *  Bestaande save.summons (ascend epic/legendary) blijft apart. */
+
+const CHEST_DAILY_TOTAL = 10;
+/** Jackpot / “leuk” roll — was 5%, nu ~14%. */
+const CHEST_NICE_CHANCE = 0.14;
+/** Op non-jackpot: kans op mid-tier unlock i.p.v. alleen coins/junk. */
+const CHEST_GOOD_CHANCE = 0.30;
+const CHEST_PULL_LOG_MAX = 12;
+const CHEST_SKILL_MAX = 48;
+/** Reveal timeline: 5s spectacle; card pops in for the last 2 seconds. */
+const SUMMON_REVEAL_TOTAL_MS = 5000;
+const SUMMON_CARD_LAST_MS = 2000;
+const SUMMON_VIDEO_SRC = 'assets/summon/reveal.mp4';
+let _summonVideoOk = null;
+
+/** @deprecated kept for older UI strings — use CHEST_DAILY_TOTAL */
+const CHEST_DAILY_WEAPON = CHEST_DAILY_TOTAL;
+const CHEST_DAILY_PET = CHEST_DAILY_TOTAL;
+
+const CHEST_WEAPON_SKILLS = [
+  'Schaduwsteek — crit na dash',
+  'Klingdans — finisher +8%',
+  'IJzeren Grip — minder knockback',
+  'Vonklijn — hit-sparks langer',
+  'Echo-slag — 2e tick 20%',
+  'Stormritme — sneller combo-venster',
+];
+
+const CHEST_PET_SKILLS = [
+  'Fluf-Schild — korte shield-pulse',
+  'Snack-Boost — +pet-assist 1 golf',
+  'Blink-Dash — snellere pet-CD',
+  'Lucky Paw — +2% crit voor jou',
+  'Koester — +4 max HP',
+  'Cheer — chakra +6% regen',
+];
+
+function chestSkillPick(kind) {
+  const pool = kind === 'pet' ? CHEST_PET_SKILLS : CHEST_WEAPON_SKILLS;
+  return pool[Math.floor(Math.random() * pool.length)] || pool[0];
+}
+
+function clampChestLeft(n, max) {
+  if (n == null || n === '') return max;
+  const v = Math.floor(Number(n));
+  if (!Number.isFinite(v)) return max;
+  return Math.max(0, Math.min(max, v));
+}
+
+/** Migrate legacy {wLeft,pLeft} → {left}. */
+function migrateChestLeftFields(raw) {
+  if (!raw || typeof raw !== 'object') return CHEST_DAILY_TOTAL;
+  if (raw.left != null && raw.left !== '') {
+    return clampChestLeft(raw.left, CHEST_DAILY_TOTAL);
+  }
+  const w = clampChestLeft(raw.wLeft, 5);
+  const p = clampChestLeft(raw.pLeft, 5);
+  return clampChestLeft(w + p, CHEST_DAILY_TOTAL);
+}
+
+function ensureChestDaily() {
+  if (typeof save === 'undefined' || !save) return null;
+  const dk = typeof todayKey === 'function' ? todayKey() : new Date().toISOString().slice(0, 10);
+  if (!save.chestDaily || typeof save.chestDaily !== 'object' || save.chestDaily.date !== dk) {
+    save.chestDaily = {
+      date: dk,
+      left: CHEST_DAILY_TOTAL,
+      pulls: [],
+    };
+  } else {
+    save.chestDaily.left = migrateChestLeftFields(save.chestDaily);
+    delete save.chestDaily.wLeft;
+    delete save.chestDaily.pLeft;
+    if (!Array.isArray(save.chestDaily.pulls)) save.chestDaily.pulls = [];
+  }
+  return save.chestDaily;
+}
+
+function chestSummonsLeft() {
+  const d = ensureChestDaily();
+  return d ? d.left : 0;
+}
+
+/** @deprecated alias — shared pool */
+function chestWeaponLeft() {
+  return chestSummonsLeft();
+}
+
+/** @deprecated alias — shared pool (0; use chestSummonsLeft) */
+function chestPetLeft() {
+  return 0;
+}
+
+function chestHasSummonsLeft() {
+  return chestSummonsLeft() > 0;
+}
+
+function chestWeaponUnlocked(id) {
+  return !!(save.chestWeapons && save.chestWeapons[id]);
+}
+
+function grantChestWeaponUnlock(weaponId, skill) {
+  if (!save.chestWeapons || typeof save.chestWeapons !== 'object') save.chestWeapons = {};
+  const sk = typeof skill === 'string' ? skill.slice(0, CHEST_SKILL_MAX) : chestSkillPick('weapon');
+  save.chestWeapons[weaponId] = { skill: sk, at: Date.now() };
+  return sk;
+}
+
+function chestWeaponSkillOf(weaponId) {
+  const e = save.chestWeapons && save.chestWeapons[weaponId];
+  return (e && typeof e.skill === 'string') ? e.skill : null;
+}
+
+function chestBaseWeaponPool() {
+  return WEAPONS.filter(w =>
+    w && !w.dropZone && w.id !== 'vuist' && w.id !== 'master_sword' &&
+    !(typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)));
+}
+
+function pushChestPull(entry) {
+  const d = ensureChestDaily();
+  if (!d) return;
+  const row = Object.assign({ at: Date.now() }, entry || {});
+  d.pulls = (Array.isArray(d.pulls) ? d.pulls : []).concat([row]).slice(-CHEST_PULL_LOG_MAX);
+}
+
+function grantChestConsolation(kind) {
+  const roll = Math.random();
+  if (roll < 0.45) {
+    const coins = 8 + Math.floor(Math.random() * 16);
+    save.petCoins = (typeof petCoinsBalance === 'function' ? petCoinsBalance() : 0) + coins;
+    return { type: 'coins', kind, amount: coins, nice: false };
+  }
+  if (roll < 0.8) {
+    const xp = 22 + Math.floor(Math.random() * 34);
+    if (typeof grantMetaXP === 'function') grantMetaXP(xp);
+    else save.xp = (save.xp || 0) + xp;
+    return { type: 'xp', kind, amount: xp, nice: false };
+  }
+  return {
+    type: 'junk',
+    kind,
+    nice: false,
+    label: kind === 'pet' ? 'Een pluisje… niks nuttigs' : 'Roestig schroot… niks nuttigs',
+  };
+}
+
+function grantMidChestWeapon() {
+  const pool = chestBaseWeaponPool();
+  const locked = pool.filter(w =>
+    !weaponUnlockedByLevel(w) &&
+    rarityOf(w.rarity).order >= 1 &&
+    rarityOf(w.rarity).order <= 3 &&
+    w.unlock <= (save.lvl || 1) + 10);
+  if (!locked.length) return null;
+  // Bias toward higher rarity within mid band
+  locked.sort((a, b) => rarityOf(b.rarity).order - rarityOf(a.rarity).order);
+  const top = locked.slice(0, Math.max(3, Math.ceil(locked.length * 0.45)));
+  const w = top[Math.floor(Math.random() * top.length)];
+  const skill = grantChestWeaponUnlock(w.id, chestSkillPick('weapon'));
+  return {
+    type: 'weapon_unlock', kind: 'weapon', nice: false,
+    weaponId: w.id, rarity: w.rarity, skill, name: w.name,
+  };
+}
+
+function grantNiceChestWeapon() {
+  const pool = chestBaseWeaponPool();
+  const lockedNice = pool.filter(w =>
+    rarityOf(w.rarity).order >= 2 &&
+    !weaponUnlockedByLevel(w) &&
+    w.unlock <= (save.lvl || 1) + 16);
+  if (lockedNice.length) {
+    lockedNice.sort((a, b) => rarityOf(b.rarity).order - rarityOf(a.rarity).order);
+    const pickFrom = lockedNice.slice(0, Math.max(4, Math.ceil(lockedNice.length * 0.5)));
+    const w = pickFrom[Math.floor(Math.random() * pickFrom.length)];
+    const skill = grantChestWeaponUnlock(w.id, chestSkillPick('weapon'));
+    return {
+      type: 'weapon_unlock', kind: 'weapon', nice: true,
+      weaponId: w.id, rarity: w.rarity, skill, name: w.name,
+    };
+  }
+
+  const elig = typeof summonEligibleWeapons === 'function' ? summonEligibleWeapons() : [];
+  if (elig.length) {
+    const w = elig[Math.floor(Math.random() * elig.length)];
+    const tier = Math.random() < 0.45 ? 'legendary' : 'epic';
+    if (!save.summons || typeof save.summons !== 'object') save.summons = {};
+    const prev = save.summons[w.id];
+    if (prev !== 'legendary') save.summons[w.id] = tier;
+    const skill = grantChestWeaponUnlock(w.id, chestSkillPick('weapon'));
+    return {
+      type: 'weapon_ascend', kind: 'weapon', nice: true,
+      weaponId: w.id, rarity: save.summons[w.id] || tier, skill, name: w.name,
+    };
+  }
+
+  const anyLocked = pool.filter(w => !weaponUnlockedByLevel(w) && w.unlock <= (save.lvl || 1) + 22);
+  if (anyLocked.length) {
+    anyLocked.sort((a, b) => rarityOf(b.rarity).order - rarityOf(a.rarity).order);
+    const w = anyLocked[0];
+    const skill = grantChestWeaponUnlock(w.id, chestSkillPick('weapon'));
+    return {
+      type: 'weapon_unlock', kind: 'weapon', nice: true,
+      weaponId: w.id, rarity: w.rarity, skill, name: w.name,
+    };
+  }
+
+  return grantChestConsolation('weapon');
+}
+
+function grantNiceChestPet() {
+  const untamed = PET_ROSTER.filter(p => !isPetTamed(p.id));
+  const nice = untamed.filter(p => {
+    const sp = SPECIES[p.speciesId];
+    return sp && rarityOf(sp.rarity).order >= 2;
+  });
+  const pool = nice.length ? nice : untamed.filter(p => {
+    const sp = SPECIES[p.speciesId];
+    return sp && rarityOf(sp.rarity).order >= 1;
+  });
+  if (pool.length) {
+    pool.sort((a, b) => {
+      const ra = rarityOf((SPECIES[a.speciesId] || {}).rarity).order;
+      const rb = rarityOf((SPECIES[b.speciesId] || {}).rarity).order;
+      return rb - ra;
+    });
+    const top = pool.slice(0, Math.max(4, Math.ceil(pool.length * 0.5)));
+    const def = top[Math.floor(Math.random() * top.length)];
+    const skill = chestSkillPick('pet');
+    if (!save.pets || typeof save.pets !== 'object') save.pets = {};
+    save.pets[def.id] = { at: Date.now(), src: 'chest', skill, kills: 0 };
+    if (!save.activePet) save.activePet = def.id;
+    save.stats = save.stats || {};
+    save.stats.petsTamed = (save.stats.petsTamed || 0) + 1;
+    const sp = SPECIES[def.speciesId];
+    return {
+      type: 'pet_unlock', kind: 'pet', nice: true,
+      petId: def.id, rarity: sp ? sp.rarity : 'rare', skill,
+      name: sp ? sp.name : def.id,
+    };
+  }
+  if (typeof hatchEggPet === 'function') {
+    const res = hatchEggPet('chest');
+    return {
+      type: 'egg', kind: 'pet', nice: true,
+      eggId: res.def && res.def.id, rarity: res.def && res.def.rarity,
+      name: res.def && res.def.name, duplicate: !!res.duplicate,
+      skill: chestSkillPick('pet'),
+    };
+  }
+  return grantChestConsolation('pet');
+}
+
+function grantMidChestPet() {
+  const untamed = PET_ROSTER.filter(p => !isPetTamed(p.id));
+  const mid = untamed.filter(p => {
+    const sp = SPECIES[p.speciesId];
+    return sp && rarityOf(sp.rarity).order >= 1 && rarityOf(sp.rarity).order <= 3;
+  });
+  if (!mid.length) return null;
+  const def = mid[Math.floor(Math.random() * mid.length)];
+  const skill = chestSkillPick('pet');
+  if (!save.pets || typeof save.pets !== 'object') save.pets = {};
+  save.pets[def.id] = { at: Date.now(), src: 'chest', skill, kills: 0 };
+  if (!save.activePet) save.activePet = def.id;
+  save.stats = save.stats || {};
+  save.stats.petsTamed = (save.stats.petsTamed || 0) + 1;
+  const sp = SPECIES[def.speciesId];
+  return {
+    type: 'pet_unlock', kind: 'pet', nice: false,
+    petId: def.id, rarity: sp ? sp.rarity : 'uncommon', skill,
+    name: sp ? sp.name : def.id,
+  };
+}
+
+function grantCommonChestPet() {
+  if (Math.random() < CHEST_GOOD_CHANCE) {
+    const mid = grantMidChestPet();
+    if (mid) return mid;
+  }
+  if (typeof hatchEggPet === 'function' && Math.random() < 0.62) {
+    const res = hatchEggPet('chest');
+    return {
+      type: 'egg', kind: 'pet', nice: false,
+      eggId: res.def && res.def.id, rarity: res.def && res.def.rarity,
+      name: res.def && res.def.name, duplicate: !!res.duplicate,
+    };
+  }
+  return grantChestConsolation('pet');
+}
+
+function grantCommonChestWeapon() {
+  if (Math.random() < CHEST_GOOD_CHANCE) {
+    const mid = grantMidChestWeapon();
+    if (mid) return mid;
+  }
+  return grantChestConsolation('weapon');
+}
+
+/**
+ * Atomisch genoeg: counters eerst valideren, daarna reward; bij throw rollback counter.
+ * @param {'weapon'|'pet'|'random'|null|undefined} kind
+ */
+function openChestSummon(kind) {
+  const d = ensureChestDaily();
+  if (!d) return { ok: false, reason: 'no_save' };
+
+  if (clampChestLeft(d.left, CHEST_DAILY_TOTAL) <= 0) {
+    return { ok: false, reason: 'empty', kind: kind || 'random' };
+  }
+
+  let rollKind = kind;
+  if (rollKind !== 'weapon' && rollKind !== 'pet') {
+    rollKind = Math.random() < 0.5 ? 'weapon' : 'pet';
+  }
+
+  const before = {
+    left: d.left,
+    pullsLen: Array.isArray(d.pulls) ? d.pulls.length : 0,
+  };
+  d.left = clampChestLeft(d.left - 1, CHEST_DAILY_TOTAL);
+
+  let result;
+  try {
+    const nice = Math.random() < CHEST_NICE_CHANCE;
+    if (rollKind === 'weapon') {
+      result = nice ? grantNiceChestWeapon() : grantCommonChestWeapon();
+    } else {
+      result = nice ? grantNiceChestPet() : grantCommonChestPet();
+    }
+    if (!result || typeof result !== 'object') result = grantChestConsolation(rollKind);
+    result.ok = true;
+    result.kind = rollKind;
+    result.nice = !!result.nice;
+    result.left = { total: chestSummonsLeft() };
+    pushChestPull({
+      kind: rollKind,
+      type: result.type,
+      nice: result.nice,
+      id: result.weaponId || result.petId || result.eggId || null,
+      rarity: result.rarity || null,
+    });
+    save.stats = save.stats || {};
+    save.stats.summonCount = (save.stats.summonCount || 0) + 1;
+    if (typeof persist === 'function') persist();
+    try { AudioSys.sfx(result.nice ? 'summon' : 'select'); } catch (_) {}
+    return result;
+  } catch (err) {
+    d.left = before.left;
+    if (Array.isArray(d.pulls) && d.pulls.length > before.pullsLen) {
+      d.pulls = d.pulls.slice(0, before.pullsLen);
+    }
+    try { console.warn('[chest-summon]', err); } catch (_) {}
+    return { ok: false, reason: 'error', kind: rollKind };
+  }
+}
+
+function sanitizeChestDaily(raw, today) {
+  if (!raw || typeof raw !== 'object') {
+    return {
+      date: today,
+      left: CHEST_DAILY_TOTAL,
+      pulls: [],
+    };
+  }
+  const dk = (typeof raw.date === 'string' ? raw.date.slice(0, 10) : null) || today;
+  const out = {
+    date: dk,
+    left: migrateChestLeftFields(raw),
+    pulls: [],
+  };
+  if (dk !== today) {
+    out.date = today;
+    out.left = CHEST_DAILY_TOTAL;
+    return out;
+  }
+  if (Array.isArray(raw.pulls)) {
+    for (const p of raw.pulls.slice(-CHEST_PULL_LOG_MAX)) {
+      if (!p || typeof p !== 'object') continue;
+      const kind = p.kind === 'pet' ? 'pet' : (p.kind === 'weapon' ? 'weapon' : null);
+      if (!kind) continue;
+      out.pulls.push({
+        kind,
+        type: typeof p.type === 'string' ? p.type.slice(0, 24) : 'junk',
+        nice: !!p.nice,
+        id: typeof p.id === 'string' ? p.id.slice(0, 32) : null,
+        rarity: typeof p.rarity === 'string' ? p.rarity.slice(0, 16) : null,
+        at: Math.floor(Number(p.at) || 0) || undefined,
+      });
+    }
+  }
+  return out;
+}
+
+function sanitizeChestWeapons(raw) {
+  const clean = {};
+  if (!raw || typeof raw !== 'object') return clean;
+  for (const [k, v] of Object.entries(raw)) {
+    const w = typeof weaponById === 'function' ? weaponById(k) : null;
+    if (!w || w.dropZone || w.id === 'vuist' || w.id === 'master_sword') continue;
+    const entry = (v && typeof v === 'object') ? v : {};
+    clean[k] = {
+      skill: typeof entry.skill === 'string' ? entry.skill.slice(0, CHEST_SKILL_MAX) : undefined,
+      at: Math.floor(Number(entry.at) || 0) || undefined,
+    };
+    if (!clean[k].skill) delete clean[k].skill;
+    if (!clean[k].at) delete clean[k].at;
+  }
+  return clean;
+}
+
+function chestResultToast(res) {
+  if (!res || !res.ok) {
+    if (res && res.reason === 'empty') return 'Geen summons meer vandaag';
+    return 'Summon mislukt — probeer opnieuw';
+  }
+  if (res.type === 'weapon_unlock') {
+    return `✦ ${res.name} ontgrendeld! · ${rarityLabel(res.rarity)}${res.skill ? ' · ' + res.skill : ''}`;
+  }
+  if (res.type === 'weapon_ascend') {
+    return `✦ ${res.name} → ${rarityLabel(res.rarity)}!${res.skill ? ' · ' + res.skill : ''}`;
+  }
+  if (res.type === 'pet_unlock') {
+    return `✦ Pet ${res.name}! · ${rarityLabel(res.rarity)}${res.skill ? ' · ' + res.skill : ''}`;
+  }
+  if (res.type === 'egg') {
+    const dup = res.duplicate ? ' (dup +XP)' : '';
+    return `Ei: ${res.name || '?'}${dup}`;
+  }
+  if (res.type === 'coins') return `+${res.amount} pet coins`;
+  if (res.type === 'xp') return `+${res.amount} XP`;
+  return res.label || 'Niks bijzonders…';
+}
+
+function chestResultRarityId(res) {
+  if (!res || !res.ok) return 'common';
+  if (res.rarity && typeof rarityOf === 'function') return rarityOf(res.rarity).id || res.rarity;
+  if (res.nice) return 'legendary';
+  if (res.type === 'coins' || res.type === 'xp') return 'uncommon';
+  return 'common';
+}
+
+function summonRevealCardDelayMs(totalMs) {
+  const total = Math.max(SUMMON_CARD_LAST_MS + 400, Number(totalMs) || SUMMON_REVEAL_TOTAL_MS);
+  return Math.max(0, total - SUMMON_CARD_LAST_MS);
 }
 /* --- src/i18n/catalog.js --- */
 /* ============================== I18N CATALOG ========================== */
@@ -10853,6 +11412,7 @@ function seedNlGameStrings() {
     pickupItemShard: '+1 {name} item-shard',
     giant: 'REUS!', wallCombo3: 'Combo ×3 · sloop +{pct}%',
     wallCombo5: 'Combo ×5 · sloop +{pct}%', wallCombo8: 'Combo ×8 · sloop +{pct}%',
+    wallCombo10: 'Combo ×10 · sloop +{pct}% — meester-tempo!',
     wallTempo: 'MUUR-TEMPO!', wallRecord: 'NIEUW RECORD!', bonus5: 'BONUS +5',
     masterSwordGain: 'Hyrules legendarische kling — 15s!',
     masterSwordFade: 'Master Sword vervaagt…',
@@ -10897,6 +11457,7 @@ function seedNlGameStrings() {
     vsHpLeadP2: 'P2 leidt +{n}% HP',
     vsHpEven: 'HP gelijk — TIME telt!',
     coinPlus1: '+1 munt', coinPlus3: '+3 munten',
+    rasenganCd: 'Rasengan CD {s}s',
   });
   if (!I18N.nl.toast) I18N.nl.toast = {};
   Object.assign(I18N.nl.toast, {
@@ -11178,8 +11739,8 @@ function seedNlGameStrings() {
     charStep2: 'Stap 2/2 · Speler 2 kiest',
     charRosterLine: '20 vechters · STR · RNG · mDPS · rDPS',
     charBlurbAll: '20 legends · tik kaart = kiezen · hover = stats preview',
-    charEmpty: 'Geen vechters in deze saga — tik ⭐ Alle',
-    charLocked: '🔒 Locked',
+    charEmpty: 'Geen vechters in deze saga — tik Alle',
+    charLocked: 'Locked',
     charIconRow: 'Saga-icons · deel 2 — tik om te kiezen',
     charBig5Title: 'Legends · snel kiezen',
     charBig5Hint: 'Ryu · Ken · Goku · One Punch Man · Aruskankou · Kutjankorio · Xavi',
@@ -11369,16 +11930,16 @@ function seedNlGameStrings() {
     hubStatWallRec: 'Record {n}',
     hubStatWallEmpty: 'Nog geen score',
     hubStatCoinsBest: 'Best {n} munten{pet}',
-    hubStatCoinsPet: ' · {n} pet 🪙',
+    hubStatCoinsPet: ' · {n} pet PC',
     hubStatCoinsEmpty: 'Munten → pet coins',
     hubStatWeapons: '{n}/{total} vrij',
     hubStatSkillLv: 'Lv {n} totaal',
     hubStatSkillShards: 'Shards in avontuur',
-    hubStatPetsFull: 'dex {pets}/{total} · {coins} 🪙 · ei {eggs}/{eggTotal}',
+    hubStatPetsFull: 'dex {pets}/{total} · {coins} PC · ei {eggs}/{eggTotal}',
     hubStatPetsEmpty: '{total} dex · munten → pet coins',
     hubStatStyle: '{n}/{total} outfits',
     hubStatDex: '{n}/{total} · +max HP',
-    petCoinTip: 'Speel <b>munten bonus</b> voor pet coins (2 gouden munten = 1 🪙). Koop pets hier, of tem via kills in het monsterboek. Pets volgen je in avontuur & training.',
+    petCoinTip: 'Speel <b>munten bonus</b> voor pet coins (2 gouden munten = 1 PC). Koop pets hier, of tem via kills in het monsterboek. Pets volgen je in avontuur & training.',
     petSummaryTamed: 'Getemd <b>{tamed}/{total}</b> · actief <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'geen',
     installSub: 'Verschijnt als icoon — net als een echte app',
@@ -11958,8 +12519,8 @@ const CATALOG_EN = {
     charStep2: 'Step 2/2 · Player 2 picks',
     charRosterLine: '20 fighters · STR · RNG · mDPS · rDPS',
     charBlurbAll: '20 legends · tap card to pick · hover = stat preview',
-    charEmpty: 'No fighters in this saga — tap ⭐ All',
-    charLocked: '🔒 Locked',
+    charEmpty: 'No fighters in this saga — tap All',
+    charLocked: 'Locked',
     charIconRow: 'Saga icons · part 2 — tap to pick',
     charBig5Title: 'Legends · quick pick',
     charBig5Hint: 'Ryu · Ken · Goku · One Punch Man · Aruskankou · Kutjankorio · Xavi',
@@ -12149,16 +12710,16 @@ const CATALOG_EN = {
     hubStatWallRec: 'Record {n}',
     hubStatWallEmpty: 'No score yet',
     hubStatCoinsBest: 'Best {n} coins{pet}',
-    hubStatCoinsPet: ' · {n} pet 🪙',
+    hubStatCoinsPet: ' · {n} pet PC',
     hubStatCoinsEmpty: 'Coins → pet coins',
     hubStatWeapons: '{n}/{total} unlocked',
     hubStatSkillLv: 'Lv {n} total',
     hubStatSkillShards: 'Shards in adventure',
-    hubStatPetsFull: 'dex {pets}/{total} · {coins} 🪙 · egg {eggs}/{eggTotal}',
+    hubStatPetsFull: 'dex {pets}/{total} · {coins} PC · egg {eggs}/{eggTotal}',
     hubStatPetsEmpty: '{total} dex · coins → pet coins',
     hubStatStyle: '{n}/{total} outfits',
     hubStatDex: '{n}/{total} · +max HP',
-    petCoinTip: 'Play <b>coin bonus</b> for pet coins (2 gold coins = 1 🪙). Buy pets here, or tame via monster book kills. Pets follow you in adventure & training.',
+    petCoinTip: 'Play <b>coin bonus</b> for pet coins (2 gold coins = 1 PC). Buy pets here, or tame via monster book kills. Pets follow you in adventure & training.',
     petSummaryTamed: 'Tamed <b>{tamed}/{total}</b> · active <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'none',
     installSub: 'Shows as an icon — like a real app',
@@ -12216,7 +12777,7 @@ const CATALOG_EN = {
     },
   },
   pet: {
-    active: 'Pet · active', tamed: 'Pet · tamed', buy: 'Pet · buy {cost} 🪙',
+    active: 'Pet · active', tamed: 'Pet · tamed', buy: 'Pet · buy {cost} PC',
     killsNeed: 'Pet · {need} kills', killsProgress: 'Pet · {cur}/{need} kills',
   },
   menu: { tips: [
@@ -12282,6 +12843,7 @@ const CATALOG_EN = {
     pickupItemShard: '+1 {name} item-shard',
     giant: 'GIANT!', wallCombo3: 'Combo ×3 · smash +{pct}%',
     wallCombo5: 'Combo ×5 · smash +{pct}%', wallCombo8: 'Combo ×8 · smash +{pct}%',
+    wallCombo10: 'Combo ×10 · smash +{pct}% — master tempo!',
     wallTempo: 'WALL TEMPO!', wallRecord: 'NEW RECORD!', bonus5: 'BONUS +5',
     masterSwordGain: "Hyrule's legendary blade — 15s!",
     masterSwordFade: 'Master Sword fades…',
@@ -12320,6 +12882,7 @@ const CATALOG_EN = {
     vsHpLeadP2: 'P2 leads +{n}% HP',
     vsHpEven: 'HP even — TIME matters!',
     coinPlus1: '+1 coin', coinPlus3: '+3 coins',
+    rasenganCd: 'Rasengan CD {s}s',
   },
   hud: {
     super: 'SUPER', masterShort: 'MASTER +20%', masterSword: 'MASTER SWORD {n}s',
@@ -15734,6 +16297,7 @@ function resize() {
   canvas.style.height = H + 'px';
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   Input.layout(W, H);
+  try { if (typeof refreshSatanCombatScale === 'function' && typeof game !== 'undefined') refreshSatanCombatScale(game); } catch (_) {}
   if (game) game.onResize();
 }
 function scheduleResize() {
@@ -17680,7 +18244,7 @@ class Fighter {
       weapon: weaponById('vuist'), speed: 260, jumpV: 620,
       ai: null, aiTimer: 0, aiMove: 0, aiCd: 2,
       name: 'Stickman',
-      substCd: 0, invulnT: 0, hitFlashT: 0, afterimages: [], dashCd: 0,
+      substCd: 0, specialCd: 0, invulnT: 0, hitFlashT: 0, afterimages: [], dashCd: 0,
       weaponComboIdx: 0, weaponComboT: 0, _lastWeaponKind: null, _weaponComboPrimed: false, _weaponComboHits: 0,
       style: null, playerSlot: 0, vsSpecial: 'rasengan',
     }, opts);
@@ -17746,12 +18310,30 @@ class Fighter {
     if (this.attack || this.state === 'hurt' || !this.alive || this.invulnT > 0 && kind !== 'special') return;
     if (kind === 'special') {
       const jKind = fighterJutsuKind(this);
+      if (jKind === 'rasengan' && (this.specialCd || 0) > 0) {
+        if (this.isPlayer || this.playerSlot) {
+          const left = Math.max(0.1, this.specialCd);
+          try {
+            game.floater(this.x, this.y - 110,
+              (typeof t === 'function' ? t('combat.rasenganCd', { s: left.toFixed(1) }) : null)
+                || ('CD ' + left.toFixed(1) + 's'),
+              '#7cf5ff', 13);
+          } catch (_) {
+            game.floater(this.x, this.y - 110, 'CD ' + left.toFixed(1) + 's', '#7cf5ff', 13);
+          }
+        }
+        return;
+      }
       const chakraCost = skillChakraCost(jKind);
       if (this.energy < chakraCost) {
         if (this.isPlayer) game.floater(this.x, this.y - 110, 'Chakra niet vol!', '#7cf5ff', 13);
         return;
       }
       this.energy = 0;
+      if (jKind === 'rasengan' && typeof rasenganCooldownSec === 'function') {
+        const lv = typeof skillLevel === 'function' ? skillLevel('rasengan') : 0;
+        this.specialCd = rasenganCooldownSec(lv);
+      }
       const sk = fighterEquippedSkill(this);
       AudioSys.sfx(skillSfxId(sk));
       if (this.isPlayer || this.playerSlot) {
@@ -18006,6 +18588,7 @@ class Fighter {
     }
     if (this.substCd > 0) this.substCd -= dt;
     if (this.dashCd > 0) this.dashCd -= dt;
+    if (this.specialCd > 0) this.specialCd -= dt;
     if (this.weaponComboT > 0) {
       this.weaponComboT -= dt;
       if (this.weaponComboT <= 0) resetWeaponCombo(this);
@@ -24418,8 +25001,12 @@ class Game {
       const spawnX = satanSpawnX(this);
       const mon = new Monster(SATAN_SPECIES_ID, spawnX, this, satanSpawnOpts(this));
       if (!mon || !mon.sp) throw new Error('satan spawn invalid');
+      if (!(mon.size >= 70)) throw new Error('satan size too small');
+      mon.y = this.ground - mon.size;
+      mon.x = clamp(mon.x, mon.size * 0.55, (this.maxX || W) - mon.size * 0.55);
       this.monsters.push(mon);
       this.satanMon = mon;
+      try { ensureSatanSvg(); } catch (_) {}
       triggerSatanIntro(this, mon);
       this.floater(W / 2, Math.max(100, (this.advHudBottom || 120) + 24), t('hud.satanShort'), '#ff3040', 18);
       UI.toast(t('toast.satanReflectHint'), 4200);
@@ -24551,7 +25138,7 @@ class Game {
       }
       this.banner(t('banner.tideBattleWin'), 2.2, '#4a9fff', 44);
       UI.toast(t('toast.tideBattleWin', { xp, coins }), 4200);
-      this.floater(W / 2, 140, `+${xp} XP · +${coins} 🪙`, '#4a9fff', 17);
+      this.floater(W / 2, 140, `+${xp} XP · +${coins} PC`, '#4a9fff', 17);
       try { AudioSys.sfx('win'); } catch (_) {}
       checkAchievements();
       if (fromSatan && this.waveIdx < 0) {
@@ -25129,7 +25716,7 @@ class Game {
     this.wallHints = {
       half: false, quarter: false, five: false, comboWarn: false,
       nearRec: false, lostCombo: false, startCombo: false,
-      combo3: false, combo5: false, combo8: false,
+      combo3: false, combo5: false, combo8: false, combo10: false,
       pace45: false, pace20: false, nearRec2: false,
     };
     this.layoutWall(true);
@@ -25780,6 +26367,11 @@ class Game {
               this.floater(W * 0.5, 136, t('combat.wallCombo8', { pct: wallComboDmgPct(8) }), '#ffd75e', 17, 'hud');
               AudioSys.sfx('combo');
               haptic(14);
+            } else if (this.combo === 10 && !wh.combo10) {
+              wh.combo10 = true;
+              this.floater(W * 0.5, 132, t('combat.wallCombo10', { pct: wallComboDmgPct(10) }), '#ffd75e', 18, 'hud');
+              AudioSys.sfx('comboEpic');
+              haptic(16);
             }
             if (!this.wallRecordToast && this.score > save.bestWall) {
               this.wallRecordToast = true;
@@ -27070,6 +27662,7 @@ class Game {
     for (const f of fighters) {
       if (!f || !f.alive || f.energy < 100) continue;
       const kind = fighterJutsuKind(f);
+      if (kind === 'rasengan' && (f.specialCd || 0) > 0) continue;
       if (calm) {
         c.save();
         c.globalAlpha = 0.42;
@@ -28756,6 +29349,18 @@ class Game {
       c.fillStyle = '#000';
       c.beginPath(); c.arc(0, 0, b.r, 0, TAU); c.fill();
     }
+    if (b.id === 'special' && fighter && fighter.specialCd > 0
+        && fighterJutsuKind(fighter) === 'rasengan') {
+      c.globalAlpha = 0.4;
+      c.fillStyle = '#000';
+      c.beginPath(); c.arc(0, 0, b.r, 0, TAU); c.fill();
+      c.globalAlpha = 0.95;
+      c.fillStyle = '#7cf5ff';
+      c.font = `800 ${Math.max(11, b.r * 0.42)}px sans-serif`;
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText(Math.ceil(fighter.specialCd) + 's', 0, 1);
+    }
     c.restore();
   }
 
@@ -29641,40 +30246,49 @@ function initCharSelectChrome() {
   window.__sfCharChrome = true;
 }
 
-/** Prestatie-iconen als inline SVG (art-upgrade 4/4) — vervangt emoji. */
-const ACH_ICON_SVG = {
-  first_win: '<path d="M7 4h10v5a5 5 0 01-10 0z"/><path d="M7 5H4c0 3 1.5 5 3 5M17 5h3c0 3-1.5 5-3 5"/><path d="M12 14v3M8 20h8M10 17h4v3h-4z"/>',
-  lv10: '<path d="M12 20V5"/><path d="M6 11l6-6 6 6"/>',
-  dex10: '<path d="M12 6c-2-1.5-4.5-2-8-2v14c3.5 0 6 .5 8 2 2-1.5 4.5-2 8-2V4c-3.5 0-6 .5-8 2z"/><path d="M12 6v14"/>',
-  dexFull: '<path d="M5 4h11v16H5z"/><path d="M16 6h3v14h-3"/><path d="M8 8h5M8 12h5"/>',
-  dex100: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/>',
-  dexHalf: '<circle cx="12" cy="12" r="9"/><path d="M14.5 9.5l-1.6 4-4 1.6 1.6-4z" fill="currentColor"/>',
-  dexTiers: '<path d="M12 3l6 5-6 13L6 8z"/><path d="M6 8h12M9 8l3 13M15 8l-3 13"/>',
-  dexMythic: '<path d="M12 3l1.8 5.4L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.6z" fill="currentColor"/>',
-  train5: '<rect x="6" y="8" width="12" height="10" rx="2"/><path d="M9 8V5.5M15 8V5.5"/><circle cx="9.5" cy="12.5" r="1.2" fill="currentColor"/><circle cx="14.5" cy="12.5" r="1.2" fill="currentColor"/>',
-  wall100: '<path d="M4 6h16M4 11h16M4 16h16M4 6v14h16V6M9 6v5M15 11v5M9 16v4"/>',
-  combo8: '<path d="M13 3L6 13h5l-2 8 7-10h-5z" fill="currentColor" stroke="none"/>',
-  lv50: '<path d="M4 17l1.5-9L9 12l3-6 3 6 3.5-4L20 17z"/><path d="M5 20h14"/>',
-  daily7: '<rect x="4" y="6" width="16" height="14" rx="2"/><path d="M4 10h16M8 4v4M16 4v4"/><path d="M9 15l2 2 4-4"/>',
-  vs5: '<circle cx="8" cy="12" r="4"/><circle cx="16" cy="12" r="4"/>',
-  vs_roster: '<circle cx="9" cy="9" r="4"/><rect x="12" y="12" width="8" height="8" rx="2"/>',
-  saga_icons: '<path d="M12 3l2 6h6l-5 4 2 6-5-3.6L7 19l2-6-5-4h6z" fill="currentColor" stroke="none"/>',
+/** ASSET-STYLE file icons — arcade stroke, geen emoji. */
+const ACH_ICON_FILE = {
+  first_win: 'ach-first-win',
+  lv10: 'ach-lv10',
+  dex10: 'ach-dex10',
+  dexFull: 'ach-dex-full',
+  dex100: 'ach-dex100',
+  dexHalf: 'ach-dex-half',
+  dexTiers: 'ach-dex-tiers',
+  dexMythic: 'ach-dex-mythic',
+  train5: 'ach-train5',
+  wall100: 'ach-wall100',
+  combo8: 'ach-combo8',
+  finisher1: 'ach-finisher1',
+  finisher10: 'ach-finisher10',
+  finisher50: 'ach-finisher50',
+  weaponMaster25: 'ach-weapon-master25',
+  streak10: 'ach-streak10',
+  trainCombo10: 'ach-train-combo10',
+  lv50: 'ach-lv50',
+  lv70: 'ach-lv70',
+  zoneWeapons10: 'ach-zone-weapons10',
+  daily7: 'ach-daily7',
+  vs5: 'ach-vs5',
+  vsFatality1: 'ach-vs-fatality1',
+  vs_roster: 'ach-vs-roster',
+  saga_icons: 'ach-saga-icons',
 };
+function uiFileIcon(file, cls, size) {
+  const s = size || 18;
+  const c = cls ? ` class="${cls}"` : '';
+  return `<img${c} src="assets/ui/${file}.svg" alt="" width="${s}" height="${s}" decoding="async" draggable="false">`;
+}
 function achIconSvg(id) {
-  const body = ACH_ICON_SVG[id] || ACH_ICON_SVG.first_win;
-  return '<svg viewBox="0 0 24 24" style="width:1.2em;height:1.2em;vertical-align:-0.24em;margin-right:2px" ' +
-    'fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg>';
+  const file = ACH_ICON_FILE[id] || ACH_ICON_FILE.first_win;
+  return uiFileIcon(file, 'ach-ico', 18);
 }
 
-/** Mini SVG-vinkje (art-upgrade 4/4) — vervangt ✔-glyphs in lijsten. */
-const SVG_CHECK_MINI =
-  '<svg viewBox="0 0 24 24" style="width:1em;height:1em;vertical-align:-0.14em" fill="none" ' +
-  'stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13l5 5L20 7"/></svg>';
-
-/** Inline SVG-slotje (art-upgrade 2/4) — vervangt 🔒 in level/wapen-lijsten. */
-const SVG_LOCK_ICON =
-  '<svg viewBox="0 0 24 24" style="width:1.15em;height:1.15em;vertical-align:-0.2em" fill="none" stroke="currentColor" stroke-width="2">' +
-  '<rect x="6" y="11" width="12" height="9" rx="2" fill="rgba(0,0,0,.3)"/><path d="M9 11V8a3 3 0 016 0v3"/></svg>';
+/** Mini check / lock / coin / warn — ASSET-STYLE files. */
+const SVG_CHECK_MINI = uiFileIcon('ui-check', 'ui-ico-check', 14);
+const SVG_LOCK_ICON = uiFileIcon('ui-lock', 'ui-ico-lock', 15);
+const SVG_COIN_ICON = uiFileIcon('ui-coin', 'ui-ico-coin', 14);
+const SVG_WARN_ICON = uiFileIcon('ui-warn', 'ui-ico-warn', 14);
 
 const MODE_HUB_META = {
   arcade: { badge: 'SOLO', badgeClass: 'badge-solo', title: 'Arcade', sub: 'Snelle sessies · high scores · geen voortgang verlies' },
@@ -29705,7 +30319,7 @@ function hubTileStatLine(hub) {
       const mats = save.stats?.matsCoinBest || 0;
       if (mats > 0) bits.push(`mats ${mats}`);
       const pc = petCoinsBalance();
-      if (pc > 0) bits.push(`${pc} pet 🪙`);
+      if (pc > 0) bits.push(`${pc} pet ${SVG_COIN_ICON}`);
       return bits.length ? bits.join(' · ') : t('hub.modes3');
     }
     case 'versus': {
@@ -29714,7 +30328,17 @@ function hubTileStatLine(hub) {
       return m > 0 ? t('hub.vsRecord', { w, m }) : t('hub.fightersLocal');
     }
     case 'collect':
-      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ${petCoinsBalance()} pet 🪙`;
+      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ${petCoinsBalance()} pet ${SVG_COIN_ICON}`;
+    case 'summon': {
+      try {
+        ensureChestDaily();
+        const n = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
+        if (n <= 0) return 'Op · morgen weer';
+        return `${n}× vandaag`;
+      } catch (_) {
+        return '10 vandaag';
+      }
+    }
     default:
       return '';
   }
@@ -29783,6 +30407,9 @@ function renderAdvHeatMeter(heat, opts) {
   const compact = !!opts.compact;
   const label = satanHeatLabel(heat);
   const tip = typeof satanHeatTip === 'function' ? satanHeatTip(heat) : '';
+  const tipAttr = typeof satanEscAttr === 'function'
+    ? satanEscAttr(tip || label)
+    : String(tip || label || '').split('"').join('');
   const bang = heat.bang
     ? `<span class="adv-heat-bang" aria-hidden="true">!</span>`
     : '';
@@ -29797,7 +30424,7 @@ function renderAdvHeatMeter(heat, opts) {
     ? satanPortraitHtml({ compact: true })
     : '';
   if (compact) {
-    return `<span class="${cls}" title="${tip || label}">` +
+    return `<span class="${cls}" title="${tipAttr}">` +
       mark +
       `<i class="lvl-heat-fill" style="width:${heat.pct}%"></i>` +
       `<span class="lvl-heat-n">${count}</span>${bang}</span>`;
@@ -29808,7 +30435,7 @@ function renderAdvHeatMeter(heat, opts) {
     : (typeof satanPortraitHtml === 'function'
       ? `<div class="adv-heat-face idle">${satanPortraitHtml({ compact: true })}</div>`
       : '');
-  return `<div class="${cls}" title="${tip}" role="meter" aria-valuemin="0" aria-valuemax="${SATAN_FAIL_THRESHOLD}" aria-valuenow="${heat.fails}" aria-label="${label}">` +
+  return `<div class="${cls}" title="${tipAttr}" role="meter" aria-valuemin="0" aria-valuemax="${SATAN_FAIL_THRESHOLD}" aria-valuenow="${heat.fails}" aria-label="${typeof satanEscAttr === 'function' ? satanEscAttr(label) : label}">` +
     `<div class="adv-heat-row">` +
     portrait +
     `<div class="adv-heat-body">` +
@@ -29844,7 +30471,7 @@ function renderAdvSatanCard(heat, diff) {
 }
 
 const UI = {
-  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'upgradeScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
+  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'summonScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'upgradeScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
@@ -29947,6 +30574,8 @@ const UI = {
           : ` · TOT ${tot.r1}-${tot.r2} (Δ${tot.diff})`;
       }
       sub.textContent = `2P ${game.roundsP1}-${game.roundsP2} · ronde ${game.round} · ${a} vs ${b}${tag}${totTag}`;
+    } else if (game?.mode === 'wall' && typeof wallPauseSubtitle === 'function') {
+      sub.textContent = wallPauseSubtitle(game);
     } else {
       sub.textContent = this.pauseSubDefault;
     }
@@ -30143,6 +30772,13 @@ const UI = {
         this.show('menuScreen');
         return;
       }
+      if (active === 'summonScreen') {
+        this.clearSummonRevealTimers();
+        this._chestPullBusy = false;
+        this.renderMenu();
+        this.show('menuScreen');
+        return;
+      }
       if (active === 'levelScreen') {
         bumpLevelHoldGen();
         try { cancelGambleStart(); } catch (_) {}
@@ -30220,6 +30856,8 @@ const UI = {
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
+      try { this.clearSummonRevealTimers(); } catch (_) {}
+      this._chestPullBusy = false;
       try { Input.releaseAll(); } catch (_) {}
       Input.dualMode = false;
       Input.layout(W, H);
@@ -30358,7 +30996,8 @@ const UI = {
       el.appendChild(cap);
       const tag = document.createElement('div');
       tag.className = 'char-tag';
-      tag.textContent = ok ? r.tag : t('ui.charLocked');
+      if (ok) tag.textContent = r.tag;
+      else tag.innerHTML = `${SVG_LOCK_ICON} ${t('ui.charLocked')}`;
       el.appendChild(tag);
       const flair = document.createElement('div');
       flair.className = 'char-flair';
@@ -30642,6 +31281,15 @@ const UI = {
     document.querySelectorAll('[data-hub-stat]').forEach((el) => {
       el.textContent = hubTileStatLine(el.dataset.hubStat);
     });
+    const summonTile = document.getElementById('btnSummons');
+    if (summonTile) {
+      let left = 0;
+      try { left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
+      summonTile.classList.toggle('has-summons', left > 0);
+      summonTile.setAttribute('aria-label', left > 0
+        ? `Summons · ${left} over vandaag`
+        : 'Summons · op voor vandaag');
+    }
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const verLine = document.getElementById('menuVerLine');
@@ -30696,6 +31344,336 @@ const UI = {
     if (typeof renderLangSwitch === 'function') renderLangSwitch();
     } catch (err) {
       sfReportError('renderMenu', err, 'Menu kon niet ververst worden');
+    }
+  },
+
+  renderSummon() {
+    try {
+      // Menu-UI only — never leave play canvas competing with this screen
+      if (typeof state !== 'undefined' && state === 'play' && game) {
+        try { UI.toast('Eerst gevecht afmaken of pauzeren', 2200); } catch (_) {}
+        return;
+      }
+      if (typeof state !== 'undefined' && state === 'play' && !game) state = 'menu';
+      ensureChestDaily();
+      const left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
+      const quota = document.getElementById('summonQuota');
+      if (quota) {
+        quota.textContent = `Vandaag: ${left}/${CHEST_DAILY_TOTAL} random summons`;
+      }
+      const pullBtn = document.getElementById('btnChestPull');
+      const pullLbl = document.getElementById('chestPullLbl');
+      if (pullLbl) pullLbl.textContent = left > 0 ? `${left} over` : 'Op';
+      if (pullBtn) pullBtn.disabled = left <= 0 || !!this._chestPullBusy;
+
+      const logEl = document.getElementById('summonLog');
+      if (logEl) {
+        const pulls = (save.chestDaily && Array.isArray(save.chestDaily.pulls))
+          ? save.chestDaily.pulls.slice().reverse() : [];
+        if (!pulls.length) {
+          logEl.textContent = 'Nog geen pulls vandaag.';
+        } else {
+          logEl.innerHTML = pulls.slice(0, 8).map((p) => {
+            const tag = p.nice ? '✦' : '·';
+            const rar = p.rarity ? ` ${p.rarity}` : '';
+            return `<div>${tag} ${p.kind} ${p.type || ''}${rar}</div>`;
+          }).join('');
+        }
+      }
+      try { syncPlayLayer(); } catch (_) {}
+      try { hardenButtonIcons(document.getElementById('summonScreen')); } catch (_) {}
+    } catch (err) {
+      sfReportError('renderSummon', err, 'Summons laden mislukt');
+      try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
+    }
+  },
+
+  clearSummonRevealTimers() {
+    if (this._summonCardTimer) {
+      clearTimeout(this._summonCardTimer);
+      this._summonCardTimer = null;
+    }
+    if (this._summonDoneTimer) {
+      clearTimeout(this._summonDoneTimer);
+      this._summonDoneTimer = null;
+    }
+    try {
+      const screen = document.getElementById('summonScreen');
+      if (screen) screen.classList.remove('is-pulling');
+    } catch (_) {}
+    try {
+      const vid = document.getElementById('summonVideo');
+      if (vid) {
+        vid.onloadedmetadata = null;
+        vid.onended = null;
+        vid.onerror = null;
+        try { vid.pause(); } catch (_) {}
+      }
+    } catch (_) {}
+  },
+
+  /** Open summons hub — never mid-fight (blue-screen guard). */
+  openSummonHub() {
+    try {
+      if (state === 'play' && game) {
+        UI.toast('Eerst gevecht afmaken of pauzeren', 2400);
+        return;
+      }
+      if (typeof adventureSpecialDuelActive === 'function' && adventureSpecialDuelActive(game)) {
+        UI.toast(t('toast.satanReflectHint'), 2400);
+        return;
+      }
+      if (state === 'play' && !game) state = 'menu';
+      if (state === 'pause' || state === 'result') state = 'menu';
+      this.clearSummonRevealTimers();
+      this._chestPullBusy = false;
+      try { if (typeof _summonVideoOk !== 'undefined') _summonVideoOk = null; } catch (_) {}
+      this.safeOpen('summonScreen', () => this.renderSummon(), { msg: 'Summons laden mislukt' });
+    } catch (err) {
+      sfReportError('openSummonHub', err, 'Summons openen mislukt');
+      try { this.goMenu(); } catch (_) {}
+    }
+  },
+
+  paintSummonCenterCard(res) {
+    const cv = document.getElementById('summonCardCanvas');
+    const nameEl = document.getElementById('summonCardName');
+    const rarEl = document.getElementById('summonCardRar');
+    const skEl = document.getElementById('summonCardSkill');
+    const card = document.getElementById('summonCenterCard');
+    if (!cv || !nameEl) return;
+    const cc = cv.getContext('2d');
+    const W = cv.width || 160;
+    const H = cv.height || 160;
+    const cx = W * 0.5;
+    const cy = H * 0.52;
+    cc.clearRect(0, 0, W, H);
+    const rarId = typeof chestResultRarityId === 'function' ? chestResultRarityId(res) : 'common';
+    const rar = typeof rarityOf === 'function' ? rarityOf(rarId) : { color: '#9db1e3', name: rarId };
+    let title = '…';
+    let skill = '';
+    try {
+      if (res && res.weaponId && typeof drawWeaponShape === 'function') {
+        cc.save();
+        cc.translate(cx - 32, cy + 18);
+        cc.rotate(-0.55);
+        if (rar.order >= 3 && !motionReduced()) {
+          cc.fillStyle = rar.glow || 'rgba(255,215,94,.35)';
+          cc.beginPath(); cc.arc(30, -8, 34, 0, Math.PI * 2); cc.fill();
+        }
+        drawWeaponShape(cc, res.weaponId, 0.34);
+        cc.restore();
+        title = res.name || (typeof weaponLabel === 'function' ? weaponLabel(res.weaponId) : res.weaponId);
+        skill = res.skill || '';
+      } else if (res && res.petId && typeof drawMonsterArt === 'function') {
+        const def = typeof petDef === 'function' ? petDef(res.petId) : null;
+        const sp = def && SPECIES[def.speciesId];
+        if (sp) {
+          cc.save();
+          cc.translate(cx, cy + 10);
+          cc.scale(0.9, 0.9);
+          drawMonsterArt(cc, sp, sp.size || 28, 1.15, false, false);
+          cc.restore();
+        }
+        title = res.name || (sp && sp.name) || res.petId;
+        skill = res.skill || '';
+      } else if (res && res.type === 'egg') {
+        cc.fillStyle = rar.color || '#ffd75e';
+        cc.beginPath(); cc.ellipse(cx, cy, 34, 44, 0, 0, Math.PI * 2); cc.fill();
+        cc.strokeStyle = 'rgba(0,0,0,.35)';
+        cc.lineWidth = 3;
+        cc.stroke();
+        title = res.name ? ('Ei · ' + res.name) : 'Ei';
+      } else if (res && res.type === 'coins') {
+        cc.fillStyle = '#ffd75e';
+        cc.beginPath(); cc.arc(cx, cy, 34, 0, Math.PI * 2); cc.fill();
+        cc.strokeStyle = '#c97a20';
+        cc.lineWidth = 4;
+        cc.stroke();
+        cc.fillStyle = '#c97a20';
+        cc.font = 'bold 28px Nunito, sans-serif';
+        cc.textAlign = 'center';
+        cc.textBaseline = 'middle';
+        cc.fillText('PC', cx, cy + 1);
+        title = '+' + (res.amount || 0) + ' pet coins';
+      } else if (res && res.type === 'xp') {
+        cc.fillStyle = '#7cf5ff';
+        cc.font = 'bold 34px Nunito, sans-serif';
+        cc.textAlign = 'center';
+        cc.textBaseline = 'middle';
+        cc.fillText('XP', cx, cy);
+        title = '+' + (res.amount || 0) + ' XP';
+      } else {
+        cc.strokeStyle = '#9db1e3';
+        cc.lineWidth = 3;
+        cc.strokeRect(cx - 36, cy - 36, 72, 72);
+        title = (res && res.label) || 'Niks bijzonders';
+      }
+    } catch (_) {
+      title = (res && res.name) || 'Summon';
+    }
+    nameEl.textContent = title;
+    if (rarEl) {
+      rarEl.textContent = typeof rarityLabel === 'function' ? rarityLabel(rarId) : rarId;
+      rarEl.style.color = rar.color || '#9db1e3';
+    }
+    if (skEl) {
+      skEl.textContent = skill || '';
+      skEl.style.display = skill ? '' : 'none';
+    }
+    if (card) card.setAttribute('aria-hidden', 'true');
+  },
+
+  showSummonCenterCard() {
+    const reveal = document.getElementById('summonReveal');
+    const card = document.getElementById('summonCenterCard');
+    if (reveal) reveal.classList.add('is-card-show');
+    if (card) card.setAttribute('aria-hidden', 'false');
+    // Spoil only when the card lands — never via toast earlier
+    try {
+      const text = document.getElementById('summonRevealText');
+      const msg = this._summonPendingMsg;
+      if (text && msg) text.textContent = msg;
+    } catch (_) {}
+  },
+
+  /**
+   * Play summon reveal video; always schedule center-card for last 2s.
+   * No video file → CSS arena fallback (no 404 spam after first fail).
+   */
+  runSummonRevealTimeline(res) {
+    this.clearSummonRevealTimers();
+    const screen = document.getElementById('summonScreen');
+    const reveal = document.getElementById('summonReveal');
+    const fallback = document.getElementById('summonStageFallback');
+    const vid = document.getElementById('summonVideo');
+    const rarId = typeof chestResultRarityId === 'function' ? chestResultRarityId(res) : 'common';
+    if (screen) screen.classList.add('is-pulling');
+    if (reveal) {
+      reveal.dataset.rarity = rarId;
+      reveal.classList.toggle('is-nice', !!(res && res.nice));
+      reveal.classList.remove('is-card-show', 'is-shake');
+      void reveal.offsetWidth;
+      reveal.classList.add('is-shake');
+    }
+    this.paintSummonCenterCard(res);
+
+    const startTimers = (totalMs) => {
+      const cardAt = typeof summonRevealCardDelayMs === 'function'
+        ? summonRevealCardDelayMs(totalMs)
+        : Math.max(0, (totalMs || SUMMON_REVEAL_TOTAL_MS) - SUMMON_CARD_LAST_MS);
+      this._summonCardTimer = setTimeout(() => {
+        try { this.showSummonCenterCard(); } catch (_) {}
+      }, cardAt);
+      this._summonDoneTimer = setTimeout(() => {
+        this._chestPullBusy = false;
+        try {
+          const sc = document.getElementById('summonScreen');
+          if (sc) sc.classList.remove('is-pulling');
+        } catch (_) {}
+        try { this.renderSummon(); } catch (_) {}
+      }, totalMs || SUMMON_REVEAL_TOTAL_MS);
+    };
+
+    const useFallback = () => {
+      if (vid) {
+        vid.style.display = 'none';
+        try { vid.removeAttribute('src'); vid.load(); } catch (_) {}
+      }
+      if (fallback) fallback.style.display = '';
+      startTimers(SUMMON_REVEAL_TOTAL_MS);
+    };
+
+    if (_summonVideoOk === false || !vid) {
+      useFallback();
+      return;
+    }
+
+    const src = vid.getAttribute('data-src') || SUMMON_VIDEO_SRC;
+    let settled = false;
+    const settleFallback = () => {
+      if (settled) return;
+      settled = true;
+      _summonVideoOk = false;
+      useFallback();
+    };
+    vid.onerror = settleFallback;
+    vid.onloadedmetadata = () => {
+      if (settled) return;
+      settled = true;
+      _summonVideoOk = true;
+      if (fallback) fallback.style.display = 'none';
+      // Must be 'block' — stylesheet sets .summon-video { display:none }
+      vid.style.display = 'block';
+      const durMs = Math.max(
+        SUMMON_REVEAL_TOTAL_MS,
+        Math.round((vid.duration || 5) * 1000)
+      );
+      startTimers(durMs);
+      try {
+        vid.currentTime = 0;
+        const p = vid.play();
+        if (p && p.catch) p.catch(() => {});
+      } catch (_) {}
+    };
+    try {
+      if (fallback) fallback.style.display = '';
+      vid.style.display = 'none';
+      if (!vid.getAttribute('src') || vid.getAttribute('src') !== src) {
+        vid.setAttribute('src', src);
+      }
+      vid.load();
+      setTimeout(() => {
+        if (!settled) settleFallback();
+      }, 1100);
+    } catch (_) {
+      settleFallback();
+    }
+  },
+
+  doChestPull(kind) {
+    try {
+      if (this._chestPullBusy) return;
+      if (state === 'play' && game) {
+        UI.toast('Niet tijdens gevecht', 2000);
+        return;
+      }
+      const screen = document.getElementById('summonScreen');
+      if (!screen || !screen.classList.contains('active')) {
+        this.openSummonHub();
+      }
+      this._chestPullBusy = true;
+      try { this.renderSummon(); } catch (_) {}
+
+      const res = openChestSummon(kind === 'weapon' || kind === 'pet' ? kind : 'random');
+      const text = document.getElementById('summonRevealText');
+      const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : 'Mislukt');
+      // Never spoil via toast/text during the open — only after card
+      this._summonPendingMsg = (res && res.ok) ? msg : null;
+      if (text) text.textContent = (res && res.ok) ? 'Kist opent…' : msg;
+
+      if (!res || !res.ok) {
+        this._chestPullBusy = false;
+        this._summonPendingMsg = null;
+        try {
+          const sc = document.getElementById('summonScreen');
+          if (sc) sc.classList.remove('is-pulling');
+        } catch (_) {}
+        try { UI.toast(msg, 2200); } catch (_) {}
+        try { this.renderSummon(); } catch (_) {}
+        try { this.renderMenu(); } catch (_) {}
+        return;
+      }
+
+      this.runSummonRevealTimeline(res);
+      try { this.renderMenu(); } catch (_) {}
+      try { syncPlayLayer(); } catch (_) {}
+    } catch (err) {
+      this._chestPullBusy = false;
+      this._summonPendingMsg = null;
+      this.clearSummonRevealTimers();
+      sfReportError('doChestPull', err, 'Summon mislukt');
+      try { ensureVisibleScreen(); } catch (_) {}
     }
   },
 
@@ -31446,6 +32424,13 @@ const UI = {
       const summonBadge = w.summoned
         ? ` <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">✦ Summon</span>`
         : '';
+      const chestSk = typeof chestWeaponSkillOf === 'function' ? chestWeaponSkillOf(w.id) : null;
+      const chestBadge = chestSk
+        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Kist</span>`
+        : '';
+      const chestSkillLine = chestSk
+        ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestSk}</div>`
+        : '';
       const statLine = w.summoned
         ? `${weaponDesc(w)} · schade x${base.dmg} → <b style="color:${rar.color}">x${w.dmg}</b> · bereik ${w.range} · snelheid x${w.speed}`
         : `${weaponDesc(w)} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}`;
@@ -31482,8 +32467,9 @@ const UI = {
       const zoneLockLine = lvlLocked && zoneMeta
         ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:${zoneMeta.color}">Drop in ${zoneMeta.name}-zone / Nightmare·Hell modus</div>`
         : '';
-      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${zoneBadge}${summonBadge}${tierBadge}${upBadge}</div>
+      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${zoneBadge}${summonBadge}${chestBadge}${tierBadge}${upBadge}</div>
         <div class="cinfo">${statLine}</div>` +
+        chestSkillLine +
         upLine +
         effectLine +
         (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '') +
@@ -32019,25 +33005,31 @@ const UI = {
       const upLv = tamed ? itemUpgradeLevel('pet', def.id) : 0;
       const upMax = tamed ? itemUpgradeMax('pet', def.id) : 0;
       const upBadge = upLv > 0 ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">↑ Lv ${upLv}/${upMax}</span>` : '';
-      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${upBadge}</div>` +
+      const petEntry = tamed && save.pets ? save.pets[def.id] : null;
+      const chestPetSk = petEntry && typeof petEntry.skill === 'string' ? petEntry.skill : null;
+      const chestPetBadge = chestPetSk
+        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Kist</span>`
+        : '';
+      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${chestPetBadge}${upBadge}</div>` +
         `<div class="cinfo">${def.perk}</div>` +
+        (chestPetSk ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestPetSk}</div>` : '') +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
           ? 'Getemd · assist in avontuur'
           : (canBuy
             ? `Kopen: ${cost} pet coins`
-            : `Temmen: ${Math.min(kills, need)}/${need} kills · of ${cost} 🪙`)}</div>` +
+            : `Temmen: ${Math.min(kills, need)}/${need} kills · of ${cost} ${SVG_COIN_ICON}`)}</div>` +
         (tamed && (upLv > 0 || itemUpgradeShards('pet', def.id) > 0)
           ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px">${petUpgradeSummary(def.id)}</div>` : '');
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
       if (tamed) {
-        right.innerHTML = active ? '&#10004; actief' : 'uitrusten';
+        right.innerHTML = active ? `${SVG_CHECK_MINI} actief` : 'uitrusten';
       } else if (canBuy) {
-        right.innerHTML = `kopen<br>${cost} 🪙`;
+        right.innerHTML = `kopen<br>${cost} ${SVG_COIN_ICON}`;
         right.style.color = '#ff9ad5';
       } else {
-        right.textContent = kills > 0 ? `${need - kills} kills` : `${cost} 🪙`;
+        right.innerHTML = kills > 0 ? `${need - kills} kills` : `${cost} ${SVG_COIN_ICON}`;
         right.style.opacity = '0.7';
       }
       el.appendChild(right);
@@ -32408,8 +33400,8 @@ const UI = {
         ? ` · ~${formatSaveBytes(h.primaryBytes || h.backupBytes)}`
         : '';
       let statusPrimary = h.primaryCorrupt
-        ? '⚠ Hoofd-save corrupt'
-        : (h.primaryValid ? `${SVG_CHECK_MINI} Save OK` : (h.primaryOk ? '⚠ Save onleesbaar' : '⚠ Geen primary save'));
+        ? `${SVG_WARN_ICON} Hoofd-save corrupt`
+        : (h.primaryValid ? `${SVG_CHECK_MINI} Save OK` : (h.primaryOk ? `${SVG_WARN_ICON} Save onleesbaar` : `${SVG_WARN_ICON} Geen primary save`));
       if (h.drift && h.backupOk) {
         statusPrimary += h.driftDetail
           ? ` · ${h.driftDetail} — tik Herstel backup`
@@ -32425,7 +33417,7 @@ const UI = {
         (h.eggs ? ` · ei ${h.eggs}` : '') +
         `${sizeLine}<br>` +
         statusPrimary +
-        (h.backupOk ? ` · ${SVG_CHECK_MINI} Backup (Lv ${h.backupLvl})` : ' · ⚠ Geen backup');
+        (h.backupOk ? ` · ${SVG_CHECK_MINI} Backup (Lv ${h.backupLvl})` : ` · ${SVG_WARN_ICON} Geen backup`);
       if (h.drift && h.backupOk) {
         healthHtml += `<br><span style="opacity:.85;color:#ffd75e">Drift: ${h.driftDetail || 'hoofd ≠ backup'} — Herstel backup óf Sync backup</span>`;
       }
@@ -32822,6 +33814,8 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
     } else if (hub === 'versus') {
       UI.charPickStep = 1;
       UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { msg: 'Kies karakter mislukt' });
+    } else if (hub === 'summon') {
+      UI.openSummonHub();
     } else {
       UI.openModeHub(hub);
     }
@@ -32894,6 +33888,24 @@ bindPress(document.getElementById('btnUpgrades'), () => {
   UI.openUpgrades('skills');
 });
 bindPress(document.getElementById('btnPets'), () => {
+  openCollectionScreen('petScreen', () => UI.renderPets());
+});
+bindPress(document.getElementById('btnChestPull'), () => {
+  AudioSys.init();
+  UI.doChestPull('random');
+});
+bindPress(document.getElementById('btnSummonGotoWeapons'), () => {
+  AudioSys.init(); AudioSys.sfx('select');
+  if (state === 'play' && game) return;
+  UI.clearSummonRevealTimers();
+  UI._chestPullBusy = false;
+  openCollectionScreen('weaponScreen', () => UI.renderWeapons());
+});
+bindPress(document.getElementById('btnSummonGotoPets'), () => {
+  AudioSys.init(); AudioSys.sfx('select');
+  if (state === 'play' && game) return;
+  UI.clearSummonRevealTimers();
+  UI._chestPullBusy = false;
   openCollectionScreen('petScreen', () => UI.renderPets());
 });
 bindPress(document.getElementById('btnDex'), () => {

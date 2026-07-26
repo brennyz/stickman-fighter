@@ -756,40 +756,49 @@ function initCharSelectChrome() {
   window.__sfCharChrome = true;
 }
 
-/** Prestatie-iconen als inline SVG (art-upgrade 4/4) — vervangt emoji. */
-const ACH_ICON_SVG = {
-  first_win: '<path d="M7 4h10v5a5 5 0 01-10 0z"/><path d="M7 5H4c0 3 1.5 5 3 5M17 5h3c0 3-1.5 5-3 5"/><path d="M12 14v3M8 20h8M10 17h4v3h-4z"/>',
-  lv10: '<path d="M12 20V5"/><path d="M6 11l6-6 6 6"/>',
-  dex10: '<path d="M12 6c-2-1.5-4.5-2-8-2v14c3.5 0 6 .5 8 2 2-1.5 4.5-2 8-2V4c-3.5 0-6 .5-8 2z"/><path d="M12 6v14"/>',
-  dexFull: '<path d="M5 4h11v16H5z"/><path d="M16 6h3v14h-3"/><path d="M8 8h5M8 12h5"/>',
-  dex100: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/>',
-  dexHalf: '<circle cx="12" cy="12" r="9"/><path d="M14.5 9.5l-1.6 4-4 1.6 1.6-4z" fill="currentColor"/>',
-  dexTiers: '<path d="M12 3l6 5-6 13L6 8z"/><path d="M6 8h12M9 8l3 13M15 8l-3 13"/>',
-  dexMythic: '<path d="M12 3l1.8 5.4L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.6z" fill="currentColor"/>',
-  train5: '<rect x="6" y="8" width="12" height="10" rx="2"/><path d="M9 8V5.5M15 8V5.5"/><circle cx="9.5" cy="12.5" r="1.2" fill="currentColor"/><circle cx="14.5" cy="12.5" r="1.2" fill="currentColor"/>',
-  wall100: '<path d="M4 6h16M4 11h16M4 16h16M4 6v14h16V6M9 6v5M15 11v5M9 16v4"/>',
-  combo8: '<path d="M13 3L6 13h5l-2 8 7-10h-5z" fill="currentColor" stroke="none"/>',
-  lv50: '<path d="M4 17l1.5-9L9 12l3-6 3 6 3.5-4L20 17z"/><path d="M5 20h14"/>',
-  daily7: '<rect x="4" y="6" width="16" height="14" rx="2"/><path d="M4 10h16M8 4v4M16 4v4"/><path d="M9 15l2 2 4-4"/>',
-  vs5: '<circle cx="8" cy="12" r="4"/><circle cx="16" cy="12" r="4"/>',
-  vs_roster: '<circle cx="9" cy="9" r="4"/><rect x="12" y="12" width="8" height="8" rx="2"/>',
-  saga_icons: '<path d="M12 3l2 6h6l-5 4 2 6-5-3.6L7 19l2-6-5-4h6z" fill="currentColor" stroke="none"/>',
+/** ASSET-STYLE file icons — arcade stroke, geen emoji. */
+const ACH_ICON_FILE = {
+  first_win: 'ach-first-win',
+  lv10: 'ach-lv10',
+  dex10: 'ach-dex10',
+  dexFull: 'ach-dex-full',
+  dex100: 'ach-dex100',
+  dexHalf: 'ach-dex-half',
+  dexTiers: 'ach-dex-tiers',
+  dexMythic: 'ach-dex-mythic',
+  train5: 'ach-train5',
+  wall100: 'ach-wall100',
+  combo8: 'ach-combo8',
+  finisher1: 'ach-finisher1',
+  finisher10: 'ach-finisher10',
+  finisher50: 'ach-finisher50',
+  weaponMaster25: 'ach-weapon-master25',
+  streak10: 'ach-streak10',
+  trainCombo10: 'ach-train-combo10',
+  lv50: 'ach-lv50',
+  lv70: 'ach-lv70',
+  zoneWeapons10: 'ach-zone-weapons10',
+  daily7: 'ach-daily7',
+  vs5: 'ach-vs5',
+  vsFatality1: 'ach-vs-fatality1',
+  vs_roster: 'ach-vs-roster',
+  saga_icons: 'ach-saga-icons',
 };
+function uiFileIcon(file, cls, size) {
+  const s = size || 18;
+  const c = cls ? ` class="${cls}"` : '';
+  return `<img${c} src="assets/ui/${file}.svg" alt="" width="${s}" height="${s}" decoding="async" draggable="false">`;
+}
 function achIconSvg(id) {
-  const body = ACH_ICON_SVG[id] || ACH_ICON_SVG.first_win;
-  return '<svg viewBox="0 0 24 24" style="width:1.2em;height:1.2em;vertical-align:-0.24em;margin-right:2px" ' +
-    'fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg>';
+  const file = ACH_ICON_FILE[id] || ACH_ICON_FILE.first_win;
+  return uiFileIcon(file, 'ach-ico', 18);
 }
 
-/** Mini SVG-vinkje (art-upgrade 4/4) — vervangt ✔-glyphs in lijsten. */
-const SVG_CHECK_MINI =
-  '<svg viewBox="0 0 24 24" style="width:1em;height:1em;vertical-align:-0.14em" fill="none" ' +
-  'stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13l5 5L20 7"/></svg>';
-
-/** Inline SVG-slotje (art-upgrade 2/4) — vervangt 🔒 in level/wapen-lijsten. */
-const SVG_LOCK_ICON =
-  '<svg viewBox="0 0 24 24" style="width:1.15em;height:1.15em;vertical-align:-0.2em" fill="none" stroke="currentColor" stroke-width="2">' +
-  '<rect x="6" y="11" width="12" height="9" rx="2" fill="rgba(0,0,0,.3)"/><path d="M9 11V8a3 3 0 016 0v3"/></svg>';
+/** Mini check / lock / coin / warn — ASSET-STYLE files. */
+const SVG_CHECK_MINI = uiFileIcon('ui-check', 'ui-ico-check', 14);
+const SVG_LOCK_ICON = uiFileIcon('ui-lock', 'ui-ico-lock', 15);
+const SVG_COIN_ICON = uiFileIcon('ui-coin', 'ui-ico-coin', 14);
+const SVG_WARN_ICON = uiFileIcon('ui-warn', 'ui-ico-warn', 14);
 
 const MODE_HUB_META = {
   arcade: { badge: 'SOLO', badgeClass: 'badge-solo', title: 'Arcade', sub: 'Snelle sessies · high scores · geen voortgang verlies' },
@@ -820,7 +829,7 @@ function hubTileStatLine(hub) {
       const mats = save.stats?.matsCoinBest || 0;
       if (mats > 0) bits.push(`mats ${mats}`);
       const pc = petCoinsBalance();
-      if (pc > 0) bits.push(`${pc} pet 🪙`);
+      if (pc > 0) bits.push(`${pc} pet ${SVG_COIN_ICON}`);
       return bits.length ? bits.join(' · ') : t('hub.modes3');
     }
     case 'versus': {
@@ -829,7 +838,17 @@ function hubTileStatLine(hub) {
       return m > 0 ? t('hub.vsRecord', { w, m }) : t('hub.fightersLocal');
     }
     case 'collect':
-      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ${petCoinsBalance()} pet 🪙`;
+      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ${petCoinsBalance()} pet ${SVG_COIN_ICON}`;
+    case 'summon': {
+      try {
+        ensureChestDaily();
+        const n = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
+        if (n <= 0) return 'Op · morgen weer';
+        return `${n}× vandaag`;
+      } catch (_) {
+        return '10 vandaag';
+      }
+    }
     default:
       return '';
   }
@@ -898,6 +917,9 @@ function renderAdvHeatMeter(heat, opts) {
   const compact = !!opts.compact;
   const label = satanHeatLabel(heat);
   const tip = typeof satanHeatTip === 'function' ? satanHeatTip(heat) : '';
+  const tipAttr = typeof satanEscAttr === 'function'
+    ? satanEscAttr(tip || label)
+    : String(tip || label || '').split('"').join('');
   const bang = heat.bang
     ? `<span class="adv-heat-bang" aria-hidden="true">!</span>`
     : '';
@@ -912,7 +934,7 @@ function renderAdvHeatMeter(heat, opts) {
     ? satanPortraitHtml({ compact: true })
     : '';
   if (compact) {
-    return `<span class="${cls}" title="${tip || label}">` +
+    return `<span class="${cls}" title="${tipAttr}">` +
       mark +
       `<i class="lvl-heat-fill" style="width:${heat.pct}%"></i>` +
       `<span class="lvl-heat-n">${count}</span>${bang}</span>`;
@@ -923,7 +945,7 @@ function renderAdvHeatMeter(heat, opts) {
     : (typeof satanPortraitHtml === 'function'
       ? `<div class="adv-heat-face idle">${satanPortraitHtml({ compact: true })}</div>`
       : '');
-  return `<div class="${cls}" title="${tip}" role="meter" aria-valuemin="0" aria-valuemax="${SATAN_FAIL_THRESHOLD}" aria-valuenow="${heat.fails}" aria-label="${label}">` +
+  return `<div class="${cls}" title="${tipAttr}" role="meter" aria-valuemin="0" aria-valuemax="${SATAN_FAIL_THRESHOLD}" aria-valuenow="${heat.fails}" aria-label="${typeof satanEscAttr === 'function' ? satanEscAttr(label) : label}">` +
     `<div class="adv-heat-row">` +
     portrait +
     `<div class="adv-heat-body">` +
@@ -959,7 +981,7 @@ function renderAdvSatanCard(heat, diff) {
 }
 
 const UI = {
-  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'upgradeScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
+  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'summonScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'upgradeScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
@@ -1062,6 +1084,8 @@ const UI = {
           : ` · TOT ${tot.r1}-${tot.r2} (Δ${tot.diff})`;
       }
       sub.textContent = `2P ${game.roundsP1}-${game.roundsP2} · ronde ${game.round} · ${a} vs ${b}${tag}${totTag}`;
+    } else if (game?.mode === 'wall' && typeof wallPauseSubtitle === 'function') {
+      sub.textContent = wallPauseSubtitle(game);
     } else {
       sub.textContent = this.pauseSubDefault;
     }
@@ -1258,6 +1282,13 @@ const UI = {
         this.show('menuScreen');
         return;
       }
+      if (active === 'summonScreen') {
+        this.clearSummonRevealTimers();
+        this._chestPullBusy = false;
+        this.renderMenu();
+        this.show('menuScreen');
+        return;
+      }
       if (active === 'levelScreen') {
         bumpLevelHoldGen();
         try { cancelGambleStart(); } catch (_) {}
@@ -1335,6 +1366,8 @@ const UI = {
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
+      try { this.clearSummonRevealTimers(); } catch (_) {}
+      this._chestPullBusy = false;
       try { Input.releaseAll(); } catch (_) {}
       Input.dualMode = false;
       Input.layout(W, H);
@@ -1473,7 +1506,8 @@ const UI = {
       el.appendChild(cap);
       const tag = document.createElement('div');
       tag.className = 'char-tag';
-      tag.textContent = ok ? r.tag : t('ui.charLocked');
+      if (ok) tag.textContent = r.tag;
+      else tag.innerHTML = `${SVG_LOCK_ICON} ${t('ui.charLocked')}`;
       el.appendChild(tag);
       const flair = document.createElement('div');
       flair.className = 'char-flair';
@@ -1757,6 +1791,15 @@ const UI = {
     document.querySelectorAll('[data-hub-stat]').forEach((el) => {
       el.textContent = hubTileStatLine(el.dataset.hubStat);
     });
+    const summonTile = document.getElementById('btnSummons');
+    if (summonTile) {
+      let left = 0;
+      try { left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
+      summonTile.classList.toggle('has-summons', left > 0);
+      summonTile.setAttribute('aria-label', left > 0
+        ? `Summons · ${left} over vandaag`
+        : 'Summons · op voor vandaag');
+    }
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const verLine = document.getElementById('menuVerLine');
@@ -1811,6 +1854,336 @@ const UI = {
     if (typeof renderLangSwitch === 'function') renderLangSwitch();
     } catch (err) {
       sfReportError('renderMenu', err, 'Menu kon niet ververst worden');
+    }
+  },
+
+  renderSummon() {
+    try {
+      // Menu-UI only — never leave play canvas competing with this screen
+      if (typeof state !== 'undefined' && state === 'play' && game) {
+        try { UI.toast('Eerst gevecht afmaken of pauzeren', 2200); } catch (_) {}
+        return;
+      }
+      if (typeof state !== 'undefined' && state === 'play' && !game) state = 'menu';
+      ensureChestDaily();
+      const left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
+      const quota = document.getElementById('summonQuota');
+      if (quota) {
+        quota.textContent = `Vandaag: ${left}/${CHEST_DAILY_TOTAL} random summons`;
+      }
+      const pullBtn = document.getElementById('btnChestPull');
+      const pullLbl = document.getElementById('chestPullLbl');
+      if (pullLbl) pullLbl.textContent = left > 0 ? `${left} over` : 'Op';
+      if (pullBtn) pullBtn.disabled = left <= 0 || !!this._chestPullBusy;
+
+      const logEl = document.getElementById('summonLog');
+      if (logEl) {
+        const pulls = (save.chestDaily && Array.isArray(save.chestDaily.pulls))
+          ? save.chestDaily.pulls.slice().reverse() : [];
+        if (!pulls.length) {
+          logEl.textContent = 'Nog geen pulls vandaag.';
+        } else {
+          logEl.innerHTML = pulls.slice(0, 8).map((p) => {
+            const tag = p.nice ? '✦' : '·';
+            const rar = p.rarity ? ` ${p.rarity}` : '';
+            return `<div>${tag} ${p.kind} ${p.type || ''}${rar}</div>`;
+          }).join('');
+        }
+      }
+      try { syncPlayLayer(); } catch (_) {}
+      try { hardenButtonIcons(document.getElementById('summonScreen')); } catch (_) {}
+    } catch (err) {
+      sfReportError('renderSummon', err, 'Summons laden mislukt');
+      try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
+    }
+  },
+
+  clearSummonRevealTimers() {
+    if (this._summonCardTimer) {
+      clearTimeout(this._summonCardTimer);
+      this._summonCardTimer = null;
+    }
+    if (this._summonDoneTimer) {
+      clearTimeout(this._summonDoneTimer);
+      this._summonDoneTimer = null;
+    }
+    try {
+      const screen = document.getElementById('summonScreen');
+      if (screen) screen.classList.remove('is-pulling');
+    } catch (_) {}
+    try {
+      const vid = document.getElementById('summonVideo');
+      if (vid) {
+        vid.onloadedmetadata = null;
+        vid.onended = null;
+        vid.onerror = null;
+        try { vid.pause(); } catch (_) {}
+      }
+    } catch (_) {}
+  },
+
+  /** Open summons hub — never mid-fight (blue-screen guard). */
+  openSummonHub() {
+    try {
+      if (state === 'play' && game) {
+        UI.toast('Eerst gevecht afmaken of pauzeren', 2400);
+        return;
+      }
+      if (typeof adventureSpecialDuelActive === 'function' && adventureSpecialDuelActive(game)) {
+        UI.toast(t('toast.satanReflectHint'), 2400);
+        return;
+      }
+      if (state === 'play' && !game) state = 'menu';
+      if (state === 'pause' || state === 'result') state = 'menu';
+      this.clearSummonRevealTimers();
+      this._chestPullBusy = false;
+      try { if (typeof _summonVideoOk !== 'undefined') _summonVideoOk = null; } catch (_) {}
+      this.safeOpen('summonScreen', () => this.renderSummon(), { msg: 'Summons laden mislukt' });
+    } catch (err) {
+      sfReportError('openSummonHub', err, 'Summons openen mislukt');
+      try { this.goMenu(); } catch (_) {}
+    }
+  },
+
+  paintSummonCenterCard(res) {
+    const cv = document.getElementById('summonCardCanvas');
+    const nameEl = document.getElementById('summonCardName');
+    const rarEl = document.getElementById('summonCardRar');
+    const skEl = document.getElementById('summonCardSkill');
+    const card = document.getElementById('summonCenterCard');
+    if (!cv || !nameEl) return;
+    const cc = cv.getContext('2d');
+    const W = cv.width || 160;
+    const H = cv.height || 160;
+    const cx = W * 0.5;
+    const cy = H * 0.52;
+    cc.clearRect(0, 0, W, H);
+    const rarId = typeof chestResultRarityId === 'function' ? chestResultRarityId(res) : 'common';
+    const rar = typeof rarityOf === 'function' ? rarityOf(rarId) : { color: '#9db1e3', name: rarId };
+    let title = '…';
+    let skill = '';
+    try {
+      if (res && res.weaponId && typeof drawWeaponShape === 'function') {
+        cc.save();
+        cc.translate(cx - 32, cy + 18);
+        cc.rotate(-0.55);
+        if (rar.order >= 3 && !motionReduced()) {
+          cc.fillStyle = rar.glow || 'rgba(255,215,94,.35)';
+          cc.beginPath(); cc.arc(30, -8, 34, 0, Math.PI * 2); cc.fill();
+        }
+        drawWeaponShape(cc, res.weaponId, 0.34);
+        cc.restore();
+        title = res.name || (typeof weaponLabel === 'function' ? weaponLabel(res.weaponId) : res.weaponId);
+        skill = res.skill || '';
+      } else if (res && res.petId && typeof drawMonsterArt === 'function') {
+        const def = typeof petDef === 'function' ? petDef(res.petId) : null;
+        const sp = def && SPECIES[def.speciesId];
+        if (sp) {
+          cc.save();
+          cc.translate(cx, cy + 10);
+          cc.scale(0.9, 0.9);
+          drawMonsterArt(cc, sp, sp.size || 28, 1.15, false, false);
+          cc.restore();
+        }
+        title = res.name || (sp && sp.name) || res.petId;
+        skill = res.skill || '';
+      } else if (res && res.type === 'egg') {
+        cc.fillStyle = rar.color || '#ffd75e';
+        cc.beginPath(); cc.ellipse(cx, cy, 34, 44, 0, 0, Math.PI * 2); cc.fill();
+        cc.strokeStyle = 'rgba(0,0,0,.35)';
+        cc.lineWidth = 3;
+        cc.stroke();
+        title = res.name ? ('Ei · ' + res.name) : 'Ei';
+      } else if (res && res.type === 'coins') {
+        cc.fillStyle = '#ffd75e';
+        cc.beginPath(); cc.arc(cx, cy, 34, 0, Math.PI * 2); cc.fill();
+        cc.strokeStyle = '#c97a20';
+        cc.lineWidth = 4;
+        cc.stroke();
+        cc.fillStyle = '#c97a20';
+        cc.font = 'bold 28px Nunito, sans-serif';
+        cc.textAlign = 'center';
+        cc.textBaseline = 'middle';
+        cc.fillText('PC', cx, cy + 1);
+        title = '+' + (res.amount || 0) + ' pet coins';
+      } else if (res && res.type === 'xp') {
+        cc.fillStyle = '#7cf5ff';
+        cc.font = 'bold 34px Nunito, sans-serif';
+        cc.textAlign = 'center';
+        cc.textBaseline = 'middle';
+        cc.fillText('XP', cx, cy);
+        title = '+' + (res.amount || 0) + ' XP';
+      } else {
+        cc.strokeStyle = '#9db1e3';
+        cc.lineWidth = 3;
+        cc.strokeRect(cx - 36, cy - 36, 72, 72);
+        title = (res && res.label) || 'Niks bijzonders';
+      }
+    } catch (_) {
+      title = (res && res.name) || 'Summon';
+    }
+    nameEl.textContent = title;
+    if (rarEl) {
+      rarEl.textContent = typeof rarityLabel === 'function' ? rarityLabel(rarId) : rarId;
+      rarEl.style.color = rar.color || '#9db1e3';
+    }
+    if (skEl) {
+      skEl.textContent = skill || '';
+      skEl.style.display = skill ? '' : 'none';
+    }
+    if (card) card.setAttribute('aria-hidden', 'true');
+  },
+
+  showSummonCenterCard() {
+    const reveal = document.getElementById('summonReveal');
+    const card = document.getElementById('summonCenterCard');
+    if (reveal) reveal.classList.add('is-card-show');
+    if (card) card.setAttribute('aria-hidden', 'false');
+    // Spoil only when the card lands — never via toast earlier
+    try {
+      const text = document.getElementById('summonRevealText');
+      const msg = this._summonPendingMsg;
+      if (text && msg) text.textContent = msg;
+    } catch (_) {}
+  },
+
+  /**
+   * Play summon reveal video; always schedule center-card for last 2s.
+   * No video file → CSS arena fallback (no 404 spam after first fail).
+   */
+  runSummonRevealTimeline(res) {
+    this.clearSummonRevealTimers();
+    const screen = document.getElementById('summonScreen');
+    const reveal = document.getElementById('summonReveal');
+    const fallback = document.getElementById('summonStageFallback');
+    const vid = document.getElementById('summonVideo');
+    const rarId = typeof chestResultRarityId === 'function' ? chestResultRarityId(res) : 'common';
+    if (screen) screen.classList.add('is-pulling');
+    if (reveal) {
+      reveal.dataset.rarity = rarId;
+      reveal.classList.toggle('is-nice', !!(res && res.nice));
+      reveal.classList.remove('is-card-show', 'is-shake');
+      void reveal.offsetWidth;
+      reveal.classList.add('is-shake');
+    }
+    this.paintSummonCenterCard(res);
+
+    const startTimers = (totalMs) => {
+      const cardAt = typeof summonRevealCardDelayMs === 'function'
+        ? summonRevealCardDelayMs(totalMs)
+        : Math.max(0, (totalMs || SUMMON_REVEAL_TOTAL_MS) - SUMMON_CARD_LAST_MS);
+      this._summonCardTimer = setTimeout(() => {
+        try { this.showSummonCenterCard(); } catch (_) {}
+      }, cardAt);
+      this._summonDoneTimer = setTimeout(() => {
+        this._chestPullBusy = false;
+        try {
+          const sc = document.getElementById('summonScreen');
+          if (sc) sc.classList.remove('is-pulling');
+        } catch (_) {}
+        try { this.renderSummon(); } catch (_) {}
+      }, totalMs || SUMMON_REVEAL_TOTAL_MS);
+    };
+
+    const useFallback = () => {
+      if (vid) {
+        vid.style.display = 'none';
+        try { vid.removeAttribute('src'); vid.load(); } catch (_) {}
+      }
+      if (fallback) fallback.style.display = '';
+      startTimers(SUMMON_REVEAL_TOTAL_MS);
+    };
+
+    if (_summonVideoOk === false || !vid) {
+      useFallback();
+      return;
+    }
+
+    const src = vid.getAttribute('data-src') || SUMMON_VIDEO_SRC;
+    let settled = false;
+    const settleFallback = () => {
+      if (settled) return;
+      settled = true;
+      _summonVideoOk = false;
+      useFallback();
+    };
+    vid.onerror = settleFallback;
+    vid.onloadedmetadata = () => {
+      if (settled) return;
+      settled = true;
+      _summonVideoOk = true;
+      if (fallback) fallback.style.display = 'none';
+      // Must be 'block' — stylesheet sets .summon-video { display:none }
+      vid.style.display = 'block';
+      const durMs = Math.max(
+        SUMMON_REVEAL_TOTAL_MS,
+        Math.round((vid.duration || 5) * 1000)
+      );
+      startTimers(durMs);
+      try {
+        vid.currentTime = 0;
+        const p = vid.play();
+        if (p && p.catch) p.catch(() => {});
+      } catch (_) {}
+    };
+    try {
+      if (fallback) fallback.style.display = '';
+      vid.style.display = 'none';
+      if (!vid.getAttribute('src') || vid.getAttribute('src') !== src) {
+        vid.setAttribute('src', src);
+      }
+      vid.load();
+      setTimeout(() => {
+        if (!settled) settleFallback();
+      }, 1100);
+    } catch (_) {
+      settleFallback();
+    }
+  },
+
+  doChestPull(kind) {
+    try {
+      if (this._chestPullBusy) return;
+      if (state === 'play' && game) {
+        UI.toast('Niet tijdens gevecht', 2000);
+        return;
+      }
+      const screen = document.getElementById('summonScreen');
+      if (!screen || !screen.classList.contains('active')) {
+        this.openSummonHub();
+      }
+      this._chestPullBusy = true;
+      try { this.renderSummon(); } catch (_) {}
+
+      const res = openChestSummon(kind === 'weapon' || kind === 'pet' ? kind : 'random');
+      const text = document.getElementById('summonRevealText');
+      const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : 'Mislukt');
+      // Never spoil via toast/text during the open — only after card
+      this._summonPendingMsg = (res && res.ok) ? msg : null;
+      if (text) text.textContent = (res && res.ok) ? 'Kist opent…' : msg;
+
+      if (!res || !res.ok) {
+        this._chestPullBusy = false;
+        this._summonPendingMsg = null;
+        try {
+          const sc = document.getElementById('summonScreen');
+          if (sc) sc.classList.remove('is-pulling');
+        } catch (_) {}
+        try { UI.toast(msg, 2200); } catch (_) {}
+        try { this.renderSummon(); } catch (_) {}
+        try { this.renderMenu(); } catch (_) {}
+        return;
+      }
+
+      this.runSummonRevealTimeline(res);
+      try { this.renderMenu(); } catch (_) {}
+      try { syncPlayLayer(); } catch (_) {}
+    } catch (err) {
+      this._chestPullBusy = false;
+      this._summonPendingMsg = null;
+      this.clearSummonRevealTimers();
+      sfReportError('doChestPull', err, 'Summon mislukt');
+      try { ensureVisibleScreen(); } catch (_) {}
     }
   },
 
@@ -2561,6 +2934,13 @@ const UI = {
       const summonBadge = w.summoned
         ? ` <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">✦ Summon</span>`
         : '';
+      const chestSk = typeof chestWeaponSkillOf === 'function' ? chestWeaponSkillOf(w.id) : null;
+      const chestBadge = chestSk
+        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Kist</span>`
+        : '';
+      const chestSkillLine = chestSk
+        ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestSk}</div>`
+        : '';
       const statLine = w.summoned
         ? `${weaponDesc(w)} · schade x${base.dmg} → <b style="color:${rar.color}">x${w.dmg}</b> · bereik ${w.range} · snelheid x${w.speed}`
         : `${weaponDesc(w)} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}`;
@@ -2597,8 +2977,9 @@ const UI = {
       const zoneLockLine = lvlLocked && zoneMeta
         ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:${zoneMeta.color}">Drop in ${zoneMeta.name}-zone / Nightmare·Hell modus</div>`
         : '';
-      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${zoneBadge}${summonBadge}${tierBadge}${upBadge}</div>
+      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${zoneBadge}${summonBadge}${chestBadge}${tierBadge}${upBadge}</div>
         <div class="cinfo">${statLine}</div>` +
+        chestSkillLine +
         upLine +
         effectLine +
         (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '') +
@@ -3134,25 +3515,31 @@ const UI = {
       const upLv = tamed ? itemUpgradeLevel('pet', def.id) : 0;
       const upMax = tamed ? itemUpgradeMax('pet', def.id) : 0;
       const upBadge = upLv > 0 ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">↑ Lv ${upLv}/${upMax}</span>` : '';
-      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${upBadge}</div>` +
+      const petEntry = tamed && save.pets ? save.pets[def.id] : null;
+      const chestPetSk = petEntry && typeof petEntry.skill === 'string' ? petEntry.skill : null;
+      const chestPetBadge = chestPetSk
+        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Kist</span>`
+        : '';
+      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${chestPetBadge}${upBadge}</div>` +
         `<div class="cinfo">${def.perk}</div>` +
+        (chestPetSk ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestPetSk}</div>` : '') +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
           ? 'Getemd · assist in avontuur'
           : (canBuy
             ? `Kopen: ${cost} pet coins`
-            : `Temmen: ${Math.min(kills, need)}/${need} kills · of ${cost} 🪙`)}</div>` +
+            : `Temmen: ${Math.min(kills, need)}/${need} kills · of ${cost} ${SVG_COIN_ICON}`)}</div>` +
         (tamed && (upLv > 0 || itemUpgradeShards('pet', def.id) > 0)
           ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px">${petUpgradeSummary(def.id)}</div>` : '');
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
       if (tamed) {
-        right.innerHTML = active ? '&#10004; actief' : 'uitrusten';
+        right.innerHTML = active ? `${SVG_CHECK_MINI} actief` : 'uitrusten';
       } else if (canBuy) {
-        right.innerHTML = `kopen<br>${cost} 🪙`;
+        right.innerHTML = `kopen<br>${cost} ${SVG_COIN_ICON}`;
         right.style.color = '#ff9ad5';
       } else {
-        right.textContent = kills > 0 ? `${need - kills} kills` : `${cost} 🪙`;
+        right.innerHTML = kills > 0 ? `${need - kills} kills` : `${cost} ${SVG_COIN_ICON}`;
         right.style.opacity = '0.7';
       }
       el.appendChild(right);
@@ -3523,8 +3910,8 @@ const UI = {
         ? ` · ~${formatSaveBytes(h.primaryBytes || h.backupBytes)}`
         : '';
       let statusPrimary = h.primaryCorrupt
-        ? '⚠ Hoofd-save corrupt'
-        : (h.primaryValid ? `${SVG_CHECK_MINI} Save OK` : (h.primaryOk ? '⚠ Save onleesbaar' : '⚠ Geen primary save'));
+        ? `${SVG_WARN_ICON} Hoofd-save corrupt`
+        : (h.primaryValid ? `${SVG_CHECK_MINI} Save OK` : (h.primaryOk ? `${SVG_WARN_ICON} Save onleesbaar` : `${SVG_WARN_ICON} Geen primary save`));
       if (h.drift && h.backupOk) {
         statusPrimary += h.driftDetail
           ? ` · ${h.driftDetail} — tik Herstel backup`
@@ -3540,7 +3927,7 @@ const UI = {
         (h.eggs ? ` · ei ${h.eggs}` : '') +
         `${sizeLine}<br>` +
         statusPrimary +
-        (h.backupOk ? ` · ${SVG_CHECK_MINI} Backup (Lv ${h.backupLvl})` : ' · ⚠ Geen backup');
+        (h.backupOk ? ` · ${SVG_CHECK_MINI} Backup (Lv ${h.backupLvl})` : ` · ${SVG_WARN_ICON} Geen backup`);
       if (h.drift && h.backupOk) {
         healthHtml += `<br><span style="opacity:.85;color:#ffd75e">Drift: ${h.driftDetail || 'hoofd ≠ backup'} — Herstel backup óf Sync backup</span>`;
       }

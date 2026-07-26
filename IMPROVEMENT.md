@@ -113,8 +113,18 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | **merge** | Satan branch × main (summons/UI): conflicts opgelost + harden · v1.18.122 / SW v332. |
 | 2026-07-26 | **user** | Satan dikke SVG + ~half-scherm combat, adventure portrait-card + na-clear hint. v1.18.114 / SW v324. |
-| 2026-07-26 | **merge** | Satan stall + hitte-meter gemerged op main (Nightmare/Hell fails per-diff). v1.18.113 / SW v323.
+| 2026-07-26 | — | **Summons:** 10× random/dag, fullscreen pull (`is-pulling`), geen spoiler-toast, nice 14% + mid 30%. v1.18.121 / SW v331. |
+| 2026-07-26 | — | **Summons spectacle LIVE:** 5s reveal.mp4, ui-rail-wide stage-first, arcade chest, rarity rays, video display:block fix. v1.18.120 / SW v330. |
+| 2026-07-26 | — | **Arcade UI icons:** prestaties/lock/check/coin/warn + saga JS → `assets/ui/*.svg`; emoji uit ach/hub/loot. v1.18.119 / SW v329. |
+| 2026-07-26 | **19** | Muur c5: pauze live-stats (timer/stenen/combo/record-tempo), combo×10 milestone, smoke-wall regressie. v1.18.118 / SW v328. |
+| 2026-07-26 | — | **Rasengan CD LIVE:** Lv1–2 = 2s · Lv3–7 = 3s · Lv8 = 5s. v1.18.117 / SW v327. |
+| 2026-07-26 | — | **Summons video:** `assets/summon/reveal.mp4` (4s stickman tree→chest) wired + SW precache. Gemini share was login-walled; replace file anytime. v1.18.116 / SW v326. |
+| 2026-07-26 | — | **LIVE merge:** daily summons harden (menu-kist, center-card last 2s, save quota fix, smoke) zonder conflict op main. v1.18.115 / SW v325. |
+| 2026-07-26 | — | **Summons harden:** where-from/where-see strip, center-card laatste 2s (video of fallback), rarity FX shell, geen open tijdens play, save null→5 fix, smoke-summon. |
+| 2026-07-26 | — | **User fix harden+merge:** wapen-upgrades ownership-only (expliciete zone-gate + belt in add/try); smoke banked-shards cheat. v1.18.114 / SW v324. |
+| 2026-07-26 | — | **User fix:** wapen-upgrades alleen voor bezit (`weaponUnlockedByLevel`) — geen zone/locked wapens meer upgraden. v1.18.113 / SW v323. |
 | 2026-07-26 | **user** | Satan harden: adventure hitte-meter, gevaar-rood + ! bij 9×, copy/help/result tips. v1.18.102 / SW v312. |
 | 2026-07-26 | **user** | Satan stall-baas: na 10× falen op zelfde level → Satan met 85% reflect; win → Tide Battle pet-duel. v1.18.101 / SW v311. |
 | 2026-07-26 | — | **iPad/mobile scale:** fluid `--ui-rail` / type tokens, tablet≥768 + iPad landscape + phone-landscape density, saga touch floors, leesbaarheid clamp. v1.18.111 / SW v321. |

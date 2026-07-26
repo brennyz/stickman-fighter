@@ -1,5 +1,5 @@
 /* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 5 */
-const CACHE = 'stickfighter-app-v324';
+const CACHE = 'stickfighter-app-v332';
 
 
 
@@ -62,6 +62,8 @@ const ASSETS = [
   './assets/buttons/hub/arcade.svg',
   './assets/buttons/hub/collect.svg',
   './assets/buttons/hub/continue.svg',
+  './assets/buttons/hub/summons.svg',
+  './assets/summon/reveal.mp4',
   './assets/buttons/hub/versus.svg',
   './assets/buttons/modes/dex.svg',
   './assets/buttons/modes/mats.svg',
@@ -72,6 +74,31 @@ const ASSETS = [
   './assets/buttons/modes/upgrades.svg',
   './assets/buttons/modes/wall.svg',
   './assets/buttons/modes/weapons.svg',
+  './assets/ui/ach-combo8.svg',
+  './assets/ui/ach-daily7.svg',
+  './assets/ui/ach-dex-full.svg',
+  './assets/ui/ach-dex-half.svg',
+  './assets/ui/ach-dex-mythic.svg',
+  './assets/ui/ach-dex-tiers.svg',
+  './assets/ui/ach-dex10.svg',
+  './assets/ui/ach-dex100.svg',
+  './assets/ui/ach-finisher1.svg',
+  './assets/ui/ach-finisher10.svg',
+  './assets/ui/ach-finisher50.svg',
+  './assets/ui/ach-first-win.svg',
+  './assets/ui/ach-lv10.svg',
+  './assets/ui/ach-lv50.svg',
+  './assets/ui/ach-lv70.svg',
+  './assets/ui/ach-saga-icons.svg',
+  './assets/ui/ach-streak10.svg',
+  './assets/ui/ach-train-combo10.svg',
+  './assets/ui/ach-train5.svg',
+  './assets/ui/ach-vs-fatality1.svg',
+  './assets/ui/ach-vs-roster.svg',
+  './assets/ui/ach-vs5.svg',
+  './assets/ui/ach-wall100.svg',
+  './assets/ui/ach-weapon-master25.svg',
+  './assets/ui/ach-zone-weapons10.svg',
   './assets/ui/saga-all.svg',
   './assets/ui/saga-cape.svg',
   './assets/ui/saga-dawn.svg',
@@ -80,7 +107,12 @@ const ASSETS = [
   './assets/ui/saga-scroll.svg',
   './assets/ui/saga-tide.svg',
   './assets/ui/satan.svg',
-  './assets/ui/satan-mark.svg'
+  './assets/ui/satan-mark.svg',
+  './assets/ui/ui-check.svg',
+  './assets/ui/ui-coin.svg',
+  './assets/ui/ui-lock.svg',
+  './assets/ui/ui-warn.svg'
+
 ];
 
 function offlineFallbackHtml() {

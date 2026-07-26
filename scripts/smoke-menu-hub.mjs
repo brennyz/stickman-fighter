@@ -29,12 +29,20 @@ must(/id="menuHeroCanvas"/.test(menu), 'missing #menuHeroCanvas');
 must(/menu-title-glass/.test(menu), 'missing title glass');
 must(/menu-meta-dock/.test(menu), 'missing meta dock');
 must(/menu-lang-compact/.test(menu), 'missing lang compact');
-must((menu.match(/data-hub="/g) || []).length >= 4, 'expected ≥4 hub tiles');
+must((menu.match(/data-hub="/g) || []).length >= 5, 'expected ≥5 hub tiles');
+must(/data-hub="summon"/.test(menu), 'missing summons hub tile');
+must(/id="summonScreen"/.test(html), 'missing summonScreen');
+must(/id="summonCenterCard"/.test(html), 'missing summon center card');
+must(/id="summonWhereStrip"/.test(html), 'missing summon where-strip');
+must(/summon-center-card/.test(css), 'missing summon-center-card CSS');
+must(/chestDaily/.test(storage), 'missing chestDaily in DEFAULT_SAVE');
+must(/sanitizeChestDaily|chestWeapons/.test(storage), 'missing chest save sanitize hooks');
+must(/src\/data\/chest-summons\.js/.test(fs.readFileSync(path.join(root, 'src/manifest.json'), 'utf8')), 'manifest missing chest-summons.js');
 must(/body\.is-playing #menuScreen \.menu-stage/.test(css), 'missing play-safe stage hide');
 must(/sf-icon-broken/.test(css), 'missing broken-icon CSS');
 must(/function hardenButtonIcons/.test(fs.readFileSync(path.join(root, 'src/systems/missions.js'), 'utf8')), 'missing hardenButtonIcons');
 
-const hub = ['adventure', 'arcade', 'versus', 'collect', 'continue'];
+const hub = ['adventure', 'arcade', 'versus', 'collect', 'summons', 'continue'];
 const modes = ['training', 'wall', 'mats', 'weapons', 'pets', 'style', 'skills', 'upgrades', 'dex'];
 const chrome = [
   'music', 'missions', 'settings', 'help', 'refresh', 'install', 'home',

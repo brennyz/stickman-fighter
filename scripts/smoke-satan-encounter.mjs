@@ -90,8 +90,8 @@ async function run() {
       if (!game.satanActive || !game.satanMon) throw new Error('Satan did not spawn');
       const mon = game.satanMon;
       if (!mon.satanBoss || !(mon.reflectRatio > 0)) throw new Error('Satan flags missing');
-      const minHalf = Math.min(W, H) * 0.18;
-      if (!(mon.size >= minHalf) || mon.size < 80) {
+      const minHalf = Math.min(W, H) * 0.15;
+      if (!(mon.size >= minHalf) || mon.size < 70) {
         throw new Error('Satan not half-screen sized: ' + mon.size + ' vs min ' + minHalf);
       }
       if (typeof satanCombatSize !== 'function') throw new Error('satanCombatSize missing');
@@ -99,6 +99,36 @@ async function run() {
         throw new Error('SATAN_SVG_URL missing');
       }
       try { ensureSatanSvg(); } catch (e) { throw new Error('ensureSatanSvg: ' + e); }
+      try { refreshSatanCombatScale(game); } catch (e) { throw new Error('refreshSatanCombatScale: ' + e); }
+
+      // Nightmare/Hell per-diff fails bag
+      if (typeof ensureAdvHardBag === 'function') {
+        save.advCleared = save.advCleared || {};
+        save.advCleared.normal = true;
+        const bag = ensureAdvHardBag('nightmare');
+        bag.fails = bag.fails || {};
+        bag.fails[1] = 10;
+        bag.satanAt = {};
+        persist();
+        if (!shouldTriggerSatan(1, 'nightmare')) throw new Error('nightmare satan trigger failed');
+      }
+
+      // After-clear card still explains Satan
+      save.advCleared = save.advCleared || {};
+      save.advCleared.normal = true;
+      save.advFails[2] = 0;
+      persist();
+      UI.advIslandPick = 1;
+      try { UI.renderLevels(); } catch (e) { throw new Error('renderLevels after-clear: ' + e); }
+      const info2 = document.getElementById('levelIslandInfo');
+      if (!info2 || !info2.innerHTML.includes('adv-satan-card')) {
+        throw new Error('after-clear missing satan card');
+      }
+      const blurb = typeof advDiffBlurb === 'function' ? advDiffBlurb('normal') : '';
+      if (!blurb || blurb.indexOf('Satan') < 0 && blurb.indexOf('Hitte') < 0 && blurb.indexOf('Heat') < 0) {
+        // NL/EN both mention Hitte/Satan or Heat/Satan
+        if (!/Satan|Hitte|Heat/i.test(blurb)) throw new Error('diff blurb missing after-clear satan hint: ' + blurb);
+      }
 
       const hpBefore = game.player.hp;
       const satanHpBefore = mon.hp;

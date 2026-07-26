@@ -48,14 +48,30 @@ function satanSvgReady() {
   );
 }
 
-/** Combat-radius zodat Satan ~halve schermhoogte vult. */
-function satanCombatSize() {
+/** Combat-radius zodat Satan ~halve schermhoogte vult (clamp tegen HUD/ground). */
+function satanCombatSize(game) {
   const ww = typeof W === 'number' && W > 0 ? W : 800;
   const hh = typeof H === 'number' && H > 0 ? H : 600;
   const m = Math.min(ww, hh);
-  const raw = Math.round(m * SATAN_SCREEN_FRAC);
+  let raw = Math.round(m * SATAN_SCREEN_FRAC);
+  // Half-screen art (~2.35×r) mag HUD + ground niet overschrijven
+  try {
+    const g = game && game.ground > 0 ? game.ground : (hh * 0.82);
+    const hud = (game && game.advHudBottom) || Math.max(88, hh * 0.12);
+    const room = Math.max(70, g - hud - 20);
+    raw = Math.min(raw, Math.floor(room / 1.55));
+  } catch (_) {}
   if (typeof clamp === 'function') return clamp(raw, SATAN_SIZE_MIN, SATAN_SIZE_MAX);
   return Math.max(SATAN_SIZE_MIN, Math.min(SATAN_SIZE_MAX, raw));
+}
+
+function satanEscAttr(s) {
+  // Geen regex-literals met quotes — die breken stripLiterals in check-undefined-calls.
+  return String(s == null ? '' : s)
+    .split('&').join('&amp;')
+    .split('"').join('&quot;')
+    .split('<').join('&lt;')
+    .split('>').join('&gt;');
 }
 
 /**
@@ -90,7 +106,7 @@ function satanPortraitHtml(opts) {
   const wh = compact
     ? 'width="18" height="18"'
     : 'width="72" height="90"';
-  return `<img class="${cls}" src="${src}" alt="" ${wh} decoding="async" draggable="false">`;
+  return `<img class="${cls}" src="${satanEscAttr(src)}" alt="" ${wh} decoding="async" draggable="false">`;
 }
 
 function satanDiffId(diff) {
@@ -273,18 +289,28 @@ function satanSpawnOpts(game) {
     targetHp,
     dmgMul: SATAN_DIRECT_DMG_MUL,
     hpMul: 1,
-    sizeOverride: satanCombatSize(),
+    sizeOverride: satanCombatSize(game),
   };
 }
 
 function satanSpawnX(game) {
   const px = game.player ? game.player.x : W * 0.5;
   const maxX = game.maxX || (typeof W === 'number' ? W - 80 : 600);
-  const gap = typeof satanCombatSize === 'function'
-    ? Math.max(180, satanCombatSize() * 1.6)
-    : 200;
+  const gap = Math.max(180, satanCombatSize(game) * 1.6);
   const side = px > maxX * 0.55 ? -1 : 1;
   return clamp(px + side * rand(gap * 0.85, gap * 1.15), 80, maxX);
+}
+
+/** Na resize: houd half-scherm footprint stabiel. */
+function refreshSatanCombatScale(game) {
+  if (!game || !game.satanActive || !game.satanMon || !game.satanMon.alive) return;
+  const mon = game.satanMon;
+  const next = satanCombatSize(game);
+  if (!(next > 0) || Math.abs(next - mon.size) < 2) return;
+  mon.size = next;
+  try {
+    if (!mon.flying && game.ground > 0) mon.y = game.ground - mon.size;
+  } catch (_) {}
 }
 
 function triggerSatanIntro(game, monster) {

@@ -1,7 +1,7 @@
 {
   "name": "stickman-fighter",
   "private": true,
-  "version": "1.18.114",
+  "version": "1.18.122",
   "description": "Stickman Fighter — Monster Arena PWA",
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -14,6 +14,7 @@
     "smoke:menu": "node scripts/smoke-menu-hub.mjs",
     "smoke:html": "node scripts/smoke-html-structure.mjs",
     "smoke:responsive": "node scripts/smoke-responsive-css.mjs",
+    "smoke:arcade-ui": "node scripts/smoke-arcade-ui-icons.mjs",
     "smoke:gamble": "node scripts/smoke-gamble-start.mjs",
     "smoke:levelup": "node scripts/smoke-levelup-fight.mjs",
     "smoke:petwave": "node scripts/smoke-pet-wave.mjs",
@@ -29,7 +30,9 @@
     "smoke:zone": "node scripts/smoke-zone-weapons.mjs",
     "smoke:cave": "node scripts/smoke-cave-scenery.mjs",
     "smoke:pwa": "node scripts/smoke-pwa-shell.mjs",
-    "test": "npm run build && npm run check && npm run check:critical && npm run smoke && npm run smoke:upgrades && npm run smoke:menu && npm run smoke:html && npm run smoke:responsive && npm run smoke:pwa && npm run smoke:gamble && npm run smoke:levelup && npm run smoke:petwave && npm run smoke:wave12 && npm run smoke:rasengan && npm run smoke:boomerang && npm run smoke:weapons && npm run smoke:zone && npm run smoke:cave && npm run smoke:adventure && npm run smoke:save",
+    "smoke:summon": "node scripts/smoke-summon-screen.mjs",
+    "smoke:wall": "node scripts/smoke-wall.mjs",
+    "test": "npm run build && npm run check && npm run check:critical && npm run smoke && npm run smoke:upgrades && npm run smoke:menu && npm run smoke:html && npm run smoke:responsive && npm run smoke:arcade-ui && npm run smoke:pwa && npm run smoke:gamble && npm run smoke:levelup && npm run smoke:petwave && npm run smoke:wave12 && npm run smoke:rasengan && npm run smoke:boomerang && npm run smoke:weapons && npm run smoke:zone && npm run smoke:cave && npm run smoke:adventure && npm run smoke:save && npm run smoke:summon && npm run smoke:wall",
     "roll": "bash scripts/roll-improvement-d20.sh",
     "roll:status": "bash scripts/roll-improvement-d20.sh status",
     "roll:verify": "bash scripts/roll-improvement-d20.sh verify",

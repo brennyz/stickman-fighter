@@ -5,11 +5,12 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.114';
+const APP_VERSION = '1.18.122';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 324;
+const SW_CACHE_REV = 332;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
+  chestDaily: null, chestWeapons: {},
   zoneWeapons: {},
   advIsland: 0, advFails: {}, advMasterBuff: null, advSatanAt: {},
   /** Normal / Nightmare / Hell — Epic Seven-stijl endgame tiers */
@@ -275,6 +276,7 @@ function weaponSkillGated(w) {
 function weaponUnlockedByLevel(w) {
   if (!w) return false;
   if (w.dropZone) return typeof weaponZoneUnlocked === 'function' ? weaponZoneUnlocked(w) : !!(save.zoneWeapons && save.zoneWeapons[w.id]);
+  if (save.chestWeapons && save.chestWeapons[w.id]) return true;
   return save.lvl >= w.unlock;
 }
 function weaponUsableNow(w) { return weaponUnlockedByLevel(w) && !weaponSkillGated(w); }
@@ -313,6 +315,24 @@ function wallRecordPaceDelta(g) {
   return Math.round(g.score - expected);
 }
 function wallComboDmgPct(combo) { return Math.min(combo, 12) * 4; }
+function wallPauseSubtitle(g) {
+  if (!g || g.mode !== 'wall') return '';
+  const tLeft = Math.ceil(Math.max(0, g.wallTimer || 0));
+  const stones = g.score || 0;
+  const combo = g.combo || 0;
+  const best = save.bestWall || 0;
+  const paceDelta = wallRecordPaceDelta(g);
+  const parts = [t('pause.wallTime', { n: tLeft }), t('pause.wallStones', { n: stones })];
+  if (combo > 1) parts.push(t('pause.wallCombo', { n: combo }));
+  if (best > 0 && paceDelta != null) {
+    parts.push(paceDelta >= 0
+      ? t('pause.wallPaceAhead', { n: paceDelta })
+      : t('pause.wallPaceBehind', { n: Math.abs(paceDelta) }));
+  } else if (best > 0 && stones < best) {
+    parts.push(t('pause.wallGap', { gap: best - stones }));
+  }
+  return parts.join(' · ');
+}
 let save = loadSave();
 function fighterJutsuKind(f) {
   return fighterEquippedSkill(f).id;
@@ -799,6 +819,8 @@ function readSaveJson(raw) {
     merged.advFails = Object.assign({}, parsed.advFails || {});
     merged.advSatanAt = Object.assign({}, parsed.advSatanAt || {});
     merged.zoneWeapons = Object.assign({}, parsed.zoneWeapons || {});
+    merged.chestWeapons = Object.assign({}, parsed.chestWeapons || {});
+    if (parsed.chestDaily && typeof parsed.chestDaily === 'object') merged.chestDaily = Object.assign({}, parsed.chestDaily);
     merged.advCleared = Object.assign(
       { normal: false, nightmare: false, hell: false },
       (parsed.advCleared && typeof parsed.advCleared === 'object') ? parsed.advCleared : {}
@@ -1211,6 +1233,10 @@ function sanitizeSave(s) {
   }
   out.zoneWeapons = cleanZone;
 
+  out.chestWeapons = typeof sanitizeChestWeapons === 'function'
+    ? sanitizeChestWeapons(out.chestWeapons)
+    : {};
+
   // Summons: alleen bekende wapens, geldige tiers, en alleen echte upgrades
   const cleanSummons = {};
   for (const [k, v] of Object.entries(out.summons || {})) {
@@ -1227,9 +1253,13 @@ function sanitizeSave(s) {
     if (typeof PET_BY_ID !== 'undefined' && !PET_BY_ID[k]) continue;
     if (typeof PET_BY_ID === 'undefined') continue;
     const entry = (v && typeof v === 'object') ? v : {};
-    cleanPets[k] = {
+    const row = {
       kills: clamp(Math.floor(Number(entry.kills) || 0), 0, 999999),
     };
+    if (typeof entry.src === 'string') row.src = entry.src.slice(0, 12);
+    if (typeof entry.skill === 'string') row.skill = entry.skill.slice(0, 48);
+    if (entry.coins != null) row.coins = clamp(Math.floor(Number(entry.coins) || 0), 0, 999999);
+    cleanPets[k] = row;
   }
   out.pets = cleanPets;
   if (out.activePet && !cleanPets[out.activePet]) out.activePet = null;
@@ -1261,6 +1291,22 @@ function sanitizeSave(s) {
       advBonus: !!out.eggDaily.advBonus,
     };
   } else out.eggDaily = null;
+
+  {
+    const today = typeof todayKey === 'function' ? todayKey() : new Date().toISOString().slice(0, 10);
+    if (typeof sanitizeChestDaily === 'function') {
+      out.chestDaily = sanitizeChestDaily(out.chestDaily, today);
+    } else if (out.chestDaily && typeof out.chestDaily === 'object') {
+      const w = Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.wLeft) || 0)));
+      const p = Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.pLeft) || 0)));
+      const leftRaw = out.chestDaily.left != null ? Number(out.chestDaily.left) : (w + p);
+      out.chestDaily = {
+        date: today,
+        left: Math.max(0, Math.min(10, Math.floor(Number.isFinite(leftRaw) ? leftRaw : 10))),
+        pulls: [],
+      };
+    } else out.chestDaily = null;
+  }
 
   const stPick = STYLES.find(st => st.id === out.style) || STYLES[0];
   let styleOk = stPick.id === 'classic';
