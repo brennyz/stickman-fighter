@@ -56,6 +56,27 @@ checkSet('chrome', chrome);
 
 must(!/class="(?:ico|tog-ico)"><svg/.test(html), 'inline ico/tog-ico SVG still present — should be file icons');
 
+/** Invalid encoding (e.g. Windows-1252 en-dash) breaks Safari/iPad <img> SVG loads. */
+function assertUtf8Svgs(dir) {
+  const abs = path.join(root, 'assets/buttons', dir);
+  const dec = new TextDecoder('utf-8', { fatal: true });
+  for (const name of fs.readdirSync(abs).filter((f) => f.endsWith('.svg'))) {
+    const buf = fs.readFileSync(path.join(abs, name));
+    let text;
+    try {
+      text = dec.decode(buf);
+    } catch (e) {
+      must(false, `non-utf8 SVG assets/buttons/${dir}/${name}`);
+    }
+    must(/<svg[\s>]/.test(text), `empty/invalid SVG assets/buttons/${dir}/${name}`);
+    must(/(<path|<circle|<rect|<ellipse|<polygon)/.test(text), `no shapes in assets/buttons/${dir}/${name}`);
+  }
+}
+assertUtf8Svgs('hub');
+assertUtf8Svgs('modes');
+assertUtf8Svgs('chrome');
+
+
 const rev = storage.match(/SW_CACHE_REV\s*=\s*(\d+)/);
 const cache = sw.match(/stickfighter-app-v(\d+)/);
 must(rev && cache && rev[1] === cache[1], `SW mismatch storage=${rev && rev[1]} sw=${cache && cache[1]}`);
