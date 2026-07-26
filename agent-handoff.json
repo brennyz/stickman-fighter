@@ -71,6 +71,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T04:06:38Z",
+      "summary": "d17 stabiliteit: gamble screen guard, tab-hide cancel, tipsSeen array fix · v1.18.73"
+    },
+    {
       "at": "2026-07-26T03:07:23Z",
       "summary": "d17 stabiliteit: tab-hide pause na over, sanitizeTipsSeen, gamble startGen guard · v1.18.72"
     },
@@ -165,10 +169,6 @@
     {
       "at": "2026-07-25T12:05:31Z",
       "summary": "Stabiliteit cron: lang-save wipe, level holdX/Y, showResult guards v1.18.1"
-    },
-    {
-      "at": "2026-07-25T11:04:18Z",
-      "summary": "d4 avontuur c4: wave trait pips, island stars bar, result star delta v1.17.84"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
