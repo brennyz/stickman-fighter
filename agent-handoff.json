@@ -26,6 +26,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260726T140100",
+      "from": "automation",
+      "text": "Check waar afbeeldingen zijn en of ze svg zijn volgens asset md en vervang ze structureel",
+      "status": "open",
+      "updated": "2026-07-26"
+    },
+    {
       "id": "w-20260726T092311",
       "from": "user",
       "text": "Collectie iconen kinderachtig — fix naar arcade stijl",
