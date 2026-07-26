@@ -4,27 +4,19 @@
   "rollFirst": [],
   "remaining": [
     19,
-    6,
     2,
     4,
     18
   ],
   "lastRoll": {
-    "face": 12,
-    "category": "Content — monsters, wapens, rariteit, dex",
-    "rolledAt": "2026-07-24T18:31:08Z",
-    "remainingCount": 5,
+    "face": 6,
+    "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+    "rolledAt": "2026-07-24T17:02:50Z",
+    "remainingCount": 4,
     "cycle": 5
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 3,
-      "note": "2P arena spawn/HUD/rematch pause herstart",
-      "version": "1.12.13",
-      "doneAt": "2026-07-23T18:28:29Z",
-      "cycle": 1
-    },
     {
       "face": 17,
       "note": "try/catch + toasts persist/import/loop/UI",
@@ -258,14 +250,14 @@
     },
     {
       "face": 19,
-      "note": "Muur cyclus 3: record-tempo HUD, combo ×3/×5/×8, 5s hint, eindscherm tempo",
+      "note": "Muur cyclus 3: record-tempo HUD, combo \u00d73/\u00d75/\u00d78, 5s hint, eindscherm tempo",
       "version": "1.17.16",
       "doneAt": "2026-07-24T17:19:12Z",
       "cycle": 3
     },
     {
       "face": 5,
-      "note": "Perf c3: FX budget vóór spawn, menu DPR, resize debounce, settings perf line",
+      "note": "Perf c3: FX budget v\u00f3\u00f3r spawn, menu DPR, resize debounce, settings perf line",
       "version": "1.17.17",
       "doneAt": "2026-07-24T17:21:14Z",
       "cycle": 3
@@ -489,7 +481,7 @@
     },
     {
       "face": 17,
-      "note": "char swap t() shadow + adventure result na pauze→menu",
+      "note": "char swap t() shadow + adventure result na pauze\u2192menu",
       "version": "1.18.67",
       "doneAt": "2026-07-25T22:05:21Z",
       "cycle": 5
@@ -577,13 +569,20 @@
       "version": "1.18.100",
       "doneAt": "2026-07-26T18:02:58Z",
       "cycle": 5
+    },
+    {
+      "face": 6,
+      "note": "pause combat-heat reset + SFX guard + slider sync",
+      "version": "1.18.108",
+      "doneAt": "2026-07-26T19:03:57Z",
+      "cycle": 5
     }
   ],
   "userFeatureLog": [
     {
       "date": "2026-07-26",
-      "wish": "Monster diversiteit verdubbelen — boerderij op hol + dierentuin, grote versies",
-      "code": "+144 SPECIES (281 totaal), 24 beast arts, ranch/safari golven, BEAST_GIANT_BONUS · v1.18.101 / SW v311",
+      "wish": "Monster diversiteit verdubbelen \u2014 boerderij op hol + dierentuin, grote versies",
+      "code": "+144 SPECIES (281 totaal), 24 beast arts, ranch/safari golven, BEAST_GIANT_BONUS \u00b7 v1.18.101 / SW v311",
       "version": "1.18.101"
     },
     {
@@ -608,7 +607,7 @@
       "commits": [],
       "code": "EGG_ROSTER 12 cosmetic egg-pets; daily crack + adv-win bonus; EggPet follower; Pets tab Ei arcade; dup +10 XP",
       "status": "done",
-      "note": "off-d20 user feature; proposal C deel 3/3 — arcade collectibles"
+      "note": "off-d20 user feature; proposal C deel 3/3 \u2014 arcade collectibles"
     },
     {
       "id": "dex-pets-deel2",
@@ -620,7 +619,7 @@
       "commits": [],
       "code": "PET_ROSTER 12 dex-pets; unlock via monsterboek kills; follower + assist avontuur/training; passives dmg/hp/energy/crit/speed/shield; Collectie Pets scherm",
       "status": "done",
-      "note": "off-d20 user feature; proposal B deel 1/3 — dex metgezels"
+      "note": "off-d20 user feature; proposal B deel 1/3 \u2014 dex metgezels"
     },
     {
       "id": "snd-extravaganza-3",
@@ -661,22 +660,22 @@
     {
       "id": "d20-roll-backlog",
       "d20Face": null,
-      "userWords": "Roll moet nieuw zijn maar ideeën opslaan en later uitwerken",
+      "userWords": "Roll moet nieuw zijn maar idee\u00ebn opslaan en later uitwerken",
       "versions": [],
       "commits": [],
-      "code": "rollBacklog in improvement-d20-bag.json; roll→backlog bij re-roll; backlog + pick d# commands",
+      "code": "rollBacklog in improvement-d20-bag.json; roll\u2192backlog bij re-roll; backlog + pick d# commands",
       "status": "done",
       "note": "history + userFeatureLog blijven; pending = actief werk"
     },
     {
       "id": "harden-movement",
       "d20Face": null,
-      "userWords": "Harden movement — strakkere loop, joy vasthouden, richting wissel",
+      "userWords": "Harden movement \u2014 strakkere loop, joy vasthouden, richting wissel",
       "versions": [
         "1.17.0"
       ],
       "commits": [],
-      "code": "applyFighterMove, padDigitalMove, joyMoveAxis; digital accel 2.4×, hurt-slide 42%, air 78%",
+      "code": "applyFighterMove, padDigitalMove, joyMoveAxis; digital accel 2.4\u00d7, hurt-slide 42%, air 78%",
       "status": "done",
       "note": "movement feel pass"
     },
@@ -695,7 +694,7 @@
     {
       "id": "ketsbam-escape-movement",
       "d20Face": null,
-      "userWords": "stunlock omringd door monsters — midden ketsbam symbool tikken voor explosie; betere links/rechts besturing",
+      "userWords": "stunlock omringd door monsters \u2014 midden ketsbam symbool tikken voor explosie; betere links/rechts besturing",
       "versions": [
         "1.16.8"
       ],
@@ -712,26 +711,26 @@
         "1.16.7"
       ],
       "commits": [],
-      "code": "+55 SPECIES (114 totaal = 6× origineel), UNLOCK_AT spread tot L50, boss-golf horde-padding (3–10 extra minions)",
+      "code": "+55 SPECIES (114 totaal = 6\u00d7 origineel), UNLOCK_AT spread tot L50, boss-golf horde-padding (3\u201310 extra minions)",
       "status": "done (2/2)",
       "note": "voltooit horde-expansie; p1 = spawns/reuzen +40 soorten"
     },
     {
       "id": "monster-horde-expansion-p1",
       "d20Face": null,
-      "userWords": "6x zoveel monsters, ook grotere dan normaal, monster boek gevuld — deel 1",
+      "userWords": "6x zoveel monsters, ook grotere dan normaal, monster boek gevuld \u2014 deel 1",
       "versions": [
         "1.16.6"
       ],
       "commits": [],
       "code": "ADVENTURE_HORDE_MUL 6, GIANT spawn (~15%), batch spawn + alive cap, +40 SPECIES (59 totaal), UNLOCK_AT spread",
       "status": "done (1/2)",
-      "note": "deel 1/2; horde spawns + reuzen — bestiary voltooid in p2"
+      "note": "deel 1/2; horde spawns + reuzen \u2014 bestiary voltooid in p2"
     },
     {
       "id": "master-sword-easter-egg",
       "d20Face": null,
-      "userWords": "2% kans in een level dat je zwaard verandert in de masters sword van Zelda — dubbel damage, niet te blocken, 15 seconden, groot bereik",
+      "userWords": "2% kans in een level dat je zwaard verandert in de masters sword van Zelda \u2014 dubbel damage, niet te blocken, 15 seconden, groot bereik",
       "versions": [
         "1.16.5"
       ],
@@ -761,7 +760,7 @@
         "1.16.3"
       ],
       "commits": [],
-      "code": "WEAPON_MOVE_FAMILIES (8×3 moves), weaponMoveFamily/Def/Pose, combo chain ~1.38s primed advance, resetWeaponCombo on hurt/death/dash/subst/special, drawWeaponStylePips, sanitizeWeaponSpec clamps",
+      "code": "WEAPON_MOVE_FAMILIES (8\u00d73 moves), weaponMoveFamily/Def/Pose, combo chain ~1.38s primed advance, resetWeaponCombo on hurt/death/dash/subst/special, drawWeaponStylePips, sanitizeWeaponSpec clamps",
       "status": "done",
       "note": "off-d20 user feature; shuriken/fuuma throw-only; hardened primed chain + safe resets"
     },
@@ -797,7 +796,7 @@
         "1.15.4"
       ],
       "commits": [],
-      "code": "layoutTouchButtonCluster: 1P 3×2 grid, 2P 2×3 grid, clampButtonsToScreen; punch/jump lagen exact op elkaar (jump onbereikbaar via hitButton first-match)",
+      "code": "layoutTouchButtonCluster: 1P 3\u00d72 grid, 2P 2\u00d73 grid, clampButtonsToScreen; punch/jump lagen exact op elkaar (jump onbereikbaar via hitButton first-match)",
       "status": "done",
       "note": "off-d20 user feedback; getest op 4 viewports + 2P: 0 overlap, alle knoppen raakbaar, press-dispatch klopt, joystick vrij"
     },
@@ -811,7 +810,7 @@
       "commits": [],
       "code": "SceneryArt (cached offscreen pixel tiles), drawSceneryTile, far skyline per thema, pixel wolken/bomen, grond-speckles",
       "status": "done (4/4)",
-      "note": "AF — 1) scenery pixel-art parallax (v1.15.0); 2) menu SVG-iconen (v1.15.1); 3) in-game canvas-art (v1.15.2); 4) final pass (v1.15.3): drawTouchBtnIcon vecht-knoppen (vuist/laars/kling/jutsu/rook/pijl) ipv emoji, drawThemeWeather (blaadjes/bloesem/sintels/neon-regen/stof per thema), ACH_ICON_SVG 16 prestatie-iconen, SAGA_ICON_SVG chips, SVG_CHECK_MINI ipv ✔, emoji uit hints/toasts/help/gamble. BONUS: versus-crash fix (f.alive setter op getter in resetVsFighterRound — 2P was kapot op live)"
+      "note": "AF \u2014 1) scenery pixel-art parallax (v1.15.0); 2) menu SVG-iconen (v1.15.1); 3) in-game canvas-art (v1.15.2); 4) final pass (v1.15.3): drawTouchBtnIcon vecht-knoppen (vuist/laars/kling/jutsu/rook/pijl) ipv emoji, drawThemeWeather (blaadjes/bloesem/sintels/neon-regen/stof per thema), ACH_ICON_SVG 16 prestatie-iconen, SAGA_ICON_SVG chips, SVG_CHECK_MINI ipv \u2714, emoji uit hints/toasts/help/gamble. BONUS: versus-crash fix (f.alive setter op getter in resetVsFighterRound \u2014 2P was kapot op live)"
     },
     {
       "id": "summon-weapon-ascend",
@@ -821,9 +820,9 @@
         "1.14.4"
       ],
       "commits": [],
-      "code": "save.summons, SUMMON_BOOST, summonEligibleWeapons, applySummonTier, playerWeapon, maybeSummon (kill-kans ~0.7% + pity), renderWeapons ✦ badge",
+      "code": "save.summons, SUMMON_BOOST, summonEligibleWeapons, applySummonTier, playerWeapon, maybeSummon (kill-kans ~0.7% + pity), renderWeapons \u2726 badge",
       "status": "done",
-      "note": "off-d20 user feature; epic ×1.55 / legendary ×1.95 dmg, gem. ~97 kills per summon, getest in echte Chrome"
+      "note": "off-d20 user feature; epic \u00d71.55 / legendary \u00d71.95 dmg, gem. ~97 kills per summon, getest in echte Chrome"
     },
     {
       "id": "level-pace-balancing",
@@ -853,7 +852,7 @@
       ],
       "code": "charSelectScreen, charIconRow, btnCharSagaClash, vsSelect",
       "status": "done",
-      "note": "d20 #18 — geen nieuwe roll; zie handoff.md"
+      "note": "d20 #18 \u2014 geen nieuwe roll; zie handoff.md"
     },
     {
       "id": "mats-coin-bonus",
@@ -972,57 +971,50 @@
   ],
   "history": [
     {
-      "face": 8,
-      "category": "PWA & offline — SW cache, install, standalone",
-      "rolledAt": "2026-07-23T14:21:12Z",
-      "remainingCount": 4,
-      "cycle": 0
-    },
-    {
       "face": 7,
-      "category": "Save & backup — import/export, corruptie, migratie",
+      "category": "Save & backup \u2014 import/export, corruptie, migratie",
       "rolledAt": "2026-07-23T14:21:52Z",
       "remainingCount": 3,
       "cycle": 0
     },
     {
       "face": 6,
-      "category": "Audio — BGM loops, SFX mix, mute paths",
+      "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
       "rolledAt": "2026-07-23T15:00:11Z",
       "remainingCount": 2,
       "cycle": 0
     },
     {
       "face": 20,
-      "category": "Code health — kleine refactors, geen gameplay-break",
+      "category": "Code health \u2014 kleine refactors, geen gameplay-break",
       "rolledAt": "2026-07-23T15:01:51Z",
       "remainingCount": 1,
       "cycle": 0
     },
     {
       "face": 14,
-      "category": "Visuele FX — particles, banners, Rasengan polish",
+      "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
       "rolledAt": "2026-07-23T15:04:37Z",
       "remainingCount": 0,
       "cycle": 0
     },
     {
       "face": 12,
-      "category": "Content — monsters, wapens, rariteit, dex",
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
       "rolledAt": "2026-07-23T15:06:05Z",
       "remainingCount": 19,
       "cycle": 1
     },
     {
       "face": 18,
-      "category": "Character select — saga UI (deel 1) + 5 saga sticks (deel 2)",
+      "category": "Character select \u2014 saga UI (deel 1) + 5 saga sticks (deel 2)",
       "rolledAt": "2026-07-23T15:44:00Z",
       "remainingCount": 18,
       "cycle": 1
     },
     {
       "face": 18,
-      "category": "Character select deel 1 — stap UX, unlock hints, saga iPad",
+      "category": "Character select deel 1 \u2014 stap UX, unlock hints, saga iPad",
       "rolledAt": "2026-07-23T15:48:23Z",
       "remainingCount": 18,
       "cycle": 1,
@@ -1030,7 +1022,7 @@
     },
     {
       "face": 18,
-      "category": "Character select deel 2 — saga icons strip, clash, achievement",
+      "category": "Character select deel 2 \u2014 saga icons strip, clash, achievement",
       "rolledAt": "2026-07-23T15:49:32Z",
       "remainingCount": 18,
       "cycle": 1,
@@ -1038,779 +1030,786 @@
     },
     {
       "face": 11,
-      "category": "Menu & navigatie — terug, flow, grote knoppen",
+      "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
       "rolledAt": "2026-07-23T15:49:57Z",
       "remainingCount": 17,
       "cycle": 1
     },
     {
       "face": 1,
-      "category": "Combat feel — hits, knockback, frame data, fairness",
+      "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
       "rolledAt": "2026-07-23T15:51:07Z",
       "remainingCount": 16,
       "cycle": 1
     },
     {
       "face": 13,
-      "category": "Missies & achievements — daily loop, beloningen",
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-07-23T15:51:54Z",
       "remainingCount": 15,
       "cycle": 1
     },
     {
       "face": 10,
-      "category": "Toegankelijkheid — reduced motion, contrast, tekst",
+      "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
       "rolledAt": "2026-07-23T18:08:58Z",
       "remainingCount": 14,
       "cycle": 1
     },
     {
       "face": 2,
-      "category": "Training vs RabbitRobot — AI, rounds, difficulty curve",
+      "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
       "rolledAt": "2026-07-23T18:10:19Z",
       "remainingCount": 13,
       "cycle": 1
     },
     {
       "face": 4,
-      "category": "Avontuur — levels, waves, boss pacing, stars",
+      "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
       "rolledAt": "2026-07-23T18:12:23Z",
       "remainingCount": 12,
       "cycle": 1
     },
     {
       "face": 5,
-      "category": "Performance — FPS, FX caps, resize, low-end iPad",
+      "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
       "rolledAt": "2026-07-23T18:13:18Z",
       "remainingCount": 11,
       "cycle": 1
     },
     {
       "face": 19,
-      "category": "Muur & minigames — combo, timer, record",
+      "category": "Muur & minigames \u2014 combo, timer, record",
       "rolledAt": "2026-07-23T18:14:23Z",
       "remainingCount": 10,
       "cycle": 1
     },
     {
       "face": 16,
-      "category": "Hosting & links — Pages, tunnel, stable URL",
+      "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
       "rolledAt": "2026-07-23T18:15:53Z",
       "remainingCount": 9,
       "cycle": 1
     },
     {
       "face": 8,
-      "category": "PWA & offline — SW cache, install, standalone",
+      "category": "PWA & offline \u2014 SW cache, install, standalone",
       "rolledAt": "2026-07-23T18:25:32Z",
       "remainingCount": 8,
       "cycle": 1
     },
     {
       "face": 3,
-      "category": "Versus 2P — split controls, rematch, char balance",
+      "category": "Versus 2P \u2014 split controls, rematch, char balance",
       "rolledAt": "2026-07-23T18:26:52Z",
       "remainingCount": 7,
       "cycle": 1
     },
     {
       "face": 17,
-      "category": "Stabiliteit — try/catch, errors, edge cases",
+      "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
       "rolledAt": "2026-07-23T18:28:45Z",
       "remainingCount": 6,
       "cycle": 1
     },
     {
       "face": 15,
-      "category": "Onboarding — tips, eerste speelminuut, help",
+      "category": "Onboarding \u2014 tips, eerste speelminuut, help",
       "rolledAt": "2026-07-23T18:30:15Z",
       "remainingCount": 5,
       "cycle": 1
     },
     {
       "face": 20,
-      "category": "Code health — kleine refactors, geen gameplay-break",
+      "category": "Code health \u2014 kleine refactors, geen gameplay-break",
       "rolledAt": "2026-07-23T18:31:34Z",
       "remainingCount": 4,
       "cycle": 1
     },
     {
       "face": 14,
-      "category": "Visuele FX — particles, banners, Rasengan polish",
+      "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
       "rolledAt": "2026-07-23T18:57:52Z",
       "remainingCount": 3,
       "cycle": 1
     },
     {
       "face": 6,
-      "category": "Audio — BGM loops, SFX mix, mute paths",
+      "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
       "rolledAt": "2026-07-23T18:59:04Z",
       "remainingCount": 2,
       "cycle": 1
     },
     {
       "face": 9,
-      "category": "iPad touch — knoppen, joystick, geen mis-taps",
+      "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
       "rolledAt": "2026-07-23T19:00:49Z",
       "remainingCount": 1,
       "cycle": 1
     },
     {
       "face": 7,
-      "category": "Save & backup — import/export, corruptie, migratie",
+      "category": "Save & backup \u2014 import/export, corruptie, migratie",
       "rolledAt": "2026-07-23T19:02:17Z",
       "remainingCount": 0,
       "cycle": 1
     },
     {
       "face": 14,
-      "category": "Visuele FX — particles, banners, Rasengan polish",
+      "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
       "rolledAt": "2026-07-23T19:40:17Z",
       "remainingCount": 19,
       "cycle": 2
     },
     {
       "face": 20,
-      "category": "Code health — kleine refactors, geen gameplay-break",
+      "category": "Code health \u2014 kleine refactors, geen gameplay-break",
       "rolledAt": "2026-07-23T19:41:09Z",
       "remainingCount": 18,
       "cycle": 2
     },
     {
       "face": 4,
-      "category": "Avontuur — levels, waves, boss pacing, stars",
+      "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
       "rolledAt": "2026-07-23T19:43:11Z",
       "remainingCount": 17,
       "cycle": 2
     },
     {
       "face": 10,
-      "category": "Toegankelijkheid — reduced motion, contrast, tekst",
+      "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
       "rolledAt": "2026-07-23T19:44:04Z",
       "remainingCount": 16,
       "cycle": 2
     },
     {
       "face": 16,
-      "category": "Hosting & links — Pages, tunnel, stable URL",
+      "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
       "rolledAt": "2026-07-23T21:04:22Z",
       "remainingCount": 15,
       "cycle": 2
     },
     {
       "face": 7,
-      "category": "Save & backup — import/export, corruptie, migratie",
+      "category": "Save & backup \u2014 import/export, corruptie, migratie",
       "rolledAt": "2026-07-23T21:23:37Z",
       "remainingCount": 14,
       "cycle": 2
     },
     {
       "face": 6,
-      "category": "Audio — BGM loops, SFX mix, mute paths",
+      "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
       "rolledAt": "2026-07-23T21:25:09Z",
       "remainingCount": 13,
       "cycle": 2
     },
     {
       "face": 19,
-      "category": "Muur & minigames — combo, timer, record",
+      "category": "Muur & minigames \u2014 combo, timer, record",
       "rolledAt": "2026-07-23T21:26:27Z",
       "remainingCount": 12,
       "cycle": 2
     },
     {
       "face": 5,
-      "category": "Performance — FPS, FX caps, resize, low-end iPad",
+      "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
       "rolledAt": "2026-07-24T08:27:00Z",
       "remainingCount": 11,
       "cycle": 2
     },
     {
       "face": 9,
-      "category": "iPad touch — knoppen, joystick, geen mis-taps",
+      "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
       "rolledAt": "2026-07-24T08:28:32Z",
       "remainingCount": 10,
       "cycle": 2
     },
     {
       "face": 8,
-      "category": "PWA & offline — SW cache, install, standalone",
+      "category": "PWA & offline \u2014 SW cache, install, standalone",
       "rolledAt": "2026-07-24T08:32:58Z",
       "remainingCount": 9,
       "cycle": 2
     },
     {
       "face": 1,
-      "category": "Combat feel — hits, knockback, frame data, fairness",
+      "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
       "rolledAt": "2026-07-24T08:34:56Z",
       "remainingCount": 8,
       "cycle": 2
     },
     {
       "face": 15,
-      "category": "Onboarding — tips, eerste speelminuut, help",
+      "category": "Onboarding \u2014 tips, eerste speelminuut, help",
       "rolledAt": "2026-07-24T08:36:37Z",
       "remainingCount": 7,
       "cycle": 2
     },
     {
       "face": 12,
-      "category": "Content — monsters, wapens, rariteit, dex",
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
       "rolledAt": "2026-07-24T12:26:16Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 18,
-      "category": "Character select — roster UI, stats, random duo",
+      "category": "Character select \u2014 roster UI, stats, random duo",
       "rolledAt": "2026-07-24T12:26:51Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 17,
-      "category": "Stabiliteit — try/catch, errors, edge cases",
+      "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
       "rolledAt": "2026-07-24T14:38:06Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 12,
-      "category": "Content — monsters, wapens, rariteit, dex",
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
       "rolledAt": "2026-07-24T14:38:18Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 13,
-      "category": "Missies & achievements — daily loop, beloningen",
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-07-24T14:38:31Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 13,
-      "category": "Missies & achievements — daily loop, beloningen",
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-07-24T14:38:46Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 2,
-      "category": "Training vs RabbitRobot — AI, rounds, difficulty curve",
+      "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
       "rolledAt": "2026-07-24T14:39:00Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 12,
-      "category": "Content — monsters, wapens, rariteit, dex",
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
       "rolledAt": "2026-07-24T14:39:10Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 13,
-      "category": "Missies & achievements — daily loop, beloningen",
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-07-24T14:39:20Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 13,
-      "category": "Missies & achievements — daily loop, beloningen",
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-07-24T15:11:33Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 3,
-      "category": "Versus 2P — split controls, rematch, char balance",
+      "category": "Versus 2P \u2014 split controls, rematch, char balance",
       "rolledAt": "2026-07-24T15:12:38Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 13,
-      "category": "Missies & achievements — daily loop, beloningen",
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-07-24T15:12:54Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 2,
-      "category": "Training vs RabbitRobot — AI, rounds, difficulty curve",
+      "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
       "rolledAt": "2026-07-24T15:13:09Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 2,
-      "category": "Training vs RabbitRobot — AI, rounds, difficulty curve",
+      "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
       "rolledAt": "2026-07-24T15:13:23Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 3,
-      "category": "Versus 2P — split controls, rematch, char balance",
+      "category": "Versus 2P \u2014 split controls, rematch, char balance",
       "rolledAt": "2026-07-24T15:13:38Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 13,
-      "category": "Missies & achievements — daily loop, beloningen",
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-07-24T15:24:07Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 11,
-      "category": "Menu & navigatie — terug, flow, grote knoppen",
+      "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
       "rolledAt": "2026-07-24T15:24:27Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 13,
-      "category": "Missies & achievements — daily loop, beloningen",
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-07-24T15:25:08Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 3,
-      "category": "Versus 2P — split controls, rematch, char balance",
+      "category": "Versus 2P \u2014 split controls, rematch, char balance",
       "rolledAt": "2026-07-24T15:25:28Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 2,
-      "category": "Training vs RabbitRobot — AI, rounds, difficulty curve",
+      "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
       "rolledAt": "2026-07-24T15:25:42Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 12,
-      "category": "Content — monsters, wapens, rariteit, dex",
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
       "rolledAt": "2026-07-24T15:25:56Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 2,
-      "category": "Training vs RabbitRobot — AI, rounds, difficulty curve",
+      "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
       "rolledAt": "2026-07-24T15:26:21Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 18,
-      "category": "Character select — roster UI, stats, random duo",
+      "category": "Character select \u2014 roster UI, stats, random duo",
       "rolledAt": "2026-07-24T15:26:21Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 12,
-      "category": "Content — monsters, wapens, rariteit, dex",
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
       "rolledAt": "2026-07-24T15:26:21Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 12,
-      "category": "Content — monsters, wapens, rariteit, dex",
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
       "rolledAt": "2026-07-24T15:26:21Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 2,
-      "category": "Training vs RabbitRobot — AI, rounds, difficulty curve",
+      "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
       "rolledAt": "2026-07-24T15:26:21Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 18,
-      "category": "Character select — roster UI, stats, random duo",
+      "category": "Character select \u2014 roster UI, stats, random duo",
       "rolledAt": "2026-07-24T15:26:21Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 18,
-      "category": "Character select — roster UI, stats, random duo",
+      "category": "Character select \u2014 roster UI, stats, random duo",
       "rolledAt": "2026-07-24T15:26:21Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 2,
-      "category": "Training vs RabbitRobot — AI, rounds, difficulty curve",
+      "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
       "rolledAt": "2026-07-24T15:26:21Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 11,
-      "category": "Menu & navigatie — terug, flow, grote knoppen",
+      "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
       "rolledAt": "2026-07-24T15:26:55Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 17,
-      "category": "Stabiliteit — try/catch, errors, edge cases",
+      "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
       "rolledAt": "2026-07-24T15:27:12Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 13,
-      "category": "Missies & achievements — daily loop, beloningen",
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-07-24T15:27:24Z",
       "remainingCount": 6,
       "cycle": 2
     },
     {
       "face": 11,
-      "category": "Menu & navigatie — terug, flow, grote knoppen",
+      "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
       "rolledAt": "2026-07-24T15:32:58Z",
       "remainingCount": 5,
       "cycle": 2
     },
     {
       "face": 12,
-      "category": "Content — monsters, wapens, rariteit, dex",
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
       "rolledAt": "2026-07-24T15:34:11Z",
       "remainingCount": 4,
       "cycle": 2
     },
     {
       "face": 17,
-      "category": "Stabiliteit — try/catch, errors, edge cases",
+      "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
       "rolledAt": "2026-07-24T15:35:34Z",
       "remainingCount": 3,
       "cycle": 2
     },
     {
       "face": 18,
-      "category": "Character select — roster UI, stats, random duo",
+      "category": "Character select \u2014 roster UI, stats, random duo",
       "rolledAt": "2026-07-24T15:36:43Z",
       "remainingCount": 2,
       "cycle": 2
     },
     {
       "face": 3,
-      "category": "Versus 2P — split controls, rematch, char balance",
+      "category": "Versus 2P \u2014 split controls, rematch, char balance",
       "rolledAt": "2026-07-24T15:37:52Z",
       "remainingCount": 1,
       "cycle": 2
     },
     {
       "face": 2,
-      "category": "Training vs RabbitRobot — AI, rounds, difficulty curve",
+      "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
       "rolledAt": "2026-07-24T15:39:08Z",
       "remainingCount": 0,
       "cycle": 2
     },
     {
       "face": 1,
-      "category": "Combat feel — hits, knockback, frame data, fairness",
+      "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
       "rolledAt": "2026-07-24T15:40:37Z",
       "remainingCount": 19,
       "cycle": 3
     },
     {
       "face": 12,
-      "category": "Content — monsters, wapens, rariteit, dex",
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
       "rolledAt": "2026-07-24T15:42:41Z",
       "remainingCount": 18,
       "cycle": 3
     },
     {
       "face": 7,
-      "category": "Save & backup — import/export, corruptie, migratie",
+      "category": "Save & backup \u2014 import/export, corruptie, migratie",
       "rolledAt": "2026-07-24T15:43:59Z",
       "remainingCount": 17,
       "cycle": 3
     },
     {
       "face": 17,
-      "category": "Stabiliteit — try/catch, errors, edge cases",
+      "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
       "rolledAt": "2026-07-24T15:45:44Z",
       "remainingCount": 16,
       "cycle": 3
     },
     {
       "face": 13,
-      "category": "Missies & achievements — daily loop, beloningen",
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-07-24T15:47:34Z",
       "remainingCount": 15,
       "cycle": 3
     },
     {
       "face": 2,
-      "category": "Training vs RabbitRobot — AI, rounds, difficulty curve",
+      "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
       "rolledAt": "2026-07-24T15:49:24Z",
       "remainingCount": 14,
       "cycle": 3
     },
     {
       "face": 19,
-      "category": "Muur & minigames — combo, timer, record",
+      "category": "Muur & minigames \u2014 combo, timer, record",
       "rolledAt": "2026-07-24T17:16:46Z",
       "remainingCount": 13,
       "cycle": 3
     },
     {
       "face": 5,
-      "category": "Performance — FPS, FX caps, resize, low-end iPad",
+      "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
       "rolledAt": "2026-07-24T17:19:40Z",
       "remainingCount": 12,
       "cycle": 3
     },
     {
       "face": 14,
-      "category": "Visuele FX — particles, banners, Rasengan polish",
+      "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
       "rolledAt": "2026-07-24T18:43:18Z",
       "remainingCount": 11,
       "cycle": 3
     },
     {
       "face": 4,
-      "category": "Avontuur — levels, waves, boss pacing, stars",
+      "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
       "rolledAt": "2026-07-24T18:57:59Z",
       "remainingCount": 10,
       "cycle": 3
     },
     {
       "face": 9,
-      "category": "iPad touch — knoppen, joystick, geen mis-taps",
+      "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
       "rolledAt": "2026-07-24T18:59:57Z",
       "remainingCount": 9,
       "cycle": 3
     },
     {
       "face": 20,
-      "category": "Code health — kleine refactors, geen gameplay-break",
+      "category": "Code health \u2014 kleine refactors, geen gameplay-break",
       "rolledAt": "2026-07-24T19:02:42Z",
       "remainingCount": 8,
       "cycle": 3
     },
     {
       "face": 10,
-      "category": "Toegankelijkheid — reduced motion, contrast, tekst",
+      "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
       "rolledAt": "2026-07-24T19:05:48Z",
       "remainingCount": 7,
       "cycle": 3
     },
     {
       "face": 6,
-      "category": "Audio — BGM loops, SFX mix, mute paths",
+      "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
       "rolledAt": "2026-07-24T19:43:25Z",
       "remainingCount": 1,
       "cycle": 3
     },
     {
       "face": 16,
-      "category": "Hosting & links — Pages, tunnel, stable URL",
+      "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
       "rolledAt": "2026-07-24T19:46:39Z",
       "remainingCount": 0,
       "cycle": 3
     },
     {
       "face": 7,
-      "category": "Save & backup — import/export, corruptie, migratie",
+      "category": "Save & backup \u2014 import/export, corruptie, migratie",
       "rolledAt": "2026-07-24T20:29:50Z",
       "remainingCount": 19,
       "cycle": 4
     },
     {
       "face": 14,
-      "category": "Visuele FX — particles, banners, Rasengan polish",
+      "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
       "rolledAt": "2026-07-24T21:29:05Z",
       "remainingCount": 13,
       "cycle": 4
     },
     {
       "face": 10,
-      "category": "Toegankelijkheid — reduced motion, contrast, tekst",
+      "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
       "rolledAt": "2026-07-24T21:35:10Z",
       "remainingCount": 12,
       "cycle": 4
     },
     {
       "face": 17,
-      "category": "Stabiliteit — try/catch, errors, edge cases",
+      "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
       "rolledAt": "2026-07-25T08:11:44Z",
       "remainingCount": 11,
       "cycle": 4
     },
     {
       "face": 15,
-      "category": "Onboarding — tips, eerste speelminuut, help",
+      "category": "Onboarding \u2014 tips, eerste speelminuut, help",
       "rolledAt": "2026-07-25T08:15:02Z",
       "remainingCount": 10,
       "cycle": 4
     },
     {
       "face": 12,
-      "category": "Content — monsters, wapens, rariteit, dex",
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
       "rolledAt": "2026-07-25T13:58:29Z",
       "remainingCount": 6,
       "cycle": 4
     },
     {
       "face": 9,
-      "category": "iPad touch — knoppen, joystick, geen mis-taps",
+      "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
       "rolledAt": "2026-07-25T14:02:25Z",
       "remainingCount": 5,
       "cycle": 4
     },
     {
       "face": 19,
-      "category": "Muur & minigames — combo, timer, record",
+      "category": "Muur & minigames \u2014 combo, timer, record",
       "rolledAt": "2026-07-25T14:06:03Z",
       "remainingCount": 4,
       "cycle": 4
     },
     {
       "face": 3,
-      "category": "Versus 2P — split controls, rematch, char balance",
+      "category": "Versus 2P \u2014 split controls, rematch, char balance",
       "rolledAt": "2026-07-25T14:09:13Z",
       "remainingCount": 3,
       "cycle": 4
     },
     {
       "face": 13,
-      "category": "Missies & achievements — daily loop, beloningen",
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-07-25T14:12:28Z",
       "remainingCount": 2,
       "cycle": 4
     },
     {
       "face": 4,
-      "category": "Avontuur — levels, waves, boss pacing, stars",
+      "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
       "rolledAt": "2026-07-25T15:03:15Z",
       "remainingCount": 1,
       "cycle": 4
     },
     {
       "face": 5,
-      "category": "Performance — FPS, FX caps, resize, low-end iPad",
+      "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
       "rolledAt": "2026-07-25T17:05:08Z",
       "remainingCount": 0,
       "cycle": 4
     },
     {
       "face": 15,
-      "category": "Onboarding — tips, eerste speelminuut, help",
+      "category": "Onboarding \u2014 tips, eerste speelminuut, help",
       "rolledAt": "2026-07-25T19:03:04Z",
       "remainingCount": 19,
       "cycle": 5
     },
     {
       "face": 9,
-      "category": "iPad touch — knoppen, joystick, geen mis-taps",
+      "category": "iPad touch \u2014 knoppen, joystick, geen mis-taps",
       "rolledAt": "2026-07-24T17:02:22Z",
       "remainingCount": 18,
       "cycle": 5
     },
     {
       "face": 17,
-      "category": "Stabiliteit — try/catch, errors, edge cases",
+      "category": "Stabiliteit \u2014 try/catch, errors, edge cases",
       "rolledAt": "2026-07-24T18:01:11Z",
       "remainingCount": 17,
       "cycle": 5
     },
     {
       "face": 10,
-      "category": "Toegankelijkheid — reduced motion, contrast, tekst",
+      "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
       "rolledAt": "2026-07-24T18:01:13Z",
       "remainingCount": 16,
       "cycle": 5
     },
     {
       "face": 11,
-      "category": "Menu & navigatie — terug, flow, grote knoppen",
+      "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
       "rolledAt": "2026-07-24T18:00:38Z",
       "remainingCount": 15,
       "cycle": 5
     },
     {
       "face": 16,
-      "category": "Hosting & links — Pages, tunnel, stable URL",
+      "category": "Hosting & links \u2014 Pages, tunnel, stable URL",
       "rolledAt": "2026-07-26T06:03:42Z",
       "remainingCount": 14,
       "cycle": 5
     },
     {
       "face": 13,
-      "category": "Missies & achievements — daily loop, beloningen",
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-07-24T17:02:47Z",
       "remainingCount": 13,
       "cycle": 5
     },
     {
       "face": 14,
-      "category": "Visuele FX — particles, banners, Rasengan polish",
+      "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
       "rolledAt": "2026-07-26T09:02:39Z",
       "remainingCount": 12,
       "cycle": 5
     },
     {
       "face": 1,
-      "category": "Combat feel — hits, knockback, frame data, fairness",
+      "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
       "rolledAt": "2026-07-26T11:06:16Z",
       "remainingCount": 11,
       "cycle": 5
     },
     {
       "face": 5,
-      "category": "Performance — FPS, FX caps, resize, low-end iPad",
+      "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
       "rolledAt": "2026-07-26T12:04:08Z",
       "remainingCount": 10,
       "cycle": 5
     },
     {
       "face": 7,
-      "category": "Save & backup — import/export, corruptie, migratie",
+      "category": "Save & backup \u2014 import/export, corruptie, migratie",
       "rolledAt": "2026-07-24T17:02:36Z",
       "remainingCount": 9,
       "cycle": 5
     },
     {
       "face": 20,
-      "category": "Code health — kleine refactors, geen gameplay-break",
+      "category": "Code health \u2014 kleine refactors, geen gameplay-break",
       "rolledAt": "2026-07-24T18:30:43Z",
       "remainingCount": 8,
       "cycle": 5
     },
     {
       "face": 3,
-      "category": "Versus 2P — split controls, rematch, char balance",
+      "category": "Versus 2P \u2014 split controls, rematch, char balance",
       "rolledAt": "2026-07-24T18:01:29Z",
       "remainingCount": 7,
       "cycle": 5
     },
     {
       "face": 8,
-      "category": "PWA & offline — SW cache, install, standalone",
+      "category": "PWA & offline \u2014 SW cache, install, standalone",
       "rolledAt": "2026-07-24T17:02:44Z",
       "remainingCount": 6,
       "cycle": 5
     },
     {
       "face": 12,
-      "category": "Content — monsters, wapens, rariteit, dex",
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
       "rolledAt": "2026-07-24T18:31:08Z",
       "remainingCount": 5,
+      "cycle": 5
+    },
+    {
+      "face": 6,
+      "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
+      "rolledAt": "2026-07-24T17:02:50Z",
+      "remainingCount": 4,
       "cycle": 5
     }
   ],

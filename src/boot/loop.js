@@ -353,6 +353,7 @@ document.addEventListener('visibilitychange', () => {
       state = 'pause';
       AudioSys.setPaused(true);
       try {
+        UI.renderPauseToggles();
         UI.show('pauseScreen');
       } catch (_) { ensureVisibleScreen(); }
     } else {

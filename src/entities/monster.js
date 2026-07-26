@@ -49,6 +49,8 @@ class Monster {
     }
     this.speed = sp.speed * (opts.speedMul || 1);
     this.advDiff = opts.advDiff || 'normal';
+    this.enrageMul = Number(opts.enrageMul) > 0 ? Number(opts.enrageMul) : 1;
+    this.enrageAt = Number.isFinite(Number(opts.enrageAt)) ? clamp(Number(opts.enrageAt), 0.25, 0.9) : 0.5;
     this.x = x;
     this.flying = sp.type === 'fly' || sp.type === 'dragon';
     this.swimming = sp.type === 'swim';
@@ -83,7 +85,8 @@ class Monster {
     this.atkCD -= dt; this.shootCD -= dt;
     if (this.superSlowT > 0) this.superSlowT -= dt;
     const genjutsuMul = (this.superSlowT > 0) ? (this.superSlowMul || 0.25) : 1;
-    const spdMul = (this.enraged ? 1.32 : 1) * genjutsuMul;
+    const enrageSpd = this.enraged ? (1.32 * (this.enrageMul || 1)) : 1;
+    const spdMul = enrageSpd * genjutsuMul;
     const type = this.sp.type;
 
     if (type === 'hop') {
@@ -229,18 +232,26 @@ class Monster {
   takeDamage(dmg, kbx, game, opts) {
     opts = opts || {};
     if (!this.alive) return;
-    if (this.elite && !this.enraged && this.hp - dmg <= this.maxhp * 0.5) {
+    const canEnrage = this.elite || this.bossCore || this.advDiff === 'nightmare' || this.advDiff === 'hell';
+    const thresh = this.maxhp * (this.enrageAt != null ? this.enrageAt : 0.5);
+    if (canEnrage && !this.enraged && this.hp - dmg <= thresh) {
       this.enraged = true;
       this.phase2FlashT = motionReduced() ? 0.35 : 0.85;
-      this.speed = Math.round(this.speed * 1.28);
-      this.dmg = Math.round(this.dmg * 1.22);
-      game.banner(`${this.sp.name} — FASE 2!`, 1.6, '#ff6b6b', 36);
+      const em = this.enrageMul || 1;
+      this.speed = Math.round(this.speed * (1.28 * Math.min(em, 1.5)));
+      this.dmg = Math.round(this.dmg * (1.22 * Math.min(em, 1.45)));
+      const phaseLabel = this.advDiff === 'hell'
+        ? `${this.sp.name} — HEL-WOEDE!`
+        : (this.advDiff === 'nightmare'
+          ? `${this.sp.name} — VUUR-RASERNIE!`
+          : `${this.sp.name} — FASE 2!`);
+      game.banner(phaseLabel, 1.6, this.advDiff === 'hell' ? '#ff3a2a' : (this.advDiff === 'nightmare' ? '#ff7a4d' : '#ff6b6b'), 36);
       AudioSys.sfx('roar');
       game.shake(9, 0.28);
       haptic(28);
       // d20 polish #12 — baas fase-2 kleurflits
       game.bossPhase2Flash = motionReduced() ? 0.22 : 0.55;
-      game.bossPhase2Hue = this.sp?.c1 || '#ff6b6b';
+      game.bossPhase2Hue = this.advDiff === 'hell' ? '#ff2a18' : (this.sp?.c1 || '#ff6b6b');
       this.flashT = Math.max(this.flashT, motionReduced() ? 0.12 : 0.28);
       const lite = fxLite() || motionReduced();
       try {
@@ -255,8 +266,10 @@ class Monster {
     this.flashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.14 : opts.crit ? 0.12 : 0.1);
     const kb = scaleKnockback(kbx, dmg, { crit: opts.crit, kind: opts.kind });
     this.x += Math.sign(kb || 1) * clamp(Math.abs(kb) * 0.038, 5, 26);
-    game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
-    game.burst(this.x, this.y, this.sp.c1, dmg >= 18 ? 9 : 6);
+    if (!opts.quiet) {
+      game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
+      game.burst(this.x, this.y, this.sp.c1, dmg >= 18 ? 9 : 6);
+    }
     if (opts.crit) spawnFxRing(game, this.x, this.y - this.size * 0.4, '#ffd75e', fxLite() ? 5 : 8);
     if (this.hp <= 0) {
       this.hp = 0; this.deadT = 0;

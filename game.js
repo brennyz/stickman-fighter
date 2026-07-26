@@ -252,17 +252,13 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.107';
+const APP_VERSION = '1.18.115';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 317;
+const SW_CACHE_REV = 325;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
   zoneWeapons: {},
-
-
-
-
   advIsland: 0, advFails: {}, advMasterBuff: null,
   /** Normal / Nightmare / Hell — Epic Seven-stijl endgame tiers */
   advDiff: 'normal',
@@ -281,11 +277,26 @@ const MAX_LEVEL = 70;
 const LEVELS_PER_ISLAND = 10;
 const ISLAND_COUNT = 7;
 const ISLAND_WEAPON_CAPS = [10, 20, 30, 40, 48, 60, 70];
-/** Avontuur moeilijkheidsgraden — Normal eerst; Nightmare/Hell na clear. */
+/** Avontuur moeilijkheidsgraden — Normal eerst; Nightmare 2.0 / Hell 3.0 na clear. */
 const ADV_DIFFS = [
-  { id: 'normal', order: 0, model: '1.0', accent: '#5ad06a', hpMul: 1, dmgMul: 1, rarityBoost: 0, eliteBonus: 0, giantBonus: 0, theme: null, xpMul: 1, dropMul: 1, speedMul: 1, enrageMul: 1 },
-  { id: 'nightmare', order: 1, model: '2.0', accent: '#ff7a4d', hpMul: 1.42, dmgMul: 1.32, rarityBoost: 1, eliteBonus: 0.12, giantBonus: 0.08, theme: 'nightmare', xpMul: 1.28, dropMul: 1.35, speedMul: 1.06, enrageMul: 1.1 },
-  { id: 'hell', order: 2, model: '3.0', accent: '#ff4a4a', hpMul: 1.85, dmgMul: 1.65, rarityBoost: 2, eliteBonus: 0.22, giantBonus: 0.12, theme: 'hell', xpMul: 1.55, dropMul: 1.65, speedMul: 1.12, enrageMul: 1.2 },
+  {
+    id: 'normal', order: 0, model: '1.0', accent: '#5ad06a',
+    hpMul: 1, dmgMul: 1, rarityBoost: 0, eliteBonus: 0, giantBonus: 0,
+    theme: null, xpMul: 1, dropMul: 1, speedMul: 1,
+    enrageMul: 1, enrageAt: 0.5, hordeMul: 1, petCoinMul: 1,
+  },
+  {
+    id: 'nightmare', order: 1, model: '2.0', accent: '#ff7a4d',
+    hpMul: 1.48, dmgMul: 1.38, rarityBoost: 1, eliteBonus: 0.16, giantBonus: 0.1,
+    theme: 'nightmare', xpMul: 1.35, dropMul: 1.42, speedMul: 1.09,
+    enrageMul: 1.18, enrageAt: 0.58, hordeMul: 1.08, petCoinMul: 1.15,
+  },
+  {
+    id: 'hell', order: 2, model: '3.0', accent: '#ff4a4a',
+    hpMul: 1.95, dmgMul: 1.78, rarityBoost: 2, eliteBonus: 0.28, giantBonus: 0.16,
+    theme: 'hell', xpMul: 1.7, dropMul: 1.8, speedMul: 1.16,
+    enrageMul: 1.32, enrageAt: 0.68, hordeMul: 1.16, petCoinMul: 1.35,
+  },
 ];
 const ADV_DIFF_IDS = ADV_DIFFS.map((d) => d.id);
 function emptyAdvHardBag() {
@@ -328,9 +339,23 @@ function advDiffShort(id) {
 }
 function advDiffUnlockHint(id) {
   const d = normalizeAdvDiffId(id);
-  if (d === 'nightmare') return typeof t === 'function' ? t('ui.diffUnlockNightmare') : 'Clear Normal Lv 50';
-  if (d === 'hell') return typeof t === 'function' ? t('ui.diffUnlockHell') : 'Clear Nightmare Lv 50';
+  if (d === 'nightmare') return typeof t === 'function' ? t('ui.diffUnlockNightmare') : ('Clear Normal Lv ' + MAX_LEVEL);
+  if (d === 'hell') return typeof t === 'function' ? t('ui.diffUnlockHell') : ('Clear Nightmare Lv ' + MAX_LEVEL);
   return '';
+}
+function advDiffBlurb(id) {
+  const d = normalizeAdvDiffId(id);
+  if (typeof t === 'function') {
+    if (d === 'nightmare') return t('ui.diffBlurbNightmare');
+    if (d === 'hell') return t('ui.diffBlurbHell');
+    return t('ui.diffBlurbNormal');
+  }
+  if (d === 'nightmare') return 'Fire arena · earlier enrage · wilder rarities';
+  if (d === 'hell') return 'Lava · screaming pain · mythic hordes';
+  return 'Standard adventure';
+}
+function advPetCoinMul(diff) {
+  return advDiffMeta(diff || currentAdvDiff()).petCoinMul || 1;
 }
 function ensureAdvHardBag(diff) {
   const d = normalizeAdvDiffId(diff);
@@ -482,7 +507,11 @@ function adventureWeaponCapForLevel(levelN) {
   return ISLAND_WEAPON_CAPS[idx];
 }
 function adventureWeaponCap() { return adventureWeaponCapForLevel(advUnlockedLevel('normal') || 1); }
-function weaponSkillGated(w) { return w.unlock > adventureWeaponCap(); }
+function weaponSkillGated(w) {
+  // Zone-drops (Nightmare/Hel): bruikbaar zodra verzameld — geen eiland-skill gate
+  if (w && w.dropZone) return false;
+  return w.unlock > adventureWeaponCap();
+}
 function weaponUnlockedByLevel(w) {
   if (!w) return false;
   if (w.dropZone) return typeof weaponZoneUnlocked === 'function' ? weaponZoneUnlocked(w) : !!(save.zoneWeapons && save.zoneWeapons[w.id]);
@@ -497,12 +526,16 @@ function masterBuffActive(levelN, diff) {
 function bestWeaponForAdventureCap(cap) {
   let best = weaponById('vuist');
   for (const base of WEAPONS) {
-    if (save.lvl >= base.unlock && base.unlock <= cap && base.unlock >= best.unlock) best = base;
+    if (base.dropZone) continue; // zone-wapens nooit via level-cap auto-pick
+    if (!weaponUnlockedByLevel(base)) continue;
+    if (base.unlock <= cap && base.unlock >= best.unlock) best = base;
   }
   return applySummonTier(best);
 }
 function playerWeaponForAdventure(levelN) {
   const w = playerWeapon();
+  // Zone-wapens: zodra unlocked, altijd meenemen in avontuur
+  if (w && w.dropZone && weaponUnlockedByLevel(w)) return w;
   const cap = adventureWeaponCapForLevel(levelN);
   if (w.unlock <= cap) return w;
   return bestWeaponForAdventureCap(cap);
@@ -794,6 +827,7 @@ function rollHitDamage(attacker, spec, mult) {
   if (attacker.isPlayer && k === 'weapon' && attacker.weapon && attacker.weapon.upgradeCrit) {
     critChance += attacker.weapon.upgradeCrit;
   }
+  if (attacker._wpnCritSurgeT > 0) critChance += 0.18;
   critChance = clamp(critChance, 0, 0.48);
   let dmg = spec.dmg * rand(0.9, 1.15) * mult;
   const crit = Math.random() < critChance;
@@ -1289,10 +1323,14 @@ function sanitizeSave(s) {
     nightmare: !!clearedIn.nightmare,
     hell: !!clearedIn.hell,
   };
-  // Migratie: Normal Lv50 gehaald (sterren) → Nightmare vrij
+  // Migratie: campagne-einde gehaald (Lv70 of legacy Lv50) → Nightmare vrij
   if (!out.advCleared.normal) {
-    const s50 = (out.stars && Number(out.stars[50])) || 0;
-    if (out.unlocked >= maxLevel && s50 > 0) out.advCleared.normal = true;
+    const stars = out.stars || {};
+    const sFinal = Number(stars[maxLevel]) || 0;
+    const sLegacy = Number(stars[50]) || 0;
+    if ((out.unlocked >= maxLevel && sFinal > 0) || (out.unlocked >= 50 && sLegacy > 0)) {
+      out.advCleared.normal = true;
+    }
   }
   const sanitizeHardBag = (raw) => {
     const bag = emptyAdvHardBag();
@@ -1319,12 +1357,15 @@ function sanitizeSave(s) {
     nightmare: sanitizeHardBag(hardIn.nightmare),
     hell: sanitizeHardBag(hardIn.hell),
   };
-  if (out.advHard.nightmare.unlocked >= maxLevel && (out.advHard.nightmare.stars[50] || 0) > 0) {
-    out.advCleared.nightmare = true;
-  }
-  if (out.advHard.hell.unlocked >= maxLevel && (out.advHard.hell.stars[50] || 0) > 0) {
-    out.advCleared.hell = true;
-  }
+  const hardCleared = (bag) => {
+    if (!bag) return false;
+    if (bag.unlocked >= maxLevel && (bag.stars[maxLevel] || 0) > 0) return true;
+    // legacy: oude eindbaas Lv50
+    if (bag.unlocked >= 50 && (bag.stars[50] || 0) > 0) return true;
+    return false;
+  };
+  if (hardCleared(out.advHard.nightmare)) out.advCleared.nightmare = true;
+  if (hardCleared(out.advHard.hell)) out.advCleared.hell = true;
   const canPickDiff = (id) => {
     if (id === 'normal') return true;
     if (id === 'nightmare') return !!out.advCleared.normal;
@@ -1711,6 +1752,7 @@ const I18N = {
     audio: {
       musicOff: 'Muziek uit', sfxOff: 'Geluid uit', musicPct: 'Muziek {pct}%', sfxPct: 'SFX {pct}%',
       allMuted: 'Alles stil', pauseDuck: 'BGM zacht', pauseTrack: 'Track: {track}',
+      ctxSuspended: 'Tik slider voor geluid (iPad)',
       track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Gevecht', elite: 'Elite', boss: 'Baas', wall: 'Muur', training: 'Training', coinrun: 'Mats' },
     },
@@ -1791,6 +1833,7 @@ const I18N = {
     audio: {
       musicOff: 'Music off', sfxOff: 'Sound off', musicPct: 'Music {pct}%', sfxPct: 'SFX {pct}%',
       allMuted: 'All muted', pauseDuck: 'BGM ducked', pauseTrack: 'Track: {track}',
+      ctxSuspended: 'Tap slider to wake audio (iPad)',
       track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Battle', elite: 'Elite', boss: 'Boss', wall: 'Wall', training: 'Training', coinrun: 'Mats' },
     },
@@ -3437,6 +3480,7 @@ function runLootSummaryShort(loot) {
   if (pickN) parts.push(`💊${pickN}`);
   if (loot.finishers) parts.push(`③${loot.finishers}`);
   if (loot.levelUps) parts.push(`↑${loot.levelUps}`);
+  if (loot.weapons && loot.weapons.length) parts.push(`⚔${loot.weapons.length}`);
   if (loot.petCoins) parts.push(`🪙${loot.petCoins}`);
   return parts.join(' · ');
 }
@@ -4061,7 +4105,7 @@ function repairBrokenButtonIcon(img) {
 function hardenButtonIcons(root) {
   try {
     const scope = root && root.querySelectorAll ? root : document;
-    scope.querySelectorAll('img[src*="assets/buttons/"]').forEach((img) => {
+    scope.querySelectorAll('img[src*="assets/buttons/"], img[src*="assets/ui/"]').forEach((img) => {
       if (img.dataset.sfIconHard) return;
       img.dataset.sfIconHard = '1';
       img.decoding = img.decoding || 'async';
@@ -5527,8 +5571,14 @@ function weaponDropZoneOf(w) {
   return (id && WEAPON_DROP_ZONES[id]) || null;
 }
 
-function adventureDropZoneForLevel(levelN) {
+function adventureDropZoneForLevel(levelN, diffId) {
   const n = Math.floor(Number(levelN) || 0);
+  const diff = typeof normalizeAdvDiffId === 'function'
+    ? normalizeAdvDiffId(diffId)
+    : (diffId || 'normal');
+  // Difficulty modes 2.0 / 3.0: drops volgen de tab, niet alleen eiland 6–7
+  if (diff === 'hell') return 'hell';
+  if (diff === 'nightmare') return 'nightmare';
   if (n >= 61 && n <= 70) return 'hell';
   if (n >= 51 && n <= 60) return 'nightmare';
   return null;
@@ -5569,11 +5619,15 @@ function grantZoneWeapon(weaponId, opts) {
     try {
       const zone = weaponDropZoneOf(w);
       const col = zone ? zone.color : '#c47aff';
-      UI.toast(`${zone ? zone.name : 'Zone'}: ${weaponLabel(w)}!`, 3800);
+      if (typeof UI !== 'undefined' && UI && typeof UI.toast === 'function') {
+        UI.toast(`${zone ? zone.name : 'Zone'}: ${weaponLabel(w)}!`, 3800);
+      }
       if (typeof game !== 'undefined' && game && typeof game.banner === 'function') {
         game.banner(weaponLabel(w), 2.1, col, 34);
       }
-      AudioSys.sfx('newmonster');
+      if (typeof AudioSys !== 'undefined' && AudioSys && typeof AudioSys.sfx === 'function') {
+        AudioSys.sfx('newmonster');
+      }
     } catch (_) {}
   }
   return true;
@@ -5581,7 +5635,8 @@ function grantZoneWeapon(weaponId, opts) {
 
 function rollZoneWeaponDrop(game, monster) {
   if (!game || game.mode !== 'adventure' || !game.level) return null;
-  const zone = adventureDropZoneForLevel(game.level.n);
+  const diff = (game.advDiff || (game.level && game.level.diff) || 'normal');
+  const zone = adventureDropZoneForLevel(game.level.n, diff);
   if (!zone) return null;
   const pool = zoneWeaponsFor(zone).filter(w => !weaponZoneUnlocked(w));
   if (!pool.length) return null;
@@ -5592,17 +5647,29 @@ function rollZoneWeaponDrop(game, monster) {
     else if (monster.giant) chance = 0.09;
   }
   if (game.level.boss && monster && monster.elite) chance = Math.max(chance, 0.28);
+  // Nightmare 2.0 / Hell 3.0: dropMul versnelt zone-collectie
+  if (typeof advDropChanceMul === 'function') {
+    chance = Math.min(0.72, chance * advDropChanceMul(diff));
+  }
   if (Math.random() > chance) return null;
   const pick = pool[Math.floor(Math.random() * pool.length)];
   if (grantZoneWeapon(pick.id)) return pick;
   return null;
 }
 
-/** Garantie-drop bij eilandbaas-clear (Lv 60 / 70). */
-function grantZoneBossClearWeapon(levelN) {
-  const zone = adventureDropZoneForLevel(levelN);
+/** Garantie-drop bij eilandbaas-clear (Lv 60 / 70) of hard-diff eilandbaas (10/20/…/70). */
+function grantZoneBossClearWeapon(levelN, diffId) {
+  const n = Math.floor(Number(levelN) || 0);
+  const diff = typeof normalizeAdvDiffId === 'function'
+    ? normalizeAdvDiffId(diffId)
+    : (diffId || 'normal');
+  const zone = adventureDropZoneForLevel(n, diff);
   if (!zone) return null;
-  if (levelN !== 60 && levelN !== 70) return null;
+  const isIslandBoss = n > 0 && n % 10 === 0;
+  const isLegacyZoneBoss = n === 60 || n === 70;
+  // Normal: alleen zone-eilandbazen 60/70. Hard diffs: elke eilandbaas.
+  if (diff === 'normal' && !isLegacyZoneBoss) return null;
+  if (diff !== 'normal' && !isIslandBoss) return null;
   const pool = zoneWeaponsFor(zone).filter(w => !weaponZoneUnlocked(w));
   if (!pool.length) return null;
   const pick = pool[Math.floor(Math.random() * pool.length)];
@@ -5613,8 +5680,12 @@ function grantZoneBossClearWeapon(levelN) {
 /* —— On-hit effecten voor zone-wapens —— */
 function applyWeaponOnHitEffect(game, fighter, target, hit) {
   if (!game || !fighter || !target || !target.alive) return;
+  // Alleen monsters (niet versus/training fighters) — burn/bleed verwachten size/sp
+  if (!target.sp || !(target.size > 0)) return;
   const w = fighter.weapon;
   if (!w || !w.effect) return;
+  // DoT / splash-rehit mag geen nieuwe effect-keten starten
+  if (hit && (hit.kind === 'dot' || hit.skipEffect)) return;
   const effect = w.effect;
   const dmg = (hit && hit.dmg) || 10;
   const finisher = !!(hit && hit.finisher);
@@ -5707,7 +5778,7 @@ function applyWeaponOnHitEffect(game, fighter, target, hit) {
         if (dist2 > r * r) continue;
         const splash = Math.max(3, Math.round(dmg * aoeMul * (m === target ? 0.35 : 1)));
         if (m !== target) {
-          try { m.takeDamage(splash, (fighter.face || 1) * 120, game, { kind: 'weapon' }); } catch (_) {}
+          try { m.takeDamage(splash, (fighter.face || 1) * 120, game, { kind: 'weapon', skipHitSfx: true, quiet: true }); } catch (_) {}
         }
       }
       try {
@@ -5776,7 +5847,7 @@ function tickWeaponStatusEffects(game, dt) {
       if (m.wpnBurnTick <= 0) {
         m.wpnBurnTick = 0.55;
         const d = Math.max(1, m.wpnBurnDmg || 2);
-        try { m.takeDamage(d, 0, game, { kind: 'weapon' }); } catch (_) {}
+        try { m.takeDamage(d, 0, game, { kind: 'dot', skipHitSfx: true, quiet: true }); } catch (_) {}
         try { game.burst(m.x, m.y - m.size * 0.4, '#ff6a3d', 3, { kind: 'spark', size: 1.5 }); } catch (_) {}
       }
     }
@@ -5786,7 +5857,7 @@ function tickWeaponStatusEffects(game, dt) {
       if (m.wpnBleedTick <= 0) {
         m.wpnBleedTick = 0.45;
         const d = Math.max(1, m.wpnBleedDmg || 2);
-        try { m.takeDamage(d, 0, game, { kind: 'weapon' }); } catch (_) {}
+        try { m.takeDamage(d, 0, game, { kind: 'dot', skipHitSfx: true, quiet: true }); } catch (_) {}
       }
     }
   }
@@ -5799,7 +5870,7 @@ function tickWeaponStatusEffects(game, dt) {
         game._wpnFlutterQueue.splice(i, 1);
         continue;
       }
-      try { q.target.takeDamage(q.dmg, q.face * 40, game, { kind: 'weapon' }); } catch (_) {}
+      try { q.target.takeDamage(q.dmg, q.face * 40, game, { kind: 'dot', skipHitSfx: true, quiet: true }); } catch (_) {}
       try { game.burst(q.target.x, q.target.y - q.target.size * 0.3, '#c47aff', 4, { kind: 'spark', size: 1.8 }); } catch (_) {}
       q.left -= 1;
       q.t = 0.1;
@@ -6005,7 +6076,16 @@ function itemUpgradeIdValid(cat, id) {
 }
 
 function weaponUpgradeEligible(w) {
-  return w && w.id && w.id !== 'vuist' && w.id !== 'master_sword' && save.lvl >= w.unlock && !isThrowWeapon(w.id);
+  // Alleen wapens die je echt bezit (character-unlock óf zone-drop), nooit “alleen Lv-getal”.
+  if (!w || !w.id || w.id === 'vuist' || w.id === 'master_sword') return false;
+  if (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) return false;
+  // Zone-drops: ownership-only — character-level mag nooit genoeg zijn.
+  if (w.dropZone) {
+    if (typeof weaponZoneUnlocked === 'function') return !!weaponZoneUnlocked(w);
+    return !!(save && save.zoneWeapons && save.zoneWeapons[w.id]);
+  }
+  if (typeof weaponUnlockedByLevel === 'function') return !!weaponUnlockedByLevel(w);
+  return !!(save && save.lvl >= (w.unlock || 1));
 }
 
 function petUpgradeEligible(p) {
@@ -6178,6 +6258,11 @@ function restoreLostItemUpgrades(snap, out) {
 
 function addItemShards(cat, id, n) {
   if (!itemUpgradeEligible(cat, id)) return 0;
+  // Extra belt: zone-wapens zonder ownership nooit shards (ook als eligibility drift).
+  if (cat === 'weapon') {
+    const w = WEAPONS.find((x) => x.id === id);
+    if (w && w.dropZone && !(save.zoneWeapons && save.zoneWeapons[w.id])) return 0;
+  }
   const add = clamp(Math.floor(Number(n) || 0), 1, ITEM_SHARD_ADD_CAP);
   const e = itemUpgradeEntry(cat, id);
   if (!e) return 0;
@@ -6190,6 +6275,10 @@ function addItemShards(cat, id, n) {
 
 function tryItemUpgrade(cat, id) {
   if (!itemUpgradeEligible(cat, id) || !itemCanUpgrade(cat, id)) return false;
+  if (cat === 'weapon') {
+    const w = WEAPONS.find((x) => x.id === id);
+    if (w && w.dropZone && !(save.zoneWeapons && save.zoneWeapons[w.id])) return false;
+  }
   const cost = itemUpgradeCost(cat, id);
   const e = itemUpgradeEntry(cat, id);
   if (!e || cost == null || itemUpgradeShards(cat, id) < cost) return false;
@@ -9437,7 +9526,10 @@ function maxRarityForAdvLevel(n, diff) {
 }
 
 function buildLevel(n, diffId) {
-  const diff = typeof advDiffMeta === 'function' ? advDiffMeta(diffId) : { id: 'normal', order: 0, hpMul: 1, dmgMul: 1, rarityBoost: 0, eliteBonus: 0, giantBonus: 0, theme: null };
+  const diff = typeof advDiffMeta === 'function' ? advDiffMeta(diffId) : {
+    id: 'normal', order: 0, hpMul: 1, dmgMul: 1, rarityBoost: 0, eliteBonus: 0, giantBonus: 0,
+    theme: null, speedMul: 1, enrageMul: 1, enrageAt: 0.5, hordeMul: 1, model: '1.0',
+  };
   const hpMul = (1 + (n - 1) * 0.14) * (diff.hpMul || 1);
   const dmgMul = (1 + (n - 1) * 0.08) * (diff.dmgMul || 1);
   const maxRarity = maxRarityForAdvLevel(n, diff.id);
@@ -9454,9 +9546,13 @@ function buildLevel(n, diffId) {
   });
   const waves = [];
   const waveMeta = [];
-  const waveCount = Math.min(2 + Math.floor(n / 5), 5);
+  const waveCount = Math.min(2 + Math.floor(n / 5) + (diff.order >= 2 ? 1 : 0), 6);
   const basePerWave = 2 + Math.floor(n / 4);
-  const perWave = Math.min(Math.max(2, Math.ceil(basePerWave * ADVENTURE_HORDE_MUL)), ADVENTURE_HORDE_MAX_PER_WAVE);
+  const hordeScale = (diff.hordeMul || 1);
+  const perWave = Math.min(
+    Math.max(2, Math.ceil(basePerWave * ADVENTURE_HORDE_MUL * hordeScale)),
+    ADVENTURE_HORDE_MAX_PER_WAVE
+  );
   for (let w = 0; w < waveCount; w++) {
     const list = [];
     for (let i = 0; i < perWave; i++) {
@@ -9467,7 +9563,31 @@ function buildLevel(n, diffId) {
     }
     const meta = { trait: null, spawnMul: 1, label: '' };
     const roll = Math.random();
-    if (flyPool.length && n >= 3 && roll < 0.22) {
+    // Model 3.0: pijn-golf — meer elites + reuzen
+    if (diff.order >= 2 && roll < 0.26) {
+      meta.trait = 'pain';
+      meta.spawnMul = 0.78;
+      meta.label = 'pain';
+      for (let i = 0; i < list.length; i++) {
+        if (Math.random() < 0.45) list[i].elite = true;
+        if (Math.random() < 0.35) {
+          list[i].giant = true;
+        }
+      }
+      if (list.length) {
+        const sp = weightedPick(pool, n, rarityBias + 1);
+        list.push({ sp, elite: true, giant: rollWaveGiant(n, true, sp, (diff.giantBonus || 0) + 0.1) });
+      }
+    // Model 2.0+: ember/rush — snellere spawn + vuur-druk
+    } else if (diff.order >= 1 && roll < 0.34) {
+      meta.trait = 'ember';
+      meta.spawnMul = 0.68;
+      meta.label = 'ember';
+      for (let i = 0; i < Math.min(3, list.length); i++) {
+        const ix = Math.floor(Math.random() * list.length);
+        list[ix].elite = list[ix].elite || Math.random() < 0.4;
+      }
+    } else if (flyPool.length && n >= 3 && roll < 0.22) {
       list[Math.floor(Math.random() * list.length)].sp = weightedPick(flyPool, n, rarityBias);
       meta.trait = 'flyers';
       meta.label = 'Vliegers — mik omhoog!';
@@ -9524,7 +9644,7 @@ function buildLevel(n, diffId) {
   }
   if (BOSS_AT[n]) {
     const bossWave = BOSS_AT[n].map(x => Object.assign({}, x, { bossCore: !!x.elite }));
-    const hordePad = Math.min(3 + Math.floor(n / 8), 10);
+    const hordePad = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, 12);
     for (let i = 0; i < hordePad; i++) {
       const elite = Math.random() < (0.1 + (diff.eliteBonus || 0) * 0.5);
       const bsp = weightedPick(pool, n, rarityBias);
@@ -9541,6 +9661,8 @@ function buildLevel(n, diffId) {
     diff: diff.id || 'normal',
     speedMul: diff.speedMul || 1,
     model: diff.model || '1.0',
+    enrageMul: diff.enrageMul || 1,
+    enrageAt: diff.enrageAt != null ? diff.enrageAt : 0.5,
   };
 }
 
@@ -9551,6 +9673,8 @@ const WAVE_TRAIT_BANNER = {
   tide: { key: 'banner.tideWave', color: '#6ee06e', size: 40 },
   ranch: { key: 'banner.ranchWave', color: '#e8c98a', size: 40 },
   safari: { key: 'banner.safariWave', color: '#43b25b', size: 40 },
+  ember: { key: 'banner.emberWave', color: '#ff7a4d', size: 42 },
+  pain: { key: 'banner.painWave', color: '#ff3a2a', size: 44 },
 };
 
 function waveTraitBanner(trait) {
@@ -9645,7 +9769,8 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
           try { AudioSys.sfx('bossTurn'); } catch (_) {}
         }
         AudioSys.sting('superBossIntro');
-        AudioSys.play('boss');
+        if (typeof playFightBgm === 'function') playFightBgm('boss');
+        else AudioSys.play('boss');
         const title = typeof t === 'function' ? t('banner.superBossTitle') : 'SUPER BAAS';
         game.banner(title, 2.8, col, bigBoss ? 68 : 44);
         game.banner(colossal
@@ -9653,7 +9778,8 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
           : (typeof t === 'function' ? t('banner.bossName', { name }) : name), 2.5, '#fff', bigBoss ? 52 : 40);
       } else if (tier === 'boss') {
         AudioSys.sting('bossIntro');
-        AudioSys.play('boss');
+        if (typeof playFightBgm === 'function') playFightBgm('boss');
+        else AudioSys.play('boss');
         if (bigBoss) {
           const title = typeof t === 'function' ? t('banner.bossTitle') : 'BAAS';
           game.banner(title, 2.6, col, 64);
@@ -9665,7 +9791,8 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
         }
       } else {
         AudioSys.sting('eliteIntro');
-        AudioSys.play('elite');
+        if (typeof playFightBgm === 'function') playFightBgm('elite');
+        else AudioSys.play('elite');
         game.banner(typeof t === 'function' ? t('banner.eliteNamed', { name }) : `ELITE — ${name}!`, 1.5, col, 38);
       }
     } catch (_) {}
@@ -9812,9 +9939,15 @@ function restoreTideBattleMusic(game) {
   cancelTideBattleMusicPending(game);
   const prev = game.tideBattlePrevSong;
   game.tideBattlePrevSong = null;
-  const fallback = (game.level && game.level.boss) ? 'boss' : 'battle';
-  const next = (prev && prev !== 'tideBattle' && SONGS[prev]) ? prev : fallback;
-  try { AudioSys.play(next); } catch (_) {}
+  const fallbackKind = (game.level && game.level.boss) ? 'boss' : 'battle';
+  const next = (prev && !(typeof isTideBgmId === 'function' ? isTideBgmId(prev) : prev === 'tideBattle') && SONGS[prev])
+    ? prev
+    : null;
+  try {
+    if (next) AudioSys.play(next);
+    else if (typeof playFightBgm === 'function') playFightBgm(fallbackKind);
+    else AudioSys.play(fallbackKind);
+  } catch (_) {}
 }
 
 function reportTideBattleRecover(reason, err) {
@@ -9871,13 +10004,17 @@ function beginTideBattleMusic(game) {
   if (!game) return;
   cancelTideBattleMusicPending(game);
   const cur = (AudioSys.song && AudioSys.song.id) || AudioSys.desiredSong;
-  game.tideBattlePrevSong = (cur && cur !== 'tideBattle' && SONGS[cur]) ? cur
+  const onTide = typeof isTideBgmId === 'function' ? isTideBgmId(cur) : (cur === 'tideBattle');
+  game.tideBattlePrevSong = (cur && !onTide && SONGS[cur]) ? cur
     : ((game.level && game.level.boss) ? 'boss' : 'battle');
   try { AudioSys.sting('tideBattleIntro'); } catch (_) {}
   game.tideBattleMusicT = setTimeout(() => {
     game.tideBattleMusicT = null;
     if (!game.tideBattleActive || game.over || game.mode !== 'adventure') return;
-    try { AudioSys.play('tideBattle'); } catch (_) {}
+    try {
+      if (typeof playFightBgm === 'function') playFightBgm('tideBattle');
+      else AudioSys.play('tideBattle');
+    } catch (_) {}
   }, 340);
 }
 
@@ -10638,6 +10775,8 @@ function seedNlGameStrings() {
     tideWave: 'TIDE-GOLF',
     ranchWave: 'BOERDERIJ OP HOL',
     safariWave: 'DIERENTUIN-UITBRAAK',
+    emberWave: 'EMBER-GOLF · 2.0',
+    painWave: 'PIJN-GOLF · 3.0',
     waveClear: 'Golf gewist +{heal} HP',
     waveN: 'GOLF {n}/{total}',
     fight: 'VECHT!',
@@ -11081,12 +11220,15 @@ function seedNlGameStrings() {
     charPickNow2: 'P2',
     charIpadTip: 'iPad: speler 1 gebruikt de linker helft van het scherm (joystick + knoppen), speler 2 de rechter helft. Draai je iPad liggend voor het meeste ruimte.',
     levelHead: 'Kies een eiland',
-    levelSub: 'Normal → Nightmare 2.0 → Hell 3.0 · 5 eilanden × 10 levels · Tik level = Gooi & start',
+    levelSub: 'Normal → Nightmare 2.0 → Hell 3.0 · 7 eilanden × 10 levels · Tik level = Gooi & start',
     diff: { normal: 'Normal', nightmare: 'Nightmare', hell: 'Hell' },
     diffTipNormal: 'Standaard avontuur · model 1.0',
     diffTipHard: '{name} — zwaardere vijanden, hogere rariteiten & eigen arena',
-    diffUnlockNightmare: 'Versla Normal Lv 50 om Nightmare 2.0 te openen',
-    diffUnlockHell: 'Versla Nightmare Lv 50 om Hell 3.0 te openen',
+    diffUnlockNightmare: 'Versla Normal Lv 70 om Nightmare 2.0 te openen',
+    diffUnlockHell: 'Versla Nightmare Lv 70 om Hell 3.0 te openen',
+    diffBlurbNormal: 'Model 1.0 — klassiek avontuur',
+    diffBlurbNightmare: 'Model 2.0 — vuur-arena · eerdere rasernie · ember-golven · wildere drops',
+    diffBlurbHell: 'Model 3.0 — lava · schreeuwende pijn · pijn-golven · mythische hordes',
     islandDiffTag: ' · {diff}',
     gambleSub: 'Twee dobbelstenen: pech = super-baas in een willekeurige golf · geluk = sterke bondgenoot (buff alleen dit level)',
     gambleSumDefault: 'Tik Gooi & start — of overslaan zonder gok',
@@ -11572,6 +11714,7 @@ const CATALOG_EN = {
     eliteNamed: 'ELITE — {name}!',
     flyerWave: 'FLYER WAVE', rushWave: 'RUSH WAVE', eliteTraitWave: 'ELITE WAVE', tideWave: 'TIDE WAVE',
     ranchWave: 'FARM RAMPAGE', safariWave: 'ZOO BREAKOUT',
+    emberWave: 'EMBER WAVE · 2.0', painWave: 'PAIN WAVE · 3.0',
     waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
     fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'DEFEATED...', rasenganTriple: 'TRIPLE RASENGAN!', rasenganDual: 'DUAL RASENGAN!',
     round: 'ROUND {n}', roundDecisive: 'ROUND {n} · decisive round', roundMatchPoint: 'ROUND {n} · match point',
@@ -11819,12 +11962,15 @@ const CATALOG_EN = {
     charPickNow2: 'P2',
     charIpadTip: 'iPad: player 1 uses the left half (joystick + buttons), player 2 the right half. Landscape works best.',
     levelHead: 'Pick an island',
-    levelSub: 'Normal → Nightmare 2.0 → Hell 3.0 · 5 islands × 10 levels · Tap level = Roll & start',
+    levelSub: 'Normal → Nightmare 2.0 → Hell 3.0 · 7 islands × 10 levels · Tap level = Roll & start',
     diff: { normal: 'Normal', nightmare: 'Nightmare', hell: 'Hell' },
     diffTipNormal: 'Standard adventure · model 1.0',
     diffTipHard: '{name} — tougher foes, higher rarities & own arena',
-    diffUnlockNightmare: 'Beat Normal Lv 50 to unlock Nightmare 2.0',
-    diffUnlockHell: 'Beat Nightmare Lv 50 to unlock Hell 3.0',
+    diffUnlockNightmare: 'Beat Normal Lv 70 to unlock Nightmare 2.0',
+    diffUnlockHell: 'Beat Nightmare Lv 70 to unlock Hell 3.0',
+    diffBlurbNormal: 'Model 1.0 — classic adventure',
+    diffBlurbNightmare: 'Model 2.0 — fire arena · earlier enrage · ember waves · wilder drops',
+    diffBlurbHell: 'Model 3.0 — lava · screaming pain · pain waves · mythic hordes',
     islandDiffTag: ' · {diff}',
     gambleSub: 'Two dice: bad luck = super-boss in a random wave · lucky = strong ally (buff this level only)',
     gambleSumDefault: 'Tap Roll & start — or skip with no gamble',
@@ -12660,7 +12806,8 @@ function dailyModeLabel(mode) {
 /* --- src/systems/audio-samples.js --- */
 /* ========================= ONLINE SFX SAMPLES (CC0) ======================
    Kenney.nl game audio — CC0 1.0 · mirror: ETdoFresh/kenney.nl via jsDelivr.
-   Loads on first AudioSys.init; procedural synth remains fallback offline. */
+   Loads on first AudioSys.init; procedural synth remains fallback offline.
+   Diversity pass: ~2× files per SFX id (random pick each play). */
 const KENNEY_CDN = 'https://cdn.jsdelivr.net/gh/ETdoFresh/kenney.nl@master';
 const SAMPLE_PACKS = {
   impact: `${KENNEY_CDN}/kenney_impactsounds/Audio`,
@@ -12678,127 +12825,129 @@ function sampleUrl(pack, file) {
 
 /** Multiple files per SFX id → random pick each play for variety. */
 const SFX_SAMPLE_MAP = {
-  select: { pack: 'ui', vol: 0.55, files: ['click_002.ogg', 'click_003.ogg', 'click_004.ogg', 'confirmation_001.ogg'] },
-  bonus: { pack: 'ui', vol: 0.7, files: ['confirmation_002.ogg', 'confirmation_003.ogg', 'confirmation_004.ogg'] },
-  bell: { pack: 'impact', vol: 0.75, files: ['impactBell_heavy_001.ogg', 'impactBell_heavy_002.ogg', 'impactBell_heavy_003.ogg'] },
-  pickup: { pack: 'ui', vol: 0.65, files: ['drop_002.ogg', 'drop_003.ogg', 'drop_004.ogg'] },
-  levelup: { pack: 'ui', vol: 0.8, files: ['confirmation_003.ogg', 'confirmation_004.ogg', 'bong_001.ogg'] },
-  win: { pack: 'ui', vol: 0.85, files: ['confirmation_004.ogg', 'bong_001.ogg'] },
-  lose: { pack: 'ui', vol: 0.7, files: ['error_002.ogg', 'error_003.ogg', 'back_003.ogg'] },
-  gamble: { pack: 'casino', vol: 0.65, files: ['chipLay1.ogg', 'chipLay2.ogg', 'cardSlide3.ogg'] },
-  gambleWin: { pack: 'casino', vol: 0.75, files: ['chipLay3.ogg', 'cardPlace2.ogg', 'cardPlace3.ogg'] },
-  gambleBoss: { pack: 'impact', vol: 0.9, files: ['impactPunch_heavy_003.ogg', 'impactMetal_heavy_002.ogg'] },
-  diceRoll: { pack: 'casino', vol: 0.6, files: ['cardShuffle.ogg', 'chipLay1.ogg', 'cardSlide1.ogg', 'cardSlide5.ogg'] },
-  summon: { pack: 'digital', vol: 0.75, files: ['phaseJump3.ogg', 'phaseJump4.ogg', 'pepSound3.ogg'] },
-  newmonster: { pack: 'rpg', vol: 0.7, files: ['bookOpen.ogg', 'doorOpen_1.ogg', 'creak2.ogg'] },
-  combo: { pack: 'digital', vol: 0.65, files: ['pepSound1.ogg', 'pepSound2.ogg', 'highUp.ogg'] },
-  comboEpic: { pack: 'digital', vol: 0.78, files: ['pepSound4.ogg', 'phaseJump5.ogg', 'highUp.ogg'] },
-  comboMega: { pack: 'digital', vol: 0.85, files: ['phaseJump5.ogg', 'pepSound5.ogg', 'bong_001.ogg'] },
-  punch: { pack: 'impact', vol: 0.82, files: ['impactPunch_medium_001.ogg', 'impactPunch_medium_002.ogg', 'impactPunch_medium_003.ogg', 'impactGeneric_light_001.ogg'] },
-  kick: { pack: 'impact', vol: 0.88, files: ['impactPunch_heavy_001.ogg', 'impactSoft_medium_002.ogg', 'impactPunch_medium_004.ogg'] },
-  hit2: { pack: 'impact', vol: 0.75, files: ['impactGeneric_light_002.ogg', 'impactGeneric_light_003.ogg', 'impactSoft_medium_001.ogg'] },
-  hitHeavy: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_002.ogg', 'impactPunch_heavy_003.ogg', 'impactMetal_heavy_001.ogg'] },
-  hitMetal: { pack: 'impact', vol: 0.85, files: ['impactMetal_medium_001.ogg', 'impactMetal_medium_002.ogg', 'impactMetal_light_003.ogg'] },
-  hitEnergy: { pack: 'digital', vol: 0.7, files: ['laser3.ogg', 'laser4.ogg', 'pepSound2.ogg'] },
-  crit: { pack: 'impact', vol: 0.9, files: ['impactGlass_heavy_001.ogg', 'impactGlass_heavy_002.ogg', 'impactMetal_heavy_003.ogg'] },
-  block: { pack: 'impact', vol: 0.7, files: ['impactMetal_light_001.ogg', 'impactMetal_light_002.ogg', 'impactWood_medium_001.ogg'] },
-  swing: { pack: 'rpg', vol: 0.55, files: ['chop.ogg', 'drawKnife1.ogg', 'drawKnife2.ogg', 'cloth2.ogg'] },
-  wKunai: { pack: 'rpg', vol: 0.5, files: ['drawKnife2.ogg', 'drawKnife3.ogg', 'cloth3.ogg'] },
-  wFuuma: { pack: 'rpg', vol: 0.58, files: ['drawKnife3.ogg', 'chop.ogg'] },
-  wBoemerang: { pack: 'digital', vol: 0.52, files: ['phaseJump1.ogg', 'lowDown.ogg', 'lowRandom.ogg'] },
-  wLaser: { pack: 'digital', vol: 0.65, files: ['laser5.ogg', 'laser6.ogg', 'laser7.ogg'] },
-  wZwaard: { pack: 'rpg', vol: 0.6, files: ['drawKnife1.ogg', 'chop.ogg', 'clothBelt.ogg'] },
-  wSpeer: { pack: 'rpg', vol: 0.58, files: ['drawKnife2.ogg', 'footstep04.ogg', 'chop.ogg'] },
-  wKnuppel: { pack: 'impact', vol: 0.8, files: ['impactWood_heavy_001.ogg', 'impactWood_medium_002.ogg'] },
-  wGuvve: { pack: 'impact', vol: 0.75, files: ['impactSoft_heavy_001.ogg', 'impactPlank_medium_001.ogg'] },
-  wKatana: { pack: 'rpg', vol: 0.62, files: ['chop.ogg', 'drawKnife3.ogg'] },
-  wMaster: { pack: 'digital', vol: 0.78, files: ['phaseJump4.ogg', 'laser8.ogg', 'highUp.ogg'] },
-  wNunchaku: { pack: 'rpg', vol: 0.52, files: ['cloth2.ogg', 'cloth3.ogg', 'cloth4.ogg'] },
-  wHamer: { pack: 'impact', vol: 0.88, files: ['impactWood_heavy_001.ogg', 'impactWood_heavy_002.ogg', 'impactPunch_heavy_002.ogg'] },
-  wKetting: { pack: 'impact', vol: 0.72, files: ['impactMetal_light_001.ogg', 'impactMetal_light_002.ogg', 'impactMetal_medium_001.ogg'] },
-  wDonder: { pack: 'impact', vol: 0.82, files: ['impactMetal_heavy_001.ogg', 'impactMetal_heavy_003.ogg', 'impactPunch_heavy_004.ogg'] },
-  wVoid: { pack: 'digital', vol: 0.68, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'phaseJump4.ogg'] },
-  wFan: { pack: 'rpg', vol: 0.48, files: ['clothBelt.ogg', 'clothBelt2.ogg', 'cloth2.ogg'] },
-  shuriken: { pack: 'digital', vol: 0.55, files: ['laser1.ogg', 'laser2.ogg', 'lowDown.ogg'] },
-  shoot: { pack: 'digital', vol: 0.62, files: ['laser4.ogg', 'laser5.ogg'] },
-  laser: { pack: 'digital', vol: 0.68, files: ['laser6.ogg', 'laser7.ogg', 'laser8.ogg', 'laser9.ogg'] },
-  special: { pack: 'digital', vol: 0.7, files: ['phaseJump3.ogg', 'pepSound4.ogg'] },
-  subst: { pack: 'rpg', vol: 0.65, files: ['cloth4.ogg', 'clothBelt2.ogg', 'dropLeather.ogg'] },
-  dash: { pack: 'digital', vol: 0.5, files: ['phaseJump1.ogg', 'lowDown.ogg', 'lowRandom.ogg'] },
-  jump: { pack: 'digital', vol: 0.58, files: ['phaseJump1.ogg', 'phaseJump2.ogg', 'highUp.ogg'] },
-  land: { pack: 'impact', vol: 0.55, files: ['footstep_concrete_001.ogg', 'footstep_concrete_002.ogg', 'footstep_grass_002.ogg'] },
-  step: { pack: 'impact', vol: 0.35, files: ['footstep_grass_001.ogg', 'footstep_grass_003.ogg', 'footstep_carpet_002.ogg'] },
-  travel: { pack: 'impact', vol: 0.4, files: ['footstep_carpet_001.ogg', 'footstep_carpet_003.ogg', 'footstep_wood_002.ogg'] },
-  hurt: { pack: 'ui', vol: 0.65, files: ['error_001.ogg', 'error_002.ogg'] },
-  die: { pack: 'impact', vol: 0.85, files: ['impactGlass_heavy_003.ogg', 'impactSoft_heavy_003.ogg', 'impactWood_heavy_002.ogg'] },
-  roar: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactSoft_heavy_004.ogg', 'impactMetal_heavy_004.ogg'] },
-  explode: { pack: 'impact', vol: 0.9, files: ['impactMetal_heavy_002.ogg', 'impactGlass_heavy_004.ogg', 'impactPunch_heavy_003.ogg'] },
-  brick: { pack: 'impact', vol: 0.7, files: ['impactPlank_medium_002.ogg', 'impactWood_light_002.ogg', 'impactGeneric_light_004.ogg'] },
-  crack: { pack: 'impact', vol: 0.65, files: ['impactGlass_light_002.ogg', 'impactWood_light_003.ogg'] },
-  whoosh: { pack: 'digital', vol: 0.45, files: ['lowDown.ogg', 'lowRandom.ogg', 'phaseJump1.ogg'] },
-  skillSwoosh: { pack: 'digital', vol: 0.62, files: ['lowDown.ogg', 'phaseJump2.ogg', 'lowRandom.ogg'] },
-  skillSwooshEpic: { pack: 'digital', vol: 0.78, files: ['phaseJump5.ogg', 'laser8.ogg', 'highUp.ogg'] },
-  megaDrop: { pack: 'digital', vol: 0.88, files: ['phaseJump5.ogg', 'pepSound5.ogg', 'bong_001.ogg'] },
-  tideSurge: { pack: 'digital', vol: 0.65, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'laser4.ogg'] },
-  bossTurn: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactBell_heavy_001.ogg'] },
-  checkpoint: { pack: 'ui', vol: 0.72, files: ['confirmation_002.ogg', 'bong_001.ogg'] },
-  bossArrive: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_003.ogg'] },
-  bossWait: { pack: 'impact', vol: 0.6, files: ['impactSoft_medium_003.ogg', 'creak1.ogg'] },
-  masterSword: { pack: 'digital', vol: 0.82, files: ['phaseJump5.ogg', 'laser8.ogg', 'highUp.ogg'] },
-  waveClear: { pack: 'ui', vol: 0.68, files: ['confirmation_003.ogg', 'confirmation_001.ogg'] },
-  hitstop: { pack: 'impact', vol: 0.45, files: ['impactGeneric_light_001.ogg', 'impactMetal_light_004.ogg'] },
-  ketsbam: { pack: 'impact', vol: 1, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactGlass_heavy_004.ogg'] },
-  ketsbamCharge: { pack: 'digital', vol: 0.55, rate: 0.88, files: ['lowRandom.ogg', 'lowThreeTone.ogg'] },
+  select: { pack: 'ui', vol: 0.55, files: ['click_001.ogg', 'click_002.ogg', 'click_003.ogg', 'click_004.ogg', 'click_005.ogg', 'confirmation_001.ogg', 'switch_001.ogg', 'pluck_001.ogg'] },
+  bonus: { pack: 'ui', vol: 0.7, files: ['confirmation_002.ogg', 'confirmation_003.ogg', 'confirmation_004.ogg', 'bong_001.ogg', 'pluck_002.ogg', 'drop_001.ogg'] },
+  bell: { pack: 'impact', vol: 0.75, files: ['impactBell_heavy_001.ogg', 'impactBell_heavy_002.ogg', 'impactBell_heavy_003.ogg', 'impactBell_heavy_004.ogg', 'impactMetal_medium_003.ogg', 'impactMetal_light_004.ogg'] },
+  pickup: { pack: 'ui', vol: 0.65, files: ['drop_001.ogg', 'drop_002.ogg', 'drop_003.ogg', 'drop_004.ogg', 'pluck_001.ogg', 'pluck_002.ogg', 'scroll_001.ogg'] },
+  levelup: { pack: 'ui', vol: 0.8, files: ['confirmation_003.ogg', 'confirmation_004.ogg', 'bong_001.ogg', 'confirmation_002.ogg', 'pluck_002.ogg', 'switch_002.ogg'] },
+  win: { pack: 'ui', vol: 0.85, files: ['confirmation_004.ogg', 'bong_001.ogg', 'confirmation_003.ogg', 'confirmation_002.ogg', 'pluck_001.ogg', 'drop_004.ogg'] },
+  lose: { pack: 'ui', vol: 0.7, files: ['error_002.ogg', 'error_003.ogg', 'error_004.ogg', 'error_005.ogg', 'back_001.ogg', 'back_002.ogg', 'back_003.ogg', 'back_004.ogg'] },
+  gamble: { pack: 'casino', vol: 0.65, files: ['chipLay1.ogg', 'chipLay2.ogg', 'cardSlide2.ogg', 'cardSlide3.ogg', 'cardSlide4.ogg', 'dieThrow1.ogg', 'chipsCollide1.ogg'] },
+  gambleWin: { pack: 'casino', vol: 0.75, files: ['chipLay3.ogg', 'cardPlace1.ogg', 'cardPlace2.ogg', 'cardPlace3.ogg', 'cardPlace4.ogg', 'chipsCollide2.ogg', 'dieThrow2.ogg'] },
+  gambleBoss: { pack: 'impact', vol: 0.9, files: ['impactPunch_heavy_003.ogg', 'impactMetal_heavy_002.ogg', 'impactPunch_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactGlass_heavy_003.ogg', 'impactSoft_heavy_002.ogg'] },
+  diceRoll: { pack: 'casino', vol: 0.6, files: ['cardShuffle.ogg', 'chipLay1.ogg', 'cardSlide1.ogg', 'cardSlide2.ogg', 'cardSlide5.ogg', 'dieThrow1.ogg', 'dieThrow2.ogg', 'dieThrow3.ogg'] },
+  summon: { pack: 'digital', vol: 0.75, files: ['phaseJump3.ogg', 'phaseJump4.ogg', 'pepSound3.ogg', 'powerUp1.ogg', 'powerUp2.ogg', 'threeTone1.ogg', 'zap1.ogg'] },
+  newmonster: { pack: 'rpg', vol: 0.7, files: ['bookOpen.ogg', 'doorOpen_1.ogg', 'doorClose_1.ogg', 'creak1.ogg', 'creak2.ogg', 'creak3.ogg', 'handleCoins.ogg'] },
+  combo: { pack: 'digital', vol: 0.65, files: ['pepSound1.ogg', 'pepSound2.ogg', 'highUp.ogg', 'powerUp1.ogg', 'tone1.ogg', 'zap2.ogg'] },
+  comboEpic: { pack: 'digital', vol: 0.78, files: ['pepSound4.ogg', 'phaseJump5.ogg', 'highUp.ogg', 'powerUp2.ogg', 'powerUp3.ogg', 'threeTone2.ogg'] },
+  comboMega: { pack: 'digital', vol: 0.85, files: ['phaseJump5.ogg', 'pepSound5.ogg', 'powerUp3.ogg', 'threeTone1.ogg', 'laser9.ogg', 'pepSound4.ogg'] },
+  punch: { pack: 'impact', vol: 0.82, files: ['impactPunch_medium_001.ogg', 'impactPunch_medium_002.ogg', 'impactPunch_medium_003.ogg', 'impactPunch_medium_004.ogg', 'impactGeneric_light_001.ogg', 'impactGeneric_light_002.ogg', 'impactSoft_medium_001.ogg', 'impactSoft_medium_003.ogg'] },
+  kick: { pack: 'impact', vol: 0.88, files: ['impactPunch_heavy_001.ogg', 'impactSoft_medium_002.ogg', 'impactPunch_medium_004.ogg', 'impactSoft_medium_004.ogg', 'impactSoft_heavy_001.ogg', 'impactPunch_heavy_002.ogg', 'impactWood_medium_001.ogg'] },
+  /** Default weapon hit — most common combat SFX (was missing → always synth). */
+  hit: { pack: 'impact', vol: 0.78, files: ['impactGeneric_light_001.ogg', 'impactGeneric_light_002.ogg', 'impactGeneric_light_003.ogg', 'impactGeneric_light_004.ogg', 'impactSoft_medium_001.ogg', 'impactSoft_medium_003.ogg', 'impactPunch_medium_001.ogg', 'impactPunch_medium_002.ogg'] },
+  hit2: { pack: 'impact', vol: 0.75, files: ['impactGeneric_light_002.ogg', 'impactGeneric_light_003.ogg', 'impactGeneric_light_004.ogg', 'impactSoft_medium_001.ogg', 'impactSoft_medium_003.ogg', 'impactWood_light_001.ogg', 'impactPlank_medium_003.ogg'] },
+  hitHeavy: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_002.ogg', 'impactPunch_heavy_003.ogg', 'impactPunch_heavy_004.ogg', 'impactMetal_heavy_001.ogg', 'impactSoft_heavy_001.ogg', 'impactSoft_heavy_002.ogg', 'impactWood_heavy_003.ogg'] },
+  hitMetal: { pack: 'impact', vol: 0.85, files: ['impactMetal_medium_001.ogg', 'impactMetal_medium_002.ogg', 'impactMetal_medium_003.ogg', 'impactMetal_medium_004.ogg', 'impactMetal_light_003.ogg', 'impactMetal_light_004.ogg', 'impactMetal_heavy_001.ogg'] },
+  hitEnergy: { pack: 'digital', vol: 0.7, files: ['laser3.ogg', 'laser4.ogg', 'pepSound2.ogg', 'zap1.ogg', 'zap2.ogg', 'tone1.ogg', 'laser1.ogg'] },
+  crit: { pack: 'impact', vol: 0.9, files: ['impactGlass_heavy_001.ogg', 'impactGlass_heavy_002.ogg', 'impactGlass_heavy_003.ogg', 'impactMetal_heavy_003.ogg', 'impactGlass_light_003.ogg', 'impactPunch_heavy_004.ogg'] },
+  block: { pack: 'impact', vol: 0.7, files: ['impactMetal_light_001.ogg', 'impactMetal_light_002.ogg', 'impactMetal_light_004.ogg', 'impactWood_medium_001.ogg', 'impactWood_medium_003.ogg', 'impactMetal_medium_001.ogg'] },
+  swing: { pack: 'rpg', vol: 0.55, files: ['chop.ogg', 'drawKnife1.ogg', 'drawKnife2.ogg', 'cloth1.ogg', 'cloth2.ogg', 'knifeSlice.ogg', 'knifeSlice2.ogg'] },
+  wKunai: { pack: 'rpg', vol: 0.5, files: ['drawKnife2.ogg', 'drawKnife3.ogg', 'cloth3.ogg', 'knifeSlice.ogg', 'cloth1.ogg', 'metalClick.ogg'] },
+  wFuuma: { pack: 'rpg', vol: 0.58, files: ['drawKnife3.ogg', 'chop.ogg', 'knifeSlice2.ogg', 'cloth2.ogg', 'drawKnife1.ogg', 'metalClick.ogg'] },
+  wBoemerang: { pack: 'digital', vol: 0.52, files: ['phaseJump1.ogg', 'lowDown.ogg', 'lowRandom.ogg', 'highDown.ogg', 'spaceTrash1.ogg', 'zap1.ogg'] },
+  wLaser: { pack: 'digital', vol: 0.65, files: ['laser5.ogg', 'laser6.ogg', 'laser7.ogg', 'laser8.ogg', 'laser9.ogg', 'zap2.ogg', 'tone1.ogg'] },
+  wZwaard: { pack: 'rpg', vol: 0.6, files: ['drawKnife1.ogg', 'chop.ogg', 'clothBelt.ogg', 'knifeSlice.ogg', 'knifeSlice2.ogg', 'drawKnife2.ogg', 'metalClick.ogg'] },
+  wSpeer: { pack: 'rpg', vol: 0.58, files: ['drawKnife2.ogg', 'footstep04.ogg', 'chop.ogg', 'footstep00.ogg', 'footstep05.ogg', 'cloth3.ogg'] },
+  wKnuppel: { pack: 'impact', vol: 0.8, files: ['impactWood_heavy_001.ogg', 'impactWood_medium_002.ogg', 'impactWood_heavy_002.ogg', 'impactWood_heavy_003.ogg', 'impactWood_medium_001.ogg', 'impactWood_medium_003.ogg'] },
+  wGuvve: { pack: 'impact', vol: 0.75, files: ['impactSoft_heavy_001.ogg', 'impactPlank_medium_001.ogg', 'impactSoft_heavy_002.ogg', 'impactPlank_medium_003.ogg', 'impactSoft_medium_004.ogg', 'impactWood_medium_002.ogg'] },
+  wKatana: { pack: 'rpg', vol: 0.62, files: ['chop.ogg', 'drawKnife3.ogg', 'knifeSlice.ogg', 'knifeSlice2.ogg', 'drawKnife1.ogg', 'metalClick.ogg'] },
+  wMaster: { pack: 'digital', vol: 0.78, files: ['phaseJump4.ogg', 'laser8.ogg', 'highUp.ogg', 'powerUp2.ogg', 'phaseJump5.ogg', 'threeTone2.ogg', 'laser9.ogg'] },
+  wNunchaku: { pack: 'rpg', vol: 0.52, files: ['cloth2.ogg', 'cloth3.ogg', 'cloth4.ogg', 'cloth1.ogg', 'clothBelt.ogg', 'clothBelt2.ogg'] },
+  wHamer: { pack: 'impact', vol: 0.88, files: ['impactWood_heavy_001.ogg', 'impactWood_heavy_002.ogg', 'impactWood_heavy_003.ogg', 'impactPunch_heavy_002.ogg', 'impactPunch_heavy_003.ogg', 'impactSoft_heavy_001.ogg'] },
+  wKetting: { pack: 'impact', vol: 0.72, files: ['impactMetal_light_001.ogg', 'impactMetal_light_002.ogg', 'impactMetal_light_004.ogg', 'impactMetal_medium_001.ogg', 'impactMetal_medium_003.ogg', 'impactMetal_medium_004.ogg'] },
+  wDonder: { pack: 'impact', vol: 0.82, files: ['impactMetal_heavy_001.ogg', 'impactMetal_heavy_003.ogg', 'impactPunch_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactGlass_heavy_003.ogg', 'impactBell_heavy_004.ogg'] },
+  wVoid: { pack: 'digital', vol: 0.68, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'phaseJump4.ogg', 'lowRandom.ogg', 'highDown.ogg', 'spaceTrash2.ogg', 'threeTone1.ogg'] },
+  wFan: { pack: 'rpg', vol: 0.48, files: ['clothBelt.ogg', 'clothBelt2.ogg', 'cloth2.ogg', 'cloth1.ogg', 'cloth3.ogg', 'cloth4.ogg'] },
+  shuriken: { pack: 'digital', vol: 0.55, files: ['laser1.ogg', 'laser2.ogg', 'lowDown.ogg', 'zap1.ogg', 'highDown.ogg', 'spaceTrash1.ogg'] },
+  shoot: { pack: 'digital', vol: 0.62, files: ['laser4.ogg', 'laser5.ogg', 'laser3.ogg', 'laser6.ogg', 'zap2.ogg', 'tone1.ogg'] },
+  laser: { pack: 'digital', vol: 0.68, files: ['laser6.ogg', 'laser7.ogg', 'laser8.ogg', 'laser9.ogg', 'laser5.ogg', 'zap1.ogg', 'powerUp1.ogg'] },
+  special: { pack: 'digital', vol: 0.7, files: ['phaseJump3.ogg', 'pepSound4.ogg', 'powerUp2.ogg', 'threeTone2.ogg', 'phaseJump5.ogg', 'laser8.ogg'] },
+  subst: { pack: 'rpg', vol: 0.65, files: ['cloth4.ogg', 'clothBelt2.ogg', 'dropLeather.ogg', 'cloth1.ogg', 'cloth3.ogg', 'creak2.ogg'] },
+  dash: { pack: 'digital', vol: 0.5, files: ['phaseJump1.ogg', 'lowDown.ogg', 'lowRandom.ogg', 'highDown.ogg', 'spaceTrash1.ogg', 'zap2.ogg'] },
+  jump: { pack: 'digital', vol: 0.58, files: ['phaseJump1.ogg', 'phaseJump2.ogg', 'highUp.ogg', 'pepSound1.ogg', 'tone1.ogg', 'powerUp1.ogg'] },
+  land: { pack: 'impact', vol: 0.55, files: ['footstep_concrete_001.ogg', 'footstep_concrete_002.ogg', 'footstep_concrete_003.ogg', 'footstep_grass_002.ogg', 'footstep_wood_001.ogg', 'footstep_wood_003.ogg'] },
+  step: { pack: 'impact', vol: 0.35, files: ['footstep_grass_001.ogg', 'footstep_grass_003.ogg', 'footstep_grass_004.ogg', 'footstep_carpet_002.ogg', 'footstep_carpet_004.ogg', 'footstep_wood_002.ogg'] },
+  travel: { pack: 'impact', vol: 0.4, files: ['footstep_carpet_001.ogg', 'footstep_carpet_003.ogg', 'footstep_carpet_004.ogg', 'footstep_wood_001.ogg', 'footstep_wood_002.ogg', 'footstep_grass_001.ogg'] },
+  hurt: { pack: 'ui', vol: 0.65, files: ['error_001.ogg', 'error_002.ogg', 'error_003.ogg', 'error_004.ogg', 'back_002.ogg', 'back_003.ogg'] },
+  die: { pack: 'impact', vol: 0.85, files: ['impactGlass_heavy_003.ogg', 'impactSoft_heavy_003.ogg', 'impactWood_heavy_002.ogg', 'impactGlass_heavy_004.ogg', 'impactSoft_heavy_002.ogg', 'impactPunch_heavy_004.ogg'] },
+  roar: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactSoft_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactSoft_heavy_002.ogg', 'impactPunch_heavy_003.ogg', 'impactBell_heavy_004.ogg'] },
+  explode: { pack: 'impact', vol: 0.9, files: ['impactMetal_heavy_002.ogg', 'impactGlass_heavy_004.ogg', 'impactPunch_heavy_003.ogg', 'impactGlass_heavy_003.ogg', 'impactMetal_heavy_004.ogg', 'impactSoft_heavy_001.ogg'] },
+  brick: { pack: 'impact', vol: 0.7, files: ['impactPlank_medium_002.ogg', 'impactWood_light_002.ogg', 'impactGeneric_light_004.ogg', 'impactPlank_medium_003.ogg', 'impactWood_light_001.ogg', 'impactWood_medium_003.ogg'] },
+  crack: { pack: 'impact', vol: 0.65, files: ['impactGlass_light_002.ogg', 'impactWood_light_003.ogg', 'impactGlass_light_001.ogg', 'impactGlass_light_003.ogg', 'impactGlass_light_004.ogg', 'impactWood_light_001.ogg'] },
+  whoosh: { pack: 'digital', vol: 0.45, files: ['lowDown.ogg', 'lowRandom.ogg', 'phaseJump1.ogg', 'highDown.ogg', 'spaceTrash1.ogg', 'spaceTrash2.ogg'] },
+  skillSwoosh: { pack: 'digital', vol: 0.62, files: ['lowDown.ogg', 'phaseJump2.ogg', 'lowRandom.ogg', 'highDown.ogg', 'zap1.ogg', 'spaceTrash2.ogg'] },
+  skillSwooshEpic: { pack: 'digital', vol: 0.78, files: ['phaseJump5.ogg', 'laser8.ogg', 'highUp.ogg', 'powerUp3.ogg', 'threeTone2.ogg', 'laser9.ogg'] },
+  megaDrop: { pack: 'digital', vol: 0.88, files: ['phaseJump5.ogg', 'pepSound5.ogg', 'powerUp3.ogg', 'threeTone1.ogg', 'laser9.ogg', 'pepSound4.ogg'] },
+  tideSurge: { pack: 'digital', vol: 0.65, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'laser4.ogg', 'threeTone1.ogg', 'lowRandom.ogg', 'spaceTrash2.ogg', 'zap2.ogg'] },
+  bossTurn: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactBell_heavy_001.ogg', 'impactBell_heavy_004.ogg', 'impactSoft_heavy_002.ogg', 'impactGlass_heavy_003.ogg'] },
+  checkpoint: { pack: 'ui', vol: 0.72, files: ['confirmation_002.ogg', 'bong_001.ogg', 'confirmation_001.ogg', 'confirmation_003.ogg', 'pluck_001.ogg', 'switch_002.ogg'] },
+  bossArrive: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_003.ogg', 'impactMetal_heavy_004.ogg', 'impactBell_heavy_004.ogg', 'impactSoft_heavy_004.ogg', 'impactGlass_heavy_004.ogg'] },
+  bossWait: { pack: 'impact', vol: 0.6, files: ['impactSoft_medium_003.ogg', 'impactSoft_medium_004.ogg', 'impactWood_medium_001.ogg', 'impactSoft_heavy_001.ogg', 'impactWood_medium_003.ogg'] },
+  masterSword: { pack: 'digital', vol: 0.82, files: ['phaseJump5.ogg', 'laser8.ogg', 'highUp.ogg', 'powerUp2.ogg', 'threeTone2.ogg', 'laser9.ogg', 'pepSound5.ogg'] },
+  waveClear: { pack: 'ui', vol: 0.68, files: ['confirmation_003.ogg', 'confirmation_001.ogg', 'confirmation_002.ogg', 'bong_001.ogg', 'pluck_002.ogg', 'drop_002.ogg'] },
+  hitstop: { pack: 'impact', vol: 0.45, files: ['impactGeneric_light_001.ogg', 'impactMetal_light_004.ogg', 'impactGeneric_light_003.ogg', 'impactMetal_light_001.ogg', 'impactGlass_light_001.ogg'] },
+  ketsbam: { pack: 'impact', vol: 1, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactGlass_heavy_004.ogg', 'impactPunch_heavy_003.ogg', 'impactSoft_heavy_004.ogg', 'impactBell_heavy_004.ogg'] },
+  ketsbamCharge: { pack: 'digital', vol: 0.55, rate: 0.88, files: ['lowRandom.ogg', 'lowThreeTone.ogg', 'threeTone1.ogg', 'highDown.ogg', 'spaceTrash2.ogg', 'lowDown.ogg'] },
 };
 
 /** Per-skill Kenney CC0 samples — each skill id maps to its own file set. */
 const SKILL_SFX_SAMPLES = {
-  rasengan: { pack: 'digital', vol: 0.72, files: ['phaseJump2.ogg', 'phaseJump3.ogg', 'pepSound3.ogg'] },
-  fireball_jutsu: { pack: 'digital', vol: 0.74, rate: 1.06, files: ['laser5.ogg', 'pepSound1.ogg', 'highUp.ogg'] },
-  chidori: { pack: 'digital', vol: 0.75, files: ['laser2.ogg', 'laser3.ogg', 'highUp.ogg'] },
-  shadow_clone_burst: { pack: 'rpg', vol: 0.68, files: ['cloth4.ogg', 'dropLeather.ogg', 'clothBelt2.ogg'] },
-  gentle_palm: { pack: 'impact', vol: 0.7, files: ['impactSoft_medium_001.ogg', 'impactGeneric_light_002.ogg'] },
-  rinnegan: { pack: 'digital', vol: 0.78, files: ['lowThreeTone.ogg', 'phaseJump4.ogg', 'laser1.ogg'] },
-  eight_gates: { pack: 'impact', vol: 0.82, rate: 1.08, files: ['impactPunch_heavy_001.ogg', 'impactPunch_heavy_002.ogg', 'impactMetal_heavy_001.ogg'] },
-  black_hole: { pack: 'digital', vol: 0.8, rate: 0.86, files: ['lowThreeTone.ogg', 'lowRandom.ogg', 'phaseJump4.ogg'] },
-  kamehameha: { pack: 'digital', vol: 0.8, files: ['laser8.ogg', 'laser9.ogg', 'pepSound4.ogg'] },
-  galick_gun: { pack: 'digital', vol: 0.76, rate: 0.94, files: ['laser6.ogg', 'laser7.ogg', 'lowDown.ogg'] },
-  destructo_disc: { pack: 'digital', vol: 0.72, rate: 1.12, files: ['laser1.ogg', 'laser2.ogg', 'phaseJump1.ogg'] },
-  instant_dash: { pack: 'digital', vol: 0.7, rate: 1.18, files: ['phaseJump1.ogg', 'highUp.ogg', 'lowRandom.ogg'] },
-  final_flash: { pack: 'digital', vol: 0.84, files: ['laser8.ogg', 'phaseJump5.ogg', 'pepSound5.ogg'] },
-  spirit_bomb: { pack: 'digital', vol: 0.85, rate: 0.82, files: ['lowThreeTone.ogg', 'phaseJump2.ogg', 'pepSound3.ogg'] },
-  getsuga: { pack: 'digital', vol: 0.74, files: ['laser3.ogg', 'laser4.ogg', 'pepSound2.ogg'] },
-  cero: { pack: 'digital', vol: 0.78, files: ['laser5.ogg', 'laser6.ogg', 'laser7.ogg'] },
-  bankai_slash: { pack: 'rpg', vol: 0.76, rate: 1.05, files: ['drawKnife3.ogg', 'chop.ogg', 'footstep04.ogg'] },
-  gum_rocket: { pack: 'digital', vol: 0.68, rate: 1.04, files: ['lowRandom.ogg', 'phaseJump2.ogg', 'pepSound1.ogg'] },
-  gear_second: { pack: 'digital', vol: 0.74, rate: 1.1, files: ['pepSound2.ogg', 'pepSound3.ogg', 'highUp.ogg'] },
-  thunder_palm: { pack: 'impact', vol: 0.78, files: ['impactBell_heavy_001.ogg', 'impactBell_heavy_002.ogg'] },
-  serious_punch: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_004.ogg', 'impactPunch_heavy_003.ogg'] },
-  serious_blast: { pack: 'digital', vol: 0.86, files: ['laser9.ogg', 'laser8.ogg', 'phaseJump5.ogg'] },
-  sun_palm: { pack: 'impact', vol: 0.72, files: ['impactBell_heavy_002.ogg', 'impactSoft_medium_002.ogg'] },
-  moon_pull: { pack: 'digital', vol: 0.76, rate: 0.95, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'laser1.ogg'] },
+  rasengan: { pack: 'digital', vol: 0.72, files: ['phaseJump2.ogg', 'phaseJump3.ogg', 'pepSound3.ogg', 'powerUp1.ogg', 'tone1.ogg', 'zap1.ogg'] },
+  fireball_jutsu: { pack: 'digital', vol: 0.74, rate: 1.06, files: ['laser5.ogg', 'pepSound1.ogg', 'highUp.ogg', 'zap2.ogg', 'laser4.ogg', 'powerUp2.ogg'] },
+  chidori: { pack: 'digital', vol: 0.75, files: ['laser2.ogg', 'laser3.ogg', 'highUp.ogg', 'zap1.ogg', 'tone1.ogg', 'laser1.ogg'] },
+  shadow_clone_burst: { pack: 'rpg', vol: 0.68, files: ['cloth4.ogg', 'dropLeather.ogg', 'clothBelt2.ogg', 'cloth1.ogg', 'cloth3.ogg', 'creak2.ogg'] },
+  gentle_palm: { pack: 'impact', vol: 0.7, files: ['impactSoft_medium_001.ogg', 'impactGeneric_light_002.ogg', 'impactSoft_medium_003.ogg', 'impactGeneric_light_004.ogg', 'impactSoft_medium_004.ogg'] },
+  rinnegan: { pack: 'digital', vol: 0.78, files: ['lowThreeTone.ogg', 'phaseJump4.ogg', 'laser1.ogg', 'threeTone1.ogg', 'laser8.ogg', 'spaceTrash2.ogg'] },
+  eight_gates: { pack: 'impact', vol: 0.82, rate: 1.08, files: ['impactPunch_heavy_001.ogg', 'impactPunch_heavy_002.ogg', 'impactMetal_heavy_001.ogg', 'impactPunch_heavy_003.ogg', 'impactSoft_heavy_001.ogg', 'impactMetal_heavy_003.ogg'] },
+  black_hole: { pack: 'digital', vol: 0.8, rate: 0.86, files: ['lowThreeTone.ogg', 'lowRandom.ogg', 'phaseJump4.ogg', 'highDown.ogg', 'threeTone2.ogg', 'spaceTrash1.ogg'] },
+  kamehameha: { pack: 'digital', vol: 0.8, files: ['laser8.ogg', 'laser9.ogg', 'pepSound4.ogg', 'powerUp3.ogg', 'threeTone2.ogg', 'laser7.ogg'] },
+  galick_gun: { pack: 'digital', vol: 0.76, rate: 0.94, files: ['laser6.ogg', 'laser7.ogg', 'lowDown.ogg', 'zap2.ogg', 'laser5.ogg', 'highDown.ogg'] },
+  destructo_disc: { pack: 'digital', vol: 0.72, rate: 1.12, files: ['laser1.ogg', 'laser2.ogg', 'phaseJump1.ogg', 'zap1.ogg', 'highDown.ogg', 'spaceTrash1.ogg'] },
+  instant_dash: { pack: 'digital', vol: 0.7, rate: 1.18, files: ['phaseJump1.ogg', 'highUp.ogg', 'lowRandom.ogg', 'pepSound1.ogg', 'zap2.ogg', 'phaseJump2.ogg'] },
+  final_flash: { pack: 'digital', vol: 0.84, files: ['laser8.ogg', 'phaseJump5.ogg', 'pepSound5.ogg', 'powerUp3.ogg', 'laser9.ogg', 'threeTone1.ogg'] },
+  spirit_bomb: { pack: 'digital', vol: 0.85, rate: 0.82, files: ['lowThreeTone.ogg', 'phaseJump2.ogg', 'pepSound3.ogg', 'threeTone2.ogg', 'powerUp2.ogg', 'lowRandom.ogg'] },
+  getsuga: { pack: 'digital', vol: 0.74, files: ['laser3.ogg', 'laser4.ogg', 'pepSound2.ogg', 'zap1.ogg', 'laser2.ogg', 'tone1.ogg'] },
+  cero: { pack: 'digital', vol: 0.78, files: ['laser5.ogg', 'laser6.ogg', 'laser7.ogg', 'laser8.ogg', 'zap2.ogg', 'powerUp1.ogg'] },
+  bankai_slash: { pack: 'rpg', vol: 0.76, rate: 1.05, files: ['drawKnife3.ogg', 'chop.ogg', 'footstep04.ogg', 'knifeSlice.ogg', 'knifeSlice2.ogg', 'metalClick.ogg'] },
+  gum_rocket: { pack: 'digital', vol: 0.68, rate: 1.04, files: ['lowRandom.ogg', 'phaseJump2.ogg', 'pepSound1.ogg', 'highDown.ogg', 'zap1.ogg', 'spaceTrash1.ogg'] },
+  gear_second: { pack: 'digital', vol: 0.74, rate: 1.1, files: ['pepSound2.ogg', 'pepSound3.ogg', 'highUp.ogg', 'powerUp1.ogg', 'pepSound1.ogg', 'tone1.ogg'] },
+  thunder_palm: { pack: 'impact', vol: 0.78, files: ['impactBell_heavy_001.ogg', 'impactBell_heavy_002.ogg', 'impactBell_heavy_003.ogg', 'impactBell_heavy_004.ogg', 'impactMetal_heavy_001.ogg'] },
+  serious_punch: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_004.ogg', 'impactPunch_heavy_003.ogg', 'impactPunch_heavy_002.ogg', 'impactSoft_heavy_002.ogg', 'impactMetal_heavy_004.ogg'] },
+  serious_blast: { pack: 'digital', vol: 0.86, files: ['laser9.ogg', 'laser8.ogg', 'phaseJump5.ogg', 'powerUp3.ogg', 'threeTone2.ogg', 'pepSound5.ogg'] },
+  sun_palm: { pack: 'impact', vol: 0.72, files: ['impactBell_heavy_002.ogg', 'impactSoft_medium_002.ogg', 'impactBell_heavy_004.ogg', 'impactSoft_medium_004.ogg', 'impactGeneric_light_003.ogg'] },
+  moon_pull: { pack: 'digital', vol: 0.76, rate: 0.95, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'laser1.ogg', 'threeTone1.ogg', 'highDown.ogg', 'lowRandom.ogg'] },
 };
 
 /** Per-super Kenney CC0 samples — charge + finish pairs. */
 const SUPER_SFX_SAMPLES = {
-  super_shield_charge: { pack: 'impact', vol: 0.62, rate: 0.92, files: ['impactMetal_light_001.ogg', 'impactWood_medium_001.ogg'] },
-  super_shield: { pack: 'impact', vol: 0.88, files: ['impactBell_heavy_002.ogg', 'impactMetal_heavy_003.ogg'] },
-  super_heal_charge: { pack: 'ui', vol: 0.62, files: ['confirmation_002.ogg', 'drop_003.ogg'] },
-  super_heal: { pack: 'ui', vol: 0.78, files: ['confirmation_004.ogg', 'bong_001.ogg'] },
-  super_sharingan_charge: { pack: 'digital', vol: 0.68, rate: 0.9, files: ['lowThreeTone.ogg', 'lowRandom.ogg'] },
-  super_sharingan: { pack: 'digital', vol: 0.82, files: ['laser2.ogg', 'phaseJump4.ogg', 'highUp.ogg'] },
-  super_lightning_charge: { pack: 'digital', vol: 0.72, files: ['laser1.ogg', 'laser2.ogg', 'lowRandom.ogg'] },
-  super_lightning: { pack: 'digital', vol: 0.9, files: ['laser7.ogg', 'laser8.ogg', 'laser9.ogg'] },
-  super_meteor_charge: { pack: 'impact', vol: 0.65, rate: 0.85, files: ['impactWood_heavy_001.ogg', 'creak1.ogg'] },
-  super_meteor: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactGlass_heavy_004.ogg'] },
-  super_rage_charge: { pack: 'digital', vol: 0.7, rate: 0.95, files: ['lowRandom.ogg', 'pepSound1.ogg'] },
-  super_rage: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_003.ogg', 'impactMetal_heavy_004.ogg'] },
-  super_time_charge: { pack: 'digital', vol: 0.66, rate: 0.88, files: ['lowThreeTone.ogg', 'phaseJump1.ogg'] },
-  super_time: { pack: 'digital', vol: 0.84, files: ['phaseJump5.ogg', 'pepSound5.ogg', 'laser3.ogg'] },
-  super_clone_charge: { pack: 'rpg', vol: 0.64, files: ['cloth4.ogg', 'dropLeather.ogg'] },
-  super_clone: { pack: 'rpg', vol: 0.76, files: ['clothBelt2.ogg', 'chop.ogg', 'drawKnife2.ogg'] },
-  super_void_charge: { pack: 'digital', vol: 0.68, rate: 0.86, files: ['lowDown.ogg', 'lowRandom.ogg'] },
-  super_void: { pack: 'impact', vol: 0.92, files: ['impactGlass_heavy_003.ogg', 'impactMetal_heavy_002.ogg'] },
+  super_shield_charge: { pack: 'impact', vol: 0.62, rate: 0.92, files: ['impactMetal_light_001.ogg', 'impactWood_medium_001.ogg', 'impactMetal_light_004.ogg', 'impactWood_medium_003.ogg', 'impactMetal_medium_001.ogg'] },
+  super_shield: { pack: 'impact', vol: 0.88, files: ['impactBell_heavy_002.ogg', 'impactMetal_heavy_003.ogg', 'impactBell_heavy_004.ogg', 'impactMetal_heavy_001.ogg', 'impactMetal_medium_004.ogg'] },
+  super_heal_charge: { pack: 'ui', vol: 0.62, files: ['confirmation_002.ogg', 'drop_003.ogg', 'pluck_001.ogg', 'drop_001.ogg', 'scroll_001.ogg'] },
+  super_heal: { pack: 'ui', vol: 0.78, files: ['confirmation_004.ogg', 'bong_001.ogg', 'confirmation_003.ogg', 'pluck_002.ogg', 'confirmation_001.ogg'] },
+  super_sharingan_charge: { pack: 'digital', vol: 0.68, rate: 0.9, files: ['lowThreeTone.ogg', 'lowRandom.ogg', 'threeTone1.ogg', 'highDown.ogg', 'spaceTrash2.ogg'] },
+  super_sharingan: { pack: 'digital', vol: 0.82, files: ['laser2.ogg', 'phaseJump4.ogg', 'highUp.ogg', 'zap1.ogg', 'powerUp2.ogg', 'laser3.ogg'] },
+  super_lightning_charge: { pack: 'digital', vol: 0.72, files: ['laser1.ogg', 'laser2.ogg', 'lowRandom.ogg', 'zap1.ogg', 'tone1.ogg', 'zap2.ogg'] },
+  super_lightning: { pack: 'digital', vol: 0.9, files: ['laser7.ogg', 'laser8.ogg', 'laser9.ogg', 'zap2.ogg', 'powerUp3.ogg', 'phaseJump5.ogg'] },
+  super_meteor_charge: { pack: 'impact', vol: 0.65, rate: 0.85, files: ['impactWood_heavy_001.ogg', 'impactWood_heavy_003.ogg', 'impactSoft_heavy_001.ogg', 'impactPlank_medium_003.ogg', 'impactWood_medium_002.ogg'] },
+  super_meteor: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactGlass_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactGlass_heavy_003.ogg', 'impactSoft_heavy_004.ogg'] },
+  super_rage_charge: { pack: 'digital', vol: 0.7, rate: 0.95, files: ['lowRandom.ogg', 'pepSound1.ogg', 'highDown.ogg', 'tone1.ogg', 'spaceTrash1.ogg'] },
+  super_rage: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_003.ogg', 'impactMetal_heavy_004.ogg', 'impactPunch_heavy_004.ogg', 'impactSoft_heavy_002.ogg', 'impactBell_heavy_004.ogg'] },
+  super_time_charge: { pack: 'digital', vol: 0.66, rate: 0.88, files: ['lowThreeTone.ogg', 'phaseJump1.ogg', 'threeTone1.ogg', 'highDown.ogg', 'lowDown.ogg'] },
+  super_time: { pack: 'digital', vol: 0.84, files: ['phaseJump5.ogg', 'pepSound5.ogg', 'laser3.ogg', 'powerUp3.ogg', 'threeTone2.ogg', 'laser9.ogg'] },
+  super_clone_charge: { pack: 'rpg', vol: 0.64, files: ['cloth4.ogg', 'dropLeather.ogg', 'cloth1.ogg', 'cloth3.ogg', 'creak3.ogg'] },
+  super_clone: { pack: 'rpg', vol: 0.76, files: ['clothBelt2.ogg', 'chop.ogg', 'drawKnife2.ogg', 'cloth2.ogg', 'knifeSlice.ogg', 'metalClick.ogg'] },
+  super_void_charge: { pack: 'digital', vol: 0.68, rate: 0.86, files: ['lowDown.ogg', 'lowRandom.ogg', 'highDown.ogg', 'spaceTrash2.ogg', 'threeTone1.ogg'] },
+  super_void: { pack: 'impact', vol: 0.92, files: ['impactGlass_heavy_003.ogg', 'impactMetal_heavy_002.ogg', 'impactGlass_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactSoft_heavy_004.ogg'] },
 };
 
 Object.assign(SFX_SAMPLE_MAP, SKILL_SFX_SAMPLES, SUPER_SFX_SAMPLES);
@@ -12826,31 +12975,32 @@ function playSkillSynthFallback(name, h) {
   const seed = skillSynthSeed(name);
   const det = 1 + (seed % 21) * 0.007;
   const mul = (f) => f * det;
+  const alt = (seed + Math.floor(Math.random() * 3)) % 3;
   const beh = sk.behavior || 'orb';
   if (beh === 'dash') {
-    T(mul(920), mul(1580), 0.16, 'sine', 0.14, now);
-    N(0.12, 0.11, 5200 + (seed % 800), true, now);
+    T(mul(920 + alt * 40), mul(1580 + alt * 60), 0.16, 'sine', 0.14, now);
+    N(0.12, 0.11, 5200 + (seed % 800) + alt * 200, true, now);
     T(mul(1400), mul(920), 0.06, 'triangle', 0.1, now + 0.05);
     if (!lite) T(mul(180 + seed % 40), mul(90), 0.07, 'sine', 0.08, now + 0.02);
   } else if (beh === 'beam') {
-    T(mul(280), mul(920), 0.2, 'sine', 0.13, now);
+    T(mul(280 + alt * 30), mul(920 + alt * 40), 0.2, 'sine', 0.13, now);
     D(mul(520), mul(1220), 0.14, 'triangle', 0.11, now + 0.04, 10 + seed % 6);
-    N(0.1, 0.09, 3800 + (seed % 600), true, now);
+    N(0.1, 0.09, 3800 + (seed % 600) + alt * 150, true, now);
     if (!lite) S([mul(880), mul(1047), mul(1175)], now + 0.08);
   } else if (beh === 'disc') {
-    T(mul(680), mul(420), 0.12, 'triangle', 0.13, now);
+    T(mul(680 + alt * 35), mul(420), 0.12, 'triangle', 0.13, now);
     T(mul(980), mul(680), 0.08, 'sine', 0.1, now + 0.04);
-    N(0.08, 0.1, 4400 + (seed % 500), true, now);
+    N(0.08, 0.1, 4400 + (seed % 500) + alt * 180, true, now);
   } else if (beh === 'pull' || beh === 'meteor') {
-    T(mul(240), mul(760), 0.14, 'sine', 0.14, now);
+    T(mul(240 + alt * 20), mul(760), 0.14, 'sine', 0.14, now);
     T(mul(760), mul(480), 0.15, 'triangle', 0.12, now + 0.04);
     T(mul(980), mul(1320), 0.08, 'sine', 0.11, now + 0.1);
     N(0.1, 0.11, 1900 + (seed % 400), true, now + 0.02);
     if (!lite) T(mul(55), mul(32), 0.16, 'sawtooth', 0.09, now + 0.05);
   } else {
-    T(mul(320), mul(1040), 0.2, 'sine', 0.13, now);
+    T(mul(320 + alt * 25), mul(1040 + alt * 40), 0.2, 'sine', 0.13, now);
     D(mul(580), mul(1220), 0.16, 'triangle', 0.11, now + 0.04, 10);
-    N(0.12, 0.1, 3600 + (seed % 700), true, now);
+    N(0.12, 0.1, 3600 + (seed % 700) + alt * 120, true, now);
     if (!lite) S([mul(880), mul(1047), mul(1175)], now + 0.1);
   }
   return true;
@@ -12890,23 +13040,24 @@ function playSuperSynthFallback(name, h) {
   if (!isSuperSfxId(name)) return false;
   const { T, N, C, now, lite } = h;
   const charge = name.endsWith('_charge');
+  const alt = Math.floor(Math.random() * 2);
   if (charge) {
-    T(88, charge ? 220 : 52, charge ? 1.6 : 0.4, 'sawtooth', 0.18, now);
-    N(charge ? 1.5 : 0.3, 0.14, 720, false, now);
+    T(88 + alt * 12, charge ? 220 + alt * 20 : 52, charge ? 1.6 : 0.4, 'sawtooth', 0.18, now);
+    N(charge ? 1.5 : 0.3, 0.14, 720 + alt * 80, false, now);
   } else if (name.includes('lightning')) {
     for (let i = 0; i < (lite ? 3 : 6); i++) {
-      T(880 + i * 120, 220, 0.06, 'square', 0.12, now + i * 0.05);
+      T(880 + i * 120 + alt * 40, 220, 0.06, 'square', 0.12, now + i * 0.05);
       N(0.04, 0.1, 4000 + i * 400, true, now + i * 0.05);
     }
   } else if (name.includes('heal')) {
-    C([523, 659, 784, 988], 'sine', 0.12, 0.08, now);
+    C(alt ? [494, 622, 740, 932] : [523, 659, 784, 988], 'sine', 0.12, 0.08, now);
   } else if (name.includes('shield')) {
-    T(220, 440, 0.2, 'triangle', 0.16, now);
-    N(0.12, 0.12, 1200, false, now);
+    T(220 + alt * 30, 440 + alt * 40, 0.2, 'triangle', 0.16, now);
+    N(0.12, 0.12, 1200 + alt * 200, false, now);
   } else {
-    N(0.3, 0.32, 400, false, now);
+    N(0.3, 0.32, 400 + alt * 60, false, now);
     T(52, 20, 0.36, 'sawtooth', 0.28, now);
-    if (!lite) C([196, 247, 330, 392], 'square', 0.1, 0.05, now + 0.08);
+    if (!lite) C(alt ? [185, 233, 311, 370] : [196, 247, 330, 392], 'square', 0.1, 0.05, now + 0.08);
   }
   return true;
 }
@@ -12914,12 +13065,21 @@ function playSuperSynthFallback(name, h) {
 function collectSampleUrls() {
   const urls = [];
   const seen = new Set();
-  for (const cfg of Object.values(SFX_SAMPLE_MAP)) {
+  /** Most-heard SFX first so combat/UI sounds unlock ASAP. */
+  const PRIORITY = [
+    'select', 'punch', 'kick', 'swing', 'hit', 'hit2', 'hitMetal', 'hitHeavy', 'hitEnergy',
+    'combo', 'comboEpic', 'jump', 'land', 'step', 'block', 'dash', 'shuriken',
+    'roar', 'win', 'lose', 'bonus', 'pickup', 'bell', 'levelup', 'crit',
+  ];
+  const pushCfg = (cfg) => {
+    if (!cfg) return;
     for (const f of cfg.files || []) {
       const u = sampleUrl(cfg.pack, f);
       if (u && !seen.has(u)) { seen.add(u); urls.push(u); }
     }
-  }
+  };
+  for (const id of PRIORITY) pushCfg(SFX_SAMPLE_MAP[id]);
+  for (const cfg of Object.values(SFX_SAMPLE_MAP)) pushCfg(cfg);
   return urls;
 }
 
@@ -12937,6 +13097,13 @@ const AudioSys = {
   _sfxVar: 0,
   _sfxPan: 0,
   _combatHeat: 0,
+  /** UI feedback SFX allowed while paused (combat hits blocked). */
+  _pauseUiSfx: new Set([
+    'select', 'bell', 'levelup', 'summon', 'diceRoll', 'claim', 'achieve',
+    'bonus', 'win', 'pickup', 'gamble', 'gambleWin', 'newmonster', 'checkpoint',
+    'modeAdventure', 'modeTraining', 'modeVersus', 'modeWall', 'modeMats',
+    'gambleRoll', 'import', 'export', 'install', 'share',
+  ]),
   _samples: {},
   _sampleLoadStarted: false,
   _sampleCount: 0,
@@ -12970,14 +13137,15 @@ const AudioSys = {
     }
   },
 
-  /** Fetch Kenney CC0 samples (jsDelivr) — batched; procedural fallback until ready. */
+  /** Fetch Kenney CC0 samples (jsDelivr) — batched; procedural fallback until ready.
+   *  Priority SFX (hits/UI) load first via collectSampleUrls order. */
   loadSamples() {
     if (!this.ctx || this._sampleLoadStarted || typeof collectSampleUrls !== 'function') return;
     this._sampleLoadStarted = true;
     const urls = collectSampleUrls();
     if (!urls.length) return;
     let idx = 0;
-    const batch = 8;
+    const batch = 10;
     const loadOne = async (url) => {
       try {
         const res = await fetch(url, { mode: 'cors', cache: 'force-cache' });
@@ -12986,7 +13154,7 @@ const AudioSys = {
         const buf = await this.ctx.decodeAudioData(ab);
         this._samples[url] = buf;
         this._sampleCount++;
-        if (this._sampleCount >= 12) this._samplesReady = true;
+        if (this._sampleCount >= 8) this._samplesReady = true;
       } catch (_) {}
     };
     const pump = () => {
@@ -12994,7 +13162,7 @@ const AudioSys = {
       const chunk = urls.slice(idx, idx + batch);
       idx += batch;
       Promise.all(chunk.map(u => loadOne(u))).then(() => {
-        if (idx < urls.length) setTimeout(pump, 16);
+        if (idx < urls.length) setTimeout(pump, 12);
         else if (this._sampleCount > 0) this._samplesReady = true;
       });
     };
@@ -13017,9 +13185,15 @@ const AudioSys = {
     const t = this.ctx.currentTime;
     const src = this.ctx.createBufferSource();
     src.buffer = buf;
-    const rate = (cfg.rate || 1) * (0.93 + Math.random() * 0.14);
+    /** Spammy combat/UI: tighter pitch; rare stingers: wider variety. */
+    const spammy = name === 'select' || name === 'step' || name === 'punch' || name === 'kick'
+      || name === 'swing' || name === 'hit' || name === 'hit2' || name === 'hitMetal'
+      || name === 'jump' || name === 'land' || name === 'dash' || name === 'block'
+      || name === 'shuriken' || (name && name.charAt(0) === 'w');
+    const rateJitter = spammy ? (0.95 + Math.random() * 0.1) : (0.88 + Math.random() * 0.24);
+    const rate = (cfg.rate || 1) * rateJitter;
     src.playbackRate.value = rate;
-    const dur = Math.min(buf.duration / rate, 2.8);
+    const dur = Math.min(buf.duration / rate, spammy ? 1.4 : 2.8);
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + dur);
@@ -13095,10 +13269,16 @@ const AudioSys = {
     this.tone(660, 880, 0.11, 'sine', vol, this.musicGain);
   },
 
+  _sfxBlockedInPause(name) {
+    const inPause = this.paused || state === 'pause';
+    return inPause && !this._pauseUiSfx.has(name);
+  },
+
   setPaused(on) {
     this.paused = !!on;
     const needAudio = !!(save.music || save.sfx);
     if (on) {
+      this.setCombatHeat(0);
       try { this.init(); } catch (_) {}
       if (needAudio) {
         try { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
@@ -13175,7 +13355,7 @@ const AudioSys = {
 
   /** Pan SFX by world/screen X (0…W → left…right) */
   sfxAt(name, screenX) {
-    if (!this.ctx || !save.sfx) return;
+    if (!this.ctx || !save.sfx || this._sfxBlockedInPause(name)) return;
     if (typeof screenX === 'number' && typeof W !== 'undefined' && W > 0) {
       this._sfxPan = clamp((screenX / W) * 2 - 1, -1, 1) * 0.82;
     }
@@ -13198,7 +13378,13 @@ const AudioSys = {
   /** Micro pitch wobble so rapid SFX don't sound identical */
   _pitchVar() {
     this._sfxVar = (this._sfxVar + 1) % 97;
-    return 0.975 + (this._sfxVar % 6) * 0.01;
+    return 0.94 + (this._sfxVar % 11) * 0.012 + Math.random() * 0.02;
+  },
+
+  /** 0…2 — rotate procedural combat hit bodies for variety */
+  _sfxAlt() {
+    this._sfxVar = (this._sfxVar + 1) % 97;
+    return this._sfxVar % 3;
   },
 
   /** Short echo tail — arcade space without reverb node */
@@ -13211,7 +13397,7 @@ const AudioSys = {
   },
 
   sfx(name) {
-    if (!this.ctx || !save.sfx) return;
+    if (!this.ctx || !save.sfx || this._sfxBlockedInPause(name)) return;
     try { if (this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
     if (this._playSample(name)) return;
     const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
@@ -13235,23 +13421,41 @@ const AudioSys = {
       freqs.forEach((f, i) => T(f, f * 1.1, 0.045, 'sine', 0.075, w + i * 0.02));
     };
     const now = this.ctx.currentTime;
+    const A = () => this._sfxAlt();
     const skillSynthH = { T, D, E, N, S, I, C, now, lite, v, d, P };
     if (typeof playSuperSynthFallback === 'function' && playSuperSynthFallback(name, skillSynthH)) return;
     if (typeof playSkillSynthFallback === 'function' && playSkillSynthFallback(name, skillSynthH)) return;
     switch (name) {
-      case 'swing':
-        N(0.05, 0.22, 3400, true, now);
-        T(420, 160, 0.07, 'sine', 0.11, now);
-        if (!lite) N(0.025, 0.08, 6200, true, now + 0.015);
+      case 'swing': {
+        const a = A();
+        N(0.055, 0.24, 3200 + a * 500, true, now);
+        T(440 + a * 70, 150 + a * 25, 0.075, a === 1 ? 'triangle' : 'sine', 0.12, now);
+        if (!lite) {
+          N(0.028, 0.09, 6400 + a * 280, true, now + 0.012);
+          T(880 + a * 40, 420, 0.035, 'sine', 0.06, now + 0.03);
+        }
         break;
-      case 'punch':
-        I(240, 3200, now);
-        T(520, 880, 0.04, 'triangle', 0.1, now + 0.02);
+      }
+      case 'punch': {
+        const a = A();
+        I(200 + a * 50, 2600 + a * 500, now);
+        T(460 + a * 70, 780 + a * 100, 0.045, a === 2 ? 'sine' : 'triangle', 0.11, now + 0.015);
+        if (!lite) {
+          N(0.028, 0.1, 4200 + a * 400, true, now + 0.02);
+          if (a) T(160 + a * 20, 70, 0.04, 'sine', 0.08, now + 0.035);
+        }
         break;
-      case 'kick':
-        I(280, 2600, now);
-        T(420, 140, 0.07, 'triangle', 0.12, now + 0.02);
+      }
+      case 'kick': {
+        const a = A();
+        I(250 + a * 40, 2200 + a * 400, now);
+        T(380 + a * 50, 120 + a * 25, 0.08, 'triangle', 0.13, now + 0.018);
+        if (!lite) {
+          T(170 + a * 15, 55, 0.055, 'sine', 0.1, now + 0.035);
+          N(0.04, 0.1, 1800 + a * 200, false, now + 0.03);
+        }
         break;
+      }
       case 'wKunai':
         N(0.035, 0.15, 5400, true, now);
         T(1020, 380, 0.075, 'triangle', 0.13, now);
@@ -13330,41 +13534,67 @@ const AudioSys = {
         T(320, 180, 0.09, 'square', 0.15, now + 0.02);
         if (!lite) T(480, 260, 0.07, 'triangle', 0.11, now + 0.06);
         break;
-      case 'hit':
-        I(180, 1400, now);
-        T(880, 420, 0.05, 'triangle', 0.1, now + 0.015);
+      case 'hit': {
+        const a = A();
+        I(150 + a * 35, 1100 + a * 350, now);
+        T(780 + a * 90, 340 + a * 50, 0.055, a ? 'sine' : 'triangle', 0.11, now + 0.012);
+        if (!lite) N(0.03, 0.1, 3600 + a * 400, true, now + 0.02);
         break;
-      case 'hit2':
-        I(130, 900, now);
-        T(150, 55, 0.09, 'square', 0.24, now);
-        N(0.07, 0.26, 650, false, now);
-        T(320, 140, 0.06, 'triangle', 0.12, now + 0.025);
+      }
+      case 'hit2': {
+        const a = A();
+        I(115 + a * 25, 800 + a * 140, now);
+        T(135 + a * 25, 48 + a * 12, 0.095, 'square', 0.25, now);
+        N(0.075, 0.27, 580 + a * 90, false, now);
+        T(290 + a * 35, 120 + a * 25, 0.065, 'triangle', 0.13, now + 0.022);
+        if (!lite) S(a ? [740, 880] : [660, 820], now + 0.04);
         break;
-      case 'hitMetal':
-        I(520, 3800, now);
-        E(980, 460, 0.06, 'triangle', 0.13, now + 0.01, 0.035, 0.45);
-        T(240, 95, 0.07, 'sine', 0.11, now);
+      }
+      case 'hitMetal': {
+        const a = A();
+        I(480 + a * 50, 3400 + a * 350, now);
+        E(940 + a * 50, 420 + a * 40, 0.07, 'triangle', 0.14, now + 0.008, 0.032, 0.48);
+        T(220 + a * 25, 85 + a * 12, 0.075, 'sine', 0.12, now);
+        if (!lite) T(1320 + a * 60, 880, 0.04, 'sine', 0.07, now + 0.04);
         break;
-      case 'hitHeavy':
-        I(110, 650, now);
-        T(130, 42, 0.13, 'sine', 0.24, now);
-        if (!lite) N(0.1, 0.22, 550, false, now + 0.04);
+      }
+      case 'hitHeavy': {
+        const a = A();
+        I(95 + a * 25, 560 + a * 100, now);
+        T(115 + a * 18, 38 + a * 8, 0.14, 'sine', 0.26, now);
+        if (!lite) {
+          N(0.11, 0.24, 500 + a * 70, false, now + 0.035);
+          T(220 + a * 20, 90, 0.06, 'triangle', 0.1, now + 0.05);
+        }
         break;
-      case 'hitEnergy':
-        T(760, 280, 0.09, 'sine', 0.15, now);
-        D(1120, 520, 0.07, 'triangle', 0.11, now, 10);
-        N(0.05, 0.13, 4400, true, now);
-        if (!lite) S([880, 1047], now + 0.04);
+      }
+      case 'hitEnergy': {
+        const a = A();
+        T(720 + a * 50, 240 + a * 35, 0.1, 'sine', 0.16, now);
+        D(1080 + a * 50, 480 + a * 35, 0.075, 'triangle', 0.12, now, 11);
+        N(0.055, 0.14, 4000 + a * 350, true, now);
+        if (!lite) {
+          S(a ? [932, 1109, 1245] : [880, 1047, 1175], now + 0.035);
+          E(980, 520, 0.06, 'sine', 0.08, now + 0.05, 0.04, 0.4);
+        }
         break;
-      case 'jump':
-        T(220, 620, 0.11, 'sine', 0.16, now);
-        T(620, 880, 0.07, 'triangle', 0.1, now + 0.04);
-        if (!lite) N(0.025, 0.07, 5200, true, now);
+      }
+      case 'jump': {
+        const a = A();
+        T(200 + a * 30, 600 + a * 40, 0.12, 'sine', 0.17, now);
+        T(600 + a * 40, 900 + a * 50, 0.075, 'triangle', 0.11, now + 0.035);
+        if (!lite) N(0.028, 0.08, 5000 + a * 400, true, now);
         break;
-      case 'land':
-        I(95, 480, now);
-        if (!lite) T(180, 70, 0.05, 'sine', 0.08, now + 0.02);
+      }
+      case 'land': {
+        const a = A();
+        I(90 + a * 15, 450 + a * 80, now);
+        if (!lite) {
+          T(170 + a * 20, 65, 0.055, 'sine', 0.09, now + 0.018);
+          N(0.03, 0.08, 1200 + a * 200, false, now + 0.01);
+        }
         break;
+      }
       case 'hurt':
         T(380, 120, 0.12, 'triangle', 0.18, now);
         T(220, 90, 0.08, 'sawtooth', 0.12, now + 0.03);
@@ -13400,11 +13630,35 @@ const AudioSys = {
         N(0.06, 0.2, 2100, false, now);
         T(720, 280, 0.05, 'triangle', 0.1, now);
         break;
-      case 'block':
-        T(980, 760, 0.07, 'sine', 0.14, now);
-        N(0.045, 0.15, 5000, true, now);
-        T(620, 820, 0.05, 'triangle', 0.1, now + 0.025);
+      case 'select': {
+        const a = A();
+        T(640 + a * 40, 860 + a * 50, 0.048, 'sine', 0.11, now);
+        T(860 + a * 40, 1040 + a * 40, 0.055, 'triangle', 0.1, now + 0.022);
+        if (!lite && a === 1) S([1175], now + 0.05);
         break;
+      }
+      case 'combo': {
+        const a = A();
+        T(500 + a * 40, 860 + a * 40, 0.07, 'triangle', 0.15, now);
+        T(860 + a * 40, 1060 + a * 40, 0.08, 'sine', 0.13, now + 0.028);
+        if (!lite) S(a ? [1109, 1245, 1397] : [1040, 1175, 1319], now + 0.05);
+        break;
+      }
+      case 'dash': {
+        const a = A();
+        N(0.065, 0.17, 3400 + a * 400, true, now);
+        T(400 + a * 40, 840 + a * 60, 0.085, 'sine', 0.12, now);
+        if (!lite) T(1000 + a * 40, 620, 0.055, 'triangle', 0.09, now + 0.035);
+        break;
+      }
+      case 'block': {
+        const a = A();
+        T(960 + a * 40, 740 + a * 30, 0.075, 'sine', 0.15, now);
+        N(0.05, 0.16, 4800 + a * 400, true, now);
+        T(600 + a * 40, 840 + a * 40, 0.055, 'triangle', 0.11, now + 0.022);
+        if (!lite) E(880, 660, 0.05, 'sine', 0.07, now + 0.04, 0.035, 0.4);
+        break;
+      }
       case 'crit':
         I(520, 4200, now);
         D(1040, 1560, 0.07, 'triangle', 0.16, now + 0.02, 12);
@@ -13437,31 +13691,23 @@ const AudioSys = {
           N(0.16, 0.15, 1100, true, now + 0.14);
         }
         break;
-      case 'select':
-        T(660, 880, 0.045, 'sine', 0.1, now);
-        T(880, 1040, 0.055, 'triangle', 0.09, now + 0.025);
-        break;
-      case 'combo':
-        T(520, 880, 0.065, 'triangle', 0.14, now);
-        T(880, 1040, 0.075, 'sine', 0.12, now + 0.03);
-        if (!lite) S([1040, 1175, 1319], now + 0.05);
-        break;
-      case 'dash':
-        N(0.06, 0.16, 3600, true, now);
-        T(420, 820, 0.08, 'sine', 0.11, now);
-        if (!lite) T(980, 620, 0.05, 'triangle', 0.08, now + 0.04);
-        break;
       case 'pickup':
-        C([784, 988, 1175], 'sine', 0.14, 0.045, now);
-        if (!lite) S([1319, 1568], now + 0.12);
+        C([784, 988, 1175], 'sine', 0.15, 0.042, now);
+        if (!lite) {
+          S([1319, 1568], now + 0.11);
+          T(1175, 1568, 0.06, 'triangle', 0.08, now + 0.16);
+        }
         break;
       case 'bell':
         D(1319, 1240, 0.5, 'triangle', 0.22, now, 6);
         T(988, 988, 0.35, 'sine', 0.08, now + 0.05);
         break;
       case 'bonus':
-        C([880, 1109, 1320], 'square', 0.15, 0.065, now);
-        if (!lite) S([1568, 1760], now + 0.14);
+        C([880, 1109, 1320], 'square', 0.16, 0.06, now);
+        if (!lite) {
+          S([1568, 1760], now + 0.13);
+          E(1320, 1760, 0.08, 'sine', 0.09, now + 0.1, 0.05, 0.4);
+        }
         break;
       case 'levelup':
         C([523, 659, 784, 1047], 'triangle', 0.16, 0.065, now);
@@ -13598,10 +13844,13 @@ const AudioSys = {
         T(180, 520, 0.14, 'sine', 0.1, now);
         if (!lite) T(520, 880, 0.08, 'triangle', 0.08, now + 0.06);
         break;
-      case 'step':
-        N(0.025, 0.08, 900, false, now);
-        T(120, 70, 0.04, 'sine', 0.09, now);
+      case 'step': {
+        const a = A();
+        N(0.022, 0.075, 850 + a * 120, false, now);
+        T(110 + a * 20, 65 + a * 10, 0.038, 'sine', 0.09, now);
+        if (!lite && a === 2) N(0.015, 0.04, 2200, true, now + 0.01);
         break;
+      }
       case 'checkpoint':
         C([523, 659, 784], 'sine', 0.14, 0.055, now);
         E(988, 1175, 0.1, 'triangle', 0.11, now + 0.12, 0.06, 0.42);
@@ -13822,10 +14071,10 @@ const AudioSys = {
       this.tone(midi(L), midi(L) * 0.995, spb * 1.6, 'square', lv, mg, t);
       if (!lite && i % 2 === 0) this.tone(midi(L + 7), midi(L + 7) * 0.998, spb * 1.1, 'triangle', 0.05 + heat * 0.03, mg, t + spb * 0.12);
     }
-    if ((s.id === 'battle' || s.id === 'elite' || s.id === 'boss' || s.id === 'tideBattle') && heat > 0.35 && !lite && i === 8 && bar % 2 === 0) {
+    if ((isFightBgmId(s.id)) && heat > 0.35 && !lite && i === 8 && bar % 2 === 0) {
       this.tone(midi(84), midi(79), spb * 0.9, 'square', 0.04 + heat * 0.04, mg, t);
     }
-    if (s.id === 'battle' || s.id === 'elite' || s.id === 'boss' || s.id === 'tideBattle') {
+    if (isFightBgmId(s.id)) {
       if (i === 0 && bar % 4 === 0 && !lite) {
         this.tone(midi(60), midi(60), spb * 3.6, 'sine', 0.05, mg, t);
         this.tone(midi(64), midi(64), spb * 3.4, 'triangle', 0.04, mg, t);
@@ -13838,8 +14087,19 @@ const AudioSys = {
         this.noise(0.08, 0.17, 7800, true, mg, t);
         this.tone(midi(84), midi(67), spb * 0.75, 'square', 0.08, mg, t);
       }
+      /** Punchier groove on common fight tracks */
+      if (!lite && (i === 6 || i === 14) && bar % 2 === 0) {
+        this.tone(midi(55), midi(48), spb * 0.7, 'triangle', 0.045, mg, t);
+      }
+      if (!lite && i === 4 && bar % 4 === 2) {
+        this.noise(0.035, 0.1, 4800, true, mg, t);
+        this.tone(midi(79), midi(76), spb * 0.85, 'square', 0.05, mg, t);
+      }
+      if (!lite && heat > 0.55 && (i === 2 || i === 10)) {
+        this.tone(midi(88), midi(84), spb * 0.45, 'sine', 0.03 + heat * 0.025, mg, t);
+      }
     }
-    if (s.id === 'tideBattle' && !lite) {
+    if ((s.id === 'tideBattle' || s.id === 'tideBattle2' || s.id === 'tideBattleSurge') && !lite) {
       if ([2, 6, 10, 14].includes(i)) {
         this.tone(midi([67, 71, 74, 79][i / 4 | 0]), midi([67, 71, 74, 79][i / 4 | 0]), spb * 0.55, 'triangle', 0.06, mg, t);
       }
@@ -13849,6 +14109,13 @@ const AudioSys = {
       if (i === 0 && bar % 8 === 4) {
         this.noise(0.06, 0.14, 5200, true, mg, t);
         this.tone(midi(91), midi(84), spb * 0.85, 'square', 0.07, mg, t);
+      }
+      if (s.id === 'tideBattle2' && (i === 3 || i === 11)) {
+        this.tone(midi(62), midi(55), spb * 0.9, 'triangle', 0.05, mg, t);
+      }
+      if (s.id === 'tideBattleSurge' && i === 8 && bar % 2 === 0) {
+        this.noise(0.05, 0.12, 6400, true, mg, t);
+        this.tone(midi(86), midi(79), spb * 1.1, 'square', 0.06, mg, t);
       }
     }
     const menuIds = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero', 'menuDream'];
@@ -13866,6 +14133,13 @@ const AudioSys = {
       }
       if (i === 0 && bar % 2 === 0) {
         this.tone(midi(57), midi(57), spb * 3.8, 'sine', 0.06, mg, t);
+      }
+      /** Soft counter-melody so long menu sessions feel less looped */
+      if (!lite && i === 6 && bar % 4 === 1) {
+        this.tone(midi(69), midi(72), spb * 1.5, 'sine', 0.045, mg, t);
+      }
+      if (!lite && i === 14 && bar % 4 === 3) {
+        this.tone(midi(74), midi(71), spb * 1.2, 'triangle', 0.04, mg, t);
       }
     }
     if (s.id === 'menu2') {
@@ -13896,13 +14170,24 @@ const AudioSys = {
     if (s.id === 'mats' && !lite && i === 12 && bar % 4 === 2) {
       this.tone(midi(84), midi(79), spb * 1.1, 'triangle', 0.06, mg, t);
     }
-    if (s.id === 'elite' || s.id === 'boss') {
+    if (s.id === 'elite' || s.id === 'elite2' || s.id === 'elitePulse' || s.id === 'boss' || s.id === 'boss2' || s.id === 'bossFury') {
+      const bossish = s.id === 'boss' || s.id === 'boss2' || s.id === 'bossFury';
       if (i === 0 && bar % 2 === 0) {
-        this.tone(midi(s.id === 'boss' ? 50 : 55), midi(s.id === 'boss' ? 38 : 43), spb * 2.4, 'sawtooth', 0.07, mg, t);
+        this.tone(midi(bossish ? 50 : 55), midi(bossish ? 38 : 43), spb * 2.4, 'sawtooth', 0.07, mg, t);
       }
       if (i === 8 && bar % 4 === 1) {
         this.noise(0.06, 0.12, 2200, true, mg, t);
       }
+      if ((s.id === 'elitePulse' || s.id === 'bossFury') && !lite && (i === 2 || i === 10) && bar % 2 === 0) {
+        this.tone(midi(bossish ? 70 : 74), midi(bossish ? 65 : 69), spb * 0.7, 'square', 0.05, mg, t);
+      }
+    }
+    if ((s.id === 'battle2' || s.id === 'battle3' || s.id === 'battlePulse' || s.id === 'battleDrive' || s.id === 'battleRush') && !lite) {
+      if (s.id === 'battle2' && (i === 2 || i === 10)) this.tone(midi(71), midi(67), spb * 0.85, 'triangle', 0.05, mg, t);
+      if (s.id === 'battle3' && i === 0 && bar % 4 === 2) this.tone(midi(57), midi(50), spb * 2.8, 'sine', 0.06, mg, t);
+      if (s.id === 'battlePulse' && (i === 0 || i === 8)) this.noise(0.025, 0.09, 5600, true, mg, t);
+      if (s.id === 'battleDrive' && (i === 4 || i === 12) && bar % 2 === 0) this.tone(midi(79), midi(76), spb * 1.05, 'square', 0.055, mg, t);
+      if (s.id === 'battleRush' && [1, 5, 9, 13].includes(i)) this.noise(0.02, 0.08, 7200, true, mg, t);
     }
     if (s.id === 'training') {
       if (i === 0) this.tone(midi(64), midi(57), spb * 2.2, 'triangle', 0.08, mg, t);
@@ -13931,6 +14216,8 @@ const SONGS = {
     lead: [
       [69,null,72,null, 76,null,72,null, 74,null,71,null, 69,null,64,null],
       [69,null,72,null, 76,null,79,null, 77,null,74,null, 72,null,71,null],
+      [72,null,76,null, 79,null,76,null, 74,null,72,null, 69,null,67,null],
+      [67,null,69,null, 72,null,76,null, 74,null,71,null, 69,null,72,null],
     ],
   },
   /** Menu variant — sneller, helderder */
@@ -13990,6 +14277,58 @@ const SONGS = {
     lead: [
       [76,null,79,76, null,74,76,null, 71,null,74,71, null,69,71,74],
       [76,null,79,81, null,79,76,null, 74,null,76,74, 71,null,69,null],
+      [79,null,81,79, null,76,74,null, 71,null,74,76, null,74,71,null],
+      [74,null,76,79, null,81,79,null, 76,null,74,71, 69,null,71,74],
+    ],
+  },
+  /** Battle variant — syncopisch / scherp */
+  battle2: {
+    bpm: 142,
+    kick: [0, 3, 8, 11], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [41,null,41,null, 44,44,null,41, 38,null,41,null, 43,null,40,null],
+    lead: [
+      [77,null,80,77, null,76,74,null, 72,null,76,72, null,71,72,76],
+      [79,null,81,79, null,77,76,null, 74,null,72,71, 69,null,71,null],
+    ],
+  },
+  /** Battle variant — zwaarder / lagere lead */
+  battle3: {
+    bpm: 132,
+    kick: [0, 4, 8, 12, 14], snare: [4, 12], hat: [2,6,10,14],
+    bass: [38,38,null,38, 41,null,38,null, 43,43,null,41, 38,null,36,null],
+    lead: [
+      [72,null,74,72, null,71,69,null, 67,null,69,67, null,64,67,69],
+      [74,null,76,74, null,72,71,null, 69,null,67,64, 62,null,64,null],
+    ],
+  },
+  /** Battle variant — pulse / arcade */
+  battlePulse: {
+    bpm: 146,
+    kick: [0, 4, 8, 12], snare: [4, 10, 12], hat: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+    bass: [42,null,42,null, 45,null,42,null, 47,null,45,null, 42,null,40,null],
+    lead: [
+      [78,78,null,81, null,79,78,null, 74,74,null,76, null,74,71,null],
+      [81,null,83,81, null,79,78,null, 76,null,74,71, 69,null,71,74],
+    ],
+  },
+  /** Battle variant — drive / gallop */
+  battleDrive: {
+    bpm: 150,
+    kick: [0, 6, 8, 14], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [40,40,43,null, 40,null,45,null, 43,43,40,null, 38,null,40,null],
+    lead: [
+      [76,null,79,null, 81,79,76,null, 74,null,76,79, null,76,74,null],
+      [79,null,81,null, 84,81,79,null, 76,null,74,71, 74,null,76,null],
+    ],
+  },
+  /** Battle variant — rush / snelle hats */
+  battleRush: {
+    bpm: 154,
+    kick: [0, 4, 8, 12], snare: [4, 12], hat: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+    bass: [43,null,43,40, 45,null,43,null, 40,40,null,38, 40,null,43,null],
+    lead: [
+      [81,null,79,81, null,84,81,null, 79,null,76,79, null,74,76,79],
+      [84,null,81,79, null,81,84,null, 79,null,76,74, 76,null,79,null],
     ],
   },
   elite: {
@@ -13999,6 +14338,28 @@ const SONGS = {
     lead: [
       [77,null,80,77, null,75,77,null, 72,null,75,72, null,70,72,75],
       [77,null,80,82, null,80,77,null, 75,null,77,75, 72,null,70,null],
+      [80,null,82,80, null,77,75,null, 72,null,75,77, null,75,72,null],
+      [75,null,77,80, null,82,80,null, 77,null,75,72, 70,null,72,75],
+    ],
+  },
+  /** Elite variant — hoger / scherper */
+  elite2: {
+    bpm: 152,
+    kick: [0, 3, 8, 11, 12], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [43,43,null,43, 46,null,43,null, 48,48,null,46, 43,null,41,null],
+    lead: [
+      [79,null,82,79, null,77,79,null, 74,null,77,74, null,72,74,77],
+      [79,null,82,84, null,82,79,null, 77,null,79,77, 74,null,72,null],
+    ],
+  },
+  /** Elite variant — pulse */
+  elitePulse: {
+    bpm: 156,
+    kick: [0, 4, 8, 12], snare: [4, 10, 12], hat: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+    bass: [42,null,42,null, 45,null,42,null, 47,null,45,null, 42,null,40,null],
+    lead: [
+      [80,80,null,83, null,81,80,null, 76,76,null,78, null,76,73,null],
+      [83,null,85,83, null,81,80,null, 78,null,76,73, 71,null,73,76],
     ],
   },
   boss: {
@@ -14008,6 +14369,28 @@ const SONGS = {
     lead: [
       [74,null,75,74, null,70,74,null, 77,null,75,74, null,72,70,null],
       [74,null,77,79, null,77,75,null, 74,null,72,70, 69,null,70,null],
+      [77,null,79,77, null,74,72,null, 70,null,74,77, null,75,74,null],
+      [79,null,77,74, null,72,70,null, 69,null,70,72, 74,null,75,null],
+    ],
+  },
+  /** Boss variant — lager / dreigender */
+  boss2: {
+    bpm: 148,
+    kick: [0, 4, 8, 12], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [36,36,null,36, 37,null,36,null, 39,39,null,37, 36,null,34,null],
+    lead: [
+      [70,null,72,70, null,67,70,null, 74,null,72,70, null,69,67,null],
+      [72,null,74,77, null,74,72,null, 70,null,69,67, 65,null,67,null],
+    ],
+  },
+  /** Boss variant — fury / sneller */
+  bossFury: {
+    bpm: 164,
+    kick: [0, 3, 6, 8, 11, 12, 14], snare: [4, 12], hat: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+    bass: [38,38,null,41, 38,null,43,null, 41,41,null,38, 36,null,38,null],
+    lead: [
+      [77,null,79,77, null,74,77,null, 81,null,79,77, null,74,72,null],
+      [79,null,81,84, null,81,79,null, 77,null,74,72, 70,null,72,null],
     ],
   },
   /** Tide Battle — epische oceaangolf / summon-clash (eigen track) */
@@ -14020,6 +14403,28 @@ const SONGS = {
       [79,null,77,74, null,71,74,null, 79,null,83,86, null,83,79,null],
       [74,null,77,81, null,79,77,null, 74,null,71,67, null,71,74,null],
       [86,null,83,79, null,77,74,null, 71,null,74,77, null,79,83,null],
+    ],
+  },
+  /** Tide variant — dieper / golvender */
+  tideBattle2: {
+    bpm: 158,
+    kick: [0, 4, 8, 12, 14], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [34,34,null,33, 34,34,null,29, 31,null,34,null, 33,null,29,null],
+    lead: [
+      [64,null,67,71, null,67,64,null, 71,null,74,76, null,74,71,null],
+      [76,null,74,71, null,67,71,null, 76,null,79,83, null,79,76,null],
+      [71,null,74,77, null,76,74,null, 71,null,67,64, null,67,71,null],
+    ],
+  },
+  /** Tide variant — surge / sneller */
+  tideBattleSurge: {
+    bpm: 172,
+    kick: [0, 3, 6, 8, 11, 12, 14], snare: [4, 12], hat: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+    bass: [36,null,36,34, 38,null,36,null, 33,33,null,36, 34,null,31,null],
+    lead: [
+      [71,null,74,77, null,74,71,null, 79,null,83,86, null,83,79,null],
+      [83,null,81,77, null,74,77,null, 83,null,86,88, null,86,83,null],
+      [77,null,79,83, null,81,79,null, 77,null,74,71, null,74,77,null],
     ],
   },
   /** Training vs RabbitRobot — strak, metallig, minder zwaar dan baas */
@@ -14067,6 +14472,46 @@ const SONGS = {
 const MENU_BGM_TRACKS = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero', 'menuDream'];
 let menuBgmIdx = 0;
 
+/** Fight BGM pools — rotate variants so battle/elite/boss/tide stay fresh. */
+const BATTLE_BGM_TRACKS = ['battle', 'battle2', 'battle3', 'battlePulse', 'battleDrive', 'battleRush'];
+const ELITE_BGM_TRACKS = ['elite', 'elite2', 'elitePulse'];
+const BOSS_BGM_TRACKS = ['boss', 'boss2', 'bossFury'];
+const TIDE_BGM_TRACKS = ['tideBattle', 'tideBattle2', 'tideBattleSurge'];
+const FIGHT_BGM_IDS = new Set([
+  ...BATTLE_BGM_TRACKS, ...ELITE_BGM_TRACKS, ...BOSS_BGM_TRACKS, ...TIDE_BGM_TRACKS,
+]);
+const fightBgmIdx = { battle: 0, elite: 0, boss: 0, tideBattle: 0 };
+
+function isFightBgmId(id) {
+  return !!(id && FIGHT_BGM_IDS.has(id));
+}
+
+function isTideBgmId(id) {
+  return !!(id && TIDE_BGM_TRACKS.includes(id));
+}
+
+/** Pick next track in a fight pool (kind: battle|elite|boss|tideBattle).
+ *  Keeps current track if already in the same pool (avoids double-rotate on start). */
+function playFightBgm(kind) {
+  const pools = {
+    battle: BATTLE_BGM_TRACKS,
+    elite: ELITE_BGM_TRACKS,
+    boss: BOSS_BGM_TRACKS,
+    tideBattle: TIDE_BGM_TRACKS,
+  };
+  const key = pools[kind] ? kind : 'battle';
+  const pool = pools[key];
+  const cur = (typeof AudioSys !== 'undefined' && ((AudioSys.song && AudioSys.song.id) || AudioSys.desiredSong)) || '';
+  if (cur && pool.includes(cur)) {
+    AudioSys.play(cur);
+    return cur;
+  }
+  fightBgmIdx[key] = ((fightBgmIdx[key] || 0) + 1) % pool.length;
+  const id = pool[fightBgmIdx[key]];
+  AudioSys.play(id);
+  return id;
+}
+
 /** Rotate menu BGM when returning from a game; keep current track on boot/toggle. */
 function playMenuBgm(fromGame) {
   if (fromGame) menuBgmIdx = (menuBgmIdx + 1) % MENU_BGM_TRACKS.length;
@@ -14075,7 +14520,11 @@ function playMenuBgm(fromGame) {
 
 const SONG_LABELS = {
   menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
-  battle: 'Gevecht', elite: 'Elite', boss: 'Baas', wall: 'Muur', training: 'Training', coinrun: 'Mats',
+  battle: 'Gevecht', battle2: 'Gevecht 2', battle3: 'Gevecht 3', battlePulse: 'Pulse', battleDrive: 'Drive', battleRush: 'Rush',
+  elite: 'Elite', elite2: 'Elite 2', elitePulse: 'Elite Pulse',
+  boss: 'Baas', boss2: 'Baas 2', bossFury: 'Baas Fury',
+  tideBattle: 'Tide', tideBattle2: 'Tide 2', tideBattleSurge: 'Tide Surge',
+  wall: 'Muur', training: 'Training', coinrun: 'Mats',
 };
 function songLabel(id) {
   if (!id) return '';
@@ -18113,6 +18562,8 @@ class Monster {
     }
     this.speed = sp.speed * (opts.speedMul || 1);
     this.advDiff = opts.advDiff || 'normal';
+    this.enrageMul = Number(opts.enrageMul) > 0 ? Number(opts.enrageMul) : 1;
+    this.enrageAt = Number.isFinite(Number(opts.enrageAt)) ? clamp(Number(opts.enrageAt), 0.25, 0.9) : 0.5;
     this.x = x;
     this.flying = sp.type === 'fly' || sp.type === 'dragon';
     this.swimming = sp.type === 'swim';
@@ -18147,7 +18598,8 @@ class Monster {
     this.atkCD -= dt; this.shootCD -= dt;
     if (this.superSlowT > 0) this.superSlowT -= dt;
     const genjutsuMul = (this.superSlowT > 0) ? (this.superSlowMul || 0.25) : 1;
-    const spdMul = (this.enraged ? 1.32 : 1) * genjutsuMul;
+    const enrageSpd = this.enraged ? (1.32 * (this.enrageMul || 1)) : 1;
+    const spdMul = enrageSpd * genjutsuMul;
     const type = this.sp.type;
 
     if (type === 'hop') {
@@ -18293,18 +18745,26 @@ class Monster {
   takeDamage(dmg, kbx, game, opts) {
     opts = opts || {};
     if (!this.alive) return;
-    if (this.elite && !this.enraged && this.hp - dmg <= this.maxhp * 0.5) {
+    const canEnrage = this.elite || this.bossCore || this.advDiff === 'nightmare' || this.advDiff === 'hell';
+    const thresh = this.maxhp * (this.enrageAt != null ? this.enrageAt : 0.5);
+    if (canEnrage && !this.enraged && this.hp - dmg <= thresh) {
       this.enraged = true;
       this.phase2FlashT = motionReduced() ? 0.35 : 0.85;
-      this.speed = Math.round(this.speed * 1.28);
-      this.dmg = Math.round(this.dmg * 1.22);
-      game.banner(`${this.sp.name} — FASE 2!`, 1.6, '#ff6b6b', 36);
+      const em = this.enrageMul || 1;
+      this.speed = Math.round(this.speed * (1.28 * Math.min(em, 1.5)));
+      this.dmg = Math.round(this.dmg * (1.22 * Math.min(em, 1.45)));
+      const phaseLabel = this.advDiff === 'hell'
+        ? `${this.sp.name} — HEL-WOEDE!`
+        : (this.advDiff === 'nightmare'
+          ? `${this.sp.name} — VUUR-RASERNIE!`
+          : `${this.sp.name} — FASE 2!`);
+      game.banner(phaseLabel, 1.6, this.advDiff === 'hell' ? '#ff3a2a' : (this.advDiff === 'nightmare' ? '#ff7a4d' : '#ff6b6b'), 36);
       AudioSys.sfx('roar');
       game.shake(9, 0.28);
       haptic(28);
       // d20 polish #12 — baas fase-2 kleurflits
       game.bossPhase2Flash = motionReduced() ? 0.22 : 0.55;
-      game.bossPhase2Hue = this.sp?.c1 || '#ff6b6b';
+      game.bossPhase2Hue = this.advDiff === 'hell' ? '#ff2a18' : (this.sp?.c1 || '#ff6b6b');
       this.flashT = Math.max(this.flashT, motionReduced() ? 0.12 : 0.28);
       const lite = fxLite() || motionReduced();
       try {
@@ -18319,8 +18779,10 @@ class Monster {
     this.flashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.14 : opts.crit ? 0.12 : 0.1);
     const kb = scaleKnockback(kbx, dmg, { crit: opts.crit, kind: opts.kind });
     this.x += Math.sign(kb || 1) * clamp(Math.abs(kb) * 0.038, 5, 26);
-    game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
-    game.burst(this.x, this.y, this.sp.c1, dmg >= 18 ? 9 : 6);
+    if (!opts.quiet) {
+      game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
+      game.burst(this.x, this.y, this.sp.c1, dmg >= 18 ? 9 : 6);
+    }
     if (opts.crit) spawnFxRing(game, this.x, this.y - this.size * 0.4, '#ffd75e', fxLite() ? 5 : 8);
     if (this.hp <= 0) {
       this.hp = 0; this.deadT = 0;
@@ -21930,54 +22392,79 @@ const THEMES = {
 };
 
 /**
- * Nightmare 2.0: dichte vuurzuilen, as, brandende wrakken.
+ * Nightmare 2.0: dichte vuurzuilen, as, brandende wrakken, hittegloed.
  */
 function drawNightmareFireDecor(c, ground, scroll, t, dX, dSpan) {
   const calm = typeof motionReduced === 'function' && motionReduced();
   const lite = (typeof fxLite === 'function' && fxLite()) || (typeof Perf !== 'undefined' && Perf.tier >= 2);
   // scorched silhouettes / wreck posts
-  const wrecks = lite ? 2 : 4;
+  const wrecks = lite ? 3 : 5;
   for (let i = 0; i < wrecks; i++) {
-    const x = dX((i * 0.24 + 0.1) * dSpan);
+    const x = dX((i * 0.2 + 0.08) * dSpan);
     c.fillStyle = '#1a0806';
     c.fillRect(Math.round(x) - 3, ground - 46 - (i % 2) * 14, 6, 46 + (i % 2) * 14);
     c.fillStyle = '#2a100c';
     c.fillRect(Math.round(x) - 16, ground - 52 - (i % 2) * 10, 32, 8);
+    // roof flames on wrecks
+    if (!calm) {
+      const fl = 0.5 + Math.sin(t * 9 + i * 2) * 0.5;
+      c.fillStyle = 'rgba(255,120,30,' + (0.35 + fl * 0.35) + ')';
+      c.beginPath();
+      c.moveTo(x - 10, ground - 52 - (i % 2) * 10);
+      c.lineTo(x, ground - 68 - fl * 14 - (i % 2) * 8);
+      c.lineTo(x + 10, ground - 52 - (i % 2) * 10);
+      c.closePath();
+      c.fill();
+    }
   }
-  const n = lite ? 5 : 9;
+  const n = lite ? 6 : 11;
   for (let i = 0; i < n; i++) {
-    const x = dX((i * 0.12 + 0.04) * dSpan);
+    const x = dX((i * 0.1 + 0.03) * dSpan);
     const flicker = calm ? 0.75 : (0.5 + Math.sin(t * 8 + i * 1.9) * 0.5);
-    const h = 52 + (i % 4) * 20 + flicker * 28;
+    const h = 56 + (i % 4) * 22 + flicker * 32;
     const g = c.createLinearGradient(x, ground - h, x, ground);
-    g.addColorStop(0, 'rgba(255,240,120,' + (0.2 + flicker * 0.4) + ')');
-    g.addColorStop(0.35, 'rgba(255,110,30,' + (0.4 + flicker * 0.4) + ')');
-    g.addColorStop(0.75, 'rgba(200,30,10,' + (0.25 + flicker * 0.2) + ')');
+    g.addColorStop(0, 'rgba(255,240,120,' + (0.22 + flicker * 0.42) + ')');
+    g.addColorStop(0.35, 'rgba(255,110,30,' + (0.42 + flicker * 0.4) + ')');
+    g.addColorStop(0.75, 'rgba(200,30,10,' + (0.28 + flicker * 0.22) + ')');
     g.addColorStop(1, 'rgba(80,10,5,0)');
     c.fillStyle = g;
     c.beginPath();
-    c.moveTo(x - 12 - flicker * 5, ground);
+    c.moveTo(x - 13 - flicker * 6, ground);
     c.quadraticCurveTo(x - 8, ground - h * 0.5, x, ground - h);
-    c.quadraticCurveTo(x + 8, ground - h * 0.5, x + 12 + flicker * 5, ground);
+    c.quadraticCurveTo(x + 8, ground - h * 0.5, x + 13 + flicker * 6, ground);
     c.closePath();
     c.fill();
   }
   if (!lite) {
     // rising embers + ash
-    for (let i = 0; i < 16; i++) {
-      const x = dX(((i * 0.09 + (t * 0.07)) % 1) * dSpan);
-      const y = ground - 12 - ((t * (28 + (i % 5) * 8) + i * 37) % (ground * 0.7));
+    for (let i = 0; i < 22; i++) {
+      const x = dX(((i * 0.07 + (t * 0.08)) % 1) * dSpan);
+      const y = ground - 12 - ((t * (30 + (i % 5) * 9) + i * 37) % (ground * 0.75));
       const s = 1.2 + (i % 3);
-      c.fillStyle = i % 3 === 0 ? 'rgba(180,160,140,.4)' : 'rgba(255,140,40,.6)';
-      c.globalAlpha = 0.3 + Math.sin(t * 6 + i) * 0.25;
+      c.fillStyle = i % 3 === 0 ? 'rgba(180,160,140,.45)' : 'rgba(255,140,40,.65)';
+      c.globalAlpha = 0.32 + Math.sin(t * 6 + i) * 0.28;
       c.fillRect(x, y, s, s);
     }
     c.globalAlpha = 1;
+    // heat shimmer bands
+    if (!calm) {
+      c.strokeStyle = 'rgba(255,160,80,.12)';
+      c.lineWidth = 2;
+      for (let i = 0; i < 4; i++) {
+        const y = ground * (0.25 + i * 0.12) + Math.sin(t * 3 + i) * 4;
+        c.beginPath();
+        for (let x = 0; x <= W; x += 24) {
+          const yy = y + Math.sin(x * 0.04 + t * 4 + i) * 3;
+          if (x === 0) c.moveTo(x, yy); else c.lineTo(x, yy);
+        }
+        c.stroke();
+      }
+    }
   }
   const haze = c.createLinearGradient(0, 0, 0, ground);
-  haze.addColorStop(0, 'rgba(255,50,10,0.08)');
-  haze.addColorStop(0.55, 'rgba(255,40,10,0)');
-  haze.addColorStop(1, 'rgba(255,30,5,0.22)');
+  haze.addColorStop(0, 'rgba(255,50,10,0.12)');
+  haze.addColorStop(0.5, 'rgba(255,40,10,0.04)');
+  haze.addColorStop(1, 'rgba(255,30,5,0.28)');
   c.fillStyle = haze;
   c.fillRect(0, 0, W, ground);
 }
@@ -21988,69 +22475,81 @@ function drawNightmareFireDecor(c, ground, scroll, t, dX, dSpan) {
 function drawHellPainDecor(c, ground, scroll, t, dX, dSpan) {
   const calm = typeof motionReduced === 'function' && motionReduced();
   const lite = (typeof fxLite === 'function' && fxLite()) || (typeof Perf !== 'undefined' && Perf.tier >= 2);
+  // cracked scorched ground lines
+  if (!lite) {
+    c.strokeStyle = 'rgba(80,10,8,.55)';
+    c.lineWidth = 2;
+    for (let i = 0; i < 5; i++) {
+      const x0 = dX((i * 0.2 + 0.05) * dSpan);
+      c.beginPath();
+      c.moveTo(x0 - 30, ground - 2);
+      c.quadraticCurveTo(x0 - 8, ground - 10 - (i % 3) * 4, x0 + 28, ground - 1);
+      c.stroke();
+    }
+  }
   // lava river band behind fighters
   const riverY = ground - 8;
-  const lava = c.createLinearGradient(0, riverY - 10, 0, riverY + 14);
+  const lava = c.createLinearGradient(0, riverY - 12, 0, riverY + 16);
   lava.addColorStop(0, 'rgba(255,80,20,0)');
-  lava.addColorStop(0.4, 'rgba(255,70,15,0.55)');
-  lava.addColorStop(0.7, 'rgba(180,20,5,0.7)');
-  lava.addColorStop(1, 'rgba(40,5,0,0.15)');
+  lava.addColorStop(0.35, 'rgba(255,90,20,0.65)');
+  lava.addColorStop(0.65, 'rgba(200,25,5,0.78)');
+  lava.addColorStop(1, 'rgba(40,5,0,0.2)');
   c.fillStyle = lava;
-  c.fillRect(0, riverY - 10, W, 24);
+  c.fillRect(0, riverY - 12, W, 28);
   if (!lite) {
-    for (let i = 0; i < 10; i++) {
-      const x = ((i * 97 + scroll * 0.9 + t * 40) % (W + 40)) - 20;
-      const bub = Math.max(0, Math.sin(t * 5 + i * 1.7)) * 4;
+    for (let i = 0; i < 14; i++) {
+      const x = ((i * 97 + scroll * 0.9 + t * 48) % (W + 40)) - 20;
+      const bub = Math.max(0, Math.sin(t * 5.5 + i * 1.7)) * 5;
       c.fillStyle = '#ffd75e';
-      c.globalAlpha = 0.45 + bub * 0.08;
+      c.globalAlpha = 0.5 + bub * 0.08;
       c.beginPath();
-      c.ellipse(x, riverY + 2, 5 + bub, 2.5, 0, 0, TAU);
+      c.ellipse(x, riverY + 2, 6 + bub, 2.8, 0, 0, TAU);
       c.fill();
     }
     c.globalAlpha = 1;
   }
   // lava pools
-  const pools = lite ? 4 : 6;
+  const pools = lite ? 5 : 8;
   for (let i = 0; i < pools; i++) {
-    const x = dX((i * 0.17 + 0.06) * dSpan);
-    const wob = calm ? 0 : Math.sin(t * 2.8 + i) * 4;
+    const x = dX((i * 0.14 + 0.05) * dSpan);
+    const wob = calm ? 0 : Math.sin(t * 2.8 + i) * 5;
     c.fillStyle = '#4a0808';
     c.beginPath();
-    c.ellipse(x, ground - 2, 38 + wob, 12, 0, 0, TAU);
+    c.ellipse(x, ground - 2, 40 + wob, 13, 0, 0, TAU);
     c.fill();
     c.fillStyle = '#ff4a14';
     c.beginPath();
-    c.ellipse(x, ground - 5, 28 + wob * 0.5, 7, 0, 0, TAU);
+    c.ellipse(x, ground - 5, 30 + wob * 0.5, 8, 0, 0, TAU);
     c.fill();
     c.fillStyle = '#ffe080';
     c.globalAlpha = 0.55 + Math.sin(t * 4.5 + i) * 0.3;
     c.beginPath();
-    c.ellipse(x - 5, ground - 6, 10, 3, 0, 0, TAU);
+    c.ellipse(x - 5, ground - 6, 11, 3.2, 0, 0, TAU);
     c.fill();
     c.globalAlpha = 1;
   }
   // screaming stickman silhouettes — denser in 3.0
-  const figs = lite ? 4 : 7;
+  const figs = lite ? 5 : 9;
   for (let i = 0; i < figs; i++) {
-    const x = dX((i * 0.14 + 0.08) * dSpan);
-    const shake = calm ? 0 : Math.sin(t * 16 + i * 2.3) * 2.4;
-    const armUp = calm ? -1.15 : (-1.1 + Math.sin(t * 11 + i) * 0.35);
+    const x = dX((i * 0.12 + 0.06) * dSpan);
+    const shake = calm ? 0 : Math.sin(t * 18 + i * 2.3) * 3.2;
+    const armUp = calm ? -1.15 : (-1.15 + Math.sin(t * 12 + i) * 0.42);
     drawScreamingStickman(c, x + shake, ground, armUp, t + i * 1.3);
   }
-  // falling ash
+  // falling ash + cinders
   if (!lite && !calm) {
-    c.fillStyle = 'rgba(120,90,80,.45)';
-    for (let i = 0; i < 14; i++) {
-      const x = ((i * 73 + scroll * 0.4) % (W + 20)) - 10;
-      const y = ((t * 55 + i * 41) % (ground + 20));
-      c.fillRect(x, y, 2, 2);
+    for (let i = 0; i < 22; i++) {
+      const x = ((i * 73 + scroll * 0.45) % (W + 20)) - 10;
+      const y = ((t * 62 + i * 41) % (ground + 20));
+      c.fillStyle = i % 4 === 0 ? 'rgba(255,90,40,.5)' : 'rgba(120,90,80,.5)';
+      c.fillRect(x, y, 2 + (i % 2), 2);
     }
   }
   // heat shimmer / red vignette
-  const vig = c.createRadialGradient(W * 0.5, ground * 0.4, 30, W * 0.5, ground * 0.5, Math.max(W, ground) * 0.78);
+  const vig = c.createRadialGradient(W * 0.5, ground * 0.4, 24, W * 0.5, ground * 0.5, Math.max(W, ground) * 0.8);
   vig.addColorStop(0, 'rgba(255,40,20,0)');
-  vig.addColorStop(0.55, 'rgba(200,10,5,0.1)');
-  vig.addColorStop(1, 'rgba(30,0,0,0.45)');
+  vig.addColorStop(0.5, 'rgba(200,10,5,0.14)');
+  vig.addColorStop(1, 'rgba(20,0,0,0.55)');
   c.fillStyle = vig;
   c.fillRect(0, 0, W, ground + 4);
 }
@@ -22952,7 +23451,10 @@ class Game {
     }
     this.allyAssistT = this.stageAlly ? 2.2 : 0;
     // Master Sword roll UIT — geen zeldzame interrupt midden in level
-    AudioSys.play(this.level.boss ? 'boss' : 'battle');
+    try {
+      if (typeof playFightBgm === 'function') playFightBgm(this.level.boss ? 'boss' : 'battle');
+      else AudioSys.play(this.level.boss ? 'boss' : 'battle');
+    } catch (_) {}
   }
 
   maybeRollMasterSword() {
@@ -23026,7 +23528,8 @@ class Game {
     if (bossWave) {
       try {
         this.banner(t('banner.bossWave'), 2.2, '#ff6b6b', 58);
-        AudioSys.play('boss');
+        if (typeof playFightBgm === 'function') playFightBgm('boss');
+        else AudioSys.play('boss');
         AudioSys.sfx('roar');
       } catch (_) {}
       try {
@@ -23038,7 +23541,8 @@ class Game {
       const hasSuper = wave.some(s => s.superBoss);
       try {
         this.banner(hasSuper ? t('banner.superBossWave') : t('banner.eliteWave'), 1.35, hasSuper ? '#ffd75e' : '#ffb0b8', 40);
-        AudioSys.play(hasSuper ? 'boss' : 'elite');
+        if (typeof playFightBgm === 'function') playFightBgm(hasSuper ? 'boss' : 'elite');
+        else AudioSys.play(hasSuper ? 'boss' : 'elite');
         AudioSys.sfx('roar');
       } catch (_) {}
     } else {
@@ -23320,6 +23824,8 @@ class Game {
             dmgMul: this.level.dmgMul,
             speedMul: this.level.speedMul || 1,
             advDiff: this.advDiff || this.level.diff || 'normal',
+            enrageMul: this.level.enrageMul || 1,
+            enrageAt: this.level.enrageAt != null ? this.level.enrageAt : 0.5,
           });
           this.monsters.push(mon);
           if (def.superBoss) {
@@ -23409,6 +23915,14 @@ class Game {
     if (win) {
       const bonus = Math.round((30 + lv * 10) * advXpMul(diff));
       this.grantXP(bonus);
+      if (diff !== 'normal') {
+        const coinN = Math.max(1, Math.round((3 + Math.floor(lv / 8)) * (typeof advPetCoinMul === 'function' ? advPetCoinMul(diff) : 1)));
+        try {
+          save.petCoins = (typeof petCoinsBalance === 'function' ? petCoinsBalance() : (save.petCoins || 0)) + coinN;
+          this.petCoinsThisRun = (this.petCoinsThisRun || 0) + coinN;
+          persist();
+        } catch (_) {}
+      }
       const unlocked = advUnlockedLevel(diff);
       if (lv === unlocked && unlocked < MAX_LEVEL) {
         setAdvUnlockedLevel(unlocked + 1, diff);
@@ -23455,6 +23969,12 @@ class Game {
       if (stars > prevStars) { setAdvStarsFor(lv, stars, diff); persist(); }
       bumpStat('advWins', 1);
       bumpDaily('advWin', 1);
+      try {
+        const zwBoss = grantZoneBossClearWeapon(lv, diff);
+        if (zwBoss) {
+          try { noteRunLootWeapon(this.runLoot, zwBoss.id); } catch (_) {}
+        }
+      } catch (_) {}
       const eggBonus = maybeAdvEggBonus();
       if (eggBonus) {
         spawnGameEggPet(this);
@@ -23590,6 +24110,12 @@ class Game {
           else if (m.elite) dropTier = 'elite';
           else if (m.giant) dropTier = 'giant';
           this.spawnPickup(m.x + rand(-22, 22), m.y - m.size * 0.45, { itemCat: itemDrop.cat, itemId: itemDrop.id, dropTier });
+        }
+      } catch (_) {}
+      try {
+        const zw = rollZoneWeaponDrop(this, m);
+        if (zw) {
+          try { noteRunLootWeapon(this.runLoot, zw.id); } catch (_) {}
         }
       } catch (_) {}
     }
@@ -25030,6 +25556,11 @@ class Game {
         }
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
+        if (spec.kind === 'weapon' && typeof applyWeaponOnHitEffect === 'function') {
+          try {
+            applyWeaponOnHitEffect(this, f, m, { dmg: hitRoll.dmg, crit: hitRoll.crit, finisher });
+          } catch (_) {}
+        }
         if (counter) this.freezeT = Math.max(this.freezeT, 0.016);
         applyHitConfirmFx(this, hx, hy, spec);
         if (f.isPlayer && this.styleLightning && !fxLite()) {
@@ -25261,6 +25792,9 @@ class Game {
         try { sfReportError('monster/update', monErr, 'Vijand hiccup — speel door'); } catch (_) {}
       }
     }
+    try { if (typeof tickWeaponStatusEffects === 'function') tickWeaponStatusEffects(this, dt); } catch (_) {}
+    if (this.player && this.player._wpnCritSurgeT > 0) this.player._wpnCritSurgeT -= dt;
+    if (this.p2 && this.p2._wpnCritSurgeT > 0) this.p2._wpnCritSurgeT -= dt;
     this.monsters = this.monsters.filter(m => m.alive || m.deadT < 1);
     if (this.mode === 'adventure') tickSuperFx(this, dt);
 
@@ -25420,6 +25954,14 @@ class Game {
             try { AudioSys.sfxAt(weaponHitSfx(p.throwId || 'shuriken', hit.dmg), m.x); } catch (_) {}
             m.takeDamage(hit.dmg, dir * 300 * (p.kbMul || 1), this, { skipHitSfx: true, crit: hit.crit });
             if (hit.crit) applyCritFx(this, m.x, m.y);
+            if (p.throwId && typeof applyWeaponOnHitEffect === 'function') {
+              const owner = this.player;
+              if (owner && owner.weapon && owner.weapon.id === p.throwId && owner.weapon.effect) {
+                try {
+                  applyWeaponOnHitEffect(this, owner, m, { dmg: hit.dmg, crit: hit.crit, finisher: false });
+                } catch (_) {}
+              }
+            }
             if (skProj) spawnJutsuImpactFx(this, m.x, m.y, p.kind, 'full');
             if (p.hitSet) p.hitSet.add(m); else p.life = 0;
           }
@@ -28911,7 +29453,27 @@ function audioMixStatusLine(inPause) {
     const track = songLabel(AudioSys.currentSongId());
     if (track) bits.push(t('audio.pauseTrack', { track }));
   }
+  if (inPause && typeof AudioSys !== 'undefined' && AudioSys.ctx && AudioSys.ctx.state === 'suspended') {
+    bits.push(t('audio.ctxSuspended'));
+  }
   return bits.join(' · ');
+}
+
+/** Keep pause + settings volume sliders in sync (presets, import, pause open). */
+function syncAudioVolSliders(skipActive = true) {
+  const rows = [
+    ['setMusicVol', 'setMusicVolLbl', 'musicVol', 0.85],
+    ['pauseMusicVol', 'pauseMusicVolLbl', 'musicVol', 0.85],
+    ['setSfxVol', 'setSfxVolLbl', 'sfxVol', 1],
+    ['pauseSfxVol', 'pauseSfxVolLbl', 'sfxVol', 1],
+  ];
+  for (const [id, lid, key, def] of rows) {
+    const el = document.getElementById(id);
+    const lbl = document.getElementById(lid);
+    const pct = volPct(save[key], def);
+    if (el && (!skipActive || document.activeElement !== el)) el.value = String(pct);
+    if (lbl) lbl.textContent = pct + '%';
+  }
 }
 
 function levelTileTip(n, pick, infoLv, boss, best, fails) {
@@ -30500,6 +31062,13 @@ const UI = {
         diffBar.appendChild(btn);
       }
     }
+    const blurbEl = document.getElementById('levelDiffBlurb');
+    if (blurbEl) {
+      const meta = advDiffMeta(activeDiff);
+      blurbEl.style.setProperty('--diff-accent', meta.accent);
+      blurbEl.className = 'diff-blurb' + (activeDiff !== 'normal' ? ' diff-blurb-' + activeDiff : '');
+      blurbEl.textContent = advDiffBlurb(activeDiff);
+    }
     const pick = this.advIslandPick || currentAdvIsland(activeDiff);
     this.advIslandPick = pick;
     if (bar) {
@@ -30588,6 +31157,8 @@ const UI = {
         else if (trait === 'ranch') cls += ' trait-ranch';
         else if (trait === 'safari') cls += ' trait-safari';
         else if (trait === 'tide') cls += ' trait-tide';
+        else if (trait === 'ember') cls += ' trait-ember';
+        else if (trait === 'pain') cls += ' trait-pain';
         return `<i class="${cls}"></i>`;
       }).join('');
       el.innerHTML = locked
@@ -30836,18 +31407,30 @@ const UI = {
       const islandLine = islandLocked && !lvlLocked
         ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:#ffd75e">${t('ui.weaponIslandPick', { cap: adventureWeaponCap() })}</div>`
         : '';
-      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${summonBadge}${chestBadge}${tierBadge}${upBadge}</div>
+      const zoneMeta = base.dropZone ? weaponDropZoneOf(base) : null;
+      const effectTxt = weaponEffectLabel(base);
+      const zoneBadge = zoneMeta
+        ? ` <span class="rar-pill" style="color:${zoneMeta.color};border-color:${zoneMeta.color}">${zoneMeta.name}</span>`
+        : '';
+      const effectLine = effectTxt
+        ? `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:3px;color:${zoneMeta ? zoneMeta.color : '#ffb0b8'}">${effectTxt}</div>`
+        : '';
+      const zoneLockLine = lvlLocked && zoneMeta
+        ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:${zoneMeta.color}">Drop in ${zoneMeta.name}-zone / Nightmare·Hell modus</div>`
+        : '';
+      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${zoneBadge}${summonBadge}${chestBadge}${tierBadge}${upBadge}</div>
         <div class="cinfo">${statLine}</div>` +
         chestSkillLine +
         upLine +
+        effectLine +
         (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '') +
-        islandLine;
+        islandLine + zoneLockLine;
       el.appendChild(info);
       if (weaponUpgradeEligible(base)) appendItemUpgradeButton(el, 'weapon', w.id, () => this.renderWeapons());
       const right = document.createElement('div');
       right.className = 'right';
       right.innerHTML = lvlLocked
-        ? `${SVG_LOCK_ICON} Lv ${base.unlock}`
+        ? (zoneMeta ? `${SVG_LOCK_ICON} ${zoneMeta.name}` : `${SVG_LOCK_ICON} Lv ${base.unlock}`)
         : (islandLocked
           ? t('ui.weaponIslandCapShort', { cap: adventureWeaponCap() })
           : (selected ? '&#10004; gekozen' : 'kies'));
@@ -30894,15 +31477,30 @@ const UI = {
       nameEl.style.color = locked ? '#8fa3d9' : '#fff';
     }
     if (rarEl) {
-      rarEl.innerHTML = locked
-        ? `<span class="rar-pill" style="color:#8fa3d9;border-color:#8fa3d9">Lv ${base.unlock}</span>`
-        : `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>` +
+      const zone = base.dropZone ? weaponDropZoneOf(base) : null;
+      if (locked) {
+        rarEl.innerHTML = zone
+          ? `<span class="rar-pill" style="color:${zone.color};border-color:${zone.color}">${zone.name}</span>`
+          : `<span class="rar-pill" style="color:#8fa3d9;border-color:#8fa3d9">Lv ${base.unlock}</span>`;
+      } else {
+        rarEl.innerHTML =
+          `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>` +
+          (zone ? ` <span class="rar-pill" style="color:${zone.color};border-color:${zone.color}">${zone.name}</span>` : '') +
           (save.weapon === w.id ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Actief</span>' : '');
+      }
     }
     if (statsEl) {
-      statsEl.textContent = locked
-        ? 'Nog vergrendeld — level verder in avontuur'
-        : `${weaponDesc(w)} · x${w.dmg} dmg · bereik ${w.range} · spd x${w.speed}`;
+      const effectTxt = weaponEffectLabel(base);
+      if (locked) {
+        const zone = base.dropZone ? weaponDropZoneOf(base) : null;
+        statsEl.textContent = zone
+          ? `Drop in ${zone.name}-zone of Nightmare 2.0 / Hell 3.0`
+          : 'Nog vergrendeld — level verder in avontuur';
+      } else {
+        statsEl.textContent =
+          `${weaponDesc(w)} · x${w.dmg} dmg · bereik ${w.range} · spd x${w.speed}` +
+          (effectTxt ? ` · ${effectTxt}` : '');
+      }
     }
     const c = cv.getContext('2d');
     if (!c) return;
@@ -31852,16 +32450,7 @@ const UI = {
     if (togS) togS.setAttribute('aria-pressed', save.sfx ? 'true' : 'false');
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
-    const pm = document.getElementById('pauseMusicVol');
-    const ps = document.getElementById('pauseSfxVol');
-    const pmL = document.getElementById('pauseMusicVolLbl');
-    const psL = document.getElementById('pauseSfxVolLbl');
-    const mPct = volPct(save.musicVol, 0.85);
-    const sPct = volPct(save.sfxVol, 1);
-    if (pm && document.activeElement !== pm) pm.value = String(mPct);
-    if (ps && document.activeElement !== ps) ps.value = String(sPct);
-    if (pmL) pmL.textContent = mPct + '%';
-    if (psL) psL.textContent = sPct + '%';
+    syncAudioVolSliders();
     const statusEl = document.getElementById('pauseAudioStatus');
     if (statusEl) {
       let line = audioMixStatusLine(true);
@@ -32103,10 +32692,14 @@ function startGame(mode, opts) {
   } catch (_) {}
   try {
     if (mode === 'training') AudioSys.play('training');
-    else if (mode === 'adventure') AudioSys.play(game.level && game.level.boss ? 'boss' : 'battle');
+    else if (mode === 'adventure') {
+      if (typeof playFightBgm === 'function') playFightBgm(game.level && game.level.boss ? 'boss' : 'battle');
+      else AudioSys.play(game.level && game.level.boss ? 'boss' : 'battle');
+    }
     else if (mode === 'versus') AudioSys.play('versus');
     else if (mode === 'coinrun') AudioSys.play('mats');
     else if (mode === 'wall') AudioSys.play('wall');
+    else if (typeof playFightBgm === 'function') playFightBgm('battle');
     else AudioSys.play('battle');
   } catch (_) {}
   } finally {
@@ -33068,6 +33661,7 @@ document.addEventListener('visibilitychange', () => {
       state = 'pause';
       AudioSys.setPaused(true);
       try {
+        UI.renderPauseToggles();
         UI.show('pauseScreen');
       } catch (_) { ensureVisibleScreen(); }
     } else {

@@ -271,7 +271,10 @@ class Game {
     }
     this.allyAssistT = this.stageAlly ? 2.2 : 0;
     // Master Sword roll UIT — geen zeldzame interrupt midden in level
-    AudioSys.play(this.level.boss ? 'boss' : 'battle');
+    try {
+      if (typeof playFightBgm === 'function') playFightBgm(this.level.boss ? 'boss' : 'battle');
+      else AudioSys.play(this.level.boss ? 'boss' : 'battle');
+    } catch (_) {}
   }
 
   maybeRollMasterSword() {
@@ -345,7 +348,8 @@ class Game {
     if (bossWave) {
       try {
         this.banner(t('banner.bossWave'), 2.2, '#ff6b6b', 58);
-        AudioSys.play('boss');
+        if (typeof playFightBgm === 'function') playFightBgm('boss');
+        else AudioSys.play('boss');
         AudioSys.sfx('roar');
       } catch (_) {}
       try {
@@ -357,7 +361,8 @@ class Game {
       const hasSuper = wave.some(s => s.superBoss);
       try {
         this.banner(hasSuper ? t('banner.superBossWave') : t('banner.eliteWave'), 1.35, hasSuper ? '#ffd75e' : '#ffb0b8', 40);
-        AudioSys.play(hasSuper ? 'boss' : 'elite');
+        if (typeof playFightBgm === 'function') playFightBgm(hasSuper ? 'boss' : 'elite');
+        else AudioSys.play(hasSuper ? 'boss' : 'elite');
         AudioSys.sfx('roar');
       } catch (_) {}
     } else {
@@ -639,6 +644,8 @@ class Game {
             dmgMul: this.level.dmgMul,
             speedMul: this.level.speedMul || 1,
             advDiff: this.advDiff || this.level.diff || 'normal',
+            enrageMul: this.level.enrageMul || 1,
+            enrageAt: this.level.enrageAt != null ? this.level.enrageAt : 0.5,
           });
           this.monsters.push(mon);
           if (def.superBoss) {
@@ -728,6 +735,14 @@ class Game {
     if (win) {
       const bonus = Math.round((30 + lv * 10) * advXpMul(diff));
       this.grantXP(bonus);
+      if (diff !== 'normal') {
+        const coinN = Math.max(1, Math.round((3 + Math.floor(lv / 8)) * (typeof advPetCoinMul === 'function' ? advPetCoinMul(diff) : 1)));
+        try {
+          save.petCoins = (typeof petCoinsBalance === 'function' ? petCoinsBalance() : (save.petCoins || 0)) + coinN;
+          this.petCoinsThisRun = (this.petCoinsThisRun || 0) + coinN;
+          persist();
+        } catch (_) {}
+      }
       const unlocked = advUnlockedLevel(diff);
       if (lv === unlocked && unlocked < MAX_LEVEL) {
         setAdvUnlockedLevel(unlocked + 1, diff);
@@ -774,6 +789,12 @@ class Game {
       if (stars > prevStars) { setAdvStarsFor(lv, stars, diff); persist(); }
       bumpStat('advWins', 1);
       bumpDaily('advWin', 1);
+      try {
+        const zwBoss = grantZoneBossClearWeapon(lv, diff);
+        if (zwBoss) {
+          try { noteRunLootWeapon(this.runLoot, zwBoss.id); } catch (_) {}
+        }
+      } catch (_) {}
       const eggBonus = maybeAdvEggBonus();
       if (eggBonus) {
         spawnGameEggPet(this);
@@ -909,6 +930,12 @@ class Game {
           else if (m.elite) dropTier = 'elite';
           else if (m.giant) dropTier = 'giant';
           this.spawnPickup(m.x + rand(-22, 22), m.y - m.size * 0.45, { itemCat: itemDrop.cat, itemId: itemDrop.id, dropTier });
+        }
+      } catch (_) {}
+      try {
+        const zw = rollZoneWeaponDrop(this, m);
+        if (zw) {
+          try { noteRunLootWeapon(this.runLoot, zw.id); } catch (_) {}
         }
       } catch (_) {}
     }
@@ -2349,6 +2376,11 @@ class Game {
         }
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
+        if (spec.kind === 'weapon' && typeof applyWeaponOnHitEffect === 'function') {
+          try {
+            applyWeaponOnHitEffect(this, f, m, { dmg: hitRoll.dmg, crit: hitRoll.crit, finisher });
+          } catch (_) {}
+        }
         if (counter) this.freezeT = Math.max(this.freezeT, 0.016);
         applyHitConfirmFx(this, hx, hy, spec);
         if (f.isPlayer && this.styleLightning && !fxLite()) {
@@ -2580,6 +2612,9 @@ class Game {
         try { sfReportError('monster/update', monErr, 'Vijand hiccup — speel door'); } catch (_) {}
       }
     }
+    try { if (typeof tickWeaponStatusEffects === 'function') tickWeaponStatusEffects(this, dt); } catch (_) {}
+    if (this.player && this.player._wpnCritSurgeT > 0) this.player._wpnCritSurgeT -= dt;
+    if (this.p2 && this.p2._wpnCritSurgeT > 0) this.p2._wpnCritSurgeT -= dt;
     this.monsters = this.monsters.filter(m => m.alive || m.deadT < 1);
     if (this.mode === 'adventure') tickSuperFx(this, dt);
 
@@ -2739,6 +2774,14 @@ class Game {
             try { AudioSys.sfxAt(weaponHitSfx(p.throwId || 'shuriken', hit.dmg), m.x); } catch (_) {}
             m.takeDamage(hit.dmg, dir * 300 * (p.kbMul || 1), this, { skipHitSfx: true, crit: hit.crit });
             if (hit.crit) applyCritFx(this, m.x, m.y);
+            if (p.throwId && typeof applyWeaponOnHitEffect === 'function') {
+              const owner = this.player;
+              if (owner && owner.weapon && owner.weapon.id === p.throwId && owner.weapon.effect) {
+                try {
+                  applyWeaponOnHitEffect(this, owner, m, { dmg: hit.dmg, crit: hit.crit, finisher: false });
+                } catch (_) {}
+              }
+            }
             if (skProj) spawnJutsuImpactFx(this, m.x, m.y, p.kind, 'full');
             if (p.hitSet) p.hitSet.add(m); else p.life = 0;
           }

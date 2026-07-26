@@ -865,7 +865,27 @@ function audioMixStatusLine(inPause) {
     const track = songLabel(AudioSys.currentSongId());
     if (track) bits.push(t('audio.pauseTrack', { track }));
   }
+  if (inPause && typeof AudioSys !== 'undefined' && AudioSys.ctx && AudioSys.ctx.state === 'suspended') {
+    bits.push(t('audio.ctxSuspended'));
+  }
   return bits.join(' · ');
+}
+
+/** Keep pause + settings volume sliders in sync (presets, import, pause open). */
+function syncAudioVolSliders(skipActive = true) {
+  const rows = [
+    ['setMusicVol', 'setMusicVolLbl', 'musicVol', 0.85],
+    ['pauseMusicVol', 'pauseMusicVolLbl', 'musicVol', 0.85],
+    ['setSfxVol', 'setSfxVolLbl', 'sfxVol', 1],
+    ['pauseSfxVol', 'pauseSfxVolLbl', 'sfxVol', 1],
+  ];
+  for (const [id, lid, key, def] of rows) {
+    const el = document.getElementById(id);
+    const lbl = document.getElementById(lid);
+    const pct = volPct(save[key], def);
+    if (el && (!skipActive || document.activeElement !== el)) el.value = String(pct);
+    if (lbl) lbl.textContent = pct + '%';
+  }
 }
 
 function levelTileTip(n, pick, infoLv, boss, best, fails) {
@@ -2454,6 +2474,13 @@ const UI = {
         diffBar.appendChild(btn);
       }
     }
+    const blurbEl = document.getElementById('levelDiffBlurb');
+    if (blurbEl) {
+      const meta = advDiffMeta(activeDiff);
+      blurbEl.style.setProperty('--diff-accent', meta.accent);
+      blurbEl.className = 'diff-blurb' + (activeDiff !== 'normal' ? ' diff-blurb-' + activeDiff : '');
+      blurbEl.textContent = advDiffBlurb(activeDiff);
+    }
     const pick = this.advIslandPick || currentAdvIsland(activeDiff);
     this.advIslandPick = pick;
     if (bar) {
@@ -2542,6 +2569,8 @@ const UI = {
         else if (trait === 'ranch') cls += ' trait-ranch';
         else if (trait === 'safari') cls += ' trait-safari';
         else if (trait === 'tide') cls += ' trait-tide';
+        else if (trait === 'ember') cls += ' trait-ember';
+        else if (trait === 'pain') cls += ' trait-pain';
         return `<i class="${cls}"></i>`;
       }).join('');
       el.innerHTML = locked
@@ -2790,18 +2819,30 @@ const UI = {
       const islandLine = islandLocked && !lvlLocked
         ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:#ffd75e">${t('ui.weaponIslandPick', { cap: adventureWeaponCap() })}</div>`
         : '';
-      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${summonBadge}${chestBadge}${tierBadge}${upBadge}</div>
+      const zoneMeta = base.dropZone ? weaponDropZoneOf(base) : null;
+      const effectTxt = weaponEffectLabel(base);
+      const zoneBadge = zoneMeta
+        ? ` <span class="rar-pill" style="color:${zoneMeta.color};border-color:${zoneMeta.color}">${zoneMeta.name}</span>`
+        : '';
+      const effectLine = effectTxt
+        ? `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:3px;color:${zoneMeta ? zoneMeta.color : '#ffb0b8'}">${effectTxt}</div>`
+        : '';
+      const zoneLockLine = lvlLocked && zoneMeta
+        ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:${zoneMeta.color}">Drop in ${zoneMeta.name}-zone / Nightmare·Hell modus</div>`
+        : '';
+      info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${zoneBadge}${summonBadge}${chestBadge}${tierBadge}${upBadge}</div>
         <div class="cinfo">${statLine}</div>` +
         chestSkillLine +
         upLine +
+        effectLine +
         (moveLine ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${moveLine}</div>` : '') +
-        islandLine;
+        islandLine + zoneLockLine;
       el.appendChild(info);
       if (weaponUpgradeEligible(base)) appendItemUpgradeButton(el, 'weapon', w.id, () => this.renderWeapons());
       const right = document.createElement('div');
       right.className = 'right';
       right.innerHTML = lvlLocked
-        ? `${SVG_LOCK_ICON} Lv ${base.unlock}`
+        ? (zoneMeta ? `${SVG_LOCK_ICON} ${zoneMeta.name}` : `${SVG_LOCK_ICON} Lv ${base.unlock}`)
         : (islandLocked
           ? t('ui.weaponIslandCapShort', { cap: adventureWeaponCap() })
           : (selected ? '&#10004; gekozen' : 'kies'));
@@ -2848,15 +2889,30 @@ const UI = {
       nameEl.style.color = locked ? '#8fa3d9' : '#fff';
     }
     if (rarEl) {
-      rarEl.innerHTML = locked
-        ? `<span class="rar-pill" style="color:#8fa3d9;border-color:#8fa3d9">Lv ${base.unlock}</span>`
-        : `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>` +
+      const zone = base.dropZone ? weaponDropZoneOf(base) : null;
+      if (locked) {
+        rarEl.innerHTML = zone
+          ? `<span class="rar-pill" style="color:${zone.color};border-color:${zone.color}">${zone.name}</span>`
+          : `<span class="rar-pill" style="color:#8fa3d9;border-color:#8fa3d9">Lv ${base.unlock}</span>`;
+      } else {
+        rarEl.innerHTML =
+          `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>` +
+          (zone ? ` <span class="rar-pill" style="color:${zone.color};border-color:${zone.color}">${zone.name}</span>` : '') +
           (save.weapon === w.id ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Actief</span>' : '');
+      }
     }
     if (statsEl) {
-      statsEl.textContent = locked
-        ? 'Nog vergrendeld — level verder in avontuur'
-        : `${weaponDesc(w)} · x${w.dmg} dmg · bereik ${w.range} · spd x${w.speed}`;
+      const effectTxt = weaponEffectLabel(base);
+      if (locked) {
+        const zone = base.dropZone ? weaponDropZoneOf(base) : null;
+        statsEl.textContent = zone
+          ? `Drop in ${zone.name}-zone of Nightmare 2.0 / Hell 3.0`
+          : 'Nog vergrendeld — level verder in avontuur';
+      } else {
+        statsEl.textContent =
+          `${weaponDesc(w)} · x${w.dmg} dmg · bereik ${w.range} · spd x${w.speed}` +
+          (effectTxt ? ` · ${effectTxt}` : '');
+      }
     }
     const c = cv.getContext('2d');
     if (!c) return;
@@ -3806,16 +3862,7 @@ const UI = {
     if (togS) togS.setAttribute('aria-pressed', save.sfx ? 'true' : 'false');
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
-    const pm = document.getElementById('pauseMusicVol');
-    const ps = document.getElementById('pauseSfxVol');
-    const pmL = document.getElementById('pauseMusicVolLbl');
-    const psL = document.getElementById('pauseSfxVolLbl');
-    const mPct = volPct(save.musicVol, 0.85);
-    const sPct = volPct(save.sfxVol, 1);
-    if (pm && document.activeElement !== pm) pm.value = String(mPct);
-    if (ps && document.activeElement !== ps) ps.value = String(sPct);
-    if (pmL) pmL.textContent = mPct + '%';
-    if (psL) psL.textContent = sPct + '%';
+    syncAudioVolSliders();
     const statusEl = document.getElementById('pauseAudioStatus');
     if (statusEl) {
       let line = audioMixStatusLine(true);

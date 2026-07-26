@@ -47,7 +47,9 @@ const modes = ['training', 'wall', 'mats', 'weapons', 'pets', 'style', 'skills',
 const chrome = [
   'music', 'missions', 'settings', 'help', 'refresh', 'install', 'home',
   'claim', 'bonus', 'next', 'thumb', 'play', 'sfx', 'dice', 'skip',
+  'back', 'pause', 'swap',
 ];
+const sagaUi = ['all', 'fighter', 'ki', 'scroll', 'tide', 'cape', 'dawn'];
 
 function checkSet(dir, names) {
   for (const name of names) {
@@ -61,6 +63,18 @@ function checkSet(dir, names) {
 checkSet('hub', hub);
 checkSet('modes', modes);
 checkSet('chrome', chrome);
+
+for (const name of sagaUi) {
+  const rel = `assets/ui/saga-${name}.svg`;
+  must(fs.existsSync(path.join(root, rel)), `missing file ${rel}`);
+  must(html.includes(rel), `index.html missing ref ${rel}`);
+  must(sw.includes(`./${rel}`) || sw.includes(rel), `sw.js missing precache ${rel}`);
+}
+
+must(/assets\/buttons\/chrome\/back\.svg/.test(html), 'back.svg not wired on back-btn');
+must(/assets\/buttons\/chrome\/pause\.svg/.test(html), 'pause.svg not wired on #pauseBtn');
+must(!/&#8592;/.test(html), 'HTML entity back-arrow still present');
+must(!/&#10074;/.test(html), 'HTML entity pause bars still present');
 
 must(!/class="(?:ico|tog-ico)"><svg/.test(html), 'inline ico/tog-ico SVG still present — should be file icons');
 

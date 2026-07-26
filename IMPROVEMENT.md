@@ -1,3 +1,4 @@
+| 2026-07-26 | **6** | Achterstallig audio LIVE: SFX/battle diversiteit + top-SFX polish + d6 pause → main. v1.18.112 / SW v322. |
 # IMPROVEMENT — agent-first (Stickman Fighter)
 
 **Lees eerst [AGENTS.md](./AGENTS.md) en [agent-handoff.json](./agent-handoff.json)** (open wensen + canonical agent-URL), daarna dit bestand. Doel: continue polish **zonder gameplay te breken**. Knoppen/beelden: **[ASSET-STYLE.md](./ASSET-STYLE.md)** is leidend.
@@ -112,10 +113,16 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-| 2026-07-26 | — | **Summons harden:** where-from/where-see strip, center-card laatste 2s (video of fallback), rarity FX shell, geen open tijdens play, save null→5 fix, smoke-summon. v1.18.107 / SW v317. |
-| 2026-07-26 | — | **Daily summons:** menu-kist (flash bij remaining) + 5 wapen/5 pet/dag + 5% jackpot + save sanitize (chestDaily/chestWeapons). Video-lagen wachten op Gemini mp4. v1.18.106 / SW v316. |
-| 2026-07-26 | — | **Summon-video:** Gemini share preview = te crude pixel-boom; nieuwe prompt stickman + sticks→kist; rarity FX na open. Wacht op mp4. |
-| 2026-07-26 | — | **Plan:** dagelijkse 5+5 summons (wapen/pet) + Gemini summon-video met rarity-lagen (common saai → legendary flitsend). Wacht op user-filmpje. Wishlist `w-20260726T185514`. |
+| 2026-07-26 | — | **LIVE merge:** daily summons harden (menu-kist, center-card last 2s, save quota fix, smoke) zonder conflict op main. v1.18.115 / SW v325. |
+| 2026-07-26 | — | **Summons harden:** where-from/where-see strip, center-card laatste 2s (video of fallback), rarity FX shell, geen open tijdens play, save null→5 fix, smoke-summon. |
+| 2026-07-26 | — | **User fix harden+merge:** wapen-upgrades ownership-only (expliciete zone-gate + belt in add/try); smoke banked-shards cheat. v1.18.114 / SW v324. |
+| 2026-07-26 | — | **User fix:** wapen-upgrades alleen voor bezit (`weaponUnlockedByLevel`) — geen zone/locked wapens meer upgraden. v1.18.113 / SW v323. |
+| 2026-07-26 | — | **iPad/mobile scale:** fluid `--ui-rail` / type tokens, tablet≥768 + iPad landscape + phone-landscape density, saga touch floors, leesbaarheid clamp. v1.18.111 / SW v321. |
+| 2026-07-26 | — | **Menu SVG nav LIVE:** back/pause chrome, saga-*.svg, preview sheet. v1.18.110 / SW v320. |
+| 2026-07-26 | — | **Zone-wapens harden:** adventure keep-equipped fix, DoT quiet/skipHitSfx, smoke:zone, regressie-guards. v1.18.109 / SW v319. |
+| 2026-07-26 | **6** | Audio c5: pauze reset combat-heat (BGM lead rustig), combat-SFX geblokkeerd (UI allowlist), syncAudioVolSliders pause↔instellingen, iPad ctx-suspended hint. v1.18.108 / SW v318. |
+| 2026-07-26 | — | **Zone-wapens wire:** drops + on-hit effects + burn-tick aangesloten; Nightmare 2.0/Hell 3.0 drops overal; UI zone/effect badges. v1.18.107 / SW v317. |
+| 2026-07-26 | — | **Model deepen:** Nightmare 2.0 / Hell 3.0 — enrageMul wired, ember/pain golven, sterkere vuur/lava visuals, unlock Lv70, petcoin bonus, UI-blurb. v1.18.106 / SW v316. |
 | 2026-07-26 | — | **LIVE fix:** Nightmare 2.0 / Hell 3.0 + herstel Nachtmerrie/Hel eilanden (Lv51–70) & zone-wapens. v1.18.105 / SW v315. |
 | 2026-07-26 | — | **User: Nachtmerrie/Hel wapens.** +2 eilanden (Lv 51–70), +27 ludieke zone-only wapens met on-hit effecten, rariteiten nightmare/hell, weapons-UI zone/effect badges. v1.18.104 / SW v314. |
 | 2026-07-26 | — | **User:** grootste bazen (bossCore/super) — grotere intro-tekst + naamplaat, soms colossaal ×2 size, veel meer HP. v1.18.103 / SW v313 (na merge Rinnegan+boerderij). |
@@ -126,6 +133,11 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-26 | — | **User:** monster diversiteit ~2× (137→281): +60 boerderij-op-hol +84 dierentuin-uitbraak (24 arts, grote sizes), ranch/safari golven, vaker reuzen. v1.18.101 / SW v311. |
 | 2026-07-26 | **12** | Content c5: weapon/pet rarity chips n/tot, volgende-wapen unlock hint, hub icon SVG data-URI fallback bij stale SW. v1.18.100 / SW v310. |
 | 2026-07-26 | **8** | PWA c5: speel.html SW register + offline share cache; SW canonical puts voor speel/ipad/android; install/loop shell check incl. speel; smoke-pwa-shell in test+doctor. v1.18.99 / SW v309. |
+| 2026-07-26 | **6** | Achterstallig audio LIVE: SFX/battle diversiteit + top-SFX polish + d6 pause → main. v1.18.112 / SW v322. |
+| 2026-07-26 | **6** | Merge d6 pause-duck van main; pause UI allowlist +bonus/win/pickup/gamble; versie na dual-108 → v1.18.109 / SW v319. |
+| 2026-07-26 | — | Merge main: audio diversity PR + zone weapons/grote bazen — playFightBgm behouden, colossal banners behouden. v1.18.108 / SW v318. |
+| 2026-07-26 | **6** | Top-SFX polish: `hit` samples + priority load, rijkere punch/hit/select/combo synth, battle/menu lead×2 + groove layers. v1.18.104 / SW v314. |
+| 2026-07-26 | **6** | Audio diversiteit ×2: Kenney SFX samples ~311→685 (~6/id), battle/elite/boss/tide BGM-pools + `playFightBgm` rotatie, bredere pitch/synth-alt. v1.18.103 / SW v313. |
 | 2026-07-26 | **3** | Versus 2P c5: pause Wissel kant (swapVsSides), TOT rating chip in HUD + pauze, swap.svg chrome. v1.18.98 / SW v308. |
 | 2026-07-26 | **17** | Stabiliteit tooling: smoke Puppeteer-tests (gamble/levelup/petwave/wave12/adventure) starten nu eigen static server via `smoke-static-server.mjs` — `npm test` faalde in cloud VM met ERR_CONNECTION_REFUSED. v1.18.97. |
 | 2026-07-26 | **20** | Code health c5: skillLabel duplicate merge (object+flat i18n), dead code prune (syncPlayLayerWithoutGuard, syncCharFightBtn, eggDailyLine, rollD20Polish, playerWalkRightInput, utilitySkillActive, ensureActiveJutsuValid). v1.18.96 / SW v306. |
