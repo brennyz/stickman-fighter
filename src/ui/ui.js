@@ -2096,21 +2096,54 @@ const UI = {
   renderLevels() {
     try {
     bumpLevelHoldGen();
+    const diffBar = document.getElementById('levelDiffBar');
     const bar = document.getElementById('levelIslandBar');
     const info = document.getElementById('levelIslandInfo');
     const grid = document.getElementById('levelGrid');
     if (!grid) return;
-    const pick = this.advIslandPick || currentAdvIsland();
+    const wantDiff = currentAdvDiff();
+    const activeDiff = advDiffAvailable(wantDiff) ? wantDiff : 'normal';
+    if (activeDiff !== wantDiff) save.advDiff = activeDiff;
+    if (diffBar) {
+      diffBar.innerHTML = '';
+      for (const meta of ADV_DIFFS) {
+        const ok = advDiffAvailable(meta.id);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'diff-tab' + (activeDiff === meta.id ? ' active' : '') + (ok ? '' : ' locked');
+        btn.style.setProperty('--diff-accent', meta.accent);
+        btn.setAttribute('role', 'tab');
+        btn.setAttribute('aria-selected', activeDiff === meta.id ? 'true' : 'false');
+        const label = advDiffLabel(meta.id);
+        const modelTag = meta.model && meta.model !== '1.0'
+          ? `<span class="diff-tab-model">${meta.model}</span>` : '';
+        btn.innerHTML = `<span class="diff-tab-name">${t('ui.diff.' + meta.id)}</span>${modelTag}` +
+          (ok ? '' : `<span class="diff-tab-lock">${SVG_LOCK_ICON}</span>`);
+        btn.title = ok
+          ? (meta.id === 'normal' ? t('ui.diffTipNormal') : t('ui.diffTipHard', { name: label }))
+          : advDiffUnlockHint(meta.id);
+        if (ok) {
+          bindPress(btn, () => safeUiAction(() => {
+            AudioSys.sfx('select');
+            setAdvDiff(meta.id);
+            UI.advIslandPick = currentAdvIsland(meta.id);
+            UI.renderLevels();
+          }, 'pickDiff/' + meta.id, t('ui.errPickIsland')));
+        }
+        diffBar.appendChild(btn);
+      }
+    }
+    const pick = this.advIslandPick || currentAdvIsland(activeDiff);
     this.advIslandPick = pick;
     if (bar) {
       bar.innerHTML = '';
       for (const isl of ADVENTURE_ISLANDS) {
-        const ok = islandUnlocked(isl.id);
+        const ok = islandUnlocked(isl.id, activeDiff);
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'island-tab' + (pick === isl.id ? ' active' : '') + (ok ? '' : ' locked');
         btn.style.setProperty('--isl-accent', isl.accent);
-        const prog = islandProgress(isl.id);
+        const prog = islandProgress(isl.id, activeDiff);
         const pct = Math.round(prog.cleared / prog.total * 100);
         const islName = islandLabel(isl.id, 'name');
         const islSub = islandLabel(isl.id, 'sub');
@@ -2132,24 +2165,26 @@ const UI = {
     const islMeta = ADVENTURE_ISLANDS[pick - 1] || ADVENTURE_ISLANDS[0];
     const range = islandLevelRange(pick);
     const wCap = adventureWeaponCapForLevel(range.start);
-    const prog = islandProgress(pick);
+    const prog = islandProgress(pick, activeDiff);
     const pct = Math.round(prog.cleared / prog.total * 100);
+    const unlocked = advUnlockedLevel(activeDiff);
+    const masterLv = masterBuffLevel(activeDiff);
     if (info) {
-      const mb = save.advMasterBuff;
       info.innerHTML =
         `<div class="island-info-head">` +
         `<span class="island-info-ico">${islMeta.icon}</span>` +
         `<div class="island-info-text">` +
         `<b style="color:${islMeta.accent}">${islandLabel(islMeta.id, 'name')}</b> · ${islandLabel(islMeta.id, 'sub')}` +
         `<div class="island-info-sub">${t('ui.islandInfoSub', { cap: wCap, cleared: prog.cleared, total: prog.total, stars: prog.stars })}` +
+        (activeDiff !== 'normal' ? t('ui.islandDiffTag', { diff: advDiffLabel(activeDiff) }) : '') +
         (pick < 5 ? t('ui.islandBossGate', { lv: pick * LEVELS_PER_ISLAND }) : '') +
         `</div></div></div>` +
         `<div class="island-prog-track island-info-prog" title="${t('island.levelsProg')}"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
         `<div class="island-prog-track island-info-stars" title="${t('island.starsProg')}"><i style="width:${Math.round(prog.stars / Math.max(1, prog.maxStars) * 100)}%"></i></div>` +
         (() => {
           const onboard = adventureIslandHintLine();
-          const mbLine = mb && mb >= range.start && mb <= range.end
-            ? `<span class="island-info-chip master">${t('ui.masterBuffChip', { lv: mb })}</span>`
+          const mbLine = masterLv && masterLv >= range.start && masterLv <= range.end
+            ? `<span class="island-info-chip master">${t('ui.masterBuffChip', { lv: masterLv })}</span>`
             : '';
           const chips = [
             onboard ? `<span class="island-info-chip onboard">${onboard}</span>` : '',
@@ -2159,16 +2194,20 @@ const UI = {
         })();
     }
     grid.innerHTML = '';
+    grid.className = 'grid island-grid' + (activeDiff !== 'normal' ? ' diff-' + activeDiff : '');
     for (let n = range.start; n <= range.end; n++) {
       const el = document.createElement('div');
       const boss = !!BOSS_AT[n];
-      const locked = n > save.unlocked;
-      const infoLv = buildLevel(n);
+      const locked = n > unlocked;
+      const cleared = isAdvLevelCleared(n, activeDiff);
+      const infoLv = buildLevel(n, activeDiff);
       const rar = rarityOf(infoLv.rarityCap);
-      const fails = advFailCount(n);
-      el.className = 'lvl' + (boss ? ' boss' : '') + (locked ? ' locked' : '') + (n < save.unlocked ? ' cleared' : '') +
-        (!locked && n === save.unlocked ? ' lvl-current' : '') +
-        (save.advMasterBuff === n ? ' master-buff' : '');
+      const fails = advFailCount(n, activeDiff);
+      const starsN = advStarsFor(n, activeDiff);
+      el.className = 'lvl' + (boss ? ' boss' : '') + (locked ? ' locked' : '') + (cleared ? ' cleared' : '') +
+        (!locked && n === unlocked && !cleared ? ' lvl-current' : '') +
+        (masterLv === n ? ' master-buff' : '') +
+        (activeDiff !== 'normal' ? ' lvl-' + activeDiff : '');
       el.style.boxShadow = locked ? 'none' : `0 5px 0 rgba(0,0,0,.35), 0 0 0 2px ${rar.color}55`;
       const waveStrip = infoLv.waves.map((_, wi) => {
         const meta = infoLv.waveMeta && infoLv.waveMeta[wi];
@@ -2179,17 +2218,20 @@ const UI = {
         else if (trait === 'flyers') cls += ' trait-fly';
         else if (trait === 'rush') cls += ' trait-rush';
         else if (trait === 'elite') cls += ' trait-elite';
+        else if (trait === 'ranch') cls += ' trait-ranch';
+        else if (trait === 'safari') cls += ' trait-safari';
+        else if (trait === 'tide') cls += ' trait-tide';
         return `<i class="${cls}"></i>`;
       }).join('');
       el.innerHTML = locked
         ? SVG_LOCK_ICON
         : `${n}${boss ? `<small>${t('ui.boss')}</small>` : `<small style="color:${rar.color}">${rarityLabel(infoLv.rarityCap)}</small>`}` +
           `<span class="lvl-wave-strip" aria-hidden="true">${waveStrip}</span>` +
-          (save.stars[n] ? `<span class="lvl-stars">${'★'.repeat(save.stars[n])}</span>` : '') +
+          (starsN ? `<span class="lvl-stars">${'★'.repeat(starsN)}</span>` : '') +
           (fails > 0 && !locked ? `<span class="lvl-fails">${fails}/5</span>` : '') +
-          (save.advMasterBuff === n ? '<span class="lvl-master">+20%</span>' : '');
+          (masterLv === n ? '<span class="lvl-master">+20%</span>' : '');
       if (!locked) {
-        const best = save.stars[n] || 0;
+        const best = starsN || 0;
         el.title = levelTileTip(n, pick, infoLv, boss, best, fails);
         let holdT = null;
         let holdSkip = false;

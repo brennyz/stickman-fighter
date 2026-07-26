@@ -435,12 +435,13 @@ const BOSS_AT = {
   50: [{ sp: 'guvvedrak', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst', elite: true }],
 };
 
-function weightedPick(pool, n) {
+function weightedPick(pool, n, rarityBias) {
   const safe = (pool || []).filter((id) => SPECIES[id]);
   const use = safe.length ? safe : ['slymo'];
+  const bias = Number(rarityBias) || 0;
   const weights = use.map(id => {
     const o = rarityOf(SPECIES[id].rarity).order;
-    return Math.max(0.3, 1.5 - o * 0.22 + Math.min(n, 45) * 0.012 * o);
+    return Math.max(0.3, 1.5 - o * 0.22 + Math.min(n, 45) * 0.012 * o + bias * o * 0.35);
   });
   const sum = weights.reduce((a, b) => a + b, 0);
   let r = Math.random() * sum;
@@ -514,9 +515,9 @@ function isBossWave(level, waveIdx) {
   return !!(level && level.boss && waveIdx === level.waves.length - 1);
 }
 
-function rollWaveGiant(n, elite, spId) {
+function rollWaveGiant(n, elite, spId, giantBonus) {
   if (elite || n < 2) return false;
-  let chance = GIANT_SPAWN_CHANCE;
+  let chance = GIANT_SPAWN_CHANCE + (Number(giantBonus) || 0);
   const sp = spId && SPECIES[spId];
   if (sp && typeof BEAST_SIZE_ARTS !== 'undefined' && BEAST_SIZE_ARTS.has(sp.art)) {
     chance = Math.min(0.55, chance + BEAST_GIANT_BONUS);
@@ -524,10 +525,26 @@ function rollWaveGiant(n, elite, spId) {
   return Math.random() < chance;
 }
 
-function buildLevel(n) {
-  const hpMul = 1 + (n - 1) * 0.14;
-  const dmgMul = 1 + (n - 1) * 0.08;
-  const maxRarity = n >= 45 ? 5 : n >= 32 ? 4 : n >= 20 ? 3 : n >= 10 ? 2 : n >= 4 ? 1 : 0;
+function maxRarityForAdvLevel(n, diff) {
+  const meta = typeof advDiffMeta === 'function' ? advDiffMeta(diff) : { order: 0, rarityBoost: 0 };
+  let maxRarity = n >= 45 ? 5 : n >= 32 ? 4 : n >= 20 ? 3 : n >= 10 ? 2 : n >= 4 ? 1 : 0;
+  maxRarity = Math.min(5, maxRarity + (meta.rarityBoost || 0));
+  if ((meta.order || 0) >= 1) {
+    maxRarity = Math.max(maxRarity, Math.min(5, meta.order + Math.floor((n - 1) / 8)));
+  }
+  if ((meta.order || 0) >= 2) {
+    maxRarity = Math.max(maxRarity, Math.min(5, 2 + Math.floor((n - 1) / 6)));
+  }
+  return maxRarity;
+}
+
+function buildLevel(n, diffId) {
+  const diff = typeof advDiffMeta === 'function' ? advDiffMeta(diffId) : { id: 'normal', order: 0, hpMul: 1, dmgMul: 1, rarityBoost: 0, eliteBonus: 0, giantBonus: 0, theme: null };
+  const hpMul = (1 + (n - 1) * 0.14) * (diff.hpMul || 1);
+  const dmgMul = (1 + (n - 1) * 0.08) * (diff.dmgMul || 1);
+  const maxRarity = maxRarityForAdvLevel(n, diff.id);
+  const rarityBias = diff.order || 0;
+  const eliteChance = 0.14 + (diff.eliteBonus || 0);
   const fightPool = Object.keys(UNLOCK_AT).filter(id => {
     const sp = SPECIES[id];
     return sp && UNLOCK_AT[id] <= n && rarityOf(sp.rarity).order <= maxRarity && id !== 'guvvedrak';
@@ -545,15 +562,15 @@ function buildLevel(n) {
   for (let w = 0; w < waveCount; w++) {
     const list = [];
     for (let i = 0; i < perWave; i++) {
-      const sp = weightedPick(pool, n);
+      const sp = weightedPick(pool, n, rarityBias);
       if (!SPECIES[sp]) continue;
-      const rareElite = rarityOf(SPECIES[sp].rarity).order >= 3 && Math.random() < 0.14;
-      list.push({ sp, elite: rareElite, giant: rollWaveGiant(n, rareElite, sp) });
+      const rareElite = rarityOf(SPECIES[sp].rarity).order >= 3 && Math.random() < eliteChance;
+      list.push({ sp, elite: rareElite, giant: rollWaveGiant(n, rareElite, sp, diff.giantBonus) });
     }
     const meta = { trait: null, spawnMul: 1, label: '' };
     const roll = Math.random();
     if (flyPool.length && n >= 3 && roll < 0.22) {
-      list[Math.floor(Math.random() * list.length)].sp = weightedPick(flyPool, n);
+      list[Math.floor(Math.random() * list.length)].sp = weightedPick(flyPool, n, rarityBias);
       meta.trait = 'flyers';
       meta.label = 'Vliegers — mik omhoog!';
     } else if (roll < 0.36) {
@@ -578,9 +595,9 @@ function buildLevel(n) {
       if (farmPool.length) {
         for (let i = 0; i < list.length; i++) {
           if (Math.random() < 0.72) {
-            const fp = weightedPick(farmPool, n);
+            const fp = weightedPick(farmPool, n, rarityBias);
             list[i].sp = fp;
-            list[i].giant = list[i].giant || rollWaveGiant(n, !!list[i].elite, fp);
+            list[i].giant = list[i].giant || rollWaveGiant(n, !!list[i].elite, fp, diff.giantBonus);
           }
         }
       }
@@ -592,15 +609,15 @@ function buildLevel(n) {
       if (zooPool.length) {
         for (let i = 0; i < list.length; i++) {
           if (Math.random() < 0.72) {
-            const zp = weightedPick(zooPool, n);
+            const zp = weightedPick(zooPool, n, rarityBias);
             list[i].sp = zp;
             list[i].giant = true; // dierentuin: altijd grote grote versies
           }
         }
       }
     } else if (n >= 7 && roll < 0.76) {
-      const sp = weightedPick(pool, n);
-      list.push({ sp, elite: true, giant: rollWaveGiant(n, true, sp) });
+      const sp = weightedPick(pool, n, rarityBias);
+      list.push({ sp, elite: true, giant: rollWaveGiant(n, true, sp, diff.giantBonus) });
       meta.trait = 'elite';
       meta.label = 'Extra elite';
     }
@@ -611,15 +628,22 @@ function buildLevel(n) {
     const bossWave = BOSS_AT[n].map(x => Object.assign({}, x, { bossCore: !!x.elite }));
     const hordePad = Math.min(3 + Math.floor(n / 8), 10);
     for (let i = 0; i < hordePad; i++) {
-      const elite = Math.random() < 0.1;
-      const bsp = weightedPick(pool, n); bossWave.push({ sp: bsp, elite, giant: rollWaveGiant(n, elite, bsp) });
+      const elite = Math.random() < (0.1 + (diff.eliteBonus || 0) * 0.5);
+      const bsp = weightedPick(pool, n, rarityBias);
+      bossWave.push({ sp: bsp, elite, giant: rollWaveGiant(n, elite, bsp, diff.giantBonus) });
     }
     waves.push(bossWave);
     waveMeta.push({ trait: 'boss', spawnMul: 1, label: 'Baas-golf' });
   }
-  const theme = WORLD_THEMES[n - 1] || 'cyber';
+  let theme = WORLD_THEMES[n - 1] || 'cyber';
+  if (diff.theme) theme = diff.theme;
   const rarityCap = ['common','uncommon','rare','epic','legendary','mythic'][maxRarity];
-  return { n, waves, waveMeta, hpMul, dmgMul, theme, boss: !!BOSS_AT[n], rarityCap };
+  return {
+    n, waves, waveMeta, hpMul, dmgMul, theme, boss: !!BOSS_AT[n], rarityCap,
+    diff: diff.id || 'normal',
+    speedMul: diff.speedMul || 1,
+    model: diff.model || '1.0',
+  };
 }
 
 const WAVE_TRAIT_BANNER = {

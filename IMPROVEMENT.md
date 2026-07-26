@@ -115,6 +115,8 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-07-26 | — | **User:** grootste bazen (bossCore/super) — grotere intro-tekst + naamplaat, soms colossaal ×2 size, veel meer HP. v1.18.103 / SW v313 (na merge Rinnegan+boerderij). |
 | 2026-07-26 | — | **Rinnegan check:** upgrade-strook dikker (Lv0 r0 42 → Lv5 ~78), smoke + merge main. v1.18.102 / SW v312. |
 | 2026-07-26 | — | **Rinnegan:** pull-orb → tweerichtings lichtschits-explosie (slash), strook tapert met afstand; dmg/kb omhoog. v1.18.101 / SW v311. |
+| 2026-07-26 | — | **Nightmare 2.0 / Hell 3.0:** model-labels, sterkere vuur/lava/schreeuw-visuals, HUD-chip, snellere vijanden + aura, merge boerderij/dierentuin. v1.18.102 / SW v312. |
+| 2026-07-26 | — | **Endgame diffs:** Normal / Nightmare 2.0 / Hell 3.0 na adventure clear. Harder HP/DMG + wildere rariteiten; Nightmare vuur-bg; Hell lava + schreeuwende stickmans. |
 | 2026-07-26 | — | **User:** monster diversiteit ~2× (137→281): +60 boerderij-op-hol +84 dierentuin-uitbraak (24 arts, grote sizes), ranch/safari golven, vaker reuzen. v1.18.101 / SW v311. |
 | 2026-07-26 | **12** | Content c5: weapon/pet rarity chips n/tot, volgende-wapen unlock hint, hub icon SVG data-URI fallback bij stale SW. v1.18.100 / SW v310. |
 | 2026-07-26 | **8** | PWA c5: speel.html SW register + offline share cache; SW canonical puts voor speel/ipad/android; install/loop shell check incl. speel; smoke-pwa-shell in test+doctor. v1.18.99 / SW v309. |

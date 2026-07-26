@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.103';
+const APP_VERSION = '1.18.104';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 313;
+const SW_CACHE_REV = 314;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -15,6 +15,13 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
 
 
   advIsland: 0, advFails: {}, advMasterBuff: null,
+  /** Normal / Nightmare / Hell — Epic Seven-stijl endgame tiers */
+  advDiff: 'normal',
+  advCleared: { normal: false, nightmare: false, hell: false },
+  advHard: {
+    nightmare: { unlocked: 1, stars: {}, fails: {}, masterBuff: null },
+    hell: { unlocked: 1, stars: {}, fails: {}, masterBuff: null },
+  },
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
@@ -24,6 +31,151 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
 const MAX_LEVEL = 50;
 const LEVELS_PER_ISLAND = 10;
 const ISLAND_WEAPON_CAPS = [10, 20, 30, 40, 48];
+/** Avontuur moeilijkheidsgraden — Normal eerst; Nightmare/Hell na clear. */
+const ADV_DIFFS = [
+  { id: 'normal', order: 0, model: '1.0', accent: '#5ad06a', hpMul: 1, dmgMul: 1, rarityBoost: 0, eliteBonus: 0, giantBonus: 0, theme: null, xpMul: 1, dropMul: 1, speedMul: 1, enrageMul: 1 },
+  { id: 'nightmare', order: 1, model: '2.0', accent: '#ff7a4d', hpMul: 1.42, dmgMul: 1.32, rarityBoost: 1, eliteBonus: 0.12, giantBonus: 0.08, theme: 'nightmare', xpMul: 1.28, dropMul: 1.35, speedMul: 1.06, enrageMul: 1.1 },
+  { id: 'hell', order: 2, model: '3.0', accent: '#ff4a4a', hpMul: 1.85, dmgMul: 1.65, rarityBoost: 2, eliteBonus: 0.22, giantBonus: 0.12, theme: 'hell', xpMul: 1.55, dropMul: 1.65, speedMul: 1.12, enrageMul: 1.2 },
+];
+const ADV_DIFF_IDS = ADV_DIFFS.map((d) => d.id);
+function emptyAdvHardBag() {
+  return { unlocked: 1, stars: {}, fails: {}, masterBuff: null };
+}
+function advDiffMeta(id) {
+  return ADV_DIFFS.find((d) => d.id === id) || ADV_DIFFS[0];
+}
+function normalizeAdvDiffId(id) {
+  return ADV_DIFF_IDS.includes(id) ? id : 'normal';
+}
+function currentAdvDiff() {
+  return normalizeAdvDiffId(save && save.advDiff);
+}
+function setAdvDiff(id) {
+  const next = normalizeAdvDiffId(id);
+  if (!advDiffAvailable(next)) return false;
+  save.advDiff = next;
+  persist();
+  return true;
+}
+function advDiffAvailable(id) {
+  const d = normalizeAdvDiffId(id);
+  if (d === 'normal') return true;
+  const cleared = (save && save.advCleared) || {};
+  if (d === 'nightmare') return !!cleared.normal;
+  if (d === 'hell') return !!cleared.nightmare;
+  return false;
+}
+function advDiffLabel(id) {
+  const meta = advDiffMeta(id);
+  const name = typeof t === 'function' ? t('ui.diff.' + meta.id) : meta.id;
+  return meta.model && meta.model !== '1.0' ? (name + ' ' + meta.model) : name;
+}
+function advDiffShort(id) {
+  const meta = advDiffMeta(id);
+  if (meta.id === 'nightmare') return 'NM 2.0';
+  if (meta.id === 'hell') return 'HELL 3.0';
+  return 'NORMAL';
+}
+function advDiffUnlockHint(id) {
+  const d = normalizeAdvDiffId(id);
+  if (d === 'nightmare') return typeof t === 'function' ? t('ui.diffUnlockNightmare') : 'Clear Normal Lv 50';
+  if (d === 'hell') return typeof t === 'function' ? t('ui.diffUnlockHell') : 'Clear Nightmare Lv 50';
+  return '';
+}
+function ensureAdvHardBag(diff) {
+  const d = normalizeAdvDiffId(diff);
+  if (d === 'normal') return null;
+  if (!save.advHard || typeof save.advHard !== 'object') save.advHard = {};
+  if (!save.advHard[d] || typeof save.advHard[d] !== 'object') save.advHard[d] = emptyAdvHardBag();
+  const bag = save.advHard[d];
+  if (!bag.stars || typeof bag.stars !== 'object') bag.stars = {};
+  if (!bag.fails || typeof bag.fails !== 'object') bag.fails = {};
+  return bag;
+}
+function advUnlockedLevel(diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
+  if (d === 'normal') return clamp(Math.floor(Number(save.unlocked) || 1), 1, MAX_LEVEL);
+  const bag = ensureAdvHardBag(d);
+  return clamp(Math.floor(Number(bag.unlocked) || 1), 1, MAX_LEVEL);
+}
+function setAdvUnlockedLevel(n, diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
+  const lv = clamp(Math.floor(Number(n) || 1), 1, MAX_LEVEL);
+  if (d === 'normal') save.unlocked = lv;
+  else ensureAdvHardBag(d).unlocked = lv;
+}
+function advStarsFor(levelN, diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
+  const n = Math.floor(Number(levelN) || 0);
+  if (d === 'normal') return (save.stars && save.stars[n]) || 0;
+  const bag = ensureAdvHardBag(d);
+  return (bag.stars && bag.stars[n]) || 0;
+}
+function setAdvStarsFor(levelN, stars, diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
+  const n = Math.floor(Number(levelN) || 0);
+  const s = clamp(Math.floor(Number(stars) || 0), 0, 3);
+  if (d === 'normal') {
+    if (!save.stars || typeof save.stars !== 'object') save.stars = {};
+    save.stars[n] = s;
+  } else {
+    const bag = ensureAdvHardBag(d);
+    bag.stars[n] = s;
+  }
+}
+function advFailCountFor(levelN, diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
+  const n = Math.floor(Number(levelN) || 0);
+  if (d === 'normal') return (save.advFails && save.advFails[n]) || 0;
+  const bag = ensureAdvHardBag(d);
+  return (bag.fails && bag.fails[n]) || 0;
+}
+function bumpAdvFail(levelN, diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
+  const n = Math.floor(Number(levelN) || 0);
+  if (d === 'normal') {
+    if (!save.advFails || typeof save.advFails !== 'object') save.advFails = {};
+    save.advFails[n] = (save.advFails[n] || 0) + 1;
+    return save.advFails[n];
+  }
+  const bag = ensureAdvHardBag(d);
+  bag.fails[n] = (bag.fails[n] || 0) + 1;
+  return bag.fails[n];
+}
+function masterBuffLevel(diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
+  if (d === 'normal') return save.advMasterBuff || null;
+  return ensureAdvHardBag(d).masterBuff || null;
+}
+function setMasterBuffLevel(levelN, diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
+  const mb = levelN == null ? null : clamp(Math.floor(Number(levelN) || 0), 1, MAX_LEVEL);
+  if (d === 'normal') save.advMasterBuff = mb;
+  else ensureAdvHardBag(d).masterBuff = mb;
+}
+function isAdvLevelCleared(n, diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
+  const unlocked = advUnlockedLevel(d);
+  if (n < unlocked) return true;
+  if (n === MAX_LEVEL && unlocked >= MAX_LEVEL) {
+    if (advStarsFor(MAX_LEVEL, d) > 0) return true;
+    if (save.advCleared && save.advCleared[d]) return true;
+  }
+  return false;
+}
+function markAdvDiffCleared(diff) {
+  const d = normalizeAdvDiffId(diff);
+  if (!save.advCleared || typeof save.advCleared !== 'object') {
+    save.advCleared = { normal: false, nightmare: false, hell: false };
+  }
+  save.advCleared[d] = true;
+}
+function advDropChanceMul(diff) {
+  return advDiffMeta(diff || currentAdvDiff()).dropMul || 1;
+}
+function advXpMul(diff) {
+  return advDiffMeta(diff || currentAdvDiff()).xpMul || 1;
+}
 const ADVENTURE_ISLANDS = [
   { id: 1, name: 'Oost-eiland', sub: 'Lv 1–10 · landweg', accent: '#5ad06a', theme: 'landweg',
     icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20" stroke="#5ad06a" stroke-width="2" stroke-linecap="round"/><path d="M5 20V13l5-8 5 8v7" fill="#43b25b" stroke="#2d8a3e" stroke-width="1"/><circle cx="18" cy="7" r="2.5" fill="#7cf5ff" opacity=".75"/></svg>' },
@@ -37,14 +189,15 @@ const ADVENTURE_ISLANDS = [
     icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18 L7 10 L12 14 L17 10 L20 18 Z" fill="#ff6b9d" stroke="#ffd75e" stroke-width="1"/><circle cx="12" cy="8" r="2.8" fill="#ffd75e"/><path d="M12 2 v2 M12 20 v2 M2 12 h2 M20 12 h2" stroke="#ffd75e" stroke-width="1.2" opacity=".7"/></svg>' },
 ];
 function islandMeta(id) { return ADVENTURE_ISLANDS.find(i => i.id === id) || ADVENTURE_ISLANDS[0]; }
-function islandProgress(islandId) {
+function islandProgress(islandId, diff) {
+  const d = normalizeAdvDiffId(diff || currentAdvDiff());
   const { start, end } = islandLevelRange(islandId);
   const total = end - start + 1;
   let cleared = 0;
   let stars = 0;
   for (let n = start; n <= end; n++) {
-    if (n < save.unlocked) cleared++;
-    stars += save.stars[n] || 0;
+    if (isAdvLevelCleared(n, d)) cleared++;
+    stars += advStarsFor(n, d);
   }
   return { cleared, total, stars, maxStars: total * 3 };
 }
@@ -54,7 +207,7 @@ function adventureProgressLine() {
   const isl = islandMeta(cur);
   return t('island.progress', {
     cur, name: islandLabel(cur, 'name'), cleared: prog.cleared, total: prog.total,
-    unlocked: save.unlocked, max: MAX_LEVEL,
+    unlocked: advUnlockedLevel(), max: MAX_LEVEL,
   });
 }
 function islandFromLevel(n) { return Math.min(5, Math.max(1, Math.ceil(n / LEVELS_PER_ISLAND))); }
@@ -62,21 +215,25 @@ function islandLevelRange(islandId) {
   const start = (islandId - 1) * LEVELS_PER_ISLAND + 1;
   return { start, end: Math.min(MAX_LEVEL, start + LEVELS_PER_ISLAND - 1) };
 }
-function currentAdvIsland() { return islandFromLevel(save.unlocked || 1); }
-function islandUnlocked(islandId) {
+function currentAdvIsland(diff) {
+  return islandFromLevel(advUnlockedLevel(diff || currentAdvDiff()) || 1);
+}
+function islandUnlocked(islandId, diff) {
   if (islandId <= 1) return true;
-  return (save.unlocked || 1) > (islandId - 1) * LEVELS_PER_ISLAND;
+  return advUnlockedLevel(diff || currentAdvDiff()) > (islandId - 1) * LEVELS_PER_ISLAND;
 }
 function adventureWeaponCapForLevel(levelN) {
   const idx = Math.min(ISLAND_WEAPON_CAPS.length - 1, Math.max(0, Math.ceil(levelN / LEVELS_PER_ISLAND) - 1));
   return ISLAND_WEAPON_CAPS[idx];
 }
-function adventureWeaponCap() { return adventureWeaponCapForLevel(save.unlocked || 1); }
+function adventureWeaponCap() { return adventureWeaponCapForLevel(advUnlockedLevel('normal') || 1); }
 function weaponSkillGated(w) { return w.unlock > adventureWeaponCap(); }
 function weaponUnlockedByLevel(w) { return save.lvl >= w.unlock; }
 function weaponUsableNow(w) { return weaponUnlockedByLevel(w) && !weaponSkillGated(w); }
 function styleSkillGated(st) { return !!(st.needLvl && st.needLvl > adventureWeaponCap()); }
-function masterBuffActive(levelN) { return save.advMasterBuff === levelN; }
+function masterBuffActive(levelN, diff) {
+  return masterBuffLevel(diff || currentAdvDiff()) === levelN;
+}
 function bestWeaponForAdventureCap(cap) {
   let best = weaponById('vuist');
   for (const base of WEAPONS) {
@@ -90,7 +247,7 @@ function playerWeaponForAdventure(levelN) {
   if (w.unlock <= cap) return w;
   return bestWeaponForAdventureCap(cap);
 }
-function advFailCount(levelN) { return (save.advFails && save.advFails[levelN]) || 0; }
+function advFailCount(levelN, diff) { return advFailCountFor(levelN, diff || currentAdvDiff()); }
 function wallRecordPaceDelta(g) {
   const best = save.bestWall || 0;
   if (!g || best <= 0) return null;
@@ -584,6 +741,15 @@ function readSaveJson(raw) {
     }
     merged.tipsSeen = sanitizeTipsSeen(parsed.tipsSeen);
     merged.advFails = Object.assign({}, parsed.advFails || {});
+    merged.advCleared = Object.assign(
+      { normal: false, nightmare: false, hell: false },
+      (parsed.advCleared && typeof parsed.advCleared === 'object') ? parsed.advCleared : {}
+    );
+    merged.advHard = {
+      nightmare: Object.assign(emptyAdvHardBag(), (parsed.advHard && parsed.advHard.nightmare) || {}),
+      hell: Object.assign(emptyAdvHardBag(), (parsed.advHard && parsed.advHard.hell) || {}),
+    };
+    if (typeof parsed.advDiff === 'string') merged.advDiff = parsed.advDiff;
     if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
     if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;
@@ -852,6 +1018,56 @@ function sanitizeSave(s) {
   out.xp = clamp(Math.floor(Number(out.xp) || 0), 0, 999999);
   out.unlocked = clamp(Math.floor(Number(out.unlocked) || 1), 1, maxLevel);
   out.advIsland = clamp(Math.floor(Number(out.advIsland) || 0), 0, 5);
+  out.advDiff = normalizeAdvDiffId(out.advDiff);
+  const clearedIn = (out.advCleared && typeof out.advCleared === 'object') ? out.advCleared : {};
+  out.advCleared = {
+    normal: !!clearedIn.normal,
+    nightmare: !!clearedIn.nightmare,
+    hell: !!clearedIn.hell,
+  };
+  // Migratie: Normal Lv50 gehaald (sterren) → Nightmare vrij
+  if (!out.advCleared.normal) {
+    const s50 = (out.stars && Number(out.stars[50])) || 0;
+    if (out.unlocked >= maxLevel && s50 > 0) out.advCleared.normal = true;
+  }
+  const sanitizeHardBag = (raw) => {
+    const bag = emptyAdvHardBag();
+    const src = (raw && typeof raw === 'object') ? raw : {};
+    bag.unlocked = clamp(Math.floor(Number(src.unlocked) || 1), 1, maxLevel);
+    const stars = {};
+    for (const [k, v] of Object.entries(src.stars || {})) {
+      const n = parseInt(k, 10);
+      if (n >= 1 && n <= maxLevel) stars[n] = clamp(Math.floor(Number(v) || 0), 0, 3);
+    }
+    bag.stars = stars;
+    const fails = {};
+    for (const [k, v] of Object.entries(src.fails || {})) {
+      const n = parseInt(k, 10);
+      if (n >= 1 && n <= maxLevel) fails[n] = clamp(Math.floor(Number(v) || 0), 0, 99);
+    }
+    bag.fails = fails;
+    const mb = parseInt(src.masterBuff, 10);
+    bag.masterBuff = (Number.isFinite(mb) && mb >= 1 && mb <= maxLevel) ? mb : null;
+    return bag;
+  };
+  const hardIn = (out.advHard && typeof out.advHard === 'object') ? out.advHard : {};
+  out.advHard = {
+    nightmare: sanitizeHardBag(hardIn.nightmare),
+    hell: sanitizeHardBag(hardIn.hell),
+  };
+  if (out.advHard.nightmare.unlocked >= maxLevel && (out.advHard.nightmare.stars[50] || 0) > 0) {
+    out.advCleared.nightmare = true;
+  }
+  if (out.advHard.hell.unlocked >= maxLevel && (out.advHard.hell.stars[50] || 0) > 0) {
+    out.advCleared.hell = true;
+  }
+  const canPickDiff = (id) => {
+    if (id === 'normal') return true;
+    if (id === 'nightmare') return !!out.advCleared.normal;
+    if (id === 'hell') return !!out.advCleared.nightmare;
+    return false;
+  };
+  if (!canPickDiff(out.advDiff)) out.advDiff = 'normal';
   const cleanFails = {};
   for (const [k, v] of Object.entries(out.advFails || {})) {
     const n = parseInt(k, 10);
@@ -888,19 +1104,22 @@ function sanitizeSave(s) {
     const lp = out.lastPlay;
     if (!['adventure', 'training', 'wall', 'versus', 'coinrun'].includes(lp.mode)) out.lastPlay = null;
     else {
-      const advCap = lp.mode === 'adventure' ? out.unlocked : maxLevel;
+      const advCap = maxLevel;
       let p1 = typeof lp.p1 === 'string' ? lp.p1.slice(0, 24) : undefined;
       let p2 = typeof lp.p2 === 'string' ? lp.p2.slice(0, 24) : undefined;
       if (typeof VS_ROSTER !== 'undefined') {
         if (p1 && !VS_ROSTER.some(r => r.id === p1)) p1 = undefined;
         if (p2 && !VS_ROSTER.some(r => r.id === p2)) p2 = undefined;
       }
+      const diffId = (lp.mode === 'adventure' && ADV_DIFF_IDS.includes(lp.difficulty))
+        ? lp.difficulty : undefined;
       out.lastPlay = {
         mode: lp.mode,
         level: clamp(Math.floor(Number(lp.level) || 1), 1, advCap),
         p1,
         p2,
       };
+      if (diffId) out.lastPlay.difficulty = diffId;
     }
   } else out.lastPlay = null;
   if (!WEAPONS.some(w => w.id === out.weapon)) out.weapon = 'vuist';

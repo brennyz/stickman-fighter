@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=313">
+<link rel="stylesheet" href="styles/main.css?v=314">
 
 
 
@@ -94,7 +94,7 @@
       <div class="arcade-pre" id="menuArcadePre">KIES JE PAD</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine">insert coin</p>
-      <div class="subtitle" id="menuVerLine">v1.18.103 · arcade</div>
+      <div class="subtitle" id="menuVerLine">v1.18.104 · arcade</div>
     </header>
     <div class="arcade-menu-body menu-landing-body">
       <div class="menu-landing-scroll">
@@ -257,6 +257,7 @@
   <button type="button" class="btn island-help-btn" id="btnIslandHelp" title="Eilanden &amp; skill gate uitleg">?</button>
   <h2 class="head" id="levelScreenHead">Kies een eiland</h2>
   <div class="subtitle" id="levelScreenSub">5 eilanden × 10 levels · <b style="color:#ffd75e">Tik level = Gooi &amp; start</b> · lang indrukken = zonder gok</div>
+  <div id="levelDiffBar" class="diff-bar" role="tablist" aria-label="Moeilijkheid"></div>
   <div class="menu-lang-wrap level-lang-wrap" style="margin:0 auto 12px;width:min(94vw,420px);text-align:center">
     <div id="levelLangBar" class="dex-filter-bar" style="justify-content:center;margin-bottom:0" role="group" aria-label="Taal / Language"></div>
   </div>
@@ -593,12 +594,12 @@
 
 <script>
 /* HTML↔JS handshake: als oude SW nog oude game.js serveert terwijl menu-HTML nieuw is. */
-window.__SF_EXPECT_REV = 313;
-window.__SF_EXPECT_APP = '1.18.103';
+window.__SF_EXPECT_REV = 314;
+window.__SF_EXPECT_APP = '1.18.104';
 </script>
-<script src="tunnel-check.js?v=313"></script>
-<script src="game.js?v=313"></script>
-<script src="install.js?v=313"></script>
+<script src="tunnel-check.js?v=314"></script>
+<script src="game.js?v=314"></script>
+<script src="install.js?v=314"></script>
 <script>
 (function () {
   function nukeStale(reason) {
