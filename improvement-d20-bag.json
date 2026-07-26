@@ -18,21 +18,8 @@
     "remainingCount": 7,
     "cycle": 5
   },
-  "pending": {
-    "face": 3,
-    "category": "Versus 2P \u2014 split controls, rematch, char balance",
-    "rolledAt": "2026-07-24T18:01:29Z",
-    "remainingCount": 7,
-    "cycle": 5
-  },
+  "pending": null,
   "implemented": [
-    {
-      "face": 19,
-      "note": "Muur HUD: timer/combo bars, record chase, tempo/projectie, muur\u00d7",
-      "version": "1.12.9",
-      "doneAt": "2026-07-23T18:15:38Z",
-      "cycle": 1
-    },
     {
       "face": 16,
       "note": "Pages primair in hosting.json/LIVE-LINK + instellingen UI",
@@ -584,6 +571,13 @@
       "note": "skillLabel merge + dead code prune (syncPlayLayerWithoutGuard, syncCharFightBtn, eggDailyLine, rollD20Polish, playerWalkRightInput, utilitySkillActive, ensureActiveJutsuValid)",
       "version": "1.18.96",
       "doneAt": "2026-07-26T14:04:40Z",
+      "cycle": 5
+    },
+    {
+      "face": 3,
+      "note": "pause side-swap + TOT HUD chip (swapVsSides, vsMatchupTotShort)",
+      "version": "1.18.98",
+      "doneAt": "2026-07-26T16:05:25Z",
       "cycle": 5
     }
   ],
