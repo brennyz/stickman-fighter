@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | **15** | ASSET-STYLE structureel: saga/ach/lock/check/island → `assets/ui/*.svg` (HTML+JS helpers), buttons al file-based; SW v303. v1.18.93. |
 | 2026-07-26 | **17** | HOTFIX: pickup life constants terug + shark/octo draw (drops + onzichtbare zwemmers). v1.18.92 / SW v302. |
 | 2026-07-26 | **15** | Collectie-iconen live: soft → arcade ASSET-STYLE (cachebust v1.18.91 / SW v301). |
 | 2026-07-26 | **15** | Collectie-iconen: soft/kinderachtig → ASSET-STYLE arcade (wapens/pets/stijl/skills/upgrades/dex/collect/ei). v1.18.90 / SW v300. |
