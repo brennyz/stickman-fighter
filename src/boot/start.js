@@ -213,13 +213,9 @@ bindPress(document.getElementById('btnUpgrades'), () => {
 bindPress(document.getElementById('btnPets'), () => {
   openCollectionScreen('petScreen', () => UI.renderPets());
 });
-bindPress(document.getElementById('btnChestWeapon'), () => {
+bindPress(document.getElementById('btnChestPull'), () => {
   AudioSys.init();
-  UI.doChestPull('weapon');
-});
-bindPress(document.getElementById('btnChestPet'), () => {
-  AudioSys.init();
-  UI.doChestPull('pet');
+  UI.doChestPull('random');
 });
 bindPress(document.getElementById('btnSummonGotoWeapons'), () => {
   AudioSys.init(); AudioSys.sfx('select');

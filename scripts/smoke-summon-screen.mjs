@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * Smoke: summons screen — no blue-screen regression.
- * Open hub → summonScreen active, canvas hidden, not is-playing.
- * Pull weapon → counters drop, center card shows after delay.
+ * Open hub → summonScreen active (fullscreen), canvas hidden, not is-playing.
+ * Pull random → counters drop, no spoiler toast, center card after delay, is-pulling.
  * Leave to adventure → screens cleared, is-playing.
  */
 import { spawn } from 'child_process';
@@ -52,6 +52,7 @@ async function run() {
   });
   try {
     const page = await browser.newPage();
+    await page.setViewport({ width: 390, height: 844 });
     await page.goto(smokeBaseUrl(8787) + '?sfsmoke=1', { waitUntil: 'load', timeout: 60000 });
     await page.waitForFunction(() => window.__sfBooted && typeof UI !== 'undefined' && typeof openChestSummon === 'function', { timeout: 30000 });
 
@@ -60,6 +61,7 @@ async function run() {
       const summon = document.getElementById('summonScreen');
       const game = document.getElementById('game');
       const actives = [...document.querySelectorAll('.screen.active')].map((s) => s.id);
+      const rect = summon ? summon.getBoundingClientRect() : null;
       return {
         active: actives,
         summonActive: !!(summon && summon.classList.contains('active')),
@@ -68,7 +70,10 @@ async function run() {
         state: typeof state !== 'undefined' ? state : null,
         where: !!(document.getElementById('summonWhereStrip')),
         centerCard: !!(document.getElementById('summonCenterCard')),
-        wLeft: typeof chestWeaponLeft === 'function' ? chestWeaponLeft() : -1,
+        left: typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : -1,
+        fullW: rect ? Math.round(rect.width) : 0,
+        fullH: rect ? Math.round(rect.height) : 0,
+        hasPull: !!document.getElementById('btnChestPull'),
       };
     });
     must(openSnap.summonActive, 'summonScreen not active: ' + JSON.stringify(openSnap.active));
@@ -77,12 +82,18 @@ async function run() {
     must(!openSnap.isPlaying, 'body.is-playing must be false on summon screen');
     must(openSnap.state === 'menu', 'state should be menu, got ' + openSnap.state);
     must(openSnap.where && openSnap.centerCard, 'missing where-strip or center card');
-    must(openSnap.wLeft === 5, 'expected 5 weapon summons, got ' + openSnap.wLeft);
+    must(openSnap.left === 10, 'expected 10 summons, got ' + openSnap.left);
+    must(openSnap.hasPull, 'missing btnChestPull');
+    must(openSnap.fullW >= 360 && openSnap.fullH >= 700, 'summon screen not fullscreen-ish: ' + JSON.stringify(openSnap));
 
     const pullSnap = await page.evaluate(async () => {
-      const before = chestWeaponLeft();
-      UI.doChestPull('weapon');
-      // Wait past card reveal (last 2s of ~5s timeline)
+      const before = chestSummonsLeft();
+      const toastBefore = (document.getElementById('toastHost') || {}).textContent || '';
+      UI.doChestPull('random');
+      const midText = (document.getElementById('summonRevealText') || {}).textContent || '';
+      const toastMid = (document.getElementById('toastHost') || {}).textContent || '';
+      const pulling = !!(document.getElementById('summonScreen') || {}).classList?.contains?.('is-pulling')
+        || document.getElementById('summonScreen')?.classList.contains('is-pulling');
       await new Promise((r) => setTimeout(r, 3400));
       const reveal = document.getElementById('summonReveal');
       const card = document.getElementById('summonCenterCard');
@@ -91,9 +102,10 @@ async function run() {
       const actives = [...document.querySelectorAll('.screen.active')].map((s) => s.id);
       const stageRect = stage ? stage.getBoundingClientRect() : null;
       const railRect = rail ? rail.getBoundingClientRect() : null;
+      const toastAfter = (document.getElementById('toastHost') || {}).textContent || '';
       return {
         before,
-        after: chestWeaponLeft(),
+        after: chestSummonsLeft(),
         cardShow: !!(reveal && reveal.classList.contains('is-card-show')),
         cardOpacity: card ? getComputedStyle(card).opacity : null,
         cardName: (document.getElementById('summonCardName') || {}).textContent || '',
@@ -110,6 +122,12 @@ async function run() {
           const f = document.getElementById('summonStageFallback');
           return !!(f && getComputedStyle(f).display !== 'none');
         })(),
+        midText,
+        toastMid,
+        toastAfter,
+        toastBefore,
+        pulling,
+        endText: (document.getElementById('summonRevealText') || {}).textContent || '',
       };
     });
     must(pullSnap.after === pullSnap.before - 1, 'counter did not drop: ' + JSON.stringify(pullSnap));
@@ -117,7 +135,11 @@ async function run() {
     must(!pullSnap.isPlaying, 'is-playing flipped during pull');
     must(pullSnap.cardShow, 'center card not shown after ~3s');
     must(pullSnap.cardName.length > 0, 'empty center card name');
-    must(pullSnap.railW >= 300, 'summon rail too narrow: ' + pullSnap.railW);
+    must(pullSnap.pulling, 'expected is-pulling immersive mode');
+    must(/kist opent/i.test(pullSnap.midText), 'expected neutral mid text, got: ' + pullSnap.midText);
+    // No spoiler toast during reveal (toast host should stay empty / unchanged vs result text)
+    must(!pullSnap.toastMid || pullSnap.toastMid === pullSnap.toastBefore,
+      'spoiler toast during reveal: ' + pullSnap.toastMid);
     must(pullSnap.stageW >= 280, 'summon stage too narrow: ' + pullSnap.stageW);
     must(pullSnap.videoDisplay === 'block' || pullSnap.fallbackOk, 'video not visible and no fallback: ' + JSON.stringify(pullSnap));
 
@@ -139,32 +161,32 @@ async function run() {
       };
     });
     must(!playSnap.err, 'adventure start failed: ' + playSnap.err);
-    must(playSnap.state === 'play' && playSnap.hasGame, 'expected play+game: ' + JSON.stringify(playSnap));
-    must(playSnap.actives.length === 0, 'screens still active in play (blue risk): ' + JSON.stringify(playSnap.actives));
-    must(playSnap.isPlaying, 'body.is-playing missing in play');
-    must(playSnap.canvasVis === 'visible', 'canvas not visible in play: ' + playSnap.canvasVis);
+    must(playSnap.actives.length === 0, 'screens still active in play: ' + JSON.stringify(playSnap.actives));
+    must(playSnap.isPlaying, 'body.is-playing missing after adventure start');
+    must(playSnap.state === 'play', 'state not play');
+    must(playSnap.canvasVis === 'visible' || playSnap.canvasVis === '', 'canvas not visible in play');
+    must(playSnap.hasGame, 'game instance missing');
 
-    // Mid-fight summon must be blocked
     const blocked = await page.evaluate(() => {
       UI.openSummonHub();
       const actives = [...document.querySelectorAll('.screen.active')].map((s) => s.id);
       return {
         actives,
-        stillPlay: state === 'play' && !!game,
+        stillPlay: typeof state !== 'undefined' ? state === 'play' : false,
         isPlaying: document.body.classList.contains('is-playing'),
       };
     });
-    must(blocked.stillPlay && blocked.isPlaying, 'openSummonHub broke play: ' + JSON.stringify(blocked));
-    must(!blocked.actives.includes('summonScreen'), 'summon opened during fight');
+    must(blocked.actives.length === 0, 'summon opened mid-fight: ' + JSON.stringify(blocked));
+    must(blocked.stillPlay && blocked.isPlaying, 'fight state lost when summon blocked');
 
     console.log('SMOKE_OK summon-screen', JSON.stringify({ openSnap, pullSnap, playSnap, blocked }));
   } finally {
     await browser.close();
-    if (server) try { server.close(); } catch (_) {}
+    if (server && server.close) try { server.close(); } catch (_) {}
   }
 }
 
-run().catch((err) => {
-  console.error('SMOKE_FAIL', err);
+run().catch((e) => {
+  console.error('SMOKE_FAIL', e);
   process.exit(1);
 });

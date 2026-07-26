@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.120';
+const APP_VERSION = '1.18.121';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 330;
+const SW_CACHE_REV = 331;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1273,10 +1273,12 @@ function sanitizeSave(s) {
     if (typeof sanitizeChestDaily === 'function') {
       out.chestDaily = sanitizeChestDaily(out.chestDaily, today);
     } else if (out.chestDaily && typeof out.chestDaily === 'object') {
+      const w = Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.wLeft) || 0)));
+      const p = Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.pLeft) || 0)));
+      const leftRaw = out.chestDaily.left != null ? Number(out.chestDaily.left) : (w + p);
       out.chestDaily = {
         date: today,
-        wLeft: Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.wLeft) || 0))),
-        pLeft: Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.pLeft) || 0))),
+        left: Math.max(0, Math.min(10, Math.floor(Number.isFinite(leftRaw) ? leftRaw : 10))),
         pulls: [],
       };
     } else out.chestDaily = null;

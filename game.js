@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.120';
+const APP_VERSION = '1.18.121';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 330;
+const SW_CACHE_REV = 331;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1520,10 +1520,12 @@ function sanitizeSave(s) {
     if (typeof sanitizeChestDaily === 'function') {
       out.chestDaily = sanitizeChestDaily(out.chestDaily, today);
     } else if (out.chestDaily && typeof out.chestDaily === 'object') {
+      const w = Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.wLeft) || 0)));
+      const p = Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.pLeft) || 0)));
+      const leftRaw = out.chestDaily.left != null ? Number(out.chestDaily.left) : (w + p);
       out.chestDaily = {
         date: today,
-        wLeft: Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.wLeft) || 0))),
-        pLeft: Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.pLeft) || 0))),
+        left: Math.max(0, Math.min(10, Math.floor(Number.isFinite(leftRaw) ? leftRaw : 10))),
         pulls: [],
       };
     } else out.chestDaily = null;
@@ -10390,15 +10392,18 @@ function eggProgressSummary() {
 }
 /* --- src/data/chest-summons.js --- */
 /* ===================== DAILY CHEST SUMMONS ============================ */
-/** Menu-kist: 5 wapen + 5 pet pulls per dag. 5% kans op “leuk” resultaat.
+/** Menu-kist: 10 random pulls/dag (wapen óf pet). Betere drop-odds.
  *  Save-shape (sanitize + UI moeten dit strikt afvangen):
- *    save.chestDaily = { date, wLeft, pLeft, pulls[] }
+ *    save.chestDaily = { date, left, pulls[] }
+ *    (legacy wLeft/pLeft → gemigreerd naar left)
  *    save.chestWeapons = { weaponId: { skill?, at? } }  // early unlock
  *  Bestaande save.summons (ascend epic/legendary) blijft apart. */
 
-const CHEST_DAILY_WEAPON = 5;
-const CHEST_DAILY_PET = 5;
-const CHEST_NICE_CHANCE = 0.05;
+const CHEST_DAILY_TOTAL = 10;
+/** Jackpot / “leuk” roll — was 5%, nu ~14%. */
+const CHEST_NICE_CHANCE = 0.14;
+/** Op non-jackpot: kans op mid-tier unlock i.p.v. alleen coins/junk. */
+const CHEST_GOOD_CHANCE = 0.30;
 const CHEST_PULL_LOG_MAX = 12;
 const CHEST_SKILL_MAX = 48;
 /** Reveal timeline: 5s spectacle; card pops in for the last 2 seconds. */
@@ -10406,6 +10411,10 @@ const SUMMON_REVEAL_TOTAL_MS = 5000;
 const SUMMON_CARD_LAST_MS = 2000;
 const SUMMON_VIDEO_SRC = 'assets/summon/reveal.mp4';
 let _summonVideoOk = null;
+
+/** @deprecated kept for older UI strings — use CHEST_DAILY_TOTAL */
+const CHEST_DAILY_WEAPON = CHEST_DAILY_TOTAL;
+const CHEST_DAILY_PET = CHEST_DAILY_TOTAL;
 
 const CHEST_WEAPON_SKILLS = [
   'Schaduwsteek — crit na dash',
@@ -10437,36 +10446,48 @@ function clampChestLeft(n, max) {
   return Math.max(0, Math.min(max, v));
 }
 
+/** Migrate legacy {wLeft,pLeft} → {left}. */
+function migrateChestLeftFields(raw) {
+  if (!raw || typeof raw !== 'object') return CHEST_DAILY_TOTAL;
+  if (raw.left != null && raw.left !== '') {
+    return clampChestLeft(raw.left, CHEST_DAILY_TOTAL);
+  }
+  const w = clampChestLeft(raw.wLeft, 5);
+  const p = clampChestLeft(raw.pLeft, 5);
+  return clampChestLeft(w + p, CHEST_DAILY_TOTAL);
+}
+
 function ensureChestDaily() {
   if (typeof save === 'undefined' || !save) return null;
   const dk = typeof todayKey === 'function' ? todayKey() : new Date().toISOString().slice(0, 10);
   if (!save.chestDaily || typeof save.chestDaily !== 'object' || save.chestDaily.date !== dk) {
     save.chestDaily = {
       date: dk,
-      wLeft: CHEST_DAILY_WEAPON,
-      pLeft: CHEST_DAILY_PET,
+      left: CHEST_DAILY_TOTAL,
       pulls: [],
     };
   } else {
-    save.chestDaily.wLeft = clampChestLeft(save.chestDaily.wLeft, CHEST_DAILY_WEAPON);
-    save.chestDaily.pLeft = clampChestLeft(save.chestDaily.pLeft, CHEST_DAILY_PET);
+    save.chestDaily.left = migrateChestLeftFields(save.chestDaily);
+    delete save.chestDaily.wLeft;
+    delete save.chestDaily.pLeft;
     if (!Array.isArray(save.chestDaily.pulls)) save.chestDaily.pulls = [];
   }
   return save.chestDaily;
 }
 
-function chestWeaponLeft() {
-  const d = ensureChestDaily();
-  return d ? d.wLeft : 0;
-}
-
-function chestPetLeft() {
-  const d = ensureChestDaily();
-  return d ? d.pLeft : 0;
-}
-
 function chestSummonsLeft() {
-  return chestWeaponLeft() + chestPetLeft();
+  const d = ensureChestDaily();
+  return d ? d.left : 0;
+}
+
+/** @deprecated alias — shared pool */
+function chestWeaponLeft() {
+  return chestSummonsLeft();
+}
+
+/** @deprecated alias — shared pool (0; use chestSummonsLeft) */
+function chestPetLeft() {
+  return 0;
 }
 
 function chestHasSummonsLeft() {
@@ -10505,12 +10526,12 @@ function pushChestPull(entry) {
 function grantChestConsolation(kind) {
   const roll = Math.random();
   if (roll < 0.45) {
-    const coins = 6 + Math.floor(Math.random() * 12);
+    const coins = 8 + Math.floor(Math.random() * 16);
     save.petCoins = (typeof petCoinsBalance === 'function' ? petCoinsBalance() : 0) + coins;
     return { type: 'coins', kind, amount: coins, nice: false };
   }
   if (roll < 0.8) {
-    const xp = 18 + Math.floor(Math.random() * 28);
+    const xp = 22 + Math.floor(Math.random() * 34);
     if (typeof grantMetaXP === 'function') grantMetaXP(xp);
     else save.xp = (save.xp || 0) + xp;
     return { type: 'xp', kind, amount: xp, nice: false };
@@ -10523,14 +10544,35 @@ function grantChestConsolation(kind) {
   };
 }
 
+function grantMidChestWeapon() {
+  const pool = chestBaseWeaponPool();
+  const locked = pool.filter(w =>
+    !weaponUnlockedByLevel(w) &&
+    rarityOf(w.rarity).order >= 1 &&
+    rarityOf(w.rarity).order <= 3 &&
+    w.unlock <= (save.lvl || 1) + 10);
+  if (!locked.length) return null;
+  // Bias toward higher rarity within mid band
+  locked.sort((a, b) => rarityOf(b.rarity).order - rarityOf(a.rarity).order);
+  const top = locked.slice(0, Math.max(3, Math.ceil(locked.length * 0.45)));
+  const w = top[Math.floor(Math.random() * top.length)];
+  const skill = grantChestWeaponUnlock(w.id, chestSkillPick('weapon'));
+  return {
+    type: 'weapon_unlock', kind: 'weapon', nice: false,
+    weaponId: w.id, rarity: w.rarity, skill, name: w.name,
+  };
+}
+
 function grantNiceChestWeapon() {
   const pool = chestBaseWeaponPool();
   const lockedNice = pool.filter(w =>
-    rarityOf(w.rarity).order >= 3 &&
+    rarityOf(w.rarity).order >= 2 &&
     !weaponUnlockedByLevel(w) &&
-    w.unlock <= (save.lvl || 1) + 14);
+    w.unlock <= (save.lvl || 1) + 16);
   if (lockedNice.length) {
-    const w = lockedNice[Math.floor(Math.random() * lockedNice.length)];
+    lockedNice.sort((a, b) => rarityOf(b.rarity).order - rarityOf(a.rarity).order);
+    const pickFrom = lockedNice.slice(0, Math.max(4, Math.ceil(lockedNice.length * 0.5)));
+    const w = pickFrom[Math.floor(Math.random() * pickFrom.length)];
     const skill = grantChestWeaponUnlock(w.id, chestSkillPick('weapon'));
     return {
       type: 'weapon_unlock', kind: 'weapon', nice: true,
@@ -10541,7 +10583,7 @@ function grantNiceChestWeapon() {
   const elig = typeof summonEligibleWeapons === 'function' ? summonEligibleWeapons() : [];
   if (elig.length) {
     const w = elig[Math.floor(Math.random() * elig.length)];
-    const tier = Math.random() < 0.4 ? 'legendary' : 'epic';
+    const tier = Math.random() < 0.45 ? 'legendary' : 'epic';
     if (!save.summons || typeof save.summons !== 'object') save.summons = {};
     const prev = save.summons[w.id];
     if (prev !== 'legendary') save.summons[w.id] = tier;
@@ -10552,8 +10594,7 @@ function grantNiceChestWeapon() {
     };
   }
 
-  // Alle high-tier al binnen — geef alsnog early unlock van hoogste locked
-  const anyLocked = pool.filter(w => !weaponUnlockedByLevel(w) && w.unlock <= (save.lvl || 1) + 20);
+  const anyLocked = pool.filter(w => !weaponUnlockedByLevel(w) && w.unlock <= (save.lvl || 1) + 22);
   if (anyLocked.length) {
     anyLocked.sort((a, b) => rarityOf(b.rarity).order - rarityOf(a.rarity).order);
     const w = anyLocked[0];
@@ -10571,14 +10612,20 @@ function grantNiceChestPet() {
   const untamed = PET_ROSTER.filter(p => !isPetTamed(p.id));
   const nice = untamed.filter(p => {
     const sp = SPECIES[p.speciesId];
-    return sp && rarityOf(sp.rarity).order >= 3;
+    return sp && rarityOf(sp.rarity).order >= 2;
   });
   const pool = nice.length ? nice : untamed.filter(p => {
     const sp = SPECIES[p.speciesId];
-    return sp && rarityOf(sp.rarity).order >= 2;
+    return sp && rarityOf(sp.rarity).order >= 1;
   });
   if (pool.length) {
-    const def = pool[Math.floor(Math.random() * pool.length)];
+    pool.sort((a, b) => {
+      const ra = rarityOf((SPECIES[a.speciesId] || {}).rarity).order;
+      const rb = rarityOf((SPECIES[b.speciesId] || {}).rarity).order;
+      return rb - ra;
+    });
+    const top = pool.slice(0, Math.max(4, Math.ceil(pool.length * 0.5)));
+    const def = top[Math.floor(Math.random() * top.length)];
     const skill = chestSkillPick('pet');
     if (!save.pets || typeof save.pets !== 'object') save.pets = {};
     save.pets[def.id] = { at: Date.now(), src: 'chest', skill, kills: 0 };
@@ -10592,7 +10639,6 @@ function grantNiceChestPet() {
       name: sp ? sp.name : def.id,
     };
   }
-  // Alles al getemd → mythic-achtig ei of coins
   if (typeof hatchEggPet === 'function') {
     const res = hatchEggPet('chest');
     return {
@@ -10605,8 +10651,34 @@ function grantNiceChestPet() {
   return grantChestConsolation('pet');
 }
 
+function grantMidChestPet() {
+  const untamed = PET_ROSTER.filter(p => !isPetTamed(p.id));
+  const mid = untamed.filter(p => {
+    const sp = SPECIES[p.speciesId];
+    return sp && rarityOf(sp.rarity).order >= 1 && rarityOf(sp.rarity).order <= 3;
+  });
+  if (!mid.length) return null;
+  const def = mid[Math.floor(Math.random() * mid.length)];
+  const skill = chestSkillPick('pet');
+  if (!save.pets || typeof save.pets !== 'object') save.pets = {};
+  save.pets[def.id] = { at: Date.now(), src: 'chest', skill, kills: 0 };
+  if (!save.activePet) save.activePet = def.id;
+  save.stats = save.stats || {};
+  save.stats.petsTamed = (save.stats.petsTamed || 0) + 1;
+  const sp = SPECIES[def.speciesId];
+  return {
+    type: 'pet_unlock', kind: 'pet', nice: false,
+    petId: def.id, rarity: sp ? sp.rarity : 'uncommon', skill,
+    name: sp ? sp.name : def.id,
+  };
+}
+
 function grantCommonChestPet() {
-  if (typeof hatchEggPet === 'function' && Math.random() < 0.55) {
+  if (Math.random() < CHEST_GOOD_CHANCE) {
+    const mid = grantMidChestPet();
+    if (mid) return mid;
+  }
+  if (typeof hatchEggPet === 'function' && Math.random() < 0.62) {
     const res = hatchEggPet('chest');
     return {
       type: 'egg', kind: 'pet', nice: false,
@@ -10617,39 +10689,52 @@ function grantCommonChestPet() {
   return grantChestConsolation('pet');
 }
 
+function grantCommonChestWeapon() {
+  if (Math.random() < CHEST_GOOD_CHANCE) {
+    const mid = grantMidChestWeapon();
+    if (mid) return mid;
+  }
+  return grantChestConsolation('weapon');
+}
+
 /**
  * Atomisch genoeg: counters eerst valideren, daarna reward; bij throw rollback counter.
- * @param {'weapon'|'pet'} kind
+ * @param {'weapon'|'pet'|'random'|null|undefined} kind
  */
 function openChestSummon(kind) {
-  if (kind !== 'weapon' && kind !== 'pet') return { ok: false, reason: 'bad_kind' };
   const d = ensureChestDaily();
   if (!d) return { ok: false, reason: 'no_save' };
 
-  const key = kind === 'weapon' ? 'wLeft' : 'pLeft';
-  if (clampChestLeft(d[key], kind === 'weapon' ? CHEST_DAILY_WEAPON : CHEST_DAILY_PET) <= 0) {
-    return { ok: false, reason: 'empty', kind };
+  if (clampChestLeft(d.left, CHEST_DAILY_TOTAL) <= 0) {
+    return { ok: false, reason: 'empty', kind: kind || 'random' };
+  }
+
+  let rollKind = kind;
+  if (rollKind !== 'weapon' && rollKind !== 'pet') {
+    rollKind = Math.random() < 0.5 ? 'weapon' : 'pet';
   }
 
   const before = {
-    wLeft: d.wLeft,
-    pLeft: d.pLeft,
+    left: d.left,
     pullsLen: Array.isArray(d.pulls) ? d.pulls.length : 0,
   };
-  d[key] = clampChestLeft(d[key] - 1, kind === 'weapon' ? CHEST_DAILY_WEAPON : CHEST_DAILY_PET);
+  d.left = clampChestLeft(d.left - 1, CHEST_DAILY_TOTAL);
 
   let result;
   try {
     const nice = Math.random() < CHEST_NICE_CHANCE;
-    if (kind === 'weapon') result = nice ? grantNiceChestWeapon() : grantChestConsolation('weapon');
-    else result = nice ? grantNiceChestPet() : grantCommonChestPet();
-    if (!result || typeof result !== 'object') result = grantChestConsolation(kind);
+    if (rollKind === 'weapon') {
+      result = nice ? grantNiceChestWeapon() : grantCommonChestWeapon();
+    } else {
+      result = nice ? grantNiceChestPet() : grantCommonChestPet();
+    }
+    if (!result || typeof result !== 'object') result = grantChestConsolation(rollKind);
     result.ok = true;
-    result.kind = kind;
+    result.kind = rollKind;
     result.nice = !!result.nice;
-    result.left = { weapon: chestWeaponLeft(), pet: chestPetLeft() };
+    result.left = { total: chestSummonsLeft() };
     pushChestPull({
-      kind,
+      kind: rollKind,
       type: result.type,
       nice: result.nice,
       id: result.weaponId || result.petId || result.eggId || null,
@@ -10661,13 +10746,12 @@ function openChestSummon(kind) {
     try { AudioSys.sfx(result.nice ? 'summon' : 'select'); } catch (_) {}
     return result;
   } catch (err) {
-    d.wLeft = before.wLeft;
-    d.pLeft = before.pLeft;
+    d.left = before.left;
     if (Array.isArray(d.pulls) && d.pulls.length > before.pullsLen) {
       d.pulls = d.pulls.slice(0, before.pullsLen);
     }
     try { console.warn('[chest-summon]', err); } catch (_) {}
-    return { ok: false, reason: 'error', kind };
+    return { ok: false, reason: 'error', kind: rollKind };
   }
 }
 
@@ -10675,23 +10759,19 @@ function sanitizeChestDaily(raw, today) {
   if (!raw || typeof raw !== 'object') {
     return {
       date: today,
-      wLeft: CHEST_DAILY_WEAPON,
-      pLeft: CHEST_DAILY_PET,
+      left: CHEST_DAILY_TOTAL,
       pulls: [],
     };
   }
   const dk = (typeof raw.date === 'string' ? raw.date.slice(0, 10) : null) || today;
   const out = {
     date: dk,
-    wLeft: clampChestLeft(raw.wLeft, CHEST_DAILY_WEAPON),
-    pLeft: clampChestLeft(raw.pLeft, CHEST_DAILY_PET),
+    left: migrateChestLeftFields(raw),
     pulls: [],
   };
-  // Als date ≠ vandaag: reset pulls + full quota (nieuwe dag)
   if (dk !== today) {
     out.date = today;
-    out.wLeft = CHEST_DAILY_WEAPON;
-    out.pLeft = CHEST_DAILY_PET;
+    out.left = CHEST_DAILY_TOTAL;
     return out;
   }
   if (Array.isArray(raw.pulls)) {
@@ -10731,9 +10811,7 @@ function sanitizeChestWeapons(raw) {
 
 function chestResultToast(res) {
   if (!res || !res.ok) {
-    if (res && res.reason === 'empty') {
-      return res.kind === 'pet' ? 'Geen pet-summons meer vandaag' : 'Geen wapen-summons meer vandaag';
-    }
+    if (res && res.reason === 'empty') return 'Geen summons meer vandaag';
     return 'Summon mislukt — probeer opnieuw';
   }
   if (res.type === 'weapon_unlock') {
@@ -29500,12 +29578,11 @@ function hubTileStatLine(hub) {
     case 'summon': {
       try {
         ensureChestDaily();
-        const w = chestWeaponLeft();
-        const p = chestPetLeft();
-        if (w + p <= 0) return 'Op · morgen weer';
-        return `${w} wapen · ${p} pet`;
+        const n = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
+        if (n <= 0) return 'Op · morgen weer';
+        return `${n}× vandaag`;
       } catch (_) {
-        return '5+5 vandaag';
+        return '10 vandaag';
       }
     }
     default:
@@ -30450,20 +30527,15 @@ const UI = {
       }
       if (typeof state !== 'undefined' && state === 'play' && !game) state = 'menu';
       ensureChestDaily();
-      const wLeft = chestWeaponLeft();
-      const pLeft = chestPetLeft();
+      const left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
       const quota = document.getElementById('summonQuota');
       if (quota) {
-        quota.textContent = `Vandaag: ${wLeft}/${CHEST_DAILY_WEAPON} wapen · ${pLeft}/${CHEST_DAILY_PET} pet · 5% jackpot`;
+        quota.textContent = `Vandaag: ${left}/${CHEST_DAILY_TOTAL} random summons`;
       }
-      const wBtn = document.getElementById('btnChestWeapon');
-      const pBtn = document.getElementById('btnChestPet');
-      const wLbl = document.getElementById('chestWeaponLbl');
-      const pLbl = document.getElementById('chestPetLbl');
-      if (wLbl) wLbl.textContent = wLeft > 0 ? `${wLeft} over` : 'Op';
-      if (pLbl) pLbl.textContent = pLeft > 0 ? `${pLeft} over` : 'Op';
-      if (wBtn) wBtn.disabled = wLeft <= 0 || !!this._chestPullBusy;
-      if (pBtn) pBtn.disabled = pLeft <= 0 || !!this._chestPullBusy;
+      const pullBtn = document.getElementById('btnChestPull');
+      const pullLbl = document.getElementById('chestPullLbl');
+      if (pullLbl) pullLbl.textContent = left > 0 ? `${left} over` : 'Op';
+      if (pullBtn) pullBtn.disabled = left <= 0 || !!this._chestPullBusy;
 
       const logEl = document.getElementById('summonLog');
       if (logEl) {
@@ -30496,6 +30568,10 @@ const UI = {
       clearTimeout(this._summonDoneTimer);
       this._summonDoneTimer = null;
     }
+    try {
+      const screen = document.getElementById('summonScreen');
+      if (screen) screen.classList.remove('is-pulling');
+    } catch (_) {}
     try {
       const vid = document.getElementById('summonVideo');
       if (vid) {
@@ -30620,6 +30696,12 @@ const UI = {
     const card = document.getElementById('summonCenterCard');
     if (reveal) reveal.classList.add('is-card-show');
     if (card) card.setAttribute('aria-hidden', 'false');
+    // Spoil only when the card lands — never via toast earlier
+    try {
+      const text = document.getElementById('summonRevealText');
+      const msg = this._summonPendingMsg;
+      if (text && msg) text.textContent = msg;
+    } catch (_) {}
   },
 
   /**
@@ -30628,10 +30710,12 @@ const UI = {
    */
   runSummonRevealTimeline(res) {
     this.clearSummonRevealTimers();
+    const screen = document.getElementById('summonScreen');
     const reveal = document.getElementById('summonReveal');
     const fallback = document.getElementById('summonStageFallback');
     const vid = document.getElementById('summonVideo');
     const rarId = typeof chestResultRarityId === 'function' ? chestResultRarityId(res) : 'common';
+    if (screen) screen.classList.add('is-pulling');
     if (reveal) {
       reveal.dataset.rarity = rarId;
       reveal.classList.toggle('is-nice', !!(res && res.nice));
@@ -30650,6 +30734,10 @@ const UI = {
       }, cardAt);
       this._summonDoneTimer = setTimeout(() => {
         this._chestPullBusy = false;
+        try {
+          const sc = document.getElementById('summonScreen');
+          if (sc) sc.classList.remove('is-pulling');
+        } catch (_) {}
         try { this.renderSummon(); } catch (_) {}
       }, totalMs || SUMMON_REVEAL_TOTAL_MS);
     };
@@ -30724,25 +30812,32 @@ const UI = {
       this._chestPullBusy = true;
       try { this.renderSummon(); } catch (_) {}
 
-      const res = openChestSummon(kind);
+      const res = openChestSummon(kind === 'weapon' || kind === 'pet' ? kind : 'random');
       const text = document.getElementById('summonRevealText');
       const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : 'Mislukt');
-      if (text) text.textContent = msg;
+      // Never spoil via toast/text during the open — only after card
+      this._summonPendingMsg = (res && res.ok) ? msg : null;
+      if (text) text.textContent = (res && res.ok) ? 'Kist opent…' : msg;
 
       if (!res || !res.ok) {
         this._chestPullBusy = false;
+        this._summonPendingMsg = null;
+        try {
+          const sc = document.getElementById('summonScreen');
+          if (sc) sc.classList.remove('is-pulling');
+        } catch (_) {}
         try { UI.toast(msg, 2200); } catch (_) {}
         try { this.renderSummon(); } catch (_) {}
         try { this.renderMenu(); } catch (_) {}
         return;
       }
 
-      try { UI.toast(msg, res.nice ? 3800 : 2400); } catch (_) {}
       this.runSummonRevealTimeline(res);
       try { this.renderMenu(); } catch (_) {}
       try { syncPlayLayer(); } catch (_) {}
     } catch (err) {
       this._chestPullBusy = false;
+      this._summonPendingMsg = null;
       this.clearSummonRevealTimers();
       sfReportError('doChestPull', err, 'Summon mislukt');
       try { ensureVisibleScreen(); } catch (_) {}
@@ -32939,13 +33034,9 @@ bindPress(document.getElementById('btnUpgrades'), () => {
 bindPress(document.getElementById('btnPets'), () => {
   openCollectionScreen('petScreen', () => UI.renderPets());
 });
-bindPress(document.getElementById('btnChestWeapon'), () => {
+bindPress(document.getElementById('btnChestPull'), () => {
   AudioSys.init();
-  UI.doChestPull('weapon');
-});
-bindPress(document.getElementById('btnChestPet'), () => {
-  AudioSys.init();
-  UI.doChestPull('pet');
+  UI.doChestPull('random');
 });
 bindPress(document.getElementById('btnSummonGotoWeapons'), () => {
   AudioSys.init(); AudioSys.sfx('select');
