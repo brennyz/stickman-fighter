@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | — | **Summon-video:** Gemini share preview = te crude pixel-boom; nieuwe prompt stickman + sticks→kist; rarity FX na open. Wacht op mp4. |
 | 2026-07-26 | — | **Plan:** dagelijkse 5+5 summons (wapen/pet) + Gemini summon-video met rarity-lagen (common saai → legendary flitsend). Wacht op user-filmpje. Wishlist `w-20260726T185514`. |
 | 2026-07-26 | — | **LIVE fix:** Nightmare 2.0 / Hell 3.0 + herstel Nachtmerrie/Hel eilanden (Lv51–70) & zone-wapens. v1.18.105 / SW v315. |
 | 2026-07-26 | — | **User: Nachtmerrie/Hel wapens.** +2 eilanden (Lv 51–70), +27 ludieke zone-only wapens met on-hit effecten, rariteiten nightmare/hell, weapons-UI zone/effect badges. v1.18.104 / SW v314. |
