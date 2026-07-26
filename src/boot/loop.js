@@ -155,6 +155,7 @@ function paintMenuHeroCanvas(t) {
   if (typeof drawMenuSemi25dVista === 'function') VISTAS.push(drawMenuSemi25dVista);
   if (typeof drawMenuStonehouseVista === 'function') VISTAS.push(drawMenuStonehouseVista);
   if (typeof drawMenuOpenRoadVista === 'function') VISTAS.push(drawMenuOpenRoadVista);
+  if (typeof drawMenuCaveVista === 'function') VISTAS.push(drawMenuCaveVista);
   const N = VISTAS.length;
   const SLOT = motionReduced() ? 12 : 8;
   const FADE = motionReduced() ? 0.01 : 1.35;

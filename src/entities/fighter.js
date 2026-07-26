@@ -367,20 +367,24 @@ class Fighter {
     if (this.y >= game.ground) {
       const hardLand = !this.onGround && this.vy > 300;
       if (hardLand) AudioSys.sfx('land');
-      // bos: kick photo-sampled leaf/twig pixels (players only — stickfight grit)
-      if (!this.onGround && this.vy > 220 && game.theme === 'bos'
+      // bos/grot: kick photo-sampled grit pixels (players only — stickfight grit)
+      if (!this.onGround && this.vy > 220
+          && (game.theme === 'bos' || game.theme === 'grot')
           && (this.isPlayer || this.playerSlot)
-          && !fxLite() && !(typeof Perf !== 'undefined' && Perf.tier >= 2)
-          && typeof forestFloorKickColors === 'function') {
-        const cols = forestFloorKickColors();
-        const n = motionReduced() ? 2 : (this.vy > 520 ? 6 : 4);
-        const c0 = cols[((this.x | 0) + (n * 3)) % cols.length];
-        const c1 = cols[(n + 2) % cols.length];
-        game.burst(this.x, this.y - 2, c0, n, { kind: 'spark', size: 2 });
-        if (!motionReduced() && n >= 4) {
-          game.burst(this.x + (this.face || 1) * 10, this.y - 1, c1, Math.ceil(n * 0.5), {
-            kind: 'spark', size: 1.7,
-          });
+          && !fxLite() && !(typeof Perf !== 'undefined' && Perf.tier >= 2)) {
+        const cols = game.theme === 'grot' && typeof caveKickColors === 'function'
+          ? caveKickColors()
+          : (typeof forestFloorKickColors === 'function' ? forestFloorKickColors() : null);
+        if (cols && cols.length) {
+          const n = motionReduced() ? 2 : (this.vy > 520 ? 6 : 4);
+          const c0 = cols[((this.x | 0) + (n * 3)) % cols.length];
+          const c1 = cols[(n + 2) % cols.length];
+          game.burst(this.x, this.y - 2, c0, n, { kind: 'spark', size: 2 });
+          if (!motionReduced() && n >= 4) {
+            game.burst(this.x + (this.face || 1) * 10, this.y - 1, c1, Math.ceil(n * 0.5), {
+              kind: 'spark', size: 1.7,
+            });
+          }
         }
       }
       this.y = game.ground; this.vy = 0; this.onGround = true;

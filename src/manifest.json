@@ -29,6 +29,7 @@
   "src/entities/egg-pet.js",
   "src/render/scenery.js",
   "src/render/forest-floor.js",
+  "src/render/cave-scenery.js",
   "src/render/backgrounds.js",
   "src/game/kablam-ui.js",
   "src/game/game.js",
