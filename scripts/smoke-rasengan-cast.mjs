@@ -96,13 +96,24 @@ async function run() {
     const lv4 = castAndCount();
     const dualOk = lv4.length >= 2
       && lv4.some((o) => o.curl < 0)
-      && lv4.some((o) => o.curl > 0);
+      && lv4.some((o) => o.curl > 0)
+      && lv4.every((o) => Math.abs(o.vx) > 50);
 
-    // Laat krul opbouwen
-    for (let i = 0; i < 20; i++) {
+    // ↓-krul bereikt snel de grond — vroeger stierf die daar; nu moet die blijven leven
+    let downAliveAtGround = false;
+    let sawSplit = false;
+    for (let i = 0; i < 36; i++) {
       try { game.update(DT); } catch (e) { errors.push(String(e)); }
+      const alive = game.projectiles.filter((x) => x.kind === 'rasengan' && x.from === 'player');
+      if (alive.length >= 2) {
+        const ys = alive.map((o) => o.y);
+        if (Math.max(...ys) - Math.min(...ys) > 24) sawSplit = true;
+      }
+      const nearFloor = alive.filter((o) => o.y >= game.ground - 40);
+      if (nearFloor.length >= 1 && nearFloor.some((o) => o.life > 0.2)) downAliveAtGround = true;
     }
-    const curled = lv4.filter((o) => o.curl).some((o) => Math.abs(o.vy) > 20);
+    const curled = sawSplit || lv4.some((o) => Math.abs(o.vy0 || 0) > 40);
+    const downSurvived = downAliveAtGround;
 
     save.skillUpgrades.rasengan = { level: 8, shards: 0 };
     startGame('adventure', { level: 1, gamble: null });
@@ -110,10 +121,11 @@ async function run() {
     const tripleOk = lv8.length >= 3
       && lv8.some((o) => !o.curl)
       && lv8.some((o) => o.curl < 0)
-      && lv8.some((o) => o.curl > 0);
+      && lv8.some((o) => o.curl > 0)
+      && lv8.every((o) => Math.abs(o.vx) > 50);
 
     return {
-      ok: errors.length === 0 && horiz && noAimTilt && dualOk && curled && tripleOk
+      ok: errors.length === 0 && horiz && noAimTilt && dualOk && curled && tripleOk && downSurvived
         && rasenganShotMode(0) === 'single'
         && rasenganShotMode(4) === 'dual'
         && rasenganShotMode(8) === 'triple'
@@ -127,6 +139,8 @@ async function run() {
       dualOk,
       curled,
       tripleOk,
+      downSurvived,
+      sawSplit,
       modes: [rasenganShotMode(0), rasenganShotMode(4), rasenganShotMode(8)],
     };
   });

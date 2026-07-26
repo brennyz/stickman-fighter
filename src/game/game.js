@@ -1992,16 +1992,17 @@ class Game {
           spin: behavior === 'disc' ? 0.4 : 0,
         }, critMeta));
       } else if (rasenHoriz) {
-        // Volledig horizontaal + optionele krul (↑/↓) in-vlucht
+        // Volledig horizontaal (geen aim) + optionele krul (↑/↓) in-vlucht
         const curl = opts.curl || 0;
+        const vy0 = opts.vy0 != null ? opts.vy0 : 0;
         this.spawnProjectile(Object.assign({
           x: f.x + face * (40 + ox), y: y0 + oy,
-          vx: face * speed, vy: 0,
+          vx: face * speed, vy: vy0,
           r: ((sk.radius || 28) + jb.radius) * sc, dmg: dmg * sc,
           from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(),
           life: (sk.life || 1.4) * jb.lifeMul * sc,
           spin: 0, pierceRepeat: jb.pierceRepeat,
-          curl, curlAccel: curl ? (opts.curlAccel || 340) : 0, curlMaxVy: opts.curlMaxVy || 240,
+          curl, curlAccel: curl ? (opts.curlAccel || 420) : 0, curlMaxVy: opts.curlMaxVy || 280,
         }, critMeta));
       } else {
         this.spawnProjectile(Object.assign({
@@ -2018,15 +2019,20 @@ class Game {
         ? rasenganShotMode(typeof skillLevel === 'function' ? skillLevel('rasengan') : 0)
         : 'single';
       if (mode === 'triple') {
-        fireProj(0, 0, 1, { curl: 0 });
-        fireProj(face * 6, -5, 0.9, { curl: -1, curlAccel: 360, curlMaxVy: 260 });
-        fireProj(face * 6, 5, 0.9, { curl: 1, curlAccel: 360, curlMaxVy: 260 });
-        try { this.banner(t('banner.rasenganTriple'), 1.1, col, 36); } catch (_) {
-          this.banner('TRIPLE RASENGAN!', 1.1, col, 36);
+        // → rechtdoor + ↑ krul + ↓ krul (duidelijke lanes)
+        fireProj(0, 0, 1.05, { curl: 0 });
+        fireProj(face * 8, -14, 0.92, { curl: -1, vy0: -120, curlAccel: 480, curlMaxVy: 300 });
+        fireProj(face * 8, 14, 0.92, { curl: 1, vy0: 120, curlAccel: 480, curlMaxVy: 300 });
+        try { this.banner(t('banner.rasenganTriple'), 1.15, col, 36); } catch (_) {
+          this.banner('TRIPLE RASENGAN!', 1.15, col, 36);
         }
       } else if (mode === 'dual') {
-        fireProj(face * 4, -4, 0.94, { curl: -1, curlAccel: 320, curlMaxVy: 230 });
-        fireProj(face * 4, 4, 0.94, { curl: 1, curlAccel: 320, curlMaxVy: 230 });
+        // ↑ + ↓ krul — start al met verticale snelheid zodat beide lanes zichtbaar zijn
+        fireProj(face * 6, -12, 0.96, { curl: -1, vy0: -100, curlAccel: 440, curlMaxVy: 280 });
+        fireProj(face * 6, 12, 0.96, { curl: 1, vy0: 100, curlAccel: 440, curlMaxVy: 280 });
+        try { this.banner(t('banner.rasenganDual'), 1.0, col, 32); } catch (_) {
+          this.banner('DUAL RASENGAN!', 1.0, col, 32);
+        }
       } else {
         fireProj(0, 0, 1, { curl: 0 });
       }
@@ -2505,8 +2511,8 @@ class Game {
       p.vy += (p.grav || 0) * dt;
       // Rasengan-krul: vanuit horizontaal omhoog/omlaag buigen
       if (p.curl) {
-        p.vy += p.curl * (p.curlAccel || 320) * dt;
-        const lim = p.curlMaxVy || 240;
+        p.vy += p.curl * (p.curlAccel || 420) * dt;
+        const lim = p.curlMaxVy || 280;
         if (p.vy > lim) p.vy = lim;
         if (p.vy < -lim) p.vy = -lim;
       }
@@ -2541,6 +2547,20 @@ class Game {
         }
       }
       p.x += p.vx * dt; p.y += p.vy * dt;
+      // Rasengan: niet sterven op de grond — anders verdwijnt de ↓-krul meteen (dual/triple leek 1 schot)
+      if (p.kind === 'rasengan') {
+        const floorY = this.ground - (p.r || 16) * 0.35;
+        if (p.y > floorY) {
+          p.y = floorY;
+          if (p.vy > 0) p.vy = 0;
+          if (p.curl > 0) p.curl = 0;
+        }
+        if (p.y < 18) {
+          p.y = 18;
+          if (p.vy < 0) p.vy = 0;
+          if (p.curl < 0) p.curl = 0;
+        }
+      }
       if (p.kind === 'boemerang' && p.returning && p.life > 0) {
         const owner = p.from === 'p2' ? this.p2
           : (p.from === 'player' || p.from === 'p1') ? this.player : null;
@@ -2655,6 +2675,9 @@ class Game {
         if (p.returning && (p.x < -100 || p.x > W + 100 || p.y > this.ground + 50)) {
           p.life = 0;
         }
+      } else if (p.kind === 'rasengan') {
+        // Alleen zijranden — grond wordt hierboven afgehandeld
+        if (p.x < -60 || p.x > W + 60) p.life = 0;
       } else if (p.y > this.ground + 10 || p.x < -60 || p.x > W + 60) {
         p.life = 0;
       }
