@@ -1,5 +1,5 @@
 /* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 5 */
-const CACHE = 'stickfighter-app-v332';
+const CACHE = 'stickfighter-app-v333';
 
 
 
@@ -63,7 +63,6 @@ const ASSETS = [
   './assets/buttons/hub/collect.svg',
   './assets/buttons/hub/continue.svg',
   './assets/buttons/hub/summons.svg',
-  './assets/summon/reveal.mp4',
   './assets/buttons/hub/versus.svg',
   './assets/buttons/modes/dex.svg',
   './assets/buttons/modes/mats.svg',
@@ -189,6 +188,15 @@ self.addEventListener('fetch', (event) => {
   let url;
   try { url = new URL(event.request.url); } catch (_) { return; }
   if (url.origin !== self.location.origin) return;
+
+  // Video/audio: never SW-cache — Range requests break mp4 on iOS/Safari
+  if (
+    event.request.headers.get('range') ||
+    /\.(mp4|webm|mov|m4v)(\?|$)/i.test(url.pathname)
+  ) {
+    event.respondWith(fetch(event.request).catch(() => new Response('', { status: 504 })));
+    return;
+  }
 
   const isDoc = event.request.mode === 'navigate'
     || (event.request.headers.get('accept') || '').includes('text/html');

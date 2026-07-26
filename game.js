@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.122';
+const APP_VERSION = '1.18.123';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 332;
+const SW_CACHE_REV = 333;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -10411,6 +10411,32 @@ const SUMMON_REVEAL_TOTAL_MS = 10000;
 const SUMMON_CARD_LAST_MS = 2000;
 const SUMMON_VIDEO_SRC = 'assets/summon/reveal.mp4';
 let _summonVideoOk = null;
+
+function summonVideoUrl() {
+  const base = (typeof SUMMON_VIDEO_SRC === 'string' && SUMMON_VIDEO_SRC)
+    ? SUMMON_VIDEO_SRC
+    : 'assets/summon/reveal.mp4';
+  const rev = (typeof SW_CACHE_REV !== 'undefined') ? SW_CACHE_REV : 0;
+  return base + (base.includes('?') ? '&' : '?') + 'v=' + rev;
+}
+
+/** Warm the mp4 while the hub is open so pull isn't racing a cold download. */
+function ensureSummonVideoPreloaded() {
+  try {
+    const vid = document.getElementById('summonVideo');
+    if (!vid) return;
+    vid.muted = true;
+    vid.defaultMuted = true;
+    vid.setAttribute('muted', '');
+    vid.setAttribute('playsinline', '');
+    vid.setAttribute('webkit-playsinline', '');
+    const src = summonVideoUrl();
+    if (vid.getAttribute('src') !== src) {
+      vid.setAttribute('src', src);
+      try { vid.load(); } catch (_) {}
+    }
+  } catch (_) {}
+}
 
 /** @deprecated kept for older UI strings — use CHEST_DAILY_TOTAL */
 const CHEST_DAILY_WEAPON = CHEST_DAILY_TOTAL;
@@ -30598,7 +30624,10 @@ const UI = {
       this.clearSummonRevealTimers();
       this._chestPullBusy = false;
       try { if (typeof _summonVideoOk !== 'undefined') _summonVideoOk = null; } catch (_) {}
-      this.safeOpen('summonScreen', () => this.renderSummon(), { msg: 'Summons laden mislukt' });
+      this.safeOpen('summonScreen', () => {
+        this.renderSummon();
+        try { ensureSummonVideoPreloaded(); } catch (_) {}
+      }, { msg: 'Summons laden mislukt' });
     } catch (err) {
       sfReportError('openSummonHub', err, 'Summons openen mislukt');
       try { this.goMenu(); } catch (_) {}
@@ -30754,7 +30783,7 @@ const UI = {
       } catch (_) {}
       if (vid) {
         vid.style.display = 'none';
-        try { vid.removeAttribute('src'); vid.load(); } catch (_) {}
+        try { vid.pause(); } catch (_) {}
       }
       if (fallback) fallback.style.display = '';
       startTimers(SUMMON_REVEAL_TOTAL_MS);
@@ -30765,16 +30794,11 @@ const UI = {
       return;
     }
 
-    const src = vid.getAttribute('data-src') || SUMMON_VIDEO_SRC;
+    const src = (typeof summonVideoUrl === 'function')
+      ? summonVideoUrl()
+      : ((vid.getAttribute('data-src') || SUMMON_VIDEO_SRC) + '?v=' + (typeof SW_CACHE_REV !== 'undefined' ? SW_CACHE_REV : 0));
     let settled = false;
-    const settleFallback = () => {
-      if (settled) return;
-      settled = true;
-      _summonVideoOk = false;
-      useFallback();
-    };
-    vid.onerror = settleFallback;
-    vid.onloadedmetadata = () => {
+    const settleOk = () => {
       if (settled) return;
       settled = true;
       _summonVideoOk = true;
@@ -30784,25 +30808,55 @@ const UI = {
       try { if (screen) screen.classList.add('has-video'); } catch (_) {}
       const durMs = Math.max(
         4000,
-        Math.round((vid.duration || 10) * 1000)
+        Math.round((vid.duration && isFinite(vid.duration) ? vid.duration : 10) * 1000)
       );
       startTimers(durMs);
       try {
+        vid.muted = true;
+        vid.defaultMuted = true;
         vid.currentTime = 0;
         const p = vid.play();
+        // play() reject must NOT kill the reveal — still show frames if any
         if (p && p.catch) p.catch(() => {});
       } catch (_) {}
+    };
+    const settleFallback = () => {
+      if (settled) return;
+      // Soft retry: if browser already has metadata, treat as ok
+      if (vid.readyState >= 1 && vid.duration && isFinite(vid.duration)) {
+        settleOk();
+        return;
+      }
+      settled = true;
+      _summonVideoOk = false;
+      useFallback();
+    };
+    vid.onerror = settleFallback;
+    vid.onloadedmetadata = settleOk;
+    vid.oncanplay = () => {
+      if (!settled && vid.readyState >= 2) settleOk();
     };
     try {
       if (fallback) fallback.style.display = '';
       vid.style.display = 'none';
-      if (!vid.getAttribute('src') || vid.getAttribute('src') !== src) {
+      vid.muted = true;
+      vid.defaultMuted = true;
+      const sameSrc = vid.getAttribute('src') === src;
+      const warm = sameSrc && vid.readyState >= 1 && vid.duration && isFinite(vid.duration);
+      if (!sameSrc) {
         vid.setAttribute('src', src);
+        try { vid.load(); } catch (_) {}
+      } else if (!warm) {
+        try { vid.load(); } catch (_) {}
       }
-      vid.load();
-      setTimeout(() => {
-        if (!settled) settleFallback();
-      }, 1100);
+      if (warm || (vid.readyState >= 1 && vid.duration && isFinite(vid.duration))) {
+        settleOk();
+      } else {
+        // 1.6MB on phone — allow more than 1.1s before fallback
+        setTimeout(() => {
+          if (!settled) settleFallback();
+        }, 4500);
+      }
     } catch (_) {
       settleFallback();
     }

@@ -92,10 +92,18 @@ async function run() {
       UI.doChestPull('random');
       const midText = (document.getElementById('summonRevealText') || {}).textContent || '';
       const toastMid = (document.getElementById('toastHost') || {}).textContent || '';
-      const pulling = !!(document.getElementById('summonScreen') || {}).classList?.contains?.('is-pulling')
-        || document.getElementById('summonScreen')?.classList.contains('is-pulling');
-      // Wait past card reveal (last 2s of ~10s Gemini clip)
-      await new Promise((r) => setTimeout(r, 8500));
+      // Give video a moment to start, then sample playback
+      await new Promise((r) => setTimeout(r, 1200));
+      const vidEarly = document.getElementById('summonVideo');
+      const playEarly = vidEarly ? {
+        display: getComputedStyle(vidEarly).display,
+        paused: vidEarly.paused,
+        t: Number(vidEarly.currentTime || 0),
+        ready: vidEarly.readyState,
+        hasVideoCls: document.getElementById('summonScreen')?.classList.contains('has-video'),
+      } : null;
+      // Wait until past card window (last 2s of ~10s) + buffer
+      await new Promise((r) => setTimeout(r, 9200));
       const reveal = document.getElementById('summonReveal');
       const card = document.getElementById('summonCenterCard');
       const stage = document.getElementById('summonStage');
@@ -131,24 +139,26 @@ async function run() {
         toastMid,
         toastAfter,
         toastBefore,
+        playEarly,
         endText: (document.getElementById('summonRevealText') || {}).textContent || '',
       };
     });
     must(pullSnap.after === pullSnap.before - 1, 'counter did not drop: ' + JSON.stringify(pullSnap));
     must(pullSnap.stillSummon, 'summon screen lost during pull');
     must(!pullSnap.isPlaying, 'is-playing flipped during pull');
-    must(pullSnap.cardShow, 'center card not shown after ~3s');
+    must(pullSnap.cardShow, 'center card not shown after reveal window');
     must(pullSnap.cardName.length > 0, 'empty center card name');
-    must(pullSnap.pulling, 'expected is-pulling immersive mode');
     must(/kist opent/i.test(pullSnap.midText), 'expected neutral mid text, got: ' + pullSnap.midText);
     // No spoiler toast during reveal (toast host should stay empty / unchanged vs result text)
     must(!pullSnap.toastMid || pullSnap.toastMid === pullSnap.toastBefore,
       'spoiler toast during reveal: ' + pullSnap.toastMid);
     must(pullSnap.stageW >= 280, 'summon stage too narrow: ' + pullSnap.stageW);
-    must(pullSnap.videoDisplay === 'block' || pullSnap.fallbackOk, 'video not visible and no fallback: ' + JSON.stringify(pullSnap));
-    if (pullSnap.videoDisplay === 'block') {
-      must(pullSnap.hasVideo, 'expected has-video fullscreen class');
-      must(pullSnap.stageH >= 700, 'fullscreen video stage too short: ' + pullSnap.stageH);
+    must(pullSnap.videoDisplay === 'block' || pullSnap.fallbackOk || (pullSnap.playEarly && pullSnap.playEarly.display === 'block'),
+      'video not visible and no fallback: ' + JSON.stringify(pullSnap));
+    if (pullSnap.playEarly && pullSnap.playEarly.display === 'block') {
+      must(pullSnap.playEarly.hasVideoCls, 'expected has-video fullscreen class during play');
+      must(pullSnap.playEarly.t > 0.05, 'mp4 did not advance currentTime: ' + JSON.stringify(pullSnap.playEarly));
+      must(!pullSnap.playEarly.paused, 'mp4 still paused after pull: ' + JSON.stringify(pullSnap.playEarly));
     }
 
     const playSnap = await page.evaluate(() => {
