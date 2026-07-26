@@ -17,6 +17,7 @@
     "smoke:levelup": "node scripts/smoke-levelup-fight.mjs",
     "smoke:petwave": "node scripts/smoke-pet-wave.mjs",
     "smoke:adventure": "node scripts/smoke-adventure-run.mjs",
+    "smoke:satan": "node scripts/smoke-satan-encounter.mjs",
     "smoke:soak": "node scripts/smoke-soak-minimal.mjs",
     "e2e:adventure": "node scripts/e2e-adventure-blue.mjs",
     "smoke:save": "node scripts/smoke-save-fuzz.mjs",
