@@ -20,8 +20,8 @@
     "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "localMainHead": null,
-    "remoteMainHead": null,
+    "localMainHead": "64d849b",
+    "remoteMainHead": "64d849b",
     "note": "Rasengan CD 2/3/5s · MERGE main · v1.18.117",
     "updated": "2026-07-26T19:35:00Z"
   },
@@ -263,6 +263,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T19:36:11Z",
+      "summary": "Rasengan CD LIVE gemerged · v1.18.117"
+    },
+    {
       "at": "2026-07-26T19:59:00Z",
       "summary": "Rasengan CD LIVE: Lv1–2=2s · Lv3–7=3s · Lv8=5s · v1.18.117"
     },
@@ -357,10 +361,6 @@
     {
       "at": "2026-07-26T18:54:52Z",
       "summary": "SFX/battle diversiteit ~2×: meer Kenney samples + fight BGM-varianten · v1.18.103"
-    },
-    {
-      "at": "2026-07-26T18:54:37Z",
-      "summary": "Restore Nachtmerrie/Hel eilanden + 2.0/3.0 diffs live · v1.18.105"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
