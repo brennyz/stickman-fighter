@@ -621,7 +621,10 @@
   .btn .ico img,
   .menu-dock .tog-ico img,
   .btn.tog .tog-ico img,
-  .sub-home-btn .ico img {
+  .sub-home-btn .ico img,
+  .back-btn .back-btn-ico,
+  #pauseBtn img,
+  .saga-ico {
     display: block;
     width: 28px;
     height: 28px;
@@ -633,6 +636,9 @@
     -webkit-user-drag: none;
     flex-shrink: 0;
   }
+  .back-btn .back-btn-ico { width: 18px; height: 18px; display: inline-block; vertical-align: -0.2em; margin-right: 4px; }
+  #pauseBtn img { width: 22px; height: 22px; margin: 0 auto; }
+  .saga-ico { width: 1em; height: 1em; display: inline-block; vertical-align: -0.15em; margin-right: 2px; }
   .mode-btn .ico img { width: 1.55em; height: 1.55em; }
   .menu-dock .tog-ico img,
   .btn.tog .tog-ico img {
@@ -976,7 +982,8 @@
   .back-btn { position:sticky; top:max(8px, env(safe-area-inset-top)); align-self:flex-start;
       z-index:6; margin:0 0 10px; left:auto;
       background:linear-gradient(180deg,#5a6784,#39445e); padding:10px 20px; font-size:16px;
-      border-radius:14px; z-index:11; touch-action:manipulation; min-height:44px; }
+      border-radius:14px; z-index:11; touch-action:manipulation; min-height:44px;
+      display:inline-flex; align-items:center; gap:2px; }
   body.big-touch .back-btn { padding:14px 22px; font-size:18px; min-height:52px; left:12px; }
   .sub-home-bar { position:sticky; bottom:0; width:min(94vw,720px); margin-top:18px;
     padding:8px 0 max(14px, env(safe-area-inset-bottom)); z-index:3; flex-shrink:0;
@@ -1186,14 +1193,15 @@
       width:48px; height:48px; border-radius:14px; font-size:18px; display:none;
       background:rgba(20,26,48,.8); border:1px solid rgba(255,255,255,.22); color:#fff;
       box-shadow:0 4px 12px rgba(0,0,0,.35); pointer-events:auto;
-      touch-action:manipulation; cursor:pointer; position:relative; }
+      touch-action:manipulation; cursor:pointer; position:relative;
+      padding:0; align-items:center; justify-content:center; }
+  #pauseBtn.show { display:flex; }
   #pauseBtn::before { content:''; position:absolute; inset:-14px; }
   body.big-touch #pauseBtn { width:56px; height:56px; font-size:20px; }
   body.big-touch #pauseBtn::before { inset:-18px; }
-  #pauseBtn.show { display:block; }
   /* Boven canvas (z40) tijdens gevecht — anders verdwijnt pauze onder het speelveld */
   body.is-playing #pauseBtn.show {
-    z-index:50 !important; display:block !important; pointer-events:auto !important;
+    z-index:50 !important; display:flex !important; pointer-events:auto !important;
     visibility:visible !important; opacity:1 !important;
   }
 

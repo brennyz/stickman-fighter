@@ -134,16 +134,35 @@ houd kleuren/stroke volgens ASSET-STYLE, geen emoji, daarna build+smoke.
 
 ## Inventaris — waar knoppen nu leven
 
-| Set | Locatie nu | Doelmap |
-|-----|------------|---------|
-| Hub tiles (4) | `index.html` `.hub-tile-ico` inline SVG | `assets/buttons/hub/` |
-| Mode-rijen | `index.html` `.mode-btn .ico` inline SVG | `assets/buttons/modes/` |
-| Terug / home | `index.html` `.sub-home-btn` / `.back-btn` | `assets/buttons/chrome/` |
-| Missies claim / bonus | `index.html` `#dailyClaimAllBtn` e.d. | `assets/buttons/chrome/` |
-| Pauze / result / settings | `index.html` + JS strings | `assets/buttons/chrome/` |
-| Touch vechtknoppen | `src/core/storage.js` `drawTouchBtnIcon` | **code**, geen PNG (tenzij later gevraagd) |
-| Prestatie / saga | `ACH_ICON_SVG` / `SAGA_ICON_SVG` in JS | optioneel later → `assets/ui/` |
-| PWA icons | `icons/icon-*.png` | blijf hier |
+| Set | Locatie nu | Doelmap | Status |
+|-----|------------|---------|--------|
+| Hub tiles (4) | `index.html` `.hub-tile-ico` | `assets/buttons/hub/` | **Live** |
+| Mode-rijen | `index.html` `.mode-btn .ico` | `assets/buttons/modes/` | **Live** |
+| Nav chrome (terug / pauze / swap) | `.back-btn` / `#pauseBtn` / char-swap | `assets/buttons/chrome/{back,pause,swap}.svg` | **Live** |
+| Home / claim / settings / dock | `index.html` | `assets/buttons/chrome/` | **Live** |
+| Saga-filters | `.char-saga-bar` / dex-filter | `assets/ui/saga-*.svg` | **Live** |
+| Touch vechtknoppen | `src/core/storage.js` `drawTouchBtnIcon` | **code**, geen PNG | code |
+| Prestatie-iconen | `ACH_ICON_SVG` in JS | optioneel later → `assets/ui/` | JS |
+| PWA icons | `icons/icon-*.png` | blijf hier | PNG |
+
+### Nav-set (chrome) — tokens
+
+| Icoon | Pad | Accent | Rol |
+|-------|-----|--------|-----|
+| Terug | `chrome/back.svg` | `ink` `#e8f0ff` | Alle `.back-btn` |
+| Pauze | `chrome/pause.svg` | `ink` | `#pauseBtn` in-gevecht |
+| Swap | `chrome/swap.svg` | `ink` | P1/P2 wissel |
+| Home | `chrome/home.svg` | `ink` | Terug naar menu |
+
+Stroke `2–2.2`, chunky paden, geen emoji-pijlen (`←` / `⏸`).
+
+### Saga-set (`assets/ui/`)
+
+`saga-all`, `saga-fighter`, `saga-ki`, `saga-scroll`, `saga-tide`, `saga-cape`, `saga-dawn` — zelfde stroke-first taal; kleuren per saga (goud / cyan / purple / rood).
+
+### Preview-sheet
+
+Na icon-batch: `scripts/render-button-previews.mjs` → PNG in `assets/buttons/_preview/` (niet verplicht in SW).
 
 ---
 

@@ -1,5 +1,5 @@
 /* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 5 */
-const CACHE = 'stickfighter-app-v319';
+const CACHE = 'stickfighter-app-v320';
 
 
 
@@ -23,6 +23,7 @@ const ASSETS = [
   './icons/icon-192.png',
   './icons/icon-512.png',
   './assets/buttons/chrome/backup.svg',
+  './assets/buttons/chrome/back.svg',
   './assets/buttons/chrome/big-touch.svg',
   './assets/buttons/chrome/bonus.svg',
   './assets/buttons/chrome/claim.svg',
@@ -44,6 +45,7 @@ const ASSETS = [
   './assets/buttons/chrome/missions.svg',
   './assets/buttons/chrome/music.svg',
   './assets/buttons/chrome/next.svg',
+  './assets/buttons/chrome/pause.svg',
   './assets/buttons/chrome/play.svg',
   './assets/buttons/chrome/reduced-motion.svg',
   './assets/buttons/chrome/refresh.svg',
@@ -52,6 +54,7 @@ const ASSETS = [
   './assets/buttons/chrome/shake.svg',
   './assets/buttons/chrome/skip.svg',
   './assets/buttons/chrome/star.svg',
+  './assets/buttons/chrome/swap.svg',
   './assets/buttons/chrome/sync.svg',
   './assets/buttons/chrome/thumb.svg',
   './assets/buttons/chrome/trash.svg',
@@ -68,7 +71,14 @@ const ASSETS = [
   './assets/buttons/modes/training.svg',
   './assets/buttons/modes/upgrades.svg',
   './assets/buttons/modes/wall.svg',
-  './assets/buttons/modes/weapons.svg'
+  './assets/buttons/modes/weapons.svg',
+  './assets/ui/saga-all.svg',
+  './assets/ui/saga-cape.svg',
+  './assets/ui/saga-dawn.svg',
+  './assets/ui/saga-fighter.svg',
+  './assets/ui/saga-ki.svg',
+  './assets/ui/saga-scroll.svg',
+  './assets/ui/saga-tide.svg'
 ];
 
 function offlineFallbackHtml() {

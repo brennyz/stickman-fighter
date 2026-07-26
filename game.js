@@ -252,16 +252,11 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.109';
-/** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 319;
+const APP_VERSION = '1.18.110';
+const SW_CACHE_REV = 320;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   zoneWeapons: {},
-
-
-
-
   advIsland: 0, advFails: {}, advMasterBuff: null,
   /** Normal / Nightmare / Hell — Epic Seven-stijl endgame tiers */
   advDiff: 'normal',
@@ -4079,7 +4074,7 @@ function repairBrokenButtonIcon(img) {
 function hardenButtonIcons(root) {
   try {
     const scope = root && root.querySelectorAll ? root : document;
-    scope.querySelectorAll('img[src*="assets/buttons/"]').forEach((img) => {
+    scope.querySelectorAll('img[src*="assets/buttons/"], img[src*="assets/ui/"]').forEach((img) => {
       if (img.dataset.sfIconHard) return;
       img.dataset.sfIconHard = '1';
       img.decoding = img.decoding || 'async';
