@@ -876,6 +876,40 @@
   .summon-screen.is-pulling .summon-center-card {
     width: min(62%, 260px);
   }
+  /* True edge-to-edge when the real Gemini video is playing */
+  .summon-screen.is-pulling.has-video .summon-reveal {
+    padding: 0;
+    background: #000;
+  }
+  .summon-screen.is-pulling.has-video .summon-stage {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    aspect-ratio: auto;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
+  .summon-screen.is-pulling.has-video .summon-video {
+    object-fit: cover;
+    object-position: center center;
+  }
+  .summon-screen.is-pulling.has-video .summon-reveal-text {
+    position: absolute;
+    left: 50%;
+    bottom: max(18px, calc(env(safe-area-inset-bottom) + 10px));
+    transform: translateX(-50%);
+    z-index: 6;
+    margin: 0;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(0,0,0,.45);
+    max-width: min(92vw, 560px);
+    pointer-events: none;
+  }
+  .summon-screen.is-pulling.has-video .summon-center-card {
+    width: min(70vw, 280px);
+  }
   .summon-reveal {
     width: 100%;
     margin: 0;

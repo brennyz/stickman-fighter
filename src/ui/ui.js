@@ -1834,7 +1834,10 @@ const UI = {
     }
     try {
       const screen = document.getElementById('summonScreen');
-      if (screen) screen.classList.remove('is-pulling');
+      if (screen) {
+        screen.classList.remove('is-pulling');
+        screen.classList.remove('has-video');
+      }
     } catch (_) {}
     try {
       const vid = document.getElementById('summonVideo');
@@ -2000,13 +2003,19 @@ const UI = {
         this._chestPullBusy = false;
         try {
           const sc = document.getElementById('summonScreen');
-          if (sc) sc.classList.remove('is-pulling');
+          if (sc) {
+            sc.classList.remove('is-pulling');
+            sc.classList.remove('has-video');
+          }
         } catch (_) {}
         try { this.renderSummon(); } catch (_) {}
       }, totalMs || SUMMON_REVEAL_TOTAL_MS);
     };
 
     const useFallback = () => {
+      try {
+        if (screen) screen.classList.remove('has-video');
+      } catch (_) {}
       if (vid) {
         vid.style.display = 'none';
         try { vid.removeAttribute('src'); vid.load(); } catch (_) {}
@@ -2036,9 +2045,10 @@ const UI = {
       if (fallback) fallback.style.display = 'none';
       // Must be 'block' — stylesheet sets .summon-video { display:none }
       vid.style.display = 'block';
+      try { if (screen) screen.classList.add('has-video'); } catch (_) {}
       const durMs = Math.max(
-        SUMMON_REVEAL_TOTAL_MS,
-        Math.round((vid.duration || 5) * 1000)
+        4000,
+        Math.round((vid.duration || 10) * 1000)
       );
       startTimers(durMs);
       try {
