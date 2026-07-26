@@ -162,6 +162,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T18:52:22Z",
+      "summary": "Dubbelcheck OK, gemerged main · Nachtmerrie/Hel v1.18.104"
+    },
+    {
       "at": "2026-07-26T18:51:54Z",
       "summary": "Dubbelcheck + merge main · Nachtmerrie/Hel · v1.18.104"
     },
@@ -256,10 +260,6 @@
     {
       "at": "2026-07-26T10:22:00Z",
       "summary": "Collectie-iconen arcade ASSET-STYLE live-push · v1.18.91"
-    },
-    {
-      "at": "2026-07-26T10:07:46Z",
-      "summary": "Stabiliteit: version-restore + mission toast play-guards, partGate tipsSeen · v1.18.90"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
