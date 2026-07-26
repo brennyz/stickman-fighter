@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=330">
+<link rel="stylesheet" href="styles/main.css?v=331">
 
 
 
@@ -94,7 +94,7 @@
       <div class="arcade-pre" id="menuArcadePre">KIES JE PAD</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine">insert coin</p>
-      <div class="subtitle" id="menuVerLine">v1.18.120 · arcade</div>
+      <div class="subtitle" id="menuVerLine">v1.18.121 · arcade</div>
     </header>
     <div class="arcade-menu-body menu-landing-body">
       <div class="menu-landing-scroll">
@@ -133,7 +133,7 @@
               <span class="hub-tile-ico"><img src="assets/buttons/hub/summons.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
               <span class="hub-tile-title">Summons</span>
               <span class="hub-tile-sub">Dagelijkse kist · wapen &amp; pet</span>
-              <span class="hub-tile-stat" data-hub-stat="summon">5+5 vandaag</span>
+              <span class="hub-tile-stat" data-hub-stat="summon">10 vandaag</span>
             </button>
           </div>
           <p class="menu-hub-hint" id="menuHubHint"></p>
@@ -297,7 +297,7 @@
 <div id="summonScreen" class="screen summon-screen">
   <button class="btn back-btn" data-back type="button"><img class="back-btn-ico" src="assets/buttons/chrome/back.svg" alt="" width="18" height="18" decoding="async" draggable="false"> Menu</button>
   <h2 class="head" id="summonScreenHead">Summons</h2>
-  <div class="subtitle" id="summonScreenSub">Dagelijkse kist · 5 wapen + 5 pet · 5% jackpot</div>
+  <div class="subtitle" id="summonScreenSub">Dagelijkse kist · 10× random · wapen of pet</div>
   <div class="summon-rail">
     <div id="summonWhereStrip" class="summon-where" role="note">
       Menu → Summons · buit in Collectie → Wapens / Pets (badge Kist)
@@ -321,16 +321,12 @@
           <div id="summonCardSkill" class="summon-card-skill"></div>
         </div>
       </div>
-      <div id="summonRevealText" class="summon-reveal-text">Tik een kist — reveal + buitkaart</div>
+      <div id="summonRevealText" class="summon-reveal-text">Tik Summon — de kist onthult de buit</div>
     </div>
     <div class="summon-actions">
-      <button type="button" class="btn mode-btn b-weapons big-touch summon-pull-btn" id="btnChestWeapon">
+      <button type="button" class="btn mode-btn b-weapons big-touch summon-pull-btn" id="btnChestPull">
         <span class="ico"><img src="assets/buttons/hub/summons.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
-        <div>Wapen-kist<small id="chestWeaponLbl">5 over</small></div>
-      </button>
-      <button type="button" class="btn mode-btn b-dex big-touch summon-pull-btn" id="btnChestPet">
-        <span class="ico"><img src="assets/buttons/modes/pets.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
-        <div>Pet-kist<small id="chestPetLbl">5 over</small></div>
+        <div>Summon<small id="chestPullLbl">10 over</small></div>
       </button>
     </div>
     <div class="summon-goto-row">
@@ -655,12 +651,12 @@
 
 <script>
 /* HTML↔JS handshake: als oude SW nog oude game.js serveert terwijl menu-HTML nieuw is. */
-window.__SF_EXPECT_REV = 330;
-window.__SF_EXPECT_APP = '1.18.120';
+window.__SF_EXPECT_REV = 331;
+window.__SF_EXPECT_APP = '1.18.121';
 </script>
-<script src="tunnel-check.js?v=330"></script>
-<script src="game.js?v=330"></script>
-<script src="install.js?v=330"></script>
+<script src="tunnel-check.js?v=331"></script>
+<script src="game.js?v=331"></script>
+<script src="install.js?v=331"></script>
 <script>
 (function () {
   function nukeStale(reason) {

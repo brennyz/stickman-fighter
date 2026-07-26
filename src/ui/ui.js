@@ -842,12 +842,11 @@ function hubTileStatLine(hub) {
     case 'summon': {
       try {
         ensureChestDaily();
-        const w = chestWeaponLeft();
-        const p = chestPetLeft();
-        if (w + p <= 0) return 'Op · morgen weer';
-        return `${w} wapen · ${p} pet`;
+        const n = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
+        if (n <= 0) return 'Op · morgen weer';
+        return `${n}× vandaag`;
       } catch (_) {
-        return '5+5 vandaag';
+        return '10 vandaag';
       }
     }
     default:
@@ -1792,20 +1791,15 @@ const UI = {
       }
       if (typeof state !== 'undefined' && state === 'play' && !game) state = 'menu';
       ensureChestDaily();
-      const wLeft = chestWeaponLeft();
-      const pLeft = chestPetLeft();
+      const left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
       const quota = document.getElementById('summonQuota');
       if (quota) {
-        quota.textContent = `Vandaag: ${wLeft}/${CHEST_DAILY_WEAPON} wapen · ${pLeft}/${CHEST_DAILY_PET} pet · 5% jackpot`;
+        quota.textContent = `Vandaag: ${left}/${CHEST_DAILY_TOTAL} random summons`;
       }
-      const wBtn = document.getElementById('btnChestWeapon');
-      const pBtn = document.getElementById('btnChestPet');
-      const wLbl = document.getElementById('chestWeaponLbl');
-      const pLbl = document.getElementById('chestPetLbl');
-      if (wLbl) wLbl.textContent = wLeft > 0 ? `${wLeft} over` : 'Op';
-      if (pLbl) pLbl.textContent = pLeft > 0 ? `${pLeft} over` : 'Op';
-      if (wBtn) wBtn.disabled = wLeft <= 0 || !!this._chestPullBusy;
-      if (pBtn) pBtn.disabled = pLeft <= 0 || !!this._chestPullBusy;
+      const pullBtn = document.getElementById('btnChestPull');
+      const pullLbl = document.getElementById('chestPullLbl');
+      if (pullLbl) pullLbl.textContent = left > 0 ? `${left} over` : 'Op';
+      if (pullBtn) pullBtn.disabled = left <= 0 || !!this._chestPullBusy;
 
       const logEl = document.getElementById('summonLog');
       if (logEl) {
@@ -1838,6 +1832,10 @@ const UI = {
       clearTimeout(this._summonDoneTimer);
       this._summonDoneTimer = null;
     }
+    try {
+      const screen = document.getElementById('summonScreen');
+      if (screen) screen.classList.remove('is-pulling');
+    } catch (_) {}
     try {
       const vid = document.getElementById('summonVideo');
       if (vid) {
@@ -1962,6 +1960,12 @@ const UI = {
     const card = document.getElementById('summonCenterCard');
     if (reveal) reveal.classList.add('is-card-show');
     if (card) card.setAttribute('aria-hidden', 'false');
+    // Spoil only when the card lands — never via toast earlier
+    try {
+      const text = document.getElementById('summonRevealText');
+      const msg = this._summonPendingMsg;
+      if (text && msg) text.textContent = msg;
+    } catch (_) {}
   },
 
   /**
@@ -1970,10 +1974,12 @@ const UI = {
    */
   runSummonRevealTimeline(res) {
     this.clearSummonRevealTimers();
+    const screen = document.getElementById('summonScreen');
     const reveal = document.getElementById('summonReveal');
     const fallback = document.getElementById('summonStageFallback');
     const vid = document.getElementById('summonVideo');
     const rarId = typeof chestResultRarityId === 'function' ? chestResultRarityId(res) : 'common';
+    if (screen) screen.classList.add('is-pulling');
     if (reveal) {
       reveal.dataset.rarity = rarId;
       reveal.classList.toggle('is-nice', !!(res && res.nice));
@@ -1992,6 +1998,10 @@ const UI = {
       }, cardAt);
       this._summonDoneTimer = setTimeout(() => {
         this._chestPullBusy = false;
+        try {
+          const sc = document.getElementById('summonScreen');
+          if (sc) sc.classList.remove('is-pulling');
+        } catch (_) {}
         try { this.renderSummon(); } catch (_) {}
       }, totalMs || SUMMON_REVEAL_TOTAL_MS);
     };
@@ -2066,25 +2076,32 @@ const UI = {
       this._chestPullBusy = true;
       try { this.renderSummon(); } catch (_) {}
 
-      const res = openChestSummon(kind);
+      const res = openChestSummon(kind === 'weapon' || kind === 'pet' ? kind : 'random');
       const text = document.getElementById('summonRevealText');
       const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : 'Mislukt');
-      if (text) text.textContent = msg;
+      // Never spoil via toast/text during the open — only after card
+      this._summonPendingMsg = (res && res.ok) ? msg : null;
+      if (text) text.textContent = (res && res.ok) ? 'Kist opent…' : msg;
 
       if (!res || !res.ok) {
         this._chestPullBusy = false;
+        this._summonPendingMsg = null;
+        try {
+          const sc = document.getElementById('summonScreen');
+          if (sc) sc.classList.remove('is-pulling');
+        } catch (_) {}
         try { UI.toast(msg, 2200); } catch (_) {}
         try { this.renderSummon(); } catch (_) {}
         try { this.renderMenu(); } catch (_) {}
         return;
       }
 
-      try { UI.toast(msg, res.nice ? 3800 : 2400); } catch (_) {}
       this.runSummonRevealTimeline(res);
       try { this.renderMenu(); } catch (_) {}
       try { syncPlayLayer(); } catch (_) {}
     } catch (err) {
       this._chestPullBusy = false;
+      this._summonPendingMsg = null;
       this.clearSummonRevealTimers();
       sfReportError('doChestPull', err, 'Summon mislukt');
       try { ensureVisibleScreen(); } catch (_) {}

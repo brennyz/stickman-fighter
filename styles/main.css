@@ -814,13 +814,68 @@
   .summon-quota { width: 100%; margin: 0; }
   .summon-actions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: clamp(8px, 1.5vw, 12px);
     width: 100%;
     margin: 0;
   }
   .summon-pull-btn { width: 100%; min-width: 0; }
   .summon-pull-btn:disabled { opacity: .45; filter: grayscale(.35); }
+
+  /* Immersive fullscreen reveal while pulling */
+  .summon-screen.is-pulling {
+    overflow: hidden;
+  }
+  .summon-screen.is-pulling > .back-btn,
+  .summon-screen.is-pulling > .head,
+  .summon-screen.is-pulling > .subtitle,
+  .summon-screen.is-pulling .summon-where,
+  .summon-screen.is-pulling .summon-quota,
+  .summon-screen.is-pulling .summon-actions,
+  .summon-screen.is-pulling .summon-goto-row,
+  .summon-screen.is-pulling .summon-log,
+  .summon-screen.is-pulling > .sub-home-bar {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .summon-screen.is-pulling .summon-rail {
+    overflow: hidden;
+    padding: 0;
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+  .summon-screen.is-pulling .summon-reveal {
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    margin: 0;
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+      max(16px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(ellipse at 50% 40%, rgba(20,28,48,.55), rgba(4,6,12,.94) 70%);
+  }
+  .summon-screen.is-pulling .summon-stage {
+    width: min(96vw, 920px);
+    max-height: min(78vh, 560px);
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    box-shadow:
+      0 0 0 1px rgba(255,215,94,.28),
+      0 18px 48px rgba(0,0,0,.55),
+      0 0 60px rgba(255,215,94,.12);
+  }
+  .summon-screen.is-pulling .summon-reveal-text {
+    margin-top: 14px;
+    font-size: clamp(14px, 3.6vw, 18px);
+    max-width: min(92vw, 520px);
+  }
+  .summon-screen.is-pulling .summon-center-card {
+    width: min(62%, 260px);
+  }
   .summon-reveal {
     width: 100%;
     margin: 0;
