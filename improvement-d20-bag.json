@@ -14,21 +14,8 @@
     "remainingCount": 3,
     "cycle": 5
   },
-  "pending": {
-    "face": 19,
-    "category": "Muur & minigames \u2014 combo, timer, record",
-    "rolledAt": "2026-07-26T20:03:52Z",
-    "remainingCount": 3,
-    "cycle": 5
-  },
+  "pending": null,
   "implemented": [
-    {
-      "face": 17,
-      "note": "try/catch + toasts persist/import/loop/UI",
-      "version": "1.12.14",
-      "doneAt": "2026-07-23T18:30:00Z",
-      "cycle": 1
-    },
     {
       "face": 15,
       "note": "1 hint/modus geen toast-stack + help chips",
@@ -580,6 +567,13 @@
       "note": "pause combat-heat reset + SFX guard + slider sync",
       "version": "1.18.108",
       "doneAt": "2026-07-26T19:03:57Z",
+      "cycle": 5
+    },
+    {
+      "face": 19,
+      "note": "pause stats + combo\u00d710 + smoke-wall",
+      "version": "1.18.118",
+      "doneAt": "2026-07-26T20:05:49Z",
       "cycle": 5
     }
   ],

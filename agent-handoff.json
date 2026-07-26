@@ -27,6 +27,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260726T200549",
+      "from": "user",
+      "text": "Elke 2 uur automatisch code scannen op bugs/optimalisaties en fixen, volledig autonoom.",
+      "status": "open",
+      "updated": "2026-07-26"
+    },
+    {
       "id": "w-20260726T191900",
       "from": "user",
       "text": "De rasengan moet naar 5 seconden cooldown voor stage 8, 3 bij 3 en 2 bij lvl1 en 2",
@@ -263,6 +270,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T20:05:49Z",
+      "summary": "d19 muur: pauze-stats, combo×10, smoke-wall LIVE · v1.18.118"
+    },
+    {
       "at": "2026-07-26T19:36:11Z",
       "summary": "Rasengan CD LIVE gemerged · v1.18.117"
     },
@@ -357,10 +368,6 @@
     {
       "at": "2026-07-26T18:54:55Z",
       "summary": "SFX/battle diversiteit ~2× klaar (samples+BGM) · v1.18.103"
-    },
-    {
-      "at": "2026-07-26T18:54:52Z",
-      "summary": "SFX/battle diversiteit ~2×: meer Kenney samples + fight BGM-varianten · v1.18.103"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

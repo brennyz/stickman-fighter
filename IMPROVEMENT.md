@@ -113,6 +113,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | **19** | Muur c5: pauze live-stats (timer/stenen/combo/record-tempo), combo×10 milestone, smoke-wall regressie. v1.18.118 / SW v328. |
 | 2026-07-26 | — | **Rasengan CD LIVE:** Lv1–2 = 2s · Lv3–7 = 3s · Lv8 = 5s. v1.18.117 / SW v327. |
 | 2026-07-26 | — | **Summons video:** `assets/summon/reveal.mp4` (4s stickman tree→chest) wired + SW precache. Gemini share was login-walled; replace file anytime. v1.18.116 / SW v326. |
 | 2026-07-26 | — | **LIVE merge:** daily summons harden (menu-kist, center-card last 2s, save quota fix, smoke) zonder conflict op main. v1.18.115 / SW v325. |
