@@ -753,6 +753,28 @@ function initCharSelectChrome() {
     scrollCharFightIntoView();
     UI.toast(t('toast.charSagaClash', { a: duo.a.name, b: duo.b.name }), 2600);
   });
+  const replayBtn = document.getElementById('btnCharReplay');
+  if (replayBtn && !replayBtn.dataset.bound) {
+    replayBtn.dataset.bound = '1';
+    bindPress(replayBtn, () => {
+      const lp = save.lastPlay;
+      if (!lp || lp.mode !== 'versus' || !lp.p1 || !lp.p2) return;
+      const a = vsRosterEntry(lp.p1);
+      const b = vsRosterEntry(lp.p2);
+      if (!vsUnlocked(a) || !vsUnlocked(b)) {
+        try { UI.toast(t('toast.charNotEnough'), 2400); } catch (_) {}
+        return;
+      }
+      AudioSys.sfx('select');
+      vsSelect.p1 = a.id;
+      vsSelect.p2 = b.id;
+      UI.charPickStep = 2;
+      UI.charPreviewHoverId = null;
+      UI.renderCharSelect();
+      scrollCharFightIntoView();
+      try { UI.toast(t('toast.charReplayLast', { p1: a.name, p2: b.name }), 2400); } catch (_) {}
+    });
+  }
   window.__sfCharChrome = true;
 }
 
@@ -1468,8 +1490,7 @@ const UI = {
     });
     const fightBtn = document.getElementById('btnCharFight');
     if (fightBtn) {
-      fightBtn.disabled = !(vsSelect.p1 && vsSelect.p2);
-      fightBtn.setAttribute('aria-disabled', fightBtn.disabled ? 'true' : 'false');
+      try { updateCharFightDock(); } catch (_) {}
     }
     const backBtn = document.getElementById('charSelectBack');
     if (backBtn) {

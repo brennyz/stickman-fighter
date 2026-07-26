@@ -86,10 +86,16 @@ async function run() {
     must(openSnap.hasPull, 'missing btnChestPull');
     must(openSnap.fullW >= 360 && openSnap.fullH >= 700, 'summon screen not fullscreen-ish: ' + JSON.stringify(openSnap));
 
-    const pullSnap = await page.evaluate(async () => {
+    const pullStart = await page.evaluate(() => {
       const before = chestSummonsLeft();
-      const toastBefore = (document.getElementById('toastHost') || {}).textContent || '';
       UI.doChestPull('random');
+      return { before, afterPull: chestSummonsLeft() };
+    });
+    must(pullStart.afterPull === pullStart.before - 1,
+      'counter did not drop on pull: ' + JSON.stringify(pullStart));
+
+    const pullSnap = await page.evaluate(async (before) => {
+      const toastBefore = (document.getElementById('toastHost') || {}).textContent || '';
       const midText = (document.getElementById('summonRevealText') || {}).textContent || '';
       const toastMid = (document.getElementById('toastHost') || {}).textContent || '';
       // Give video a moment to start, then sample playback
@@ -142,8 +148,9 @@ async function run() {
         playEarly,
         endText: (document.getElementById('summonRevealText') || {}).textContent || '',
       };
-    });
-    must(pullSnap.after === pullSnap.before - 1, 'counter did not drop: ' + JSON.stringify(pullSnap));
+    }, pullStart.before);
+    must(pullSnap.after === pullStart.afterPull,
+      'counter changed during reveal: ' + JSON.stringify(pullSnap));
     must(pullSnap.stillSummon, 'summon screen lost during pull');
     must(!pullSnap.isPlaying, 'is-playing flipped during pull');
     must(pullSnap.cardShow, 'center card not shown after reveal window');

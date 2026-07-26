@@ -3,17 +3,22 @@
   "cyclesCompleted": 5,
   "rollFirst": [],
   "remaining": [
-    2,
-    18
+    2
   ],
   "lastRoll": {
-    "face": 4,
-    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
-    "rolledAt": "2026-07-26T21:02:27Z",
-    "remainingCount": 2,
+    "face": 18,
+    "category": "Character select \u2014 roster UI, stats, random duo",
+    "rolledAt": "2026-07-26T22:05:08Z",
+    "remainingCount": 1,
     "cycle": 5
   },
-  "pending": null,
+  "pending": {
+    "face": 18,
+    "category": "Character select \u2014 roster UI, stats, random duo",
+    "rolledAt": "2026-07-26T22:05:08Z",
+    "remainingCount": 1,
+    "cycle": 5
+  },
   "implemented": [
     {
       "face": 20,
@@ -969,13 +974,6 @@
   ],
   "history": [
     {
-      "face": 20,
-      "category": "Code health \u2014 kleine refactors, geen gameplay-break",
-      "rolledAt": "2026-07-23T15:01:51Z",
-      "remainingCount": 1,
-      "cycle": 0
-    },
-    {
       "face": 14,
       "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
       "rolledAt": "2026-07-23T15:04:37Z",
@@ -1808,6 +1806,13 @@
       "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
       "rolledAt": "2026-07-26T21:02:27Z",
       "remainingCount": 2,
+      "cycle": 5
+    },
+    {
+      "face": 18,
+      "category": "Character select \u2014 roster UI, stats, random duo",
+      "rolledAt": "2026-07-26T22:05:08Z",
+      "remainingCount": 1,
       "cycle": 5
     }
   ],

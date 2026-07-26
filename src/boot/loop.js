@@ -604,6 +604,9 @@ function bootGame() {
     }
   } catch (_) {}
   window.__sfBooted = true;
+  try {
+    if (typeof window.__sfDismissBootFailToast === 'function') window.__sfDismissBootFailToast();
+  } catch (_) {}
   safeCall(runSplashIntro, 'splash');
   initUiTapScrollGuard();
   try {

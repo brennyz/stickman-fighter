@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.124';
+const APP_VERSION = '1.18.125';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 334;
+const SW_CACHE_REV = 335;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -4890,6 +4890,68 @@ function updateCharStatPreview() {
   if (!statEl) return;
   const [a, b, previewing, lockedPreview] = charStatPreviewPair();
   statEl.innerHTML = vsStatPreviewHtml(a, b, previewing, lockedPreview);
+  try { updateCharFightDock(); } catch (_) {}
+}
+
+/** d18 c5 — sticky fight dock: step hints, TOT preview, replay last duo. */
+function updateCharFightDock() {
+  const summary = document.getElementById('charFightSummary');
+  const fightBtn = document.getElementById('btnCharFight');
+  const replayBtn = document.getElementById('btnCharReplay');
+  const e1 = vsRosterEntry(vsSelect.p1);
+  const e2 = vsRosterEntry(vsSelect.p2);
+  const step = UI.charPickStep || 1;
+  const ready = typeof charSelectFightReady === 'function' ? charSelectFightReady() : false;
+  const samePair = vsSelect.p1 === vsSelect.p2;
+
+  if (summary) {
+    let cls = 'char-fight-summary';
+    let text = '';
+    if (step === 1) {
+      text = t('ui.charFightNeedP1');
+      cls += ' need-p1';
+    } else if (samePair) {
+      text = t('ui.charFightSamePair', { name: e1.name });
+      cls += ' warn';
+    } else if (!ready) {
+      text = t('ui.charFightNeedP2', { p1: e1.name });
+      cls += ' need-p2';
+    } else {
+      const tot = typeof vsMatchupTotShort === 'function'
+        ? vsMatchupTotShort(vsSelect.p1, vsSelect.p2)
+        : null;
+      text = t('ui.charFightSummary', { p1: e1.name, p2: e2.name });
+      if (tot) {
+        text += ` · TOT ${tot.r1}/${tot.r2}`;
+        if (!tot.even) text += tot.leadP1 ? ' · P1+' : ' · P2+';
+      }
+      cls += ' ready';
+    }
+    summary.className = cls;
+    summary.textContent = text;
+  }
+
+  if (fightBtn) {
+    fightBtn.disabled = !ready;
+    fightBtn.setAttribute('aria-disabled', fightBtn.disabled ? 'true' : 'false');
+    fightBtn.classList.toggle('char-fight-ready', ready);
+    fightBtn.textContent = ready
+      ? t('ui.charFightReady', { p1: e1.name, p2: e2.name })
+      : t('ui.charFight');
+  }
+
+  if (replayBtn) {
+    const lp = save.lastPlay;
+    const canReplay = !!(lp && lp.mode === 'versus' && lp.p1 && lp.p2 &&
+      vsUnlocked(vsRosterEntry(lp.p1)) && vsUnlocked(vsRosterEntry(lp.p2)));
+    replayBtn.style.display = canReplay ? '' : 'none';
+    if (canReplay) {
+      replayBtn.textContent = t('ui.charReplayLast', {
+        p1: vsRosterEntry(lp.p1).name,
+        p2: vsRosterEntry(lp.p2).name,
+      });
+    }
+  }
 }
 
 function copyPlayLink() {
@@ -11107,6 +11169,9 @@ function seedNlGameStrings() {
     charSwap: 'P1 ↔ P2 omgewisseld',
     vsSwap: 'Kant gewisseld · {a} vs {b} (was {was1} vs {was2})',
     charNotEnough: 'Niet genoeg unlocked vechters in deze saga',
+    charPickP1First: 'Eerst Speler 1 kiezen',
+    charPickDifferent: 'P1 en P2 moeten verschillende vechters zijn',
+    charReplayLast: 'Laatste duo: {p1} vs {p2}',
     charRandom: '{a} vs {b} · HP {hp1}/{hp2} · TOT {tot1}/{tot2}',
     charFair: 'Fair duo: {a} vs {b} · TOT Δ{diff}',
     skillUpgradeReady: '{name} kan upgraden — Collectie → Upgrades',
@@ -11351,6 +11416,8 @@ function seedNlGameStrings() {
     charFightNeedP1: 'Kies Speler 1 (cyan) — tik een kaart hierboven',
     charFightNeedP2: 'Kies Speler 2 (roze) · P1 = {p1}',
     charFightReady: 'START · {p1} vs {p2}',
+    charFightSamePair: 'Kies een andere vechter voor P2 — {name} is al P1',
+    charReplayLast: 'Herhaal · {p1} vs {p2}',
     charPickNow1: 'P1',
     charPickNow2: 'P2',
     charIpadTip: 'iPad: speler 1 gebruikt de linker helft van het scherm (joystick + knoppen), speler 2 de rechter helft. Draai je iPad liggend voor het meeste ruimte.',
@@ -11940,6 +12007,9 @@ const CATALOG_EN = {
     charSwap: 'P1 ↔ P2 swapped',
     vsSwap: 'Sides swapped · {a} vs {b} (was {was1} vs {was2})',
     charNotEnough: 'Not enough unlocked fighters in this saga',
+    charPickP1First: 'Pick Player 1 first',
+    charPickDifferent: 'P1 and P2 must be different fighters',
+    charReplayLast: 'Last duo: {p1} vs {p2}',
     charRandom: '{a} vs {b} · HP {hp1}/{hp2} · TOT {tot1}/{tot2}',
     charFair: 'Fair duo: {a} vs {b} · TOT Δ{diff}',
     skillUpgradeReady: '{name} ready to upgrade — Collection → Upgrades',
@@ -12096,6 +12166,8 @@ const CATALOG_EN = {
     charFightNeedP1: 'Pick Player 1 (cyan) — tap a card above',
     charFightNeedP2: 'Pick Player 2 (pink) · P1 = {p1}',
     charFightReady: 'START · {p1} vs {p2}',
+    charFightSamePair: 'Pick a different fighter for P2 — {name} is already P1',
+    charReplayLast: 'Replay · {p1} vs {p2}',
     charPickNow1: 'P1',
     charPickNow2: 'P2',
     charIpadTip: 'iPad: player 1 uses the left half (joystick + buttons), player 2 the right half. Landscape works best.',
@@ -29583,6 +29655,28 @@ function initCharSelectChrome() {
     scrollCharFightIntoView();
     UI.toast(t('toast.charSagaClash', { a: duo.a.name, b: duo.b.name }), 2600);
   });
+  const replayBtn = document.getElementById('btnCharReplay');
+  if (replayBtn && !replayBtn.dataset.bound) {
+    replayBtn.dataset.bound = '1';
+    bindPress(replayBtn, () => {
+      const lp = save.lastPlay;
+      if (!lp || lp.mode !== 'versus' || !lp.p1 || !lp.p2) return;
+      const a = vsRosterEntry(lp.p1);
+      const b = vsRosterEntry(lp.p2);
+      if (!vsUnlocked(a) || !vsUnlocked(b)) {
+        try { UI.toast(t('toast.charNotEnough'), 2400); } catch (_) {}
+        return;
+      }
+      AudioSys.sfx('select');
+      vsSelect.p1 = a.id;
+      vsSelect.p2 = b.id;
+      UI.charPickStep = 2;
+      UI.charPreviewHoverId = null;
+      UI.renderCharSelect();
+      scrollCharFightIntoView();
+      try { UI.toast(t('toast.charReplayLast', { p1: a.name, p2: b.name }), 2400); } catch (_) {}
+    });
+  }
   window.__sfCharChrome = true;
 }
 
@@ -30298,8 +30392,7 @@ const UI = {
     });
     const fightBtn = document.getElementById('btnCharFight');
     if (fightBtn) {
-      fightBtn.disabled = !(vsSelect.p1 && vsSelect.p2);
-      fightBtn.setAttribute('aria-disabled', fightBtn.disabled ? 'true' : 'false');
+      try { updateCharFightDock(); } catch (_) {}
     }
     const backBtn = document.getElementById('charSelectBack');
     if (backBtn) {
@@ -34233,6 +34326,9 @@ function bootGame() {
     }
   } catch (_) {}
   window.__sfBooted = true;
+  try {
+    if (typeof window.__sfDismissBootFailToast === 'function') window.__sfDismissBootFailToast();
+  } catch (_) {}
   safeCall(runSplashIntro, 'splash');
   initUiTapScrollGuard();
   try {

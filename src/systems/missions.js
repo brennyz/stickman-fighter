@@ -2283,6 +2283,68 @@ function updateCharStatPreview() {
   if (!statEl) return;
   const [a, b, previewing, lockedPreview] = charStatPreviewPair();
   statEl.innerHTML = vsStatPreviewHtml(a, b, previewing, lockedPreview);
+  try { updateCharFightDock(); } catch (_) {}
+}
+
+/** d18 c5 — sticky fight dock: step hints, TOT preview, replay last duo. */
+function updateCharFightDock() {
+  const summary = document.getElementById('charFightSummary');
+  const fightBtn = document.getElementById('btnCharFight');
+  const replayBtn = document.getElementById('btnCharReplay');
+  const e1 = vsRosterEntry(vsSelect.p1);
+  const e2 = vsRosterEntry(vsSelect.p2);
+  const step = UI.charPickStep || 1;
+  const ready = typeof charSelectFightReady === 'function' ? charSelectFightReady() : false;
+  const samePair = vsSelect.p1 === vsSelect.p2;
+
+  if (summary) {
+    let cls = 'char-fight-summary';
+    let text = '';
+    if (step === 1) {
+      text = t('ui.charFightNeedP1');
+      cls += ' need-p1';
+    } else if (samePair) {
+      text = t('ui.charFightSamePair', { name: e1.name });
+      cls += ' warn';
+    } else if (!ready) {
+      text = t('ui.charFightNeedP2', { p1: e1.name });
+      cls += ' need-p2';
+    } else {
+      const tot = typeof vsMatchupTotShort === 'function'
+        ? vsMatchupTotShort(vsSelect.p1, vsSelect.p2)
+        : null;
+      text = t('ui.charFightSummary', { p1: e1.name, p2: e2.name });
+      if (tot) {
+        text += ` · TOT ${tot.r1}/${tot.r2}`;
+        if (!tot.even) text += tot.leadP1 ? ' · P1+' : ' · P2+';
+      }
+      cls += ' ready';
+    }
+    summary.className = cls;
+    summary.textContent = text;
+  }
+
+  if (fightBtn) {
+    fightBtn.disabled = !ready;
+    fightBtn.setAttribute('aria-disabled', fightBtn.disabled ? 'true' : 'false');
+    fightBtn.classList.toggle('char-fight-ready', ready);
+    fightBtn.textContent = ready
+      ? t('ui.charFightReady', { p1: e1.name, p2: e2.name })
+      : t('ui.charFight');
+  }
+
+  if (replayBtn) {
+    const lp = save.lastPlay;
+    const canReplay = !!(lp && lp.mode === 'versus' && lp.p1 && lp.p2 &&
+      vsUnlocked(vsRosterEntry(lp.p1)) && vsUnlocked(vsRosterEntry(lp.p2)));
+    replayBtn.style.display = canReplay ? '' : 'none';
+    if (canReplay) {
+      replayBtn.textContent = t('ui.charReplayLast', {
+        p1: vsRosterEntry(lp.p1).name,
+        p2: vsRosterEntry(lp.p2).name,
+      });
+    }
+  }
 }
 
 function copyPlayLink() {

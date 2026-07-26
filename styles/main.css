@@ -1983,6 +1983,10 @@
     background:linear-gradient(180deg, rgba(10,14,34,.55) 0%, rgba(10,14,34,.96) 28%);
     border-top:1px solid rgba(255,215,94,.28); box-shadow:0 -8px 28px rgba(0,0,0,.45); }
   .char-fight-summary { font-size:12px; font-weight:800; color:#cfe0ff; margin:0 0 8px; line-height:1.4; min-height:1.2em; }
+  .char-fight-summary.ready { color:#7cf5ff; }
+  .char-fight-summary.warn { color:#ffb0b8; }
+  .char-fight-summary.need-p1,
+  .char-fight-summary.need-p2 { color:#9db1e3; }
   #charSelectScreen.pick-step-1 #charPickStep { color:#7cf5ff; font-weight:900; }
   #charSelectScreen.pick-step-2 #charPickStep { color:#ffb0b8; font-weight:900; }
   #charSelectScreen.pick-step-1 .char-grid-scroll { border-color:rgba(124,245,255,.35);
