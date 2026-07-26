@@ -735,7 +735,7 @@ class Game {
       }
       if (lv % LEVELS_PER_ISLAND === 0) {
         if (diff === 'normal') {
-          save.advIsland = Math.min(5, lv / LEVELS_PER_ISLAND);
+          save.advIsland = Math.min(islandCount(), lv / LEVELS_PER_ISLAND);
           persist();
         }
         if (lv < MAX_LEVEL) {

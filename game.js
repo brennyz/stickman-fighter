@@ -252,11 +252,12 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.104';
+const APP_VERSION = '1.18.105';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 314;
+const SW_CACHE_REV = 315;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
+  zoneWeapons: {},
 
 
 
@@ -275,9 +276,10 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeJutsu: 'rasengan', skill: 'rasengan', super: 'ketsbam', missionsIntroSeen: false };
 
-const MAX_LEVEL = 50;
+const MAX_LEVEL = 70;
 const LEVELS_PER_ISLAND = 10;
-const ISLAND_WEAPON_CAPS = [10, 20, 30, 40, 48];
+const ISLAND_COUNT = 7;
+const ISLAND_WEAPON_CAPS = [10, 20, 30, 40, 48, 60, 70];
 /** Avontuur moeilijkheidsgraden — Normal eerst; Nightmare/Hell na clear. */
 const ADV_DIFFS = [
   { id: 'normal', order: 0, model: '1.0', accent: '#5ad06a', hpMul: 1, dmgMul: 1, rarityBoost: 0, eliteBonus: 0, giantBonus: 0, theme: null, xpMul: 1, dropMul: 1, speedMul: 1, enrageMul: 1 },
@@ -434,8 +436,13 @@ const ADVENTURE_ISLANDS = [
     icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 L17 8 H7 Z" fill="#ffd75e"/><rect x="10" y="8" width="4" height="12" fill="#c97a20"/><path d="M6 11 H18 M7 14 H17 M8 17 H16" stroke="#ffd75e" stroke-width="1.4" stroke-linecap="round"/><rect x="4" y="20" width="16" height="2" rx="1" fill="#8a6030"/></svg>' },
   { id: 5, name: 'Finale-eiland', sub: 'Lv 41–50', accent: '#ff6b9d', theme: 'cyber',
     icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18 L7 10 L12 14 L17 10 L20 18 Z" fill="#ff6b9d" stroke="#ffd75e" stroke-width="1"/><circle cx="12" cy="8" r="2.8" fill="#ffd75e"/><path d="M12 2 v2 M12 20 v2 M2 12 h2 M20 12 h2" stroke="#ffd75e" stroke-width="1.2" opacity=".7"/></svg>' },
+  { id: 6, name: 'Nachtmerrie', sub: 'Lv 51–60 · droomchaos', accent: '#c47aff', theme: 'nachtmerrie',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18c2-6 6-10 8-10s6 4 8 10" fill="none" stroke="#c47aff" stroke-width="1.6"/><circle cx="9" cy="10" r="2.2" fill="#2a1840" stroke="#c47aff" stroke-width="1"/><circle cx="15" cy="10" r="2.2" fill="#2a1840" stroke="#c47aff" stroke-width="1"/><path d="M8 15c1.2 1.4 2.8 2 4 2s2.8-.6 4-2" stroke="#ff6b9d" stroke-width="1.4" fill="none"/></svg>' },
+  { id: 7, name: 'Hel', sub: 'Lv 61–70 · zwavel & lava', accent: '#ff6a3d', theme: 'hel',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 L8 10 L12 16 L16 8 L20 20 Z" fill="#ff6a3d" stroke="#ffd75e" stroke-width="1"/><path d="M9 10c0-3 1.5-5 3-5s3 2 3 5" fill="#ffd75e" opacity=".85"/><ellipse cx="12" cy="20" rx="9" ry="1.6" fill="#5a1010" opacity=".7"/></svg>' },
 ];
 function islandMeta(id) { return ADVENTURE_ISLANDS.find(i => i.id === id) || ADVENTURE_ISLANDS[0]; }
+function islandCount() { return ADVENTURE_ISLANDS.length || ISLAND_COUNT; }
 function islandProgress(islandId, diff) {
   const d = normalizeAdvDiffId(diff || currentAdvDiff());
   const { start, end } = islandLevelRange(islandId);
@@ -457,7 +464,7 @@ function adventureProgressLine() {
     unlocked: advUnlockedLevel(), max: MAX_LEVEL,
   });
 }
-function islandFromLevel(n) { return Math.min(5, Math.max(1, Math.ceil(n / LEVELS_PER_ISLAND))); }
+function islandFromLevel(n) { return Math.min(islandCount(), Math.max(1, Math.ceil(n / LEVELS_PER_ISLAND))); }
 function islandLevelRange(islandId) {
   const start = (islandId - 1) * LEVELS_PER_ISLAND + 1;
   return { start, end: Math.min(MAX_LEVEL, start + LEVELS_PER_ISLAND - 1) };
@@ -475,7 +482,11 @@ function adventureWeaponCapForLevel(levelN) {
 }
 function adventureWeaponCap() { return adventureWeaponCapForLevel(advUnlockedLevel('normal') || 1); }
 function weaponSkillGated(w) { return w.unlock > adventureWeaponCap(); }
-function weaponUnlockedByLevel(w) { return save.lvl >= w.unlock; }
+function weaponUnlockedByLevel(w) {
+  if (!w) return false;
+  if (w.dropZone) return typeof weaponZoneUnlocked === 'function' ? weaponZoneUnlocked(w) : !!(save.zoneWeapons && save.zoneWeapons[w.id]);
+  return save.lvl >= w.unlock;
+}
 function weaponUsableNow(w) { return weaponUnlockedByLevel(w) && !weaponSkillGated(w); }
 function styleSkillGated(st) { return !!(st.needLvl && st.needLvl > adventureWeaponCap()); }
 function masterBuffActive(levelN, diff) {
@@ -988,6 +999,7 @@ function readSaveJson(raw) {
     }
     merged.tipsSeen = sanitizeTipsSeen(parsed.tipsSeen);
     merged.advFails = Object.assign({}, parsed.advFails || {});
+    merged.zoneWeapons = Object.assign({}, parsed.zoneWeapons || {});
     merged.advCleared = Object.assign(
       { normal: false, nightmare: false, hell: false },
       (parsed.advCleared && typeof parsed.advCleared === 'object') ? parsed.advCleared : {}
@@ -1256,7 +1268,8 @@ function sanitizeTipsSeen(raw) {
 /** Corrupte / gemanipuleerde saves veilig maken (localStorage + import). */
 function sanitizeSave(s) {
   // Literal max — nooit TDZ op MAX_LEVEL (anders crashen alle click-handlers)
-  const maxLevel = 50;
+  const maxLevel = 70;
+  const maxIsland = 7;
   const skillSnap = typeof snapshotSkillUpgradeTracks === 'function' ? snapshotSkillUpgradeTracks(s) : null;
   const itemSnap = typeof snapshotItemUpgradeTracks === 'function' ? snapshotItemUpgradeTracks(s) : null;
   const out = Object.assign({}, DEFAULT_SAVE, s);
@@ -1264,7 +1277,7 @@ function sanitizeSave(s) {
   out.lvl = clamp(Math.floor(Number(out.lvl) || 1), 1, 500);
   out.xp = clamp(Math.floor(Number(out.xp) || 0), 0, 999999);
   out.unlocked = clamp(Math.floor(Number(out.unlocked) || 1), 1, maxLevel);
-  out.advIsland = clamp(Math.floor(Number(out.advIsland) || 0), 0, 5);
+  out.advIsland = clamp(Math.floor(Number(out.advIsland) || 0), 0, maxIsland);
   out.advDiff = normalizeAdvDiffId(out.advDiff);
   const clearedIn = (out.advCleared && typeof out.advCleared === 'object') ? out.advCleared : {};
   out.advCleared = {
@@ -1324,7 +1337,7 @@ function sanitizeSave(s) {
   const mb = parseInt(out.advMasterBuff, 10);
   out.advMasterBuff = (Number.isFinite(mb) && mb >= 1 && mb <= maxLevel) ? mb : null;
   if (!out.advIsland && out.unlocked > 1) {
-    out.advIsland = Math.min(5, Math.floor((out.unlocked - 1) / LEVELS_PER_ISLAND));
+    out.advIsland = Math.min(maxIsland, Math.floor((out.unlocked - 1) / LEVELS_PER_ISLAND));
   }
   out.trainWins = clamp(Math.floor(Number(out.trainWins) || 0), 0, 9999);
   out.bestWall = clamp(Math.floor(Number(out.bestWall) || 0), 0, 999999);
@@ -1370,6 +1383,15 @@ function sanitizeSave(s) {
     }
   } else out.lastPlay = null;
   if (!WEAPONS.some(w => w.id === out.weapon)) out.weapon = 'vuist';
+
+  // Zone-wapens (Nachtmerrie / Hel drops)
+  const cleanZone = {};
+  for (const [k, v] of Object.entries(out.zoneWeapons || {})) {
+    if (!v) continue;
+    const w = WEAPONS.find(x => x.id === k);
+    if (w && w.dropZone) cleanZone[k] = 1;
+  }
+  out.zoneWeapons = cleanZone;
 
   // Summons: alleen bekende wapens, geldige tiers, en alleen echte upgrades
   const cleanSummons = {};
@@ -9159,6 +9181,12 @@ const WORLD_THEMES = [
   'cyber','vulkaan','dojo','cyber','cyber',
   'cyber','vulkaan','dojo','cyber','cyber',
   'cyber','cyber','cyber','cyber','cyber',
+  /* Nachtmerrie 51–60 */
+  'nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie',
+  'nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie',
+  /* Hel 61–70 */
+  'hel','hel','hel','hel','hel',
+  'hel','hel','hel','hel','hel',
 ];
 const UNLOCK_AT = {
   slymo: 1, bubbel: 1, flapper: 2, piepvleugel: 5, stekelra: 3, ijzerstek: 9,
@@ -9269,6 +9297,10 @@ const BOSS_AT = {
   40: [{ sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst' }],
   45: [{ sp: 'voidkonijn', elite: true }, { sp: 'guvvedrak' }],
   50: [{ sp: 'guvvedrak', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst', elite: true }],
+  55: [{ sp: 'voidkonijn', elite: true }, { sp: 'neondrake', elite: true }, { sp: 'schaduwvorst' }],
+  60: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'voidkonijn', elite: true }],
+  65: [{ sp: 'omegadrake', elite: true }, { sp: 'etherwyrm', elite: true }, { sp: 'neondrake' }],
+  70: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'apexwyrm', elite: true }, { sp: 'voidkonijn', elite: true }],
 };
 
 function weightedPick(pool, n, rarityBias) {
@@ -9363,13 +9395,13 @@ function rollWaveGiant(n, elite, spId, giantBonus) {
 
 function maxRarityForAdvLevel(n, diff) {
   const meta = typeof advDiffMeta === 'function' ? advDiffMeta(diff) : { order: 0, rarityBoost: 0 };
-  let maxRarity = n >= 45 ? 5 : n >= 32 ? 4 : n >= 20 ? 3 : n >= 10 ? 2 : n >= 4 ? 1 : 0;
-  maxRarity = Math.min(5, maxRarity + (meta.rarityBoost || 0));
+  let maxRarity = n >= 61 ? 7 : n >= 51 ? 6 : n >= 45 ? 5 : n >= 32 ? 4 : n >= 20 ? 3 : n >= 10 ? 2 : n >= 4 ? 1 : 0;
+  maxRarity = Math.min(7, maxRarity + (meta.rarityBoost || 0));
   if ((meta.order || 0) >= 1) {
-    maxRarity = Math.max(maxRarity, Math.min(5, meta.order + Math.floor((n - 1) / 8)));
+    maxRarity = Math.max(maxRarity, Math.min(7, meta.order + Math.floor((n - 1) / 8)));
   }
   if ((meta.order || 0) >= 2) {
-    maxRarity = Math.max(maxRarity, Math.min(5, 2 + Math.floor((n - 1) / 6)));
+    maxRarity = Math.max(maxRarity, Math.min(7, 2 + Math.floor((n - 1) / 6)));
   }
   return maxRarity;
 }
@@ -9471,9 +9503,9 @@ function buildLevel(n, diffId) {
     waves.push(bossWave);
     waveMeta.push({ trait: 'boss', spawnMul: 1, label: 'Baas-golf' });
   }
-  let theme = WORLD_THEMES[n - 1] || 'cyber';
+  let theme = WORLD_THEMES[n - 1] || (n >= 61 ? 'hel' : (n >= 51 ? 'nachtmerrie' : 'cyber'));
   if (diff.theme) theme = diff.theme;
-  const rarityCap = ['common','uncommon','rare','epic','legendary','mythic'][maxRarity];
+  const rarityCap = ['common','uncommon','rare','epic','legendary','mythic','nightmare','hell'][maxRarity] || 'mythic';
   return {
     n, waves, waveMeta, hpMul, dmgMul, theme, boss: !!BOSS_AT[n], rarityCap,
     diff: diff.id || 'normal',
@@ -22976,7 +23008,7 @@ class Game {
       }
       if (lv % LEVELS_PER_ISLAND === 0) {
         if (diff === 'normal') {
-          save.advIsland = Math.min(5, lv / LEVELS_PER_ISLAND);
+          save.advIsland = Math.min(islandCount(), lv / LEVELS_PER_ISLAND);
           persist();
         }
         if (lv < MAX_LEVEL) {
@@ -29783,7 +29815,7 @@ const UI = {
         `<b style="color:${islMeta.accent}">${islandLabel(islMeta.id, 'name')}</b> · ${islandLabel(islMeta.id, 'sub')}` +
         `<div class="island-info-sub">${t('ui.islandInfoSub', { cap: wCap, cleared: prog.cleared, total: prog.total, stars: prog.stars })}` +
         (activeDiff !== 'normal' ? t('ui.islandDiffTag', { diff: advDiffLabel(activeDiff) }) : '') +
-        (pick < 5 ? t('ui.islandBossGate', { lv: pick * LEVELS_PER_ISLAND }) : '') +
+        (pick < islandCount() ? t('ui.islandBossGate', { lv: pick * LEVELS_PER_ISLAND }) : '') +
         `</div></div></div>` +
         `<div class="island-prog-track island-info-prog" title="${t('island.levelsProg')}"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
         `<div class="island-prog-track island-info-stars" title="${t('island.starsProg')}"><i style="width:${Math.round(prog.stars / Math.max(1, prog.maxStars) * 100)}%"></i></div>` +

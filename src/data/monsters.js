@@ -323,6 +323,12 @@ const WORLD_THEMES = [
   'cyber','vulkaan','dojo','cyber','cyber',
   'cyber','vulkaan','dojo','cyber','cyber',
   'cyber','cyber','cyber','cyber','cyber',
+  /* Nachtmerrie 51–60 */
+  'nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie',
+  'nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie',
+  /* Hel 61–70 */
+  'hel','hel','hel','hel','hel',
+  'hel','hel','hel','hel','hel',
 ];
 const UNLOCK_AT = {
   slymo: 1, bubbel: 1, flapper: 2, piepvleugel: 5, stekelra: 3, ijzerstek: 9,
@@ -433,6 +439,10 @@ const BOSS_AT = {
   40: [{ sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst' }],
   45: [{ sp: 'voidkonijn', elite: true }, { sp: 'guvvedrak' }],
   50: [{ sp: 'guvvedrak', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst', elite: true }],
+  55: [{ sp: 'voidkonijn', elite: true }, { sp: 'neondrake', elite: true }, { sp: 'schaduwvorst' }],
+  60: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'voidkonijn', elite: true }],
+  65: [{ sp: 'omegadrake', elite: true }, { sp: 'etherwyrm', elite: true }, { sp: 'neondrake' }],
+  70: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'apexwyrm', elite: true }, { sp: 'voidkonijn', elite: true }],
 };
 
 function weightedPick(pool, n, rarityBias) {
@@ -527,13 +537,13 @@ function rollWaveGiant(n, elite, spId, giantBonus) {
 
 function maxRarityForAdvLevel(n, diff) {
   const meta = typeof advDiffMeta === 'function' ? advDiffMeta(diff) : { order: 0, rarityBoost: 0 };
-  let maxRarity = n >= 45 ? 5 : n >= 32 ? 4 : n >= 20 ? 3 : n >= 10 ? 2 : n >= 4 ? 1 : 0;
-  maxRarity = Math.min(5, maxRarity + (meta.rarityBoost || 0));
+  let maxRarity = n >= 61 ? 7 : n >= 51 ? 6 : n >= 45 ? 5 : n >= 32 ? 4 : n >= 20 ? 3 : n >= 10 ? 2 : n >= 4 ? 1 : 0;
+  maxRarity = Math.min(7, maxRarity + (meta.rarityBoost || 0));
   if ((meta.order || 0) >= 1) {
-    maxRarity = Math.max(maxRarity, Math.min(5, meta.order + Math.floor((n - 1) / 8)));
+    maxRarity = Math.max(maxRarity, Math.min(7, meta.order + Math.floor((n - 1) / 8)));
   }
   if ((meta.order || 0) >= 2) {
-    maxRarity = Math.max(maxRarity, Math.min(5, 2 + Math.floor((n - 1) / 6)));
+    maxRarity = Math.max(maxRarity, Math.min(7, 2 + Math.floor((n - 1) / 6)));
   }
   return maxRarity;
 }
@@ -635,9 +645,9 @@ function buildLevel(n, diffId) {
     waves.push(bossWave);
     waveMeta.push({ trait: 'boss', spawnMul: 1, label: 'Baas-golf' });
   }
-  let theme = WORLD_THEMES[n - 1] || 'cyber';
+  let theme = WORLD_THEMES[n - 1] || (n >= 61 ? 'hel' : (n >= 51 ? 'nachtmerrie' : 'cyber'));
   if (diff.theme) theme = diff.theme;
-  const rarityCap = ['common','uncommon','rare','epic','legendary','mythic'][maxRarity];
+  const rarityCap = ['common','uncommon','rare','epic','legendary','mythic','nightmare','hell'][maxRarity] || 'mythic';
   return {
     n, waves, waveMeta, hpMul, dmgMul, theme, boss: !!BOSS_AT[n], rarityCap,
     diff: diff.id || 'normal',

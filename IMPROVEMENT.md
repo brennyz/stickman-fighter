@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | — | **LIVE fix:** Nightmare 2.0 / Hell 3.0 + herstel Nachtmerrie/Hel eilanden (Lv51–70) & zone-wapens. v1.18.105 / SW v315. |
 | 2026-07-26 | — | **User: Nachtmerrie/Hel wapens.** +2 eilanden (Lv 51–70), +27 ludieke zone-only wapens met on-hit effecten, rariteiten nightmare/hell, weapons-UI zone/effect badges. v1.18.104 / SW v314. |
 | 2026-07-26 | — | **User:** grootste bazen (bossCore/super) — grotere intro-tekst + naamplaat, soms colossaal ×2 size, veel meer HP. v1.18.103 / SW v313 (na merge Rinnegan+boerderij). |
 | 2026-07-26 | — | **Rinnegan check:** upgrade-strook dikker (Lv0 r0 42 → Lv5 ~78), smoke + merge main. v1.18.102 / SW v312. |

@@ -2177,7 +2177,7 @@ const UI = {
         `<b style="color:${islMeta.accent}">${islandLabel(islMeta.id, 'name')}</b> · ${islandLabel(islMeta.id, 'sub')}` +
         `<div class="island-info-sub">${t('ui.islandInfoSub', { cap: wCap, cleared: prog.cleared, total: prog.total, stars: prog.stars })}` +
         (activeDiff !== 'normal' ? t('ui.islandDiffTag', { diff: advDiffLabel(activeDiff) }) : '') +
-        (pick < 5 ? t('ui.islandBossGate', { lv: pick * LEVELS_PER_ISLAND }) : '') +
+        (pick < islandCount() ? t('ui.islandBossGate', { lv: pick * LEVELS_PER_ISLAND }) : '') +
         `</div></div></div>` +
         `<div class="island-prog-track island-info-prog" title="${t('island.levelsProg')}"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
         `<div class="island-prog-track island-info-stars" title="${t('island.starsProg')}"><i style="width:${Math.round(prog.stars / Math.max(1, prog.maxStars) * 100)}%"></i></div>` +
