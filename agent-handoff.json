@@ -17,12 +17,12 @@
     "swCache": "stickfighter-app-v311",
     "gameJsQuery": "game.js?v=311",
     "cssQuery": "styles/main.css?v=311",
-    "featureBranch": "cursor/boerderij-dierentuin-monsters-4007",
+    "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "localMainHead": "ae5890e",
-    "remoteMainHead": "ae5890e",
-    "note": "boerderij+dierentuin monsters ~2× diversiteit"
+    "localMainHead": "e2754e9",
+    "remoteMainHead": "e2754e9",
+    "note": "boerderij+dierentuin monsters ~2× diversiteit · MERGE main"
   },
   "userWishlist": [
     {
