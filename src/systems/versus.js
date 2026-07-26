@@ -403,3 +403,34 @@ function resetVsFighterRound(f, entry, ground, slot) {
 
 let vsSelect = { p1: 'ryu', p2: 'ken' };
 
+/** d3 c5 — korte TOT-preview voor HUD/pauze (geen dmg-tweak). */
+function vsMatchupTotShort(p1Id, p2Id) {
+  const s1 = vsFighterStats(vsRosterEntry(p1Id));
+  const s2 = vsFighterStats(vsRosterEntry(p2Id));
+  const r1 = vsOverallRating(s1);
+  const r2 = vsOverallRating(s2);
+  const diff = Math.abs(r1 - r2);
+  return { r1, r2, diff, even: diff <= 4, leadP1: r1 > r2 };
+}
+
+/** d3 c5 — wissel P1/P2 kant mid-match; score volgt de pad-kant. */
+function swapVsSides(game) {
+  if (!game || game.mode !== 'versus' || !game.p2) return false;
+  const holdP1 = game.p1Pick;
+  game.p1Pick = game.p2Pick;
+  game.p2Pick = holdP1;
+  vsSelect.p1 = game.p1Pick;
+  vsSelect.p2 = game.p2Pick;
+  const rp1 = game.roundsP1;
+  game.roundsP1 = game.roundsP2;
+  game.roundsP2 = rp1;
+  if (Array.isArray(game.vsRoundLog)) {
+    game.vsRoundLog = game.vsRoundLog.map(w => (w === 'p1' ? 'p2' : 'p1'));
+  }
+  applyVsArenaBounds(game);
+  game.player = buildVsFighter(vsRosterEntry(game.p1Pick), vsSpawnX(1), 1);
+  game.p2 = buildVsFighter(vsRosterEntry(game.p2Pick), vsSpawnX(2), 2);
+  game.startVsRound();
+  return true;
+}
+

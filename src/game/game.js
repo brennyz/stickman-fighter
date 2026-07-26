@@ -4947,17 +4947,32 @@ class Game {
         ? t('hud.decisiveRound', { s: this.roundsP1, r: this.roundsP2 })
         : t('hud.roundInfo', { n: this.round, s: this.roundsP1, r: this.roundsP2 });
       c.fillText(scoreLine, W / 2, timerY + 18);
+      // d3 c5: TOT rating chip (fairness preview, geen balance-tweak)
+      if (this.phase === 'fight' || this.phase === 'intro') {
+        const tot = vsMatchupTotShort(this.p1Pick, this.p2Pick);
+        c.font = '700 9px sans-serif';
+        c.fillStyle = tot.even ? 'rgba(255,215,94,.78)' : (tot.leadP1 ? 'rgba(124,245,255,.72)' : 'rgba(255,176,184,.72)');
+        const totLine = tot.even
+          ? t('hud.vsTotEven', { r1: tot.r1, r2: tot.r2 })
+          : (tot.leadP1
+            ? t('hud.vsTotLeadP1', { r1: tot.r1, r2: tot.r2, diff: tot.diff })
+            : t('hud.vsTotLeadP2', { r1: tot.r1, r2: tot.r2, diff: tot.diff }));
+        c.fillText(totLine, W / 2, timerY + 30);
+      }
       // d3 c4: match-point side chip
       const mp1Only = this.roundsP1 === 1 && this.roundsP2 === 0;
       const mp2Only = this.roundsP2 === 1 && this.roundsP1 === 0;
+      const showTot = this.phase === 'fight' || this.phase === 'intro';
       if ((mp1Only || mp2Only) && this.phase === 'fight') {
         c.font = '800 10px sans-serif';
         c.fillStyle = mp1Only ? '#7cf5ff' : '#ffb0b8';
-        c.fillText(mp1Only ? t('hud.matchPointP1') : t('hud.matchPointP2'), W / 2, timerY + 32);
+        c.fillText(mp1Only ? t('hud.matchPointP1') : t('hud.matchPointP2'), W / 2, timerY + (showTot ? 42 : 32));
       }
       const timerBarW = Math.min(160, W * 0.28);
       const timerFrac = clamp(this.roundTimer / 99, 0, 1);
-      const timerBarY = (mp1Only || mp2Only) && this.phase === 'fight' ? timerY + 38 : timerY + 24;
+      const timerBarY = (mp1Only || mp2Only) && this.phase === 'fight'
+        ? timerY + (showTot ? 50 : 38)
+        : (showTot ? timerY + 38 : timerY + 24);
       c.fillStyle = 'rgba(0,0,0,.35)';
       this.rr(c, W / 2 - timerBarW / 2, timerBarY, timerBarW, 5, 3);
       c.fill();

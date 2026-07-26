@@ -938,8 +938,12 @@ const UI = {
   refreshPauseSubtitle() {
     const sub = document.querySelector('#pauseScreen .subtitle');
     const vsRestart = document.getElementById('pauseVsRestart');
+    const vsSwap = document.getElementById('pauseVsSwap');
     if (vsRestart) {
       vsRestart.style.display = (game?.mode === 'versus' && (state === 'play' || state === 'pause')) ? 'flex' : 'none';
+    }
+    if (vsSwap) {
+      vsSwap.style.display = (game?.mode === 'versus' && (state === 'play' || state === 'pause')) ? 'flex' : 'none';
     }
     if (!sub) return;
     const onboardEl = document.getElementById('pauseOnboardLine');
@@ -961,7 +965,14 @@ const UI = {
       let tag = '';
       if (game.roundsP1 === 1 && game.roundsP2 === 1) tag = ' · beslissende ronde';
       else if (game.roundsP1 === 1 || game.roundsP2 === 1) tag = ' · match point';
-      sub.textContent = `2P ${game.roundsP1}-${game.roundsP2} · ronde ${game.round} · ${a} vs ${b}${tag}`;
+      let totTag = '';
+      if (typeof vsMatchupTotShort === 'function') {
+        const tot = vsMatchupTotShort(game.p1Pick, game.p2Pick);
+        totTag = tot.even
+          ? ` · TOT ${tot.r1}=${tot.r2}`
+          : ` · TOT ${tot.r1}-${tot.r2} (Δ${tot.diff})`;
+      }
+      sub.textContent = `2P ${game.roundsP1}-${game.roundsP2} · ronde ${game.round} · ${a} vs ${b}${tag}${totTag}`;
     } else {
       sub.textContent = this.pauseSubDefault;
     }

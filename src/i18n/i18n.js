@@ -33,6 +33,7 @@ const I18N = {
       title: 'Pauze', sub: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
       resume: 'Verder spelen', music: 'Muziek', sfx: 'Geluid', quit: 'Stop & hoofdmenu',
       vsRestart: 'Herstart match', vsRestartSub: '0-0 · zelfde vechters',
+      vsSwap: 'Wissel kant', vsSwapSub: 'P1 ↔ P2 · zelfde score',
       audioHint: 'Volume in pauze — sliders sync met Instellingen',
       audioMuteAll: 'Alles uit', audioRestore: 'Standaard', audioSfxOnly: 'Alleen geluid',
     },
@@ -109,6 +110,7 @@ const I18N = {
       title: 'Paused', sub: 'Rasengan ready — go! · progress stays on this device',
       resume: 'Resume', music: 'Music', sfx: 'Sound', quit: 'Quit to menu',
       vsRestart: 'Restart match', vsRestartSub: '0-0 · same fighters',
+      vsSwap: 'Swap sides', vsSwapSub: 'P1 ↔ P2 · same score',
       audioHint: 'Volume in pause — sliders sync with Settings',
       audioMuteAll: 'Mute all', audioRestore: 'Default', audioSfxOnly: 'SFX only',
     },
@@ -185,6 +187,7 @@ const I18N = {
       title: 'Pause', sub: 'Rasengan bereit — los! · Fortschritt bleibt auf diesem Gerät',
       resume: 'Weiter', music: 'Musik', sfx: 'Sound', quit: 'Menü verlassen',
       vsRestart: 'Match neu starten', vsRestartSub: '0-0 · gleiche Kämpfer',
+      vsSwap: 'Seite tauschen', vsSwapSub: 'P1 ↔ P2 · gleicher Stand',
       audioHint: 'Lautstärke in Pause — sync mit Einstellungen',
     },
     result: { again: 'Nochmal', next: 'Nächstes Level', menu: 'Hauptmenü', rematch: 'Revanche', rematchSub: 'Gleiche Kämpfer',
@@ -248,6 +251,7 @@ const I18N = {
       title: 'Pause', sub: 'Rasengan prêt — go ! · progrès sur cet appareil',
       resume: 'Reprendre', music: 'Musique', sfx: 'Son', quit: 'Quitter au menu',
       vsRestart: 'Recommencer', vsRestartSub: '0-0 · mêmes combattants',
+      vsSwap: 'Changer de côté', vsSwapSub: 'P1 ↔ P2 · même score',
       audioHint: 'Volume en pause — sync avec Options',
     },
     result: { again: 'Rejouer', next: 'Niveau suivant', menu: 'Menu principal', rematch: 'Revanche', rematchSub: 'Mêmes combattants',
@@ -311,6 +315,7 @@ const I18N = {
       title: 'Pausa', sub: 'Rasengan listo — ¡ya! · progreso en este dispositivo',
       resume: 'Seguir', music: 'Música', sfx: 'Sonido', quit: 'Salir al menú',
       vsRestart: 'Reiniciar partida', vsRestartSub: '0-0 · mismos luchadores',
+      vsSwap: 'Cambiar lado', vsSwapSub: 'P1 ↔ P2 · mismo marcador',
       audioHint: 'Volumen en pausa — sync con Opciones',
     },
     result: { again: 'Otra vez', next: 'Siguiente nivel', menu: 'Menú principal', rematch: 'Revancha', rematchSub: 'Mismos luchadores',
@@ -611,6 +616,11 @@ function applyLangStaticScreens() {
   if (pauseVs) {
     const d = pauseVs.querySelector('div');
     if (d) d.innerHTML = t('pause.vsRestart') + '<small>' + t('pause.vsRestartSub') + '</small>';
+  }
+  const pauseVsSwapEl = document.getElementById('pauseVsSwap');
+  if (pauseVsSwapEl) {
+    const d = pauseVsSwapEl.querySelector('div');
+    if (d) d.innerHTML = t('pause.vsSwap') + '<small>' + t('pause.vsSwapSub') + '</small>';
   }
   ['pauseTogMusic', 'pauseTogSfx'].forEach((id, i) => {
     const el = document.getElementById(id);

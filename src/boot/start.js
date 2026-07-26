@@ -601,6 +601,27 @@ if (pauseVsRestart) {
     startGame('versus', { p1, p2 });
   });
 }
+const pauseVsSwap = document.getElementById('pauseVsSwap');
+if (pauseVsSwap) {
+  bindPress(pauseVsSwap, () => {
+    if (!game || game.mode !== 'versus') return;
+    if (state !== 'play' && state !== 'pause') return;
+    AudioSys.sfx('select');
+    const beforeP1 = vsRosterEntry(game.p1Pick).name;
+    const beforeP2 = vsRosterEntry(game.p2Pick).name;
+    if (!swapVsSides(game)) return;
+    state = 'play';
+    AudioSys.setPaused(false);
+    UI.show(null);
+    try { primePlayInput(true); } catch (_) {}
+    UI.toast(t('toast.vsSwap', {
+      a: vsRosterEntry(game.p1Pick).name,
+      b: vsRosterEntry(game.p2Pick).name,
+      was1: beforeP1,
+      was2: beforeP2,
+    }), 2800);
+  });
+}
 bindPress(document.getElementById('resAgain'), () => {
   const d = UI.lastResult;
   if (!d || !d.mode) return;
