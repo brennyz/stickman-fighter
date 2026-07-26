@@ -1,5 +1,27 @@
 # assets/ui — overige UI-SVG
 
-Kleine gedeelde UI-stukken (lock, check, saga-chips) mogen hier landen als ze uit JS-strings worden gehaald.
+**Leidend document:** [`../../ASSET-STYLE.md`](../../ASSET-STYLE.md)
 
-Zie **`ASSET-STYLE.md`** (repo-root) voor tokens en workflow.
+Kleine gedeelde UI-stukken die uit HTML/JS-strings zijn gehaald.
+
+| Prefix | Rol |
+|--------|-----|
+| `saga-*.svg` | Character/skill saga-filter chips |
+| `ach-*.svg` | Prestatie-lijst iconen |
+| `lock.svg` / `check.svg` | Slot & vinkje in lijsten |
+| `island-*.svg` | Avontuur-eiland tabs / help |
+
+## Regels
+
+- Alleen **SVG**, `viewBox="0 0 24 24"`, stroke-first waar mogelijk, geen emoji.
+- Wire-in: `<img src="assets/ui/…">` (HTML of JS-helper).
+- SW precache: alle `assets/ui/*.svg` staan in `sw.js`.
+
+## Status
+
+| Set | Status |
+|-----|--------|
+| saga | Live |
+| ach | Live |
+| lock / check | Live |
+| island | Live |
