@@ -210,6 +210,30 @@ const SceneryArt = {
         }
         break;
       }
+      case 'nachtmerrie': {
+        for (let i = 0; i < 5; i++) {
+          const cx = 20 + i * 36 + r() * 8;
+          const h = 28 + Math.floor(r() * 28);
+          px(cx - 8, base - h, 16, h, '#1a0a28');
+          px(cx - 6, base - h - 4, 12, 6, '#2a1040');
+          if (r() < 0.6) px(cx - 2, base - h + 8, 4, 4, '#c47aff');
+        }
+        for (let i = 0; i < 8; i++) px(r() * W0, base - 6 - r() * 20, 3, 2, 'rgba(196,122,255,.35)');
+        break;
+      }
+      case 'hel': {
+        const cones = [[28, 48], [90, 60], [145, 40]];
+        for (const [cx, h] of cones) {
+          for (let yy = 0; yy < h; yy += 2) {
+            const w = 5 + (yy / h) * (h * 0.95);
+            px(cx - w / 2, base - h + yy, w, 2, '#2a0808');
+          }
+          px(cx - 4, base - h, 8, 3, '#ff6a3d');
+          px(cx - 2, base - h - 2, 4, 2, '#ffd75e');
+        }
+        for (let i = 0; i < 12; i++) px(r() * W0, base - 1 - r() * 5, 3, 1, '#5a1010');
+        break;
+      }
       case 'dojo': {
         // pagode-silhouet + torii-poort
         const pag = (cx, s) => {
@@ -353,14 +377,25 @@ function drawThemeWeather(c, themeName, t, ground, scroll) {
         c.save(); c.translate(x, y); c.rotate(t * 1.6 + i * 2); c.fillRect(-2.4, -1.4, 4.8, 2.8); c.restore();
         break;
       }
-      case 'vulkaan': {
+      case 'vulkaan':
+      case 'hel': {
         // opstijgende sintels met flikker
         const rise = 30 + (i % 4) * 12;
         const x = wrapW(seed * 3.3 + Math.sin(t * 1.7 + i * 2.1) * 18 - scroll * 0.3, W + 30) - 15;
         const y = ground - wrapW(seed * 1.9 + t * rise, ground + 20);
         const fl = 0.35 + Math.max(0, Math.sin(t * 6 + i * 1.7)) * 0.4;
-        c.fillStyle = `rgba(255,${120 + (i % 3) * 30},48,${fl.toFixed(2)})`;
+        const hot = themeName === 'hel';
+        c.fillStyle = hot
+          ? `rgba(255,${90 + (i % 3) * 40},40,${fl.toFixed(2)})`
+          : `rgba(255,${120 + (i % 3) * 30},48,${fl.toFixed(2)})`;
         c.fillRect(x, y, 3, 3);
+        break;
+      }
+      case 'nachtmerrie': {
+        const x = wrapW(seed * 4.2 + Math.sin(t * 1.1 + i) * 40 - scroll * 0.25, W + 40) - 20;
+        const y = wrapW(seed * 2.1 + t * 16, ground + 30) - 15;
+        c.fillStyle = i % 2 ? 'rgba(196,122,255,.45)' : 'rgba(255,107,157,.35)';
+        c.beginPath(); c.arc(x, y, 2.2 + (i % 3) * 0.6, 0, Math.PI * 2); c.fill();
         break;
       }
       case 'cyber': {

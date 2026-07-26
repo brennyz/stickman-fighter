@@ -715,7 +715,7 @@ class Game {
       this.grantXP(bonus);
       if (lv === save.unlocked && save.unlocked < MAX_LEVEL) { save.unlocked++; persist(); }
       if (lv % LEVELS_PER_ISLAND === 0) {
-        save.advIsland = Math.min(5, lv / LEVELS_PER_ISLAND);
+        save.advIsland = Math.min(islandCount(), lv / LEVELS_PER_ISLAND);
         persist();
         if (lv < MAX_LEVEL) {
           const nCap = adventureWeaponCapForLevel(lv + 1);
@@ -727,6 +727,10 @@ class Game {
             } catch (_) {}
           }, 1700);
         }
+        try {
+          const zw = grantZoneBossClearWeapon(lv);
+          if (zw) noteRunLootWeapon(this.runLoot, zw.id);
+        } catch (_) {}
       }
       if (save.advMasterBuff === lv) {
         save.advMasterBuff = null;
@@ -871,6 +875,10 @@ class Game {
           else if (m.giant) dropTier = 'giant';
           this.spawnPickup(m.x + rand(-22, 22), m.y - m.size * 0.45, { itemCat: itemDrop.cat, itemId: itemDrop.id, dropTier });
         }
+      } catch (_) {}
+      try {
+        const zw = rollZoneWeaponDrop(this, m);
+        if (zw) noteRunLootWeapon(this.runLoot, zw.id);
       } catch (_) {}
     }
     try { bumpStat('kills', 1); } catch (_) {}
@@ -2311,6 +2319,9 @@ class Game {
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         if (counter) this.freezeT = Math.max(this.freezeT, 0.016);
         applyHitConfirmFx(this, hx, hy, spec);
+        if (f.isPlayer && spec.kind === 'weapon') {
+          try { applyWeaponOnHitEffect(this, f, m, { dmg: hitRoll.dmg, finisher, crit: hitRoll.crit }); } catch (_) {}
+        }
         if (f.isPlayer && this.styleLightning && !fxLite()) {
           this.burst(m.x, m.y - m.size * 0.5, f.style?.accent || '#7cf5ff', 5, { kind: 'spark', size: 2 });
           if (f.style?.id === 'cyber') spawnFxRing(this, m.x, m.y - m.size * 0.3, '#4ecf6a', 6);
@@ -2497,6 +2508,9 @@ class Game {
     if (this.hint > 0) this.hint -= dt;
     this.shakeT = Math.max(0, this.shakeT - dt);
     if (this.bossPhase2Flash > 0) this.bossPhase2Flash -= dt;
+    try { tickWeaponStatusEffects(this, dt); } catch (_) {}
+    if (this.player && this.player._wpnCritSurgeT > 0) this.player._wpnCritSurgeT -= dt;
+    if (this.p2 && this.p2._wpnCritSurgeT > 0) this.p2._wpnCritSurgeT -= dt;
 
     if (!this.player) return;
     try { this.player.update(dt, this); } catch (plErr) {

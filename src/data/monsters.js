@@ -323,6 +323,12 @@ const WORLD_THEMES = [
   'cyber','vulkaan','dojo','cyber','cyber',
   'cyber','vulkaan','dojo','cyber','cyber',
   'cyber','cyber','cyber','cyber','cyber',
+  /* Nachtmerrie 51–60 */
+  'nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie',
+  'nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie',
+  /* Hel 61–70 */
+  'hel','hel','hel','hel','hel',
+  'hel','hel','hel','hel','hel',
 ];
 const UNLOCK_AT = {
   slymo: 1, bubbel: 1, flapper: 2, piepvleugel: 5, stekelra: 3, ijzerstek: 9,
@@ -423,6 +429,10 @@ const BOSS_AT = {
   40: [{ sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst' }],
   45: [{ sp: 'voidkonijn', elite: true }, { sp: 'guvvedrak' }],
   50: [{ sp: 'guvvedrak', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst', elite: true }],
+  55: [{ sp: 'voidkonijn', elite: true }, { sp: 'neondrake', elite: true }, { sp: 'schaduwvorst' }],
+  60: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'voidkonijn', elite: true }],
+  65: [{ sp: 'omegadrake', elite: true }, { sp: 'etherwyrm', elite: true }, { sp: 'neondrake' }],
+  70: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'apexwyrm', elite: true }, { sp: 'voidkonijn', elite: true }],
 };
 
 function weightedPick(pool, n) {
@@ -517,7 +527,7 @@ function rollWaveGiant(n, elite, spId) {
 function buildLevel(n) {
   const hpMul = 1 + (n - 1) * 0.14;
   const dmgMul = 1 + (n - 1) * 0.08;
-  const maxRarity = n >= 45 ? 5 : n >= 32 ? 4 : n >= 20 ? 3 : n >= 10 ? 2 : n >= 4 ? 1 : 0;
+  const maxRarity = n >= 61 ? 7 : n >= 51 ? 6 : n >= 45 ? 5 : n >= 32 ? 4 : n >= 20 ? 3 : n >= 10 ? 2 : n >= 4 ? 1 : 0;
   const fightPool = Object.keys(UNLOCK_AT).filter(id => {
     const sp = SPECIES[id];
     return sp && UNLOCK_AT[id] <= n && rarityOf(sp.rarity).order <= maxRarity && id !== 'guvvedrak';
@@ -607,8 +617,8 @@ function buildLevel(n) {
     waves.push(bossWave);
     waveMeta.push({ trait: 'boss', spawnMul: 1, label: 'Baas-golf' });
   }
-  const theme = WORLD_THEMES[n - 1] || 'cyber';
-  const rarityCap = ['common','uncommon','rare','epic','legendary','mythic'][maxRarity];
+  const theme = WORLD_THEMES[n - 1] || (n >= 61 ? 'hel' : (n >= 51 ? 'nachtmerrie' : 'cyber'));
+  const rarityCap = ['common','uncommon','rare','epic','legendary','mythic','nightmare','hell'][maxRarity];
   return { n, waves, waveMeta, hpMul, dmgMul, theme, boss: !!BOSS_AT[n], rarityCap };
 }
 

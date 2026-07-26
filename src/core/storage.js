@@ -5,11 +5,12 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.102';
+const APP_VERSION = '1.18.103';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 312;
+const SW_CACHE_REV = 313;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
+  zoneWeapons: {},
 
 
 
@@ -21,9 +22,10 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeJutsu: 'rasengan', skill: 'rasengan', super: 'ketsbam', missionsIntroSeen: false };
 
-const MAX_LEVEL = 50;
+const MAX_LEVEL = 70;
 const LEVELS_PER_ISLAND = 10;
-const ISLAND_WEAPON_CAPS = [10, 20, 30, 40, 48];
+const ISLAND_COUNT = 7;
+const ISLAND_WEAPON_CAPS = [10, 20, 30, 40, 48, 60, 70];
 const ADVENTURE_ISLANDS = [
   { id: 1, name: 'Oost-eiland', sub: 'Lv 1–10 · landweg', accent: '#5ad06a', theme: 'landweg',
     icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20" stroke="#5ad06a" stroke-width="2" stroke-linecap="round"/><path d="M5 20V13l5-8 5 8v7" fill="#43b25b" stroke="#2d8a3e" stroke-width="1"/><circle cx="18" cy="7" r="2.5" fill="#7cf5ff" opacity=".75"/></svg>' },
@@ -35,8 +37,13 @@ const ADVENTURE_ISLANDS = [
     icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 L17 8 H7 Z" fill="#ffd75e"/><rect x="10" y="8" width="4" height="12" fill="#c97a20"/><path d="M6 11 H18 M7 14 H17 M8 17 H16" stroke="#ffd75e" stroke-width="1.4" stroke-linecap="round"/><rect x="4" y="20" width="16" height="2" rx="1" fill="#8a6030"/></svg>' },
   { id: 5, name: 'Finale-eiland', sub: 'Lv 41–50', accent: '#ff6b9d', theme: 'cyber',
     icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18 L7 10 L12 14 L17 10 L20 18 Z" fill="#ff6b9d" stroke="#ffd75e" stroke-width="1"/><circle cx="12" cy="8" r="2.8" fill="#ffd75e"/><path d="M12 2 v2 M12 20 v2 M2 12 h2 M20 12 h2" stroke="#ffd75e" stroke-width="1.2" opacity=".7"/></svg>' },
+  { id: 6, name: 'Nachtmerrie', sub: 'Lv 51–60 · droomchaos', accent: '#c47aff', theme: 'nachtmerrie',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18c2-6 6-10 8-10s6 4 8 10" fill="none" stroke="#c47aff" stroke-width="1.6"/><circle cx="9" cy="10" r="2.2" fill="#2a1840" stroke="#c47aff" stroke-width="1"/><circle cx="15" cy="10" r="2.2" fill="#2a1840" stroke="#c47aff" stroke-width="1"/><path d="M8 15c1.2 1.4 2.8 2 4 2s2.8-.6 4-2" stroke="#ff6b9d" stroke-width="1.4" fill="none"/></svg>' },
+  { id: 7, name: 'Hel', sub: 'Lv 61–70 · zwavel & lava', accent: '#ff6a3d', theme: 'hel',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 L8 10 L12 16 L16 8 L20 20 Z" fill="#ff6a3d" stroke="#ffd75e" stroke-width="1"/><path d="M9 10c0-3 1.5-5 3-5s3 2 3 5" fill="#ffd75e" opacity=".85"/><ellipse cx="12" cy="20" rx="9" ry="1.6" fill="#5a1010" opacity=".7"/></svg>' },
 ];
 function islandMeta(id) { return ADVENTURE_ISLANDS.find(i => i.id === id) || ADVENTURE_ISLANDS[0]; }
+function islandCount() { return ADVENTURE_ISLANDS.length || ISLAND_COUNT; }
 function islandProgress(islandId) {
   const { start, end } = islandLevelRange(islandId);
   const total = end - start + 1;
@@ -57,7 +64,7 @@ function adventureProgressLine() {
     unlocked: save.unlocked, max: MAX_LEVEL,
   });
 }
-function islandFromLevel(n) { return Math.min(5, Math.max(1, Math.ceil(n / LEVELS_PER_ISLAND))); }
+function islandFromLevel(n) { return Math.min(islandCount(), Math.max(1, Math.ceil(n / LEVELS_PER_ISLAND))); }
 function islandLevelRange(islandId) {
   const start = (islandId - 1) * LEVELS_PER_ISLAND + 1;
   return { start, end: Math.min(MAX_LEVEL, start + LEVELS_PER_ISLAND - 1) };
@@ -73,7 +80,11 @@ function adventureWeaponCapForLevel(levelN) {
 }
 function adventureWeaponCap() { return adventureWeaponCapForLevel(save.unlocked || 1); }
 function weaponSkillGated(w) { return w.unlock > adventureWeaponCap(); }
-function weaponUnlockedByLevel(w) { return save.lvl >= w.unlock; }
+function weaponUnlockedByLevel(w) {
+  if (!w) return false;
+  if (w.dropZone) return typeof weaponZoneUnlocked === 'function' ? weaponZoneUnlocked(w) : !!(save.zoneWeapons && save.zoneWeapons[w.id]);
+  return save.lvl >= w.unlock;
+}
 function weaponUsableNow(w) { return weaponUnlockedByLevel(w) && !weaponSkillGated(w); }
 function styleSkillGated(st) { return !!(st.needLvl && st.needLvl > adventureWeaponCap()); }
 function masterBuffActive(levelN) { return save.advMasterBuff === levelN; }
@@ -377,7 +388,8 @@ function rollHitDamage(attacker, spec, mult) {
   if (attacker.isPlayer && k === 'weapon' && attacker.weapon && attacker.weapon.upgradeCrit) {
     critChance += attacker.weapon.upgradeCrit;
   }
-  critChance = clamp(critChance, 0, 0.48);
+  if (attacker._wpnCritSurgeT > 0) critChance += 0.18;
+  critChance = clamp(critChance, 0, 0.55);
   let dmg = spec.dmg * rand(0.9, 1.15) * mult;
   const crit = Math.random() < critChance;
   if (crit) dmg *= critMul;
@@ -843,7 +855,8 @@ function sanitizeTipsSeen(raw) {
 /** Corrupte / gemanipuleerde saves veilig maken (localStorage + import). */
 function sanitizeSave(s) {
   // Literal max — nooit TDZ op MAX_LEVEL (anders crashen alle click-handlers)
-  const maxLevel = 50;
+  const maxLevel = 70;
+  const maxIsland = 7;
   const skillSnap = typeof snapshotSkillUpgradeTracks === 'function' ? snapshotSkillUpgradeTracks(s) : null;
   const itemSnap = typeof snapshotItemUpgradeTracks === 'function' ? snapshotItemUpgradeTracks(s) : null;
   const out = Object.assign({}, DEFAULT_SAVE, s);
@@ -851,7 +864,7 @@ function sanitizeSave(s) {
   out.lvl = clamp(Math.floor(Number(out.lvl) || 1), 1, 500);
   out.xp = clamp(Math.floor(Number(out.xp) || 0), 0, 999999);
   out.unlocked = clamp(Math.floor(Number(out.unlocked) || 1), 1, maxLevel);
-  out.advIsland = clamp(Math.floor(Number(out.advIsland) || 0), 0, 5);
+  out.advIsland = clamp(Math.floor(Number(out.advIsland) || 0), 0, maxIsland);
   const cleanFails = {};
   for (const [k, v] of Object.entries(out.advFails || {})) {
     const n = parseInt(k, 10);
@@ -861,7 +874,7 @@ function sanitizeSave(s) {
   const mb = parseInt(out.advMasterBuff, 10);
   out.advMasterBuff = (Number.isFinite(mb) && mb >= 1 && mb <= maxLevel) ? mb : null;
   if (!out.advIsland && out.unlocked > 1) {
-    out.advIsland = Math.min(5, Math.floor((out.unlocked - 1) / LEVELS_PER_ISLAND));
+    out.advIsland = Math.min(maxIsland, Math.floor((out.unlocked - 1) / LEVELS_PER_ISLAND));
   }
   out.trainWins = clamp(Math.floor(Number(out.trainWins) || 0), 0, 9999);
   out.bestWall = clamp(Math.floor(Number(out.bestWall) || 0), 0, 999999);
@@ -905,12 +918,21 @@ function sanitizeSave(s) {
   } else out.lastPlay = null;
   if (!WEAPONS.some(w => w.id === out.weapon)) out.weapon = 'vuist';
 
+  // Zone-wapens (Nachtmerrie / Hel drops)
+  const cleanZone = {};
+  for (const [k, v] of Object.entries(out.zoneWeapons || {})) {
+    if (!v) continue;
+    const w = WEAPONS.find(x => x.id === k);
+    if (w && w.dropZone) cleanZone[k] = 1;
+  }
+  out.zoneWeapons = cleanZone;
+
   // Summons: alleen bekende wapens, geldige tiers, en alleen echte upgrades
   const cleanSummons = {};
   for (const [k, v] of Object.entries(out.summons || {})) {
     const w = WEAPONS.find(x => x.id === k);
     if (!w || (v !== 'epic' && v !== 'legendary')) continue;
-    const wOrder = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4, mythic: 5 }[w.rarity] || 0;
+    const wOrder = rarityOf(w.rarity).order;
     const tOrder = v === 'legendary' ? 4 : 3;
     if (tOrder > wOrder) cleanSummons[k] = v;
   }
