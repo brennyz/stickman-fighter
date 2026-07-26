@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.77';
+const APP_VERSION = '1.18.78';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 287;
+const SW_CACHE_REV = 288;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -2286,7 +2286,12 @@ function bumpDaily(type, amount) {
     } else {
       task.progress += amount;
     }
-    if (task.progress >= def.goal) { task.progress = def.goal; task.done = true; changed = true; UI.toast(t('toast.missionDone', { text: dailyText(def.id) }), 2800); }
+    if (task.progress >= def.goal) {
+      task.progress = def.goal;
+      task.done = true;
+      changed = true;
+      notifyDailyMissionDone(def.id);
+    }
     else changed = true;
   }
   if (changed) { persist(); checkAchievements(); if (UI.renderMissions) UI.renderMissions(); }
@@ -2509,6 +2514,77 @@ function dailyClaimPathHint(claimedN, readyN) {
   return left === 1
     ? t('missionsUi.claimPathAfter1')
     : t('missionsUi.claimPathAfterN', { n: left });
+}
+
+/** d13 c5: geen toast-stack midden in gevecht — floater in play, toast in menu. */
+function notifyDailyMissionDone(taskId) {
+  const text = dailyText(taskId);
+  const msg = t('toast.missionDone', { text });
+  if (state === 'play' && game && typeof game.floater === 'function') {
+    try {
+      const short = t('missionsUi.missionDoneFloater', { text });
+      game.floater(typeof W !== 'undefined' ? W * 0.5 : 400, 72, short, '#ffd75e', 13, 'hud');
+    } catch (_) {
+      UI.toast(msg, 2400);
+    }
+    return;
+  }
+  UI.toast(msg, 2800);
+}
+
+function achievementPlayTarget(ach) {
+  if (!ach) return null;
+  switch (ach.id) {
+    case 'first_win':
+    case 'combo8':
+    case 'streak10':
+    case 'finisher1':
+    case 'finisher10':
+    case 'finisher50':
+    case 'weaponMaster25':
+    case 'dex10':
+    case 'dexFull':
+    case 'dex100':
+    case 'dexHalf':
+    case 'dexTiers':
+    case 'dexMythic':
+    case 'lv10':
+    case 'lv50':
+      return { mode: 'adventure' };
+    case 'train5':
+    case 'trainCombo10':
+      return { mode: 'training' };
+    case 'wall100':
+      return { mode: 'wall' };
+    case 'vs5':
+    case 'vsFatality1':
+    case 'vs_roster':
+    case 'saga_icons':
+      return { mode: 'versus' };
+    default:
+      return null;
+  }
+}
+
+function goAchievementPlayTarget(ach) {
+  const target = achievementPlayTarget(ach);
+  if (!target) return;
+  try {
+    AudioSys.init();
+    AudioSys.sfx('select');
+    if (target.mode === 'adventure') {
+      UI.safeOpen('levelScreen', () => UI.renderLevels());
+    } else if (target.mode === 'training') {
+      startGame('training');
+    } else if (target.mode === 'wall') {
+      startGame('wall');
+    } else if (target.mode === 'versus') {
+      UI.charPickStep = 1;
+      UI.safeOpen('charSelectScreen', () => UI.renderCharSelect());
+    }
+  } catch (err) {
+    sfReportError('achPlay/' + (ach && ach.id), err, 'Kon modus niet openen — kies handmatig in menu');
+  }
 }
 
 function achievementProgressFrac(ach) {
@@ -9143,6 +9219,7 @@ function seedNlGameStrings() {
     remainderGeneric: 'Nog {n}',
     planNow: 'Nu:',
     planEarned: 'Vandaag +{earned} / max +{max} XP',
+    planXpPct: '{pct}% van max XP vandaag',
     planReset: 'Nieuwe missies over {reset}',
     resetSoon: 'binnenkort',
     resetMinutes: '{m} min',
@@ -9155,8 +9232,10 @@ function seedNlGameStrings() {
     nextPlay: 'Speel {mode} · {text}{remainder}',
     nextPlayGeneric: 'Speel een missie-modus (Avontuur / Muur / Training)',
     dailyClaimedXp: '+{xp} XP',
+    missionDoneFloater: '✓ Missie: {text}',
     spotlightTitle: 'Volgende prestatie (permanent)',
     spotlightFoot: '{pct}% — geen dagelijkse grind',
+    spotlightPlayBtn: 'Speel {mode} →',
   });
   if (!I18N.nl.help) I18N.nl.help = {};
   I18N.nl.help.tips = [
@@ -9933,6 +10012,7 @@ const CATALOG_EN = {
     remainderGeneric: '{n} left',
     planNow: 'Now:',
     planEarned: 'Today +{earned} / max +{max} XP',
+    planXpPct: '{pct}% of max XP today',
     planReset: 'New missions in {reset}',
     resetSoon: 'soon',
     resetMinutes: '{m} min',
@@ -9945,8 +10025,10 @@ const CATALOG_EN = {
     nextPlay: 'Play {mode} · {text}{remainder}',
     nextPlayGeneric: 'Play a mission mode (Adventure / Wall / Training)',
     dailyClaimedXp: '+{xp} XP',
+    missionDoneFloater: '✓ Mission: {text}',
     spotlightTitle: 'Next achievement (permanent)',
     spotlightFoot: '{pct}% — not daily grind',
+    spotlightPlayBtn: 'Play {mode} →',
   },
   ui: {
     menuMissionReady: 'mission ready',
@@ -25738,7 +25820,11 @@ const UI = {
         `<div class="mission-plan-next"><b>${t('missionsUi.planNow')}</b> ${next}</div>` +
         `<div class="mission-plan-xp">${t('missionsUi.planEarned', { earned, max: maxXp })}` +
         (step === 0 ? ` · ${t('missionsUi.planReset', { reset: dailyResetCountdown() })}` : '') +
-        '</div>';
+        '</div>' +
+        (maxXp > 0
+          ? `<div class="mission-plan-xpbar xpline" style="margin-top:8px;height:8px"><div style="width:${Math.min(100, Math.round(earned / maxXp * 100))}%"></div></div>` +
+            `<div class="mission-plan-xpbar-label">${t('missionsUi.planXpPct', { pct: Math.min(100, Math.round(earned / maxXp * 100)) })}</div>`
+          : '');
     }
     const sum = document.getElementById('missionsSummary');
     if (sum) {
@@ -25877,9 +25963,10 @@ const UI = {
     const achSpot = document.getElementById('achSpotlight');
     if (achSpot) {
       const near = nearestAchievement();
-      const showSpot = step === 0 && near;
+      const showSpot = near && (step === 0 || step === 1);
       if (showSpot) {
         const pct = Math.min(100, Math.round(near.frac * 100));
+        const playTarget = achievementPlayTarget(near.ach);
         achSpot.style.display = 'block';
         achSpot.innerHTML =
           `<div class="mission-spot-title">${t('missionsUi.spotlightTitle')}</div>` +
@@ -25887,6 +25974,14 @@ const UI = {
           `<div class="mission-spot-desc">${achLabel(near.ach, 'desc')}${near.hint ? ` · ${near.hint}` : ''}</div>` +
           `<div class="xpline" style="margin-top:8px;height:6px"><div style="width:${pct}%"></div></div>` +
           `<div class="mission-spot-foot">${t('missionsUi.spotlightFoot', { pct })}</div>`;
+        if (playTarget) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn mission-spot-btn';
+          btn.textContent = t('missionsUi.spotlightPlayBtn', { mode: dailyModeLabel(playTarget.mode) });
+          bindPress(btn, () => safeUiAction(() => goAchievementPlayTarget(near.ach), 'achSpotPlay/' + near.ach.id, 'Kon modus niet openen'));
+          achSpot.appendChild(btn);
+        }
       } else {
         achSpot.style.display = 'none';
         achSpot.innerHTML = '';

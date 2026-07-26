@@ -143,7 +143,12 @@ function bumpDaily(type, amount) {
     } else {
       task.progress += amount;
     }
-    if (task.progress >= def.goal) { task.progress = def.goal; task.done = true; changed = true; UI.toast(t('toast.missionDone', { text: dailyText(def.id) }), 2800); }
+    if (task.progress >= def.goal) {
+      task.progress = def.goal;
+      task.done = true;
+      changed = true;
+      notifyDailyMissionDone(def.id);
+    }
     else changed = true;
   }
   if (changed) { persist(); checkAchievements(); if (UI.renderMissions) UI.renderMissions(); }
@@ -366,6 +371,77 @@ function dailyClaimPathHint(claimedN, readyN) {
   return left === 1
     ? t('missionsUi.claimPathAfter1')
     : t('missionsUi.claimPathAfterN', { n: left });
+}
+
+/** d13 c5: geen toast-stack midden in gevecht — floater in play, toast in menu. */
+function notifyDailyMissionDone(taskId) {
+  const text = dailyText(taskId);
+  const msg = t('toast.missionDone', { text });
+  if (state === 'play' && game && typeof game.floater === 'function') {
+    try {
+      const short = t('missionsUi.missionDoneFloater', { text });
+      game.floater(typeof W !== 'undefined' ? W * 0.5 : 400, 72, short, '#ffd75e', 13, 'hud');
+    } catch (_) {
+      UI.toast(msg, 2400);
+    }
+    return;
+  }
+  UI.toast(msg, 2800);
+}
+
+function achievementPlayTarget(ach) {
+  if (!ach) return null;
+  switch (ach.id) {
+    case 'first_win':
+    case 'combo8':
+    case 'streak10':
+    case 'finisher1':
+    case 'finisher10':
+    case 'finisher50':
+    case 'weaponMaster25':
+    case 'dex10':
+    case 'dexFull':
+    case 'dex100':
+    case 'dexHalf':
+    case 'dexTiers':
+    case 'dexMythic':
+    case 'lv10':
+    case 'lv50':
+      return { mode: 'adventure' };
+    case 'train5':
+    case 'trainCombo10':
+      return { mode: 'training' };
+    case 'wall100':
+      return { mode: 'wall' };
+    case 'vs5':
+    case 'vsFatality1':
+    case 'vs_roster':
+    case 'saga_icons':
+      return { mode: 'versus' };
+    default:
+      return null;
+  }
+}
+
+function goAchievementPlayTarget(ach) {
+  const target = achievementPlayTarget(ach);
+  if (!target) return;
+  try {
+    AudioSys.init();
+    AudioSys.sfx('select');
+    if (target.mode === 'adventure') {
+      UI.safeOpen('levelScreen', () => UI.renderLevels());
+    } else if (target.mode === 'training') {
+      startGame('training');
+    } else if (target.mode === 'wall') {
+      startGame('wall');
+    } else if (target.mode === 'versus') {
+      UI.charPickStep = 1;
+      UI.safeOpen('charSelectScreen', () => UI.renderCharSelect());
+    }
+  } catch (err) {
+    sfReportError('achPlay/' + (ach && ach.id), err, 'Kon modus niet openen — kies handmatig in menu');
+  }
 }
 
 function achievementProgressFrac(ach) {

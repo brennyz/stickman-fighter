@@ -13,16 +13,16 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.77",
-    "swCache": "stickfighter-app-v287",
-    "gameJsQuery": "game.js?v=287",
-    "cssQuery": "styles/main.css?v=287",
+    "appVersion": "1.18.78",
+    "swCache": "stickfighter-app-v288",
+    "gameJsQuery": "game.js?v=288",
+    "cssQuery": "styles/main.css?v=288",
     "featureBranch": "cursor/fix-fight-hiccup-freeze-d226",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "dice roll → always start adventure · MERGE"
+    "note": "fight hiccup-freeze · MERGE"
   },
   "userWishlist": [
     {
@@ -30,6 +30,13 @@
       "from": "user",
       "text": "Bug avontuur: hiccup-toast + paars wapen-banner (Lv7 knuppel) → gevecht bevriest, kan niet verder spelen.",
       "status": "done-in-code",
+      "updated": "2026-07-26"
+    },
+    {
+      "id": "w-20260726T070240",
+      "from": "user",
+      "text": "Elke 2 uur automatisch code scannen op bugs/optimalisaties en fixen, volledig autonoom.",
+      "status": "open",
       "updated": "2026-07-26"
     },
     {
@@ -79,11 +86,11 @@
   "sessionLog": [
     {
       "at": "2026-07-26T07:10:13Z",
-      "summary": "Fight hiccup-freeze fix: loop door na crash, grantXP guarded · v1.18.77"
+      "summary": "Fight hiccup-freeze fix: loop door na crash, grantXP guarded · v1.18.78"
     },
     {
-      "at": "2026-07-26T07:00:24Z",
-      "summary": "Pages live v1.18.76: dice→start fix al op main via PR #179"
+      "at": "2026-07-26T07:02:40Z",
+      "summary": "d13 missies c5: in-play floater, XP bar, ach spotlight shortcut · v1.18.77"
     },
     {
       "at": "2026-07-26T06:55:00Z",
@@ -176,6 +183,10 @@
     {
       "at": "2026-07-25T14:14:09Z",
       "summary": "d13 missions c4: claim path copy, almost tag, streak bonus toast v1.18.34"
+    },
+    {
+      "at": "2026-07-25T14:12:00Z",
+      "summary": "d3 versus c4: spawn pads, match-point/HP lead, round-skip, rematch tips v1.18.33"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
