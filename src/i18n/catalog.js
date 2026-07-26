@@ -332,6 +332,7 @@ function seedNlGameStrings() {
     remainderGeneric: 'Nog {n}',
     planNow: 'Nu:',
     planEarned: 'Vandaag +{earned} / max +{max} XP',
+    planXpPct: '{pct}% van max XP vandaag',
     planReset: 'Nieuwe missies over {reset}',
     resetSoon: 'binnenkort',
     resetMinutes: '{m} min',
@@ -344,8 +345,10 @@ function seedNlGameStrings() {
     nextPlay: 'Speel {mode} · {text}{remainder}',
     nextPlayGeneric: 'Speel een missie-modus (Avontuur / Muur / Training)',
     dailyClaimedXp: '+{xp} XP',
+    missionDoneFloater: '✓ Missie: {text}',
     spotlightTitle: 'Volgende prestatie (permanent)',
     spotlightFoot: '{pct}% — geen dagelijkse grind',
+    spotlightPlayBtn: 'Speel {mode} →',
   });
   if (!I18N.nl.help) I18N.nl.help = {};
   I18N.nl.help.tips = [
@@ -1122,6 +1125,7 @@ const CATALOG_EN = {
     remainderGeneric: '{n} left',
     planNow: 'Now:',
     planEarned: 'Today +{earned} / max +{max} XP',
+    planXpPct: '{pct}% of max XP today',
     planReset: 'New missions in {reset}',
     resetSoon: 'soon',
     resetMinutes: '{m} min',
@@ -1134,8 +1138,10 @@ const CATALOG_EN = {
     nextPlay: 'Play {mode} · {text}{remainder}',
     nextPlayGeneric: 'Play a mission mode (Adventure / Wall / Training)',
     dailyClaimedXp: '+{xp} XP',
+    missionDoneFloater: '✓ Mission: {text}',
     spotlightTitle: 'Next achievement (permanent)',
     spotlightFoot: '{pct}% — not daily grind',
+    spotlightPlayBtn: 'Play {mode} →',
   },
   ui: {
     menuMissionReady: 'mission ready',
