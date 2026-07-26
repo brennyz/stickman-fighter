@@ -4,25 +4,17 @@
   "rollFirst": [],
   "remaining": [
     2,
-    4,
     18
   ],
   "lastRoll": {
-    "face": 19,
-    "category": "Muur & minigames \u2014 combo, timer, record",
-    "rolledAt": "2026-07-26T20:03:52Z",
-    "remainingCount": 3,
+    "face": 4,
+    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
+    "rolledAt": "2026-07-26T21:02:27Z",
+    "remainingCount": 2,
     "cycle": 5
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 15,
-      "note": "1 hint/modus geen toast-stack + help chips",
-      "version": "1.12.15",
-      "doneAt": "2026-07-23T18:31:07Z",
-      "cycle": 1
-    },
     {
       "face": 20,
       "note": "dead onboarding wrappers + dup keydown dash",
@@ -575,6 +567,13 @@
       "version": "1.18.118",
       "doneAt": "2026-07-26T20:05:49Z",
       "cycle": 5
+    },
+    {
+      "face": 4,
+      "note": "spawn funnel + star beat + stage clear runway + levelClear reset",
+      "version": "1.18.124",
+      "doneAt": "2026-07-26T21:04:33Z",
+      "cycle": 5
     }
   ],
   "userFeatureLog": [
@@ -969,13 +968,6 @@
     }
   ],
   "history": [
-    {
-      "face": 6,
-      "category": "Audio \u2014 BGM loops, SFX mix, mute paths",
-      "rolledAt": "2026-07-23T15:00:11Z",
-      "remainingCount": 2,
-      "cycle": 0
-    },
     {
       "face": 20,
       "category": "Code health \u2014 kleine refactors, geen gameplay-break",
@@ -1809,6 +1801,13 @@
       "category": "Muur & minigames \u2014 combo, timer, record",
       "rolledAt": "2026-07-26T20:03:52Z",
       "remainingCount": 3,
+      "cycle": 5
+    },
+    {
+      "face": 4,
+      "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
+      "rolledAt": "2026-07-26T21:02:27Z",
+      "remainingCount": 2,
       "cycle": 5
     }
   ],

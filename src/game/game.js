@@ -199,6 +199,8 @@ class Game {
     this.travelWasOn = false;
     this.bossBeatPlayed = false;
     this.waveTotal = 0;
+    this._levelClearPending = false;
+    this.advPrevStars = advStarsFor(n, diff);
     this.allyAssistT = 0;
     this.gambleRoll = gamble || null;
     this.ketsbamCd = 0;
@@ -3702,6 +3704,41 @@ class Game {
     return cy + h / 2 + 6;
   }
 
+  /** d4 c5: spawn/kill trechter — golf-voortgang tijdens actieve spawn (geen xp/hp tweak). */
+  drawWaveSpawnFunnel(c, barY) {
+    if (!this.level || this.waveIdx < 0 || this.wavePause > 0) return barY;
+    const total = Math.max(1, this.waveTotal || 0);
+    if (total <= 3) return barY;
+    const queueLeft = this.spawnQueue.length;
+    const alive = this.monsters.filter((m) => m.alive).length;
+    const spawned = total - queueLeft;
+    const cleared = total - queueLeft - alive;
+    const spawnFrac = clamp(spawned / total, 0, 1);
+    const clearFrac = clamp(cleared / total, 0, 1);
+    const barW = Math.min(148, W * 0.3);
+    const x0 = W / 2 - barW / 2;
+    const y = barY;
+    const h = 4;
+    c.save();
+    c.fillStyle = 'rgba(0,0,0,.45)';
+    this.rr(c, x0 - 1, y - 1, barW + 2, h + 2, 3);
+    c.fill();
+    c.fillStyle = 'rgba(124,245,255,.32)';
+    this.rr(c, x0, y, barW * spawnFrac, h, 2);
+    c.fill();
+    if (clearFrac > 0.01) {
+      c.fillStyle = '#ffd75e';
+      this.rr(c, x0, y, barW * clearFrac, h, 2);
+      c.fill();
+    }
+    c.font = '700 8px -apple-system, sans-serif';
+    c.textAlign = 'center';
+    c.fillStyle = 'rgba(255,255,255,.48)';
+    c.fillText(t('hud.waveFunnel', { cleared, total }), W / 2, y + h + 9);
+    c.restore();
+    return y + h + 14;
+  }
+
   /** d4 c4: sterren-buffer strip — HP% t.o.v. 2★/3★ drempels (hoek rechtsboven). */
   drawAdvStarBuffer(c, x, y, hpPct) {
     const barW = 50;
@@ -4469,6 +4506,9 @@ class Game {
       }
 
       hy = this.drawStageProgress(c, hy + 4) + 10;
+      if (this.waveIdx >= 0 && this.wavePause <= 0) {
+        hy = this.drawWaveSpawnFunnel(c, hy);
+      }
 
       const bossAlive = this.monsters.find(m => m.alive && (m.tideBoss || m.elite));
       if (this.tideBattleActive && this.tideBattleBossId) {
@@ -4527,10 +4567,23 @@ class Game {
       if (p.alive) {
         const hpPct = p.hp / Math.max(1, p.maxhp);
         const proj = starsFromHpPct(hpPct);
+        const prevBest = this.advPrevStars || 0;
         for (let i = 0; i < 3; i++) {
-          drawStarShape(c, W - 52 + i * 19, starY, 8, '#ffd75e', i < proj);
+          const ghost = prevBest > 0 && i < prevBest && i >= proj;
+          drawStarShape(c, W - 52 + i * 19, starY, 8, ghost ? 'rgba(255,215,94,.22)' : '#ffd75e', !ghost && i < proj);
         }
         this.drawAdvStarBuffer(c, W - 58, starY + 13, hpPct);
+        if (proj > prevBest) {
+          c.font = '800 9px -apple-system, sans-serif';
+          c.textAlign = 'right';
+          c.fillStyle = '#7cfc8a';
+          c.fillText(t('hud.starBeat', { n: proj - prevBest }), W - 8, starY + 28);
+        } else if (prevBest > 0) {
+          c.font = '700 8px -apple-system, sans-serif';
+          c.textAlign = 'right';
+          c.fillStyle = 'rgba(255,255,255,.42)';
+          c.fillText(t('hud.starBest', { n: prevBest }), W - 8, starY + 28);
+        }
       }
 
       const rightX = W - Math.max(14, readSafeInsets().right + 8);
@@ -4626,14 +4679,15 @@ class Game {
         const ringX = W / 2;
         const ringY = H - 78;
         const ringR = 24;
+        const stageClear = !!this._levelClearPending;
         if (!motionReduced()) {
           c.save();
-          c.strokeStyle = nextBoss ? 'rgba(255,138,154,.22)' : 'rgba(124,245,255,.18)';
+          c.strokeStyle = stageClear ? 'rgba(126,252,138,.22)' : (nextBoss ? 'rgba(255,138,154,.22)' : 'rgba(124,245,255,.18)');
           c.lineWidth = 3.5;
           c.beginPath();
           c.arc(ringX, ringY, ringR, 0, TAU);
           c.stroke();
-          c.strokeStyle = nextBoss ? '#ffb0b8' : '#7cf5ff';
+          c.strokeStyle = stageClear ? '#7cfc8a' : (nextBoss ? '#ffb0b8' : '#7cf5ff');
           c.lineWidth = 3.5;
           c.lineCap = 'round';
           c.beginPath();
@@ -4641,12 +4695,20 @@ class Game {
           c.stroke();
           c.restore();
         }
+        if (stageClear) {
+          c.font = '900 16px -apple-system, sans-serif';
+          fillHudText(c, t('banner.levelClear', { n: this.level.n }), ringX, ringY - 30, {
+            fill: '#7cfc8a',
+          });
+        }
         c.font = '800 15px sans-serif';
-        const pauseMsg = nextBoss ? t('hud.toBoss', { sec: sec.toFixed(1) }) : t('hud.walkNext', { sec: sec.toFixed(1) });
+        const pauseMsg = stageClear
+          ? t('hud.stageClearSec', { sec: sec.toFixed(1) })
+          : (nextBoss ? t('hud.toBoss', { sec: sec.toFixed(1) }) : t('hud.walkNext', { sec: sec.toFixed(1) }));
         fillHudText(c, pauseMsg, ringX, ringY, {
-          fill: nextBoss ? '#ffc8d0' : '#d8e8ff',
+          fill: stageClear ? '#bfffc8' : (nextBoss ? '#ffc8d0' : '#d8e8ff'),
         });
-        this.drawNextWavePreview(c);
+        if (!stageClear) this.drawNextWavePreview(c);
       }
       let advTele = null;
       for (const m of this.monsters) {
