@@ -17,19 +17,19 @@
     "swCache": "stickfighter-app-v316",
     "gameJsQuery": "game.js?v=316",
     "cssQuery": "styles/main.css?v=316",
-    "featureBranch": "cursor/nightmare-hell-model-deepen-80de",
+    "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "Nightmare 2.0 / Hell 3.0 model deepen in progress · v1.18.106"
+    "note": "Nightmare 2.0 / Hell 3.0 model deepen LIVE · v1.18.106"
   },
   "userWishlist": [
     {
       "id": "w-20260726T185200",
       "from": "user",
       "text": "Werk dit 2.0 en 3.0 model verder uit en push naar live",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-07-26"
     },
     {
@@ -183,6 +183,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T18:58:20Z",
+      "summary": "Nightmare 2.0 / Hell 3.0 verder uitgewerkt en live · v1.18.106"
+    },
+    {
       "at": "2026-07-26T18:54:37Z",
       "summary": "Restore Nachtmerrie/Hel eilanden + 2.0/3.0 diffs live · v1.18.105"
     },
@@ -277,10 +281,6 @@
     {
       "at": "2026-07-26T13:03:47Z",
       "summary": "d7 save: upgrade Lv export/import/drift + readSaveJson merge · v1.18.95"
-    },
-    {
-      "at": "2026-07-26T12:05:30Z",
-      "summary": "d5 perf: projectile budget + hidden tab throttle + scenery cache cap · v1.18.94"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
