@@ -1,6 +1,6 @@
 # Summon reveal video
 
-`reveal.mp4` — 4s stickman clip (tree → sticks fall into closed chest → soft shake).
+`reveal.mp4` — 5s arcade stickman spectacle (arena → stickman → energy into closed iron chest → bloom/shake → dark plate for card).
 
 Code plays this on each chest pull (`SUMMON_VIDEO_SRC`), then shows the rarity card in the last 2s. Overlay FX by rarity live in CSS/JS.
 

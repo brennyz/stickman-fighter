@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=326">
+<link rel="stylesheet" href="styles/main.css?v=327">
 
 
 
@@ -94,7 +94,7 @@
       <div class="arcade-pre" id="menuArcadePre">KIES JE PAD</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine">insert coin</p>
-      <div class="subtitle" id="menuVerLine">v1.18.116 · arcade</div>
+      <div class="subtitle" id="menuVerLine">v1.18.117 · arcade</div>
     </header>
     <div class="arcade-menu-body menu-landing-body">
       <div class="menu-landing-scroll">
@@ -294,53 +294,57 @@
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><img src="assets/buttons/chrome/home.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><span class="sub-home-label">Terug naar menu</span></button></div>
 </div>
 
-<div id="summonScreen" class="screen">
+<div id="summonScreen" class="screen summon-screen">
   <button class="btn back-btn" data-back type="button"><img class="back-btn-ico" src="assets/buttons/chrome/back.svg" alt="" width="18" height="18" decoding="async" draggable="false"> Menu</button>
   <h2 class="head" id="summonScreenHead">Summons</h2>
-  <div class="subtitle" id="summonScreenSub">Dagelijkse menu-kist · 5 wapen + 5 pet · 5% jackpot</div>
-  <div id="summonWhereStrip" class="summon-where" role="note">
-    <b>Waar komt het vandaan?</b> Hoofdmenu → Summons (gratis, 1×/dag per kist-type).<br>
-    <b>Waar zie je het?</b> Hier in de reveal-kaart · daarna Collectie → Wapens / Pets (badge “Kist”).
-  </div>
-  <div id="summonQuota" class="statbar" style="margin-top:6px"></div>
-  <div class="summon-actions">
-    <button type="button" class="btn mode-btn b-weapons big-touch summon-pull-btn" id="btnChestWeapon">
-      <span class="ico"><img src="assets/buttons/hub/summons.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
-      <div>Wapen-kist<small id="chestWeaponLbl">5 over</small></div>
-    </button>
-    <button type="button" class="btn mode-btn b-dex big-touch summon-pull-btn" id="btnChestPet">
-      <span class="ico"><img src="assets/buttons/modes/pets.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
-      <div>Pet-kist<small id="chestPetLbl">5 over</small></div>
-    </button>
-  </div>
-  <div id="summonReveal" class="summon-reveal" data-rarity="common" aria-live="polite">
-    <div class="summon-stage" id="summonStage">
-      <video id="summonVideo" class="summon-video" playsinline muted preload="none"
-        data-src="assets/summon/reveal.mp4" aria-hidden="true"></video>
-      <div class="summon-stage-fallback" id="summonStageFallback" aria-hidden="true">
-        <div class="summon-chest-visual" id="summonChestVisual"></div>
-      </div>
-      <div class="summon-rarity-fx" id="summonRarityFx" aria-hidden="true"></div>
-      <div class="summon-center-card" id="summonCenterCard" aria-hidden="true">
-        <canvas id="summonCardCanvas" class="summon-card-canvas" width="120" height="120" aria-hidden="true"></canvas>
-        <div id="summonCardName" class="summon-card-name"></div>
-        <div id="summonCardRar" class="summon-card-rar"></div>
-        <div id="summonCardSkill" class="summon-card-skill"></div>
-      </div>
+  <div class="subtitle" id="summonScreenSub">Dagelijkse kist · 5 wapen + 5 pet · 5% jackpot</div>
+  <div class="summon-rail">
+    <div id="summonWhereStrip" class="summon-where" role="note">
+      Menu → Summons · buit in Collectie → Wapens / Pets (badge Kist)
     </div>
-    <div id="summonRevealText" class="summon-reveal-text">Tik een kist — laatste 2s verschijnt de buit in het midden</div>
+    <div id="summonQuota" class="statbar summon-quota"></div>
+    <div id="summonReveal" class="summon-reveal" data-rarity="common" aria-live="polite">
+      <div class="summon-stage" id="summonStage">
+        <video id="summonVideo" class="summon-video" playsinline muted preload="none"
+          data-src="assets/summon/reveal.mp4" aria-hidden="true"></video>
+        <div class="summon-stage-fallback" id="summonStageFallback" aria-hidden="true">
+          <div class="summon-arena" aria-hidden="true"></div>
+          <div class="summon-chest-visual" id="summonChestVisual"></div>
+        </div>
+        <div class="summon-rarity-rays" id="summonRarityRays" aria-hidden="true"></div>
+        <div class="summon-rarity-fx" id="summonRarityFx" aria-hidden="true"></div>
+        <div class="summon-stage-vignette" aria-hidden="true"></div>
+        <div class="summon-center-card" id="summonCenterCard" aria-hidden="true">
+          <canvas id="summonCardCanvas" class="summon-card-canvas" width="160" height="160" aria-hidden="true"></canvas>
+          <div id="summonCardName" class="summon-card-name"></div>
+          <div id="summonCardRar" class="summon-card-rar"></div>
+          <div id="summonCardSkill" class="summon-card-skill"></div>
+        </div>
+      </div>
+      <div id="summonRevealText" class="summon-reveal-text">Tik een kist — reveal + buitkaart</div>
+    </div>
+    <div class="summon-actions">
+      <button type="button" class="btn mode-btn b-weapons big-touch summon-pull-btn" id="btnChestWeapon">
+        <span class="ico"><img src="assets/buttons/hub/summons.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
+        <div>Wapen-kist<small id="chestWeaponLbl">5 over</small></div>
+      </button>
+      <button type="button" class="btn mode-btn b-dex big-touch summon-pull-btn" id="btnChestPet">
+        <span class="ico"><img src="assets/buttons/modes/pets.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
+        <div>Pet-kist<small id="chestPetLbl">5 over</small></div>
+      </button>
+    </div>
+    <div class="summon-goto-row">
+      <button type="button" class="btn mode-btn b-gray big-touch" id="btnSummonGotoWeapons">
+        <span class="ico"><img src="assets/buttons/modes/weapons.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
+        <div>Naar wapens<small>Collectie</small></div>
+      </button>
+      <button type="button" class="btn mode-btn b-gray big-touch" id="btnSummonGotoPets">
+        <span class="ico"><img src="assets/buttons/modes/pets.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
+        <div>Naar pets<small>Collectie</small></div>
+      </button>
+    </div>
+    <div id="summonLog" class="summon-log"></div>
   </div>
-  <div class="summon-goto-row">
-    <button type="button" class="btn mode-btn b-gray big-touch" id="btnSummonGotoWeapons">
-      <span class="ico"><img src="assets/buttons/modes/weapons.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
-      <div>Naar wapens<small>Collectie</small></div>
-    </button>
-    <button type="button" class="btn mode-btn b-gray big-touch" id="btnSummonGotoPets">
-      <span class="ico"><img src="assets/buttons/modes/pets.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
-      <div>Naar pets<small>Collectie</small></div>
-    </button>
-  </div>
-  <div id="summonLog" class="summon-log"></div>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><img src="assets/buttons/chrome/home.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><span class="sub-home-label">Terug naar menu</span></button></div>
 </div>
 
@@ -651,12 +655,12 @@
 
 <script>
 /* HTML↔JS handshake: als oude SW nog oude game.js serveert terwijl menu-HTML nieuw is. */
-window.__SF_EXPECT_REV = 326;
-window.__SF_EXPECT_APP = '1.18.116';
+window.__SF_EXPECT_REV = 327;
+window.__SF_EXPECT_APP = '1.18.117';
 </script>
-<script src="tunnel-check.js?v=326"></script>
-<script src="game.js?v=326"></script>
-<script src="install.js?v=326"></script>
+<script src="tunnel-check.js?v=327"></script>
+<script src="game.js?v=327"></script>
+<script src="install.js?v=327"></script>
 <script>
 (function () {
   function nukeStale(reason) {

@@ -1848,6 +1848,7 @@ const UI = {
       if (state === 'pause' || state === 'result') state = 'menu';
       this.clearSummonRevealTimers();
       this._chestPullBusy = false;
+      try { if (typeof _summonVideoOk !== 'undefined') _summonVideoOk = null; } catch (_) {}
       this.safeOpen('summonScreen', () => this.renderSummon(), { msg: 'Summons laden mislukt' });
     } catch (err) {
       sfReportError('openSummonHub', err, 'Summons openen mislukt');
@@ -1863,7 +1864,11 @@ const UI = {
     const card = document.getElementById('summonCenterCard');
     if (!cv || !nameEl) return;
     const cc = cv.getContext('2d');
-    cc.clearRect(0, 0, cv.width, cv.height);
+    const W = cv.width || 160;
+    const H = cv.height || 160;
+    const cx = W * 0.5;
+    const cy = H * 0.52;
+    cc.clearRect(0, 0, W, H);
     const rarId = typeof chestResultRarityId === 'function' ? chestResultRarityId(res) : 'common';
     const rar = typeof rarityOf === 'function' ? rarityOf(rarId) : { color: '#9db1e3', name: rarId };
     let title = '…';
@@ -1871,13 +1876,13 @@ const UI = {
     try {
       if (res && res.weaponId && typeof drawWeaponShape === 'function') {
         cc.save();
-        cc.translate(28, 78);
+        cc.translate(cx - 32, cy + 18);
         cc.rotate(-0.55);
         if (rar.order >= 3 && !motionReduced()) {
           cc.fillStyle = rar.glow || 'rgba(255,215,94,.35)';
-          cc.beginPath(); cc.arc(26, -6, 28, 0, Math.PI * 2); cc.fill();
+          cc.beginPath(); cc.arc(30, -8, 34, 0, Math.PI * 2); cc.fill();
         }
-        drawWeaponShape(cc, res.weaponId, 0.28);
+        drawWeaponShape(cc, res.weaponId, 0.34);
         cc.restore();
         title = res.name || (typeof weaponLabel === 'function' ? weaponLabel(res.weaponId) : res.weaponId);
         skill = res.skill || '';
@@ -1886,8 +1891,8 @@ const UI = {
         const sp = def && SPECIES[def.speciesId];
         if (sp) {
           cc.save();
-          cc.translate(60, 72);
-          cc.scale(0.72, 0.72);
+          cc.translate(cx, cy + 10);
+          cc.scale(0.9, 0.9);
           drawMonsterArt(cc, sp, sp.size || 28, 1.15, false, false);
           cc.restore();
         }
@@ -1895,26 +1900,34 @@ const UI = {
         skill = res.skill || '';
       } else if (res && res.type === 'egg') {
         cc.fillStyle = rar.color || '#ffd75e';
-        cc.beginPath(); cc.ellipse(60, 62, 28, 36, 0, 0, Math.PI * 2); cc.fill();
+        cc.beginPath(); cc.ellipse(cx, cy, 34, 44, 0, 0, Math.PI * 2); cc.fill();
+        cc.strokeStyle = 'rgba(0,0,0,.35)';
+        cc.lineWidth = 3;
+        cc.stroke();
         title = res.name ? ('Ei · ' + res.name) : 'Ei';
       } else if (res && res.type === 'coins') {
         cc.fillStyle = '#ffd75e';
-        cc.beginPath(); cc.arc(60, 60, 28, 0, Math.PI * 2); cc.fill();
+        cc.beginPath(); cc.arc(cx, cy, 34, 0, Math.PI * 2); cc.fill();
+        cc.strokeStyle = '#c97a20';
+        cc.lineWidth = 4;
+        cc.stroke();
         cc.fillStyle = '#c97a20';
-        cc.font = 'bold 22px sans-serif';
+        cc.font = 'bold 28px Nunito, sans-serif';
         cc.textAlign = 'center';
-        cc.fillText('🪙', 60, 68);
+        cc.textBaseline = 'middle';
+        cc.fillText('P', cx, cy + 1);
         title = '+' + (res.amount || 0) + ' pet coins';
       } else if (res && res.type === 'xp') {
         cc.fillStyle = '#7cf5ff';
-        cc.font = 'bold 28px sans-serif';
+        cc.font = 'bold 34px Nunito, sans-serif';
         cc.textAlign = 'center';
-        cc.fillText('XP', 60, 70);
+        cc.textBaseline = 'middle';
+        cc.fillText('XP', cx, cy);
         title = '+' + (res.amount || 0) + ' XP';
       } else {
         cc.strokeStyle = '#9db1e3';
         cc.lineWidth = 3;
-        cc.strokeRect(30, 30, 60, 60);
+        cc.strokeRect(cx - 36, cy - 36, 72, 72);
         title = (res && res.label) || 'Niks bijzonders';
       }
     } catch (_) {
@@ -1940,8 +1953,8 @@ const UI = {
   },
 
   /**
-   * Play optional Gemini video; always schedule center-card for last 2s.
-   * No video file → CSS fallback stage (no 404 spam after first fail).
+   * Play summon reveal video; always schedule center-card for last 2s.
+   * No video file → CSS arena fallback (no 404 spam after first fail).
    */
   runSummonRevealTimeline(res) {
     this.clearSummonRevealTimers();
@@ -1999,8 +2012,12 @@ const UI = {
       settled = true;
       _summonVideoOk = true;
       if (fallback) fallback.style.display = 'none';
-      vid.style.display = '';
-      const durMs = Math.max(2500, (vid.duration || 4) * 1000);
+      // Must be 'block' — stylesheet sets .summon-video { display:none }
+      vid.style.display = 'block';
+      const durMs = Math.max(
+        SUMMON_REVEAL_TOTAL_MS,
+        Math.round((vid.duration || 5) * 1000)
+      );
       startTimers(durMs);
       try {
         vid.currentTime = 0;
@@ -2010,15 +2027,14 @@ const UI = {
     };
     try {
       if (fallback) fallback.style.display = '';
-      vid.style.display = '';
+      vid.style.display = 'none';
       if (!vid.getAttribute('src') || vid.getAttribute('src') !== src) {
         vid.setAttribute('src', src);
       }
       vid.load();
-      // If metadata never fires (missing file), fall back
       setTimeout(() => {
         if (!settled) settleFallback();
-      }, 900);
+      }, 1100);
     } catch (_) {
       settleFallback();
     }
