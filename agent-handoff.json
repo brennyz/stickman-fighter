@@ -127,6 +127,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T15:04:15Z",
+      "summary": "ASSET-STYLE ui SVGs wired (saga/ach/lock/island) · v1.18.98"
+    },
+    {
       "at": "2026-07-26T15:03:29Z",
       "summary": "ASSET-STYLE ui SVGs wired · v1.18.98"
     },
@@ -221,10 +225,6 @@
     {
       "at": "2026-07-26T02:05:36Z",
       "summary": "d17+d11: goMenu gamble/result fix, pause over guard, sanitize tipsSeen/missionsIntroSeen · v1.18.71"
-    },
-    {
-      "at": "2026-07-26T01:01:43Z",
-      "summary": "d10 a11y c5: calm joy/special meter, HC gamble flash CSS · v1.18.70"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
