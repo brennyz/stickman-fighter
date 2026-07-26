@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.106';
+const APP_VERSION = '1.18.107';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 316;
+const SW_CACHE_REV = 317;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   zoneWeapons: {},
@@ -263,7 +263,11 @@ function adventureWeaponCapForLevel(levelN) {
   return ISLAND_WEAPON_CAPS[idx];
 }
 function adventureWeaponCap() { return adventureWeaponCapForLevel(advUnlockedLevel('normal') || 1); }
-function weaponSkillGated(w) { return w.unlock > adventureWeaponCap(); }
+function weaponSkillGated(w) {
+  // Zone-drops (Nightmare/Hel): bruikbaar zodra verzameld — geen eiland-skill gate
+  if (w && w.dropZone) return false;
+  return w.unlock > adventureWeaponCap();
+}
 function weaponUnlockedByLevel(w) {
   if (!w) return false;
   if (w.dropZone) return typeof weaponZoneUnlocked === 'function' ? weaponZoneUnlocked(w) : !!(save.zoneWeapons && save.zoneWeapons[w.id]);
@@ -574,6 +578,7 @@ function rollHitDamage(attacker, spec, mult) {
   if (attacker.isPlayer && k === 'weapon' && attacker.weapon && attacker.weapon.upgradeCrit) {
     critChance += attacker.weapon.upgradeCrit;
   }
+  if (attacker._wpnCritSurgeT > 0) critChance += 0.18;
   critChance = clamp(critChance, 0, 0.48);
   let dmg = spec.dmg * rand(0.9, 1.15) * mult;
   const crit = Math.random() < critChance;
