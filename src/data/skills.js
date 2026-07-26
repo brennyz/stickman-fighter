@@ -313,6 +313,11 @@ function rollSkillShardDrop(monster) {
   if (superBoss) chance = 0.55;
   else if (elite) chance = 0.28;
   else if (giant) chance = 0.16;
+  try {
+    if (typeof game !== 'undefined' && game && game.mode === 'adventure') {
+      chance = Math.min(0.92, chance * advDropChanceMul(game.advDiff));
+    }
+  } catch (_) {}
   if (Math.random() >= chance) return null;
   const weights = [];
   for (const id of SKILL_IDS) {

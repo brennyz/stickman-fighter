@@ -391,6 +391,11 @@ function rollItemShardDrop(monster) {
   if (superBoss) chance = 0.42;
   else if (elite) chance = 0.18;
   else if (giant) chance = 0.11;
+  try {
+    if (typeof game !== 'undefined' && game && game.mode === 'adventure') {
+      chance = Math.min(0.9, chance * advDropChanceMul(game.advDiff));
+    }
+  } catch (_) {}
   if (Math.random() >= chance) return null;
 
   const pool = [];

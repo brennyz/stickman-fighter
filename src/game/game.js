@@ -110,9 +110,12 @@ class Game {
     this.runLoot = createRunLoot();
 
     const st = playerStats();
+    if (mode === 'adventure') {
+      this.advDiff = normalizeAdvDiffId(opts.difficulty || currentAdvDiff());
+    }
     if (mode !== 'versus') {
       const advLevel = mode === 'adventure' ? (opts.level || 1) : 0;
-      const mb = mode === 'adventure' && masterBuffActive(advLevel);
+      const mb = mode === 'adventure' && masterBuffActive(advLevel, this.advDiff);
       const pst = mode === 'adventure' ? playerStats({ masterBuff: mb }) : st;
       const wpn = mode === 'adventure' ? playerWeaponForAdventure(advLevel) : playerWeapon();
       this.player = new Fighter({
@@ -151,7 +154,7 @@ class Game {
       this.gambleBossWave = 0;
       this.masterSwordT = 0;
       this._savedMasterWeapon = null;
-      this.initAdventure(opts.level || 1, opts.gamble);
+      this.initAdventure(opts.level || 1, opts.gamble, opts.difficulty);
     } else if (mode === 'training') this.initTraining();
     else if (mode === 'wall') this.initWall();
     else if (mode === 'coinrun') this.initCoinRun();
@@ -174,9 +177,11 @@ class Game {
   }
 
   /* --------------------------- AVONTUUR ------------------------------- */
-  initAdventure(n, gamble) {
+  initAdventure(n, gamble, difficulty) {
     try { Input.dualMode = false; } catch (_) {}
-    this.level = buildLevel(n);
+    const diff = normalizeAdvDiffId(difficulty || currentAdvDiff());
+    this.advDiff = diff;
+    this.level = buildLevel(n, diff);
     this.theme = this.level.theme;
     this.waveIdx = -1;
     this.spawnQueue = [];
@@ -211,8 +216,12 @@ class Game {
     this.tideBattlePrevSong = null;
     this.tideBattleMusicT = null;
     applyGambleToStage(this, gamble);
-    this.banner(t('banner.levelStart', { n }), 1.4, '#ffd75e', 54);
-    if (masterBuffActive(n)) {
+    const diffMeta = advDiffMeta(diff);
+    const startLabel = diff === 'normal'
+      ? t('banner.levelStart', { n })
+      : t('banner.levelStartDiff', { n, diff: advDiffLabel(diff) });
+    this.banner(startLabel, 1.4, diffMeta.accent || '#ffd75e', 54);
+    if (masterBuffActive(n, diff)) {
       const self = this;
       setTimeout(() => {
         try {
@@ -230,7 +239,7 @@ class Game {
           if (!gameUiTimerOk(self)) return;
           self.floater(W * 0.5, 148, t('combat.skillGate', { cap: wCap }), '#ffd75e', 13, 'hud');
         } catch (_) {}
-      }, masterBuffActive(n) ? 2800 : 1500);
+      }, masterBuffActive(n, diff) ? 2800 : 1500);
     }
     if (gamble && gamble.outcome !== 'neutral') {
       const self = this;
@@ -338,15 +347,15 @@ class Game {
     }
     if (bossWave) {
       try {
-        this.banner(t('banner.bossWave'), 1.8, '#ff6b6b', 50);
+        this.banner(t('banner.bossWave'), 2.2, '#ff6b6b', 58);
         if (typeof playFightBgm === 'function') playFightBgm('boss');
         else AudioSys.play('boss');
         AudioSys.sfx('roar');
       } catch (_) {}
       try {
-        this.shake(8, 0.3);
-        this.burst(W * 0.5, this.ground - 80, '#ff6b6b', fxLite() ? 12 : 22);
-        spawnFxRing(this, W * 0.5, this.ground - 80, '#ffd75e', 18);
+        this.shake(10, 0.36);
+        this.burst(W * 0.5, this.ground - 80, '#ff6b6b', fxLite() ? 12 : 26);
+        spawnFxRing(this, W * 0.5, this.ground - 80, '#ffd75e', 20);
       } catch (_) {}
     } else if (wave.some(s => s.elite || s.superBoss)) {
       const hasSuper = wave.some(s => s.superBoss);
@@ -633,11 +642,17 @@ class Game {
             levelN: this.level.n,
             hpMul: this.level.hpMul,
             dmgMul: this.level.dmgMul,
+            speedMul: this.level.speedMul || 1,
+            advDiff: this.advDiff || this.level.diff || 'normal',
+            enrageMul: this.level.enrageMul || 1,
+            enrageAt: this.level.enrageAt != null ? this.level.enrageAt : 0.5,
           });
           this.monsters.push(mon);
           if (def.superBoss) {
             triggerSpecialEnemyIntro(this, mon, 'superBoss');
-          } else if (def.elite || bossWave) {
+          } else if (def.bossCore) {
+            triggerSpecialEnemyIntro(this, mon, 'boss');
+          } else if (def.elite) {
             triggerSpecialEnemyIntro(this, mon, bossWave ? 'boss' : 'elite');
           } else if (def.giant && !fxLite()) {
             this.floater(mon.x, mon.y - mon.size - 28, t('combat.giant'), '#ffd75e', 13);
@@ -714,14 +729,30 @@ class Game {
     this.inputLocked = true;
     let stars = 0;
     const lv = this.level.n;
-    const prevStars = save.stars[lv] || 0;
+    const diff = normalizeAdvDiffId(this.advDiff || (this.level && this.level.diff) || currentAdvDiff());
+    this.advDiff = diff;
+    const prevStars = advStarsFor(lv, diff);
     if (win) {
-      const bonus = 30 + lv * 10;
+      const bonus = Math.round((30 + lv * 10) * advXpMul(diff));
       this.grantXP(bonus);
-      if (lv === save.unlocked && save.unlocked < MAX_LEVEL) { save.unlocked++; persist(); }
-      if (lv % LEVELS_PER_ISLAND === 0) {
-        save.advIsland = Math.min(5, lv / LEVELS_PER_ISLAND);
+      if (diff !== 'normal') {
+        const coinN = Math.max(1, Math.round((3 + Math.floor(lv / 8)) * (typeof advPetCoinMul === 'function' ? advPetCoinMul(diff) : 1)));
+        try {
+          save.petCoins = (typeof petCoinsBalance === 'function' ? petCoinsBalance() : (save.petCoins || 0)) + coinN;
+          this.petCoinsThisRun = (this.petCoinsThisRun || 0) + coinN;
+          persist();
+        } catch (_) {}
+      }
+      const unlocked = advUnlockedLevel(diff);
+      if (lv === unlocked && unlocked < MAX_LEVEL) {
+        setAdvUnlockedLevel(unlocked + 1, diff);
         persist();
+      }
+      if (lv % LEVELS_PER_ISLAND === 0) {
+        if (diff === 'normal') {
+          save.advIsland = Math.min(islandCount(), lv / LEVELS_PER_ISLAND);
+          persist();
+        }
         if (lv < MAX_LEVEL) {
           const nCap = adventureWeaponCapForLevel(lv + 1);
           const self = this;
@@ -733,15 +764,37 @@ class Game {
           }, 1700);
         }
       }
-      if (save.advMasterBuff === lv) {
-        save.advMasterBuff = null;
+      if (lv === MAX_LEVEL) {
+        const already = !!(save.advCleared && save.advCleared[diff]);
+        markAdvDiffCleared(diff);
+        persist();
+        if (!already) {
+          const self = this;
+          setTimeout(() => {
+            try {
+              if (!gameUiTimerOk(self, { allowOver: true })) return;
+              if (diff === 'normal') UI.toast(t('toast.diffUnlockNightmare'), 4800);
+              else if (diff === 'nightmare') UI.toast(t('toast.diffUnlockHell'), 4800);
+              else UI.toast(t('toast.diffHellCleared'), 4200);
+            } catch (_) {}
+          }, 1900);
+        }
+      }
+      if (masterBuffLevel(diff) === lv) {
+        setMasterBuffLevel(null, diff);
         persist();
       }
       const hpPct = this.player.hp / Math.max(1, this.player.maxhp);
       stars = starsFromHpPct(hpPct);
-      if (stars > prevStars) { save.stars[lv] = stars; persist(); }
+      if (stars > prevStars) { setAdvStarsFor(lv, stars, diff); persist(); }
       bumpStat('advWins', 1);
       bumpDaily('advWin', 1);
+      try {
+        const zwBoss = grantZoneBossClearWeapon(lv, diff);
+        if (zwBoss) {
+          try { noteRunLootWeapon(this.runLoot, zwBoss.id); } catch (_) {}
+        }
+      } catch (_) {}
       const eggBonus = maybeAdvEggBonus();
       if (eggBonus) {
         spawnGameEggPet(this);
@@ -767,11 +820,10 @@ class Game {
         this.banner(t('banner.levelClear', { n: lv }), 2, '#7cfc8a', 52);
       }
     } else {
-      if (!save.advFails || typeof save.advFails !== 'object') save.advFails = {};
-      const hadMaster = save.advMasterBuff === lv;
-      save.advFails[lv] = (save.advFails[lv] || 0) + 1;
-      const gotMaster = save.advFails[lv] >= 5 && !hadMaster;
-      if (gotMaster) save.advMasterBuff = lv;
+      const hadMaster = masterBuffLevel(diff) === lv;
+      const fails = bumpAdvFail(lv, diff);
+      const gotMaster = fails >= 5 && !hadMaster;
+      if (gotMaster) setMasterBuffLevel(lv, diff);
       persist();
       if (gotMaster) {
         const self = this;
@@ -795,7 +847,10 @@ class Game {
         let base = win
           ? t('result.advDetailWin', { lv, kills: this.kills, stars, combo: this.maxCombo || 0, finishers, streak })
           : t('result.advDetailLose', { lv, kills: this.kills, combo: this.maxCombo || 0, finishers, streak });
-        if (masterBuffActive(lv) && !win) base += t('result.masterBuffActive');
+        if (diff !== 'normal') {
+          base = t('result.advDiffLine', { diff: advDiffLabel(diff) }) + base;
+        }
+        if (masterBuffActive(lv, diff) && !win) base += t('result.masterBuffActive');
         if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
           base += t('result.gambleLine', {
             text: gambleOutcomeLabelFromKey(this.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48),
@@ -804,7 +859,7 @@ class Game {
         return base;
       })(),
       xp: this.sessionXP,
-      mode: 'adventure', level: this.level.n, win, stars, prevStars,
+      mode: 'adventure', level: this.level.n, win, stars, prevStars, difficulty: diff,
       tip: win ? (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
         ? t('result.starImproved', { stars, prev: prevStars })
         : t('result.pickupsHelp', { hint: starHintLine() }))) : (() => {
@@ -877,6 +932,12 @@ class Game {
           this.spawnPickup(m.x + rand(-22, 22), m.y - m.size * 0.45, { itemCat: itemDrop.cat, itemId: itemDrop.id, dropTier });
         }
       } catch (_) {}
+      try {
+        const zw = rollZoneWeaponDrop(this, m);
+        if (zw) {
+          try { noteRunLootWeapon(this.runLoot, zw.id); } catch (_) {}
+        }
+      } catch (_) {}
     }
     try { bumpStat('kills', 1); } catch (_) {}
     try { bumpDaily('kills', 1); } catch (_) {}
@@ -887,7 +948,8 @@ class Game {
     const lvlScale = 1 + (this.level ? (this.level.n - 1) * 0.1 : 0);
     const rarMul = 1 + (rar.order || 0) * 0.15;
     const giantMul = m.giant ? GIANT_XP_MUL : 1;
-    const xp = Math.round((sp.xp || 8) * lvlScale * rarMul * (m.elite ? 2 : 1) * giantMul);
+    const bossMul = m.colossal ? COLOSSAL_XP_MUL : (m.bossCore ? 1.25 : 1);
+    const xp = Math.round((sp.xp || 8) * lvlScale * rarMul * (m.elite ? 2 : 1) * giantMul * bossMul);
     try { this.grantXP(xp); } catch (_) {}
     try { this.floater(m.x, m.y - m.size - 30, `+${xp} XP`, rar.color, 16); } catch (_) {}
     if ((rar.order || 0) >= 3) {
@@ -2314,6 +2376,11 @@ class Game {
         }
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
+        if (spec.kind === 'weapon' && typeof applyWeaponOnHitEffect === 'function') {
+          try {
+            applyWeaponOnHitEffect(this, f, m, { dmg: hitRoll.dmg, crit: hitRoll.crit, finisher });
+          } catch (_) {}
+        }
         if (counter) this.freezeT = Math.max(this.freezeT, 0.016);
         applyHitConfirmFx(this, hx, hy, spec);
         if (f.isPlayer && this.styleLightning && !fxLite()) {
@@ -2545,6 +2612,9 @@ class Game {
         try { sfReportError('monster/update', monErr, 'Vijand hiccup — speel door'); } catch (_) {}
       }
     }
+    try { if (typeof tickWeaponStatusEffects === 'function') tickWeaponStatusEffects(this, dt); } catch (_) {}
+    if (this.player && this.player._wpnCritSurgeT > 0) this.player._wpnCritSurgeT -= dt;
+    if (this.p2 && this.p2._wpnCritSurgeT > 0) this.p2._wpnCritSurgeT -= dt;
     this.monsters = this.monsters.filter(m => m.alive || m.deadT < 1);
     if (this.mode === 'adventure') tickSuperFx(this, dt);
 
@@ -2704,6 +2774,14 @@ class Game {
             try { AudioSys.sfxAt(weaponHitSfx(p.throwId || 'shuriken', hit.dmg), m.x); } catch (_) {}
             m.takeDamage(hit.dmg, dir * 300 * (p.kbMul || 1), this, { skipHitSfx: true, crit: hit.crit });
             if (hit.crit) applyCritFx(this, m.x, m.y);
+            if (p.throwId && typeof applyWeaponOnHitEffect === 'function') {
+              const owner = this.player;
+              if (owner && owner.weapon && owner.weapon.id === p.throwId && owner.weapon.effect) {
+                try {
+                  applyWeaponOnHitEffect(this, owner, m, { dmg: hit.dmg, crit: hit.crit, finisher: false });
+                } catch (_) {}
+              }
+            }
             if (skProj) spawnJutsuImpactFx(this, m.x, m.y, p.kind, 'full');
             if (p.hitSet) p.hitSet.add(m); else p.life = 0;
           }
@@ -4261,7 +4339,7 @@ class Game {
       c.fillStyle = '#333c55'; this.rr(c, bx, by, bw, 15, 6); c.fill();
       c.fillStyle = p.hp / p.maxhp > 0.35 ? '#6ee06e' : '#ff6b6b';
       this.rr(c, bx, by, bw * clamp(p.hp / p.maxhp, 0, 1), 15, 6); c.fill();
-      if (this.mode === 'adventure' && masterBuffActive(this.level.n)) {
+      if (this.mode === 'adventure' && masterBuffActive(this.level.n, this.advDiff)) {
         c.fillStyle = 'rgba(196,122,255,.28)';
         this.rr(c, bx - 2, by - 16, bw + 4, 13, 5); c.fill();
         c.font = '800 9px -apple-system, sans-serif';
@@ -4355,6 +4433,22 @@ class Game {
         fill: a11yHighContrast() ? '#fff' : 'rgba(255,255,255,.9)',
       });
       hy += 17;
+
+      if (this.advDiff && this.advDiff !== 'normal') {
+        const dm = advDiffMeta(this.advDiff);
+        const chip = advDiffShort(this.advDiff);
+        c.font = '900 11px -apple-system, sans-serif';
+        const tw = c.measureText(chip).width;
+        const cx = W / 2;
+        c.fillStyle = 'rgba(0,0,0,.45)';
+        this.rr(c, cx - tw / 2 - 8, hy - 10, tw + 16, 14, 7); c.fill();
+        c.strokeStyle = dm.accent;
+        c.lineWidth = 1.5;
+        this.rr(c, cx - tw / 2 - 8, hy - 10, tw + 16, 14, 7); c.stroke();
+        c.fillStyle = dm.accent;
+        c.fillText(chip, cx, hy);
+        hy += 16;
+      }
 
       c.font = '700 11px -apple-system, sans-serif';
       c.fillStyle = isl.accent;

@@ -133,6 +133,12 @@ function weaponHitSfx(weaponOrId, dmg) {
   if (id === 'shuriken' || id === 'fuuma') return 'hitMetal';
   if (id === 'boemerang') return 'hit2';
   if (id === 'waaier') return 'hit2';
+  const w = typeof weaponOrId === 'object' && weaponOrId ? weaponOrId : (typeof weaponById === 'function' ? weaponById(id) : null);
+  if (w && (w.rarity === 'nightmare' || w.rarity === 'hell')) {
+    if (w.effect === 'quake' || w.effect === 'meteor' || w.effect === 'quakboom') return 'hitHeavy';
+    if (w.effect === 'burn' || w.effect === 'inferno' || w.effect === 'sonic') return 'hitEnergy';
+    return 'hit2';
+  }
   if (dmg > 22) return 'hit2';
   return 'hit';
 }
@@ -328,6 +334,33 @@ const WEAPON_COMBOS = {
       { pose: 'upper', rangeMul: 1.06, dmgMul: 1.18, kbMul: 1.28, hitY: -14, windupMul: 1.1, activeMul: 0.96 },
     ],
   },
+  nachtkaars: { labels: ['Wax-snit', 'Drip-stoot', 'Kaars-finisher'] },
+  droomprikker: { labels: ['Prik', 'Droom-haak', 'Slapeloos'] },
+  spooklepel: { labels: ['Lepel-slap', 'Omkeer', 'Spook-scoop'] },
+  nachtmerriesok: { labels: ['Sok-slap', 'Nat-zwiep', 'Was-finisher'] },
+  echotrompet: { labels: ['Blaas', 'Echo-sweep', 'Fanfare'] },
+  schaduwbanaan: { labels: ['Schil', 'Slip-stoot', 'Banaan-boom'] },
+  voidvork: { labels: ['Vork-prik', 'Leegte-hap', 'Drie-tand'] },
+  angstaccordeon: { labels: ['Zuig-akkoord', 'Pomp', 'Angst-crescendo'] },
+  slaapkussen: { labels: ['Pluis-klop', 'Kussen-slam', 'Nacht-uit'] },
+  spooktoaster: { labels: ['Toast-in', 'Pop!', 'Verbrand'] },
+  droomspiegel: { labels: ['Spiegel-snit', 'Reflect', 'Krit-nova'] },
+  nachtuilvleugel: { labels: ['Fladder', 'Uil-sweep', 'Nachtvlucht'] },
+  waanballon: { labels: ['Opblazen', 'Wobble', 'POP!'] },
+  schriktandwiel: { labels: ['Rammel', 'Tand-hak', 'Gear-grind'] },
+  hellevork: { labels: ['Zwavel-prik', 'Hel-stoot', 'Drie-vlam'] },
+  lavalepel: { labels: ['Schep-lava', 'Plas-slam', 'Magma-scoop'] },
+  duiveltrommel: { labels: ['Beuk', 'Rol-slag', 'Hel-solo'] },
+  zwavelzeep: { labels: ['Glad', 'Schuim-stoot', 'Zeep-boom'] },
+  infernoijsje: { labels: ['Lik-koud', 'Smelt', 'Inferno-dip'] },
+  helhamsterwiel: { labels: ['Rol', 'Chaos-spin', 'Wiel-crash'] },
+  brimstonebanaan: { labels: ['Schil', 'Brim-slip', 'Knal-banaan'] },
+  demondoekje: { labels: ['Veeg', 'Wipe', 'EXECUTE'] },
+  asaccordeon: { labels: ['As-zuig', 'Pomp-vuur', 'Crescendo'] },
+  chiliketting: { labels: ['Chili-flurry', 'Kettingsmaak', 'Brand-regen'] },
+  helgitaar: { labels: ['Riff', 'Powerchord', 'Solo-finisher'] },
+  pyroeend: { labels: ['QUAK', 'Vlam-eend', 'BOOM-eend'] },
+  apocalypslepel: { labels: ['Wereld-schep', 'Meteor-scoop', 'EINDE'] },
   master_sword: {
     labels: ['Licht-slice', 'Zwaard-dans', 'Triforce-hak'],
     moves: [
@@ -353,13 +386,18 @@ function weaponComboSet(id) {
 function weaponMoveFamily(id) {
   if (id === 'master_sword') return 'slash';
   if (isThrowWeapon(id) || id === 'vuist') return null;
-  if (id === 'speer' || id === 'drietand' || id === 'bostaf') return 'spear';
-  if (id === 'knuppel' || id === 'hamer' || id === 'tonfa' || id === 'guvve' || id === 'donder') return 'blunt';
-  if (id === 'nunchaku' || id === 'ketting' || id === 'vlamzweep') return 'chain';
-  if (id === 'kama' || id === 'zeis') return 'hook';
-  if (id === 'waaier') return 'fan';
-  if (id === 'sai') return 'dual';
-  if (id === 'laser' || id === 'void' || id === 'kristal' || id === 'sterkling') return 'energy';
+  if (id === 'speer' || id === 'drietand' || id === 'bostaf' || id === 'echotrompet' || id === 'helgitaar') return 'spear';
+  if (id === 'knuppel' || id === 'hamer' || id === 'tonfa' || id === 'guvve' || id === 'donder'
+    || id === 'slaapkussen' || id === 'duiveltrommel' || id === 'apocalypslepel' || id === 'pyroeend') return 'blunt';
+  if (id === 'nunchaku' || id === 'ketting' || id === 'vlamzweep' || id === 'chiliketting'
+    || id === 'angstaccordeon' || id === 'asaccordeon' || id === 'helhamsterwiel') return 'chain';
+  if (id === 'kama' || id === 'zeis' || id === 'voidvork' || id === 'hellevork' || id === 'droomprikker') return 'hook';
+  if (id === 'waaier' || id === 'nachtuilvleugel' || id === 'demondoekje') return 'fan';
+  if (id === 'sai' || id === 'nachtmerriesok' || id === 'zwavelzeep') return 'dual';
+  if (id === 'laser' || id === 'void' || id === 'kristal' || id === 'sterkling'
+    || id === 'nachtkaars' || id === 'spooktoaster' || id === 'droomspiegel' || id === 'waanballon'
+    || id === 'lavalepel' || id === 'infernoijsje' || id === 'brimstonebanaan') return 'energy';
+  if (id === 'spooklepel' || id === 'schaduwbanaan' || id === 'schriktandwiel') return 'slash';
   return 'slash';
 }
 

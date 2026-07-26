@@ -323,6 +323,12 @@ const WORLD_THEMES = [
   'cyber','vulkaan','dojo','cyber','cyber',
   'cyber','vulkaan','dojo','cyber','cyber',
   'cyber','cyber','cyber','cyber','cyber',
+  /* Nachtmerrie 51–60 */
+  'nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie',
+  'nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie','nachtmerrie',
+  /* Hel 61–70 */
+  'hel','hel','hel','hel','hel',
+  'hel','hel','hel','hel','hel',
 ];
 const UNLOCK_AT = {
   slymo: 1, bubbel: 1, flapper: 2, piepvleugel: 5, stekelra: 3, ijzerstek: 9,
@@ -354,6 +360,16 @@ const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
 const GIANT_DMG_MUL = 1.14;
 const GIANT_XP_MUL = 1.3;
+/** Flagship baas (BOSS_AT elite / super-baas): groter + tankier. */
+const BOSS_CORE_SIZE_MUL = 1.25;
+const BOSS_CORE_HP_MUL = 2.85;
+const BOSS_CORE_DMG_MUL = 1.18;
+/** Soms ~2× zo groot als huidige baas, met extra HP. */
+const COLOSSAL_CHANCE = 0.42;
+const COLOSSAL_SIZE_MUL = 2.0;
+const COLOSSAL_HP_MUL = 1.9;
+const COLOSSAL_DMG_MUL = 1.12;
+const COLOSSAL_XP_MUL = 1.45;
 
 const SEA_ARTS = new Set(['shark', 'octo']);
 const FARM_ARTS = new Set(['cow', 'pig', 'chicken', 'sheep', 'horse', 'goat', 'duck', 'rooster', 'donkey', 'goose']);
@@ -423,14 +439,19 @@ const BOSS_AT = {
   40: [{ sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst' }],
   45: [{ sp: 'voidkonijn', elite: true }, { sp: 'guvvedrak' }],
   50: [{ sp: 'guvvedrak', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst', elite: true }],
+  55: [{ sp: 'voidkonijn', elite: true }, { sp: 'neondrake', elite: true }, { sp: 'schaduwvorst' }],
+  60: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'voidkonijn', elite: true }],
+  65: [{ sp: 'omegadrake', elite: true }, { sp: 'etherwyrm', elite: true }, { sp: 'neondrake' }],
+  70: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'apexwyrm', elite: true }, { sp: 'voidkonijn', elite: true }],
 };
 
-function weightedPick(pool, n) {
+function weightedPick(pool, n, rarityBias) {
   const safe = (pool || []).filter((id) => SPECIES[id]);
   const use = safe.length ? safe : ['slymo'];
+  const bias = Number(rarityBias) || 0;
   const weights = use.map(id => {
     const o = rarityOf(SPECIES[id].rarity).order;
-    return Math.max(0.3, 1.5 - o * 0.22 + Math.min(n, 45) * 0.012 * o);
+    return Math.max(0.3, 1.5 - o * 0.22 + Math.min(n, 45) * 0.012 * o + bias * o * 0.35);
   });
   const sum = weights.reduce((a, b) => a + b, 0);
   let r = Math.random() * sum;
@@ -504,9 +525,9 @@ function isBossWave(level, waveIdx) {
   return !!(level && level.boss && waveIdx === level.waves.length - 1);
 }
 
-function rollWaveGiant(n, elite, spId) {
+function rollWaveGiant(n, elite, spId, giantBonus) {
   if (elite || n < 2) return false;
-  let chance = GIANT_SPAWN_CHANCE;
+  let chance = GIANT_SPAWN_CHANCE + (Number(giantBonus) || 0);
   const sp = spId && SPECIES[spId];
   if (sp && typeof BEAST_SIZE_ARTS !== 'undefined' && BEAST_SIZE_ARTS.has(sp.art)) {
     chance = Math.min(0.55, chance + BEAST_GIANT_BONUS);
@@ -514,10 +535,29 @@ function rollWaveGiant(n, elite, spId) {
   return Math.random() < chance;
 }
 
-function buildLevel(n) {
-  const hpMul = 1 + (n - 1) * 0.14;
-  const dmgMul = 1 + (n - 1) * 0.08;
-  const maxRarity = n >= 45 ? 5 : n >= 32 ? 4 : n >= 20 ? 3 : n >= 10 ? 2 : n >= 4 ? 1 : 0;
+function maxRarityForAdvLevel(n, diff) {
+  const meta = typeof advDiffMeta === 'function' ? advDiffMeta(diff) : { order: 0, rarityBoost: 0 };
+  let maxRarity = n >= 61 ? 7 : n >= 51 ? 6 : n >= 45 ? 5 : n >= 32 ? 4 : n >= 20 ? 3 : n >= 10 ? 2 : n >= 4 ? 1 : 0;
+  maxRarity = Math.min(7, maxRarity + (meta.rarityBoost || 0));
+  if ((meta.order || 0) >= 1) {
+    maxRarity = Math.max(maxRarity, Math.min(7, meta.order + Math.floor((n - 1) / 8)));
+  }
+  if ((meta.order || 0) >= 2) {
+    maxRarity = Math.max(maxRarity, Math.min(7, 2 + Math.floor((n - 1) / 6)));
+  }
+  return maxRarity;
+}
+
+function buildLevel(n, diffId) {
+  const diff = typeof advDiffMeta === 'function' ? advDiffMeta(diffId) : {
+    id: 'normal', order: 0, hpMul: 1, dmgMul: 1, rarityBoost: 0, eliteBonus: 0, giantBonus: 0,
+    theme: null, speedMul: 1, enrageMul: 1, enrageAt: 0.5, hordeMul: 1, model: '1.0',
+  };
+  const hpMul = (1 + (n - 1) * 0.14) * (diff.hpMul || 1);
+  const dmgMul = (1 + (n - 1) * 0.08) * (diff.dmgMul || 1);
+  const maxRarity = maxRarityForAdvLevel(n, diff.id);
+  const rarityBias = diff.order || 0;
+  const eliteChance = 0.14 + (diff.eliteBonus || 0);
   const fightPool = Object.keys(UNLOCK_AT).filter(id => {
     const sp = SPECIES[id];
     return sp && UNLOCK_AT[id] <= n && rarityOf(sp.rarity).order <= maxRarity && id !== 'guvvedrak';
@@ -529,21 +569,49 @@ function buildLevel(n) {
   });
   const waves = [];
   const waveMeta = [];
-  const waveCount = Math.min(2 + Math.floor(n / 5), 5);
+  const waveCount = Math.min(2 + Math.floor(n / 5) + (diff.order >= 2 ? 1 : 0), 6);
   const basePerWave = 2 + Math.floor(n / 4);
-  const perWave = Math.min(Math.max(2, Math.ceil(basePerWave * ADVENTURE_HORDE_MUL)), ADVENTURE_HORDE_MAX_PER_WAVE);
+  const hordeScale = (diff.hordeMul || 1);
+  const perWave = Math.min(
+    Math.max(2, Math.ceil(basePerWave * ADVENTURE_HORDE_MUL * hordeScale)),
+    ADVENTURE_HORDE_MAX_PER_WAVE
+  );
   for (let w = 0; w < waveCount; w++) {
     const list = [];
     for (let i = 0; i < perWave; i++) {
-      const sp = weightedPick(pool, n);
+      const sp = weightedPick(pool, n, rarityBias);
       if (!SPECIES[sp]) continue;
-      const rareElite = rarityOf(SPECIES[sp].rarity).order >= 3 && Math.random() < 0.14;
-      list.push({ sp, elite: rareElite, giant: rollWaveGiant(n, rareElite, sp) });
+      const rareElite = rarityOf(SPECIES[sp].rarity).order >= 3 && Math.random() < eliteChance;
+      list.push({ sp, elite: rareElite, giant: rollWaveGiant(n, rareElite, sp, diff.giantBonus) });
     }
     const meta = { trait: null, spawnMul: 1, label: '' };
     const roll = Math.random();
-    if (flyPool.length && n >= 3 && roll < 0.22) {
-      list[Math.floor(Math.random() * list.length)].sp = weightedPick(flyPool, n);
+    // Model 3.0: pijn-golf — meer elites + reuzen
+    if (diff.order >= 2 && roll < 0.26) {
+      meta.trait = 'pain';
+      meta.spawnMul = 0.78;
+      meta.label = 'pain';
+      for (let i = 0; i < list.length; i++) {
+        if (Math.random() < 0.45) list[i].elite = true;
+        if (Math.random() < 0.35) {
+          list[i].giant = true;
+        }
+      }
+      if (list.length) {
+        const sp = weightedPick(pool, n, rarityBias + 1);
+        list.push({ sp, elite: true, giant: rollWaveGiant(n, true, sp, (diff.giantBonus || 0) + 0.1) });
+      }
+    // Model 2.0+: ember/rush — snellere spawn + vuur-druk
+    } else if (diff.order >= 1 && roll < 0.34) {
+      meta.trait = 'ember';
+      meta.spawnMul = 0.68;
+      meta.label = 'ember';
+      for (let i = 0; i < Math.min(3, list.length); i++) {
+        const ix = Math.floor(Math.random() * list.length);
+        list[ix].elite = list[ix].elite || Math.random() < 0.4;
+      }
+    } else if (flyPool.length && n >= 3 && roll < 0.22) {
+      list[Math.floor(Math.random() * list.length)].sp = weightedPick(flyPool, n, rarityBias);
       meta.trait = 'flyers';
       meta.label = 'Vliegers — mik omhoog!';
     } else if (roll < 0.36) {
@@ -568,9 +636,9 @@ function buildLevel(n) {
       if (farmPool.length) {
         for (let i = 0; i < list.length; i++) {
           if (Math.random() < 0.72) {
-            const fp = weightedPick(farmPool, n);
+            const fp = weightedPick(farmPool, n, rarityBias);
             list[i].sp = fp;
-            list[i].giant = list[i].giant || rollWaveGiant(n, !!list[i].elite, fp);
+            list[i].giant = list[i].giant || rollWaveGiant(n, !!list[i].elite, fp, diff.giantBonus);
           }
         }
       }
@@ -582,15 +650,15 @@ function buildLevel(n) {
       if (zooPool.length) {
         for (let i = 0; i < list.length; i++) {
           if (Math.random() < 0.72) {
-            const zp = weightedPick(zooPool, n);
+            const zp = weightedPick(zooPool, n, rarityBias);
             list[i].sp = zp;
             list[i].giant = true; // dierentuin: altijd grote grote versies
           }
         }
       }
     } else if (n >= 7 && roll < 0.76) {
-      const sp = weightedPick(pool, n);
-      list.push({ sp, elite: true, giant: rollWaveGiant(n, true, sp) });
+      const sp = weightedPick(pool, n, rarityBias);
+      list.push({ sp, elite: true, giant: rollWaveGiant(n, true, sp, diff.giantBonus) });
       meta.trait = 'elite';
       meta.label = 'Extra elite';
     }
@@ -599,17 +667,26 @@ function buildLevel(n) {
   }
   if (BOSS_AT[n]) {
     const bossWave = BOSS_AT[n].map(x => Object.assign({}, x, { bossCore: !!x.elite }));
-    const hordePad = Math.min(3 + Math.floor(n / 8), 10);
+    const hordePad = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, 12);
     for (let i = 0; i < hordePad; i++) {
-      const elite = Math.random() < 0.1;
-      const bsp = weightedPick(pool, n); bossWave.push({ sp: bsp, elite, giant: rollWaveGiant(n, elite, bsp) });
+      const elite = Math.random() < (0.1 + (diff.eliteBonus || 0) * 0.5);
+      const bsp = weightedPick(pool, n, rarityBias);
+      bossWave.push({ sp: bsp, elite, giant: rollWaveGiant(n, elite, bsp, diff.giantBonus) });
     }
     waves.push(bossWave);
     waveMeta.push({ trait: 'boss', spawnMul: 1, label: 'Baas-golf' });
   }
-  const theme = WORLD_THEMES[n - 1] || 'cyber';
-  const rarityCap = ['common','uncommon','rare','epic','legendary','mythic'][maxRarity];
-  return { n, waves, waveMeta, hpMul, dmgMul, theme, boss: !!BOSS_AT[n], rarityCap };
+  let theme = WORLD_THEMES[n - 1] || (n >= 61 ? 'hel' : (n >= 51 ? 'nachtmerrie' : 'cyber'));
+  if (diff.theme) theme = diff.theme;
+  const rarityCap = ['common','uncommon','rare','epic','legendary','mythic','nightmare','hell'][maxRarity] || 'mythic';
+  return {
+    n, waves, waveMeta, hpMul, dmgMul, theme, boss: !!BOSS_AT[n], rarityCap,
+    diff: diff.id || 'normal',
+    speedMul: diff.speedMul || 1,
+    model: diff.model || '1.0',
+    enrageMul: diff.enrageMul || 1,
+    enrageAt: diff.enrageAt != null ? diff.enrageAt : 0.5,
+  };
 }
 
 const WAVE_TRAIT_BANNER = {
@@ -619,6 +696,8 @@ const WAVE_TRAIT_BANNER = {
   tide: { key: 'banner.tideWave', color: '#6ee06e', size: 40 },
   ranch: { key: 'banner.ranchWave', color: '#e8c98a', size: 40 },
   safari: { key: 'banner.safariWave', color: '#43b25b', size: 40 },
+  ember: { key: 'banner.emberWave', color: '#ff7a4d', size: 42 },
+  pain: { key: 'banner.painWave', color: '#ff3a2a', size: 44 },
 };
 
 function waveTraitBanner(trait) {
@@ -691,14 +770,19 @@ function gambleOutcomeLabel(g) {
 /** Intro-lied + FX voor elite / baas / super-baas (avontuur). */
 function triggerSpecialEnemyIntro(game, monster, kind) {
   if (!game || !monster) return;
-  const tier = kind || (monster.superBoss ? 'superBoss' : (monster.elite ? 'elite' : 'boss'));
+  const tier = kind || (monster.superBoss ? 'superBoss' : (monster.bossCore ? 'boss' : (monster.elite ? 'elite' : 'boss')));
   const name = (monster.sp && monster.sp.name) || 'Baas';
   const rar = rarityOf(monster.sp?.rarity || 'rare');
+  const bigBoss = !!(monster.bossCore || monster.superBoss || tier === 'superBoss');
+  const colossal = !!monster.colossal;
   const col = tier === 'superBoss' ? '#ffd75e' : (tier === 'boss' ? '#ff6b6b' : (rar.color || '#ffb0b8'));
-  monster.introT = tier === 'superBoss' ? 2.4 : (tier === 'boss' ? 2.0 : 1.55);
+  let introDur = tier === 'superBoss' ? 2.4 : (tier === 'boss' ? 2.0 : 1.55);
+  if (bigBoss) introDur = colossal ? 3.6 : (tier === 'superBoss' ? 3.2 : 2.85);
+  monster.introDur = introDur;
+  monster.introT = introDur;
   monster.introTier = tier;
-  const waveKey = `${game.mode || 'x'}:${game.waveIdx}:${tier === 'superBoss' ? 'super' : 'special'}`;
-  const firstOfWave = tier === 'superBoss' || game._specialIntroKey !== waveKey;
+  const waveKey = `${game.mode || 'x'}:${game.waveIdx}:${tier === 'superBoss' ? 'super' : (bigBoss ? 'bossCore' : 'special')}`;
+  const firstOfWave = tier === 'superBoss' || bigBoss || game._specialIntroKey !== waveKey;
   if (firstOfWave) game._specialIntroKey = waveKey;
 
   if (firstOfWave) {
@@ -710,17 +794,29 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
         AudioSys.sting('superBossIntro');
         if (typeof playFightBgm === 'function') playFightBgm('boss');
         else AudioSys.play('boss');
-        game.banner(`SUPER BAAS — ${name}!`, 2.0, col, 44);
+        const title = typeof t === 'function' ? t('banner.superBossTitle') : 'SUPER BAAS';
+        game.banner(title, 2.8, col, bigBoss ? 68 : 44);
+        game.banner(colossal
+          ? (typeof t === 'function' ? t('banner.colossalBossName', { name }) : `COLOSSALE ${name}!`)
+          : (typeof t === 'function' ? t('banner.bossName', { name }) : name), 2.5, '#fff', bigBoss ? 52 : 40);
       } else if (tier === 'boss') {
         AudioSys.sting('bossIntro');
         if (typeof playFightBgm === 'function') playFightBgm('boss');
         else AudioSys.play('boss');
-        game.banner(`BAAS — ${name}!`, 1.8, col, 42);
+        if (bigBoss) {
+          const title = typeof t === 'function' ? t('banner.bossTitle') : 'BAAS';
+          game.banner(title, 2.6, col, 64);
+          game.banner(colossal
+            ? (typeof t === 'function' ? t('banner.colossalBossName', { name }) : `COLOSSALE ${name}!`)
+            : (typeof t === 'function' ? t('banner.bossName', { name }) : `${name}!`), 2.35, '#fff', 50);
+        } else {
+          game.banner(typeof t === 'function' ? t('banner.bossNamed', { name }) : `BAAS — ${name}!`, 1.8, col, 42);
+        }
       } else {
         AudioSys.sting('eliteIntro');
         if (typeof playFightBgm === 'function') playFightBgm('elite');
         else AudioSys.play('elite');
-        game.banner(`ELITE — ${name}!`, 1.5, col, 38);
+        game.banner(typeof t === 'function' ? t('banner.eliteNamed', { name }) : `ELITE — ${name}!`, 1.5, col, 38);
       }
     } catch (_) {}
     try { AudioSys.sfx('roar'); } catch (_) {}
@@ -731,16 +827,19 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
   const x = monster.x, y = monster.y - (monster.size || 40) * 0.4;
   const burstN = motionReduced() || fxLite()
     ? 8
-    : (firstOfWave ? (tier === 'superBoss' ? 28 : 18) : 8);
+    : (firstOfWave ? (tier === 'superBoss' || colossal ? 34 : (bigBoss ? 26 : 18)) : 8);
   try {
     game.burst(x, y, col, burstN);
     if (firstOfWave) {
       game.burst(x, y, '#fff', Math.ceil(burstN * 0.35));
-      spawnFxRing(game, x, y, col, tier === 'superBoss' ? 22 : 14);
-      if (tier !== 'elite') spawnFxRing(game, x, y - 20, '#fff', 10);
-      game.shake(tier === 'superBoss' ? 12 : (tier === 'boss' ? 9 : 6), tier === 'superBoss' ? 0.42 : 0.28);
-      game.freezeT = Math.max(game.freezeT || 0, tier === 'superBoss' ? 0.16 : 0.1);
-      haptic(tier === 'superBoss' ? 28 : 16);
+      spawnFxRing(game, x, y, col, tier === 'superBoss' || colossal ? 26 : (bigBoss ? 20 : 14));
+      if (tier !== 'elite') spawnFxRing(game, x, y - 20, '#fff', bigBoss ? 14 : 10);
+      if (colossal) spawnFxRing(game, x, y - 36, '#ffd75e', 16);
+      const shakeAmt = colossal ? 16 : (tier === 'superBoss' ? 14 : (bigBoss ? 11 : (tier === 'boss' ? 9 : 6)));
+      const shakeDur = colossal ? 0.55 : (tier === 'superBoss' ? 0.48 : (bigBoss ? 0.38 : (tier === 'boss' ? 0.28 : 0.22)));
+      game.shake(shakeAmt, shakeDur);
+      game.freezeT = Math.max(game.freezeT || 0, colossal ? 0.22 : (tier === 'superBoss' ? 0.18 : (bigBoss ? 0.14 : 0.1)));
+      haptic(colossal ? 36 : (tier === 'superBoss' ? 28 : (bigBoss ? 22 : 16)));
     }
   } catch (_) {}
 }

@@ -7,9 +7,232 @@ const THEMES = {
   grot:    { sky1: '#07090e', sky2: '#1a2028', hill: '#2a323c', hill2: '#141820', ground: '#1a2028', gtop: '#3a4450', deco: 'stalag' },
   vulkaan: { sky1: '#3a1f28', sky2: '#7a3020', hill: '#552430', hill2: '#3a1820', ground: '#4a2a28', gtop: '#5e3630', deco: 'lava' },
   cyber:   { sky1: '#0a1030', sky2: '#252a60', hill: '#1c2350', hill2: '#131840', ground: '#20264a', gtop: '#2c3468', deco: 'neon' },
+  nachtmerrie: { sky1: '#12081c', sky2: '#2a1040', hill: '#1a0a28', hill2: '#0e0618', ground: '#1c1028', gtop: '#3a2050', deco: 'neon' },
+  hel:     { sky1: '#2a0808', sky2: '#6a2010', hill: '#4a1010', hill2: '#2a0808', ground: '#3a1010', gtop: '#5a1810', deco: 'lava' },
   dojo:    { sky1: '#3a2d24', sky2: '#6a5240', hill: '#4a3a2c', hill2: '#3a2d22', ground: '#7a5c3c', gtop: '#8f6f4a', deco: 'lampion' },
   sloop:   { sky1: '#8fb6d0', sky2: '#d8e8f0', hill: '#7a8794', hill2: '#5f6b78', ground: '#6f7684', gtop: '#848b99', deco: 'kraan' },
+  nightmare: { sky1: '#2a0808', sky2: '#7a2810', hill: '#4a1410', hill2: '#30100c', ground: '#3a1812', gtop: '#5a2820', deco: 'fire' },
+  hell:    { sky1: '#140404', sky2: '#4a0a08', hill: '#2e0a0a', hill2: '#1a0606', ground: '#220808', gtop: '#3a100c', deco: 'hell' },
 };
+
+/**
+ * Nightmare 2.0: dichte vuurzuilen, as, brandende wrakken, hittegloed.
+ */
+function drawNightmareFireDecor(c, ground, scroll, t, dX, dSpan) {
+  const calm = typeof motionReduced === 'function' && motionReduced();
+  const lite = (typeof fxLite === 'function' && fxLite()) || (typeof Perf !== 'undefined' && Perf.tier >= 2);
+  // scorched silhouettes / wreck posts
+  const wrecks = lite ? 3 : 5;
+  for (let i = 0; i < wrecks; i++) {
+    const x = dX((i * 0.2 + 0.08) * dSpan);
+    c.fillStyle = '#1a0806';
+    c.fillRect(Math.round(x) - 3, ground - 46 - (i % 2) * 14, 6, 46 + (i % 2) * 14);
+    c.fillStyle = '#2a100c';
+    c.fillRect(Math.round(x) - 16, ground - 52 - (i % 2) * 10, 32, 8);
+    // roof flames on wrecks
+    if (!calm) {
+      const fl = 0.5 + Math.sin(t * 9 + i * 2) * 0.5;
+      c.fillStyle = 'rgba(255,120,30,' + (0.35 + fl * 0.35) + ')';
+      c.beginPath();
+      c.moveTo(x - 10, ground - 52 - (i % 2) * 10);
+      c.lineTo(x, ground - 68 - fl * 14 - (i % 2) * 8);
+      c.lineTo(x + 10, ground - 52 - (i % 2) * 10);
+      c.closePath();
+      c.fill();
+    }
+  }
+  const n = lite ? 6 : 11;
+  for (let i = 0; i < n; i++) {
+    const x = dX((i * 0.1 + 0.03) * dSpan);
+    const flicker = calm ? 0.75 : (0.5 + Math.sin(t * 8 + i * 1.9) * 0.5);
+    const h = 56 + (i % 4) * 22 + flicker * 32;
+    const g = c.createLinearGradient(x, ground - h, x, ground);
+    g.addColorStop(0, 'rgba(255,240,120,' + (0.22 + flicker * 0.42) + ')');
+    g.addColorStop(0.35, 'rgba(255,110,30,' + (0.42 + flicker * 0.4) + ')');
+    g.addColorStop(0.75, 'rgba(200,30,10,' + (0.28 + flicker * 0.22) + ')');
+    g.addColorStop(1, 'rgba(80,10,5,0)');
+    c.fillStyle = g;
+    c.beginPath();
+    c.moveTo(x - 13 - flicker * 6, ground);
+    c.quadraticCurveTo(x - 8, ground - h * 0.5, x, ground - h);
+    c.quadraticCurveTo(x + 8, ground - h * 0.5, x + 13 + flicker * 6, ground);
+    c.closePath();
+    c.fill();
+  }
+  if (!lite) {
+    // rising embers + ash
+    for (let i = 0; i < 22; i++) {
+      const x = dX(((i * 0.07 + (t * 0.08)) % 1) * dSpan);
+      const y = ground - 12 - ((t * (30 + (i % 5) * 9) + i * 37) % (ground * 0.75));
+      const s = 1.2 + (i % 3);
+      c.fillStyle = i % 3 === 0 ? 'rgba(180,160,140,.45)' : 'rgba(255,140,40,.65)';
+      c.globalAlpha = 0.32 + Math.sin(t * 6 + i) * 0.28;
+      c.fillRect(x, y, s, s);
+    }
+    c.globalAlpha = 1;
+    // heat shimmer bands
+    if (!calm) {
+      c.strokeStyle = 'rgba(255,160,80,.12)';
+      c.lineWidth = 2;
+      for (let i = 0; i < 4; i++) {
+        const y = ground * (0.25 + i * 0.12) + Math.sin(t * 3 + i) * 4;
+        c.beginPath();
+        for (let x = 0; x <= W; x += 24) {
+          const yy = y + Math.sin(x * 0.04 + t * 4 + i) * 3;
+          if (x === 0) c.moveTo(x, yy); else c.lineTo(x, yy);
+        }
+        c.stroke();
+      }
+    }
+  }
+  const haze = c.createLinearGradient(0, 0, 0, ground);
+  haze.addColorStop(0, 'rgba(255,50,10,0.12)');
+  haze.addColorStop(0.5, 'rgba(255,40,10,0.04)');
+  haze.addColorStop(1, 'rgba(255,30,5,0.28)');
+  c.fillStyle = haze;
+  c.fillRect(0, 0, W, ground);
+}
+
+/**
+ * Hell 3.0: lava-rivier, asregen, schreeuwende stickmans in pijn.
+ */
+function drawHellPainDecor(c, ground, scroll, t, dX, dSpan) {
+  const calm = typeof motionReduced === 'function' && motionReduced();
+  const lite = (typeof fxLite === 'function' && fxLite()) || (typeof Perf !== 'undefined' && Perf.tier >= 2);
+  // cracked scorched ground lines
+  if (!lite) {
+    c.strokeStyle = 'rgba(80,10,8,.55)';
+    c.lineWidth = 2;
+    for (let i = 0; i < 5; i++) {
+      const x0 = dX((i * 0.2 + 0.05) * dSpan);
+      c.beginPath();
+      c.moveTo(x0 - 30, ground - 2);
+      c.quadraticCurveTo(x0 - 8, ground - 10 - (i % 3) * 4, x0 + 28, ground - 1);
+      c.stroke();
+    }
+  }
+  // lava river band behind fighters
+  const riverY = ground - 8;
+  const lava = c.createLinearGradient(0, riverY - 12, 0, riverY + 16);
+  lava.addColorStop(0, 'rgba(255,80,20,0)');
+  lava.addColorStop(0.35, 'rgba(255,90,20,0.65)');
+  lava.addColorStop(0.65, 'rgba(200,25,5,0.78)');
+  lava.addColorStop(1, 'rgba(40,5,0,0.2)');
+  c.fillStyle = lava;
+  c.fillRect(0, riverY - 12, W, 28);
+  if (!lite) {
+    for (let i = 0; i < 14; i++) {
+      const x = ((i * 97 + scroll * 0.9 + t * 48) % (W + 40)) - 20;
+      const bub = Math.max(0, Math.sin(t * 5.5 + i * 1.7)) * 5;
+      c.fillStyle = '#ffd75e';
+      c.globalAlpha = 0.5 + bub * 0.08;
+      c.beginPath();
+      c.ellipse(x, riverY + 2, 6 + bub, 2.8, 0, 0, TAU);
+      c.fill();
+    }
+    c.globalAlpha = 1;
+  }
+  // lava pools
+  const pools = lite ? 5 : 8;
+  for (let i = 0; i < pools; i++) {
+    const x = dX((i * 0.14 + 0.05) * dSpan);
+    const wob = calm ? 0 : Math.sin(t * 2.8 + i) * 5;
+    c.fillStyle = '#4a0808';
+    c.beginPath();
+    c.ellipse(x, ground - 2, 40 + wob, 13, 0, 0, TAU);
+    c.fill();
+    c.fillStyle = '#ff4a14';
+    c.beginPath();
+    c.ellipse(x, ground - 5, 30 + wob * 0.5, 8, 0, 0, TAU);
+    c.fill();
+    c.fillStyle = '#ffe080';
+    c.globalAlpha = 0.55 + Math.sin(t * 4.5 + i) * 0.3;
+    c.beginPath();
+    c.ellipse(x - 5, ground - 6, 11, 3.2, 0, 0, TAU);
+    c.fill();
+    c.globalAlpha = 1;
+  }
+  // screaming stickman silhouettes — denser in 3.0
+  const figs = lite ? 5 : 9;
+  for (let i = 0; i < figs; i++) {
+    const x = dX((i * 0.12 + 0.06) * dSpan);
+    const shake = calm ? 0 : Math.sin(t * 18 + i * 2.3) * 3.2;
+    const armUp = calm ? -1.15 : (-1.15 + Math.sin(t * 12 + i) * 0.42);
+    drawScreamingStickman(c, x + shake, ground, armUp, t + i * 1.3);
+  }
+  // falling ash + cinders
+  if (!lite && !calm) {
+    for (let i = 0; i < 22; i++) {
+      const x = ((i * 73 + scroll * 0.45) % (W + 20)) - 10;
+      const y = ((t * 62 + i * 41) % (ground + 20));
+      c.fillStyle = i % 4 === 0 ? 'rgba(255,90,40,.5)' : 'rgba(120,90,80,.5)';
+      c.fillRect(x, y, 2 + (i % 2), 2);
+    }
+  }
+  // heat shimmer / red vignette
+  const vig = c.createRadialGradient(W * 0.5, ground * 0.4, 24, W * 0.5, ground * 0.5, Math.max(W, ground) * 0.8);
+  vig.addColorStop(0, 'rgba(255,40,20,0)');
+  vig.addColorStop(0.5, 'rgba(200,10,5,0.14)');
+  vig.addColorStop(1, 'rgba(20,0,0,0.55)');
+  c.fillStyle = vig;
+  c.fillRect(0, 0, W, ground + 4);
+}
+
+function drawScreamingStickman(c, x, ground, armAngle, t) {
+  const y = ground;
+  c.save();
+  c.strokeStyle = 'rgba(12,2,2,.92)';
+  c.fillStyle = 'rgba(12,2,2,.92)';
+  c.lineWidth = 2.6;
+  c.lineCap = 'round';
+  c.lineJoin = 'round';
+  // legs
+  c.beginPath();
+  c.moveTo(x, y - 28);
+  c.lineTo(x - 8, y);
+  c.moveTo(x, y - 28);
+  c.lineTo(x + 9, y);
+  c.stroke();
+  // body
+  c.beginPath();
+  c.moveTo(x, y - 28);
+  c.lineTo(x, y - 54);
+  c.stroke();
+  // arms raised in pain
+  c.beginPath();
+  c.moveTo(x, y - 46);
+  c.lineTo(x - 16, y - 46 + Math.cos(armAngle) * 18);
+  c.moveTo(x, y - 46);
+  c.lineTo(x + 16, y - 46 + Math.cos(armAngle + 0.35) * 18);
+  c.stroke();
+  // head
+  c.beginPath();
+  c.arc(x, y - 62, 7.5, 0, TAU);
+  c.fill();
+  // glowing pain eyes
+  c.fillStyle = 'rgba(255,60,40,.85)';
+  c.beginPath();
+  c.arc(x - 2.5, y - 63, 1.4, 0, TAU);
+  c.arc(x + 2.5, y - 63, 1.4, 0, TAU);
+  c.fill();
+  // open screaming mouth
+  c.fillStyle = 'rgba(255,90,60,.85)';
+  c.beginPath();
+  c.ellipse(x, y - 59, 2.8, 3.6 + Math.abs(Math.sin(t * 12)) * 1.6, 0, 0, TAU);
+  c.fill();
+  // pain lines / scream marks
+  c.strokeStyle = 'rgba(255,80,40,.4)';
+  c.lineWidth = 1.3;
+  c.beginPath();
+  c.moveTo(x + 11, y - 70);
+  c.lineTo(x + 18, y - 78);
+  c.moveTo(x - 11, y - 70);
+  c.lineTo(x - 18, y - 78);
+  c.moveTo(x + 9, y - 66);
+  c.lineTo(x + 17, y - 70);
+  c.stroke();
+  c.restore();
+}
 
 /**
  * Landweg fight decor from countryside curve photo:
@@ -129,8 +352,8 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   c.fillStyle = g; c.fillRect(0, 0, W, ground);
   const wrap = (x, span) => ((x % span) + span) % span;
 
-  if (themeName === 'grot' || themeName === 'cyber') {
-    c.fillStyle = 'rgba(255,255,255,.5)';
+  if (themeName === 'grot' || themeName === 'cyber' || themeName === 'nightmare' || themeName === 'hell') {
+    c.fillStyle = themeName === 'hell' || themeName === 'nightmare' ? 'rgba(255,160,80,.45)' : 'rgba(255,255,255,.5)';
     const starN = Perf.tier >= 1 ? 14 : 26;
     for (let i = 0; i < starN; i++) {
       const x = wrap(i * 137.5 - scroll * 0.08, W), y = (i * 61.3) % (ground * 0.7);
@@ -159,7 +382,9 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
     }
   }
   // pixel-art skyline per thema (art-upgrade 1/4) — traagste parallax-laag
-  const farTile = SceneryArt.get(themeName, 'far');
+  // Nightmare/Hell: eigen deco, geen groene landweg-tiles
+  const hardTheme = themeName === 'nightmare' || themeName === 'hell';
+  const farTile = !hardTheme && SceneryArt.get(themeName, 'far');
   if (farTile && Perf.tier < 2) {
     drawSceneryTile(c, farTile, ground - 52 - farTile.height * SCENERY_SCALE, scroll, 0.18);
   }
@@ -223,6 +448,10 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
       const bub = Math.max(0, Math.sin(t * 3 + i * 2.2)) * 5;
       c.beginPath(); c.arc(x, ground - 8, 4 + bub, 0, TAU); c.fill();
     }
+  } else if (th.deco === 'fire') {
+    drawNightmareFireDecor(c, ground, scroll, t, dX, dSpan);
+  } else if (th.deco === 'hell') {
+    drawHellPainDecor(c, ground, scroll, t, dX, dSpan);
   } else if (th.deco === 'neon') {
     for (let i = 0; i < 6; i++) {
       const x = dX((i * 0.18 + 0.03) * dSpan), h = 110 + (i % 3) * 60;
