@@ -135,7 +135,7 @@
   ],
   "sessionLog": [
     {
-      "at": "2026-07-26T13:03:02Z",
+      "at": "2026-07-26T13:03:15Z",
       "summary": "ASSET-STYLE assets/ui SVG set (saga/ach/lock/island) wired · v1.18.95"
     },
     {
@@ -229,10 +229,6 @@
     {
       "at": "2026-07-26T00:04:11Z",
       "summary": "d17 stabiliteit: level hold stale timer, gamble SFX cancel, petCoinCost guard · v1.18.69"
-    },
-    {
-      "at": "2026-07-25T23:03:12Z",
-      "summary": "d17 stabiliteit: stale result timer, training scheduleGameResult, gamble cancel level terug · v1.18.68"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
