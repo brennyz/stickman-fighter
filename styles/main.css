@@ -1323,7 +1323,10 @@
   .card.dex-available { background:rgba(124,245,255,.05); }
   .card.rar-legendary { background:rgba(255,215,94,.08); }
   .card.rar-mythic { background:rgba(255,107,157,.1); }
+  .card.rar-nightmare { background:rgba(196,122,255,.12); box-shadow:inset 0 0 18px rgba(196,122,255,.15); }
+  .card.rar-hell { background:rgba(255,106,61,.12); box-shadow:inset 0 0 18px rgba(255,106,61,.18); }
   .card.rar-epic { background:rgba(176,106,224,.08); }
+  .weapon-zone-pill { letter-spacing:.02em; }
   .settings-card { width:min(92vw,480px); background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
       border-radius:16px; padding:16px 18px; margin:10px 0; color:#d5e0ff; font-size:15px; }
   .settings-card label { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:8px 0; flex-wrap:wrap; }

@@ -93,6 +93,10 @@ const ACHIEVEMENTS = [
     test: s => (s.stats.trainMaxCombo || 0) >= 10 },
   { id: 'lv50', name: 'Legende', desc: 'Unlock level 50', icon: '👑',
     test: s => s.unlocked >= 50 },
+  { id: 'lv70', name: 'Hel-legende', desc: 'Unlock level 70 (Hel)', icon: '🔥',
+    test: s => s.unlocked >= 70 },
+  { id: 'zoneWeapons10', name: 'Zone-verzamelaar', desc: 'Verzamel 10 Nachtmerrie/Hel-wapens', icon: '⚔️',
+    test: s => Object.keys(s.zoneWeapons || {}).length >= 10 },
   { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd', icon: '📅',
     test: s => (s.stats.dailyBonusCount || 0) >= 7 },
   { id: 'vs5', name: 'Duelist', desc: '5× 2-speler duel gespeeld', icon: '🥊',
@@ -868,6 +872,10 @@ function noteRunLootLevelUp(loot, newLvl) {
   loot.levelUps++;
   const w = WEAPONS.find(x => x.unlock === newLvl);
   if (w) loot.weapons.push(w.id);
+}
+function noteRunLootWeapon(loot, weaponId) {
+  if (!loot || !weaponId || !loot.weapons) return;
+  if (!loot.weapons.includes(weaponId)) loot.weapons.push(weaponId);
 }
 
 function runLootHasItems(loot) {
@@ -2763,6 +2771,17 @@ function weaponNextUnlockHtml() {
   }
   if (!next) return '';
   const rar = rarityOf(next.rarity);
+  const zone = weaponDropZoneOf(next);
+  if (zone) {
+    const owned = zoneWeaponsFor(zone.id).filter(w => weaponZoneUnlocked(w)).length;
+    const tot = zoneWeaponsFor(zone.id).length;
+    const pct = Math.min(100, Math.round((owned / Math.max(1, tot)) * 100));
+    return `<div class="dex-ach-next" style="margin-top:10px;padding:8px 10px;border-radius:12px;background:rgba(196,122,255,.08);border:1px solid ${zone.color}55">` +
+      `<div style="font-size:11px;font-weight:800;color:${zone.color};margin-bottom:4px">Zone-drop · ${weaponLabel(next)}</div>` +
+      `<div style="font-size:12px;opacity:.85"><span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(next.rarity)}</span>` +
+      ` · alleen in <b>${zone.name}</b> (Lv ${zone.minLevel}–${zone.maxLevel}) · ${owned}/${tot}</div>` +
+      `<div class="xpline" style="margin-top:6px;height:6px"><div style="width:${pct}%;background:${zone.color}"></div></div></div>`;
+  }
   const need = Math.max(0, next.unlock - save.lvl);
   const pct = Math.min(100, Math.round((save.lvl / next.unlock) * 100));
   return `<div class="dex-ach-next" style="margin-top:10px;padding:8px 10px;border-radius:12px;background:rgba(124,245,255,.06);border:1px solid rgba(124,245,255,.22)">` +

@@ -20,8 +20,8 @@
     "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "localMainHead": "8228ed0",
-    "remoteMainHead": "8228ed0",
+    "localMainHead": null,
+    "remoteMainHead": null,
     "note": "Nightmare 2.0 + Hell 3.0 LIVE · v1.18.104"
   },
   "userWishlist": [
@@ -40,23 +40,16 @@
       "updated": "2026-07-26"
     },
     {
-      "id": "w-20260726T183600",
+      "id": "w-20260726T184821",
       "from": "user",
-      "text": "De grootste bazen moeten meer intro krijgen, met een grote tekst in beeld en ze zijn ook soms wel 2x groter dan nu, met veel meer hitpoints.",
+      "text": "Verdubbeling wapens: ludieke nightmare/hell-only drops met gekke effecten + weapons UI",
       "status": "done-in-code",
       "updated": "2026-07-26"
     },
     {
-      "id": "w-20260726T184800",
+      "id": "w-20260726T184000",
       "from": "user",
-      "text": "Rinnegan is erg slecht vergeleken rasengan, rinnegan moet beter een soort lichtschits explosie dat twee kanten op gaat, en hoe verder hoe minder groot de strook is.",
-      "status": "done-in-code",
-      "updated": "2026-07-26"
-    },
-    {
-      "id": "w-20260726T183500",
-      "from": "user",
-      "text": "Meer monster diversiteit verdubbelen — boerderijdieren op hol + dierentuindieren, grote grote versies",
+      "text": "Verdubbeling wapens: ludieke nightmare/hell-only drops met gekke effecten + weapons UI",
       "status": "done-in-code",
       "updated": "2026-07-26"
     },
@@ -150,6 +143,27 @@
       "text": "Character screens — bedoelde 2P char select deel 1+2 (v1.11.1–1.11.2). Bevestig op iPad via menu → 2 spelers.",
       "status": "done-in-code",
       "updated": "2026-07-23"
+    },
+    {
+      "id": "w-20260726T184800",
+      "from": "user",
+      "text": "Rinnegan is erg slecht vergeleken rasengan, rinnegan moet beter een soort lichtschits explosie dat twee kanten op gaat, en hoe verder hoe minder groot de strook is.",
+      "status": "done-in-code",
+      "updated": "2026-07-26"
+    },
+    {
+      "id": "w-20260726T183500",
+      "from": "user",
+      "text": "Meer monster diversiteit verdubbelen — boerderijdieren op hol + dierentuindieren, grote grote versies",
+      "status": "done-in-code",
+      "updated": "2026-07-26"
+    },
+    {
+      "id": "w-20260726T183600",
+      "from": "user",
+      "text": "De grootste bazen moeten meer intro krijgen, met een grote tekst in beeld en ze zijn ook soms wel 2x groter dan nu, met veel meer hitpoints.",
+      "status": "done-in-code",
+      "updated": "2026-07-26"
     }
   ],
   "agentRules": [
@@ -162,16 +176,32 @@
   ],
   "sessionLog": [
     {
-      "at": "2026-07-26T18:52:23Z",
+      "at": "2026-07-26T18:52:33Z",
       "summary": "Nightmare 2.0 + Hell 3.0 LIVE op Pages · v1.18.104"
+    },
+    {
+      "at": "2026-07-26T18:52:22Z",
+      "summary": "Dubbelcheck OK, gemerged main · Nachtmerrie/Hel v1.18.104"
+    },
+    {
+      "at": "2026-07-26T18:51:54Z",
+      "summary": "Dubbelcheck + merge main · Nachtmerrie/Hel · v1.18.104"
     },
     {
       "at": "2026-07-26T18:51:29Z",
       "summary": "Main merge dicht: grootste bazen + Rinnegan · v1.18.103"
     },
     {
+      "at": "2026-07-26T18:51:13Z",
+      "summary": "Dubbelcheck + merge main · Nachtmerrie/Hel zone-wapens · v1.18.103"
+    },
+    {
       "at": "2026-07-26T18:51:00Z",
       "summary": "Merge Rinnegan + grootste bazen op main · v1.18.103"
+    },
+    {
+      "at": "2026-07-26T18:49:50Z",
+      "summary": "Nachtmerrie/Hel zone-wapens merge-ready · v1.18.103"
     },
     {
       "at": "2026-07-26T18:49:35Z",
@@ -188,6 +218,14 @@
     {
       "at": "2026-07-26T18:48:24Z",
       "summary": "Rinnegan slash check: upgrade dikker (r0 42→78) · merge main v1.18.102"
+    },
+    {
+      "at": "2026-07-26T18:48:21Z",
+      "summary": "Nachtmerrie/Hel zone-wapens shipped"
+    },
+    {
+      "at": "2026-07-26T18:48:21Z",
+      "summary": "Nachtmerrie+Hel eilanden, +27 zone-wapens met gekke effecten, weapons UI · v1.18.102"
     },
     {
       "at": "2026-07-26T18:44:55Z",
@@ -236,30 +274,6 @@
     {
       "at": "2026-07-26T11:07:21Z",
       "summary": "d1 combat counter-hit + dup Avontuur hub-fix · v1.18.93"
-    },
-    {
-      "at": "2026-07-26T10:22:00Z",
-      "summary": "Collectie-iconen arcade ASSET-STYLE live-push · v1.18.91"
-    },
-    {
-      "at": "2026-07-26T10:07:46Z",
-      "summary": "Stabiliteit: version-restore + mission toast play-guards, partGate tipsSeen · v1.18.90"
-    },
-    {
-      "at": "2026-07-26T09:23:11Z",
-      "summary": "Collectie-iconen arcade ASSET-STYLE (wapens/pets/stijl/skills/upgrades/dex) · v1.18.90"
-    },
-    {
-      "at": "2026-07-26T09:05:00Z",
-      "summary": "d14 FX: training combo dup fix, Rasengan rings, lite ring fill · v1.18.88"
-    },
-    {
-      "at": "2026-07-26T09:03:38Z",
-      "summary": "d14 FX: training combo dup fix, Rasengan rings, lite ring fill · v1.18.88"
-    },
-    {
-      "at": "2026-07-26T09:00:59Z",
-      "summary": "Avontuur hub-icoon: UTF-8 fix + duidelijker map-SVG · v1.18.89"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
