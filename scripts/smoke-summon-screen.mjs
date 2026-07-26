@@ -82,11 +82,15 @@ async function run() {
     const pullSnap = await page.evaluate(async () => {
       const before = chestWeaponLeft();
       UI.doChestPull('weapon');
-      // Wait past card reveal (last 2s of 4s timeline) — use short path via timers already scheduled
-      await new Promise((r) => setTimeout(r, 2200));
+      // Wait past card reveal (last 2s of ~5s timeline)
+      await new Promise((r) => setTimeout(r, 3400));
       const reveal = document.getElementById('summonReveal');
       const card = document.getElementById('summonCenterCard');
+      const stage = document.getElementById('summonStage');
+      const rail = document.querySelector('.summon-rail');
       const actives = [...document.querySelectorAll('.screen.active')].map((s) => s.id);
+      const stageRect = stage ? stage.getBoundingClientRect() : null;
+      const railRect = rail ? rail.getBoundingClientRect() : null;
       return {
         before,
         after: chestWeaponLeft(),
@@ -96,13 +100,26 @@ async function run() {
         stillSummon: actives[0] === 'summonScreen' && actives.length === 1,
         isPlaying: document.body.classList.contains('is-playing'),
         rarity: reveal ? reveal.dataset.rarity : null,
+        stageW: stageRect ? Math.round(stageRect.width) : 0,
+        railW: railRect ? Math.round(railRect.width) : 0,
+        videoDisplay: (() => {
+          const v = document.getElementById('summonVideo');
+          return v ? getComputedStyle(v).display : null;
+        })(),
+        fallbackOk: (() => {
+          const f = document.getElementById('summonStageFallback');
+          return !!(f && getComputedStyle(f).display !== 'none');
+        })(),
       };
     });
     must(pullSnap.after === pullSnap.before - 1, 'counter did not drop: ' + JSON.stringify(pullSnap));
     must(pullSnap.stillSummon, 'summon screen lost during pull');
     must(!pullSnap.isPlaying, 'is-playing flipped during pull');
-    must(pullSnap.cardShow, 'center card not shown after ~2s');
+    must(pullSnap.cardShow, 'center card not shown after ~3s');
     must(pullSnap.cardName.length > 0, 'empty center card name');
+    must(pullSnap.railW >= 300, 'summon rail too narrow: ' + pullSnap.railW);
+    must(pullSnap.stageW >= 280, 'summon stage too narrow: ' + pullSnap.stageW);
+    must(pullSnap.videoDisplay === 'block' || pullSnap.fallbackOk, 'video not visible and no fallback: ' + JSON.stringify(pullSnap));
 
     const playSnap = await page.evaluate(() => {
       UI.goMenu();

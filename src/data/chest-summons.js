@@ -10,8 +10,8 @@ const CHEST_DAILY_PET = 5;
 const CHEST_NICE_CHANCE = 0.05;
 const CHEST_PULL_LOG_MAX = 12;
 const CHEST_SKILL_MAX = 48;
-/** Reveal timeline: card pops in for the last 2 seconds (video or CSS fallback). */
-const SUMMON_REVEAL_TOTAL_MS = 4000;
+/** Reveal timeline: 5s spectacle; card pops in for the last 2 seconds. */
+const SUMMON_REVEAL_TOTAL_MS = 5000;
 const SUMMON_CARD_LAST_MS = 2000;
 const SUMMON_VIDEO_SRC = 'assets/summon/reveal.mp4';
 let _summonVideoOk = null;
