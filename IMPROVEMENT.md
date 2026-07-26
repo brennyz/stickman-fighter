@@ -108,6 +108,8 @@ Voordat je merge/commit:
 
 ## Agent log (kort — nieuwste bovenaan)
 
+| 2026-07-26 | — | **ASSET-STYLE ui-batch:** saga/ach/lock/check/island inline SVG → `assets/ui/*.svg` + `<img>` helpers; SW precache; smoke uitgebreid. v1.18.98 / SW v308. |
+
 Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
