@@ -1,7 +1,7 @@
 {
   "name": "stickman-fighter",
   "private": true,
-  "version": "1.18.77",
+  "version": "1.18.78",
   "description": "Stickman Fighter — Monster Arena PWA",
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -12,7 +12,9 @@
     "smoke:upgrades": "node scripts/smoke-upgrades.mjs",
     "smoke:menu": "node scripts/smoke-menu-hub.mjs",
     "smoke:html": "node scripts/smoke-html-structure.mjs",
-    "test": "npm run build && npm run check && npm run smoke && npm run smoke:upgrades && npm run smoke:menu && npm run smoke:html",
+    "smoke:gamble": "node scripts/smoke-gamble-start.mjs",
+    "smoke:levelup": "node scripts/smoke-levelup-fight.mjs",
+    "test": "npm run build && npm run check && npm run smoke && npm run smoke:upgrades && npm run smoke:menu && npm run smoke:html && npm run smoke:gamble && npm run smoke:levelup",
     "roll": "bash scripts/roll-improvement-d20.sh",
     "roll:status": "bash scripts/roll-improvement-d20.sh status",
     "roll:verify": "bash scripts/roll-improvement-d20.sh verify",
