@@ -43,7 +43,11 @@ function itemUpgradeIdValid(cat, id) {
 }
 
 function weaponUpgradeEligible(w) {
-  return w && w.id && w.id !== 'vuist' && w.id !== 'master_sword' && save.lvl >= w.unlock && !isThrowWeapon(w.id);
+  // Alleen wapens die je echt bezit (character-unlock óf zone-drop), niet alleen Lv-getal.
+  if (!w || !w.id || w.id === 'vuist' || w.id === 'master_sword') return false;
+  if (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) return false;
+  if (typeof weaponUnlockedByLevel === 'function') return weaponUnlockedByLevel(w);
+  return save.lvl >= w.unlock;
 }
 
 function petUpgradeEligible(p) {

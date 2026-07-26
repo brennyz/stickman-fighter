@@ -113,6 +113,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | — | **User fix:** wapen-upgrades alleen voor bezit (`weaponUnlockedByLevel`) — geen zone/locked wapens meer upgraden. v1.18.113 / SW v323. |
 | 2026-07-26 | — | **iPad/mobile scale:** fluid `--ui-rail` / type tokens, tablet≥768 + iPad landscape + phone-landscape density, saga touch floors, leesbaarheid clamp. v1.18.111 / SW v321. |
 | 2026-07-26 | — | **Menu SVG nav LIVE:** back/pause chrome, saga-*.svg, preview sheet. v1.18.110 / SW v320. |
 | 2026-07-26 | — | **Zone-wapens harden:** adventure keep-equipped fix, DoT quiet/skipHitSfx, smoke:zone, regressie-guards. v1.18.109 / SW v319. |

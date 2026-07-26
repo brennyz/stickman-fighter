@@ -26,6 +26,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260726T191800",
+      "from": "user",
+      "text": "Je kunt al wapens upgraden die niet eens in bezit zijn — mag niet",
+      "status": "open",
+      "updated": "2026-07-26"
+    },
+    {
       "id": "w-20260726T190000",
       "from": "user",
       "text": "Zone-wapens Nightmare/Hel goed integreren met 2.0/3.0 modus (drops + effects)",
