@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | — | **Summons harden:** where-from/where-see strip, center-card laatste 2s (video of fallback), rarity FX shell, geen open tijdens play, save null→5 fix, smoke-summon. v1.18.107 / SW v317. |
 | 2026-07-26 | — | **Daily summons:** menu-kist (flash bij remaining) + 5 wapen/5 pet/dag + 5% jackpot + save sanitize (chestDaily/chestWeapons). Video-lagen wachten op Gemini mp4. v1.18.106 / SW v316. |
 | 2026-07-26 | — | **Summon-video:** Gemini share preview = te crude pixel-boom; nieuwe prompt stickman + sticks→kist; rarity FX na open. Wacht op mp4. |
 | 2026-07-26 | — | **Plan:** dagelijkse 5+5 summons (wapen/pet) + Gemini summon-video met rarity-lagen (common saai → legendary flitsend). Wacht op user-filmpje. Wishlist `w-20260726T185514`. |

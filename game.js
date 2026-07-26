@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.106';
+const APP_VERSION = '1.18.107';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 316;
+const SW_CACHE_REV = 317;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2312,6 +2312,7 @@ function applyLangStaticScreens() {
     modeHubScreen: t('back.menu'),
     levelScreen: t('back.menu'),
     gambleScreen: t('back.levels'),
+    summonScreen: t('back.menu'),
     weaponScreen: t('back.collect'),
     petScreen: t('back.collect'),
     styleScreen: t('back.collect'),
@@ -4036,6 +4037,7 @@ const BUTTON_ICON_FALLBACKS = {
   arcade: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#9db8ff" stroke-width="1.9"><rect x="5" y="8" width="14" height="11" rx="2.2"/><circle cx="9" cy="13.5" r="1.7" fill="#7cf5ff" stroke="none"/><circle cx="15" cy="13.5" r="1.7" fill="#ff6b6b" stroke="none"/></svg>',
   versus: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ff9ab8" stroke-width="2"><circle cx="7.5" cy="8" r="2.4" fill="#7cf5ff"/><circle cx="16.5" cy="8" r="2.4" fill="#ff788c"/></svg>',
   collect: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#c792ff" stroke-width="2"><path d="M5 4.5h9.5L18.5 8v11.5H5z" fill="rgba(199,146,255,.18)"/></svg>',
+  summons: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ffd75e" stroke-width="2"><path d="M4.5 10.5h15v8.2a1.5 1.5 0 0 1-1.5 1.5h-12a1.5 1.5 0 0 1-1.5-1.5z" fill="rgba(255,215,94,.22)"/><path d="M12 10.5v9.7"/></svg>',
   continue: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#7cf5ff" stroke-width="2"><path d="M5 12h12M13 8l4 4-4 4"/></svg>',
 };
 function buttonIconFallbackUri(src) {
@@ -10233,6 +10235,11 @@ const CHEST_DAILY_PET = 5;
 const CHEST_NICE_CHANCE = 0.05;
 const CHEST_PULL_LOG_MAX = 12;
 const CHEST_SKILL_MAX = 48;
+/** Reveal timeline: card pops in for the last 2 seconds (video or CSS fallback). */
+const SUMMON_REVEAL_TOTAL_MS = 4000;
+const SUMMON_CARD_LAST_MS = 2000;
+const SUMMON_VIDEO_SRC = 'assets/summon/reveal.mp4';
+let _summonVideoOk = null;
 
 const CHEST_WEAPON_SKILLS = [
   'Schaduwsteek — crit na dash',
@@ -10258,6 +10265,7 @@ function chestSkillPick(kind) {
 }
 
 function clampChestLeft(n, max) {
+  if (n == null || n === '') return max;
   const v = Math.floor(Number(n));
   if (!Number.isFinite(v)) return max;
   return Math.max(0, Math.min(max, v));
@@ -10498,11 +10506,19 @@ function openChestSummon(kind) {
 }
 
 function sanitizeChestDaily(raw, today) {
-  const dk = (typeof raw?.date === 'string' ? raw.date.slice(0, 10) : null) || today;
+  if (!raw || typeof raw !== 'object') {
+    return {
+      date: today,
+      wLeft: CHEST_DAILY_WEAPON,
+      pLeft: CHEST_DAILY_PET,
+      pulls: [],
+    };
+  }
+  const dk = (typeof raw.date === 'string' ? raw.date.slice(0, 10) : null) || today;
   const out = {
     date: dk,
-    wLeft: clampChestLeft(raw && raw.wLeft, CHEST_DAILY_WEAPON),
-    pLeft: clampChestLeft(raw && raw.pLeft, CHEST_DAILY_PET),
+    wLeft: clampChestLeft(raw.wLeft, CHEST_DAILY_WEAPON),
+    pLeft: clampChestLeft(raw.pLeft, CHEST_DAILY_PET),
     pulls: [],
   };
   // Als date ≠ vandaag: reset pulls + full quota (nieuwe dag)
@@ -10512,7 +10528,7 @@ function sanitizeChestDaily(raw, today) {
     out.pLeft = CHEST_DAILY_PET;
     return out;
   }
-  if (raw && Array.isArray(raw.pulls)) {
+  if (Array.isArray(raw.pulls)) {
     for (const p of raw.pulls.slice(-CHEST_PULL_LOG_MAX)) {
       if (!p || typeof p !== 'object') continue;
       const kind = p.kind === 'pet' ? 'pet' : (p.kind === 'weapon' ? 'weapon' : null);
@@ -10570,6 +10586,19 @@ function chestResultToast(res) {
   if (res.type === 'coins') return `+${res.amount} pet coins`;
   if (res.type === 'xp') return `+${res.amount} XP`;
   return res.label || 'Niks bijzonders…';
+}
+
+function chestResultRarityId(res) {
+  if (!res || !res.ok) return 'common';
+  if (res.rarity && typeof rarityOf === 'function') return rarityOf(res.rarity).id || res.rarity;
+  if (res.nice) return 'legendary';
+  if (res.type === 'coins' || res.type === 'xp') return 'uncommon';
+  return 'common';
+}
+
+function summonRevealCardDelayMs(totalMs) {
+  const total = Math.max(SUMMON_CARD_LAST_MS + 400, Number(totalMs) || SUMMON_REVEAL_TOTAL_MS);
+  return Math.max(0, total - SUMMON_CARD_LAST_MS);
 }
 /* --- src/i18n/catalog.js --- */
 /* ============================== I18N CATALOG ========================== */
@@ -29197,6 +29226,8 @@ const UI = {
         return;
       }
       if (active === 'summonScreen') {
+        this.clearSummonRevealTimers();
+        this._chestPullBusy = false;
         this.renderMenu();
         this.show('menuScreen');
         return;
@@ -29277,6 +29308,8 @@ const UI = {
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
+      try { this.clearSummonRevealTimers(); } catch (_) {}
+      this._chestPullBusy = false;
       try { Input.releaseAll(); } catch (_) {}
       Input.dualMode = false;
       Input.layout(W, H);
@@ -29766,6 +29799,12 @@ const UI = {
 
   renderSummon() {
     try {
+      // Menu-UI only — never leave play canvas competing with this screen
+      if (typeof state !== 'undefined' && state === 'play' && game) {
+        try { UI.toast('Eerst gevecht afmaken of pauzeren', 2200); } catch (_) {}
+        return;
+      }
+      if (typeof state !== 'undefined' && state === 'play' && !game) state = 'menu';
       ensureChestDaily();
       const wLeft = chestWeaponLeft();
       const pLeft = chestPetLeft();
@@ -29779,8 +29818,8 @@ const UI = {
       const pLbl = document.getElementById('chestPetLbl');
       if (wLbl) wLbl.textContent = wLeft > 0 ? `${wLeft} over` : 'Op';
       if (pLbl) pLbl.textContent = pLeft > 0 ? `${pLeft} over` : 'Op';
-      if (wBtn) wBtn.disabled = wLeft <= 0;
-      if (pBtn) pBtn.disabled = pLeft <= 0;
+      if (wBtn) wBtn.disabled = wLeft <= 0 || !!this._chestPullBusy;
+      if (pBtn) pBtn.disabled = pLeft <= 0 || !!this._chestPullBusy;
 
       const logEl = document.getElementById('summonLog');
       if (logEl) {
@@ -29796,33 +29835,257 @@ const UI = {
           }).join('');
         }
       }
+      try { syncPlayLayer(); } catch (_) {}
+      try { hardenButtonIcons(document.getElementById('summonScreen')); } catch (_) {}
     } catch (err) {
       sfReportError('renderSummon', err, 'Summons laden mislukt');
+      try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
+    }
+  },
+
+  clearSummonRevealTimers() {
+    if (this._summonCardTimer) {
+      clearTimeout(this._summonCardTimer);
+      this._summonCardTimer = null;
+    }
+    if (this._summonDoneTimer) {
+      clearTimeout(this._summonDoneTimer);
+      this._summonDoneTimer = null;
+    }
+    try {
+      const vid = document.getElementById('summonVideo');
+      if (vid) {
+        vid.onloadedmetadata = null;
+        vid.onended = null;
+        vid.onerror = null;
+        try { vid.pause(); } catch (_) {}
+      }
+    } catch (_) {}
+  },
+
+  /** Open summons hub — never mid-fight (blue-screen guard). */
+  openSummonHub() {
+    try {
+      if (state === 'play' && game) {
+        UI.toast('Eerst gevecht afmaken of pauzeren', 2400);
+        return;
+      }
+      if (state === 'play' && !game) state = 'menu';
+      if (state === 'pause' || state === 'result') state = 'menu';
+      this.clearSummonRevealTimers();
+      this._chestPullBusy = false;
+      this.safeOpen('summonScreen', () => this.renderSummon(), { msg: 'Summons laden mislukt' });
+    } catch (err) {
+      sfReportError('openSummonHub', err, 'Summons openen mislukt');
+      try { this.goMenu(); } catch (_) {}
+    }
+  },
+
+  paintSummonCenterCard(res) {
+    const cv = document.getElementById('summonCardCanvas');
+    const nameEl = document.getElementById('summonCardName');
+    const rarEl = document.getElementById('summonCardRar');
+    const skEl = document.getElementById('summonCardSkill');
+    const card = document.getElementById('summonCenterCard');
+    if (!cv || !nameEl) return;
+    const cc = cv.getContext('2d');
+    cc.clearRect(0, 0, cv.width, cv.height);
+    const rarId = typeof chestResultRarityId === 'function' ? chestResultRarityId(res) : 'common';
+    const rar = typeof rarityOf === 'function' ? rarityOf(rarId) : { color: '#9db1e3', name: rarId };
+    let title = '…';
+    let skill = '';
+    try {
+      if (res && res.weaponId && typeof drawWeaponShape === 'function') {
+        cc.save();
+        cc.translate(28, 78);
+        cc.rotate(-0.55);
+        if (rar.order >= 3 && !motionReduced()) {
+          cc.fillStyle = rar.glow || 'rgba(255,215,94,.35)';
+          cc.beginPath(); cc.arc(26, -6, 28, 0, Math.PI * 2); cc.fill();
+        }
+        drawWeaponShape(cc, res.weaponId, 0.28);
+        cc.restore();
+        title = res.name || (typeof weaponLabel === 'function' ? weaponLabel(res.weaponId) : res.weaponId);
+        skill = res.skill || '';
+      } else if (res && res.petId && typeof drawMonsterArt === 'function') {
+        const def = typeof petDef === 'function' ? petDef(res.petId) : null;
+        const sp = def && SPECIES[def.speciesId];
+        if (sp) {
+          cc.save();
+          cc.translate(60, 72);
+          cc.scale(0.72, 0.72);
+          drawMonsterArt(cc, sp, sp.size || 28, 1.15, false, false);
+          cc.restore();
+        }
+        title = res.name || (sp && sp.name) || res.petId;
+        skill = res.skill || '';
+      } else if (res && res.type === 'egg') {
+        cc.fillStyle = rar.color || '#ffd75e';
+        cc.beginPath(); cc.ellipse(60, 62, 28, 36, 0, 0, Math.PI * 2); cc.fill();
+        title = res.name ? ('Ei · ' + res.name) : 'Ei';
+      } else if (res && res.type === 'coins') {
+        cc.fillStyle = '#ffd75e';
+        cc.beginPath(); cc.arc(60, 60, 28, 0, Math.PI * 2); cc.fill();
+        cc.fillStyle = '#c97a20';
+        cc.font = 'bold 22px sans-serif';
+        cc.textAlign = 'center';
+        cc.fillText('🪙', 60, 68);
+        title = '+' + (res.amount || 0) + ' pet coins';
+      } else if (res && res.type === 'xp') {
+        cc.fillStyle = '#7cf5ff';
+        cc.font = 'bold 28px sans-serif';
+        cc.textAlign = 'center';
+        cc.fillText('XP', 60, 70);
+        title = '+' + (res.amount || 0) + ' XP';
+      } else {
+        cc.strokeStyle = '#9db1e3';
+        cc.lineWidth = 3;
+        cc.strokeRect(30, 30, 60, 60);
+        title = (res && res.label) || 'Niks bijzonders';
+      }
+    } catch (_) {
+      title = (res && res.name) || 'Summon';
+    }
+    nameEl.textContent = title;
+    if (rarEl) {
+      rarEl.textContent = typeof rarityLabel === 'function' ? rarityLabel(rarId) : rarId;
+      rarEl.style.color = rar.color || '#9db1e3';
+    }
+    if (skEl) {
+      skEl.textContent = skill || '';
+      skEl.style.display = skill ? '' : 'none';
+    }
+    if (card) card.setAttribute('aria-hidden', 'true');
+  },
+
+  showSummonCenterCard() {
+    const reveal = document.getElementById('summonReveal');
+    const card = document.getElementById('summonCenterCard');
+    if (reveal) reveal.classList.add('is-card-show');
+    if (card) card.setAttribute('aria-hidden', 'false');
+  },
+
+  /**
+   * Play optional Gemini video; always schedule center-card for last 2s.
+   * No video file → CSS fallback stage (no 404 spam after first fail).
+   */
+  runSummonRevealTimeline(res) {
+    this.clearSummonRevealTimers();
+    const reveal = document.getElementById('summonReveal');
+    const fallback = document.getElementById('summonStageFallback');
+    const vid = document.getElementById('summonVideo');
+    const rarId = typeof chestResultRarityId === 'function' ? chestResultRarityId(res) : 'common';
+    if (reveal) {
+      reveal.dataset.rarity = rarId;
+      reveal.classList.toggle('is-nice', !!(res && res.nice));
+      reveal.classList.remove('is-card-show', 'is-shake');
+      void reveal.offsetWidth;
+      reveal.classList.add('is-shake');
+    }
+    this.paintSummonCenterCard(res);
+
+    const startTimers = (totalMs) => {
+      const cardAt = typeof summonRevealCardDelayMs === 'function'
+        ? summonRevealCardDelayMs(totalMs)
+        : Math.max(0, (totalMs || SUMMON_REVEAL_TOTAL_MS) - SUMMON_CARD_LAST_MS);
+      this._summonCardTimer = setTimeout(() => {
+        try { this.showSummonCenterCard(); } catch (_) {}
+      }, cardAt);
+      this._summonDoneTimer = setTimeout(() => {
+        this._chestPullBusy = false;
+        try { this.renderSummon(); } catch (_) {}
+      }, totalMs || SUMMON_REVEAL_TOTAL_MS);
+    };
+
+    const useFallback = () => {
+      if (vid) {
+        vid.style.display = 'none';
+        try { vid.removeAttribute('src'); vid.load(); } catch (_) {}
+      }
+      if (fallback) fallback.style.display = '';
+      startTimers(SUMMON_REVEAL_TOTAL_MS);
+    };
+
+    if (_summonVideoOk === false || !vid) {
+      useFallback();
+      return;
+    }
+
+    const src = vid.getAttribute('data-src') || SUMMON_VIDEO_SRC;
+    let settled = false;
+    const settleFallback = () => {
+      if (settled) return;
+      settled = true;
+      _summonVideoOk = false;
+      useFallback();
+    };
+    vid.onerror = settleFallback;
+    vid.onloadedmetadata = () => {
+      if (settled) return;
+      settled = true;
+      _summonVideoOk = true;
+      if (fallback) fallback.style.display = 'none';
+      vid.style.display = '';
+      const durMs = Math.max(2500, (vid.duration || 4) * 1000);
+      startTimers(durMs);
+      try {
+        vid.currentTime = 0;
+        const p = vid.play();
+        if (p && p.catch) p.catch(() => {});
+      } catch (_) {}
+    };
+    try {
+      if (fallback) fallback.style.display = '';
+      vid.style.display = '';
+      if (!vid.getAttribute('src') || vid.getAttribute('src') !== src) {
+        vid.setAttribute('src', src);
+      }
+      vid.load();
+      // If metadata never fires (missing file), fall back
+      setTimeout(() => {
+        if (!settled) settleFallback();
+      }, 900);
+    } catch (_) {
+      settleFallback();
     }
   },
 
   doChestPull(kind) {
     try {
+      if (this._chestPullBusy) return;
+      if (state === 'play' && game) {
+        UI.toast('Niet tijdens gevecht', 2000);
+        return;
+      }
+      const screen = document.getElementById('summonScreen');
+      if (!screen || !screen.classList.contains('active')) {
+        this.openSummonHub();
+      }
+      this._chestPullBusy = true;
+      try { this.renderSummon(); } catch (_) {}
+
       const res = openChestSummon(kind);
-      const reveal = document.getElementById('summonReveal');
       const text = document.getElementById('summonRevealText');
       const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : 'Mislukt');
       if (text) text.textContent = msg;
-      if (reveal) {
-        reveal.classList.toggle('is-nice', !!(res && res.ok && res.nice));
-        reveal.classList.remove('is-shake');
-        void reveal.offsetWidth;
-        reveal.classList.add('is-shake');
-      }
-      if (res && res.ok) {
-        try { UI.toast(msg, res.nice ? 3800 : 2400); } catch (_) {}
-      } else {
+
+      if (!res || !res.ok) {
+        this._chestPullBusy = false;
         try { UI.toast(msg, 2200); } catch (_) {}
+        try { this.renderSummon(); } catch (_) {}
+        try { this.renderMenu(); } catch (_) {}
+        return;
       }
-      this.renderSummon();
-      this.renderMenu();
+
+      try { UI.toast(msg, res.nice ? 3800 : 2400); } catch (_) {}
+      this.runSummonRevealTimeline(res);
+      try { this.renderMenu(); } catch (_) {}
+      try { syncPlayLayer(); } catch (_) {}
     } catch (err) {
+      this._chestPullBusy = false;
+      this.clearSummonRevealTimers();
       sfReportError('doChestPull', err, 'Summon mislukt');
+      try { ensureVisibleScreen(); } catch (_) {}
     }
   },
 
@@ -31910,7 +32173,7 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
       UI.charPickStep = 1;
       UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { msg: 'Kies karakter mislukt' });
     } else if (hub === 'summon') {
-      UI.safeOpen('summonScreen', () => UI.renderSummon(), { msg: 'Summons laden mislukt' });
+      UI.openSummonHub();
     } else {
       UI.openModeHub(hub);
     }
@@ -31992,6 +32255,20 @@ bindPress(document.getElementById('btnChestWeapon'), () => {
 bindPress(document.getElementById('btnChestPet'), () => {
   AudioSys.init();
   UI.doChestPull('pet');
+});
+bindPress(document.getElementById('btnSummonGotoWeapons'), () => {
+  AudioSys.init(); AudioSys.sfx('select');
+  if (state === 'play' && game) return;
+  UI.clearSummonRevealTimers();
+  UI._chestPullBusy = false;
+  openCollectionScreen('weaponScreen', () => UI.renderWeapons());
+});
+bindPress(document.getElementById('btnSummonGotoPets'), () => {
+  AudioSys.init(); AudioSys.sfx('select');
+  if (state === 'play' && game) return;
+  UI.clearSummonRevealTimers();
+  UI._chestPullBusy = false;
+  openCollectionScreen('petScreen', () => UI.renderPets());
 });
 bindPress(document.getElementById('btnDex'), () => {
   openCollectionScreen('dexScreen', () => UI.renderDex());

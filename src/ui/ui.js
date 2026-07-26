@@ -1180,6 +1180,8 @@ const UI = {
         return;
       }
       if (active === 'summonScreen') {
+        this.clearSummonRevealTimers();
+        this._chestPullBusy = false;
         this.renderMenu();
         this.show('menuScreen');
         return;
@@ -1260,6 +1262,8 @@ const UI = {
       game = null;
       state = 'menu';
       window.__sfLoopErr = false;
+      try { this.clearSummonRevealTimers(); } catch (_) {}
+      this._chestPullBusy = false;
       try { Input.releaseAll(); } catch (_) {}
       Input.dualMode = false;
       Input.layout(W, H);
@@ -1749,6 +1753,12 @@ const UI = {
 
   renderSummon() {
     try {
+      // Menu-UI only — never leave play canvas competing with this screen
+      if (typeof state !== 'undefined' && state === 'play' && game) {
+        try { UI.toast('Eerst gevecht afmaken of pauzeren', 2200); } catch (_) {}
+        return;
+      }
+      if (typeof state !== 'undefined' && state === 'play' && !game) state = 'menu';
       ensureChestDaily();
       const wLeft = chestWeaponLeft();
       const pLeft = chestPetLeft();
@@ -1762,8 +1772,8 @@ const UI = {
       const pLbl = document.getElementById('chestPetLbl');
       if (wLbl) wLbl.textContent = wLeft > 0 ? `${wLeft} over` : 'Op';
       if (pLbl) pLbl.textContent = pLeft > 0 ? `${pLeft} over` : 'Op';
-      if (wBtn) wBtn.disabled = wLeft <= 0;
-      if (pBtn) pBtn.disabled = pLeft <= 0;
+      if (wBtn) wBtn.disabled = wLeft <= 0 || !!this._chestPullBusy;
+      if (pBtn) pBtn.disabled = pLeft <= 0 || !!this._chestPullBusy;
 
       const logEl = document.getElementById('summonLog');
       if (logEl) {
@@ -1779,33 +1789,257 @@ const UI = {
           }).join('');
         }
       }
+      try { syncPlayLayer(); } catch (_) {}
+      try { hardenButtonIcons(document.getElementById('summonScreen')); } catch (_) {}
     } catch (err) {
       sfReportError('renderSummon', err, 'Summons laden mislukt');
+      try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
+    }
+  },
+
+  clearSummonRevealTimers() {
+    if (this._summonCardTimer) {
+      clearTimeout(this._summonCardTimer);
+      this._summonCardTimer = null;
+    }
+    if (this._summonDoneTimer) {
+      clearTimeout(this._summonDoneTimer);
+      this._summonDoneTimer = null;
+    }
+    try {
+      const vid = document.getElementById('summonVideo');
+      if (vid) {
+        vid.onloadedmetadata = null;
+        vid.onended = null;
+        vid.onerror = null;
+        try { vid.pause(); } catch (_) {}
+      }
+    } catch (_) {}
+  },
+
+  /** Open summons hub — never mid-fight (blue-screen guard). */
+  openSummonHub() {
+    try {
+      if (state === 'play' && game) {
+        UI.toast('Eerst gevecht afmaken of pauzeren', 2400);
+        return;
+      }
+      if (state === 'play' && !game) state = 'menu';
+      if (state === 'pause' || state === 'result') state = 'menu';
+      this.clearSummonRevealTimers();
+      this._chestPullBusy = false;
+      this.safeOpen('summonScreen', () => this.renderSummon(), { msg: 'Summons laden mislukt' });
+    } catch (err) {
+      sfReportError('openSummonHub', err, 'Summons openen mislukt');
+      try { this.goMenu(); } catch (_) {}
+    }
+  },
+
+  paintSummonCenterCard(res) {
+    const cv = document.getElementById('summonCardCanvas');
+    const nameEl = document.getElementById('summonCardName');
+    const rarEl = document.getElementById('summonCardRar');
+    const skEl = document.getElementById('summonCardSkill');
+    const card = document.getElementById('summonCenterCard');
+    if (!cv || !nameEl) return;
+    const cc = cv.getContext('2d');
+    cc.clearRect(0, 0, cv.width, cv.height);
+    const rarId = typeof chestResultRarityId === 'function' ? chestResultRarityId(res) : 'common';
+    const rar = typeof rarityOf === 'function' ? rarityOf(rarId) : { color: '#9db1e3', name: rarId };
+    let title = '…';
+    let skill = '';
+    try {
+      if (res && res.weaponId && typeof drawWeaponShape === 'function') {
+        cc.save();
+        cc.translate(28, 78);
+        cc.rotate(-0.55);
+        if (rar.order >= 3 && !motionReduced()) {
+          cc.fillStyle = rar.glow || 'rgba(255,215,94,.35)';
+          cc.beginPath(); cc.arc(26, -6, 28, 0, Math.PI * 2); cc.fill();
+        }
+        drawWeaponShape(cc, res.weaponId, 0.28);
+        cc.restore();
+        title = res.name || (typeof weaponLabel === 'function' ? weaponLabel(res.weaponId) : res.weaponId);
+        skill = res.skill || '';
+      } else if (res && res.petId && typeof drawMonsterArt === 'function') {
+        const def = typeof petDef === 'function' ? petDef(res.petId) : null;
+        const sp = def && SPECIES[def.speciesId];
+        if (sp) {
+          cc.save();
+          cc.translate(60, 72);
+          cc.scale(0.72, 0.72);
+          drawMonsterArt(cc, sp, sp.size || 28, 1.15, false, false);
+          cc.restore();
+        }
+        title = res.name || (sp && sp.name) || res.petId;
+        skill = res.skill || '';
+      } else if (res && res.type === 'egg') {
+        cc.fillStyle = rar.color || '#ffd75e';
+        cc.beginPath(); cc.ellipse(60, 62, 28, 36, 0, 0, Math.PI * 2); cc.fill();
+        title = res.name ? ('Ei · ' + res.name) : 'Ei';
+      } else if (res && res.type === 'coins') {
+        cc.fillStyle = '#ffd75e';
+        cc.beginPath(); cc.arc(60, 60, 28, 0, Math.PI * 2); cc.fill();
+        cc.fillStyle = '#c97a20';
+        cc.font = 'bold 22px sans-serif';
+        cc.textAlign = 'center';
+        cc.fillText('🪙', 60, 68);
+        title = '+' + (res.amount || 0) + ' pet coins';
+      } else if (res && res.type === 'xp') {
+        cc.fillStyle = '#7cf5ff';
+        cc.font = 'bold 28px sans-serif';
+        cc.textAlign = 'center';
+        cc.fillText('XP', 60, 70);
+        title = '+' + (res.amount || 0) + ' XP';
+      } else {
+        cc.strokeStyle = '#9db1e3';
+        cc.lineWidth = 3;
+        cc.strokeRect(30, 30, 60, 60);
+        title = (res && res.label) || 'Niks bijzonders';
+      }
+    } catch (_) {
+      title = (res && res.name) || 'Summon';
+    }
+    nameEl.textContent = title;
+    if (rarEl) {
+      rarEl.textContent = typeof rarityLabel === 'function' ? rarityLabel(rarId) : rarId;
+      rarEl.style.color = rar.color || '#9db1e3';
+    }
+    if (skEl) {
+      skEl.textContent = skill || '';
+      skEl.style.display = skill ? '' : 'none';
+    }
+    if (card) card.setAttribute('aria-hidden', 'true');
+  },
+
+  showSummonCenterCard() {
+    const reveal = document.getElementById('summonReveal');
+    const card = document.getElementById('summonCenterCard');
+    if (reveal) reveal.classList.add('is-card-show');
+    if (card) card.setAttribute('aria-hidden', 'false');
+  },
+
+  /**
+   * Play optional Gemini video; always schedule center-card for last 2s.
+   * No video file → CSS fallback stage (no 404 spam after first fail).
+   */
+  runSummonRevealTimeline(res) {
+    this.clearSummonRevealTimers();
+    const reveal = document.getElementById('summonReveal');
+    const fallback = document.getElementById('summonStageFallback');
+    const vid = document.getElementById('summonVideo');
+    const rarId = typeof chestResultRarityId === 'function' ? chestResultRarityId(res) : 'common';
+    if (reveal) {
+      reveal.dataset.rarity = rarId;
+      reveal.classList.toggle('is-nice', !!(res && res.nice));
+      reveal.classList.remove('is-card-show', 'is-shake');
+      void reveal.offsetWidth;
+      reveal.classList.add('is-shake');
+    }
+    this.paintSummonCenterCard(res);
+
+    const startTimers = (totalMs) => {
+      const cardAt = typeof summonRevealCardDelayMs === 'function'
+        ? summonRevealCardDelayMs(totalMs)
+        : Math.max(0, (totalMs || SUMMON_REVEAL_TOTAL_MS) - SUMMON_CARD_LAST_MS);
+      this._summonCardTimer = setTimeout(() => {
+        try { this.showSummonCenterCard(); } catch (_) {}
+      }, cardAt);
+      this._summonDoneTimer = setTimeout(() => {
+        this._chestPullBusy = false;
+        try { this.renderSummon(); } catch (_) {}
+      }, totalMs || SUMMON_REVEAL_TOTAL_MS);
+    };
+
+    const useFallback = () => {
+      if (vid) {
+        vid.style.display = 'none';
+        try { vid.removeAttribute('src'); vid.load(); } catch (_) {}
+      }
+      if (fallback) fallback.style.display = '';
+      startTimers(SUMMON_REVEAL_TOTAL_MS);
+    };
+
+    if (_summonVideoOk === false || !vid) {
+      useFallback();
+      return;
+    }
+
+    const src = vid.getAttribute('data-src') || SUMMON_VIDEO_SRC;
+    let settled = false;
+    const settleFallback = () => {
+      if (settled) return;
+      settled = true;
+      _summonVideoOk = false;
+      useFallback();
+    };
+    vid.onerror = settleFallback;
+    vid.onloadedmetadata = () => {
+      if (settled) return;
+      settled = true;
+      _summonVideoOk = true;
+      if (fallback) fallback.style.display = 'none';
+      vid.style.display = '';
+      const durMs = Math.max(2500, (vid.duration || 4) * 1000);
+      startTimers(durMs);
+      try {
+        vid.currentTime = 0;
+        const p = vid.play();
+        if (p && p.catch) p.catch(() => {});
+      } catch (_) {}
+    };
+    try {
+      if (fallback) fallback.style.display = '';
+      vid.style.display = '';
+      if (!vid.getAttribute('src') || vid.getAttribute('src') !== src) {
+        vid.setAttribute('src', src);
+      }
+      vid.load();
+      // If metadata never fires (missing file), fall back
+      setTimeout(() => {
+        if (!settled) settleFallback();
+      }, 900);
+    } catch (_) {
+      settleFallback();
     }
   },
 
   doChestPull(kind) {
     try {
+      if (this._chestPullBusy) return;
+      if (state === 'play' && game) {
+        UI.toast('Niet tijdens gevecht', 2000);
+        return;
+      }
+      const screen = document.getElementById('summonScreen');
+      if (!screen || !screen.classList.contains('active')) {
+        this.openSummonHub();
+      }
+      this._chestPullBusy = true;
+      try { this.renderSummon(); } catch (_) {}
+
       const res = openChestSummon(kind);
-      const reveal = document.getElementById('summonReveal');
       const text = document.getElementById('summonRevealText');
       const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : 'Mislukt');
       if (text) text.textContent = msg;
-      if (reveal) {
-        reveal.classList.toggle('is-nice', !!(res && res.ok && res.nice));
-        reveal.classList.remove('is-shake');
-        void reveal.offsetWidth;
-        reveal.classList.add('is-shake');
-      }
-      if (res && res.ok) {
-        try { UI.toast(msg, res.nice ? 3800 : 2400); } catch (_) {}
-      } else {
+
+      if (!res || !res.ok) {
+        this._chestPullBusy = false;
         try { UI.toast(msg, 2200); } catch (_) {}
+        try { this.renderSummon(); } catch (_) {}
+        try { this.renderMenu(); } catch (_) {}
+        return;
       }
-      this.renderSummon();
-      this.renderMenu();
+
+      try { UI.toast(msg, res.nice ? 3800 : 2400); } catch (_) {}
+      this.runSummonRevealTimeline(res);
+      try { this.renderMenu(); } catch (_) {}
+      try { syncPlayLayer(); } catch (_) {}
     } catch (err) {
+      this._chestPullBusy = false;
+      this.clearSummonRevealTimers();
       sfReportError('doChestPull', err, 'Summon mislukt');
+      try { ensureVisibleScreen(); } catch (_) {}
     }
   },
 

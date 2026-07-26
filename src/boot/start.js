@@ -134,7 +134,7 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
       UI.charPickStep = 1;
       UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { msg: 'Kies karakter mislukt' });
     } else if (hub === 'summon') {
-      UI.safeOpen('summonScreen', () => UI.renderSummon(), { msg: 'Summons laden mislukt' });
+      UI.openSummonHub();
     } else {
       UI.openModeHub(hub);
     }
@@ -216,6 +216,20 @@ bindPress(document.getElementById('btnChestWeapon'), () => {
 bindPress(document.getElementById('btnChestPet'), () => {
   AudioSys.init();
   UI.doChestPull('pet');
+});
+bindPress(document.getElementById('btnSummonGotoWeapons'), () => {
+  AudioSys.init(); AudioSys.sfx('select');
+  if (state === 'play' && game) return;
+  UI.clearSummonRevealTimers();
+  UI._chestPullBusy = false;
+  openCollectionScreen('weaponScreen', () => UI.renderWeapons());
+});
+bindPress(document.getElementById('btnSummonGotoPets'), () => {
+  AudioSys.init(); AudioSys.sfx('select');
+  if (state === 'play' && game) return;
+  UI.clearSummonRevealTimers();
+  UI._chestPullBusy = false;
+  openCollectionScreen('petScreen', () => UI.renderPets());
 });
 bindPress(document.getElementById('btnDex'), () => {
   openCollectionScreen('dexScreen', () => UI.renderDex());

@@ -680,6 +680,7 @@ function applyLangStaticScreens() {
     modeHubScreen: t('back.menu'),
     levelScreen: t('back.menu'),
     gambleScreen: t('back.levels'),
+    summonScreen: t('back.menu'),
     weaponScreen: t('back.collect'),
     petScreen: t('back.collect'),
     styleScreen: t('back.collect'),

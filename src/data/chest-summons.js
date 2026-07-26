@@ -10,6 +10,11 @@ const CHEST_DAILY_PET = 5;
 const CHEST_NICE_CHANCE = 0.05;
 const CHEST_PULL_LOG_MAX = 12;
 const CHEST_SKILL_MAX = 48;
+/** Reveal timeline: card pops in for the last 2 seconds (video or CSS fallback). */
+const SUMMON_REVEAL_TOTAL_MS = 4000;
+const SUMMON_CARD_LAST_MS = 2000;
+const SUMMON_VIDEO_SRC = 'assets/summon/reveal.mp4';
+let _summonVideoOk = null;
 
 const CHEST_WEAPON_SKILLS = [
   'Schaduwsteek — crit na dash',
@@ -35,6 +40,7 @@ function chestSkillPick(kind) {
 }
 
 function clampChestLeft(n, max) {
+  if (n == null || n === '') return max;
   const v = Math.floor(Number(n));
   if (!Number.isFinite(v)) return max;
   return Math.max(0, Math.min(max, v));
@@ -275,11 +281,19 @@ function openChestSummon(kind) {
 }
 
 function sanitizeChestDaily(raw, today) {
-  const dk = (typeof raw?.date === 'string' ? raw.date.slice(0, 10) : null) || today;
+  if (!raw || typeof raw !== 'object') {
+    return {
+      date: today,
+      wLeft: CHEST_DAILY_WEAPON,
+      pLeft: CHEST_DAILY_PET,
+      pulls: [],
+    };
+  }
+  const dk = (typeof raw.date === 'string' ? raw.date.slice(0, 10) : null) || today;
   const out = {
     date: dk,
-    wLeft: clampChestLeft(raw && raw.wLeft, CHEST_DAILY_WEAPON),
-    pLeft: clampChestLeft(raw && raw.pLeft, CHEST_DAILY_PET),
+    wLeft: clampChestLeft(raw.wLeft, CHEST_DAILY_WEAPON),
+    pLeft: clampChestLeft(raw.pLeft, CHEST_DAILY_PET),
     pulls: [],
   };
   // Als date ≠ vandaag: reset pulls + full quota (nieuwe dag)
@@ -289,7 +303,7 @@ function sanitizeChestDaily(raw, today) {
     out.pLeft = CHEST_DAILY_PET;
     return out;
   }
-  if (raw && Array.isArray(raw.pulls)) {
+  if (Array.isArray(raw.pulls)) {
     for (const p of raw.pulls.slice(-CHEST_PULL_LOG_MAX)) {
       if (!p || typeof p !== 'object') continue;
       const kind = p.kind === 'pet' ? 'pet' : (p.kind === 'weapon' ? 'weapon' : null);
@@ -347,4 +361,17 @@ function chestResultToast(res) {
   if (res.type === 'coins') return `+${res.amount} pet coins`;
   if (res.type === 'xp') return `+${res.amount} XP`;
   return res.label || 'Niks bijzonders…';
+}
+
+function chestResultRarityId(res) {
+  if (!res || !res.ok) return 'common';
+  if (res.rarity && typeof rarityOf === 'function') return rarityOf(res.rarity).id || res.rarity;
+  if (res.nice) return 'legendary';
+  if (res.type === 'coins' || res.type === 'xp') return 'uncommon';
+  return 'common';
+}
+
+function summonRevealCardDelayMs(totalMs) {
+  const total = Math.max(SUMMON_CARD_LAST_MS + 400, Number(totalMs) || SUMMON_REVEAL_TOTAL_MS);
+  return Math.max(0, total - SUMMON_CARD_LAST_MS);
 }
