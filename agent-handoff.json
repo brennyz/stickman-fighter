@@ -13,17 +13,17 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.115",
-    "swCache": "stickfighter-app-v325",
-    "gameJsQuery": "game.js?v=325",
-    "cssQuery": "styles/main.css?v=325",
-    "featureBranch": "main",
+    "appVersion": "1.18.116",
+    "swCache": "stickfighter-app-v326",
+    "gameJsQuery": "game.js?v=326",
+    "cssQuery": "styles/main.css?v=326",
+    "featureBranch": "cursor/summon-reveal-video-c62d",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "Daily summons harden LIVE merge · v1.18.115",
-    "updated": "2026-07-26T19:23:55Z"
+    "note": "Summon reveal.mp4 shipped · v1.18.116",
+    "updated": "2026-07-26T19:35:00Z"
   },
   "userWishlist": [
     {
@@ -32,7 +32,15 @@
       "text": "Dagelijkse summons: 5× wapen + 5× pet met extra skill; Gemini summon-video + rarity-lagen. Harden + live.",
       "status": "done-in-code",
       "updated": "2026-07-26",
-      "notes": "LIVE v1.18.115. Open: Gemini mp4 at assets/summon/reveal.mp4"
+      "notes": "LIVE + reveal.mp4 (stickman placeholder; Gemini share was login-walled — replace assets/summon/reveal.mp4 anytime). v1.18.116"
+    },
+    {
+      "id": "w-20260726T193200",
+      "from": "user",
+      "text": "Je hebt alleen niet de summons video gepakt",
+      "status": "done-in-code",
+      "updated": "2026-07-26",
+      "notes": "assets/summon/reveal.mp4 + SW precache; Gemini share undownloadable"
     },
     {
       "id": "w-20260726T191800",
