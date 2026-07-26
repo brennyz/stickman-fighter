@@ -143,16 +143,37 @@ const SceneryArt = {
         break;
       }
       case 'grot': {
-        // rotswand-skyline + gloeiende kristallen
-        for (let x = 0; x < W0; x += 4) {
-          const h = 18 + Math.sin(x * 0.16) * 8 + r() * 10;
-          px(x, base - h, 4, h, '#1b2140');
-          if (r() < 0.5) px(x, base - h - 1, 2, 1, '#252c4e');
+        // Photo cave far wall: stratified rock + amber light + mineral tips
+        const P = typeof CAVE_PAL !== 'undefined' ? CAVE_PAL : null;
+        const deep = P ? P.deep : '#10141c';
+        const rock = P ? P.rock : '#1a2028';
+        const mid = P ? P.rockMid : '#2a323c';
+        const amber = P ? P.amber : '#c48840';
+        const amberH = P ? P.amberHot : '#e8a858';
+        const mineral = P ? P.mineral : '#e8e0d0';
+        const green = P ? P.glowGreen : '#a8c840';
+        for (let x = 0; x < W0; x += 3) {
+          const h = 16 + Math.sin(x * 0.14) * 7 + Math.sin(x * 0.05) * 5 + r() * 8;
+          px(x, base - h, 3, h, x > W0 * 0.55 ? mid : deep);
+          if (r() < 0.4) px(x, base - h - 1, 2, 1, rock);
         }
-        for (let i = 0; i < 8; i++) {
-          const x = r() * W0, y = base - 4 - r() * 16;
-          px(x, y, 2, 3, '#6fd7ff');
-          px(x, y - 1, 1, 1, '#bffaff');
+        // amber strata bands (warm-lit wall foto)
+        for (let i = 0; i < 5; i++) {
+          const x = 8 + i * 28 + r() * 4;
+          const y = base - 10 - r() * 14;
+          px(x, y, 18, 2, amber);
+          px(x + 2, y - 1, 10, 1, amberH);
+        }
+        // green glow pockets + mineral flecks
+        for (let i = 0; i < 6; i++) {
+          const x = r() * W0, y = base - 4 - r() * 18;
+          if (i % 2) {
+            px(x, y, 3, 2, green);
+            px(x + 1, y - 1, 1, 1, P ? P.glowGreenHot : '#d0e868');
+          } else {
+            px(x, y, 2, 3, mineral);
+            px(x, y - 1, 1, 1, P ? P.mineralHot : '#f4f0e4');
+          }
         }
         break;
       }
@@ -353,11 +374,23 @@ function drawThemeWeather(c, themeName, t, ground, scroll) {
         break;
       }
       case 'grot': {
-        // zwevende stofjes
+        // stof + waterdruppels + amber mote (foto-atmosfeer)
+        const drip = i % 4 === 0;
         const x = wrapW(seed * 3.9 + Math.sin(t * 0.5 + i) * 30 - scroll * 0.15, W + 20) - 10;
-        const y = wrapW(seed * 2.1 + Math.sin(t * 0.7 + i * 2.3) * 40 + t * 6, ground) ;
-        c.fillStyle = `rgba(200,220,255,${(0.10 + (i % 3) * 0.05).toFixed(2)})`;
-        c.fillRect(x, y, 2, 2);
+        if (drip) {
+          const y = wrapW(seed * 1.4 + t * (90 + (i % 3) * 40), ground + 10) - 4;
+          c.fillStyle = 'rgba(200,220,255,.28)';
+          c.fillRect(x, y, 1, 4);
+          c.fillStyle = 'rgba(232,240,255,.18)';
+          c.fillRect(x, y + 4, 2, 1);
+        } else {
+          const y = wrapW(seed * 2.1 + Math.sin(t * 0.7 + i * 2.3) * 40 + t * 6, ground);
+          const amber = i % 3 === 1;
+          c.fillStyle = amber
+            ? `rgba(232,168,88,${(0.12 + (i % 2) * 0.08).toFixed(2)})`
+            : `rgba(200,220,255,${(0.10 + (i % 3) * 0.05).toFixed(2)})`;
+          c.fillRect(x, y, amber ? 3 : 2, 2);
+        }
         break;
       }
       case 'sloop': {

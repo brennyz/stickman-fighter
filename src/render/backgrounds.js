@@ -3,7 +3,8 @@ const THEMES = {
   veld:    { sky1: '#7ec8ff', sky2: '#cfeeff', hill: '#5cb85c', hill2: '#3f9b47', ground: '#4c8f3f', gtop: '#66b356', deco: 'bloem' },
   landweg: { sky1: '#4a9adf', sky2: '#c5e0f5', hill: '#3a6a42', hill2: '#2a5030', ground: '#7a6848', gtop: '#9a8458', deco: 'struik' },
   bos:     { sky1: '#4a6a58', sky2: '#8aaa78', hill: '#2a4a30', hill2: '#1e3a24', ground: '#3a342c', gtop: '#4a4438', deco: 'boom' },
-  grot:    { sky1: '#232840', sky2: '#3a4265', hill: '#2a3050', hill2: '#1d2340', ground: '#3d4056', gtop: '#4d5170', deco: 'stalag' },
+  // Photo cave: void ceiling → cool rock → amber-lit strata (refs 1–4)
+  grot:    { sky1: '#07090e', sky2: '#1a2028', hill: '#2a323c', hill2: '#141820', ground: '#1a2028', gtop: '#3a4450', deco: 'stalag' },
   vulkaan: { sky1: '#3a1f28', sky2: '#7a3020', hill: '#552430', hill2: '#3a1820', ground: '#4a2a28', gtop: '#5e3630', deco: 'lava' },
   cyber:   { sky1: '#0a1030', sky2: '#252a60', hill: '#1c2350', hill2: '#131840', ground: '#20264a', gtop: '#2c3468', deco: 'neon' },
   dojo:    { sky1: '#3a2d24', sky2: '#6a5240', hill: '#4a3a2c', hill2: '#3a2d22', ground: '#7a5c3c', gtop: '#8f6f4a', deco: 'lampion' },
@@ -205,10 +206,15 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
       }
     }
   } else if (th.deco === 'stalag') {
-    c.fillStyle = '#20263f';
-    for (let i = 0; i < 7; i++) {
-      const x = dX((i * 0.15 + 0.04) * dSpan);
-      c.beginPath(); c.moveTo(x - 20, 0); c.lineTo(x, 70 + (i % 3) * 32); c.lineTo(x + 20, 0); c.closePath(); c.fill();
+    // Photo cave: stalactite curtain + amber/green glow + ground spikes
+    if (typeof drawCaveStalactiteDecor === 'function') {
+      drawCaveStalactiteDecor(c, ground, scroll, t, dX, dSpan);
+    } else {
+      c.fillStyle = '#20263f';
+      for (let i = 0; i < 7; i++) {
+        const x = dX((i * 0.15 + 0.04) * dSpan);
+        c.beginPath(); c.moveTo(x - 20, 0); c.lineTo(x, 70 + (i % 3) * 32); c.lineTo(x + 20, 0); c.closePath(); c.fill();
+      }
     }
   } else if (th.deco === 'lava') {
     c.fillStyle = '#ff7a30';
@@ -262,6 +268,9 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   // grond
   if (themeName === 'bos' && typeof drawForestFloorGround === 'function') {
     drawForestFloorGround(c, ground, scroll);
+  } else if (themeName === 'grot' && typeof drawCaveFloorGround === 'function') {
+    drawCaveFloorGround(c, ground, scroll);
+    if (typeof drawCaveWaterBand === 'function') drawCaveWaterBand(c, ground, scroll, t);
   } else {
     const gg = c.createLinearGradient(0, ground, 0, H);
     gg.addColorStop(0, th.gtop); gg.addColorStop(1, th.ground);
@@ -311,7 +320,7 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   }
 
   // grondstrepen — lopen mee met de wereld (loop-gevoel)
-  if (themeName !== 'landweg' && themeName !== 'bos') {
+  if (themeName !== 'landweg' && themeName !== 'bos' && themeName !== 'grot') {
     c.fillStyle = 'rgba(0,0,0,.14)';
     const span = 92;
     const off = wrap(-scroll, span);
@@ -333,8 +342,8 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   // weer per thema (art-upgrade 4/4): blaadjes/bloesem/sintels/regen/stof
   drawThemeWeather(c, themeName, t, ground, scroll);
   // pixel-speckles op de grond (art-upgrade 1/4) — deterministisch, scroll-vast
-  // bos: skip — photo-sampled floor tiles already carry grit
-  if (!fxLite() && themeName !== 'bos') {
+  // bos/grot: skip — photo-sampled floor tiles already carry grit
+  if (!fxLite() && themeName !== 'bos' && themeName !== 'grot') {
     const spSpan = 61;
     const spOff = wrap(-scroll, spSpan);
     c.fillStyle = 'rgba(255,255,255,.08)';

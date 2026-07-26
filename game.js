@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.96';
+const APP_VERSION = '1.18.97';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 306;
+const SW_CACHE_REV = 307;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -15129,20 +15129,24 @@ class Fighter {
     if (this.y >= game.ground) {
       const hardLand = !this.onGround && this.vy > 300;
       if (hardLand) AudioSys.sfx('land');
-      // bos: kick photo-sampled leaf/twig pixels (players only — stickfight grit)
-      if (!this.onGround && this.vy > 220 && game.theme === 'bos'
+      // bos/grot: kick photo-sampled grit pixels (players only — stickfight grit)
+      if (!this.onGround && this.vy > 220
+          && (game.theme === 'bos' || game.theme === 'grot')
           && (this.isPlayer || this.playerSlot)
-          && !fxLite() && !(typeof Perf !== 'undefined' && Perf.tier >= 2)
-          && typeof forestFloorKickColors === 'function') {
-        const cols = forestFloorKickColors();
-        const n = motionReduced() ? 2 : (this.vy > 520 ? 6 : 4);
-        const c0 = cols[((this.x | 0) + (n * 3)) % cols.length];
-        const c1 = cols[(n + 2) % cols.length];
-        game.burst(this.x, this.y - 2, c0, n, { kind: 'spark', size: 2 });
-        if (!motionReduced() && n >= 4) {
-          game.burst(this.x + (this.face || 1) * 10, this.y - 1, c1, Math.ceil(n * 0.5), {
-            kind: 'spark', size: 1.7,
-          });
+          && !fxLite() && !(typeof Perf !== 'undefined' && Perf.tier >= 2)) {
+        const cols = game.theme === 'grot' && typeof caveKickColors === 'function'
+          ? caveKickColors()
+          : (typeof forestFloorKickColors === 'function' ? forestFloorKickColors() : null);
+        if (cols && cols.length) {
+          const n = motionReduced() ? 2 : (this.vy > 520 ? 6 : 4);
+          const c0 = cols[((this.x | 0) + (n * 3)) % cols.length];
+          const c1 = cols[(n + 2) % cols.length];
+          game.burst(this.x, this.y - 2, c0, n, { kind: 'spark', size: 2 });
+          if (!motionReduced() && n >= 4) {
+            game.burst(this.x + (this.face || 1) * 10, this.y - 1, c1, Math.ceil(n * 0.5), {
+              kind: 'spark', size: 1.7,
+            });
+          }
         }
       }
       this.y = game.ground; this.vy = 0; this.onGround = true;
@@ -16770,16 +16774,37 @@ const SceneryArt = {
         break;
       }
       case 'grot': {
-        // rotswand-skyline + gloeiende kristallen
-        for (let x = 0; x < W0; x += 4) {
-          const h = 18 + Math.sin(x * 0.16) * 8 + r() * 10;
-          px(x, base - h, 4, h, '#1b2140');
-          if (r() < 0.5) px(x, base - h - 1, 2, 1, '#252c4e');
+        // Photo cave far wall: stratified rock + amber light + mineral tips
+        const P = typeof CAVE_PAL !== 'undefined' ? CAVE_PAL : null;
+        const deep = P ? P.deep : '#10141c';
+        const rock = P ? P.rock : '#1a2028';
+        const mid = P ? P.rockMid : '#2a323c';
+        const amber = P ? P.amber : '#c48840';
+        const amberH = P ? P.amberHot : '#e8a858';
+        const mineral = P ? P.mineral : '#e8e0d0';
+        const green = P ? P.glowGreen : '#a8c840';
+        for (let x = 0; x < W0; x += 3) {
+          const h = 16 + Math.sin(x * 0.14) * 7 + Math.sin(x * 0.05) * 5 + r() * 8;
+          px(x, base - h, 3, h, x > W0 * 0.55 ? mid : deep);
+          if (r() < 0.4) px(x, base - h - 1, 2, 1, rock);
         }
-        for (let i = 0; i < 8; i++) {
-          const x = r() * W0, y = base - 4 - r() * 16;
-          px(x, y, 2, 3, '#6fd7ff');
-          px(x, y - 1, 1, 1, '#bffaff');
+        // amber strata bands (warm-lit wall foto)
+        for (let i = 0; i < 5; i++) {
+          const x = 8 + i * 28 + r() * 4;
+          const y = base - 10 - r() * 14;
+          px(x, y, 18, 2, amber);
+          px(x + 2, y - 1, 10, 1, amberH);
+        }
+        // green glow pockets + mineral flecks
+        for (let i = 0; i < 6; i++) {
+          const x = r() * W0, y = base - 4 - r() * 18;
+          if (i % 2) {
+            px(x, y, 3, 2, green);
+            px(x + 1, y - 1, 1, 1, P ? P.glowGreenHot : '#d0e868');
+          } else {
+            px(x, y, 2, 3, mineral);
+            px(x, y - 1, 1, 1, P ? P.mineralHot : '#f4f0e4');
+          }
         }
         break;
       }
@@ -16980,11 +17005,23 @@ function drawThemeWeather(c, themeName, t, ground, scroll) {
         break;
       }
       case 'grot': {
-        // zwevende stofjes
+        // stof + waterdruppels + amber mote (foto-atmosfeer)
+        const drip = i % 4 === 0;
         const x = wrapW(seed * 3.9 + Math.sin(t * 0.5 + i) * 30 - scroll * 0.15, W + 20) - 10;
-        const y = wrapW(seed * 2.1 + Math.sin(t * 0.7 + i * 2.3) * 40 + t * 6, ground) ;
-        c.fillStyle = `rgba(200,220,255,${(0.10 + (i % 3) * 0.05).toFixed(2)})`;
-        c.fillRect(x, y, 2, 2);
+        if (drip) {
+          const y = wrapW(seed * 1.4 + t * (90 + (i % 3) * 40), ground + 10) - 4;
+          c.fillStyle = 'rgba(200,220,255,.28)';
+          c.fillRect(x, y, 1, 4);
+          c.fillStyle = 'rgba(232,240,255,.18)';
+          c.fillRect(x, y + 4, 2, 1);
+        } else {
+          const y = wrapW(seed * 2.1 + Math.sin(t * 0.7 + i * 2.3) * 40 + t * 6, ground);
+          const amber = i % 3 === 1;
+          c.fillStyle = amber
+            ? `rgba(232,168,88,${(0.12 + (i % 2) * 0.08).toFixed(2)})`
+            : `rgba(200,220,255,${(0.10 + (i % 3) * 0.05).toFixed(2)})`;
+          c.fillRect(x, y, amber ? 3 : 2, 2);
+        }
         break;
       }
       case 'sloop': {
@@ -18879,13 +18916,453 @@ function forestFloorKickColors() {
   const P = FOREST_FLOOR_PAL;
   return [P.leafTan, P.leafOchre, P.leafRust, P.twig, P.ivyLite, P.moss];
 }
+/* --- src/render/cave-scenery.js --- */
+/* ===================== CAVE SCENERY — photo-sampled pixel ===================== */
+/**
+ * Grotfoto’s → stickfight grit (thema `grot`).
+ * Palet uit 4 refs: donkere watergrot, amber-rotswand, stalactiet-gordijn, grote zaal.
+ * Geen raw photos in fights — 16×8 tiles + canvas decor, imageSmoothing off.
+ */
+
+const CAVE_PAL = {
+  void: '#07090e',
+  deep: '#10141c',
+  rock: '#1a2028',
+  rockMid: '#2a323c',
+  rockLite: '#3a4450',
+  strata: '#4a3a2c',
+  amber: '#c48840',
+  amberHot: '#e8a858',
+  amberDeep: '#8a5a28',
+  ochre: '#a87848',
+  sand: '#c4a878',
+  mineral: '#e8e0d0',
+  mineralHot: '#f4f0e4',
+  wet: '#121828',
+  water: '#0c1420',
+  reflect: '#2a3850',
+  glowGreen: '#a8c840',
+  glowGreenHot: '#d0e868',
+  crystal: '#7cf0ff',
+  crystalHot: '#d8fbff',
+  spotlight: '#e8f0ff',
+};
+
+const CAVE_COLS = [
+  CAVE_PAL.void,
+  CAVE_PAL.deep,
+  CAVE_PAL.rock,
+  CAVE_PAL.rockMid,
+  CAVE_PAL.rockLite,
+  CAVE_PAL.strata,
+  CAVE_PAL.amber,
+  CAVE_PAL.amberHot,
+  CAVE_PAL.amberDeep,
+  CAVE_PAL.ochre,
+  CAVE_PAL.sand,
+  CAVE_PAL.mineral,
+  CAVE_PAL.mineralHot,
+  CAVE_PAL.wet,
+  CAVE_PAL.water,
+  CAVE_PAL.reflect,
+  CAVE_PAL.glowGreen,
+  CAVE_PAL.glowGreenHot,
+];
+
+/**
+ * Packed 16×8 patches — char → CAVE_COLS (0–9, a–h).
+ * 0 wet charcoal · 1 amber strata · 2 mineral grit · 3 green-glow ledge
+ */
+const CAVE_FLOOR_PATCH_STRS = [
+  // 0 — wet charcoal floor + cool flecks (water-grot foto)
+  '0011001100110011' +
+  '1122112211221122' +
+  '00dd00dd00dd00dd' +
+  '2233223322332233' +
+  '1d1e1d1e1d1e1d1e' +
+  '0011001100110011' +
+  '3322332233223322' +
+  '0d0e0d0e0d0e0d0e',
+  // 1 — amber rock strata (warm-lit wall foto)
+  '5588558855885588' +
+  '6699669966996699' +
+  '8558855885588558' +
+  '996a996a996a996a' +
+  '5588558855885588' +
+  '6a556a556a556a55' +
+  '8899889988998899' +
+  '2552255225522552',
+  // 2 — mineral / stalactite grit (white curtain foto)
+  '22bb22bb22bb22bb' +
+  '3bcb3bcb3bcb3bcb' +
+  'bbccbbccbbccbbcc' +
+  '2233223322332233' +
+  'c2b2c2b2c2b2c2b2' +
+  '11bb11bb11bb11bb' +
+  '3344334433443344' +
+  '0b0c0b0c0b0c0b0c',
+  // 3 — ochre cavern + green glow pools (photo 1/4)
+  '2255225522552255' +
+  '9a99a99a99a99a99' +
+  '55gg55hh55gg55hh' +
+  '3344334433443344' +
+  'g2h2g2h2g2h2g2h2' +
+  '5588558855885588' +
+  '22hh22gg22hh22gg' +
+  '0110011001100110',
+];
+
+const CAVE_PX = 3;
+const CAVE_TILE_W = 16;
+const CAVE_TILE_H = 8;
+let _caveTiles = null;
+let _caveStrip = null;
+let _caveStripRows = 0;
+
+function caveWrap(v, span) {
+  if (!span) return 0;
+  return ((v % span) + span) % span;
+}
+
+function caveCharToIdx(ch) {
+  if (ch >= '0' && ch <= '9') return ch.charCodeAt(0) - 48;
+  if (ch >= 'a' && ch <= 'h') return 10 + (ch.charCodeAt(0) - 97);
+  return 0;
+}
+
+function caveLiteMode() {
+  return (typeof fxLite === 'function' && fxLite())
+    || (typeof Perf !== 'undefined' && Perf.tier >= 2)
+    || (typeof save !== 'undefined' && save && save.liteFx);
+}
+
+function buildCaveFloorTiles() {
+  if (_caveTiles) return _caveTiles;
+  _caveTiles = [];
+  for (let pi = 0; pi < CAVE_FLOOR_PATCH_STRS.length; pi++) {
+    const str = CAVE_FLOOR_PATCH_STRS[pi];
+    const cv = document.createElement('canvas');
+    cv.width = CAVE_TILE_W;
+    cv.height = CAVE_TILE_H;
+    const c = cv.getContext('2d');
+    if (!c) continue;
+    c.imageSmoothingEnabled = false;
+    for (let i = 0; i < CAVE_TILE_W * CAVE_TILE_H; i++) {
+      const idx = caveCharToIdx(str[i] || '0');
+      c.fillStyle = CAVE_COLS[idx] || CAVE_COLS[0];
+      c.fillRect(i % CAVE_TILE_W, (i / CAVE_TILE_W) | 0, 1, 1);
+    }
+    try {
+      const img = c.getImageData(0, 0, CAVE_TILE_W, CAVE_TILE_H);
+      const d = img.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const n = ((i * 19 + pi * 73) % 7) - 3;
+        d[i] = Math.max(0, Math.min(255, d[i] + n));
+        d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + n));
+        d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + (n >> 1)));
+      }
+      c.putImageData(img, 0, 0);
+    } catch (_) {}
+    _caveTiles.push(cv);
+  }
+  return _caveTiles;
+}
+
+function ensureCaveFloorStrip(needH) {
+  const tiles = buildCaveFloorTiles();
+  if (!tiles.length) return null;
+  const tw = CAVE_TILE_W * CAVE_PX;
+  const th = CAVE_TILE_H * CAVE_PX;
+  const rows = Math.max(2, Math.min(6, Math.ceil(needH / th) + 1));
+  if (_caveStrip && _caveStripRows === rows) return _caveStrip;
+  const cols = 4;
+  const cv = document.createElement('canvas');
+  cv.width = tw * cols;
+  cv.height = th * rows;
+  const c = cv.getContext('2d');
+  if (!c) return null;
+  c.imageSmoothingEnabled = false;
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const ti = caveWrap(col + row * 3, tiles.length);
+      c.drawImage(tiles[ti], col * tw, row * th, tw, th);
+    }
+  }
+  _caveStrip = cv;
+  _caveStripRows = rows;
+  return cv;
+}
+
+function drawCaveFloorGroundLite(c, ground) {
+  const P = CAVE_PAL;
+  const h = Math.max(8, H - ground);
+  c.fillStyle = P.deep;
+  c.fillRect(0, ground, W, h);
+  c.fillStyle = P.rockMid;
+  c.fillRect(0, ground, W, Math.ceil(h * 0.22));
+  c.fillStyle = P.amberDeep;
+  c.fillRect(0, ground + Math.ceil(h * 0.35), W, 3);
+  c.fillStyle = 'rgba(232,168,88,.18)';
+  c.fillRect(0, ground, W, 2);
+}
+
+/** Fight floor: photo-mapped rock / wet stone tiles. */
+function drawCaveFloorGround(c, ground, scroll) {
+  if (ground >= H - 2) return;
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+
+  if (caveLiteMode()) {
+    drawCaveFloorGroundLite(c, ground);
+    c.imageSmoothingEnabled = prev;
+    return;
+  }
+
+  const needH = Math.max(24, H - ground);
+  const strip = ensureCaveFloorStrip(needH);
+  if (!strip) {
+    drawCaveFloorGroundLite(c, ground);
+    c.imageSmoothingEnabled = prev;
+    return;
+  }
+
+  const sw = strip.width;
+  const sh = Math.min(strip.height, needH + CAVE_TILE_H * CAVE_PX);
+  const off = caveWrap(-scroll, sw);
+  for (let x = off - sw; x < W + sw; x += sw) {
+    c.drawImage(strip, 0, 0, sw, sh, Math.round(x), ground, sw, sh);
+  }
+  // wet seam + amber catch-light at fight line
+  c.fillStyle = 'rgba(232,168,88,.22)';
+  c.fillRect(0, ground, W, 3);
+  c.fillStyle = 'rgba(12,20,32,.45)';
+  c.fillRect(0, ground + 3, W, 2);
+  c.imageSmoothingEnabled = prev;
+}
+
+/**
+ * Reflective water pool band (foto 1–3) — dark mirror under the fight line.
+ * Drawn after floor so it reads as a flooded ledge strip.
+ */
+function drawCaveWaterBand(c, ground, scroll, t) {
+  if (caveLiteMode()) return;
+  const P = CAVE_PAL;
+  const bandH = Math.min(28, Math.max(14, Math.round((H - ground) * 0.22)));
+  const y0 = ground + Math.max(10, Math.round((H - ground) * 0.42));
+  if (y0 + bandH > H) return;
+  const calm = typeof motionReduced === 'function' && motionReduced();
+  const shimmer = calm ? 0 : Math.sin((t || 0) * 2.2) * 0.04;
+
+  c.fillStyle = P.water;
+  c.fillRect(0, y0, W, bandH);
+  c.fillStyle = P.wet;
+  c.fillRect(0, y0, W, 3);
+  // amber wall reflection streaks
+  const span = 56;
+  const off = caveWrap(-scroll * 0.4, span);
+  for (let x = off - span; x < W + span; x += span) {
+    c.fillStyle = `rgba(232,168,88,${(0.12 + shimmer).toFixed(3)})`;
+    c.fillRect(Math.round(x + 8), y0 + 4, 10, bandH - 8);
+    c.fillStyle = `rgba(232,224,208,${(0.08 + shimmer * 0.5).toFixed(3)})`;
+    c.fillRect(Math.round(x + 28), y0 + 6, 4, bandH - 10);
+    c.fillStyle = `rgba(168,200,64,${(0.06 + shimmer * 0.4).toFixed(3)})`;
+    c.fillRect(Math.round(x + 40), y0 + 8, 6, 4);
+  }
+  c.fillStyle = 'rgba(232,240,255,.08)';
+  c.fillRect(0, y0 + 1, W, 1);
+}
+
+/**
+ * Stalactite curtain + ground spikes (foto 3) + amber glow pockets (foto 1/2).
+ */
+function drawCaveStalactiteDecor(c, ground, scroll, t, dX, dSpan) {
+  const P = CAVE_PAL;
+  const lite = caveLiteMode();
+  const calm = typeof motionReduced === 'function' && motionReduced();
+  const n = lite ? 5 : 8;
+
+  // Ceiling rock band
+  c.fillStyle = P.deep;
+  c.fillRect(0, 0, W, 10);
+  c.fillStyle = P.rock;
+  c.fillRect(0, 8, W, 6);
+
+  for (let i = 0; i < n; i++) {
+    const x = dX((i * 0.13 + 0.03) * dSpan);
+    const tall = 48 + (i % 4) * 22;
+    const half = 10 + (i % 3) * 4;
+    // dark rock cone
+    c.fillStyle = i % 2 ? P.rock : P.deep;
+    c.beginPath();
+    c.moveTo(x - half, 0);
+    c.lineTo(x, tall);
+    c.lineTo(x + half, 0);
+    c.closePath();
+    c.fill();
+    // mineral highlight edge (stalactite curtain)
+    c.fillStyle = P.mineral;
+    c.beginPath();
+    c.moveTo(x - 2, 4);
+    c.lineTo(x, tall * 0.85);
+    c.lineTo(x + 3, 4);
+    c.closePath();
+    c.fill();
+    if (!lite && i % 3 === 0) {
+      c.fillStyle = P.mineralHot;
+      c.fillRect(Math.round(x) - 1, 6, 2, Math.round(tall * 0.35));
+    }
+  }
+
+  // Ground stalagmites
+  const mN = lite ? 3 : 5;
+  for (let i = 0; i < mN; i++) {
+    const x = dX((i * 0.2 + 0.1) * dSpan);
+    const h = 18 + (i % 3) * 10;
+    c.fillStyle = P.rockMid;
+    c.beginPath();
+    c.moveTo(x - 8, ground);
+    c.lineTo(x, ground - h);
+    c.lineTo(x + 8, ground);
+    c.closePath();
+    c.fill();
+    c.fillStyle = P.mineral;
+    c.fillRect(Math.round(x) - 1, ground - h, 2, Math.round(h * 0.55));
+  }
+
+  // Amber / green glow ledges (photo 1+2)
+  if (!lite) {
+    for (let i = 0; i < 4; i++) {
+      const x = dX((i * 0.24 + 0.08) * dSpan);
+      const y = 28 + (i % 2) * 18;
+      const pulse = calm ? 0.55 : 0.45 + Math.sin((t || 0) * 3 + i) * 0.2;
+      c.fillStyle = i % 2
+        ? `rgba(232,168,88,${pulse.toFixed(2)})`
+        : `rgba(168,200,64,${(pulse * 0.85).toFixed(2)})`;
+      c.fillRect(Math.round(x), y, 14, 4);
+      c.fillRect(Math.round(x) + 3, y - 3, 8, 3);
+      // reflection speck on ground
+      c.fillStyle = i % 2
+        ? 'rgba(232,168,88,.2)'
+        : 'rgba(168,200,64,.16)';
+      c.fillRect(Math.round(x) + 2, ground - 4, 10, 3);
+    }
+  }
+}
+
+/** Kick dust: charcoal + amber + mineral. */
+function caveKickColors() {
+  const P = CAVE_PAL;
+  return [P.rockLite, P.amber, P.mineral, P.ochre, P.glowGreen, P.sand];
+}
+
+/**
+ * Menu hero vista — dark cavern with water mirror + amber wall + stalactite curtain.
+ * Photo DNA: still pool, warm rock light, needle minerals, deep void.
+ */
+function drawMenuCaveVista(c, w, h, t, opts) {
+  opts = opts || {};
+  const prev = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  const lite = !!opts.lite;
+  const calm = typeof motionReduced === 'function' && motionReduced();
+  const P = CAVE_PAL;
+  const wrap = (v, span) => ((v % span) + span) % span;
+  const waterY = Math.round(h * 0.58);
+  const pSlow = calm ? 0 : t * 5;
+
+  // Void ceiling / deep sky
+  const sky = c.createLinearGradient(0, 0, 0, waterY);
+  sky.addColorStop(0, P.void);
+  sky.addColorStop(0.45, P.deep);
+  sky.addColorStop(1, P.rock);
+  c.fillStyle = sky;
+  c.fillRect(0, 0, w, waterY);
+
+  // Far stratified rock wall (amber lit right side)
+  c.fillStyle = P.rockMid;
+  c.fillRect(0, Math.round(h * 0.22), w, Math.round(h * 0.36));
+  const wallOff = Math.round(wrap(-pSlow, 40) - 20);
+  for (let i = 0; i < 10; i++) {
+    const x = Math.round(i * (w / 9) + wallOff * 0.3);
+    const bandY = Math.round(h * 0.28) + (i % 3) * 8;
+    c.fillStyle = i > 5 ? P.amberDeep : P.strata;
+    c.fillRect(x, bandY, Math.round(w / 8), 5);
+    if (i > 6) {
+      c.fillStyle = P.amber;
+      c.fillRect(x + 4, bandY - 2, Math.round(w / 12), 3);
+      c.fillStyle = P.amberHot;
+      c.fillRect(x + 8, bandY - 3, 6, 2);
+    }
+  }
+
+  // Stalactite curtain
+  const stN = lite ? 7 : 12;
+  for (let i = 0; i < stN; i++) {
+    const x = Math.round(wrap(i * (w / stN) + pSlow * 0.4, w + 20) - 10);
+    const tall = Math.round(h * (0.18 + (i % 4) * 0.05));
+    c.fillStyle = P.rock;
+    c.beginPath();
+    c.moveTo(x - 6, 0);
+    c.lineTo(x, tall);
+    c.lineTo(x + 6, 0);
+    c.closePath();
+    c.fill();
+    c.fillStyle = P.mineral;
+    c.fillRect(x - 1, 2, 2, Math.round(tall * 0.7));
+  }
+
+  // Spotlight flecks
+  if (!lite) {
+    for (let i = 0; i < 5; i++) {
+      const x = Math.round(wrap(i * 0.2 * w + pSlow * 1.2, w));
+      const y = Math.round(h * 0.18 + (i % 3) * 14);
+      c.fillStyle = 'rgba(232,240,255,.35)';
+      c.fillRect(x, y, 3, 3);
+    }
+  }
+
+  // Water mirror
+  c.fillStyle = P.water;
+  c.fillRect(0, waterY, w, h - waterY);
+  c.fillStyle = P.wet;
+  c.fillRect(0, waterY, w, 4);
+  // reflected amber + stalactites (ghosted)
+  for (let i = 0; i < (lite ? 4 : 7); i++) {
+    const x = Math.round(wrap(i * (w / 7) + pSlow * 0.35, w));
+    c.fillStyle = 'rgba(232,168,88,.18)';
+    c.fillRect(x, waterY + 8, 16, Math.round((h - waterY) * 0.55));
+    c.fillStyle = 'rgba(232,224,208,.14)';
+    c.beginPath();
+    c.moveTo(x + 4, waterY + 4);
+    c.lineTo(x + 8, waterY + 28 + (i % 3) * 8);
+    c.lineTo(x + 12, waterY + 4);
+    c.closePath();
+    c.fill();
+  }
+  // green glow pockets reflected
+  c.fillStyle = 'rgba(168,200,64,.22)';
+  c.fillRect(Math.round(w * 0.12), waterY + 12, 18, 6);
+  c.fillRect(Math.round(w * 0.7), waterY + 18, 14, 5);
+  c.fillStyle = P.glowGreenHot;
+  c.fillRect(Math.round(w * 0.14), waterY + 10, 8, 3);
+
+  // Near ledge
+  c.fillStyle = P.rockLite;
+  c.fillRect(0, waterY - 8, w, 8);
+  c.fillStyle = P.amber;
+  c.fillRect(0, waterY - 3, w, 2);
+
+  c.imageSmoothingEnabled = prev;
+  return { groundY: waterY };
+}
 /* --- src/render/backgrounds.js --- */
 /* ========================== ACHTERGRONDEN ============================== */
 const THEMES = {
   veld:    { sky1: '#7ec8ff', sky2: '#cfeeff', hill: '#5cb85c', hill2: '#3f9b47', ground: '#4c8f3f', gtop: '#66b356', deco: 'bloem' },
   landweg: { sky1: '#4a9adf', sky2: '#c5e0f5', hill: '#3a6a42', hill2: '#2a5030', ground: '#7a6848', gtop: '#9a8458', deco: 'struik' },
   bos:     { sky1: '#4a6a58', sky2: '#8aaa78', hill: '#2a4a30', hill2: '#1e3a24', ground: '#3a342c', gtop: '#4a4438', deco: 'boom' },
-  grot:    { sky1: '#232840', sky2: '#3a4265', hill: '#2a3050', hill2: '#1d2340', ground: '#3d4056', gtop: '#4d5170', deco: 'stalag' },
+  // Photo cave: void ceiling → cool rock → amber-lit strata (refs 1–4)
+  grot:    { sky1: '#07090e', sky2: '#1a2028', hill: '#2a323c', hill2: '#141820', ground: '#1a2028', gtop: '#3a4450', deco: 'stalag' },
   vulkaan: { sky1: '#3a1f28', sky2: '#7a3020', hill: '#552430', hill2: '#3a1820', ground: '#4a2a28', gtop: '#5e3630', deco: 'lava' },
   cyber:   { sky1: '#0a1030', sky2: '#252a60', hill: '#1c2350', hill2: '#131840', ground: '#20264a', gtop: '#2c3468', deco: 'neon' },
   dojo:    { sky1: '#3a2d24', sky2: '#6a5240', hill: '#4a3a2c', hill2: '#3a2d22', ground: '#7a5c3c', gtop: '#8f6f4a', deco: 'lampion' },
@@ -19087,10 +19564,15 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
       }
     }
   } else if (th.deco === 'stalag') {
-    c.fillStyle = '#20263f';
-    for (let i = 0; i < 7; i++) {
-      const x = dX((i * 0.15 + 0.04) * dSpan);
-      c.beginPath(); c.moveTo(x - 20, 0); c.lineTo(x, 70 + (i % 3) * 32); c.lineTo(x + 20, 0); c.closePath(); c.fill();
+    // Photo cave: stalactite curtain + amber/green glow + ground spikes
+    if (typeof drawCaveStalactiteDecor === 'function') {
+      drawCaveStalactiteDecor(c, ground, scroll, t, dX, dSpan);
+    } else {
+      c.fillStyle = '#20263f';
+      for (let i = 0; i < 7; i++) {
+        const x = dX((i * 0.15 + 0.04) * dSpan);
+        c.beginPath(); c.moveTo(x - 20, 0); c.lineTo(x, 70 + (i % 3) * 32); c.lineTo(x + 20, 0); c.closePath(); c.fill();
+      }
     }
   } else if (th.deco === 'lava') {
     c.fillStyle = '#ff7a30';
@@ -19144,6 +19626,9 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   // grond
   if (themeName === 'bos' && typeof drawForestFloorGround === 'function') {
     drawForestFloorGround(c, ground, scroll);
+  } else if (themeName === 'grot' && typeof drawCaveFloorGround === 'function') {
+    drawCaveFloorGround(c, ground, scroll);
+    if (typeof drawCaveWaterBand === 'function') drawCaveWaterBand(c, ground, scroll, t);
   } else {
     const gg = c.createLinearGradient(0, ground, 0, H);
     gg.addColorStop(0, th.gtop); gg.addColorStop(1, th.ground);
@@ -19193,7 +19678,7 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   }
 
   // grondstrepen — lopen mee met de wereld (loop-gevoel)
-  if (themeName !== 'landweg' && themeName !== 'bos') {
+  if (themeName !== 'landweg' && themeName !== 'bos' && themeName !== 'grot') {
     c.fillStyle = 'rgba(0,0,0,.14)';
     const span = 92;
     const off = wrap(-scroll, span);
@@ -19215,8 +19700,8 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   // weer per thema (art-upgrade 4/4): blaadjes/bloesem/sintels/regen/stof
   drawThemeWeather(c, themeName, t, ground, scroll);
   // pixel-speckles op de grond (art-upgrade 1/4) — deterministisch, scroll-vast
-  // bos: skip — photo-sampled floor tiles already carry grit
-  if (!fxLite() && themeName !== 'bos') {
+  // bos/grot: skip — photo-sampled floor tiles already carry grit
+  if (!fxLite() && themeName !== 'bos' && themeName !== 'grot') {
     const spSpan = 61;
     const spOff = wrap(-scroll, spSpan);
     c.fillStyle = 'rgba(255,255,255,.08)';
@@ -29051,6 +29536,7 @@ function paintMenuHeroCanvas(t) {
   if (typeof drawMenuSemi25dVista === 'function') VISTAS.push(drawMenuSemi25dVista);
   if (typeof drawMenuStonehouseVista === 'function') VISTAS.push(drawMenuStonehouseVista);
   if (typeof drawMenuOpenRoadVista === 'function') VISTAS.push(drawMenuOpenRoadVista);
+  if (typeof drawMenuCaveVista === 'function') VISTAS.push(drawMenuCaveVista);
   const N = VISTAS.length;
   const SLOT = motionReduced() ? 12 : 8;
   const FADE = motionReduced() ? 0.01 : 1.35;
