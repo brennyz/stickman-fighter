@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.78';
+const APP_VERSION = '1.18.79';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 288;
+const SW_CACHE_REV = 289;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -19134,6 +19134,38 @@ function drawTelegraphBar(c, game, tele, y) {
   c.fill();
 }
 
+/** Seconden actief naar rechts lopen om checkpoint-deel te unlocken. */
+const PART_GATE_WALK_SEC = 3.35;
+const PART_GATE_DECAY_MUL = 1.5;
+const PART_GATE_IDLE_HINT = 1.35;
+const PART_GATE_PLAYER_X = 0.28;
+
+function partBoundaryWaveIdx(totalWaves, currentPart) {
+  if (totalWaves < 1) return -1;
+  const b1 = Math.max(0, Math.ceil(totalWaves / 3) - 1);
+  if (currentPart === 1) return b1;
+  if (currentPart === 2) {
+    const b2 = Math.max(0, Math.ceil((2 * totalWaves) / 3) - 1);
+    return Math.max(b1 + 1, b2);
+  }
+  return -1;
+}
+
+function playerWalkInput() {
+  if (typeof Input === 'undefined' || Input.dualMode) return 0;
+  let mv = Input.move || 0;
+  if (Math.abs(mv) < 0.08) {
+    if (Input.keys.d || Input.keys.arrowright) mv = 1;
+    else if (Input.keys.a || Input.keys.arrowleft) mv = -1;
+  }
+  return mv;
+}
+
+function playerWalkRightInput() {
+  const mv = playerWalkInput();
+  return mv > 0.05 ? mv : 0;
+}
+
 class Game {
   constructor(mode, opts) {
     opts = opts || {};
@@ -19941,6 +19973,7 @@ class Game {
     try {
       const tame = maybeTamePet(m.spId);
       if (tame) {
+        save.stats = save.stats || {};
         save.stats.petsTamed = petTamedCount();
         persist();
         spawnGamePet(this);

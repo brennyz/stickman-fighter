@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | **17** | Wave-clear hiccup: ontbrekende `partBoundaryWaveIdx` + `playerWalkInput` na module-split (checkpoint golf 1/2 + pet Slymo). v1.18.79 / SW v289. |
 | 2026-07-26 | **17** | Fight hiccup-freeze: loop tekent/input na update-crash door; grantXP level-up + pickup guarded; recoverFightHiccup. v1.18.78 / SW v288. |
 | 2026-07-26 | **13** | Missies c5: in-play mission floater (geen toast-stack), XP-voortgangsbalk vandaag, achievement spotlight Speel-knop. v1.18.77 / SW v287. |
 | 2026-07-26 | — | **HOTFIX dice→start:** Continue/level rolled dice maar startte niet (levelScreenActive-guard + flash in display:none). Flash buiten screen; start altijd na roll. v1.18.76 / SW v286. |
