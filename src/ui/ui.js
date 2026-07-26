@@ -2995,7 +2995,7 @@ const UI = {
       const ready = canCrackDailyEgg();
       crackBtn.style.display = ready ? '' : 'none';
       crackBtn.innerHTML =
-        `<span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><ellipse cx="12" cy="13" rx="7" ry="9" fill="#ffd75e" opacity=".35"/><path d="M8 10c2-3 6-3 8 0"/></svg></span>` +
+        `<span class="ico"><img src="assets/buttons/chrome/egg.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>` +
         `<div>Dag-ei openen<small>Gratis arcade-pull · vandaag</small></div>`;
       if (!crackBtn.dataset.bound) {
         crackBtn.dataset.bound = '1';

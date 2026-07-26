@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | **15** | Collectie-iconen: soft/kinderachtig → ASSET-STYLE arcade (wapens/pets/stijl/skills/upgrades/dex/collect/ei). v1.18.90 / SW v300. |
 | 2026-07-26 | **15** | Hub Avontuur-icoon: kapotte UTF-8 (Win-1252) → Safari/iPad toonde geen afbeelding; duidelijker map-SVG + utf8 smoke. v1.18.89 / SW v299. |
 | 2026-07-26 | **14** | Visuele FX: training combo HUD dubbel-blok verwijderd; Rasengan dual/triple extra ring+spark (Lite FX capped); ring fill in Lite. v1.18.88 / SW v298. |
 | 2026-07-26 | — | **Rasengan:** altijd horizontaal; Lv4+ dual krul ↑↓; Lv8 triple ultimate (→↑↓). Max Lv8. v1.18.84 / SW v294. |
