@@ -2320,11 +2320,13 @@ const UI = {
       const unlocked = weaponUnlockedCount();
       const advUsable = weaponAdventureUsableCount();
       const br = weaponRarityBreakdown();
+      const wTotals = weaponRarityTotals();
       const tierChips = Object.keys(RARITIES).map(rid => {
         const rar = RARITIES[rid];
         const n = br[rid] || 0;
-        if (!n) return '';
-        return `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color};margin:2px">${rarityLabel(rid)} ${n}</span>`;
+        const tot = wTotals[rid] || 0;
+        if (!tot) return '';
+        return `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color};margin:2px">${rarityLabel(rid)} ${n}/${tot}</span>`;
       }).filter(Boolean).join(' ');
       sumEl.style.display = 'block';
       sumEl.innerHTML =
@@ -2332,7 +2334,8 @@ const UI = {
         ` · actief <b>${weaponLabel(save.weapon)}</b>` +
         ` · eiland-skill gate: Lv <b>${adventureWeaponCap()}</b>` +
         ((save.stats.weaponFinishers || 0) > 0 ? ` · finishers <b>${save.stats.weaponFinishers}</b>` : '') +
-        (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '');
+        (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '') +
+        weaponNextUnlockHtml();
     }
     const mastEl = document.getElementById('weaponMasteryStrip');
     if (mastEl) {
@@ -2886,6 +2889,15 @@ const UI = {
       const tamed = petTamedCount();
       const active = activePetDef();
       const wallet = petCoinsBalance();
+      const pBr = petRarityBreakdown();
+      const pTotals = petRarityTotals();
+      const petChips = Object.keys(RARITIES).map(rid => {
+        const rar = RARITIES[rid];
+        const n = pBr[rid] || 0;
+        const tot = pTotals[rid] || 0;
+        if (!tot) return '';
+        return `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color};margin:2px">${rarityLabel(rid)} ${n}/${tot}</span>`;
+      }).filter(Boolean).join(' ');
       sumEl.style.display = 'block';
       sumEl.innerHTML =
         t('ui.petSummaryTamed', {
@@ -2894,6 +2906,7 @@ const UI = {
           active: active ? SPECIES[active.speciesId].name : t('ui.petNone'),
           wallet,
         }) +
+        (petChips ? `<div style="margin-top:6px;line-height:1.7">${petChips}</div>` : '') +
         `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.petCoinTip')}</div>`;
     }
     const list = document.getElementById('petList');

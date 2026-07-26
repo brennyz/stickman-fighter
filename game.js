@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.99';
+const APP_VERSION = '1.18.100';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 309;
+const SW_CACHE_REV = 310;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -3686,6 +3686,31 @@ function syncMenuHubStage() {
   }
 }
 
+/** Inline SVG fallbacks when assets/buttons/*.svg fails (stale SW / offline). */
+const BUTTON_ICON_FALLBACKS = {
+  adventure: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#7cfc8a" stroke-width="2"><path d="M4.5 5.5h15v13h-15z" fill="rgba(124,252,138,.22)"/><circle cx="12" cy="5.5" r="1.7" fill="#7cfc8a" stroke="none"/><path d="M8 15.5c1.2-2.2 2.6-3.4 4-3.4s2.8 1.2 4 3.4"/></svg>',
+  arcade: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#9db8ff" stroke-width="1.9"><rect x="5" y="8" width="14" height="11" rx="2.2"/><circle cx="9" cy="13.5" r="1.7" fill="#7cf5ff" stroke="none"/><circle cx="15" cy="13.5" r="1.7" fill="#ff6b6b" stroke="none"/></svg>',
+  versus: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ff9ab8" stroke-width="2"><circle cx="7.5" cy="8" r="2.4" fill="#7cf5ff"/><circle cx="16.5" cy="8" r="2.4" fill="#ff788c"/></svg>',
+  collect: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#c792ff" stroke-width="2"><path d="M5 4.5h9.5L18.5 8v11.5H5z" fill="rgba(199,146,255,.18)"/></svg>',
+  continue: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#7cf5ff" stroke-width="2"><path d="M5 12h12M13 8l4 4-4 4"/></svg>',
+};
+function buttonIconFallbackUri(src) {
+  const base = (src || '').split('/').pop().replace(/\.svg.*$/, '');
+  const svg = BUTTON_ICON_FALLBACKS[base];
+  if (!svg) return null;
+  return 'data:image/svg+xml,' + encodeURIComponent(svg);
+}
+function repairBrokenButtonIcon(img) {
+  if (!img || img.dataset.sfIconRepaired) return;
+  img.dataset.sfIconRepaired = '1';
+  const uri = buttonIconFallbackUri(img.getAttribute('src') || img.src);
+  if (uri) {
+    img.src = uri;
+    img.classList.remove('sf-icon-broken');
+    return;
+  }
+  img.classList.add('sf-icon-broken');
+}
 /** ASSET-STYLE file icons: mark broken loads without killing the button. */
 function hardenButtonIcons(root) {
   try {
@@ -3695,9 +3720,14 @@ function hardenButtonIcons(root) {
       img.dataset.sfIconHard = '1';
       img.decoding = img.decoding || 'async';
       img.draggable = false;
-      img.addEventListener('error', () => {
-        img.classList.add('sf-icon-broken');
-      }, { once: true });
+      const check = () => {
+        try {
+          if (img.complete && img.naturalWidth === 0) repairBrokenButtonIcon(img);
+        } catch (_) {}
+      };
+      img.addEventListener('error', () => repairBrokenButtonIcon(img), { once: true });
+      img.addEventListener('load', check, { once: true });
+      check();
     });
   } catch (_) {}
 }
@@ -4895,6 +4925,47 @@ function weaponRarityBreakdown() {
     if (weaponUnlockedByLevel(w) && counts[w.rarity] != null) counts[w.rarity]++;
   }
   return counts;
+}
+function weaponRarityTotals() {
+  const counts = {};
+  for (const id of Object.keys(RARITIES)) counts[id] = 0;
+  for (const w of WEAPONS) {
+    if (counts[w.rarity] != null) counts[w.rarity]++;
+  }
+  return counts;
+}
+function petRarityBreakdown() {
+  const counts = {};
+  for (const id of Object.keys(RARITIES)) counts[id] = 0;
+  for (const def of PET_ROSTER) {
+    const sp = SPECIES[def.speciesId];
+    if (sp && isPetTamed(def.id) && counts[sp.rarity] != null) counts[sp.rarity]++;
+  }
+  return counts;
+}
+function petRarityTotals() {
+  const counts = {};
+  for (const id of Object.keys(RARITIES)) counts[id] = 0;
+  for (const def of PET_ROSTER) {
+    const sp = SPECIES[def.speciesId];
+    if (sp && counts[sp.rarity] != null) counts[sp.rarity]++;
+  }
+  return counts;
+}
+function weaponNextUnlockHtml() {
+  let next = null;
+  for (const w of WEAPONS) {
+    if (!weaponUnlockedByLevel(w)) { next = w; break; }
+  }
+  if (!next) return '';
+  const rar = rarityOf(next.rarity);
+  const need = Math.max(0, next.unlock - save.lvl);
+  const pct = Math.min(100, Math.round((save.lvl / next.unlock) * 100));
+  return `<div class="dex-ach-next" style="margin-top:10px;padding:8px 10px;border-radius:12px;background:rgba(124,245,255,.06);border:1px solid rgba(124,245,255,.22)">` +
+    `<div style="font-size:11px;font-weight:800;color:#7cf5ff;margin-bottom:4px">Volgende wapen · ${weaponLabel(next)}</div>` +
+    `<div style="font-size:12px;opacity:.85"><span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(next.rarity)}</span>` +
+    ` · unlock Lv <b>${next.unlock}</b>${need ? ` · nog <b>${need}</b> level${need === 1 ? '' : 's'}` : ' · bijna!'}</div>` +
+    `<div class="xpline" style="margin-top:6px;height:6px"><div style="width:${pct}%"></div></div></div>`;
 }
 function dexCosmeticProgressLines() {
   const out = [];
@@ -27543,11 +27614,13 @@ const UI = {
       const unlocked = weaponUnlockedCount();
       const advUsable = weaponAdventureUsableCount();
       const br = weaponRarityBreakdown();
+      const wTotals = weaponRarityTotals();
       const tierChips = Object.keys(RARITIES).map(rid => {
         const rar = RARITIES[rid];
         const n = br[rid] || 0;
-        if (!n) return '';
-        return `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color};margin:2px">${rarityLabel(rid)} ${n}</span>`;
+        const tot = wTotals[rid] || 0;
+        if (!tot) return '';
+        return `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color};margin:2px">${rarityLabel(rid)} ${n}/${tot}</span>`;
       }).filter(Boolean).join(' ');
       sumEl.style.display = 'block';
       sumEl.innerHTML =
@@ -27555,7 +27628,8 @@ const UI = {
         ` · actief <b>${weaponLabel(save.weapon)}</b>` +
         ` · eiland-skill gate: Lv <b>${adventureWeaponCap()}</b>` +
         ((save.stats.weaponFinishers || 0) > 0 ? ` · finishers <b>${save.stats.weaponFinishers}</b>` : '') +
-        (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '');
+        (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '') +
+        weaponNextUnlockHtml();
     }
     const mastEl = document.getElementById('weaponMasteryStrip');
     if (mastEl) {
@@ -28109,6 +28183,15 @@ const UI = {
       const tamed = petTamedCount();
       const active = activePetDef();
       const wallet = petCoinsBalance();
+      const pBr = petRarityBreakdown();
+      const pTotals = petRarityTotals();
+      const petChips = Object.keys(RARITIES).map(rid => {
+        const rar = RARITIES[rid];
+        const n = pBr[rid] || 0;
+        const tot = pTotals[rid] || 0;
+        if (!tot) return '';
+        return `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color};margin:2px">${rarityLabel(rid)} ${n}/${tot}</span>`;
+      }).filter(Boolean).join(' ');
       sumEl.style.display = 'block';
       sumEl.innerHTML =
         t('ui.petSummaryTamed', {
@@ -28117,6 +28200,7 @@ const UI = {
           active: active ? SPECIES[active.speciesId].name : t('ui.petNone'),
           wallet,
         }) +
+        (petChips ? `<div style="margin-top:6px;line-height:1.7">${petChips}</div>` : '') +
         `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.petCoinTip')}</div>`;
     }
     const list = document.getElementById('petList');

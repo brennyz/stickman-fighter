@@ -4,28 +4,20 @@
   "rollFirst": [],
   "remaining": [
     19,
-    12,
     6,
     2,
     4,
     18
   ],
   "lastRoll": {
-    "face": 8,
-    "category": "PWA & offline \u2014 SW cache, install, standalone",
-    "rolledAt": "2026-07-24T17:02:44Z",
-    "remainingCount": 6,
+    "face": 12,
+    "category": "Content \u2014 monsters, wapens, rariteit, dex",
+    "rolledAt": "2026-07-24T18:31:08Z",
+    "remainingCount": 5,
     "cycle": 5
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 8,
-      "note": "Offline banner + SW v75 network-first manifest",
-      "version": "1.12.12",
-      "doneAt": "2026-07-23T18:26:30Z",
-      "cycle": 1
-    },
     {
       "face": 3,
       "note": "2P arena spawn/HUD/rematch pause herstart",
@@ -578,6 +570,13 @@
       "version": "1.18.99",
       "doneAt": "2026-07-26T17:04:50Z",
       "cycle": 5
+    },
+    {
+      "face": 12,
+      "note": "weapon/pet rarity n/tot + next unlock + icon SVG fallback",
+      "version": "1.18.100",
+      "doneAt": "2026-07-26T18:02:58Z",
+      "cycle": 5
     }
   ],
   "userFeatureLog": [
@@ -966,13 +965,6 @@
     }
   ],
   "history": [
-    {
-      "face": 13,
-      "category": "Missies & achievements \u2014 daily loop, beloningen",
-      "rolledAt": "2026-07-23T14:19:46Z",
-      "remainingCount": 5,
-      "cycle": 0
-    },
     {
       "face": 8,
       "category": "PWA & offline \u2014 SW cache, install, standalone",
@@ -1806,6 +1798,13 @@
       "category": "PWA & offline \u2014 SW cache, install, standalone",
       "rolledAt": "2026-07-24T17:02:44Z",
       "remainingCount": 6,
+      "cycle": 5
+    },
+    {
+      "face": 12,
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
+      "rolledAt": "2026-07-24T18:31:08Z",
+      "remainingCount": 5,
       "cycle": 5
     }
   ],
