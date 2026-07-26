@@ -360,6 +360,16 @@ const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
 const GIANT_DMG_MUL = 1.14;
 const GIANT_XP_MUL = 1.3;
+/** Flagship baas (BOSS_AT elite / super-baas): groter + tankier. */
+const BOSS_CORE_SIZE_MUL = 1.25;
+const BOSS_CORE_HP_MUL = 2.85;
+const BOSS_CORE_DMG_MUL = 1.18;
+/** Soms ~2× zo groot als huidige baas, met extra HP. */
+const COLOSSAL_CHANCE = 0.42;
+const COLOSSAL_SIZE_MUL = 2.0;
+const COLOSSAL_HP_MUL = 1.9;
+const COLOSSAL_DMG_MUL = 1.12;
+const COLOSSAL_XP_MUL = 1.45;
 
 const SEA_ARTS = new Set(['shark', 'octo']);
 const FARM_ARTS = new Set(['cow', 'pig', 'chicken', 'sheep', 'horse', 'goat', 'duck', 'rooster', 'donkey', 'goose']);
@@ -701,14 +711,19 @@ function gambleOutcomeLabel(g) {
 /** Intro-lied + FX voor elite / baas / super-baas (avontuur). */
 function triggerSpecialEnemyIntro(game, monster, kind) {
   if (!game || !monster) return;
-  const tier = kind || (monster.superBoss ? 'superBoss' : (monster.elite ? 'elite' : 'boss'));
+  const tier = kind || (monster.superBoss ? 'superBoss' : (monster.bossCore ? 'boss' : (monster.elite ? 'elite' : 'boss')));
   const name = (monster.sp && monster.sp.name) || 'Baas';
   const rar = rarityOf(monster.sp?.rarity || 'rare');
+  const bigBoss = !!(monster.bossCore || monster.superBoss || tier === 'superBoss');
+  const colossal = !!monster.colossal;
   const col = tier === 'superBoss' ? '#ffd75e' : (tier === 'boss' ? '#ff6b6b' : (rar.color || '#ffb0b8'));
-  monster.introT = tier === 'superBoss' ? 2.4 : (tier === 'boss' ? 2.0 : 1.55);
+  let introDur = tier === 'superBoss' ? 2.4 : (tier === 'boss' ? 2.0 : 1.55);
+  if (bigBoss) introDur = colossal ? 3.6 : (tier === 'superBoss' ? 3.2 : 2.85);
+  monster.introDur = introDur;
+  monster.introT = introDur;
   monster.introTier = tier;
-  const waveKey = `${game.mode || 'x'}:${game.waveIdx}:${tier === 'superBoss' ? 'super' : 'special'}`;
-  const firstOfWave = tier === 'superBoss' || game._specialIntroKey !== waveKey;
+  const waveKey = `${game.mode || 'x'}:${game.waveIdx}:${tier === 'superBoss' ? 'super' : (bigBoss ? 'bossCore' : 'special')}`;
+  const firstOfWave = tier === 'superBoss' || bigBoss || game._specialIntroKey !== waveKey;
   if (firstOfWave) game._specialIntroKey = waveKey;
 
   if (firstOfWave) {
@@ -719,15 +734,27 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
         }
         AudioSys.sting('superBossIntro');
         AudioSys.play('boss');
-        game.banner(`SUPER BAAS — ${name}!`, 2.0, col, 44);
+        const title = typeof t === 'function' ? t('banner.superBossTitle') : 'SUPER BAAS';
+        game.banner(title, 2.8, col, bigBoss ? 68 : 44);
+        game.banner(colossal
+          ? (typeof t === 'function' ? t('banner.colossalBossName', { name }) : `COLOSSALE ${name}!`)
+          : (typeof t === 'function' ? t('banner.bossName', { name }) : name), 2.5, '#fff', bigBoss ? 52 : 40);
       } else if (tier === 'boss') {
         AudioSys.sting('bossIntro');
         AudioSys.play('boss');
-        game.banner(`BAAS — ${name}!`, 1.8, col, 42);
+        if (bigBoss) {
+          const title = typeof t === 'function' ? t('banner.bossTitle') : 'BAAS';
+          game.banner(title, 2.6, col, 64);
+          game.banner(colossal
+            ? (typeof t === 'function' ? t('banner.colossalBossName', { name }) : `COLOSSALE ${name}!`)
+            : (typeof t === 'function' ? t('banner.bossName', { name }) : `${name}!`), 2.35, '#fff', 50);
+        } else {
+          game.banner(typeof t === 'function' ? t('banner.bossNamed', { name }) : `BAAS — ${name}!`, 1.8, col, 42);
+        }
       } else {
         AudioSys.sting('eliteIntro');
         AudioSys.play('elite');
-        game.banner(`ELITE — ${name}!`, 1.5, col, 38);
+        game.banner(typeof t === 'function' ? t('banner.eliteNamed', { name }) : `ELITE — ${name}!`, 1.5, col, 38);
       }
     } catch (_) {}
     try { AudioSys.sfx('roar'); } catch (_) {}
@@ -738,16 +765,19 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
   const x = monster.x, y = monster.y - (monster.size || 40) * 0.4;
   const burstN = motionReduced() || fxLite()
     ? 8
-    : (firstOfWave ? (tier === 'superBoss' ? 28 : 18) : 8);
+    : (firstOfWave ? (tier === 'superBoss' || colossal ? 34 : (bigBoss ? 26 : 18)) : 8);
   try {
     game.burst(x, y, col, burstN);
     if (firstOfWave) {
       game.burst(x, y, '#fff', Math.ceil(burstN * 0.35));
-      spawnFxRing(game, x, y, col, tier === 'superBoss' ? 22 : 14);
-      if (tier !== 'elite') spawnFxRing(game, x, y - 20, '#fff', 10);
-      game.shake(tier === 'superBoss' ? 12 : (tier === 'boss' ? 9 : 6), tier === 'superBoss' ? 0.42 : 0.28);
-      game.freezeT = Math.max(game.freezeT || 0, tier === 'superBoss' ? 0.16 : 0.1);
-      haptic(tier === 'superBoss' ? 28 : 16);
+      spawnFxRing(game, x, y, col, tier === 'superBoss' || colossal ? 26 : (bigBoss ? 20 : 14));
+      if (tier !== 'elite') spawnFxRing(game, x, y - 20, '#fff', bigBoss ? 14 : 10);
+      if (colossal) spawnFxRing(game, x, y - 36, '#ffd75e', 16);
+      const shakeAmt = colossal ? 16 : (tier === 'superBoss' ? 14 : (bigBoss ? 11 : (tier === 'boss' ? 9 : 6)));
+      const shakeDur = colossal ? 0.55 : (tier === 'superBoss' ? 0.48 : (bigBoss ? 0.38 : (tier === 'boss' ? 0.28 : 0.22)));
+      game.shake(shakeAmt, shakeDur);
+      game.freezeT = Math.max(game.freezeT || 0, colossal ? 0.22 : (tier === 'superBoss' ? 0.18 : (bigBoss ? 0.14 : 0.1)));
+      haptic(colossal ? 36 : (tier === 'superBoss' ? 28 : (bigBoss ? 22 : 16)));
     }
   } catch (_) {}
 }

@@ -7,6 +7,8 @@ class Monster {
     this.spId = spId; this.sp = sp;
     this.elite = !!opts.elite;
     this.superBoss = !!opts.superBoss;
+    this.bossCore = !!(opts.bossCore || opts.superBoss);
+    this.colossal = false;
     this.size = sp.size * (opts.elite ? 1.5 : 1);
     this.maxhp = Math.round(sp.hp * (opts.hpMul || 1) * eliteMul);
     this.hp = this.maxhp;
@@ -18,7 +20,27 @@ class Monster {
       this.dmg = Math.round(this.dmg * 1.42);
       this.size *= 1.32;
     }
-    if (opts.giant && !this.superBoss) {
+    if (this.bossCore) {
+      if (this.superBoss) {
+        // Super-baas is al zwaar gebufft — lichte extra + kans op colossaal.
+        this.size = Math.round(this.size * 1.12);
+        this.maxhp = Math.round(this.maxhp * 1.35);
+        this.hp = this.maxhp;
+      } else {
+        this.size = Math.round(this.size * BOSS_CORE_SIZE_MUL);
+        this.maxhp = Math.round(this.maxhp * BOSS_CORE_HP_MUL);
+        this.hp = this.maxhp;
+        this.dmg = Math.round(this.dmg * BOSS_CORE_DMG_MUL);
+      }
+      if (Math.random() < COLOSSAL_CHANCE) {
+        this.colossal = true;
+        this.size = Math.round(this.size * COLOSSAL_SIZE_MUL);
+        this.maxhp = Math.round(this.maxhp * COLOSSAL_HP_MUL);
+        this.hp = this.maxhp;
+        this.dmg = Math.round(this.dmg * COLOSSAL_DMG_MUL);
+      }
+    }
+    if (opts.giant && !this.superBoss && !this.bossCore) {
       this.giant = true;
       this.size = Math.round(this.size * GIANT_SIZE_MUL);
       this.maxhp = Math.round(this.maxhp * GIANT_HP_MUL);
@@ -38,8 +60,12 @@ class Monster {
     this.enraged = false;
     this.phase2FlashT = 0;
     this.introT = 0;
+    this.introDur = 0;
     this.introTier = null;
     this.tideBoss = !!opts.tideBoss;
+    if (this.bossCore && typeof BOSS_SAFETY_DUR === 'number') {
+      this.safetyT = BOSS_SAFETY_DUR * (this.colossal ? 1.35 : 1);
+    }
   }
   get alive() { return this.hp > 0; }
 
@@ -260,11 +286,12 @@ class Monster {
     const rar = rarityOf(this.sp.rarity);
     if (this.introT > 0 && this.alive) {
       c.save();
-      const p = clamp(this.introT / 1.6, 0, 1);
+      const p = clamp(this.introT / Math.max(0.6, this.introDur || 1.6), 0, 1);
       const pulse = 1 + Math.sin(this.t * 14) * 0.08;
+      const bigIntro = !!(this.bossCore || this.superBoss || this.colossal);
       c.globalAlpha = 0.25 + p * 0.45;
-      c.strokeStyle = this.introTier === 'tideBoss' ? '#4a9fff' : (this.introTier === 'superBoss' ? '#ffd75e' : (this.introTier === 'boss' ? '#ff6b6b' : '#c47aff'));
-      c.lineWidth = 4 + p * 4;
+      c.strokeStyle = this.introTier === 'tideBoss' ? '#4a9fff' : (this.introTier === 'superBoss' || this.colossal ? '#ffd75e' : (this.introTier === 'boss' ? '#ff6b6b' : '#c47aff'));
+      c.lineWidth = (bigIntro ? 5 : 4) + p * (bigIntro ? 6 : 4);
       c.beginPath();
       c.ellipse(0, 0, this.size * (1.7 + (1 - p) * 0.9) * pulse, this.size * (1.35 + (1 - p) * 0.7) * pulse, 0, 0, TAU);
       c.stroke();
@@ -274,6 +301,29 @@ class Monster {
         c.beginPath();
         c.ellipse(0, 0, this.size * 1.9 * pulse, this.size * 1.5 * pulse, 0, 0, TAU);
         c.fill();
+      }
+      if (bigIntro && p > 0.12) {
+        const label = (this.sp && this.sp.name) || 'BAAS';
+        const tag = this.colossal
+          ? (typeof t === 'function' ? t('combat.colossalTag') : 'COLOSSAAL')
+          : (this.superBoss
+            ? (typeof t === 'function' ? t('combat.superBossTag') : 'SUPER BAAS')
+            : (typeof t === 'function' ? t('combat.bossTag') : 'BAAS'));
+        const fs = Math.max(18, Math.min(this.colossal ? 42 : 34, this.size * 0.55));
+        c.globalAlpha = Math.min(1, 0.35 + p * 0.75);
+        c.font = `900 ${fs}px -apple-system, sans-serif`;
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        const ty = -this.size * (this.flying ? 1.15 : 1.35) - fs * 0.35;
+        c.lineWidth = Math.max(4, fs * 0.18);
+        c.strokeStyle = 'rgba(0,0,0,.72)';
+        c.fillStyle = this.colossal || this.superBoss ? '#ffd75e' : '#ff8a9a';
+        c.strokeText(tag, 0, ty - fs * 0.85);
+        c.fillText(tag, 0, ty - fs * 0.85);
+        c.font = `900 ${Math.round(fs * 1.15)}px -apple-system, sans-serif`;
+        c.fillStyle = '#fff';
+        c.strokeText(label, 0, ty);
+        c.fillText(label, 0, ty);
       }
       c.restore();
     }
@@ -312,10 +362,11 @@ class Monster {
       }
       c.restore();
     }
-    if (this.giant && this.alive) {
+    if ((this.giant || this.colossal) && this.alive) {
       c.save();
       c.globalAlpha = 0.35 + Math.sin(this.t * 4) * 0.08;
-      c.strokeStyle = '#ffd75e'; c.lineWidth = 2.5;
+      c.strokeStyle = this.colossal ? '#ffb06a' : '#ffd75e';
+      c.lineWidth = this.colossal ? 3.4 : 2.5;
       c.beginPath(); c.ellipse(0, this.size * 0.82, this.size * 1.28, this.size * 0.24, 0, 0, TAU); c.stroke();
       c.restore();
     }
