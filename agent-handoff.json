@@ -256,6 +256,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T19:34:31Z",
+      "summary": "Summons reveal.mp4 toegevoegd (stickman tree→chest) · v1.18.116"
+    },
+    {
       "at": "2026-07-26T19:24:39Z",
       "summary": "Summons harden conflictvrij gemerged naar main live · v1.18.115"
     },
@@ -350,10 +354,6 @@
     {
       "at": "2026-07-26T18:52:33Z",
       "summary": "Nightmare 2.0 + Hell 3.0 LIVE op Pages · v1.18.104"
-    },
-    {
-      "at": "2026-07-26T18:52:22Z",
-      "summary": "Dubbelcheck OK, gemerged main · Nachtmerrie/Hel v1.18.104"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
