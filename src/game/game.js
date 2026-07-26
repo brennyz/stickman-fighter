@@ -1091,7 +1091,7 @@ class Game {
       }
       this.banner(t('banner.tideBattleWin'), 2.2, '#4a9fff', 44);
       UI.toast(t('toast.tideBattleWin', { xp, coins }), 4200);
-      this.floater(W / 2, 140, `+${xp} XP · +${coins} 🪙`, '#4a9fff', 17);
+      this.floater(W / 2, 140, `+${xp} XP · +${coins} PC`, '#4a9fff', 17);
       try { AudioSys.sfx('win'); } catch (_) {}
       checkAchievements();
     } catch (err) {

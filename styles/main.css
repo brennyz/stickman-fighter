@@ -655,6 +655,24 @@
   .back-btn .back-btn-ico { width: 18px; height: 18px; display: inline-block; vertical-align: -0.2em; margin-right: 4px; }
   #pauseBtn img { width: 22px; height: 22px; margin: 0 auto; }
   .saga-ico { width: 1em; height: 1em; display: inline-block; vertical-align: -0.15em; margin-right: 2px; }
+  img.ach-ico,
+  img.ui-ico-check,
+  img.ui-ico-lock,
+  img.ui-ico-coin,
+  img.ui-ico-warn {
+    display: inline-block;
+    vertical-align: -0.22em;
+    margin-right: 3px;
+    width: 1.15em;
+    height: 1.15em;
+    object-fit: contain;
+    pointer-events: none;
+    flex-shrink: 0;
+  }
+  img.ui-ico-check { width: 1em; height: 1em; vertical-align: -0.14em; }
+  img.ui-ico-lock { width: 1.1em; height: 1.1em; }
+  img.ui-ico-coin { width: 1em; height: 1em; margin-right: 2px; }
+  img.ach-ico { width: 1.2em; height: 1.2em; vertical-align: -0.24em; }
   .mode-btn .ico img { width: 1.55em; height: 1.55em; }
   .menu-dock .tog-ico img,
   .btn.tog .tog-ico img {

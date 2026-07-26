@@ -153,10 +153,10 @@ function petProgressLine(speciesId) {
   if (!def) return '';
   if (isPetTamed(def.id)) return save.activePet === def.id ? 'Pet · actief' : 'Pet · getemd';
   const cost = petCoinCost(def.id);
-  if (canBuyPetWithCoins(def.id)) return `Pet · kopen ${cost} 🪙`;
+  if (canBuyPetWithCoins(def.id)) return `Pet · kopen ${cost} PC`;
   const need = petKillNeed(speciesId);
   const cur = save.dex[speciesId] || 0;
-  const coinHint = petCoinsBalance() > 0 ? ` · ${petCoinsBalance()}/${cost} 🪙` : '';
+  const coinHint = petCoinsBalance() > 0 ? ` · ${petCoinsBalance()}/${cost} PC` : '';
   if (cur <= 0) return `Pet · ${need} kills${coinHint}`;
   return `Pet · ${Math.min(cur, need)}/${need} kills${coinHint}`;
 }

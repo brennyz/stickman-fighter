@@ -756,40 +756,49 @@ function initCharSelectChrome() {
   window.__sfCharChrome = true;
 }
 
-/** Prestatie-iconen als inline SVG (art-upgrade 4/4) — vervangt emoji. */
-const ACH_ICON_SVG = {
-  first_win: '<path d="M7 4h10v5a5 5 0 01-10 0z"/><path d="M7 5H4c0 3 1.5 5 3 5M17 5h3c0 3-1.5 5-3 5"/><path d="M12 14v3M8 20h8M10 17h4v3h-4z"/>',
-  lv10: '<path d="M12 20V5"/><path d="M6 11l6-6 6 6"/>',
-  dex10: '<path d="M12 6c-2-1.5-4.5-2-8-2v14c3.5 0 6 .5 8 2 2-1.5 4.5-2 8-2V4c-3.5 0-6 .5-8 2z"/><path d="M12 6v14"/>',
-  dexFull: '<path d="M5 4h11v16H5z"/><path d="M16 6h3v14h-3"/><path d="M8 8h5M8 12h5"/>',
-  dex100: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/>',
-  dexHalf: '<circle cx="12" cy="12" r="9"/><path d="M14.5 9.5l-1.6 4-4 1.6 1.6-4z" fill="currentColor"/>',
-  dexTiers: '<path d="M12 3l6 5-6 13L6 8z"/><path d="M6 8h12M9 8l3 13M15 8l-3 13"/>',
-  dexMythic: '<path d="M12 3l1.8 5.4L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.6z" fill="currentColor"/>',
-  train5: '<rect x="6" y="8" width="12" height="10" rx="2"/><path d="M9 8V5.5M15 8V5.5"/><circle cx="9.5" cy="12.5" r="1.2" fill="currentColor"/><circle cx="14.5" cy="12.5" r="1.2" fill="currentColor"/>',
-  wall100: '<path d="M4 6h16M4 11h16M4 16h16M4 6v14h16V6M9 6v5M15 11v5M9 16v4"/>',
-  combo8: '<path d="M13 3L6 13h5l-2 8 7-10h-5z" fill="currentColor" stroke="none"/>',
-  lv50: '<path d="M4 17l1.5-9L9 12l3-6 3 6 3.5-4L20 17z"/><path d="M5 20h14"/>',
-  daily7: '<rect x="4" y="6" width="16" height="14" rx="2"/><path d="M4 10h16M8 4v4M16 4v4"/><path d="M9 15l2 2 4-4"/>',
-  vs5: '<circle cx="8" cy="12" r="4"/><circle cx="16" cy="12" r="4"/>',
-  vs_roster: '<circle cx="9" cy="9" r="4"/><rect x="12" y="12" width="8" height="8" rx="2"/>',
-  saga_icons: '<path d="M12 3l2 6h6l-5 4 2 6-5-3.6L7 19l2-6-5-4h6z" fill="currentColor" stroke="none"/>',
+/** ASSET-STYLE file icons — arcade stroke, geen emoji. */
+const ACH_ICON_FILE = {
+  first_win: 'ach-first-win',
+  lv10: 'ach-lv10',
+  dex10: 'ach-dex10',
+  dexFull: 'ach-dex-full',
+  dex100: 'ach-dex100',
+  dexHalf: 'ach-dex-half',
+  dexTiers: 'ach-dex-tiers',
+  dexMythic: 'ach-dex-mythic',
+  train5: 'ach-train5',
+  wall100: 'ach-wall100',
+  combo8: 'ach-combo8',
+  finisher1: 'ach-finisher1',
+  finisher10: 'ach-finisher10',
+  finisher50: 'ach-finisher50',
+  weaponMaster25: 'ach-weapon-master25',
+  streak10: 'ach-streak10',
+  trainCombo10: 'ach-train-combo10',
+  lv50: 'ach-lv50',
+  lv70: 'ach-lv70',
+  zoneWeapons10: 'ach-zone-weapons10',
+  daily7: 'ach-daily7',
+  vs5: 'ach-vs5',
+  vsFatality1: 'ach-vs-fatality1',
+  vs_roster: 'ach-vs-roster',
+  saga_icons: 'ach-saga-icons',
 };
+function uiFileIcon(file, cls, size) {
+  const s = size || 18;
+  const c = cls ? ` class="${cls}"` : '';
+  return `<img${c} src="assets/ui/${file}.svg" alt="" width="${s}" height="${s}" decoding="async" draggable="false">`;
+}
 function achIconSvg(id) {
-  const body = ACH_ICON_SVG[id] || ACH_ICON_SVG.first_win;
-  return '<svg viewBox="0 0 24 24" style="width:1.2em;height:1.2em;vertical-align:-0.24em;margin-right:2px" ' +
-    'fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg>';
+  const file = ACH_ICON_FILE[id] || ACH_ICON_FILE.first_win;
+  return uiFileIcon(file, 'ach-ico', 18);
 }
 
-/** Mini SVG-vinkje (art-upgrade 4/4) — vervangt ✔-glyphs in lijsten. */
-const SVG_CHECK_MINI =
-  '<svg viewBox="0 0 24 24" style="width:1em;height:1em;vertical-align:-0.14em" fill="none" ' +
-  'stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13l5 5L20 7"/></svg>';
-
-/** Inline SVG-slotje (art-upgrade 2/4) — vervangt 🔒 in level/wapen-lijsten. */
-const SVG_LOCK_ICON =
-  '<svg viewBox="0 0 24 24" style="width:1.15em;height:1.15em;vertical-align:-0.2em" fill="none" stroke="currentColor" stroke-width="2">' +
-  '<rect x="6" y="11" width="12" height="9" rx="2" fill="rgba(0,0,0,.3)"/><path d="M9 11V8a3 3 0 016 0v3"/></svg>';
+/** Mini check / lock / coin / warn — ASSET-STYLE files. */
+const SVG_CHECK_MINI = uiFileIcon('ui-check', 'ui-ico-check', 14);
+const SVG_LOCK_ICON = uiFileIcon('ui-lock', 'ui-ico-lock', 15);
+const SVG_COIN_ICON = uiFileIcon('ui-coin', 'ui-ico-coin', 14);
+const SVG_WARN_ICON = uiFileIcon('ui-warn', 'ui-ico-warn', 14);
 
 const MODE_HUB_META = {
   arcade: { badge: 'SOLO', badgeClass: 'badge-solo', title: 'Arcade', sub: 'Snelle sessies · high scores · geen voortgang verlies' },
@@ -820,7 +829,7 @@ function hubTileStatLine(hub) {
       const mats = save.stats?.matsCoinBest || 0;
       if (mats > 0) bits.push(`mats ${mats}`);
       const pc = petCoinsBalance();
-      if (pc > 0) bits.push(`${pc} pet 🪙`);
+      if (pc > 0) bits.push(`${pc} pet ${SVG_COIN_ICON}`);
       return bits.length ? bits.join(' · ') : t('hub.modes3');
     }
     case 'versus': {
@@ -829,7 +838,7 @@ function hubTileStatLine(hub) {
       return m > 0 ? t('hub.vsRecord', { w, m }) : t('hub.fightersLocal');
     }
     case 'collect':
-      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ${petCoinsBalance()} pet 🪙`;
+      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ${petCoinsBalance()} pet ${SVG_COIN_ICON}`;
     case 'summon': {
       try {
         ensureChestDaily();
@@ -1423,7 +1432,8 @@ const UI = {
       el.appendChild(cap);
       const tag = document.createElement('div');
       tag.className = 'char-tag';
-      tag.textContent = ok ? r.tag : t('ui.charLocked');
+      if (ok) tag.textContent = r.tag;
+      else tag.innerHTML = `${SVG_LOCK_ICON} ${t('ui.charLocked')}`;
       el.appendChild(tag);
       const flair = document.createElement('div');
       flair.className = 'char-flair';
@@ -1905,7 +1915,7 @@ const UI = {
         cc.fillStyle = '#c97a20';
         cc.font = 'bold 22px sans-serif';
         cc.textAlign = 'center';
-        cc.fillText('🪙', 60, 68);
+        cc.fillText('PC', 60, 68);
         title = '+' + (res.amount || 0) + ' pet coins';
       } else if (res && res.type === 'xp') {
         cc.fillStyle = '#7cf5ff';
@@ -3382,19 +3392,19 @@ const UI = {
           ? 'Getemd · assist in avontuur'
           : (canBuy
             ? `Kopen: ${cost} pet coins`
-            : `Temmen: ${Math.min(kills, need)}/${need} kills · of ${cost} 🪙`)}</div>` +
+            : `Temmen: ${Math.min(kills, need)}/${need} kills · of ${cost} ${SVG_COIN_ICON}`)}</div>` +
         (tamed && (upLv > 0 || itemUpgradeShards('pet', def.id) > 0)
           ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px">${petUpgradeSummary(def.id)}</div>` : '');
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
       if (tamed) {
-        right.innerHTML = active ? '&#10004; actief' : 'uitrusten';
+        right.innerHTML = active ? `${SVG_CHECK_MINI} actief` : 'uitrusten';
       } else if (canBuy) {
-        right.innerHTML = `kopen<br>${cost} 🪙`;
+        right.innerHTML = `kopen<br>${cost} ${SVG_COIN_ICON}`;
         right.style.color = '#ff9ad5';
       } else {
-        right.textContent = kills > 0 ? `${need - kills} kills` : `${cost} 🪙`;
+        right.innerHTML = kills > 0 ? `${need - kills} kills` : `${cost} ${SVG_COIN_ICON}`;
         right.style.opacity = '0.7';
       }
       el.appendChild(right);
@@ -3765,8 +3775,8 @@ const UI = {
         ? ` · ~${formatSaveBytes(h.primaryBytes || h.backupBytes)}`
         : '';
       let statusPrimary = h.primaryCorrupt
-        ? '⚠ Hoofd-save corrupt'
-        : (h.primaryValid ? `${SVG_CHECK_MINI} Save OK` : (h.primaryOk ? '⚠ Save onleesbaar' : '⚠ Geen primary save'));
+        ? `${SVG_WARN_ICON} Hoofd-save corrupt`
+        : (h.primaryValid ? `${SVG_CHECK_MINI} Save OK` : (h.primaryOk ? `${SVG_WARN_ICON} Save onleesbaar` : `${SVG_WARN_ICON} Geen primary save`));
       if (h.drift && h.backupOk) {
         statusPrimary += h.driftDetail
           ? ` · ${h.driftDetail} — tik Herstel backup`
@@ -3782,7 +3792,7 @@ const UI = {
         (h.eggs ? ` · ei ${h.eggs}` : '') +
         `${sizeLine}<br>` +
         statusPrimary +
-        (h.backupOk ? ` · ${SVG_CHECK_MINI} Backup (Lv ${h.backupLvl})` : ' · ⚠ Geen backup');
+        (h.backupOk ? ` · ${SVG_CHECK_MINI} Backup (Lv ${h.backupLvl})` : ` · ${SVG_WARN_ICON} Geen backup`);
       if (h.drift && h.backupOk) {
         healthHtml += `<br><span style="opacity:.85;color:#ffd75e">Drift: ${h.driftDetail || 'hoofd ≠ backup'} — Herstel backup óf Sync backup</span>`;
       }

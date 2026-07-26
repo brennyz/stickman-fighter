@@ -1,30 +1,20 @@
 /* ========================== VERSUS / 2 SPELERS ========================== */
 /** Saga-hints: parodie-vibes, geen officiële manga/IP-namen. */
 const VS_SAGAS = {
-  all: { id: 'all', label: 'Alle', emoji: '⭐', blurb: 'Alle 20 vechters — kies P1, dan P2.' },
-  fighter: { id: 'fighter', label: 'Street', emoji: '🥋', blurb: 'Ryu & Ken — classic white/red gi duel.' },
-  ki: { id: 'ki', label: 'Ki', emoji: '🔥', blurb: 'Ki-golven & power spikes — Goku vibes.' },
-  scroll: { id: 'scroll', label: 'Scroll', emoji: '📜', blurb: 'Ninja & demon fox — headband hints.' },
-  tide: { id: 'tide', label: 'Tide', emoji: '🌊', blurb: 'Reach & crew — rubber stretch slagen.' },
-  cape: { id: 'cape', label: 'Cape', emoji: '🦸', blurb: 'Serious hero — bald one-punch blink.' },
-  dawn: { id: 'dawn', label: 'Dawn', emoji: '☀️', blurb: 'Holy lance & void sin aura.' },
+  all: { id: 'all', label: 'Alle', blurb: 'Alle 20 vechters — kies P1, dan P2.' },
+  fighter: { id: 'fighter', label: 'Street', blurb: 'Ryu & Ken — classic white/red gi duel.' },
+  ki: { id: 'ki', label: 'Ki', blurb: 'Ki-golven & power spikes — Goku vibes.' },
+  scroll: { id: 'scroll', label: 'Scroll', blurb: 'Ninja & demon fox — headband hints.' },
+  tide: { id: 'tide', label: 'Tide', blurb: 'Reach & crew — rubber stretch slagen.' },
+  cape: { id: 'cape', label: 'Cape', blurb: 'Serious hero — bald one-punch blink.' },
+  dawn: { id: 'dawn', label: 'Dawn', blurb: 'Holy lance & void sin aura.' },
 };
 function vsSagaMeta(id) { return VS_SAGAS[id] || VS_SAGAS.scroll; }
 
-/** Saga-iconen als inline SVG (art-upgrade 4/4) — vervangt emoji-chips. */
-const SAGA_ICON_SVG = {
-  all: '<path d="M12 3l2 6h6l-5 4 2 6-5-3.6L7 19l2-6-5-4h6z" fill="currentColor" stroke="none"/>',
-  ki: '<path d="M12 3c3 3.5 5.5 6 5.5 10a5.5 5.5 0 01-11 0c0-2 .8-3.6 2-5.4.4 1.4 1 2.2 2 2.9C10.2 8 10.8 5.5 12 3z" fill="currentColor" stroke="none"/>',
-  scroll: '<path d="M7 4h11v14H7z"/><path d="M7 4a2 2 0 00-2 2v12a2 2 0 002 2h11"/><path d="M10 8h5M10 12h5"/>',
-  tide: '<path d="M3 12c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/><path d="M3 17c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/>',
-  cape: '<path d="M12 3l7 4-2 13-5 2-5-2L5 7z"/><path d="M12 3v19"/>',
-  fighter: '<path d="M8 4h8v4H8zM6 8h12v12H6z"/><path d="M9 12h6M9 16h6"/>',
-  dawn: '<circle cx="12" cy="14" r="4.5"/><path d="M12 5.5V3M5.5 8L4 6.5M18.5 8L20 6.5M3 14h2M19 14h2"/>',
-};
+/** Saga-iconen via ASSET-STYLE files (assets/ui/saga-*.svg). */
 function sagaIconSvg(id) {
-  const body = SAGA_ICON_SVG[id] || SAGA_ICON_SVG.all;
-  return '<svg viewBox="0 0 24 24" style="width:1.05em;height:1.05em;vertical-align:-0.16em" ' +
-    'fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg>';
+  const key = (VS_SAGAS[id] ? id : 'all');
+  return `<img class="saga-ico" src="assets/ui/saga-${key}.svg" alt="" width="16" height="16" decoding="async" draggable="false">`;
 }
 function rosterFlair(r) { return r.flair || r.tag; }
 

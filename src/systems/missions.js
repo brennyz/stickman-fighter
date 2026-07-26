@@ -47,25 +47,25 @@ function goDailyPlayTarget(taskId) {
   }
 }
 const ACHIEVEMENTS = [
-  { id: 'first_win', name: 'Eerste triomf', desc: 'Win je eerste level', icon: '🏆',
+  { id: 'first_win', name: 'Eerste triomf', desc: 'Win je eerste level',
     test: s => s.stats.advWins >= 1 },
-  { id: 'lv10', name: 'Groeiende ninja', desc: 'Bereik vechter Lv 10', icon: '⬆️',
+  { id: 'lv10', name: 'Groeiende ninja', desc: 'Bereik vechter Lv 10',
     test: s => s.lvl >= 10 },
-  { id: 'dex10', name: 'Monsterkenner', desc: '10 soorten in monsterboek', icon: '📖',
+  { id: 'dex10', name: 'Monsterkenner', desc: '10 soorten in monsterboek',
     test: s => Object.keys(s.dex).length >= 10 },
-  { id: 'dexFull', name: 'Encyclopedie', desc: 'Alle monster-soorten ontdekt', icon: '📚',
+  { id: 'dexFull', name: 'Encyclopedie', desc: 'Alle monster-soorten ontdekt',
     test: s => Object.keys(s.dex).length >= SPECIES_ORDER.length },
-  { id: 'dex100', name: 'Jager', desc: '100 monster-kills geregistreerd', icon: '🎯',
+  { id: 'dex100', name: 'Jager', desc: '100 monster-kills geregistreerd',
     test: s => {
       let n = 0;
       for (const v of Object.values(s.dex || {})) n += v || 0;
       return n >= 100;
     } },
-  { id: 'dexHalf', name: 'Veldgids', desc: 'Helft van alle soorten ontdekt', icon: '🧭',
+  { id: 'dexHalf', name: 'Veldgids', desc: 'Helft van alle soorten ontdekt',
     test: s => Object.keys(s.dex || {}).length >= Math.ceil(SPECIES_ORDER.length / 2) },
-  { id: 'dexTiers', name: 'Rariteitenjager', desc: '4 verschillende rariteiten in boek', icon: '💎',
+  { id: 'dexTiers', name: 'Rariteitenjager', desc: '4 verschillende rariteiten in boek',
     test: () => dexRarityTierCount() >= 4 },
-  { id: 'dexMythic', name: 'Mythe-zoeker', desc: 'Eén mythisch monster ontdekt', icon: '✨',
+  { id: 'dexMythic', name: 'Mythe-zoeker', desc: 'Eén mythisch monster ontdekt',
     test: s => {
       for (const id of Object.keys(s.dex || {})) {
         const sp = SPECIES[id];
@@ -73,39 +73,39 @@ const ACHIEVEMENTS = [
       }
       return false;
     } },
-  { id: 'train5', name: 'Robotbreker', desc: '5× training gewonnen', icon: '🤖',
+  { id: 'train5', name: 'Robotbreker', desc: '5× training gewonnen',
     test: s => s.trainWins >= 5 },
-  { id: 'wall100', name: 'Sloper', desc: 'Muurrecord 100+', icon: '🧱',
+  { id: 'wall100', name: 'Sloper', desc: 'Muurrecord 100+',
     test: s => s.bestWall >= 100 },
-  { id: 'combo8', name: 'Combo-koning', desc: 'Combo ×8 bereikt', icon: '⚡',
+  { id: 'combo8', name: 'Combo-koning', desc: 'Combo ×8 bereikt',
     test: s => s.stats.maxCombo >= 8 },
-  { id: 'finisher10', name: 'Stijl-meester', desc: '10 wapen-finishers geland', icon: '⚔',
+  { id: 'finisher10', name: 'Stijl-meester', desc: '10 wapen-finishers geland',
     test: s => (s.stats.weaponFinishers || 0) >= 10 },
-  { id: 'finisher1', name: 'Eerste stijl', desc: 'Land je eerste wapen-finisher', icon: '🗡',
+  { id: 'finisher1', name: 'Eerste stijl', desc: 'Land je eerste wapen-finisher',
     test: s => (s.stats.weaponFinishers || 0) >= 1 },
-  { id: 'weaponMaster25', name: 'Wapen-legende', desc: '25 finishers met één wapen', icon: '👑',
+  { id: 'weaponMaster25', name: 'Wapen-legende', desc: '25 finishers met één wapen',
     test: s => Object.values(s.weaponMastery || {}).some(m => (m.finishers || 0) >= 25) },
-  { id: 'finisher50', name: 'Combo-sensei', desc: '50 finishers totaal', icon: '✨',
+  { id: 'finisher50', name: 'Combo-sensei', desc: '50 finishers totaal',
     test: s => (s.stats.weaponFinishers || 0) >= 50 },
-  { id: 'streak10', name: 'Onstuitbaar', desc: 'Kill streak ×10 in avontuur', icon: '🔥',
+  { id: 'streak10', name: 'Onstuitbaar', desc: 'Kill streak ×10 in avontuur',
     test: s => (s.stats.maxKillStreak || 0) >= 10 },
-  { id: 'trainCombo10', name: 'Dummy-meester', desc: 'Training combo ×10', icon: '🎯',
+  { id: 'trainCombo10', name: 'Dummy-meester', desc: 'Training combo ×10',
     test: s => (s.stats.trainMaxCombo || 0) >= 10 },
-  { id: 'lv50', name: 'Legende', desc: 'Unlock level 50', icon: '👑',
+  { id: 'lv50', name: 'Legende', desc: 'Unlock level 50',
     test: s => s.unlocked >= 50 },
-  { id: 'lv70', name: 'Hel-legende', desc: 'Unlock level 70 (Hel)', icon: '🔥',
+  { id: 'lv70', name: 'Hel-legende', desc: 'Unlock level 70 (Hel)',
     test: s => s.unlocked >= 70 },
-  { id: 'zoneWeapons10', name: 'Zone-verzamelaar', desc: 'Verzamel 10 Nachtmerrie/Hel-wapens', icon: '⚔️',
+  { id: 'zoneWeapons10', name: 'Zone-verzamelaar', desc: 'Verzamel 10 Nachtmerrie/Hel-wapens',
     test: s => Object.keys(s.zoneWeapons || {}).length >= 10 },
-  { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd', icon: '📅',
+  { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd',
     test: s => (s.stats.dailyBonusCount || 0) >= 7 },
-  { id: 'vs5', name: 'Duelist', desc: '5× 2-speler duel gespeeld', icon: '🥊',
+  { id: 'vs5', name: 'Duelist', desc: '5× 2-speler duel gespeeld',
     test: s => (s.stats.vsMatches || 0) >= 5 },
-  { id: 'vsFatality1', name: 'Afronden!', desc: 'Land een versus fatality op match-KO', icon: '💀',
+  { id: 'vsFatality1', name: 'Afronden!', desc: 'Land een versus fatality op match-KO',
     test: s => (s.stats.vsFatalities || 0) >= 1 },
-  { id: 'vs_roster', name: 'Vol roster', desc: 'Speel met 10+ verschillende vechters (2P)', icon: '🎭',
+  { id: 'vs_roster', name: 'Vol roster', desc: 'Speel met 10+ verschillende vechters (2P)',
     test: s => (s.vsPlayedIds || []).length >= 10 },
-  { id: 'saga_icons', name: 'Saga-legends', desc: 'Speel 2P met alle 7 legend picks', icon: '🌟',
+  { id: 'saga_icons', name: 'Saga-legends', desc: 'Speel 2P met alle 7 legend picks',
     test: s => {
       const need = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
       const played = s.vsPlayedIds || [];
@@ -900,7 +900,7 @@ function runLootSummaryShort(loot) {
   if (loot.finishers) parts.push(`③${loot.finishers}`);
   if (loot.levelUps) parts.push(`↑${loot.levelUps}`);
   if (loot.weapons && loot.weapons.length) parts.push(`⚔${loot.weapons.length}`);
-  if (loot.petCoins) parts.push(`🪙${loot.petCoins}`);
+  if (loot.petCoins) parts.push(`PC${loot.petCoins}`);
   return parts.join(' · ');
 }
 
@@ -946,7 +946,7 @@ function formatRunLootHtml(loot, mode) {
       push('⚔', t('runLoot.weaponLine', { name: weaponLabel(weaponById(wid)) }), '#c792ff');
     }
   }
-  if (loot.petCoins) push('🪙', t('runLoot.petCoinsLine', { n: loot.petCoins }), '#ffd75e');
+  if (loot.petCoins) push('PC', t('runLoot.petCoinsLine', { n: loot.petCoins }), '#ffd75e');
   if (!rows.length) return '';
   const head = mode === 'adventure' ? t('runLoot.headAdv') : t('runLoot.head');
   return `<div class="run-loot-head">${escRunLootHtml(head)}</div><div class="run-loot-lines">${rows.join('')}</div>`;

@@ -142,7 +142,8 @@ houd kleuren/stroke volgens ASSET-STYLE, geen emoji, daarna build+smoke.
 | Home / claim / settings / dock | `index.html` | `assets/buttons/chrome/` | **Live** |
 | Saga-filters | `.char-saga-bar` / dex-filter | `assets/ui/saga-*.svg` | **Live** |
 | Touch vechtknoppen | `src/core/storage.js` `drawTouchBtnIcon` | **code**, geen PNG | code |
-| Prestatie-iconen | `ACH_ICON_SVG` in JS | optioneel later → `assets/ui/` | JS |
+| Prestatie-iconen | `ACH_ICON_FILE` → `assets/ui/ach-*.svg` | `assets/ui/` | **Live** |
+| Lock / check / coin / warn | `SVG_*` → `assets/ui/ui-*.svg` | `assets/ui/` | **Live** |
 | PWA icons | `icons/icon-*.png` | blijf hier | PNG |
 
 ### Nav-set (chrome) — tokens

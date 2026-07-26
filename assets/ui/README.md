@@ -1,19 +1,14 @@
 # assets/ui — overige UI-SVG
 
-Kleine gedeelde UI-stukken (lock, check, saga-chips) landen hier als ze uit inline HTML/JS komen.
-
 **Leidend:** [`../../ASSET-STYLE.md`](../../ASSET-STYLE.md)
 
-## Saga-filters (live)
+## Sets (live)
 
-| Bestand | Label |
-|---------|-------|
-| `saga-all.svg` | Alle |
-| `saga-fighter.svg` | Street |
-| `saga-ki.svg` | Ki |
-| `saga-scroll.svg` | Scroll |
-| `saga-tide.svg` | Tide |
-| `saga-cape.svg` | Cape |
-| `saga-dawn.svg` | Dawn |
+| Prefix | Rol |
+|--------|-----|
+| `saga-*.svg` | Char/dex saga-filters + versus chips |
+| `ach-*.svg` | Prestatie-lijst iconen (missies) |
+| `ui-lock.svg` / `ui-check.svg` | Slot & vinkje in lijsten |
+| `ui-coin.svg` / `ui-warn.svg` | Pet-coins & save-waarschuwing |
 
-Wire-in: `.char-saga-bar` + dex-filter in `index.html` via `<img class="saga-ico">`.
+Wire-in via `achIconSvg` / `sagaIconSvg` / `SVG_*` helpers in `src/ui/ui.js` + `src/systems/versus.js` (`<img>`).
