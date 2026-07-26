@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.90';
+const APP_VERSION = '1.18.91';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 300;
+const SW_CACHE_REV = 301;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -2505,6 +2505,8 @@ function dailyTaskRemainderText(task, def) {
 }
 
 function dailyClaimFollowUpToast() {
+  if (state === 'play' || state === 'pause') return;
+  if (typeof gamblePending === 'function' && gamblePending()) return;
   const left = claimableDailyTasks();
   if (left.length > 0) {
     const xp = left.reduce((n, task) => n + (dailyDef(task.id)?.xp || 0), 0);
@@ -3247,6 +3249,8 @@ function maybeOfferVersionUpdateSave() {
     return;
   }
   setTimeout(() => {
+    if (state !== 'menu' || game) return;
+    if (typeof gamblePending === 'function' && gamblePending()) return;
     try {
       UI.showVersionUpdateRestore({
         stash,
@@ -5926,13 +5930,19 @@ function weaponMoveFamily(id) {
   return 'slash';
 }
 
-/** Idle grip: speer horizontaal, rest diagonaal/omhoog — voorkomt “alles is speer”. */
+/** Idle grip: speer horizontaal, zeis/kama meer rechtop — voorkomt “alles is speer”. */
 function weaponIdleAngle(id) {
+  if (id === 'zeis') return -1.2;
+  if (id === 'kama') return -1.05;
+  if (id === 'hamer' || id === 'donder') return -1.12;
+  if (id === 'tonfa') return -0.95;
+  if (id === 'void') return -0.55;
+  if (id === 'waaier') return -0.32;
   const fam = weaponMoveFamily(id);
   if (!fam) return -0.45;
   if (fam === 'spear') return -0.1;
   if (fam === 'blunt') return -1.05;
-  if (fam === 'hook') return -0.9;
+  if (fam === 'hook') return -0.95;
   if (fam === 'chain') return -0.78;
   if (fam === 'fan') return -0.32;
   if (fam === 'dual') return -0.58;
@@ -5945,6 +5955,11 @@ function weaponGripBias(id, move) {
   const pose = (move && move.pose) || '';
   const fam = weaponMoveFamily(id);
   if (fam === 'spear' || pose === 'thrust') return 0;
+  if (id === 'zeis' || id === 'kama') {
+    if (pose === 'overhead' || pose === 'upper') return -0.55;
+    if (pose === 'sweep' || pose === 'hook') return -0.48;
+    return -0.5;
+  }
   if (pose === 'overhead' || pose === 'upper') return -0.42;
   if (pose === 'slash' || pose === 'spin') return -0.55;
   if (pose === 'sweep' || pose === 'hook') return -0.35;
@@ -13686,14 +13701,10 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.strokeStyle = 'rgba(180,235,255,.55)'; c.lineWidth = 1.2;
       c.beginPath(); c.moveTo(12, 1.5); c.lineTo(60, 1.5); c.stroke();
       c.restore();
-      c.fillStyle = '#ffd75e'; c.fillRect(0, -9, 11, 18);
-      c.strokeStyle = '#c97a20'; c.lineWidth = 2; c.strokeRect(0, -9, 11, 18);
-      c.fillStyle = '#6a4a9a'; c.fillRect(-7, -6, 9, 12);
-      c.fillStyle = '#8a6030';
-      c.beginPath(); c.moveTo(5.5, -3); c.lineTo(3.5, 1); c.lineTo(7.5, 1); c.closePath(); c.fill();
-      c.beginPath(); c.moveTo(5.5, 2.5); c.lineTo(2.5, 7); c.lineTo(8.5, 7); c.closePath(); c.fill();
-      c.strokeStyle = '#4db8ff'; c.lineWidth = 4;
-      c.beginPath(); c.moveTo(11, -12); c.lineTo(11, 12); c.stroke();
+      c.fillStyle = '#c9e8ff';
+      c.beginPath(); c.moveTo(62, -5); c.lineTo(74, 0); c.lineTo(62, 5); c.closePath(); c.fill();
+      c.strokeStyle = '#d4af37'; c.lineWidth = 5; c.beginPath(); c.moveTo(4, -9); c.lineTo(4, 9); c.stroke();
+      c.fillStyle = '#6fd7ff'; c.beginPath(); c.arc(4, 0, 3.2, 0, TAU); c.fill();
       break;
     case 'kunai':
       c.strokeStyle = '#5a6474'; c.lineWidth = 3.4; c.beginPath(); c.moveTo(0, 0); c.lineTo(26, 0); c.stroke();
@@ -13714,14 +13725,82 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.restore();
       break;
     }
+    case 'tanto':
+      // Kort mes: korte greep + dikke tip-kling
+      c.strokeStyle = '#6a7484'; c.lineWidth = 3.4; c.beginPath(); c.moveTo(0, 0); c.lineTo(24, 0); c.stroke();
+      c.fillStyle = '#dce4f0';
+      c.beginPath(); c.moveTo(22, -6); c.lineTo(40, 0); c.lineTo(22, 6); c.closePath(); c.fill();
+      c.strokeStyle = '#8a6030'; c.lineWidth = 3.5; c.beginPath(); c.moveTo(4, -6); c.lineTo(4, 6); c.stroke();
+      c.fillStyle = '#5a4030'; c.beginPath(); c.arc(0, 0, 3, 0, TAU); c.fill();
+      break;
+    case 'sai':
+      // Driepunt: middenstaaf + twee prongs
+      c.strokeStyle = '#a8b4c4'; c.lineWidth = 3.8; c.beginPath(); c.moveTo(0, 0); c.lineTo(38, 0); c.stroke();
+      c.lineWidth = 3;
+      c.beginPath(); c.moveTo(10, 0); c.lineTo(24, -12); c.stroke();
+      c.beginPath(); c.moveTo(10, 0); c.lineTo(24, 12); c.stroke();
+      c.fillStyle = '#c9d6e8';
+      c.beginPath(); c.moveTo(38, -4); c.lineTo(50, 0); c.lineTo(38, 4); c.closePath(); c.fill();
+      c.strokeStyle = '#6a7484'; c.lineWidth = 4; c.beginPath(); c.moveTo(0, -5); c.lineTo(0, 5); c.stroke();
+      break;
     case 'knuppel':
       c.strokeStyle = '#6a4020'; c.lineWidth = 5; c.beginPath(); c.moveTo(2, 0); c.lineTo(18, 0); c.stroke();
       c.strokeStyle = '#8a5a30'; c.lineWidth = 14; c.beginPath(); c.moveTo(18, 0); c.lineTo(40, 0); c.stroke();
       c.strokeStyle = '#a07040'; c.lineWidth = 9; c.beginPath(); c.moveTo(22, 0); c.lineTo(36, 0); c.stroke();
       break;
+    case 'waaier': {
+      c.save();
+      const open = 0.55 + Math.sin(spin * 6) * 0.12;
+      for (let i = -3; i <= 3; i++) {
+        const a = i * 0.22 * open;
+        c.strokeStyle = i === 0 ? '#e8c98a' : '#c97a20';
+        c.lineWidth = i === 0 ? 3 : 2;
+        c.beginPath(); c.moveTo(4, 0); c.lineTo(4 + Math.cos(a) * 38, Math.sin(a) * 38); c.stroke();
+      }
+      c.fillStyle = 'rgba(255,215,94,.25)';
+      c.beginPath(); c.moveTo(4, 0);
+      c.arc(4, 0, 36, -0.7 * open, 0.7 * open);
+      c.closePath(); c.fill();
+      c.restore();
+      break;
+    }
     case 'speer':
+      // Enige echte speer: lange schacht + één punt
       c.strokeStyle = '#a3763f'; c.lineWidth = 4; c.beginPath(); c.moveTo(-14, 0); c.lineTo(58, 0); c.stroke();
       c.fillStyle = '#c9d6e8'; c.beginPath(); c.moveTo(58, -6); c.lineTo(74, 0); c.lineTo(58, 6); c.closePath(); c.fill();
+      c.strokeStyle = '#6a4820'; c.lineWidth = 2.5;
+      c.beginPath(); c.moveTo(8, -5); c.lineTo(8, 5); c.stroke();
+      break;
+    case 'drietand':
+      // Drietand: schacht + 3 duidelijke punten
+      c.strokeStyle = '#6a7488'; c.lineWidth = 4.5;
+      c.beginPath(); c.moveTo(-8, 0); c.lineTo(44, 0); c.stroke();
+      c.strokeStyle = '#c9d6e8'; c.lineWidth = 3.2;
+      c.beginPath(); c.moveTo(44, 0); c.lineTo(66, 0); c.stroke();
+      c.beginPath(); c.moveTo(44, -2); c.lineTo(62, -14); c.stroke();
+      c.beginPath(); c.moveTo(44, 2); c.lineTo(62, 14); c.stroke();
+      c.fillStyle = '#e8eef8';
+      c.beginPath(); c.moveTo(66, -3); c.lineTo(74, 0); c.lineTo(66, 3); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(62, -14); c.lineTo(68, -16); c.lineTo(62, -10); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(62, 14); c.lineTo(68, 16); c.lineTo(62, 10); c.closePath(); c.fill();
+      break;
+    case 'bostaf':
+      // Bo-staf: lange staf zonder speerpunt
+      c.strokeStyle = '#8a6030'; c.lineWidth = 6;
+      c.beginPath(); c.moveTo(-22, 0); c.lineTo(56, 0); c.stroke();
+      c.strokeStyle = '#c9a66b'; c.lineWidth = 2.5;
+      c.beginPath(); c.moveTo(-18, -5); c.lineTo(-18, 5); c.stroke();
+      c.beginPath(); c.moveTo(52, -5); c.lineTo(52, 5); c.stroke();
+      c.fillStyle = '#6a4820';
+      c.beginPath(); c.arc(-22, 0, 3.5, 0, TAU); c.fill();
+      c.beginPath(); c.arc(56, 0, 3.5, 0, TAU); c.fill();
+      break;
+    case 'tonfa':
+      // Tonfa: zijhandvat loodrecht op stok
+      c.strokeStyle = '#4a3020'; c.lineWidth = 7; c.beginPath(); c.moveTo(0, 0); c.lineTo(44, 0); c.stroke();
+      c.lineWidth = 6; c.beginPath(); c.moveTo(14, 0); c.lineTo(14, 18); c.stroke();
+      c.fillStyle = '#6a4830';
+      c.beginPath(); c.arc(14, 18, 4, 0, TAU); c.fill();
       break;
     case 'nunchaku': {
       c.strokeStyle = '#4a3520'; c.lineWidth = 5;
@@ -13736,19 +13815,29 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.beginPath(); c.moveTo(ex, ey); c.lineTo(fx, fy); c.stroke();
       break;
     }
-    case 'hamer':
-      c.strokeStyle = '#7a5c34'; c.lineWidth = 5; c.beginPath(); c.moveTo(2, 0); c.lineTo(40, 0); c.stroke();
-      c.fillStyle = '#6d7787'; c.fillRect(34, -12, 16, 24);
-      c.fillStyle = '#8f9aab'; c.fillRect(34, -12, 16, 6);
-      break;
-    case 'laser':
+    case 'kama': {
+      // Sikkel: korte steel + haak-kling (niet speer)
       c.save();
-      c.shadowColor = '#4ff3ff'; c.shadowBlur = 12;
-      c.strokeStyle = '#4ff3ff'; c.lineWidth = 6; c.beginPath(); c.moveTo(6, 0); c.lineTo(50, 0); c.stroke();
-      c.strokeStyle = '#fff'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(6, 0); c.lineTo(50, 0); c.stroke();
+      c.rotate(-0.55);
+      c.strokeStyle = '#5a4030';
+      c.lineWidth = 4.5;
+      c.beginPath(); c.moveTo(0, 4); c.lineTo(0, -28); c.stroke();
+      c.fillStyle = '#d0d8e8';
+      c.beginPath();
+      c.moveTo(0, -26);
+      c.quadraticCurveTo(26, -30, 28, -6);
+      c.quadraticCurveTo(18, -22, 2, -22);
+      c.closePath();
+      c.fill();
+      c.strokeStyle = '#8a98b0';
+      c.lineWidth = 1.6;
+      c.beginPath();
+      c.moveTo(2, -24);
+      c.quadraticCurveTo(20, -28, 24, -10);
+      c.stroke();
       c.restore();
-      c.strokeStyle = '#39404f'; c.lineWidth = 6; c.beginPath(); c.moveTo(-4, 0); c.lineTo(6, 0); c.stroke();
       break;
+    }
     case 'boemerang': {
       // Klassieke L/V-boemerang (niet speer-achtig); spin roteert in hand & als projectiel.
       c.save();
@@ -13775,85 +13864,65 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.restore();
       break;
     }
-    case 'ketting':
-      c.strokeStyle = '#8899aa'; c.lineWidth = 3;
-      for (let i = 0; i < 5; i++) { c.beginPath(); c.arc(8 + i * 10, Math.sin(i + spin * 8) * 2, 4, 0, TAU); c.stroke(); }
-      c.strokeStyle = '#c9d6e8'; c.lineWidth = 5; c.beginPath(); c.moveTo(52, -2); c.lineTo(68, 0); c.lineTo(52, 2); c.stroke();
-      break;
-    case 'donder':
-      c.strokeStyle = '#7a5c34'; c.lineWidth = 6; c.beginPath(); c.moveTo(2, 0); c.lineTo(34, 0); c.stroke();
-      c.fillStyle = '#ffd75e';
-      c.beginPath(); c.moveTo(34, -14); c.lineTo(58, -4); c.lineTo(40, 0); c.lineTo(58, 4); c.lineTo(34, 14); c.lineTo(38, 0); c.closePath(); c.fill();
-      break;
-    case 'void':
-      c.save(); c.shadowColor = '#ff6b9d'; c.shadowBlur = 14;
-      c.strokeStyle = '#ff6b9d'; c.lineWidth = 4;
-      c.beginPath(); c.moveTo(0, 0); c.lineTo(28, -10); c.lineTo(48, 0); c.lineTo(28, 10); c.closePath(); c.stroke();
-      c.fillStyle = 'rgba(90,16,64,.7)'; c.fill();
-      c.restore();
-      break;
-    case 'guvve':
-      c.strokeStyle = '#43b25b'; c.lineWidth = 6; c.beginPath(); c.moveTo(0, 0); c.lineTo(36, 0); c.stroke();
-      c.fillStyle = '#ffe259'; c.beginPath(); c.ellipse(48, 0, 14, 10, 0, 0, TAU); c.fill();
-      c.fillStyle = '#222'; c.beginPath(); c.arc(52, -2, 2, 0, TAU); c.fill();
-      c.strokeStyle = '#ff8c42'; c.lineWidth = 2; c.beginPath(); c.moveTo(58, 0); c.lineTo(68, 2); c.stroke();
-      break;
-    case 'tanto':
-      c.strokeStyle = '#6a7484'; c.lineWidth = 3.2; c.beginPath(); c.moveTo(0, 0); c.lineTo(28, 0); c.stroke();
-      c.fillStyle = '#dce4f0';
-      c.beginPath(); c.moveTo(28, -5); c.lineTo(44, 0); c.lineTo(28, 5); c.closePath(); c.fill();
-      c.strokeStyle = '#8a6030'; c.lineWidth = 3; c.beginPath(); c.moveTo(4, -5); c.lineTo(4, 5); c.stroke();
-      break;
-    case 'sai':
-      c.strokeStyle = '#a8b4c4'; c.lineWidth = 3.5; c.beginPath(); c.moveTo(0, 0); c.lineTo(40, 0); c.stroke();
-      c.beginPath(); c.moveTo(10, 0); c.lineTo(22, -10); c.stroke();
-      c.beginPath(); c.moveTo(10, 0); c.lineTo(22, 10); c.stroke();
-      c.fillStyle = '#c9d6e8'; c.beginPath(); c.moveTo(40, -4); c.lineTo(50, 0); c.lineTo(40, 4); c.closePath(); c.fill();
-      break;
-    case 'waaier': {
+    case 'zeis': {
+      // Schaduwzeis: verticale paal + grote paarse sikkel (niet speer)
       c.save();
-      const open = 0.55 + Math.sin(spin * 6) * 0.12;
-      for (let i = -3; i <= 3; i++) {
-        const a = i * 0.22 * open;
-        c.strokeStyle = i === 0 ? '#e8c98a' : '#c97a20';
-        c.lineWidth = i === 0 ? 3 : 2;
-        c.beginPath(); c.moveTo(4, 0); c.lineTo(4 + Math.cos(a) * 38, Math.sin(a) * 38); c.stroke();
-      }
-      c.fillStyle = 'rgba(255,215,94,.25)';
-      c.beginPath(); c.moveTo(4, 0);
-      c.arc(4, 0, 36, -0.7 * open, 0.7 * open);
-      c.closePath(); c.fill();
+      c.rotate(-0.95);
+      c.strokeStyle = '#2a2038';
+      c.lineWidth = 5;
+      c.beginPath(); c.moveTo(0, 10); c.lineTo(0, -44); c.stroke();
+      c.strokeStyle = '#5a4078';
+      c.lineWidth = 2;
+      c.beginPath(); c.moveTo(-3, 6); c.lineTo(-3, -40); c.stroke();
+      c.fillStyle = '#a060e0';
+      c.beginPath();
+      c.moveTo(1, -42);
+      c.quadraticCurveTo(42, -52, 48, -14);
+      c.quadraticCurveTo(34, -38, 4, -36);
+      c.closePath();
+      c.fill();
+      c.strokeStyle = '#e8d0ff';
+      c.lineWidth = 2;
+      c.beginPath();
+      c.moveTo(4, -40);
+      c.quadraticCurveTo(36, -48, 44, -18);
+      c.stroke();
+      c.fillStyle = '#6a40a0';
+      c.beginPath(); c.arc(0, -42, 3.5, 0, TAU); c.fill();
       c.restore();
       break;
     }
-    case 'tonfa':
-      c.strokeStyle = '#5a4030'; c.lineWidth = 6; c.beginPath(); c.moveTo(0, 0); c.lineTo(42, 0); c.stroke();
-      c.lineWidth = 5; c.beginPath(); c.moveTo(12, 0); c.lineTo(12, 14); c.stroke();
+    case 'hamer':
+      // Moker: korte steel + dikke kop
+      c.strokeStyle = '#6a4828'; c.lineWidth = 5; c.beginPath(); c.moveTo(2, 0); c.lineTo(34, 0); c.stroke();
+      c.fillStyle = '#5a6478';
+      c.fillRect(30, -16, 22, 32);
+      c.fillStyle = '#8f9aab';
+      c.fillRect(30, -16, 22, 8);
+      c.fillStyle = '#3a4458';
+      c.fillRect(34, -10, 14, 20);
       break;
-    case 'kama':
-      c.strokeStyle = '#6a5030'; c.lineWidth = 4; c.beginPath(); c.moveTo(0, 0); c.lineTo(34, 0); c.stroke();
-      c.strokeStyle = '#c9d6e8'; c.lineWidth = 3.5;
-      c.beginPath(); c.arc(34, -2, 14, -0.2, 2.4); c.stroke();
+    case 'ketting':
+      // Kettingzwaard: schakels + bladpunt
+      c.strokeStyle = '#8899aa'; c.lineWidth = 3;
+      for (let i = 0; i < 6; i++) {
+        c.beginPath();
+        c.arc(6 + i * 9, Math.sin(i * 0.9 + spin * 8) * 3, 4.2, 0, TAU);
+        c.stroke();
+      }
+      c.fillStyle = '#c9d6e8';
+      c.beginPath(); c.moveTo(56, -7); c.lineTo(72, 0); c.lineTo(56, 7); c.closePath(); c.fill();
       break;
-    case 'zeis':
-      c.strokeStyle = '#3a3048'; c.lineWidth = 4; c.beginPath(); c.moveTo(-8, 0); c.lineTo(48, 0); c.stroke();
-      c.strokeStyle = '#b06ae0'; c.lineWidth = 4;
-      c.beginPath(); c.arc(48, -6, 18, -0.4, 2.6); c.stroke();
-      c.strokeStyle = '#e0c0ff'; c.lineWidth = 1.5;
-      c.beginPath(); c.arc(48, -6, 14, -0.2, 2.4); c.stroke();
-      break;
-    case 'drietand':
-      c.strokeStyle = '#7a8494'; c.lineWidth = 4; c.beginPath(); c.moveTo(-6, 0); c.lineTo(50, 0); c.stroke();
-      c.strokeStyle = '#c9d6e8'; c.lineWidth = 3;
-      c.beginPath(); c.moveTo(50, 0); c.lineTo(66, 0); c.stroke();
-      c.beginPath(); c.moveTo(50, 0); c.lineTo(62, -10); c.stroke();
-      c.beginPath(); c.moveTo(50, 0); c.lineTo(62, 10); c.stroke();
-      break;
-    case 'bostaf':
-      c.strokeStyle = '#8a6030'; c.lineWidth = 5; c.beginPath(); c.moveTo(-20, 0); c.lineTo(58, 0); c.stroke();
-      c.strokeStyle = '#c9a66b'; c.lineWidth = 2;
-      c.beginPath(); c.moveTo(-16, -4); c.lineTo(-16, 4); c.stroke();
-      c.beginPath(); c.moveTo(54, -4); c.lineTo(54, 4); c.stroke();
+    case 'laser':
+      // Chakra-kling: gloeiende blade + greep
+      c.save();
+      c.shadowColor = '#4ff3ff'; c.shadowBlur = 12;
+      c.strokeStyle = '#4ff3ff'; c.lineWidth = 7; c.beginPath(); c.moveTo(8, 0); c.lineTo(52, 0); c.stroke();
+      c.strokeStyle = '#fff'; c.lineWidth = 2.6; c.beginPath(); c.moveTo(10, 0); c.lineTo(50, 0); c.stroke();
+      c.restore();
+      c.fillStyle = '#39404f';
+      c.fillRect(-6, -6, 14, 12);
+      c.strokeStyle = '#7cf5ff'; c.lineWidth = 2; c.strokeRect(-6, -6, 14, 12);
       break;
     case 'fuuma': {
       const rot = spin * 14;
@@ -13875,6 +13944,16 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.restore();
       c.strokeStyle = '#5a6784'; c.lineWidth = 5; c.beginPath(); c.moveTo(-2, 0); c.lineTo(8, 0); c.stroke();
       break;
+    case 'donder':
+      // Bliksem-bijl: steel + bliksemvormige bijlkop
+      c.strokeStyle = '#6a4828'; c.lineWidth = 6; c.beginPath(); c.moveTo(2, 0); c.lineTo(30, 0); c.stroke();
+      c.fillStyle = '#ffd75e';
+      c.beginPath();
+      c.moveTo(28, -16); c.lineTo(54, -5); c.lineTo(38, 0); c.lineTo(56, 6); c.lineTo(28, 16);
+      c.lineTo(34, 2); c.lineTo(24, 0); c.closePath();
+      c.fill();
+      c.strokeStyle = '#fff0a0'; c.lineWidth = 1.5; c.stroke();
+      break;
     case 'vlamzweep': {
       c.strokeStyle = '#5a3020'; c.lineWidth = 3; c.beginPath(); c.moveTo(0, 0); c.lineTo(14, 0); c.stroke();
       c.save(); c.shadowColor = '#ff8c42'; c.shadowBlur = 10;
@@ -13895,20 +13974,46 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.restore();
       break;
     }
+    case 'void':
+      // Voidklaauw: klauw-vorm, geen schacht
+      c.save(); c.shadowColor = '#ff6b9d'; c.shadowBlur = 14;
+      c.fillStyle = 'rgba(90,16,64,.85)';
+      c.beginPath();
+      c.moveTo(4, 0); c.lineTo(22, -16); c.lineTo(36, -6); c.lineTo(48, -14);
+      c.lineTo(40, 0); c.lineTo(48, 14); c.lineTo(36, 6); c.lineTo(22, 16);
+      c.closePath(); c.fill();
+      c.strokeStyle = '#ff6b9d'; c.lineWidth = 2.5; c.stroke();
+      c.restore();
+      break;
     case 'sterkling':
+      // Sterkling: ster-gevest + gloedkling
       c.save(); c.shadowColor = '#ffd75e'; c.shadowBlur = 12;
-      c.strokeStyle = '#ffd75e'; c.lineWidth = 5; c.beginPath(); c.moveTo(4, 0); c.lineTo(50, 0); c.stroke();
-      c.strokeStyle = '#fff8d0'; c.lineWidth = 2; c.beginPath(); c.moveTo(8, -1); c.lineTo(46, -1); c.stroke();
+      c.strokeStyle = '#ffd75e'; c.lineWidth = 6; c.beginPath(); c.moveTo(10, 0); c.lineTo(50, 0); c.stroke();
+      c.strokeStyle = '#fff8d0'; c.lineWidth = 2; c.beginPath(); c.moveTo(14, -1.2); c.lineTo(46, -1.2); c.stroke();
       c.restore();
       c.fillStyle = '#c97a20';
       c.beginPath();
       for (let i = 0; i < 5; i++) {
         const a = -Math.PI / 2 + i * TAU / 5;
-        const r = i % 2 === 0 ? 7 : 3;
-        const x = 10 + Math.cos(a) * r, y = Math.sin(a) * r;
+        const r = i % 2 === 0 ? 8 : 3.5;
+        const x = 8 + Math.cos(a) * r, y = Math.sin(a) * r;
         if (i === 0) c.moveTo(x, y); else c.lineTo(x, y);
       }
       c.closePath(); c.fill();
+      c.strokeStyle = '#8a6030'; c.lineWidth = 4;
+      c.beginPath(); c.moveTo(-4, -7); c.lineTo(-4, 7); c.stroke();
+      break;
+    case 'guvve':
+      // Guvve-stok: steel + eend-kop
+      c.strokeStyle = '#43b25b'; c.lineWidth = 6; c.beginPath(); c.moveTo(0, 0); c.lineTo(32, 0); c.stroke();
+      c.fillStyle = '#ffe259'; c.beginPath(); c.ellipse(46, 0, 16, 12, 0, 0, TAU); c.fill();
+      c.fillStyle = '#222'; c.beginPath(); c.arc(50, -3, 2.5, 0, TAU); c.fill();
+      c.strokeStyle = '#ff8c42'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(58, 2); c.lineTo(70, 6); c.stroke();
+      break;
+    default:
+      // Fallback: korte stok (nooit speer-punt)
+      c.strokeStyle = '#7a5c34'; c.lineWidth = 5;
+      c.beginPath(); c.moveTo(0, 0); c.lineTo(28, 0); c.stroke();
       break;
   }
   if (mi) c.restore();
@@ -19577,9 +19682,9 @@ class Game {
       this.player.face = 1;
       this.player.vx = Math.max(this.player.vx, this.player.speed * 0.35);
     }
-    if (!save.tipsSeen) save.tipsSeen = {};
+    ensureTipsSeen();
     if (!save.tipsSeen.partGate) {
-      save.tipsSeen.partGate = true;
+      save.tipsSeen.partGate = 1;
       persist();
       this.modeHintLine = IS_TOUCH ? t('hud.partGateTouch') : t('hud.partGateKb');
       this.hint = 5.5;
