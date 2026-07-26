@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.113';
+const APP_VERSION = '1.18.114';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 323;
+const SW_CACHE_REV = 324;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   zoneWeapons: {},
@@ -344,14 +344,22 @@ function advDiffUnlockHint(id) {
 }
 function advDiffBlurb(id) {
   const d = normalizeAdvDiffId(id);
+  let base = '';
   if (typeof t === 'function') {
-    if (d === 'nightmare') return t('ui.diffBlurbNightmare');
-    if (d === 'hell') return t('ui.diffBlurbHell');
-    return t('ui.diffBlurbNormal');
+    if (d === 'nightmare') base = t('ui.diffBlurbNightmare');
+    else if (d === 'hell') base = t('ui.diffBlurbHell');
+    else base = t('ui.diffBlurbNormal');
+  } else if (d === 'nightmare') {
+    base = 'Fire arena · earlier enrage · wilder rarities';
+  } else if (d === 'hell') {
+    base = 'Lava · screaming pain · mythic hordes';
+  } else {
+    base = 'Standard adventure';
   }
-  if (d === 'nightmare') return 'Fire arena · earlier enrage · wilder rarities';
-  if (d === 'hell') return 'Lava · screaming pain · mythic hordes';
-  return 'Standard adventure';
+  if (save && save.advCleared && save.advCleared[d] && typeof t === 'function') {
+    base += ' · ' + t('ui.diffBlurbSatanAfterClear');
+  }
+  return base;
 }
 function advPetCoinMul(diff) {
   return advDiffMeta(diff || currentAdvDiff()).petCoinMul || 1;
@@ -9079,7 +9087,7 @@ const SPECIES = {
   krakenling: { name: 'Krakenling', art: 'octo', size: 28, hp: 155, dmg: 17, speed: 42, type: 'swim', xp: 48, rarity: 'legendary', c1: '#2a1840', c2: '#6ee06e' },
   voidocto: { name: 'Voidocto', art: 'octo', size: 24, hp: 98, dmg: 15, speed: 50, type: 'swim', xp: 42, rarity: 'mythic', c1: '#5a1040', c2: '#ff6b9d' },
   /* Satan — stall-baas na 10× falen; nooit in normale golven */
-  satan: { name: 'Satan', art: 'satan', size: 42, hp: 220, dmg: 18, speed: 78, type: 'charge', xp: 160, rarity: 'mythic', c1: '#ff3040', c2: '#2a0810' },
+  satan: { name: 'Satan', art: 'satan', size: 96, hp: 220, dmg: 18, speed: 78, type: 'charge', xp: 160, rarity: 'mythic', c1: '#ff3040', c2: '#2a0810' },
   /* --- Boerderij op hol: reuzen-boerderijdieren --- */
   holkoe: { name: 'Holkoe', art: 'cow', size: 34, hp: 57, dmg: 8, speed: 38, type: 'tank', xp: 10, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
   razendeholkoe: { name: 'Razende Holkoe', art: 'cow', size: 35, hp: 90, dmg: 11, speed: 41, type: 'tank', xp: 18, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
@@ -10040,6 +10048,89 @@ const SATAN_SPECIES_ID = 'satan';
 /** Reflect + HP-tuning: ~85% van de duels wint Satan (speler sterft eerder). */
 const SATAN_HP_VS_PLAYER = 1.35;
 const SATAN_DIRECT_DMG_MUL = 0.55;
+/** Dikke SVG-portrait (UI + canvas). */
+const SATAN_SVG_URL = 'assets/ui/satan.svg';
+const SATAN_MARK_URL = 'assets/ui/satan-mark.svg';
+/** Art-hoogte ≈ 2.35 × size → size ≈ 0.21 × min(W,H) ≈ half scherm. */
+const SATAN_SCREEN_FRAC = 0.21;
+const SATAN_SIZE_MIN = 88;
+const SATAN_SIZE_MAX = 200;
+
+let _satanSvgImg = null;
+let _satanSvgReady = false;
+let _satanSvgFailed = false;
+
+function ensureSatanSvg() {
+  if (_satanSvgFailed) return null;
+  if (_satanSvgImg) return _satanSvgImg;
+  if (typeof Image === 'undefined') return null;
+  try {
+    _satanSvgImg = new Image();
+    _satanSvgImg.decoding = 'async';
+    _satanSvgImg.onload = () => { _satanSvgReady = true; };
+    _satanSvgImg.onerror = () => { _satanSvgReady = false; _satanSvgFailed = true; };
+    _satanSvgImg.src = SATAN_SVG_URL;
+  } catch (_) {
+    _satanSvgFailed = true;
+    return null;
+  }
+  return _satanSvgImg;
+}
+
+function satanSvgReady() {
+  ensureSatanSvg();
+  return !!(
+    _satanSvgReady &&
+    _satanSvgImg &&
+    _satanSvgImg.complete &&
+    _satanSvgImg.naturalWidth > 0
+  );
+}
+
+/** Combat-radius zodat Satan ~halve schermhoogte vult. */
+function satanCombatSize() {
+  const ww = typeof W === 'number' && W > 0 ? W : 800;
+  const hh = typeof H === 'number' && H > 0 ? H : 600;
+  const m = Math.min(ww, hh);
+  const raw = Math.round(m * SATAN_SCREEN_FRAC);
+  if (typeof clamp === 'function') return clamp(raw, SATAN_SIZE_MIN, SATAN_SIZE_MAX);
+  return Math.max(SATAN_SIZE_MIN, Math.min(SATAN_SIZE_MAX, raw));
+}
+
+/**
+ * Teken dikke SVG-Satan op canvas (centered). Fallback: false → caller tekent vector.
+ * Art-hoogte ≈ 2.35 × r (hoorns tot cape).
+ */
+function drawSatanSvgArt(c, r, t, flash, telegraph) {
+  if (!c || !(r > 0)) return false;
+  ensureSatanSvg();
+  if (!satanSvgReady()) return false;
+  const h = r * 2.35;
+  const w = h * (160 / 200);
+  const bob = Math.sin((t || 0) * 2.2) * r * 0.02;
+  c.save();
+  try {
+    if (flash) c.globalAlpha = 0.92;
+    else if (telegraph) c.globalAlpha = 0.88 + Math.sin((t || 0) * 14) * 0.08;
+    c.drawImage(_satanSvgImg, -w * 0.5, -h * 0.52 + bob, w, h);
+  } catch (_) {
+    c.restore();
+    return false;
+  }
+  c.restore();
+  return true;
+}
+
+function satanPortraitHtml(opts) {
+  opts = opts || {};
+  const compact = !!opts.compact;
+  const cls = compact ? 'adv-satan-mark' : 'adv-satan-portrait';
+  const src = compact ? SATAN_MARK_URL : SATAN_SVG_URL;
+  const wh = compact
+    ? 'width="18" height="18"'
+    : 'width="72" height="90"';
+  return `<img class="${cls}" src="${src}" alt="" ${wh} decoding="async" draggable="false">`;
+}
 
 function satanDiffId(diff) {
   return typeof normalizeAdvDiffId === 'function'
@@ -10213,6 +10304,7 @@ function satanSpawnOpts(game) {
   const targetHp = p && p.maxhp > 0
     ? Math.round(p.maxhp * SATAN_HP_VS_PLAYER)
     : Math.round(baseHp * 1.4);
+  ensureSatanSvg();
   return {
     elite: true,
     satanBoss: true,
@@ -10220,14 +10312,18 @@ function satanSpawnOpts(game) {
     targetHp,
     dmgMul: SATAN_DIRECT_DMG_MUL,
     hpMul: 1,
+    sizeOverride: satanCombatSize(),
   };
 }
 
 function satanSpawnX(game) {
   const px = game.player ? game.player.x : W * 0.5;
   const maxX = game.maxX || (typeof W === 'number' ? W - 80 : 600);
+  const gap = typeof satanCombatSize === 'function'
+    ? Math.max(180, satanCombatSize() * 1.6)
+    : 200;
   const side = px > maxX * 0.55 ? -1 : 1;
-  return clamp(px + side * rand(160, 240), 80, maxX);
+  return clamp(px + side * rand(gap * 0.85, gap * 1.15), 80, maxX);
 }
 
 function triggerSatanIntro(game, monster) {
@@ -10688,6 +10784,7 @@ function seedNlGameStrings() {
     heatRising: 'Hitte {n}/{max} — bij 9 gevaar, bij 10 Satan',
     heatDanger: 'GEVAAR! Hitte rood — nog 1 verlies en Satan komt',
     heatSatanNext: 'Satan staat klaar bij de volgende start van dit level',
+    satanAfterClear: 'Adventure gehaald — hitte blijft: 10× falen op één level → Satan (~half scherm, reflect) → Tide-pet',
     trainComboRecord: 'Combo-trainer: ×{n}{rec}',
     trainComboNewRec: ' — nieuw record!',
     trainStyleUnlock: 'Nieuwe stijl vrij: Chakra gloed — Instellingen → Stijl!',
@@ -10762,6 +10859,7 @@ function seedNlGameStrings() {
     bossWaits: 'DE BAAS WACHT…',
     bossTag: 'BAAS',
     superBossTag: 'SUPER BAAS',
+    satanTag: 'SATAN',
     colossalTag: 'COLOSSAAL',
     checkpoint: 'CHECKPOINT — DEEL {part}/3',
     allyHeal: '+{heal} bondgenoot',
@@ -11254,6 +11352,13 @@ function seedNlGameStrings() {
     heatTipSatan: 'Lv {lv}: {n}/10 — Satan staat klaar bij de volgende start.',
     heatChipSatan: 'Satan klaar · volgende start',
     heatChipDanger: 'Gevaar! · 9× verloren',
+    satanCardTitle: 'Satan',
+    satanCardIdle: 'Blijf hangen op één level? Hitte loopt op — bij 10× komt deze baas (~half scherm, 85% reflect).',
+    satanCardHeat: 'Hitte {n}/{max}. Verlies stapelen lokt Satan — dikke SVG-duivel met reflect.',
+    satanCardDanger: 'GEVAAR! Nog 1× verlies en Satan verschijnt — ~half scherm, heel boosaardig.',
+    satanCardReady: 'Satan staat klaar bij de volgende start van dit level.',
+    satanCardAfterClear: 'Adventure gehaald? Hitte werkt nog steeds: 10× falen op één level → Satan-duel → Tide-pet.',
+    diffBlurbSatanAfterClear: 'Hitte/Satan blijft actief bij vastzitten',
     helpSatanHeat: 'Hitte-meter: verliezen op één level stapelen. 5× = Meester-buff (+20%). 9× = rood gevaar!. 10× = Satan (85% reflect); win Satan → Tide Battle pet.',
     errPickIsland: 'Eiland kiezen mislukt',
     errStart: 'Start mislukt',
@@ -11540,6 +11645,7 @@ const CATALOG_EN = {
     heatRising: 'Heat {n}/{max} — danger at 9, Satan at 10',
     heatDanger: 'DANGER! Heat red — one more loss and Satan appears',
     heatSatanNext: 'Satan is ready on the next start of this level',
+    satanAfterClear: 'Adventure cleared — heat still applies: 10× fails on one level → Satan (~half screen, reflect) → Tide pet',
     trainComboRecord: 'Combo trainer: ×{n}{rec}',
     trainComboNewRec: ' — new record!',
     trainStyleUnlock: 'New style unlocked: Chakra glow — Settings → Style!',
@@ -12026,6 +12132,13 @@ const CATALOG_EN = {
     heatTipSatan: 'Lv {lv}: {n}/10 — Satan is ready on the next start.',
     heatChipSatan: 'Satan ready · next start',
     heatChipDanger: 'Danger! · lost 9×',
+    satanCardTitle: 'Satan',
+    satanCardIdle: 'Stuck on one level? Heat builds — at 10× this boss appears (~half screen, 85% reflect).',
+    satanCardHeat: 'Heat {n}/{max}. Stacked losses summon Satan — thick SVG devil with reflect.',
+    satanCardDanger: 'DANGER! One more loss and Satan appears — ~half screen, pure villain.',
+    satanCardReady: 'Satan is ready on the next start of this level.',
+    satanCardAfterClear: 'Adventure cleared? Heat still applies: 10× fails on one level → Satan duel → Tide pet.',
+    diffBlurbSatanAfterClear: 'Heat/Satan still active when you stall',
     helpSatanHeat: 'Heat meter: losses stack on one level. 5× = Master buff (+20%). 9× = red danger!. 10× = Satan (85% reflect); beat Satan → Tide Battle pet.',
     errPickIsland: 'Could not pick island',
     errStart: 'Start failed',
@@ -12175,6 +12288,7 @@ const CATALOG_EN = {
     bossWaits: 'THE BOSS AWAITS…',
     bossTag: 'BOSS',
     superBossTag: 'SUPER BOSS',
+    satanTag: 'SATAN',
     colossalTag: 'COLOSSAL',
     checkpoint: 'CHECKPOINT — PART {part}/3',
     allyHeal: '+{heal} ally', allyHit: '{name} −{dmg}',
@@ -18476,7 +18590,11 @@ class Monster {
         this.hp = this.maxhp;
       }
       this.dmg = Math.round(sp.dmg * (opts.dmgMul || SATAN_DIRECT_DMG_MUL));
-      this.size = sp.size * 1.45;
+      // ~half-screen villain (SVG art spans ≈2.35× size)
+      const override = Number(opts.sizeOverride) > 0
+        ? Math.round(opts.sizeOverride)
+        : (typeof satanCombatSize === 'function' ? satanCombatSize() : Math.round(sp.size * 2.2));
+      this.size = override;
     } else if (this.bossCore) {
       if (this.superBoss) {
         // Super-baas is al zwaar gebufft — lichte extra + kans op colossaal.
@@ -18804,14 +18922,16 @@ class Monster {
         c.ellipse(0, 0, this.size * 1.9 * pulse, this.size * 1.5 * pulse, 0, 0, TAU);
         c.fill();
       }
-      if (bigIntro && p > 0.12) {
+      if ((bigIntro || this.satanBoss) && p > 0.12) {
         const label = (this.sp && this.sp.name) || 'BAAS';
-        const tag = this.colossal
+        const tag = this.satanBoss
+          ? (typeof t === 'function' ? t('combat.satanTag') : 'SATAN')
+          : (this.colossal
           ? (typeof t === 'function' ? t('combat.colossalTag') : 'COLOSSAAL')
           : (this.superBoss
             ? (typeof t === 'function' ? t('combat.superBossTag') : 'SUPER BAAS')
-            : (typeof t === 'function' ? t('combat.bossTag') : 'BAAS'));
-        const fs = Math.max(18, Math.min(this.colossal ? 42 : 34, this.size * 0.55));
+            : (typeof t === 'function' ? t('combat.bossTag') : 'BAAS')));
+        const fs = Math.max(18, Math.min(this.satanBoss ? 40 : (this.colossal ? 42 : 34), this.size * (this.satanBoss ? 0.28 : 0.55)));
         c.globalAlpha = Math.min(1, 0.35 + p * 0.75);
         c.font = `900 ${fs}px -apple-system, sans-serif`;
         c.textAlign = 'center';
@@ -18819,7 +18939,7 @@ class Monster {
         const ty = -this.size * (this.flying ? 1.15 : 1.35) - fs * 0.35;
         c.lineWidth = Math.max(4, fs * 0.18);
         c.strokeStyle = 'rgba(0,0,0,.72)';
-        c.fillStyle = this.colossal || this.superBoss ? '#ffd75e' : '#ff8a9a';
+        c.fillStyle = this.satanBoss ? '#ff3040' : (this.colossal || this.superBoss ? '#ffd75e' : '#ff8a9a');
         c.strokeText(tag, 0, ty - fs * 0.85);
         c.fillText(tag, 0, ty - fs * 0.85);
         c.font = `900 ${Math.round(fs * 1.15)}px -apple-system, sans-serif`;
@@ -18861,6 +18981,18 @@ class Monster {
         c.globalAlpha = 0.12 + Math.sin(this.t * 3.5) * 0.06;
         c.fillStyle = '#4a9fff';
         c.beginPath(); c.ellipse(0, this.size * 0.1, this.size * 1.75, this.size * 0.35, 0, 0, TAU); c.fill();
+      }
+      c.restore();
+    }
+    if (this.satanBoss && this.alive) {
+      c.save();
+      c.globalAlpha = motionReduced() ? 0.32 : (0.3 + Math.sin(this.t * 4.5) * 0.12);
+      c.strokeStyle = '#ff3040'; c.lineWidth = 4.2;
+      c.beginPath(); c.ellipse(0, 0, this.size * 1.58, this.size * 1.35, 0, 0, TAU); c.stroke();
+      if (!motionReduced() && !fxLite()) {
+        c.globalAlpha = 0.1 + Math.sin(this.t * 3.2) * 0.05;
+        c.fillStyle = '#8a1020';
+        c.beginPath(); c.ellipse(0, this.size * 0.15, this.size * 1.7, this.size * 0.4, 0, 0, TAU); c.fill();
       }
       c.restore();
     }
@@ -19187,7 +19319,10 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
       }
       break;
     case 'satan': {
-      // Hoorns + cape — leesbaar arcade-duivel zonder emoji
+      // Dikke SVG (~half scherm) + canvas-fallback zonder loose ends
+      if (typeof drawSatanSvgArt === 'function' && drawSatanSvgArt(c, r, t, flash, telegraph)) {
+        break;
+      }
       c.fillStyle = dark;
       c.beginPath();
       c.moveTo(-r * 1.1, r * 0.55);
@@ -19207,7 +19342,7 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
         c.closePath();
         c.fill();
       }
-      c.strokeStyle = telegraph ? '#ffd75e' : '#ffd75e';
+      c.strokeStyle = '#ffd75e';
       c.lineWidth = Math.max(2, r * 0.08);
       c.beginPath();
       c.moveTo(r * 0.55, r * 0.15);
@@ -24091,9 +24226,11 @@ class Game {
       })(),
       xp: this.sessionXP,
       mode: 'adventure', level: this.level.n, win, stars, prevStars, difficulty: diff,
-      tip: win ? (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
+      tip: win ? (lv === MAX_LEVEL
+        ? t('result.satanAfterClear')
+        : (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
         ? t('result.starImproved', { stars, prev: prevStars })
-        : t('result.pickupsHelp', { hint: starHintLine() }))) : (() => {
+        : t('result.pickupsHelp', { hint: starHintLine() })))) : (() => {
         const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : 'start';
         const failsNow = advFailCount(lv, diff);
         let heatTip = '';
@@ -29642,6 +29779,7 @@ function levelTileTip(n, pick, infoLv, boss, best, fails) {
 function renderAdvHeatMeter(heat, opts) {
   opts = opts || {};
   if (!heat || typeof satanHeatLabel !== 'function') return '';
+  try { if (typeof ensureSatanSvg === 'function') ensureSatanSvg(); } catch (_) {}
   const compact = !!opts.compact;
   const label = satanHeatLabel(heat);
   const tip = typeof satanHeatTip === 'function' ? satanHeatTip(heat) : '';
@@ -29655,17 +29793,54 @@ function renderAdvHeatMeter(heat, opts) {
     heat.satanReady ? 'satan-ready' : '',
   ].filter(Boolean).join(' ');
   const count = `${heat.fails}/${SATAN_FAIL_THRESHOLD}`;
+  const mark = typeof satanPortraitHtml === 'function'
+    ? satanPortraitHtml({ compact: true })
+    : '';
   if (compact) {
     return `<span class="${cls}" title="${tip || label}">` +
+      mark +
       `<i class="lvl-heat-fill" style="width:${heat.pct}%"></i>` +
       `<span class="lvl-heat-n">${count}</span>${bang}</span>`;
   }
+  const showPortrait = !!(heat.danger || heat.satanReady || heat.fails > 0);
+  const portrait = (showPortrait && typeof satanPortraitHtml === 'function')
+    ? `<div class="adv-heat-face">${satanPortraitHtml()}</div>`
+    : (typeof satanPortraitHtml === 'function'
+      ? `<div class="adv-heat-face idle">${satanPortraitHtml({ compact: true })}</div>`
+      : '');
   return `<div class="${cls}" title="${tip}" role="meter" aria-valuemin="0" aria-valuemax="${SATAN_FAIL_THRESHOLD}" aria-valuenow="${heat.fails}" aria-label="${label}">` +
+    `<div class="adv-heat-row">` +
+    portrait +
+    `<div class="adv-heat-body">` +
     `<div class="adv-heat-head"><span class="adv-heat-title">${t('ui.heatTitle')}</span>` +
     `<span class="adv-heat-label">${label}${bang}</span>` +
     `<span class="adv-heat-count">${count}</span></div>` +
     `<div class="adv-heat-track"><i class="adv-heat-fill" style="width:${heat.pct}%"></i></div>` +
-    `<div class="adv-heat-sub">${tip}</div></div>`;
+    `<div class="adv-heat-sub">${tip}</div>` +
+    `</div></div></div>`;
+}
+
+function renderAdvSatanCard(heat, diff) {
+  try { if (typeof ensureSatanSvg === 'function') ensureSatanSvg(); } catch (_) {}
+  const d = typeof satanDiffId === 'function' ? satanDiffId(diff) : (diff || 'normal');
+  const cleared = !!(save && save.advCleared && save.advCleared[d]);
+  const pending = !!(heat && heat.satanReady);
+  const danger = !!(heat && heat.danger);
+  let copy;
+  if (pending) copy = t('ui.satanCardReady');
+  else if (danger) copy = t('ui.satanCardDanger');
+  else if (cleared) copy = t('ui.satanCardAfterClear');
+  else if (heat && heat.fails > 0) copy = t('ui.satanCardHeat', { n: heat.fails, max: SATAN_FAIL_THRESHOLD });
+  else copy = t('ui.satanCardIdle');
+  const face = typeof satanPortraitHtml === 'function' ? satanPortraitHtml() : '';
+  const cls = 'adv-satan-card' +
+    (pending ? ' ready' : '') +
+    (danger && !pending ? ' danger' : '') +
+    (cleared && !pending && !danger ? ' after-clear' : '');
+  return `<div class="${cls}" role="note">` +
+    `<div class="adv-satan-card-face">${face}</div>` +
+    `<div class="adv-satan-card-copy"><b>${t('ui.satanCardTitle')}</b><span>${copy}</span></div>` +
+    `</div>`;
 }
 
 const UI = {
@@ -31002,6 +31177,7 @@ const UI = {
         `<div class="island-prog-track island-info-prog" title="${t('island.levelsProg')}"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
         `<div class="island-prog-track island-info-stars" title="${t('island.starsProg')}"><i style="width:${Math.round(prog.stars / Math.max(1, prog.maxStars) * 100)}%"></i></div>` +
         (meterHeat ? renderAdvHeatMeter(meterHeat) : '') +
+        (typeof renderAdvSatanCard === 'function' ? renderAdvSatanCard(meterHeat, activeDiff) : '') +
         (() => {
           const onboard = adventureIslandHintLine();
           const mbLine = masterLv && masterLv >= range.start && masterLv <= range.end

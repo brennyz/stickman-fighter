@@ -919,9 +919,11 @@ class Game {
       })(),
       xp: this.sessionXP,
       mode: 'adventure', level: this.level.n, win, stars, prevStars, difficulty: diff,
-      tip: win ? (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
+      tip: win ? (lv === MAX_LEVEL
+        ? t('result.satanAfterClear')
+        : (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
         ? t('result.starImproved', { stars, prev: prevStars })
-        : t('result.pickupsHelp', { hint: starHintLine() }))) : (() => {
+        : t('result.pickupsHelp', { hint: starHintLine() })))) : (() => {
         const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : 'start';
         const failsNow = advFailCount(lv, diff);
         let heatTip = '';

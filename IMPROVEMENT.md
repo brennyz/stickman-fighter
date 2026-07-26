@@ -113,6 +113,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | **user** | Satan dikke SVG + ~half-scherm combat, adventure portrait-card + na-clear hint. v1.18.114 / SW v324. |
 | 2026-07-26 | **merge** | Satan stall + hitte-meter gemerged op main (Nightmare/Hell fails per-diff). v1.18.113 / SW v323.
 | 2026-07-26 | **user** | Satan harden: adventure hitte-meter, gevaar-rood + ! bij 9×, copy/help/result tips. v1.18.102 / SW v312. |
 | 2026-07-26 | **user** | Satan stall-baas: na 10× falen op zelfde level → Satan met 85% reflect; win → Tide Battle pet-duel. v1.18.101 / SW v311. |

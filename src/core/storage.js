@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.113';
+const APP_VERSION = '1.18.114';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 323;
+const SW_CACHE_REV = 324;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   zoneWeapons: {},
@@ -97,14 +97,22 @@ function advDiffUnlockHint(id) {
 }
 function advDiffBlurb(id) {
   const d = normalizeAdvDiffId(id);
+  let base = '';
   if (typeof t === 'function') {
-    if (d === 'nightmare') return t('ui.diffBlurbNightmare');
-    if (d === 'hell') return t('ui.diffBlurbHell');
-    return t('ui.diffBlurbNormal');
+    if (d === 'nightmare') base = t('ui.diffBlurbNightmare');
+    else if (d === 'hell') base = t('ui.diffBlurbHell');
+    else base = t('ui.diffBlurbNormal');
+  } else if (d === 'nightmare') {
+    base = 'Fire arena · earlier enrage · wilder rarities';
+  } else if (d === 'hell') {
+    base = 'Lava · screaming pain · mythic hordes';
+  } else {
+    base = 'Standard adventure';
   }
-  if (d === 'nightmare') return 'Fire arena · earlier enrage · wilder rarities';
-  if (d === 'hell') return 'Lava · screaming pain · mythic hordes';
-  return 'Standard adventure';
+  if (save && save.advCleared && save.advCleared[d] && typeof t === 'function') {
+    base += ' · ' + t('ui.diffBlurbSatanAfterClear');
+  }
+  return base;
 }
 function advPetCoinMul(diff) {
   return advDiffMeta(diff || currentAdvDiff()).petCoinMul || 1;

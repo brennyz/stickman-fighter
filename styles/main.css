@@ -1135,6 +1135,13 @@
   .adv-heat { margin-top:10px; padding:8px 10px; border-radius:12px; background:rgba(0,0,0,.22);
       border:1px solid rgba(255,176,184,.28); }
   .adv-heat.danger, .adv-heat.satan-ready { border-color:rgba(255,48,64,.55); background:rgba(255,48,64,.1); }
+  .adv-heat-row { display:flex; align-items:flex-start; gap:10px; }
+  .adv-heat-face { flex:0 0 auto; width:56px; height:70px; display:flex; align-items:center; justify-content:center;
+      border-radius:10px; background:rgba(26,10,16,.55); border:1px solid rgba(255,48,64,.35); overflow:hidden; }
+  .adv-heat-face.idle { width:28px; height:28px; border-radius:8px; }
+  .adv-heat-face .adv-satan-portrait { width:56px; height:70px; object-fit:contain; display:block; }
+  .adv-heat-face .adv-satan-mark { width:18px; height:18px; display:block; }
+  .adv-heat-body { flex:1 1 auto; min-width:0; }
   .adv-heat-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:11px; font-weight:800; }
   .adv-heat-title { color:#ffb0b8; letter-spacing:.04em; text-transform:uppercase; }
   .adv-heat-label { color:#e8f0ff; }
@@ -1149,11 +1156,28 @@
   .adv-heat.satan-ready .adv-heat-fill { background:linear-gradient(90deg,#ff3040,#8a1020); }
   .adv-heat-sub { margin-top:5px; font-size:11px; line-height:1.35; color:#9db1e3; opacity:.95; }
   .adv-heat.danger .adv-heat-sub, .adv-heat.satan-ready .adv-heat-sub { color:#ffb0b8; }
+  .lvl-heat .adv-satan-mark { width:12px; height:12px; flex:0 0 auto; opacity:.95; }
+  .adv-satan-card { margin-top:10px; display:flex; gap:12px; align-items:center; padding:10px 12px;
+      border-radius:14px; background:linear-gradient(135deg,rgba(42,8,16,.72),rgba(18,10,20,.55));
+      border:1px solid rgba(255,48,64,.4); box-shadow:0 6px 0 rgba(0,0,0,.28); }
+  .adv-satan-card.danger { border-color:rgba(255,48,64,.7); }
+  .adv-satan-card.ready { border-color:#ff3040; box-shadow:0 6px 0 rgba(0,0,0,.28), 0 0 18px rgba(255,48,64,.28); }
+  .adv-satan-card.after-clear { border-color:rgba(255,215,94,.35); }
+  .adv-satan-card-face { flex:0 0 auto; width:72px; height:90px; display:flex; align-items:center; justify-content:center;
+      border-radius:12px; background:rgba(0,0,0,.28); overflow:hidden; }
+  .adv-satan-card-face .adv-satan-portrait { width:72px; height:90px; object-fit:contain; display:block; }
+  .adv-satan-card-copy { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:4px; }
+  .adv-satan-card-copy b { color:#ff3040; font-size:13px; letter-spacing:.04em; text-transform:uppercase; }
+  .adv-satan-card.ready .adv-satan-card-copy b,
+  .adv-satan-card.danger .adv-satan-card-copy b { color:#ff6b6b; }
+  .adv-satan-card.after-clear .adv-satan-card-copy b { color:#ffd75e; }
+  .adv-satan-card-copy span { color:#e8f0ff; font-size:12px; line-height:1.4; opacity:.95; }
   @media (prefers-reduced-motion: reduce) {
     .adv-heat-fill, .lvl-heat-fill { transition:none; }
   }
   body.high-contrast .adv-heat.danger, body.high-contrast .adv-heat.satan-ready {
     border-color:#ff6b6b; background:rgba(255,48,64,.18); }
+  body.high-contrast .adv-satan-card { border-color:#ff6b6b; }
   .island-info-chip.satan { background:rgba(255,48,64,.2); color:#ff6b6b; border-color:rgba(255,48,64,.5); }
   .island-info-chip.satan-danger { background:rgba(255,48,64,.16); color:#ff8a9a; border-color:rgba(255,106,107,.45); }
   .island-bar { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:min(92vw,640px); margin:8px 0 10px; }

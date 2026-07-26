@@ -13,18 +13,25 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.113",
-    "swCache": "stickfighter-app-v323",
-    "gameJsQuery": "game.js?v=323",
-    "cssQuery": "styles/main.css?v=323",
+    "appVersion": "1.18.114",
+    "swCache": "stickfighter-app-v324",
+    "gameJsQuery": "game.js?v=324",
+    "cssQuery": "styles/main.css?v=324",
     "featureBranch": "cursor/satan-stall-boss-7b0e",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": "1577ea5",
     "remoteMainHead": "1577ea5",
-    "note": "Merge Satan stall+hitte-meter op main · v1.18.113 · PR #206"
+    "note": "Satan SVG + half-screen + adventure card · v1.18.114 · PR #206"
   },
   "userWishlist": [
+    {
+      "id": "w-20260726T200200",
+      "from": "user",
+      "text": "Satan duidelijk bij adventure / na clear: ~half scherm, heel boosaardig, dikke SVG zonder loose ends.",
+      "status": "done-in-code",
+      "updated": "2026-07-26"
+    },
     {
       "id": "w-20260726T184800",
       "from": "user",
@@ -239,6 +246,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T20:05:54Z",
+      "summary": "Satan dikke SVG + half-scherm + adventure card · v1.18.114"
+    },
+    {
       "at": "2026-07-26T19:25:00Z",
       "summary": "Merge Satan stall+hitte-meter op main (per-diff fails) · v1.18.113"
     },
@@ -333,10 +344,6 @@
     {
       "at": "2026-07-26T18:51:13Z",
       "summary": "Dubbelcheck + merge main · Nachtmerrie/Hel zone-wapens · v1.18.103"
-    },
-    {
-      "at": "2026-07-26T18:51:00Z",
-      "summary": "Merge Rinnegan + grootste bazen op main · v1.18.103"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

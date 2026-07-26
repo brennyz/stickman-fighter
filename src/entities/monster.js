@@ -34,7 +34,11 @@ class Monster {
         this.hp = this.maxhp;
       }
       this.dmg = Math.round(sp.dmg * (opts.dmgMul || SATAN_DIRECT_DMG_MUL));
-      this.size = sp.size * 1.45;
+      // ~half-screen villain (SVG art spans ≈2.35× size)
+      const override = Number(opts.sizeOverride) > 0
+        ? Math.round(opts.sizeOverride)
+        : (typeof satanCombatSize === 'function' ? satanCombatSize() : Math.round(sp.size * 2.2));
+      this.size = override;
     } else if (this.bossCore) {
       if (this.superBoss) {
         // Super-baas is al zwaar gebufft — lichte extra + kans op colossaal.
@@ -362,14 +366,16 @@ class Monster {
         c.ellipse(0, 0, this.size * 1.9 * pulse, this.size * 1.5 * pulse, 0, 0, TAU);
         c.fill();
       }
-      if (bigIntro && p > 0.12) {
+      if ((bigIntro || this.satanBoss) && p > 0.12) {
         const label = (this.sp && this.sp.name) || 'BAAS';
-        const tag = this.colossal
+        const tag = this.satanBoss
+          ? (typeof t === 'function' ? t('combat.satanTag') : 'SATAN')
+          : (this.colossal
           ? (typeof t === 'function' ? t('combat.colossalTag') : 'COLOSSAAL')
           : (this.superBoss
             ? (typeof t === 'function' ? t('combat.superBossTag') : 'SUPER BAAS')
-            : (typeof t === 'function' ? t('combat.bossTag') : 'BAAS'));
-        const fs = Math.max(18, Math.min(this.colossal ? 42 : 34, this.size * 0.55));
+            : (typeof t === 'function' ? t('combat.bossTag') : 'BAAS')));
+        const fs = Math.max(18, Math.min(this.satanBoss ? 40 : (this.colossal ? 42 : 34), this.size * (this.satanBoss ? 0.28 : 0.55)));
         c.globalAlpha = Math.min(1, 0.35 + p * 0.75);
         c.font = `900 ${fs}px -apple-system, sans-serif`;
         c.textAlign = 'center';
@@ -377,7 +383,7 @@ class Monster {
         const ty = -this.size * (this.flying ? 1.15 : 1.35) - fs * 0.35;
         c.lineWidth = Math.max(4, fs * 0.18);
         c.strokeStyle = 'rgba(0,0,0,.72)';
-        c.fillStyle = this.colossal || this.superBoss ? '#ffd75e' : '#ff8a9a';
+        c.fillStyle = this.satanBoss ? '#ff3040' : (this.colossal || this.superBoss ? '#ffd75e' : '#ff8a9a');
         c.strokeText(tag, 0, ty - fs * 0.85);
         c.fillText(tag, 0, ty - fs * 0.85);
         c.font = `900 ${Math.round(fs * 1.15)}px -apple-system, sans-serif`;
@@ -419,6 +425,18 @@ class Monster {
         c.globalAlpha = 0.12 + Math.sin(this.t * 3.5) * 0.06;
         c.fillStyle = '#4a9fff';
         c.beginPath(); c.ellipse(0, this.size * 0.1, this.size * 1.75, this.size * 0.35, 0, 0, TAU); c.fill();
+      }
+      c.restore();
+    }
+    if (this.satanBoss && this.alive) {
+      c.save();
+      c.globalAlpha = motionReduced() ? 0.32 : (0.3 + Math.sin(this.t * 4.5) * 0.12);
+      c.strokeStyle = '#ff3040'; c.lineWidth = 4.2;
+      c.beginPath(); c.ellipse(0, 0, this.size * 1.58, this.size * 1.35, 0, 0, TAU); c.stroke();
+      if (!motionReduced() && !fxLite()) {
+        c.globalAlpha = 0.1 + Math.sin(this.t * 3.2) * 0.05;
+        c.fillStyle = '#8a1020';
+        c.beginPath(); c.ellipse(0, this.size * 0.15, this.size * 1.7, this.size * 0.4, 0, 0, TAU); c.fill();
       }
       c.restore();
     }
@@ -745,7 +763,10 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
       }
       break;
     case 'satan': {
-      // Hoorns + cape — leesbaar arcade-duivel zonder emoji
+      // Dikke SVG (~half scherm) + canvas-fallback zonder loose ends
+      if (typeof drawSatanSvgArt === 'function' && drawSatanSvgArt(c, r, t, flash, telegraph)) {
+        break;
+      }
       c.fillStyle = dark;
       c.beginPath();
       c.moveTo(-r * 1.1, r * 0.55);
@@ -765,7 +786,7 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
         c.closePath();
         c.fill();
       }
-      c.strokeStyle = telegraph ? '#ffd75e' : '#ffd75e';
+      c.strokeStyle = '#ffd75e';
       c.lineWidth = Math.max(2, r * 0.08);
       c.beginPath();
       c.moveTo(r * 0.55, r * 0.15);

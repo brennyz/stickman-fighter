@@ -1,5 +1,5 @@
 /* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 5 */
-const CACHE = 'stickfighter-app-v323';
+const CACHE = 'stickfighter-app-v324';
 
 
 
@@ -78,7 +78,9 @@ const ASSETS = [
   './assets/ui/saga-fighter.svg',
   './assets/ui/saga-ki.svg',
   './assets/ui/saga-scroll.svg',
-  './assets/ui/saga-tide.svg'
+  './assets/ui/saga-tide.svg',
+  './assets/ui/satan.svg',
+  './assets/ui/satan-mark.svg'
 ];
 
 function offlineFallbackHtml() {

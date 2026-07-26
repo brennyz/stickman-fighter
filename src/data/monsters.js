@@ -132,7 +132,7 @@ const SPECIES = {
   krakenling: { name: 'Krakenling', art: 'octo', size: 28, hp: 155, dmg: 17, speed: 42, type: 'swim', xp: 48, rarity: 'legendary', c1: '#2a1840', c2: '#6ee06e' },
   voidocto: { name: 'Voidocto', art: 'octo', size: 24, hp: 98, dmg: 15, speed: 50, type: 'swim', xp: 42, rarity: 'mythic', c1: '#5a1040', c2: '#ff6b9d' },
   /* Satan — stall-baas na 10× falen; nooit in normale golven */
-  satan: { name: 'Satan', art: 'satan', size: 42, hp: 220, dmg: 18, speed: 78, type: 'charge', xp: 160, rarity: 'mythic', c1: '#ff3040', c2: '#2a0810' },
+  satan: { name: 'Satan', art: 'satan', size: 96, hp: 220, dmg: 18, speed: 78, type: 'charge', xp: 160, rarity: 'mythic', c1: '#ff3040', c2: '#2a0810' },
   /* --- Boerderij op hol: reuzen-boerderijdieren --- */
   holkoe: { name: 'Holkoe', art: 'cow', size: 34, hp: 57, dmg: 8, speed: 38, type: 'tank', xp: 10, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
   razendeholkoe: { name: 'Razende Holkoe', art: 'cow', size: 35, hp: 90, dmg: 11, speed: 41, type: 'tank', xp: 18, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },

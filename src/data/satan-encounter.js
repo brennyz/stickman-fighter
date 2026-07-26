@@ -9,6 +9,89 @@ const SATAN_SPECIES_ID = 'satan';
 /** Reflect + HP-tuning: ~85% van de duels wint Satan (speler sterft eerder). */
 const SATAN_HP_VS_PLAYER = 1.35;
 const SATAN_DIRECT_DMG_MUL = 0.55;
+/** Dikke SVG-portrait (UI + canvas). */
+const SATAN_SVG_URL = 'assets/ui/satan.svg';
+const SATAN_MARK_URL = 'assets/ui/satan-mark.svg';
+/** Art-hoogte ≈ 2.35 × size → size ≈ 0.21 × min(W,H) ≈ half scherm. */
+const SATAN_SCREEN_FRAC = 0.21;
+const SATAN_SIZE_MIN = 88;
+const SATAN_SIZE_MAX = 200;
+
+let _satanSvgImg = null;
+let _satanSvgReady = false;
+let _satanSvgFailed = false;
+
+function ensureSatanSvg() {
+  if (_satanSvgFailed) return null;
+  if (_satanSvgImg) return _satanSvgImg;
+  if (typeof Image === 'undefined') return null;
+  try {
+    _satanSvgImg = new Image();
+    _satanSvgImg.decoding = 'async';
+    _satanSvgImg.onload = () => { _satanSvgReady = true; };
+    _satanSvgImg.onerror = () => { _satanSvgReady = false; _satanSvgFailed = true; };
+    _satanSvgImg.src = SATAN_SVG_URL;
+  } catch (_) {
+    _satanSvgFailed = true;
+    return null;
+  }
+  return _satanSvgImg;
+}
+
+function satanSvgReady() {
+  ensureSatanSvg();
+  return !!(
+    _satanSvgReady &&
+    _satanSvgImg &&
+    _satanSvgImg.complete &&
+    _satanSvgImg.naturalWidth > 0
+  );
+}
+
+/** Combat-radius zodat Satan ~halve schermhoogte vult. */
+function satanCombatSize() {
+  const ww = typeof W === 'number' && W > 0 ? W : 800;
+  const hh = typeof H === 'number' && H > 0 ? H : 600;
+  const m = Math.min(ww, hh);
+  const raw = Math.round(m * SATAN_SCREEN_FRAC);
+  if (typeof clamp === 'function') return clamp(raw, SATAN_SIZE_MIN, SATAN_SIZE_MAX);
+  return Math.max(SATAN_SIZE_MIN, Math.min(SATAN_SIZE_MAX, raw));
+}
+
+/**
+ * Teken dikke SVG-Satan op canvas (centered). Fallback: false → caller tekent vector.
+ * Art-hoogte ≈ 2.35 × r (hoorns tot cape).
+ */
+function drawSatanSvgArt(c, r, t, flash, telegraph) {
+  if (!c || !(r > 0)) return false;
+  ensureSatanSvg();
+  if (!satanSvgReady()) return false;
+  const h = r * 2.35;
+  const w = h * (160 / 200);
+  const bob = Math.sin((t || 0) * 2.2) * r * 0.02;
+  c.save();
+  try {
+    if (flash) c.globalAlpha = 0.92;
+    else if (telegraph) c.globalAlpha = 0.88 + Math.sin((t || 0) * 14) * 0.08;
+    c.drawImage(_satanSvgImg, -w * 0.5, -h * 0.52 + bob, w, h);
+  } catch (_) {
+    c.restore();
+    return false;
+  }
+  c.restore();
+  return true;
+}
+
+function satanPortraitHtml(opts) {
+  opts = opts || {};
+  const compact = !!opts.compact;
+  const cls = compact ? 'adv-satan-mark' : 'adv-satan-portrait';
+  const src = compact ? SATAN_MARK_URL : SATAN_SVG_URL;
+  const wh = compact
+    ? 'width="18" height="18"'
+    : 'width="72" height="90"';
+  return `<img class="${cls}" src="${src}" alt="" ${wh} decoding="async" draggable="false">`;
+}
 
 function satanDiffId(diff) {
   return typeof normalizeAdvDiffId === 'function'
@@ -182,6 +265,7 @@ function satanSpawnOpts(game) {
   const targetHp = p && p.maxhp > 0
     ? Math.round(p.maxhp * SATAN_HP_VS_PLAYER)
     : Math.round(baseHp * 1.4);
+  ensureSatanSvg();
   return {
     elite: true,
     satanBoss: true,
@@ -189,14 +273,18 @@ function satanSpawnOpts(game) {
     targetHp,
     dmgMul: SATAN_DIRECT_DMG_MUL,
     hpMul: 1,
+    sizeOverride: satanCombatSize(),
   };
 }
 
 function satanSpawnX(game) {
   const px = game.player ? game.player.x : W * 0.5;
   const maxX = game.maxX || (typeof W === 'number' ? W - 80 : 600);
+  const gap = typeof satanCombatSize === 'function'
+    ? Math.max(180, satanCombatSize() * 1.6)
+    : 200;
   const side = px > maxX * 0.55 ? -1 : 1;
-  return clamp(px + side * rand(160, 240), 80, maxX);
+  return clamp(px + side * rand(gap * 0.85, gap * 1.15), 80, maxX);
 }
 
 function triggerSatanIntro(game, monster) {

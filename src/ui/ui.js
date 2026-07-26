@@ -894,6 +894,7 @@ function levelTileTip(n, pick, infoLv, boss, best, fails) {
 function renderAdvHeatMeter(heat, opts) {
   opts = opts || {};
   if (!heat || typeof satanHeatLabel !== 'function') return '';
+  try { if (typeof ensureSatanSvg === 'function') ensureSatanSvg(); } catch (_) {}
   const compact = !!opts.compact;
   const label = satanHeatLabel(heat);
   const tip = typeof satanHeatTip === 'function' ? satanHeatTip(heat) : '';
@@ -907,17 +908,54 @@ function renderAdvHeatMeter(heat, opts) {
     heat.satanReady ? 'satan-ready' : '',
   ].filter(Boolean).join(' ');
   const count = `${heat.fails}/${SATAN_FAIL_THRESHOLD}`;
+  const mark = typeof satanPortraitHtml === 'function'
+    ? satanPortraitHtml({ compact: true })
+    : '';
   if (compact) {
     return `<span class="${cls}" title="${tip || label}">` +
+      mark +
       `<i class="lvl-heat-fill" style="width:${heat.pct}%"></i>` +
       `<span class="lvl-heat-n">${count}</span>${bang}</span>`;
   }
+  const showPortrait = !!(heat.danger || heat.satanReady || heat.fails > 0);
+  const portrait = (showPortrait && typeof satanPortraitHtml === 'function')
+    ? `<div class="adv-heat-face">${satanPortraitHtml()}</div>`
+    : (typeof satanPortraitHtml === 'function'
+      ? `<div class="adv-heat-face idle">${satanPortraitHtml({ compact: true })}</div>`
+      : '');
   return `<div class="${cls}" title="${tip}" role="meter" aria-valuemin="0" aria-valuemax="${SATAN_FAIL_THRESHOLD}" aria-valuenow="${heat.fails}" aria-label="${label}">` +
+    `<div class="adv-heat-row">` +
+    portrait +
+    `<div class="adv-heat-body">` +
     `<div class="adv-heat-head"><span class="adv-heat-title">${t('ui.heatTitle')}</span>` +
     `<span class="adv-heat-label">${label}${bang}</span>` +
     `<span class="adv-heat-count">${count}</span></div>` +
     `<div class="adv-heat-track"><i class="adv-heat-fill" style="width:${heat.pct}%"></i></div>` +
-    `<div class="adv-heat-sub">${tip}</div></div>`;
+    `<div class="adv-heat-sub">${tip}</div>` +
+    `</div></div></div>`;
+}
+
+function renderAdvSatanCard(heat, diff) {
+  try { if (typeof ensureSatanSvg === 'function') ensureSatanSvg(); } catch (_) {}
+  const d = typeof satanDiffId === 'function' ? satanDiffId(diff) : (diff || 'normal');
+  const cleared = !!(save && save.advCleared && save.advCleared[d]);
+  const pending = !!(heat && heat.satanReady);
+  const danger = !!(heat && heat.danger);
+  let copy;
+  if (pending) copy = t('ui.satanCardReady');
+  else if (danger) copy = t('ui.satanCardDanger');
+  else if (cleared) copy = t('ui.satanCardAfterClear');
+  else if (heat && heat.fails > 0) copy = t('ui.satanCardHeat', { n: heat.fails, max: SATAN_FAIL_THRESHOLD });
+  else copy = t('ui.satanCardIdle');
+  const face = typeof satanPortraitHtml === 'function' ? satanPortraitHtml() : '';
+  const cls = 'adv-satan-card' +
+    (pending ? ' ready' : '') +
+    (danger && !pending ? ' danger' : '') +
+    (cleared && !pending && !danger ? ' after-clear' : '');
+  return `<div class="${cls}" role="note">` +
+    `<div class="adv-satan-card-face">${face}</div>` +
+    `<div class="adv-satan-card-copy"><b>${t('ui.satanCardTitle')}</b><span>${copy}</span></div>` +
+    `</div>`;
 }
 
 const UI = {
@@ -2254,6 +2292,7 @@ const UI = {
         `<div class="island-prog-track island-info-prog" title="${t('island.levelsProg')}"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
         `<div class="island-prog-track island-info-stars" title="${t('island.starsProg')}"><i style="width:${Math.round(prog.stars / Math.max(1, prog.maxStars) * 100)}%"></i></div>` +
         (meterHeat ? renderAdvHeatMeter(meterHeat) : '') +
+        (typeof renderAdvSatanCard === 'function' ? renderAdvSatanCard(meterHeat, activeDiff) : '') +
         (() => {
           const onboard = adventureIslandHintLine();
           const mbLine = masterLv && masterLv >= range.start && masterLv <= range.end

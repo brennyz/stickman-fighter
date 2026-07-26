@@ -72,6 +72,9 @@ async function run() {
         if (!info.innerHTML.includes('adv-heat-bang')) {
           throw new Error('levelIslandInfo missing danger bang at 9 fails');
         }
+        if (!info.innerHTML.includes('adv-satan-card') || !info.innerHTML.includes('satan.svg')) {
+          throw new Error('levelIslandInfo missing Satan portrait card/svg');
+        }
       }
 
       save.advFails[1] = 10;
@@ -87,6 +90,15 @@ async function run() {
       if (!game.satanActive || !game.satanMon) throw new Error('Satan did not spawn');
       const mon = game.satanMon;
       if (!mon.satanBoss || !(mon.reflectRatio > 0)) throw new Error('Satan flags missing');
+      const minHalf = Math.min(W, H) * 0.18;
+      if (!(mon.size >= minHalf) || mon.size < 80) {
+        throw new Error('Satan not half-screen sized: ' + mon.size + ' vs min ' + minHalf);
+      }
+      if (typeof satanCombatSize !== 'function') throw new Error('satanCombatSize missing');
+      if (typeof SATAN_SVG_URL !== 'string' || !SATAN_SVG_URL.includes('satan.svg')) {
+        throw new Error('SATAN_SVG_URL missing');
+      }
+      try { ensureSatanSvg(); } catch (e) { throw new Error('ensureSatanSvg: ' + e); }
 
       const hpBefore = game.player.hp;
       const satanHpBefore = mon.hp;
