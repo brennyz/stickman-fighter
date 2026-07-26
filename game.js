@@ -243,9 +243,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.87';
+const APP_VERSION = '1.18.88';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 297;
+const SW_CACHE_REV = 298;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
 
@@ -16024,6 +16024,71 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
       eye(-r * 1.0, -r * 0.85, r * 0.13);
       break;
     }
+    case 'shark': {
+      const wag = Math.sin(t * 5.5) * 0.08;
+      c.save(); c.rotate(wag);
+      c.fillStyle = body;
+      c.beginPath();
+      c.ellipse(0, 0, r * 1.15, r * 0.62, 0, 0, TAU);
+      c.fill();
+      c.fillStyle = dark;
+      c.beginPath();
+      c.moveTo(0, -r * 0.55);
+      c.lineTo(r * 0.08, -r * 1.05);
+      c.lineTo(r * 0.22, -r * 0.5);
+      c.closePath();
+      c.fill();
+      c.fillStyle = body;
+      c.beginPath();
+      c.moveTo(r * 1.05, 0);
+      c.lineTo(r * 1.55, r * 0.22);
+      c.lineTo(r * 1.0, r * 0.08);
+      c.closePath();
+      c.fill();
+      c.fillStyle = 'rgba(255,255,255,.22)';
+      c.beginPath();
+      c.ellipse(-r * 0.15, -r * 0.12, r * 0.42, r * 0.14, -0.2, 0, TAU);
+      c.fill();
+      c.fillStyle = dark;
+      c.beginPath();
+      c.moveTo(-r * 0.95, r * 0.05);
+      c.lineTo(-r * 1.35, r * 0.35);
+      c.lineTo(-r * 0.75, r * 0.22);
+      c.closePath();
+      c.fill();
+      eye(-r * 0.55, -r * 0.12, r * 0.14);
+      c.fillStyle = '#fff';
+      c.beginPath();
+      c.moveTo(-r * 1.05, r * 0.02);
+      c.lineTo(-r * 1.22, r * 0.14);
+      c.lineTo(-r * 1.02, r * 0.12);
+      c.closePath();
+      c.fill();
+      c.restore();
+      break;
+    }
+    case 'octo': {
+      c.fillStyle = body;
+      c.beginPath();
+      c.arc(0, -r * 0.2, r * 0.82, 0, TAU);
+      c.fill();
+      c.strokeStyle = dark;
+      c.lineWidth = Math.max(2, r * 0.14);
+      c.lineCap = 'round';
+      for (let i = 0; i < 6; i++) {
+        const a = Math.PI * 0.15 + (i / 5) * Math.PI * 0.7;
+        const len = r * (1.05 + Math.sin(t * 4 + i * 1.7) * 0.12);
+        const ex = Math.cos(a) * len;
+        const ey = Math.sin(a) * len * 0.55 + r * 0.35;
+        c.beginPath();
+        c.moveTo(Math.cos(a) * r * 0.55, -r * 0.05 + Math.sin(a) * r * 0.35);
+        c.quadraticCurveTo(ex * 0.55, ey * 0.7, ex, ey);
+        c.stroke();
+      }
+      eye(-r * 0.28, -r * 0.28, r * 0.16);
+      eye(r * 0.12, -r * 0.28, r * 0.16);
+      break;
+    }
     case 'tideFox':
     case 'tideSnake':
     case 'tideToad':
@@ -19190,6 +19255,10 @@ function drawKablamLabel(c, text, x, y, size, fill) {
 /* --- src/game/game.js --- */
 /* ================================ GAME ================================= */
 let game = null;
+
+/** Pickup lifetime (sec) — shards langer zodat je ze kunt teruglopen. */
+const SHARD_PICKUP_LIFE = 36;
+const GENERIC_PICKUP_LIFE = 22;
 
 /** Deferred UI (toast/banner) — negeer na menu-exit of nieuw gevecht. */
 function gameUiTimerOk(ref, opts) {

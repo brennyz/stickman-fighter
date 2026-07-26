@@ -16,6 +16,7 @@ const REGRESSION_MUST_DEFINE = [
   'partBoundaryWaveIdx', 'playerWalkInput', 'playerWalkRightInput',
   'recoverFightHiccup', 'playInputSuppressed', 'rollStageGamble',
   'applyGambleToStage', 'gameUiTimerOk', 'syncPlayLayer', 'forcePlayCanvasVisible',
+  'GENERIC_PICKUP_LIFE', 'SHARD_PICKUP_LIFE',
 ];
 
 const CRITICAL_FILES = /^src\/(game|boot|entities)\//;
@@ -69,7 +70,7 @@ function collectDefs(code) {
   const s = stripLiterals(code);
   for (const m of s.matchAll(/\bfunction\s+([A-Za-z_$][\w$]*)\s*\(/g)) defined.add(m[1]);
   for (const m of s.matchAll(/\bclass\s+([A-Za-z_$][\w$]*)\b/g)) defined.add(m[1]);
-  for (const m of s.matchAll(/\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s+)?(?:function\b|\(|[^=;]+\s*=>)/g)) {
+  for (const m of s.matchAll(/\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=/g)) {
     defined.add(m[1]);
   }
   return defined;
