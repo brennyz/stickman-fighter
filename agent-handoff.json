@@ -17,13 +17,13 @@
     "swCache": "stickfighter-app-v329",
     "gameJsQuery": "game.js?v=329",
     "cssQuery": "styles/main.css?v=329",
-    "featureBranch": "cursor/arcade-ach-icons-replace-7d24",
+    "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "localMainHead": "64d849b",
-    "remoteMainHead": "64d849b",
-    "note": "Arcade prestaties/lock/check/coin/warn SVG · v1.18.119 (pending live merge)",
-    "updated": "2026-07-26T20:06:22Z"
+    "localMainHead": null,
+    "remoteMainHead": null,
+    "note": "Arcade prestaties/lock/check/coin/warn SVG LIVE · v1.18.119",
+    "updated": "2026-07-26T20:06:38Z"
   },
   "userWishlist": [
     {
@@ -277,6 +277,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T20:06:38Z",
+      "summary": "Arcade UI icons LIVE gemerged · v1.18.119"
+    },
+    {
       "at": "2026-07-26T20:06:22Z",
       "summary": "Arcade prestaties/lock/check/coin/warn + saga JS → assets/ui SVG · v1.18.119"
     },
@@ -371,10 +375,6 @@
     {
       "at": "2026-07-26T18:57:27Z",
       "summary": "Top SFX (hit/select/combat) + battle/menu muziek polish · v1.18.104"
-    },
-    {
-      "at": "2026-07-26T18:55:47Z",
-      "summary": "Follow-up: meest gebruikte SFX/muziek polishen"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
