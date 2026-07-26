@@ -323,9 +323,11 @@ class Game {
       this.playerShieldT = Math.max(this.playerShieldT, this.styleShieldWave);
     }
     if (bossWave) {
-      this.banner(t('banner.bossWave'), 1.8, '#ff6b6b', 50);
-      AudioSys.play('boss');
-      AudioSys.sfx('roar');
+      try {
+        this.banner(t('banner.bossWave'), 1.8, '#ff6b6b', 50);
+        AudioSys.play('boss');
+        AudioSys.sfx('roar');
+      } catch (_) {}
       try {
         this.shake(8, 0.3);
         this.burst(W * 0.5, this.ground - 80, '#ff6b6b', fxLite() ? 12 : 22);
@@ -333,9 +335,11 @@ class Game {
       } catch (_) {}
     } else if (wave.some(s => s.elite || s.superBoss)) {
       const hasSuper = wave.some(s => s.superBoss);
-      this.banner(hasSuper ? t('banner.superBossWave') : t('banner.eliteWave'), 1.35, hasSuper ? '#ffd75e' : '#ffb0b8', 40);
-      AudioSys.play(hasSuper ? 'boss' : 'elite');
-      AudioSys.sfx('roar');
+      try {
+        this.banner(hasSuper ? t('banner.superBossWave') : t('banner.eliteWave'), 1.35, hasSuper ? '#ffd75e' : '#ffb0b8', 40);
+        AudioSys.play(hasSuper ? 'boss' : 'elite');
+        AudioSys.sfx('roar');
+      } catch (_) {}
     } else {
       const meta = this.level.waveMeta && this.level.waveMeta[this.waveIdx];
       const trait = meta && meta.trait && (typeof waveTraitBanner === 'function' ? waveTraitBanner(meta.trait) : null);
@@ -2337,17 +2341,47 @@ class Game {
     if (this.bossPhase2Flash > 0) this.bossPhase2Flash -= dt;
 
     if (!this.player) return;
-    this.player.update(dt, this);
-    if (this.pet) this.pet.update(dt);
-    if (this.eggPet) this.eggPet.update(dt);
+    try { this.player.update(dt, this); } catch (plErr) {
+      try { sfReportError('player/update', plErr, 'Speler hiccup — speel door'); } catch (_) {}
+    }
+    if (this.pet) {
+      try { this.pet.update(dt); } catch (petErr) {
+        try { sfReportError('pet/update', petErr, 'Pet hiccup — speel door'); } catch (_) {}
+      }
+    }
+    if (this.eggPet) {
+      try { this.eggPet.update(dt); } catch (eggErr) {
+        try { sfReportError('eggPet/update', eggErr, 'Ei-pet hiccup — speel door'); } catch (_) {}
+      }
+    }
 
-    if (this.mode === 'adventure') this.updateAdventure(dt);
-    else if (this.mode === 'training') this.updateTraining(dt);
-    else if (this.mode === 'versus') this.updateVersus(dt);
-    else if (this.mode === 'wall') this.updateWall(dt);
-    else if (this.mode === 'coinrun') this.updateCoinRun(dt);
+    if (this.mode === 'adventure') {
+      try { this.updateAdventure(dt); } catch (advErr) {
+        try { sfReportError('adventure/update', advErr, 'Avontuur hiccup — speel door'); } catch (_) {}
+      }
+    } else if (this.mode === 'training') {
+      try { this.updateTraining(dt); } catch (trErr) {
+        try { sfReportError('training/update', trErr, 'Training hiccup — speel door'); } catch (_) {}
+      }
+    } else if (this.mode === 'versus') {
+      try { this.updateVersus(dt); } catch (vsErr) {
+        try { sfReportError('versus/update', vsErr, 'Versus hiccup — speel door'); } catch (_) {}
+      }
+    } else if (this.mode === 'wall') {
+      try { this.updateWall(dt); } catch (wErr) {
+        try { sfReportError('wall/update', wErr, 'Muur hiccup — speel door'); } catch (_) {}
+      }
+    } else if (this.mode === 'coinrun') {
+      try { this.updateCoinRun(dt); } catch (crErr) {
+        try { sfReportError('coinrun/update', crErr, 'Mats hiccup — speel door'); } catch (_) {}
+      }
+    }
 
-    for (const m of this.monsters) m.update(dt, this);
+    for (const m of this.monsters) {
+      try { m.update(dt, this); } catch (monErr) {
+        try { sfReportError('monster/update', monErr, 'Vijand hiccup — speel door'); } catch (_) {}
+      }
+    }
     this.monsters = this.monsters.filter(m => m.alive || m.deadT < 1);
     if (this.mode === 'adventure') tickSuperFx(this, dt);
 

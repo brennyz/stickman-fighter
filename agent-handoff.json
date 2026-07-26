@@ -92,6 +92,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T07:19:14Z",
+      "summary": "Wave-clear hiccup: partBoundaryWaveIdx terug na module-split · v1.18.79"
+    },
+    {
       "at": "2026-07-26T08:00:00Z",
       "summary": "Wave-clear hiccup: herstel partBoundaryWaveIdx + playerWalkInput na module-split · v1.18.79"
     },
@@ -186,18 +190,6 @@
     {
       "at": "2026-07-25T15:05:00Z",
       "summary": "Stabiliteit + d4 c4: ketsbam crash, sanitizeSave guards, trait chip + star buffer v1.18.36"
-    },
-    {
-      "at": "2026-07-25T14:35:00Z",
-      "summary": "Fix settings blue-lid stuck + orphan pause · v1.18.37"
-    },
-    {
-      "at": "2026-07-25T14:14:09Z",
-      "summary": "d13 missions c4: claim path copy, almost tag, streak bonus toast v1.18.34"
-    },
-    {
-      "at": "2026-07-25T14:12:00Z",
-      "summary": "d3 versus c4: spawn pads, match-point/HP lead, round-skip, rematch tips v1.18.33"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

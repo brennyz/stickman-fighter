@@ -1352,6 +1352,7 @@ function recoverFightHiccup(g) {
     g.ketsbamShow = false;
     g.ketsbamBuildT = 0;
     g.ketsbamBuildProg = 0;
+    if (g.player?.attack && !g.over) g.player.attack = null;
   } catch (_) {}
 }
 /** Tijdens gevecht: strip .screen.active — ochtend-aanpak: geen !important display-kills. */
