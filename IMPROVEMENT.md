@@ -112,6 +112,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-26 | **17** | Fix gamble-start: dobbel-flash startte niet na Verder (menu) of result opnieuw — `gambleFlashStartOk` i.p.v. alleen `levelScreenActive`. Smoke `smoke:gamble`. v1.18.76 / SW v286. |
 | 2026-07-26 | **16** | Hosting c5: shareCacheRevFor max(SW, hosting.json); speel.html QR sync via index rev; settings refresh hosting. v1.18.75 / SW v285. |
 | 2026-07-26 | **17** | Stabiliteit cron: gameUiTimerOk op deferred toast/banner; dexBag() guard tegen corrupt save.dex. v1.18.74 / SW v284. |
 | 2026-07-26 | **17** | Stabiliteit cron: gamble timer screen-guard (level/gamble), safeOpen cancel, tab-hide/bfcache cancelGambleStart, ensureTipsSeen array. v1.18.73 / SW v283. |
