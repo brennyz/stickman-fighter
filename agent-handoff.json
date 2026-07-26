@@ -27,6 +27,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260726T200044",
+      "from": "automation-cron",
+      "text": "Check waar afbeeldingen zijn en of ze svg zijn volgens asset md en vervang ze structureel",
+      "status": "active",
+      "updated": "2026-07-26"
+    },
+    {
       "id": "w-20260726T185514",
       "from": "user",
       "text": "Dagelijkse summons: 5× wapen + 5× pet met extra skill; Gemini summon-video + rarity-lagen. Harden + live.",

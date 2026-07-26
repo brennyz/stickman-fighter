@@ -1,19 +1,18 @@
 # assets/ui — overige UI-SVG
 
-Kleine gedeelde UI-stukken (lock, check, saga-chips) landen hier als ze uit inline HTML/JS komen.
+Kleine gedeelde UI-stukken (lock, check, saga-chips, prestatiën, eiland-tabs) als ASSET-STYLE files.
 
-**Leidend:** [`../../ASSET-STYLE.md`](../../ASSET-STYLE.md)
+**Leidend document:** [`../../ASSET-STYLE.md`](../../ASSET-STYLE.md)
 
-## Saga-filters (live)
+## Inhoud (live)
 
-| Bestand | Label |
-|---------|-------|
-| `saga-all.svg` | Alle |
-| `saga-fighter.svg` | Street |
-| `saga-ki.svg` | Ki |
-| `saga-scroll.svg` | Scroll |
-| `saga-tide.svg` | Tide |
-| `saga-cape.svg` | Cape |
-| `saga-dawn.svg` | Dawn |
+| Prefix | Rol |
+|--------|-----|
+| `saga-*.svg` | Character-select saga chips |
+| `ach-*.svg` | Prestatiën / achievements |
+| `island-*.svg` | Adventure eiland-tabs |
+| `lock.svg` / `check.svg` | Slot + vinkje in lijsten |
 
-Wire-in: `.char-saga-bar` + dex-filter in `index.html` via `<img class="saga-ico">`.
+Wire-in: `<img>` via `sagaIconSvg` / `achIconSvg` / `SVG_LOCK_ICON` / `SVG_CHECK_MINI` / `ADVENTURE_ISLANDS.icon`.
+
+SW precache + `hardenButtonIcons()` dekken `assets/ui/` mee.

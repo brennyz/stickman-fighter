@@ -1,8 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-     stroke="#9db1e3" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"
+     stroke="#e8f0ff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"
      aria-hidden="true">
-  <!-- Saga: Scroll  rol -->
-  <path d="M7.2 4.2h10.6v13.6H7.2z" fill="rgba(157,177,227,.16)"/>
-  <path d="M7.2 4.2a2 2 0 00-2 2v12a2 2 0 002 2h10.6"/>
-  <path d="M10 8.2h5M10 12h5" stroke="#c792ff"/>
+  <path d="M7 4h11v14H7z"/>
+  <path d="M7 4a2 2 0 00-2 2v12a2 2 0 002 2h11"/>
+  <path d="M10 8h5M10 12h5"/>
 </svg>

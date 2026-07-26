@@ -23,8 +23,8 @@
 | **hub** | Live |
 | **modes** | Live |
 | **chrome** | Live (dock + home + **back/pause/swap** + settings + gamble + claim) |
-| **ui/saga-*** | Live (char + dex filters) |
+| **ui/** (saga/ach/island/lock/check) | Live |
 
-Harden: SW precache alle `assets/buttons/**/*.svg` + `assets/ui/saga-*.svg`, CSS sizes/HC, `hardenButtonIcons()` error-class.
+Harden: SW precache alle `assets/buttons/**/*.svg` + `assets/ui/*.svg`, CSS sizes/HC, `hardenButtonIcons()` error-class.
 
 Preview: `node scripts/render-button-previews.mjs` → `assets/buttons/_preview/`.

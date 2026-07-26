@@ -136,13 +136,15 @@ houd kleuren/stroke volgens ASSET-STYLE, geen emoji, daarna build+smoke.
 
 | Set | Locatie nu | Doelmap | Status |
 |-----|------------|---------|--------|
-| Hub tiles (4) | `index.html` `.hub-tile-ico` | `assets/buttons/hub/` | **Live** |
+| Hub tiles (5+) | `index.html` `.hub-tile-ico` | `assets/buttons/hub/` | **Live** |
 | Mode-rijen | `index.html` `.mode-btn .ico` | `assets/buttons/modes/` | **Live** |
 | Nav chrome (terug / pauze / swap) | `.back-btn` / `#pauseBtn` / char-swap | `assets/buttons/chrome/{back,pause,swap}.svg` | **Live** |
 | Home / claim / settings / dock | `index.html` | `assets/buttons/chrome/` | **Live** |
-| Saga-filters | `.char-saga-bar` / dex-filter | `assets/ui/saga-*.svg` | **Live** |
-| Touch vechtknoppen | `src/core/storage.js` `drawTouchBtnIcon` | **code**, geen PNG | code |
-| Prestatie-iconen | `ACH_ICON_SVG` in JS | optioneel later → `assets/ui/` | JS |
+| Saga-filters | `.char-saga-bar` / dex-filter + `sagaIconSvg` | `assets/ui/saga-*.svg` | **Live** |
+| Prestatie-iconen | `achIconSvg` in `src/ui/ui.js` | `assets/ui/ach-*.svg` | **Live** |
+| Lock / check | `SVG_LOCK_ICON` / `SVG_CHECK_MINI` | `assets/ui/{lock,check}.svg` | **Live** |
+| Adventure eilanden | `ADVENTURE_ISLANDS.icon` | `assets/ui/island-*.svg` | **Live** |
+| Touch vechtknoppen | `drawTouchBtnIcon` | **code**, geen PNG | code |
 | PWA icons | `icons/icon-*.png` | blijf hier | PNG |
 
 ### Nav-set (chrome) — tokens
