@@ -266,8 +266,10 @@ class Monster {
     this.flashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.14 : opts.crit ? 0.12 : 0.1);
     const kb = scaleKnockback(kbx, dmg, { crit: opts.crit, kind: opts.kind });
     this.x += Math.sign(kb || 1) * clamp(Math.abs(kb) * 0.038, 5, 26);
-    game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
-    game.burst(this.x, this.y, this.sp.c1, dmg >= 18 ? 9 : 6);
+    if (!opts.quiet) {
+      game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
+      game.burst(this.x, this.y, this.sp.c1, dmg >= 18 ? 9 : 6);
+    }
     if (opts.crit) spawnFxRing(game, this.x, this.y - this.size * 0.4, '#ffd75e', fxLite() ? 5 : 8);
     if (this.hp <= 0) {
       this.hp = 0; this.deadT = 0;

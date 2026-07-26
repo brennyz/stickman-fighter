@@ -899,6 +899,7 @@ function runLootSummaryShort(loot) {
   if (pickN) parts.push(`💊${pickN}`);
   if (loot.finishers) parts.push(`③${loot.finishers}`);
   if (loot.levelUps) parts.push(`↑${loot.levelUps}`);
+  if (loot.weapons && loot.weapons.length) parts.push(`⚔${loot.weapons.length}`);
   if (loot.petCoins) parts.push(`🪙${loot.petCoins}`);
   return parts.join(' · ');
 }

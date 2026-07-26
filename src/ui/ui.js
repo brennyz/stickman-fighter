@@ -2540,15 +2540,30 @@ const UI = {
       nameEl.style.color = locked ? '#8fa3d9' : '#fff';
     }
     if (rarEl) {
-      rarEl.innerHTML = locked
-        ? `<span class="rar-pill" style="color:#8fa3d9;border-color:#8fa3d9">Lv ${base.unlock}</span>`
-        : `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>` +
+      const zone = base.dropZone ? weaponDropZoneOf(base) : null;
+      if (locked) {
+        rarEl.innerHTML = zone
+          ? `<span class="rar-pill" style="color:${zone.color};border-color:${zone.color}">${zone.name}</span>`
+          : `<span class="rar-pill" style="color:#8fa3d9;border-color:#8fa3d9">Lv ${base.unlock}</span>`;
+      } else {
+        rarEl.innerHTML =
+          `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>` +
+          (zone ? ` <span class="rar-pill" style="color:${zone.color};border-color:${zone.color}">${zone.name}</span>` : '') +
           (save.weapon === w.id ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Actief</span>' : '');
+      }
     }
     if (statsEl) {
-      statsEl.textContent = locked
-        ? 'Nog vergrendeld — level verder in avontuur'
-        : `${weaponDesc(w)} · x${w.dmg} dmg · bereik ${w.range} · spd x${w.speed}`;
+      const effectTxt = weaponEffectLabel(base);
+      if (locked) {
+        const zone = base.dropZone ? weaponDropZoneOf(base) : null;
+        statsEl.textContent = zone
+          ? `Drop in ${zone.name}-zone of Nightmare 2.0 / Hell 3.0`
+          : 'Nog vergrendeld — level verder in avontuur';
+      } else {
+        statsEl.textContent =
+          `${weaponDesc(w)} · x${w.dmg} dmg · bereik ${w.range} · spd x${w.speed}` +
+          (effectTxt ? ` · ${effectTxt}` : '');
+      }
     }
     const c = cv.getContext('2d');
     if (!c) return;

@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.107';
+const APP_VERSION = '1.18.108';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 317;
+const SW_CACHE_REV = 318;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   zoneWeapons: {},
@@ -281,12 +281,16 @@ function masterBuffActive(levelN, diff) {
 function bestWeaponForAdventureCap(cap) {
   let best = weaponById('vuist');
   for (const base of WEAPONS) {
-    if (save.lvl >= base.unlock && base.unlock <= cap && base.unlock >= best.unlock) best = base;
+    if (base.dropZone) continue; // zone-wapens nooit via level-cap auto-pick
+    if (!weaponUnlockedByLevel(base)) continue;
+    if (base.unlock <= cap && base.unlock >= best.unlock) best = base;
   }
   return applySummonTier(best);
 }
 function playerWeaponForAdventure(levelN) {
   const w = playerWeapon();
+  // Zone-wapens: zodra unlocked, altijd meenemen in avontuur
+  if (w && w.dropZone && weaponUnlockedByLevel(w)) return w;
   const cap = adventureWeaponCapForLevel(levelN);
   if (w.unlock <= cap) return w;
   return bestWeaponForAdventureCap(cap);
