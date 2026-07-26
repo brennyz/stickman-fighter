@@ -10,21 +10,8 @@
     "remainingCount": 0,
     "cycle": 5
   },
-  "pending": {
-    "face": 2,
-    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
-    "rolledAt": "2026-07-26T23:03:19Z",
-    "remainingCount": 0,
-    "cycle": 5
-  },
+  "pending": null,
   "implemented": [
-    {
-      "face": 14,
-      "note": "Rasengan halo/impact ring + burst cap Lite FX",
-      "version": "1.12.18",
-      "doneAt": "2026-07-23T18:58:38Z",
-      "cycle": 1
-    },
     {
       "face": 6,
       "note": "pauze-volume sliders, Lite mix, syncContextPower mute",
@@ -576,6 +563,13 @@
       "note": "fight dock + replay duo + boot toast",
       "version": "1.18.125",
       "doneAt": "2026-07-26T22:07:07Z",
+      "cycle": 5
+    },
+    {
+      "face": 2,
+      "note": "dummy grace + Chidori cap + round combo + summon snap",
+      "version": "1.18.126",
+      "doneAt": "2026-07-26T23:06:07Z",
       "cycle": 5
     }
   ],

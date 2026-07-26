@@ -27,6 +27,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260726T230607",
+      "from": "user",
+      "text": "Elke 2 uur automatisch code scannen op bugs/optimalisaties en fixen, volledig autonoom.",
+      "status": "open",
+      "updated": "2026-07-26"
+    },
+    {
       "id": "w-20260726T202400",
       "from": "user",
       "text": "Merge zonder conflicts, hopelijk speelt hij mp4 überhaupt af",
@@ -308,6 +315,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T23:06:07Z",
+      "summary": "d2: training dummy grace + Chidori cap + summon counter snap · v1.18.126"
+    },
+    {
       "at": "2026-07-26T22:07:07Z",
       "summary": "d18: fight dock + replay duo + boot toast fix · v1.18.125"
     },
@@ -402,10 +413,6 @@
     {
       "at": "2026-07-26T19:12:22Z",
       "summary": "Menu SVG nav LIVE op main · v1.18.110 / SW v320"
-    },
-    {
-      "at": "2026-07-26T19:11:28Z",
-      "summary": "Menu SVG nav LIVE: back/pause/saga icons + preview · v1.18.110"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
