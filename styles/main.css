@@ -1080,6 +1080,10 @@
   .lvl.master-buff:not(.locked) { outline:2px solid rgba(196,122,255,.75); box-shadow:0 0 10px rgba(196,122,255,.25), 0 5px 0 rgba(0,0,0,.35); }
   .island-bar { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:min(92vw,640px); margin:8px 0 10px; }
   .diff-bar { display:flex; flex-wrap:nowrap; gap:8px; justify-content:center; width:min(92vw,480px); margin:4px auto 6px; }
+  .diff-blurb { width:min(92vw,480px); margin:0 auto 10px; text-align:center; font-size:11px; line-height:1.35;
+      color:color-mix(in srgb, var(--diff-accent, #8fa3d9) 70%, #cdd8f5); opacity:.95; letter-spacing:.02em; min-height:1.35em; }
+  .diff-blurb-nightmare { color:#ffb08a; text-shadow:0 0 10px rgba(255,100,40,.25); }
+  .diff-blurb-hell { color:#ff8a7a; text-shadow:0 0 12px rgba(255,40,30,.3); }
   .diff-tab { flex:1 1 0; min-width:0; padding:10px 8px; border-radius:14px; border:2px solid rgba(255,255,255,.12);
       background:linear-gradient(180deg,#3a4258,#262c3d); color:#cdd8f5; cursor:pointer; font-weight:800; position:relative;
       display:flex; align-items:center; justify-content:center; gap:4px; transition:border-color .15s, transform .1s; }
@@ -1096,6 +1100,8 @@
   .lvl.lvl-nightmare.boss, .lvl.lvl-hell.boss { background:linear-gradient(180deg,#c04030,#701818); }
   .island-grid.diff-nightmare .lvl:not(.locked):not(.boss) { box-shadow:0 5px 0 rgba(0,0,0,.35), 0 0 10px rgba(255,100,40,.18); }
   .island-grid.diff-hell .lvl:not(.locked):not(.boss) { box-shadow:0 5px 0 rgba(0,0,0,.35), 0 0 12px rgba(255,40,30,.22); }
+  .lvl-wave-dot.trait-ember { background:rgba(255,122,77,.95); box-shadow:0 0 4px rgba(255,100,40,.45); }
+  .lvl-wave-dot.trait-pain { background:rgba(255,58,42,.95); box-shadow:0 0 4px rgba(255,40,30,.5); }
   .island-tab { flex:1 1 88px; min-width:72px; max-width:120px; padding:10px 8px; border-radius:14px; border:2px solid rgba(255,255,255,.12);
       background:linear-gradient(180deg,#3a4258,#262c3d); color:#cdd8f5; cursor:pointer; font-weight:800; position:relative;
       display:flex; flex-direction:column; align-items:center; gap:2px; transition:border-color .15s, transform .1s; }

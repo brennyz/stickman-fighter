@@ -1,5 +1,5 @@
 /* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 5 */
-const CACHE = 'stickfighter-app-v315';
+const CACHE = 'stickfighter-app-v316';
 
 
 

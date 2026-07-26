@@ -2133,6 +2133,13 @@ const UI = {
         diffBar.appendChild(btn);
       }
     }
+    const blurbEl = document.getElementById('levelDiffBlurb');
+    if (blurbEl) {
+      const meta = advDiffMeta(activeDiff);
+      blurbEl.style.setProperty('--diff-accent', meta.accent);
+      blurbEl.className = 'diff-blurb' + (activeDiff !== 'normal' ? ' diff-blurb-' + activeDiff : '');
+      blurbEl.textContent = advDiffBlurb(activeDiff);
+    }
     const pick = this.advIslandPick || currentAdvIsland(activeDiff);
     this.advIslandPick = pick;
     if (bar) {
@@ -2221,6 +2228,8 @@ const UI = {
         else if (trait === 'ranch') cls += ' trait-ranch';
         else if (trait === 'safari') cls += ' trait-safari';
         else if (trait === 'tide') cls += ' trait-tide';
+        else if (trait === 'ember') cls += ' trait-ember';
+        else if (trait === 'pain') cls += ' trait-pain';
         return `<i class="${cls}"></i>`;
       }).join('');
       el.innerHTML = locked
