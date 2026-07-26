@@ -17,19 +17,19 @@
     "swCache": "stickfighter-app-v317",
     "gameJsQuery": "game.js?v=317",
     "cssQuery": "styles/main.css?v=317",
-    "featureBranch": "cursor/zone-weapons-wire-80de",
+    "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "Zone weapons wiring in progress · v1.18.107"
+    "note": "Zone weapons wired LIVE · v1.18.107"
   },
   "userWishlist": [
     {
       "id": "w-20260726T190000",
       "from": "user",
       "text": "Zone-wapens Nightmare/Hel goed integreren met 2.0/3.0 modus (drops + effects)",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-07-26"
     },
     {
@@ -190,6 +190,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-26T19:01:08Z",
+      "summary": "Zone-wapens Nightmare/Hel aangesloten op drops+effects+2.0/3.0 · v1.18.107"
+    },
+    {
       "at": "2026-07-26T18:58:20Z",
       "summary": "Nightmare 2.0 / Hell 3.0 verder uitgewerkt en live · v1.18.106"
     },
@@ -284,10 +288,6 @@
     {
       "at": "2026-07-26T14:05:11Z",
       "summary": "d20 code health: skillLabel merge + dead code prune · v1.18.96"
-    },
-    {
-      "at": "2026-07-26T13:03:47Z",
-      "summary": "d7 save: upgrade Lv export/import/drift + readSaveJson merge · v1.18.95"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
