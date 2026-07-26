@@ -1954,14 +1954,19 @@ class Game {
     const behavior = sk.behavior || 'orb';
     const speed = (sk.speed || 420) * jb.speedMul;
     const aim = projAimVelocity(f, behavior === 'dash' ? speed : speed * 0.9);
-    const y0 = f.y - 50 + clamp(aim.ny, -1, 0.5) * 36;
     const face = f.face || 1;
     const col = sk.color || '#7cf5ff';
+    // Rasengan: altijd horizontaal (geen aim-tilt); overige jutsu behouden aim
+    const rasenHoriz = jutsu === 'rasengan';
+    const y0 = rasenHoriz
+      ? (f.y - 50)
+      : (f.y - 50 + clamp(aim.ny, -1, 0.5) * 36);
 
-    const fireProj = (offX, offY, scale) => {
+    const fireProj = (offX, offY, scale, opts) => {
       const sc = scale || 1;
       const ox = offX || 0;
       const oy = offY || 0;
+      opts = opts || {};
       if (behavior === 'dash') {
         this.spawnProjectile(Object.assign({
           x: f.x + face * (36 + ox), y: y0 + oy,
@@ -1986,6 +1991,18 @@ class Game {
           from, kind: sk.id, pierce: sk.pierce !== false, hitSet: new Set(), life: (sk.life || 1.1) * jb.lifeMul * sc,
           spin: behavior === 'disc' ? 0.4 : 0,
         }, critMeta));
+      } else if (rasenHoriz) {
+        // Volledig horizontaal + optionele krul (↑/↓) in-vlucht
+        const curl = opts.curl || 0;
+        this.spawnProjectile(Object.assign({
+          x: f.x + face * (40 + ox), y: y0 + oy,
+          vx: face * speed, vy: 0,
+          r: ((sk.radius || 28) + jb.radius) * sc, dmg: dmg * sc,
+          from, kind: sk.id, pierce: !!sk.pierce, hitSet: new Set(),
+          life: (sk.life || 1.4) * jb.lifeMul * sc,
+          spin: 0, pierceRepeat: jb.pierceRepeat,
+          curl, curlAccel: curl ? (opts.curlAccel || 340) : 0, curlMaxVy: opts.curlMaxVy || 240,
+        }, critMeta));
       } else {
         this.spawnProjectile(Object.assign({
           x: f.x + face * (40 + ox), y: y0 + oy,
@@ -1996,7 +2013,30 @@ class Game {
       }
     };
 
-    if (behavior === 'dash') {
+    if (rasenHoriz && (f.isPlayer || f.playerSlot)) {
+      const mode = typeof rasenganShotMode === 'function'
+        ? rasenganShotMode(typeof skillLevel === 'function' ? skillLevel('rasengan') : 0)
+        : 'single';
+      if (mode === 'triple') {
+        fireProj(0, 0, 1, { curl: 0 });
+        fireProj(face * 6, -5, 0.9, { curl: -1, curlAccel: 360, curlMaxVy: 260 });
+        fireProj(face * 6, 5, 0.9, { curl: 1, curlAccel: 360, curlMaxVy: 260 });
+        try { this.banner(t('banner.rasenganTriple'), 1.1, col, 36); } catch (_) {
+          this.banner('TRIPLE RASENGAN!', 1.1, col, 36);
+        }
+      } else if (mode === 'dual') {
+        fireProj(face * 4, -4, 0.94, { curl: -1, curlAccel: 320, curlMaxVy: 230 });
+        fireProj(face * 4, 4, 0.94, { curl: 1, curlAccel: 320, curlMaxVy: 230 });
+      } else {
+        fireProj(0, 0, 1, { curl: 0 });
+      }
+      this.burst(f.x + face * 30, y0, col, fxLite() ? 8 : 16);
+      spawnFxRing(this, f.x + face * 34, y0, col, mode === 'triple' ? 14 : 10);
+      this.shake(mode === 'triple' ? 11 : 9, 0.28);
+      this.freezeT = Math.max(this.freezeT, mode === 'triple' ? 0.08 : 0.06);
+      AudioSys.sfx(skillSfxId(sk));
+      if (f.isPlayer || f.playerSlot) haptic(mode === 'triple' ? 28 : 22);
+    } else if (behavior === 'dash') {
       fireProj(0, 0, 1);
       f.vx = face * (sk.dashVx || 380) * jb.speedMul;
       this.shake(7, 0.2);
@@ -2031,9 +2071,12 @@ class Game {
       if (this.mode === 'versus' && f.vsSaga === 'tide') AudioSys.sfx('tideSurge');
       AudioSys.sfxAt(swoosh, f.x + f.face * 40);
     } catch (_) {}
-    const extra = (atk && atk.extraShot) || jb.extraShot || 0;
-    if (extra > 0 && Math.random() < extra) {
-      fireProj(face * 12, rand(-8, 8), 0.72);
+    // Rasengan multi-shot vervangt random extraShot
+    if (!(rasenHoriz && (f.isPlayer || f.playerSlot))) {
+      const extra = (atk && atk.extraShot) || jb.extraShot || 0;
+      if (extra > 0 && Math.random() < extra) {
+        fireProj(face * 12, rand(-8, 8), 0.72);
+      }
     }
   }
 
@@ -2441,6 +2484,13 @@ class Game {
         : (p.kind === 'shuriken' ? 28 : 12);
       p.spin = (p.spin || 0) + dt * spinRate;
       p.vy += (p.grav || 0) * dt;
+      // Rasengan-krul: vanuit horizontaal omhoog/omlaag buigen
+      if (p.curl) {
+        p.vy += p.curl * (p.curlAccel || 320) * dt;
+        const lim = p.curlMaxVy || 240;
+        if (p.vy > lim) p.vy = lim;
+        if (p.vy < -lim) p.vy = -lim;
+      }
       p.x += p.vx * dt; p.y += p.vy * dt;
       if (skProj && (skProj.behavior === 'orb' || skProj.behavior === 'pull' || skProj.behavior === 'meteor')) {
         const grow = (skProj.behavior === 'pull' || skProj.behavior === 'meteor') ? 2.5 : 4;
