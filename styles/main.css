@@ -640,7 +640,11 @@
   .sub-home-btn .ico img,
   .back-btn .back-btn-ico,
   #pauseBtn img,
-  .saga-ico {
+  .saga-ico,
+  .island-ico,
+  .island-tab-ico img,
+  .island-info-ico img,
+  .help-island-ico img {
     display: block;
     width: 28px;
     height: 28px;
@@ -1617,7 +1621,8 @@
   .island-info { width:min(92vw,640px); text-align:left; font-size:13px; color:#9db1e3; margin:0 0 12px; line-height:1.45;
       background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:16px; padding:12px 14px; }
   .island-info-head { display:flex; align-items:center; gap:12px; }
-  .island-info-ico svg { width:36px; height:36px; display:block; }
+  .island-info-ico svg,
+  .island-info-ico img { width:36px; height:36px; display:block; }
   .island-info-sub { font-size:12px; margin-top:4px; opacity:.92; }
   .island-info-prog { margin-top:10px; height:7px; }
   .island-info-chips { margin-top:8px; display:flex; flex-wrap:wrap; gap:6px; }
@@ -1631,7 +1636,8 @@
   .stars-big .stars-delta { display:block; font-size:14px; font-weight:800; color:#7cfc8a; margin-top:4px; letter-spacing:0; }
   .stars-big.stars-perfect { text-shadow:0 0 12px rgba(255,215,94,.45); }
   .island-tab-ico { line-height:0; margin-bottom:2px; }
-  .island-tab-ico svg { width:28px; height:28px; display:block; }
+  .island-tab-ico svg,
+  .island-tab-ico img { width:28px; height:28px; display:block; }
   .island-tab-prog { margin-top:6px; max-width:100%; }
   .island-help-btn { position:absolute; top:max(12px, env(safe-area-inset-top)); right:max(12px, env(safe-area-inset-right));
       width:44px; height:44px; min-height:44px; padding:0; border-radius:50%; font-size:20px; font-weight:900;
@@ -1642,7 +1648,8 @@
   .help-island-row { display:flex; gap:10px; align-items:flex-start; padding:8px 10px; border-radius:12px; background:rgba(0,0,0,.2); }
   .help-island-row.cur { outline:1px solid rgba(124,245,255,.45); }
   .help-island-row.locked { opacity:.55; }
-  .help-island-ico svg { width:32px; height:32px; display:block; flex:0 0 auto; }
+  .help-island-ico svg,
+  .help-island-ico img { width:32px; height:32px; display:block; flex:0 0 auto; }
   .help-island-body { flex:1; min-width:0; font-size:13px; }
   .help-island-sub { font-size:11px; opacity:.85; margin-top:3px; margin-bottom:6px; }
   .island-grid { grid-template-columns:repeat(5, minmax(56px, 1fr)); max-width:var(--ui-rail); }

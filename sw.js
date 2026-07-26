@@ -1,5 +1,5 @@
 /* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 5 */
-const CACHE = 'stickfighter-app-v333';
+const CACHE = 'stickfighter-app-v334';
 
 
 
@@ -98,6 +98,13 @@ const ASSETS = [
   './assets/ui/ach-wall100.svg',
   './assets/ui/ach-weapon-master25.svg',
   './assets/ui/ach-zone-weapons10.svg',
+  './assets/ui/island-cyber.svg',
+  './assets/ui/island-dojo.svg',
+  './assets/ui/island-finale.svg',
+  './assets/ui/island-hel.svg',
+  './assets/ui/island-landweg.svg',
+  './assets/ui/island-nachtmerrie.svg',
+  './assets/ui/island-vulkaan.svg',
   './assets/ui/saga-all.svg',
   './assets/ui/saga-cape.svg',
   './assets/ui/saga-dawn.svg',

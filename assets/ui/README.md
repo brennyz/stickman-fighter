@@ -8,7 +8,8 @@
 |--------|-----|
 | `saga-*.svg` | Char/dex saga-filters + versus chips |
 | `ach-*.svg` | Prestatie-lijst iconen (missies) |
+| `island-*.svg` | Adventure eiland-tabs (landweg…hel) |
 | `ui-lock.svg` / `ui-check.svg` | Slot & vinkje in lijsten |
 | `ui-coin.svg` / `ui-warn.svg` | Pet-coins & save-waarschuwing |
 
-Wire-in via `achIconSvg` / `sagaIconSvg` / `SVG_*` helpers in `src/ui/ui.js` + `src/systems/versus.js` (`<img>`).
+Wire-in via `achIconSvg` / `sagaIconSvg` / `SVG_*` helpers in `src/ui/ui.js` + `src/systems/versus.js` (`<img>`), en `ADVENTURE_ISLANDS.icon` in `src/core/storage.js`.
