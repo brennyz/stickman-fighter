@@ -30,7 +30,7 @@
       "id": "w-20260727T000422",
       "from": "user",
       "text": "Cron inventaris: check SVG vs ASSET-STYLE en structureel vervangen (islands na merge)",
-      "status": "open",
+      "status": "done-in-code",
       "updated": "2026-07-27"
     },
     {
@@ -322,6 +322,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-07-27T00:04:41Z",
+      "summary": "ASSET-STYLE inventaris: islands hersteld + file-wire · v1.18.127"
+    },
+    {
       "at": "2026-07-27T00:04:22Z",
       "summary": "ASSET-STYLE: restore 7 island SVGs + wire file icons · v1.18.127"
     },
@@ -416,10 +420,6 @@
     {
       "at": "2026-07-26T19:16:24Z",
       "summary": "iPad/mobile fluid scale + splash/dock · v1.18.111"
-    },
-    {
-      "at": "2026-07-26T19:16:24Z",
-      "summary": "iPad/mobile responsive scale (ui-rail + type clamp) · v1.18.111"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
