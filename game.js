@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.126';
+const APP_VERSION = '1.18.127';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 336;
+const SW_CACHE_REV = 337;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -27152,7 +27152,7 @@ class Game {
   drawWaveSpawnFunnel(c, barY) {
     if (!this.level || this.waveIdx < 0 || this.wavePause > 0) return barY;
     const total = Math.max(1, this.waveTotal || 0);
-    if (total <= 3) return barY;
+    if (total <= 1) return barY;
     const queueLeft = this.spawnQueue.length;
     const alive = this.monsters.filter((m) => m.alive).length;
     const spawned = total - queueLeft;
@@ -27252,6 +27252,9 @@ class Game {
     const next = this.level && this.level.waves[nextIdx];
     if (!next || !next.length) return;
     const meta = this.level.waveMeta && this.level.waveMeta[nextIdx];
+    const traitBanner = meta && meta.trait && typeof waveTraitBanner === 'function'
+      ? waveTraitBanner(meta.trait) : null;
+    const traitCol = traitBanner ? traitBanner.color : null;
     const chips = Math.min(5, next.length);
     const gap = 22;
     const x0 = W / 2 - ((chips - 1) * gap) / 2;
@@ -27268,9 +27271,6 @@ class Game {
       const cx = x0 + i * gap;
       const flying = sp.type === 'fly' || sp.type === 'dragon';
       const col = def.superBoss ? '#ffd75e' : (def.elite ? '#ffb0b8' : (sp.c2 || '#8899bb'));
-      const traitCol = meta && meta.trait === 'flyers' ? '#c47aff'
-        : (meta && meta.trait === 'rush' ? '#ffb06a'
-          : (meta && meta.trait === 'elite' ? '#ffb0b8' : null));
       c.fillStyle = col;
       c.globalAlpha = 0.75;
       c.beginPath();
@@ -27284,7 +27284,7 @@ class Game {
         c.stroke();
       }
       if (flying) {
-        c.strokeStyle = 'rgba(196,122,255,.7)';
+        c.strokeStyle = traitCol ? traitCol + 'bb' : 'rgba(196,122,255,.7)';
         c.lineWidth = 1.2;
         c.beginPath();
         c.moveTo(cx - 5, y - 2);
@@ -27294,7 +27294,7 @@ class Game {
     }
     if (meta && meta.label) {
       c.globalAlpha = 0.85;
-      c.fillStyle = meta.trait === 'flyers' ? '#c47aff' : (meta.trait === 'rush' ? '#ffb06a' : '#ffb0b8');
+      c.fillStyle = traitCol || '#ffb0b8';
       c.fillText(meta.label, W / 2, y + 16);
     }
     c.restore();
@@ -27537,6 +27537,10 @@ class Game {
     for (let i = 0; i < total; i++) {
       const px = pipStart + i * pipGap;
       const isBossPip = this.level.boss && i === total - 1;
+      const wMeta = this.level.waveMeta && this.level.waveMeta[i];
+      const wTrait = wMeta && wMeta.trait && typeof waveTraitBanner === 'function'
+        ? waveTraitBanner(wMeta.trait) : null;
+      const traitCol = wTrait ? wTrait.color : null;
       const done = i < cur;
       const active = i === cur && this.waveIdx >= 0 && this.wavePause <= 0;
       const nextPause = i === cur + 1 && this.wavePause > 0;
@@ -27544,16 +27548,17 @@ class Game {
       const r = (done || active ? 3.5 : 3) * pulseP;
       c.beginPath();
       if (done) {
-        c.fillStyle = isBossPip ? '#ff8a9a' : '#ffd75e';
+        c.fillStyle = isBossPip ? '#ff8a9a' : (traitCol || '#ffd75e');
         c.arc(px, pipY, r, 0, TAU);
         c.fill();
       } else {
-        c.strokeStyle = isBossPip ? 'rgba(255,138,154,.85)' : (active || nextPause ? '#7cf5ff' : 'rgba(255,255,255,.35)');
+        c.strokeStyle = isBossPip ? 'rgba(255,138,154,.85)'
+          : (active || nextPause ? '#7cf5ff' : (traitCol ? traitCol + 'aa' : 'rgba(255,255,255,.35)'));
         c.lineWidth = active || nextPause ? 2 : 1.2;
         c.arc(px, pipY, r, 0, TAU);
         c.stroke();
         if (active || nextPause) {
-          c.fillStyle = 'rgba(124,245,255,.28)';
+          c.fillStyle = traitCol ? traitCol + '44' : 'rgba(124,245,255,.28)';
           c.fill();
         }
       }
@@ -27973,16 +27978,8 @@ class Game {
         let ctxCol = null;
         let ctxDie = false;
         if (this.stageAlly) {
-          c.font = '700 11px sans-serif';
-          const col = this.stageAlly.color || '#7cf5ff';
-          c.fillStyle = col;
-          const txt = this.stageAlly.name;
-          c.fillText(txt, W / 2 + 7, 62);
-          if (this.stageAlly.id === 'tide' && typeof drawMiniWave === 'function') {
-            drawMiniWave(c, W / 2 - c.measureText(txt).width / 2 - 3, 58.5, 10, col);
-          } else {
-            drawMiniDie(c, W / 2 - c.measureText(txt).width / 2 - 3, 58.5, 10, col);
-          }
+          ctxCol = this.stageAlly.color || '#7cf5ff';
+          ctxTxt = this.stageAlly.name;
         } else if (this.eggPet && activeEggPetDef()) {
           ctxCol = this.eggPet.def?.c1 || '#ffd75e';
           ctxTxt = t('hud.eggPet', { name: this.eggPet.def?.name || t('hud.cosmetic') });
@@ -27997,9 +27994,13 @@ class Game {
         if (ctxTxt) {
           c.font = '700 11px sans-serif';
           c.fillStyle = ctxCol;
-          if (ctxDie) {
+          if (ctxDie || this.stageAlly) {
             c.fillText(ctxTxt, W / 2 + 7, hy);
-            drawMiniDie(c, W / 2 - c.measureText(ctxTxt).width / 2 - 3, hy - 3.5, 10, ctxCol);
+            if (this.stageAlly && this.stageAlly.id === 'tide' && typeof drawMiniWave === 'function') {
+              drawMiniWave(c, W / 2 - c.measureText(ctxTxt).width / 2 - 3, hy - 3.5, 10, ctxCol);
+            } else {
+              drawMiniDie(c, W / 2 - c.measureText(ctxTxt).width / 2 - 3, hy - 3.5, 10, ctxCol);
+            }
           } else {
             c.fillText(ctxTxt, W / 2, hy);
           }
@@ -31623,7 +31624,7 @@ const UI = {
         ? SVG_LOCK_ICON
         : `${n}${boss ? `<small>${t('ui.boss')}</small>` : `<small style="color:${rar.color}">${rarityLabel(infoLv.rarityCap)}</small>`}` +
           `<span class="lvl-wave-strip" aria-hidden="true">${waveStrip}</span>` +
-          (starsN ? `<span class="lvl-stars">${'★'.repeat(starsN)}</span>` : '') +
+          `<span class="lvl-stars${starsN ? '' : ' lvl-stars-empty'}" aria-label="${starsN}/3 ${t('island.starsProg')}">${'★'.repeat(starsN)}${'☆'.repeat(3 - starsN)}</span>` +
           (fails > 0 && !locked ? `<span class="lvl-fails">${fails}/5</span>` : '') +
           (masterLv === n ? '<span class="lvl-master">+20%</span>' : '');
       if (!locked) {

@@ -115,6 +115,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-07-27 | **4** | Avontuur c6: wave-pip trait-kleuren (alle 8 traits), next-wave preview via waveTraitBanner, stageAlly HUD op hy-stack, level-grid ★☆ slots, spawn funnel vanaf 2 vijanden. v1.18.127 / SW v337. |
 | 2026-07-26 | **2** | Training c5: 3s dummy grace wired, Chidori cap 32% HP + low-HP mercy AI, trainRoundBest per ronde, summon counter snap tijdens reveal. v1.18.126 / SW v336. |
 | 2026-07-26 | **18** | Char select c5: fight dock + replay duo + boot toast fix. v1.18.125 / SW v335. |
 | 2026-07-26 | — | **Summons video:** echte Gemini-share mp4 (10s) i.p.v. placeholder + true fullscreen (`has-video`). v1.18.122 / SW v332. |

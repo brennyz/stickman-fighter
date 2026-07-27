@@ -2691,7 +2691,7 @@ const UI = {
         ? SVG_LOCK_ICON
         : `${n}${boss ? `<small>${t('ui.boss')}</small>` : `<small style="color:${rar.color}">${rarityLabel(infoLv.rarityCap)}</small>`}` +
           `<span class="lvl-wave-strip" aria-hidden="true">${waveStrip}</span>` +
-          (starsN ? `<span class="lvl-stars">${'★'.repeat(starsN)}</span>` : '') +
+          `<span class="lvl-stars${starsN ? '' : ' lvl-stars-empty'}" aria-label="${starsN}/3 ${t('island.starsProg')}">${'★'.repeat(starsN)}${'☆'.repeat(3 - starsN)}</span>` +
           (fails > 0 && !locked ? `<span class="lvl-fails">${fails}/5</span>` : '') +
           (masterLv === n ? '<span class="lvl-master">+20%</span>' : '');
       if (!locked) {

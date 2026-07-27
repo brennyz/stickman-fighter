@@ -1578,6 +1578,7 @@
   .lvl-wave-dot.trait-safari { background:rgba(67,178,91,.92); box-shadow:0 0 3px rgba(67,178,91,.35); }
   .lvl-wave-dot.trait-tide { background:rgba(74,159,255,.9); }
   .lvl-stars { display:block; font-size:11px; color:#ffd75e; letter-spacing:1px; margin-top:3px; }
+  .lvl-stars-empty { color:rgba(255,215,94,.42); }
   .lvl-fails { position:absolute; top:6px; right:8px; font-size:10px; font-weight:800; color:#ffb0b8; opacity:.9; }
   .lvl-master { display:block; font-size:10px; font-weight:800; color:#c47aff; margin-top:2px; letter-spacing:.04em; }
   .lvl.master-buff:not(.locked) { outline:2px solid rgba(196,122,255,.75); box-shadow:0 0 10px rgba(196,122,255,.25), 0 5px 0 rgba(0,0,0,.35); }

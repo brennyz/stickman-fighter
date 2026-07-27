@@ -1,24 +1,37 @@
 {
   "version": 3,
-  "cyclesCompleted": 5,
+  "cyclesCompleted": 6,
   "rollFirst": [],
-  "remaining": [],
+  "remaining": [
+    16,
+    1,
+    15,
+    7,
+    9,
+    3,
+    8,
+    11,
+    5,
+    10,
+    12,
+    14,
+    2,
+    13,
+    17,
+    19,
+    18,
+    6,
+    20
+  ],
   "lastRoll": {
-    "face": 2,
-    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
-    "rolledAt": "2026-07-26T23:03:19Z",
-    "remainingCount": 0,
-    "cycle": 5
+    "face": 4,
+    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
+    "rolledAt": "2026-07-27T00:01:29Z",
+    "remainingCount": 19,
+    "cycle": 6
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 6,
-      "note": "pauze-volume sliders, Lite mix, syncContextPower mute",
-      "version": "1.12.19",
-      "doneAt": "2026-07-23T19:00:31Z",
-      "cycle": 1
-    },
     {
       "face": 9,
       "note": "2P neutraal strip, slop, touchend guard, pauze hit",
@@ -571,6 +584,13 @@
       "version": "1.18.126",
       "doneAt": "2026-07-26T23:06:07Z",
       "cycle": 5
+    },
+    {
+      "face": 4,
+      "note": "trait-pip kleuren + ally hy + ster-slots grid + spawn funnel 2+",
+      "version": "1.18.127",
+      "doneAt": "2026-07-27T00:03:08Z",
+      "cycle": 6
     }
   ],
   "userFeatureLog": [
@@ -965,13 +985,6 @@
     }
   ],
   "history": [
-    {
-      "face": 12,
-      "category": "Content \u2014 monsters, wapens, rariteit, dex",
-      "rolledAt": "2026-07-23T15:06:05Z",
-      "remainingCount": 19,
-      "cycle": 1
-    },
     {
       "face": 18,
       "category": "Character select \u2014 saga UI (deel 1) + 5 saga sticks (deel 2)",
@@ -1806,6 +1819,13 @@
       "rolledAt": "2026-07-26T23:03:19Z",
       "remainingCount": 0,
       "cycle": 5
+    },
+    {
+      "face": 4,
+      "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
+      "rolledAt": "2026-07-27T00:01:29Z",
+      "remainingCount": 19,
+      "cycle": 6
     }
   ],
   "rollBacklog": []
