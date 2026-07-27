@@ -110,6 +110,7 @@ Voordat je merge/commit:
 ---
 
 ## Agent log (kort — nieuwste bovenaan)
+| 2026-07-27 | — | **Assets (cron):** inventaris vs ASSET-STYLE — hub/modes/chrome + saga/ach/ui live; adventure islands opnieuw als `assets/ui/island-*.svg` (7) na merge-drop, inline SVG uit `ADVENTURE_ISLANDS` → file `<img>`, SW precache, CSS img, smoke. v1.18.127 / SW v337. |
 
 Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
