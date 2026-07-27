@@ -144,6 +144,7 @@ houd kleuren/stroke volgens ASSET-STYLE, geen emoji, daarna build+smoke.
 | Touch vechtknoppen | `src/core/storage.js` `drawTouchBtnIcon` | **code**, geen PNG | code |
 | Prestatie-iconen | `ACH_ICON_FILE` → `assets/ui/ach-*.svg` | `assets/ui/` | **Live** |
 | Lock / check / coin / warn | `SVG_*` → `assets/ui/ui-*.svg` | `assets/ui/` | **Live** |
+| Adventure eilanden | `ADVENTURE_ISLANDS.icon` → `assets/ui/island-*.svg` | `assets/ui/` | **Live** |
 | PWA icons | `icons/icon-*.png` | blijf hier | PNG |
 
 ### Nav-set (chrome) — tokens
