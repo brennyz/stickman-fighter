@@ -323,6 +323,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-07T12:18:26Z",
+      "summary": "Loose ends LIVE: hub coin + island SVGs + Satan · v1.18.129"
+    },
+    {
       "at": "2026-08-07T12:04:13Z",
       "summary": "d1 c6: adventure counter FX + haptic + freeze parity · v1.18.128"
     },
@@ -417,10 +421,6 @@
     {
       "at": "2026-07-26T19:16:24Z",
       "summary": "iPad/mobile fluid scale + splash/dock · v1.18.111"
-    },
-    {
-      "at": "2026-07-26T19:16:24Z",
-      "summary": "iPad/mobile responsive scale (ui-rail + type clamp) · v1.18.111"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
