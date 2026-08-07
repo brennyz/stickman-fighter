@@ -83,7 +83,25 @@ async function run() {
     must(openSnap.state === 'menu', 'state should be menu, got ' + openSnap.state);
     must(openSnap.where && openSnap.centerCard, 'missing where-strip or center card');
     must(openSnap.left === 10, 'expected 10 summons, got ' + openSnap.left);
+    
     must(openSnap.hasPull, 'missing btnChestPull');
+    const btnTxt = await page.evaluate(() => (document.getElementById('btnChestPull') || {}).textContent || '');
+    must(/open kist/i.test(btnTxt), 'expected Open kist CTA, got: ' + btnTxt);
+    const polish = await page.evaluate(() => {
+      const css = [...document.styleSheets].flatMap(s => {
+        try { return [...s.cssRules].map(r => r.cssText); } catch (_) { return []; }
+      }).join('\n');
+      return {
+        stagePullable: !!(document.getElementById('summonStage')?.classList.contains('is-pullable')),
+        videoCrop: /111\.12%/.test(css) || /111\.12%/.test(document.getElementById('summonVideo') && ''),
+        hasSummonSongs: typeof playSummonBgm === 'function' && typeof endSummonBgm === 'function',
+        rarityCardCss: /data-rarity=.rare./.test(css) || /summon-center-card/.test(css),
+      };
+    });
+    // CSSOM may omit cross-origin; also check source via inline computed after pull
+    must(polish.stagePullable, 'stage should be pullable when summons left');
+    must(polish.hasSummonSongs, 'missing playSummonBgm/endSummonBgm');
+
     must(openSnap.fullW >= 360 && openSnap.fullH >= 700, 'summon screen not fullscreen-ish: ' + JSON.stringify(openSnap));
 
     const pullStart = await page.evaluate(() => {
@@ -101,6 +119,7 @@ async function run() {
       // Give video a moment to start, then sample playback
       await new Promise((r) => setTimeout(r, 1200));
       const vidEarly = document.getElementById('summonVideo');
+      const stageEarly = document.getElementById('summonStage');
       const playEarly = vidEarly ? {
         display: getComputedStyle(vidEarly).display,
         paused: vidEarly.paused,
@@ -108,6 +127,17 @@ async function run() {
         ready: vidEarly.readyState,
         hasVideoCls: document.getElementById('summonScreen')?.classList.contains('has-video'),
       } : null;
+      let cropEarly = null;
+      if (vidEarly && stageEarly && playEarly && playEarly.display === 'block') {
+        const vs = getComputedStyle(vidEarly);
+        const vw = parseFloat(vs.width);
+        const sw = stageEarly.getBoundingClientRect().width;
+        cropEarly = {
+          vw, sw,
+          ratio: sw > 0 ? vw / sw : 0,
+          stagePct: stageEarly.getBoundingClientRect().width / window.innerWidth,
+        };
+      }
       // Wait until past card window (last 2s of ~10s) + buffer
       await new Promise((r) => setTimeout(r, 9200));
       const reveal = document.getElementById('summonReveal');
@@ -146,6 +176,7 @@ async function run() {
         toastAfter,
         toastBefore,
         playEarly,
+        cropEarly,
         endText: (document.getElementById('summonRevealText') || {}).textContent || '',
       };
     }, pullStart.before);
@@ -163,7 +194,10 @@ async function run() {
     must(pullSnap.videoDisplay === 'block' || pullSnap.fallbackOk || (pullSnap.playEarly && pullSnap.playEarly.display === 'block'),
       'video not visible and no fallback: ' + JSON.stringify(pullSnap));
     if (pullSnap.playEarly && pullSnap.playEarly.display === 'block') {
-      must(pullSnap.playEarly.hasVideoCls, 'expected has-video fullscreen class during play');
+      must(pullSnap.playEarly.hasVideoCls, 'expected has-video class during play');
+      const crop = pullSnap.cropEarly;
+      must(crop && crop.ratio >= 1.08, 'video should zoom ~111% to crop watermark: ' + JSON.stringify(crop));
+      must(crop && crop.stagePct <= 0.94, 'stage should be ~90% viewport wide: ' + JSON.stringify(crop));
       must(pullSnap.playEarly.t > 0.05, 'mp4 did not advance currentTime: ' + JSON.stringify(pullSnap.playEarly));
       must(!pullSnap.playEarly.paused, 'mp4 still paused after pull: ' + JSON.stringify(pullSnap.playEarly));
     }

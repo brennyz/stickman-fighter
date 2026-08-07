@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=339">
+<link rel="stylesheet" href="styles/main.css?v=340">
 
 
 
@@ -94,7 +94,7 @@
       <div class="arcade-pre" id="menuArcadePre">KIES JE PAD</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine">insert coin</p>
-      <div class="subtitle" id="menuVerLine">v1.18.129 · arcade</div>
+      <div class="subtitle" id="menuVerLine">v1.18.130 · arcade</div>
     </header>
     <div class="arcade-menu-body menu-landing-body">
       <div class="menu-landing-scroll">
@@ -308,7 +308,7 @@
     </div>
     <div id="summonQuota" class="statbar summon-quota"></div>
     <div id="summonReveal" class="summon-reveal" data-rarity="common" aria-live="polite">
-      <div class="summon-stage" id="summonStage">
+      <div class="summon-stage" id="summonStage" role="button" tabindex="0" aria-label="Open kist">
         <video id="summonVideo" class="summon-video" playsinline webkit-playsinline muted
           preload="auto" data-src="assets/summon/reveal.mp4" aria-hidden="true"></video>
         <div class="summon-stage-fallback" id="summonStageFallback" aria-hidden="true">
@@ -324,13 +324,14 @@
           <div id="summonCardRar" class="summon-card-rar"></div>
           <div id="summonCardSkill" class="summon-card-skill"></div>
         </div>
+        <div class="summon-stage-hint" id="summonStageHint" aria-hidden="true">Tik kist om te openen</div>
       </div>
-      <div id="summonRevealText" class="summon-reveal-text">Tik Summon — de kist onthult de buit</div>
+      <div id="summonRevealText" class="summon-reveal-text">Tik de kist of Open — buit verschijnt in de kist</div>
     </div>
     <div class="summon-actions">
-      <button type="button" class="btn mode-btn b-weapons big-touch summon-pull-btn" id="btnChestPull">
+      <button type="button" class="btn mode-btn big-touch summon-pull-btn" id="btnChestPull">
         <span class="ico"><img src="assets/buttons/hub/summons.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
-        <div>Summon<small id="chestPullLbl">10 over</small></div>
+        <div>Open kist<small id="chestPullLbl">10 over</small></div>
       </button>
     </div>
     <div class="summon-goto-row">
@@ -655,12 +656,12 @@
 
 <script>
 /* HTML↔JS handshake: als oude SW nog oude game.js serveert terwijl menu-HTML nieuw is. */
-window.__SF_EXPECT_REV = 339;
-window.__SF_EXPECT_APP = '1.18.129';
+window.__SF_EXPECT_REV = 340;
+window.__SF_EXPECT_APP = '1.18.130';
 </script>
-<script src="tunnel-check.js?v=339"></script>
-<script src="game.js?v=339"></script>
-<script src="install.js?v=339"></script>
+<script src="tunnel-check.js?v=340"></script>
+<script src="game.js?v=340"></script>
+<script src="install.js?v=340"></script>
 <script>
 (function () {
   function nukeStale(reason) {

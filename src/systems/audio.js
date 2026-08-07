@@ -135,7 +135,7 @@ const AudioSys = {
     const id = (this.song && this.song.id) || this.desiredSong;
     const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
     const inPause = this.paused || state === 'pause';
-    let baseM = (id === 'menu' || (id && String(id).startsWith('menu'))) ? 0.24 : 0.32;
+    let baseM = (id === 'menu' || (id && String(id).startsWith('menu')) || (id && String(id).startsWith('summon'))) ? 0.24 : 0.32;
     if (lite) baseM *= 0.88;
     if (inPause) baseM *= 0.26;
     else if (state === 'result') baseM *= 0.5;
@@ -1369,7 +1369,7 @@ const SONGS = {
     ],
   },
   /** Mats munten — speels / vrolijk */
-  mats: {
+    mats: {
     bpm: 118,
     kick: [0, 8], snare: [4, 12], hat: [2, 6, 10, 14],
     bass: [48,null,null,48, 52,null,48,null, 50,null,null,50, 47,null,45,null],
@@ -1378,10 +1378,109 @@ const SONGS = {
       [76,null,79,83, null,79,76,null, 74,null,72,69, 71,null,72,76],
     ],
   },
+  /** Summon chest — mystic open (different each pull) */
+  summonReveal: {
+    bpm: 92,
+    kick: [0, 10], snare: [6], hat: [2, 4, 8, 12],
+    bass: [41,null,null,null, 38,null,null,null, 36,null,null,null, 33,null,36,null],
+    lead: [
+      [60,null,64,null, 67,null,64,null, 65,null,62,null, 60,null,57,null],
+      [62,null,65,null, 69,null,65,null, 67,null,64,null, 60,null,58,null],
+    ],
+  },
+  summonPulse: {
+    bpm: 108,
+    kick: [0, 4, 8, 12], snare: [4, 12], hat: [0,2,6,8,10,14],
+    bass: [45,null,45,null, 43,null,40,null, 45,null,48,null, 43,null,40,null],
+    lead: [
+      [69,null,72,null, 76,null,72,null, 74,null,71,null, 69,null,67,null],
+      [72,null,76,null, 79,null,76,null, 77,null,74,null, 72,null,69,null],
+    ],
+  },
+  summonMystic: {
+    bpm: 78,
+    kick: [0], snare: [], hat: [4, 12],
+    bass: [36,null,null,null, 33,null,null,null, 31,null,null,null, 28,null,31,null],
+    lead: [
+      [55,null,60,null, 64,null,60,null, 62,null,57,null, 55,null,52,null],
+      [57,null,62,null, 65,null,62,null, 64,null,60,null, 55,null,53,null],
+    ],
+  },
+  summonEpic: {
+    bpm: 118,
+    kick: [0, 6, 8, 14], snare: [4, 12], hat: [2, 6, 10, 14],
+    bass: [40,null,null,43, 45,null,null,40, 38,null,36,null, 33,null,38,null],
+    lead: [
+      [67,null,71,74, null,72,69,null, 67,null,64,null, 62,null,64,67],
+      [71,null,74,79, null,76,72,null, 71,null,67,null, 64,null,67,71],
+    ],
+  },
+  summonJackpot: {
+    bpm: 128,
+    kick: [0, 4, 8, 12], snare: [4, 12], hat: [0,2,4,6,8,10,12,14],
+    bass: [48,48,null,48, 52,null,48,null, 55,55,null,52, 48,null,45,null],
+    lead: [
+      [76,null,79,81, null,79,76,null, 84,null,81,79, null,76,79,81],
+      [79,null,83,86, null,83,79,null, 81,null,79,76, 74,null,76,79],
+    ],
+  },
 };
 
 const MENU_BGM_TRACKS = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero', 'menuDream'];
 let menuBgmIdx = 0;
+
+/** Summon chest BGM — rotate so each pull feels different. */
+const SUMMON_BGM_TRACKS = ['summonReveal', 'summonPulse', 'summonMystic', 'summonEpic', 'summonJackpot'];
+let summonBgmIdx = 0;
+let _summonPrevSong = null;
+
+function isSummonBgmId(id) {
+  return !!(id && SUMMON_BGM_TRACKS.includes(id));
+}
+
+/** Start a fresh chest track (rarity can bias epic/jackpot). Restores via endSummonBgm. */
+function playSummonBgm(rarId) {
+  try {
+    if (typeof AudioSys === 'undefined' || !AudioSys) return null;
+    if (typeof save !== 'undefined' && save && !save.music) {
+      try { AudioSys.sfx('summon'); } catch (_) {}
+      return null;
+    }
+    const cur = (AudioSys.song && AudioSys.song.id) || AudioSys.desiredSong || '';
+    if (!isSummonBgmId(cur)) _summonPrevSong = cur || null;
+    let id;
+    const r = String(rarId || '');
+    if (r === 'mythic' || r === 'legendary') id = 'summonJackpot';
+    else if (r === 'epic') id = 'summonEpic';
+    else {
+      summonBgmIdx = (summonBgmIdx + 1) % SUMMON_BGM_TRACKS.length;
+      id = SUMMON_BGM_TRACKS[summonBgmIdx];
+      // Avoid immediately repeating the same track as last pull when rotating
+      if (id === cur) {
+        summonBgmIdx = (summonBgmIdx + 1) % SUMMON_BGM_TRACKS.length;
+        id = SUMMON_BGM_TRACKS[summonBgmIdx];
+      }
+    }
+    AudioSys.play(id);
+    try { AudioSys.sfx('summon'); } catch (_) {}
+    return id;
+  } catch (_) {
+    return null;
+  }
+}
+
+function endSummonBgm() {
+  try {
+    if (typeof AudioSys === 'undefined' || !AudioSys) return;
+    const prev = _summonPrevSong;
+    _summonPrevSong = null;
+    if (prev && SONGS[prev] && !isSummonBgmId(prev)) {
+      AudioSys.play(prev);
+      return;
+    }
+    if (typeof playMenuBgm === 'function') playMenuBgm(false);
+  } catch (_) {}
+}
 
 /** Fight BGM pools — rotate variants so battle/elite/boss/tide stay fresh. */
 const BATTLE_BGM_TRACKS = ['battle', 'battle2', 'battle3', 'battlePulse', 'battleDrive', 'battleRush'];
@@ -1436,6 +1535,8 @@ const SONG_LABELS = {
   boss: 'Baas', boss2: 'Baas 2', bossFury: 'Baas Fury',
   tideBattle: 'Tide', tideBattle2: 'Tide 2', tideBattleSurge: 'Tide Surge',
   wall: 'Muur', training: 'Training', coinrun: 'Mats',
+  summonReveal: 'Kist', summonPulse: 'Kist Pulse', summonMystic: 'Kist Mystiek',
+  summonEpic: 'Kist Epic', summonJackpot: 'Kist Jackpot',
 };
 function songLabel(id) {
   if (!id) return '';
