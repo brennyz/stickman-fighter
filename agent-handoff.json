@@ -339,6 +339,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-07T12:37:53Z",
+      "summary": "Summon framing: kist-onderkant + reward center · v1.18.131"
+    },
+    {
       "at": "2026-08-07T12:28:58Z",
       "summary": "Summon polish LIVE: rarity card-in-chest + per-pull BGM + Open kist + watermark crop · v1.18.130"
     },
@@ -433,10 +437,6 @@
     {
       "at": "2026-07-26T19:18:40Z",
       "summary": "Achterstallig audio gemerged naar main · v1.18.112 LIVE"
-    },
-    {
-      "at": "2026-07-26T19:18:04Z",
-      "summary": "Merge achterstallig audio naar main · diversity+top-SFX"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
