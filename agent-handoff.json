@@ -27,6 +27,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260807T202954",
+      "from": "user",
+      "text": "IP-A anime skill rename (jutsu/chakra → technique/energy)",
+      "status": "open",
+      "updated": "2026-08-07"
+    },
+    {
       "id": "w-20260807T123500",
       "from": "user",
       "text": "Onderkant van de kist niet zien (groot PC-scherm); reward moet goed in het midden centeren",
@@ -339,6 +346,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-07T20:29:54Z",
+      "summary": "IP-A: anime skills → generic techniques (spiral_orb/…) · activeTechnique migrate · v1.18.136 / SW v346"
+    },
+    {
       "at": "2026-08-07T20:29:02Z",
       "summary": "IP-A: renamed anime skills to generic ids (spiral_orb etc) + Technique/Energy + save migrate · v1.18.136"
     },
@@ -433,10 +444,6 @@
     {
       "at": "2026-07-26T19:12:00Z",
       "summary": "Harden+merge: wapen-upgrades ownership-only LIVE · v1.18.114"
-    },
-    {
-      "at": "2026-07-26T19:10:16Z",
-      "summary": "Wapen-upgrades alleen bij bezit (weaponUnlockedByLevel) · v1.18.113"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
