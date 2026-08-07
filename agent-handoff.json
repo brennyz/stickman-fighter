@@ -367,6 +367,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-07T20:53:55Z",
+      "summary": "Soft-live merge to main: legal+feel+versus-retire+IP-A+listing · Play TWA shell · v1.18.138 / SW 348"
+    },
+    {
       "at": "2026-08-07T20:48:00Z",
       "summary": "Merge soft-live: soft-legal + soft-feel onto main"
     },
