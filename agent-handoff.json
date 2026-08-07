@@ -347,6 +347,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-07T20:27:51Z",
+      "summary": "IP-B: Ryu/Ken→Arcade Flair/Rush, master_sword→dawnblade, migrate saves, v1.18.134/SW344"
+    },
+    {
       "at": "2026-08-07T20:27:10Z",
       "summary": "IP-B: Ryu/Ken→Arcade Flair/Rush, master_sword→dawnblade, migrate saves, v1.18.134/SW344"
     },
@@ -441,10 +445,6 @@
     {
       "at": "2026-07-26T19:12:00Z",
       "summary": "Harden+merge: wapen-upgrades ownership-only LIVE · v1.18.114"
-    },
-    {
-      "at": "2026-07-26T19:10:16Z",
-      "summary": "Wapen-upgrades alleen bij bezit (weaponUnlockedByLevel) · v1.18.113"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
