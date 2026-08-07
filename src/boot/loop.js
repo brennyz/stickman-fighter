@@ -321,15 +321,23 @@ function loop(now) {
     if (!Perf.canvasDrawActive()) return;
     // NOOIT menu-blauw (#151b33) tekenen tijdens play/pause — dat IS het "blauwe scherm"
     if (state === 'play') {
-      if (game && typeof game.draw === 'function' && !Perf.skipHeavyDraw()) {
+      // Always draw fight frames (incl. background). Never skip — blank canvas flash.
+      if (game && typeof game.draw === 'function') {
         try {
           game.draw(ctx);
         } catch (drawErr) {
           try { sfReportError('draw', drawErr, 'Tekenen hiccup — speel door'); } catch (_) {}
+          // On error: still paint sky+ground so adventure doesn't go black
           try {
-            ctx.fillStyle = '#0a0d18';
-            ctx.fillRect(0, 0, W, H);
-          } catch (_) {}
+            if (game && typeof drawBackground === 'function') {
+              drawBackground(ctx, game.theme || 'veld', game.t || 0, game.ground || H * 0.72, game.worldX || 0, null);
+            } else {
+              ctx.fillStyle = '#0a0d18';
+              ctx.fillRect(0, 0, W, H);
+            }
+          } catch (_) {
+            try { ctx.fillStyle = '#0a0d18'; ctx.fillRect(0, 0, W, H); } catch (_) {}
+          }
         }
       } else if (!game) {
         try { ctx.fillStyle = '#0a0d18'; ctx.fillRect(0, 0, W, H); } catch (_) {}

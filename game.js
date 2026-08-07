@@ -40,6 +40,12 @@ const Perf = {
   },
   reset() { this.tier = 0; this.emaMs = 16.7; this.frames = 0; },
   skipHeavyDraw() {
+    // Never skip the whole fight frame — that left a blank/half canvas after resize
+    // and made adventure backgrounds "fall away". Throttle particles inside draw instead.
+    return false;
+  },
+  /** True when FX should be light (particles/weather) — does not skip background. */
+  lightFxFrame() {
     if (typeof state === 'undefined' || state !== 'play') return false;
     if (this.tier >= 2 && (this.frames & 1) === 0) return true;
     const horde = perfHordeLoad();
@@ -268,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.132';
+const APP_VERSION = '1.18.133';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 342;
+const SW_CACHE_REV = 343;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -16548,7 +16554,9 @@ function resize() {
   const vp = viewportGameSize();
   syncViewportCssVars(vp);
   const newDpr = Math.min(devicePixelRatio || 1, maxCanvasDpr());
-  const sizeKey = vp.w + 'x' + vp.h + '@' + newDpr + 't' + Perf.tier;
+  // Do NOT include Perf.tier — tier bumps must not recreate/blank the canvas mid-fight
+  // (that + skipHeavyDraw caused adventure backgrounds to vanish for a frame).
+  const sizeKey = vp.w + 'x' + vp.h + '@' + newDpr;
   if (sizeKey === lastResizeKey) return;
   lastResizeKey = sizeKey;
   try { if (typeof menuBgCacheInvalidate === 'function') menuBgCacheInvalidate(); } catch (_) {}
@@ -23947,7 +23955,8 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
     }
   }
   // weer per thema (art-upgrade 4/4): blaadjes/bloesem/sintels/regen/stof
-  drawThemeWeather(c, themeName, t, ground, scroll);
+  const lightFx = typeof Perf !== 'undefined' && typeof Perf.lightFxFrame === 'function' && Perf.lightFxFrame();
+  if (!lightFx) drawThemeWeather(c, themeName, t, ground, scroll);
   // pixel-speckles op de grond (art-upgrade 1/4) — deterministisch, scroll-vast
   // bos/grot: skip — photo-sampled floor tiles already carry grit
   if (!fxLite() && themeName !== 'bos' && themeName !== 'grot') {
@@ -23965,14 +23974,14 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
     }
   }
 
-  // Stage-delen (avontuur): decor evolueert per deel — schemer + rotsen + arena-fakkels
+  // Stage-delen (avontuur): decor evolueert per deel — zachte schemer (geen harde wipe)
   if (stageFx && stageFx.pr > 0.02) {
     const pr = clamp(stageFx.pr, 0, 1);
     const part = stageFx.part || 1;
-    // 1) lucht kleurt langzaam naar schemer richting het einde
+    // Soft dusk — was up to 30%/16% and read as "half background gone"
     const dusk = c.createLinearGradient(0, 0, 0, ground);
-    dusk.addColorStop(0, `rgba(30,14,60,${(pr * 0.30).toFixed(3)})`);
-    dusk.addColorStop(1, `rgba(90,30,50,${(pr * 0.16).toFixed(3)})`);
+    dusk.addColorStop(0, `rgba(30,14,60,${(pr * 0.14).toFixed(3)})`);
+    dusk.addColorStop(1, `rgba(90,30,50,${(pr * 0.08).toFixed(3)})`);
     c.fillStyle = dusk;
     c.fillRect(0, 0, W, ground);
     // 2) vanaf deel 2: rotsblokken op de grondlijn
@@ -27422,6 +27431,15 @@ class Game {
     if (this.shakeT > 0) {
       c.translate(rand(-1, 1) * this.shakeMag, rand(-1, 1) * this.shakeMag);
     }
+    // Always paint a full base fill first — prevents "half background gone" if a later layer fails
+    try {
+      const th = (typeof THEMES !== 'undefined' && THEMES[this.theme]) || null;
+      c.fillStyle = (th && th.sky2) || '#151b33';
+      c.fillRect(0, 0, W, H);
+    } catch (_) {
+      c.fillStyle = '#0a0d18';
+      c.fillRect(0, 0, W, H);
+    }
     drawBackground(c, this.theme, this.t, this.ground, this.worldX || 0,
       this.mode === 'adventure' && this.level ? {
         pr: this.progressSmooth || 0,
@@ -27626,8 +27644,9 @@ class Game {
       c.restore();
     }
 
-    // deeltjes
-    for (const pt of this.particles) {
+    // deeltjes — skip alternate frames under load (never skip background)
+    const skipFx = typeof Perf !== 'undefined' && typeof Perf.lightFxFrame === 'function' && Perf.lightFxFrame();
+    if (!skipFx) for (const pt of this.particles) {
       c.globalAlpha = clamp(pt.life * 2, 0, 1);
       if (pt.kind === 'ring') {
         const maxL = pt.maxLife || 0.34;
@@ -28340,9 +28359,10 @@ class Game {
   drawStageBeatFx(c) {
     if (this.partFlashT > 0 && !motionReduced()) {
       const f = clamp(this.partFlashT / 0.5, 0, 1);
-      const g = c.createRadialGradient(W / 2, 44, 10, W / 2, 44, H * 0.9);
-      g.addColorStop(0, `rgba(124,245,255,${0.26 * f})`);
-      g.addColorStop(0.4, `rgba(124,245,255,${0.09 * f})`);
+      // Soft vignette only — full-screen cyan wash looked like background drop
+      const g = c.createRadialGradient(W / 2, 44, 10, W / 2, 44, H * 0.55);
+      g.addColorStop(0, `rgba(124,245,255,${0.14 * f})`);
+      g.addColorStop(0.55, `rgba(124,245,255,${0.04 * f})`);
       g.addColorStop(1, 'rgba(124,245,255,0)');
       c.fillStyle = g;
       c.fillRect(0, 0, W, H);
@@ -35284,15 +35304,23 @@ function loop(now) {
     if (!Perf.canvasDrawActive()) return;
     // NOOIT menu-blauw (#151b33) tekenen tijdens play/pause — dat IS het "blauwe scherm"
     if (state === 'play') {
-      if (game && typeof game.draw === 'function' && !Perf.skipHeavyDraw()) {
+      // Always draw fight frames (incl. background). Never skip — blank canvas flash.
+      if (game && typeof game.draw === 'function') {
         try {
           game.draw(ctx);
         } catch (drawErr) {
           try { sfReportError('draw', drawErr, 'Tekenen hiccup — speel door'); } catch (_) {}
+          // On error: still paint sky+ground so adventure doesn't go black
           try {
-            ctx.fillStyle = '#0a0d18';
-            ctx.fillRect(0, 0, W, H);
-          } catch (_) {}
+            if (game && typeof drawBackground === 'function') {
+              drawBackground(ctx, game.theme || 'veld', game.t || 0, game.ground || H * 0.72, game.worldX || 0, null);
+            } else {
+              ctx.fillStyle = '#0a0d18';
+              ctx.fillRect(0, 0, W, H);
+            }
+          } catch (_) {
+            try { ctx.fillStyle = '#0a0d18'; ctx.fillRect(0, 0, W, H); } catch (_) {}
+          }
         }
       } else if (!game) {
         try { ctx.fillStyle = '#0a0d18'; ctx.fillRect(0, 0, W, H); } catch (_) {}

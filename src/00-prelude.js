@@ -38,6 +38,12 @@ const Perf = {
   },
   reset() { this.tier = 0; this.emaMs = 16.7; this.frames = 0; },
   skipHeavyDraw() {
+    // Never skip the whole fight frame — that left a blank/half canvas after resize
+    // and made adventure backgrounds "fall away". Throttle particles inside draw instead.
+    return false;
+  },
+  /** True when FX should be light (particles/weather) — does not skip background. */
+  lightFxFrame() {
     if (typeof state === 'undefined' || state !== 'play') return false;
     if (this.tier >= 2 && (this.frames & 1) === 0) return true;
     const horde = perfHordeLoad();

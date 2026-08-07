@@ -3240,6 +3240,15 @@ class Game {
     if (this.shakeT > 0) {
       c.translate(rand(-1, 1) * this.shakeMag, rand(-1, 1) * this.shakeMag);
     }
+    // Always paint a full base fill first — prevents "half background gone" if a later layer fails
+    try {
+      const th = (typeof THEMES !== 'undefined' && THEMES[this.theme]) || null;
+      c.fillStyle = (th && th.sky2) || '#151b33';
+      c.fillRect(0, 0, W, H);
+    } catch (_) {
+      c.fillStyle = '#0a0d18';
+      c.fillRect(0, 0, W, H);
+    }
     drawBackground(c, this.theme, this.t, this.ground, this.worldX || 0,
       this.mode === 'adventure' && this.level ? {
         pr: this.progressSmooth || 0,
@@ -3444,8 +3453,9 @@ class Game {
       c.restore();
     }
 
-    // deeltjes
-    for (const pt of this.particles) {
+    // deeltjes — skip alternate frames under load (never skip background)
+    const skipFx = typeof Perf !== 'undefined' && typeof Perf.lightFxFrame === 'function' && Perf.lightFxFrame();
+    if (!skipFx) for (const pt of this.particles) {
       c.globalAlpha = clamp(pt.life * 2, 0, 1);
       if (pt.kind === 'ring') {
         const maxL = pt.maxLife || 0.34;
@@ -4158,9 +4168,10 @@ class Game {
   drawStageBeatFx(c) {
     if (this.partFlashT > 0 && !motionReduced()) {
       const f = clamp(this.partFlashT / 0.5, 0, 1);
-      const g = c.createRadialGradient(W / 2, 44, 10, W / 2, 44, H * 0.9);
-      g.addColorStop(0, `rgba(124,245,255,${0.26 * f})`);
-      g.addColorStop(0.4, `rgba(124,245,255,${0.09 * f})`);
+      // Soft vignette only — full-screen cyan wash looked like background drop
+      const g = c.createRadialGradient(W / 2, 44, 10, W / 2, 44, H * 0.55);
+      g.addColorStop(0, `rgba(124,245,255,${0.14 * f})`);
+      g.addColorStop(0.55, `rgba(124,245,255,${0.04 * f})`);
       g.addColorStop(1, 'rgba(124,245,255,0)');
       c.fillStyle = g;
       c.fillRect(0, 0, W, H);
