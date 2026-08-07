@@ -37,9 +37,9 @@
 | B1 | Kies pad: **TWA (Bubblewrap)** vs **Capacitor Android** | cloud: play-shell | pending |
 | B2 | Scaffold Android wrapper (package id, icons, signing placeholder) | cloud: play-shell | pending |
 | B3 | Play Console account + app aanmaken | human | pending |
-| B4 | Store listing NL/EN (korte/lange beschrijving, tags) | cloud: store-listing | pending |
-| B5 | Screenshots script (phone + tablet landscape) | cloud: store-listing | pending |
-| B6 | IARC / content rating questionnaire antwoorden (draft) | cloud: store-listing | pending |
+| B4 | Store listing NL/EN (korte/lange beschrijving, tags) | cloud: store-listing | done |
+| B5 | Screenshots script (phone + tablet landscape) | cloud: store-listing | done |
+| B6 | IARC / content rating questionnaire antwoorden (draft) | cloud: store-listing | done |
 | B7 | Data safety form draft (localStorage save, geen account) | cloud: soft-legal | pending |
 | B8 | Privacy policy URL (moet publiek https zijn) | hangt van A1 af | pending |
 
@@ -53,8 +53,8 @@
 | C2 | Capacitor iOS shell + bundle id | cloud: ios-shell | pending |
 | C3 | Guideline **4.2** mitigatie: native extras (haptics bridge, Game Center later, offline pack) | cloud: ios-shell | pending |
 | C4 | Privacy Nutrition Labels draft | cloud: soft-legal | pending |
-| C5 | Screenshots iPhone + iPad landscape | cloud: store-listing | pending |
-| C6 | Review notes + demo account (n.v.t. als geen login) | cloud: store-listing | pending |
+| C5 | Screenshots iPhone + iPad landscape | cloud: store-listing | done |
+| C6 | Review notes + demo account (n.v.t. als geen login) | cloud: store-listing | done |
 
 ---
 

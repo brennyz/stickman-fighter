@@ -32,6 +32,7 @@
     "smoke:pc": "node scripts/smoke-pc-controls.mjs",
     "smoke:vista": "node scripts/smoke-vista-flash.mjs",
     "smoke:advbg": "node scripts/smoke-adventure-bg-drop.mjs",
+    "store:shots": "node scripts/capture-store-screenshots.mjs",
     "smoke:pwa": "node scripts/smoke-pwa-shell.mjs",
     "smoke:summon": "node scripts/smoke-summon-screen.mjs",
     "smoke:wall": "node scripts/smoke-wall.mjs",

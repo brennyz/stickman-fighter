@@ -115,6 +115,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-08-07 | — | **Store listing:** NL/EN copy, IARC draft, App Review notes, `capture-store-screenshots.mjs` (B4–B6, C5–C6). Docs only. |
 | 2026-08-07 | — | **Summons fix:** kist-onderkant zichtbaar (16:9 + right-crop watermark); reward true center. v1.18.131 / SW v341. |
 | 2026-08-07 | — | **Summons polish:** reward rarity-tint in kist, per-pull BGM, Open kist CTA + stage-tap, video 90% + watermark crop. v1.18.130 / SW v340. |
 | 2026-08-07 | **merge** | Loose ends LIVE: hub coin innerHTML (#220) + island SVGs (#227) + Satan stall-boss/heat (#206) · v1.18.129 / SW v339. |
