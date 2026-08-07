@@ -185,6 +185,27 @@ const volPct = (v, d) => Math.round((Number(v ?? d)) * 100);
 const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
 
+/**
+ * Fight UI scheme — device-first (touch vs PC), save can override.
+ * - showTouchPads true  → always draw pads (also on desktop)
+ * - showTouchPads false → never draw pads (keyboard/legend only)
+ * - auto (default)      → IS_TOUCH
+ * Screen width alone is NOT used (touch laptops are wide).
+ */
+function useTouchFightPads() {
+  if (typeof save !== 'undefined' && save) {
+    if (save.showTouchPads === true) return true;
+    if (save.showTouchPads === false) return false;
+  }
+  return !!IS_TOUCH;
+}
+
+/** Persistent keyboard legend during fights when not using touch pads (PC default). */
+function useKbFightLegend() {
+  if (typeof save !== 'undefined' && save && save.kbLegend === false) return false;
+  return !useTouchFightPads();
+}
+
 /** Combat floaters: spreid over lagen zodat BAM/KETS/schade niet op elkaar stapelen. */
 const FLOATER_LANE_H = 22;
 const FLOATER_LANE_W = 32;
@@ -269,6 +290,10 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   },
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
+  /** null/undefined = auto via IS_TOUCH; true = force pads; false = force keyboard */
+  showTouchPads: null,
+  /** Keyboard legend on PC / when pads off (default on) */
+  kbLegend: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeJutsu: 'rasengan', skill: 'rasengan', super: 'ketsbam', missionsIntroSeen: false };
@@ -1450,6 +1475,10 @@ function sanitizeSave(s) {
   out.haptics = out.haptics !== false;
   out.comboHud = out.comboHud !== false;
   out.bigTouch = out.bigTouch !== false;
+  // Tri-state: null = auto (device), true = force pads, false = force keyboard
+  if (out.showTouchPads === true || out.showTouchPads === false) { /* keep */ }
+  else out.showTouchPads = null;
+  out.kbLegend = out.kbLegend !== false;
   out.reducedMotion = !!out.reducedMotion;
   out.liteFx = !!out.liteFx;
   out.highContrast = !!out.highContrast;
@@ -1771,7 +1800,9 @@ const I18N = {
     settings: {
       title: 'Instellingen', sub: 'Geluid, trilling & HUD — opgeslagen op dit apparaat',
       lang: 'Taal / Language', music: 'Muziek', sfx: 'Effecten', shake: 'Schermschok', haptics: 'Trillen (iPad)',
-      comboHud: 'Combo-HUD', bigTouch: 'Grote knoppen (iPad)', reducedMotion: 'Minder beweging (FX + iOS)',
+      comboHud: 'Combo-HUD', bigTouch: 'Grote knoppen (iPad)',
+      kbLegend: 'Toetsen-legenda (PC)', showTouchPads: 'Touch-knoppen altijd',
+      reducedMotion: 'Minder beweging (FX + iOS)',
       liteFx: 'Lite FX (iPad sneller)', highContrast: 'Hoog contrast tekst', restoreBackup: 'Herstel save uit backup',
       a11yMotionOn: 'Minder beweging: aan', a11yMotionOs: 'Minder beweging: via iOS/OS',
       a11yContrastOn: 'Hoog contrast: aan', a11yContrastOs: 'Hoog contrast: via iOS/OS',
@@ -1855,7 +1886,9 @@ const I18N = {
     settings: {
       title: 'Settings', sub: 'Sound, haptics & HUD — saved on this device',
       lang: 'Language / Taal', music: 'Music', sfx: 'Effects', shake: 'Screen shake', haptics: 'Haptics (iPad)',
-      comboHud: 'Combo HUD', bigTouch: 'Big buttons (iPad)', reducedMotion: 'Reduce motion (FX + iOS)',
+      comboHud: 'Combo HUD', bigTouch: 'Big buttons (iPad)',
+      kbLegend: 'Keyboard legend (PC)', showTouchPads: 'Always show touch pads',
+      reducedMotion: 'Reduce motion (FX + iOS)',
       liteFx: 'Lite FX (faster iPad)', highContrast: 'High contrast text', restoreBackup: 'Restore save from backup',
       a11yMotionOn: 'Reduce motion: on', a11yMotionOs: 'Reduce motion: via iOS/OS',
       a11yContrastOn: 'High contrast: on', a11yContrastOs: 'High contrast: via iOS/OS',
@@ -1934,7 +1967,9 @@ const I18N = {
     settings: {
       title: 'Einstellungen', sub: 'Sound, Vibration & HUD — auf diesem Gerät gespeichert',
       lang: 'Sprache / Language', music: 'Musik', sfx: 'Effekte', shake: 'Bildschirmshake', haptics: 'Vibration (iPad)',
-      comboHud: 'Combo-HUD', bigTouch: 'Große Tasten (iPad)', reducedMotion: 'Weniger Bewegung',
+      comboHud: 'Combo-HUD', bigTouch: 'Große Tasten (iPad)',
+      kbLegend: 'Tastatur-Legende (PC)', showTouchPads: 'Touch-Tasten immer',
+      reducedMotion: 'Weniger Bewegung',
       liteFx: 'Lite FX (schneller)', highContrast: 'Hoher Kontrast', restoreBackup: 'Save aus Backup',
       syncBackup: 'Backup syncen', freshCache: 'Neue Version (Cache leeren)', clearSave: 'Neustart (2× tippen)',
       hosting: 'Hosting & Fortschritt', copyLink: 'Link kopieren', openLink: 'Link öffnen',
@@ -2000,7 +2035,9 @@ const I18N = {
     settings: {
       title: 'Options', sub: 'Son, vibrations & HUD — sauvegardé sur cet appareil',
       lang: 'Langue / Language', music: 'Musique', sfx: 'Effets', shake: 'Secousse écran', haptics: 'Vibration (iPad)',
-      comboHud: 'HUD combo', bigTouch: 'Gros boutons (iPad)', reducedMotion: 'Moins de mouvement',
+      comboHud: 'HUD combo', bigTouch: 'Gros boutons (iPad)',
+      kbLegend: 'Légende clavier (PC)', showTouchPads: 'Toujours boutons tactile',
+      reducedMotion: 'Moins de mouvement',
       liteFx: 'Lite FX (plus rapide)', highContrast: 'Contraste élevé', restoreBackup: 'Restaurer backup',
       syncBackup: 'Sync backup', freshCache: 'Version fraîche (cache)', clearSave: 'Nouveau départ (2× tap)',
       hosting: 'Hébergement & progrès', copyLink: 'Copier le lien', openLink: 'Ouvrir le lien',
@@ -2066,7 +2103,9 @@ const I18N = {
     settings: {
       title: 'Opciones', sub: 'Sonido, vibración y HUD — guardado en este dispositivo',
       lang: 'Idioma / Language', music: 'Música', sfx: 'Efectos', shake: 'Sacudida pantalla', haptics: 'Vibración (iPad)',
-      comboHud: 'HUD combo', bigTouch: 'Botones grandes (iPad)', reducedMotion: 'Menos movimiento',
+      comboHud: 'HUD combo', bigTouch: 'Botones grandes (iPad)',
+      kbLegend: 'Leyenda teclado (PC)', showTouchPads: 'Siempre botones táctiles',
+      reducedMotion: 'Menos movimiento',
       liteFx: 'Lite FX (más rápido)', highContrast: 'Alto contraste', restoreBackup: 'Restaurar backup',
       syncBackup: 'Sync backup', freshCache: 'Versión nueva (caché)', clearSave: 'Nuevo inicio (2× tap)',
       hosting: 'Hosting y progreso', copyLink: 'Copiar enlace', openLink: 'Abrir enlace',
@@ -2253,7 +2292,8 @@ function applyLangStaticScreens() {
   setText('setLangLbl', 'settings.lang');
   const setMap = [
     ['setShake', 'settings.shake'], ['setHaptics', 'settings.haptics'], ['setComboHud', 'settings.comboHud'],
-    ['setBigTouch', 'settings.bigTouch'], ['setReducedMotion', 'settings.reducedMotion'],
+    ['setBigTouch', 'settings.bigTouch'], ['setKbLegend', 'settings.kbLegend'], ['setShowTouchPads', 'settings.showTouchPads'],
+    ['setReducedMotion', 'settings.reducedMotion'],
     ['setLiteFx', 'settings.liteFx'], ['setHighContrast', 'settings.highContrast'],
     ['btnRestoreBackup', 'settings.restoreBackup'], ['btnSyncBackup', 'settings.syncBackup'],
     ['btnForceFresh', 'settings.freshCache'], ['btnClearSave', 'settings.clearSave'],
@@ -5205,26 +5245,28 @@ function adventureIslandHintLine() {
 
 /** Eerste-minuut regel per modus — gedeeld door HUD-hint, Tips-scherm en help-chips. */
 function modeFirstMinuteLine(mode) {
-  const touch = IS_TOUCH;
-  const key = 'ui.firstMinute' + (mode ? mode.charAt(0).toUpperCase() + mode.slice(1) : 'Adventure');
+  const touch = typeof useTouchFightPads === 'function' ? useTouchFightPads() : IS_TOUCH;
+  const base = 'ui.firstMinute' + (mode ? mode.charAt(0).toUpperCase() + mode.slice(1) : 'Adventure');
+  const key = touch ? base : base + 'Kb';
   const localized = typeof t === 'function' ? t(key) : '';
   if (localized && localized !== key) return localized;
+  // Fallback if Kb key missing: try base touch key only on touch
+  if (!touch) {
+    const lines = {
+      adventure: 'Eerste minuut: A/D lopen · W springen · J/K/L · U jutsu · Shift subst',
+      training: 'Eerste minuut: ontwijk lasers · Shift = substitutie · chakra vol → U',
+      wall: '60s · combo-milestones · A/D · J/K/L · record-tempo in HUD',
+      versus: 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
+      coinrun: 'Munten pakken · W/↑ hoger mikken · J/K shuriken · max 3 snel',
+    };
+    return lines[mode] || lines.adventure;
+  }
   const lines = {
-    adventure: touch
-      ? 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol chakra = SUPER'
-      : 'Eerste minuut: A/D · J/K/L · mik omhoog op vliegers · chakra vol → U',
-    training: touch
-      ? 'Eerste minuut: ontwijk rode laser · blokkeer dichtbij · chakra vol → SUPER'
-      : 'Eerste minuut: ontwijk lasers · Shift = substitutie · chakra vol → U',
-    wall: touch
-      ? '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD'
-      : '60s · combo-milestones · voor/achter record-tempo · 5s countdown',
-    versus: touch
-      ? 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best'
-      : 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
-    coinrun: touch
-      ? '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel'
-      : 'Munten pakken · joy ↑ = hoger mikken · max 3 shuriken snel',
+    adventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol chakra = SUPER',
+    training: 'Eerste minuut: ontwijk rode laser · blokkeer dichtbij · chakra vol → SUPER',
+    wall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
+    versus: 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best',
+    coinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
   };
   return lines[mode] || lines.adventure;
 }
@@ -12062,6 +12104,11 @@ function seedNlGameStrings() {
     firstMinuteWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
     firstMinuteVersus: 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best',
     firstMinuteCoinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
+    firstMinuteAdventureKb: 'Eerste minuut: A/D lopen · W springen · J/K/L · U jutsu · Shift subst',
+    firstMinuteTrainingKb: 'Eerste minuut: ontwijk lasers · Shift = substitutie · chakra vol → U',
+    firstMinuteWallKb: '60s · combo-milestones · A/D · J/K/L · record-tempo in HUD',
+    firstMinuteVersusKb: 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
+    firstMinuteCoinrunKb: 'Munten pakken · W/↑ hoger mikken · J/K shuriken · max 3 snel',
     weaponComboHint: 'Wapen 3× = ①②③ · ①+② raken → gouden ③',
     gambleOnboardTouch: 'Eerste keer gok: lage som = super-baas · hoge som = bondgenoot · Overslaan = normaal level',
     gambleOnboardKb: 'Eerste keer: sum ≤5 super-baas · sum ≥9 ally buff · Skip = geen gok',
@@ -12850,6 +12897,11 @@ const CATALOG_EN = {
     firstMinuteWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD',
     firstMinuteVersus: 'First minute: P1 left · P2 right · landscape iPad works best',
     firstMinuteCoinrun: '45s coins · joy ↑ aim · pink flyer = +3 · max 3 shuriken fast',
+    firstMinuteAdventureKb: 'First minute: A/D move · W jump · J/K/L · U jutsu · Shift subst',
+    firstMinuteTrainingKb: 'First minute: dodge lasers · Shift = subst · full chakra → U',
+    firstMinuteWallKb: '60s · combo milestones · A/D · J/K/L · record pace in HUD',
+    firstMinuteVersusKb: 'First minute: P1 WASD+JKL · P2 arrows+1-5 · best-of-3',
+    firstMinuteCoinrunKb: 'Grab coins · W/↑ aim higher · J/K shuriken · max 3 fast',
     weaponComboHint: 'Weapon 3× = ①②③ · hit ①+② → golden ③',
     gambleOnboardTouch: 'First gamble: low sum = super-boss · high sum = ally · Skip = normal level',
     gambleOnboardKb: 'First time: sum ≤5 super-boss · sum ≥9 ally buff · Skip = no gamble',
@@ -27670,8 +27722,11 @@ class Game {
     const bannerDraw = this.banners.slice().sort((a, b) => (a.lane || 0) - (b.lane || 0));
     for (const b of bannerDraw) this.drawBannerLine(c, b);
 
-    if (IS_TOUCH) {
+    if (typeof useTouchFightPads === 'function' ? useTouchFightPads() : IS_TOUCH) {
       try { this.drawTouchControls(c); } catch (_) {}
+    }
+    if (typeof useKbFightLegend === 'function' ? useKbFightLegend() : !IS_TOUCH) {
+      try { this.drawKeyboardLegend(c); } catch (_) {}
     }
     if (this.mode === 'adventure') {
       try { this.drawKetsbamPrompt(c); } catch (_) {}
@@ -27682,11 +27737,12 @@ class Game {
       let hintTxt = this.modeHintLine;
       if (!hintTxt) {
         const dualOk = Input.dualMode && this.mode === 'versus';
-        if (dualOk && IS_TOUCH) {
+        const touchPads = typeof useTouchFightPads === 'function' ? useTouchFightPads() : IS_TOUCH;
+        if (dualOk && touchPads) {
           hintTxt = t('hud.hintDualTouch');
         } else if (dualOk) {
           hintTxt = t('hud.hintDualKb');
-        } else if (IS_TOUCH) {
+        } else if (touchPads) {
           hintTxt = t('hud.hintTouch');
         } else {
           hintTxt = t('hud.hintKb');
@@ -29612,6 +29668,80 @@ class Game {
       c.beginPath();
       c.arc(0, 0, ring + 5 + (calm ? 0 : Math.sin(this.t * 8) * 2), 0, TAU);
       c.stroke();
+    }
+    c.restore();
+  }
+
+  /** PC / keyboard: persistent corner legend so controls are visible without touch pads. */
+  drawKeyboardLegend(c) {
+    if (fxLite() && typeof Perf !== 'undefined' && Perf.tier >= 2) return;
+    const dual = Input.dualMode && this.mode === 'versus';
+    const rows = dual
+      ? [
+          [{ k: 'A/D', lab: 'P1' }, { k: 'W', lab: '↑' }, { k: 'J K L', lab: 'slag' }, { k: 'U', lab: 'jutsu' }],
+          [{ k: '←→', lab: 'P2' }, { k: '↑', lab: '↑' }, { k: '1 2 3', lab: 'slag' }, { k: '4', lab: 'jutsu' }],
+        ]
+      : [
+          [{ k: 'A/D', lab: 'lopen' }, { k: 'W', lab: 'spring' }, { k: 'Shift', lab: 'subst' }],
+          [{ k: 'J', lab: 'stomp' }, { k: 'K', lab: 'trap' }, { k: 'L', lab: 'wapen' }, { k: 'U', lab: 'jutsu' }],
+        ];
+    if (!dual && this.mode === 'adventure') {
+      rows[0].push({ k: 'E', lab: 'kets' });
+    }
+
+    const chipH = 22;
+    const gap = 5;
+    const pad = 10;
+    const rowH = chipH + 4;
+    c.save();
+    c.font = '700 11px -apple-system, BlinkMacSystemFont, sans-serif';
+    c.textAlign = 'left';
+    c.textBaseline = 'middle';
+
+    const measureRow = (row) => {
+      let w = 0;
+      for (const it of row) {
+        const kw = c.measureText(it.k).width;
+        const lw = c.measureText(it.lab).width;
+        w += Math.ceil(kw + lw + 18) + gap;
+      }
+      return w - gap;
+    };
+    let boxW = 0;
+    for (const row of rows) boxW = Math.max(boxW, measureRow(row));
+    boxW = Math.min(W - 24, boxW + pad * 2);
+    const boxH = rows.length * rowH + pad * 2 - 4;
+    // Bottom-right — same side as touch action cluster on mobile
+    const x0 = W - boxW - 12;
+    const y0 = H - boxH - 12;
+
+    c.globalAlpha = 0.82;
+    c.fillStyle = 'rgba(6,10,24,.78)';
+    this.rr(c, x0, y0, boxW, boxH, 10);
+    c.fill();
+    c.strokeStyle = 'rgba(124,245,255,.28)';
+    c.lineWidth = a11yHighContrast() ? 2 : 1.2;
+    this.rr(c, x0, y0, boxW, boxH, 10);
+    c.stroke();
+    c.globalAlpha = 1;
+
+    let y = y0 + pad + chipH / 2;
+    for (const row of rows) {
+      let x = x0 + pad;
+      for (const it of row) {
+        const kw = c.measureText(it.k).width;
+        const chipW = Math.ceil(kw + 12);
+        c.fillStyle = 'rgba(124,245,255,.16)';
+        this.rr(c, x, y - chipH / 2, chipW, chipH, 6);
+        c.fill();
+        c.fillStyle = '#7cf5ff';
+        c.fillText(it.k, x + 6, y + 1);
+        c.fillStyle = 'rgba(232,240,255,.85)';
+        c.fillText(it.lab, x + chipW + 4, y + 1);
+        const lw = c.measureText(it.lab).width;
+        x += chipW + lw + 14;
+      }
+      y += rowH;
     }
     c.restore();
   }
@@ -33873,14 +34003,29 @@ const UI = {
     const lblS = document.getElementById('setSfxVolLbl');
     if (lblM) lblM.textContent = mPct + '%';
     if (lblS) lblS.textContent = sPct + '%';
-    ['setShake', 'setHaptics', 'setComboHud', 'setBigTouch', 'setReducedMotion', 'setLiteFx', 'setHighContrast'].forEach((id, i) => {
+    ['setShake', 'setHaptics', 'setComboHud', 'setBigTouch', 'setKbLegend', 'setShowTouchPads', 'setReducedMotion', 'setLiteFx', 'setHighContrast'].forEach((id, i) => {
       const el = document.getElementById(id);
       if (!el) return;
-      const keys = ['shake', 'haptics', 'comboHud', 'bigTouch', 'reducedMotion', 'liteFx', 'highContrast'];
+      const keys = ['shake', 'haptics', 'comboHud', 'bigTouch', 'kbLegend', 'showTouchPads', 'reducedMotion', 'liteFx', 'highContrast'];
       const key = keys[i];
-      let off = save[key] === false;
-      if (key === 'reducedMotion') off = !save.reducedMotion && !systemPrefersReducedMotion();
-      if (key === 'highContrast') off = !save.highContrast && !systemPrefersMoreContrast();
+      let off;
+      if (key === 'showTouchPads') {
+        // off = not forced on (auto or force-off both look "off-ish"; use label suffix)
+        off = save.showTouchPads !== true;
+        const mode = save.showTouchPads == null ? 'auto' : (save.showTouchPads ? 'on' : 'off');
+        const base = typeof t === 'function' ? t('settings.showTouchPads') : 'Touch-knoppen altijd';
+        const suffix = mode === 'auto' ? ' · auto' : (mode === 'on' ? ' · aan' : ' · uit');
+        const ico = el.querySelector('.tog-ico');
+        el.textContent = '';
+        if (ico) el.appendChild(ico);
+        el.appendChild(document.createTextNode(base + suffix));
+      } else if (key === 'reducedMotion') {
+        off = !save.reducedMotion && !systemPrefersReducedMotion();
+      } else if (key === 'highContrast') {
+        off = !save.highContrast && !systemPrefersMoreContrast();
+      } else {
+        off = save[key] === false;
+      }
       el.classList.toggle('off', off);
     });
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
@@ -34498,7 +34643,8 @@ function bindSettingsControls() {
   onVol('pauseSfxVol', 'pauseSfxVolLbl', 'sfxVol');
   const toggles = [
     ['setShake', 'shake'], ['setHaptics', 'haptics'], ['setComboHud', 'comboHud'],
-    ['setBigTouch', 'bigTouch'], ['setReducedMotion', 'reducedMotion'],
+    ['setBigTouch', 'bigTouch'], ['setKbLegend', 'kbLegend'], ['setShowTouchPads', 'showTouchPads'],
+    ['setReducedMotion', 'reducedMotion'],
     ['setLiteFx', 'liteFx'], ['setHighContrast', 'highContrast'],
   ];
   for (const [id, key] of toggles) {
@@ -34506,8 +34652,26 @@ function bindSettingsControls() {
     if (!el || el.dataset.bound) continue;
     el.dataset.bound = '1';
     el.addEventListener('click', () => {
-      if (save[key] !== false) save[key] = false;
-      else save[key] = true;
+      if (key === 'showTouchPads') {
+        // Cycle: auto (null) → force on (true) → force off (false) → auto
+        if (save.showTouchPads == null) save.showTouchPads = true;
+        else if (save.showTouchPads === true) save.showTouchPads = false;
+        else save.showTouchPads = null;
+        // Refresh label to show Auto / Aan / Uit
+        try {
+          const ico = el.querySelector('.tog-ico');
+          const mode = save.showTouchPads == null ? 'auto' : (save.showTouchPads ? 'on' : 'off');
+          const base = typeof t === 'function' ? t('settings.showTouchPads') : 'Touch-knoppen';
+          const suffix = mode === 'auto' ? ' · auto' : (mode === 'on' ? ' · aan' : ' · uit');
+          el.textContent = '';
+          if (ico) el.appendChild(ico);
+          el.appendChild(document.createTextNode(base + suffix));
+        } catch (_) {}
+      } else if (save[key] !== false) {
+        save[key] = false;
+      } else {
+        save[key] = true;
+      }
       if (key === 'reducedMotion' && save.reducedMotion) save.shake = false;
       if (key === 'liteFx') { Perf.reset(); lastResizeKey = ''; try { SceneryArt.clearCache(); } catch (_) {} scheduleResize(); AudioSys.applyVolumes(); refreshA11yUi(); }
       if (key === 'reducedMotion' || key === 'highContrast') refreshA11yUi();
@@ -34515,7 +34679,7 @@ function bindSettingsControls() {
       UI.renderSettings();
       UI.syncTouchClass();
       relayoutTouchPads();
-      if (key === 'bigTouch') scheduleResize();
+      if (key === 'bigTouch' || key === 'showTouchPads') scheduleResize();
       AudioSys.sfx('select');
       haptic(8);
     });

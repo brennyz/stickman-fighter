@@ -22,6 +22,10 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   },
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
+  /** null/undefined = auto via IS_TOUCH; true = force pads; false = force keyboard */
+  showTouchPads: null,
+  /** Keyboard legend on PC / when pads off (default on) */
+  kbLegend: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeJutsu: 'rasengan', skill: 'rasengan', super: 'ketsbam', missionsIntroSeen: false };
@@ -1203,6 +1207,10 @@ function sanitizeSave(s) {
   out.haptics = out.haptics !== false;
   out.comboHud = out.comboHud !== false;
   out.bigTouch = out.bigTouch !== false;
+  // Tri-state: null = auto (device), true = force pads, false = force keyboard
+  if (out.showTouchPads === true || out.showTouchPads === false) { /* keep */ }
+  else out.showTouchPads = null;
+  out.kbLegend = out.kbLegend !== false;
   out.reducedMotion = !!out.reducedMotion;
   out.liteFx = !!out.liteFx;
   out.highContrast = !!out.highContrast;

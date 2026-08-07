@@ -4081,14 +4081,29 @@ const UI = {
     const lblS = document.getElementById('setSfxVolLbl');
     if (lblM) lblM.textContent = mPct + '%';
     if (lblS) lblS.textContent = sPct + '%';
-    ['setShake', 'setHaptics', 'setComboHud', 'setBigTouch', 'setReducedMotion', 'setLiteFx', 'setHighContrast'].forEach((id, i) => {
+    ['setShake', 'setHaptics', 'setComboHud', 'setBigTouch', 'setKbLegend', 'setShowTouchPads', 'setReducedMotion', 'setLiteFx', 'setHighContrast'].forEach((id, i) => {
       const el = document.getElementById(id);
       if (!el) return;
-      const keys = ['shake', 'haptics', 'comboHud', 'bigTouch', 'reducedMotion', 'liteFx', 'highContrast'];
+      const keys = ['shake', 'haptics', 'comboHud', 'bigTouch', 'kbLegend', 'showTouchPads', 'reducedMotion', 'liteFx', 'highContrast'];
       const key = keys[i];
-      let off = save[key] === false;
-      if (key === 'reducedMotion') off = !save.reducedMotion && !systemPrefersReducedMotion();
-      if (key === 'highContrast') off = !save.highContrast && !systemPrefersMoreContrast();
+      let off;
+      if (key === 'showTouchPads') {
+        // off = not forced on (auto or force-off both look "off-ish"; use label suffix)
+        off = save.showTouchPads !== true;
+        const mode = save.showTouchPads == null ? 'auto' : (save.showTouchPads ? 'on' : 'off');
+        const base = typeof t === 'function' ? t('settings.showTouchPads') : 'Touch-knoppen altijd';
+        const suffix = mode === 'auto' ? ' · auto' : (mode === 'on' ? ' · aan' : ' · uit');
+        const ico = el.querySelector('.tog-ico');
+        el.textContent = '';
+        if (ico) el.appendChild(ico);
+        el.appendChild(document.createTextNode(base + suffix));
+      } else if (key === 'reducedMotion') {
+        off = !save.reducedMotion && !systemPrefersReducedMotion();
+      } else if (key === 'highContrast') {
+        off = !save.highContrast && !systemPrefersMoreContrast();
+      } else {
+        off = save[key] === false;
+      }
       el.classList.toggle('off', off);
     });
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);

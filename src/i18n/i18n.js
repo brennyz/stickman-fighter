@@ -46,7 +46,9 @@ const I18N = {
     settings: {
       title: 'Instellingen', sub: 'Geluid, trilling & HUD — opgeslagen op dit apparaat',
       lang: 'Taal / Language', music: 'Muziek', sfx: 'Effecten', shake: 'Schermschok', haptics: 'Trillen (iPad)',
-      comboHud: 'Combo-HUD', bigTouch: 'Grote knoppen (iPad)', reducedMotion: 'Minder beweging (FX + iOS)',
+      comboHud: 'Combo-HUD', bigTouch: 'Grote knoppen (iPad)',
+      kbLegend: 'Toetsen-legenda (PC)', showTouchPads: 'Touch-knoppen altijd',
+      reducedMotion: 'Minder beweging (FX + iOS)',
       liteFx: 'Lite FX (iPad sneller)', highContrast: 'Hoog contrast tekst', restoreBackup: 'Herstel save uit backup',
       a11yMotionOn: 'Minder beweging: aan', a11yMotionOs: 'Minder beweging: via iOS/OS',
       a11yContrastOn: 'Hoog contrast: aan', a11yContrastOs: 'Hoog contrast: via iOS/OS',
@@ -130,7 +132,9 @@ const I18N = {
     settings: {
       title: 'Settings', sub: 'Sound, haptics & HUD — saved on this device',
       lang: 'Language / Taal', music: 'Music', sfx: 'Effects', shake: 'Screen shake', haptics: 'Haptics (iPad)',
-      comboHud: 'Combo HUD', bigTouch: 'Big buttons (iPad)', reducedMotion: 'Reduce motion (FX + iOS)',
+      comboHud: 'Combo HUD', bigTouch: 'Big buttons (iPad)',
+      kbLegend: 'Keyboard legend (PC)', showTouchPads: 'Always show touch pads',
+      reducedMotion: 'Reduce motion (FX + iOS)',
       liteFx: 'Lite FX (faster iPad)', highContrast: 'High contrast text', restoreBackup: 'Restore save from backup',
       a11yMotionOn: 'Reduce motion: on', a11yMotionOs: 'Reduce motion: via iOS/OS',
       a11yContrastOn: 'High contrast: on', a11yContrastOs: 'High contrast: via iOS/OS',
@@ -209,7 +213,9 @@ const I18N = {
     settings: {
       title: 'Einstellungen', sub: 'Sound, Vibration & HUD — auf diesem Gerät gespeichert',
       lang: 'Sprache / Language', music: 'Musik', sfx: 'Effekte', shake: 'Bildschirmshake', haptics: 'Vibration (iPad)',
-      comboHud: 'Combo-HUD', bigTouch: 'Große Tasten (iPad)', reducedMotion: 'Weniger Bewegung',
+      comboHud: 'Combo-HUD', bigTouch: 'Große Tasten (iPad)',
+      kbLegend: 'Tastatur-Legende (PC)', showTouchPads: 'Touch-Tasten immer',
+      reducedMotion: 'Weniger Bewegung',
       liteFx: 'Lite FX (schneller)', highContrast: 'Hoher Kontrast', restoreBackup: 'Save aus Backup',
       syncBackup: 'Backup syncen', freshCache: 'Neue Version (Cache leeren)', clearSave: 'Neustart (2× tippen)',
       hosting: 'Hosting & Fortschritt', copyLink: 'Link kopieren', openLink: 'Link öffnen',
@@ -275,7 +281,9 @@ const I18N = {
     settings: {
       title: 'Options', sub: 'Son, vibrations & HUD — sauvegardé sur cet appareil',
       lang: 'Langue / Language', music: 'Musique', sfx: 'Effets', shake: 'Secousse écran', haptics: 'Vibration (iPad)',
-      comboHud: 'HUD combo', bigTouch: 'Gros boutons (iPad)', reducedMotion: 'Moins de mouvement',
+      comboHud: 'HUD combo', bigTouch: 'Gros boutons (iPad)',
+      kbLegend: 'Légende clavier (PC)', showTouchPads: 'Toujours boutons tactile',
+      reducedMotion: 'Moins de mouvement',
       liteFx: 'Lite FX (plus rapide)', highContrast: 'Contraste élevé', restoreBackup: 'Restaurer backup',
       syncBackup: 'Sync backup', freshCache: 'Version fraîche (cache)', clearSave: 'Nouveau départ (2× tap)',
       hosting: 'Hébergement & progrès', copyLink: 'Copier le lien', openLink: 'Ouvrir le lien',
@@ -341,7 +349,9 @@ const I18N = {
     settings: {
       title: 'Opciones', sub: 'Sonido, vibración y HUD — guardado en este dispositivo',
       lang: 'Idioma / Language', music: 'Música', sfx: 'Efectos', shake: 'Sacudida pantalla', haptics: 'Vibración (iPad)',
-      comboHud: 'HUD combo', bigTouch: 'Botones grandes (iPad)', reducedMotion: 'Menos movimiento',
+      comboHud: 'HUD combo', bigTouch: 'Botones grandes (iPad)',
+      kbLegend: 'Leyenda teclado (PC)', showTouchPads: 'Siempre botones táctiles',
+      reducedMotion: 'Menos movimiento',
       liteFx: 'Lite FX (más rápido)', highContrast: 'Alto contraste', restoreBackup: 'Restaurar backup',
       syncBackup: 'Sync backup', freshCache: 'Versión nueva (caché)', clearSave: 'Nuevo inicio (2× tap)',
       hosting: 'Hosting y progreso', copyLink: 'Copiar enlace', openLink: 'Abrir enlace',
@@ -528,7 +538,8 @@ function applyLangStaticScreens() {
   setText('setLangLbl', 'settings.lang');
   const setMap = [
     ['setShake', 'settings.shake'], ['setHaptics', 'settings.haptics'], ['setComboHud', 'settings.comboHud'],
-    ['setBigTouch', 'settings.bigTouch'], ['setReducedMotion', 'settings.reducedMotion'],
+    ['setBigTouch', 'settings.bigTouch'], ['setKbLegend', 'settings.kbLegend'], ['setShowTouchPads', 'settings.showTouchPads'],
+    ['setReducedMotion', 'settings.reducedMotion'],
     ['setLiteFx', 'settings.liteFx'], ['setHighContrast', 'settings.highContrast'],
     ['btnRestoreBackup', 'settings.restoreBackup'], ['btnSyncBackup', 'settings.syncBackup'],
     ['btnForceFresh', 'settings.freshCache'], ['btnClearSave', 'settings.clearSave'],

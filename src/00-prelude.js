@@ -183,6 +183,27 @@ const volPct = (v, d) => Math.round((Number(v ?? d)) * 100);
 const choice = arr => arr[Math.floor(Math.random() * arr.length)];
 const IS_TOUCH = (typeof window !== 'undefined' && ('ontouchstart' in window)) || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
 
+/**
+ * Fight UI scheme — device-first (touch vs PC), save can override.
+ * - showTouchPads true  → always draw pads (also on desktop)
+ * - showTouchPads false → never draw pads (keyboard/legend only)
+ * - auto (default)      → IS_TOUCH
+ * Screen width alone is NOT used (touch laptops are wide).
+ */
+function useTouchFightPads() {
+  if (typeof save !== 'undefined' && save) {
+    if (save.showTouchPads === true) return true;
+    if (save.showTouchPads === false) return false;
+  }
+  return !!IS_TOUCH;
+}
+
+/** Persistent keyboard legend during fights when not using touch pads (PC default). */
+function useKbFightLegend() {
+  if (typeof save !== 'undefined' && save && save.kbLegend === false) return false;
+  return !useTouchFightPads();
+}
+
 /** Combat floaters: spreid over lagen zodat BAM/KETS/schade niet op elkaar stapelen. */
 const FLOATER_LANE_H = 22;
 const FLOATER_LANE_W = 32;
