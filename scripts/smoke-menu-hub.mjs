@@ -50,6 +50,8 @@ const chrome = [
   'back', 'pause', 'swap',
 ];
 const sagaUi = ['all', 'fighter', 'ki', 'scroll', 'tide', 'cape', 'dawn'];
+const islandUi = ['landweg', 'vulkaan', 'cyber', 'dojo', 'finale', 'nachtmerrie', 'hel'];
+const coreUi = ['ui-lock', 'ui-check', 'ui-coin', 'ui-warn'];
 
 function checkSet(dir, names) {
   for (const name of names) {
@@ -70,6 +72,25 @@ for (const name of sagaUi) {
   must(html.includes(rel), `index.html missing ref ${rel}`);
   must(sw.includes(`./${rel}`) || sw.includes(rel), `sw.js missing precache ${rel}`);
 }
+
+for (const name of coreUi) {
+  const rel = `assets/ui/${name}.svg`;
+  must(fs.existsSync(path.join(root, rel)), `missing file ${rel}`);
+  must(sw.includes(`./${rel}`) || sw.includes(rel), `sw.js missing precache ${rel}`);
+}
+
+for (const name of islandUi) {
+  const rel = `assets/ui/island-${name}.svg`;
+  must(fs.existsSync(path.join(root, rel)), `missing file ${rel}`);
+  must(sw.includes(`./${rel}`) || sw.includes(rel), `sw.js missing precache ${rel}`);
+}
+
+must(/assets\/ui\/island-/.test(storage), 'storage.js missing island file icons');
+must(!/<svg viewBox="0 0 24 24" aria-hidden="true">/.test(storage), 'storage.js still has inline island SVGs');
+
+const uiCount = fs.readdirSync(path.join(root, 'assets/ui')).filter((f) => f.endsWith('.svg')).length;
+must(uiCount >= 30, `expected ≥30 ui SVGs, got ${uiCount}`);
+must(/assets\/ui\//.test(fs.readFileSync(path.join(root, 'src/ui/ui.js'), 'utf8')), 'ui.js missing assets/ui ach/lock refs');
 
 must(/assets\/buttons\/chrome\/back\.svg/.test(html), 'back.svg not wired on back-btn');
 must(/assets\/buttons\/chrome\/pause\.svg/.test(html), 'pause.svg not wired on #pauseBtn');
