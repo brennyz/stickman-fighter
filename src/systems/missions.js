@@ -1767,6 +1767,7 @@ function blackScreenGuard(where) {
           try { cancelTideBattleMusicPending(game); } catch (_) {}
         }
       }
+      try { if (typeof clearSatanState === 'function') clearSatanState(game); } catch (_) {}
       state = 'menu';
       game = null;
     }
@@ -1909,6 +1910,7 @@ function recoverToMenu(opts) {
         game.tideBattlePrevSong = null;
       }
     }
+    try { if (game && typeof clearSatanState === 'function') clearSatanState(game); } catch (_) {}
     game = null;
     state = 'menu';
     window.__sfLoopErr = false;

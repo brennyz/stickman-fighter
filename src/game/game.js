@@ -217,12 +217,30 @@ class Game {
     this.tideBattleMon = null;
     this.tideBattlePrevSong = null;
     this.tideBattleMusicT = null;
+    this.tideFromSatan = false;
+    this.satanPending = false;
+    this.satanActive = false;
+    this.satanMon = null;
+    this.satanDelayT = 0;
     applyGambleToStage(this, gamble);
     const diffMeta = advDiffMeta(diff);
     const startLabel = diff === 'normal'
       ? t('banner.levelStart', { n })
       : t('banner.levelStartDiff', { n, diff: advDiffLabel(diff) });
     this.banner(startLabel, 1.4, diffMeta.accent || '#ffd75e', 54);
+    if (typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(n, diff)) {
+      this.satanPending = true;
+      this.satanDelayT = 2.4;
+      this.betweenT = 99;
+      const self = this;
+      setTimeout(() => {
+        try {
+          if (!gameUiTimerOk(self)) return;
+          self.banner(t('banner.satanIncoming'), 2.2, '#ff3040', 42);
+          UI.toast(t('toast.satanIncoming'), 3800);
+        } catch (_) {}
+      }, 900);
+    }
     if (masterBuffActive(n, diff)) {
       const self = this;
       setTimeout(() => {
@@ -514,8 +532,21 @@ class Game {
 
   updateAdventure(dt) {
     syncTideBattleState(this);
+    if (typeof syncSatanState === 'function') syncSatanState(this);
+    if (this.satanPending && !this.satanActive && !this.over) {
+      this.satanDelayT = (this.satanDelayT || 0) - dt;
+      if (this.satanDelayT <= 0) {
+        try { this.startSatanEncounter(); } catch (err) {
+          console.error('[Satan] start', err);
+          clearSatanState(this);
+          this.betweenT = 1.0;
+          reportSatanRecover('spawn', err);
+        }
+      }
+    }
     // Bewegend decor: tussen golven "loopt" de wereld door (à la beat 'em up)
-    const travelPhase = this.wavePause > 0 || (this.betweenT > 0 && this.waveIdx < 0) || !!this.partGate;
+    const specialDuel = typeof adventureSpecialDuelActive === 'function' && adventureSpecialDuelActive(this);
+    const travelPhase = !specialDuel && (this.wavePause > 0 || (this.betweenT > 0 && this.waveIdx < 0) || !!this.partGate);
     this.traveling = travelPhase && !!(this.player && this.player.alive) && !this.over;
     // Deel 3: camera-punch bij vertrek, zwaardere beat bij aankomst op de baas
     if (this.traveling && !this.travelWasOn) {
@@ -618,9 +649,14 @@ class Game {
     this.pickups = this.pickups.filter(pk => pk.life > 0);
     if (this.betweenT > 0) {
       this.betweenT -= dt;
-      if (this.betweenT <= 0 && this.waveIdx < 0 && this.player?.alive) this.nextWave();
+      if (this.betweenT <= 0 && this.waveIdx < 0 && this.player?.alive
+        && !(typeof adventureSpecialDuelActive === 'function' && adventureSpecialDuelActive(this))) {
+        this.nextWave();
+      }
     }
-    if (this.spawnQueue.length) {
+    if (typeof adventureSpecialDuelActive === 'function' && adventureSpecialDuelActive(this)) {
+      // Satan / tide-beloning: geen normale golven tot duel klaar
+    } else if (this.spawnQueue.length) {
       const alive = this.monsters.filter((m) => m.alive).length;
       this.spawnTimer -= dt;
       if (this.spawnTimer <= 0 && alive < ADVENTURE_MAX_ALIVE) {
@@ -726,6 +762,8 @@ class Game {
   finishAdventure(win) {
     if (this.over) return;
     clearTideBattleState(this, { restoreMusic: true });
+    this.tideFromSatan = false;
+    if (typeof clearSatanState === 'function') clearSatanState(this);
     this.deactivateMasterSword(true);
     this.over = true;
     this.inputLocked = true;
@@ -786,6 +824,7 @@ class Game {
         setMasterBuffLevel(null, diff);
         persist();
       }
+      if (typeof clearSatanEncounterProgress === 'function') clearSatanEncounterProgress(lv, diff);
       const hpPct = this.player.hp / Math.max(1, this.player.maxhp);
       stars = starsFromHpPct(hpPct);
       if (stars > prevStars) { setAdvStarsFor(lv, stars, diff); persist(); }
@@ -823,9 +862,12 @@ class Game {
       }
     } else {
       const hadMaster = masterBuffLevel(diff) === lv;
-      const fails = bumpAdvFail(lv, diff);
-      const gotMaster = fails >= 5 && !hadMaster;
+      const failsNow = bumpAdvFail(lv, diff);
+      const gotMaster = failsNow >= 5 && !hadMaster;
       if (gotMaster) setMasterBuffLevel(lv, diff);
+      const satanSoon = failsNow === SATAN_FAIL_THRESHOLD
+        || (typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff));
+      const heatDanger = failsNow === SATAN_DANGER_FAILS;
       persist();
       if (gotMaster) {
         const self = this;
@@ -835,6 +877,23 @@ class Game {
             UI.toast(t('toast.masterBuffGain'), 3800);
           } catch (_) {}
         }, 1500);
+      }
+      if (heatDanger) {
+        const self = this;
+        setTimeout(() => {
+          try {
+            if (!gameUiTimerOk(self, { allowOver: true })) return;
+            UI.toast(t('toast.satanHeatDanger'), 4200);
+          } catch (_) {}
+        }, gotMaster ? 3200 : 1500);
+      } else if (satanSoon) {
+        const self = this;
+        setTimeout(() => {
+          try {
+            if (!gameUiTimerOk(self, { allowOver: true })) return;
+            UI.toast(t('toast.satanComingNext'), 4200);
+          } catch (_) {}
+        }, gotMaster ? 3200 : 1500);
       }
       AudioSys.sfx('lose');
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
@@ -862,16 +921,28 @@ class Game {
       })(),
       xp: this.sessionXP,
       mode: 'adventure', level: this.level.n, win, stars, prevStars, difficulty: diff,
-      tip: win ? (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
+      tip: win ? (lv === MAX_LEVEL
+        ? t('result.satanAfterClear')
+        : (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
         ? t('result.starImproved', { stars, prev: prevStars })
-        : t('result.pickupsHelp', { hint: starHintLine() }))) : (() => {
+        : t('result.pickupsHelp', { hint: starHintLine() })))) : (() => {
         const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : 'start';
+        const failsNow = advFailCount(lv, diff);
+        let heatTip = '';
+        if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff)) {
+          heatTip = t('result.heatSatanNext');
+        } else if (failsNow >= SATAN_DANGER_FAILS) {
+          heatTip = t('result.heatDanger');
+        } else if (failsNow >= 7) {
+          heatTip = t('result.heatRising', { n: failsNow, max: SATAN_FAIL_THRESHOLD });
+        }
         const base = this.player.hp <= 0
           ? t('result.lossBlockTip', { prog })
           : t('result.lossOrbTip', { prog });
         const once = onceResultTip('adventure', 'loss',
           t('result.lossGambleTip'));
-        return once ? `${once} · ${base}` : base;
+        const core = once ? `${once} · ${base}` : base;
+        return heatTip ? `${heatTip} · ${core}` : core;
       })(),
     }));
   }
@@ -1009,6 +1080,10 @@ class Game {
       try { this.finishTideBattle(true, m); } catch (_) {}
       return;
     }
+    if (m.satanBoss && this.satanActive) {
+      try { this.finishSatanEncounter(true, m); } catch (_) {}
+      return;
+    }
     // summon / tide / master-sword rolls UIT — stabiele adventure flow
   }
 
@@ -1019,6 +1094,75 @@ class Game {
   /** Summon-ascend UIT — geen epic/legendary rariteit-rolls midden in gevecht. */
   maybeSummon(m) {
     return;
+  }
+
+  startSatanEncounter() {
+    if (this.mode !== 'adventure' || this.over) return;
+    if (this.satanActive || this.tideBattleActive) return;
+    if (!this.player || !this.player.alive) return;
+    if (!SPECIES[SATAN_SPECIES_ID]) return;
+    try {
+      this.satanPending = false;
+      this.satanDelayT = 0;
+      this.satanActive = true;
+      markSatanEncounterStarted(this.level.n, this.advDiff);
+      this.spawnQueue = [];
+      this.monsters = this.monsters.filter((m) => m && m.satanBoss);
+      this.purgeDeadMonsters();
+      const spawnX = satanSpawnX(this);
+      const mon = new Monster(SATAN_SPECIES_ID, spawnX, this, satanSpawnOpts(this));
+      if (!mon || !mon.sp) throw new Error('satan spawn invalid');
+      if (!(mon.size >= 70)) throw new Error('satan size too small');
+      mon.y = this.ground - mon.size;
+      mon.x = clamp(mon.x, mon.size * 0.55, (this.maxX || W) - mon.size * 0.55);
+      this.monsters.push(mon);
+      this.satanMon = mon;
+      try { ensureSatanSvg(); } catch (_) {}
+      triggerSatanIntro(this, mon);
+      this.floater(W / 2, Math.max(100, (this.advHudBottom || 120) + 24), t('hud.satanShort'), '#ff3040', 18);
+      UI.toast(t('toast.satanReflectHint'), 4200);
+      this.modeHintLine = IS_TOUCH ? t('hud.satanHintTouch') : t('hud.satanHintKb');
+      this.hint = 8;
+    } catch (err) {
+      console.error('[Satan] start', err);
+      clearSatanState(this);
+      this.betweenT = 1.0;
+      reportSatanRecover('spawn', err);
+    }
+  }
+
+  finishSatanEncounter(won, m) {
+    if (!this.satanActive && !this.satanPending) return;
+    try {
+      clearSatanState(this);
+      if (!won) return;
+      this.banner(t('banner.satanWin'), 2.2, '#ffd75e', 46);
+      UI.toast(t('toast.satanWinTide'), 4200);
+      try { AudioSys.sfx('win'); } catch (_) {}
+      const self = this;
+      setTimeout(() => {
+        try {
+          if (!gameUiTimerOk(self) || self.over || !self.player?.alive) return;
+          if (self.tideBattleActive || self.satanActive) return;
+          const bossId = typeof pickTideBossId === 'function' ? pickTideBossId() : null;
+          if (!bossId) {
+            self.betweenT = 1.2;
+            return;
+          }
+          self.tideFromSatan = true;
+          self.startTideBattle(bossId);
+        } catch (err) {
+          console.error('[Satan] tide reward', err);
+          self.tideFromSatan = false;
+          self.betweenT = 1.2;
+        }
+      }, 1600);
+    } catch (err) {
+      console.error('[Satan] finish', err);
+      clearSatanState(this);
+      this.betweenT = 1.2;
+      sfReportError('satan/finish', err, 'Satan-gevecht afronden mislukt — avontuur veilig');
+    }
   }
 
   startTideBattle(spId) {
@@ -1049,19 +1193,29 @@ class Game {
       }
     } catch (err) {
       console.error('[TideBattle] start', err);
+      this.tideFromSatan = false;
       clearTideBattleState(this, { restoreMusic: true });
       reportTideBattleRecover('spawn', err);
+      if (this.waveIdx < 0) this.betweenT = 1.2;
     }
   }
 
   finishTideBattle(won, m) {
     if (!this.tideBattleActive) return;
     try {
+      const fromSatan = !!this.tideFromSatan;
       const bossId = (m && m.spId) || this.tideBattleBossId;
       clearTideBattleState(this, { restoreMusic: true });
-      if (!won) return;
+      this.tideFromSatan = false;
+      if (!won) {
+        if (fromSatan && this.waveIdx < 0) this.betweenT = 1.2;
+        return;
+      }
       const sp = (m && m.sp) || (bossId && SPECIES[bossId]) || null;
-      if (!sp) return;
+      if (!sp) {
+        if (fromSatan && this.waveIdx < 0) this.betweenT = 1.2;
+        return;
+      }
       const xp = tideBattleRewardXp(this);
       const coins = tideBattleRewardCoins();
       const p = this.player;
@@ -1089,6 +1243,7 @@ class Game {
           p.baseDmg = snap.baseDmg;
           p.hp = snap.hp;
         }
+        if (fromSatan && this.waveIdx < 0) this.betweenT = 1.2;
         return;
       }
       this.banner(t('banner.tideBattleWin'), 2.2, '#4a9fff', 44);
@@ -1096,9 +1251,15 @@ class Game {
       this.floater(W / 2, 140, `+${xp} XP · +${coins} PC`, '#4a9fff', 17);
       try { AudioSys.sfx('win'); } catch (_) {}
       checkAchievements();
+      if (fromSatan && this.waveIdx < 0) {
+        this.betweenT = 1.4;
+        try { UI.toast(t('toast.satanTideDone'), 3200); } catch (_) {}
+      }
     } catch (err) {
       console.error('[TideBattle] finish', err);
+      this.tideFromSatan = false;
       clearTideBattleState(this, { restoreMusic: true });
+      if (this.waveIdx < 0) this.betweenT = 1.2;
       sfReportError('tideBattle/finish', err, 'Tide Battle beloning mislukt — voortgang veilig');
     }
   }
@@ -4540,6 +4701,17 @@ class Game {
         const txt = t('hud.tideBattle', { name: tideName }) + tideHp;
         c.fillText(txt, W / 2 + 7, hy);
         drawMiniDie(c, W / 2 - c.measureText(txt).width / 2 - 3, hy - 3.5, 10, '#4a9fff');
+        hy += 14;
+      } else if (this.satanActive && this.satanMon) {
+        const satMon = this.satanMon;
+        const satName = (satMon.sp && satMon.sp.name) || 'Satan';
+        const satHp = satMon.alive && satMon.maxhp > 0
+          ? ` · ${Math.round(100 * satMon.hp / satMon.maxhp)}%`
+          : '';
+        c.font = '700 11px sans-serif';
+        c.fillStyle = '#ff3040';
+        const txt = t('hud.satan', { name: satName }) + satHp;
+        c.fillText(txt, W / 2, hy);
         hy += 14;
       } else if (!bossAlive) {
         let ctxTxt = null;
