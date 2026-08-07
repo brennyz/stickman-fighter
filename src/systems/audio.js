@@ -781,7 +781,7 @@ const AudioSys = {
         N(0.12, 0.14, 600, false, now);
         if (!lite) T(220, 110, 0.12, 'sine', 0.1, now + 0.08);
         break;
-      case 'masterSword':
+      case 'dawnblade':
         C([784, 988, 1175, 1568], 'sine', 0.15, 0.065, now);
         D(880, 1760, 0.24, 'triangle', 0.14, now + 0.08, 12);
         if (!lite) {
@@ -789,7 +789,7 @@ const AudioSys = {
           N(0.08, 0.12, 4200, true, now + 0.1);
         }
         break;
-      case 'wMaster':
+      case 'wDawnblade':
         N(0.05, 0.18, 4600, true, now);
         D(720, 1320, 0.11, 'sawtooth', 0.13, now, 14);
         E(1040, 520, 0.08, 'sine', 0.12, now + 0.03, 0.045, 0.45);
@@ -901,7 +901,7 @@ const AudioSys = {
           N(0.2, 0.26, 420, true, now + 0.88);
         }
         break;
-      case 'masterSword':
+      case 'dawnblade':
         [523, 659, 784, 988, 1175, 1568].forEach((f, i) => E(f, f * 1.02, 0.09, 'sine', 0.12, now + i * 0.048, 0.055, 0.4));
         T(880, 1760, 0.28, 'triangle', 0.14, now + 0.12);
         if (!lite) S([1760, 2093, 2349], now + 0.28);

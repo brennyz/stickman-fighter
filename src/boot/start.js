@@ -18,10 +18,10 @@ function startGame(mode, opts) {
   try { dismissTunnelOverlayIfStatic(); } catch (_) {}
   if (mode === 'versus') {
     try {
-      opts.p1 = normalizeVsPick(opts.p1 || vsSelect.p1, 'ryu');
-      opts.p2 = normalizeVsPick(opts.p2 || vsSelect.p2, 'ken');
+      opts.p1 = normalizeVsPick(opts.p1 || vsSelect.p1, 'arcade_flair');
+      opts.p2 = normalizeVsPick(opts.p2 || vsSelect.p2, 'arcade_rush');
     } catch (_) {
-      opts.p1 = 'ryu'; opts.p2 = 'ken';
+      opts.p1 = 'arcade_flair'; opts.p2 = 'arcade_rush';
     }
     try { primePlayInput(true); } catch (_) {}
   }

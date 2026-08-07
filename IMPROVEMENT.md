@@ -1,4 +1,5 @@
 | 2026-07-26 | **18** | d18 c5: char fight dock (step/TOT/same-pair) + replay last duo; boot-fail toast dismiss; summon smoke counter timing · v1.18.125 / SW v335 LIVE. |
+| 2026-08-07 | IP-B | **IP rename fighters:** Ryu/Ken→Arcade Flair/Rush, Street→Arcade Flair, master_sword→dawnblade + save migrate. v1.18.134 / SW v344. |
 | 2026-07-26 | **4** | d4 c5: spawn funnel + star beat HUD + stage-clear runway; _levelClearPending reset · v1.18.124 / SW v334 LIVE. |
 | 2026-07-26 | **6** | Achterstallig audio LIVE: SFX/battle diversiteit + top-SFX polish + d6 pause → main. v1.18.112 / SW v322. |
 # IMPROVEMENT — agent-first (Stickman Fighter)
