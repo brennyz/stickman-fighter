@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.127';
+const APP_VERSION = '1.18.128';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 337;
+const SW_CACHE_REV = 338;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -633,13 +633,20 @@ function hitConfirmColor(kind) {
   return '#e8f0ff';
 }
 
-function applyHitConfirmFx(game, x, y, spec) {
+function applyHitConfirmFx(game, x, y, spec, opts) {
   if (!game || motionReduced()) return;
+  opts = opts || {};
   const kind = spec && spec.kind ? spec.kind : 'punch';
   let col = hitConfirmColor(kind);
   if (kind === 'weapon' && spec.move) col = weaponMoveFxColor(spec.move);
-  spawnFxRing(game, x, y, col, fxLite() ? 6 : 9);
-  if (!fxLite()) game.burst(x, y, col, 3, { kind: 'spark', size: 2 });
+  if (opts.counter) col = '#ffd75e';
+  const ringN = opts.counter ? (fxLite() ? 9 : 14) : (fxLite() ? 6 : 9);
+  spawnFxRing(game, x, y, col, ringN);
+  if (!fxLite()) {
+    const burstN = opts.counter ? 5 : 3;
+    const burstSize = opts.counter ? 2.4 : 2;
+    game.burst(x, y, col, burstN, { kind: 'spark', size: burstSize });
+  }
 }
 
 function isCounterHitWindow(target) {

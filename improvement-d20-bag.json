@@ -4,7 +4,6 @@
   "rollFirst": [],
   "remaining": [
     16,
-    1,
     15,
     7,
     9,
@@ -24,13 +23,19 @@
     20
   ],
   "lastRoll": {
-    "face": 4,
-    "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
-    "rolledAt": "2026-07-27T00:01:29Z",
-    "remainingCount": 19,
+    "face": 1,
+    "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
+    "rolledAt": "2026-08-07T12:01:50Z",
+    "remainingCount": 18,
     "cycle": 6
   },
-  "pending": null,
+  "pending": {
+    "face": 1,
+    "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
+    "rolledAt": "2026-08-07T12:01:50Z",
+    "remainingCount": 18,
+    "cycle": 6
+  },
   "implemented": [
     {
       "face": 9,
@@ -987,13 +992,6 @@
   "history": [
     {
       "face": 18,
-      "category": "Character select \u2014 saga UI (deel 1) + 5 saga sticks (deel 2)",
-      "rolledAt": "2026-07-23T15:44:00Z",
-      "remainingCount": 18,
-      "cycle": 1
-    },
-    {
-      "face": 18,
       "category": "Character select deel 1 \u2014 stap UX, unlock hints, saga iPad",
       "rolledAt": "2026-07-23T15:48:23Z",
       "remainingCount": 18,
@@ -1825,6 +1823,13 @@
       "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
       "rolledAt": "2026-07-27T00:01:29Z",
       "remainingCount": 19,
+      "cycle": 6
+    },
+    {
+      "face": 1,
+      "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
+      "rolledAt": "2026-08-07T12:01:50Z",
+      "remainingCount": 18,
       "cycle": 6
     }
   ],

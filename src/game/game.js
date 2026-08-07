@@ -2390,6 +2390,7 @@ class Game {
           if (m.jutsuTelegraphT > 0) m.jutsuTelegraphT = 0;
           if (m.telegraphT > 0) m.telegraphT = 0;
           if (m.dashT > 0) { m.dashT = 0; m.vx *= 0.35; }
+          if (save.haptics !== false) haptic(9);
         }
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
@@ -2398,8 +2399,8 @@ class Game {
             applyWeaponOnHitEffect(this, f, m, { dmg: hitRoll.dmg, crit: hitRoll.crit, finisher });
           } catch (_) {}
         }
-        if (counter) this.freezeT = Math.max(this.freezeT, 0.016);
-        applyHitConfirmFx(this, hx, hy, spec);
+        if (counter) this.freezeT = Math.max(this.freezeT, 0.026);
+        applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
         if (f.isPlayer && this.styleLightning && !fxLite()) {
           this.burst(m.x, m.y - m.size * 0.5, f.style?.accent || '#7cf5ff', 5, { kind: 'spark', size: 2 });
           if (f.style?.id === 'cyber') spawnFxRing(this, m.x, m.y - m.size * 0.3, '#4ecf6a', 6);
@@ -2476,7 +2477,7 @@ class Game {
         const col = tgt.playerSlot === 2 ? '#ffb0b8' : (tgt.isPlayer ? '#ff8080' : '#ffe680');
         this.floater(tgt.x, tgt.y - 115, (counter ? t('combat.counter') + ' ' : '') + '-' + dmg, col, 16);
         this.burst(tgt.bodyX, tgt.bodyY, col, 7);
-        applyHitConfirmFx(this, hx, hy, spec);
+        applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
         if (spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id) && spec.moveIdx < 2) {
           f._weaponComboHits = (f._weaponComboHits || 0) + 1;

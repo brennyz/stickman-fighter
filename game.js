@@ -252,9 +252,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.127';
+const APP_VERSION = '1.18.128';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 337;
+const SW_CACHE_REV = 338;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -880,13 +880,20 @@ function hitConfirmColor(kind) {
   return '#e8f0ff';
 }
 
-function applyHitConfirmFx(game, x, y, spec) {
+function applyHitConfirmFx(game, x, y, spec, opts) {
   if (!game || motionReduced()) return;
+  opts = opts || {};
   const kind = spec && spec.kind ? spec.kind : 'punch';
   let col = hitConfirmColor(kind);
   if (kind === 'weapon' && spec.move) col = weaponMoveFxColor(spec.move);
-  spawnFxRing(game, x, y, col, fxLite() ? 6 : 9);
-  if (!fxLite()) game.burst(x, y, col, 3, { kind: 'spark', size: 2 });
+  if (opts.counter) col = '#ffd75e';
+  const ringN = opts.counter ? (fxLite() ? 9 : 14) : (fxLite() ? 6 : 9);
+  spawnFxRing(game, x, y, col, ringN);
+  if (!fxLite()) {
+    const burstN = opts.counter ? 5 : 3;
+    const burstSize = opts.counter ? 2.4 : 2;
+    game.burst(x, y, col, burstN, { kind: 'spark', size: burstSize });
+  }
 }
 
 function isCounterHitWindow(target) {
@@ -25823,6 +25830,7 @@ class Game {
           if (m.jutsuTelegraphT > 0) m.jutsuTelegraphT = 0;
           if (m.telegraphT > 0) m.telegraphT = 0;
           if (m.dashT > 0) { m.dashT = 0; m.vx *= 0.35; }
+          if (save.haptics !== false) haptic(9);
         }
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
@@ -25831,8 +25839,8 @@ class Game {
             applyWeaponOnHitEffect(this, f, m, { dmg: hitRoll.dmg, crit: hitRoll.crit, finisher });
           } catch (_) {}
         }
-        if (counter) this.freezeT = Math.max(this.freezeT, 0.016);
-        applyHitConfirmFx(this, hx, hy, spec);
+        if (counter) this.freezeT = Math.max(this.freezeT, 0.026);
+        applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
         if (f.isPlayer && this.styleLightning && !fxLite()) {
           this.burst(m.x, m.y - m.size * 0.5, f.style?.accent || '#7cf5ff', 5, { kind: 'spark', size: 2 });
           if (f.style?.id === 'cyber') spawnFxRing(this, m.x, m.y - m.size * 0.3, '#4ecf6a', 6);
@@ -25909,7 +25917,7 @@ class Game {
         const col = tgt.playerSlot === 2 ? '#ffb0b8' : (tgt.isPlayer ? '#ff8080' : '#ffe680');
         this.floater(tgt.x, tgt.y - 115, (counter ? t('combat.counter') + ' ' : '') + '-' + dmg, col, 16);
         this.burst(tgt.bodyX, tgt.bodyY, col, 7);
-        applyHitConfirmFx(this, hx, hy, spec);
+        applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
         if (spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id) && spec.moveIdx < 2) {
           f._weaponComboHits = (f._weaponComboHits || 0) + 1;
