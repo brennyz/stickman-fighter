@@ -29,21 +29,8 @@
     "remainingCount": 18,
     "cycle": 6
   },
-  "pending": {
-    "face": 1,
-    "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
-    "rolledAt": "2026-08-07T12:01:50Z",
-    "remainingCount": 18,
-    "cycle": 6
-  },
+  "pending": null,
   "implemented": [
-    {
-      "face": 9,
-      "note": "2P neutraal strip, slop, touchend guard, pauze hit",
-      "version": "1.12.20",
-      "doneAt": "2026-07-23T19:02:04Z",
-      "cycle": 1
-    },
     {
       "face": 7,
       "note": "sanitize strip, diagnostics, import warnings, export schema",
@@ -595,6 +582,13 @@
       "note": "trait-pip kleuren + ally hy + ster-slots grid + spawn funnel 2+",
       "version": "1.18.127",
       "doneAt": "2026-07-27T00:03:08Z",
+      "cycle": 6
+    },
+    {
+      "face": 1,
+      "note": "adventure counter FX + haptic + freeze parity",
+      "version": "1.18.128",
+      "doneAt": "2026-08-07T12:03:59Z",
       "cycle": 6
     }
   ],
