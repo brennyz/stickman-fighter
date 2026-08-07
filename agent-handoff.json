@@ -38,10 +38,20 @@
       "from": "user",
       "text": "store soft-feel A3/A4/A5",
       "status": "done-in-code",
+      "updated": "2026-08-07"
+    },
+    {
       "id": "w-20260807T202954",
       "from": "user",
       "text": "IP-A anime skill rename (jutsu/chakra → technique/energy)",
-      "status": "open",
+      "status": "done-in-code",
+      "updated": "2026-08-07"
+    },
+    {
+      "id": "w-20260807T202154",
+      "from": "user",
+      "text": "Store listing B4–B6 C5–C6 draft docs",
+      "status": "done-in-code",
       "updated": "2026-08-07"
     },
     {
@@ -375,6 +385,10 @@
     {
       "at": "2026-08-07T20:29:02Z",
       "summary": "IP-A: renamed anime skills to generic ids (spiral_orb etc) + Technique/Energy + save migrate · v1.18.136"
+    },
+    {
+      "at": "2026-08-07T20:21:54Z",
+      "summary": "Store listing: NL/EN copy, IARC draft, review notes, screenshot script (B4–B6 C5–C6)"
     },
     {
       "at": "2026-08-07T12:37:53Z",

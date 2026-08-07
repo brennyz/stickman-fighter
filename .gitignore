@@ -4,6 +4,10 @@
 /tmp/
 node_modules/
 
+# Store screenshot binaries (regenerate: npm run store:shots)
+docs/store/screenshots/*.png
+docs/store/screenshots/manifest.json
+
 # Lokaal tunnel (niet nodig op GitHub/Netlify)
 LIVE-LINK.txt
 health.json
