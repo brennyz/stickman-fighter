@@ -252,20 +252,20 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.128';
+const APP_VERSION = '1.18.129';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 338;
+const SW_CACHE_REV = 339;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
   zoneWeapons: {},
-  advIsland: 0, advFails: {}, advMasterBuff: null,
+  advIsland: 0, advFails: {}, advMasterBuff: null, advSatanAt: {},
   /** Normal / Nightmare / Hell — Epic Seven-stijl endgame tiers */
   advDiff: 'normal',
   advCleared: { normal: false, nightmare: false, hell: false },
   advHard: {
-    nightmare: { unlocked: 1, stars: {}, fails: {}, masterBuff: null },
-    hell: { unlocked: 1, stars: {}, fails: {}, masterBuff: null },
+    nightmare: { unlocked: 1, stars: {}, fails: {}, masterBuff: null, satanAt: {} },
+    hell: { unlocked: 1, stars: {}, fails: {}, masterBuff: null, satanAt: {} },
   },
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -300,7 +300,7 @@ const ADV_DIFFS = [
 ];
 const ADV_DIFF_IDS = ADV_DIFFS.map((d) => d.id);
 function emptyAdvHardBag() {
-  return { unlocked: 1, stars: {}, fails: {}, masterBuff: null };
+  return { unlocked: 1, stars: {}, fails: {}, masterBuff: null, satanAt: {} };
 }
 function advDiffMeta(id) {
   return ADV_DIFFS.find((d) => d.id === id) || ADV_DIFFS[0];
@@ -345,14 +345,22 @@ function advDiffUnlockHint(id) {
 }
 function advDiffBlurb(id) {
   const d = normalizeAdvDiffId(id);
+  let base = '';
   if (typeof t === 'function') {
-    if (d === 'nightmare') return t('ui.diffBlurbNightmare');
-    if (d === 'hell') return t('ui.diffBlurbHell');
-    return t('ui.diffBlurbNormal');
+    if (d === 'nightmare') base = t('ui.diffBlurbNightmare');
+    else if (d === 'hell') base = t('ui.diffBlurbHell');
+    else base = t('ui.diffBlurbNormal');
+  } else if (d === 'nightmare') {
+    base = 'Fire arena · earlier enrage · wilder rarities';
+  } else if (d === 'hell') {
+    base = 'Lava · screaming pain · mythic hordes';
+  } else {
+    base = 'Standard adventure';
   }
-  if (d === 'nightmare') return 'Fire arena · earlier enrage · wilder rarities';
-  if (d === 'hell') return 'Lava · screaming pain · mythic hordes';
-  return 'Standard adventure';
+  if (save && save.advCleared && save.advCleared[d] && typeof t === 'function') {
+    base += ' · ' + t('ui.diffBlurbSatanAfterClear');
+  }
+  return base;
 }
 function advPetCoinMul(diff) {
   return advDiffMeta(diff || currentAdvDiff()).petCoinMul || 1;
@@ -451,21 +459,22 @@ function advDropChanceMul(diff) {
 function advXpMul(diff) {
   return advDiffMeta(diff || currentAdvDiff()).xpMul || 1;
 }
+/** ASSET-STYLE file icons — adventure islands (assets/ui/island-*.svg). */
 const ADVENTURE_ISLANDS = [
   { id: 1, name: 'Oost-eiland', sub: 'Lv 1–10 · landweg', accent: '#5ad06a', theme: 'landweg',
-    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20" stroke="#5ad06a" stroke-width="2" stroke-linecap="round"/><path d="M5 20V13l5-8 5 8v7" fill="#43b25b" stroke="#2d8a3e" stroke-width="1"/><circle cx="18" cy="7" r="2.5" fill="#7cf5ff" opacity=".75"/></svg>' },
+    icon: '<img class="island-ico" src="assets/ui/island-landweg.svg" alt="" width="24" height="24" decoding="async" draggable="false">' },
   { id: 2, name: 'Vuur-eiland', sub: 'Lv 11–20', accent: '#ff7a4d', theme: 'vulkaan',
-    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 L12 5 L20 20 Z" fill="#e85a6a" stroke="#ff7a4d" stroke-width="1.2"/><path d="M10 11 L12 7 L14 11 Z" fill="#ffd75e"/><ellipse cx="12" cy="20" rx="8" ry="1.5" fill="#ff7a4d" opacity=".45"/></svg>' },
+    icon: '<img class="island-ico" src="assets/ui/island-vulkaan.svg" alt="" width="24" height="24" decoding="async" draggable="false">' },
   { id: 3, name: 'Neon-eiland', sub: 'Lv 21–30', accent: '#7cf5ff', theme: 'cyber',
-    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="16" width="20" height="5" rx="1" fill="#1a2040" stroke="#7cf5ff" stroke-width="1.2"/><rect x="5" y="10" width="4" height="6" fill="#7cf5ff" opacity=".85"/><rect x="10" y="7" width="4" height="9" fill="#4ecf6a" opacity=".8"/><rect x="15" y="5" width="4" height="11" fill="#c47aff" opacity=".85"/></svg>' },
+    icon: '<img class="island-ico" src="assets/ui/island-cyber.svg" alt="" width="24" height="24" decoding="async" draggable="false">' },
   { id: 4, name: 'Tempel-eiland', sub: 'Lv 31–40', accent: '#ffd75e', theme: 'dojo',
-    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 L17 8 H7 Z" fill="#ffd75e"/><rect x="10" y="8" width="4" height="12" fill="#c97a20"/><path d="M6 11 H18 M7 14 H17 M8 17 H16" stroke="#ffd75e" stroke-width="1.4" stroke-linecap="round"/><rect x="4" y="20" width="16" height="2" rx="1" fill="#8a6030"/></svg>' },
+    icon: '<img class="island-ico" src="assets/ui/island-dojo.svg" alt="" width="24" height="24" decoding="async" draggable="false">' },
   { id: 5, name: 'Finale-eiland', sub: 'Lv 41–50', accent: '#ff6b9d', theme: 'cyber',
-    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18 L7 10 L12 14 L17 10 L20 18 Z" fill="#ff6b9d" stroke="#ffd75e" stroke-width="1"/><circle cx="12" cy="8" r="2.8" fill="#ffd75e"/><path d="M12 2 v2 M12 20 v2 M2 12 h2 M20 12 h2" stroke="#ffd75e" stroke-width="1.2" opacity=".7"/></svg>' },
+    icon: '<img class="island-ico" src="assets/ui/island-finale.svg" alt="" width="24" height="24" decoding="async" draggable="false">' },
   { id: 6, name: 'Nachtmerrie', sub: 'Lv 51–60 · droomchaos', accent: '#c47aff', theme: 'nachtmerrie',
-    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18c2-6 6-10 8-10s6 4 8 10" fill="none" stroke="#c47aff" stroke-width="1.6"/><circle cx="9" cy="10" r="2.2" fill="#2a1840" stroke="#c47aff" stroke-width="1"/><circle cx="15" cy="10" r="2.2" fill="#2a1840" stroke="#c47aff" stroke-width="1"/><path d="M8 15c1.2 1.4 2.8 2 4 2s2.8-.6 4-2" stroke="#ff6b9d" stroke-width="1.4" fill="none"/></svg>' },
+    icon: '<img class="island-ico" src="assets/ui/island-nachtmerrie.svg" alt="" width="24" height="24" decoding="async" draggable="false">' },
   { id: 7, name: 'Hel', sub: 'Lv 61–70 · zwavel & lava', accent: '#ff6a3d', theme: 'hel',
-    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 L8 10 L12 16 L16 8 L20 20 Z" fill="#ff6a3d" stroke="#ffd75e" stroke-width="1"/><path d="M9 10c0-3 1.5-5 3-5s3 2 3 5" fill="#ffd75e" opacity=".85"/><ellipse cx="12" cy="20" rx="9" ry="1.6" fill="#5a1010" opacity=".7"/></svg>' },
+    icon: '<img class="island-ico" src="assets/ui/island-hel.svg" alt="" width="24" height="24" decoding="async" draggable="false">' },
 ];
 function islandMeta(id) { return ADVENTURE_ISLANDS.find(i => i.id === id) || ADVENTURE_ISLANDS[0]; }
 function islandCount() { return ADVENTURE_ISLANDS.length || ISLAND_COUNT; }
@@ -541,6 +550,9 @@ function playerWeaponForAdventure(levelN) {
   return bestWeaponForAdventureCap(cap);
 }
 function advFailCount(levelN, diff) { return advFailCountFor(levelN, diff || currentAdvDiff()); }
+function advSatanReady(levelN, diff) {
+  return typeof shouldTriggerSatan === 'function' ? shouldTriggerSatan(levelN, diff) : false;
+}
 function wallRecordPaceDelta(g) {
   const best = save.bestWall || 0;
   if (!g || best <= 0) return null;
@@ -1060,6 +1072,7 @@ function readSaveJson(raw) {
     }
     merged.tipsSeen = sanitizeTipsSeen(parsed.tipsSeen);
     merged.advFails = Object.assign({}, parsed.advFails || {});
+    merged.advSatanAt = Object.assign({}, parsed.advSatanAt || {});
     merged.zoneWeapons = Object.assign({}, parsed.zoneWeapons || {});
     merged.chestWeapons = Object.assign({}, parsed.chestWeapons || {});
     if (parsed.chestDaily && typeof parsed.chestDaily === 'object') merged.chestDaily = Object.assign({}, parsed.chestDaily);
@@ -1375,6 +1388,12 @@ function sanitizeSave(s) {
     bag.fails = fails;
     const mb = parseInt(src.masterBuff, 10);
     bag.masterBuff = (Number.isFinite(mb) && mb >= 1 && mb <= maxLevel) ? mb : null;
+    const satanAt = {};
+    for (const [k, v] of Object.entries(src.satanAt || {})) {
+      const n = parseInt(k, 10);
+      if (n >= 1 && n <= maxLevel) satanAt[n] = clamp(Math.floor(Number(v) || 0), 0, 99);
+    }
+    bag.satanAt = satanAt;
     return bag;
   };
   const hardIn = (out.advHard && typeof out.advHard === 'object') ? out.advHard : {};
@@ -1404,6 +1423,12 @@ function sanitizeSave(s) {
     if (n >= 1 && n <= maxLevel) cleanFails[n] = clamp(Math.floor(Number(v) || 0), 0, 99);
   }
   out.advFails = cleanFails;
+  const cleanSatanAt = {};
+  for (const [k, v] of Object.entries(out.advSatanAt || {})) {
+    const n = parseInt(k, 10);
+    if (n >= 1 && n <= maxLevel) cleanSatanAt[n] = clamp(Math.floor(Number(v) || 0), 0, 99);
+  }
+  out.advSatanAt = cleanSatanAt;
   const mb = parseInt(out.advMasterBuff, 10);
   out.advMasterBuff = (Number.isFinite(mb) && mb >= 1 && mb <= maxLevel) ? mb : null;
   if (!out.advIsland && out.unlocked > 1) {
@@ -4381,6 +4406,7 @@ function blackScreenGuard(where) {
           try { cancelTideBattleMusicPending(game); } catch (_) {}
         }
       }
+      try { if (typeof clearSatanState === 'function') clearSatanState(game); } catch (_) {}
       state = 'menu';
       game = null;
     }
@@ -4523,6 +4549,7 @@ function recoverToMenu(opts) {
         game.tideBattlePrevSong = null;
       }
     }
+    try { if (game && typeof clearSatanState === 'function') clearSatanState(game); } catch (_) {}
     game = null;
     state = 'menu';
     window.__sfLoopErr = false;
@@ -9208,6 +9235,8 @@ const SPECIES = {
   stormocto: { name: 'Stormocto', art: 'octo', size: 21, hp: 72, dmg: 13, speed: 54, type: 'swim', xp: 28, rarity: 'epic', c1: '#7cf5ff', c2: '#2a7fc0' },
   krakenling: { name: 'Krakenling', art: 'octo', size: 28, hp: 155, dmg: 17, speed: 42, type: 'swim', xp: 48, rarity: 'legendary', c1: '#2a1840', c2: '#6ee06e' },
   voidocto: { name: 'Voidocto', art: 'octo', size: 24, hp: 98, dmg: 15, speed: 50, type: 'swim', xp: 42, rarity: 'mythic', c1: '#5a1040', c2: '#ff6b9d' },
+  /* Satan — stall-baas na 10× falen; nooit in normale golven */
+  satan: { name: 'Satan', art: 'satan', size: 96, hp: 220, dmg: 18, speed: 78, type: 'charge', xp: 160, rarity: 'mythic', c1: '#ff3040', c2: '#2a0810' },
   /* --- Boerderij op hol: reuzen-boerderijdieren --- */
   holkoe: { name: 'Holkoe', art: 'cow', size: 34, hp: 57, dmg: 8, speed: 38, type: 'tank', xp: 10, rarity: 'common', c1: '#c98850', c2: '#6b4a28' },
   razendeholkoe: { name: 'Razende Holkoe', art: 'cow', size: 35, hp: 90, dmg: 11, speed: 41, type: 'tank', xp: 18, rarity: 'uncommon', c1: '#d4a574', c2: '#6b4a28' },
@@ -9795,6 +9824,7 @@ const GAMBLE_ALLY_IDS = Object.keys(GAMBLE_ALLIES);
 
 function pickSuperBossSpecies(levelN) {
   const pool = SPECIES_ORDER.filter((id) => {
+    if (id === 'satan' || (typeof isTideBossId === 'function' && isTideBossId(id))) return false;
     const o = rarityOf(SPECIES[id].rarity).order;
     return o >= 3 && (UNLOCK_AT[id] == null || UNLOCK_AT[id] <= levelN);
   });
@@ -10154,6 +10184,390 @@ function tideBattleSpawnX(game) {
   const maxX = game.maxX || (typeof W === 'number' ? W - 80 : 600);
   const side = px > maxX * 0.55 ? -1 : 1;
   return clamp(px + side * rand(150, 230), 80, maxX);
+}
+/* --- src/data/satan-encounter.js --- */
+/* ============================== SATAN ENCOUNTER ======================== */
+/** Na 10× falen op hetzelfde level (per moeilijkheid) verschijnt Satan. */
+const SATAN_FAIL_THRESHOLD = 10;
+/** UI-danger: één fail vóór Satan (9× = rood + !). */
+const SATAN_DANGER_FAILS = 9;
+const SATAN_REAPPEAR_GAP = 5;
+const SATAN_REFLECT_RATIO = 0.85;
+const SATAN_SPECIES_ID = 'satan';
+/** Reflect + HP-tuning: ~85% van de duels wint Satan (speler sterft eerder). */
+const SATAN_HP_VS_PLAYER = 1.35;
+const SATAN_DIRECT_DMG_MUL = 0.55;
+/** Dikke SVG-portrait (UI + canvas). */
+const SATAN_SVG_URL = 'assets/ui/satan.svg';
+const SATAN_MARK_URL = 'assets/ui/satan-mark.svg';
+/** Art-hoogte ≈ 2.35 × size → size ≈ 0.21 × min(W,H) ≈ half scherm. */
+const SATAN_SCREEN_FRAC = 0.21;
+const SATAN_SIZE_MIN = 88;
+const SATAN_SIZE_MAX = 200;
+
+let _satanSvgImg = null;
+let _satanSvgReady = false;
+let _satanSvgFailed = false;
+
+function ensureSatanSvg() {
+  if (_satanSvgFailed) return null;
+  if (_satanSvgImg) return _satanSvgImg;
+  if (typeof Image === 'undefined') return null;
+  try {
+    _satanSvgImg = new Image();
+    _satanSvgImg.decoding = 'async';
+    _satanSvgImg.onload = () => { _satanSvgReady = true; };
+    _satanSvgImg.onerror = () => { _satanSvgReady = false; _satanSvgFailed = true; };
+    _satanSvgImg.src = SATAN_SVG_URL;
+  } catch (_) {
+    _satanSvgFailed = true;
+    return null;
+  }
+  return _satanSvgImg;
+}
+
+function satanSvgReady() {
+  ensureSatanSvg();
+  return !!(
+    _satanSvgReady &&
+    _satanSvgImg &&
+    _satanSvgImg.complete &&
+    _satanSvgImg.naturalWidth > 0
+  );
+}
+
+/** Combat-radius zodat Satan ~halve schermhoogte vult (clamp tegen HUD/ground). */
+function satanCombatSize(game) {
+  const ww = typeof W === 'number' && W > 0 ? W : 800;
+  const hh = typeof H === 'number' && H > 0 ? H : 600;
+  const m = Math.min(ww, hh);
+  let raw = Math.round(m * SATAN_SCREEN_FRAC);
+  // Half-screen art (~2.35×r) mag HUD + ground niet overschrijven
+  try {
+    const g = game && game.ground > 0 ? game.ground : (hh * 0.82);
+    const hud = (game && game.advHudBottom) || Math.max(88, hh * 0.12);
+    const room = Math.max(70, g - hud - 20);
+    raw = Math.min(raw, Math.floor(room / 1.55));
+  } catch (_) {}
+  if (typeof clamp === 'function') return clamp(raw, SATAN_SIZE_MIN, SATAN_SIZE_MAX);
+  return Math.max(SATAN_SIZE_MIN, Math.min(SATAN_SIZE_MAX, raw));
+}
+
+function satanEscAttr(s) {
+  // Geen regex-literals met quotes — die breken stripLiterals in check-undefined-calls.
+  return String(s == null ? '' : s)
+    .split('&').join('&amp;')
+    .split('"').join('&quot;')
+    .split('<').join('&lt;')
+    .split('>').join('&gt;');
+}
+
+/**
+ * Teken dikke SVG-Satan op canvas (centered). Fallback: false → caller tekent vector.
+ * Art-hoogte ≈ 2.35 × r (hoorns tot cape).
+ */
+function drawSatanSvgArt(c, r, t, flash, telegraph) {
+  if (!c || !(r > 0)) return false;
+  ensureSatanSvg();
+  if (!satanSvgReady()) return false;
+  const h = r * 2.35;
+  const w = h * (160 / 200);
+  const bob = Math.sin((t || 0) * 2.2) * r * 0.02;
+  c.save();
+  try {
+    if (flash) c.globalAlpha = 0.92;
+    else if (telegraph) c.globalAlpha = 0.88 + Math.sin((t || 0) * 14) * 0.08;
+    c.drawImage(_satanSvgImg, -w * 0.5, -h * 0.52 + bob, w, h);
+  } catch (_) {
+    c.restore();
+    return false;
+  }
+  c.restore();
+  return true;
+}
+
+function satanPortraitHtml(opts) {
+  opts = opts || {};
+  const compact = !!opts.compact;
+  const cls = compact ? 'adv-satan-mark' : 'adv-satan-portrait';
+  const src = compact ? SATAN_MARK_URL : SATAN_SVG_URL;
+  const wh = compact
+    ? 'width="18" height="18"'
+    : 'width="72" height="90"';
+  return `<img class="${cls}" src="${satanEscAttr(src)}" alt="" ${wh} decoding="async" draggable="false">`;
+}
+
+function satanDiffId(diff) {
+  return typeof normalizeAdvDiffId === 'function'
+    ? normalizeAdvDiffId(diff || (typeof currentAdvDiff === 'function' ? currentAdvDiff() : 'normal'))
+    : (diff || 'normal');
+}
+
+function satanFailCount(levelN, diff) {
+  if (typeof advFailCount === 'function') return advFailCount(levelN, satanDiffId(diff));
+  return (save && save.advFails && save.advFails[levelN]) || 0;
+}
+
+function satanLastAt(levelN, diff) {
+  const d = satanDiffId(diff);
+  const n = Math.floor(Number(levelN) || 0);
+  if (d === 'normal') {
+    if (!save || !save.advSatanAt || typeof save.advSatanAt !== 'object') return 0;
+    const v = Math.floor(Number(save.advSatanAt[n]) || 0);
+    return v > 0 ? v : 0;
+  }
+  if (typeof ensureAdvHardBag !== 'function') return 0;
+  const bag = ensureAdvHardBag(d);
+  if (!bag.satanAt || typeof bag.satanAt !== 'object') return 0;
+  const v = Math.floor(Number(bag.satanAt[n]) || 0);
+  return v > 0 ? v : 0;
+}
+
+function shouldTriggerSatan(levelN, diff) {
+  const fails = satanFailCount(levelN, diff);
+  if (fails < SATAN_FAIL_THRESHOLD) return false;
+  const last = satanLastAt(levelN, diff);
+  if (!last) return true;
+  return fails >= last + SATAN_REAPPEAR_GAP;
+}
+
+/**
+ * Hitte-tier voor adventure-UI (temperatuur-meter).
+ * cool → warm → hot (meester) → danger (9) → satan (10+ / klaar).
+ */
+function satanHeatTier(fails) {
+  const n = clamp(Math.floor(Number(fails) || 0), 0, 99);
+  if (n >= SATAN_FAIL_THRESHOLD) return 'satan';
+  if (n >= SATAN_DANGER_FAILS) return 'danger';
+  if (n >= 5) return 'hot';
+  if (n >= 3) return 'warm';
+  if (n >= 1) return 'cool';
+  return 'none';
+}
+
+function satanHeatPct(fails) {
+  const n = clamp(Math.floor(Number(fails) || 0), 0, 99);
+  return clamp(Math.round((n / SATAN_FAIL_THRESHOLD) * 100), 0, 100);
+}
+
+function satanHeatForLevel(levelN, diff) {
+  const d = satanDiffId(diff);
+  const fails = satanFailCount(levelN, d);
+  const tier = satanHeatTier(fails);
+  const pending = shouldTriggerSatan(levelN, d);
+  return {
+    levelN: levelN,
+    diff: d,
+    fails,
+    tier,
+    pct: satanHeatPct(fails),
+    danger: tier === 'danger' || tier === 'satan' || pending,
+    bang: fails >= SATAN_DANGER_FAILS || pending,
+    satanReady: pending || tier === 'satan',
+    master: fails >= 5,
+  };
+}
+
+/** Hoogste hitte op een eiland (voor info-paneel). */
+function satanHeatForIsland(islandId, diff) {
+  const d = satanDiffId(diff);
+  const range = typeof islandLevelRange === 'function'
+    ? islandLevelRange(islandId)
+    : { start: 1, end: 10 };
+  let best = null;
+  for (let n = range.start; n <= range.end; n++) {
+    const h = satanHeatForLevel(n, d);
+    if (!best || h.fails > best.fails || (h.fails === best.fails && h.satanReady && !best.satanReady)) {
+      best = h;
+    }
+  }
+  const unlocked = typeof advUnlockedLevel === 'function' ? advUnlockedLevel(d) : (save && save.unlocked) || 1;
+  return best || satanHeatForLevel(unlocked, d);
+}
+
+function satanHeatLabel(heat) {
+  if (!heat) return '';
+  if (typeof t !== 'function') {
+    if (heat.satanReady) return 'Satan komt';
+    if (heat.tier === 'danger') return 'Gevaar!';
+    if (heat.tier === 'hot') return 'Hitte';
+    if (heat.tier === 'warm') return 'Warm';
+    if (heat.tier === 'cool') return 'Koel';
+    return 'Hitte';
+  }
+  if (heat.satanReady) return t('ui.heatSatanReady');
+  if (heat.tier === 'danger') return t('ui.heatDanger');
+  if (heat.tier === 'hot') return t('ui.heatHot');
+  if (heat.tier === 'warm') return t('ui.heatWarm');
+  if (heat.tier === 'cool') return t('ui.heatCool');
+  return t('ui.heatIdle');
+}
+
+function satanHeatTip(heat) {
+  if (!heat || typeof t !== 'function') return '';
+  if (heat.satanReady) return t('ui.heatTipSatan', { lv: heat.levelN, n: heat.fails });
+  if (heat.tier === 'danger') return t('ui.heatTipDanger', { lv: heat.levelN, n: heat.fails });
+  if (heat.fails > 0) return t('ui.heatTipFails', { lv: heat.levelN, n: heat.fails, max: SATAN_FAIL_THRESHOLD });
+  return t('ui.heatTipIdle');
+}
+
+function markSatanEncounterStarted(levelN, diff) {
+  if (!save) return;
+  const d = satanDiffId(diff);
+  const n = Math.floor(Number(levelN) || 0);
+  const fails = satanFailCount(n, d);
+  if (d === 'normal') {
+    if (!save.advSatanAt || typeof save.advSatanAt !== 'object') save.advSatanAt = {};
+    save.advSatanAt[n] = fails;
+  } else if (typeof ensureAdvHardBag === 'function') {
+    const bag = ensureAdvHardBag(d);
+    if (!bag.satanAt || typeof bag.satanAt !== 'object') bag.satanAt = {};
+    bag.satanAt[n] = fails;
+  }
+  try { persist(); } catch (_) {}
+}
+
+function clearSatanEncounterProgress(levelN, diff) {
+  if (!save) return;
+  const d = satanDiffId(diff);
+  const n = Math.floor(Number(levelN) || 0);
+  let changed = false;
+  if (d === 'normal') {
+    if (save.advSatanAt && typeof save.advSatanAt === 'object' && save.advSatanAt[n] != null) {
+      delete save.advSatanAt[n];
+      changed = true;
+    }
+  } else if (typeof ensureAdvHardBag === 'function') {
+    const bag = ensureAdvHardBag(d);
+    if (bag.satanAt && bag.satanAt[n] != null) {
+      delete bag.satanAt[n];
+      changed = true;
+    }
+  }
+  if (changed) {
+    try { persist(); } catch (_) {}
+  }
+}
+
+function adventureSpecialDuelActive(game) {
+  if (!game) return false;
+  return !!(game.satanPending || game.satanActive || (game.tideBattleActive && game.tideFromSatan));
+}
+
+function clearSatanState(game) {
+  if (!game) return;
+  game.satanPending = false;
+  game.satanActive = false;
+  game.satanMon = null;
+  game.satanDelayT = 0;
+}
+
+function satanSpawnOpts(game) {
+  const p = game && game.player;
+  const sp = SPECIES[SATAN_SPECIES_ID];
+  const baseHp = (sp && sp.hp) || 220;
+  const targetHp = p && p.maxhp > 0
+    ? Math.round(p.maxhp * SATAN_HP_VS_PLAYER)
+    : Math.round(baseHp * 1.4);
+  ensureSatanSvg();
+  return {
+    elite: true,
+    satanBoss: true,
+    reflectRatio: SATAN_REFLECT_RATIO,
+    targetHp,
+    dmgMul: SATAN_DIRECT_DMG_MUL,
+    hpMul: 1,
+    sizeOverride: satanCombatSize(game),
+  };
+}
+
+function satanSpawnX(game) {
+  const px = game.player ? game.player.x : W * 0.5;
+  const maxX = game.maxX || (typeof W === 'number' ? W - 80 : 600);
+  const gap = Math.max(180, satanCombatSize(game) * 1.6);
+  const side = px > maxX * 0.55 ? -1 : 1;
+  return clamp(px + side * rand(gap * 0.85, gap * 1.15), 80, maxX);
+}
+
+/** Na resize: houd half-scherm footprint stabiel. */
+function refreshSatanCombatScale(game) {
+  if (!game || !game.satanActive || !game.satanMon || !game.satanMon.alive) return;
+  const mon = game.satanMon;
+  const next = satanCombatSize(game);
+  if (!(next > 0) || Math.abs(next - mon.size) < 2) return;
+  mon.size = next;
+  try {
+    if (!mon.flying && game.ground > 0) mon.y = game.ground - mon.size;
+  } catch (_) {}
+}
+
+function triggerSatanIntro(game, monster) {
+  if (!game || !monster || !monster.sp) return;
+  const name = monster.sp.name || 'Satan';
+  monster.introT = 2.8;
+  monster.introTier = 'satanBoss';
+  try {
+    AudioSys.sting('bossIntro');
+    AudioSys.play('boss');
+    game.banner(t('banner.satan', { name }), 2.6, '#ff3040', 48);
+    AudioSys.sfx('roar');
+  } catch (_) {}
+  const x = monster.x;
+  const y = monster.y - (monster.size || 40) * 0.4;
+  try {
+    game.burst(x, y, '#ff3040', motionReduced() || fxLite() ? 12 : 30);
+    game.burst(x, y, '#ffd75e', 14);
+    spawnFxRing(game, x, y, '#ff3040', 26);
+    spawnFxRing(game, x, y - 18, '#1a0a10', 14);
+    game.shake(16, 0.5);
+    game.freezeT = Math.max(game.freezeT || 0, 0.2);
+    haptic(34);
+  } catch (_) {}
+}
+
+function reportSatanRecover(reason, err) {
+  const now = Date.now();
+  if (window.__sfSatanRecoverT && now - window.__sfSatanRecoverT < 6000) return;
+  window.__sfSatanRecoverT = now;
+  const msg = reason === 'spawn'
+    ? 'Satan-gevecht start mislukt — avontuur gaat verder'
+    : 'Satan-gevecht hersteld';
+  if (typeof sfReportError === 'function') sfReportError('satan/' + (reason || 'recover'), err, msg);
+  else if (typeof userToast === 'function') userToast(msg, 3400);
+}
+
+function syncSatanState(game) {
+  if (!game || game.mode !== 'adventure') return;
+  if (game.satanPending) {
+    if (!game.player || !game.player.alive || game.over) {
+      clearSatanState(game);
+      return;
+    }
+    return;
+  }
+  if (!game.satanActive) return;
+  const mon = game.satanMon;
+  if (!mon || !Array.isArray(game.monsters) || !game.monsters.includes(mon)) {
+    clearSatanState(game);
+    reportSatanRecover('sync');
+    return;
+  }
+  if (!mon.alive) {
+    if ((mon.deadT || 0) >= 0.35) {
+      try {
+        if (typeof game.finishSatanEncounter === 'function') game.finishSatanEncounter(true, mon);
+        else clearSatanState(game);
+      } catch (err) {
+        console.error('[Satan] finish', err);
+        clearSatanState(game);
+        reportSatanRecover('finish', err);
+      }
+    }
+    return;
+  }
+  if (!game.player || !game.player.alive || game.over) {
+    clearSatanState(game);
+  }
 }
 /* --- src/data/pets.js --- */
 /* ============================== DEX PETS ================================ */
@@ -11014,6 +11428,9 @@ function seedNlGameStrings() {
     wallNewWall: 'MUUR GESLOOPT! Nieuwe muur...',
     tideBattle: 'TIDE BATTLE — {name}!',
     tideBattleWin: 'TIDE BATTLE GEWONNEN!',
+    satan: 'SATAN — {name}!',
+    satanIncoming: 'SATAN KOMT…',
+    satanWin: 'SATAN VERSLAGEN!',
   });
   if (!I18N.nl.result) I18N.nl.result = {};
   Object.assign(I18N.nl.result, {
@@ -11025,6 +11442,10 @@ function seedNlGameStrings() {
     lossBlockTip: 'Tip: blokkeer · mik omhoog op vliegers · {prog}',
     lossOrbTip: 'Tip: pak groene orbs · vul SUPER vóór baas · {prog}',
     lossGambleTip: 'Eerste nederlaag: vóór elk level kun je dobbelen — bondgenoot helpt tussen golven.',
+    heatRising: 'Hitte {n}/{max} — bij 9 gevaar, bij 10 Satan',
+    heatDanger: 'GEVAAR! Hitte rood — nog 1 verlies en Satan komt',
+    heatSatanNext: 'Satan staat klaar bij de volgende start van dit level',
+    satanAfterClear: 'Adventure gehaald — hitte blijft: 10× falen op één level → Satan (~half scherm, reflect) → Tide-pet',
     trainComboRecord: 'Combo-trainer: ×{n}{rec}',
     trainComboNewRec: ' — nieuw record!',
     trainStyleUnlock: 'Nieuwe stijl vrij: Chakra gloed — Instellingen → Stijl!',
@@ -11100,6 +11521,7 @@ function seedNlGameStrings() {
     bossWaits: 'DE BAAS WACHT…',
     bossTag: 'BAAS',
     superBossTag: 'SUPER BAAS',
+    satanTag: 'SATAN',
     colossalTag: 'COLOSSAAL',
     checkpoint: 'CHECKPOINT — DEEL {part}/3',
     allyHeal: '+{heal} bondgenoot',
@@ -11110,6 +11532,7 @@ function seedNlGameStrings() {
     gambleSuperBoss: 'Super-baas mogelijk golf {n}',
     allyHelps: '{name} helpt je!',
     masterBuffFloater: '5× verloren — HP, snelheid & schade ↑',
+    satanReflect: 'REFLECT −{n}',
     skillGate: 'Eiland-skill gate: max wapen Lv {cap}',
     aimUp: 'Joystick omhoog = hoger mikken',
     partGateHint: 'Checkpoint: loop rechts door — scherm scrollt mee · 3 delen per level',
@@ -11155,6 +11578,12 @@ function seedNlGameStrings() {
     summon: '✦ Summon! {name} is nu {rar} — schade ×{dmg}',
     tideBattle: 'Tide Battle! {name} verschijnt — versla de baas!',
     tideBattleWin: 'Tide Battle gewonnen! +{xp} XP · +{coins} pet coins',
+    satanIncoming: 'Satan verschijnt — 10× vastgelopen!',
+    satanComingNext: '10× verloren — volgende poging: Satan komt langs…',
+    satanHeatDanger: 'Gevaar! 9× verloren — hitte rood · nog 1× en Satan komt!',
+    satanReflectHint: 'Satan kaatst 85% schade terug — let op je HP!',
+    satanWinTide: 'Satan verslagen! Beloning: Tide Battle pet!',
+    satanTideDone: 'Tide-beloning klaar — avontuur gaat verder',
     shurikenWait: 'Werpwapen even wachten…',
     shurikenSpam: 'Niet spammen — max 3 snel achter elkaar',
     missionDone: 'Missie klaar: {text}',
@@ -11338,7 +11767,7 @@ function seedNlGameStrings() {
     '<b>RabbitRobot:</b> hij gebruikt <b>Chidori</b> (bliksem) — wacht tot hij open is.',
     '<b>Muur:</b> 60s timer · combo-balk (+4% sloop per hit) · milestones ×3/×5/×8 · record-tempo in HUD · bom/goud bonusstenen.',
     '<b>Rariteiten:</b> Gewoon → Ongewoon → Zeldzaam → Episch → Legendarisch → Mythisch. Zeldzamer = meer XP & meer max HP.',
-    '<b>50 levels:</b> <b>5 eilanden × 10 levels</b> — skill gate wapens per eiland · baas Lv 10/20/30/40/50 opent volgend eiland · 5× verlies = Meester-buff (+20%).',
+    '<b>50 levels:</b> <b>5 eilanden × 10 levels</b> — skill gate wapens per eiland · baas Lv 10/20/30/40/50 opent volgend eiland · hitte-meter: 5× = Meester-buff · 9× = gevaar! · 10× = Satan.',
     '<b>Backup:</b> elke save wordt dubbel opgeslagen — bij problemen: <b>Instellingen → Herstel save uit backup</b>.',
     '<b>Delen:</b> menu → <b>Deel link</b> — vrienden op Android openen in Chrome → Zet in app-lade. Zie ANDROID-DELEN.txt op GitHub.',
     '<b>Offline:</b> na 1× online openen cache’t de app HTML+JS — banner onderaan bij geen net. Tunnel-link heeft internet nodig; GitHub Pages + app-lade = stabielst.',
@@ -11435,7 +11864,7 @@ function seedNlGameStrings() {
     charPickNow2: 'P2',
     charIpadTip: 'iPad: speler 1 gebruikt de linker helft van het scherm (joystick + knoppen), speler 2 de rechter helft. Draai je iPad liggend voor het meeste ruimte.',
     levelHead: 'Kies een eiland',
-    levelSub: 'Normal → Nightmare 2.0 → Hell 3.0 · 7 eilanden × 10 levels · Tik level = Gooi & start',
+    levelSub: 'Normal → Nightmare 2.0 → Hell 3.0 · hitte-meter · 9× = gevaar! · 10× = Satan',
     diff: { normal: 'Normal', nightmare: 'Nightmare', hell: 'Hell' },
     diffTipNormal: 'Standaard avontuur · model 1.0',
     diffTipHard: '{name} — zwaardere vijanden, hogere rariteiten & eigen arena',
@@ -11566,7 +11995,7 @@ function seedNlGameStrings() {
     islandInfoSub: 'Skill gate: wapens tot Lv {cap} · {cleared}/{total} levels · {stars}★',
     islandBossGate: ' · baas Lv {lv} → volgend eiland',
     masterBuffChip: 'Meester-buff Lv {lv} · +20%',
-    islandFirstHint: 'Eerste keer avontuur: 5×10 levels · skill gate per eiland · Meester-buff na 5× verlies op één level',
+    islandFirstHint: 'Hitte-meter: 5× verlies = Meester-buff · 9× = gevaar! · 10× = Satan (reflect)',
     starHint: '3★ >{three}% HP · 2★ >{two}% · 1★ = win',
     levelTipWaves: '{waves} golven · {starHint}',
     levelTipIslandBoss: ' · eiland-baas — opent volgend eiland',
@@ -11574,7 +12003,31 @@ function seedNlGameStrings() {
     levelTipYourStars: ' · jouw {stars}{empty}',
     levelTipFails: ' · {n}× verloren',
     levelTipMasterActive: ' · Meester-buff actief',
+    levelTipSatan: ' · 10×+ = Satan (reflect)',
+    levelTipSatanDanger: ' · GEVAAR! bijna Satan',
+    levelTipSatanRising: ' · hitte stijgt → Satan bij 10',
     levelTipTap: ' · Tik = Gooi & start · Lang = zonder gok',
+    heatTitle: 'Hitte',
+    heatIdle: 'Koel',
+    heatCool: 'Koel',
+    heatWarm: 'Warm',
+    heatHot: 'Heet',
+    heatDanger: 'Gevaar!',
+    heatSatanReady: 'Satan komt',
+    heatTipIdle: 'Verlies op dit level vult de hitte-meter — bij 10 komt Satan.',
+    heatTipFails: 'Lv {lv}: {n}/{max} verliezen · 5 = Meester · 9 = gevaar · 10 = Satan',
+    heatTipDanger: 'Lv {lv}: {n}/10 — GEVAAR! Nog 1 verlies en Satan komt langs.',
+    heatTipSatan: 'Lv {lv}: {n}/10 — Satan staat klaar bij de volgende start.',
+    heatChipSatan: 'Satan klaar · volgende start',
+    heatChipDanger: 'Gevaar! · 9× verloren',
+    satanCardTitle: 'Satan',
+    satanCardIdle: 'Blijf hangen op één level? Hitte loopt op — bij 10× komt deze baas (~half scherm, 85% reflect).',
+    satanCardHeat: 'Hitte {n}/{max}. Verlies stapelen lokt Satan — dikke SVG-duivel met reflect.',
+    satanCardDanger: 'GEVAAR! Nog 1× verlies en Satan verschijnt — ~half scherm, heel boosaardig.',
+    satanCardReady: 'Satan staat klaar bij de volgende start van dit level.',
+    satanCardAfterClear: 'Adventure gehaald? Hitte werkt nog steeds: 10× falen op één level → Satan-duel → Tide-pet.',
+    diffBlurbSatanAfterClear: 'Hitte/Satan blijft actief bij vastzitten',
+    helpSatanHeat: 'Hitte-meter: verliezen op één level stapelen. 5× = Meester-buff (+20%). 9× = rood gevaar!. 10× = Satan (85% reflect); win Satan → Tide Battle pet.',
     errPickIsland: 'Eiland kiezen mislukt',
     errStart: 'Start mislukt',
     errLevelStart: 'Level starten mislukt',
@@ -11599,7 +12052,7 @@ function seedNlGameStrings() {
     installSub: 'Verschijnt als icoon — net als een echte app',
     boss: 'BAAS',
     topHunter: 'Top jager',
-    modeAdventure: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok · omringd = KABLAM!',
+    modeAdventure: '5 eilanden × 10 levels · hitte-meter · 9× = gevaar! · 10× = Satan · Meester-buff · dobbel-gok',
     modeTraining: 'Combo-trainer ×5/×8/×10 · 3s dummy · lasers · Chidori',
     modeWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing',
     modeVersus: 'P1 links P2 rechts · best-of-3 · rematch in pauze',
@@ -11632,6 +12085,9 @@ function seedNlGameStrings() {
     petDefault: 'Metgezel', cosmetic: 'Cosmetisch',
     gambleBoss: 'Super-baas mogelijk · golf {n}', starZone: ' · 3★ zone',
     tideBattle: '⚔ Tide Battle — versla {name}!', tideBattleShort: '⚔ Tide Battle',
+    satan: 'Satan — versla {name}!', satanShort: 'Satan',
+    satanHintTouch: 'Satan kaatst schade terug — korte bursts, pak orbs',
+    satanHintKb: 'Satan reflecteert 85% — mik, wijken, orbs pakken',
     star2: ' · 2★ bij >{pct}% HP', star3: ' · 3★ bij >{pct}% HP', hpPct: '{pct}% HP{hint}',
     enemiesLeft1: 'Nog 1 vijand in deze golf', enemiesLeftN: 'Nog {n} vijanden in deze golf',
     waveFunnel: '{cleared}/{total} weg · spawn actief',
@@ -11857,6 +12313,10 @@ const CATALOG_EN = {
     lossBlockTip: 'Tip: block · aim up at flyers · {prog}',
     lossOrbTip: 'Tip: grab green orbs · fill SUPER before boss · {prog}',
     lossGambleTip: 'First loss: before each level you can gamble — ally helps between waves.',
+    heatRising: 'Heat {n}/{max} — danger at 9, Satan at 10',
+    heatDanger: 'DANGER! Heat red — one more loss and Satan appears',
+    heatSatanNext: 'Satan is ready on the next start of this level',
+    satanAfterClear: 'Adventure cleared — heat still applies: 10× fails on one level → Satan (~half screen, reflect) → Tide pet',
     trainComboRecord: 'Combo trainer: ×{n}{rec}',
     trainComboNewRec: ' — new record!',
     trainStyleUnlock: 'New style unlocked: Chakra glow — Settings → Style!',
@@ -11944,6 +12404,7 @@ const CATALOG_EN = {
     matsStart: 'MATS · COIN BONUS', wallStart: 'SMASH THE WALL!', bonusDone: 'BONUS DONE!',
     kets: 'KETS!', ketsBam: 'KETS-BAM!', wallTime: 'TIME!', wallNewWall: 'WALL SMASHED! New wall...',
     tideBattle: 'TIDE BATTLE — {name}!', tideBattleWin: 'TIDE BATTLE WON!',
+    satan: 'SATAN — {name}!', satanIncoming: 'SATAN APPROACHES…', satanWin: 'SATAN DEFEATED!',
   },
   help: { tips: [
     'Power-ups: defeated monsters sometimes drop orbs — HP, rage, chakra, shield.',
@@ -11958,7 +12419,7 @@ const CATALOG_EN = {
     'RabbitRobot: uses Chidori (lightning) — wait until he opens up.',
     'Wall: 60s timer · combo bar (+4% smash per hit) · milestones ×3/×5/×8 · record pace in HUD · bomb/gold bonus bricks.',
     'Rarities: Common → Uncommon → Rare → Epic → Legendary → Mythic. Rarer = more XP & max HP.',
-    '50 levels: 5 islands × 10 levels — skill gate weapons per island · boss Lv 10/20/30/40/50 opens next island · 5× loss = Master buff (+20%).',
+    '50 levels: 5 islands × 10 levels — skill gate weapons per island · boss Lv 10/20/30/40/50 opens next island · heat meter: 5× = Master buff · 9× = danger! · 10× = Satan.',
     'Backup: every save is stored twice — if needed: Settings → Restore save from backup.',
     'Share: menu → Share link — friends on Android open in Chrome → Add to home screen. See ANDROID-DELEN.txt on GitHub.',
     'Offline: after opening online once the app caches HTML+JS — banner at bottom when offline. Tunnel links need internet; GitHub Pages + home screen = most stable.',
@@ -11993,6 +12454,12 @@ const CATALOG_EN = {
     summon: '✦ Summon! {name} is now {rar} — damage ×{dmg}',
     tideBattle: 'Tide Battle! {name} appears — defeat the boss!',
     tideBattleWin: 'Tide Battle won! +{xp} XP · +{coins} pet coins',
+    satanIncoming: 'Satan appears — stuck 10×!',
+    satanComingNext: 'Lost 10× — next attempt: Satan shows up…',
+    satanHeatDanger: 'Danger! Lost 9× — heat red · one more and Satan comes!',
+    satanReflectHint: 'Satan reflects 85% damage — watch your HP!',
+    satanWinTide: 'Satan defeated! Reward: Tide Battle pet!',
+    satanTideDone: 'Tide reward done — adventure continues',
     shurikenWait: 'Throw weapon on cooldown…',
     shurikenSpam: "Don't spam — max 3 rapid throws",
     missionDone: 'Mission complete: {text}',
@@ -12185,7 +12652,7 @@ const CATALOG_EN = {
     charPickNow2: 'P2',
     charIpadTip: 'iPad: player 1 uses the left half (joystick + buttons), player 2 the right half. Landscape works best.',
     levelHead: 'Pick an island',
-    levelSub: 'Normal → Nightmare 2.0 → Hell 3.0 · 7 islands × 10 levels · Tap level = Roll & start',
+    levelSub: 'Normal → Nightmare 2.0 → Hell 3.0 · heat meter · 9× = danger! · 10× = Satan',
     diff: { normal: 'Normal', nightmare: 'Nightmare', hell: 'Hell' },
     diffTipNormal: 'Standard adventure · model 1.0',
     diffTipHard: '{name} — tougher foes, higher rarities & own arena',
@@ -12316,7 +12783,7 @@ const CATALOG_EN = {
     islandInfoSub: 'Skill gate: weapons up to Lv {cap} · {cleared}/{total} levels · {stars}★',
     islandBossGate: ' · boss Lv {lv} → next island',
     masterBuffChip: 'Master buff Lv {lv} · +20%',
-    islandFirstHint: 'First adventure run: 5×10 levels · skill gate per island · Master buff after 5× loss on one level',
+    islandFirstHint: 'Heat meter: 5× loss = Master buff · 9× = danger! · 10× = Satan (reflect)',
     starHint: '3★ >{three}% HP · 2★ >{two}% · 1★ = win',
     levelTipWaves: '{waves} waves · {starHint}',
     levelTipIslandBoss: ' · island boss — opens next island',
@@ -12324,7 +12791,31 @@ const CATALOG_EN = {
     levelTipYourStars: ' · yours {stars}{empty}',
     levelTipFails: ' · {n}× lost',
     levelTipMasterActive: ' · Master buff active',
+    levelTipSatan: ' · 10×+ = Satan (reflect)',
+    levelTipSatanDanger: ' · DANGER! almost Satan',
+    levelTipSatanRising: ' · heat rising → Satan at 10',
     levelTipTap: ' · Tap = Roll & start · Hold = skip gamble',
+    heatTitle: 'Heat',
+    heatIdle: 'Cool',
+    heatCool: 'Cool',
+    heatWarm: 'Warm',
+    heatHot: 'Hot',
+    heatDanger: 'Danger!',
+    heatSatanReady: 'Satan incoming',
+    heatTipIdle: 'Losses on this level fill the heat meter — Satan at 10.',
+    heatTipFails: 'Lv {lv}: {n}/{max} losses · 5 = Master · 9 = danger · 10 = Satan',
+    heatTipDanger: 'Lv {lv}: {n}/10 — DANGER! One more loss and Satan appears.',
+    heatTipSatan: 'Lv {lv}: {n}/10 — Satan is ready on the next start.',
+    heatChipSatan: 'Satan ready · next start',
+    heatChipDanger: 'Danger! · lost 9×',
+    satanCardTitle: 'Satan',
+    satanCardIdle: 'Stuck on one level? Heat builds — at 10× this boss appears (~half screen, 85% reflect).',
+    satanCardHeat: 'Heat {n}/{max}. Stacked losses summon Satan — thick SVG devil with reflect.',
+    satanCardDanger: 'DANGER! One more loss and Satan appears — ~half screen, pure villain.',
+    satanCardReady: 'Satan is ready on the next start of this level.',
+    satanCardAfterClear: 'Adventure cleared? Heat still applies: 10× fails on one level → Satan duel → Tide pet.',
+    diffBlurbSatanAfterClear: 'Heat/Satan still active when you stall',
+    helpSatanHeat: 'Heat meter: losses stack on one level. 5× = Master buff (+20%). 9× = red danger!. 10× = Satan (85% reflect); beat Satan → Tide Battle pet.',
     errPickIsland: 'Could not pick island',
     errStart: 'Start failed',
     errLevelStart: 'Could not start level',
@@ -12349,7 +12840,7 @@ const CATALOG_EN = {
     installSub: 'Shows as an icon — like a real app',
     boss: 'BOSS',
     topHunter: 'Top hunter',
-    modeAdventure: '5 islands × 10 levels · skill gate weapons · Master buff after 5× loss · gamble roll · swarmed = KABLAM!',
+    modeAdventure: '5 islands × 10 levels · heat meter · 9× = danger! · 10× = Satan · Master buff · gamble',
     modeTraining: 'Combo trainer ×5/×8/×10 · 3s dummy · lasers · Chidori',
     modeWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD · 5s warning',
     modeVersus: 'P1 left P2 right · best-of-3 · rematch in pause',
@@ -12474,6 +12965,7 @@ const CATALOG_EN = {
     bossWaits: 'THE BOSS AWAITS…',
     bossTag: 'BOSS',
     superBossTag: 'SUPER BOSS',
+    satanTag: 'SATAN',
     colossalTag: 'COLOSSAL',
     checkpoint: 'CHECKPOINT — PART {part}/3',
     allyHeal: '+{heal} ally', allyHit: '{name} −{dmg}',
@@ -12482,6 +12974,7 @@ const CATALOG_EN = {
     tideTraitTip: 'Fast tide wave — ally heal counts extra',
     gambleSuperBoss: 'Super-boss possible wave {n}', allyHelps: '{name} helps you!',
     masterBuffFloater: '5× lost — HP, speed & damage ↑',
+    satanReflect: 'REFLECT −{n}',
     skillGate: 'Island skill gate: max weapon Lv {cap}',
     aimUp: 'Joystick up = aim higher',
     partGateHint: 'Checkpoint: walk right — screen scrolls with you · 3 parts per level',
@@ -12514,6 +13007,9 @@ const CATALOG_EN = {
     petDefault: 'Companion', cosmetic: 'Cosmetic',
     gambleBoss: 'Super-boss possible · wave {n}', starZone: ' · 3★ zone',
     tideBattle: '⚔ Tide Battle — defeat {name}!', tideBattleShort: '⚔ Tide Battle',
+    satan: 'Satan — defeat {name}!', satanShort: 'Satan',
+    satanHintTouch: 'Satan reflects damage — short bursts, grab orbs',
+    satanHintKb: 'Satan reflects 85% — aim, dodge, grab orbs',
     star2: ' · 2★ at >{pct}% HP', star3: ' · 3★ at >{pct}% HP', hpPct: '{pct}% HP{hint}',
     enemiesLeft1: '1 enemy left this wave', enemiesLeftN: '{n} enemies left this wave',
     waveFunnel: '{cleared}/{total} down · spawning',
@@ -15919,6 +16415,7 @@ function resize() {
   canvas.style.height = H + 'px';
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   Input.layout(W, H);
+  try { if (typeof refreshSatanCombatScale === 'function' && typeof game !== 'undefined') refreshSatanCombatScale(game); } catch (_) {}
   if (game) game.onResize();
 }
 function scheduleResize() {
@@ -18780,6 +19277,10 @@ class Monster {
     this.spId = spId; this.sp = sp;
     this.elite = !!opts.elite;
     this.superBoss = !!opts.superBoss;
+    this.satanBoss = !!opts.satanBoss;
+    this.reflectRatio = opts.satanBoss
+      ? (Number(opts.reflectRatio) > 0 ? Number(opts.reflectRatio) : SATAN_REFLECT_RATIO)
+      : 0;
     this.bossCore = !!(opts.bossCore || opts.superBoss);
     this.colossal = false;
     this.size = sp.size * (opts.elite ? 1.5 : 1);
@@ -18793,7 +19294,21 @@ class Monster {
       this.dmg = Math.round(this.dmg * 1.42);
       this.size *= 1.32;
     }
-    if (this.bossCore) {
+    if (this.satanBoss) {
+      this.elite = true;
+      this.superBoss = false;
+      this.bossCore = false;
+      this.colossal = false;
+      if (opts.targetHp > 0) {
+        this.maxhp = Math.round(opts.targetHp);
+        this.hp = this.maxhp;
+      }
+      this.dmg = Math.round(sp.dmg * (opts.dmgMul || SATAN_DIRECT_DMG_MUL));
+      const override = Number(opts.sizeOverride) > 0
+        ? Math.round(opts.sizeOverride)
+        : (typeof satanCombatSize === 'function' ? satanCombatSize() : Math.round(sp.size * 2.2));
+      this.size = override;
+    } else if (this.bossCore) {
       if (this.superBoss) {
         // Super-baas is al zwaar gebufft — lichte extra + kans op colossaal.
         this.size = Math.round(this.size * 1.12);
@@ -18813,7 +19328,7 @@ class Monster {
         this.dmg = Math.round(this.dmg * COLOSSAL_DMG_MUL);
       }
     }
-    if (opts.giant && !this.superBoss && !this.bossCore) {
+    if (opts.giant && !this.superBoss && !this.bossCore && !this.satanBoss) {
       this.giant = true;
       this.size = Math.round(this.size * GIANT_SIZE_MUL);
       this.maxhp = Math.round(this.maxhp * GIANT_HP_MUL);
@@ -19047,11 +19562,22 @@ class Monster {
     if (this.hp <= 0) {
       this.hp = 0; this.deadT = 0;
       AudioSys.sfxAt('die', this.x);
-      const burstN = fxLite() ? 6 : (this.superBoss ? 14 : (this.elite ? 12 : 10));
+      const burstN = fxLite() ? 6 : (this.superBoss || this.satanBoss ? 14 : (this.elite ? 12 : 10));
       game.burst(this.x, this.y, this.sp.c1, burstN);
       game.onMonsterKilled(this);
-    } else if (!opts.skipHitSfx) {
-      AudioSys.sfxAt('hit', this.x);
+    } else {
+      if (this.satanBoss && this.reflectRatio > 0 && dmg > 0 && game && game.player && game.player.alive) {
+        const rd = Math.max(1, Math.round(dmg * this.reflectRatio));
+        try {
+          game.player.takeDamage(rd, Math.sign(game.player.x - this.x) * 220, game, { reflect: true, skipHitSfx: true });
+          game.floater(game.player.x, game.player.y - 70, t('combat.satanReflect', { n: rd }), '#ff3040', 13);
+          game.burst(game.player.x, game.player.y - 40, '#ff3040', fxLite() ? 4 : 8);
+          AudioSys.sfxAt('hit', game.player.x);
+        } catch (_) {}
+      }
+      if (!opts.skipHitSfx) {
+        AudioSys.sfxAt('hit', this.x);
+      }
     }
   }
 
@@ -19095,8 +19621,9 @@ class Monster {
       const pulse = 1 + Math.sin(this.t * 14) * 0.08;
       const bigIntro = !!(this.bossCore || this.superBoss || this.colossal);
       c.globalAlpha = 0.25 + p * 0.45;
-      c.strokeStyle = this.introTier === 'tideBoss' ? '#4a9fff' : (this.introTier === 'superBoss' || this.colossal ? '#ffd75e' : (this.introTier === 'boss' ? '#ff6b6b' : '#c47aff'));
-      c.lineWidth = (bigIntro ? 5 : 4) + p * (bigIntro ? 6 : 4);
+      c.strokeStyle = this.introTier === 'satanBoss' ? '#ff3040'
+        : (this.introTier === 'tideBoss' ? '#4a9fff' : (this.introTier === 'superBoss' || this.colossal ? '#ffd75e' : (this.introTier === 'boss' ? '#ff6b6b' : '#c47aff')));
+      c.lineWidth = (bigIntro || this.satanBoss ? 5 : 4) + p * (bigIntro || this.satanBoss ? 6 : 4);
       c.beginPath();
       c.ellipse(0, 0, this.size * (1.7 + (1 - p) * 0.9) * pulse, this.size * (1.35 + (1 - p) * 0.7) * pulse, 0, 0, TAU);
       c.stroke();
@@ -19107,14 +19634,16 @@ class Monster {
         c.ellipse(0, 0, this.size * 1.9 * pulse, this.size * 1.5 * pulse, 0, 0, TAU);
         c.fill();
       }
-      if (bigIntro && p > 0.12) {
+      if ((bigIntro || this.satanBoss) && p > 0.12) {
         const label = (this.sp && this.sp.name) || 'BAAS';
-        const tag = this.colossal
+        const tag = this.satanBoss
+          ? (typeof t === 'function' ? t('combat.satanTag') : 'SATAN')
+          : (this.colossal
           ? (typeof t === 'function' ? t('combat.colossalTag') : 'COLOSSAAL')
           : (this.superBoss
             ? (typeof t === 'function' ? t('combat.superBossTag') : 'SUPER BAAS')
-            : (typeof t === 'function' ? t('combat.bossTag') : 'BAAS'));
-        const fs = Math.max(18, Math.min(this.colossal ? 42 : 34, this.size * 0.55));
+            : (typeof t === 'function' ? t('combat.bossTag') : 'BAAS')));
+        const fs = Math.max(18, Math.min(this.satanBoss ? 40 : (this.colossal ? 42 : 34), this.size * (this.satanBoss ? 0.28 : 0.55)));
         c.globalAlpha = Math.min(1, 0.35 + p * 0.75);
         c.font = `900 ${fs}px -apple-system, sans-serif`;
         c.textAlign = 'center';
@@ -19122,7 +19651,7 @@ class Monster {
         const ty = -this.size * (this.flying ? 1.15 : 1.35) - fs * 0.35;
         c.lineWidth = Math.max(4, fs * 0.18);
         c.strokeStyle = 'rgba(0,0,0,.72)';
-        c.fillStyle = this.colossal || this.superBoss ? '#ffd75e' : '#ff8a9a';
+        c.fillStyle = this.satanBoss ? '#ff3040' : (this.colossal || this.superBoss ? '#ffd75e' : '#ff8a9a');
         c.strokeText(tag, 0, ty - fs * 0.85);
         c.fillText(tag, 0, ty - fs * 0.85);
         c.font = `900 ${Math.round(fs * 1.15)}px -apple-system, sans-serif`;
@@ -19146,12 +19675,24 @@ class Monster {
     }
     if (rar.order >= 2 && this.alive) {
       c.save();
-      c.strokeStyle = this.tideBoss ? '#4a9fff' : (this.superBoss ? '#ffd75e' : rar.glow); c.lineWidth = 3 + rar.order * 0.4;
+      c.strokeStyle = this.satanBoss ? '#ff3040' : (this.tideBoss ? '#4a9fff' : (this.superBoss ? '#ffd75e' : rar.glow)); c.lineWidth = 3 + rar.order * 0.4;
       c.beginPath(); c.ellipse(0, 0, this.size * 1.55, this.size * 1.2, 0, 0, TAU); c.stroke();
       if (rar.order >= 4) {
         c.globalAlpha = motionReduced() ? 0.25 : (0.25 + Math.sin(this.t * 6) * 0.1);
         c.fillStyle = rar.color;
         c.beginPath(); c.ellipse(0, 0, this.size * 1.7, this.size * 1.35, 0, 0, TAU); c.fill();
+      }
+      c.restore();
+    }
+    if (this.satanBoss && this.alive) {
+      c.save();
+      c.globalAlpha = motionReduced() ? 0.32 : (0.3 + Math.sin(this.t * 4.5) * 0.12);
+      c.strokeStyle = '#ff3040'; c.lineWidth = 4.2;
+      c.beginPath(); c.ellipse(0, 0, this.size * 1.58, this.size * 1.35, 0, 0, TAU); c.stroke();
+      if (!motionReduced() && !fxLite()) {
+        c.globalAlpha = 0.1 + Math.sin(this.t * 3.2) * 0.05;
+        c.fillStyle = '#8a1020';
+        c.beginPath(); c.ellipse(0, this.size * 0.15, this.size * 1.7, this.size * 0.4, 0, 0, TAU); c.fill();
       }
       c.restore();
     }
@@ -19489,6 +20030,43 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
         c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
       }
       break;
+    case 'satan': {
+      if (typeof drawSatanSvgArt === 'function' && drawSatanSvgArt(c, r, t, flash, telegraph)) {
+        break;
+      }
+      c.fillStyle = dark;
+      c.beginPath();
+      c.moveTo(-r * 1.1, r * 0.55);
+      c.quadraticCurveTo(0, r * 1.15, r * 1.1, r * 0.55);
+      c.lineTo(r * 0.85, -r * 0.2);
+      c.quadraticCurveTo(0, r * 0.35, -r * 0.85, -r * 0.2);
+      c.closePath();
+      c.fill();
+      c.fillStyle = body;
+      c.beginPath(); c.arc(0, -r * 0.08, r * 0.92, 0, TAU); c.fill();
+      c.fillStyle = dark;
+      for (const s of [-1, 1]) {
+        c.beginPath();
+        c.moveTo(s * r * 0.42, -r * 0.72);
+        c.lineTo(s * r * 0.62, -r * 1.28);
+        c.lineTo(s * r * 0.18, -r * 0.85);
+        c.closePath();
+        c.fill();
+      }
+      c.strokeStyle = '#ffd75e';
+      c.lineWidth = Math.max(2, r * 0.08);
+      c.beginPath();
+      c.moveTo(r * 0.55, r * 0.15);
+      c.quadraticCurveTo(r * 1.35, r * 0.55, r * 0.7, r * 1.05);
+      c.stroke();
+      c.fillStyle = '#ffd75e';
+      c.beginPath(); c.arc(r * 0.72, r * 1.08, r * 0.12, 0, TAU); c.fill();
+      eye(-r * 0.32, -r * 0.12, r * 0.16);
+      eye(r * 0.22, -r * 0.12, r * 0.16);
+      c.fillStyle = '#1a0a10';
+      c.beginPath(); c.ellipse(0, r * 0.28, r * 0.22, r * 0.1, 0, 0, Math.PI); c.fill();
+      break;
+    }
     case 'cow':
     case 'pig':
     case 'chicken':
@@ -23657,12 +24235,30 @@ class Game {
     this.tideBattleMon = null;
     this.tideBattlePrevSong = null;
     this.tideBattleMusicT = null;
+    this.tideFromSatan = false;
+    this.satanPending = false;
+    this.satanActive = false;
+    this.satanMon = null;
+    this.satanDelayT = 0;
     applyGambleToStage(this, gamble);
     const diffMeta = advDiffMeta(diff);
     const startLabel = diff === 'normal'
       ? t('banner.levelStart', { n })
       : t('banner.levelStartDiff', { n, diff: advDiffLabel(diff) });
     this.banner(startLabel, 1.4, diffMeta.accent || '#ffd75e', 54);
+    if (typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(n, diff)) {
+      this.satanPending = true;
+      this.satanDelayT = 2.4;
+      this.betweenT = 99;
+      const self = this;
+      setTimeout(() => {
+        try {
+          if (!gameUiTimerOk(self)) return;
+          self.banner(t('banner.satanIncoming'), 2.2, '#ff3040', 42);
+          UI.toast(t('toast.satanIncoming'), 3800);
+        } catch (_) {}
+      }, 900);
+    }
     if (masterBuffActive(n, diff)) {
       const self = this;
       setTimeout(() => {
@@ -23954,8 +24550,21 @@ class Game {
 
   updateAdventure(dt) {
     syncTideBattleState(this);
+    if (typeof syncSatanState === 'function') syncSatanState(this);
+    if (this.satanPending && !this.satanActive && !this.over) {
+      this.satanDelayT = (this.satanDelayT || 0) - dt;
+      if (this.satanDelayT <= 0) {
+        try { this.startSatanEncounter(); } catch (err) {
+          console.error('[Satan] start', err);
+          clearSatanState(this);
+          this.betweenT = 1.0;
+          reportSatanRecover('spawn', err);
+        }
+      }
+    }
     // Bewegend decor: tussen golven "loopt" de wereld door (à la beat 'em up)
-    const travelPhase = this.wavePause > 0 || (this.betweenT > 0 && this.waveIdx < 0) || !!this.partGate;
+    const specialDuel = typeof adventureSpecialDuelActive === 'function' && adventureSpecialDuelActive(this);
+    const travelPhase = !specialDuel && (this.wavePause > 0 || (this.betweenT > 0 && this.waveIdx < 0) || !!this.partGate);
     this.traveling = travelPhase && !!(this.player && this.player.alive) && !this.over;
     // Deel 3: camera-punch bij vertrek, zwaardere beat bij aankomst op de baas
     if (this.traveling && !this.travelWasOn) {
@@ -24058,9 +24667,14 @@ class Game {
     this.pickups = this.pickups.filter(pk => pk.life > 0);
     if (this.betweenT > 0) {
       this.betweenT -= dt;
-      if (this.betweenT <= 0 && this.waveIdx < 0 && this.player?.alive) this.nextWave();
+      if (this.betweenT <= 0 && this.waveIdx < 0 && this.player?.alive
+        && !(typeof adventureSpecialDuelActive === 'function' && adventureSpecialDuelActive(this))) {
+        this.nextWave();
+      }
     }
-    if (this.spawnQueue.length) {
+    if (typeof adventureSpecialDuelActive === 'function' && adventureSpecialDuelActive(this)) {
+      // Satan / tide-beloning: geen normale golven tot duel klaar
+    } else if (this.spawnQueue.length) {
       const alive = this.monsters.filter((m) => m.alive).length;
       this.spawnTimer -= dt;
       if (this.spawnTimer <= 0 && alive < ADVENTURE_MAX_ALIVE) {
@@ -24166,6 +24780,8 @@ class Game {
   finishAdventure(win) {
     if (this.over) return;
     clearTideBattleState(this, { restoreMusic: true });
+    this.tideFromSatan = false;
+    if (typeof clearSatanState === 'function') clearSatanState(this);
     this.deactivateMasterSword(true);
     this.over = true;
     this.inputLocked = true;
@@ -24226,6 +24842,7 @@ class Game {
         setMasterBuffLevel(null, diff);
         persist();
       }
+      if (typeof clearSatanEncounterProgress === 'function') clearSatanEncounterProgress(lv, diff);
       const hpPct = this.player.hp / Math.max(1, this.player.maxhp);
       stars = starsFromHpPct(hpPct);
       if (stars > prevStars) { setAdvStarsFor(lv, stars, diff); persist(); }
@@ -24263,9 +24880,12 @@ class Game {
       }
     } else {
       const hadMaster = masterBuffLevel(diff) === lv;
-      const fails = bumpAdvFail(lv, diff);
-      const gotMaster = fails >= 5 && !hadMaster;
+      const failsNow = bumpAdvFail(lv, diff);
+      const gotMaster = failsNow >= 5 && !hadMaster;
       if (gotMaster) setMasterBuffLevel(lv, diff);
+      const satanSoon = failsNow === SATAN_FAIL_THRESHOLD
+        || (typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff));
+      const heatDanger = failsNow === SATAN_DANGER_FAILS;
       persist();
       if (gotMaster) {
         const self = this;
@@ -24275,6 +24895,23 @@ class Game {
             UI.toast(t('toast.masterBuffGain'), 3800);
           } catch (_) {}
         }, 1500);
+      }
+      if (heatDanger) {
+        const self = this;
+        setTimeout(() => {
+          try {
+            if (!gameUiTimerOk(self, { allowOver: true })) return;
+            UI.toast(t('toast.satanHeatDanger'), 4200);
+          } catch (_) {}
+        }, gotMaster ? 3200 : 1500);
+      } else if (satanSoon) {
+        const self = this;
+        setTimeout(() => {
+          try {
+            if (!gameUiTimerOk(self, { allowOver: true })) return;
+            UI.toast(t('toast.satanComingNext'), 4200);
+          } catch (_) {}
+        }, gotMaster ? 3200 : 1500);
       }
       AudioSys.sfx('lose');
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
@@ -24302,16 +24939,28 @@ class Game {
       })(),
       xp: this.sessionXP,
       mode: 'adventure', level: this.level.n, win, stars, prevStars, difficulty: diff,
-      tip: win ? (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
+      tip: win ? (lv === MAX_LEVEL
+        ? t('result.satanAfterClear')
+        : (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
         ? t('result.starImproved', { stars, prev: prevStars })
-        : t('result.pickupsHelp', { hint: starHintLine() }))) : (() => {
+        : t('result.pickupsHelp', { hint: starHintLine() })))) : (() => {
         const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : 'start';
+        const failsNow = advFailCount(lv, diff);
+        let heatTip = '';
+        if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff)) {
+          heatTip = t('result.heatSatanNext');
+        } else if (failsNow >= SATAN_DANGER_FAILS) {
+          heatTip = t('result.heatDanger');
+        } else if (failsNow >= 7) {
+          heatTip = t('result.heatRising', { n: failsNow, max: SATAN_FAIL_THRESHOLD });
+        }
         const base = this.player.hp <= 0
           ? t('result.lossBlockTip', { prog })
           : t('result.lossOrbTip', { prog });
         const once = onceResultTip('adventure', 'loss',
           t('result.lossGambleTip'));
-        return once ? `${once} · ${base}` : base;
+        const core = once ? `${once} · ${base}` : base;
+        return heatTip ? `${heatTip} · ${core}` : core;
       })(),
     }));
   }
@@ -24449,6 +25098,10 @@ class Game {
       try { this.finishTideBattle(true, m); } catch (_) {}
       return;
     }
+    if (m.satanBoss && this.satanActive) {
+      try { this.finishSatanEncounter(true, m); } catch (_) {}
+      return;
+    }
     // summon / tide / master-sword rolls UIT — stabiele adventure flow
   }
 
@@ -24459,6 +25112,75 @@ class Game {
   /** Summon-ascend UIT — geen epic/legendary rariteit-rolls midden in gevecht. */
   maybeSummon(m) {
     return;
+  }
+
+  startSatanEncounter() {
+    if (this.mode !== 'adventure' || this.over) return;
+    if (this.satanActive || this.tideBattleActive) return;
+    if (!this.player || !this.player.alive) return;
+    if (!SPECIES[SATAN_SPECIES_ID]) return;
+    try {
+      this.satanPending = false;
+      this.satanDelayT = 0;
+      this.satanActive = true;
+      markSatanEncounterStarted(this.level.n, this.advDiff);
+      this.spawnQueue = [];
+      this.monsters = this.monsters.filter((m) => m && m.satanBoss);
+      this.purgeDeadMonsters();
+      const spawnX = satanSpawnX(this);
+      const mon = new Monster(SATAN_SPECIES_ID, spawnX, this, satanSpawnOpts(this));
+      if (!mon || !mon.sp) throw new Error('satan spawn invalid');
+      if (!(mon.size >= 70)) throw new Error('satan size too small');
+      mon.y = this.ground - mon.size;
+      mon.x = clamp(mon.x, mon.size * 0.55, (this.maxX || W) - mon.size * 0.55);
+      this.monsters.push(mon);
+      this.satanMon = mon;
+      try { ensureSatanSvg(); } catch (_) {}
+      triggerSatanIntro(this, mon);
+      this.floater(W / 2, Math.max(100, (this.advHudBottom || 120) + 24), t('hud.satanShort'), '#ff3040', 18);
+      UI.toast(t('toast.satanReflectHint'), 4200);
+      this.modeHintLine = IS_TOUCH ? t('hud.satanHintTouch') : t('hud.satanHintKb');
+      this.hint = 8;
+    } catch (err) {
+      console.error('[Satan] start', err);
+      clearSatanState(this);
+      this.betweenT = 1.0;
+      reportSatanRecover('spawn', err);
+    }
+  }
+
+  finishSatanEncounter(won, m) {
+    if (!this.satanActive && !this.satanPending) return;
+    try {
+      clearSatanState(this);
+      if (!won) return;
+      this.banner(t('banner.satanWin'), 2.2, '#ffd75e', 46);
+      UI.toast(t('toast.satanWinTide'), 4200);
+      try { AudioSys.sfx('win'); } catch (_) {}
+      const self = this;
+      setTimeout(() => {
+        try {
+          if (!gameUiTimerOk(self) || self.over || !self.player?.alive) return;
+          if (self.tideBattleActive || self.satanActive) return;
+          const bossId = typeof pickTideBossId === 'function' ? pickTideBossId() : null;
+          if (!bossId) {
+            self.betweenT = 1.2;
+            return;
+          }
+          self.tideFromSatan = true;
+          self.startTideBattle(bossId);
+        } catch (err) {
+          console.error('[Satan] tide reward', err);
+          self.tideFromSatan = false;
+          self.betweenT = 1.2;
+        }
+      }, 1600);
+    } catch (err) {
+      console.error('[Satan] finish', err);
+      clearSatanState(this);
+      this.betweenT = 1.2;
+      sfReportError('satan/finish', err, 'Satan-gevecht afronden mislukt — avontuur veilig');
+    }
   }
 
   startTideBattle(spId) {
@@ -24489,19 +25211,29 @@ class Game {
       }
     } catch (err) {
       console.error('[TideBattle] start', err);
+      this.tideFromSatan = false;
       clearTideBattleState(this, { restoreMusic: true });
       reportTideBattleRecover('spawn', err);
+      if (this.waveIdx < 0) this.betweenT = 1.2;
     }
   }
 
   finishTideBattle(won, m) {
     if (!this.tideBattleActive) return;
     try {
+      const fromSatan = !!this.tideFromSatan;
       const bossId = (m && m.spId) || this.tideBattleBossId;
       clearTideBattleState(this, { restoreMusic: true });
-      if (!won) return;
+      this.tideFromSatan = false;
+      if (!won) {
+        if (fromSatan && this.waveIdx < 0) this.betweenT = 1.2;
+        return;
+      }
       const sp = (m && m.sp) || (bossId && SPECIES[bossId]) || null;
-      if (!sp) return;
+      if (!sp) {
+        if (fromSatan && this.waveIdx < 0) this.betweenT = 1.2;
+        return;
+      }
       const xp = tideBattleRewardXp(this);
       const coins = tideBattleRewardCoins();
       const p = this.player;
@@ -24529,6 +25261,7 @@ class Game {
           p.baseDmg = snap.baseDmg;
           p.hp = snap.hp;
         }
+        if (fromSatan && this.waveIdx < 0) this.betweenT = 1.2;
         return;
       }
       this.banner(t('banner.tideBattleWin'), 2.2, '#4a9fff', 44);
@@ -24536,9 +25269,15 @@ class Game {
       this.floater(W / 2, 140, `+${xp} XP · +${coins} PC`, '#4a9fff', 17);
       try { AudioSys.sfx('win'); } catch (_) {}
       checkAchievements();
+      if (fromSatan && this.waveIdx < 0) {
+        this.betweenT = 1.4;
+        try { UI.toast(t('toast.satanTideDone'), 3200); } catch (_) {}
+      }
     } catch (err) {
       console.error('[TideBattle] finish', err);
+      this.tideFromSatan = false;
       clearTideBattleState(this, { restoreMusic: true });
+      if (this.waveIdx < 0) this.betweenT = 1.2;
       sfReportError('tideBattle/finish', err, 'Tide Battle beloning mislukt — voortgang veilig');
     }
   }
@@ -27981,6 +28720,17 @@ class Game {
         c.fillText(txt, W / 2 + 7, hy);
         drawMiniDie(c, W / 2 - c.measureText(txt).width / 2 - 3, hy - 3.5, 10, '#4a9fff');
         hy += 14;
+      } else if (this.satanActive && this.satanMon) {
+        const satMon = this.satanMon;
+        const satName = (satMon.sp && satMon.sp.name) || 'Satan';
+        const satHp = satMon.alive && satMon.maxhp > 0
+          ? ` · ${Math.round(100 * satMon.hp / satMon.maxhp)}%`
+          : '';
+        c.font = '700 11px sans-serif';
+        c.fillStyle = '#ff3040';
+        const txt = t('hud.satan', { name: satName }) + satHp;
+        c.fillText(txt, W / 2, hy);
+        hy += 14;
       } else if (!bossAlive) {
         let ctxTxt = null;
         let ctxCol = null;
@@ -29866,9 +30616,81 @@ function levelTileTip(n, pick, infoLv, boss, best, fails) {
   if (fails > 0) {
     tip += t('ui.levelTipFails', { n: fails });
     if (fails >= 5) tip += t('ui.levelTipMasterActive');
+    if (fails >= SATAN_DANGER_FAILS) tip += t('ui.levelTipSatanDanger');
+    else if (fails >= 7) tip += t('ui.levelTipSatanRising');
   }
   tip += t('ui.levelTipTap');
   return tip;
+}
+
+function renderAdvHeatMeter(heat, opts) {
+  opts = opts || {};
+  if (!heat || typeof satanHeatLabel !== 'function') return '';
+  try { if (typeof ensureSatanSvg === 'function') ensureSatanSvg(); } catch (_) {}
+  const compact = !!opts.compact;
+  const label = satanHeatLabel(heat);
+  const tip = typeof satanHeatTip === 'function' ? satanHeatTip(heat) : '';
+  const tipAttr = typeof satanEscAttr === 'function'
+    ? satanEscAttr(tip || label)
+    : String(tip || label || '').split('"').join('');
+  const bang = heat.bang
+    ? `<span class="adv-heat-bang" aria-hidden="true">!</span>`
+    : '';
+  const cls = [
+    compact ? 'lvl-heat' : 'adv-heat',
+    heat.tier !== 'none' ? 'tier-' + heat.tier : '',
+    heat.danger ? 'danger' : '',
+    heat.satanReady ? 'satan-ready' : '',
+  ].filter(Boolean).join(' ');
+  const count = `${heat.fails}/${SATAN_FAIL_THRESHOLD}`;
+  const mark = typeof satanPortraitHtml === 'function'
+    ? satanPortraitHtml({ compact: true })
+    : '';
+  if (compact) {
+    return `<span class="${cls}" title="${tipAttr}">` +
+      mark +
+      `<i class="lvl-heat-fill" style="width:${heat.pct}%"></i>` +
+      `<span class="lvl-heat-n">${count}</span>${bang}</span>`;
+  }
+  const showPortrait = !!(heat.danger || heat.satanReady || heat.fails > 0);
+  const portrait = (showPortrait && typeof satanPortraitHtml === 'function')
+    ? `<div class="adv-heat-face">${satanPortraitHtml()}</div>`
+    : (typeof satanPortraitHtml === 'function'
+      ? `<div class="adv-heat-face idle">${satanPortraitHtml({ compact: true })}</div>`
+      : '');
+  return `<div class="${cls}" title="${tipAttr}" role="meter" aria-valuemin="0" aria-valuemax="${SATAN_FAIL_THRESHOLD}" aria-valuenow="${heat.fails}" aria-label="${typeof satanEscAttr === 'function' ? satanEscAttr(label) : label}">` +
+    `<div class="adv-heat-row">` +
+    portrait +
+    `<div class="adv-heat-body">` +
+    `<div class="adv-heat-head"><span class="adv-heat-title">${t('ui.heatTitle')}</span>` +
+    `<span class="adv-heat-label">${label}${bang}</span>` +
+    `<span class="adv-heat-count">${count}</span></div>` +
+    `<div class="adv-heat-track"><i class="adv-heat-fill" style="width:${heat.pct}%"></i></div>` +
+    `<div class="adv-heat-sub">${tip}</div>` +
+    `</div></div></div>`;
+}
+
+function renderAdvSatanCard(heat, diff) {
+  try { if (typeof ensureSatanSvg === 'function') ensureSatanSvg(); } catch (_) {}
+  const d = typeof satanDiffId === 'function' ? satanDiffId(diff) : (diff || 'normal');
+  const cleared = !!(save && save.advCleared && save.advCleared[d]);
+  const pending = !!(heat && heat.satanReady);
+  const danger = !!(heat && heat.danger);
+  let copy;
+  if (pending) copy = t('ui.satanCardReady');
+  else if (danger) copy = t('ui.satanCardDanger');
+  else if (cleared) copy = t('ui.satanCardAfterClear');
+  else if (heat && heat.fails > 0) copy = t('ui.satanCardHeat', { n: heat.fails, max: SATAN_FAIL_THRESHOLD });
+  else copy = t('ui.satanCardIdle');
+  const face = typeof satanPortraitHtml === 'function' ? satanPortraitHtml() : '';
+  const cls = 'adv-satan-card' +
+    (pending ? ' ready' : '') +
+    (danger && !pending ? ' danger' : '') +
+    (cleared && !pending && !danger ? ' after-clear' : '');
+  return `<div class="${cls}" role="note">` +
+    `<div class="adv-satan-card-face">${face}</div>` +
+    `<div class="adv-satan-card-copy"><b>${t('ui.satanCardTitle')}</b><span>${copy}</span></div>` +
+    `</div>`;
 }
 
 const UI = {
@@ -30110,14 +30932,15 @@ const UI = {
         `<div class="step-card help-island-card">` +
         `<b>${t('ui.helpIslandTitle')}</b> — ${t('ui.helpIslandIntro', { cap, cur })}` +
         `<div class="help-island-grid">${rows}</div>` +
-        `<div style="margin-top:10px;opacity:.88;line-height:1.45">${t('ui.helpMasterBuff')}</div></div>`;
+        `<div style="margin-top:10px;opacity:.88;line-height:1.45">${t('ui.helpMasterBuff')}</div>` +
+        `<div style="margin-top:8px;opacity:.88;line-height:1.45">${t('ui.helpSatanHeat')}</div></div>`;
     }
     if (!host) return;
     const touch = IS_TOUCH ? t('ui.helpTouch') : t('ui.helpKeyboard');
     const prog = onboardingProgress();
     const next = nextUntriedMode();
     const modes = [
-      { id: 'adventure', label: 'Avontuur', tip: '5 eilanden × 10 levels · skill gate wapens · Meester-buff na 5× verlies · dobbel-gok vóór level' },
+      { id: 'adventure', label: 'Avontuur', tip: t('ui.modeAdventure') },
       { id: 'training', label: 'Training', tip: 'Combo-trainer ×5/×8/×10 · lasers · Chidori-telegraph' },
       { id: 'wall', label: 'Muur', tip: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing' },
       { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
@@ -30251,6 +31074,7 @@ const UI = {
         } catch (_) {
           try { if (typeof cancelTideBattleMusicPending === 'function') cancelTideBattleMusicPending(game); } catch (_) {}
         }
+        try { if (typeof clearSatanState === 'function') clearSatanState(game); } catch (_) {}
       }
       game = null;
       state = 'menu';
@@ -30280,6 +31104,7 @@ const UI = {
         } catch (_) {
           try { if (typeof cancelTideBattleMusicPending === 'function') cancelTideBattleMusicPending(game); } catch (_) {}
         }
+        try { if (typeof clearSatanState === 'function') clearSatanState(game); } catch (_) {}
       }
       game = null;
       state = 'menu';
@@ -30676,7 +31501,8 @@ const UI = {
       el.classList.toggle('hub-tile-featured', el.dataset.hub === featHub);
     });
     document.querySelectorAll('[data-hub-stat]').forEach((el) => {
-      el.textContent = hubTileStatLine(el.dataset.hubStat);
+      // hubTileStatLine may include SVG_COIN_ICON <img> — must be HTML, not textContent
+      el.innerHTML = hubTileStatLine(el.dataset.hubStat);
     });
     const summonTile = document.getElementById('btnSummons');
     if (summonTile) {
@@ -30817,6 +31643,10 @@ const UI = {
     try {
       if (state === 'play' && game) {
         UI.toast('Eerst gevecht afmaken of pauzeren', 2400);
+        return;
+      }
+      if (typeof adventureSpecialDuelActive === 'function' && adventureSpecialDuelActive(game)) {
+        UI.toast(t('toast.satanReflectHint'), 2400);
         return;
       }
       if (state === 'play' && !game) state = 'menu';
@@ -31573,6 +32403,16 @@ const UI = {
     const unlocked = advUnlockedLevel(activeDiff);
     const masterLv = masterBuffLevel(activeDiff);
     if (info) {
+      const heat = typeof satanHeatForIsland === 'function'
+        ? satanHeatForIsland(pick, activeDiff)
+        : null;
+      const curLv = Math.min(Math.max(unlocked || 1, range.start), range.end);
+      const curHeat = typeof satanHeatForLevel === 'function'
+        ? satanHeatForLevel(curLv, activeDiff)
+        : heat;
+      const meterHeat = (curHeat && curHeat.fails >= (heat && heat.fails ? heat.fails : 0))
+        ? curHeat
+        : (heat || curHeat);
       info.innerHTML =
         `<div class="island-info-head">` +
         `<span class="island-info-ico">${islMeta.icon}</span>` +
@@ -31584,14 +32424,22 @@ const UI = {
         `</div></div></div>` +
         `<div class="island-prog-track island-info-prog" title="${t('island.levelsProg')}"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
         `<div class="island-prog-track island-info-stars" title="${t('island.starsProg')}"><i style="width:${Math.round(prog.stars / Math.max(1, prog.maxStars) * 100)}%"></i></div>` +
+        (meterHeat ? renderAdvHeatMeter(meterHeat) : '') +
+        (typeof renderAdvSatanCard === 'function' ? renderAdvSatanCard(meterHeat, activeDiff) : '') +
         (() => {
           const onboard = adventureIslandHintLine();
           const mbLine = masterLv && masterLv >= range.start && masterLv <= range.end
             ? `<span class="island-info-chip master">${t('ui.masterBuffChip', { lv: masterLv })}</span>`
             : '';
+          const satanChip = meterHeat && meterHeat.satanReady
+            ? `<span class="island-info-chip satan">${t('ui.heatChipSatan')}</span>`
+            : (meterHeat && meterHeat.tier === 'danger'
+              ? `<span class="island-info-chip satan-danger">${t('ui.heatChipDanger')}</span>`
+              : '');
           const chips = [
             onboard ? `<span class="island-info-chip onboard">${onboard}</span>` : '',
             mbLine,
+            satanChip,
           ].filter(Boolean).join('');
           return chips ? `<div class="island-info-chips">${chips}</div>` : '';
         })();
@@ -31607,10 +32455,13 @@ const UI = {
       const rar = rarityOf(infoLv.rarityCap);
       const fails = advFailCount(n, activeDiff);
       const starsN = advStarsFor(n, activeDiff);
+      const heat = !locked && typeof satanHeatForLevel === 'function' ? satanHeatForLevel(n, activeDiff) : null;
       el.className = 'lvl' + (boss ? ' boss' : '') + (locked ? ' locked' : '') + (cleared ? ' cleared' : '') +
         (!locked && n === unlocked && !cleared ? ' lvl-current' : '') +
         (masterLv === n ? ' master-buff' : '') +
-        (activeDiff !== 'normal' ? ' lvl-' + activeDiff : '');
+        (activeDiff !== 'normal' ? ' lvl-' + activeDiff : '') +
+        (heat && heat.tier === 'danger' ? ' heat-danger' : '') +
+        (heat && heat.satanReady ? ' satan-ready' : '');
       el.style.boxShadow = locked ? 'none' : `0 5px 0 rgba(0,0,0,.35), 0 0 0 2px ${rar.color}55`;
       const waveStrip = infoLv.waves.map((_, wi) => {
         const meta = infoLv.waveMeta && infoLv.waveMeta[wi];
@@ -31628,12 +32479,13 @@ const UI = {
         else if (trait === 'pain') cls += ' trait-pain';
         return `<i class="${cls}"></i>`;
       }).join('');
+      const heatHtml = (heat && heat.fails > 0 && !locked) ? renderAdvHeatMeter(heat, { compact: true }) : '';
       el.innerHTML = locked
         ? SVG_LOCK_ICON
         : `${n}${boss ? `<small>${t('ui.boss')}</small>` : `<small style="color:${rar.color}">${rarityLabel(infoLv.rarityCap)}</small>`}` +
           `<span class="lvl-wave-strip" aria-hidden="true">${waveStrip}</span>` +
           `<span class="lvl-stars${starsN ? '' : ' lvl-stars-empty'}" aria-label="${starsN}/3 ${t('island.starsProg')}">${'★'.repeat(starsN)}${'☆'.repeat(3 - starsN)}</span>` +
-          (fails > 0 && !locked ? `<span class="lvl-fails">${fails}/5</span>` : '') +
+          heatHtml +
           (masterLv === n ? '<span class="lvl-master">+20%</span>' : '');
       if (!locked) {
         const best = starsN || 0;

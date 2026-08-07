@@ -1,5 +1,5 @@
 /* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 5 */
-const CACHE = 'stickfighter-app-v338';
+const CACHE = 'stickfighter-app-v339';
 
 
 
@@ -108,7 +108,16 @@ const ASSETS = [
   './assets/ui/ui-check.svg',
   './assets/ui/ui-coin.svg',
   './assets/ui/ui-lock.svg',
-  './assets/ui/ui-warn.svg'
+  './assets/ui/ui-warn.svg',
+  './assets/ui/island-cyber.svg',
+  './assets/ui/island-dojo.svg',
+  './assets/ui/island-finale.svg',
+  './assets/ui/island-hel.svg',
+  './assets/ui/island-landweg.svg',
+  './assets/ui/island-nachtmerrie.svg',
+  './assets/ui/island-vulkaan.svg',
+  './assets/ui/satan.svg',
+  './assets/ui/satan-mark.svg'
 ];
 
 function offlineFallbackHtml() {

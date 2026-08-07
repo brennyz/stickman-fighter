@@ -7,6 +7,10 @@ class Monster {
     this.spId = spId; this.sp = sp;
     this.elite = !!opts.elite;
     this.superBoss = !!opts.superBoss;
+    this.satanBoss = !!opts.satanBoss;
+    this.reflectRatio = opts.satanBoss
+      ? (Number(opts.reflectRatio) > 0 ? Number(opts.reflectRatio) : SATAN_REFLECT_RATIO)
+      : 0;
     this.bossCore = !!(opts.bossCore || opts.superBoss);
     this.colossal = false;
     this.size = sp.size * (opts.elite ? 1.5 : 1);
@@ -20,7 +24,21 @@ class Monster {
       this.dmg = Math.round(this.dmg * 1.42);
       this.size *= 1.32;
     }
-    if (this.bossCore) {
+    if (this.satanBoss) {
+      this.elite = true;
+      this.superBoss = false;
+      this.bossCore = false;
+      this.colossal = false;
+      if (opts.targetHp > 0) {
+        this.maxhp = Math.round(opts.targetHp);
+        this.hp = this.maxhp;
+      }
+      this.dmg = Math.round(sp.dmg * (opts.dmgMul || SATAN_DIRECT_DMG_MUL));
+      const override = Number(opts.sizeOverride) > 0
+        ? Math.round(opts.sizeOverride)
+        : (typeof satanCombatSize === 'function' ? satanCombatSize() : Math.round(sp.size * 2.2));
+      this.size = override;
+    } else if (this.bossCore) {
       if (this.superBoss) {
         // Super-baas is al zwaar gebufft — lichte extra + kans op colossaal.
         this.size = Math.round(this.size * 1.12);
@@ -40,7 +58,7 @@ class Monster {
         this.dmg = Math.round(this.dmg * COLOSSAL_DMG_MUL);
       }
     }
-    if (opts.giant && !this.superBoss && !this.bossCore) {
+    if (opts.giant && !this.superBoss && !this.bossCore && !this.satanBoss) {
       this.giant = true;
       this.size = Math.round(this.size * GIANT_SIZE_MUL);
       this.maxhp = Math.round(this.maxhp * GIANT_HP_MUL);
@@ -274,11 +292,22 @@ class Monster {
     if (this.hp <= 0) {
       this.hp = 0; this.deadT = 0;
       AudioSys.sfxAt('die', this.x);
-      const burstN = fxLite() ? 6 : (this.superBoss ? 14 : (this.elite ? 12 : 10));
+      const burstN = fxLite() ? 6 : (this.superBoss || this.satanBoss ? 14 : (this.elite ? 12 : 10));
       game.burst(this.x, this.y, this.sp.c1, burstN);
       game.onMonsterKilled(this);
-    } else if (!opts.skipHitSfx) {
-      AudioSys.sfxAt('hit', this.x);
+    } else {
+      if (this.satanBoss && this.reflectRatio > 0 && dmg > 0 && game && game.player && game.player.alive) {
+        const rd = Math.max(1, Math.round(dmg * this.reflectRatio));
+        try {
+          game.player.takeDamage(rd, Math.sign(game.player.x - this.x) * 220, game, { reflect: true, skipHitSfx: true });
+          game.floater(game.player.x, game.player.y - 70, t('combat.satanReflect', { n: rd }), '#ff3040', 13);
+          game.burst(game.player.x, game.player.y - 40, '#ff3040', fxLite() ? 4 : 8);
+          AudioSys.sfxAt('hit', game.player.x);
+        } catch (_) {}
+      }
+      if (!opts.skipHitSfx) {
+        AudioSys.sfxAt('hit', this.x);
+      }
     }
   }
 
@@ -322,8 +351,9 @@ class Monster {
       const pulse = 1 + Math.sin(this.t * 14) * 0.08;
       const bigIntro = !!(this.bossCore || this.superBoss || this.colossal);
       c.globalAlpha = 0.25 + p * 0.45;
-      c.strokeStyle = this.introTier === 'tideBoss' ? '#4a9fff' : (this.introTier === 'superBoss' || this.colossal ? '#ffd75e' : (this.introTier === 'boss' ? '#ff6b6b' : '#c47aff'));
-      c.lineWidth = (bigIntro ? 5 : 4) + p * (bigIntro ? 6 : 4);
+      c.strokeStyle = this.introTier === 'satanBoss' ? '#ff3040'
+        : (this.introTier === 'tideBoss' ? '#4a9fff' : (this.introTier === 'superBoss' || this.colossal ? '#ffd75e' : (this.introTier === 'boss' ? '#ff6b6b' : '#c47aff')));
+      c.lineWidth = (bigIntro || this.satanBoss ? 5 : 4) + p * (bigIntro || this.satanBoss ? 6 : 4);
       c.beginPath();
       c.ellipse(0, 0, this.size * (1.7 + (1 - p) * 0.9) * pulse, this.size * (1.35 + (1 - p) * 0.7) * pulse, 0, 0, TAU);
       c.stroke();
@@ -334,14 +364,16 @@ class Monster {
         c.ellipse(0, 0, this.size * 1.9 * pulse, this.size * 1.5 * pulse, 0, 0, TAU);
         c.fill();
       }
-      if (bigIntro && p > 0.12) {
+      if ((bigIntro || this.satanBoss) && p > 0.12) {
         const label = (this.sp && this.sp.name) || 'BAAS';
-        const tag = this.colossal
+        const tag = this.satanBoss
+          ? (typeof t === 'function' ? t('combat.satanTag') : 'SATAN')
+          : (this.colossal
           ? (typeof t === 'function' ? t('combat.colossalTag') : 'COLOSSAAL')
           : (this.superBoss
             ? (typeof t === 'function' ? t('combat.superBossTag') : 'SUPER BAAS')
-            : (typeof t === 'function' ? t('combat.bossTag') : 'BAAS'));
-        const fs = Math.max(18, Math.min(this.colossal ? 42 : 34, this.size * 0.55));
+            : (typeof t === 'function' ? t('combat.bossTag') : 'BAAS')));
+        const fs = Math.max(18, Math.min(this.satanBoss ? 40 : (this.colossal ? 42 : 34), this.size * (this.satanBoss ? 0.28 : 0.55)));
         c.globalAlpha = Math.min(1, 0.35 + p * 0.75);
         c.font = `900 ${fs}px -apple-system, sans-serif`;
         c.textAlign = 'center';
@@ -349,7 +381,7 @@ class Monster {
         const ty = -this.size * (this.flying ? 1.15 : 1.35) - fs * 0.35;
         c.lineWidth = Math.max(4, fs * 0.18);
         c.strokeStyle = 'rgba(0,0,0,.72)';
-        c.fillStyle = this.colossal || this.superBoss ? '#ffd75e' : '#ff8a9a';
+        c.fillStyle = this.satanBoss ? '#ff3040' : (this.colossal || this.superBoss ? '#ffd75e' : '#ff8a9a');
         c.strokeText(tag, 0, ty - fs * 0.85);
         c.fillText(tag, 0, ty - fs * 0.85);
         c.font = `900 ${Math.round(fs * 1.15)}px -apple-system, sans-serif`;
@@ -373,12 +405,24 @@ class Monster {
     }
     if (rar.order >= 2 && this.alive) {
       c.save();
-      c.strokeStyle = this.tideBoss ? '#4a9fff' : (this.superBoss ? '#ffd75e' : rar.glow); c.lineWidth = 3 + rar.order * 0.4;
+      c.strokeStyle = this.satanBoss ? '#ff3040' : (this.tideBoss ? '#4a9fff' : (this.superBoss ? '#ffd75e' : rar.glow)); c.lineWidth = 3 + rar.order * 0.4;
       c.beginPath(); c.ellipse(0, 0, this.size * 1.55, this.size * 1.2, 0, 0, TAU); c.stroke();
       if (rar.order >= 4) {
         c.globalAlpha = motionReduced() ? 0.25 : (0.25 + Math.sin(this.t * 6) * 0.1);
         c.fillStyle = rar.color;
         c.beginPath(); c.ellipse(0, 0, this.size * 1.7, this.size * 1.35, 0, 0, TAU); c.fill();
+      }
+      c.restore();
+    }
+    if (this.satanBoss && this.alive) {
+      c.save();
+      c.globalAlpha = motionReduced() ? 0.32 : (0.3 + Math.sin(this.t * 4.5) * 0.12);
+      c.strokeStyle = '#ff3040'; c.lineWidth = 4.2;
+      c.beginPath(); c.ellipse(0, 0, this.size * 1.58, this.size * 1.35, 0, 0, TAU); c.stroke();
+      if (!motionReduced() && !fxLite()) {
+        c.globalAlpha = 0.1 + Math.sin(this.t * 3.2) * 0.05;
+        c.fillStyle = '#8a1020';
+        c.beginPath(); c.ellipse(0, this.size * 0.15, this.size * 1.7, this.size * 0.4, 0, 0, TAU); c.fill();
       }
       c.restore();
     }
@@ -716,6 +760,43 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
         c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
       }
       break;
+    case 'satan': {
+      if (typeof drawSatanSvgArt === 'function' && drawSatanSvgArt(c, r, t, flash, telegraph)) {
+        break;
+      }
+      c.fillStyle = dark;
+      c.beginPath();
+      c.moveTo(-r * 1.1, r * 0.55);
+      c.quadraticCurveTo(0, r * 1.15, r * 1.1, r * 0.55);
+      c.lineTo(r * 0.85, -r * 0.2);
+      c.quadraticCurveTo(0, r * 0.35, -r * 0.85, -r * 0.2);
+      c.closePath();
+      c.fill();
+      c.fillStyle = body;
+      c.beginPath(); c.arc(0, -r * 0.08, r * 0.92, 0, TAU); c.fill();
+      c.fillStyle = dark;
+      for (const s of [-1, 1]) {
+        c.beginPath();
+        c.moveTo(s * r * 0.42, -r * 0.72);
+        c.lineTo(s * r * 0.62, -r * 1.28);
+        c.lineTo(s * r * 0.18, -r * 0.85);
+        c.closePath();
+        c.fill();
+      }
+      c.strokeStyle = '#ffd75e';
+      c.lineWidth = Math.max(2, r * 0.08);
+      c.beginPath();
+      c.moveTo(r * 0.55, r * 0.15);
+      c.quadraticCurveTo(r * 1.35, r * 0.55, r * 0.7, r * 1.05);
+      c.stroke();
+      c.fillStyle = '#ffd75e';
+      c.beginPath(); c.arc(r * 0.72, r * 1.08, r * 0.12, 0, TAU); c.fill();
+      eye(-r * 0.32, -r * 0.12, r * 0.16);
+      eye(r * 0.22, -r * 0.12, r * 0.16);
+      c.fillStyle = '#1a0a10';
+      c.beginPath(); c.ellipse(0, r * 0.28, r * 0.22, r * 0.1, 0, 0, Math.PI); c.fill();
+      break;
+    }
     case 'cow':
     case 'pig':
     case 'chicken':

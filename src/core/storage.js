@@ -5,20 +5,20 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.128';
+const APP_VERSION = '1.18.129';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 338;
+const SW_CACHE_REV = 339;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
   zoneWeapons: {},
-  advIsland: 0, advFails: {}, advMasterBuff: null,
+  advIsland: 0, advFails: {}, advMasterBuff: null, advSatanAt: {},
   /** Normal / Nightmare / Hell — Epic Seven-stijl endgame tiers */
   advDiff: 'normal',
   advCleared: { normal: false, nightmare: false, hell: false },
   advHard: {
-    nightmare: { unlocked: 1, stars: {}, fails: {}, masterBuff: null },
-    hell: { unlocked: 1, stars: {}, fails: {}, masterBuff: null },
+    nightmare: { unlocked: 1, stars: {}, fails: {}, masterBuff: null, satanAt: {} },
+    hell: { unlocked: 1, stars: {}, fails: {}, masterBuff: null, satanAt: {} },
   },
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
@@ -53,7 +53,7 @@ const ADV_DIFFS = [
 ];
 const ADV_DIFF_IDS = ADV_DIFFS.map((d) => d.id);
 function emptyAdvHardBag() {
-  return { unlocked: 1, stars: {}, fails: {}, masterBuff: null };
+  return { unlocked: 1, stars: {}, fails: {}, masterBuff: null, satanAt: {} };
 }
 function advDiffMeta(id) {
   return ADV_DIFFS.find((d) => d.id === id) || ADV_DIFFS[0];
@@ -98,14 +98,22 @@ function advDiffUnlockHint(id) {
 }
 function advDiffBlurb(id) {
   const d = normalizeAdvDiffId(id);
+  let base = '';
   if (typeof t === 'function') {
-    if (d === 'nightmare') return t('ui.diffBlurbNightmare');
-    if (d === 'hell') return t('ui.diffBlurbHell');
-    return t('ui.diffBlurbNormal');
+    if (d === 'nightmare') base = t('ui.diffBlurbNightmare');
+    else if (d === 'hell') base = t('ui.diffBlurbHell');
+    else base = t('ui.diffBlurbNormal');
+  } else if (d === 'nightmare') {
+    base = 'Fire arena · earlier enrage · wilder rarities';
+  } else if (d === 'hell') {
+    base = 'Lava · screaming pain · mythic hordes';
+  } else {
+    base = 'Standard adventure';
   }
-  if (d === 'nightmare') return 'Fire arena · earlier enrage · wilder rarities';
-  if (d === 'hell') return 'Lava · screaming pain · mythic hordes';
-  return 'Standard adventure';
+  if (save && save.advCleared && save.advCleared[d] && typeof t === 'function') {
+    base += ' · ' + t('ui.diffBlurbSatanAfterClear');
+  }
+  return base;
 }
 function advPetCoinMul(diff) {
   return advDiffMeta(diff || currentAdvDiff()).petCoinMul || 1;
@@ -204,21 +212,22 @@ function advDropChanceMul(diff) {
 function advXpMul(diff) {
   return advDiffMeta(diff || currentAdvDiff()).xpMul || 1;
 }
+/** ASSET-STYLE file icons — adventure islands (assets/ui/island-*.svg). */
 const ADVENTURE_ISLANDS = [
   { id: 1, name: 'Oost-eiland', sub: 'Lv 1–10 · landweg', accent: '#5ad06a', theme: 'landweg',
-    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20" stroke="#5ad06a" stroke-width="2" stroke-linecap="round"/><path d="M5 20V13l5-8 5 8v7" fill="#43b25b" stroke="#2d8a3e" stroke-width="1"/><circle cx="18" cy="7" r="2.5" fill="#7cf5ff" opacity=".75"/></svg>' },
+    icon: '<img class="island-ico" src="assets/ui/island-landweg.svg" alt="" width="24" height="24" decoding="async" draggable="false">' },
   { id: 2, name: 'Vuur-eiland', sub: 'Lv 11–20', accent: '#ff7a4d', theme: 'vulkaan',
-    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 L12 5 L20 20 Z" fill="#e85a6a" stroke="#ff7a4d" stroke-width="1.2"/><path d="M10 11 L12 7 L14 11 Z" fill="#ffd75e"/><ellipse cx="12" cy="20" rx="8" ry="1.5" fill="#ff7a4d" opacity=".45"/></svg>' },
+    icon: '<img class="island-ico" src="assets/ui/island-vulkaan.svg" alt="" width="24" height="24" decoding="async" draggable="false">' },
   { id: 3, name: 'Neon-eiland', sub: 'Lv 21–30', accent: '#7cf5ff', theme: 'cyber',
-    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="16" width="20" height="5" rx="1" fill="#1a2040" stroke="#7cf5ff" stroke-width="1.2"/><rect x="5" y="10" width="4" height="6" fill="#7cf5ff" opacity=".85"/><rect x="10" y="7" width="4" height="9" fill="#4ecf6a" opacity=".8"/><rect x="15" y="5" width="4" height="11" fill="#c47aff" opacity=".85"/></svg>' },
+    icon: '<img class="island-ico" src="assets/ui/island-cyber.svg" alt="" width="24" height="24" decoding="async" draggable="false">' },
   { id: 4, name: 'Tempel-eiland', sub: 'Lv 31–40', accent: '#ffd75e', theme: 'dojo',
-    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 L17 8 H7 Z" fill="#ffd75e"/><rect x="10" y="8" width="4" height="12" fill="#c97a20"/><path d="M6 11 H18 M7 14 H17 M8 17 H16" stroke="#ffd75e" stroke-width="1.4" stroke-linecap="round"/><rect x="4" y="20" width="16" height="2" rx="1" fill="#8a6030"/></svg>' },
+    icon: '<img class="island-ico" src="assets/ui/island-dojo.svg" alt="" width="24" height="24" decoding="async" draggable="false">' },
   { id: 5, name: 'Finale-eiland', sub: 'Lv 41–50', accent: '#ff6b9d', theme: 'cyber',
-    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18 L7 10 L12 14 L17 10 L20 18 Z" fill="#ff6b9d" stroke="#ffd75e" stroke-width="1"/><circle cx="12" cy="8" r="2.8" fill="#ffd75e"/><path d="M12 2 v2 M12 20 v2 M2 12 h2 M20 12 h2" stroke="#ffd75e" stroke-width="1.2" opacity=".7"/></svg>' },
+    icon: '<img class="island-ico" src="assets/ui/island-finale.svg" alt="" width="24" height="24" decoding="async" draggable="false">' },
   { id: 6, name: 'Nachtmerrie', sub: 'Lv 51–60 · droomchaos', accent: '#c47aff', theme: 'nachtmerrie',
-    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18c2-6 6-10 8-10s6 4 8 10" fill="none" stroke="#c47aff" stroke-width="1.6"/><circle cx="9" cy="10" r="2.2" fill="#2a1840" stroke="#c47aff" stroke-width="1"/><circle cx="15" cy="10" r="2.2" fill="#2a1840" stroke="#c47aff" stroke-width="1"/><path d="M8 15c1.2 1.4 2.8 2 4 2s2.8-.6 4-2" stroke="#ff6b9d" stroke-width="1.4" fill="none"/></svg>' },
+    icon: '<img class="island-ico" src="assets/ui/island-nachtmerrie.svg" alt="" width="24" height="24" decoding="async" draggable="false">' },
   { id: 7, name: 'Hel', sub: 'Lv 61–70 · zwavel & lava', accent: '#ff6a3d', theme: 'hel',
-    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 L8 10 L12 16 L16 8 L20 20 Z" fill="#ff6a3d" stroke="#ffd75e" stroke-width="1"/><path d="M9 10c0-3 1.5-5 3-5s3 2 3 5" fill="#ffd75e" opacity=".85"/><ellipse cx="12" cy="20" rx="9" ry="1.6" fill="#5a1010" opacity=".7"/></svg>' },
+    icon: '<img class="island-ico" src="assets/ui/island-hel.svg" alt="" width="24" height="24" decoding="async" draggable="false">' },
 ];
 function islandMeta(id) { return ADVENTURE_ISLANDS.find(i => i.id === id) || ADVENTURE_ISLANDS[0]; }
 function islandCount() { return ADVENTURE_ISLANDS.length || ISLAND_COUNT; }
@@ -294,6 +303,9 @@ function playerWeaponForAdventure(levelN) {
   return bestWeaponForAdventureCap(cap);
 }
 function advFailCount(levelN, diff) { return advFailCountFor(levelN, diff || currentAdvDiff()); }
+function advSatanReady(levelN, diff) {
+  return typeof shouldTriggerSatan === 'function' ? shouldTriggerSatan(levelN, diff) : false;
+}
 function wallRecordPaceDelta(g) {
   const best = save.bestWall || 0;
   if (!g || best <= 0) return null;
@@ -813,6 +825,7 @@ function readSaveJson(raw) {
     }
     merged.tipsSeen = sanitizeTipsSeen(parsed.tipsSeen);
     merged.advFails = Object.assign({}, parsed.advFails || {});
+    merged.advSatanAt = Object.assign({}, parsed.advSatanAt || {});
     merged.zoneWeapons = Object.assign({}, parsed.zoneWeapons || {});
     merged.chestWeapons = Object.assign({}, parsed.chestWeapons || {});
     if (parsed.chestDaily && typeof parsed.chestDaily === 'object') merged.chestDaily = Object.assign({}, parsed.chestDaily);
@@ -1128,6 +1141,12 @@ function sanitizeSave(s) {
     bag.fails = fails;
     const mb = parseInt(src.masterBuff, 10);
     bag.masterBuff = (Number.isFinite(mb) && mb >= 1 && mb <= maxLevel) ? mb : null;
+    const satanAt = {};
+    for (const [k, v] of Object.entries(src.satanAt || {})) {
+      const n = parseInt(k, 10);
+      if (n >= 1 && n <= maxLevel) satanAt[n] = clamp(Math.floor(Number(v) || 0), 0, 99);
+    }
+    bag.satanAt = satanAt;
     return bag;
   };
   const hardIn = (out.advHard && typeof out.advHard === 'object') ? out.advHard : {};
@@ -1157,6 +1176,12 @@ function sanitizeSave(s) {
     if (n >= 1 && n <= maxLevel) cleanFails[n] = clamp(Math.floor(Number(v) || 0), 0, 99);
   }
   out.advFails = cleanFails;
+  const cleanSatanAt = {};
+  for (const [k, v] of Object.entries(out.advSatanAt || {})) {
+    const n = parseInt(k, 10);
+    if (n >= 1 && n <= maxLevel) cleanSatanAt[n] = clamp(Math.floor(Number(v) || 0), 0, 99);
+  }
+  out.advSatanAt = cleanSatanAt;
   const mb = parseInt(out.advMasterBuff, 10);
   out.advMasterBuff = (Number.isFinite(mb) && mb >= 1 && mb <= maxLevel) ? mb : null;
   if (!out.advIsland && out.unlocked > 1) {
