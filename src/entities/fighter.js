@@ -12,7 +12,7 @@ class Fighter {
       name: 'Stickman',
       substCd: 0, specialCd: 0, invulnT: 0, hitFlashT: 0, afterimages: [], dashCd: 0,
       weaponComboIdx: 0, weaponComboT: 0, _lastWeaponKind: null, _weaponComboPrimed: false, _weaponComboHits: 0,
-      style: null, playerSlot: 0, vsSpecial: 'rasengan',
+      style: null, playerSlot: 0, vsSpecial: 'spiral_orb',
     }, opts);
   }
 
@@ -59,7 +59,7 @@ class Fighter {
         spec = {
           kind, windup: sk.windup || 0.48, active: 0.12, recover: sk.recover || 0.28,
           range: 62, r: sk.radius || 44,
-          dmg: this.baseDmg * (sk.dmgMul || 2.8), kb: sk.kb || 520, jutsu: sk.id,
+          dmg: this.baseDmg * (sk.dmgMul || 2.8), kb: sk.kb || 520, technique: sk.id,
         };
         break;
       }
@@ -75,13 +75,13 @@ class Fighter {
   startAttack(kind, game) {
     if (this.attack || this.state === 'hurt' || !this.alive || this.invulnT > 0 && kind !== 'special') return;
     if (kind === 'special') {
-      const jKind = fighterJutsuKind(this);
-      if (jKind === 'rasengan' && (this.specialCd || 0) > 0) {
+      const jKind = fighterTechniqueKind(this);
+      if (jKind === 'spiral_orb' && (this.specialCd || 0) > 0) {
         if (this.isPlayer || this.playerSlot) {
           const left = Math.max(0.1, this.specialCd);
           try {
             game.floater(this.x, this.y - 110,
-              (typeof t === 'function' ? t('combat.rasenganCd', { s: left.toFixed(1) }) : null)
+              (typeof t === 'function' ? t('combat.spiral_orbCd', { s: left.toFixed(1) }) : null)
                 || ('CD ' + left.toFixed(1) + 's'),
               '#7cf5ff', 13);
           } catch (_) {
@@ -90,15 +90,15 @@ class Fighter {
         }
         return;
       }
-      const chakraCost = skillChakraCost(jKind);
-      if (this.energy < chakraCost) {
-        if (this.isPlayer) game.floater(this.x, this.y - 110, 'Chakra niet vol!', '#7cf5ff', 13);
+      const energyCost = skillEnergyCost(jKind);
+      if (this.energy < energyCost) {
+        if (this.isPlayer) game.floater(this.x, this.y - 110, 'Energy niet vol!', '#7cf5ff', 13);
         return;
       }
       this.energy = 0;
-      if (jKind === 'rasengan' && typeof rasenganCooldownSec === 'function') {
-        const lv = typeof skillLevel === 'function' ? skillLevel('rasengan') : 0;
-        this.specialCd = rasenganCooldownSec(lv);
+      if (jKind === 'spiral_orb' && typeof spiralOrbCooldownSec === 'function') {
+        const lv = typeof skillLevel === 'function' ? skillLevel('spiral_orb') : 0;
+        this.specialCd = spiralOrbCooldownSec(lv);
       }
       const sk = fighterEquippedSkill(this);
       AudioSys.sfx(skillSfxId(sk));
@@ -260,7 +260,7 @@ class Fighter {
   }
 
   aiIntent(dt, game) {
-    // RabbitRobot street-fighter AI
+    // RabbitRobot arcade AI
     const out = { move: 0, jump: false, punch: false, kick: false, weapon: false, special: false, block: false };
     const p = game.player;
     if (!p || !p.alive || !this.alive) return out;
@@ -287,9 +287,9 @@ class Fighter {
       this.aiTimer = rand(0.22, 0.55) / diff;
       if (dist > 240) {
         this.aiMove = dir;
-        const chidoriChance = pLowTrain ? 0.12 : 0.3;
-        const chidoriMinDist = pLowTrain ? 160 : 105;
-        if (this.aiCd <= 0 && dist > chidoriMinDist && !pAir && Math.random() < chidoriChance) {
+        const lightning_pierceChance = pLowTrain ? 0.12 : 0.3;
+        const lightning_pierceMinDist = pLowTrain ? 160 : 105;
+        if (this.aiCd <= 0 && dist > lightning_pierceMinDist && !pAir && Math.random() < lightning_pierceChance) {
           out.special = true; this.aiCd = rand(2.6, 4.2) / diff;
         }
         if (Math.random() < 0.12) out.jump = true;
@@ -431,7 +431,7 @@ class Fighter {
         a._telegraphed = true;
         if (game.mode === 'training') {
           game.trainTelegraphT = 0.85;
-          game.floater(this.x, this.y - 138, 'CHIDORI — dash/spring!', '#7cf5ff', 16);
+          game.floater(this.x, this.y - 138, 'LIGHTNING PIERCE — dash/spring!', '#7cf5ff', 16);
           haptic(10);
         }
       }
@@ -441,14 +441,14 @@ class Fighter {
           this.attack = null;
           game.trainTelegraphT = 0;
           this.aiCd = rand(2.5, 4.2) / (this.aiDiff || 1);
-          game.floater(this.x, this.y - 128, 'Chidori gemist — spring werkt!', '#7cf5ff', 14);
+          game.floater(this.x, this.y - 128, 'Lightning Pierce gemist — spring werkt!', '#7cf5ff', 14);
         } else if (a.t >= a.windup) {
           a.fired = true;
-          game.spawnJutsu(this, a);
+          game.spawnTechnique(this, a);
         }
       } else if (a.kind === 'special' && !a.fired && a.t >= a.windup) {
         a.fired = true;
-        game.spawnJutsu(this, a);
+        game.spawnTechnique(this, a);
       }
       if (this.isRobot && game.mode === 'training' && !a.fired && (a.kind === 'punch' || a.kind === 'kick') && a.t < a.windup) {
         const p = game.player;
@@ -471,17 +471,17 @@ class Fighter {
       }
     }
 
-    // chakra laadt sneller bij combo-gevoel (in beweging/gevecht)
+    // energy laadt sneller bij combo-gevoel (in beweging/gevecht)
     if (this.isPlayer || this.playerSlot) {
       const stageMul = (typeof game !== 'undefined' && game && game.stageEnergyMul) ? game.stageEnergyMul : 1;
       const petMul = (typeof game !== 'undefined' && game && game.petEnergyMul) ? game.petEnergyMul : 1;
       const styleMul = (typeof game !== 'undefined' && game && game.styleEnergyMul) ? game.styleEnergyMul : 1;
-      const chakraMul = (this.isPlayer || this.playerSlot) ? skillBonuses('chakra').regenMul : 1;
-      const rate = (this.attack ? 4.2 : 2.8) * stageMul * petMul * styleMul * chakraMul;
+      const energyRegenMul = (this.isPlayer || this.playerSlot) ? skillBonuses('energy').regenMul : 1;
+      const rate = (this.attack ? 4.2 : 2.8) * stageMul * petMul * styleMul * energyRegenMul;
       const prevE = this._energyPrev == null ? this.energy : this._energyPrev;
       this.energy = clamp(this.energy + dt * rate, 0, 100);
       if (this.energy >= 100 && prevE < 100) {
-        try { AudioSys.sting('superReady', fighterJutsuKind(this)); } catch (_) {}
+        try { AudioSys.sting('superReady', fighterTechniqueKind(this)); } catch (_) {}
       }
       this._energyPrev = this.energy;
     }
@@ -631,7 +631,7 @@ class Fighter {
         const move = a.move || weaponMoveDef(this.weapon.id, a.moveIdx || 0);
         applyWeaponMovePose(P, ext, move);
       } else if (a.kind === 'special') {
-        // Rasengan / Chidori houding: hand naar voren
+        // Spiral Orb / Lightning Pierce houding: hand naar voren
         const charge = clamp(a.t / a.windup, 0, 1);
         P.arms = [[2.1, -2.0], [lerp(0.4, 0.05, charge), lerp(-0.2, 0.05, charge)]];
         P.legs = [[1.95, 1.85], [1.15, 1.4]];
@@ -762,14 +762,14 @@ class Fighter {
       c.strokeStyle = 'rgba(120,220,255,.8)'; c.lineWidth = 3;
       c.beginPath(); c.arc(22, -50, 26, -1.4, 1.4); c.stroke();
     }
-    // Rasengan / Chidori oplaad-aura in de hand
+    // Spiral Orb / Lightning Pierce oplaad-aura in de hand
     if (this.attack && this.attack.kind === 'special' && !this.attack.fired) {
       const g = clamp(this.attack.t / this.attack.windup, 0, 1);
-      const kind = fighterJutsuKind(this);
-      if (typeof drawJutsuChargeAura === 'function') {
-        drawJutsuChargeAura(c, hx, hy, g, this.animT, kind);
+      const kind = fighterTechniqueKind(this);
+      if (typeof drawTechniqueChargeAura === 'function') {
+        drawTechniqueChargeAura(c, hx, hy, g, this.animT, kind);
       } else {
-        drawJutsuOrb(c, hx + 14, hy, 8 + g * 16, this.animT * (8 + g * 20), kind, 0.55 + g * 0.45);
+        drawTechniqueOrb(c, hx + 14, hy, 8 + g * 16, this.animT * (8 + g * 20), kind, 0.55 + g * 0.45);
       }
     }
     c.restore();

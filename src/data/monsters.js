@@ -308,10 +308,10 @@ function speciesTop10Threshold() {
   return _speciesTop10Threshold;
 }
 
-function pickEnemyJutsu(spId, levelN) {
-  if (levelN < ENEMY_JUTSU_MIN_LEVEL) return null;
+function pickEnemyTechnique(spId, levelN) {
+  if (levelN < ENEMY_TECHNIQUE_MIN_LEVEL) return null;
   if (speciesPowerScore(spId) < speciesTop10Threshold()) return null;
-  return ENEMY_JUTSU_KINDS[Math.floor(Math.random() * ENEMY_JUTSU_KINDS.length)];
+  return ENEMY_TECHNIQUE_KINDS[Math.floor(Math.random() * ENEMY_TECHNIQUE_KINDS.length)];
 }
 
 const WORLD_THEMES = [
@@ -425,9 +425,9 @@ const KETSBAM_INVULN = 1.15;
 const KETSBAM_SUPER_ARMOR = 0.95;
 /** Top-10 baas-golven: flagship bazen overleven minstens 3s. */
 const BOSS_SAFETY_DUR = 3;
-/** Vanaf dit level mogen top-10% soorten vijandelijke jutsu gebruiken. */
-const ENEMY_JUTSU_MIN_LEVEL = 20;
-const ENEMY_JUTSU_KINDS = ['rasengan', 'chidori', 'kamehame'];
+/** Vanaf dit level mogen top-10% soorten vijandelijke technique gebruiken. */
+const ENEMY_TECHNIQUE_MIN_LEVEL = 20;
+const ENEMY_TECHNIQUE_KINDS = ['spiral_orb', 'lightning_pierce', 'wave_cannon'];
 /** Min. gap tussen speler-hits door contact/projectiles — anti stunlock-keten */
 const PLAYER_HURT_CHAIN_CD = 0.42;
 const BOSS_AT = {

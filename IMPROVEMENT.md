@@ -3,6 +3,7 @@
 | 2026-07-26 | **4** | d4 c5: spawn funnel + star beat HUD + stage-clear runway; _levelClearPending reset · v1.18.124 / SW v334 LIVE. |
 | 2026-07-26 | **6** | Achterstallig audio LIVE: SFX/battle diversiteit + top-SFX polish + d6 pause → main. v1.18.112 / SW v322. |
 # IMPROVEMENT — agent-first (Stickman Fighter)
+- 2026-08-07 IP-A: anime skill IDs → generic (spiral_orb/lightning_pierce/…) · Jutsu→Technique · Chakra→Energy · activeTechnique save migrate · v1.18.136 / SW v346
 
 **Lees eerst [AGENTS.md](./AGENTS.md) en [agent-handoff.json](./agent-handoff.json)** (open wensen + canonical agent-URL), daarna dit bestand. Doel: continue polish **zonder gameplay te breken**. Knoppen/beelden: **[ASSET-STYLE.md](./ASSET-STYLE.md)** is leidend.
 
@@ -117,6 +118,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
 | 2026-08-07 | — | **soft-legal:** privacy.html + settings/menu link, age/teens+ hints, docs/store data-safety + iOS nutrition; A1/A2/A7/B7/C4 done. v1.18.134 / SW v344. |
+| 2026-08-07 | — | **IP-A:** anime skill names → generic techniques (spiral_orb/lightning_pierce/void_gaze/…); jutsu→technique; chakra→energy; activeTechnique + hex alias migration; v1.18.136 / SW v346. |
 | 2026-08-07 | — | **Summons fix:** kist-onderkant zichtbaar (16:9 + right-crop watermark); reward true center. v1.18.131 / SW v341. |
 | 2026-08-07 | — | **Summons polish:** reward rarity-tint in kist, per-pull BGM, Open kist CTA + stage-tap, video 90% + watermark crop. v1.18.130 / SW v340. |
 | 2026-08-07 | **merge** | Loose ends LIVE: hub coin innerHTML (#220) + island SVGs (#227) + Satan stall-boss/heat (#206) · v1.18.129 / SW v339. |

@@ -242,7 +242,7 @@ const WEAPON_COMBOS = {
     ],
   },
   zwaard: {
-    labels: ['Iai-houw', 'Diagonale kling', 'Kenjutsu-eind'],
+    labels: ['Iai-houw', 'Diagonale kling', 'Blade-arts finish'],
   },
   sai: {
     labels: ['Drie-punt stoot', 'Blok-snap', 'Parry-kruis'],
@@ -304,7 +304,7 @@ const WEAPON_COMBOS = {
     ],
   },
   laser: {
-    labels: ['Chakra-zwaai', 'Focus-stoot', 'Licht-nova'],
+    labels: ['Energie-zwaai', 'Focus-stoot', 'Licht-nova'],
   },
   kristal: {
     labels: ['Kristal-splinter', 'Prisma-stoot', 'Shard-burst'],

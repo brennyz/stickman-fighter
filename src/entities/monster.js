@@ -104,9 +104,9 @@ class Monster {
     this.face = dir;
     this.atkCD -= dt; this.shootCD -= dt;
     if (this.superSlowT > 0) this.superSlowT -= dt;
-    const genjutsuMul = (this.superSlowT > 0) ? (this.superSlowMul || 0.25) : 1;
+    const gentechniqueMul = (this.superSlowT > 0) ? (this.superSlowMul || 0.25) : 1;
     const enrageSpd = this.enraged ? (1.32 * (this.enrageMul || 1)) : 1;
-    const spdMul = enrageSpd * genjutsuMul;
+    const spdMul = enrageSpd * gentechniqueMul;
     const type = this.sp.type;
 
     if (type === 'hop') {
@@ -223,7 +223,7 @@ class Monster {
     }
     this.x = clamp(this.x, game.minX - 20, game.maxX + 20);
 
-    this.tryEnemyJutsu(dt, game, p, dist);
+    this.tryEnemyTechnique(dt, game, p, dist);
 
     // contactschade
     if (this.atkCD <= 0 || this.dashT > 0) {
@@ -242,20 +242,20 @@ class Monster {
     }
   }
 
-  tryEnemyJutsu(dt, game, p, dist) {
-    if (!this.enemyJutsu || !p || !p.alive || this.introT > 0 || game.inputLocked) return;
-    this.jutsuCD -= dt;
-    if (this.jutsuTelegraphT > 0) {
-      this.jutsuTelegraphT -= dt;
-      if (this.jutsuTelegraphT <= 0) game.spawnEnemyJutsu(this);
+  tryEnemyTechnique(dt, game, p, dist) {
+    if (!this.enemyTechnique || !p || !p.alive || this.introT > 0 || game.inputLocked) return;
+    this.techniqueCD -= dt;
+    if (this.techniqueTelegraphT > 0) {
+      this.techniqueTelegraphT -= dt;
+      if (this.techniqueTelegraphT <= 0) game.spawnEnemyTechnique(this);
       return;
     }
-    if (this.jutsuCD > 0 || dist < 130 || dist > 520) return;
+    if (this.techniqueCD > 0 || dist < 130 || dist > 520) return;
     if (this.dashT > 0 || this.telegraphT > 0) return;
-    this.jutsuTelegraphT = this.enemyJutsu === 'kamehame' ? 0.9 : 0.5;
-    this.jutsuCD = rand(5, 8.5) / (this.enraged ? 1.2 : 1);
+    this.techniqueTelegraphT = this.enemyTechnique === 'wave_cannon' ? 0.9 : 0.5;
+    this.techniqueCD = rand(5, 8.5) / (this.enraged ? 1.2 : 1);
     try {
-      AudioSys.sfx(this.enemyJutsu === 'kamehame' ? 'ketsbamCharge' : 'roar');
+      AudioSys.sfx(this.enemyTechnique === 'wave_cannon' ? 'ketsbamCharge' : 'roar');
     } catch (_) {}
   }
 
@@ -552,11 +552,11 @@ class Monster {
       }
       c.restore();
     }
-    if (this.jutsuTelegraphT > 0 && this.alive) {
+    if (this.techniqueTelegraphT > 0 && this.alive) {
       c.save();
-      const prog = 1 - this.jutsuTelegraphT / (this.enemyJutsu === 'kamehame' ? 0.9 : 0.5);
+      const prog = 1 - this.techniqueTelegraphT / (this.enemyTechnique === 'wave_cannon' ? 0.9 : 0.5);
       c.globalAlpha = 0.4 + prog * 0.35;
-      c.strokeStyle = this.enemyJutsu === 'chidori' ? '#a8e0ff' : '#7cf5ff';
+      c.strokeStyle = this.enemyTechnique === 'lightning_pierce' ? '#a8e0ff' : '#7cf5ff';
       c.lineWidth = 2.5 + prog * 2;
       c.beginPath();
       c.arc(0, 0, this.size * (1.2 + prog * 0.35), 0, TAU);

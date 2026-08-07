@@ -4,15 +4,15 @@ const STYLES = [
     needLvl: 1, hint: 'Standaard ninja',
     tooltip: 'Basis ninja — geen bonus, wel de snelste unlock.',
     bonus: 'Geen combat-bonus' },
-  { id: 'konoha', name: 'Konoha bandana', body: '#f2f5ff', accent: '#43b25b', bandana: '#2d6b36', plate: '#dfe8ff',
+  { id: 'leaf_band', name: 'Leaf bandana', body: '#f2f5ff', accent: '#43b25b', bandana: '#2d6b36', plate: '#dfe8ff',
     needLvl: 5, hint: 'Unlock op Lv 5',
     tooltip: 'Leaf-dorp headband. Iets meer max HP — standvastig in lange levels.',
     bonus: '+5 max HP', mods: { maxHp: 5 } },
-  { id: 'chakra', name: 'Chakra gloed', body: '#e8f4ff', accent: '#7cf5ff', bandana: '#3db8ff', glow: true,
+  { id: 'energy_glow', name: 'Energie gloed', body: '#e8f4ff', accent: '#7cf5ff', bandana: '#3db8ff', glow: true,
     needTrain: 3, hint: 'Win 3× training',
-    tooltip: 'Blauwe chakra-aura. Chakra laadt sneller — vaker Rasengan/Chidori.',
-    bonus: '+8% chakra-regen', mods: { energyMul: 1.08 } },
-  { id: 'akatsuki', name: 'Rode mantel', body: '#1a1424', accent: '#e04f4f', bandana: '#e04f4f', coat: true,
+    tooltip: 'Blauwe energy-aura. Energy laadt sneller — vaker Spiral Orb/Lightning Pierce.',
+    bonus: '+8% energy-regen', mods: { energyMul: 1.08 } },
+  { id: 'crimson_pact', name: 'Rode mantel', body: '#1a1424', accent: '#e04f4f', bandana: '#e04f4f', coat: true,
     needLvl: 12, hint: 'Unlock op Lv 12',
     tooltip: 'Rode mantel — agressieve slagen. Meer schade op melee en wapens.',
     bonus: '+4% schade', mods: { dmgMul: 1.04 } },
@@ -38,8 +38,8 @@ const STYLES = [
     bonus: '+8% wapen-reach', mods: { weaponRange: 1.08 } },
   { id: 'cyber', name: 'Cyber-ninja', body: '#1a2040', accent: '#7cf5ff', bandana: '#4ecf6a', visor: true, lightning: true,
     needLvl: 18, hint: 'Unlock op Lv 18',
-    tooltip: 'Neon-visier + bliksem-flits bij melee. Snellere chakra en visuele chain-sparks.',
-    bonus: 'Lightning FX · +6% chakra', mods: { energyMul: 1.06, lightning: true, dmgMul: 1.02 } },
+    tooltip: 'Neon-visier + bliksem-flits bij melee. Snellere energy en visuele chain-sparks.',
+    bonus: 'Lightning FX · +6% energy', mods: { energyMul: 1.06, lightning: true, dmgMul: 1.02 } },
   { id: 'fox', name: 'Vossen-ninja', body: '#ff8c42', accent: '#ffe259', bandana: '#d05a1e', fox: true,
     needDex: 12, hint: '12 monsters in boek',
     tooltip: 'Vossenoren — sneller op de grond. Ideaal voor kiting en shuriken.',
@@ -50,8 +50,8 @@ const STYLES = [
     bonus: 'Lightning gloed · +0.8s shield/golf', mods: { shieldWave: 0.8, lightning: true } },
   { id: 'void', name: 'Void-waker', body: '#2a1840', accent: '#ff6b9d', bandana: '#5a1040', coat: true,
     needLvl: 40, hint: 'Unlock op Lv 40',
-    tooltip: 'Void-mantel — zwaardere jutsu. Specials (Rasengan/Chidori/Rinnegan) raken harder.',
-    bonus: '+8% jutsu-schade', mods: { jutsuMul: 1.08 } },
+    tooltip: 'Void-mantel — zwaardere technique. Specials (Spiral Orb/Lightning Pierce/Void Gaze) raken harder.',
+    bonus: '+8% technique-schade', mods: { techniqueMul: 1.08 } },
   { id: 'hunter', name: 'Jagerlook', body: '#6b5344', accent: '#5ad06a', bandana: '#3d5c32', hunter: true,
     needDexKills: 75, hint: '75 kills in monsterboek',
     tooltip: 'Jager-cape + groene accenten. Bonus schade vs monsters in avontuur.',
@@ -104,7 +104,7 @@ function applyStyleBonusesToPlayer(game, player) {
   game.styleEnergyMul = scaleStyleModValue('energyMul', m.energyMul || 1, sc) || 1;
   game.styleCritBonus = scaleStyleModValue('critBonus', m.critBonus || 0, sc) || 0;
   game.styleKbMul = scaleStyleModValue('kbMul', m.kbMul || 1, sc) || 1;
-  game.styleJutsuMul = scaleStyleModValue('jutsuMul', m.jutsuMul || 1, sc) || 1;
+  game.styleTechniqueMul = scaleStyleModValue('techniqueMul', m.techniqueMul || 1, sc) || 1;
   game.styleShieldWave = (m.shieldWave || 0) + up.shieldAdd;
   game.styleBlockMul = scaleStyleModValue('blockMul', m.blockMul || 1, sc) || 1;
   game.styleXpMul = scaleStyleModValue('xpMul', m.xpMul || 1, sc) || 1;
@@ -146,6 +146,6 @@ function applyStyleToSpec(fighter, spec) {
     spec.range = (spec.range || 40) * m.weaponRange;
     spec.r = (spec.r || 24) * Math.sqrt(m.weaponRange);
   }
-  if (m.jutsuMul && spec.kind === 'special') spec.dmg = Math.round(spec.dmg * m.jutsuMul);
+  if (m.techniqueMul && spec.kind === 'special') spec.dmg = Math.round(spec.dmg * m.techniqueMul);
   return spec;
 }

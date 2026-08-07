@@ -786,7 +786,7 @@ function createRunLoot() {
     dex: [],
     pets: [],
     eggs: [],
-    pickups: { heal: 0, rage: 0, chakra: 0, shield: 0 },
+    pickups: { heal: 0, rage: 0, energy: 0, shield: 0 },
     petCoins: 0,
     hpBonus: 0,
     levelUps: 0,
@@ -848,7 +848,7 @@ function runLootHasItems(loot) {
   if (loot.petCoins > 0 || loot.hpBonus > 0 || loot.levelUps > 0 || loot.weapons.length) return true;
   if (loot.finishers > 0) return true;
   const pk = loot.pickups || {};
-  return (pk.heal || 0) + (pk.rage || 0) + (pk.chakra || 0) + (pk.shield || 0) > 0;
+  return (pk.heal || 0) + (pk.rage || 0) + (pk.energy || 0) + (pk.shield || 0) > 0;
 }
 
 function runLootSummaryShort(loot) {
@@ -859,7 +859,7 @@ function runLootSummaryShort(loot) {
   if (loot.pets.length) parts.push(`🐾${loot.pets.length}`);
   if (loot.eggs.length) parts.push(`🥚${loot.eggs.length}`);
   const pk = loot.pickups || {};
-  const pickN = (pk.heal || 0) + (pk.rage || 0) + (pk.chakra || 0) + (pk.shield || 0);
+  const pickN = (pk.heal || 0) + (pk.rage || 0) + (pk.energy || 0) + (pk.shield || 0);
   if (pickN) parts.push(`💊${pickN}`);
   if (loot.finishers) parts.push(`③${loot.finishers}`);
   if (loot.levelUps) parts.push(`↑${loot.levelUps}`);
@@ -901,7 +901,7 @@ function formatRunLootHtml(loot, mode) {
   const pk = loot.pickups || {};
   if (pk.heal) push('💚', t('runLoot.pickupLine', { kind: t('pickup.heal'), n: pk.heal }), '#6ee06e');
   if (pk.rage) push('🔥', t('runLoot.pickupLine', { kind: t('pickup.rage'), n: pk.rage }), '#ff7a4d');
-  if (pk.chakra) push('🌀', t('runLoot.pickupLine', { kind: t('pickup.chakra'), n: pk.chakra }), '#7cf5ff');
+  if (pk.energy) push('🌀', t('runLoot.pickupLine', { kind: t('pickup.energy'), n: pk.energy }), '#7cf5ff');
   if (pk.shield) push('🛡', t('runLoot.pickupLine', { kind: t('pickup.shield'), n: pk.shield }), '#9fd8ff');
   if (loot.finishers) push('③', t('runLoot.finishersLine', { n: loot.finishers }), '#ffb830');
   if (loot.levelUps) {
@@ -2119,10 +2119,10 @@ function vsFighterStats(entry) {
   const meleeScale = (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) ? 0.38 : 1;
   const meleeDps = Math.round(Math.min(100, (dmg * (w.speed || 1) * spd) / 88 * meleeScale));
   const rangeDps = Math.round(Math.min(100, (dmg * (w.speed || 1) * rng) / 72 * vsWeaponRangeFactor(w) * (0.82 + crit * 0.9)));
-  let special = 'Rasengan';
-  if (entry.isRobot) special = 'Robot · Chidori';
-  else if (entry.special === 'chidori') special = 'Chidori';
-  else if (entry.special === 'rinnegan') special = 'Rinnegan';
+  let special = 'Spiral Orb';
+  if (entry.isRobot) special = 'Robot · Lightning Pierce';
+  else if (entry.special === 'lightning_pierce') special = 'Lightning Pierce';
+  else if (entry.special === 'void_gaze') special = 'Void Gaze';
   const sigKey = entry.sig || 'balanced';
   const sig = VS_SIG_LABELS[sigKey] || sigKey;
   return { hp, spd, dmg, str, rng, meleeDps, rangeDps, wpn: w.name, special, critPct, sig, sigKey };
@@ -2541,8 +2541,8 @@ function modeFirstMinuteLine(mode) {
   // Fallback if Kb key missing: try base touch key only on touch
   if (!touch) {
     const lines = {
-      adventure: 'Eerste minuut: A/D lopen · W springen · J/K/L · U jutsu · Shift subst',
-      training: 'Eerste minuut: ontwijk lasers · Shift = substitutie · chakra vol → U',
+      adventure: 'Eerste minuut: A/D lopen · W springen · J/K/L · U technique · Shift subst',
+      training: 'Eerste minuut: ontwijk lasers · Shift = substitutie · energy vol → U',
       wall: '60s · combo-milestones · A/D · J/K/L · record-tempo in HUD',
       versus: 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
       coinrun: 'Munten pakken · W/↑ hoger mikken · J/K shuriken · max 3 snel',
@@ -2550,8 +2550,8 @@ function modeFirstMinuteLine(mode) {
     return lines[mode] || lines.adventure;
   }
   const lines = {
-    adventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol chakra = SUPER',
-    training: 'Eerste minuut: ontwijk rode laser · blokkeer dichtbij · chakra vol → SUPER',
+    adventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol energy = SUPER',
+    training: 'Eerste minuut: ontwijk rode laser · blokkeer dichtbij · energy vol → SUPER',
     wall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
     versus: 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best',
     coinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
@@ -2619,7 +2619,7 @@ function applyModeOnboarding(mode, g) {
   save.tipsSeen[key] = 1;
   save.tipsSeen['mode_' + mode] = 1;
   save.tipsSeen['hint_' + mode] = 1;
-  if (mode === 'adventure' || mode === 'training') save.tipsSeen.chakra = 1;
+  if (mode === 'adventure' || mode === 'training') save.tipsSeen.energy = 1;
   if (mode === 'coinrun') save.tipsSeen.hint_coinrun = 1;
   persist();
   g.modeHintLine = modeFirstMinuteLine(mode);

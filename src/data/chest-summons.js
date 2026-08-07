@@ -64,7 +64,7 @@ const CHEST_PET_SKILLS = [
   'Blink-Dash — snellere pet-CD',
   'Lucky Paw — +2% crit voor jou',
   'Koester — +4 max HP',
-  'Cheer — chakra +6% regen',
+  'Cheer — energy +6% regen',
 ];
 
 function chestSkillPick(kind) {

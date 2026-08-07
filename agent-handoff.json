@@ -13,17 +13,17 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.131",
-    "swCache": "stickfighter-app-v341",
-    "gameJsQuery": "game.js?v=341",
+    "appVersion": "1.18.136",
+    "swCache": "stickfighter-app-v346",
+    "gameJsQuery": "game.js?v=346",
     "cssQuery": "styles/main.css?v=341",
-    "featureBranch": "cursor/summon-chest-center-c62d",
+    "featureBranch": "cursor/ip-anime-rename-2125",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "Summon: keep chest bottom + center reward · v1.18.131",
-    "updated": "2026-08-07T12:36:57Z"
+    "note": "IP-A anime skill rename · spiral_orb / Technique / Energy",
+    "updated": "2026-08-07T20:29:02Z"
   },
   "userWishlist": [
     {
@@ -38,6 +38,10 @@
       "from": "user",
       "text": "store soft-feel A3/A4/A5",
       "status": "done-in-code",
+      "id": "w-20260807T202954",
+      "from": "user",
+      "text": "IP-A anime skill rename (jutsu/chakra → technique/energy)",
+      "status": "open",
       "updated": "2026-08-07"
     },
     {
@@ -363,6 +367,14 @@
     {
       "at": "2026-08-07T20:21:04Z",
       "summary": "Soft-feel A3/A4: milder golf 1 + telegraph cues + sterkere partGate loop-rechts; device-qa.md · v1.18.134"
+    },
+    {
+      "at": "2026-08-07T20:29:54Z",
+      "summary": "IP-A: anime skills → generic techniques (spiral_orb/…) · activeTechnique migrate · v1.18.136 / SW v346"
+    },
+    {
+      "at": "2026-08-07T20:29:02Z",
+      "summary": "IP-A: renamed anime skills to generic ids (spiral_orb etc) + Technique/Energy + save migrate · v1.18.136"
     },
     {
       "at": "2026-08-07T12:37:53Z",

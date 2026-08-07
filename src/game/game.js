@@ -139,7 +139,7 @@ class Game {
         weapon: wpn, color: '#f2f5ff',
         speed: Math.round(260 * (pst.speedMul || 1)),
         rosterId: 'hero',
-        vsSpecial: activeJutsuId(),
+        vsSpecial: activeTechniqueId(),
       });
       applyPlayerStyle(this.player);
       applyStyleBonusesToPlayer(this, this.player);
@@ -476,7 +476,7 @@ class Game {
     this.monsters = this.monsters.filter((m) => m && m.alive);
   }
 
-  /** Speler-jutsu orbs tussen golven opruimen — geen zwevende Rasengan na wave-clear. */
+  /** Speler-technique orbs tussen golven opruimen — geen zwevende Spiral Orb na wave-clear. */
   purgePlayerProjectiles() {
     if (!this.projectiles?.length) return;
     this.projectiles = this.projectiles.filter((p) => p && p.from !== 'player' && p.from !== 'p1');
@@ -641,7 +641,7 @@ class Game {
                 this.player.hp = Math.min(this.player.maxhp, this.player.hp + micro);
               }
             } else {
-              AudioSys.sfxAt(typeof jutsuSwooshSfx === 'function' ? jutsuSwooshSfx('rasengan') : 'skillSwoosh', tgt.x);
+              AudioSys.sfxAt(typeof techniqueSwooshSfx === 'function' ? techniqueSwooshSfx('spiral_orb') : 'skillSwoosh', tgt.x);
             }
           } catch (_) {}
           const burstN = allyId === 'tide' ? 9 : 6;
@@ -1381,10 +1381,10 @@ class Game {
         noteRunLootPickup(this.runLoot, 'rage');
         this.floater(p.x, p.y - 100, t('combat.pickupRage'), meta.color, 16);
         break;
-      case 'chakra':
+      case 'energy':
         p.energy = 100;
-        noteRunLootPickup(this.runLoot, 'chakra');
-        this.floater(p.x, p.y - 100, t('combat.pickupChakra'), meta.color, 16);
+        noteRunLootPickup(this.runLoot, 'energy');
+        this.floater(p.x, p.y - 100, t('combat.pickupEnergy'), meta.color, 16);
         break;
       case 'shield':
         this.playerShieldT = 6.5;
@@ -1586,9 +1586,9 @@ class Game {
     const trainTip = win
       ? (trainBest >= 8
         ? `Combo-trainer: max ×${trainBest} — bonus XP!`
-        : (save.trainWins === 3 ? 'Nieuwe stijl vrij: Chakra gloed — Instellingen → Stijl!' : 'Unlock stijlen door meer train-wins!'))
-      : onceResultTip('training', 'loss', 'Spring tijdens CHIDORI-telegraph — robot mist · duck oor-lasers')
-        || 'Tip: duck lasers · chakra vol → Rasengan';
+        : (save.trainWins === 3 ? 'Nieuwe stijl vrij: Energie gloed — Instellingen → Stijl!' : 'Unlock stijlen door meer train-wins!'))
+      : onceResultTip('training', 'loss', 'Spring tijdens LIGHTNING PIERCE-telegraph — robot mist · duck oor-lasers')
+        || 'Tip: duck lasers · energy vol → Spiral Orb';
     scheduleGameResult(this, 1400, () => UI.showResult(win, {
       title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
       detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · max combo ×${trainBest}` +
@@ -2198,10 +2198,10 @@ class Game {
     if (!opts.deferPersist) persist();
   }
 
-  spawnJutsu(f, atk) {
-    const jutsu = (atk && atk.jutsu) || fighterJutsuKind(f);
-    const sk = skillById(jutsu);
-    const jb = jutsuSkillBonuses(jutsu);
+  spawnTechnique(f, atk) {
+    const technique = (atk && atk.technique) || fighterTechniqueKind(f);
+    const sk = skillById(technique);
+    const jb = techniqueSkillBonuses(technique);
     const behavior = sk.behavior || 'orb';
     let dmg = (atk ? atk.dmg : f.baseDmg * (sk.dmgMul || 2.8)) * jb.dmgMul;
     if (this.mode === 'training' && f.isRobot && behavior === 'dash' && this.player) {
@@ -2213,8 +2213,8 @@ class Game {
     const aim = projAimVelocity(f, behavior === 'dash' ? speed : speed * 0.9);
     const face = f.face || 1;
     const col = sk.color || '#7cf5ff';
-    // Rasengan: altijd horizontaal (geen aim-tilt); Rinnegan-slash ook op torso-hoogte
-    const rasenHoriz = jutsu === 'rasengan';
+    // Spiral Orb: altijd horizontaal (geen aim-tilt); Void Gaze-slash ook op torso-hoogte
+    const rasenHoriz = technique === 'spiral_orb';
     const slashFlat = behavior === 'slash';
     const y0 = (rasenHoriz || slashFlat)
       ? (f.y - 50)
@@ -2288,23 +2288,23 @@ class Game {
     };
 
     if (rasenHoriz && (f.isPlayer || f.playerSlot)) {
-      const mode = typeof rasenganShotMode === 'function'
-        ? rasenganShotMode(typeof skillLevel === 'function' ? skillLevel('rasengan') : 0)
+      const mode = typeof spiralOrbShotMode === 'function'
+        ? spiralOrbShotMode(typeof skillLevel === 'function' ? skillLevel('spiral_orb') : 0)
         : 'single';
       if (mode === 'triple') {
         // → rechtdoor + ↑ krul + ↓ krul (duidelijke lanes)
         fireProj(0, 0, 1.05, { curl: 0 });
         fireProj(face * 8, -14, 0.92, { curl: -1, vy0: -120, curlAccel: 480, curlMaxVy: 300 });
         fireProj(face * 8, 14, 0.92, { curl: 1, vy0: 120, curlAccel: 480, curlMaxVy: 300 });
-        try { this.banner(t('banner.rasenganTriple'), 1.15, col, 36); } catch (_) {
-          this.banner('TRIPLE RASENGAN!', 1.15, col, 36);
+        try { this.banner(t('banner.spiral_orbTriple'), 1.15, col, 36); } catch (_) {
+          this.banner('TRIPLE SPIRAL ORB!', 1.15, col, 36);
         }
       } else if (mode === 'dual') {
         // ↑ + ↓ krul — start al met verticale snelheid zodat beide lanes zichtbaar zijn
         fireProj(face * 6, -12, 0.96, { curl: -1, vy0: -100, curlAccel: 440, curlMaxVy: 280 });
         fireProj(face * 6, 12, 0.96, { curl: 1, vy0: 100, curlAccel: 440, curlMaxVy: 280 });
-        try { this.banner(t('banner.rasenganDual'), 1.0, col, 32); } catch (_) {
-          this.banner('DUAL RASENGAN!', 1.0, col, 32);
+        try { this.banner(t('banner.spiral_orbDual'), 1.0, col, 32); } catch (_) {
+          this.banner('DUAL SPIRAL ORB!', 1.0, col, 32);
         }
       } else {
         fireProj(0, 0, 1, { curl: 0 });
@@ -2365,11 +2365,11 @@ class Game {
       if (f.isPlayer || f.playerSlot) haptic(22);
     }
     try {
-      const swoosh = typeof jutsuSwooshSfx === 'function' ? jutsuSwooshSfx(jutsu) : 'skillSwoosh';
+      const swoosh = typeof techniqueSwooshSfx === 'function' ? techniqueSwooshSfx(technique) : 'skillSwoosh';
       if (this.mode === 'versus' && f.vsSaga === 'tide') AudioSys.sfx('tideSurge');
       AudioSys.sfxAt(swoosh, f.x + f.face * 40);
     } catch (_) {}
-    // Rasengan multi-shot vervangt random extraShot
+    // Spiral Orb multi-shot vervangt random extraShot
     if (!(rasenHoriz && (f.isPlayer || f.playerSlot))) {
       const extra = (atk && atk.extraShot) || jb.extraShot || 0;
       if (extra > 0 && Math.random() < extra) {
@@ -2423,40 +2423,40 @@ class Game {
     }, critMeta));
   }
 
-  spawnWave(f) { this.spawnJutsu(f, f.attackSpec('special')); }
+  spawnWave(f) { this.spawnTechnique(f, f.attackSpec('special')); }
 
-  spawnEnemyJutsu(m) {
+  spawnEnemyTechnique(m) {
     const p = this.player;
-    if (!p || !p.alive || !m.enemyJutsu || !m.alive) return;
+    if (!p || !p.alive || !m.enemyTechnique || !m.alive) return;
     const dir = Math.sign(p.x - m.x) || m.face || 1;
-    const j = m.enemyJutsu;
-    const dmg = Math.round(m.dmg * (j === 'kamehame' ? 2.15 : j === 'chidori' ? 1.75 : 1.55));
+    const j = m.enemyTechnique;
+    const dmg = Math.round(m.dmg * (j === 'wave_cannon' ? 2.15 : j === 'lightning_pierce' ? 1.75 : 1.55));
     const y0 = m.y - m.size * 0.55;
-    const lbl = j === 'chidori' ? 'CHIDORI!' : j === 'kamehame' ? 'KAMEHAME!' : 'RASENGAN!';
-    const col = j === 'chidori' ? '#a8e0ff' : j === 'kamehame' ? '#7cf5ff' : '#7cf5ff';
+    const lbl = j === 'lightning_pierce' ? 'LIGHTNING PIERCE!' : j === 'wave_cannon' ? 'WAVE CANNON!' : 'SPIRAL ORB!';
+    const col = j === 'lightning_pierce' ? '#a8e0ff' : j === 'wave_cannon' ? '#7cf5ff' : '#7cf5ff';
     try {
       this.floater(m.x, m.y - m.size - 24, lbl, col, 14);
     } catch (_) {}
-    if (j === 'rasengan') {
+    if (j === 'spiral_orb') {
       this.spawnProjectile({
         x: m.x + dir * m.size, y: y0, vx: dir * 360, vy: 0, r: 22, dmg,
-        from: 'enemy', kind: 'rasengan', life: 1.15, spin: 0, hitSet: new Set(),
+        from: 'enemy', kind: 'spiral_orb', life: 1.15, spin: 0, hitSet: new Set(),
       });
-      try { AudioSys.sfx('rasengan'); } catch (_) {}
-    } else if (j === 'chidori') {
+      try { AudioSys.sfx('spiral_orb'); } catch (_) {}
+    } else if (j === 'lightning_pierce') {
       this.spawnProjectile({
         x: m.x + dir * m.size, y: y0, vx: dir * 500, vy: 0, r: 17, dmg,
-        from: 'enemy', kind: 'chidori', life: 0.34, hitSet: new Set(),
+        from: 'enemy', kind: 'lightning_pierce', life: 0.34, hitSet: new Set(),
       });
-      try { AudioSys.sfx('chidori'); } catch (_) {}
+      try { AudioSys.sfx('lightning_pierce'); } catch (_) {}
     } else {
       const a = Math.atan2((p.y - 42) - y0, p.x - m.x);
       this.spawnProjectile({
         x: m.x + Math.cos(a) * m.size, y: y0 + Math.sin(a) * m.size,
         vx: Math.cos(a) * 400, vy: Math.sin(a) * 400, r: 28, dmg,
-        from: 'enemy', kind: 'kamehame', life: 1.05, spin: 0, hitSet: new Set(),
+        from: 'enemy', kind: 'wave_cannon', life: 1.05, spin: 0, hitSet: new Set(),
       });
-      try { this.shake(7, 0.22); AudioSys.sfx('rasengan'); } catch (_) {}
+      try { this.shake(7, 0.22); AudioSys.sfx('spiral_orb'); } catch (_) {}
     }
   }
 
@@ -2566,7 +2566,7 @@ class Game {
         if (counter) {
           this.comboT = Math.min(2.2, this.comboT + 0.14);
           this.floater(m.x, m.y - m.size - 24, t('combat.counter'), '#ffd75e', 15, 'fx');
-          if (m.jutsuTelegraphT > 0) m.jutsuTelegraphT = 0;
+          if (m.techniqueTelegraphT > 0) m.techniqueTelegraphT = 0;
           if (m.telegraphT > 0) m.telegraphT = 0;
           if (m.dashT > 0) { m.dashT = 0; m.vx *= 0.35; }
           if (save.haptics !== false) haptic(9);
@@ -2828,14 +2828,14 @@ class Game {
         : (p.kind === 'shuriken' ? 28 : p.kind === 'boemerang' ? 34 : 12);
       p.spin = (p.spin || 0) + dt * spinRate;
       p.vy += (p.grav || 0) * dt;
-      // Rasengan-krul: vanuit horizontaal omhoog/omlaag buigen
+      // Spiral Orb-krul: vanuit horizontaal omhoog/omlaag buigen
       if (p.curl) {
         p.vy += p.curl * (p.curlAccel || 420) * dt;
         const lim = p.curlMaxVy || 280;
         if (p.vy > lim) p.vy = lim;
         if (p.vy < -lim) p.vy = -lim;
       }
-      // Rinnegan lichtschits: expandeert links/rechts i.p.v. te vliegen
+      // Void Gaze lichtschits: expandeert links/rechts i.p.v. te vliegen
       if (p.slashWave) {
         const maxR = p.slashMaxReach || 460;
         p.slashReach = Math.min(maxR, (p.slashReach || 0) + (p.slashExpand || 720) * dt);
@@ -2887,8 +2887,8 @@ class Game {
         }
       }
       p.x += p.vx * dt; p.y += p.vy * dt;
-      // Rasengan: niet sterven op de grond — anders verdwijnt de ↓-krul meteen (dual/triple leek 1 schot)
-      if (p.kind === 'rasengan') {
+      // Spiral Orb: niet sterven op de grond — anders verdwijnt de ↓-krul meteen (dual/triple leek 1 schot)
+      if (p.kind === 'spiral_orb') {
         const floorY = this.ground - (p.r || 16) * 0.35;
         if (p.y > floorY) {
           p.y = floorY;
@@ -2927,7 +2927,7 @@ class Game {
           }
         }
       }
-      if (p.kind === 'kamehame') {
+      if (p.kind === 'wave_cannon') {
         p.r = Math.min(44, (p.r || 28) + dt * 18);
         if (!motionReduced() && !fxLite()) {
           p._trailAcc = (p._trailAcc || 0) + dt;
@@ -2980,7 +2980,7 @@ class Game {
                 } catch (_) {}
               }
             }
-            if (skProj) spawnJutsuImpactFx(this, m.x, m.y, p.kind, 'full');
+            if (skProj) spawnTechniqueImpactFx(this, m.x, m.y, p.kind, 'full');
             if (p.hitSet) p.hitSet.add(m); else p.life = 0;
           }
         }
@@ -3033,7 +3033,7 @@ class Game {
         if ((p.slashReach || 0) >= (p.slashMaxReach || 460) && p.life > 0.12) {
           p.life = Math.min(p.life, 0.12);
         }
-      } else if (p.kind === 'rasengan') {
+      } else if (p.kind === 'spiral_orb') {
         // Alleen zijranden — grond wordt hierboven afgehandeld
         if (p.x < -60 || p.x > W + 60) p.life = 0;
       } else if (p.y > this.ground + 10 || p.x < -60 || p.x > W + 60) {
@@ -3051,7 +3051,7 @@ class Game {
       }
       if (p.life <= 0 && !p._impactFx && skillExists(p.kind)) {
         p._impactFx = true;
-        spawnJutsuImpactFx(this, p.x, p.y, p.kind === 'kamehame' ? 'rasengan' : p.kind, 'small');
+        spawnTechniqueImpactFx(this, p.x, p.y, p.kind === 'wave_cannon' ? 'spiral_orb' : p.kind, 'small');
       }
     }
     this.projectiles = this.projectiles.filter(p => p.life > 0);
@@ -3390,7 +3390,7 @@ class Game {
             c.stroke();
             c.restore();
           } else if (skDraw.behavior === 'dash') {
-            // Chidori flight — crackle trail behind the bolt
+            // Lightning Pierce flight — crackle trail behind the bolt
             const ang = Math.atan2(p.vy || 0, p.vx || 1);
             c.save();
             c.globalAlpha = 0.35;
@@ -3412,9 +3412,9 @@ class Game {
           }
         }
         if (p.slashWave || skDraw.behavior === 'slash') {
-          drawRinneganSlashWave(c, p);
+          drawVoidGazeSlashWave(c, p);
         } else {
-          drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, p.kind, 1);
+          drawTechniqueOrb(c, p.x, p.y, p.r, p.spin || 0, p.kind, 1);
         }
       } else if (p.kind === 'shuriken') {
         c.translate(p.x, p.y); c.rotate(p.spin || 0);
@@ -3566,7 +3566,7 @@ class Game {
     c.globalAlpha = 1;
     c.restore();
 
-    this.drawChakraReadyFx(c);
+    this.drawEnergyReadyFx(c);
     if (this.mode === 'adventure') {
       try { drawSuperFxLayer(this, c); } catch (_) {}
       try { this.drawKetsbamChargeAura(c); } catch (_) {}
@@ -3748,7 +3748,7 @@ class Game {
     const ready = pct >= 1;
     const calm = motionReduced();
     c.save();
-    if (kind === 'chidori') {
+    if (kind === 'lightning_pierce') {
       const seg = 10;
       const segW = w / seg;
       for (let i = 0; i < seg; i++) {
@@ -3761,7 +3761,7 @@ class Game {
         this.rr(c, x + i * segW + 1, y + 1, Math.max(1, segW * fill - 2), h - 2, 2);
         c.fill();
       }
-    } else if (kind === 'rinnegan') {
+    } else if (kind === 'void_gaze') {
       const rings = 6;
       for (let i = 0; i < rings; i++) {
         const segStart = i / rings;
@@ -3809,18 +3809,18 @@ class Game {
     c.restore();
   }
 
-  drawChakraReadyFx(c) {
+  drawEnergyReadyFx(c) {
     const fighters = [this.player];
     if (this.p2) fighters.push(this.p2);
     const calm = motionReduced();
     for (const f of fighters) {
       if (!f || !f.alive || f.energy < 100) continue;
-      const kind = fighterJutsuKind(f);
-      if (kind === 'rasengan' && (f.specialCd || 0) > 0) continue;
+      const kind = fighterTechniqueKind(f);
+      if (kind === 'spiral_orb' && (f.specialCd || 0) > 0) continue;
       if (calm) {
         c.save();
         c.globalAlpha = 0.42;
-        c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : (kind === 'chidori' ? '#a8e0ff' : kind === 'rinnegan' ? '#c47aff' : '#7cf5ff');
+        c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : (kind === 'lightning_pierce' ? '#a8e0ff' : kind === 'void_gaze' ? '#c47aff' : '#7cf5ff');
         c.lineWidth = 2;
         c.beginPath();
         c.arc(f.x, f.y - 55, 36, 0, TAU);
@@ -3831,7 +3831,7 @@ class Game {
       const pulse = 0.35 + Math.sin(this.t * 7) * 0.15;
       c.save();
       c.globalAlpha = pulse;
-      if (kind === 'chidori') {
+      if (kind === 'lightning_pierce') {
         c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : '#a8e0ff';
         c.lineWidth = 3;
         c.beginPath();
@@ -3844,7 +3844,7 @@ class Game {
           c.lineTo(f.x + 28, f.y - 52 + i * 10);
           c.stroke();
         }
-      } else if (kind === 'rinnegan') {
+      } else if (kind === 'void_gaze') {
         c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : '#c47aff';
         c.lineWidth = 3;
         c.lineCap = 'round';
@@ -4640,15 +4640,15 @@ class Game {
         }
       }
       c.fillStyle = '#333c55'; this.rr(c, bx, by + 20, bw, 11, 5); c.fill();
-      const jKind = fighterJutsuKind(p);
+      const jKind = fighterTechniqueKind(p);
       this.drawSuperMeterFill(c, bx, by + 20, bw, 11, p.energy / 100, jKind, this.t);
       c.font = '800 10px -apple-system, sans-serif';
       c.fillStyle = 'rgba(255,255,255,.85)'; c.textAlign = 'left';
       c.fillText(t('hud.super'), bx + 6, by + 29);
-      // getekend jutsu-icoontje (art-upgrade 3/4): bliksem / oog / orb
+      // getekend technique-icoontje (art-upgrade 3/4): bliksem / oog / orb
       const ix = bx + 6 + c.measureText(t('hud.super')).width + 9;
       const iy = by + 25.5;
-      if (jKind === 'chidori') {
+      if (jKind === 'lightning_pierce') {
         c.fillStyle = '#a8e0ff';
         c.beginPath();
         c.moveTo(ix + 2, iy - 5.5);
@@ -4659,7 +4659,7 @@ class Game {
         c.lineTo(ix + 0.7, iy - 1);
         c.closePath();
         c.fill();
-      } else if (jKind === 'rinnegan') {
+      } else if (jKind === 'void_gaze') {
         c.strokeStyle = '#c47aff'; c.lineWidth = 1.4;
         c.beginPath(); c.ellipse(ix + 1, iy, 5.2, 3.2, 0, 0, TAU); c.stroke();
         c.fillStyle = '#c47aff';
@@ -4674,9 +4674,9 @@ class Game {
       c.fillStyle = '#fff';
       c.fillText(`Lv ${save.lvl}`, bx + bw + 12, by + 13);
       if (p.energy >= 100) {
-        c.fillStyle = jKind === 'chidori' ? '#a8e0ff' : jKind === 'rinnegan' ? '#c47aff' : '#7cf5ff';
-        c.fillText(jutsuLabel(jKind), bx + bw + 12, by + 32);
-        c.strokeStyle = jKind === 'chidori' ? 'rgba(168,224,255,.55)' : jKind === 'rinnegan' ? 'rgba(196,122,255,.55)' : 'rgba(124,245,255,.55)';
+        c.fillStyle = jKind === 'lightning_pierce' ? '#a8e0ff' : jKind === 'void_gaze' ? '#c47aff' : '#7cf5ff';
+        c.fillText(techniqueLabel(jKind), bx + bw + 12, by + 32);
+        c.strokeStyle = jKind === 'lightning_pierce' ? 'rgba(168,224,255,.55)' : jKind === 'void_gaze' ? 'rgba(196,122,255,.55)' : 'rgba(124,245,255,.55)';
         c.lineWidth = 2;
         c.beginPath();
         const joyR = motionReduced() ? 18 : 18 + Math.sin(this.t * 8) * 3;
@@ -4991,7 +4991,7 @@ class Game {
       const tele = this.trainLaserTelegraph > 0
         ? { label: t('hud.earLaser'), frac: this.trainLaserTelegraph / 0.95, color: '#ff6b6b', max: 0.95 }
         : (this.trainTelegraphT > 0
-          ? { label: t('hud.chidoriTele'), frac: this.trainTelegraphT / 0.85, color: '#7cf5ff', max: 0.85 }
+          ? { label: t('hud.lightning_pierceTele'), frac: this.trainTelegraphT / 0.85, color: '#7cf5ff', max: 0.85 }
           : (this.trainMeleeTelegraphT > 0
             ? {
               label: this.trainTelegraphKind === 'kick' ? t('hud.kickTele') : t('hud.punchTele'),
@@ -5388,7 +5388,7 @@ class Game {
       const hp1Pct = Math.round(hp1Frac * 100);
       c.fillText(t('hud.p1Line', { name: name1, pct: hp1Pct }), bx, byVs + 30);
       c.fillStyle = '#333c55'; this.rr(c, bx, byVs + 34, half, 5, 3); c.fill();
-      this.drawSuperMeterFill(c, bx, byVs + 34, half, 5, p.energy / 100, fighterJutsuKind(p), this.t);
+      this.drawSuperMeterFill(c, bx, byVs + 34, half, 5, p.energy / 100, fighterTechniqueKind(p), this.t);
       drawWeaponStylePips(c, bx + 8, byVs + 44, p);
 
       c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, W - half - 20, byVs - 4, half + 8, 44, 10); c.fill();
@@ -5403,7 +5403,7 @@ class Game {
       const hp2Pct = Math.round(frac2 * 100);
       c.fillText(t('hud.p2Line', { pct: hp2Pct, name: name2 }), W - 20, byVs + 30);
       c.fillStyle = '#333c55'; this.rr(c, W - half - 16, byVs + 34, half, 5, 3); c.fill();
-      this.drawSuperMeterFill(c, W - half - 16, byVs + 34, half, 5, p2.energy / 100, fighterJutsuKind(p2), this.t);
+      this.drawSuperMeterFill(c, W - half - 16, byVs + 34, half, 5, p2.energy / 100, fighterTechniqueKind(p2), this.t);
       drawWeaponStylePips(c, W - half - 8, byVs + 44, p2);
 
       c.textAlign = 'center';
@@ -5505,12 +5505,12 @@ class Game {
         c.fillText(t('hud.spawnGrace', { n: p2.invulnT.toFixed(1) }), W - 20, byVs + 52);
       }
       if (p.energy >= 100) {
-        const k1 = fighterJutsuKind(p);
-        drawJutsuMiniIcon(c, k1, bx + half - 10, byVs + 9, jutsuAccentColor(k1, false));
+        const k1 = fighterTechniqueKind(p);
+        drawTechniqueMiniIcon(c, k1, bx + half - 10, byVs + 9, techniqueAccentColor(k1, false));
       }
       if (p2.energy >= 100) {
-        const k2 = fighterJutsuKind(p2);
-        drawJutsuMiniIcon(c, k2, W - 26, byVs + 9, jutsuAccentColor(k2, true));
+        const k2 = fighterTechniqueKind(p2);
+        drawTechniqueMiniIcon(c, k2, W - 26, byVs + 9, techniqueAccentColor(k2, true));
       }
     }
   }
@@ -5529,7 +5529,7 @@ class Game {
   drawSpecialBtnMeter(c, b, fighter, accent) {
     if (!fighter || b.id !== 'special') return;
     const pct = clamp(fighter.energy / 100, 0, 1);
-    const kind = fighterJutsuKind(fighter);
+    const kind = fighterTechniqueKind(fighter);
     const ring = b.r + 4;
     c.save();
     c.globalAlpha = 0.28;
@@ -5538,8 +5538,8 @@ class Game {
     c.beginPath(); c.arc(0, 0, ring, 0, TAU); c.stroke();
     const calm = motionReduced();
     if (pct > 0.02) {
-      c.globalAlpha = calm ? 0.82 : (kind === 'chidori' ? 0.75 + Math.sin(this.t * 18) * 0.12 : 0.82);
-      c.strokeStyle = kind === 'chidori' ? '#7ec8ff' : kind === 'rinnegan' ? '#b06ae0' : accent || '#3db8ff';
+      c.globalAlpha = calm ? 0.82 : (kind === 'lightning_pierce' ? 0.75 + Math.sin(this.t * 18) * 0.12 : 0.82);
+      c.strokeStyle = kind === 'lightning_pierce' ? '#7ec8ff' : kind === 'void_gaze' ? '#b06ae0' : accent || '#3db8ff';
       c.lineWidth = 5;
       c.lineCap = 'round';
       c.beginPath();
@@ -5548,7 +5548,7 @@ class Game {
     }
     if (pct >= 1) {
       c.globalAlpha = 0.9;
-      c.strokeStyle = kind === 'chidori' ? '#a8e0ff' : kind === 'rinnegan' ? '#c47aff' : '#7cf5ff';
+      c.strokeStyle = kind === 'lightning_pierce' ? '#a8e0ff' : kind === 'void_gaze' ? '#c47aff' : '#7cf5ff';
       c.lineWidth = 3;
       c.beginPath();
       c.arc(0, 0, ring + 5 + (calm ? 0 : Math.sin(this.t * 8) * 2), 0, TAU);
@@ -5563,12 +5563,12 @@ class Game {
     const dual = Input.dualMode && this.mode === 'versus';
     const rows = dual
       ? [
-          [{ k: 'A/D', lab: 'P1' }, { k: 'W', lab: '↑' }, { k: 'J K L', lab: 'slag' }, { k: 'U', lab: 'jutsu' }],
-          [{ k: '←→', lab: 'P2' }, { k: '↑', lab: '↑' }, { k: '1 2 3', lab: 'slag' }, { k: '4', lab: 'jutsu' }],
+          [{ k: 'A/D', lab: 'P1' }, { k: 'W', lab: '↑' }, { k: 'J K L', lab: 'slag' }, { k: 'U', lab: 'technique' }],
+          [{ k: '←→', lab: 'P2' }, { k: '↑', lab: '↑' }, { k: '1 2 3', lab: 'slag' }, { k: '4', lab: 'technique' }],
         ]
       : [
           [{ k: 'A/D', lab: 'lopen' }, { k: 'W', lab: 'spring' }, { k: 'Shift', lab: 'subst' }],
-          [{ k: 'J', lab: 'stomp' }, { k: 'K', lab: 'trap' }, { k: 'L', lab: 'wapen' }, { k: 'U', lab: 'jutsu' }],
+          [{ k: 'J', lab: 'stomp' }, { k: 'K', lab: 'trap' }, { k: 'L', lab: 'wapen' }, { k: 'U', lab: 'technique' }],
         ];
     if (!dual && this.mode === 'adventure') {
       rows[0].push({ k: 'E', lab: 'kets' });
@@ -5654,7 +5654,7 @@ class Game {
     }
     c.globalAlpha = opts.dual ? 0.9 : (0.85 + 0.15 * (xf.p || 0));
     const jk = b.id === 'special'
-      ? (fighter ? fighterJutsuKind(fighter) : 'rasengan')
+      ? (fighter ? fighterTechniqueKind(fighter) : 'spiral_orb')
       : null;
     if (!drawTouchBtnIcon(c, b.id, 0, 0, b.r, jk)) {
       c.font = `${b.r * (opts.dual ? 0.8 : 0.85)}px sans-serif`;
@@ -5667,7 +5667,7 @@ class Game {
       c.beginPath(); c.arc(0, 0, b.r, 0, TAU); c.fill();
     }
     if (b.id === 'special' && fighter && fighter.specialCd > 0
-        && fighterJutsuKind(fighter) === 'rasengan') {
+        && fighterTechniqueKind(fighter) === 'spiral_orb') {
       c.globalAlpha = 0.4;
       c.fillStyle = '#000';
       c.beginPath(); c.arc(0, 0, b.r, 0, TAU); c.fill();

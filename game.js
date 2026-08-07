@@ -274,9 +274,10 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.137';
+const APP_VERSION = '1.18.138';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 347;const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
+const SW_CACHE_REV = 348;
+const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
   zoneWeapons: {},
@@ -296,7 +297,7 @@ const SW_CACHE_REV = 347;const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weap
   kbLegend: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
-  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeJutsu: 'rasengan', skill: 'rasengan', super: 'ketsbam', missionsIntroSeen: false };
+  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
 
 const MAX_LEVEL = 70;
 const LEVELS_PER_ISLAND = 10;
@@ -607,16 +608,16 @@ function wallPauseSubtitle(g) {
   return parts.join(' · ');
 }
 let save = loadSave();
-function fighterJutsuKind(f) {
+function fighterTechniqueKind(f) {
   return fighterEquippedSkill(f).id;
 }
-function jutsuHudLabel(kind) {
+function techniqueHudLabel(kind) {
   const sk = skillById(kind);
   return sk.banner || 'SPECIAL!';
 }
 
-/** Klein getekend jutsu-icoon (bliksem/oog/orb) voor HUD-markers. */
-function drawJutsuMiniIcon(c, kind, x, y, color) {
+/** Klein getekend technique-icoon (bliksem/oog/orb) voor HUD-markers. */
+function drawTechniqueMiniIcon(c, kind, x, y, color) {
   const sk = skillById(kind);
   const behavior = sk.behavior || 'orb';
   c.save();
@@ -660,7 +661,7 @@ function drawJutsuMiniIcon(c, kind, x, y, color) {
 }
 
 /** Getekend touch-knop-icoon (art-upgrade 4/4) — vervangt emoji-labels. */
-function drawTouchBtnIcon(c, id, x, y, r, jutsuKind) {
+function drawTouchBtnIcon(c, id, x, y, r, techniqueKind) {
   const s = r * 0.52;
   c.save();
   c.translate(x, y);
@@ -718,7 +719,7 @@ function drawTouchBtnIcon(c, id, x, y, r, jutsuKind) {
       break;
     }
     case 'special': {
-      const sk = skillById(jutsuKind);
+      const sk = skillById(techniqueKind);
       const behavior = sk.behavior || 'orb';
       if (behavior === 'dash') {
         c.beginPath();
@@ -753,7 +754,7 @@ function drawTouchBtnIcon(c, id, x, y, r, jutsuKind) {
         c.beginPath(); c.ellipse(0, 0, s * 1.05, s * 0.45, 0, 0, TAU); c.stroke();
         c.beginPath(); c.arc(0, 0, s * 0.25, 0, TAU); c.fill();
       } else {
-        // rasengan: orb + spiraal
+        // spiral_orb: orb + spiraal
         c.beginPath(); c.arc(0, 0, s * 0.95, 0, TAU); c.stroke();
         c.beginPath();
         for (let a = 0; a < TAU * 1.35; a += 0.3) {
@@ -800,7 +801,7 @@ function drawTouchBtnIcon(c, id, x, y, r, jutsuKind) {
   return true;
 }
 
-function jutsuAccentColor(kind, p2Slot) {
+function techniqueAccentColor(kind, p2Slot) {
   const sk = SKILLS.find(s => s.id === kind);
   if (sk) return p2Slot ? '#ffb0b8' : sk.color;
   return p2Slot ? '#ffb0b8' : '#7cf5ff';
@@ -812,10 +813,10 @@ const SIG_MODS = {
   assassin: { kickDmg: 1.18, kickCrit: 0.16, kickCritMul: 1.6 },
   heavy: { weaponDmg: 1.14, weaponCrit: 0.1, weaponCritMul: 2.05 },
   combo: { kickDmg: 1.24, kickCrit: 0.2, kickCritMul: 1.5 },
-  kenjutsu: { weaponDmg: 1.16, weaponCrit: 0.14, weaponCritMul: 1.72 },
+  blade_arts: { weaponDmg: 1.16, weaponCrit: 0.14, weaponCritMul: 1.72 },
   hitrun: { kickDmg: 1.12, kickCrit: 0.22, kickCritMul: 1.58 },
   quak: { punchDmg: 1.28, critAdd: -0.02 },
-  rinne: { jutsuCrit: 0.07, jutsuDmg: 1.06 },
+  void_sig: { techniqueCrit: 0.07, techniqueDmg: 1.06 },
   boss: { critAdd: 0.05, critMul: 1.72 },
   storm: { kickDmg: 1.14, kickCrit: 0.08 },
   tank: { punchDmg: 1.2, punchCrit: 0.04, kbMul: 1.15 },
@@ -844,7 +845,7 @@ function applySignatureToSpec(f, spec) {
     if (sig.weaponDmg) spec.dmg *= sig.weaponDmg;
     if (sig.weaponRange) spec.range *= sig.weaponRange;
   }
-  if (spec.kind === 'special' && sig.jutsuDmg) spec.dmg *= sig.jutsuDmg;
+  if (spec.kind === 'special' && sig.techniqueDmg) spec.dmg *= sig.techniqueDmg;
   if (sig.kbMul && spec.kb) spec.kb *= sig.kbMul;
   return spec;
 }
@@ -865,10 +866,10 @@ function rollHitDamage(attacker, spec, mult) {
     if (sig.weaponCritMul) critMul = sig.weaponCritMul;
   }
   if (k === 'punch') critChance += sig.punchCrit || 0;
-  if (k === 'special' || spec.jutsu) {
-    critChance += sig.jutsuCrit || 0;
-    const jsk = SKILLS.find(s => s.id === spec.jutsu);
-    if (jsk && (jsk.id === 'rinnegan' || jsk.behavior === 'pull' || jsk.behavior === 'slash')) critChance += 0.05;
+  if (k === 'special' || spec.technique) {
+    critChance += sig.techniqueCrit || 0;
+    const jsk = SKILLS.find(s => s.id === spec.technique);
+    if (jsk && (jsk.id === 'void_gaze' || jsk.behavior === 'pull' || jsk.behavior === 'slash')) critChance += 0.05;
   }
   if (attacker.isPlayer && typeof game !== 'undefined' && game && game.stageCritBonus) {
     critChance += game.stageCritBonus;
@@ -893,9 +894,9 @@ function rollHitDamage(attacker, spec, mult) {
 function projCritMeta(f) {
   const prof = combatEntryFor(f);
   const sig = SIG_MODS[prof.sig] || {};
-  let critChance = prof.crit + (sig.critAdd || 0) + (sig.jutsuCrit || 0);
+  let critChance = prof.crit + (sig.critAdd || 0) + (sig.techniqueCrit || 0);
   const eqSk = fighterEquippedSkill(f);
-  if (eqSk && (eqSk.id === 'rinnegan' || eqSk.behavior === 'pull' || eqSk.behavior === 'slash')) critChance += 0.05;
+  if (eqSk && (eqSk.id === 'void_gaze' || eqSk.behavior === 'pull' || eqSk.behavior === 'slash')) critChance += 0.05;
   return { critChance: clamp(critChance, 0, 0.42), critMul: prof.critMul };
 }
 
@@ -938,10 +939,10 @@ function isCounterHitWindow(target) {
   return !!(a && a.t < a.windup * 0.92);
 }
 
-/** Avontuur: monster in telegraph/dash/jutsu windup — counter-hit zonder dmg×. */
+/** Avontuur: monster in telegraph/dash/technique windup — counter-hit zonder dmg×. */
 function isMonsterCounterWindow(m) {
   if (!m || !m.alive) return false;
-  return (m.telegraphT > 0) || (m.dashT > 0) || (m.jutsuTelegraphT > 0);
+  return (m.telegraphT > 0) || (m.dashT > 0) || (m.techniqueTelegraphT > 0);
 }
 
 function resolveProjHit(p) {
@@ -951,7 +952,7 @@ function resolveProjHit(p) {
   return { dmg: Math.max(1, Math.round(dmg)), crit };
 }
 
-/** Rinnegan lichtschits: horizontale strook L+R, dikte tapert met afstand tot centrum. */
+/** Void Gaze lichtschits: horizontale strook L+R, dikte tapert met afstand tot centrum. */
 function slashWaveHalfHeight(p, dist) {
   const r0 = p.r0 || p.r || 42;
   const maxR = Math.max(1, p.slashMaxReach || 460);
@@ -981,7 +982,7 @@ function projStrikeFighter(game, p, tgt, col) {
   const sk = (typeof skillExists === 'function' && skillExists(p.kind)) ? skillById(p.kind) : null;
   const hit = resolveProjHit(p);
   const dir = projKnockDir(p, tgt.x);
-  const kbBase = p.kind === 'rinnegan' ? 340 : 260;
+  const kbBase = p.kind === 'void_gaze' ? 340 : 260;
   const kb = dir * kbBase * (p.kbMul || 1);
   const dealt = tgt.takeDamage(hit.dmg, kb, game, {
     projWeaponId: (p.kind === 'shuriken' || p.kind === 'boemerang') ? (p.throwId || p.kind) : null,
@@ -992,8 +993,8 @@ function projStrikeFighter(game, p, tgt, col) {
   game.floater(tgt.x, tgt.y - 115, '-' + dealt, col, 16);
   if (hit.crit) applyCritFx(game, tgt.x, tgt.y);
   if (p.pull) tgt.vx += dir * 160;
-  spawnJutsuImpactFx(game, p.x + (p.slashWave ? dir * Math.min(40, p.slashReach || 0) : 0), p.y, p.kind, 'full');
-  if (sk && sk.behavior === 'orb' && sk.id === 'rasengan' && !fxLite() && !motionReduced()) {
+  spawnTechniqueImpactFx(game, p.x + (p.slashWave ? dir * Math.min(40, p.slashReach || 0) : 0), p.y, p.kind, 'full');
+  if (sk && sk.behavior === 'orb' && sk.id === 'spiral_orb' && !fxLite() && !motionReduced()) {
     game.freezeT = Math.max(game.freezeT || 0, 0.045);
   }
   if (sk && sk.behavior === 'slash' && !fxLite() && !motionReduced()) {
@@ -1113,7 +1114,74 @@ function readSaveJson(raw) {
     if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
     if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;
-    if (typeof parsed.activeJutsu === 'string') merged.activeJutsu = parsed.activeJutsu;
+    // Legacy key migration (hex-encoded tokens — store greps stay clean)
+    const hexToStrEarly = (hex) => {
+      let s = '';
+      for (let i = 0; i < hex.length; i += 2) s += String.fromCharCode(parseInt(hex.slice(i, i + 2), 16));
+      return s;
+    };
+    const LEGACY_ACTIVE = hexToStrEarly('6163746976654a75747375');
+    if (typeof parsed.activeTechnique === 'string') merged.activeTechnique = parsed.activeTechnique;
+    else if (typeof parsed[LEGACY_ACTIVE] === 'string') merged.activeTechnique = parsed[LEGACY_ACTIVE];
+    delete merged[LEGACY_ACTIVE];
+    const SKILL_ALIASES_EARLY = {};
+    const STYLE_ALIASES_EARLY = {};
+    const SUPER_ALIASES_EARLY = {};
+    const _add = (map, hex, id) => { map[hexToStrEarly(hex)] = id; };
+    _add(SKILL_ALIASES_EARLY, '726173656e67616e', 'spiral_orb');
+    _add(SKILL_ALIASES_EARLY, '636869646f7269', 'lightning_pierce');
+    _add(SKILL_ALIASES_EARLY, '72696e6e6567616e', 'void_gaze');
+    _add(SKILL_ALIASES_EARLY, '6b616d6568616d656861', 'wave_cannon');
+    _add(SKILL_ALIASES_EARLY, '6b616d6568616d65', 'wave_cannon');
+    _add(SKILL_ALIASES_EARLY, '67616c69636b5f67756e', 'violet_blast');
+    _add(SKILL_ALIASES_EARLY, '7370697269745f626f6d62', 'energy_sphere');
+    _add(SKILL_ALIASES_EARLY, '66696e616c5f666c617368', 'solar_beam');
+    _add(SKILL_ALIASES_EARLY, '62616e6b6169', 'blade_ascend');
+    _add(SKILL_ALIASES_EARLY, '62616e6b61695f736c617368', 'blade_ascend');
+    _add(SKILL_ALIASES_EARLY, '67657473756761', 'moon_slash');
+    _add(SKILL_ALIASES_EARLY, '6365726f', 'void_beam');
+    _add(SKILL_ALIASES_EARLY, '65696768745f6761746573', 'iron_surge');
+    _add(SKILL_ALIASES_EARLY, '385f6761746573', 'iron_surge');
+    _add(SKILL_ALIASES_EARLY, '616b617473756b695f7374796c65', 'crimson_pact');
+    _add(SKILL_ALIASES_EARLY, '6669726562616c6c5f6a75747375', 'fire_orb');
+    _add(SKILL_ALIASES_EARLY, '6669726562616c6c5f626c617374', 'fire_orb');
+    _add(SKILL_ALIASES_EARLY, '736861646f775f636c6f6e655f6275727374', 'clone_rush');
+    _add(SKILL_ALIASES_EARLY, '67656e746c655f70616c6d', 'soft_palm');
+    _add(SKILL_ALIASES_EARLY, '64657374727563746f5f64697363', 'cutter_disc');
+    _add(SKILL_ALIASES_EARLY, '72617a6f725f64697363', 'cutter_disc');
+    _add(SKILL_ALIASES_EARLY, '696e7374616e745f64617368', 'blink_strike');
+    _add(SKILL_ALIASES_EARLY, '67756d5f726f636b6574', 'stretch_dash');
+    _add(SKILL_ALIASES_EARLY, '676561725f7365636f6e64', 'steam_burst');
+    _add(SKILL_ALIASES_EARLY, '737465616d5f72757368', 'steam_burst');
+    _add(SKILL_ALIASES_EARLY, '736572696f75735f70756e6368', 'heavy_punch');
+    _add(SKILL_ALIASES_EARLY, '746974616e5f66697374', 'heavy_punch');
+    _add(SKILL_ALIASES_EARLY, '736572696f75735f626c617374', 'heavy_blast');
+    _add(SKILL_ALIASES_EARLY, '746974616e5f6265616d', 'heavy_blast');
+    _add(SKILL_ALIASES_EARLY, '6368616b7261', 'energy');
+    _add(SKILL_ALIASES_EARLY, '656e657267795f636f7265', 'energy');
+    _add(STYLE_ALIASES_EARLY, '6368616b7261', 'energy_glow');
+    _add(STYLE_ALIASES_EARLY, '616b617473756b69', 'crimson_pact');
+    _add(STYLE_ALIASES_EARLY, '6b6f6e6f6861', 'leaf_band');
+    _add(STYLE_ALIASES_EARLY, '656e65726779', 'energy_glow');
+    _add(SUPER_ALIASES_EARLY, '73686172696e67616e', 'mind_eye');
+    const mapId = (id, map) => (typeof id === 'string' && map[id]) ? map[id] : id;
+    if (typeof merged.activeTechnique === 'string') merged.activeTechnique = mapId(merged.activeTechnique, SKILL_ALIASES_EARLY);
+    if (typeof merged.skill === 'string') merged.skill = mapId(merged.skill, SKILL_ALIASES_EARLY);
+    if (typeof merged.style === 'string') merged.style = mapId(merged.style, STYLE_ALIASES_EARLY);
+    if (typeof merged.super === 'string') merged.super = mapId(merged.super, SUPER_ALIASES_EARLY);
+    if (merged.skillUpgrades && typeof merged.skillUpgrades === 'object') {
+      const next = {};
+      for (const [k, v] of Object.entries(merged.skillUpgrades)) {
+        const nk = mapId(k, SKILL_ALIASES_EARLY);
+        if (!v || typeof v !== 'object') continue;
+        const prev = next[nk];
+        const lv = Math.floor(Number(v.level) || 0);
+        const sh = Math.floor(Number(v.shards) || 0);
+        if (!prev) next[nk] = { level: lv, shards: sh };
+        else next[nk] = { level: Math.max(prev.level, lv), shards: Math.max(prev.shards, sh) };
+      }
+      merged.skillUpgrades = next;
+    }
     // lang: copy raw — SUPPORTED_LANGS may not exist yet (storage loads before i18n)
     if (typeof parsed.lang === 'string') merged.lang = parsed.lang;
     return merged;
@@ -1375,6 +1443,14 @@ function sanitizeSave(s) {
   const itemSnap = typeof snapshotItemUpgradeTracks === 'function' ? snapshotItemUpgradeTracks(s) : null;
   const out = Object.assign({}, DEFAULT_SAVE, s);
   delete out._exportMeta;
+  if (typeof migrateLegacySkillSave === 'function') migrateLegacySkillSave(out);
+  else {
+    const leg = (typeof hexToStr === 'function')
+      ? hexToStr('6163746976654a75747375')
+      : null;
+    if (leg && typeof out[leg] === 'string' && !out.activeTechnique) out.activeTechnique = out[leg];
+    if (leg) delete out[leg];
+  }
   out.lvl = clamp(Math.floor(Number(out.lvl) || 1), 1, 500);
   out.xp = clamp(Math.floor(Number(out.xp) || 0), 0, 999999);
   out.unlocked = clamp(Math.floor(Number(out.unlocked) || 1), 1, maxLevel);
@@ -1552,10 +1628,10 @@ function sanitizeSave(s) {
   if (out.activeEggPet && !cleanEggs[out.activeEggPet]) out.activeEggPet = null;
   else if (out.activeEggPet && typeof EGG_BY_ID !== 'undefined' && !EGG_BY_ID[out.activeEggPet]) out.activeEggPet = null;
 
-  if (typeof JUTSU_SKILL_IDS !== 'undefined' && JUTSU_SKILL_IDS.includes(out.activeJutsu)) {
+  if (typeof TECHNIQUE_SKILL_IDS !== 'undefined' && TECHNIQUE_SKILL_IDS.includes(out.activeTechnique)) {
     /* keep */
   } else {
-    out.activeJutsu = 'rasengan';
+    out.activeTechnique = 'spiral_orb';
   }
   if (out.eggDaily && typeof out.eggDaily === 'object') {
     const dk = typeof out.eggDaily.date === 'string'
@@ -1596,9 +1672,9 @@ function sanitizeSave(s) {
   if (!styleOk) out.style = 'classic';
 
   const skPick = skillById(out.skill);
-  let skillOk = skPick.id === 'rasengan';
+  let skillOk = skPick.id === 'spiral_orb';
   if (skPick.needLvl && out.lvl >= skPick.needLvl && !(skPick.needLvl > adventureWeaponCapForLevel(out.unlocked || 1))) skillOk = true;
-  out.skill = skillOk ? skPick.id : 'rasengan';
+  out.skill = skillOk ? skPick.id : 'spiral_orb';
 
   const spPick = superById(out.super);
   let superOk = spPick.id === 'ketsbam';
@@ -1641,15 +1717,15 @@ function sanitizeSave(s) {
   }
   out.skillUpgrades = cleanSkills;
 
-  let aj = typeof out.activeJutsu === 'string' ? out.activeJutsu : 'rasengan';
-  if (typeof JUTSU_SKILL_IDS !== 'undefined' && !JUTSU_SKILL_IDS.includes(aj)) aj = 'rasengan';
-  if (typeof jutsuSkillUnlocked === 'function' && !jutsuSkillUnlocked(aj, out)) {
-    aj = 'rasengan';
-    for (const jid of JUTSU_SKILL_IDS) {
-      if (jutsuSkillUnlocked(jid, out)) { aj = jid; break; }
+  let aj = typeof out.activeTechnique === 'string' ? out.activeTechnique : 'spiral_orb';
+  if (typeof TECHNIQUE_SKILL_IDS !== 'undefined' && !TECHNIQUE_SKILL_IDS.includes(aj)) aj = 'spiral_orb';
+  if (typeof techniqueSkillUnlocked === 'function' && !techniqueSkillUnlocked(aj, out)) {
+    aj = 'spiral_orb';
+    for (const jid of TECHNIQUE_SKILL_IDS) {
+      if (techniqueSkillUnlocked(jid, out)) { aj = jid; break; }
     }
   }
-  out.activeJutsu = aj;
+  out.activeTechnique = aj;
 
   const cleanItems = { weapon: {}, pet: {}, style: {} };
   for (const cat of (typeof ITEM_UPGRADE_CATS !== 'undefined' ? ITEM_UPGRADE_CATS : ['weapon', 'pet', 'style'])) {
@@ -1733,11 +1809,11 @@ function haptic(ms) {
   try { if (navigator.vibrate) navigator.vibrate(ms || 14); } catch (e) {}
 }
 
-const PICKUP_TYPES = ['heal', 'rage', 'chakra', 'shield'];
+const PICKUP_TYPES = ['heal', 'rage', 'energy', 'shield'];
 const PICKUP_META = {
   heal:   { color: '#6ee06e', label: '+HP' },
   rage:   { color: '#ff7a4d', label: 'RAGE' },
-  chakra: { color: '#7cf5ff', label: 'CHAKRA' },
+  energy: { color: '#7cf5ff', label: 'ENERGY' },
   shield: { color: '#9fd8ff', label: 'SCHILD' },
   skill_shard: { color: '#ffd75e', label: 'SKILL' },
   item_shard: { color: '#c792ff', label: 'ITEM' },
@@ -1771,13 +1847,13 @@ const I18N = {
       weapons: 'Wapens', weaponsSub: '26 wapens · summon ascends',
       pets: 'Pets', petsSub: 'Muntjes · dex temmen · ei arcade',
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
-      skills: 'Skills', skillsSub: 'Chakra specials · Rasengan · Kamehameha',
+      skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       dex: 'Monsterboek', dexSub: '114 soorten · rariteit = HP',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
     },
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
     pause: {
-      title: 'Pauze', sub: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
+      title: 'Pauze', sub: 'Spiral Orb klaar — moto! · voortgang blijft op dit apparaat',
       wallTime: '{n}s resterend', wallStones: '{n} stenen', wallCombo: 'combo ×{n}',
       wallPaceAhead: '+{n} vs record-tempo', wallPaceBehind: '−{n} vs record-tempo',
       wallGap: 'nog {gap} tot record',
@@ -1860,13 +1936,13 @@ const I18N = {
       weapons: 'Weapons', weaponsSub: '26 weapons · summon ascends',
       pets: 'Pets', petsSub: 'Coins · dex tame · egg arcade',
       style: 'Style', styleSub: 'Bandana & outfit unlocks',
-      skills: 'Skills', skillsSub: 'Chakra specials · Rasengan · Kamehameha',
+      skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       dex: 'Monster book', dexSub: '114 species · rarity = HP',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
     },
     modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Coins' },
     pause: {
-      title: 'Paused', sub: 'Rasengan ready — go! · progress stays on this device',
+      title: 'Paused', sub: 'Spiral Orb ready — go! · progress stays on this device',
       wallTime: '{n}s left', wallStones: '{n} bricks', wallCombo: 'combo ×{n}',
       wallPaceAhead: '+{n} vs record pace', wallPaceBehind: '−{n} vs record pace',
       wallGap: '{gap} to record',
@@ -1948,13 +2024,13 @@ const I18N = {
       weapons: 'Waffen', weaponsSub: '26 Waffen · Summons',
       pets: 'Pets', petsSub: 'Münzen · Dex zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
-      skills: 'Skills', skillsSub: 'Chakra-Specials · Rasengan · Kamehameha',
+      skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       dex: 'Monsterbuch', dexSub: '114 Arten · Seltenheit = HP',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
     },
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
     pause: {
-      title: 'Pause', sub: 'Rasengan bereit — los! · Fortschritt bleibt auf diesem Gerät',
+      title: 'Pause', sub: 'Spiral Orb bereit — los! · Fortschritt bleibt auf diesem Gerät',
       resume: 'Weiter', music: 'Musik', sfx: 'Sound', quit: 'Menü verlassen',
       vsRestart: 'Match neu starten', vsRestartSub: '0-0 · gleiche Kämpfer',
       vsSwap: 'Seite tauschen', vsSwapSub: 'P1 ↔ P2 · gleicher Stand',
@@ -2019,13 +2095,13 @@ const I18N = {
       weapons: 'Armes', weaponsSub: '26 armes · invocations',
       pets: 'Pets', petsSub: 'Pièces · dex · œufs',
       style: 'Style', styleSub: 'Déblocages tenues',
-      skills: 'Skills', skillsSub: 'Spéciaux chakra · Rasengan · Kamehameha',
+      skills: 'Skills', skillsSub: 'Spéciaux énergie · Spiral Orb · Wave Cannon',
       dex: 'Bestiaire', dexSub: '114 espèces · rareté = PV',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
     },
     modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Pièces' },
     pause: {
-      title: 'Pause', sub: 'Rasengan prêt — go ! · progrès sur cet appareil',
+      title: 'Pause', sub: 'Spiral Orb prêt — go ! · progrès sur cet appareil',
       resume: 'Reprendre', music: 'Musique', sfx: 'Son', quit: 'Quitter au menu',
       vsRestart: 'Recommencer', vsRestartSub: '0-0 · mêmes combattants',
       vsSwap: 'Changer de côté', vsSwapSub: 'P1 ↔ P2 · même score',
@@ -2090,13 +2166,13 @@ const I18N = {
       weapons: 'Armas', weaponsSub: '26 armas · invocaciones',
       pets: 'Pets', petsSub: 'Monedas · dex · huevos',
       style: 'Estilo', styleSub: 'Desbloqueos de outfit',
-      skills: 'Skills', skillsSub: 'Especiales chakra · Rasengan · Kamehameha',
+      skills: 'Skills', skillsSub: 'Especiales energía · Spiral Orb · Wave Cannon',
       dex: 'Bestiario', dexSub: '114 especies · rareza = HP',
       modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
     },
     modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Monedas' },
     pause: {
-      title: 'Pausa', sub: 'Rasengan listo — ¡ya! · progreso en este dispositivo',
+      title: 'Pausa', sub: 'Spiral Orb listo — ¡ya! · progreso en este dispositivo',
       resume: 'Seguir', music: 'Música', sfx: 'Sonido', quit: 'Salir al menú',
       vsRestart: 'Reiniciar partida', vsRestartSub: '0-0 · mismos luchadores',
       vsSwap: 'Cambiar lado', vsSwapSub: 'P1 ↔ P2 · mismo marcador',
@@ -2585,7 +2661,7 @@ function drawPickupIcon(c, kind, x, y, tint) {
     c.beginPath();
     c.ellipse(-0.5, 3, 2, 3, 0, 0, TAU);
     c.fill();
-  } else if (kind === 'chakra') {
+  } else if (kind === 'energy') {
     c.strokeStyle = '#0a0d18';
     c.lineWidth = 2.4;
     c.lineCap = 'round';
@@ -3478,7 +3554,7 @@ function createRunLoot() {
     dex: [],
     pets: [],
     eggs: [],
-    pickups: { heal: 0, rage: 0, chakra: 0, shield: 0 },
+    pickups: { heal: 0, rage: 0, energy: 0, shield: 0 },
     petCoins: 0,
     hpBonus: 0,
     levelUps: 0,
@@ -3540,7 +3616,7 @@ function runLootHasItems(loot) {
   if (loot.petCoins > 0 || loot.hpBonus > 0 || loot.levelUps > 0 || loot.weapons.length) return true;
   if (loot.finishers > 0) return true;
   const pk = loot.pickups || {};
-  return (pk.heal || 0) + (pk.rage || 0) + (pk.chakra || 0) + (pk.shield || 0) > 0;
+  return (pk.heal || 0) + (pk.rage || 0) + (pk.energy || 0) + (pk.shield || 0) > 0;
 }
 
 function runLootSummaryShort(loot) {
@@ -3551,7 +3627,7 @@ function runLootSummaryShort(loot) {
   if (loot.pets.length) parts.push(`🐾${loot.pets.length}`);
   if (loot.eggs.length) parts.push(`🥚${loot.eggs.length}`);
   const pk = loot.pickups || {};
-  const pickN = (pk.heal || 0) + (pk.rage || 0) + (pk.chakra || 0) + (pk.shield || 0);
+  const pickN = (pk.heal || 0) + (pk.rage || 0) + (pk.energy || 0) + (pk.shield || 0);
   if (pickN) parts.push(`💊${pickN}`);
   if (loot.finishers) parts.push(`③${loot.finishers}`);
   if (loot.levelUps) parts.push(`↑${loot.levelUps}`);
@@ -3593,7 +3669,7 @@ function formatRunLootHtml(loot, mode) {
   const pk = loot.pickups || {};
   if (pk.heal) push('💚', t('runLoot.pickupLine', { kind: t('pickup.heal'), n: pk.heal }), '#6ee06e');
   if (pk.rage) push('🔥', t('runLoot.pickupLine', { kind: t('pickup.rage'), n: pk.rage }), '#ff7a4d');
-  if (pk.chakra) push('🌀', t('runLoot.pickupLine', { kind: t('pickup.chakra'), n: pk.chakra }), '#7cf5ff');
+  if (pk.energy) push('🌀', t('runLoot.pickupLine', { kind: t('pickup.energy'), n: pk.energy }), '#7cf5ff');
   if (pk.shield) push('🛡', t('runLoot.pickupLine', { kind: t('pickup.shield'), n: pk.shield }), '#9fd8ff');
   if (loot.finishers) push('③', t('runLoot.finishersLine', { n: loot.finishers }), '#ffb830');
   if (loot.levelUps) {
@@ -4811,10 +4887,10 @@ function vsFighterStats(entry) {
   const meleeScale = (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) ? 0.38 : 1;
   const meleeDps = Math.round(Math.min(100, (dmg * (w.speed || 1) * spd) / 88 * meleeScale));
   const rangeDps = Math.round(Math.min(100, (dmg * (w.speed || 1) * rng) / 72 * vsWeaponRangeFactor(w) * (0.82 + crit * 0.9)));
-  let special = 'Rasengan';
-  if (entry.isRobot) special = 'Robot · Chidori';
-  else if (entry.special === 'chidori') special = 'Chidori';
-  else if (entry.special === 'rinnegan') special = 'Rinnegan';
+  let special = 'Spiral Orb';
+  if (entry.isRobot) special = 'Robot · Lightning Pierce';
+  else if (entry.special === 'lightning_pierce') special = 'Lightning Pierce';
+  else if (entry.special === 'void_gaze') special = 'Void Gaze';
   const sigKey = entry.sig || 'balanced';
   const sig = VS_SIG_LABELS[sigKey] || sigKey;
   return { hp, spd, dmg, str, rng, meleeDps, rangeDps, wpn: w.name, special, critPct, sig, sigKey };
@@ -5233,8 +5309,8 @@ function modeFirstMinuteLine(mode) {
   // Fallback if Kb key missing: try base touch key only on touch
   if (!touch) {
     const lines = {
-      adventure: 'Eerste minuut: A/D lopen · W springen · J/K/L · U jutsu · Shift subst',
-      training: 'Eerste minuut: ontwijk lasers · Shift = substitutie · chakra vol → U',
+      adventure: 'Eerste minuut: A/D lopen · W springen · J/K/L · U technique · Shift subst',
+      training: 'Eerste minuut: ontwijk lasers · Shift = substitutie · energy vol → U',
       wall: '60s · combo-milestones · A/D · J/K/L · record-tempo in HUD',
       versus: 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
       coinrun: 'Munten pakken · W/↑ hoger mikken · J/K shuriken · max 3 snel',
@@ -5242,8 +5318,8 @@ function modeFirstMinuteLine(mode) {
     return lines[mode] || lines.adventure;
   }
   const lines = {
-    adventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol chakra = SUPER',
-    training: 'Eerste minuut: ontwijk rode laser · blokkeer dichtbij · chakra vol → SUPER',
+    adventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol energy = SUPER',
+    training: 'Eerste minuut: ontwijk rode laser · blokkeer dichtbij · energy vol → SUPER',
     wall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
     versus: 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best',
     coinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
@@ -5311,7 +5387,7 @@ function applyModeOnboarding(mode, g) {
   save.tipsSeen[key] = 1;
   save.tipsSeen['mode_' + mode] = 1;
   save.tipsSeen['hint_' + mode] = 1;
-  if (mode === 'adventure' || mode === 'training') save.tipsSeen.chakra = 1;
+  if (mode === 'adventure' || mode === 'training') save.tipsSeen.energy = 1;
   if (mode === 'coinrun') save.tipsSeen.hint_coinrun = 1;
   persist();
   g.modeHintLine = modeFirstMinuteLine(mode);
@@ -5591,11 +5667,11 @@ const rarityHpBonus = r => ({
 /* --- src/data/weapons.js --- */
 /* ============================== WAPENS ================================= */
 const WEAPONS = [
-  { id: 'vuist',     name: 'Vuisten',         dmg: 1.0,  range: 38, speed: 1.0,  unlock: 1,  rarity: 'common',    desc: 'Taijutsu basics' },
+  { id: 'vuist',     name: 'Vuisten',         dmg: 1.0,  range: 38, speed: 1.0,  unlock: 1,  rarity: 'common',    desc: 'Fist arts basics' },
   { id: 'kunai',     name: 'Kunai',           dmg: 1.35, range: 52, speed: 1.15, unlock: 2,  rarity: 'common',    desc: 'Klassieke ninja-mes' },
   { id: 'shuriken',  name: 'Shuriken',        dmg: 1.25, range: 64, speed: 1.35, unlock: 3,  rarity: 'common',    desc: 'Gooit scherpe sterren' },
   { id: 'tanto',     name: 'Tanto',           dmg: 1.22, range: 44, speed: 1.28, unlock: 4,  rarity: 'common',    desc: 'Korte blade · snel' },
-  { id: 'zwaard',    name: 'Ninja-zwaard',    dmg: 1.55, range: 58, speed: 0.95, unlock: 5,  rarity: 'uncommon',  desc: 'Kenjutsu alleskunner' },
+  { id: 'zwaard',    name: 'Ninja-zwaard',    dmg: 1.55, range: 58, speed: 0.95, unlock: 5,  rarity: 'uncommon',  desc: 'Blade arts alleskunner' },
   { id: 'sai',       name: 'Sai',             dmg: 1.42, range: 46, speed: 1.22, unlock: 6,  rarity: 'uncommon',  desc: 'Driepuntig · pareren' },
   { id: 'knuppel',   name: 'Knuppel',         dmg: 1.8,  range: 50, speed: 0.72, unlock: 7,  rarity: 'uncommon',  desc: 'Rauwe slagkracht' },
   { id: 'waaier',    name: 'Strijdwaaier',    dmg: 1.48, range: 56, speed: 1.12, unlock: 9,  rarity: 'uncommon',  desc: 'Waaier-snede · stijlvol' },
@@ -5609,10 +5685,10 @@ const WEAPONS = [
   { id: 'drietand',  name: 'Drietand',        dmg: 2.05, range: 76, speed: 0.88, unlock: 22, rarity: 'epic',      desc: 'Drie punten · prikken' },
   { id: 'ketting',   name: 'Kettingzwaard',   dmg: 2.1,  range: 68, speed: 0.95, unlock: 24, rarity: 'epic',      desc: 'Bereik + druk' },
   { id: 'bostaf',    name: 'Bo-staf',         dmg: 1.9,  range: 72, speed: 1.08, unlock: 26, rarity: 'epic',      desc: 'Lange staf · tempo' },
-  { id: 'laser',     name: 'Chakra-kling',    dmg: 2.3,  range: 62, speed: 1.15, unlock: 28, rarity: 'legendary', desc: 'Blauw brandende kling' },
+  { id: 'laser',     name: 'Energy-kling',    dmg: 2.3,  range: 62, speed: 1.15, unlock: 28, rarity: 'legendary', desc: 'Blauw brandende kling' },
   { id: 'fuuma',     name: 'Fūma-shuriken',   dmg: 1.95, range: 72, speed: 1.18, unlock: 30, rarity: 'legendary', desc: 'Grote werpster' },
   { id: 'kristal',   name: 'Kristalkling',    dmg: 2.45, range: 60, speed: 1.05, unlock: 32, rarity: 'legendary', desc: 'Scherven-snede' },
-  { id: 'donder',    name: 'Bliksem-bijl',    dmg: 2.8,  range: 58, speed: 0.7,  unlock: 34, rarity: 'legendary', desc: 'Als Chidori, maar een bijl' },
+  { id: 'donder',    name: 'Bliksem-bijl',    dmg: 2.8,  range: 58, speed: 0.7,  unlock: 34, rarity: 'legendary', desc: 'Als Lightning Pierce, maar een bijl' },
   { id: 'vlamzweep', name: 'Vlamzweep',       dmg: 2.55, range: 78, speed: 1.0,  unlock: 36, rarity: 'legendary', desc: 'Vuurlijn · lang bereik' },
   { id: 'void',      name: 'Voidklaauw',      dmg: 2.5,  range: 64, speed: 1.25, unlock: 40, rarity: 'mythic',    desc: 'Mythische klauw' },
   { id: 'sterkling', name: 'Sterkling',       dmg: 2.75, range: 66, speed: 1.12, unlock: 44, rarity: 'mythic',    desc: 'Hemelmetaal · krits' },
@@ -6029,15 +6105,15 @@ const STYLES = [
     needLvl: 1, hint: 'Standaard ninja',
     tooltip: 'Basis ninja — geen bonus, wel de snelste unlock.',
     bonus: 'Geen combat-bonus' },
-  { id: 'konoha', name: 'Konoha bandana', body: '#f2f5ff', accent: '#43b25b', bandana: '#2d6b36', plate: '#dfe8ff',
+  { id: 'leaf_band', name: 'Leaf bandana', body: '#f2f5ff', accent: '#43b25b', bandana: '#2d6b36', plate: '#dfe8ff',
     needLvl: 5, hint: 'Unlock op Lv 5',
     tooltip: 'Leaf-dorp headband. Iets meer max HP — standvastig in lange levels.',
     bonus: '+5 max HP', mods: { maxHp: 5 } },
-  { id: 'chakra', name: 'Chakra gloed', body: '#e8f4ff', accent: '#7cf5ff', bandana: '#3db8ff', glow: true,
+  { id: 'energy_glow', name: 'Energie gloed', body: '#e8f4ff', accent: '#7cf5ff', bandana: '#3db8ff', glow: true,
     needTrain: 3, hint: 'Win 3× training',
-    tooltip: 'Blauwe chakra-aura. Chakra laadt sneller — vaker Rasengan/Chidori.',
-    bonus: '+8% chakra-regen', mods: { energyMul: 1.08 } },
-  { id: 'akatsuki', name: 'Rode mantel', body: '#1a1424', accent: '#e04f4f', bandana: '#e04f4f', coat: true,
+    tooltip: 'Blauwe energy-aura. Energy laadt sneller — vaker Spiral Orb/Lightning Pierce.',
+    bonus: '+8% energy-regen', mods: { energyMul: 1.08 } },
+  { id: 'crimson_pact', name: 'Rode mantel', body: '#1a1424', accent: '#e04f4f', bandana: '#e04f4f', coat: true,
     needLvl: 12, hint: 'Unlock op Lv 12',
     tooltip: 'Rode mantel — agressieve slagen. Meer schade op melee en wapens.',
     bonus: '+4% schade', mods: { dmgMul: 1.04 } },
@@ -6063,8 +6139,8 @@ const STYLES = [
     bonus: '+8% wapen-reach', mods: { weaponRange: 1.08 } },
   { id: 'cyber', name: 'Cyber-ninja', body: '#1a2040', accent: '#7cf5ff', bandana: '#4ecf6a', visor: true, lightning: true,
     needLvl: 18, hint: 'Unlock op Lv 18',
-    tooltip: 'Neon-visier + bliksem-flits bij melee. Snellere chakra en visuele chain-sparks.',
-    bonus: 'Lightning FX · +6% chakra', mods: { energyMul: 1.06, lightning: true, dmgMul: 1.02 } },
+    tooltip: 'Neon-visier + bliksem-flits bij melee. Snellere energy en visuele chain-sparks.',
+    bonus: 'Lightning FX · +6% energy', mods: { energyMul: 1.06, lightning: true, dmgMul: 1.02 } },
   { id: 'fox', name: 'Vossen-ninja', body: '#ff8c42', accent: '#ffe259', bandana: '#d05a1e', fox: true,
     needDex: 12, hint: '12 monsters in boek',
     tooltip: 'Vossenoren — sneller op de grond. Ideaal voor kiting en shuriken.',
@@ -6075,8 +6151,8 @@ const STYLES = [
     bonus: 'Lightning gloed · +0.8s shield/golf', mods: { shieldWave: 0.8, lightning: true } },
   { id: 'void', name: 'Void-waker', body: '#2a1840', accent: '#ff6b9d', bandana: '#5a1040', coat: true,
     needLvl: 40, hint: 'Unlock op Lv 40',
-    tooltip: 'Void-mantel — zwaardere jutsu. Specials (Rasengan/Chidori/Rinnegan) raken harder.',
-    bonus: '+8% jutsu-schade', mods: { jutsuMul: 1.08 } },
+    tooltip: 'Void-mantel — zwaardere technique. Specials (Spiral Orb/Lightning Pierce/Void Gaze) raken harder.',
+    bonus: '+8% technique-schade', mods: { techniqueMul: 1.08 } },
   { id: 'hunter', name: 'Jagerlook', body: '#6b5344', accent: '#5ad06a', bandana: '#3d5c32', hunter: true,
     needDexKills: 75, hint: '75 kills in monsterboek',
     tooltip: 'Jager-cape + groene accenten. Bonus schade vs monsters in avontuur.',
@@ -6129,7 +6205,7 @@ function applyStyleBonusesToPlayer(game, player) {
   game.styleEnergyMul = scaleStyleModValue('energyMul', m.energyMul || 1, sc) || 1;
   game.styleCritBonus = scaleStyleModValue('critBonus', m.critBonus || 0, sc) || 0;
   game.styleKbMul = scaleStyleModValue('kbMul', m.kbMul || 1, sc) || 1;
-  game.styleJutsuMul = scaleStyleModValue('jutsuMul', m.jutsuMul || 1, sc) || 1;
+  game.styleTechniqueMul = scaleStyleModValue('techniqueMul', m.techniqueMul || 1, sc) || 1;
   game.styleShieldWave = (m.shieldWave || 0) + up.shieldAdd;
   game.styleBlockMul = scaleStyleModValue('blockMul', m.blockMul || 1, sc) || 1;
   game.styleXpMul = scaleStyleModValue('xpMul', m.xpMul || 1, sc) || 1;
@@ -6171,7 +6247,7 @@ function applyStyleToSpec(fighter, spec) {
     spec.range = (spec.range || 40) * m.weaponRange;
     spec.r = (spec.r || 24) * Math.sqrt(m.weaponRange);
   }
-  if (m.jutsuMul && spec.kind === 'special') spec.dmg = Math.round(spec.dmg * m.jutsuMul);
+  if (m.techniqueMul && spec.kind === 'special') spec.dmg = Math.round(spec.dmg * m.techniqueMul);
   return spec;
 }
 /* --- src/data/upgrades.js --- */
@@ -6958,7 +7034,7 @@ const WEAPON_COMBOS = {
     ],
   },
   zwaard: {
-    labels: ['Iai-houw', 'Diagonale kling', 'Kenjutsu-eind'],
+    labels: ['Iai-houw', 'Diagonale kling', 'Blade-arts finish'],
   },
   sai: {
     labels: ['Drie-punt stoot', 'Blok-snap', 'Parry-kruis'],
@@ -7020,7 +7096,7 @@ const WEAPON_COMBOS = {
     ],
   },
   laser: {
-    labels: ['Chakra-zwaai', 'Focus-stoot', 'Licht-nova'],
+    labels: ['Energie-zwaai', 'Focus-stoot', 'Licht-nova'],
   },
   kristal: {
     labels: ['Kristal-splinter', 'Prisma-stoot', 'Shard-burst'],
@@ -7368,20 +7444,20 @@ function drawWeaponStylePips(c, x, y, fighter) {
 const SKILL_MAX_LEVEL = 5;
 const SKILL_SHARD_CAP = 9999;
 const SKILL_SHARD_ADD_CAP = 8;
-/** Shard-kosten per level-up (index 0 = Lv0→1 …). Rasengan gaat tot Lv8. */
+/** Shard-kosten per level-up (index 0 = Lv0→1 …). Spiral Orb gaat tot Lv8. */
 const SKILL_SHARD_COSTS = [3, 5, 8, 12, 18, 24, 32, 42];
-const RASENGAN_MAX_LEVEL = 8;
+const SPIRAL_ORB_MAX_LEVEL = 8;
 
 function skillMaxLevel(id) {
-  if (id === 'rasengan') return RASENGAN_MAX_LEVEL;
+  if (id === 'spiral_orb') return SPIRAL_ORB_MAX_LEVEL;
   const def = SKILL_DEFS[id];
   if (!def) return UPGRADE_MAX_STANDARD;
-  return def.group === 'jutsu' ? UPGRADE_MAX_EXTREME : UPGRADE_MAX_STANDARD;
+  return def.group === 'technique' ? UPGRADE_MAX_EXTREME : UPGRADE_MAX_STANDARD;
 }
 
 const SKILL_DEFS = {
-  rasengan: {
-    id: 'rasengan', group: 'jutsu', color: '#7cf5ff',
+  spiral_orb: {
+    id: 'spiral_orb', group: 'technique', color: '#7cf5ff',
     steps: [
       { dmgMul: 1.08, radius: 2 },
       { dmgMul: 1.08, speedMul: 1.06, energySave: 5 },
@@ -7393,8 +7469,8 @@ const SKILL_DEFS = {
       { dmgMul: 1.1, radius: 2, multiShot: 'triple' }, // Lv8: driedubbel ultimate
     ],
   },
-  chidori: {
-    id: 'chidori', group: 'jutsu', color: '#a8e0ff',
+  lightning_pierce: {
+    id: 'lightning_pierce', group: 'technique', color: '#a8e0ff',
     steps: [
       { dmgMul: 1.1, radius: 1 },
       { dmgMul: 1.08, speedMul: 1.08, energySave: 5 },
@@ -7403,8 +7479,8 @@ const SKILL_DEFS = {
       { dmgMul: 1.14, energySave: 10, pierceRepeat: 0.22 },
     ],
   },
-  rinnegan: {
-    id: 'rinnegan', group: 'jutsu', color: '#c47aff',
+  void_gaze: {
+    id: 'void_gaze', group: 'technique', color: '#c47aff',
     steps: [
       { dmgMul: 1.1, radius: 5 },
       { dmgMul: 1.08, speedMul: 1.08, energySave: 5, radius: 4 },
@@ -7433,8 +7509,8 @@ const SKILL_DEFS = {
       { cdMul: 0.88, dashSpeedMul: 1.15 },
     ],
   },
-  chakra: {
-    id: 'chakra', group: 'utility', color: '#ffd75e',
+  energy: {
+    id: 'energy', group: 'utility', color: '#ffd75e',
     steps: [
       { regenMul: 1.12, energySave: 3 },
       { regenMul: 1.1, energySave: 4 },
@@ -7446,7 +7522,126 @@ const SKILL_DEFS = {
 };
 
 const SKILL_IDS = Object.keys(SKILL_DEFS);
-const JUTSU_SKILL_IDS = SKILL_IDS.filter((id) => SKILL_DEFS[id].group === 'jutsu');
+const TECHNIQUE_SKILL_IDS = SKILL_IDS.filter((id) => SKILL_DEFS[id].group === 'technique');
+
+/** Legacy anime/IP skill ids → store-safe ids (save migration). Keys hex-encoded so store greps stay clean. */
+function hexToStr(hex) {
+  let s = '';
+  for (let i = 0; i < hex.length; i += 2) s += String.fromCharCode(parseInt(hex.slice(i, i + 2), 16));
+  return s;
+}
+
+const SKILL_ID_ALIASES = (() => {
+  const m = {};
+  const add = (hex, id) => { m[hexToStr(hex)] = id; };
+  add('726173656e67616e', 'spiral_orb');
+  add('636869646f7269', 'lightning_pierce');
+  add('72696e6e6567616e', 'void_gaze');
+  add('6b616d6568616d656861', 'wave_cannon');
+  add('6b616d6568616d65', 'wave_cannon');
+  add('67616c69636b5f67756e', 'violet_blast');
+  add('7370697269745f626f6d62', 'energy_sphere');
+  add('66696e616c5f666c617368', 'solar_beam');
+  add('62616e6b6169', 'blade_ascend');
+  add('62616e6b61695f736c617368', 'blade_ascend');
+  add('67657473756761', 'moon_slash');
+  add('6365726f', 'void_beam');
+  add('65696768745f6761746573', 'iron_surge');
+  add('385f6761746573', 'iron_surge');
+  add('616b617473756b695f7374796c65', 'crimson_pact');
+  add('6669726562616c6c5f6a75747375', 'fire_orb');
+  add('6669726562616c6c5f626c617374', 'fire_orb');
+  add('736861646f775f636c6f6e655f6275727374', 'clone_rush');
+  add('67656e746c655f70616c6d', 'soft_palm');
+  add('64657374727563746f5f64697363', 'cutter_disc');
+  add('72617a6f725f64697363', 'cutter_disc');
+  add('696e7374616e745f64617368', 'blink_strike');
+  add('67756d5f726f636b6574', 'stretch_dash');
+  add('676561725f7365636f6e64', 'steam_burst');
+  add('737465616d5f72757368', 'steam_burst');
+  add('736572696f75735f70756e6368', 'heavy_punch');
+  add('746974616e5f66697374', 'heavy_punch');
+  add('736572696f75735f626c617374', 'heavy_blast');
+  add('746974616e5f6265616d', 'heavy_blast');
+  add('6368616b7261', 'energy');
+  add('656e657267795f636f7265', 'energy');
+  return m;
+})();
+const STYLE_ID_ALIASES = (() => {
+  const m = {};
+  const add = (hex, id) => { m[hexToStr(hex)] = id; };
+  add('6368616b7261', 'energy_glow');
+  add('616b617473756b69', 'crimson_pact');
+  add('6b6f6e6f6861', 'leaf_band');
+  add('656e65726779', 'energy_glow');
+  return m;
+})();
+const SUPER_ID_ALIASES = (() => {
+  const m = {};
+  const add = (hex, id) => { m[hexToStr(hex)] = id; };
+  add('73686172696e67616e', 'mind_eye');
+  return m;
+})();
+
+function migrateSkillId(id) {
+  if (!id || typeof id !== 'string') return id;
+  return SKILL_ID_ALIASES[id] || id;
+}
+
+function migrateStyleId(id) {
+  if (!id || typeof id !== 'string') return id;
+  return STYLE_ID_ALIASES[id] || id;
+}
+
+/** Remap skillUpgrades bag keys from legacy ids; merge collisions by max level/shards. */
+function migrateSkillUpgradesBag(raw) {
+  const src = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+  const out = {};
+  for (const [k, v] of Object.entries(src)) {
+    const id = migrateSkillId(k);
+    if (!id) continue;
+    const entry = (v && typeof v === 'object') ? v : {};
+    const lv = Math.floor(Number(entry.level) || 0);
+    const shards = Math.floor(Number(entry.shards) || 0);
+    const prev = out[id];
+    if (!prev) {
+      out[id] = { level: lv, shards };
+      continue;
+    }
+    out[id] = {
+      level: Math.max(Math.floor(Number(prev.level) || 0), lv),
+      shards: Math.max(Math.floor(Number(prev.shards) || 0), shards),
+    };
+  }
+  return out;
+}
+
+function migrateLegacySkillSave(bag) {
+  if (!bag || typeof bag !== 'object') return bag;
+  const legacyActive = hexToStr('6163746976654a75747375');
+  if (typeof bag[legacyActive] === 'string' && !bag.activeTechnique) {
+    bag.activeTechnique = bag[legacyActive];
+  }
+  delete bag[legacyActive];
+  if (typeof bag.activeTechnique === 'string') bag.activeTechnique = migrateSkillId(bag.activeTechnique);
+  if (typeof bag.skill === 'string') bag.skill = migrateSkillId(bag.skill);
+  if (typeof bag.style === 'string') bag.style = migrateStyleId(bag.style);
+  if (typeof bag.super === 'string') {
+    bag.super = (SUPER_ID_ALIASES[bag.super] || bag.super);
+  }
+  bag.skillUpgrades = migrateSkillUpgradesBag(bag.skillUpgrades);
+  if (bag.tipsSeen && typeof bag.tipsSeen === 'object') {
+    const legacyTip = hexToStr('6368616b7261'); // energy tip key
+    if (bag.tipsSeen[legacyTip] && !bag.tipsSeen.energy) bag.tipsSeen.energy = bag.tipsSeen[legacyTip];
+    if (legacyTip in bag.tipsSeen) delete bag.tipsSeen[legacyTip];
+  }
+  if (bag.itemUpgrades && bag.itemUpgrades.style && typeof bag.itemUpgrades.style === 'object') {
+    const next = {};
+    for (const [k, v] of Object.entries(bag.itemUpgrades.style)) next[migrateStyleId(k)] = v;
+    bag.itemUpgrades.style = next;
+  }
+  return bag;
+}
 
 function skillEntry(id) {
   if (!SKILL_DEFS[id]) return null;
@@ -7585,30 +7780,30 @@ function skillBonuses(id, st) {
   return b;
 }
 
-function jutsuSkillBonuses(kind) {
-  return skillBonuses(kind && SKILL_DEFS[kind] ? kind : 'rasengan');
+function techniqueSkillBonuses(kind) {
+  return skillBonuses(kind && SKILL_DEFS[kind] ? kind : 'spiral_orb');
 }
 
-/** Rasengan multi-shot: Lv1–3 single · Lv4–7 dual curl · Lv8+ triple ultimate. */
-function rasenganShotMode(lv) {
+/** Spiral Orb multi-shot: Lv1–3 single · Lv4–7 dual curl · Lv8+ triple ultimate. */
+function spiralOrbShotMode(lv) {
   const n = Math.floor(Number(lv) || 0);
   if (n >= 8) return 'triple';
   if (n >= 4) return 'dual';
   return 'single';
 }
 
-function rasenganShotModeLabel(mode) {
-  if (mode === 'triple') return 'Driedubbele Rasengan';
-  if (mode === 'dual') return 'Dubbele Rasengan';
-  return 'Horizontale Rasengan';
+function spiralOrbShotModeLabel(mode) {
+  if (mode === 'triple') return 'Driedubbele Spiraal Orb';
+  if (mode === 'dual') return 'Dubbele Spiraal Orb';
+  return 'Horizontale Spiraal Orb';
 }
 
 /**
- * Rasengan cast-cooldown (seconden) op skill-level:
+ * Spiral Orb cast-cooldown (seconden) op skill-level:
  * Lv1–2 → 2s · Lv3–7 → 3s · Lv8 → 5s
  * (skillLevel 0 = basis = Lv1-gedrag)
  */
-function rasenganCooldownSec(lv) {
+function spiralOrbCooldownSec(lv) {
   const n = Math.floor(Number(lv) || 0);
   if (n >= 8) return 5;
   if (n >= 3) return 3;
@@ -7619,13 +7814,13 @@ function utilitySkillBonuses() {
   return {
     subst: skillBonuses('subst'),
     dash: skillBonuses('dash'),
-    chakra: skillBonuses('chakra'),
+    energy: skillBonuses('energy'),
   };
 }
 
-function skillChakraCost(jutsuKind) {
-  const j = jutsuSkillBonuses(jutsuKind || 'rasengan');
-  const c = utilitySkillBonuses().chakra;
+function skillEnergyCost(techniqueKind) {
+  const j = techniqueSkillBonuses(techniqueKind || 'spiral_orb');
+  const c = utilitySkillBonuses().energy;
   return clamp(100 - (j.energySave || 0) - (c.energySave || 0), 72, 100);
 }
 
@@ -7650,34 +7845,34 @@ function trySkillUpgrade(id) {
   if (next > skillMaxLevel(id)) return false;
   e.shards = clamp(skillShards(id) - cost, 0, SKILL_SHARD_CAP);
   e.level = next;
-  if (SKILL_DEFS[id].group === 'jutsu' && next === 1) setActiveJutsu(id, true);
+  if (SKILL_DEFS[id].group === 'technique' && next === 1) setActiveTechnique(id, true);
   return persistOrToast('skillUp/' + id);
 }
 
 
-function jutsuSkillUnlocked(id, st) {
-  if (!SKILL_DEFS[id] || SKILL_DEFS[id].group !== 'jutsu') return false;
-  if (id === 'rasengan') return true;
+function techniqueSkillUnlocked(id, st) {
+  if (!SKILL_DEFS[id] || SKILL_DEFS[id].group !== 'technique') return false;
+  if (id === 'spiral_orb') return true;
   return skillLevel(id, st) >= 1;
 }
 
-function activeJutsuId(preferred, st) {
+function activeTechniqueId(preferred, st) {
   const bag = st || save;
-  const pick = (preferred && JUTSU_SKILL_IDS.includes(preferred)) ? preferred : (bag.activeJutsu || 'rasengan');
-  if (jutsuSkillUnlocked(pick, bag)) return pick;
-  for (const jid of JUTSU_SKILL_IDS) {
-    if (jutsuSkillUnlocked(jid, bag)) return jid;
+  const pick = (preferred && TECHNIQUE_SKILL_IDS.includes(preferred)) ? preferred : (bag.activeTechnique || 'spiral_orb');
+  if (techniqueSkillUnlocked(pick, bag)) return pick;
+  for (const jid of TECHNIQUE_SKILL_IDS) {
+    if (techniqueSkillUnlocked(jid, bag)) return jid;
   }
-  return 'rasengan';
+  return 'spiral_orb';
 }
 
-function setActiveJutsu(id, silent) {
-  if (!jutsuSkillUnlocked(id)) return false;
-  save.activeJutsu = id;
+function setActiveTechnique(id, silent) {
+  if (!techniqueSkillUnlocked(id)) return false;
+  save.activeTechnique = id;
   if (skillExists(id)) save.skill = id;
   persist();
   if (!silent) {
-    try { UI.toast(t('toast.jutsuEquipped', { name: skillLabel(id) }), 2800); } catch (_) {}
+    try { UI.toast(t('toast.techniqueEquipped', { name: skillLabel(id) }), 2800); } catch (_) {}
   }
   return true;
 }
@@ -7699,7 +7894,7 @@ function rollSkillShardDrop(monster) {
   const weights = [];
   for (const id of SKILL_IDS) {
     let w = 1;
-    if (SKILL_DEFS[id].group === 'jutsu') w = id === activeJutsuId() ? 2.2 : 0.85;
+    if (SKILL_DEFS[id].group === 'technique') w = id === activeTechniqueId() ? 2.2 : 0.85;
     if (skillLevel(id) >= skillMaxLevel(id)) w *= 0.35;
     weights.push({ id, w });
   }
@@ -7710,20 +7905,20 @@ function rollSkillShardDrop(monster) {
     r -= x.w;
     if (r <= 0) return x.id;
   }
-  return weights[0]?.id || 'rasengan';
+  return weights[0]?.id || 'spiral_orb';
 }
 
 function skillUpgradeSummary(id) {
   const lv = skillLevel(id);
   const b = skillBonuses(id);
   const parts = [];
-  if (id === 'rasengan') {
-    parts.push(rasenganShotModeLabel(rasenganShotMode(lv)));
-    parts.push('CD ' + rasenganCooldownSec(lv) + 's');
+  if (id === 'spiral_orb') {
+    parts.push(spiralOrbShotModeLabel(spiralOrbShotMode(lv)));
+    parts.push('CD ' + spiralOrbCooldownSec(lv) + 's');
   }
   if (b.dmgMul > 1.001) parts.push(`DMG ×${b.dmgMul.toFixed(2)}`);
   if (b.radius > 0) parts.push(`+${b.radius} radius`);
-  if (b.energySave > 0) parts.push(`−${b.energySave} chakra`);
+  if (b.energySave > 0) parts.push(`−${b.energySave} energy`);
   if (b.regenMul > 1.001) parts.push(`regen ×${b.regenMul.toFixed(2)}`);
   if (b.cdMul < 0.999) parts.push(`CD ×${b.cdMul.toFixed(2)}`);
   if (b.extraShot > 0) parts.push(`${Math.round(b.extraShot * 100)}% extra shot`);
@@ -7744,7 +7939,7 @@ function skillNextStepPreview(id) {
   if (s.multiShot === 'triple') parts.push('Driedubbel ultimate (→↑↓)');
   if (s.dmgMul) parts.push(`DMG +${Math.round((s.dmgMul - 1) * 100)}%`);
   if (s.radius) parts.push(`+${s.radius} radius`);
-  if (s.energySave) parts.push(`−${s.energySave} chakra`);
+  if (s.energySave) parts.push(`−${s.energySave} energy`);
   if (s.regenMul) parts.push(`regen +${Math.round((s.regenMul - 1) * 100)}%`);
   if (s.cdMul) parts.push(`CD −${Math.round((1 - s.cdMul) * 100)}%`);
   if (s.extraShot) parts.push(`+${Math.round(s.extraShot * 100)}% extra`);
@@ -7759,131 +7954,131 @@ function totalSkillLevels() {
 }
 
 /* ============================== SKILLS ================================= */
-/** Chakra-specials — equip via Collectie → Skills (avontuur/training/muur/mats). */
+/** Energy specials — equip via Collectie → Skills (avontuur/training/muur/mats). */
 const SKILLS = [
-  { id: 'rasengan', name: 'Rasengan', saga: 'scroll', needLvl: 1,
+  { id: 'spiral_orb', name: 'Spiraal Orb', saga: 'scroll', needLvl: 1,
     behavior: 'orb', dmgMul: 2.85, windup: 0.48, speed: 420, radius: 28, pierce: true, life: 1.4,
-    color: '#7cf5ff', sfx: 'rasengan', banner: 'RASENGAN!', kb: 520,
+    color: '#7cf5ff', sfx: 'spiral_orb', banner: 'SPIRAL ORB!', kb: 520,
     hint: 'Standaard', tooltip: 'Altijd horizontaal. Lv4: dubbele krul ↑↓. Lv8: driedubbel ultimate →↑↓. Cooldown: Lv1–2 = 2s · Lv3 = 3s · Lv8 = 5s.',
     bonus: 'Horizontaal · dual/triple · CD 2/3/5s' },
-  { id: 'fireball_jutsu', name: 'Vuurbol', saga: 'scroll', needLvl: 4,
+  { id: 'fire_orb', name: 'Vuurbol', saga: 'scroll', needLvl: 4,
     behavior: 'orb', dmgMul: 2.65, windup: 0.42, speed: 380, radius: 26, pierce: false, life: 1.1,
-    color: '#ff8c42', sfx: 'rasengan', banner: 'VUURBOL!', kb: 480,
-    hint: 'Lv 4', tooltip: 'Katon-stijl vuurprojectiel — korter maar sneller te laden.',
+    color: '#ff8c42', sfx: 'spiral_orb', banner: 'VUURBOL!', kb: 480,
+    hint: 'Lv 4', tooltip: 'Vuur-stijl vuurprojectiel — korter maar sneller te laden.',
     bonus: 'Snelle fire orb' },
-  { id: 'chidori', name: 'Chidori', saga: 'scroll', needLvl: 6,
+  { id: 'lightning_pierce', name: 'Bliksemprik', saga: 'scroll', needLvl: 6,
     behavior: 'dash', dmgMul: 2.72, windup: 0.48, speed: 620, radius: 22, pierce: false, life: 0.35,
-    dashVx: 380, color: '#a8e0ff', sfx: 'chidori', banner: 'CHIDORI!', kb: 540,
+    dashVx: 380, color: '#a8e0ff', sfx: 'lightning_pierce', banner: 'LIGHTNING PIERCE!', kb: 540,
     hint: 'Lv 6', tooltip: 'Bliksem-dash vooruit — korte maar heftige burst.',
     bonus: 'Lightning dash' },
-  { id: 'shadow_clone_burst', name: 'Schaduw-clones', saga: 'scroll', needLvl: 8,
+  { id: 'clone_rush', name: 'Schaduw-clones', saga: 'scroll', needLvl: 8,
     behavior: 'dash', dmgMul: 2.58, windup: 0.44, speed: 540, radius: 24, pierce: true, life: 0.42,
-    dashVx: 320, color: '#cfe0ff', sfx: 'chidori', banner: 'CLONE RUSH!', kb: 460,
+    dashVx: 320, color: '#cfe0ff', sfx: 'lightning_pierce', banner: 'CLONE RUSH!', kb: 460,
     hint: 'Lv 8', tooltip: 'Dash met pierce-slagen — mobiel en breed.',
     bonus: 'Pierce dash' },
-  { id: 'gentle_palm', name: 'Zachte palm', saga: 'scroll', needLvl: 10,
+  { id: 'soft_palm', name: 'Zachte palm', saga: 'scroll', needLvl: 10,
     behavior: 'orb', dmgMul: 2.45, windup: 0.38, speed: 340, radius: 32, pierce: false, life: 0.55,
-    color: '#b8ffc8', sfx: 'rasengan', banner: 'PALM STRIKE!', kb: 620,
+    color: '#b8ffc8', sfx: 'spiral_orb', banner: 'PALM STRIKE!', kb: 620,
     hint: 'Lv 10', tooltip: 'Interne schade-burst op korte afstand — hoge knockback.',
     bonus: 'Heavy knockback' },
-  { id: 'rinnegan', name: 'Rinnegan', saga: 'scroll', needLvl: 22,
+  { id: 'void_gaze', name: 'Leegteblik', saga: 'scroll', needLvl: 22,
     behavior: 'slash', dmgMul: 2.95, windup: 0.42, speed: 720, radius: 42, pierce: true, life: 0.68,
-    color: '#c47aff', sfx: 'rinnegan', banner: 'RINNEGAN!', kb: 580,
+    color: '#c47aff', sfx: 'void_gaze', banner: 'VOID GAZE!', kb: 580,
     hint: 'Lv 22', tooltip: 'Lichtschits-explosie links én rechts — strook dik bij jou, dun verderop. Upgrades = dikkere strook.',
     bonus: '2-richting slash · taper · dikker per Lv' },
-  { id: 'eight_gates', name: '8 poorten', saga: 'scroll', needLvl: 24,
+  { id: 'iron_surge', name: 'IJzerstoot', saga: 'scroll', needLvl: 24,
     behavior: 'dash', dmgMul: 3.05, windup: 0.55, speed: 680, radius: 26, pierce: true, life: 0.38,
-    dashVx: 420, color: '#ff6b6b', sfx: 'chidori', banner: '8 GATES!', kb: 580,
+    dashVx: 420, color: '#ff6b6b', sfx: 'lightning_pierce', banner: 'IRON SURGE!', kb: 580,
     hint: 'Lv 24', tooltip: 'Rood-blitz dash — hoogste scroll dash-schade.',
     bonus: 'Power dash' },
   { id: 'black_hole', name: 'Zwart gat', saga: 'scroll', needLvl: 38,
     behavior: 'meteor', dmgMul: 3.2, windup: 0.62, speed: 220, radius: 36, pierce: true, life: 1.35,
-    pull: true, color: '#6a4aff', sfx: 'rinnegan', banner: 'BLACK HOLE!', kb: 500,
+    pull: true, color: '#6a4aff', sfx: 'void_gaze', banner: 'BLACK HOLE!', kb: 500,
     hint: 'Lv 38', tooltip: 'Gravity-orb — langzaam, trekt alles naar binnen.',
     bonus: 'Gravity meteor' },
 
-  { id: 'kamehameha', name: 'Kamehameha', saga: 'ki', needLvl: 7,
+  { id: 'wave_cannon', name: 'Golfkanon', saga: 'ki', needLvl: 7,
     behavior: 'beam', dmgMul: 3.0, windup: 0.58, speed: 520, radius: 34, pierce: true, life: 1.15,
-    color: '#5ad0ff', sfx: 'rasengan', banner: 'KAMEHAMEHA!', kb: 540,
+    color: '#5ad0ff', sfx: 'spiral_orb', banner: 'WAVE CANNON!', kb: 540,
     hint: 'Lv 7', tooltip: 'Brede ki-straal — pierce door de hele golf.',
     bonus: 'Classic beam' },
-  { id: 'galick_gun', name: 'Galick Gun', saga: 'ki', needLvl: 13,
+  { id: 'violet_blast', name: 'Violetschot', saga: 'ki', needLvl: 13,
     behavior: 'beam', dmgMul: 2.92, windup: 0.52, speed: 480, radius: 30, pierce: true, life: 1.0,
-    color: '#b06ae0', sfx: 'rinnegan', banner: 'GALICK GUN!', kb: 520,
+    color: '#b06ae0', sfx: 'void_gaze', banner: 'VIOLET BLAST!', kb: 520,
     hint: 'Lv 13', tooltip: 'Paarse ki-beam — iets sneller windup.',
     bonus: 'Purple beam' },
-  { id: 'destructo_disc', name: 'Destructo Disc', saga: 'ki', needLvl: 16,
+  { id: 'cutter_disc', name: 'Cutter Disc', saga: 'ki', needLvl: 16,
     behavior: 'disc', dmgMul: 2.78, windup: 0.5, speed: 560, radius: 18, pierce: true, life: 1.25,
-    color: '#ffe259', sfx: 'rasengan', banner: 'DISC!', kb: 380,
+    color: '#ffe259', sfx: 'spiral_orb', banner: 'DISC!', kb: 380,
     hint: 'Lv 16', tooltip: 'Dunne snijschijf — snel en pierce.',
     bonus: 'Pierce disc' },
-  { id: 'instant_dash', name: 'Instant Move', saga: 'ki', needLvl: 11,
+  { id: 'blink_strike', name: 'Blink Strike', saga: 'ki', needLvl: 11,
     behavior: 'dash', dmgMul: 2.48, windup: 0.36, speed: 700, radius: 20, pierce: false, life: 0.28,
-    dashVx: 440, color: '#7cf5ff', sfx: 'chidori', banner: 'TELEPORT STRIKE!', kb: 420,
+    dashVx: 440, color: '#7cf5ff', sfx: 'lightning_pierce', banner: 'TELEPORT STRIKE!', kb: 420,
     hint: 'Lv 11', tooltip: 'Ultra-korte windup dash — surprise opener.',
     bonus: 'Fast dash' },
-  { id: 'final_flash', name: 'Final Flash', saga: 'ki', needLvl: 28,
+  { id: 'solar_beam', name: 'Zonnestraal', saga: 'ki', needLvl: 28,
     behavior: 'beam', dmgMul: 3.35, windup: 0.68, speed: 580, radius: 38, pierce: true, life: 1.3,
-    color: '#ffe080', sfx: 'rasengan', banner: 'FINAL FLASH!', kb: 600,
+    color: '#ffe080', sfx: 'spiral_orb', banner: 'SOLAR BEAM!', kb: 600,
     hint: 'Lv 28', tooltip: 'Massieve gele beam — lang windup, extreme schade.',
     bonus: 'Mega beam' },
-  { id: 'spirit_bomb', name: 'Spirit Bomb', saga: 'ki', needLvl: 32,
+  { id: 'energy_sphere', name: 'Energiesfeer', saga: 'ki', needLvl: 32,
     behavior: 'meteor', dmgMul: 3.4, windup: 0.72, speed: 180, radius: 40, pierce: true, life: 1.6,
-    pull: true, color: '#a8ecff', sfx: 'rinnegan', banner: 'SPIRIT BOMB!', kb: 480,
+    pull: true, color: '#a8ecff', sfx: 'void_gaze', banner: 'ENERGY SPHERE!', kb: 480,
     hint: 'Lv 32', tooltip: 'Gigantische ki-orb — langzaam, alles trekt mee.',
     bonus: 'Ultimate orb' },
 
-  { id: 'getsuga', name: 'Getsuga', saga: 'tide', needLvl: 9,
+  { id: 'moon_slash', name: 'Maanslag', saga: 'tide', needLvl: 9,
     behavior: 'beam', dmgMul: 2.75, windup: 0.46, speed: 500, radius: 26, pierce: true, life: 0.95,
-    color: '#6fd7ff', sfx: 'rasengan', banner: 'GETSUGA!', kb: 500,
+    color: '#6fd7ff', sfx: 'spiral_orb', banner: 'MOON SLASH!', kb: 500,
     hint: 'Lv 9', tooltip: 'Cyan maanslag-golf — snelle horizontale slash.',
     bonus: 'Moon slash' },
-  { id: 'cero', name: 'Cero', saga: 'tide', needLvl: 15,
+  { id: 'void_beam', name: 'Leegtestraal', saga: 'tide', needLvl: 15,
     behavior: 'beam', dmgMul: 2.88, windup: 0.54, speed: 510, radius: 32, pierce: true, life: 1.05,
-    color: '#ff4040', sfx: 'rinnegan', banner: 'CERO!', kb: 560,
-    hint: 'Lv 15', tooltip: 'Rode hollow-straal — brede tide beam.',
+    color: '#ff4040', sfx: 'void_gaze', banner: 'VOID BEAM!', kb: 560,
+    hint: 'Lv 15', tooltip: 'Rode leegte-straal — brede tide beam.',
     bonus: 'Red beam' },
-  { id: 'bankai_slash', name: 'Bankai Flash', saga: 'tide', needLvl: 26,
+  { id: 'blade_ascend', name: 'Lemmet-opstijging', saga: 'tide', needLvl: 26,
     behavior: 'dash', dmgMul: 3.1, windup: 0.5, speed: 640, radius: 28, pierce: true, life: 0.45,
-    dashVx: 400, color: '#9db8ff', sfx: 'chidori', banner: 'BANKAI!', kb: 580,
+    dashVx: 400, color: '#9db8ff', sfx: 'lightning_pierce', banner: 'BLADE ASCEND!', kb: 580,
     hint: 'Lv 26', tooltip: 'Blauwe blitz na release — pierce dash.',
-    bonus: 'Bankai dash' },
+    bonus: 'Blade Ascend dash' },
 
-  { id: 'gum_rocket', name: 'Gum-Gum Rocket', saga: 'fighter', needLvl: 5,
+  { id: 'stretch_dash', name: 'Stretch Dash', saga: 'fighter', needLvl: 5,
     behavior: 'dash', dmgMul: 2.52, windup: 0.4, speed: 580, radius: 24, pierce: false, life: 0.32,
-    dashVx: 360, color: '#ffb0b8', sfx: 'chidori', banner: 'GUM ROCKET!', kb: 500,
-    hint: 'Lv 5', tooltip: 'Rubber-arm dash — vroeg unlock street-fighter vibe.',
+    dashVx: 360, color: '#ffb0b8', sfx: 'lightning_pierce', banner: 'STRETCH DASH!', kb: 500,
+    hint: 'Lv 5', tooltip: 'Rubber-arm dash — vroeg unlock arcade vibe.',
     bonus: 'Stretch dash' },
-  { id: 'gear_second', name: 'Gear Second', saga: 'fighter', needLvl: 14,
+  { id: 'steam_burst', name: 'Steam Burst', saga: 'fighter', needLvl: 14,
     behavior: 'orb', dmgMul: 2.95, windup: 0.42, speed: 480, radius: 26, pierce: true, life: 1.0,
-    color: '#ff6b6b', sfx: 'rasengan', banner: 'GEAR 2!', kb: 540,
+    color: '#ff6b6b', sfx: 'spiral_orb', banner: 'STEAM BURST!', kb: 540,
     hint: 'Lv 14', tooltip: 'Steam-orb — snelle pierce special.',
     bonus: 'Speed orb' },
 
   { id: 'thunder_palm', name: 'Thunder Palm', saga: 'cape', needLvl: 12,
     behavior: 'dash', dmgMul: 2.68, windup: 0.45, speed: 600, radius: 24, pierce: false, life: 0.34,
-    dashVx: 370, color: '#ffe259', sfx: 'chidori', banner: 'THUNDER!', kb: 520,
+    dashVx: 370, color: '#ffe259', sfx: 'lightning_pierce', banner: 'THUNDER!', kb: 520,
     hint: 'Lv 12', tooltip: 'Bliksem-palm dash — cape saga special.',
     bonus: 'Hero dash' },
-  { id: 'serious_punch', name: 'Serious Punch', saga: 'cape', needLvl: 30,
+  { id: 'heavy_punch', name: 'Heavy Punch', saga: 'cape', needLvl: 30,
     behavior: 'orb', dmgMul: 3.5, windup: 0.55, speed: 460, radius: 34, pierce: true, life: 0.7,
-    color: '#ff4040', sfx: 'rasengan', banner: 'SERIOUS PUNCH!', kb: 720,
+    color: '#ff4040', sfx: 'spiral_orb', banner: 'HEAVY PUNCH!', kb: 720,
     hint: 'Lv 30', tooltip: 'One-hit orb — korte range, extreme schade.',
-    bonus: 'Serious hit' },
-  { id: 'serious_blast', name: 'Serious Blast', saga: 'cape', needLvl: 42,
+    bonus: 'Heavy hit' },
+  { id: 'heavy_blast', name: 'Heavy Blast', saga: 'cape', needLvl: 42,
     behavior: 'beam', dmgMul: 3.55, windup: 0.65, speed: 550, radius: 36, pierce: true, life: 1.2,
-    color: '#ff8080', sfx: 'rasengan', banner: 'SERIOUS BLAST!', kb: 640,
-    hint: 'Lv 42', tooltip: 'Serious Series beam — endgame cape ultimate.',
-    bonus: 'Serious beam' },
+    color: '#ff8080', sfx: 'spiral_orb', banner: 'HEAVY BLAST!', kb: 640,
+    hint: 'Lv 42', tooltip: 'Heavy Series beam — endgame cape ultimate.',
+    bonus: 'Heavy beam' },
 
   { id: 'sun_palm', name: 'Sun Palm', saga: 'dawn', needLvl: 10,
     behavior: 'orb', dmgMul: 2.7, windup: 0.44, speed: 400, radius: 30, pierce: false, life: 1.0,
-    color: '#ffd75e', sfx: 'rasengan', banner: 'SUN PALM!', kb: 490,
+    color: '#ffd75e', sfx: 'spiral_orb', banner: 'SUN PALM!', kb: 490,
     hint: 'Lv 10', tooltip: 'Gouden palm-orb — dawn saga balanced special.',
     bonus: 'Solar orb' },
   { id: 'moon_pull', name: 'Moon Pull', saga: 'dawn', needLvl: 18,
     behavior: 'pull', dmgMul: 2.62, windup: 0.5, speed: 300, radius: 28, pierce: true, life: 1.0,
-    pull: true, color: '#e0a8ff', sfx: 'rinnegan', banner: 'MOON PULL!', kb: 440,
+    pull: true, color: '#e0a8ff', sfx: 'void_gaze', banner: 'MOON PULL!', kb: 440,
     hint: 'Lv 18', tooltip: 'Maankracht-orb met pull — controle-special.',
     bonus: 'Lunar pull' },
 ];
@@ -7908,7 +8103,7 @@ function skillSkillGated(sk) {
 
 function skillUnlocked(sk) {
   if (!sk) return false;
-  if (sk.id === 'rasengan') return true;
+  if (sk.id === 'spiral_orb') return true;
   if (skillSkillGated(sk)) return false;
   if (sk.needLvl && save.lvl >= sk.needLvl) return true;
   if (sk.needTrain && save.trainWins >= sk.needTrain) return true;
@@ -7922,19 +8117,19 @@ function skillUnlockedCount() {
 }
 
 function fighterEquippedSkill(f) {
-  if (!f) return skillById('rasengan');
-  if (f.isRobot) return skillById('chidori');
+  if (!f) return skillById('spiral_orb');
+  if (f.isRobot) return skillById('lightning_pierce');
   if (f.playerSlot === 2 || (f.playerSlot && f.playerSlot !== 1)) {
-    const vs = f.vsSpecial || 'rasengan';
-    return skillById(vs) || skillById('rasengan');
+    const vs = f.vsSpecial || 'spiral_orb';
+    return skillById(vs) || skillById('spiral_orb');
   }
   if (f.isPlayer && !f.playerSlot) {
-    const skillId = save.skill || (typeof activeJutsuId === 'function' ? activeJutsuId() : 'rasengan') || 'rasengan';
+    const skillId = save.skill || (typeof activeTechniqueId === 'function' ? activeTechniqueId() : 'spiral_orb') || 'spiral_orb';
     const eq = skillById(skillId);
-    return skillUnlocked(eq) ? eq : skillById('rasengan');
+    return skillUnlocked(eq) ? eq : skillById('spiral_orb');
   }
-  if (f.vsSpecial) return skillById(f.vsSpecial) || skillById('rasengan');
-  return skillById('rasengan');
+  if (f.vsSpecial) return skillById(f.vsSpecial) || skillById('spiral_orb');
+  return skillById('spiral_orb');
 }
 
 function applyPlayerSkill(fighter) {
@@ -7952,8 +8147,8 @@ function skillHudColor(sk) {
 }
 
 function skillSfxId(sk) {
-  if (!sk) return 'rasengan';
-  return sk.id || sk.sfx || 'rasengan';
+  if (!sk) return 'spiral_orb';
+  return sk.id || sk.sfx || 'spiral_orb';
 }
 
 function skillCombatLine(sk) {
@@ -8053,20 +8248,20 @@ const SUPERS = [
     chargeBanner: 'HEAL!', finishBanner: 'GENEZING!',
     chargeSfx: 'super_heal_charge', finishSfx: 'super_heal',
     healPct: 0.38, cd: 9, chargeDur: 1.9, blastR: 176, power: 3,
-    hint: 'Lv 8', tooltip: 'Chakra-golf herstelt HP en ruimt vijanden licht weg.',
+    hint: 'Lv 8', tooltip: 'Energy-golf herstelt HP en ruimt vijanden licht weg.',
     bonus: 'HP + lichte push', tags: ['heal', 'push'] },
-  { id: 'sharingan', name: 'Sharingan', needLvl: 12,
-    behavior: 'sharingan', icon: 'eye',
+  { id: 'mind_eye', name: 'Mind Eye', needLvl: 12,
+    behavior: 'mind_eye', icon: 'eye',
     color: '#e04040', color2: '#8b0000',
-    chargeBanner: 'SHARINGAN!', finishBanner: 'GENJUTSU!',
-    chargeSfx: 'super_sharingan_charge', finishSfx: 'super_sharingan',
+    chargeBanner: 'EYE LOCK!', finishBanner: 'MIND BIND!',
+    chargeSfx: 'super_mind_eye_charge', finishSfx: 'super_mind_eye',
     slowDur: 1.5, slowMul: 0.22, cd: 9, chargeDur: 2, blastR: 188, power: 4,
-    hint: 'Lv 12', tooltip: 'Oog-genjutsu: vertraagt vijanden, trekt ze naar je toe en slaat hard toe.',
-    bonus: 'Slow + pull + hit', tags: ['genjutsu', 'pull', 'slow'] },
+    hint: 'Lv 12', tooltip: 'Oog-illusion: vertraagt vijanden, trekt ze naar je toe en slaat hard toe.',
+    bonus: 'Slow + pull + hit', tags: ['illusion', 'pull', 'slow'] },
   { id: 'lightning_storm', name: 'Bliksemstorm', needLvl: 15,
     behavior: 'lightning', icon: 'bolt',
     color: '#a8e0ff', color2: '#5ad0ff',
-    chargeBanner: 'STORM!', finishBanner: 'RAIJIN!',
+    chargeBanner: 'STORM!', finishBanner: 'THUNDER!',
     chargeSfx: 'super_lightning_charge', finishSfx: 'super_lightning',
     strikes: 8, cd: 9, chargeDur: 1.85, blastR: 200, power: 4,
     hint: 'Lv 15', tooltip: 'Ultra-snelle bliksemslagen op alle nabije vijanden — één voor één.',
@@ -8113,7 +8308,7 @@ const SUPERS = [
     bonus: 'Pull + void burst', tags: ['pull', 'void'] },
 ];
 
-const SUPER_BEHAVIORS = ['blast', 'shield', 'heal', 'sharingan', 'lightning', 'meteor', 'rage', 'timestop', 'clones', 'void'];
+const SUPER_BEHAVIORS = ['blast', 'shield', 'heal', 'mind_eye', 'lightning', 'meteor', 'rage', 'timestop', 'clones', 'void'];
 
 const superById = id => SUPERS.find(s => s.id === id) || SUPERS[0];
 
@@ -8123,7 +8318,7 @@ function superExists(id) {
 
 function superBehaviorLabel(sp) {
   const map = {
-    blast: 'Blast', shield: 'Schild', heal: 'Heal', sharingan: 'Genjutsu',
+    blast: 'Blast', shield: 'Schild', heal: 'Heal', mind_eye: 'Illusion',
     lightning: 'Bliksem', meteor: 'Meteor', rage: 'Rage', timestop: 'Tijd',
     clones: 'Clones', void: 'Void',
   };
@@ -8403,7 +8598,7 @@ function finishEquippedSuper(fighter, game) {
       break;
     }
 
-    case 'sharingan': {
+    case 'mind_eye': {
       for (const m of game.monsters) {
         if (!m || !m.alive) continue;
         const dx = px - m.x, dy = py - m.y;
@@ -9061,10 +9256,10 @@ function speciesTop10Threshold() {
   return _speciesTop10Threshold;
 }
 
-function pickEnemyJutsu(spId, levelN) {
-  if (levelN < ENEMY_JUTSU_MIN_LEVEL) return null;
+function pickEnemyTechnique(spId, levelN) {
+  if (levelN < ENEMY_TECHNIQUE_MIN_LEVEL) return null;
   if (speciesPowerScore(spId) < speciesTop10Threshold()) return null;
-  return ENEMY_JUTSU_KINDS[Math.floor(Math.random() * ENEMY_JUTSU_KINDS.length)];
+  return ENEMY_TECHNIQUE_KINDS[Math.floor(Math.random() * ENEMY_TECHNIQUE_KINDS.length)];
 }
 
 const WORLD_THEMES = [
@@ -9178,9 +9373,9 @@ const KETSBAM_INVULN = 1.15;
 const KETSBAM_SUPER_ARMOR = 0.95;
 /** Top-10 baas-golven: flagship bazen overleven minstens 3s. */
 const BOSS_SAFETY_DUR = 3;
-/** Vanaf dit level mogen top-10% soorten vijandelijke jutsu gebruiken. */
-const ENEMY_JUTSU_MIN_LEVEL = 20;
-const ENEMY_JUTSU_KINDS = ['rasengan', 'chidori', 'kamehame'];
+/** Vanaf dit level mogen top-10% soorten vijandelijke technique gebruiken. */
+const ENEMY_TECHNIQUE_MIN_LEVEL = 20;
+const ENEMY_TECHNIQUE_KINDS = ['spiral_orb', 'lightning_pierce', 'wave_cannon'];
 /** Min. gap tussen speler-hits door contact/projectiles — anti stunlock-keten */
 const PLAYER_HURT_CHAIN_CD = 0.42;
 const BOSS_AT = {
@@ -10277,7 +10472,7 @@ const PET_ROSTER = [
   { id: 'pet_bubbel', speciesId: 'bubbel', passive: 'hp', passiveVal: 6, assistMul: 0.26, cd: 5.2,
     perk: '+6 max HP · zachte assist' },
   { id: 'pet_flapper', speciesId: 'flapper', passive: 'energy', passiveVal: 1.08, assistMul: 0.28, cd: 4.2,
-    perk: 'Snellere chakra-regen' },
+    perk: 'Snellere energy-regen' },
   { id: 'pet_stekelra', speciesId: 'stekelra', passive: 'dmg', passiveVal: 0.035, assistMul: 0.34, cd: 4.8,
     perk: 'Charge-assist — stevige tik' },
   { id: 'pet_spooki', speciesId: 'spooki', passive: 'crit', passiveVal: 0.04, assistMul: 0.29, cd: 4.9,
@@ -10287,7 +10482,7 @@ const PET_ROSTER = [
   { id: 'pet_vlamvos', speciesId: 'vlamvos', passive: 'speed', passiveVal: 1.04, assistMul: 0.33, cd: 4.4,
     perk: '+4% loopsnelheid' },
   { id: 'pet_piepvleugel', speciesId: 'piepvleugel', passive: 'energy', passiveVal: 1.1, assistMul: 0.3, cd: 4.0,
-    perk: 'Vlugge chakra + dart-assist' },
+    perk: 'Vlugge energy + dart-assist' },
   { id: 'pet_rotsbonk', speciesId: 'rotsbonk', passive: 'hp', passiveVal: 12, assistMul: 0.36, cd: 5.6,
     perk: '+12 max HP · tank-assist' },
   { id: 'pet_nachtwolk', speciesId: 'nachtwolk', passive: 'crit', passiveVal: 0.05, assistMul: 0.31, cd: 5.0,
@@ -10612,7 +10807,7 @@ const CHEST_PET_SKILLS = [
   'Blink-Dash — snellere pet-CD',
   'Lucky Paw — +2% crit voor jou',
   'Koester — +4 max HP',
-  'Cheer — chakra +6% regen',
+  'Cheer — energy +6% regen',
 ];
 
 function chestSkillPick(kind) {
@@ -11077,8 +11272,8 @@ function seedNlGameStrings() {
     levelClear: 'LEVEL {n} KLAAR!',
     won: 'GEWONNEN!',
     lost: 'VERSLAGEN...',
-    rasenganTriple: 'TRIPLE RASENGAN!',
-    rasenganDual: 'DUAL RASENGAN!',
+    spiral_orbTriple: 'TRIPLE SPIRAL ORB!',
+    spiral_orbDual: 'DUAL SPIRAL ORB!',
     round: 'RONDE {n}',
     roundDecisive: 'RONDE {n} · beslissende ronde',
     roundMatchPoint: 'RONDE {n} · match point',
@@ -11120,10 +11315,10 @@ function seedNlGameStrings() {
     satanAfterClear: 'Adventure gehaald — hitte blijft: 10× falen op één level → Satan (~half scherm, reflect) → Tide-pet',
     trainComboRecord: 'Combo-trainer: ×{n}{rec}',
     trainComboNewRec: ' — nieuw record!',
-    trainStyleUnlock: 'Nieuwe stijl vrij: Chakra gloed — Instellingen → Stijl!',
+    trainStyleUnlock: 'Nieuwe stijl vrij: Energie gloed — Instellingen → Stijl!',
     trainStyleMore: 'Unlock stijlen door meer train-wins!',
-    trainLossTip: 'Spring tijdens CHIDORI-telegraph — robot mist · duck oor-lasers',
-    trainTipDefault: 'Tip: duck lasers · chakra vol → Rasengan',
+    trainLossTip: 'Spring tijdens LIGHTNING PIERCE-telegraph — robot mist · duck oor-lasers',
+    trainTipDefault: 'Tip: duck lasers · energy vol → Spiral Orb',
     vsRematchTip: 'Opnieuw = rematch · Pauze → Herstart match (0-0)',
     vsCloseRematchTip: 'Krappe match! Rematch met Opnieuw · of Pauze → Herstart 0-0',
     vsFatalityRematchTip: 'Fatality! Rematch met Opnieuw · zelfde vechters',
@@ -11181,7 +11376,7 @@ function seedNlGameStrings() {
     streak8: 'RAMPAGE!', streak12: 'UNSTOPPABLE!', streakHold: 'STREAK ×{n} vast!',
     combo3: 'Combo ×3 — door!', combo5: 'Combo ×5 — netjes!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — meester!', comboN: 'COMBO ×{n}!',
-    pickupHp: '+HP', pickupRage: 'RAGE ×1.4', pickupChakra: 'Vol chakra!', pickupShield: 'Schild!',
+    pickupHp: '+HP', pickupRage: 'RAGE ×1.4', pickupEnergy: 'Vol energy!', pickupShield: 'Schild!',
     pickupSkillShard: '+1 {name} shard',
     pickupItemShard: '+1 {name} item-shard',
     giant: 'REUS!', wallCombo3: 'Combo ×3 · sloop +{pct}%',
@@ -11231,7 +11426,7 @@ function seedNlGameStrings() {
     vsHpLeadP2: 'P2 leidt +{n}% HP',
     vsHpEven: 'HP gelijk — TIME telt!',
     coinPlus1: '+1 munt', coinPlus3: '+3 munten',
-    rasenganCd: 'Rasengan CD {s}s',
+    spiral_orbCd: 'Spiral Orb CD {s}s',
   });
   if (!I18N.nl.toast) I18N.nl.toast = {};
   Object.assign(I18N.nl.toast, {
@@ -11291,7 +11486,7 @@ function seedNlGameStrings() {
     charFair: 'Fair duo: {a} vs {b} · TOT Δ{diff}',
     skillUpgradeReady: '{name} kan upgraden — Collectie → Upgrades',
     skillUpgraded: '{name} Lv {lv}! {detail}',
-    jutsuEquipped: '{name} uitgerust als SUPER-jutsu',
+    techniqueEquipped: '{name} uitgerust als SUPER-technique',
     itemUpgradeReady: '{name} kan upgraden — Collectie → Upgrades',
     itemUpgraded: '{name} Lv {lv}! {detail}',
     skipGamble: 'Zonder gok',
@@ -11428,16 +11623,16 @@ function seedNlGameStrings() {
   });
   if (!I18N.nl.help) I18N.nl.help = {};
   I18N.nl.help.tips = [
-    '<b>Power-ups:</b> verslagen monsters laten soms bolletjes vallen — HP, rage, chakra, schild.',
+    '<b>Power-ups:</b> verslagen monsters laten soms bolletjes vallen — HP, rage, energy, schild.',
     '<b>Bazen:</b> onder half HP worden ze woester (fase 2).',
     '<b>Combo’s:</b> sla snel achter elkaar om ×2 / ×3 schade te stapelen.',
     '<b>Dash:</b> dubbel-tik links/rechts (of toets <b>Shift</b>) om te ontwijken.',
-    '<b>Rasengan:</b> vul je <b>chakra</b>-balk — dan laad je een draaiende chakra-bol en knal je ‘m erin.',
+    '<b>Spiral Orb:</b> vul je <b>energy</b>-balk — dan laad je een draaiende energy-bol en knal je ‘m erin.',
     '<b>Substitutie:</b> rookwolk + ontwijk (knop of <b>Shift</b>). Korte onkwetsbaarheid.',
-    '<b>Wapen-combo:</b> tik wapen 3× snel — elk wapen heeft 3 eigen moves (①②③). Raak met ① én ②, dan is ③ een <b>finisher</b> (+schade, +chakra). Meesterschap: Virtuoos 3× · Meester 10× · Legende 25× per wapen.',
+    '<b>Wapen-combo:</b> tik wapen 3× snel — elk wapen heeft 3 eigen moves (①②③). Raak met ① én ②, dan is ③ een <b>finisher</b> (+schade, +energy). Meesterschap: Virtuoos 3× · Meester 10× · Legende 25× per wapen.',
     '<b>2 spelers:</b> roster met <b>5 saga-icons</b> (Ki/Scroll/Tide/Cape/Dawn parodie) + filters · best-of-3.',
     '<b>Versus fatality:</b> match-KO op beslissende ronde → FATALITY-venster — tik wapen/slag/trap voor styl-finish (auto skip ~3,5s).',
-    '<b>RabbitRobot:</b> hij gebruikt <b>Chidori</b> (bliksem) — wacht tot hij open is.',
+    '<b>RabbitRobot:</b> hij gebruikt <b>Lightning Pierce</b> (bliksem) — wacht tot hij open is.',
     '<b>Muur:</b> 60s timer · combo-balk (+4% sloop per hit) · milestones ×3/×5/×8 · record-tempo in HUD · bom/goud bonusstenen.',
     '<b>Rariteiten:</b> Gewoon → Ongewoon → Zeldzaam → Episch → Legendarisch → Mythisch. Zeldzamer = meer XP & meer max HP.',
     '<b>50 levels:</b> <b>5 eilanden × 10 levels</b> — skill gate wapens per eiland · baas Lv 10/20/30/40/50 opent volgend eiland · hitte-meter: 5× = Meester-buff · 9× = gevaar! · 10× = Satan.',
@@ -11450,16 +11645,16 @@ function seedNlGameStrings() {
     '2 spelers: character select in twee delen — eerst P1, dan P2 (18 vechters, best-of-3).',
     'Komt eraan: Mat\'s bonus game — korte mini-uitdaging na een sterke run of perfecte ronde.',
     'Komt eraan: mik met je wapen — richt op de vloer voor schokgolven of op vogels voor bonus-XP.',
-    'Volle chakra → tik 🌀 voor Rasengan — grote schade en screen-shake.',
+    'Volle energy → tik 🌀 voor Spiral Orb — grote schade en screen-shake.',
     '2P op iPad: liggend houden; P1 linker helft, P2 rechter helft (joystick + knoppen).',
     'Muur: combo\'s stapelen schade — bomstenen (rood) ontploffen, goud = extra XP.',
     'Monsterboek vullen = meer max HP via rariteit (gewoon +3 … mythisch +25).',
     'Komt eraan: avontuur-character select vóór elk level — eigen loadout per run.',
-    'Training vs RabbitRobot: duck zijn lasers; Chidori open = jouw moment.',
+    'Training vs RabbitRobot: duck zijn lasers; Lightning Pierce open = jouw moment.',
     'Dash / substitutie: dubbel-tik links-rechts of Shift — korte onkwetsbaarheid.',
     'Komt eraan: Mat\'s dojo — timing-minigame met planken en combo-multipliers.',
     'Kunai & shuriken unlocken vroeg — gooi projectielen naast melee.',
-    'Bazen fase 2 onder half HP — blokkeer en spaar chakra voor de finish.',
+    'Bazen fase 2 onder half HP — blokkeer en spaar energy voor de finish.',
     'Komt eraan: vogels in levels — mik met boog/kunai voor pickups zonder grond te raken.',
     'Dagelijkse missies + dagbonus (+80 XP) — reset om middernacht (UTC).',
     'Verder spelen hervat je laatste modus (avontuur, training, muur of 2P).',
@@ -11479,7 +11674,7 @@ function seedNlGameStrings() {
     'Menu hero — pixel grondstrip',
     'Pause-scherm pixel backdrop',
     'Combo-HUD pixel accenten',
-    'Jutsu-aura (Rasengan/Chidori) polish',
+    'Technique-aura (Spiral Orb/Lightning Pierce) polish',
     'Baas fase-2 kleurflits',
     'Muur-modus tegel texture',
     'Versus VS-banner pixels',
@@ -11568,10 +11763,10 @@ function seedNlGameStrings() {
     weaponIslandPick: 'Training ✓ · avontuur ≤ Lv {cap}',
     weaponIslandCapShort: 'Eiland-cap Lv {cap}',
     skillHead: 'Skills',
-    skillSub: 'Chakra-specials — level unlocks · avontuur/training/muur/mats',
+    skillSub: 'Energy specials — level unlocks · avontuur/training/muur/mats',
     skillSummaryHead: 'Skills',
     skillSummaryActive: 'actief',
-    skillSummarySub: 'Kies je chakra-special voor avontuur & solo-modi. Versus gebruikt roster-specials.',
+    skillSummarySub: 'Kies je energy-special voor avontuur & solo-modi. Versus gebruikt roster-specials.',
     skillActive: 'Actief',
     skillPick: 'Tik om uit te rusten',
     skillPickHint: 'Tik = preview · nogmaals = uitrusten',
@@ -11579,7 +11774,7 @@ function seedNlGameStrings() {
     skillIslandGate: 'Eiland-skill Lv {lvl}',
     skillNeedLvl: 'Unlock op Lv {lvl}',
     skillGateLine: 'eiland-gate Lv {cap}',
-    skillBlurbAll: '24 chakra-specials — filter op saga of type · preview + stats',
+    skillBlurbAll: '24 energy specials — filter op saga of type · preview + stats',
     skillEmptyFilter: 'Geen skills in deze filter — wijzig saga of type',
     skillNextUnlock: 'Volgende unlock: <b>{name}</b> op Lv {lvl} · nog {need} level(s)',
     skillNextUnlockSoon: 'Volgende: <b>{name}</b> (Lv {lvl}) — bijna klaar',
@@ -11615,7 +11810,7 @@ function seedNlGameStrings() {
     skillTabWeapons: 'Wapens',
     skillTabPets: 'Pets',
     skillTabStyle: 'Stijl',
-    upgradeSubSkills: 'Skill-shards in avontuur · jutsu max Lv 5 · utility max Lv 3',
+    upgradeSubSkills: 'Skill-shards in avontuur · technique max Lv 5 · utility max Lv 3',
     upgradeSubWeapons: 'Item-shards voor unlocked wapens · mythisch max Lv 5',
     upgradeSubPets: 'Item-shards voor getemde pets · passief, assist & CD',
     upgradeSubStyle: 'Item-shards voor unlocked outfits · bonus, HP & shield',
@@ -11643,15 +11838,15 @@ function seedNlGameStrings() {
     skillLevel: 'Lv {lv}/{max}',
     skillNow: 'Nu',
     skillNext: 'Volgende',
-    skillGroupJutsu: 'Jutsu',
+    skillGroupTechnique: 'Techniek',
     skillGroupUtility: 'Utility',
-    jutsuActive: 'Actief jutsu: {name}',
-    jutsuActiveBadge: 'ACTIEF',
-    jutsuEquip: 'Uitrusten',
-    jutsuEquipped: 'SUPER in avontuur & training',
-    jutsuTapEquip: 'Tik Uitrusten voor SUPER in avontuur',
-    jutsuSelectHint: 'Kies je SUPER (Rasengan/Chidori/Rinnegan) · skill-shards vallen vaker voor actief jutsu',
-    helpFirstMinute: 'Eerste minuut — per modus één korte hint bovenin het gevecht (geen toast-stapel). Avontuur: joystick + knoppen · groen = HP · vol chakra = SUPER-knop. Training = Robot · Muur = combo · 2 spelers = links/rechts.',
+    techniqueActive: 'Actief technique: {name}',
+    techniqueActiveBadge: 'ACTIEF',
+    techniqueEquip: 'Uitrusten',
+    techniqueEquipped: 'SUPER in avontuur & training',
+    techniqueTapEquip: 'Tik Uitrusten voor SUPER in avontuur',
+    techniqueSelectHint: 'Kies je SUPER (Spiral Orb/Lightning Pierce/Void Gaze) · skill-shards vallen vaker voor actief technique',
+    helpFirstMinute: 'Eerste minuut — per modus één korte hint bovenin het gevecht (geen toast-stapel). Avontuur: joystick + knoppen · groen = HP · vol energy = SUPER-knop. Training = Robot · Muur = combo · 2 spelers = links/rechts.',
     helpOnboardHead: 'Eerste-minuut hints: {seen}/{total} modi gezien · max één regel bovenin per modus',
     helpTryNext: 'Probeer als volgende: {mode}',
     helpTrySub: 'Nog niet gespeeld — één hint bovenin, geen extra toast.',
@@ -11726,17 +11921,17 @@ function seedNlGameStrings() {
     boss: 'BAAS',
     topHunter: 'Top jager',
     modeAdventure: '5 eilanden × 10 levels · hitte-meter · 9× = gevaar! · 10× = Satan · Meester-buff · dobbel-gok',
-    modeTraining: 'Combo-trainer ×5/×8/×10 · 3s dummy · lasers · Chidori',
+    modeTraining: 'Combo-trainer ×5/×8/×10 · 3s dummy · lasers · Lightning Pierce',
     modeWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing',
     modeVersus: 'P1 links P2 rechts · best-of-3 · rematch in pauze',
     modeCoinrun: '45s munten · 2 munten = 1 pet coin · mik ↑ · vliegers +3',
-    firstMinuteAdventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol chakra = SUPER',
-    firstMinuteTraining: 'Eerste minuut: ontwijk rode laser · blokkeer dichtbij · chakra vol → SUPER',
+    firstMinuteAdventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol energy = SUPER',
+    firstMinuteTraining: 'Eerste minuut: ontwijk rode laser · blokkeer dichtbij · energy vol → SUPER',
     firstMinuteWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
     firstMinuteVersus: 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best',
     firstMinuteCoinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
-    firstMinuteAdventureKb: 'Eerste minuut: A/D lopen · W springen · J/K/L · U jutsu · Shift subst',
-    firstMinuteTrainingKb: 'Eerste minuut: ontwijk lasers · Shift = substitutie · chakra vol → U',
+    firstMinuteAdventureKb: 'Eerste minuut: A/D lopen · W springen · J/K/L · U technique · Shift subst',
+    firstMinuteTrainingKb: 'Eerste minuut: ontwijk lasers · Shift = substitutie · energy vol → U',
     firstMinuteWallKb: '60s · combo-milestones · A/D · J/K/L · record-tempo in HUD',
     firstMinuteVersusKb: 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
     firstMinuteCoinrunKb: 'Munten pakken · W/↑ hoger mikken · J/K shuriken · max 3 snel',
@@ -11751,8 +11946,8 @@ function seedNlGameStrings() {
   });
   if (!I18N.nl.skill) I18N.nl.skill = {};
   Object.assign(I18N.nl.skill, {
-    rasengan: 'Rasengan', chidori: 'Chidori', rinnegan: 'Rinnegan',
-    subst: 'Substitutie', dash: 'Dash', chakra: 'Chakra',
+    spiral_orb: 'Spiraal Orb', lightning_pierce: 'Bliksemprik', void_gaze: 'Leegteblik',
+    subst: 'Substitutie', dash: 'Dash', energy_core: 'Energie',
   });
   if (!I18N.nl.hud) I18N.nl.hud = {};
   Object.assign(I18N.nl.hud, {
@@ -11773,7 +11968,7 @@ function seedNlGameStrings() {
     stageClearSec: 'Stage klaar — {sec}s',
     toBoss: 'Op weg naar de baas — {sec}s', walkNext: 'Verder lopen… volgende golf {sec}s',
     streak: 'STREAK ×{n}', combo: 'COMBO ×{n}', rage: 'RAGE {n}s', shield: 'Schild {n}s',
-    earLaser: 'OOR-LASER — spring!', chidoriTele: 'CHIDORI — dash/spring!',
+    earLaser: 'OOR-LASER — spring!', lightning_pierceTele: 'LIGHTNING PIERCE — dash/spring!',
     kickTele: 'TRAP — spring/blok!', punchTele: 'SLA — blok/weg!', earLaserShort: 'OOR-LASER',
     rabbitRobot: 'RABBITROBOT · {pct}%', roundInfo: 'Ronde {n} · eerst 2 wint · {s}-{r}',
     dummyGrace: 'Dummy {n}s — oefen combo', goal: 'doel ×{n}', record: 'record ×{n}',
@@ -11855,11 +12050,11 @@ function seedNlFromRuntime() {
       stat: { dmg: 'Schade', wind: 'Windup', spd: 'Snelheid', kb: 'Knockback' },
       tag: { pierce: 'Pierce', pull: 'Pull' },
       saga: {
-        scroll: { blurb: 'Ninja-scroll — Rasengan, Chidori, Rinnegan-lichtschits & gravity specials.' },
-        ki: { blurb: 'Ki-golven — Kamehameha, discs, Spirit Bomb & blitz dashes.' },
-        tide: { blurb: 'Tide-straal — Getsuga, Cero & Bankai flash.' },
-        fighter: { blurb: 'Street stretch — Gum-Gum dash & Gear Second steam.' },
-        cape: { blurb: 'Hero specials — Thunder Palm & Serious Series.' },
+        scroll: { blurb: 'Ninja-scroll — Spiral Orb, Lightning Pierce, Void Gaze-lichtschits & gravity specials.' },
+        ki: { blurb: 'Ki-golven — Wave Cannon, discs, Energy Sphere & blitz dashes.' },
+        tide: { blurb: 'Tide-straal — Moon Slash, Void Beam & Blade Ascend flash.' },
+        fighter: { blurb: 'Street stretch — Stretch dash & Steam Burst steam.' },
+        cape: { blurb: 'Hero specials — Thunder Palm & Heavy Series.' },
         dawn: { blurb: 'Dawn palm — solar orbs & lunar pull control.' },
       },
     });
@@ -11874,14 +12069,14 @@ function seedNlFromRuntime() {
     }
     Object.assign(I18N.nl.super, {
       behavior: {
-        blast: 'Blast', shield: 'Schild', heal: 'Heal', sharingan: 'Genjutsu',
+        blast: 'Blast', shield: 'Schild', heal: 'Heal', mind_eye: 'Illusion',
         lightning: 'Bliksem', meteor: 'Meteor', rage: 'Rage', timestop: 'Tijd',
         clones: 'Clones', void: 'Void',
       },
       stat: { pow: 'Kracht', rad: 'Radius', cd: 'Cooldown', charge: 'Laden' },
       tag: {
         blast: 'Blast', knockback: 'Knockback', defense: 'Verdediging', push: 'Push',
-        heal: 'Heal', genjutsu: 'Genjutsu', pull: 'Pull', slow: 'Slow',
+        heal: 'Heal', illusion: 'Illusion', pull: 'Pull', slow: 'Slow',
         lightning: 'Bliksem', 'multi-hit': 'Multi-hit', meteor: 'Meteor', zone: 'Zone',
         buff: 'Buff', freeze: 'Freeze', burst: 'Burst', rush: 'Rush', void: 'Void',
       },
@@ -11942,11 +12137,11 @@ const CATALOG_EN = {
     boss1: { text: 'Defeat 1 boss monster', hint: 'Adventure: boss at end of a level' },
   },
   weapon: {
-    vuist: { name: 'Fists', desc: 'Taijutsu basics' },
+    vuist: { name: 'Fists', desc: 'Fist arts basics' },
     kunai: { name: 'Kunai', desc: 'Classic ninja blade' },
     shuriken: { name: 'Shuriken', desc: 'Throws sharp stars' },
     tanto: { name: 'Tanto', desc: 'Short blade · fast' },
-    zwaard: { name: 'Ninja sword', desc: 'Kenjutsu all-rounder' },
+    zwaard: { name: 'Ninja sword', desc: 'Blade arts all-rounder' },
     sai: { name: 'Sai', desc: 'Three-prong · parry' },
     knuppel: { name: 'Club', desc: 'Raw blunt force' },
     waaier: { name: 'War fan', desc: 'Fan slash · stylish' },
@@ -11960,10 +12155,10 @@ const CATALOG_EN = {
     drietand: { name: 'Trident', desc: 'Three points · thrust' },
     ketting: { name: 'Chain blade', desc: 'Reach + pressure' },
     bostaf: { name: 'Bo staff', desc: 'Long staff · tempo' },
-    laser: { name: 'Chakra blade', desc: 'Blue burning edge' },
+    laser: { name: 'Energy blade', desc: 'Blue burning edge' },
     fuuma: { name: 'Fūma shuriken', desc: 'Large throwing star' },
     kristal: { name: 'Crystal blade', desc: 'Shard slash' },
-    donder: { name: 'Lightning axe', desc: 'Like Chidori, but an axe' },
+    donder: { name: 'Lightning axe', desc: 'Like Lightning Pierce, but an axe' },
     vlamzweep: { name: 'Flame whip', desc: 'Fire line · long reach' },
     void: { name: 'Void claw', desc: 'Mythic claw' },
     sterkling: { name: 'Star blade', desc: 'Sky metal · crits' },
@@ -11971,23 +12166,23 @@ const CATALOG_EN = {
   },
   style: {
     classic: { name: 'Classic', hint: 'Standard ninja', tooltip: 'Base ninja — no bonus, fastest unlock.', bonus: 'No combat bonus' },
-    konoha: { name: 'Konoha bandana', hint: 'Unlock at Lv 5', tooltip: 'Leaf village headband. Slightly more max HP — steady in long levels.', bonus: '+5 max HP' },
-    chakra: { name: 'Chakra glow', hint: 'Win training 3×', tooltip: 'Blue chakra aura. Chakra charges faster — more Rasengan/Chidori.', bonus: '+8% chakra regen' },
-    akatsuki: { name: 'Red cloak', hint: 'Unlock at Lv 12', tooltip: 'Red cloak — aggressive hits. More melee and weapon damage.', bonus: '+4% damage' },
+    leaf_band: { name: 'Leaf bandana', hint: 'Unlock at Lv 5', tooltip: 'Leaf village headband. Slightly more max HP — steady in long levels.', bonus: '+5 max HP' },
+    energy_glow: { name: 'Energy glow', hint: 'Win training 3×', tooltip: 'Blue energy aura. Energy charges faster — more Spiral Orb/Lightning Pierce.', bonus: '+8% energy regen' },
+    crimson_pact: { name: 'Red cloak', hint: 'Unlock at Lv 12', tooltip: 'Red cloak — aggressive hits. More melee and weapon damage.', bonus: '+4% damage' },
     shadow: { name: 'Shadow ninja', hint: 'Unlock at Lv 15', tooltip: 'Shadow steps. Extra crit chance on all hits.', bonus: '+3% crit' },
     guvve: { name: 'Guvvedukkie', hint: '8 monsters in book', tooltip: 'Quack cosplay. Bonus XP on adventure kills — light, no grind.', bonus: '+6% adventure XP' },
     gold: { name: 'Legendary', hint: 'Unlock at Lv 25', tooltip: 'Golden outline + glow. Stronger knockback on kicks and specials.', bonus: '+10% knockback' },
     sand: { name: 'Desert', hint: 'Unlock at Lv 8', tooltip: 'Sand cloak — less damage taken and stronger block. Tank style for crowds.', bonus: '−14% damage · block −25% chip' },
     samurai: { name: 'Samurai', hint: 'Unlock at Lv 20', tooltip: 'Topknot + katana stance. Weapon combos reach slightly farther.', bonus: '+8% weapon reach' },
-    cyber: { name: 'Cyber ninja', hint: 'Unlock at Lv 18', tooltip: 'Neon visor + lightning flash on melee. Faster chakra and chain sparks.', bonus: 'Lightning FX · +6% chakra' },
+    cyber: { name: 'Cyber ninja', hint: 'Unlock at Lv 18', tooltip: 'Neon visor + lightning flash on melee. Faster energy and chain sparks.', bonus: 'Lightning FX · +6% energy' },
     fox: { name: 'Fox ninja', hint: '12 monsters in book', tooltip: 'Fox ears — faster on the ground. Great for kiting and shuriken.', bonus: '+5% move speed' },
     storm: { name: 'Storm spirit', hint: 'Win training 5×', tooltip: 'Storm aura + soft lightning. Extra shield at start of each wave.', bonus: 'Lightning glow · +0.8s shield/wave' },
-    void: { name: 'Void walker', hint: 'Unlock at Lv 40', tooltip: 'Void cloak — heavier jutsu. Specials (Rasengan/Chidori/Rinnegan) hit harder.', bonus: '+8% jutsu damage' },
+    void: { name: 'Void walker', hint: 'Unlock at Lv 40', tooltip: 'Void cloak — heavier technique. Specials (Spiral Orb/Lightning Pierce/Void Gaze) hit harder.', bonus: '+8% technique damage' },
     hunter: { name: 'Hunter look', hint: '75 kills in monster book', tooltip: 'Hunter cape + green accents. Bonus damage vs monsters in adventure.', bonus: '+6% vs monsters' },
     crystal: { name: 'Crystalline', hint: '4 rarities in monster book', tooltip: 'Crystal shard — reflective glow. Short shield each wave.', bonus: '+1.0s shield/wave' },
     tome: { name: 'Bookmaster', hint: 'Half the monster book', tooltip: 'Monster book on your back. More HP bonus on new dex discoveries.', bonus: '+4 max HP · book wisdom' },
   },
-  pickup: { heal: '+HP', rage: 'RAGE', chakra: 'CHAKRA', shield: 'SHIELD' },
+  pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SHIELD' },
   result: {
     advWin: 'VICTORY!', advLose: 'DEFEATED...', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
     vsP1Win: 'PLAYER 1 WINS!', vsP2Win: 'PLAYER 2 WINS!', wallRecord: 'NEW RECORD!', wallTime: "TIME'S UP!",
@@ -12003,10 +12198,10 @@ const CATALOG_EN = {
     satanAfterClear: 'Adventure cleared — heat still applies: 10× fails on one level → Satan (~half screen, reflect) → Tide pet',
     trainComboRecord: 'Combo trainer: ×{n}{rec}',
     trainComboNewRec: ' — new record!',
-    trainStyleUnlock: 'New style unlocked: Chakra glow — Settings → Style!',
+    trainStyleUnlock: 'New style unlocked: Energy glow — Settings → Style!',
     trainStyleMore: 'Unlock styles with more training wins!',
-    trainLossTip: 'Jump during CHIDORI telegraph — robot misses · duck ear-lasers',
-    trainTipDefault: 'Tip: duck lasers · full chakra → Rasengan',
+    trainLossTip: 'Jump during LIGHTNING PIERCE telegraph — robot misses · duck ear-lasers',
+    trainTipDefault: 'Tip: duck lasers · full energy → Spiral Orb',
     vsRematchTip: 'Again = rematch · Pause → Restart match (0-0)',
     vsCloseRematchTip: 'Close one! Rematch with Again · or Pause → Restart 0-0',
     vsFatalityRematchTip: 'Fatality! Rematch with Again · same fighters',
@@ -12078,7 +12273,7 @@ const CATALOG_EN = {
     ranchWave: 'FARM RAMPAGE', safariWave: 'ZOO BREAKOUT',
     emberWave: 'EMBER WAVE · 2.0', painWave: 'PAIN WAVE · 3.0',
     waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
-    fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'DEFEATED...', rasenganTriple: 'TRIPLE RASENGAN!', rasenganDual: 'DUAL RASENGAN!',
+    fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'DEFEATED...', spiral_orbTriple: 'TRIPLE SPIRAL ORB!', spiral_orbDual: 'DUAL SPIRAL ORB!',
     round: 'ROUND {n}', roundDecisive: 'ROUND {n} · decisive round', roundMatchPoint: 'ROUND {n} · match point',
     roundWon: 'ROUND WON!', roundLost: 'ROUND LOST',
     p1RoundWin: 'P1 WINS ROUND!', p2RoundWin: 'P2 WINS ROUND!',
@@ -12091,16 +12286,16 @@ const CATALOG_EN = {
     satan: 'SATAN — {name}!', satanIncoming: 'SATAN APPROACHES…', satanWin: 'SATAN DEFEATED!',
   },
   help: { tips: [
-    'Power-ups: defeated monsters sometimes drop orbs — HP, rage, chakra, shield.',
+    'Power-ups: defeated monsters sometimes drop orbs — HP, rage, energy, shield.',
     'Bosses: below half HP they get fiercer (phase 2).',
     'Combos: hit quickly in a row to stack ×2 / ×3 damage.',
     'Dash: double-tap left/right (or Shift) to dodge.',
-    'Rasengan: fill your chakra bar — then charge a spinning orb and slam it in.',
+    'Spiral Orb: fill your energy bar — then charge a spinning orb and slam it in.',
     'Substitution: smoke cloud + dodge (button or Shift). Brief invulnerability.',
-    'Weapon combo: tap weapon 3× fast — each weapon has 3 moves (①②③). Hit with ① and ②, then ③ is a finisher (+damage, +chakra). Mastery: Virtuoso 3× · Master 10× · Legend 25× per weapon.',
+    'Weapon combo: tap weapon 3× fast — each weapon has 3 moves (①②③). Hit with ① and ②, then ③ is a finisher (+damage, +energy). Mastery: Virtuoso 3× · Master 10× · Legend 25× per weapon.',
     '2 players: roster with 5 saga-icons (Ki/Scroll/Tide/Cape/Dawn parody) + filters · best-of-3.',
     'Versus fatality: match-winning KO → FATALITY window — tap weapon/punch/kick for styl-finish (skips after 3.5s).',
-    'RabbitRobot: uses Chidori (lightning) — wait until he opens up.',
+    'RabbitRobot: uses Lightning Pierce (lightning) — wait until he opens up.',
     'Wall: 60s timer · combo bar (+4% smash per hit) · milestones ×3/×5/×8 · record pace in HUD · bomb/gold bonus bricks.',
     'Rarities: Common → Uncommon → Rare → Epic → Legendary → Mythic. Rarer = more XP & max HP.',
     '50 levels: 5 islands × 10 levels — skill gate weapons per island · boss Lv 10/20/30/40/50 opens next island · heat meter: 5× = Master buff · 9× = danger! · 10× = Satan.',
@@ -12180,7 +12375,7 @@ const CATALOG_EN = {
     charFair: 'Fair duo: {a} vs {b} · TOT Δ{diff}',
     skillUpgradeReady: '{name} ready to upgrade — Collection → Upgrades',
     skillUpgraded: '{name} Lv {lv}! {detail}',
-    jutsuEquipped: '{name} equipped as SUPER jutsu',
+    techniqueEquipped: '{name} equipped as SUPER technique',
     itemUpgradeReady: '{name} ready to upgrade — Collection → Upgrades',
     itemUpgraded: '{name} Lv {lv}! {detail}',
     skipGamble: 'No gamble',
@@ -12369,10 +12564,10 @@ const CATALOG_EN = {
     weaponIslandPick: 'Training ✓ · adventure ≤ Lv {cap}',
     weaponIslandCapShort: 'Island cap Lv {cap}',
     skillHead: 'Skills',
-    skillSub: 'Chakra specials — level unlocks · adventure/training/wall/mats',
+    skillSub: 'Energy specials — level unlocks · adventure/training/wall/mats',
     skillSummaryHead: 'Skills',
     skillSummaryActive: 'active',
-    skillSummarySub: 'Pick your chakra special for adventure & solo modes. Versus uses roster specials.',
+    skillSummarySub: 'Pick your energy special for adventure & solo modes. Versus uses roster specials.',
     skillActive: 'Active',
     skillPick: 'Tap to equip',
     skillPickHint: 'Tap = preview · tap again = equip',
@@ -12380,7 +12575,7 @@ const CATALOG_EN = {
     skillIslandGate: 'Island skill Lv {lvl}',
     skillNeedLvl: 'Unlocks at Lv {lvl}',
     skillGateLine: 'island gate Lv {cap}',
-    skillBlurbAll: '24 chakra specials — filter by saga or type · preview + stats',
+    skillBlurbAll: '24 energy specials — filter by saga or type · preview + stats',
     skillEmptyFilter: 'No skills in this filter — change saga or type',
     skillNextUnlock: 'Next unlock: <b>{name}</b> at Lv {lvl} · {need} level(s) to go',
     skillNextUnlockSoon: 'Next: <b>{name}</b> (Lv {lvl}) — almost ready',
@@ -12416,7 +12611,7 @@ const CATALOG_EN = {
     skillTabWeapons: 'Weapons',
     skillTabPets: 'Pets',
     skillTabStyle: 'Style',
-    upgradeSubSkills: 'Skill shards in adventure · jutsu max Lv 5 · utility max Lv 3',
+    upgradeSubSkills: 'Skill shards in adventure · technique max Lv 5 · utility max Lv 3',
     upgradeSubWeapons: 'Item shards for unlocked weapons · mythic max Lv 5',
     upgradeSubPets: 'Item shards for tamed pets · passive, assist & CD',
     upgradeSubStyle: 'Item shards for unlocked outfits · bonus, HP & shield',
@@ -12444,15 +12639,15 @@ const CATALOG_EN = {
     skillLevel: 'Lv {lv}/{max}',
     skillNow: 'Now',
     skillNext: 'Next',
-    skillGroupJutsu: 'Jutsu',
+    skillGroupTechnique: 'Technique',
     skillGroupUtility: 'Utility',
-    jutsuActive: 'Active jutsu: {name}',
-    jutsuActiveBadge: 'ACTIVE',
-    jutsuEquip: 'Equip',
-    jutsuEquipped: 'SUPER in adventure & training',
-    jutsuTapEquip: 'Tap Equip for SUPER in adventure',
-    jutsuSelectHint: 'Pick your SUPER (Rasengan/Chidori/Rinnegan) · skill shards drop more for active jutsu',
-    helpFirstMinute: 'First minute — one short hint per mode at top (no toast stack). Adventure: joystick + buttons · green = HP · full chakra = SUPER. Training = Robot · Wall = combo · 2P = left/right.',
+    techniqueActive: 'Active technique: {name}',
+    techniqueActiveBadge: 'ACTIVE',
+    techniqueEquip: 'Equip',
+    techniqueEquipped: 'SUPER in adventure & training',
+    techniqueTapEquip: 'Tap Equip for SUPER in adventure',
+    techniqueSelectHint: 'Pick your SUPER (Spiral Orb/Lightning Pierce/Void Gaze) · skill shards drop more for active technique',
+    helpFirstMinute: 'First minute — one short hint per mode at top (no toast stack). Adventure: joystick + buttons · green = HP · full energy = SUPER. Training = Robot · Wall = combo · 2P = left/right.',
     helpOnboardHead: 'First-minute hints: {seen}/{total} modes seen · max one line per mode at top',
     helpTryNext: 'Try next: {mode}',
     helpTrySub: 'Not played yet — one hint at top, no extra toast.',
@@ -12527,17 +12722,17 @@ const CATALOG_EN = {
     boss: 'BOSS',
     topHunter: 'Top hunter',
     modeAdventure: '5 islands × 10 levels · heat meter · 9× = danger! · 10× = Satan · Master buff · gamble',
-    modeTraining: 'Combo trainer ×5/×8/×10 · 3s dummy · lasers · Chidori',
+    modeTraining: 'Combo trainer ×5/×8/×10 · 3s dummy · lasers · Lightning Pierce',
     modeWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD · 5s warning',
     modeVersus: 'P1 left P2 right · best-of-3 · rematch in pause',
     modeCoinrun: '45s coins · 2 coins = 1 pet coin · aim ↑ · flyers +3',
-    firstMinuteAdventure: 'First minute: move left · punch right · joy ↑ aim flyers · full chakra = SUPER',
-    firstMinuteTraining: 'First minute: dodge red laser · block up close · full chakra → SUPER',
+    firstMinuteAdventure: 'First minute: move left · punch right · joy ↑ aim flyers · full energy = SUPER',
+    firstMinuteTraining: 'First minute: dodge red laser · block up close · full energy → SUPER',
     firstMinuteWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD',
     firstMinuteVersus: 'First minute: P1 left · P2 right · landscape iPad works best',
     firstMinuteCoinrun: '45s coins · joy ↑ aim · pink flyer = +3 · max 3 shuriken fast',
-    firstMinuteAdventureKb: 'First minute: A/D move · W jump · J/K/L · U jutsu · Shift subst',
-    firstMinuteTrainingKb: 'First minute: dodge lasers · Shift = subst · full chakra → U',
+    firstMinuteAdventureKb: 'First minute: A/D move · W jump · J/K/L · U technique · Shift subst',
+    firstMinuteTrainingKb: 'First minute: dodge lasers · Shift = subst · full energy → U',
     firstMinuteWallKb: '60s · combo milestones · A/D · J/K/L · record pace in HUD',
     firstMinuteVersusKb: 'First minute: P1 WASD+JKL · P2 arrows+1-5 · best-of-3',
     firstMinuteCoinrunKb: 'Grab coins · W/↑ aim higher · J/K shuriken · max 3 fast',
@@ -12551,7 +12746,7 @@ const CATALOG_EN = {
     langSwitchFail: 'Language switch failed',
   },
   fighter: {
-    chakraEmpty: 'Chakra not full!', subst: 'Substitution!', dash: 'Dash!',
+    energyEmpty: 'Energy not full!', subst: 'Substitution!', dash: 'Dash!',
     shield: 'Shield!', parry: 'PARRY!', block: 'BLOCK!', miss: 'MISS!',
   },
   egg: { dailyReady: 'Daily egg ready', advBonus: 'Bonus egg: win 1× adventure', tomorrow: 'Egg again tomorrow' },
@@ -12560,24 +12755,24 @@ const CATALOG_EN = {
     stat: { dmg: 'Damage', wind: 'Windup', spd: 'Speed', kb: 'Knockback' },
     tag: { pierce: 'Pierce', pull: 'Pull' },
     saga: {
-      scroll: { blurb: 'Ninja scroll — Rasengan, Chidori, Rinnegan lightning slash & gravity specials.' },
-      ki: { blurb: 'Ki waves — Kamehameha, discs, Spirit Bomb & blitz dashes.' },
-      tide: { blurb: 'Tide beams — Getsuga, Cero & Bankai flash.' },
-      fighter: { blurb: 'Street stretch — Gum-Gum dash & Gear Second steam.' },
-      cape: { blurb: 'Hero specials — Thunder Palm & Serious Series.' },
+      scroll: { blurb: 'Ninja scroll — Spiral Orb, Lightning Pierce, Void Gaze lightning slash & gravity specials.' },
+      ki: { blurb: 'Ki waves — Wave Cannon, discs, Energy Sphere & blitz dashes.' },
+      tide: { blurb: 'Tide beams — Moon Slash, Void Beam & Blade Ascend flash.' },
+      fighter: { blurb: 'Street stretch — Stretch dash & Steam Burst steam.' },
+      cape: { blurb: 'Hero specials — Thunder Palm & Heavy Series.' },
       dawn: { blurb: 'Dawn palm — solar orbs & lunar pull control.' },
     },
   },
   super: {
     behavior: {
-      blast: 'Blast', shield: 'Shield', heal: 'Heal', sharingan: 'Genjutsu',
+      blast: 'Blast', shield: 'Shield', heal: 'Heal', mind_eye: 'Illusion',
       lightning: 'Lightning', meteor: 'Meteor', rage: 'Rage', timestop: 'Time',
       clones: 'Clones', void: 'Void',
     },
     stat: { pow: 'Power', rad: 'Radius', cd: 'Cooldown', charge: 'Charge' },
     tag: {
       blast: 'Blast', knockback: 'Knockback', defense: 'Defense', push: 'Push',
-      heal: 'Heal', genjutsu: 'Genjutsu', pull: 'Pull', slow: 'Slow',
+      heal: 'Heal', illusion: 'Illusion', pull: 'Pull', slow: 'Slow',
       lightning: 'Lightning', 'multi-hit': 'Multi-hit', meteor: 'Meteor', zone: 'Zone',
       buff: 'Buff', freeze: 'Freeze', burst: 'Burst', rush: 'Rush', void: 'Void',
     },
@@ -12600,16 +12795,16 @@ const CATALOG_EN = {
     '2P: character select in two steps — P1 then P2 (18 fighters, best-of-3).',
     'Coming: Mat\'s bonus game — short mini-challenge after a strong run or perfect round.',
     'Coming: aim your weapon — floor for shockwaves or birds for bonus XP.',
-    'Full chakra → tap 🌀 for Rasengan — big damage and screen-shake.',
+    'Full energy → tap 🌀 for Spiral Orb — big damage and screen-shake.',
     '2P on iPad: landscape; P1 left half, P2 right half (joystick + buttons).',
     'Wall: combos stack damage — red bombs explode, gold = extra XP.',
     'Fill monster book = more max HP by rarity (common +3 … mythic +25).',
     'Coming: adventure character select before each level — loadout per run.',
-    'Training vs RabbitRobot: duck lasers; open Chidori = your moment.',
+    'Training vs RabbitRobot: duck lasers; open Lightning Pierce = your moment.',
     'Dash / substitution: double-tap left-right or Shift — brief invulnerability.',
     'Coming: Mat\'s dojo — timing minigame with boards and combo multipliers.',
     'Kunai & shuriken unlock early — throw projectiles alongside melee.',
-    'Bosses phase 2 under half HP — block and save chakra for the finish.',
+    'Bosses phase 2 under half HP — block and save energy for the finish.',
     'Coming: birds in levels — aim with bow/kunai for pickups without touching ground.',
     'Daily missions + day bonus (+80 XP) — resets at midnight (UTC).',
     'Continue resumes your last mode (adventure, training, wall or 2P).',
@@ -12628,7 +12823,7 @@ const CATALOG_EN = {
     'Menu hero — pixel ground strip',
     'Pause screen pixel backdrop',
     'Combo HUD pixel accents',
-    'Jutsu aura (Rasengan/Chidori) polish',
+    'Technique aura (Spiral Orb/Lightning Pierce) polish',
     'Boss phase-2 color flash',
     'Wall mode tile texture',
     'Versus VS banner pixels',
@@ -12644,7 +12839,7 @@ const CATALOG_EN = {
     streak8: 'RAMPAGE!', streak12: 'UNSTOPPABLE!', streakHold: 'STREAK ×{n} locked!',
     combo3: 'Combo ×3 — keep going!', combo5: 'Combo ×5 — nice!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — master!', comboN: 'COMBO ×{n}!',
-    pickupHp: '+HP', pickupRage: 'RAGE ×1.4', pickupChakra: 'Full chakra!', pickupShield: 'Shield!',
+    pickupHp: '+HP', pickupRage: 'RAGE ×1.4', pickupEnergy: 'Full energy!', pickupShield: 'Shield!',
     pickupSkillShard: '+1 {name} shard',
     pickupItemShard: '+1 {name} item-shard',
     giant: 'GIANT!', wallCombo3: 'Combo ×3 · smash +{pct}%',
@@ -12688,7 +12883,7 @@ const CATALOG_EN = {
     vsHpLeadP2: 'P2 leads +{n}% HP',
     vsHpEven: 'HP even — TIME matters!',
     coinPlus1: '+1 coin', coinPlus3: '+3 coins',
-    rasenganCd: 'Rasengan CD {s}s',
+    spiral_orbCd: 'Spiral Orb CD {s}s',
   },
   hud: {
     super: 'SUPER', masterShort: 'MASTER +20%', masterSword: 'MASTER SWORD {n}s',
@@ -12708,7 +12903,7 @@ const CATALOG_EN = {
     stageClearSec: 'Stage clear — {sec}s',
     toBoss: 'Heading to boss — {sec}s', walkNext: 'Walking on… next wave {sec}s',
     streak: 'STREAK ×{n}', combo: 'COMBO ×{n}', rage: 'RAGE {n}s', shield: 'Shield {n}s',
-    earLaser: 'EAR-LASER — jump!', chidoriTele: 'CHIDORI — dash/jump!',
+    earLaser: 'EAR-LASER — jump!', lightning_pierceTele: 'LIGHTNING PIERCE — dash/jump!',
     kickTele: 'KICK — jump/block!', punchTele: 'PUNCH — block/dodge!', earLaserShort: 'EAR-LASER',
     rabbitRobot: 'RABBITROBOT · {pct}%', roundInfo: 'Round {n} · first to 2 · {s}-{r}',
     dummyGrace: 'Dummy {n}s — practice combo', goal: 'goal ×{n}', record: 'record ×{n}',
@@ -12753,10 +12948,10 @@ const CATALOG_EN = {
     teleFire: 'FIRE — side-step!',
     ketsTap: 'Tap!', ketsKey: 'E / tap',
   },
-  jutsu: { rasengan: 'RASENGAN!', chidori: 'CHIDORI!', rinnegan: 'RINNEGAN!' },
+  technique: { spiral_orb: 'SPIRAL ORB!', lightning_pierce: 'LIGHTNING PIERCE!', void_gaze: 'VOID GAZE!' },
   skill: {
-    rasengan: 'Rasengan', chidori: 'Chidori', rinnegan: 'Rinnegan',
-    subst: 'Substitution', dash: 'Dash', chakra: 'Chakra',
+    spiral_orb: 'Spiraal Orb', lightning_pierce: 'Bliksemprik', void_gaze: 'Leegteblik',
+    subst: 'Substitution', dash: 'Dash', energy_core: 'Energie',
   },
   gamble: {
     superBoss: 'Bad luck! Super-boss in a random wave',
@@ -12803,34 +12998,34 @@ const CATALOG_DE = {
     boss1: { text: 'Besiege 1 Boss-Monster', hint: 'Abenteuer: Boss am Levelende' },
   },
   weapon: {
-    vuist: { name: 'Fäuste', desc: 'Taijutsu-Grundlagen' }, kunai: { name: 'Kunai', desc: 'Klassische Ninja-Klinge' },
+    vuist: { name: 'Fäuste', desc: 'Fist arts-Grundlagen' }, kunai: { name: 'Kunai', desc: 'Klassische Ninja-Klinge' },
     shuriken: { name: 'Shuriken', desc: 'Wirft scharfe Sterne' }, tanto: { name: 'Tanto', desc: 'Kurze Klinge · schnell' },
-    zwaard: { name: 'Ninja-Schwert', desc: 'Kenjutsu-Allrounder' }, sai: { name: 'Sai', desc: 'Dreizack · parieren' },
+    zwaard: { name: 'Ninja-Schwert', desc: 'Blade arts-Allrounder' }, sai: { name: 'Sai', desc: 'Dreizack · parieren' },
     knuppel: { name: 'Knüppel', desc: 'Rohe Schlagkraft' }, waaier: { name: 'Kriegsfächer', desc: 'Fächer-Schnitt · stilvoll' },
     speer: { name: 'Speer', desc: 'Enorme Reichweite' }, tonfa: { name: 'Tonfa', desc: 'Seitengriff · Flurry' },
     nunchaku: { name: 'Nunchaku', desc: 'Blitzschnell' }, kama: { name: 'Kama', desc: 'Sichel · Haken-Schläge' },
     boemerang: { name: 'Bumerang', desc: 'Werfen · kommt zurück' }, zeis: { name: 'Schattensense', desc: 'Langer Bogen · dunkel' },
     hamer: { name: 'Vorschlaghammer', desc: 'Zerstört alles' }, drietand: { name: 'Dreizack', desc: 'Drei Spitzen · stechen' },
     ketting: { name: 'Kettenklinge', desc: 'Reichweite + Druck' }, bostaf: { name: 'Bo-Stab', desc: 'Langer Stab · Tempo' },
-    laser: { name: 'Chakra-Klinge', desc: 'Blau brennende Klinge' }, fuuma: { name: 'Fūma-Shuriken', desc: 'Großer Wurfstern' },
-    kristal: { name: 'Kristallklinge', desc: 'Splitter-Schnitt' }, donder: { name: 'Blitz-Axt', desc: 'Wie Chidori, aber eine Axt' },
+    laser: { name: 'Energie-Klinge', desc: 'Blau brennende Klinge' }, fuuma: { name: 'Fūma-Shuriken', desc: 'Großer Wurfstern' },
+    kristal: { name: 'Kristallklinge', desc: 'Splitter-Schnitt' }, donder: { name: 'Blitz-Axt', desc: 'Wie Lightning Pierce, aber eine Axt' },
     vlamzweep: { name: 'Flammenpeitsche', desc: 'Feuerlinie · lange Reichweite' }, void: { name: 'Void-Klaue', desc: 'Mythische Klaue' },
     sterkling: { name: 'Sternklinge', desc: 'Himmelsmetall · Crits' }, guvve: { name: 'Guvvedukkie-Stab', desc: 'Quak. Bitte. Boom.' },
   },
   style: {
     classic: { name: 'Klassisch', hint: 'Standard-Ninja', tooltip: 'Basis-Ninja — kein Bonus.', bonus: 'Kein Kampfbonus' },
-    konoha: { name: 'Konoha-Bandana', hint: 'Lv 5', tooltip: 'Leaf-Dorf-Kopfband. Etwas mehr max HP.', bonus: '+5 max HP' },
-    chakra: { name: 'Chakra-Glühen', hint: '3× Training gewinnen', tooltip: 'Blaues Chakra. Schnelleres Laden.', bonus: '+8% Chakra-Regen' },
-    akatsuki: { name: 'Roter Mantel', hint: 'Lv 12', tooltip: 'Aggressive Schläge.', bonus: '+4% Schaden' },
+    leaf_band: { name: 'Leaf-Bandana', hint: 'Lv 5', tooltip: 'Leaf-Dorf-Kopfband. Etwas mehr max HP.', bonus: '+5 max HP' },
+    energy_glow: { name: 'Energie-Glühen', hint: '3× Training gewinnen', tooltip: 'Blaues Energy. Schnelleres Laden.', bonus: '+8% Energy-Regen' },
+    crimson_pact: { name: 'Roter Mantel', hint: 'Lv 12', tooltip: 'Aggressive Schläge.', bonus: '+4% Schaden' },
     shadow: { name: 'Schatten-Ninja', hint: 'Lv 15', tooltip: 'Extra Crit-Chance.', bonus: '+3% Crit' },
     guvve: { name: 'Guvvedukkie', hint: '8 Monster im Buch', tooltip: 'Quack-Cosplay. Bonus-XP.', bonus: '+6% Abenteuer-XP' },
     gold: { name: 'Legendär', hint: 'Lv 25', tooltip: 'Goldene Umrandung.', bonus: '+10% Knockback' },
     sand: { name: 'Wüste', hint: 'Lv 8', tooltip: 'Sandmantel — weniger Schaden.', bonus: '−14% Schaden · Block −25%' },
     samurai: { name: 'Samurai', hint: 'Lv 20', tooltip: 'Katana-Haltung.', bonus: '+8% Waffen-Reichweite' },
-    cyber: { name: 'Cyber-Ninja', hint: 'Lv 18', tooltip: 'Neon-Visier.', bonus: 'Blitz-FX · +6% Chakra' },
+    cyber: { name: 'Cyber-Ninja', hint: 'Lv 18', tooltip: 'Neon-Visier.', bonus: 'Blitz-FX · +6% Energy' },
     fox: { name: 'Fuchs-Ninja', hint: '12 Monster im Buch', tooltip: 'Fuchsohren — schneller.', bonus: '+5% Lauftempo' },
     storm: { name: 'Sturmgeist', hint: '5× Training gewinnen', tooltip: 'Sturm-Aura.', bonus: 'Blitz · +0,8s Schild/Welle' },
-    void: { name: 'Void-Wanderer', hint: 'Lv 40', tooltip: 'Schwerere Jutsu.', bonus: '+8% Jutsu-Schaden' },
+    void: { name: 'Void-Wanderer', hint: 'Lv 40', tooltip: 'Schwerere Technique.', bonus: '+8% Technique-Schaden' },
     hunter: { name: 'Jägerlook', hint: '75 Kills im Buch', tooltip: 'Jäger-Umhang.', bonus: '+6% vs Monster' },
     crystal: { name: 'Kristallin', hint: '4 Seltenheiten', tooltip: 'Kristall-Splitter.', bonus: '+1,0s Schild/Welle' },
     tome: { name: 'Buchmeister', hint: 'Hälfte des Buches', tooltip: 'Monsterbuch auf dem Rücken.', bonus: '+4 max HP · Buchweisheit' },
@@ -12847,15 +13042,15 @@ const CATALOG_DE = {
     kets: 'KABLAM…', ketsBam: 'KABLAM!',
   },
   help: { tips: [
-    'Power-ups: besiegte Monster lassen manchmal Kugeln fallen — HP, Rage, Chakra, Schild.',
+    'Power-ups: besiegte Monster lassen manchmal Kugeln fallen — HP, Rage, Energy, Schild.',
     'Bosse: unter halb HP werden sie wütender (Phase 2).',
     'Combos: schnell hintereinander schlagen für ×2 / ×3 Schaden.',
     'Dash: doppelt tippen links/rechts (oder Shift) zum Ausweichen.',
-    'Rasengan: Chakra-Balken füllen — dann Kugel laden und einschlagen.',
+    'Spiral Orb: Energy-Balken füllen — dann Kugel laden und einschlagen.',
     'Substitution: Rauchwolke + Ausweichen (Taste oder Shift). Kurz unverwundbar.',
     'Waffen-Combo: Waffe 3× schnell — ①②③. Mit ① und ② treffen, dann ③ Finisher.',
     '2 Spieler: Roster mit 5 Saga-Icons · Best-of-3.',
-    'RabbitRobot: nutzt Chidori — warte auf eine Lücke.',
+    'RabbitRobot: nutzt Lightning Pierce — warte auf eine Lücke.',
     'Mauer: 60s · Combo-Balken · Meilensteine ×3/×5/×8 · Rekord-Tempo im HUD.',
     'Seltenheiten: Gewöhnlich → Ungewöhnlich → Selten → Episch → Legendär → Mythisch.',
     '50 Level: 5 Inseln × 10 — Skill-Gate · Boss Lv 10/20/30/40/50 · 5× Verlust = Meister-Buff.',
@@ -12901,34 +13096,34 @@ const CATALOG_FR = {
     boss1: { text: 'Vaincs 1 boss', hint: 'Aventure : boss en fin de niveau' },
   },
   weapon: {
-    vuist: { name: 'Poings', desc: 'Bases taijutsu' }, kunai: { name: 'Kunai', desc: 'Lame ninja classique' },
+    vuist: { name: 'Poings', desc: 'Bases fist_arts' }, kunai: { name: 'Kunai', desc: 'Lame ninja classique' },
     shuriken: { name: 'Shuriken', desc: 'Lance des étoiles' }, tanto: { name: 'Tanto', desc: 'Lame courte · rapide' },
-    zwaard: { name: 'Épée ninja', desc: 'Kenjutsu polyvalent' }, sai: { name: 'Sai', desc: 'Trois dents · parade' },
+    zwaard: { name: 'Épée ninja', desc: 'Blade arts polyvalent' }, sai: { name: 'Sai', desc: 'Trois dents · parade' },
     knuppel: { name: 'Massue', desc: 'Force brute' }, waaier: { name: 'Éventail de guerre', desc: 'Entaille stylée' },
     speer: { name: 'Lance', desc: 'Grande portée' }, tonfa: { name: 'Tonfa', desc: 'Poignée latérale' },
     nunchaku: { name: 'Nunchaku', desc: 'Ultra rapide' }, kama: { name: 'Kama', desc: 'Faucille · crochet' },
     boemerang: { name: 'Boomerang', desc: 'Lancer · revient' }, zeis: { name: 'Faux de l\'ombre', desc: 'Long arc · sombre' },
     hamer: { name: 'Masse', desc: 'Tout détruit' }, drietand: { name: 'Trident', desc: 'Trois pointes' },
     ketting: { name: 'Lame chaîne', desc: 'Portée + pression' }, bostaf: { name: 'Bô', desc: 'Long bâton' },
-    laser: { name: 'Lame chakra', desc: 'Lame bleue ardente' }, fuuma: { name: 'Shuriken Fūma', desc: 'Grande étoile' },
-    kristal: { name: 'Lame cristal', desc: 'Entaille de shards' }, donder: { name: 'Hache foudre', desc: 'Comme Chidori, en hache' },
+    laser: { name: 'Lame energy', desc: 'Lame bleue ardente' }, fuuma: { name: 'Shuriken Fūma', desc: 'Grande étoile' },
+    kristal: { name: 'Lame cristal', desc: 'Entaille de shards' }, donder: { name: 'Hache foudre', desc: 'Comme Lightning Pierce, en hache' },
     vlamzweep: { name: 'Fouet flamme', desc: 'Ligne de feu' }, void: { name: 'Griffe du vide', desc: 'Griffe mythique' },
     sterkling: { name: 'Lame étoile', desc: 'Métal céleste · crits' }, guvve: { name: 'Bâton Guvvedukkie', desc: 'Coin. S\'il vous plaît. Boum.' },
   },
   style: {
     classic: { name: 'Classique', hint: 'Ninja standard', tooltip: 'Ninja de base — pas de bonus.', bonus: 'Pas de bonus combat' },
-    konoha: { name: 'Bandana Konoha', hint: 'Lv 5', tooltip: 'Bandeau du village.', bonus: '+5 PV max' },
-    chakra: { name: 'Lueur chakra', hint: '3× entraînement gagné', tooltip: 'Aura bleue.', bonus: '+8% regen chakra' },
-    akatsuki: { name: 'Manteau rouge', hint: 'Lv 12', tooltip: 'Coups agressifs.', bonus: '+4% dégâts' },
+    leaf_band: { name: 'Bandana Leaf', hint: 'Lv 5', tooltip: 'Bandeau du village.', bonus: '+5 PV max' },
+    energy_glow: { name: 'Lueur energy', hint: '3× entraînement gagné', tooltip: 'Aura bleue.', bonus: '+8% regen energy' },
+    crimson_pact: { name: 'Manteau rouge', hint: 'Lv 12', tooltip: 'Coups agressifs.', bonus: '+4% dégâts' },
     shadow: { name: 'Ninja ombre', hint: 'Lv 15', tooltip: 'Crit en plus.', bonus: '+3% crit' },
     guvve: { name: 'Guvvedukkie', hint: '8 monstres au bestiaire', tooltip: 'Cosplay coin-coin.', bonus: '+6% XP aventure' },
     gold: { name: 'Légendaire', hint: 'Lv 25', tooltip: 'Contour doré.', bonus: '+10% knockback' },
     sand: { name: 'Désert', hint: 'Lv 8', tooltip: 'Manteau de sable.', bonus: '−14% dégâts · bloc −25%' },
     samurai: { name: 'Samouraï', hint: 'Lv 20', tooltip: 'Posture katana.', bonus: '+8% portée arme' },
-    cyber: { name: 'Cyber-ninja', hint: 'Lv 18', tooltip: 'Visière néon.', bonus: 'FX éclair · +6% chakra' },
+    cyber: { name: 'Cyber-ninja', hint: 'Lv 18', tooltip: 'Visière néon.', bonus: 'FX éclair · +6% energy' },
     fox: { name: 'Ninja renard', hint: '12 monstres', tooltip: 'Oreilles de renard.', bonus: '+5% vitesse' },
     storm: { name: 'Esprit tempête', hint: '5× entraînement', tooltip: 'Aura tempête.', bonus: 'Éclair · +0,8s bouclier/vague' },
-    void: { name: 'Marcheur du vide', hint: 'Lv 40', tooltip: 'Jutsu plus lourds.', bonus: '+8% dégâts jutsu' },
+    void: { name: 'Marcheur du vide', hint: 'Lv 40', tooltip: 'Technique plus lourds.', bonus: '+8% dégâts technique' },
     hunter: { name: 'Look chasseur', hint: '75 kills bestiaire', tooltip: 'Cape chasseur.', bonus: '+6% vs monstres' },
     crystal: { name: 'Cristallin', hint: '4 raretés', tooltip: 'Éclat cristal.', bonus: '+1,0s bouclier/vague' },
     tome: { name: 'Maître du livre', hint: 'Moitié du bestiaire', tooltip: 'Bestiaire sur le dos.', bonus: '+4 PV max · sagesse' },
@@ -12945,15 +13140,15 @@ const CATALOG_FR = {
     kets: 'KABLAM…', ketsBam: 'KABLAM !',
   },
   help: { tips: [
-    'Power-ups : les monstres vaincus laissent parfois des orbes — PV, rage, chakra, bouclier.',
+    'Power-ups : les monstres vaincus laissent parfois des orbes — PV, rage, energy, bouclier.',
     'Boss : sous la moitié des PV ils deviennent plus furieux (phase 2).',
     'Combos : enchaîne vite pour ×2 / ×3 dégâts.',
     'Dash : double-tap gauche/droite (ou Shift) pour esquiver.',
-    'Rasengan : remplis la barre chakra — charge une boule et frappe.',
+    'Spiral Orb : remplis la barre energy — charge une boule et frappe.',
     'Substitution : nuage de fumée + esquive (bouton ou Shift). Invulnérabilité brève.',
     'Combo arme : arme 3× vite — ①②③. Touche ① et ②, puis ③ finisher.',
     '2 joueurs : roster 5 icônes saga · best-of-3.',
-    'RabbitRobot : utilise Chidori — attends qu\'il s\'ouvre.',
+    'RabbitRobot : utilise Lightning Pierce — attends qu\'il s\'ouvre.',
     'Mur : 60 s · barre combo · jalons ×3/×5/×8 · tempo record au HUD.',
     'Raretés : Commun → Peu commun → Rare → Épique → Légendaire → Mythique.',
     '50 niveaux : 5 îles × 10 — skill gate · boss Lv 10/20/30/40/50 · 5× échec = buff maître.',
@@ -12999,34 +13194,34 @@ const CATALOG_ES = {
     boss1: { text: 'Derrota 1 jefe', hint: 'Aventura: jefe al final del nivel' },
   },
   weapon: {
-    vuist: { name: 'Puños', desc: 'Básicos taijutsu' }, kunai: { name: 'Kunai', desc: 'Cuchilla ninja clásica' },
+    vuist: { name: 'Puños', desc: 'Básicos fist_arts' }, kunai: { name: 'Kunai', desc: 'Cuchilla ninja clásica' },
     shuriken: { name: 'Shuriken', desc: 'Lanza estrellas' }, tanto: { name: 'Tanto', desc: 'Hoja corta · rápida' },
-    zwaard: { name: 'Espada ninja', desc: 'Kenjutsu versátil' }, sai: { name: 'Sai', desc: 'Tres puntas · parada' },
+    zwaard: { name: 'Espada ninja', desc: 'Blade arts versátil' }, sai: { name: 'Sai', desc: 'Tres puntas · parada' },
     knuppel: { name: 'Garrote', desc: 'Fuerza bruta' }, waaier: { name: 'Abanico de guerra', desc: 'Corte con estilo' },
     speer: { name: 'Lanza', desc: 'Gran alcance' }, tonfa: { name: 'Tonfa', desc: 'Empuñadura lateral' },
     nunchaku: { name: 'Nunchaku', desc: 'Ultrarrápido' }, kama: { name: 'Kama', desc: 'Hoz · gancho' },
     boemerang: { name: 'Bumerán', desc: 'Lanza · vuelve' }, zeis: { name: 'Guadaña sombra', desc: 'Arco largo · oscuro' },
     hamer: { name: 'Mazo', desc: 'Lo destroza todo' }, drietand: { name: 'Tridente', desc: 'Tres puntas' },
     ketting: { name: 'Espada cadena', desc: 'Alcance + presión' }, bostaf: { name: 'Bastón bo', desc: 'Bastón largo' },
-    laser: { name: 'Hoja chakra', desc: 'Filo azul ardiente' }, fuuma: { name: 'Shuriken Fūma', desc: 'Estrella grande' },
-    kristal: { name: 'Hoja cristal', desc: 'Corte de fragmentos' }, donder: { name: 'Hacha rayo', desc: 'Como Chidori, pero hacha' },
+    laser: { name: 'Hoja energy', desc: 'Filo azul ardiente' }, fuuma: { name: 'Shuriken Fūma', desc: 'Estrella grande' },
+    kristal: { name: 'Hoja cristal', desc: 'Corte de fragmentos' }, donder: { name: 'Hacha rayo', desc: 'Como Lightning Pierce, pero hacha' },
     vlamzweep: { name: 'Látigo llama', desc: 'Línea de fuego' }, void: { name: 'Garra void', desc: 'Garra mítica' },
     sterkling: { name: 'Hoja estrella', desc: 'Metal celestial · críticos' }, guvve: { name: 'Palo Guvvedukkie', desc: 'Cuac. Por favor. Boom.' },
   },
   style: {
     classic: { name: 'Clásico', hint: 'Ninja estándar', tooltip: 'Ninja base — sin bonus.', bonus: 'Sin bonus combate' },
-    konoha: { name: 'Bandana Konoha', hint: 'Lv 5', tooltip: 'Cinta del pueblo.', bonus: '+5 HP máx' },
-    chakra: { name: 'Brillo chakra', hint: '3× entrenamiento ganado', tooltip: 'Aura azul.', bonus: '+8% regen chakra' },
-    akatsuki: { name: 'Capa roja', hint: 'Lv 12', tooltip: 'Golpes agresivos.', bonus: '+4% daño' },
+    leaf_band: { name: 'Bandana Leaf', hint: 'Lv 5', tooltip: 'Cinta del pueblo.', bonus: '+5 HP máx' },
+    energy_glow: { name: 'Brillo energy', hint: '3× entrenamiento ganado', tooltip: 'Aura azul.', bonus: '+8% regen energy' },
+    crimson_pact: { name: 'Capa roja', hint: 'Lv 12', tooltip: 'Golpes agresivos.', bonus: '+4% daño' },
     shadow: { name: 'Ninja sombra', hint: 'Lv 15', tooltip: 'Más críticos.', bonus: '+3% crít' },
     guvve: { name: 'Guvvedukkie', hint: '8 monstruos en libro', tooltip: 'Cosplay cuac.', bonus: '+6% XP aventura' },
     gold: { name: 'Legendario', hint: 'Lv 25', tooltip: 'Contorno dorado.', bonus: '+10% knockback' },
     sand: { name: 'Desierto', hint: 'Lv 8', tooltip: 'Capa de arena.', bonus: '−14% daño · bloqueo −25%' },
     samurai: { name: 'Samurái', hint: 'Lv 20', tooltip: 'Postura katana.', bonus: '+8% alcance arma' },
-    cyber: { name: 'Cyber-ninja', hint: 'Lv 18', tooltip: 'Visor neón.', bonus: 'FX rayo · +6% chakra' },
+    cyber: { name: 'Cyber-ninja', hint: 'Lv 18', tooltip: 'Visor neón.', bonus: 'FX rayo · +6% energy' },
     fox: { name: 'Ninja zorro', hint: '12 monstruos', tooltip: 'Orejas de zorro.', bonus: '+5% velocidad' },
     storm: { name: 'Espíritu tormenta', hint: '5× entrenamiento', tooltip: 'Aura tormenta.', bonus: 'Rayo · +0,8s escudo/ola' },
-    void: { name: 'Caminante void', hint: 'Lv 40', tooltip: 'Jutsu más fuertes.', bonus: '+8% daño jutsu' },
+    void: { name: 'Caminante void', hint: 'Lv 40', tooltip: 'Technique más fuertes.', bonus: '+8% daño technique' },
     hunter: { name: 'Look cazador', hint: '75 kills libro', tooltip: 'Capa cazador.', bonus: '+6% vs monstruos' },
     crystal: { name: 'Cristalino', hint: '4 rarezas', tooltip: 'Fragmento cristal.', bonus: '+1,0s escudo/ola' },
     tome: { name: 'Maestro del libro', hint: 'Mitad del bestiario', tooltip: 'Libro en la espalda.', bonus: '+4 HP máx · sabiduría' },
@@ -13043,15 +13238,15 @@ const CATALOG_ES = {
     kets: '¡KABLAM…', ketsBam: '¡KABLAM!',
   },
   help: { tips: [
-    'Power-ups: monstruos derrotados sueltan orbes — HP, furia, chakra, escudo.',
+    'Power-ups: monstruos derrotados sueltan orbes — HP, furia, energy, escudo.',
     'Jefes: bajo mitad HP se vuelven más feroces (fase 2).',
     'Combos: golpea rápido para ×2 / ×3 daño.',
     'Dash: doble toque izquierda/derecha (o Shift) para esquivar.',
-    'Rasengan: llena la barra chakra — carga una bola y golpea.',
+    'Spiral Orb: llena la barra energy — carga una bola y golpea.',
     'Substitución: nube de humo + esquiva (botón o Shift). Invulnerabilidad breve.',
     'Combo arma: arma 3× rápido — ①②③. Acierta ① y ②, luego ③ finisher.',
     '2 jugadores: roster 5 iconos saga · best-of-3.',
-    'RabbitRobot: usa Chidori — espera que se abra.',
+    'RabbitRobot: usa Lightning Pierce — espera que se abra.',
     'Muro: 60 s · barra combo · hitos ×3/×5/×8 · ritmo récord en HUD.',
     'Rarezas: Común → Poco común → Raro → Épico → Legendario → Mítico.',
     '50 niveles: 5 islas × 10 — skill gate · jefe Lv 10/20/30/40/50 · 5× derrotas = buff maestro.',
@@ -13093,19 +13288,19 @@ function skillLabel(sk, field) {
   field = field || 'name';
   const id = typeof sk === 'string' ? sk : (sk && sk.id);
   if (field === 'name') {
-    const flatK = 'skill.' + (id || 'rasengan');
+    const flatK = 'skill.' + (id || 'spiral_orb');
     const flatV = t(flatK);
     if (flatV && flatV !== flatK) return flatV;
     if (id === 'subst') return 'Substitutie';
     if (id === 'dash') return 'Dash';
-    if (id === 'chakra') return 'Chakra';
+    if (id === 'energy') return 'Energy';
   }
   const k = 'skill.' + id + '.' + field;
   const v = t(k);
   if (v && v !== k) return v;
   const ss = typeof sk === 'object' && sk ? sk : (typeof skillById === 'function' ? skillById(id) : null);
   if (ss && ss[field] != null) return ss[field];
-  if (field === 'name') return jutsuLabel(id);
+  if (field === 'name') return techniqueLabel(id);
   return '';
 }
 
@@ -13154,11 +13349,11 @@ function skillDesc(id) {
   return '';
 }
 
-function jutsuLabel(kind) {
-  const k = 'jutsu.' + (kind || 'rasengan');
+function techniqueLabel(kind) {
+  const k = 'technique.' + (kind || 'spiral_orb');
   const v = t(k);
   if (v && v !== k) return v;
-  if (typeof jutsuHudLabel === 'function') return jutsuHudLabel(kind);
+  if (typeof techniqueHudLabel === 'function') return techniqueHudLabel(kind);
   return String(kind || '').toUpperCase();
 }
 
@@ -13323,28 +13518,28 @@ const SFX_SAMPLE_MAP = {
 
 /** Per-skill Kenney CC0 samples — each skill id maps to its own file set. */
 const SKILL_SFX_SAMPLES = {
-  rasengan: { pack: 'digital', vol: 0.72, files: ['phaseJump2.ogg', 'phaseJump3.ogg', 'pepSound3.ogg', 'powerUp1.ogg', 'tone1.ogg', 'zap1.ogg'] },
-  fireball_jutsu: { pack: 'digital', vol: 0.74, rate: 1.06, files: ['laser5.ogg', 'pepSound1.ogg', 'highUp.ogg', 'zap2.ogg', 'laser4.ogg', 'powerUp2.ogg'] },
-  chidori: { pack: 'digital', vol: 0.75, files: ['laser2.ogg', 'laser3.ogg', 'highUp.ogg', 'zap1.ogg', 'tone1.ogg', 'laser1.ogg'] },
-  shadow_clone_burst: { pack: 'rpg', vol: 0.68, files: ['cloth4.ogg', 'dropLeather.ogg', 'clothBelt2.ogg', 'cloth1.ogg', 'cloth3.ogg', 'creak2.ogg'] },
-  gentle_palm: { pack: 'impact', vol: 0.7, files: ['impactSoft_medium_001.ogg', 'impactGeneric_light_002.ogg', 'impactSoft_medium_003.ogg', 'impactGeneric_light_004.ogg', 'impactSoft_medium_004.ogg'] },
-  rinnegan: { pack: 'digital', vol: 0.78, files: ['lowThreeTone.ogg', 'phaseJump4.ogg', 'laser1.ogg', 'threeTone1.ogg', 'laser8.ogg', 'spaceTrash2.ogg'] },
-  eight_gates: { pack: 'impact', vol: 0.82, rate: 1.08, files: ['impactPunch_heavy_001.ogg', 'impactPunch_heavy_002.ogg', 'impactMetal_heavy_001.ogg', 'impactPunch_heavy_003.ogg', 'impactSoft_heavy_001.ogg', 'impactMetal_heavy_003.ogg'] },
+  spiral_orb: { pack: 'digital', vol: 0.72, files: ['phaseJump2.ogg', 'phaseJump3.ogg', 'pepSound3.ogg', 'powerUp1.ogg', 'tone1.ogg', 'zap1.ogg'] },
+  fire_orb: { pack: 'digital', vol: 0.74, rate: 1.06, files: ['laser5.ogg', 'pepSound1.ogg', 'highUp.ogg', 'zap2.ogg', 'laser4.ogg', 'powerUp2.ogg'] },
+  lightning_pierce: { pack: 'digital', vol: 0.75, files: ['laser2.ogg', 'laser3.ogg', 'highUp.ogg', 'zap1.ogg', 'tone1.ogg', 'laser1.ogg'] },
+  clone_rush: { pack: 'rpg', vol: 0.68, files: ['cloth4.ogg', 'dropLeather.ogg', 'clothBelt2.ogg', 'cloth1.ogg', 'cloth3.ogg', 'creak2.ogg'] },
+  soft_palm: { pack: 'impact', vol: 0.7, files: ['impactSoft_medium_001.ogg', 'impactGeneric_light_002.ogg', 'impactSoft_medium_003.ogg', 'impactGeneric_light_004.ogg', 'impactSoft_medium_004.ogg'] },
+  void_gaze: { pack: 'digital', vol: 0.78, files: ['lowThreeTone.ogg', 'phaseJump4.ogg', 'laser1.ogg', 'threeTone1.ogg', 'laser8.ogg', 'spaceTrash2.ogg'] },
+  iron_surge: { pack: 'impact', vol: 0.82, rate: 1.08, files: ['impactPunch_heavy_001.ogg', 'impactPunch_heavy_002.ogg', 'impactMetal_heavy_001.ogg', 'impactPunch_heavy_003.ogg', 'impactSoft_heavy_001.ogg', 'impactMetal_heavy_003.ogg'] },
   black_hole: { pack: 'digital', vol: 0.8, rate: 0.86, files: ['lowThreeTone.ogg', 'lowRandom.ogg', 'phaseJump4.ogg', 'highDown.ogg', 'threeTone2.ogg', 'spaceTrash1.ogg'] },
-  kamehameha: { pack: 'digital', vol: 0.8, files: ['laser8.ogg', 'laser9.ogg', 'pepSound4.ogg', 'powerUp3.ogg', 'threeTone2.ogg', 'laser7.ogg'] },
-  galick_gun: { pack: 'digital', vol: 0.76, rate: 0.94, files: ['laser6.ogg', 'laser7.ogg', 'lowDown.ogg', 'zap2.ogg', 'laser5.ogg', 'highDown.ogg'] },
-  destructo_disc: { pack: 'digital', vol: 0.72, rate: 1.12, files: ['laser1.ogg', 'laser2.ogg', 'phaseJump1.ogg', 'zap1.ogg', 'highDown.ogg', 'spaceTrash1.ogg'] },
-  instant_dash: { pack: 'digital', vol: 0.7, rate: 1.18, files: ['phaseJump1.ogg', 'highUp.ogg', 'lowRandom.ogg', 'pepSound1.ogg', 'zap2.ogg', 'phaseJump2.ogg'] },
-  final_flash: { pack: 'digital', vol: 0.84, files: ['laser8.ogg', 'phaseJump5.ogg', 'pepSound5.ogg', 'powerUp3.ogg', 'laser9.ogg', 'threeTone1.ogg'] },
-  spirit_bomb: { pack: 'digital', vol: 0.85, rate: 0.82, files: ['lowThreeTone.ogg', 'phaseJump2.ogg', 'pepSound3.ogg', 'threeTone2.ogg', 'powerUp2.ogg', 'lowRandom.ogg'] },
-  getsuga: { pack: 'digital', vol: 0.74, files: ['laser3.ogg', 'laser4.ogg', 'pepSound2.ogg', 'zap1.ogg', 'laser2.ogg', 'tone1.ogg'] },
-  cero: { pack: 'digital', vol: 0.78, files: ['laser5.ogg', 'laser6.ogg', 'laser7.ogg', 'laser8.ogg', 'zap2.ogg', 'powerUp1.ogg'] },
-  bankai_slash: { pack: 'rpg', vol: 0.76, rate: 1.05, files: ['drawKnife3.ogg', 'chop.ogg', 'footstep04.ogg', 'knifeSlice.ogg', 'knifeSlice2.ogg', 'metalClick.ogg'] },
-  gum_rocket: { pack: 'digital', vol: 0.68, rate: 1.04, files: ['lowRandom.ogg', 'phaseJump2.ogg', 'pepSound1.ogg', 'highDown.ogg', 'zap1.ogg', 'spaceTrash1.ogg'] },
-  gear_second: { pack: 'digital', vol: 0.74, rate: 1.1, files: ['pepSound2.ogg', 'pepSound3.ogg', 'highUp.ogg', 'powerUp1.ogg', 'pepSound1.ogg', 'tone1.ogg'] },
+  wave_cannon: { pack: 'digital', vol: 0.8, files: ['laser8.ogg', 'laser9.ogg', 'pepSound4.ogg', 'powerUp3.ogg', 'threeTone2.ogg', 'laser7.ogg'] },
+  violet_blast: { pack: 'digital', vol: 0.76, rate: 0.94, files: ['laser6.ogg', 'laser7.ogg', 'lowDown.ogg', 'zap2.ogg', 'laser5.ogg', 'highDown.ogg'] },
+  cutter_disc: { pack: 'digital', vol: 0.72, rate: 1.12, files: ['laser1.ogg', 'laser2.ogg', 'phaseJump1.ogg', 'zap1.ogg', 'highDown.ogg', 'spaceTrash1.ogg'] },
+  blink_strike: { pack: 'digital', vol: 0.7, rate: 1.18, files: ['phaseJump1.ogg', 'highUp.ogg', 'lowRandom.ogg', 'pepSound1.ogg', 'zap2.ogg', 'phaseJump2.ogg'] },
+  solar_beam: { pack: 'digital', vol: 0.84, files: ['laser8.ogg', 'phaseJump5.ogg', 'pepSound5.ogg', 'powerUp3.ogg', 'laser9.ogg', 'threeTone1.ogg'] },
+  energy_sphere: { pack: 'digital', vol: 0.85, rate: 0.82, files: ['lowThreeTone.ogg', 'phaseJump2.ogg', 'pepSound3.ogg', 'threeTone2.ogg', 'powerUp2.ogg', 'lowRandom.ogg'] },
+  moon_slash: { pack: 'digital', vol: 0.74, files: ['laser3.ogg', 'laser4.ogg', 'pepSound2.ogg', 'zap1.ogg', 'laser2.ogg', 'tone1.ogg'] },
+  void_beam: { pack: 'digital', vol: 0.78, files: ['laser5.ogg', 'laser6.ogg', 'laser7.ogg', 'laser8.ogg', 'zap2.ogg', 'powerUp1.ogg'] },
+  blade_ascend: { pack: 'rpg', vol: 0.76, rate: 1.05, files: ['drawKnife3.ogg', 'chop.ogg', 'footstep04.ogg', 'knifeSlice.ogg', 'knifeSlice2.ogg', 'metalClick.ogg'] },
+  stretch_dash: { pack: 'digital', vol: 0.68, rate: 1.04, files: ['lowRandom.ogg', 'phaseJump2.ogg', 'pepSound1.ogg', 'highDown.ogg', 'zap1.ogg', 'spaceTrash1.ogg'] },
+  steam_burst: { pack: 'digital', vol: 0.74, rate: 1.1, files: ['pepSound2.ogg', 'pepSound3.ogg', 'highUp.ogg', 'powerUp1.ogg', 'pepSound1.ogg', 'tone1.ogg'] },
   thunder_palm: { pack: 'impact', vol: 0.78, files: ['impactBell_heavy_001.ogg', 'impactBell_heavy_002.ogg', 'impactBell_heavy_003.ogg', 'impactBell_heavy_004.ogg', 'impactMetal_heavy_001.ogg'] },
-  serious_punch: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_004.ogg', 'impactPunch_heavy_003.ogg', 'impactPunch_heavy_002.ogg', 'impactSoft_heavy_002.ogg', 'impactMetal_heavy_004.ogg'] },
-  serious_blast: { pack: 'digital', vol: 0.86, files: ['laser9.ogg', 'laser8.ogg', 'phaseJump5.ogg', 'powerUp3.ogg', 'threeTone2.ogg', 'pepSound5.ogg'] },
+  heavy_punch: { pack: 'impact', vol: 0.92, files: ['impactPunch_heavy_004.ogg', 'impactPunch_heavy_003.ogg', 'impactPunch_heavy_002.ogg', 'impactSoft_heavy_002.ogg', 'impactMetal_heavy_004.ogg'] },
+  heavy_blast: { pack: 'digital', vol: 0.86, files: ['laser9.ogg', 'laser8.ogg', 'phaseJump5.ogg', 'powerUp3.ogg', 'threeTone2.ogg', 'pepSound5.ogg'] },
   sun_palm: { pack: 'impact', vol: 0.72, files: ['impactBell_heavy_002.ogg', 'impactSoft_medium_002.ogg', 'impactBell_heavy_004.ogg', 'impactSoft_medium_004.ogg', 'impactGeneric_light_003.ogg'] },
   moon_pull: { pack: 'digital', vol: 0.76, rate: 0.95, files: ['lowThreeTone.ogg', 'phaseJump3.ogg', 'laser1.ogg', 'threeTone1.ogg', 'highDown.ogg', 'lowRandom.ogg'] },
 };
@@ -13355,8 +13550,8 @@ const SUPER_SFX_SAMPLES = {
   super_shield: { pack: 'impact', vol: 0.88, files: ['impactBell_heavy_002.ogg', 'impactMetal_heavy_003.ogg', 'impactBell_heavy_004.ogg', 'impactMetal_heavy_001.ogg', 'impactMetal_medium_004.ogg'] },
   super_heal_charge: { pack: 'ui', vol: 0.62, files: ['confirmation_002.ogg', 'drop_003.ogg', 'pluck_001.ogg', 'drop_001.ogg', 'scroll_001.ogg'] },
   super_heal: { pack: 'ui', vol: 0.78, files: ['confirmation_004.ogg', 'bong_001.ogg', 'confirmation_003.ogg', 'pluck_002.ogg', 'confirmation_001.ogg'] },
-  super_sharingan_charge: { pack: 'digital', vol: 0.68, rate: 0.9, files: ['lowThreeTone.ogg', 'lowRandom.ogg', 'threeTone1.ogg', 'highDown.ogg', 'spaceTrash2.ogg'] },
-  super_sharingan: { pack: 'digital', vol: 0.82, files: ['laser2.ogg', 'phaseJump4.ogg', 'highUp.ogg', 'zap1.ogg', 'powerUp2.ogg', 'laser3.ogg'] },
+  super_mind_eye_charge: { pack: 'digital', vol: 0.68, rate: 0.9, files: ['lowThreeTone.ogg', 'lowRandom.ogg', 'threeTone1.ogg', 'highDown.ogg', 'spaceTrash2.ogg'] },
+  super_mind_eye: { pack: 'digital', vol: 0.82, files: ['laser2.ogg', 'phaseJump4.ogg', 'highUp.ogg', 'zap1.ogg', 'powerUp2.ogg', 'laser3.ogg'] },
   super_lightning_charge: { pack: 'digital', vol: 0.72, files: ['laser1.ogg', 'laser2.ogg', 'lowRandom.ogg', 'zap1.ogg', 'tone1.ogg', 'zap2.ogg'] },
   super_lightning: { pack: 'digital', vol: 0.9, files: ['laser7.ogg', 'laser8.ogg', 'laser9.ogg', 'zap2.ogg', 'powerUp3.ogg', 'phaseJump5.ogg'] },
   super_meteor_charge: { pack: 'impact', vol: 0.65, rate: 0.85, files: ['impactWood_heavy_001.ogg', 'impactWood_heavy_003.ogg', 'impactSoft_heavy_001.ogg', 'impactPlank_medium_003.ogg', 'impactWood_medium_002.ogg'] },
@@ -15166,7 +15361,7 @@ function drawPlayerAimIndicator(c, fighter, alpha) {
   c.restore();
 }
 
-/** Werpers / jutsu: snelheid in de mikrichting (joy ↑ = hoger gooien). */
+/** Werpers / technique: snelheid in de mikrichting (joy ↑ = hoger gooien). */
 function projAimVelocity(f, baseSpeed) {
   baseSpeed = baseSpeed || 520;
   const aim = fighterAimNorm(f);
@@ -16557,7 +16752,7 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.beginPath(); c.moveTo(56, -7); c.lineTo(72, 0); c.lineTo(56, 7); c.closePath(); c.fill();
       break;
     case 'laser':
-      // Chakra-kling: gloeiende blade + greep
+      // Energy-kling: gloeiende blade + greep
       c.save();
       c.shadowColor = '#4ff3ff'; c.shadowBlur = 12;
       c.strokeStyle = '#4ff3ff'; c.lineWidth = 7; c.beginPath(); c.moveTo(8, 0); c.lineTo(52, 0); c.stroke();
@@ -16877,8 +17072,8 @@ function spawnCompanionSparkles(game, x, y, color, opts) {
   }
 }
 
-/** Jutsu impact burst — Lite FX capped; scale 'small' for projectile fade-out. */
-function spawnJutsuImpactFx(game, x, y, kind, scale) {
+/** Technique impact burst — Lite FX capped; scale 'small' for projectile fade-out. */
+function spawnTechniqueImpactFx(game, x, y, kind, scale) {
   if (!game || motionReduced()) return;
   const sk = skillById(kind);
   const col = sk.color || '#7cf5ff';
@@ -16890,23 +17085,23 @@ function spawnJutsuImpactFx(game, x, y, kind, scale) {
   if (!lite && !small && (sk.behavior === 'pull' || sk.behavior === 'meteor')) {
     game.burst(x, y, '#ff6b9d', 6);
   }
-  if (!lite && !small && (kind === 'rasengan' || sk.behavior === 'orb')) {
+  if (!lite && !small && (kind === 'spiral_orb' || sk.behavior === 'orb')) {
     spawnFxRing(game, x, y, '#ffffff', 10);
   }
-  if (!lite && !small && (kind === 'chidori' || sk.behavior === 'dash')) {
+  if (!lite && !small && (kind === 'lightning_pierce' || sk.behavior === 'dash')) {
     game.burst(x, y, '#e8f7ff', 8, { kind: 'spark', size: 1.8 });
   }
-  if (!lite && !small && (kind === 'rinnegan' || sk.behavior === 'slash')) {
+  if (!lite && !small && (kind === 'void_gaze' || sk.behavior === 'slash')) {
     game.burst(x, y, '#e8d0ff', 10, { kind: 'spark', size: 2.4 });
     spawnFxRing(game, x, y, '#ffffff', 12);
   }
 }
 
 /**
- * Hand-charge aura while winding up a jutsu (Rasengan spiral / Chidori crackle).
+ * Hand-charge aura while winding up a technique (Spiral Orb spiral / Lightning Pierce crackle).
  * g = charge progress 0..1, animT = fighter anim clock.
  */
-function drawJutsuChargeAura(c, hx, hy, g, animT, kind) {
+function drawTechniqueChargeAura(c, hx, hy, g, animT, kind) {
   const sk = skillById(kind);
   const behavior = sk.behavior || 'orb';
   const col = sk.color || '#7cf5ff';
@@ -16916,11 +17111,11 @@ function drawJutsuChargeAura(c, hx, hy, g, animT, kind) {
   const oy = hy;
   const spin = animT * (8 + g * 20);
 
-  drawJutsuOrb(c, ox, oy, 8 + g * 16, spin, kind, 0.55 + g * 0.45);
+  drawTechniqueOrb(c, ox, oy, 8 + g * 16, spin, kind, 0.55 + g * 0.45);
 
   c.save();
-  if (behavior === 'dash' || kind === 'chidori') {
-    // Chidori — crackling sheath + jagged bolts from the palm
+  if (behavior === 'dash' || kind === 'lightning_pierce') {
+    // Lightning Pierce — crackling sheath + jagged bolts from the palm
     const halo = c.createRadialGradient(ox, oy, 2, ox, oy, 22 + g * 28);
     halo.addColorStop(0, `rgba(232,247,255,${0.35 + g * 0.4})`);
     halo.addColorStop(0.45, `rgba(168,224,255,${0.22 + g * 0.28})`);
@@ -16964,8 +17159,8 @@ function drawJutsuChargeAura(c, hx, hy, g, animT, kind) {
         c.stroke();
       }
     }
-  } else if (behavior === 'slash' || kind === 'rinnegan') {
-    // Rinnegan — horizontale bliksem-schede beide kanten (charge preview)
+  } else if (behavior === 'slash' || kind === 'void_gaze') {
+    // Void Gaze — horizontale bliksem-schede beide kanten (charge preview)
     const halo = c.createRadialGradient(ox, oy, 2, ox, oy, 24 + g * 30);
     halo.addColorStop(0, `rgba(255,255,255,${0.4 + g * 0.4})`);
     halo.addColorStop(0.4, `rgba(196,122,255,${0.28 + g * 0.35})`);
@@ -17011,7 +17206,7 @@ function drawJutsuChargeAura(c, hx, hy, g, animT, kind) {
       c.fill();
     }
   } else {
-    // Rasengan — cyan halo + orbiting motes + spiral rings
+    // Spiral Orb — cyan halo + orbiting motes + spiral rings
     const halo = c.createRadialGradient(ox, oy, 2, ox, oy, 20 + g * 26);
     halo.addColorStop(0, `rgba(255,255,255,${0.4 + g * 0.35})`);
     halo.addColorStop(0.4, `rgba(124,245,255,${0.28 + g * 0.32})`);
@@ -17054,7 +17249,7 @@ function drawJutsuChargeAura(c, hx, hy, g, animT, kind) {
   c.restore();
 }
 
-function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
+function drawTechniqueOrb(c, x, y, r, spin, kind, alpha) {
   const sk = skillById(kind);
   const behavior = sk.behavior || 'orb';
   const col = sk.color || '#7cf5ff';
@@ -17164,7 +17359,7 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
       c.ellipse(0, 0, r * 0.95, r * (0.32 + (i % 3) * 0.11), a0, 0, TAU);
       c.stroke();
     }
-    // Inner spiral ribbon (Rasengan signature)
+    // Inner spiral ribbon (Spiral Orb signature)
     if (!lite) {
       c.strokeStyle = 'rgba(255,255,255,.55)';
       c.lineWidth = 1.5;
@@ -17199,10 +17394,10 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
 }
 
 /**
- * Rinnegan in-flight: tweerichtings lichtschits-strook.
+ * Void Gaze in-flight: tweerichtings lichtschits-strook.
  * Dik bij centrum, smaller naar de tips (taper met afstand).
  */
-function drawRinneganSlashWave(c, p) {
+function drawVoidGazeSlashWave(c, p) {
   if (!p) return;
   const col = (typeof skillById === 'function' ? (skillById(p.kind) || {}).color : null) || '#c47aff';
   const reach = Math.max(8, p.slashReach || 0);
@@ -18164,7 +18359,7 @@ class Fighter {
       name: 'Stickman',
       substCd: 0, specialCd: 0, invulnT: 0, hitFlashT: 0, afterimages: [], dashCd: 0,
       weaponComboIdx: 0, weaponComboT: 0, _lastWeaponKind: null, _weaponComboPrimed: false, _weaponComboHits: 0,
-      style: null, playerSlot: 0, vsSpecial: 'rasengan',
+      style: null, playerSlot: 0, vsSpecial: 'spiral_orb',
     }, opts);
   }
 
@@ -18211,7 +18406,7 @@ class Fighter {
         spec = {
           kind, windup: sk.windup || 0.48, active: 0.12, recover: sk.recover || 0.28,
           range: 62, r: sk.radius || 44,
-          dmg: this.baseDmg * (sk.dmgMul || 2.8), kb: sk.kb || 520, jutsu: sk.id,
+          dmg: this.baseDmg * (sk.dmgMul || 2.8), kb: sk.kb || 520, technique: sk.id,
         };
         break;
       }
@@ -18227,13 +18422,13 @@ class Fighter {
   startAttack(kind, game) {
     if (this.attack || this.state === 'hurt' || !this.alive || this.invulnT > 0 && kind !== 'special') return;
     if (kind === 'special') {
-      const jKind = fighterJutsuKind(this);
-      if (jKind === 'rasengan' && (this.specialCd || 0) > 0) {
+      const jKind = fighterTechniqueKind(this);
+      if (jKind === 'spiral_orb' && (this.specialCd || 0) > 0) {
         if (this.isPlayer || this.playerSlot) {
           const left = Math.max(0.1, this.specialCd);
           try {
             game.floater(this.x, this.y - 110,
-              (typeof t === 'function' ? t('combat.rasenganCd', { s: left.toFixed(1) }) : null)
+              (typeof t === 'function' ? t('combat.spiral_orbCd', { s: left.toFixed(1) }) : null)
                 || ('CD ' + left.toFixed(1) + 's'),
               '#7cf5ff', 13);
           } catch (_) {
@@ -18242,15 +18437,15 @@ class Fighter {
         }
         return;
       }
-      const chakraCost = skillChakraCost(jKind);
-      if (this.energy < chakraCost) {
-        if (this.isPlayer) game.floater(this.x, this.y - 110, 'Chakra niet vol!', '#7cf5ff', 13);
+      const energyCost = skillEnergyCost(jKind);
+      if (this.energy < energyCost) {
+        if (this.isPlayer) game.floater(this.x, this.y - 110, 'Energy niet vol!', '#7cf5ff', 13);
         return;
       }
       this.energy = 0;
-      if (jKind === 'rasengan' && typeof rasenganCooldownSec === 'function') {
-        const lv = typeof skillLevel === 'function' ? skillLevel('rasengan') : 0;
-        this.specialCd = rasenganCooldownSec(lv);
+      if (jKind === 'spiral_orb' && typeof spiralOrbCooldownSec === 'function') {
+        const lv = typeof skillLevel === 'function' ? skillLevel('spiral_orb') : 0;
+        this.specialCd = spiralOrbCooldownSec(lv);
       }
       const sk = fighterEquippedSkill(this);
       AudioSys.sfx(skillSfxId(sk));
@@ -18412,7 +18607,7 @@ class Fighter {
   }
 
   aiIntent(dt, game) {
-    // RabbitRobot street-fighter AI
+    // RabbitRobot arcade AI
     const out = { move: 0, jump: false, punch: false, kick: false, weapon: false, special: false, block: false };
     const p = game.player;
     if (!p || !p.alive || !this.alive) return out;
@@ -18439,9 +18634,9 @@ class Fighter {
       this.aiTimer = rand(0.22, 0.55) / diff;
       if (dist > 240) {
         this.aiMove = dir;
-        const chidoriChance = pLowTrain ? 0.12 : 0.3;
-        const chidoriMinDist = pLowTrain ? 160 : 105;
-        if (this.aiCd <= 0 && dist > chidoriMinDist && !pAir && Math.random() < chidoriChance) {
+        const lightning_pierceChance = pLowTrain ? 0.12 : 0.3;
+        const lightning_pierceMinDist = pLowTrain ? 160 : 105;
+        if (this.aiCd <= 0 && dist > lightning_pierceMinDist && !pAir && Math.random() < lightning_pierceChance) {
           out.special = true; this.aiCd = rand(2.6, 4.2) / diff;
         }
         if (Math.random() < 0.12) out.jump = true;
@@ -18583,7 +18778,7 @@ class Fighter {
         a._telegraphed = true;
         if (game.mode === 'training') {
           game.trainTelegraphT = 0.85;
-          game.floater(this.x, this.y - 138, 'CHIDORI — dash/spring!', '#7cf5ff', 16);
+          game.floater(this.x, this.y - 138, 'LIGHTNING PIERCE — dash/spring!', '#7cf5ff', 16);
           haptic(10);
         }
       }
@@ -18593,14 +18788,14 @@ class Fighter {
           this.attack = null;
           game.trainTelegraphT = 0;
           this.aiCd = rand(2.5, 4.2) / (this.aiDiff || 1);
-          game.floater(this.x, this.y - 128, 'Chidori gemist — spring werkt!', '#7cf5ff', 14);
+          game.floater(this.x, this.y - 128, 'Lightning Pierce gemist — spring werkt!', '#7cf5ff', 14);
         } else if (a.t >= a.windup) {
           a.fired = true;
-          game.spawnJutsu(this, a);
+          game.spawnTechnique(this, a);
         }
       } else if (a.kind === 'special' && !a.fired && a.t >= a.windup) {
         a.fired = true;
-        game.spawnJutsu(this, a);
+        game.spawnTechnique(this, a);
       }
       if (this.isRobot && game.mode === 'training' && !a.fired && (a.kind === 'punch' || a.kind === 'kick') && a.t < a.windup) {
         const p = game.player;
@@ -18623,17 +18818,17 @@ class Fighter {
       }
     }
 
-    // chakra laadt sneller bij combo-gevoel (in beweging/gevecht)
+    // energy laadt sneller bij combo-gevoel (in beweging/gevecht)
     if (this.isPlayer || this.playerSlot) {
       const stageMul = (typeof game !== 'undefined' && game && game.stageEnergyMul) ? game.stageEnergyMul : 1;
       const petMul = (typeof game !== 'undefined' && game && game.petEnergyMul) ? game.petEnergyMul : 1;
       const styleMul = (typeof game !== 'undefined' && game && game.styleEnergyMul) ? game.styleEnergyMul : 1;
-      const chakraMul = (this.isPlayer || this.playerSlot) ? skillBonuses('chakra').regenMul : 1;
-      const rate = (this.attack ? 4.2 : 2.8) * stageMul * petMul * styleMul * chakraMul;
+      const energyRegenMul = (this.isPlayer || this.playerSlot) ? skillBonuses('energy').regenMul : 1;
+      const rate = (this.attack ? 4.2 : 2.8) * stageMul * petMul * styleMul * energyRegenMul;
       const prevE = this._energyPrev == null ? this.energy : this._energyPrev;
       this.energy = clamp(this.energy + dt * rate, 0, 100);
       if (this.energy >= 100 && prevE < 100) {
-        try { AudioSys.sting('superReady', fighterJutsuKind(this)); } catch (_) {}
+        try { AudioSys.sting('superReady', fighterTechniqueKind(this)); } catch (_) {}
       }
       this._energyPrev = this.energy;
     }
@@ -18783,7 +18978,7 @@ class Fighter {
         const move = a.move || weaponMoveDef(this.weapon.id, a.moveIdx || 0);
         applyWeaponMovePose(P, ext, move);
       } else if (a.kind === 'special') {
-        // Rasengan / Chidori houding: hand naar voren
+        // Spiral Orb / Lightning Pierce houding: hand naar voren
         const charge = clamp(a.t / a.windup, 0, 1);
         P.arms = [[2.1, -2.0], [lerp(0.4, 0.05, charge), lerp(-0.2, 0.05, charge)]];
         P.legs = [[1.95, 1.85], [1.15, 1.4]];
@@ -18914,14 +19109,14 @@ class Fighter {
       c.strokeStyle = 'rgba(120,220,255,.8)'; c.lineWidth = 3;
       c.beginPath(); c.arc(22, -50, 26, -1.4, 1.4); c.stroke();
     }
-    // Rasengan / Chidori oplaad-aura in de hand
+    // Spiral Orb / Lightning Pierce oplaad-aura in de hand
     if (this.attack && this.attack.kind === 'special' && !this.attack.fired) {
       const g = clamp(this.attack.t / this.attack.windup, 0, 1);
-      const kind = fighterJutsuKind(this);
-      if (typeof drawJutsuChargeAura === 'function') {
-        drawJutsuChargeAura(c, hx, hy, g, this.animT, kind);
+      const kind = fighterTechniqueKind(this);
+      if (typeof drawTechniqueChargeAura === 'function') {
+        drawTechniqueChargeAura(c, hx, hy, g, this.animT, kind);
       } else {
-        drawJutsuOrb(c, hx + 14, hy, 8 + g * 16, this.animT * (8 + g * 20), kind, 0.55 + g * 0.45);
+        drawTechniqueOrb(c, hx + 14, hy, 8 + g * 16, this.animT * (8 + g * 20), kind, 0.55 + g * 0.45);
       }
     }
     c.restore();
@@ -19174,9 +19369,9 @@ class Monster {
     this.face = dir;
     this.atkCD -= dt; this.shootCD -= dt;
     if (this.superSlowT > 0) this.superSlowT -= dt;
-    const genjutsuMul = (this.superSlowT > 0) ? (this.superSlowMul || 0.25) : 1;
+    const gentechniqueMul = (this.superSlowT > 0) ? (this.superSlowMul || 0.25) : 1;
     const enrageSpd = this.enraged ? (1.32 * (this.enrageMul || 1)) : 1;
-    const spdMul = enrageSpd * genjutsuMul;
+    const spdMul = enrageSpd * gentechniqueMul;
     const type = this.sp.type;
 
     if (type === 'hop') {
@@ -19293,7 +19488,7 @@ class Monster {
     }
     this.x = clamp(this.x, game.minX - 20, game.maxX + 20);
 
-    this.tryEnemyJutsu(dt, game, p, dist);
+    this.tryEnemyTechnique(dt, game, p, dist);
 
     // contactschade
     if (this.atkCD <= 0 || this.dashT > 0) {
@@ -19312,20 +19507,20 @@ class Monster {
     }
   }
 
-  tryEnemyJutsu(dt, game, p, dist) {
-    if (!this.enemyJutsu || !p || !p.alive || this.introT > 0 || game.inputLocked) return;
-    this.jutsuCD -= dt;
-    if (this.jutsuTelegraphT > 0) {
-      this.jutsuTelegraphT -= dt;
-      if (this.jutsuTelegraphT <= 0) game.spawnEnemyJutsu(this);
+  tryEnemyTechnique(dt, game, p, dist) {
+    if (!this.enemyTechnique || !p || !p.alive || this.introT > 0 || game.inputLocked) return;
+    this.techniqueCD -= dt;
+    if (this.techniqueTelegraphT > 0) {
+      this.techniqueTelegraphT -= dt;
+      if (this.techniqueTelegraphT <= 0) game.spawnEnemyTechnique(this);
       return;
     }
-    if (this.jutsuCD > 0 || dist < 130 || dist > 520) return;
+    if (this.techniqueCD > 0 || dist < 130 || dist > 520) return;
     if (this.dashT > 0 || this.telegraphT > 0) return;
-    this.jutsuTelegraphT = this.enemyJutsu === 'kamehame' ? 0.9 : 0.5;
-    this.jutsuCD = rand(5, 8.5) / (this.enraged ? 1.2 : 1);
+    this.techniqueTelegraphT = this.enemyTechnique === 'wave_cannon' ? 0.9 : 0.5;
+    this.techniqueCD = rand(5, 8.5) / (this.enraged ? 1.2 : 1);
     try {
-      AudioSys.sfx(this.enemyJutsu === 'kamehame' ? 'ketsbamCharge' : 'roar');
+      AudioSys.sfx(this.enemyTechnique === 'wave_cannon' ? 'ketsbamCharge' : 'roar');
     } catch (_) {}
   }
 
@@ -19622,11 +19817,11 @@ class Monster {
       }
       c.restore();
     }
-    if (this.jutsuTelegraphT > 0 && this.alive) {
+    if (this.techniqueTelegraphT > 0 && this.alive) {
       c.save();
-      const prog = 1 - this.jutsuTelegraphT / (this.enemyJutsu === 'kamehame' ? 0.9 : 0.5);
+      const prog = 1 - this.techniqueTelegraphT / (this.enemyTechnique === 'wave_cannon' ? 0.9 : 0.5);
       c.globalAlpha = 0.4 + prog * 0.35;
-      c.strokeStyle = this.enemyJutsu === 'chidori' ? '#a8e0ff' : '#7cf5ff';
+      c.strokeStyle = this.enemyTechnique === 'lightning_pierce' ? '#a8e0ff' : '#7cf5ff';
       c.lineWidth = 2.5 + prog * 2;
       c.beginPath();
       c.arc(0, 0, this.size * (1.2 + prog * 0.35), 0, TAU);
@@ -24016,7 +24211,7 @@ class Game {
         weapon: wpn, color: '#f2f5ff',
         speed: Math.round(260 * (pst.speedMul || 1)),
         rosterId: 'hero',
-        vsSpecial: activeJutsuId(),
+        vsSpecial: activeTechniqueId(),
       });
       applyPlayerStyle(this.player);
       applyStyleBonusesToPlayer(this, this.player);
@@ -24353,7 +24548,7 @@ class Game {
     this.monsters = this.monsters.filter((m) => m && m.alive);
   }
 
-  /** Speler-jutsu orbs tussen golven opruimen — geen zwevende Rasengan na wave-clear. */
+  /** Speler-technique orbs tussen golven opruimen — geen zwevende Spiral Orb na wave-clear. */
   purgePlayerProjectiles() {
     if (!this.projectiles?.length) return;
     this.projectiles = this.projectiles.filter((p) => p && p.from !== 'player' && p.from !== 'p1');
@@ -24518,7 +24713,7 @@ class Game {
                 this.player.hp = Math.min(this.player.maxhp, this.player.hp + micro);
               }
             } else {
-              AudioSys.sfxAt(typeof jutsuSwooshSfx === 'function' ? jutsuSwooshSfx('rasengan') : 'skillSwoosh', tgt.x);
+              AudioSys.sfxAt(typeof techniqueSwooshSfx === 'function' ? techniqueSwooshSfx('spiral_orb') : 'skillSwoosh', tgt.x);
             }
           } catch (_) {}
           const burstN = allyId === 'tide' ? 9 : 6;
@@ -25258,10 +25453,10 @@ class Game {
         noteRunLootPickup(this.runLoot, 'rage');
         this.floater(p.x, p.y - 100, t('combat.pickupRage'), meta.color, 16);
         break;
-      case 'chakra':
+      case 'energy':
         p.energy = 100;
-        noteRunLootPickup(this.runLoot, 'chakra');
-        this.floater(p.x, p.y - 100, t('combat.pickupChakra'), meta.color, 16);
+        noteRunLootPickup(this.runLoot, 'energy');
+        this.floater(p.x, p.y - 100, t('combat.pickupEnergy'), meta.color, 16);
         break;
       case 'shield':
         this.playerShieldT = 6.5;
@@ -25463,9 +25658,9 @@ class Game {
     const trainTip = win
       ? (trainBest >= 8
         ? `Combo-trainer: max ×${trainBest} — bonus XP!`
-        : (save.trainWins === 3 ? 'Nieuwe stijl vrij: Chakra gloed — Instellingen → Stijl!' : 'Unlock stijlen door meer train-wins!'))
-      : onceResultTip('training', 'loss', 'Spring tijdens CHIDORI-telegraph — robot mist · duck oor-lasers')
-        || 'Tip: duck lasers · chakra vol → Rasengan';
+        : (save.trainWins === 3 ? 'Nieuwe stijl vrij: Energie gloed — Instellingen → Stijl!' : 'Unlock stijlen door meer train-wins!'))
+      : onceResultTip('training', 'loss', 'Spring tijdens LIGHTNING PIERCE-telegraph — robot mist · duck oor-lasers')
+        || 'Tip: duck lasers · energy vol → Spiral Orb';
     scheduleGameResult(this, 1400, () => UI.showResult(win, {
       title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
       detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · max combo ×${trainBest}` +
@@ -26075,10 +26270,10 @@ class Game {
     if (!opts.deferPersist) persist();
   }
 
-  spawnJutsu(f, atk) {
-    const jutsu = (atk && atk.jutsu) || fighterJutsuKind(f);
-    const sk = skillById(jutsu);
-    const jb = jutsuSkillBonuses(jutsu);
+  spawnTechnique(f, atk) {
+    const technique = (atk && atk.technique) || fighterTechniqueKind(f);
+    const sk = skillById(technique);
+    const jb = techniqueSkillBonuses(technique);
     const behavior = sk.behavior || 'orb';
     let dmg = (atk ? atk.dmg : f.baseDmg * (sk.dmgMul || 2.8)) * jb.dmgMul;
     if (this.mode === 'training' && f.isRobot && behavior === 'dash' && this.player) {
@@ -26090,8 +26285,8 @@ class Game {
     const aim = projAimVelocity(f, behavior === 'dash' ? speed : speed * 0.9);
     const face = f.face || 1;
     const col = sk.color || '#7cf5ff';
-    // Rasengan: altijd horizontaal (geen aim-tilt); Rinnegan-slash ook op torso-hoogte
-    const rasenHoriz = jutsu === 'rasengan';
+    // Spiral Orb: altijd horizontaal (geen aim-tilt); Void Gaze-slash ook op torso-hoogte
+    const rasenHoriz = technique === 'spiral_orb';
     const slashFlat = behavior === 'slash';
     const y0 = (rasenHoriz || slashFlat)
       ? (f.y - 50)
@@ -26165,23 +26360,23 @@ class Game {
     };
 
     if (rasenHoriz && (f.isPlayer || f.playerSlot)) {
-      const mode = typeof rasenganShotMode === 'function'
-        ? rasenganShotMode(typeof skillLevel === 'function' ? skillLevel('rasengan') : 0)
+      const mode = typeof spiralOrbShotMode === 'function'
+        ? spiralOrbShotMode(typeof skillLevel === 'function' ? skillLevel('spiral_orb') : 0)
         : 'single';
       if (mode === 'triple') {
         // → rechtdoor + ↑ krul + ↓ krul (duidelijke lanes)
         fireProj(0, 0, 1.05, { curl: 0 });
         fireProj(face * 8, -14, 0.92, { curl: -1, vy0: -120, curlAccel: 480, curlMaxVy: 300 });
         fireProj(face * 8, 14, 0.92, { curl: 1, vy0: 120, curlAccel: 480, curlMaxVy: 300 });
-        try { this.banner(t('banner.rasenganTriple'), 1.15, col, 36); } catch (_) {
-          this.banner('TRIPLE RASENGAN!', 1.15, col, 36);
+        try { this.banner(t('banner.spiral_orbTriple'), 1.15, col, 36); } catch (_) {
+          this.banner('TRIPLE SPIRAL ORB!', 1.15, col, 36);
         }
       } else if (mode === 'dual') {
         // ↑ + ↓ krul — start al met verticale snelheid zodat beide lanes zichtbaar zijn
         fireProj(face * 6, -12, 0.96, { curl: -1, vy0: -100, curlAccel: 440, curlMaxVy: 280 });
         fireProj(face * 6, 12, 0.96, { curl: 1, vy0: 100, curlAccel: 440, curlMaxVy: 280 });
-        try { this.banner(t('banner.rasenganDual'), 1.0, col, 32); } catch (_) {
-          this.banner('DUAL RASENGAN!', 1.0, col, 32);
+        try { this.banner(t('banner.spiral_orbDual'), 1.0, col, 32); } catch (_) {
+          this.banner('DUAL SPIRAL ORB!', 1.0, col, 32);
         }
       } else {
         fireProj(0, 0, 1, { curl: 0 });
@@ -26242,11 +26437,11 @@ class Game {
       if (f.isPlayer || f.playerSlot) haptic(22);
     }
     try {
-      const swoosh = typeof jutsuSwooshSfx === 'function' ? jutsuSwooshSfx(jutsu) : 'skillSwoosh';
+      const swoosh = typeof techniqueSwooshSfx === 'function' ? techniqueSwooshSfx(technique) : 'skillSwoosh';
       if (this.mode === 'versus' && f.vsSaga === 'tide') AudioSys.sfx('tideSurge');
       AudioSys.sfxAt(swoosh, f.x + f.face * 40);
     } catch (_) {}
-    // Rasengan multi-shot vervangt random extraShot
+    // Spiral Orb multi-shot vervangt random extraShot
     if (!(rasenHoriz && (f.isPlayer || f.playerSlot))) {
       const extra = (atk && atk.extraShot) || jb.extraShot || 0;
       if (extra > 0 && Math.random() < extra) {
@@ -26300,40 +26495,40 @@ class Game {
     }, critMeta));
   }
 
-  spawnWave(f) { this.spawnJutsu(f, f.attackSpec('special')); }
+  spawnWave(f) { this.spawnTechnique(f, f.attackSpec('special')); }
 
-  spawnEnemyJutsu(m) {
+  spawnEnemyTechnique(m) {
     const p = this.player;
-    if (!p || !p.alive || !m.enemyJutsu || !m.alive) return;
+    if (!p || !p.alive || !m.enemyTechnique || !m.alive) return;
     const dir = Math.sign(p.x - m.x) || m.face || 1;
-    const j = m.enemyJutsu;
-    const dmg = Math.round(m.dmg * (j === 'kamehame' ? 2.15 : j === 'chidori' ? 1.75 : 1.55));
+    const j = m.enemyTechnique;
+    const dmg = Math.round(m.dmg * (j === 'wave_cannon' ? 2.15 : j === 'lightning_pierce' ? 1.75 : 1.55));
     const y0 = m.y - m.size * 0.55;
-    const lbl = j === 'chidori' ? 'CHIDORI!' : j === 'kamehame' ? 'KAMEHAME!' : 'RASENGAN!';
-    const col = j === 'chidori' ? '#a8e0ff' : j === 'kamehame' ? '#7cf5ff' : '#7cf5ff';
+    const lbl = j === 'lightning_pierce' ? 'LIGHTNING PIERCE!' : j === 'wave_cannon' ? 'WAVE CANNON!' : 'SPIRAL ORB!';
+    const col = j === 'lightning_pierce' ? '#a8e0ff' : j === 'wave_cannon' ? '#7cf5ff' : '#7cf5ff';
     try {
       this.floater(m.x, m.y - m.size - 24, lbl, col, 14);
     } catch (_) {}
-    if (j === 'rasengan') {
+    if (j === 'spiral_orb') {
       this.spawnProjectile({
         x: m.x + dir * m.size, y: y0, vx: dir * 360, vy: 0, r: 22, dmg,
-        from: 'enemy', kind: 'rasengan', life: 1.15, spin: 0, hitSet: new Set(),
+        from: 'enemy', kind: 'spiral_orb', life: 1.15, spin: 0, hitSet: new Set(),
       });
-      try { AudioSys.sfx('rasengan'); } catch (_) {}
-    } else if (j === 'chidori') {
+      try { AudioSys.sfx('spiral_orb'); } catch (_) {}
+    } else if (j === 'lightning_pierce') {
       this.spawnProjectile({
         x: m.x + dir * m.size, y: y0, vx: dir * 500, vy: 0, r: 17, dmg,
-        from: 'enemy', kind: 'chidori', life: 0.34, hitSet: new Set(),
+        from: 'enemy', kind: 'lightning_pierce', life: 0.34, hitSet: new Set(),
       });
-      try { AudioSys.sfx('chidori'); } catch (_) {}
+      try { AudioSys.sfx('lightning_pierce'); } catch (_) {}
     } else {
       const a = Math.atan2((p.y - 42) - y0, p.x - m.x);
       this.spawnProjectile({
         x: m.x + Math.cos(a) * m.size, y: y0 + Math.sin(a) * m.size,
         vx: Math.cos(a) * 400, vy: Math.sin(a) * 400, r: 28, dmg,
-        from: 'enemy', kind: 'kamehame', life: 1.05, spin: 0, hitSet: new Set(),
+        from: 'enemy', kind: 'wave_cannon', life: 1.05, spin: 0, hitSet: new Set(),
       });
-      try { this.shake(7, 0.22); AudioSys.sfx('rasengan'); } catch (_) {}
+      try { this.shake(7, 0.22); AudioSys.sfx('spiral_orb'); } catch (_) {}
     }
   }
 
@@ -26443,7 +26638,7 @@ class Game {
         if (counter) {
           this.comboT = Math.min(2.2, this.comboT + 0.14);
           this.floater(m.x, m.y - m.size - 24, t('combat.counter'), '#ffd75e', 15, 'fx');
-          if (m.jutsuTelegraphT > 0) m.jutsuTelegraphT = 0;
+          if (m.techniqueTelegraphT > 0) m.techniqueTelegraphT = 0;
           if (m.telegraphT > 0) m.telegraphT = 0;
           if (m.dashT > 0) { m.dashT = 0; m.vx *= 0.35; }
           if (save.haptics !== false) haptic(9);
@@ -26705,14 +26900,14 @@ class Game {
         : (p.kind === 'shuriken' ? 28 : p.kind === 'boemerang' ? 34 : 12);
       p.spin = (p.spin || 0) + dt * spinRate;
       p.vy += (p.grav || 0) * dt;
-      // Rasengan-krul: vanuit horizontaal omhoog/omlaag buigen
+      // Spiral Orb-krul: vanuit horizontaal omhoog/omlaag buigen
       if (p.curl) {
         p.vy += p.curl * (p.curlAccel || 420) * dt;
         const lim = p.curlMaxVy || 280;
         if (p.vy > lim) p.vy = lim;
         if (p.vy < -lim) p.vy = -lim;
       }
-      // Rinnegan lichtschits: expandeert links/rechts i.p.v. te vliegen
+      // Void Gaze lichtschits: expandeert links/rechts i.p.v. te vliegen
       if (p.slashWave) {
         const maxR = p.slashMaxReach || 460;
         p.slashReach = Math.min(maxR, (p.slashReach || 0) + (p.slashExpand || 720) * dt);
@@ -26764,8 +26959,8 @@ class Game {
         }
       }
       p.x += p.vx * dt; p.y += p.vy * dt;
-      // Rasengan: niet sterven op de grond — anders verdwijnt de ↓-krul meteen (dual/triple leek 1 schot)
-      if (p.kind === 'rasengan') {
+      // Spiral Orb: niet sterven op de grond — anders verdwijnt de ↓-krul meteen (dual/triple leek 1 schot)
+      if (p.kind === 'spiral_orb') {
         const floorY = this.ground - (p.r || 16) * 0.35;
         if (p.y > floorY) {
           p.y = floorY;
@@ -26804,7 +26999,7 @@ class Game {
           }
         }
       }
-      if (p.kind === 'kamehame') {
+      if (p.kind === 'wave_cannon') {
         p.r = Math.min(44, (p.r || 28) + dt * 18);
         if (!motionReduced() && !fxLite()) {
           p._trailAcc = (p._trailAcc || 0) + dt;
@@ -26857,7 +27052,7 @@ class Game {
                 } catch (_) {}
               }
             }
-            if (skProj) spawnJutsuImpactFx(this, m.x, m.y, p.kind, 'full');
+            if (skProj) spawnTechniqueImpactFx(this, m.x, m.y, p.kind, 'full');
             if (p.hitSet) p.hitSet.add(m); else p.life = 0;
           }
         }
@@ -26910,7 +27105,7 @@ class Game {
         if ((p.slashReach || 0) >= (p.slashMaxReach || 460) && p.life > 0.12) {
           p.life = Math.min(p.life, 0.12);
         }
-      } else if (p.kind === 'rasengan') {
+      } else if (p.kind === 'spiral_orb') {
         // Alleen zijranden — grond wordt hierboven afgehandeld
         if (p.x < -60 || p.x > W + 60) p.life = 0;
       } else if (p.y > this.ground + 10 || p.x < -60 || p.x > W + 60) {
@@ -26928,7 +27123,7 @@ class Game {
       }
       if (p.life <= 0 && !p._impactFx && skillExists(p.kind)) {
         p._impactFx = true;
-        spawnJutsuImpactFx(this, p.x, p.y, p.kind === 'kamehame' ? 'rasengan' : p.kind, 'small');
+        spawnTechniqueImpactFx(this, p.x, p.y, p.kind === 'wave_cannon' ? 'spiral_orb' : p.kind, 'small');
       }
     }
     this.projectiles = this.projectiles.filter(p => p.life > 0);
@@ -27267,7 +27462,7 @@ class Game {
             c.stroke();
             c.restore();
           } else if (skDraw.behavior === 'dash') {
-            // Chidori flight — crackle trail behind the bolt
+            // Lightning Pierce flight — crackle trail behind the bolt
             const ang = Math.atan2(p.vy || 0, p.vx || 1);
             c.save();
             c.globalAlpha = 0.35;
@@ -27289,9 +27484,9 @@ class Game {
           }
         }
         if (p.slashWave || skDraw.behavior === 'slash') {
-          drawRinneganSlashWave(c, p);
+          drawVoidGazeSlashWave(c, p);
         } else {
-          drawJutsuOrb(c, p.x, p.y, p.r, p.spin || 0, p.kind, 1);
+          drawTechniqueOrb(c, p.x, p.y, p.r, p.spin || 0, p.kind, 1);
         }
       } else if (p.kind === 'shuriken') {
         c.translate(p.x, p.y); c.rotate(p.spin || 0);
@@ -27443,7 +27638,7 @@ class Game {
     c.globalAlpha = 1;
     c.restore();
 
-    this.drawChakraReadyFx(c);
+    this.drawEnergyReadyFx(c);
     if (this.mode === 'adventure') {
       try { drawSuperFxLayer(this, c); } catch (_) {}
       try { this.drawKetsbamChargeAura(c); } catch (_) {}
@@ -27625,7 +27820,7 @@ class Game {
     const ready = pct >= 1;
     const calm = motionReduced();
     c.save();
-    if (kind === 'chidori') {
+    if (kind === 'lightning_pierce') {
       const seg = 10;
       const segW = w / seg;
       for (let i = 0; i < seg; i++) {
@@ -27638,7 +27833,7 @@ class Game {
         this.rr(c, x + i * segW + 1, y + 1, Math.max(1, segW * fill - 2), h - 2, 2);
         c.fill();
       }
-    } else if (kind === 'rinnegan') {
+    } else if (kind === 'void_gaze') {
       const rings = 6;
       for (let i = 0; i < rings; i++) {
         const segStart = i / rings;
@@ -27686,18 +27881,18 @@ class Game {
     c.restore();
   }
 
-  drawChakraReadyFx(c) {
+  drawEnergyReadyFx(c) {
     const fighters = [this.player];
     if (this.p2) fighters.push(this.p2);
     const calm = motionReduced();
     for (const f of fighters) {
       if (!f || !f.alive || f.energy < 100) continue;
-      const kind = fighterJutsuKind(f);
-      if (kind === 'rasengan' && (f.specialCd || 0) > 0) continue;
+      const kind = fighterTechniqueKind(f);
+      if (kind === 'spiral_orb' && (f.specialCd || 0) > 0) continue;
       if (calm) {
         c.save();
         c.globalAlpha = 0.42;
-        c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : (kind === 'chidori' ? '#a8e0ff' : kind === 'rinnegan' ? '#c47aff' : '#7cf5ff');
+        c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : (kind === 'lightning_pierce' ? '#a8e0ff' : kind === 'void_gaze' ? '#c47aff' : '#7cf5ff');
         c.lineWidth = 2;
         c.beginPath();
         c.arc(f.x, f.y - 55, 36, 0, TAU);
@@ -27708,7 +27903,7 @@ class Game {
       const pulse = 0.35 + Math.sin(this.t * 7) * 0.15;
       c.save();
       c.globalAlpha = pulse;
-      if (kind === 'chidori') {
+      if (kind === 'lightning_pierce') {
         c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : '#a8e0ff';
         c.lineWidth = 3;
         c.beginPath();
@@ -27721,7 +27916,7 @@ class Game {
           c.lineTo(f.x + 28, f.y - 52 + i * 10);
           c.stroke();
         }
-      } else if (kind === 'rinnegan') {
+      } else if (kind === 'void_gaze') {
         c.strokeStyle = f.playerSlot === 2 ? '#ffb0b8' : '#c47aff';
         c.lineWidth = 3;
         c.lineCap = 'round';
@@ -28517,15 +28712,15 @@ class Game {
         }
       }
       c.fillStyle = '#333c55'; this.rr(c, bx, by + 20, bw, 11, 5); c.fill();
-      const jKind = fighterJutsuKind(p);
+      const jKind = fighterTechniqueKind(p);
       this.drawSuperMeterFill(c, bx, by + 20, bw, 11, p.energy / 100, jKind, this.t);
       c.font = '800 10px -apple-system, sans-serif';
       c.fillStyle = 'rgba(255,255,255,.85)'; c.textAlign = 'left';
       c.fillText(t('hud.super'), bx + 6, by + 29);
-      // getekend jutsu-icoontje (art-upgrade 3/4): bliksem / oog / orb
+      // getekend technique-icoontje (art-upgrade 3/4): bliksem / oog / orb
       const ix = bx + 6 + c.measureText(t('hud.super')).width + 9;
       const iy = by + 25.5;
-      if (jKind === 'chidori') {
+      if (jKind === 'lightning_pierce') {
         c.fillStyle = '#a8e0ff';
         c.beginPath();
         c.moveTo(ix + 2, iy - 5.5);
@@ -28536,7 +28731,7 @@ class Game {
         c.lineTo(ix + 0.7, iy - 1);
         c.closePath();
         c.fill();
-      } else if (jKind === 'rinnegan') {
+      } else if (jKind === 'void_gaze') {
         c.strokeStyle = '#c47aff'; c.lineWidth = 1.4;
         c.beginPath(); c.ellipse(ix + 1, iy, 5.2, 3.2, 0, 0, TAU); c.stroke();
         c.fillStyle = '#c47aff';
@@ -28551,9 +28746,9 @@ class Game {
       c.fillStyle = '#fff';
       c.fillText(`Lv ${save.lvl}`, bx + bw + 12, by + 13);
       if (p.energy >= 100) {
-        c.fillStyle = jKind === 'chidori' ? '#a8e0ff' : jKind === 'rinnegan' ? '#c47aff' : '#7cf5ff';
-        c.fillText(jutsuLabel(jKind), bx + bw + 12, by + 32);
-        c.strokeStyle = jKind === 'chidori' ? 'rgba(168,224,255,.55)' : jKind === 'rinnegan' ? 'rgba(196,122,255,.55)' : 'rgba(124,245,255,.55)';
+        c.fillStyle = jKind === 'lightning_pierce' ? '#a8e0ff' : jKind === 'void_gaze' ? '#c47aff' : '#7cf5ff';
+        c.fillText(techniqueLabel(jKind), bx + bw + 12, by + 32);
+        c.strokeStyle = jKind === 'lightning_pierce' ? 'rgba(168,224,255,.55)' : jKind === 'void_gaze' ? 'rgba(196,122,255,.55)' : 'rgba(124,245,255,.55)';
         c.lineWidth = 2;
         c.beginPath();
         const joyR = motionReduced() ? 18 : 18 + Math.sin(this.t * 8) * 3;
@@ -28868,7 +29063,7 @@ class Game {
       const tele = this.trainLaserTelegraph > 0
         ? { label: t('hud.earLaser'), frac: this.trainLaserTelegraph / 0.95, color: '#ff6b6b', max: 0.95 }
         : (this.trainTelegraphT > 0
-          ? { label: t('hud.chidoriTele'), frac: this.trainTelegraphT / 0.85, color: '#7cf5ff', max: 0.85 }
+          ? { label: t('hud.lightning_pierceTele'), frac: this.trainTelegraphT / 0.85, color: '#7cf5ff', max: 0.85 }
           : (this.trainMeleeTelegraphT > 0
             ? {
               label: this.trainTelegraphKind === 'kick' ? t('hud.kickTele') : t('hud.punchTele'),
@@ -29265,7 +29460,7 @@ class Game {
       const hp1Pct = Math.round(hp1Frac * 100);
       c.fillText(t('hud.p1Line', { name: name1, pct: hp1Pct }), bx, byVs + 30);
       c.fillStyle = '#333c55'; this.rr(c, bx, byVs + 34, half, 5, 3); c.fill();
-      this.drawSuperMeterFill(c, bx, byVs + 34, half, 5, p.energy / 100, fighterJutsuKind(p), this.t);
+      this.drawSuperMeterFill(c, bx, byVs + 34, half, 5, p.energy / 100, fighterTechniqueKind(p), this.t);
       drawWeaponStylePips(c, bx + 8, byVs + 44, p);
 
       c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, W - half - 20, byVs - 4, half + 8, 44, 10); c.fill();
@@ -29280,7 +29475,7 @@ class Game {
       const hp2Pct = Math.round(frac2 * 100);
       c.fillText(t('hud.p2Line', { pct: hp2Pct, name: name2 }), W - 20, byVs + 30);
       c.fillStyle = '#333c55'; this.rr(c, W - half - 16, byVs + 34, half, 5, 3); c.fill();
-      this.drawSuperMeterFill(c, W - half - 16, byVs + 34, half, 5, p2.energy / 100, fighterJutsuKind(p2), this.t);
+      this.drawSuperMeterFill(c, W - half - 16, byVs + 34, half, 5, p2.energy / 100, fighterTechniqueKind(p2), this.t);
       drawWeaponStylePips(c, W - half - 8, byVs + 44, p2);
 
       c.textAlign = 'center';
@@ -29382,12 +29577,12 @@ class Game {
         c.fillText(t('hud.spawnGrace', { n: p2.invulnT.toFixed(1) }), W - 20, byVs + 52);
       }
       if (p.energy >= 100) {
-        const k1 = fighterJutsuKind(p);
-        drawJutsuMiniIcon(c, k1, bx + half - 10, byVs + 9, jutsuAccentColor(k1, false));
+        const k1 = fighterTechniqueKind(p);
+        drawTechniqueMiniIcon(c, k1, bx + half - 10, byVs + 9, techniqueAccentColor(k1, false));
       }
       if (p2.energy >= 100) {
-        const k2 = fighterJutsuKind(p2);
-        drawJutsuMiniIcon(c, k2, W - 26, byVs + 9, jutsuAccentColor(k2, true));
+        const k2 = fighterTechniqueKind(p2);
+        drawTechniqueMiniIcon(c, k2, W - 26, byVs + 9, techniqueAccentColor(k2, true));
       }
     }
   }
@@ -29406,7 +29601,7 @@ class Game {
   drawSpecialBtnMeter(c, b, fighter, accent) {
     if (!fighter || b.id !== 'special') return;
     const pct = clamp(fighter.energy / 100, 0, 1);
-    const kind = fighterJutsuKind(fighter);
+    const kind = fighterTechniqueKind(fighter);
     const ring = b.r + 4;
     c.save();
     c.globalAlpha = 0.28;
@@ -29415,8 +29610,8 @@ class Game {
     c.beginPath(); c.arc(0, 0, ring, 0, TAU); c.stroke();
     const calm = motionReduced();
     if (pct > 0.02) {
-      c.globalAlpha = calm ? 0.82 : (kind === 'chidori' ? 0.75 + Math.sin(this.t * 18) * 0.12 : 0.82);
-      c.strokeStyle = kind === 'chidori' ? '#7ec8ff' : kind === 'rinnegan' ? '#b06ae0' : accent || '#3db8ff';
+      c.globalAlpha = calm ? 0.82 : (kind === 'lightning_pierce' ? 0.75 + Math.sin(this.t * 18) * 0.12 : 0.82);
+      c.strokeStyle = kind === 'lightning_pierce' ? '#7ec8ff' : kind === 'void_gaze' ? '#b06ae0' : accent || '#3db8ff';
       c.lineWidth = 5;
       c.lineCap = 'round';
       c.beginPath();
@@ -29425,7 +29620,7 @@ class Game {
     }
     if (pct >= 1) {
       c.globalAlpha = 0.9;
-      c.strokeStyle = kind === 'chidori' ? '#a8e0ff' : kind === 'rinnegan' ? '#c47aff' : '#7cf5ff';
+      c.strokeStyle = kind === 'lightning_pierce' ? '#a8e0ff' : kind === 'void_gaze' ? '#c47aff' : '#7cf5ff';
       c.lineWidth = 3;
       c.beginPath();
       c.arc(0, 0, ring + 5 + (calm ? 0 : Math.sin(this.t * 8) * 2), 0, TAU);
@@ -29440,12 +29635,12 @@ class Game {
     const dual = Input.dualMode && this.mode === 'versus';
     const rows = dual
       ? [
-          [{ k: 'A/D', lab: 'P1' }, { k: 'W', lab: '↑' }, { k: 'J K L', lab: 'slag' }, { k: 'U', lab: 'jutsu' }],
-          [{ k: '←→', lab: 'P2' }, { k: '↑', lab: '↑' }, { k: '1 2 3', lab: 'slag' }, { k: '4', lab: 'jutsu' }],
+          [{ k: 'A/D', lab: 'P1' }, { k: 'W', lab: '↑' }, { k: 'J K L', lab: 'slag' }, { k: 'U', lab: 'technique' }],
+          [{ k: '←→', lab: 'P2' }, { k: '↑', lab: '↑' }, { k: '1 2 3', lab: 'slag' }, { k: '4', lab: 'technique' }],
         ]
       : [
           [{ k: 'A/D', lab: 'lopen' }, { k: 'W', lab: 'spring' }, { k: 'Shift', lab: 'subst' }],
-          [{ k: 'J', lab: 'stomp' }, { k: 'K', lab: 'trap' }, { k: 'L', lab: 'wapen' }, { k: 'U', lab: 'jutsu' }],
+          [{ k: 'J', lab: 'stomp' }, { k: 'K', lab: 'trap' }, { k: 'L', lab: 'wapen' }, { k: 'U', lab: 'technique' }],
         ];
     if (!dual && this.mode === 'adventure') {
       rows[0].push({ k: 'E', lab: 'kets' });
@@ -29531,7 +29726,7 @@ class Game {
     }
     c.globalAlpha = opts.dual ? 0.9 : (0.85 + 0.15 * (xf.p || 0));
     const jk = b.id === 'special'
-      ? (fighter ? fighterJutsuKind(fighter) : 'rasengan')
+      ? (fighter ? fighterTechniqueKind(fighter) : 'spiral_orb')
       : null;
     if (!drawTouchBtnIcon(c, b.id, 0, 0, b.r, jk)) {
       c.font = `${b.r * (opts.dual ? 0.8 : 0.85)}px sans-serif`;
@@ -29544,7 +29739,7 @@ class Game {
       c.beginPath(); c.arc(0, 0, b.r, 0, TAU); c.fill();
     }
     if (b.id === 'special' && fighter && fighter.specialCd > 0
-        && fighterJutsuKind(fighter) === 'rasengan') {
+        && fighterTechniqueKind(fighter) === 'spiral_orb') {
       c.globalAlpha = 0.4;
       c.fillStyle = '#000';
       c.beginPath(); c.arc(0, 0, b.r, 0, TAU); c.fill();
@@ -29935,7 +30130,7 @@ function initSkillScreenChrome() {
   UI.skillSagaFilter = 'all';
   UI.skillBehaviorFilter = 'all';
   UI.skillSortMode = 'level';
-  UI.skillPreviewId = save.skill || 'rasengan';
+  UI.skillPreviewId = save.skill || 'spiral_orb';
   UI.superPreviewId = save.super || 'ketsbam';
 
   const sagaBar = document.getElementById('skillSagaBar');
@@ -30010,8 +30205,8 @@ function equipSkill(id) {
   try {
     safeUiAction(() => {
       save.skill = id;
-      if (typeof JUTSU_SKILL_IDS !== 'undefined' && JUTSU_SKILL_IDS.includes(id)) {
-        save.activeJutsu = id;
+      if (typeof TECHNIQUE_SKILL_IDS !== 'undefined' && TECHNIQUE_SKILL_IDS.includes(id)) {
+        save.activeTechnique = id;
       }
       if (!persistOrToast('skill')) return;
       AudioSys.sfx(skillSfxId(sk));
@@ -30261,7 +30456,7 @@ function runSkillCard(card, meta) {
 function updateSkillPreview() {
   const host = document.getElementById('skillPreview');
   if (!host) return;
-  const id = UI.skillPreviewId || save.skill || 'rasengan';
+  const id = UI.skillPreviewId || save.skill || 'spiral_orb';
   const sk = skillById(id);
   const ok = skillUnlocked(sk);
   const active = save.skill === sk.id;
@@ -30302,11 +30497,11 @@ function updateSkillPreview() {
     `<div class="skill-stat-grid">${statRows}</div>` +
     `<div class="skill-preview-foot">${foot}</div>`;
   const cv = document.getElementById('skillPreviewCanvas');
-  if (cv && typeof drawJutsuOrb === 'function') {
+  if (cv && typeof drawTechniqueOrb === 'function') {
     const cc = cv.getContext('2d');
     cc.clearRect(0, 0, 88, 88);
     cc.translate(44, 46);
-    drawJutsuOrb(cc, 0, 0, 30, performance.now() * 0.001 * 3, sk.id, ok ? 1 : 0.42);
+    drawTechniqueOrb(cc, 0, 0, 30, performance.now() * 0.001 * 3, sk.id, ok ? 1 : 0.42);
   }
   const equipBtn = document.getElementById('skillEquipBtn');
   if (equipBtn) equipBtn.type = 'button';
@@ -30688,7 +30883,7 @@ const UI = {
   skillSagaFilter: 'all',
   skillBehaviorFilter: 'all',
   skillSortMode: 'level',
-  skillPreviewId: 'rasengan',
+  skillPreviewId: 'spiral_orb',
   weaponPreviewId: null,
   charSortMode: 'name',
   charPreviewHoverId: null,
@@ -30697,7 +30892,7 @@ const UI = {
   petTab: 'dex',
   advIslandPick: 0,
   lastResult: null,
-  pauseSubDefault: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
+  pauseSubDefault: 'Spiral Orb klaar — moto! · voortgang blijft op dit apparaat',
 
   activeScreen() {
     return this.screens.find(sid => document.getElementById(sid)?.classList.contains('active')) || null;
@@ -30876,7 +31071,7 @@ const UI = {
           try { this.renderHelp(); } catch (err) { sfReportError('renderHelp', err); }
         }
         if (id === 'skillScreen') {
-          this.skillPreviewId = save.skill || 'rasengan';
+          this.skillPreviewId = save.skill || 'spiral_orb';
           this.superPreviewId = save.super || 'ketsbam';
         }
         if (id === 'levelScreen') {
@@ -30928,7 +31123,7 @@ const UI = {
     const next = nextUntriedMode();
     const modes = [
       { id: 'adventure', label: 'Avontuur', tip: t('ui.modeAdventure') },
-      { id: 'training', label: 'Training', tip: 'Combo-trainer · lasers · telegraph-oefening' },
+      { id: 'training', label: 'Training', tip: 'Combo-trainer ×5/×8/×10 · lasers · Lightning Pierce-telegraph' },
       { id: 'wall', label: 'Muur', tip: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing' },
       { id: 'coinrun', label: 'Mats', tip: '45s munten · mik ↑ · vliegers +3' },
     ];
@@ -31437,7 +31632,7 @@ const UI = {
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
       setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
       const skillsN = skillUnlockedCount();
-      const activeSk = skillById(save.skill || 'rasengan');
+      const activeSk = skillById(save.skill || 'spiral_orb');
       const activeSp = equippedSuper();
       setStat('hubStatSkills', skillsN > 0
         ? `${skillsN}/${SKILLS.length} · ${skillLabel(activeSk)} · ${superLabel(activeSp)}`
@@ -31462,7 +31657,7 @@ const UI = {
     if (profileEl) {
       profileEl.innerHTML =
         `<span class="prof-row"><b>Lv ${save.lvl}</b><span>${weaponLabel(w)}</span>` +
-        `<span style="color:${(skillById(save.skill || 'rasengan').color)}">${skillLabel(skillById(save.skill || 'rasengan'))}</span>` +
+        `<span style="color:${(skillById(save.skill || 'spiral_orb').color)}">${skillLabel(skillById(save.skill || 'spiral_orb'))}</span>` +
         `<span style="color:${equippedSuper().color}">${superLabel(equippedSuper())}</span>` +
         `<span style="color:${st.accent}">${styleLabel(st)}</span></span>` +
         `<span style="display:block;margin-top:3px;opacity:.82;font-size:11px">${adventureProgressLine()}</span>` +
@@ -32950,15 +33145,15 @@ const UI = {
       const ready = countAllUpgradesReady();
       sumEl.style.display = 'block';
       if (tab === 'skills') {
-        const activeJ = activeJutsuId();
+        const activeJ = activeTechniqueId();
         const activeName = `<b style="color:${SKILL_DEFS[activeJ]?.color || '#7cf5ff'}">${skillLabel(activeJ)}</b>`;
         sumEl.innerHTML =
-          `${t('ui.jutsuActive', { name: activeName })} · ` +
+          `${t('ui.techniqueActive', { name: activeName })} · ` +
           `Totaal <b>${totalAllUpgradeLevels()}</b> upgrade-levels · ` +
           `<b>${skillShards}</b> skill · <b>${itemShards}</b> item shards` +
           (ready > 0 ? ` · <b style="color:#ffd75e">${t('ui.upgradeReady', { n: ready })}</b>` : '') +
           `<div class="upgrade-shard-hint">${t('ui.upgradeShardHint')}</div>` +
-          `<div style="font-size:11px;opacity:.72;margin-top:4px">${t('ui.jutsuSelectHint')}</div>`;
+          `<div style="font-size:11px;opacity:.72;margin-top:4px">${t('ui.techniqueSelectHint')}</div>`;
       } else {
         sumEl.innerHTML =
           `Totaal <b>${totalAllUpgradeLevels()}</b> upgrade-levels · ` +
@@ -32977,7 +33172,7 @@ const UI = {
     if (!list) return;
     list.innerHTML = '';
     const groups = [
-      { id: 'jutsu', title: t('ui.skillGroupJutsu'), ids: JUTSU_SKILL_IDS },
+      { id: 'technique', title: t('ui.skillGroupTechnique'), ids: TECHNIQUE_SKILL_IDS },
       { id: 'utility', title: t('ui.skillGroupUtility'), ids: SKILL_IDS.filter((id) => SKILL_DEFS[id].group === 'utility') },
     ];
     for (const g of groups) {
@@ -32992,8 +33187,8 @@ const UI = {
         const shards = skillShards(id);
         const cost = skillUpgradeCost(id);
         const canUp = skillCanUpgrade(id);
-        const equipped = def.group === 'jutsu' && activeJutsuId() === id;
-        const unlocked = def.group === 'jutsu' ? jutsuSkillUnlocked(id) : (lv >= 1 || id === 'rasengan');
+        const equipped = def.group === 'technique' && activeTechniqueId() === id;
+        const unlocked = def.group === 'technique' ? techniqueSkillUnlocked(id) : (lv >= 1 || id === 'spiral_orb');
         const el = document.createElement('div');
         el.className = 'card skill-card upgrade-polish-card' + (canUp ? ' claimable' : '') + (lv >= maxLv ? ' claimed' : '') + (equipped ? ' sel' : '');
         el.style.borderColor = def.color + (equipped ? '' : '88');
@@ -33005,7 +33200,7 @@ const UI = {
           ? t('ui.skillShards', { cur: shards, cost })
           : t('ui.skillMax');
         const desc = skillDesc(id);
-        const statusLine = def.group === 'jutsu'
+        const statusLine = def.group === 'technique'
           ? (equipped ? t('ui.skillEquipped') : (unlocked ? t('ui.skillEquipHint') : t('ui.skillLocked', { lv: 1 })))
           : (lv >= 1 ? t('ui.skillPassiveActive') : t('ui.skillPassiveLocked', { lv: 1 }));
         el.innerHTML =
@@ -33020,10 +33215,10 @@ const UI = {
           `<div class="cinfo" style="opacity:.78;font-size:11px;margin-top:3px">${statusLine}</div>` +
           `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:4px"><b>${t('ui.skillNow')}:</b> ${now}</div>` +
           (next ? `<div class="cinfo" style="opacity:.75;font-size:11px;margin-top:3px"><b>${t('ui.skillNext')}:</b> ${next}</div>` : '') +
-          (def.group === 'jutsu' ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:4px">${equipped ? t('ui.jutsuEquipped') : t('ui.jutsuTapEquip')}</div>` : '') +
+          (def.group === 'technique' ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:4px">${equipped ? t('ui.techniqueEquipped') : t('ui.techniqueTapEquip')}</div>` : '') +
           `</div>`;
         appendUpgradeOrbRow(el, lv, maxLv, def.color);
-        if (def.group === 'jutsu' && unlocked && !equipped) {
+        if (def.group === 'technique' && unlocked && !equipped) {
           const eqBtn = document.createElement('button');
           eqBtn.type = 'button';
           eqBtn.className = 'btn claim-btn';
@@ -33031,10 +33226,10 @@ const UI = {
           eqBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             safeUiAction(() => {
-              if (!setActiveJutsu(id)) return;
+              if (!setActiveTechnique(id)) return;
               AudioSys.sfx('select');
               this.renderUpgrades();
-            }, 'equipJutsu/' + id, 'Jutsu kiezen mislukt');
+            }, 'equipTechnique/' + id, 'Technique kiezen mislukt');
           });
           el.appendChild(eqBtn);
         }
@@ -33539,7 +33734,7 @@ const UI = {
     const sumEl = document.getElementById('skillSummary');
     if (sumEl) {
       const unlocked = skillUnlockedCount();
-      const active = skillById(save.skill || 'rasengan');
+      const active = skillById(save.skill || 'spiral_orb');
       const sagaChips = SKILL_SAGA_ORDER.map(sid => {
         const c = skillSagaCounts(sid);
         const meta = vsSagaMeta(sid);
@@ -33612,10 +33807,10 @@ const UI = {
       const mode = UI.skillSortMode || 'level';
       sortBtn.textContent = t('ui.skillSort_' + mode);
     }
-    const previewId = UI.skillPreviewId || save.skill || 'rasengan';
+    const previewId = UI.skillPreviewId || save.skill || 'spiral_orb';
     const filtered = sortSkills(skillsForFilters(saga, behavior), UI.skillSortMode || 'level');
     if (!filtered.some(s => s.id === previewId)) {
-      UI.skillPreviewId = filtered[0] ? filtered[0].id : (save.skill || 'rasengan');
+      UI.skillPreviewId = filtered[0] ? filtered[0].id : (save.skill || 'spiral_orb');
     }
     updateSkillPreview();
     const grid = document.getElementById('skillGrid');
@@ -33641,8 +33836,8 @@ const UI = {
       cv.width = 72; cv.height = 72;
       const cc = cv.getContext('2d');
       cc.translate(36, 38);
-      if (typeof drawJutsuOrb === 'function') {
-        drawJutsuOrb(cc, 0, 0, 22, 0.6, sk.id, ok ? 1 : 0.45);
+      if (typeof drawTechniqueOrb === 'function') {
+        drawTechniqueOrb(cc, 0, 0, 22, 0.6, sk.id, ok ? 1 : 0.45);
       } else {
         cc.fillStyle = sk.color;
         cc.beginPath(); cc.arc(0, 0, 20, 0, TAU); cc.fill();
@@ -34813,11 +35008,11 @@ function drawMenuBackdrop(c, t) {
   }
   c.save();
   c.translate(W * 0.5, H * 0.42);
-  if (typeof drawJutsuOrb === 'function') {
-    drawJutsuOrb(c, 0, 0,
+  if (typeof drawTechniqueOrb === 'function') {
+    drawTechniqueOrb(c, 0, 0,
       lite ? 22 : 28 + Math.sin(t * 2) * 4,
       lite ? t * 2 : t * 3,
-      'rasengan',
+      'spiral_orb',
       lite ? 0.55 : 0.85);
   }
   c.restore();

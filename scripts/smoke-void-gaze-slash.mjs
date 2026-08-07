@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-/** Rinnegan: tweerichtings lichtschits-golf met taperende strook. */
+/** Void Gaze: tweerichtings lichtschits-golf met taperende strook. */
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import http from 'http';
 
-const outDir = '/tmp/sf-rinnegan';
+const outDir = '/tmp/sf-void_gaze';
 fs.mkdirSync(outDir, { recursive: true });
 const chrome = ['/usr/local/bin/google-chrome', '/usr/bin/google-chrome'].find((p) => fs.existsSync(p));
 if (!chrome) { console.error('SMOKE_FAIL no chrome'); process.exit(1); }
@@ -64,14 +64,14 @@ async function run() {
   const result = await page.evaluate(() => {
     const DT = 1 / 30;
     const errors = [];
-    const sk = skillById('rinnegan');
+    const sk = skillById('void_gaze');
     if (!sk || sk.behavior !== 'slash') {
       return { ok: false, reason: 'behavior', behavior: sk && sk.behavior, dmgMul: sk && sk.dmgMul };
     }
 
     try {
-      save.skill = 'rinnegan';
-      save.activeJutsu = 'rinnegan';
+      save.skill = 'void_gaze';
+      save.activeTechnique = 'void_gaze';
       save.lvl = 30;
     } catch (_) {}
 
@@ -84,15 +84,15 @@ async function run() {
     game.projectiles = [];
 
     // Direct cast (equip-gate kan in smoke Lv1 adventure blokkeren)
-    try { game.spawnJutsu(p, { jutsu: 'rinnegan', dmg: 40 }); }
+    try { game.spawnTechnique(p, { technique: 'void_gaze', dmg: 40 }); }
     catch (e) { errors.push('spawn:' + String(e)); }
 
-    const wave0 = game.projectiles.find((pr) => pr.kind === 'rinnegan' && pr.slashWave) || null;
+    const wave0 = game.projectiles.find((pr) => pr.kind === 'void_gaze' && pr.slashWave) || null;
     for (let i = 0; i < 12; i++) {
       try { game.update(DT); } catch (e) { errors.push(String(e)); }
     }
 
-    const wave = game.projectiles.find((pr) => pr.kind === 'rinnegan' && pr.slashWave) || wave0;
+    const wave = game.projectiles.find((pr) => pr.kind === 'void_gaze' && pr.slashWave) || wave0;
     const midH = slashWaveHalfHeight({ r0: 42, slashMaxReach: 460 }, 0);
     const halfH = slashWaveHalfHeight({ r0: 42, slashMaxReach: 460 }, 230);
     const tipH = slashWaveHalfHeight({ r0: 42, slashMaxReach: 460 }, 460);
@@ -111,11 +111,11 @@ async function run() {
     // Upgrade → dikkere strook (Lv0 < Lv3 < Lv5)
     const measure = (lv) => {
       save.skillUpgrades = save.skillUpgrades || {};
-      save.skillUpgrades.rinnegan = { level: lv, shards: 0 };
+      save.skillUpgrades.void_gaze = { level: lv, shards: 0 };
       game.projectiles = [];
-      game.spawnJutsu(p, { jutsu: 'rinnegan', dmg: 40 });
+      game.spawnTechnique(p, { technique: 'void_gaze', dmg: 40 });
       const w = game.projectiles.find((pr) => pr.slashWave);
-      return w ? { r0: w.r0, maxReach: w.slashMaxReach, jbR: jutsuSkillBonuses('rinnegan').radius } : null;
+      return w ? { r0: w.r0, maxReach: w.slashMaxReach, jbR: techniqueSkillBonuses('void_gaze').radius } : null;
     };
     const u0 = measure(0);
     const u3 = measure(3);
@@ -139,7 +139,7 @@ async function run() {
         && halfH > tipH
         && kbL < 0
         && kbR > 0
-        && typeof drawRinneganSlashWave === 'function'
+        && typeof drawVoidGazeSlashWave === 'function'
         && upgradeThicker
         && errors.length === 0
       ),
@@ -156,7 +156,7 @@ async function run() {
       tipH,
       kbL,
       kbR,
-      hasDraw: typeof drawRinneganSlashWave === 'function',
+      hasDraw: typeof drawVoidGazeSlashWave === 'function',
       upgradeThicker,
       u0,
       u3,
@@ -169,10 +169,10 @@ async function run() {
   await browser.close();
   if (server) server.close();
   if (!result.ok) {
-    console.error('SMOKE_FAIL rinnegan-slash');
+    console.error('SMOKE_FAIL void_gaze-slash');
     process.exit(1);
   }
-  console.log('SMOKE_OK rinnegan-slash');
+  console.log('SMOKE_OK void_gaze-slash');
 }
 
 run().catch((e) => {
