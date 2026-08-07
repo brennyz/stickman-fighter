@@ -13,10 +13,12 @@ function sceneryRng(seed) {
 
 const SCENERY_SCALE = 3;
 
-const SCENERY_CACHE_MAX = { lite: 12, tier2: 8, tier1: 16, full: 24 };
+const SCENERY_CACHE_MAX = { lite: 16, tier2: 16, tier1: 20, full: 28 };
 
 const SceneryArt = {
   cache: {},
+  /** Prefer keeping these keys when trimming (active fight theme). */
+  pinTheme: null,
 
   clearCache() { this.cache = {}; },
 
@@ -30,12 +32,20 @@ const SceneryArt = {
   evictIfNeeded() {
     const keys = Object.keys(this.cache);
     const max = this.cacheMax();
-    if (keys.length < max) return;
-    const drop = keys.length - max + 4;
-    for (let i = 0; i < drop; i++) delete this.cache[keys[i]];
+    if (keys.length <= max) return;
+    const pin = this.pinTheme;
+    const dropN = Math.min(2, keys.length - max);
+    let dropped = 0;
+    for (let i = 0; i < keys.length && dropped < dropN; i++) {
+      const k = keys[i];
+      if (pin && (k === pin + ':far' || k === pin + ':cloud' || k === pin + ':tree')) continue;
+      delete this.cache[k];
+      dropped++;
+    }
   },
 
   get(themeName, kind) {
+    if (themeName) this.pinTheme = themeName;
     const key = themeName + ':' + kind;
     if (key in this.cache) return this.cache[key];
     this.evictIfNeeded();

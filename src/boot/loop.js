@@ -25,9 +25,9 @@ function scheduleNextLoop() {
 }
 
 function menuHeroPaintSkip() {
+  // Don't skip frames during menu — choppy crossfades read as flashes
   if (save.liteFx) return 2;
-  if (Perf.tier >= 2) return 3;
-  if (Perf.tier >= 1) return 2;
+  if (Perf.tier >= 2) return 2;
   return 1;
 }
 
@@ -149,7 +149,7 @@ function paintMenuHeroCanvas(t) {
   const Hs = cv.height;
   c.clearRect(0, 0, Ws, Hs);
 
-  // Foto-album: kruispunt (4 paden) → eik → steenhuis → open weg
+  // Foto-album: countryside first, cave last — slow holds + soft crossfade (no eye-strain flash)
   const VISTAS = [];
   if (typeof drawMenuCrossroadsVista === 'function') VISTAS.push(drawMenuCrossroadsVista);
   if (typeof drawMenuSemi25dVista === 'function') VISTAS.push(drawMenuSemi25dVista);
@@ -157,13 +157,21 @@ function paintMenuHeroCanvas(t) {
   if (typeof drawMenuOpenRoadVista === 'function') VISTAS.push(drawMenuOpenRoadVista);
   if (typeof drawMenuCaveVista === 'function') VISTAS.push(drawMenuCaveVista);
   const N = VISTAS.length;
-  const SLOT = motionReduced() ? 12 : 8;
-  const FADE = motionReduced() ? 0.01 : 1.35;
+  const calm = motionReduced();
+  // Longer hold + fade; reduced-motion pins one calm vista (never hard-cut every few seconds)
+  const SLOT = calm ? 1e9 : 16;
+  const FADE = calm ? 0 : 2.8;
   let aFrom = 1;
   let aTo = 0;
   let fromIdx = 0;
   let toIdx = 0;
-  if (N > 1) {
+  if (calm && N > 0) {
+    // Prefer open road / oak over cave↔house contrast
+    let pin = VISTAS.indexOf(typeof drawMenuOpenRoadVista === 'function' ? drawMenuOpenRoadVista : null);
+    if (pin < 0) pin = VISTAS.indexOf(typeof drawMenuSemi25dVista === 'function' ? drawMenuSemi25dVista : null);
+    fromIdx = pin >= 0 ? pin : 0;
+    toIdx = fromIdx;
+  } else if (N > 1) {
     const cycle = SLOT * N;
     const u = ((t % cycle) + cycle) % cycle;
     fromIdx = Math.floor(u / SLOT) % N;
@@ -171,8 +179,10 @@ function paintMenuHeroCanvas(t) {
     const inSlot = u % SLOT;
     if (inSlot > SLOT - FADE) {
       const f = (inSlot - (SLOT - FADE)) / FADE;
-      aFrom = 1 - f;
-      aTo = f;
+      // smootherstep — less flashy than linear alpha
+      const s = f * f * (3 - 2 * f);
+      aFrom = 1 - s;
+      aTo = s;
     } else {
       aFrom = 1;
       aTo = 0;
