@@ -11,6 +11,7 @@
   "src/data/summons.js",
   "src/data/skills.js",
   "src/data/supers.js",
+  "src/systems/a11y.js",
   "src/systems/versus.js",
   "src/data/monsters.js",
   "src/data/tide-battle.js",
