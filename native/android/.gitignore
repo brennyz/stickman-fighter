@@ -1,0 +1,15 @@
+# Generated Bubblewrap / Android Studio tree (create locally — optional to commit later)
+/app/
+/gradle/
+/gradlew
+/gradlew.bat
+/build.gradle
+/build.gradle.kts
+/settings.gradle
+/settings.gradle.kts
+/gradle.properties
+/local.properties
+/*.aab
+/*.apk
+/android.keystore
+/upload-keystore.jks

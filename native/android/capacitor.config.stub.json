@@ -1,0 +1,13 @@
+{
+  "_comment": "STUB ONLY — Play shell uses Bubblewrap TWA (see README.md). Keep for a future Capacitor Android/iOS shared shell; do not treat as active config.",
+  "appId": "com.brennyz.stickmanfighter",
+  "appName": "Stickman Fighter",
+  "webDir": "www",
+  "server": {
+    "url": "https://brennyz.github.io/stickman-fighter/speel.html",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

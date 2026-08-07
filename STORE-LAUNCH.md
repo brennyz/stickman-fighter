@@ -11,7 +11,7 @@
 | Pad | Klaar? | Blockers |
 |-----|--------|----------|
 | A. Soft live (PWA delen) | ~80% | Privacy page, echte device QA, onboarding |
-| B. Google Play | ~10% | TWA/Capacitor, Play Console, listing, rating |
+| B. Google Play | ~25% | Play Console, listing, rating, DAL on apex/custom domain |
 | C. Apple App Store | ~5% | Developer account, native shell, Guideline 4.2 |
 
 ---
@@ -34,8 +34,8 @@
 
 | # | Taak | Owner / agent | Status |
 |---|------|---------------|--------|
-| B1 | Kies pad: **TWA (Bubblewrap)** vs **Capacitor Android** | cloud: play-shell | pending |
-| B2 | Scaffold Android wrapper (package id, icons, signing placeholder) | cloud: play-shell | pending |
+| B1 | Kies pad: **TWA (Bubblewrap)** vs **Capacitor Android** | cloud: play-shell | **done** — TWA → `speel.html` (see `native/android/README.md`) |
+| B2 | Scaffold Android wrapper (package id, icons, signing placeholder) | cloud: play-shell | **done** — `native/android/` Bubblewrap scaffold + signing placeholder |
 | B3 | Play Console account + app aanmaken | human | pending |
 | B4 | Store listing NL/EN (korte/lange beschrijving, tags) | cloud: store-listing | pending |
 | B5 | Screenshots script (phone + tablet landscape) | cloud: store-listing | pending |

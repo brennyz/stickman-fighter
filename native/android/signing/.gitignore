@@ -1,0 +1,8 @@
+# Never commit secrets or binary keys
+*.jks
+*.keystore
+*.p12
+keystore.properties
+local.properties
+*.pem
+*.pk8
