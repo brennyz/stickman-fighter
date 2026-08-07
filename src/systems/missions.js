@@ -99,18 +99,7 @@ const ACHIEVEMENTS = [
     test: s => Object.keys(s.zoneWeapons || {}).length >= 10 },
   { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd',
     test: s => (s.stats.dailyBonusCount || 0) >= 7 },
-  { id: 'vs5', name: 'Duelist', desc: '5× 2-speler duel gespeeld',
-    test: s => (s.stats.vsMatches || 0) >= 5 },
-  { id: 'vsFatality1', name: 'Afronden!', desc: 'Land een versus fatality op match-KO',
-    test: s => (s.stats.vsFatalities || 0) >= 1 },
-  { id: 'vs_roster', name: 'Vol roster', desc: 'Speel met 10+ verschillende vechters (2P)',
-    test: s => (s.vsPlayedIds || []).length >= 10 },
-  { id: 'saga_icons', name: 'Saga-legends', desc: 'Speel 2P met alle 7 legend picks',
-    test: s => {
-      const need = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
-      const played = s.vsPlayedIds || [];
-      return need.every(id => played.includes(id));
-    } },
+  // Local versus retired — vs achievements removed (online MP later).
 ];
 
 function todayKey() {
@@ -419,11 +408,6 @@ function achievementPlayTarget(ach) {
       return { mode: 'training' };
     case 'wall100':
       return { mode: 'wall' };
-    case 'vs5':
-    case 'vsFatality1':
-    case 'vs_roster':
-    case 'saga_icons':
-      return { mode: 'versus' };
     default:
       return null;
   }
@@ -441,9 +425,6 @@ function goAchievementPlayTarget(ach) {
       startGame('training');
     } else if (target.mode === 'wall') {
       startGame('wall');
-    } else if (target.mode === 'versus') {
-      UI.charPickStep = 1;
-      UI.safeOpen('charSelectScreen', () => UI.renderCharSelect());
     }
   } catch (err) {
     sfReportError('achPlay/' + (ach && ach.id), err, 'Kon modus niet openen — kies handmatig in menu');
@@ -486,14 +467,6 @@ function achievementProgressFrac(ach) {
     case 'trainCombo10': return Math.min(s.stats.trainMaxCombo || 0, 10) / 10;
     case 'lv50': return Math.min(s.unlocked, 50) / 50;
     case 'daily7': return Math.min(s.stats.dailyBonusCount || 0, 7) / 7;
-    case 'vs5': return Math.min(s.stats.vsMatches || 0, 5) / 5;
-    case 'vsFatality1': return Math.min(s.stats.vsFatalities || 0, 1);
-    case 'vs_roster': return Math.min((s.vsPlayedIds || []).length, 10) / 10;
-    case 'saga_icons': {
-      const need = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
-      const played = s.vsPlayedIds || [];
-      return need.filter(id => played.includes(id)).length / need.length;
-    }
     default: return 0;
   }
 }
@@ -527,15 +500,6 @@ function achievementProgressHint(ach) {
     case 'trainCombo10': return `train ×${Math.min(s.stats.trainMaxCombo || 0, 10)}/10`;
     case 'lv50': return `Unlock Lv ${Math.min(s.unlocked, 50)}/50`;
     case 'daily7': return `${Math.min(s.stats.dailyBonusCount || 0, 7)}/7 dagbonussen`;
-    case 'vs5': return `${Math.min(s.stats.vsMatches || 0, 5)}/5 duels`;
-    case 'vsFatality1': return `${Math.min(s.stats.vsFatalities || 0, 1)}/1 fatality`;
-    case 'vs_roster': return `${(s.vsPlayedIds || []).length}/10 vechters gespeeld`;
-    case 'saga_icons': {
-      const need = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
-      const played = s.vsPlayedIds || [];
-      const n = need.filter(id => played.includes(id)).length;
-      return `${n}/7 legends in 2P`;
-    }
     default: return '';
   }
 }
@@ -1985,7 +1949,10 @@ function resumeLastPlay() {
       if (lp.difficulty && advDiffAvailable(lp.difficulty)) setAdvDiff(lp.difficulty);
       gokGooiStartLevel(lp.level || 1);
     } else if (lp.mode === 'versus') {
-      startGame('versus', { p1: lp.p1, p2: lp.p2 });
+      save.lastPlay = null;
+      persist();
+      try { toastVersusRetired(); } catch (_) {}
+      return false;
     } else {
       startGame(lp.mode);
     }
@@ -2524,7 +2491,7 @@ function modeOnboardingSeen(mode) {
   return !!(save.tipsSeen['onboard_' + mode] || save.tipsSeen['mode_' + mode]);
 }
 
-const ONBOARD_MODE_IDS = ['adventure', 'training', 'wall', 'versus', 'coinrun'];
+const ONBOARD_MODE_IDS = ['adventure', 'training', 'wall', 'coinrun'];
 
 function onboardingProgress() {
   const seen = ONBOARD_MODE_IDS.filter((id) => modeOnboardingSeen(id)).length;

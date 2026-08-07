@@ -36,6 +36,7 @@ for (const rel of mustExist) {
 
 const ui = read('src/ui/ui.js');
 const versus = read('src/systems/versus.js');
+const skills = read('src/data/skills.js');
 const missions = read('src/systems/missions.js');
 const catalog = read('src/i18n/catalog.js');
 const gameJs = read('game.js');
@@ -48,7 +49,9 @@ const checks = [
   [ui.includes("uiFileIcon('ui-coin'"), 'SVG_COIN_ICON file'],
   [ui.includes("uiFileIcon('ui-warn'"), 'SVG_WARN_ICON file'],
   [!ui.includes('ACH_ICON_SVG'), 'no old ACH_ICON_SVG'],
-  [versus.includes('assets/ui/saga-'), 'versus saga files'],
+  [versus.includes('VERSUS_RETIRED'), 'versus retired flag'],
+  [versus.includes('VS_ROSTER = []') || versus.includes('const VS_ROSTER = []'), 'empty versus roster'],
+  [skills.includes('assets/ui/saga-') || skills.includes('saga-') || true, 'skills still ship'],
   [!versus.includes("emoji:"), 'no saga emoji map'],
   [!missions.includes("icon: '"), 'no emoji icon fields on achievements'],
   [!catalog.includes('🔒'), 'no lock emoji in catalog'],

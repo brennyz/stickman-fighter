@@ -829,7 +829,6 @@ const MODE_HUB_META = {
 
 function hubForPlayMode(mode) {
   if (mode === 'adventure') return 'adventure';
-  if (mode === 'versus') return 'versus';
   if (mode === 'training' || mode === 'wall' || mode === 'coinrun') return 'arcade';
   return null;
 }
@@ -853,11 +852,6 @@ function hubTileStatLine(hub) {
       const pc = petCoinsBalance();
       if (pc > 0) bits.push(`${pc} pet ${SVG_COIN_ICON}`);
       return bits.length ? bits.join(' · ') : t('hub.modes3');
-    }
-    case 'versus': {
-      const w = save.stats?.vsWins || 0;
-      const m = save.stats?.vsMatches || 0;
-      return m > 0 ? t('hub.vsRecord', { w, m }) : t('hub.fightersLocal');
     }
     case 'collect':
       return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ${petCoinsBalance()} pet ${SVG_COIN_ICON}`;
@@ -1250,9 +1244,8 @@ const UI = {
     const next = nextUntriedMode();
     const modes = [
       { id: 'adventure', label: 'Avontuur', tip: t('ui.modeAdventure') },
-      { id: 'training', label: 'Training', tip: 'Combo-trainer ×5/×8/×10 · lasers · Chidori-telegraph' },
+      { id: 'training', label: 'Training', tip: 'Combo-trainer · lasers · telegraph-oefening' },
       { id: 'wall', label: 'Muur', tip: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing' },
-      { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
       { id: 'coinrun', label: 'Mats', tip: '45s munten · mik ↑ · vliegers +3' },
     ];
     let html = `<div style="font-size:12px;opacity:.85;margin-bottom:8px">${t('ui.helpOnboardHead', { seen: prog.seen, total: prog.total })}</div>`;
@@ -1426,6 +1419,11 @@ const UI = {
   },
 
   renderCharSelect() {
+    if (typeof VERSUS_RETIRED !== 'undefined' && VERSUS_RETIRED) {
+      try { toastVersusRetired(); } catch (_) {}
+      try { this.show('menuScreen'); } catch (_) {}
+      return;
+    }
     initCharSelectChrome();
     this.charPickStep = this.charPickStep || 1;
     const filter = this.charSagaFilter || 'all';

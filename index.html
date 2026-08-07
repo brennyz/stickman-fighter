@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=343">
+<link rel="stylesheet" href="styles/main.css?v=347">
 
 
 
@@ -94,7 +94,7 @@
       <div class="arcade-pre" id="menuArcadePre">KIES JE PAD</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine">insert coin</p>
-      <div class="subtitle" id="menuVerLine">v1.18.133 · arcade</div>
+      <div class="subtitle" id="menuVerLine">v1.18.137 · arcade</div>
     </header>
     <div class="arcade-menu-body menu-landing-body">
       <div class="menu-landing-scroll">
@@ -116,12 +116,6 @@
               <span class="hub-tile-title">Arcade</span>
               <span class="hub-tile-sub">Training · Muur · Mats</span>
               <span class="hub-tile-stat" data-hub-stat="arcade">3 modi</span>
-            </button>
-            <button type="button" class="hub-tile hub-tile-versus" data-hub="versus">
-              <span class="hub-tile-ico"><img src="assets/buttons/hub/versus.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
-              <span class="hub-tile-title">2 spelers</span>
-              <span class="hub-tile-sub">Lokaal · iPad liggend</span>
-              <span class="hub-tile-stat" data-hub-stat="versus">Best-of-3</span>
             </button>
             <button type="button" class="hub-tile hub-tile-collect" data-hub="collect">
               <span class="hub-tile-ico"><img src="assets/buttons/hub/collect.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
@@ -208,58 +202,32 @@
   </div>
 </div>
 
-<div id="charSelectScreen" class="screen char-select-arena">
-  <div class="char-arena-bg" aria-hidden="true"></div>
-  <div class="char-arena-body">
-  <div class="char-arena-inner">
-  <button class="btn back-btn" data-back id="charSelectBack"><img class="back-btn-ico" src="assets/buttons/chrome/back.svg" alt="" width="18" height="18" decoding="async" draggable="false"> Terug</button>
-  <div class="char-arena-title-block">
-    <div class="char-arena-pre" id="charArenaPre">VERSUS · BEST OF 3</div>
-    <h2 class="head char-arena-head" id="charSelectHead">SELECT FIGHTER</h2>
-    <p class="char-arena-sub" id="charSelectRosterLine">20 legends · Ryu · Ken · Goku · Xavi · Aruskankou · Kutjankorio · One Punch Man</p>
-  </div>
-  <div class="subtitle" id="charPickStep">Speler 1 — kies je vechter (links)</div>
-  <div class="char-pick-step-badge" id="charPickStepBadge">Stap 1/2 · Choose P1</div>
-  <div class="char-duel-bar char-arena-duel">
-    <button type="button" class="p1pill pick-pill big-touch" id="charP1Label">P1: Ryu</button>
-    <span class="char-arena-vs" aria-hidden="true">VS</span>
-    <button type="button" class="p2pill pick-pill big-touch" id="charP2Label">P2: Ken</button>
-  </div>
-  <div class="char-saga-bar" id="charSagaBar" role="tablist" aria-label="Saga filter">
-    <button type="button" data-saga="all" class="active"><img class="saga-ico" src="assets/ui/saga-all.svg" alt="" width="16" height="16" decoding="async" draggable="false"> Alle</button>
-    <button type="button" data-saga="fighter"><img class="saga-ico" src="assets/ui/saga-fighter.svg" alt="" width="16" height="16" decoding="async" draggable="false"> Street</button>
-    <button type="button" data-saga="ki"><img class="saga-ico" src="assets/ui/saga-ki.svg" alt="" width="16" height="16" decoding="async" draggable="false"> Ki</button>
-    <button type="button" data-saga="scroll"><img class="saga-ico" src="assets/ui/saga-scroll.svg" alt="" width="16" height="16" decoding="async" draggable="false"> Scroll</button>
-    <button type="button" data-saga="tide"><img class="saga-ico" src="assets/ui/saga-tide.svg" alt="" width="16" height="16" decoding="async" draggable="false"> Tide</button>
-    <button type="button" data-saga="cape"><img class="saga-ico" src="assets/ui/saga-cape.svg" alt="" width="16" height="16" decoding="async" draggable="false"> Cape</button>
-    <button type="button" data-saga="dawn"><img class="saga-ico" src="assets/ui/saga-dawn.svg" alt="" width="16" height="16" decoding="async" draggable="false"> Dawn</button>
-  </div>
-  <button type="button" class="btn tog big-touch" id="btnCharSort" style="margin:0 auto 8px;display:block;font-size:12px;min-height:40px;padding:8px 16px">Sort: naam</button>
-  <div id="charSagaBlurb" class="subtitle" style="margin-top:0"></div>
-  <div class="char-icon-row char-arena-featured" id="charIconRow"></div>
-  <div class="step-card char-arena-preview" id="charStatPreview"></div>
-  <div class="char-grid-scroll char-arena-grid-wrap" id="charGridScroll" data-scroll-reset data-char-scroll>
-    <div class="char-grid" id="charGrid"></div>
-  </div>
-  <div class="step-card char-arena-tip" id="charIpadTipCard">
-    <b>iPad:</b> speler 1 gebruikt de <b>linker helft</b> van het scherm (joystick + knoppen),
-    speler 2 de <b>rechter helft</b>. Draai je iPad liggend voor het meeste ruimte.
-  </div>
-  <div class="char-arena-footer">
-  <div class="char-arena-actions">
-    <button type="button" class="btn tog big-touch" id="btnCharSagaClash" style="flex:1 1 100%;margin:0"><span class="tog-ico"><img src="assets/buttons/chrome/star.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Legend clash (7 icons)</button>
-    <button type="button" class="btn tog big-touch" id="btnCharRandom" style="flex:1 1 200px;margin:0"><span class="tog-ico"><img src="assets/buttons/chrome/dice.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Willekeurig duo</button>
-    <button type="button" class="btn tog big-touch" id="btnCharRandomFair" style="flex:1 1 200px;margin:0"><span class="tog-ico"><img src="assets/buttons/chrome/fair.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Fair duo (ΔTOT)</button>
-    <button type="button" class="btn tog big-touch" id="btnCharSwap" style="flex:1 1 160px;margin:0"><span class="tog-ico"><img src="assets/buttons/chrome/swap.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Wissel P1/P2</button>
-  </div>
-  <div class="char-fight-dock" id="charFightDock">
-    <div class="char-fight-summary" id="charFightSummary" aria-live="polite"></div>
-    <button type="button" class="btn tog big-touch" id="btnCharReplay" style="display:none;width:min(86vw,420px);margin:0 auto 8px;font-size:12px;min-height:40px">Herhaal laatste duo</button>
-    <button type="button" class="btn char-fight-btn" id="btnCharFight">VECHT! (best-of-3)</button>
-  </div>
-  </div>
-  </div>
-  </div>
+<!-- Local versus retired — char select removed (online MP later). Keep empty shell ids for safe DOM lookups. -->
+<div id="charSelectScreen" class="screen" hidden aria-hidden="true">
+  <button class="btn back-btn" data-back id="charSelectBack" type="button">Terug</button>
+  <h2 class="head" id="charSelectHead"></h2>
+  <p id="charSelectRosterLine"></p>
+  <div id="charPickStep"></div>
+  <div id="charPickStepBadge"></div>
+  <div id="charP1Label"></div>
+  <div id="charP2Label"></div>
+  <div id="charSagaBar"></div>
+  <div id="charSagaBlurb"></div>
+  <div id="charIconRow"></div>
+  <div id="charStatPreview"></div>
+  <div id="charGrid"></div>
+  <div id="charFightSummary"></div>
+  <button type="button" id="btnCharFight" hidden></button>
+  <button type="button" id="btnCharReplay" hidden></button>
+  <button type="button" id="btnCharRandom" hidden></button>
+  <button type="button" id="btnCharRandomFair" hidden></button>
+  <button type="button" id="btnCharSwap" hidden></button>
+  <button type="button" id="btnCharSagaClash" hidden></button>
+  <button type="button" id="btnCharSort" hidden></button>
+  <div id="charArenaPre"></div>
+  <div id="charIpadTipCard"></div>
+  <div id="charFightDock"></div>
+  <div id="charGridScroll"></div>
 </div>
 
 <div id="levelScreen" class="screen">
@@ -658,12 +626,12 @@
 
 <script>
 /* HTML↔JS handshake: als oude SW nog oude game.js serveert terwijl menu-HTML nieuw is. */
-window.__SF_EXPECT_REV = 343;
-window.__SF_EXPECT_APP = '1.18.133';
+window.__SF_EXPECT_REV = 347;
+window.__SF_EXPECT_APP = '1.18.137';
 </script>
-<script src="tunnel-check.js?v=343"></script>
-<script src="game.js?v=343"></script>
-<script src="install.js?v=343"></script>
+<script src="tunnel-check.js?v=347"></script>
+<script src="game.js?v=347"></script>
+<script src="install.js?v=347"></script>
 <script>
 (function () {
   function nukeStale(reason) {

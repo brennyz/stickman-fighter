@@ -765,8 +765,7 @@ function bootGame() {
             UI.safeOpen('levelScreen', () => UI.renderLevels());
           } else if (mode === 'training') startGame('training');
           else if (mode === 'versus') {
-            UI.charPickStep = 1;
-            UI.safeOpen('charSelectScreen', () => UI.renderCharSelect());
+            try { toastVersusRetired(); } catch (_) {}
           } else if (mode === 'wall') startGame('wall');
           else if (mode === 'coinrun') startGame('coinrun');
         } catch (err) {

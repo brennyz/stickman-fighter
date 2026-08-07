@@ -29,7 +29,7 @@ must(/id="menuHeroCanvas"/.test(menu), 'missing #menuHeroCanvas');
 must(/menu-title-glass/.test(menu), 'missing title glass');
 must(/menu-meta-dock/.test(menu), 'missing meta dock');
 must(/menu-lang-compact/.test(menu), 'missing lang compact');
-must((menu.match(/data-hub="/g) || []).length >= 5, 'expected ≥5 hub tiles');
+must((menu.match(/data-hub="/g) || []).length >= 4, 'expected ≥4 hub tiles');
 must(/data-hub="summon"/.test(menu), 'missing summons hub tile');
 must(/id="summonScreen"/.test(html), 'missing summonScreen');
 must(/id="summonCenterCard"/.test(html), 'missing summon center card');
@@ -42,7 +42,7 @@ must(/body\.is-playing #menuScreen \.menu-stage/.test(css), 'missing play-safe s
 must(/sf-icon-broken/.test(css), 'missing broken-icon CSS');
 must(/function hardenButtonIcons/.test(fs.readFileSync(path.join(root, 'src/systems/missions.js'), 'utf8')), 'missing hardenButtonIcons');
 
-const hub = ['adventure', 'arcade', 'versus', 'collect', 'summons', 'continue'];
+const hub = ['adventure', 'arcade', 'collect', 'summons', 'continue'];
 const modes = ['training', 'wall', 'mats', 'weapons', 'pets', 'style', 'skills', 'upgrades', 'dex'];
 const chrome = [
   'music', 'missions', 'settings', 'help', 'refresh', 'install', 'home',
@@ -64,12 +64,17 @@ checkSet('hub', hub);
 checkSet('modes', modes);
 checkSet('chrome', chrome);
 
+// Saga chips remain for skills screen filters (not versus char-select).
 for (const name of sagaUi) {
   const rel = `assets/ui/saga-${name}.svg`;
   must(fs.existsSync(path.join(root, rel)), `missing file ${rel}`);
   must(html.includes(rel), `index.html missing ref ${rel}`);
   must(sw.includes(`./${rel}`) || sw.includes(rel), `sw.js missing precache ${rel}`);
 }
+
+must(!/data-hub="versus"/.test(html), 'versus hub tile should be removed');
+must(!/One Punch Man|Goku|Ryu · Ken/.test(html), 'brand fighter names still in HTML');
+must((html.match(/data-hub="/g) || []).length >= 4, 'expected ≥4 hub tiles');
 
 must(/assets\/buttons\/chrome\/back\.svg/.test(html), 'back.svg not wired on back-btn');
 must(/assets\/buttons\/chrome\/pause\.svg/.test(html), 'pause.svg not wired on #pauseBtn');

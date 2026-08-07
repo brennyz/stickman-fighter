@@ -1521,11 +1521,11 @@ function drawMenuCrossroadsVista(c, w, h, t, opts) {
   const markers = [
     { x: w * 0.18, y: h * 0.64, label: lab('menu.adventure', 'Avontuur'), col: '#7cf5aa', dir: '←' },
     { x: w * 0.50, y: forkY - 6, label: lab('menu.arcade', 'Arcade'), col: '#9db8ff', dir: '↑' },
-    { x: w * 0.78, y: h * 0.62, label: lab('menu.versus', '2P'), col: '#ff9ab8', dir: '→' },
+    { x: w * 0.78, y: h * 0.62, label: lab('menu.summons', 'Summons'), col: '#ffd75e', dir: '→' },
     { x: w * 0.50, y: h * 0.88, label: lab('menu.collect', 'Collectie'), col: '#d8a8ff', dir: '●' },
   ];
-  // Shorten long translated versus labels for pixel chip
-  if (markers[2].label && markers[2].label.length > 10) markers[2].label = '2P';
+  // Shorten long translated labels for pixel chip
+  if (markers[2].label && markers[2].label.length > 10) markers[2].label = 'Summon';
   c.font = '700 8px -apple-system, sans-serif';
   c.textAlign = 'center';
   for (const m of markers) {
