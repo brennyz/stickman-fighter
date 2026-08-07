@@ -86,7 +86,7 @@ function setSave(patch) {
 setSave({
   lvl: 5,
   weapon: 'kunai',
-  skillUpgrades: { rasengan: { level: 99, shards: 0 }, dash: { level: 2, shards: 1 } },
+  skillUpgrades: { spiral_orb: { level: 99, shards: 0 }, dash: { level: 2, shards: 1 } },
   itemUpgrades: {
     weapon: { kunai: { level: 9, shards: 0 }, vuist: { level: 3, shards: 5 }, fake: { level: 2, shards: 2 } },
     pet: { pet_slymo: { level: 4, shards: 99 } },
@@ -95,7 +95,7 @@ setSave({
   },
 });
 
-assert(run("skillLevel('rasengan') <= skillMaxLevel('rasengan')"), 'skill level clamped to max');
+assert(run("skillLevel('spiral_orb') <= skillMaxLevel('spiral_orb')"), 'skill level clamped to max');
 assert(run("skillLevel('dash') <= 2"), 'skill level clamped by shard budget');
 assert(run('!save.itemUpgrades.weapon?.vuist'), 'vuist upgrades stripped');
 assert(run('!save.itemUpgrades.weapon?.fake'), 'invalid weapon id stripped');
@@ -114,14 +114,14 @@ assert(run("weaponUpgradeBonuses('vuist').dmgMul === 1"), 'vuist gets no weapon 
 
 setSave({
   lvl: 8,
-  skillUpgrades: { chidori: { level: 2, shards: 0 }, rasengan: { level: 1, shards: 0 } },
-  activeJutsu: 'chidori',
+  skillUpgrades: { lightning_pierce: { level: 2, shards: 0 }, spiral_orb: { level: 1, shards: 0 } },
+  activeTechnique: 'lightning_pierce',
 });
-assert(run("save.activeJutsu === 'chidori'"), 'equipped jutsu kept after sanitize');
-assert(run("activeJutsuId(undefined, save) === 'chidori'"), 'active jutsu resolves from save');
-assert(run("jutsuSkillUnlocked('chidori', save)"), 'chidori unlocked at Lv 2');
-assert(run("skillBonuses('chidori', save).dmgMul > 1"), 'upgraded skill bonuses apply from Lv 1+');
-assert(run("skillBonuses('rasengan', save).dmgMul > 1"), 'rasengan Lv 1 bonus applies');
+assert(run("save.activeTechnique === 'lightning_pierce'"), 'equipped technique kept after sanitize');
+assert(run("activeTechniqueId(undefined, save) === 'lightning_pierce'"), 'active technique resolves from save');
+assert(run("techniqueSkillUnlocked('lightning_pierce', save)"), 'lightning_pierce unlocked at Lv 2');
+assert(run("skillBonuses('lightning_pierce', save).dmgMul > 1"), 'upgraded skill bonuses apply from Lv 1+');
+assert(run("skillBonuses('spiral_orb', save).dmgMul > 1"), 'spiral_orb Lv 1 bonus applies');
 
 // --- ownership: no upgrade for weapons you don't own ---
 assert(run("!weaponUpgradeEligible(weaponById('vuist'))"), 'vuist never upgrade-eligible');
@@ -186,10 +186,10 @@ assert(run("petUpgradeEligible(petDef('pet_slymo'))"), 'tamed pet eligible');
 assert(run("addItemShards('pet', 'pet_slymo', 2) === 2"), 'pet shards ok when tamed');
 
 setSave({ lvl: 1, trainWins: 0 });
-assert(run("!styleUpgradeEligible(styleById('chakra'))"), 'locked style not eligible');
-assert(run("addItemShards('style', 'chakra', 5) === 0"), 'style shards refused when locked');
+assert(run("!styleUpgradeEligible(styleById('energy_glow'))"), 'locked style not eligible');
+assert(run("addItemShards('style', 'energy_glow', 5) === 0"), 'style shards refused when locked');
 run('save.trainWins = 3');
-assert(run("styleUpgradeEligible(styleById('chakra'))"), 'unlocked style eligible');
+assert(run("styleUpgradeEligible(styleById('energy_glow'))"), 'unlocked style eligible');
 
 // shard drop pool never picks unowned weapons (superBoss → high drop chance)
 setSave({ lvl: 20, zoneWeapons: {}, pets: { pet_slymo: { at: 1 } }, style: 'classic' });

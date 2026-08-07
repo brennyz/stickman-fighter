@@ -108,7 +108,7 @@ function drawPlayerAimIndicator(c, fighter, alpha) {
   c.restore();
 }
 
-/** Werpers / jutsu: snelheid in de mikrichting (joy ↑ = hoger gooien). */
+/** Werpers / technique: snelheid in de mikrichting (joy ↑ = hoger gooien). */
 function projAimVelocity(f, baseSpeed) {
   baseSpeed = baseSpeed || 520;
   const aim = fighterAimNorm(f);

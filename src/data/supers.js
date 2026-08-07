@@ -23,20 +23,20 @@ const SUPERS = [
     chargeBanner: 'HEAL!', finishBanner: 'GENEZING!',
     chargeSfx: 'super_heal_charge', finishSfx: 'super_heal',
     healPct: 0.38, cd: 9, chargeDur: 1.9, blastR: 176, power: 3,
-    hint: 'Lv 8', tooltip: 'Chakra-golf herstelt HP en ruimt vijanden licht weg.',
+    hint: 'Lv 8', tooltip: 'Energy-golf herstelt HP en ruimt vijanden licht weg.',
     bonus: 'HP + lichte push', tags: ['heal', 'push'] },
-  { id: 'sharingan', name: 'Sharingan', needLvl: 12,
-    behavior: 'sharingan', icon: 'eye',
+  { id: 'mind_eye', name: 'Mind Eye', needLvl: 12,
+    behavior: 'mind_eye', icon: 'eye',
     color: '#e04040', color2: '#8b0000',
-    chargeBanner: 'SHARINGAN!', finishBanner: 'GENJUTSU!',
-    chargeSfx: 'super_sharingan_charge', finishSfx: 'super_sharingan',
+    chargeBanner: 'EYE LOCK!', finishBanner: 'MIND BIND!',
+    chargeSfx: 'super_mind_eye_charge', finishSfx: 'super_mind_eye',
     slowDur: 1.5, slowMul: 0.22, cd: 9, chargeDur: 2, blastR: 188, power: 4,
-    hint: 'Lv 12', tooltip: 'Oog-genjutsu: vertraagt vijanden, trekt ze naar je toe en slaat hard toe.',
-    bonus: 'Slow + pull + hit', tags: ['genjutsu', 'pull', 'slow'] },
+    hint: 'Lv 12', tooltip: 'Oog-illusion: vertraagt vijanden, trekt ze naar je toe en slaat hard toe.',
+    bonus: 'Slow + pull + hit', tags: ['illusion', 'pull', 'slow'] },
   { id: 'lightning_storm', name: 'Bliksemstorm', needLvl: 15,
     behavior: 'lightning', icon: 'bolt',
     color: '#a8e0ff', color2: '#5ad0ff',
-    chargeBanner: 'STORM!', finishBanner: 'RAIJIN!',
+    chargeBanner: 'STORM!', finishBanner: 'THUNDER!',
     chargeSfx: 'super_lightning_charge', finishSfx: 'super_lightning',
     strikes: 8, cd: 9, chargeDur: 1.85, blastR: 200, power: 4,
     hint: 'Lv 15', tooltip: 'Ultra-snelle bliksemslagen op alle nabije vijanden — één voor één.',
@@ -83,7 +83,7 @@ const SUPERS = [
     bonus: 'Pull + void burst', tags: ['pull', 'void'] },
 ];
 
-const SUPER_BEHAVIORS = ['blast', 'shield', 'heal', 'sharingan', 'lightning', 'meteor', 'rage', 'timestop', 'clones', 'void'];
+const SUPER_BEHAVIORS = ['blast', 'shield', 'heal', 'mind_eye', 'lightning', 'meteor', 'rage', 'timestop', 'clones', 'void'];
 
 const superById = id => SUPERS.find(s => s.id === id) || SUPERS[0];
 
@@ -93,7 +93,7 @@ function superExists(id) {
 
 function superBehaviorLabel(sp) {
   const map = {
-    blast: 'Blast', shield: 'Schild', heal: 'Heal', sharingan: 'Genjutsu',
+    blast: 'Blast', shield: 'Schild', heal: 'Heal', mind_eye: 'Illusion',
     lightning: 'Bliksem', meteor: 'Meteor', rage: 'Rage', timestop: 'Tijd',
     clones: 'Clones', void: 'Void',
   };
@@ -373,7 +373,7 @@ function finishEquippedSuper(fighter, game) {
       break;
     }
 
-    case 'sharingan': {
+    case 'mind_eye': {
       for (const m of game.monsters) {
         if (!m || !m.alive) continue;
         const dx = px - m.x, dy = py - m.y;

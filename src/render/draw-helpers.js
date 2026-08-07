@@ -241,7 +241,7 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.beginPath(); c.moveTo(56, -7); c.lineTo(72, 0); c.lineTo(56, 7); c.closePath(); c.fill();
       break;
     case 'laser':
-      // Chakra-kling: gloeiende blade + greep
+      // Energy-kling: gloeiende blade + greep
       c.save();
       c.shadowColor = '#4ff3ff'; c.shadowBlur = 12;
       c.strokeStyle = '#4ff3ff'; c.lineWidth = 7; c.beginPath(); c.moveTo(8, 0); c.lineTo(52, 0); c.stroke();
@@ -561,8 +561,8 @@ function spawnCompanionSparkles(game, x, y, color, opts) {
   }
 }
 
-/** Jutsu impact burst — Lite FX capped; scale 'small' for projectile fade-out. */
-function spawnJutsuImpactFx(game, x, y, kind, scale) {
+/** Technique impact burst — Lite FX capped; scale 'small' for projectile fade-out. */
+function spawnTechniqueImpactFx(game, x, y, kind, scale) {
   if (!game || motionReduced()) return;
   const sk = skillById(kind);
   const col = sk.color || '#7cf5ff';
@@ -574,23 +574,23 @@ function spawnJutsuImpactFx(game, x, y, kind, scale) {
   if (!lite && !small && (sk.behavior === 'pull' || sk.behavior === 'meteor')) {
     game.burst(x, y, '#ff6b9d', 6);
   }
-  if (!lite && !small && (kind === 'rasengan' || sk.behavior === 'orb')) {
+  if (!lite && !small && (kind === 'spiral_orb' || sk.behavior === 'orb')) {
     spawnFxRing(game, x, y, '#ffffff', 10);
   }
-  if (!lite && !small && (kind === 'chidori' || sk.behavior === 'dash')) {
+  if (!lite && !small && (kind === 'lightning_pierce' || sk.behavior === 'dash')) {
     game.burst(x, y, '#e8f7ff', 8, { kind: 'spark', size: 1.8 });
   }
-  if (!lite && !small && (kind === 'rinnegan' || sk.behavior === 'slash')) {
+  if (!lite && !small && (kind === 'void_gaze' || sk.behavior === 'slash')) {
     game.burst(x, y, '#e8d0ff', 10, { kind: 'spark', size: 2.4 });
     spawnFxRing(game, x, y, '#ffffff', 12);
   }
 }
 
 /**
- * Hand-charge aura while winding up a jutsu (Rasengan spiral / Chidori crackle).
+ * Hand-charge aura while winding up a technique (Spiral Orb spiral / Lightning Pierce crackle).
  * g = charge progress 0..1, animT = fighter anim clock.
  */
-function drawJutsuChargeAura(c, hx, hy, g, animT, kind) {
+function drawTechniqueChargeAura(c, hx, hy, g, animT, kind) {
   const sk = skillById(kind);
   const behavior = sk.behavior || 'orb';
   const col = sk.color || '#7cf5ff';
@@ -600,11 +600,11 @@ function drawJutsuChargeAura(c, hx, hy, g, animT, kind) {
   const oy = hy;
   const spin = animT * (8 + g * 20);
 
-  drawJutsuOrb(c, ox, oy, 8 + g * 16, spin, kind, 0.55 + g * 0.45);
+  drawTechniqueOrb(c, ox, oy, 8 + g * 16, spin, kind, 0.55 + g * 0.45);
 
   c.save();
-  if (behavior === 'dash' || kind === 'chidori') {
-    // Chidori — crackling sheath + jagged bolts from the palm
+  if (behavior === 'dash' || kind === 'lightning_pierce') {
+    // Lightning Pierce — crackling sheath + jagged bolts from the palm
     const halo = c.createRadialGradient(ox, oy, 2, ox, oy, 22 + g * 28);
     halo.addColorStop(0, `rgba(232,247,255,${0.35 + g * 0.4})`);
     halo.addColorStop(0.45, `rgba(168,224,255,${0.22 + g * 0.28})`);
@@ -648,8 +648,8 @@ function drawJutsuChargeAura(c, hx, hy, g, animT, kind) {
         c.stroke();
       }
     }
-  } else if (behavior === 'slash' || kind === 'rinnegan') {
-    // Rinnegan — horizontale bliksem-schede beide kanten (charge preview)
+  } else if (behavior === 'slash' || kind === 'void_gaze') {
+    // Void Gaze — horizontale bliksem-schede beide kanten (charge preview)
     const halo = c.createRadialGradient(ox, oy, 2, ox, oy, 24 + g * 30);
     halo.addColorStop(0, `rgba(255,255,255,${0.4 + g * 0.4})`);
     halo.addColorStop(0.4, `rgba(196,122,255,${0.28 + g * 0.35})`);
@@ -695,7 +695,7 @@ function drawJutsuChargeAura(c, hx, hy, g, animT, kind) {
       c.fill();
     }
   } else {
-    // Rasengan — cyan halo + orbiting motes + spiral rings
+    // Spiral Orb — cyan halo + orbiting motes + spiral rings
     const halo = c.createRadialGradient(ox, oy, 2, ox, oy, 20 + g * 26);
     halo.addColorStop(0, `rgba(255,255,255,${0.4 + g * 0.35})`);
     halo.addColorStop(0.4, `rgba(124,245,255,${0.28 + g * 0.32})`);
@@ -738,7 +738,7 @@ function drawJutsuChargeAura(c, hx, hy, g, animT, kind) {
   c.restore();
 }
 
-function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
+function drawTechniqueOrb(c, x, y, r, spin, kind, alpha) {
   const sk = skillById(kind);
   const behavior = sk.behavior || 'orb';
   const col = sk.color || '#7cf5ff';
@@ -848,7 +848,7 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
       c.ellipse(0, 0, r * 0.95, r * (0.32 + (i % 3) * 0.11), a0, 0, TAU);
       c.stroke();
     }
-    // Inner spiral ribbon (Rasengan signature)
+    // Inner spiral ribbon (Spiral Orb signature)
     if (!lite) {
       c.strokeStyle = 'rgba(255,255,255,.55)';
       c.lineWidth = 1.5;
@@ -883,10 +883,10 @@ function drawJutsuOrb(c, x, y, r, spin, kind, alpha) {
 }
 
 /**
- * Rinnegan in-flight: tweerichtings lichtschits-strook.
+ * Void Gaze in-flight: tweerichtings lichtschits-strook.
  * Dik bij centrum, smaller naar de tips (taper met afstand).
  */
-function drawRinneganSlashWave(c, p) {
+function drawVoidGazeSlashWave(c, p) {
   if (!p) return;
   const col = (typeof skillById === 'function' ? (skillById(p.kind) || {}).color : null) || '#c47aff';
   const reach = Math.max(8, p.slashReach || 0);

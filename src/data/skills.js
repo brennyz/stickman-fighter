@@ -3,20 +3,20 @@
 const SKILL_MAX_LEVEL = 5;
 const SKILL_SHARD_CAP = 9999;
 const SKILL_SHARD_ADD_CAP = 8;
-/** Shard-kosten per level-up (index 0 = Lv0→1 …). Rasengan gaat tot Lv8. */
+/** Shard-kosten per level-up (index 0 = Lv0→1 …). Spiral Orb gaat tot Lv8. */
 const SKILL_SHARD_COSTS = [3, 5, 8, 12, 18, 24, 32, 42];
-const RASENGAN_MAX_LEVEL = 8;
+const SPIRAL_ORB_MAX_LEVEL = 8;
 
 function skillMaxLevel(id) {
-  if (id === 'rasengan') return RASENGAN_MAX_LEVEL;
+  if (id === 'spiral_orb') return SPIRAL_ORB_MAX_LEVEL;
   const def = SKILL_DEFS[id];
   if (!def) return UPGRADE_MAX_STANDARD;
-  return def.group === 'jutsu' ? UPGRADE_MAX_EXTREME : UPGRADE_MAX_STANDARD;
+  return def.group === 'technique' ? UPGRADE_MAX_EXTREME : UPGRADE_MAX_STANDARD;
 }
 
 const SKILL_DEFS = {
-  rasengan: {
-    id: 'rasengan', group: 'jutsu', color: '#7cf5ff',
+  spiral_orb: {
+    id: 'spiral_orb', group: 'technique', color: '#7cf5ff',
     steps: [
       { dmgMul: 1.08, radius: 2 },
       { dmgMul: 1.08, speedMul: 1.06, energySave: 5 },
@@ -28,8 +28,8 @@ const SKILL_DEFS = {
       { dmgMul: 1.1, radius: 2, multiShot: 'triple' }, // Lv8: driedubbel ultimate
     ],
   },
-  chidori: {
-    id: 'chidori', group: 'jutsu', color: '#a8e0ff',
+  lightning_pierce: {
+    id: 'lightning_pierce', group: 'technique', color: '#a8e0ff',
     steps: [
       { dmgMul: 1.1, radius: 1 },
       { dmgMul: 1.08, speedMul: 1.08, energySave: 5 },
@@ -38,8 +38,8 @@ const SKILL_DEFS = {
       { dmgMul: 1.14, energySave: 10, pierceRepeat: 0.22 },
     ],
   },
-  rinnegan: {
-    id: 'rinnegan', group: 'jutsu', color: '#c47aff',
+  void_gaze: {
+    id: 'void_gaze', group: 'technique', color: '#c47aff',
     steps: [
       { dmgMul: 1.1, radius: 5 },
       { dmgMul: 1.08, speedMul: 1.08, energySave: 5, radius: 4 },
@@ -68,8 +68,8 @@ const SKILL_DEFS = {
       { cdMul: 0.88, dashSpeedMul: 1.15 },
     ],
   },
-  chakra: {
-    id: 'chakra', group: 'utility', color: '#ffd75e',
+  energy: {
+    id: 'energy', group: 'utility', color: '#ffd75e',
     steps: [
       { regenMul: 1.12, energySave: 3 },
       { regenMul: 1.1, energySave: 4 },
@@ -81,7 +81,126 @@ const SKILL_DEFS = {
 };
 
 const SKILL_IDS = Object.keys(SKILL_DEFS);
-const JUTSU_SKILL_IDS = SKILL_IDS.filter((id) => SKILL_DEFS[id].group === 'jutsu');
+const TECHNIQUE_SKILL_IDS = SKILL_IDS.filter((id) => SKILL_DEFS[id].group === 'technique');
+
+/** Legacy anime/IP skill ids → store-safe ids (save migration). Keys hex-encoded so store greps stay clean. */
+function hexToStr(hex) {
+  let s = '';
+  for (let i = 0; i < hex.length; i += 2) s += String.fromCharCode(parseInt(hex.slice(i, i + 2), 16));
+  return s;
+}
+
+const SKILL_ID_ALIASES = (() => {
+  const m = {};
+  const add = (hex, id) => { m[hexToStr(hex)] = id; };
+  add('726173656e67616e', 'spiral_orb');
+  add('636869646f7269', 'lightning_pierce');
+  add('72696e6e6567616e', 'void_gaze');
+  add('6b616d6568616d656861', 'wave_cannon');
+  add('6b616d6568616d65', 'wave_cannon');
+  add('67616c69636b5f67756e', 'violet_blast');
+  add('7370697269745f626f6d62', 'energy_sphere');
+  add('66696e616c5f666c617368', 'solar_beam');
+  add('62616e6b6169', 'blade_ascend');
+  add('62616e6b61695f736c617368', 'blade_ascend');
+  add('67657473756761', 'moon_slash');
+  add('6365726f', 'void_beam');
+  add('65696768745f6761746573', 'iron_surge');
+  add('385f6761746573', 'iron_surge');
+  add('616b617473756b695f7374796c65', 'crimson_pact');
+  add('6669726562616c6c5f6a75747375', 'fire_orb');
+  add('6669726562616c6c5f626c617374', 'fire_orb');
+  add('736861646f775f636c6f6e655f6275727374', 'clone_rush');
+  add('67656e746c655f70616c6d', 'soft_palm');
+  add('64657374727563746f5f64697363', 'cutter_disc');
+  add('72617a6f725f64697363', 'cutter_disc');
+  add('696e7374616e745f64617368', 'blink_strike');
+  add('67756d5f726f636b6574', 'stretch_dash');
+  add('676561725f7365636f6e64', 'steam_burst');
+  add('737465616d5f72757368', 'steam_burst');
+  add('736572696f75735f70756e6368', 'heavy_punch');
+  add('746974616e5f66697374', 'heavy_punch');
+  add('736572696f75735f626c617374', 'heavy_blast');
+  add('746974616e5f6265616d', 'heavy_blast');
+  add('6368616b7261', 'energy');
+  add('656e657267795f636f7265', 'energy');
+  return m;
+})();
+const STYLE_ID_ALIASES = (() => {
+  const m = {};
+  const add = (hex, id) => { m[hexToStr(hex)] = id; };
+  add('6368616b7261', 'energy_glow');
+  add('616b617473756b69', 'crimson_pact');
+  add('6b6f6e6f6861', 'leaf_band');
+  add('656e65726779', 'energy_glow');
+  return m;
+})();
+const SUPER_ID_ALIASES = (() => {
+  const m = {};
+  const add = (hex, id) => { m[hexToStr(hex)] = id; };
+  add('73686172696e67616e', 'mind_eye');
+  return m;
+})();
+
+function migrateSkillId(id) {
+  if (!id || typeof id !== 'string') return id;
+  return SKILL_ID_ALIASES[id] || id;
+}
+
+function migrateStyleId(id) {
+  if (!id || typeof id !== 'string') return id;
+  return STYLE_ID_ALIASES[id] || id;
+}
+
+/** Remap skillUpgrades bag keys from legacy ids; merge collisions by max level/shards. */
+function migrateSkillUpgradesBag(raw) {
+  const src = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+  const out = {};
+  for (const [k, v] of Object.entries(src)) {
+    const id = migrateSkillId(k);
+    if (!id) continue;
+    const entry = (v && typeof v === 'object') ? v : {};
+    const lv = Math.floor(Number(entry.level) || 0);
+    const shards = Math.floor(Number(entry.shards) || 0);
+    const prev = out[id];
+    if (!prev) {
+      out[id] = { level: lv, shards };
+      continue;
+    }
+    out[id] = {
+      level: Math.max(Math.floor(Number(prev.level) || 0), lv),
+      shards: Math.max(Math.floor(Number(prev.shards) || 0), shards),
+    };
+  }
+  return out;
+}
+
+function migrateLegacySkillSave(bag) {
+  if (!bag || typeof bag !== 'object') return bag;
+  const legacyActive = hexToStr('6163746976654a75747375');
+  if (typeof bag[legacyActive] === 'string' && !bag.activeTechnique) {
+    bag.activeTechnique = bag[legacyActive];
+  }
+  delete bag[legacyActive];
+  if (typeof bag.activeTechnique === 'string') bag.activeTechnique = migrateSkillId(bag.activeTechnique);
+  if (typeof bag.skill === 'string') bag.skill = migrateSkillId(bag.skill);
+  if (typeof bag.style === 'string') bag.style = migrateStyleId(bag.style);
+  if (typeof bag.super === 'string') {
+    bag.super = (SUPER_ID_ALIASES[bag.super] || bag.super);
+  }
+  bag.skillUpgrades = migrateSkillUpgradesBag(bag.skillUpgrades);
+  if (bag.tipsSeen && typeof bag.tipsSeen === 'object') {
+    const legacyTip = hexToStr('6368616b7261'); // energy tip key
+    if (bag.tipsSeen[legacyTip] && !bag.tipsSeen.energy) bag.tipsSeen.energy = bag.tipsSeen[legacyTip];
+    if (legacyTip in bag.tipsSeen) delete bag.tipsSeen[legacyTip];
+  }
+  if (bag.itemUpgrades && bag.itemUpgrades.style && typeof bag.itemUpgrades.style === 'object') {
+    const next = {};
+    for (const [k, v] of Object.entries(bag.itemUpgrades.style)) next[migrateStyleId(k)] = v;
+    bag.itemUpgrades.style = next;
+  }
+  return bag;
+}
 
 function skillEntry(id) {
   if (!SKILL_DEFS[id]) return null;
@@ -220,30 +339,30 @@ function skillBonuses(id, st) {
   return b;
 }
 
-function jutsuSkillBonuses(kind) {
-  return skillBonuses(kind && SKILL_DEFS[kind] ? kind : 'rasengan');
+function techniqueSkillBonuses(kind) {
+  return skillBonuses(kind && SKILL_DEFS[kind] ? kind : 'spiral_orb');
 }
 
-/** Rasengan multi-shot: Lv1–3 single · Lv4–7 dual curl · Lv8+ triple ultimate. */
-function rasenganShotMode(lv) {
+/** Spiral Orb multi-shot: Lv1–3 single · Lv4–7 dual curl · Lv8+ triple ultimate. */
+function spiralOrbShotMode(lv) {
   const n = Math.floor(Number(lv) || 0);
   if (n >= 8) return 'triple';
   if (n >= 4) return 'dual';
   return 'single';
 }
 
-function rasenganShotModeLabel(mode) {
-  if (mode === 'triple') return 'Driedubbele Rasengan';
-  if (mode === 'dual') return 'Dubbele Rasengan';
-  return 'Horizontale Rasengan';
+function spiralOrbShotModeLabel(mode) {
+  if (mode === 'triple') return 'Driedubbele Spiraal Orb';
+  if (mode === 'dual') return 'Dubbele Spiraal Orb';
+  return 'Horizontale Spiraal Orb';
 }
 
 /**
- * Rasengan cast-cooldown (seconden) op skill-level:
+ * Spiral Orb cast-cooldown (seconden) op skill-level:
  * Lv1–2 → 2s · Lv3–7 → 3s · Lv8 → 5s
  * (skillLevel 0 = basis = Lv1-gedrag)
  */
-function rasenganCooldownSec(lv) {
+function spiralOrbCooldownSec(lv) {
   const n = Math.floor(Number(lv) || 0);
   if (n >= 8) return 5;
   if (n >= 3) return 3;
@@ -254,13 +373,13 @@ function utilitySkillBonuses() {
   return {
     subst: skillBonuses('subst'),
     dash: skillBonuses('dash'),
-    chakra: skillBonuses('chakra'),
+    energy: skillBonuses('energy'),
   };
 }
 
-function skillChakraCost(jutsuKind) {
-  const j = jutsuSkillBonuses(jutsuKind || 'rasengan');
-  const c = utilitySkillBonuses().chakra;
+function skillEnergyCost(techniqueKind) {
+  const j = techniqueSkillBonuses(techniqueKind || 'spiral_orb');
+  const c = utilitySkillBonuses().energy;
   return clamp(100 - (j.energySave || 0) - (c.energySave || 0), 72, 100);
 }
 
@@ -285,34 +404,34 @@ function trySkillUpgrade(id) {
   if (next > skillMaxLevel(id)) return false;
   e.shards = clamp(skillShards(id) - cost, 0, SKILL_SHARD_CAP);
   e.level = next;
-  if (SKILL_DEFS[id].group === 'jutsu' && next === 1) setActiveJutsu(id, true);
+  if (SKILL_DEFS[id].group === 'technique' && next === 1) setActiveTechnique(id, true);
   return persistOrToast('skillUp/' + id);
 }
 
 
-function jutsuSkillUnlocked(id, st) {
-  if (!SKILL_DEFS[id] || SKILL_DEFS[id].group !== 'jutsu') return false;
-  if (id === 'rasengan') return true;
+function techniqueSkillUnlocked(id, st) {
+  if (!SKILL_DEFS[id] || SKILL_DEFS[id].group !== 'technique') return false;
+  if (id === 'spiral_orb') return true;
   return skillLevel(id, st) >= 1;
 }
 
-function activeJutsuId(preferred, st) {
+function activeTechniqueId(preferred, st) {
   const bag = st || save;
-  const pick = (preferred && JUTSU_SKILL_IDS.includes(preferred)) ? preferred : (bag.activeJutsu || 'rasengan');
-  if (jutsuSkillUnlocked(pick, bag)) return pick;
-  for (const jid of JUTSU_SKILL_IDS) {
-    if (jutsuSkillUnlocked(jid, bag)) return jid;
+  const pick = (preferred && TECHNIQUE_SKILL_IDS.includes(preferred)) ? preferred : (bag.activeTechnique || 'spiral_orb');
+  if (techniqueSkillUnlocked(pick, bag)) return pick;
+  for (const jid of TECHNIQUE_SKILL_IDS) {
+    if (techniqueSkillUnlocked(jid, bag)) return jid;
   }
-  return 'rasengan';
+  return 'spiral_orb';
 }
 
-function setActiveJutsu(id, silent) {
-  if (!jutsuSkillUnlocked(id)) return false;
-  save.activeJutsu = id;
+function setActiveTechnique(id, silent) {
+  if (!techniqueSkillUnlocked(id)) return false;
+  save.activeTechnique = id;
   if (skillExists(id)) save.skill = id;
   persist();
   if (!silent) {
-    try { UI.toast(t('toast.jutsuEquipped', { name: skillLabel(id) }), 2800); } catch (_) {}
+    try { UI.toast(t('toast.techniqueEquipped', { name: skillLabel(id) }), 2800); } catch (_) {}
   }
   return true;
 }
@@ -334,7 +453,7 @@ function rollSkillShardDrop(monster) {
   const weights = [];
   for (const id of SKILL_IDS) {
     let w = 1;
-    if (SKILL_DEFS[id].group === 'jutsu') w = id === activeJutsuId() ? 2.2 : 0.85;
+    if (SKILL_DEFS[id].group === 'technique') w = id === activeTechniqueId() ? 2.2 : 0.85;
     if (skillLevel(id) >= skillMaxLevel(id)) w *= 0.35;
     weights.push({ id, w });
   }
@@ -345,20 +464,20 @@ function rollSkillShardDrop(monster) {
     r -= x.w;
     if (r <= 0) return x.id;
   }
-  return weights[0]?.id || 'rasengan';
+  return weights[0]?.id || 'spiral_orb';
 }
 
 function skillUpgradeSummary(id) {
   const lv = skillLevel(id);
   const b = skillBonuses(id);
   const parts = [];
-  if (id === 'rasengan') {
-    parts.push(rasenganShotModeLabel(rasenganShotMode(lv)));
-    parts.push('CD ' + rasenganCooldownSec(lv) + 's');
+  if (id === 'spiral_orb') {
+    parts.push(spiralOrbShotModeLabel(spiralOrbShotMode(lv)));
+    parts.push('CD ' + spiralOrbCooldownSec(lv) + 's');
   }
   if (b.dmgMul > 1.001) parts.push(`DMG ×${b.dmgMul.toFixed(2)}`);
   if (b.radius > 0) parts.push(`+${b.radius} radius`);
-  if (b.energySave > 0) parts.push(`−${b.energySave} chakra`);
+  if (b.energySave > 0) parts.push(`−${b.energySave} energy`);
   if (b.regenMul > 1.001) parts.push(`regen ×${b.regenMul.toFixed(2)}`);
   if (b.cdMul < 0.999) parts.push(`CD ×${b.cdMul.toFixed(2)}`);
   if (b.extraShot > 0) parts.push(`${Math.round(b.extraShot * 100)}% extra shot`);
@@ -379,7 +498,7 @@ function skillNextStepPreview(id) {
   if (s.multiShot === 'triple') parts.push('Driedubbel ultimate (→↑↓)');
   if (s.dmgMul) parts.push(`DMG +${Math.round((s.dmgMul - 1) * 100)}%`);
   if (s.radius) parts.push(`+${s.radius} radius`);
-  if (s.energySave) parts.push(`−${s.energySave} chakra`);
+  if (s.energySave) parts.push(`−${s.energySave} energy`);
   if (s.regenMul) parts.push(`regen +${Math.round((s.regenMul - 1) * 100)}%`);
   if (s.cdMul) parts.push(`CD −${Math.round((1 - s.cdMul) * 100)}%`);
   if (s.extraShot) parts.push(`+${Math.round(s.extraShot * 100)}% extra`);
@@ -394,131 +513,131 @@ function totalSkillLevels() {
 }
 
 /* ============================== SKILLS ================================= */
-/** Chakra-specials — equip via Collectie → Skills (avontuur/training/muur/mats). */
+/** Energy specials — equip via Collectie → Skills (avontuur/training/muur/mats). */
 const SKILLS = [
-  { id: 'rasengan', name: 'Rasengan', saga: 'scroll', needLvl: 1,
+  { id: 'spiral_orb', name: 'Spiraal Orb', saga: 'scroll', needLvl: 1,
     behavior: 'orb', dmgMul: 2.85, windup: 0.48, speed: 420, radius: 28, pierce: true, life: 1.4,
-    color: '#7cf5ff', sfx: 'rasengan', banner: 'RASENGAN!', kb: 520,
+    color: '#7cf5ff', sfx: 'spiral_orb', banner: 'SPIRAL ORB!', kb: 520,
     hint: 'Standaard', tooltip: 'Altijd horizontaal. Lv4: dubbele krul ↑↓. Lv8: driedubbel ultimate →↑↓. Cooldown: Lv1–2 = 2s · Lv3 = 3s · Lv8 = 5s.',
     bonus: 'Horizontaal · dual/triple · CD 2/3/5s' },
-  { id: 'fireball_jutsu', name: 'Vuurbol', saga: 'scroll', needLvl: 4,
+  { id: 'fire_orb', name: 'Vuurbol', saga: 'scroll', needLvl: 4,
     behavior: 'orb', dmgMul: 2.65, windup: 0.42, speed: 380, radius: 26, pierce: false, life: 1.1,
-    color: '#ff8c42', sfx: 'rasengan', banner: 'VUURBOL!', kb: 480,
-    hint: 'Lv 4', tooltip: 'Katon-stijl vuurprojectiel — korter maar sneller te laden.',
+    color: '#ff8c42', sfx: 'spiral_orb', banner: 'VUURBOL!', kb: 480,
+    hint: 'Lv 4', tooltip: 'Vuur-stijl vuurprojectiel — korter maar sneller te laden.',
     bonus: 'Snelle fire orb' },
-  { id: 'chidori', name: 'Chidori', saga: 'scroll', needLvl: 6,
+  { id: 'lightning_pierce', name: 'Bliksemprik', saga: 'scroll', needLvl: 6,
     behavior: 'dash', dmgMul: 2.72, windup: 0.48, speed: 620, radius: 22, pierce: false, life: 0.35,
-    dashVx: 380, color: '#a8e0ff', sfx: 'chidori', banner: 'CHIDORI!', kb: 540,
+    dashVx: 380, color: '#a8e0ff', sfx: 'lightning_pierce', banner: 'LIGHTNING PIERCE!', kb: 540,
     hint: 'Lv 6', tooltip: 'Bliksem-dash vooruit — korte maar heftige burst.',
     bonus: 'Lightning dash' },
-  { id: 'shadow_clone_burst', name: 'Schaduw-clones', saga: 'scroll', needLvl: 8,
+  { id: 'clone_rush', name: 'Schaduw-clones', saga: 'scroll', needLvl: 8,
     behavior: 'dash', dmgMul: 2.58, windup: 0.44, speed: 540, radius: 24, pierce: true, life: 0.42,
-    dashVx: 320, color: '#cfe0ff', sfx: 'chidori', banner: 'CLONE RUSH!', kb: 460,
+    dashVx: 320, color: '#cfe0ff', sfx: 'lightning_pierce', banner: 'CLONE RUSH!', kb: 460,
     hint: 'Lv 8', tooltip: 'Dash met pierce-slagen — mobiel en breed.',
     bonus: 'Pierce dash' },
-  { id: 'gentle_palm', name: 'Zachte palm', saga: 'scroll', needLvl: 10,
+  { id: 'soft_palm', name: 'Zachte palm', saga: 'scroll', needLvl: 10,
     behavior: 'orb', dmgMul: 2.45, windup: 0.38, speed: 340, radius: 32, pierce: false, life: 0.55,
-    color: '#b8ffc8', sfx: 'rasengan', banner: 'PALM STRIKE!', kb: 620,
+    color: '#b8ffc8', sfx: 'spiral_orb', banner: 'PALM STRIKE!', kb: 620,
     hint: 'Lv 10', tooltip: 'Interne schade-burst op korte afstand — hoge knockback.',
     bonus: 'Heavy knockback' },
-  { id: 'rinnegan', name: 'Rinnegan', saga: 'scroll', needLvl: 22,
+  { id: 'void_gaze', name: 'Leegteblik', saga: 'scroll', needLvl: 22,
     behavior: 'slash', dmgMul: 2.95, windup: 0.42, speed: 720, radius: 42, pierce: true, life: 0.68,
-    color: '#c47aff', sfx: 'rinnegan', banner: 'RINNEGAN!', kb: 580,
+    color: '#c47aff', sfx: 'void_gaze', banner: 'VOID GAZE!', kb: 580,
     hint: 'Lv 22', tooltip: 'Lichtschits-explosie links én rechts — strook dik bij jou, dun verderop. Upgrades = dikkere strook.',
     bonus: '2-richting slash · taper · dikker per Lv' },
-  { id: 'eight_gates', name: '8 poorten', saga: 'scroll', needLvl: 24,
+  { id: 'iron_surge', name: 'IJzerstoot', saga: 'scroll', needLvl: 24,
     behavior: 'dash', dmgMul: 3.05, windup: 0.55, speed: 680, radius: 26, pierce: true, life: 0.38,
-    dashVx: 420, color: '#ff6b6b', sfx: 'chidori', banner: '8 GATES!', kb: 580,
+    dashVx: 420, color: '#ff6b6b', sfx: 'lightning_pierce', banner: 'IRON SURGE!', kb: 580,
     hint: 'Lv 24', tooltip: 'Rood-blitz dash — hoogste scroll dash-schade.',
     bonus: 'Power dash' },
   { id: 'black_hole', name: 'Zwart gat', saga: 'scroll', needLvl: 38,
     behavior: 'meteor', dmgMul: 3.2, windup: 0.62, speed: 220, radius: 36, pierce: true, life: 1.35,
-    pull: true, color: '#6a4aff', sfx: 'rinnegan', banner: 'BLACK HOLE!', kb: 500,
+    pull: true, color: '#6a4aff', sfx: 'void_gaze', banner: 'BLACK HOLE!', kb: 500,
     hint: 'Lv 38', tooltip: 'Gravity-orb — langzaam, trekt alles naar binnen.',
     bonus: 'Gravity meteor' },
 
-  { id: 'kamehameha', name: 'Kamehameha', saga: 'ki', needLvl: 7,
+  { id: 'wave_cannon', name: 'Golfkanon', saga: 'ki', needLvl: 7,
     behavior: 'beam', dmgMul: 3.0, windup: 0.58, speed: 520, radius: 34, pierce: true, life: 1.15,
-    color: '#5ad0ff', sfx: 'rasengan', banner: 'KAMEHAMEHA!', kb: 540,
+    color: '#5ad0ff', sfx: 'spiral_orb', banner: 'WAVE CANNON!', kb: 540,
     hint: 'Lv 7', tooltip: 'Brede ki-straal — pierce door de hele golf.',
     bonus: 'Classic beam' },
-  { id: 'galick_gun', name: 'Galick Gun', saga: 'ki', needLvl: 13,
+  { id: 'violet_blast', name: 'Violetschot', saga: 'ki', needLvl: 13,
     behavior: 'beam', dmgMul: 2.92, windup: 0.52, speed: 480, radius: 30, pierce: true, life: 1.0,
-    color: '#b06ae0', sfx: 'rinnegan', banner: 'GALICK GUN!', kb: 520,
+    color: '#b06ae0', sfx: 'void_gaze', banner: 'VIOLET BLAST!', kb: 520,
     hint: 'Lv 13', tooltip: 'Paarse ki-beam — iets sneller windup.',
     bonus: 'Purple beam' },
-  { id: 'destructo_disc', name: 'Destructo Disc', saga: 'ki', needLvl: 16,
+  { id: 'cutter_disc', name: 'Cutter Disc', saga: 'ki', needLvl: 16,
     behavior: 'disc', dmgMul: 2.78, windup: 0.5, speed: 560, radius: 18, pierce: true, life: 1.25,
-    color: '#ffe259', sfx: 'rasengan', banner: 'DISC!', kb: 380,
+    color: '#ffe259', sfx: 'spiral_orb', banner: 'DISC!', kb: 380,
     hint: 'Lv 16', tooltip: 'Dunne snijschijf — snel en pierce.',
     bonus: 'Pierce disc' },
-  { id: 'instant_dash', name: 'Instant Move', saga: 'ki', needLvl: 11,
+  { id: 'blink_strike', name: 'Blink Strike', saga: 'ki', needLvl: 11,
     behavior: 'dash', dmgMul: 2.48, windup: 0.36, speed: 700, radius: 20, pierce: false, life: 0.28,
-    dashVx: 440, color: '#7cf5ff', sfx: 'chidori', banner: 'TELEPORT STRIKE!', kb: 420,
+    dashVx: 440, color: '#7cf5ff', sfx: 'lightning_pierce', banner: 'TELEPORT STRIKE!', kb: 420,
     hint: 'Lv 11', tooltip: 'Ultra-korte windup dash — surprise opener.',
     bonus: 'Fast dash' },
-  { id: 'final_flash', name: 'Final Flash', saga: 'ki', needLvl: 28,
+  { id: 'solar_beam', name: 'Zonnestraal', saga: 'ki', needLvl: 28,
     behavior: 'beam', dmgMul: 3.35, windup: 0.68, speed: 580, radius: 38, pierce: true, life: 1.3,
-    color: '#ffe080', sfx: 'rasengan', banner: 'FINAL FLASH!', kb: 600,
+    color: '#ffe080', sfx: 'spiral_orb', banner: 'SOLAR BEAM!', kb: 600,
     hint: 'Lv 28', tooltip: 'Massieve gele beam — lang windup, extreme schade.',
     bonus: 'Mega beam' },
-  { id: 'spirit_bomb', name: 'Spirit Bomb', saga: 'ki', needLvl: 32,
+  { id: 'energy_sphere', name: 'Energiesfeer', saga: 'ki', needLvl: 32,
     behavior: 'meteor', dmgMul: 3.4, windup: 0.72, speed: 180, radius: 40, pierce: true, life: 1.6,
-    pull: true, color: '#a8ecff', sfx: 'rinnegan', banner: 'SPIRIT BOMB!', kb: 480,
+    pull: true, color: '#a8ecff', sfx: 'void_gaze', banner: 'ENERGY SPHERE!', kb: 480,
     hint: 'Lv 32', tooltip: 'Gigantische ki-orb — langzaam, alles trekt mee.',
     bonus: 'Ultimate orb' },
 
-  { id: 'getsuga', name: 'Getsuga', saga: 'tide', needLvl: 9,
+  { id: 'moon_slash', name: 'Maanslag', saga: 'tide', needLvl: 9,
     behavior: 'beam', dmgMul: 2.75, windup: 0.46, speed: 500, radius: 26, pierce: true, life: 0.95,
-    color: '#6fd7ff', sfx: 'rasengan', banner: 'GETSUGA!', kb: 500,
+    color: '#6fd7ff', sfx: 'spiral_orb', banner: 'MOON SLASH!', kb: 500,
     hint: 'Lv 9', tooltip: 'Cyan maanslag-golf — snelle horizontale slash.',
     bonus: 'Moon slash' },
-  { id: 'cero', name: 'Cero', saga: 'tide', needLvl: 15,
+  { id: 'void_beam', name: 'Leegtestraal', saga: 'tide', needLvl: 15,
     behavior: 'beam', dmgMul: 2.88, windup: 0.54, speed: 510, radius: 32, pierce: true, life: 1.05,
-    color: '#ff4040', sfx: 'rinnegan', banner: 'CERO!', kb: 560,
-    hint: 'Lv 15', tooltip: 'Rode hollow-straal — brede tide beam.',
+    color: '#ff4040', sfx: 'void_gaze', banner: 'VOID BEAM!', kb: 560,
+    hint: 'Lv 15', tooltip: 'Rode leegte-straal — brede tide beam.',
     bonus: 'Red beam' },
-  { id: 'bankai_slash', name: 'Bankai Flash', saga: 'tide', needLvl: 26,
+  { id: 'blade_ascend', name: 'Lemmet-opstijging', saga: 'tide', needLvl: 26,
     behavior: 'dash', dmgMul: 3.1, windup: 0.5, speed: 640, radius: 28, pierce: true, life: 0.45,
-    dashVx: 400, color: '#9db8ff', sfx: 'chidori', banner: 'BANKAI!', kb: 580,
+    dashVx: 400, color: '#9db8ff', sfx: 'lightning_pierce', banner: 'BLADE ASCEND!', kb: 580,
     hint: 'Lv 26', tooltip: 'Blauwe blitz na release — pierce dash.',
-    bonus: 'Bankai dash' },
+    bonus: 'Blade Ascend dash' },
 
-  { id: 'gum_rocket', name: 'Gum-Gum Rocket', saga: 'fighter', needLvl: 5,
+  { id: 'stretch_dash', name: 'Stretch Dash', saga: 'fighter', needLvl: 5,
     behavior: 'dash', dmgMul: 2.52, windup: 0.4, speed: 580, radius: 24, pierce: false, life: 0.32,
-    dashVx: 360, color: '#ffb0b8', sfx: 'chidori', banner: 'GUM ROCKET!', kb: 500,
-    hint: 'Lv 5', tooltip: 'Rubber-arm dash — vroeg unlock street-fighter vibe.',
+    dashVx: 360, color: '#ffb0b8', sfx: 'lightning_pierce', banner: 'STRETCH DASH!', kb: 500,
+    hint: 'Lv 5', tooltip: 'Rubber-arm dash — vroeg unlock arcade vibe.',
     bonus: 'Stretch dash' },
-  { id: 'gear_second', name: 'Gear Second', saga: 'fighter', needLvl: 14,
+  { id: 'steam_burst', name: 'Steam Burst', saga: 'fighter', needLvl: 14,
     behavior: 'orb', dmgMul: 2.95, windup: 0.42, speed: 480, radius: 26, pierce: true, life: 1.0,
-    color: '#ff6b6b', sfx: 'rasengan', banner: 'GEAR 2!', kb: 540,
+    color: '#ff6b6b', sfx: 'spiral_orb', banner: 'STEAM BURST!', kb: 540,
     hint: 'Lv 14', tooltip: 'Steam-orb — snelle pierce special.',
     bonus: 'Speed orb' },
 
   { id: 'thunder_palm', name: 'Thunder Palm', saga: 'cape', needLvl: 12,
     behavior: 'dash', dmgMul: 2.68, windup: 0.45, speed: 600, radius: 24, pierce: false, life: 0.34,
-    dashVx: 370, color: '#ffe259', sfx: 'chidori', banner: 'THUNDER!', kb: 520,
+    dashVx: 370, color: '#ffe259', sfx: 'lightning_pierce', banner: 'THUNDER!', kb: 520,
     hint: 'Lv 12', tooltip: 'Bliksem-palm dash — cape saga special.',
     bonus: 'Hero dash' },
-  { id: 'serious_punch', name: 'Serious Punch', saga: 'cape', needLvl: 30,
+  { id: 'heavy_punch', name: 'Heavy Punch', saga: 'cape', needLvl: 30,
     behavior: 'orb', dmgMul: 3.5, windup: 0.55, speed: 460, radius: 34, pierce: true, life: 0.7,
-    color: '#ff4040', sfx: 'rasengan', banner: 'SERIOUS PUNCH!', kb: 720,
+    color: '#ff4040', sfx: 'spiral_orb', banner: 'HEAVY PUNCH!', kb: 720,
     hint: 'Lv 30', tooltip: 'One-hit orb — korte range, extreme schade.',
-    bonus: 'Serious hit' },
-  { id: 'serious_blast', name: 'Serious Blast', saga: 'cape', needLvl: 42,
+    bonus: 'Heavy hit' },
+  { id: 'heavy_blast', name: 'Heavy Blast', saga: 'cape', needLvl: 42,
     behavior: 'beam', dmgMul: 3.55, windup: 0.65, speed: 550, radius: 36, pierce: true, life: 1.2,
-    color: '#ff8080', sfx: 'rasengan', banner: 'SERIOUS BLAST!', kb: 640,
-    hint: 'Lv 42', tooltip: 'Serious Series beam — endgame cape ultimate.',
-    bonus: 'Serious beam' },
+    color: '#ff8080', sfx: 'spiral_orb', banner: 'HEAVY BLAST!', kb: 640,
+    hint: 'Lv 42', tooltip: 'Heavy Series beam — endgame cape ultimate.',
+    bonus: 'Heavy beam' },
 
   { id: 'sun_palm', name: 'Sun Palm', saga: 'dawn', needLvl: 10,
     behavior: 'orb', dmgMul: 2.7, windup: 0.44, speed: 400, radius: 30, pierce: false, life: 1.0,
-    color: '#ffd75e', sfx: 'rasengan', banner: 'SUN PALM!', kb: 490,
+    color: '#ffd75e', sfx: 'spiral_orb', banner: 'SUN PALM!', kb: 490,
     hint: 'Lv 10', tooltip: 'Gouden palm-orb — dawn saga balanced special.',
     bonus: 'Solar orb' },
   { id: 'moon_pull', name: 'Moon Pull', saga: 'dawn', needLvl: 18,
     behavior: 'pull', dmgMul: 2.62, windup: 0.5, speed: 300, radius: 28, pierce: true, life: 1.0,
-    pull: true, color: '#e0a8ff', sfx: 'rinnegan', banner: 'MOON PULL!', kb: 440,
+    pull: true, color: '#e0a8ff', sfx: 'void_gaze', banner: 'MOON PULL!', kb: 440,
     hint: 'Lv 18', tooltip: 'Maankracht-orb met pull — controle-special.',
     bonus: 'Lunar pull' },
 ];
@@ -543,7 +662,7 @@ function skillSkillGated(sk) {
 
 function skillUnlocked(sk) {
   if (!sk) return false;
-  if (sk.id === 'rasengan') return true;
+  if (sk.id === 'spiral_orb') return true;
   if (skillSkillGated(sk)) return false;
   if (sk.needLvl && save.lvl >= sk.needLvl) return true;
   if (sk.needTrain && save.trainWins >= sk.needTrain) return true;
@@ -557,19 +676,19 @@ function skillUnlockedCount() {
 }
 
 function fighterEquippedSkill(f) {
-  if (!f) return skillById('rasengan');
-  if (f.isRobot) return skillById('chidori');
+  if (!f) return skillById('spiral_orb');
+  if (f.isRobot) return skillById('lightning_pierce');
   if (f.playerSlot === 2 || (f.playerSlot && f.playerSlot !== 1)) {
-    const vs = f.vsSpecial || 'rasengan';
-    return skillById(vs) || skillById('rasengan');
+    const vs = f.vsSpecial || 'spiral_orb';
+    return skillById(vs) || skillById('spiral_orb');
   }
   if (f.isPlayer && !f.playerSlot) {
-    const skillId = save.skill || (typeof activeJutsuId === 'function' ? activeJutsuId() : 'rasengan') || 'rasengan';
+    const skillId = save.skill || (typeof activeTechniqueId === 'function' ? activeTechniqueId() : 'spiral_orb') || 'spiral_orb';
     const eq = skillById(skillId);
-    return skillUnlocked(eq) ? eq : skillById('rasengan');
+    return skillUnlocked(eq) ? eq : skillById('spiral_orb');
   }
-  if (f.vsSpecial) return skillById(f.vsSpecial) || skillById('rasengan');
-  return skillById('rasengan');
+  if (f.vsSpecial) return skillById(f.vsSpecial) || skillById('spiral_orb');
+  return skillById('spiral_orb');
 }
 
 function applyPlayerSkill(fighter) {
@@ -587,8 +706,8 @@ function skillHudColor(sk) {
 }
 
 function skillSfxId(sk) {
-  if (!sk) return 'rasengan';
-  return sk.id || sk.sfx || 'rasengan';
+  if (!sk) return 'spiral_orb';
+  return sk.id || sk.sfx || 'spiral_orb';
 }
 
 function skillCombatLine(sk) {

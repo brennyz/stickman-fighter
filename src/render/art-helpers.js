@@ -22,7 +22,7 @@ function drawPickupIcon(c, kind, x, y, tint) {
     c.beginPath();
     c.ellipse(-0.5, 3, 2, 3, 0, 0, TAU);
     c.fill();
-  } else if (kind === 'chakra') {
+  } else if (kind === 'energy') {
     c.strokeStyle = '#0a0d18';
     c.lineWidth = 2.4;
     c.lineCap = 'round';

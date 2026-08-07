@@ -19,12 +19,12 @@ const FEATURE_CATALOG = [
   'mode_adventure', 'mode_training', 'mode_wall', 'mode_coinrun', 'mode_versus',
   'adv_start', 'adv_wave_spawn', 'adv_wave_clear', 'adv_part_gate', 'adv_level_win',
   'adv_gamble_ally', 'adv_gamble_neutral', 'adv_pickup', 'adv_ketsbam', 'adv_draw',
-  'meta_weapon_equip', 'meta_style_equip', 'meta_jutsu_equip', 'meta_super_equip',
+  'meta_weapon_equip', 'meta_style_equip', 'meta_technique_equip', 'meta_super_equip',
   'meta_skill_upgrade', 'meta_weapon_upgrade', 'meta_style_upgrade', 'meta_pet_tame',
   'meta_pet_equip', 'meta_pet_upgrade', 'meta_dex', 'meta_achievements', 'meta_grant_xp',
   'meta_stars', 'meta_persist',
   'training_frames', 'wall_frames', 'coinrun_frames', 'versus_frames',
-  'skill_rasengan', 'skill_chidori', 'skill_kamehameha', 'skill_fireball',
+  'skill_spiral_orb', 'skill_lightning_pierce', 'skill_wave_cannon', 'skill_fireball',
   'super_ketsbam', 'super_iron_shield', 'super_heal_wave',
   'weapon_kunai', 'weapon_knuppel', 'weapon_speer', 'weapon_zwaard',
   'style_konoha', 'style_sand', 'style_classic',
@@ -170,7 +170,7 @@ async function run() {
       xp: xpNeed(maxLv) - 5,
       weapon: 'kunai',
       style: 'konoha',
-      activeJutsu: 'chidori',
+      activeTechnique: 'lightning_pierce',
       super: 'iron_shield',
       petCoins: 120,
       stats: Object.assign({}, DEFAULT_SAVE.stats, { kills: 200, advWins: maxLv - 1 }),
@@ -204,11 +204,11 @@ async function run() {
       }
     });
 
-    tryMark('meta_jutsu_equip', () => {
-      for (const id of ['rasengan', 'chidori', 'kamehameha', 'fireball_jutsu']) {
+    tryMark('meta_technique_equip', () => {
+      for (const id of ['spiral_orb', 'lightning_pierce', 'wave_cannon', 'fireball_blast']) {
         const sk = SKILLS.find((s) => s.id === id);
         if (sk && skillUnlocked(sk)) {
-          save.activeJutsu = id;
+          save.activeTechnique = id;
           save.skill = id;
           ok(`skill_${id}`);
         }
@@ -223,7 +223,7 @@ async function run() {
     });
 
     tryMark('meta_skill_upgrade', () => {
-      for (const id of ['rasengan', 'chidori', 'dash', 'chakra']) {
+      for (const id of ['spiral_orb', 'lightning_pierce', 'dash', 'energy']) {
         addSkillShards(id, 24);
         while (skillCanUpgrade(id)) trySkillUpgrade(id);
       }

@@ -23,7 +23,7 @@ const REGRESSION_MUST_DEFINE = [
 const CRITICAL_FILES = /^src\/(game|boot|entities)\//;
 const GLOBAL_CALL_HEURISTIC = /(?:Idx|Gate|Input|Walk|Boundary|Trait|Loot|Sanitize|Unlocked|Eligible|Persistable|Bonuses|Summary|Preview|Toast|Banner|Sfx|Art|Pool|Roll|Gamble|Tame|Equip|Shard|Upgrade|Achieve|Mission|Repair|Stash|Backup|Export|Import|Hiccup|Recover|Suppress|Onboard|Floater|Spawn|Clear|Tide|Summon|Dex|Pet|Egg|Wave|Level|Stage|Part|Checkpoint)$/;
 
-const OPTIONAL_EXTERNALS = new Set(['jutsuSwooshSfx']);
+const OPTIONAL_EXTERNALS = new Set(['techniqueSwooshSfx']);
 const SKIP = new Set(['if', 'for', 'while', 'catch', 'typeof', 'return', 'new', 'throw', 'await', 'async', 'function', 'class', 'super', 'this']);
 
 function stripLiterals(src) {

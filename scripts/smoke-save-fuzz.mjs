@@ -72,16 +72,16 @@ const mutators = [
   (s) => { s.dex = 'not-an-object'; },
   (s) => { s.pets = [{ id: 'x' }]; },
   (s) => { s.stats = null; },
-  (s) => { s.skillUpgrades = { rasengan: { level: 999, shards: -5 } }; },
+  (s) => { s.skillUpgrades = { spiral_orb: { level: 999, shards: -5 } }; },
   (s) => { s.itemUpgrades = { weapon: { fake: { level: 9 } }, hacker: { x: 1 } }; },
   (s) => { s.achievements = '[]'; },
-  (s) => { s.activeJutsu = 42; },
+  (s) => { s.activeTechnique = 42; },
   (s) => { s.stars = { abc: 'three' }; },
   (s) => { s.tipsSeen = 'yes'; },
   (s) => { delete s.lvl; delete s.xp; },
   (s) => { s.musicVol = 'loud'; s.sfxVol = Infinity; },
   (s) => {
-    s.skillUpgrades = { rasengan: { level: 'max', shards: null }, fake: 42 };
+    s.skillUpgrades = { spiral_orb: { level: 'max', shards: null }, fake: 42 };
     s.itemUpgrades = { weapon: { katana: { level: -3, shards: 'x' } }, hacker: { x: 1 } };
   },
 ];

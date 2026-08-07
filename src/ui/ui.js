@@ -251,7 +251,7 @@ function initSkillScreenChrome() {
   UI.skillSagaFilter = 'all';
   UI.skillBehaviorFilter = 'all';
   UI.skillSortMode = 'level';
-  UI.skillPreviewId = save.skill || 'rasengan';
+  UI.skillPreviewId = save.skill || 'spiral_orb';
   UI.superPreviewId = save.super || 'ketsbam';
 
   const sagaBar = document.getElementById('skillSagaBar');
@@ -326,8 +326,8 @@ function equipSkill(id) {
   try {
     safeUiAction(() => {
       save.skill = id;
-      if (typeof JUTSU_SKILL_IDS !== 'undefined' && JUTSU_SKILL_IDS.includes(id)) {
-        save.activeJutsu = id;
+      if (typeof TECHNIQUE_SKILL_IDS !== 'undefined' && TECHNIQUE_SKILL_IDS.includes(id)) {
+        save.activeTechnique = id;
       }
       if (!persistOrToast('skill')) return;
       AudioSys.sfx(skillSfxId(sk));
@@ -577,7 +577,7 @@ function runSkillCard(card, meta) {
 function updateSkillPreview() {
   const host = document.getElementById('skillPreview');
   if (!host) return;
-  const id = UI.skillPreviewId || save.skill || 'rasengan';
+  const id = UI.skillPreviewId || save.skill || 'spiral_orb';
   const sk = skillById(id);
   const ok = skillUnlocked(sk);
   const active = save.skill === sk.id;
@@ -618,11 +618,11 @@ function updateSkillPreview() {
     `<div class="skill-stat-grid">${statRows}</div>` +
     `<div class="skill-preview-foot">${foot}</div>`;
   const cv = document.getElementById('skillPreviewCanvas');
-  if (cv && typeof drawJutsuOrb === 'function') {
+  if (cv && typeof drawTechniqueOrb === 'function') {
     const cc = cv.getContext('2d');
     cc.clearRect(0, 0, 88, 88);
     cc.translate(44, 46);
-    drawJutsuOrb(cc, 0, 0, 30, performance.now() * 0.001 * 3, sk.id, ok ? 1 : 0.42);
+    drawTechniqueOrb(cc, 0, 0, 30, performance.now() * 0.001 * 3, sk.id, ok ? 1 : 0.42);
   }
   const equipBtn = document.getElementById('skillEquipBtn');
   if (equipBtn) equipBtn.type = 'button';
@@ -1010,7 +1010,7 @@ const UI = {
   skillSagaFilter: 'all',
   skillBehaviorFilter: 'all',
   skillSortMode: 'level',
-  skillPreviewId: 'rasengan',
+  skillPreviewId: 'spiral_orb',
   weaponPreviewId: null,
   charSortMode: 'name',
   charPreviewHoverId: null,
@@ -1019,7 +1019,7 @@ const UI = {
   petTab: 'dex',
   advIslandPick: 0,
   lastResult: null,
-  pauseSubDefault: 'Rasengan klaar — moto! · voortgang blijft op dit apparaat',
+  pauseSubDefault: 'Spiral Orb klaar — moto! · voortgang blijft op dit apparaat',
 
   activeScreen() {
     return this.screens.find(sid => document.getElementById(sid)?.classList.contains('active')) || null;
@@ -1198,7 +1198,7 @@ const UI = {
           try { this.renderHelp(); } catch (err) { sfReportError('renderHelp', err); }
         }
         if (id === 'skillScreen') {
-          this.skillPreviewId = save.skill || 'rasengan';
+          this.skillPreviewId = save.skill || 'spiral_orb';
           this.superPreviewId = save.super || 'ketsbam';
         }
         if (id === 'levelScreen') {
@@ -1250,7 +1250,7 @@ const UI = {
     const next = nextUntriedMode();
     const modes = [
       { id: 'adventure', label: 'Avontuur', tip: t('ui.modeAdventure') },
-      { id: 'training', label: 'Training', tip: 'Combo-trainer ×5/×8/×10 · lasers · Chidori-telegraph' },
+      { id: 'training', label: 'Training', tip: 'Combo-trainer ×5/×8/×10 · lasers · Lightning Pierce-telegraph' },
       { id: 'wall', label: 'Muur', tip: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing' },
       { id: 'versus', label: '2 spelers', tip: 'P1 links P2 rechts · best-of-3 · rematch in pauze' },
       { id: 'coinrun', label: 'Mats', tip: '45s munten · mik ↑ · vliegers +3' },
@@ -1755,7 +1755,7 @@ const UI = {
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
       setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
       const skillsN = skillUnlockedCount();
-      const activeSk = skillById(save.skill || 'rasengan');
+      const activeSk = skillById(save.skill || 'spiral_orb');
       const activeSp = equippedSuper();
       setStat('hubStatSkills', skillsN > 0
         ? `${skillsN}/${SKILLS.length} · ${skillLabel(activeSk)} · ${superLabel(activeSp)}`
@@ -1780,7 +1780,7 @@ const UI = {
     if (profileEl) {
       profileEl.innerHTML =
         `<span class="prof-row"><b>Lv ${save.lvl}</b><span>${weaponLabel(w)}</span>` +
-        `<span style="color:${(skillById(save.skill || 'rasengan').color)}">${skillLabel(skillById(save.skill || 'rasengan'))}</span>` +
+        `<span style="color:${(skillById(save.skill || 'spiral_orb').color)}">${skillLabel(skillById(save.skill || 'spiral_orb'))}</span>` +
         `<span style="color:${equippedSuper().color}">${superLabel(equippedSuper())}</span>` +
         `<span style="color:${st.accent}">${styleLabel(st)}</span></span>` +
         `<span style="display:block;margin-top:3px;opacity:.82;font-size:11px">${adventureProgressLine()}</span>` +
@@ -3268,15 +3268,15 @@ const UI = {
       const ready = countAllUpgradesReady();
       sumEl.style.display = 'block';
       if (tab === 'skills') {
-        const activeJ = activeJutsuId();
+        const activeJ = activeTechniqueId();
         const activeName = `<b style="color:${SKILL_DEFS[activeJ]?.color || '#7cf5ff'}">${skillLabel(activeJ)}</b>`;
         sumEl.innerHTML =
-          `${t('ui.jutsuActive', { name: activeName })} · ` +
+          `${t('ui.techniqueActive', { name: activeName })} · ` +
           `Totaal <b>${totalAllUpgradeLevels()}</b> upgrade-levels · ` +
           `<b>${skillShards}</b> skill · <b>${itemShards}</b> item shards` +
           (ready > 0 ? ` · <b style="color:#ffd75e">${t('ui.upgradeReady', { n: ready })}</b>` : '') +
           `<div class="upgrade-shard-hint">${t('ui.upgradeShardHint')}</div>` +
-          `<div style="font-size:11px;opacity:.72;margin-top:4px">${t('ui.jutsuSelectHint')}</div>`;
+          `<div style="font-size:11px;opacity:.72;margin-top:4px">${t('ui.techniqueSelectHint')}</div>`;
       } else {
         sumEl.innerHTML =
           `Totaal <b>${totalAllUpgradeLevels()}</b> upgrade-levels · ` +
@@ -3295,7 +3295,7 @@ const UI = {
     if (!list) return;
     list.innerHTML = '';
     const groups = [
-      { id: 'jutsu', title: t('ui.skillGroupJutsu'), ids: JUTSU_SKILL_IDS },
+      { id: 'technique', title: t('ui.skillGroupTechnique'), ids: TECHNIQUE_SKILL_IDS },
       { id: 'utility', title: t('ui.skillGroupUtility'), ids: SKILL_IDS.filter((id) => SKILL_DEFS[id].group === 'utility') },
     ];
     for (const g of groups) {
@@ -3310,8 +3310,8 @@ const UI = {
         const shards = skillShards(id);
         const cost = skillUpgradeCost(id);
         const canUp = skillCanUpgrade(id);
-        const equipped = def.group === 'jutsu' && activeJutsuId() === id;
-        const unlocked = def.group === 'jutsu' ? jutsuSkillUnlocked(id) : (lv >= 1 || id === 'rasengan');
+        const equipped = def.group === 'technique' && activeTechniqueId() === id;
+        const unlocked = def.group === 'technique' ? techniqueSkillUnlocked(id) : (lv >= 1 || id === 'spiral_orb');
         const el = document.createElement('div');
         el.className = 'card skill-card upgrade-polish-card' + (canUp ? ' claimable' : '') + (lv >= maxLv ? ' claimed' : '') + (equipped ? ' sel' : '');
         el.style.borderColor = def.color + (equipped ? '' : '88');
@@ -3323,7 +3323,7 @@ const UI = {
           ? t('ui.skillShards', { cur: shards, cost })
           : t('ui.skillMax');
         const desc = skillDesc(id);
-        const statusLine = def.group === 'jutsu'
+        const statusLine = def.group === 'technique'
           ? (equipped ? t('ui.skillEquipped') : (unlocked ? t('ui.skillEquipHint') : t('ui.skillLocked', { lv: 1 })))
           : (lv >= 1 ? t('ui.skillPassiveActive') : t('ui.skillPassiveLocked', { lv: 1 }));
         el.innerHTML =
@@ -3338,10 +3338,10 @@ const UI = {
           `<div class="cinfo" style="opacity:.78;font-size:11px;margin-top:3px">${statusLine}</div>` +
           `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:4px"><b>${t('ui.skillNow')}:</b> ${now}</div>` +
           (next ? `<div class="cinfo" style="opacity:.75;font-size:11px;margin-top:3px"><b>${t('ui.skillNext')}:</b> ${next}</div>` : '') +
-          (def.group === 'jutsu' ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:4px">${equipped ? t('ui.jutsuEquipped') : t('ui.jutsuTapEquip')}</div>` : '') +
+          (def.group === 'technique' ? `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:4px">${equipped ? t('ui.techniqueEquipped') : t('ui.techniqueTapEquip')}</div>` : '') +
           `</div>`;
         appendUpgradeOrbRow(el, lv, maxLv, def.color);
-        if (def.group === 'jutsu' && unlocked && !equipped) {
+        if (def.group === 'technique' && unlocked && !equipped) {
           const eqBtn = document.createElement('button');
           eqBtn.type = 'button';
           eqBtn.className = 'btn claim-btn';
@@ -3349,10 +3349,10 @@ const UI = {
           eqBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             safeUiAction(() => {
-              if (!setActiveJutsu(id)) return;
+              if (!setActiveTechnique(id)) return;
               AudioSys.sfx('select');
               this.renderUpgrades();
-            }, 'equipJutsu/' + id, 'Jutsu kiezen mislukt');
+            }, 'equipTechnique/' + id, 'Technique kiezen mislukt');
           });
           el.appendChild(eqBtn);
         }
@@ -3857,7 +3857,7 @@ const UI = {
     const sumEl = document.getElementById('skillSummary');
     if (sumEl) {
       const unlocked = skillUnlockedCount();
-      const active = skillById(save.skill || 'rasengan');
+      const active = skillById(save.skill || 'spiral_orb');
       const sagaChips = SKILL_SAGA_ORDER.map(sid => {
         const c = skillSagaCounts(sid);
         const meta = vsSagaMeta(sid);
@@ -3930,10 +3930,10 @@ const UI = {
       const mode = UI.skillSortMode || 'level';
       sortBtn.textContent = t('ui.skillSort_' + mode);
     }
-    const previewId = UI.skillPreviewId || save.skill || 'rasengan';
+    const previewId = UI.skillPreviewId || save.skill || 'spiral_orb';
     const filtered = sortSkills(skillsForFilters(saga, behavior), UI.skillSortMode || 'level');
     if (!filtered.some(s => s.id === previewId)) {
-      UI.skillPreviewId = filtered[0] ? filtered[0].id : (save.skill || 'rasengan');
+      UI.skillPreviewId = filtered[0] ? filtered[0].id : (save.skill || 'spiral_orb');
     }
     updateSkillPreview();
     const grid = document.getElementById('skillGrid');
@@ -3959,8 +3959,8 @@ const UI = {
       cv.width = 72; cv.height = 72;
       const cc = cv.getContext('2d');
       cc.translate(36, 38);
-      if (typeof drawJutsuOrb === 'function') {
-        drawJutsuOrb(cc, 0, 0, 22, 0.6, sk.id, ok ? 1 : 0.45);
+      if (typeof drawTechniqueOrb === 'function') {
+        drawTechniqueOrb(cc, 0, 0, 22, 0.6, sk.id, ok ? 1 : 0.45);
       } else {
         cc.fillStyle = sk.color;
         cc.beginPath(); cc.arc(0, 0, 20, 0, TAU); cc.fill();

@@ -105,11 +105,11 @@ function drawMenuBackdrop(c, t) {
   }
   c.save();
   c.translate(W * 0.5, H * 0.42);
-  if (typeof drawJutsuOrb === 'function') {
-    drawJutsuOrb(c, 0, 0,
+  if (typeof drawTechniqueOrb === 'function') {
+    drawTechniqueOrb(c, 0, 0,
       lite ? 22 : 28 + Math.sin(t * 2) * 4,
       lite ? t * 2 : t * 3,
-      'rasengan',
+      'spiral_orb',
       lite ? 0.55 : 0.85);
   }
   c.restore();

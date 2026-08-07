@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.133';
+const APP_VERSION = '1.18.136';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 343;
+const SW_CACHE_REV = 346;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -28,7 +28,7 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   kbLegend: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
-  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeJutsu: 'rasengan', skill: 'rasengan', super: 'ketsbam', missionsIntroSeen: false };
+  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
 
 const MAX_LEVEL = 70;
 const LEVELS_PER_ISLAND = 10;
@@ -339,16 +339,16 @@ function wallPauseSubtitle(g) {
   return parts.join(' · ');
 }
 let save = loadSave();
-function fighterJutsuKind(f) {
+function fighterTechniqueKind(f) {
   return fighterEquippedSkill(f).id;
 }
-function jutsuHudLabel(kind) {
+function techniqueHudLabel(kind) {
   const sk = skillById(kind);
   return sk.banner || 'SPECIAL!';
 }
 
-/** Klein getekend jutsu-icoon (bliksem/oog/orb) voor HUD-markers. */
-function drawJutsuMiniIcon(c, kind, x, y, color) {
+/** Klein getekend technique-icoon (bliksem/oog/orb) voor HUD-markers. */
+function drawTechniqueMiniIcon(c, kind, x, y, color) {
   const sk = skillById(kind);
   const behavior = sk.behavior || 'orb';
   c.save();
@@ -392,7 +392,7 @@ function drawJutsuMiniIcon(c, kind, x, y, color) {
 }
 
 /** Getekend touch-knop-icoon (art-upgrade 4/4) — vervangt emoji-labels. */
-function drawTouchBtnIcon(c, id, x, y, r, jutsuKind) {
+function drawTouchBtnIcon(c, id, x, y, r, techniqueKind) {
   const s = r * 0.52;
   c.save();
   c.translate(x, y);
@@ -450,7 +450,7 @@ function drawTouchBtnIcon(c, id, x, y, r, jutsuKind) {
       break;
     }
     case 'special': {
-      const sk = skillById(jutsuKind);
+      const sk = skillById(techniqueKind);
       const behavior = sk.behavior || 'orb';
       if (behavior === 'dash') {
         c.beginPath();
@@ -485,7 +485,7 @@ function drawTouchBtnIcon(c, id, x, y, r, jutsuKind) {
         c.beginPath(); c.ellipse(0, 0, s * 1.05, s * 0.45, 0, 0, TAU); c.stroke();
         c.beginPath(); c.arc(0, 0, s * 0.25, 0, TAU); c.fill();
       } else {
-        // rasengan: orb + spiraal
+        // spiral_orb: orb + spiraal
         c.beginPath(); c.arc(0, 0, s * 0.95, 0, TAU); c.stroke();
         c.beginPath();
         for (let a = 0; a < TAU * 1.35; a += 0.3) {
@@ -532,7 +532,7 @@ function drawTouchBtnIcon(c, id, x, y, r, jutsuKind) {
   return true;
 }
 
-function jutsuAccentColor(kind, p2Slot) {
+function techniqueAccentColor(kind, p2Slot) {
   const sk = SKILLS.find(s => s.id === kind);
   if (sk) return p2Slot ? '#ffb0b8' : sk.color;
   return p2Slot ? '#ffb0b8' : '#7cf5ff';
@@ -544,10 +544,10 @@ const SIG_MODS = {
   assassin: { kickDmg: 1.18, kickCrit: 0.16, kickCritMul: 1.6 },
   heavy: { weaponDmg: 1.14, weaponCrit: 0.1, weaponCritMul: 2.05 },
   combo: { kickDmg: 1.24, kickCrit: 0.2, kickCritMul: 1.5 },
-  kenjutsu: { weaponDmg: 1.16, weaponCrit: 0.14, weaponCritMul: 1.72 },
+  blade_arts: { weaponDmg: 1.16, weaponCrit: 0.14, weaponCritMul: 1.72 },
   hitrun: { kickDmg: 1.12, kickCrit: 0.22, kickCritMul: 1.58 },
   quak: { punchDmg: 1.28, critAdd: -0.02 },
-  rinne: { jutsuCrit: 0.07, jutsuDmg: 1.06 },
+  void_sig: { techniqueCrit: 0.07, techniqueDmg: 1.06 },
   boss: { critAdd: 0.05, critMul: 1.72 },
   storm: { kickDmg: 1.14, kickCrit: 0.08 },
   tank: { punchDmg: 1.2, punchCrit: 0.04, kbMul: 1.15 },
@@ -576,7 +576,7 @@ function applySignatureToSpec(f, spec) {
     if (sig.weaponDmg) spec.dmg *= sig.weaponDmg;
     if (sig.weaponRange) spec.range *= sig.weaponRange;
   }
-  if (spec.kind === 'special' && sig.jutsuDmg) spec.dmg *= sig.jutsuDmg;
+  if (spec.kind === 'special' && sig.techniqueDmg) spec.dmg *= sig.techniqueDmg;
   if (sig.kbMul && spec.kb) spec.kb *= sig.kbMul;
   return spec;
 }
@@ -597,10 +597,10 @@ function rollHitDamage(attacker, spec, mult) {
     if (sig.weaponCritMul) critMul = sig.weaponCritMul;
   }
   if (k === 'punch') critChance += sig.punchCrit || 0;
-  if (k === 'special' || spec.jutsu) {
-    critChance += sig.jutsuCrit || 0;
-    const jsk = SKILLS.find(s => s.id === spec.jutsu);
-    if (jsk && (jsk.id === 'rinnegan' || jsk.behavior === 'pull' || jsk.behavior === 'slash')) critChance += 0.05;
+  if (k === 'special' || spec.technique) {
+    critChance += sig.techniqueCrit || 0;
+    const jsk = SKILLS.find(s => s.id === spec.technique);
+    if (jsk && (jsk.id === 'void_gaze' || jsk.behavior === 'pull' || jsk.behavior === 'slash')) critChance += 0.05;
   }
   if (attacker.isPlayer && typeof game !== 'undefined' && game && game.stageCritBonus) {
     critChance += game.stageCritBonus;
@@ -625,9 +625,9 @@ function rollHitDamage(attacker, spec, mult) {
 function projCritMeta(f) {
   const prof = combatEntryFor(f);
   const sig = SIG_MODS[prof.sig] || {};
-  let critChance = prof.crit + (sig.critAdd || 0) + (sig.jutsuCrit || 0);
+  let critChance = prof.crit + (sig.critAdd || 0) + (sig.techniqueCrit || 0);
   const eqSk = fighterEquippedSkill(f);
-  if (eqSk && (eqSk.id === 'rinnegan' || eqSk.behavior === 'pull' || eqSk.behavior === 'slash')) critChance += 0.05;
+  if (eqSk && (eqSk.id === 'void_gaze' || eqSk.behavior === 'pull' || eqSk.behavior === 'slash')) critChance += 0.05;
   return { critChance: clamp(critChance, 0, 0.42), critMul: prof.critMul };
 }
 
@@ -670,10 +670,10 @@ function isCounterHitWindow(target) {
   return !!(a && a.t < a.windup * 0.92);
 }
 
-/** Avontuur: monster in telegraph/dash/jutsu windup — counter-hit zonder dmg×. */
+/** Avontuur: monster in telegraph/dash/technique windup — counter-hit zonder dmg×. */
 function isMonsterCounterWindow(m) {
   if (!m || !m.alive) return false;
-  return (m.telegraphT > 0) || (m.dashT > 0) || (m.jutsuTelegraphT > 0);
+  return (m.telegraphT > 0) || (m.dashT > 0) || (m.techniqueTelegraphT > 0);
 }
 
 function resolveProjHit(p) {
@@ -683,7 +683,7 @@ function resolveProjHit(p) {
   return { dmg: Math.max(1, Math.round(dmg)), crit };
 }
 
-/** Rinnegan lichtschits: horizontale strook L+R, dikte tapert met afstand tot centrum. */
+/** Void Gaze lichtschits: horizontale strook L+R, dikte tapert met afstand tot centrum. */
 function slashWaveHalfHeight(p, dist) {
   const r0 = p.r0 || p.r || 42;
   const maxR = Math.max(1, p.slashMaxReach || 460);
@@ -713,7 +713,7 @@ function projStrikeFighter(game, p, tgt, col) {
   const sk = (typeof skillExists === 'function' && skillExists(p.kind)) ? skillById(p.kind) : null;
   const hit = resolveProjHit(p);
   const dir = projKnockDir(p, tgt.x);
-  const kbBase = p.kind === 'rinnegan' ? 340 : 260;
+  const kbBase = p.kind === 'void_gaze' ? 340 : 260;
   const kb = dir * kbBase * (p.kbMul || 1);
   const dealt = tgt.takeDamage(hit.dmg, kb, game, {
     projWeaponId: (p.kind === 'shuriken' || p.kind === 'boemerang') ? (p.throwId || p.kind) : null,
@@ -724,8 +724,8 @@ function projStrikeFighter(game, p, tgt, col) {
   game.floater(tgt.x, tgt.y - 115, '-' + dealt, col, 16);
   if (hit.crit) applyCritFx(game, tgt.x, tgt.y);
   if (p.pull) tgt.vx += dir * 160;
-  spawnJutsuImpactFx(game, p.x + (p.slashWave ? dir * Math.min(40, p.slashReach || 0) : 0), p.y, p.kind, 'full');
-  if (sk && sk.behavior === 'orb' && sk.id === 'rasengan' && !fxLite() && !motionReduced()) {
+  spawnTechniqueImpactFx(game, p.x + (p.slashWave ? dir * Math.min(40, p.slashReach || 0) : 0), p.y, p.kind, 'full');
+  if (sk && sk.behavior === 'orb' && sk.id === 'spiral_orb' && !fxLite() && !motionReduced()) {
     game.freezeT = Math.max(game.freezeT || 0, 0.045);
   }
   if (sk && sk.behavior === 'slash' && !fxLite() && !motionReduced()) {
@@ -845,7 +845,74 @@ function readSaveJson(raw) {
     if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
     if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;
-    if (typeof parsed.activeJutsu === 'string') merged.activeJutsu = parsed.activeJutsu;
+    // Legacy key migration (hex-encoded tokens — store greps stay clean)
+    const hexToStrEarly = (hex) => {
+      let s = '';
+      for (let i = 0; i < hex.length; i += 2) s += String.fromCharCode(parseInt(hex.slice(i, i + 2), 16));
+      return s;
+    };
+    const LEGACY_ACTIVE = hexToStrEarly('6163746976654a75747375');
+    if (typeof parsed.activeTechnique === 'string') merged.activeTechnique = parsed.activeTechnique;
+    else if (typeof parsed[LEGACY_ACTIVE] === 'string') merged.activeTechnique = parsed[LEGACY_ACTIVE];
+    delete merged[LEGACY_ACTIVE];
+    const SKILL_ALIASES_EARLY = {};
+    const STYLE_ALIASES_EARLY = {};
+    const SUPER_ALIASES_EARLY = {};
+    const _add = (map, hex, id) => { map[hexToStrEarly(hex)] = id; };
+    _add(SKILL_ALIASES_EARLY, '726173656e67616e', 'spiral_orb');
+    _add(SKILL_ALIASES_EARLY, '636869646f7269', 'lightning_pierce');
+    _add(SKILL_ALIASES_EARLY, '72696e6e6567616e', 'void_gaze');
+    _add(SKILL_ALIASES_EARLY, '6b616d6568616d656861', 'wave_cannon');
+    _add(SKILL_ALIASES_EARLY, '6b616d6568616d65', 'wave_cannon');
+    _add(SKILL_ALIASES_EARLY, '67616c69636b5f67756e', 'violet_blast');
+    _add(SKILL_ALIASES_EARLY, '7370697269745f626f6d62', 'energy_sphere');
+    _add(SKILL_ALIASES_EARLY, '66696e616c5f666c617368', 'solar_beam');
+    _add(SKILL_ALIASES_EARLY, '62616e6b6169', 'blade_ascend');
+    _add(SKILL_ALIASES_EARLY, '62616e6b61695f736c617368', 'blade_ascend');
+    _add(SKILL_ALIASES_EARLY, '67657473756761', 'moon_slash');
+    _add(SKILL_ALIASES_EARLY, '6365726f', 'void_beam');
+    _add(SKILL_ALIASES_EARLY, '65696768745f6761746573', 'iron_surge');
+    _add(SKILL_ALIASES_EARLY, '385f6761746573', 'iron_surge');
+    _add(SKILL_ALIASES_EARLY, '616b617473756b695f7374796c65', 'crimson_pact');
+    _add(SKILL_ALIASES_EARLY, '6669726562616c6c5f6a75747375', 'fire_orb');
+    _add(SKILL_ALIASES_EARLY, '6669726562616c6c5f626c617374', 'fire_orb');
+    _add(SKILL_ALIASES_EARLY, '736861646f775f636c6f6e655f6275727374', 'clone_rush');
+    _add(SKILL_ALIASES_EARLY, '67656e746c655f70616c6d', 'soft_palm');
+    _add(SKILL_ALIASES_EARLY, '64657374727563746f5f64697363', 'cutter_disc');
+    _add(SKILL_ALIASES_EARLY, '72617a6f725f64697363', 'cutter_disc');
+    _add(SKILL_ALIASES_EARLY, '696e7374616e745f64617368', 'blink_strike');
+    _add(SKILL_ALIASES_EARLY, '67756d5f726f636b6574', 'stretch_dash');
+    _add(SKILL_ALIASES_EARLY, '676561725f7365636f6e64', 'steam_burst');
+    _add(SKILL_ALIASES_EARLY, '737465616d5f72757368', 'steam_burst');
+    _add(SKILL_ALIASES_EARLY, '736572696f75735f70756e6368', 'heavy_punch');
+    _add(SKILL_ALIASES_EARLY, '746974616e5f66697374', 'heavy_punch');
+    _add(SKILL_ALIASES_EARLY, '736572696f75735f626c617374', 'heavy_blast');
+    _add(SKILL_ALIASES_EARLY, '746974616e5f6265616d', 'heavy_blast');
+    _add(SKILL_ALIASES_EARLY, '6368616b7261', 'energy');
+    _add(SKILL_ALIASES_EARLY, '656e657267795f636f7265', 'energy');
+    _add(STYLE_ALIASES_EARLY, '6368616b7261', 'energy_glow');
+    _add(STYLE_ALIASES_EARLY, '616b617473756b69', 'crimson_pact');
+    _add(STYLE_ALIASES_EARLY, '6b6f6e6f6861', 'leaf_band');
+    _add(STYLE_ALIASES_EARLY, '656e65726779', 'energy_glow');
+    _add(SUPER_ALIASES_EARLY, '73686172696e67616e', 'mind_eye');
+    const mapId = (id, map) => (typeof id === 'string' && map[id]) ? map[id] : id;
+    if (typeof merged.activeTechnique === 'string') merged.activeTechnique = mapId(merged.activeTechnique, SKILL_ALIASES_EARLY);
+    if (typeof merged.skill === 'string') merged.skill = mapId(merged.skill, SKILL_ALIASES_EARLY);
+    if (typeof merged.style === 'string') merged.style = mapId(merged.style, STYLE_ALIASES_EARLY);
+    if (typeof merged.super === 'string') merged.super = mapId(merged.super, SUPER_ALIASES_EARLY);
+    if (merged.skillUpgrades && typeof merged.skillUpgrades === 'object') {
+      const next = {};
+      for (const [k, v] of Object.entries(merged.skillUpgrades)) {
+        const nk = mapId(k, SKILL_ALIASES_EARLY);
+        if (!v || typeof v !== 'object') continue;
+        const prev = next[nk];
+        const lv = Math.floor(Number(v.level) || 0);
+        const sh = Math.floor(Number(v.shards) || 0);
+        if (!prev) next[nk] = { level: lv, shards: sh };
+        else next[nk] = { level: Math.max(prev.level, lv), shards: Math.max(prev.shards, sh) };
+      }
+      merged.skillUpgrades = next;
+    }
     // lang: copy raw — SUPPORTED_LANGS may not exist yet (storage loads before i18n)
     if (typeof parsed.lang === 'string') merged.lang = parsed.lang;
     return merged;
@@ -1107,6 +1174,14 @@ function sanitizeSave(s) {
   const itemSnap = typeof snapshotItemUpgradeTracks === 'function' ? snapshotItemUpgradeTracks(s) : null;
   const out = Object.assign({}, DEFAULT_SAVE, s);
   delete out._exportMeta;
+  if (typeof migrateLegacySkillSave === 'function') migrateLegacySkillSave(out);
+  else {
+    const leg = (typeof hexToStr === 'function')
+      ? hexToStr('6163746976654a75747375')
+      : null;
+    if (leg && typeof out[leg] === 'string' && !out.activeTechnique) out.activeTechnique = out[leg];
+    if (leg) delete out[leg];
+  }
   out.lvl = clamp(Math.floor(Number(out.lvl) || 1), 1, 500);
   out.xp = clamp(Math.floor(Number(out.xp) || 0), 0, 999999);
   out.unlocked = clamp(Math.floor(Number(out.unlocked) || 1), 1, maxLevel);
@@ -1292,10 +1367,10 @@ function sanitizeSave(s) {
   if (out.activeEggPet && !cleanEggs[out.activeEggPet]) out.activeEggPet = null;
   else if (out.activeEggPet && typeof EGG_BY_ID !== 'undefined' && !EGG_BY_ID[out.activeEggPet]) out.activeEggPet = null;
 
-  if (typeof JUTSU_SKILL_IDS !== 'undefined' && JUTSU_SKILL_IDS.includes(out.activeJutsu)) {
+  if (typeof TECHNIQUE_SKILL_IDS !== 'undefined' && TECHNIQUE_SKILL_IDS.includes(out.activeTechnique)) {
     /* keep */
   } else {
-    out.activeJutsu = 'rasengan';
+    out.activeTechnique = 'spiral_orb';
   }
   if (out.eggDaily && typeof out.eggDaily === 'object') {
     const dk = typeof out.eggDaily.date === 'string'
@@ -1336,9 +1411,9 @@ function sanitizeSave(s) {
   if (!styleOk) out.style = 'classic';
 
   const skPick = skillById(out.skill);
-  let skillOk = skPick.id === 'rasengan';
+  let skillOk = skPick.id === 'spiral_orb';
   if (skPick.needLvl && out.lvl >= skPick.needLvl && !(skPick.needLvl > adventureWeaponCapForLevel(out.unlocked || 1))) skillOk = true;
-  out.skill = skillOk ? skPick.id : 'rasengan';
+  out.skill = skillOk ? skPick.id : 'spiral_orb';
 
   const spPick = superById(out.super);
   let superOk = spPick.id === 'ketsbam';
@@ -1381,15 +1456,15 @@ function sanitizeSave(s) {
   }
   out.skillUpgrades = cleanSkills;
 
-  let aj = typeof out.activeJutsu === 'string' ? out.activeJutsu : 'rasengan';
-  if (typeof JUTSU_SKILL_IDS !== 'undefined' && !JUTSU_SKILL_IDS.includes(aj)) aj = 'rasengan';
-  if (typeof jutsuSkillUnlocked === 'function' && !jutsuSkillUnlocked(aj, out)) {
-    aj = 'rasengan';
-    for (const jid of JUTSU_SKILL_IDS) {
-      if (jutsuSkillUnlocked(jid, out)) { aj = jid; break; }
+  let aj = typeof out.activeTechnique === 'string' ? out.activeTechnique : 'spiral_orb';
+  if (typeof TECHNIQUE_SKILL_IDS !== 'undefined' && !TECHNIQUE_SKILL_IDS.includes(aj)) aj = 'spiral_orb';
+  if (typeof techniqueSkillUnlocked === 'function' && !techniqueSkillUnlocked(aj, out)) {
+    aj = 'spiral_orb';
+    for (const jid of TECHNIQUE_SKILL_IDS) {
+      if (techniqueSkillUnlocked(jid, out)) { aj = jid; break; }
     }
   }
-  out.activeJutsu = aj;
+  out.activeTechnique = aj;
 
   const cleanItems = { weapon: {}, pet: {}, style: {} };
   for (const cat of (typeof ITEM_UPGRADE_CATS !== 'undefined' ? ITEM_UPGRADE_CATS : ['weapon', 'pet', 'style'])) {
@@ -1473,11 +1548,11 @@ function haptic(ms) {
   try { if (navigator.vibrate) navigator.vibrate(ms || 14); } catch (e) {}
 }
 
-const PICKUP_TYPES = ['heal', 'rage', 'chakra', 'shield'];
+const PICKUP_TYPES = ['heal', 'rage', 'energy', 'shield'];
 const PICKUP_META = {
   heal:   { color: '#6ee06e', label: '+HP' },
   rage:   { color: '#ff7a4d', label: 'RAGE' },
-  chakra: { color: '#7cf5ff', label: 'CHAKRA' },
+  energy: { color: '#7cf5ff', label: 'ENERGY' },
   shield: { color: '#9fd8ff', label: 'SCHILD' },
   skill_shard: { color: '#ffd75e', label: 'SKILL' },
   item_shard: { color: '#c792ff', label: 'ITEM' },
