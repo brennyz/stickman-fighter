@@ -575,7 +575,8 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
     }
   }
   // weer per thema (art-upgrade 4/4): blaadjes/bloesem/sintels/regen/stof
-  drawThemeWeather(c, themeName, t, ground, scroll);
+  const lightFx = typeof Perf !== 'undefined' && typeof Perf.lightFxFrame === 'function' && Perf.lightFxFrame();
+  if (!lightFx) drawThemeWeather(c, themeName, t, ground, scroll);
   // pixel-speckles op de grond (art-upgrade 1/4) — deterministisch, scroll-vast
   // bos/grot: skip — photo-sampled floor tiles already carry grit
   if (!fxLite() && themeName !== 'bos' && themeName !== 'grot') {
@@ -593,14 +594,14 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
     }
   }
 
-  // Stage-delen (avontuur): decor evolueert per deel — schemer + rotsen + arena-fakkels
+  // Stage-delen (avontuur): decor evolueert per deel — zachte schemer (geen harde wipe)
   if (stageFx && stageFx.pr > 0.02) {
     const pr = clamp(stageFx.pr, 0, 1);
     const part = stageFx.part || 1;
-    // 1) lucht kleurt langzaam naar schemer richting het einde
+    // Soft dusk — was up to 30%/16% and read as "half background gone"
     const dusk = c.createLinearGradient(0, 0, 0, ground);
-    dusk.addColorStop(0, `rgba(30,14,60,${(pr * 0.30).toFixed(3)})`);
-    dusk.addColorStop(1, `rgba(90,30,50,${(pr * 0.16).toFixed(3)})`);
+    dusk.addColorStop(0, `rgba(30,14,60,${(pr * 0.14).toFixed(3)})`);
+    dusk.addColorStop(1, `rgba(90,30,50,${(pr * 0.08).toFixed(3)})`);
     c.fillStyle = dusk;
     c.fillRect(0, 0, W, ground);
     // 2) vanaf deel 2: rotsblokken op de grondlijn

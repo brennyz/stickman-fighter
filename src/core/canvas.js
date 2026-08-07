@@ -23,7 +23,9 @@ function resize() {
   const vp = viewportGameSize();
   syncViewportCssVars(vp);
   const newDpr = Math.min(devicePixelRatio || 1, maxCanvasDpr());
-  const sizeKey = vp.w + 'x' + vp.h + '@' + newDpr + 't' + Perf.tier;
+  // Do NOT include Perf.tier — tier bumps must not recreate/blank the canvas mid-fight
+  // (that + skipHeavyDraw caused adventure backgrounds to vanish for a frame).
+  const sizeKey = vp.w + 'x' + vp.h + '@' + newDpr;
   if (sizeKey === lastResizeKey) return;
   lastResizeKey = sizeKey;
   try { if (typeof menuBgCacheInvalidate === 'function') menuBgCacheInvalidate(); } catch (_) {}
