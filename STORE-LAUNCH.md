@@ -22,9 +22,9 @@
 |---|------|---------------|--------|
 | A1 | Privacy policy pagina (`privacy.html`) + link in settings/menu | cloud: soft-legal | pending |
 | A2 | Content/leeftijd hint (geweld stickmen, geen chat) in install + README | cloud: soft-legal | pending |
-| A3 | Adventure onboarding: milder wave 1 OF duidelijkere telegraphs | cloud: soft-feel | pending |
-| A4 | Checkpoint “loop rechts” cue sterker (touch + KB) | cloud: soft-feel | pending |
-| A5 | Echte device QA checklist (iPhone Safari, Android Chrome, iPad) | human + cloud: soft-feel notes | pending |
+| A3 | Adventure onboarding: milder wave 1 OF duidelijkere telegraphs | cloud: soft-feel | done |
+| A4 | Checkpoint “loop rechts” cue sterker (touch + KB) | cloud: soft-feel | done |
+| A5 | Echte device QA checklist (iPhone Safari, Android Chrome, iPad) | human + cloud: soft-feel notes | done (notes) · human smoke open |
 | A6 | “Verse versie” / SW update flow 1× op echt device verifiëren | human | pending |
 | A7 | Deel-link + install copy NL/EN kloppend houden | cloud: soft-legal | pending |
 

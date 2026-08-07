@@ -274,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.133';
+const APP_VERSION = '1.18.134';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 343;
+const SW_CACHE_REV = 344;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -9814,6 +9814,29 @@ function buildLevel(n, diffId) {
     waves.push(list);
     waveMeta.push(meta);
   }
+  // Soft live A3: golf 1 milder — minder mobs, geen rush/pain/ember, langzamere spawn.
+  if (waves[0] && waves[0].length) {
+    const softCap = n <= 3
+      ? Math.max(4, Math.ceil(perWave * 0.42))
+      : n <= 8
+        ? Math.max(5, Math.ceil(perWave * 0.55))
+        : Math.max(6, Math.ceil(perWave * 0.72));
+    if (waves[0].length > softCap) waves[0] = waves[0].slice(0, softCap);
+    if (n <= 5) {
+      for (let i = 0; i < waves[0].length; i++) {
+        waves[0][i].elite = false;
+        if (n <= 2) waves[0][i].giant = false;
+      }
+    }
+    if (waveMeta[0]) {
+      const harsh = waveMeta[0].trait === 'rush' || waveMeta[0].trait === 'ember' || waveMeta[0].trait === 'pain';
+      if (harsh && n <= 8) {
+        waveMeta[0].trait = null;
+        waveMeta[0].label = '';
+      }
+      waveMeta[0].spawnMul = Math.max(waveMeta[0].spawnMul || 1, n <= 8 ? 1.22 : 1.1);
+    }
+  }
   if (BOSS_AT[n]) {
     const bossWave = BOSS_AT[n].map(x => Object.assign({}, x, { bossCore: !!x.elite }));
     const hordePad = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, 12);
@@ -11579,9 +11602,9 @@ function seedNlGameStrings() {
     skillGate: 'Eiland-skill gate: max wapen Lv {cap}',
     aimUp: 'Joystick omhoog = hoger mikken',
     partGateHint: 'Checkpoint: loop rechts door — scherm scrollt mee · 3 delen per level',
-    partGateWalk: 'Loop door → Deel {part}/3',
-    partGateIntro: 'Levels hebben 3 delen — loop bij checkpoints rechts door',
-    partGateIdle: 'Loop naar rechts →',
+    partGateWalk: '→ LOOP RECHTS · Deel {part}/3',
+    partGateIntro: 'Levels hebben 3 delen — bij checkpoints: houd rechts vast',
+    partGateIdle: '→ Loop naar rechts!',
     trainIntro: 'Combo-trainer — 3s oefenen, robot wacht',
     earLaser: 'Oor-laser — spring!',
     robotActive: 'Robot activeert — hou combo vast!',
@@ -12178,8 +12201,14 @@ function seedNlGameStrings() {
     hintDualKb: 'P1: A/D · W · J/K/L/U · Shift  |  P2: pijltjes · 1/2/3/4/5',
     hintTouch: 'Links: joystick om te lopen · Rechts: aanvalsknoppen',
     hintKb: 'A/D lopen · W springen · J stomp · K trap · L wapen · U speciaal',
-    partGateTouch: 'Checkpoint: joystick → rechts lopen',
-    partGateKb: 'Checkpoint: D / → lopen naar volgend deel',
+    partGateTouch: 'CHECKPOINT → houd joystick RECHTS (loop door)',
+    partGateKb: 'CHECKPOINT → houd D of → vast (loop door)',
+    partGateTouchShort: 'Joystick →',
+    partGateKbShort: 'D / →',
+    teleSlam: 'SLAM — spring!',
+    teleCharge: 'CHARGE — uit de weg!',
+    teleShoot: 'SCHIET — side-step!',
+    teleFire: 'VUUR — side-step!',
     ketsTap: 'Tik!', ketsKey: 'E / tik',
   });
 }
@@ -13031,9 +13060,9 @@ const CATALOG_EN = {
     skillGate: 'Island skill gate: max weapon Lv {cap}',
     aimUp: 'Joystick up = aim higher',
     partGateHint: 'Checkpoint: walk right — screen scrolls with you · 3 parts per level',
-    partGateWalk: 'Walk through → Part {part}/3',
-    partGateIntro: 'Levels have 3 parts — walk right at checkpoints',
-    partGateIdle: 'Walk right →',
+    partGateWalk: '→ WALK RIGHT · Part {part}/3',
+    partGateIntro: 'Levels have 3 parts — at checkpoints: hold right',
+    partGateIdle: '→ Walk right!',
     trainIntro: 'Combo trainer — 3s practice, robot waits',
     earLaser: 'Ear-laser — jump!', robotActive: 'Robot active — keep combo!',
     roundCombo: 'Round combo ×{n}',
@@ -13105,8 +13134,14 @@ const CATALOG_EN = {
     hintDualKb: 'P1: A/D · W · J/K/L/U · Shift  |  P2: arrows · 1/2/3/4/5',
     hintTouch: 'Left: joystick to walk · Right: attack buttons',
     hintKb: 'A/D walk · W jump · J punch · K kick · L weapon · U special',
-    partGateTouch: 'Checkpoint: joystick → walk right',
-    partGateKb: 'Checkpoint: D / → walk to next part',
+    partGateTouch: 'CHECKPOINT → hold joystick RIGHT (walk through)',
+    partGateKb: 'CHECKPOINT → hold D or → (walk through)',
+    partGateTouchShort: 'Stick →',
+    partGateKbShort: 'D / →',
+    teleSlam: 'SLAM — jump!',
+    teleCharge: 'CHARGE — dodge!',
+    teleShoot: 'SHOT — side-step!',
+    teleFire: 'FIRE — side-step!',
     ketsTap: 'Tap!', ketsKey: 'E / tap',
   },
   jutsu: { rasengan: 'RASENGAN!', chidori: 'CHIDORI!', rinnegan: 'RINNEGAN!' },
@@ -19502,7 +19537,9 @@ class Monster {
     this.vx = 0; this.vy = 0;
     this.t = rand(0, 10); this.flashT = 0; this.deadT = -1;
     this.atkCD = rand(0.5, 1.5); this.shootCD = rand(1, 2.5);
-    this.dashT = 0; this.telegraphT = 0; this.hopT = rand(0, 0.8);
+    this.dashT = 0; this.telegraphT = 0; this.telegraphMax = 0; this.hopT = rand(0, 0.8);
+    /** Soft-feel: langere dodge-telegraphs op golf 1 / vroege levels. */
+    this.softTelegraph = !!opts.softTelegraph;
     this.face = -1;
     this.enraged = false;
     this.phase2FlashT = 0;
@@ -19556,7 +19593,9 @@ class Monster {
       } else {
         this.x += dir * this.speed * spdMul * dt * 0.6;
         if (dist < 240 && this.atkCD <= 0) {
-          this.telegraphT = this.enraged ? 0.28 : 0.45;
+          const wind = this.enraged ? 0.28 : (this.softTelegraph ? 0.72 : 0.45);
+          this.telegraphT = wind;
+          this.telegraphMax = wind;
           this.atkCD = rand(1.6, 2.6) / (this.enraged ? 1.25 : 1);
         }
       }
@@ -19585,7 +19624,13 @@ class Monster {
         }
       } else {
         this.x += dir * this.speed * dt;
-        if (dist < this.size + 48 && this.atkCD <= 0) { this.telegraphT = 0.55; this.atkCD = 2.0; AudioSys.sfx('roar'); }
+        if (dist < this.size + 48 && this.atkCD <= 0) {
+          const wind = this.softTelegraph ? 0.78 : 0.55;
+          this.telegraphT = wind;
+          this.telegraphMax = wind;
+          this.atkCD = 2.0;
+          AudioSys.sfx('roar');
+        }
       }
       this.y = game.ground - this.size;
     } else if (type === 'dragon') {
@@ -19618,7 +19663,9 @@ class Monster {
         } else {
           this.x += dir * this.speed * spdMul * dt * 0.78;
           if (dist < 230 && this.atkCD <= 0) {
-            this.telegraphT = this.enraged ? 0.2 : 0.36;
+            const wind = this.enraged ? 0.2 : (this.softTelegraph ? 0.58 : 0.36);
+            this.telegraphT = wind;
+            this.telegraphMax = wind;
             this.atkCD = rand(1.35, 2.1) / (this.enraged ? 1.25 : 1);
           }
         }
@@ -19881,6 +19928,36 @@ class Monster {
       c.beginPath();
       c.arc(0, 0, this.size * (1.45 + Math.sin(this.t * 8) * 0.05), 0, TAU);
       c.stroke();
+      c.restore();
+    }
+    // Soft-feel A3: duidelijke dodge-telegraph ring + richtingspijl vóór charge/slam.
+    if (this.telegraphT > 0 && this.alive) {
+      c.save();
+      const maxT = Math.max(0.2, this.telegraphMax || this.telegraphT);
+      const frac = clamp(this.telegraphT / maxT, 0, 1);
+      const calm = motionReduced();
+      const pulse = calm ? 0.55 : (0.45 + Math.sin(this.t * 16) * 0.25);
+      const isSlam = this.sp && this.sp.type === 'tank';
+      c.globalAlpha = pulse * (0.55 + frac * 0.45);
+      c.strokeStyle = isSlam ? '#ff9a3d' : '#ffdd66';
+      c.lineWidth = 3.2 + (1 - frac) * 2.4;
+      c.beginPath();
+      c.arc(0, 0, this.size * (1.38 + (1 - frac) * 0.22), 0, TAU);
+      c.stroke();
+      if (!calm) {
+        const arrowDir = this.face >= 0 ? 1 : -1;
+        c.globalAlpha = 0.55 + pulse * 0.35;
+        c.fillStyle = isSlam ? '#ff9a3d' : '#ffdd66';
+        const ax = arrowDir * this.size * 1.55;
+        const asz = this.size * 0.42;
+        c.beginPath();
+        c.moveTo(ax, 0);
+        c.lineTo(ax - arrowDir * asz, -asz * 0.7);
+        c.lineTo(ax - arrowDir * asz * 0.45, 0);
+        c.lineTo(ax - arrowDir * asz, asz * 0.7);
+        c.closePath();
+        c.fill();
+      }
       c.restore();
     }
     c.scale(this.face < 0 ? 1 : -1, 1); // art kijkt standaard naar links
@@ -24208,43 +24285,58 @@ function gameUiTimerOk(ref, opts) {
 function adventureTelegraphHud(m) {
   if (!m || !m.alive) return null;
   if (m.telegraphT > 0) {
-    if (m.sp.type === 'tank') return { label: 'SLAM — spring!', color: '#ff9a3d', frac: m.telegraphT / 0.55, max: 0.55 };
-    if (m.sp.type === 'charge') {
-      const max = m.enraged ? 0.28 : 0.45;
-      return { label: 'CHARGE — uit de weg!', color: '#ffdd66', frac: m.telegraphT / max, max };
+    const max = Math.max(0.2, m.telegraphMax || m.telegraphT);
+    if (m.sp.type === 'tank') {
+      return {
+        label: (typeof t === 'function' ? t('hud.teleSlam') : 'SLAM — spring!'),
+        color: '#ff9a3d', frac: m.telegraphT / max, max,
+      };
+    }
+    if (m.sp.type === 'charge' || (m.sp.type === 'swim' && m.sp.art === 'shark')) {
+      return {
+        label: (typeof t === 'function' ? t('hud.teleCharge') : 'CHARGE — uit de weg!'),
+        color: '#ffdd66', frac: m.telegraphT / max, max,
+      };
     }
   }
   if (m.sp.type === 'shoot' && m.shootCD > 0 && m.shootCD < 0.32) {
-    return { label: 'SCHIET — side-step!', color: '#7cf5ff', frac: 1 - m.shootCD / 0.32, max: 0.32 };
+    return {
+      label: (typeof t === 'function' ? t('hud.teleShoot') : 'SCHIET — side-step!'),
+      color: '#7cf5ff', frac: 1 - m.shootCD / 0.32, max: 0.32,
+    };
   }
   if (m.sp.type === 'dragon' && m.shootCD > 0 && m.shootCD < 0.38) {
-    return { label: 'VUUR — side-step!', color: '#ff7a4d', frac: 1 - m.shootCD / 0.38, max: 0.38 };
+    return {
+      label: (typeof t === 'function' ? t('hud.teleFire') : 'VUUR — side-step!'),
+      color: '#ff7a4d', frac: 1 - m.shootCD / 0.38, max: 0.38,
+    };
   }
   return null;
 }
 
 function drawTelegraphBar(c, game, tele, y) {
-  const barW = Math.min(240, W - 48);
+  const barW = Math.min(280, W - 40);
   const bx = (W - barW) / 2;
-  c.fillStyle = 'rgba(0,0,0,.4)';
-  game.rr(c, bx - 4, y - 14, barW + 8, 22, 8);
+  const tall = !!(tele && tele.max >= 0.55);
+  c.fillStyle = 'rgba(0,0,0,.52)';
+  game.rr(c, bx - 6, y - 16, barW + 12, tall ? 28 : 24, 9);
   c.fill();
-  c.font = '800 11px sans-serif';
+  c.font = tall ? '900 13px sans-serif' : '800 11px sans-serif';
   c.textAlign = 'center';
   c.fillStyle = tele.color;
   c.fillText(tele.label, W / 2, y);
-  c.fillStyle = 'rgba(255,255,255,.15)';
-  game.rr(c, bx, y + 6, barW, 5, 3);
+  c.fillStyle = 'rgba(255,255,255,.18)';
+  game.rr(c, bx, y + 6, barW, tall ? 7 : 5, 3);
   c.fill();
   c.fillStyle = tele.color;
-  game.rr(c, bx, y + 6, barW * clamp(tele.frac, 0, 1), 5, 3);
+  game.rr(c, bx, y + 6, barW * clamp(tele.frac, 0, 1), tall ? 7 : 5, 3);
   c.fill();
 }
 
 /** Seconden actief naar rechts lopen om checkpoint-deel te unlocken. */
 const PART_GATE_WALK_SEC = 3.35;
 const PART_GATE_DECAY_MUL = 1.5;
-const PART_GATE_IDLE_HINT = 1.35;
+const PART_GATE_IDLE_HINT = 0.85;
 const PART_GATE_PLAYER_X = 0.28;
 
 function partBoundaryWaveIdx(totalWaves, currentPart) {
@@ -24612,11 +24704,13 @@ class Game {
       this.player.vx = Math.max(this.player.vx, this.player.speed * 0.35);
     }
     ensureTipsSeen();
+    // Soft-feel A4: altijd sterke cue (touch + KB), niet alleen eerste tip.
+    this.modeHintLine = IS_TOUCH ? t('hud.partGateTouch') : t('hud.partGateKb');
+    this.hint = Math.max(this.hint || 0, 6.5);
+    this.floater(W * 0.5, 110, t('combat.partGateIdle'), '#ffd75e', 15);
     if (!save.tipsSeen.partGate) {
       save.tipsSeen.partGate = 1;
       persist();
-      this.modeHintLine = IS_TOUCH ? t('hud.partGateTouch') : t('hud.partGateKb');
-      this.hint = 5.5;
     }
     try { AudioSys.sfx('travel'); } catch (_) {}
     this.shake(motionReduced() ? 0 : 3, 0.12);
@@ -24875,6 +24969,7 @@ class Game {
             advDiff: this.advDiff || this.level.diff || 'normal',
             enrageMul: this.level.enrageMul || 1,
             enrageAt: this.level.enrageAt != null ? this.level.enrageAt : 0.5,
+            softTelegraph: this.waveIdx === 0 || (this.level.n <= 4 && this.waveIdx <= 1),
           });
           this.monsters.push(mon);
           if (def.superBoss) {
@@ -28273,8 +28368,34 @@ class Game {
     const barH = Math.max(10, Math.round(12 * ui));
 
     c.save();
+    // Soft-feel A4: grote rand-pijl rechts (touch + KB) — altijd zichtbaar tijdens gate.
+    {
+      const edgePulse = calm ? 0.72 : (0.5 + Math.max(0, Math.sin(gt * (walking ? 7 : 4))) * 0.5);
+      const edgeX = W - Math.max(48, 56 * ui);
+      const edgeY = this.ground - 110;
+      const edgeSz = Math.max(36, 48 * ui) * (walking ? 1.08 : 1);
+      c.globalAlpha = 0.35 + edgePulse * 0.55;
+      c.fillStyle = walking ? '#ffd75e' : '#7cf5ff';
+      c.strokeStyle = 'rgba(0,0,0,.55)';
+      c.lineWidth = 3 * ui;
+      c.lineJoin = 'round';
+      c.beginPath();
+      c.moveTo(edgeX - edgeSz * 0.55, edgeY - edgeSz * 0.7);
+      c.lineTo(edgeX + edgeSz * 0.35, edgeY);
+      c.lineTo(edgeX - edgeSz * 0.55, edgeY + edgeSz * 0.7);
+      c.lineTo(edgeX - edgeSz * 0.2, edgeY);
+      c.closePath();
+      c.fill();
+      c.stroke();
+      c.font = `900 ${Math.round(12 * ui)}px -apple-system,sans-serif`;
+      c.textAlign = 'center';
+      c.fillStyle = '#fff';
+      c.globalAlpha = 0.9;
+      c.fillText(IS_TOUCH ? t('hud.partGateTouchShort') : t('hud.partGateKbShort'), edgeX - 4, edgeY + edgeSz + 16);
+    }
+
     // gloedpad op de grond
-    c.globalAlpha = 0.22 + prog * 0.18;
+    c.globalAlpha = 0.28 + prog * 0.22;
     const pathGrad = c.createLinearGradient(px - 20, py, px + barW + 40, py);
     pathGrad.addColorStop(0, 'rgba(124,245,255,0)');
     pathGrad.addColorStop(0.35, 'rgba(124,245,255,0.55)');
@@ -28288,19 +28409,19 @@ class Game {
     c.closePath();
     c.fill();
 
-    // drie chevrons >>
+    // drie chevrons >> (groter + sterker pulse)
     for (let i = 0; i < 3; i++) {
-      const phase = gt * (calm ? 4 : (walking ? 9 : 5)) - i * 0.38;
-      const blink = calm ? 0.75 : (walking
-        ? (0.55 + Math.max(0, Math.sin(phase)) * 0.45)
-        : (0.28 + Math.max(0, Math.sin(phase * 0.7)) * 0.35));
-      const slide = calm ? 0 : Math.sin(phase * 0.9) * 6;
-      const cx = px + 36 + i * (34 * ui) + slide + prog * 18;
+      const phase = gt * (calm ? 4 : (walking ? 10 : 6)) - i * 0.38;
+      const blink = calm ? 0.82 : (walking
+        ? (0.62 + Math.max(0, Math.sin(phase)) * 0.38)
+        : (0.38 + Math.max(0, Math.sin(phase * 0.7)) * 0.42));
+      const slide = calm ? 0 : Math.sin(phase * 0.9) * 8;
+      const cx = px + 40 + i * (38 * ui) + slide + prog * 22;
       const cy = py + (i % 2 ? -6 : 6);
-      const sz = (18 + i * 3) * ui;
+      const sz = (22 + i * 4) * ui;
       c.save();
       c.translate(cx, cy);
-      c.globalAlpha = blink * (0.55 + prog * 0.45);
+      c.globalAlpha = blink * (0.65 + prog * 0.35);
       c.fillStyle = i === 2 ? '#ffd75e' : '#7cf5ff';
       c.strokeStyle = 'rgba(0,0,0,.45)';
       c.lineWidth = 2.5 * ui;
@@ -28318,28 +28439,29 @@ class Game {
 
     // label + progress pill boven speler
     const label = t('combat.partGateWalk', { part: pg.targetPart });
-    c.font = `900 ${Math.round(13 * ui)}px -apple-system,sans-serif`;
+    c.font = `900 ${Math.round(14 * ui)}px -apple-system,sans-serif`;
     c.textAlign = 'center';
     const tw = c.measureText(label).width;
     const pillW = Math.max(tw + 28, barW + 16);
     const pillX = px + 48 - pillW * 0.35;
-    const pillY = py - 38;
-    c.fillStyle = 'rgba(6,10,24,.82)';
-    this.rr(c, pillX, pillY, pillW, 34 + barH, 12);
+    const pillY = py - 42;
+    c.globalAlpha = 1;
+    c.fillStyle = 'rgba(6,10,24,.88)';
+    this.rr(c, pillX, pillY, pillW, 36 + barH, 12);
     c.fill();
-    c.strokeStyle = 'rgba(124,245,255,.45)';
-    c.lineWidth = 2;
-    this.rr(c, pillX, pillY, pillW, 34 + barH, 12);
+    c.strokeStyle = walking ? 'rgba(255,215,94,.7)' : 'rgba(124,245,255,.55)';
+    c.lineWidth = 2.4;
+    this.rr(c, pillX, pillY, pillW, 36 + barH, 12);
     c.stroke();
     c.fillStyle = '#fff';
-    c.fillText(label, pillX + pillW * 0.5, pillY + 16);
+    c.fillText(label, pillX + pillW * 0.5, pillY + 17);
     if (!walking && prog < 0.98) {
-      c.font = `700 ${Math.round(10 * ui)}px -apple-system,sans-serif`;
-      c.fillStyle = 'rgba(255,215,94,.88)';
-      c.fillText(t('combat.partGateIdle'), pillX + pillW * 0.5, pillY + 28);
+      c.font = `800 ${Math.round(11 * ui)}px -apple-system,sans-serif`;
+      c.fillStyle = 'rgba(255,215,94,.95)';
+      c.fillText(t('combat.partGateIdle'), pillX + pillW * 0.5, pillY + 30);
     }
     const bx = pillX + 10;
-    const by = pillY + 24;
+    const by = pillY + 26;
     c.fillStyle = 'rgba(255,255,255,.16)';
     this.rr(c, bx, by, pillW - 20, barH, barH * 0.45);
     c.fill();

@@ -76,7 +76,9 @@ class Monster {
     this.vx = 0; this.vy = 0;
     this.t = rand(0, 10); this.flashT = 0; this.deadT = -1;
     this.atkCD = rand(0.5, 1.5); this.shootCD = rand(1, 2.5);
-    this.dashT = 0; this.telegraphT = 0; this.hopT = rand(0, 0.8);
+    this.dashT = 0; this.telegraphT = 0; this.telegraphMax = 0; this.hopT = rand(0, 0.8);
+    /** Soft-feel: langere dodge-telegraphs op golf 1 / vroege levels. */
+    this.softTelegraph = !!opts.softTelegraph;
     this.face = -1;
     this.enraged = false;
     this.phase2FlashT = 0;
@@ -130,7 +132,9 @@ class Monster {
       } else {
         this.x += dir * this.speed * spdMul * dt * 0.6;
         if (dist < 240 && this.atkCD <= 0) {
-          this.telegraphT = this.enraged ? 0.28 : 0.45;
+          const wind = this.enraged ? 0.28 : (this.softTelegraph ? 0.72 : 0.45);
+          this.telegraphT = wind;
+          this.telegraphMax = wind;
           this.atkCD = rand(1.6, 2.6) / (this.enraged ? 1.25 : 1);
         }
       }
@@ -159,7 +163,13 @@ class Monster {
         }
       } else {
         this.x += dir * this.speed * dt;
-        if (dist < this.size + 48 && this.atkCD <= 0) { this.telegraphT = 0.55; this.atkCD = 2.0; AudioSys.sfx('roar'); }
+        if (dist < this.size + 48 && this.atkCD <= 0) {
+          const wind = this.softTelegraph ? 0.78 : 0.55;
+          this.telegraphT = wind;
+          this.telegraphMax = wind;
+          this.atkCD = 2.0;
+          AudioSys.sfx('roar');
+        }
       }
       this.y = game.ground - this.size;
     } else if (type === 'dragon') {
@@ -192,7 +202,9 @@ class Monster {
         } else {
           this.x += dir * this.speed * spdMul * dt * 0.78;
           if (dist < 230 && this.atkCD <= 0) {
-            this.telegraphT = this.enraged ? 0.2 : 0.36;
+            const wind = this.enraged ? 0.2 : (this.softTelegraph ? 0.58 : 0.36);
+            this.telegraphT = wind;
+            this.telegraphMax = wind;
             this.atkCD = rand(1.35, 2.1) / (this.enraged ? 1.25 : 1);
           }
         }
@@ -455,6 +467,36 @@ class Monster {
       c.beginPath();
       c.arc(0, 0, this.size * (1.45 + Math.sin(this.t * 8) * 0.05), 0, TAU);
       c.stroke();
+      c.restore();
+    }
+    // Soft-feel A3: duidelijke dodge-telegraph ring + richtingspijl vóór charge/slam.
+    if (this.telegraphT > 0 && this.alive) {
+      c.save();
+      const maxT = Math.max(0.2, this.telegraphMax || this.telegraphT);
+      const frac = clamp(this.telegraphT / maxT, 0, 1);
+      const calm = motionReduced();
+      const pulse = calm ? 0.55 : (0.45 + Math.sin(this.t * 16) * 0.25);
+      const isSlam = this.sp && this.sp.type === 'tank';
+      c.globalAlpha = pulse * (0.55 + frac * 0.45);
+      c.strokeStyle = isSlam ? '#ff9a3d' : '#ffdd66';
+      c.lineWidth = 3.2 + (1 - frac) * 2.4;
+      c.beginPath();
+      c.arc(0, 0, this.size * (1.38 + (1 - frac) * 0.22), 0, TAU);
+      c.stroke();
+      if (!calm) {
+        const arrowDir = this.face >= 0 ? 1 : -1;
+        c.globalAlpha = 0.55 + pulse * 0.35;
+        c.fillStyle = isSlam ? '#ff9a3d' : '#ffdd66';
+        const ax = arrowDir * this.size * 1.55;
+        const asz = this.size * 0.42;
+        c.beginPath();
+        c.moveTo(ax, 0);
+        c.lineTo(ax - arrowDir * asz, -asz * 0.7);
+        c.lineTo(ax - arrowDir * asz * 0.45, 0);
+        c.lineTo(ax - arrowDir * asz, asz * 0.7);
+        c.closePath();
+        c.fill();
+      }
       c.restore();
     }
     c.scale(this.face < 0 ? 1 : -1, 1); // art kijkt standaard naar links

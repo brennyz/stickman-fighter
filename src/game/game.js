@@ -17,43 +17,58 @@ function gameUiTimerOk(ref, opts) {
 function adventureTelegraphHud(m) {
   if (!m || !m.alive) return null;
   if (m.telegraphT > 0) {
-    if (m.sp.type === 'tank') return { label: 'SLAM — spring!', color: '#ff9a3d', frac: m.telegraphT / 0.55, max: 0.55 };
-    if (m.sp.type === 'charge') {
-      const max = m.enraged ? 0.28 : 0.45;
-      return { label: 'CHARGE — uit de weg!', color: '#ffdd66', frac: m.telegraphT / max, max };
+    const max = Math.max(0.2, m.telegraphMax || m.telegraphT);
+    if (m.sp.type === 'tank') {
+      return {
+        label: (typeof t === 'function' ? t('hud.teleSlam') : 'SLAM — spring!'),
+        color: '#ff9a3d', frac: m.telegraphT / max, max,
+      };
+    }
+    if (m.sp.type === 'charge' || (m.sp.type === 'swim' && m.sp.art === 'shark')) {
+      return {
+        label: (typeof t === 'function' ? t('hud.teleCharge') : 'CHARGE — uit de weg!'),
+        color: '#ffdd66', frac: m.telegraphT / max, max,
+      };
     }
   }
   if (m.sp.type === 'shoot' && m.shootCD > 0 && m.shootCD < 0.32) {
-    return { label: 'SCHIET — side-step!', color: '#7cf5ff', frac: 1 - m.shootCD / 0.32, max: 0.32 };
+    return {
+      label: (typeof t === 'function' ? t('hud.teleShoot') : 'SCHIET — side-step!'),
+      color: '#7cf5ff', frac: 1 - m.shootCD / 0.32, max: 0.32,
+    };
   }
   if (m.sp.type === 'dragon' && m.shootCD > 0 && m.shootCD < 0.38) {
-    return { label: 'VUUR — side-step!', color: '#ff7a4d', frac: 1 - m.shootCD / 0.38, max: 0.38 };
+    return {
+      label: (typeof t === 'function' ? t('hud.teleFire') : 'VUUR — side-step!'),
+      color: '#ff7a4d', frac: 1 - m.shootCD / 0.38, max: 0.38,
+    };
   }
   return null;
 }
 
 function drawTelegraphBar(c, game, tele, y) {
-  const barW = Math.min(240, W - 48);
+  const barW = Math.min(280, W - 40);
   const bx = (W - barW) / 2;
-  c.fillStyle = 'rgba(0,0,0,.4)';
-  game.rr(c, bx - 4, y - 14, barW + 8, 22, 8);
+  const tall = !!(tele && tele.max >= 0.55);
+  c.fillStyle = 'rgba(0,0,0,.52)';
+  game.rr(c, bx - 6, y - 16, barW + 12, tall ? 28 : 24, 9);
   c.fill();
-  c.font = '800 11px sans-serif';
+  c.font = tall ? '900 13px sans-serif' : '800 11px sans-serif';
   c.textAlign = 'center';
   c.fillStyle = tele.color;
   c.fillText(tele.label, W / 2, y);
-  c.fillStyle = 'rgba(255,255,255,.15)';
-  game.rr(c, bx, y + 6, barW, 5, 3);
+  c.fillStyle = 'rgba(255,255,255,.18)';
+  game.rr(c, bx, y + 6, barW, tall ? 7 : 5, 3);
   c.fill();
   c.fillStyle = tele.color;
-  game.rr(c, bx, y + 6, barW * clamp(tele.frac, 0, 1), 5, 3);
+  game.rr(c, bx, y + 6, barW * clamp(tele.frac, 0, 1), tall ? 7 : 5, 3);
   c.fill();
 }
 
 /** Seconden actief naar rechts lopen om checkpoint-deel te unlocken. */
 const PART_GATE_WALK_SEC = 3.35;
 const PART_GATE_DECAY_MUL = 1.5;
-const PART_GATE_IDLE_HINT = 1.35;
+const PART_GATE_IDLE_HINT = 0.85;
 const PART_GATE_PLAYER_X = 0.28;
 
 function partBoundaryWaveIdx(totalWaves, currentPart) {
@@ -421,11 +436,13 @@ class Game {
       this.player.vx = Math.max(this.player.vx, this.player.speed * 0.35);
     }
     ensureTipsSeen();
+    // Soft-feel A4: altijd sterke cue (touch + KB), niet alleen eerste tip.
+    this.modeHintLine = IS_TOUCH ? t('hud.partGateTouch') : t('hud.partGateKb');
+    this.hint = Math.max(this.hint || 0, 6.5);
+    this.floater(W * 0.5, 110, t('combat.partGateIdle'), '#ffd75e', 15);
     if (!save.tipsSeen.partGate) {
       save.tipsSeen.partGate = 1;
       persist();
-      this.modeHintLine = IS_TOUCH ? t('hud.partGateTouch') : t('hud.partGateKb');
-      this.hint = 5.5;
     }
     try { AudioSys.sfx('travel'); } catch (_) {}
     this.shake(motionReduced() ? 0 : 3, 0.12);
@@ -684,6 +701,7 @@ class Game {
             advDiff: this.advDiff || this.level.diff || 'normal',
             enrageMul: this.level.enrageMul || 1,
             enrageAt: this.level.enrageAt != null ? this.level.enrageAt : 0.5,
+            softTelegraph: this.waveIdx === 0 || (this.level.n <= 4 && this.waveIdx <= 1),
           });
           this.monsters.push(mon);
           if (def.superBoss) {
@@ -4082,8 +4100,34 @@ class Game {
     const barH = Math.max(10, Math.round(12 * ui));
 
     c.save();
+    // Soft-feel A4: grote rand-pijl rechts (touch + KB) — altijd zichtbaar tijdens gate.
+    {
+      const edgePulse = calm ? 0.72 : (0.5 + Math.max(0, Math.sin(gt * (walking ? 7 : 4))) * 0.5);
+      const edgeX = W - Math.max(48, 56 * ui);
+      const edgeY = this.ground - 110;
+      const edgeSz = Math.max(36, 48 * ui) * (walking ? 1.08 : 1);
+      c.globalAlpha = 0.35 + edgePulse * 0.55;
+      c.fillStyle = walking ? '#ffd75e' : '#7cf5ff';
+      c.strokeStyle = 'rgba(0,0,0,.55)';
+      c.lineWidth = 3 * ui;
+      c.lineJoin = 'round';
+      c.beginPath();
+      c.moveTo(edgeX - edgeSz * 0.55, edgeY - edgeSz * 0.7);
+      c.lineTo(edgeX + edgeSz * 0.35, edgeY);
+      c.lineTo(edgeX - edgeSz * 0.55, edgeY + edgeSz * 0.7);
+      c.lineTo(edgeX - edgeSz * 0.2, edgeY);
+      c.closePath();
+      c.fill();
+      c.stroke();
+      c.font = `900 ${Math.round(12 * ui)}px -apple-system,sans-serif`;
+      c.textAlign = 'center';
+      c.fillStyle = '#fff';
+      c.globalAlpha = 0.9;
+      c.fillText(IS_TOUCH ? t('hud.partGateTouchShort') : t('hud.partGateKbShort'), edgeX - 4, edgeY + edgeSz + 16);
+    }
+
     // gloedpad op de grond
-    c.globalAlpha = 0.22 + prog * 0.18;
+    c.globalAlpha = 0.28 + prog * 0.22;
     const pathGrad = c.createLinearGradient(px - 20, py, px + barW + 40, py);
     pathGrad.addColorStop(0, 'rgba(124,245,255,0)');
     pathGrad.addColorStop(0.35, 'rgba(124,245,255,0.55)');
@@ -4097,19 +4141,19 @@ class Game {
     c.closePath();
     c.fill();
 
-    // drie chevrons >>
+    // drie chevrons >> (groter + sterker pulse)
     for (let i = 0; i < 3; i++) {
-      const phase = gt * (calm ? 4 : (walking ? 9 : 5)) - i * 0.38;
-      const blink = calm ? 0.75 : (walking
-        ? (0.55 + Math.max(0, Math.sin(phase)) * 0.45)
-        : (0.28 + Math.max(0, Math.sin(phase * 0.7)) * 0.35));
-      const slide = calm ? 0 : Math.sin(phase * 0.9) * 6;
-      const cx = px + 36 + i * (34 * ui) + slide + prog * 18;
+      const phase = gt * (calm ? 4 : (walking ? 10 : 6)) - i * 0.38;
+      const blink = calm ? 0.82 : (walking
+        ? (0.62 + Math.max(0, Math.sin(phase)) * 0.38)
+        : (0.38 + Math.max(0, Math.sin(phase * 0.7)) * 0.42));
+      const slide = calm ? 0 : Math.sin(phase * 0.9) * 8;
+      const cx = px + 40 + i * (38 * ui) + slide + prog * 22;
       const cy = py + (i % 2 ? -6 : 6);
-      const sz = (18 + i * 3) * ui;
+      const sz = (22 + i * 4) * ui;
       c.save();
       c.translate(cx, cy);
-      c.globalAlpha = blink * (0.55 + prog * 0.45);
+      c.globalAlpha = blink * (0.65 + prog * 0.35);
       c.fillStyle = i === 2 ? '#ffd75e' : '#7cf5ff';
       c.strokeStyle = 'rgba(0,0,0,.45)';
       c.lineWidth = 2.5 * ui;
@@ -4127,28 +4171,29 @@ class Game {
 
     // label + progress pill boven speler
     const label = t('combat.partGateWalk', { part: pg.targetPart });
-    c.font = `900 ${Math.round(13 * ui)}px -apple-system,sans-serif`;
+    c.font = `900 ${Math.round(14 * ui)}px -apple-system,sans-serif`;
     c.textAlign = 'center';
     const tw = c.measureText(label).width;
     const pillW = Math.max(tw + 28, barW + 16);
     const pillX = px + 48 - pillW * 0.35;
-    const pillY = py - 38;
-    c.fillStyle = 'rgba(6,10,24,.82)';
-    this.rr(c, pillX, pillY, pillW, 34 + barH, 12);
+    const pillY = py - 42;
+    c.globalAlpha = 1;
+    c.fillStyle = 'rgba(6,10,24,.88)';
+    this.rr(c, pillX, pillY, pillW, 36 + barH, 12);
     c.fill();
-    c.strokeStyle = 'rgba(124,245,255,.45)';
-    c.lineWidth = 2;
-    this.rr(c, pillX, pillY, pillW, 34 + barH, 12);
+    c.strokeStyle = walking ? 'rgba(255,215,94,.7)' : 'rgba(124,245,255,.55)';
+    c.lineWidth = 2.4;
+    this.rr(c, pillX, pillY, pillW, 36 + barH, 12);
     c.stroke();
     c.fillStyle = '#fff';
-    c.fillText(label, pillX + pillW * 0.5, pillY + 16);
+    c.fillText(label, pillX + pillW * 0.5, pillY + 17);
     if (!walking && prog < 0.98) {
-      c.font = `700 ${Math.round(10 * ui)}px -apple-system,sans-serif`;
-      c.fillStyle = 'rgba(255,215,94,.88)';
-      c.fillText(t('combat.partGateIdle'), pillX + pillW * 0.5, pillY + 28);
+      c.font = `800 ${Math.round(11 * ui)}px -apple-system,sans-serif`;
+      c.fillStyle = 'rgba(255,215,94,.95)';
+      c.fillText(t('combat.partGateIdle'), pillX + pillW * 0.5, pillY + 30);
     }
     const bx = pillX + 10;
-    const by = pillY + 24;
+    const by = pillY + 26;
     c.fillStyle = 'rgba(255,255,255,.16)';
     this.rr(c, bx, by, pillW - 20, barH, barH * 0.45);
     c.fill();
