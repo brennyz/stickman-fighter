@@ -23,21 +23,16 @@ const Perf = {
     if (save.liteFx) {
       if (this.tier !== 1) {
         this.tier = 1;
-        try { SceneryArt.clearCache(); } catch (_) {}
-        scheduleResize();
+        // Don't wipe scenery / force resize — pops houses & flashes screens
       }
       return;
     }
     const sampleEvery = IS_TOUCH ? 24 : 40;
     if (this.frames % sampleEvery !== 0) return;
-    const prev = this.tier;
     const heavyMs = IS_TOUCH ? 22 : 24;
     if (this.emaMs > heavyMs) this.tier = Math.min(2, this.tier + 1);
     else if (this.emaMs < 17.5 && this.tier > 0) this.tier -= 1;
-    if (prev !== this.tier) {
-      try { SceneryArt.clearCache(); } catch (_) {}
-      scheduleResize();
-    }
+    // Tier only throttles FX density — no clearCache/scheduleResize (eye-strain flashes)
     if (this.tier >= 2 && this.frames > 120 && !save.liteFx && !window.__sfLiteHint) {
       window.__sfLiteHint = 1;
       try { UI.toast('Traag op iPad? Instellingen → Lite FX', 4200); } catch (_) {}
@@ -273,9 +268,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.131';
+const APP_VERSION = '1.18.132';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 341;
+const SW_CACHE_REV = 342;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -20618,10 +20613,12 @@ function sceneryRng(seed) {
 
 const SCENERY_SCALE = 3;
 
-const SCENERY_CACHE_MAX = { lite: 12, tier2: 8, tier1: 16, full: 24 };
+const SCENERY_CACHE_MAX = { lite: 16, tier2: 16, tier1: 20, full: 28 };
 
 const SceneryArt = {
   cache: {},
+  /** Prefer keeping these keys when trimming (active fight theme). */
+  pinTheme: null,
 
   clearCache() { this.cache = {}; },
 
@@ -20635,12 +20632,20 @@ const SceneryArt = {
   evictIfNeeded() {
     const keys = Object.keys(this.cache);
     const max = this.cacheMax();
-    if (keys.length < max) return;
-    const drop = keys.length - max + 4;
-    for (let i = 0; i < drop; i++) delete this.cache[keys[i]];
+    if (keys.length <= max) return;
+    const pin = this.pinTheme;
+    const dropN = Math.min(2, keys.length - max);
+    let dropped = 0;
+    for (let i = 0; i < keys.length && dropped < dropN; i++) {
+      const k = keys[i];
+      if (pin && (k === pin + ':far' || k === pin + ':cloud' || k === pin + ':tree')) continue;
+      delete this.cache[k];
+      dropped++;
+    }
   },
 
   get(themeName, kind) {
+    if (themeName) this.pinTheme = themeName;
     const key = themeName + ':' + kind;
     if (key in this.cache) return this.cache[key];
     this.evictIfNeeded();
@@ -23641,41 +23646,46 @@ function drawLandwegFightDecor(c, ground, scroll, t, dX, dSpan) {
   c.fillRect(Math.round(postX) - 12, ground - 84, 24, 12);
 
   // Modern gabled house + solar panels (peeking behind trees)
-  if (!lite) {
+  // Keep house visible even on lite/tier2 — skipping it caused eye-strain flashes
+  {
     const hx = dX(0.42 * dSpan);
     const baseY = ground - 8;
     // body
     c.fillStyle = '#6a7078';
-    c.fillRect(Math.round(hx), baseY - 36, 48, 36);
-    c.fillStyle = '#525860';
-    c.fillRect(Math.round(hx) + 2, baseY - 34, 10, 12);
-    c.fillRect(Math.round(hx) + 34, baseY - 34, 10, 12);
+    c.fillRect(Math.round(hx), baseY - (lite ? 28 : 36), 48, lite ? 28 : 36);
+    if (!lite) {
+      c.fillStyle = '#525860';
+      c.fillRect(Math.round(hx) + 2, baseY - 34, 10, 12);
+      c.fillRect(Math.round(hx) + 34, baseY - 34, 10, 12);
+    }
     // gable roof
     c.fillStyle = '#3a3e44';
     c.beginPath();
-    c.moveTo(hx - 4, baseY - 36);
-    c.lineTo(hx + 24, baseY - 54);
-    c.lineTo(hx + 52, baseY - 36);
+    c.moveTo(hx - 4, baseY - (lite ? 28 : 36));
+    c.lineTo(hx + 24, baseY - (lite ? 42 : 54));
+    c.lineTo(hx + 52, baseY - (lite ? 28 : 36));
     c.closePath();
     c.fill();
-    // solar panels (dark blue rectangles on roof slope)
-    c.fillStyle = '#1a2840';
-    c.fillRect(Math.round(hx) + 6, baseY - 48, 14, 8);
-    c.fillRect(Math.round(hx) + 22, baseY - 46, 14, 8);
-    c.fillStyle = '#2a4060';
-    c.fillRect(Math.round(hx) + 7, baseY - 47, 5, 2);
-    c.fillRect(Math.round(hx) + 23, baseY - 45, 5, 2);
-    // door
-    c.fillStyle = '#2a2e34';
-    c.fillRect(Math.round(hx) + 18, baseY - 16, 10, 16);
-    // tree screen in front of house
-    c.fillStyle = '#2a5834';
-    c.beginPath();
-    c.ellipse(hx + 8, baseY - 20, 16, 18, 0, 0, TAU);
-    c.fill();
-    c.beginPath();
-    c.ellipse(hx + 40, baseY - 22, 14, 16, 0, 0, TAU);
-    c.fill();
+    if (!lite) {
+      // solar panels (dark blue rectangles on roof slope)
+      c.fillStyle = '#1a2840';
+      c.fillRect(Math.round(hx) + 6, baseY - 48, 14, 8);
+      c.fillRect(Math.round(hx) + 22, baseY - 46, 14, 8);
+      c.fillStyle = '#2a4060';
+      c.fillRect(Math.round(hx) + 7, baseY - 47, 5, 2);
+      c.fillRect(Math.round(hx) + 23, baseY - 45, 5, 2);
+      // door
+      c.fillStyle = '#2a2e34';
+      c.fillRect(Math.round(hx) + 18, baseY - 16, 10, 16);
+      // tree screen in front of house
+      c.fillStyle = '#2a5834';
+      c.beginPath();
+      c.ellipse(hx + 8, baseY - 20, 16, 18, 0, 0, TAU);
+      c.fill();
+      c.beginPath();
+      c.ellipse(hx + 40, baseY - 22, 14, 16, 0, 0, TAU);
+      c.fill();
+    }
   }
 
   // ZONE 30 traffic sign (white disc, red rim)
@@ -23752,7 +23762,8 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   // Nightmare/Hell: eigen deco, geen groene landweg-tiles
   const hardTheme = themeName === 'nightmare' || themeName === 'hell';
   const farTile = !hardTheme && SceneryArt.get(themeName, 'far');
-  if (farTile && Perf.tier < 2) {
+  // Always draw far skyline (houses/molen) — gating on Perf.tier made huisjes flash when FPS dipped
+  if (farTile) {
     drawSceneryTile(c, farTile, ground - 52 - farTile.height * SCENERY_SCALE, scroll, 0.18);
   }
   // heuvels (parallax: verre laag traag, nabije laag sneller)
@@ -34977,9 +34988,9 @@ function scheduleNextLoop() {
 }
 
 function menuHeroPaintSkip() {
+  // Don't skip frames during menu — choppy crossfades read as flashes
   if (save.liteFx) return 2;
-  if (Perf.tier >= 2) return 3;
-  if (Perf.tier >= 1) return 2;
+  if (Perf.tier >= 2) return 2;
   return 1;
 }
 
@@ -35101,7 +35112,7 @@ function paintMenuHeroCanvas(t) {
   const Hs = cv.height;
   c.clearRect(0, 0, Ws, Hs);
 
-  // Foto-album: kruispunt (4 paden) → eik → steenhuis → open weg
+  // Foto-album: countryside first, cave last — slow holds + soft crossfade (no eye-strain flash)
   const VISTAS = [];
   if (typeof drawMenuCrossroadsVista === 'function') VISTAS.push(drawMenuCrossroadsVista);
   if (typeof drawMenuSemi25dVista === 'function') VISTAS.push(drawMenuSemi25dVista);
@@ -35109,13 +35120,21 @@ function paintMenuHeroCanvas(t) {
   if (typeof drawMenuOpenRoadVista === 'function') VISTAS.push(drawMenuOpenRoadVista);
   if (typeof drawMenuCaveVista === 'function') VISTAS.push(drawMenuCaveVista);
   const N = VISTAS.length;
-  const SLOT = motionReduced() ? 12 : 8;
-  const FADE = motionReduced() ? 0.01 : 1.35;
+  const calm = motionReduced();
+  // Longer hold + fade; reduced-motion pins one calm vista (never hard-cut every few seconds)
+  const SLOT = calm ? 1e9 : 16;
+  const FADE = calm ? 0 : 2.8;
   let aFrom = 1;
   let aTo = 0;
   let fromIdx = 0;
   let toIdx = 0;
-  if (N > 1) {
+  if (calm && N > 0) {
+    // Prefer open road / oak over cave↔house contrast
+    let pin = VISTAS.indexOf(typeof drawMenuOpenRoadVista === 'function' ? drawMenuOpenRoadVista : null);
+    if (pin < 0) pin = VISTAS.indexOf(typeof drawMenuSemi25dVista === 'function' ? drawMenuSemi25dVista : null);
+    fromIdx = pin >= 0 ? pin : 0;
+    toIdx = fromIdx;
+  } else if (N > 1) {
     const cycle = SLOT * N;
     const u = ((t % cycle) + cycle) % cycle;
     fromIdx = Math.floor(u / SLOT) % N;
@@ -35123,8 +35142,10 @@ function paintMenuHeroCanvas(t) {
     const inSlot = u % SLOT;
     if (inSlot > SLOT - FADE) {
       const f = (inSlot - (SLOT - FADE)) / FADE;
-      aFrom = 1 - f;
-      aTo = f;
+      // smootherstep — less flashy than linear alpha
+      const s = f * f * (3 - 2 * f);
+      aFrom = 1 - s;
+      aTo = s;
     } else {
       aFrom = 1;
       aTo = 0;

@@ -21,21 +21,16 @@ const Perf = {
     if (save.liteFx) {
       if (this.tier !== 1) {
         this.tier = 1;
-        try { SceneryArt.clearCache(); } catch (_) {}
-        scheduleResize();
+        // Don't wipe scenery / force resize — pops houses & flashes screens
       }
       return;
     }
     const sampleEvery = IS_TOUCH ? 24 : 40;
     if (this.frames % sampleEvery !== 0) return;
-    const prev = this.tier;
     const heavyMs = IS_TOUCH ? 22 : 24;
     if (this.emaMs > heavyMs) this.tier = Math.min(2, this.tier + 1);
     else if (this.emaMs < 17.5 && this.tier > 0) this.tier -= 1;
-    if (prev !== this.tier) {
-      try { SceneryArt.clearCache(); } catch (_) {}
-      scheduleResize();
-    }
+    // Tier only throttles FX density — no clearCache/scheduleResize (eye-strain flashes)
     if (this.tier >= 2 && this.frames > 120 && !save.liteFx && !window.__sfLiteHint) {
       window.__sfLiteHint = 1;
       try { UI.toast('Traag op iPad? Instellingen → Lite FX', 4200); } catch (_) {}

@@ -274,41 +274,46 @@ function drawLandwegFightDecor(c, ground, scroll, t, dX, dSpan) {
   c.fillRect(Math.round(postX) - 12, ground - 84, 24, 12);
 
   // Modern gabled house + solar panels (peeking behind trees)
-  if (!lite) {
+  // Keep house visible even on lite/tier2 — skipping it caused eye-strain flashes
+  {
     const hx = dX(0.42 * dSpan);
     const baseY = ground - 8;
     // body
     c.fillStyle = '#6a7078';
-    c.fillRect(Math.round(hx), baseY - 36, 48, 36);
-    c.fillStyle = '#525860';
-    c.fillRect(Math.round(hx) + 2, baseY - 34, 10, 12);
-    c.fillRect(Math.round(hx) + 34, baseY - 34, 10, 12);
+    c.fillRect(Math.round(hx), baseY - (lite ? 28 : 36), 48, lite ? 28 : 36);
+    if (!lite) {
+      c.fillStyle = '#525860';
+      c.fillRect(Math.round(hx) + 2, baseY - 34, 10, 12);
+      c.fillRect(Math.round(hx) + 34, baseY - 34, 10, 12);
+    }
     // gable roof
     c.fillStyle = '#3a3e44';
     c.beginPath();
-    c.moveTo(hx - 4, baseY - 36);
-    c.lineTo(hx + 24, baseY - 54);
-    c.lineTo(hx + 52, baseY - 36);
+    c.moveTo(hx - 4, baseY - (lite ? 28 : 36));
+    c.lineTo(hx + 24, baseY - (lite ? 42 : 54));
+    c.lineTo(hx + 52, baseY - (lite ? 28 : 36));
     c.closePath();
     c.fill();
-    // solar panels (dark blue rectangles on roof slope)
-    c.fillStyle = '#1a2840';
-    c.fillRect(Math.round(hx) + 6, baseY - 48, 14, 8);
-    c.fillRect(Math.round(hx) + 22, baseY - 46, 14, 8);
-    c.fillStyle = '#2a4060';
-    c.fillRect(Math.round(hx) + 7, baseY - 47, 5, 2);
-    c.fillRect(Math.round(hx) + 23, baseY - 45, 5, 2);
-    // door
-    c.fillStyle = '#2a2e34';
-    c.fillRect(Math.round(hx) + 18, baseY - 16, 10, 16);
-    // tree screen in front of house
-    c.fillStyle = '#2a5834';
-    c.beginPath();
-    c.ellipse(hx + 8, baseY - 20, 16, 18, 0, 0, TAU);
-    c.fill();
-    c.beginPath();
-    c.ellipse(hx + 40, baseY - 22, 14, 16, 0, 0, TAU);
-    c.fill();
+    if (!lite) {
+      // solar panels (dark blue rectangles on roof slope)
+      c.fillStyle = '#1a2840';
+      c.fillRect(Math.round(hx) + 6, baseY - 48, 14, 8);
+      c.fillRect(Math.round(hx) + 22, baseY - 46, 14, 8);
+      c.fillStyle = '#2a4060';
+      c.fillRect(Math.round(hx) + 7, baseY - 47, 5, 2);
+      c.fillRect(Math.round(hx) + 23, baseY - 45, 5, 2);
+      // door
+      c.fillStyle = '#2a2e34';
+      c.fillRect(Math.round(hx) + 18, baseY - 16, 10, 16);
+      // tree screen in front of house
+      c.fillStyle = '#2a5834';
+      c.beginPath();
+      c.ellipse(hx + 8, baseY - 20, 16, 18, 0, 0, TAU);
+      c.fill();
+      c.beginPath();
+      c.ellipse(hx + 40, baseY - 22, 14, 16, 0, 0, TAU);
+      c.fill();
+    }
   }
 
   // ZONE 30 traffic sign (white disc, red rim)
@@ -385,7 +390,8 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   // Nightmare/Hell: eigen deco, geen groene landweg-tiles
   const hardTheme = themeName === 'nightmare' || themeName === 'hell';
   const farTile = !hardTheme && SceneryArt.get(themeName, 'far');
-  if (farTile && Perf.tier < 2) {
+  // Always draw far skyline (houses/molen) — gating on Perf.tier made huisjes flash when FPS dipped
+  if (farTile) {
     drawSceneryTile(c, farTile, ground - 52 - farTile.height * SCENERY_SCALE, scroll, 0.18);
   }
   // heuvels (parallax: verre laag traag, nabije laag sneller)
