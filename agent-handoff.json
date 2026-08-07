@@ -367,6 +367,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-07T20:54:14Z",
+      "summary": "Merge iOS Capacitor shell stubs + Guideline 4.2 notes (C2–C3)"
+    },
+    {
       "at": "2026-08-07T20:53:55Z",
       "summary": "Soft-live merge to main: legal+feel+versus-retire+IP-A+listing · Play TWA shell · v1.18.138 / SW 348"
     },

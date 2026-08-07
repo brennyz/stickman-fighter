@@ -117,6 +117,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-08-07 | — | **iOS shell:** Capacitor stubs + Guideline 4.2 notes (C2–C3). Docs only. |
 | 2026-08-07 | **merge** | Soft-live stack op main: privacy + soft-feel + versus-retire + IP-A techniques · **v1.18.138 / SW v348**. |
 | 2026-08-07 | — | **soft-legal:** privacy.html + settings/menu link, age/teens+ hints, docs/store data-safety + iOS nutrition; A1/A2/A7/B7/C4 done. v1.18.134 / SW v344. |
 | 2026-08-07 | — | **IP-A:** anime skill names → generic techniques (spiral_orb/lightning_pierce/void_gaze/…); jutsu→technique; chakra→energy; activeTechnique + hex alias migration; v1.18.136 / SW v346. |
