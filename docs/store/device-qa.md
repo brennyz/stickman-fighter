@@ -1,37 +1,34 @@
-# Device QA — soft live (PWA)
+# Device QA — soft live (PWA) · Android first
 
-Korte checklist vóór soft live / store. Deel-link: `speel.html` (niet `ipad.html` / tunnel).
+Deel-link: https://brennyz.github.io/stickman-fighter/speel.html  
+Store-pad nu: **Google Play only** (Apple on hold).
 
-## iPhone Safari
+## 1. Android Chrome (prioriteit)
 
-- [ ] Open `speel.html` → SPELEN → avontuur start zonder zwart/blauw scherm
-- [ ] Touch: joystick loopt, aanvalsknoppen reageren, geen “tap zonder actie”
-- [ ] Golf 1: charge/slam toont gele/oranje telegraph + HUD-balk (leesbaar)
-- [ ] Checkpoint: “houd joystick RECHTS” hint + grote pijl rechts; voortgangsbalk vult
-- [ ] Pause/menu terug naar hub werkt; audio start na eerste tap
-- [ ] Add to Home Screen (optioneel): icoon + offline start
+- [ ] Open `speel.html` → SPELEN → avontuur start (geen zwart/blauw scherm)
+- [ ] Touch: joystick + knoppen; landscape speelbaar
+- [ ] Golf 1: milder + gele/oranje telegraph leesbaar
+- [ ] Checkpoint: “houd joystick RECHTS” + pijl; balk vult
+- [ ] Pause → menu; audio na eerste tap
+- [ ] **Toevoegen aan startscherm** → icoon start PWA
+- [ ] **Verse versie** (of heropen) → cache update zonder vastlopen
+- [ ] Menu-scroll niet vast; HUD niet onder knoppen
+- [ ] Settings ≈ v1.18.138 · save blijft na herladen
+- [ ] Privacy-link opent `privacy.html`
 
-## Android Chrome
+## 2. Optioneel (niet blocker voor Play)
 
-- [ ] Zelfde speel-flow als iPhone; landscape speelbaar
-- [ ] Install prompt / “Toevoegen aan startscherm” bereikbaar
-- [ ] SW: hard refresh of heropen → versie/cache update zonder vastlopen
-- [ ] Touch scroll in menu niet vast; adventure HUD niet onder knoppen
-- [ ] Checkpoint cue zichtbaar; keyboard n.v.t. tenzij Bluetooth
+### iPad Safari / bookmark
+- [ ] Pages-URL speelt full canvas
+- [ ] Joystick links / knoppen rechts; checkpoint cue OK
 
-## iPad (Safari / PWA bookmark)
+### iPhone Safari
+- [ ] Alleen als je wilt delen met iOS-vrienden via PWA — **geen App Store nu**
 
-- [ ] Bookmark of Pages-URL speelt full canvas (geen Cursor-terminal nodig)
-- [ ] Dual-layout: joystick links, knoppen rechts; geen overlap
-- [ ] Avontuur: milder golf 1 voelbaar; telegraph leesbaar op afstand
-- [ ] Checkpoint “loop rechts” werkt met joystick; idle-hint komt snel
-- [ ] Rotate / resize: geen zwarte strook; knoppen blijven bereikbaar
+## Smoke (Android genoeg)
 
-## Smoke (alle devices)
+- [ ] Deel-link = `…/speel.html`
+- [ ] Geen login-blocker in gevecht
+- [ ] Versus-tegel weg / niet startbaar
 
-- [ ] Versie in settings ≈ APP_VERSION uit build
-- [ ] Deel-link deelt `…/speel.html`
-- [ ] Save blijft na herladen (localStorage)
-- [ ] Geen privacy/login-blocker midden in gevecht
-
-**Owner:** human speelt A5/A6; cloud soft-feel levert deze notes.
+**Owner:** jij (A5/A6). Daarna Play Console + Bubblewrap (`native/android/README.md`).
