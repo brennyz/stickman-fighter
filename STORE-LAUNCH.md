@@ -44,7 +44,7 @@ Deel-link = `speel.html` (niet alleen `index.html`).
 | B6 | IARC / rating | **jij** | draft in `docs/store/content-rating-iarc.md` |
 | B7 | Data safety | **jij** | draft in `docs/store/data-safety-play.md` |
 | B8 | Privacy URL in Console | **jij** | `…/privacy.html` |
-| B9 | Keystore lokaal + `bubblewrap build` → `.aab` | **jij** | zie `native/android/README.md` |
+| B9 | Keystore lokaal + Bubblewrap → **APK** (test) + **AAB** (Play) | **jij** op PC | zie `native/android/BUILD.md` |
 | B10 | Internal testing track → open testing → productie | **jij** | pending |
 
 Package id (scaffold): `com.brennyz.stickmanfighter`
@@ -53,9 +53,9 @@ Package id (scaffold): `com.brennyz.stickmanfighter`
 
 1. Soft live op je Android: Pages-link → Chrome → toevoegen aan startscherm → 5 min avontuur + Verse versie.  
 2. Play Console account (eenmalig, goedkoper/sneller dan Apple).  
-3. Lokaal: Bubblewrap init/build met signing (geen secrets in git).  
-4. Listing + screenshots + data safety + privacy-URL plakken.  
-5. Internal test → vrienden → daarna productie.
+3. Lokaal op PC: `npm run android:init` → keystore → `npm run android:build` → APK op telefoon testen (`native/android/BUILD.md`).  
+4. Listing + screenshots + data safety + privacy-URL in Play Console.  
+5. Upload **AAB** → Internal testing → vrienden → productie.
 
 ---
 

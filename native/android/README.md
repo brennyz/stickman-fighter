@@ -59,11 +59,12 @@ Notes + checklist: [`icons/NOTES.md`](./icons/NOTES.md).
 
 | Path | Purpose |
 |------|---------|
+| **[BUILD.md](./BUILD.md)** | **Start hier** — APK/AAB stappen zonder “APK maker”-sites |
 | `twa-manifest.json` | Bubblewrap project config (checked in) |
 | `signing/keystore.properties.example` | Signing placeholders — **no secrets** |
 | `signing/.gitignore` | Ignore real keystores / properties |
 | `assetlinks.json.example` | Digital Asset Links stub |
-| `scripts/init-bubblewrap.sh` | Optional local init helper |
+| `scripts/init-bubblewrap.sh` | `npm run android:init` |
 | `capacitor.config.stub.json` | Reference only — not the active path |
 
 Generated Android Studio project (`app/`, `gradle/`, …) is **not** committed yet. Run Bubblewrap locally (below), then optionally commit the generated tree in a follow-up PR once signing is ready.

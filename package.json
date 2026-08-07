@@ -33,6 +33,8 @@
     "smoke:vista": "node scripts/smoke-vista-flash.mjs",
     "smoke:advbg": "node scripts/smoke-adventure-bg-drop.mjs",
     "store:shots": "node scripts/capture-store-screenshots.mjs",
+    "android:init": "bash native/android/scripts/init-bubblewrap.sh",
+    "android:build": "bash -lc 'cd native/android && bubblewrap build'",
     "smoke:pwa": "node scripts/smoke-pwa-shell.mjs",
     "smoke:summon": "node scripts/smoke-summon-screen.mjs",
     "smoke:wall": "node scripts/smoke-wall.mjs",
