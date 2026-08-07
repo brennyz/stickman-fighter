@@ -128,7 +128,6 @@ async function run() {
         hasVideoCls: document.getElementById('summonScreen')?.classList.contains('has-video'),
       } : null;
       let cropEarly = null;
-      let cardCenter = null;
       if (vidEarly && stageEarly && playEarly && playEarly.display === 'block') {
         const vs = getComputedStyle(vidEarly);
         const vw = parseFloat(vs.width);
