@@ -131,11 +131,14 @@ async function run() {
       if (vidEarly && stageEarly && playEarly && playEarly.display === 'block') {
         const vs = getComputedStyle(vidEarly);
         const vw = parseFloat(vs.width);
-        const sw = stageEarly.getBoundingClientRect().width;
+        const vh = parseFloat(vs.height);
+        const sr = stageEarly.getBoundingClientRect();
         cropEarly = {
-          vw, sw,
-          ratio: sw > 0 ? vw / sw : 0,
-          stagePct: stageEarly.getBoundingClientRect().width / window.innerWidth,
+          vw, vh, sw: sr.width, sh: sr.height,
+          ratioW: sr.width > 0 ? vw / sr.width : 0,
+          ratioH: sr.height > 0 ? vh / sr.height : 0,
+          stagePct: sr.width / window.innerWidth,
+          aspect: sr.height > 0 ? sr.width / sr.height : 0,
         };
       }
       // Wait until past card window (last 2s of ~10s) + buffer
@@ -148,6 +151,14 @@ async function run() {
       const actives = [...document.querySelectorAll('.screen.active')].map((s) => s.id);
       const stageRect = stage ? stage.getBoundingClientRect() : null;
       const railRect = rail ? rail.getBoundingClientRect() : null;
+      const cardRect = card ? card.getBoundingClientRect() : null;
+      let cardCenter = null;
+      if (cardRect && stageRect && cardRect.width > 8 && stageRect.width > 8) {
+        cardCenter = {
+          dx: Math.abs((cardRect.left + cardRect.width / 2) - (stageRect.left + stageRect.width / 2)),
+          dy: Math.abs((cardRect.top + cardRect.height / 2) - (stageRect.top + stageRect.height / 2)),
+        };
+      }
       const toastAfter = (document.getElementById('toastHost') || {}).textContent || '';
       return {
         before,
@@ -155,6 +166,7 @@ async function run() {
         cardShow: !!(reveal && reveal.classList.contains('is-card-show')),
         cardOpacity: card ? getComputedStyle(card).opacity : null,
         cardName: (document.getElementById('summonCardName') || {}).textContent || '',
+        cardCenter,
         stillSummon: actives[0] === 'summonScreen' && actives.length === 1,
         isPlaying: document.body.classList.contains('is-playing'),
         rarity: reveal ? reveal.dataset.rarity : null,
@@ -186,6 +198,10 @@ async function run() {
     must(!pullSnap.isPlaying, 'is-playing flipped during pull');
     must(pullSnap.cardShow, 'center card not shown after reveal window');
     must(pullSnap.cardName.length > 0, 'empty center card name');
+    if (pullSnap.cardCenter) {
+      must(pullSnap.cardCenter.dx <= 12, 'reward card not horizontally centered: ' + JSON.stringify(pullSnap.cardCenter));
+      must(pullSnap.cardCenter.dy <= 18, 'reward card not vertically centered: ' + JSON.stringify(pullSnap.cardCenter));
+    }
     must(/kist opent/i.test(pullSnap.midText), 'expected neutral mid text, got: ' + pullSnap.midText);
     // No spoiler toast during reveal (toast host should stay empty / unchanged vs result text)
     must(!pullSnap.toastMid || pullSnap.toastMid === pullSnap.toastBefore,
@@ -196,7 +212,9 @@ async function run() {
     if (pullSnap.playEarly && pullSnap.playEarly.display === 'block') {
       must(pullSnap.playEarly.hasVideoCls, 'expected has-video class during play');
       const crop = pullSnap.cropEarly;
-      must(crop && crop.ratio >= 1.08, 'video should zoom ~111% to crop watermark: ' + JSON.stringify(crop));
+      must(crop && crop.ratioW >= 1.08, 'video should crop right (~112%) for watermark: ' + JSON.stringify(crop));
+      must(crop && crop.ratioH <= 1.05, 'video height should stay ~100% so chest bottom is visible: ' + JSON.stringify(crop));
+      must(crop && crop.aspect >= 1.6 && crop.aspect <= 1.9, 'stage should stay ~16:9 on large screens: ' + JSON.stringify(crop));
       must(crop && crop.stagePct <= 0.94, 'stage should be ~90% viewport wide: ' + JSON.stringify(crop));
       must(pullSnap.playEarly.t > 0.05, 'mp4 did not advance currentTime: ' + JSON.stringify(pullSnap.playEarly));
       must(!pullSnap.playEarly.paused, 'mp4 still paused after pull: ' + JSON.stringify(pullSnap.playEarly));

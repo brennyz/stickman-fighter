@@ -923,32 +923,32 @@
   .summon-screen.is-pulling .summon-center-card {
     width: min(62%, 260px);
   }
-  /* ~90% stage + zoom-crop so Gemini watermark (bottom-right) stays off-frame */
+  /* 16:9 stage (~90%) + crop RIGHT for watermark — keep chest bottom visible */
   .summon-screen.is-pulling.has-video .summon-reveal {
     padding: 0;
     background: #05070c;
   }
   .summon-screen.is-pulling.has-video .summon-stage {
-    width: 90vw;
-    height: 90vh;
+    width: min(90vw, calc(90vh * 16 / 9), 1100px);
+    height: auto;
     max-width: 90%;
-    max-height: 90%;
-    aspect-ratio: auto;
+    max-height: 90vh;
+    aspect-ratio: 16 / 9;
     border-radius: 10px;
     border: 1px solid rgba(255,215,94,.18);
     box-shadow: 0 16px 48px rgba(0,0,0,.55);
     overflow: hidden;
   }
   .summon-screen.is-pulling.has-video .summon-video {
-    /* 100/0.9 ≈ 111.12% — show 90% of the frame, crop bottom-right watermark */
-    width: 111.12%;
-    height: 111.12%;
+    /* Crop right edge (Gemini watermark) — keep nearly full height so chest bottom stays */
+    width: 112%;
+    height: 100%;
     left: 0;
     top: 0;
     right: auto;
     bottom: auto;
     object-fit: cover;
-    object-position: left top;
+    object-position: left center;
   }
   .summon-screen.is-pulling.has-video .summon-reveal-text {
     position: absolute;
@@ -1126,7 +1126,7 @@
   }
   .summon-center-card {
     position: absolute;
-    left: 50%; top: 58%;
+    left: 50%; top: 50%;
     width: min(58%, 220px);
     transform: translate(-50%, -50%) scale(.86);
     opacity: 0;
@@ -1134,7 +1134,7 @@
     z-index: 4;
     padding: clamp(10px, 2.2vw, 14px) clamp(8px, 2vw, 12px) clamp(12px, 2.4vw, 16px);
     border-radius: 12px;
-    /* Soft rarity-tinted glass — sits “in” the chest instead of a hard dark slab */
+    /* Soft rarity-tinted glass — matches reward back, centered on stage */
     background:
       linear-gradient(180deg, rgba(157,177,227,.38), rgba(12,16,28,.48));
     border: 2px solid rgba(157,177,227,.45);
@@ -1148,7 +1148,7 @@
   }
   .summon-reveal.is-card-show .summon-center-card {
     opacity: 1;
-    transform: translate(-50%, -42%) scale(1);
+    transform: translate(-50%, -50%) scale(1);
   }
   .summon-reveal[data-rarity="common"] .summon-center-card {
     background: linear-gradient(180deg, rgba(157,177,227,.36), rgba(14,18,30,.46));
