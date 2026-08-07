@@ -6,25 +6,21 @@ function startGame(mode, opts) {
   window.__sfStartGameBusy = true;
   try {
   try { cancelGambleStart(); } catch (_) {}
-  const allowed = { adventure: 1, training: 1, wall: 1, versus: 1, coinrun: 1 };
+  const allowed = { adventure: 1, training: 1, wall: 1, coinrun: 1 };
+  if (mode === 'versus') {
+    try { toastVersusRetired(); } catch (_) {}
+    try { UI.show('menuScreen'); } catch (_) {}
+    return;
+  }
   if (!allowed[mode]) {
     try { UI.toast('Onbekende modus', 2200); } catch (_) {}
     return;
   }
-  try { primePlayInput(mode === 'versus'); } catch (_) {}
+  try { primePlayInput(false); } catch (_) {}
   window.__sfLoopErr = false;
   try { Input.releaseAll(); } catch (_) {}
   Input.dualMode = false;
   try { dismissTunnelOverlayIfStatic(); } catch (_) {}
-  if (mode === 'versus') {
-    try {
-      opts.p1 = normalizeVsPick(opts.p1 || vsSelect.p1, 'ryu');
-      opts.p2 = normalizeVsPick(opts.p2 || vsSelect.p2, 'ken');
-    } catch (_) {
-      opts.p1 = 'ryu'; opts.p2 = 'ken';
-    }
-    try { primePlayInput(true); } catch (_) {}
-  }
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
   try {
     game = new Game(mode, opts);
@@ -135,8 +131,7 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
     if (hub === 'adventure') {
       UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: 'Avontuur laden mislukt' });
     } else if (hub === 'versus') {
-      UI.charPickStep = 1;
-      UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { msg: 'Kies karakter mislukt' });
+      try { toastVersusRetired(); } catch (_) {}
     } else if (hub === 'summon') {
       UI.openSummonHub();
     } else {
@@ -176,11 +171,12 @@ bindPress(document.getElementById('btnTraining'), () => {
   AudioSys.init(); AudioSys.sfx('select'); startGame('training');
 });
 const btnVersus = document.getElementById('btnVersus');
-bindPress(btnVersus, () => {
-  AudioSys.init(); AudioSys.sfx('select');
-  UI.charPickStep = 1;
-  UI.safeOpen('charSelectScreen', () => UI.renderCharSelect(), { msg: 'Kies karakter mislukt' });
-});
+if (btnVersus) {
+  bindPress(btnVersus, () => {
+    AudioSys.init(); AudioSys.sfx('select');
+    try { toastVersusRetired(); } catch (_) {}
+  });
+}
 const charPickBackP1 = document.getElementById('charPickBackP1');
 bindPress(charPickBackP1, () => {
   AudioSys.sfx('select');

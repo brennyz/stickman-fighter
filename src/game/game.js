@@ -1606,8 +1606,8 @@ class Game {
     this.roundsP2 = 0;
     this.round = 0;
     this.vsRoundLog = [];
-    this.p1Pick = normalizeVsPick(opts.p1 || vsSelect.p1, 'ryu');
-    this.p2Pick = normalizeVsPick(opts.p2 || vsSelect.p2, 'ken');
+    this.p1Pick = normalizeVsPick(opts.p1 || vsSelect.p1, null);
+    this.p2Pick = normalizeVsPick(opts.p2 || vsSelect.p2, null);
     vsSelect.p1 = this.p1Pick;
     vsSelect.p2 = this.p2Pick;
     trackVsRosterUse(this.p1Pick, this.p2Pick);

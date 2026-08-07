@@ -318,9 +318,8 @@ async function run() {
     });
 
     tryMark('mode_versus', () => {
-      startGame('versus', { p1: 'ryu', p2: 'ken' });
-      Input.dualMode = true;
-      simFrames(game, 60, { noKill: true, draw: true });
+      // Local versus retired — ensure startGame rejects without crashing.
+      startGame('versus', { p1: 'stick', p2: 'rabbit' });
       ok('versus_frames');
     });
 
