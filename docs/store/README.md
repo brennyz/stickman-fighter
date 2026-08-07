@@ -1,26 +1,27 @@
 # Store drafts
 
-Cloud agents drop privacy / listing / rating drafts here.
+**Android first** — use Play drafts below. iOS nutrition / App Review notes are optional later (Apple on hold).
 
-## Privacy & data (soft-legal agent)
+## Privacy & data
 
 | File | Purpose |
 |------|---------|
-| [data-safety-play.md](./data-safety-play.md) | Play Data safety — local-only save (B7) |
-| [privacy-nutrition-ios.md](./privacy-nutrition-ios.md) | App Privacy nutrition labels draft (C4) |
-| `/privacy.html` (repo root) | Public privacy policy (A1) → Pages after merge |
+| [data-safety-play.md](./data-safety-play.md) | Play Data safety — local-only save (**B7 · nu**) |
+| [privacy-nutrition-ios.md](./privacy-nutrition-ios.md) | App Privacy nutrition — **later / Apple hold** |
+| `/privacy.html` (repo root) | Public privacy policy → Pages |
 
 ## Soft-feel / QA
 
-- `device-qa.md` — real-device soft-live checklist (iPhone / Android / iPad)
-## Listing & rating (store-listing agent)
+- [device-qa.md](./device-qa.md) — soft-live checklist (**prioriteit: Android Chrome**)
+
+## Listing & rating (Play)
 
 | File | Purpose |
 |------|---------|
 | [listing-nl.md](./listing-nl.md) | NL title, short/long description, keywords (B4) |
 | [listing-en.md](./listing-en.md) | EN title, short/long description, keywords (B4) |
 | [content-rating-iarc.md](./content-rating-iarc.md) | IARC / age-rating questionnaire draft (B6) |
-| [review-notes.md](./review-notes.md) | App Review notes — no login (C6) |
+| [review-notes.md](./review-notes.md) | Review notes (Play + later App Store) |
 
 Claims: cartoon stickman arena fighter · **no IAP** · no account · dice roll = in-game run modifier only (not real-money gambling).
 

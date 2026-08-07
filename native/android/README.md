@@ -1,5 +1,7 @@
 # Android Play shell — Stickman Fighter
 
+**Store strategy:** Android / Google Play **first**. Apple is on hold (`STORE-LAUNCH.md`).
+
 **Scope:** B1–B2 (Google Play wrapper scaffold). No game combat changes.
 
 ## B1 — Decision: **TWA (Bubblewrap)**
