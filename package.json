@@ -1,7 +1,7 @@
 {
   "name": "stickman-fighter",
   "private": true,
-  "version": "1.18.129",
+  "version": "1.18.130",
   "description": "Stickman Fighter — Monster Arena PWA",
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -29,10 +29,11 @@
     "smoke:weapons": "node scripts/smoke-weapon-silhouettes.mjs",
     "smoke:zone": "node scripts/smoke-zone-weapons.mjs",
     "smoke:cave": "node scripts/smoke-cave-scenery.mjs",
+    "smoke:pc": "node scripts/smoke-pc-controls.mjs",
     "smoke:pwa": "node scripts/smoke-pwa-shell.mjs",
     "smoke:summon": "node scripts/smoke-summon-screen.mjs",
     "smoke:wall": "node scripts/smoke-wall.mjs",
-    "test": "npm run build && npm run check && npm run check:critical && npm run smoke && npm run smoke:upgrades && npm run smoke:menu && npm run smoke:html && npm run smoke:responsive && npm run smoke:arcade-ui && npm run smoke:pwa && npm run smoke:gamble && npm run smoke:levelup && npm run smoke:petwave && npm run smoke:wave12 && npm run smoke:rasengan && npm run smoke:boomerang && npm run smoke:weapons && npm run smoke:zone && npm run smoke:cave && npm run smoke:adventure && npm run smoke:satan && npm run smoke:save && npm run smoke:summon && npm run smoke:wall",
+    "test": "npm run build && npm run check && npm run check:critical && npm run smoke && npm run smoke:upgrades && npm run smoke:menu && npm run smoke:html && npm run smoke:responsive && npm run smoke:arcade-ui && npm run smoke:pwa && npm run smoke:gamble && npm run smoke:levelup && npm run smoke:petwave && npm run smoke:wave12 && npm run smoke:rasengan && npm run smoke:boomerang && npm run smoke:weapons && npm run smoke:zone && npm run smoke:cave && npm run smoke:pc && npm run smoke:adventure && npm run smoke:satan && npm run smoke:save && npm run smoke:summon && npm run smoke:wall",
     "roll": "bash scripts/roll-improvement-d20.sh",
     "roll:status": "bash scripts/roll-improvement-d20.sh status",
     "roll:verify": "bash scripts/roll-improvement-d20.sh verify",

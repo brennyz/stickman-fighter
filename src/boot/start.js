@@ -386,7 +386,8 @@ function bindSettingsControls() {
   onVol('pauseSfxVol', 'pauseSfxVolLbl', 'sfxVol');
   const toggles = [
     ['setShake', 'shake'], ['setHaptics', 'haptics'], ['setComboHud', 'comboHud'],
-    ['setBigTouch', 'bigTouch'], ['setReducedMotion', 'reducedMotion'],
+    ['setBigTouch', 'bigTouch'], ['setKbLegend', 'kbLegend'], ['setShowTouchPads', 'showTouchPads'],
+    ['setReducedMotion', 'reducedMotion'],
     ['setLiteFx', 'liteFx'], ['setHighContrast', 'highContrast'],
   ];
   for (const [id, key] of toggles) {
@@ -394,8 +395,26 @@ function bindSettingsControls() {
     if (!el || el.dataset.bound) continue;
     el.dataset.bound = '1';
     el.addEventListener('click', () => {
-      if (save[key] !== false) save[key] = false;
-      else save[key] = true;
+      if (key === 'showTouchPads') {
+        // Cycle: auto (null) → force on (true) → force off (false) → auto
+        if (save.showTouchPads == null) save.showTouchPads = true;
+        else if (save.showTouchPads === true) save.showTouchPads = false;
+        else save.showTouchPads = null;
+        // Refresh label to show Auto / Aan / Uit
+        try {
+          const ico = el.querySelector('.tog-ico');
+          const mode = save.showTouchPads == null ? 'auto' : (save.showTouchPads ? 'on' : 'off');
+          const base = typeof t === 'function' ? t('settings.showTouchPads') : 'Touch-knoppen';
+          const suffix = mode === 'auto' ? ' · auto' : (mode === 'on' ? ' · aan' : ' · uit');
+          el.textContent = '';
+          if (ico) el.appendChild(ico);
+          el.appendChild(document.createTextNode(base + suffix));
+        } catch (_) {}
+      } else if (save[key] !== false) {
+        save[key] = false;
+      } else {
+        save[key] = true;
+      }
       if (key === 'reducedMotion' && save.reducedMotion) save.shake = false;
       if (key === 'liteFx') { Perf.reset(); lastResizeKey = ''; try { SceneryArt.clearCache(); } catch (_) {} scheduleResize(); AudioSys.applyVolumes(); refreshA11yUi(); }
       if (key === 'reducedMotion' || key === 'highContrast') refreshA11yUi();
@@ -403,7 +422,7 @@ function bindSettingsControls() {
       UI.renderSettings();
       UI.syncTouchClass();
       relayoutTouchPads();
-      if (key === 'bigTouch') scheduleResize();
+      if (key === 'bigTouch' || key === 'showTouchPads') scheduleResize();
       AudioSys.sfx('select');
       haptic(8);
     });

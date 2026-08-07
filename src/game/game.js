@@ -3551,8 +3551,11 @@ class Game {
     const bannerDraw = this.banners.slice().sort((a, b) => (a.lane || 0) - (b.lane || 0));
     for (const b of bannerDraw) this.drawBannerLine(c, b);
 
-    if (IS_TOUCH) {
+    if (typeof useTouchFightPads === 'function' ? useTouchFightPads() : IS_TOUCH) {
       try { this.drawTouchControls(c); } catch (_) {}
+    }
+    if (typeof useKbFightLegend === 'function' ? useKbFightLegend() : !IS_TOUCH) {
+      try { this.drawKeyboardLegend(c); } catch (_) {}
     }
     if (this.mode === 'adventure') {
       try { this.drawKetsbamPrompt(c); } catch (_) {}
@@ -3563,11 +3566,12 @@ class Game {
       let hintTxt = this.modeHintLine;
       if (!hintTxt) {
         const dualOk = Input.dualMode && this.mode === 'versus';
-        if (dualOk && IS_TOUCH) {
+        const touchPads = typeof useTouchFightPads === 'function' ? useTouchFightPads() : IS_TOUCH;
+        if (dualOk && touchPads) {
           hintTxt = t('hud.hintDualTouch');
         } else if (dualOk) {
           hintTxt = t('hud.hintDualKb');
-        } else if (IS_TOUCH) {
+        } else if (touchPads) {
           hintTxt = t('hud.hintTouch');
         } else {
           hintTxt = t('hud.hintKb');
@@ -5493,6 +5497,80 @@ class Game {
       c.beginPath();
       c.arc(0, 0, ring + 5 + (calm ? 0 : Math.sin(this.t * 8) * 2), 0, TAU);
       c.stroke();
+    }
+    c.restore();
+  }
+
+  /** PC / keyboard: persistent corner legend so controls are visible without touch pads. */
+  drawKeyboardLegend(c) {
+    if (fxLite() && typeof Perf !== 'undefined' && Perf.tier >= 2) return;
+    const dual = Input.dualMode && this.mode === 'versus';
+    const rows = dual
+      ? [
+          [{ k: 'A/D', lab: 'P1' }, { k: 'W', lab: '↑' }, { k: 'J K L', lab: 'slag' }, { k: 'U', lab: 'jutsu' }],
+          [{ k: '←→', lab: 'P2' }, { k: '↑', lab: '↑' }, { k: '1 2 3', lab: 'slag' }, { k: '4', lab: 'jutsu' }],
+        ]
+      : [
+          [{ k: 'A/D', lab: 'lopen' }, { k: 'W', lab: 'spring' }, { k: 'Shift', lab: 'subst' }],
+          [{ k: 'J', lab: 'stomp' }, { k: 'K', lab: 'trap' }, { k: 'L', lab: 'wapen' }, { k: 'U', lab: 'jutsu' }],
+        ];
+    if (!dual && this.mode === 'adventure') {
+      rows[0].push({ k: 'E', lab: 'kets' });
+    }
+
+    const chipH = 22;
+    const gap = 5;
+    const pad = 10;
+    const rowH = chipH + 4;
+    c.save();
+    c.font = '700 11px -apple-system, BlinkMacSystemFont, sans-serif';
+    c.textAlign = 'left';
+    c.textBaseline = 'middle';
+
+    const measureRow = (row) => {
+      let w = 0;
+      for (const it of row) {
+        const kw = c.measureText(it.k).width;
+        const lw = c.measureText(it.lab).width;
+        w += Math.ceil(kw + lw + 18) + gap;
+      }
+      return w - gap;
+    };
+    let boxW = 0;
+    for (const row of rows) boxW = Math.max(boxW, measureRow(row));
+    boxW = Math.min(W - 24, boxW + pad * 2);
+    const boxH = rows.length * rowH + pad * 2 - 4;
+    // Bottom-right — same side as touch action cluster on mobile
+    const x0 = W - boxW - 12;
+    const y0 = H - boxH - 12;
+
+    c.globalAlpha = 0.82;
+    c.fillStyle = 'rgba(6,10,24,.78)';
+    this.rr(c, x0, y0, boxW, boxH, 10);
+    c.fill();
+    c.strokeStyle = 'rgba(124,245,255,.28)';
+    c.lineWidth = a11yHighContrast() ? 2 : 1.2;
+    this.rr(c, x0, y0, boxW, boxH, 10);
+    c.stroke();
+    c.globalAlpha = 1;
+
+    let y = y0 + pad + chipH / 2;
+    for (const row of rows) {
+      let x = x0 + pad;
+      for (const it of row) {
+        const kw = c.measureText(it.k).width;
+        const chipW = Math.ceil(kw + 12);
+        c.fillStyle = 'rgba(124,245,255,.16)';
+        this.rr(c, x, y - chipH / 2, chipW, chipH, 6);
+        c.fill();
+        c.fillStyle = '#7cf5ff';
+        c.fillText(it.k, x + 6, y + 1);
+        c.fillStyle = 'rgba(232,240,255,.85)';
+        c.fillText(it.lab, x + chipW + 4, y + 1);
+        const lw = c.measureText(it.lab).width;
+        x += chipW + lw + 14;
+      }
+      y += rowH;
     }
     c.restore();
   }

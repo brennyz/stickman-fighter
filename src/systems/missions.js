@@ -2566,26 +2566,28 @@ function adventureIslandHintLine() {
 
 /** Eerste-minuut regel per modus — gedeeld door HUD-hint, Tips-scherm en help-chips. */
 function modeFirstMinuteLine(mode) {
-  const touch = IS_TOUCH;
-  const key = 'ui.firstMinute' + (mode ? mode.charAt(0).toUpperCase() + mode.slice(1) : 'Adventure');
+  const touch = typeof useTouchFightPads === 'function' ? useTouchFightPads() : IS_TOUCH;
+  const base = 'ui.firstMinute' + (mode ? mode.charAt(0).toUpperCase() + mode.slice(1) : 'Adventure');
+  const key = touch ? base : base + 'Kb';
   const localized = typeof t === 'function' ? t(key) : '';
   if (localized && localized !== key) return localized;
+  // Fallback if Kb key missing: try base touch key only on touch
+  if (!touch) {
+    const lines = {
+      adventure: 'Eerste minuut: A/D lopen · W springen · J/K/L · U jutsu · Shift subst',
+      training: 'Eerste minuut: ontwijk lasers · Shift = substitutie · chakra vol → U',
+      wall: '60s · combo-milestones · A/D · J/K/L · record-tempo in HUD',
+      versus: 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
+      coinrun: 'Munten pakken · W/↑ hoger mikken · J/K shuriken · max 3 snel',
+    };
+    return lines[mode] || lines.adventure;
+  }
   const lines = {
-    adventure: touch
-      ? 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol chakra = SUPER'
-      : 'Eerste minuut: A/D · J/K/L · mik omhoog op vliegers · chakra vol → U',
-    training: touch
-      ? 'Eerste minuut: ontwijk rode laser · blokkeer dichtbij · chakra vol → SUPER'
-      : 'Eerste minuut: ontwijk lasers · Shift = substitutie · chakra vol → U',
-    wall: touch
-      ? '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD'
-      : '60s · combo-milestones · voor/achter record-tempo · 5s countdown',
-    versus: touch
-      ? 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best'
-      : 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
-    coinrun: touch
-      ? '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel'
-      : 'Munten pakken · joy ↑ = hoger mikken · max 3 shuriken snel',
+    adventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol chakra = SUPER',
+    training: 'Eerste minuut: ontwijk rode laser · blokkeer dichtbij · chakra vol → SUPER',
+    wall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
+    versus: 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best',
+    coinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
   };
   return lines[mode] || lines.adventure;
 }
