@@ -115,6 +115,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-08-07 | — | **Summons polish:** reward rarity-tint in kist, per-pull BGM, Open kist CTA + stage-tap, video 90% + watermark crop. v1.18.130 / SW v340. |
 | 2026-08-07 | **merge** | Loose ends LIVE: hub coin innerHTML (#220) + island SVGs (#227) + Satan stall-boss/heat (#206) · v1.18.129 / SW v339. |
 | 2026-08-07 | **1** | Combat c6: adventure counter-hit gold confirm ring + haptic(9) + 26ms freeze; training/versus counter ring parity. v1.18.128 / SW v338. |
 | 2026-07-27 | **4** | Avontuur c6: wave-pip trait-kleuren (alle 8 traits), next-wave preview via waveTraitBanner, stageAlly HUD op hy-stack, level-grid ★☆ slots, spawn funnel vanaf 2 vijanden. v1.18.127 / SW v337. |

@@ -821,9 +821,53 @@
     gap: clamp(8px, 1.5vw, 12px);
     width: 100%;
     margin: 0;
+    position: sticky;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    z-index: 6;
   }
-  .summon-pull-btn { width: 100%; min-width: 0; }
-  .summon-pull-btn:disabled { opacity: .45; filter: grayscale(.35); }
+  .summon-pull-btn {
+    width: 100%;
+    min-width: 0;
+    min-height: 58px;
+    justify-content: center;
+    background: linear-gradient(180deg, #ffd75e 0%, #e8a820 55%, #c97a20 100%);
+    border: 2px solid rgba(255,255,255,.22);
+    color: #1a1208;
+    box-shadow: 0 6px 0 #7a4a10, 0 10px 22px rgba(0,0,0,.35);
+    font-weight: 900;
+    letter-spacing: .02em;
+  }
+  .summon-pull-btn .ico { filter: none; }
+  .summon-pull-btn div { color: #1a1208; }
+  .summon-pull-btn small { color: rgba(26,18,8,.72); font-weight: 800; }
+  .summon-pull-btn:disabled { opacity: .45; filter: grayscale(.35); box-shadow: none; }
+  .summon-pull-btn:not(:disabled):active {
+    transform: translateY(3px);
+    box-shadow: 0 3px 0 #7a4a10, 0 6px 14px rgba(0,0,0,.3);
+  }
+  .summon-stage.is-pullable { cursor: pointer; }
+  .summon-stage.is-pullable:focus-visible {
+    outline: 2px solid rgba(255,215,94,.75);
+    outline-offset: 3px;
+  }
+  .summon-stage-hint {
+    position: absolute;
+    left: 50%;
+    bottom: 10px;
+    transform: translateX(-50%);
+    z-index: 3;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: clamp(11px, 2.8vw, 13px);
+    font-weight: 800;
+    color: #ffd75e;
+    background: rgba(0,0,0,.42);
+    border: 1px solid rgba(255,215,94,.28);
+    pointer-events: none;
+    letter-spacing: .03em;
+  }
+  .summon-screen.is-pulling .summon-stage-hint { display: none; }
+  .summon-stage:not(.is-pullable) .summon-stage-hint { display: none; }
 
   /* Immersive fullscreen reveal while pulling */
   .summon-screen.is-pulling {
@@ -879,23 +923,32 @@
   .summon-screen.is-pulling .summon-center-card {
     width: min(62%, 260px);
   }
-  /* True edge-to-edge when the real Gemini video is playing */
+  /* ~90% stage + zoom-crop so Gemini watermark (bottom-right) stays off-frame */
   .summon-screen.is-pulling.has-video .summon-reveal {
     padding: 0;
-    background: #000;
+    background: #05070c;
   }
   .summon-screen.is-pulling.has-video .summon-stage {
-    width: 100%;
-    height: 100%;
-    max-height: none;
+    width: 90vw;
+    height: 90vh;
+    max-width: 90%;
+    max-height: 90%;
     aspect-ratio: auto;
-    border-radius: 0;
-    border: none;
-    box-shadow: none;
+    border-radius: 10px;
+    border: 1px solid rgba(255,215,94,.18);
+    box-shadow: 0 16px 48px rgba(0,0,0,.55);
+    overflow: hidden;
   }
   .summon-screen.is-pulling.has-video .summon-video {
+    /* 100/0.9 ≈ 111.12% — show 90% of the frame, crop bottom-right watermark */
+    width: 111.12%;
+    height: 111.12%;
+    left: 0;
+    top: 0;
+    right: auto;
+    bottom: auto;
     object-fit: cover;
-    object-position: center center;
+    object-position: left top;
   }
   .summon-screen.is-pulling.has-video .summon-reveal-text {
     position: absolute;
@@ -1073,7 +1126,7 @@
   }
   .summon-center-card {
     position: absolute;
-    left: 50%; top: 50%;
+    left: 50%; top: 58%;
     width: min(58%, 220px);
     transform: translate(-50%, -50%) scale(.86);
     opacity: 0;
@@ -1081,32 +1134,58 @@
     z-index: 4;
     padding: clamp(10px, 2.2vw, 14px) clamp(8px, 2vw, 12px) clamp(12px, 2.4vw, 16px);
     border-radius: 12px;
+    /* Soft rarity-tinted glass — sits “in” the chest instead of a hard dark slab */
     background:
-      linear-gradient(180deg, rgba(22,28,44,.95), rgba(8,10,18,.96));
-    border: 2px solid rgba(255,215,94,.5);
+      linear-gradient(180deg, rgba(157,177,227,.38), rgba(12,16,28,.48));
+    border: 2px solid rgba(157,177,227,.45);
     box-shadow:
-      0 12px 32px rgba(0,0,0,.55),
-      0 0 0 1px rgba(255,255,255,.06) inset;
-    transition: opacity .45s ease, transform .45s cubic-bezier(.2,1.1,.3,1);
+      0 10px 28px rgba(0,0,0,.4),
+      0 0 0 1px rgba(255,255,255,.05) inset;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    transition: opacity .45s ease, transform .45s cubic-bezier(.2,1.1,.3,1),
+      background .35s ease, border-color .35s ease, box-shadow .35s ease;
   }
   .summon-reveal.is-card-show .summon-center-card {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, -42%) scale(1);
   }
-  .summon-reveal.is-nice .summon-center-card,
+  .summon-reveal[data-rarity="common"] .summon-center-card {
+    background: linear-gradient(180deg, rgba(157,177,227,.36), rgba(14,18,30,.46));
+    border-color: rgba(157,177,227,.5);
+  }
+  .summon-reveal[data-rarity="uncommon"] .summon-center-card {
+    background: linear-gradient(180deg, rgba(90,208,106,.36), rgba(10,22,14,.46));
+    border-color: rgba(90,208,106,.55);
+  }
+  .summon-reveal[data-rarity="rare"] .summon-center-card {
+    background: linear-gradient(180deg, rgba(74,159,255,.38), rgba(8,16,32,.48));
+    border-color: rgba(74,159,255,.55);
+  }
+  .summon-reveal[data-rarity="epic"] .summon-center-card {
+    background: linear-gradient(180deg, rgba(176,106,224,.4), rgba(18,10,28,.5));
+    border-color: rgba(176,106,224,.6);
+  }
   .summon-reveal[data-rarity="legendary"] .summon-center-card,
-  .summon-reveal[data-rarity="mythic"] .summon-center-card {
-    border-color: rgba(255,215,94,.85);
+  .summon-reveal[data-rarity="mythic"] .summon-center-card,
+  .summon-reveal.is-nice .summon-center-card {
+    background: linear-gradient(180deg, rgba(255,215,94,.42), rgba(28,18,8,.5));
+    border-color: rgba(255,215,94,.78);
     box-shadow:
-      0 12px 36px rgba(0,0,0,.55),
-      0 0 28px rgba(255,215,94,.28),
-      0 0 0 1px rgba(255,255,255,.08) inset;
+      0 10px 28px rgba(0,0,0,.4),
+      0 0 22px rgba(255,215,94,.22),
+      0 0 0 1px rgba(255,255,255,.06) inset;
+  }
+  .summon-reveal[data-rarity="mythic"] .summon-center-card {
+    background: linear-gradient(180deg, rgba(255,107,157,.42), rgba(28,10,18,.5));
+    border-color: rgba(255,107,157,.75);
   }
   .summon-card-canvas {
     display: block;
     width: clamp(84px, 22vw, 112px);
     height: clamp(84px, 22vw, 112px);
     margin: 0 auto 6px;
+    border-radius: 10px;
   }
   .summon-card-name {
     font-size: clamp(13px, 3.4vw, 16px);

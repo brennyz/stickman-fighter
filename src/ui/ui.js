@@ -1896,7 +1896,24 @@ const UI = {
       const pullBtn = document.getElementById('btnChestPull');
       const pullLbl = document.getElementById('chestPullLbl');
       if (pullLbl) pullLbl.textContent = left > 0 ? `${left} over` : 'Op';
-      if (pullBtn) pullBtn.disabled = left <= 0 || !!this._chestPullBusy;
+      if (pullBtn) {
+        pullBtn.disabled = left <= 0 || !!this._chestPullBusy;
+        pullBtn.setAttribute('aria-label', left > 0
+          ? `Open kist, ${left} over`
+          : 'Geen summons meer vandaag');
+      }
+      const stage = document.getElementById('summonStage');
+      if (stage) {
+        const canPull = left > 0 && !this._chestPullBusy;
+        stage.classList.toggle('is-pullable', canPull);
+        stage.setAttribute('aria-disabled', canPull ? 'false' : 'true');
+        stage.setAttribute('aria-label', canPull
+          ? `Open kist, ${left} over`
+          : (left <= 0 ? 'Geen summons meer vandaag' : 'Kist opent…'));
+        stage.tabIndex = canPull ? 0 : -1;
+      }
+      const hint = document.getElementById('summonStageHint');
+      if (hint) hint.style.display = (left > 0 && !this._chestPullBusy) ? '' : 'none';
 
       const logEl = document.getElementById('summonLog');
       if (logEl) {
@@ -1945,6 +1962,7 @@ const UI = {
         try { vid.pause(); } catch (_) {}
       }
     } catch (_) {}
+    try { if (typeof endSummonBgm === 'function') endSummonBgm(); } catch (_) {}
   },
 
   /** Open summons hub — never mid-fight (blue-screen guard). */
@@ -1989,6 +2007,35 @@ const UI = {
     cc.clearRect(0, 0, W, H);
     const rarId = typeof chestResultRarityId === 'function' ? chestResultRarityId(res) : 'common';
     const rar = typeof rarityOf === 'function' ? rarityOf(rarId) : { color: '#9db1e3', name: rarId };
+    // Reward art sits on the same rarity-tinted back as the card shell
+    try {
+      const pad = 6;
+      const rr = 14;
+      const x = pad, y = pad, w = W - pad * 2, h = H - pad * 2;
+      cc.save();
+      cc.beginPath();
+      if (typeof cc.roundRect === 'function') cc.roundRect(x, y, w, h, rr);
+      else {
+        cc.moveTo(x + rr, y);
+        cc.arcTo(x + w, y, x + w, y + h, rr);
+        cc.arcTo(x + w, y + h, x, y + h, rr);
+        cc.arcTo(x, y + h, x, y, rr);
+        cc.arcTo(x, y, x + w, y, rr);
+        cc.closePath();
+      }
+      const g = cc.createLinearGradient(0, y, 0, y + h);
+      const col = rar.color || '#9db1e3';
+      g.addColorStop(0, col);
+      g.addColorStop(1, 'rgba(8,10,18,0.55)');
+      cc.globalAlpha = 0.55;
+      cc.fillStyle = g;
+      cc.fill();
+      cc.globalAlpha = 0.85;
+      cc.strokeStyle = col;
+      cc.lineWidth = 2;
+      cc.stroke();
+      cc.restore();
+    } catch (_) {}
     let title = '…';
     let skill = '';
     try {
@@ -2096,6 +2143,7 @@ const UI = {
       reveal.classList.add('is-shake');
     }
     this.paintSummonCenterCard(res);
+    try { if (typeof playSummonBgm === 'function') playSummonBgm(rarId); } catch (_) {}
 
     const startTimers = (totalMs) => {
       const cardAt = typeof summonRevealCardDelayMs === 'function'
@@ -2114,6 +2162,7 @@ const UI = {
             sc.classList.remove('has-video');
           }
         } catch (_) {}
+        try { if (typeof endSummonBgm === 'function') endSummonBgm(); } catch (_) {}
         try { this.renderSummon(); } catch (_) {}
       }, totalMs || SUMMON_REVEAL_TOTAL_MS);
     };

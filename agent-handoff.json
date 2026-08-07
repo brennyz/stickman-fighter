@@ -13,19 +13,27 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.129",
-    "swCache": "stickfighter-app-v339",
-    "gameJsQuery": "game.js?v=339",
-    "cssQuery": "styles/main.css?v=339",
-    "featureBranch": "main",
+    "appVersion": "1.18.130",
+    "swCache": "stickfighter-app-v340",
+    "gameJsQuery": "game.js?v=340",
+    "cssQuery": "styles/main.css?v=340",
+    "featureBranch": "cursor/summon-polish-c62d",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "Loose ends LIVE: hub coin HTML + island SVGs + Satan stall-boss · v1.18.129",
-    "updated": "2026-08-07T12:17:20Z"
+    "note": "Summon polish: rarity card-in-chest, per-pull BGM, Open kist CTA, 90% video crop watermark · v1.18.130",
+    "updated": "2026-08-07T12:28:07Z"
   },
   "userWishlist": [
+    {
+      "id": "w-20260807T122300",
+      "from": "user",
+      "text": "Summon polish: reward zelfde achterkant/kleur als kaart of meer in kist; muziek per kist anders; summon knop handiger; video 90% om watermark rechtsonder te verbergen",
+      "status": "done-in-code",
+      "updated": "2026-08-07",
+      "notes": "v1.18.130 — rarity tinted reward card, summon BGM rotate, Open kist + stage tap, video 90%/111% crop"
+    },
     {
       "id": "w-20260807T120900",
       "from": "user",

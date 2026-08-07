@@ -217,6 +217,21 @@ bindPress(document.getElementById('btnChestPull'), () => {
   AudioSys.init();
   UI.doChestPull('random');
 });
+bindPress(document.getElementById('summonStage'), () => {
+  const stage = document.getElementById('summonStage');
+  if (!stage || !stage.classList.contains('is-pullable')) return;
+  if (UI._chestPullBusy) return;
+  AudioSys.init();
+  UI.doChestPull('random');
+});
+document.getElementById('summonStage')?.addEventListener('keydown', (ev) => {
+  if (ev.key !== 'Enter' && ev.key !== ' ') return;
+  const stage = document.getElementById('summonStage');
+  if (!stage || !stage.classList.contains('is-pullable')) return;
+  ev.preventDefault();
+  AudioSys.init();
+  UI.doChestPull('random');
+});
 bindPress(document.getElementById('btnSummonGotoWeapons'), () => {
   AudioSys.init(); AudioSys.sfx('select');
   if (state === 'play' && game) return;
