@@ -1,0 +1,11 @@
+{
+  "appId": "com.brennyz.stickmanfighter",
+  "appName": "Stickman Fighter",
+  "webDir": "native/ios/www",
+  "ios": {
+    "contentInset": "automatic",
+    "preferredContentMode": "mobile",
+    "scheme": "Stickman Fighter"
+  },
+  "_comment": "Option B — Local www copy (no server.url). Preferred for App Store: bundle PWA into native/ios/www then npx cap sync ios."
+}

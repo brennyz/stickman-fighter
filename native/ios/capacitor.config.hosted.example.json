@@ -1,0 +1,16 @@
+{
+  "appId": "com.brennyz.stickmanfighter",
+  "appName": "Stickman Fighter",
+  "webDir": "native/ios/www",
+  "server": {
+    "url": "https://brennyz.github.io/stickman-fighter/",
+    "cleartext": false,
+    "allowNavigation": ["brennyz.github.io"]
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "preferredContentMode": "mobile",
+    "scheme": "Stickman Fighter"
+  },
+  "_comment": "Option A — Hosted URL. For internal/debug. Prefer www example for App Store (Guideline 4.2)."
+}

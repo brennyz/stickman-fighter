@@ -1,0 +1,3 @@
+# Bundled PWA placeholder for Capacitor Option B (webDir).
+# Sync steps (later, on Mac): copy built index/game.js/assets here → npx cap sync ios
+# Do not commit certificates or App Store Connect keys.

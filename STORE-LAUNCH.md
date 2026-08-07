@@ -12,7 +12,7 @@
 |-----|--------|----------|
 | A. Soft live (PWA delen) | ~80% | Privacy page, echte device QA, onboarding |
 | B. Google Play | ~10% | TWA/Capacitor, Play Console, listing, rating |
-| C. Apple App Store | ~5% | Developer account, native shell, Guideline 4.2 |
+| C. Apple App Store | ~15% | Developer account (C1); shell stubs + 4.2 notes done (C2–C3) |
 
 ---
 
@@ -50,8 +50,8 @@
 | # | Taak | Owner / agent | Status |
 |---|------|---------------|--------|
 | C1 | Apple Developer Program (€99/jaar) | human | pending |
-| C2 | Capacitor iOS shell + bundle id | cloud: ios-shell | pending |
-| C3 | Guideline **4.2** mitigatie: native extras (haptics bridge, Game Center later, offline pack) | cloud: ios-shell | pending |
+| C2 | Capacitor iOS shell + bundle id | cloud: ios-shell | **done** — stubs in `native/ios/` · bundle id `com.brennyz.stickmanfighter` · hosted URL + www options |
+| C3 | Guideline **4.2** mitigatie: native extras (haptics bridge, Game Center later, offline pack) | cloud: ios-shell | **done** — see `native/ios/GUIDELINE-4.2.md` (haptics, offline pack, GC optional) |
 | C4 | Privacy Nutrition Labels draft | cloud: soft-legal | pending |
 | C5 | Screenshots iPhone + iPad landscape | cloud: store-listing | pending |
 | C6 | Review notes + demo account (n.v.t. als geen login) | cloud: store-listing | pending |
