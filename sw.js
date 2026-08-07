@@ -1,5 +1,5 @@
 /* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 5 */
-const CACHE = 'stickfighter-app-v343';
+const CACHE = 'stickfighter-app-v344';
 
 
 
@@ -11,6 +11,7 @@ const ASSETS = [
   './android.html',
   './speel.html',
   './404.html',
+  './privacy.html',
   './game.js',
   './styles/main.css',
   './tunnel-check.js',
@@ -149,6 +150,7 @@ function isNetworkFirstPath(pathname) {
     p.endsWith('/android.html') ||
     p.endsWith('/speel.html') ||
     p.endsWith('/404.html') ||
+    p.endsWith('/privacy.html') ||
     p.endsWith('/game.js') ||
     p.endsWith('/styles/main.css') ||
     p.endsWith('/tunnel-check.js') ||
@@ -232,6 +234,7 @@ self.addEventListener('fetch', (event) => {
               else if (path.endsWith('/speel.html')) await c.put('./speel.html', forCanon);
               else if (path.endsWith('/ipad.html')) await c.put('./ipad.html', forCanon);
               else if (path.endsWith('/android.html')) await c.put('./android.html', forCanon);
+              else if (path.endsWith('/privacy.html')) await c.put('./privacy.html', forCanon);
               else if (path.endsWith('/index.html') || /\/stickman-fighter\/?$/.test(path) || path.endsWith('/')) {
                 await c.put('./index.html', forCanon);
               }

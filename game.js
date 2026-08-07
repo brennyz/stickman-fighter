@@ -274,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.133';
+const APP_VERSION = '1.18.134';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 343;
+const SW_CACHE_REV = 344;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1817,6 +1817,9 @@ const I18N = {
       importSaveFile: 'Bestand kiezen',
       savePortDesc: 'Export kopieert JSON (clipboard + download). Import: kies een exportbestand of plak JSON — 1× Import = preview, 2× = toepassen.',
       savePortPlaceholder: 'Plak JSON of kies een exportbestand (.json) — meta.key stickfighter_save_v1 · 2× Import om te laden',
+      privacy: 'Privacy',
+      ageHint: 'Cartoon-gevecht · tiener+ · geen chat',
+      installAge: 'Cartoon-stickman gevechten · aanbevolen tiener+ · geen chat.',
       langChanged: 'Taal: {lang}',
     },
     missions: { title: 'Missies & prestaties', sub: '3 lichte dagmissies · claim XP wanneer klaar',
@@ -1903,6 +1906,9 @@ const I18N = {
       importSaveFile: 'Choose file',
       savePortDesc: 'Export copies JSON (clipboard + download). Import: pick an export file or paste JSON — 1× Import = preview, 2× = apply.',
       savePortPlaceholder: 'Paste JSON or choose an export file (.json) — meta.key stickfighter_save_v1 · tap Import twice to load',
+      privacy: 'Privacy',
+      ageHint: 'Cartoon combat · teens+ · no chat',
+      installAge: 'Cartoon stickman combat · teens+ recommended · no chat.',
       langChanged: 'Language: {lang}',
     },
     missions: { title: 'Missions & achievements', sub: '3 light daily missions · claim XP when done',
@@ -1978,6 +1984,9 @@ const I18N = {
       importSaveFile: 'Datei wählen',
       savePortDesc: 'Export kopiert JSON (Zwischenablage + Download). Import: Datei wählen oder JSON einfügen — 1× Import = Vorschau, 2× = anwenden.',
       savePortPlaceholder: 'JSON einfügen oder Exportdatei (.json) wählen — meta.key stickfighter_save_v1 · 2× Import zum Laden',
+      privacy: 'Datenschutz',
+      ageHint: 'Cartoon-Kampf · ab Teenager · kein Chat',
+      installAge: 'Cartoon-Stockfigur-Kämpfe · Teenager+ · kein Chat.',
       langChanged: 'Sprache: {lang}',
     },
     missions: { title: 'Missionen & Erfolge', sub: '3 tägliche Missionen · XP abholen',
@@ -2046,6 +2055,9 @@ const I18N = {
       importSaveFile: 'Choisir fichier',
       savePortDesc: 'Export copie le JSON (presse-papiers + téléchargement). Import : choisir un fichier ou coller le JSON — 1× Import = aperçu, 2× = appliquer.',
       savePortPlaceholder: 'Coller le JSON ou choisir un fichier (.json) — meta.key stickfighter_save_v1 · 2× Import pour charger',
+      privacy: 'Confidentialité',
+      ageHint: 'Combat cartoon · ados+ · pas de chat',
+      installAge: 'Combats stickman cartoon · ados+ · pas de chat.',
       langChanged: 'Langue : {lang}',
     },
     missions: { title: 'Missions & succès', sub: '3 missions quotidiennes · réclamer XP',
@@ -2114,6 +2126,9 @@ const I18N = {
       importSaveFile: 'Elegir archivo',
       savePortDesc: 'Export copia JSON (portapapeles + descarga). Import: elige un archivo o pega JSON — 1× Import = vista previa, 2× = aplicar.',
       savePortPlaceholder: 'Pega JSON o elige un archivo (.json) — meta.key stickfighter_save_v1 · 2× Import para cargar',
+      privacy: 'Privacidad',
+      ageHint: 'Combate cartoon · teens+ · sin chat',
+      installAge: 'Combates stickman cartoon · teens+ · sin chat.',
       langChanged: 'Idioma: {lang}',
     },
     missions: { title: 'Misiones y logros', sub: '3 misiones diarias · reclamar XP',
@@ -2300,6 +2315,7 @@ function applyLangStaticScreens() {
     ['btnForceFresh', 'settings.freshCache'], ['btnClearSave', 'settings.clearSave'],
     ['btnCopyLink', 'settings.copyLink'], ['btnOpenPlayLink', 'settings.openLink'],
     ['btnExportSave', 'settings.exportSave'], ['btnImportSaveFile', 'settings.importSaveFile'], ['btnImportSave', 'settings.importSave'],
+    ['btnPrivacy', 'settings.privacy'],
   ];
   for (const [id, key] of setMap) {
     const el = document.getElementById(id);
@@ -2349,6 +2365,11 @@ function applyLangStaticScreens() {
   setText('helpHead', 'help.title');
   setText('installHead', 'install.title');
   setText('installSub', 'ui.installSub');
+  setText('installAgeHint', 'settings.installAge');
+  setText('menuAgeHint', 'settings.ageHint');
+  const privMenu = document.getElementById('menuPrivacyLink');
+  if (privMenu) privMenu.textContent = t('settings.privacy');
+
 
   setText('charArenaPre', 'ui.charArenaPre');
   setText('charSelectHead', 'ui.charHead');

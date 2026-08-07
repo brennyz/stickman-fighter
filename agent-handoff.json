@@ -27,6 +27,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260807T202147",
+      "from": "user",
+      "text": "Store soft-legal: privacy policy + data-safety drafts",
+      "status": "open",
+      "updated": "2026-08-07"
+    },
+    {
       "id": "w-20260807T123500",
       "from": "user",
       "text": "Onderkant van de kist niet zien (groot PC-scherm); reward moet goed in het midden centeren",
@@ -339,6 +346,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-07T20:21:47Z",
+      "summary": "soft-legal: privacy.html, settings/menu links, age hints, Play/iOS privacy drafts (A1/A2/A7/B7/C4)"
+    },
+    {
       "at": "2026-08-07T12:37:53Z",
       "summary": "Summon framing: kist-onderkant + reward center · v1.18.131"
     },
@@ -433,10 +444,6 @@
     {
       "at": "2026-07-26T19:10:16Z",
       "summary": "Wapen-upgrades alleen bij bezit (weaponUnlockedByLevel) · v1.18.113"
-    },
-    {
-      "at": "2026-07-26T19:18:40Z",
-      "summary": "Achterstallig audio gemerged naar main · v1.18.112 LIVE"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

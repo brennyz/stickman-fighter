@@ -6,6 +6,14 @@ Ja — je kunt dit spel **als app** gebruiken, zonder App Store. Het is een **PW
 
 **Verbeteringen (agents):** lees **[AGENTS.md](./AGENTS.md)** + **[agent-handoff.json](./agent-handoff.json)** + **[IMPROVEMENT.md](./IMPROVEMENT.md)** — één gedeelde context (iPad/Mac). Kort: **[CURSOR-EEN-AGENT.txt](./CURSOR-EEN-AGENT.txt)**.
 
+## Inhoud / leeftijd (content)
+
+Cartoon-stickman **gevechten** (fantasy-geweld, geen realistisch bloed). **Geen chat.** Aanbevolen voor **tiener+ / teens+** met ouderlijk oordeel.
+
+Privacy (lokale save, geen account): **[privacy.html](./privacy.html)** — publiek na Pages: `https://brennyz.github.io/stickman-fighter/privacy.html`.
+
+Deel-link voor nieuwe spelers blijft **[speel.html](./speel.html)** (niet `ipad.html` / tunnel).
+
 ## Snelste vaste link (GitHub Pages)
 
 1. Repo op GitHub → push deze map → **Pages: GitHub Actions** aan.

@@ -10,7 +10,7 @@
 
 | Pad | Klaar? | Blockers |
 |-----|--------|----------|
-| A. Soft live (PWA delen) | ~80% | Privacy page, echte device QA, onboarding |
+| A. Soft live (PWA delen) | ~85% | Echte device QA, onboarding (privacy A1 done on soft-legal) |
 | B. Google Play | ~10% | TWA/Capacitor, Play Console, listing, rating |
 | C. Apple App Store | ~5% | Developer account, native shell, Guideline 4.2 |
 
@@ -20,13 +20,13 @@
 
 | # | Taak | Owner / agent | Status |
 |---|------|---------------|--------|
-| A1 | Privacy policy pagina (`privacy.html`) + link in settings/menu | cloud: soft-legal | pending |
-| A2 | Content/leeftijd hint (geweld stickmen, geen chat) in install + README | cloud: soft-legal | pending |
+| A1 | Privacy policy pagina (`privacy.html`) + link in settings/menu | cloud: soft-legal | done |
+| A2 | Content/leeftijd hint (geweld stickmen, geen chat) in install + README | cloud: soft-legal | done |
 | A3 | Adventure onboarding: milder wave 1 OF duidelijkere telegraphs | cloud: soft-feel | pending |
 | A4 | Checkpoint “loop rechts” cue sterker (touch + KB) | cloud: soft-feel | pending |
 | A5 | Echte device QA checklist (iPhone Safari, Android Chrome, iPad) | human + cloud: soft-feel notes | pending |
 | A6 | “Verse versie” / SW update flow 1× op echt device verifiëren | human | pending |
-| A7 | Deel-link + install copy NL/EN kloppend houden | cloud: soft-legal | pending |
+| A7 | Deel-link + install copy NL/EN kloppend houden | cloud: soft-legal | done |
 
 ---
 
@@ -40,8 +40,8 @@
 | B4 | Store listing NL/EN (korte/lange beschrijving, tags) | cloud: store-listing | pending |
 | B5 | Screenshots script (phone + tablet landscape) | cloud: store-listing | pending |
 | B6 | IARC / content rating questionnaire antwoorden (draft) | cloud: store-listing | pending |
-| B7 | Data safety form draft (localStorage save, geen account) | cloud: soft-legal | pending |
-| B8 | Privacy policy URL (moet publiek https zijn) | hangt van A1 af | pending |
+| B7 | Data safety form draft (localStorage save, geen account) | cloud: soft-legal | done (`docs/store/data-safety-play.md`) |
+| B8 | Privacy policy URL (moet publiek https zijn) | hangt van A1 merge → Pages | pending (URL ready: `…/privacy.html`) |
 
 ---
 
@@ -52,7 +52,7 @@
 | C1 | Apple Developer Program (€99/jaar) | human | pending |
 | C2 | Capacitor iOS shell + bundle id | cloud: ios-shell | pending |
 | C3 | Guideline **4.2** mitigatie: native extras (haptics bridge, Game Center later, offline pack) | cloud: ios-shell | pending |
-| C4 | Privacy Nutrition Labels draft | cloud: soft-legal | pending |
+| C4 | Privacy Nutrition Labels draft | cloud: soft-legal | done (`docs/store/privacy-nutrition-ios.md`) |
 | C5 | Screenshots iPhone + iPad landscape | cloud: store-listing | pending |
 | C6 | Review notes + demo account (n.v.t. als geen login) | cloud: store-listing | pending |
 
