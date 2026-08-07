@@ -29,25 +29,25 @@ function applySummonTier(w) {
 }
 const playerWeapon = () => applyWeaponUpgrades(applySummonTier(weaponById(save.weapon)));
 
-/** 2% per avontuur-level: zwaard → Master Sword — UIT (zorgde voor plotselinge run-breaks). */
-const MASTER_SWORD_DURATION = 15;
-const MASTER_SWORD_CHANCE = 0;
-function canMasterSwordRoll(w) {
-  if (!w || w.id === 'vuist' || w.id === 'master_sword' || isThrowWeapon(w.id)) return false;
+/** Avontuur-level: zwaard → Dawnblade — UIT (zorgde voor plotselinge run-breaks). */
+const DAWNBLADE_DURATION = 15;
+const DAWNBLADE_CHANCE = 0;
+function canDawnbladeRoll(w) {
+  if (!w || w.id === 'vuist' || w.id === 'dawnblade' || isThrowWeapon(w.id)) return false;
   const fam = weaponMoveFamily(w.id);
   return fam === 'slash' || fam === 'energy';
 }
-function buildMasterSwordWeapon(base) {
+function buildDawnbladeWeapon(base) {
   base = base || weaponById('zwaard');
   return Object.assign({}, base, {
-    id: 'master_sword',
-    name: 'Master Sword',
+    id: 'dawnblade',
+    name: 'Dawnblade',
     dmg: Math.round((base.dmg || 1.55) * 2 * 100) / 100,
     range: Math.max(96, (base.range || 58) + 38),
     speed: Math.min(1.22, (base.speed || 1) * 1.1),
     rarity: 'legendary',
-    masterSword: true,
-    desc: 'Hyrules legendarische kling — unblockable',
+    dawnblade: true,
+    desc: 'Dageraadkling — unblockable',
   });
 }
 function rollSummonChance(elite) {
@@ -83,7 +83,7 @@ const WEAPON_SWING_SFX = {
   void: 'wVoid',
   sterkling: 'wZwaard',
   guvve: 'wGuvve',
-  master_sword: 'wMaster',
+  dawnblade: 'wDawnblade',
 };
 
 const FAMILY_SWING_SFX = {
@@ -115,7 +115,7 @@ function weaponThrowSfx(id) {
 
 function weaponFinisherSfx(weaponOrId) {
   const id = typeof weaponOrId === 'string' ? weaponOrId : (weaponOrId && weaponOrId.id);
-  if (id === 'master_sword') return 'wMaster';
+  if (id === 'dawnblade') return 'wDawnblade';
   const fam = weaponMoveFamily(id);
   if (fam === 'blunt') return 'hitHeavy';
   if (fam === 'energy') return 'hitEnergy';
@@ -127,7 +127,7 @@ function weaponFinisherSfx(weaponOrId) {
 
 function weaponHitSfx(weaponOrId, dmg) {
   const id = typeof weaponOrId === 'string' ? weaponOrId : (weaponOrId && weaponOrId.id);
-  if (id === 'laser' || id === 'void' || id === 'donder' || id === 'kristal' || id === 'vlamzweep' || id === 'sterkling' || id === 'master_sword') return 'hitEnergy';
+  if (id === 'laser' || id === 'void' || id === 'donder' || id === 'kristal' || id === 'vlamzweep' || id === 'sterkling' || id === 'dawnblade') return 'hitEnergy';
   if (id === 'hamer' || id === 'knuppel' || id === 'guvve' || id === 'bostaf') return 'hitHeavy';
   if (id === 'zwaard' || id === 'ketting' || id === 'kunai' || id === 'tanto' || id === 'sai' || id === 'kama' || id === 'zeis' || id === 'drietand' || id === 'nunchaku' || id === 'tonfa' || id === 'speer') return 'hitMetal';
   if (id === 'shuriken' || id === 'fuuma') return 'hitMetal';
@@ -361,8 +361,8 @@ const WEAPON_COMBOS = {
   helgitaar: { labels: ['Riff', 'Powerchord', 'Solo-finisher'] },
   pyroeend: { labels: ['QUAK', 'Vlam-eend', 'BOOM-eend'] },
   apocalypslepel: { labels: ['Wereld-schep', 'Meteor-scoop', 'EINDE'] },
-  master_sword: {
-    labels: ['Licht-slice', 'Zwaard-dans', 'Triforce-hak'],
+  dawnblade: {
+    labels: ['Licht-slice', 'Zwaard-dans', 'Dawn-hak'],
     moves: [
       { pose: 'slash', rangeMul: 1.06, dmgMul: 1.04, kbMul: 1.06, hitY: 0, windupMul: 0.92, activeMul: 0.96 },
       { pose: 'spin', rangeMul: 1.1, dmgMul: 1.08, kbMul: 1.12, hitY: -4, windupMul: 0.98, activeMul: 1.02 },
@@ -384,7 +384,7 @@ function weaponComboSet(id) {
 }
 
 function weaponMoveFamily(id) {
-  if (id === 'master_sword') return 'slash';
+  if (id === 'dawnblade') return 'slash';
   if (isThrowWeapon(id) || id === 'vuist') return null;
   if (id === 'speer' || id === 'drietand' || id === 'bostaf' || id === 'echotrompet' || id === 'helgitaar') return 'spear';
   if (id === 'knuppel' || id === 'hamer' || id === 'tonfa' || id === 'guvve' || id === 'donder'

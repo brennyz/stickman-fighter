@@ -20,7 +20,7 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.strokeStyle = '#a67c2e'; c.lineWidth = 5; c.beginPath(); c.moveTo(4, -8); c.lineTo(4, 8); c.stroke();
       c.strokeStyle = '#6a5030'; c.lineWidth = 4; c.beginPath(); c.moveTo(-2, 0); c.lineTo(8, 0); c.stroke();
       break;
-    case 'master_sword':
+    case 'dawnblade':
       c.save();
       c.shadowColor = '#6fd7ff'; c.shadowBlur = 16;
       c.strokeStyle = '#3a9fd4'; c.lineWidth = 6; c.beginPath(); c.moveTo(6, 0); c.lineTo(64, 0); c.stroke();

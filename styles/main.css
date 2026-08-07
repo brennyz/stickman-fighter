@@ -55,7 +55,7 @@
       text-shadow: 0 4px 0 #c97a20, 0 0 28px rgba(255,180,60,.35); text-align:center;
       animation: pulse 2.8s ease-in-out infinite; }
 
-  /* —— Arcade title (Street-fighter vibe, origineel) —— */
+  /* —— Arcade title (arcade-fighter vibe, origineel) —— */
   #menuScreen.arcade-title {
     background: #06050c;
     padding: max(8px, env(safe-area-inset-top)) 12px 32px;

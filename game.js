@@ -274,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.133';
+const APP_VERSION = '1.18.134';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 343;
+const SW_CACHE_REV = 344;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1507,6 +1507,23 @@ function sanitizeSave(s) {
       if (diffId) out.lastPlay.difficulty = diffId;
     }
   } else out.lastPlay = null;
+  // IP rename: master_sword → dawnblade (easter-egg blade; catalog falls back to zwaard)
+  if (out.weapon === 'master_sword' || out.weapon === 'dawnblade') out.weapon = 'zwaard';
+  const renameWeaponKey = (bag) => {
+    if (!bag || typeof bag !== 'object') return bag || {};
+    if (bag.master_sword != null && bag.dawnblade == null) {
+      bag.dawnblade = bag.master_sword;
+    }
+    if ('master_sword' in bag) delete bag.master_sword;
+    return bag;
+  };
+  out.summons = renameWeaponKey(Object.assign({}, out.summons || {}));
+  out.chestWeapons = renameWeaponKey(Object.assign({}, out.chestWeapons || {}));
+  out.weaponMastery = renameWeaponKey(Object.assign({}, out.weaponMastery || {}));
+  if (out.itemUpgrades && typeof out.itemUpgrades === 'object' && out.itemUpgrades.weapon) {
+    out.itemUpgrades.weapon = renameWeaponKey(Object.assign({}, out.itemUpgrades.weapon));
+  }
+
   if (!WEAPONS.some(w => w.id === out.weapon)) out.weapon = 'vuist';
 
   // Zone-wapens (Nachtmerrie / Hel drops)
@@ -2787,7 +2804,7 @@ const ACHIEVEMENTS = [
     test: s => (s.vsPlayedIds || []).length >= 10 },
   { id: 'saga_icons', name: 'Saga-legends', desc: 'Speel 2P met alle 7 legend picks',
     test: s => {
-      const need = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
+      const need = ['arcade_flair', 'arcade_rush', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
       const played = s.vsPlayedIds || [];
       return need.every(id => played.includes(id));
     } },
@@ -3170,7 +3187,7 @@ function achievementProgressFrac(ach) {
     case 'vsFatality1': return Math.min(s.stats.vsFatalities || 0, 1);
     case 'vs_roster': return Math.min((s.vsPlayedIds || []).length, 10) / 10;
     case 'saga_icons': {
-      const need = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
+      const need = ['arcade_flair', 'arcade_rush', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
       const played = s.vsPlayedIds || [];
       return need.filter(id => played.includes(id)).length / need.length;
     }
@@ -3211,7 +3228,7 @@ function achievementProgressHint(ach) {
     case 'vsFatality1': return `${Math.min(s.stats.vsFatalities || 0, 1)}/1 fatality`;
     case 'vs_roster': return `${(s.vsPlayedIds || []).length}/10 vechters gespeeld`;
     case 'saga_icons': {
-      const need = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
+      const need = ['arcade_flair', 'arcade_rush', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
       const played = s.vsPlayedIds || [];
       const n = need.filter(id => played.includes(id)).length;
       return `${n}/7 legends in 2P`;
@@ -6242,7 +6259,7 @@ function itemUpgradeIdValid(cat, id) {
 
 function weaponUpgradeEligible(w) {
   // Alleen wapens die je echt bezit (character-unlock óf zone-drop), nooit “alleen Lv-getal”.
-  if (!w || !w.id || w.id === 'vuist' || w.id === 'master_sword') return false;
+  if (!w || !w.id || w.id === 'vuist' || w.id === 'dawnblade') return false;
   if (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) return false;
   // Zone-drops: ownership-only — character-level mag nooit genoeg zijn.
   if (w.dropZone) {
@@ -6274,7 +6291,7 @@ function itemUpgradePersistable(cat, id) {
   if (!itemUpgradeIdValid(cat, id)) return false;
   if (cat === 'weapon') {
     const w = WEAPONS.find((x) => x.id === id);
-    if (!w || w.id === 'vuist' || w.id === 'master_sword' || isThrowWeapon(w.id)) return false;
+    if (!w || w.id === 'vuist' || w.id === 'dawnblade' || isThrowWeapon(w.id)) return false;
   }
   return true;
 }
@@ -6766,25 +6783,25 @@ function applySummonTier(w) {
 }
 const playerWeapon = () => applyWeaponUpgrades(applySummonTier(weaponById(save.weapon)));
 
-/** 2% per avontuur-level: zwaard → Master Sword — UIT (zorgde voor plotselinge run-breaks). */
-const MASTER_SWORD_DURATION = 15;
-const MASTER_SWORD_CHANCE = 0;
-function canMasterSwordRoll(w) {
-  if (!w || w.id === 'vuist' || w.id === 'master_sword' || isThrowWeapon(w.id)) return false;
+/** Avontuur-level: zwaard → Dawnblade — UIT (zorgde voor plotselinge run-breaks). */
+const DAWNBLADE_DURATION = 15;
+const DAWNBLADE_CHANCE = 0;
+function canDawnbladeRoll(w) {
+  if (!w || w.id === 'vuist' || w.id === 'dawnblade' || isThrowWeapon(w.id)) return false;
   const fam = weaponMoveFamily(w.id);
   return fam === 'slash' || fam === 'energy';
 }
-function buildMasterSwordWeapon(base) {
+function buildDawnbladeWeapon(base) {
   base = base || weaponById('zwaard');
   return Object.assign({}, base, {
-    id: 'master_sword',
-    name: 'Master Sword',
+    id: 'dawnblade',
+    name: 'Dawnblade',
     dmg: Math.round((base.dmg || 1.55) * 2 * 100) / 100,
     range: Math.max(96, (base.range || 58) + 38),
     speed: Math.min(1.22, (base.speed || 1) * 1.1),
     rarity: 'legendary',
-    masterSword: true,
-    desc: 'Hyrules legendarische kling — unblockable',
+    dawnblade: true,
+    desc: 'Dageraadkling — unblockable',
   });
 }
 function rollSummonChance(elite) {
@@ -6820,7 +6837,7 @@ const WEAPON_SWING_SFX = {
   void: 'wVoid',
   sterkling: 'wZwaard',
   guvve: 'wGuvve',
-  master_sword: 'wMaster',
+  dawnblade: 'wDawnblade',
 };
 
 const FAMILY_SWING_SFX = {
@@ -6852,7 +6869,7 @@ function weaponThrowSfx(id) {
 
 function weaponFinisherSfx(weaponOrId) {
   const id = typeof weaponOrId === 'string' ? weaponOrId : (weaponOrId && weaponOrId.id);
-  if (id === 'master_sword') return 'wMaster';
+  if (id === 'dawnblade') return 'wDawnblade';
   const fam = weaponMoveFamily(id);
   if (fam === 'blunt') return 'hitHeavy';
   if (fam === 'energy') return 'hitEnergy';
@@ -6864,7 +6881,7 @@ function weaponFinisherSfx(weaponOrId) {
 
 function weaponHitSfx(weaponOrId, dmg) {
   const id = typeof weaponOrId === 'string' ? weaponOrId : (weaponOrId && weaponOrId.id);
-  if (id === 'laser' || id === 'void' || id === 'donder' || id === 'kristal' || id === 'vlamzweep' || id === 'sterkling' || id === 'master_sword') return 'hitEnergy';
+  if (id === 'laser' || id === 'void' || id === 'donder' || id === 'kristal' || id === 'vlamzweep' || id === 'sterkling' || id === 'dawnblade') return 'hitEnergy';
   if (id === 'hamer' || id === 'knuppel' || id === 'guvve' || id === 'bostaf') return 'hitHeavy';
   if (id === 'zwaard' || id === 'ketting' || id === 'kunai' || id === 'tanto' || id === 'sai' || id === 'kama' || id === 'zeis' || id === 'drietand' || id === 'nunchaku' || id === 'tonfa' || id === 'speer') return 'hitMetal';
   if (id === 'shuriken' || id === 'fuuma') return 'hitMetal';
@@ -7098,8 +7115,8 @@ const WEAPON_COMBOS = {
   helgitaar: { labels: ['Riff', 'Powerchord', 'Solo-finisher'] },
   pyroeend: { labels: ['QUAK', 'Vlam-eend', 'BOOM-eend'] },
   apocalypslepel: { labels: ['Wereld-schep', 'Meteor-scoop', 'EINDE'] },
-  master_sword: {
-    labels: ['Licht-slice', 'Zwaard-dans', 'Triforce-hak'],
+  dawnblade: {
+    labels: ['Licht-slice', 'Zwaard-dans', 'Dawn-hak'],
     moves: [
       { pose: 'slash', rangeMul: 1.06, dmgMul: 1.04, kbMul: 1.06, hitY: 0, windupMul: 0.92, activeMul: 0.96 },
       { pose: 'spin', rangeMul: 1.1, dmgMul: 1.08, kbMul: 1.12, hitY: -4, windupMul: 0.98, activeMul: 1.02 },
@@ -7121,7 +7138,7 @@ function weaponComboSet(id) {
 }
 
 function weaponMoveFamily(id) {
-  if (id === 'master_sword') return 'slash';
+  if (id === 'dawnblade') return 'slash';
   if (isThrowWeapon(id) || id === 'vuist') return null;
   if (id === 'speer' || id === 'drietand' || id === 'bostaf' || id === 'echotrompet' || id === 'helgitaar') return 'spear';
   if (id === 'knuppel' || id === 'hamer' || id === 'tonfa' || id === 'guvve' || id === 'donder'
@@ -8722,7 +8739,7 @@ function drawSuperIcon(c, icon, r, color, color2) {
 /** Saga-hints: parodie-vibes, geen officiële manga/IP-namen. */
 const VS_SAGAS = {
   all: { id: 'all', label: 'Alle', blurb: 'Alle 20 vechters — kies P1, dan P2.' },
-  fighter: { id: 'fighter', label: 'Street', blurb: 'Ryu & Ken — classic white/red gi duel.' },
+  fighter: { id: 'fighter', label: 'Arcade Flair', blurb: 'Arcade Flair & Arcade Rush — classic white/red gi duel.' },
   ki: { id: 'ki', label: 'Ki', blurb: 'Ki-golven & power spikes — Goku vibes.' },
   scroll: { id: 'scroll', label: 'Scroll', blurb: 'Ninja & demon fox — headband hints.' },
   tide: { id: 'tide', label: 'Tide', blurb: 'Reach & crew — rubber stretch slagen.' },
@@ -8739,15 +8756,16 @@ function sagaIconSvg(id) {
 function rosterFlair(r) { return r.flair || r.tag; }
 
 /** Featured legends — snel kiezen bovenaan character select. */
-const VS_FEATURED_IDS = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
+const VS_FEATURED_IDS = ['arcade_flair', 'arcade_rush', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
 const SAGA_ICON_IDS = VS_FEATURED_IDS;
 const VS_ROSTER_MAX = 20;
 const VS_ROSTER_MIGRATE = {
   kiball: 'goku', scrollkid: 'aruskankou', zipcape: 'onepunchman', tidecrew: 'rubber',
   dawnlance: 'lance', spikyki: 'goku', bandana: 'aruskankou', hero: 'stick',
+  ryu: 'arcade_flair', ken: 'arcade_rush', whitegi: 'arcade_flair', redgi: 'arcade_rush',
 };
 function migrateVsRosterId(id) {
-  if (!id || typeof id !== 'string') return 'ryu';
+  if (!id || typeof id !== 'string') return 'arcade_flair';
   return VS_ROSTER_MIGRATE[id] || id;
 }
 function sagaIconEntries() {
@@ -8818,10 +8836,10 @@ function pickBalancedRandomDuo() {
 }
 
 const VS_ROSTER = [
-  { id: 'ryu', name: 'Ryu', tag: 'Street · balanced', saga: 'fighter', flair: 'White gi · hadou stance · all-round',
+  { id: 'arcade_flair', name: 'Arcade Flair', tag: 'Arcade Flair · balanced', saga: 'fighter', flair: 'White gi · energy-wave stance · all-round',
     styleId: 'classic', weapon: 'vuist', bodyColor: '#f0f0f8', gi: 'white',
     hpMul: 1, spdMul: 1, dmgMul: 1.02, crit: 0.09, critMul: 1.5, sig: 'balanced', unlock: () => true, featured: true },
-  { id: 'ken', name: 'Ken', tag: 'Street · fire kicks', saga: 'fighter', flair: 'Red gi · blazing shoryu · combo rush',
+  { id: 'arcade_rush', name: 'Arcade Rush', tag: 'Arcade Flair · fire kicks', saga: 'fighter', flair: 'Red gi · rising upper · combo rush',
     styleId: 'konoha', weapon: 'nunchaku', bodyColor: '#ff5555', gi: 'red',
     hpMul: 0.94, spdMul: 1.1, dmgMul: 1.06, crit: 0.11, critMul: 1.52, sig: 'combo', unlock: () => true, featured: true },
   { id: 'goku', name: 'Goku', tag: 'Ki · melee DPS', saga: 'ki', flair: 'Orange trainee · ki-ball rush · high STR',
@@ -8894,7 +8912,7 @@ function normalizeVsPick(id, fallback) {
   const r = vsRosterEntry(id);
   if (r.id === id && vsUnlocked(r)) return id;
   const fb = vsRosterEntry(fallback);
-  return vsUnlocked(fb) ? fallback : 'ryu';
+  return vsUnlocked(fb) ? fallback : 'arcade_flair';
 }
 function trackVsRosterUse(p1, p2) {
   if (!Array.isArray(save.vsPlayedIds)) save.vsPlayedIds = [];
@@ -9111,7 +9129,7 @@ function resetVsFighterRound(f, entry, ground, slot) {
   resetWeaponCombo(f);
 }
 
-let vsSelect = { p1: 'ryu', p2: 'ken' };
+let vsSelect = { p1: 'arcade_flair', p2: 'arcade_rush' };
 
 /** d3 c5 — korte TOT-preview voor HUD/pauze (geen dmg-tweak). */
 function vsMatchupTotShort(p1Id, p2Id) {
@@ -11070,7 +11088,7 @@ function chestWeaponSkillOf(weaponId) {
 
 function chestBaseWeaponPool() {
   return WEAPONS.filter(w =>
-    w && !w.dropZone && w.id !== 'vuist' && w.id !== 'master_sword' &&
+    w && !w.dropZone && w.id !== 'vuist' && w.id !== 'dawnblade' &&
     !(typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)));
 }
 
@@ -11355,7 +11373,7 @@ function sanitizeChestWeapons(raw) {
   if (!raw || typeof raw !== 'object') return clean;
   for (const [k, v] of Object.entries(raw)) {
     const w = typeof weaponById === 'function' ? weaponById(k) : null;
-    if (!w || w.dropZone || w.id === 'vuist' || w.id === 'master_sword') continue;
+    if (!w || w.dropZone || w.id === 'vuist' || w.id === 'dawnblade') continue;
     const entry = (v && typeof v === 'object') ? v : {};
     clean[k] = {
       skill: typeof entry.skill === 'string' ? entry.skill.slice(0, CHEST_SKILL_MAX) : undefined,
@@ -11424,7 +11442,7 @@ function seedNlGameStrings() {
     levelUp: 'LEVEL OMHOOG! Lv {lvl}',
     newWeapon: 'Nieuw wapen: {name}!',
     masterBuff: 'MEESTER-BUFF +20%',
-    masterSword: 'MASTER SWORD!',
+    dawnblade: 'DAGERAADKLING!',
     bossWave: 'BAAS-GOLF!',
     eliteWave: 'ELITE-GOLF',
     superBossWave: 'SUPER-BAAS GOLF',
@@ -11559,8 +11577,8 @@ function seedNlGameStrings() {
     wallCombo5: 'Combo ×5 · sloop +{pct}%', wallCombo8: 'Combo ×8 · sloop +{pct}%',
     wallCombo10: 'Combo ×10 · sloop +{pct}% — meester-tempo!',
     wallTempo: 'MUUR-TEMPO!', wallRecord: 'NIEUW RECORD!', bonus5: 'BONUS +5',
-    masterSwordGain: 'Hyrules legendarische kling — 15s!',
-    masterSwordFade: 'Master Sword vervaagt…',
+    dawnbladeGain: 'Dageraadkling — 15s!',
+    dawnbladeFade: 'Dageraadkling vervaagt…',
     bossWaits: 'DE BAAS WACHT…',
     bossTag: 'BAAS',
     superBossTag: 'SUPER BAAS',
@@ -11891,7 +11909,7 @@ function seedNlGameStrings() {
     charLocked: 'Locked',
     charIconRow: 'Saga-icons · deel 2 — tik om te kiezen',
     charBig5Title: 'Legends · snel kiezen',
-    charBig5Hint: 'Ryu · Ken · Goku · One Punch Man · Aruskankou · Kutjankorio · Xavi',
+    charBig5Hint: 'Arcade Flair · Arcade Rush · Goku · One Punch Man · Aruskankou · Kutjankorio · Xavi',
     charArenaPre: 'VERSUS · BEST OF 3',
     charHead: 'SELECT FIGHTER',
     charBackP1: '← Andere P1',
@@ -12126,7 +12144,7 @@ function seedNlGameStrings() {
   });
   if (!I18N.nl.hud) I18N.nl.hud = {};
   Object.assign(I18N.nl.hud, {
-    super: 'SUPER', masterShort: 'MEESTER +20%', masterSword: 'MASTER SWORD {n}s',
+    super: 'SUPER', masterShort: 'MEESTER +20%', dawnblade: 'DAGERAADKLING {n}s',
     levelWave: 'Level {n} — Golf {wv}/{total}', islandWeapon: '{name} · wapen ≤ Lv {cap}',
     part: 'deel {cur}/3', waveLine: 'Golf {n}/{total}', wavesTotal: '{total} golven',
     nextWave: 'Volgende golf', eggPet: 'Ei · {name}', petActive: 'Pet · {name}',
@@ -12430,7 +12448,7 @@ const CATALOG_EN = {
     levelStart: 'LEVEL {n}',
     levelStartDiff: '{diff} · LEVEL {n}',
     levelUp: 'LEVEL UP! Lv {lvl}', newWeapon: 'New weapon: {name}!', masterBuff: 'MASTER BUFF +20%',
-    masterSword: 'MASTER SWORD!',
+    dawnblade: 'DAWNBLADE!',
     bossWave: 'BOSS WAVE!', eliteWave: 'ELITE WAVE', superBossWave: 'SUPER-BOSS WAVE',
     bossTitle: 'BOSS',
     superBossTitle: 'SUPER BOSS',
@@ -12684,7 +12702,7 @@ const CATALOG_EN = {
     charLocked: 'Locked',
     charIconRow: 'Saga icons · part 2 — tap to pick',
     charBig5Title: 'Legends · quick pick',
-    charBig5Hint: 'Ryu · Ken · Goku · One Punch Man · Aruskankou · Kutjankorio · Xavi',
+    charBig5Hint: 'Arcade Flair · Arcade Rush · Goku · One Punch Man · Aruskankou · Kutjankorio · Xavi',
     charArenaPre: 'VERSUS · BEST OF 3',
     charHead: 'SELECT FIGHTER',
     charBackP1: '← Other P1',
@@ -13013,8 +13031,8 @@ const CATALOG_EN = {
     wallCombo5: 'Combo ×5 · smash +{pct}%', wallCombo8: 'Combo ×8 · smash +{pct}%',
     wallCombo10: 'Combo ×10 · smash +{pct}% — master tempo!',
     wallTempo: 'WALL TEMPO!', wallRecord: 'NEW RECORD!', bonus5: 'BONUS +5',
-    masterSwordGain: "Hyrule's legendary blade — 15s!",
-    masterSwordFade: 'Master Sword fades…',
+    dawnbladeGain: 'Dawnblade — 15s!',
+    dawnbladeFade: 'Dawnblade fades…',
     bossWaits: 'THE BOSS AWAITS…',
     bossTag: 'BOSS',
     superBossTag: 'SUPER BOSS',
@@ -13053,7 +13071,7 @@ const CATALOG_EN = {
     rasenganCd: 'Rasengan CD {s}s',
   },
   hud: {
-    super: 'SUPER', masterShort: 'MASTER +20%', masterSword: 'MASTER SWORD {n}s',
+    super: 'SUPER', masterShort: 'MASTER +20%', dawnblade: 'DAWNBLADE {n}s',
     levelWave: 'Level {n} — Wave {wv}/{total}', islandWeapon: '{name} · weapon ≤ Lv {cap}',
     part: 'part {cur}/3', waveLine: 'Wave {n}/{total}', wavesTotal: '{total} waves',
     nextWave: 'Next wave', eggPet: 'Egg · {name}', petActive: 'Pet · {name}',
@@ -13638,7 +13656,7 @@ const SFX_SAMPLE_MAP = {
   wKnuppel: { pack: 'impact', vol: 0.8, files: ['impactWood_heavy_001.ogg', 'impactWood_medium_002.ogg', 'impactWood_heavy_002.ogg', 'impactWood_heavy_003.ogg', 'impactWood_medium_001.ogg', 'impactWood_medium_003.ogg'] },
   wGuvve: { pack: 'impact', vol: 0.75, files: ['impactSoft_heavy_001.ogg', 'impactPlank_medium_001.ogg', 'impactSoft_heavy_002.ogg', 'impactPlank_medium_003.ogg', 'impactSoft_medium_004.ogg', 'impactWood_medium_002.ogg'] },
   wKatana: { pack: 'rpg', vol: 0.62, files: ['chop.ogg', 'drawKnife3.ogg', 'knifeSlice.ogg', 'knifeSlice2.ogg', 'drawKnife1.ogg', 'metalClick.ogg'] },
-  wMaster: { pack: 'digital', vol: 0.78, files: ['phaseJump4.ogg', 'laser8.ogg', 'highUp.ogg', 'powerUp2.ogg', 'phaseJump5.ogg', 'threeTone2.ogg', 'laser9.ogg'] },
+  wDawnblade: { pack: 'digital', vol: 0.78, files: ['phaseJump4.ogg', 'laser8.ogg', 'highUp.ogg', 'powerUp2.ogg', 'phaseJump5.ogg', 'threeTone2.ogg', 'laser9.ogg'] },
   wNunchaku: { pack: 'rpg', vol: 0.52, files: ['cloth2.ogg', 'cloth3.ogg', 'cloth4.ogg', 'cloth1.ogg', 'clothBelt.ogg', 'clothBelt2.ogg'] },
   wHamer: { pack: 'impact', vol: 0.88, files: ['impactWood_heavy_001.ogg', 'impactWood_heavy_002.ogg', 'impactWood_heavy_003.ogg', 'impactPunch_heavy_002.ogg', 'impactPunch_heavy_003.ogg', 'impactSoft_heavy_001.ogg'] },
   wKetting: { pack: 'impact', vol: 0.72, files: ['impactMetal_light_001.ogg', 'impactMetal_light_002.ogg', 'impactMetal_light_004.ogg', 'impactMetal_medium_001.ogg', 'impactMetal_medium_003.ogg', 'impactMetal_medium_004.ogg'] },
@@ -13670,7 +13688,7 @@ const SFX_SAMPLE_MAP = {
   checkpoint: { pack: 'ui', vol: 0.72, files: ['confirmation_002.ogg', 'bong_001.ogg', 'confirmation_001.ogg', 'confirmation_003.ogg', 'pluck_001.ogg', 'switch_002.ogg'] },
   bossArrive: { pack: 'impact', vol: 0.95, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_003.ogg', 'impactMetal_heavy_004.ogg', 'impactBell_heavy_004.ogg', 'impactSoft_heavy_004.ogg', 'impactGlass_heavy_004.ogg'] },
   bossWait: { pack: 'impact', vol: 0.6, files: ['impactSoft_medium_003.ogg', 'impactSoft_medium_004.ogg', 'impactWood_medium_001.ogg', 'impactSoft_heavy_001.ogg', 'impactWood_medium_003.ogg'] },
-  masterSword: { pack: 'digital', vol: 0.82, files: ['phaseJump5.ogg', 'laser8.ogg', 'highUp.ogg', 'powerUp2.ogg', 'threeTone2.ogg', 'laser9.ogg', 'pepSound5.ogg'] },
+  dawnblade: { pack: 'digital', vol: 0.82, files: ['phaseJump5.ogg', 'laser8.ogg', 'highUp.ogg', 'powerUp2.ogg', 'threeTone2.ogg', 'laser9.ogg', 'pepSound5.ogg'] },
   waveClear: { pack: 'ui', vol: 0.68, files: ['confirmation_003.ogg', 'confirmation_001.ogg', 'confirmation_002.ogg', 'bong_001.ogg', 'pluck_002.ogg', 'drop_002.ogg'] },
   hitstop: { pack: 'impact', vol: 0.45, files: ['impactGeneric_light_001.ogg', 'impactMetal_light_004.ogg', 'impactGeneric_light_003.ogg', 'impactMetal_light_001.ogg', 'impactGlass_light_001.ogg'] },
   ketsbam: { pack: 'impact', vol: 1, files: ['impactPunch_heavy_004.ogg', 'impactMetal_heavy_004.ogg', 'impactGlass_heavy_004.ogg', 'impactPunch_heavy_003.ogg', 'impactSoft_heavy_004.ogg', 'impactBell_heavy_004.ogg'] },
@@ -14647,7 +14665,7 @@ const AudioSys = {
         N(0.12, 0.14, 600, false, now);
         if (!lite) T(220, 110, 0.12, 'sine', 0.1, now + 0.08);
         break;
-      case 'masterSword':
+      case 'dawnblade':
         C([784, 988, 1175, 1568], 'sine', 0.15, 0.065, now);
         D(880, 1760, 0.24, 'triangle', 0.14, now + 0.08, 12);
         if (!lite) {
@@ -14655,7 +14673,7 @@ const AudioSys = {
           N(0.08, 0.12, 4200, true, now + 0.1);
         }
         break;
-      case 'wMaster':
+      case 'wDawnblade':
         N(0.05, 0.18, 4600, true, now);
         D(720, 1320, 0.11, 'sawtooth', 0.13, now, 14);
         E(1040, 520, 0.08, 'sine', 0.12, now + 0.03, 0.045, 0.45);
@@ -14767,7 +14785,7 @@ const AudioSys = {
           N(0.2, 0.26, 420, true, now + 0.88);
         }
         break;
-      case 'masterSword':
+      case 'dawnblade':
         [523, 659, 784, 988, 1175, 1568].forEach((f, i) => E(f, f * 1.02, 0.09, 'sine', 0.12, now + i * 0.048, 0.055, 0.4));
         T(880, 1760, 0.28, 'triangle', 0.14, now + 0.12);
         if (!lite) S([1760, 2093, 2349], now + 0.28);
@@ -16692,7 +16710,7 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.strokeStyle = '#a67c2e'; c.lineWidth = 5; c.beginPath(); c.moveTo(4, -8); c.lineTo(4, 8); c.stroke();
       c.strokeStyle = '#6a5030'; c.lineWidth = 4; c.beginPath(); c.moveTo(-2, 0); c.lineTo(8, 0); c.stroke();
       break;
-    case 'master_sword':
+    case 'dawnblade':
       c.save();
       c.shadowColor = '#6fd7ff'; c.shadowBlur = 16;
       c.strokeStyle = '#3a9fd4'; c.lineWidth = 6; c.beginPath(); c.moveTo(6, 0); c.lineTo(64, 0); c.stroke();
@@ -18575,7 +18593,7 @@ class Fighter {
         return null;
     }
     if (spec && spec.kind === 'weapon') spec = sanitizeWeaponSpec(spec);
-    if (spec && spec.kind === 'weapon' && (w.masterSword || w.id === 'master_sword')) spec.unblockable = true;
+    if (spec && spec.kind === 'weapon' && (w.dawnblade || w.id === 'dawnblade')) spec.unblockable = true;
     spec = applySignatureToSpec(this, spec);
     return applyStyleToSpec(this, spec);
   }
@@ -18768,7 +18786,7 @@ class Fighter {
   }
 
   aiIntent(dt, game) {
-    // RabbitRobot street-fighter AI
+    // RabbitRobot arcade-rival AI
     const out = { move: 0, jump: false, punch: false, kick: false, weapon: false, special: false, block: false };
     const p = game.player;
     if (!p || !p.alive || !this.alive) return out;
@@ -19258,7 +19276,7 @@ class Fighter {
         }
       }
       c.save(); c.translate(hx, hy); c.rotate(wAng);
-      if (this.weapon.masterSword || this.weapon.id === 'master_sword') {
+      if (this.weapon.dawnblade || this.weapon.id === 'dawnblade') {
         c.shadowColor = '#6fd7ff';
         c.shadowBlur = fxLite() ? 10 : 18;
       }
@@ -24343,8 +24361,8 @@ class Game {
       this.stageCritBonus = 0;
       this.gambleRoll = null;
       this.gambleBossWave = 0;
-      this.masterSwordT = 0;
-      this._savedMasterWeapon = null;
+      this.dawnbladeT = 0;
+      this._savedDawnbladeWeapon = null;
       this.initAdventure(opts.level || 1, opts.gamble, opts.difficulty);
     } else if (mode === 'training') this.initTraining();
     else if (mode === 'wall') this.initWall();
@@ -24481,56 +24499,56 @@ class Game {
       }, 2400);
     }
     this.allyAssistT = this.stageAlly ? 2.2 : 0;
-    // Master Sword roll UIT — geen zeldzame interrupt midden in level
+    // Dawnblade roll UIT — geen zeldzame interrupt midden in level
     try {
       if (typeof playFightBgm === 'function') playFightBgm(this.level.boss ? 'boss' : 'battle');
       else AudioSys.play(this.level.boss ? 'boss' : 'battle');
     } catch (_) {}
   }
 
-  maybeRollMasterSword() {
+  maybeRollDawnblade() {
     return; // UIT
   }
 
-  activateMasterSword() {
+  activateDawnblade() {
     try {
       const p = this.player;
-      if (!p || !canMasterSwordRoll(p.weapon)) return;
-      this._savedMasterWeapon = p.weapon;
-      p.weapon = buildMasterSwordWeapon(p.weapon);
-      this.masterSwordT = MASTER_SWORD_DURATION;
+      if (!p || !canDawnbladeRoll(p.weapon)) return;
+      this._savedDawnbladeWeapon = p.weapon;
+      p.weapon = buildDawnbladeWeapon(p.weapon);
+      this.dawnbladeT = DAWNBLADE_DURATION;
       resetWeaponCombo(p);
-      this.banner(t('banner.masterSword'), 2.4, '#7cf5ff', 52);
-      this.floater(p.x, p.y - 132, t('combat.masterSwordGain'), '#ffd75e', 16);
+      this.banner(t('banner.dawnblade'), 2.4, '#7cf5ff', 52);
+      this.floater(p.x, p.y - 132, t('combat.dawnbladeGain'), '#ffd75e', 16);
       if (!fxLite() && !motionReduced()) {
         this.burst(p.x + p.face * 18, p.y - 52, '#6fd7ff', 14, { kind: 'spark', size: 2.8 });
         spawnFxRing(this, p.x, p.y - 48, '#7cf5ff', 12);
       }
-      try { AudioSys.sting('masterSword'); AudioSys.sfx('masterSword'); } catch (_) {}
+      try { AudioSys.sting('dawnblade'); AudioSys.sfx('dawnblade'); } catch (_) {}
       haptic(26);
     } catch (err) {
-      try { sfReportError('masterSword/on', err, 'Master Sword hiccup — speel door'); } catch (_) {}
+      try { sfReportError('dawnblade/on', err, 'Dawnblade hiccup — speel door'); } catch (_) {}
     }
   }
 
-  deactivateMasterSword(silent) {
+  deactivateDawnblade(silent) {
     try {
-      if (!this._savedMasterWeapon || !this.player) {
-        this.masterSwordT = 0;
-        this._savedMasterWeapon = null;
+      if (!this._savedDawnbladeWeapon || !this.player) {
+        this.dawnbladeT = 0;
+        this._savedDawnbladeWeapon = null;
         return;
       }
-      this.player.weapon = this._savedMasterWeapon;
-      this._savedMasterWeapon = null;
-      this.masterSwordT = 0;
+      this.player.weapon = this._savedDawnbladeWeapon;
+      this._savedDawnbladeWeapon = null;
+      this.dawnbladeT = 0;
       resetWeaponCombo(this.player);
       if (!silent) {
-        this.floater(this.player.x, this.player.y - 120, t('combat.masterSwordFade'), '#9db1e3', 14);
+        this.floater(this.player.x, this.player.y - 120, t('combat.dawnbladeFade'), '#9db1e3', 14);
       }
     } catch (err) {
-      this.masterSwordT = 0;
-      this._savedMasterWeapon = null;
-      try { sfReportError('masterSword/off', err); } catch (_) {}
+      this.dawnbladeT = 0;
+      this._savedDawnbladeWeapon = null;
+      try { sfReportError('dawnblade/off', err); } catch (_) {}
     }
   }
 
@@ -24788,9 +24806,9 @@ class Game {
       if (this.dmgBuffT <= 0) this.dmgBuffMul = 1;
     }
     if (this.playerShieldT > 0) this.playerShieldT -= dt;
-    if (this.masterSwordT > 0) {
-      this.masterSwordT -= dt;
-      if (this.masterSwordT <= 0) this.deactivateMasterSword(false);
+    if (this.dawnbladeT > 0) {
+      this.dawnbladeT -= dt;
+      if (this.dawnbladeT <= 0) this.deactivateDawnblade(false);
     }
     if (this.stageAlly && this.player && this.player.alive && this.monsters.some((m) => m.alive)) {
       this.allyAssistT = (this.allyAssistT || 0) - dt;
@@ -24955,7 +24973,7 @@ class Game {
     clearTideBattleState(this, { restoreMusic: true });
     this.tideFromSatan = false;
     if (typeof clearSatanState === 'function') clearSatanState(this);
-    this.deactivateMasterSword(true);
+    this.deactivateDawnblade(true);
     this.over = true;
     this.inputLocked = true;
     let stars = 0;
@@ -25779,8 +25797,8 @@ class Game {
     this.roundsP2 = 0;
     this.round = 0;
     this.vsRoundLog = [];
-    this.p1Pick = normalizeVsPick(opts.p1 || vsSelect.p1, 'ryu');
-    this.p2Pick = normalizeVsPick(opts.p2 || vsSelect.p2, 'ken');
+    this.p1Pick = normalizeVsPick(opts.p1 || vsSelect.p1, 'arcade_flair');
+    this.p2Pick = normalizeVsPick(opts.p2 || vsSelect.p2, 'arcade_rush');
     vsSelect.p1 = this.p1Pick;
     vsSelect.p2 = this.p2Pick;
     trackVsRosterUse(this.p1Pick, this.p2Pick);
@@ -29053,10 +29071,10 @@ class Game {
         c.fillText(t('hud.shield', { n: Math.ceil(this.playerShieldT) }), W / 2, hy);
         hy += 16;
       }
-      if (this.masterSwordT > 0) {
+      if (this.dawnbladeT > 0) {
         c.font = '900 14px sans-serif'; c.fillStyle = '#7cf5ff';
         if (!motionReduced()) { c.shadowColor = '#7cf5ff'; c.shadowBlur = 8; }
-        c.fillText(t('hud.masterSword', { n: Math.ceil(this.masterSwordT) }), W / 2, hy);
+        c.fillText(t('hud.dawnblade', { n: Math.ceil(this.dawnbladeT) }), W / 2, hy);
         c.shadowBlur = 0;
         hy += 16;
       }
@@ -34291,10 +34309,10 @@ function startGame(mode, opts) {
   try { dismissTunnelOverlayIfStatic(); } catch (_) {}
   if (mode === 'versus') {
     try {
-      opts.p1 = normalizeVsPick(opts.p1 || vsSelect.p1, 'ryu');
-      opts.p2 = normalizeVsPick(opts.p2 || vsSelect.p2, 'ken');
+      opts.p1 = normalizeVsPick(opts.p1 || vsSelect.p1, 'arcade_flair');
+      opts.p2 = normalizeVsPick(opts.p2 || vsSelect.p2, 'arcade_rush');
     } catch (_) {
-      opts.p1 = 'ryu'; opts.p2 = 'ken';
+      opts.p1 = 'arcade_flair'; opts.p2 = 'arcade_rush';
     }
     try { primePlayInput(true); } catch (_) {}
   }

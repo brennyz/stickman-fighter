@@ -151,7 +151,7 @@ function chestWeaponSkillOf(weaponId) {
 
 function chestBaseWeaponPool() {
   return WEAPONS.filter(w =>
-    w && !w.dropZone && w.id !== 'vuist' && w.id !== 'master_sword' &&
+    w && !w.dropZone && w.id !== 'vuist' && w.id !== 'dawnblade' &&
     !(typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)));
 }
 
@@ -436,7 +436,7 @@ function sanitizeChestWeapons(raw) {
   if (!raw || typeof raw !== 'object') return clean;
   for (const [k, v] of Object.entries(raw)) {
     const w = typeof weaponById === 'function' ? weaponById(k) : null;
-    if (!w || w.dropZone || w.id === 'vuist' || w.id === 'master_sword') continue;
+    if (!w || w.dropZone || w.id === 'vuist' || w.id === 'dawnblade') continue;
     const entry = (v && typeof v === 'object') ? v : {};
     clean[k] = {
       skill: typeof entry.skill === 'string' ? entry.skill.slice(0, CHEST_SKILL_MAX) : undefined,

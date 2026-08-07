@@ -107,7 +107,7 @@ const ACHIEVEMENTS = [
     test: s => (s.vsPlayedIds || []).length >= 10 },
   { id: 'saga_icons', name: 'Saga-legends', desc: 'Speel 2P met alle 7 legend picks',
     test: s => {
-      const need = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
+      const need = ['arcade_flair', 'arcade_rush', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
       const played = s.vsPlayedIds || [];
       return need.every(id => played.includes(id));
     } },
@@ -490,7 +490,7 @@ function achievementProgressFrac(ach) {
     case 'vsFatality1': return Math.min(s.stats.vsFatalities || 0, 1);
     case 'vs_roster': return Math.min((s.vsPlayedIds || []).length, 10) / 10;
     case 'saga_icons': {
-      const need = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
+      const need = ['arcade_flair', 'arcade_rush', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
       const played = s.vsPlayedIds || [];
       return need.filter(id => played.includes(id)).length / need.length;
     }
@@ -531,7 +531,7 @@ function achievementProgressHint(ach) {
     case 'vsFatality1': return `${Math.min(s.stats.vsFatalities || 0, 1)}/1 fatality`;
     case 'vs_roster': return `${(s.vsPlayedIds || []).length}/10 vechters gespeeld`;
     case 'saga_icons': {
-      const need = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
+      const need = ['arcade_flair', 'arcade_rush', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
       const played = s.vsPlayedIds || [];
       const n = need.filter(id => played.includes(id)).length;
       return `${n}/7 legends in 2P`;

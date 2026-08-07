@@ -67,7 +67,7 @@ class Fighter {
         return null;
     }
     if (spec && spec.kind === 'weapon') spec = sanitizeWeaponSpec(spec);
-    if (spec && spec.kind === 'weapon' && (w.masterSword || w.id === 'master_sword')) spec.unblockable = true;
+    if (spec && spec.kind === 'weapon' && (w.dawnblade || w.id === 'dawnblade')) spec.unblockable = true;
     spec = applySignatureToSpec(this, spec);
     return applyStyleToSpec(this, spec);
   }
@@ -260,7 +260,7 @@ class Fighter {
   }
 
   aiIntent(dt, game) {
-    // RabbitRobot street-fighter AI
+    // RabbitRobot arcade-rival AI
     const out = { move: 0, jump: false, punch: false, kick: false, weapon: false, special: false, block: false };
     const p = game.player;
     if (!p || !p.alive || !this.alive) return out;
@@ -750,7 +750,7 @@ class Fighter {
         }
       }
       c.save(); c.translate(hx, hy); c.rotate(wAng);
-      if (this.weapon.masterSword || this.weapon.id === 'master_sword') {
+      if (this.weapon.dawnblade || this.weapon.id === 'dawnblade') {
         c.shadowColor = '#6fd7ff';
         c.shadowBlur = fxLite() ? 10 : 18;
       }

@@ -318,7 +318,7 @@ async function run() {
     });
 
     tryMark('mode_versus', () => {
-      startGame('versus', { p1: 'ryu', p2: 'ken' });
+      startGame('versus', { p1: 'arcade_flair', p2: 'arcade_rush' });
       Input.dualMode = true;
       simFrames(game, 60, { noKill: true, draw: true });
       ok('versus_frames');

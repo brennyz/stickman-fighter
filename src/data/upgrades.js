@@ -44,7 +44,7 @@ function itemUpgradeIdValid(cat, id) {
 
 function weaponUpgradeEligible(w) {
   // Alleen wapens die je echt bezit (character-unlock óf zone-drop), nooit “alleen Lv-getal”.
-  if (!w || !w.id || w.id === 'vuist' || w.id === 'master_sword') return false;
+  if (!w || !w.id || w.id === 'vuist' || w.id === 'dawnblade') return false;
   if (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) return false;
   // Zone-drops: ownership-only — character-level mag nooit genoeg zijn.
   if (w.dropZone) {
@@ -76,7 +76,7 @@ function itemUpgradePersistable(cat, id) {
   if (!itemUpgradeIdValid(cat, id)) return false;
   if (cat === 'weapon') {
     const w = WEAPONS.find((x) => x.id === id);
-    if (!w || w.id === 'vuist' || w.id === 'master_sword' || isThrowWeapon(w.id)) return false;
+    if (!w || w.id === 'vuist' || w.id === 'dawnblade' || isThrowWeapon(w.id)) return false;
   }
   return true;
 }

@@ -152,8 +152,8 @@ class Game {
       this.stageCritBonus = 0;
       this.gambleRoll = null;
       this.gambleBossWave = 0;
-      this.masterSwordT = 0;
-      this._savedMasterWeapon = null;
+      this.dawnbladeT = 0;
+      this._savedDawnbladeWeapon = null;
       this.initAdventure(opts.level || 1, opts.gamble, opts.difficulty);
     } else if (mode === 'training') this.initTraining();
     else if (mode === 'wall') this.initWall();
@@ -290,56 +290,56 @@ class Game {
       }, 2400);
     }
     this.allyAssistT = this.stageAlly ? 2.2 : 0;
-    // Master Sword roll UIT — geen zeldzame interrupt midden in level
+    // Dawnblade roll UIT — geen zeldzame interrupt midden in level
     try {
       if (typeof playFightBgm === 'function') playFightBgm(this.level.boss ? 'boss' : 'battle');
       else AudioSys.play(this.level.boss ? 'boss' : 'battle');
     } catch (_) {}
   }
 
-  maybeRollMasterSword() {
+  maybeRollDawnblade() {
     return; // UIT
   }
 
-  activateMasterSword() {
+  activateDawnblade() {
     try {
       const p = this.player;
-      if (!p || !canMasterSwordRoll(p.weapon)) return;
-      this._savedMasterWeapon = p.weapon;
-      p.weapon = buildMasterSwordWeapon(p.weapon);
-      this.masterSwordT = MASTER_SWORD_DURATION;
+      if (!p || !canDawnbladeRoll(p.weapon)) return;
+      this._savedDawnbladeWeapon = p.weapon;
+      p.weapon = buildDawnbladeWeapon(p.weapon);
+      this.dawnbladeT = DAWNBLADE_DURATION;
       resetWeaponCombo(p);
-      this.banner(t('banner.masterSword'), 2.4, '#7cf5ff', 52);
-      this.floater(p.x, p.y - 132, t('combat.masterSwordGain'), '#ffd75e', 16);
+      this.banner(t('banner.dawnblade'), 2.4, '#7cf5ff', 52);
+      this.floater(p.x, p.y - 132, t('combat.dawnbladeGain'), '#ffd75e', 16);
       if (!fxLite() && !motionReduced()) {
         this.burst(p.x + p.face * 18, p.y - 52, '#6fd7ff', 14, { kind: 'spark', size: 2.8 });
         spawnFxRing(this, p.x, p.y - 48, '#7cf5ff', 12);
       }
-      try { AudioSys.sting('masterSword'); AudioSys.sfx('masterSword'); } catch (_) {}
+      try { AudioSys.sting('dawnblade'); AudioSys.sfx('dawnblade'); } catch (_) {}
       haptic(26);
     } catch (err) {
-      try { sfReportError('masterSword/on', err, 'Master Sword hiccup — speel door'); } catch (_) {}
+      try { sfReportError('dawnblade/on', err, 'Dawnblade hiccup — speel door'); } catch (_) {}
     }
   }
 
-  deactivateMasterSword(silent) {
+  deactivateDawnblade(silent) {
     try {
-      if (!this._savedMasterWeapon || !this.player) {
-        this.masterSwordT = 0;
-        this._savedMasterWeapon = null;
+      if (!this._savedDawnbladeWeapon || !this.player) {
+        this.dawnbladeT = 0;
+        this._savedDawnbladeWeapon = null;
         return;
       }
-      this.player.weapon = this._savedMasterWeapon;
-      this._savedMasterWeapon = null;
-      this.masterSwordT = 0;
+      this.player.weapon = this._savedDawnbladeWeapon;
+      this._savedDawnbladeWeapon = null;
+      this.dawnbladeT = 0;
       resetWeaponCombo(this.player);
       if (!silent) {
-        this.floater(this.player.x, this.player.y - 120, t('combat.masterSwordFade'), '#9db1e3', 14);
+        this.floater(this.player.x, this.player.y - 120, t('combat.dawnbladeFade'), '#9db1e3', 14);
       }
     } catch (err) {
-      this.masterSwordT = 0;
-      this._savedMasterWeapon = null;
-      try { sfReportError('masterSword/off', err); } catch (_) {}
+      this.dawnbladeT = 0;
+      this._savedDawnbladeWeapon = null;
+      try { sfReportError('dawnblade/off', err); } catch (_) {}
     }
   }
 
@@ -597,9 +597,9 @@ class Game {
       if (this.dmgBuffT <= 0) this.dmgBuffMul = 1;
     }
     if (this.playerShieldT > 0) this.playerShieldT -= dt;
-    if (this.masterSwordT > 0) {
-      this.masterSwordT -= dt;
-      if (this.masterSwordT <= 0) this.deactivateMasterSword(false);
+    if (this.dawnbladeT > 0) {
+      this.dawnbladeT -= dt;
+      if (this.dawnbladeT <= 0) this.deactivateDawnblade(false);
     }
     if (this.stageAlly && this.player && this.player.alive && this.monsters.some((m) => m.alive)) {
       this.allyAssistT = (this.allyAssistT || 0) - dt;
@@ -764,7 +764,7 @@ class Game {
     clearTideBattleState(this, { restoreMusic: true });
     this.tideFromSatan = false;
     if (typeof clearSatanState === 'function') clearSatanState(this);
-    this.deactivateMasterSword(true);
+    this.deactivateDawnblade(true);
     this.over = true;
     this.inputLocked = true;
     let stars = 0;
@@ -1588,8 +1588,8 @@ class Game {
     this.roundsP2 = 0;
     this.round = 0;
     this.vsRoundLog = [];
-    this.p1Pick = normalizeVsPick(opts.p1 || vsSelect.p1, 'ryu');
-    this.p2Pick = normalizeVsPick(opts.p2 || vsSelect.p2, 'ken');
+    this.p1Pick = normalizeVsPick(opts.p1 || vsSelect.p1, 'arcade_flair');
+    this.p2Pick = normalizeVsPick(opts.p2 || vsSelect.p2, 'arcade_rush');
     vsSelect.p1 = this.p1Pick;
     vsSelect.p2 = this.p2Pick;
     trackVsRosterUse(this.p1Pick, this.p2Pick);
@@ -4862,10 +4862,10 @@ class Game {
         c.fillText(t('hud.shield', { n: Math.ceil(this.playerShieldT) }), W / 2, hy);
         hy += 16;
       }
-      if (this.masterSwordT > 0) {
+      if (this.dawnbladeT > 0) {
         c.font = '900 14px sans-serif'; c.fillStyle = '#7cf5ff';
         if (!motionReduced()) { c.shadowColor = '#7cf5ff'; c.shadowBlur = 8; }
-        c.fillText(t('hud.masterSword', { n: Math.ceil(this.masterSwordT) }), W / 2, hy);
+        c.fillText(t('hud.dawnblade', { n: Math.ceil(this.dawnbladeT) }), W / 2, hy);
         c.shadowBlur = 0;
         hy += 16;
       }

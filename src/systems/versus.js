@@ -2,7 +2,7 @@
 /** Saga-hints: parodie-vibes, geen officiële manga/IP-namen. */
 const VS_SAGAS = {
   all: { id: 'all', label: 'Alle', blurb: 'Alle 20 vechters — kies P1, dan P2.' },
-  fighter: { id: 'fighter', label: 'Street', blurb: 'Ryu & Ken — classic white/red gi duel.' },
+  fighter: { id: 'fighter', label: 'Arcade Flair', blurb: 'Arcade Flair & Arcade Rush — classic white/red gi duel.' },
   ki: { id: 'ki', label: 'Ki', blurb: 'Ki-golven & power spikes — Goku vibes.' },
   scroll: { id: 'scroll', label: 'Scroll', blurb: 'Ninja & demon fox — headband hints.' },
   tide: { id: 'tide', label: 'Tide', blurb: 'Reach & crew — rubber stretch slagen.' },
@@ -19,15 +19,16 @@ function sagaIconSvg(id) {
 function rosterFlair(r) { return r.flair || r.tag; }
 
 /** Featured legends — snel kiezen bovenaan character select. */
-const VS_FEATURED_IDS = ['ryu', 'ken', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
+const VS_FEATURED_IDS = ['arcade_flair', 'arcade_rush', 'goku', 'onepunchman', 'aruskankou', 'kutjankorio', 'xavi'];
 const SAGA_ICON_IDS = VS_FEATURED_IDS;
 const VS_ROSTER_MAX = 20;
 const VS_ROSTER_MIGRATE = {
   kiball: 'goku', scrollkid: 'aruskankou', zipcape: 'onepunchman', tidecrew: 'rubber',
   dawnlance: 'lance', spikyki: 'goku', bandana: 'aruskankou', hero: 'stick',
+  ryu: 'arcade_flair', ken: 'arcade_rush', whitegi: 'arcade_flair', redgi: 'arcade_rush',
 };
 function migrateVsRosterId(id) {
-  if (!id || typeof id !== 'string') return 'ryu';
+  if (!id || typeof id !== 'string') return 'arcade_flair';
   return VS_ROSTER_MIGRATE[id] || id;
 }
 function sagaIconEntries() {
@@ -98,10 +99,10 @@ function pickBalancedRandomDuo() {
 }
 
 const VS_ROSTER = [
-  { id: 'ryu', name: 'Ryu', tag: 'Street · balanced', saga: 'fighter', flair: 'White gi · hadou stance · all-round',
+  { id: 'arcade_flair', name: 'Arcade Flair', tag: 'Arcade Flair · balanced', saga: 'fighter', flair: 'White gi · energy-wave stance · all-round',
     styleId: 'classic', weapon: 'vuist', bodyColor: '#f0f0f8', gi: 'white',
     hpMul: 1, spdMul: 1, dmgMul: 1.02, crit: 0.09, critMul: 1.5, sig: 'balanced', unlock: () => true, featured: true },
-  { id: 'ken', name: 'Ken', tag: 'Street · fire kicks', saga: 'fighter', flair: 'Red gi · blazing shoryu · combo rush',
+  { id: 'arcade_rush', name: 'Arcade Rush', tag: 'Arcade Flair · fire kicks', saga: 'fighter', flair: 'Red gi · rising upper · combo rush',
     styleId: 'konoha', weapon: 'nunchaku', bodyColor: '#ff5555', gi: 'red',
     hpMul: 0.94, spdMul: 1.1, dmgMul: 1.06, crit: 0.11, critMul: 1.52, sig: 'combo', unlock: () => true, featured: true },
   { id: 'goku', name: 'Goku', tag: 'Ki · melee DPS', saga: 'ki', flair: 'Orange trainee · ki-ball rush · high STR',
@@ -174,7 +175,7 @@ function normalizeVsPick(id, fallback) {
   const r = vsRosterEntry(id);
   if (r.id === id && vsUnlocked(r)) return id;
   const fb = vsRosterEntry(fallback);
-  return vsUnlocked(fb) ? fallback : 'ryu';
+  return vsUnlocked(fb) ? fallback : 'arcade_flair';
 }
 function trackVsRosterUse(p1, p2) {
   if (!Array.isArray(save.vsPlayedIds)) save.vsPlayedIds = [];
@@ -391,7 +392,7 @@ function resetVsFighterRound(f, entry, ground, slot) {
   resetWeaponCombo(f);
 }
 
-let vsSelect = { p1: 'ryu', p2: 'ken' };
+let vsSelect = { p1: 'arcade_flair', p2: 'arcade_rush' };
 
 /** d3 c5 — korte TOT-preview voor HUD/pauze (geen dmg-tweak). */
 function vsMatchupTotShort(p1Id, p2Id) {

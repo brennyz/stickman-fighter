@@ -125,9 +125,9 @@ assert(run("skillBonuses('rasengan', save).dmgMul > 1"), 'rasengan Lv 1 bonus ap
 
 // --- ownership: no upgrade for weapons you don't own ---
 assert(run("!weaponUpgradeEligible(weaponById('vuist'))"), 'vuist never upgrade-eligible');
-const master = run("weaponById('master_sword')");
-if (master && master.id === 'master_sword') {
-  assert(run("!weaponUpgradeEligible(weaponById('master_sword'))"), 'master_sword never upgrade-eligible');
+const master = run("weaponById('dawnblade')");
+if (master && master.id === 'dawnblade') {
+  assert(run("!weaponUpgradeEligible(weaponById('dawnblade'))"), 'dawnblade never upgrade-eligible');
 }
 
 setSave({ lvl: 1, zoneWeapons: {} });
