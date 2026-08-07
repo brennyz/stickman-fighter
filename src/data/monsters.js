@@ -667,6 +667,29 @@ function buildLevel(n, diffId) {
     waves.push(list);
     waveMeta.push(meta);
   }
+  // Soft live A3: golf 1 milder — minder mobs, geen rush/pain/ember, langzamere spawn.
+  if (waves[0] && waves[0].length) {
+    const softCap = n <= 3
+      ? Math.max(4, Math.ceil(perWave * 0.42))
+      : n <= 8
+        ? Math.max(5, Math.ceil(perWave * 0.55))
+        : Math.max(6, Math.ceil(perWave * 0.72));
+    if (waves[0].length > softCap) waves[0] = waves[0].slice(0, softCap);
+    if (n <= 5) {
+      for (let i = 0; i < waves[0].length; i++) {
+        waves[0][i].elite = false;
+        if (n <= 2) waves[0][i].giant = false;
+      }
+    }
+    if (waveMeta[0]) {
+      const harsh = waveMeta[0].trait === 'rush' || waveMeta[0].trait === 'ember' || waveMeta[0].trait === 'pain';
+      if (harsh && n <= 8) {
+        waveMeta[0].trait = null;
+        waveMeta[0].label = '';
+      }
+      waveMeta[0].spawnMul = Math.max(waveMeta[0].spawnMul || 1, n <= 8 ? 1.22 : 1.1);
+    }
+  }
   if (BOSS_AT[n]) {
     const bossWave = BOSS_AT[n].map(x => Object.assign({}, x, { bossCore: !!x.elite }));
     const hordePad = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, 12);

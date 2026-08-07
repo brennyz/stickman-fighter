@@ -1,3 +1,4 @@
+| 2026-08-07 | — | Soft-feel store A3/A4: milder golf 1 + langere telegraphs/visual cue; sterkere partGate loop-rechts (touch+KB); device-qa.md. v1.18.134 / SW v344. |
 | 2026-07-26 | **18** | d18 c5: char fight dock (step/TOT/same-pair) + replay last duo; boot-fail toast dismiss; summon smoke counter timing · v1.18.125 / SW v335 LIVE. |
 | 2026-07-26 | **4** | d4 c5: spawn funnel + star beat HUD + stage-clear runway; _levelClearPending reset · v1.18.124 / SW v334 LIVE. |
 | 2026-07-26 | **6** | Achterstallig audio LIVE: SFX/battle diversiteit + top-SFX polish + d6 pause → main. v1.18.112 / SW v322. |

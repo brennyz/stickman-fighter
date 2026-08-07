@@ -30,7 +30,14 @@
       "id": "w-20260807T202147",
       "from": "user",
       "text": "Store soft-legal: privacy policy + data-safety drafts",
-      "status": "open",
+      "status": "done-in-code",
+      "updated": "2026-08-07"
+    },
+    {
+      "id": "w-20260807T202104",
+      "from": "user",
+      "text": "store soft-feel A3/A4/A5",
+      "status": "done-in-code",
       "updated": "2026-08-07"
     },
     {
@@ -346,8 +353,16 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-07T20:48:00Z",
+      "summary": "Merge soft-live: soft-legal + soft-feel onto main"
+    },
+    {
       "at": "2026-08-07T20:21:47Z",
       "summary": "soft-legal: privacy.html, settings/menu links, age hints, Play/iOS privacy drafts (A1/A2/A7/B7/C4)"
+    },
+    {
+      "at": "2026-08-07T20:21:04Z",
+      "summary": "Soft-feel A3/A4: milder golf 1 + telegraph cues + sterkere partGate loop-rechts; device-qa.md · v1.18.134"
     },
     {
       "at": "2026-08-07T12:37:53Z",
