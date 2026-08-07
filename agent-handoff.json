@@ -315,6 +315,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-07T12:04:13Z",
+      "summary": "d1 c6: adventure counter FX + haptic + freeze parity · v1.18.128"
+    },
+    {
       "at": "2026-07-26T23:06:07Z",
       "summary": "d2: training dummy grace + Chidori cap + summon counter snap · v1.18.126"
     },
@@ -409,10 +413,6 @@
     {
       "at": "2026-07-26T19:16:24Z",
       "summary": "iPad/mobile responsive scale (ui-rail + type clamp) · v1.18.111"
-    },
-    {
-      "at": "2026-07-26T19:12:22Z",
-      "summary": "Menu SVG nav LIVE op main · v1.18.110 / SW v320"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
