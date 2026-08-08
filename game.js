@@ -274,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.140';
+const APP_VERSION = '1.18.141';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 350;
+const SW_CACHE_REV = 351;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -16168,8 +16168,16 @@ function makePad(side) {
       }
     },
     get move() {
-      let m = padDigitalMove(this);
-      if (this.joy.active) m += joyMoveAxis(this);
+      // Hardened: never throw if fighter-move helpers are missing (versus-retire footgun).
+      let m = 0;
+      try {
+        if (typeof padDigitalMove === 'function') m = padDigitalMove(this) || 0;
+        if (this.joy && this.joy.active && typeof joyMoveAxis === 'function') {
+          m += joyMoveAxis(this) || 0;
+        }
+      } catch (_) {
+        m = 0;
+      }
       return clamp(m, -1, 1);
     },
     press(action) { this.pressed[action] = true; },
@@ -16471,22 +16479,23 @@ addEventListener('keyup', e => {
  * pads and keyboard move keep working.
  */
 function fighterMoveXBounds(f, game) {
-  let min = game.minX ?? 40;
-  let max = game.maxX ?? W - 40;
-  if (game.mode === 'wall' && f.isPlayer && game.wallX != null) {
+  const ww = typeof W === 'number' && W > 0 ? W : 800;
+  let min = (game && game.minX != null) ? game.minX : 40;
+  let max = (game && game.maxX != null) ? game.maxX : ww - 40;
+  if (game && game.mode === 'wall' && f && f.isPlayer && game.wallX != null) {
     const cols = game.wallCols || 4;
     const bw = game.wallBrickW || 62;
     const wallFace = game.wallX + cols * bw;
     max = Math.min(max, wallFace - 12);
   }
-  if (game.mode === 'versus' && f.playerSlot === 1) max = Math.min(max, game.p1MaxX ?? max);
-  if (game.mode === 'versus' && f.playerSlot === 2) min = Math.max(min, game.p2MinX ?? min);
+  if (game && game.mode === 'versus' && f && f.playerSlot === 1) max = Math.min(max, game.p1MaxX ?? max);
+  if (game && game.mode === 'versus' && f && f.playerSlot === 2) min = Math.max(min, game.p2MinX ?? min);
   return { min, max };
 }
 
 function clampFighterX(f, game, x) {
   const b = fighterMoveXBounds(f, game);
-  return clamp(x, b.min, b.max);
+  return clamp(Number(x) || 0, b.min, b.max);
 }
 
 /** Beweging — hardened: snappy keyboard-turn, analog joy, lichte hurt-control. */
@@ -16499,10 +16508,11 @@ const MOVE_ATTACK_RECOVER_MUL = 0.76;
 const MOVE_HURT_MUL = 0.88;
 
 function padDigitalMove(pad) {
-  if (!pad) return 0;
+  if (!pad || !pad.keys) return 0;
   let m = 0;
+  const dual = typeof Input !== 'undefined' && Input && Input.dualMode;
   if (pad.side === 'p1') {
-    if (Input.dualMode) {
+    if (dual) {
       if (pad.keys['a']) m -= 1;
       if (pad.keys['d']) m += 1;
     } else {
@@ -16517,17 +16527,21 @@ function padDigitalMove(pad) {
 }
 
 function joyMoveAxis(pad) {
-  if (!pad || !pad.joy.active) return 0;
-  const jx = pad.joy.dx;
-  if (Math.abs(jx) < JOY_DEAD_PX) return 0;
-  const t = clamp(jx / JOY_MAX_PX, -1, 1);
+  if (!pad || !pad.joy || !pad.joy.active) return 0;
+  const dead = typeof JOY_DEAD_PX === 'number' ? JOY_DEAD_PX : 11;
+  const max = typeof JOY_MAX_PX === 'number' ? JOY_MAX_PX : 58;
+  const jx = pad.joy.dx || 0;
+  if (Math.abs(jx) < dead) return 0;
+  const t = clamp(jx / Math.max(1, max), -1, 1);
   return Math.sign(t) * Math.pow(Math.abs(t), 0.78);
 }
 
 function applyFighterMove(f, mv, dt, opts) {
+  if (!f) return;
   opts = opts || {};
   const canAct = opts.canAct !== false;
-  let targetVx = mv * f.speed;
+  const spd = f.speed || 260;
+  let targetVx = (mv || 0) * spd;
   if (!f.onGround) targetVx *= MOVE_AIR_MUL;
 
   const flip = f.vx !== 0 && mv !== 0 && Math.sign(f.vx) !== Math.sign(mv);
@@ -16540,13 +16554,14 @@ function applyFighterMove(f, mv, dt, opts) {
   }
 
   const lerpPow = opts.digital && canAct && Math.abs(mv) > 0.45 ? accel * 2.5 : accel;
-  f.vx = lerp(f.vx, targetVx, 1 - Math.pow(lerpPow, dt));
+  const safeDt = Math.max(0, Number(dt) || 0);
+  f.vx = lerp(f.vx || 0, targetVx, 1 - Math.pow(lerpPow, safeDt));
 
   if (flip && canAct && Math.abs(mv) > 0.1 && f.onGround) {
-    f.vx += mv * f.speed * (opts.digital ? 0.34 : 0.24);
+    f.vx += mv * spd * (opts.digital ? 0.34 : 0.24);
   }
   if (canAct && Math.abs(mv) < 0.035 && f.onGround) {
-    f.vx = lerp(f.vx, 0, 1 - Math.pow(MOVE_STOP_DECAY, dt));
+    f.vx = lerp(f.vx, 0, 1 - Math.pow(MOVE_STOP_DECAY, safeDt));
   }
   if (Math.abs(mv) > 0.05) f.face = mv > 0 ? 1 : -1;
 }
@@ -18872,18 +18887,32 @@ class Fighter {
 
     const canAct = this.hurtT <= 0 && !this.blocking;
     const pad = (this.playerSlot === 2) ? InputP2 : (this.isPlayer ? Input : null);
+    const atkRec = typeof MOVE_ATTACK_RECOVER_MUL === 'number' ? MOVE_ATTACK_RECOVER_MUL : 0.76;
+    const hurtMul = typeof MOVE_HURT_MUL === 'number' ? MOVE_HURT_MUL : 0.88;
     let mv = 0;
     if (canAct) {
       if (!this.attack) mv = it.move || 0;
       else if (this.attack.t >= this.attack.windup + this.attack.active) {
-        mv = (it.move || 0) * MOVE_ATTACK_RECOVER_MUL;
+        mv = (it.move || 0) * atkRec;
       }
     } else if ((this.isPlayer || this.playerSlot) && this.hurtT > 0 && this.onGround) {
-      mv = (it.move || 0) * MOVE_HURT_MUL;
+      mv = (it.move || 0) * hurtMul;
     }
-    const dig = pad && padDigitalMove(pad) !== 0
-      && Math.abs((it.move || 0) - padDigitalMove(pad)) < 0.08;
-    applyFighterMove(this, mv, dt, { canAct: canAct || this.hurtT > 0, digital: !!dig });
+    let dig = false;
+    if (pad && typeof padDigitalMove === 'function') {
+      try {
+        const pd = padDigitalMove(pad);
+        dig = pd !== 0 && Math.abs((it.move || 0) - pd) < 0.08;
+      } catch (_) { dig = false; }
+    }
+    if (typeof applyFighterMove === 'function') {
+      applyFighterMove(this, mv, dt, { canAct: canAct || this.hurtT > 0, digital: !!dig });
+    } else {
+      // Last-resort fallback if fighter-move.js was dropped from the bundle.
+      const target = mv * (this.speed || 260) * (this.onGround ? 1 : 0.78);
+      this.vx = lerp(this.vx || 0, target, 1 - Math.pow(0.002, Math.max(0, dt || 0)));
+      if (Math.abs(mv) > 0.05) this.face = mv > 0 ? 1 : -1;
+    }
 
     if (canAct && it.jump && this.onGround && !this.attack) {
       this.vy = -this.jumpV; this.onGround = false; AudioSys.sfx('jump');
@@ -24350,9 +24379,10 @@ function partGateMoveSignal(g) {
 }
 
 function playerWalkInput() {
-  if (typeof Input === 'undefined' || Input.dualMode) return 0;
-  let mv = Input.move || 0;
-  if (Math.abs(mv) < 0.08) {
+  if (typeof Input === 'undefined' || !Input || Input.dualMode) return 0;
+  let mv = 0;
+  try { mv = Input.move || 0; } catch (_) { mv = 0; }
+  if (Math.abs(mv) < 0.08 && Input.keys) {
     if (Input.keys.d || Input.keys.arrowright) mv = 1;
     else if (Input.keys.a || Input.keys.arrowleft) mv = -1;
   }

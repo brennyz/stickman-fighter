@@ -819,8 +819,16 @@ function makePad(side) {
       }
     },
     get move() {
-      let m = padDigitalMove(this);
-      if (this.joy.active) m += joyMoveAxis(this);
+      // Hardened: never throw if fighter-move helpers are missing (versus-retire footgun).
+      let m = 0;
+      try {
+        if (typeof padDigitalMove === 'function') m = padDigitalMove(this) || 0;
+        if (this.joy && this.joy.active && typeof joyMoveAxis === 'function') {
+          m += joyMoveAxis(this) || 0;
+        }
+      } catch (_) {
+        m = 0;
+      }
       return clamp(m, -1, 1);
     },
     press(action) { this.pressed[action] = true; },

@@ -5,22 +5,23 @@
  * pads and keyboard move keep working.
  */
 function fighterMoveXBounds(f, game) {
-  let min = game.minX ?? 40;
-  let max = game.maxX ?? W - 40;
-  if (game.mode === 'wall' && f.isPlayer && game.wallX != null) {
+  const ww = typeof W === 'number' && W > 0 ? W : 800;
+  let min = (game && game.minX != null) ? game.minX : 40;
+  let max = (game && game.maxX != null) ? game.maxX : ww - 40;
+  if (game && game.mode === 'wall' && f && f.isPlayer && game.wallX != null) {
     const cols = game.wallCols || 4;
     const bw = game.wallBrickW || 62;
     const wallFace = game.wallX + cols * bw;
     max = Math.min(max, wallFace - 12);
   }
-  if (game.mode === 'versus' && f.playerSlot === 1) max = Math.min(max, game.p1MaxX ?? max);
-  if (game.mode === 'versus' && f.playerSlot === 2) min = Math.max(min, game.p2MinX ?? min);
+  if (game && game.mode === 'versus' && f && f.playerSlot === 1) max = Math.min(max, game.p1MaxX ?? max);
+  if (game && game.mode === 'versus' && f && f.playerSlot === 2) min = Math.max(min, game.p2MinX ?? min);
   return { min, max };
 }
 
 function clampFighterX(f, game, x) {
   const b = fighterMoveXBounds(f, game);
-  return clamp(x, b.min, b.max);
+  return clamp(Number(x) || 0, b.min, b.max);
 }
 
 /** Beweging — hardened: snappy keyboard-turn, analog joy, lichte hurt-control. */
@@ -33,10 +34,11 @@ const MOVE_ATTACK_RECOVER_MUL = 0.76;
 const MOVE_HURT_MUL = 0.88;
 
 function padDigitalMove(pad) {
-  if (!pad) return 0;
+  if (!pad || !pad.keys) return 0;
   let m = 0;
+  const dual = typeof Input !== 'undefined' && Input && Input.dualMode;
   if (pad.side === 'p1') {
-    if (Input.dualMode) {
+    if (dual) {
       if (pad.keys['a']) m -= 1;
       if (pad.keys['d']) m += 1;
     } else {
@@ -51,17 +53,21 @@ function padDigitalMove(pad) {
 }
 
 function joyMoveAxis(pad) {
-  if (!pad || !pad.joy.active) return 0;
-  const jx = pad.joy.dx;
-  if (Math.abs(jx) < JOY_DEAD_PX) return 0;
-  const t = clamp(jx / JOY_MAX_PX, -1, 1);
+  if (!pad || !pad.joy || !pad.joy.active) return 0;
+  const dead = typeof JOY_DEAD_PX === 'number' ? JOY_DEAD_PX : 11;
+  const max = typeof JOY_MAX_PX === 'number' ? JOY_MAX_PX : 58;
+  const jx = pad.joy.dx || 0;
+  if (Math.abs(jx) < dead) return 0;
+  const t = clamp(jx / Math.max(1, max), -1, 1);
   return Math.sign(t) * Math.pow(Math.abs(t), 0.78);
 }
 
 function applyFighterMove(f, mv, dt, opts) {
+  if (!f) return;
   opts = opts || {};
   const canAct = opts.canAct !== false;
-  let targetVx = mv * f.speed;
+  const spd = f.speed || 260;
+  let targetVx = (mv || 0) * spd;
   if (!f.onGround) targetVx *= MOVE_AIR_MUL;
 
   const flip = f.vx !== 0 && mv !== 0 && Math.sign(f.vx) !== Math.sign(mv);
@@ -74,13 +80,14 @@ function applyFighterMove(f, mv, dt, opts) {
   }
 
   const lerpPow = opts.digital && canAct && Math.abs(mv) > 0.45 ? accel * 2.5 : accel;
-  f.vx = lerp(f.vx, targetVx, 1 - Math.pow(lerpPow, dt));
+  const safeDt = Math.max(0, Number(dt) || 0);
+  f.vx = lerp(f.vx || 0, targetVx, 1 - Math.pow(lerpPow, safeDt));
 
   if (flip && canAct && Math.abs(mv) > 0.1 && f.onGround) {
-    f.vx += mv * f.speed * (opts.digital ? 0.34 : 0.24);
+    f.vx += mv * spd * (opts.digital ? 0.34 : 0.24);
   }
   if (canAct && Math.abs(mv) < 0.035 && f.onGround) {
-    f.vx = lerp(f.vx, 0, 1 - Math.pow(MOVE_STOP_DECAY, dt));
+    f.vx = lerp(f.vx, 0, 1 - Math.pow(MOVE_STOP_DECAY, safeDt));
   }
   if (Math.abs(mv) > 0.05) f.face = mv > 0 ? 1 : -1;
 }

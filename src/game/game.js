@@ -95,9 +95,10 @@ function partGateMoveSignal(g) {
 }
 
 function playerWalkInput() {
-  if (typeof Input === 'undefined' || Input.dualMode) return 0;
-  let mv = Input.move || 0;
-  if (Math.abs(mv) < 0.08) {
+  if (typeof Input === 'undefined' || !Input || Input.dualMode) return 0;
+  let mv = 0;
+  try { mv = Input.move || 0; } catch (_) { mv = 0; }
+  if (Math.abs(mv) < 0.08 && Input.keys) {
     if (Input.keys.d || Input.keys.arrowright) mv = 1;
     else if (Input.keys.a || Input.keys.arrowleft) mv = -1;
   }

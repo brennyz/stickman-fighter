@@ -342,18 +342,32 @@ class Fighter {
 
     const canAct = this.hurtT <= 0 && !this.blocking;
     const pad = (this.playerSlot === 2) ? InputP2 : (this.isPlayer ? Input : null);
+    const atkRec = typeof MOVE_ATTACK_RECOVER_MUL === 'number' ? MOVE_ATTACK_RECOVER_MUL : 0.76;
+    const hurtMul = typeof MOVE_HURT_MUL === 'number' ? MOVE_HURT_MUL : 0.88;
     let mv = 0;
     if (canAct) {
       if (!this.attack) mv = it.move || 0;
       else if (this.attack.t >= this.attack.windup + this.attack.active) {
-        mv = (it.move || 0) * MOVE_ATTACK_RECOVER_MUL;
+        mv = (it.move || 0) * atkRec;
       }
     } else if ((this.isPlayer || this.playerSlot) && this.hurtT > 0 && this.onGround) {
-      mv = (it.move || 0) * MOVE_HURT_MUL;
+      mv = (it.move || 0) * hurtMul;
     }
-    const dig = pad && padDigitalMove(pad) !== 0
-      && Math.abs((it.move || 0) - padDigitalMove(pad)) < 0.08;
-    applyFighterMove(this, mv, dt, { canAct: canAct || this.hurtT > 0, digital: !!dig });
+    let dig = false;
+    if (pad && typeof padDigitalMove === 'function') {
+      try {
+        const pd = padDigitalMove(pad);
+        dig = pd !== 0 && Math.abs((it.move || 0) - pd) < 0.08;
+      } catch (_) { dig = false; }
+    }
+    if (typeof applyFighterMove === 'function') {
+      applyFighterMove(this, mv, dt, { canAct: canAct || this.hurtT > 0, digital: !!dig });
+    } else {
+      // Last-resort fallback if fighter-move.js was dropped from the bundle.
+      const target = mv * (this.speed || 260) * (this.onGround ? 1 : 0.78);
+      this.vx = lerp(this.vx || 0, target, 1 - Math.pow(0.002, Math.max(0, dt || 0)));
+      if (Math.abs(mv) > 0.05) this.face = mv > 0 ? 1 : -1;
+    }
 
     if (canAct && it.jump && this.onGround && !this.attack) {
       this.vy = -this.jumpV; this.onGround = false; AudioSys.sfx('jump');

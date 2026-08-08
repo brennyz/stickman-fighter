@@ -77,10 +77,14 @@ async function run() {
 
     function walkRight(on) {
       if (typeof Input === 'undefined') return;
-      Input.move = on ? 1 : 0;
       Input.keys = Input.keys || {};
       Input.keys.d = !!on;
       Input.keys.arrowright = !!on;
+      if (on) {
+        Input.keys.a = false;
+        Input.keys.arrowleft = false;
+      }
+      // Never assign Input.move — it overwrites the getter and masks missing helpers.
     }
 
     function killAll(g) {

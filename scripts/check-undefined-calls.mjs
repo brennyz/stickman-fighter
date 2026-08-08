@@ -23,6 +23,14 @@ const REGRESSION_MUST_DEFINE = [
   'fighterMoveXBounds', 'refreshA11yUi', 'motionReduced',
 ];
 
+/** Consts / values that must appear in the bundle (not only functions). */
+const REGRESSION_MUST_CONTAIN = [
+  'MOVE_ACCEL',
+  'MOVE_ATTACK_RECOVER_MUL',
+  'MOVE_HURT_MUL',
+  'src/systems/fighter-move.js',
+];
+
 const CRITICAL_FILES = /^src\/(game|boot|entities)\//;
 const GLOBAL_CALL_HEURISTIC = /(?:Idx|Gate|Input|Walk|Boundary|Trait|Loot|Sanitize|Unlocked|Eligible|Persistable|Bonuses|Summary|Preview|Toast|Banner|Sfx|Art|Pool|Roll|Gamble|Tame|Equip|Shard|Upgrade|Achieve|Mission|Repair|Stash|Backup|Export|Import|Hiccup|Recover|Suppress|Onboard|Floater|Spawn|Clear|Tide|Summon|Dex|Pet|Egg|Wave|Level|Stage|Part|Checkpoint)$/;
 
@@ -86,6 +94,22 @@ const problems = [];
 
 for (const sym of REGRESSION_MUST_DEFINE) {
   if (!defined.has(sym)) problems.push({ name: sym, file: 'regression-list', line: 0, why: 'missing definition' });
+}
+
+const rawBundle = bundle;
+for (const token of REGRESSION_MUST_CONTAIN) {
+  if (!rawBundle.includes(token) && !manifest.includes(token)) {
+    problems.push({ name: token, file: 'regression-contain', line: 0, why: 'missing in bundle/manifest' });
+  }
+}
+// MOVE_* must be defined as consts (collectDefs misses bare consts)
+for (const c of ['MOVE_ACCEL', 'MOVE_ATTACK_RECOVER_MUL', 'MOVE_HURT_MUL']) {
+  if (!new RegExp(`\\b(?:const|let|var)\\s+${c}\\b`).test(rawBundle)) {
+    problems.push({ name: c, file: 'regression-const', line: 0, why: 'missing const definition' });
+  }
+}
+if (!manifest.includes('src/systems/fighter-move.js')) {
+  problems.push({ name: 'src/systems/fighter-move.js', file: 'manifest', line: 0, why: 'not in src/manifest.json' });
 }
 
 for (const rel of manifest) {

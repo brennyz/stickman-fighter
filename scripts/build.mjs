@@ -18,6 +18,31 @@ if (!fs.existsSync(manifestPath)) {
 }
 
 const files = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+
+/** Guard: shared combat helpers must stay in the bundle after versus retire. */
+const REQUIRED_MODULES = [
+  'src/systems/a11y.js',
+  'src/systems/fighter-move.js',
+  'src/systems/input.js',
+];
+for (const req of REQUIRED_MODULES) {
+  if (!files.includes(req)) {
+    console.error('build: missing required module in manifest:', req);
+    process.exit(1);
+  }
+}
+const inputIdx = files.indexOf('src/systems/input.js');
+const moveIdx = files.indexOf('src/systems/fighter-move.js');
+const fighterIdx = files.indexOf('src/entities/fighter.js');
+if (moveIdx < 0 || inputIdx < 0 || moveIdx < inputIdx) {
+  console.error('build: fighter-move.js must load after input.js (JOY_* consts)');
+  process.exit(1);
+}
+if (fighterIdx >= 0 && moveIdx > fighterIdx) {
+  console.error('build: fighter-move.js must load before entities/fighter.js');
+  process.exit(1);
+}
+
 const parts = ["'use strict';\n"];
 let total = 0;
 

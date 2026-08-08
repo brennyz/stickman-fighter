@@ -44,8 +44,13 @@ async function run() {
     for (let i = 0; i < 800; i++) {
       frames++;
       if (g.betweenT > 0) g.betweenT = Math.min(g.betweenT, DT);
-      Input.move = 0;
-      if (Input.keys) { Input.keys.d = false; Input.keys.arrowright = false; }
+      if (Input.keys) {
+        Input.keys.d = false;
+        Input.keys.arrowright = false;
+        Input.keys.a = false;
+        Input.keys.arrowleft = false;
+      }
+      // Never assign Input.move — preserves padDigitalMove getter.
       for (const m of g.monsters) if (m.alive) try { m.takeDamage(999999, 0, g); } catch (e) { errors.push(String(e)); }
       try { g.update(DT); } catch (e) { errors.push('update:' + e); }
       if (g.wavePause > 0 && !g.partGate) sawWaveClear = true;
