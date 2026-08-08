@@ -18,6 +18,9 @@ const REGRESSION_MUST_DEFINE = [
   'applyGambleToStage', 'gameUiTimerOk', 'syncPlayLayer', 'forcePlayCanvasVisible',
   'rollZoneWeaponDrop', 'grantZoneBossClearWeapon', 'applyWeaponOnHitEffect',
   'tickWeaponStatusEffects', 'adventureDropZoneForLevel', 'weaponZoneUnlocked',
+  /* Shared combat helpers — must not vanish when versus.js is stubbed */
+  'padDigitalMove', 'joyMoveAxis', 'applyFighterMove', 'clampFighterX',
+  'fighterMoveXBounds', 'refreshA11yUi', 'motionReduced',
 ];
 
 const CRITICAL_FILES = /^src\/(game|boot|entities)\//;

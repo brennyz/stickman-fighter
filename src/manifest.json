@@ -23,6 +23,7 @@
   "src/systems/audio-samples.js",
   "src/systems/audio.js",
   "src/systems/input.js",
+  "src/systems/fighter-move.js",
   "src/core/canvas.js",
   "src/render/draw-helpers.js",
   "src/render/tide-art.js",
