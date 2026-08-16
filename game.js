@@ -274,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.142';
+const APP_VERSION = '1.18.143';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 352;
+const SW_CACHE_REV = 353;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -824,13 +824,18 @@ const SIG_MODS = {
 };
 
 function combatEntryFor(f) {
-  if (f && f.rosterId) {
+  // Versus retire: vsRosterEntry() is a null stub. Adventure still tags
+  // the player as rosterId 'hero' — never dereference a missing entry
+  // (that threw in attackSpec → punch/weapon/kick felt dead on mobile).
+  if (f && f.rosterId && typeof vsRosterEntry === 'function') {
     const e = vsRosterEntry(f.rosterId);
-    return {
-      crit: e.crit != null ? e.crit : 0.08,
-      critMul: e.critMul != null ? e.critMul : 1.5,
-      sig: e.sig || 'balanced',
-    };
+    if (e) {
+      return {
+        crit: e.crit != null ? e.crit : 0.08,
+        critMul: e.critMul != null ? e.critMul : 1.5,
+        sig: e.sig || 'balanced',
+      };
+    }
   }
   const lv = typeof save !== 'undefined' ? (save.lvl || 1) : 1;
   return { crit: 0.06 + Math.min(0.05, lv * 0.002), critMul: 1.48, sig: 'balanced' };
@@ -15656,6 +15661,15 @@ const JOY_MAX_PX = 58;
 /** Geen pointermove meer → joy los (iPad mist soms pointerup) — alleen als touch weg is */
 const JOY_STALE_MS = IS_TOUCH ? 2000 : 1600;
 
+/**
+ * Bottom/edge keep-out for the pads. Phone browsers own the last ~20px:
+ * Android's gesture bar and Chrome's pull-up toolbar swallow taps there, so a
+ * button whose hitbox ends 4px above the edge is barely pressable.
+ */
+function touchEdgeGuard() {
+  return IS_TOUCH ? 24 : 6;
+}
+
 function btnHitSlop() {
   // d9: iets ruimere hit-slop op touch (iPad mis-taps), bigTouch nog ruimer
   const base = (typeof save !== 'undefined' && save.bigTouch !== false) ? 16 : 11;
@@ -15760,14 +15774,15 @@ function shiftTouchButtons(buttons, dx) {
   for (const b of buttons) b.x += dx;
 }
 
-/** Knoppen mogen niet buiten de schermranden uitsteken. */
-function clampButtonsToScreen(buttons, H) {
+/** Knoppen mogen niet buiten de schermranden (of de gesture-strip) uitsteken. */
+function clampButtonsToScreen(buttons, H, guard) {
+  const gy = guard != null ? guard : 4;
   let maxBy = -Infinity, maxBx = -Infinity;
   for (const b of buttons) {
     maxBy = Math.max(maxBy, b.y + b.r);
     maxBx = Math.max(maxBx, b.x + b.r);
   }
-  const overY = maxBy - (H - 4);
+  const overY = maxBy - (H - gy);
   if (overY > 0) for (const b of buttons) b.y -= overY;
   const overX = maxBx - (W - 2);
   if (overX > 0) for (const b of buttons) b.x -= overX;
@@ -15779,7 +15794,9 @@ function layoutTouchButtonCluster(W, H, ui, safe, opts) {
   const portraitTight = W < 420 && H > W * 1.02;
   const r = Math.max(20, Math.round((portraitTight ? 34 : 42) * ui));
   const rs = Math.max(17, Math.round((portraitTight ? 28 : 34) * ui));
-  const bottomY = H - safe.bottom - Math.max(10, H * 0.02);
+  const edgeGuard = touchEdgeGuard();
+  const bottomGuard = safe.bottom + edgeGuard;
+  const bottomY = H - safe.bottom - Math.max(edgeGuard, H * 0.03);
   const joyInset = Math.max((dual ? 48 : 64) + (side === 'p1' ? safe.left : safe.right), W * (portraitTight ? 0.09 : 0.12));
   const joyHome = side === 'p1'
     ? { x: joyInset, y: bottomY - (dual ? 6 : 8) }
@@ -15790,21 +15807,25 @@ function layoutTouchButtonCluster(W, H, ui, safe, opts) {
     const marginR = Math.max(10 + safe.right, W * 0.035);
     const xR = W - marginR;
     if (portraitTight) {
-      const rSmall = Math.max(18, Math.round(28 * ui));
-      const rsSmall = Math.max(15, Math.round(24 * ui));
-      const col = rSmall * 1.55 + 12;
-      const gap = 6;
+      // Floors keep every target at the 44px touch minimum on small phones.
+      const rSmall = Math.max(24, Math.round(28 * ui));
+      const rsSmall = Math.max(22, Math.round(24 * ui));
+      const gap = Math.max(6, Math.round(7 * ui));
+      // Pitch must clear two full-size buttons — the old 1.55×r spacing only
+      // held while r was pinned to the 18px floor (special/weapon overlapped).
+      const col = rSmall * 2 + gap;
+      const row = rSmall * 2 + gap;
       const by = bottomY - rsSmall * 0.35;
       const xJump = xR - rsSmall * 0.15;
       const xMid = xR - col;
-      const xFar = xR - col * 2.25;
+      const xFar = xR - col * 2;
       buttons = [
         touchBtn('jump', xJump, by, rsSmall),
         touchBtn('punch', xMid, by, rSmall),
         touchBtn('kick', xFar, by, rSmall),
-        touchBtn('special', xJump, by - (rsSmall + rSmall + gap), rSmall),
-        touchBtn('weapon', xMid, by - (rSmall + rSmall + gap), rSmall),
-        touchBtn('subst', xFar, by - (rsSmall + rSmall + gap), rsSmall),
+        touchBtn('special', xJump, by - row, rSmall),
+        touchBtn('weapon', xMid, by - row, rSmall),
+        touchBtn('subst', xFar, by - row, rsSmall),
       ];
       const joyClear = joyHome.x + Math.round(50 * ui) + rSmall * 0.25;
       const minBx = Math.min(...buttons.map((b) => b.x - b.r));
@@ -15832,7 +15853,7 @@ function layoutTouchButtonCluster(W, H, ui, safe, opts) {
       const minBx = Math.min(...buttons.map((b) => b.x - b.r));
       if (minBx < joyClear) shiftTouchButtons(buttons, joyClear - minBx);
     }
-    clampButtonsToScreen(buttons, H);
+    clampButtonsToScreen(buttons, H, bottomGuard);
     return { joyHome, buttons };
   }
 
@@ -15901,7 +15922,7 @@ function layoutTouchButtonCluster(W, H, ui, safe, opts) {
       if (maxBx > joyClearR) shiftTouchButtons(buttons, joyClearR - maxBx);
     }
   }
-  clampButtonsToScreen(buttons, H);
+  clampButtonsToScreen(buttons, H, bottomGuard);
   return { joyHome, buttons };
 }
 
@@ -16156,14 +16177,19 @@ function viewportGameSize() {
   return { w: Math.max(1, innerWidth), h: Math.max(1, innerHeight), offsetX: 0, offsetY: 0 };
 }
 
+/**
+ * Pad scale. Portrait used to fold in a `W / H * 0.95` aspect term, but every
+ * modern 19.5:9 phone lands near 0.44 there — that pinned the scale to the old
+ * 0.62 floor and shrank punch/weapon to 36px, under the 44px touch minimum.
+ */
 function touchUiScale(W, H, opts) {
   opts = opts || {};
   const base = (typeof save !== 'undefined' && save.bigTouch !== false) ? 1.1 : 1;
   const portrait = H > W * 1.04;
   const fit = portrait
-    ? Math.min(W / 390, H / 660, W / H * 0.95)
-    : Math.min(W / 400, H / 740);
-  let scale = clamp(fit * base, 0.62, 1.16);
+    ? Math.min(W / 390, H / 720)
+    : Math.min(W / 640, H / 560);
+  let scale = clamp(fit * base, 0.78, 1.16);
   const dual = opts.dual || (typeof Input !== 'undefined' && Input.dualMode);
   if (dual) {
     const mul = portrait ? (W < 420 ? 0.78 : 0.86) : 0.9;

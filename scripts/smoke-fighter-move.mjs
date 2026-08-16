@@ -108,25 +108,28 @@ async function run() {
     Input.keys.d = false;
     Input.keys.arrowright = false;
 
-    // Touch pad press path (punch button) — clear startGame input suppress.
+    // Touch pad press path (punch button) — must start a real attack.
+    // (Earlier smoke only checked Input.pressed and then take()'d it away.)
     let punchOk = false;
+    let punchKind = null;
     try {
       Input.suppressUntil = 0;
+      g.inputLocked = false;
+      g.partGate = null;
+      g.player.invulnT = 0;
+      g.player.attack = null;
+      g.player.state = 'idle';
       if (typeof Input.layout === 'function') Input.layout(W, H);
       const punch = (Input.buttons || []).find((b) => b.id === 'punch');
       if (punch) {
         Input.onDown(punch.x, punch.y, 91);
-        punchOk = !!(punch.held || Input.pressed?.punch);
-        if (!punchOk) {
-          Input.press('punch');
-          punchOk = !!Input.pressed?.punch;
-        }
         Input.onUp(91);
       } else {
         Input.press('punch');
-        punchOk = !!Input.pressed?.punch;
       }
-      if (punchOk) Input.take('punch');
+      g.update(1 / 30);
+      punchKind = g.player.attack && g.player.attack.kind;
+      punchOk = punchKind === 'punch';
     } catch (e) {
       errors.push('touch:' + e);
     }
@@ -153,6 +156,7 @@ async function run() {
       x0, x1, vx,
       moved,
       punchOk,
+      punchKind,
       errors: errors.slice(0, 8),
       app: typeof APP_VERSION !== 'undefined' ? APP_VERSION : null,
       sw: typeof SW_CACHE_REV !== 'undefined' ? SW_CACHE_REV : null,
