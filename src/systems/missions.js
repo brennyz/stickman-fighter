@@ -2107,6 +2107,12 @@ function vsWeaponRangeFactor(w) {
   return 0.22;
 }
 function vsFighterStats(entry) {
+  if (!entry) {
+    return {
+      hp: 0, spd: 0, dmg: 0, str: 0, rng: 0, meleeDps: 0, rangeDps: 0,
+      wpn: '—', special: '—', critPct: 0, sig: '—', sigKey: 'balanced',
+    };
+  }
   const w = weaponById(entry.weapon);
   const hp = Math.round(100 * entry.hpMul);
   const spd = Math.round(100 * entry.spdMul);
@@ -2212,8 +2218,8 @@ function charStatPreviewPair() {
 function vsStatPreviewHtml(e1, e2, previewing, lockedPreview) {
   const s1 = vsFighterStats(e1);
   const s2 = vsFighterStats(e2);
-  const g1 = vsSagaMeta(e1.saga || 'scroll');
-  const g2 = vsSagaMeta(e2.saga || 'scroll');
+  const g1 = vsSagaMeta((e1 && e1.saga) || 'scroll');
+  const g2 = vsSagaMeta((e2 && e2.saga) || 'scroll');
   const step = UI.charPickStep === 2 ? 'Stap 2 · kies P2' : 'Stap 1 · kies P1';
   const counts = vsSagaUnlockedCounts(UI.charSagaFilter || 'all');
   const next = charRosterNextUnlock();
@@ -2223,10 +2229,11 @@ function vsStatPreviewHtml(e1, e2, previewing, lockedPreview) {
   const head = `<div class="vs-preview-head">${step} · ${counts.unlocked}/${counts.total} in filter · ${vsUnlockedCount()}/${VS_ROSTER.length} totaal${prog}</div>`;
   const col = (entry, s, theirs, accent, saga, flair, side, locked) => {
     const live = previewing && !locked && ((UI.charPickStep === 1 && side === 'left') || (UI.charPickStep === 2 && side === 'right'));
-    const played = !locked && vsPlayedBefore(entry.id) ? '<span class="vs-played-chip">gespeeld</span>' : '';
+    const played = !locked && entry && vsPlayedBefore(entry.id) ? '<span class="vs-played-chip">gespeeld</span>' : '';
     const lockNote = locked ? `<div class="vs-preview-lock">${SVG_LOCK_ICON} ${vsUnlockHint(entry)}</div>` : '';
+    const nm = (entry && entry.name) || '—';
     return `<div class="vs-preview-col${live ? ' preview-live' : ''}${locked ? ' preview-locked' : ''}" style="--accent:${accent}">` +
-    `<div class="vs-preview-name">${entry.name}${played}${live ? ' <span class="vs-preview-tag">preview</span>' : ''}${locked ? ' <span class="vs-preview-tag locked">locked</span>' : ''}</div>` +
+    `<div class="vs-preview-name">${nm}${played}${live ? ' <span class="vs-preview-tag">preview</span>' : ''}${locked ? ' <span class="vs-preview-tag locked">locked</span>' : ''}</div>` +
     lockNote +
     `<div class="vs-preview-wpn">${sagaIconSvg(saga.id)} ${saga.label} · ${s.wpn} · ${s.special}</div>` +
     `<div class="vs-preview-sig">${s.sig} · ${s.critPct}% crit</div>` +
@@ -2273,16 +2280,16 @@ function updateCharFightDock() {
       text = t('ui.charFightNeedP1');
       cls += ' need-p1';
     } else if (samePair) {
-      text = t('ui.charFightSamePair', { name: e1.name });
+      text = t('ui.charFightSamePair', { name: vsRosterName(vsSelect.p1) || '—' });
       cls += ' warn';
     } else if (!ready) {
-      text = t('ui.charFightNeedP2', { p1: e1.name });
+      text = t('ui.charFightNeedP2', { p1: vsRosterName(vsSelect.p1) || '—' });
       cls += ' need-p2';
     } else {
       const tot = typeof vsMatchupTotShort === 'function'
         ? vsMatchupTotShort(vsSelect.p1, vsSelect.p2)
         : null;
-      text = t('ui.charFightSummary', { p1: e1.name, p2: e2.name });
+      text = t('ui.charFightSummary', { p1: vsRosterName(vsSelect.p1) || '—', p2: vsRosterName(vsSelect.p2) || '—' });
       if (tot) {
         text += ` · TOT ${tot.r1}/${tot.r2}`;
         if (!tot.even) text += tot.leadP1 ? ' · P1+' : ' · P2+';
@@ -2298,7 +2305,7 @@ function updateCharFightDock() {
     fightBtn.setAttribute('aria-disabled', fightBtn.disabled ? 'true' : 'false');
     fightBtn.classList.toggle('char-fight-ready', ready);
     fightBtn.textContent = ready
-      ? t('ui.charFightReady', { p1: e1.name, p2: e2.name })
+      ? t('ui.charFightReady', { p1: vsRosterName(vsSelect.p1) || '—', p2: vsRosterName(vsSelect.p2) || '—' })
       : t('ui.charFight');
   }
 
@@ -2309,8 +2316,8 @@ function updateCharFightDock() {
     replayBtn.style.display = canReplay ? '' : 'none';
     if (canReplay) {
       replayBtn.textContent = t('ui.charReplayLast', {
-        p1: vsRosterEntry(lp.p1).name,
-        p2: vsRosterEntry(lp.p2).name,
+        p1: vsRosterName(lp.p1) || '—',
+        p2: vsRosterName(lp.p2) || '—',
       });
     }
   }

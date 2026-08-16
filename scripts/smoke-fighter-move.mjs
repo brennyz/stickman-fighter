@@ -126,7 +126,20 @@ async function run() {
         Input.press('punch');
         punchOk = !!Input.pressed?.punch;
       }
-      if (punchOk) Input.take('punch');
+      if (punchOk) {
+        try {
+          g.player.attack = null;
+          g.player.state = 'idle';
+          g.player.invulnT = 0;
+          g.inputLocked = false;
+          Input.press('punch');
+          g.update(1 / 30);
+          punchOk = g.player.attack && g.player.attack.kind === 'punch';
+        } catch (e) {
+          errors.push('punchAttack:' + e);
+          punchOk = false;
+        }
+      }
     } catch (e) {
       errors.push('touch:' + e);
     }

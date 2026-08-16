@@ -274,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.141';
+const APP_VERSION = '1.18.143';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 351;
+const SW_CACHE_REV = 353;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -824,13 +824,18 @@ const SIG_MODS = {
 };
 
 function combatEntryFor(f) {
-  if (f && f.rosterId) {
+  // Versus retire: vsRosterEntry() is a null stub. Adventure still tags
+  // the player as rosterId 'hero' — never dereference a missing entry
+  // (that threw in attackSpec → punch/weapon/kick felt dead).
+  if (f && f.rosterId && typeof vsRosterEntry === 'function') {
     const e = vsRosterEntry(f.rosterId);
-    return {
-      crit: e.crit != null ? e.crit : 0.08,
-      critMul: e.critMul != null ? e.critMul : 1.5,
-      sig: e.sig || 'balanced',
-    };
+    if (e) {
+      return {
+        crit: e.crit != null ? e.crit : 0.08,
+        critMul: e.critMul != null ? e.critMul : 1.5,
+        sig: e.sig || 'balanced',
+      };
+    }
   }
   const lv = typeof save !== 'undefined' ? (save.lvl || 1) : 1;
   return { crit: 0.06 + Math.min(0.05, lv * 0.002), critMul: 1.48, sig: 'balanced' };
@@ -4875,6 +4880,12 @@ function vsWeaponRangeFactor(w) {
   return 0.22;
 }
 function vsFighterStats(entry) {
+  if (!entry) {
+    return {
+      hp: 0, spd: 0, dmg: 0, str: 0, rng: 0, meleeDps: 0, rangeDps: 0,
+      wpn: '—', special: '—', critPct: 0, sig: '—', sigKey: 'balanced',
+    };
+  }
   const w = weaponById(entry.weapon);
   const hp = Math.round(100 * entry.hpMul);
   const spd = Math.round(100 * entry.spdMul);
@@ -4980,8 +4991,8 @@ function charStatPreviewPair() {
 function vsStatPreviewHtml(e1, e2, previewing, lockedPreview) {
   const s1 = vsFighterStats(e1);
   const s2 = vsFighterStats(e2);
-  const g1 = vsSagaMeta(e1.saga || 'scroll');
-  const g2 = vsSagaMeta(e2.saga || 'scroll');
+  const g1 = vsSagaMeta((e1 && e1.saga) || 'scroll');
+  const g2 = vsSagaMeta((e2 && e2.saga) || 'scroll');
   const step = UI.charPickStep === 2 ? 'Stap 2 · kies P2' : 'Stap 1 · kies P1';
   const counts = vsSagaUnlockedCounts(UI.charSagaFilter || 'all');
   const next = charRosterNextUnlock();
@@ -4991,10 +5002,11 @@ function vsStatPreviewHtml(e1, e2, previewing, lockedPreview) {
   const head = `<div class="vs-preview-head">${step} · ${counts.unlocked}/${counts.total} in filter · ${vsUnlockedCount()}/${VS_ROSTER.length} totaal${prog}</div>`;
   const col = (entry, s, theirs, accent, saga, flair, side, locked) => {
     const live = previewing && !locked && ((UI.charPickStep === 1 && side === 'left') || (UI.charPickStep === 2 && side === 'right'));
-    const played = !locked && vsPlayedBefore(entry.id) ? '<span class="vs-played-chip">gespeeld</span>' : '';
+    const played = !locked && entry && vsPlayedBefore(entry.id) ? '<span class="vs-played-chip">gespeeld</span>' : '';
     const lockNote = locked ? `<div class="vs-preview-lock">${SVG_LOCK_ICON} ${vsUnlockHint(entry)}</div>` : '';
+    const nm = (entry && entry.name) || '—';
     return `<div class="vs-preview-col${live ? ' preview-live' : ''}${locked ? ' preview-locked' : ''}" style="--accent:${accent}">` +
-    `<div class="vs-preview-name">${entry.name}${played}${live ? ' <span class="vs-preview-tag">preview</span>' : ''}${locked ? ' <span class="vs-preview-tag locked">locked</span>' : ''}</div>` +
+    `<div class="vs-preview-name">${nm}${played}${live ? ' <span class="vs-preview-tag">preview</span>' : ''}${locked ? ' <span class="vs-preview-tag locked">locked</span>' : ''}</div>` +
     lockNote +
     `<div class="vs-preview-wpn">${sagaIconSvg(saga.id)} ${saga.label} · ${s.wpn} · ${s.special}</div>` +
     `<div class="vs-preview-sig">${s.sig} · ${s.critPct}% crit</div>` +
@@ -5041,16 +5053,16 @@ function updateCharFightDock() {
       text = t('ui.charFightNeedP1');
       cls += ' need-p1';
     } else if (samePair) {
-      text = t('ui.charFightSamePair', { name: e1.name });
+      text = t('ui.charFightSamePair', { name: vsRosterName(vsSelect.p1) || '—' });
       cls += ' warn';
     } else if (!ready) {
-      text = t('ui.charFightNeedP2', { p1: e1.name });
+      text = t('ui.charFightNeedP2', { p1: vsRosterName(vsSelect.p1) || '—' });
       cls += ' need-p2';
     } else {
       const tot = typeof vsMatchupTotShort === 'function'
         ? vsMatchupTotShort(vsSelect.p1, vsSelect.p2)
         : null;
-      text = t('ui.charFightSummary', { p1: e1.name, p2: e2.name });
+      text = t('ui.charFightSummary', { p1: vsRosterName(vsSelect.p1) || '—', p2: vsRosterName(vsSelect.p2) || '—' });
       if (tot) {
         text += ` · TOT ${tot.r1}/${tot.r2}`;
         if (!tot.even) text += tot.leadP1 ? ' · P1+' : ' · P2+';
@@ -5066,7 +5078,7 @@ function updateCharFightDock() {
     fightBtn.setAttribute('aria-disabled', fightBtn.disabled ? 'true' : 'false');
     fightBtn.classList.toggle('char-fight-ready', ready);
     fightBtn.textContent = ready
-      ? t('ui.charFightReady', { p1: e1.name, p2: e2.name })
+      ? t('ui.charFightReady', { p1: vsRosterName(vsSelect.p1) || '—', p2: vsRosterName(vsSelect.p2) || '—' })
       : t('ui.charFight');
   }
 
@@ -5077,8 +5089,8 @@ function updateCharFightDock() {
     replayBtn.style.display = canReplay ? '' : 'none';
     if (canReplay) {
       replayBtn.textContent = t('ui.charReplayLast', {
-        p1: vsRosterEntry(lp.p1).name,
-        p2: vsRosterEntry(lp.p2).name,
+        p1: vsRosterName(lp.p1) || '—',
+        p2: vsRosterName(lp.p2) || '—',
       });
     }
   }
@@ -8986,10 +8998,19 @@ function pickBalancedRandomDuo() { return null; }
 const VS_ROSTER = [];
 
 function vsRosterEntry() { return null; }
+function vsRosterName(id) {
+  try {
+    const e = typeof vsRosterEntry === 'function' ? vsRosterEntry(id) : null;
+    return (e && e.name) || '';
+  } catch (_) {
+    return '';
+  }
+}
 function vsUnlocked() { return false; }
 function vsUnlockHint() { return ''; }
 function normalizeVsPick() { return null; }
 function markVsPlayed() {}
+function trackVsRosterUse() {}
 
 function applyVsArenaBounds() {}
 function resetVsFighterRound() {}
@@ -25901,6 +25922,10 @@ class Game {
     this.pendingVsP1Win = null;
     this.player = buildVsFighter(vsRosterEntry(this.p1Pick), vsSpawnX(1), 1);
     this.p2 = buildVsFighter(vsRosterEntry(this.p2Pick), vsSpawnX(2), 2);
+    if (!this.player || !this.p2) {
+      try { toastVersusRetired(); } catch (_) {}
+      return;
+    }
     this.startVsRound();
     AudioSys.play('versus');
   }
@@ -26115,7 +26140,7 @@ class Game {
     else if (close) tip = t('result.vsCloseRematchTip');
     scheduleGameResult(this, 1200, () => UI.showResult(p1Win, {
       title: p1Win ? t('result.vsP1Win') : t('result.vsP2Win'),
-      detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}` +
+      detail: `${vsRosterName(this.p1Pick) || 'P1'} vs ${vsRosterName(this.p2Pick) || 'P2'} · ${this.roundsP1}-${this.roundsP2}` +
         ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : '') +
         (this.matchFatality ? t('result.vsFatalityLine') : '') +
         (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
@@ -29159,7 +29184,7 @@ class Game {
         c.fillStyle = '#e04f5f'; this.rr(c, W / 2 - bwid / 2, hy, bwid * boss.hp / boss.maxhp, 10, 5); c.fill();
         hy += 18;
         c.font = '700 12px sans-serif';
-        fillHudText(c, boss.sp.name.toUpperCase(), W / 2, hy, { fill: '#ffc8d0' });
+        fillHudText(c, String((boss.sp && boss.sp.name) || 'BOSS').toUpperCase(), W / 2, hy, { fill: '#ffc8d0' });
         hy += 16;
       }
 
@@ -29602,8 +29627,8 @@ class Game {
       const half = Math.min(260, W * 0.38);
       const safeTop = hudInsetTop();
       const byVs = Math.max(by, safeTop + 42);
-      const name1 = vsRosterEntry(this.p1Pick).name;
-      const name2 = vsRosterEntry(this.p2Pick).name;
+      const name1 = vsRosterName(this.p1Pick) || 'P1';
+      const name2 = vsRosterName(this.p2Pick) || 'P2';
       if (this.phase === 'intro' && this.phaseT < 1.55) {
         const n = Math.ceil(Math.max(0.35, 1.55 - this.phaseT));
         if (typeof drawPixelVsBanner === 'function') {
@@ -31179,8 +31204,8 @@ const UI = {
       }
     }
     if (game?.mode === 'versus' && game.p2) {
-      const a = vsRosterEntry(game.p1Pick).name;
-      const b = vsRosterEntry(game.p2Pick).name;
+      const a = vsRosterName(game.p1Pick) || 'P1';
+      const b = vsRosterName(game.p2Pick) || 'P2';
       let tag = '';
       if (game.roundsP1 === 1 && game.roundsP2 === 1) tag = ' · beslissende ronde';
       else if (game.roundsP1 === 1 || game.roundsP2 === 1) tag = ' · match point';
@@ -31565,12 +31590,12 @@ const UI = {
     const e1 = vsRosterEntry(vsSelect.p1);
     const e2 = vsRosterEntry(vsSelect.p2);
     if (p1Lbl) {
-      p1Lbl.textContent = (this.charPickStep === 1 ? '▶ ' : '') + 'P1: ' + e1.name;
+      p1Lbl.textContent = (this.charPickStep === 1 ? '▶ ' : '') + 'P1: ' + ((e1 && e1.name) || vsRosterName(vsSelect.p1) || '—');
       p1Lbl.classList.toggle('active', this.charPickStep === 1);
       p1Lbl.setAttribute('aria-pressed', this.charPickStep === 1 ? 'true' : 'false');
     }
     if (p2Lbl) {
-      p2Lbl.textContent = (this.charPickStep === 2 ? '▶ ' : '') + 'P2: ' + e2.name;
+      p2Lbl.textContent = (this.charPickStep === 2 ? '▶ ' : '') + 'P2: ' + ((e2 && e2.name) || vsRosterName(vsSelect.p2) || '—');
       p2Lbl.classList.toggle('active', this.charPickStep === 2);
       p2Lbl.setAttribute('aria-pressed', this.charPickStep === 2 ? 'true' : 'false');
     }
@@ -35061,7 +35086,7 @@ if (pauseVsRestart) {
     vsSelect.p2 = p2;
     state = 'play';
     AudioSys.setPaused(false);
-    UI.toast(`Herstart · ${vsRosterEntry(p1).name} vs ${vsRosterEntry(p2).name}`, 2400);
+    UI.toast(`Herstart · ${vsRosterName(p1) || 'P1'} vs ${vsRosterName(p2) || 'P2'}`, 2400);
     startGame('versus', { p1, p2 });
   });
 }
@@ -35071,16 +35096,16 @@ if (pauseVsSwap) {
     if (!game || game.mode !== 'versus') return;
     if (state !== 'play' && state !== 'pause') return;
     AudioSys.sfx('select');
-    const beforeP1 = vsRosterEntry(game.p1Pick).name;
-    const beforeP2 = vsRosterEntry(game.p2Pick).name;
+    const beforeP1 = vsRosterName(game.p1Pick) || 'P1';
+    const beforeP2 = vsRosterName(game.p2Pick) || 'P2';
     if (!swapVsSides(game)) return;
     state = 'play';
     AudioSys.setPaused(false);
     UI.show(null);
     try { primePlayInput(true); } catch (_) {}
     UI.toast(t('toast.vsSwap', {
-      a: vsRosterEntry(game.p1Pick).name,
-      b: vsRosterEntry(game.p2Pick).name,
+      a: vsRosterName(game.p1Pick) || 'P1',
+      b: vsRosterName(game.p2Pick) || 'P2',
       was1: beforeP1,
       was2: beforeP2,
     }), 2800);
@@ -35097,7 +35122,7 @@ bindPress(document.getElementById('resAgain'), () => {
     const p2 = d.p2 || vsSelect.p2;
     vsSelect.p1 = p1;
     vsSelect.p2 = p2;
-    UI.toast(`Rematch · ${vsRosterEntry(p1).name} vs ${vsRosterEntry(p2).name}`, 2600);
+    UI.toast(`Rematch · ${vsRosterName(p1) || 'P1'} vs ${vsRosterName(p2) || 'P2'}`, 2600);
     startGame('versus', { p1, p2 });
   }
   else startGame(d.mode);

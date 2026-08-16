@@ -1,7 +1,7 @@
 {
   "name": "stickman-fighter",
   "private": true,
-  "version": "1.18.141",
+  "version": "1.18.143",
   "description": "Stickman Fighter — Monster Arena PWA",
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -31,6 +31,7 @@
     "smoke:cave": "node scripts/smoke-cave-scenery.mjs",
     "smoke:pc": "node scripts/smoke-pc-controls.mjs",
     "smoke:fighter-move": "node scripts/smoke-fighter-move.mjs",
+    "smoke:versus-retire": "node scripts/smoke-versus-retire.mjs",
     "smoke:vista": "node scripts/smoke-vista-flash.mjs",
     "smoke:advbg": "node scripts/smoke-adventure-bg-drop.mjs",
     "store:shots": "node scripts/capture-store-screenshots.mjs",
@@ -39,7 +40,7 @@
     "smoke:pwa": "node scripts/smoke-pwa-shell.mjs",
     "smoke:summon": "node scripts/smoke-summon-screen.mjs",
     "smoke:wall": "node scripts/smoke-wall.mjs",
-    "test": "npm run build && npm run check && npm run check:critical && npm run smoke && npm run smoke:upgrades && npm run smoke:menu && npm run smoke:html && npm run smoke:responsive && npm run smoke:arcade-ui && npm run smoke:pwa && npm run smoke:gamble && npm run smoke:levelup && npm run smoke:petwave && npm run smoke:wave12 && npm run smoke:spiral-orb && npm run smoke:boomerang && npm run smoke:weapons && npm run smoke:zone && npm run smoke:cave && npm run smoke:pc && npm run smoke:fighter-move && npm run smoke:vista && npm run smoke:advbg && npm run smoke:adventure && npm run smoke:satan && npm run smoke:save && npm run smoke:summon && npm run smoke:wall",
+    "test": "npm run build && npm run check && npm run check:critical && npm run smoke && npm run smoke:upgrades && npm run smoke:menu && npm run smoke:html && npm run smoke:responsive && npm run smoke:arcade-ui && npm run smoke:pwa && npm run smoke:gamble && npm run smoke:levelup && npm run smoke:petwave && npm run smoke:wave12 && npm run smoke:spiral-orb && npm run smoke:boomerang && npm run smoke:weapons && npm run smoke:zone && npm run smoke:cave && npm run smoke:pc && npm run smoke:fighter-move && npm run smoke:versus-retire && npm run smoke:vista && npm run smoke:advbg && npm run smoke:adventure && npm run smoke:satan && npm run smoke:save && npm run smoke:summon && npm run smoke:wall",
     "roll": "bash scripts/roll-improvement-d20.sh",
     "roll:status": "bash scripts/roll-improvement-d20.sh status",
     "roll:verify": "bash scripts/roll-improvement-d20.sh verify",

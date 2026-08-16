@@ -117,6 +117,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-08-16 | — | **versus-retire leftovers:** `combatEntryFor` null-check (sla/wapen crashte op `rosterId:'hero'`), `trackVsRosterUse` stub, `vsRosterName` + vsFighterStats(null), HUD/start/char-select `.name` guards. smoke:versus-retire. v1.18.143 / SW v353. |
 | 2026-08-07 | — | **iOS shell:** Capacitor stubs + Guideline 4.2 notes (C2–C3). Docs only. |
 | 2026-08-07 | **merge** | Soft-live stack op main: privacy + soft-feel + versus-retire + IP-A techniques · **v1.18.138 / SW v348**. |
 | 2026-08-07 | — | **soft-legal:** privacy.html + settings/menu link, age/teens+ hints, docs/store data-safety + iOS nutrition; A1/A2/A7/B7/C4 done. v1.18.134 / SW v344. |
