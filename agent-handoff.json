@@ -30,7 +30,7 @@
       "id": "w-20260816T074900",
       "from": "user",
       "text": "Upgrade de speciale wapens met light effects",
-      "status": "open",
+      "status": "done-in-code",
       "updated": "2026-08-16"
     },
     {
@@ -374,6 +374,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-16T07:53:12Z",
+      "summary": "Speciale wapens: light-FX glow/trail/hit-flash · v1.18.142"
+    },
+    {
       "at": "2026-08-07T20:54:14Z",
       "summary": "Merge iOS Capacitor shell stubs + Guideline 4.2 notes (C2–C3)"
     },
@@ -468,38 +472,6 @@
     {
       "at": "2026-07-26T20:05:49Z",
       "summary": "d19 muur: pauze-stats, combo×10, smoke-wall LIVE · v1.18.118"
-    },
-    {
-      "at": "2026-07-26T19:36:11Z",
-      "summary": "Rasengan CD LIVE gemerged · v1.18.117"
-    },
-    {
-      "at": "2026-07-26T19:59:00Z",
-      "summary": "Rasengan CD LIVE: Lv1–2=2s · Lv3–7=3s · Lv8=5s · v1.18.117"
-    },
-    {
-      "at": "2026-07-26T19:34:31Z",
-      "summary": "Summons reveal.mp4 toegevoegd (stickman tree→chest) · v1.18.116"
-    },
-    {
-      "at": "2026-07-26T19:24:39Z",
-      "summary": "Summons harden conflictvrij gemerged naar main live · v1.18.115"
-    },
-    {
-      "at": "2026-07-26T19:23:55Z",
-      "summary": "Merge summons harden → main live zonder conflict · v1.18.115"
-    },
-    {
-      "at": "2026-07-26T19:12:08Z",
-      "summary": "Harden+merge PR#214: wapen-upgrades ownership LIVE · v1.18.114"
-    },
-    {
-      "at": "2026-07-26T19:12:00Z",
-      "summary": "Harden+merge: wapen-upgrades ownership-only LIVE · v1.18.114"
-    },
-    {
-      "at": "2026-07-26T19:10:16Z",
-      "summary": "Wapen-upgrades alleen bij bezit (weaponUnlockedByLevel) · v1.18.113"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
