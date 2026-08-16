@@ -13,19 +13,26 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.136",
-    "swCache": "stickfighter-app-v346",
-    "gameJsQuery": "game.js?v=346",
-    "cssQuery": "styles/main.css?v=341",
-    "featureBranch": "cursor/ip-anime-rename-2125",
+    "appVersion": "1.18.142",
+    "swCache": "stickfighter-app-v352",
+    "gameJsQuery": "game.js?v=352",
+    "cssQuery": "styles/main.css?v=352",
+    "featureBranch": "cursor/d12-dex-content-c6-2125",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "IP-A anime skill rename · spiral_orb / Technique / Energy",
-    "updated": "2026-08-07T20:29:02Z"
+    "note": "d12 c6 dex biome filters + flavor blurbs + farm/zoo/sea achievements",
+    "updated": "2026-08-16T07:49:54Z"
   },
   "userWishlist": [
+    {
+      "id": "w-20260816T074548",
+      "from": "user",
+      "text": "Maak de app beter",
+      "status": "done-in-code",
+      "updated": "2026-08-16"
+    },
     {
       "id": "w-20260807T202147",
       "from": "user",
@@ -367,6 +374,18 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-16T07:49:54Z",
+      "summary": "d12 monsterboek polish live · v1.18.142 / SW 352"
+    },
+    {
+      "at": "2026-08-16T07:49:43Z",
+      "summary": "d12: monsterboek biome-filters, flavor-regels, 282-count, farm/zoo/zee-prestaties · v1.18.142"
+    },
+    {
+      "at": "2026-08-16T07:45:48Z",
+      "summary": "Start: maak de app beter (d20 polish)"
+    },
+    {
       "at": "2026-08-07T20:54:14Z",
       "summary": "Merge iOS Capacitor shell stubs + Guideline 4.2 notes (C2–C3)"
     },
@@ -453,46 +472,6 @@
     {
       "at": "2026-07-26T20:06:38Z",
       "summary": "Arcade UI icons LIVE gemerged · v1.18.119"
-    },
-    {
-      "at": "2026-07-26T20:06:22Z",
-      "summary": "Arcade prestaties/lock/check/coin/warn + saga JS → assets/ui SVG · v1.18.119"
-    },
-    {
-      "at": "2026-07-26T20:05:49Z",
-      "summary": "d19 muur: pauze-stats, combo×10, smoke-wall LIVE · v1.18.118"
-    },
-    {
-      "at": "2026-07-26T19:36:11Z",
-      "summary": "Rasengan CD LIVE gemerged · v1.18.117"
-    },
-    {
-      "at": "2026-07-26T19:59:00Z",
-      "summary": "Rasengan CD LIVE: Lv1–2=2s · Lv3–7=3s · Lv8=5s · v1.18.117"
-    },
-    {
-      "at": "2026-07-26T19:34:31Z",
-      "summary": "Summons reveal.mp4 toegevoegd (stickman tree→chest) · v1.18.116"
-    },
-    {
-      "at": "2026-07-26T19:24:39Z",
-      "summary": "Summons harden conflictvrij gemerged naar main live · v1.18.115"
-    },
-    {
-      "at": "2026-07-26T19:23:55Z",
-      "summary": "Merge summons harden → main live zonder conflict · v1.18.115"
-    },
-    {
-      "at": "2026-07-26T19:12:08Z",
-      "summary": "Harden+merge PR#214: wapen-upgrades ownership LIVE · v1.18.114"
-    },
-    {
-      "at": "2026-07-26T19:12:00Z",
-      "summary": "Harden+merge: wapen-upgrades ownership-only LIVE · v1.18.114"
-    },
-    {
-      "at": "2026-07-26T19:10:16Z",
-      "summary": "Wapen-upgrades alleen bij bezit (weaponUnlockedByLevel) · v1.18.113"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

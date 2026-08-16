@@ -408,6 +408,128 @@ function seaSpeciesPool(levelN, maxRarityOrder) {
   });
 }
 
+/** Dex biome — farm / zoo / sea / secret / classic. Display-only, no spawn change. */
+function speciesBiomeId(sp, id) {
+  if (!sp) return 'classic';
+  if (id === 'satan' || (id && String(id).indexOf('tide') === 0)) return 'secret';
+  if (SEA_ARTS.has(sp.art) || sp.type === 'swim') return 'sea';
+  if (FARM_ARTS.has(sp.art)) return 'farm';
+  if (ZOO_ARTS.has(sp.art)) return 'zoo';
+  return 'classic';
+}
+
+function speciesInBiome(id, biome) {
+  if (!biome || biome === 'all') return true;
+  return speciesBiomeId(SPECIES[id], id) === biome;
+}
+
+function dexBiomeTotals() {
+  const out = { farm: 0, zoo: 0, sea: 0, classic: 0, secret: 0 };
+  for (const id of SPECIES_ORDER) {
+    const b = speciesBiomeId(SPECIES[id], id);
+    if (out[b] != null) out[b]++;
+  }
+  return out;
+}
+
+function dexBiomeDiscovered(biome) {
+  let n = 0;
+  const bag = (typeof save !== 'undefined' && save && save.dex) ? save.dex : {};
+  for (const id of SPECIES_ORDER) {
+    if (!bag[id]) continue;
+    if (speciesInBiome(id, biome)) n++;
+  }
+  return n;
+}
+
+/** Hand-written one-liners for flagship species (NL). */
+const SPECIES_BLURB = {
+  slymo: 'De groene starter. Springt alsof de vloer een trampoline is.',
+  bubbel: 'Te schattig om te slaan — tot hij terugkaatst.',
+  flapper: 'Piept, duikt, verdwijnt. Typische vleermuis-energie.',
+  vlamvos: 'Vuurstaart, geen geduld. Rent eerst, denkt later.',
+  stormvos: 'Zelfde vos, nu met onweer in de vacht.',
+  rotsbonk: 'Een wandelende kei. Duurt even, maar hij komt.',
+  magmabon: 'Rotsbonk die te lang in de oven bleef.',
+  vlamdraak: 'Eerste echte draak. Rookt nog een beetje.',
+  kristallo: 'IJs en tanden. Mooi tot hij bijt.',
+  schaduwvorst: 'Nacht in draakvorm. Het licht gaat even uit.',
+  voidkonijn: 'Konijn? Ja. Onschuldig? Nee.',
+  guvvedrak: 'De gouden mythe. Als hij landt, voel je het.',
+  satan: 'Niet in het lesboek. Komt langs als je vaak valt.',
+  rifhaai: 'Rif-toerist met tanden. Blijft laag bij het water.',
+};
+
+const ART_BLURB = {
+  slime: 'Wiebelt alsof zwaartekracht optioneel is.',
+  bat: 'Duikt uit het donker en is alweer weg.',
+  hedgehog: 'Een stekelige sprint — niet knuffelen.',
+  ghost: 'Half zichtbaar, helemaal irritant.',
+  can: 'Blik met een mening. Schiet blikjes-filosofie.',
+  fox: 'Te snel voor je eerste slag.',
+  golem: 'Loopt alsof de vloer hem iets schuldig is.',
+  dragon: 'Grote vleugels, grotere ego.',
+  cow: 'Weigert te geloven dat dit geen wei is.',
+  pig: 'Modder, vaart, geen schaamte.',
+  chicken: 'Kakelt harder dan je ochtendwekker.',
+  sheep: 'Wollig. Tot de kopstoot.',
+  horse: 'Galop eerst, vragen later.',
+  goat: 'Eet alles, inclusief je combo.',
+  duck: 'Kwak als waarschuwingssirene.',
+  rooster: 'Kraait alsof hij de baas is. Misschien is hij dat.',
+  donkey: 'Koppig. En zwaarder dan hij lijkt.',
+  goose: 'Gans-protocol: iedereen is de vijand.',
+  elephant: 'Stapt zacht — tot hij dat niet meer doet.',
+  lion: 'Maanlicht-manen, daglicht-honger.',
+  tiger: 'Strepen betekenen: te laat om te rennen.',
+  giraffe: 'Reikt over je guard heen.',
+  hippo: 'Rivierbaas. Mond groter dan je plan.',
+  rhino: 'Eén lijn, één doel, geen rem.',
+  gorilla: 'Trommelt eerst. Jij voelt het daarna.',
+  zebra: 'Strepen als camouflage. Werkt niet. Geeft niet.',
+  bear: 'Winterslaap overgeslagen. Jij bent de snack.',
+  croc: 'Glimlacht met te veel tanden.',
+  kangaroo: 'Boks-zak met benen.',
+  panda: 'Schattig tot de rol een tackle wordt.',
+  flamingo: 'Op één been, twee keer zo arrogant.',
+  camel: 'Woestijn-reserve. Spuugt tactisch.',
+  shark: 'Vin, tanden, slecht nieuws.',
+  octo: 'Acht armen, nul geduld.',
+};
+
+const TYPE_BLURB = {
+  hop: 'Hupt tot je timing breekt.',
+  fly: 'Blijft net buiten je vuist.',
+  charge: 'Komt recht op je af. Geen plan B.',
+  shoot: 'Houdt afstand en gooit problemen.',
+  tank: 'Langzaam. Hard. Vervelend eerlijk.',
+  dragon: 'Baas-energie, ook als hij dat niet is.',
+  swim: 'Voelt zich beter in het natte.',
+};
+
+const RARITY_BLURB_TAIL = {
+  uncommon: 'Net iets te stoer voor een beginner.',
+  rare: 'Zeldzaam genoeg om te onthouden.',
+  epic: 'Wanneer hij valt, voelt het als buit.',
+  legendary: 'Verhalen beginnen hier.',
+  mythic: 'Mythe-inkt in het boek.',
+};
+
+function speciesBlurb(id) {
+  if (SPECIES_BLURB[id]) return SPECIES_BLURB[id];
+  const sp = SPECIES[id];
+  if (!sp) return '';
+  if (ART_BLURB[sp.art]) return ART_BLURB[sp.art];
+  if (TYPE_BLURB[sp.type]) return TYPE_BLURB[sp.type];
+  return RARITY_BLURB_TAIL[sp.rarity] || '';
+}
+
+function dexSecretHint(id) {
+  if (id === 'satan') return 'Geheim · verschijnt na 10× verloren';
+  if (id && String(id).indexOf('tide') === 0) return 'Geheim · Tide Battle-baas';
+  return 'Geheim · zeldzame ontmoeting';
+}
+
 function tideWaveSeaPick(seaPool, levelN, maxRarityOrder) {
   if (!seaPool || !seaPool.length) return null;
   return weightedPick(seaPool, levelN);

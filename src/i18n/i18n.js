@@ -26,7 +26,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Muntjes · dex temmen · ei arcade',
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
-      dex: 'Monsterboek', dexSub: '114 soorten · rariteit = HP',
+      dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
     },
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
@@ -72,7 +72,7 @@ const I18N = {
       achievements: 'Prestaties' },
     pets: { title: 'Pets · Metgezels', sub: 'Dex-pets via monsterboek · Ei-pets via dagelijkse arcade-pull',
       crackEgg: 'Dag-ei openen', crackEggSub: 'Gratis arcade-pull' },
-    dex: { title: 'Monsterboek', sub: 'Rariteit = HP-bonus (+3…+25) · 4 rariteiten = Kristallijn · helft boek = Boekmeester · 75 kills = Jagerlook' },
+    dex: { title: 'Monsterboek', sub: '{n} soorten · rariteit = HP · boerderij / dierentuin / zee-filters · 4 rariteiten = Kristallijn' },
     help: { title: 'Tips & controls' },
     install: { title: 'In app-lade zetten', sub: 'Verschijnt als icoon — net als een echte app' },
     island: {
@@ -115,7 +115,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Coins · dex tame · egg arcade',
       style: 'Style', styleSub: 'Bandana & outfit unlocks',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
-      dex: 'Monster book', dexSub: '114 species · rarity = HP',
+      dex: 'Monster book', dexSub: '{n} species · rarity = HP · farm · zoo · sea',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
     },
     modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Coins' },
@@ -161,7 +161,7 @@ const I18N = {
       achievements: 'Achievements' },
     pets: { title: 'Pets · Companions', sub: 'Dex pets via monster book · Egg pets via daily arcade pull',
       crackEgg: 'Open daily egg', crackEggSub: 'Free arcade pull' },
-    dex: { title: 'Monster book', sub: 'Rarity = HP bonus (+3…+25) · 4 rarities = Crystalline · half book = Bookmaster · 75 kills = Hunter look' },
+    dex: { title: 'Monster book', sub: '{n} species · rarity = HP · farm / zoo / sea filters · 4 rarities = Crystalline' },
     help: { title: 'Tips & controls' },
     install: { title: 'Add to home screen', sub: 'Shows as an icon — like a real app' },
     island: {
@@ -203,7 +203,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Münzen · Dex zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
-      dex: 'Monsterbuch', dexSub: '114 Arten · Seltenheit = HP',
+      dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP · Farm · Zoo · Meer',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
     },
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
@@ -238,7 +238,7 @@ const I18N = {
       claimAll: 'Alle abholen', claimAllSub: '+XP auf einmal', dayBonus: 'Tagesbonus', dayBonusSub: '+80 XP',
       achievements: 'Erfolge' },
     pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Gratis Pull' },
-    dex: { title: 'Monsterbuch', sub: 'Seltenheit = HP-Bonus' },
+    dex: { title: 'Monsterbuch', sub: '{n} Arten · Seltenheit = HP · Farm / Zoo / Meer' },
     help: { title: 'Tipps & Steuerung' },
     install: { title: 'Zum Home-Bildschirm', sub: 'Wie eine echte App' },
     island: {
@@ -274,7 +274,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Pièces · dex · œufs',
       style: 'Style', styleSub: 'Déblocages tenues',
       skills: 'Skills', skillsSub: 'Spéciaux énergie · Spiral Orb · Wave Cannon',
-      dex: 'Bestiaire', dexSub: '114 espèces · rareté = PV',
+      dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV · ferme · zoo · mer',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
     },
     modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Pièces' },
@@ -309,7 +309,7 @@ const I18N = {
       claimAll: 'Tout réclamer', claimAllSub: '+XP en un tap', dayBonus: 'Bonus du jour', dayBonusSub: '+80 XP',
       achievements: 'Succès' },
     pets: { title: 'Pets · Compagnons', sub: 'Pets dex & œufs arcade', crackEgg: 'Ouvrir l\'œuf du jour', crackEggSub: 'Tir gratuit' },
-    dex: { title: 'Bestiaire', sub: 'Rareté = bonus PV' },
+    dex: { title: 'Bestiaire', sub: '{n} espèces · rareté = PV · ferme / zoo / mer' },
     help: { title: 'Astuces & contrôles' },
     install: { title: 'Ajouter à l\'écran d\'accueil', sub: 'Comme une vraie app' },
     island: {
@@ -345,7 +345,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Monedas · dex · huevos',
       style: 'Estilo', styleSub: 'Desbloqueos de outfit',
       skills: 'Skills', skillsSub: 'Especiales energía · Spiral Orb · Wave Cannon',
-      dex: 'Bestiario', dexSub: '114 especies · rareza = HP',
+      dex: 'Bestiario', dexSub: '{n} especies · rareza = HP · granja · zoo · mar',
       modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
     },
     modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Monedas' },
@@ -380,7 +380,7 @@ const I18N = {
       claimAll: 'Reclamar todo', claimAllSub: '+XP de una vez', dayBonus: 'Bonus diario', dayBonusSub: '+80 XP',
       achievements: 'Logros' },
     pets: { title: 'Pets · Compañeros', sub: 'Pets dex y huevos arcade', crackEgg: 'Abrir huevo diario', crackEggSub: 'Tirada gratis' },
-    dex: { title: 'Bestiario', sub: 'Rareza = bonus HP' },
+    dex: { title: 'Bestiario', sub: '{n} especies · rareza = HP · granja / zoo / mar' },
     help: { title: 'Consejos y controles' },
     install: { title: 'Añadir a inicio', sub: 'Como una app real' },
     island: {
@@ -541,7 +541,10 @@ function applyLangStaticScreens() {
     if (!div) continue;
     const stat = div.querySelector('.hub-mode-stat');
     const statHtml = stat ? stat.outerHTML : '';
-    div.innerHTML = t(titleKey) + '<small>' + t(subKey) + '</small>' + statHtml;
+    const subParams = (id === 'btnDex' && typeof SPECIES_ORDER !== 'undefined')
+      ? { n: SPECIES_ORDER.length }
+      : undefined;
+    div.innerHTML = t(titleKey) + '<small>' + t(subKey, subParams) + '</small>' + statHtml;
   }
 
   document.querySelectorAll('.sub-home-btn .sub-home-label').forEach((el) => {
@@ -606,7 +609,7 @@ function applyLangStaticScreens() {
   }
 
   setText('dexScreenHead', 'dex.title');
-  setText('dexScreenSub', 'dex.sub');
+  setText('dexScreenSub', 'dex.sub', typeof SPECIES_ORDER !== 'undefined' ? { n: SPECIES_ORDER.length } : undefined);
   setText('helpHead', 'help.title');
   setText('installHead', 'install.title');
   setText('installSub', 'ui.installSub');

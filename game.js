@@ -274,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.141';
+const APP_VERSION = '1.18.142';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 351;
+const SW_CACHE_REV = 352;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1848,7 +1848,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Muntjes · dex temmen · ei arcade',
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
-      dex: 'Monsterboek', dexSub: '114 soorten · rariteit = HP',
+      dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
     },
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
@@ -1894,7 +1894,7 @@ const I18N = {
       achievements: 'Prestaties' },
     pets: { title: 'Pets · Metgezels', sub: 'Dex-pets via monsterboek · Ei-pets via dagelijkse arcade-pull',
       crackEgg: 'Dag-ei openen', crackEggSub: 'Gratis arcade-pull' },
-    dex: { title: 'Monsterboek', sub: 'Rariteit = HP-bonus (+3…+25) · 4 rariteiten = Kristallijn · helft boek = Boekmeester · 75 kills = Jagerlook' },
+    dex: { title: 'Monsterboek', sub: '{n} soorten · rariteit = HP · boerderij / dierentuin / zee-filters · 4 rariteiten = Kristallijn' },
     help: { title: 'Tips & controls' },
     install: { title: 'In app-lade zetten', sub: 'Verschijnt als icoon — net als een echte app' },
     island: {
@@ -1937,7 +1937,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Coins · dex tame · egg arcade',
       style: 'Style', styleSub: 'Bandana & outfit unlocks',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
-      dex: 'Monster book', dexSub: '114 species · rarity = HP',
+      dex: 'Monster book', dexSub: '{n} species · rarity = HP · farm · zoo · sea',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
     },
     modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Coins' },
@@ -1983,7 +1983,7 @@ const I18N = {
       achievements: 'Achievements' },
     pets: { title: 'Pets · Companions', sub: 'Dex pets via monster book · Egg pets via daily arcade pull',
       crackEgg: 'Open daily egg', crackEggSub: 'Free arcade pull' },
-    dex: { title: 'Monster book', sub: 'Rarity = HP bonus (+3…+25) · 4 rarities = Crystalline · half book = Bookmaster · 75 kills = Hunter look' },
+    dex: { title: 'Monster book', sub: '{n} species · rarity = HP · farm / zoo / sea filters · 4 rarities = Crystalline' },
     help: { title: 'Tips & controls' },
     install: { title: 'Add to home screen', sub: 'Shows as an icon — like a real app' },
     island: {
@@ -2025,7 +2025,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Münzen · Dex zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
-      dex: 'Monsterbuch', dexSub: '114 Arten · Seltenheit = HP',
+      dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP · Farm · Zoo · Meer',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
     },
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
@@ -2060,7 +2060,7 @@ const I18N = {
       claimAll: 'Alle abholen', claimAllSub: '+XP auf einmal', dayBonus: 'Tagesbonus', dayBonusSub: '+80 XP',
       achievements: 'Erfolge' },
     pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Gratis Pull' },
-    dex: { title: 'Monsterbuch', sub: 'Seltenheit = HP-Bonus' },
+    dex: { title: 'Monsterbuch', sub: '{n} Arten · Seltenheit = HP · Farm / Zoo / Meer' },
     help: { title: 'Tipps & Steuerung' },
     install: { title: 'Zum Home-Bildschirm', sub: 'Wie eine echte App' },
     island: {
@@ -2096,7 +2096,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Pièces · dex · œufs',
       style: 'Style', styleSub: 'Déblocages tenues',
       skills: 'Skills', skillsSub: 'Spéciaux énergie · Spiral Orb · Wave Cannon',
-      dex: 'Bestiaire', dexSub: '114 espèces · rareté = PV',
+      dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV · ferme · zoo · mer',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
     },
     modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Pièces' },
@@ -2131,7 +2131,7 @@ const I18N = {
       claimAll: 'Tout réclamer', claimAllSub: '+XP en un tap', dayBonus: 'Bonus du jour', dayBonusSub: '+80 XP',
       achievements: 'Succès' },
     pets: { title: 'Pets · Compagnons', sub: 'Pets dex & œufs arcade', crackEgg: 'Ouvrir l\'œuf du jour', crackEggSub: 'Tir gratuit' },
-    dex: { title: 'Bestiaire', sub: 'Rareté = bonus PV' },
+    dex: { title: 'Bestiaire', sub: '{n} espèces · rareté = PV · ferme / zoo / mer' },
     help: { title: 'Astuces & contrôles' },
     install: { title: 'Ajouter à l\'écran d\'accueil', sub: 'Comme une vraie app' },
     island: {
@@ -2167,7 +2167,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Monedas · dex · huevos',
       style: 'Estilo', styleSub: 'Desbloqueos de outfit',
       skills: 'Skills', skillsSub: 'Especiales energía · Spiral Orb · Wave Cannon',
-      dex: 'Bestiario', dexSub: '114 especies · rareza = HP',
+      dex: 'Bestiario', dexSub: '{n} especies · rareza = HP · granja · zoo · mar',
       modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
     },
     modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Monedas' },
@@ -2202,7 +2202,7 @@ const I18N = {
       claimAll: 'Reclamar todo', claimAllSub: '+XP de una vez', dayBonus: 'Bonus diario', dayBonusSub: '+80 XP',
       achievements: 'Logros' },
     pets: { title: 'Pets · Compañeros', sub: 'Pets dex y huevos arcade', crackEgg: 'Abrir huevo diario', crackEggSub: 'Tirada gratis' },
-    dex: { title: 'Bestiario', sub: 'Rareza = bonus HP' },
+    dex: { title: 'Bestiario', sub: '{n} especies · rareza = HP · granja / zoo / mar' },
     help: { title: 'Consejos y controles' },
     install: { title: 'Añadir a inicio', sub: 'Como una app real' },
     island: {
@@ -2363,7 +2363,10 @@ function applyLangStaticScreens() {
     if (!div) continue;
     const stat = div.querySelector('.hub-mode-stat');
     const statHtml = stat ? stat.outerHTML : '';
-    div.innerHTML = t(titleKey) + '<small>' + t(subKey) + '</small>' + statHtml;
+    const subParams = (id === 'btnDex' && typeof SPECIES_ORDER !== 'undefined')
+      ? { n: SPECIES_ORDER.length }
+      : undefined;
+    div.innerHTML = t(titleKey) + '<small>' + t(subKey, subParams) + '</small>' + statHtml;
   }
 
   document.querySelectorAll('.sub-home-btn .sub-home-label').forEach((el) => {
@@ -2428,7 +2431,7 @@ function applyLangStaticScreens() {
   }
 
   setText('dexScreenHead', 'dex.title');
-  setText('dexScreenSub', 'dex.sub');
+  setText('dexScreenSub', 'dex.sub', typeof SPECIES_ORDER !== 'undefined' ? { n: SPECIES_ORDER.length } : undefined);
   setText('helpHead', 'help.title');
   setText('installHead', 'install.title');
   setText('installSub', 'ui.installSub');
@@ -2841,6 +2844,12 @@ const ACHIEVEMENTS = [
       }
       return false;
     } },
+  { id: 'dexFarm', name: 'Boerderij-jager', desc: '10 boerderij-soorten in het boek',
+    test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('farm') : 0) >= 10 },
+  { id: 'dexZoo', name: 'Safari-gids', desc: '10 dierentuin-soorten in het boek',
+    test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('zoo') : 0) >= 10 },
+  { id: 'dexSea', name: 'Getij-kenner', desc: '5 zee-soorten in het boek',
+    test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('sea') : 0) >= 5 },
   { id: 'train5', name: 'Robotbreker', desc: '5× training gewonnen',
     test: s => s.trainWins >= 5 },
   { id: 'wall100', name: 'Sloper', desc: 'Muurrecord 100+',
@@ -3168,6 +3177,9 @@ function achievementPlayTarget(ach) {
     case 'dexHalf':
     case 'dexTiers':
     case 'dexMythic':
+    case 'dexFarm':
+    case 'dexZoo':
+    case 'dexSea':
     case 'lv10':
     case 'lv50':
       return { mode: 'adventure' };
@@ -3220,6 +3232,9 @@ function achievementProgressFrac(ach) {
       }
       return 0;
     }
+    case 'dexFarm': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('farm') : 0, 10) / 10;
+    case 'dexZoo': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('zoo') : 0, 10) / 10;
+    case 'dexSea': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('sea') : 0, 5) / 5;
     case 'train5': return Math.min(s.trainWins, 5) / 5;
     case 'wall100': return Math.min(s.bestWall, 100) / 100;
     case 'combo8': return Math.min(s.stats.maxCombo || 0, 8) / 8;
@@ -3253,6 +3268,9 @@ function achievementProgressHint(ach) {
     }
     case 'dexHalf': return `${Object.keys(s.dex || {}).length}/${Math.ceil(SPECIES_ORDER.length / 2)} soorten`;
     case 'dexTiers': return `${dexRarityTierCount()}/4 rariteiten`;
+    case 'dexFarm': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('farm') : 0}/10 boerderij`;
+    case 'dexZoo': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('zoo') : 0}/10 dierentuin`;
+    case 'dexSea': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('sea') : 0}/5 zee`;
     case 'train5': return `${Math.min(s.trainWins, 5)}/5 training-wins`;
     case 'wall100': return `${Math.min(s.bestWall, 100)}/100 muur-score`;
     case 'combo8': return `×${Math.min(s.stats.maxCombo || 0, 8)}/8 combo`;
@@ -5469,7 +5487,7 @@ function dexRarityTotals() {
   }
   return counts;
 }
-const DEX_ACH_IDS = ['dex10', 'dexHalf', 'dexTiers', 'dex100', 'dexMythic', 'dexFull'];
+const DEX_ACH_IDS = ['dex10', 'dexFarm', 'dexZoo', 'dexSea', 'dexHalf', 'dexTiers', 'dex100', 'dexMythic', 'dexFull'];
 function dexNextAchievementHtml() {
   let best = null, bestFrac = -1;
   for (const id of DEX_ACH_IDS) {
@@ -5488,11 +5506,12 @@ function dexNextAchievementHtml() {
     `<div style="font-size:12px;opacity:.85">${best.desc}${hint ? ' · ' + hint : ''}</div>` +
     `<div class="xpline" style="margin-top:6px;height:6px"><div style="width:${pct}%"></div></div></div>`;
 }
-function dexSortedIds(rarityFilter, typeFilter, sortKey) {
+function dexSortedIds(rarityFilter, typeFilter, sortKey, biomeFilter) {
   let ids = SPECIES_ORDER.filter(id => {
     const sp = SPECIES[id];
     if (rarityFilter !== 'all' && sp.rarity !== rarityFilter) return false;
     if (typeFilter !== 'all' && sp.type !== typeFilter) return false;
+    if (biomeFilter && biomeFilter !== 'all' && typeof speciesInBiome === 'function' && !speciesInBiome(id, biomeFilter)) return false;
     return true;
   });
   if (sortKey === 'rarity') {
@@ -5620,7 +5639,10 @@ function dexTotalKillsFromSave(s) {
   return n;
 }
 const MONSTER_TYPE_LABEL = {
-  hop: 'Hups', fly: 'Vlieg', charge: 'Charge', shoot: 'Schiet', tank: 'Tank', dragon: 'Draak',
+  hop: 'Hups', fly: 'Vlieg', charge: 'Charge', shoot: 'Schiet', tank: 'Tank', dragon: 'Draak', swim: 'Zee',
+};
+const DEX_BIOME_LABEL = {
+  farm: 'Boerderij', zoo: 'Dierentuin', sea: 'Zee', classic: 'Klassiek', secret: 'Geheim',
 };
 const DEX_REF_STATS = { hp: 420, dmg: 28, speed: 150 };
 function dexMiniStat(label, val, max, color) {
@@ -9452,6 +9474,128 @@ function seaSpeciesPool(levelN, maxRarityOrder) {
   });
 }
 
+/** Dex biome — farm / zoo / sea / secret / classic. Display-only, no spawn change. */
+function speciesBiomeId(sp, id) {
+  if (!sp) return 'classic';
+  if (id === 'satan' || (id && String(id).indexOf('tide') === 0)) return 'secret';
+  if (SEA_ARTS.has(sp.art) || sp.type === 'swim') return 'sea';
+  if (FARM_ARTS.has(sp.art)) return 'farm';
+  if (ZOO_ARTS.has(sp.art)) return 'zoo';
+  return 'classic';
+}
+
+function speciesInBiome(id, biome) {
+  if (!biome || biome === 'all') return true;
+  return speciesBiomeId(SPECIES[id], id) === biome;
+}
+
+function dexBiomeTotals() {
+  const out = { farm: 0, zoo: 0, sea: 0, classic: 0, secret: 0 };
+  for (const id of SPECIES_ORDER) {
+    const b = speciesBiomeId(SPECIES[id], id);
+    if (out[b] != null) out[b]++;
+  }
+  return out;
+}
+
+function dexBiomeDiscovered(biome) {
+  let n = 0;
+  const bag = (typeof save !== 'undefined' && save && save.dex) ? save.dex : {};
+  for (const id of SPECIES_ORDER) {
+    if (!bag[id]) continue;
+    if (speciesInBiome(id, biome)) n++;
+  }
+  return n;
+}
+
+/** Hand-written one-liners for flagship species (NL). */
+const SPECIES_BLURB = {
+  slymo: 'De groene starter. Springt alsof de vloer een trampoline is.',
+  bubbel: 'Te schattig om te slaan — tot hij terugkaatst.',
+  flapper: 'Piept, duikt, verdwijnt. Typische vleermuis-energie.',
+  vlamvos: 'Vuurstaart, geen geduld. Rent eerst, denkt later.',
+  stormvos: 'Zelfde vos, nu met onweer in de vacht.',
+  rotsbonk: 'Een wandelende kei. Duurt even, maar hij komt.',
+  magmabon: 'Rotsbonk die te lang in de oven bleef.',
+  vlamdraak: 'Eerste echte draak. Rookt nog een beetje.',
+  kristallo: 'IJs en tanden. Mooi tot hij bijt.',
+  schaduwvorst: 'Nacht in draakvorm. Het licht gaat even uit.',
+  voidkonijn: 'Konijn? Ja. Onschuldig? Nee.',
+  guvvedrak: 'De gouden mythe. Als hij landt, voel je het.',
+  satan: 'Niet in het lesboek. Komt langs als je vaak valt.',
+  rifhaai: 'Rif-toerist met tanden. Blijft laag bij het water.',
+};
+
+const ART_BLURB = {
+  slime: 'Wiebelt alsof zwaartekracht optioneel is.',
+  bat: 'Duikt uit het donker en is alweer weg.',
+  hedgehog: 'Een stekelige sprint — niet knuffelen.',
+  ghost: 'Half zichtbaar, helemaal irritant.',
+  can: 'Blik met een mening. Schiet blikjes-filosofie.',
+  fox: 'Te snel voor je eerste slag.',
+  golem: 'Loopt alsof de vloer hem iets schuldig is.',
+  dragon: 'Grote vleugels, grotere ego.',
+  cow: 'Weigert te geloven dat dit geen wei is.',
+  pig: 'Modder, vaart, geen schaamte.',
+  chicken: 'Kakelt harder dan je ochtendwekker.',
+  sheep: 'Wollig. Tot de kopstoot.',
+  horse: 'Galop eerst, vragen later.',
+  goat: 'Eet alles, inclusief je combo.',
+  duck: 'Kwak als waarschuwingssirene.',
+  rooster: 'Kraait alsof hij de baas is. Misschien is hij dat.',
+  donkey: 'Koppig. En zwaarder dan hij lijkt.',
+  goose: 'Gans-protocol: iedereen is de vijand.',
+  elephant: 'Stapt zacht — tot hij dat niet meer doet.',
+  lion: 'Maanlicht-manen, daglicht-honger.',
+  tiger: 'Strepen betekenen: te laat om te rennen.',
+  giraffe: 'Reikt over je guard heen.',
+  hippo: 'Rivierbaas. Mond groter dan je plan.',
+  rhino: 'Eén lijn, één doel, geen rem.',
+  gorilla: 'Trommelt eerst. Jij voelt het daarna.',
+  zebra: 'Strepen als camouflage. Werkt niet. Geeft niet.',
+  bear: 'Winterslaap overgeslagen. Jij bent de snack.',
+  croc: 'Glimlacht met te veel tanden.',
+  kangaroo: 'Boks-zak met benen.',
+  panda: 'Schattig tot de rol een tackle wordt.',
+  flamingo: 'Op één been, twee keer zo arrogant.',
+  camel: 'Woestijn-reserve. Spuugt tactisch.',
+  shark: 'Vin, tanden, slecht nieuws.',
+  octo: 'Acht armen, nul geduld.',
+};
+
+const TYPE_BLURB = {
+  hop: 'Hupt tot je timing breekt.',
+  fly: 'Blijft net buiten je vuist.',
+  charge: 'Komt recht op je af. Geen plan B.',
+  shoot: 'Houdt afstand en gooit problemen.',
+  tank: 'Langzaam. Hard. Vervelend eerlijk.',
+  dragon: 'Baas-energie, ook als hij dat niet is.',
+  swim: 'Voelt zich beter in het natte.',
+};
+
+const RARITY_BLURB_TAIL = {
+  uncommon: 'Net iets te stoer voor een beginner.',
+  rare: 'Zeldzaam genoeg om te onthouden.',
+  epic: 'Wanneer hij valt, voelt het als buit.',
+  legendary: 'Verhalen beginnen hier.',
+  mythic: 'Mythe-inkt in het boek.',
+};
+
+function speciesBlurb(id) {
+  if (SPECIES_BLURB[id]) return SPECIES_BLURB[id];
+  const sp = SPECIES[id];
+  if (!sp) return '';
+  if (ART_BLURB[sp.art]) return ART_BLURB[sp.art];
+  if (TYPE_BLURB[sp.type]) return TYPE_BLURB[sp.type];
+  return RARITY_BLURB_TAIL[sp.rarity] || '';
+}
+
+function dexSecretHint(id) {
+  if (id === 'satan') return 'Geheim · verschijnt na 10× verloren';
+  if (id && String(id).indexOf('tide') === 0) return 'Geheim · Tide Battle-baas';
+  return 'Geheim · zeldzame ontmoeting';
+}
+
 function tideWaveSeaPick(seaPool, levelN, maxRarityOrder) {
   if (!seaPool || !seaPool.length) return null;
   return weightedPick(seaPool, levelN);
@@ -12206,6 +12350,9 @@ const CATALOG_EN = {
     dexHalf: { name: 'Field guide', desc: 'Half of all species discovered' },
     dexTiers: { name: 'Rarity hunter', desc: '4 different rarities in book' },
     dexMythic: { name: 'Myth seeker', desc: 'Discover one mythic monster' },
+    dexFarm: { name: 'Ranch hunter', desc: '10 farm species in the book' },
+    dexZoo: { name: 'Safari guide', desc: '10 zoo species in the book' },
+    dexSea: { name: 'Tide knower', desc: '5 sea species in the book' },
     train5: { name: 'Robot breaker', desc: 'Win training 5×' },
     wall100: { name: 'Demolisher', desc: 'Wall record 100+' },
     combo8: { name: 'Combo king', desc: 'Reach combo ×8' },
@@ -13068,6 +13215,9 @@ const CATALOG_DE = {
     dexHalf: { name: 'Feldguide', desc: 'Hälfte aller Arten entdeckt' },
     dexTiers: { name: 'Seltenheitsjäger', desc: '4 Seltenheiten im Buch' },
     dexMythic: { name: 'Mythensucher', desc: 'Ein mythisches Monster entdeckt' },
+    dexFarm: { name: 'Farmjäger', desc: '10 Farm-Arten im Buch' },
+    dexZoo: { name: 'Safari-Guide', desc: '10 Zoo-Arten im Buch' },
+    dexSea: { name: 'Gezeitenkenner', desc: '5 Meer-Arten im Buch' },
     train5: { name: 'Robotbrecher', desc: '5× Training gewonnen' },
     wall100: { name: 'Schlacker', desc: 'Mauer-Rekord 100+' },
     combo8: { name: 'Combo-König', desc: 'Combo ×8 erreicht' },
@@ -13166,6 +13316,9 @@ const CATALOG_FR = {
     dexHalf: { name: 'Guide terrain', desc: 'Moitié des espèces découvertes' },
     dexTiers: { name: 'Chasseur de raretés', desc: '4 raretés au bestiaire' },
     dexMythic: { name: 'Chercheur de mythes', desc: 'Un monstre mythique découvert' },
+    dexFarm: { name: 'Chasseur de ferme', desc: '10 espèces de ferme au livre' },
+    dexZoo: { name: 'Guide safari', desc: '10 espèces de zoo au livre' },
+    dexSea: { name: 'Connaisseur des marées', desc: '5 espèces marines au livre' },
     train5: { name: 'Brise-robot', desc: '5× entraînement gagné' },
     wall100: { name: 'Démolisseur', desc: 'Record mur 100+' },
     combo8: { name: 'Roi du combo', desc: 'Combo ×8 atteint' },
@@ -13264,6 +13417,9 @@ const CATALOG_ES = {
     dexHalf: { name: 'Guía de campo', desc: 'Mitad de especies descubiertas' },
     dexTiers: { name: 'Cazador de rarezas', desc: '4 rarezas en el libro' },
     dexMythic: { name: 'Buscador de mitos', desc: 'Un monstruo mítico descubierto' },
+    dexFarm: { name: 'Cazador de granja', desc: '10 especies de granja en el libro' },
+    dexZoo: { name: 'Guía safari', desc: '10 especies de zoo en el libro' },
+    dexSea: { name: 'Conocedor de mareas', desc: '5 especies marinas en el libro' },
     train5: { name: 'Rompe-robots', desc: '5× entrenamiento ganado' },
     wall100: { name: 'Demoledor', desc: 'Récord muro 100+' },
     combo8: { name: 'Rey del combo', desc: 'Combo ×8 alcanzado' },
@@ -31101,6 +31257,9 @@ const UI = {
   charSortMode: 'name',
   charPreviewHoverId: null,
   dexRarityFilter: 'all',
+  dexTypeFilter: 'all',
+  dexBiomeFilter: 'all',
+  dexSortKey: 'book',
   achFilter: 'all',
   petTab: 'dex',
   advIslandPick: 0,
@@ -33526,12 +33685,21 @@ const UI = {
           }).join('')}</div>`
         : '';
       sumEl.style.display = 'block';
+      const biomeTot = typeof dexBiomeTotals === 'function' ? dexBiomeTotals() : {};
+      const biomeChips = ['farm', 'zoo', 'sea'].map((b) => {
+        const tot = biomeTot[b] || 0;
+        if (!tot) return '';
+        const n = typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered(b) : 0;
+        const lab = (typeof DEX_BIOME_LABEL !== 'undefined' && DEX_BIOME_LABEL[b]) || b;
+        return `<span class="rar-pill" style="color:#9fd4ff;border-color:#4a7aa0;margin:2px">${lab} ${n}/${tot}</span>`;
+      }).filter(Boolean).join(' ');
       sumEl.innerHTML =
         `Boek <b>${dexCount()}/${SPECIES_ORDER.length}</b> · kills <b>${kills}</b> · bonus max HP <b>+${totalHp}</b>` +
         ` · rariteiten <b>${dexRarityTierCount()}/6</b>` +
         `<div class="dex-mini-row">${dexMiniStat('HP', totalHp, SPECIES_ORDER.length * 25, '#6ee06e')}` +
         `${dexMiniStat('Kills', kills, 150, '#ffd75e')}</div>` +
         (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '') +
+        (biomeChips ? `<div style="margin-top:4px;line-height:1.7">${biomeChips}</div>` : '') +
         cosmeticHtml +
         dexNextAchievementHtml();
     }
@@ -33560,6 +33728,21 @@ const UI = {
           return mk(rid, `${rarityLabel(rid)} ${n}/${tot}`, rar.color);
         }).join('');
     });
+    bindFilterBar(document.getElementById('dexBiomeFilterBar'), 'data-dex-biome-filter', 'dexBiomeFilter', () => {
+      const cur = this.dexBiomeFilter || 'all';
+      const mk = (id, label) =>
+        `<button type="button" class="dex-filter-btn${cur === id ? ' active' : ''}" data-dex-biome-filter="${id}">${label}</button>`;
+      const tot = typeof dexBiomeTotals === 'function' ? dexBiomeTotals() : {};
+      const lab = (typeof DEX_BIOME_LABEL !== 'undefined') ? DEX_BIOME_LABEL : {};
+      const order = ['farm', 'zoo', 'sea', 'classic', 'secret'];
+      return mk('all', 'Alle biomen') +
+        order.map((b) => {
+          const nTot = tot[b] || 0;
+          if (!nTot) return '';
+          const n = typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered(b) : 0;
+          return mk(b, `${lab[b] || b} ${n}/${nTot}`);
+        }).join('');
+    });
     bindFilterBar(document.getElementById('dexTypeFilterBar'), 'data-dex-type-filter', 'dexTypeFilter', () => {
       const cur = this.dexTypeFilter || 'all';
       const mk = (id, label) =>
@@ -33584,9 +33767,10 @@ const UI = {
     list.innerHTML = '';
     const filter = this.dexRarityFilter || 'all';
     const typeFilter = this.dexTypeFilter || 'all';
+    const biomeFilter = this.dexBiomeFilter || 'all';
     const sortKey = this.dexSortKey || 'book';
     const topKillId = dexTopKillId();
-    for (const id of dexSortedIds(filter, typeFilter, sortKey)) {
+    for (const id of dexSortedIds(filter, typeFilter, sortKey, biomeFilter)) {
       const sp = SPECIES[id];
       const kills = save.dex[id] || 0;
       const rar = rarityOf(sp.rarity);
@@ -33623,12 +33807,16 @@ const UI = {
           ? `<div style="color:#7cf5ff;font-size:12px;margin-top:4px">Verschijnt in avontuur · unlock Lv ${unlockLv}</div>`
           : (unlockLv != null
             ? `<div style="opacity:.72;font-size:12px;margin-top:4px">Unlock Lv ${unlockLv}</div>`
-            : ''));
+            : `<div style="opacity:.78;font-size:12px;margin-top:4px">${typeof dexSecretHint === 'function' ? dexSecretHint(id) : 'Geheim'}</div>`));
       const petLine = PET_BY_SPECIES[id]
         ? `<div style="font-size:12px;margin-top:4px;color:${isPetTamed(PET_BY_SPECIES[id].id) ? '#7cf5ff' : '#8fa3d9'}">${petProgressLine(id)}</div>`
         : '';
-      info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>` : ''}${id === topKillId ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.topHunter')}</span>` : ''}</div>
-        <div class="cinfo">${kills ? `${typeLbl} · basis HP ${sp.hp} · dmg ${sp.dmg} · spd ${sp.speed} · ${sp.xp} XP · Lv ${unlockLv || '?'}` : 'Nog niet verslagen'}</div>${lockHint}${petLine}${statRow}`;
+      const biome = typeof speciesBiomeId === 'function' ? speciesBiomeId(sp, id) : '';
+      const biomeLbl = (typeof DEX_BIOME_LABEL !== 'undefined' && DEX_BIOME_LABEL[biome]) || '';
+      const blurb = kills && typeof speciesBlurb === 'function' ? speciesBlurb(id) : '';
+      const blurbLine = blurb ? `<div class="dex-blurb">${blurb}</div>` : '';
+      info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>` : ''}${id === topKillId ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.topHunter')}</span>` : ''}${kills && biomeLbl ? ` <span class="rar-pill" style="color:#9fd4ff;border-color:#4a7aa0">${biomeLbl}</span>` : ''}</div>
+        <div class="cinfo">${kills ? `${typeLbl} · basis HP ${sp.hp} · dmg ${sp.dmg} · spd ${sp.speed} · ${sp.xp} XP · Lv ${unlockLv || '?'}` : 'Nog niet verslagen'}</div>${blurbLine}${lockHint}${petLine}${statRow}`;
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
