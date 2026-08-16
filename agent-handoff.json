@@ -22,7 +22,7 @@
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "versus-retire combatEntryFor null-check — mobile punch/weapon",
+    "note": "mobiel slaan: combatEntryFor null-check + touch-knop 44px/edge-guard",
     "updated": "2026-08-16T07:50:00Z"
   },
   "userWishlist": [
