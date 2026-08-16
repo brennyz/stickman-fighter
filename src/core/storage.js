@@ -555,13 +555,15 @@ const SIG_MODS = {
 };
 
 function combatEntryFor(f) {
-  if (f && f.rosterId) {
+  if (f && f.rosterId && typeof vsRosterEntry === 'function') {
     const e = vsRosterEntry(f.rosterId);
-    return {
-      crit: e.crit != null ? e.crit : 0.08,
-      critMul: e.critMul != null ? e.critMul : 1.5,
-      sig: e.sig || 'balanced',
-    };
+    if (e) {
+      return {
+        crit: e.crit != null ? e.crit : 0.08,
+        critMul: e.critMul != null ? e.critMul : 1.5,
+        sig: e.sig || 'balanced',
+      };
+    }
   }
   const lv = typeof save !== 'undefined' ? (save.lvl || 1) : 1;
   return { crit: 0.06 + Math.min(0.05, lv * 0.002), critMul: 1.48, sig: 'balanced' };
