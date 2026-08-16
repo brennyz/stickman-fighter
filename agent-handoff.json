@@ -374,6 +374,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-16T07:55:12Z",
+      "summary": "Mobiel slaan: attackSpec null-crash bevestigd op main (hiccup-toast) + touch-knoppen 36px→62px met 24px edge-guard · smoke sweept 8 formaten"
+    },
+    {
       "at": "2026-08-16T07:40:22Z",
       "summary": "Merge-fix: versus-retire vsRosterEntry null + rosterId hero crashte attackSpec — sla/wapen-knoppen weer live · v1.18.142 / SW 352"
     },
@@ -468,10 +472,6 @@
     {
       "at": "2026-07-26T20:06:22Z",
       "summary": "Arcade prestaties/lock/check/coin/warn + saga JS → assets/ui SVG · v1.18.119"
-    },
-    {
-      "at": "2026-07-26T20:05:49Z",
-      "summary": "d19 muur: pauze-stats, combo×10, smoke-wall LIVE · v1.18.118"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
