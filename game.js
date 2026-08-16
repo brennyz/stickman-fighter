@@ -274,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.141';
+const APP_VERSION = '1.18.142';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 351;
+const SW_CACHE_REV = 352;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -5818,6 +5818,45 @@ function weaponEffectLabel(w) {
   if (!base || !base.effect) return '';
   if (base.effectLabel) return base.effectLabel;
   return String(base.effect);
+}
+
+const WEAPON_EFFECT_LIGHT = {
+  burn: ['#ff8c42', '#ffd75e'], popburn: ['#ff6a3d', '#ffe259'], inferno: ['#ff4d2a', '#ffd75e'],
+  magma: ['#ff6a3d', '#ff8c42'], soapburn: ['#ffd75e', '#ff8c42'], chainburn: ['#ff6a3d', '#ffe259'],
+  ashpull: ['#ff8c42', '#c47aff'], frostfire: ['#7cf5ff', '#ff6a3d'], freeze: ['#7cf5ff', '#e8ffff'],
+  drowsy: ['#c47aff', '#7cf5ff'], slip: ['#ffe259', '#c47aff'], flipkb: ['#c47aff', '#ff6b9d'],
+  confuse: ['#ff6b9d', '#c47aff'], spinchaos: ['#ff6a3d', '#c47aff'], echo: ['#c47aff', '#ffd75e'],
+  sonic: ['#ff6b9d', '#ffe259'], quake: ['#ffd75e', '#ff6a3d'], meteor: ['#ff6a3d', '#fff0a0'],
+  quakboom: ['#ffe259', '#ff8c42'], explodepeel: ['#ff6a3d', '#ffe259'], balloon: ['#ff6b9d', '#fff'],
+  lifesteal: ['#6ee06e', '#ff6b9d'], pull: ['#b06ae0', '#7cf5ff'], critsurge: ['#ffd75e', '#fff8d0'],
+  flutter: ['#c47aff', '#e8d0ff'], bleed: ['#ff4d6d', '#ffb0b8'], execute: ['#ff6a3d', '#fff'],
+};
+
+/** Licht-FX voor speciale wapens (zone / effect / legendary+ / summon / master). */
+function weaponLightFx(w) {
+  const base = typeof w === 'string' ? weaponById(w) : (w || null);
+  if (!base || !base.id || base.id === 'vuist') return null;
+  if (base.masterSword || base.id === 'master_sword') {
+    return { color: '#6fd7ff', color2: '#e8f8ff', pulse: 1.15, special: true };
+  }
+  if (base.effect && WEAPON_EFFECT_LIGHT[base.effect]) {
+    const [color, color2] = WEAPON_EFFECT_LIGHT[base.effect];
+    return { color, color2, pulse: base.dropZone === 'hell' ? 1.25 : 1.12, special: true };
+  }
+  if (base.dropZone === 'hell') return { color: '#ff6a3d', color2: '#ffd75e', pulse: 1.22, special: true };
+  if (base.dropZone === 'nightmare') return { color: '#c47aff', color2: '#7cf5ff', pulse: 1.1, special: true };
+  const rar = typeof rarityOf === 'function' ? rarityOf(base.rarity) : null;
+  if (rar && rar.order >= 4) {
+    return { color: rar.color, color2: '#fff8e8', pulse: 0.9 + rar.order * 0.04, special: true };
+  }
+  if (base.summoned && rar) {
+    return { color: rar.color, color2: '#ffffff', pulse: 0.95, special: true };
+  }
+  return null;
+}
+
+function isSpecialLightWeapon(w) {
+  return !!weaponLightFx(w);
 }
 
 /** Zone-wapens: alleen via drop in Nachtmerrie/Hel (save.zoneWeapons). */
@@ -16710,6 +16749,30 @@ Input.releaseAll = function releaseAllWithCanvasClear() {
 /* ============================ TEKENHULPEN ============================== */
 function seg(x, y, ang, len) { return [x + Math.cos(ang) * len, y + Math.sin(ang) * len]; }
 
+function drawWeaponLightMotes(c, light, spin, lite) {
+  if (!c || !light) return;
+  const t = spin || 0;
+  c.save();
+  c.globalCompositeOperation = 'lighter';
+  c.strokeStyle = light.color2 || light.color;
+  c.globalAlpha = lite ? 0.16 : (0.2 + 0.1 * Math.sin(t * 8));
+  c.lineWidth = 1.4;
+  c.beginPath();
+  c.arc(26, 0, lite ? 16 : 20, 0, TAU);
+  c.stroke();
+  if (!lite) {
+    for (let i = 0; i < 3; i++) {
+      const a = t * 5 + i * 2.094;
+      c.fillStyle = i % 2 ? (light.color2 || '#fff') : light.color;
+      c.globalAlpha = 0.28 + 0.22 * Math.sin(a);
+      c.beginPath();
+      c.arc(20 + Math.cos(a) * 14, Math.sin(a) * 9, 1.5, 0, TAU);
+      c.fill();
+    }
+  }
+  c.restore();
+}
+
 function drawWeaponShape(c, id, spin, moveIdx) {
   // getekend langs +x vanaf de hand (0,0); c is al getransleerd/geroteerd
   c.lineCap = 'round';
@@ -16718,6 +16781,14 @@ function drawWeaponShape(c, id, spin, moveIdx) {
     c.save();
     if (mi === 1) c.rotate(0.22);
     else if (mi === 2) c.rotate(-0.12);
+  }
+  const light = typeof weaponLightFx === 'function' ? weaponLightFx(id) : null;
+  const lite = typeof fxLite === 'function' && fxLite();
+  if (light) {
+    c.save();
+    const pulse = 0.7 + 0.3 * Math.sin((spin || 0) * 7);
+    c.shadowColor = light.color;
+    c.shadowBlur = lite ? 6 : (8 + (light.pulse || 1) * 10) * pulse;
   }
   switch (id) {
     case 'zwaard':
@@ -17189,6 +17260,10 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.beginPath(); c.moveTo(0, 0); c.lineTo(28, 0); c.stroke();
       break;
   }
+  if (light) {
+    drawWeaponLightMotes(c, light, spin, lite);
+    c.restore();
+  }
   if (mi) c.restore();
 }
 
@@ -17210,6 +17285,23 @@ function ensureParticleRoom(game, slots) {
     room++;
   }
   return room >= slots;
+}
+
+function spawnWeaponLightHit(game, fighter, target, hit) {
+  if (!game || !target) return;
+  const w = fighter && fighter.weapon;
+  const light = typeof weaponLightFx === 'function' ? weaponLightFx(w || (fighter && fighter.weaponId)) : null;
+  if (!light) return;
+  if (typeof motionReduced === 'function' && motionReduced()) return;
+  const x = target.x;
+  const y = target.y - (target.size || 20) * 0.42;
+  const big = !!(hit && (hit.finisher || hit.crit));
+  const lite = typeof fxLite === 'function' && fxLite();
+  try {
+    game.burst(x, y, light.color, lite ? 3 : (big ? 12 : 7), { kind: 'spark', size: big ? 2.5 : 1.9 });
+    if (!lite) game.burst(x, y, light.color2 || '#fff', big ? 6 : 3, { kind: 'spark', size: 1.4 });
+    if (typeof spawnFxRing === 'function') spawnFxRing(game, x, y, light.color, lite ? 6 : (big ? 15 : 10));
+  } catch (_) {}
 }
 
 function spawnFxRing(game, x, y, color, baseR) {
@@ -19294,22 +19386,47 @@ class Fighter {
       const wAng = attacking
         ? P.arms[1][1] + grip + aimLift
         : idle + aimLift * 0.25;
+      const light = typeof weaponLightFx === 'function' ? weaponLightFx(this.weapon) : null;
       if (attacking && this.attack.move && !motionReduced() && !fxLite()) {
         const a = this.attack;
         if (a.t >= a.windup && a.t <= a.windup + a.active) {
           const ext = clamp((a.t - a.windup) / Math.max(0.01, a.active), 0, 1);
+          const trailCol = (light && light.color) || weaponMoveFxColor(a.move);
           c.save();
-          c.globalAlpha = 0.32 * (1 - ext * 0.35);
-          c.strokeStyle = weaponMoveFxColor(a.move);
-          c.lineWidth = 2.5;
+          c.globalAlpha = (light ? 0.48 : 0.32) * (1 - ext * 0.35);
+          c.strokeStyle = trailCol;
+          c.lineWidth = light ? 4.2 : 2.5;
           c.beginPath();
           c.arc(hx, hy, 16 + ext * 30, wAng - 0.85, wAng + 0.45);
           c.stroke();
+          if (light) {
+            c.globalAlpha = 0.28 * (1 - ext);
+            c.strokeStyle = light.color2 || '#fff';
+            c.lineWidth = 1.6;
+            c.beginPath();
+            c.arc(hx, hy, 20 + ext * 34, wAng - 0.7, wAng + 0.35);
+            c.stroke();
+          }
           c.restore();
         }
       }
+      if (light && !attacking && !motionReduced() && !fxLite()) {
+        c.save();
+        const pulse = 0.35 + 0.2 * Math.sin(this.animT * 6);
+        const g = c.createRadialGradient(hx, hy, 2, hx, hy, 22);
+        g.addColorStop(0, light.color);
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        c.globalAlpha = pulse;
+        c.globalCompositeOperation = 'lighter';
+        c.fillStyle = g;
+        c.beginPath(); c.arc(hx, hy, 22, 0, TAU); c.fill();
+        c.restore();
+      }
       c.save(); c.translate(hx, hy); c.rotate(wAng);
-      if (this.weapon.masterSword || this.weapon.id === 'master_sword') {
+      if (light) {
+        c.shadowColor = light.color;
+        c.shadowBlur = fxLite() ? 8 : 16;
+      } else if (this.weapon.masterSword || this.weapon.id === 'master_sword') {
         c.shadowColor = '#6fd7ff';
         c.shadowBlur = fxLite() ? 10 : 18;
       }
@@ -26863,6 +26980,9 @@ class Game {
             applyWeaponOnHitEffect(this, f, m, { dmg: hitRoll.dmg, crit: hitRoll.crit, finisher });
           } catch (_) {}
         }
+        if (spec.kind === 'weapon' && typeof spawnWeaponLightHit === 'function') {
+          try { spawnWeaponLightHit(this, f, m, { finisher, crit: hitRoll.crit }); } catch (_) {}
+        }
         if (counter) this.freezeT = Math.max(this.freezeT, 0.026);
         applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
         if (f.isPlayer && this.styleLightning && !fxLite()) {
@@ -27263,6 +27383,12 @@ class Game {
                 try {
                   applyWeaponOnHitEffect(this, owner, m, { dmg: hit.dmg, crit: hit.crit, finisher: false });
                 } catch (_) {}
+              }
+            }
+            if (p.throwId && typeof spawnWeaponLightHit === 'function') {
+              const owner = this.player;
+              if (owner && owner.weapon && owner.weapon.id === p.throwId) {
+                try { spawnWeaponLightHit(this, owner, m, { crit: hit.crit }); } catch (_) {}
               }
             }
             if (skProj) spawnTechniqueImpactFx(this, m.x, m.y, p.kind, 'full');

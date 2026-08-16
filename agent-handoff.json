@@ -27,6 +27,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260816T074900",
+      "from": "user",
+      "text": "Upgrade de speciale wapens met light effects",
+      "status": "open",
+      "updated": "2026-08-16"
+    },
+    {
       "id": "w-20260807T202147",
       "from": "user",
       "text": "Store soft-legal: privacy policy + data-safety drafts",

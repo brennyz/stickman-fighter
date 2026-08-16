@@ -2579,6 +2579,9 @@ class Game {
             applyWeaponOnHitEffect(this, f, m, { dmg: hitRoll.dmg, crit: hitRoll.crit, finisher });
           } catch (_) {}
         }
+        if (spec.kind === 'weapon' && typeof spawnWeaponLightHit === 'function') {
+          try { spawnWeaponLightHit(this, f, m, { finisher, crit: hitRoll.crit }); } catch (_) {}
+        }
         if (counter) this.freezeT = Math.max(this.freezeT, 0.026);
         applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
         if (f.isPlayer && this.styleLightning && !fxLite()) {
@@ -2979,6 +2982,12 @@ class Game {
                 try {
                   applyWeaponOnHitEffect(this, owner, m, { dmg: hit.dmg, crit: hit.crit, finisher: false });
                 } catch (_) {}
+              }
+            }
+            if (p.throwId && typeof spawnWeaponLightHit === 'function') {
+              const owner = this.player;
+              if (owner && owner.weapon && owner.weapon.id === p.throwId) {
+                try { spawnWeaponLightHit(this, owner, m, { crit: hit.crit }); } catch (_) {}
               }
             }
             if (skProj) spawnTechniqueImpactFx(this, m.x, m.y, p.kind, 'full');

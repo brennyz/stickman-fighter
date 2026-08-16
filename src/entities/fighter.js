@@ -749,22 +749,47 @@ class Fighter {
       const wAng = attacking
         ? P.arms[1][1] + grip + aimLift
         : idle + aimLift * 0.25;
+      const light = typeof weaponLightFx === 'function' ? weaponLightFx(this.weapon) : null;
       if (attacking && this.attack.move && !motionReduced() && !fxLite()) {
         const a = this.attack;
         if (a.t >= a.windup && a.t <= a.windup + a.active) {
           const ext = clamp((a.t - a.windup) / Math.max(0.01, a.active), 0, 1);
+          const trailCol = (light && light.color) || weaponMoveFxColor(a.move);
           c.save();
-          c.globalAlpha = 0.32 * (1 - ext * 0.35);
-          c.strokeStyle = weaponMoveFxColor(a.move);
-          c.lineWidth = 2.5;
+          c.globalAlpha = (light ? 0.48 : 0.32) * (1 - ext * 0.35);
+          c.strokeStyle = trailCol;
+          c.lineWidth = light ? 4.2 : 2.5;
           c.beginPath();
           c.arc(hx, hy, 16 + ext * 30, wAng - 0.85, wAng + 0.45);
           c.stroke();
+          if (light) {
+            c.globalAlpha = 0.28 * (1 - ext);
+            c.strokeStyle = light.color2 || '#fff';
+            c.lineWidth = 1.6;
+            c.beginPath();
+            c.arc(hx, hy, 20 + ext * 34, wAng - 0.7, wAng + 0.35);
+            c.stroke();
+          }
           c.restore();
         }
       }
+      if (light && !attacking && !motionReduced() && !fxLite()) {
+        c.save();
+        const pulse = 0.35 + 0.2 * Math.sin(this.animT * 6);
+        const g = c.createRadialGradient(hx, hy, 2, hx, hy, 22);
+        g.addColorStop(0, light.color);
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        c.globalAlpha = pulse;
+        c.globalCompositeOperation = 'lighter';
+        c.fillStyle = g;
+        c.beginPath(); c.arc(hx, hy, 22, 0, TAU); c.fill();
+        c.restore();
+      }
       c.save(); c.translate(hx, hy); c.rotate(wAng);
-      if (this.weapon.masterSword || this.weapon.id === 'master_sword') {
+      if (light) {
+        c.shadowColor = light.color;
+        c.shadowBlur = fxLite() ? 8 : 16;
+      } else if (this.weapon.masterSword || this.weapon.id === 'master_sword') {
         c.shadowColor = '#6fd7ff';
         c.shadowBlur = fxLite() ? 10 : 18;
       }

@@ -153,6 +153,45 @@ function weaponEffectLabel(w) {
   return String(base.effect);
 }
 
+const WEAPON_EFFECT_LIGHT = {
+  burn: ['#ff8c42', '#ffd75e'], popburn: ['#ff6a3d', '#ffe259'], inferno: ['#ff4d2a', '#ffd75e'],
+  magma: ['#ff6a3d', '#ff8c42'], soapburn: ['#ffd75e', '#ff8c42'], chainburn: ['#ff6a3d', '#ffe259'],
+  ashpull: ['#ff8c42', '#c47aff'], frostfire: ['#7cf5ff', '#ff6a3d'], freeze: ['#7cf5ff', '#e8ffff'],
+  drowsy: ['#c47aff', '#7cf5ff'], slip: ['#ffe259', '#c47aff'], flipkb: ['#c47aff', '#ff6b9d'],
+  confuse: ['#ff6b9d', '#c47aff'], spinchaos: ['#ff6a3d', '#c47aff'], echo: ['#c47aff', '#ffd75e'],
+  sonic: ['#ff6b9d', '#ffe259'], quake: ['#ffd75e', '#ff6a3d'], meteor: ['#ff6a3d', '#fff0a0'],
+  quakboom: ['#ffe259', '#ff8c42'], explodepeel: ['#ff6a3d', '#ffe259'], balloon: ['#ff6b9d', '#fff'],
+  lifesteal: ['#6ee06e', '#ff6b9d'], pull: ['#b06ae0', '#7cf5ff'], critsurge: ['#ffd75e', '#fff8d0'],
+  flutter: ['#c47aff', '#e8d0ff'], bleed: ['#ff4d6d', '#ffb0b8'], execute: ['#ff6a3d', '#fff'],
+};
+
+/** Licht-FX voor speciale wapens (zone / effect / legendary+ / summon / master). */
+function weaponLightFx(w) {
+  const base = typeof w === 'string' ? weaponById(w) : (w || null);
+  if (!base || !base.id || base.id === 'vuist') return null;
+  if (base.masterSword || base.id === 'master_sword') {
+    return { color: '#6fd7ff', color2: '#e8f8ff', pulse: 1.15, special: true };
+  }
+  if (base.effect && WEAPON_EFFECT_LIGHT[base.effect]) {
+    const [color, color2] = WEAPON_EFFECT_LIGHT[base.effect];
+    return { color, color2, pulse: base.dropZone === 'hell' ? 1.25 : 1.12, special: true };
+  }
+  if (base.dropZone === 'hell') return { color: '#ff6a3d', color2: '#ffd75e', pulse: 1.22, special: true };
+  if (base.dropZone === 'nightmare') return { color: '#c47aff', color2: '#7cf5ff', pulse: 1.1, special: true };
+  const rar = typeof rarityOf === 'function' ? rarityOf(base.rarity) : null;
+  if (rar && rar.order >= 4) {
+    return { color: rar.color, color2: '#fff8e8', pulse: 0.9 + rar.order * 0.04, special: true };
+  }
+  if (base.summoned && rar) {
+    return { color: rar.color, color2: '#ffffff', pulse: 0.95, special: true };
+  }
+  return null;
+}
+
+function isSpecialLightWeapon(w) {
+  return !!weaponLightFx(w);
+}
+
 /** Zone-wapens: alleen via drop in Nachtmerrie/Hel (save.zoneWeapons). */
 function weaponZoneUnlocked(w) {
   const base = typeof w === 'string' ? weaponById(w) : w;
