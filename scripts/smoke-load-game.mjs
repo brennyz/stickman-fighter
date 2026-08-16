@@ -40,6 +40,20 @@ if (/\bplayerWalkInput\s*\(/.test(code) && !/function\s+playerWalkInput\s*\(/.te
   process.exit(1);
 }
 
+// Versus-retire: combatEntryFor must not assume vsRosterEntry() returns an object.
+{
+  const fn = code.match(/function\s+combatEntryFor\s*\([\s\S]*?\nfunction\s+\w+/);
+  const body = fn ? fn[0] : '';
+  if (!body) {
+    console.error('SMOKE_FAIL combatEntryFor missing — punch/weapon attackSpec');
+    process.exit(1);
+  }
+  if (/vsRosterEntry\s*\([^)]*\)\s*;/.test(body) && !/\bif\s*\(\s*e\s*\)/.test(body) && !/e\s*\|\|/.test(body) && !/e\s*\?/.test(body)) {
+    console.error('SMOKE_FAIL combatEntryFor must null-check vsRosterEntry — mobile punch/weapon throw');
+    process.exit(1);
+  }
+}
+
 function makeEl(id) {
   return {
     id,

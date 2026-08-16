@@ -274,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.141';
+const APP_VERSION = '1.18.142';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 351;
+const SW_CACHE_REV = 352;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -824,13 +824,18 @@ const SIG_MODS = {
 };
 
 function combatEntryFor(f) {
-  if (f && f.rosterId) {
+  // Versus retire: vsRosterEntry() is a null stub. Adventure still tags
+  // the player as rosterId 'hero' — never dereference a missing entry
+  // (that threw in attackSpec → punch/weapon/kick felt dead on mobile).
+  if (f && f.rosterId && typeof vsRosterEntry === 'function') {
     const e = vsRosterEntry(f.rosterId);
-    return {
-      crit: e.crit != null ? e.crit : 0.08,
-      critMul: e.critMul != null ? e.critMul : 1.5,
-      sig: e.sig || 'balanced',
-    };
+    if (e) {
+      return {
+        crit: e.crit != null ? e.crit : 0.08,
+        critMul: e.critMul != null ? e.critMul : 1.5,
+        sig: e.sig || 'balanced',
+      };
+    }
   }
   const lv = typeof save !== 'undefined' ? (save.lvl || 1) : 1;
   return { crit: 0.06 + Math.min(0.05, lv * 0.002), critMul: 1.48, sig: 'balanced' };
