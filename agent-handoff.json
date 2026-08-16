@@ -381,6 +381,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-16T08:27:26Z",
+      "summary": "LIVE gemerged naar main: mobiel slaan + d12 dex · v1.18.143 / SW 353 — Verse versie op telefoon"
+    },
+    {
       "at": "2026-08-16T08:26:00Z",
       "summary": "LIVE merge: mobiel slaan (attackSpec + 44px pads) + d12 dex · v1.18.143 / SW 353"
     },
@@ -475,22 +479,6 @@
     {
       "at": "2026-07-26T20:12:11Z",
       "summary": "Summons: 10× random, fullscreen pull, no spoiler toast, betere odds · v1.18.121"
-    },
-    {
-      "at": "2026-07-26T20:08:57Z",
-      "summary": "Summons spectacle + scale LIVE · v1.18.120 / SW v330"
-    },
-    {
-      "at": "2026-07-26T20:06:48Z",
-      "summary": "Arcade UI icons LIVE op main · v1.18.119 / SW v329"
-    },
-    {
-      "at": "2026-07-26T20:06:43Z",
-      "summary": "Arcade UI icons LIVE op main · v1.18.119 / SW v329"
-    },
-    {
-      "at": "2026-07-26T20:06:38Z",
-      "summary": "Arcade UI icons LIVE gemerged · v1.18.119"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
