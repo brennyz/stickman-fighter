@@ -13,23 +13,30 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.142",
-    "swCache": "stickfighter-app-v352",
-    "gameJsQuery": "game.js?v=352",
-    "cssQuery": "styles/main.css?v=352",
-    "featureBranch": "cursor/fix-mobile-attack-buttons-8f9e",
+    "appVersion": "1.18.143",
+    "swCache": "stickfighter-app-v353",
+    "gameJsQuery": "game.js?v=353",
+    "cssQuery": "styles/main.css?v=353",
+    "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "mobiel slaan: combatEntryFor null-check + touch-knop 44px/edge-guard",
-    "updated": "2026-08-16T07:50:00Z"
+    "note": "LIVE: mobiel slaan (attackSpec + 44px pads) + d12 dex biome filters",
+    "updated": "2026-08-16T08:26:00Z"
   },
   "userWishlist": [
     {
       "id": "w-20260816T073600",
       "from": "user",
       "text": "Mobiel in browser: wapen- en slaknoppen werken niet. Check code merge (versus-retire).",
+      "status": "done-in-code",
+      "updated": "2026-08-16"
+    },
+    {
+      "id": "w-20260816T074548",
+      "from": "user",
+      "text": "Maak de app beter",
       "status": "done-in-code",
       "updated": "2026-08-16"
     },
@@ -374,8 +381,24 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-16T08:26:00Z",
+      "summary": "LIVE merge: mobiel slaan (attackSpec + 44px pads) + d12 dex · v1.18.143 / SW 353"
+    },
+    {
       "at": "2026-08-16T07:55:12Z",
       "summary": "Mobiel slaan: attackSpec null-crash bevestigd op main (hiccup-toast) + touch-knoppen 36px→62px met 24px edge-guard · smoke sweept 8 formaten"
+    },
+    {
+      "at": "2026-08-16T07:49:54Z",
+      "summary": "d12 monsterboek polish live · v1.18.142 / SW 352"
+    },
+    {
+      "at": "2026-08-16T07:49:43Z",
+      "summary": "d12: monsterboek biome-filters, flavor-regels, 282-count, farm/zoo/zee-prestaties · v1.18.142"
+    },
+    {
+      "at": "2026-08-16T07:45:48Z",
+      "summary": "Start: maak de app beter (d20 polish)"
     },
     {
       "at": "2026-08-16T07:40:22Z",
@@ -468,10 +491,6 @@
     {
       "at": "2026-07-26T20:06:38Z",
       "summary": "Arcade UI icons LIVE gemerged · v1.18.119"
-    },
-    {
-      "at": "2026-07-26T20:06:22Z",
-      "summary": "Arcade prestaties/lock/check/coin/warn + saga JS → assets/ui SVG · v1.18.119"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

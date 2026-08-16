@@ -73,6 +73,12 @@ const ACHIEVEMENTS = [
       }
       return false;
     } },
+  { id: 'dexFarm', name: 'Boerderij-jager', desc: '10 boerderij-soorten in het boek',
+    test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('farm') : 0) >= 10 },
+  { id: 'dexZoo', name: 'Safari-gids', desc: '10 dierentuin-soorten in het boek',
+    test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('zoo') : 0) >= 10 },
+  { id: 'dexSea', name: 'Getij-kenner', desc: '5 zee-soorten in het boek',
+    test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('sea') : 0) >= 5 },
   { id: 'train5', name: 'Robotbreker', desc: '5× training gewonnen',
     test: s => s.trainWins >= 5 },
   { id: 'wall100', name: 'Sloper', desc: 'Muurrecord 100+',
@@ -400,6 +406,9 @@ function achievementPlayTarget(ach) {
     case 'dexHalf':
     case 'dexTiers':
     case 'dexMythic':
+    case 'dexFarm':
+    case 'dexZoo':
+    case 'dexSea':
     case 'lv10':
     case 'lv50':
       return { mode: 'adventure' };
@@ -452,6 +461,9 @@ function achievementProgressFrac(ach) {
       }
       return 0;
     }
+    case 'dexFarm': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('farm') : 0, 10) / 10;
+    case 'dexZoo': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('zoo') : 0, 10) / 10;
+    case 'dexSea': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('sea') : 0, 5) / 5;
     case 'train5': return Math.min(s.trainWins, 5) / 5;
     case 'wall100': return Math.min(s.bestWall, 100) / 100;
     case 'combo8': return Math.min(s.stats.maxCombo || 0, 8) / 8;
@@ -485,6 +497,9 @@ function achievementProgressHint(ach) {
     }
     case 'dexHalf': return `${Object.keys(s.dex || {}).length}/${Math.ceil(SPECIES_ORDER.length / 2)} soorten`;
     case 'dexTiers': return `${dexRarityTierCount()}/4 rariteiten`;
+    case 'dexFarm': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('farm') : 0}/10 boerderij`;
+    case 'dexZoo': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('zoo') : 0}/10 dierentuin`;
+    case 'dexSea': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('sea') : 0}/5 zee`;
     case 'train5': return `${Math.min(s.trainWins, 5)}/5 training-wins`;
     case 'wall100': return `${Math.min(s.bestWall, 100)}/100 muur-score`;
     case 'combo8': return `×${Math.min(s.stats.maxCombo || 0, 8)}/8 combo`;
@@ -2701,7 +2716,7 @@ function dexRarityTotals() {
   }
   return counts;
 }
-const DEX_ACH_IDS = ['dex10', 'dexHalf', 'dexTiers', 'dex100', 'dexMythic', 'dexFull'];
+const DEX_ACH_IDS = ['dex10', 'dexFarm', 'dexZoo', 'dexSea', 'dexHalf', 'dexTiers', 'dex100', 'dexMythic', 'dexFull'];
 function dexNextAchievementHtml() {
   let best = null, bestFrac = -1;
   for (const id of DEX_ACH_IDS) {
@@ -2720,11 +2735,12 @@ function dexNextAchievementHtml() {
     `<div style="font-size:12px;opacity:.85">${best.desc}${hint ? ' · ' + hint : ''}</div>` +
     `<div class="xpline" style="margin-top:6px;height:6px"><div style="width:${pct}%"></div></div></div>`;
 }
-function dexSortedIds(rarityFilter, typeFilter, sortKey) {
+function dexSortedIds(rarityFilter, typeFilter, sortKey, biomeFilter) {
   let ids = SPECIES_ORDER.filter(id => {
     const sp = SPECIES[id];
     if (rarityFilter !== 'all' && sp.rarity !== rarityFilter) return false;
     if (typeFilter !== 'all' && sp.type !== typeFilter) return false;
+    if (biomeFilter && biomeFilter !== 'all' && typeof speciesInBiome === 'function' && !speciesInBiome(id, biomeFilter)) return false;
     return true;
   });
   if (sortKey === 'rarity') {
@@ -2852,7 +2868,10 @@ function dexTotalKillsFromSave(s) {
   return n;
 }
 const MONSTER_TYPE_LABEL = {
-  hop: 'Hups', fly: 'Vlieg', charge: 'Charge', shoot: 'Schiet', tank: 'Tank', dragon: 'Draak',
+  hop: 'Hups', fly: 'Vlieg', charge: 'Charge', shoot: 'Schiet', tank: 'Tank', dragon: 'Draak', swim: 'Zee',
+};
+const DEX_BIOME_LABEL = {
+  farm: 'Boerderij', zoo: 'Dierentuin', sea: 'Zee', classic: 'Klassiek', secret: 'Geheim',
 };
 const DEX_REF_STATS = { hp: 420, dmg: 28, speed: 150 };
 function dexMiniStat(label, val, max, color) {

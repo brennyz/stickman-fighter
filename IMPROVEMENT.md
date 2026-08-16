@@ -1,4 +1,5 @@
-| 2026-08-16 | — | **Merge-fix + touch-maat:** (1) versus-retire `vsRosterEntry()`=null + adventure `rosterId:'hero'` → `combatEntryFor` crash in `attackSpec` (sla/wapen/trap dood, "hiccup"-toast). (2) `touchUiScale` portret-aspect `W/H*0.95` pinde elke 19,5:9 telefoon op de ondergrens → 36px knoppen 4px van de gesture-strip; nu ≥44px + 24px vrijloop, kolom-pitch op 2×r. `smoke:touch-btns` sweept 8 formaten. v1.18.142 / SW v352. |
+| 2026-08-16 | — | **Merge-fix + touch-maat:** (1) versus-retire `vsRosterEntry()`=null + adventure `rosterId:'hero'` → `combatEntryFor` crash in `attackSpec` (sla/wapen/trap dood, "hiccup"-toast). (2) `touchUiScale` portret-aspect `W/H*0.95` pinde elke 19,5:9 telefoon op de ondergrens → 36px knoppen 4px van de gesture-strip; nu ≥44px + 24px vrijloop, kolom-pitch op 2×r. `smoke:touch-btns` sweept 8 formaten. LIVE v1.18.143 / SW v353. |
+| 2026-08-16 | **12** | d12 c6: monsterboek biome-filters (boerderij/zoo/zee) + flavor-regels + 282-count + farm/zoo/zee-prestaties. v1.18.142 / SW v352. |
 | 2026-08-07 | — | Soft-feel store A3/A4: milder golf 1 + langere telegraphs/visual cue; sterkere partGate loop-rechts (touch+KB); device-qa.md. v1.18.134 / SW v344. |
 | 2026-07-26 | **18** | d18 c5: char fight dock (step/TOT/same-pair) + replay last duo; boot-fail toast dismiss; summon smoke counter timing · v1.18.125 / SW v335 LIVE. |
 | 2026-07-26 | **4** | d4 c5: spawn funnel + star beat HUD + stage-clear runway; _levelClearPending reset · v1.18.124 / SW v334 LIVE. |
@@ -118,6 +119,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-08-16 | **12** | Monsterboek: biome-filters, flavor-tekst op kaarten, juiste 282-count, 3 biome-prestaties. v1.18.142 / SW 352. |
 | 2026-08-07 | — | **iOS shell:** Capacitor stubs + Guideline 4.2 notes (C2–C3). Docs only. |
 | 2026-08-07 | **merge** | Soft-live stack op main: privacy + soft-feel + versus-retire + IP-A techniques · **v1.18.138 / SW v348**. |
 | 2026-08-07 | — | **soft-legal:** privacy.html + settings/menu link, age/teens+ hints, docs/store data-safety + iOS nutrition; A1/A2/A7/B7/C4 done. v1.18.134 / SW v344. |

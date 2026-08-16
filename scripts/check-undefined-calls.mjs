@@ -22,6 +22,7 @@ const REGRESSION_MUST_DEFINE = [
   'padDigitalMove', 'joyMoveAxis', 'applyFighterMove', 'clampFighterX',
   'fighterMoveXBounds', 'refreshA11yUi', 'motionReduced',
   'combatEntryFor', 'applySignatureToSpec',
+  'speciesBlurb', 'speciesBiomeId', 'dexBiomeDiscovered',
 ];
 
 /** Consts / values that must appear in the bundle (not only functions). */

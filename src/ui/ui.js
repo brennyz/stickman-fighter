@@ -1009,6 +1009,9 @@ const UI = {
   charSortMode: 'name',
   charPreviewHoverId: null,
   dexRarityFilter: 'all',
+  dexTypeFilter: 'all',
+  dexBiomeFilter: 'all',
+  dexSortKey: 'book',
   achFilter: 'all',
   petTab: 'dex',
   advIslandPick: 0,
@@ -3434,12 +3437,21 @@ const UI = {
           }).join('')}</div>`
         : '';
       sumEl.style.display = 'block';
+      const biomeTot = typeof dexBiomeTotals === 'function' ? dexBiomeTotals() : {};
+      const biomeChips = ['farm', 'zoo', 'sea'].map((b) => {
+        const tot = biomeTot[b] || 0;
+        if (!tot) return '';
+        const n = typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered(b) : 0;
+        const lab = (typeof DEX_BIOME_LABEL !== 'undefined' && DEX_BIOME_LABEL[b]) || b;
+        return `<span class="rar-pill" style="color:#9fd4ff;border-color:#4a7aa0;margin:2px">${lab} ${n}/${tot}</span>`;
+      }).filter(Boolean).join(' ');
       sumEl.innerHTML =
         `Boek <b>${dexCount()}/${SPECIES_ORDER.length}</b> · kills <b>${kills}</b> · bonus max HP <b>+${totalHp}</b>` +
         ` · rariteiten <b>${dexRarityTierCount()}/6</b>` +
         `<div class="dex-mini-row">${dexMiniStat('HP', totalHp, SPECIES_ORDER.length * 25, '#6ee06e')}` +
         `${dexMiniStat('Kills', kills, 150, '#ffd75e')}</div>` +
         (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '') +
+        (biomeChips ? `<div style="margin-top:4px;line-height:1.7">${biomeChips}</div>` : '') +
         cosmeticHtml +
         dexNextAchievementHtml();
     }
@@ -3468,6 +3480,21 @@ const UI = {
           return mk(rid, `${rarityLabel(rid)} ${n}/${tot}`, rar.color);
         }).join('');
     });
+    bindFilterBar(document.getElementById('dexBiomeFilterBar'), 'data-dex-biome-filter', 'dexBiomeFilter', () => {
+      const cur = this.dexBiomeFilter || 'all';
+      const mk = (id, label) =>
+        `<button type="button" class="dex-filter-btn${cur === id ? ' active' : ''}" data-dex-biome-filter="${id}">${label}</button>`;
+      const tot = typeof dexBiomeTotals === 'function' ? dexBiomeTotals() : {};
+      const lab = (typeof DEX_BIOME_LABEL !== 'undefined') ? DEX_BIOME_LABEL : {};
+      const order = ['farm', 'zoo', 'sea', 'classic', 'secret'];
+      return mk('all', 'Alle biomen') +
+        order.map((b) => {
+          const nTot = tot[b] || 0;
+          if (!nTot) return '';
+          const n = typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered(b) : 0;
+          return mk(b, `${lab[b] || b} ${n}/${nTot}`);
+        }).join('');
+    });
     bindFilterBar(document.getElementById('dexTypeFilterBar'), 'data-dex-type-filter', 'dexTypeFilter', () => {
       const cur = this.dexTypeFilter || 'all';
       const mk = (id, label) =>
@@ -3492,9 +3519,10 @@ const UI = {
     list.innerHTML = '';
     const filter = this.dexRarityFilter || 'all';
     const typeFilter = this.dexTypeFilter || 'all';
+    const biomeFilter = this.dexBiomeFilter || 'all';
     const sortKey = this.dexSortKey || 'book';
     const topKillId = dexTopKillId();
-    for (const id of dexSortedIds(filter, typeFilter, sortKey)) {
+    for (const id of dexSortedIds(filter, typeFilter, sortKey, biomeFilter)) {
       const sp = SPECIES[id];
       const kills = save.dex[id] || 0;
       const rar = rarityOf(sp.rarity);
@@ -3531,12 +3559,16 @@ const UI = {
           ? `<div style="color:#7cf5ff;font-size:12px;margin-top:4px">Verschijnt in avontuur · unlock Lv ${unlockLv}</div>`
           : (unlockLv != null
             ? `<div style="opacity:.72;font-size:12px;margin-top:4px">Unlock Lv ${unlockLv}</div>`
-            : ''));
+            : `<div style="opacity:.78;font-size:12px;margin-top:4px">${typeof dexSecretHint === 'function' ? dexSecretHint(id) : 'Geheim'}</div>`));
       const petLine = PET_BY_SPECIES[id]
         ? `<div style="font-size:12px;margin-top:4px;color:${isPetTamed(PET_BY_SPECIES[id].id) ? '#7cf5ff' : '#8fa3d9'}">${petProgressLine(id)}</div>`
         : '';
-      info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>` : ''}${id === topKillId ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.topHunter')}</span>` : ''}</div>
-        <div class="cinfo">${kills ? `${typeLbl} · basis HP ${sp.hp} · dmg ${sp.dmg} · spd ${sp.speed} · ${sp.xp} XP · Lv ${unlockLv || '?'}` : 'Nog niet verslagen'}</div>${lockHint}${petLine}${statRow}`;
+      const biome = typeof speciesBiomeId === 'function' ? speciesBiomeId(sp, id) : '';
+      const biomeLbl = (typeof DEX_BIOME_LABEL !== 'undefined' && DEX_BIOME_LABEL[biome]) || '';
+      const blurb = kills && typeof speciesBlurb === 'function' ? speciesBlurb(id) : '';
+      const blurbLine = blurb ? `<div class="dex-blurb">${blurb}</div>` : '';
+      info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>` : ''}${id === topKillId ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.topHunter')}</span>` : ''}${kills && biomeLbl ? ` <span class="rar-pill" style="color:#9fd4ff;border-color:#4a7aa0">${biomeLbl}</span>` : ''}</div>
+        <div class="cinfo">${kills ? `${typeLbl} · basis HP ${sp.hp} · dmg ${sp.dmg} · spd ${sp.speed} · ${sp.xp} XP · Lv ${unlockLv || '?'}` : 'Nog niet verslagen'}</div>${blurbLine}${lockHint}${petLine}${statRow}`;
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';

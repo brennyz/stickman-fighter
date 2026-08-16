@@ -12,7 +12,6 @@
     11,
     5,
     10,
-    12,
     14,
     2,
     13,
@@ -23,21 +22,14 @@
     20
   ],
   "lastRoll": {
-    "face": 1,
-    "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
-    "rolledAt": "2026-08-07T12:01:50Z",
-    "remainingCount": 18,
+    "face": 12,
+    "category": "Content \u2014 monsters, wapens, rariteit, dex",
+    "rolledAt": "2026-08-16T07:45:49Z",
+    "remainingCount": 17,
     "cycle": 6
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 7,
-      "note": "sanitize strip, diagnostics, import warnings, export schema",
-      "version": "1.12.21",
-      "doneAt": "2026-07-23T19:03:26Z",
-      "cycle": 1
-    },
     {
       "face": 14,
       "note": "crit/combo/jutsu rings + particle room",
@@ -590,6 +582,13 @@
       "version": "1.18.128",
       "doneAt": "2026-08-07T12:03:59Z",
       "cycle": 6
+    },
+    {
+      "face": 12,
+      "note": "dex biome filters + flavor blurbs + farm/zoo/sea ach",
+      "version": "1.18.142",
+      "doneAt": "2026-08-16T07:49:43Z",
+      "cycle": 6
     }
   ],
   "userFeatureLog": [
@@ -984,14 +983,6 @@
     }
   ],
   "history": [
-    {
-      "face": 18,
-      "category": "Character select deel 1 \u2014 stap UX, unlock hints, saga iPad",
-      "rolledAt": "2026-07-23T15:48:23Z",
-      "remainingCount": 18,
-      "cycle": 1,
-      "part": 1
-    },
     {
       "face": 18,
       "category": "Character select deel 2 \u2014 saga icons strip, clash, achievement",
@@ -1824,6 +1815,13 @@
       "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
       "rolledAt": "2026-08-07T12:01:50Z",
       "remainingCount": 18,
+      "cycle": 6
+    },
+    {
+      "face": 12,
+      "category": "Content \u2014 monsters, wapens, rariteit, dex",
+      "rolledAt": "2026-08-16T07:45:49Z",
+      "remainingCount": 17,
       "cycle": 6
     }
   ],
