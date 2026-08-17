@@ -733,7 +733,7 @@ function specialTouchBtn(pad) {
 
 function ketsbamPromptLayout(g) {
   const ui = touchUiScale(W, H);
-  const special = specialTouchBtn(g?.mode === 'versus' && Input.dualMode ? Input : Input);
+  const special = specialTouchBtn(Input);
   if (!special) {
     return { cx: W * 0.88, cy: H * 0.68, w: 72 * ui, h: 12 * ui, gap: 8 * ui };
   }
