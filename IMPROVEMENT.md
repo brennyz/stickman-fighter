@@ -1,3 +1,4 @@
+| 2026-08-17 | **13** | d13 c6: missies-copy één adem — Dagbonus, geen grind-mantra, geen dubbele claim-toast; knop pas als klaar. v1.18.146 / SW v356. |
 | 2026-08-17 | **20** | d20 c6: dode Kets-UI (`kablam-ui.js`) eruit — live thermometer blijft; versus-ghost binds; duplicate LIVE-LINK. Zero gedrag. v1.18.145 / SW v355. |
 | 2026-08-17 | **8** | d8 c6: SW wacht op menu (geen skipWaiting midden-gevecht); update-banner tikt alleen op hub; tijdens play “laadt in het menu”; install-cache regel. v1.18.144 / SW v354. |
 | 2026-08-16 | — | **Merge-fix + touch-maat:** (1) versus-retire `vsRosterEntry()`=null + adventure `rosterId:'hero'` → `combatEntryFor` crash in `attackSpec` (sla/wapen/trap dood, "hiccup"-toast). (2) `touchUiScale` portret-aspect `W/H*0.95` pinde elke 19,5:9 telefoon op de ondergrens → 36px knoppen 4px van de gesture-strip; nu ≥44px + 24px vrijloop, kolom-pitch op 2×r. `smoke:touch-btns` sweept 8 formaten. LIVE v1.18.143 / SW v353. |
@@ -121,6 +122,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-08-17 | **13** | Missies: één term Dagbonus, hub-hook, scherm = flow+Nu+kaarten; claim-toast alleen XP; Dagbonus-knop pas klaar/binnen. v1.18.146 / SW 356. |
 | 2026-08-17 | **20** | Code health: spook-Kets UI weg, live balk ongemoeid; versus-ghost knoppen; LIVE-LINK 1×. v1.18.145 / SW 355. |
 | 2026-08-17 | **8** | PWA: nieuwe SW wacht tot hub; gouden balk tikt alleen in menu; gevecht ziet “laadt in het menu”; install toont cache-klaar. v1.18.144 / SW 354. |
 | 2026-08-16 | **12** | Monsterboek: biome-filters, flavor-tekst op kaarten, juiste 282-count, 3 biome-prestaties. v1.18.142 / SW 352. |

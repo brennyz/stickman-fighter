@@ -172,13 +172,7 @@ function claimDailyTask(taskId, opts) {
   }
   if (!opts.silent) {
     AudioSys.sfx('bonus');
-    const leftClaims = save.daily.tasks.filter(x => !x.claimed).length;
-    const path = leftClaims === 0
-      ? t('toast.claimPathBonus')
-      : (leftClaims === 1
-        ? t('toast.claimPath1')
-        : t('toast.claimPathN', { n: leftClaims }));
-    UI.toast(t('toast.claimXp', { xp: def.xp, text: dailyText(taskId) }) + ' · ' + path, 2800);
+    UI.toast(t('toast.claimXp', { xp: def.xp, text: dailyText(taskId) }), 2800);
   }
   if (!persistOrToast('missie-claim')) {
     task.claimed = snap.claimed;
@@ -191,9 +185,6 @@ function claimDailyTask(taskId, opts) {
   if (!opts.skipRefresh) {
     checkDailyAllBonus();
     UI.renderMissions();
-    if (!opts.silent && !opts.skipFollowUp) {
-      setTimeout(() => dailyClaimFollowUpToast(), 420);
-    }
   }
   return def.xp;
 }
@@ -224,16 +215,9 @@ function claimAllDailyReady() {
   checkDailyAllBonus();
   UI.renderMissions();
   UI.renderMenu();
-  const leftClaims = save.daily.tasks.filter(x => !x.claimed).length;
-  const path = leftClaims === 0
-    ? t('toast.claimPathBonus')
-    : (leftClaims === 1
-      ? t('toast.claimPath1')
-      : t('toast.claimPathN', { n: leftClaims }));
-  UI.toast((claimed === 1
+  UI.toast(claimed === 1
     ? t('toast.claimBatch1', { total })
-    : t('toast.claimBatchN', { n: claimed, total })) + ' · ' + path, 3400);
-  setTimeout(() => dailyClaimFollowUpToast(), 450);
+    : t('toast.claimBatchN', { n: claimed, total }), 2800);
 }
 
 function claimDailyDayBonus() {
@@ -270,11 +254,7 @@ function claimDailyDayBonus() {
   checkAchievements();
   UI.renderMissions();
   UI.renderMenu();
-  const n = save.stats.dailyBonusCount || 0;
-  const streakBit = n >= 7
-    ? t('toast.dayBonusStreakDone', { n })
-    : t('toast.dayBonusStreak', { n, left: Math.max(0, 7 - n) });
-  UI.toast(t('toast.dayBonusDone') + ' · ' + streakBit, 3600);
+  UI.toast(t('toast.dayBonusDone'), 3200);
 }
 
 function grantMetaXP(n, opts) {
@@ -293,9 +273,7 @@ function grantMetaXP(n, opts) {
 
 function checkDailyAllBonus() {
   ensureDaily();
-  if (save.daily.tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed) {
-    UI.toast(t('toast.allClaimedTapBonus'), 3500);
-  }
+  /* Scherm/hub-regel is de follow-up — geen tweede toast na de XP-claim. */
 }
 
 function dailyUnclaimedXp() {
@@ -325,7 +303,8 @@ function dailyFlowBarHtml(step) {
   const mk = (n, label, sub) => {
     const active = step === n ? ' active' : '';
     const done = step > n ? ' done' : '';
-    return `<span class="mission-flow-pill${active}${done}"><b>${n}</b> ${label}<small>${sub}</small></span>`;
+    const small = sub ? `<small>${sub}</small>` : '';
+    return `<span class="mission-flow-pill${active}${done}"><b>${n}</b> ${label}${small}</span>`;
   };
   return `<div class="mission-flow-bar">${mk(1, t('missionsUi.flowPlay'), t('missionsUi.flowPlaySub'))}` +
     `<span class="mission-flow-arrow">→</span>${mk(2, t('missionsUi.flowClaim'), t('missionsUi.flowClaimSub'))}` +
@@ -342,36 +321,6 @@ function dailyTaskRemainderText(task, def) {
   if (def.type === 'pickups') return left === 1 ? t('missionsUi.remainderPickups1') : t('missionsUi.remainderPickupsN', { n: left });
   if (def.type === 'advWin' || def.type === 'trainWin' || def.type === 'bossKill') return t('missionsUi.remainderRun');
   return t('missionsUi.remainderGeneric', { n: left });
-}
-
-function dailyClaimFollowUpToast() {
-  if (state === 'play' || state === 'pause') return;
-  if (typeof gamblePending === 'function' && gamblePending()) return;
-  const left = claimableDailyTasks();
-  if (left.length > 0) {
-    const xp = left.reduce((n, task) => n + (dailyDef(task.id)?.xp || 0), 0);
-    UI.toast(left.length === 1
-      ? t('toast.followUp1', { xp })
-      : t('toast.followUpN', { n: left.length, xp }), 2600);
-    return;
-  }
-  if (save.daily.tasks.every(task => task.claimed) && !save.daily.dayBonusClaimed) {
-    UI.toast(t('toast.followUpBonus'), 2800);
-    return;
-  }
-  if (save.daily.dayBonusClaimed) {
-    UI.toast(t('toast.followUpDone', { reset: dailyResetCountdown() }), 2600);
-  }
-}
-
-/** d13 c4: korte claim-pad regel voor kaarten (naar dagbonus). */
-function dailyClaimPathHint(claimedN, readyN) {
-  const afterThis = claimedN + 1;
-  if (afterThis >= 3) return t('missionsUi.claimPathOpensBonus');
-  const left = 3 - afterThis;
-  return left === 1
-    ? t('missionsUi.claimPathAfter1')
-    : t('missionsUi.claimPathAfterN', { n: left });
 }
 
 /** d13 c5: geen toast-stack midden in gevecht — floater in play, toast in menu. */
@@ -531,33 +480,10 @@ function dailyStatusLine() {
   const done = tasks.filter(t => t.done).length;
   const claimed = tasks.filter(t => t.claimed).length;
   const ready = tasks.filter(t => t.done && !t.claimed).length;
-  const achN = Object.keys(save.achievements).length;
-  const streak = dailyStreakLine();
-  const streakBit = streak ? ` · ${streak}` : '';
-  if (save.daily.dayBonusClaimed) {
-    return t('missionsUi.statusDone', {
-      streak: streakBit,
-      ach: achN,
-      total: ACHIEVEMENTS.length,
-    });
-  }
-  const step = dailyFlowStep();
-  const stepHint = step === 2 ? t('missionsUi.statusStep2')
-    : (step === 3 ? t('missionsUi.statusStep3') : t('missionsUi.statusStep1'));
-  const pendingXp = dailyUnclaimedXp();
-  if (ready > 0) {
-    return t('missionsUi.statusReady', {
-      hint: stepHint, xp: pendingXp, done, streak: streakBit,
-    });
-  }
-  if (claimed === 3) {
-    return t('missionsUi.statusAllClaimed', {
-      hint: stepHint, streak: streakBit, ach: achN, total: ACHIEVEMENTS.length,
-    });
-  }
-  return t('missionsUi.statusDefault', {
-    hint: stepHint, done, xp: dailyPotentialXp(), streak: streakBit,
-  });
+  if (save.daily.dayBonusClaimed) return t('missionsUi.statusDone');
+  if (ready > 0) return t('missionsUi.statusReady', { xp: dailyUnclaimedXp() });
+  if (claimed === 3) return t('missionsUi.statusAllClaimed');
+  return t('missionsUi.statusDefault', { done });
 }
 
 function dailyEarnedXpToday() {

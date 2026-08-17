@@ -2344,13 +2344,7 @@ const UI = {
           ? t('missionsUi.subDayDoneStreak', { streak })
           : t('missionsUi.subDayDone');
       } else {
-        const pending = dailyUnclaimedXp();
-        const base = step === 2
-          ? t('missionsUi.subStep2', { xp: pending })
-          : (step === 3
-            ? t('missionsUi.subStep3')
-            : t('missionsUi.subStep1', { xp: dailyPotentialXp() }));
-        sub.textContent = streak ? `${base} · ${streak}` : base;
+        sub.textContent = t('missions.sub');
       }
     }
     const flowHost = document.getElementById('missionsFlowBar');
@@ -2362,56 +2356,27 @@ const UI = {
       const earned = dailyEarnedXpToday();
       const maxXp = dailyPotentialXp();
       const next = dailyNextActionLine();
-      let claimCall = '';
-      if (readyN > 0) {
-        const xpSum = claimableDailyTasks().reduce((n, task) => n + (dailyDef(task.id)?.xp || 0), 0);
-        claimCall = `<div class="mission-claim-call">${t('missionsUi.claimCall', {
-          n: readyN, xp: xpSum,
-        })}</div>`;
-      } else if (step === 3) {
-        claimCall = `<div class="mission-claim-call mission-claim-call-bonus">${t('missionsUi.claimCallBonus')}</div>`;
-      }
       planHost.innerHTML =
-        claimCall +
         `<div class="mission-plan-next"><b>${t('missionsUi.planNow')}</b> ${next}</div>` +
-        `<div class="mission-plan-xp">${t('missionsUi.planEarned', { earned, max: maxXp })}` +
-        (step === 0 ? ` · ${t('missionsUi.planReset', { reset: dailyResetCountdown() })}` : '') +
-        '</div>' +
+        `<div class="mission-plan-xp">${t('missionsUi.planEarned', { earned, max: maxXp })}</div>` +
         (maxXp > 0
-          ? `<div class="mission-plan-xpbar xpline" style="margin-top:8px;height:8px"><div style="width:${Math.min(100, Math.round(earned / maxXp * 100))}%"></div></div>` +
-            `<div class="mission-plan-xpbar-label">${t('missionsUi.planXpPct', { pct: Math.min(100, Math.round(earned / maxXp * 100)) })}</div>`
+          ? `<div class="mission-plan-xpbar xpline" style="margin-top:8px;height:8px"><div style="width:${Math.min(100, Math.round(earned / maxXp * 100))}%"></div></div>`
           : '');
     }
     const sum = document.getElementById('missionsSummary');
     if (sum) {
-      sum.style.display = 'block';
-      const bonusLeft = !save.daily.dayBonusClaimed;
-      const streak = dailyStreakLine();
-      sum.innerHTML = t('missionsUi.summaryDone', { done: doneN, claimed: claimedN }) +
-        (readyN ? ` · <b style="color:#ffd75e">${t('missionsUi.summaryReady', { n: readyN })}</b>` : '') +
-        (bonusLeft
-          ? (claimedN === 3
-            ? ` · <b style="color:#7cfc8a">${t('missionsUi.summaryBonusReady')}</b>`
-            : ` · ${claimedN === 2 ? t('missionsUi.summaryBonusAfter1') : t('missionsUi.summaryBonusAfterN', { n: 3 - claimedN })}`)
-          : ` · dagbonus ${SVG_CHECK_MINI}`) +
-        (streak ? ` · <b style="color:#7cf5ff">${streak}</b>` : '') +
-        ` · ${t('missionsUi.summaryMax', { xp: dailyPotentialXp() })}`;
+      sum.style.display = 'none';
+      sum.textContent = '';
     }
     const claimAll = document.getElementById('dailyClaimAllBtn');
     if (claimAll) {
       claimAll.style.display = readyN >= 1 ? 'flex' : 'none';
       claimAll.classList.toggle('mission-claim-pulse', readyN >= 1);
       const lab = claimAll.querySelector('div');
+      const xpSum = claimableDailyTasks().reduce((n, task) => n + (dailyDef(task.id)?.xp || 0), 0);
       if (lab) {
-        const xpSum = claimableDailyTasks().reduce((n, task) => n + (dailyDef(task.id)?.xp || 0), 0);
-        const afterClaim = 3 - claimedN - readyN;
-        lab.innerHTML = t('missionsUi.claimAllBtn') + `<small>+${xpSum} XP` +
-          (afterClaim > 0
-            ? (afterClaim === 1
-              ? ` · ${t('missionsUi.claimAllAfter1')}`
-              : ` · ${t('missionsUi.claimAllAfterN', { n: afterClaim })}`)
-            : ` · ${t('missionsUi.claimAllThenBonus')}`) +
-          '</small>';
+        lab.innerHTML = t('missionsUi.claimAllBtn') +
+          (xpSum > 0 ? `<small>+${xpSum} XP</small>` : '');
       }
     }
     dailyHost.innerHTML = '';
@@ -2439,17 +2404,17 @@ const UI = {
         ? `<span class="mission-mode-pill">${dailyModeLabel(playTarget.mode)}</span> `
         : '';
       const almostTag = almost ? ` <span class="almost-tag">${t('missionsUi.dailyAlmost')}</span>` : '';
+      const showPlayHint = playHint && !task.done && !playTarget;
       el.innerHTML = `${modePill}<b>${dailyText(def.id)}</b>${isNextUp ? ` <span class="next-up-tag">${t('missionsUi.dailyNextUp')}</span>` : ''}${almostTag}<br>${status}` +
         (remainder && !task.done ? `<div style="color:#7cf5ff;font-size:12px;margin-top:4px;font-weight:700">${remainder}</div>` : '') +
-        (playHint && !task.done ? `<div style="opacity:.75;font-size:12px;margin-top:4px">${playHint}</div>` : '') +
-        `<div style="opacity:.8;font-size:13px;margin-top:4px">${t('missionsUi.dailyReward', { xp: def.xp })}</div>` +
+        (showPlayHint ? `<div style="opacity:.75;font-size:12px;margin-top:4px">${playHint}</div>` : '') +
+        (!claimable ? `<div style="opacity:.8;font-size:13px;margin-top:4px">${t('missionsUi.dailyReward', { xp: def.xp })}</div>` : '') +
         `<div class="xpline" style="margin-top:8px"><div style="width:${pct}%"></div></div>`;
       if (claimable) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'btn claim-btn';
-        btn.innerHTML = t('missionsUi.dailyClaimBtn', { xp: def.xp }) +
-          `<small>${dailyClaimPathHint(claimedN, readyN)}</small>`;
+        btn.innerHTML = t('missionsUi.dailyClaimBtn', { xp: def.xp });
         bindPress(btn, () => safeUiAction(() => {
           AudioSys.sfx('select');
           claimDailyTask(task.id);
@@ -2474,23 +2439,21 @@ const UI = {
         bonusBtn.style.display = 'flex';
         bonusBtn.disabled = true;
         bonusBtn.classList.add('done');
+        bonusBtn.style.opacity = '1';
         if (label) label.innerHTML = t('missionsUi.bonusClaimed') + `<small>${t('missionsUi.bonusTomorrow')}</small>`;
-      } else {
+      } else if (ready) {
         bonusBtn.classList.remove('done');
         bonusBtn.style.display = 'flex';
-        bonusBtn.disabled = !ready;
-        bonusBtn.style.opacity = ready ? '1' : '0.45';
+        bonusBtn.disabled = false;
+        bonusBtn.style.opacity = '1';
         if (label) {
-          const streakN = save.stats.dailyBonusCount || 0;
-          const streakHint = ready
-            ? (streakN >= 6
-              ? t('missionsUi.bonusStreakAlmost')
-              : t('missionsUi.bonusStreakHint', { n: streakN + 1 }))
-            : '';
-          label.innerHTML = ready
-            ? t('missionsUi.bonusClaimBtn') + `<small>${t('missionsUi.bonusTap')}${streakHint ? ' · ' + streakHint : ''}</small>`
-            : t('missionsUi.bonusNeed') + `<small>${(3 - claimedN) === 1 ? t('missionsUi.bonusNeed1') : t('missionsUi.bonusNeedN', { n: 3 - claimedN })}</small>`;
+          label.innerHTML = t('missionsUi.bonusClaimBtn') + `<small>${t('missionsUi.bonusTap')}</small>`;
         }
+      } else {
+        bonusBtn.classList.remove('done');
+        bonusBtn.style.display = 'none';
+        bonusBtn.disabled = true;
+        bonusBtn.style.opacity = '';
       }
     }
     const achSum = document.getElementById('achSummary');
