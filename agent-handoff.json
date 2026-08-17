@@ -30,7 +30,7 @@
       "id": "w-20260817T100229",
       "from": "user",
       "text": "overgezet op high fast, mergen conflictloos zodat ik kan pullen naar deze pc",
-      "status": "open",
+      "status": "done-in-code",
       "updated": "2026-08-17"
     },
     {
@@ -444,6 +444,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-17T10:03:24Z",
+      "summary": "LIVE gemerged #248–#255 naar main conflictloos · v1.18.151 / SW 361 — pull main op de pc"
+    },
+    {
       "at": "2026-08-17T10:02:29Z",
       "summary": "LIVE merge van d8–d14 stack naar main (conflictloos FF)"
     },
@@ -538,10 +542,6 @@
     {
       "at": "2026-08-16T07:40:22Z",
       "summary": "Merge-fix: versus-retire vsRosterEntry null + rosterId hero crashte attackSpec — sla/wapen-knoppen weer live · v1.18.142 / SW 352"
-    },
-    {
-      "at": "2026-08-07T20:54:14Z",
-      "summary": "Merge iOS Capacitor shell stubs + Guideline 4.2 notes (C2–C3)"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
