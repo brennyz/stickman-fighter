@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.148';
+const APP_VERSION = '1.18.149';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 358;
+const SW_CACHE_REV = 359;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -318,6 +318,20 @@ function wallRecordPaceDelta(g) {
   if (elapsed < 3) return null;
   const expected = (best / dur) * elapsed;
   return Math.round(g.score - expected);
+}
+/** 60s-run: bricks/min === projected final score — one number, not two. */
+function wallProjectedScore(g) {
+  if (!g) return null;
+  const dur = g.wallDuration || 60;
+  const elapsed = dur - (g.wallTimer || 0);
+  if (elapsed < 2 || !(g.score > 0)) return null;
+  return Math.round((g.score / elapsed) * dur);
+}
+/** Ahead of record-tempo (or already past the saved record). */
+function wallHudOnPace(g) {
+  const d = wallRecordPaceDelta(g);
+  if (d != null) return d >= 0;
+  return !!(g && (save.bestWall || 0) > 0 && g.score > save.bestWall);
 }
 function wallComboDmgPct(combo) { return Math.min(combo, 12) * 4; }
 function wallPauseSubtitle(g) {

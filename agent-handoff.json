@@ -27,6 +27,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260817T085041",
+      "from": "user",
+      "text": "roll d20 (zesde worp, niet mergen)",
+      "status": "open",
+      "updated": "2026-08-17"
+    },
+    {
       "id": "w-20260817T084514",
       "from": "user",
       "text": "roll d20 (vijfde worp, niet mergen)",
@@ -416,6 +423,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-17T08:50:41Z",
+      "summary": "Zesde d20-worp geclaimd via CLI"
+    },
+    {
       "at": "2026-08-17T08:50:00Z",
       "summary": "d11: Arcade-exits landen op Arcade-hub; avontuur op landing"
     },
@@ -510,10 +521,6 @@
     {
       "at": "2026-08-07T20:29:02Z",
       "summary": "IP-A: renamed anime skills to generic ids (spiral_orb etc) + Technique/Energy + save migrate · v1.18.136"
-    },
-    {
-      "at": "2026-08-07T20:21:54Z",
-      "summary": "Store listing: NL/EN copy, IARC draft, review notes, screenshot script (B4–B6 C5–C6)"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
