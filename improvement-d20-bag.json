@@ -13,28 +13,20 @@
     10,
     14,
     2,
-    13,
     17,
     19,
     18,
     6
   ],
   "lastRoll": {
-    "face": 20,
-    "category": "Code health \u2014 kleine refactors, geen gameplay-break",
-    "rolledAt": "2026-08-17T07:08:27Z",
-    "remainingCount": 15,
+    "face": 13,
+    "category": "Missies & achievements \u2014 daily loop, beloningen",
+    "rolledAt": "2026-08-17T07:17:46Z",
+    "remainingCount": 14,
     "cycle": 6
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 4,
-      "note": "golf-pips HUD, enemy count, level highlight",
-      "version": "1.12.25",
-      "doneAt": "2026-07-23T19:43:50Z",
-      "cycle": 2
-    },
     {
       "face": 10,
       "note": "fillHudText, calm combo/pips, a11y status",
@@ -587,6 +579,13 @@
       "version": "1.18.145",
       "doneAt": "2026-08-17T07:16:06Z",
       "cycle": 6
+    },
+    {
+      "face": 13,
+      "note": "missies copy: \u00e9\u00e9n adem Dagbonus, geen grind-mantra, claim-toast alleen XP",
+      "version": "1.18.146",
+      "doneAt": "2026-08-17T08:04:39Z",
+      "cycle": 6
     }
   ],
   "userFeatureLog": [
@@ -981,13 +980,6 @@
     }
   ],
   "history": [
-    {
-      "face": 1,
-      "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
-      "rolledAt": "2026-07-23T15:51:07Z",
-      "remainingCount": 16,
-      "cycle": 1
-    },
     {
       "face": 13,
       "category": "Missies & achievements \u2014 daily loop, beloningen",
@@ -1819,6 +1811,13 @@
       "category": "Code health \u2014 kleine refactors, geen gameplay-break",
       "rolledAt": "2026-08-17T07:08:27Z",
       "remainingCount": 15,
+      "cycle": 6
+    },
+    {
+      "face": 13,
+      "category": "Missies & achievements \u2014 daily loop, beloningen",
+      "rolledAt": "2026-08-17T07:17:46Z",
+      "remainingCount": 14,
       "cycle": 6
     }
   ],
