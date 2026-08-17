@@ -27,6 +27,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260817T091012",
+      "from": "user",
+      "text": "roll d20 (achtste worp, niet mergen)",
+      "status": "open",
+      "updated": "2026-08-17"
+    },
+    {
       "id": "w-20260817T085653",
       "from": "user",
       "text": "roll d20 (zevende worp, niet mergen)",
@@ -430,6 +437,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-17T09:10:12Z",
+      "summary": "Achtste d20-worp geclaimd via CLI"
+    },
+    {
       "at": "2026-08-17T09:08:04Z",
       "summary": "d7: Import undo via Backup; SAVE_KEY ongewijzigd"
     },
@@ -524,10 +535,6 @@
     {
       "at": "2026-08-07T20:48:00Z",
       "summary": "Merge soft-live: soft-legal + soft-feel onto main"
-    },
-    {
-      "at": "2026-08-07T20:21:47Z",
-      "summary": "soft-legal: privacy.html, settings/menu links, age hints, Play/iOS privacy drafts (A1/A2/A7/B7/C4)"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

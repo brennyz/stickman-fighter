@@ -9,19 +9,24 @@
     3,
     5,
     10,
-    14,
     17,
     18,
     6
   ],
   "lastRoll": {
-    "face": 7,
-    "category": "Save & backup \u2014 import/export, corruptie, migratie",
-    "rolledAt": "2026-08-17T08:56:54Z",
-    "remainingCount": 10,
+    "face": 14,
+    "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
+    "rolledAt": "2026-08-17T09:10:13Z",
+    "remainingCount": 9,
     "cycle": 6
   },
-  "pending": null,
+  "pending": {
+    "face": 14,
+    "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
+    "rolledAt": "2026-08-17T09:10:13Z",
+    "remainingCount": 9,
+    "cycle": 6
+  },
   "implemented": [
     {
       "face": 19,
@@ -977,13 +982,6 @@
   ],
   "history": [
     {
-      "face": 5,
-      "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
-      "rolledAt": "2026-07-23T18:13:18Z",
-      "remainingCount": 11,
-      "cycle": 1
-    },
-    {
       "face": 19,
       "category": "Muur & minigames \u2014 combo, timer, record",
       "rolledAt": "2026-07-23T18:14:23Z",
@@ -1814,6 +1812,13 @@
       "category": "Save & backup \u2014 import/export, corruptie, migratie",
       "rolledAt": "2026-08-17T08:56:54Z",
       "remainingCount": 10,
+      "cycle": 6
+    },
+    {
+      "face": 14,
+      "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
+      "rolledAt": "2026-08-17T09:10:13Z",
+      "remainingCount": 9,
       "cycle": 6
     }
   ],

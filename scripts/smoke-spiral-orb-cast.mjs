@@ -155,13 +155,90 @@ async function run() {
       && game.projectiles.filter((x) => x.kind === 'spiral_orb').length === beforeN
       && (!!p.attack) === hadAttack;
 
+    // d14: miss must not spawn a ghost ring off-screen; a real hit still gets a ring (Lite FX).
+    // Training starts in intro + inputLocked; fight unlock + locked input keeps RabbitRobot still.
+    const playW = (typeof W === 'number' && W > 80) ? W : innerWidth;
+    const armTrainingOrb = (robotX) => {
+      save.skill = 'spiral_orb';
+      save.activeTechnique = 'spiral_orb';
+      save.liteFx = true;
+      save.reducedMotion = false;
+      save.skillUpgrades.spiral_orb = { level: 0, shards: 0 };
+      startGame('training');
+      game.phase = 'fight';
+      game.phaseT = 2;
+      game.over = false;
+      game.trainDummyGrace = 99;
+      game.freezeT = 0;
+      game.player.onGround = true;
+      game.player.x = 110;
+      game.player.y = game.ground;
+      game.player.face = 1;
+      game.player.energy = 100;
+      game.player.specialCd = 0;
+      game.player.attack = null;
+      game.player.hurtT = 0;
+      if (game.robot) {
+        game.robot.x = robotX;
+        game.robot.y = game.ground;
+        game.robot.hp = game.robot.maxhp;
+        game.robot.hurtT = 0;
+        game.robot.attack = null;
+        game.robot.vx = 0;
+        game.robot.aiCd = 99;
+        game.robot.aiMove = 0;
+      }
+      game.projectiles = [];
+      game.particles = [];
+      game.inputLocked = false;
+      game.player.startAttack('special', game);
+      game.inputLocked = true;
+      for (let i = 0; i < 45; i++) {
+        game.freezeT = 0;
+        try { game.update(DT); } catch (e) { errors.push(String(e)); }
+        if (game.player.attack?.fired) break;
+      }
+      game.freezeT = 0;
+      if (game.robot) {
+        game.robot.x = robotX;
+        game.robot.vx = 0;
+        game.robot.attack = null;
+      }
+    };
+
+    armTrainingOrb(36);
+    let edgeGhost = false;
+    for (let i = 0; i < 100; i++) {
+      game.freezeT = 0;
+      try { game.update(DT); } catch (e) { errors.push(String(e)); }
+      for (const pt of game.particles) {
+        if (pt.kind === 'ring' && pt.x > playW + 8) edgeGhost = true;
+      }
+      const live = game.projectiles.filter((x) => x.kind === 'spiral_orb');
+      if (i > 12 && !live.length) break;
+    }
+    const noEdgeGhost = !edgeGhost;
+
+    armTrainingOrb(230);
+    let hitRing = false;
+    for (let i = 0; i < 80; i++) {
+      game.freezeT = 0;
+      try { game.update(DT); } catch (e) { errors.push(String(e)); }
+      const rx = game.robot ? game.robot.bodyX : 230;
+      for (const pt of game.particles) {
+        if (pt.kind === 'ring' && Math.abs(pt.x - rx) < 56) hitRing = true;
+      }
+      if (hitRing) break;
+    }
+
     return {
       ok: errors.length === 0 && horiz && noAimTilt && dualOk && curled && tripleOk && downSurvived
         && spiralOrbShotMode(0) === 'single'
         && spiralOrbShotMode(4) === 'dual'
         && spiralOrbShotMode(8) === 'triple'
         && skillMaxLevel('spiral_orb') >= 8
-        && cdOk && cdSetOk && blockedOk,
+        && cdOk && cdSetOk && blockedOk
+        && noEdgeGhost && hitRing,
       errors: errors.slice(0, 5),
       lv0: lv0.length,
       lv4: lv4.length,
@@ -179,6 +256,8 @@ async function run() {
       blockedOk,
       cdRightAfter,
       cds: [spiralOrbCooldownSec(1), spiralOrbCooldownSec(3), spiralOrbCooldownSec(8)],
+      noEdgeGhost,
+      hitRing,
     };
   });
 
