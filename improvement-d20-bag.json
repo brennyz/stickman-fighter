@@ -22,21 +22,8 @@
     "remainingCount": 11,
     "cycle": 6
   },
-  "pending": {
-    "face": 19,
-    "category": "Muur & minigames \u2014 combo, timer, record",
-    "rolledAt": "2026-08-17T08:50:41Z",
-    "remainingCount": 11,
-    "cycle": 6
-  },
+  "pending": null,
   "implemented": [
-    {
-      "face": 7,
-      "note": "export schema v2, import key/summon warnings, corrupt primary repair",
-      "version": "1.14.6",
-      "doneAt": "2026-07-23T21:24:49Z",
-      "cycle": 2
-    },
     {
       "face": 6,
       "note": "pause duck/status, audio resume paths, 2P restart in pause",
@@ -588,6 +575,13 @@
       "note": "arcade result/pause terug naar hub",
       "version": "1.18.148",
       "doneAt": "2026-08-17T08:50:00Z",
+      "cycle": 6
+    },
+    {
+      "face": 19,
+      "note": "een eerlijk muur-tempo getal op HUD",
+      "version": "1.18.149",
+      "doneAt": "2026-08-17T08:55:56Z",
       "cycle": 6
     }
   ],

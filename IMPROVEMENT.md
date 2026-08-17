@@ -1,3 +1,4 @@
+| 2026-08-17 | **19** | d19 c6: Muur-HUD had ~/min én projectie (zelfde getal); balk “achter” tot record al gebroken. Eén “Op weg naar N”. v1.18.149 / SW v359. |
 | 2026-08-17 | **11** | d11 c6: Arcade result/pauze terug naar Arcade-hub i.p.v. KIES JE PAD; avontuur blijft landing. v1.18.148 / SW v358. |
 | 2026-08-17 | **2** | d2 c6: RabbitRobot Pierce had energy-gate (nooit); telegraph = windup; laser XOR Pierce; tips zeggen spring. v1.18.147 / SW v357. |
 | 2026-08-17 | **13** | d13 c6: missies-copy één adem — Dagbonus, geen grind-mantra, geen dubbele claim-toast; knop pas als klaar. v1.18.146 / SW v356. |
@@ -124,6 +125,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-08-17 | **19** | Muur: één tempo-getal (Op weg naar N · record); balk groen op tempo, niet pas ná record. v1.18.149 / SW 359. |
 | 2026-08-17 | **11** | Menu: Arcade-fight exits (result/pauze) landen op Arcade-hub; avontuur op landing; labels Arcade / Stop & Arcade. v1.18.148 / SW 358. |
 | 2026-08-17 | **2** | Training: Pierce doet het weer (robot-energy); balk = windup; één dreiging; spring i.p.v. duck. v1.18.147 / SW 357. |
 | 2026-08-17 | **13** | Missies: één term Dagbonus, hub-hook, scherm = flow+Nu+kaarten; claim-toast alleen XP; Dagbonus-knop pas klaar/binnen. v1.18.146 / SW 356. |
