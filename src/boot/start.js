@@ -626,7 +626,10 @@ bindPress(document.getElementById('pauseResume'), () => {
   }
   UI.show(null);
 });
-bindPress(document.getElementById('pauseQuit'), () => { UI.goMenu(); });
+bindPress(document.getElementById('pauseQuit'), () => {
+  try { UI.hideGambleRollFlash(); } catch (_) {}
+  UI.goMenu({ fromPlay: true });
+});
 const pauseVsRestart = document.getElementById('pauseVsRestart');
 if (pauseVsRestart) {
   bindPress(pauseVsRestart, () => {
@@ -689,5 +692,5 @@ bindPress(document.getElementById('resNext'), () => {
 });
 bindPress(document.getElementById('resMenu'), () => {
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
-  UI.goMenu();
+  UI.goMenu({ fromPlay: true });
 });

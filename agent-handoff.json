@@ -27,6 +27,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260817T084514",
+      "from": "user",
+      "text": "roll d20 (vijfde worp, niet mergen)",
+      "status": "open",
+      "updated": "2026-08-17"
+    },
+    {
       "id": "w-20260817T082019",
       "from": "user",
       "text": "roll d20 (vierde worp, niet mergen)",
@@ -409,6 +416,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-17T08:45:14Z",
+      "summary": "Vijfde d20-worp geclaimd via CLI"
+    },
+    {
       "at": "2026-08-17T08:42:38Z",
       "summary": "d2 training: Pierce doet het weer, telegraph=windup, één dreiging — klaar voor super-merge"
     },
@@ -503,10 +514,6 @@
     {
       "at": "2026-08-07T12:37:53Z",
       "summary": "Summon framing: kist-onderkant + reward center · v1.18.131"
-    },
-    {
-      "at": "2026-08-07T12:28:58Z",
-      "summary": "Summon polish LIVE: rarity card-in-chest + per-pull BGM + Open kist + watermark crop · v1.18.130"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

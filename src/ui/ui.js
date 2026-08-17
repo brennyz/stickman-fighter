@@ -1075,6 +1075,15 @@ const UI = {
     if (vsSwap) {
       vsSwap.style.display = (game?.mode === 'versus' && (state === 'play' || state === 'pause')) ? 'flex' : 'none';
     }
+    const pauseQuit = document.getElementById('pauseQuit');
+    if (pauseQuit) {
+      const d = pauseQuit.querySelector('div');
+      if (d) {
+        d.textContent = hubForPlayMode(game && game.mode) === 'arcade'
+          ? t('pause.quitArcade')
+          : t('pause.quit');
+      }
+    }
     if (!sub) return;
     const onboardEl = document.getElementById('pauseOnboardLine');
     if (onboardEl) {
@@ -1333,7 +1342,8 @@ const UI = {
         return;
       }
       if (active === 'resultScreen') {
-        this.goMenu();
+        const mode = (this.lastResult && this.lastResult.mode) || (game && game.mode);
+        this.goMenu(hubForPlayMode(mode) === 'arcade' ? { hub: 'arcade' } : undefined);
         return;
       }
       this.goMenu();
@@ -1362,8 +1372,12 @@ const UI = {
     }, ms || 2800);
   },
 
-  goMenu() {
+  goMenu(opts) {
     try {
+      opts = opts || {};
+      const fromMode = opts.fromMode
+        || (opts.fromPlay ? ((game && game.mode) || (this.lastResult && this.lastResult.mode)) : null);
+      const toArcade = opts.hub === 'arcade' || hubForPlayMode(fromMode) === 'arcade';
       try { cancelGambleStart(); } catch (_) {}
       bumpLevelHoldGen();
       const active = this.screens.find(sid => document.getElementById(sid)?.classList.contains('active'));
@@ -1392,10 +1406,14 @@ const UI = {
       this.charPickStep = 1;
       this.syncTouchClass();
       this.renderMenu();
-      this.show('menuScreen');
-      requestAnimationFrame(() => {
-        try { this.scrollNavTop(document.getElementById('menuScreen')); } catch (_) {}
-      });
+      if (toArcade) {
+        this.openModeHub('arcade');
+      } else {
+        this.show('menuScreen');
+        requestAnimationFrame(() => {
+          try { this.scrollNavTop(document.getElementById('menuScreen')); } catch (_) {}
+        });
+      }
       AudioSys.setPaused(false);
       playMenuBgm(true);
       scheduleResize();
@@ -4280,6 +4298,13 @@ const UI = {
         if (data.mode === 'versus') label.innerHTML = t('result.rematch') + '<small>' + t('result.rematchSub') + '</small>';
         else if (data.mode === 'training') label.innerHTML = t('result.again') + '<small>vs RabbitRobot</small>';
         else label.textContent = t('result.again');
+      }
+    }
+    const menuBtn = document.getElementById('resMenu');
+    if (menuBtn) {
+      const label = menuBtn.querySelector('div');
+      if (label) {
+        label.textContent = hubForPlayMode(data.mode) === 'arcade' ? t('result.menuArcade') : t('result.menu');
       }
     }
     state = 'result';
