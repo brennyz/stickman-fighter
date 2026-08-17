@@ -2998,6 +2998,7 @@ class Game {
             const d = rb.takeDamage(hit.dmg, projKnockDir(p, rb.x) * 300 * (p.kbMul || 1), this);
             this.floater(rb.x, rb.y - 115, '-' + d, '#ffe680', 16);
             if (hit.crit) applyCritFx(this, rb.x, rb.y);
+            if (skProj) spawnTechniqueImpactFx(this, rb.bodyX, rb.bodyY, p.kind, 'full');
             if (p.hitSet) p.hitSet.add(rb); else p.life = 0;
           }
         }
@@ -3058,7 +3059,11 @@ class Game {
       }
       if (p.life <= 0 && !p._impactFx && skillExists(p.kind)) {
         p._impactFx = true;
-        spawnTechniqueImpactFx(this, p.x, p.y, p.kind === 'wave_cannon' ? 'spiral_orb' : p.kind, 'small');
+        const off = p.x < -16 || p.x > W + 16 || p.y < -16 || p.y > this.ground + 18;
+        const scored = !!(p.hitSet && p.hitSet.size);
+        if (!off && !scored) {
+          spawnTechniqueImpactFx(this, p.x, p.y, p.kind === 'wave_cannon' ? 'spiral_orb' : p.kind, 'small');
+        }
       }
     }
     this.projectiles = this.projectiles.filter(p => p.life > 0);

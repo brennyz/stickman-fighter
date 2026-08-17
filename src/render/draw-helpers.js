@@ -569,8 +569,9 @@ function spawnTechniqueImpactFx(game, x, y, kind, scale) {
   const lite = fxLite();
   const small = scale === 'small';
   const n = lite ? (small ? 4 : 6) : (small ? 8 : 14);
-  game.burst(x, y, col, n, { kind: 'spark', size: small ? 2.2 : 2.8 });
+  // Ring first: Lite FX per-frame budget is tiny; sparks must not eat the hit confirm.
   spawnFxRing(game, x, y, col, lite ? 6 : (small ? 8 : 14));
+  game.burst(x, y, col, n, { kind: 'spark', size: small ? 2.2 : 2.8 });
   if (!lite && !small && (sk.behavior === 'pull' || sk.behavior === 'meteor')) {
     game.burst(x, y, '#ff6b9d', 6);
   }

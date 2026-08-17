@@ -13,19 +13,33 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.150",
-    "swCache": "stickfighter-app-v360",
-    "gameJsQuery": "game.js?v=360",
-    "cssQuery": "styles/main.css?v=360",
-    "featureBranch": "cursor/wiggum-d7-save-85e6",
+    "appVersion": "1.18.151",
+    "swCache": "stickfighter-app-v361",
+    "gameJsQuery": "game.js?v=361",
+    "cssQuery": "styles/main.css?v=361",
+    "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "d7 c6 ready (niet gemerged): import keeps previous save in Backup; stacked on d8+d20+d13+d2+d11+d19",
-    "updated": "2026-08-17T09:05:00Z"
+    "note": "LIVE FF-merge #248–#255: d8+d20+d13+d2+d11+d19+d7+d14 · v1.18.151 / SW 361",
+    "updated": "2026-08-17T10:00:00Z"
   },
   "userWishlist": [
+    {
+      "id": "w-20260817T100229",
+      "from": "user",
+      "text": "overgezet op high fast, mergen conflictloos zodat ik kan pullen naar deze pc",
+      "status": "open",
+      "updated": "2026-08-17"
+    },
+    {
+      "id": "w-20260817T091012",
+      "from": "user",
+      "text": "roll d20 (achtste worp, niet mergen)",
+      "status": "done-in-code",
+      "updated": "2026-08-17"
+    },
     {
       "id": "w-20260817T085653",
       "from": "user",
@@ -430,6 +444,18 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-17T10:02:29Z",
+      "summary": "LIVE merge van d8–d14 stack naar main (conflictloos FF)"
+    },
+    {
+      "at": "2026-08-17T09:56:06Z",
+      "summary": "d14: Spiral Orb ring alleen op hit, geen rand-ghost; Lite FX ring-eerst"
+    },
+    {
+      "at": "2026-08-17T09:10:12Z",
+      "summary": "Achtste d20-worp geclaimd via CLI"
+    },
+    {
       "at": "2026-08-17T09:08:04Z",
       "summary": "d7: Import undo via Backup; SAVE_KEY ongewijzigd"
     },
@@ -516,18 +542,6 @@
     {
       "at": "2026-08-07T20:54:14Z",
       "summary": "Merge iOS Capacitor shell stubs + Guideline 4.2 notes (C2–C3)"
-    },
-    {
-      "at": "2026-08-07T20:53:55Z",
-      "summary": "Soft-live merge to main: legal+feel+versus-retire+IP-A+listing · Play TWA shell · v1.18.138 / SW 348"
-    },
-    {
-      "at": "2026-08-07T20:48:00Z",
-      "summary": "Merge soft-live: soft-legal + soft-feel onto main"
-    },
-    {
-      "at": "2026-08-07T20:21:47Z",
-      "summary": "soft-legal: privacy.html, settings/menu links, age hints, Play/iOS privacy drafts (A1/A2/A7/B7/C4)"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

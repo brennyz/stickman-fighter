@@ -274,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.150';
+const APP_VERSION = '1.18.151';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 360;
+const SW_CACHE_REV = 361;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -17407,8 +17407,9 @@ function spawnTechniqueImpactFx(game, x, y, kind, scale) {
   const lite = fxLite();
   const small = scale === 'small';
   const n = lite ? (small ? 4 : 6) : (small ? 8 : 14);
-  game.burst(x, y, col, n, { kind: 'spark', size: small ? 2.2 : 2.8 });
+  // Ring first: Lite FX per-frame budget is tiny; sparks must not eat the hit confirm.
   spawnFxRing(game, x, y, col, lite ? 6 : (small ? 8 : 14));
+  game.burst(x, y, col, n, { kind: 'spark', size: small ? 2.2 : 2.8 });
   if (!lite && !small && (sk.behavior === 'pull' || sk.behavior === 'meteor')) {
     game.burst(x, y, '#ff6b9d', 6);
   }
@@ -27256,6 +27257,7 @@ class Game {
             const d = rb.takeDamage(hit.dmg, projKnockDir(p, rb.x) * 300 * (p.kbMul || 1), this);
             this.floater(rb.x, rb.y - 115, '-' + d, '#ffe680', 16);
             if (hit.crit) applyCritFx(this, rb.x, rb.y);
+            if (skProj) spawnTechniqueImpactFx(this, rb.bodyX, rb.bodyY, p.kind, 'full');
             if (p.hitSet) p.hitSet.add(rb); else p.life = 0;
           }
         }
@@ -27316,7 +27318,11 @@ class Game {
       }
       if (p.life <= 0 && !p._impactFx && skillExists(p.kind)) {
         p._impactFx = true;
-        spawnTechniqueImpactFx(this, p.x, p.y, p.kind === 'wave_cannon' ? 'spiral_orb' : p.kind, 'small');
+        const off = p.x < -16 || p.x > W + 16 || p.y < -16 || p.y > this.ground + 18;
+        const scored = !!(p.hitSet && p.hitSet.size);
+        if (!off && !scored) {
+          spawnTechniqueImpactFx(this, p.x, p.y, p.kind === 'wave_cannon' ? 'spiral_orb' : p.kind, 'small');
+        }
       }
     }
     this.projectiles = this.projectiles.filter(p => p.life > 0);

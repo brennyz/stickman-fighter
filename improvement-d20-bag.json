@@ -9,27 +9,19 @@
     3,
     5,
     10,
-    14,
     17,
     18,
     6
   ],
   "lastRoll": {
-    "face": 7,
-    "category": "Save & backup \u2014 import/export, corruptie, migratie",
-    "rolledAt": "2026-08-17T08:56:54Z",
-    "remainingCount": 10,
+    "face": 14,
+    "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
+    "rolledAt": "2026-08-17T09:10:13Z",
+    "remainingCount": 9,
     "cycle": 6
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 19,
-      "note": "timer/combo/record hints + HUD labels",
-      "version": "1.14.8",
-      "doneAt": "2026-07-23T21:27:27Z",
-      "cycle": 2
-    },
     {
       "face": 5,
       "note": "Adaptieve perf tier + resize coalesce + scenery caps + hidden pause",
@@ -582,6 +574,13 @@
       "version": "1.18.150",
       "doneAt": "2026-08-17T09:08:04Z",
       "cycle": 6
+    },
+    {
+      "face": 14,
+      "note": "spiral orb impact only on hit, no edge ghost",
+      "version": "1.18.151",
+      "doneAt": "2026-08-17T09:55:23Z",
+      "cycle": 6
     }
   ],
   "userFeatureLog": [
@@ -976,13 +975,6 @@
     }
   ],
   "history": [
-    {
-      "face": 5,
-      "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
-      "rolledAt": "2026-07-23T18:13:18Z",
-      "remainingCount": 11,
-      "cycle": 1
-    },
     {
       "face": 19,
       "category": "Muur & minigames \u2014 combo, timer, record",
@@ -1814,6 +1806,13 @@
       "category": "Save & backup \u2014 import/export, corruptie, migratie",
       "rolledAt": "2026-08-17T08:56:54Z",
       "remainingCount": 10,
+      "cycle": 6
+    },
+    {
+      "face": 14,
+      "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
+      "rolledAt": "2026-08-17T09:10:13Z",
+      "remainingCount": 9,
       "cycle": 6
     }
   ],
