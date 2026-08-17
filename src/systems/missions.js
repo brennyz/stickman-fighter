@@ -810,11 +810,6 @@ function createRunLoot() {
   };
 }
 
-function noteRunLootSummon(loot, weaponId, tier) {
-  if (!loot) return;
-  loot.summons.push({ id: weaponId, tier: tier || 'epic' });
-}
-
 function noteRunLootDex(loot, sp, hpBonus) {
   if (!loot || !sp) return;
   loot.dex.push({ name: sp.name, rarity: sp.rarity });

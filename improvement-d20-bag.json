@@ -17,25 +17,17 @@
     17,
     19,
     18,
-    6,
-    20
+    6
   ],
   "lastRoll": {
-    "face": 8,
-    "category": "PWA & offline \u2014 SW cache, install, standalone",
-    "rolledAt": "2026-08-17T06:33:25Z",
-    "remainingCount": 16,
+    "face": 20,
+    "category": "Code health \u2014 kleine refactors, geen gameplay-break",
+    "rolledAt": "2026-08-17T07:08:27Z",
+    "remainingCount": 15,
     "cycle": 6
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 20,
-      "note": "pad method refs, hitButton reuse, error toast dedupe",
-      "version": "1.12.24",
-      "doneAt": "2026-07-23T19:41:53Z",
-      "cycle": 2
-    },
     {
       "face": 4,
       "note": "golf-pips HUD, enemy count, level highlight",
@@ -588,6 +580,13 @@
       "version": "1.18.144",
       "doneAt": "2026-08-17T06:41:19Z",
       "cycle": 6
+    },
+    {
+      "face": 20,
+      "note": "dead kablam UI prune + versus ghost binds + LIVE-LINK dedupe",
+      "version": "1.18.145",
+      "doneAt": "2026-08-17T07:16:06Z",
+      "cycle": 6
     }
   ],
   "userFeatureLog": [
@@ -982,13 +981,6 @@
     }
   ],
   "history": [
-    {
-      "face": 11,
-      "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
-      "rolledAt": "2026-07-23T15:49:57Z",
-      "remainingCount": 17,
-      "cycle": 1
-    },
     {
       "face": 1,
       "category": "Combat feel \u2014 hits, knockback, frame data, fairness",
@@ -1820,6 +1812,13 @@
       "category": "PWA & offline \u2014 SW cache, install, standalone",
       "rolledAt": "2026-08-17T06:33:25Z",
       "remainingCount": 16,
+      "cycle": 6
+    },
+    {
+      "face": 20,
+      "category": "Code health \u2014 kleine refactors, geen gameplay-break",
+      "rolledAt": "2026-08-17T07:08:27Z",
+      "remainingCount": 15,
       "cycle": 6
     }
   ],

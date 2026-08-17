@@ -36,6 +36,8 @@ for (const asset of landing) {
 must(/function isNetworkFirstPath/.test(sw), 'missing isNetworkFirstPath');
 must(/speel\.html/.test(sw) && /index\.html/.test(sw), 'network-first paths missing HTML shells');
 must(/offlineFallbackHtml/.test(sw), 'missing offlineFallbackHtml');
+must((sw.match(/p\.endsWith\('\/LIVE-LINK\.txt'\)/g) || []).length === 1,
+  'LIVE-LINK.txt network-first check should appear once');
 must(/c\.put\('\.\/speel\.html'/.test(sw), 'missing canonical speel.html cache put');
 must(/c\.put\('\.\/game\.js'/.test(sw), 'missing canonical game.js cache put');
 

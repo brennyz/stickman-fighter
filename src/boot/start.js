@@ -170,18 +170,6 @@ bindPress(btnContinue, () => {
 bindPress(document.getElementById('btnTraining'), () => {
   AudioSys.init(); AudioSys.sfx('select'); startGame('training');
 });
-const btnVersus = document.getElementById('btnVersus');
-if (btnVersus) {
-  bindPress(btnVersus, () => {
-    AudioSys.init(); AudioSys.sfx('select');
-    try { toastVersusRetired(); } catch (_) {}
-  });
-}
-const charPickBackP1 = document.getElementById('charPickBackP1');
-bindPress(charPickBackP1, () => {
-  AudioSys.sfx('select');
-  UI.charSelectBackToP1();
-});
 bindPress(document.getElementById('btnWall'), () => {
   AudioSys.init(); AudioSys.sfx('select'); startGame('wall');
 });

@@ -2,7 +2,7 @@
  * Nieuwe SW wacht op SF_SKIP_WAITING (menu/idle). Eerste install activeert
  * vanzelf (geen actieve worker). skipWaiting() hier zou midden in een gevecht
  * claimen — dat is de classic “update tijdens combo → startscherm”. */
-const CACHE = 'stickfighter-app-v354';
+const CACHE = 'stickfighter-app-v355';
 
 
 
@@ -146,7 +146,6 @@ function isNetworkFirstPath(pathname) {
     p.endsWith('/LIVE-LINK.txt') ||
     p.endsWith('/manifest.webmanifest') ||
     p.endsWith('/hosting.json') ||
-    p.endsWith('/LIVE-LINK.txt') ||
     p.endsWith('/index.html') ||
     p.endsWith('/ipad.html') ||
     p.endsWith('/android.html') ||

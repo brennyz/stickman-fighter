@@ -31,6 +31,14 @@ const REGRESSION_MUST_CONTAIN = [
   'MOVE_ATTACK_RECOVER_MUL',
   'MOVE_HURT_MUL',
   'src/systems/fighter-move.js',
+  'drawKetsbamPrompt',
+];
+const MUST_NOT_SHIP = [
+  'src/game/kablam-ui.js',
+  'function drawKablamPoopCursor',
+  'function isZoneWeapon',
+  'function noteRunLootSummon',
+  'function onLangSwitchClick',
 ];
 
 const CRITICAL_FILES = /^src\/(game|boot|entities)\//;
@@ -112,6 +120,15 @@ for (const c of ['MOVE_ACCEL', 'MOVE_ATTACK_RECOVER_MUL', 'MOVE_HURT_MUL']) {
 }
 if (!manifest.includes('src/systems/fighter-move.js')) {
   problems.push({ name: 'src/systems/fighter-move.js', file: 'manifest', line: 0, why: 'not in src/manifest.json' });
+}
+if (manifest.includes('src/game/kablam-ui.js')) {
+  problems.push({ name: 'src/game/kablam-ui.js', file: 'manifest', line: 0, why: 'dead kablam UI must stay out of bundle' });
+}
+for (const token of MUST_NOT_SHIP) {
+  if (token === 'src/game/kablam-ui.js') continue;
+  if (rawBundle.includes(token)) {
+    problems.push({ name: token, file: 'regression-forbid', line: 0, why: 'dead helper leaked back into bundle' });
+  }
 }
 
 for (const rel of manifest) {

@@ -494,8 +494,6 @@ function applyLangStaticScreens() {
     ['.hub-tile-adventure .hub-tile-sub', 'menu.adventureSub'],
     ['.hub-tile-arcade .hub-tile-title', 'menu.arcade'],
     ['.hub-tile-arcade .hub-tile-sub', 'menu.arcadeSub'],
-    ['.hub-tile-versus .hub-tile-title', 'menu.versus'],
-    ['.hub-tile-versus .hub-tile-sub', 'menu.versusSub'],
     ['.hub-tile-collect .hub-tile-title', 'menu.collect'],
     ['.hub-tile-collect .hub-tile-sub', 'menu.collectSub'],
   ];
@@ -737,21 +735,6 @@ function applyLangStaticScreens() {
     installScreen: t('back.menu'),
   });
   UI.syncBackLabels();
-}
-
-function onLangSwitchClick(e) {
-  const btn = e.target.closest('[data-lang]');
-  if (!btn) return;
-  const code = btn.getAttribute('data-lang');
-  if (!code || code === getLang()) return;
-  safeUiAction(() => {
-    setLang(code);
-    AudioSys.sfx('select');
-    UI.toast(t('settings.langChanged', { lang: LANG_LABELS[code] }), 2200);
-    UI.renderSettings();
-    UI.renderMenu();
-    if (typeof UI.renderModeHub === 'function') UI.renderModeHub();
-  }, 'setLang/' + code, t('ui.langSwitchFail') || 'Language switch failed');
 }
 
 function renderLangSwitchBar(bar) {

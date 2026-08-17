@@ -13,19 +13,26 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.144",
-    "swCache": "stickfighter-app-v354",
-    "gameJsQuery": "game.js?v=354",
-    "cssQuery": "styles/main.css?v=354",
-    "featureBranch": "cursor/wiggum-d8-pwa-offline-85e6",
+    "appVersion": "1.18.145",
+    "swCache": "stickfighter-app-v355",
+    "gameJsQuery": "game.js?v=355",
+    "cssQuery": "styles/main.css?v=355",
+    "featureBranch": "cursor/wiggum-d20-code-health-85e6",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "d8 c6 ready (niet gemerged): SW wacht op menu + eerlijke update-banner",
-    "updated": "2026-08-17T06:40:00Z"
+    "note": "d20 c6 ready (niet gemerged): dead kablam UI prune + versus ghosts",
+    "updated": "2026-08-17T07:15:00Z"
   },
   "userWishlist": [
+    {
+      "id": "w-20260817T070814",
+      "from": "user",
+      "text": "roll d20 (tweede worp, niet mergen)",
+      "status": "done-in-code",
+      "updated": "2026-08-17"
+    },
     {
       "id": "w-20260817T063320",
       "from": "user",
@@ -388,6 +395,14 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-17T07:16:06Z",
+      "summary": "d20 code health: spook-Kets UI weg, live balk blijft — klaar voor super-merge"
+    },
+    {
+      "at": "2026-08-17T07:08:14Z",
+      "summary": "Tweede d20-worp geclaimd via CLI"
+    },
+    {
       "at": "2026-08-17T06:41:19Z",
       "summary": "d8 PWA: SW wacht op menu, update-banner tikt alleen op hub — klaar voor super-merge"
     },
@@ -478,14 +493,6 @@
     {
       "at": "2026-07-26T22:07:07Z",
       "summary": "d18: fight dock + replay duo + boot toast fix · v1.18.125"
-    },
-    {
-      "at": "2026-07-26T21:04:36Z",
-      "summary": "d4 c5: spawn funnel + star beat + stage clear runway · v1.18.124"
-    },
-    {
-      "at": "2026-07-26T20:27:43Z",
-      "summary": "mp4 play harden: SW Range-bypass + preload; merge live · v1.18.123"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

@@ -137,11 +137,6 @@ function adventureDropZoneForLevel(levelN, diffId) {
   return null;
 }
 
-function isZoneWeapon(w) {
-  const base = typeof w === 'string' ? weaponById(w) : w;
-  return !!(base && base.dropZone);
-}
-
 function zoneWeaponsFor(zone) {
   return WEAPONS.filter(w => w.dropZone === zone);
 }
