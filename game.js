@@ -274,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.143';
+const APP_VERSION = '1.18.144';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 353;
+const SW_CACHE_REV = 354;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -35721,12 +35721,21 @@ function isStandalonePwa() {
   }
 }
 
-function swCacheHint() {
+/** Hub-landing only — same gate as __sfSafeToReload, usable before that exists. */
+function netUpdateOnHub() {
   try {
-    const c = sessionStorage.getItem('sf_sw_cache');
-    if (c) return ' · ' + c.replace('stickfighter-app-v', 'SW v');
-  } catch (_) {}
-  return typeof SW_CACHE_REV !== 'undefined' ? ' · SW v' + SW_CACHE_REV : '';
+    if (typeof window.__sfSafeToReload === 'function') return !!window.__sfSafeToReload();
+    if (typeof state !== 'undefined' && state !== 'menu') return false;
+    if (typeof game !== 'undefined' && game) return false;
+    if (typeof gamblePending === 'function' && gamblePending()) return false;
+    if (document.body.classList.contains('is-playing')) return false;
+    const active = document.querySelector('.screen.active');
+    if (active && active.id !== 'menuScreen') return false;
+    const menu = document.getElementById('menuScreen');
+    return !!(menu && menu.classList.contains('active'));
+  } catch (_) {
+    return false;
+  }
 }
 
 function updateNetStatus(ev) {
@@ -35743,12 +35752,20 @@ function updateNetStatus(ev) {
   } catch (_) {}
 
   const paintUpdateBanner = () => {
+    const onHub = netUpdateOnHub();
     el.hidden = false;
-    el.classList.remove('online-flash', 'sw-pending', 'offline-ready');
-    el.classList.add('sw-update');
-    el.setAttribute('role', 'button');
-    if ('tabIndex' in el) el.tabIndex = 0;
-    el.textContent = 'Update klaar — tik om te laden · of «Verse versie»';
+    el.classList.remove('online-flash', 'sw-pending', 'offline-ready', 'sw-update', 'sw-update-wait');
+    if (onHub) {
+      el.classList.add('sw-update');
+      el.setAttribute('role', 'button');
+      if ('tabIndex' in el) el.tabIndex = 0;
+      el.textContent = 'Nieuwe versie klaar — tik om te laden';
+    } else {
+      el.classList.add('sw-update-wait');
+      if (el.removeAttribute) el.removeAttribute('role');
+      if ('tabIndex' in el) el.tabIndex = -1;
+      el.textContent = 'Nieuwe versie — laadt in het menu';
+    }
   };
 
   if (swUpdate && navigator.onLine !== false) {
@@ -35761,27 +35778,23 @@ function updateNetStatus(ev) {
 
   if (off) {
     el.hidden = false;
-    el.classList.remove('online-flash', 'sw-pending', 'sw-update');
+    el.classList.remove('online-flash', 'sw-pending', 'sw-update', 'sw-update-wait');
     if (state === 'play') {
       el.textContent = standalone
-        ? 'Offline — speelt uit app-cache · save blijft lokaal'
-        : 'Offline — uit cache · «Zet in app-lade» = altijd spelen';
+        ? 'Offline — speelt uit cache · save blijft hier'
+        : 'Offline — uit cache · icoon in de lade = altijd spelen';
     } else {
       el.textContent = swReady
-        ? 'Offline — menu & save uit cache' + swCacheHint()
-        : 'Offline — open 1× online voor volledige PWA-cache';
-    }
-    if (ev && ev.type === 'offline') {
-      try { UI.toast('Offline — voortgang blijft op dit apparaat', 3000); } catch (_) {}
+        ? 'Offline — menu & save uit cache'
+        : 'Offline — open 1× online, daarna speelt het zonder net';
     }
     return;
   }
   if (ev && ev.type === 'online') {
     el.hidden = false;
-    el.classList.remove('sw-pending', 'sw-update');
+    el.classList.remove('sw-pending', 'sw-update', 'sw-update-wait');
     el.classList.add('online-flash');
-    el.textContent = 'Weer online — HTML/game via netwerk bij volgende load';
-    try { UI.toast('Weer online', 2200); } catch (_) {}
+    el.textContent = 'Weer online';
     if ('serviceWorker' in navigator) {
       try { navigator.serviceWorker.ready.then((reg) => reg.update()); } catch (_) {}
     }
@@ -35791,14 +35804,14 @@ function updateNetStatus(ev) {
         el.classList.remove('online-flash');
         el.textContent = '';
       }
-    }, 3200);
+    }, 2200);
     return;
   }
   if (!swReady && location.protocol !== 'file:' && 'serviceWorker' in navigator && !/[?&](ipad|nosw)=1\b/.test(location.search)) {
     el.hidden = false;
     el.classList.add('sw-pending');
-    el.classList.remove('online-flash', 'sw-update', 'offline-ready');
-    el.textContent = 'Cache laden… — daarna ook offline spelen';
+    el.classList.remove('online-flash', 'sw-update', 'sw-update-wait', 'offline-ready');
+    el.textContent = 'Cache laden… — daarna ook offline';
     return;
   }
   if (swReady && 'caches' in window && !window.__sfOfflineReadyShown) {
@@ -35813,21 +35826,20 @@ function updateNetStatus(ev) {
         const el2 = document.getElementById('netStatus');
         if (!el2 || window.__sfSwUpdateReady || !navigator.onLine) return;
         el2.hidden = false;
-        el2.classList.remove('sw-pending', 'sw-update');
+        el2.classList.remove('sw-pending', 'sw-update', 'sw-update-wait');
         el2.classList.add('offline-ready');
-        const ver = typeof APP_VERSION !== 'undefined' ? APP_VERSION : '';
-        el2.textContent = ver ? `Offline-klaar · v${ver} in cache${swCacheHint()}` : 'Offline-klaar — app opgeslagen';
+        el2.textContent = 'Klaar voor offline — save blijft hier';
         setTimeout(() => {
           if (!window.__sfSwUpdateReady && navigator.onLine && el2.classList.contains('offline-ready')) {
             el2.hidden = true;
             el2.classList.remove('offline-ready');
             el2.textContent = '';
           }
-        }, 4500);
+        }, 3200);
     }).catch(() => {});
   }
   el.hidden = true;
-  el.classList.remove('online-flash', 'sw-pending', 'sw-update', 'offline-ready');
+  el.classList.remove('online-flash', 'sw-pending', 'sw-update', 'sw-update-wait', 'offline-ready');
   el.textContent = '';
 }
 window.addEventListener('online', updateNetStatus);
@@ -35856,6 +35868,7 @@ function wireNetStatusTap() {
   el.dataset.sfNetTap = '1';
   const run = () => {
     if (!window.__sfSwUpdateReady) return;
+    if (!netUpdateOnHub()) return;
     safeAsync(runVersionUpdateWithSavePrompt(), 'swUpdateTap', t('versionUpdate.fail'));
   };
   el.addEventListener('click', run);

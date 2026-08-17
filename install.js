@@ -101,6 +101,11 @@
     else if (screen) screen.classList.remove('active');
   }
 
+  function toastIfHub(msg, ms) {
+    if (busyPlaying()) return;
+    toast(msg, ms);
+  }
+
   async function applySwUpdate() {
     if (!('serviceWorker' in navigator)) return false;
     try {
@@ -116,7 +121,7 @@
         navigator.serviceWorker.addEventListener('controllerchange', onChange, { once: true });
         reg.waiting.postMessage({ type: 'SF_SKIP_WAITING' });
         setTimeout(() => {
-          toast('Update duurt lang — tik «Verse versie» in Instellingen', 3600);
+          toastIfHub('Update duurt lang — tik «Verse versie» in Instellingen', 3600);
           resolve(false);
         }, 8000);
       });
@@ -205,7 +210,7 @@
         pendingReload = null;
         refreshing = false;
         markSwUpdateReady(true);
-        try { toast('Update klaar — tik «Verse versie» als je in het menu bent', 4500); } catch (_) {}
+        try { toastIfHub('Nieuwe versie — tik om te laden als je in het menu bent', 4500); } catch (_) {}
         return;
       }
       pendingReload = null;
@@ -217,7 +222,7 @@
   function trackWaitingWorker(reg) {
     if (reg && reg.waiting && navigator.serviceWorker.controller) {
       markSwUpdateReady(true);
-      toast('Update klaar — tik banner of «Verse versie»', 4200);
+      toastIfHub('Nieuwe versie klaar — tik de gouden balk', 4200);
     }
   }
 
@@ -252,11 +257,11 @@
                   setTimeout(apply, 2000);
                   return;
                 }
-                toast('Update klaar — tik banner of «Verse versie»', 4500);
+                toastIfHub('Nieuwe versie klaar — tik de gouden balk', 4500);
                 return;
               }
               try { nw.postMessage({ type: 'SF_SKIP_WAITING' }); }
-              catch (_) { toast('Update klaar — tik banner of «Verse versie»', 4500); }
+              catch (_) { toastIfHub('Nieuwe versie klaar — tik de gouden balk', 4500); }
             };
             apply();
           });
@@ -284,12 +289,12 @@
       if (typeof window.updateNetStatus === 'function') window.updateNetStatus();
       if (!needsFreshJs()) {
         // Cache is bij; de draaiende game.js is al de juiste versie.
-        try { toast('App-cache bijgewerkt', 2000); } catch (_) {}
+        // Stilte in een gevecht — geen "cache bijgewerkt"-toast over je combo.
         return;
       }
       // Oude in-memory game.js terwijl HTML/UI al nieuw is → wél verversen,
       // maar pas op een rustig moment in het menu.
-      try { toast('Update klaar — laadt zodra je in het menu bent', 3200); } catch (_) {}
+      toastIfHub('Nieuwe versie — laadt zodra je in het menu bent', 3200);
       reloadWhenIdle('controllerchange');
     });
 
