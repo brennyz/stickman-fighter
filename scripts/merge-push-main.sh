@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Alleen pushen. Ophalen naar deze pc: ./scripts/pull-main.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 git checkout main

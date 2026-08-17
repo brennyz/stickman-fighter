@@ -22,10 +22,17 @@
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "LIVE FF-merge #248–#255: d8+d20+d13+d2+d11+d19+d7+d14 · v1.18.151 / SW 361",
+    "note": "LIVE main v1.18.151 / SW 361 — op de pc: ./scripts/pull-main.sh (eerste keer: git checkout main && git pull origin main)",
     "updated": "2026-08-17T10:00:00Z"
   },
   "userWishlist": [
+    {
+      "id": "w-20260817T102050",
+      "from": "user",
+      "text": "ik wil dat je het regelt zodat ik pull kan doen",
+      "status": "done-in-code",
+      "updated": "2026-08-17"
+    },
     {
       "id": "w-20260817T100229",
       "from": "user",
@@ -444,6 +451,14 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-17T10:21:10Z",
+      "summary": "PC-pull geregeld: pull-main.sh + GITHUB-PUSH is nu pull-kaart; main LIVE"
+    },
+    {
+      "at": "2026-08-17T10:20:50Z",
+      "summary": "pull-main script + GITHUB-PUSH bijwerken zodat de pc één commando kan pullen"
+    },
+    {
       "at": "2026-08-17T10:18:00Z",
       "summary": "main LIVE 33d89b6 v1.18.151 — pull-commando voor de pc klaar"
     },
@@ -534,14 +549,6 @@
     {
       "at": "2026-08-16T07:49:54Z",
       "summary": "d12 monsterboek polish live · v1.18.142 / SW 352"
-    },
-    {
-      "at": "2026-08-16T07:49:43Z",
-      "summary": "d12: monsterboek biome-filters, flavor-regels, 282-count, farm/zoo/zee-prestaties · v1.18.142"
-    },
-    {
-      "at": "2026-08-16T07:45:48Z",
-      "summary": "Start: maak de app beter (d20 polish)"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

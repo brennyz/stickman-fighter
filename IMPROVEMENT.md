@@ -128,6 +128,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-08-17 | — | PC-pull: `./scripts/pull-main.sh` (of `npm run pull`) zet de clone op origin/main. |
 | 2026-08-17 | **merge** | LIVE FF-merge #248–#255 → main · v1.18.151 / SW 361. Pull `main` op de pc. |
 | 2026-08-17 | **14** | FX: Spiral Orb hit-ring (ook robot); geen off-screen ghost; Lite FX ring vóór sparks. v1.18.151 / SW 361. |
 | 2026-08-17 | **7** | Save: import bewaart vorige voortgang in Backup; Herstel backup is echte undo. v1.18.150 / SW 360. |
