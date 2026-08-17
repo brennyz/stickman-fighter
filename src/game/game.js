@@ -1427,6 +1427,7 @@ class Game {
     this.robot.aiDiff = diff;
     this.robotMaxHp = Math.round(110 + save.lvl * 9 + save.trainWins * 14);
     this.trainTelegraphT = 0;
+    this.trainPierceTeleMax = 0.42;
     this.trainMeleeTelegraphT = 0;
     this.trainMeleeTelegraphMax = 0.32;
     this.trainTelegraphKind = null;
@@ -1456,6 +1457,8 @@ class Game {
     this.inputLocked = true;
     this.trainLaserCd = rand(4, 7);
     this.trainLaserTelegraph = 0;
+    this.trainTelegraphT = 0;
+    this.trainPierceTeleMax = 0.42;
     this.trainMeleeTelegraphT = 0;
     this.trainTelegraphKind = null;
     this.combo = 0;
@@ -1469,13 +1472,17 @@ class Game {
   updateTrainingLasers(dt) {
     if ((this.trainDummyGrace || 0) > 0) return;
     if (this.phase !== 'fight' || !this.robot?.alive || !this.player?.alive) return;
-    if (this.robot.attack || this.robot.hurtT > 0) {
-      if ((this.trainLaserCd || 0) <= 0.5) this.trainLaserCd = rand(1.8, 3.2);
+    if (this.robot.attack || this.robot.hurtT > 0 || (this.trainTelegraphT || 0) > 0) {
+      if (this.trainLaserTelegraph > 0) {
+        this.trainLaserTelegraph = 0;
+        this.trainLaserCd = Math.max(this.trainLaserCd || 0, rand(1.8, 3.2));
+      } else if ((this.trainLaserCd || 0) <= 0.5) {
+        this.trainLaserCd = rand(1.8, 3.2);
+      }
       return;
     }
     if (this.trainLaserTelegraph > 0) {
       this.trainLaserTelegraph -= dt;
-      this.trainTelegraphT = Math.max(this.trainTelegraphT || 0, this.trainLaserTelegraph);
       if (this.trainLaserTelegraph <= 0) this.fireTrainingLaser();
       return;
     }
@@ -1527,7 +1534,6 @@ class Game {
         this.comboT -= dt;
         if (this.comboT <= 0) this.combo = 0;
       }
-      if (this.trainTelegraphT > 0) this.trainTelegraphT -= dt;
       if (this.trainMeleeTelegraphT > 0) this.trainMeleeTelegraphT -= dt;
       this.updateTrainingLasers(dt);
       this.roundTimer -= dt;
@@ -1588,8 +1594,8 @@ class Game {
       ? (trainBest >= 8
         ? `Combo-trainer: max ×${trainBest} — bonus XP!`
         : (save.trainWins === 3 ? 'Nieuwe stijl vrij: Energie gloed — Instellingen → Stijl!' : 'Unlock stijlen door meer train-wins!'))
-      : onceResultTip('training', 'loss', 'Spring tijdens LIGHTNING PIERCE-telegraph — robot mist · duck oor-lasers')
-        || 'Tip: duck lasers · energy vol → Spiral Orb';
+      : onceResultTip('training', 'loss', t('combat.trainLossTip'))
+        || t('combat.trainTipDefault');
     scheduleGameResult(this, 1400, () => UI.showResult(win, {
       title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
       detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · max combo ×${trainBest}` +
@@ -4992,7 +4998,7 @@ class Game {
       const tele = this.trainLaserTelegraph > 0
         ? { label: t('hud.earLaser'), frac: this.trainLaserTelegraph / 0.95, color: '#ff6b6b', max: 0.95 }
         : (this.trainTelegraphT > 0
-          ? { label: t('hud.lightning_pierceTele'), frac: this.trainTelegraphT / 0.85, color: '#7cf5ff', max: 0.85 }
+          ? { label: t('hud.lightning_pierceTele'), frac: this.trainTelegraphT / (this.trainPierceTeleMax || 0.42), color: '#7cf5ff', max: this.trainPierceTeleMax || 0.42 }
           : (this.trainMeleeTelegraphT > 0
             ? {
               label: this.trainTelegraphKind === 'kick' ? t('hud.kickTele') : t('hud.punchTele'),
@@ -5038,7 +5044,7 @@ class Game {
         c.stroke();
         const dashDir = Math.sign(this.player.x - r.x) || -1;
         const dashLen = Math.min(200, Math.abs(this.player.x - r.x) + 40);
-        c.globalAlpha = 0.35 + (this.trainTelegraphT / 0.85) * 0.35;
+        c.globalAlpha = 0.35 + (this.trainTelegraphT / (this.trainPierceTeleMax || 0.42)) * 0.35;
         c.strokeStyle = '#7cf5ff';
         c.lineWidth = 3;
         c.setLineDash([8, 10]);
