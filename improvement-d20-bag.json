@@ -8,7 +8,6 @@
     7,
     9,
     3,
-    8,
     11,
     5,
     10,
@@ -22,21 +21,14 @@
     20
   ],
   "lastRoll": {
-    "face": 12,
-    "category": "Content \u2014 monsters, wapens, rariteit, dex",
-    "rolledAt": "2026-08-16T07:45:49Z",
-    "remainingCount": 17,
+    "face": 8,
+    "category": "PWA & offline \u2014 SW cache, install, standalone",
+    "rolledAt": "2026-08-17T06:33:25Z",
+    "remainingCount": 16,
     "cycle": 6
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 14,
-      "note": "crit/combo/jutsu rings + particle room",
-      "version": "1.12.23",
-      "doneAt": "2026-07-23T19:40:55Z",
-      "cycle": 2
-    },
     {
       "face": 20,
       "note": "pad method refs, hitButton reuse, error toast dedupe",
@@ -589,6 +581,13 @@
       "version": "1.18.142",
       "doneAt": "2026-08-16T07:49:43Z",
       "cycle": 6
+    },
+    {
+      "face": 8,
+      "note": "SW wait-for-hub + honest update banner + install cache line",
+      "version": "1.18.144",
+      "doneAt": "2026-08-17T06:41:19Z",
+      "cycle": 6
     }
   ],
   "userFeatureLog": [
@@ -983,14 +982,6 @@
     }
   ],
   "history": [
-    {
-      "face": 18,
-      "category": "Character select deel 2 \u2014 saga icons strip, clash, achievement",
-      "rolledAt": "2026-07-23T15:49:32Z",
-      "remainingCount": 18,
-      "cycle": 1,
-      "part": 2
-    },
     {
       "face": 11,
       "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
@@ -1822,6 +1813,13 @@
       "category": "Content \u2014 monsters, wapens, rariteit, dex",
       "rolledAt": "2026-08-16T07:45:49Z",
       "remainingCount": 17,
+      "cycle": 6
+    },
+    {
+      "face": 8,
+      "category": "PWA & offline \u2014 SW cache, install, standalone",
+      "rolledAt": "2026-08-17T06:33:25Z",
+      "remainingCount": 16,
       "cycle": 6
     }
   ],

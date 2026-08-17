@@ -1,5 +1,8 @@
-/* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 5 */
-const CACHE = 'stickfighter-app-v353';
+/* Stickman Fighter — hardened offline cache (PWA) d8 cyclus 6
+ * Nieuwe SW wacht op SF_SKIP_WAITING (menu/idle). Eerste install activeert
+ * vanzelf (geen actieve worker). skipWaiting() hier zou midden in een gevecht
+ * claimen — dat is de classic “update tijdens combo → startscherm”. */
+const CACHE = 'stickfighter-app-v354';
 
 
 
@@ -172,7 +175,7 @@ async function precache() {
 }
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(precache().then(() => self.skipWaiting()));
+  event.waitUntil(precache());
 });
 
 self.addEventListener('activate', (event) => {
