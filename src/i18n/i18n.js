@@ -36,12 +36,13 @@ const I18N = {
       wallPaceAhead: '+{n} vs record-tempo', wallPaceBehind: '−{n} vs record-tempo',
       wallGap: 'nog {gap} tot record',
       resume: 'Verder spelen', music: 'Muziek', sfx: 'Geluid', quit: 'Stop & hoofdmenu',
+      quitArcade: 'Stop & Arcade',
       vsRestart: 'Herstart match', vsRestartSub: '0-0 · zelfde vechters',
       vsSwap: 'Wissel kant', vsSwapSub: 'P1 ↔ P2 · zelfde score',
       audioHint: 'Volume in pauze — sliders sync met Instellingen',
       audioMuteAll: 'Alles uit', audioRestore: 'Standaard', audioSfxOnly: 'Alleen geluid',
     },
-    result: { again: 'Opnieuw', next: 'Volgend level', menu: 'Hoofdmenu', rematch: 'Rematch', rematchSub: 'Zelfde vechters',
+    result: { again: 'Opnieuw', next: 'Volgend level', menu: 'Hoofdmenu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Zelfde vechters',
       xp: '+{xp} XP verdiend · nu Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Instellingen', sub: 'Geluid, trilling & HUD — opgeslagen op dit apparaat',
@@ -125,12 +126,13 @@ const I18N = {
       wallPaceAhead: '+{n} vs record pace', wallPaceBehind: '−{n} vs record pace',
       wallGap: '{gap} to record',
       resume: 'Resume', music: 'Music', sfx: 'Sound', quit: 'Quit to menu',
+      quitArcade: 'Quit to Arcade',
       vsRestart: 'Restart match', vsRestartSub: '0-0 · same fighters',
       vsSwap: 'Swap sides', vsSwapSub: 'P1 ↔ P2 · same score',
       audioHint: 'Volume in pause — sliders sync with Settings',
       audioMuteAll: 'Mute all', audioRestore: 'Default', audioSfxOnly: 'SFX only',
     },
-    result: { again: 'Again', next: 'Next level', menu: 'Main menu', rematch: 'Rematch', rematchSub: 'Same fighters',
+    result: { again: 'Again', next: 'Next level', menu: 'Main menu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Same fighters',
       xp: '+{xp} XP earned · now Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Settings', sub: 'Sound, haptics & HUD — saved on this device',
@@ -210,11 +212,12 @@ const I18N = {
     pause: {
       title: 'Pause', sub: 'Spiral Orb bereit — los! · Fortschritt bleibt auf diesem Gerät',
       resume: 'Weiter', music: 'Musik', sfx: 'Sound', quit: 'Menü verlassen',
+      quitArcade: 'Stopp & Arcade',
       vsRestart: 'Match neu starten', vsRestartSub: '0-0 · gleiche Kämpfer',
       vsSwap: 'Seite tauschen', vsSwapSub: 'P1 ↔ P2 · gleicher Stand',
       audioHint: 'Lautstärke in Pause — sync mit Einstellungen',
     },
-    result: { again: 'Nochmal', next: 'Nächstes Level', menu: 'Hauptmenü', rematch: 'Revanche', rematchSub: 'Gleiche Kämpfer',
+    result: { again: 'Nochmal', next: 'Nächstes Level', menu: 'Hauptmenü', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Gleiche Kämpfer',
       xp: '+{xp} XP · jetzt Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Einstellungen', sub: 'Sound, Vibration & HUD — auf diesem Gerät gespeichert',
@@ -281,11 +284,12 @@ const I18N = {
     pause: {
       title: 'Pause', sub: 'Spiral Orb prêt — go ! · progrès sur cet appareil',
       resume: 'Reprendre', music: 'Musique', sfx: 'Son', quit: 'Quitter au menu',
+      quitArcade: 'Stop & Arcade',
       vsRestart: 'Recommencer', vsRestartSub: '0-0 · mêmes combattants',
       vsSwap: 'Changer de côté', vsSwapSub: 'P1 ↔ P2 · même score',
       audioHint: 'Volume en pause — sync avec Options',
     },
-    result: { again: 'Rejouer', next: 'Niveau suivant', menu: 'Menu principal', rematch: 'Revanche', rematchSub: 'Mêmes combattants',
+    result: { again: 'Rejouer', next: 'Niveau suivant', menu: 'Menu principal', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Mêmes combattants',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Options', sub: 'Son, vibrations & HUD — sauvegardé sur cet appareil',
@@ -352,11 +356,12 @@ const I18N = {
     pause: {
       title: 'Pausa', sub: 'Spiral Orb listo — ¡ya! · progreso en este dispositivo',
       resume: 'Seguir', music: 'Música', sfx: 'Sonido', quit: 'Salir al menú',
+      quitArcade: 'Parar y Arcade',
       vsRestart: 'Reiniciar partida', vsRestartSub: '0-0 · mismos luchadores',
       vsSwap: 'Cambiar lado', vsSwapSub: 'P1 ↔ P2 · mismo marcador',
       audioHint: 'Volumen en pausa — sync con Opciones',
     },
-    result: { again: 'Otra vez', next: 'Siguiente nivel', menu: 'Menú principal', rematch: 'Revancha', rematchSub: 'Mismos luchadores',
+    result: { again: 'Otra vez', next: 'Siguiente nivel', menu: 'Menú principal', menuArcade: 'Arcade', rematch: 'Revancha', rematchSub: 'Mismos luchadores',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Opciones', sub: 'Sonido, vibración y HUD — guardado en este dispositivo',
@@ -663,7 +668,11 @@ function applyLangStaticScreens() {
   const pauseQuit = document.getElementById('pauseQuit');
   if (pauseQuit) {
     const d = pauseQuit.querySelector('div');
-    if (d) d.textContent = t('pause.quit');
+    if (d) {
+      const arcade = typeof hubForPlayMode === 'function'
+        && hubForPlayMode(typeof game !== 'undefined' && game && game.mode) === 'arcade';
+      d.textContent = t(arcade ? 'pause.quitArcade' : 'pause.quit');
+    }
   }
   const pauseVs = document.getElementById('pauseVsRestart');
   if (pauseVs) {
@@ -707,7 +716,12 @@ function applyLangStaticScreens() {
   const resMenu = document.getElementById('resMenu');
   if (resMenu) {
     const d = resMenu.querySelector('div');
-    if (d) d.textContent = t('result.menu');
+    if (d) {
+      const mode = (typeof UI !== 'undefined' && UI.lastResult && UI.lastResult.mode)
+        || (typeof game !== 'undefined' && game && game.mode);
+      const arcade = typeof hubForPlayMode === 'function' && hubForPlayMode(mode) === 'arcade';
+      d.textContent = t(arcade ? 'result.menuArcade' : 'result.menu');
+    }
   }
   const helpOk = document.getElementById('helpOk');
   if (helpOk) {
