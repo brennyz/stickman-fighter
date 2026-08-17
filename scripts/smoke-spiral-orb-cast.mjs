@@ -158,6 +158,15 @@ async function run() {
     // d14: miss must not spawn a ghost ring off-screen; a real hit still gets a ring (Lite FX).
     // Training starts in intro + inputLocked; fight unlock + locked input keeps RabbitRobot still.
     const playW = (typeof W === 'number' && W > 80) ? W : innerWidth;
+    const stepTrain = (g, dt, errs) => {
+      g.freezeT = 0;
+      if (typeof Perf !== 'undefined') {
+        Perf.frames++;
+        g._fxBudgetFrame = Perf.frames;
+        g._fxBudgetUsed = 0;
+      }
+      try { g.update(dt); } catch (e) { errs.push(String(e)); }
+    };
     const armTrainingOrb = (robotX) => {
       save.skill = 'spiral_orb';
       save.activeTechnique = 'spiral_orb';
@@ -194,8 +203,7 @@ async function run() {
       game.player.startAttack('special', game);
       game.inputLocked = true;
       for (let i = 0; i < 45; i++) {
-        game.freezeT = 0;
-        try { game.update(DT); } catch (e) { errors.push(String(e)); }
+        stepTrain(game, DT, errors);
         if (game.player.attack?.fired) break;
       }
       game.freezeT = 0;
@@ -209,8 +217,7 @@ async function run() {
     armTrainingOrb(36);
     let edgeGhost = false;
     for (let i = 0; i < 100; i++) {
-      game.freezeT = 0;
-      try { game.update(DT); } catch (e) { errors.push(String(e)); }
+      stepTrain(game, DT, errors);
       for (const pt of game.particles) {
         if (pt.kind === 'ring' && pt.x > playW + 8) edgeGhost = true;
       }
@@ -222,8 +229,7 @@ async function run() {
     armTrainingOrb(230);
     let hitRing = false;
     for (let i = 0; i < 80; i++) {
-      game.freezeT = 0;
-      try { game.update(DT); } catch (e) { errors.push(String(e)); }
+      stepTrain(game, DT, errors);
       const rx = game.robot ? game.robot.bodyX : 230;
       for (const pt of game.particles) {
         if (pt.kind === 'ring' && Math.abs(pt.x - rx) < 56) hitRing = true;
