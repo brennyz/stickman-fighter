@@ -444,6 +444,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-17T10:18:00Z",
+      "summary": "main LIVE 33d89b6 v1.18.151 — pull-commando voor de pc klaar"
+    },
+    {
       "at": "2026-08-17T10:03:24Z",
       "summary": "LIVE gemerged #248–#255 naar main conflictloos · v1.18.151 / SW 361 — pull main op de pc"
     },
@@ -538,10 +542,6 @@
     {
       "at": "2026-08-16T07:45:48Z",
       "summary": "Start: maak de app beter (d20 polish)"
-    },
-    {
-      "at": "2026-08-16T07:40:22Z",
-      "summary": "Merge-fix: versus-retire vsRosterEntry null + rosterId hero crashte attackSpec — sla/wapen-knoppen weer live · v1.18.142 / SW 352"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
