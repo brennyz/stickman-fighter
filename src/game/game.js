@@ -5211,15 +5211,16 @@ class Game {
       c.font = '700 13px sans-serif';
       const bestSaved = save.bestWall || 0;
       const rec = Math.max(bestSaved, this.score);
-      const onPace = this.score > bestSaved;
-      c.fillStyle = onPace ? '#7cfc8a' : 'rgba(255,255,255,.55)';
+      const beaten = bestSaved > 0 && this.score > bestSaved;
+      const onPace = typeof wallHudOnPace === 'function' ? wallHudOnPace(this) : beaten;
+      c.fillStyle = beaten ? '#7cfc8a' : 'rgba(255,255,255,.55)';
       if (bestSaved > 0 && this.score < bestSaved) {
         const gap = bestSaved - this.score;
         c.fillText(t('hud.recordGap', { best: bestSaved, gap }), W / 2, 86);
       } else {
-        c.fillText(onPace && bestSaved > 0 ? t('hud.recordBroken', { rec }) : t('hud.recordLine', { rec }), W / 2, 86);
+        c.fillText(beaten ? t('hud.recordBroken', { rec }) : t('hud.recordLine', { rec }), W / 2, 86);
       }
-      // d19 c4: record-chase meter (score → best) + expected-pace tick
+      // Record-chase meter (score → best) + expected-pace tick
       if (bestSaved > 0) {
         const chaseW = Math.min(180, W * 0.48);
         const chaseX = (W - chaseW) / 2;
@@ -5229,7 +5230,6 @@ class Game {
         this.rr(c, chaseX, chaseY, chaseW, 5, 3); c.fill();
         c.fillStyle = onPace ? '#7cfc8a' : (chaseFrac >= 0.85 ? '#ffd75e' : '#7cf5ff');
         this.rr(c, chaseX, chaseY, Math.max(3, chaseW * Math.min(1, chaseFrac)), 5, 3); c.fill();
-        // 100% notch
         c.strokeStyle = 'rgba(255,255,255,.55)';
         c.lineWidth = 1.5;
         c.beginPath();
@@ -5250,31 +5250,24 @@ class Game {
           c.fill();
         }
       }
-      let showPaceDelta = false;
-      const elapsed = wallDur - this.wallTimer;
-      if (elapsed > 2 && this.score > 0) {
-        const pace = Math.round((this.score / elapsed) * 60);
-        const proj = Math.round(this.score + (this.wallTimer / elapsed) * this.score);
+      const proj = typeof wallProjectedScore === 'function' ? wallProjectedScore(this) : null;
+      const showProj = proj != null;
+      if (showProj) {
         c.font = '700 12px sans-serif';
-        c.fillStyle = 'rgba(255,255,255,.62)';
-        c.fillText(t('hud.pace', { pace, proj }), W / 2, 112);
-        const paceDelta = wallRecordPaceDelta(this);
-        if (paceDelta != null && bestSaved > 0) {
-          showPaceDelta = true;
-          c.font = '700 11px sans-serif';
-          c.fillStyle = paceDelta >= 0 ? '#7cfc8a' : '#ffb0b8';
-          c.fillText(
-            paceDelta >= 0 ? t('hud.paceAhead', { n: paceDelta }) : t('hud.paceBehind', { n: paceDelta }),
-            W / 2, 126
-          );
-        }
+        c.fillStyle = onPace ? '#7cfc8a' : (bestSaved > 0 ? '#ffb0b8' : 'rgba(255,255,255,.62)');
+        c.fillText(
+          bestSaved > 0
+            ? t('hud.paceProjRecord', { proj, best: bestSaved })
+            : t('hud.paceProj', { proj }),
+          W / 2, 110
+        );
       }
       const comboWin = this.wallComboWindow || 1.4;
       if (this.combo > 0 && this.comboT > 0) {
         const cFrac = clamp(this.comboT / comboWin, 0, 1);
         const cBarW = Math.min(160, W * 0.42);
         const cBarX = (W - cBarW) / 2;
-        const cy = showPaceDelta ? (this.combo > 1 ? 172 : 156) : (this.combo > 1 ? 158 : 142);
+        const cy = showProj ? (this.combo > 1 ? 156 : 140) : (this.combo > 1 ? 142 : 126);
         c.font = '700 9px sans-serif';
         c.textAlign = 'left';
         c.fillStyle = 'rgba(124,245,255,.55)';
@@ -5293,7 +5286,7 @@ class Game {
       if (this.combo > 1) {
         const pulse = motionReduced() ? 1 : (1 + Math.sin(this.t * 10) * 0.1);
         c.save();
-        c.translate(W / 2, showPaceDelta ? 152 : 138);
+        c.translate(W / 2, showProj ? 136 : 122);
         c.scale(pulse, pulse);
         c.font = '900 22px sans-serif'; c.fillStyle = '#7cf5ff';
         c.fillText(t('hud.combo', { n: this.combo }), 0, 0);
@@ -5303,7 +5296,7 @@ class Game {
       } else if (this.combo === 1 && this.comboT > 0) {
         c.font = '700 12px sans-serif';
         c.fillStyle = 'rgba(124,245,255,.75)';
-        c.fillText(t('hud.comboActive'), W / 2, showPaceDelta ? 142 : 128);
+        c.fillText(t('hud.comboActive'), W / 2, showProj ? 126 : 114);
       }
     } else if (this.mode === 'coinrun') {
       const tLeft = Math.ceil(Math.max(0, this.coinTimer));

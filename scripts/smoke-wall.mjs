@@ -68,6 +68,13 @@ async function run() {
     const paceDelta = paceFn ? wallRecordPaceDelta(g) : null;
     const pauseLine = typeof wallPauseSubtitle === 'function' ? wallPauseSubtitle(g) : '';
 
+    g.wallTimer = 40;
+    g.score = 20;
+    const proj = typeof wallProjectedScore === 'function' ? wallProjectedScore(g) : null;
+    const paceNow = wallRecordPaceDelta(g);
+    const onPaceEarly = typeof wallHudOnPace === 'function' ? wallHudOnPace(g) : null;
+    const paceEqualsProj = proj === Math.round((20 / 20) * 60);
+
     // Fast-forward to time-up
     g.wallTimer = 0.05;
     g.over = false;
@@ -75,7 +82,8 @@ async function run() {
     try { g.updateWall(0.1); } catch (e) { return { ok: false, why: 'finish:' + e, errors }; }
 
     return {
-      ok: g.over === true && g.score >= 1 && timerTicked && pauseLine.length > 3,
+      ok: g.over === true && g.score >= 1 && timerTicked && pauseLine.length > 3
+        && proj === 60 && paceNow === 7 && onPaceEarly === true && paceEqualsProj,
       timerTicked,
       score: g.score,
       over: g.over,
@@ -83,6 +91,10 @@ async function run() {
       paceDelta,
       pauseLine: pauseLine.slice(0, 80),
       combo10Hint: !!(g.wallHints && 'combo10' in g.wallHints),
+      proj,
+      paceNow,
+      onPaceEarly,
+      paceEqualsProj,
       errors,
     };
   });
