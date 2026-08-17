@@ -1,3 +1,4 @@
+| 2026-08-17 | **2** | d2 c6: RabbitRobot Pierce had energy-gate (nooit); telegraph = windup; laser XOR Pierce; tips zeggen spring. v1.18.147 / SW v357. |
 | 2026-08-17 | **13** | d13 c6: missies-copy één adem — Dagbonus, geen grind-mantra, geen dubbele claim-toast; knop pas als klaar. v1.18.146 / SW v356. |
 | 2026-08-17 | **20** | d20 c6: dode Kets-UI (`kablam-ui.js`) eruit — live thermometer blijft; versus-ghost binds; duplicate LIVE-LINK. Zero gedrag. v1.18.145 / SW v355. |
 | 2026-08-17 | **8** | d8 c6: SW wacht op menu (geen skipWaiting midden-gevecht); update-banner tikt alleen op hub; tijdens play “laadt in het menu”; install-cache regel. v1.18.144 / SW v354. |
@@ -122,6 +123,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-08-17 | **2** | Training: Pierce doet het weer (robot-energy); balk = windup; één dreiging; spring i.p.v. duck. v1.18.147 / SW 357. |
 | 2026-08-17 | **13** | Missies: één term Dagbonus, hub-hook, scherm = flow+Nu+kaarten; claim-toast alleen XP; Dagbonus-knop pas klaar/binnen. v1.18.146 / SW 356. |
 | 2026-08-17 | **20** | Code health: spook-Kets UI weg, live balk ongemoeid; versus-ghost knoppen; LIVE-LINK 1×. v1.18.145 / SW 355. |
 | 2026-08-17 | **8** | PWA: nieuwe SW wacht tot hub; gouden balk tikt alleen in menu; gevecht ziet “laadt in het menu”; install toont cache-klaar. v1.18.144 / SW 354. |

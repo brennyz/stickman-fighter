@@ -2478,7 +2478,7 @@ function modeFirstMinuteLine(mode) {
   if (!touch) {
     const lines = {
       adventure: 'Eerste minuut: A/D lopen · W springen · J/K/L · U technique · Shift subst',
-      training: 'Eerste minuut: ontwijk lasers · Shift = substitutie · energy vol → U',
+      training: 'Eerste minuut: spring lasers · Shift = substitutie · energy vol → U',
       wall: '60s · combo-milestones · A/D · J/K/L · record-tempo in HUD',
       versus: 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
       coinrun: 'Munten pakken · W/↑ hoger mikken · J/K shuriken · max 3 snel',
@@ -2487,7 +2487,7 @@ function modeFirstMinuteLine(mode) {
   }
   const lines = {
     adventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol energy = SUPER',
-    training: 'Eerste minuut: ontwijk rode laser · blokkeer dichtbij · energy vol → SUPER',
+    training: 'Eerste minuut: spring rode laser · blokkeer dichtbij · energy vol → SUPER',
     wall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
     versus: 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best',
     coinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',

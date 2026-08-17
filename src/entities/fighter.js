@@ -91,11 +91,13 @@ class Fighter {
         return;
       }
       const energyCost = skillEnergyCost(jKind);
-      if (this.energy < energyCost) {
-        if (this.isPlayer) game.floater(this.x, this.y - 110, 'Energy niet vol!', '#7cf5ff', 13);
-        return;
+      if (!this.isRobot) {
+        if (this.energy < energyCost) {
+          if (this.isPlayer) game.floater(this.x, this.y - 110, 'Energy niet vol!', '#7cf5ff', 13);
+          return;
+        }
+        this.energy = 0;
       }
-      this.energy = 0;
       if (jKind === 'spiral_orb' && typeof spiralOrbCooldownSec === 'function') {
         const lv = typeof skillLevel === 'function' ? skillLevel('spiral_orb') : 0;
         this.specialCd = spiralOrbCooldownSec(lv);
@@ -289,14 +291,16 @@ class Fighter {
         this.aiMove = dir;
         const lightning_pierceChance = pLowTrain ? 0.12 : 0.3;
         const lightning_pierceMinDist = pLowTrain ? 160 : 105;
-        if (this.aiCd <= 0 && dist > lightning_pierceMinDist && !pAir && Math.random() < lightning_pierceChance) {
+        if (this.aiCd <= 0 && dist > lightning_pierceMinDist && !pAir
+            && !(game.trainLaserTelegraph > 0) && Math.random() < lightning_pierceChance) {
           out.special = true; this.aiCd = rand(2.6, 4.2) / diff;
         }
         if (Math.random() < 0.12) out.jump = true;
       } else if (dist > 110) {
         const r = Math.random();
         if (r < 0.55) this.aiMove = dir;
-        else if (r < 0.72 && this.aiCd <= 0 && dist > (pLowTrain ? 160 : 120) && !pAir) {
+        else if (r < 0.72 && this.aiCd <= 0 && dist > (pLowTrain ? 160 : 120) && !pAir
+            && !(game.trainLaserTelegraph > 0)) {
           out.special = true; this.aiCd = rand(2.6, 4.2) / diff;
         }
         else this.aiMove = -dir * 0.6;
@@ -441,27 +445,31 @@ class Fighter {
     if (this.attack) {
       const a = this.attack;
       a.t += dt;
-      if (this.isRobot && a.kind === 'special' && !a.fired && !a._telegraphed && a.t >= a.windup * 0.28) {
-        a._telegraphed = true;
-        if (game.mode === 'training') {
-          game.trainTelegraphT = 0.85;
-          game.floater(this.x, this.y - 138, 'LIGHTNING PIERCE — dash/spring!', '#7cf5ff', 16);
-          haptic(10);
+      if (this.isRobot && a.kind === 'special' && !a.fired && game.mode === 'training') {
+        const remain = Math.max(0, a.windup - a.t);
+        if (a.t >= a.windup * 0.28) {
+          if (!a._telegraphed) {
+            a._telegraphed = true;
+            game.trainPierceTeleMax = remain;
+            game.floater(this.x, this.y - 138, t('hud.lightning_pierceTele'), '#7cf5ff', 16);
+            haptic(10);
+          }
+          game.trainTelegraphT = remain;
         }
-      }
-      if (this.isRobot && a.kind === 'special' && !a.fired && a._telegraphed && game.mode === 'training') {
         const p = game.player;
-        if (p && !p.onGround) {
+        if (a._telegraphed && p && !p.onGround) {
           this.attack = null;
           game.trainTelegraphT = 0;
           this.aiCd = rand(2.5, 4.2) / (this.aiDiff || 1);
-          game.floater(this.x, this.y - 128, 'Lightning Pierce gemist — spring werkt!', '#7cf5ff', 14);
+          game.floater(this.x, this.y - 128, t('hud.lightning_pierceMiss'), '#7cf5ff', 14);
         } else if (a.t >= a.windup) {
           a.fired = true;
+          game.trainTelegraphT = 0;
           game.spawnTechnique(this, a);
         }
       } else if (a.kind === 'special' && !a.fired && a.t >= a.windup) {
         a.fired = true;
+        if (this.isRobot && game.mode === 'training') game.trainTelegraphT = 0;
         game.spawnTechnique(this, a);
       }
       if (this.isRobot && game.mode === 'training' && !a.fired && (a.kind === 'punch' || a.kind === 'kick') && a.t < a.windup) {

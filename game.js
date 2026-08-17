@@ -274,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.146';
+const APP_VERSION = '1.18.147';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 356;
+const SW_CACHE_REV = 357;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -5237,7 +5237,7 @@ function modeFirstMinuteLine(mode) {
   if (!touch) {
     const lines = {
       adventure: 'Eerste minuut: A/D lopen · W springen · J/K/L · U technique · Shift subst',
-      training: 'Eerste minuut: ontwijk lasers · Shift = substitutie · energy vol → U',
+      training: 'Eerste minuut: spring lasers · Shift = substitutie · energy vol → U',
       wall: '60s · combo-milestones · A/D · J/K/L · record-tempo in HUD',
       versus: 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
       coinrun: 'Munten pakken · W/↑ hoger mikken · J/K shuriken · max 3 snel',
@@ -5246,7 +5246,7 @@ function modeFirstMinuteLine(mode) {
   }
   const lines = {
     adventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol energy = SUPER',
-    training: 'Eerste minuut: ontwijk rode laser · blokkeer dichtbij · energy vol → SUPER',
+    training: 'Eerste minuut: spring rode laser · blokkeer dichtbij · energy vol → SUPER',
     wall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
     versus: 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best',
     coinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
@@ -11461,8 +11461,8 @@ function seedNlGameStrings() {
     trainComboNewRec: ' — nieuw record!',
     trainStyleUnlock: 'Nieuwe stijl vrij: Energie gloed — Instellingen → Stijl!',
     trainStyleMore: 'Unlock stijlen door meer train-wins!',
-    trainLossTip: 'Spring tijdens LIGHTNING PIERCE-telegraph — robot mist · duck oor-lasers',
-    trainTipDefault: 'Tip: duck lasers · energy vol → Spiral Orb',
+    trainLossTip: 'Spring tijdens LIGHTNING PIERCE — robot mist · spring oor-lasers',
+    trainTipDefault: 'Tip: spring lasers · energy vol → Spiral Orb',
     vsRematchTip: 'Opnieuw = rematch · Pauze → Herstart match (0-0)',
     vsCloseRematchTip: 'Krappe match! Rematch met Opnieuw · of Pauze → Herstart 0-0',
     vsFatalityRematchTip: 'Fatality! Rematch met Opnieuw · zelfde vechters',
@@ -11794,7 +11794,7 @@ function seedNlGameStrings() {
     'Muur: combo\'s stapelen schade — bomstenen (rood) ontploffen, goud = extra XP.',
     'Monsterboek vullen = meer max HP via rariteit (gewoon +3 … mythisch +25).',
     'Komt eraan: avontuur-character select vóór elk level — eigen loadout per run.',
-    'Training vs RabbitRobot: duck zijn lasers; Lightning Pierce open = jouw moment.',
+    'Training vs RabbitRobot: spring zijn oor-lasers; Lightning Pierce open = jouw moment.',
     'Dash / substitutie: dubbel-tik links-rechts of Shift — korte onkwetsbaarheid.',
     'Komt eraan: Mat\'s dojo — timing-minigame met planken en combo-multipliers.',
     'Kunai & shuriken unlocken vroeg — gooi projectielen naast melee.',
@@ -12070,12 +12070,12 @@ function seedNlGameStrings() {
     modeVersus: 'P1 links P2 rechts · best-of-3 · rematch in pauze',
     modeCoinrun: '45s munten · 2 munten = 1 pet coin · mik ↑ · vliegers +3',
     firstMinuteAdventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol energy = SUPER',
-    firstMinuteTraining: 'Eerste minuut: ontwijk rode laser · blokkeer dichtbij · energy vol → SUPER',
+    firstMinuteTraining: 'Eerste minuut: spring rode laser · blokkeer dichtbij · energy vol → SUPER',
     firstMinuteWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
     firstMinuteVersus: 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best',
     firstMinuteCoinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
     firstMinuteAdventureKb: 'Eerste minuut: A/D lopen · W springen · J/K/L · U technique · Shift subst',
-    firstMinuteTrainingKb: 'Eerste minuut: ontwijk lasers · Shift = substitutie · energy vol → U',
+    firstMinuteTrainingKb: 'Eerste minuut: spring lasers · Shift = substitutie · energy vol → U',
     firstMinuteWallKb: '60s · combo-milestones · A/D · J/K/L · record-tempo in HUD',
     firstMinuteVersusKb: 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
     firstMinuteCoinrunKb: 'Munten pakken · W/↑ hoger mikken · J/K shuriken · max 3 snel',
@@ -12113,6 +12113,7 @@ function seedNlGameStrings() {
     toBoss: 'Op weg naar de baas — {sec}s', walkNext: 'Verder lopen… volgende golf {sec}s',
     streak: 'STREAK ×{n}', combo: 'COMBO ×{n}', rage: 'RAGE {n}s', shield: 'Schild {n}s',
     earLaser: 'OOR-LASER — spring!', lightning_pierceTele: 'LIGHTNING PIERCE — dash/spring!',
+    lightning_pierceMiss: 'Lightning Pierce gemist — spring werkt!',
     kickTele: 'TRAP — spring/blok!', punchTele: 'SLA — blok/weg!', earLaserShort: 'OOR-LASER',
     rabbitRobot: 'RABBITROBOT · {pct}%', roundInfo: 'Ronde {n} · eerst 2 wint · {s}-{r}',
     dummyGrace: 'Dummy {n}s — oefen combo', goal: 'doel ×{n}', record: 'record ×{n}',
@@ -12347,8 +12348,8 @@ const CATALOG_EN = {
     trainComboNewRec: ' — new record!',
     trainStyleUnlock: 'New style unlocked: Energy glow — Settings → Style!',
     trainStyleMore: 'Unlock styles with more training wins!',
-    trainLossTip: 'Jump during LIGHTNING PIERCE telegraph — robot misses · duck ear-lasers',
-    trainTipDefault: 'Tip: duck lasers · full energy → Spiral Orb',
+    trainLossTip: 'Jump during LIGHTNING PIERCE — robot misses · jump ear-lasers',
+    trainTipDefault: 'Tip: jump lasers · full energy → Spiral Orb',
     vsRematchTip: 'Again = rematch · Pause → Restart match (0-0)',
     vsCloseRematchTip: 'Close one! Rematch with Again · or Pause → Restart 0-0',
     vsFatalityRematchTip: 'Fatality! Rematch with Again · same fighters',
@@ -12874,12 +12875,12 @@ const CATALOG_EN = {
     modeVersus: 'P1 left P2 right · best-of-3 · rematch in pause',
     modeCoinrun: '45s coins · 2 coins = 1 pet coin · aim ↑ · flyers +3',
     firstMinuteAdventure: 'First minute: move left · punch right · joy ↑ aim flyers · full energy = SUPER',
-    firstMinuteTraining: 'First minute: dodge red laser · block up close · full energy → SUPER',
+    firstMinuteTraining: 'First minute: jump the red laser · block up close · full energy → SUPER',
     firstMinuteWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD',
     firstMinuteVersus: 'First minute: P1 left · P2 right · landscape iPad works best',
     firstMinuteCoinrun: '45s coins · joy ↑ aim · pink flyer = +3 · max 3 shuriken fast',
     firstMinuteAdventureKb: 'First minute: A/D move · W jump · J/K/L · U technique · Shift subst',
-    firstMinuteTrainingKb: 'First minute: dodge lasers · Shift = subst · full energy → U',
+    firstMinuteTrainingKb: 'First minute: jump lasers · Shift = subst · full energy → U',
     firstMinuteWallKb: '60s · combo milestones · A/D · J/K/L · record pace in HUD',
     firstMinuteVersusKb: 'First minute: P1 WASD+JKL · P2 arrows+1-5 · best-of-3',
     firstMinuteCoinrunKb: 'Grab coins · W/↑ aim higher · J/K shuriken · max 3 fast',
@@ -12947,7 +12948,7 @@ const CATALOG_EN = {
     'Wall: combos stack damage — red bombs explode, gold = extra XP.',
     'Fill monster book = more max HP by rarity (common +3 … mythic +25).',
     'Coming: adventure character select before each level — loadout per run.',
-    'Training vs RabbitRobot: duck lasers; open Lightning Pierce = your moment.',
+    'Training vs RabbitRobot: jump ear-lasers; open Lightning Pierce = your moment.',
     'Dash / substitution: double-tap left-right or Shift — brief invulnerability.',
     'Coming: Mat\'s dojo — timing minigame with boards and combo multipliers.',
     'Kunai & shuriken unlock early — throw projectiles alongside melee.',
@@ -13051,6 +13052,7 @@ const CATALOG_EN = {
     toBoss: 'Heading to boss — {sec}s', walkNext: 'Walking on… next wave {sec}s',
     streak: 'STREAK ×{n}', combo: 'COMBO ×{n}', rage: 'RAGE {n}s', shield: 'Shield {n}s',
     earLaser: 'EAR-LASER — jump!', lightning_pierceTele: 'LIGHTNING PIERCE — dash/jump!',
+    lightning_pierceMiss: 'Lightning Pierce missed — jump works!',
     kickTele: 'KICK — jump/block!', punchTele: 'PUNCH — block/dodge!', earLaserShort: 'EAR-LASER',
     rabbitRobot: 'RABBITROBOT · {pct}%', roundInfo: 'Round {n} · first to 2 · {s}-{r}',
     dummyGrace: 'Dummy {n}s — practice combo', goal: 'goal ×{n}', record: 'record ×{n}',
@@ -18717,11 +18719,13 @@ class Fighter {
         return;
       }
       const energyCost = skillEnergyCost(jKind);
-      if (this.energy < energyCost) {
-        if (this.isPlayer) game.floater(this.x, this.y - 110, 'Energy niet vol!', '#7cf5ff', 13);
-        return;
+      if (!this.isRobot) {
+        if (this.energy < energyCost) {
+          if (this.isPlayer) game.floater(this.x, this.y - 110, 'Energy niet vol!', '#7cf5ff', 13);
+          return;
+        }
+        this.energy = 0;
       }
-      this.energy = 0;
       if (jKind === 'spiral_orb' && typeof spiralOrbCooldownSec === 'function') {
         const lv = typeof skillLevel === 'function' ? skillLevel('spiral_orb') : 0;
         this.specialCd = spiralOrbCooldownSec(lv);
@@ -18915,14 +18919,16 @@ class Fighter {
         this.aiMove = dir;
         const lightning_pierceChance = pLowTrain ? 0.12 : 0.3;
         const lightning_pierceMinDist = pLowTrain ? 160 : 105;
-        if (this.aiCd <= 0 && dist > lightning_pierceMinDist && !pAir && Math.random() < lightning_pierceChance) {
+        if (this.aiCd <= 0 && dist > lightning_pierceMinDist && !pAir
+            && !(game.trainLaserTelegraph > 0) && Math.random() < lightning_pierceChance) {
           out.special = true; this.aiCd = rand(2.6, 4.2) / diff;
         }
         if (Math.random() < 0.12) out.jump = true;
       } else if (dist > 110) {
         const r = Math.random();
         if (r < 0.55) this.aiMove = dir;
-        else if (r < 0.72 && this.aiCd <= 0 && dist > (pLowTrain ? 160 : 120) && !pAir) {
+        else if (r < 0.72 && this.aiCd <= 0 && dist > (pLowTrain ? 160 : 120) && !pAir
+            && !(game.trainLaserTelegraph > 0)) {
           out.special = true; this.aiCd = rand(2.6, 4.2) / diff;
         }
         else this.aiMove = -dir * 0.6;
@@ -19067,27 +19073,31 @@ class Fighter {
     if (this.attack) {
       const a = this.attack;
       a.t += dt;
-      if (this.isRobot && a.kind === 'special' && !a.fired && !a._telegraphed && a.t >= a.windup * 0.28) {
-        a._telegraphed = true;
-        if (game.mode === 'training') {
-          game.trainTelegraphT = 0.85;
-          game.floater(this.x, this.y - 138, 'LIGHTNING PIERCE — dash/spring!', '#7cf5ff', 16);
-          haptic(10);
+      if (this.isRobot && a.kind === 'special' && !a.fired && game.mode === 'training') {
+        const remain = Math.max(0, a.windup - a.t);
+        if (a.t >= a.windup * 0.28) {
+          if (!a._telegraphed) {
+            a._telegraphed = true;
+            game.trainPierceTeleMax = remain;
+            game.floater(this.x, this.y - 138, t('hud.lightning_pierceTele'), '#7cf5ff', 16);
+            haptic(10);
+          }
+          game.trainTelegraphT = remain;
         }
-      }
-      if (this.isRobot && a.kind === 'special' && !a.fired && a._telegraphed && game.mode === 'training') {
         const p = game.player;
-        if (p && !p.onGround) {
+        if (a._telegraphed && p && !p.onGround) {
           this.attack = null;
           game.trainTelegraphT = 0;
           this.aiCd = rand(2.5, 4.2) / (this.aiDiff || 1);
-          game.floater(this.x, this.y - 128, 'Lightning Pierce gemist — spring werkt!', '#7cf5ff', 14);
+          game.floater(this.x, this.y - 128, t('hud.lightning_pierceMiss'), '#7cf5ff', 14);
         } else if (a.t >= a.windup) {
           a.fired = true;
+          game.trainTelegraphT = 0;
           game.spawnTechnique(this, a);
         }
       } else if (a.kind === 'special' && !a.fired && a.t >= a.windup) {
         a.fired = true;
+        if (this.isRobot && game.mode === 'training') game.trainTelegraphT = 0;
         game.spawnTechnique(this, a);
       }
       if (this.isRobot && game.mode === 'training' && !a.fired && (a.kind === 'punch' || a.kind === 'kick') && a.t < a.windup) {
@@ -25629,6 +25639,7 @@ class Game {
     this.robot.aiDiff = diff;
     this.robotMaxHp = Math.round(110 + save.lvl * 9 + save.trainWins * 14);
     this.trainTelegraphT = 0;
+    this.trainPierceTeleMax = 0.42;
     this.trainMeleeTelegraphT = 0;
     this.trainMeleeTelegraphMax = 0.32;
     this.trainTelegraphKind = null;
@@ -25658,6 +25669,8 @@ class Game {
     this.inputLocked = true;
     this.trainLaserCd = rand(4, 7);
     this.trainLaserTelegraph = 0;
+    this.trainTelegraphT = 0;
+    this.trainPierceTeleMax = 0.42;
     this.trainMeleeTelegraphT = 0;
     this.trainTelegraphKind = null;
     this.combo = 0;
@@ -25671,13 +25684,17 @@ class Game {
   updateTrainingLasers(dt) {
     if ((this.trainDummyGrace || 0) > 0) return;
     if (this.phase !== 'fight' || !this.robot?.alive || !this.player?.alive) return;
-    if (this.robot.attack || this.robot.hurtT > 0) {
-      if ((this.trainLaserCd || 0) <= 0.5) this.trainLaserCd = rand(1.8, 3.2);
+    if (this.robot.attack || this.robot.hurtT > 0 || (this.trainTelegraphT || 0) > 0) {
+      if (this.trainLaserTelegraph > 0) {
+        this.trainLaserTelegraph = 0;
+        this.trainLaserCd = Math.max(this.trainLaserCd || 0, rand(1.8, 3.2));
+      } else if ((this.trainLaserCd || 0) <= 0.5) {
+        this.trainLaserCd = rand(1.8, 3.2);
+      }
       return;
     }
     if (this.trainLaserTelegraph > 0) {
       this.trainLaserTelegraph -= dt;
-      this.trainTelegraphT = Math.max(this.trainTelegraphT || 0, this.trainLaserTelegraph);
       if (this.trainLaserTelegraph <= 0) this.fireTrainingLaser();
       return;
     }
@@ -25729,7 +25746,6 @@ class Game {
         this.comboT -= dt;
         if (this.comboT <= 0) this.combo = 0;
       }
-      if (this.trainTelegraphT > 0) this.trainTelegraphT -= dt;
       if (this.trainMeleeTelegraphT > 0) this.trainMeleeTelegraphT -= dt;
       this.updateTrainingLasers(dt);
       this.roundTimer -= dt;
@@ -25790,8 +25806,8 @@ class Game {
       ? (trainBest >= 8
         ? `Combo-trainer: max ×${trainBest} — bonus XP!`
         : (save.trainWins === 3 ? 'Nieuwe stijl vrij: Energie gloed — Instellingen → Stijl!' : 'Unlock stijlen door meer train-wins!'))
-      : onceResultTip('training', 'loss', 'Spring tijdens LIGHTNING PIERCE-telegraph — robot mist · duck oor-lasers')
-        || 'Tip: duck lasers · energy vol → Spiral Orb';
+      : onceResultTip('training', 'loss', t('combat.trainLossTip'))
+        || t('combat.trainTipDefault');
     scheduleGameResult(this, 1400, () => UI.showResult(win, {
       title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
       detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · max combo ×${trainBest}` +
@@ -29194,7 +29210,7 @@ class Game {
       const tele = this.trainLaserTelegraph > 0
         ? { label: t('hud.earLaser'), frac: this.trainLaserTelegraph / 0.95, color: '#ff6b6b', max: 0.95 }
         : (this.trainTelegraphT > 0
-          ? { label: t('hud.lightning_pierceTele'), frac: this.trainTelegraphT / 0.85, color: '#7cf5ff', max: 0.85 }
+          ? { label: t('hud.lightning_pierceTele'), frac: this.trainTelegraphT / (this.trainPierceTeleMax || 0.42), color: '#7cf5ff', max: this.trainPierceTeleMax || 0.42 }
           : (this.trainMeleeTelegraphT > 0
             ? {
               label: this.trainTelegraphKind === 'kick' ? t('hud.kickTele') : t('hud.punchTele'),
@@ -29240,7 +29256,7 @@ class Game {
         c.stroke();
         const dashDir = Math.sign(this.player.x - r.x) || -1;
         const dashLen = Math.min(200, Math.abs(this.player.x - r.x) + 40);
-        c.globalAlpha = 0.35 + (this.trainTelegraphT / 0.85) * 0.35;
+        c.globalAlpha = 0.35 + (this.trainTelegraphT / (this.trainPierceTeleMax || 0.42)) * 0.35;
         c.strokeStyle = '#7cf5ff';
         c.lineWidth = 3;
         c.setLineDash([8, 10]);

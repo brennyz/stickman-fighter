@@ -12,28 +12,20 @@
     5,
     10,
     14,
-    2,
     17,
     19,
     18,
     6
   ],
   "lastRoll": {
-    "face": 13,
-    "category": "Missies & achievements \u2014 daily loop, beloningen",
-    "rolledAt": "2026-08-17T07:17:46Z",
-    "remainingCount": 14,
+    "face": 2,
+    "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
+    "rolledAt": "2026-08-17T08:20:19Z",
+    "remainingCount": 13,
     "cycle": 6
   },
   "pending": null,
   "implemented": [
-    {
-      "face": 10,
-      "note": "fillHudText, calm combo/pips, a11y status",
-      "version": "1.12.26",
-      "doneAt": "2026-07-23T19:45:10Z",
-      "cycle": 2
-    },
     {
       "face": 16,
       "note": "Pages-only share; tunnel UI hidden off-host; LIVE-LINK clean",
@@ -586,6 +578,13 @@
       "version": "1.18.146",
       "doneAt": "2026-08-17T08:04:39Z",
       "cycle": 6
+    },
+    {
+      "face": 2,
+      "note": "Pierce energy-gate + telegraph=windup + laser XOR Pierce + spring-copy",
+      "version": "1.18.147",
+      "doneAt": "2026-08-17T08:42:38Z",
+      "cycle": 6
     }
   ],
   "userFeatureLog": [
@@ -980,13 +979,6 @@
     }
   ],
   "history": [
-    {
-      "face": 13,
-      "category": "Missies & achievements \u2014 daily loop, beloningen",
-      "rolledAt": "2026-07-23T15:51:54Z",
-      "remainingCount": 15,
-      "cycle": 1
-    },
     {
       "face": 10,
       "category": "Toegankelijkheid \u2014 reduced motion, contrast, tekst",
@@ -1818,6 +1810,13 @@
       "category": "Missies & achievements \u2014 daily loop, beloningen",
       "rolledAt": "2026-08-17T07:17:46Z",
       "remainingCount": 14,
+      "cycle": 6
+    },
+    {
+      "face": 2,
+      "category": "Training vs RabbitRobot \u2014 AI, rounds, difficulty curve",
+      "rolledAt": "2026-08-17T08:20:19Z",
+      "remainingCount": 13,
       "cycle": 6
     }
   ],
