@@ -1623,6 +1623,10 @@ class Game {
     this.pendingVsP1Win = null;
     this.player = buildVsFighter(vsRosterEntry(this.p1Pick), vsSpawnX(1), 1);
     this.p2 = buildVsFighter(vsRosterEntry(this.p2Pick), vsSpawnX(2), 2);
+    if (!this.player || !this.p2) {
+      try { toastVersusRetired(); } catch (_) {}
+      return;
+    }
     this.startVsRound();
     AudioSys.play('versus');
   }
@@ -1837,7 +1841,7 @@ class Game {
     else if (close) tip = t('result.vsCloseRematchTip');
     scheduleGameResult(this, 1200, () => UI.showResult(p1Win, {
       title: p1Win ? t('result.vsP1Win') : t('result.vsP2Win'),
-      detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}` +
+      detail: `${vsRosterName(this.p1Pick) || 'P1'} vs ${vsRosterName(this.p2Pick) || 'P2'} · ${this.roundsP1}-${this.roundsP2}` +
         ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : '') +
         (this.matchFatality ? t('result.vsFatalityLine') : '') +
         (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
@@ -2585,6 +2589,9 @@ class Game {
             applyWeaponOnHitEffect(this, f, m, { dmg: hitRoll.dmg, crit: hitRoll.crit, finisher });
           } catch (_) {}
         }
+        if (spec.kind === 'weapon' && typeof spawnWeaponLightHit === 'function') {
+          try { spawnWeaponLightHit(this, f, m, { finisher, crit: hitRoll.crit }); } catch (_) {}
+        }
         if (counter) this.freezeT = Math.max(this.freezeT, 0.026);
         applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
         if (f.isPlayer && this.styleLightning && !fxLite()) {
@@ -2985,6 +2992,12 @@ class Game {
                 try {
                   applyWeaponOnHitEffect(this, owner, m, { dmg: hit.dmg, crit: hit.crit, finisher: false });
                 } catch (_) {}
+              }
+            }
+            if (p.throwId && typeof spawnWeaponLightHit === 'function') {
+              const owner = this.player;
+              if (owner && owner.weapon && owner.weapon.id === p.throwId) {
+                try { spawnWeaponLightHit(this, owner, m, { crit: hit.crit }); } catch (_) {}
               }
             }
             if (skProj) spawnTechniqueImpactFx(this, m.x, m.y, p.kind, 'full');
@@ -4886,7 +4899,7 @@ class Game {
         c.fillStyle = '#e04f5f'; this.rr(c, W / 2 - bwid / 2, hy, bwid * boss.hp / boss.maxhp, 10, 5); c.fill();
         hy += 18;
         c.font = '700 12px sans-serif';
-        fillHudText(c, boss.sp.name.toUpperCase(), W / 2, hy, { fill: '#ffc8d0' });
+        fillHudText(c, String((boss.sp && boss.sp.name) || 'BOSS').toUpperCase(), W / 2, hy, { fill: '#ffc8d0' });
         hy += 16;
       }
 
@@ -5322,8 +5335,8 @@ class Game {
       const half = Math.min(260, W * 0.38);
       const safeTop = hudInsetTop();
       const byVs = Math.max(by, safeTop + 42);
-      const name1 = vsRosterEntry(this.p1Pick).name;
-      const name2 = vsRosterEntry(this.p2Pick).name;
+      const name1 = vsRosterName(this.p1Pick) || 'P1';
+      const name2 = vsRosterName(this.p2Pick) || 'P2';
       if (this.phase === 'intro' && this.phaseT < 1.55) {
         const n = Math.ceil(Math.max(0.35, 1.55 - this.phaseT));
         if (typeof drawPixelVsBanner === 'function') {

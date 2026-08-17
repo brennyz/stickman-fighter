@@ -274,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.151';
+const APP_VERSION = '1.18.152';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 361;
+const SW_CACHE_REV = 362;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1607,6 +1607,20 @@ function sanitizeSave(s) {
       if (diffId) out.lastPlay.difficulty = diffId;
     }
   } else out.lastPlay = null;
+  // IP-B: master_sword / dawnblade is easter-egg overlay, not a catalog weapon
+  if (out.weapon === 'master_sword' || out.weapon === 'dawnblade') out.weapon = 'zwaard';
+  const renameWeaponKey = (bag) => {
+    if (!bag || typeof bag !== 'object') return bag || {};
+    if (bag.master_sword != null && bag.dawnblade == null) bag.dawnblade = bag.master_sword;
+    if ('master_sword' in bag) delete bag.master_sword;
+    return bag;
+  };
+  out.summons = renameWeaponKey(Object.assign({}, out.summons || {}));
+  out.chestWeapons = renameWeaponKey(Object.assign({}, out.chestWeapons || {}));
+  out.weaponMastery = renameWeaponKey(Object.assign({}, out.weaponMastery || {}));
+  if (out.itemUpgrades && typeof out.itemUpgrades === 'object' && out.itemUpgrades.weapon) {
+    out.itemUpgrades.weapon = renameWeaponKey(Object.assign({}, out.itemUpgrades.weapon));
+  }
   if (!WEAPONS.some(w => w.id === out.weapon)) out.weapon = 'vuist';
 
   // Zone-wapens (Nachtmerrie / Hel drops)
@@ -4846,6 +4860,12 @@ function vsWeaponRangeFactor(w) {
   return 0.22;
 }
 function vsFighterStats(entry) {
+  if (!entry) {
+    return {
+      hp: 0, spd: 0, dmg: 0, str: 0, rng: 0, meleeDps: 0, rangeDps: 0,
+      wpn: '—', special: '—', critPct: 0, sig: '—', sigKey: 'balanced',
+    };
+  }
   const w = weaponById(entry.weapon);
   const hp = Math.round(100 * entry.hpMul);
   const spd = Math.round(100 * entry.spdMul);
@@ -4951,8 +4971,8 @@ function charStatPreviewPair() {
 function vsStatPreviewHtml(e1, e2, previewing, lockedPreview) {
   const s1 = vsFighterStats(e1);
   const s2 = vsFighterStats(e2);
-  const g1 = vsSagaMeta(e1.saga || 'scroll');
-  const g2 = vsSagaMeta(e2.saga || 'scroll');
+  const g1 = vsSagaMeta((e1 && e1.saga) || 'scroll');
+  const g2 = vsSagaMeta((e2 && e2.saga) || 'scroll');
   const step = UI.charPickStep === 2 ? 'Stap 2 · kies P2' : 'Stap 1 · kies P1';
   const counts = vsSagaUnlockedCounts(UI.charSagaFilter || 'all');
   const next = charRosterNextUnlock();
@@ -4962,10 +4982,11 @@ function vsStatPreviewHtml(e1, e2, previewing, lockedPreview) {
   const head = `<div class="vs-preview-head">${step} · ${counts.unlocked}/${counts.total} in filter · ${vsUnlockedCount()}/${VS_ROSTER.length} totaal${prog}</div>`;
   const col = (entry, s, theirs, accent, saga, flair, side, locked) => {
     const live = previewing && !locked && ((UI.charPickStep === 1 && side === 'left') || (UI.charPickStep === 2 && side === 'right'));
-    const played = !locked && vsPlayedBefore(entry.id) ? '<span class="vs-played-chip">gespeeld</span>' : '';
+    const played = !locked && entry && vsPlayedBefore(entry.id) ? '<span class="vs-played-chip">gespeeld</span>' : '';
     const lockNote = locked ? `<div class="vs-preview-lock">${SVG_LOCK_ICON} ${vsUnlockHint(entry)}</div>` : '';
+    const nm = (entry && entry.name) || '—';
     return `<div class="vs-preview-col${live ? ' preview-live' : ''}${locked ? ' preview-locked' : ''}" style="--accent:${accent}">` +
-    `<div class="vs-preview-name">${entry.name}${played}${live ? ' <span class="vs-preview-tag">preview</span>' : ''}${locked ? ' <span class="vs-preview-tag locked">locked</span>' : ''}</div>` +
+    `<div class="vs-preview-name">${nm}${played}${live ? ' <span class="vs-preview-tag">preview</span>' : ''}${locked ? ' <span class="vs-preview-tag locked">locked</span>' : ''}</div>` +
     lockNote +
     `<div class="vs-preview-wpn">${sagaIconSvg(saga.id)} ${saga.label} · ${s.wpn} · ${s.special}</div>` +
     `<div class="vs-preview-sig">${s.sig} · ${s.critPct}% crit</div>` +
@@ -5012,16 +5033,16 @@ function updateCharFightDock() {
       text = t('ui.charFightNeedP1');
       cls += ' need-p1';
     } else if (samePair) {
-      text = t('ui.charFightSamePair', { name: e1.name });
+      text = t('ui.charFightSamePair', { name: vsRosterName(vsSelect.p1) || '—' });
       cls += ' warn';
     } else if (!ready) {
-      text = t('ui.charFightNeedP2', { p1: e1.name });
+      text = t('ui.charFightNeedP2', { p1: vsRosterName(vsSelect.p1) || '—' });
       cls += ' need-p2';
     } else {
       const tot = typeof vsMatchupTotShort === 'function'
         ? vsMatchupTotShort(vsSelect.p1, vsSelect.p2)
         : null;
-      text = t('ui.charFightSummary', { p1: e1.name, p2: e2.name });
+      text = t('ui.charFightSummary', { p1: vsRosterName(vsSelect.p1) || '—', p2: vsRosterName(vsSelect.p2) || '—' });
       if (tot) {
         text += ` · TOT ${tot.r1}/${tot.r2}`;
         if (!tot.even) text += tot.leadP1 ? ' · P1+' : ' · P2+';
@@ -5037,7 +5058,7 @@ function updateCharFightDock() {
     fightBtn.setAttribute('aria-disabled', fightBtn.disabled ? 'true' : 'false');
     fightBtn.classList.toggle('char-fight-ready', ready);
     fightBtn.textContent = ready
-      ? t('ui.charFightReady', { p1: e1.name, p2: e2.name })
+      ? t('ui.charFightReady', { p1: vsRosterName(vsSelect.p1) || '—', p2: vsRosterName(vsSelect.p2) || '—' })
       : t('ui.charFight');
   }
 
@@ -5048,8 +5069,8 @@ function updateCharFightDock() {
     replayBtn.style.display = canReplay ? '' : 'none';
     if (canReplay) {
       replayBtn.textContent = t('ui.charReplayLast', {
-        p1: vsRosterEntry(lp.p1).name,
-        p2: vsRosterEntry(lp.p2).name,
+        p1: vsRosterName(lp.p1) || '—',
+        p2: vsRosterName(lp.p2) || '—',
       });
     }
   }
@@ -5783,6 +5804,50 @@ function zoneWeaponsFor(zone) {
   return WEAPONS.filter(w => w.dropZone === zone);
 }
 
+const WEAPON_EFFECT_LIGHT = {
+  burn: ['#ff8c42', '#ffd75e'], popburn: ['#ff6a3d', '#ffe259'], inferno: ['#ff4d2a', '#ffd75e'],
+  magma: ['#ff6a3d', '#ff8c42'], soapburn: ['#ffd75e', '#ff8c42'], chainburn: ['#ff6a3d', '#ffe259'],
+  ashpull: ['#ff8c42', '#c47aff'], frostfire: ['#7cf5ff', '#ff6a3d'], freeze: ['#7cf5ff', '#e8ffff'],
+  drowsy: ['#c47aff', '#7cf5ff'], slip: ['#ffe259', '#c47aff'], flipkb: ['#c47aff', '#ff6b9d'],
+  confuse: ['#ff6b9d', '#c47aff'], spinchaos: ['#ff6a3d', '#c47aff'], echo: ['#c47aff', '#ffd75e'],
+  sonic: ['#ff6b9d', '#ffe259'], quake: ['#ffd75e', '#ff6a3d'], meteor: ['#ff6a3d', '#fff0a0'],
+  quakboom: ['#ffe259', '#ff8c42'], explodepeel: ['#ff6a3d', '#ffe259'], balloon: ['#ff6b9d', '#fff'],
+  lifesteal: ['#6ee06e', '#ff6b9d'], pull: ['#b06ae0', '#7cf5ff'], critsurge: ['#ffd75e', '#fff8d0'],
+  flutter: ['#c47aff', '#e8d0ff'], bleed: ['#ff4d6d', '#ffb0b8'], execute: ['#ff6a3d', '#fff'],
+};
+
+function isDawnbladeWeapon(w) {
+  const id = typeof w === 'string' ? w : (w && w.id);
+  return !!(w && (w.dawnblade || w.masterSword || id === 'dawnblade' || id === 'master_sword'));
+}
+
+/** Licht-FX voor speciale wapens (zone / effect / legendary+ / summon / dawnblade). */
+function weaponLightFx(w) {
+  const base = typeof w === 'string' ? weaponById(w) : (w || null);
+  if (!base || !base.id || base.id === 'vuist') return null;
+  if (isDawnbladeWeapon(base)) {
+    return { color: '#6fd7ff', color2: '#e8f8ff', pulse: 1.15, special: true };
+  }
+  if (base.effect && WEAPON_EFFECT_LIGHT[base.effect]) {
+    const [color, color2] = WEAPON_EFFECT_LIGHT[base.effect];
+    return { color, color2, pulse: base.dropZone === 'hell' ? 1.25 : 1.12, special: true };
+  }
+  if (base.dropZone === 'hell') return { color: '#ff6a3d', color2: '#ffd75e', pulse: 1.22, special: true };
+  if (base.dropZone === 'nightmare') return { color: '#c47aff', color2: '#7cf5ff', pulse: 1.1, special: true };
+  const rar = typeof rarityOf === 'function' ? rarityOf(base.rarity) : null;
+  if (rar && rar.order >= 4) {
+    return { color: rar.color, color2: '#fff8e8', pulse: 0.9 + rar.order * 0.04, special: true };
+  }
+  if (base.summoned && rar) {
+    return { color: rar.color, color2: '#ffffff', pulse: 0.95, special: true };
+  }
+  return null;
+}
+
+function isSpecialLightWeapon(w) {
+  return !!weaponLightFx(w);
+}
+
 function weaponEffectLabel(w) {
   const base = typeof w === 'string' ? weaponById(w) : w;
   if (!base || !base.effect) return '';
@@ -6267,7 +6332,7 @@ function itemUpgradeIdValid(cat, id) {
 
 function weaponUpgradeEligible(w) {
   // Alleen wapens die je echt bezit (character-unlock óf zone-drop), nooit “alleen Lv-getal”.
-  if (!w || !w.id || w.id === 'vuist' || w.id === 'master_sword') return false;
+  if (!w || !w.id || w.id === 'vuist' || w.id === 'master_sword' || w.id === 'dawnblade') return false;
   if (typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)) return false;
   // Zone-drops: ownership-only — character-level mag nooit genoeg zijn.
   if (w.dropZone) {
@@ -6299,7 +6364,7 @@ function itemUpgradePersistable(cat, id) {
   if (!itemUpgradeIdValid(cat, id)) return false;
   if (cat === 'weapon') {
     const w = WEAPONS.find((x) => x.id === id);
-    if (!w || w.id === 'vuist' || w.id === 'master_sword' || isThrowWeapon(w.id)) return false;
+    if (!w || w.id === 'vuist' || w.id === 'master_sword' || w.id === 'dawnblade' || isThrowWeapon(w.id)) return false;
   }
   return true;
 }
@@ -6791,27 +6856,32 @@ function applySummonTier(w) {
 }
 const playerWeapon = () => applyWeaponUpgrades(applySummonTier(weaponById(save.weapon)));
 
-/** 2% per avontuur-level: zwaard → Master Sword — UIT (zorgde voor plotselinge run-breaks). */
-const MASTER_SWORD_DURATION = 15;
-const MASTER_SWORD_CHANCE = 0;
-function canMasterSwordRoll(w) {
-  if (!w || w.id === 'vuist' || w.id === 'master_sword' || isThrowWeapon(w.id)) return false;
+/** Avontuur-level: zwaard → Dawnblade — UIT (zorgde voor plotselinge run-breaks). */
+const DAWNBLADE_DURATION = 15;
+const DAWNBLADE_CHANCE = 0;
+const MASTER_SWORD_DURATION = DAWNBLADE_DURATION;
+const MASTER_SWORD_CHANCE = DAWNBLADE_CHANCE;
+function canDawnbladeRoll(w) {
+  if (!w || w.id === 'vuist' || w.id === 'dawnblade' || w.id === 'master_sword' || isThrowWeapon(w.id)) return false;
   const fam = weaponMoveFamily(w.id);
   return fam === 'slash' || fam === 'energy';
 }
-function buildMasterSwordWeapon(base) {
+function canMasterSwordRoll(w) { return canDawnbladeRoll(w); }
+function buildDawnbladeWeapon(base) {
   base = base || weaponById('zwaard');
   return Object.assign({}, base, {
-    id: 'master_sword',
-    name: 'Master Sword',
+    id: 'dawnblade',
+    name: 'Dawnblade',
     dmg: Math.round((base.dmg || 1.55) * 2 * 100) / 100,
     range: Math.max(96, (base.range || 58) + 38),
     speed: Math.min(1.22, (base.speed || 1) * 1.1),
     rarity: 'legendary',
+    dawnblade: true,
     masterSword: true,
-    desc: 'Hyrules legendarische kling — unblockable',
+    desc: 'Dageraadkling — unblockable',
   });
 }
+function buildMasterSwordWeapon(base) { return buildDawnbladeWeapon(base); }
 function rollSummonChance(elite) {
   // UIT: zeldzame summon-ascend (epic/legendary) crashte runs midden in combo-spam
   return false;
@@ -6845,6 +6915,7 @@ const WEAPON_SWING_SFX = {
   void: 'wVoid',
   sterkling: 'wZwaard',
   guvve: 'wGuvve',
+  dawnblade: 'wMaster',
   master_sword: 'wMaster',
 };
 
@@ -6877,7 +6948,7 @@ function weaponThrowSfx(id) {
 
 function weaponFinisherSfx(weaponOrId) {
   const id = typeof weaponOrId === 'string' ? weaponOrId : (weaponOrId && weaponOrId.id);
-  if (id === 'master_sword') return 'wMaster';
+  if (id === 'dawnblade' || id === 'master_sword') return 'wMaster';
   const fam = weaponMoveFamily(id);
   if (fam === 'blunt') return 'hitHeavy';
   if (fam === 'energy') return 'hitEnergy';
@@ -6889,7 +6960,7 @@ function weaponFinisherSfx(weaponOrId) {
 
 function weaponHitSfx(weaponOrId, dmg) {
   const id = typeof weaponOrId === 'string' ? weaponOrId : (weaponOrId && weaponOrId.id);
-  if (id === 'laser' || id === 'void' || id === 'donder' || id === 'kristal' || id === 'vlamzweep' || id === 'sterkling' || id === 'master_sword') return 'hitEnergy';
+  if (id === 'laser' || id === 'void' || id === 'donder' || id === 'kristal' || id === 'vlamzweep' || id === 'sterkling' || id === 'dawnblade' || id === 'master_sword') return 'hitEnergy';
   if (id === 'hamer' || id === 'knuppel' || id === 'guvve' || id === 'bostaf') return 'hitHeavy';
   if (id === 'zwaard' || id === 'ketting' || id === 'kunai' || id === 'tanto' || id === 'sai' || id === 'kama' || id === 'zeis' || id === 'drietand' || id === 'nunchaku' || id === 'tonfa' || id === 'speer') return 'hitMetal';
   if (id === 'shuriken' || id === 'fuuma') return 'hitMetal';
@@ -7123,8 +7194,8 @@ const WEAPON_COMBOS = {
   helgitaar: { labels: ['Riff', 'Powerchord', 'Solo-finisher'] },
   pyroeend: { labels: ['QUAK', 'Vlam-eend', 'BOOM-eend'] },
   apocalypslepel: { labels: ['Wereld-schep', 'Meteor-scoop', 'EINDE'] },
-  master_sword: {
-    labels: ['Licht-slice', 'Zwaard-dans', 'Triforce-hak'],
+  dawnblade: {
+    labels: ['Licht-slice', 'Zwaard-dans', 'Dawn-hak'],
     moves: [
       { pose: 'slash', rangeMul: 1.06, dmgMul: 1.04, kbMul: 1.06, hitY: 0, windupMul: 0.92, activeMul: 0.96 },
       { pose: 'spin', rangeMul: 1.1, dmgMul: 1.08, kbMul: 1.12, hitY: -4, windupMul: 0.98, activeMul: 1.02 },
@@ -7146,7 +7217,7 @@ function weaponComboSet(id) {
 }
 
 function weaponMoveFamily(id) {
-  if (id === 'master_sword') return 'slash';
+  if (id === 'dawnblade' || id === 'master_sword') return 'slash';
   if (isThrowWeapon(id) || id === 'vuist') return null;
   if (id === 'speer' || id === 'drietand' || id === 'bostaf' || id === 'echotrompet' || id === 'helgitaar') return 'spear';
   if (id === 'knuppel' || id === 'hamer' || id === 'tonfa' || id === 'guvve' || id === 'donder'
@@ -8956,10 +9027,19 @@ function pickBalancedRandomDuo() { return null; }
 const VS_ROSTER = [];
 
 function vsRosterEntry() { return null; }
+function vsRosterName(id) {
+  try {
+    const e = typeof vsRosterEntry === 'function' ? vsRosterEntry(id) : null;
+    return (e && e.name) || '';
+  } catch (_) {
+    return '';
+  }
+}
 function vsUnlocked() { return false; }
 function vsUnlockHint() { return ''; }
 function normalizeVsPick() { return null; }
 function markVsPlayed() {}
+function trackVsRosterUse() {}
 
 function applyVsArenaBounds() {}
 function resetVsFighterRound() {}
@@ -11082,7 +11162,7 @@ function chestWeaponSkillOf(weaponId) {
 
 function chestBaseWeaponPool() {
   return WEAPONS.filter(w =>
-    w && !w.dropZone && w.id !== 'vuist' && w.id !== 'master_sword' &&
+    w && !w.dropZone && w.id !== 'vuist' && w.id !== 'master_sword' && w.id !== 'dawnblade' &&
     !(typeof isThrowWeapon === 'function' && isThrowWeapon(w.id)));
 }
 
@@ -11367,7 +11447,7 @@ function sanitizeChestWeapons(raw) {
   if (!raw || typeof raw !== 'object') return clean;
   for (const [k, v] of Object.entries(raw)) {
     const w = typeof weaponById === 'function' ? weaponById(k) : null;
-    if (!w || w.dropZone || w.id === 'vuist' || w.id === 'master_sword') continue;
+    if (!w || w.dropZone || w.id === 'vuist' || w.id === 'master_sword' || w.id === 'dawnblade') continue;
     const entry = (v && typeof v === 'object') ? v : {};
     clean[k] = {
       skill: typeof entry.skill === 'string' ? entry.skill.slice(0, CHEST_SKILL_MAX) : undefined,
@@ -11436,7 +11516,7 @@ function seedNlGameStrings() {
     levelUp: 'LEVEL OMHOOG! Lv {lvl}',
     newWeapon: 'Nieuw wapen: {name}!',
     masterBuff: 'MEESTER-BUFF +20%',
-    masterSword: 'MASTER SWORD!',
+    masterSword: 'DAWNBLADE!',
     bossWave: 'BAAS-GOLF!',
     eliteWave: 'ELITE-GOLF',
     superBossWave: 'SUPER-BAAS GOLF',
@@ -11571,8 +11651,8 @@ function seedNlGameStrings() {
     wallCombo5: 'Combo ×5 · sloop +{pct}%', wallCombo8: 'Combo ×8 · sloop +{pct}%',
     wallCombo10: 'Combo ×10 · sloop +{pct}% — meester-tempo!',
     wallTempo: 'MUUR-TEMPO!', wallRecord: 'NIEUW RECORD!', bonus5: 'BONUS +5',
-    masterSwordGain: 'Hyrules legendarische kling — 15s!',
-    masterSwordFade: 'Master Sword vervaagt…',
+    masterSwordGain: 'Dageraadkling — 15s!',
+    masterSwordFade: 'Dawnblade vervaagt…',
     bossWaits: 'DE BAAS WACHT…',
     bossTag: 'BAAS',
     superBossTag: 'SUPER BAAS',
@@ -12139,7 +12219,7 @@ function seedNlGameStrings() {
   });
   if (!I18N.nl.hud) I18N.nl.hud = {};
   Object.assign(I18N.nl.hud, {
-    super: 'SUPER', masterShort: 'MEESTER +20%', masterSword: 'MASTER SWORD {n}s',
+    super: 'SUPER', masterShort: 'MEESTER +20%', masterSword: 'DAWNBLADE {n}s',
     levelWave: 'Level {n} — Golf {wv}/{total}', islandWeapon: '{name} · wapen ≤ Lv {cap}',
     part: 'deel {cur}/3', waveLine: 'Golf {n}/{total}', wavesTotal: '{total} golven',
     nextWave: 'Volgende golf', eggPet: 'Ei · {name}', petActive: 'Pet · {name}',
@@ -12454,7 +12534,7 @@ const CATALOG_EN = {
     levelStart: 'LEVEL {n}',
     levelStartDiff: '{diff} · LEVEL {n}',
     levelUp: 'LEVEL UP! Lv {lvl}', newWeapon: 'New weapon: {name}!', masterBuff: 'MASTER BUFF +20%',
-    masterSword: 'MASTER SWORD!',
+    masterSword: 'DAWNBLADE!',
     bossWave: 'BOSS WAVE!', eliteWave: 'ELITE WAVE', superBossWave: 'SUPER-BOSS WAVE',
     bossTitle: 'BOSS',
     superBossTitle: 'SUPER BOSS',
@@ -13039,8 +13119,8 @@ const CATALOG_EN = {
     wallCombo5: 'Combo ×5 · smash +{pct}%', wallCombo8: 'Combo ×8 · smash +{pct}%',
     wallCombo10: 'Combo ×10 · smash +{pct}% — master tempo!',
     wallTempo: 'WALL TEMPO!', wallRecord: 'NEW RECORD!', bonus5: 'BONUS +5',
-    masterSwordGain: "Hyrule's legendary blade — 15s!",
-    masterSwordFade: 'Master Sword fades…',
+    masterSwordGain: 'Dawnblade — 15s!',
+    masterSwordFade: 'Dawnblade fades…',
     bossWaits: 'THE BOSS AWAITS…',
     bossTag: 'BOSS',
     superBossTag: 'SUPER BOSS',
@@ -13079,7 +13159,7 @@ const CATALOG_EN = {
     spiral_orbCd: 'Spiral Orb CD {s}s',
   },
   hud: {
-    super: 'SUPER', masterShort: 'MASTER +20%', masterSword: 'MASTER SWORD {n}s',
+    super: 'SUPER', masterShort: 'MASTER +20%', masterSword: 'DAWNBLADE {n}s',
     levelWave: 'Level {n} — Wave {wv}/{total}', islandWeapon: '{name} · weapon ≤ Lv {cap}',
     part: 'part {cur}/3', waveLine: 'Wave {n}/{total}', wavesTotal: '{total} waves',
     nextWave: 'Next wave', eggPet: 'Egg · {name}', petActive: 'Pet · {name}',
@@ -16839,6 +16919,30 @@ Input.releaseAll = function releaseAllWithCanvasClear() {
 /* ============================ TEKENHULPEN ============================== */
 function seg(x, y, ang, len) { return [x + Math.cos(ang) * len, y + Math.sin(ang) * len]; }
 
+function drawWeaponLightMotes(c, light, spin, lite) {
+  if (!c || !light) return;
+  const t = spin || 0;
+  c.save();
+  c.globalCompositeOperation = 'lighter';
+  c.strokeStyle = light.color2 || light.color;
+  c.globalAlpha = lite ? 0.16 : (0.2 + 0.1 * Math.sin(t * 8));
+  c.lineWidth = 1.4;
+  c.beginPath();
+  c.arc(26, 0, lite ? 16 : 20, 0, TAU);
+  c.stroke();
+  if (!lite) {
+    for (let i = 0; i < 3; i++) {
+      const a = t * 5 + i * 2.094;
+      c.fillStyle = i % 2 ? (light.color2 || '#fff') : light.color;
+      c.globalAlpha = 0.28 + 0.22 * Math.sin(a);
+      c.beginPath();
+      c.arc(20 + Math.cos(a) * 14, Math.sin(a) * 9, 1.5, 0, TAU);
+      c.fill();
+    }
+  }
+  c.restore();
+}
+
 function drawWeaponShape(c, id, spin, moveIdx) {
   // getekend langs +x vanaf de hand (0,0); c is al getransleerd/geroteerd
   c.lineCap = 'round';
@@ -16847,6 +16951,14 @@ function drawWeaponShape(c, id, spin, moveIdx) {
     c.save();
     if (mi === 1) c.rotate(0.22);
     else if (mi === 2) c.rotate(-0.12);
+  }
+  const light = typeof weaponLightFx === 'function' ? weaponLightFx(id) : null;
+  const lite = typeof fxLite === 'function' && fxLite();
+  if (light) {
+    c.save();
+    const pulse = 0.7 + 0.3 * Math.sin((spin || 0) * 7);
+    c.shadowColor = light.color;
+    c.shadowBlur = lite ? 6 : (8 + (light.pulse || 1) * 10) * pulse;
   }
   switch (id) {
     case 'zwaard':
@@ -16858,6 +16970,7 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.strokeStyle = '#a67c2e'; c.lineWidth = 5; c.beginPath(); c.moveTo(4, -8); c.lineTo(4, 8); c.stroke();
       c.strokeStyle = '#6a5030'; c.lineWidth = 4; c.beginPath(); c.moveTo(-2, 0); c.lineTo(8, 0); c.stroke();
       break;
+    case 'dawnblade':
     case 'master_sword':
       c.save();
       c.shadowColor = '#6fd7ff'; c.shadowBlur = 16;
@@ -17318,6 +17431,10 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.beginPath(); c.moveTo(0, 0); c.lineTo(28, 0); c.stroke();
       break;
   }
+  if (light) {
+    drawWeaponLightMotes(c, light, spin, lite);
+    c.restore();
+  }
   if (mi) c.restore();
 }
 
@@ -17339,6 +17456,23 @@ function ensureParticleRoom(game, slots) {
     room++;
   }
   return room >= slots;
+}
+
+function spawnWeaponLightHit(game, fighter, target, hit) {
+  if (!game || !target) return;
+  const w = fighter && fighter.weapon;
+  const light = typeof weaponLightFx === 'function' ? weaponLightFx(w || (fighter && fighter.weaponId)) : null;
+  if (!light) return;
+  if (typeof motionReduced === 'function' && motionReduced()) return;
+  const x = target.x;
+  const y = target.y - (target.size || 20) * 0.42;
+  const big = !!(hit && (hit.finisher || hit.crit));
+  const lite = typeof fxLite === 'function' && fxLite();
+  try {
+    game.burst(x, y, light.color, lite ? 3 : (big ? 12 : 7), { kind: 'spark', size: big ? 2.5 : 1.9 });
+    if (!lite) game.burst(x, y, light.color2 || '#fff', big ? 6 : 3, { kind: 'spark', size: 1.4 });
+    if (typeof spawnFxRing === 'function') spawnFxRing(game, x, y, light.color, lite ? 6 : (big ? 15 : 10));
+  } catch (_) {}
 }
 
 function spawnFxRing(game, x, y, color, baseR) {
@@ -18742,7 +18876,7 @@ class Fighter {
         return null;
     }
     if (spec && spec.kind === 'weapon') spec = sanitizeWeaponSpec(spec);
-    if (spec && spec.kind === 'weapon' && (w.masterSword || w.id === 'master_sword')) spec.unblockable = true;
+    if (spec && spec.kind === 'weapon' && (typeof isDawnbladeWeapon === 'function' ? isDawnbladeWeapon(w) : (w.masterSword || w.dawnblade || w.id === 'master_sword' || w.id === 'dawnblade'))) spec.unblockable = true;
     spec = applySignatureToSpec(this, spec);
     return applyStyleToSpec(this, spec);
   }
@@ -19432,22 +19566,47 @@ class Fighter {
       const wAng = attacking
         ? P.arms[1][1] + grip + aimLift
         : idle + aimLift * 0.25;
+      const light = typeof weaponLightFx === 'function' ? weaponLightFx(this.weapon) : null;
       if (attacking && this.attack.move && !motionReduced() && !fxLite()) {
         const a = this.attack;
         if (a.t >= a.windup && a.t <= a.windup + a.active) {
           const ext = clamp((a.t - a.windup) / Math.max(0.01, a.active), 0, 1);
+          const trailCol = (light && light.color) || weaponMoveFxColor(a.move);
           c.save();
-          c.globalAlpha = 0.32 * (1 - ext * 0.35);
-          c.strokeStyle = weaponMoveFxColor(a.move);
-          c.lineWidth = 2.5;
+          c.globalAlpha = (light ? 0.48 : 0.32) * (1 - ext * 0.35);
+          c.strokeStyle = trailCol;
+          c.lineWidth = light ? 4.2 : 2.5;
           c.beginPath();
           c.arc(hx, hy, 16 + ext * 30, wAng - 0.85, wAng + 0.45);
           c.stroke();
+          if (light) {
+            c.globalAlpha = 0.28 * (1 - ext);
+            c.strokeStyle = light.color2 || '#fff';
+            c.lineWidth = 1.6;
+            c.beginPath();
+            c.arc(hx, hy, 20 + ext * 34, wAng - 0.7, wAng + 0.35);
+            c.stroke();
+          }
           c.restore();
         }
       }
+      if (light && !attacking && !motionReduced() && !fxLite()) {
+        c.save();
+        const pulse = 0.35 + 0.2 * Math.sin(this.animT * 6);
+        const g = c.createRadialGradient(hx, hy, 2, hx, hy, 22);
+        g.addColorStop(0, light.color);
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        c.globalAlpha = pulse;
+        c.globalCompositeOperation = 'lighter';
+        c.fillStyle = g;
+        c.beginPath(); c.arc(hx, hy, 22, 0, TAU); c.fill();
+        c.restore();
+      }
       c.save(); c.translate(hx, hy); c.rotate(wAng);
-      if (this.weapon.masterSword || this.weapon.id === 'master_sword') {
+      if (light) {
+        c.shadowColor = light.color;
+        c.shadowBlur = fxLite() ? 8 : 16;
+      } else if (typeof isDawnbladeWeapon === 'function' ? isDawnbladeWeapon(this.weapon) : (this.weapon.masterSword || this.weapon.id === 'master_sword')) {
         c.shadowColor = '#6fd7ff';
         c.shadowBlur = fxLite() ? 10 : 18;
       }
@@ -25882,6 +26041,10 @@ class Game {
     this.pendingVsP1Win = null;
     this.player = buildVsFighter(vsRosterEntry(this.p1Pick), vsSpawnX(1), 1);
     this.p2 = buildVsFighter(vsRosterEntry(this.p2Pick), vsSpawnX(2), 2);
+    if (!this.player || !this.p2) {
+      try { toastVersusRetired(); } catch (_) {}
+      return;
+    }
     this.startVsRound();
     AudioSys.play('versus');
   }
@@ -26096,7 +26259,7 @@ class Game {
     else if (close) tip = t('result.vsCloseRematchTip');
     scheduleGameResult(this, 1200, () => UI.showResult(p1Win, {
       title: p1Win ? t('result.vsP1Win') : t('result.vsP2Win'),
-      detail: `${vsRosterEntry(this.p1Pick).name} vs ${vsRosterEntry(this.p2Pick).name} · ${this.roundsP1}-${this.roundsP2}` +
+      detail: `${vsRosterName(this.p1Pick) || 'P1'} vs ${vsRosterName(this.p2Pick) || 'P2'} · ${this.roundsP1}-${this.roundsP2}` +
         ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : '') +
         (this.matchFatality ? t('result.vsFatalityLine') : '') +
         (this.runFinishers ? ` · ${this.runFinishers} finishers` : ''),
@@ -26844,6 +27007,9 @@ class Game {
             applyWeaponOnHitEffect(this, f, m, { dmg: hitRoll.dmg, crit: hitRoll.crit, finisher });
           } catch (_) {}
         }
+        if (spec.kind === 'weapon' && typeof spawnWeaponLightHit === 'function') {
+          try { spawnWeaponLightHit(this, f, m, { finisher, crit: hitRoll.crit }); } catch (_) {}
+        }
         if (counter) this.freezeT = Math.max(this.freezeT, 0.026);
         applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
         if (f.isPlayer && this.styleLightning && !fxLite()) {
@@ -27244,6 +27410,12 @@ class Game {
                 try {
                   applyWeaponOnHitEffect(this, owner, m, { dmg: hit.dmg, crit: hit.crit, finisher: false });
                 } catch (_) {}
+              }
+            }
+            if (p.throwId && typeof spawnWeaponLightHit === 'function') {
+              const owner = this.player;
+              if (owner && owner.weapon && owner.weapon.id === p.throwId) {
+                try { spawnWeaponLightHit(this, owner, m, { crit: hit.crit }); } catch (_) {}
               }
             }
             if (skProj) spawnTechniqueImpactFx(this, m.x, m.y, p.kind, 'full');
@@ -29145,7 +29317,7 @@ class Game {
         c.fillStyle = '#e04f5f'; this.rr(c, W / 2 - bwid / 2, hy, bwid * boss.hp / boss.maxhp, 10, 5); c.fill();
         hy += 18;
         c.font = '700 12px sans-serif';
-        fillHudText(c, boss.sp.name.toUpperCase(), W / 2, hy, { fill: '#ffc8d0' });
+        fillHudText(c, String((boss.sp && boss.sp.name) || 'BOSS').toUpperCase(), W / 2, hy, { fill: '#ffc8d0' });
         hy += 16;
       }
 
@@ -29581,8 +29753,8 @@ class Game {
       const half = Math.min(260, W * 0.38);
       const safeTop = hudInsetTop();
       const byVs = Math.max(by, safeTop + 42);
-      const name1 = vsRosterEntry(this.p1Pick).name;
-      const name2 = vsRosterEntry(this.p2Pick).name;
+      const name1 = vsRosterName(this.p1Pick) || 'P1';
+      const name2 = vsRosterName(this.p2Pick) || 'P2';
       if (this.phase === 'intro' && this.phaseT < 1.55) {
         const n = Math.ceil(Math.max(0.35, 1.55 - this.phaseT));
         if (typeof drawPixelVsBanner === 'function') {
@@ -31170,8 +31342,8 @@ const UI = {
       }
     }
     if (game?.mode === 'versus' && game.p2) {
-      const a = vsRosterEntry(game.p1Pick).name;
-      const b = vsRosterEntry(game.p2Pick).name;
+      const a = vsRosterName(game.p1Pick) || 'P1';
+      const b = vsRosterName(game.p2Pick) || 'P2';
       let tag = '';
       if (game.roundsP1 === 1 && game.roundsP2 === 1) tag = ' · beslissende ronde';
       else if (game.roundsP1 === 1 || game.roundsP2 === 1) tag = ' · match point';
@@ -31565,12 +31737,12 @@ const UI = {
     const e1 = vsRosterEntry(vsSelect.p1);
     const e2 = vsRosterEntry(vsSelect.p2);
     if (p1Lbl) {
-      p1Lbl.textContent = (this.charPickStep === 1 ? '▶ ' : '') + 'P1: ' + e1.name;
+      p1Lbl.textContent = (this.charPickStep === 1 ? '▶ ' : '') + 'P1: ' + ((e1 && e1.name) || vsRosterName(vsSelect.p1) || '—');
       p1Lbl.classList.toggle('active', this.charPickStep === 1);
       p1Lbl.setAttribute('aria-pressed', this.charPickStep === 1 ? 'true' : 'false');
     }
     if (p2Lbl) {
-      p2Lbl.textContent = (this.charPickStep === 2 ? '▶ ' : '') + 'P2: ' + e2.name;
+      p2Lbl.textContent = (this.charPickStep === 2 ? '▶ ' : '') + 'P2: ' + ((e2 && e2.name) || vsRosterName(vsSelect.p2) || '—');
       p2Lbl.classList.toggle('active', this.charPickStep === 2);
       p2Lbl.setAttribute('aria-pressed', this.charPickStep === 2 ? 'true' : 'false');
     }
@@ -35051,7 +35223,7 @@ if (pauseVsRestart) {
     vsSelect.p2 = p2;
     state = 'play';
     AudioSys.setPaused(false);
-    UI.toast(`Herstart · ${vsRosterEntry(p1).name} vs ${vsRosterEntry(p2).name}`, 2400);
+    UI.toast(`Herstart · ${vsRosterName(p1) || 'P1'} vs ${vsRosterName(p2) || 'P2'}`, 2400);
     startGame('versus', { p1, p2 });
   });
 }
@@ -35061,16 +35233,16 @@ if (pauseVsSwap) {
     if (!game || game.mode !== 'versus') return;
     if (state !== 'play' && state !== 'pause') return;
     AudioSys.sfx('select');
-    const beforeP1 = vsRosterEntry(game.p1Pick).name;
-    const beforeP2 = vsRosterEntry(game.p2Pick).name;
+    const beforeP1 = vsRosterName(game.p1Pick) || 'P1';
+    const beforeP2 = vsRosterName(game.p2Pick) || 'P2';
     if (!swapVsSides(game)) return;
     state = 'play';
     AudioSys.setPaused(false);
     UI.show(null);
     try { primePlayInput(true); } catch (_) {}
     UI.toast(t('toast.vsSwap', {
-      a: vsRosterEntry(game.p1Pick).name,
-      b: vsRosterEntry(game.p2Pick).name,
+      a: vsRosterName(game.p1Pick) || 'P1',
+      b: vsRosterName(game.p2Pick) || 'P2',
       was1: beforeP1,
       was2: beforeP2,
     }), 2800);
@@ -35087,7 +35259,7 @@ bindPress(document.getElementById('resAgain'), () => {
     const p2 = d.p2 || vsSelect.p2;
     vsSelect.p1 = p1;
     vsSelect.p2 = p2;
-    UI.toast(`Rematch · ${vsRosterEntry(p1).name} vs ${vsRosterEntry(p2).name}`, 2600);
+    UI.toast(`Rematch · ${vsRosterName(p1) || 'P1'} vs ${vsRosterName(p2) || 'P2'}`, 2600);
     startGame('versus', { p1, p2 });
   }
   else startGame(d.mode);

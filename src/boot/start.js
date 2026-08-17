@@ -642,7 +642,7 @@ if (pauseVsRestart) {
     vsSelect.p2 = p2;
     state = 'play';
     AudioSys.setPaused(false);
-    UI.toast(`Herstart · ${vsRosterEntry(p1).name} vs ${vsRosterEntry(p2).name}`, 2400);
+    UI.toast(`Herstart · ${vsRosterName(p1) || 'P1'} vs ${vsRosterName(p2) || 'P2'}`, 2400);
     startGame('versus', { p1, p2 });
   });
 }
@@ -652,16 +652,16 @@ if (pauseVsSwap) {
     if (!game || game.mode !== 'versus') return;
     if (state !== 'play' && state !== 'pause') return;
     AudioSys.sfx('select');
-    const beforeP1 = vsRosterEntry(game.p1Pick).name;
-    const beforeP2 = vsRosterEntry(game.p2Pick).name;
+    const beforeP1 = vsRosterName(game.p1Pick) || 'P1';
+    const beforeP2 = vsRosterName(game.p2Pick) || 'P2';
     if (!swapVsSides(game)) return;
     state = 'play';
     AudioSys.setPaused(false);
     UI.show(null);
     try { primePlayInput(true); } catch (_) {}
     UI.toast(t('toast.vsSwap', {
-      a: vsRosterEntry(game.p1Pick).name,
-      b: vsRosterEntry(game.p2Pick).name,
+      a: vsRosterName(game.p1Pick) || 'P1',
+      b: vsRosterName(game.p2Pick) || 'P2',
       was1: beforeP1,
       was2: beforeP2,
     }), 2800);
@@ -678,7 +678,7 @@ bindPress(document.getElementById('resAgain'), () => {
     const p2 = d.p2 || vsSelect.p2;
     vsSelect.p1 = p1;
     vsSelect.p2 = p2;
-    UI.toast(`Rematch · ${vsRosterEntry(p1).name} vs ${vsRosterEntry(p2).name}`, 2600);
+    UI.toast(`Rematch · ${vsRosterName(p1) || 'P1'} vs ${vsRosterName(p2) || 'P2'}`, 2600);
     startGame('versus', { p1, p2 });
   }
   else startGame(d.mode);

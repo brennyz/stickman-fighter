@@ -85,9 +85,9 @@ must(!/class="(?:ico|tog-ico)"><svg/.test(html), 'inline ico/tog-ico SVG still p
 
 // Hub tile stats use SVG_COIN_ICON HTML — must set via innerHTML, not textContent
 const uiSrc = fs.readFileSync(path.join(root, 'src/ui/ui.js'), 'utf8');
-must(/\[data-hub-stat\][\s\S]{0,120}innerHTML\s*=\s*hubTileStatLine/.test(uiSrc),
+must(/\[data-hub-stat\][\s\S]{0,240}innerHTML\s*=\s*hubTileStatLine/.test(uiSrc),
   'hub-stat must use innerHTML=hubTileStatLine (textContent leaks raw <img>)');
-must(!/\[data-hub-stat\][\s\S]{0,120}textContent\s*=\s*hubTileStatLine/.test(uiSrc),
+must(!/\[data-hub-stat\][\s\S]{0,240}textContent\s*=\s*hubTileStatLine/.test(uiSrc),
   'hub-stat must not use textContent=hubTileStatLine');
 
 

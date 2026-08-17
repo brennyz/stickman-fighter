@@ -21,6 +21,40 @@ if ! git diff --quiet 2>/dev/null || ! git diff --cached --quiet 2>/dev/null; th
   echo "LET OP: uncommitted wijzigingen:"
   git status --short | head -15
 fi
+LOCAL_HEAD="$(git rev-parse --short HEAD 2>/dev/null || echo '?')"
+REMOTE_HEAD="$(git rev-parse --short origin/main 2>/dev/null || echo '?')"
+if [[ "$LOCAL_HEAD" == "$REMOTE_HEAD" ]]; then
+  echo "sync: PC == origin/main ($LOCAL_HEAD)"
+else
+  echo "sync: PC ($LOCAL_HEAD) ≠ origin/main ($REMOTE_HEAD) — zie githubSync / ./scripts/github-sync-status.sh"
+fi
+echo
+echo "── GitHub wachtlijst ──"
+python3 - <<'PY'
+import json
+from pathlib import Path
+p = Path("agent-handoff.json")
+if not p.exists():
+    print("(geen agent-handoff.json)")
+else:
+    j = json.loads(p.read_text(encoding="utf-8"))
+    sync = j.get("githubSync") or {}
+    up = sync.get("pendingUpload") or []
+    mg = sync.get("pendingMerge") or []
+    print("pcEqualsMain:", sync.get("pcEqualsMain"))
+    if up:
+        print("nog te uploaden:")
+        for item in up[:12]:
+            print("  •", item.get("text") or item.get("title") or item.get("id"))
+    else:
+        print("nog te uploaden: (leeg)")
+    if mg:
+        print("open PRs niet op main:")
+        for item in mg[:8]:
+            print(f"  • {item.get('ref','?')} {item.get('title','')} [{item.get('status','')}]")
+    else:
+        print("open PRs niet op main: (geen)")
+PY
 echo
 echo "── Handoff (open wensen) ──"
 python3 - <<'PY'

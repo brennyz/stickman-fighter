@@ -21,6 +21,7 @@ const mustCall = [
   [/grantZoneBossClearWeapon\s*\(\s*lv\s*,\s*diff\s*\)/, 'clear→grantZoneBossClearWeapon'],
   [/applyWeaponOnHitEffect\s*\(\s*this\s*,\s*f\s*,\s*m/, 'hit→applyWeaponOnHitEffect'],
   [/tickWeaponStatusEffects\s*\(\s*this\s*,\s*dt\s*\)/, 'loop→tickWeaponStatusEffects'],
+  [/spawnWeaponLightHit\s*\(\s*this\s*,\s*f\s*,\s*m/, 'hit→spawnWeaponLightHit'],
 ];
 for (const [re, label] of mustCall) {
   if (!re.test(code)) {
@@ -59,12 +60,13 @@ function makeEl(id) {
     querySelectorAll() { return []; },
     getContext() {
       return {
-        fillRect() {}, clearRect() {}, fillText() {}, measureText() { return { width: 8 }; },
+        fillRect() {}, clearRect() {}, strokeRect() {}, fillText() {}, measureText() { return { width: 8 }; },
         beginPath() {}, closePath() {}, moveTo() {}, lineTo() {}, arc() {}, ellipse() {},
         fill() {}, stroke() {}, save() {}, restore() {}, translate() {}, rotate() {}, scale() {},
         createLinearGradient() { return { addColorStop() {} }; },
         createRadialGradient() { return { addColorStop() {} }; },
         drawImage() {}, setTransform() {}, quadraticCurveTo() {},
+        setLineDash() {}, clip() {}, rect() {},
         canvas: { width: 960, height: 540 },
       };
     },
@@ -215,12 +217,43 @@ if (!run('Object.keys(save.zoneWeapons).length > 0')) fail('zoneWeapons not upda
 const noGrant = run("grantZoneBossClearWeapon(7, 'nightmare')");
 if (noGrant) fail('non-boss level should not guarantee zone weapon');
 
+if (run("!!weaponLightFx(weaponById('vuist'))")) fail('vuist must not have special light fx');
+if (!run("!!weaponLightFx(weaponById('laser'))")) fail('legendary laser needs light fx');
+if (!run("!!weaponLightFx(weaponById('void'))")) fail('mythic void needs light fx');
+for (const w of zoneW) {
+  sandbox.__lid = w.id;
+  const fx = run('weaponLightFx(weaponById(__lid))');
+  if (!fx || !fx.color || !fx.special) fail('missing light fx for ' + w.id);
+  try {
+    run('drawWeaponShape(document.createElement("canvas").getContext("2d"), __lid, 0.4, 0)');
+  } catch (e) {
+    fail('drawWeaponShape+light threw for ' + w.id + ': ' + e.message);
+  }
+}
+run(`
+  globalThis.__lightBursts = 0;
+  spawnWeaponLightHit({
+    burst() { globalThis.__lightBursts++; },
+    particles: [],
+  }, { weapon: weaponById('nachtkaars') }, { x: 10, y: 20, size: 24 }, { finisher: true });
+`);
+if (!(run('__lightBursts > 0'))) fail('spawnWeaponLightHit did not burst');
+run("save.liteFx = true; globalThis.__lightBursts = 0");
+run(`
+  spawnWeaponLightHit({
+    burst() { globalThis.__lightBursts++; },
+    particles: [],
+  }, { weapon: weaponById('hellevork') }, { x: 10, y: 20, size: 24 }, {});
+`);
+if (!(run('__lightBursts > 0'))) fail('liteFx still needs a small light burst');
+
 console.log(JSON.stringify({
   ok: true,
   zoneWeapons: zoneW.length,
   effects: effects.size,
   sample: sample.id,
   advKept: advW.id,
+  lightFx: zoneW.length,
 }));
 console.log('SMOKE_OK zone-weapons');
 process.exit(0);

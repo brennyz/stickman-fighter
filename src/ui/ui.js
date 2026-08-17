@@ -1099,8 +1099,8 @@ const UI = {
       }
     }
     if (game?.mode === 'versus' && game.p2) {
-      const a = vsRosterEntry(game.p1Pick).name;
-      const b = vsRosterEntry(game.p2Pick).name;
+      const a = vsRosterName(game.p1Pick) || 'P1';
+      const b = vsRosterName(game.p2Pick) || 'P2';
       let tag = '';
       if (game.roundsP1 === 1 && game.roundsP2 === 1) tag = ' · beslissende ronde';
       else if (game.roundsP1 === 1 || game.roundsP2 === 1) tag = ' · match point';
@@ -1494,12 +1494,12 @@ const UI = {
     const e1 = vsRosterEntry(vsSelect.p1);
     const e2 = vsRosterEntry(vsSelect.p2);
     if (p1Lbl) {
-      p1Lbl.textContent = (this.charPickStep === 1 ? '▶ ' : '') + 'P1: ' + e1.name;
+      p1Lbl.textContent = (this.charPickStep === 1 ? '▶ ' : '') + 'P1: ' + ((e1 && e1.name) || vsRosterName(vsSelect.p1) || '—');
       p1Lbl.classList.toggle('active', this.charPickStep === 1);
       p1Lbl.setAttribute('aria-pressed', this.charPickStep === 1 ? 'true' : 'false');
     }
     if (p2Lbl) {
-      p2Lbl.textContent = (this.charPickStep === 2 ? '▶ ' : '') + 'P2: ' + e2.name;
+      p2Lbl.textContent = (this.charPickStep === 2 ? '▶ ' : '') + 'P2: ' + ((e2 && e2.name) || vsRosterName(vsSelect.p2) || '—');
       p2Lbl.classList.toggle('active', this.charPickStep === 2);
       p2Lbl.setAttribute('aria-pressed', this.charPickStep === 2 ? 'true' : 'false');
     }

@@ -14,3 +14,4 @@ alwaysApply: true
 6. Git push may fail with 403 — document branch for user; do not commit tunnel-local `health.json`, `hosting.json`, `LIVE-LINK.txt` unless intentional.
 7. At session end run `./scripts/agent-log.sh "summary"` (optionally `--done <wish-id>` / `--wish "text"`).
 8. Share URL for new players is `speel.html` (bookmarkShare) — never `ipad.html` or tunnel links.
+9. GitHub-sync (PC + cloud): na betekenisvolle wijzigingen **vragen** of we naar `origin/main` moeten. User-trigger **«merge main»** = commit (als nodig) + `git push origin main`. Daarna Pages (~1–3 min) → `speel.html` is LIVE. Niet stil pushen. Houd `githubSync.pendingUpload` bij tot PC == GitHub main. Open PRs: `githubSync.pendingMerge`. Check: `./scripts/github-sync-status.sh`.

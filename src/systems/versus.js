@@ -31,10 +31,19 @@ function pickBalancedRandomDuo() { return null; }
 const VS_ROSTER = [];
 
 function vsRosterEntry() { return null; }
+function vsRosterName(id) {
+  try {
+    const e = typeof vsRosterEntry === 'function' ? vsRosterEntry(id) : null;
+    return (e && e.name) || '';
+  } catch (_) {
+    return '';
+  }
+}
 function vsUnlocked() { return false; }
 function vsUnlockHint() { return ''; }
 function normalizeVsPick() { return null; }
 function markVsPlayed() {}
+function trackVsRosterUse() {}
 
 function applyVsArenaBounds() {}
 function resetVsFighterRound() {}

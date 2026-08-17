@@ -125,10 +125,8 @@ assert(run("skillBonuses('spiral_orb', save).dmgMul > 1"), 'spiral_orb Lv 1 bonu
 
 // --- ownership: no upgrade for weapons you don't own ---
 assert(run("!weaponUpgradeEligible(weaponById('vuist'))"), 'vuist never upgrade-eligible');
-const master = run("weaponById('master_sword')");
-if (master && master.id === 'master_sword') {
-  assert(run("!weaponUpgradeEligible(weaponById('master_sword'))"), 'master_sword never upgrade-eligible');
-}
+assert(run("!weaponUpgradeEligible({ id: 'dawnblade' })"), 'dawnblade never upgrade-eligible');
+assert(run("!weaponUpgradeEligible({ id: 'master_sword' })"), 'master_sword never upgrade-eligible');
 
 setSave({ lvl: 1, zoneWeapons: {} });
 assert(run("!WEAPONS.some((w) => w.dropZone && weaponUpgradeEligible(w))"), 'lvl1: no zone weapons eligible');

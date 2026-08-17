@@ -2,9 +2,9 @@
 
 **Zoektermen:** `handoff`, `agent-handoff`, `d20`, `character select`, `Mats`, `mikken`, `coinrun`
 
-## Waarom GitHub niets toont
+## GitHub vs deze PC
 
-`origin/main` = **60423e4** (v1.7.0). **65+ commits** staan alleen lokaal in de oude agent-VM tot patch/push.
+`origin/main` is LIVE (v1.18.151+). Of deze PC gelijk is: `./scripts/github-sync-status.sh` en `githubSync` in `agent-handoff.json`.
 
 Na push werken o.a.:
 

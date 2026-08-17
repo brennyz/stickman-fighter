@@ -53,6 +53,10 @@ if (/\bplayerWalkInput\s*\(/.test(code) && !/function\s+playerWalkInput\s*\(/.te
     process.exit(1);
   }
 }
+if (/\btrackVsRosterUse\s*\(/.test(code) && !/function\s+trackVsRosterUse\s*\(/.test(code)) {
+  console.error('SMOKE_FAIL trackVsRosterUse called but not defined — leftover versus init');
+  process.exit(1);
+}
 
 function makeEl(id) {
   return {

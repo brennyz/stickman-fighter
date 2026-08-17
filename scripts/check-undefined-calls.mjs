@@ -21,7 +21,7 @@ const REGRESSION_MUST_DEFINE = [
   /* Shared combat helpers — must not vanish when versus.js is stubbed */
   'padDigitalMove', 'joyMoveAxis', 'applyFighterMove', 'clampFighterX',
   'fighterMoveXBounds', 'refreshA11yUi', 'motionReduced',
-  'combatEntryFor', 'applySignatureToSpec',
+  'combatEntryFor', 'applySignatureToSpec', 'trackVsRosterUse', 'vsRosterName', 'weaponLightFx', 'spawnWeaponLightHit',
   'speciesBlurb', 'speciesBiomeId', 'dexBiomeDiscovered',
 ];
 

@@ -1,6 +1,30 @@
 /* ============================ TEKENHULPEN ============================== */
 function seg(x, y, ang, len) { return [x + Math.cos(ang) * len, y + Math.sin(ang) * len]; }
 
+function drawWeaponLightMotes(c, light, spin, lite) {
+  if (!c || !light) return;
+  const t = spin || 0;
+  c.save();
+  c.globalCompositeOperation = 'lighter';
+  c.strokeStyle = light.color2 || light.color;
+  c.globalAlpha = lite ? 0.16 : (0.2 + 0.1 * Math.sin(t * 8));
+  c.lineWidth = 1.4;
+  c.beginPath();
+  c.arc(26, 0, lite ? 16 : 20, 0, TAU);
+  c.stroke();
+  if (!lite) {
+    for (let i = 0; i < 3; i++) {
+      const a = t * 5 + i * 2.094;
+      c.fillStyle = i % 2 ? (light.color2 || '#fff') : light.color;
+      c.globalAlpha = 0.28 + 0.22 * Math.sin(a);
+      c.beginPath();
+      c.arc(20 + Math.cos(a) * 14, Math.sin(a) * 9, 1.5, 0, TAU);
+      c.fill();
+    }
+  }
+  c.restore();
+}
+
 function drawWeaponShape(c, id, spin, moveIdx) {
   // getekend langs +x vanaf de hand (0,0); c is al getransleerd/geroteerd
   c.lineCap = 'round';
@@ -9,6 +33,14 @@ function drawWeaponShape(c, id, spin, moveIdx) {
     c.save();
     if (mi === 1) c.rotate(0.22);
     else if (mi === 2) c.rotate(-0.12);
+  }
+  const light = typeof weaponLightFx === 'function' ? weaponLightFx(id) : null;
+  const lite = typeof fxLite === 'function' && fxLite();
+  if (light) {
+    c.save();
+    const pulse = 0.7 + 0.3 * Math.sin((spin || 0) * 7);
+    c.shadowColor = light.color;
+    c.shadowBlur = lite ? 6 : (8 + (light.pulse || 1) * 10) * pulse;
   }
   switch (id) {
     case 'zwaard':
@@ -20,6 +52,7 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.strokeStyle = '#a67c2e'; c.lineWidth = 5; c.beginPath(); c.moveTo(4, -8); c.lineTo(4, 8); c.stroke();
       c.strokeStyle = '#6a5030'; c.lineWidth = 4; c.beginPath(); c.moveTo(-2, 0); c.lineTo(8, 0); c.stroke();
       break;
+    case 'dawnblade':
     case 'master_sword':
       c.save();
       c.shadowColor = '#6fd7ff'; c.shadowBlur = 16;
@@ -480,6 +513,10 @@ function drawWeaponShape(c, id, spin, moveIdx) {
       c.beginPath(); c.moveTo(0, 0); c.lineTo(28, 0); c.stroke();
       break;
   }
+  if (light) {
+    drawWeaponLightMotes(c, light, spin, lite);
+    c.restore();
+  }
   if (mi) c.restore();
 }
 
@@ -501,6 +538,23 @@ function ensureParticleRoom(game, slots) {
     room++;
   }
   return room >= slots;
+}
+
+function spawnWeaponLightHit(game, fighter, target, hit) {
+  if (!game || !target) return;
+  const w = fighter && fighter.weapon;
+  const light = typeof weaponLightFx === 'function' ? weaponLightFx(w || (fighter && fighter.weaponId)) : null;
+  if (!light) return;
+  if (typeof motionReduced === 'function' && motionReduced()) return;
+  const x = target.x;
+  const y = target.y - (target.size || 20) * 0.42;
+  const big = !!(hit && (hit.finisher || hit.crit));
+  const lite = typeof fxLite === 'function' && fxLite();
+  try {
+    game.burst(x, y, light.color, lite ? 3 : (big ? 12 : 7), { kind: 'spark', size: big ? 2.5 : 1.9 });
+    if (!lite) game.burst(x, y, light.color2 || '#fff', big ? 6 : 3, { kind: 'spark', size: 1.4 });
+    if (typeof spawnFxRing === 'function') spawnFxRing(game, x, y, light.color, lite ? 6 : (big ? 15 : 10));
+  } catch (_) {}
 }
 
 function spawnFxRing(game, x, y, color, baseR) {

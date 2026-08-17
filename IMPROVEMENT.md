@@ -1,3 +1,4 @@
+| 2026-08-17 | **merge** | Mega-merge: #247 light-FX + #246 versus-stubs + #240 dawnblade (roster blijft retired) · **v1.18.152 / SW v362**. |
 | 2026-08-17 | **merge** | LIVE FF: d8 PWA + d20 health + d13 missies + d2 training + d11 nav + d19 muur + d7 save + d14 FX · **v1.18.151 / SW v361**. |
 | 2026-08-17 | **14** | d14 c6: Spiral Orb ring alleen op echte hit (ook robot); geen rand-ghost; Lite FX ring-eerst. v1.18.151 / SW v361. |
 | 2026-08-17 | **7** | d7 c6: Import overschreef Backup — Herstel deed niks. Nu: huidige save eerst in Backup, daarna alleen primary. v1.18.150 / SW v360. |
@@ -128,6 +129,8 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-08-17 | **merge** | Mega-merge op huidige main: #247 light-FX + #246 versus-stubs + #240 dawnblade (geen versus-roster). v1.18.152 / SW 362. |
+| 2026-08-17 | — | GitHub-sync: agent vraagt bij wijzigingen of we naar main moeten; wachtlijst in `githubSync` + `./scripts/github-sync-status.sh`. |
 | 2026-08-17 | — | PC-pull: `./scripts/pull-main.sh` (of `npm run pull`) zet de clone op origin/main. |
 | 2026-08-17 | **merge** | LIVE FF-merge #248–#255 → main · v1.18.151 / SW 361. Pull `main` op de pc. |
 | 2026-08-17 | **14** | FX: Spiral Orb hit-ring (ook robot); geen off-screen ghost; Lite FX ring vóór sparks. v1.18.151 / SW 361. |

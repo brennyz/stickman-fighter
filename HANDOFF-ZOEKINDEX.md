@@ -2,7 +2,7 @@
 
 **handoff** · **agent-handoff** · **Mats** · **mikken** · **character select** · **deel 1** · **deel 2** · **coinrun** · **d20** · **ASSET-STYLE** · **buttons**
 
-> Tot push staat dit **alleen** in lokale main / patch. GitHub `main` = `60423e4` (v1.7).
+> GitHub `main` is LIVE (v1.18.151+). PC vs GitHub: `./scripts/github-sync-status.sh` en `githubSync` in `agent-handoff.json`.
 
 ## Snel zoeken (na patch)
 

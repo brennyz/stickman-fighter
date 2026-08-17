@@ -1,8 +1,15 @@
-STICKMAN FIGHTER — PULL NAAR DEZE PC
-====================================
+STICKMAN FIGHTER — PULL / PUSH
+==============================
 
-GitHub main is LIVE (v1.18.151 / SW 361). Jij hoeft niet te pushen.
-Op de pc alleen ophalen:
+GitHub main is LIVE (v1.18.152 / SW 362).
+Agent vraagt af en toe: “uploaden naar GitHub?” en houdt de wachtlijst
+bij in agent-handoff.json → githubSync (pendingUpload / pendingMerge).
+
+Stand checken:
+
+  ./scripts/github-sync-status.sh
+
+Op de pc ophalen:
 
   cd stickman-fighter
   ./scripts/pull-main.sh
@@ -16,7 +23,7 @@ Daarna opnieuw ./scripts/pull-main.sh — die stasht rommel, stapt
 van een feature-branch af, en fast-forward (of reset) naar GitHub.
 
 Klaar als:  git log -1 --oneline
-toont een commit op main met v1.18.151 (of nieuwer).
+toont een commit op main met v1.18.152 (of nieuwer).
 
 GitHub Desktop: branch **main** kiezen → Fetch origin → Pull origin.
 

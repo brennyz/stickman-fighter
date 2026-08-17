@@ -55,6 +55,13 @@ Wel (ochtend-route in `syncPlayLayer` / `startGame`):
 4. Loop: tijdens play/pause **nooit** `drawMenuBackdrop` (#151b33)
 5. Flash alleen verbergen bij echte play — niet bij elke menu-`syncPlayLayer`
 
+## GitHub-sync (PC + cloud)
+
+Na betekenisvolle wijzigingen **vragen** of we naar `origin/main` moeten (niet stil pushen).
+User zegt **«merge main»** → commit (als nodig) + push `origin/main`. GitHub Actions zet Pages live in ~1–3 min; daarna is `speel.html` bij. Oude app-cache: in het menu «Verse versie».
+Wachtlijst: `githubSync` in `agent-handoff.json` — `pendingUpload` (deze clone) en `pendingMerge` (open PRs).
+Check: `./scripts/github-sync-status.sh`. Deel-URL blijft `speel.html`.
+
 ## Wat elke agent **bij afloop** doet
 
 ```bash

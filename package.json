@@ -1,7 +1,7 @@
 {
   "name": "stickman-fighter",
   "private": true,
-  "version": "1.18.151",
+  "version": "1.18.152",
   "description": "Stickman Fighter — Monster Arena PWA",
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -49,6 +49,7 @@
     "roll:verify": "bash scripts/roll-improvement-d20.sh verify",
     "roll:doctor": "bash scripts/roll-improvement-d20.sh doctor",
     "d20:done": "bash scripts/mark-d20-done.sh",
-    "pull": "bash scripts/pull-main.sh"
+    "pull": "bash scripts/pull-main.sh",
+    "sync": "bash scripts/github-sync-status.sh"
   }
 }
