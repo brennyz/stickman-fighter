@@ -21,21 +21,8 @@
     "remainingCount": 10,
     "cycle": 6
   },
-  "pending": {
-    "face": 7,
-    "category": "Save & backup \u2014 import/export, corruptie, migratie",
-    "rolledAt": "2026-08-17T08:56:54Z",
-    "remainingCount": 10,
-    "cycle": 6
-  },
+  "pending": null,
   "implemented": [
-    {
-      "face": 6,
-      "note": "pause duck/status, audio resume paths, 2P restart in pause",
-      "version": "1.14.7",
-      "doneAt": "2026-07-23T21:26:05Z",
-      "cycle": 2
-    },
     {
       "face": 19,
       "note": "timer/combo/record hints + HUD labels",
@@ -587,6 +574,13 @@
       "note": "een eerlijk muur-tempo getal op HUD",
       "version": "1.18.149",
       "doneAt": "2026-08-17T08:55:56Z",
+      "cycle": 6
+    },
+    {
+      "face": 7,
+      "note": "import bewaart vorige save in Backup",
+      "version": "1.18.150",
+      "doneAt": "2026-08-17T09:08:04Z",
       "cycle": 6
     }
   ],
