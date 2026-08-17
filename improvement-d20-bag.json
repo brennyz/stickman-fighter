@@ -23,21 +23,8 @@
     "remainingCount": 12,
     "cycle": 6
   },
-  "pending": {
-    "face": 11,
-    "category": "Menu & navigatie \u2014 terug, flow, grote knoppen",
-    "rolledAt": "2026-08-17T08:45:14Z",
-    "remainingCount": 12,
-    "cycle": 6
-  },
+  "pending": null,
   "implemented": [
-    {
-      "face": 16,
-      "note": "Pages-only share; tunnel UI hidden off-host; LIVE-LINK clean",
-      "version": "1.14.2",
-      "doneAt": "2026-07-23T21:06:26Z",
-      "cycle": 2
-    },
     {
       "face": 7,
       "note": "export schema v2, import key/summon warnings, corrupt primary repair",
@@ -589,6 +576,13 @@
       "note": "Pierce energy-gate + telegraph=windup + laser XOR Pierce + spring-copy",
       "version": "1.18.147",
       "doneAt": "2026-08-17T08:42:38Z",
+      "cycle": 6
+    },
+    {
+      "face": 11,
+      "note": "arcade result/pause terug naar hub",
+      "version": "1.18.148",
+      "doneAt": "2026-08-17T08:50:00Z",
       "cycle": 6
     }
   ],
