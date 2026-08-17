@@ -20,21 +20,8 @@
     "remainingCount": 9,
     "cycle": 6
   },
-  "pending": {
-    "face": 14,
-    "category": "Visuele FX \u2014 particles, banners, Rasengan polish",
-    "rolledAt": "2026-08-17T09:10:13Z",
-    "remainingCount": 9,
-    "cycle": 6
-  },
+  "pending": null,
   "implemented": [
-    {
-      "face": 19,
-      "note": "timer/combo/record hints + HUD labels",
-      "version": "1.14.8",
-      "doneAt": "2026-07-23T21:27:27Z",
-      "cycle": 2
-    },
     {
       "face": 5,
       "note": "Adaptieve perf tier + resize coalesce + scenery caps + hidden pause",
@@ -586,6 +573,13 @@
       "note": "import bewaart vorige save in Backup",
       "version": "1.18.150",
       "doneAt": "2026-08-17T09:08:04Z",
+      "cycle": 6
+    },
+    {
+      "face": 14,
+      "note": "spiral orb impact only on hit, no edge ghost",
+      "version": "1.18.151",
+      "doneAt": "2026-08-17T09:55:23Z",
       "cycle": 6
     }
   ],

@@ -13,24 +13,24 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.150",
-    "swCache": "stickfighter-app-v360",
-    "gameJsQuery": "game.js?v=360",
-    "cssQuery": "styles/main.css?v=360",
-    "featureBranch": "cursor/wiggum-d7-save-85e6",
+    "appVersion": "1.18.151",
+    "swCache": "stickfighter-app-v361",
+    "gameJsQuery": "game.js?v=361",
+    "cssQuery": "styles/main.css?v=361",
+    "featureBranch": "cursor/wiggum-d14-fx-85e6",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": null,
     "remoteMainHead": null,
-    "note": "d7 c6 ready (niet gemerged): import keeps previous save in Backup; stacked on d8+d20+d13+d2+d11+d19",
-    "updated": "2026-08-17T09:05:00Z"
+    "note": "d14 c6 ready (niet gemerged): spiral orb impact on hit, no edge ghost; stacked on d8+d20+d13+d2+d11+d19+d7",
+    "updated": "2026-08-17T09:20:00Z"
   },
   "userWishlist": [
     {
       "id": "w-20260817T091012",
       "from": "user",
       "text": "roll d20 (achtste worp, niet mergen)",
-      "status": "open",
+      "status": "done-in-code",
       "updated": "2026-08-17"
     },
     {
@@ -437,6 +437,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-17T09:56:06Z",
+      "summary": "d14: Spiral Orb ring alleen op hit, geen rand-ghost; Lite FX ring-eerst"
+    },
+    {
       "at": "2026-08-17T09:10:12Z",
       "summary": "Achtste d20-worp geclaimd via CLI"
     },
@@ -531,10 +535,6 @@
     {
       "at": "2026-08-07T20:53:55Z",
       "summary": "Soft-live merge to main: legal+feel+versus-retire+IP-A+listing · Play TWA shell · v1.18.138 / SW 348"
-    },
-    {
-      "at": "2026-08-07T20:48:00Z",
-      "summary": "Merge soft-live: soft-legal + soft-feel onto main"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
