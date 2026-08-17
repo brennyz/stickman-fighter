@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.149';
+const APP_VERSION = '1.18.150';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 359;
+const SW_CACHE_REV = 360;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -971,6 +971,20 @@ function persistPrimaryOnly() {
   }
 }
 
+/** Schrijf huidige voortgang naar backup — undo voor import (hoofd-save niet aanraken). */
+function snapshotSaveToBackup(s) {
+  try {
+    const src = s || save;
+    if (!src || typeof src !== 'object') return false;
+    if (!saveHasProgress(src)) return false;
+    const json = JSON.stringify(sanitizeSave(src));
+    localStorage.setItem(SAVE_BACKUP_KEY, json);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 function persist() {
   try {
     if (!save || typeof save !== 'object') return false;
@@ -1059,9 +1073,9 @@ function restoreSaveFromBackup() {
       userToast('Backup herstellen mislukt — export save als je die hebt', 4200);
       return false;
     }
-    checkAchievements();
-    UI.renderMenu();
-    if (UI.renderMissions) UI.renderMissions();
+    try { checkAchievements(); } catch (_) {}
+    try { UI.renderMenu(); } catch (_) {}
+    try { if (UI.renderMissions) UI.renderMissions(); } catch (_) {}
     return true;
   } catch (err) {
     sfReportError('restoreBackup', err, 'Backup herstellen mislukt');

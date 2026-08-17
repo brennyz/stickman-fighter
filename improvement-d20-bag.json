@@ -5,7 +5,6 @@
   "remaining": [
     16,
     15,
-    7,
     9,
     3,
     5,
@@ -16,13 +15,19 @@
     6
   ],
   "lastRoll": {
-    "face": 19,
-    "category": "Muur & minigames \u2014 combo, timer, record",
-    "rolledAt": "2026-08-17T08:50:41Z",
-    "remainingCount": 11,
+    "face": 7,
+    "category": "Save & backup \u2014 import/export, corruptie, migratie",
+    "rolledAt": "2026-08-17T08:56:54Z",
+    "remainingCount": 10,
     "cycle": 6
   },
-  "pending": null,
+  "pending": {
+    "face": 7,
+    "category": "Save & backup \u2014 import/export, corruptie, migratie",
+    "rolledAt": "2026-08-17T08:56:54Z",
+    "remainingCount": 10,
+    "cycle": 6
+  },
   "implemented": [
     {
       "face": 6,
@@ -978,13 +983,6 @@
   ],
   "history": [
     {
-      "face": 4,
-      "category": "Avontuur \u2014 levels, waves, boss pacing, stars",
-      "rolledAt": "2026-07-23T18:12:23Z",
-      "remainingCount": 12,
-      "cycle": 1
-    },
-    {
       "face": 5,
       "category": "Performance \u2014 FPS, FX caps, resize, low-end iPad",
       "rolledAt": "2026-07-23T18:13:18Z",
@@ -1815,6 +1813,13 @@
       "category": "Muur & minigames \u2014 combo, timer, record",
       "rolledAt": "2026-08-17T08:50:41Z",
       "remainingCount": 11,
+      "cycle": 6
+    },
+    {
+      "face": 7,
+      "category": "Save & backup \u2014 import/export, corruptie, migratie",
+      "rolledAt": "2026-08-17T08:56:54Z",
+      "remainingCount": 10,
       "cycle": 6
     }
   ],

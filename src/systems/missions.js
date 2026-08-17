@@ -1849,16 +1849,18 @@ function importSaveJson(text) {
     }
   }
   const { save: next, warnings } = previewImportSave(text);
+  const keptBackup = typeof snapshotSaveToBackup === 'function' && snapshotSaveToBackup(save);
   save = next;
-  if (!persistOrToast('import')) throw new Error('Import gelukt maar opslaan mislukt — probeer opnieuw');
-  checkAchievements();
-  UI.renderMenu();
-  if (UI.renderMissions) UI.renderMissions();
-  if (UI.renderSettings) UI.renderSettings();
+  if (!persistPrimaryOnly()) throw new Error('Import gelukt maar opslaan mislukt — probeer opnieuw');
+  try { checkAchievements(); } catch (_) {}
+  try { UI.renderMenu(); } catch (_) {}
+  try { if (UI.renderMissions) UI.renderMissions(); } catch (_) {}
+  try { if (UI.renderSettings) UI.renderSettings(); } catch (_) {}
   const repair = (warnings || []).find(w => w.startsWith('Reparatie:'));
+  const undo = keptBackup ? ' · vorige save zit in Backup' : '';
   userToast(repair
-    ? `Save geïmporteerd · Lv ${save.lvl} · ${repair.replace('Reparatie: ', '')}`
-    : `Save geïmporteerd · Lv ${save.lvl} · level ${save.unlocked}`, 3400);
+    ? `Save geïmporteerd · Lv ${save.lvl} · ${repair.replace('Reparatie: ', '')}${undo}`
+    : `Save geïmporteerd · Lv ${save.lvl} · level ${save.unlocked}${undo}`, 3600);
 }
 
 function exportSaveFilename() {

@@ -274,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.149';
+const APP_VERSION = '1.18.150';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 359;
+const SW_CACHE_REV = 360;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1240,6 +1240,20 @@ function persistPrimaryOnly() {
   }
 }
 
+/** Schrijf huidige voortgang naar backup — undo voor import (hoofd-save niet aanraken). */
+function snapshotSaveToBackup(s) {
+  try {
+    const src = s || save;
+    if (!src || typeof src !== 'object') return false;
+    if (!saveHasProgress(src)) return false;
+    const json = JSON.stringify(sanitizeSave(src));
+    localStorage.setItem(SAVE_BACKUP_KEY, json);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 function persist() {
   try {
     if (!save || typeof save !== 'object') return false;
@@ -1328,9 +1342,9 @@ function restoreSaveFromBackup() {
       userToast('Backup herstellen mislukt — export save als je die hebt', 4200);
       return false;
     }
-    checkAchievements();
-    UI.renderMenu();
-    if (UI.renderMissions) UI.renderMissions();
+    try { checkAchievements(); } catch (_) {}
+    try { UI.renderMenu(); } catch (_) {}
+    try { if (UI.renderMissions) UI.renderMissions(); } catch (_) {}
     return true;
   } catch (err) {
     sfReportError('restoreBackup', err, 'Backup herstellen mislukt');
@@ -1902,7 +1916,7 @@ const I18N = {
       hosting: 'Hosting & voortgang', copyLink: 'Kopieer vaste speel-link', openLink: 'Open vaste link',
       savePort: 'Save export / import', exportSave: 'Export save', importSave: 'Import save',
       importSaveFile: 'Bestand kiezen',
-      savePortDesc: 'Export kopieert JSON (clipboard + download). Import: kies een exportbestand of plak JSON — 1× Import = preview, 2× = toepassen.',
+      savePortDesc: 'Export kopieert JSON (clipboard + download). Import: kies een bestand of plak JSON — 1× preview, 2× laden. Huidige save gaat naar Backup.',
       savePortPlaceholder: 'Plak JSON of kies een exportbestand (.json) — meta.key stickfighter_save_v1 · 2× Import om te laden',
       privacy: 'Privacy',
       ageHint: 'Cartoon-gevecht · tiener+ · geen chat',
@@ -1992,7 +2006,7 @@ const I18N = {
       hosting: 'Hosting & progress', copyLink: 'Copy play link', openLink: 'Open play link',
       savePort: 'Save export / import', exportSave: 'Export save', importSave: 'Import save',
       importSaveFile: 'Choose file',
-      savePortDesc: 'Export copies JSON (clipboard + download). Import: pick an export file or paste JSON — 1× Import = preview, 2× = apply.',
+      savePortDesc: 'Export copies JSON (clipboard + download). Import: pick a file or paste JSON — 1× preview, 2× load. Current save goes to Backup.',
       savePortPlaceholder: 'Paste JSON or choose an export file (.json) — meta.key stickfighter_save_v1 · tap Import twice to load',
       privacy: 'Privacy',
       ageHint: 'Cartoon combat · teens+ · no chat',
@@ -2071,7 +2085,7 @@ const I18N = {
       hosting: 'Hosting & Fortschritt', copyLink: 'Link kopieren', openLink: 'Link öffnen',
       savePort: 'Save export / import', exportSave: 'Save exportieren', importSave: 'Save importieren',
       importSaveFile: 'Datei wählen',
-      savePortDesc: 'Export kopiert JSON (Zwischenablage + Download). Import: Datei wählen oder JSON einfügen — 1× Import = Vorschau, 2× = anwenden.',
+      savePortDesc: 'Export kopiert JSON (Zwischenablage + Download). Import: Datei oder JSON — 1× Vorschau, 2× laden. Aktueller Save geht ins Backup.',
       savePortPlaceholder: 'JSON einfügen oder Exportdatei (.json) wählen — meta.key stickfighter_save_v1 · 2× Import zum Laden',
       privacy: 'Datenschutz',
       ageHint: 'Cartoon-Kampf · ab Teenager · kein Chat',
@@ -2143,7 +2157,7 @@ const I18N = {
       hosting: 'Hébergement & progrès', copyLink: 'Copier le lien', openLink: 'Ouvrir le lien',
       savePort: 'Export / import save', exportSave: 'Exporter save', importSave: 'Importer save',
       importSaveFile: 'Choisir fichier',
-      savePortDesc: 'Export copie le JSON (presse-papiers + téléchargement). Import : choisir un fichier ou coller le JSON — 1× Import = aperçu, 2× = appliquer.',
+      savePortDesc: 'Export copie le JSON (presse-papiers + téléchargement). Import : fichier ou JSON — 1× aperçu, 2× charger. La save actuelle va dans Backup.',
       savePortPlaceholder: 'Coller le JSON ou choisir un fichier (.json) — meta.key stickfighter_save_v1 · 2× Import pour charger',
       privacy: 'Confidentialité',
       ageHint: 'Combat cartoon · ados+ · pas de chat',
@@ -2215,7 +2229,7 @@ const I18N = {
       hosting: 'Hosting y progreso', copyLink: 'Copiar enlace', openLink: 'Abrir enlace',
       savePort: 'Export / import save', exportSave: 'Exportar save', importSave: 'Importar save',
       importSaveFile: 'Elegir archivo',
-      savePortDesc: 'Export copia JSON (portapapeles + descarga). Import: elige un archivo o pega JSON — 1× Import = vista previa, 2× = aplicar.',
+      savePortDesc: 'Export copia JSON (portapapeles + descarga). Import: archivo o JSON — 1× vista previa, 2× cargar. La save actual va a Backup.',
       savePortPlaceholder: 'Pega JSON o elige un archivo (.json) — meta.key stickfighter_save_v1 · 2× Import para cargar',
       privacy: 'Privacidad',
       ageHint: 'Combate cartoon · teens+ · sin chat',
@@ -4636,16 +4650,18 @@ function importSaveJson(text) {
     }
   }
   const { save: next, warnings } = previewImportSave(text);
+  const keptBackup = typeof snapshotSaveToBackup === 'function' && snapshotSaveToBackup(save);
   save = next;
-  if (!persistOrToast('import')) throw new Error('Import gelukt maar opslaan mislukt — probeer opnieuw');
-  checkAchievements();
-  UI.renderMenu();
-  if (UI.renderMissions) UI.renderMissions();
-  if (UI.renderSettings) UI.renderSettings();
+  if (!persistPrimaryOnly()) throw new Error('Import gelukt maar opslaan mislukt — probeer opnieuw');
+  try { checkAchievements(); } catch (_) {}
+  try { UI.renderMenu(); } catch (_) {}
+  try { if (UI.renderMissions) UI.renderMissions(); } catch (_) {}
+  try { if (UI.renderSettings) UI.renderSettings(); } catch (_) {}
   const repair = (warnings || []).find(w => w.startsWith('Reparatie:'));
+  const undo = keptBackup ? ' · vorige save zit in Backup' : '';
   userToast(repair
-    ? `Save geïmporteerd · Lv ${save.lvl} · ${repair.replace('Reparatie: ', '')}`
-    : `Save geïmporteerd · Lv ${save.lvl} · level ${save.unlocked}`, 3400);
+    ? `Save geïmporteerd · Lv ${save.lvl} · ${repair.replace('Reparatie: ', '')}${undo}`
+    : `Save geïmporteerd · Lv ${save.lvl} · level ${save.unlocked}${undo}`, 3600);
 }
 
 function exportSaveFilename() {

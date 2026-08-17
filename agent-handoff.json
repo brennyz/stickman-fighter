@@ -27,6 +27,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260817T085653",
+      "from": "user",
+      "text": "roll d20 (zevende worp, niet mergen)",
+      "status": "open",
+      "updated": "2026-08-17"
+    },
+    {
       "id": "w-20260817T085041",
       "from": "user",
       "text": "roll d20 (zesde worp, niet mergen)",
@@ -423,6 +430,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-08-17T08:56:53Z",
+      "summary": "Zevende d20-worp geclaimd via CLI"
+    },
+    {
       "at": "2026-08-17T08:55:57Z",
       "summary": "d19: Muur-HUD één tempo-getal; balk volgt tempo niet pas record"
     },
@@ -517,10 +528,6 @@
     {
       "at": "2026-08-07T20:21:04Z",
       "summary": "Soft-feel A3/A4: milder golf 1 + telegraph cues + sterkere partGate loop-rechts; device-qa.md · v1.18.134"
-    },
-    {
-      "at": "2026-08-07T20:29:54Z",
-      "summary": "IP-A: anime skills → generic techniques (spiral_orb/…) · activeTechnique migrate · v1.18.136 / SW v346"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

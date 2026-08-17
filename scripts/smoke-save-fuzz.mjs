@@ -15,6 +15,7 @@ function makeEl(id) {
     children: [], parentElement: null, closest() { return this; },
     addEventListener() {}, removeEventListener() {}, appendChild() {}, remove() {}, focus() {}, select() {},
     querySelector() { return null; }, querySelectorAll() { return [] },
+    querySelector() { return null; }, querySelectorAll() { return [] },
     getBoundingClientRect() { return { left: 0, top: 0, width: 100, height: 40 }; },
     setAttribute() {}, removeAttribute() {}, getAttribute() { return null; },
     getContext() {
@@ -31,6 +32,7 @@ const ctx = {
   document: {
     getElementById: get, querySelector: () => null, querySelectorAll: () => [],
     body: get('body'), createElement: (t) => makeEl(t),
+    createTextNode: (s) => ({ nodeType: 3, textContent: String(s), data: String(s) }),
     addEventListener() {}, dispatchEvent() {},
   },
   addEventListener() {},
@@ -124,4 +126,30 @@ try {
   process.exit(1);
 }
 
-console.log(`SMOKE_OK save-fuzz ${ok}/${mutators.length + 1} corrupt saves repaired`);
+// Import must keep previous progress in backup (undo via Herstel backup)
+try {
+  const previous = ctx.sanitizeSave(Object.assign({}, ctx.DEFAULT_SAVE, { lvl: 12, unlocked: 10, xp: 40 }));
+  const incomingJson = JSON.stringify(Object.assign({}, ctx.DEFAULT_SAVE, {
+    lvl: 3,
+    unlocked: 2,
+    _exportMeta: { schema: 3, app: '1.18.150', key: 'stickfighter_save_v1' },
+  }));
+  const preview = ctx.previewImportSave(incomingJson);
+  const next = preview && preview.save;
+  if (!next || next.lvl !== 3) throw new Error('preview lvl=' + (next && next.lvl));
+  if (!ctx.snapshotSaveToBackup(previous)) throw new Error('snapshot failed');
+  ctx.localStorage.setItem('stickfighter_save_v1', JSON.stringify(next));
+  const bak = ctx.readSaveJson(ctx.localStorage.getItem('stickfighter_save_backup_v1'));
+  const prim = ctx.readSaveJson(ctx.localStorage.getItem('stickfighter_save_v1'));
+  if (!bak || bak.lvl !== 12) throw new Error('backup lvl=' + (bak && bak.lvl));
+  if (!prim || prim.lvl !== 3) throw new Error('primary lvl=' + (prim && prim.lvl));
+  if (!ctx.applySaveFromBackupRaw()) throw new Error('apply backup false');
+  const restored = ctx.readSaveJson(ctx.localStorage.getItem('stickfighter_save_v1'));
+  if (!restored || restored.lvl !== 12) throw new Error('restored lvl=' + (restored && restored.lvl));
+  ok++;
+} catch (e) {
+  console.error('SMOKE_FAIL save-fuzz import-backup', e.message || e);
+  process.exit(1);
+}
+
+console.log(`SMOKE_OK save-fuzz ${ok}/${mutators.length + 2} corrupt saves repaired`);
