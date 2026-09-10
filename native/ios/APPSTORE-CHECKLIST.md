@@ -1,6 +1,6 @@
 # App Store — wat er moet gebeuren, en wat dat inhoudt
 
-Dit is **geen knop in de repo**. Stickman Fighter is nu een **website-spel** (PWA) op
+Dit is **geen knop in de repo**, en **niet verplicht**. Stickman Fighter is een **website-spel** (PWA) op
 
 https://brennyz.github.io/stickman-fighter/speel.html
 
@@ -18,9 +18,9 @@ npm run store:doctor
 
 | Laag | Wat het is | Wie |
 |------|------------|-----|
-| Soft live | Browser / “zet op startscherm” | Al live |
-| Google Play | TWA: Play-icoon opent dezelfde Pages-URL in Chrome | Jij + pc |
-| App Store | Echt Xcode-project + lokale gamebestanden in de IPA | Jij + Mac |
+| Soft live (website) | Browser / “zet op startscherm” — **dit is het spel** | Al live, geen store nodig |
+| Google Play (optioneel) | TWA: Play-icoon opent dezelfde Pages-URL in Chrome | Alleen als je een Play-listing wilt |
+| App Store (optioneel) | Echt Xcode-project + lokale gamebestanden in de IPA | Alleen als je een App Store-listing wilt |
 
 Play en App Store zijn **niet hetzelfde product**. Play mag een Chrome-tab om de site wrappen. Apple keurt dat vaak af als **Guideline 4.2** (“minimum functionality” — te dun, alleen een website).
 

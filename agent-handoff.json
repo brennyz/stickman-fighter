@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260910T131901",
+      "from": "user",
+      "text": "website is geen Play-app — hoeft dat ook niet?",
+      "status": "done-in-code",
+      "updated": "2026-09-10"
+    },
+    {
       "id": "w-20260910T125242",
       "from": "user",
       "text": "verbeter de store-tool; toon wat er moet gebeuren vóór App Store deploy",
@@ -537,6 +544,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-10T13:19:01Z",
+      "summary": "website is het spel; Play en App Store optioneel, niet verplicht"
+    },
+    {
       "at": "2026-09-10T13:08:47Z",
       "summary": "store:doctor + App Store-checklist: wat jij moet doen vóór Play/App Store-deploy"
     },
@@ -631,10 +642,6 @@
     {
       "at": "2026-08-17T06:41:19Z",
       "summary": "d8 PWA: SW wacht op menu, update-banner tikt alleen op hub — klaar voor super-merge"
-    },
-    {
-      "at": "2026-08-17T06:33:20Z",
-      "summary": "Director-protocol ontvangen — d20-claim via CLI, niet mergen"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

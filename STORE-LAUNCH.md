@@ -1,7 +1,8 @@
 # Store & livegang — Android first, App Store zichtbaar
 
-**Beslissing:** eerst **Android** (PWA soft live → Google Play TWA).
-**Apple App Store:** pad C staat hieronder uitgelegd — starten wanneer jij €99 + Mac klaarzet. Tot die tijd: geen Xcode-project in de repo.
+**De website is het spel.** Play en App Store zijn **optioneel** — niet nodig om te spelen of te delen (`speel.html`).
+
+Als je later wél een store-icoon wilt: eerst Android (PWA → Play TWA). App Store (pad C) alleen wanneer jij €99 + Mac klaarzet. Tot die tijd: geen Xcode-project in de repo.
 
 **Live PWA:** https://brennyz.github.io/stickman-fighter/speel.html · **v1.18.152 / SW 362**
 **Privacy:** https://brennyz.github.io/stickman-fighter/privacy.html
@@ -20,9 +21,9 @@ App Store in gewone taal: `native/ios/APPSTORE-CHECKLIST.md`.
 
 | Pad | Focus? | Klaar in repo? | Blockers (jij) |
 |-----|--------|----------------|----------------|
-| A. Soft live (PWA) | ja | ~95% | Android Chrome (+ evt. iPad) smoke |
-| B. Google Play (TWA) | **nu** | ~scaffold + drafts | Play Console, keystore, AAB |
-| C. Apple App Store | **later / jij** | docs + stubs | Developer €99, Mac+Xcode, 4.2 extras, TestFlight |
+| A. Website (PWA) | **dit is het spel** | ~95% | Telefoon-smoke als je wilt |
+| B. Google Play (TWA) | optioneel | scaffold + drafts | Alleen als je een Play-icoon wilt |
+| C. Apple App Store | optioneel | docs + stubs | Alleen als je een App Store-icoon wilt |
 
 `native/ios/` is **documentatie + Capacitor-stubs**. Geen IPA tot jij op een Mac `npx cap add ios` draait.
 
@@ -40,7 +41,9 @@ Deel-link = `speel.html` (niet `ipad.html`, geen tunnel).
 
 ---
 
-## B — Google Play (kortste store-pad)
+## B — Google Play (optioneel — kortste store-pad)
+
+Niet nodig voor spelen. Alleen als je een icoon in de Play Store wilt. De TWA opent dan dezelfde website.
 
 TWA / Bubblewrap opent **dezelfde** Pages-URL in Chrome Custom Tabs. Updates = `git push` + Pages. Geen aparte game-binary.
 

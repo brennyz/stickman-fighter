@@ -88,6 +88,8 @@ add('pwa',
 add('pwa', exists('sw.js') && exists('manifest.webmanifest') ? 'ok' : 'fail',
   'Service worker + web manifest',
   `SW v${swRev} · app ${appFromSrc}`);
+add('pwa', 'ok', 'Website = het spel (geen store nodig)',
+  'speel.html is genoeg om te spelen en te delen. Play en App Store zijn extra, niet verplicht.');
 add('pwa', 'you', 'Device-QA op je telefoon',
   'Chrome → speel.html → toevoegen aan startscherm → 5 min avontuur + Verse versie. Zie docs/store/device-qa.md');
 
@@ -128,9 +130,9 @@ add('play', hasKeystore ? 'warn' : 'ok',
     ? 'Keystore staat in de werkmap — niet committen'
     : 'Geen keystore in git (goed)',
   'Jij maakt signing/upload-keystore.jks één keer op de pc. Nooit in GitHub.');
-add('play', 'you', 'Play Console-account + app aanmaken',
-  'https://play.google.com/console — eenmalig Google-developer (goedkoper/sneller dan Apple)');
-add('play', 'you', 'AAB bouwen en Internal testing',
+add('play', 'you', 'Alleen als je een Play-icoon wilt: Console-account',
+  'Niet verplicht. https://play.google.com/console — eenmalig, goedkoper/sneller dan Apple');
+add('play', 'you', 'Alleen als je Play wilt: AAB + Internal testing',
   'Op de pc: npm run android:init → npm run android:build → APK op telefoon → AAB naar Internal testing → vrienden → productie');
 
 /* ---- App Store ---- */
@@ -149,13 +151,13 @@ add('ios', exists('docs/store/review-notes.md') && /no login/i.test(review) ? 'o
 add('ios', hasIosXcode ? 'ok' : 'you',
   hasIosXcode ? 'Xcode-project aanwezig' : 'Nog geen Xcode-project',
   'Later op een Mac: npx cap add ios · bundled www (niet alleen GitHub Pages-URL)');
-add('ios', 'you', 'Apple Developer Program (€99 / jaar)',
-  'Zonder dit: geen App Store Connect, geen TestFlight, geen review. Jij betaalt en logt in — de agent kan dit niet.');
-add('ios', 'you', 'Mac + Xcode + signing',
+add('ios', 'you', 'Alleen als je App Store wilt: Developer (€99 / jaar)',
+  'Niet verplicht om te spelen. Zonder dit: geen Connect, geen TestFlight, geen review. Jij betaalt — de agent kan dit niet.');
+add('ios', 'you', 'Alleen als je App Store wilt: Mac + Xcode + signing',
   'Certificates, provisioning, team-id. Nooit .p12 / API-keys in de repo.');
-add('ios', 'you', 'Native extras vóór review (4.2)',
+add('ios', 'you', 'Alleen als je App Store wilt: native extras (4.2)',
   'Minimaal: lokale www-bundle + haptics + splash + landscape-lock. Alleen “website in WebView” = afkeur.');
-add('ios', 'you', 'App Store Connect listing + TestFlight + Review',
+add('ios', 'you', 'Alleen als je App Store wilt: Connect + TestFlight + Review',
   'Icon 1024, screenshots iPhone+iPad, privacy-URL, review notes, dan wachten op Apple.');
 
 /* ---- Honesty ---- */
@@ -172,9 +174,9 @@ add('copy', iapLie ? 'fail' : 'ok',
 /* ---- print ---- */
 const mark = { ok: 'OK  ', warn: 'LET ', fail: 'FOUT', you: 'JIJ ' };
 const tracks = [
-  ['pwa', 'A · Soft live (PWA — al speelbaar)'],
-  ['play', 'B · Google Play (TWA)'],
-  ['ios', 'C · Apple App Store'],
+  ['pwa', 'A · Website (PWA — dit ís het spel)'],
+  ['play', 'B · Google Play (optioneel)'],
+  ['ios', 'C · Apple App Store (optioneel)'],
   ['copy', 'Listing-eerlijkheid'],
 ];
 
@@ -196,12 +198,12 @@ for (const [id, title] of tracks) {
 }
 
 lines.push('── Wat dit inhoudt ──');
-lines.push('  Nu: een website-spel (PWA). Een store-app is een wikkel + jouw accounts.');
-lines.push('  Play: Bubblewrap opent speel.html in Chrome Custom Tabs — updates via Pages.');
-lines.push('  App Store: Capacitor + lokale bestanden in de IPA, anders keurt Apple 4.2 af.');
-lines.push('  Agent = drafts/scripts. Jij = geld, keystore, Mac, Console, review.');
+lines.push('  De website IS het spel. Geen Play-app, geen App Store-app — en dat hoeft ook niet.');
+lines.push('  Delen = speel.html. “Zet op startscherm” = bladwijzer, geen store-listing.');
+lines.push('  Play is extra (icoon in de Play Store). App Store is extra (apart iOS-programma).');
+lines.push('  Agent = drafts/scripts. Jij = alleen store-accounts als je die extra wilt.');
 lines.push('');
-lines.push('── App Store in het kort (jij, niet de agent) ──');
+lines.push('── Als je tóch App Store wilt (optioneel — jij, niet de agent) ──');
 lines.push('  1. Apple Developer Program — €99/jaar, Apple-ID, 2FA.');
 lines.push('  2. Mac met Xcode — signing, simulator, IPA. Deze cloud-VM is geen Mac.');
 lines.push('  3. Capacitor iOS + bundled www (niet alleen GitHub Pages-URL).');
@@ -298,14 +300,14 @@ function renderHtml({ appFromSrc: ver, swRev: sw, packageId, rows: all, fails: f
 <main>
   <div class="meaning">
     <h2>Wat dit inhoudt</h2>
-    <p>Het spel is nu een <strong>website</strong> (PWA op GitHub Pages). Een icoon in de App Store is geen extra knop in deze repo — het is een <strong>apart iOS-programma</strong> dat jij op een Mac tekent, betaalt en instuurt.</p>
+    <p>Het spel is een <strong>website</strong> (PWA). Dat is <strong>geen</strong> Google Play-app en <strong>geen</strong> App Store-app — en dat <strong>hoeft ook niet</strong>. Delen = <code>speel.html</code>.</p>
+    <p>Een store-icoon is extra. Play wrapt dezelfde site. App Store eist een apart iOS-programma (Mac, €99, 4.2).</p>
     <ol>
-      <li><strong>Apple Developer Program</strong> — €99 per jaar. Zonder dit bestaat “de app” niet bij Apple.</li>
-      <li><strong>Mac + Xcode</strong> — certificates, simulator, IPA. Deze cloud-omgeving kan dat niet.</li>
-      <li><strong>Bundled www + native extras</strong> — anders Guideline 4.2 (website-in-een-jasje) = afkeur.</li>
-      <li><strong>App Store Connect + TestFlight + Review</strong> — listing, shots, privacy-URL, wachten op Apple.</li>
+      <li><strong>Niet doen</strong> — blijven delen via <code>speel.html</code>. Geen account, geen €99.</li>
+      <li><strong>Optioneel Play</strong> — icoon in de Play Store; wrapt dezelfde site. Jij + pc.</li>
+      <li><strong>Optioneel App Store</strong> — apart iOS-programma: €99, Mac, 4.2, TestFlight.</li>
     </ol>
-    <p>Google Play is het kortere pad (TWA, updates via Pages). Lees <code>native/ios/APPSTORE-CHECKLIST.md</code> en <code>STORE-LAUNCH.md</code>.</p>
+    <p>Lees <code>STORE-LAUNCH.md</code> en <code>native/ios/APPSTORE-CHECKLIST.md</code> alleen als je een store wilt.</p>
   </div>
   ${sections}
   <div class="next">
