@@ -129,7 +129,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-| 2026-09-10 | — | Android GO: `npm run android:go` + `native/android/GO.md` — $25, keystore, AAB, 12 testers × 14 dagen. |
+| 2026-09-10 | — | Store scripts: geen bash-inject, --html pad-lock, git weigert getrackte .jks/.p12, shots alleen localhost. |
 | 2026-09-10 | — | Store doctor: website ís het spel; Play/App Store optioneel, niet verplicht. |
 | 2026-09-10 | — | Store doctor (`npm run store:doctor`) + App Store-checklist: wat jij moet doen vóór deploy (Developer €99, Mac/Xcode, 4.2, TestFlight). Listing zonder versus. |
 | 2026-08-17 | **merge** | Mega-merge op huidige main: #247 light-FX + #246 versus-stubs + #240 dawnblade (geen versus-roster). v1.18.152 / SW 362. |

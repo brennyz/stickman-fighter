@@ -18,7 +18,11 @@ const chrome = [
   '/usr/local/bin/google-chrome',
   '/usr/bin/google-chrome',
   '/usr/bin/chromium-browser',
-].find((p) => p && fs.existsSync(p));
+].find((p) => {
+  if (!p || !fs.existsSync(p)) return false;
+  const base = path.basename(p).toLowerCase();
+  return base === 'google-chrome' || base === 'chrome' || base === 'chromium' || base === 'chromium-browser';
+});
 
 if (!chrome) {
   console.error('FEATURE_FAIL no chrome — set CHROME_PATH');

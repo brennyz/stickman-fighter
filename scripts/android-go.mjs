@@ -12,8 +12,10 @@ import { fileURLToPath } from 'url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 function which(cmd) {
-  const r = spawnSync('bash', ['-lc', `command -v ${cmd}`], { encoding: 'utf8' });
-  return r.status === 0 ? r.stdout.trim() : '';
+  if (!/^[a-zA-Z0-9_-]+$/.test(cmd)) return '';
+  const tool = process.platform === 'win32' ? 'where' : 'which';
+  const r = spawnSync(tool, [cmd], { encoding: 'utf8' });
+  return r.status === 0 ? (r.stdout.trim().split(/\r?\n/)[0] || '') : '';
 }
 function exists(rel) {
   return fs.existsSync(path.join(root, rel));

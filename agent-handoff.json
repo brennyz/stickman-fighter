@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260910T201014",
+      "from": "user",
+      "text": "Fix security issues",
+      "status": "done-in-code",
+      "updated": "2026-09-10"
+    },
+    {
       "id": "w-20260910T200616",
       "from": "user",
       "text": "Ik ben wel go voor Android",
@@ -551,6 +558,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-10T20:10:14Z",
+      "summary": "security harden store scripts: html-pad, geen shell-inject, git secret-check"
+    },
+    {
       "at": "2026-09-10T20:07:14Z",
       "summary": "Android GO-kaart + android:go + Play feature graphic"
     },
@@ -645,10 +656,6 @@
     {
       "at": "2026-08-17T07:17:45Z",
       "summary": "Derde d20-worp geclaimd via CLI"
-    },
-    {
-      "at": "2026-08-17T07:16:06Z",
-      "summary": "d20 code health: spook-Kets UI weg, live balk blijft — klaar voor super-merge"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

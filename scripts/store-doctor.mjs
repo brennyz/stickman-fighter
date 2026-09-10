@@ -7,6 +7,7 @@
  *   node scripts/store-doctor.mjs
  *   node scripts/store-doctor.mjs --html /tmp/store-doctor.html
  */
+import { spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -40,6 +41,35 @@ function argValue(flag) {
   const next = process.argv[i + 1];
   if (!next || next.startsWith('-')) return '';
   return next;
+}
+
+function trackedSecretPaths() {
+  const r = spawnSync(
+    'git',
+    ['ls-files', '--', '*.jks', '*.keystore', '*.p12', '*.p8', '**/keystore.properties', '**/AuthKey_*.p8'],
+    { cwd: root, encoding: 'utf8' },
+  );
+  return (r.stdout || '')
+    .split(/\r?\n/)
+    .map((s) => s.trim())
+    .filter((p) => p && !p.endsWith('.example'));
+}
+
+function safeHtmlOutPath(arg) {
+  const fallback = path.join(root, 'docs/store/doctor-report.html');
+  const resolved = path.resolve(arg || fallback);
+  const allowed = [
+    path.join(root, 'docs/store'),
+    '/tmp',
+    '/opt/cursor/artifacts',
+  ];
+  const okExt = resolved.toLowerCase().endsWith('.html');
+  const okDir = allowed.some((dir) => resolved === dir || resolved.startsWith(dir + path.sep));
+  if (!okExt || !okDir) {
+    console.error('STORE_DOCTOR_FAIL --html alleen onder docs/store/, /tmp/ of /opt/cursor/artifacts/');
+    process.exit(1);
+  }
+  return resolved;
 }
 
 function add(track, status, title, detail) {
@@ -128,11 +158,14 @@ add('play', shots >= 8 ? 'ok' : (shots > 0 ? 'warn' : 'you'),
   `Store-screenshots (${shots} PNG)`,
   shots ? 'docs/store/screenshots/ — handmatig in Console plakken'
     : 'npm run store:shots  (Chrome nodig; PNG’s blijven lokaal / gitignored)');
-add('play', hasKeystore ? 'warn' : 'ok',
+const leakedSecrets = trackedSecretPaths();
+add('play', leakedSecrets.length ? 'fail' : 'ok',
+  leakedSecrets.length
+    ? `Git trackt secrets: ${leakedSecrets.join(', ')}`
+    : 'Geen keystore/API-key in git',
   hasKeystore
-    ? 'Keystore staat in de werkmap — niet committen'
-    : 'Geen keystore in git (goed)',
-  'Jij maakt signing/upload-keystore.jks één keer op de pc. Nooit in GitHub.');
+    ? 'Lokaal keystore-bestand aanwezig — oké als gitignored, nooit pushen'
+    : 'Jij maakt signing/upload-keystore.jks één keer op de pc. Nooit in GitHub.');
 add('play', exists('docs/store/play-console-stappen.md') ? 'ok' : 'fail',
   'Play Console plakvolgorde',
   'docs/store/play-console-stappen.md');
@@ -234,9 +267,7 @@ console.log(lines.join('\n'));
 
 const htmlArg = argValue('--html');
 if (htmlArg !== null) {
-  const htmlPath = htmlArg
-    ? path.resolve(htmlArg)
-    : path.join(root, 'docs/store/doctor-report.html');
+  const htmlPath = safeHtmlOutPath(htmlArg);
   fs.mkdirSync(path.dirname(htmlPath), { recursive: true });
   fs.writeFileSync(htmlPath, renderHtml({
     appFromSrc, swRev, packageId: twa.packageId || '?', rows, fails, warns, youN,
@@ -250,7 +281,9 @@ function escapeHtml(s) {
   return String(s)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function renderHtml({ appFromSrc: ver, swRev: sw, packageId, rows: all, fails: f, warns: w, youN: y }) {

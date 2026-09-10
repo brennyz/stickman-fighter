@@ -18,10 +18,27 @@ import { ensureSmokeServer, smokeBaseUrl } from './smoke-static-server.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const defaultOut = path.join(root, 'docs/store/screenshots');
+function allowedWriteDir(resolved) {
+  const allowed = [defaultOut, '/tmp', '/opt/cursor/artifacts'];
+  return allowed.some((dir) => resolved === dir || resolved.startsWith(dir + path.sep));
+}
 const outDir = process.env.OUT_DIR
   ? path.resolve(process.env.OUT_DIR)
   : defaultOut;
+if (!allowedWriteDir(outDir)) {
+  console.error('CAPTURE_FAIL OUT_DIR must be docs/store/screenshots, /tmp, or artifacts');
+  process.exit(1);
+}
 const puppeteerInstallDir = '/tmp/sf-store-shots-deps';
+
+function allowedShotUrl(url) {
+  try {
+    const u = new URL(url);
+    return u.protocol === 'http:' && (u.hostname === '127.0.0.1' || u.hostname === 'localhost');
+  } catch {
+    return false;
+  }
+}
 
 const VIEWPORTS = [
   // Google Play phone landscape (16:9)
@@ -194,6 +211,10 @@ async function run() {
   } catch (_) {}
 
   const base = process.argv[2] || smokeBaseUrl(8787, '/index.html');
+  if (!allowedShotUrl(base)) {
+    console.error('CAPTURE_FAIL URL must be http://127.0.0.1 or http://localhost');
+    process.exit(1);
+  }
   const puppeteer = await getPuppeteer();
   const browser = await puppeteer.default.launch({
     executablePath: chrome,
