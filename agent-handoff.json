@@ -94,7 +94,7 @@
       "id": "w-20260910T125242",
       "from": "user",
       "text": "verbeter de store-tool; toon wat er moet gebeuren vóór App Store deploy",
-      "status": "open",
+      "status": "done-in-code",
       "updated": "2026-09-10"
     },
     {
@@ -537,6 +537,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-10T13:08:47Z",
+      "summary": "store:doctor + App Store-checklist: wat jij moet doen vóór Play/App Store-deploy"
+    },
+    {
       "at": "2026-09-10T12:52:42Z",
       "summary": "store:doctor + App Store-checklist (wat jij moet doen vóór deploy)"
     },
@@ -631,10 +635,6 @@
     {
       "at": "2026-08-17T06:33:20Z",
       "summary": "Director-protocol ontvangen — d20-claim via CLI, niet mergen"
-    },
-    {
-      "at": "2026-08-16T08:27:26Z",
-      "summary": "LIVE gemerged naar main: mobiel slaan + d12 dex · v1.18.143 / SW 353 — Verse versie op telefoon"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
