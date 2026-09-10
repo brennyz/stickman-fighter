@@ -1,10 +1,12 @@
 # Store drafts
 
-**Android first** — Play-drafts hieronder. App Store-pad is uitgelegd (niet “on hold verzwegen”): `../../STORE-LAUNCH.md` + `../../native/ios/APPSTORE-CHECKLIST.md`.
+**Android GO** — `../../native/android/GO.md` · `npm run android:go`. App Store blijft optioneel: `../../STORE-LAUNCH.md` + `../../native/ios/APPSTORE-CHECKLIST.md`.
 
 ```bash
-npm run store:doctor          # wat zit in de repo / wat jij nog moet
+npm run android:go            # Play-GO: wat de pc nog mist
+npm run store:doctor          # PWA + Play + App Store + listing
 npm run store:shots           # landscape PNG’s (gitignored)
+npm run store:feature         # Play feature graphic 1024×500
 ```
 
 ## Privacy & data

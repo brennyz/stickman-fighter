@@ -94,6 +94,9 @@ add('pwa', 'you', 'Device-QA op je telefoon',
   'Chrome → speel.html → toevoegen aan startscherm → 5 min avontuur + Verse versie. Zie docs/store/device-qa.md');
 
 /* ---- Play ---- */
+add('play', exists('native/android/GO.md') ? 'ok' : 'fail',
+  'Android GO — jij hebt gekozen',
+  'native/android/GO.md · npm run android:go — $25 + 12 testers × 14 dagen');
 add('play', exists('native/android/twa-manifest.json') ? 'ok' : 'fail',
   'TWA-scaffold (Bubblewrap)',
   `package ${twa.packageId || '?'} · start ${twa.startUrl || '?'}`);
@@ -130,10 +133,13 @@ add('play', hasKeystore ? 'warn' : 'ok',
     ? 'Keystore staat in de werkmap — niet committen'
     : 'Geen keystore in git (goed)',
   'Jij maakt signing/upload-keystore.jks één keer op de pc. Nooit in GitHub.');
-add('play', 'you', 'Alleen als je een Play-icoon wilt: Console-account',
-  'Niet verplicht. https://play.google.com/console — eenmalig, goedkoper/sneller dan Apple');
-add('play', 'you', 'Alleen als je Play wilt: AAB + Internal testing',
-  'Op de pc: npm run android:init → npm run android:build → APK op telefoon → AAB naar Internal testing → vrienden → productie');
+add('play', exists('docs/store/play-console-stappen.md') ? 'ok' : 'fail',
+  'Play Console plakvolgorde',
+  'docs/store/play-console-stappen.md');
+add('play', 'you', 'Play Console-account (US$25 eenmalig)',
+  'https://play.google.com/console — 2FA, geen prepaid. Daarna app Stickman Fighter aanmaken.');
+add('play', 'you', 'AAB op de pc + closed testing',
+  'npm run android:init → android:build → APK-smoke → AAB → Closed testing (12 testers × 14 dagen) → productie');
 
 /* ---- App Store ---- */
 add('ios', exists('native/ios/README.md') && exists('native/ios/GUIDELINE-4.2.md') ? 'ok' : 'fail',
@@ -175,7 +181,7 @@ add('copy', iapLie ? 'fail' : 'ok',
 const mark = { ok: 'OK  ', warn: 'LET ', fail: 'FOUT', you: 'JIJ ' };
 const tracks = [
   ['pwa', 'A · Website (PWA — dit ís het spel)'],
-  ['play', 'B · Google Play (optioneel)'],
+  ['play', 'B · Google Play — GO (jij nu)'],
   ['ios', 'C · Apple App Store (optioneel)'],
   ['copy', 'Listing-eerlijkheid'],
 ];
@@ -198,10 +204,9 @@ for (const [id, title] of tracks) {
 }
 
 lines.push('── Wat dit inhoudt ──');
-lines.push('  De website IS het spel. Geen Play-app, geen App Store-app — en dat hoeft ook niet.');
-lines.push('  Delen = speel.html. “Zet op startscherm” = bladwijzer, geen store-listing.');
-lines.push('  Play is extra (icoon in de Play Store). App Store is extra (apart iOS-programma).');
-lines.push('  Agent = drafts/scripts. Jij = alleen store-accounts als je die extra wilt.');
+lines.push('  De website IS het spel. Delen blijft speel.html.');
+lines.push('  Android/Play: GO — jij maakt het Play-icoon (TWA). App Store blijft optioneel.');
+lines.push('  Agent = drafts/scripts. Jij = $25, keystore, AAB, 12 testers. Zie npm run android:go');
 lines.push('');
 lines.push('── Als je tóch App Store wilt (optioneel — jij, niet de agent) ──');
 lines.push('  1. Apple Developer Program — €99/jaar, Apple-ID, 2FA.');
@@ -213,10 +218,11 @@ lines.push('  6. TestFlight intern → Submit for Review → wachten op Apple.')
 lines.push('  Lees: native/ios/APPSTORE-CHECKLIST.md');
 lines.push('');
 lines.push('── Volgende commando’s ──');
+lines.push('  npm run android:go      # Play-GO: wat de pc nog mist');
 lines.push('  npm run store:shots     # screenshots (Chrome)');
+lines.push('  npm run store:feature   # Play feature graphic 1024×500');
 lines.push('  npm run android:init    # eenmalig TWA-project op de pc');
-lines.push('  npm run android:build   # APK/AAB — zie native/android/BUILD.md');
-lines.push('  STORE-LAUNCH.md         # volledige stappen A → B → C');
+lines.push('  npm run android:build   # APK/AAB — zie native/android/GO.md');
 lines.push('');
 
 const youN = rows.filter((r) => r.status === 'you').length;
@@ -312,7 +318,7 @@ function renderHtml({ appFromSrc: ver, swRev: sw, packageId, rows: all, fails: f
   ${sections}
   <div class="next">
     <h2>Volgende commando’s</h2>
-    <p><code>npm run store:shots</code> · <code>npm run android:init</code> · <code>npm run android:build</code></p>
+    <p><code>npm run android:go</code> · <code>npm run store:shots</code> · <code>npm run store:feature</code> · <code>npm run android:build</code></p>
   </div>
   <footer>Gegenereerd door <code>npm run store:doctor -- --html</code>. Geen secrets, geen account-calls.</footer>
 </main>

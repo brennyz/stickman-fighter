@@ -1,8 +1,8 @@
 # Store & livegang — Android first, App Store zichtbaar
 
-**De website is het spel.** Play en App Store zijn **optioneel** — niet nodig om te spelen of te delen (`speel.html`).
+**De website is het spel.** App Store blijft optioneel.
 
-Als je later wél een store-icoon wilt: eerst Android (PWA → Play TWA). App Store (pad C) alleen wanneer jij €99 + Mac klaarzet. Tot die tijd: geen Xcode-project in de repo.
+**Android / Play: GO.** Jij maakt het icoon in de Play Store (TWA). Kaart: `native/android/GO.md` · `npm run android:go`.
 
 **Live PWA:** https://brennyz.github.io/stickman-fighter/speel.html · **v1.18.152 / SW 362**
 **Privacy:** https://brennyz.github.io/stickman-fighter/privacy.html
@@ -21,9 +21,9 @@ App Store in gewone taal: `native/ios/APPSTORE-CHECKLIST.md`.
 
 | Pad | Focus? | Klaar in repo? | Blockers (jij) |
 |-----|--------|----------------|----------------|
-| A. Website (PWA) | **dit is het spel** | ~95% | Telefoon-smoke als je wilt |
-| B. Google Play (TWA) | optioneel | scaffold + drafts | Alleen als je een Play-icoon wilt |
-| C. Apple App Store | optioneel | docs + stubs | Alleen als je een App Store-icoon wilt |
+| A. Website (PWA) | blijft het spel | ~95% | Telefoon-smoke (`device-qa.md`) |
+| B. Google Play (TWA) | **GO** | scaffold + drafts | Jij: $25, keystore, AAB, 12 testers |
+| C. Apple App Store | later / optioneel | docs + stubs | Niet nu |
 
 `native/ios/` is **documentatie + Capacitor-stubs**. Geen IPA tot jij op een Mac `npx cap add ios` draait.
 
@@ -41,9 +41,9 @@ Deel-link = `speel.html` (niet `ipad.html`, geen tunnel).
 
 ---
 
-## B — Google Play (optioneel — kortste store-pad)
+## B — Google Play — GO
 
-Niet nodig voor spelen. Alleen als je een icoon in de Play Store wilt. De TWA opent dan dezelfde website.
+Jij wilt het Play-icoon. De TWA opent dezelfde website. **Start:** `native/android/GO.md`.
 
 TWA / Bubblewrap opent **dezelfde** Pages-URL in Chrome Custom Tabs. Updates = `git push` + Pages. Geen aparte game-binary.
 
@@ -58,7 +58,7 @@ TWA / Bubblewrap opent **dezelfde** Pages-URL in Chrome Custom Tabs. Updates = `
 | B7 | Data safety | **jij** | draft in `docs/store/data-safety-play.md` |
 | B8 | Privacy URL in Console | **jij** | `…/privacy.html` |
 | B9 | Keystore lokaal + Bubblewrap → **APK** (test) + **AAB** (Play) | **jij** op PC | zie `native/android/BUILD.md` |
-| B10 | Internal testing track → open testing → productie | **jij** | pending |
+| B10 | Closed testing (12 testers × 14 dagen) → productie | **jij** | pending — zie GO.md |
 
 Package id: `com.brennyz.stickmanfighter`
 

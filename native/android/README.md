@@ -1,6 +1,8 @@
 # Android Play shell — Stickman Fighter
 
-**Store strategy:** Android / Google Play **first**. Apple is on hold (`STORE-LAUNCH.md`).
+**Store strategy:** Android / Google Play **GO**. Apple remains optional (`STORE-LAUNCH.md`).
+
+**Start here:** [`GO.md`](./GO.md) · `npm run android:go`
 
 **Scope:** B1–B2 (Google Play wrapper scaffold). No game combat changes.
 
@@ -59,7 +61,8 @@ Notes + checklist: [`icons/NOTES.md`](./icons/NOTES.md).
 
 | Path | Purpose |
 |------|---------|
-| **[BUILD.md](./BUILD.md)** | **Start hier** — APK/AAB stappen zonder “APK maker”-sites |
+| **[GO.md](./GO.md)** | **Start hier** — jij bent GO, volgorde op de pc |
+| **[BUILD.md](./BUILD.md)** | APK/AAB-commando’s zonder “APK maker”-sites |
 | `twa-manifest.json` | Bubblewrap project config (checked in) |
 | `signing/keystore.properties.example` | Signing placeholders — **no secrets** |
 | `signing/.gitignore` | Ignore real keystores / properties |

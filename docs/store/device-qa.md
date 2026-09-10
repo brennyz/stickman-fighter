@@ -1,7 +1,7 @@
 # Device QA — soft live (PWA) · Android first
 
 Deel-link: https://brennyz.github.io/stickman-fighter/speel.html  
-Store-pad nu: **Google Play only** (Apple on hold).
+Store-pad nu: **Android GO** (`native/android/GO.md`). Apple blijft optioneel.
 
 ## 1. Android Chrome (prioriteit)
 

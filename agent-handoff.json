@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260910T200616",
+      "from": "user",
+      "text": "Ik ben wel go voor Android",
+      "status": "done-in-code",
+      "updated": "2026-09-10"
+    },
+    {
       "id": "w-20260910T131901",
       "from": "user",
       "text": "website is geen Play-app — hoeft dat ook niet?",
@@ -544,6 +551,14 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-10T20:07:14Z",
+      "summary": "Android GO-kaart + android:go + Play feature graphic"
+    },
+    {
+      "at": "2026-09-10T20:06:16Z",
+      "summary": "Android GO: Play-pad actief — GO.md + android:go"
+    },
+    {
       "at": "2026-09-10T13:19:01Z",
       "summary": "website is het spel; Play en App Store optioneel, niet verplicht"
     },
@@ -634,14 +649,6 @@
     {
       "at": "2026-08-17T07:16:06Z",
       "summary": "d20 code health: spook-Kets UI weg, live balk blijft — klaar voor super-merge"
-    },
-    {
-      "at": "2026-08-17T07:08:14Z",
-      "summary": "Tweede d20-worp geclaimd via CLI"
-    },
-    {
-      "at": "2026-08-17T06:41:19Z",
-      "summary": "d8 PWA: SW wacht op menu, update-banner tikt alleen op hub — klaar voor super-merge"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
