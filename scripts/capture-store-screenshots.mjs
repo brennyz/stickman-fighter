@@ -38,7 +38,7 @@ const SCENES = [
   { id: '01-menu', label: 'main menu', setup: setupMenu },
   { id: '02-levels', label: 'level select', setup: setupLevels },
   { id: '03-adventure', label: 'adventure fight', setup: setupAdventure },
-  { id: '04-versus-ready', label: 'versus / char path', setup: setupVersusReady },
+  { id: '04-arcade-hub', label: 'arcade / training hub', setup: setupArcadeHub },
 ];
 
 const chrome = [
@@ -141,26 +141,19 @@ async function setupAdventure(page) {
   await sleep(400);
 }
 
-async function setupVersusReady(page) {
+async function setupArcadeHub(page) {
   await page.evaluate(() => {
     try {
       if (typeof recoverToMenu === 'function') recoverToMenu({ force: true });
     } catch (_) {}
     if (typeof UI !== 'undefined' && UI.safeOpen) {
-      const modeHub = document.getElementById('modeHubScreen');
-      if (modeHub) {
-        UI.safeOpen('modeHubScreen', () => {});
-        return;
-      }
-      const vs = document.getElementById('charScreen') || document.getElementById('versusScreen');
-      if (vs) {
-        document.querySelectorAll('.screen').forEach((s) => s.classList.remove('active'));
-        vs.classList.add('active');
-        return;
-      }
+      UI.safeOpen('modeHubScreen', () => {
+        if (typeof UI.renderModeHub === 'function') UI.renderModeHub();
+      });
+      return;
     }
     document.querySelectorAll('.screen').forEach((s) => s.classList.remove('active'));
-    document.getElementById('menuScreen')?.classList.add('active');
+    document.getElementById('modeHubScreen')?.classList.add('active');
   });
   await sleep(500);
 }

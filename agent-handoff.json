@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260910T125242",
+      "from": "user",
+      "text": "verbeter de store-tool; toon wat er moet gebeuren vóór App Store deploy",
+      "status": "open",
+      "updated": "2026-09-10"
+    },
+    {
       "id": "w-20260817T142500",
       "from": "user",
       "text": "Conflicts van open PRs oplossen en daarna mega-merge naar main.",
@@ -530,6 +537,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-10T12:52:42Z",
+      "summary": "store:doctor + App Store-checklist (wat jij moet doen vóór deploy)"
+    },
+    {
       "at": "2026-08-17T14:31:25Z",
       "summary": "Mega-merge op main: light-FX + versus-stubs + dawnblade · v1.18.152 / SW 362"
     },
@@ -624,10 +635,6 @@
     {
       "at": "2026-08-16T08:27:26Z",
       "summary": "LIVE gemerged naar main: mobiel slaan + d12 dex · v1.18.143 / SW 353 — Verse versie op telefoon"
-    },
-    {
-      "at": "2026-08-16T08:26:00Z",
-      "summary": "LIVE merge: mobiel slaan (attackSpec + 44px pads) + d12 dex · v1.18.143 / SW 353"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

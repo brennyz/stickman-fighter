@@ -19,9 +19,9 @@ Reviewers can open the app and play immediately. Progress is stored on-device (l
 2. Tap **Adventure** (or Avontuur) → pick **Level 1** (or lowest unlocked).
 3. Optional **dice / gamble** screen: tap **Skip** (or equivalent) to start without a roll, **or** roll — see honesty note below.
 4. Fight cartoon stickman vs monsters; touch buttons (or keyboard on Mac Catalyst / simulator).
-5. Pause → Home returns to menu. Versus / Training also work without network.
+5. Pause → Home returns to menu. Training and Arcade (wall / Mats) also work without network.
 
-Landscape orientation recommended (especially 2-player).
+Landscape orientation recommended, especially on iPad.
 
 ---
 
@@ -42,8 +42,10 @@ Please do **not** treat this as Guideline 3.1.1 gambling or as a casino feature.
 | Is | Is not |
 |----|--------|
 | Offline-capable cartoon arena fighter | Online chat / social network |
-| Local 1–2 player on one device | Account-gated online PvP |
+| Local single-player (adventure, training, arcade) | Account-gated online PvP |
 | Free, no IAP in this build | Coin shop / battle pass |
+
+Local versus / two-player-on-one-device is retired and is **not** in this binary.
 
 ---
 

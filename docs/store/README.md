@@ -1,29 +1,34 @@
 # Store drafts
 
-**Android first** — use Play drafts below. iOS nutrition / App Review notes are optional later (Apple on hold).
+**Android first** — Play-drafts hieronder. App Store-pad is uitgelegd (niet “on hold verzwegen”): `../../STORE-LAUNCH.md` + `../../native/ios/APPSTORE-CHECKLIST.md`.
+
+```bash
+npm run store:doctor          # wat zit in de repo / wat jij nog moet
+npm run store:shots           # landscape PNG’s (gitignored)
+```
 
 ## Privacy & data
 
 | File | Purpose |
 |------|---------|
 | [data-safety-play.md](./data-safety-play.md) | Play Data safety — local-only save (**B7 · nu**) |
-| [privacy-nutrition-ios.md](./privacy-nutrition-ios.md) | App Privacy nutrition — **later / Apple hold** |
+| [privacy-nutrition-ios.md](./privacy-nutrition-ios.md) | App Privacy nutrition — pad C, als/wanneer iOS start |
 | `/privacy.html` (repo root) | Public privacy policy → Pages |
 
 ## Soft-feel / QA
 
 - [device-qa.md](./device-qa.md) — soft-live checklist (**prioriteit: Android Chrome**)
 
-## Listing & rating (Play)
+## Listing & rating
 
 | File | Purpose |
 |------|---------|
-| [listing-nl.md](./listing-nl.md) | NL title, short/long description, keywords (B4) |
-| [listing-en.md](./listing-en.md) | EN title, short/long description, keywords (B4) |
+| [listing-nl.md](./listing-nl.md) | NL title, short/long description, keywords (B4 / C5) |
+| [listing-en.md](./listing-en.md) | EN title, short/long description, keywords (B4 / C5) |
 | [content-rating-iarc.md](./content-rating-iarc.md) | IARC / age-rating questionnaire draft (B6) |
-| [review-notes.md](./review-notes.md) | Review notes (Play + later App Store) |
+| [review-notes.md](./review-notes.md) | Review notes (Play + App Store) |
 
-Claims: cartoon stickman arena fighter · **no IAP** · no account · dice roll = in-game run modifier only (not real-money gambling).
+Claims: cartoon stickman arena fighter · **no IAP** · no account · solo adventure / training / arcade · dice roll = in-game run modifier only (not real-money gambling). **Do not claim versus / 2-player.**
 
 ## Screenshots (B5 / C5)
 
@@ -54,6 +59,6 @@ Output sizes (landscape):
 | `play-tablet-1920x1200` | 1920×1200 | Google Play tablet |
 | `ios-ipad-2732x2048` | 2732×2048 | App Store iPad |
 
-Scenes per size: menu, level select, adventure fight, versus/hub.
+Scenes per size: menu, level select, adventure fight, **arcade / training hub**.
 
 PNG files under `docs/store/screenshots/*.png` are **gitignored** (folder kept via `.gitkeep`). Attach generated shots in Play Console / App Store Connect manually.

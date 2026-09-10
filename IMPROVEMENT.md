@@ -129,6 +129,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-10 | — | Store doctor (`npm run store:doctor`) + App Store-checklist: wat jij moet doen vóór deploy (Developer €99, Mac/Xcode, 4.2, TestFlight). Listing zonder versus. |
 | 2026-08-17 | **merge** | Mega-merge op huidige main: #247 light-FX + #246 versus-stubs + #240 dawnblade (geen versus-roster). v1.18.152 / SW 362. |
 | 2026-08-17 | — | GitHub-sync: agent vraagt bij wijzigingen of we naar main moeten; wachtlijst in `githubSync` + `./scripts/github-sync-status.sh`. |
 | 2026-08-17 | — | PC-pull: `./scripts/pull-main.sh` (of `npm run pull`) zet de clone op origin/main. |
