@@ -1826,7 +1826,15 @@ const UI = {
       } else cont.style.display = 'none';
     }
     document.querySelectorAll('[data-hub]').forEach((el) => {
-      el.classList.toggle('hub-tile-featured', el.dataset.hub === featHub);
+      const featured = featHub ? el.dataset.hub === featHub : el.dataset.hub === 'adventure';
+      el.classList.toggle('hub-tile-featured', featured);
+      if (featured) {
+        el.setAttribute('data-hub-badge', featHub
+          ? tOr('menu.lastPlayed', 'LAATST')
+          : tOr('menu.playHere', 'SPEEL'));
+      } else {
+        el.removeAttribute('data-hub-badge');
+      }
     });
     document.querySelectorAll('[data-hub-stat]').forEach((el) => {
       // hubTileStatLine may include SVG_COIN_ICON <img> — must be HTML, not textContent
@@ -1838,8 +1846,8 @@ const UI = {
       try { left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
       summonTile.classList.toggle('has-summons', left > 0);
       summonTile.setAttribute('aria-label', left > 0
-        ? `Summons · ${left} over vandaag`
-        : 'Summons · op voor vandaag');
+        ? `${tOr('menu.summons', 'Summons')} · ${left} over vandaag`
+        : `${tOr('menu.summons', 'Summons')} · op voor vandaag`);
     }
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);

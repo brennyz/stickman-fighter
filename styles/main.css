@@ -454,8 +454,12 @@
   #menuScreen.menu-video-overhaul .menu-meta-cluster .btn.b-install {
     width: 100%;
     margin: 0;
-    opacity: 1;
-    background: var(--menu-tile-solid-hi);
+    opacity: .92;
+    background: transparent;
+    border: 1px solid var(--menu-edge);
+    box-shadow: none;
+    min-height: 40px;
+    padding: 8px 12px;
   }
   #menuScreen.menu-video-overhaul .menu-lang-compact .dex-filter-btn {
     -webkit-backdrop-filter: none;
@@ -606,6 +610,7 @@
   .menu-lang-bar { width: 100%; margin: 0; justify-content: center; }
   .menu-landing-inner > .btn.mode-btn.b-continue { width: 100%; margin: 2px 0 0; min-height: 54px; }
   .hub-tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ui-gap); width: 100%; margin: 4px 0 0; }
+  .hub-tile-grid .hub-tile-adventure { grid-column: 1 / -1; min-height: 96px; }
   .hub-tile {
     position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 5px;
     padding: 13px 32px 11px 13px; min-height: 88px; border-radius: 14px; cursor: pointer;
@@ -624,9 +629,11 @@
     box-shadow: 0 3px 0 rgba(0,0,0,.26), 0 0 0 1px rgba(255,215,94,.2), inset 0 1px 0 rgba(255,255,255,.1);
   }
   .hub-tile-featured::before {
-    content: 'LAATST'; position: absolute; top: 8px; right: 28px;
+    content: attr(data-hub-badge); position: absolute; top: 8px; right: 28px;
     font-size: 8px; font-weight: 900; letter-spacing: .08em; color: #ffd75e; opacity: .9;
   }
+  .hub-tile-featured:not([data-hub-badge])::before,
+  .hub-tile-featured[data-hub-badge=""]::before { content: none; }
   .hub-tile-ico { width: 1.85em; height: 1.85em; display: flex; align-items: center; justify-content: center;
     border-radius: 9px; background: rgba(0,0,0,.2); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
   .hub-tile-ico svg { width: 1.15em; height: 1.15em; }

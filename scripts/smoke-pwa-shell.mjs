@@ -73,5 +73,10 @@ must(!/Sluit Safari/.test(index), 'install done-copy must not assume Safari');
 must(/serviceWorker\.register/.test(speel), 'speel.html should register SW for share-link installs');
 must(/sessionStorage\.setItem\('sf_share_url'/.test(speel), 'speel.html should cache share URL for offline');
 must(/offlineHint/.test(speel), 'speel.html missing offline hint');
+must(/id="btnPlay"/.test(speel) && /▶ SPELEN/.test(speel), 'speel.html missing primary SPELEN');
+must(/id="installFold"/.test(speel) && /<details/.test(speel), 'speel.html should fold install steps');
+const playAt = speel.indexOf('id="btnPlay"');
+const foldAt = speel.indexOf('id="installFold"');
+must(playAt !== -1 && foldAt !== -1 && playAt < foldAt, 'SPELEN must appear before install fold');
 
 console.log('SMOKE_OK pwa-shell rev=' + rev[1]);

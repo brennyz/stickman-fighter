@@ -789,14 +789,17 @@ function buildLevel(n, diffId) {
     waves.push(list);
     waveMeta.push(meta);
   }
-  // Soft live A3: golf 1 milder — minder mobs, geen rush/pain/ember, langzamere spawn.
+  // Soft live A3 + playtest P1: golf 1 milder — opener niet omsingelen.
   if (waves[0] && waves[0].length) {
-    const softCap = n <= 3
-      ? Math.max(4, Math.ceil(perWave * 0.42))
-      : n <= 8
-        ? Math.max(5, Math.ceil(perWave * 0.55))
-        : Math.max(6, Math.ceil(perWave * 0.72));
+    const softCap = n <= 2
+      ? (n === 1 ? 2 : 3)
+      : n <= 3
+        ? Math.max(3, Math.ceil(perWave * 0.38))
+        : n <= 8
+          ? Math.max(5, Math.ceil(perWave * 0.55))
+          : Math.max(6, Math.ceil(perWave * 0.72));
     if (waves[0].length > softCap) waves[0] = waves[0].slice(0, softCap);
+    if (n === 1 && waves[1] && waves[1].length > 4) waves[1] = waves[1].slice(0, 4);
     if (n <= 5) {
       for (let i = 0; i < waves[0].length; i++) {
         waves[0][i].elite = false;
@@ -809,7 +812,7 @@ function buildLevel(n, diffId) {
         waveMeta[0].trait = null;
         waveMeta[0].label = '';
       }
-      waveMeta[0].spawnMul = Math.max(waveMeta[0].spawnMul || 1, n <= 8 ? 1.22 : 1.1);
+      waveMeta[0].spawnMul = Math.max(waveMeta[0].spawnMul || 1, n <= 2 ? 1.55 : (n <= 8 ? 1.22 : 1.1));
     }
   }
   if (BOSS_AT[n]) {
