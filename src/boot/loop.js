@@ -921,6 +921,8 @@ function bootGame() {
     get state() { return state; },
     get swRev() { return SW_CACHE_REV; },
     startGame, save, Game, UI, recoverToMenu, syncPlayLayer,
+    resetAimTutorial: typeof resetAimTutorialFlag === 'function' ? resetAimTutorialFlag : null,
+    aimTutorialSeen: typeof aimTutorialSeen === 'function' ? aimTutorialSeen : null,
     enterHub: enterHubFromTitle,
     debug: typeof sfDebugScreen === 'function' ? sfDebugScreen : null,
     fixPlayLayer: () => (typeof sfDebugScreen === 'function' ? sfDebugScreen({ fix: true }) : null),

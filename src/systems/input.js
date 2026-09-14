@@ -1105,6 +1105,10 @@ Input.layout = function (W, H) {
 };
 
 addEventListener('keydown', e => {
+  if (typeof handleAimTutorialKey === 'function' && handleAimTutorialKey(e)) {
+    e.preventDefault();
+    return;
+  }
   const k = e.key.toLowerCase();
   const now = performance.now();
   if (!Input.keys[k]) {

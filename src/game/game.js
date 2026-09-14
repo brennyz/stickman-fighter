@@ -2737,6 +2737,7 @@ class Game {
     if (this.mode !== 'versus' && typeof Input !== 'undefined' && Input.dualMode) {
       try { Input.dualMode = false; Input.layout(W, H); } catch (_) {}
     }
+    try { if (typeof updateAimTutorial === 'function') updateAimTutorial(this, dt); } catch (_) {}
     if (this.playerHurtCd > 0) this.playerHurtCd -= dt;
     let ketsJustFinished = false;
     if (this.ketsbamChargeT > 0) {
@@ -3650,7 +3651,7 @@ class Game {
       try { this.drawKetsbamPrompt(c); } catch (_) {}
     }
 
-    if (this.hint > 0) {
+    if (this.hint > 0 && !(typeof aimTutorialActive === 'function' && aimTutorialActive(this))) {
       c.globalAlpha = clamp(this.hint, 0, 1);
       let hintTxt = this.modeHintLine;
       if (!hintTxt) {
@@ -3688,6 +3689,7 @@ class Game {
       });
       c.globalAlpha = 1;
     }
+    try { if (typeof drawAimTutorial === 'function') drawAimTutorial(c, this); } catch (_) {}
   }
 
   drawWall(c) {

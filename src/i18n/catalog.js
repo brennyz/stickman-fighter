@@ -143,6 +143,17 @@ function seedNlGameStrings() {
     weaponLine: 'Nieuw wapen: {name}',
     petCoinsLine: '+{n} pet coins',
   });
+  if (!I18N.nl.aimTut) I18N.nl.aimTut = {};
+  Object.assign(I18N.nl.aimTut, {
+    title: 'MIK MET DE LOOPBALK',
+    body: 'Sleep de balk omhoog of omlaag. Zo raak je hoge én lage monsters.',
+    high: 'HOOG',
+    low: 'LAAG',
+    try: 'Probeer het: sleep omhoog en omlaag',
+    gotIt: 'Begrepen',
+    skip: 'Overslaan',
+    kbHint: 'W/↑ hoog · S/↓ laag · Enter = verder',
+  });
   if (!I18N.nl.combat) I18N.nl.combat = {};
   Object.assign(I18N.nl.combat, {
     counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
@@ -463,6 +474,7 @@ function seedNlGameStrings() {
   });
   if (!I18N.nl.help) I18N.nl.help = {};
   I18N.nl.help.tips = [
+    '<b>Mikken:</b> sleep de <b>loopbalk</b> omhoog voor hoge vijanden, omlaag voor lage — slag én worp volgen je mik.',
     '<b>Power-ups:</b> verslagen monsters laten soms bolletjes vallen — HP, rage, energy, schild.',
     '<b>Bazen:</b> onder half HP worden ze woester (fase 2).',
     '<b>Combo’s:</b> sla snel achter elkaar om ×2 / ×3 schade te stapelen.',
@@ -1272,7 +1284,18 @@ const CATALOG_EN = {
     tideBattle: 'TIDE BATTLE — {name}!', tideBattleWin: 'TIDE BATTLE WON!',
     satan: 'SATAN — {name}!', satanIncoming: 'SATAN APPROACHES…', satanWin: 'SATAN DEFEATED!',
   },
+  aimTut: {
+    title: 'AIM WITH THE MOVE BAR',
+    body: 'Drag the bar up or down to hit high and low monsters.',
+    high: 'HIGH',
+    low: 'LOW',
+    try: 'Try it: drag up and down',
+    gotIt: 'Got it',
+    skip: 'Skip',
+    kbHint: 'W/↑ high · S/↓ low · Enter = continue',
+  },
   help: { tips: [
+    'Aim: drag the <b>move bar</b> up for high foes, down for low ones — melee and throws follow your aim.',
     'Power-ups: defeated monsters sometimes drop orbs — HP, rage, energy, shield.',
     'Bosses: below half HP they get fiercer (phase 2).',
     'Combos: hit quickly in a row to stack ×2 / ×3 damage.',

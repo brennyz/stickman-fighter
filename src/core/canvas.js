@@ -80,6 +80,7 @@ canvas.addEventListener('pointerdown', e => {
   try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
   try {
     const p = pointerGameCoords(e.clientX, e.clientY);
+    if (typeof handleAimTutorialPointer === 'function' && handleAimTutorialPointer(p.x, p.y, game)) return;
     if (ketsbamHitTest(p.x, p.y, game) && game.tryKetsbam()) return;
     Input.onDown(p.x, p.y, e.pointerId);
   } catch (err) {
