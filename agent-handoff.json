@@ -20,10 +20,10 @@
     "featureBranch": "cursor/buildings-ui-home-c4fc",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "localMainHead": "68e5ccc",
+    "localMainHead": "47cf062",
     "remoteMainHead": "68e5ccc",
-    "note": "LIVE main v1.18.161 / SW 371 after #264 merge (68e5ccc). This branch: start polish + HOME chrome unify. #265 folded. #263 parked. Not silent main.",
-    "updated": "2026-09-14T14:20:00Z"
+    "note": "Buildings UI draft #291 (v1.18.164 / SW 374). Mega-merge 2/4 — do not silent main.",
+    "updated": "2026-09-14T17:25:00Z"
   },
   "githubSync": {
     "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
@@ -91,10 +91,17 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260914T172339",
+      "from": "user",
+      "text": "BUILDINGS UI (2 of 4): HOME tile + Buildings screen (5 factories, lock-by-world, collect, upgrade). Draft, no main.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
       "id": "w-20260914T171300",
       "from": "user",
       "text": "BUILDINGS UI (2 of 4): HOME tile + Buildings screen (5 factories, level, lock-by-world, collect timed resources, upgrade CTA). Coordinate systems API / stub. Android-first, no Versus. Draft PR, do not merge main.",
-      "status": "active",
+      "status": "done-in-code",
       "updated": "2026-09-14"
     },
     {
@@ -621,6 +628,14 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:23:54Z",
+      "summary": "Buildings UI (2/4) klaar: HOME-tegel + scherm, draft #291, geen main."
+    },
+    {
+      "at": "2026-09-14T17:23:39Z",
+      "summary": "Buildings UI (2/4): HOME-tegel + list/detail 5 factories, stub systems-API. Draft #291, geen main. v1.18.164/SW374."
+    },
+    {
       "at": "2026-09-14T15:17:48Z",
       "summary": "#266 sprint: NL VERLOREN, Tips-label i.p.v. menu.tips, stillere versie-banner, rest HOME. v1.18.163/SW373. Draft."
     },
@@ -711,14 +726,6 @@
     {
       "at": "2026-08-17T10:18:00Z",
       "summary": "main LIVE 33d89b6 v1.18.151 — pull-commando voor de pc klaar"
-    },
-    {
-      "at": "2026-08-17T10:03:24Z",
-      "summary": "LIVE gemerged #248–#255 naar main conflictloos · v1.18.151 / SW 361 — pull main op de pc"
-    },
-    {
-      "at": "2026-08-17T10:02:29Z",
-      "summary": "LIVE merge van d8–d14 stack naar main (conflictloos FF)"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
