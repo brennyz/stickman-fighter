@@ -274,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.152';
+const APP_VERSION = '1.18.153';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 362;
+const SW_CACHE_REV = 363;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1881,8 +1881,10 @@ const I18N = {
       collect: 'Collectie', collectSub: 'Wapens · stijl · boek', music: 'Muziek', missions: 'Missies',
       summons: 'Summons', summonsSub: 'Dagelijkse kist · wapen & pet',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon op je beginscherm',
-      pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
+      pressStart: 'tik SPELEN', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
       choosePath: 'KIES JE PAD',
+      play: 'SPELEN', playSub: 'Avontuur · Oost-eiland', playContinueSub: 'Verder · {mode}',
+      more: 'Meer',
     },
     hub: {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
@@ -1971,8 +1973,10 @@ const I18N = {
       collect: 'Collection', collectSub: 'Weapons · style · book', music: 'Music', missions: 'Missions',
       summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
       options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add to home screen', installSub: 'One icon on your device',
-      pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
+      pressStart: 'tap PLAY', missionReady: 'mission ready', dayBonus: 'Daily bonus',
       choosePath: 'CHOOSE YOUR PATH',
+      play: 'PLAY', playSub: 'Adventure · East island', playContinueSub: 'Continue · {mode}',
+      more: 'More',
     },
     hub: {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -2060,8 +2064,10 @@ const I18N = {
       arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal · iPad quer',
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch', music: 'Musik', missions: 'Missionen',
       options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Zum Home-Bildschirm', installSub: 'Ein Icon auf dem Gerät',
-      pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
+      pressStart: 'tippe SPIELEN', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
       choosePath: 'WÄHLE DEINEN WEG',
+      play: 'SPIELEN', playSub: 'Abenteuer · Ost-Insel', playContinueSub: 'Weiter · {mode}',
+      more: 'Mehr',
     },
     hub: {
       step: 'Schritt 2 · Modus wählen', solo: 'SOLO', collection: 'SAMMLUNG',
@@ -2132,8 +2138,10 @@ const I18N = {
       arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Pièces', versus: '2 joueurs', versusSub: 'Local · iPad paysage',
       collect: 'Collection', collectSub: 'Armes · style · bestiaire', music: 'Musique', missions: 'Missions',
       options: 'Options', tips: 'Astuces', fresh: 'Version fraîche', install: 'Ajouter à l\'écran d\'accueil', installSub: 'Une icône sur l\'appareil',
-      pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
+      pressStart: 'touche JOUER', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
       choosePath: 'CHOISIS TON CHEMIN',
+      play: 'JOUER', playSub: 'Aventure · Île de l\'Est', playContinueSub: 'Continuer · {mode}',
+      more: 'Plus',
     },
     hub: {
       step: 'Étape 2 · Choisir le mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -2204,8 +2212,10 @@ const I18N = {
       arcade: 'Arcade', arcadeSub: 'Entrenamiento · Muro · Monedas', versus: '2 jugadores', versusSub: 'Local · iPad horizontal',
       collect: 'Colección', collectSub: 'Armas · estilo · bestiario', music: 'Música', missions: 'Misiones',
       options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir a inicio', installSub: 'Un icono en tu dispositivo',
-      pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
+      pressStart: 'toca JUGAR', missionReady: 'misión lista', dayBonus: 'Bonus diario',
       choosePath: 'ELIGE TU CAMINO',
+      play: 'JUGAR', playSub: 'Aventura · Isla Este', playContinueSub: 'Seguir · {mode}',
+      more: 'Más',
     },
     hub: {
       step: 'Paso 2 · Elige modo', solo: 'SOLO', collection: 'COLECCIÓN',
@@ -2313,6 +2323,22 @@ function t(key, params) {
   return s;
 }
 
+/** True when lookup missed and the UI would leak a dotted catalog key. */
+function isRawI18nKey(s) {
+  return typeof s === 'string' && /^[a-z][a-zA-Z0-9]*(\.[a-zA-Z][a-zA-Z0-9]*)+$/.test(s.trim());
+}
+
+/** Resolve a string for result/HUD tips — never return a raw i18n key. */
+function resolvedT(key, fallbackKey, params) {
+  const a = t(key, params);
+  if (a && !isRawI18nKey(a)) return a;
+  if (fallbackKey) {
+    const b = t(fallbackKey, params);
+    if (b && !isRawI18nKey(b)) return b;
+  }
+  return '';
+}
+
 function rarityLabel(id) {
   return t('rarity.' + id) || rarityOf(id).name;
 }
@@ -2357,6 +2383,9 @@ function applyLangStaticScreens() {
   setText('menuLangLbl', 'settings.lang');
   setText('pressStartLine', 'menu.pressStart');
   setText('menuArcadePre', 'menu.choosePath');
+  const moreLbl = document.getElementById('menuMoreLbl');
+  if (moreLbl) moreLbl.textContent = t('menu.more');
+  syncPlayPrimaryLabel();
   const cont = document.getElementById('btnContinue');
   if (cont) {
     const div = cont.querySelector('div');
@@ -2639,15 +2668,62 @@ function renderLangSwitchBar(bar) {
         UI.renderSettings();
         UI.renderMenu();
         if (typeof UI.renderModeHub === 'function') UI.renderModeHub();
+        collapseMenuLangBar();
       }, 'setLang/' + code, t('ui.langSwitchFail') || 'Language switch failed');
     });
   });
+}
+
+function syncMenuLangChip() {
+  const tog = document.getElementById('menuLangToggle');
+  if (tog) tog.textContent = LANG_LABELS[getLang()] || String(getLang()).toUpperCase();
+}
+
+function collapseMenuLangBar() {
+  const bar = document.getElementById('menuLangBar');
+  const tog = document.getElementById('menuLangToggle');
+  if (bar) bar.hidden = true;
+  if (tog) tog.setAttribute('aria-expanded', 'false');
+}
+
+function bindMenuLangToggle() {
+  const tog = document.getElementById('menuLangToggle');
+  const bar = document.getElementById('menuLangBar');
+  if (!tog || !bar || tog.dataset.langToggleBound) return;
+  tog.dataset.langToggleBound = '1';
+  bindPress(tog, () => {
+    const open = !!bar.hidden;
+    bar.hidden = !open;
+    tog.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+}
+
+function playPrimaryModeLabel(lp) {
+  if (!lp || !lp.mode) return '';
+  const labels = {
+    adventure: t('modes.adventure') + (lp.level ? ` Lv ${lp.level}` : ''),
+    training: t('modes.training'), wall: t('modes.wall'), versus: t('modes.versus'), coinrun: t('modes.coinrun'),
+  };
+  return labels[lp.mode] || lp.mode;
+}
+
+function syncPlayPrimaryLabel() {
+  const el = document.getElementById('btnPlayPrimaryLabel');
+  if (!el) return;
+  const lp = (typeof save !== 'undefined' && save && save.lastPlay) ? save.lastPlay : null;
+  if (lp && lp.mode) {
+    el.innerHTML = t('menu.play') + '<small>' + t('menu.playContinueSub', { mode: playPrimaryModeLabel(lp) }) + '</small>';
+  } else {
+    el.innerHTML = t('menu.play') + '<small>' + t('menu.playSub') + '</small>';
+  }
 }
 
 function renderLangSwitch() {
   renderLangSwitchBar(document.getElementById('langSwitchBar'));
   renderLangSwitchBar(document.getElementById('menuLangBar'));
   renderLangSwitchBar(document.getElementById('levelLangBar'));
+  syncMenuLangChip();
+  bindMenuLangToggle();
 }
 
 function applyLang() {
@@ -4790,11 +4866,13 @@ function gokGooiStartLevel(n) {
   try {
     pendingAdvLevel = Math.max(1, Math.min(MAX_LEVEL, Number(n) || advUnlockedLevel() || 1));
     AudioSys.init();
-    lastGambleRoll = rollStageGamble();
+    lastGambleRoll = rollStageGamble(pendingAdvLevel);
     playGambleRollSfx(lastGambleRoll);
     try {
-      const line = typeof gambleRollToastLine === 'function' ? gambleRollToastLine(lastGambleRoll) : '';
-      if (line) UI.toast(line, motionReduced() ? 900 : 1400);
+      const line = lastGambleRoll && lastGambleRoll.openerSafe
+        ? t('toast.openerSafe')
+        : (typeof gambleRollToastLine === 'function' ? gambleRollToastLine(lastGambleRoll) : '');
+      if (line && !(typeof isRawI18nKey === 'function' && isRawI18nKey(line))) UI.toast(line, motionReduced() ? 900 : 1400);
     } catch (_) {}
     try { UI.showGambleRollFlash(lastGambleRoll); } catch (_) {}
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
@@ -4826,7 +4904,7 @@ function gokGooiStartFromScreen() {
   try {
     if (pendingAdvLevel == null) pendingAdvLevel = advUnlockedLevel() || 1;
     AudioSys.init();
-    lastGambleRoll = rollStageGamble();
+    lastGambleRoll = rollStageGamble(pendingAdvLevel || advUnlockedLevel() || 1);
     playGambleRollSfx(lastGambleRoll);
     try { UI.renderGamble(pendingAdvLevel || advUnlockedLevel() || 1); } catch (_) {}
     const sumLine = document.getElementById('gambleSumLine');
@@ -9885,16 +9963,27 @@ function buildLevel(n, diffId) {
   }
   // Soft live A3: golf 1 milder — minder mobs, geen rush/pain/ember, langzamere spawn.
   if (waves[0] && waves[0].length) {
-    const softCap = n <= 3
-      ? Math.max(4, Math.ceil(perWave * 0.42))
-      : n <= 8
-        ? Math.max(5, Math.ceil(perWave * 0.55))
-        : Math.max(6, Math.ceil(perWave * 0.72));
+    const softCap = n <= 2
+      ? 3
+      : n <= 3
+        ? 4
+        : n <= 8
+          ? Math.max(5, Math.ceil(perWave * 0.5))
+          : Math.max(6, Math.ceil(perWave * 0.72));
     if (waves[0].length > softCap) waves[0] = waves[0].slice(0, softCap);
     if (n <= 5) {
+      const groundPool = pool.filter((id) => {
+        const ty = SPECIES[id] && SPECIES[id].type;
+        return ty && ty !== 'tank' && ty !== 'dragon' && ty !== 'fly';
+      });
+      const fallback = groundPool[0] || pool[0] || 'slymo';
       for (let i = 0; i < waves[0].length; i++) {
         waves[0][i].elite = false;
         if (n <= 2) waves[0][i].giant = false;
+        if (n <= 2) {
+          const ty = SPECIES[waves[0][i].sp] && SPECIES[waves[0][i].sp].type;
+          if (ty === 'tank' || ty === 'dragon') waves[0][i].sp = fallback;
+        }
       }
     }
     if (waveMeta[0]) {
@@ -9967,7 +10056,7 @@ function pickSuperBossSpecies(levelN) {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-function rollStageGamble() {
+function rollStageGamble(levelN) {
   const d1 = 1 + Math.floor(Math.random() * 6);
   const d2 = 1 + Math.floor(Math.random() * 6);
   const sum = d1 + d2;
@@ -9977,7 +10066,13 @@ function rollStageGamble() {
   else if (sum >= 12) outcome = 'superAlly';
   else if (sum >= 9) outcome = 'ally';
   const allyId = GAMBLE_ALLY_IDS[Math.floor(Math.random() * GAMBLE_ALLY_IDS.length)];
-  return { d1, d2, sum, outcome, allyId };
+  const n = Number(levelN) || 0;
+  let openerSafe = false;
+  if (n > 0 && n <= 3 && (outcome === 'superBoss' || outcome === 'miniBoss')) {
+    outcome = 'neutral';
+    openerSafe = true;
+  }
+  return { d1, d2, sum, outcome, allyId, openerSafe };
 }
 
 function gambleDiceFace(d) {
@@ -10097,7 +10192,9 @@ function applyGambleToStage(game, g) {
   game.gambleBossWave = 0;
   const pot = g.outcome === 'superAlly' ? 1.22 : 1;
   if (g.outcome === 'superBoss' || g.outcome === 'miniBoss') {
-    const wi = Math.floor(Math.random() * game.level.waves.length);
+    const waves = game.level.waves.length;
+    let wi = Math.floor(Math.random() * Math.max(1, waves));
+    if ((game.level.n || 1) <= 5 && waves > 1) wi = Math.max(1, wi);
     const sp = pickSuperBossSpecies(game.level.n);
     game.level.waves[wi].push({
       sp,
@@ -11695,6 +11792,11 @@ function seedNlGameStrings() {
     vsHpEven: 'HP gelijk — TIME telt!',
     coinPlus1: '+1 munt', coinPlus3: '+3 munten',
     spiral_orbCd: 'Spiral Orb CD {s}s',
+    trainLossTip: 'Spring tijdens LIGHTNING PIERCE — robot mist · spring oor-lasers',
+    trainLostTip: 'Spring tijdens LIGHTNING PIERCE — robot mist · spring oor-lasers',
+    trainTipDefault: 'Tip: spring lasers · energy vol → Spiral Orb',
+    energyNeed: 'Energy {have}/{need}',
+    guarded: '…',
   });
   if (!I18N.nl.toast) I18N.nl.toast = {};
   Object.assign(I18N.nl.toast, {
@@ -11758,6 +11860,7 @@ function seedNlGameStrings() {
     itemUpgradeReady: '{name} kan upgraden — Collectie → Upgrades',
     itemUpgraded: '{name} Lv {lv}! {detail}',
     skipGamble: 'Zonder gok',
+    openerSafe: 'Oost-eiland opener: normaal level',
     errGambleStart: 'Gok start mislukt — probeer opnieuw',
     weaponIslandCap: 'Klaar voor training — in avontuur max Lv {cap}',
     petNone: 'Geen actieve pet',
@@ -12277,7 +12380,7 @@ function seedNlGameStrings() {
     partGateKb: 'CHECKPOINT → houd D of → vast (loop door)',
     partGateTouchShort: 'Joystick →',
     partGateKbShort: 'D / →',
-    teleSlam: 'SLAM — spring!',
+    teleSlam: 'SPRING! Stamp komt',
     teleCharge: 'CHARGE — uit de weg!',
     teleShoot: 'SCHIET — side-step!',
     teleFire: 'VUUR — side-step!',
@@ -12652,6 +12755,7 @@ const CATALOG_EN = {
     itemUpgradeReady: '{name} ready to upgrade — Collection → Upgrades',
     itemUpgraded: '{name} Lv {lv}! {detail}',
     skipGamble: 'No gamble',
+    openerSafe: 'East island opener: normal level',
     errGambleStart: 'Gamble start failed — try again',
     weaponIslandCap: 'Ready for training — in adventure max Lv {cap}',
     petNone: 'No active pet',
@@ -13157,6 +13261,11 @@ const CATALOG_EN = {
     vsHpEven: 'HP even — TIME matters!',
     coinPlus1: '+1 coin', coinPlus3: '+3 coins',
     spiral_orbCd: 'Spiral Orb CD {s}s',
+    trainLossTip: 'Jump during LIGHTNING PIERCE — robot misses · jump ear-lasers',
+    trainLostTip: 'Jump during LIGHTNING PIERCE — robot misses · jump ear-lasers',
+    trainTipDefault: 'Tip: jump lasers · full energy → Spiral Orb',
+    energyNeed: 'Energy {have}/{need}',
+    guarded: '…',
   },
   hud: {
     super: 'SUPER', masterShort: 'MASTER +20%', masterSword: 'DAWNBLADE {n}s',
@@ -13217,7 +13326,7 @@ const CATALOG_EN = {
     partGateKb: 'CHECKPOINT → hold D or → (walk through)',
     partGateTouchShort: 'Stick →',
     partGateKbShort: 'D / →',
-    teleSlam: 'SLAM — jump!',
+    teleSlam: 'JUMP! Slam incoming',
     teleCharge: 'CHARGE — dodge!',
     teleShoot: 'SHOT — side-step!',
     teleFire: 'FIRE — side-step!',
@@ -15665,6 +15774,32 @@ function meleeHitPoint(f, spec) {
   const moveOff = (spec && spec.moveHitY) || 0;
   const hy = f.y - 48 + clamp(aim.ny, -1, 0.65) * 88 + moveOff;
   return { hx, hy, aim };
+}
+
+/** Capsule vs stickman body — joystick-up on Android must still hit a grounded foe. */
+function meleeHitsFighter(hx, hy, r, tgt) {
+  if (!tgt) return false;
+  const scale = tgt.scale || 1;
+  const bodyTop = tgt.y - 118 * scale;
+  const bodyBot = tgt.y - 6 * scale;
+  const nearestY = clamp(hy, bodyTop, bodyBot);
+  const dx = hx - (tgt.bodyX != null ? tgt.bodyX : tgt.x);
+  const dy = hy - nearestY;
+  const rad = r + (tgt.bodyR || 30 * scale) * 1.2;
+  return dx * dx + dy * dy < rad * rad;
+}
+
+/** Capsule vs monster — keep aim-up useful for flyers, forgive vertical miss on grounded. */
+function meleeHitsMonster(hx, hy, r, m) {
+  if (!m) return false;
+  const size = m.size || 24;
+  const top = m.y - size * (m.flying ? 1.15 : 0.25);
+  const bot = m.y + size * (m.flying ? 0.2 : 0.4);
+  const nearestY = clamp(hy, top, bot);
+  const dx = hx - m.x;
+  const dy = hy - nearestY;
+  const rad = r + size * 1.05;
+  return dx * dx + dy * dy < rad * rad;
 }
 
 function canThrowShuriken(f, game) {
@@ -18902,7 +19037,12 @@ class Fighter {
       const energyCost = skillEnergyCost(jKind);
       if (!this.isRobot) {
         if (this.energy < energyCost) {
-          if (this.isPlayer) game.floater(this.x, this.y - 110, 'Energy niet vol!', '#7cf5ff', 13);
+          if (this.isPlayer) {
+            const msg = (typeof resolvedT === 'function'
+              ? resolvedT('combat.energyNeed', '', { have: Math.round(this.energy), need: energyCost })
+              : '') || (`Energy ${Math.round(this.energy)}/${energyCost}`);
+            game.floater(this.x, this.y - 110, msg, '#7cf5ff', 13);
+          }
           return;
         }
         this.energy = 0;
@@ -19090,7 +19230,8 @@ class Fighter {
 
     // reactief blokkeren als de speler aanvalt en dichtbij is
     if (p.attack && p.attack.t < p.attack.windup + p.attack.active && dist < 130 && !this.attack) {
-      if (Math.random() < 0.55 * diff * dt * 22) { this.blockT = 0.42; }
+      const blockRate = game.mode === 'training' ? 0.12 : 0.55;
+      if (Math.random() < blockRate * diff * dt * 22) { this.blockT = 0.42; }
     }
     if (this.blockT > 0) { this.blockT -= dt; out.block = true; return out; }
 
@@ -19345,7 +19486,6 @@ class Fighter {
     if (!this.alive) return 0;
     if ((this.isPlayer || this.playerSlot) && game && game.ketsbamSuperT > 0) return 0;
     if (this.invulnT > 0) {
-      if (game) game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13, 'fx');
       return 0;
     }
     if (this.blocking && !opts.unblockable) {
@@ -19938,11 +20078,15 @@ class Monster {
       } else {
         this.x += dir * this.speed * dt;
         if (dist < this.size + 48 && this.atkCD <= 0) {
-          const wind = this.softTelegraph ? 0.78 : 0.55;
+          const wind = this.softTelegraph ? 0.95 : 0.55;
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = 2.0;
           AudioSys.sfx('roar');
+          try {
+            const slam = typeof t === 'function' ? t('hud.teleSlam') : 'SPRING!';
+            game.floater(this.x, this.y - this.size - 22, slam, '#ff9a3d', 16, 'hud');
+          } catch (_) {}
         }
       }
       this.y = game.ground - this.size;
@@ -24465,21 +24609,21 @@ function adventureTelegraphHud(m) {
 }
 
 function drawTelegraphBar(c, game, tele, y) {
-  const barW = Math.min(280, W - 40);
+  const barW = Math.min(320, W - 28);
   const bx = (W - barW) / 2;
   const tall = !!(tele && tele.max >= 0.55);
-  c.fillStyle = 'rgba(0,0,0,.52)';
-  game.rr(c, bx - 6, y - 16, barW + 12, tall ? 28 : 24, 9);
+  c.fillStyle = 'rgba(0,0,0,.62)';
+  game.rr(c, bx - 8, y - 20, barW + 16, tall ? 36 : 28, 10);
   c.fill();
-  c.font = tall ? '900 13px sans-serif' : '800 11px sans-serif';
+  c.font = tall ? '900 16px sans-serif' : '800 13px sans-serif';
   c.textAlign = 'center';
   c.fillStyle = tele.color;
   c.fillText(tele.label, W / 2, y);
   c.fillStyle = 'rgba(255,255,255,.18)';
-  game.rr(c, bx, y + 6, barW, tall ? 7 : 5, 3);
+  game.rr(c, bx, y + 8, barW, tall ? 8 : 5, 3);
   c.fill();
   c.fillStyle = tele.color;
-  game.rr(c, bx, y + 6, barW * clamp(tele.frac, 0, 1), tall ? 7 : 5, 3);
+  game.rr(c, bx, y + 8, barW * clamp(tele.frac, 0, 1), tall ? 8 : 5, 3);
   c.fill();
 }
 
@@ -26010,14 +26154,22 @@ class Game {
     const trainBest = this.trainComboBest || 0;
     const trainTip = win
       ? (trainBest >= 8
-        ? `Combo-trainer: max ×${trainBest} — bonus XP!`
-        : (save.trainWins === 3 ? 'Nieuwe stijl vrij: Energie gloed — Instellingen → Stijl!' : 'Unlock stijlen door meer train-wins!'))
-      : onceResultTip('training', 'loss', t('combat.trainLossTip'))
-        || t('combat.trainTipDefault');
+        ? resolvedT('result.trainComboRecord', 'combat.trainTipDefault', { n: trainBest, rec: '' })
+        : (save.trainWins === 3
+          ? resolvedT('result.trainStyleUnlock', 'combat.trainTipDefault')
+          : resolvedT('result.trainStyleMore', 'combat.trainTipDefault')))
+      : (onceResultTip('training', 'loss',
+          resolvedT('combat.trainLossTip', 'result.trainLossTip')
+          || resolvedT('combat.trainLostTip', 'result.trainLossTip'))
+        || resolvedT('combat.trainTipDefault', 'result.trainTipDefault'));
     scheduleGameResult(this, 1400, () => UI.showResult(win, {
-      title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
-      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · max combo ×${trainBest}` +
-        (win ? ` · ${save.trainWins}x gewonnen` : ''),
+      title: win ? resolvedT('result.trainWin', 'banner.won') : resolvedT('result.trainLose', 'banner.lost'),
+      detail: resolvedT('result.trainDetail', '', {
+        outcome: win ? resolvedT('result.trainOutcomeWin', '', {}) : resolvedT('result.trainOutcomeLose', '', {}),
+        s: this.roundsP, r: this.roundsR, combo: trainBest,
+        wins: win ? resolvedT('result.trainWinsLine', '', { n: save.trainWins }) : '',
+        record: '', finishers: '',
+      }) || (`RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR})`),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
     }));
@@ -26971,7 +27123,8 @@ class Game {
     // monsters
     for (const m of this.monsters) {
       if (!m.alive) continue;
-      if ((hx - m.x) ** 2 + (hy - m.y) ** 2 < (r + m.size) ** 2) {
+      if ((typeof meleeHitsMonster === 'function' ? meleeHitsMonster(hx, hy, r, m)
+        : ((hx - m.x) ** 2 + (hy - m.y) ** 2 < (r + m.size) ** 2))) {
         let comboMul = 1;
         if (this.mode === 'adventure' && f.isPlayer) {
           this.combo = Math.min(12, this.combo + 1);
@@ -27056,7 +27209,16 @@ class Game {
     }
     for (const tgt of targets) {
       if (!tgt.alive) continue;
-      if ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2) {
+      if ((typeof meleeHitsFighter === 'function' ? meleeHitsFighter(hx, hy, r, tgt)
+        : ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2))) {
+        const finisher = spec.kind === 'weapon' && typeof isWeaponFinisher === 'function' && isWeaponFinisher(f, spec);
+        const hitRoll = rollHitDamage(f, spec, 1);
+        const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
+        const counter = isCounterHitWindow(tgt);
+        const dmg = tgt.takeDamage(hitRoll.dmg, kbHit, this, {
+          unblockable: spec.unblockable, attacker: f, kind: spec.kind,
+        });
+        if (!(dmg > 0)) continue;
         if (this.mode === 'training' && f.isPlayer) {
           this.combo = Math.min(12, this.combo + 1);
           f._chainKind = spec.kind;
@@ -27068,26 +27230,20 @@ class Game {
           if ([3, 5, 8, 10].includes(this.combo) && !goals[this.combo]) {
             goals[this.combo] = 1;
             AudioSys.sfx('combo');
-            const labels = {
-              3: 'Combo ×3 — door!',
-              5: 'Combo ×5 — netjes!',
-              8: 'Combo ×8 — pro!',
-              10: 'Combo ×10 — meester!',
-            };
-            this.floater(f.x + f.face * 30, f.y - 130, labels[this.combo], '#ffd75e', 16);
+            const key = this.combo === 3 ? 'combat.combo3' : this.combo === 5 ? 'combat.combo5'
+              : this.combo === 8 ? 'combat.combo8' : 'combat.combo10';
+            this.floater(f.x + f.face * 30, f.y - 130, resolvedT(key, 'combat.comboN', { n: this.combo }), '#ffd75e', 16);
             haptic(8 + this.combo);
           }
         }
-        const hitRoll = rollHitDamage(f, spec, 1);
-        const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
-        const counter = isCounterHitWindow(tgt);
-        const dmg = tgt.takeDamage(hitRoll.dmg, kbHit, this, {
-          unblockable: spec.unblockable, attacker: f, kind: spec.kind,
-        });
         if (hitRoll.crit) applyCritFx(this, tgt.x, tgt.y);
         const col = tgt.playerSlot === 2 ? '#ffb0b8' : (tgt.isPlayer ? '#ff8080' : '#ffe680');
-        this.floater(tgt.x, tgt.y - 115, (counter ? t('combat.counter') + ' ' : '') + '-' + dmg, col, 16);
-        this.burst(tgt.bodyX, tgt.bodyY, col, 7);
+        const pct = tgt.maxhp > 0 ? Math.max(0, Math.round(tgt.hp / tgt.maxhp * 100)) : 0;
+        this.floater(tgt.x, tgt.y - 115, (counter ? t('combat.counter') + ' ' : '') + '-' + dmg, col, 18);
+        if (this.mode === 'training' && tgt.isRobot) {
+          this.floater(tgt.x, tgt.y - 136, pct + '%', '#ffe680', 13, 'hud');
+        }
+        this.burst(tgt.bodyX, tgt.bodyY, col, 10);
         applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
         if (spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id) && spec.moveIdx < 2) {
@@ -32056,18 +32212,10 @@ const UI = {
     const lp = save.lastPlay;
     const featHub = lp?.mode ? hubForPlayMode(lp.mode) : null;
     if (cont) {
-      if (lp && lp.mode) {
-        const labels = {
-          adventure: t('modes.adventure') + ` Lv ${lp.level || 1}`,
-          training: t('modes.training'), wall: t('modes.wall'), versus: t('modes.versus'), coinrun: t('modes.coinrun'),
-        };
-        cont.style.display = 'flex';
-        const contDiv = cont.querySelector('div');
-        if (contDiv) {
-          contDiv.innerHTML = `${t('menu.continue')}<small>${labels[lp.mode] || lp.mode}</small>`;
-        }
-      } else cont.style.display = 'none';
+      cont.hidden = true;
+      cont.style.display = 'none';
     }
+    if (typeof syncPlayPrimaryLabel === 'function') syncPlayPrimaryLabel();
     document.querySelectorAll('[data-hub]').forEach((el) => {
       el.classList.toggle('hub-tile-featured', el.dataset.hub === featHub);
     });
@@ -34515,7 +34663,11 @@ const UI = {
       });
     }
     const tipEl = document.getElementById('resTip');
-    if (tipEl) tipEl.textContent = data.tip || '';
+    if (tipEl) {
+      let tip = data.tip || '';
+      if (typeof isRawI18nKey === 'function' && isRawI18nKey(tip)) tip = '';
+      tipEl.textContent = tip;
+    }
     const starsEl = document.getElementById('resStars');
     if (starsEl) {
       const n = win && data.stars ? data.stars : 0;
@@ -34746,6 +34898,20 @@ bindPress(btnContinue, () => {
     if (!resumeLastPlay()) userToast('Nog geen sessie — kies een modus', 2400);
   } catch (err) {
     sfReportError('resume', err, 'Verder spelen mislukt — kies een modus');
+  }
+});
+bindPress(document.getElementById('btnPlayPrimary'), () => {
+  AudioSys.init(); AudioSys.sfx('select');
+  try {
+    if (save.lastPlay && save.lastPlay.mode) {
+      if (!resumeLastPlay()) {
+        UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: 'Avontuur laden mislukt' });
+      }
+      return;
+    }
+    UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: 'Avontuur laden mislukt' });
+  } catch (err) {
+    sfReportError('playPrimary', err, 'Starten mislukt — kies Avontuur');
   }
 });
 bindPress(document.getElementById('btnTraining'), () => {

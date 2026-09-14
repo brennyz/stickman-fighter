@@ -85,9 +85,29 @@ async function run() {
 
       const lossTip = typeof t === 'function' ? t('combat.trainLossTip') : '';
       const noDuckLie = !/duck/i.test(lossTip);
+      const tipKeys = ['combat.trainTipDefault', 'combat.trainLossTip', 'combat.trainLostTip', 'result.trainTipDefault'];
+      const rawKeys = tipKeys.filter((k) => {
+        const v = typeof t === 'function' ? t(k) : k;
+        return !v || v === k || (typeof isRawI18nKey === 'function' && isRawI18nKey(v));
+      });
+
+      g.robot.blockT = 0;
+      g.robot.blocking = false;
+      g.robot.invulnT = 0;
+      g.robot.hurtT = 0;
+      g.player.x = g.robot.x - 48;
+      g.player.y = g.ground;
+      g.player.face = 1;
+      g.player.onGround = true;
+      g.player._aimAtAttack = { nx: 0.15, ny: -1 };
+      const spec = g.player.attackSpec('punch');
+      spec.hasHit = false;
+      const hp0 = g.robot.hp;
+      const connected = g.tryMelee(g.player, spec);
+      const aimUpHit = connected && g.robot.hp < hp0;
 
       return {
-        ok: laserCancelled && sawTele && teleLeqRemain && teleMaxOk && fired && barCleared && noDuckLie,
+        ok: laserCancelled && sawTele && teleLeqRemain && teleMaxOk && fired && barCleared && noDuckLie && !rawKeys.length && aimUpHit,
         laserCancelled,
         sawTele,
         teleLeqRemain,
@@ -95,6 +115,10 @@ async function run() {
         fired,
         barCleared,
         noDuckLie,
+        rawKeys,
+        aimUpHit,
+        hp0,
+        hp1: g.robot.hp,
         trainTelegraphT: g.trainTelegraphT,
       };
     } catch (e) {

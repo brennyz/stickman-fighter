@@ -791,16 +791,27 @@ function buildLevel(n, diffId) {
   }
   // Soft live A3: golf 1 milder — minder mobs, geen rush/pain/ember, langzamere spawn.
   if (waves[0] && waves[0].length) {
-    const softCap = n <= 3
-      ? Math.max(4, Math.ceil(perWave * 0.42))
-      : n <= 8
-        ? Math.max(5, Math.ceil(perWave * 0.55))
-        : Math.max(6, Math.ceil(perWave * 0.72));
+    const softCap = n <= 2
+      ? 3
+      : n <= 3
+        ? 4
+        : n <= 8
+          ? Math.max(5, Math.ceil(perWave * 0.5))
+          : Math.max(6, Math.ceil(perWave * 0.72));
     if (waves[0].length > softCap) waves[0] = waves[0].slice(0, softCap);
     if (n <= 5) {
+      const groundPool = pool.filter((id) => {
+        const ty = SPECIES[id] && SPECIES[id].type;
+        return ty && ty !== 'tank' && ty !== 'dragon' && ty !== 'fly';
+      });
+      const fallback = groundPool[0] || pool[0] || 'slymo';
       for (let i = 0; i < waves[0].length; i++) {
         waves[0][i].elite = false;
         if (n <= 2) waves[0][i].giant = false;
+        if (n <= 2) {
+          const ty = SPECIES[waves[0][i].sp] && SPECIES[waves[0][i].sp].type;
+          if (ty === 'tank' || ty === 'dragon') waves[0][i].sp = fallback;
+        }
       }
     }
     if (waveMeta[0]) {
@@ -873,7 +884,7 @@ function pickSuperBossSpecies(levelN) {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-function rollStageGamble() {
+function rollStageGamble(levelN) {
   const d1 = 1 + Math.floor(Math.random() * 6);
   const d2 = 1 + Math.floor(Math.random() * 6);
   const sum = d1 + d2;
@@ -883,7 +894,13 @@ function rollStageGamble() {
   else if (sum >= 12) outcome = 'superAlly';
   else if (sum >= 9) outcome = 'ally';
   const allyId = GAMBLE_ALLY_IDS[Math.floor(Math.random() * GAMBLE_ALLY_IDS.length)];
-  return { d1, d2, sum, outcome, allyId };
+  const n = Number(levelN) || 0;
+  let openerSafe = false;
+  if (n > 0 && n <= 3 && (outcome === 'superBoss' || outcome === 'miniBoss')) {
+    outcome = 'neutral';
+    openerSafe = true;
+  }
+  return { d1, d2, sum, outcome, allyId, openerSafe };
 }
 
 function gambleDiceFace(d) {
@@ -1003,7 +1020,9 @@ function applyGambleToStage(game, g) {
   game.gambleBossWave = 0;
   const pot = g.outcome === 'superAlly' ? 1.22 : 1;
   if (g.outcome === 'superBoss' || g.outcome === 'miniBoss') {
-    const wi = Math.floor(Math.random() * game.level.waves.length);
+    const waves = game.level.waves.length;
+    let wi = Math.floor(Math.random() * Math.max(1, waves));
+    if ((game.level.n || 1) <= 5 && waves > 1) wi = Math.max(1, wi);
     const sp = pickSuperBossSpecies(game.level.n);
     game.level.waves[wi].push({
       sp,

@@ -94,6 +94,24 @@ async function run() {
   const resultAgain = await dump('result-again');
   if (resultAgain.state !== 'play' || !resultAgain.hasGame) fails.push('result-again:' + JSON.stringify(resultAgain));
 
+  const opener = await page.evaluate(() => {
+    const bad = [];
+    for (let i = 0; i < 48; i++) {
+      const g = rollStageGamble(1);
+      if (g.outcome === 'superBoss' || g.outcome === 'miniBoss') bad.push(g.outcome);
+    }
+    const lv = buildLevel(1, 'normal');
+    const w1 = (lv.waves && lv.waves[0]) || [];
+    return {
+      bad,
+      wave1: w1.length,
+      wave1Tank: w1.some((s) => SPECIES[s.sp] && SPECIES[s.sp].type === 'tank'),
+    };
+  });
+  if (opener.bad.length) fails.push('opener-superboss:' + opener.bad.join(','));
+  if (opener.wave1 > 3) fails.push('opener-wave1-count:' + opener.wave1);
+  if (opener.wave1Tank) fails.push('opener-wave1-tank');
+
   if (fails.length) {
     console.error('SMOKE_FAIL', fails.join(' | '));
     await browser.close();

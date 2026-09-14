@@ -12,8 +12,10 @@ const I18N = {
       collect: 'Collectie', collectSub: 'Wapens · stijl · boek', music: 'Muziek', missions: 'Missies',
       summons: 'Summons', summonsSub: 'Dagelijkse kist · wapen & pet',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon op je beginscherm',
-      pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
+      pressStart: 'tik SPELEN', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
       choosePath: 'KIES JE PAD',
+      play: 'SPELEN', playSub: 'Avontuur · Oost-eiland', playContinueSub: 'Verder · {mode}',
+      more: 'Meer',
     },
     hub: {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
@@ -102,8 +104,10 @@ const I18N = {
       collect: 'Collection', collectSub: 'Weapons · style · book', music: 'Music', missions: 'Missions',
       summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
       options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add to home screen', installSub: 'One icon on your device',
-      pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
+      pressStart: 'tap PLAY', missionReady: 'mission ready', dayBonus: 'Daily bonus',
       choosePath: 'CHOOSE YOUR PATH',
+      play: 'PLAY', playSub: 'Adventure · East island', playContinueSub: 'Continue · {mode}',
+      more: 'More',
     },
     hub: {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -191,8 +195,10 @@ const I18N = {
       arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal · iPad quer',
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch', music: 'Musik', missions: 'Missionen',
       options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Zum Home-Bildschirm', installSub: 'Ein Icon auf dem Gerät',
-      pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
+      pressStart: 'tippe SPIELEN', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
       choosePath: 'WÄHLE DEINEN WEG',
+      play: 'SPIELEN', playSub: 'Abenteuer · Ost-Insel', playContinueSub: 'Weiter · {mode}',
+      more: 'Mehr',
     },
     hub: {
       step: 'Schritt 2 · Modus wählen', solo: 'SOLO', collection: 'SAMMLUNG',
@@ -263,8 +269,10 @@ const I18N = {
       arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Pièces', versus: '2 joueurs', versusSub: 'Local · iPad paysage',
       collect: 'Collection', collectSub: 'Armes · style · bestiaire', music: 'Musique', missions: 'Missions',
       options: 'Options', tips: 'Astuces', fresh: 'Version fraîche', install: 'Ajouter à l\'écran d\'accueil', installSub: 'Une icône sur l\'appareil',
-      pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
+      pressStart: 'touche JOUER', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
       choosePath: 'CHOISIS TON CHEMIN',
+      play: 'JOUER', playSub: 'Aventure · Île de l\'Est', playContinueSub: 'Continuer · {mode}',
+      more: 'Plus',
     },
     hub: {
       step: 'Étape 2 · Choisir le mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -335,8 +343,10 @@ const I18N = {
       arcade: 'Arcade', arcadeSub: 'Entrenamiento · Muro · Monedas', versus: '2 jugadores', versusSub: 'Local · iPad horizontal',
       collect: 'Colección', collectSub: 'Armas · estilo · bestiario', music: 'Música', missions: 'Misiones',
       options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir a inicio', installSub: 'Un icono en tu dispositivo',
-      pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
+      pressStart: 'toca JUGAR', missionReady: 'misión lista', dayBonus: 'Bonus diario',
       choosePath: 'ELIGE TU CAMINO',
+      play: 'JUGAR', playSub: 'Aventura · Isla Este', playContinueSub: 'Seguir · {mode}',
+      more: 'Más',
     },
     hub: {
       step: 'Paso 2 · Elige modo', solo: 'SOLO', collection: 'COLECCIÓN',
@@ -444,6 +454,22 @@ function t(key, params) {
   return s;
 }
 
+/** True when lookup missed and the UI would leak a dotted catalog key. */
+function isRawI18nKey(s) {
+  return typeof s === 'string' && /^[a-z][a-zA-Z0-9]*(\.[a-zA-Z][a-zA-Z0-9]*)+$/.test(s.trim());
+}
+
+/** Resolve a string for result/HUD tips — never return a raw i18n key. */
+function resolvedT(key, fallbackKey, params) {
+  const a = t(key, params);
+  if (a && !isRawI18nKey(a)) return a;
+  if (fallbackKey) {
+    const b = t(fallbackKey, params);
+    if (b && !isRawI18nKey(b)) return b;
+  }
+  return '';
+}
+
 function rarityLabel(id) {
   return t('rarity.' + id) || rarityOf(id).name;
 }
@@ -488,6 +514,9 @@ function applyLangStaticScreens() {
   setText('menuLangLbl', 'settings.lang');
   setText('pressStartLine', 'menu.pressStart');
   setText('menuArcadePre', 'menu.choosePath');
+  const moreLbl = document.getElementById('menuMoreLbl');
+  if (moreLbl) moreLbl.textContent = t('menu.more');
+  syncPlayPrimaryLabel();
   const cont = document.getElementById('btnContinue');
   if (cont) {
     const div = cont.querySelector('div');
@@ -770,15 +799,62 @@ function renderLangSwitchBar(bar) {
         UI.renderSettings();
         UI.renderMenu();
         if (typeof UI.renderModeHub === 'function') UI.renderModeHub();
+        collapseMenuLangBar();
       }, 'setLang/' + code, t('ui.langSwitchFail') || 'Language switch failed');
     });
   });
+}
+
+function syncMenuLangChip() {
+  const tog = document.getElementById('menuLangToggle');
+  if (tog) tog.textContent = LANG_LABELS[getLang()] || String(getLang()).toUpperCase();
+}
+
+function collapseMenuLangBar() {
+  const bar = document.getElementById('menuLangBar');
+  const tog = document.getElementById('menuLangToggle');
+  if (bar) bar.hidden = true;
+  if (tog) tog.setAttribute('aria-expanded', 'false');
+}
+
+function bindMenuLangToggle() {
+  const tog = document.getElementById('menuLangToggle');
+  const bar = document.getElementById('menuLangBar');
+  if (!tog || !bar || tog.dataset.langToggleBound) return;
+  tog.dataset.langToggleBound = '1';
+  bindPress(tog, () => {
+    const open = !!bar.hidden;
+    bar.hidden = !open;
+    tog.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+}
+
+function playPrimaryModeLabel(lp) {
+  if (!lp || !lp.mode) return '';
+  const labels = {
+    adventure: t('modes.adventure') + (lp.level ? ` Lv ${lp.level}` : ''),
+    training: t('modes.training'), wall: t('modes.wall'), versus: t('modes.versus'), coinrun: t('modes.coinrun'),
+  };
+  return labels[lp.mode] || lp.mode;
+}
+
+function syncPlayPrimaryLabel() {
+  const el = document.getElementById('btnPlayPrimaryLabel');
+  if (!el) return;
+  const lp = (typeof save !== 'undefined' && save && save.lastPlay) ? save.lastPlay : null;
+  if (lp && lp.mode) {
+    el.innerHTML = t('menu.play') + '<small>' + t('menu.playContinueSub', { mode: playPrimaryModeLabel(lp) }) + '</small>';
+  } else {
+    el.innerHTML = t('menu.play') + '<small>' + t('menu.playSub') + '</small>';
+  }
 }
 
 function renderLangSwitch() {
   renderLangSwitchBar(document.getElementById('langSwitchBar'));
   renderLangSwitchBar(document.getElementById('menuLangBar'));
   renderLangSwitchBar(document.getElementById('levelLangBar'));
+  syncMenuLangChip();
+  bindMenuLangToggle();
 }
 
 function applyLang() {

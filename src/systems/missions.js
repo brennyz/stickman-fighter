@@ -1975,11 +1975,13 @@ function gokGooiStartLevel(n) {
   try {
     pendingAdvLevel = Math.max(1, Math.min(MAX_LEVEL, Number(n) || advUnlockedLevel() || 1));
     AudioSys.init();
-    lastGambleRoll = rollStageGamble();
+    lastGambleRoll = rollStageGamble(pendingAdvLevel);
     playGambleRollSfx(lastGambleRoll);
     try {
-      const line = typeof gambleRollToastLine === 'function' ? gambleRollToastLine(lastGambleRoll) : '';
-      if (line) UI.toast(line, motionReduced() ? 900 : 1400);
+      const line = lastGambleRoll && lastGambleRoll.openerSafe
+        ? t('toast.openerSafe')
+        : (typeof gambleRollToastLine === 'function' ? gambleRollToastLine(lastGambleRoll) : '');
+      if (line && !(typeof isRawI18nKey === 'function' && isRawI18nKey(line))) UI.toast(line, motionReduced() ? 900 : 1400);
     } catch (_) {}
     try { UI.showGambleRollFlash(lastGambleRoll); } catch (_) {}
     try { AudioSys.sting('modeAdventure'); } catch (_) {}
@@ -2011,7 +2013,7 @@ function gokGooiStartFromScreen() {
   try {
     if (pendingAdvLevel == null) pendingAdvLevel = advUnlockedLevel() || 1;
     AudioSys.init();
-    lastGambleRoll = rollStageGamble();
+    lastGambleRoll = rollStageGamble(pendingAdvLevel || advUnlockedLevel() || 1);
     playGambleRollSfx(lastGambleRoll);
     try { UI.renderGamble(pendingAdvLevel || advUnlockedLevel() || 1); } catch (_) {}
     const sumLine = document.getElementById('gambleSumLine');

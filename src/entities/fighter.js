@@ -93,7 +93,12 @@ class Fighter {
       const energyCost = skillEnergyCost(jKind);
       if (!this.isRobot) {
         if (this.energy < energyCost) {
-          if (this.isPlayer) game.floater(this.x, this.y - 110, 'Energy niet vol!', '#7cf5ff', 13);
+          if (this.isPlayer) {
+            const msg = (typeof resolvedT === 'function'
+              ? resolvedT('combat.energyNeed', '', { have: Math.round(this.energy), need: energyCost })
+              : '') || (`Energy ${Math.round(this.energy)}/${energyCost}`);
+            game.floater(this.x, this.y - 110, msg, '#7cf5ff', 13);
+          }
           return;
         }
         this.energy = 0;
@@ -281,7 +286,8 @@ class Fighter {
 
     // reactief blokkeren als de speler aanvalt en dichtbij is
     if (p.attack && p.attack.t < p.attack.windup + p.attack.active && dist < 130 && !this.attack) {
-      if (Math.random() < 0.55 * diff * dt * 22) { this.blockT = 0.42; }
+      const blockRate = game.mode === 'training' ? 0.12 : 0.55;
+      if (Math.random() < blockRate * diff * dt * 22) { this.blockT = 0.42; }
     }
     if (this.blockT > 0) { this.blockT -= dt; out.block = true; return out; }
 
@@ -536,7 +542,6 @@ class Fighter {
     if (!this.alive) return 0;
     if ((this.isPlayer || this.playerSlot) && game && game.ketsbamSuperT > 0) return 0;
     if (this.invulnT > 0) {
-      if (game) game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13, 'fx');
       return 0;
     }
     if (this.blocking && !opts.unblockable) {

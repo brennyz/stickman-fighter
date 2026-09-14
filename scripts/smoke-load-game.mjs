@@ -127,7 +127,7 @@ const get = (id) => {
   'resultScreen', 'pauseScreen', 'game', 'toastHost', 'pauseBtn', 'menuStats',
   'menuDailyHint', 'menuTipLine', 'menuPlayLink', 'togMusic', 'togSfx',
   'btnAdventure', 'btnTraining', 'btnWall', 'btnMatsCoins', 'btnWeapons', 'btnDex', 'btnVersus',
-  'btnContinue', 'btnStyle', 'btnSkills', 'btnSettings', 'btnMissions', 'btnMissionsLbl', 'btnHelp', 'helpOk',
+  'btnContinue', 'btnPlayPrimary', 'menuLangToggle', 'menuLangBar', 'btnStyle', 'btnSkills', 'btnSettings', 'btnMissions', 'btnMissionsLbl', 'btnHelp', 'helpOk',
   'skillPreview', 'skillGrid', 'skillGridScroll', 'skillSagaBlurb', 'skillBehaviorBar', 'btnSkillSort', 'skillNextUnlock',
   'superPreview', 'superGrid', 'superGridScroll', 'superSummary', 'superNextUnlock',
   'btnGuvve', 'pauseResume', 'pauseQuit', 'resAgain', 'resNext', 'resMenu',

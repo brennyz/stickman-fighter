@@ -1,3 +1,4 @@
+| 2026-09-14 | — | Android-first P1 playtest: start SPELEN-hiërarchie + compacte taal; Oost-eiland opener zonder super-baas; melee capsule + geen MISS-i-frames; training i18n keys (`combat.trainTipDefault` e.d.). **v1.18.153 / SW v363**. |
 | 2026-08-17 | **merge** | Mega-merge: #247 light-FX + #246 versus-stubs + #240 dawnblade (roster blijft retired) · **v1.18.152 / SW v362**. |
 | 2026-08-17 | **merge** | LIVE FF: d8 PWA + d20 health + d13 missies + d2 training + d11 nav + d19 muur + d7 save + d14 FX · **v1.18.151 / SW v361**. |
 | 2026-08-17 | **14** | d14 c6: Spiral Orb ring alleen op echte hit (ook robot); geen rand-ghost; Lite FX ring-eerst. v1.18.151 / SW v361. |

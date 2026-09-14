@@ -1813,18 +1813,10 @@ const UI = {
     const lp = save.lastPlay;
     const featHub = lp?.mode ? hubForPlayMode(lp.mode) : null;
     if (cont) {
-      if (lp && lp.mode) {
-        const labels = {
-          adventure: t('modes.adventure') + ` Lv ${lp.level || 1}`,
-          training: t('modes.training'), wall: t('modes.wall'), versus: t('modes.versus'), coinrun: t('modes.coinrun'),
-        };
-        cont.style.display = 'flex';
-        const contDiv = cont.querySelector('div');
-        if (contDiv) {
-          contDiv.innerHTML = `${t('menu.continue')}<small>${labels[lp.mode] || lp.mode}</small>`;
-        }
-      } else cont.style.display = 'none';
+      cont.hidden = true;
+      cont.style.display = 'none';
     }
+    if (typeof syncPlayPrimaryLabel === 'function') syncPlayPrimaryLabel();
     document.querySelectorAll('[data-hub]').forEach((el) => {
       el.classList.toggle('hub-tile-featured', el.dataset.hub === featHub);
     });
@@ -4272,7 +4264,11 @@ const UI = {
       });
     }
     const tipEl = document.getElementById('resTip');
-    if (tipEl) tipEl.textContent = data.tip || '';
+    if (tipEl) {
+      let tip = data.tip || '';
+      if (typeof isRawI18nKey === 'function' && isRawI18nKey(tip)) tip = '';
+      tipEl.textContent = tip;
+    }
     const starsEl = document.getElementById('resStars');
     if (starsEl) {
       const n = win && data.stars ? data.stars : 0;

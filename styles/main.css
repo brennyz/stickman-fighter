@@ -425,6 +425,78 @@
     -webkit-backdrop-filter: blur(calc(var(--menu-glass-blur) * 0.6));
     backdrop-filter: blur(calc(var(--menu-glass-blur) * 0.6));
   }
+  #menuScreen.menu-video-overhaul .b-play-primary {
+    width: 100%;
+    justify-content: center;
+    min-height: 56px;
+    margin: 0 0 6px;
+    padding: 12px 16px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #7cf5aa, #2fbf6a);
+    color: #042814;
+    box-shadow: 0 4px 0 #1a7a42, 0 8px 18px rgba(0, 0, 0, 0.28);
+    font-weight: 800;
+  }
+  #menuScreen.menu-video-overhaul .b-play-primary .ico img {
+    filter: none;
+  }
+  #menuScreen.menu-video-overhaul .b-play-primary small {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0.82;
+    color: #06351c;
+  }
+  #menuScreen.menu-video-overhaul .menu-lang-chip {
+    min-width: 48px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 180, 200, 0.28);
+    background: var(--menu-glass-lang);
+    color: var(--menu-ink);
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+  #menuScreen.menu-video-overhaul .menu-lang-bar[hidden] {
+    display: none !important;
+  }
+  #menuScreen.menu-video-overhaul .menu-more {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  #menuScreen.menu-video-overhaul .menu-more > summary {
+    list-style: none;
+    cursor: pointer;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--menu-ink-muted, #cfe0ff);
+  }
+  #menuScreen.menu-video-overhaul .menu-more > summary::-webkit-details-marker { display: none; }
+  #menuScreen.menu-video-overhaul .b-install.menu-install-quiet {
+    width: auto;
+    min-height: 40px;
+    margin: 0;
+    padding: 8px 12px;
+    font-size: 13px;
+    opacity: 0.92;
+  }
+  #menuScreen.menu-video-overhaul .b-install[hidden],
+  #menuScreen.menu-video-overhaul .b-install.is-hidden {
+    display: none !important;
+  }
+  #menuScreen.menu-video-overhaul .b-continue[hidden] {
+    display: none !important;
+  }
   #menuScreen.menu-video-overhaul .menu-meta-cluster {
     flex: 1 1 180px;
     min-width: 0;

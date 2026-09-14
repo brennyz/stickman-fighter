@@ -130,6 +130,32 @@ function meleeHitPoint(f, spec) {
   return { hx, hy, aim };
 }
 
+/** Capsule vs stickman body — joystick-up on Android must still hit a grounded foe. */
+function meleeHitsFighter(hx, hy, r, tgt) {
+  if (!tgt) return false;
+  const scale = tgt.scale || 1;
+  const bodyTop = tgt.y - 118 * scale;
+  const bodyBot = tgt.y - 6 * scale;
+  const nearestY = clamp(hy, bodyTop, bodyBot);
+  const dx = hx - (tgt.bodyX != null ? tgt.bodyX : tgt.x);
+  const dy = hy - nearestY;
+  const rad = r + (tgt.bodyR || 30 * scale) * 1.2;
+  return dx * dx + dy * dy < rad * rad;
+}
+
+/** Capsule vs monster — keep aim-up useful for flyers, forgive vertical miss on grounded. */
+function meleeHitsMonster(hx, hy, r, m) {
+  if (!m) return false;
+  const size = m.size || 24;
+  const top = m.y - size * (m.flying ? 1.15 : 0.25);
+  const bot = m.y + size * (m.flying ? 0.2 : 0.4);
+  const nearestY = clamp(hy, top, bot);
+  const dx = hx - m.x;
+  const dy = hy - nearestY;
+  const rad = r + size * 1.05;
+  return dx * dx + dy * dy < rad * rad;
+}
+
 function canThrowShuriken(f, game) {
   if (!f || f._shurikenCd > 0) return false;
   if (f._boomerOut) return false;

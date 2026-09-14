@@ -47,21 +47,21 @@ function adventureTelegraphHud(m) {
 }
 
 function drawTelegraphBar(c, game, tele, y) {
-  const barW = Math.min(280, W - 40);
+  const barW = Math.min(320, W - 28);
   const bx = (W - barW) / 2;
   const tall = !!(tele && tele.max >= 0.55);
-  c.fillStyle = 'rgba(0,0,0,.52)';
-  game.rr(c, bx - 6, y - 16, barW + 12, tall ? 28 : 24, 9);
+  c.fillStyle = 'rgba(0,0,0,.62)';
+  game.rr(c, bx - 8, y - 20, barW + 16, tall ? 36 : 28, 10);
   c.fill();
-  c.font = tall ? '900 13px sans-serif' : '800 11px sans-serif';
+  c.font = tall ? '900 16px sans-serif' : '800 13px sans-serif';
   c.textAlign = 'center';
   c.fillStyle = tele.color;
   c.fillText(tele.label, W / 2, y);
   c.fillStyle = 'rgba(255,255,255,.18)';
-  game.rr(c, bx, y + 6, barW, tall ? 7 : 5, 3);
+  game.rr(c, bx, y + 8, barW, tall ? 8 : 5, 3);
   c.fill();
   c.fillStyle = tele.color;
-  game.rr(c, bx, y + 6, barW * clamp(tele.frac, 0, 1), tall ? 7 : 5, 3);
+  game.rr(c, bx, y + 8, barW * clamp(tele.frac, 0, 1), tall ? 8 : 5, 3);
   c.fill();
 }
 
@@ -1592,14 +1592,22 @@ class Game {
     const trainBest = this.trainComboBest || 0;
     const trainTip = win
       ? (trainBest >= 8
-        ? `Combo-trainer: max ×${trainBest} — bonus XP!`
-        : (save.trainWins === 3 ? 'Nieuwe stijl vrij: Energie gloed — Instellingen → Stijl!' : 'Unlock stijlen door meer train-wins!'))
-      : onceResultTip('training', 'loss', t('combat.trainLossTip'))
-        || t('combat.trainTipDefault');
+        ? resolvedT('result.trainComboRecord', 'combat.trainTipDefault', { n: trainBest, rec: '' })
+        : (save.trainWins === 3
+          ? resolvedT('result.trainStyleUnlock', 'combat.trainTipDefault')
+          : resolvedT('result.trainStyleMore', 'combat.trainTipDefault')))
+      : (onceResultTip('training', 'loss',
+          resolvedT('combat.trainLossTip', 'result.trainLossTip')
+          || resolvedT('combat.trainLostTip', 'result.trainLossTip'))
+        || resolvedT('combat.trainTipDefault', 'result.trainTipDefault'));
     scheduleGameResult(this, 1400, () => UI.showResult(win, {
-      title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
-      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · max combo ×${trainBest}` +
-        (win ? ` · ${save.trainWins}x gewonnen` : ''),
+      title: win ? resolvedT('result.trainWin', 'banner.won') : resolvedT('result.trainLose', 'banner.lost'),
+      detail: resolvedT('result.trainDetail', '', {
+        outcome: win ? resolvedT('result.trainOutcomeWin', '', {}) : resolvedT('result.trainOutcomeLose', '', {}),
+        s: this.roundsP, r: this.roundsR, combo: trainBest,
+        wins: win ? resolvedT('result.trainWinsLine', '', { n: save.trainWins }) : '',
+        record: '', finishers: '',
+      }) || (`RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR})`),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
     }));
@@ -2553,7 +2561,8 @@ class Game {
     // monsters
     for (const m of this.monsters) {
       if (!m.alive) continue;
-      if ((hx - m.x) ** 2 + (hy - m.y) ** 2 < (r + m.size) ** 2) {
+      if ((typeof meleeHitsMonster === 'function' ? meleeHitsMonster(hx, hy, r, m)
+        : ((hx - m.x) ** 2 + (hy - m.y) ** 2 < (r + m.size) ** 2))) {
         let comboMul = 1;
         if (this.mode === 'adventure' && f.isPlayer) {
           this.combo = Math.min(12, this.combo + 1);
@@ -2638,7 +2647,16 @@ class Game {
     }
     for (const tgt of targets) {
       if (!tgt.alive) continue;
-      if ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2) {
+      if ((typeof meleeHitsFighter === 'function' ? meleeHitsFighter(hx, hy, r, tgt)
+        : ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2))) {
+        const finisher = spec.kind === 'weapon' && typeof isWeaponFinisher === 'function' && isWeaponFinisher(f, spec);
+        const hitRoll = rollHitDamage(f, spec, 1);
+        const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
+        const counter = isCounterHitWindow(tgt);
+        const dmg = tgt.takeDamage(hitRoll.dmg, kbHit, this, {
+          unblockable: spec.unblockable, attacker: f, kind: spec.kind,
+        });
+        if (!(dmg > 0)) continue;
         if (this.mode === 'training' && f.isPlayer) {
           this.combo = Math.min(12, this.combo + 1);
           f._chainKind = spec.kind;
@@ -2650,26 +2668,20 @@ class Game {
           if ([3, 5, 8, 10].includes(this.combo) && !goals[this.combo]) {
             goals[this.combo] = 1;
             AudioSys.sfx('combo');
-            const labels = {
-              3: 'Combo ×3 — door!',
-              5: 'Combo ×5 — netjes!',
-              8: 'Combo ×8 — pro!',
-              10: 'Combo ×10 — meester!',
-            };
-            this.floater(f.x + f.face * 30, f.y - 130, labels[this.combo], '#ffd75e', 16);
+            const key = this.combo === 3 ? 'combat.combo3' : this.combo === 5 ? 'combat.combo5'
+              : this.combo === 8 ? 'combat.combo8' : 'combat.combo10';
+            this.floater(f.x + f.face * 30, f.y - 130, resolvedT(key, 'combat.comboN', { n: this.combo }), '#ffd75e', 16);
             haptic(8 + this.combo);
           }
         }
-        const hitRoll = rollHitDamage(f, spec, 1);
-        const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
-        const counter = isCounterHitWindow(tgt);
-        const dmg = tgt.takeDamage(hitRoll.dmg, kbHit, this, {
-          unblockable: spec.unblockable, attacker: f, kind: spec.kind,
-        });
         if (hitRoll.crit) applyCritFx(this, tgt.x, tgt.y);
         const col = tgt.playerSlot === 2 ? '#ffb0b8' : (tgt.isPlayer ? '#ff8080' : '#ffe680');
-        this.floater(tgt.x, tgt.y - 115, (counter ? t('combat.counter') + ' ' : '') + '-' + dmg, col, 16);
-        this.burst(tgt.bodyX, tgt.bodyY, col, 7);
+        const pct = tgt.maxhp > 0 ? Math.max(0, Math.round(tgt.hp / tgt.maxhp * 100)) : 0;
+        this.floater(tgt.x, tgt.y - 115, (counter ? t('combat.counter') + ' ' : '') + '-' + dmg, col, 18);
+        if (this.mode === 'training' && tgt.isRobot) {
+          this.floater(tgt.x, tgt.y - 136, pct + '%', '#ffe680', 13, 'hud');
+        }
+        this.burst(tgt.bodyX, tgt.bodyY, col, 10);
         applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
         if (spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id) && spec.moveIdx < 2) {

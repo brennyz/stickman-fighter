@@ -167,6 +167,20 @@ bindPress(btnContinue, () => {
     sfReportError('resume', err, 'Verder spelen mislukt — kies een modus');
   }
 });
+bindPress(document.getElementById('btnPlayPrimary'), () => {
+  AudioSys.init(); AudioSys.sfx('select');
+  try {
+    if (save.lastPlay && save.lastPlay.mode) {
+      if (!resumeLastPlay()) {
+        UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: 'Avontuur laden mislukt' });
+      }
+      return;
+    }
+    UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: 'Avontuur laden mislukt' });
+  } catch (err) {
+    sfReportError('playPrimary', err, 'Starten mislukt — kies Avontuur');
+  }
+});
 bindPress(document.getElementById('btnTraining'), () => {
   AudioSys.init(); AudioSys.sfx('select'); startGame('training');
 });

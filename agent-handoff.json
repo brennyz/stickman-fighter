@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260914T105500",
+      "from": "user",
+      "text": "Android-first playtest P1s: start-screen declutter + SPELEN path; East island opener fairness/clarity; combat feel + Training i18n (no raw keys).",
+      "status": "active",
+      "updated": "2026-09-14"
+    },
+    {
       "id": "w-20260817T142500",
       "from": "user",
       "text": "Conflicts van open PRs oplossen en daarna mega-merge naar main.",

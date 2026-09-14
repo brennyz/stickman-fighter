@@ -67,6 +67,9 @@
 
   function refreshMenuButton() {
     if (!btnMenu || !btnLabel) return;
+    const showCta = !isStandalone && isAndroid;
+    btnMenu.hidden = !showCta;
+    btnMenu.classList.toggle('is-hidden', !showCta);
     if (isStandalone) {
       btnMenu.classList.add('done');
       btnMenu.disabled = true;

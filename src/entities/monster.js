@@ -164,11 +164,15 @@ class Monster {
       } else {
         this.x += dir * this.speed * dt;
         if (dist < this.size + 48 && this.atkCD <= 0) {
-          const wind = this.softTelegraph ? 0.78 : 0.55;
+          const wind = this.softTelegraph ? 0.95 : 0.55;
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = 2.0;
           AudioSys.sfx('roar');
+          try {
+            const slam = typeof t === 'function' ? t('hud.teleSlam') : 'SPRING!';
+            game.floater(this.x, this.y - this.size - 22, slam, '#ff9a3d', 16, 'hud');
+          } catch (_) {}
         }
       }
       this.y = game.ground - this.size;
