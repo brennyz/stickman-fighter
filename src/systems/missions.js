@@ -79,6 +79,12 @@ const ACHIEVEMENTS = [
     test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('zoo') : 0) >= 10 },
   { id: 'dexSea', name: 'Getij-kenner', desc: '5 zee-soorten in het boek',
     test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('sea') : 0) >= 5 },
+  { id: 'dexWild', name: 'Woud-jager', desc: '10 woud-soorten in het boek',
+    test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('wild') : 0) >= 10 },
+  { id: 'dexCrypt', name: 'Crypte-gids', desc: '10 crypte-soorten in het boek',
+    test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('crypt') : 0) >= 10 },
+  { id: 'dexScrap', name: 'Schroot-kenner', desc: '10 schroot-soorten in het boek',
+    test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('scrap') : 0) >= 10 },
   { id: 'train5', name: 'Robotbreker', desc: '5× training gewonnen',
     test: s => s.trainWins >= 5 },
   { id: 'wall100', name: 'Sloper', desc: 'Muurrecord 100+',
@@ -515,6 +521,9 @@ function achievementPlayTarget(ach) {
     case 'dexFarm':
     case 'dexZoo':
     case 'dexSea':
+    case 'dexWild':
+    case 'dexCrypt':
+    case 'dexScrap':
     case 'lv10':
     case 'lv50':
       return { mode: 'adventure' };
@@ -570,6 +579,9 @@ function achievementProgressFrac(ach) {
     case 'dexFarm': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('farm') : 0, 10) / 10;
     case 'dexZoo': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('zoo') : 0, 10) / 10;
     case 'dexSea': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('sea') : 0, 5) / 5;
+    case 'dexWild': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('wild') : 0, 10) / 10;
+    case 'dexCrypt': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('crypt') : 0, 10) / 10;
+    case 'dexScrap': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('scrap') : 0, 10) / 10;
     case 'train5': return Math.min(s.trainWins, 5) / 5;
     case 'wall100': return Math.min(s.bestWall, 100) / 100;
     case 'combo8': return Math.min(s.stats.maxCombo || 0, 8) / 8;
@@ -606,6 +618,9 @@ function achievementProgressHint(ach) {
     case 'dexFarm': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('farm') : 0}/10 boerderij`;
     case 'dexZoo': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('zoo') : 0}/10 dierentuin`;
     case 'dexSea': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('sea') : 0}/5 zee`;
+    case 'dexWild': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('wild') : 0}/10 woud`;
+    case 'dexCrypt': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('crypt') : 0}/10 crypte`;
+    case 'dexScrap': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('scrap') : 0}/10 schroot`;
     case 'train5': return `${Math.min(s.trainWins, 5)}/5 training-wins`;
     case 'wall100': return `${Math.min(s.bestWall, 100)}/100 muur-score`;
     case 'combo8': return `×${Math.min(s.stats.maxCombo || 0, 8)}/8 combo`;
@@ -2858,7 +2873,7 @@ function dexRarityTotals() {
   }
   return counts;
 }
-const DEX_ACH_IDS = ['dex10', 'dexFarm', 'dexZoo', 'dexSea', 'dexHalf', 'dexTiers', 'dex100', 'dexMythic', 'dexFull'];
+const DEX_ACH_IDS = ['dex10', 'dexFarm', 'dexZoo', 'dexSea', 'dexWild', 'dexCrypt', 'dexScrap', 'dexHalf', 'dexTiers', 'dex100', 'dexMythic', 'dexFull'];
 function dexNextAchievementHtml() {
   let best = null, bestFrac = -1;
   for (const id of DEX_ACH_IDS) {
@@ -3013,7 +3028,9 @@ const MONSTER_TYPE_LABEL = {
   hop: 'Hups', fly: 'Vlieg', charge: 'Charge', shoot: 'Schiet', tank: 'Tank', dragon: 'Draak', swim: 'Zee',
 };
 const DEX_BIOME_LABEL = {
-  farm: 'Boerderij', zoo: 'Dierentuin', sea: 'Zee', classic: 'Klassiek', secret: 'Geheim',
+  farm: 'Boerderij', zoo: 'Dierentuin', sea: 'Zee',
+  wild: 'Woud', crypt: 'Crypte', scrap: 'Schroot', frost: 'Vorst',
+  classic: 'Klassiek', secret: 'Geheim',
 };
 const DEX_REF_STATS = { hp: 420, dmg: 28, speed: 150 };
 function dexMiniStat(label, val, max, color) {

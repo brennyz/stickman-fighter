@@ -290,6 +290,13 @@ const SPECIES = {
     tideGaruda: { name: 'Stormarend', art: 'tideHawk', size: 34, hp: 310, dmg: 26, speed: 110, type: 'fly', xp: 118, rarity: 'mythic', c1: '#7cf5ff', c2: '#2a6090' },
     tideCerber: { name: 'Driekoppige Jachthond', art: 'tideHound', size: 36, hp: 345, dmg: 29, speed: 92, type: 'charge', xp: 124, rarity: 'mythic', c1: '#505868', c2: '#202830' },
 };
+const MONSTER_CATALOG_W2_EXPANDED = (typeof expandMonsterCatalog === 'function')
+  ? expandMonsterCatalog(typeof MONSTER_FAMILIES_W2 !== 'undefined' ? MONSTER_FAMILIES_W2 : [])
+  : { species: {}, unlockAt: {}, familyCount: 0, speciesCount: 0 };
+Object.assign(SPECIES, MONSTER_CATALOG_W2_EXPANDED.species || {});
+for (const _spId of Object.keys(SPECIES)) {
+  if (SPECIES[_spId] && !SPECIES[_spId].id) SPECIES[_spId].id = _spId;
+}
 const SPECIES_ORDER = Object.keys(SPECIES).sort((a, b) =>
   (rarityOf(SPECIES[a].rarity).order - rarityOf(SPECIES[b].rarity).order) || SPECIES[a].name.localeCompare(SPECIES[b].name)
 );
@@ -350,10 +357,11 @@ const UNLOCK_AT = {
   /* boerderij op hol */
   holkoe: 1, razendeholkoe: 6, stampkoe: 11, melkkolos: 17, boerenbonk: 22, woesteholkoe: 27, razendzwijn: 3, modderzwijn: 8, stootzwijn: 13, spekzwaai: 19, knorbonker: 24, reuzenzwijn: 29, kipophol: 1, vliegkip: 6, pikstorm: 11, kippenkolos: 17, woestekip: 22, snavelstorm: 27, razendeschaap: 3, wolkolos: 8, stampwol: 13, boerenschrik: 19, donsbeest: 24, schaaptitan: 29, holpaard: 1, galopgevaar: 6, stampveulen: 11, renkolos: 17, boerenrenner: 22, stormhengst: 27, kopstootgeit: 3, berggeitboos: 8, hoornram: 13, geitenkolos: 19, razendebok: 24, steenbokstorm: 29, kwakophol: 1, razendeeend: 6, vlotkwak: 11, eendenkolos: 17, snavelduiker: 22, kwaktitan: 27, haanophol: 3, kraairoep: 8, kamstoot: 13, hanenkolos: 19, vuurhaan: 24, zonnekam: 29, koppigeezel: 1, stampzel: 6, boerenezel: 11, ezelkolos: 17, hardhoofd: 22, molenzwaai: 27, gansophol: 3, sissendegans: 8, vleugelram: 13, ganzenkolos: 19, nesthoeder: 24, stormgans: 29,
   /* dierentuin-uitbraak */
-  reuzenolifant: 10, stampolifant: 16, slurfkolos: 23, ivoiretitan: 29, woesteolifant: 36, mammoetstorm: 42, razendeleeuw: 9, manenstorm: 15, savannekoning: 22, leeuwenkolos: 28, woestemanen: 30, koningsklauw: 36, razendetijger: 7, streepstorm: 13, jungleklauw: 20, tijgerkolos: 26, nachtstreep: 33, vuurtijger: 39, langegiraffe: 14, nekkolos: 20, savannetoren: 22, giraffenreus: 28, hoogkijk: 35, wolkennek: 41, razendnijlpaard: 8, rivierkolos: 14, gapendekaak: 21, nijltitan: 27, modderhip: 34, waterton: 40, razendeneushoorn: 6, hoornram2: 12, pantserstoot: 19, rhinokolos: 25, ijzervel: 32, stampneus: 38, woestegorilla: 9, vuistberg: 15, junglereus: 22, apenkolos: 28, zilverrug: 30, trommelborst: 36, razendezebra: 7, streepgalop: 13, savanneren: 20, zebrakolos: 26, zwartwitstorm: 33, hoefstamp: 39, razendebeer: 10, klauwberg: 16, bosreus: 18, berenkolos: 24, honingslok: 31, winterklauw: 37, razendekrokodil: 8, kaakklem: 14, rivierschrik: 21, krokodiltitan: 27, schubbenmuil: 34, snapkrokodil: 40, razendekangoeroe: 6, sprongstoot: 12, buidelbonk: 19, kangokolos: 25, hopklauw: 32, outbackram: 38, woestepanda: 9, bamboebonk: 15, zwartwitreus: 22, pandakolos: 28, rolbeer: 30, tempelpanda: 36, razendeflamingo: 7, rozestorm: 13, eenpoot: 20, flamingokolos: 26, lagunevlam: 33, nekzwaai: 39, razendekameel: 10, bultbonk: 16, woestijnreus: 18, kameelkolos: 24, zandgalop: 31, oasestamp: 37,
+  reuzenolifant: 10, stampolifant: 16, slurfkolos: 23, ivoiretitan: 29, woesteolifant: 36, mammoetstorm: 42, razendeleeuw: 9, manenstorm: 15, savannekoning: 22, leeuwenkolos: 28, woestemanen: 30, koningsklauw: 36, razendetijger: 7, streepstorm: 13, jungleklauw: 20, tijgerkolos: 26, nachtstreep: 33, vuurtijger: 39, langegiraffe: 14, nekkolos: 20, savannetoren: 22, giraffenreus: 28, hoogkijk: 35, wolkennek: 41, razendnijlpaard: 8, rivierkolos: 14, gapendekaak: 21, nijltitan: 27, modderhip: 34, waterton: 40, razendeneushoorn: 6, hoornram2: 12, pantserstoot: 19, rhinokolos: 25, ijzervel: 32, stampneus: 38, woestegorilla: 9, vuistberg: 15, junglereus: 22, apenkolos: 28, zilverrug: 30, trommelborst: 36, razendezebra: 7, streepgalop: 13, savanneren: 20, zebrakolos: 26, zwartwitstorm: 33, hoefstamp: 39, razendebeer: 10, klauwberg: 16, bosreus: 18, berenkolos: 24, honingslok: 31, winterklauw: 37, razendekrokodil: 8, kaakklem: 14, rivierschrik: 21, krokodiltitan: 27, schubbenmuil: 34, snapkrokodil: 40, razendekangoeroe: 6, sprongstoot: 12, buidelbonk: 19, kangokolos: 25, hopklauw: 32, outbackram: 38, woestepanda: 9, bamboebonk: 15, zwartwitreus: 22, pandakolos: 28, rolbeer: 30, tempelpanda: 36, razendeflamingo: 7, rozestorm: 13, eenpoot: 20, flamingokolos: 26, lagunevlam: 33, nekzwaai: 39,   razendekameel: 10, bultbonk: 16, woestijnreus: 18, kameelkolos: 24, zandgalop: 31, oasestamp: 37,
 
 };
-/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (~2× diversiteit: boerderij + dierentuin). */
+Object.assign(UNLOCK_AT, (MONSTER_CATALOG_W2_EXPANDED && MONSTER_CATALOG_W2_EXPANDED.unlockAt) || {});
+/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (W2 catalog ≈ 2× roster). */
 const ADVENTURE_HORDE_MUL = 6;
 const ADVENTURE_HORDE_MAX_PER_WAVE = 36;
 const ADVENTURE_MAX_ALIVE = IS_TOUCH ? 54 : 78;
@@ -373,10 +381,16 @@ const COLOSSAL_HP_MUL = 1.9;
 const COLOSSAL_DMG_MUL = 1.12;
 const COLOSSAL_XP_MUL = 1.45;
 
-const SEA_ARTS = new Set(['shark', 'octo']);
+const SEA_ARTS = new Set(['shark', 'octo', 'crab', 'turtle', 'squid', 'ray']);
 const FARM_ARTS = new Set(['cow', 'pig', 'chicken', 'sheep', 'horse', 'goat', 'duck', 'rooster', 'donkey', 'goose']);
 const ZOO_ARTS = new Set(['elephant', 'lion', 'tiger', 'giraffe', 'hippo', 'rhino', 'gorilla', 'zebra', 'bear', 'croc', 'kangaroo', 'panda', 'flamingo', 'camel']);
-const BEAST_SIZE_ARTS = new Set([...FARM_ARTS, ...ZOO_ARTS]);
+const BEAST_SIZE_ARTS = new Set([
+  ...FARM_ARTS,
+  ...ZOO_ARTS,
+  ...(typeof WILD_ARTS !== 'undefined' ? WILD_ARTS : []),
+  ...(typeof CRYPT_ARTS !== 'undefined' ? CRYPT_ARTS : []),
+  ...(typeof SCRAP_ARTS !== 'undefined' ? SCRAP_ARTS : []),
+]);
 /** Boerderij/dierentuin: vaker reuzen-variant (al groot, nog groter). */
 const BEAST_GIANT_BONUS = 0.28;
 
@@ -408,10 +422,18 @@ function seaSpeciesPool(levelN, maxRarityOrder) {
   });
 }
 
-/** Dex biome — farm / zoo / sea / secret / classic. Display-only, no spawn change. */
+/** Dex biome — farm / zoo / sea / wild / crypt / scrap / frost / secret / classic. */
 function speciesBiomeId(sp, id) {
   if (!sp) return 'classic';
+  if (sp.biome) return sp.biome;
   if (id === 'satan' || (id && String(id).indexOf('tide') === 0)) return 'secret';
+  if (typeof CATALOG_SEA_ARTS !== 'undefined' && CATALOG_SEA_ARTS.has(sp.art)) return 'sea';
+  if (typeof CRYPT_ARTS !== 'undefined' && CRYPT_ARTS.has(sp.art)) return 'crypt';
+  if (typeof SCRAP_ARTS !== 'undefined' && SCRAP_ARTS.has(sp.art)) return 'scrap';
+  if (typeof WILD_ARTS !== 'undefined' && WILD_ARTS.has(sp.art)) {
+    const slot = typeof MONSTER_ART_SLOTS !== 'undefined' ? MONSTER_ART_SLOTS[sp.art] : null;
+    return (slot && slot.biome) || 'wild';
+  }
   if (SEA_ARTS.has(sp.art) || sp.type === 'swim') return 'sea';
   if (FARM_ARTS.has(sp.art)) return 'farm';
   if (ZOO_ARTS.has(sp.art)) return 'zoo';
@@ -424,7 +446,7 @@ function speciesInBiome(id, biome) {
 }
 
 function dexBiomeTotals() {
-  const out = { farm: 0, zoo: 0, sea: 0, classic: 0, secret: 0 };
+  const out = { farm: 0, zoo: 0, sea: 0, wild: 0, crypt: 0, scrap: 0, frost: 0, classic: 0, secret: 0 };
   for (const id of SPECIES_ORDER) {
     const b = speciesBiomeId(SPECIES[id], id);
     if (out[b] != null) out[b]++;
@@ -495,6 +517,42 @@ const ART_BLURB = {
   camel: 'Woestijn-reserve. Spuugt tactisch.',
   shark: 'Vin, tanden, slecht nieuws.',
   octo: 'Acht armen, nul geduld.',
+  wolf: 'Tanden eerst, vragen later.',
+  owl: 'Draait de kop, dan jij.',
+  frog: 'Eén sprong, twee problemen.',
+  snake: 'Geen benen, wél tempo.',
+  boar: 'Slagtanden als bumper.',
+  raven: 'Krast alsof hij gelijk heeft.',
+  moose: 'Gewei breder dan je plan.',
+  beaver: 'Bouwt een dam van jouw combo.',
+  badger: 'Graaft eerst, bijt daarna.',
+  stag: 'Woud-koning met piek-gewei.',
+  lynx: 'Pluimoor, scherpe mening.',
+  mole: 'Komt van onder. Altijd.',
+  skeleton: 'Rammelt, maar raakt wél.',
+  mummy: 'Verband als pantser.',
+  beetle: 'Schild-kever, weinig praat.',
+  wasp: 'Angel eerst, excuses nooit.',
+  spider: 'Web + afstand = irritant.',
+  wisp: 'Dwaallicht met slechte bedoelingen.',
+  gargoyle: 'Steen die dacht dat hij kon vliegen.',
+  lich: 'Te veel botten, te veel magie.',
+  drone: 'Zoemt, mikt, piept.',
+  bot: 'Blik met een laser-mening.',
+  scrapdog: 'Roest-hond. Kwispelt met ketting.',
+  cog: 'Tandwiel dat terugbijt.',
+  turret: 'Blijft staan. Jij beweegt.',
+  rivet: 'Klinknagels en slechte ideeën.',
+  junkbat: 'Vleermuis van sloopafval.',
+  piston: 'Hydrauliek met een deadline.',
+  penguin: 'Waddelt. Tot hij sprint.',
+  yeti: 'Sneeuwman die terugslaat.',
+  walrus: 'Slagtand-zee. Zwaar.',
+  seal: 'Glibbert uit je timing.',
+  crab: 'Schaar links, schaar rechts.',
+  turtle: 'Schild. Daarna nog een schild.',
+  squid: 'Armen genoeg voor iedereen.',
+  ray: 'Glijdt alsof water optioneel is.',
 };
 
 const TYPE_BLURB = {
@@ -563,10 +621,10 @@ const BOSS_AT = {
   40: [{ sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst' }],
   45: [{ sp: 'voidkonijn', elite: true }, { sp: 'guvvedrak' }],
   50: [{ sp: 'guvvedrak', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst', elite: true }],
-  55: [{ sp: 'voidkonijn', elite: true }, { sp: 'neondrake', elite: true }, { sp: 'schaduwvorst' }],
-  60: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'voidkonijn', elite: true }],
-  65: [{ sp: 'omegadrake', elite: true }, { sp: 'etherwyrm', elite: true }, { sp: 'neondrake' }],
-  70: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'apexwyrm', elite: true }, { sp: 'voidkonijn', elite: true }],
+  55: [{ sp: 'voidkonijn', elite: true }, { sp: 'neondrake', elite: true }, { sp: 'schaduwvorst' }, { sp: 'voidyeti', elite: true }],
+  60: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'voidlich', elite: true }],
+  65: [{ sp: 'omegadrake', elite: true }, { sp: 'etherwyrm', elite: true }, { sp: 'neondrake' }, { sp: 'voidwolf', elite: true }],
+  70: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'apexwyrm', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'voidklink', elite: true }],
 };
 
 function weightedPick(pool, n, rarityBias) {
@@ -780,7 +838,31 @@ function buildLevel(n, diffId) {
           }
         }
       }
-    } else if (n >= 7 && roll < 0.76) {
+    } else if (n >= 4 && roll < 0.80) {
+      meta.trait = 'woods';
+      meta.spawnMul = 0.88;
+      meta.label = 'woods';
+      const wildPool = typeof wildSpeciesPool === 'function' ? wildSpeciesPool(n, maxRarity) : [];
+      if (wildPool.length && typeof applyCatalogWave === 'function') {
+        applyCatalogWave(list, wildPool, n, rarityBias, false);
+      }
+    } else if (n >= 9 && roll < 0.86) {
+      meta.trait = 'crypt';
+      meta.spawnMul = 0.86;
+      meta.label = 'crypt';
+      const cryptPool = typeof cryptSpeciesPool === 'function' ? cryptSpeciesPool(n, maxRarity) : [];
+      if (cryptPool.length && typeof applyCatalogWave === 'function') {
+        applyCatalogWave(list, cryptPool, n, rarityBias, false);
+      }
+    } else if (n >= 12 && roll < 0.92) {
+      meta.trait = 'scrap';
+      meta.spawnMul = 0.84;
+      meta.label = 'scrap';
+      const scrapPool = typeof scrapSpeciesPool === 'function' ? scrapSpeciesPool(n, maxRarity) : [];
+      if (scrapPool.length && typeof applyCatalogWave === 'function') {
+        applyCatalogWave(list, scrapPool, n, rarityBias, false);
+      }
+    } else if (n >= 7 && roll < 0.96) {
       const sp = weightedPick(pool, n, rarityBias);
       list.push({ sp, elite: true, giant: rollWaveGiant(n, true, sp, diff.giantBonus) });
       meta.trait = 'elite';
@@ -846,6 +928,9 @@ const WAVE_TRAIT_BANNER = {
   tide: { key: 'banner.tideWave', color: '#6ee06e', size: 40 },
   ranch: { key: 'banner.ranchWave', color: '#e8c98a', size: 40 },
   safari: { key: 'banner.safariWave', color: '#43b25b', size: 40 },
+  woods: { key: 'banner.woodsWave', color: '#6ee06e', size: 40 },
+  crypt: { key: 'banner.cryptWave', color: '#c47aff', size: 40 },
+  scrap: { key: 'banner.scrapWave', color: '#9fb2c8', size: 40 },
   ember: { key: 'banner.emberWave', color: '#ff7a4d', size: 42 },
   pain: { key: 'banner.painWave', color: '#ff3a2a', size: 44 },
 };

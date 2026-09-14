@@ -2299,7 +2299,7 @@ const I18N = {
       gear: 'Uitrusting', gearSub: '5 slots · pantser & cosmetics',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Shards · technique uitrusten',
-      dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee',
+      dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee · woud',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
       loadFail: 'Hub laden mislukt',
     },
@@ -2387,7 +2387,7 @@ const I18N = {
     },
     pets: { title: 'Pets · Metgezels', sub: 'Dex-pets via monsterboek · Ei-pets via dagelijkse arcade-pull',
       crackEgg: 'Dag-ei openen', crackEggSub: 'Gratis arcade-pull' },
-    dex: { title: 'Monsterboek', sub: '{n} soorten · rariteit = HP · boerderij / dierentuin / zee-filters · 4 rariteiten = Kristallijn' },
+    dex: { title: 'Monsterboek', sub: '{n} soorten · rariteit = HP · boerderij / zoo / zee / woud / crypte · 4 rariteiten = Kristallijn' },
     help: { title: 'Tips & controls' },
     gear: {
       title: 'Uitrusting', sub: '5 slots · pantser & cosmetics · level + tijd-gate',
@@ -2457,7 +2457,7 @@ const I18N = {
       gear: 'Loadout', gearSub: '5 slots · armour & cosmetics',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Shards · equip a technique',
-      dex: 'Monster book', dexSub: '{n} species · rarity = HP · farm · zoo · sea',
+      dex: 'Monster book', dexSub: '{n} species · rarity = HP · farm · zoo · sea · woods',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
       loadFail: 'Could not load hub',
     },
@@ -2545,7 +2545,7 @@ const I18N = {
     },
     pets: { title: 'Pets · Companions', sub: 'Dex pets via monster book · Egg pets via daily arcade pull',
       crackEgg: 'Open daily egg', crackEggSub: 'Free arcade pull' },
-    dex: { title: 'Monster book', sub: '{n} species · rarity = HP · farm / zoo / sea filters · 4 rarities = Crystalline' },
+    dex: { title: 'Monster book', sub: '{n} species · rarity = HP · farm / zoo / sea / woods / crypt · 4 rarities = Crystalline' },
     help: { title: 'Tips & controls' },
     gear: {
       title: 'Loadout', sub: '5 slots · armour & cosmetics · level + time gate',
@@ -2615,7 +2615,7 @@ const I18N = {
       gear: 'Ausrüstung', gearSub: '5 Slots · Rüstung & Kosmetik',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Splitter · Technik ausrüsten',
-      dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP · Farm · Zoo · Meer',
+      dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP · Farm · Zoo · Meer · Wald',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
       loadFail: 'Hub laden fehlgeschlagen',
     },
@@ -2694,7 +2694,7 @@ const I18N = {
       streakReward3: '+1 summon', streakReward7: '+egg or summons', streakReward14: '+120 XP',
     },
     pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Kostenloser Arcade-Zug' },
-    dex: { title: 'Monsterbuch', sub: '{n} Arten · Seltenheit = HP · Farm / Zoo / Meer' },
+    dex: { title: 'Monsterbuch', sub: '{n} Arten · Seltenheit = HP · Farm / Zoo / Meer / Wald / Krypta' },
     help: { title: 'Tipps & Steuerung' },
     install: { title: 'Als App speichern', sub: 'Ein Icon, wie eine echte App' },
     island: {
@@ -2758,7 +2758,7 @@ const I18N = {
       gear: 'Équipement', gearSub: '5 emplacements · armure & cosmétique',
       skills: 'Skills', skillsSub: 'Spéciaux énergie · Spiral Orb · Wave Cannon',
       upgrades: 'Améliorations', upgradesSub: 'Éclats · équiper une technique',
-      dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV · ferme · zoo · mer',
+      dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV · ferme · zoo · mer · bois',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
       loadFail: 'Hub introuvable',
     },
@@ -2837,7 +2837,7 @@ const I18N = {
       streakReward3: '+1 summon', streakReward7: '+egg or summons', streakReward14: '+120 XP',
     },
     pets: { title: 'Pets · Compagnons', sub: 'Pets dex & œufs arcade', crackEgg: 'Ouvrir l\'œuf du jour', crackEggSub: 'Tir gratuit' },
-    dex: { title: 'Bestiaire', sub: '{n} espèces · rareté = PV · ferme / zoo / mer' },
+    dex: { title: 'Bestiaire', sub: '{n} espèces · rareté = PV · ferme / zoo / mer / bois / crypte' },
     help: { title: 'Astuces & contrôles' },
     install: { title: 'Ajouter comme app', sub: 'Une icône, comme une vraie app' },
     island: {
@@ -2901,7 +2901,7 @@ const I18N = {
       gear: 'Equipo', gearSub: '5 huecos · armadura y cosméticos',
       skills: 'Skills', skillsSub: 'Especiales energía · Spiral Orb · Wave Cannon',
       upgrades: 'Mejoras', upgradesSub: 'Fragmentos · equipar técnica',
-      dex: 'Bestiario', dexSub: '{n} especies · rareza = HP · granja · zoo · mar',
+      dex: 'Bestiario', dexSub: '{n} especies · rareza = HP · granja · zoo · mar · bosque',
       modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
       loadFail: 'No se pudo cargar el hub',
     },
@@ -2980,7 +2980,7 @@ const I18N = {
       streakReward3: '+1 summon', streakReward7: '+egg or summons', streakReward14: '+120 XP',
     },
     pets: { title: 'Pets · Compañeros', sub: 'Pets dex y huevos arcade', crackEgg: 'Abrir huevo diario', crackEggSub: 'Tirada gratis' },
-    dex: { title: 'Bestiario', sub: '{n} especies · rareza = HP · granja / zoo / mar' },
+    dex: { title: 'Bestiario', sub: '{n} especies · rareza = HP · granja / zoo / mar / bosque / cripta' },
     help: { title: 'Consejos y controles' },
     install: { title: 'Añadir como app', sub: 'Un icono, como una app real' },
     island: {
@@ -3730,6 +3730,12 @@ const ACHIEVEMENTS = [
     test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('zoo') : 0) >= 10 },
   { id: 'dexSea', name: 'Getij-kenner', desc: '5 zee-soorten in het boek',
     test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('sea') : 0) >= 5 },
+  { id: 'dexWild', name: 'Woud-jager', desc: '10 woud-soorten in het boek',
+    test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('wild') : 0) >= 10 },
+  { id: 'dexCrypt', name: 'Crypte-gids', desc: '10 crypte-soorten in het boek',
+    test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('crypt') : 0) >= 10 },
+  { id: 'dexScrap', name: 'Schroot-kenner', desc: '10 schroot-soorten in het boek',
+    test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('scrap') : 0) >= 10 },
   { id: 'train5', name: 'Robotbreker', desc: '5× training gewonnen',
     test: s => s.trainWins >= 5 },
   { id: 'wall100', name: 'Sloper', desc: 'Muurrecord 100+',
@@ -4166,6 +4172,9 @@ function achievementPlayTarget(ach) {
     case 'dexFarm':
     case 'dexZoo':
     case 'dexSea':
+    case 'dexWild':
+    case 'dexCrypt':
+    case 'dexScrap':
     case 'lv10':
     case 'lv50':
       return { mode: 'adventure' };
@@ -4221,6 +4230,9 @@ function achievementProgressFrac(ach) {
     case 'dexFarm': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('farm') : 0, 10) / 10;
     case 'dexZoo': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('zoo') : 0, 10) / 10;
     case 'dexSea': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('sea') : 0, 5) / 5;
+    case 'dexWild': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('wild') : 0, 10) / 10;
+    case 'dexCrypt': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('crypt') : 0, 10) / 10;
+    case 'dexScrap': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('scrap') : 0, 10) / 10;
     case 'train5': return Math.min(s.trainWins, 5) / 5;
     case 'wall100': return Math.min(s.bestWall, 100) / 100;
     case 'combo8': return Math.min(s.stats.maxCombo || 0, 8) / 8;
@@ -4257,6 +4269,9 @@ function achievementProgressHint(ach) {
     case 'dexFarm': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('farm') : 0}/10 boerderij`;
     case 'dexZoo': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('zoo') : 0}/10 dierentuin`;
     case 'dexSea': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('sea') : 0}/5 zee`;
+    case 'dexWild': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('wild') : 0}/10 woud`;
+    case 'dexCrypt': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('crypt') : 0}/10 crypte`;
+    case 'dexScrap': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('scrap') : 0}/10 schroot`;
     case 'train5': return `${Math.min(s.trainWins, 5)}/5 training-wins`;
     case 'wall100': return `${Math.min(s.bestWall, 100)}/100 muur-score`;
     case 'combo8': return `×${Math.min(s.stats.maxCombo || 0, 8)}/8 combo`;
@@ -6509,7 +6524,7 @@ function dexRarityTotals() {
   }
   return counts;
 }
-const DEX_ACH_IDS = ['dex10', 'dexFarm', 'dexZoo', 'dexSea', 'dexHalf', 'dexTiers', 'dex100', 'dexMythic', 'dexFull'];
+const DEX_ACH_IDS = ['dex10', 'dexFarm', 'dexZoo', 'dexSea', 'dexWild', 'dexCrypt', 'dexScrap', 'dexHalf', 'dexTiers', 'dex100', 'dexMythic', 'dexFull'];
 function dexNextAchievementHtml() {
   let best = null, bestFrac = -1;
   for (const id of DEX_ACH_IDS) {
@@ -6664,7 +6679,9 @@ const MONSTER_TYPE_LABEL = {
   hop: 'Hups', fly: 'Vlieg', charge: 'Charge', shoot: 'Schiet', tank: 'Tank', dragon: 'Draak', swim: 'Zee',
 };
 const DEX_BIOME_LABEL = {
-  farm: 'Boerderij', zoo: 'Dierentuin', sea: 'Zee', classic: 'Klassiek', secret: 'Geheim',
+  farm: 'Boerderij', zoo: 'Dierentuin', sea: 'Zee',
+  wild: 'Woud', crypt: 'Crypte', scrap: 'Schroot', frost: 'Vorst',
+  classic: 'Klassiek', secret: 'Geheim',
 };
 const DEX_REF_STATS = { hp: 420, dmg: 28, speed: 150 };
 function dexMiniStat(label, val, max, color) {
@@ -12368,6 +12385,374 @@ function toastVersusRetired() {
     UI.toast(t('toast.versusRetired'), 3200, { tone: 'warn' });
   } catch (_) {}
 }
+/* --- src/data/monster-catalog.js --- */
+/* ====================== MONSTER CATALOG W2 (editor) ==================== */
+/**
+ * Data-driven family table — expands into SPECIES + UNLOCK_AT.
+ * Pixel partner: reuse #282 maps via SPECIES[id].pixel (MONSTER_PIXEL_ALIAS).
+ * Unique `art` stays for biome/waves; stubs only if pixel maps are absent.
+ *
+ * Do not edit SPECIES by hand for wave-2 beasts — add a family row here.
+ */
+const MONSTER_CATALOG_RARITIES = [
+  { rarity: 'common',    size: 0, hp: 1.00, dmg: 1.00, speed: 1.00, xp: 1.00, unlockAdd: 0 },
+  { rarity: 'uncommon',  size: 1, hp: 1.42, dmg: 1.24, speed: 1.05, xp: 1.55, unlockAdd: 5 },
+  { rarity: 'rare',      size: 2, hp: 1.88, dmg: 1.48, speed: 1.10, xp: 2.15, unlockAdd: 10 },
+  { rarity: 'epic',      size: 3, hp: 2.38, dmg: 1.72, speed: 1.14, xp: 2.80, unlockAdd: 16 },
+  { rarity: 'legendary', size: 4, hp: 2.92, dmg: 1.96, speed: 1.18, xp: 3.50, unlockAdd: 22 },
+  { rarity: 'mythic',    size: 5, hp: 3.50, dmg: 2.20, speed: 1.22, xp: 4.25, unlockAdd: 28 },
+  { rarity: 'nightmare', size: 6, hp: 4.15, dmg: 2.48, speed: 1.26, xp: 5.15, unlockAdd: 'nm' },
+  { rarity: 'hell',      size: 7, hp: 4.90, dmg: 2.80, speed: 1.30, xp: 6.10, unlockAdd: 'hell' },
+];
+
+/** Art slot registry — one ID per silhouette. Pixel partner owns these. */
+const MONSTER_ART_SLOTS = {
+  wolf:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Tanden eerst, vragen later.' },
+  owl:       { biome: 'wild',  type: 'fly',    shape: 'flyer',   priority: 1, pixelStatus: 'stub', blurb: 'Draait de kop, dan jij.' },
+  frog:      { biome: 'wild',  type: 'hop',    shape: 'hopper',  priority: 1, pixelStatus: 'stub', blurb: 'Eén sprong, twee problemen.' },
+  snake:     { biome: 'wild',  type: 'charge', shape: 'swimmer', priority: 1, pixelStatus: 'stub', blurb: 'Geen benen, wél tempo.' },
+  boar:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Slagtanden als bumper.' },
+  raven:     { biome: 'wild',  type: 'fly',    shape: 'flyer',   priority: 2, pixelStatus: 'stub', blurb: 'Krast alsof hij gelijk heeft.' },
+  moose:     { biome: 'wild',  type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'stub', blurb: 'Gewei breder dan je plan.' },
+  beaver:    { biome: 'wild',  type: 'tank',   shape: 'quad',    priority: 2, pixelStatus: 'stub', blurb: 'Bouwt een dam van jouw combo.' },
+  badger:    { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 2, pixelStatus: 'stub', blurb: 'Graaft eerst, bijt daarna.' },
+  stag:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 2, pixelStatus: 'stub', blurb: 'Woud-koning met piek-gewei.' },
+  lynx:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 2, pixelStatus: 'stub', blurb: 'Pluimoor, scherpe mening.' },
+  mole:      { biome: 'wild',  type: 'hop',    shape: 'hopper',  priority: 3, pixelStatus: 'stub', blurb: 'Komt van onder. Altijd.' },
+  skeleton:  { biome: 'crypt', type: 'charge', shape: 'undead',  priority: 1, pixelStatus: 'stub', blurb: 'Rammelt, maar raakt wél.' },
+  mummy:     { biome: 'crypt', type: 'tank',   shape: 'undead',  priority: 1, pixelStatus: 'stub', blurb: 'Verband als pantser.' },
+  beetle:    { biome: 'crypt', type: 'hop',    shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Schild-kever, weinig praat.' },
+  wasp:      { biome: 'crypt', type: 'fly',    shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Angel eerst, excuses nooit.' },
+  spider:    { biome: 'crypt', type: 'shoot',  shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Web + afstand = irritant.' },
+  wisp:      { biome: 'crypt', type: 'shoot',  shape: 'shooter', priority: 2, pixelStatus: 'stub', blurb: 'Dwaallicht met slechte bedoelingen.' },
+  gargoyle:  { biome: 'crypt', type: 'fly',    shape: 'flyer',   priority: 2, pixelStatus: 'stub', blurb: 'Steen die dacht dat hij kon vliegen.' },
+  lich:      { biome: 'crypt', type: 'shoot',  shape: 'undead',  priority: 2, pixelStatus: 'stub', blurb: 'Te veel botten, te veel magie.' },
+  drone:     { biome: 'scrap', type: 'fly',    shape: 'mech',    priority: 1, pixelStatus: 'stub', blurb: 'Zoemt, mikt, piept.' },
+  bot:       { biome: 'scrap', type: 'shoot',  shape: 'mech',    priority: 1, pixelStatus: 'stub', blurb: 'Blik met een laser-mening.' },
+  scrapdog:  { biome: 'scrap', type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Roest-hond. Kwispelt met ketting.' },
+  cog:       { biome: 'scrap', type: 'hop',    shape: 'mech',    priority: 2, pixelStatus: 'stub', blurb: 'Tandwiel dat terugbijt.' },
+  turret:    { biome: 'scrap', type: 'shoot',  shape: 'shooter', priority: 2, pixelStatus: 'stub', blurb: 'Blijft staan. Jij beweegt.' },
+  rivet:     { biome: 'scrap', type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'stub', blurb: 'Klinknagels en slechte ideeën.' },
+  junkbat:   { biome: 'scrap', type: 'fly',    shape: 'flyer',   priority: 3, pixelStatus: 'stub', blurb: 'Vleermuis van sloopafval.' },
+  piston:    { biome: 'scrap', type: 'charge', shape: 'mech',    priority: 2, pixelStatus: 'stub', blurb: 'Hydrauliek met een deadline.' },
+  penguin:   { biome: 'frost', type: 'hop',    shape: 'hopper',  priority: 1, pixelStatus: 'stub', blurb: 'Waddelt. Tot hij sprint.' },
+  yeti:      { biome: 'frost', type: 'tank',   shape: 'tank',    priority: 1, pixelStatus: 'stub', blurb: 'Sneeuwman die terugslaat.' },
+  walrus:    { biome: 'frost', type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'stub', blurb: 'Slagtand-zee. Zwaar.' },
+  seal:      { biome: 'frost', type: 'hop',    shape: 'hopper',  priority: 3, pixelStatus: 'stub', blurb: 'Glibbert uit je timing.' },
+  crab:      { biome: 'sea',   type: 'swim',   shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Schaar links, schaar rechts.' },
+  turtle:    { biome: 'sea',   type: 'swim',   shape: 'tank',    priority: 1, pixelStatus: 'stub', blurb: 'Schild. Daarna nog een schild.' },
+  squid:     { biome: 'sea',   type: 'swim',   shape: 'swimmer', priority: 1, pixelStatus: 'stub', blurb: 'Armen genoeg voor iedereen.' },
+  ray:       { biome: 'sea',   type: 'swim',   shape: 'swimmer', priority: 2, pixelStatus: 'stub', blurb: 'Glijdt alsof water optioneel is.' },
+};
+
+const WILD_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].biome === 'wild' || MONSTER_ART_SLOTS[id].biome === 'frost'));
+const CRYPT_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].biome === 'crypt'));
+const SCRAP_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].biome === 'scrap'));
+const CATALOG_SEA_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].biome === 'sea'));
+
+/**
+ * #282 provisional pixel IDs (art families + flagship SPECIES keys).
+ * W2 keeps unique `art` for biome/waves; `sp.pixel` aliases these so
+ * `monsterPixelKey` (pixel PR) can tint existing maps — no art redo.
+ * See MONSTER-PIXEL-MAP.md on cursor/monster-pixel-art-6c6b / PR #282.
+ */
+const MONSTER_PIXEL_PROVISIONAL = {
+  art: [
+    'slime', 'bat', 'hedgehog', 'ghost', 'can', 'fox', 'golem', 'dragon', 'shark', 'octo',
+    'cow', 'pig', 'chicken', 'sheep', 'horse', 'goat', 'duck', 'rooster', 'donkey', 'goose',
+    'elephant', 'lion', 'tiger', 'giraffe', 'hippo', 'rhino', 'gorilla', 'zebra', 'bear', 'croc',
+    'kangaroo', 'panda', 'flamingo', 'camel',
+  ],
+  species: [
+    'holkoe', 'razendzwijn', 'kipophol', 'razendeschaap', 'holpaard', 'kopstootgeit',
+    'kwakophol', 'haanophol', 'koppigeezel', 'gansophol', 'reuzenolifant', 'razendeleeuw',
+    'razendetijger', 'langegiraffe', 'razendnijlpaard', 'razendeneushoorn', 'woestegorilla',
+    'razendezebra', 'razendebeer', 'razendekrokodil', 'razendekangoeroe', 'woestepanda',
+    'razendeflamingo', 'razendekameel', 'voidsly', 'frostbub', 'lavablob', 'voidkonijn',
+    'omegadrake', 'levihaai', 'voidocto',
+  ],
+};
+const MONSTER_PIXEL_PROVISIONAL_SET = new Set([
+  ...MONSTER_PIXEL_PROVISIONAL.art,
+  ...MONSTER_PIXEL_PROVISIONAL.species,
+]);
+
+/** Closest #282 map per W2 art. `high` = mythic / nightmare / hell flagship. */
+const MONSTER_PIXEL_ALIAS = {
+  wolf: { pixel: 'fox', high: 'voidkonijn' },
+  owl: { pixel: 'bat' },
+  frog: { pixel: 'slime', high: 'voidsly' },
+  snake: { pixel: 'croc', high: 'razendekrokodil' },
+  boar: { pixel: 'pig', high: 'razendzwijn' },
+  raven: { pixel: 'bat' },
+  moose: { pixel: 'cow', high: 'holkoe' },
+  beaver: { pixel: 'pig' },
+  badger: { pixel: 'hedgehog' },
+  stag: { pixel: 'horse', high: 'holpaard' },
+  lynx: { pixel: 'tiger', high: 'razendetijger' },
+  mole: { pixel: 'slime', high: 'frostbub' },
+  skeleton: { pixel: 'ghost' },
+  mummy: { pixel: 'golem' },
+  beetle: { pixel: 'hedgehog' },
+  wasp: { pixel: 'bat' },
+  spider: { pixel: 'octo' },
+  wisp: { pixel: 'ghost' },
+  gargoyle: { pixel: 'dragon', high: 'omegadrake' },
+  lich: { pixel: 'ghost' },
+  drone: { pixel: 'can' },
+  bot: { pixel: 'can' },
+  scrapdog: { pixel: 'fox', high: 'voidkonijn' },
+  cog: { pixel: 'can' },
+  turret: { pixel: 'can' },
+  rivet: { pixel: 'golem' },
+  junkbat: { pixel: 'bat' },
+  piston: { pixel: 'golem' },
+  penguin: { pixel: 'duck', high: 'kwakophol' },
+  yeti: { pixel: 'bear', high: 'razendebeer' },
+  walrus: { pixel: 'hippo', high: 'razendnijlpaard' },
+  seal: { pixel: 'duck' },
+  crab: { pixel: 'hedgehog' },
+  turtle: { pixel: 'golem' },
+  squid: { pixel: 'octo', high: 'voidocto' },
+  ray: { pixel: 'shark', high: 'levihaai' },
+};
+
+function catalogPixelFor(art, rarity) {
+  const a = MONSTER_PIXEL_ALIAS[art];
+  if (!a) return null;
+  const order = (typeof rarityOf === 'function')
+    ? rarityOf(rarity).order
+    : ({ mythic: 5, nightmare: 6, hell: 7 }[rarity] || 0);
+  const id = (order >= 5 && a.high) ? a.high : a.pixel;
+  return (id && MONSTER_PIXEL_PROVISIONAL_SET.has(id)) ? id : (a.pixel || null);
+}
+
+function catalogColors(pairs) {
+  return pairs.map((p) => ({ c1: p[0], c2: p[1] }));
+}
+
+/** Compact family rows: names[i] matches rarity i (common → hell). */
+const MONSTER_FAMILIES_W2 = [
+  { art: 'wolf', unlock: 2, base: { size: 22, hp: 50, dmg: 10, speed: 108, xp: 12 },
+    names: [['wolfling','Wolfling'],['nachtwolf','Nachtwolf'],['roedelwolf','Roedelwolf'],['stormwolf','Stormwolf'],['maanklauw','Maanklauw'],['voidwolf','Voidwolf'],['nmwolf','Nachtmerrie-Wolf'],['helwolf','Hel-Wolf']],
+    colors: catalogColors([['#8a8478','#3a3830'],['#505868','#202830'],['#9a917f','#4a4038'],['#7cf5ff','#2a7fc0'],['#c47aff','#5a2080'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'owl', unlock: 3, base: { size: 18, hp: 36, dmg: 8, speed: 100, xp: 11 },
+    names: [['uilkuiken','Uilkuiken'],['nachtuil','Nachtuil'],['bosuil','Bosuil'],['stormuil','Stormuil'],['maanuil','Maanuil'],['voiduil','Voiduil'],['nmuil','Nachtmerrie-Uil'],['heluil','Hel-Uil']],
+    colors: catalogColors([['#c98850','#6b4a28'],['#2a1840','#5a3fb0'],['#43b25b','#1e4a28'],['#7cf5ff','#2a7fc0'],['#ffe259','#c97a20'],['#5a1040','#ff6b9d'],['#6b5cff','#2e2266'],['#ff3040','#2a0810']]) },
+  { art: 'frog', unlock: 1, base: { size: 16, hp: 34, dmg: 7, speed: 62, xp: 9 },
+    names: [['kikkervis','Kikkervis'],['moeraskikker','Moeraskikker'],['springkik','Springkik'],['stormkikker','Stormkikker'],['koningskik','Koningskik'],['voidkikker','Voidkikker'],['nmkikker','Nachtmerrie-Kikker'],['helkikker','Hel-Kikker']],
+    colors: catalogColors([['#5ad06a','#2e8f3c'],['#4a8f52','#1e4a28'],['#7ad06a','#3a7a42'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#b06ae0','#5a2080'],['#ff3040','#2a0810']]) },
+  { art: 'snake', unlock: 4, base: { size: 20, hp: 44, dmg: 11, speed: 96, xp: 13 },
+    names: [['slingerling','Slingerling'],['graslang','Graslang'],['bijtlang','Bijtlang'],['stormslang','Stormslang'],['kronkelvorst','Kronkelvorst'],['voidslang','Voidslang'],['nmslang','Nachtmerrie-Slang'],['helslang','Hel-Slang']],
+    colors: catalogColors([['#43b25b','#1e4a28'],['#5ad06a','#2a6030'],['#c98850','#6b4a28'],['#7cf5ff','#2a7fc0'],['#c47aff','#5a2080'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'boar', unlock: 3, base: { size: 24, hp: 58, dmg: 11, speed: 102, xp: 13 },
+    names: [['keilerjong','Keilerjong'],['boskeiler','Boskeiler'],['stoottand','Stoottand'],['stormkeiler','Stormkeiler'],['slagtandvorst','Slagtandvorst'],['voidkeiler','Voidkeiler'],['nmkeiler','Nachtmerrie-Keiler'],['helkeiler','Hel-Keiler']],
+    colors: catalogColors([['#9a917f','#4a4038'],['#6b5344','#3a2820'],['#c98850','#6b4a28'],['#ff7043','#8a2020'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'raven', unlock: 5, base: { size: 16, hp: 32, dmg: 8, speed: 112, xp: 11 },
+    names: [['kraailing','Kraailing'],['nachtkras','Nachtkras'],['stormraaf','Stormraaf'],['asraaf','Asraaf'],['maankraai','Maankraai'],['voidraaf','Voidraaf'],['nmraaf','Nachtmerrie-Raaf'],['helraaf','Hel-Raaf']],
+    colors: catalogColors([['#505868','#202830'],['#2a1840','#5a3fb0'],['#7cf5ff','#2a7fc0'],['#9a917f','#4a4038'],['#c47aff','#5a2080'],['#5a1040','#ff6b9d'],['#6b5cff','#2e2266'],['#ff3040','#2a0810']]) },
+  { art: 'moose', unlock: 8, base: { size: 32, hp: 78, dmg: 13, speed: 42, xp: 16 },
+    names: [['elandkalf','Elandkalf'],['woudeland','Woudeland'],['takelhorn','Takelhorn'],['stormeland','Stormeland'],['krooneland','Krooneland'],['voideland','Voideland'],['nmeland','Nachtmerrie-Eland'],['heleland','Hel-Eland']],
+    colors: catalogColors([['#c98850','#6b4a28'],['#8a5a30','#4a3020'],['#d4a574','#8a6030'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'beaver', unlock: 4, base: { size: 20, hp: 52, dmg: 9, speed: 48, xp: 12 },
+    names: [['beverpup','Beverpup'],['dambever','Dambever'],['knaagster','Knaagster'],['stormbever','Stormbever'],['damkolos','Damkolos'],['voidbever','Voidbever'],['nmbever','Nachtmerrie-Bever'],['helbever','Hel-Bever']],
+    colors: catalogColors([['#c98850','#6b4a28'],['#6b5344','#3a2820'],['#9a917f','#4a4038'],['#7cf5ff','#2a7fc0'],['#43b25b','#1e4a28'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'badger', unlock: 6, base: { size: 20, hp: 54, dmg: 11, speed: 92, xp: 13 },
+    names: [['dassenwelp','Dassenwelp'],['nachtdas','Nachtdas'],['graverdas','Graverdas'],['stormdas','Stormdas'],['zilverdas','Zilverdas'],['voiddas','Voiddas'],['nmdas','Nachtmerrie-Das'],['heldas','Hel-Das']],
+    colors: catalogColors([['#9a917f','#4a4038'],['#505868','#202830'],['#8a8478','#3a3830'],['#7cf5ff','#2a7fc0'],['#dfe8ff','#6a7080'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'stag', unlock: 7, base: { size: 26, hp: 60, dmg: 12, speed: 100, xp: 14 },
+    names: [['hertkalf','Hertkalf'],['woudhert','Woudhert'],['geweihorn','Geweihorn'],['stormhert','Stormhert'],['kroonhert','Kroonhert'],['voidhert','Voidhert'],['nmhert','Nachtmerrie-Hert'],['helhert','Hel-Hert']],
+    colors: catalogColors([['#d4a574','#8a6030'],['#43b25b','#1e4a28'],['#c98850','#6b4a28'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#c47aff','#5a2080'],['#ff3040','#2a0810']]) },
+  { art: 'lynx', unlock: 6, base: { size: 20, hp: 48, dmg: 12, speed: 118, xp: 14 },
+    names: [['loswelp','Loswelp'],['boslos','Boslos'],['klauwlos','Klauwlos'],['stormlos','Stormlos'],['schaduwlos','Schaduwlos'],['voidlos','Voidlos'],['nmlos','Nachtmerrie-Los'],['hellos','Hel-Los']],
+    colors: catalogColors([['#e8c98a','#8a6030'],['#c98850','#6b4a28'],['#ff8c42','#d05a1e'],['#7cf5ff','#2a7fc0'],['#2a1840','#5a3fb0'],['#5a1040','#ff6b9d'],['#6b5cff','#2e2266'],['#ff3040','#2a0810']]) },
+  { art: 'mole', unlock: 2, base: { size: 15, hp: 38, dmg: 8, speed: 58, xp: 10 },
+    names: [['molpup','Molpup'],['graafmol','Graafmol'],['tunnelmol','Tunnelmol'],['stormmol','Stormmol'],['diepmol','Diepmol'],['voidmol','Voidmol'],['nmmol','Nachtmerrie-Mol'],['helmol','Hel-Mol']],
+    colors: catalogColors([['#6b5344','#3a2820'],['#9a917f','#4a4038'],['#8a8478','#5a5548'],['#7cf5ff','#2a7fc0'],['#2a1840','#6a5080'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'skeleton', unlock: 8, base: { size: 20, hp: 42, dmg: 10, speed: 88, xp: 13 },
+    names: [['rammelbeen','Rammelbeen'],['knerpbot','Knerpbot'],['grafwacht','Grafwacht'],['stormskelet','Stormskelet'],['grafheer','Grafheer'],['voidskelet','Voidskelet'],['nmskelet','Nachtmerrie-Skelet'],['helskelet','Hel-Skelet']],
+    colors: catalogColors([['#dfe8ff','#6a7080'],['#9fb2c8','#5f7189'],['#cfe6ff','#7aa8cf'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'mummy', unlock: 10, base: { size: 22, hp: 70, dmg: 11, speed: 40, xp: 16 },
+    names: [['windseling','Windseling'],['zandmummie','Zandmummie'],['grafdoek','Grafdoek'],['stormmummie','Stormmummie'],['faraokolos','Faraokolos'],['voidmummie','Voidmummie'],['nmmummie','Nachtmerrie-Mummie'],['helmummie','Hel-Mummie']],
+    colors: catalogColors([['#e8c98a','#8a6030'],['#d4a574','#8a6030'],['#c98850','#6b4a28'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'beetle', unlock: 5, base: { size: 16, hp: 40, dmg: 8, speed: 64, xp: 11 },
+    names: [['keverling','Keverling'],['pantskever','Pantskever'],['hoornkever','Hoornkever'],['stormkever','Stormkever'],['schildkever','Schildkever'],['voidkever','Voidkever'],['nmkever','Nachtmerrie-Kever'],['helkever','Hel-Kever']],
+    colors: catalogColors([['#43b25b','#1e4a28'],['#5a8a40','#2a5020'],['#c98850','#6b4a28'],['#7cf5ff','#2a7fc0'],['#9fb2c8','#4a5568'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'wasp', unlock: 7, base: { size: 14, hp: 28, dmg: 9, speed: 120, xp: 12 },
+    names: [['wespje','Wespje'],['steekwesp','Steekwesp'],['zwermwesp','Zwermwesp'],['stormwesp','Stormwesp'],['koninginneangel','Koninginneangel'],['voidwesp','Voidwesp'],['nmwesp','Nachtmerrie-Wesp'],['helwesp','Hel-Wesp']],
+    colors: catalogColors([['#ffe259','#c97a20'],['#ffd75e','#8a6020'],['#ff8c42','#d05a1e'],['#7cf5ff','#2a7fc0'],['#c47aff','#5a2080'],['#5a1040','#ff6b9d'],['#6b5cff','#2e2266'],['#ff3040','#2a0810']]) },
+  { art: 'spider', unlock: 9, base: { size: 18, hp: 46, dmg: 10, speed: 54, xp: 14 },
+    names: [['spinling','Spinling'],['webspinner','Webspinner'],['gifspin','Gifspin'],['stormspin','Stormspin'],['nestmoeder','Nestmoeder'],['voidspin','Voidspin'],['nmspin','Nachtmerrie-Spin'],['helspin','Hel-Spin']],
+    colors: catalogColors([['#6b5344','#3a2820'],['#505868','#202830'],['#9fd06a','#4a7030'],['#7cf5ff','#2a7fc0'],['#b06ae0','#5a3080'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'wisp', unlock: 11, base: { size: 15, hp: 38, dmg: 9, speed: 52, xp: 14 },
+    names: [['wispling','Wispling'],['dwaallicht','Dwaallicht'],['zielewisp','Zielewisp'],['stormwisp','Stormwisp'],['etherwisp','Etherwisp'],['voidwisp','Voidwisp'],['nmwisp','Nachtmerrie-Wisp'],['helwisp','Hel-Wisp']],
+    colors: catalogColors([['#cfe6ff','#7aa8cf'],['#7cf5ff','#2a7fc0'],['#c47aff','#5a2080'],['#6fd7ff','#2a5080'],['#a8e0ff','#3a7fc0'],['#5a1040','#ff6b9d'],['#6b5cff','#2e2266'],['#ff3040','#2a0810']]) },
+  { art: 'gargoyle', unlock: 14, base: { size: 24, hp: 72, dmg: 13, speed: 78, xp: 18 },
+    names: [['steengarg','Steengarg'],['nachtgarg','Nachtgarg'],['daksteek','Daksteek'],['stormgarg','Stormgarg'],['kathedraalkolos','Kathedraalkolos'],['voidgarg','Voidgarg'],['nmgarg','Nachtmerrie-Garg'],['helgarg','Hel-Garg']],
+    colors: catalogColors([['#8a8478','#5a5548'],['#2a1840','#5a3fb0'],['#9a917f','#4a4038'],['#7cf5ff','#2a7fc0'],['#9fb2c8','#4a5568'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'lich', unlock: 16, base: { size: 22, hp: 68, dmg: 14, speed: 50, xp: 20 },
+    names: [['lichling','Lichling'],['grafmagus','Grafmagus'],['botvorst','Botvorst'],['stormlich','Stormlich'],['doodsheer','Doodsheer'],['voidlich','Voidlich'],['nmlich','Nachtmerrie-Lich'],['hellich','Hel-Lich']],
+    colors: catalogColors([['#c47aff','#5a2080'],['#6b5cff','#2e2266'],['#dfe8ff','#6a7080'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'drone', unlock: 12, base: { size: 16, hp: 36, dmg: 9, speed: 118, xp: 13 },
+    names: [['droneling','Droneling'],['zweefblik','Zweefblik'],['lasdrone','Lasdrone'],['stormdrone','Stormdrone'],['zwermkoning','Zwermkoning'],['voiddrone','Voiddrone'],['nmdrone','Nachtmerrie-Drone'],['heldrone','Hel-Drone']],
+    colors: catalogColors([['#9fb2c8','#5f7189'],['#7cf5ff','#2a7fc0'],['#ff6b6b','#8a2020'],['#6fd7ff','#2a5080'],['#c47aff','#5a2080'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'bot', unlock: 10, base: { size: 18, hp: 50, dmg: 10, speed: 48, xp: 13 },
+    names: [['tandwieling','Tandwieling'],['schroefbot','Schroefbot'],['lasbot','Lasbot'],['stormbot','Stormbot'],['corebot','Corebot'],['voidbot','Voidbot'],['nmbot','Nachtmerrie-Bot'],['helbot','Hel-Bot']],
+    colors: catalogColors([['#9fb2c8','#5f7189'],['#b86a4a','#6a3820'],['#ff6b6b','#8a2020'],['#7cf5ff','#2a7fc0'],['#ffd75e','#c97a20'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'scrapdog', unlock: 11, base: { size: 20, hp: 52, dmg: 12, speed: 110, xp: 15 },
+    names: [['schroefhond','Schroefhond'],['roesthond','Roesthond'],['knipkaak','Knipkaak'],['stormhond','Stormhond'],['kettingbek','Kettingbek'],['voidhond','Voidhond'],['nmhond','Nachtmerrie-Hond'],['helschroef','Hel-Schroef']],
+    colors: catalogColors([['#9fb2c8','#5f7189'],['#b86a4a','#6a3820'],['#c98850','#7a5030'],['#7cf5ff','#2a7fc0'],['#505868','#202830'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'cog', unlock: 9, base: { size: 15, hp: 36, dmg: 8, speed: 66, xp: 11 },
+    names: [['tandwielpup','Tandwielpup'],['ratelrad','Ratelrad'],['stoomslof','Stoomslof'],['stormrad','Stormrad'],['megavertanding','Megavertanding'],['voidrad','Voidrad'],['nmrad','Nachtmerrie-Rad'],['helrad','Hel-Rad']],
+    colors: catalogColors([['#c98850','#7a5030'],['#9a917f','#4a4038'],['#dfe8ff','#6a7080'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'turret', unlock: 14, base: { size: 18, hp: 58, dmg: 12, speed: 36, xp: 16 },
+    names: [['torentje','Torentje'],['piektor','Piektor'],['laserkop','Laserkop'],['stormtoren','Stormtoren'],['bastionoog','Bastionoog'],['voidtoren','Voidtoren'],['nmtoren','Nachtmerrie-Toren'],['heltoren','Hel-Toren']],
+    colors: catalogColors([['#9fb2c8','#5f7189'],['#ff6b6b','#8a2020'],['#7cf5ff','#2a7fc0'],['#6fd7ff','#2a5080'],['#ffd75e','#c97a20'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'rivet', unlock: 15, base: { size: 26, hp: 88, dmg: 14, speed: 30, xp: 18 },
+    names: [['klinknagel','Klinknagel'],['lasplaat','Lasplaat'],['stoombonk','Stoombonk'],['stormklink','Stormklink'],['ijzerkolos','Ijzerkolos'],['voidklink','Voidklink'],['nmklink','Nachtmerrie-Klink'],['helklink','Hel-Klink']],
+    colors: catalogColors([['#9fb2c8','#5f7189'],['#b86a4a','#6a3820'],['#dfe8ff','#6a7080'],['#7cf5ff','#2a7fc0'],['#9a917f','#4a4038'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'junkbat', unlock: 13, base: { size: 15, hp: 30, dmg: 8, speed: 116, xp: 12 },
+    names: [['blikvleerm','Blikvleerm'],['schroefvleugel','Schroefvleugel'],['roestflap','Roestflap'],['stormjunk','Stormjunk'],['sloopvleugel','Sloopvleugel'],['voidjunk','Voidjunk'],['nmjunk','Nachtmerrie-Junk'],['heljunk','Hel-Junk']],
+    colors: catalogColors([['#9fb2c8','#5f7189'],['#b86a4a','#6a3820'],['#c98850','#7a5030'],['#7cf5ff','#2a7fc0'],['#505868','#202830'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'piston', unlock: 16, base: { size: 22, hp: 64, dmg: 13, speed: 98, xp: 17 },
+    names: [['zuigerling','Zuigerling'],['stoomstoot','Stoomstoot'],['hydrauliek','Hydrauliek'],['stormzuiger','Stormzuiger'],['perskolos','Perskolos'],['voidzuiger','Voidzuiger'],['nmzuiger','Nachtmerrie-Zuiger'],['helzuiger','Hel-Zuiger']],
+    colors: catalogColors([['#9fb2c8','#5f7189'],['#dfe8ff','#6a7080'],['#c98850','#7a5030'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'penguin', unlock: 4, base: { size: 17, hp: 40, dmg: 8, speed: 70, xp: 11 },
+    names: [['pinguinkuiken','Pinguinkuiken'],['waddleping','Waddleping'],['ijssteek','Ijssteek'],['stormping','Stormping'],['keizerping','Keizerping'],['voidping','Voidping'],['nmping','Nachtmerrie-Ping'],['helping','Hel-Ping']],
+    colors: catalogColors([['#505868','#202830'],['#dfe8ff','#6a7080'],['#a8e0ff','#3a7fc0'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#6b5cff','#2e2266'],['#ff3040','#2a0810']]) },
+  { art: 'yeti', unlock: 12, base: { size: 30, hp: 92, dmg: 15, speed: 36, xp: 20 },
+    names: [['yetiling','Yetiling'],['sneeuwbom','Sneeuwbom'],['bergvuist','Bergvuist'],['stormyeti','Stormyeti'],['ijsreus','Ijsreus'],['voidyeti','Voidyeti'],['nmyeti','Nachtmerrie-Yeti'],['helyeti','Hel-Yeti']],
+    colors: catalogColors([['#dfe8ff','#6a7080'],['#a8e0ff','#3a7fc0'],['#9fb2c8','#5f7189'],['#7cf5ff','#2a7fc0'],['#cfe6ff','#7aa8cf'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'walrus', unlock: 10, base: { size: 28, hp: 84, dmg: 13, speed: 34, xp: 17 },
+    names: [['walruspup','Walruspup'],['slagtandzee','Slagtandzee'],['ijsbonk','Ijsbonk'],['stormwalrus','Stormwalrus'],['slagtandkolos','Slagtandkolos'],['voidwalrus','Voidwalrus'],['nmwalrus','Nachtmerrie-Walrus'],['helwalrus','Hel-Walrus']],
+    colors: catalogColors([['#9fb2c8','#5f7189'],['#cfe6ff','#7aa8cf'],['#a8e0ff','#3a7fc0'],['#7cf5ff','#2a7fc0'],['#dfe8ff','#6a7080'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'seal', unlock: 5, base: { size: 18, hp: 42, dmg: 8, speed: 72, xp: 11 },
+    names: [['zeehondpup','Zeehondpup'],['glibberzee','Glibberzee'],['ijsduik','Ijsduik'],['stormzeehond','Stormzeehond'],['ijsvel','Ijsvel'],['voidzeehond','Voidzeehond'],['nmzeehond','Nachtmerrie-Zeehond'],['helzeehond','Hel-Zeehond']],
+    colors: catalogColors([['#cfe6ff','#7aa8cf'],['#a8e0ff','#3a7fc0'],['#7cf5ff','#2a7fc0'],['#6fd7ff','#2a5080'],['#dfe8ff','#6a7080'],['#5a1040','#ff6b9d'],['#6b5cff','#2e2266'],['#ff3040','#2a0810']]) },
+  { art: 'crab', unlock: 8, base: { size: 17, hp: 40, dmg: 9, speed: 70, xp: 12 },
+    names: [['krabling','Krabling'],['schaarkrab','Schaarkrab'],['pantserschaar','Pantserschaar'],['stormkrab','Stormkrab'],['koningsschaar','Koningsschaar'],['voidkrab','Voidkrab'],['nmkrab','Nachtmerrie-Krab'],['helkrab','Hel-Krab']],
+    colors: catalogColors([['#ff7043','#8a2020'],['#e04f4f','#8a2020'],['#c98850','#6b4a28'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'turtle', unlock: 9, base: { size: 22, hp: 72, dmg: 10, speed: 40, xp: 15 },
+    names: [['schildpadjong','Schildpadjong'],['rifschild','Rifschild'],['pantserduik','Pantserduik'],['stormschild','Stormschild'],['eilandrug','Eilandrug'],['voidschild','Voidschild'],['nmschild','Nachtmerrie-Schild'],['helschild','Hel-Schild']],
+    colors: catalogColors([['#43b25b','#1e4a28'],['#4a9fff','#1a4080'],['#5ad06a','#2a6030'],['#7cf5ff','#2a7fc0'],['#e8c98a','#8a6030'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'squid', unlock: 11, base: { size: 20, hp: 48, dmg: 10, speed: 58, xp: 14 },
+    names: [['inktling','Inktling'],['dieptarm','Dieptarm'],['grijparm','Grijparm'],['storminkt','Storminkt'],['krakentent','Krakentent'],['voidinkt','Voidinkt'],['nminkt','Nachtmerrie-Inkt'],['helinkt','Hel-Inkt']],
+    colors: catalogColors([['#c47aff','#5a2080'],['#6b5cff','#2e2266'],['#b06ae0','#4a1870'],['#7cf5ff','#2a7fc0'],['#2a1840','#6ee06e'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'ray', unlock: 10, base: { size: 20, hp: 46, dmg: 9, speed: 92, xp: 13 },
+    names: [['rogling','Rogling'],['zandrog','Zandrog'],['glijvin','Glijvin'],['stormrog','Stormrog'],['manteltitaan','Manteltitaan'],['voidrog','Voidrog'],['nmrog','Nachtmerrie-Rog'],['helrog','Hel-Rog']],
+    colors: catalogColors([['#6a9fc8','#2a5080'],['#e8c98a','#8a6030'],['#8fb8d8','#3a6088'],['#7cf5ff','#2a7fc0'],['#4a9fff','#1a4080'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+];
+
+function catalogUnlockFor(step, familyUnlock) {
+  const base = Number(familyUnlock) || 1;
+  if (step.unlockAdd === 'nm') return Math.max(51, base + 36);
+  if (step.unlockAdd === 'hell') return Math.max(61, base + 42);
+  return Math.min(50, Math.max(1, base + (Number(step.unlockAdd) || 0)));
+}
+
+function expandMonsterCatalog(families) {
+  const species = {};
+  const unlockAt = {};
+  const collisions = [];
+  const list = families || MONSTER_FAMILIES_W2;
+  for (const fam of list) {
+    const slot = MONSTER_ART_SLOTS[fam.art] || {};
+    const names = fam.names || [];
+    if (names.length !== MONSTER_CATALOG_RARITIES.length) {
+      throw new Error('[MonsterCatalog] family ' + fam.art + ' needs ' + MONSTER_CATALOG_RARITIES.length + ' names');
+    }
+    for (let i = 0; i < MONSTER_CATALOG_RARITIES.length; i++) {
+      const step = MONSTER_CATALOG_RARITIES[i];
+      const pair = names[i];
+      const id = pair[0];
+      const name = pair[1];
+      if (species[id] || (typeof SPECIES !== 'undefined' && SPECIES[id])) {
+        collisions.push(id);
+        continue;
+      }
+      const col = (fam.colors && fam.colors[i]) || { c1: '#888', c2: '#444' };
+      const b = fam.base || {};
+      const pixelId = catalogPixelFor(fam.art, step.rarity);
+      species[id] = {
+        name,
+        art: fam.art,
+        artSlot: fam.art,
+        catalog: 'w2',
+        biome: slot.biome || fam.biome || 'classic',
+        pixel: pixelId || undefined,
+        pixelStatus: slot.pixelStatus || 'stub',
+        size: Math.round((b.size || 18) + step.size),
+        hp: Math.round((b.hp || 40) * step.hp),
+        dmg: Math.round((b.dmg || 8) * step.dmg),
+        speed: Math.round((b.speed || 70) * step.speed),
+        type: slot.type || fam.type || 'charge',
+        xp: Math.round((b.xp || 10) * step.xp),
+        rarity: step.rarity,
+        c1: col.c1,
+        c2: col.c2,
+      };
+      unlockAt[id] = catalogUnlockFor(step, fam.unlock);
+    }
+  }
+  if (collisions.length) {
+    throw new Error('[MonsterCatalog] id collision: ' + collisions.join(','));
+  }
+  return { species, unlockAt, familyCount: list.length, speciesCount: Object.keys(species).length };
+}
+
+function listMonsterArtSlots() {
+  return Object.keys(MONSTER_ART_SLOTS).map((id) => {
+    const s = MONSTER_ART_SLOTS[id];
+    const used = (typeof SPECIES !== 'undefined')
+      ? Object.keys(SPECIES).filter((spId) => SPECIES[spId].art === id)
+      : [];
+    const alias = MONSTER_PIXEL_ALIAS[id] || {};
+    return {
+      art: id,
+      biome: s.biome,
+      type: s.type,
+      shape: s.shape,
+      priority: s.priority,
+      pixelStatus: s.pixelStatus,
+      pixel: alias.pixel || null,
+      pixelHigh: alias.high || null,
+      species: used,
+      count: used.length,
+    };
+  });
+}
+
+function catalogSpeciesPool(levelN, maxRarityOrder, arts) {
+  const set = arts instanceof Set ? arts : new Set(arts || []);
+  return Object.keys(UNLOCK_AT).filter((id) => {
+    const sp = SPECIES[id];
+    if (!sp || !set.has(sp.art)) return false;
+    if (UNLOCK_AT[id] > levelN) return false;
+    return rarityOf(sp.rarity).order <= maxRarityOrder;
+  });
+}
+
+function wildSpeciesPool(levelN, maxRarityOrder) {
+  return catalogSpeciesPool(levelN, maxRarityOrder, WILD_ARTS);
+}
+function cryptSpeciesPool(levelN, maxRarityOrder) {
+  return catalogSpeciesPool(levelN, maxRarityOrder, CRYPT_ARTS);
+}
+function scrapSpeciesPool(levelN, maxRarityOrder) {
+  return catalogSpeciesPool(levelN, maxRarityOrder, SCRAP_ARTS);
+}
+
+function applyCatalogWave(list, pool, n, rarityBias, giantForce) {
+  if (!pool || !pool.length || !list || !list.length) return;
+  for (let i = 0; i < list.length; i++) {
+    if (Math.random() < 0.72) {
+      const sp = weightedPick(pool, n, rarityBias);
+      list[i].sp = sp;
+      if (giantForce) list[i].giant = true;
+      else list[i].giant = list[i].giant || rollWaveGiant(n, !!list[i].elite, sp, 0);
+    }
+  }
+}
 /* --- src/data/monsters.js --- */
 /* ============================ MONSTERS ================================= */
 const SPECIES = {
@@ -12661,6 +13046,13 @@ const SPECIES = {
     tideGaruda: { name: 'Stormarend', art: 'tideHawk', size: 34, hp: 310, dmg: 26, speed: 110, type: 'fly', xp: 118, rarity: 'mythic', c1: '#7cf5ff', c2: '#2a6090' },
     tideCerber: { name: 'Driekoppige Jachthond', art: 'tideHound', size: 36, hp: 345, dmg: 29, speed: 92, type: 'charge', xp: 124, rarity: 'mythic', c1: '#505868', c2: '#202830' },
 };
+const MONSTER_CATALOG_W2_EXPANDED = (typeof expandMonsterCatalog === 'function')
+  ? expandMonsterCatalog(typeof MONSTER_FAMILIES_W2 !== 'undefined' ? MONSTER_FAMILIES_W2 : [])
+  : { species: {}, unlockAt: {}, familyCount: 0, speciesCount: 0 };
+Object.assign(SPECIES, MONSTER_CATALOG_W2_EXPANDED.species || {});
+for (const _spId of Object.keys(SPECIES)) {
+  if (SPECIES[_spId] && !SPECIES[_spId].id) SPECIES[_spId].id = _spId;
+}
 const SPECIES_ORDER = Object.keys(SPECIES).sort((a, b) =>
   (rarityOf(SPECIES[a].rarity).order - rarityOf(SPECIES[b].rarity).order) || SPECIES[a].name.localeCompare(SPECIES[b].name)
 );
@@ -12721,10 +13113,11 @@ const UNLOCK_AT = {
   /* boerderij op hol */
   holkoe: 1, razendeholkoe: 6, stampkoe: 11, melkkolos: 17, boerenbonk: 22, woesteholkoe: 27, razendzwijn: 3, modderzwijn: 8, stootzwijn: 13, spekzwaai: 19, knorbonker: 24, reuzenzwijn: 29, kipophol: 1, vliegkip: 6, pikstorm: 11, kippenkolos: 17, woestekip: 22, snavelstorm: 27, razendeschaap: 3, wolkolos: 8, stampwol: 13, boerenschrik: 19, donsbeest: 24, schaaptitan: 29, holpaard: 1, galopgevaar: 6, stampveulen: 11, renkolos: 17, boerenrenner: 22, stormhengst: 27, kopstootgeit: 3, berggeitboos: 8, hoornram: 13, geitenkolos: 19, razendebok: 24, steenbokstorm: 29, kwakophol: 1, razendeeend: 6, vlotkwak: 11, eendenkolos: 17, snavelduiker: 22, kwaktitan: 27, haanophol: 3, kraairoep: 8, kamstoot: 13, hanenkolos: 19, vuurhaan: 24, zonnekam: 29, koppigeezel: 1, stampzel: 6, boerenezel: 11, ezelkolos: 17, hardhoofd: 22, molenzwaai: 27, gansophol: 3, sissendegans: 8, vleugelram: 13, ganzenkolos: 19, nesthoeder: 24, stormgans: 29,
   /* dierentuin-uitbraak */
-  reuzenolifant: 10, stampolifant: 16, slurfkolos: 23, ivoiretitan: 29, woesteolifant: 36, mammoetstorm: 42, razendeleeuw: 9, manenstorm: 15, savannekoning: 22, leeuwenkolos: 28, woestemanen: 30, koningsklauw: 36, razendetijger: 7, streepstorm: 13, jungleklauw: 20, tijgerkolos: 26, nachtstreep: 33, vuurtijger: 39, langegiraffe: 14, nekkolos: 20, savannetoren: 22, giraffenreus: 28, hoogkijk: 35, wolkennek: 41, razendnijlpaard: 8, rivierkolos: 14, gapendekaak: 21, nijltitan: 27, modderhip: 34, waterton: 40, razendeneushoorn: 6, hoornram2: 12, pantserstoot: 19, rhinokolos: 25, ijzervel: 32, stampneus: 38, woestegorilla: 9, vuistberg: 15, junglereus: 22, apenkolos: 28, zilverrug: 30, trommelborst: 36, razendezebra: 7, streepgalop: 13, savanneren: 20, zebrakolos: 26, zwartwitstorm: 33, hoefstamp: 39, razendebeer: 10, klauwberg: 16, bosreus: 18, berenkolos: 24, honingslok: 31, winterklauw: 37, razendekrokodil: 8, kaakklem: 14, rivierschrik: 21, krokodiltitan: 27, schubbenmuil: 34, snapkrokodil: 40, razendekangoeroe: 6, sprongstoot: 12, buidelbonk: 19, kangokolos: 25, hopklauw: 32, outbackram: 38, woestepanda: 9, bamboebonk: 15, zwartwitreus: 22, pandakolos: 28, rolbeer: 30, tempelpanda: 36, razendeflamingo: 7, rozestorm: 13, eenpoot: 20, flamingokolos: 26, lagunevlam: 33, nekzwaai: 39, razendekameel: 10, bultbonk: 16, woestijnreus: 18, kameelkolos: 24, zandgalop: 31, oasestamp: 37,
+  reuzenolifant: 10, stampolifant: 16, slurfkolos: 23, ivoiretitan: 29, woesteolifant: 36, mammoetstorm: 42, razendeleeuw: 9, manenstorm: 15, savannekoning: 22, leeuwenkolos: 28, woestemanen: 30, koningsklauw: 36, razendetijger: 7, streepstorm: 13, jungleklauw: 20, tijgerkolos: 26, nachtstreep: 33, vuurtijger: 39, langegiraffe: 14, nekkolos: 20, savannetoren: 22, giraffenreus: 28, hoogkijk: 35, wolkennek: 41, razendnijlpaard: 8, rivierkolos: 14, gapendekaak: 21, nijltitan: 27, modderhip: 34, waterton: 40, razendeneushoorn: 6, hoornram2: 12, pantserstoot: 19, rhinokolos: 25, ijzervel: 32, stampneus: 38, woestegorilla: 9, vuistberg: 15, junglereus: 22, apenkolos: 28, zilverrug: 30, trommelborst: 36, razendezebra: 7, streepgalop: 13, savanneren: 20, zebrakolos: 26, zwartwitstorm: 33, hoefstamp: 39, razendebeer: 10, klauwberg: 16, bosreus: 18, berenkolos: 24, honingslok: 31, winterklauw: 37, razendekrokodil: 8, kaakklem: 14, rivierschrik: 21, krokodiltitan: 27, schubbenmuil: 34, snapkrokodil: 40, razendekangoeroe: 6, sprongstoot: 12, buidelbonk: 19, kangokolos: 25, hopklauw: 32, outbackram: 38, woestepanda: 9, bamboebonk: 15, zwartwitreus: 22, pandakolos: 28, rolbeer: 30, tempelpanda: 36, razendeflamingo: 7, rozestorm: 13, eenpoot: 20, flamingokolos: 26, lagunevlam: 33, nekzwaai: 39,   razendekameel: 10, bultbonk: 16, woestijnreus: 18, kameelkolos: 24, zandgalop: 31, oasestamp: 37,
 
 };
-/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (~2× diversiteit: boerderij + dierentuin). */
+Object.assign(UNLOCK_AT, (MONSTER_CATALOG_W2_EXPANDED && MONSTER_CATALOG_W2_EXPANDED.unlockAt) || {});
+/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (W2 catalog ≈ 2× roster). */
 const ADVENTURE_HORDE_MUL = 6;
 const ADVENTURE_HORDE_MAX_PER_WAVE = 36;
 const ADVENTURE_MAX_ALIVE = IS_TOUCH ? 54 : 78;
@@ -12744,10 +13137,16 @@ const COLOSSAL_HP_MUL = 1.9;
 const COLOSSAL_DMG_MUL = 1.12;
 const COLOSSAL_XP_MUL = 1.45;
 
-const SEA_ARTS = new Set(['shark', 'octo']);
+const SEA_ARTS = new Set(['shark', 'octo', 'crab', 'turtle', 'squid', 'ray']);
 const FARM_ARTS = new Set(['cow', 'pig', 'chicken', 'sheep', 'horse', 'goat', 'duck', 'rooster', 'donkey', 'goose']);
 const ZOO_ARTS = new Set(['elephant', 'lion', 'tiger', 'giraffe', 'hippo', 'rhino', 'gorilla', 'zebra', 'bear', 'croc', 'kangaroo', 'panda', 'flamingo', 'camel']);
-const BEAST_SIZE_ARTS = new Set([...FARM_ARTS, ...ZOO_ARTS]);
+const BEAST_SIZE_ARTS = new Set([
+  ...FARM_ARTS,
+  ...ZOO_ARTS,
+  ...(typeof WILD_ARTS !== 'undefined' ? WILD_ARTS : []),
+  ...(typeof CRYPT_ARTS !== 'undefined' ? CRYPT_ARTS : []),
+  ...(typeof SCRAP_ARTS !== 'undefined' ? SCRAP_ARTS : []),
+]);
 /** Boerderij/dierentuin: vaker reuzen-variant (al groot, nog groter). */
 const BEAST_GIANT_BONUS = 0.28;
 
@@ -12779,10 +13178,18 @@ function seaSpeciesPool(levelN, maxRarityOrder) {
   });
 }
 
-/** Dex biome — farm / zoo / sea / secret / classic. Display-only, no spawn change. */
+/** Dex biome — farm / zoo / sea / wild / crypt / scrap / frost / secret / classic. */
 function speciesBiomeId(sp, id) {
   if (!sp) return 'classic';
+  if (sp.biome) return sp.biome;
   if (id === 'satan' || (id && String(id).indexOf('tide') === 0)) return 'secret';
+  if (typeof CATALOG_SEA_ARTS !== 'undefined' && CATALOG_SEA_ARTS.has(sp.art)) return 'sea';
+  if (typeof CRYPT_ARTS !== 'undefined' && CRYPT_ARTS.has(sp.art)) return 'crypt';
+  if (typeof SCRAP_ARTS !== 'undefined' && SCRAP_ARTS.has(sp.art)) return 'scrap';
+  if (typeof WILD_ARTS !== 'undefined' && WILD_ARTS.has(sp.art)) {
+    const slot = typeof MONSTER_ART_SLOTS !== 'undefined' ? MONSTER_ART_SLOTS[sp.art] : null;
+    return (slot && slot.biome) || 'wild';
+  }
   if (SEA_ARTS.has(sp.art) || sp.type === 'swim') return 'sea';
   if (FARM_ARTS.has(sp.art)) return 'farm';
   if (ZOO_ARTS.has(sp.art)) return 'zoo';
@@ -12795,7 +13202,7 @@ function speciesInBiome(id, biome) {
 }
 
 function dexBiomeTotals() {
-  const out = { farm: 0, zoo: 0, sea: 0, classic: 0, secret: 0 };
+  const out = { farm: 0, zoo: 0, sea: 0, wild: 0, crypt: 0, scrap: 0, frost: 0, classic: 0, secret: 0 };
   for (const id of SPECIES_ORDER) {
     const b = speciesBiomeId(SPECIES[id], id);
     if (out[b] != null) out[b]++;
@@ -12866,6 +13273,42 @@ const ART_BLURB = {
   camel: 'Woestijn-reserve. Spuugt tactisch.',
   shark: 'Vin, tanden, slecht nieuws.',
   octo: 'Acht armen, nul geduld.',
+  wolf: 'Tanden eerst, vragen later.',
+  owl: 'Draait de kop, dan jij.',
+  frog: 'Eén sprong, twee problemen.',
+  snake: 'Geen benen, wél tempo.',
+  boar: 'Slagtanden als bumper.',
+  raven: 'Krast alsof hij gelijk heeft.',
+  moose: 'Gewei breder dan je plan.',
+  beaver: 'Bouwt een dam van jouw combo.',
+  badger: 'Graaft eerst, bijt daarna.',
+  stag: 'Woud-koning met piek-gewei.',
+  lynx: 'Pluimoor, scherpe mening.',
+  mole: 'Komt van onder. Altijd.',
+  skeleton: 'Rammelt, maar raakt wél.',
+  mummy: 'Verband als pantser.',
+  beetle: 'Schild-kever, weinig praat.',
+  wasp: 'Angel eerst, excuses nooit.',
+  spider: 'Web + afstand = irritant.',
+  wisp: 'Dwaallicht met slechte bedoelingen.',
+  gargoyle: 'Steen die dacht dat hij kon vliegen.',
+  lich: 'Te veel botten, te veel magie.',
+  drone: 'Zoemt, mikt, piept.',
+  bot: 'Blik met een laser-mening.',
+  scrapdog: 'Roest-hond. Kwispelt met ketting.',
+  cog: 'Tandwiel dat terugbijt.',
+  turret: 'Blijft staan. Jij beweegt.',
+  rivet: 'Klinknagels en slechte ideeën.',
+  junkbat: 'Vleermuis van sloopafval.',
+  piston: 'Hydrauliek met een deadline.',
+  penguin: 'Waddelt. Tot hij sprint.',
+  yeti: 'Sneeuwman die terugslaat.',
+  walrus: 'Slagtand-zee. Zwaar.',
+  seal: 'Glibbert uit je timing.',
+  crab: 'Schaar links, schaar rechts.',
+  turtle: 'Schild. Daarna nog een schild.',
+  squid: 'Armen genoeg voor iedereen.',
+  ray: 'Glijdt alsof water optioneel is.',
 };
 
 const TYPE_BLURB = {
@@ -12934,10 +13377,10 @@ const BOSS_AT = {
   40: [{ sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst' }],
   45: [{ sp: 'voidkonijn', elite: true }, { sp: 'guvvedrak' }],
   50: [{ sp: 'guvvedrak', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst', elite: true }],
-  55: [{ sp: 'voidkonijn', elite: true }, { sp: 'neondrake', elite: true }, { sp: 'schaduwvorst' }],
-  60: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'voidkonijn', elite: true }],
-  65: [{ sp: 'omegadrake', elite: true }, { sp: 'etherwyrm', elite: true }, { sp: 'neondrake' }],
-  70: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'apexwyrm', elite: true }, { sp: 'voidkonijn', elite: true }],
+  55: [{ sp: 'voidkonijn', elite: true }, { sp: 'neondrake', elite: true }, { sp: 'schaduwvorst' }, { sp: 'voidyeti', elite: true }],
+  60: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'voidlich', elite: true }],
+  65: [{ sp: 'omegadrake', elite: true }, { sp: 'etherwyrm', elite: true }, { sp: 'neondrake' }, { sp: 'voidwolf', elite: true }],
+  70: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'apexwyrm', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'voidklink', elite: true }],
 };
 
 function weightedPick(pool, n, rarityBias) {
@@ -13151,7 +13594,31 @@ function buildLevel(n, diffId) {
           }
         }
       }
-    } else if (n >= 7 && roll < 0.76) {
+    } else if (n >= 4 && roll < 0.80) {
+      meta.trait = 'woods';
+      meta.spawnMul = 0.88;
+      meta.label = 'woods';
+      const wildPool = typeof wildSpeciesPool === 'function' ? wildSpeciesPool(n, maxRarity) : [];
+      if (wildPool.length && typeof applyCatalogWave === 'function') {
+        applyCatalogWave(list, wildPool, n, rarityBias, false);
+      }
+    } else if (n >= 9 && roll < 0.86) {
+      meta.trait = 'crypt';
+      meta.spawnMul = 0.86;
+      meta.label = 'crypt';
+      const cryptPool = typeof cryptSpeciesPool === 'function' ? cryptSpeciesPool(n, maxRarity) : [];
+      if (cryptPool.length && typeof applyCatalogWave === 'function') {
+        applyCatalogWave(list, cryptPool, n, rarityBias, false);
+      }
+    } else if (n >= 12 && roll < 0.92) {
+      meta.trait = 'scrap';
+      meta.spawnMul = 0.84;
+      meta.label = 'scrap';
+      const scrapPool = typeof scrapSpeciesPool === 'function' ? scrapSpeciesPool(n, maxRarity) : [];
+      if (scrapPool.length && typeof applyCatalogWave === 'function') {
+        applyCatalogWave(list, scrapPool, n, rarityBias, false);
+      }
+    } else if (n >= 7 && roll < 0.96) {
       const sp = weightedPick(pool, n, rarityBias);
       list.push({ sp, elite: true, giant: rollWaveGiant(n, true, sp, diff.giantBonus) });
       meta.trait = 'elite';
@@ -13217,6 +13684,9 @@ const WAVE_TRAIT_BANNER = {
   tide: { key: 'banner.tideWave', color: '#6ee06e', size: 40 },
   ranch: { key: 'banner.ranchWave', color: '#e8c98a', size: 40 },
   safari: { key: 'banner.safariWave', color: '#43b25b', size: 40 },
+  woods: { key: 'banner.woodsWave', color: '#6ee06e', size: 40 },
+  crypt: { key: 'banner.cryptWave', color: '#c47aff', size: 40 },
+  scrap: { key: 'banner.scrapWave', color: '#9fb2c8', size: 40 },
   ember: { key: 'banner.emberWave', color: '#ff7a4d', size: 42 },
   pain: { key: 'banner.painWave', color: '#ff3a2a', size: 44 },
 };
@@ -14845,6 +15315,9 @@ function seedNlGameStrings() {
     tideWave: 'TIDE-GOLF',
     ranchWave: 'BOERDERIJ OP HOL',
     safariWave: 'DIERENTUIN-UITBRAAK',
+    woodsWave: 'WOUD-GOLF',
+    cryptWave: 'CRYPTE-GOLF',
+    scrapWave: 'SCHROOT-GOLF',
     emberWave: 'EMBER-GOLF · 2.0',
     painWave: 'PIJN-GOLF · 3.0',
     waveClear: 'Golf gewist +{heal} HP',
@@ -16029,6 +16502,9 @@ const CATALOG_EN = {
     dexFarm: { name: 'Ranch hunter', desc: '10 farm species in the book' },
     dexZoo: { name: 'Safari guide', desc: '10 zoo species in the book' },
     dexSea: { name: 'Tide knower', desc: '5 sea species in the book' },
+    dexWild: { name: 'Woods hunter', desc: '10 wild species in the book' },
+    dexCrypt: { name: 'Crypt guide', desc: '10 crypt species in the book' },
+    dexScrap: { name: 'Scrap knower', desc: '10 scrap species in the book' },
     train5: { name: 'Robot breaker', desc: 'Win training 5×' },
     wall100: { name: 'Demolisher', desc: 'Wall record 100+' },
     combo8: { name: 'Combo king', desc: 'Reach combo ×8' },
@@ -16197,6 +16673,7 @@ const CATALOG_EN = {
     eliteNamed: 'ELITE — {name}!',
     flyerWave: 'FLYER WAVE', rushWave: 'RUSH WAVE', eliteTraitWave: 'ELITE WAVE', tideWave: 'TIDE WAVE',
     ranchWave: 'FARM RAMPAGE', safariWave: 'ZOO BREAKOUT',
+    woodsWave: 'WOODS WAVE', cryptWave: 'CRYPT WAVE', scrapWave: 'SCRAP WAVE',
     emberWave: 'EMBER WAVE · 2.0', painWave: 'PAIN WAVE · 3.0',
     waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
     fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'YOU LOST...', spiral_orbTriple: 'TRIPLE SPIRAL ORB!', spiral_orbDual: 'DUAL SPIRAL ORB!',
@@ -17102,6 +17579,9 @@ const CATALOG_DE = {
     dexFarm: { name: 'Farmjäger', desc: '10 Farm-Arten im Buch' },
     dexZoo: { name: 'Safari-Guide', desc: '10 Zoo-Arten im Buch' },
     dexSea: { name: 'Gezeitenkenner', desc: '5 Meer-Arten im Buch' },
+    dexWild: { name: 'Waldjäger', desc: '10 Wald-Arten im Buch' },
+    dexCrypt: { name: 'Krypten-Guide', desc: '10 Krypten-Arten im Buch' },
+    dexScrap: { name: 'Schrottkenner', desc: '10 Schrott-Arten im Buch' },
     train5: { name: 'Robotbrecher', desc: '5× Training gewonnen' },
     wall100: { name: 'Abrissprofi', desc: 'Mauer-Rekord 100+' },
     combo8: { name: 'Combo-König', desc: 'Combo ×8 erreicht' },
@@ -17167,6 +17647,7 @@ const CATALOG_DE = {
   },
   banner: {
     levelUp: 'LEVEL UP! Lv {lvl}', masterBuff: 'MEISTER-BUFF +20%', bossWave: 'BOSS-WELLE!',
+    woodsWave: 'WALD-WELLE', cryptWave: 'KRYPTEN-WELLE', scrapWave: 'SCHROTT-WELLE',
     fight: 'KÄMPF!', levelClear: 'LEVEL {n} FERTIG!', won: 'GEWONNEN!', lost: 'VERLOREN...', summon: '✦ SUMMON! ✦',
     matsStart: 'MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
     kets: 'KABLAM…', ketsBam: 'KABLAM!',
@@ -17203,6 +17684,9 @@ const CATALOG_FR = {
     dexFarm: { name: 'Chasseur de ferme', desc: '10 espèces de ferme au livre' },
     dexZoo: { name: 'Guide safari', desc: '10 espèces de zoo au livre' },
     dexSea: { name: 'Connaisseur des marées', desc: '5 espèces marines au livre' },
+    dexWild: { name: 'Chasseur des bois', desc: '10 espèces des bois au livre' },
+    dexCrypt: { name: 'Guide de crypte', desc: '10 espèces de crypte au livre' },
+    dexScrap: { name: 'Connaisseur de ferraille', desc: '10 espèces de ferraille au livre' },
     train5: { name: 'Brise-robot', desc: '5× entraînement gagné' },
     wall100: { name: 'Démolisseur', desc: 'Record mur 100+' },
     combo8: { name: 'Roi du combo', desc: 'Combo ×8 atteint' },
@@ -17268,6 +17752,7 @@ const CATALOG_FR = {
   },
   banner: {
     levelUp: 'LEVEL UP ! Lv {lvl}', masterBuff: 'BUFF MAÎTRE +20 %', bossWave: 'VAGUE BOSS !',
+    woodsWave: 'VAGUE FORÊT', cryptWave: 'VAGUE CRYPTE', scrapWave: 'VAGUE FERRAILLE',
     fight: 'COMBAT !', levelClear: 'NIVEAU {n} TERMINÉ !', won: 'VICTOIRE !', lost: 'DÉFAITE...', summon: '✦ INVOCATION ! ✦',
     matsStart: 'BONUS PIÈCES', wallStart: 'CASSE LE MUR !', bonusDone: 'BONUS TERMINÉ !',
     kets: 'KABLAM…', ketsBam: 'KABLAM !',
@@ -17304,6 +17789,9 @@ const CATALOG_ES = {
     dexFarm: { name: 'Cazador de granja', desc: '10 especies de granja en el libro' },
     dexZoo: { name: 'Guía safari', desc: '10 especies de zoo en el libro' },
     dexSea: { name: 'Conocedor de mareas', desc: '5 especies marinas en el libro' },
+    dexWild: { name: 'Cazador del bosque', desc: '10 especies salvajes en el libro' },
+    dexCrypt: { name: 'Guía de cripta', desc: '10 especies de cripta en el libro' },
+    dexScrap: { name: 'Conocedor de chatarra', desc: '10 especies de chatarra en el libro' },
     train5: { name: 'Rompe-robots', desc: '5× entrenamiento ganado' },
     wall100: { name: 'Demoledor', desc: 'Récord muro 100+' },
     combo8: { name: 'Rey del combo', desc: 'Combo ×8 alcanzado' },
@@ -17369,6 +17857,7 @@ const CATALOG_ES = {
   },
   banner: {
     levelUp: '¡SUBIDA DE NIVEL! Lv {lvl}', masterBuff: 'BUFF MAESTRO +20%', bossWave: '¡OLA JEFE!',
+    woodsWave: 'OLA BOSQUE', cryptWave: 'OLA CRIPTA', scrapWave: 'OLA CHATARRA',
     fight: '¡LUCHA!', levelClear: '¡NIVEL {n} LISTO!', won: '¡VICTORIA!', lost: 'DERROTA...', summon: '✦ ¡INVOCACIÓN! ✦',
     matsStart: 'BONUS MONEDAS', wallStart: '¡ROMPE EL MURO!', bonusDone: '¡BONUS LISTO!',
     kets: '¡KABLAM…!', ketsBam: '¡KABLAM!',
@@ -27312,6 +27801,353 @@ function drawBeastCamel(c, r, t, body, dark) {
   beastEye(c, -r * 1.3, -r * 0.5, r * 0.09);
   c.restore();
 }
+/* --- src/data/monster-pixel-maps.js --- */
+/* GENERATED by scripts/gen-monster-pixels.mjs — do not hand-edit */
+/* 32×32 stickman-pixel maps (1024 chars). . empty B body D dark W eye K pupil
+   A accent H highlight P pink O orange N ink outline */
+const MONSTER_PIXEL_SIZE = 32;
+const MONSTER_PIXEL_ART = {
+  slime: '...............................................................................................................................................................................................................................................................................................................................................NNN.........................NNNNBBBNNNN....................NBHBBBBBBBBBN..................NHHHHHBBBBBBBBN................NHHHHHHHBBBBBBBBN..............NBBHWHHHBBWBBBBBBBN............NBBBWWWBBBWWWBBBBBBBN...........NBBWKWWWBWKWWWBBBBBBN..........NBBBBWWWBBBWWWBBBBBBBBN.........NBBBBBWBBBBBWBBBBBBBBBN.........NBBBBBDBBBBBDBBBBBBBBBN..........NBBBBBDDDDDBBBBBBBBBN...........NBBBBBBBBBBBBBBBBBBBN............NBBBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NBBBBBBBBBBBN....................NNNNBBBNNNN.........................NNN..............................................................................................................',
+  bat: '..........................................................................................................................................................................N...........N..................NDN.........NDN..................NN.........NN...................NDN.......NDN...................NDDN..N..NDDN...................NDDDNNBNNDDDN.................NNDDDDDBBBDDDDDNN............NNNDDDDBBBBBBBBBDDDDNNN.......NNDDDDDDBBWBBBBWBBBDDDDDDNN....NDDDDDDDDBWWWBBWWWBBDDDDDDDDN....NNDDDDDDWKWWWWKWWWBDDDDDDNN.......NNNDDBBWWWBBWWWBBBDDNNN............NNDBBWBBBBWBBBDNN.................NBBBBBBBBBBBN...................NBBBBPPBBBBBN....................NBBBBBBBBBN......................NBBBBBBBN........................NNNBNNN............................N...............................................................................................................................................................................................................................................................................',
+  hedgehog: '..................................................................................................................................................................................N..........................N...NDN........................NDN.NDN...N.....................NDNNDDNNNNDN...................NDDNDDDNDDDN...................NNDDDDDDDDDNN..................NDNDDDBBBDDDDDNN................NDDBBBBBBBBBDDDDN...............NDBBBBBBBBBBBDNN...............NNBWBBBBBBBBBBBN...............NDBWWWBBBBBBBBBBBN...............NWKWWWBBBBBBBBBBN.............NNDBWWWBBBBBBBBBBBN............NDDDDDWBBBBBBBBBBBBBN..........NDDDDDDDBBBBBBBBBBBBN............NDDDDDBBBBBBBBBBBBBN.............NNDBBBBBBBBBBBBBBBN...............NNBBBBBBBBBBBBBN..................NBBBBBBBBBBBN....................NBBBBBBBBBN......................NNNBBBNNN..........................NNN..............................................................................................................................................................................',
+  ghost: '...............................................................................................................................................NNN..........................NNNBBBNNN......................NBBBBBBBBBN....................NBBBBBBBBBBBN..................NBBBBBBBBBBBBBN................NBBBBBBBBBBBBBBBN...............NBBBBBBBBBBBBBBBN...............NBBBBWBBBBBWBBBBN..............NBBBBWWWBBBWWWBBBBN.............NBBBWKWWWBWKWWWBBBN.............NBBBBWWWBBBWWWBBBBN.............NBBBBBWBBBBBWBBBBN..............NBBBBBBBBDBBBBBBBN..............NBBBBBBBDDDBBBBBBN..............NBBBBBBDDDDDBBBBBN..............NBBBBBBBDDDBBBBBBN..............NBBBBBBBBDBBBBBBBN..............NBBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBBN...............NBBBNBBBNBBBNBBBN..............NBBBBBBBBBBBBBBBBBN..............NBBBNBBBNBBBNBBBN................NBNNBBBNNBNNBBBN.................N..NBN..N..NBN......................N.......N.........................................................................................................',
+  can: '................N..............................NON............................NOOON..........................NOOOOON..........................NOOON...........................NDON............................NDDN........................NNNNNDDNNNNN...................NDDDDDDDDDDDDN..................NDDDDDDDDDDDDN..................NDDDDDDDDDDDDN..................NBBBBBNBBBBBBN..................NBBBNNNNNBBBBN..................NBBBNNHNNBBBBN..................NBBNNHHHNNBBBN..................NBBBNNHNNBBBBN..................NBBBNNNNNBBBBN..................NBBBBBNBBBBBBN..................NBBBBBBBBBBBBN..................NBBBBBBBBBBBBN..................NBBBBBBBBBBBBN..................NBBBBBBBBBBBBN..................NBBBBBBBBBBBBN..................NDDDDDDDDDDDDN..................NDDDDDDDDDDDDN..................NDDDDDDDDDDDDN...................NNNNNNNNNNNN..........................................................................................................................................................................',
+  fox: '........................................................................................................................................................................N........N.....................NBN......NBN.....................NN......NBN.....................NBN.....NBN.....................NBBN....NBN......................NBN..NNNBBN.....................NBBNNBBBBBN.....................NBBBBBBBBBBNNN.................NBBWBBBBBBBBBBONNN.............NBBWWWBBBBBBBBBBOOON............NBWKWWWBBBBBBBBBOOOON...........NBBWWWBBBBBBBBBBOOOOON.........NDBBBWBBBBBBBBBBBBOOON........NNDDBBBBBBBBBBBBBBBOOON........NDDDDDBBBBBBBBBBBBBBNNN..........NNNNBDBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNBBBBBBBBBNN.....................NNNBBBNNN..........................NNN...............................................................................................................................................................................................................................................',
+  golem: '...........................................................................................................................................NNNNNNNNNN.....................NBBBBBBBBBBN....................NBBBBBBBBBBN...................NNBBBBBBBBBBNN.................NBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBBN................NBBBBABBBBABBBBN................NBBBBBBBBBBBBBBN..............N.NBBBBBBBBBBBBBBN............NNDNNBBBBBBBBBDBBBBN...........NDDDDDBBBDBBBBBDBBBBN..N........NDDDDDBBBDBBBBBDBBBBNNNDNN.....NDDDDDDDBBDBBBBBDBBBBNDDDDDN.....NDDDDDBBBDBBBBBDBBBBNDDDDDN.....NDDDDDBBBDBBBBBBBBBBDDDDDDDN.....NNDNNBBBDBBBBBBBBBBNDDDDDN........N.NBBBBBBBBBBBBBBNDDDDDN..........NBBBBBBBBBBBBBBNNNDNN...........NBBBBBBBBBBBBBBN..N.............NBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBBN.................NNNNNNNNNNNNNN.........................................................................................................................................................................',
+  dragon: '...........................................................................N..............................NAN.............................NAN.......................N.....NAN...............N......NDNN...NAAN............NNDN......NDDNNNAAAN..........NNDDN........NDDDBNNNAN.......NNDDDN.........NBBWBBBBN......NNDDDDN..........NBWKWBBBNNNNNNNDDDDDN..........NBBBWBBBBBDBBBDDDDDDN.........NNBBBBBBBBBBBBBBBBBDDN.........NBBBBBBBBBBBBBBBBBBBBBN..........NNNNNBNBBBBBBBBBBBBBBBN..............NNBBBBBBBBBBBBBBBN...............NBBBBBBBBBBBBBBBBNNNN..........NBBBBBBABBBBBBBBBBBBBBN..........NBBAAAAAAABBBBBBBBBBBBN.........NBBAAAAAAABBBBBBBBBBBN..........NBAAAAAAAAABBBBBBNNNN............NBAAAAAAABBBBBNN.................NAAAAAAABBBNN....................NNNABBBNNN.........................NNNN..............................................................................................................................................................................................................................................',
+  shark: '..................................................................................................................................................N..............................NDN.............................NDN.............................NDN............................NDDDN...........................NDDDN..........................NNDDDDN....................NNNNNBDDDDDNN.................NNBBBBBBBBBBBDBNN......N......NNBBWBBBBBBBBBBBBBBNN...NB.....NBBBWKWBBBBBBBBBBBBBBBNNNBB.....NBBBBWBBBBBBBBBBBBBBBBNBBBB....NBBBBBBBBBBBBBBBBBBBBBBBBBBB.....NWBBBBBBBBBBBBBBBBBBBBNBBBB....NDDDBBBBBBBBBBBBBBBBBBBNNBBB..NNDDDDDBBBBBBBBBBBBBBBBNN..NBB.NDNNNNNNNBBBBBBBBBBBBBNN.....NB..N.......NNNNNBBBNNNNN........N...............NNN..............................................................................................................................................................................................................................................................................................................',
+  octo: '...............................................................................................................................................NNN..........................NNNBBBNNN......................NBBBBBBBBBN....................NBBBBBBBBBBBN..................NBBBBBBBBBBBBBN................NBBBBWBBBBBWBBBBN...............NBBBWWWBBBWWWBBBN...............NBBWKWWWBWKWWWBBN..............NBBBBWWWBBBWWWBBBBN..............NBBBBWBBBBBWBBBBN...............NBBBBBBBBBBBBBBBN...............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN................NNNBBBBBBBBBBBNNN..............NDDNDDBDDBDDBDDNDDN.............NDDNDDNDDBDDNDDNDDN.............NDDNDDNDDNDDNDDNDDN.............NDDNDDNDDNDDNDDNDDN.............NDDNDDNDDNDDNDDNDDN.............NDDNDDNDDNDDNDDNDDN.............NDDNDDNDDNDDNDDNDDN.............NPNNDDNDDNPNNDDNDDN..............N.NPNNDDNN.NPNNDDN.................N.NPN....N.NPN.....................N........N........................................................................................................',
+  cow: '....................................................................................................................................................................................................N.......N......................NDN.....NDN......................NN.....NN.......................NDN...NDN........................NDNN.NN....NNN..................NDNDNDNNNNNBBBNNNN.............NDDDDDDDBBBBBBBBBBBNN..........NDDDWDDDDDBBBBBBBBBBBBN.........NDDWKWDDDDBDBBBBBDBBBBBN.......NDDADWDDDDDDDDBBDDDDDBBBBN.......NAAADDDDDDDDDDBBBDBBBBBBN......NAAAAADDDDDDDDBBBBBBBBBBBN.......NAAADDDDDBBDBBBBBBBBBBBBBN.......NANNDBBBBBBBBBBBBBBBBBBN.........N.NBBBBBBBBBBBBBBPBBBBN...........NBBBBBBBBBBBBPPPPPBBN............NBBBBBBBBBBPPPPPPPN..............NBBBBBBBBBBPPPPPN................NNDDBBBBBBBBDDN..................NDDNNBBBNNNDDN..................NDDN.NNN..NDDN...................NN........NN........................................................................................................................................',
+  pig: '...............................................................................................................................................................................................................................................................................................................................................NNN..........................NNNBBBNNN...................N.NNBBBBBBBBBNN...............NNDNBBBBBBBBBBBBBN.............NDDWDDBBBBBBBBBBBBBN..N........NDDWKWDDBBBBBBBBBBBBBNNPN......NNPDDWDDDBBBBBBBBBBBBDDDDN.....NPDPPPDDDDDBBBBBBBBBBBDDDDN....NPPPPDPPDDDBBBBBBBBBBBBBBNN......NPPPPPDDDDBBBBBBBBBBBBBN.........NNPDDDDDBBBBBBBBBBBBBBN...........NNNDBBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNDDBBBBBBDDN....................NDDNBBBNNDDN....................NDDNNNN.NDDN.....................NN......NN..........................................................................................................................................',
+  chicken: '............................................................................N............................N.NPN..........................NPNNPN...........................NNNPPN..........................NPNPPN...........................NPPPPN.........................NNPPPPN........................NBBBBPNPN......................NBBWBBBBN.......................NBWKWBBBNN.....................NBBBWBBBBBBNNN...............NNNNOBBBBBBBBBBBBN.............NOOOOOBBBBBBBBBBBBDNNN...........NNNOONBBBBBBBBDDDDDDDN.............NNONNBBBBBDDDDDDDDDN..............N.NBBBBBBDDDDDDDN................NBBBBBBBBBBDBBN..................NBBBBBBBBBBBN...................NBBBBBBBBBBBN...................NBBBBBBBBBBBN....................NBBBBBBBBBN......................NBBBBBBBN........................NOOBOON.........................NOONOON.........................NOONOON..........................NN.NN.............................................................................................................................................',
+  sheep: '................................................................................................................................................................................................................................................N............................NNNBNNN........................NBBBBBBBN.....................NNBBBBBBBBBNN.................NNBBBBBBBBBBBBBN...............NBBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBBN.............NBBBBBBBBBBBBBBBBBBN...........NNDBBBBBBBBBBBBBBBBBN..........NDWDDDBBBBBBBBBBBBBBBBN.........NWKWDDBBBBBBBBBBBBBBBBN........NDDWDDDDBBBBBBBBBBBBBBBN.........NDDDDDBBBBBBBBBBBBBBBN..........NDDDDDBBBBBBBBBBBBBBBN...........NNDNBBBBBBBBBBBBBBBN..............NNBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNDDBBBBBBDDN....................NDDNBBBNNDDN....................NDDNNNN.NDDN.....................NN......NN..........................................................................................................................................',
+  horse: '..............................................................................................................................................N..............................NDN..............................NDN..............................NDNN............................NDDDN...........................NDDN............................NDDN.....................NNNN...NDDNN..................NNBBBBN.NNDDBBNNN............NNNWNBBBBNNBBDDBBBBBNN.........NDDWKWDDBBBBBBDDBBBBBBBN........NDDDWDDDBBBBBBDDBBBBBBBBN......NDDDDDDDDDBBBBBBBBBBBBBBBN.......NDDDDDDDBBBBBBBBBBBBBBBBN.......NDDDDDDDBBBBBBBBBBBBBBBBBN.......NNNDNBBBBBBBBBBBBBBBBBBN...........N.NNNBBBBBBBBBBBBBBBN...............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NDDBBBBBBBDDN...................NDDNNBBBNNDDN...................NDDN.NNN.NDDN...................NDDN.....NDDN....................NN.......NN........................................................................................................................................',
+  goat: '....................................................................................................................................................................N.......N......................NAN.....NAN......................NN......N.......................NAN....N........................NAN...NAN........................NANN.NN.........................NANDNAN....NNN..................NAADDAN.NNNBBBNNN..............NDDWAADDNBBBBBBBBBNN............NDWKWDDDBBBBBBBBBBBBN..........NDDDWDDDDDBBBBBBBBBBBBN..........NDDDDDDDBBBBBBBBBBBBBN..........NDDDDDDDBBBBBBBBBBBBBN...........NDDDDDBBBBBBBBBBBBBBBN...........NDDNBBBBBBBBBBBBBBBN............NDNNBBBBBBBBBBBBBBBN............NDNNBBBBBBBBBBBBBBBN.............N..NBBBBBBBBBBBBBN..................NNDDBBBBBBDDN....................NDDNBBBNNDDN....................NDDNNNN.NDDN....................NDDN....NDDN.....................NN......NN.........................................................................................................................................',
+  duck: '..........................................................................................................................................................................................................................................................................N.............................NNBNN..........................NBBBBBN........................NBBBWBBBN.....................NNOBBWKWBBN....................NOOOOOBWBBBBNN.................NOOOOOOOBBBBNNBNNNN..............NOOOOOBBBBBBBBBBBBNN.............NNONBBBBBBBBBBBBBBDNN.............N.NNBBBBBBBBBBDDDDDN...............NBBBBBBBBBDDDDDDDN.............NBBBBBBBBBBBDDDDDN...............NBBBBBBBBBBBBDNN................NBBBBBBBBBBBBBN..................NBBBBBBBBBBBN....................NBBBBBBBBBN......................NNOOBNOON........................NOONNOON........................NOONNOON.........................NN..NN............................................................................................................................................',
+  rooster: '.............N..........................N...NPN........................NPN..NPN.........................NN..NPN.........................NPN.NPN..........................NPNNPPN.........................NPNNPPN........................NNPPPPPN.......................NBBBBPNNPN.....................NBBWBBBBNN............N.........NBWKWBBBNN..........NNDN.......NBBBWBBBBBBNNN......NDDN.....NNNNOBBBBBBBBBBBBN...NNDDDN....NOOOOOBBBBBBBBBBBBBNNNDDDDN......NNNOONBBBBBBBBBBBBBDDDDDDN.........NNONNBBBBBBBBBBBNDDDDDNNN.........N.NBBBBBBBBBBBOOOOOOOOON.........NBBBBBBBBBBBBBOOOOOOON...........NBBBBBBBBBBBNOOOOOON............NBBBBBBBBBBBNNOOOON.............NBBBBBBBBBBBNNOOON...............NBBBBBBBBBN..NON.................NBBBBBBBN...NON..................NOOBNOON....N...................NOONNOON........................NOONNOON........................NOONNOON.........................NN..NN.............................................................................................................................................',
+  donkey: '......................................................................................................N.......N......................NDN.....NDN......................NN......N.......................NDN....N........................NDN...NDN.......................NDDN..NDN........................NDN..NN.........................NDDNNDN.........................NDDNNDN...NNN...................NDDDDDNNNNBBBNNN..............NNDNBBBBNBBBBBBBBBNN...........NDDWDDBBBBBBBBBBBBBBBN..........NDWKWDBBBBBBBBBBBBBBBBN........NDDDWDDDBBBBBBBBBBBBBBBN.........NDDDDDBBBBBBBBBBBBBBBBN.........NDDDDDBBBBBBBBBBBBBBBBBN.........NNDNBBBBBBBBBBBBBBBBBN............N.NNBBBBBBBBBBBBBBBN...............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNDDBBBBBBDDN....................NDDNBBBNNDDN....................NDDNNNN.NDDN....................NDDN....NDDN.....................NN......NN........................................................................................................................................',
+  goose: '........................................................................................................................................................................N.............................NNBNN.........................NNBBWBBN......................NNONBWKWBN.....................NOOOOOBWBBBN...................NOOOOOOOBBBBN....................NOOOOOBBBBBN.....................NNONNNBBBBN.......................N...NBBBN...........................NBBBN...NNN.....................NBBBNNNNBBBNNN..N...............NBBBNBBBBBBBBBNNDNN.............NBBBBBBBBBBBBBDDDDDN............NBBBBBBBBBBBBDDDDDDDN...........NBBBBBBBBBBBBBDDDDDN............NBBBBBBBBBBBBBBBDBN..............NBBBBBBBBBBBBBBBN...............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNBOOBBBBOONN.....................NOOBBBNOON......................NOONNNNOON.......................NN....NN..........................................................................................................................................',
+  elephant: '............................................................................................................................................................................................................................................N.......................N...N.NNBNN..NNN..............NNBNNNDNBBBBBNNBBBNNN..........NBBBBBDDDBBBBBBBBBBBBBNN........NBBBBBDDDBBBBBBBBBBBBBBBN.......NBBBBBWDBBBBBBBBBBBBBBBBBN.....NBBBBBWKWDBBBBBBBBBBBBBBBBN......NBBBBBWDDBBBBBBBBBBBBBBBBBN.....NBBBBBDDDBBBBBBBBBBBBBBBBBN.....NBBBBBDDDDDBBBBBBBBBBBBBBBBN.....NNBDDDDDDDDBBBBBBBBBBBBBBBN.......NDDDDDDDBBBBBBBBBBBBBBBBN.......NDDDDNBBBBBBBBBBBBBBBBBN........NDDDNNBBBBBBBBBBBBBBBBBN........NDDDN.NBBBBBBBBBBBBBBBN.........NDDDN.NBBBBBBBBBBBBBBBN.........NDDDN..NBBBBBBBBBBBBBN.........NDDDDN...NDDDBBBBBBDDDN........NDDDDDN...NDDDNBBBNNDDDN.........NDDDN....NDDDNNNN.NDDDN..........NDN.....NDDDN....NDDDN...........N.......NNN......NNN.......................................................................................................',
+  lion: '...............................................................................................................................................................................................................NNN..........................NNNOOONNN.....................NNOOOOOOOOONN..................NOOOOOOOOOOOOON................NOOOOOOOOOOOOOOON..............NOBOOOOOOBOOOOOOOON............NBBBBBOBBBBBBBOOOOOON..........NBBWBBBBBBBBBBBBBOOOON..........NBWKWBBBBBBBBBBBBBOOON.........NBBBWBBBBBBBBBBBBBBOOOON.........NDBBBBBBBBBBBBBBBBOOOON.......NNDDBBBBBBBBBBBBBBBBBOOON......NDDDDDBBBBBBBBBBBBBBBOOON........NNNNODBBBBBBBBBBBBBBOOON...........NOOOBBBBBBBBBBBBBOOON............NOOOBBBBBBBBBBBOOON..............NOOOOBBBBBBBOOOON................NOOODDOBOOODDON..................NNODDOOOOODDN.....................NDDOOONNDDN.....................NDDNNN.NDDN......................NN.....NN..........................................................................................................................................',
+  tiger: '.......................................................................................................................................................................................................................................N....N.........................NBN..NBN.........................NN..NBN.........................NBN.NBN.........................NBN.NBN.NNN....................NNBBNBBNNBBBNNNN...............NBBBBBBBBBBBBBBBBNNN...........NBBWBBBBDBBBDBBBDBBBDN..........NBWKWBBBDBBBDBBBDBBBDN.........NBDBWBBBBDBBBDBBBDBBBDBN.......NNDDBBBBBBDBBBDBBBDBBBDBN......NDDDDDBBBBBDBBBDBBBDBBBDBBN......NNNNBDBBBBDBBBDBBBDBBBDBN...........NBBBBBDBBBDBBBDBBBDBN............NBBBBDBBBDBBBDBBBDN..............NBBBBBBBBBBBBBBBN................NNBDDBBBBBBBDDN...................NDDNBBBNNNDDN...................NDDNNNN..NDDN...................NDDN.....NDDN....................NN.......NN.........................................................................................................................................',
+  giraffe: '........................................................................NN.N...........................NADNAN.........................NDWDDAN.........................NWKWDAN........................NDDWDDDDN........................NDDDDDBN........................NDDDDDBN.........................NNDBBBNN..........................NBBBNDN.........................NBBBDDDN........................NBBDDDDDN.......................NBBBDDDN........................NBBBNDN.........................NBBBNN..........................NBBBN...NNN.....................NBBBNNNNBBBNNN..................NBBBNBBBBBBDBBNN................NBBBBBBBBBDDDBBBN...............NBBBBBBBBDDDDDBBBN..............NBBBBBBBBBDDDBBBBN..............NBBBBBBBBBBDBBBBBBN..............NBBBBBBBBBBBBBBBN...............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNDDBBBBBBDDN....................NDDNBBBNNDDN....................NDDNNNN.NDDN.....................NN......NN........................................................................',
+  hippo: '................................................................................................................................................................................................................................................................................................................................................NNN.........................NNNNBBBNNNN.................N.NNBBBBBBBBBBBNN............NNNDNWBBBBBBBBBBBBBBN..........NDDDDWKWBBBBBBBBBBBBBBN........NDDDDDDWDDBBBBBBBBBBBBBBN......NDDDDDDDDDDDBBBBBBBBBBBBBN......NDPDDPDDDDDDBBBBBBBBBBBBBN.....NDDDDDDDDDDDDDBBBBBBBBBBBBBN.....NDDDDDDDDDDDBBBBBBBBBBBBBN......NDDDDDDDDDDDBBBBBBBBBBBBBN......NDDDDDDDDDDBBBBBBBBBBBBBBN.......NNDDDDDDDBBBBBBBBBBBBBBN..........NNNDNBBBBBBBBBBBBBBBN..............N.NNBDDDBBBBBBDDDN..................NDDDBBBNNNDDDN..................NDDDNNN..NDDDN...................NNN......NNN.......................................................................................................................................',
+  rhino: '.................................................................................................................................................................................................................................................................................................................................................NNN.............N.......N....NNNBBBNNN.........NANN..NNNDNNNNBBBBBBBBBNN........NNANNDDDWDDDBBBBBBBBBBBBN.........NAADDWKWDDDBBBBBBBBBBBBN.........NADDDWDDDDBBBBBBBBBBBBBN.......NDDADDDDDDDDBBBBBBBBBBBBN........NDDADDDDDDBBBBBBBBBBBBBN........NDDDDDDDDDBBBBBBBBBBBBBBN........NDDDDDDDBBBBBBBBBBBBBBN..........NNNDBBBBBBBBBBBBBBBBBN.............NBBBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NDDDBBBBBBDDDN..................NDDDNBBBNNDDDN..................NDDDNNNN.NDDDN..................NDDDN....NDDDN...................NNN......NNN.......................................................................................................',
+  gorilla: '...........................................................................................................................................................................................................N............................NNNDNNN..N.....................NDDDDDDDNNBNNN.................NDDDDDDDDDBBBBBN................NDDWDDDDDDBBBBBBN...............NDWKWDDDDDBBBBBBBN.............NDDDWDDDDDDDBBBBBBBN.............NDDDDDDDDDBBBBBBBBN.............NDDDDDDDDDBBBBBBBBN.............NDDDDDDDDDBBBBBBBBBN...........NNDDDDDDDDBBBBBBBBBDNN.........NDDDDDBDBBBBBBBBBBDDDDDN.......NDDDDDDDBBBBBBBBBBDDDDDDDN......NDDDDDDDBBBBBBBBBBDDDDDDDN.....NDDDDDDDDDBBBBBBBBDDDDDDDDDN.....NDDDDDDDNBBBBBBBBBDDDDDDDN......NDDDDDDDNNBBBBBBBBDDDDDDDN.......NDDDDDN..NDDDBBBDDDDDDDN.........NNDNN...NDDDBNNDDDNDNN............N.....NDDDN.NDDDNN....................NDDDN.NDDDN......................NNN...NNN.........................................................................................................................................',
+  zebra: '..........................................................................................................................................................................................................................................NN.............................NDDN............................NDDN............................NDDN............................NDDN....NNN...................NNBDDBNNNNBBBNNN..............NNWNBBBBNBBBBBBBBBNN...........NDWKWDBBDBBBDBBBDBBBDN..........NDDWDDBBDBBBDBBBDBBBDBN........NDDDDDDDBDBBBDBBBDBBBDBN.........NDDDDDBBDBBBDBBBDBBBDBN.........NDDDDDBBDBBBDBBBDBBBDBBN.........NNDNBBBDBBBDBBBDBBBDBN............N.NNBDBBBDBBBDBBBDBN...............NBDBBBDBBBDBBBDBN................NBBBBBBBBBBBBBN..................NNDDBBBBBBDDN....................NDDNBBBNNDDN....................NDDNNNN.NDDN....................NDDN....NDDN.....................NN......NN........................................................................................................................................',
+  bear: '..........................................................................................................................................................................................................................................................................N....NNN..N...................NNBNNNNBBBNNBNN................NBBBBBBBBBBBBBBBN...............NBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBBBN..............NBBDBBBBBBBBBBBBBN..............NDDDDWBBBBBBBBBBBBN.............NDDDWKWBBBBBBBBBBBN............NDDADDWDBBBBBBBBBBBBN...........NBAAADDBBBBBBBBBBBBBN...........NAAAAADBBBBBBBBBBBBBN............NAAABBBBBBBBBBBBBBN.............NBABBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBN...............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNDDDBBBBBDDDN...................NDDDBBBNNDDDN...................NDDDNNN.NDDDN....................NNN.....NNN.........................................................................................................................................',
+  croc: '....................................................................................................................................................................................................................................................N..............................NDN.............................NDN.............................NDN............................NDDDN..........................NNDDDN......................NNNNBDDDDNN...................NNBBBBBBBBBDBNN................NBWBBBBBBBBBBBBBN........NNNNNNNBWKWBBBBBBBBBBBBBN......NBWBWBWBWBWBBBBBBBBBBBBBBN......NBBBBBBBBBBBBBBBBBBBBBBBBBN.....NBBBBBBBBBBBBBBBBBBBBBBBBN......NBBBBBBBBBBBBBBBBBBBBBBBBN.......NNNNNNNNBBBBBBBBBBBBBDDDN...............NNBDDDBBBBBBBDDDN.................NDDDBBBNNNNDDDN.................NDDDNNN....NNN...................NNN...............................................................................................................................................................................................................',
+  kangaroo: '............................................................................................................................................N.............................NNBNN..........................NBBBBBN........................NBBWBBBBN.......................NBWKWBBBN......................NBBBWBBBBBNNN.................NNNDBBBBBBBBBBBN...............NDDDDBBBBBBBBBBBBN...............NNDDNBBBBBBBBBBBN.................NNDNBBBBBBBBBBBN..................NNBBBBBBBBBBBN...................NBBBBBBBBBBBN..................NBBBBBBBBBBBBBN..................NBBBBBBBBBBBN...................NBBBBBBBBBBBDN..................NBBBBBBBBBBBDDNN.................NBBBBBBBBBNDDDDN................NBBDBBBBBBDDDDDDNN..............NDDDDDBDDNDDDDDDDDN.............NDDDDDNDDNDDDDNNNN.............NDDDDDDDDDDNNNN..................NDDDDDNDDN......................NDDDDDNDDN.......................NNDNN.NN..........................N.................................................................................................................',
+  panda: '..........................................................................................................................................................................................................................................................................N..........N..................NNDNN..NNN.NNDNN...............NDDDDDNNBBBNDDDDDN..............NDDDDDBBBBBBDDDDDN.............NDDDDDDDBBBBDDDDDDDN.............NDDDDDBBBBBBDDDDDN..............NDDDDDBBBBBDDDDDDN..............NBDDWDDBBDDWDDDBBBN.............NDDWKWDDDDWKWDDBBBN............NBBDDWDDBBDDWDDBBBBBN...........NBBBBDBBBDBBDBBBBBBBN...........NBBBBBBBDDDBBBBBBBBBN............NBBBBBDDDDDBBBBBBBN.............NBBBBBBDDDBBBBBBBBN..............NBBBBBBDBBBBBBBBN...............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNDDDBBBBBDDDN...................NDDDBBBNNDDDN...................NDDDNNN.NDDDN....................NNN.....NNN.........................................................................................................',
+  flamingo: '...........................................................................N.............................NNWNN..........................NPWKWPN......................NNNOPPWPPPN....................NOOOOPPPPPN......................NNNNONPPPN..........................N.NPPN............................NPPN............................NPPN............................NPPN...N...N....................NPPNNNNBNNNDNNN.................NPPNBBBBDDDDDDDN................NPPBBBBDDDDDDDDDN...............NPPBBBBBDDDDDDDN.................NBBBBBBBBBDBNN...................NBBBBBBBBBN.....................NBBBBBBBBBN......................NBBBBBBBN........................NNOONNN..........................NOON............................NOON............................NOON............................NOON............................NOON............................NOON...........................NOOON............................NNN.............................................................................................................',
+  camel: '................................................................................................................................................................................................................................................N.............................NNBNN..........................NBBBBBN........................NBBBBBBBN.................N.NNN.NBBBBBBBN...............NNWNBBBNBBBBBBBBBNNN...........NDWKWDBBNNBBBBBBBBBBBN..........NDDWDDBBNBBBBBBBBBBBBBN........NDDDDDDDBBBBBBBBBBBBBBBBN........NDDDDDBBBBBBBBBBBBBBBBBBN.......NDDDDDBBBBBBBBBBBBBBBBBBN........NNDNBBBBBBBBBBBBBBBBBBBBN.........NNBBBBBBBBBBBBBBBBBBBN............NNBBBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NDDBBBBBBBDDN...................NDDNNBBBNNDDN...................NDDN.NNN.NDDN...................NDDN.....NDDN....................NN.......NN........................................................................................................................................',
+};
+const MONSTER_PIXEL_SPECIES = {
+  holkoe: '....................................................................................................................................................................................................N.......N......................NDN.....NDN......................NN.....NN.......................NDN...NDN........................NDNN.NN....NNN..................NDNDNDNNNNNBBBNNNN.............NDDDDDDDBBBBBBBBBBBNN..........NDDDWDDDDDBBBBBBBBDBBBN.........NDDWKWDDDDBDDBBBDDDDDBBN.......NDDADWDDDDDDDDDBDDDDDBBBBN.......NAAADDDDDDDDDDDBBDBBBBBBN......NAAAAADDDDDDDDDBBBBBBBBBBN.......NAAADDDDDBBDDBBBBBBBBBBBBN.......NANNDBBBBBBBBBBBBBBBBBBN.........N.NBBBBBBBBBBBBBBPBBBBN...........NBBBBBBBBBBBBPPPPPBBN............NBBBBBBBBBBPPPPPPPN..............NBBBBBBBBBBPPPPPN................NNDDBBBBBBBBDDN..................NDDNNBBBNNNDDN..................NDDN.NNN..NDDN...................NN........NN........................................................................................................................................',
+  razendzwijn: '...............................................................................................................................................................................................................................................................................................................................................NNN..........................NNNBBBNNN...................N.NNBBBBBBBBBNN...............NNDNBBBBBBBBBBBBBN.............NDDWDDBBBBBBBBBBBBBN..N........NDDWKWDDBBBBBBBBBBBBBNNPN......NNPDDWDDDBBBBBBBBBBBBDDDDN.....NPDPPPDDDDDBBBBBBBBBBBDDDDN....NPPPPDPPDDDBBBBBBBBBBBBBBNN......NPPPPPDDDDBBBBBBBBBBBBBN.........NNPDDDDDBBBBBBBBBBBBBBN...........NNNDBBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNDDBBBBBBDDN....................NDDNBBBNNDDN....................NDDNNNN.NDDN.....................NN......NN..........................................................................................................................................',
+  kipophol: '............................................................................N............................N.NPN..........................NPNNPN...........................NNNPPN..........................NPNPPN...........................NPPPPN.........................NNPPPPN........................NBBBBPNPN......................NBBWBBBBN.......................NBWKWBBBNN.....................NBBBWBBBBBBNNN...............NNNNOBBBBBBBBBBBBN.............NOOOOOBBBBBBBBBBBBONNN...........NNNOONBBBBBBBBDDDDDDDN.............NNONNBBBBBDDDDDDDDDN..............N.NBBBBBBDDDDDDDN................NBBBBBBBBBBDBBN..................NBBBBBBBBBBBN...................NBBBBBBBBBBBN...................NBBBBBBBBBBBN....................NBBBBBBBBBN......................NBBBBBBBN........................NOOBOON.........................NOONOON.........................NOONOON..........................NN.NN.............................................................................................................................................',
+  razendeschaap: '................................................................................................................................................................................................................................................N............................NNNBNNN........................NBBBBBBBN.....................NNBBBBBBBBBNN.................NNBBBBBBBBBBBBBN...............NBBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBBN.............NBBBBBBBBBBBBBBBBBBN...........NNDBBBBBBBBPBBBBBBBBN..........NDWDDDBBBBBPPPBBBBBBBBN.........NWKWDDBBBBPPPPPBBBBBBBN........NDDWDDDDBBBBPPPBBBBBBBBN.........NDDDDDBBBBBBPBBBBBBBBN..........NDDDDDBBBBBBBBBBBBBBBN...........NNDNBBBBBBBBBBBBBBBN..............NNBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNDDBBBBBBDDN....................NDDNBBBNNDDN....................NDDNNNN.NDDN.....................NN......NN..........................................................................................................................................',
+  holpaard: '..............................................................................................................................................N..............................NDN..............................NDN..............................NOON............................NOODN...........................NOON............................NOON.....................NNNN...NDDNN..................NNBBBBN.NNDDBBNNN............NNNWNBBBBNNBBDDBBBBBNN.........NDDWKWDDBBBBBBDDBBBBBBBN........NDDDWDDDBBBBBBDDBBBBBBBBN......NDDDDDDDDDBBBBBBBBBBBBBBBN.......NDDDDDDDBBBBBBBBBBBBBBBBN.......NDDDDDDDBBBBBBBBBBBBBBBBBN.......NNNDNBBBBBBBBBBBBBBBBBBN...........N.NNNBBBBBBBBBBBBBBBN...............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NDDBBBBBBBDDN...................NDDNNBBBNNDDN...................NDDN.NNN.NDDN...................NDDN.....NDDN....................NN.......NN........................................................................................................................................',
+  kopstootgeit: '....................................................................................................................................................................N.......N......................NAA.....NAN......................NN......N.......................NAN....N........................NAN...NAN........................NANN.NN.........................NANDNAN....NNN..................NAADDAN.NNNBBBNNN..............NDDWAADDNBBBBBBBBBNN............NDWKWDDDBBBBBBBBBBBBN..........NDDDWDDDDDBBBBBBBBBBBBN..........NDDDDDDDBBBBBBBBBBBBBN..........NDDDDDDDBBBBBBBBBBBBBN...........NDDDDDBBBBBBBBBBBBBBBN...........NDDNBBBBBBBBBBBBBBBN............NDNNBBBBBBBBBBBBBBBN............NDNNBBBBBBBBBBBBBBBN.............N..NBBBBBBBBBBBBBN..................NNDDBBBBBBDDN....................NDDNBBBNNDDN....................NDDNNNN.NDDN....................NDDN....NDDN.....................NN......NN.........................................................................................................................................',
+  kwakophol: '..........................................................................................................................................................................................................................................................................N.............................NNBNN..........................NBBBBBN........................NBBBWBBBN.....................NNOBBWKWBBN....................NOOOOOBWBBBBNN.................NOOOOOOOBBBBNNBNNNN..............NOOOOOBBBBBBBBBBBBNN.............NNONBBBBBBBBBBBBBBDNN.............N.NNBBBBBBBBBBDDDDDN...............NBBBBBBBBBDDDDDDDN.............NBBBBBBBBBBBDDDDDN...............NBBBBBBBBBBBBDNN................NBBBBBBBBBBBBBN..................NBBBBBBBBBBBN....................NBBBBBBBBBN......................NNOOBNOON........................NOONNOON........................NOONNOON.........................NN..NN............................................................................................................................................',
+  haanophol: '.............N..........................N...NPN........................NPN..NPN.........................NN..NPN.........................NPN.NPN..........................NPNNPPN.........................NPNNPPN........................NNPPPPPN.......................NBBBBPNNPN.....................NBBWBBBBNN............N.........NBWKWBBBNN..........NNDN.......NBBBWBBBBBBNNN......NDDN.....NNNNOBBBBBBBBBBBBN...NNDDDN....NOOOOOBBBBBBBBBBBBBNNNDDDDN......NNNOONBBBBBBBBBBBBBDDDDDDN.........NNONNBBBBBBBBBBBNDDDDDNNN.........N.NBBBBBBBBBBBOOOOOOOOON.........NBBBBBBBBBBBBBOOOOOOON...........NBBBBBBBBBBBNOOOOOON............NBBBBBBBBBBBNNOOOON.............NBBBBBBBBBBBNNOOON...............NBBBBBBBBBN..NON.................NBBBBBBBN...NON..................NOOBNOON....N...................NOONNOON........................NOONNOON........................NOONNOON.........................NN..NN.............................................................................................................................................',
+  koppigeezel: '......................................................................................................D.......N......................NDN.....NDN......................DN......N.......................NDN....N........................NDN...NDN.......................NDDN..NDN........................NDN..NN.........................NDDNNDN.........................NDDNNDN...NNN...................NDDDDDNNNNBBBNNN..............NNDNBBBBNBBBBBBBBBNN...........NDDWDDBBBBBBBBBBBBBBBN..........NDWKWDBBBBBBBBBBBBBBBBN........NDDDWDDDBBBBBBBBBBBBBBBN.........NDDDDDBBBBBBBBBBBBBBBBN.........NDDDDDBBBBBBBBBBBBBBBBBN.........NNDNBBBBBBBBBBBBBBBBBN............N.NNBBBBBBBBBBBBBBBN...............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNDDBBBBBBDDN....................NDDNBBBNNDDN....................NDDNNNN.NDDN....................NDDN....NDDN.....................NN......NN........................................................................................................................................',
+  gansophol: '........................................................................................................................................................................N.............................NNBNN.........................NNBBWBBN......................NNONBWKOON.....................NOOOOOBWOOBN...................NOOOOOOOBOOBN....................NOOOOOBBBBBN.....................NNONNNBBBBN.......................N...NBBBN...........................NBBBN...NNN.....................NBBBNNNNBBBNNN..N...............NBBBNBBBBBBBBBNNDNN.............NBBBBBBBBBBBBBDDDDDN............NBBBBBBBBBBBBDDDDDDDN...........NBBBBBBBBBBBBBDDDDDN............NBBBBBBBBBBBBBBBDBN..............NBBBBBBBBBBBBBBBN...............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNBOOBBBBOONN.....................NOOBBBNOON......................NOONNNNOON.......................NN....NN..........................................................................................................................................',
+  reuzenolifant: '............................................................................................................................................................................................................................................N.......................N...N.NNBNN..NNN..............NNBNNNDNBBBBBNNBBBNNN..........NBBBBBDDDBBBBBBBBBBBBBNN........NBBBBBDDDBBBBBBBBBBBBBBBN.......NBBBBBWDBBBBBBBBBBBBBBBBBN.....NBBBBBWKWDBBBBBBBBBBBBBBBBN......NBBBBBWDDBBBBBBBBBBBBBBBBBN.....NBBBBBDDDBBBBBBBBBBBBBBBBBN.....NBBBBBDDDDDBBBBBBBBBBBBBBBBN.....NNBDDDDDDDDBBBBBBBBBBBBBBBN.......NDDDDDDDBBBBBBBBBBBBBBBBN.......NDDDDNBBBBBBBBBBBBBBBBBN........NDDDNNBBBBBBBBBBBBBBBBBN........NDDDN.NBBBBBBBBBBBBBBBN.........NDDDN.NBBBBBBBBBBBBBBBN.........NDDDN..NBBBBBBBBBBBBBN.........NDDDDN...NDDDBBBBBBDDDN........NDDDDDN...NDDDNBBBNNDDDN.........NDDDN....NDDDNNNN.NDDDN..........NDN.....NDDDN....NDDDN...........N.......NNN......NNN.......................................................................................................',
+  razendeleeuw: '...............................................................................................................................................................................................................OOO.........................OOOOOOOOOOO....................OOOOOOOOOOOOO.................OOOOOOOOOOOOOOOOO...............OOOOOOOOOOOOOOOOO..............OOBOOOOOOBOOOOOOOOO............OBBBBBOBBBBBBBOOOOOOO..........NBBWBBBBBBBBBBBBBOOOOO..........NBWKWBBBBBBBBBBBBBOOOO.........NBBBWBBBBBBBBBBBBBBOOOOO.........OBBBBBBBBBBBBBBBBBOOOOO.......NNOBBBBBBBBBBBBBBBBBBOOOO......NDDDOBBBBBBBBBBBBBBBBOOOO........NNNOOOBBBBBBBBBBBBBBOOOO...........OOOOBBBBBBBBBBBBBOOOO............OOOOBBBBBBBBBBBOOOO..............OOOOOBBBBBBBOOOOO...............OOOOOOOOBOOOOOOOO.................OOOOOOOOOOOOO....................OOOOOOOOOOON.....................NDDOOO.NDDN......................NN.....NN..........................................................................................................................................',
+  razendetijger: '.......................................................................................................................................................................................................................................N....N.........................NBN..NBN.........................NN..NBN.........................NBN.NBN.........................NBN.NBN.NNN....................NNBBNBBNNBBBNNNN...............NBBBBBBBBNBBBBBBBNNN...........NBBWBBBBDBNBDBBBDBBBDN..........NBWKWBBBDBNBDBBBDBBBDN.........NBDBWBBBBDBNBDBBBDBBBDBN.......NNDDBBBBBBDBNBDBBBDBBBDBN......NDDDDDBBBBBDBNBDBBBDBBBDBBN......NNNNBDBBBBDBNBDBBBDBBBDBN...........NBBBBBDBNBDBBBDBBBDBN............NBBBBDBBBDBBBDBBBDN..............NBBBBBBBBBBBBBBBN................NNBDDBBBBBBBDDN...................NDDNBBBNNNDDN...................NDDNNNN..NDDN...................NDDN.....NDDN....................NN.......NN.........................................................................................................................................',
+  langegiraffe: '........................................................................NN.N...........................NADNAN.........................NDWDDAN.........................NWKWDAN........................NDDWDDDDN........................NDDDDDBN........................NDDDDDBND........................NNDBBBDDD.........................NBBDDDDD........................NBBBDDDN........................NBBDDDDDN.......................NBBBDDDN........................NBBBNDN.........................NBBBNN..........................NBBBN...NNN.....................NBBBNNNNBBBNNN..................NBBBNBBBBBBDBBNN................NBBBBBBBBBDDDBBBN...............NBBBBBBBBDDDDDBBBN..............NBBBBBBBBBDDDBBBBN..............NBBBBBBBBBBDBBBBBBN..............NBBBBBBBBBBBBBBBN...............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNDDBBBBBBDDN....................NDDNBBBNNDDN....................NDDNNNN.NDDN.....................NN......NN........................................................................',
+  razendnijlpaard: '................................................................................................................................................................................................................................................................................................................................................NNN.........................NNNNBBBNNNN.................N.NNBBBBBBBBBBBNN............NNNDNWBBBBBBBBBBBBBBN..........NDDDDWKWBBBBBBBBBBBBBBN........NDDDDDDWDDBBBBBBBBBBBBBBN......NDDDDDDDDDDDBBBBBBBBBBBBBN......NDPDDPDDDDDDBBBBBBBBBBBBBN.....NDDDDDDDDDDDDDBBBBBBBBBBBBBN.....NPPPPPDDDDDDBBBBBBBBBBBBBN......NPPPPPDDDDDDBBBBBBBBBBBBBN......NDDDDDDDDDDBBBBBBBBBBBBBBN.......NNDDDDDDDBBBBBBBBBBBBBBN..........NNNDNBBBBBBBBBBBBBBBN..............N.NNBDDDBBBBBBDDDN..................NDDDBBBNNNDDDN..................NDDDNNN..NDDDN...................NNN......NNN.......................................................................................................................................',
+  razendeneushoorn: '.................................................................................................................................................................................................................................................................................................................................................NNN.............NA......N....NNNBBBNNN.........NANN..NNNDNNNNBBBBBBBBBNN........NNANNDDDWDDDBBBBBBBBBBBBN.........NAADDWKWDDDBBBBBBBBBBBBN.........NADDDWDDDDBBBBBBBBBBBBBN.......NDDADDDDDDDDBBBBBBBBBBBBN........NDDADDDDDDBBBBBBBBBBBBBN........NDDDDDDDDDBBBBBBBBBBBBBBN........NDDDDDDDBBBBBBBBBBBBBBN..........NNNDBBBBBBBBBBBBBBBBBN.............NBBBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NDDDBBBBBBDDDN..................NDDDNBBBNNDDDN..................NDDDNNNN.NDDDN..................NDDDN....NDDDN...................NNN......NNN.......................................................................................................',
+  woestegorilla: '...........................................................................................................................................................................................................N............................NNNDNNN..N.....................NDDDDDDDNNBNNN.................NDDDDDDDDDBBBBBN................NDDWDDDDDDBBBBBBN...............NDWKWDDDDDBBBBBBBN.............NDDDWDDDDDDDABBBBBBN.............NDDDDDDDDAAAAABBBBN.............NDDDDDDDAAAAAAABBBN.............NDDDDDDDDAAAAABBBBBN...........NNDDDDDDDDBBABBBBBBDNN.........NDDDDDBDBBBBBBBBBBDDDDDN.......NDDDDDDDBBBBBBBBBBDDDDDDDN......NDDDDDDDBBBBBBBBBBDDDDDDDN.....NDDDDDDDDDBBBBBBBBDDDDDDDDDN.....NDDDDDDDNBBBBBBBBBDDDDDDDN......NDDDDDDDNNBBBBBBBBDDDDDDDN.......NDDDDDN..NDDDBBBDDDDDDDN.........NNDNN...NDDDBNNDDDNDNN............N.....NDDDN.NDDDNN....................NDDDN.NDDDN......................NNN...NNN.........................................................................................................................................',
+  razendezebra: '..........................................................................................................................................................................................................................................NN.............................NDDN............................NDDN............................NDDN............................NDDN....NNN...................NNBDDBNNNNBBBNNN..............NNWNBBBBNBBBBBBBBBNN...........NDWKWDBBDBBBDBNBDBBBDN..........NDDWDDBBDBBBDBNBDBBBDBN........NDDDDDDDBDBBBDBNBDBBBDBN.........NDDDDDBBDBBBDBNBDBBBDBN.........NDDDDDBBDBBBDBNBDBBBDBBN.........NNDNBBBDBBBDBNBDBBBDBN............N.NNBDBBBDBNBDBBBDBN...............NBDBBBDBNBDBBBDBN................NBBBBBBBBBBBBBN..................NNDDBBBBBBDDN....................NDDNBBBNNDDN....................NDDNNNN.NDDN....................NDDN....NDDN.....................NN......NN........................................................................................................................................',
+  razendebeer: '..........................................................................................................................................................................................................................................................................N....NNN..N...................NNBNNNNBBBNNBNN................NBBBBBBBBBBBBBBBN...............NBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBBBN..............NBBDBBBBBBBBBBBBBN..............NDDDDWBBBBBBBBBBBBN.............NDDDWKWBBBBBBBBBBBN............NDDADDWDBBOBBBBBBBBBN...........NBAAADDBOOOOOBBBBBBBN...........NAAAAADOOOOOOOBBBBBBN............NAAABBBOOOOOBBBBBBN.............NBABBBBBBOBBBBBBBBN..............NBBBBBBBBBBBBBBBN...............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNDDDBBBBBDDDN...................NDDDBBBNNDDDN...................NDDDNNN.NDDDN....................NNN.....NNN.........................................................................................................................................',
+  razendekrokodil: '....................................................................................................................................................................................................................................................N..............................NDN.............................NDN.............................NDN............................NDDDN..........................NNDDDN......................NNNNBDDDDNN...................NNBBBBBBBBBDBNN................NBWBBBBBBBBBBBBBN........NNWNWNNBWKWBBBBBBBBBBBBBN......NBWBWBWBWBWBBBBBBBBBBBBBBN......NBBBBBBBBBBBBBBBBBBBBBBBBBN.....NBBBBBBBBBBBBBBBBBBBBBBBBN......NBBBBBBBBBBBBBBBBBBBBBBBBN.......NNNNNNNNBBBBBBBBBBBBBDDDN...............NNBDDDBBBBBBBDDDN.................NDDDBBBNNNNDDDN.................NDDDNNN....NNN...................NNN...............................................................................................................................................................................................................',
+  razendekangoeroe: '............................................................................................................................................N.............................NNBNN..........................NBBBBBN........................NBBWBBBBN.......................NBWKWBBBN......................NBBBWBBBBBNNN.................NNNDBBBBBBBBBBBN...............NDDDDBBBBBBBBBBBBN...............NNDDNBBBBBBBBBBBN.................NNDNBBBBBBBBBBBN..................NNBBBBBBBBBBBN...................NBBBBBBBBBBBN..................NBBBBBBPBBBBBBN..................NBBBBPPPBBBBN...................NBBBPPPPPBBBDN..................NBBBBPPPBBBBDDNN.................NBBBBPBBBBNDDDDN................NBBDBBBBBBDDDDDDNN..............NDDDDDBDDNDDDDDDDDN.............NDDDDDNDDNDDDDNNNN.............NDDDDDDDDDDNNNN..................NDDDDDNDDN......................NDDDDDNDDN.......................NNDNN.NN..........................N.................................................................................................................',
+  woestepanda: '..........................................................................................................................................................................................................................................................................N..........N..................NNDNN..NNN.NNDNN...............NDDDDDNNBBBNDDDDDN..............NDDDDDBBBBBBDDDDDN.............NDDDDDDDBBBBDDDDDDDN.............NDDDDDBBBBBBDDDDDN..............NDDDDDBBBBBDDDDDDN..............NBDDWDDBBDDWDDDBBBN.............NDDWKWDDDDWKWDDBBBN............NBBDDWDDBBDDWDDBBBBBN...........NBBBBDBBBDDBDBBBBBBBN...........NBBBBBBBDDDDDBBBBBBBN............NBBBBBDDDDDDDBBBBBN.............NBBBBBBDDDDDBBBBBBN..............NBBBBBBDDBBBBBBBN...............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNDDDBBBBBDDDN...................NDDDBBBNNDDDN...................NDDDNNN.NDDDN....................NNN.....NNN.........................................................................................................',
+  razendeflamingo: '...........................................................................N.............................NNWNN..........................NPWKWPN......................NNNOPPWPPPN....................NOOOOPPPOON......................NNNNONPOON..........................N.NOON............................NPPN............................NPPN............................NPPN...N...N....................NPPNNNNBNNNDNNN.................NPPNBBBBDDDDDDDN................NPPBBBBDDDDDDDDDN...............NPPBBBBBDDDDDDDN.................NBBBBBBBBBDBNN...................NBBBBBBBBBN.....................NBBBBBBBBBN......................NBBBBBBBN........................NNOONNN..........................NOON............................NOON............................NOON............................NOON............................NOON............................NOON...........................NOOON............................NNN.............................................................................................................',
+  razendekameel: '................................................................................................................................................................................................................................................N.............................NNBNN.B........................NBBBBBBBBB.....................NBBBBBBBBBB...............N.NNN.NBBBBBBBBBBB............NNWNBBBNBBBBBBBBBBBN...........NDWKWDBBNNBBBBBBBBBBBN..........NDDWDDBBNBBBBBBBBBBBBBN........NDDDDDDDBBBBBBBBBBBBBBBBN........NDDDDDBBBBBBBBBBBBBBBBBBN.......NDDDDDBBBBBBBBBBBBBBBBBBN........NNDNBBBBBBBBBBBBBBBBBBBBN.........NNBBBBBBBBBBBBBBBBBBBN............NNBBBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NDDBBBBBBBDDN...................NDDNNBBBNNDDN...................NDDN.NNN.NDDN...................NDDN.....NDDN....................NN.......NN........................................................................................................................................',
+  voidsly: '...............................................................................................................................................................................................................................................................................................................................................NNN.........................NNNNBBBNNNN....................NBHBBBBBBBBBN..................NHHHHHBBBBBBBBN................NHHHHHHHBBBBBBBBN..............NBBHWHHHBBWBBBBBBBN............NBBBWWWBBBPWWBBBBBBBN...........NBBWKWWPPPPPPPBBBBBBN..........NBBBBWWWPPPPPPPBBBBBBBN.........NBBBBBWPPPPPPPPPBBBBBBN.........NBBBBBDBPPPPPPPBBBBBBBN..........NBBBBBDPPPPPPPBBBBBBN...........NBBBBBBBBBPBBBBBBBBBN............NBBBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NBBBBBBBBBBBN....................NNNNBBBNNNN.........................NNN..............................................................................................................',
+  frostbub: '...............................................................................................................................................................................................................................................................................................................................................NNN.........................NNNNBBBNNNN....................HBHBBBBBBBBBN..................NHHHHHBBBBBBBBN................NHHHHHHHBBBBBBHBN..............NBBHWHHHBBWBBBBBBBN............NBBBWWWBBBWWWBBBBBBBN...........NBBWKWWWBWKWWWBBBBBBN..........NBBBBWWWBBBWWWBBBBBBBBN.........NBBBBBWBBBBBWBBBBBBBBBN.........NBBBBBDBBBBBDBBBBBBBBBN..........NBBBBBDDDDDBBBBBBBBBN...........NBBBBBBBBBBBBBBBBBBBN............NBBBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NBBBBBBBBBBBN....................NNNNBBBNNNN.........................NNN..............................................................................................................',
+  lavablob: '...............................................................................................................................................................................................................................................................................................................................................NNN.........................NNNNBBBNNNN....................NBHBBBBBBBBBN..................NHHHHHBBBBBBBBN................NHHHHHHHBBBBBBBBN..............NBBHWHHHBBWBBBBBBBN............NBBBWWWBBBWWWBBBBBBBN...........NBBWKWWWBWKWWWBBBBBBN..........NBBBBWWWBBBWWWBBBBBBBBN.........NBBBBBWBBBBBWBBBBBBBBBN.........NBBBBBDBBBBODBBBBBBBBBN..........NBBBBBDDOOOOOBBBBBBBN...........NBBBBBBOOOOOOOBBBBBBN............NBBBBBBOOOOOBBBBBBN..............NBBBBBBBOBBBBBBBN................NBBBBBBBBBBBBBN..................NBBBBBBBBBBBN....................NNNNBBBNNNN.........................NNN..............................................................................................................',
+  voidkonijn: '........................................................................................................................................................................N........N.....................NBN......NBN.....................NN......NBN.....................NBN.....NBN.....................NBBN....NBN......................NBN..NNNBBN.....................NBBNNBBBBBN.....................NBBBBBBBBBBNNN.................NBBWBBBBBBBBBBONNN.............NBBWWWBBBBBBBBBBOOON............NBWKWWWBBBBBBBBBOOOON...........NBBWWWBBBBBBBBBBOOOOON.........NDBBBWBBBBBBBBBBBBOOON........NNDDBBBBBBBBBBBBBBBOOON........NDDDDDBBBBBBBBBBBBBBNNN..........NNNNBDBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNBBBBBBBBBNN.....................NNNBBBNNN..........................NNN...............................................................................................................................................................................................................................................',
+  omegadrake: '...........................................................................N..............................NAN.............................NAN.......................N.....NAN...............N......NDNN...NAAN............NNDN......NDDNNNAAAN..........NNDDN........NDDDBNNNAN.A.....NNDDDN.........NBBWBBBBNAAAAA.NNDDDDN..........NBWKWBBBAAAAAAADDDDDN..........NBBBWBBBBBAAAAADDDDDN.........NNBBBBBBBBBBBBABBBBDDN.........NBBBBBBBBBBBBBBBBBBBBBN..........NNNNNBNBBBBBBBBBBBBBBBN..............NNBBBBBBBBBBBBBBBN...............NBBBBBBBBBBBBBBBBNNNN..........NBBBBBBABBBBBBBBBBBBBBN..........NBBAAAAAAABBBBBBBBBBBBN.........NBBAAAAAAABBBBBBBBBBBN..........NBAAAAAAAAABBBBBBNNNN............NBAAAAAAABBBBBNN.................NAAAAAAABBBNN....................NNNABBBNNN.........................NNNN..............................................................................................................................................................................................................................................',
+  levihaai: '..................................................................................................................................................N..............................NDN.............................NDN.............................NDN............................DDDDN...........................DDDDN..........................NDDDDDN....................NNNNNBDDDDDNN.................NNBBBBBBBBBBBDBNN......N......NNBBWBBBBBBBBBBBBBBNN...NB.....NBBBWKWBBBBBBBBBBBBBBBNNNBB.....NBBBBWBBBBBBBBBBBBBBBBNBBBB....NBBBBBBBBBBBBBBBBBBBBBBBBBBB.....NWBBBBBBBBBBBBBBBBBBBBNBBBB....NDDDBBBBBBBBBBBBBBBBBBBNNBBB..NNDDDDDBBBBBBBBBBBBBBBBNN..NBB.NDNNNNNNNBBBBBBBBBBBBBNN.....NB..N.......NNNNNBBBNNNNN........N...............NNN..............................................................................................................................................................................................................................................................................................................',
+  voidocto: '...............................................................................................................................................NNN..........................NNNBBBNNN......................NBBBBBBBBBN....................NBBBBBBBBBBBN..................NBBBBBBBBBBBBBN................NBBBBWBBBBBWBBBBN...............NBBBWWWBPBWWWBBBN...............NBBWKWPPPPPWWWBBN..............NBBBBWPPPPPPPWBBBBN..............NBBBBWPPPPPWBBBBN...............NBBBBBBBPBBBBBBBN...............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN................NNNBBBBBBBBBBBNNN..............NDDNDDBDDBDDBDDNDDN.............NDDNDDNDDBDDNDDNDDN.............NDDNDDNDDNDDNDDNDDN.............NDDNDDNDDNDDNDDNDDN.............NDDNDDNDDNDDNDDNDDN.............NDDNDDNDDNDDNDDNDDN.............NDDNDDNDDNDDNDDNDDN.............NPNNDDNDDNPNNDDNDDN..............N.NPNNDDNN.NPNNDDN.................N.NPN....N.NPN.....................N........N........................................................................................................',
+};
+/* --- src/render/monster-pixel.js --- */
+/* ===================== MONSTER PIXEL ART (roster double) =============== */
+/** 32×32 stickman-pixel sprites. Tinted with species c1/c2. Fallback: canvas art. */
+
+const MONSTER_PIXEL_FILE = {
+  art: (id) => './assets/monsters/art-' + id + '.svg',
+  species: (id) => './assets/monsters/sp-' + id + '.svg',
+};
+
+function monsterPixelKey(sp) {
+  if (!sp) return null;
+  const art = sp.art;
+  if (
+    art &&
+    typeof MONSTER_ART_SLOTS !== 'undefined' &&
+    MONSTER_ART_SLOTS[art] &&
+    MONSTER_ART_SLOTS[art].pixelStatus === 'pixel' &&
+    typeof MONSTER_PIXEL_ART !== 'undefined' &&
+    MONSTER_PIXEL_ART[art]
+  ) {
+    return { kind: 'art', id: art, map: MONSTER_PIXEL_ART[art] };
+  }
+  const pixel = sp.pixel;
+  if (pixel && typeof MONSTER_PIXEL_SPECIES !== 'undefined' && MONSTER_PIXEL_SPECIES[pixel]) {
+    return { kind: 'species', id: pixel, map: MONSTER_PIXEL_SPECIES[pixel] };
+  }
+  if (pixel && typeof MONSTER_PIXEL_ART !== 'undefined' && MONSTER_PIXEL_ART[pixel]) {
+    return { kind: 'art', id: pixel, map: MONSTER_PIXEL_ART[pixel] };
+  }
+  const sid = sp.id;
+  if (sid && typeof MONSTER_PIXEL_SPECIES !== 'undefined' && MONSTER_PIXEL_SPECIES[sid]) {
+    return { kind: 'species', id: sid, map: MONSTER_PIXEL_SPECIES[sid] };
+  }
+  if (art && typeof MONSTER_PIXEL_ART !== 'undefined' && MONSTER_PIXEL_ART[art]) {
+    return { kind: 'art', id: art, map: MONSTER_PIXEL_ART[art] };
+  }
+  return null;
+}
+
+function monsterPixelPalette(sp, flash, telegraph) {
+  const body = flash ? '#ffffff' : (telegraph ? '#ffdd66' : (sp && sp.c1) || '#c98850');
+  const dark = flash ? '#dddddd' : (telegraph ? '#c97a20' : (sp && sp.c2) || '#6b4a28');
+  return {
+    B: body,
+    D: dark,
+    W: '#f4f7ff',
+    K: '#1a1a2a',
+    A: flash ? '#fff6d8' : '#ffe9c9',
+    H: 'rgba(255,255,255,.42)',
+    P: flash ? '#ffd0d8' : '#ff8aa0',
+    O: flash ? '#ffd9a8' : '#ff9a42',
+    N: flash ? '#8a90a0' : '#14161e',
+  };
+}
+
+/**
+ * Paint a 32×32 map centered on current transform (art already faces left).
+ * Returns true if a map was drawn.
+ */
+function drawMonsterPixelArt(c, sp, r, t, flash, telegraph) {
+  if (!c || !sp) return false;
+  const slot = monsterPixelKey(sp);
+  if (!slot || !slot.map) return false;
+  r = (typeof clamp === 'function') ? clamp(Number(r) || 24, 6, 120) : Math.max(6, Math.min(120, Number(r) || 24));
+  const n = (typeof MONSTER_PIXEL_SIZE === 'number' && MONSTER_PIXEL_SIZE > 0) ? MONSTER_PIXEL_SIZE : 32;
+  const map = slot.map;
+  if (typeof map !== 'string' || map.length < n * n) return false;
+  const pal = monsterPixelPalette(sp, flash, telegraph);
+  const cell = (r * 2.15) / n;
+  const bob = (typeof motionReduced === 'function' && motionReduced())
+    ? 0
+    : Math.sin((Number(t) || 0) * 5) * r * 0.03;
+  const ox = -n * cell * 0.5;
+  const oy = -n * cell * 0.52 + bob;
+  const prevSmooth = c.imageSmoothingEnabled;
+  c.imageSmoothingEnabled = false;
+  if (c.imageSmoothingQuality) c.imageSmoothingQuality = 'low';
+  let painted = 0;
+  for (let y = 0; y < n; y++) {
+    const rowOff = y * n;
+    let x = 0;
+    while (x < n) {
+      const ch = map.charAt(rowOff + x);
+      if (ch === '.' || !pal[ch]) { x++; continue; }
+      let w = 1;
+      while (x + w < n && map.charAt(rowOff + x + w) === ch) w++;
+      c.fillStyle = pal[ch];
+      c.fillRect(
+        Math.round(ox + x * cell),
+        Math.round(oy + y * cell),
+        Math.max(1, Math.ceil(cell * w)),
+        Math.max(1, Math.ceil(cell))
+      );
+      painted += w;
+      x += w;
+    }
+  }
+  c.imageSmoothingEnabled = prevSmooth;
+  return painted > 12;
+}
+
+function monsterPixelCoverage() {
+  const artN = (typeof MONSTER_PIXEL_ART === 'object' && MONSTER_PIXEL_ART)
+    ? Object.keys(MONSTER_PIXEL_ART).length
+    : 0;
+  const spN = (typeof MONSTER_PIXEL_SPECIES === 'object' && MONSTER_PIXEL_SPECIES)
+    ? Object.keys(MONSTER_PIXEL_SPECIES).length
+    : 0;
+  return { art: artN, species: spN };
+}
+/* --- src/render/catalog-art.js --- */
+/* ====================== CATALOG W2 STUB SILHOUETTES ==================== */
+/**
+ * Placeholder shapes until the pixel-art partner fills MONSTER_ART_SLOTS.
+ * Distinct per `shape` so woods/crypt/scrap/frost/sea read differently in-fight.
+ * Replace a case in drawCatalogStubArt — keep this fallback.
+ */
+
+function catalogStubEye(c, x, y, s) {
+  c.fillStyle = '#fff';
+  c.beginPath(); c.arc(x, y, s, 0, TAU); c.fill();
+  c.fillStyle = '#1a1a2a';
+  c.beginPath(); c.arc(x - s * 0.28, y, s * 0.48, 0, TAU); c.fill();
+}
+
+function catalogStubMark(c, art, r, dark) {
+  const letters = String(art || '??').slice(0, 2).toUpperCase();
+  c.fillStyle = dark;
+  c.globalAlpha *= 0.85;
+  c.font = 'bold ' + Math.max(7, Math.round(r * 0.42)) + 'px sans-serif';
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillText(letters, 0, r * 0.08);
+  c.globalAlpha = 1;
+}
+
+function drawCatalogShape(c, shape, r, t, body, dark, telegraph) {
+  const bob = Math.sin(t * 4.2) * r * 0.04;
+  const warn = telegraph ? 1.08 : 1;
+  c.save();
+  c.translate(0, bob);
+  c.fillStyle = body;
+  switch (shape) {
+    case 'flyer': {
+      const flap = Math.sin(t * 10) * 0.45;
+      c.fillStyle = dark;
+      for (const s of [-1, 1]) {
+        c.save();
+        c.translate(s * r * 0.35, -r * 0.15);
+        c.rotate(s * (0.4 + flap));
+        c.beginPath();
+        c.moveTo(0, 0);
+        c.lineTo(s * r * 1.35, -r * 0.55);
+        c.lineTo(s * r * 1.05, r * 0.28);
+        c.closePath();
+        c.fill();
+        c.restore();
+      }
+      c.fillStyle = body;
+      c.beginPath(); c.ellipse(0, 0, r * 0.78 * warn, r * 0.62, 0, 0, TAU); c.fill();
+      catalogStubEye(c, -r * 0.22, -r * 0.08, r * 0.14);
+      break;
+    }
+    case 'hopper': {
+      c.beginPath(); c.ellipse(0, r * 0.08, r * 1.05, r * 0.72 * warn, 0, 0, TAU); c.fill();
+      c.fillStyle = dark;
+      c.fillRect(-r * 0.7, r * 0.45, r * 0.28, r * 0.4);
+      c.fillRect(r * 0.38, r * 0.45, r * 0.28, r * 0.4);
+      catalogStubEye(c, -r * 0.28, -r * 0.05, r * 0.15);
+      catalogStubEye(c, r * 0.18, -r * 0.05, r * 0.15);
+      break;
+    }
+    case 'tank': {
+      c.beginPath();
+      c.moveTo(-r * 1.05, r * 0.7);
+      c.lineTo(-r * 0.95, -r * 0.35);
+      c.lineTo(r * 0.95, -r * 0.3);
+      c.lineTo(r * 1.05, r * 0.7);
+      c.closePath();
+      c.fill();
+      c.fillStyle = dark;
+      c.beginPath(); c.arc(-r * 0.55, -r * 0.55, r * 0.32, 0, TAU); c.fill();
+      catalogStubEye(c, -r * 0.62, -r * 0.58, r * 0.12);
+      break;
+    }
+    case 'shooter': {
+      c.beginPath(); c.ellipse(0, r * 0.1, r * 0.7, r * 0.85 * warn, 0, 0, TAU); c.fill();
+      c.fillStyle = telegraph ? '#ffd75e' : dark;
+      c.beginPath(); c.arc(0, -r * 0.85, r * 0.22, 0, TAU); c.fill();
+      catalogStubEye(c, -r * 0.18, -r * 0.1, r * 0.14);
+      catalogStubEye(c, r * 0.2, -r * 0.1, r * 0.14);
+      break;
+    }
+    case 'swimmer': {
+      const wag = Math.sin(t * 5) * 0.08;
+      c.save(); c.rotate(wag);
+      c.beginPath(); c.ellipse(0, 0, r * 1.15 * warn, r * 0.52, 0, 0, TAU); c.fill();
+      c.fillStyle = dark;
+      c.beginPath();
+      c.moveTo(r * 0.95, 0);
+      c.lineTo(r * 1.5, -r * 0.28);
+      c.lineTo(r * 1.5, r * 0.28);
+      c.closePath();
+      c.fill();
+      catalogStubEye(c, -r * 0.55, -r * 0.08, r * 0.12);
+      c.restore();
+      break;
+    }
+    case 'undead': {
+      c.fillRect(-r * 0.38, -r * 0.15, r * 0.76, r * 0.95);
+      c.beginPath(); c.arc(0, -r * 0.45, r * 0.48, 0, TAU); c.fill();
+      c.fillStyle = dark;
+      c.fillRect(-r * 0.18, -r * 0.55, r * 0.12, r * 0.16);
+      c.fillRect(r * 0.06, -r * 0.55, r * 0.12, r * 0.16);
+      c.fillRect(-r * 0.16, -r * 0.22, r * 0.32, r * 0.08);
+      break;
+    }
+    case 'insect': {
+      c.beginPath(); c.ellipse(-r * 0.45, 0, r * 0.38, r * 0.32, 0, 0, TAU); c.fill();
+      c.beginPath(); c.ellipse(0.05 * r, 0, r * 0.42, r * 0.38, 0, 0, TAU); c.fill();
+      c.beginPath(); c.ellipse(r * 0.5, 0, r * 0.34, r * 0.3, 0, 0, TAU); c.fill();
+      c.strokeStyle = dark;
+      c.lineWidth = Math.max(1.5, r * 0.08);
+      for (const s of [-1, 1]) {
+        c.beginPath(); c.moveTo(0, r * 0.1); c.lineTo(s * r * 0.85, r * 0.55); c.stroke();
+      }
+      catalogStubEye(c, -r * 0.55, -r * 0.08, r * 0.1);
+      break;
+    }
+    case 'mech': {
+      c.fillRect(-r * 0.7, -r * 0.55, r * 1.4, r * 1.15);
+      c.fillStyle = dark;
+      c.fillRect(-r * 0.7, -r * 0.55, r * 1.4, r * 0.22);
+      c.fillStyle = telegraph ? '#ffd75e' : '#7cf5ff';
+      c.beginPath(); c.arc(-r * 0.18, -r * 0.08, r * 0.16, 0, TAU); c.fill();
+      break;
+    }
+    case 'quad':
+    default: {
+      c.beginPath(); c.ellipse(0, 0, r * warn, r * 0.68, 0, 0, TAU); c.fill();
+      c.fillStyle = dark;
+      for (const x of [-0.55, 0.2]) {
+        c.fillRect(r * x, r * 0.4, r * 0.22, r * 0.42);
+      }
+      c.fillStyle = body;
+      c.beginPath();
+      c.moveTo(-r * 0.85, -r * 0.15);
+      c.lineTo(-r * 1.25, -r * 0.05);
+      c.lineTo(-r * 0.8, r * 0.15);
+      c.closePath();
+      c.fill();
+      catalogStubEye(c, -r * 0.45, -r * 0.12, r * 0.13);
+      break;
+    }
+  }
+  c.restore();
+}
+
+function drawCatalogStubArt(c, art, r, t, body, dark, telegraph) {
+  if (!c) return;
+  r = clamp(Number(r) || 22, 6, 120);
+  const slot = (typeof MONSTER_ART_SLOTS !== 'undefined' && MONSTER_ART_SLOTS[art]) || { shape: 'quad' };
+  drawCatalogShape(c, slot.shape || 'quad', r, t, body || '#888', dark || '#444', telegraph);
+  catalogStubMark(c, art, r, dark || '#333');
+  if (slot.pixelStatus === 'stub') {
+    c.save();
+    c.strokeStyle = 'rgba(255,215,94,.45)';
+    c.lineWidth = Math.max(1, r * 0.05);
+    c.setLineDash([3, 3]);
+    c.beginPath(); c.ellipse(0, 0, r * 1.2, r * 0.95, 0, 0, TAU); c.stroke();
+    c.restore();
+  }
+}
 /* --- src/entities/fighter.js --- */
 /* ============================== VECHTER ================================ */
 class Fighter {
@@ -28822,6 +29658,9 @@ class Monster {
 function drawMonsterArt(c, sp, r, t, flash, telegraph) {
   if (!sp || !c) return;
   r = clamp(Number(r) || 24, 6, 120);
+  if (typeof drawMonsterPixelArt === 'function' && drawMonsterPixelArt(c, sp, r, t, flash, telegraph)) {
+    return;
+  }
   const body = flash ? (motionReduced() ? sp.c1 : '#ffffff') : (sp.c1 || '#888');
   const dark = flash ? (motionReduced() ? sp.c2 : '#dddddd') : (sp.c2 || '#444');
   const sq = 1 + Math.sin(t * 5) * 0.05;
@@ -29119,11 +29958,21 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
       }
       break;
     default:
-      c.fillStyle = body;
-      c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
-      c.strokeStyle = dark;
-      c.lineWidth = Math.max(2, r * 0.08);
-      c.stroke();
+      if (typeof drawCatalogStubArt === 'function' && typeof MONSTER_ART_SLOTS !== 'undefined' && MONSTER_ART_SLOTS[sp.art]) {
+        try {
+          drawCatalogStubArt(c, sp.art, r, t, body, dark, telegraph);
+        } catch (err) {
+          console.error('[CatalogArt]', sp.art, err);
+          c.fillStyle = body;
+          c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+        }
+      } else {
+        c.fillStyle = body;
+        c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+        c.strokeStyle = dark;
+        c.lineWidth = Math.max(2, r * 0.08);
+        c.stroke();
+      }
       break;
   }
 }
@@ -41931,6 +42780,9 @@ const UI = {
         else if (trait === 'elite') cls += ' trait-elite';
         else if (trait === 'ranch') cls += ' trait-ranch';
         else if (trait === 'safari') cls += ' trait-safari';
+        else if (trait === 'woods') cls += ' trait-woods';
+        else if (trait === 'crypt') cls += ' trait-crypt';
+        else if (trait === 'scrap') cls += ' trait-scrap';
         else if (trait === 'tide') cls += ' trait-tide';
         else if (trait === 'ember') cls += ' trait-ember';
         else if (trait === 'pain') cls += ' trait-pain';
@@ -42546,7 +43398,7 @@ const UI = {
         : '';
       sumEl.style.display = 'block';
       const biomeTot = typeof dexBiomeTotals === 'function' ? dexBiomeTotals() : {};
-      const biomeChips = ['farm', 'zoo', 'sea'].map((b) => {
+      const biomeChips = ['farm', 'zoo', 'sea', 'wild', 'crypt', 'scrap', 'frost'].map((b) => {
         const tot = biomeTot[b] || 0;
         if (!tot) return '';
         const n = typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered(b) : 0;
@@ -42595,7 +43447,7 @@ const UI = {
       const mk = (id, label) =>
         `<button type="button" class="dex-filter-btn${cur === id ? ' active' : ''}" data-dex-biome-filter="${id}">${label}</button>`;
       const tot = typeof dexBiomeTotals === 'function' ? dexBiomeTotals() : {};
-      const order = ['farm', 'zoo', 'sea', 'classic', 'secret'];
+      const order = ['farm', 'zoo', 'sea', 'wild', 'crypt', 'scrap', 'frost', 'classic', 'secret'];
       return mk('all', t('ui.dexAllBiomes')) +
         order.map((b) => {
           const nTot = tot[b] || 0;

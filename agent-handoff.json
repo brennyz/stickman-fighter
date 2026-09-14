@@ -776,6 +776,22 @@
       "text": "Systems PR READY #280 with 131 gear ids + gates. Wire world drops to those catalog ids; respect level+time gates; can-own-locked OK.",
       "status": "done-in-code",
       "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T170900",
+      "from": "user",
+      "text": "MONSTER EDITOR / content DOUBLE: ~2× Adventure roster via data-driven catalog; art slot IDs for pixel partner; stub silhouettes. No Versus / gear cosmetics / audio.",
+      "status": "done-in-code",
+      "updated": "2026-09-14",
+      "notes": "Draft PR #284 — catalog W2 + aliases onto #282"
+    },
+    {
+      "id": "w-20260914T173000",
+      "from": "user",
+      "text": "Vul P1 art-slots uit editor draft PR #284 (docs/MONSTER-ART-SLOTS.md). Nieuwe IDs — niet herschilderen van classic/farm/zoo/sea/tide/satan of #282 set. Exact: wolf, owl, frog, snake, boar, skeleton, mummy, beetle, wasp, spider, drone, bot, scrapdog, penguin, yeti, crab, turtle, squid.",
+      "status": "done-in-code",
+      "updated": "2026-09-14",
+      "notes": "Superseded by editor pivot: alias-first onto #282. Unique P1 drawers abandoned. All 36 W2 arts aliased."
     }
   ],
   "agentRules": [

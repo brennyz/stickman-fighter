@@ -143,6 +143,8 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | W2 `sp.pixel` aliases → #282 provisional art/species IDs (geen pixel-redo). v1.18.165 / SW 375. Draft. |
+| 2026-09-14 | — | Monster catalog W2: +288 soorten (36 art slots × 8 rarities), woods/crypt/scrap golven, stub silhouetten, `docs/MONSTER-ART-SLOTS.md` voor pixel-partner. v1.18.164 / SW 374. Draft. |
 | 2026-09-14 | — | Gear contract v1: ownedGear {gearId,at}, zone drops on NM/Hell, can-own-locked. Catalog = #280 (131). v1.18.164 / SW 374. |
 | 2026-09-14 | — | Gear world drops wired to #280 catalog (131 IDs). Rolls respect lvl+days; grant can-own-locked. 16×16 pixels. v1.18.164 / SW 374. |
 | 2026-09-14 | — | Gear UI schema delta: only save.gear {schema,equipped,owned} + createdAt; drop flat bags; HOME Uitrusting. v1.18.169 / SW 379. |

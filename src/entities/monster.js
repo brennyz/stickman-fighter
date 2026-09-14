@@ -578,6 +578,9 @@ class Monster {
 function drawMonsterArt(c, sp, r, t, flash, telegraph) {
   if (!sp || !c) return;
   r = clamp(Number(r) || 24, 6, 120);
+  if (typeof drawMonsterPixelArt === 'function' && drawMonsterPixelArt(c, sp, r, t, flash, telegraph)) {
+    return;
+  }
   const body = flash ? (motionReduced() ? sp.c1 : '#ffffff') : (sp.c1 || '#888');
   const dark = flash ? (motionReduced() ? sp.c2 : '#dddddd') : (sp.c2 || '#444');
   const sq = 1 + Math.sin(t * 5) * 0.05;
@@ -875,11 +878,21 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
       }
       break;
     default:
-      c.fillStyle = body;
-      c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
-      c.strokeStyle = dark;
-      c.lineWidth = Math.max(2, r * 0.08);
-      c.stroke();
+      if (typeof drawCatalogStubArt === 'function' && typeof MONSTER_ART_SLOTS !== 'undefined' && MONSTER_ART_SLOTS[sp.art]) {
+        try {
+          drawCatalogStubArt(c, sp.art, r, t, body, dark, telegraph);
+        } catch (err) {
+          console.error('[CatalogArt]', sp.art, err);
+          c.fillStyle = body;
+          c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+        }
+      } else {
+        c.fillStyle = body;
+        c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+        c.strokeStyle = dark;
+        c.lineWidth = Math.max(2, r * 0.08);
+        c.stroke();
+      }
       break;
   }
 }

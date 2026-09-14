@@ -10,7 +10,7 @@ Game logic is split from the monolithic `game.js` into ordered modules.
 | `00-prelude.js` | Math utils, Perf, FX budget |
 | `core/storage.js` | Save/load, version, islands, adventure helpers |
 | `core/canvas.js` | Canvas resize, DPR |
-| `data/*` | Weapons, monsters, styles, rarities |
+| `data/*` | Weapons, monsters, catalog W2 families, styles, rarities |
 | `systems/*` | Audio, input, missions, versus |
 | `entities/*` | Fighter & monster classes |
 | `render/*` | Draw helpers, scenery, backgrounds |
