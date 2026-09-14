@@ -108,7 +108,7 @@
       <div class="arcade-pre" id="menuArcadePre" hidden>KIES JE PAD</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine" hidden>insert coin</p>
-      <div class="subtitle menu-sr-only" id="menuVerLine">v1.18.166</div>
+      <div class="subtitle" id="menuVerLine" hidden>v1.18.166</div>
     </header>
     <div class="arcade-menu-body menu-landing-body">
       <div class="menu-landing-scroll">
@@ -175,12 +175,11 @@
         <span id="menuDailyHint"></span>
         <span id="menuTipLine"></span>
         <span id="menuPlayLink"></span>
-        <div id="menuLangBar" class="dex-filter-bar menu-lang-bar" role="group" aria-label="Taal"></div>
         <button class="btn tog" id="togSfx" type="button"></button>
         <button class="btn tog" id="btnGuvve" type="button"></button>
         <button class="btn tog" id="btnSharePlay" type="button"></button>
         <button class="btn tog" id="sfForceFresh" type="button"></button>
-        <button class="btn tog" id="btnVerseVersie" type="button" title="Oude cache? Forceer verse versie"><span class="tog-ico"><img src="assets/buttons/chrome/refresh.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Vers</button>
+        <button class="btn tog" id="btnVerseVersie" type="button" hidden title="Oude cache? Forceer verse versie"><span class="tog-ico"><img src="assets/buttons/chrome/refresh.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Vers</button>
       </div>
     </div>
   </div>
@@ -459,6 +458,11 @@
   <button class="btn back-btn" data-back><img class="back-btn-ico" src="assets/buttons/chrome/back.svg" alt="" width="18" height="18" decoding="async" draggable="false"> Terug</button>
   <h2 class="head" id="settingsHead">Instellingen</h2>
   <div class="subtitle" id="settingsSub">Geluid &amp; HUD — save gaat automatisch mee</div>
+  <div class="settings-card" id="settingsSaveAutoCard">
+    <div id="settingsSaveAutoTitle" style="font-weight:900;color:#7cf5ff;margin-bottom:6px">Save gaat automatisch mee</div>
+    <div id="saveHealthLine" style="font-size:13px;line-height:1.45;color:#cfe0ff;margin-bottom:8px">Lv … · OK op dit apparaat</div>
+    <div id="settingsSaveAutoHint" style="font-size:12px;opacity:.78;line-height:1.45">Online-save blijft vanzelf bij deze speel-link. Geen extra knop.</div>
+  </div>
   <div class="settings-card">
     <div style="font-weight:900;color:#7cf5ff;margin-bottom:6px" id="setLangLbl">Taal</div>
     <div id="langSwitchBar" class="dex-filter-bar" style="margin-bottom:14px"></div>
@@ -481,11 +485,6 @@
   </div>
   <div class="step-card" id="settingsA11yTip">Minder beweging = rustigere banners. Hoog contrast = dikkere randen. Lite FX = soepeler op telefoon.</div>
   <div id="a11yStatusLine" class="step-card" style="font-size:13px;padding:10px 14px;margin-top:0">Toegankelijkheid laden…</div>
-  <div class="settings-card" id="settingsSaveAutoCard">
-    <div id="settingsSaveAutoTitle" style="font-weight:900;color:#7cf5ff;margin-bottom:6px">Save gaat automatisch mee</div>
-    <div id="saveHealthLine" style="font-size:13px;line-height:1.45;color:#cfe0ff;margin-bottom:8px">Lv … · OK op dit apparaat</div>
-    <div id="settingsSaveAutoHint" style="font-size:12px;opacity:.78;line-height:1.45">Online-save blijft vanzelf bij deze speel-link. Geen extra knop.</div>
-  </div>
   <details class="settings-fold" id="settingsShareFold">
     <summary id="settingsShareFoldSum">Speel-link</summary>
     <div class="settings-card settings-fold-body">

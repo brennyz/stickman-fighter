@@ -1708,10 +1708,10 @@
       display:inline-flex; align-items:center; gap:6px; }
   body.big-touch .back-btn { padding:14px 22px; font-size:18px; min-height:52px; left:12px; }
   body.big-touch .back-btn .back-btn-ico { width: 20px; height: 20px; }
-  .sub-home-bar { position:sticky; bottom:0; width:var(--ui-rail-wide); margin-top:24px;
+  .sub-home-bar { position:relative; bottom:auto; width:var(--ui-rail-wide); margin-top:24px;
     padding:12px 0 max(16px, env(safe-area-inset-bottom)); z-index:8; flex-shrink:0;
     display:flex; justify-content:center; align-items:center;
-    background:linear-gradient(180deg, transparent, #0a0d18 28%); }
+    background:transparent; }
   .sub-home-bar .sub-home-btn { width:auto; max-width:min(88vw,420px); min-width:min(52vw,240px);
     min-height:48px; padding:10px 22px; font-size:clamp(14px, 3.6vw, 16px); font-weight:800; justify-content:center; }
   body.big-touch .sub-home-bar .sub-home-btn { min-height:54px; padding:12px 26px; font-size:17px; }

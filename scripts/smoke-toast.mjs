@@ -79,6 +79,7 @@ must(/id="settingsHelpFold"/.test(index), 'settings help fold missing');
 must(/id="settingsSaveFold"/.test(index), 'settings offline fold missing');
 must(!/id="setPerfLine"/.test(index), 'settings still dumps perf line');
 must(index.indexOf('id="settingsSaveAutoCard"') < index.indexOf('id="settingsSaveFold"'), 'auto-save must sit above offline fold');
+must(index.indexOf('id="settingsSaveAutoCard"') < index.indexOf('id="langSwitchBar"'), 'auto-save status must sit above Options toggles');
 must(index.indexOf('id="settingsHelpFold"') < index.indexOf('id="btnForceFresh"'), 'Verse versie must live in help fold');
 must(index.indexOf('id="menuScreen"') < index.indexOf('id="btnInstallApp"') && index.indexOf('id="btnInstallApp"') > index.indexOf('id="settingsHelpFold"'), 'install CTA must leave HOME and live in Options help');
 const settingsFn = ui.match(/renderSettings\(\)[\s\S]*?renderPausePerfStrip/)?.[0] || '';
