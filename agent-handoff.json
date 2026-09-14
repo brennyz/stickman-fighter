@@ -94,7 +94,7 @@
       "id": "w-20260914T131600",
       "from": "user",
       "text": "ja doe maar (2026-09-14): slim Training feel after #259 — ghost HP bar + gold flash + RABBIT n/max only. No spawn-gap/capsule rewrite. No main merge until «merge main».",
-      "status": "active",
+      "status": "done-in-code",
       "updated": "2026-09-14"
     },
     {
@@ -600,6 +600,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T13:28:15Z",
+      "summary": "Slim ghost-HP feel na #259: RABBIT n/max + ghost/gold. Geen spawn/capsule. PR #262. #261 blijft dicht. Geen main-merge."
+    },
+    {
       "at": "2026-09-14T13:07:40Z",
       "summary": "PARKED #259 v1.18.158/SW368 tot «merge». Hit-reg van ons; #261 draft niet herschrijven. LIVE blijft 1.18.153."
     },
@@ -694,10 +698,6 @@
     {
       "at": "2026-08-17T08:55:57Z",
       "summary": "d19: Muur-HUD één tempo-getal; balk volgt tempo niet pas record"
-    },
-    {
-      "at": "2026-08-17T08:50:41Z",
-      "summary": "Zesde d20-worp geclaimd via CLI"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
