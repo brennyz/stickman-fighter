@@ -2320,6 +2320,7 @@ const I18N = {
       arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal',
       collect: 'Collectie', collectSub: 'Wapens · figuur · boek', music: 'Muziek', missions: 'Missies',
       summons: 'Summons', summonsSub: 'Dagelijkse kist · wapen & pet',
+      buildings: 'Fabrieken', buildingsSub: 'Werken · oogst · upgrade',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon, zoals een echte app',
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
       choosePath: 'KIES JE PAD', lastPlayed: 'LAATST', playHere: 'SPEEL',
@@ -2346,16 +2347,6 @@ const I18N = {
       dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee · woud',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
       loadFail: 'Hub laden mislukt',
-    },
-    buildings: {
-      collected: '+{n} {res} · {name}',
-      collectedAll: 'Oogst +{n} uit {k} gebouwen',
-      waveHeal: '+{n} HP',
-      stick_lighter: { name: 'Stick-Lighter' }, woodchip_glue: { name: 'Woodchip-Glue' },
-      chipping_wood: { name: 'Chipping-Wood' }, bamboo_boesa: { name: 'Bamboo-Boesa' },
-      echo_whistle: { name: 'Echo-Whistle' },
-      bamboo_boesa_boiler: { name: 'Bamboo-Boesa' }, echo_whistle_mill: { name: 'Echo-Whistle' },
-      res: { spark: 'vonken', glue: 'lijm', chip: 'snipper', steam: 'stoom', echo: 'echo', embers: 'sintels', chips: 'chips', echoes: 'echo' },
     },
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
     pause: {
@@ -2461,18 +2452,38 @@ const I18N = {
     },
     buildings: {
       title: 'Fabrieken',
-      sub: 'Eiland-fabrieken · levels · timed resources — stub voor UI/art/powers',
+      sub: 'Vijf werken · oogst op tijd · upgrade',
+      hubStatReady: '{n} klaar om te oogsten', hubStatIdle: '5 werken',
+      hubStatLocked: '{n}/{total} open',
+      level: 'Lv {n}', locked: 'Op slot',
+      lockWorld: 'Open {name} (wereld {n})',
+      collect: 'Oogsten', collectSub: '{n} {res} klaar', collectEmpty: 'Nog niks klaar',
+      collectDone: '+{n} {res}',
+      upgrade: 'Upgrade', upgradeSub: '{cost} pet coins · Lv {next}',
+      upgradeMax: 'Max level', upgradeNeed: 'Nog {need} pet coins',
+      upgradeOk: '{name} → Lv {lv}',
+      nextIn: 'Volgende over {t}', stored: '{n}/{cap} opgeslagen',
+      stubNote: 'Systems-API nog niet gemerged — stub-productie',
+      liveNote: 'Live systems-API',
       loadFail: 'Fabrieken laden mislukt',
-      build: 'Bouwen', collect: 'Ophalen', upgrade: 'Upgrade',
-      buildHint: 'Bouwen als eiland open is',
+      build: 'Bouwen', buildHint: 'Bouwen als eiland open is',
       lockedWorld: 'Unlock: eiland {n}',
       rateLine: '{n}/uur · {pending} wacht · cap {cap}',
+      collected: '+{n} {res} · {name}',
+      collectedAll: 'Oogst +{n} uit {k} gebouwen',
+      waveHeal: '+{n} HP',
       stick_lighter: { name: 'Stok-Aansteker Fabriek', blurb: 'Scheef schuurtje dat stokken tegen elkaar wrijft tot ze vonken geven.' },
+      stick_lighterSub: 'Vonken · Oost-eiland',
       woodchip_glue: { name: 'Houtsnipper-Lijm Fabriek', blurb: 'Kookt zaagsel tot een pasta die harder plakt dan een combo. Niet likken.' },
+      woodchip_glueSub: 'Lijm · Vuur-eiland',
       chipping_wood: { name: 'Versnipper-Hout Fabriek', blurb: 'Vrolijke versnipperaar die TIMBER fluistert en nuttige snippers hoest.' },
+      chipping_woodSub: 'Snippers · Neon-eiland',
       bamboo_boesa: { name: 'Bamboe-Boesa Ketel', blurb: 'Vuur-ketel die holle boesa-bamboe stoomt tot de stengels fluiten.' },
+      bamboo_boesaSub: 'Stoom · Tempel-eiland',
       echo_whistle: { name: 'Echo-Fluitmolen', blurb: 'Molenrad dat lucht tot taunts maalt. Het gebouw scheldt terug.' },
-      res: { spark: 'Vonken', glue: 'Lijm', chip: 'Snippers', steam: 'Stoom', echo: 'Echo' },
+      echo_whistleSub: 'Echo · Finale-eiland',
+      bamboo_boesa_boiler: { name: 'Bamboe-Boesa Ketel' }, echo_whistle_mill: { name: 'Echo-Fluitmolen' },
+      res: { spark: 'Vonken', glue: 'Lijm', chip: 'Snippers', steam: 'Stoom', echo: 'Echo', embers: 'sintels', chips: 'chips', echoes: 'echo' },
     },
     rarity: { common: 'Gewoon', uncommon: 'Ongewoon', rare: 'Zeldzaam', epic: 'Episch', legendary: 'Legendarisch', mythic: 'Mythisch', nightmare: 'Nachtmerrie', hell: 'Hel' },
     audio: {
@@ -2503,6 +2514,7 @@ const I18N = {
       arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local',
       collect: 'Collection', collectSub: 'Weapons · figure · book', music: 'Music', missions: 'Missions',
       summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
+      buildings: 'Buildings', buildingsSub: 'Factories · collect · upgrade',
       options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add as app', installSub: 'One icon, like a real app',
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
       choosePath: 'CHOOSE YOUR PATH', lastPlayed: 'LAST', playHere: 'PLAY',
@@ -2529,16 +2541,6 @@ const I18N = {
       dex: 'Monster book', dexSub: '{n} species · rarity = HP · farm · zoo · sea · woods',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
       loadFail: 'Could not load hub',
-    },
-    buildings: {
-      collected: '+{n} {res} · {name}',
-      collectedAll: 'Harvest +{n} from {k} buildings',
-      waveHeal: '+{n} HP',
-      stick_lighter: { name: 'Stick-Lighter' }, woodchip_glue: { name: 'Woodchip-Glue' },
-      chipping_wood: { name: 'Chipping-Wood' }, bamboo_boesa: { name: 'Bamboo-Boesa' },
-      echo_whistle: { name: 'Echo-Whistle' },
-      bamboo_boesa_boiler: { name: 'Bamboo-Boesa' }, echo_whistle_mill: { name: 'Echo-Whistle' },
-      res: { spark: 'spark', glue: 'glue', chip: 'chip', steam: 'steam', echo: 'echo', embers: 'embers', chips: 'chips', echoes: 'echoes' },
     },
     modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Coins' },
     pause: {
@@ -2644,18 +2646,38 @@ const I18N = {
     },
     buildings: {
       title: 'Factories',
-      sub: 'Island factories · levels · timed resources — stub for UI/art/powers',
+      sub: 'Five factories · timed collect · upgrade',
+      hubStatReady: '{n} ready to collect', hubStatIdle: '5 factories',
+      hubStatLocked: '{n}/{total} open',
+      level: 'Lv {n}', locked: 'Locked',
+      lockWorld: 'Clear {name} (world {n})',
+      collect: 'Collect', collectSub: '{n} {res} ready', collectEmpty: 'Nothing ready yet',
+      collectDone: '+{n} {res}',
+      upgrade: 'Upgrade', upgradeSub: '{cost} pet coins · Lv {next}',
+      upgradeMax: 'Max level', upgradeNeed: 'Need {need} more pet coins',
+      upgradeOk: '{name} → Lv {lv}',
+      nextIn: 'Next in {t}', stored: '{n}/{cap} stored',
+      stubNote: 'Systems API not merged yet — stub production',
+      liveNote: 'Live systems API',
       loadFail: 'Could not load factories',
-      build: 'Build', collect: 'Collect', upgrade: 'Upgrade',
-      buildHint: 'Build once the island is open',
+      build: 'Build', buildHint: 'Build once the island is open',
       lockedWorld: 'Unlock: island {n}',
       rateLine: '{n}/hr · {pending} waiting · cap {cap}',
+      collected: '+{n} {res} · {name}',
+      collectedAll: 'Harvest +{n} from {k} buildings',
+      waveHeal: '+{n} HP',
       stick_lighter: { name: 'Stick-Lighter Factory', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
+      stick_lighterSub: 'Sparks · East island',
       woodchip_glue: { name: 'Woodchip-Glue Factory', blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.' },
+      woodchip_glueSub: 'Glue · Fire island',
       chipping_wood: { name: 'Chipping-Wood Factory', blurb: 'A cheerful chipper that whispers TIMBER and coughs useful chips.' },
+      chipping_woodSub: 'Chips · Neon island',
       bamboo_boesa: { name: 'Bamboo-Boesa Boiler', blurb: 'Fire-island kettle that steams hollow “boesa” bamboo until the stalks whistle.' },
+      bamboo_boesaSub: 'Steam · Temple island',
       echo_whistle: { name: 'Echo-Whistle Mill', blurb: 'A mill wheel that turns air into taunts. The building heckles you back.' },
-      res: { spark: 'Spark', glue: 'Glue', chip: 'Chip', steam: 'Steam', echo: 'Echo' },
+      echo_whistleSub: 'Echo · Final island',
+      bamboo_boesa_boiler: { name: 'Bamboo-Boesa Boiler' }, echo_whistle_mill: { name: 'Echo-Whistle Mill' },
+      res: { spark: 'Spark', glue: 'Glue', chip: 'Chip', steam: 'Steam', echo: 'Echo', embers: 'embers', chips: 'chips', echoes: 'echoes' },
     },
     rarity: { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary', mythic: 'Mythic', nightmare: 'Nightmare', hell: 'Hell' },
     audio: {
@@ -2684,7 +2706,9 @@ const I18N = {
     menu: {
       continue: 'Weiterspielen', adventure: 'Abenteuer', adventureSub: 'Story · Inseln · Bosse',
       arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal',
-      collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch', music: 'Musik', missions: 'Missionen',
+      collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch',
+      buildings: 'Fabriken', buildingsSub: 'Werke · ernten · upgrade',
+      music: 'Musik', missions: 'Missionen',
       summons: 'Summons', summonsSub: 'Tägliche Kiste · Waffe & Pet',
       options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Als App speichern', installSub: 'Ein Icon, wie eine echte App',
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
@@ -2714,13 +2738,38 @@ const I18N = {
       loadFail: 'Hub laden fehlgeschlagen',
     },
     buildings: {
+      title: 'Fabriken',
+      sub: 'Fünf Werke · ernten · upgrade',
+      hubStatReady: '{n} bereit zum Ernten', hubStatIdle: '5 Werke',
+      hubStatLocked: '{n}/{total} offen',
+      level: 'Lv {n}', locked: 'Gesperrt',
+      lockWorld: '{name} freischalten (Welt {n})',
+      collect: 'Ernten', collectSub: '{n} {res} bereit', collectEmpty: 'Noch nichts bereit',
+      collectDone: '+{n} {res}',
+      upgrade: 'Upgrade', upgradeSub: '{cost} Pet-Coins · Lv {next}',
+      upgradeMax: 'Max-Level', upgradeNeed: 'Noch {need} Pet-Coins',
+      upgradeOk: '{name} → Lv {lv}',
+      nextIn: 'Nächste in {t}', stored: '{n}/{cap} gelagert',
+      stubNote: 'Systems-API noch nicht gemerged — Stub-Produktion',
+      liveNote: 'Live Systems-API',
+      loadFail: 'Fabriken laden fehlgeschlagen',
+      build: 'Bauen', buildHint: 'Bauen, wenn die Insel offen ist',
+      lockedWorld: 'Frei: Insel {n}',
+      rateLine: '{n}/Std · {pending} wartet · Cap {cap}',
       collected: '+{n} {res} · {name}',
       collectedAll: 'Ernte +{n} aus {k} Gebäuden',
       waveHeal: '+{n} HP',
-      stick_lighter: { name: 'Stick-Lighter' }, woodchip_glue: { name: 'Woodchip-Glue' },
-      chipping_wood: { name: 'Chipping-Wood' }, bamboo_boesa: { name: 'Bamboo-Boesa' },
-      echo_whistle: { name: 'Echo-Whistle' },
-      bamboo_boesa_boiler: { name: 'Bamboo-Boesa' }, echo_whistle_mill: { name: 'Echo-Whistle' },
+      stick_lighter: { name: 'Stick-Lighter Factory', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
+      stick_lighterSub: 'Funken · Ostinsel',
+      woodchip_glue: { name: 'Woodchip-Glue Factory', blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.' },
+      woodchip_glueSub: 'Leim · Feuerinsel',
+      chipping_wood: { name: 'Chipping-Wood Factory', blurb: 'A cheerful chipper that whispers TIMBER and coughs useful chips.' },
+      chipping_woodSub: 'Späne · Neoninsel',
+      bamboo_boesa: { name: 'Bamboo-Boesa Boiler', blurb: 'Fire-island kettle that steams hollow “boesa” bamboo until the stalks whistle.' },
+      bamboo_boesaSub: 'Dampf · Tempelinsel',
+      echo_whistle: { name: 'Echo-Whistle Mill', blurb: 'A mill wheel that turns air into taunts. The building heckles you back.' },
+      echo_whistleSub: 'Echo · Finalinsel',
+      bamboo_boesa_boiler: { name: 'Bamboo-Boesa Boiler' }, echo_whistle_mill: { name: 'Echo-Whistle Mill' },
       res: { spark: 'Funken', glue: 'Leim', chip: 'Span', steam: 'Dampf', echo: 'Echo', embers: 'Glut', chips: 'Späne', echoes: 'Echos' },
     },
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
@@ -2837,9 +2886,11 @@ const I18N = {
     menu: {
       continue: 'Continuer', adventure: 'Aventure', adventureSub: 'Histoire · îles · boss',
       arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Pièces', versus: '2 joueurs', versusSub: 'Local',
-      collect: 'Collection', collectSub: 'Armes · style · bestiaire', music: 'Musique', missions: 'Missions',
+      collect: 'Collection', collectSub: 'Armes · style · bestiaire',
+      buildings: 'Usines', buildingsSub: 'Usines · récolte · upgrade',
+      music: 'Musique', missions: 'Missions',
       summons: 'Summons', summonsSub: 'Coffre du jour · arme et pet',
-      options: 'Options', tips: 'Astuces', fresh: 'Nouvelle version', install: 'Ajouter comme app', installSub: 'Une icône, comme une vraie app',
+      options: 'Options', tips: 'Astuces', fresh: 'Version fraîche', install: 'Ajouter comme app', installSub: 'Une icône, comme une vraie app',
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
       choosePath: 'CHOISIS TON CHEMIN', lastPlayed: 'DERNIER', playHere: 'JOUER',
       startGame: 'JOUER', startSub: 'Lance le combat',
@@ -2867,13 +2918,38 @@ const I18N = {
       loadFail: 'Hub introuvable',
     },
     buildings: {
+      title: 'Usines',
+      sub: 'Cinq usines · récolte · upgrade',
+      hubStatReady: '{n} prêtes à récolter', hubStatIdle: '5 usines',
+      hubStatLocked: '{n}/{total} ouvertes',
+      level: 'Nv {n}', locked: 'Verrouillé',
+      lockWorld: 'Ouvre {name} (monde {n})',
+      collect: 'Récolter', collectSub: '{n} {res} prêts', collectEmpty: 'Rien de prêt',
+      collectDone: '+{n} {res}',
+      upgrade: 'Upgrade', upgradeSub: '{cost} pet coins · Nv {next}',
+      upgradeMax: 'Niveau max', upgradeNeed: 'Encore {need} pet coins',
+      upgradeOk: '{name} → Nv {lv}',
+      nextIn: 'Prochain dans {t}', stored: '{n}/{cap} stockés',
+      stubNote: 'API systems pas encore fusionnée — production stub',
+      liveNote: 'API systems live',
+      loadFail: 'Usines introuvables',
+      build: 'Construire', buildHint: 'Construire une fois l’île ouverte',
+      lockedWorld: 'Déblocage : île {n}',
+      rateLine: '{n}/h · {pending} en attente · cap {cap}',
       collected: '+{n} {res} · {name}',
       collectedAll: 'Récolte +{n} de {k} bâtiments',
       waveHeal: '+{n} PV',
-      stick_lighter: { name: 'Stick-Lighter' }, woodchip_glue: { name: 'Woodchip-Glue' },
-      chipping_wood: { name: 'Chipping-Wood' }, bamboo_boesa: { name: 'Bamboo-Boesa' },
-      echo_whistle: { name: 'Echo-Whistle' },
-      bamboo_boesa_boiler: { name: 'Bamboo-Boesa' }, echo_whistle_mill: { name: 'Echo-Whistle' },
+      stick_lighter: { name: 'Stick-Lighter Factory', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
+      stick_lighterSub: 'Étincelles · île de l’Est',
+      woodchip_glue: { name: 'Woodchip-Glue Factory', blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.' },
+      woodchip_glueSub: 'Colle · île de Feu',
+      chipping_wood: { name: 'Chipping-Wood Factory', blurb: 'A cheerful chipper that whispers TIMBER and coughs useful chips.' },
+      chipping_woodSub: 'Copeaux · île Néon',
+      bamboo_boesa: { name: 'Bamboo-Boesa Boiler', blurb: 'Fire-island kettle that steams hollow “boesa” bamboo until the stalks whistle.' },
+      bamboo_boesaSub: 'Vapeur · île Temple',
+      echo_whistle: { name: 'Echo-Whistle Mill', blurb: 'A mill wheel that turns air into taunts. The building heckles you back.' },
+      echo_whistleSub: 'Écho · île Finale',
+      bamboo_boesa_boiler: { name: 'Bamboo-Boesa Boiler' }, echo_whistle_mill: { name: 'Echo-Whistle Mill' },
       res: { spark: 'étincelles', glue: 'colle', chip: 'copeau', steam: 'vapeur', echo: 'écho', embers: 'braises', chips: 'copeaux', echoes: 'échos' },
     },
     modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Pièces' },
@@ -2990,7 +3066,9 @@ const I18N = {
     menu: {
       continue: 'Continuar', adventure: 'Aventura', adventureSub: 'Historia · islas · jefes',
       arcade: 'Arcade', arcadeSub: 'Entrenamiento · Muro · Monedas', versus: '2 jugadores', versusSub: 'Local',
-      collect: 'Colección', collectSub: 'Armas · estilo · bestiario', music: 'Música', missions: 'Misiones',
+      collect: 'Colección', collectSub: 'Armas · estilo · bestiario',
+      buildings: 'Fábricas', buildingsSub: 'Obras · recolectar · mejorar',
+      music: 'Música', missions: 'Misiones',
       summons: 'Summons', summonsSub: 'Cofre diario · arma y pet',
       options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir como app', installSub: 'Un icono, como una app real',
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
@@ -3020,13 +3098,38 @@ const I18N = {
       loadFail: 'No se pudo cargar el hub',
     },
     buildings: {
+      title: 'Fábricas',
+      sub: 'Cinco obras · recolectar · mejorar',
+      hubStatReady: '{n} listas para recolectar', hubStatIdle: '5 obras',
+      hubStatLocked: '{n}/{total} abiertas',
+      level: 'Nv {n}', locked: 'Bloqueado',
+      lockWorld: 'Abre {name} (mundo {n})',
+      collect: 'Recolectar', collectSub: '{n} {res} listos', collectEmpty: 'Nada listo aún',
+      collectDone: '+{n} {res}',
+      upgrade: 'Mejora', upgradeSub: '{cost} pet coins · Nv {next}',
+      upgradeMax: 'Nivel máx.', upgradeNeed: 'Faltan {need} pet coins',
+      upgradeOk: '{name} → Nv {lv}',
+      nextIn: 'Siguiente en {t}', stored: '{n}/{cap} guardados',
+      stubNote: 'API de systems aún no fusionada — producción stub',
+      liveNote: 'API de systems en vivo',
+      loadFail: 'No se pudieron cargar las fábricas',
+      build: 'Construir', buildHint: 'Construye cuando la isla esté abierta',
+      lockedWorld: 'Desbloqueo: isla {n}',
+      rateLine: '{n}/h · {pending} en espera · cap {cap}',
       collected: '+{n} {res} · {name}',
       collectedAll: 'Cosecha +{n} de {k} edificios',
       waveHeal: '+{n} HP',
-      stick_lighter: { name: 'Stick-Lighter' }, woodchip_glue: { name: 'Woodchip-Glue' },
-      chipping_wood: { name: 'Chipping-Wood' }, bamboo_boesa: { name: 'Bamboo-Boesa' },
-      echo_whistle: { name: 'Echo-Whistle' },
-      bamboo_boesa_boiler: { name: 'Bamboo-Boesa' }, echo_whistle_mill: { name: 'Echo-Whistle' },
+      stick_lighter: { name: 'Stick-Lighter Factory', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
+      stick_lighterSub: 'Chispas · isla Este',
+      woodchip_glue: { name: 'Woodchip-Glue Factory', blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.' },
+      woodchip_glueSub: 'Cola · isla Fuego',
+      chipping_wood: { name: 'Chipping-Wood Factory', blurb: 'A cheerful chipper that whispers TIMBER and coughs useful chips.' },
+      chipping_woodSub: 'Astillas · isla Neón',
+      bamboo_boesa: { name: 'Bamboo-Boesa Boiler', blurb: 'Fire-island kettle that steams hollow “boesa” bamboo until the stalks whistle.' },
+      bamboo_boesaSub: 'Vapor · isla Templo',
+      echo_whistle: { name: 'Echo-Whistle Mill', blurb: 'A mill wheel that turns air into taunts. The building heckles you back.' },
+      echo_whistleSub: 'Eco · isla Final',
+      bamboo_boesa_boiler: { name: 'Bamboo-Boesa Boiler' }, echo_whistle_mill: { name: 'Echo-Whistle Mill' },
       res: { spark: 'chispas', glue: 'cola', chip: 'astilla', steam: 'vapor', echo: 'eco', embers: 'brasas', chips: 'astillas', echoes: 'ecos' },
     },
     modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Monedas' },
@@ -3253,6 +3356,8 @@ function applyLangStaticScreens() {
     ['.hub-tile-arcade .hub-tile-sub', 'menu.arcadeSub'],
     ['.hub-tile-collect .hub-tile-title', 'menu.collect'],
     ['.hub-tile-collect .hub-tile-sub', 'menu.collectSub'],
+    ['.hub-tile-buildings .hub-tile-title', 'menu.buildings'],
+    ['.hub-tile-buildings .hub-tile-sub', 'menu.buildingsSub'],
     ['.hub-tile-summon .hub-tile-title', 'menu.summons'],
     ['.hub-tile-summon .hub-tile-sub', 'menu.summonsSub'],
   ];
@@ -3422,6 +3527,8 @@ function applyLangStaticScreens() {
   setText('superSectionSub', 'ui.superSub');
   setText('weaponScreenHead', 'ui.weaponHead');
   setText('weaponScreenSub', 'ui.weaponSub');
+  setText('buildingsScreenHead', 'buildings.title');
+  setText('buildingsScreenSub', 'buildings.sub');
   setText('helpFirstMinute', 'ui.helpFirstMinute');
   setText('summonScreenHead', 'ui.summonHead');
   setText('summonScreenSub', 'ui.summonSub');
@@ -16298,6 +16405,543 @@ function petProgressLine(speciesId) {
     };
   }
 })(typeof window !== 'undefined' ? window : globalThis);
+/* --- src/systems/buildings-bridge.js --- */
+/* ======================== BUILDINGS API BRIDGE ======================== */
+/**
+ * UI adapter for the Buildings HOME screen (batch 2 of 4).
+ * Prefers the systems partner API (BuildingsSys / listBuildings).
+ * If that PR is not merged, a local stub keeps the screen playable.
+ *
+ * Contract: docs/BUILDINGS-UI.md  ·  systems: docs/BUILDINGS.md (partner)
+ * Stub state lives in its own localStorage key — not save.buildings —
+ * so sanitizeSave does not wipe it and systems can own the real bag later.
+ */
+const BUILDINGS_STUB_KEY = 'sf-buildings-stub-v1';
+const BUILDINGS_FACTORY_IDS = ['stick_lighter', 'woodchip_glue', 'chipping_wood', 'bamboo_boesa', 'echo_whistle'];
+const BUILDINGS_STUB_MAX_LV = 8;
+const BUILDINGS_STUB_DEFS = [
+  { id: 'stick_lighter', world: 1, resourceId: 'spark', intervalMs: 75000, rate: 4, capBase: 8, capPerLv: 4 },
+  { id: 'woodchip_glue', world: 2, resourceId: 'glue',  intervalMs: 90000, rate: 2, capBase: 6, capPerLv: 3 },
+  { id: 'chipping_wood', world: 3, resourceId: 'chip',  intervalMs: 80000, rate: 3, capBase: 8, capPerLv: 4 },
+  { id: 'bamboo_boesa',  world: 4, resourceId: 'steam', intervalMs: 110000, rate: 1, capBase: 4, capPerLv: 2 },
+  { id: 'echo_whistle',  world: 5, resourceId: 'echo',  intervalMs: 130000, rate: 1, capBase: 3, capPerLv: 2 },
+];
+
+function buildingsHasLiveCatalog() {
+  return typeof BUILDING_IDS !== 'undefined' && BUILDING_IDS && BUILDING_IDS.length
+    && typeof buildingTooltipModel === 'function'
+    && typeof buildingCollect === 'function';
+}
+
+function buildingsHasSystemsApi() {
+  const sys = (typeof BuildingsSys !== 'undefined' && BuildingsSys) ? BuildingsSys : null;
+  if (sys && typeof sys.list === 'function') return true;
+  if (typeof listBuildings === 'function') return true;
+  return buildingsHasLiveCatalog();
+}
+
+function buildingsSystemsHandle() {
+  if (typeof BuildingsSys !== 'undefined' && BuildingsSys && typeof BuildingsSys.list === 'function') {
+    return BuildingsSys;
+  }
+  if (typeof listBuildings === 'function') {
+    return {
+      list: listBuildings,
+      get: (typeof getBuilding === 'function') ? getBuilding : null,
+      collect: (typeof collectBuilding === 'function') ? collectBuilding : null,
+      upgrade: (typeof upgradeBuilding === 'function') ? upgradeBuilding : null,
+      hubStat: (typeof buildingsHubStatPartner === 'function') ? buildingsHubStatPartner : null,
+      select: (typeof selectBuilding === 'function') ? selectBuilding : null,
+      selectedId: (typeof selectedBuildingId === 'function') ? selectedBuildingId : null,
+    };
+  }
+  if (buildingsHasLiveCatalog()) return BuildingsLiveSys;
+  return null;
+}
+
+function buildingsI18nName(id) {
+  if (typeof tOr === 'function') return tOr('buildings.' + id + '.name', tOr('buildings.' + id, id));
+  if (typeof t === 'function') {
+    const nested = t('buildings.' + id + '.name');
+    if (nested && nested !== 'buildings.' + id + '.name') return nested;
+    return t('buildings.' + id);
+  }
+  return id;
+}
+function buildingsI18nSub(id) {
+  if (typeof tOr === 'function') return tOr('buildings.' + id + '.blurb', tOr('buildings.' + id + 'Sub', ''));
+  if (typeof t === 'function') {
+    const blurb = t('buildings.' + id + '.blurb');
+    if (blurb && blurb !== 'buildings.' + id + '.blurb') return blurb;
+    return t('buildings.' + id + 'Sub');
+  }
+  return '';
+}
+function buildingsResourceLabel(resourceId) {
+  if (typeof buildingResourceLabel === 'function') {
+    try {
+      const live = buildingResourceLabel(resourceId);
+      if (live) return live;
+    } catch (_) {}
+  }
+  const key = ({
+    spark: 'buildings.res.spark',
+    glue: 'buildings.res.glue',
+    chip: 'buildings.res.chip',
+    steam: 'buildings.res.steam',
+    echo: 'buildings.res.echo',
+    xp: 'buildings.resXp',
+    shard: 'buildings.resShard',
+    pet: 'buildings.resPet',
+    dust: 'buildings.resDust',
+    ember: 'buildings.resEmber',
+  })[resourceId];
+  if (key && typeof tOr === 'function') return tOr(key, String(resourceId || ''));
+  return key && typeof t === 'function' ? t(key) : String(resourceId || '');
+}
+function buildingsWorldName(world) {
+  try {
+    if (typeof islandLabel === 'function') return islandLabel(world, 'name');
+    if (typeof islandMeta === 'function') {
+      const m = islandMeta(world);
+      if (m && m.name) return m.name;
+    }
+  } catch (_) {}
+  return 'W' + world;
+}
+function buildingsWorldLocked(world) {
+  try {
+    if (typeof islandUnlocked === 'function') return !islandUnlocked(world);
+  } catch (_) {}
+  const unlocked = (typeof save !== 'undefined' && save) ? (Number(save.unlocked) || 1) : 1;
+  return world > 1 && unlocked <= (world - 1) * 10;
+}
+
+function buildingsArtPath(id) {
+  const pixel = 'assets/buildings/pixel/' + id + '.png';
+  const svg = 'assets/buildings/' + id + '.svg';
+  if (typeof document !== 'undefined' && document) {
+    const probe = document.querySelector('img[data-buildings-art="' + id + '"]');
+    if (probe && probe.getAttribute('src')) return probe.getAttribute('src');
+  }
+  return { pixel, svg, hub: 'assets/buttons/hub/buildings.svg' };
+}
+
+function buildingsEmptyStubState() {
+  const factories = {};
+  for (const def of BUILDINGS_STUB_DEFS) {
+    factories[def.id] = { lv: def.world <= 1 ? 1 : 0, lastTs: 0 };
+  }
+  return { v: 1, selectedId: 'stick_lighter', factories, wallet: { spark: 0, glue: 0, chip: 0, steam: 0, echo: 0 } };
+}
+
+function buildingsLoadStub() {
+  try {
+    const raw = localStorage.getItem(BUILDINGS_STUB_KEY);
+    if (!raw) return buildingsEmptyStubState();
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return buildingsEmptyStubState();
+    const base = buildingsEmptyStubState();
+    base.selectedId = BUILDINGS_FACTORY_IDS.includes(parsed.selectedId) ? parsed.selectedId : 'stick_lighter';
+    base.wallet = Object.assign(base.wallet, parsed.wallet || {});
+    for (const id of BUILDINGS_FACTORY_IDS) {
+      const row = parsed.factories && parsed.factories[id];
+      if (row && typeof row === 'object') {
+        base.factories[id] = {
+          lv: Math.max(0, Math.min(BUILDINGS_STUB_MAX_LV, Math.floor(Number(row.lv) || 0))),
+          lastTs: Math.max(0, Math.floor(Number(row.lastTs) || 0)),
+        };
+      }
+    }
+    return base;
+  } catch (_) {
+    return buildingsEmptyStubState();
+  }
+}
+
+function buildingsSaveStub(state) {
+  try { localStorage.setItem(BUILDINGS_STUB_KEY, JSON.stringify(state)); } catch (_) {}
+}
+
+function buildingsStubCap(def, lv) {
+  return def.capBase + Math.max(1, lv) * def.capPerLv;
+}
+function buildingsStubInterval(def, lv) {
+  return Math.max(18000, def.intervalMs - Math.max(0, lv - 1) * 5000);
+}
+function buildingsStubPending(def, row, now) {
+  const lv = Math.max(0, row.lv || 0);
+  if (lv < 1) return 0;
+  const elapsed = Math.max(0, now - (row.lastTs || 0));
+  const gained = Math.floor(elapsed / buildingsStubInterval(def, lv)) * def.rate * lv;
+  return Math.min(buildingsStubCap(def, lv), gained);
+}
+
+function buildingsStubView(def, state, now) {
+  now = now || Date.now();
+  const row = state.factories[def.id] || { lv: 0, lastTs: 0 };
+  const locked = buildingsWorldLocked(def.world);
+  const level = locked ? 0 : Math.max(row.lv || 0, def.world <= 1 ? 1 : 0);
+  if (!locked && level < 1) {
+    row.lv = 1;
+    state.factories[def.id] = row;
+  }
+  const pending = locked ? 0 : buildingsStubPending(def, row, now);
+  const cap = buildingsStubCap(def, Math.max(1, level));
+  const interval = buildingsStubInterval(def, Math.max(1, level));
+  const nextMs = (locked || pending >= cap)
+    ? 0
+    : Math.max(0, interval - ((now - (row.lastTs || 0)) % interval));
+  const maxLevel = BUILDINGS_STUB_MAX_LV;
+  const atMax = level >= maxLevel;
+  const upgradeCost = atMax ? 0 : 12 * Math.max(1, level);
+  const wallet = (typeof petCoinsBalance === 'function') ? petCoinsBalance() : 0;
+  const canUpgrade = !locked && !atMax && wallet >= upgradeCost;
+  const art = buildingsArtPath(def.id);
+  return {
+    id: def.id,
+    name: buildingsI18nName(def.id),
+    sub: buildingsI18nSub(def.id),
+    world: def.world,
+    worldName: buildingsWorldName(def.world),
+    locked,
+    lockHint: locked
+      ? ((typeof t === 'function')
+        ? t('buildings.lockWorld', { name: buildingsWorldName(def.world), n: def.world })
+        : buildingsWorldName(def.world))
+      : '',
+    level,
+    maxLevel,
+    pending,
+    capacity: cap,
+    nextMs,
+    resourceId: def.resourceId,
+    resourceLabel: buildingsResourceLabel(def.resourceId),
+    canCollect: !locked && pending > 0,
+    canUpgrade,
+    upgradeCost,
+    upgradeHint: atMax
+      ? ((typeof t === 'function') ? t('buildings.upgradeMax') : 'Max')
+      : ((typeof t === 'function')
+        ? t('buildings.upgradeSub', { cost: upgradeCost, next: level + 1 })
+        : String(upgradeCost)),
+    art: art.pixel,
+    artSvg: art.svg,
+    artHub: art.hub,
+    stub: true,
+  };
+}
+
+function buildingsNormalizeView(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const id = String(raw.id || raw.key || '');
+  if (!id) return null;
+  const world = Math.max(1, Math.floor(Number(raw.world ?? raw.island ?? raw.unlockWorld) || 1));
+  const locked = raw.locked != null ? !!raw.locked : buildingsWorldLocked(world);
+  const art = buildingsArtPath(id);
+  const resourceId = raw.resourceId || raw.resource || 'xp';
+  return {
+    id,
+    name: raw.name || buildingsI18nName(id),
+    sub: raw.sub || raw.blurb || buildingsI18nSub(id),
+    world,
+    worldName: raw.worldName || buildingsWorldName(world),
+    locked,
+    lockHint: raw.lockHint || raw.lockReason || (locked
+      ? ((typeof t === 'function') ? t('buildings.lockWorld', { name: buildingsWorldName(world), n: world }) : '')
+      : ''),
+    level: Math.max(0, Math.floor(Number(raw.level ?? raw.lv) || 0)),
+    maxLevel: Math.max(1, Math.floor(Number(raw.maxLevel ?? raw.maxLv) || BUILDINGS_STUB_MAX_LV)),
+    pending: Math.max(0, Math.floor(Number(raw.pending ?? raw.ready ?? raw.stored) || 0)),
+    capacity: Math.max(1, Math.floor(Number(raw.capacity ?? raw.cap) || 1)),
+    nextMs: Math.max(0, Math.floor(Number(raw.nextMs ?? raw.readyInMs) || 0)),
+    resourceId,
+    resourceLabel: raw.resourceLabel || buildingsResourceLabel(resourceId),
+    canCollect: raw.canCollect != null ? !!raw.canCollect : (!locked && Number(raw.pending ?? raw.ready) > 0),
+    canUpgrade: !!raw.canUpgrade,
+    upgradeCost: Math.max(0, Math.floor(Number(raw.upgradeCost) || 0)),
+    upgradeHint: raw.upgradeHint || '',
+    art: raw.art || art.pixel,
+    artSvg: raw.artSvg || art.svg,
+    artHub: art.hub,
+    stub: false,
+  };
+}
+
+const BuildingsStub = {
+  _sel: 'stick_lighter',
+  list() {
+    const state = buildingsLoadStub();
+    const now = Date.now();
+    return BUILDINGS_STUB_DEFS.map((def) => buildingsStubView(def, state, now));
+  },
+  get(id) {
+    const state = buildingsLoadStub();
+    const def = BUILDINGS_STUB_DEFS.find((d) => d.id === id);
+    if (!def) return null;
+    return buildingsStubView(def, state, Date.now());
+  },
+  collect(id) {
+    const state = buildingsLoadStub();
+    const def = BUILDINGS_STUB_DEFS.find((d) => d.id === id);
+    if (!def) return { ok: false, message: 'missing' };
+    if (buildingsWorldLocked(def.world)) {
+      return { ok: false, message: (typeof t === 'function') ? t('buildings.locked') : 'locked' };
+    }
+    const view = buildingsStubView(def, state, Date.now());
+    if (view.pending <= 0) {
+      return { ok: false, message: (typeof t === 'function') ? t('buildings.collectEmpty') : 'empty' };
+    }
+    const amount = view.pending;
+    const row = state.factories[def.id] || { lv: 1, lastTs: 0 };
+    row.lastTs = Date.now();
+    state.factories[def.id] = row;
+    state.wallet[def.resourceId] = Math.max(0, Math.floor(Number(state.wallet[def.resourceId]) || 0) + amount);
+    buildingsSaveStub(state);
+    return {
+      ok: true,
+      amount,
+      resourceId: def.resourceId,
+      message: (typeof t === 'function')
+        ? t('buildings.collectDone', { n: amount, res: buildingsResourceLabel(def.resourceId) })
+        : ('+' + amount),
+    };
+  },
+  upgrade(id) {
+    const state = buildingsLoadStub();
+    const def = BUILDINGS_STUB_DEFS.find((d) => d.id === id);
+    if (!def) return { ok: false, message: 'missing' };
+    if (buildingsWorldLocked(def.world)) {
+      return { ok: false, message: (typeof t === 'function') ? t('buildings.locked') : 'locked' };
+    }
+    const view = buildingsStubView(def, state, Date.now());
+    if (view.level >= view.maxLevel) {
+      return { ok: false, message: (typeof t === 'function') ? t('buildings.upgradeMax') : 'max' };
+    }
+    const cost = view.upgradeCost;
+    const wallet = (typeof petCoinsBalance === 'function') ? petCoinsBalance() : 0;
+    if (wallet < cost) {
+      return {
+        ok: false,
+        message: (typeof t === 'function') ? t('buildings.upgradeNeed', { need: cost - wallet }) : 'need',
+      };
+    }
+    if (typeof save !== 'undefined' && save) {
+      save.petCoins = wallet - cost;
+      try { if (typeof persist === 'function') persist(); } catch (_) {}
+    }
+    const row = state.factories[def.id] || { lv: 1, lastTs: Date.now() };
+    row.lv = Math.min(BUILDINGS_STUB_MAX_LV, Math.max(1, (row.lv || 1) + 1));
+    state.factories[def.id] = row;
+    buildingsSaveStub(state);
+    return {
+      ok: true,
+      level: row.lv,
+      message: (typeof t === 'function')
+        ? t('buildings.upgradeOk', { name: buildingsI18nName(def.id), lv: row.lv })
+        : ('Lv ' + row.lv),
+    };
+  },
+  hubStat() {
+    const rows = this.list();
+    const ready = rows.filter((r) => r.canCollect).length;
+    const open = rows.filter((r) => !r.locked).length;
+    if (ready > 0 && typeof t === 'function') return t('buildings.hubStatReady', { n: ready });
+    if (typeof t === 'function') return t('buildings.hubStatLocked', { n: open, total: rows.length });
+    return open + '/' + rows.length;
+  },
+  select(id) {
+    if (!BUILDINGS_FACTORY_IDS.includes(id)) return;
+    const state = buildingsLoadStub();
+    state.selectedId = id;
+    this._sel = id;
+    buildingsSaveStub(state);
+  },
+  selectedId() {
+    const state = buildingsLoadStub();
+    return state.selectedId || this._sel || 'stick_lighter';
+  },
+  wallet() {
+    return buildingsLoadStub().wallet;
+  },
+};
+
+const BuildingsLiveSys = {
+  _sel: 'stick_lighter',
+  _ids() {
+    return (typeof BUILDING_IDS !== 'undefined' && BUILDING_IDS.length) ? BUILDING_IDS : BUILDINGS_FACTORY_IDS;
+  },
+  _view(id) {
+    const raw = buildingTooltipModel(id);
+    if (!raw) return null;
+    const art = buildingsArtPath(raw.id);
+    const locked = !raw.unlocked;
+    const unbuilt = !raw.built;
+    const cost = raw.nextCost || {};
+    const costPc = Math.max(0, Math.floor(Number(cost.petCoins) || 0));
+    const canAct = !locked && (raw.canBuild || raw.canUpgrade);
+    return {
+      id: raw.id,
+      name: raw.name || buildingsI18nName(raw.id),
+      sub: raw.blurb || buildingsI18nSub(raw.id),
+      world: raw.worldUnlock || 1,
+      worldName: buildingsWorldName(raw.worldUnlock || 1),
+      locked,
+      lockHint: locked
+        ? ((typeof t === 'function')
+          ? t('buildings.lockWorld', { name: buildingsWorldName(raw.worldUnlock || 1), n: raw.worldUnlock || 1 })
+          : '')
+        : '',
+      level: raw.level || 0,
+      maxLevel: raw.maxLevel || 10,
+      pending: raw.pending || 0,
+      capacity: raw.storageCap || 1,
+      nextMs: 0,
+      resourceId: raw.resourceId,
+      resourceLabel: raw.resourceName || buildingsResourceLabel(raw.resourceId),
+      canCollect: !!raw.canCollect,
+      canUpgrade: canAct,
+      upgradeCost: costPc,
+      upgradeHint: locked
+        ? ''
+        : (unbuilt
+          ? ((typeof t === 'function') ? t('buildings.build') : 'Build')
+          : ((typeof t === 'function')
+            ? t('buildings.upgradeSub', { cost: costPc, next: (raw.level || 0) + 1 })
+            : String(costPc))),
+      art: art.pixel,
+      artSvg: art.svg,
+      artHub: art.hub,
+      stub: false,
+    };
+  },
+  list() {
+    try { if (typeof buildingTickAll === 'function') buildingTickAll(); } catch (_) {}
+    return this._ids().map((id) => this._view(id)).filter(Boolean);
+  },
+  get(id) {
+    try { if (typeof buildingTickAll === 'function') buildingTickAll(); } catch (_) {}
+    return this._view(id);
+  },
+  collect(id) {
+    const res = buildingCollect(id);
+    const amount = (res && res.amount) || 0;
+    const ok = !!(res && res.ok && amount > 0);
+    return {
+      ok,
+      amount,
+      resourceId: res && res.resourceId,
+      message: ok
+        ? ((typeof t === 'function')
+          ? t('buildings.collectDone', { n: amount, res: buildingsResourceLabel(res.resourceId) })
+          : ('+' + amount))
+        : ((typeof t === 'function') ? t('buildings.collectEmpty') : 'empty'),
+    };
+  },
+  upgrade(id) {
+    const lv = (typeof buildingLevel === 'function') ? buildingLevel(id) : 0;
+    const res = (lv < 1 && typeof buildingBuild === 'function') ? buildingBuild(id) : buildingUpgrade(id);
+    const ok = !!(res && res.ok);
+    return {
+      ok,
+      level: res && res.level,
+      message: ok
+        ? ((typeof t === 'function')
+          ? t('buildings.upgradeOk', { name: buildingsI18nName(id), lv: res.level })
+          : ('Lv ' + (res && res.level)))
+        : ((typeof t === 'function')
+          ? (res && res.reason === 'broke' ? t('buildings.upgradeNeed', { need: 1 }) : t('buildings.locked'))
+          : 'no'),
+    };
+  },
+  hubStat() {
+    const rows = this.list();
+    const ready = rows.filter((r) => r.canCollect).length;
+    const open = rows.filter((r) => !r.locked).length;
+    if (ready > 0 && typeof t === 'function') return t('buildings.hubStatReady', { n: ready });
+    if (typeof t === 'function') return t('buildings.hubStatLocked', { n: open, total: rows.length });
+    return open + '/' + rows.length;
+  },
+  select(id) {
+    if (!this._ids().includes(id)) return;
+    this._sel = id;
+  },
+  selectedId() { return this._sel || 'stick_lighter'; },
+};
+
+function buildingsApi() {
+  const live = buildingsSystemsHandle();
+  return live || BuildingsStub;
+}
+
+function buildingsList() {
+  const api = buildingsApi();
+  let rows = [];
+  try { rows = api.list() || []; } catch (_) { rows = []; }
+  if (!Array.isArray(rows) || !rows.length) {
+    try { rows = BuildingsStub.list(); } catch (_) { rows = []; }
+  }
+  return rows.map((r) => (r && r.id && r.name != null && r.pending != null) ? r : buildingsNormalizeView(r)).filter(Boolean);
+}
+
+function buildingsGet(id) {
+  const api = buildingsApi();
+  let row = null;
+  try { row = api.get ? api.get(id) : null; } catch (_) { row = null; }
+  if (row) return buildingsNormalizeView(row) || row;
+  return buildingsList().find((r) => r.id === id) || null;
+}
+
+function buildingsCollect(id) {
+  const api = buildingsApi();
+  try { return api.collect(id) || { ok: false }; } catch (err) {
+    return { ok: false, message: (err && err.message) || 'collect' };
+  }
+}
+
+function buildingsUpgrade(id) {
+  const api = buildingsApi();
+  try { return api.upgrade(id) || { ok: false }; } catch (err) {
+    return { ok: false, message: (err && err.message) || 'upgrade' };
+  }
+}
+
+function buildingsHubStat() {
+  const api = buildingsApi();
+  try {
+    if (typeof api.hubStat === 'function') {
+      const line = api.hubStat();
+      if (line) return line;
+    }
+  } catch (_) {}
+  return BuildingsStub.hubStat();
+}
+
+function buildingsSelect(id) {
+  const api = buildingsApi();
+  try { if (typeof api.select === 'function') api.select(id); } catch (_) {}
+  BuildingsStub._sel = id;
+  if (!buildingsHasSystemsApi()) BuildingsStub.select(id);
+}
+
+function buildingsSelectedId() {
+  const api = buildingsApi();
+  try {
+    if (typeof api.selectedId === 'function') {
+      const id = api.selectedId();
+      if (id) return id;
+    }
+  } catch (_) {}
+  return BuildingsStub.selectedId();
+}
+
+function buildingsFormatEta(ms) {
+  const s = Math.max(0, Math.ceil((Number(ms) || 0) / 1000));
+  if (s < 60) return s + 's';
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return m + ':' + String(r).padStart(2, '0');
+}
 /* --- src/data/egg-pets.js --- */
 /* ============================== EGG PETS (ARCADE) ===================== */
 /** Cosmetische ei-metgezels — dagelijks + bonus na avontuur-win (deel 3 pets). */
@@ -42467,6 +43111,13 @@ function hubTileStatLine(hub) {
         w: weaponUnlockedCount(), total: WEAPONS.length,
         pets: petTamedCount(), coins: petCoinsBalance(),
       }) + ` ${SVG_COIN_ICON}`;
+    case 'buildings': {
+      try {
+        return (typeof buildingsHubStat === 'function') ? buildingsHubStat() : t('buildings.hubStatIdle');
+      } catch (_) {
+        return t('buildings.hubStatIdle');
+      }
+    }
     case 'summon': {
       try {
         ensureChestDaily();
@@ -42938,6 +43589,12 @@ const UI = {
         this.show('menuScreen');
         return;
       }
+      if (active === 'buildingsScreen') {
+        try { this.stopBuildingsTick(); } catch (_) {}
+        this.renderMenu();
+        this.show('menuScreen');
+        return;
+      }
       if (active === 'levelScreen') {
         bumpLevelHoldGen();
         try { cancelGambleStart(); } catch (_) {}
@@ -43164,6 +43821,7 @@ const UI = {
       state = 'menu';
       window.__sfLoopErr = false;
       try { this.clearSummonRevealTimers(); } catch (_) {}
+      try { this.stopBuildingsTick(); } catch (_) {}
       this._chestPullBusy = false;
       try { Input.releaseAll(); } catch (_) {}
       Input.dualMode = false;
@@ -46710,6 +47368,198 @@ const UI = {
   },
 };
 
+/* --- src/ui/buildings-ui.js --- */
+/* ======================== BUILDINGS HOME UI ======================== */
+/** List/detail screen for 5 factories. Binds BuildingsSys via buildings-bridge.js. */
+
+function buildingsEscape(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function buildingsArtHtml(view) {
+  const pixel = view.art || '';
+  const svg = view.artSvg || ('assets/buildings/' + view.id + '.svg');
+  const hub = view.artHub || 'assets/buttons/hub/buildings.svg';
+  const alt = buildingsEscape(view.name);
+  return '<img class="buildings-art-img" data-buildings-art="' + buildingsEscape(view.id) + '"'
+    + ' src="' + buildingsEscape(svg) + '" alt="' + alt + '" width="64" height="64"'
+    + ' decoding="async" draggable="false"'
+    + ' onerror="this.onerror=null;this.src=\'' + buildingsEscape(hub) + '\'">';
+}
+
+if (typeof UI === 'object' && UI) {
+  UI.buildingsTick = 0;
+
+  UI.openBuildings = function openBuildings() {
+    this.stopBuildingsTick();
+    this.safeOpen('buildingsScreen', () => this.renderBuildings(), {
+      msg: (typeof tOr === 'function') ? tOr('buildings.loadFail', 'Fabrieken laden mislukt') : 'Fabrieken laden mislukt',
+    });
+    this.startBuildingsTick();
+  };
+
+  UI.startBuildingsTick = function startBuildingsTick() {
+    this.stopBuildingsTick();
+    const self = this;
+    this.buildingsTick = setInterval(() => {
+      const scr = document.getElementById('buildingsScreen');
+      if (!scr || !scr.classList.contains('active')) {
+        self.stopBuildingsTick();
+        return;
+      }
+      try { self.renderBuildings({ quiet: true }); } catch (_) {}
+    }, 1000);
+  };
+
+  UI.stopBuildingsTick = function stopBuildingsTick() {
+    if (this.buildingsTick) {
+      try { clearInterval(this.buildingsTick); } catch (_) {}
+      this.buildingsTick = 0;
+    }
+  };
+
+  UI.renderBuildings = function renderBuildings() {
+    const list = document.getElementById('buildingsList');
+    const detail = document.getElementById('buildingsDetail');
+    const note = document.getElementById('buildingsApiNote');
+    const head = document.getElementById('buildingsScreenHead');
+    const sub = document.getElementById('buildingsScreenSub');
+    if (head && typeof t === 'function') head.textContent = t('buildings.title');
+    if (sub && typeof t === 'function') sub.textContent = t('buildings.sub');
+    if (note) {
+      const live = typeof buildingsHasSystemsApi === 'function' && buildingsHasSystemsApi();
+      note.hidden = live;
+      note.textContent = live
+        ? ((typeof t === 'function') ? t('buildings.liveNote') : '')
+        : ((typeof t === 'function') ? t('buildings.stubNote') : '');
+    }
+    const rows = (typeof buildingsList === 'function') ? buildingsList() : [];
+    let sel = (typeof buildingsSelectedId === 'function') ? buildingsSelectedId() : (rows[0] && rows[0].id);
+    if (!rows.some((r) => r.id === sel)) sel = rows[0] && rows[0].id;
+    if (list) {
+      list.innerHTML = '';
+      for (const view of rows) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'hub-tile buildings-row'
+          + (view.id === sel ? ' hub-tile-featured buildings-row-sel' : '')
+          + (view.locked ? ' buildings-row-locked' : '')
+          + (view.canCollect ? ' buildings-row-ready' : '');
+        btn.dataset.buildingId = view.id;
+        if (view.id === sel) btn.setAttribute('data-hub-badge', view.canCollect
+          ? ((typeof t === 'function') ? t('buildings.collect') : 'Oogsten')
+          : ((typeof t === 'function') ? t('buildings.level', { n: view.level }) : ('Lv ' + view.level)));
+        const lockBit = view.locked
+          ? buildingsEscape(view.lockHint || ((typeof t === 'function') ? t('buildings.locked') : ''))
+          : ((typeof t === 'function') ? t('buildings.level', { n: view.level }) : ('Lv ' + view.level));
+        const stock = view.locked
+          ? ''
+          : (view.pending + '/' + view.capacity + ' ' + buildingsEscape(view.resourceLabel));
+        btn.innerHTML =
+          '<span class="hub-tile-ico">' + buildingsArtHtml(view) + '</span>'
+          + '<span class="hub-tile-title">' + buildingsEscape(view.name) + '</span>'
+          + '<span class="hub-tile-sub">' + buildingsEscape(view.sub) + '</span>'
+          + '<span class="hub-tile-stat">' + lockBit + (stock ? ' · ' + stock : '') + '</span>';
+        if (typeof bindPress === 'function') {
+          bindPress(btn, () => {
+            if (typeof AudioSys !== 'undefined') { try { AudioSys.sfx('select'); } catch (_) {} }
+            if (typeof buildingsSelect === 'function') buildingsSelect(view.id);
+            UI.renderBuildings();
+          });
+        } else {
+          btn.addEventListener('click', () => {
+            if (typeof buildingsSelect === 'function') buildingsSelect(view.id);
+            UI.renderBuildings();
+          });
+        }
+        list.appendChild(btn);
+      }
+    }
+    const view = rows.find((r) => r.id === sel) || rows[0];
+    if (detail) this.paintBuildingsDetail(detail, view);
+  };
+
+  UI.paintBuildingsDetail = function paintBuildingsDetail(host, view) {
+    if (!host) return;
+    if (!view) {
+      host.innerHTML = '';
+      return;
+    }
+    const locked = !!view.locked;
+    const pct = view.capacity ? Math.min(100, Math.round((view.pending / view.capacity) * 100)) : 0;
+    const eta = (!locked && view.pending < view.capacity && view.nextMs > 0)
+      ? ((typeof t === 'function') ? t('buildings.nextIn', { t: buildingsFormatEta(view.nextMs) }) : '')
+      : '';
+    const collectLbl = (typeof t === 'function') ? t('buildings.collect') : 'Oogsten';
+    const collectSub = locked
+      ? buildingsEscape(view.lockHint)
+      : (view.canCollect
+        ? ((typeof t === 'function') ? t('buildings.collectSub', { n: view.pending, res: view.resourceLabel }) : String(view.pending))
+        : ((typeof t === 'function') ? t('buildings.collectEmpty') : ''));
+    const upLbl = (typeof t === 'function') ? t('buildings.upgrade') : 'Upgrade';
+    const upSub = view.upgradeHint || '';
+    host.innerHTML =
+      '<div class="buildings-detail-art">' + buildingsArtHtml(view) + '</div>'
+      + '<div class="buildings-detail-meta">'
+      + '<div class="buildings-detail-name">' + buildingsEscape(view.name)
+      + ' <span class="buildings-lv">' + ((typeof t === 'function') ? t('buildings.level', { n: view.level }) : ('Lv ' + view.level)) + '</span></div>'
+      + '<div class="buildings-detail-sub">' + buildingsEscape(view.sub) + '</div>'
+      + (locked
+        ? '<div class="buildings-lock">' + buildingsEscape(view.lockHint) + '</div>'
+        : '<div class="buildings-stock">'
+          + '<div class="buildings-stock-bar" role="progressbar" aria-valuenow="' + view.pending + '" aria-valuemax="' + view.capacity + '">'
+          + '<span style="width:' + pct + '%"></span></div>'
+          + '<div class="buildings-stock-lbl">'
+          + ((typeof t === 'function') ? t('buildings.stored', { n: view.pending, cap: view.capacity }) : (view.pending + '/' + view.capacity))
+          + (eta ? ' · ' + buildingsEscape(eta) : '')
+          + '</div></div>')
+      + '</div>'
+      + '<div class="buildings-cta-row">'
+      + '<button type="button" class="btn mode-btn b-continue big-touch buildings-cta" id="btnBuildingCollect"'
+      + (view.canCollect ? '' : ' disabled') + '>'
+      + '<span class="ico"><img src="assets/buttons/chrome/claim.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>'
+      + '<div>' + buildingsEscape(collectLbl) + '<small>' + buildingsEscape(collectSub) + '</small></div></button>'
+      + '<button type="button" class="btn mode-btn b-gray big-touch buildings-cta" id="btnBuildingUpgrade"'
+      + (view.canUpgrade ? '' : ' disabled') + '>'
+      + '<span class="ico"><img src="assets/buttons/modes/upgrades.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>'
+      + '<div>' + buildingsEscape(upLbl) + '<small>' + buildingsEscape(upSub) + '</small></div></button>'
+      + '</div>';
+    const collectBtn = document.getElementById('btnBuildingCollect');
+    const upBtn = document.getElementById('btnBuildingUpgrade');
+    if (collectBtn && typeof bindPress === 'function') {
+      bindPress(collectBtn, () => UI.doBuildingCollect(view.id));
+    }
+    if (upBtn && typeof bindPress === 'function') {
+      bindPress(upBtn, () => UI.doBuildingUpgrade(view.id));
+    }
+  };
+
+  UI.doBuildingCollect = function doBuildingCollect(id) {
+    if (typeof AudioSys !== 'undefined') { try { AudioSys.init(); AudioSys.sfx('claim'); } catch (_) { try { AudioSys.sfx('select'); } catch (__) {} } }
+    const res = (typeof buildingsCollect === 'function') ? buildingsCollect(id) : { ok: false };
+    if (res && res.ok) {
+      try { this.toast(res.message || ((typeof t === 'function') ? t('buildings.collectDone', { n: res.amount || 0, res: '' }) : 'ok'), 2400, { tone: 'ok' }); } catch (_) {}
+    } else {
+      try { this.toast((res && res.message) || ((typeof t === 'function') ? t('buildings.collectEmpty') : ''), 2200, { tone: 'warn' }); } catch (_) {}
+    }
+    this.renderBuildings();
+    try { this.renderMenu(); } catch (_) {}
+  };
+
+  UI.doBuildingUpgrade = function doBuildingUpgrade(id) {
+    if (typeof AudioSys !== 'undefined') { try { AudioSys.init(); AudioSys.sfx('select'); } catch (_) {} }
+    const res = (typeof buildingsUpgrade === 'function') ? buildingsUpgrade(id) : { ok: false };
+    if (res && res.ok) {
+      try { if (typeof AudioSys !== 'undefined') AudioSys.sfx('levelup'); } catch (_) {}
+      try { this.toast(res.message || '', 2600, { tone: 'ok' }); } catch (_) {}
+    } else {
+      try { this.toast((res && res.message) || '', 2200, { tone: 'warn' }); } catch (_) {}
+    }
+    this.renderBuildings();
+    try { this.renderMenu(); } catch (_) {}
+  };
+}
 /* --- src/boot/start.js --- */
 /* ============================ SPELSTART ================================ */
 let state = 'menu';
@@ -46848,6 +47698,8 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
       try { toastVersusRetired(); } catch (_) {}
     } else if (hub === 'summon') {
       UI.openSummonHub();
+    } else if (hub === 'buildings') {
+      if (typeof UI.openBuildings === 'function') UI.openBuildings();
     } else {
       UI.openModeHub(hub);
     }
