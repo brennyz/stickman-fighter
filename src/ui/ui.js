@@ -4285,8 +4285,13 @@ const UI = {
       let sampleLine = t('settings.sfxSamplesLoad');
       if (AudioSys._samplesReady) sampleLine = t('settings.sfxSamplesOn') + ` (${AudioSys._sampleCount})`;
       else if (AudioSys._sampleLoadStarted && !AudioSys._sampleCount) sampleLine = t('settings.sfxSamplesOff');
-      audioEl.textContent = base + ' · ' + sampleLine;
+      const themeMeta = (typeof AUDIO_THEME_META !== 'undefined' && typeof getAudioTheme === 'function')
+        ? AUDIO_THEME_META[getAudioTheme()]
+        : null;
+      const themeLine = themeMeta ? ('Sfeer: ' + themeMeta.label) : '';
+      audioEl.textContent = base + ' · ' + sampleLine + (themeLine ? ' · ' + themeLine : '');
     }
+    try { if (typeof renderAudioThemeSwitch === 'function') renderAudioThemeSwitch(); } catch (_) {}
     const a11yEl = document.getElementById('a11yStatusLine');
     if (a11yEl) a11yEl.textContent = a11yStatusText();
     try { this.renderHosting(); } catch (_) {}
@@ -4322,6 +4327,7 @@ const UI = {
       }
       statusEl.textContent = line;
     }
+    try { if (typeof renderAudioThemeSwitch === 'function') renderAudioThemeSwitch(); } catch (_) {}
   },
 
   hideVersionUpdateDialog() {

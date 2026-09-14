@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.163';
+const APP_VERSION = '1.18.164';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 373;
+const SW_CACHE_REV = 374;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -20,7 +20,9 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
     nightmare: { unlocked: 1, stars: {}, fails: {}, masterBuff: null, satanAt: {} },
     hell: { unlocked: 1, stars: {}, fails: {}, masterBuff: null, satanAt: {} },
   },
-  bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
+  bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic',
+  /** classic | jungle | fire-bamboo-boesa — soundtrack + light scenery tint */
+  audioTheme: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   /** null/undefined = auto via IS_TOUCH; true = force pads; false = force keyboard */
   showTouchPads: null,
@@ -1336,6 +1338,10 @@ function sanitizeSave(s) {
   })();
   out.music = out.music !== false;
   out.sfx = out.sfx !== false;
+  {
+    const allowedThemes = ['classic', 'jungle', 'fire-bamboo-boesa'];
+    out.audioTheme = allowedThemes.includes(out.audioTheme) ? out.audioTheme : 'classic';
+  }
   out.shake = out.shake !== false;
   out.haptics = out.haptics !== false;
   out.comboHud = out.comboHud !== false;

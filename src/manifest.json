@@ -21,6 +21,7 @@
   "src/data/chest-summons.js",
   "src/i18n/catalog.js",
   "src/systems/audio-samples.js",
+  "src/systems/audio-themes.js",
   "src/systems/audio.js",
   "src/systems/input.js",
   "src/systems/fighter-move.js",

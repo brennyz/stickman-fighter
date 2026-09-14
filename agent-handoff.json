@@ -13,11 +13,11 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.163",
-    "swCache": "stickfighter-app-v373",
-    "gameJsQuery": "game.js?v=373",
-    "cssQuery": "styles/main.css?v=373",
-    "featureBranch": "cursor/unify-ui-polish-0977",
+    "appVersion": "1.18.164",
+    "swCache": "stickfighter-app-v374",
+    "gameJsQuery": "game.js?v=374",
+    "cssQuery": "styles/main.css?v=374",
+    "featureBranch": "cursor/audio-themes-1a9e",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": "68e5ccc",
@@ -90,6 +90,13 @@
     "pendingMerge": []
   },
   "userWishlist": [
+    {
+      "id": "w-20260914T164100",
+      "from": "user",
+      "text": "Audio themes only (separate i18n agent): keep classic pack; add jungle + fire-bamboo-boesa BGM/SFX + light scenery tint; persist; Settings/pause switcher. No Versus, no i18n, no combat icons/tutorials. Entry speel.html.",
+      "status": "in-progress",
+      "updated": "2026-09-14"
+    },
     {
       "id": "w-20260914T151100",
       "from": "user",

@@ -1,3 +1,4 @@
+| 2026-09-14 | **audio themes** | Classic pack blijft; Jungle + Vuur-bamboe/Boesa soundtrack + lichte scenery-tint; persist in save.audioTheme; switch in Instellingen/Pauze. **v1.18.164 / SW v374**. |
 | 2026-09-14 | **locale + toast** | #266: NL VERLOREN, geen raw menu.tips / PICK AN ISLAND; versie-banner stiller + wegklik; rest HOME. **v1.18.163 / SW v373**. |
 | 2026-09-14 | **unify polish** | Start: geen naamveld, SPELEN-first; alle schermen HOME-tegels. #265 folded. **v1.18.162 / SW v372**. |
 | 2026-09-14 | **arcade pick** | STEP 2 pick-mode = HOME hub-tegels; chrome/toasts volgen game-taal. **v1.18.161 / SW v371**. |
@@ -140,6 +141,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | Audio themes: classic pack blijft; Jungle + Vuur-bamboe/Boesa BGM/SFX + lichte scenery-tint; save.audioTheme persist; switch Instellingen + Pauze. v1.18.164 / SW 374. i18n aparte agent. |
 | 2026-09-14 | — | #266 sprint: locale (VERLOREN, Tips-label, eilandkop) + stillere versie-banner + rest HOME. v1.18.163 / SW 373. Draft. |
 | 2026-09-14 | — | Start polish + unify HOME-tegels (Avontuur/Training/Collect/Settings/pauze). Naamveld weg. #265 folded. v1.18.162 / SW 372. #263 geparkeerd. |
 | 2026-09-14 | — | Arcade pick-mode = HOME hub-tegels; net/SW-banner volgt game-taal. v1.18.161 / SW 371. #263 geparkeerd. |
