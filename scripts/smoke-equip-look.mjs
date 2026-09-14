@@ -277,6 +277,9 @@ if (!api.layers.includes(clamped[0].layer)) fail('unknown layer must canon to a 
 
 if (api.canonSlot && api.canonSlot('helmet') !== 'head') fail('helmet alias');
 if (api.canonSlot && api.canonSlot('trinket') !== 'hands') fail('trinket alias → hands');
+if (api.canonSlot && api.canonSlot('charm') !== 'back') fail('#280 charm alias → back');
+if (api.canonSlot && api.canonSlot('accessory') !== 'back') fail('#280 accessory alias → back');
+if (api.canonSlot && api.canonSlot('aura') !== 'back') fail('#280 aura alias → back');
 if (api.canonSlot && api.canonSlot('nope') != null) fail('unknown slot must be null');
 if (api.canonLayer && api.canonLayer('behind', 'head') !== 'back') fail('behind → back');
 if (api.canonLayer && api.canonLayer('under', 'chest') !== 'back') fail('under → back');
@@ -338,6 +341,53 @@ if (desc[0].kind !== 'helmet' || desc[1].kind !== 'chestplate' || desc[2].kind !
 if (desc[3].kind !== 'greaves' || desc[4].kind !== 'cape') fail('legs/back kind map');
 if (desc[0].color !== '#9aa8bc' || desc[4].color !== '#e04f4f') fail('descriptor tint → color');
 
+const bodyLayer = api.fromDescriptor({
+  schema: 1,
+  slots: [
+    { slot: 'head', itemId: 'head_helm_iron', tint: '#9aa8bc', layer: 'body' },
+    { slot: 'chest', itemId: null, kind: null, vanity: true, hasStats: false, tint: null, accent: null, layer: 'chest' },
+    { slot: 'hands', itemId: null, kind: null, vanity: true, hasStats: false, tint: null, accent: null, layer: 'hands' },
+    { slot: 'legs', itemId: null, kind: null, vanity: true, hasStats: false, tint: null, accent: null, layer: 'legs' },
+    { slot: 'back', itemId: 'back_cape_red', tint: '#e04f4f', layer: 'body' },
+  ],
+});
+if (bodyLayer.length !== 2) fail('#280 empty slots must be skipped');
+if (bodyLayer[0].slot !== 'head' || bodyLayer[0].layer !== 'head') fail('#280 body layer must stay on head slot');
+if (bodyLayer[1].slot !== 'back' || bodyLayer[1].layer !== 'back') fail('#280 body layer must stay on back slot');
+
+if (api.kindFromId('back_tail_fox', 'back') !== 'tail') fail('tail_fox → tail');
+if (api.kindFromId('back_void_spine', 'back') !== 'crystal') fail('void_spine → crystal');
+
+const prevDesc = ctx.gearRenderDescriptor;
+const prevSave = ctx.save;
+ctx.gearRenderDescriptor = function gearRenderDescriptor() {
+  return {
+    schema: 1,
+    slots: [
+      { slot: 'head', itemId: 'head_helm_iron', kind: 'armour', vanity: false, hasStats: true, tint: '#9aa8bc', accent: '#7cf5ff', layer: 'head' },
+      { slot: 'chest', itemId: 'chest_plate_knight', kind: 'armour', vanity: false, hasStats: true, tint: '#c9d6e8', accent: '#8fa3d9', layer: 'chest' },
+      { slot: 'hands', itemId: 'hands_gauntlet_steel', kind: 'armour', vanity: false, hasStats: true, tint: '#b8c4d4', accent: '#6a5030', layer: 'hands' },
+      { slot: 'legs', itemId: 'legs_greaves_iron', kind: 'armour', vanity: false, hasStats: true, tint: '#8fa3d9', accent: '#5a6474', layer: 'legs' },
+      { slot: 'back', itemId: 'back_cape_red', kind: 'cosmetic', vanity: true, hasStats: false, tint: '#e04f4f', accent: '#c97a20', layer: 'back' },
+    ],
+  };
+};
+ctx.save = { gear: { equipped: { head: 'head_helm_iron' } } };
+const fromLiveApi = api.resolve({ isPlayer: true, style: { id: 'leaf_band', bandana: '#2d6b36', plate: '#dfe8ff', accent: '#43b25b' } });
+if (fromLiveApi.length < 5) fail('gearRenderDescriptor must paint all 5 equipped slots');
+if (!fromLiveApi.some((l) => l.kind === 'helmet' && l.slot === 'head')) fail('live descriptor head');
+if (!fromLiveApi.some((l) => l.kind === 'cape' && l.slot === 'back')) fail('live descriptor back');
+if (fromLiveApi.some((l) => l.kind === 'bandana')) fail('live 5-slot loadout replaces style head');
+const previewIso = api.resolve({
+  isPlayer: true,
+  _preview: true,
+  style: { id: 'leaf_band', bandana: '#2d6b36', plate: '#dfe8ff', accent: '#43b25b' },
+});
+if (!previewIso.some((l) => l.kind === 'bandana')) fail('style preview must keep style pieces');
+if (previewIso.some((l) => l.kind === 'helmet' || l.kind === 'cape')) fail('style preview must not steal live gearRenderDescriptor');
+ctx.gearRenderDescriptor = prevDesc;
+ctx.save = prevSave;
+
 const viaFighter = api.resolve({
   isPlayer: true,
   style: { id: 'leaf_band', bandana: '#2d6b36', plate: '#dfe8ff', accent: '#43b25b' },
@@ -384,7 +434,7 @@ const catalogIds = [
   ['back', 'void_spine'], ['back', 'wings_nightmare'], ['back', 'wings_hell'],
 ];
 if (catalogIds.length !== 131) fail('catalog snapshot must stay 131');
-const drawable = new Set(['bandana', 'visor', 'fox', 'horns', 'halo', 'glow', 'helmet', 'gloves', 'charm', 'greaves', 'wrap', 'wings', 'cape', 'tome', 'crystal', 'chestplate', 'vest']);
+const drawable = new Set(['bandana', 'visor', 'fox', 'horns', 'halo', 'glow', 'helmet', 'gloves', 'charm', 'greaves', 'wrap', 'wings', 'cape', 'tome', 'crystal', 'chestplate', 'vest', 'tail']);
 for (const [slot, suf] of catalogIds) {
   const id = slot + '_' + suf;
   const kind = api.kindFromId(id, slot);

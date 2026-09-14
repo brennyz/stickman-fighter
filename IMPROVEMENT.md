@@ -1,3 +1,4 @@
+| 2026-09-14 | **equip look** | #280 READY: 5-slot `gearRenderDescriptor` + 131-id kinds; `body` layer stays on slot; charm→back; style cards isolated. **v1.18.168 / SW v378**. |
 | 2026-09-14 | **equip look** | Consume #280 `gearRenderDescriptor` for all 5 slots; 131-id kind map + tint/layer. **v1.18.167 / SW v377**. |
 | 2026-09-14 | **equip look** | Gear contract v1: slotIds head/chest/hands/legs/back; draw back→legs→chest→head→hands (weapon-hold/pet existing); Item.draw.layer + offsets; one item per slot. **v1.18.166 / SW v376**. |
 | 2026-09-14 | **equip look** | Harden: clamp offsets/scale, canon layers, isolate piece draw (try/finally), skip junk gear keys, cheaper Android shadows, no roundRect. Combat cannot hiccup on a bad look. **v1.18.165 / SW v375**. |

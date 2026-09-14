@@ -409,6 +409,21 @@ function drawLookHalo(c, look, x, y, sc) {
   c.stroke();
 }
 
+function drawLookTail(c, look, x, y, sc, bones) {
+  const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y };
+  c.strokeStyle = look.color || look.accent || '#c97a20';
+  c.lineCap = 'round';
+  c.lineWidth = 4.4 * sc;
+  c.beginPath();
+  c.moveTo(hip.x + 3 * sc, hip.y + 2 * sc);
+  c.quadraticCurveTo(hip.x + 16 * sc, hip.y + 6 * sc, hip.x + 14 * sc, hip.y + 18 * sc);
+  c.stroke();
+  c.fillStyle = look.accent || '#fff4d6';
+  c.beginPath();
+  c.arc(hip.x + 14 * sc, hip.y + 18 * sc, 3.2 * sc, 0, TAU);
+  c.fill();
+}
+
 function drawLookWings(c, look, x, y, sc, bones) {
   const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
   c.fillStyle = look.fill || look.color || 'rgba(200,208,220,.55)';
@@ -455,6 +470,7 @@ function drawEquipLookPreview(c, styleId, gear) {
     const f = new Fighter({
       isPlayer: true, x: 0, y: 0, color: st.body || '#f2f5ff', style: st, scale: 1,
       gear: gear || null,
+      _preview: true,
     });
     f.animT = 0.4;
     f.draw(c);
@@ -492,4 +508,5 @@ const EQUIP_LOOK_DRAW = {
   horns: drawLookHorns,
   halo: drawLookHalo,
   wings: drawLookWings,
+  tail: drawLookTail,
 };

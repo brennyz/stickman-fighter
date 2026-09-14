@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.167';
+const APP_VERSION = '1.18.168';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 377;
+const SW_CACHE_REV = 378;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -6535,7 +6535,9 @@ const EQUIP_SLOT_ALIAS = {
   boots: 'legs', greaves: 'legs', shin: 'legs',
   cape: 'back', cloak: 'back', tome: 'back',
   gloves: 'hands', bracers: 'hands', wrists: 'hands',
-  accessory: 'hands', trinket: 'hands', charm: 'hands', ring: 'hands', aura: 'hands',
+  /* #280: charm / accessory / aura migrate → back. trinket / ring stay hands. */
+  accessory: 'back', aura: 'back', charm: 'back',
+  trinket: 'hands', ring: 'hands',
 };
 
 const EQUIP_LOOK_DEFAULTS = {
@@ -6560,6 +6562,7 @@ const EQUIP_LOOK_DEFAULTS = {
   horns: { slot: 'head', layer: 'head', ox: 0, oy: -2, scale: 1 },
   halo: { slot: 'head', layer: 'head', ox: 0, oy: -4, scale: 1 },
   wings: { slot: 'back', layer: 'back', ox: 0, oy: 0, scale: 1 },
+  tail: { slot: 'back', layer: 'back', ox: 2, oy: 4, scale: 1 },
 };
 
 /** #280 catalog suffixes → draw kind (131 ids). More specific first. */
@@ -6567,6 +6570,7 @@ const GEAR_ID_KIND_RULES = [
   [/bandana|wrap_cloth|head_wrap/, 'bandana'],
   [/visor/, 'visor'],
   [/mask_fox/, 'fox'],
+  [/tail_/, 'tail'],
   [/horns/, 'horns'],
   [/halo|circlet/, 'halo'],
   [/aura_glow|hood_void/, 'glow'],
@@ -6575,11 +6579,11 @@ const GEAR_ID_KIND_RULES = [
   [/gaunt|bracer|mittens|cuffs|fists|claws|gloves|hands_wrap|wraps_monk|wraps_gold|wraps_dream/, 'gloves'],
   [/rings_/, 'charm'],
   [/greaves|boots_|sneakers/, 'greaves'],
-  [/legs_wrap|socks|shorts|pants|tabi|bells|legs_wrap/, 'wrap'],
+  [/legs_wrap|socks|shorts|pants|tabi|bells/, 'wrap'],
   [/wings_|wing_/, 'wings'],
   [/cape|scarf|banner|kite|capelet/, 'cape'],
   [/backpack|pack_|shell|plate_back|banner_iron/, 'tome'],
-  [/crystal_shard/, 'crystal'],
+  [/crystal_shard|void_spine/, 'crystal'],
   [/pin_|balloon|back_leaf\b|back_void\b/, 'charm'],
   [/plate_|mail_|cuirass/, 'chestplate'],
   [/vest_|shirt_|hoodie|gi_|tunic|sash|jacket|robe|coat_|poncho/, 'vest'],
@@ -6858,16 +6862,21 @@ function looksForGear(gear) {
   return out.filter(Boolean);
 }
 
+/** #280 `_gearLook` defaulted layer to `body` — never relocate a slotted item. */
+const EQUIP_GENERIC_LAYERS = ['body', 'torso', 'under', 'over', 'front', 'fg', 'overlay'];
+
 function lookPieceFromDescriptorRow(row) {
   if (!row || !row.itemId) return null;
   const slot = canonEquipSlot(row.slot) || canonEquipSlot(row.layer);
   if (!slot) return null;
+  const rawLayer = row.layer != null ? String(row.layer).toLowerCase() : '';
+  const layer = (rawLayer && EQUIP_GENERIC_LAYERS.includes(rawLayer)) ? slot : (row.layer || slot);
   const kind = lookKindFromGearId(row.itemId, slot);
   return hydrateEquipLook({
     id: row.itemId,
     kind,
     slot,
-    layer: row.layer || slot,
+    layer,
     color: row.tint,
     accent: row.accent,
   });
@@ -6918,7 +6927,10 @@ function resolveGearLooks(fighter) {
     const fromDesc = looksFromGearDescriptor(fighter.gearDescriptor);
     if (fromDesc.length) return fromDesc;
   }
-  const store = (fighter && fighter.save) || (typeof save !== 'undefined' ? save : null);
+  /* Style / upgrade cards are ephemeral previews — do not steal the live loadout. */
+  const preview = !!(fighter && fighter._preview);
+  const store = (fighter && fighter.save)
+    || (!preview && fighter && fighter.isPlayer && typeof save !== 'undefined' ? save : null);
   if (typeof gearRenderDescriptor === 'function' && store) {
     try {
       const fromApi = looksFromGearDescriptor(gearRenderDescriptor(store));
@@ -19257,6 +19269,21 @@ function drawLookHalo(c, look, x, y, sc) {
   c.stroke();
 }
 
+function drawLookTail(c, look, x, y, sc, bones) {
+  const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y };
+  c.strokeStyle = look.color || look.accent || '#c97a20';
+  c.lineCap = 'round';
+  c.lineWidth = 4.4 * sc;
+  c.beginPath();
+  c.moveTo(hip.x + 3 * sc, hip.y + 2 * sc);
+  c.quadraticCurveTo(hip.x + 16 * sc, hip.y + 6 * sc, hip.x + 14 * sc, hip.y + 18 * sc);
+  c.stroke();
+  c.fillStyle = look.accent || '#fff4d6';
+  c.beginPath();
+  c.arc(hip.x + 14 * sc, hip.y + 18 * sc, 3.2 * sc, 0, TAU);
+  c.fill();
+}
+
 function drawLookWings(c, look, x, y, sc, bones) {
   const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
   c.fillStyle = look.fill || look.color || 'rgba(200,208,220,.55)';
@@ -19303,6 +19330,7 @@ function drawEquipLookPreview(c, styleId, gear) {
     const f = new Fighter({
       isPlayer: true, x: 0, y: 0, color: st.body || '#f2f5ff', style: st, scale: 1,
       gear: gear || null,
+      _preview: true,
     });
     f.animT = 0.4;
     f.draw(c);
@@ -19340,6 +19368,7 @@ const EQUIP_LOOK_DRAW = {
   horns: drawLookHorns,
   halo: drawLookHalo,
   wings: drawLookWings,
+  tail: drawLookTail,
 };
 /* --- src/render/tide-art.js --- */
 /* ============================== TIDE BOSS ART ========================== */
@@ -31617,7 +31646,7 @@ function drawStyleLookPreview(cc, st, w, h) {
       cc.translate((w || 80) * 0.5, (h || 86) * 0.87);
       cc.scale(0.78, 0.78);
     }
-    const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9 });
+    const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9, _preview: true });
     preview.animT = 0.4;
     preview.draw(cc);
   } catch (_) { /* one card must not blank the style grid on Android */ }
