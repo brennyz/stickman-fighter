@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.163';
+const APP_VERSION = '1.18.164';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 373;
+const SW_CACHE_REV = 374;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -28,7 +28,9 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   kbLegend: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, playerTag: '', lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
-  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
+  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {},
+  buildings: {}, buildingRes: {},
+  activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
 
 const MAX_LEVEL = 70;
 const LEVELS_PER_ISLAND = 10;
@@ -776,8 +778,12 @@ function saveProgressScore(s) {
     for (const v of Object.values(bag)) itUp += Math.floor(Number(v && v.level) || 0);
   }
   const petCoins = Math.floor(Number(s.petCoins) || 0);
+  let bLv = 0;
+  if (s.buildings && typeof s.buildings === 'object') {
+    for (const v of Object.values(s.buildings)) bLv += Math.floor(Number(v && v.level) || 0);
+  }
   return unlocked * 1e12 + lvl * 1e9 + xp * 1e6 + ach * 1e5 + dex * 1e4
-    + dexKills * 1e3 + starSum * 1e2 + statSum + skUp * 15 + itUp * 12 + petCoins;
+    + dexKills * 1e3 + starSum * 1e2 + statSum + skUp * 15 + itUp * 12 + petCoins + bLv * 9;
 }
 
 function pickBestSave(primary, backup) {
@@ -851,6 +857,10 @@ function readSaveJson(raw) {
     merged.advSatanAt = Object.assign({}, parsed.advSatanAt || {});
     merged.zoneWeapons = Object.assign({}, parsed.zoneWeapons || {});
     merged.chestWeapons = Object.assign({}, parsed.chestWeapons || {});
+    merged.buildings = (parsed.buildings && typeof parsed.buildings === 'object' && !Array.isArray(parsed.buildings))
+      ? Object.assign({}, parsed.buildings) : {};
+    merged.buildingRes = (parsed.buildingRes && typeof parsed.buildingRes === 'object' && !Array.isArray(parsed.buildingRes))
+      ? Object.assign({}, parsed.buildingRes) : {};
     if (parsed.chestDaily && typeof parsed.chestDaily === 'object') merged.chestDaily = Object.assign({}, parsed.chestDaily);
     merged.advCleared = Object.assign(
       { normal: false, nightmare: false, hell: false },
@@ -1108,6 +1118,11 @@ function saveHasProgress(s) {
   if (Object.keys(st.achievements || {}).length > 0) return true;
   if (Object.keys(st.summons || {}).length > 0) return true;
   if (Object.keys(st.pets || {}).length > 0) return true;
+  if (st.buildings && typeof st.buildings === 'object') {
+    for (const v of Object.values(st.buildings)) {
+      if (Math.floor(Number(v && v.level) || 0) > 0) return true;
+    }
+  }
   return false;
 }
 
@@ -1545,6 +1560,14 @@ function sanitizeSave(s) {
 
   if (skillSnap && typeof restoreLostSkillUpgrades === 'function') restoreLostSkillUpgrades(skillSnap, out);
   if (itemSnap && typeof restoreLostItemUpgrades === 'function') restoreLostItemUpgrades(itemSnap, out);
+
+  if (typeof sanitizeBuildingSave === 'function') sanitizeBuildingSave(out);
+  else {
+    out.buildings = (out.buildings && typeof out.buildings === 'object' && !Array.isArray(out.buildings))
+      ? out.buildings : {};
+    out.buildingRes = (out.buildingRes && typeof out.buildingRes === 'object' && !Array.isArray(out.buildingRes))
+      ? out.buildingRes : {};
+  }
 
   out.petCoins = clamp(Math.floor(Number(out.petCoins) || 0), 0, 999999);
   if (out.lang != null && typeof SUPPORTED_LANGS !== 'undefined' && !SUPPORTED_LANGS.includes(out.lang)) {

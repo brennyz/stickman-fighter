@@ -1001,7 +1001,7 @@ function renderAdvSatanCard(heat, diff) {
 }
 
 const UI = {
-  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'summonScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'upgradeScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
+  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'summonScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'upgradeScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'buildingsScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
@@ -1332,7 +1332,7 @@ const UI = {
         this.show('menuScreen');
         return;
       }
-      if (active === 'weaponScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'skillScreen' || active === 'upgradeScreen' || active === 'dexScreen') {
+      if (active === 'weaponScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'skillScreen' || active === 'upgradeScreen' || active === 'dexScreen' || active === 'buildingsScreen') {
         this.openModeHub('collect');
         return;
       }
@@ -3364,6 +3364,96 @@ const UI = {
     this.safeOpen('upgradeScreen', () => this.renderUpgrades(), {
       msg: 'Upgrades laden mislukt — herlaad via Verse versie',
     });
+  },
+
+  openBuildings() {
+    this.safeOpen('buildingsScreen', () => this.renderBuildings(), {
+      msg: (typeof tOr === 'function') ? tOr('buildings.loadFail', 'Fabrieken laden mislukt') : 'Fabrieken laden mislukt',
+    });
+  },
+
+  renderBuildings() {
+    const head = document.getElementById('buildingsScreenHead');
+    const sub = document.getElementById('buildingsScreenSub');
+    const list = document.getElementById('buildingsList');
+    const walletEl = document.getElementById('buildingsWallet');
+    if (head) head.textContent = (typeof tOr === 'function') ? tOr('buildings.title', 'Fabrieken') : 'Fabrieken';
+    if (sub) sub.textContent = (typeof tOr === 'function')
+      ? tOr('buildings.sub', 'Eiland-fabrieken · levels · timed resources — stub voor UI/art/powers')
+      : 'Eiland-fabrieken · levels · timed resources — stub voor UI/art/powers';
+    if (typeof tickBuildings === 'function') tickBuildings();
+    const rows = (typeof listBuildingsForUi === 'function') ? listBuildingsForUi() : [];
+    if (walletEl) {
+      const parts = [];
+      const wallet = (typeof buildingWalletAll === 'function') ? buildingWalletAll() : {};
+      for (const [id, n] of Object.entries(wallet)) {
+        if (!n) continue;
+        const label = (typeof buildingResourceLabel === 'function') ? buildingResourceLabel(id) : id;
+        parts.push(label + ' ' + n);
+      }
+      const pc = Math.max(0, Math.floor(Number(save && save.petCoins) || 0));
+      parts.unshift('PC ' + pc);
+      walletEl.textContent = parts.join(' · ');
+    }
+    if (!list) return;
+    list.innerHTML = '';
+    for (const row of rows) {
+      const card = document.createElement('div');
+      card.className = 'step-card building-stub-card';
+      card.dataset.buildingId = row.id;
+      const title = document.createElement('b');
+      title.textContent = row.name + (row.built ? ` · Lv ${row.level}/${row.maxLevel}` : ' · —');
+      const meta = document.createElement('div');
+      meta.style.cssText = 'margin-top:4px;font-size:13px;line-height:1.4;opacity:.9';
+      const lock = row.unlocked
+        ? (row.built
+          ? ((typeof tOr === 'function')
+            ? tOr('buildings.rateLine', '{n}/uur · {pending} wacht · cap {cap}', {
+              n: row.outputRate, pending: row.pending, cap: row.storageCap,
+            })
+            : `${row.outputRate}/uur · ${row.pending} wacht · cap ${row.storageCap}`)
+          : ((typeof tOr === 'function') ? tOr('buildings.buildHint', 'Bouwen als eiland open is') : 'Bouwen als eiland open is'))
+        : ((typeof tOr === 'function')
+          ? tOr('buildings.lockedWorld', 'Unlock: eiland {n}', { n: row.worldUnlock })
+          : ('Unlock: eiland ' + row.worldUnlock));
+      meta.textContent = lock;
+      const powers = document.createElement('div');
+      powers.style.cssText = 'margin-top:4px;font-size:12px;opacity:.8';
+      powers.textContent = row.powersUnlocked.length
+        ? ('powers: ' + row.powersUnlocked.join(', '))
+        : (row.nextPower ? ('next power @ Lv ' + row.nextPower.atLevel + ': ' + row.nextPower.id) : '');
+      card.appendChild(title);
+      card.appendChild(meta);
+      if (powers.textContent) card.appendChild(powers);
+      const actions = document.createElement('div');
+      actions.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:8px';
+      const addBtn = (label, enabled, fn) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn tog';
+        btn.textContent = label;
+        btn.disabled = !enabled;
+        if (enabled) btn.addEventListener('click', (e) => { e.preventDefault(); fn(); });
+        actions.appendChild(btn);
+      };
+      if (!row.built) {
+        addBtn((typeof tOr === 'function') ? tOr('buildings.build', 'Bouwen') : 'Bouwen', row.canBuild, () => {
+          tryBuildBuilding(row.id);
+          this.renderBuildings();
+        });
+      } else {
+        addBtn((typeof tOr === 'function') ? tOr('buildings.collect', 'Ophalen') : 'Ophalen', row.pending > 0, () => {
+          collectBuilding(row.id);
+          this.renderBuildings();
+        });
+        addBtn((typeof tOr === 'function') ? tOr('buildings.upgrade', 'Upgrade') : 'Upgrade', row.canUpgrade, () => {
+          tryUpgradeBuilding(row.id);
+          this.renderBuildings();
+        });
+      }
+      card.appendChild(actions);
+      list.appendChild(card);
+    }
   },
 
   renderUpgrades() {

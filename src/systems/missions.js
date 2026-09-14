@@ -658,6 +658,11 @@ function saveSanitizeNotes(before, after) {
     const itA = countItemUpgradeLevels(after);
     if (itA < itB) notes.push(`item-upgrades ${itB}→${itA} Lv`);
   }
+  if (typeof countBuildingLevels === 'function') {
+    const bB = countBuildingLevels(before);
+    const bA = countBuildingLevels(after);
+    if (bA !== bB) notes.push(`fabrieken ${bB}→${bA} Lv`);
+  }
   return notes;
 }
 
@@ -695,6 +700,10 @@ function saveDriftDetail() {
   const ppc = Math.max(0, Math.floor(Number(p.petCoins) || 0));
   const bpc = Math.max(0, Math.floor(Number(b.petCoins) || 0));
   if (ppc !== bpc) parts.push(`pet coins ${ppc} vs ${bpc}`);
+  if (typeof countBuildingLevels === 'function') {
+    const pb = countBuildingLevels(p), bb = countBuildingLevels(b);
+    if (pb !== bb) parts.push(`fabriek ${pb} vs ${bb} Lv`);
+  }
   return parts.join(' · ');
 }
 
@@ -717,6 +726,10 @@ function saveExportSummaryLine(s) {
   }
   const pc = Math.max(0, Math.floor(Number(st.petCoins) || 0));
   if (pc) line += ` · ${pc} pet coins`;
+  if (typeof countBuildingLevels === 'function') {
+    const bl = countBuildingLevels(st);
+    if (bl) line += ` · fabriek +${bl} Lv`;
+  }
   return line;
 }
 

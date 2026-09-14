@@ -230,6 +230,9 @@ bindPress(document.getElementById('btnSummonGotoPets'), () => {
   UI._chestPullBusy = false;
   openCollectionScreen('petScreen', () => UI.renderPets());
 });
+bindPress(document.getElementById('btnBuildings'), () => {
+  if (typeof UI !== 'undefined' && UI.openBuildings) UI.openBuildings();
+});
 bindPress(document.getElementById('btnDex'), () => {
   openCollectionScreen('dexScreen', () => UI.renderDex());
 });
