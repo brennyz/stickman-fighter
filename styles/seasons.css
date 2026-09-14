@@ -34,13 +34,13 @@ html[data-season="jungle"] {
   --season-wash-a: rgba(46, 140, 62, 0.22);
   --season-wash-b: rgba(18, 70, 36, 0.18);
   --season-wash-c: rgba(90, 170, 50, 0.14);
-  /* --season-art-vignette: url('../assets/seasons/jungle/vignette.png'); */
-  /* --season-art-motif: url('../assets/seasons/jungle/motif.png'); */
-  /* --season-art-corner-tl: url('../assets/seasons/jungle/corner-tl.png'); */
-  /* --season-art-corner-tr: url('../assets/seasons/jungle/corner-tr.png'); */
-  /* --season-art-corner-bl: url('../assets/seasons/jungle/corner-bl.png'); */
-  /* --season-art-corner-br: url('../assets/seasons/jungle/corner-br.png'); */
-  /* --season-art-banner: url('../assets/seasons/jungle/banner.png'); */
+  --season-art-vignette: url('../assets/seasons/jungle/vignette.png');
+  --season-art-motif: url('../assets/seasons/jungle/motif.png');
+  --season-art-corner-tl: url('../assets/seasons/jungle/corner-tl.png');
+  --season-art-corner-tr: url('../assets/seasons/jungle/corner-tr.png');
+  --season-art-corner-bl: url('../assets/seasons/jungle/corner-bl.png');
+  --season-art-corner-br: url('../assets/seasons/jungle/corner-br.png');
+  --season-art-banner: url('../assets/seasons/jungle/banner.png');
 }
 
 html[data-season="halloween"] {
@@ -50,13 +50,13 @@ html[data-season="halloween"] {
   --season-wash-a: rgba(255, 120, 32, 0.2);
   --season-wash-b: rgba(88, 28, 120, 0.2);
   --season-wash-c: rgba(40, 10, 28, 0.22);
-  /* --season-art-vignette: url('../assets/seasons/halloween/vignette.png'); */
-  /* --season-art-motif: url('../assets/seasons/halloween/motif.png'); */
-  /* --season-art-corner-tl: url('../assets/seasons/halloween/corner-tl.png'); */
-  /* --season-art-corner-tr: url('../assets/seasons/halloween/corner-tr.png'); */
-  /* --season-art-corner-bl: url('../assets/seasons/halloween/corner-bl.png'); */
-  /* --season-art-corner-br: url('../assets/seasons/halloween/corner-br.png'); */
-  /* --season-art-banner: url('../assets/seasons/halloween/banner.png'); */
+  --season-art-vignette: url('../assets/seasons/halloween/vignette.png');
+  --season-art-motif: url('../assets/seasons/halloween/motif.png');
+  --season-art-corner-tl: url('../assets/seasons/halloween/corner-tl.png');
+  --season-art-corner-tr: url('../assets/seasons/halloween/corner-tr.png');
+  --season-art-corner-bl: url('../assets/seasons/halloween/corner-bl.png');
+  --season-art-corner-br: url('../assets/seasons/halloween/corner-br.png');
+  --season-art-banner: url('../assets/seasons/halloween/banner.png');
 }
 
 html[data-season="winter"] {
