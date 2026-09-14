@@ -205,4 +205,21 @@ if (rt.getEffectiveAudioTheme() !== 'fire-bamboo-boesa') {
   fail('empty season hook must fall back to player pack');
 }
 
+const bar = {
+  innerHTML: '',
+  dataset: {},
+  nodes: [],
+  querySelectorAll() { return this.nodes; },
+  addEventListener() {},
+};
+rt.renderAudioThemeBar(bar);
+if (!/data-audio-theme="halloween"/.test(bar.innerHTML) || !/Halloween/.test(bar.innerHTML)) {
+  fail('Settings bar must render a Halloween chip');
+}
+if (!/data-audio-theme="classic"/.test(bar.innerHTML)) fail('Settings bar must keep Classic chip');
+if (!/data-audio-theme="fire-bamboo-boesa"/.test(bar.innerHTML)) fail('Settings bar must keep fire-bamboo chip');
+if (/data-season-pref/.test(bar.innerHTML) || /data-audio-theme="winter"/.test(bar.innerHTML)) {
+  fail('audio bar must not duplicate #277 season chips');
+}
+
 console.log('SMOKE_OK audio-themes: classic pack kept, halloween + #277 season hooks, jungle/fire-bamboo persist');
