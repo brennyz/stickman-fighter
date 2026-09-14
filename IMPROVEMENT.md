@@ -140,6 +140,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | Gear UI schema delta: only save.gear {schema,equipped,owned} + createdAt; drop flat bags; HOME Uitrusting. v1.18.169 / SW 379. |
 | 2026-09-14 | — | Gear UI large catalog: rarity chips + search/sort + n/total, page-scroll (no tiny-list). v1.18.168 / SW 378. |
 | 2026-09-14 | — | Gear UI contract v1 locked: cosmetics may have STAT, doll draw-order +weapon+pet, hub n/5. v1.18.167 / SW 377. |
 | 2026-09-14 | — | Gear UI contract v1: HOME Figuur-tegel, 5 slot-kaarten (title/sub stacked), weapon aside, save.equipment + ownedGear. v1.18.166 / SW 376. |

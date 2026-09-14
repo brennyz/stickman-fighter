@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.168';
+const APP_VERSION = '1.18.169';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 378;
+const SW_CACHE_REV = 379;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -29,10 +29,7 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, playerTag: '', lastPlay: null, tipsSeen: {},
   /** Epoch ms — set once in sanitizeSave. Time gates use account age from this. */
   createdAt: 0,
-  /** Contract v1 bags — docs/GEAR-CONTRACT-v1.md */
-  equipment: { head: null, chest: null, hands: null, legs: null, back: null },
-  ownedGear: {},
-  /** Systems #280 mirror — kept in sync with equipment / ownedGear */
+  /** Systems #280 / GEAR-SYSTEM.md — only bag. Flat equipment/ownedGear migrate then drop. */
   gear: { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} },
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
@@ -887,11 +884,6 @@ function readSaveJson(raw) {
           : { at: 0, src: 'grant' };
       }
       merged.gear = { schema: 1, equipped, owned };
-      merged.equipment = Object.assign({ head: null, chest: null, hands: null, legs: null, back: null }, equipped);
-      merged.ownedGear = {};
-      for (const [id, v] of Object.entries(owned)) {
-        merged.ownedGear[id] = { at: (v && v.at) || 1 };
-      }
       if (parsed.createdAt != null) merged.createdAt = parsed.createdAt;
     }
     if (parsed.chestDaily && typeof parsed.chestDaily === 'object') merged.chestDaily = Object.assign({}, parsed.chestDaily);
@@ -1653,17 +1645,17 @@ function sanitizeSave(s) {
       } else {
         out.gear = { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} };
       }
-      if (typeof _syncContractBags === 'function') _syncContractBags(out);
+      if (typeof _dropFlatGearKeys === 'function') _dropFlatGearKeys(out);
       else {
-        out.equipment = Object.assign({ head: null, chest: null, hands: null, legs: null, back: null }, (out.gear && out.gear.equipped) || {});
-        out.ownedGear = {};
-        const own = (out.gear && out.gear.owned) || {};
-        for (const [id, v] of Object.entries(own)) out.ownedGear[id] = { at: (v && v.at) || 1 };
+        delete out.equipment;
+        delete out.ownedGear;
+        delete out.gearEquipped;
+        delete out.gearOwned;
       }
     } catch (_) {
       out.gear = { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} };
-      out.equipment = { head: null, chest: null, hands: null, legs: null, back: null };
-      out.ownedGear = {};
+      delete out.equipment;
+      delete out.ownedGear;
     }
   }
   if (!Array.isArray(out.vsPlayedIds)) out.vsPlayedIds = [];

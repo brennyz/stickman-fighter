@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.168';
+const APP_VERSION = '1.18.169';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 378;
+const SW_CACHE_REV = 379;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -347,10 +347,7 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, playerTag: '', lastPlay: null, tipsSeen: {},
   /** Epoch ms — set once in sanitizeSave. Time gates use account age from this. */
   createdAt: 0,
-  /** Contract v1 bags — docs/GEAR-CONTRACT-v1.md */
-  equipment: { head: null, chest: null, hands: null, legs: null, back: null },
-  ownedGear: {},
-  /** Systems #280 mirror — kept in sync with equipment / ownedGear */
+  /** Systems #280 / GEAR-SYSTEM.md — only bag. Flat equipment/ownedGear migrate then drop. */
   gear: { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} },
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
@@ -1205,11 +1202,6 @@ function readSaveJson(raw) {
           : { at: 0, src: 'grant' };
       }
       merged.gear = { schema: 1, equipped, owned };
-      merged.equipment = Object.assign({ head: null, chest: null, hands: null, legs: null, back: null }, equipped);
-      merged.ownedGear = {};
-      for (const [id, v] of Object.entries(owned)) {
-        merged.ownedGear[id] = { at: (v && v.at) || 1 };
-      }
       if (parsed.createdAt != null) merged.createdAt = parsed.createdAt;
     }
     if (parsed.chestDaily && typeof parsed.chestDaily === 'object') merged.chestDaily = Object.assign({}, parsed.chestDaily);
@@ -1971,17 +1963,17 @@ function sanitizeSave(s) {
       } else {
         out.gear = { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} };
       }
-      if (typeof _syncContractBags === 'function') _syncContractBags(out);
+      if (typeof _dropFlatGearKeys === 'function') _dropFlatGearKeys(out);
       else {
-        out.equipment = Object.assign({ head: null, chest: null, hands: null, legs: null, back: null }, (out.gear && out.gear.equipped) || {});
-        out.ownedGear = {};
-        const own = (out.gear && out.gear.owned) || {};
-        for (const [id, v] of Object.entries(own)) out.ownedGear[id] = { at: (v && v.at) || 1 };
+        delete out.equipment;
+        delete out.ownedGear;
+        delete out.gearEquipped;
+        delete out.gearOwned;
       }
     } catch (_) {
       out.gear = { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} };
-      out.equipment = { head: null, chest: null, hands: null, legs: null, back: null };
-      out.ownedGear = {};
+      delete out.equipment;
+      delete out.ownedGear;
     }
   }
   if (!Array.isArray(out.vsPlayedIds)) out.vsPlayedIds = [];
@@ -2052,8 +2044,8 @@ const I18N = {
     hub: {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
       arcadeTitle: 'Arcade', arcadeSub: 'Snelle sessies · save blijft hier',
-      collectTitle: 'Collectie', collectSub: 'Figuur · wapens · pets · stijl',
-      gear: 'Figuur', gearSub: 'Slots · look',
+      collectTitle: 'Collectie', collectSub: 'Uitrusting · wapens · pets · stijl',
+      gear: 'Uitrusting', gearSub: 'Slots · look',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · oefenen',
       wall: 'Muur Slopen', wallSub: '60 sec · combo = sneller',
       mats: 'Muntjes', matsSub: '45 sec · munten → pet coins',
@@ -2165,8 +2157,8 @@ const I18N = {
     hub: {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
       arcadeTitle: 'Arcade', arcadeSub: 'Quick sessions · save stays here',
-      collectTitle: 'Collection', collectSub: 'Figure · weapons · pets · style',
-      gear: 'Character', gearSub: 'Slots · look',
+      collectTitle: 'Collection', collectSub: 'Gear · weapons · pets · style',
+      gear: 'Gear', gearSub: 'Slots · look',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · practice',
       wall: 'Wall Smash', wallSub: '60 sec · combo = faster',
       mats: 'Coins', matsSub: '45 sec · coins → pet coins',
@@ -2265,8 +2257,8 @@ const I18N = {
     hub: {
       step: 'Schritt 2 · Modus wählen', solo: 'SOLO', collection: 'SAMMLUNG',
       arcadeTitle: 'Arcade', arcadeSub: 'Schnelle Runden · Save bleibt hier',
-      collectTitle: 'Sammlung', collectSub: 'Figur · Waffen · Pets · Stil',
-      gear: 'Figur', gearSub: 'Slots · Look',
+      collectTitle: 'Sammlung', collectSub: 'Ausrüstung · Waffen · Pets · Stil',
+      gear: 'Ausrüstung', gearSub: 'Slots · Look',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · Üben',
       wall: 'Mauer', wallSub: '60 Sek · Combo = schneller',
       mats: 'Münzen', matsSub: '45 Sek · Münzen → Pet-Coins',
@@ -2347,8 +2339,8 @@ const I18N = {
     hub: {
       step: 'Étape 2 · Choisir le mode', solo: 'SOLO', collection: 'COLLECTION',
       arcadeTitle: 'Arcade', arcadeSub: 'Sessions rapides · save ici',
-      collectTitle: 'Collection', collectSub: 'Figure · armes · pets · style',
-      gear: 'Figure', gearSub: 'Slots · look',
+      collectTitle: 'Collection', collectSub: 'Équipement · armes · pets · style',
+      gear: 'Équipement', gearSub: 'Slots · look',
       training: 'Entraînement', trainingSub: '1v1 · RabbitRobot · pratique',
       wall: 'Mur', wallSub: '60 s · combo = plus vite',
       mats: 'Pièces', matsSub: '45 s · pièces → pet coins',
@@ -2429,8 +2421,8 @@ const I18N = {
     hub: {
       step: 'Paso 2 · Elige modo', solo: 'SOLO', collection: 'COLECCIÓN',
       arcadeTitle: 'Arcade', arcadeSub: 'Sesiones rápidas · save aquí',
-      collectTitle: 'Colección', collectSub: 'Figura · armas · pets · estilo',
-      gear: 'Figura', gearSub: 'Slots · look',
+      collectTitle: 'Colección', collectSub: 'Equipo · armas · pets · estilo',
+      gear: 'Equipo', gearSub: 'Slots · look',
       training: 'Entrenamiento', trainingSub: '1v1 · RabbitRobot · practicar',
       wall: 'Muro', wallSub: '60 s · combo = más rápido',
       mats: 'Monedas', matsSub: '45 s · monedas → pet coins',
@@ -13276,7 +13268,7 @@ function seedNlGameStrings() {
     gambleGoStart: 'START!',
     styleHead: 'Stijl',
     styleSub: 'Outfits met bonus — level, training, monsterboek · hover voor tooltip',
-    gearHead: 'Figuur',
+    gearHead: 'Uitrusting',
     gearSub: '5 slots · look vs stats · level- en tijdslot',
     styleActive: 'Actief',
     stylePick: 'Tik om te kiezen',
@@ -14208,7 +14200,7 @@ const CATALOG_EN = {
     gambleGoStart: 'START!',
     styleHead: 'Style',
     styleSub: 'Outfits with bonus — level, training, monster book · hover for tooltip',
-    gearHead: 'Figure',
+    gearHead: 'Gear',
     gearSub: '5 slots · look vs stats · level and time locks',
     styleActive: 'Active',
     stylePick: 'Tap to equip',
@@ -18181,8 +18173,9 @@ function applyFighterMove(f, mv, dt, opts) {
 }
 /* --- src/systems/gear.js --- */
 /* ============================== GEAR UI ADAPTER ========================
- * Char-screen lane. Contract v1: docs/GEAR-CONTRACT-v1.md
- * Save bags: save.equipment + save.ownedGear. Systems #280 save.gear is a mirror.
+ * Char-screen lane. Schema: docs/GEAR-SYSTEM.md (#280).
+ * Save: createdAt + save.gear { schema, equipped, owned:{id:{at,src}} }.
+ * Flat save.equipment / save.ownedGear migrate once then drop.
  * Do not redeclare GEAR_SLOT_IDS, gearItemById, sanitizeGearSave, gearEquipItem.
  */
 const GEAR_DRAW_ORDER = ['back', 'legs', 'chest', 'head', 'hands', 'weapon', 'pet'];
@@ -18240,6 +18233,8 @@ function contractGearItem(raw) {
     needDays: Math.floor(Number(raw.unlockDays || raw.needDays) || 0),
     unlockLvl: Math.max(1, Math.floor(Number(raw.unlockLvl || raw.needLvl) || 1)),
     unlockDays: Math.max(1, Math.floor(Number(raw.unlockDays || raw.needDays) || 1)),
+    needAdvUnlocked: raw.needAdvUnlocked != null ? Math.floor(Number(raw.needAdvUnlocked) || 0) : null,
+    needDiff: raw.needDiff === 'nightmare' || raw.needDiff === 'hell' ? raw.needDiff : null,
     mods: (hasStats && hasModKeys) ? mods : null,
     draw: raw.draw || raw.look || null,
     look: raw.look || null,
@@ -18261,44 +18256,37 @@ function listGearItems(slotId) {
   return list.map(contractGearItem).filter(Boolean);
 }
 
-function _syncContractBags(st) {
+function _dropFlatGearKeys(st) {
   if (!st || typeof st !== 'object') return st;
-  if (!st.equipment || typeof st.equipment !== 'object') st.equipment = _emptyEq();
-  if (!st.ownedGear || typeof st.ownedGear !== 'object') st.ownedGear = {};
-  if (!st.gear || typeof st.gear !== 'object') {
-    st.gear = { schema: 1, equipped: _emptyEq(), owned: {} };
+  delete st.equipment;
+  delete st.ownedGear;
+  delete st.gearEquipped;
+  delete st.gearOwned;
+  return st;
+}
+
+function _ensureGearBag(st) {
+  if (!st || typeof st !== 'object') return st;
+  if (typeof ensureGearSave === 'function') ensureGearSave(st);
+  else {
+    if (!st.gear || typeof st.gear !== 'object' || Array.isArray(st.gear)) {
+      st.gear = { schema: 1, equipped: _emptyEq(), owned: {} };
+    }
+    if (!st.gear.equipped || typeof st.gear.equipped !== 'object') st.gear.equipped = _emptyEq();
+    if (!st.gear.owned || typeof st.gear.owned !== 'object') st.gear.owned = {};
+    st.gear.schema = 1;
   }
-  if (!st.gear.equipped || typeof st.gear.equipped !== 'object') st.gear.equipped = _emptyEq();
-  if (!st.gear.owned || typeof st.gear.owned !== 'object') st.gear.owned = {};
-  for (const sid of _gearSlotIds()) {
-    const fromEq = st.equipment[sid];
-    const fromBag = st.gear.equipped[sid];
-    const id = (typeof fromEq === 'string' && fromEq) ? fromEq
-      : ((typeof fromBag === 'string' && fromBag) ? fromBag : null);
-    st.equipment[sid] = id;
-    st.gear.equipped[sid] = id;
-  }
-  const owned = Object.assign({}, st.gear.owned || {}, st.ownedGear || {});
-  st.ownedGear = {};
-  st.gear.owned = st.gear.owned || {};
-  for (const [id, v] of Object.entries(owned)) {
-    if (!id || !v) continue;
-    const at = (typeof v === 'object' && Number(v.at)) ? Number(v.at) : (typeof v === 'number' ? v : 1);
-    const src = (typeof v === 'object' && typeof v.src === 'string') ? v.src : 'grant';
-    st.ownedGear[id] = { at: at || 1 };
-    if (!st.gear.owned[id]) st.gear.owned[id] = { at: at || 1, src };
-  }
+  _dropFlatGearKeys(st);
   return st;
 }
 
 function getEquippedGear() {
   const out = _emptyEq();
-  if (typeof save === 'object' && save) _syncContractBags(save);
+  if (typeof save === 'object' && save) _ensureGearBag(save);
   for (const sid of _gearSlotIds()) {
     let id = null;
-    if (typeof save === 'object' && save && save.equipment) id = save.equipment[sid];
-    if (!id && typeof gearEquippedId === 'function') id = gearEquippedId(sid);
-    if (!id && save && save.gear && save.gear.equipped) id = save.gear.equipped[sid];
+    if (typeof gearEquippedId === 'function') id = gearEquippedId(sid);
+    if (!id && typeof save === 'object' && save && save.gear && save.gear.equipped) id = save.gear.equipped[sid];
     out[sid] = (typeof id === 'string' && id) ? id : null;
   }
   return out;
@@ -18307,11 +18295,8 @@ function getEquippedGear() {
 function gearOwned(item) {
   if (!item) return false;
   const id = typeof item === 'string' ? item : item.id;
-  if (typeof save === 'object' && save) {
-    _syncContractBags(save);
-    if (save.ownedGear && save.ownedGear[id]) return true;
-  }
   if (typeof gearItemOwned === 'function') return !!gearItemOwned(id);
+  if (typeof save === 'object' && save) _ensureGearBag(save);
   return !!(save && save.gear && save.gear.owned && save.gear.owned[id]);
 }
 
@@ -18328,8 +18313,17 @@ function _lockCopy(gate, need, when) {
   if (gate === 'dex') {
     return typeof tOr === 'function' ? tOr('gear.lockDex', '{n} monsters', { n: need }) : (need + ' monsters');
   }
-  if (gate === 'time') {
+  if (gate === 'time' || gate === 'days') {
+    if (need != null && need !== '') {
+      return typeof tOr === 'function' ? tOr('gear.lockDays', '{n} dagen', { n: need }) : (need + ' dagen');
+    }
     return typeof tOr === 'function' ? tOr('gear.lockTime', 'Vanaf {when}', { when: when || 'datum' }) : ('Vanaf ' + (when || 'datum'));
+  }
+  if (gate === 'adventure' || gate === 'adv') {
+    return typeof tOr === 'function' ? tOr('gear.lockAdv', 'Avontuur Lv {n}', { n: need }) : ('Avontuur Lv ' + need);
+  }
+  if (gate === 'diff') {
+    return typeof tOr === 'function' ? tOr('gear.lockDiff', 'Nog niet vrij') : 'Nog niet vrij';
   }
   return typeof tOr === 'function' ? tOr('gear.pillLock', 'LOCK') : 'LOCK';
 }
@@ -18345,49 +18339,29 @@ function _dexN() {
 }
 
 function gearUnlockState(item) {
-  const it = contractGearItem(item) || item;
+  const raw = (item && item.id && typeof gearItemById === 'function') ? (gearItemById(item.id) || item) : item;
+  const it = contractGearItem(raw) || raw;
   if (!it) return { unlocked: true, gate: null, label: '', model: null };
   if (!gearOwned(it)) {
     return { unlocked: false, gate: 'owned', label: _lockCopy('owned'), model: null };
   }
+  if (typeof gearGateState === 'function') {
+    const g = gearGateState(raw && raw.unlockLvl != null ? raw : it);
+    if (g && !g.ok) {
+      const why = (g.reasons && g.reasons[0]) || 'locked';
+      if (why === 'level') return { unlocked: false, gate: 'level', need: g.needLvl, label: _lockCopy('level', g.needLvl), model: g };
+      if (why === 'time') return { unlocked: false, gate: 'time', need: g.needDays, label: _lockCopy('days', g.needDays), model: g };
+      if (why === 'adventure') return { unlocked: false, gate: 'adv', need: it.needAdvUnlocked || g.needLvl, label: _lockCopy('adv', it.needAdvUnlocked || g.needLvl), model: g };
+      if (why === 'diff') return { unlocked: false, gate: 'diff', label: _lockCopy('diff'), model: g };
+      return { unlocked: false, gate: why, label: _lockCopy(why, g.needLvl), model: g };
+    }
+    const tip = typeof gearTooltipModel === 'function' ? gearTooltipModel(raw) : null;
+    return { unlocked: true, gate: null, label: '', model: tip || g };
+  }
   const lvl = (typeof save === 'object' && save) ? (save.lvl || 1) : 1;
-  const trains = (typeof save === 'object' && save) ? (save.trainWins || 0) : 0;
-  if (it.needLvl && lvl < it.needLvl) {
-    return { unlocked: false, gate: 'level', need: it.needLvl, label: _lockCopy('level', it.needLvl) };
-  }
-  if (it.needTrain && trains < it.needTrain) {
-    return { unlocked: false, gate: 'train', need: it.needTrain, label: _lockCopy('train', it.needTrain) };
-  }
-  if (it.needDex && _dexN() < it.needDex) {
-    return { unlocked: false, gate: 'dex', need: it.needDex, label: _lockCopy('dex', it.needDex) };
-  }
-  if (it.needTime) {
-    const at = Date.parse(it.needTime);
-    if (Number.isFinite(at) && Date.now() < at) {
-      let when = it.needTime;
-      try { when = new Date(at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); } catch (_) {}
-      return { unlocked: false, gate: 'time', label: _lockCopy('time', null, when) };
-    }
-  }
-  if (it.needDays && typeof gearAccountAgeDays === 'function') {
-    const have = gearAccountAgeDays(typeof save === 'object' ? save : null);
-    if (have < it.needDays) {
-      return { unlocked: false, gate: 'time', need: it.needDays, label: _lockCopy('time', null, String(it.needDays)) };
-    }
-  }
-  if (typeof gearTooltipModel === 'function') {
-    const raw = (item && item.unlockLvl != null) ? item : it;
-    const m = gearTooltipModel(raw);
-    if (m && m.gate && !m.gate.ok) {
-      const why = (m.gate.reasons && m.gate.reasons[0]) || 'locked';
-      if (why === 'level') return { unlocked: false, gate: 'level', label: _lockCopy('level', m.unlockLvl || it.needLvl), model: m };
-      if (why === 'time') {
-        const when = m.unlockDays != null ? String(m.unlockDays) : (it.needTime || 'datum');
-        return { unlocked: false, gate: 'time', label: _lockCopy('time', null, when), model: m };
-      }
-      return { unlocked: false, gate: why, label: _lockCopy(why, m.unlockLvl || it.needLvl), model: m };
-    }
-    return { unlocked: true, gate: null, label: '', model: m };
+  if ((it.unlockLvl || it.needLvl) && lvl < (it.unlockLvl || it.needLvl)) {
+    const need = it.unlockLvl || it.needLvl;
+    return { unlocked: false, gate: 'level', need, label: _lockCopy('level', need) };
   }
   return { unlocked: true, gate: null, label: '', model: null };
 }
@@ -18459,12 +18433,13 @@ function equipGear(itemId) {
       const unlock = gearUnlockState(item);
       return { ok: false, reason: (res && res.reason) || unlock.gate || 'locked', label: unlock.label, item };
     }
+    if (typeof save === 'object' && save) _dropFlatGearKeys(save);
+    return { ok: true, item };
   }
   if (typeof save === 'object' && save) {
-    _syncContractBags(save);
-    save.equipment[item.slotId] = item.id;
-    if (!save.ownedGear[item.id]) save.ownedGear[item.id] = { at: Date.now() };
-    if (save.gear && save.gear.equipped) save.gear.equipped[item.slotId] = item.id;
+    _ensureGearBag(save);
+    save.gear.equipped[item.slotId] = item.id;
+    if (!save.gear.owned[item.id]) save.gear.owned[item.id] = { at: Date.now(), src: 'grant' };
     if (typeof persistOrToast === 'function') persistOrToast('gear');
     else if (typeof persist === 'function') persist();
   }
@@ -18475,13 +18450,13 @@ function unequipGear(slotId) {
   const sid = (slotId && _gearSlotIds().indexOf(slotId) >= 0) ? slotId : null;
   if (!sid) return { ok: false, reason: 'slot' };
   if (typeof gearUnequipSlot === 'function') gearUnequipSlot(sid);
-  if (typeof save === 'object' && save) {
-    _syncContractBags(save);
-    save.equipment[sid] = null;
-    if (save.gear && save.gear.equipped) save.gear.equipped[sid] = null;
+  else if (typeof save === 'object' && save) {
+    _ensureGearBag(save);
+    save.gear.equipped[sid] = null;
     if (typeof persistOrToast === 'function') persistOrToast('gear');
     else if (typeof persist === 'function') persist();
   }
+  if (typeof save === 'object' && save) _dropFlatGearKeys(save);
   return { ok: true };
 }
 
@@ -18623,7 +18598,7 @@ function migrateFlatGearIntoBag(out) {
   }
   delete out.gearEquipped;
   delete out.gearOwned;
-  _syncContractBags(out);
+  _dropFlatGearKeys(out);
   return out;
 }
 

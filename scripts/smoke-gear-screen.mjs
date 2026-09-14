@@ -43,16 +43,17 @@ must(/function sanitizeGearSave/.test(data), 'sanitizeGearSave missing');
 must(/gearEquipItem/.test(uiAdapt) && /gearTooltipModel/.test(uiAdapt) && /gearRenderDescriptor/.test(uiAdapt), 'UI adapter must bind systems helpers');
 must(/merged\.gear/.test(storage) && /out\.gear = sanitizeGearSave/.test(storage), 'storage must wire save.gear');
 must(/createdAt: 0/.test(storage), 'DEFAULT_SAVE.createdAt missing');
-must(/equipment: \{ head: null, chest: null, hands: null, legs: null, back: null \}/.test(storage), 'DEFAULT_SAVE.equipment missing');
-must(/ownedGear: \{\}/.test(storage), 'DEFAULT_SAVE.ownedGear missing');
+must(!/equipment: \{ head: null, chest: null, hands: null, legs: null, back: null \}/.test(storage), 'DEFAULT_SAVE must not keep flat equipment');
 must(/gear: \{ schema: 1/.test(storage), 'DEFAULT_SAVE.gear missing');
+must(/_dropFlatGearKeys/.test(uiAdapt) && /_ensureGearBag/.test(uiAdapt), 'schema delta drop/ensure helpers missing');
+must(/gearGateState/.test(uiAdapt) && /gearEquipItem/.test(uiAdapt), 'UI adapter must call #280 gate/equip');
 must(/renderGear/.test(ui) && /gearScreen/.test(ui), 'UI must render + navigate gearScreen');
 must(/gearEquipItem/.test(ui) && /gearTooltipModel/.test(ui) && /drawGearHeroDoll/.test(ui), 'renderGear must call systems bind helpers');
 must(/btnGear',\s*'hub\.gear'/.test(i18n), 'Character tile must be i18n-wired');
 must(/--menu-tile-solid/.test(css.match(/\.gear-slot-card \{[\s\S]*?\}/)?.[0] || ''), 'slot cards must use HOME tiles');
 must(/min-height:\s*max\(56px,\s*var\(--touch-min\)\)/.test(css), 'Android touch floor missing on slot cards');
 must(!/\.gear-picker \{[\s\S]{0,160}max-height/.test(css), 'picker must not nest-scroll (one page scroll)');
-must(/save\.equipment/.test(uiAdapt) && /ownedGear/.test(uiAdapt), 'v1 save.equipment + ownedGear missing');
+must(/save\.gear/.test(uiAdapt) && /equipped\[/.test(uiAdapt), 'adapter must write save.gear.equipped');
 must(/needLvl/.test(uiAdapt) && /needTrain/.test(uiAdapt) && /needDex/.test(uiAdapt) && /needTime/.test(uiAdapt), 'v1 item lock fields missing');
 must(/GEAR_DRAW_ORDER = \['back', 'legs', 'chest', 'head', 'hands', 'weapon', 'pet'\]/.test(uiAdapt), 'draw-order must be back→legs→chest→head→hands→weapon→pet');
 must(/function drawGearHeroDoll/.test(uiAdapt), 'drawGearHeroDoll missing');
@@ -111,6 +112,10 @@ async function run() {
       UI.openModeHub('collect');
       const tile = document.getElementById('btnGear');
       if (!tile || tile.hidden) return { ok: false, why: 'btnGear missing on collect hub' };
+      const tileTitle = tile.querySelector('.hub-tile-title');
+      if (tileTitle && !/Uitrusting|Gear|Ausrüstung|Équipement|Equipo/.test(tileTitle.textContent || '')) {
+        return { ok: false, why: 'hub tile must be Uitrusting/Gear', text: tileTitle.textContent };
+      }
       UI.safeOpen('gearScreen', () => UI.renderGear());
       const screen = document.getElementById('gearScreen');
       if (!screen || !screen.classList.contains('active')) return { ok: false, why: 'gearScreen not active' };
@@ -138,12 +143,17 @@ async function run() {
       const q = document.getElementById('gearFilterQ');
       if (!q) return { ok: false, why: 'search missing' };
 
-      if (!save.equipment || !save.ownedGear) return { ok: false, why: 'v1 save.equipment / ownedGear missing' };
-      if (!save.gear || save.gear.schema !== 1 || !save.gear.equipped || !save.gear.owned) {
-        return { ok: false, why: 'save.gear mirror missing after boot' };
+      if (save.equipment != null || save.ownedGear != null) {
+        return { ok: false, why: 'flat equipment/ownedGear must be dropped', equipment: save.equipment, ownedGear: save.ownedGear };
       }
-      if (save.equipment.head !== 'head_wrap_cloth' && save.gear.equipped.head !== 'head_wrap_cloth') {
-        return { ok: false, why: 'starter head not equipped', head: save.equipment.head };
+      if (!save.createdAt || !save.gear || save.gear.schema !== 1 || !save.gear.equipped || !save.gear.owned) {
+        return { ok: false, why: 'save.gear schema bag missing after boot' };
+      }
+      if (save.gear.equipped.head !== 'head_wrap_cloth') {
+        return { ok: false, why: 'starter head not equipped', head: save.gear.equipped.head };
+      }
+      if (!save.gear.owned.head_wrap_cloth || save.gear.owned.head_wrap_cloth.src == null) {
+        return { ok: false, why: 'owned entry must be {at,src}', own: save.gear.owned.head_wrap_cloth };
       }
 
       const desc = gearRenderDescriptor(save);
@@ -169,7 +179,7 @@ async function run() {
 
       const locked = gearEquipItem('head_helm_iron');
       if (locked && locked.ok) return { ok: false, why: 'lvl-gated helm must refuse at default lvl' };
-      if (save.equipment.head === 'head_helm_iron' || save.gear.equipped.head === 'head_helm_iron') {
+      if (save.gear.equipped.head === 'head_helm_iron') {
         return { ok: false, why: 'locked item leaked into slot' };
       }
 
@@ -177,11 +187,12 @@ async function run() {
       if (missing && missing.ok) return { ok: false, why: 'unowned/gated bandana must refuse' };
 
       unequipGear('head');
-      if (save.equipment.head) return { ok: false, why: 'unequip did not clear equipment.head' };
+      if (save.gear.equipped.head) return { ok: false, why: 'unequip did not clear gear.equipped.head' };
+      if (save.equipment != null) return { ok: false, why: 'unequip recreated flat equipment' };
       const wear = equipGear('head_wrap_cloth');
       if (!wear || !wear.ok) return { ok: false, why: 're-equip starter failed', wear };
-      if (save.equipment.head !== 'head_wrap_cloth') return { ok: false, why: 'save.equipment.head not set' };
-      if (!save.ownedGear.head_wrap_cloth) return { ok: false, why: 'ownedGear starter missing' };
+      if (save.gear.equipped.head !== 'head_wrap_cloth') return { ok: false, why: 'save.gear.equipped.head not set' };
+      if (!save.gear.owned.head_wrap_cloth) return { ok: false, why: 'gear.owned starter missing' };
 
       const dirty = sanitizeGearSave({
         schema: 1,
