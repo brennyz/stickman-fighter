@@ -140,6 +140,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | Gear UI contract v1: HOME Figuur-tegel, 5 slot-kaarten (title/sub stacked), weapon aside, save.equipment + ownedGear. v1.18.166 / SW 376. |
 | 2026-09-14 | — | Gear UI bind #280: GEAR_SLOT_IDS + gearTooltipModel/gearEquipItem/gearRenderDescriptor, save.gear, filter+scroll for 131. v1.18.165 / SW 375. Draft. |
 | 2026-09-14 | — | Gear UI char-screen: 5 slots (head/chest/hands/legs/back), LOOK vs STAT, level/time/train/dex locks, save.equipment. v1.18.164 / SW 374. Draft. |
 | 2026-09-14 | — | #266 sprint: locale (VERLOREN, Tips-label, eilandkop) + stillere versie-banner + rest HOME. v1.18.163 / SW 373. Draft. |

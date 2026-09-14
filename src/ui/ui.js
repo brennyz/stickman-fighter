@@ -4097,26 +4097,33 @@ const UI = {
       slotList.innerHTML = '';
       for (const slot of slots) {
         const sid = slot.id;
-        const item = typeof gearItemById === 'function' ? gearItemById(eq[sid]) : null;
+        const rawItem = typeof gearItemById === 'function' ? gearItemById(eq[sid]) : null;
+        const item = (typeof contractGearItem === 'function' && rawItem) ? contractGearItem(rawItem) : rawItem;
         const unlock = item && typeof gearUnlockState === 'function' ? gearUnlockState(item) : { unlocked: true };
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'gear-slot-card'
           + (sid === pickSlot ? ' sel' : '')
-          + (item && gearHasStats(item) ? ' kind-stat' : '')
-          + (item && !unlock.unlocked ? ' locked' : '');
+          + (item && unlock.unlocked && gearHasStats(item) ? ' kind-stat' : '')
+          + (item && !unlock.unlocked ? ' locked' : '')
+          + (!item ? ' empty' : '');
         btn.setAttribute('data-gear-slot', sid);
         btn.setAttribute('data-slot', sid);
         btn.setAttribute('role', 'listitem');
         btn.setAttribute('aria-pressed', sid === pickSlot ? 'true' : 'false');
         const tint = (item && item.look && item.look.tint) || (item && item.color) || slot.color || '#1c2940';
-        const sub = item
-          ? (unlock.unlocked ? gearItemName(item) : (unlock.label || tOr('gear.empty', 'Leeg')))
-          : tOr('gear.empty', 'Leeg');
+        const rar = item && item.rarity ? String(item.rarity) : '';
+        const sub = !item
+          ? tOr('gear.empty', 'Leeg')
+          : (!unlock.unlocked
+            ? (unlock.label || tOr('gear.pillLock', 'LOCK'))
+            : (gearItemName(item) + (rar ? ' · ' + rar : '')));
         btn.innerHTML =
           `<span class="gear-slot-swatch" style="background:${esc(tint)}"></span>` +
-          `<span class="gear-slot-copy"><span class="gear-slot-title">${esc(gearSlotName(sid))}</span>` +
-          `<span class="gear-slot-sub">${esc(sub)}</span></span>` +
+          `<span class="gear-slot-copy">` +
+          `<span class="gear-slot-title">${esc(gearSlotName(sid))}</span>` +
+          `<span class="gear-slot-sub">${esc(sub)}</span>` +
+          `</span>` +
           pillFor(item, unlock);
         bindPress(btn, () => {
           safeUiAction(() => {
