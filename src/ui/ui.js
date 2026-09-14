@@ -4033,9 +4033,12 @@ const UI = {
   },
 
   renderGear() {
-    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-    }[c]));
+    const esc = (s) => String(s == null ? '' : s)
+      .split('&').join('&amp;')
+      .split('<').join('&lt;')
+      .split('>').join('&gt;')
+      .split('"').join('&quot;')
+      .split("'").join('&#39;');
     const slots = typeof listGearSlots === 'function' ? listGearSlots() : [];
     const eq = typeof getEquippedGear === 'function' ? getEquippedGear() : {};
     if (!this.gearSlotPick || !slots.some((s) => s.id === this.gearSlotPick)) {

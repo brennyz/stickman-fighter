@@ -40,7 +40,7 @@ must(/function gearEquipItem/.test(data), 'gearEquipItem missing');
 must(/function gearRenderDescriptor/.test(data), 'gearRenderDescriptor missing');
 must(/function sanitizeGearSave/.test(data), 'sanitizeGearSave missing');
 must(/gearEquipItem/.test(uiAdapt) && /gearTooltipModel/.test(uiAdapt) && /gearRenderDescriptor/.test(uiAdapt), 'UI adapter must bind systems helpers');
-must(/save\.gear/.test(storage), 'storage must wire save.gear');
+must(/merged\.gear/.test(storage) && /out\.gear = sanitizeGearSave/.test(storage), 'storage must wire save.gear');
 must(/createdAt: 0/.test(storage), 'DEFAULT_SAVE.createdAt missing');
 must(/gear: \{ schema: 1/.test(storage), 'DEFAULT_SAVE.gear missing');
 must(/renderGear/.test(ui) && /gearScreen/.test(ui), 'UI must render + navigate gearScreen');

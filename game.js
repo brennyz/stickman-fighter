@@ -18304,6 +18304,11 @@ function gearEquippedCount() {
   return _gearSlotIds().reduce((n, sid) => n + (eq[sid] ? 1 : 0), 0);
 }
 
+function gearUiRenderDescriptor(s) {
+  if (typeof gearRenderDescriptor === 'function') return gearRenderDescriptor(s);
+  return { schema: 1, slots: _gearSlotIds().map((id) => ({ slot: id, itemId: null })) };
+}
+
 function gearFilterItems(items, filter, q) {
   const needle = String(q || '').trim().toLowerCase();
   const want = filter || 'all';
@@ -35929,9 +35934,12 @@ const UI = {
   },
 
   renderGear() {
-    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-    }[c]));
+    const esc = (s) => String(s == null ? '' : s)
+      .split('&').join('&amp;')
+      .split('<').join('&lt;')
+      .split('>').join('&gt;')
+      .split('"').join('&quot;')
+      .split("'").join('&#39;');
     const slots = typeof listGearSlots === 'function' ? listGearSlots() : [];
     const eq = typeof getEquippedGear === 'function' ? getEquippedGear() : {};
     if (!this.gearSlotPick || !slots.some((s) => s.id === this.gearSlotPick)) {

@@ -153,6 +153,11 @@ function gearEquippedCount() {
   return _gearSlotIds().reduce((n, sid) => n + (eq[sid] ? 1 : 0), 0);
 }
 
+function gearUiRenderDescriptor(s) {
+  if (typeof gearRenderDescriptor === 'function') return gearRenderDescriptor(s);
+  return { schema: 1, slots: _gearSlotIds().map((id) => ({ slot: id, itemId: null })) };
+}
+
 function gearFilterItems(items, filter, q) {
   const needle = String(q || '').trim().toLowerCase();
   const want = filter || 'all';
