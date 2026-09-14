@@ -698,6 +698,11 @@ function applyPlayerSkill(fighter) {
 }
 
 function skillBanner(sk) {
+  const id = sk && sk.id;
+  if (id && typeof tOr === 'function') {
+    const via = tOr('technique.' + id, '');
+    if (via) return via;
+  }
   return (sk && sk.banner) || 'SPECIAL!';
 }
 

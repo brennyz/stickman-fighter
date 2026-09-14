@@ -2070,16 +2070,29 @@ const UI = {
       const left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
       const quota = document.getElementById('summonQuota');
       if (quota) {
-        quota.textContent = `Vandaag: ${left}/${CHEST_DAILY_TOTAL} random summons`;
+        quota.textContent = tOr('ui.summonQuota', 'Vandaag: {left}/{total} random summons', {
+          left, total: CHEST_DAILY_TOTAL,
+        });
       }
       const pullBtn = document.getElementById('btnChestPull');
       const pullLbl = document.getElementById('chestPullLbl');
-      if (pullLbl) pullLbl.textContent = left > 0 ? `${left} over` : 'Op';
+      if (pullLbl) {
+        pullLbl.textContent = left > 0
+          ? tOr('ui.summonLeft', '{n} over', { n: left })
+          : tOr('ui.summonDone', 'Op');
+      }
       if (pullBtn) {
         pullBtn.disabled = left <= 0 || !!this._chestPullBusy;
+        const titleEl = pullBtn.querySelector('div');
+        if (titleEl) {
+          const small = titleEl.querySelector('small');
+          titleEl.textContent = '';
+          titleEl.appendChild(document.createTextNode(tOr('ui.summonOpen', 'Open kist')));
+          if (small) titleEl.appendChild(small);
+        }
         pullBtn.setAttribute('aria-label', left > 0
-          ? `Open kist, ${left} over`
-          : 'Geen summons meer vandaag');
+          ? tOr('ui.summonOpenAria', 'Open kist, {n} over', { n: left })
+          : tOr('ui.summonNoMore', 'Geen summons meer vandaag'));
       }
       const stage = document.getElementById('summonStage');
       if (stage) {
@@ -2087,19 +2100,24 @@ const UI = {
         stage.classList.toggle('is-pullable', canPull);
         stage.setAttribute('aria-disabled', canPull ? 'false' : 'true');
         stage.setAttribute('aria-label', canPull
-          ? `Open kist, ${left} over`
-          : (left <= 0 ? 'Geen summons meer vandaag' : 'Kist opent…'));
+          ? tOr('ui.summonOpenAria', 'Open kist, {n} over', { n: left })
+          : (left <= 0
+            ? tOr('ui.summonNoMore', 'Geen summons meer vandaag')
+            : tOr('ui.summonOpening', 'Kist opent…')));
         stage.tabIndex = canPull ? 0 : -1;
       }
       const hint = document.getElementById('summonStageHint');
-      if (hint) hint.style.display = (left > 0 && !this._chestPullBusy) ? '' : 'none';
+      if (hint) {
+        hint.textContent = tOr('ui.summonHint', 'Tik kist om te openen');
+        hint.style.display = (left > 0 && !this._chestPullBusy) ? '' : 'none';
+      }
 
       const logEl = document.getElementById('summonLog');
       if (logEl) {
         const pulls = (save.chestDaily && Array.isArray(save.chestDaily.pulls))
           ? save.chestDaily.pulls.slice().reverse() : [];
         if (!pulls.length) {
-          logEl.textContent = 'Nog geen pulls vandaag.';
+          logEl.textContent = tOr('ui.summonNoPulls', 'Nog geen pulls vandaag.');
         } else {
           logEl.innerHTML = pulls.slice(0, 8).map((p) => {
             const tag = p.nice ? '✦' : '·';
@@ -2454,10 +2472,10 @@ const UI = {
         this._chestPullLeftSnap = null;
       }
       const text = document.getElementById('summonRevealText');
-      const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : 'Mislukt');
+      const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : tOr('ui.summonFail', 'Mislukt'));
       // Never spoil via toast/text during the open — only after card
       this._summonPendingMsg = (res && res.ok) ? msg : null;
-      if (text) text.textContent = (res && res.ok) ? 'Kist opent…' : msg;
+      if (text) text.textContent = (res && res.ok) ? tOr('ui.summonOpening', 'Kist opent…') : msg;
 
       if (!res || !res.ok) {
         this._chestPullBusy = false;

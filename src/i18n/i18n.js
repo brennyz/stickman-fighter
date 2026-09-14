@@ -703,6 +703,21 @@ function applyLangStaticScreens() {
 
   setText('petScreenHead', 'pets.title');
   setText('petScreenSub', 'pets.sub');
+  setText('summonScreenHead', 'menu.summons');
+  setText('summonScreenSub', 'ui.summonSub');
+  setText('summonWhereStrip', 'ui.summonWhere');
+  setText('summonStageHint', 'ui.summonHint');
+  setText('summonRevealText', 'ui.summonRevealHint');
+  const gotoW = document.getElementById('btnSummonGotoWeapons');
+  if (gotoW) {
+    const d = gotoW.querySelector('div');
+    if (d) d.innerHTML = t('ui.summonGotoWeapons') + '<small>' + t('ui.summonCollect') + '</small>';
+  }
+  const gotoP = document.getElementById('btnSummonGotoPets');
+  if (gotoP) {
+    const d = gotoP.querySelector('div');
+    if (d) d.innerHTML = t('ui.summonGotoPets') + '<small>' + t('ui.summonCollect') + '</small>';
+  }
   const eggBtn = document.getElementById('eggCrackBtn');
   if (eggBtn) {
     const d = eggBtn.querySelector('div');
@@ -905,6 +920,7 @@ function applyLang() {
     else if (active === 'dexScreen' && typeof UI.renderDex === 'function') UI.renderDex();
     else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'modeHubScreen') UI.renderModeHub();
+    else if (active === 'summonScreen' && typeof UI.renderSummon === 'function') UI.renderSummon();
     else if (active === 'resultScreen' && UI.lastResult && typeof UI.showResult === 'function') {
       try { UI.showResult(!!UI.lastResult.win, UI.lastResult); } catch (_) {}
     }

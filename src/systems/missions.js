@@ -2612,6 +2612,22 @@ function gambleOnboardHintLine() {
       : 'Eerste keer: sum ≤5 super-baas · sum ≥9 ally buff · Skip = geen gok');
 }
 
+/** Welcome only on HOME hub — never chase Adventure/Settings/title. */
+function welcomeToastOnHub() {
+  try {
+    if (typeof state !== 'undefined' && (state === 'play' || state === 'pause')) return false;
+    const splash = document.getElementById('sfSplash');
+    if (splash && !splash.classList.contains('is-done')) return false;
+    const menu = document.getElementById('menuScreen');
+    if (!menu || !menu.classList.contains('active')) return false;
+    const other = document.querySelector('.screen.active:not(#menuScreen)');
+    if (other) return false;
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 function maybeWelcomeToast() {
   ensureTipsSeen();
   if (save.tipsSeen.welcome) return;
@@ -2621,19 +2637,35 @@ function maybeWelcomeToast() {
     persist();
     return;
   }
-  save.tipsSeen.welcome = 1;
-  persist();
-  setTimeout(() => {
-    if (state === 'play') return;
-    if (onboardingProgress().seen > 0) return;
+  let tries = 0;
+  const tick = () => {
+    if (save.tipsSeen.welcome) return;
+    if (onboardingProgress().seen > 0 || save.lvl > 1) {
+      save.tipsSeen.welcome = 1;
+      persist();
+      return;
+    }
+    if (welcomeToastOnHub()) {
+      save.tipsSeen.welcome = 1;
+      persist();
+      try { userToast(t('toast.welcome'), 2200); } catch (_) {}
+      return;
+    }
+    tries++;
+    let onSplash = false;
     try {
-      const lvl = document.getElementById('levelScreen');
-      if (lvl && lvl.classList.contains('active')) return;
+      const splash = document.getElementById('sfSplash');
+      onSplash = !!(splash && !splash.classList.contains('is-done'));
     } catch (_) {}
-    const splash = document.getElementById('sfSplash');
-    if (splash && !splash.classList.contains('is-done')) return;
-    userToast(t('toast.welcome'), 3800);
-  }, 2800);
+    // Still on title/splash — wait for HOME. Left hub already — don't follow.
+    if (onSplash && tries < 24) {
+      setTimeout(tick, 350);
+      return;
+    }
+    save.tipsSeen.welcome = 1;
+    persist();
+  };
+  setTimeout(tick, 400);
 }
 
 /** Level-pacing v1.14.3: iets rustiger — +15% vroeg, oplopend tot +50% vanaf ~Lv 18. */

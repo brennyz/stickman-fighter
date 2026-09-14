@@ -2329,16 +2329,12 @@ class Game {
         fireProj(0, 0, 1.05, { curl: 0 });
         fireProj(face * 8, -14, 0.92, { curl: -1, vy0: -120, curlAccel: 480, curlMaxVy: 300 });
         fireProj(face * 8, 14, 0.92, { curl: 1, vy0: 120, curlAccel: 480, curlMaxVy: 300 });
-        try { this.banner(t('banner.spiral_orbTriple'), 1.15, col, 36); } catch (_) {
-          this.banner('TRIPLE SPIRAL ORB!', 1.15, col, 36);
-        }
+        this.banner(tOr('banner.spiral_orbTriple', 'TRIPLE SPIRAL ORB!'), 1.15, col, 36);
       } else if (mode === 'dual') {
         // ↑ + ↓ krul — start al met verticale snelheid zodat beide lanes zichtbaar zijn
         fireProj(face * 6, -12, 0.96, { curl: -1, vy0: -100, curlAccel: 440, curlMaxVy: 280 });
         fireProj(face * 6, 12, 0.96, { curl: 1, vy0: 100, curlAccel: 440, curlMaxVy: 280 });
-        try { this.banner(t('banner.spiral_orbDual'), 1.0, col, 32); } catch (_) {
-          this.banner('DUAL SPIRAL ORB!', 1.0, col, 32);
-        }
+        this.banner(tOr('banner.spiral_orbDual', 'DUAL SPIRAL ORB!'), 1.0, col, 32);
       } else {
         fireProj(0, 0, 1, { curl: 0 });
       }
@@ -2465,7 +2461,8 @@ class Game {
     const j = m.enemyTechnique;
     const dmg = Math.round(m.dmg * (j === 'wave_cannon' ? 2.15 : j === 'lightning_pierce' ? 1.75 : 1.55));
     const y0 = m.y - m.size * 0.55;
-    const lbl = j === 'lightning_pierce' ? 'LIGHTNING PIERCE!' : j === 'wave_cannon' ? 'WAVE CANNON!' : 'SPIRAL ORB!';
+    const fallback = j === 'lightning_pierce' ? 'LIGHTNING PIERCE!' : j === 'wave_cannon' ? 'WAVE CANNON!' : 'SPIRAL ORB!';
+    const lbl = (typeof tOr === 'function') ? tOr('technique.' + j, fallback) : fallback;
     const col = j === 'lightning_pierce' ? '#a8e0ff' : j === 'wave_cannon' ? '#7cf5ff' : '#7cf5ff';
     try {
       this.floater(m.x, m.y - m.size - 24, lbl, col, 14);

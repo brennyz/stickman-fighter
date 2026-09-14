@@ -49,4 +49,21 @@ if (!/__sfNetQuietUpdate/.test(loop)) fail('dismiss must quiet the update banner
 if (!/body\.is-playing #netStatus\.sw-update/.test(css)) fail('update banner must hide during play');
 if (!/id="sfTitleStart"/.test(html) || /id="sfTitleName"/.test(html)) fail('name field must stay off the title gate');
 
-console.log('SMOKE_OK i18n-locale: Tips label, VERLOREN, no PICK AN ISLAND, quiet version banner');
+const missions = fs.readFileSync(path.join(root, 'src/systems/missions.js'), 'utf8');
+if (!/function welcomeToastOnHub/.test(missions)) fail('welcome toast must gate on HOME hub');
+if (!/screen\.active:not\(#menuScreen\)/.test(missions)) fail('welcome toast must skip other screens');
+if (/userToast\(t\('toast\.welcome'\), 3800\)/.test(missions)) fail('welcome toast still uses 3800ms overlay');
+
+if (/this\.banner\('TRIPLE SPIRAL ORB!'/.test(game)) fail('triple orb banner still hardcoded EN');
+if (/this\.banner\('DUAL SPIRAL ORB!'/.test(game)) fail('dual orb banner still hardcoded EN');
+if (/const lbl = j === 'lightning_pierce' \? 'LIGHTNING PIERCE!'/.test(game)) fail('enemy technique floater still hardcoded EN');
+if (!/tOr\('technique\.' \+ j/.test(game)) fail('enemy technique floater must use technique.* i18n');
+if (!/wave_cannon: 'WAVE CANNON!'/.test(catalog) && !/wave_cannon: 'GOLFKANON!'/.test(catalog)) {
+  fail('technique.wave_cannon missing from catalog');
+}
+if (!/summonNoMore:/.test(catalog)) fail('summon empty copy must be i18n');
+if (!/summonQuota:/.test(catalog)) fail('summon quota copy must be i18n');
+if (!/tOr\('ui\.summonQuota'/.test(ui)) fail('renderSummon quota must use i18n');
+if (!/tOr\('ui\.summonNoPulls'/.test(ui)) fail('summon log empty state must use i18n');
+
+console.log('SMOKE_OK i18n-locale: Tips label, VERLOREN, hub welcome, technique banners, summon i18n');
