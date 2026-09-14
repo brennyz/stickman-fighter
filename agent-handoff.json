@@ -13,10 +13,10 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.164",
-    "swCache": "stickfighter-app-v374",
-    "gameJsQuery": "game.js?v=374",
-    "cssQuery": "styles/main.css?v=374",
+    "appVersion": "1.18.165",
+    "swCache": "stickfighter-app-v375",
+    "gameJsQuery": "game.js?v=375",
+    "cssQuery": "styles/main.css?v=375",
     "featureBranch": "cursor/audio-themes-1a9e",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
@@ -95,6 +95,7 @@
       "from": "user",
       "text": "Audio themes only (separate i18n agent): keep classic pack; add jungle + fire-bamboo-boesa BGM/SFX + light scenery tint; persist; Settings/pause switcher. No Versus, no i18n, no combat icons/tutorials. Entry speel.html.",
       "status": "in-progress",
+      "notes": "Harden #270: soft BGM replay, sidecar persist, classic raw SONGS, no stacked SFX. v1.18.165.",
       "updated": "2026-09-14"
     },
     {

@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.164';
+const APP_VERSION = '1.18.165';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 374;
+const SW_CACHE_REV = 375;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1656,10 +1656,9 @@ function sanitizeSave(s) {
   })();
   out.music = out.music !== false;
   out.sfx = out.sfx !== false;
-  {
-    const allowedThemes = ['classic', 'jungle', 'fire-bamboo-boesa'];
-    out.audioTheme = allowedThemes.includes(out.audioTheme) ? out.audioTheme : 'classic';
-  }
+  out.audioTheme = (typeof normalizeAudioTheme === 'function')
+    ? normalizeAudioTheme(out.audioTheme)
+    : (['classic', 'jungle', 'fire-bamboo-boesa'].includes(out.audioTheme) ? out.audioTheme : 'classic');
   out.shake = out.shake !== false;
   out.haptics = out.haptics !== false;
   out.comboHud = out.comboHud !== false;
@@ -4884,6 +4883,7 @@ function importSaveJson(text) {
   const keptBackup = typeof snapshotSaveToBackup === 'function' && snapshotSaveToBackup(save);
   save = next;
   if (!persistPrimaryOnly()) throw new Error('Import gelukt maar opslaan mislukt — probeer opnieuw');
+  try { if (typeof syncAudioThemeAfterSaveChange === 'function') syncAudioThemeAfterSaveChange(); } catch (_) {}
   try { checkAchievements(); } catch (_) {}
   try { UI.renderMenu(); } catch (_) {}
   try { if (UI.renderMissions) UI.renderMissions(); } catch (_) {}
@@ -14376,16 +14376,49 @@ const AUDIO_THEME_PROFILES = {
   },
 };
 
+const AUDIO_THEME_PREF_KEY = 'stickfighter_audio_theme_v1';
+
 function normalizeAudioTheme(id) {
   return AUDIO_THEME_IDS.includes(id) ? id : 'classic';
 }
 
+function readAudioThemeSidecar() {
+  try {
+    if (typeof localStorage === 'undefined') return null;
+    const raw = localStorage.getItem(AUDIO_THEME_PREF_KEY);
+    return AUDIO_THEME_IDS.includes(raw) ? raw : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function writeAudioThemeSidecar(id) {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    localStorage.setItem(AUDIO_THEME_PREF_KEY, normalizeAudioTheme(id));
+  } catch (_) {}
+}
+
+function persistAudioTheme(id) {
+  const next = normalizeAudioTheme(id);
+  if (typeof save !== 'undefined' && save) save.audioTheme = next;
+  try { if (typeof persist === 'function') persist(); } catch (_) {}
+  if (typeof save !== 'undefined' && save && save.audioTheme !== next) save.audioTheme = next;
+  writeAudioThemeSidecar(next);
+  return next;
+}
+
 function getAudioTheme() {
   try {
-    return normalizeAudioTheme(typeof save !== 'undefined' && save ? save.audioTheme : 'classic');
-  } catch (_) {
-    return 'classic';
-  }
+    const fromSave = (typeof save !== 'undefined' && save) ? save.audioTheme : null;
+    if (AUDIO_THEME_IDS.includes(fromSave)) return fromSave;
+    const side = readAudioThemeSidecar();
+    if (side) {
+      if (typeof save !== 'undefined' && save) save.audioTheme = side;
+      return side;
+    }
+  } catch (_) {}
+  return 'classic';
 }
 
 function audioThemeProfile() {
@@ -14452,28 +14485,53 @@ function resolveThemedSong(name) {
     song.hat = uniqueSortedInts(song.hat.concat([1, 5, 9, 13]));
   } else if (theme === 'fire-bamboo-boesa') {
     song.kick = uniqueSortedInts(song.kick.concat([6]));
-    if (!song.snare.includes(10)) song.snare = uniqueSortedInts(song.snare.concat([10]));
   }
   return song;
 }
 
+function replayAudioThemeSong() {
+  try {
+    if (typeof AudioSys === 'undefined' || !AudioSys) return;
+    if (typeof AudioSys.replayForTheme === 'function') {
+      AudioSys.replayForTheme();
+      return;
+    }
+    const cur = AudioSys.currentSongId ? AudioSys.currentSongId() : (AudioSys.desiredSong || '');
+    if (!cur) return;
+    AudioSys.song = null;
+    AudioSys.play(cur);
+  } catch (_) {}
+}
+
+function initAudioThemeFromStorage() {
+  const side = readAudioThemeSidecar();
+  const fromSave = (typeof save !== 'undefined' && save && AUDIO_THEME_IDS.includes(save.audioTheme))
+    ? save.audioTheme
+    : null;
+  persistAudioTheme(side || fromSave || 'classic');
+  applyAudioThemeDom();
+}
+
+function syncAudioThemeAfterSaveChange() {
+  persistAudioTheme(getAudioTheme());
+  applyAudioThemeDom();
+  replayAudioThemeSong();
+  try { renderAudioThemeSwitch(); } catch (_) {}
+}
+
 function setAudioTheme(id) {
   const next = normalizeAudioTheme(id);
-  const prev = getAudioTheme();
-  if (typeof save !== 'undefined' && save) {
-    save.audioTheme = next;
-    try { if (typeof persist === 'function') persist(); } catch (_) {}
-  }
+  const was = getAudioTheme();
+  let songTheme = null;
+  try { songTheme = AudioSys && AudioSys.song && AudioSys.song.audioTheme; } catch (_) {}
+  persistAudioTheme(next);
   applyAudioThemeDom();
-  if (typeof AudioSys !== 'undefined' && AudioSys && next !== prev) {
-    const cur = AudioSys.currentSongId ? AudioSys.currentSongId() : '';
-    if (cur) {
-      AudioSys.song = null;
-      try { AudioSys.play(cur); } catch (_) {}
-    }
-    try { AudioSys.sfx('select'); } catch (_) {}
+  const needReplay = was !== next || (songTheme && songTheme !== next);
+  if (needReplay) {
+    replayAudioThemeSong();
     try { playAudioThemePreview(); } catch (_) {}
   }
+  try { renderAudioThemeSwitch(); } catch (_) {}
   try { if (typeof UI !== 'undefined' && UI.renderSettings) UI.renderSettings(); } catch (_) {}
   try { if (typeof UI !== 'undefined' && UI.renderPauseToggles) UI.renderPauseToggles(); } catch (_) {}
   return next;
@@ -14484,13 +14542,13 @@ function playAudioThemePreview() {
   const theme = getAudioTheme();
   const now = AudioSys.ctx.currentTime;
   if (theme === 'jungle') {
-    AudioSys.tone(210, 90, 0.09, 'triangle', 0.12, null, now);
-    AudioSys.noise(0.05, 0.08, 1800, false, null, now + 0.02);
-    AudioSys.tone(880, 990, 0.12, 'sine', 0.06, null, now + 0.06);
+    AudioSys.tone(210, 90, 0.07, 'triangle', 0.08, null, now);
+    AudioSys.tone(880, 990, 0.09, 'sine', 0.045, null, now + 0.05);
   } else if (theme === 'fire-bamboo-boesa') {
-    AudioSys.noise(0.08, 0.07, 900, false, null, now);
-    AudioSys.tone(620, 310, 0.08, 'triangle', 0.1, null, now + 0.02);
-    AudioSys.tone(784, 880, 0.16, 'sine', 0.07, null, now + 0.05);
+    AudioSys.tone(620, 310, 0.07, 'triangle', 0.07, null, now);
+    AudioSys.tone(784, 880, 0.1, 'sine', 0.05, null, now + 0.04);
+  } else {
+    AudioSys.tone(660, 820, 0.07, 'sine', 0.06, null, now);
   }
 }
 
@@ -14502,34 +14560,33 @@ function scheduleAudioThemeStep(audio, i, bar, t, spb) {
   const mg = audio.musicGain;
   const midi = (n) => 440 * Math.pow(2, (n - 69) / 12);
   if (theme === 'jungle') {
-    if ([1, 5, 9, 13].includes(i)) audio.noise(0.024, 0.065, 3600, true, mg, t);
-    if (i === 6 || i === 14) audio.tone(midi(74), midi(67), spb * 0.34, 'triangle', 0.042, mg, t);
-    if (!lite && i === 0 && bar % 4 === 2) audio.tone(midi(84), midi(88), spb * 1.35, 'sine', 0.032, mg, t);
-    if (!lite && i === 10 && bar % 8 === 5) audio.tone(midi(79), midi(76), spb * 0.75, 'sine', 0.028, mg, t);
+    if (i === 6 || i === 14) audio.tone(midi(74), midi(67), spb * 0.32, 'triangle', 0.036, mg, t);
+    if (!lite && i === 0 && bar % 4 === 2) audio.tone(midi(84), midi(88), spb * 1.2, 'sine', 0.026, mg, t);
     return;
   }
   if (theme === 'fire-bamboo-boesa') {
-    if (i === 0 || i === 8) audio.noise(0.048, 0.04, 1300, false, mg, t);
-    if (i === 3 || i === 11) audio.tone(midi(72), midi(60), spb * 0.26, 'triangle', 0.048, mg, t);
-    if (!lite && i === 4 && bar % 2 === 0) audio.tone(midi(81), midi(81), spb * 2.1, 'sine', 0.038, mg, t);
-    if (!lite && i === 12 && bar % 4 === 1) audio.tone(midi(76), midi(79), spb * 1.5, 'sine', 0.032, mg, t);
+    if (i === 0 && bar % 2 === 0) audio.noise(0.036, 0.028, 1200, false, mg, t);
+    if (i === 3 || i === 11) audio.tone(midi(72), midi(60), spb * 0.24, 'triangle', 0.038, mg, t);
+    if (!lite && i === 4 && bar % 2 === 0) audio.tone(midi(81), midi(81), spb * 1.8, 'sine', 0.03, mg, t);
   }
 }
 
+let _themeSfxAccentAt = 0;
 function playAudioThemeSfxAccent(audio, name) {
   const theme = getAudioTheme();
   if (theme === 'classic' || !audio) return;
   const combat = name === 'punch' || name === 'kick' || name === 'hit' || name === 'hit2'
     || name === 'swing' || name === 'hitHeavy' || (name && name.charAt(0) === 'w');
   if (!combat) return;
+  const nowMs = Date.now();
+  if (nowMs - _themeSfxAccentAt < 110) return;
+  _themeSfxAccentAt = nowMs;
   if (theme === 'jungle') {
-    audio.noise(0.032, 0.06, 1500, false);
-    audio.tone(600, 260, 0.038, 'triangle', 0.045);
+    audio.tone(600, 260, 0.03, 'triangle', 0.03);
     return;
   }
   if (theme === 'fire-bamboo-boesa') {
-    audio.noise(0.042, 0.055, 820, false);
-    audio.tone(860, 400, 0.046, 'sine', 0.038);
+    audio.tone(860, 400, 0.032, 'sine', 0.028);
   }
 }
 
@@ -14671,38 +14728,47 @@ function drawAudioThemeMenuWash(c) {
   c.restore();
 }
 
+function onAudioThemeBarPress(e) {
+  const t = e && (e.target || e.srcElement);
+  const btn = t && t.closest ? t.closest('[data-audio-theme]') : null;
+  if (!btn) return;
+  const id = btn.getAttribute('data-audio-theme');
+  if (!id || id === getAudioTheme()) return;
+  const apply = () => {
+    setAudioTheme(id);
+    try {
+      if (typeof UI !== 'undefined' && UI.toast) {
+        const meta = AUDIO_THEME_META[id];
+        UI.toast('Sfeer: ' + meta.label, 1600, { tone: 'ok' });
+      }
+    } catch (_) {}
+  };
+  if (typeof safeUiAction === 'function') safeUiAction(apply, 'audioTheme/' + id, 'Theme switch failed');
+  else apply();
+}
+
 function renderAudioThemeBar(bar) {
   if (!bar) return;
   const cur = getAudioTheme();
-  bar.innerHTML = AUDIO_THEME_IDS.map((id) => {
-    const meta = AUDIO_THEME_META[id];
-    const active = id === cur ? ' active' : '';
-    return `<button type="button" class="dex-filter-btn${active}" data-audio-theme="${id}">${meta.label}</button>`;
-  }).join('');
-  bar.querySelectorAll('[data-audio-theme]').forEach((btn) => {
-    const id = btn.getAttribute('data-audio-theme');
-    if (!id) return;
-    if (typeof bindPress === 'function') {
-      bindPress(btn, () => {
-        if (id === getAudioTheme()) return;
-        if (typeof safeUiAction === 'function') {
-          safeUiAction(() => {
-            setAudioTheme(id);
-            try {
-              if (typeof UI !== 'undefined' && UI.toast) {
-                const meta = AUDIO_THEME_META[id];
-                UI.toast('Sfeer: ' + meta.label, 1800, { tone: 'ok' });
-              }
-            } catch (_) {}
-          }, 'audioTheme/' + id, 'Theme switch failed');
-        } else {
-          setAudioTheme(id);
-        }
-      });
-    } else {
-      btn.addEventListener('click', () => setAudioTheme(id));
-    }
-  });
+  const existing = bar.querySelectorAll('[data-audio-theme]');
+  const same = existing.length === AUDIO_THEME_IDS.length
+    && AUDIO_THEME_IDS.every((id, i) => existing[i] && existing[i].getAttribute('data-audio-theme') === id);
+  if (!same) {
+    bar.innerHTML = AUDIO_THEME_IDS.map((id) => {
+      const meta = AUDIO_THEME_META[id];
+      const active = id === cur ? ' active' : '';
+      return `<button type="button" class="dex-filter-btn${active}" data-audio-theme="${id}">${meta.label}</button>`;
+    }).join('');
+  } else {
+    existing.forEach((btn) => {
+      btn.classList.toggle('active', btn.getAttribute('data-audio-theme') === cur);
+    });
+  }
+  if (!bar.dataset.audioThemeBound) {
+    bar.dataset.audioThemeBound = '1';
+    if (typeof bindPress === 'function') bindPress(bar, onAudioThemeBarPress);
+    else bar.addEventListener('click', onAudioThemeBarPress);
+  }
 }
 
 function renderAudioThemeSwitch() {
@@ -15037,10 +15103,7 @@ const AudioSys = {
   sfx(name) {
     if (!this.ctx || !save.sfx || this._sfxBlockedInPause(name)) return;
     try { if (this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
-    if (this._playSample(name)) {
-      try { if (typeof playAudioThemeSfxAccent === 'function') playAudioThemeSfxAccent(this, name); } catch (_) {}
-      return;
-    }
+    if (this._playSample(name)) return;
     const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
     const v = (n) => n * (lite ? 0.72 : 0.88);
     const d = (n) => n * (lite ? 0.78 : 0.9);
@@ -15650,16 +15713,33 @@ const AudioSys = {
     this.desiredSong = name;
     if (!this.ctx || !save.music) { this.applyVolumes(); return; }
     const theme = (typeof getAudioTheme === 'function') ? getAudioTheme() : 'classic';
-    if (this.song && this.song.id === name && this.song.audioTheme === theme) {
+    if (this.song && this.song.id === name && (this.song.audioTheme || 'classic') === theme) {
       this.applyVolumes();
       return;
     }
-    const src = (typeof resolveThemedSong === 'function') ? resolveThemedSong(name) : SONGS[name];
+    const swapping = !!(this.song && this.song.audioTheme && this.song.audioTheme !== theme);
+    if (swapping && this.musicGain) {
+      try { this._setGain(this.musicGain, 0.001, 0.03); } catch (_) {}
+    }
+    const src = (theme === 'classic' || typeof resolveThemedSong !== 'function')
+      ? SONGS[name]
+      : resolveThemedSong(name);
     if (!src) return;
     this.song = Object.assign({ id: name, audioTheme: theme }, src);
     this.step = 0; this.bar = 0;
-    this.nextTime = this.ctx.currentTime + 0.06;
+    this.nextTime = this.ctx.currentTime + (swapping ? 0.09 : 0.06);
     this.applyVolumes();
+  },
+
+  /** Soft restart of the current track after a theme switch (avoids hard click). */
+  replayForTheme() {
+    const name = this.desiredSong || this.currentSongId();
+    if (!name || !SONGS[name]) return;
+    if (this.musicGain) {
+      try { this._setGain(this.musicGain, 0.001, 0.03); } catch (_) {}
+    }
+    this.song = null;
+    this.play(name);
   },
   stop() { this.song = null; this.desiredSong = null; this.setCombatHeat(0); this.applyVolumes(); },
   setMusicOn(on) {
@@ -36073,6 +36153,7 @@ if (btnClearSave) btnClearSave.addEventListener('click', () => {
       userToast(t('toast.saveFailRetry'), 3200, { tone: 'danger' });
       return;
     }
+    try { if (typeof syncAudioThemeAfterSaveChange === 'function') syncAudioThemeAfterSaveChange(); } catch (_) {}
     AudioSys.sfx('lose');
     UI.renderMenu();
     UI.toast(t('toast.newStart'), 4000, { tone: 'ok' });
@@ -37127,7 +37208,10 @@ function bootGame() {
   safeCall(syncPlayLayer, 'syncPlay');
   safeCall(resize, 'resize');
   safeCall(() => initLang(), 'i18n');
-  safeCall(() => { if (typeof applyAudioThemeDom === 'function') applyAudioThemeDom(); }, 'audioTheme');
+  safeCall(() => {
+    if (typeof initAudioThemeFromStorage === 'function') initAudioThemeFromStorage();
+    else if (typeof applyAudioThemeDom === 'function') applyAudioThemeDom();
+  }, 'audioTheme');
   safeCall(() => UI.renderMenu(), 'menu');
   safeCall(ensureDaily, 'daily');
   safeCall(checkAchievements, 'ach');

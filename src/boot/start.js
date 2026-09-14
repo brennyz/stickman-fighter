@@ -484,6 +484,7 @@ if (btnClearSave) btnClearSave.addEventListener('click', () => {
       userToast(t('toast.saveFailRetry'), 3200, { tone: 'danger' });
       return;
     }
+    try { if (typeof syncAudioThemeAfterSaveChange === 'function') syncAudioThemeAfterSaveChange(); } catch (_) {}
     AudioSys.sfx('lose');
     UI.renderMenu();
     UI.toast(t('toast.newStart'), 4000, { tone: 'ok' });

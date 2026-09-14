@@ -324,10 +324,7 @@ const AudioSys = {
   sfx(name) {
     if (!this.ctx || !save.sfx || this._sfxBlockedInPause(name)) return;
     try { if (this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
-    if (this._playSample(name)) {
-      try { if (typeof playAudioThemeSfxAccent === 'function') playAudioThemeSfxAccent(this, name); } catch (_) {}
-      return;
-    }
+    if (this._playSample(name)) return;
     const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
     const v = (n) => n * (lite ? 0.72 : 0.88);
     const d = (n) => n * (lite ? 0.78 : 0.9);
@@ -937,16 +934,33 @@ const AudioSys = {
     this.desiredSong = name;
     if (!this.ctx || !save.music) { this.applyVolumes(); return; }
     const theme = (typeof getAudioTheme === 'function') ? getAudioTheme() : 'classic';
-    if (this.song && this.song.id === name && this.song.audioTheme === theme) {
+    if (this.song && this.song.id === name && (this.song.audioTheme || 'classic') === theme) {
       this.applyVolumes();
       return;
     }
-    const src = (typeof resolveThemedSong === 'function') ? resolveThemedSong(name) : SONGS[name];
+    const swapping = !!(this.song && this.song.audioTheme && this.song.audioTheme !== theme);
+    if (swapping && this.musicGain) {
+      try { this._setGain(this.musicGain, 0.001, 0.03); } catch (_) {}
+    }
+    const src = (theme === 'classic' || typeof resolveThemedSong !== 'function')
+      ? SONGS[name]
+      : resolveThemedSong(name);
     if (!src) return;
     this.song = Object.assign({ id: name, audioTheme: theme }, src);
     this.step = 0; this.bar = 0;
-    this.nextTime = this.ctx.currentTime + 0.06;
+    this.nextTime = this.ctx.currentTime + (swapping ? 0.09 : 0.06);
     this.applyVolumes();
+  },
+
+  /** Soft restart of the current track after a theme switch (avoids hard click). */
+  replayForTheme() {
+    const name = this.desiredSong || this.currentSongId();
+    if (!name || !SONGS[name]) return;
+    if (this.musicGain) {
+      try { this._setGain(this.musicGain, 0.001, 0.03); } catch (_) {}
+    }
+    this.song = null;
+    this.play(name);
   },
   stop() { this.song = null; this.desiredSong = null; this.setCombatHeat(0); this.applyVolumes(); },
   setMusicOn(on) {

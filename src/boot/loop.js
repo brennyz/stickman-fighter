@@ -840,7 +840,10 @@ function bootGame() {
   safeCall(syncPlayLayer, 'syncPlay');
   safeCall(resize, 'resize');
   safeCall(() => initLang(), 'i18n');
-  safeCall(() => { if (typeof applyAudioThemeDom === 'function') applyAudioThemeDom(); }, 'audioTheme');
+  safeCall(() => {
+    if (typeof initAudioThemeFromStorage === 'function') initAudioThemeFromStorage();
+    else if (typeof applyAudioThemeDom === 'function') applyAudioThemeDom();
+  }, 'audioTheme');
   safeCall(() => UI.renderMenu(), 'menu');
   safeCall(ensureDaily, 'daily');
   safeCall(checkAchievements, 'ach');

@@ -1879,6 +1879,7 @@ function importSaveJson(text) {
   const keptBackup = typeof snapshotSaveToBackup === 'function' && snapshotSaveToBackup(save);
   save = next;
   if (!persistPrimaryOnly()) throw new Error('Import gelukt maar opslaan mislukt — probeer opnieuw');
+  try { if (typeof syncAudioThemeAfterSaveChange === 'function') syncAudioThemeAfterSaveChange(); } catch (_) {}
   try { checkAchievements(); } catch (_) {}
   try { UI.renderMenu(); } catch (_) {}
   try { if (UI.renderMissions) UI.renderMissions(); } catch (_) {}
