@@ -20,74 +20,66 @@
     "featureBranch": "cursor/en-nl-lost-toast-834e",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "localMainHead": "68e5ccc",
-    "remoteMainHead": "68e5ccc",
+    "localMainHead": "3fe23473f49a8486c6b18d27bfc4e54cc6c1914c",
+    "remoteMainHead": "68e5ccc0d34fd149e1c3c3d51d25e73253f25c73",
     "note": "LIVE main v1.18.161 / SW 371 (#264). This branch = EN-NL + VERLOREN keep-loot + no sticky lose toasts (v1.18.163 / SW 373). Unify stays #266. Not silent main — wait «merge».",
-    "updated": "2026-09-14T15:20:00Z"
+    "updated": "2026-09-14T15:20:54Z"
   },
   "githubSync": {
     "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
     "pcEqualsMain": false,
-    "localHead": "197890b9c30ec3371d7d2c2d0cc177151ad995b3",
-    "remoteMainHead": "197890b9c30ec3371d7d2c2d0cc177151ad995b3",
-    "ahead": 0,
+    "localHead": "3fe23473f49a8486c6b18d27bfc4e54cc6c1914c",
+    "remoteMainHead": "68e5ccc0d34fd149e1c3c3d51d25e73253f25c73",
+    "ahead": 1,
     "behind": 0,
-    "dirty": true,
-    "lastChecked": "2026-08-17T14:01:21Z",
+    "dirty": false,
+    "lastChecked": "2026-09-14T15:20:54Z",
     "lastAsked": "2026-08-17T14:01:21Z",
     "pendingUpload": [
       {
-        "id": "file-.cursor-agent-handoffs-handoff.md",
-        "kind": "file",
-        "text": ".cursor/agent-handoffs/handoff.md"
-      },
-      {
-        "id": "file-.cursor-rules-stickman-agent-handoff.mdc",
-        "kind": "file",
-        "text": ".cursor/rules/stickman-agent-handoff.mdc"
-      },
-      {
-        "id": "file-AGENTS.md",
-        "kind": "file",
-        "text": "AGENTS.md"
-      },
-      {
-        "id": "file-GITHUB-PUSH.txt",
-        "kind": "file",
-        "text": "GITHUB-PUSH.txt"
-      },
-      {
-        "id": "file-HANDOFF-ZOEKINDEX.md",
-        "kind": "file",
-        "text": "HANDOFF-ZOEKINDEX.md"
-      },
-      {
-        "id": "file-IMPROVEMENT.md",
-        "kind": "file",
-        "text": "IMPROVEMENT.md"
-      },
-      {
-        "id": "file-agent-handoff.json",
-        "kind": "file",
-        "text": "agent-handoff.json"
-      },
-      {
-        "id": "file-package.json",
-        "kind": "file",
-        "text": "package.json"
-      },
-      {
-        "id": "file-scripts-agent-status.sh",
-        "kind": "file",
-        "text": "scripts/agent-status.sh"
-      },
-      {
-        "id": "file-scripts-github-sync-status.sh",
-        "kind": "untracked",
-        "text": "scripts/github-sync-status.sh"
+        "id": "commit-3fe2347",
+        "kind": "commit",
+        "text": "3fe2347 fix(ui): VERLOREN keep-loot, no sticky lose toasts, train Again i18n"
       }
     ],
-    "pendingMerge": []
+    "pendingMerge": [
+      {
+        "id": "pr-267",
+        "kind": "pr",
+        "ref": "#267",
+        "title": "EN-NL + VERLOREN keep-loot + no sticky lose toasts",
+        "status": "draft",
+        "url": "https://github.com/brennyz/stickman-fighter/pull/267",
+        "note": "Niet op main."
+      },
+      {
+        "id": "pr-266",
+        "kind": "pr",
+        "ref": "#266",
+        "title": "Start polish + unify all screens to HOME tiles",
+        "status": "draft",
+        "url": "https://github.com/brennyz/stickman-fighter/pull/266",
+        "note": "Niet op main."
+      },
+      {
+        "id": "pr-263",
+        "kind": "pr",
+        "ref": "#263",
+        "title": "Training feel only: ghost HP + gold flash + RABBIT n/max",
+        "status": "draft-conflicting",
+        "url": "https://github.com/brennyz/stickman-fighter/pull/263",
+        "note": "Niet op main. Conflict — niet automatisch mergen."
+      },
+      {
+        "id": "pr-256",
+        "kind": "pr",
+        "ref": "#256",
+        "title": "Store doctor + App Store-pad (wat jij moet doen vóór deploy)",
+        "status": "draft-conflicting",
+        "url": "https://github.com/brennyz/stickman-fighter/pull/256",
+        "note": "Niet op main. Conflict — niet automatisch mergen."
+      }
+    ]
   },
   "userWishlist": [
     {
