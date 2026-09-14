@@ -61,7 +61,7 @@ const BUILDING_PIXELS = {
   },
 };
 
-const BUILDING_IDS = [
+const BUILDING_PIXEL_CANON_IDS = [
   'stick_lighter',
   'woodchip_glue',
   'chipping_wood',
@@ -204,7 +204,7 @@ function buildingArtMeta(id) {
 try {
   if (typeof window !== 'undefined') {
     window.__sfBuildingArt = {
-      ids: BUILDING_IDS.slice(),
+      ids: BUILDING_PIXEL_CANON_IDS.slice(),
       hub: BUILDING_HUB_ART,
       src: buildingArtSrc,
       resolve: resolveBuildingId,

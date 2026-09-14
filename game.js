@@ -10067,14 +10067,23 @@ const BUILDING_RESOURCE_IDS = buildingResourceIds;
 
 const BUILDING_ID_ALIASES = {
   bamboo_boesa_boiler: 'bamboo_boesa',
+  'bamboo-boesa-boiler': 'bamboo_boesa',
+  'bamboo-boesa': 'bamboo_boesa',
   echo_whistle_mill: 'echo_whistle',
+  'echo-whistle-mill': 'echo_whistle',
+  'echo-whistle': 'echo_whistle',
+  mill: 'echo_whistle',
+  forge: 'stick_lighter',
 };
 const BUILDING_RES_ALIASES = {
   ember_sticks: 'spark',
+  embers: 'spark',
   glue_pots: 'glue',
   wood_chips: 'chip',
+  chips: 'chip',
   boesa_steam: 'steam',
   echo_notes: 'echo',
+  echoes: 'echo',
 };
 
 function buildingRateCap(startRate) {
@@ -10286,7 +10295,13 @@ function buildingSaveRef(st) {
 
 function buildingCanonId(id) {
   if (!id || typeof id !== 'string') return '';
-  return BUILDING_ID_ALIASES[id] || id;
+  if (BUILDING_ID_ALIASES[id]) return BUILDING_ID_ALIASES[id];
+  const snake = id.replace(/-/g, '_').toLowerCase();
+  if (BUILDING_ID_ALIASES[snake]) return BUILDING_ID_ALIASES[snake];
+  if (BUILDING_ID_ALIASES[id.toLowerCase()]) return BUILDING_ID_ALIASES[id.toLowerCase()];
+  if (typeof BUILDING_IDS !== 'undefined' && BUILDING_IDS.includes(snake)) return snake;
+  if (typeof BUILDING_IDS !== 'undefined' && BUILDING_IDS.includes(id)) return id;
+  return snake;
 }
 
 function buildingCanonRes(id) {
@@ -16987,7 +17002,7 @@ const BUILDING_PIXELS = {
   },
 };
 
-const BUILDING_IDS = [
+const BUILDING_PIXEL_CANON_IDS = [
   'stick_lighter',
   'woodchip_glue',
   'chipping_wood',
@@ -17130,7 +17145,7 @@ function buildingArtMeta(id) {
 try {
   if (typeof window !== 'undefined') {
     window.__sfBuildingArt = {
-      ids: BUILDING_IDS.slice(),
+      ids: BUILDING_PIXEL_CANON_IDS.slice(),
       hub: BUILDING_HUB_ART,
       src: buildingArtSrc,
       resolve: resolveBuildingId,

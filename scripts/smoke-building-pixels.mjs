@@ -95,7 +95,7 @@ ok(game.includes('echo_whistle'), 'game.js has echo_whistle');
 
 const ctx = { window: {}, console };
 vm.createContext(ctx);
-vm.runInContext(data + '\nthis.__out = { resolveBuildingId, buildingArtSrc, buildingArtMeta, BUILDING_IDS };', ctx);
+vm.runInContext(data + '\nthis.__out = { resolveBuildingId, buildingArtSrc, buildingArtMeta, BUILDING_IDS: BUILDING_PIXEL_CANON_IDS };', ctx);
 const api = ctx.__out;
 
 ok(JSON.stringify(api.BUILDING_IDS) === JSON.stringify(LOCKED), 'BUILDING_IDS exact #292');
