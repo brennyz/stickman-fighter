@@ -22,11 +22,13 @@
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": "90182c8",
     "remoteMainHead": "90182c8",
-    "note": "LIVE main v1.18.163. #269 scanner pack draft v1.18.166/SW376. No merge until «merge main». #263 parked.",
-    "updated": "2026-09-14T16:25:00Z"
+    "note": "LIVE main v1.18.163. #269 stays DRAFT until Brendon mega-merge of all feature sets + conflict check. NO individual merges. #263 parked.",
+    "updated": "2026-09-14T17:10:00Z"
   },
   "githubSync": {
-    "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
+    "policy": "NO individual merges. Keep feature drafts until Brendon mega-merge flag for all Stickman feature sets + conflict check. «merge main» alone is not enough while this owner rule is active. Niet stil pushen naar origin/main.",
+    "megaMergeOnly": true,
+    "megaMergeNote": "Owner 2026-09-14: no solo PR landings. Wait for mega-merge of all feature sets, then conflict check.",
     "pcEqualsMain": false,
     "localHead": "197890b9c30ec3371d7d2c2d0cc177151ad995b3",
     "remoteMainHead": "197890b9c30ec3371d7d2c2d0cc177151ad995b3",
@@ -90,6 +92,13 @@
     "pendingMerge": []
   },
   "userWishlist": [
+    {
+      "id": "w-20260914T171000",
+      "from": "user",
+      "text": "Owner rule: NO individual merges. Keep #269 draft until Brendon mega-merge flag for all Stickman feature sets + conflict check. Harden OK; do not merge main.",
+      "status": "active",
+      "updated": "2026-09-14"
+    },
     {
       "id": "w-20260914T161500",
       "from": "user",
@@ -635,6 +644,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:11:43Z",
+      "summary": "Owner: no individual merges. #269 stays draft until Brendon mega-merge + conflict check. Main untouched."
+    },
+    {
       "at": "2026-09-14T16:54:05Z",
       "summary": "Idle on #269 draft: playtest gaps already in code; hardened smoke:unify-ui + screenshots. No new PR. No merge."
     },
@@ -729,10 +742,6 @@
     {
       "at": "2026-08-17T10:21:10Z",
       "summary": "PC-pull geregeld: pull-main.sh + GITHUB-PUSH is nu pull-kaart; main LIVE"
-    },
-    {
-      "at": "2026-08-17T10:20:50Z",
-      "summary": "pull-main script + GITHUB-PUSH bijwerken zodat de pc één commando kan pullen"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
