@@ -2382,18 +2382,27 @@
       background:linear-gradient(180deg,#ff5a8a,#a82050); justify-content:center; min-height:54px; }
   #btnCharFight:disabled { opacity:.35; filter:grayscale(.4); cursor:not-allowed; }
 
-  #netStatus { position:fixed; left:50%; bottom:max(12px, env(safe-area-inset-bottom)); transform:translateX(-50%);
-      z-index:35; max-width:92vw; padding:8px 14px; border-radius:999px; font-size:12px; font-weight:800;
-      text-align:center; color:#ffe8a8; background:rgba(40,20,10,.88); border:1px solid rgba(255,120,60,.45);
-      box-shadow:0 6px 20px rgba(0,0,0,.4); pointer-events:none; }
-  body.is-playing.sf-offline #netStatus,
-  body.is-playing.sf-sw-update #netStatus { bottom:max(108px, calc(env(safe-area-inset-bottom) + 92px)); font-size:11px; }
+  #netStatus { position:fixed; left:50%; top:max(10px, calc(env(safe-area-inset-top) + 6px)); bottom:auto;
+      transform:translateX(-50%); z-index:36; max-width:min(88vw, 360px);
+      padding:6px 8px 6px 12px; border-radius:14px; font-size:11px; font-weight:700;
+      text-align:left; color:var(--menu-ink); background:var(--menu-tile-solid);
+      border:1px solid var(--menu-edge); box-shadow:0 4px 0 rgba(0,0,0,.28);
+      pointer-events:auto; display:flex; align-items:center; gap:8px; }
+  #netStatusMsg { flex:1; min-width:0; line-height:1.35; }
+  #netStatus .net-dismiss {
+      flex:0 0 auto; width:28px; height:28px; min-height:28px; padding:0; margin:0;
+      border:1px solid var(--menu-edge); border-radius:10px; background:var(--menu-tile-solid-hi);
+      color:var(--menu-ink); font-size:16px; font-weight:800; line-height:1; cursor:pointer;
+      pointer-events:auto; touch-action:manipulation; }
+  #netStatus .net-dismiss[hidden] { display:none !important; }
+  body.is-playing #netStatus.sw-update,
+  body.is-playing #netStatus.sw-update-wait { display:none !important; }
+  body.is-playing.sf-offline #netStatus { top:auto; bottom:max(108px, calc(env(safe-area-inset-bottom) + 92px)); font-size:11px; }
   #netStatus.online-flash { color:#d8ffe8; background:rgba(12,40,28,.9); border-color:rgba(80,220,140,.5); }
-  #netStatus.sw-pending { color:#cfe0ff; background:rgba(20,28,55,.92); border-color:rgba(124,245,255,.35); }
-  #netStatus.sw-update { color:#2a1a00; background:rgba(255,215,94,.95); border-color:rgba(255,180,60,.8);
-      cursor:pointer; font-weight:800; pointer-events:auto; touch-action:manipulation; z-index:90; }
-  #netStatus.sw-update-wait { color:#ffe8a8; background:rgba(40,24,8,.9); border-color:rgba(255,180,80,.4);
-      pointer-events:none; }
+  #netStatus.sw-pending { color:var(--menu-ink-muted); }
+  #netStatus.sw-update { color:var(--menu-ink); background:var(--menu-tile-solid-hi);
+      border-color:rgba(255,215,94,.45); cursor:pointer; touch-action:manipulation; }
+  #netStatus.sw-update-wait { color:var(--menu-ink-muted); pointer-events:auto; }
   #netStatus.offline-ready { color:#d8ffe8; background:rgba(12,40,28,.88); border-color:rgba(80,220,140,.45); }
   #netStatus[hidden] { display:none !important; }
 
@@ -2528,6 +2537,36 @@
   #resultScreen .b-gray,
   #pauseScreen .b-gray {
     background: var(--menu-tile-solid-hi);
+  }
+  .summon-pull-btn {
+    background: linear-gradient(135deg, rgba(255, 215, 94, 0.2), transparent 45%), var(--menu-tile-solid);
+    color: var(--menu-ink);
+    border: 1px solid var(--menu-edge);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  .summon-pull-btn div { color: var(--menu-ink); }
+  .summon-pull-btn small { color: var(--menu-ink-muted); font-weight: 600; }
+  .summon-pull-btn:not(:disabled):active { box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35); }
+  .mission-card,
+  .mission-today-plan,
+  .mission-ach-spotlight,
+  .help-island-card,
+  .version-update-card {
+    background: var(--menu-tile-solid);
+    border: 1px solid var(--menu-edge);
+    color: var(--menu-ink);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  .mission-card .claim-btn,
+  .mission-card .mission-play-btn {
+    background: var(--menu-tile-solid-hi);
+    color: var(--menu-ink);
+  }
+  .mission-card .claim-btn small { color: var(--menu-ink-muted); }
+  .mission-flow-pill {
+    background: var(--menu-tile-solid);
+    border-color: var(--menu-edge);
+    color: var(--menu-ink);
   }
 
   @media (pointer: coarse) {

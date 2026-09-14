@@ -4410,7 +4410,14 @@ const UI = {
     this.lastResult = data;
     const title = document.getElementById('resTitle');
     if (!title) throw new Error('result DOM missing');
-    title.textContent = data.title;
+    const titleKey = data.titleKey || (data.mode === 'training'
+      ? (win ? 'result.trainWin' : 'result.trainLose')
+      : (win ? 'result.advWin' : 'result.advLose'));
+    const painted = (typeof tOr === 'function')
+      ? tOr(titleKey, data.title || (win ? 'GEWONNEN!' : 'VERLOREN'))
+      : (data.title || (win ? 'GEWONNEN!' : 'VERLOREN'));
+    title.textContent = painted;
+    data.titleKey = titleKey;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
     const detailEl = document.getElementById('resDetail');
     if (detailEl) detailEl.textContent = data.detail;

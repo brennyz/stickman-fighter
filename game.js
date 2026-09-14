@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.162';
+const APP_VERSION = '1.18.163';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 372;
+const SW_CACHE_REV = 373;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1953,6 +1953,7 @@ const I18N = {
     net: {
       updateReady: 'Nieuwe versie klaar — tik om te laden',
       updateWait: 'Nieuwe versie — laadt in het menu',
+      dismiss: 'Sluiten',
       offlinePlay: 'Offline — speelt uit cache · save blijft hier',
       offlinePlayHint: 'Offline — uit cache · icoon in de lade = altijd spelen',
       offlineMenu: 'Offline — menu & save uit cache',
@@ -2064,6 +2065,7 @@ const I18N = {
     net: {
       updateReady: 'New version ready — tap to load',
       updateWait: 'New version — loads in the menu',
+      dismiss: 'Dismiss',
       offlinePlay: 'Offline — playing from cache · save stays here',
       offlinePlayHint: 'Offline — from cache · home-screen icon = always play',
       offlineMenu: 'Offline — menu & save from cache',
@@ -2509,8 +2511,10 @@ function setTitle(id, key, params) {
 function applyLangStaticScreens() {
   if (!canApplyDomI18n()) return;
   if (document.documentElement) document.documentElement.lang = getLang();
-  const net = document.getElementById('netStatus');
-  if (net) net.textContent = t('common.offline');
+  const netMsg = document.getElementById('netStatusMsg') || document.getElementById('netStatus');
+  if (netMsg) netMsg.textContent = t('common.offline');
+  const netX = document.getElementById('netStatusDismiss');
+  if (netX) netX.setAttribute('aria-label', tOr('net.dismiss', 'Sluiten'));
 
   setText('menuLangLbl', 'settings.lang');
   setText('pressStartLine', 'menu.pressStart');
@@ -2845,6 +2849,9 @@ function applyLang() {
     else if (active === 'dexScreen' && typeof UI.renderDex === 'function') UI.renderDex();
     else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'modeHubScreen') UI.renderModeHub();
+    else if (active === 'resultScreen' && UI.lastResult && typeof UI.showResult === 'function') {
+      try { UI.showResult(!!UI.lastResult.win, UI.lastResult); } catch (_) {}
+    }
     UI.syncBackLabels();
   }
   try { if (typeof syncTitleGateCopy === 'function') syncTitleGateCopy(); } catch (_) {}
@@ -11814,6 +11821,8 @@ function seedNlGameStrings() {
     satanAfterClear: 'Adventure gehaald — hitte blijft: 10× falen op één level → Satan (~half scherm, reflect) → Tide-pet',
     trainComboRecord: 'Combo-trainer: ×{n}{rec}',
     trainComboNewRec: ' — nieuw record!',
+    trainDetailWin: 'RabbitRobot verslagen ({p}-{r}) · max combo ×{combo} · {wins}× gewonnen',
+    trainDetailLose: 'RabbitRobot was te sterk ({p}-{r}) · max combo ×{combo}',
     trainStyleUnlock: 'Nieuwe stijl vrij: Energie gloed — Instellingen → Stijl!',
     trainStyleMore: 'Unlock stijlen door meer train-wins!',
     trainLossTip: 'Spring tijdens LIGHTNING PIERCE — robot mist · spring oor-lasers',
@@ -12235,7 +12244,7 @@ function seedNlGameStrings() {
     'Joystick ring pixel art',
     'Laadscherm / splash strip',
   ];
-  I18N.nl.menu.tips = [
+  I18N.nl.menu.tipList = [
     'Kies een tegel — Avontuur · Arcade · 2P · Collectie',
     '5 eilanden — baas Lv 10/20/30/40/50 opent volgend eiland',
     'Skill gate — max wapen per eiland in avontuur',
@@ -12740,6 +12749,8 @@ const CATALOG_EN = {
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SHIELD' },
   result: {
     advWin: 'VICTORY!', advLose: 'YOU LOST...', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+    trainDetailWin: 'RabbitRobot down ({p}-{r}) · max combo ×{combo} · {wins}× won',
+    trainDetailLose: 'RabbitRobot was too strong ({p}-{r}) · max combo ×{combo}',
     vsP1Win: 'PLAYER 1 WINS!', vsP2Win: 'PLAYER 2 WINS!', wallRecord: 'NEW RECORD!', wallTime: "TIME'S UP!",
     matsRecord: 'NEW RECORD!', matsDone: 'Well done!',
     perfectRun: 'Perfect run — keep HP high!',
@@ -13113,7 +13124,7 @@ const CATALOG_EN = {
     charPickNow1: 'P1',
     charPickNow2: 'P2',
     charIpadTip: '',
-    levelHead: 'Pick an island',
+    levelHead: 'Choose an island',
     levelSub: 'Normal → Nightmare 2.0 → Hell 3.0 · heat meter · 9× = danger! · 10× = Satan',
     diff: { normal: 'Normal', nightmare: 'Nightmare', hell: 'Hell' },
     diffTipNormal: 'Standard adventure · model 1.0',
@@ -13362,7 +13373,7 @@ const CATALOG_EN = {
     active: 'Pet · active', tamed: 'Pet · tamed', buy: 'Pet · buy {cost} PC',
     killsNeed: 'Pet · {need} kills', killsProgress: 'Pet · {cur}/{need} kills',
   },
-  menu: { tips: [
+  menu: { tipList: [
     'Pick a tile — Adventure · Arcade · 2P · Collection',
     '5 islands — boss Lv 10/20/30/40/50 opens next island',
     'Skill gate — max weapon per island in adventure',
@@ -13989,7 +14000,7 @@ function i18nList(key) {
 }
 
 function menuTipAt(i) {
-  const tips = i18nList('menu.tips');
+  const tips = i18nList('menu.tipList');
   if (!tips.length) return '';
   return tips[((i % tips.length) + tips.length) % tips.length];
 }
@@ -25705,6 +25716,7 @@ class Game {
     }
     // Resultaat-scherm altijd tonen (Volgende level / Opnieuw) — niet stil naar menu
     scheduleGameResult(this, win ? 1600 : 1400, () => UI.showResult(win, {
+      titleKey: win ? 'result.advWin' : 'result.advLose',
       title: win ? t('result.advWin') : t('result.advLose'),
       detail: (() => {
         const finishers = this.runFinishers ? t('result.finishersLine', { n: this.runFinishers }) : '';
@@ -26386,9 +26398,15 @@ class Game {
       : onceResultTip('training', 'loss', tOr('combat.trainLostTip', tOr('combat.trainLossTip', 'Spring tijdens LIGHTNING PIERCE — robot mist · spring oor-lasers')))
         || tOr('combat.trainTipDefault', 'Tip: spring lasers · energy vol → Spiral Orb');
     scheduleGameResult(this, 1400, () => UI.showResult(win, {
+      titleKey: win ? 'result.trainWin' : 'result.trainLose',
       title: win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'),
-      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · max combo ×${trainBest}` +
-        (win ? ` · ${save.trainWins}x gewonnen` : ''),
+      detail: win
+        ? tOr('result.trainDetailWin', 'RabbitRobot verslagen ({p}-{r}) · max combo ×{combo} · {wins}× gewonnen', {
+          p: this.roundsP, r: this.roundsR, combo: trainBest, wins: save.trainWins,
+        })
+        : tOr('result.trainDetailLose', 'RabbitRobot was te sterk ({p}-{r}) · max combo ×{combo}', {
+          p: this.roundsP, r: this.roundsR, combo: trainBest,
+        }),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
     }));
@@ -26629,6 +26647,7 @@ class Game {
     if (this.matchFatality) tip = t('result.vsFatalityRematchTip');
     else if (close) tip = t('result.vsCloseRematchTip');
     scheduleGameResult(this, 1200, () => UI.showResult(p1Win, {
+      titleKey: p1Win ? 'result.vsP1Win' : 'result.vsP2Win',
       title: p1Win ? t('result.vsP1Win') : t('result.vsP2Win'),
       detail: `${vsRosterName(this.p1Pick) || 'P1'} vs ${vsRosterName(this.p2Pick) || 'P2'} · ${this.roundsP1}-${this.roundsP2}` +
         ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : '') +
@@ -26806,6 +26825,7 @@ class Game {
       else if (paceDelta != null && paceDelta >= 3) tip = t('result.wallGoodPace');
     }
     scheduleGameResult(this, 1200, () => UI.showResult(true, {
+      titleKey: isRecord ? 'result.wallRecord' : 'result.wallTime',
       title: isRecord ? t('result.wallRecord') : t('result.wallTime'),
       detail: t('result.wallDetail', {
         score: this.score, pace, best, combo: this.maxCombo || 0,
@@ -26915,6 +26935,7 @@ class Game {
     this.banner(t('banner.bonusDone'), 1.4, '#7cfc8a', 40);
     const wallet = petCoinsBalance();
     scheduleGameResult(this, 1200, () => UI.showResult(true, {
+      titleKey: isRecord ? 'result.matsRecord' : 'result.matsDone',
       title: isRecord ? t('result.matsRecord') : t('result.matsDone'),
       detail: t('result.matsDetail', {
         n, best,
@@ -35035,7 +35056,14 @@ const UI = {
     this.lastResult = data;
     const title = document.getElementById('resTitle');
     if (!title) throw new Error('result DOM missing');
-    title.textContent = data.title;
+    const titleKey = data.titleKey || (data.mode === 'training'
+      ? (win ? 'result.trainWin' : 'result.trainLose')
+      : (win ? 'result.advWin' : 'result.advLose'));
+    const painted = (typeof tOr === 'function')
+      ? tOr(titleKey, data.title || (win ? 'GEWONNEN!' : 'VERLOREN'))
+      : (data.title || (win ? 'GEWONNEN!' : 'VERLOREN'));
+    title.textContent = painted;
+    data.titleKey = titleKey;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
     const detailEl = document.getElementById('resDetail');
     if (detailEl) detailEl.textContent = data.detail;
@@ -36229,6 +36257,22 @@ function netUpdateOnHub() {
   }
 }
 
+function netStatusMsgEl(el) {
+  return (el && el.querySelector && el.querySelector('#netStatusMsg')) || el;
+}
+
+function setNetStatusText(el, text) {
+  const msg = netStatusMsgEl(el);
+  if (msg) msg.textContent = text;
+}
+
+function showNetDismiss(el, on) {
+  const x = document.getElementById('netStatusDismiss');
+  if (!x) return;
+  x.hidden = !on;
+  x.setAttribute('aria-label', (typeof tOr === 'function') ? tOr('net.dismiss', 'Sluiten') : 'Sluiten');
+}
+
 function updateNetStatus(ev) {
   const el = document.getElementById('netStatus');
   if (!el) return;
@@ -36236,30 +36280,37 @@ function updateNetStatus(ev) {
   const swReady = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
   const standalone = isStandalonePwa();
   const swUpdate = !!window.__sfSwUpdateReady;
+  const playing = !!(document.body && document.body.classList.contains('is-playing'));
   try {
     document.body.classList.toggle('sf-offline', off);
     document.body.classList.toggle('sf-sw-ready', swReady);
-    document.body.classList.toggle('sf-sw-update', swUpdate);
+    document.body.classList.toggle('sf-sw-update', swUpdate && !playing);
   } catch (_) {}
 
   const paintUpdateBanner = () => {
+    if (playing || window.__sfNetQuietUpdate) {
+      el.hidden = true;
+      showNetDismiss(el, false);
+      return;
+    }
     const onHub = netUpdateOnHub();
     el.hidden = false;
     el.classList.remove('online-flash', 'sw-pending', 'offline-ready', 'sw-update', 'sw-update-wait');
+    showNetDismiss(el, true);
     if (onHub) {
       el.classList.add('sw-update');
       el.setAttribute('role', 'button');
       if ('tabIndex' in el) el.tabIndex = 0;
-      el.textContent = (typeof tOr === 'function')
+      setNetStatusText(el, (typeof tOr === 'function')
         ? tOr('net.updateReady', 'Nieuwe versie klaar — tik om te laden')
-        : 'Nieuwe versie klaar — tik om te laden';
+        : 'Nieuwe versie klaar — tik om te laden');
     } else {
       el.classList.add('sw-update-wait');
       if (el.removeAttribute) el.removeAttribute('role');
       if ('tabIndex' in el) el.tabIndex = -1;
-      el.textContent = (typeof tOr === 'function')
+      setNetStatusText(el, (typeof tOr === 'function')
         ? tOr('net.updateWait', 'Nieuwe versie — laadt in het menu')
-        : 'Nieuwe versie — laadt in het menu';
+        : 'Nieuwe versie — laadt in het menu');
     }
   };
 
@@ -36270,18 +36321,19 @@ function updateNetStatus(ev) {
 
   el.removeAttribute && el.removeAttribute('role');
   if ('tabIndex' in el) el.tabIndex = -1;
+  showNetDismiss(el, false);
 
   if (off) {
     el.hidden = false;
     el.classList.remove('online-flash', 'sw-pending', 'sw-update', 'sw-update-wait');
     if (state === 'play') {
-      el.textContent = standalone
+      setNetStatusText(el, standalone
         ? (typeof tOr === 'function' ? tOr('net.offlinePlay', 'Offline — speelt uit cache · save blijft hier') : 'Offline — speelt uit cache · save blijft hier')
-        : (typeof tOr === 'function' ? tOr('net.offlinePlayHint', 'Offline — uit cache · icoon in de lade = altijd spelen') : 'Offline — uit cache · icoon in de lade = altijd spelen');
+        : (typeof tOr === 'function' ? tOr('net.offlinePlayHint', 'Offline — uit cache · icoon in de lade = altijd spelen') : 'Offline — uit cache · icoon in de lade = altijd spelen'));
     } else {
-      el.textContent = swReady
+      setNetStatusText(el, swReady
         ? (typeof tOr === 'function' ? tOr('net.offlineMenu', 'Offline — menu & save uit cache') : 'Offline — menu & save uit cache')
-        : (typeof tOr === 'function' ? tOr('net.offlineNeedOnce', 'Offline — open 1× online, daarna speelt het zonder net') : 'Offline — open 1× online, daarna speelt het zonder net');
+        : (typeof tOr === 'function' ? tOr('net.offlineNeedOnce', 'Offline — open 1× online, daarna speelt het zonder net') : 'Offline — open 1× online, daarna speelt het zonder net'));
     }
     return;
   }
@@ -36289,7 +36341,7 @@ function updateNetStatus(ev) {
     el.hidden = false;
     el.classList.remove('sw-pending', 'sw-update', 'sw-update-wait');
     el.classList.add('online-flash');
-    el.textContent = (typeof tOr === 'function') ? tOr('net.backOnline', 'Weer online') : 'Weer online';
+    setNetStatusText(el, (typeof tOr === 'function') ? tOr('net.backOnline', 'Weer online') : 'Weer online');
     if ('serviceWorker' in navigator) {
       try { navigator.serviceWorker.ready.then((reg) => reg.update()); } catch (_) {}
     }
@@ -36297,7 +36349,7 @@ function updateNetStatus(ev) {
       if (navigator.onLine && !window.__sfSwUpdateReady) {
         el.hidden = true;
         el.classList.remove('online-flash');
-        el.textContent = '';
+        setNetStatusText(el, '');
       }
     }, 2200);
     return;
@@ -36306,7 +36358,7 @@ function updateNetStatus(ev) {
     el.hidden = false;
     el.classList.add('sw-pending');
     el.classList.remove('online-flash', 'sw-update', 'sw-update-wait', 'offline-ready');
-    el.textContent = (typeof tOr === 'function') ? tOr('net.cacheLoading', 'Cache laden… — daarna ook offline') : 'Cache laden… — daarna ook offline';
+    setNetStatusText(el, (typeof tOr === 'function') ? tOr('net.cacheLoading', 'Cache laden… — daarna ook offline') : 'Cache laden… — daarna ook offline');
     return;
   }
   if (swReady && 'caches' in window && !window.__sfOfflineReadyShown) {
@@ -36323,19 +36375,19 @@ function updateNetStatus(ev) {
         el2.hidden = false;
         el2.classList.remove('sw-pending', 'sw-update', 'sw-update-wait');
         el2.classList.add('offline-ready');
-        el2.textContent = (typeof tOr === 'function') ? tOr('net.offlineReady', 'Klaar voor offline — save blijft hier') : 'Klaar voor offline — save blijft hier';
+        setNetStatusText(el2, (typeof tOr === 'function') ? tOr('net.offlineReady', 'Klaar voor offline — save blijft hier') : 'Klaar voor offline — save blijft hier');
         setTimeout(() => {
           if (!window.__sfSwUpdateReady && navigator.onLine && el2.classList.contains('offline-ready')) {
             el2.hidden = true;
             el2.classList.remove('offline-ready');
-            el2.textContent = '';
+            setNetStatusText(el2, '');
           }
         }, 3200);
     }).catch(() => {});
   }
   el.hidden = true;
   el.classList.remove('online-flash', 'sw-pending', 'sw-update', 'sw-update-wait', 'offline-ready');
-  el.textContent = '';
+  setNetStatusText(el, '');
 }
 window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
@@ -36366,7 +36418,21 @@ function wireNetStatusTap() {
     if (!netUpdateOnHub()) return;
     safeAsync(runVersionUpdateWithSavePrompt(), 'swUpdateTap', t('versionUpdate.fail'));
   };
-  el.addEventListener('click', run);
+  el.addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'netStatusDismiss') return;
+    run();
+  });
+  const dismiss = document.getElementById('netStatusDismiss');
+  if (dismiss && !dismiss.dataset.sfNetDismiss) {
+    dismiss.dataset.sfNetDismiss = '1';
+    dismiss.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.__sfNetQuietUpdate = true;
+      el.hidden = true;
+      showNetDismiss(el, false);
+    });
+  }
   el.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); run(); }
   });

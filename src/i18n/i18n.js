@@ -9,6 +9,7 @@ const I18N = {
     net: {
       updateReady: 'Nieuwe versie klaar — tik om te laden',
       updateWait: 'Nieuwe versie — laadt in het menu',
+      dismiss: 'Sluiten',
       offlinePlay: 'Offline — speelt uit cache · save blijft hier',
       offlinePlayHint: 'Offline — uit cache · icoon in de lade = altijd spelen',
       offlineMenu: 'Offline — menu & save uit cache',
@@ -120,6 +121,7 @@ const I18N = {
     net: {
       updateReady: 'New version ready — tap to load',
       updateWait: 'New version — loads in the menu',
+      dismiss: 'Dismiss',
       offlinePlay: 'Offline — playing from cache · save stays here',
       offlinePlayHint: 'Offline — from cache · home-screen icon = always play',
       offlineMenu: 'Offline — menu & save from cache',
@@ -565,8 +567,10 @@ function setTitle(id, key, params) {
 function applyLangStaticScreens() {
   if (!canApplyDomI18n()) return;
   if (document.documentElement) document.documentElement.lang = getLang();
-  const net = document.getElementById('netStatus');
-  if (net) net.textContent = t('common.offline');
+  const netMsg = document.getElementById('netStatusMsg') || document.getElementById('netStatus');
+  if (netMsg) netMsg.textContent = t('common.offline');
+  const netX = document.getElementById('netStatusDismiss');
+  if (netX) netX.setAttribute('aria-label', tOr('net.dismiss', 'Sluiten'));
 
   setText('menuLangLbl', 'settings.lang');
   setText('pressStartLine', 'menu.pressStart');
@@ -901,6 +905,9 @@ function applyLang() {
     else if (active === 'dexScreen' && typeof UI.renderDex === 'function') UI.renderDex();
     else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'modeHubScreen') UI.renderModeHub();
+    else if (active === 'resultScreen' && UI.lastResult && typeof UI.showResult === 'function') {
+      try { UI.showResult(!!UI.lastResult.win, UI.lastResult); } catch (_) {}
+    }
     UI.syncBackLabels();
   }
   try { if (typeof syncTitleGateCopy === 'function') syncTitleGateCopy(); } catch (_) {}
