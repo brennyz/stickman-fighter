@@ -320,9 +320,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.154';
+const APP_VERSION = '1.18.155';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 364;
+const SW_CACHE_REV = 365;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -4280,8 +4280,8 @@ const BUTTON_ICON_FALLBACKS = {
   collect: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#c792ff" stroke-width="2"><path d="M5 4.5h9.5L18.5 8v11.5H5z" fill="rgba(199,146,255,.18)"/></svg>',
   summons: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ffd75e" stroke-width="2"><path d="M4.5 10.5h15v8.2a1.5 1.5 0 0 1-1.5 1.5h-12a1.5 1.5 0 0 1-1.5-1.5z" fill="rgba(255,215,94,.22)"/><path d="M12 10.5v9.7"/></svg>',
   continue: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#7cf5ff" stroke-width="2"><path d="M5 12h12M13 8l4 4-4 4"/></svg>',
-  satan: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#2a0810" stroke="#ff3040" stroke-width="2" d="M6 20c-1.2-4-.8-8 1.2-10.2C9 8 11 7.4 12 7.5c1-.1 3 .5 4.8 2.3C18.8 12 19.2 16 18 20Z"/><circle cx="12" cy="10.2" r="3.4" fill="#8a2030" stroke="#ff3040"/><path d="M9.2 8.2L7.2 4.6M14.8 8.2L16.8 4.6" stroke="#ffd75e" stroke-width="2.1" fill="none"/></svg>',
-  'satan-mark': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#2a0810" stroke="#ff3040" stroke-width="2" d="M6 20c-1.2-4-.8-8 1.2-10.2C9 8 11 7.4 12 7.5c1-.1 3 .5 4.8 2.3C18.8 12 19.2 16 18 20Z"/><circle cx="12" cy="10.2" r="3.4" fill="#8a2030" stroke="#ff3040"/><path d="M9.2 8.2L7.2 4.6M14.8 8.2L16.8 4.6" stroke="#ffd75e" stroke-width="2.1" fill="none"/></svg>',
+  satan: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="13" r="6.2" fill="#8a2030" stroke="#ff3040" stroke-width="1.8"/><path d="M7.2 9.2L5 3.4L10 8.4Z" fill="#1a0a10" stroke="#ffd75e" stroke-width="1.4"/><path d="M16.8 9.2L19 3.4L14 8.4Z" fill="#1a0a10" stroke="#ffd75e" stroke-width="1.4"/><circle cx="9.6" cy="12.6" r="1.35" fill="#ffd75e"/><circle cx="14.4" cy="12.6" r="1.35" fill="#ffd75e"/></svg>',
+  'satan-mark': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="13" r="6.2" fill="#8a2030" stroke="#ff3040" stroke-width="1.8"/><path d="M7.2 9.2L5 3.4L10 8.4Z" fill="#1a0a10" stroke="#ffd75e" stroke-width="1.4"/><path d="M16.8 9.2L19 3.4L14 8.4Z" fill="#1a0a10" stroke="#ffd75e" stroke-width="1.4"/><circle cx="9.6" cy="12.6" r="1.35" fill="#ffd75e"/><circle cx="14.4" cy="12.6" r="1.35" fill="#ffd75e"/></svg>',
 };
 function buttonIconFallbackUri(src) {
   const base = (src || '').split('/').pop().replace(/\.svg.*$/, '');
@@ -10429,7 +10429,7 @@ const SATAN_DIRECT_DMG_MUL = 0.55;
 const SATAN_SVG_URL = './assets/ui/satan.svg';
 const SATAN_MARK_URL = './assets/ui/satan-mark.svg';
 /** Inline mark als satan.svg of satan-mark.svg niet laadt (geen broken-icon box). */
-const SATAN_MARK_FALLBACK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="#2a0810" stroke="#ff3040" stroke-width="2" d="M6 20c-1.2-4-.8-8 1.2-10.2C9 8 11 7.4 12 7.5c1-.1 3 .5 4.8 2.3C18.8 12 19.2 16 18 20Z"/><circle cx="12" cy="10.2" r="3.4" fill="#8a2030" stroke="#ff3040"/><path d="M9.2 8.2L7.2 4.6M14.8 8.2L16.8 4.6" stroke="#ffd75e" stroke-width="2.1" fill="none"/></svg>';
+const SATAN_MARK_FALLBACK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="13" r="6.2" fill="#8a2030" stroke="#ff3040" stroke-width="1.8"/><path d="M7.2 9.2L5 3.4L10 8.4Z" fill="#1a0a10" stroke="#ffd75e" stroke-width="1.4"/><path d="M16.8 9.2L19 3.4L14 8.4Z" fill="#1a0a10" stroke="#ffd75e" stroke-width="1.4"/><circle cx="9.6" cy="12.6" r="1.35" fill="#ffd75e"/><circle cx="14.4" cy="12.6" r="1.35" fill="#ffd75e"/></svg>';
 /** Art-hoogte ≈ 2.35 × size → size ≈ 0.21 × min(W,H) ≈ half scherm. */
 const SATAN_SCREEN_FRAC = 0.21;
 const SATAN_SIZE_MIN = 88;
@@ -12250,7 +12250,7 @@ function seedNlGameStrings() {
     helpIslandLocked: 'Vergrendeld — versla baas Lv {lv}',
     helpIslandProg: '{cleared}/{total} levels · {stars}/{maxStars}★ · skill gate wapens Lv {cap}',
     helpIslandBtnTitle: 'Eilanden & skill gate uitleg',
-    islandInfoSub: 'Skill gate: wapens tot Lv {cap} · {cleared}/{total} levels · {stars}★',
+    islandInfoSub: 'Wapens tot Lv {cap} · {cleared}/{total} gehaald · {stars}★',
     islandBossGate: ' · baas Lv {lv} → volgend eiland',
     masterBuffChip: 'Meester-buff Lv {lv} · +20%',
     islandFirstHint: 'Hitte-meter: 5× verlies = Meester-buff · 9× = gevaar! · 10× = Satan (reflect)',
@@ -12272,18 +12272,18 @@ function seedNlGameStrings() {
     heatHot: 'Heet',
     heatDanger: 'Gevaar!',
     heatSatanReady: 'Satan komt',
-    heatTipIdle: 'Verlies op dit level vult de hitte-meter — bij 10 komt Satan.',
-    heatTipFails: 'Lv {lv}: {n}/{max} verliezen · 5 = Meester · 9 = gevaar · 10 = Satan',
-    heatTipDanger: 'Lv {lv}: {n}/10 — GEVAAR! Nog 1 verlies en Satan komt langs.',
-    heatTipSatan: 'Lv {lv}: {n}/10 — Satan staat klaar bij de volgende start.',
+    heatTipIdle: 'Verlies vult de meter. Bij 10 komt Satan.',
+    heatTipFails: 'Lv {lv}: {n}/{max} · 5 Meester · 9 gevaar · 10 Satan',
+    heatTipDanger: 'Lv {lv}: nog 1 verlies tot Satan.',
+    heatTipSatan: 'Lv {lv}: Satan bij de volgende start.',
     heatChipSatan: 'Satan klaar · volgende start',
     heatChipDanger: 'Gevaar! · 9× verloren',
     satanCardTitle: 'Satan',
-    satanCardIdle: 'Blijf hangen op één level? Hitte loopt op — bij 10× komt deze baas (~half scherm, 85% reflect).',
-    satanCardHeat: 'Hitte {n}/{max}. Verlies stapelen lokt Satan — dikke SVG-duivel met reflect.',
-    satanCardDanger: 'GEVAAR! Nog 1× verlies en Satan verschijnt — ~half scherm, heel boosaardig.',
-    satanCardReady: 'Satan staat klaar bij de volgende start van dit level.',
-    satanCardAfterClear: 'Adventure gehaald? Hitte werkt nog steeds: 10× falen op één level → Satan-duel → Tide-pet.',
+    satanCardIdle: '10× verlies op dit level → Satan. Sla zijn klap terug, of je gaat eraan.',
+    satanCardHeat: 'Hitte {n}/{max}. Nog een paar verliezen en Satan komt.',
+    satanCardDanger: 'Nog 1 verlies. Daarna vecht je tegen Satan.',
+    satanCardReady: 'Volgende start: Satan. Kaats zijn aanval terug.',
+    satanCardAfterClear: 'Ook na de eindbaas: 10× falen op één level roept Satan.',
     diffBlurbSatanAfterClear: 'Hitte/Satan blijft actief bij vastzitten',
     helpSatanHeat: 'Hitte-meter: verliezen op één level stapelen. 5× = Meester-buff (+20%). 9× = rood gevaar!. 10× = Satan (85% reflect); win Satan → Tide Battle pet.',
     errPickIsland: 'Eiland kiezen mislukt',
@@ -13056,7 +13056,7 @@ const CATALOG_EN = {
     helpIslandLocked: 'Locked — beat boss Lv {lv}',
     helpIslandProg: '{cleared}/{total} levels · {stars}/{maxStars}★ · skill gate weapons Lv {cap}',
     helpIslandBtnTitle: 'Islands & skill gate help',
-    islandInfoSub: 'Skill gate: weapons up to Lv {cap} · {cleared}/{total} levels · {stars}★',
+    islandInfoSub: 'Weapons up to Lv {cap} · {cleared}/{total} cleared · {stars}★',
     islandBossGate: ' · boss Lv {lv} → next island',
     masterBuffChip: 'Master buff Lv {lv} · +20%',
     islandFirstHint: 'Heat meter: 5× loss = Master buff · 9× = danger! · 10× = Satan (reflect)',
@@ -13078,18 +13078,18 @@ const CATALOG_EN = {
     heatHot: 'Hot',
     heatDanger: 'Danger!',
     heatSatanReady: 'Satan incoming',
-    heatTipIdle: 'Losses on this level fill the heat meter — Satan at 10.',
-    heatTipFails: 'Lv {lv}: {n}/{max} losses · 5 = Master · 9 = danger · 10 = Satan',
-    heatTipDanger: 'Lv {lv}: {n}/10 — DANGER! One more loss and Satan appears.',
-    heatTipSatan: 'Lv {lv}: {n}/10 — Satan is ready on the next start.',
+    heatTipIdle: 'Losses fill the meter. Satan at 10.',
+    heatTipFails: 'Lv {lv}: {n}/{max} · 5 Master · 9 danger · 10 Satan',
+    heatTipDanger: 'Lv {lv}: one more loss until Satan.',
+    heatTipSatan: 'Lv {lv}: Satan on the next start.',
     heatChipSatan: 'Satan ready · next start',
     heatChipDanger: 'Danger! · lost 9×',
     satanCardTitle: 'Satan',
-    satanCardIdle: 'Stuck on one level? Heat builds — at 10× this boss appears (~half screen, 85% reflect).',
-    satanCardHeat: 'Heat {n}/{max}. Stacked losses summon Satan — thick SVG devil with reflect.',
-    satanCardDanger: 'DANGER! One more loss and Satan appears — ~half screen, pure villain.',
-    satanCardReady: 'Satan is ready on the next start of this level.',
-    satanCardAfterClear: 'Adventure cleared? Heat still applies: 10× fails on one level → Satan duel → Tide pet.',
+    satanCardIdle: 'Lose 10× on this level → Satan. Reflect his hit or you drop.',
+    satanCardHeat: 'Heat {n}/{max}. A few more losses and Satan shows.',
+    satanCardDanger: 'One more loss. Then you fight Satan.',
+    satanCardReady: 'Next start: Satan. Bounce his attack back.',
+    satanCardAfterClear: 'After the finale too: 10× fails on one level summons Satan.',
     diffBlurbSatanAfterClear: 'Heat/Satan still active when you stall',
     helpSatanHeat: 'Heat meter: losses stack on one level. 5× = Master buff (+20%). 9× = red danger!. 10× = Satan (85% reflect); beat Satan → Tide Battle pet.',
     errPickIsland: 'Could not pick island',
@@ -31366,13 +31366,17 @@ function renderAdvHeatMeter(heat, opts) {
       `<i class="lvl-heat-fill" style="width:${heat.pct}%"></i>` +
       `<span class="lvl-heat-n">${count}</span>${bang}</span>`;
   }
-  const showPortrait = !!(heat.danger || heat.satanReady || heat.fails > 0);
-  const portrait = (showPortrait && typeof satanPortraitHtml === 'function')
-    ? `<div class="adv-heat-face">${satanPortraitHtml()}</div>`
-    : (typeof satanPortraitHtml === 'function'
-      ? `<div class="adv-heat-face idle">${satanPortraitHtml({ compact: true })}</div>`
-      : '');
-  return `<div class="${cls}" title="${tipAttr}" role="meter" aria-valuemin="0" aria-valuemax="${SATAN_FAIL_THRESHOLD}" aria-valuenow="${heat.fails}" aria-label="${typeof satanEscAttr === 'function' ? satanEscAttr(label) : label}">` +
+  const bare = !!opts.bare;
+  const showPortrait = !bare && !!(heat.danger || heat.satanReady || heat.fails > 0);
+  const portrait = (typeof satanPortraitHtml !== 'function')
+    ? ''
+    : (showPortrait
+      ? `<div class="adv-heat-face">${satanPortraitHtml()}</div>`
+      : `<div class="adv-heat-face idle">${satanPortraitHtml({ compact: true })}</div>`);
+  const sub = (!bare && tip)
+    ? `<div class="adv-heat-sub">${tip}</div>`
+    : '';
+  return `<div class="${cls}${bare ? ' bare' : ''}" title="${tipAttr}" role="meter" aria-valuemin="0" aria-valuemax="${SATAN_FAIL_THRESHOLD}" aria-valuenow="${heat.fails}" aria-label="${typeof satanEscAttr === 'function' ? satanEscAttr(label) : label}">` +
     `<div class="adv-heat-row">` +
     portrait +
     `<div class="adv-heat-body">` +
@@ -31380,7 +31384,7 @@ function renderAdvHeatMeter(heat, opts) {
     `<span class="adv-heat-label">${label}${bang}</span>` +
     `<span class="adv-heat-count">${count}</span></div>` +
     `<div class="adv-heat-track"><i class="adv-heat-fill" style="width:${heat.pct}%"></i></div>` +
-    `<div class="adv-heat-sub">${tip}</div>` +
+    sub +
     `</div></div></div>`;
 }
 
@@ -31621,6 +31625,10 @@ const UI = {
         if (id === 'levelScreen') {
           if (!this.advIslandPick) this.advIslandPick = currentAdvIsland();
           try { applyIslandOnboarding(); } catch (_) {}
+          try {
+            const host = document.getElementById('toastHost');
+            if (host) host.innerHTML = '';
+          } catch (_) {}
         }
       } else if (game?.mode === 'versus') {
         try { this.refreshPauseSubtitle(); } catch (_) {}
@@ -33183,7 +33191,7 @@ const UI = {
         `</div></div></div>` +
         `<div class="island-prog-track island-info-prog" title="${t('island.levelsProg')}"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
         `<div class="island-prog-track island-info-stars" title="${t('island.starsProg')}"><i style="width:${Math.round(prog.stars / Math.max(1, prog.maxStars) * 100)}%"></i></div>` +
-        (meterHeat ? renderAdvHeatMeter(meterHeat) : '') +
+        (meterHeat ? renderAdvHeatMeter(meterHeat, { bare: true }) : '') +
         (typeof renderAdvSatanCard === 'function' ? renderAdvSatanCard(meterHeat, activeDiff) : '') +
         (() => {
           const onboard = adventureIslandHintLine();

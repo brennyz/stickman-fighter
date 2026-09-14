@@ -20,6 +20,7 @@ const satan = fs.readFileSync(path.join(root, 'src/data/satan-encounter.js'), 'u
 const missions = fs.readFileSync(path.join(root, 'src/systems/missions.js'), 'utf8');
 const prelude = fs.readFileSync(path.join(root, 'src/00-prelude.js'), 'utf8');
 const game = fs.readFileSync(path.join(root, 'src/game/game.js'), 'utf8');
+const ui = fs.readFileSync(path.join(root, 'src/ui/ui.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'styles/main.css'), 'utf8');
 const satanSvg = fs.readFileSync(path.join(root, 'assets/ui/satan.svg'), 'utf8');
 const markSvg = fs.readFileSync(path.join(root, 'assets/ui/satan-mark.svg'), 'utf8');
@@ -49,8 +50,14 @@ must(/FLOATER_LANE_W = 40/.test(prelude), 'floater lane width should be 40');
 must(/function tryMergeDmgFloater\(/.test(prelude), 'tryMergeDmgFloater missing');
 must(/function parseDmgFloaterTxt\(/.test(prelude), 'parseDmgFloaterTxt missing');
 must(/tryMergeDmgFloater\(this,/.test(game), 'Game.floater must try merge first');
+must(/renderAdvHeatMeter\(meterHeat, \{ bare: true \}\)/.test(ui), 'island heat meter must be bare (no duplicate portrait)');
+must(/Wapens tot Lv/.test(fs.readFileSync(path.join(root, 'src/i18n/catalog.js'), 'utf8')), 'island sub copy should be short NL');
+must(!/Aura-ringen/.test(satanSvg), 'satan.svg must not use aura rings (read as a bug at card size)');
 
 must(/url\("\.\.\/assets\/ui\/satan\.svg"\)/.test(css), 'card-face CSS fallback path wrong (must be ../assets)');
+must(/width:104px/.test(css) && /height:128px/.test(css), 'satan card face should be larger (104x128)');
+must(/adv-heat\.bare/.test(css), 'bare heat meter style missing');
+must(/toastHost/.test(css) && /levelScreen\.active/.test(css), 'hide welcome toast on island screen');
 must(/url\("\.\.\/assets\/ui\/satan-mark\.svg"\)/.test(css), 'heat-face CSS fallback path wrong');
 must(/satan-portrait-art\.sf-icon-broken/.test(css), 'CSS must neutralize broken outline on satan art');
 

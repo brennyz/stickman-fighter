@@ -13,7 +13,7 @@ const SATAN_DIRECT_DMG_MUL = 0.55;
 const SATAN_SVG_URL = './assets/ui/satan.svg';
 const SATAN_MARK_URL = './assets/ui/satan-mark.svg';
 /** Inline mark als satan.svg of satan-mark.svg niet laadt (geen broken-icon box). */
-const SATAN_MARK_FALLBACK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="#2a0810" stroke="#ff3040" stroke-width="2" d="M6 20c-1.2-4-.8-8 1.2-10.2C9 8 11 7.4 12 7.5c1-.1 3 .5 4.8 2.3C18.8 12 19.2 16 18 20Z"/><circle cx="12" cy="10.2" r="3.4" fill="#8a2030" stroke="#ff3040"/><path d="M9.2 8.2L7.2 4.6M14.8 8.2L16.8 4.6" stroke="#ffd75e" stroke-width="2.1" fill="none"/></svg>';
+const SATAN_MARK_FALLBACK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="13" r="6.2" fill="#8a2030" stroke="#ff3040" stroke-width="1.8"/><path d="M7.2 9.2L5 3.4L10 8.4Z" fill="#1a0a10" stroke="#ffd75e" stroke-width="1.4"/><path d="M16.8 9.2L19 3.4L14 8.4Z" fill="#1a0a10" stroke="#ffd75e" stroke-width="1.4"/><circle cx="9.6" cy="12.6" r="1.35" fill="#ffd75e"/><circle cx="14.4" cy="12.6" r="1.35" fill="#ffd75e"/></svg>';
 /** Art-hoogte ≈ 2.35 × size → size ≈ 0.21 × min(W,H) ≈ half scherm. */
 const SATAN_SCREEN_FRAC = 0.21;
 const SATAN_SIZE_MIN = 88;

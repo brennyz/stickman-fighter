@@ -955,13 +955,17 @@ function renderAdvHeatMeter(heat, opts) {
       `<i class="lvl-heat-fill" style="width:${heat.pct}%"></i>` +
       `<span class="lvl-heat-n">${count}</span>${bang}</span>`;
   }
-  const showPortrait = !!(heat.danger || heat.satanReady || heat.fails > 0);
-  const portrait = (showPortrait && typeof satanPortraitHtml === 'function')
-    ? `<div class="adv-heat-face">${satanPortraitHtml()}</div>`
-    : (typeof satanPortraitHtml === 'function'
-      ? `<div class="adv-heat-face idle">${satanPortraitHtml({ compact: true })}</div>`
-      : '');
-  return `<div class="${cls}" title="${tipAttr}" role="meter" aria-valuemin="0" aria-valuemax="${SATAN_FAIL_THRESHOLD}" aria-valuenow="${heat.fails}" aria-label="${typeof satanEscAttr === 'function' ? satanEscAttr(label) : label}">` +
+  const bare = !!opts.bare;
+  const showPortrait = !bare && !!(heat.danger || heat.satanReady || heat.fails > 0);
+  const portrait = (typeof satanPortraitHtml !== 'function')
+    ? ''
+    : (showPortrait
+      ? `<div class="adv-heat-face">${satanPortraitHtml()}</div>`
+      : `<div class="adv-heat-face idle">${satanPortraitHtml({ compact: true })}</div>`);
+  const sub = (!bare && tip)
+    ? `<div class="adv-heat-sub">${tip}</div>`
+    : '';
+  return `<div class="${cls}${bare ? ' bare' : ''}" title="${tipAttr}" role="meter" aria-valuemin="0" aria-valuemax="${SATAN_FAIL_THRESHOLD}" aria-valuenow="${heat.fails}" aria-label="${typeof satanEscAttr === 'function' ? satanEscAttr(label) : label}">` +
     `<div class="adv-heat-row">` +
     portrait +
     `<div class="adv-heat-body">` +
@@ -969,7 +973,7 @@ function renderAdvHeatMeter(heat, opts) {
     `<span class="adv-heat-label">${label}${bang}</span>` +
     `<span class="adv-heat-count">${count}</span></div>` +
     `<div class="adv-heat-track"><i class="adv-heat-fill" style="width:${heat.pct}%"></i></div>` +
-    `<div class="adv-heat-sub">${tip}</div>` +
+    sub +
     `</div></div></div>`;
 }
 
@@ -1210,6 +1214,10 @@ const UI = {
         if (id === 'levelScreen') {
           if (!this.advIslandPick) this.advIslandPick = currentAdvIsland();
           try { applyIslandOnboarding(); } catch (_) {}
+          try {
+            const host = document.getElementById('toastHost');
+            if (host) host.innerHTML = '';
+          } catch (_) {}
         }
       } else if (game?.mode === 'versus') {
         try { this.refreshPauseSubtitle(); } catch (_) {}
@@ -2772,7 +2780,7 @@ const UI = {
         `</div></div></div>` +
         `<div class="island-prog-track island-info-prog" title="${t('island.levelsProg')}"><i style="width:${pct}%;background:${islMeta.accent}"></i></div>` +
         `<div class="island-prog-track island-info-stars" title="${t('island.starsProg')}"><i style="width:${Math.round(prog.stars / Math.max(1, prog.maxStars) * 100)}%"></i></div>` +
-        (meterHeat ? renderAdvHeatMeter(meterHeat) : '') +
+        (meterHeat ? renderAdvHeatMeter(meterHeat, { bare: true }) : '') +
         (typeof renderAdvSatanCard === 'function' ? renderAdvSatanCard(meterHeat, activeDiff) : '') +
         (() => {
           const onboard = adventureIslandHintLine();

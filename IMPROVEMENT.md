@@ -1,3 +1,4 @@
+| 2026-09-14 | **satan look** | SATAN-kaart: dikkere duivel (geen aura-insect), groter portret, korte copy, hitte-balk zonder dubbele tekst. **v1.18.155 / SW v365**. |
 | 2026-09-14 | **island polish** | HEAT/SATAN-kaarten: geen sf-icon-broken (skip harden + SVG size + fallback). Schade-floaters ruimer + −N merge. **v1.18.154 / SW v364**. |
 | 2026-09-14 | **playtest P1** | Android-first: landing fold + NL-first hub; trainLostTip + energy/iframe copy; opener 2-mob + robot block/HP readable. **v1.18.153 / SW v363**. |
 | 2026-08-17 | **merge** | Mega-merge: #247 light-FX + #246 versus-stubs + #240 dawnblade (roster blijft retired) · **v1.18.152 / SW v362**. |
@@ -131,6 +132,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | SATAN-kaart dikkere duivel + groter portret + korte copy. v1.18.155 / SW 365. |
 | 2026-09-14 | — | HEAT/SATAN-kaarten geen broken-icon; schade-floaters ruimer + −N merge. v1.18.154 / SW 364. |
 | 2026-08-17 | **merge** | Mega-merge op huidige main: #247 light-FX + #246 versus-stubs + #240 dawnblade (geen versus-roster). v1.18.152 / SW 362. |
 | 2026-08-17 | — | GitHub-sync: agent vraagt bij wijzigingen of we naar main moeten; wachtlijst in `githubSync` + `./scripts/github-sync-status.sh`. |
