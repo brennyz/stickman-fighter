@@ -10,6 +10,11 @@
 | `bamboo-boesa-boiler.svg` | `bamboo-boesa-boiler` |
 | `echo-whistle-mill.svg` | `echo-whistle-mill` |
 | `hub-buildings.svg` | `buildings` (pixel) |
+| `forge.svg` / `foundry.svg` | alias → `stick-lighter` |
+| `dojo.svg` | alias → `chipping-wood` |
+| `tower.svg` / `ranch.svg` | alias → `woodchip-glue` |
+| `garden.svg` | alias → `bamboo-boesa-boiler` |
+| `shrine.svg` / `mill.svg` | alias → `echo-whistle-mill` |
 
 HOME **stroke** tile lives at `assets/buttons/hub/buildings.svg` (ASSET-STYLE 24×24).
 

@@ -11831,6 +11831,27 @@ const BUILDING_PIXEL_ALIASES = {
   whistlemill: 'echo-whistle-mill',
   'echo-mill': 'echo-whistle-mill',
   echocmill: 'echo-whistle-mill',
+
+  /* powers #290 fallback catalog */
+  dojo: 'chipping-wood',
+  hall: 'chipping-wood',
+  forge: 'stick-lighter',
+  smith: 'stick-lighter',
+  workshop: 'stick-lighter',
+  garden: 'bamboo-boesa-boiler',
+  farm: 'bamboo-boesa-boiler',
+  kitchen: 'bamboo-boesa-boiler',
+  tower: 'woodchip-glue',
+  watch: 'woodchip-glue',
+  barracks: 'woodchip-glue',
+  shrine: 'echo-whistle-mill',
+  well: 'echo-whistle-mill',
+  temple: 'echo-whistle-mill',
+
+  /* UI #291 stub catalog (file probe assets/buildings/{id}.svg) */
+  mill: 'echo-whistle-mill',
+  ranch: 'woodchip-glue',
+  foundry: 'stick-lighter',
 };
 
 function _normBuildingKey(id) {

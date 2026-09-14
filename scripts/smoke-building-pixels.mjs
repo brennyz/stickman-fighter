@@ -18,6 +18,14 @@ const FILES = [
   'assets/buildings/chipping-wood.svg',
   'assets/buildings/bamboo-boesa-boiler.svg',
   'assets/buildings/echo-whistle-mill.svg',
+  'assets/buildings/forge.svg',
+  'assets/buildings/dojo.svg',
+  'assets/buildings/garden.svg',
+  'assets/buildings/tower.svg',
+  'assets/buildings/shrine.svg',
+  'assets/buildings/mill.svg',
+  'assets/buildings/ranch.svg',
+  'assets/buildings/foundry.svg',
   'assets/buildings/preview.html',
   'BUILDING-PIXEL-MAP.md',
 ];
@@ -85,6 +93,10 @@ ok(api.resolveBuildingId('stickLighter') === 'stick-lighter', 'alias stickLighte
 ok(api.resolveBuildingId('factory-woodchip-glue') === 'woodchip-glue', 'prefix factory-');
 ok(api.resolveBuildingId('boesa') === 'bamboo-boesa-boiler', 'alias boesa');
 ok(api.resolveBuildingId('whistleMill') === 'echo-whistle-mill', 'alias whistleMill');
+ok(api.resolveBuildingId('forge') === 'stick-lighter', 'powers forge');
+ok(api.resolveBuildingId('dojo') === 'chipping-wood', 'powers dojo');
+ok(api.resolveBuildingId('garden') === 'bamboo-boesa-boiler', 'powers garden');
+ok(api.resolveBuildingId('mill') === 'echo-whistle-mill', 'UI mill');
 ok(api.resolveBuildingId('buildings') === 'buildings', 'hub id');
 ok(api.buildingArtSrc('chipping-wood', 'card') === 'assets/buildings/chipping-wood.svg', 'card src');
 ok(api.buildingArtSrc('buildings', 'stroke') === 'assets/buttons/hub/buildings.svg', 'hub stroke');

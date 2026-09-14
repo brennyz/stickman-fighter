@@ -45,6 +45,19 @@ Aliases: `factory`, `factories`, `fabrieken`.
 | `bambooBoesaBoiler`, `boesa`, `bamboo-boiler` | `bamboo-boesa-boiler` |
 | `echoWhistleMill`, `whistle-mill`, `echo-mill` | `echo-whistle-mill` |
 
+### Partner catalogs (same pixels, other ids)
+
+Powers #290 and UI #291 shipped before systems. Same art is also written
+to their filenames so `assets/buildings/{id}.svg` probes work.
+
+| partner id | source | file alias |
+|------------|--------|------------|
+| `forge` / `foundry` | Stick-Lighter | `forge.svg`, `foundry.svg` |
+| `dojo` | Chipping-Wood | `dojo.svg` |
+| `tower` / `ranch` | Woodchip-Glue | `tower.svg`, `ranch.svg` |
+| `garden` | Bamboo-Boesa Boiler | `garden.svg` |
+| `shrine` / `mill` | Echo-Whistle Mill | `shrine.svg`, `mill.svg` |
+
 Prefixes `factory-`, `bldg-`, `building-` are stripped automatically
 (`factory-stick-lighter` → `stick-lighter`).
 

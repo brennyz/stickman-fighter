@@ -542,6 +542,18 @@ const HUB = {
   paint: paintHubBuildings,
 };
 
+/** Partner-PR filenames so UI/powers file probes resolve without a merge. */
+const FILE_ALIASES = [
+  { file: 'forge.svg', paint: paintStickLighter, of: 'stick-lighter' },
+  { file: 'foundry.svg', paint: paintStickLighter, of: 'stick-lighter' },
+  { file: 'dojo.svg', paint: paintChippingWood, of: 'chipping-wood' },
+  { file: 'ranch.svg', paint: paintWoodchipGlue, of: 'woodchip-glue' },
+  { file: 'tower.svg', paint: paintWoodchipGlue, of: 'woodchip-glue' },
+  { file: 'garden.svg', paint: paintBambooBoesa, of: 'bamboo-boesa-boiler' },
+  { file: 'mill.svg', paint: paintEchoWhistle, of: 'echo-whistle-mill' },
+  { file: 'shrine.svg', paint: paintEchoWhistle, of: 'echo-whistle-mill' },
+];
+
 function writePreview(items) {
   const figs = items.map((b) => `
 <figure data-id="${b.id}">
@@ -600,6 +612,11 @@ function main() {
     fs.writeFileSync(dest, svg);
     const kb = (Buffer.byteLength(svg) / 1024).toFixed(2);
     console.log(`OK ${b.id} → assets/buildings/${b.file} (${kb} KB)`);
+  }
+  for (const a of FILE_ALIASES) {
+    const svg = encodeSvg(a.paint());
+    fs.writeFileSync(path.join(outDir, a.file), svg);
+    console.log(`OK alias ${a.of} → assets/buildings/${a.file}`);
   }
   writePreview(BUILDINGS);
   console.log('OK preview → assets/buildings/preview.html');
