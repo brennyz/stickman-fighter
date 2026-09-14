@@ -94,7 +94,7 @@
       "id": "w-20260914T140500",
       "from": "user",
       "text": "MERGE #264 NOW. Then NEW PR: start polish (drop optional name, SPELEN-first) + unify ALL screens to start/HOME button style. Fold or close #265 if it only trims start copy. Leave #263 ghost-HP draft alone.",
-      "status": "active",
+      "status": "done-in-code",
       "updated": "2026-09-14"
     },
     {
@@ -607,6 +607,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T14:12:19Z",
+      "summary": "#264 merged 68e5ccc (v1.18.161/SW371 LIVE). #266 start polish + HOME unify (v1.18.162/SW372). #265 closed folded. #263 parked."
+    },
+    {
       "at": "2026-09-14T13:50:58Z",
       "summary": "Same PR #264: EN tooltips + SW-banner follow game lang; Arcade pick already HOME tiles."
     },
@@ -701,10 +705,6 @@
     {
       "at": "2026-08-17T09:56:06Z",
       "summary": "d14: Spiral Orb ring alleen op hit, geen rand-ghost; Lite FX ring-eerst"
-    },
-    {
-      "at": "2026-08-17T09:10:12Z",
-      "summary": "Achtste d20-worp geclaimd via CLI"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
