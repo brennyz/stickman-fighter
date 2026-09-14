@@ -94,7 +94,7 @@
       "id": "w-20260914T132500",
       "from": "user",
       "text": "ga verder — na merge: training ghost-HP / goud-flash / RABBIT n/max (feel only, geen hit-reg rewrite). Geen versus/nuclear CSS/iOS/share-URL/secrets. Niet stil naar main.",
-      "status": "open",
+      "status": "done-in-code",
       "updated": "2026-09-14"
     },
     {
@@ -600,6 +600,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T13:36:11Z",
+      "summary": "Training ghost-HP + goud-flash + RABBIT n/max (v1.18.160/SW370). Hit-reg ongemoeid. PR #263. Niet stil main."
+    },
+    {
       "at": "2026-09-14T13:22:45Z",
       "summary": "MERGE MAIN: #259 + #260 → v1.18.159/SW369. Hit-reg gehouden. #261 closed. #256 overgeslagen. speel.html LIVE na Pages."
     },
@@ -694,10 +698,6 @@
     {
       "at": "2026-08-17T08:56:53Z",
       "summary": "Zevende d20-worp geclaimd via CLI"
-    },
-    {
-      "at": "2026-08-17T08:55:57Z",
-      "summary": "d19: Muur-HUD één tempo-getal; balk volgt tempo niet pas record"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

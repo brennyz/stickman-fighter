@@ -188,7 +188,8 @@ async function run() {
       game.player.attack = null;
       game.player.hurtT = 0;
       if (game.robot) {
-        game.robot.x = robotX;
+        // Park far during windup so #259 train capsule cannot chip before the orb fires.
+        game.robot.x = Math.max(robotX + 420, 720);
         game.robot.y = game.ground;
         game.robot.hp = game.robot.maxhp;
         game.robot.hurtT = 0;
