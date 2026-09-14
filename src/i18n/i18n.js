@@ -93,6 +93,21 @@ const I18N = {
     missions: { title: 'Missies & prestaties', sub: '3 missies per dag',
       claimAll: 'Claim alle klaar', claimAllSub: '+XP in één tik', dayBonus: 'Dagbonus', dayBonusSub: '+80 XP · alle 3 geclaimd',
       achievements: 'Prestaties' },
+    fomo: {
+      ritualTitle: 'Vandaag',
+      ritualCtaSummon: 'Naar summons',
+      ritualCtaMission: 'Speel missie',
+      ritualCtaAdv: 'Naar avontuur',
+      ritualDismiss: 'Sluiten',
+      ritualReopen: 'Dagoverzicht',
+      resetIn: 'Nieuw over {reset}',
+      rowSummons: 'Summons {left}/{total}',
+      rowEggReady: 'Dag-ei klaar',
+      rowEggDone: 'Dag-ei al open',
+      streakReward3: '+1 summon',
+      streakReward7: '+ei of summons',
+      streakReward14: '+120 XP',
+    },
     pets: { title: 'Pets · Metgezels', sub: 'Dex-pets via monsterboek · Ei-pets via dagelijkse arcade-pull',
       crackEgg: 'Dag-ei openen', crackEggSub: 'Gratis arcade-pull' },
     dex: { title: 'Monsterboek', sub: '{n} soorten · rariteit = HP · boerderij / dierentuin / zee-filters · 4 rariteiten = Kristallijn' },
@@ -205,6 +220,21 @@ const I18N = {
     missions: { title: 'Missions & achievements', sub: '3 missions a day',
       claimAll: 'Claim all ready', claimAllSub: '+XP in one tap', dayBonus: 'Daily bonus', dayBonusSub: '+80 XP · all 3 claimed',
       achievements: 'Achievements' },
+    fomo: {
+      ritualTitle: 'Today',
+      ritualCtaSummon: 'Open summons',
+      ritualCtaMission: 'Play mission',
+      ritualCtaAdv: 'Play adventure',
+      ritualDismiss: 'Close',
+      ritualReopen: 'Day overview',
+      resetIn: 'Resets in {reset}',
+      rowSummons: 'Summons {left}/{total}',
+      rowEggReady: 'Daily egg ready',
+      rowEggDone: 'Daily egg already opened',
+      streakReward3: '+1 summon',
+      streakReward7: '+egg or summons',
+      streakReward14: '+120 XP',
+    },
     pets: { title: 'Pets · Companions', sub: 'Dex pets via monster book · Egg pets via daily arcade pull',
       crackEgg: 'Open daily egg', crackEggSub: 'Free arcade pull' },
     dex: { title: 'Monster book', sub: '{n} species · rarity = HP · farm / zoo / sea filters · 4 rarities = Crystalline' },
@@ -293,6 +323,13 @@ const I18N = {
     missions: { title: 'Missionen & Erfolge', sub: '3 tägliche Missionen · XP abholen',
       claimAll: 'Alle abholen', claimAllSub: '+XP auf einmal', dayBonus: 'Tagesbonus', dayBonusSub: '+80 XP',
       achievements: 'Erfolge' },
+    fomo: {
+      ritualTitle: 'Today', ritualCtaSummon: 'Open summons', ritualCtaMission: 'Play mission',
+      ritualCtaAdv: 'Play adventure', ritualDismiss: 'Close', ritualReopen: 'Day overview',
+      resetIn: 'Resets in {reset}', rowSummons: 'Summons {left}/{total}',
+      rowEggReady: 'Daily egg ready', rowEggDone: 'Daily egg already opened',
+      streakReward3: '+1 summon', streakReward7: '+egg or summons', streakReward14: '+120 XP',
+    },
     pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Gratis Pull' },
     dex: { title: 'Monsterbuch', sub: '{n} Arten · Seltenheit = HP · Farm / Zoo / Meer' },
     help: { title: 'Tipps & Steuerung' },
@@ -374,6 +411,13 @@ const I18N = {
     missions: { title: 'Missions & succès', sub: '3 missions quotidiennes · réclamer XP',
       claimAll: 'Tout réclamer', claimAllSub: '+XP en un tap', dayBonus: 'Bonus du jour', dayBonusSub: '+80 XP',
       achievements: 'Succès' },
+    fomo: {
+      ritualTitle: 'Today', ritualCtaSummon: 'Open summons', ritualCtaMission: 'Play mission',
+      ritualCtaAdv: 'Play adventure', ritualDismiss: 'Close', ritualReopen: 'Day overview',
+      resetIn: 'Resets in {reset}', rowSummons: 'Summons {left}/{total}',
+      rowEggReady: 'Daily egg ready', rowEggDone: 'Daily egg already opened',
+      streakReward3: '+1 summon', streakReward7: '+egg or summons', streakReward14: '+120 XP',
+    },
     pets: { title: 'Pets · Compagnons', sub: 'Pets dex & œufs arcade', crackEgg: 'Ouvrir l\'œuf du jour', crackEggSub: 'Tir gratuit' },
     dex: { title: 'Bestiaire', sub: '{n} espèces · rareté = PV · ferme / zoo / mer' },
     help: { title: 'Astuces & contrôles' },
@@ -455,6 +499,13 @@ const I18N = {
     missions: { title: 'Misiones y logros', sub: '3 misiones diarias · reclamar XP',
       claimAll: 'Reclamar todo', claimAllSub: '+XP de una vez', dayBonus: 'Bonus diario', dayBonusSub: '+80 XP',
       achievements: 'Logros' },
+    fomo: {
+      ritualTitle: 'Today', ritualCtaSummon: 'Open summons', ritualCtaMission: 'Play mission',
+      ritualCtaAdv: 'Play adventure', ritualDismiss: 'Close', ritualReopen: 'Day overview',
+      resetIn: 'Resets in {reset}', rowSummons: 'Summons {left}/{total}',
+      rowEggReady: 'Daily egg ready', rowEggDone: 'Daily egg already opened',
+      streakReward3: '+1 summon', streakReward7: '+egg or summons', streakReward14: '+120 XP',
+    },
     pets: { title: 'Pets · Compañeros', sub: 'Pets dex y huevos arcade', crackEgg: 'Abrir huevo diario', crackEggSub: 'Tirada gratis' },
     dex: { title: 'Bestiario', sub: '{n} especies · rareza = HP · granja / zoo / mar' },
     help: { title: 'Consejos y controles' },
@@ -688,6 +739,11 @@ function applyLangStaticScreens() {
 
   setText('missionsHead', 'missions.title');
   setText('missionsSub', 'missions.sub');
+  setText('fomoRitualReopenLbl', 'fomo.ritualReopen');
+  setText('fomoRitualTitle', 'fomo.ritualTitle');
+  setTitle('fomoRitualDismiss', 'fomo.ritualDismiss');
+  setTitle('fomoRitualBackdrop', 'fomo.ritualDismiss');
+  setTitle('fomoRitualReopen', 'fomo.ritualReopen');
   const claimAll = document.getElementById('dailyClaimAllBtn');
   if (claimAll) {
     const d = claimAll.querySelector('div');

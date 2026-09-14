@@ -7,6 +7,8 @@
  *  Bestaande save.summons (ascend epic/legendary) blijft apart. */
 
 const CHEST_DAILY_TOTAL = 10;
+/** F3 streak extras may raise today's leftover to 12; reset still uses TOTAL. */
+const CHEST_DAILY_LEFT_CAP = 12;
 /** Jackpot / “leuk” roll — was 5%, nu ~14%. */
 const CHEST_NICE_CHANCE = 0.14;
 /** Op non-jackpot: kans op mid-tier unlock i.p.v. alleen coins/junk. */
@@ -83,11 +85,11 @@ function clampChestLeft(n, max) {
 function migrateChestLeftFields(raw) {
   if (!raw || typeof raw !== 'object') return CHEST_DAILY_TOTAL;
   if (raw.left != null && raw.left !== '') {
-    return clampChestLeft(raw.left, CHEST_DAILY_TOTAL);
+    return clampChestLeft(raw.left, CHEST_DAILY_LEFT_CAP);
   }
   const w = clampChestLeft(raw.wLeft, 5);
   const p = clampChestLeft(raw.pLeft, 5);
-  return clampChestLeft(w + p, CHEST_DAILY_TOTAL);
+  return clampChestLeft(w + p, CHEST_DAILY_LEFT_CAP);
 }
 
 function ensureChestDaily() {

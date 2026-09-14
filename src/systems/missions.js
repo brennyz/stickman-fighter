@@ -103,13 +103,117 @@ const ACHIEVEMENTS = [
     test: s => s.unlocked >= 70 },
   { id: 'zoneWeapons10', name: 'Zone-verzamelaar', desc: 'Verzamel 10 Nachtmerrie/Hel-wapens',
     test: s => Object.keys(s.zoneWeapons || {}).length >= 10 },
-  { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd',
-    test: s => (s.stats.dailyBonusCount || 0) >= 7 },
+  { id: 'daily7', name: 'Vastberaden', desc: '7 dagen op rij dagbonus geclaimd',
+    test: s => (s.stats.dailyStreakBest || 0) >= 7 },
   // Local versus retired — vs achievements removed (online MP later).
 ];
 
+/** Local calendar day — must match dailyResetCountdown() midnight. See docs/FOMO-GAPS.md F0. */
 function todayKey() {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function weekKey(d) {
+  d = d || new Date();
+  const tmp = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const day = (tmp.getDay() + 6) % 7; // Mon=0
+  tmp.setDate(tmp.getDate() - day);
+  const jan1 = new Date(tmp.getFullYear(), 0, 1);
+  const wk = 1 + Math.floor((tmp - jan1) / 86400000 / 7);
+  return tmp.getFullYear() + '-W' + String(wk).padStart(2, '0');
+}
+
+function daysBetweenKeys(a, b) {
+  if (!a || !b) return 99;
+  return Math.round((Date.parse(b + 'T12:00:00') - Date.parse(a + 'T12:00:00')) / 86400000);
+}
+
+function defaultFomoBag() {
+  return {
+    ritualSeenDate: null, lastOpenDate: null, lastComebackDate: null,
+    dailyShardDate: null, arcadeStampDate: null,
+    sneakWeekKey: null, sneakCleared: false,
+    starChestWeekKey: null, featureIds: null,
+  };
+}
+
+function sanitizeFomoBag(raw) {
+  const d = defaultFomoBag();
+  const src = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+  const dateOrNull = (v) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v.slice(0, 10))) ? v.slice(0, 10) : null;
+  const weekOrNull = (v) => (typeof v === 'string' && /^\d{4}-W\d{2}$/.test(v)) ? v : null;
+  d.ritualSeenDate = dateOrNull(src.ritualSeenDate);
+  d.lastOpenDate = dateOrNull(src.lastOpenDate);
+  d.lastComebackDate = dateOrNull(src.lastComebackDate);
+  d.dailyShardDate = dateOrNull(src.dailyShardDate);
+  d.arcadeStampDate = dateOrNull(src.arcadeStampDate);
+  d.sneakWeekKey = weekOrNull(src.sneakWeekKey);
+  d.sneakCleared = !!src.sneakCleared;
+  d.starChestWeekKey = weekOrNull(src.starChestWeekKey);
+  d.featureIds = null;
+  return d;
+}
+
+function ensureFomo() {
+  if (typeof save === 'undefined' || !save) return defaultFomoBag();
+  save.fomo = sanitizeFomoBag(save.fomo);
+  return save.fomo;
+}
+
+function dailyDayBonusReady() {
+  ensureDaily();
+  const tasks = (save.daily && Array.isArray(save.daily.tasks)) ? save.daily.tasks : [];
+  return tasks.length > 0 && tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed;
+}
+
+/** F1: egg row only after first adventure win. */
+function fomoRitualEggVisible() {
+  return !!(save && save.stats && (save.stats.advWins || 0) >= 1);
+}
+
+function fomoRitualPending() {
+  if (typeof save === 'undefined' || !save) return false;
+  ensureFomo();
+  const today = todayKey();
+  if (save.fomo.ritualSeenDate === today) return false;
+  try {
+    if (typeof chestSummonsLeft === 'function' && chestSummonsLeft() > 0) return true;
+  } catch (_) {}
+  try {
+    if (typeof claimableDailyTasks === 'function' && claimableDailyTasks().length) return true;
+  } catch (_) {}
+  if (dailyDayBonusReady()) return true;
+  try {
+    if (typeof canCrackDailyEgg === 'function' && canCrackDailyEgg()) return true;
+  } catch (_) {}
+  return false;
+}
+
+function dismissFomoRitual() {
+  ensureFomo();
+  save.fomo.ritualSeenDate = todayKey();
+  if (typeof UI !== 'undefined') {
+    UI._fomoRitualHide = true;
+    UI._fomoRitualForce = false;
+  }
+  persist();
+  if (typeof UI !== 'undefined' && UI.hideFomoRitual) UI.hideFomoRitual();
+}
+
+function reopenFomoRitual() {
+  ensureFomo();
+  save.fomo.ritualSeenDate = null;
+  if (typeof UI !== 'undefined') {
+    UI._fomoRitualHide = false;
+    UI._fomoRitualForce = true;
+  }
+  persist();
+  if (typeof UI !== 'undefined') {
+    try { UI.show('menuScreen'); } catch (_) {}
+    try { UI.renderMenu(); } catch (_) {}
+    if (UI.showFomoRitual) UI.showFomoRitual(true);
+  }
 }
 function ensureDaily() {
   const dk = todayKey();
@@ -233,19 +337,60 @@ function claimDailyDayBonus() {
       : t('toast.dayBonusNeedN', { n: left }), 3000);
     return;
   }
+  const today = todayKey();
+  const prevDate = save.stats.lastDayBonusDate || null;
+  const prevStreak = save.stats.dailyStreak || 0;
+  const prevBest = save.stats.dailyStreakBest || 0;
+  const nextStreak = daysBetweenKeys(prevDate, today) === 1 ? (prevStreak + 1) : 1;
+  const nextBest = Math.max(prevBest, nextStreak);
   const snap = {
     xp: save.xp,
     lvl: save.lvl,
     dayBonusClaimed: save.daily.dayBonusClaimed,
     dailyBonusCount: save.stats.dailyBonusCount || 0,
+    dailyStreak: prevStreak,
+    dailyStreakBest: prevBest,
+    lastDayBonusDate: prevDate,
+    chestLeft: save.chestDaily && save.chestDaily.left,
+    eggCracked: save.eggDaily && save.eggDaily.dailyCracked,
   };
   save.daily.dayBonusClaimed = true;
   save.stats.dailyBonusCount = snap.dailyBonusCount + 1;
+  save.stats.dailyStreak = nextStreak;
+  save.stats.dailyStreakBest = nextBest;
+  save.stats.lastDayBonusDate = today;
   grantMetaXP(80, { deferPersist: true });
+  if (nextStreak === 3) {
+    if (typeof ensureChestDaily === 'function') ensureChestDaily();
+    if (save.chestDaily) {
+      const cap = (typeof CHEST_DAILY_LEFT_CAP === 'number') ? CHEST_DAILY_LEFT_CAP : 12;
+      save.chestDaily.left = Math.min((save.chestDaily.left || 0) + 1, cap);
+    }
+  }
+  if (nextStreak === 7) {
+    if (typeof eggOwnedCount === 'function' && eggOwnedCount() < 12) {
+      if (typeof ensureEggDaily === 'function') ensureEggDaily();
+      if (save.eggDaily) save.eggDaily.dailyCracked = false;
+    } else {
+      if (typeof ensureChestDaily === 'function') ensureChestDaily();
+      if (save.chestDaily) {
+        const cap = (typeof CHEST_DAILY_LEFT_CAP === 'number') ? CHEST_DAILY_LEFT_CAP : 12;
+        save.chestDaily.left = Math.min((save.chestDaily.left || 0) + 2, cap);
+      }
+    }
+  }
+  if (nextStreak >= 14) {
+    grantMetaXP(120, { deferPersist: true });
+  }
   AudioSys.sfx('win');
   if (!persistOrToast('dagbonus')) {
     save.daily.dayBonusClaimed = snap.dayBonusClaimed;
     save.stats.dailyBonusCount = snap.dailyBonusCount;
+    save.stats.dailyStreak = snap.dailyStreak;
+    save.stats.dailyStreakBest = snap.dailyStreakBest;
+    save.stats.lastDayBonusDate = snap.lastDayBonusDate;
+    if (save.chestDaily && snap.chestLeft != null) save.chestDaily.left = snap.chestLeft;
+    if (save.eggDaily && snap.eggCracked != null) save.eggDaily.dailyCracked = snap.eggCracked;
     save.xp = snap.xp;
     save.lvl = snap.lvl;
     return;
@@ -254,7 +399,11 @@ function claimDailyDayBonus() {
   checkAchievements();
   UI.renderMissions();
   UI.renderMenu();
-  UI.toast(t('toast.dayBonusDone'), 3200);
+  let msg = t('toast.dayBonusDone');
+  if (nextStreak === 3) msg += ' · ' + tOr('fomo.streakReward3', '+1 summon');
+  else if (nextStreak === 7) msg += ' · ' + tOr('fomo.streakReward7', '+ei of summons');
+  else if (nextStreak >= 14) msg += ' · ' + tOr('fomo.streakReward14', '+120 XP');
+  UI.toast(msg, 3200);
 }
 
 function grantMetaXP(n, opts) {
@@ -427,7 +576,7 @@ function achievementProgressFrac(ach) {
     case 'streak10': return Math.min(s.stats.maxKillStreak || 0, 10) / 10;
     case 'trainCombo10': return Math.min(s.stats.trainMaxCombo || 0, 10) / 10;
     case 'lv50': return Math.min(s.unlocked, 50) / 50;
-    case 'daily7': return Math.min(s.stats.dailyBonusCount || 0, 7) / 7;
+    case 'daily7': return Math.min(s.stats.dailyStreakBest || 0, 7) / 7;
     default: return 0;
   }
 }
@@ -463,13 +612,13 @@ function achievementProgressHint(ach) {
     case 'streak10': return `streak ×${Math.min(s.stats.maxKillStreak || 0, 10)}/10`;
     case 'trainCombo10': return `train ×${Math.min(s.stats.trainMaxCombo || 0, 10)}/10`;
     case 'lv50': return `Unlock Lv ${Math.min(s.unlocked, 50)}/50`;
-    case 'daily7': return `${Math.min(s.stats.dailyBonusCount || 0, 7)}/7 dagbonussen`;
+    case 'daily7': return `${Math.min(s.stats.dailyStreakBest || 0, 7)}/7 dagen op rij`;
     default: return '';
   }
 }
 
 function dailyStreakLine() {
-  const n = save.stats.dailyBonusCount || 0;
+  const n = save.stats.dailyStreak || 0;
   if (n <= 0) return '';
   return n >= 7 ? t('missionsUi.streakDone', { n }) : t('missionsUi.streakLine', { n });
 }
