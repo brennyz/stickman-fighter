@@ -2162,7 +2162,9 @@
   .aim-color-swatch[data-aim-color="#ffb0b8"] { background:#ffb0b8; }
   .aim-color-swatch[data-aim-color="#c792ff"] { background:#c792ff; }
   .aim-color-swatch[data-aim-color="#e8f0ff"] { background:#e8f0ff; }
-  .aim-color-swatch.on { border-color:#fff; box-shadow:0 0 0 3px rgba(124,245,255,.45), inset 0 0 0 2px rgba(0,0,0,.28); }
+  .aim-color-swatch.on { border-color:#fff; outline:3px solid #7cf5ff; outline-offset:2px;
+    box-shadow:0 0 0 2px rgba(0,0,0,.45), inset 0 0 0 2px rgba(0,0,0,.28); }
+  #setAimRadiusLbl { margin-left:8px; font-variant-numeric:tabular-nums; min-width:1.4em; display:inline-block; }
   .aim-color-picker-lab { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:6px 0 10px; }
   .aim-color-picker-lab input[type=color] { width:48px; height:36px; padding:0; border:1px solid rgba(255,255,255,.2);
     border-radius:8px; background:transparent; cursor:pointer; }
