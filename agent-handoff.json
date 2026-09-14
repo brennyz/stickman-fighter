@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260914T172200",
+      "from": "user",
+      "text": "Locked building art ids/names: stick_lighter, woodchip_glue, chipping_wood, bamboo_boesa_boiler, echo_whistle_mill — quirky factories, not generic sawmill/forge.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
       "id": "w-20260914T171300",
       "from": "user",
       "text": "BUILDINGS PIXEL ART (3 of 4). Mega-merge batch — DO NOT merge to main. Pixel art for 5 quirky factories: Stick-Lighter, Woodchip-Glue, Chipping-Wood, Bamboo-Boesa Boiler, Echo-Whistle Mill. Stickman-pixel style, small files, icons for HOME tile + building cards. Wire to buildingIds from systems docs. Success: assets + wire map; draft PR with previews.",
@@ -621,6 +628,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:25:12Z",
+      "summary": "Locked building art ids to stick_lighter…echo_whistle_mill (quirky factories, not forge/sawmill)."
+    },
+    {
       "at": "2026-09-14T17:18:48Z",
       "summary": "Buildings pixel art (3 of 4): 5 factory SVGs + HOME tile, BUILDING-PIXEL-MAP, draft no merge."
     },
@@ -715,10 +726,6 @@
     {
       "at": "2026-08-17T10:18:00Z",
       "summary": "main LIVE 33d89b6 v1.18.151 — pull-commando voor de pc klaar"
-    },
-    {
-      "at": "2026-08-17T10:03:24Z",
-      "summary": "LIVE gemerged #248–#255 naar main conflictloos · v1.18.151 / SW 361 — pull main op de pc"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

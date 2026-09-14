@@ -1,84 +1,60 @@
-# Building pixel ID map (provisional)
+# Building pixel ID map (locked)
 
-Mega-merge **3 of 4** — art + wire only. Systems agent
-([Buildings systems 5 factories](https://cursor.com/agents/bc-16152ee1-411f-541c-99e2-023e8a891419))
-had no merged catalog when this set shipped.
+Mega-merge **3 of 4** — art + wire only. Canonical ids match systems **#292**.
 
-**Reuse these `buildingId` strings.** If systems ships a different key, either:
+**Locked `buildingId` strings — quirky factories, not generic sawmill/forge:**
 
-1. Use the same kebab-case id (preferred), or
-2. Add an alias in `BUILDING_PIXEL_ALIASES` (`src/data/building-pixels.js`).
+| buildingId | name | card | stroke (artHint) |
+|------------|------|------|------------------|
+| `stick_lighter` | Stick-Lighter Factory | `assets/buildings/stick_lighter.svg` | `assets/buttons/modes/buildings-stick-lighter.svg` |
+| `woodchip_glue` | Woodchip-Glue Factory | `assets/buildings/woodchip_glue.svg` | `assets/buttons/modes/buildings-woodchip-glue.svg` |
+| `chipping_wood` | Chipping-Wood Factory | `assets/buildings/chipping_wood.svg` | `assets/buttons/modes/buildings-chipping-wood.svg` |
+| `bamboo_boesa_boiler` | Bamboo-Boesa Boiler | `assets/buildings/bamboo_boesa_boiler.svg` | `assets/buttons/modes/buildings-bamboo-boesa.svg` |
+| `echo_whistle_mill` | Echo-Whistle Mill | `assets/buildings/echo_whistle_mill.svg` | `assets/buttons/modes/buildings-echo-whistle.svg` |
 
-Resolution: `resolveBuildingId(id)` → camelCase / snake / `factory-` prefix stripped → alias table → catalog.
+HOME tile: `buildings` → stroke `assets/buttons/hub/buildings.svg` · pixel `assets/buildings/hub-buildings.svg`
 
 Preview: [assets/buildings/preview.html](assets/buildings/preview.html)
 
-UI HOME tile (2 of 4) should point at `assets/buttons/hub/buildings.svg` (stroke, 24×24).
-Card faces use the 32×32 pixel SVGs below.
+## Resolution
 
-## HOME tile
-
-| buildingId | slot | file |
-|------------|------|------|
-| `buildings` | hub stroke | `assets/buttons/hub/buildings.svg` |
-| `buildings` | hub pixel | `assets/buildings/hub-buildings.svg` |
-
-Aliases: `factory`, `factories`, `fabrieken`.
-
-## Factory cards
-
-| buildingId | name | file | accent |
-|------------|------|------|--------|
-| `stick-lighter` | Stick-Lighter | `assets/buildings/stick-lighter.svg` | `#ffd75e` |
-| `woodchip-glue` | Woodchip-Glue | `assets/buildings/woodchip-glue.svg` | `#d4e05a` |
-| `chipping-wood` | Chipping-Wood | `assets/buildings/chipping-wood.svg` | `#7cf5ff` |
-| `bamboo-boesa-boiler` | Bamboo-Boesa Boiler | `assets/buildings/bamboo-boesa-boiler.svg` | `#4ecf6a` |
-| `echo-whistle-mill` | Echo-Whistle Mill | `assets/buildings/echo-whistle-mill.svg` | `#c792ff` |
-
-### Aliases (systems / UI)
-
-| alias | → buildingId |
-|-------|----------------|
-| `stickLighter`, `sticklighter`, `lighter` | `stick-lighter` |
-| `woodchipGlue`, `glue`, `wood-chip-glue` | `woodchip-glue` |
-| `chippingWood`, `woodchipper`, `sawmill` | `chipping-wood` |
-| `bambooBoesaBoiler`, `boesa`, `bamboo-boiler` | `bamboo-boesa-boiler` |
-| `echoWhistleMill`, `whistle-mill`, `echo-mill` | `echo-whistle-mill` |
-
-### Partner catalogs (same pixels, other ids)
-
-Powers #290 and UI #291 shipped before systems. Same art is also written
-to their filenames so `assets/buildings/{id}.svg` probes work.
-
-| partner id | source | file alias |
-|------------|--------|------------|
-| `forge` / `foundry` | Stick-Lighter | `forge.svg`, `foundry.svg` |
-| `dojo` | Chipping-Wood | `dojo.svg` |
-| `tower` / `ranch` | Woodchip-Glue | `tower.svg`, `ranch.svg` |
-| `garden` | Bamboo-Boesa Boiler | `garden.svg` |
-| `shrine` / `mill` | Echo-Whistle Mill | `shrine.svg`, `mill.svg` |
-
-Prefixes `factory-`, `bldg-`, `building-` are stripped automatically
-(`factory-stick-lighter` → `stick-lighter`).
-
-## JS API (bundled)
+`resolveBuildingId(id)` accepts snake_case (locked), kebab-case, camelCase, and
+a few leftover generic stubs from early partner drafts. **Return value is always
+the locked snake_case id.**
 
 ```js
-resolveBuildingId('woodchipGlue')          // 'woodchip-glue'
-buildingArtSrc('stick-lighter')            // card SVG
-buildingArtSrc('buildings', 'stroke')      // HOME tile
-buildingArtMeta('echo-whistle-mill').accent
-window.__sfBuildingArt.src(id, 'card')
+resolveBuildingId('stick_lighter')   // 'stick_lighter'
+resolveBuildingId('stick-lighter')   // 'stick_lighter'
+resolveBuildingId('stickLighter')    // 'stick_lighter'
+buildingArtSrc('woodchip_glue')      // assets/buildings/woodchip_glue.svg
+buildingArtSrc('chipping_wood', 'icon')
+window.__sfBuildingArt.ids
 ```
+
+Kebab-case SVG copies stay on disk so older probes do not 404.
+
+## Compat only (not the locked names)
+
+Early #290 / #291 stubs used generic ids. Those filenames still exist as
+copies of the quirky art. Do **not** treat them as catalog names.
+
+| leftover probe | → locked id |
+|----------------|-------------|
+| `forge` / `foundry` | `stick_lighter` |
+| `dojo` / `sawmill` | `chipping_wood` |
+| `tower` / `ranch` | `woodchip_glue` |
+| `garden` | `bamboo_boesa_boiler` |
+| `shrine` / `mill` | `echo_whistle_mill` |
 
 ## Files / size
 
-- 32×32 crisp SVG (`shape-rendering=crispEdges`, path-RLE), typically &lt; 3 KB
-- HOME stroke is 24×24 ASSET-STYLE (gold factory + chimney)
+- 32×32 crisp SVG cards (`shape-rendering=crispEdges`), typically &lt; 5 KB
+- HOME + per-factory stroke icons are 24×24 ASSET-STYLE
 - `npm run pixels:buildings` regenerates cards + preview
 
 ## Do not
 
-- Implement loot / timers / HOME tile markup here (systems / powers / UI agents).
+- Implement loot / timers / HOME tile markup here (systems / powers / UI).
 - Point the share URL at the preview — players stay on `speel.html`.
 - Add Versus.
+- Rename the locked ids to mill / forge / dojo / shrine.

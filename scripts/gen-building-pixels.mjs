@@ -492,42 +492,42 @@ function paintHubBuildings() {
 
 const BUILDINGS = [
   {
-    id: 'stick-lighter',
-    file: 'stick-lighter.svg',
-    name: 'Stick-Lighter',
-    nameNl: 'Stok-Aansteker',
+    id: 'stick_lighter',
+    file: 'stick_lighter.svg',
+    name: 'Stick-Lighter Factory',
+    nameNl: 'Stok-Aansteker Fabriek',
     accent: C.g,
     paint: paintStickLighter,
   },
   {
-    id: 'woodchip-glue',
-    file: 'woodchip-glue.svg',
-    name: 'Woodchip-Glue',
-    nameNl: 'Houtsnip-Lijm',
+    id: 'woodchip_glue',
+    file: 'woodchip_glue.svg',
+    name: 'Woodchip-Glue Factory',
+    nameNl: 'Houtsnipper-Lijm Fabriek',
     accent: C.q,
     paint: paintWoodchipGlue,
   },
   {
-    id: 'chipping-wood',
-    file: 'chipping-wood.svg',
-    name: 'Chipping-Wood',
-    nameNl: 'Versnipper-Hout',
+    id: 'chipping_wood',
+    file: 'chipping_wood.svg',
+    name: 'Chipping-Wood Factory',
+    nameNl: 'Versnipper-Hout Fabriek',
     accent: C.c,
     paint: paintChippingWood,
   },
   {
-    id: 'bamboo-boesa-boiler',
-    file: 'bamboo-boesa-boiler.svg',
+    id: 'bamboo_boesa_boiler',
+    file: 'bamboo_boesa_boiler.svg',
     name: 'Bamboo-Boesa Boiler',
     nameNl: 'Bamboe-Boesa Ketel',
     accent: C.e,
     paint: paintBambooBoesa,
   },
   {
-    id: 'echo-whistle-mill',
-    file: 'echo-whistle-mill.svg',
+    id: 'echo_whistle_mill',
+    file: 'echo_whistle_mill.svg',
     name: 'Echo-Whistle Mill',
-    nameNl: 'Echo-Fluit Molen',
+    nameNl: 'Echo-Fluitmolen',
     accent: C.u,
     paint: paintEchoWhistle,
   },
@@ -542,16 +542,21 @@ const HUB = {
   paint: paintHubBuildings,
 };
 
-/** Partner-PR filenames so UI/powers file probes resolve without a merge. */
+/** kebab-case copies + leftover generic stubs (not locked names). */
 const FILE_ALIASES = [
-  { file: 'forge.svg', paint: paintStickLighter, of: 'stick-lighter' },
-  { file: 'foundry.svg', paint: paintStickLighter, of: 'stick-lighter' },
-  { file: 'dojo.svg', paint: paintChippingWood, of: 'chipping-wood' },
-  { file: 'ranch.svg', paint: paintWoodchipGlue, of: 'woodchip-glue' },
-  { file: 'tower.svg', paint: paintWoodchipGlue, of: 'woodchip-glue' },
-  { file: 'garden.svg', paint: paintBambooBoesa, of: 'bamboo-boesa-boiler' },
-  { file: 'mill.svg', paint: paintEchoWhistle, of: 'echo-whistle-mill' },
-  { file: 'shrine.svg', paint: paintEchoWhistle, of: 'echo-whistle-mill' },
+  { file: 'stick-lighter.svg', paint: paintStickLighter, of: 'stick_lighter' },
+  { file: 'woodchip-glue.svg', paint: paintWoodchipGlue, of: 'woodchip_glue' },
+  { file: 'chipping-wood.svg', paint: paintChippingWood, of: 'chipping_wood' },
+  { file: 'bamboo-boesa-boiler.svg', paint: paintBambooBoesa, of: 'bamboo_boesa_boiler' },
+  { file: 'echo-whistle-mill.svg', paint: paintEchoWhistle, of: 'echo_whistle_mill' },
+  { file: 'forge.svg', paint: paintStickLighter, of: 'stick_lighter' },
+  { file: 'foundry.svg', paint: paintStickLighter, of: 'stick_lighter' },
+  { file: 'dojo.svg', paint: paintChippingWood, of: 'chipping_wood' },
+  { file: 'ranch.svg', paint: paintWoodchipGlue, of: 'woodchip_glue' },
+  { file: 'tower.svg', paint: paintWoodchipGlue, of: 'woodchip_glue' },
+  { file: 'garden.svg', paint: paintBambooBoesa, of: 'bamboo_boesa_boiler' },
+  { file: 'mill.svg', paint: paintEchoWhistle, of: 'echo_whistle_mill' },
+  { file: 'shrine.svg', paint: paintEchoWhistle, of: 'echo_whistle_mill' },
 ];
 
 function writePreview(items) {
@@ -584,7 +589,7 @@ function writePreview(items) {
 </style>
 </head><body>
 <h1>Fabrieken — stickman pixel</h1>
-<p class="sub">32×32 crisp SVG · HOME tile + building cards · not the share URL</p>
+<p class="sub">Locked ids: stick_lighter · woodchip_glue · chipping_wood · bamboo_boesa_boiler · echo_whistle_mill · not the share URL</p>
 <h2>HOME tile</h2>
 <div class="grid">
 <figure data-id="buildings">

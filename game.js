@@ -11735,9 +11735,13 @@ function summonRevealCardDelayMs(totalMs) {
 /* --- src/data/building-pixels.js --- */
 /* ======================== BUILDING PIXEL WIRE MAP ======================== */
 /**
- * Art-only contract for the 5 quirky factories (mega-merge 3 of 4).
- * Systems / UI should reuse these buildingIds. If they ship a different
- * string, add it to BUILDING_PIXEL_ALIASES — do not rename files.
+ * Locked catalog (#292 / user): quirky factories — NOT generic sawmill/forge.
+ *
+ *   stick_lighter
+ *   woodchip_glue
+ *   chipping_wood
+ *   bamboo_boesa_boiler
+ *   echo_whistle_mill
  *
  * Preview: assets/buildings/preview.html
  * Map:     BUILDING-PIXEL-MAP.md
@@ -11745,49 +11749,60 @@ function summonRevealCardDelayMs(totalMs) {
 const BUILDING_HUB_ID = 'buildings';
 
 const BUILDING_PIXELS = {
-  'stick-lighter': {
-    id: 'stick-lighter',
-    name: 'Stick-Lighter',
-    nameNl: 'Stok-Aansteker',
+  stick_lighter: {
+    id: 'stick_lighter',
+    name: 'Stick-Lighter Factory',
+    nameNl: 'Stok-Aansteker Fabriek',
     accent: '#ffd75e',
-    card: 'assets/buildings/stick-lighter.svg',
+    card: 'assets/buildings/stick_lighter.svg',
     hub: 'assets/buttons/hub/buildings.svg',
+    iconFile: 'assets/buttons/modes/buildings-stick-lighter.svg',
   },
-  'woodchip-glue': {
-    id: 'woodchip-glue',
-    name: 'Woodchip-Glue',
-    nameNl: 'Houtsnip-Lijm',
+  woodchip_glue: {
+    id: 'woodchip_glue',
+    name: 'Woodchip-Glue Factory',
+    nameNl: 'Houtsnipper-Lijm Fabriek',
     accent: '#d4e05a',
-    card: 'assets/buildings/woodchip-glue.svg',
+    card: 'assets/buildings/woodchip_glue.svg',
     hub: 'assets/buttons/hub/buildings.svg',
+    iconFile: 'assets/buttons/modes/buildings-woodchip-glue.svg',
   },
-  'chipping-wood': {
-    id: 'chipping-wood',
-    name: 'Chipping-Wood',
-    nameNl: 'Versnipper-Hout',
+  chipping_wood: {
+    id: 'chipping_wood',
+    name: 'Chipping-Wood Factory',
+    nameNl: 'Versnipper-Hout Fabriek',
     accent: '#7cf5ff',
-    card: 'assets/buildings/chipping-wood.svg',
+    card: 'assets/buildings/chipping_wood.svg',
     hub: 'assets/buttons/hub/buildings.svg',
+    iconFile: 'assets/buttons/modes/buildings-chipping-wood.svg',
   },
-  'bamboo-boesa-boiler': {
-    id: 'bamboo-boesa-boiler',
+  bamboo_boesa_boiler: {
+    id: 'bamboo_boesa_boiler',
     name: 'Bamboo-Boesa Boiler',
     nameNl: 'Bamboe-Boesa Ketel',
     accent: '#4ecf6a',
-    card: 'assets/buildings/bamboo-boesa-boiler.svg',
+    card: 'assets/buildings/bamboo_boesa_boiler.svg',
     hub: 'assets/buttons/hub/buildings.svg',
+    iconFile: 'assets/buttons/modes/buildings-bamboo-boesa.svg',
   },
-  'echo-whistle-mill': {
-    id: 'echo-whistle-mill',
+  echo_whistle_mill: {
+    id: 'echo_whistle_mill',
     name: 'Echo-Whistle Mill',
-    nameNl: 'Echo-Fluit Molen',
+    nameNl: 'Echo-Fluitmolen',
     accent: '#c792ff',
-    card: 'assets/buildings/echo-whistle-mill.svg',
+    card: 'assets/buildings/echo_whistle_mill.svg',
     hub: 'assets/buttons/hub/buildings.svg',
+    iconFile: 'assets/buttons/modes/buildings-echo-whistle.svg',
   },
 };
 
-const BUILDING_IDS = Object.keys(BUILDING_PIXELS);
+const BUILDING_IDS = [
+  'stick_lighter',
+  'woodchip_glue',
+  'chipping_wood',
+  'bamboo_boesa_boiler',
+  'echo_whistle_mill',
+];
 
 /** HOME tile (stroke + pixel). */
 const BUILDING_HUB_ART = {
@@ -11797,87 +11812,95 @@ const BUILDING_HUB_ART = {
 };
 
 /**
- * Systems-doc aliases. Resolution strips factory-/bldg-/building- prefixes
- * and camelCase / snake_case before this table.
+ * Compat only. Locked ids are snake_case quirky factories.
+ * kebab-case, camelCase, and leftover generic partner stubs fold in here.
  */
 const BUILDING_PIXEL_ALIASES = {
   buildings: BUILDING_HUB_ID,
   factory: BUILDING_HUB_ID,
   factories: BUILDING_HUB_ID,
   fabrieken: BUILDING_HUB_ID,
-  sticklighter: 'stick-lighter',
-  'stick_lighter': 'stick-lighter',
-  lighter: 'stick-lighter',
-  'stick-light': 'stick-lighter',
-  woodchipglue: 'woodchip-glue',
-  'woodchip_glue': 'woodchip-glue',
-  glue: 'woodchip-glue',
-  'wood-chip-glue': 'woodchip-glue',
-  chippingwood: 'chipping-wood',
-  'chipping_wood': 'chipping-wood',
-  woodchipper: 'chipping-wood',
-  sawmill: 'chipping-wood',
-  'chip-wood': 'chipping-wood',
-  bambooboesa: 'bamboo-boesa-boiler',
-  'bamboo-boesa': 'bamboo-boesa-boiler',
-  'bamboo_boesa_boiler': 'bamboo-boesa-boiler',
-  'boesa-boiler': 'bamboo-boesa-boiler',
-  boesa: 'bamboo-boesa-boiler',
-  'bamboo-boiler': 'bamboo-boesa-boiler',
-  bambooboiler: 'bamboo-boesa-boiler',
-  echowhistlemill: 'echo-whistle-mill',
-  'echo_whistle_mill': 'echo-whistle-mill',
-  'whistle-mill': 'echo-whistle-mill',
-  whistlemill: 'echo-whistle-mill',
-  'echo-mill': 'echo-whistle-mill',
-  echocmill: 'echo-whistle-mill',
 
-  /* powers #290 fallback catalog */
-  dojo: 'chipping-wood',
-  hall: 'chipping-wood',
-  forge: 'stick-lighter',
-  smith: 'stick-lighter',
-  workshop: 'stick-lighter',
-  garden: 'bamboo-boesa-boiler',
-  farm: 'bamboo-boesa-boiler',
-  kitchen: 'bamboo-boesa-boiler',
-  tower: 'woodchip-glue',
-  watch: 'woodchip-glue',
-  barracks: 'woodchip-glue',
-  shrine: 'echo-whistle-mill',
-  well: 'echo-whistle-mill',
-  temple: 'echo-whistle-mill',
+  sticklighter: 'stick_lighter',
+  sticklighterfactory: 'stick_lighter',
+  lighter: 'stick_lighter',
+  'stick-light': 'stick_lighter',
 
-  /* UI #291 stub catalog (file probe assets/buildings/{id}.svg) */
-  mill: 'echo-whistle-mill',
-  ranch: 'woodchip-glue',
-  foundry: 'stick-lighter',
+  woodchipglue: 'woodchip_glue',
+  woodchipgluefactory: 'woodchip_glue',
+  glue: 'woodchip_glue',
+  'wood-chip-glue': 'woodchip_glue',
+
+  chippingwood: 'chipping_wood',
+  chippingwoodfactory: 'chipping_wood',
+  woodchipper: 'chipping_wood',
+  'chip-wood': 'chipping_wood',
+
+  bambooboesaboiler: 'bamboo_boesa_boiler',
+  bambooboesa: 'bamboo_boesa_boiler',
+  'bamboo-boesa': 'bamboo_boesa_boiler',
+  'boesa-boiler': 'bamboo_boesa_boiler',
+  boesa: 'bamboo_boesa_boiler',
+  'bamboo-boiler': 'bamboo_boesa_boiler',
+  bambooboiler: 'bamboo_boesa_boiler',
+
+  echowhistlemill: 'echo_whistle_mill',
+  'whistle-mill': 'echo_whistle_mill',
+  whistlemill: 'echo_whistle_mill',
+  'echo-mill': 'echo_whistle_mill',
+  echomill: 'echo_whistle_mill',
+
+  /* leftover generic stubs from early partner drafts — not the locked names */
+  dojo: 'chipping_wood',
+  hall: 'chipping_wood',
+  sawmill: 'chipping_wood',
+  forge: 'stick_lighter',
+  smith: 'stick_lighter',
+  workshop: 'stick_lighter',
+  foundry: 'stick_lighter',
+  garden: 'bamboo_boesa_boiler',
+  farm: 'bamboo_boesa_boiler',
+  kitchen: 'bamboo_boesa_boiler',
+  tower: 'woodchip_glue',
+  watch: 'woodchip_glue',
+  barracks: 'woodchip_glue',
+  ranch: 'woodchip_glue',
+  shrine: 'echo_whistle_mill',
+  well: 'echo_whistle_mill',
+  temple: 'echo_whistle_mill',
+  mill: 'echo_whistle_mill',
 };
 
-function _normBuildingKey(id) {
-  if (id == null) return '';
+function _buildingKeyForms(id) {
+  if (id == null) return null;
   let s = String(id).trim();
-  if (!s) return '';
-  s = s.replace(/([a-z\d])([A-Z])/g, '$1-$2').toLowerCase();
-  s = s.replace(/[_\s.]+/g, '-');
-  s = s.replace(/-+/g, '-');
-  s = s.replace(/^(factory|factories|bldg|bld|building|buildings)-/, '');
-  return s;
+  if (!s) return null;
+  const camel = s.replace(/([a-z\d])([A-Z])/g, '$1_$2');
+  let snake = camel.replace(/[-\s.]+/g, '_').toLowerCase();
+  snake = snake.replace(/^(factory|factories|bldg|bld|building|buildings)_/, '');
+  const kebab = snake.replace(/_/g, '-');
+  const compact = snake.replace(/_/g, '');
+  return { raw: s, snake, kebab, compact, lower: s.toLowerCase() };
 }
 
 function resolveBuildingId(id) {
-  const raw = _normBuildingKey(id);
-  if (!raw) return null;
-  if (BUILDING_PIXELS[raw]) return raw;
-  if (raw === BUILDING_HUB_ID || BUILDING_PIXEL_ALIASES[raw] === BUILDING_HUB_ID) return BUILDING_HUB_ID;
-  const aliased = BUILDING_PIXEL_ALIASES[raw];
-  if (aliased && (BUILDING_PIXELS[aliased] || aliased === BUILDING_HUB_ID)) return aliased;
+  const f = _buildingKeyForms(id);
+  if (!f) return null;
+  if (BUILDING_PIXELS[f.raw]) return f.raw;
+  if (BUILDING_PIXELS[f.snake]) return f.snake;
+  if (f.snake === BUILDING_HUB_ID || f.compact === BUILDING_HUB_ID) return BUILDING_HUB_ID;
+  const hit = BUILDING_PIXEL_ALIASES[f.snake]
+    || BUILDING_PIXEL_ALIASES[f.kebab]
+    || BUILDING_PIXEL_ALIASES[f.compact]
+    || BUILDING_PIXEL_ALIASES[f.lower];
+  if (hit === BUILDING_HUB_ID) return BUILDING_HUB_ID;
+  if (hit && BUILDING_PIXELS[hit]) return hit;
   return null;
 }
 
 /**
  * @param {string} id
- * @param {'card'|'hub'|'pixel'|'stroke'} [slot='card']
+ * @param {'card'|'hub'|'pixel'|'stroke'|'icon'} [slot='card']
  * @returns {string|null} relative asset URL
  */
 function buildingArtSrc(id, slot) {
@@ -11889,6 +11912,7 @@ function buildingArtSrc(id, slot) {
   }
   const row = BUILDING_PIXELS[key];
   if (!row) return null;
+  if (slot === 'icon') return row.iconFile;
   if (slot === 'hub' || slot === 'stroke') return row.hub;
   return row.card;
 }

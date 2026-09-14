@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+     stroke="#ffd75e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true">
+  <!-- Stick-Lighter: crossed matches + spark (not a generic forge) -->
+  <path d="M5 19l7-14" stroke="#c98850"/>
+  <path d="M12 19L8 6" stroke="#6b4a28"/>
+  <circle cx="12" cy="4.4" r="1.5" fill="#ff8a3d" stroke="none"/>
+  <path d="M12 2.2c1.2-.9 2.4-.4 2.6.6" stroke="#ff8a3d" stroke-width="1.7"/>
+  <path d="M15.5 13.5h5.2v6.2H15.5z" fill="rgba(255,215,94,.22)"/>
+  <path d="M17.2 13.5V11h1.8v2.5"/>
+</svg>
