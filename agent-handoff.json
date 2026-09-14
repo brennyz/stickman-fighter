@@ -635,6 +635,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:14:20Z",
+      "summary": "READY #280: 5-slot gearRenderDescriptor + 131-id kinds; body-layer stays on slot; style cards isolated. v1.18.168/SW378."
+    },
+    {
       "at": "2026-09-14T17:06:31Z",
       "summary": "Consume #280 gearRenderDescriptor for all 5 slots; 131-id kind map + tint/layer. v1.18.167/SW377."
     },
@@ -729,10 +733,6 @@
     {
       "at": "2026-08-17T10:21:10Z",
       "summary": "PC-pull geregeld: pull-main.sh + GITHUB-PUSH is nu pull-kaart; main LIVE"
-    },
-    {
-      "at": "2026-08-17T10:20:50Z",
-      "summary": "pull-main script + GITHUB-PUSH bijwerken zodat de pc één commando kan pullen"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
