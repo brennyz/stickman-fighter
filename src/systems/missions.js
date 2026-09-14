@@ -902,7 +902,7 @@ function applySaveImportText(text, sourceLabel) {
   window.__sfImportConfirm = false;
   updateSaveImportPreview(text);
   if (sourceLabel) {
-    userToast(`Save geladen uit ${sourceLabel} — tik Import voor preview`, 3200);
+    userToast(tOr('toast.saveLoadedPreview', 'Save uit {src} — tik Import om te kijken', { src: sourceLabel }), 3200);
   }
   return true;
 }

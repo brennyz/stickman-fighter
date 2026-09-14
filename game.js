@@ -274,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.156';
+const APP_VERSION = '1.18.157';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 366;
+const SW_CACHE_REV = 367;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1910,9 +1910,10 @@ const I18N = {
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
       choosePath: 'KIES JE PAD', lastPlayed: 'LAATST', playHere: 'SPEEL',
       startGame: 'SPELEN', startSub: 'Start het gevecht',
-      titleName: 'Hoe heet je?', titleNamePh: 'Jouw naam',
+      titleName: 'Naam — hoeft niet', titleNamePh: 'Bijnaam (optioneel)',
       titleNote: 'Geen account — je save blijft op deze telefoon',
       titleGreet: 'Hoi, {name}',
+      splash0: 'Laden…', splash1: 'Pixelmap…', splash2: 'Arena…', splash3: 'Klaar',
     },
     hub: {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
@@ -2007,9 +2008,10 @@ const I18N = {
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
       choosePath: 'CHOOSE YOUR PATH', lastPlayed: 'LAST', playHere: 'PLAY',
       startGame: 'PLAY', startSub: 'Start the fight',
-      titleName: 'What is your name?', titleNamePh: 'Your name',
+      titleName: 'Name — optional', titleNamePh: 'Nickname (optional)',
       titleNote: 'No account — your save stays on this phone',
       titleGreet: 'Hi, {name}',
+      splash0: 'Loading…', splash1: 'Pixel map…', splash2: 'Arena…', splash3: 'Ready',
     },
     hub: {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -2103,9 +2105,10 @@ const I18N = {
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
       choosePath: 'WÄHLE DEINEN WEG', lastPlayed: 'ZULETZT', playHere: 'SPIEL',
       startGame: 'SPIELEN', startSub: 'Starte den Kampf',
-      titleName: 'Wie heißt du?', titleNamePh: 'Dein Name',
+      titleName: 'Name — muss nicht', titleNamePh: 'Spitzname (optional)',
       titleNote: 'Kein Konto — dein Save bleibt auf diesem Handy',
       titleGreet: 'Hi, {name}',
+      splash0: 'Laden…', splash1: 'Pixelmap…', splash2: 'Arena…', splash3: 'Fertig',
     },
     hub: {
       step: 'Schritt 2 · Modus wählen', solo: 'SOLO', collection: 'SAMMLUNG',
@@ -2181,9 +2184,10 @@ const I18N = {
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
       choosePath: 'CHOISIS TON CHEMIN', lastPlayed: 'DERNIER', playHere: 'JOUER',
       startGame: 'JOUER', startSub: 'Lance le combat',
-      titleName: 'Comment tu t\'appelles ?', titleNamePh: 'Ton nom',
+      titleName: 'Nom — pas obligatoire', titleNamePh: 'Surnom (optionnel)',
       titleNote: 'Pas de compte — ta sauvegarde reste sur ce téléphone',
       titleGreet: 'Salut, {name}',
+      splash0: 'Chargement…', splash1: 'Pixelmap…', splash2: 'Arène…', splash3: 'Prêt',
     },
     hub: {
       step: 'Étape 2 · Choisir le mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -2259,9 +2263,10 @@ const I18N = {
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
       choosePath: 'ELIGE TU CAMINO', lastPlayed: 'ÚLTIMO', playHere: 'JUEGA',
       startGame: 'JUGAR', startSub: 'Empieza el combate',
-      titleName: '¿Cómo te llamas?', titleNamePh: 'Tu nombre',
+      titleName: 'Nombre — no hace falta', titleNamePh: 'Apodo (opcional)',
       titleNote: 'Sin cuenta — tu partida se queda en este teléfono',
       titleGreet: 'Hola, {name}',
+      splash0: 'Cargando…', splash1: 'Pixelmap…', splash2: 'Arena…', splash3: 'Listo',
     },
     hub: {
       step: 'Paso 2 · Elige modo', solo: 'SOLO', collection: 'COLECCIÓN',
@@ -3801,7 +3806,7 @@ function applySaveImportText(text, sourceLabel) {
   window.__sfImportConfirm = false;
   updateSaveImportPreview(text);
   if (sourceLabel) {
-    userToast(`Save geladen uit ${sourceLabel} — tik Import voor preview`, 3200);
+    userToast(tOr('toast.saveLoadedPreview', 'Save uit {src} — tik Import om te kijken', { src: sourceLabel }), 3200);
   }
   return true;
 }
@@ -11900,6 +11905,7 @@ function seedNlGameStrings() {
     persistFail: 'Opslaan mislukt — export save in Instellingen',
     persistFailCtx: 'Opslaan mislukt ({context}) — export save in Instellingen',
     pickFileOrPaste: 'Kies een exportbestand of plak save-JSON in het vak',
+    saveLoadedPreview: 'Save uit {src} — tik Import om te kijken',
     filePickerUnavailable: 'Bestand kiezen niet beschikbaar',
     pagesLinkCopied: 'Speel-link gekopieerd — stuur naar vrienden',
     pagesLinkCopiedAndroid: 'Speel-link gekopieerd — stuur naar vrienden (Chrome)',
@@ -12734,6 +12740,7 @@ const CATALOG_EN = {
     persistFail: 'Save failed — export in Settings',
     persistFailCtx: 'Save failed ({context}) — export in Settings',
     pickFileOrPaste: 'Pick an export file or paste save JSON in the box',
+    saveLoadedPreview: 'Save from {src} — tap Import to preview',
     filePickerUnavailable: 'File picker not available',
     pagesLinkCopied: 'Play link copied — send it to friends',
     pagesLinkCopiedAndroid: 'Play link copied — send it to friends (Chrome)',
@@ -36265,6 +36272,7 @@ function syncTitleGateCopy() {
     greet.textContent = live && typeof t === 'function'
       ? t('menu.titleGreet', { name: live })
       : (live ? ('Hoi, ' + live) : '');
+    greet.hidden = !live;
   }
 }
 
@@ -36370,7 +36378,12 @@ function runSplashIntro() {
   const dur = calm ? 220 : 1050;
   const t0 = performance.now();
   let finished = false;
-  const labels = ['Laden…', 'Pixelmap…', 'Arena…', 'Klaar'];
+  const labels = [
+    (typeof tOr === 'function' ? tOr('menu.splash0', 'Laden…') : 'Laden…'),
+    (typeof tOr === 'function' ? tOr('menu.splash1', 'Pixelmap…') : 'Pixelmap…'),
+    (typeof tOr === 'function' ? tOr('menu.splash2', 'Arena…') : 'Arena…'),
+    (typeof tOr === 'function' ? tOr('menu.splash3', 'Klaar') : 'Klaar'),
+  ];
 
   // First paint immediately so the canvas isn’t blank while CSS shows
   try { paintSplashTargets(0, 0); } catch (_) {}
@@ -36380,7 +36393,7 @@ function runSplashIntro() {
     finished = true;
     if (fill) fill.style.width = '100%';
     if (bar) bar.setAttribute('aria-valuenow', '100');
-    if (sub) sub.textContent = 'Klaar';
+    if (sub) sub.textContent = (typeof tOr === 'function' ? tOr('menu.splash3', 'Klaar') : 'Klaar');
     try { paintSplashTargets(dur / 1000, 1); } catch (_) {}
     showTitleGate();
   };

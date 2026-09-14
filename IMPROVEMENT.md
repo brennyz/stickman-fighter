@@ -1,3 +1,4 @@
+| 2026-09-14 | **title-gate polish** | SPELEN eerst (naam optioneel eronder); splash-labels i18n; save-import toast catalog. #261 closed as #259 dup. **v1.18.157 / SW v367**. |
 | 2026-09-14 | **title-gate** | Eerste scherm = splash-poppetjes groter + SPELEN / naam (geen account). Settings-fold + Android-copy gelijkgetrokken. **v1.18.156 / SW v366**. |
 | 2026-09-14 | **android-copy** | iPad/iOS-copy eruit uit speler-UI (settings, speel.html, install, tips, share). Zelfde Android-taal overal. **v1.18.155 / SW v365**. |
 | 2026-09-14 | **toast/UI** | Toast-queue (max 2 + de-dupe + tik-weg) · a11y aria-live · leftover NL-toasts i18n · Android-leesbaar + toon (ok/warn/danger). Complementary aan #257. **v1.18.154 / SW v364**. |

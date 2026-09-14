@@ -1553,10 +1553,11 @@
   .sf-title-gate[hidden],
   .sf-splash .sf-title-continue[hidden] { display:none !important; }
   .sf-title-greet {
-    margin:0; min-height:1.2em; text-align:center;
+    margin:0; text-align:center;
     font-family:'Bangers', cursive; font-size:clamp(22px, 6vw, 32px);
     letter-spacing:1px; color:#ffd75e; text-shadow:2px 2px 0 #2a2418;
   }
+  .sf-title-greet[hidden] { display:none; }
   .sf-title-name-wrap {
     display:flex; flex-direction:column; gap:6px; width:100%;
     font-size:13px; font-weight:800; color:#cfe0ff; text-align:left;
@@ -1595,15 +1596,20 @@
     .sf-splash-canvas { width: min(82vw, 720px); }
     .sf-splash-bar { width: min(52vw, 420px); }
   }
+  @media (max-height: 720px) {
+    .sf-splash.is-title .sf-splash-canvas { height: 34vh; }
+    .sf-splash.is-title .sf-splash-title { margin-top: calc(32vh - 4px); }
+  }
   @media (orientation: landscape) and (max-height: 500px) {
     .sf-splash { gap: 6px; padding-top: 8px; }
     .sf-splash-canvas { width: min(52vw, 560px); }
     .sf-splash-title { font-size: clamp(22px, 5.5vw, 34px); }
-    .sf-splash.is-title .sf-splash-canvas { height: 36vh; width: 100%; max-width: none; }
-    .sf-splash.is-title .sf-splash-title { margin-top: calc(34vh - 4px); font-size: clamp(22px, 5.5vw, 34px); }
+    .sf-splash.is-title .sf-splash-canvas { height: 28vh; width: 100%; max-width: none; }
+    .sf-splash.is-title .sf-splash-title { margin-top: calc(26vh - 4px); font-size: clamp(22px, 5.5vw, 34px); }
     .sf-title-name-wrap input { min-height: 44px; font-size: 16px; }
     .sf-splash .sf-title-start,
     .sf-splash .sf-title-continue { min-height: 48px; }
+    .sf-title-note { display: none; }
   }
   body.reduced-motion .sf-splash { transition: none; }
   body.reduced-motion #tunnelBootOverlay .boot-spinner { animation-duration: 1.4s; }

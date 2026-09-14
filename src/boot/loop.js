@@ -621,6 +621,7 @@ function syncTitleGateCopy() {
     greet.textContent = live && typeof t === 'function'
       ? t('menu.titleGreet', { name: live })
       : (live ? ('Hoi, ' + live) : '');
+    greet.hidden = !live;
   }
 }
 
@@ -726,7 +727,12 @@ function runSplashIntro() {
   const dur = calm ? 220 : 1050;
   const t0 = performance.now();
   let finished = false;
-  const labels = ['Laden…', 'Pixelmap…', 'Arena…', 'Klaar'];
+  const labels = [
+    (typeof tOr === 'function' ? tOr('menu.splash0', 'Laden…') : 'Laden…'),
+    (typeof tOr === 'function' ? tOr('menu.splash1', 'Pixelmap…') : 'Pixelmap…'),
+    (typeof tOr === 'function' ? tOr('menu.splash2', 'Arena…') : 'Arena…'),
+    (typeof tOr === 'function' ? tOr('menu.splash3', 'Klaar') : 'Klaar'),
+  ];
 
   // First paint immediately so the canvas isn’t blank while CSS shows
   try { paintSplashTargets(0, 0); } catch (_) {}
@@ -736,7 +742,7 @@ function runSplashIntro() {
     finished = true;
     if (fill) fill.style.width = '100%';
     if (bar) bar.setAttribute('aria-valuenow', '100');
-    if (sub) sub.textContent = 'Klaar';
+    if (sub) sub.textContent = (typeof tOr === 'function' ? tOr('menu.splash3', 'Klaar') : 'Klaar');
     try { paintSplashTargets(dur / 1000, 1); } catch (_) {}
     showTitleGate();
   };

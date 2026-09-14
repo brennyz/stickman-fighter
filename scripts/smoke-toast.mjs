@@ -51,8 +51,8 @@ must(/pointer-events:\s*auto/.test(css.match(/\.toast \{[\s\S]*?\}/)?.[0] || '')
 must(/t\('toast\.unknownMode'\)/.test(start), 'unknownMode must use i18n');
 must(/t\('toast\.noBackup'\)/.test(start), 'backup toasts must use i18n');
 must(/toastT\(/.test(storage), 'storage leftover toasts should use toastT');
-must(/APP_VERSION = '1\.18\.156'/.test(storage), 'version should be 1.18.156');
-must(/SW_CACHE_REV = 366/.test(storage), 'SW rev should be 366');
+must(/APP_VERSION = '1\.18\.157'/.test(storage), 'version should be 1.18.157');
+must(/SW_CACHE_REV = 367/.test(storage), 'SW rev should be 367');
 
 const i18n = fs.readFileSync(path.join(root, 'src/i18n/i18n.js'), 'utf8');
 const speel = fs.readFileSync(path.join(root, 'speel.html'), 'utf8');
@@ -77,6 +77,11 @@ must(!/meta\.key stickfighter/.test(index), 'settings still shows save schema ke
 must(/id="sfTitleGate"/.test(index), 'title gate missing');
 must(/id="sfTitleStart"/.test(index), 'title SPELEN button missing');
 must(/id="sfTitleName"/.test(index), 'title name field missing');
+must(index.indexOf('id="sfTitleStart"') < index.indexOf('id="sfTitleName"'), 'SPELEN must sit above the optional name field');
+must(/titleName: 'Naam — hoeft niet'/.test(i18n), 'name field must read as optional');
+must(/splash0:/.test(i18n), 'splash load labels should be i18n');
+must(/saveLoadedPreview:/.test(catalog), 'catalog missing toast.saveLoadedPreview');
+must(!/Save geladen uit/.test(fs.readFileSync(path.join(root, 'src/systems/missions.js'), 'utf8')), 'save import toast still hardcoded Dutch');
 must(/width="720" height="360"/.test(index), 'splash canvas should be larger hero size');
 must(/classList.contains\('is-title'\)/.test(index), 'failsafe must keep title gate');
 must(/startGame: 'SPELEN'/.test(i18n), 'title start label missing');
