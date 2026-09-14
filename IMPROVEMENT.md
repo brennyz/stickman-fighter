@@ -1,3 +1,4 @@
+| 2026-09-14 | **parked** | #259 P1 landing (SPELEN + SATAN + floaters + train hit-reg + VERLOREN). Hit-reg owned here — geen rewrite t.o.v. draft #261. Wacht «merge». **v1.18.158 / SW v368**. |
 | 2026-09-14 | **train hit-reg** | Training: capsule-hurtbox + face-naar-robot zodat W/joy-up J/K/L/U RabbitRobot raken; floaters niet links clippen; resultaat VERLOREN / YOU LOST. **v1.18.158 / SW v368**. |
 | 2026-09-14 | **P1 entry** | speel.html: alleen het install-blok van dit apparaat; Android ziet geen iPad. SPELEN blijft hero. **v1.18.157 / SW v367**. |
 | 2026-09-14 | **toast queue** | Eén toast tegelijk (wachtrij), Android Chrome/TWA = dezelfde HTML onder safe-area. Geen stapel. **v1.18.156 / SW v366**. |
@@ -135,6 +136,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | PARKED: #259 P1 landing v1.18.158/SW368. Hit-reg owned here; #261 draft overlaps — geen herschrijven. Wacht «merge». |
 | 2026-09-14 | — | Training hit-reg: capsule + face-naar-robot; floater left-clamp; YOU LOST/VERLOREN. v1.18.158 / SW 368. |
 | 2026-09-14 | — | P1 entry: één install-blok per apparaat, geen iPad op Android. v1.18.157 / SW 367. |
 | 2026-09-14 | — | Toast-wachtrij: één tegelijk, Android = HTML onder statusbalk. v1.18.156 / SW 366. |
