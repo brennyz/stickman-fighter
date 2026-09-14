@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.165';
+const APP_VERSION = '1.18.166';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 375;
+const SW_CACHE_REV = 376;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2323,7 +2323,7 @@ const I18N = {
       buildings: 'Fabrieken', buildingsSub: 'Werken · oogst · upgrade',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon, zoals een echte app',
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
-      choosePath: 'KIES JE PAD', lastPlayed: 'LAATST', playHere: 'SPEEL',
+      choosePath: 'KIES JE PAD', lastPlayed: 'LAATST', playHere: 'SPEEL', saveSync: 'save OK',
       startGame: 'SPELEN', startSub: 'Start het gevecht',
       titleName: 'Naam — hoeft niet', titleNamePh: 'Bijnaam (optioneel)',
       titleNote: 'Geen account — je save blijft op deze telefoon',
@@ -2369,7 +2369,7 @@ const I18N = {
       wavesStart: 'begin',
       xp: '+{xp} XP verdiend · nu Lv {lvl} ({cur}/{need} XP)' },
     settings: {
-      title: 'Instellingen', sub: 'Geluid, trilling & HUD — opgeslagen op dit apparaat',
+      title: 'Instellingen', sub: 'Geluid & HUD — save gaat automatisch mee',
       lang: 'Taal', music: 'Muziek', sfx: 'Effecten', shake: 'Schermschok', haptics: 'Trillen',
       aimHead: 'Mik-indicator', aimHint: 'Kleur en grootte van de straal als je omhoog of omlaag mikt met de beweegbalk.',
       aimColor: 'Kleur', aimRadius: 'Grootte', aimPick: 'Kies zelf',
@@ -2384,6 +2384,19 @@ const I18N = {
       sfxSamplesOn: 'Geluidseffecten: geladen',
       sfxSamplesLoad: 'Geluidseffecten: laden…',
       sfxSamplesOff: 'Geluidseffecten: offline',
+      saveAuto: 'Save gaat automatisch mee',
+      saveAutoLine: 'Lv {lvl} · OK op dit apparaat',
+      saveAutoBad: 'Lv {lvl} · check — open Bestand / offline',
+      saveAutoHint: 'Online-save blijft vanzelf bij deze speel-link. Geen extra knop.',
+      saveOfflineFold: 'Bestand / offline',
+      saveOfflineTitle: 'Los pad — alleen als je een bestand wilt',
+      saveOfflineOk: 'Bestandskopie klaar',
+      saveOfflineBad: 'Hoofd-save check',
+      saveOfflineBackup: 'Backup Lv {lvl}',
+      saveOfflineDrift: 'Hoofd en backup verschillen',
+      helpFold: 'Hulp',
+      helpTitle: 'Vast op een oude versie?',
+      helpDesc: 'Leegt de cache en laadt opnieuw. Alleen nodig als het spel niet meekomt.',
       syncBackup: 'Backup bijwerken', freshCache: 'Verse versie', clearSave: 'Nieuwe start (dubbel tikken)',
       syncHint: 'Zet de backup gelijk aan je huidige voortgang.',
       freshHint: 'Menu reageert niet? Tik hier voor de nieuwste versie.',
@@ -2395,7 +2408,7 @@ const I18N = {
       masteryTiers: 'Tiers: Leerling → Virtuoos (3) → Meester (10) → Legende (25)',
       savePort: 'Voortgang kopiëren', exportSave: 'Kopieer save', importSave: 'Laad save',
       importSaveFile: 'Bestand kiezen',
-      savePortDesc: 'Kopieer je voortgang (bestand + klembord). Laden: kies een bestand of plak hier — 1× kijken, 2× laden. Je huidige save gaat naar backup.',
+      savePortDesc: 'Gewone save blijft automatisch. Dit pad is alleen voor een ander apparaat of een bestand. Laden: bestand of plakken — 1× kijken, 2× laden.',
       savePortPlaceholder: 'Plak je save hier, of kies een bestand',
       privacy: 'Privacy',
       ageHint: 'Cartoon-gevecht · tiener+ · geen chat',
@@ -2527,7 +2540,7 @@ const I18N = {
       buildings: 'Buildings', buildingsSub: 'Factories · collect · upgrade',
       options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add as app', installSub: 'One icon, like a real app',
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
-      choosePath: 'CHOOSE YOUR PATH', lastPlayed: 'LAST', playHere: 'PLAY',
+      choosePath: 'CHOOSE YOUR PATH', lastPlayed: 'LAST', playHere: 'PLAY', saveSync: 'save OK',
       startGame: 'PLAY', startSub: 'Start the fight',
       titleName: 'Name — optional', titleNamePh: 'Nickname (optional)',
       titleNote: 'No account — your save stays on this phone',
@@ -2573,7 +2586,7 @@ const I18N = {
       wavesStart: 'start',
       xp: '+{xp} XP earned · now Lv {lvl} ({cur}/{need} XP)' },
     settings: {
-      title: 'Settings', sub: 'Sound, haptics & HUD — saved on this device',
+      title: 'Settings', sub: 'Sound & HUD — save stays with you automatically',
       lang: 'Language', music: 'Music', sfx: 'Effects', shake: 'Screen shake', haptics: 'Haptics',
       aimHead: 'Aim indicator', aimHint: 'Color and size of the beam when you aim high or low with the move bar.',
       aimColor: 'Color', aimRadius: 'Size', aimPick: 'Custom',
@@ -2588,6 +2601,19 @@ const I18N = {
       sfxSamplesOn: 'Sound effects: loaded',
       sfxSamplesLoad: 'Sound effects: loading…',
       sfxSamplesOff: 'Sound effects: offline',
+      saveAuto: 'Save stays with you automatically',
+      saveAutoLine: 'Lv {lvl} · OK on this device',
+      saveAutoBad: 'Lv {lvl} · check — open File / offline',
+      saveAutoHint: 'Online save stays with this play link automatically. No extra button.',
+      saveOfflineFold: 'File / offline',
+      saveOfflineTitle: 'Separate path — only if you want a file',
+      saveOfflineOk: 'File copy ready',
+      saveOfflineBad: 'Main save check',
+      saveOfflineBackup: 'Backup Lv {lvl}',
+      saveOfflineDrift: 'Main and backup differ',
+      helpFold: 'Help',
+      helpTitle: 'Stuck on an old version?',
+      helpDesc: 'Clears the cache and reloads. Only needed if the game does not catch up.',
       syncBackup: 'Update backup', freshCache: 'Fresh version', clearSave: 'New start (tap twice)',
       syncHint: 'Set the backup equal to your current progress.',
       freshHint: 'Menu stuck? Tap here for the newest version.',
@@ -2599,7 +2625,7 @@ const I18N = {
       masteryTiers: 'Tiers: Pupil → Virtuoso (3) → Master (10) → Legend (25)',
       savePort: 'Copy progress', exportSave: 'Copy save', importSave: 'Load save',
       importSaveFile: 'Choose file',
-      savePortDesc: 'Copy your progress (file + clipboard). Load: pick a file or paste here — 1× preview, 2× load. Current save goes to backup.',
+      savePortDesc: 'Normal save stays automatic. This path is only for another device or a file. Load: pick a file or paste — 1× preview, 2× load.',
       savePortPlaceholder: 'Paste your save here, or choose a file',
       privacy: 'Privacy',
       ageHint: 'Cartoon combat · teens+ · no chat',
@@ -2732,7 +2758,7 @@ const I18N = {
       summons: 'Summons', summonsSub: 'Tägliche Kiste · Waffe & Pet',
       options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Als App speichern', installSub: 'Ein Icon, wie eine echte App',
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
-      choosePath: 'WÄHLE DEINEN WEG', lastPlayed: 'ZULETZT', playHere: 'SPIEL',
+      choosePath: 'WÄHLE DEINEN WEG', lastPlayed: 'ZULETZT', playHere: 'SPIEL', saveSync: 'save OK',
       startGame: 'SPIELEN', startSub: 'Starte den Kampf',
       titleName: 'Name — optional', titleNamePh: 'Spitzname (optional)',
       titleNote: 'Kein Konto — dein Save bleibt auf diesem Handy',
@@ -2813,7 +2839,7 @@ const I18N = {
       wavesStart: 'Start',
       xp: '+{xp} XP · jetzt Lv {lvl} ({cur}/{need} XP)' },
     settings: {
-      title: 'Einstellungen', sub: 'Sound, Vibration & HUD — auf diesem Gerät gespeichert',
+      title: 'Einstellungen', sub: 'Sound & HUD — Save läuft automatisch mit',
       lang: 'Sprache', music: 'Musik', sfx: 'Effekte', shake: 'Bildschirmshake', haptics: 'Vibration',
       aimHead: 'Zielanzeige', aimHint: 'Farbe und Größe des Strahls beim Zielen nach oben oder unten.',
       aimColor: 'Farbe', aimRadius: 'Größe', aimPick: 'Eigene Farbe',
@@ -2832,10 +2858,23 @@ const I18N = {
       syncHint: 'Backup auf deinen aktuellen Stand setzen.',
       freshHint: 'Menü hängt? Tippe hier für die neueste Version.',
       hosting: 'Spiel-Link', copyLink: 'Link kopieren', openLink: 'Link öffnen',
-      savePort: 'Fortschritt kopieren', exportSave: 'Save kopieren', importSave: 'Save laden',
+      savePort: 'Datei / offline', exportSave: 'Save kopieren', importSave: 'Save laden',
       importSaveFile: 'Datei wählen',
-      savePortDesc: 'Kopiere deinen Fortschritt (Datei + Zwischenablage). Laden: Datei oder hier einfügen — 1× Vorschau, 2× laden.',
+      savePortDesc: 'Der normale Save bleibt automatisch. Dieser Weg ist nur für ein anderes Gerät oder eine Datei.',
       savePortPlaceholder: 'Save hier einfügen oder Datei wählen',
+      saveAuto: 'Save läuft automatisch mit',
+      saveAutoLine: 'Lv {lvl} · OK auf diesem Gerät',
+      saveAutoBad: 'Lv {lvl} · prüfen — Datei / offline öffnen',
+      saveAutoHint: 'Online-Save bleibt automatisch bei diesem Spiel-Link. Kein Extra-Knopf.',
+      saveOfflineFold: 'Datei / offline',
+      saveOfflineTitle: 'Extra-Weg — nur wenn du eine Datei willst',
+      saveOfflineOk: 'Datei-Kopie bereit',
+      saveOfflineBad: 'Haupt-Save prüfen',
+      saveOfflineBackup: 'Backup Lv {lvl}',
+      saveOfflineDrift: 'Haupt und Backup unterscheiden sich',
+      helpFold: 'Hilfe',
+      helpTitle: 'Alte Version fest?',
+      helpDesc: 'Leert den Cache und lädt neu. Nur nötig wenn das Spiel nicht mitkommt.',
       privacy: 'Datenschutz',
       ageHint: 'Cartoon-Kampf · ab Teenager · kein Chat',
       installAge: 'Cartoon-Stockfigur-Kämpfe · Teenager+ · kein Chat.',
@@ -2874,7 +2913,7 @@ const I18N = {
     pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Kostenloser Arcade-Zug' },
     dex: { title: 'Monsterbuch', sub: '{n} Arten · Seltenheit = HP · Farm / Zoo / Meer / Wald / Krypta' },
     help: { title: 'Tipps & Steuerung' },
-    install: { title: 'Als App speichern', sub: 'Ein Icon, wie eine echte App' },
+    install: { title: 'App', sub: 'Homebildschirm' },
     island: {
       1: { name: 'Ost-Insel', sub: 'Lv 1–10' }, 2: { name: 'Feuer-Insel', sub: 'Lv 11–20' },
       3: { name: 'Neon-Insel', sub: 'Lv 21–30' }, 4: { name: 'Tempel-Insel', sub: 'Lv 31–40' },
@@ -2915,9 +2954,9 @@ const I18N = {
       buildings: 'Usines', buildingsSub: 'Usines · récolte · upgrade',
       music: 'Musique', missions: 'Missions',
       summons: 'Summons', summonsSub: 'Coffre du jour · arme et pet',
-      options: 'Options', tips: 'Astuces', fresh: 'Version fraîche', install: 'Ajouter comme app', installSub: 'Une icône, comme une vraie app',
+      options: 'Options', tips: 'Astuces', fresh: 'Nouvelle version', install: 'Ajouter comme app', installSub: 'Une icône, comme une vraie app',
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
-      choosePath: 'CHOISIS TON CHEMIN', lastPlayed: 'DERNIER', playHere: 'JOUER',
+      choosePath: 'CHOISIS TON CHEMIN', lastPlayed: 'DERNIER', playHere: 'JOUER', saveSync: 'save OK',
       startGame: 'JOUER', startSub: 'Lance le combat',
       titleName: 'Nom — pas obligatoire', titleNamePh: 'Surnom (optionnel)',
       titleNote: 'Pas de compte — ta sauvegarde reste sur ce téléphone',
@@ -2998,7 +3037,7 @@ const I18N = {
       wavesStart: 'début',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
-      title: 'Options', sub: 'Son, vibrations & HUD — sauvegardé sur cet appareil',
+      title: 'Options', sub: 'Son & HUD — la save suit automatiquement',
       lang: 'Langue', music: 'Musique', sfx: 'Effets', shake: 'Secousse écran', haptics: 'Vibration',
       aimHead: 'Viseur', aimHint: 'Couleur et taille du rayon quand tu vises haut ou bas avec la barre de déplacement.',
       aimColor: 'Couleur', aimRadius: 'Taille', aimPick: 'Personnaliser',
@@ -3017,10 +3056,23 @@ const I18N = {
       syncHint: 'Aligner la copie sur ta progression actuelle.',
       freshHint: 'Menu bloqué ? Tape ici pour la dernière version.',
       hosting: 'Lien de jeu', copyLink: 'Copier le lien', openLink: 'Ouvrir le lien',
-      savePort: 'Copier la progression', exportSave: 'Copier la save', importSave: 'Charger la save',
+      savePort: 'Fichier / hors ligne', exportSave: 'Copier la save', importSave: 'Charger la save',
       importSaveFile: 'Choisir fichier',
-      savePortDesc: 'Copie ta progression (fichier + presse-papiers). Charger : fichier ou coller ici — 1× aperçu, 2× charger.',
+      savePortDesc: 'La save normale reste automatique. Ce chemin est seulement pour un autre appareil ou un fichier.',
       savePortPlaceholder: 'Colle ta save ici, ou choisis un fichier',
+      saveAuto: 'La save suit automatiquement',
+      saveAutoLine: 'Nv {lvl} · OK sur cet appareil',
+      saveAutoBad: 'Nv {lvl} · vérifie — ouvre Fichier / hors ligne',
+      saveAutoHint: 'La save en ligne reste avec ce lien, sans bouton extra.',
+      saveOfflineFold: 'Fichier / hors ligne',
+      saveOfflineTitle: 'Chemin à part — seulement si tu veux un fichier',
+      saveOfflineOk: 'Copie fichier prête',
+      saveOfflineBad: 'Save principale à vérifier',
+      saveOfflineBackup: 'Backup nv {lvl}',
+      saveOfflineDrift: 'Principale et backup différent',
+      helpFold: 'Aide',
+      helpTitle: 'Bloqué sur une vieille version ?',
+      helpDesc: 'Vide le cache et recharge. Seulement si le jeu ne suit pas.',
       privacy: 'Confidentialité',
       ageHint: 'Combat cartoon · ados+ · pas de chat',
       installAge: 'Combats stickman cartoon · ados+ · pas de chat.',
@@ -3059,7 +3111,7 @@ const I18N = {
     pets: { title: 'Pets · Compagnons', sub: 'Pets dex & œufs arcade', crackEgg: 'Ouvrir l\'œuf du jour', crackEggSub: 'Tir gratuit' },
     dex: { title: 'Bestiaire', sub: '{n} espèces · rareté = PV · ferme / zoo / mer / bois / crypte' },
     help: { title: 'Astuces & contrôles' },
-    install: { title: 'Ajouter comme app', sub: 'Une icône, comme une vraie app' },
+    install: { title: 'App', sub: 'Écran d\'accueil' },
     island: {
       1: { name: 'Île de l\'Est', sub: 'Lv 1–10' }, 2: { name: 'Île de Feu', sub: 'Lv 11–20' },
       3: { name: 'Île Néon', sub: 'Lv 21–30' }, 4: { name: 'Île Temple', sub: 'Lv 31–40' },
@@ -3102,7 +3154,7 @@ const I18N = {
       summons: 'Summons', summonsSub: 'Cofre diario · arma y pet',
       options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir como app', installSub: 'Un icono, como una app real',
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
-      choosePath: 'ELIGE TU CAMINO', lastPlayed: 'ÚLTIMO', playHere: 'JUEGA',
+      choosePath: 'ELIGE TU CAMINO', lastPlayed: 'ÚLTIMO', playHere: 'JUEGA', saveSync: 'save OK',
       startGame: 'JUGAR', startSub: 'Empieza el combate',
       titleName: 'Nombre — no hace falta', titleNamePh: 'Apodo (opcional)',
       titleNote: 'Sin cuenta — tu partida se queda en este teléfono',
@@ -3183,7 +3235,7 @@ const I18N = {
       wavesStart: 'inicio',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
-      title: 'Opciones', sub: 'Sonido, vibración y HUD — guardado en este dispositivo',
+      title: 'Opciones', sub: 'Sonido y HUD — el save va automático',
       lang: 'Idioma', music: 'Música', sfx: 'Efectos', shake: 'Sacudida pantalla', haptics: 'Vibración',
       aimHead: 'Indicador de mira', aimHint: 'Color y tamaño del rayo al apuntar arriba o abajo con la barra de movimiento.',
       aimColor: 'Color', aimRadius: 'Tamaño', aimPick: 'Elegir',
@@ -3202,10 +3254,23 @@ const I18N = {
       syncHint: 'Iguala la copia a tu progreso actual.',
       freshHint: '¿Menú atascado? Toca aquí para la versión nueva.',
       hosting: 'Enlace para jugar', copyLink: 'Copiar enlace', openLink: 'Abrir enlace',
-      savePort: 'Copiar progreso', exportSave: 'Copiar save', importSave: 'Cargar save',
+      savePort: 'Archivo / sin red', exportSave: 'Copiar save', importSave: 'Cargar save',
       importSaveFile: 'Elegir archivo',
-      savePortDesc: 'Copia tu progreso (archivo + portapapeles). Cargar: elige un archivo o pega aquí — 1× vista, 2× cargar.',
+      savePortDesc: 'El save normal sigue automático. Este camino es solo para otro aparato o un archivo.',
       savePortPlaceholder: 'Pega tu save aquí, o elige un archivo',
+      saveAuto: 'El save va automático',
+      saveAutoLine: 'Nv {lvl} · OK en este aparato',
+      saveAutoBad: 'Nv {lvl} · revisa — abre Archivo / sin red',
+      saveAutoHint: 'El save online se queda con este enlace, sin botón extra.',
+      saveOfflineFold: 'Archivo / sin red',
+      saveOfflineTitle: 'Camino aparte — solo si quieres un archivo',
+      saveOfflineOk: 'Copia de archivo lista',
+      saveOfflineBad: 'Save principal a revisar',
+      saveOfflineBackup: 'Backup nv {lvl}',
+      saveOfflineDrift: 'Principal y backup no coinciden',
+      helpFold: 'Ayuda',
+      helpTitle: '¿Atascado en una versión vieja?',
+      helpDesc: 'Vacía la caché y recarga. Solo si el juego no se pone al día.',
       privacy: 'Privacidad',
       ageHint: 'Combate cartoon · adolescentes+ · sin chat',
       installAge: 'Combates stickman cartoon · adolescentes+ · sin chat.',
@@ -3244,7 +3309,7 @@ const I18N = {
     pets: { title: 'Pets · Compañeros', sub: 'Pets dex y huevos arcade', crackEgg: 'Abrir huevo diario', crackEggSub: 'Tirada gratis' },
     dex: { title: 'Bestiario', sub: '{n} especies · rareza = HP · granja / zoo / mar / bosque / cripta' },
     help: { title: 'Consejos y controles' },
-    install: { title: 'Añadir como app', sub: 'Un icono, como una app real' },
+    install: { title: 'App', sub: 'Pantalla de inicio' },
     island: {
       1: { name: 'Isla Este', sub: 'Lv 1–10' }, 2: { name: 'Isla Fuego', sub: 'Lv 11–20' },
       3: { name: 'Isla Neón', sub: 'Lv 21–30' }, 4: { name: 'Isla Templo', sub: 'Lv 31–40' },
@@ -3437,6 +3502,7 @@ function applyLangStaticScreens() {
     ['btnGear', 'hub.gear', 'hub.gearSub'],
     ['btnSkills', 'hub.skills', 'hub.skillsSub'],
     ['btnUpgrades', 'hub.upgrades', 'hub.upgradesSub'],
+    ['btnUpgradesHome', 'hub.upgrades', 'hub.upgradesSub'],
     ['btnDex', 'hub.dex', 'hub.dexSub'],
     ['btnGear', 'hub.gear', 'hub.gearSub'],
   ];
@@ -3495,10 +3561,15 @@ function applyLangStaticScreens() {
   if (savePortDesc) savePortDesc.textContent = t('settings.savePortDesc');
   const savePortText = document.getElementById('savePortText');
   if (savePortText) savePortText.placeholder = t('settings.savePortPlaceholder');
+  setText('settingsSaveAutoTitle', 'settings.saveAuto');
+  setText('settingsSaveAutoHint', 'settings.saveAutoHint');
   setText('settingsShareFoldSum', 'settings.hosting');
   setText('settingsShareTitle', 'settings.hosting');
-  setText('settingsSaveFoldSum', 'settings.savePort');
-  setText('settingsSaveTitle', 'settings.savePort');
+  setText('settingsSaveFoldSum', 'settings.saveOfflineFold');
+  setText('settingsSaveTitle', 'settings.saveOfflineTitle');
+  setText('settingsHelpFoldSum', 'settings.helpFold');
+  setText('settingsHelpTitle', 'settings.helpTitle');
+  setText('settingsHelpDesc', 'settings.helpDesc');
   setText('settingsSyncHint', 'settings.syncHint');
   setText('settingsFreshHint', 'settings.freshHint');
 
@@ -18190,7 +18261,7 @@ function seedNlGameStrings() {
     saveCorruptOverwritten: 'Corrupte hoofd-save overschreven — export blijft je vangnet bij URL-wissel',
     saveRestoredAfterLoad: 'Save hersteld uit backup na laadfout',
     saveLoadFailedFresh: 'Save kon niet geladen worden — nieuwe voortgang gestart (export backup als je die had)',
-    staleCacheMenu: 'Oude cache — menu reageert niet. Tik «Verse versie» in de dock.',
+    staleCacheMenu: 'Oude cache — menu reageert niet. Tik «Verse versie» onder Opties → Hulp.',
   });
   if (!I18N.nl.gamble) I18N.nl.gamble = {};
   Object.assign(I18N.nl.gamble, {
@@ -18338,7 +18409,7 @@ function seedNlGameStrings() {
     '<b>Rariteiten:</b> Gewoon → Ongewoon → Zeldzaam → Episch → Legendarisch → Mythisch. Zeldzamer = meer XP & meer max HP.',
     '<b>50 levels:</b> <b>5 eilanden × 10 levels</b> — skill gate wapens per eiland · baas Lv 10/20/30/40/50 opent volgend eiland · hitte-meter: 5× = Meester-buff · 9× = gevaar! · 10× = Satan.',
     '<b>Backup:</b> elke save wordt dubbel opgeslagen — bij problemen: <b>Instellingen → Herstel save uit backup</b>.',
-    '<b>Delen:</b> menu → <b>Deel link</b> — vrienden openen in Chrome en tikken <b>Zet in app-lade</b>.',
+    '<b>Delen:</b> menu → <b>Deel link</b> — vrienden openen in Chrome en tikken <b>App</b>.',
     '<b>Offline:</b> na 1× online spelen werkt de app daarna ook zonder net. Banner onderaan als je offline bent.',
   ];
   if (!I18N.nl.menu) I18N.nl.menu = {};
@@ -18624,7 +18695,7 @@ function seedNlGameStrings() {
     petCoinTip: 'Speel <b>munten bonus</b> voor pet coins (2 gouden munten = 1 PC). Koop pets hier, of tem via kills in het monsterboek. Pets volgen je in avontuur & training.',
     petSummaryTamed: 'Getemd <b>{tamed}/{total}</b> · actief <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'geen',
-    installSub: 'Één icoon, zoals een echte app',
+    installSub: 'Lade · beginscherm',
     boss: 'BAAS',
     topHunter: 'Top jager',
     modeAdventure: '5 eilanden × 10 levels · hitte-meter · 9× = gevaar! · 10× = Satan · Meester-buff · dobbel-gok',
@@ -19314,7 +19385,7 @@ const CATALOG_EN = {
     saveCorruptOverwritten: 'Corrupt main save overwritten — export stays your safety net',
     saveRestoredAfterLoad: 'Save restored from backup after a load error',
     saveLoadFailedFresh: 'Save could not load — started fresh (export a backup if you had one)',
-    staleCacheMenu: 'Stale cache — menu not responding. Tap «Fresh version» in the dock.',
+    staleCacheMenu: 'Stale cache — menu not responding. Tap «Fresh version» under Options → Help.',
     backupRestored: 'Backup restored — save + backup in sync',
     backupFailed: 'Backup restore failed — export save if you have one',
     syncConfirm: 'Sync overwrites backup with main save — tap again',
@@ -19747,7 +19818,7 @@ const CATALOG_EN = {
     petCoinTip: 'Play <b>coin bonus</b> for pet coins (2 gold coins = 1 PC). Buy pets here, or tame via monster book kills. Pets follow you in adventure & training.',
     petSummaryTamed: 'Tamed <b>{tamed}/{total}</b> · active <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'none',
-    installSub: 'One icon, like a real app',
+    installSub: 'Home screen',
     boss: 'BOSS',
     topHunter: 'Top hunter',
     modeAdventure: '5 islands × 10 levels · heat meter · 9× = danger! · 10× = Satan · Master buff · gamble',
@@ -43169,6 +43240,14 @@ function hubTileStatLine(hub) {
         return t('buildings.hubStatIdle');
       }
     }
+    case 'upgrades': {
+      try {
+        const ready = typeof countAllUpgradesReady === 'function' ? countAllUpgradesReady() : 0;
+        return ready > 0 ? t('ui.upgradeReady', { n: ready }) : t('ui.hubStatSkillShards');
+      } catch (_) {
+        return t('hub.upgrades');
+      }
+    }
     case 'summon': {
       try {
         ensureChestDaily();
@@ -44288,7 +44367,7 @@ const UI = {
         `<span style="color:${st.accent}">${styleLabel(st)}</span></span>` +
         `<span style="display:block;margin-top:3px;opacity:.82;font-size:11px">${adventureProgressLine()}</span>` +
         `<span class="prof-xp" aria-hidden="true"><span style="width:${pct}%"></span></span>` +
-        `<span class="prof-foot">${save.xp}/${need} XP${missAlert ? ' · ' + t('ui.menuMissionReady') : ''}</span>`;
+        `<span class="prof-foot">${save.xp}/${need} XP · ${tOr('menu.saveSync', 'save OK')}${missAlert ? ' · ' + t('ui.menuMissionReady') : ''}</span>`;
       profileEl.classList.toggle('has-alert', missAlert);
     }
     const statsEl = document.getElementById('menuStats');
@@ -47833,11 +47912,13 @@ bindPress(document.getElementById('btnWeapons'), () => {
 bindPress(document.getElementById('btnSkills'), () => {
   openCollectionScreen('skillScreen', () => UI.renderSkills());
 });
-bindPress(document.getElementById('btnUpgrades'), () => {
+function openUpgradesHub() {
   AudioSys.init();
   AudioSys.sfx('select');
   UI.openUpgrades('skills');
-});
+}
+bindPress(document.getElementById('btnUpgrades'), openUpgradesHub);
+bindPress(document.getElementById('btnUpgradesHome'), openUpgradesHub);
 bindPress(document.getElementById('btnPets'), () => {
   openCollectionScreen('petScreen', () => UI.renderPets());
 });
@@ -49345,8 +49426,9 @@ function bootGame() {
     try {
       const hub = document.querySelector('[data-hub]');
       if (hub && !hub.dataset.sfPressBound) {
-        userToast(toastT('toast.staleCacheMenu', null, 'Oude cache — menu reageert niet. Tik «Verse versie» in de dock.'), 6500, { tone: 'danger' });
+        userToast(toastT('toast.staleCacheMenu', null, 'Oude cache — menu reageert niet. Tik «Verse versie» onder Opties → Hulp.'), 6500, { tone: 'danger' });
         document.getElementById('btnVerseVersie')?.classList.add('sw-update');
+        document.getElementById('btnSettings')?.classList.add('sw-update');
       }
     } catch (_) {}
   }, 900);
