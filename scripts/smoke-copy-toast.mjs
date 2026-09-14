@@ -35,5 +35,14 @@ if (/<small>vs RabbitRobot<\/small>/.test(ui)) fail('training again-sub still ha
 if (!/result\.trainAgainSub/.test(ui)) fail('training again-sub must use i18n');
 if (!/result\.wavesStart/.test(game)) fail('lose-tip wave fallback must be i18n (no hardcoded start)');
 if (!/this\.clearToasts\(\)/.test(ui)) fail('UI.showResult / play must call this.clearToasts');
+const i18n = fs.readFileSync(path.join(root, 'src/i18n/i18n.js'), 'utf8');
+const nlBlock = i18n.split(/\n  en: \{/)[0] || '';
+if (!/trainLose: 'ROBOT WINT\.\.\.'/.test(nlBlock)) fail('NL result.trainLose must be ROBOT WINT (not ROBOT WINS)');
+if (/trainLose: 'ROBOT WINS/.test(nlBlock)) fail('NL UI still has ROBOT WINS');
+if (!/tOr\(titleKey, titleFallback\)/.test(ui)) fail('showResult must not reuse stale EN lose titles');
+if (!/detailKey/.test(game)) fail('result detail must store i18n keys for lang switch');
+if (!/combat\.streak3/.test(game)) fail('combat streak shouts must follow language');
+if (!/hubStatStyle/.test(ui)) fail('Arcade/collect hub stats must use i18n (no hardcoded outfits)');
+if (!/hub\.statTrain/.test(ui)) fail('HOME arcade tile stats must follow language');
 
 console.log('SMOKE_OK copy-toast: VERLOREN keep-loot · no sticky lose toasts · train again i18n');

@@ -905,6 +905,17 @@ class Game {
     scheduleGameResult(this, win ? 1600 : 1400, () => UI.showResult(win, {
       titleKey: win ? 'result.advWin' : 'result.advLose',
       title: win ? t('result.advWin') : t('result.advLose'),
+      detailKey: win ? 'result.advDetailWin' : 'result.advDetailLose',
+      finishersN: this.runFinishers || 0,
+      streakN: this.sessionBestKillStreak || 0,
+      detailParams: {
+        lv, kills: this.kills, stars, combo: this.maxCombo || 0, finishers: '', streak: '',
+      },
+      keepLoot: !win,
+      diffLineKey: diff !== 'normal' ? 'result.advDiffLine' : '',
+      diffLineParams: diff !== 'normal' ? { diff: advDiffLabel(diff) } : undefined,
+      masterBuff: !!(masterBuffActive(lv, diff) && !win),
+      gambleRoll: this.gambleRoll || null,
       detail: (() => {
         const finishers = this.runFinishers ? t('result.finishersLine', { n: this.runFinishers }) : '';
         const streak = (this.sessionBestKillStreak || 0) >= 3
@@ -970,7 +981,12 @@ class Game {
     this.killStreak = (this.killStreak || 0) + 1;
     const ks = this.killStreak;
     if ([3, 5, 8, 12].includes(ks)) {
-      const msgs = { 3: 'STREAK ×3', 5: 'ON FIRE!', 8: 'RAMPAGE!', 12: 'UNSTOPPABLE!' };
+      const msgs = {
+        3: tOr('combat.streak3', 'STREAK ×3'),
+        5: tOr('combat.streak5', 'ON FIRE!'),
+        8: tOr('combat.streak8', 'RAMPAGE!'),
+        12: tOr('combat.streak12', 'UNSTOPPABLE!'),
+      };
       try { this.floater(W / 2, 128, msgs[ks], ks >= 8 ? '#ff7a4d' : '#ffd75e', 17); } catch (_) {}
       try { AudioSys.sfx(ks >= 8 ? 'comboEpic' : 'combo'); } catch (_) {}
       if (!motionReduced() && !fxLite()) {
@@ -1591,6 +1607,8 @@ class Game {
     scheduleGameResult(this, 1400, () => UI.showResult(win, {
       titleKey: win ? 'result.trainWin' : 'result.trainLose',
       title: win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'),
+      detailKey: win ? 'result.trainDetailWin' : 'result.trainDetailLose',
+      detailParams: { p: this.roundsP, r: this.roundsR, combo: trainBest, wins: save.trainWins },
       detail: win
         ? tOr('result.trainDetailWin', 'RabbitRobot verslagen ({p}-{r}) · max combo ×{combo} · {wins}× gewonnen', {
           p: this.roundsP, r: this.roundsR, combo: trainBest, wins: save.trainWins,

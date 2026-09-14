@@ -140,7 +140,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-| 2026-09-14 | — | #267 merge-klaar (v1.18.165 / SW 375). Upgrades/drawer/wapen-contrast = c4a6, niet hier. Wacht «merge». |
+| 2026-09-14 | — | #267 EN-NL strak: resultaat-titels i18n (NL geen ROBOT WINS), detailKey + gamble bij taalwissel, streak-shouts NL, Hub/Arcade stats volgen taal. v1.18.166 / SW 376. #269 = upgrades/contrast. Wacht «merge». |
 | 2026-09-14 | — | #267 op main+#266: EN VERLOREN, keep-loot, geen sticky lose-toasts, update-banner alleen op HOME. v1.18.165 / SW 375. Wacht «merge». |
 | 2026-09-14 | — | #266 LIVE: locale (VERLOREN NL, Tips-label, eilandkop) + stillere versie-banner + HOME. v1.18.163 / SW 373. |
 | 2026-09-14 | — | Start polish + unify HOME-tegels (Avontuur/Training/Collect/Settings/pauze). Naamveld weg. #265 folded. v1.18.162 / SW 372. #263 geparkeerd. |

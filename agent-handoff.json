@@ -13,17 +13,17 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.165",
-    "swCache": "stickfighter-app-v375",
-    "gameJsQuery": "game.js?v=375",
-    "cssQuery": "styles/main.css?v=375",
+    "appVersion": "1.18.166",
+    "swCache": "stickfighter-app-v376",
+    "gameJsQuery": "game.js?v=376",
+    "cssQuery": "styles/main.css?v=376",
     "featureBranch": "cursor/en-nl-lost-toast-834e",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": "90182c8",
     "remoteMainHead": "90182c8",
-    "note": "LIVE main v1.18.163 / SW 373 after #266. #267 MERGE-READY (v1.18.165 / SW 375): EN VERLOREN + keep-loot + quiet HOME update. Upgrades/drawer/weapons-contrast = c4a6 new PR — do not duplicate. Wait «merge».",
-    "updated": "2026-09-14T16:12:00Z"
+    "note": "LIVE main v1.18.163 / SW 373 after #266. #267 (v1.18.166 / SW 376): EN VERLOREN, NL no ROBOT WINS, result/streak/hub-arcade i18n, quiet HOME update. #269 owns upgrades/drawer/weapons-contrast. Wait «merge».",
+    "updated": "2026-09-14T16:20:00Z"
   },
   "githubSync": {
     "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
@@ -82,6 +82,13 @@
     ]
   },
   "userWishlist": [
+    {
+      "id": "w-20260914T161000",
+      "from": "user",
+      "text": "Stay on #267. Tighten EN-NL (VERLOREN, no ROBOT WINS in NL, toast/tooltip match UI). Sticky toasts / version chip. Keep-loot i18n. Upgrades/drawer/weapons-contrast only if still open here — #269 owns that, do not duplicate. No merge without «merge».",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
     {
       "id": "w-20260914T160800",
       "from": "user",
@@ -627,6 +634,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T16:15:52Z",
+      "summary": "#267 EN-NL strak: resultaat-titels i18n, NL geen ROBOT WINS, streak-shouts, v1.18.166/SW376. #269 = upgrades. Wacht «merge»."
+    },
+    {
       "at": "2026-09-14T16:09:29Z",
       "summary": "#267 merge-klaar (v1.18.165/SW375). Upgrades/drawer/contrast aan c4a6. Niet gemerged — wacht «merge»."
     },
@@ -721,10 +732,6 @@
     {
       "at": "2026-08-17T14:01:21Z",
       "summary": "GitHub-sync: PC==main; wachtlijst + vraag-bij-upload; tracking nog lokaal"
-    },
-    {
-      "at": "2026-08-17T10:21:10Z",
-      "summary": "PC-pull geregeld: pull-main.sh + GITHUB-PUSH is nu pull-kaart; main LIVE"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

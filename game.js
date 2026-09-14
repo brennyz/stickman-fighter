@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.165';
+const APP_VERSION = '1.18.166';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 375;
+const SW_CACHE_REV = 376;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1990,6 +1990,7 @@ const I18N = {
       upgrades: 'Upgrades', upgradesSub: 'Shards · technique uitrusten',
       dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
+      statTrain: '{n}× training', statWall: 'muur {n}', statMats: '{n} munten',
       loadFail: 'Hub laden mislukt',
     },
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
@@ -2007,6 +2008,7 @@ const I18N = {
     },
     result: { again: 'Opnieuw', next: 'Volgend level', menu: 'Hoofdmenu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Zelfde vechters',
       trainAgainSub: 'vs RabbitRobot',
+      advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
       advLoseKeep: 'XP en loot van deze run blijven',
       wavesStart: 'begin',
       xp: '+{xp} XP verdiend · nu Lv {lvl} ({cur}/{need} XP)' },
@@ -2110,6 +2112,7 @@ const I18N = {
       upgrades: 'Upgrades', upgradesSub: 'Shards · equip a technique',
       dex: 'Monster book', dexSub: '{n} species · rarity = HP · farm · zoo · sea',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
+      statTrain: '{n} train', statWall: 'wall {n}', statMats: '{n} coins',
       loadFail: 'Could not load hub',
     },
     modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Coins' },
@@ -2127,6 +2130,7 @@ const I18N = {
     },
     result: { again: 'Again', next: 'Next level', menu: 'Main menu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Same fighters',
       trainAgainSub: 'vs RabbitRobot',
+      advWin: 'VICTORY!', advLose: 'VERLOREN', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
       advLoseKeep: 'XP and loot from this run stay',
       wavesStart: 'start',
       xp: '+{xp} XP earned · now Lv {lvl} ({cur}/{need} XP)' },
@@ -2217,6 +2221,7 @@ const I18N = {
       upgrades: 'Upgrades', upgradesSub: 'Splitter · Technik ausrüsten',
       dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP · Farm · Zoo · Meer',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
+      statTrain: '{n}× Training', statWall: 'Mauer {n}', statMats: '{n} Münzen',
       loadFail: 'Hub laden fehlgeschlagen',
     },
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
@@ -2230,6 +2235,7 @@ const I18N = {
     },
     result: { again: 'Nochmal', next: 'Nächstes Level', menu: 'Hauptmenü', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Gleiche Kämpfer',
       trainAgainSub: 'vs RabbitRobot',
+      advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
       advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
       wavesStart: 'Start',
       xp: '+{xp} XP · jetzt Lv {lvl} ({cur}/{need} XP)' },
@@ -2301,6 +2307,7 @@ const I18N = {
       upgrades: 'Amélios', upgradesSub: 'Éclats · équiper une technique',
       dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV · ferme · zoo · mer',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
+      statTrain: '{n}× entraînement', statWall: 'mur {n}', statMats: '{n} pièces',
       loadFail: 'Hub introuvable',
     },
     modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Pièces' },
@@ -2314,6 +2321,7 @@ const I18N = {
     },
     result: { again: 'Rejouer', next: 'Niveau suivant', menu: 'Menu principal', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Mêmes combattants',
       trainAgainSub: 'vs RabbitRobot',
+      advWin: 'VICTOIRE !', advLose: 'DÉFAITE...', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
       advLoseKeep: 'XP et butin de cette run restent',
       wavesStart: 'début',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
@@ -2385,6 +2393,7 @@ const I18N = {
       upgrades: 'Mejoras', upgradesSub: 'Fragmentos · equipar técnica',
       dex: 'Bestiario', dexSub: '{n} especies · rareza = HP · granja · zoo · mar',
       modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
+      statTrain: '{n}× entrenamiento', statWall: 'muro {n}', statMats: '{n} monedas',
       loadFail: 'No se pudo cargar el hub',
     },
     modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Monedas' },
@@ -2398,6 +2407,7 @@ const I18N = {
     },
     result: { again: 'Otra vez', next: 'Siguiente nivel', menu: 'Menú principal', menuArcade: 'Arcade', rematch: 'Revancha', rematchSub: 'Mismos luchadores',
       trainAgainSub: 'vs RabbitRobot',
+      advWin: '¡VICTORIA!', advLose: 'DERROTA...', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
       advLoseKeep: 'XP y botín de esta run se quedan',
       wavesStart: 'inicio',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
@@ -11884,7 +11894,7 @@ function seedNlGameStrings() {
     advDetailWin: 'Level {lv} · {kills} monsters · {stars}★ · max combo ×{combo}{finishers}{streak}',
     advDetailLose: 'Level {lv} · {kills} monsters · max combo ×{combo}{finishers}{streak}',
     advDiffLine: '{diff} · ',
-    streakLine: ' · streak ×{n}',
+    streakLine: ' · reeks ×{n}',
     gambleLine: ' · gok: {text}',
     starGain: '+{n}★',
     starImproved: 'Nieuwe sterren! Was {prev}★ — nu {stars}★ · hou HP hoog voor meer',
@@ -11908,8 +11918,8 @@ function seedNlGameStrings() {
   });
   if (!I18N.nl.combat) I18N.nl.combat = {};
   Object.assign(I18N.nl.combat, {
-    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
-    streak8: 'RAMPAGE!', streak12: 'UNSTOPPABLE!', streakHold: 'STREAK ×{n} vast!',
+    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'REEKS ×3', streak5: 'IN VUUR!',
+    streak8: 'RAZEND!', streak12: 'NIET TE STOPPEN!', streakHold: 'REEKS ×{n} vast!',
     combo3: 'Combo ×3 — door!', combo5: 'Combo ×5 — netjes!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — meester!', comboN: 'COMBO ×{n}!',
     pickupHp: '+HP', pickupRage: 'RAGE ×1.4', pickupEnergy: 'Vol energy!', pickupShield: 'Schild!',
@@ -12487,11 +12497,11 @@ function seedNlGameStrings() {
     errStart: 'Start mislukt',
     errLevelStart: 'Level starten mislukt',
     hubStatNotPlayed: 'Nog niet gespeeld',
-    hubStatTrainWins: '{wins} wins{rec}',
+    hubStatTrainWins: '{wins}× gewonnen{rec}',
     hubStatTrainRecOnly: 'Record combo ×{n}',
     hubStatWallRec: 'Record {n}',
     hubStatWallEmpty: 'Nog geen score',
-    hubStatCoinsBest: 'Best {n} munten{pet}',
+    hubStatCoinsBest: 'Beste {n} munten{pet}',
     hubStatCoinsPet: ' · {n} pet PC',
     hubStatCoinsEmpty: 'Munten → pet coins',
     hubStatWeapons: '{n}/{total} vrij',
@@ -12499,7 +12509,9 @@ function seedNlGameStrings() {
     hubStatSkillShards: 'Shards in avontuur',
     hubStatPetsFull: 'dex {pets}/{total} · {coins} PC · ei {eggs}/{eggTotal}',
     hubStatPetsEmpty: '{total} dex · munten → pet coins',
-    hubStatStyle: '{n}/{total} outfits',
+    hubStatStyle: '{n}/{total} stijlen',
+    hubStatSkills: '{n}/{total} · {skill} · {super}',
+    hubStatSkillsEmpty: '{total} skills',
     hubStatDex: '{n}/{total} · +max HP',
     petCoinTip: 'Speel <b>munten bonus</b> voor pet coins (2 gouden munten = 1 PC). Koop pets hier, of tem via kills in het monsterboek. Pets volgen je in avontuur & training.',
     petSummaryTamed: 'Getemd <b>{tamed}/{total}</b> · actief <b>{active}</b> · <b>{wallet} pet coins</b>',
@@ -13337,6 +13349,8 @@ const CATALOG_EN = {
     hubStatPetsFull: 'dex {pets}/{total} · {coins} PC · egg {eggs}/{eggTotal}',
     hubStatPetsEmpty: '{total} dex · coins → pet coins',
     hubStatStyle: '{n}/{total} outfits',
+    hubStatSkills: '{n}/{total} · {skill} · {super}',
+    hubStatSkillsEmpty: '{total} specials',
     hubStatDex: '{n}/{total} · +max HP',
     petCoinTip: 'Play <b>coin bonus</b> for pet coins (2 gold coins = 1 PC). Buy pets here, or tame via monster book kills. Pets follow you in adventure & training.',
     petSummaryTamed: 'Tamed <b>{tamed}/{total}</b> · active <b>{active}</b> · <b>{wallet} pet coins</b>',
@@ -25733,6 +25747,17 @@ class Game {
     scheduleGameResult(this, win ? 1600 : 1400, () => UI.showResult(win, {
       titleKey: win ? 'result.advWin' : 'result.advLose',
       title: win ? t('result.advWin') : t('result.advLose'),
+      detailKey: win ? 'result.advDetailWin' : 'result.advDetailLose',
+      finishersN: this.runFinishers || 0,
+      streakN: this.sessionBestKillStreak || 0,
+      detailParams: {
+        lv, kills: this.kills, stars, combo: this.maxCombo || 0, finishers: '', streak: '',
+      },
+      keepLoot: !win,
+      diffLineKey: diff !== 'normal' ? 'result.advDiffLine' : '',
+      diffLineParams: diff !== 'normal' ? { diff: advDiffLabel(diff) } : undefined,
+      masterBuff: !!(masterBuffActive(lv, diff) && !win),
+      gambleRoll: this.gambleRoll || null,
       detail: (() => {
         const finishers = this.runFinishers ? t('result.finishersLine', { n: this.runFinishers }) : '';
         const streak = (this.sessionBestKillStreak || 0) >= 3
@@ -25798,7 +25823,12 @@ class Game {
     this.killStreak = (this.killStreak || 0) + 1;
     const ks = this.killStreak;
     if ([3, 5, 8, 12].includes(ks)) {
-      const msgs = { 3: 'STREAK ×3', 5: 'ON FIRE!', 8: 'RAMPAGE!', 12: 'UNSTOPPABLE!' };
+      const msgs = {
+        3: tOr('combat.streak3', 'STREAK ×3'),
+        5: tOr('combat.streak5', 'ON FIRE!'),
+        8: tOr('combat.streak8', 'RAMPAGE!'),
+        12: tOr('combat.streak12', 'UNSTOPPABLE!'),
+      };
       try { this.floater(W / 2, 128, msgs[ks], ks >= 8 ? '#ff7a4d' : '#ffd75e', 17); } catch (_) {}
       try { AudioSys.sfx(ks >= 8 ? 'comboEpic' : 'combo'); } catch (_) {}
       if (!motionReduced() && !fxLite()) {
@@ -26419,6 +26449,8 @@ class Game {
     scheduleGameResult(this, 1400, () => UI.showResult(win, {
       titleKey: win ? 'result.trainWin' : 'result.trainLose',
       title: win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'),
+      detailKey: win ? 'result.trainDetailWin' : 'result.trainDetailLose',
+      detailParams: { p: this.roundsP, r: this.roundsR, combo: trainBest, wins: save.trainWins },
       detail: win
         ? tOr('result.trainDetailWin', 'RabbitRobot verslagen ({p}-{r}) · max combo ×{combo} · {wins}× gewonnen', {
           p: this.roundsP, r: this.roundsR, combo: trainBest, wins: save.trainWins,
@@ -31510,10 +31542,10 @@ function hubTileStatLine(hub) {
     }
     case 'arcade': {
       const bits = [];
-      if (save.trainWins > 0) bits.push(`${save.trainWins} train`);
-      if (save.bestWall > 0) bits.push(`muur ${save.bestWall}`);
+      if (save.trainWins > 0) bits.push(tOr('hub.statTrain', '{n}× training', { n: save.trainWins }));
+      if (save.bestWall > 0) bits.push(tOr('hub.statWall', 'muur {n}', { n: save.bestWall }));
       const mats = save.stats?.matsCoinBest || 0;
-      if (mats > 0) bits.push(`mats ${mats}`);
+      if (mats > 0) bits.push(tOr('hub.statMats', '{n} munten', { n: mats }));
       const pc = petCoinsBalance();
       if (pc > 0) bits.push(`${pc} pet ${SVG_COIN_ICON}`);
       return bits.length ? bits.join(' · ') : t('hub.modes3');
@@ -32589,14 +32621,16 @@ const UI = {
         ? t('ui.hubStatPetsFull', { pets: petsN, total: PET_ROSTER.length, coins: pc, eggs: eggsN, eggTotal: EGG_ROSTER.length })
         : t('ui.hubStatPetsEmpty', { total: PET_ROSTER.length }));
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
-      setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
+      setStat('hubStatStyle', t('ui.hubStatStyle', { n: stylesN, total: STYLES.length }));
       const skillsN = skillUnlockedCount();
       const activeSk = skillById(save.skill || 'spiral_orb');
       const activeSp = equippedSuper();
       setStat('hubStatSkills', skillsN > 0
-        ? `${skillsN}/${SKILLS.length} · ${skillLabel(activeSk)} · ${superLabel(activeSp)}`
-        : `${SKILLS.length} specials`);
-      setStat('hubStatDex', `${dexCount()}/${SPECIES_ORDER.length} · +max HP`);
+        ? tOr('ui.hubStatSkills', '{n}/{total} · {skill} · {super}', {
+          n: skillsN, total: SKILLS.length, skill: skillLabel(activeSk), super: superLabel(activeSp),
+        })
+        : tOr('ui.hubStatSkillsEmpty', '{total} specials', { total: SKILLS.length }));
+      setStat('hubStatDex', t('ui.hubStatDex', { n: dexCount(), total: SPECIES_ORDER.length }));
     }
   },
 
@@ -35082,14 +35116,38 @@ const UI = {
     const titleKey = data.titleKey || (data.mode === 'training'
       ? (win ? 'result.trainWin' : 'result.trainLose')
       : (win ? 'result.advWin' : 'result.advLose'));
-    const painted = (typeof tOr === 'function')
-      ? tOr(titleKey, data.title || (win ? 'GEWONNEN!' : 'VERLOREN'))
-      : (data.title || (win ? 'GEWONNEN!' : 'VERLOREN'));
+    const titleFallback = data.mode === 'training'
+      ? (win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'))
+      : (win ? tOr('result.advWin', 'GEWONNEN!') : tOr('result.advLose', 'VERLOREN'));
+    // Never reuse a stale English title (ROBOT WINS / YOU LOST) when the UI is NL.
+    const painted = (typeof tOr === 'function') ? tOr(titleKey, titleFallback) : titleFallback;
     title.textContent = painted;
     data.titleKey = titleKey;
+    data.title = painted;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
     const detailEl = document.getElementById('resDetail');
-    if (detailEl) detailEl.textContent = data.detail;
+    if (detailEl) {
+      let detail = data.detail || '';
+      if (data.detailKey) {
+        const params = Object.assign({}, data.detailParams || {});
+        if (data.finishersN) params.finishers = tOr('result.finishersLine', '', { n: data.finishersN });
+        if (data.streakN >= 3) params.streak = tOr('result.streakLine', '', { n: data.streakN });
+        detail = tOr(data.detailKey, detail, params);
+        if (data.diffLineKey) detail = tOr(data.diffLineKey, '', data.diffLineParams || {}) + detail;
+        if (data.keepLoot) {
+          const keep = tOr('result.advLoseKeep', 'XP en loot van deze run blijven');
+          if (keep) detail = keep + ' · ' + detail;
+        }
+        if (data.masterBuff) detail += tOr('result.masterBuffActive', '');
+        if (data.gambleRoll && data.gambleRoll.outcome && data.gambleRoll.outcome !== 'neutral'
+          && typeof gambleOutcomeLabelFromKey === 'function') {
+          const gText = gambleOutcomeLabelFromKey(data.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48);
+          if (gText) detail += tOr('result.gambleLine', '', { text: gText });
+        }
+      }
+      detailEl.textContent = detail;
+      data.detail = detail;
+    }
     const lootEl = document.getElementById('resLoot');
     if (lootEl) {
       const html = formatRunLootHtml(game && game.runLoot, data.mode);

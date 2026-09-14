@@ -845,10 +845,10 @@ function hubTileStatLine(hub) {
     }
     case 'arcade': {
       const bits = [];
-      if (save.trainWins > 0) bits.push(`${save.trainWins} train`);
-      if (save.bestWall > 0) bits.push(`muur ${save.bestWall}`);
+      if (save.trainWins > 0) bits.push(tOr('hub.statTrain', '{n}× training', { n: save.trainWins }));
+      if (save.bestWall > 0) bits.push(tOr('hub.statWall', 'muur {n}', { n: save.bestWall }));
       const mats = save.stats?.matsCoinBest || 0;
-      if (mats > 0) bits.push(`mats ${mats}`);
+      if (mats > 0) bits.push(tOr('hub.statMats', '{n} munten', { n: mats }));
       const pc = petCoinsBalance();
       if (pc > 0) bits.push(`${pc} pet ${SVG_COIN_ICON}`);
       return bits.length ? bits.join(' · ') : t('hub.modes3');
@@ -1924,14 +1924,16 @@ const UI = {
         ? t('ui.hubStatPetsFull', { pets: petsN, total: PET_ROSTER.length, coins: pc, eggs: eggsN, eggTotal: EGG_ROSTER.length })
         : t('ui.hubStatPetsEmpty', { total: PET_ROSTER.length }));
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
-      setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
+      setStat('hubStatStyle', t('ui.hubStatStyle', { n: stylesN, total: STYLES.length }));
       const skillsN = skillUnlockedCount();
       const activeSk = skillById(save.skill || 'spiral_orb');
       const activeSp = equippedSuper();
       setStat('hubStatSkills', skillsN > 0
-        ? `${skillsN}/${SKILLS.length} · ${skillLabel(activeSk)} · ${superLabel(activeSp)}`
-        : `${SKILLS.length} specials`);
-      setStat('hubStatDex', `${dexCount()}/${SPECIES_ORDER.length} · +max HP`);
+        ? tOr('ui.hubStatSkills', '{n}/{total} · {skill} · {super}', {
+          n: skillsN, total: SKILLS.length, skill: skillLabel(activeSk), super: superLabel(activeSp),
+        })
+        : tOr('ui.hubStatSkillsEmpty', '{total} specials', { total: SKILLS.length }));
+      setStat('hubStatDex', t('ui.hubStatDex', { n: dexCount(), total: SPECIES_ORDER.length }));
     }
   },
 
@@ -4417,14 +4419,38 @@ const UI = {
     const titleKey = data.titleKey || (data.mode === 'training'
       ? (win ? 'result.trainWin' : 'result.trainLose')
       : (win ? 'result.advWin' : 'result.advLose'));
-    const painted = (typeof tOr === 'function')
-      ? tOr(titleKey, data.title || (win ? 'GEWONNEN!' : 'VERLOREN'))
-      : (data.title || (win ? 'GEWONNEN!' : 'VERLOREN'));
+    const titleFallback = data.mode === 'training'
+      ? (win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'))
+      : (win ? tOr('result.advWin', 'GEWONNEN!') : tOr('result.advLose', 'VERLOREN'));
+    // Never reuse a stale English title (ROBOT WINS / YOU LOST) when the UI is NL.
+    const painted = (typeof tOr === 'function') ? tOr(titleKey, titleFallback) : titleFallback;
     title.textContent = painted;
     data.titleKey = titleKey;
+    data.title = painted;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
     const detailEl = document.getElementById('resDetail');
-    if (detailEl) detailEl.textContent = data.detail;
+    if (detailEl) {
+      let detail = data.detail || '';
+      if (data.detailKey) {
+        const params = Object.assign({}, data.detailParams || {});
+        if (data.finishersN) params.finishers = tOr('result.finishersLine', '', { n: data.finishersN });
+        if (data.streakN >= 3) params.streak = tOr('result.streakLine', '', { n: data.streakN });
+        detail = tOr(data.detailKey, detail, params);
+        if (data.diffLineKey) detail = tOr(data.diffLineKey, '', data.diffLineParams || {}) + detail;
+        if (data.keepLoot) {
+          const keep = tOr('result.advLoseKeep', 'XP en loot van deze run blijven');
+          if (keep) detail = keep + ' · ' + detail;
+        }
+        if (data.masterBuff) detail += tOr('result.masterBuffActive', '');
+        if (data.gambleRoll && data.gambleRoll.outcome && data.gambleRoll.outcome !== 'neutral'
+          && typeof gambleOutcomeLabelFromKey === 'function') {
+          const gText = gambleOutcomeLabelFromKey(data.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48);
+          if (gText) detail += tOr('result.gambleLine', '', { text: gText });
+        }
+      }
+      detailEl.textContent = detail;
+      data.detail = detail;
+    }
     const lootEl = document.getElementById('resLoot');
     if (lootEl) {
       const html = formatRunLootHtml(game && game.runLoot, data.mode);
