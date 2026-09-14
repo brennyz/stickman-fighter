@@ -152,6 +152,21 @@ const I18N = {
       7: { name: 'Hel', sub: 'Lv 61–70' },
       progress: 'Eiland {cur}/7 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
     },
+    buildings: {
+      title: 'Fabrieken',
+      sub: 'Eiland-fabrieken · levels · timed resources — stub voor UI/art/powers',
+      loadFail: 'Fabrieken laden mislukt',
+      build: 'Bouwen', collect: 'Ophalen', upgrade: 'Upgrade',
+      buildHint: 'Bouwen als eiland open is',
+      lockedWorld: 'Unlock: eiland {n}',
+      rateLine: '{n}/uur · {pending} wacht · cap {cap}',
+      stick_lighter: { name: 'Stok-Aansteker Fabriek', blurb: 'Scheef schuurtje dat stokken tegen elkaar wrijft tot ze vonken geven.' },
+      woodchip_glue: { name: 'Houtsnipper-Lijm Fabriek', blurb: 'Kookt zaagsel tot een pasta die harder plakt dan een combo. Niet likken.' },
+      chipping_wood: { name: 'Versnipper-Hout Fabriek', blurb: 'Vrolijke versnipperaar die TIMBER fluistert en nuttige snippers hoest.' },
+      bamboo_boesa: { name: 'Bamboe-Boesa Ketel', blurb: 'Vuur-ketel die holle boesa-bamboe stoomt tot de stengels fluiten.' },
+      echo_whistle: { name: 'Echo-Fluitmolen', blurb: 'Molenrad dat lucht tot taunts maalt. Het gebouw scheldt terug.' },
+      res: { spark: 'Vonken', glue: 'Lijm', chip: 'Snippers', steam: 'Stoom', echo: 'Echo' },
+    },
     rarity: { common: 'Gewoon', uncommon: 'Ongewoon', rare: 'Zeldzaam', epic: 'Episch', legendary: 'Legendarisch', mythic: 'Mythisch', nightmare: 'Nachtmerrie', hell: 'Hel' },
     audio: {
       musicOff: 'Muziek uit', sfxOff: 'Geluid uit', musicPct: 'Muziek {pct}%', sfxPct: 'SFX {pct}%',
@@ -309,6 +324,21 @@ const I18N = {
       6: { name: 'Nightmare', sub: 'Lv 51–60' },
       7: { name: 'Hell', sub: 'Lv 61–70' },
       progress: 'Island {cur}/7 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
+    },
+    buildings: {
+      title: 'Factories',
+      sub: 'Island factories · levels · timed resources — stub for UI/art/powers',
+      loadFail: 'Could not load factories',
+      build: 'Build', collect: 'Collect', upgrade: 'Upgrade',
+      buildHint: 'Build once the island is open',
+      lockedWorld: 'Unlock: island {n}',
+      rateLine: '{n}/hr · {pending} waiting · cap {cap}',
+      stick_lighter: { name: 'Stick-Lighter Factory', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
+      woodchip_glue: { name: 'Woodchip-Glue Factory', blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.' },
+      chipping_wood: { name: 'Chipping-Wood Factory', blurb: 'A cheerful chipper that whispers TIMBER and coughs useful chips.' },
+      bamboo_boesa: { name: 'Bamboo-Boesa Boiler', blurb: 'Fire-island kettle that steams hollow “boesa” bamboo until the stalks whistle.' },
+      echo_whistle: { name: 'Echo-Whistle Mill', blurb: 'A mill wheel that turns air into taunts. The building heckles you back.' },
+      res: { spark: 'Spark', glue: 'Glue', chip: 'Chip', steam: 'Steam', echo: 'Echo' },
     },
     rarity: { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary', mythic: 'Mythic', nightmare: 'Nightmare', hell: 'Hell' },
     audio: {
@@ -1013,6 +1043,8 @@ function applyLangStaticScreens() {
     if (d) d.innerHTML = t('pets.crackEgg') + '<small>' + t('pets.crackEggSub') + '</small>';
   }
 
+  setText('buildingsScreenHead', 'buildings.title');
+  setText('buildingsScreenSub', 'buildings.sub');
   setText('dexScreenHead', 'dex.title');
   setText('dexScreenSub', 'dex.sub', typeof SPECIES_ORDER !== 'undefined' ? { n: SPECIES_ORDER.length } : undefined);
   setText('helpHead', 'help.title');

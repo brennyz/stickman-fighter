@@ -76,6 +76,7 @@ const mutators = [
   (s) => { s.stats = null; },
   (s) => { s.skillUpgrades = { spiral_orb: { level: 999, shards: -5 } }; },
   (s) => { s.itemUpgrades = { weapon: { fake: { level: 9 } }, hacker: { x: 1 } }; },
+  (s) => { s.buildings = { sawmill: { level: 9 }, stick_lighter: { level: 'max', stored: -2 } }; s.buildingRes = { plutonium: 3, ember_sticks: 2 }; },
   (s) => { s.achievements = '[]'; },
   (s) => { s.activeTechnique = 42; },
   (s) => { s.gear = { schema: 99, equipped: { charm: 'charm_void', head: 1 }, owned: ['nope', 'head_wrap_cloth'] }; s.createdAt = 'soon'; },

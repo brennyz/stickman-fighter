@@ -11,6 +11,7 @@
   "src/data/gear-world.js",
   "src/data/equip-look.js",
   "src/data/upgrades.js",
+  "src/data/buildings.js",
   "src/data/summons.js",
   "src/data/skills.js",
   "src/data/supers.js",

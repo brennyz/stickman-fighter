@@ -46,6 +46,7 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   gear: { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} },
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0, dailyStreak: 0, dailyStreakBest: 0, lastDayBonusDate: null, playSec: 0 },
   fomo: { ritualSeenDate: null, lastOpenDate: null, lastComebackDate: null, dailyShardDate: null, arcadeStampDate: null, sneakWeekKey: null, sneakCleared: false, starChestWeekKey: null, featureIds: null },
+  buildings: { schema: 1, factories: {}, wallet: {} },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
 
 const AIM_COLOR_DEFAULT = '#7cf5ff';
@@ -924,8 +925,15 @@ function saveProgressScore(s) {
     for (const v of Object.values(bag)) itUp += Math.floor(Number(v && v.level) || 0);
   }
   const petCoins = Math.floor(Number(s.petCoins) || 0);
+  let bLv = 0;
+  const fac = s.buildings && s.buildings.factories;
+  if (fac && typeof fac === 'object') {
+    for (const v of Object.values(fac)) bLv += Math.floor(Number(v && v.level) || 0);
+  } else if (s.buildings && typeof s.buildings === 'object') {
+    for (const v of Object.values(s.buildings)) bLv += Math.floor(Number(v && v.level) || 0);
+  }
   return unlocked * 1e12 + lvl * 1e9 + xp * 1e6 + ach * 1e5 + dex * 1e4
-    + dexKills * 1e3 + starSum * 1e2 + statSum + skUp * 15 + itUp * 12 + petCoins;
+    + dexKills * 1e3 + starSum * 1e2 + statSum + skUp * 15 + itUp * 12 + petCoins + bLv * 9;
 }
 
 function pickBestSave(primary, backup) {
@@ -1030,17 +1038,12 @@ function readSaveJson(raw) {
       merged.gear = { schema: 1, equipped, owned };
       if (parsed.createdAt != null) merged.createdAt = parsed.createdAt;
     }
-    if (parsed.chestDaily && typeof parsed.chestDaily === 'object') merged.chestDaily = Object.assign({}, parsed.chestDaily);
-    {
-      const emptyEq = { head: null, chest: null, hands: null, legs: null, back: null };
-      const gIn = (parsed.gear && typeof parsed.gear === 'object') ? parsed.gear : {};
-      merged.gear = {
-        schema: 1,
-        equipped: Object.assign({}, emptyEq, (gIn.equipped && typeof gIn.equipped === 'object') ? gIn.equipped : {}),
-        owned: Object.assign({}, (gIn.owned && typeof gIn.owned === 'object') ? gIn.owned : {}),
-      };
-      if (parsed.createdAt != null) merged.createdAt = parsed.createdAt;
+    merged.buildings = (parsed.buildings && typeof parsed.buildings === 'object' && !Array.isArray(parsed.buildings))
+      ? Object.assign({}, parsed.buildings) : { schema: 1, factories: {}, wallet: {} };
+    if (parsed.buildingRes && typeof parsed.buildingRes === 'object' && !Array.isArray(parsed.buildingRes)) {
+      merged.buildingRes = Object.assign({}, parsed.buildingRes);
     }
+    if (parsed.chestDaily && typeof parsed.chestDaily === 'object') merged.chestDaily = Object.assign({}, parsed.chestDaily);
     merged.advCleared = Object.assign(
       { normal: false, nightmare: false, hell: false },
       (parsed.advCleared && typeof parsed.advCleared === 'object') ? parsed.advCleared : {}
@@ -1301,6 +1304,13 @@ function saveHasProgress(s) {
   if (Object.keys(st.summons || {}).length > 0) return true;
   if (Object.keys(st.pets || {}).length > 0) return true;
   if (st.gear && st.gear.owned && Object.keys(st.gear.owned).length > 0) return true;
+  if (st.buildings && typeof st.buildings === 'object') {
+    const fac = (st.buildings.factories && typeof st.buildings.factories === 'object')
+      ? st.buildings.factories : st.buildings;
+    for (const v of Object.values(fac)) {
+      if (v && typeof v === 'object' && Math.floor(Number(v.level) || 0) > 0) return true;
+    }
+  }
   return false;
 }
 
@@ -1788,6 +1798,13 @@ function sanitizeSave(s) {
 
   if (skillSnap && typeof restoreLostSkillUpgrades === 'function') restoreLostSkillUpgrades(skillSnap, out);
   if (itemSnap && typeof restoreLostItemUpgrades === 'function') restoreLostItemUpgrades(itemSnap, out);
+
+  if (typeof sanitizeBuildingSave === 'function') sanitizeBuildingSave(out);
+  else {
+    out.buildings = (out.buildings && typeof out.buildings === 'object' && !Array.isArray(out.buildings))
+      ? out.buildings : { schema: 1, factories: {}, wallet: {} };
+    delete out.buildingRes;
+  }
 
   out.petCoins = clamp(Math.floor(Number(out.petCoins) || 0), 0, 999999);
   if (out.lang != null && typeof SUPPORTED_LANGS !== 'undefined' && !SUPPORTED_LANGS.includes(out.lang)) {

@@ -816,6 +816,7 @@ function bootGame() {
     const hadCorruptPrimary = saveStorageDiagnostics().primaryCorrupt;
     const beforeSave = Object.assign({}, save);
     save = sanitizeSave(save || Object.assign({}, DEFAULT_SAVE));
+    try { if (typeof buildingTickAll === 'function') buildingTickAll(save); } catch (_) {}
     const repairNotes = saveSanitizeNotes(beforeSave, save);
     persist();
     if (repairNotes.length && !hadCorruptPrimary && !window.__sfRecoveredBackup) {

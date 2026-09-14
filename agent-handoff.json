@@ -792,6 +792,13 @@
       "status": "done-in-code",
       "updated": "2026-09-14",
       "notes": "Superseded by editor pivot: alias-first onto #282. Unique P1 drawers abandoned. All 36 W2 arts aliased."
+    },
+    {
+      "id": "w-20260914T171552",
+      "from": "user",
+      "text": "BUILDINGS SYSTEMS (1 of 4): catalog of exactly 5 quirky factories (Stick-Lighter, Woodchip-Glue, Chipping-Wood, Bamboo-Boesa Boiler, Echo-Whistle Mill). Data model + save + unlock-by-world + upgrade helpers + docs/BUILDINGS.md. Android-first, no Versus, draft PR, DO NOT merge main (mega-merge batch).",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
     }
   ],
   "agentRules": [
