@@ -578,6 +578,9 @@ class Monster {
 function drawMonsterArt(c, sp, r, t, flash, telegraph) {
   if (!sp || !c) return;
   r = clamp(Number(r) || 24, 6, 120);
+  if (typeof drawMonsterPixelArt === 'function' && drawMonsterPixelArt(c, sp, r, t, flash, telegraph)) {
+    return;
+  }
   const body = flash ? (motionReduced() ? sp.c1 : '#ffffff') : (sp.c1 || '#888');
   const dark = flash ? (motionReduced() ? sp.c2 : '#dddddd') : (sp.c2 || '#444');
   const sq = 1 + Math.sin(t * 5) * 0.05;

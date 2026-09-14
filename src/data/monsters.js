@@ -290,6 +290,9 @@ const SPECIES = {
     tideGaruda: { name: 'Stormarend', art: 'tideHawk', size: 34, hp: 310, dmg: 26, speed: 110, type: 'fly', xp: 118, rarity: 'mythic', c1: '#7cf5ff', c2: '#2a6090' },
     tideCerber: { name: 'Driekoppige Jachthond', art: 'tideHound', size: 36, hp: 345, dmg: 29, speed: 92, type: 'charge', xp: 124, rarity: 'mythic', c1: '#505868', c2: '#202830' },
 };
+for (const _spId of Object.keys(SPECIES)) {
+  if (SPECIES[_spId] && !SPECIES[_spId].id) SPECIES[_spId].id = _spId;
+}
 const SPECIES_ORDER = Object.keys(SPECIES).sort((a, b) =>
   (rarityOf(SPECIES[a].rarity).order - rarityOf(SPECIES[b].rarity).order) || SPECIES[a].name.localeCompare(SPECIES[b].name)
 );
