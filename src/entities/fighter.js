@@ -93,7 +93,13 @@ class Fighter {
       const energyCost = skillEnergyCost(jKind);
       if (!this.isRobot) {
         if (this.energy < energyCost) {
-          if (this.isPlayer) game.floater(this.x, this.y - 110, 'Energy niet vol!', '#7cf5ff', 13);
+          if (this.isPlayer) {
+            const have = Math.floor(this.energy);
+            const need = Math.ceil(energyCost);
+            game.floater(this.x, this.y - 110,
+              tOr('combat.energyNotFull', 'Energy {have}/{need} — sla om te vullen', { have, need }),
+              '#7cf5ff', 13);
+          }
           return;
         }
         this.energy = 0;
@@ -279,9 +285,13 @@ class Fighter {
       return out;
     }
 
-    // reactief blokkeren als de speler aanvalt en dichtbij is
+    // reactief blokkeren — training first fights stay readable (hits must chip HP)
     if (p.attack && p.attack.t < p.attack.windup + p.attack.active && dist < 130 && !this.attack) {
-      if (Math.random() < 0.55 * diff * dt * 22) { this.blockT = 0.42; }
+      const trainWins = (typeof save !== 'undefined' && save && save.trainWins) || 0;
+      const blockRate = game.mode === 'training'
+        ? (trainWins >= 3 ? 0.22 : trainWins >= 1 ? 0.1 : 0.03)
+        : 0.55;
+      if (Math.random() < blockRate * diff * dt * 22) { this.blockT = 0.42; }
     }
     if (this.blockT > 0) { this.blockT -= dt; out.block = true; return out; }
 
@@ -536,8 +546,13 @@ class Fighter {
     if (!this.alive) return 0;
     if ((this.isPlayer || this.playerSlot) && game && game.ketsbamSuperT > 0) return 0;
     if (this.invulnT > 0) {
-      if (game) game.floater(this.x, this.y - 115, 'MISS!', '#c9a66b', 13, 'fx');
-      return 0;
+      // Player i-frames are survival, not a whiff. Robot/AI should not eat hits.
+      if (this.isPlayer || this.playerSlot) {
+        if (game && !opts.quiet) {
+          game.floater(this.x, this.y - 115, tOr('combat.protected', 'Beschermd!'), '#cfe0ff', 13, 'fx');
+        }
+        return 0;
+      }
     }
     if (this.blocking && !opts.unblockable) {
       const blockMul = (this.isPlayer && game && game.styleBlockMul) ? game.styleBlockMul : 1;
@@ -545,7 +560,13 @@ class Fighter {
       AudioSys.sfx('block');
       const atk = opts.attacker && opts.attacker.attack;
       const parry = atk && atk.t >= atk.windup && atk.t <= atk.windup + 0.16;
-      if (game) game.floater(this.x, this.y - 115, parry ? 'PARRY!' : 'BLOK!', parry ? '#ffd75e' : '#9fd8ff', 14, 'fx');
+      if (game) {
+        game.floater(this.x, this.y - 115,
+          parry
+            ? tOr('combat.parry', 'PARRY!')
+            : tOr('combat.blockChip', 'BLOK −{n}', { n: dmg }),
+          parry ? '#ffd75e' : '#9fd8ff', 14, 'fx');
+      }
       if (game) {
         applyHitStop(game, { kind: 'punch' }, { chip: true });
         if (parry) game.freezeT = Math.max(game.freezeT, 0.032);
@@ -557,7 +578,7 @@ class Fighter {
     }
     if (this.isPlayer && game && game.playerShieldT > 0) {
       dmg = Math.max(1, Math.round(dmg * 0.32));
-      game.floater(this.x, this.y - 115, 'Schild!', '#9fd8ff', 13, 'fx');
+      game.floater(this.x, this.y - 115, tOr('combat.pickupShield', 'Schild!'), '#9fd8ff', 13, 'fx');
     }
     dmg = Math.round(dmg);
     if (this.isPlayer && game && game.styleDefMul && game.styleDefMul !== 1) {

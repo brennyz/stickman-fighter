@@ -47,21 +47,24 @@ function adventureTelegraphHud(m) {
 }
 
 function drawTelegraphBar(c, game, tele, y) {
-  const barW = Math.min(280, W - 40);
+  const barW = Math.min(320, W - 32);
   const bx = (W - barW) / 2;
-  const tall = !!(tele && tele.max >= 0.55);
-  c.fillStyle = 'rgba(0,0,0,.52)';
-  game.rr(c, bx - 6, y - 16, barW + 12, tall ? 28 : 24, 9);
+  c.fillStyle = 'rgba(0,0,0,.62)';
+  game.rr(c, bx - 8, y - 20, barW + 16, 34, 10);
   c.fill();
-  c.font = tall ? '900 13px sans-serif' : '800 11px sans-serif';
+  c.font = '900 15px sans-serif';
   c.textAlign = 'center';
-  c.fillStyle = tele.color;
-  c.fillText(tele.label, W / 2, y);
-  c.fillStyle = 'rgba(255,255,255,.18)';
-  game.rr(c, bx, y + 6, barW, tall ? 7 : 5, 3);
+  if (typeof fillHudText === 'function') {
+    fillHudText(c, tele.label, W / 2, y, { fill: tele.color, strokeW: 3 });
+  } else {
+    c.fillStyle = tele.color;
+    c.fillText(tele.label, W / 2, y);
+  }
+  c.fillStyle = 'rgba(255,255,255,.2)';
+  game.rr(c, bx, y + 8, barW, 8, 4);
   c.fill();
   c.fillStyle = tele.color;
-  game.rr(c, bx, y + 6, barW * clamp(tele.frac, 0, 1), tall ? 7 : 5, 3);
+  game.rr(c, bx, y + 8, barW * clamp(tele.frac, 0, 1), 8, 4);
   c.fill();
 }
 
@@ -152,6 +155,7 @@ class Game {
       applyPetBonusesToPlayer(this, this.player);
       spawnGamePet(this);
       spawnGameEggPet(this);
+      if (mode === 'adventure') this.player.energy = 45;
     }
 
     if (mode === 'adventure') {
@@ -311,6 +315,10 @@ class Game {
       if (typeof playFightBgm === 'function') playFightBgm(this.level.boss ? 'boss' : 'battle');
       else AudioSys.play(this.level.boss ? 'boss' : 'battle');
     } catch (_) {}
+    // Spawn grace only for a normal opener — never during Satan (reflect must land).
+    if (this.player && n <= 3 && !this.satanPending && !this.satanActive) {
+      this.player.invulnT = Math.max(this.player.invulnT || 0, 1.35);
+    }
   }
 
   maybeRollMasterSword() {
@@ -682,9 +690,10 @@ class Game {
         const meta = this.level.waveMeta && this.level.waveMeta[this.waveIdx];
         const spawnMul = (meta && meta.spawnMul) || 1;
         const queueLeft = this.spawnQueue.length;
-        const batch = queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1;
-        const intervalMul = queueLeft > 20 ? 0.72 : queueLeft > 10 ? 0.86 : 1;
-        this.spawnTimer = (bossWave ? 0.92 : 0.38) * spawnMul * intervalMul;
+        const opener = this.level && this.level.n <= 2 && this.waveIdx === 0;
+        const batch = opener ? 1 : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1);
+        const intervalMul = opener ? 1.55 : (queueLeft > 20 ? 0.72 : queueLeft > 10 ? 0.86 : 1);
+        this.spawnTimer = (bossWave ? 0.92 : (opener ? 0.78 : 0.38)) * spawnMul * intervalMul;
         for (let b = 0; b < batch && this.spawnQueue.length && this.monsters.filter((m) => m.alive).length < ADVENTURE_MAX_ALIVE; b++) {
           const def = this.spawnQueue.shift();
           if (!def || !def.sp || !SPECIES[def.sp]) continue;
@@ -1124,6 +1133,7 @@ class Game {
       this.satanPending = false;
       this.satanDelayT = 0;
       this.satanActive = true;
+      if (this.player) this.player.invulnT = 0;
       markSatanEncounterStarted(this.level.n, this.advDiff);
       this.spawnQueue = [];
       this.monsters = this.monsters.filter((m) => m && m.satanBoss);
@@ -1425,7 +1435,7 @@ class Game {
       weapon: weaponById('vuist'),
     });
     this.robot.aiDiff = diff;
-    this.robotMaxHp = Math.round(110 + save.lvl * 9 + save.trainWins * 14);
+    this.robotMaxHp = Math.round(88 + save.lvl * 8 + Math.min(save.trainWins, 12) * 14);
     this.trainTelegraphT = 0;
     this.trainPierceTeleMax = 0.42;
     this.trainMeleeTelegraphT = 0;
@@ -1447,7 +1457,7 @@ class Game {
     const st = playerStats();
     this.player.hp = this.player.maxhp = st.maxhp;
     this.player.x = W * 0.25; this.player.y = this.ground; this.player.vx = 0; this.player.face = 1;
-    this.player.attack = null; this.player.hurtT = 0; this.player.energy = 30;
+    this.player.attack = null; this.player.hurtT = 0; this.player.energy = 45;
     resetWeaponCombo(this.player);
     this.robot.hp = this.robot.maxhp = this.robotMaxHp;
     this.robot.x = W * 0.75; this.robot.y = this.ground; this.robot.vx = 0; this.robot.face = -1;
@@ -1592,12 +1602,14 @@ class Game {
     const trainBest = this.trainComboBest || 0;
     const trainTip = win
       ? (trainBest >= 8
-        ? `Combo-trainer: max ×${trainBest} — bonus XP!`
-        : (save.trainWins === 3 ? 'Nieuwe stijl vrij: Energie gloed — Instellingen → Stijl!' : 'Unlock stijlen door meer train-wins!'))
-      : onceResultTip('training', 'loss', t('combat.trainLossTip'))
-        || t('combat.trainTipDefault');
+        ? tOr('result.trainComboRecord', 'Combo-trainer: ×{n}', { n: trainBest })
+        : (save.trainWins === 3
+          ? tOr('result.trainStyleUnlock', 'Nieuwe stijl vrij: Energie gloed — Instellingen → Stijl!')
+          : tOr('result.trainStyleMore', 'Unlock stijlen door meer train-wins!')))
+      : onceResultTip('training', 'loss', tOr('combat.trainLostTip', tOr('combat.trainLossTip', 'Spring tijdens LIGHTNING PIERCE — robot mist · spring oor-lasers')))
+        || tOr('combat.trainTipDefault', 'Tip: spring lasers · energy vol → Spiral Orb');
     scheduleGameResult(this, 1400, () => UI.showResult(win, {
-      title: win ? 'KAMPIOEN!' : 'ROBOT WINT...',
+      title: win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'),
       detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · max combo ×${trainBest}` +
         (win ? ` · ${save.trainWins}x gewonnen` : ''),
       xp: this.sessionXP, mode: 'training', win,
@@ -2639,6 +2651,13 @@ class Game {
     for (const tgt of targets) {
       if (!tgt.alive) continue;
       if ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2) {
+        const hitRoll = rollHitDamage(f, spec, 1);
+        const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
+        const counter = isCounterHitWindow(tgt);
+        const dmg = tgt.takeDamage(hitRoll.dmg, kbHit, this, {
+          unblockable: spec.unblockable, attacker: f, kind: spec.kind,
+        });
+        if (dmg <= 0) continue;
         if (this.mode === 'training' && f.isPlayer) {
           this.combo = Math.min(12, this.combo + 1);
           f._chainKind = spec.kind;
@@ -2651,24 +2670,20 @@ class Game {
             goals[this.combo] = 1;
             AudioSys.sfx('combo');
             const labels = {
-              3: 'Combo ×3 — door!',
-              5: 'Combo ×5 — netjes!',
-              8: 'Combo ×8 — pro!',
-              10: 'Combo ×10 — meester!',
+              3: tOr('combat.combo3', 'Combo ×3 — door!'),
+              5: tOr('combat.combo5', 'Combo ×5 — netjes!'),
+              8: tOr('combat.combo8', 'Combo ×8 — pro!'),
+              10: tOr('combat.combo10', 'Combo ×10 — meester!'),
             };
             this.floater(f.x + f.face * 30, f.y - 130, labels[this.combo], '#ffd75e', 16);
             haptic(8 + this.combo);
           }
         }
-        const hitRoll = rollHitDamage(f, spec, 1);
-        const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
-        const counter = isCounterHitWindow(tgt);
-        const dmg = tgt.takeDamage(hitRoll.dmg, kbHit, this, {
-          unblockable: spec.unblockable, attacker: f, kind: spec.kind,
-        });
         if (hitRoll.crit) applyCritFx(this, tgt.x, tgt.y);
         const col = tgt.playerSlot === 2 ? '#ffb0b8' : (tgt.isPlayer ? '#ff8080' : '#ffe680');
-        this.floater(tgt.x, tgt.y - 115, (counter ? t('combat.counter') + ' ' : '') + '-' + dmg, col, 16);
+        if (!tgt.blocking) {
+          this.floater(tgt.x, tgt.y - 115, (counter ? t('combat.counter') + ' ' : '') + '-' + dmg, col, 16);
+        }
         this.burst(tgt.bodyX, tgt.bodyY, col, 7);
         applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);

@@ -198,6 +198,15 @@ function seedNlGameStrings() {
     vsHpEven: 'HP gelijk — TIME telt!',
     coinPlus1: '+1 munt', coinPlus3: '+3 munten',
     spiral_orbCd: 'Spiral Orb CD {s}s',
+    trainLostTip: 'Spring tijdens LIGHTNING PIERCE — robot mist · spring oor-lasers',
+    trainLossTip: 'Spring tijdens LIGHTNING PIERCE — robot mist · spring oor-lasers',
+    trainTipDefault: 'Tip: spring lasers · energy vol → Spiral Orb',
+    energyNotFull: 'Energy {have}/{need} — sla om te vullen',
+    protected: 'Beschermd!',
+    iframe: 'Beschermd!',
+    blockChip: 'BLOK −{n}',
+    parry: 'PARRY!',
+    miss: 'MIS!',
   });
   if (!I18N.nl.toast) I18N.nl.toast = {};
   Object.assign(I18N.nl.toast, {
@@ -1660,6 +1669,15 @@ const CATALOG_EN = {
     vsHpEven: 'HP even — TIME matters!',
     coinPlus1: '+1 coin', coinPlus3: '+3 coins',
     spiral_orbCd: 'Spiral Orb CD {s}s',
+    trainLostTip: 'Jump during LIGHTNING PIERCE — robot misses · jump ear-lasers',
+    trainLossTip: 'Jump during LIGHTNING PIERCE — robot misses · jump ear-lasers',
+    trainTipDefault: 'Tip: jump lasers · full energy → Spiral Orb',
+    energyNotFull: 'Energy {have}/{need} — hit to fill',
+    protected: 'Safe!',
+    iframe: 'Safe!',
+    blockChip: 'BLOCK −{n}',
+    parry: 'PARRY!',
+    miss: 'MISS!',
   },
   hud: {
     super: 'SUPER', masterShort: 'MASTER +20%', masterSword: 'DAWNBLADE {n}s',

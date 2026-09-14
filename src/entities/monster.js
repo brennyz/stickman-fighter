@@ -132,7 +132,7 @@ class Monster {
       } else {
         this.x += dir * this.speed * spdMul * dt * 0.6;
         if (dist < 240 && this.atkCD <= 0) {
-          const wind = this.enraged ? 0.28 : (this.softTelegraph ? 0.72 : 0.45);
+          const wind = this.enraged ? 0.28 : (this.softTelegraph ? 0.88 : 0.45);
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = rand(1.6, 2.6) / (this.enraged ? 1.25 : 1);
@@ -164,7 +164,7 @@ class Monster {
       } else {
         this.x += dir * this.speed * dt;
         if (dist < this.size + 48 && this.atkCD <= 0) {
-          const wind = this.softTelegraph ? 0.78 : 0.55;
+          const wind = this.softTelegraph ? 0.98 : 0.55;
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = 2.0;

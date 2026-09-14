@@ -21,12 +21,21 @@
   .icon { width:104px; height:104px; border-radius:24px; box-shadow:0 8px 30px rgba(0,0,0,.6); }
   h1 { font-size:34px; margin:14px 0 4px; color:#ffd75e; letter-spacing:1px; }
   .sub { color:#a8b8e8; font-size:15px; margin:0 0 22px; max-width:420px; }
-  .play { display:inline-block; padding:20px 56px; border-radius:20px; font-size:26px; font-weight:800;
+  .play { display:inline-block; padding:22px 64px; border-radius:20px; font-size:28px; font-weight:800;
     background:linear-gradient(180deg,#ffe259,#c97a20); color:#2a1a00; text-decoration:none;
-    box-shadow:0 6px 24px rgba(255,190,60,.35); }
+    box-shadow:0 8px 28px rgba(255,190,60,.4); letter-spacing:.02em; }
   .play:active { transform:scale(.97); }
+  .play-hint { margin:10px 0 0; font-size:14px; color:#a8b8e8; max-width:420px; }
   .card { width:min(94vw,460px); background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12);
     border-radius:16px; padding:16px 18px; margin-top:16px; text-align:left; font-size:14.5px; line-height:1.55; }
+  .install-fold { width:min(94vw,460px); margin-top:22px; text-align:left;
+    background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); border-radius:16px; padding:4px 14px 10px; }
+  .install-fold > summary { cursor:pointer; list-style:none; padding:12px 4px; font-weight:800; color:#ffd75e; font-size:15px; }
+  .install-fold > summary::-webkit-details-marker { display:none; }
+  .install-fold > summary::after { content:' ▾'; opacity:.7; font-weight:700; }
+  .install-fold[open] > summary::after { content:' ▴'; }
+  .install-fold .card { width:100%; margin-top:8px; background:transparent; border:none; padding:8px 2px 4px; }
+  .legal { width:min(94vw,460px); margin-top:18px; font-size:13px; color:#a8b8e8; line-height:1.5; }
   .card b { color:#ffd75e; }
   .card .step { display:flex; gap:10px; margin:8px 0; }
   .card .n { flex:0 0 24px; height:24px; border-radius:50%; background:#223058; color:#7cf5ff;
@@ -46,49 +55,49 @@
 <body>
   <img class="icon" src="./icons/icon-192.png" alt="Stickman Fighter">
   <h1>STICKMAN FIGHTER</h1>
-  <p class="sub">Gratis vechtspel — Spiral Orb, monsters, 2 spelers op één scherm. Geen download uit een store nodig.</p>
+  <p class="sub">Gratis vechtspel — Avontuur, Training en kisten. Tik SPELEN en ga vechten.</p>
 
-  <a class="play" href="./index.html">▶ SPELEN</a>
+  <a class="play" href="./index.html" id="btnPlay">▶ SPELEN</a>
+  <p class="play-hint">Opent het startscherm · kies daarna <b>Avontuur</b></p>
 
   <div class="rowbtns">
     <button class="mini" id="btnShare" type="button">📤 Deel deze pagina</button>
     <button class="mini" id="btnCopy" type="button">🔗 Kopieer link</button>
   </div>
 
-  <div class="card hide" id="stepsAndroid">
-    <b>📱 Android — als app installeren</b>
-    <div class="step"><span class="n">1</span><span>Open deze pagina in <b>Chrome</b> (niet de Instagram/WhatsApp-browser: menu → “Openen in Chrome”).</span></div>
-    <div class="step"><span class="n">2</span><span>Tik <b>SPELEN</b> en daarna in het spelmenu op <b>Zet in app-lade</b>, of Chrome-menu ⋮ → <b>App installeren</b>.</span></div>
-    <div class="step"><span class="n">3</span><span>Open voortaan via het <b>Stickman-icoon</b> — werkt daarna ook offline.</span></div>
-  </div>
+  <details class="install-fold" id="installFold">
+    <summary>Als app op je beginscherm</summary>
+    <div class="card hide" id="stepsAndroid">
+      <b>📱 Android — als app installeren</b>
+      <div class="step"><span class="n">1</span><span>Open deze pagina in <b>Chrome</b> (niet de Instagram/WhatsApp-browser: menu → “Openen in Chrome”).</span></div>
+      <div class="step"><span class="n">2</span><span>Tik <b>SPELEN</b> en daarna in het spelmenu op <b>Zet in app-lade</b>, of Chrome-menu ⋮ → <b>App installeren</b>.</span></div>
+      <div class="step"><span class="n">3</span><span>Open voortaan via het <b>Stickman-icoon</b> — werkt daarna ook offline.</span></div>
+    </div>
 
-  <div class="card hide" id="stepsIos">
-    <b>🍎 iPad / iPhone — op beginscherm</b>
-    <div class="step"><span class="n">1</span><span>Open deze pagina in <b>Safari</b>.</span></div>
-    <div class="step"><span class="n">2</span><span>Tik <b>Delen</b> 📤 (vierkant met pijl) → <b>Zet op beginscherm</b>.</span></div>
-    <div class="step"><span class="n">3</span><span>Open via het icoon — fullscreen, en 2 spelers = iPad liggend (P1 links, P2 rechts).</span></div>
-  </div>
+    <div class="card hide" id="stepsIos">
+      <b>🍎 iPad / iPhone — op beginscherm</b>
+      <div class="step"><span class="n">1</span><span>Open deze pagina in <b>Safari</b>.</span></div>
+      <div class="step"><span class="n">2</span><span>Tik <b>Delen</b> 📤 (vierkant met pijl) → <b>Zet op beginscherm</b>.</span></div>
+      <div class="step"><span class="n">3</span><span>Open via het icoon — fullscreen, en 2 spelers = iPad liggend (P1 links, P2 rechts).</span></div>
+    </div>
 
-  <div class="card hide" id="stepsDesktop">
-    <b>💻 PC / Mac</b>
-    <div class="step"><span class="n">1</span><span>Klik <b>SPELEN</b> — toetsenbord: A/D lopen, J/K/L aanvallen.</span></div>
-    <div class="step"><span class="n">2</span><span>Chrome/Edge: installatie-icoon in de adresbalk = als app.</span></div>
-    <div class="step"><span class="n">3</span><span>Telefoon of iPad erbij? Scan de QR-code hieronder.</span></div>
-  </div>
+    <div class="card hide" id="stepsDesktop">
+      <b>💻 PC / Mac</b>
+      <div class="step"><span class="n">1</span><span>Klik <b>SPELEN</b> — toetsenbord: A/D lopen, J/K/L aanvallen.</span></div>
+      <div class="step"><span class="n">2</span><span>Chrome/Edge: installatie-icoon in de adresbalk = als app.</span></div>
+      <div class="step"><span class="n">3</span><span>Telefoon of iPad erbij? Scan de QR-code hieronder.</span></div>
+    </div>
 
-  <div class="qrbox" id="qrbox">
-    <div style="font-size:13px;color:#a8b8e8;margin-bottom:8px">Scan met je telefoon of iPad:</div>
-    <img id="qrimg" alt="QR-code naar het spel" loading="lazy">
-    <div class="linkline" id="linkline"></div>
-  </div>
+    <div class="qrbox" id="qrbox">
+      <div style="font-size:13px;color:#a8b8e8;margin-bottom:8px">Scan met je telefoon of iPad:</div>
+      <img id="qrimg" alt="QR-code naar het spel" loading="lazy">
+      <div class="linkline" id="linkline"></div>
+    </div>
+  </details>
 
-  <div class="card" id="contentAge" style="margin-top:14px">
-    <b>Inhoud / leeftijd</b>
-    <p style="margin:8px 0 0">Cartoon-stickman gevechten (fantasy-geweld). Geen chat. Aanbevolen <b>tiener+ / teens+</b>. Save blijft lokaal op je apparaat. <a href="./privacy.html" style="color:#7cf5ff;font-weight:700">Privacy</a></p>
-    <p style="margin:8px 0 0;font-size:13px;color:#a8b8e8" lang="en">EN: Cartoon combat violence · no chat · teens+ · local save only.</p>
-  </div>
+  <p class="legal" id="contentAge">Cartoon-gevechten · geen chat · tiener+ · save blijft op dit apparaat · <a href="./privacy.html" style="color:#7cf5ff;font-weight:700">Privacy</a></p>
 
-  <footer>PWA · offline na 1× online · save blijft op je eigen apparaat · deel-link = deze pagina (<code>speel.html</code>) · <a href="./privacy.html" style="color:#7cf5ff">Privacy</a></footer>
+  <footer>PWA · offline na 1× online · deel-link = deze pagina (<code>speel.html</code>)</footer>
   <p class="offline-hint hide" id="offlineHint">Offline — deel-link uit cache · SPELEN opent het spel uit app-cache</p>
 
 <script>

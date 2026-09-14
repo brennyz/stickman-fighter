@@ -13,7 +13,7 @@ const I18N = {
       summons: 'Summons', summonsSub: 'Dagelijkse kist · wapen & pet',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon op je beginscherm',
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
-      choosePath: 'KIES JE PAD',
+      choosePath: 'KIES JE PAD', lastPlayed: 'LAATST', playHere: 'SPEEL',
     },
     hub: {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
@@ -103,7 +103,7 @@ const I18N = {
       summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
       options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add to home screen', installSub: 'One icon on your device',
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
-      choosePath: 'CHOOSE YOUR PATH',
+      choosePath: 'CHOOSE YOUR PATH', lastPlayed: 'LAST', playHere: 'PLAY',
     },
     hub: {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -192,7 +192,7 @@ const I18N = {
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch', music: 'Musik', missions: 'Missionen',
       options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Zum Home-Bildschirm', installSub: 'Ein Icon auf dem Gerät',
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
-      choosePath: 'WÄHLE DEINEN WEG',
+      choosePath: 'WÄHLE DEINEN WEG', lastPlayed: 'ZULETZT', playHere: 'SPIEL',
     },
     hub: {
       step: 'Schritt 2 · Modus wählen', solo: 'SOLO', collection: 'SAMMLUNG',
@@ -264,7 +264,7 @@ const I18N = {
       collect: 'Collection', collectSub: 'Armes · style · bestiaire', music: 'Musique', missions: 'Missions',
       options: 'Options', tips: 'Astuces', fresh: 'Version fraîche', install: 'Ajouter à l\'écran d\'accueil', installSub: 'Une icône sur l\'appareil',
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
-      choosePath: 'CHOISIS TON CHEMIN',
+      choosePath: 'CHOISIS TON CHEMIN', lastPlayed: 'DERNIER', playHere: 'JOUER',
     },
     hub: {
       step: 'Étape 2 · Choisir le mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -336,7 +336,7 @@ const I18N = {
       collect: 'Colección', collectSub: 'Armas · estilo · bestiario', music: 'Música', missions: 'Misiones',
       options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir a inicio', installSub: 'Un icono en tu dispositivo',
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
-      choosePath: 'ELIGE TU CAMINO',
+      choosePath: 'ELIGE TU CAMINO', lastPlayed: 'ÚLTIMO', playHere: 'JUEGA',
     },
     hub: {
       step: 'Paso 2 · Elige modo', solo: 'SOLO', collection: 'COLECCIÓN',
@@ -422,7 +422,7 @@ function detectBrowserLang() {
 
 function getLang() {
   const l = save && save.lang;
-  return SUPPORTED_LANGS.includes(l) ? l : detectBrowserLang();
+  return SUPPORTED_LANGS.includes(l) ? l : 'nl';
 }
 
 function setLang(code) {
@@ -442,6 +442,20 @@ function t(key, params) {
     }
   }
   return s;
+}
+
+/** Never leak a raw key — use fallback copy if lookup misses. */
+function tOr(key, fallback, params) {
+  const s = t(key, params);
+  if (s && s !== key) return s;
+  if (fallback && params && typeof params === 'object') {
+    let out = String(fallback);
+    for (const [k, v] of Object.entries(params)) {
+      out = out.split('{' + k + '}').join(String(v));
+    }
+    return out;
+  }
+  return fallback || '';
 }
 
 function rarityLabel(id) {
@@ -501,6 +515,8 @@ function applyLangStaticScreens() {
     ['.hub-tile-arcade .hub-tile-sub', 'menu.arcadeSub'],
     ['.hub-tile-collect .hub-tile-title', 'menu.collect'],
     ['.hub-tile-collect .hub-tile-sub', 'menu.collectSub'],
+    ['.hub-tile-summon .hub-tile-title', 'menu.summons'],
+    ['.hub-tile-summon .hub-tile-sub', 'menu.summonsSub'],
   ];
   for (const [sel, key] of hubMap) {
     const el = document.querySelector(sel);
@@ -809,7 +825,8 @@ function applyLang() {
 function initLang() {
   if (typeof mergeI18nCatalogs === 'function') mergeI18nCatalogs();
   if (!save.lang || !SUPPORTED_LANGS.includes(save.lang)) {
-    save.lang = detectBrowserLang();
+    // Dutch-first product: first run stays NL. Player can switch in the lang bar.
+    save.lang = 'nl';
     persist();
   }
   applyLang();
