@@ -94,7 +94,7 @@
       "id": "w-20260914T130500",
       "from": "user",
       "text": "5-min playtest coach steer (2026-09-14 ~13:05): #260 toast/Android-copy/title-gate only; #259 hit-reg landing; close #261 overlap; no main merge until «merge main».",
-      "status": "active",
+      "status": "done-in-code",
       "updated": "2026-09-14"
     },
     {
@@ -565,6 +565,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T13:12:14Z",
+      "summary": "Coach 13:05: #260 title-gate SPELEN-eerst + leftover i18n (v1.18.157/SW367). #261 closed as #259 dup. Geen main-merge."
+    },
+    {
       "at": "2026-09-14T12:46:43Z",
       "summary": "Title-gate: grotere splash-poppetjes + SPELEN + lokale naam (geen account) · settings-fold · Android-copy gelijk · v1.18.156 / SW 366"
     },
@@ -659,10 +663,6 @@
     {
       "at": "2026-08-17T07:16:06Z",
       "summary": "d20 code health: spook-Kets UI weg, live balk blijft — klaar voor super-merge"
-    },
-    {
-      "at": "2026-08-17T07:08:14Z",
-      "summary": "Tweede d20-worp geclaimd via CLI"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
