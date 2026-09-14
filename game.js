@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.163';
+const APP_VERSION = '1.18.165';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 373;
+const SW_CACHE_REV = 375;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1967,7 +1967,7 @@ const I18N = {
       arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal',
       collect: 'Collectie', collectSub: 'Wapens · stijl · boek', music: 'Muziek', missions: 'Missies',
       summons: 'Summons', summonsSub: 'Dagelijkse kist · wapen & pet',
-      options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon, zoals een echte app',
+      options: 'Opties', tips: 'Tips', fresh: 'Vers', install: 'App', installSub: 'Lade',
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
       choosePath: 'KIES JE PAD', lastPlayed: 'LAATST', playHere: 'SPEEL',
       startGame: 'SPELEN', startSub: 'Start het gevecht',
@@ -2021,7 +2021,7 @@ const I18N = {
       sfxSamplesOn: 'Geluidseffecten: geladen',
       sfxSamplesLoad: 'Geluidseffecten: laden…',
       sfxSamplesOff: 'Geluidseffecten: offline',
-      syncBackup: 'Backup bijwerken', freshCache: 'Verse versie', clearSave: 'Nieuwe start (dubbel tikken)',
+      syncBackup: 'Backup bijwerken', freshCache: 'Vers', clearSave: 'Nieuwe start (dubbel tikken)',
       syncHint: 'Zet de backup gelijk aan je huidige voortgang.',
       freshHint: 'Menu reageert niet? Tik hier voor de nieuwste versie.',
       hosting: 'Speel-link', copyLink: 'Kopieer speel-link', openLink: 'Open speel-link',
@@ -2041,7 +2041,7 @@ const I18N = {
       crackEgg: 'Dag-ei openen', crackEggSub: 'Gratis arcade-pull' },
     dex: { title: 'Monsterboek', sub: '{n} soorten · rariteit = HP · boerderij / dierentuin / zee-filters · 4 rariteiten = Kristallijn' },
     help: { title: 'Tips & controls' },
-    install: { title: 'Zet in app-lade', sub: 'Één icoon, zoals een echte app' },
+    install: { title: 'App', sub: 'Lade · beginscherm' },
     island: {
       1: { name: 'Oost-eiland', sub: 'Lv 1–10' }, 2: { name: 'Vuur-eiland', sub: 'Lv 11–20' },
       3: { name: 'Neon-eiland', sub: 'Lv 21–30' }, 4: { name: 'Tempel-eiland', sub: 'Lv 31–40' },
@@ -2079,7 +2079,7 @@ const I18N = {
       arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local',
       collect: 'Collection', collectSub: 'Weapons · style · book', music: 'Music', missions: 'Missions',
       summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
-      options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add as app', installSub: 'One icon, like a real app',
+      options: 'Options', tips: 'Tips', fresh: 'Fresh', install: 'App', installSub: 'Home',
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
       choosePath: 'CHOOSE YOUR PATH', lastPlayed: 'LAST', playHere: 'PLAY',
       startGame: 'PLAY', startSub: 'Start the fight',
@@ -2133,7 +2133,7 @@ const I18N = {
       sfxSamplesOn: 'Sound effects: loaded',
       sfxSamplesLoad: 'Sound effects: loading…',
       sfxSamplesOff: 'Sound effects: offline',
-      syncBackup: 'Update backup', freshCache: 'Fresh version', clearSave: 'New start (tap twice)',
+      syncBackup: 'Update backup', freshCache: 'Fresh', clearSave: 'New start (tap twice)',
       syncHint: 'Set the backup equal to your current progress.',
       freshHint: 'Menu stuck? Tap here for the newest version.',
       hosting: 'Play link', copyLink: 'Copy play link', openLink: 'Open play link',
@@ -2153,7 +2153,7 @@ const I18N = {
       crackEgg: 'Open daily egg', crackEggSub: 'Free arcade pull' },
     dex: { title: 'Monster book', sub: '{n} species · rarity = HP · farm / zoo / sea filters · 4 rarities = Crystalline' },
     help: { title: 'Tips & controls' },
-    install: { title: 'Add as app', sub: 'One icon, like a real app' },
+    install: { title: 'App', sub: 'Home screen' },
     island: {
       1: { name: 'East island', sub: 'Lv 1–10' }, 2: { name: 'Fire island', sub: 'Lv 11–20' },
       3: { name: 'Neon island', sub: 'Lv 21–30' }, 4: { name: 'Temple island', sub: 'Lv 31–40' },
@@ -2178,7 +2178,7 @@ const I18N = {
       continue: 'Weiterspielen', adventure: 'Abenteuer', adventureSub: 'Story · Inseln · Bosse',
       arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal',
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch', music: 'Musik', missions: 'Missionen',
-      options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Als App speichern', installSub: 'Ein Icon, wie eine echte App',
+      options: 'Optionen', tips: 'Tipps', fresh: 'Neu', install: 'App', installSub: 'Home',
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
       choosePath: 'WÄHLE DEINEN WEG', lastPlayed: 'ZULETZT', playHere: 'SPIEL',
       startGame: 'SPIELEN', startSub: 'Starte den Kampf',
@@ -2240,7 +2240,7 @@ const I18N = {
     pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Gratis Pull' },
     dex: { title: 'Monsterbuch', sub: '{n} Arten · Seltenheit = HP · Farm / Zoo / Meer' },
     help: { title: 'Tipps & Steuerung' },
-    install: { title: 'Als App speichern', sub: 'Ein Icon, wie eine echte App' },
+    install: { title: 'App', sub: 'Homebildschirm' },
     island: {
       1: { name: 'Ost-Insel', sub: 'Lv 1–10' }, 2: { name: 'Feuer-Insel', sub: 'Lv 11–20' },
       3: { name: 'Neon-Insel', sub: 'Lv 21–30' }, 4: { name: 'Tempel-Insel', sub: 'Lv 31–40' },
@@ -2259,7 +2259,7 @@ const I18N = {
       continue: 'Continuer', adventure: 'Aventure', adventureSub: 'Histoire · îles · boss',
       arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Pièces', versus: '2 joueurs', versusSub: 'Local',
       collect: 'Collection', collectSub: 'Armes · style · bestiaire', music: 'Musique', missions: 'Missions',
-      options: 'Options', tips: 'Astuces', fresh: 'Version fraîche', install: 'Ajouter comme app', installSub: 'Une icône, comme une vraie app',
+      options: 'Options', tips: 'Astuces', fresh: 'Neuf', install: 'App', installSub: 'Home',
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
       choosePath: 'CHOISIS TON CHEMIN', lastPlayed: 'DERNIER', playHere: 'JOUER',
       startGame: 'JOUER', startSub: 'Lance le combat',
@@ -2321,7 +2321,7 @@ const I18N = {
     pets: { title: 'Pets · Compagnons', sub: 'Pets dex & œufs arcade', crackEgg: 'Ouvrir l\'œuf du jour', crackEggSub: 'Tir gratuit' },
     dex: { title: 'Bestiaire', sub: '{n} espèces · rareté = PV · ferme / zoo / mer' },
     help: { title: 'Astuces & contrôles' },
-    install: { title: 'Ajouter comme app', sub: 'Une icône, comme une vraie app' },
+    install: { title: 'App', sub: 'Écran d\'accueil' },
     island: {
       1: { name: 'Île de l\'Est', sub: 'Lv 1–10' }, 2: { name: 'Île de Feu', sub: 'Lv 11–20' },
       3: { name: 'Île Néon', sub: 'Lv 21–30' }, 4: { name: 'Île Temple', sub: 'Lv 31–40' },
@@ -2340,7 +2340,7 @@ const I18N = {
       continue: 'Continuar', adventure: 'Aventura', adventureSub: 'Historia · islas · jefes',
       arcade: 'Arcade', arcadeSub: 'Entrenamiento · Muro · Monedas', versus: '2 jugadores', versusSub: 'Local',
       collect: 'Colección', collectSub: 'Armas · estilo · bestiario', music: 'Música', missions: 'Misiones',
-      options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir como app', installSub: 'Un icono, como una app real',
+      options: 'Opciones', tips: 'Consejos', fresh: 'Nueva', install: 'App', installSub: 'Home',
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
       choosePath: 'ELIGE TU CAMINO', lastPlayed: 'ÚLTIMO', playHere: 'JUEGA',
       startGame: 'JUGAR', startSub: 'Empieza el combate',
@@ -2402,7 +2402,7 @@ const I18N = {
     pets: { title: 'Pets · Compañeros', sub: 'Pets dex y huevos arcade', crackEgg: 'Abrir huevo diario', crackEggSub: 'Tirada gratis' },
     dex: { title: 'Bestiario', sub: '{n} especies · rareza = HP · granja / zoo / mar' },
     help: { title: 'Consejos y controles' },
-    install: { title: 'Añadir como app', sub: 'Un icono, como una app real' },
+    install: { title: 'App', sub: 'Pantalla de inicio' },
     island: {
       1: { name: 'Isla Este', sub: 'Lv 1–10' }, 2: { name: 'Isla Fuego', sub: 'Lv 11–20' },
       3: { name: 'Isla Neón', sub: 'Lv 21–30' }, 4: { name: 'Isla Templo', sub: 'Lv 31–40' },
@@ -2575,6 +2575,7 @@ function applyLangStaticScreens() {
     ['btnStyle', 'hub.style', 'hub.styleSub'],
     ['btnSkills', 'hub.skills', 'hub.skillsSub'],
     ['btnUpgrades', 'hub.upgrades', 'hub.upgradesSub'],
+    ['btnUpgradesHome', 'hub.upgrades', 'hub.upgradesSub'],
     ['btnDex', 'hub.dex', 'hub.dexSub'],
   ];
   for (const [id, titleKey, subKey] of modeRows) {
@@ -12196,7 +12197,7 @@ function seedNlGameStrings() {
     '<b>Rariteiten:</b> Gewoon → Ongewoon → Zeldzaam → Episch → Legendarisch → Mythisch. Zeldzamer = meer XP & meer max HP.',
     '<b>50 levels:</b> <b>5 eilanden × 10 levels</b> — skill gate wapens per eiland · baas Lv 10/20/30/40/50 opent volgend eiland · hitte-meter: 5× = Meester-buff · 9× = gevaar! · 10× = Satan.',
     '<b>Backup:</b> elke save wordt dubbel opgeslagen — bij problemen: <b>Instellingen → Herstel save uit backup</b>.',
-    '<b>Delen:</b> menu → <b>Deel link</b> — vrienden openen in Chrome en tikken <b>Zet in app-lade</b>.',
+    '<b>Delen:</b> menu → <b>Deel link</b> — vrienden openen in Chrome en tikken <b>App</b>.',
     '<b>Offline:</b> na 1× online spelen werkt de app daarna ook zonder net. Banner onderaan als je offline bent.',
   ];
   if (!I18N.nl.menu) I18N.nl.menu = {};
@@ -12476,7 +12477,7 @@ function seedNlGameStrings() {
     petCoinTip: 'Speel <b>munten bonus</b> voor pet coins (2 gouden munten = 1 PC). Koop pets hier, of tem via kills in het monsterboek. Pets volgen je in avontuur & training.',
     petSummaryTamed: 'Getemd <b>{tamed}/{total}</b> · actief <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'geen',
-    installSub: 'Één icoon, zoals een echte app',
+    installSub: 'Lade · beginscherm',
     boss: 'BAAS',
     topHunter: 'Top jager',
     modeAdventure: '5 eilanden × 10 levels · hitte-meter · 9× = gevaar! · 10× = Satan · Meester-buff · dobbel-gok',
@@ -13310,7 +13311,7 @@ const CATALOG_EN = {
     petCoinTip: 'Play <b>coin bonus</b> for pet coins (2 gold coins = 1 PC). Buy pets here, or tame via monster book kills. Pets follow you in adventure & training.',
     petSummaryTamed: 'Tamed <b>{tamed}/{total}</b> · active <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'none',
-    installSub: 'One icon, like a real app',
+    installSub: 'Home screen',
     boss: 'BOSS',
     topHunter: 'Top hunter',
     modeAdventure: '5 islands × 10 levels · heat meter · 9× = danger! · 10× = Satan · Master buff · gamble',
@@ -31501,6 +31502,14 @@ function hubTileStatLine(hub) {
     }
     case 'collect':
       return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ${petCoinsBalance()} pet ${SVG_COIN_ICON}`;
+    case 'upgrades': {
+      try {
+        const ready = typeof countAllUpgradesReady === 'function' ? countAllUpgradesReady() : 0;
+        return ready > 0 ? t('ui.upgradeReady', { n: ready }) : t('ui.hubStatSkillShards');
+      } catch (_) {
+        return t('hub.upgrades');
+      }
+    }
     case 'summon': {
       try {
         ensureChestDaily();
@@ -35340,11 +35349,13 @@ bindPress(document.getElementById('btnWeapons'), () => {
 bindPress(document.getElementById('btnSkills'), () => {
   openCollectionScreen('skillScreen', () => UI.renderSkills());
 });
-bindPress(document.getElementById('btnUpgrades'), () => {
+function openUpgradesHub() {
   AudioSys.init();
   AudioSys.sfx('select');
   UI.openUpgrades('skills');
-});
+}
+bindPress(document.getElementById('btnUpgrades'), openUpgradesHub);
+bindPress(document.getElementById('btnUpgradesHome'), openUpgradesHub);
 bindPress(document.getElementById('btnPets'), () => {
   openCollectionScreen('petScreen', () => UI.renderPets());
 });

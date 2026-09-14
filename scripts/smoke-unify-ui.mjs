@@ -48,5 +48,19 @@ if (/\.screen\s*\{\s*display:\s*none\s*!important/.test(css)
 if (!/id="sfTitleStart"/.test(html) || /id="sfTitleName"/.test(html)) {
   fail('title gate must be SPELEN-first without a name field');
 }
+if (!/id="btnUpgradesHome"/.test(html)) fail('Upgrades must have a HOME tile on start');
+if (!/id="btnUpgrades"/.test(html)) fail('Upgrades collect tile missing');
+if (/\.card\s*\{[^}]*background:rgba\(255,255,255,\.06\)/.test(css)) {
+  fail('weapon/collection cards still use low-contrast gray wash');
+}
+if (!/\.card\s*\{[\s\S]{0,220}var\(--menu-tile-solid\)/.test(css)) {
+  fail('collection cards must use HOME solid tiles');
+}
+if (/\.mission-card \.claim-btn[\s\S]{0,160}linear-gradient\(180deg,#ffe259/.test(css)) {
+  fail('mission claim leftover candy gold');
+}
 
-console.log('SMOKE_OK unify-ui: HOME tiles on start / adventure / collect / settings / pause');
+const start = fs.readFileSync(path.join(root, 'src/boot/start.js'), 'utf8');
+if (!/btnUpgradesHome/.test(start)) fail('start HOME upgrades tile must be bound');
+
+console.log('SMOKE_OK unify-ui: HOME tiles + upgrades entry + readable cards');

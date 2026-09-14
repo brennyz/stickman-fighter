@@ -461,7 +461,7 @@ function seedNlGameStrings() {
     '<b>Rariteiten:</b> Gewoon → Ongewoon → Zeldzaam → Episch → Legendarisch → Mythisch. Zeldzamer = meer XP & meer max HP.',
     '<b>50 levels:</b> <b>5 eilanden × 10 levels</b> — skill gate wapens per eiland · baas Lv 10/20/30/40/50 opent volgend eiland · hitte-meter: 5× = Meester-buff · 9× = gevaar! · 10× = Satan.',
     '<b>Backup:</b> elke save wordt dubbel opgeslagen — bij problemen: <b>Instellingen → Herstel save uit backup</b>.',
-    '<b>Delen:</b> menu → <b>Deel link</b> — vrienden openen in Chrome en tikken <b>Zet in app-lade</b>.',
+    '<b>Delen:</b> menu → <b>Deel link</b> — vrienden openen in Chrome en tikken <b>App</b>.',
     '<b>Offline:</b> na 1× online spelen werkt de app daarna ook zonder net. Banner onderaan als je offline bent.',
   ];
   if (!I18N.nl.menu) I18N.nl.menu = {};
@@ -741,7 +741,7 @@ function seedNlGameStrings() {
     petCoinTip: 'Speel <b>munten bonus</b> voor pet coins (2 gouden munten = 1 PC). Koop pets hier, of tem via kills in het monsterboek. Pets volgen je in avontuur & training.',
     petSummaryTamed: 'Getemd <b>{tamed}/{total}</b> · actief <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'geen',
-    installSub: 'Één icoon, zoals een echte app',
+    installSub: 'Lade · beginscherm',
     boss: 'BAAS',
     topHunter: 'Top jager',
     modeAdventure: '5 eilanden × 10 levels · hitte-meter · 9× = gevaar! · 10× = Satan · Meester-buff · dobbel-gok',
@@ -1575,7 +1575,7 @@ const CATALOG_EN = {
     petCoinTip: 'Play <b>coin bonus</b> for pet coins (2 gold coins = 1 PC). Buy pets here, or tame via monster book kills. Pets follow you in adventure & training.',
     petSummaryTamed: 'Tamed <b>{tamed}/{total}</b> · active <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'none',
-    installSub: 'One icon, like a real app',
+    installSub: 'Home screen',
     boss: 'BOSS',
     topHunter: 'Top hunter',
     modeAdventure: '5 islands × 10 levels · heat meter · 9× = danger! · 10× = Satan · Master buff · gamble',

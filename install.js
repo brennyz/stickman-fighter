@@ -77,7 +77,7 @@
     } else {
       btnMenu.classList.remove('done');
       btnMenu.disabled = false;
-      btnLabel.innerHTML = 'Zet in app-lade<small>Één icoon · werkt ook offline na 1× online openen</small>';
+      btnLabel.innerHTML = 'App<small>Lade · offline na 1× openen</small>';
     }
     refreshInstallCacheLine();
   }

@@ -855,6 +855,14 @@ function hubTileStatLine(hub) {
     }
     case 'collect':
       return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ${petCoinsBalance()} pet ${SVG_COIN_ICON}`;
+    case 'upgrades': {
+      try {
+        const ready = typeof countAllUpgradesReady === 'function' ? countAllUpgradesReady() : 0;
+        return ready > 0 ? t('ui.upgradeReady', { n: ready }) : t('ui.hubStatSkillShards');
+      } catch (_) {
+        return t('hub.upgrades');
+      }
+    }
     case 'summon': {
       try {
         ensureChestDaily();
