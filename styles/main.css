@@ -1300,19 +1300,85 @@
   .menu-landing-footer .btn.b-install.done { display: none; }
   .menu-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
   #modeHubScreen {
-    background: #06050c; padding: max(8px, env(safe-area-inset-top)) 12px max(20px, env(safe-area-inset-bottom));
+    background: #0a1218; padding: max(8px, env(safe-area-inset-top)) 12px max(20px, env(safe-area-inset-bottom));
     justify-content: flex-start;
   }
   #modeHubScreen::before {
     content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
-    background: linear-gradient(180deg, #12101c 0%, #06050c 55%, #040308 100%);
+    background:
+      radial-gradient(ellipse 90% 70% at 50% 0%, rgba(90, 140, 160, 0.22), transparent 62%),
+      linear-gradient(180deg, #1a2834 0%, #0a1218 48%, #080e14 100%);
   }
   #modeHubScreen > * { position: relative; z-index: 1; }
+  #modeHubScreen.mode-hub-home {
+    --menu-tile-solid: #162033;
+    --menu-tile-solid-hi: #1c2940;
+    --menu-ink: #f2efe6;
+    --menu-ink-muted: #c8d0dc;
+    --menu-edge: rgba(255, 255, 255, 0.16);
+  }
+  #modeHubScreen.mode-hub-home .hub-tile {
+    background: var(--menu-tile-solid);
+    border-color: var(--menu-edge);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    color: var(--menu-ink);
+    opacity: 1;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  #modeHubScreen.mode-hub-home .hub-tile-title { color: var(--menu-ink); opacity: 1; }
+  #modeHubScreen.mode-hub-home .hub-tile-sub { color: var(--menu-ink-muted); opacity: .82; font-weight: 600; }
+  #modeHubScreen.mode-hub-home .hub-tile-stat {
+    background: rgba(0, 0, 0, 0.45);
+    color: #e8f0ff;
+    opacity: .92;
+  }
+  #modeHubScreen.mode-hub-home .hub-tile-ico { background: #0c1422; }
+  #modeHubScreen.mode-hub-home .hub-tile-grid .hub-tile-featured { grid-column: 1 / -1; min-height: 96px; }
+  #modeHubScreen.mode-hub-home .hub-tile-train {
+    background: linear-gradient(135deg, rgba(90, 140, 255, 0.18), transparent 45%), var(--menu-tile-solid);
+    border-color: rgba(90, 140, 255, 0.28);
+  }
+  #modeHubScreen.mode-hub-home .hub-tile-wall {
+    background: linear-gradient(135deg, rgba(255, 167, 81, 0.16), transparent 45%), var(--menu-tile-solid);
+    border-color: rgba(255, 167, 81, 0.26);
+  }
+  #modeHubScreen.mode-hub-home .hub-tile-coin {
+    background: linear-gradient(135deg, rgba(255, 215, 94, 0.16), transparent 45%), var(--menu-tile-solid);
+    border-color: rgba(255, 215, 94, 0.28);
+  }
+  #modeHubScreen.mode-hub-home .hub-tile-weapons {
+    background: linear-gradient(135deg, rgba(176, 106, 224, 0.18), transparent 42%), var(--menu-tile-solid);
+    border-color: rgba(200, 140, 255, 0.32);
+    grid-column: 1 / -1;
+  }
+  #modeHubScreen.mode-hub-home .hub-tile-pets {
+    background: linear-gradient(135deg, rgba(78, 207, 106, 0.14), transparent 45%), var(--menu-tile-solid);
+    border-color: rgba(78, 207, 106, 0.24);
+  }
+  #modeHubScreen.mode-hub-home .hub-tile-style {
+    background: linear-gradient(135deg, rgba(124, 240, 232, 0.14), transparent 45%), var(--menu-tile-solid);
+    border-color: rgba(124, 240, 232, 0.24);
+  }
+  #modeHubScreen.mode-hub-home .hub-tile-skills {
+    background: linear-gradient(135deg, rgba(154, 108, 255, 0.16), transparent 45%), var(--menu-tile-solid);
+    border-color: rgba(154, 108, 255, 0.28);
+  }
+  #modeHubScreen.mode-hub-home .hub-tile-upgrades {
+    background: linear-gradient(135deg, rgba(255, 176, 184, 0.14), transparent 45%), var(--menu-tile-solid);
+    border-color: rgba(255, 176, 184, 0.24);
+  }
+  #modeHubScreen.mode-hub-home .hub-tile-dex { grid-column: 1 / -1; }
   .mode-hub-body { width: var(--ui-rail); margin: 0 auto; display: flex; flex-direction: column; align-items: stretch; }
-  .mode-hub-step { font-size: 10px; font-weight: 800; letter-spacing: .12em; color: #7cf5ff; opacity: .75; margin-bottom: 6px; text-transform: uppercase; }
-  .mode-hub-head { text-align: center; margin: 0 0 16px; }
-  .mode-hub-head .head { margin-bottom: 4px; font-size: clamp(24px, 6.5vw, 36px); }
-  .mode-hub-head .subtitle { font-size: var(--type-caption) !important; opacity: .88; line-height: 1.4; }
+  .mode-hub-step {
+    font-size: 10px; font-weight: 800; letter-spacing: .12em; color: #9db1e3;
+    opacity: .7; margin-bottom: 8px; text-transform: uppercase;
+  }
+  .mode-hub-head { text-align: center; margin: 0 0 14px; }
+  .mode-hub-head .head { margin-bottom: 4px; font-size: clamp(24px, 6.5vw, 36px); color: var(--menu-ink, #f2efe6); }
+  .mode-hub-head .subtitle { font-size: var(--type-caption) !important; color: var(--menu-ink-muted, #c8d0dc); opacity: .72; line-height: 1.4; font-weight: 600; }
+  #modeHubScreen.mode-hub-home .mode-hub-panel.hub-tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ui-gap); width: 100%; }
+  #modeHubScreen.mode-hub-home .mode-hub-panel.hub-tile-grid[hidden] { display: none; }
   .mode-hub-panel { display: flex; flex-direction: column; gap: 8px; }
   .mode-hub-panel .hub-mode-row {
     width: 100%; margin: 0; padding: 13px 36px 13px 14px; min-height: 54px;
@@ -2463,6 +2529,10 @@
     .menu-profile-bar { padding: 8px 10px; }
     .menu-hub-hint { display: none; }
     .mode-hub-panel .hub-mode-row small { display: none; }
+    #modeHubScreen.mode-hub-home .hub-tile-grid .hub-tile-featured { min-height: 56px; }
+    #modeHubScreen.mode-hub-home .mode-hub-head { margin-bottom: 6px; }
+    #modeHubScreen.mode-hub-home .mode-hub-head .head { font-size: clamp(18px, 4.5vw, 24px); }
+    #modeHubScreen.mode-hub-home .mode-hub-step { margin-bottom: 4px; }
     .char-saga-bar button { min-height: 40px; padding: 6px 10px; }
     .menu-landing-footer { padding-top: 2px; padding-bottom: max(6px, env(safe-area-inset-bottom)); }
     #menuScreen.menu-video-overhaul .menu-utility-row { margin-top: 6px; gap: 6px; }

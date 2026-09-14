@@ -6,6 +6,17 @@ const I18N = {
   nl: {
     back: { menu: '← Menu', collect: '← Collectie', levels: '← Levels' },
     common: { backHome: 'Terug naar menu', ok: 'Begrepen!', offline: 'Offline' },
+    net: {
+      updateReady: 'Nieuwe versie klaar — tik om te laden',
+      updateWait: 'Nieuwe versie — laadt in het menu',
+      offlinePlay: 'Offline — speelt uit cache · save blijft hier',
+      offlinePlayHint: 'Offline — uit cache · icoon in de lade = altijd spelen',
+      offlineMenu: 'Offline — menu & save uit cache',
+      offlineNeedOnce: 'Offline — open 1× online, daarna speelt het zonder net',
+      backOnline: 'Weer online',
+      cacheLoading: 'Cache laden… — daarna ook offline',
+      offlineReady: 'Klaar voor offline — save blijft hier',
+    },
     menu: {
       continue: 'Verder spelen', adventure: 'Avontuur', adventureSub: 'Verhaal · eilanden · bazen',
       arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal',
@@ -22,17 +33,19 @@ const I18N = {
     },
     hub: {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
-      arcadeTitle: 'Arcade', arcadeSub: 'Snelle sessies · high scores · geen voortgang verlies',
-      collectTitle: 'Verzameling', collectSub: 'Wapens · dex & ei-pets · stijlen · monsterboek',
-      training: 'Training vs RabbitRobot', trainingSub: '1v1 · oefenen',
+      arcadeTitle: 'Arcade', arcadeSub: 'Snelle sessies · save blijft hier',
+      collectTitle: 'Collectie', collectSub: 'Wapens · pets · stijl · boek',
+      training: 'Training', trainingSub: '1v1 · RabbitRobot · oefenen',
       wall: 'Muur Slopen', wallSub: '60 sec · combo = sneller',
-      mats: 'Muntjes bonus', matsSub: '45 sec · munten → pet coins',
+      mats: 'Muntjes', matsSub: '45 sec · munten → pet coins',
       weapons: 'Wapens', weaponsSub: '26 wapens · summon ascends',
       pets: 'Pets', petsSub: 'Muntjes · dex temmen · ei arcade',
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
+      upgrades: 'Upgrades', upgradesSub: 'Shards · technique uitrusten',
       dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
+      loadFail: 'Hub laden mislukt',
     },
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
     pause: {
@@ -104,6 +117,17 @@ const I18N = {
   en: {
     back: { menu: '← Menu', collect: '← Collection', levels: '← Levels' },
     common: { backHome: 'Back to menu', ok: 'Got it!', offline: 'Offline' },
+    net: {
+      updateReady: 'New version ready — tap to load',
+      updateWait: 'New version — loads in the menu',
+      offlinePlay: 'Offline — playing from cache · save stays here',
+      offlinePlayHint: 'Offline — from cache · home-screen icon = always play',
+      offlineMenu: 'Offline — menu & save from cache',
+      offlineNeedOnce: 'Offline — open once online, then it plays without net',
+      backOnline: 'Back online',
+      cacheLoading: 'Loading cache… — then it works offline',
+      offlineReady: 'Ready offline — save stays here',
+    },
     menu: {
       continue: 'Continue', adventure: 'Adventure', adventureSub: 'Story · islands · bosses',
       arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local',
@@ -120,17 +144,19 @@ const I18N = {
     },
     hub: {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
-      arcadeTitle: 'Arcade', arcadeSub: 'Quick sessions · high scores · no progress loss',
-      collectTitle: 'Collection', collectSub: 'Weapons · dex & egg pets · styles · monster book',
-      training: 'Training vs RabbitRobot', trainingSub: '1v1 · practice',
+      arcadeTitle: 'Arcade', arcadeSub: 'Quick sessions · save stays here',
+      collectTitle: 'Collection', collectSub: 'Weapons · pets · style · book',
+      training: 'Training', trainingSub: '1v1 · RabbitRobot · practice',
       wall: 'Wall Smash', wallSub: '60 sec · combo = faster',
-      mats: 'Coin bonus', matsSub: '45 sec · coins → pet coins',
+      mats: 'Coins', matsSub: '45 sec · coins → pet coins',
       weapons: 'Weapons', weaponsSub: '26 weapons · summon ascends',
       pets: 'Pets', petsSub: 'Coins · dex tame · egg arcade',
       style: 'Style', styleSub: 'Bandana & outfit unlocks',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
+      upgrades: 'Upgrades', upgradesSub: 'Shards · equip a technique',
       dex: 'Monster book', dexSub: '{n} species · rarity = HP · farm · zoo · sea',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
+      loadFail: 'Could not load hub',
     },
     modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Coins' },
     pause: {
@@ -217,17 +243,19 @@ const I18N = {
     },
     hub: {
       step: 'Schritt 2 · Modus wählen', solo: 'SOLO', collection: 'SAMMLUNG',
-      arcadeTitle: 'Arcade', arcadeSub: 'Schnelle Runden · Highscores',
-      collectTitle: 'Sammlung', collectSub: 'Waffen · Pets · Stile · Monsterbuch',
-      training: 'Training vs RabbitRobot', trainingSub: '1v1 · Üben',
-      wall: 'Mauer zerstören', wallSub: '60 Sek · Combo = schneller',
-      mats: 'Münzen-Bonus', matsSub: '45 Sek · Münzen → Pet-Coins',
+      arcadeTitle: 'Arcade', arcadeSub: 'Schnelle Runden · Save bleibt hier',
+      collectTitle: 'Sammlung', collectSub: 'Waffen · Pets · Stil · Buch',
+      training: 'Training', trainingSub: '1v1 · RabbitRobot · Üben',
+      wall: 'Mauer', wallSub: '60 Sek · Combo = schneller',
+      mats: 'Münzen', matsSub: '45 Sek · Münzen → Pet-Coins',
       weapons: 'Waffen', weaponsSub: '26 Waffen · Summons',
       pets: 'Pets', petsSub: 'Münzen · Dex zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
+      upgrades: 'Upgrades', upgradesSub: 'Splitter · Technik ausrüsten',
       dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP · Farm · Zoo · Meer',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
+      loadFail: 'Hub laden fehlgeschlagen',
     },
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
     pause: {
@@ -296,17 +324,19 @@ const I18N = {
     },
     hub: {
       step: 'Étape 2 · Choisir le mode', solo: 'SOLO', collection: 'COLLECTION',
-      arcadeTitle: 'Arcade', arcadeSub: 'Sessions rapides · high scores',
-      collectTitle: 'Collection', collectSub: 'Armes · pets · styles · bestiaire',
-      training: 'Entraînement vs RabbitRobot', trainingSub: '1v1 · pratique',
-      wall: 'Mur à détruire', wallSub: '60 s · combo = plus vite',
-      mats: 'Bonus pièces', matsSub: '45 s · pièces → pet coins',
+      arcadeTitle: 'Arcade', arcadeSub: 'Sessions rapides · save ici',
+      collectTitle: 'Collection', collectSub: 'Armes · pets · style · bestiaire',
+      training: 'Entraînement', trainingSub: '1v1 · RabbitRobot · pratique',
+      wall: 'Mur', wallSub: '60 s · combo = plus vite',
+      mats: 'Pièces', matsSub: '45 s · pièces → pet coins',
       weapons: 'Armes', weaponsSub: '26 armes · invocations',
       pets: 'Pets', petsSub: 'Pièces · dex · œufs',
       style: 'Style', styleSub: 'Déblocages tenues',
       skills: 'Skills', skillsSub: 'Spéciaux énergie · Spiral Orb · Wave Cannon',
+      upgrades: 'Amélios', upgradesSub: 'Éclats · équiper une technique',
       dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV · ferme · zoo · mer',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
+      loadFail: 'Hub introuvable',
     },
     modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Pièces' },
     pause: {
@@ -375,17 +405,19 @@ const I18N = {
     },
     hub: {
       step: 'Paso 2 · Elige modo', solo: 'SOLO', collection: 'COLECCIÓN',
-      arcadeTitle: 'Arcade', arcadeSub: 'Sesiones rápidas · high scores',
-      collectTitle: 'Colección', collectSub: 'Armas · pets · estilos · bestiario',
-      training: 'Entrenamiento vs RabbitRobot', trainingSub: '1v1 · practicar',
-      wall: 'Romper muro', wallSub: '60 s · combo = más rápido',
-      mats: 'Bonus monedas', matsSub: '45 s · monedas → pet coins',
+      arcadeTitle: 'Arcade', arcadeSub: 'Sesiones rápidas · save aquí',
+      collectTitle: 'Colección', collectSub: 'Armas · pets · estilo · bestiario',
+      training: 'Entrenamiento', trainingSub: '1v1 · RabbitRobot · practicar',
+      wall: 'Muro', wallSub: '60 s · combo = más rápido',
+      mats: 'Monedas', matsSub: '45 s · monedas → pet coins',
       weapons: 'Armas', weaponsSub: '26 armas · invocaciones',
       pets: 'Pets', petsSub: 'Monedas · dex · huevos',
       style: 'Estilo', styleSub: 'Desbloqueos de outfit',
       skills: 'Skills', skillsSub: 'Especiales energía · Spiral Orb · Wave Cannon',
+      upgrades: 'Mejoras', upgradesSub: 'Fragmentos · equipar técnica',
       dex: 'Bestiario', dexSub: '{n} especies · rareza = HP · granja · zoo · mar',
       modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
+      loadFail: 'No se pudo cargar el hub',
     },
     modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Monedas' },
     pause: {
@@ -573,6 +605,11 @@ function applyLangStaticScreens() {
       el.appendChild(document.createTextNode(label));
     } else el.textContent = label;
   }
+  setTitle('togMusic', 'menu.music');
+  setTitle('btnMissions', 'menu.missions');
+  setTitle('btnSettings', 'settings.title');
+  setTitle('btnHelp', 'menu.tips');
+  setTitle('btnVerseVersie', 'settings.freshHint');
 
   const installLbl = document.getElementById('btnInstallLabel');
   if (installLbl) installLbl.innerHTML = t('menu.install') + '<small>' + t('menu.installSub') + '</small>';
@@ -586,18 +623,19 @@ function applyLangStaticScreens() {
     ['btnPets', 'hub.pets', 'hub.petsSub'],
     ['btnStyle', 'hub.style', 'hub.styleSub'],
     ['btnSkills', 'hub.skills', 'hub.skillsSub'],
+    ['btnUpgrades', 'hub.upgrades', 'hub.upgradesSub'],
     ['btnDex', 'hub.dex', 'hub.dexSub'],
   ];
   for (const [id, titleKey, subKey] of modeRows) {
     const btn = document.getElementById(id);
-    const div = btn && btn.querySelector('div');
-    if (!div) continue;
-    const stat = div.querySelector('.hub-mode-stat');
-    const statHtml = stat ? stat.outerHTML : '';
+    if (!btn) continue;
+    const title = btn.querySelector('.hub-tile-title');
+    const sub = btn.querySelector('.hub-tile-sub');
     const subParams = (id === 'btnDex' && typeof SPECIES_ORDER !== 'undefined')
       ? { n: SPECIES_ORDER.length }
       : undefined;
-    div.innerHTML = t(titleKey) + '<small>' + t(subKey, subParams) + '</small>' + statHtml;
+    if (title) title.textContent = t(titleKey);
+    if (sub) sub.textContent = t(subKey, subParams);
   }
 
   document.querySelectorAll('.sub-home-btn .sub-home-label').forEach((el) => {
@@ -863,6 +901,7 @@ function applyLang() {
     UI.syncBackLabels();
   }
   try { if (typeof syncTitleGateCopy === 'function') syncTitleGateCopy(); } catch (_) {}
+  try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
 }
 
 function initLang() {

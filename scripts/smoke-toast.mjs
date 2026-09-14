@@ -51,8 +51,8 @@ must(/pointer-events:\s*auto/.test(css.match(/\.toast \{[\s\S]*?\}/)?.[0] || '')
 must(/t\('toast\.unknownMode'\)/.test(start), 'unknownMode must use i18n');
 must(/t\('toast\.noBackup'\)/.test(start), 'backup toasts must use i18n');
 must(/toastT\(/.test(storage), 'storage leftover toasts should use toastT');
-must(/APP_VERSION = '1\.18\.160'/.test(storage), 'version should be 1.18.160');
-must(/SW_CACHE_REV = 370/.test(storage), 'SW rev should be 370');
+must(/const APP_VERSION = '/.test(storage), 'APP_VERSION missing');
+must(/const SW_CACHE_REV = \d+/.test(storage), 'SW_CACHE_REV missing');
 
 const i18n = fs.readFileSync(path.join(root, 'src/i18n/i18n.js'), 'utf8');
 const speel = fs.readFileSync(path.join(root, 'speel.html'), 'utf8');

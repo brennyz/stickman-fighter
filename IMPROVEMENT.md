@@ -1,3 +1,4 @@
+| 2026-09-14 | **arcade pick** | STEP 2 pick-mode = HOME hub-tegels; chrome/toasts volgen game-taal. **v1.18.161 / SW v371**. |
 | 2026-09-14 | **merge main** | #259 P1 landing + #260 toast/title-gate. Hit-reg ongemoeid. **v1.18.159 / SW v369**. |
 | 2026-09-14 | **train hit-reg** | Training: capsule-hurtbox + face-naar-robot zodat W/joy-up J/K/L/U RabbitRobot raken; floaters niet links clippen; resultaat VERLOREN / YOU LOST. **v1.18.158 / SW v368**. |
 | 2026-09-14 | **title-gate** | SPELEN eerst; splash-poppetjes groter; naam optioneel. **v1.18.157 / SW v367**. |
@@ -137,8 +138,8 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-| 2026-09-14 | — | #265 align unify: SPELEN/Verder = hub-tile; naamveld van title-gate af. Trim blijft. #264 merged eerst. Geen main. |
-| 2026-09-14 | — | Startscherm: MONSTER ARENA / insert coin / KIES JE PAD weg. SPELEN + tegels blijven. v1.18.160 / SW 370. |
+| 2026-09-14 | — | #265 op main+#264: start-trim + SPELEN hub-tile, naamveld weg. Draft tot owner merge. v1.18.162 / SW 372. |
+| 2026-09-14 | — | Arcade pick-mode = HOME hub-tegels; net/SW-banner volgt game-taal. v1.18.161 / SW 371. #263 geparkeerd. |
 | 2026-09-14 | — | MERGE MAIN: #259 + #260 → v1.18.159 / SW 369. Hit-reg gehouden. #261 closed. #256 store-draft overgeslagen. |
 | 2026-09-14 | — | Training hit-reg: capsule + face-naar-robot; floater left-clamp; YOU LOST/VERLOREN. v1.18.158 / SW 368. |
 | 2026-09-14 | — | P1 entry: één install-blok per apparaat, geen iPad op Android. v1.18.157 / SW 367. |
