@@ -70,8 +70,8 @@ async function run() {
     const list = document.getElementById('dexList');
     const hasBiomeBar = !!(bar && bar.querySelector('[data-dex-biome-filter="farm"]'));
     const hasBlurb = !!(list && list.querySelector('.dex-blurb'));
-    const hubDex = document.querySelector('#btnDex small');
-    const hubCountOk = !!(hubDex && hubDex.textContent && !hubDex.textContent.includes('114') && hubDex.textContent.includes(String(n)));
+    const hubDex = document.querySelector('#btnDex .hub-tile-sub') || document.querySelector('#btnDex small');
+    const hubCountOk = !!(hubDex && hubDex.textContent && !hubDex.textContent.includes('114') && !hubDex.textContent.includes('126') && hubDex.textContent.includes(String(n)));
 
     const achFarm = ACHIEVEMENTS.find((a) => a.id === 'dexFarm');
     const achZoo = ACHIEVEMENTS.find((a) => a.id === 'dexZoo');

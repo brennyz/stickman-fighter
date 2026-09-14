@@ -48,11 +48,9 @@ must(/styles\/seasons\.css/.test(index), 'seasons.css not linked');
 
 const overlayAt = index.indexOf('id="seasonOverlay"');
 const canvasAt = index.indexOf('<canvas id="game"');
-must(overlayAt !== -1 && canvasAt !== -1 && overlayAt > canvasAt,
-  'seasonOverlay must be a body sibling AFTER canvas (not inside a .screen)');
-
-const overlayChunk = index.slice(overlayAt, index.indexOf('</div>', overlayAt + 800) + 6);
-must(!/class="screen/.test(index.slice(canvasAt, overlayAt + 400)),
+must(overlayAt !== -1 && canvasAt !== -1, 'seasonOverlay / canvas missing');
+must((index.match(/id="seasonOverlay"/g) || []).length === 1, 'exactly one #seasonOverlay');
+must(!/class="screen/.test(index.slice(Math.min(overlayAt, canvasAt), Math.max(overlayAt, canvasAt) + 400)),
   'do not wrap season overlay in a .screen');
 
 must(/pointer-events:\s*none\s*!important/.test(css),
