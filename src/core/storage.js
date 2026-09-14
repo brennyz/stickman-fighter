@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.165';
+const APP_VERSION = '1.18.166';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 375;
+const SW_CACHE_REV = 376;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -21,7 +21,7 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
     hell: { unlocked: 1, stars: {}, fails: {}, masterBuff: null, satanAt: {} },
   },
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic',
-  /** classic | jungle | fire-bamboo-boesa — soundtrack + light scenery tint */
+  /** classic | jungle | fire-bamboo-boesa | halloween — player pack; #277 overlay may override BGM */
   audioTheme: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   /** null/undefined = auto via IS_TOUCH; true = force pads; false = force keyboard */
@@ -1340,7 +1340,7 @@ function sanitizeSave(s) {
   out.sfx = out.sfx !== false;
   out.audioTheme = (typeof normalizeAudioTheme === 'function')
     ? normalizeAudioTheme(out.audioTheme)
-    : (['classic', 'jungle', 'fire-bamboo-boesa'].includes(out.audioTheme) ? out.audioTheme : 'classic');
+    : (['classic', 'jungle', 'fire-bamboo-boesa', 'halloween'].includes(out.audioTheme) ? out.audioTheme : 'classic');
   out.shake = out.shake !== false;
   out.haptics = out.haptics !== false;
   out.comboHud = out.comboHud !== false;

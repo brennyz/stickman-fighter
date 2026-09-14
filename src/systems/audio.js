@@ -20,6 +20,26 @@ const AudioSys = {
   _sampleCount: 0,
   _samplesReady: false,
 
+  /** Same contract as season overlay #277. Do not call getEffectiveAudioTheme. */
+  seasonId() {
+    try {
+      if (typeof currentSeasonId === 'function') return currentSeasonId();
+    } catch (_) {}
+    try {
+      const root = typeof document !== 'undefined' && document.documentElement;
+      const raw = root && root.dataset && (root.dataset.seasonAudio || root.dataset.season);
+      if (raw) {
+        const id = String(raw).toLowerCase().trim();
+        if (id === 'default' || id === 'auto') return 'classic';
+        if (id === 'fire-bamboo' || id === 'fire-bamboo-boesa') return 'fire-bamboo-boesa';
+        const ids = (typeof SEASON_AUDIO_IDS !== 'undefined' && SEASON_AUDIO_IDS)
+          || ['classic', 'jungle', 'halloween', 'winter', 'summer'];
+        if (ids.includes(id) || id === 'fire-bamboo-boesa') return id;
+      }
+    } catch (_) {}
+    return 'classic';
+  },
+
   init() {
     try {
       if (this.ctx) {
@@ -933,7 +953,9 @@ const AudioSys = {
     if (!name || !SONGS[name]) return;
     this.desiredSong = name;
     if (!this.ctx || !save.music) { this.applyVolumes(); return; }
-    const theme = (typeof getAudioTheme === 'function') ? getAudioTheme() : 'classic';
+    const theme = (typeof getEffectiveAudioTheme === 'function')
+      ? getEffectiveAudioTheme()
+      : ((typeof getAudioTheme === 'function') ? getAudioTheme() : 'classic');
     if (this.song && this.song.id === name && (this.song.audioTheme || 'classic') === theme) {
       this.applyVolumes();
       return;
@@ -1468,6 +1490,36 @@ const SONGS = {
       [79,null,83,86, null,83,79,null, 81,null,79,76, 74,null,76,79],
     ],
   },
+  /** Halloween menu — Carpenter-ish A-minor ostinato (recognizable spooky theme). */
+  halloweenMenu: {
+    bpm: 88,
+    kick: [0], snare: [], hat: [4, 12],
+    bass: [45,null,null,null, 45,null,48,null, 45,null,null,null, 43,null,41,null],
+    lead: [
+      [69,69,69,69, 72,72,74,74, 69,69,69,69, 72,72,74,76],
+      [69,null,69,null, 72,null,74,null, 69,null,67,null, 65,null,64,null],
+    ],
+  },
+  /** Halloween fight — same ostinato, tighter drums. */
+  halloweenBattle: {
+    bpm: 118,
+    kick: [0, 8], snare: [4, 12], hat: [2, 6, 10, 14],
+    bass: [45,45,null,45, 48,null,45,null, 41,41,null,43, 45,null,43,null],
+    lead: [
+      [69,69,null,69, 72,72,74,null, 69,null,67,null, 65,null,64,67],
+      [69,null,72,74, null,72,69,null, 65,null,67,69, null,64,65,67],
+    ],
+  },
+  /** Halloween boss — heavier / slower menace. */
+  halloweenBoss: {
+    bpm: 100,
+    kick: [0, 4, 8, 12], snare: [4, 12], hat: [4, 12],
+    bass: [33,33,null,33, 36,null,33,null, 31,31,null,29, 33,null,31,null],
+    lead: [
+      [57,57,57,57, 60,60,62,62, 57,57,55,null, 53,null,52,null],
+      [57,null,60,62, null,60,57,null, 53,null,55,57, null,52,53,55],
+    ],
+  },
 };
 
 const MENU_BGM_TRACKS = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero', 'menuDream'];
@@ -1581,6 +1633,7 @@ const SONG_LABELS = {
   wall: 'Muur', training: 'Training', coinrun: 'Mats',
   summonReveal: 'Kist', summonPulse: 'Kist Pulse', summonMystic: 'Kist Mystiek',
   summonEpic: 'Kist Epic', summonJackpot: 'Kist Jackpot',
+  halloweenMenu: 'Halloween', halloweenBattle: 'Halloween gevecht', halloweenBoss: 'Halloween baas',
 };
 function songLabel(id) {
   if (!id) return '';

@@ -1,3 +1,4 @@
+| 2026-09-14 | **seasonal BGM** | Halloween ostinato + BGM volgt #277 (`data-season-audio`, `AudioSys.seasonId`, `sf-season-change`). Geen season-UI. **v1.18.166 / SW v376**. |
 | 2026-09-14 | **audio harden** | Theme-switch: soft BGM-restart, sidecar persist, geen stacked SFX, classic = raw SONGS. **v1.18.165 / SW v375**. |
 | 2026-09-14 | **audio themes** | Classic pack blijft; Jungle + Vuur-bamboe/Boesa soundtrack + lichte scenery-tint; persist in save.audioTheme; switch in Instellingen/Pauze. **v1.18.164 / SW v374**. |
 | 2026-09-14 | **locale + toast** | #266: NL VERLOREN, geen raw menu.tips / PICK AN ISLAND; versie-banner stiller + wegklik; rest HOME. **v1.18.163 / SW v373**. |
@@ -142,6 +143,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | Seasonal BGM #270: Halloween ostinato + #277 hooks (`data-season-audio`, `AudioSys.seasonId`, `sf-season-change`). Geen season-UI. v1.18.166 / SW 376. |
 | 2026-09-14 | — | Audio harden #270: soft replay, sidecar, geen stacked SFX, classic raw SONGS. v1.18.165 / SW 375. |
 | 2026-09-14 | — | Audio themes: classic pack blijft; Jungle + Vuur-bamboe/Boesa BGM/SFX + lichte scenery-tint; save.audioTheme persist; switch Instellingen + Pauze. v1.18.164 / SW 374. i18n aparte agent. |
 | 2026-09-14 | — | #266 sprint: locale (VERLOREN, Tips-label, eilandkop) + stillere versie-banner + rest HOME. v1.18.163 / SW 373. Draft. |

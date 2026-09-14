@@ -26,9 +26,24 @@ const missions = fs.readFileSync(path.join(root, 'src/systems/missions.js'), 'ut
 const start = fs.readFileSync(path.join(root, 'src/boot/start.js'), 'utf8');
 const loop = fs.readFileSync(path.join(root, 'src/boot/loop.js'), 'utf8');
 
-if (!/AUDIO_THEME_IDS = \['classic', 'jungle', 'fire-bamboo-boesa'\]/.test(themes)) {
-  fail('AUDIO_THEME_IDS must be classic + jungle + fire-bamboo-boesa');
+if (!/AUDIO_THEME_IDS = \['classic', 'jungle', 'fire-bamboo-boesa', 'halloween'\]/.test(themes)) {
+  fail('AUDIO_THEME_IDS must be classic + jungle + fire-bamboo-boesa + halloween');
 }
+if (!/SEASON_AUDIO_IDS = \['classic', 'jungle', 'halloween', 'winter', 'summer'\]/.test(themes)) {
+  fail('SEASON_AUDIO_IDS must match #277 overlay ids');
+}
+if (!/sf-season-change/.test(themes)) fail('must listen for #277 sf-season-change');
+if (!/getEffectiveAudioTheme/.test(themes)) fail('overlay must resolve an effective BGM pack');
+if (!/data-season-audio/.test(themes)) fail('must read html[data-season-audio] from #277');
+if (!/halloweenMenu: \{/.test(audio)) fail('dedicated halloweenMenu song missing');
+if (!/halloweenBattle: \{/.test(audio)) fail('dedicated halloweenBattle song missing');
+if (!/halloweenBoss: \{/.test(audio)) fail('dedicated halloweenBoss song missing');
+if (!/seasonId\(\) \{/.test(audio)) fail('AudioSys.seasonId must match #277 hook');
+if (!/getEffectiveAudioTheme/.test(audio)) fail('AudioSys.play must use effective (season) theme');
+if (/id="seasonOverlay"/.test(html) || /id="seasonSwitchBar"/.test(html)) {
+  fail('audio PR must not add season overlay UI (that is #277)');
+}
+if (/seasons\.css/.test(html)) fail('audio PR must not add seasons.css');
 if (!/audioTheme: 'classic'/.test(storage)) fail('DEFAULT_SAVE.audioTheme must default to classic');
 if (!/normalizeAudioTheme\(out\.audioTheme\)/.test(storage) && !/allowedThemes.includes\(out\.audioTheme\)/.test(storage)) {
   fail('sanitizeSave must clamp audioTheme');
@@ -76,11 +91,29 @@ const rt = {
       bpm: 138, kick: [0, 4], snare: [4], hat: [2, 6],
       bass: [40, null, 43, null], lead: [[76, null, 79, null]],
     },
+    menu: {
+      bpm: 96, kick: [0], snare: [], hat: [4],
+      bass: [45, null], lead: [[69, null]],
+    },
+    halloweenMenu: {
+      bpm: 88, kick: [0], snare: [], hat: [4, 12],
+      bass: [45, null], lead: [[69, 69, 69, 69]],
+    },
+    halloweenBattle: {
+      bpm: 118, kick: [0, 8], snare: [4, 12], hat: [2, 6],
+      bass: [45, 45], lead: [[69, 69, null, 69]],
+    },
+    halloweenBoss: {
+      bpm: 100, kick: [0, 4], snare: [4], hat: [4],
+      bass: [33, 33], lead: [[57, 57, 57, 57]],
+    },
   },
   AudioSys: { currentSongId() { return ''; }, play() {}, sfx() {}, song: null, ctx: null },
   UI: { renderSettings() {}, renderPauseToggles() {}, toast() {} },
   document: {
     body: { setAttribute(k, v) { rt.__domTheme = v; } },
+    documentElement: { dataset: {} },
+    addEventListener() {},
     getElementById() { return null; },
   },
   bindPress() {},
@@ -133,4 +166,43 @@ if (rt.save.audioTheme !== 'jungle') fail('boot heal must write jungle back into
 const same = rt.setAudioTheme('classic');
 if (same !== 'classic') fail('setAudioTheme classic must stay classic');
 
-console.log('SMOKE_OK audio-themes: classic pack kept, jungle + fire-bamboo-boesa switch, persist + scenery hooks');
+rt.setAudioTheme('halloween');
+if (rt.getAudioTheme() !== 'halloween') fail('halloween player chip must persist');
+if (rt.resolveHalloweenSongName('menu') !== 'halloweenMenu') fail('halloween menu map');
+if (rt.resolveHalloweenSongName('battle') !== 'halloweenBattle') fail('halloween battle map');
+if (rt.resolveHalloweenSongName('boss') !== 'halloweenBoss') fail('halloween boss map');
+const hallBattle = rt.resolveThemedSong('battle');
+if (!hallBattle || hallBattle.bpm !== 118) fail('halloween battle must use dedicated ostinato track');
+const hallMenu = rt.resolveThemedSong('menu');
+if (!hallMenu || hallMenu.bpm !== 88) fail('halloween menu must use dedicated ostinato track');
+
+rt.setAudioTheme('classic');
+rt.document.documentElement.dataset.seasonAudio = 'jungle';
+if (rt.getAudioTheme() !== 'classic') fail('overlay must not rewrite player chip');
+if (rt.getEffectiveAudioTheme() !== 'jungle') fail('#277 jungle overlay must switch BGM pack');
+const overlayJungle = rt.resolveThemedSong('battle');
+if (!overlayJungle || overlayJungle.bpm !== Math.round(138 * 0.92)) {
+  fail('jungle overlay must remix classic battle');
+}
+
+rt.document.documentElement.dataset.seasonAudio = 'classic';
+rt.setAudioTheme('fire-bamboo-boesa');
+if (rt.getEffectiveAudioTheme() !== 'fire-bamboo-boesa') {
+  fail('overlay classic must keep player fire-bamboo pack usable');
+}
+
+rt.document.documentElement.dataset.seasonAudio = 'halloween';
+if (rt.getEffectiveAudioTheme() !== 'halloween') fail('halloween overlay must switch BGM');
+if (rt.getAudioTheme() !== 'fire-bamboo-boesa') fail('player fire-bamboo chip stays under halloween overlay');
+if (rt.resolveThemedSong('battle').bpm !== 118) fail('halloween overlay must play dedicated battle track');
+
+rt.document.documentElement.dataset.seasonAudio = 'winter';
+if (rt.getEffectiveAudioTheme() !== 'winter') fail('winter overlay hook must map to winter pack');
+
+rt.document.documentElement.dataset.seasonAudio = '';
+rt.document.documentElement.dataset.season = '';
+if (rt.getEffectiveAudioTheme() !== 'fire-bamboo-boesa') {
+  fail('empty season hook must fall back to player pack');
+}
+
+console.log('SMOKE_OK audio-themes: classic pack kept, halloween + #277 season hooks, jungle/fire-bamboo persist');
