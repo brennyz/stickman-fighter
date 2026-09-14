@@ -19,6 +19,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 
 | Gebruiker vroeg | Versie | Commit | Waar in code |
 |-----------------|--------|--------|----------------|
+| **Gear loadout (5 slots)** | 1.18.164 | this branch | `src/data/gear.js`, `docs/GEAR-SYSTEM.md`, `#gearScreen` |
 | **Asset / knop-stijl (leidend)** | docs | — | `ASSET-STYLE.md`, `assets/buttons/` |
 | Character select **deel 1** | 1.11.1 | `09b7dc2` | `index.html` `#charSelectScreen`, `game.js` charPickStep |
 | Character select **deel 2** | 1.11.2 | `7d236c1` | `#charIconRow`, `#btnCharSagaClash`, saga strip |

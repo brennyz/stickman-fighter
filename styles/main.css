@@ -1367,6 +1367,10 @@
     background: linear-gradient(135deg, rgba(124, 240, 232, 0.14), transparent 45%), var(--menu-tile-solid);
     border-color: rgba(124, 240, 232, 0.24);
   }
+  #modeHubScreen.mode-hub-home .hub-tile-gear {
+    background: linear-gradient(135deg, rgba(255, 215, 94, 0.14), transparent 45%), var(--menu-tile-solid);
+    border-color: rgba(255, 215, 94, 0.28);
+  }
   #modeHubScreen.mode-hub-home .hub-tile-skills {
     background: linear-gradient(135deg, rgba(154, 108, 255, 0.16), transparent 45%), var(--menu-tile-solid);
     border-color: rgba(154, 108, 255, 0.28);
@@ -2058,6 +2062,37 @@
   .style-card.sel { border-color:#ffd75e; background:rgba(255,215,94,.14); }
   .style-card.locked { opacity:.4; }
   .style-card canvas { display:block; margin:0 auto 8px; }
+  .gear-slot-row {
+    display: flex; flex-wrap: wrap; gap: 8px; width: min(92vw, 640px); margin: 8px auto 12px;
+  }
+  .gear-slot-btn {
+    flex: 1 1 72px; min-height: 54px; border-radius: 13px; padding: 8px 6px;
+    background: var(--menu-tile-solid, #162033); border: 2px solid rgba(255,255,255,.12);
+    color: var(--menu-ink, #f2efe6); font-weight: 800; font-size: 11px; text-align: center;
+    cursor: pointer; touch-action: manipulation;
+  }
+  .gear-slot-btn.active { border-color: #ffd75e; background: rgba(255,215,94,.14); }
+  .gear-slot-btn .gear-slot-name { display: block; letter-spacing: .04em; text-transform: uppercase; opacity: .72; font-size: 10px; }
+  .gear-slot-btn .gear-slot-item { display: block; margin-top: 3px; font-size: 12px; }
+  .gear-list { width: min(92vw, 640px); margin: 0 auto 12px; display: flex; flex-direction: column; gap: 8px; }
+  .gear-card {
+    border-radius: 14px; padding: 12px 14px; text-align: left; cursor: pointer;
+    touch-action: manipulation; background: rgba(255,255,255,.06); border: 2px solid transparent;
+    font-weight: 700;
+  }
+  .gear-card.sel { border-color: #ffd75e; background: rgba(255,215,94,.12); }
+  .gear-card.locked { opacity: .48; cursor: default; }
+  .gear-card-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+  .gear-card-name { font-size: 15px; font-weight: 900; }
+  .gear-flag {
+    font-size: 10px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2);
+  }
+  .gear-flag.vanity { color: #9db1e3; }
+  .gear-flag.stats { color: #7cf5ff; border-color: rgba(124,245,255,.35); }
+  .gear-flag.armour { color: #ffd75e; border-color: rgba(255,215,94,.35); }
+  .gear-card-desc { font-size: 12px; opacity: .78; margin-top: 4px; line-height: 1.35; }
+  .gear-card-meta { font-size: 11px; opacity: .7; margin-top: 6px; }
   .skill-grid-scroll { width:min(94vw,680px); max-height:min(38vh,320px); overflow-y:auto;
       overflow-x:hidden; margin:8px auto 12px; padding:4px 6px 8px; -webkit-overflow-scrolling:touch;
       scroll-behavior:smooth; border-radius:18px; border:1px solid rgba(255,255,255,.08);

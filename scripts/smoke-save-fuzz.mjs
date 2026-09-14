@@ -78,6 +78,8 @@ const mutators = [
   (s) => { s.itemUpgrades = { weapon: { fake: { level: 9 } }, hacker: { x: 1 } }; },
   (s) => { s.achievements = '[]'; },
   (s) => { s.activeTechnique = 42; },
+  (s) => { s.gear = { schema: 99, equipped: { charm: 'charm_void', head: 1 }, owned: ['nope', 'head_wrap_cloth'] }; s.createdAt = 'soon'; },
+  (s) => { s.gear = { owned: { __proto__: { x: 1 }, constructor: { y: 1 } } }; },
   (s) => { s.stars = { abc: 'three' }; },
   (s) => { s.tipsSeen = 'yes'; },
   (s) => { delete s.lvl; delete s.xp; },

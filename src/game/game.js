@@ -147,6 +147,7 @@ class Game {
       });
       applyPlayerStyle(this.player);
       applyStyleBonusesToPlayer(this, this.player);
+      if (typeof applyGearBonusesToPlayer === 'function') applyGearBonusesToPlayer(this, this.player);
       applyPlayerSkill(this.player);
       this.petDmgMul = 1;
       this.petEnergyMul = 1;
