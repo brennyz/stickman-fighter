@@ -875,11 +875,21 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
       }
       break;
     default:
-      c.fillStyle = body;
-      c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
-      c.strokeStyle = dark;
-      c.lineWidth = Math.max(2, r * 0.08);
-      c.stroke();
+      if (typeof drawCatalogStubArt === 'function' && typeof MONSTER_ART_SLOTS !== 'undefined' && MONSTER_ART_SLOTS[sp.art]) {
+        try {
+          drawCatalogStubArt(c, sp.art, r, t, body, dark, telegraph);
+        } catch (err) {
+          console.error('[CatalogArt]', sp.art, err);
+          c.fillStyle = body;
+          c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+        }
+      } else {
+        c.fillStyle = body;
+        c.beginPath(); c.ellipse(0, 0, r, r * 0.82, 0, 0, TAU); c.fill();
+        c.strokeStyle = dark;
+        c.lineWidth = Math.max(2, r * 0.08);
+        c.stroke();
+      }
       break;
   }
 }
