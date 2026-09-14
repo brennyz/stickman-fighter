@@ -645,6 +645,22 @@
       "text": "Zone-wapens goed koppelen, checken, harden en mergen",
       "status": "done-in-code",
       "updated": "2026-07-26"
+    },
+    {
+      "id": "w-20260914T165600",
+      "from": "user",
+      "text": "Harden FOMO design audit on #274 only. Tighten P0–P3 briefs, Cursor-executable, no fluff. Same PR. No scope creep.",
+      "status": "done-in-code",
+      "updated": "2026-09-14",
+      "notes": "docs/FOMO-GAPS.md rewritten as implement spec: exact hooks, dud/hit, PR-A/B split, resolved gates."
+    },
+    {
+      "id": "w-20260914T164800",
+      "from": "user",
+      "text": "FOMO / retention GAP design audit (codebase + design doc PR). Android-first, NO Versus. Game-maker + player view on what's MISSING: better summons, other loot, dailies, progression cliffs. Widget skipped — full scan P0–P3. Deliver docs/FOMO-GAPS.md. No full gear/cosmetics, no audio themes.",
+      "status": "done-in-code",
+      "updated": "2026-09-14",
+      "notes": "docs/FOMO-GAPS.md — P0 clock/ritual/pity/streak; P1 weekly/shard/NM sneak/banner. Design only."
     }
   ],
   "agentRules": [

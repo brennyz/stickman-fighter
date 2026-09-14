@@ -143,6 +143,8 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | FOMO spec harden (#274): Cursor-executable F0–F13 briefs, PR-A/B split, dud/hit + gates pinned. No gameplay. |
+| 2026-09-14 | — | FOMO/retention design audit: `docs/FOMO-GAPS.md` (P0 clock+ritual+pity+streak · P1 weekly/shard/NM sneak). No gameplay. v1.18.163 / SW 373. |
 | 2026-09-14 | — | #273 base for #283: t() aligned EN-first; additive aliases (dexAppears/dexNotSeen/errLoad*). Rebase #283 onto #273. |
 | 2026-09-14 | — | i18n harden #273: Collectie/Settings leftover Dutch via t(); EN/DE geen NL-markers. v1.18.165 / SW 375. Draft. |
 | 2026-09-14 | — | EN/DE/NL UI chrome: locale in scope, geen grote NL-blokken op EN/DE. v1.18.164 / SW 374. Draft. |
