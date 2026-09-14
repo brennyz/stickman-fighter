@@ -87,7 +87,13 @@
         "text": "scripts/github-sync-status.sh"
       }
     ],
-    "pendingMerge": []
+    "pendingMerge": [
+      {
+        "id": "pr-274",
+        "kind": "pr",
+        "text": "#274 FOMO/retention design (docs/FOMO-GAPS.md) — ask before main"
+      }
+    ]
   },
   "userWishlist": [
     {
@@ -622,6 +628,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T16:54:39Z",
+      "summary": "FOMO/retention design audit: docs/FOMO-GAPS.md P0 clock+ritual+pity+streak, P1 weekly/shard/NM sneak. PR #274. No gameplay."
+    },
+    {
       "at": "2026-09-14T15:17:48Z",
       "summary": "#266 sprint: NL VERLOREN, Tips-label i.p.v. menu.tips, stillere versie-banner, rest HOME. v1.18.163/SW373. Draft."
     },
@@ -716,10 +726,6 @@
     {
       "at": "2026-08-17T10:03:24Z",
       "summary": "LIVE gemerged #248–#255 naar main conflictloos · v1.18.151 / SW 361 — pull main op de pc"
-    },
-    {
-      "at": "2026-08-17T10:02:29Z",
-      "summary": "LIVE merge van d8–d14 stack naar main (conflictloos FF)"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
