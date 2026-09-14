@@ -1,9 +1,6 @@
 # Seasonal pixel overlays
 
-Stickman-pixel **corner / rail / crest** props. Not buttons, not gear, not combat HUD.
-
-**Contract (slot IDs):** [`docs/season-overlay-slots.md`](../../docs/season-overlay-slots.md)  
-**Style:** [`ASSET-STYLE.md`](../../ASSET-STYLE.md) palettes (green / gold / purple / pumpkin). Chunky integer pixels, SVG, retina-safe.
+Stickman-pixel props for **overlay slots only**. Contract: [`docs/season-overlay-slots.md`](../../docs/season-overlay-slots.md) (aligned with CSS pair `#279`).
 
 ## Packs
 
@@ -12,13 +9,12 @@ Stickman-pixel **corner / rail / crest** props. Not buttons, not gear, not comba
 | Jungle | `jungle/` | Vines, leaves, ferns, gold fruit |
 | Halloween | `halloween/` | Cobwebs, bats, pumpkins, candles |
 
-Each pack has the **same filenames** as the slot IDs: `corner-tl.svg`, `corner-tr.svg`, `rail-l.svg`, `rail-r.svg`, `corner-bl.svg`, `corner-br.svg`, `crest.svg`.
+## Slot files (every pack)
 
-`_sheet.svg` is a labeled preview only (not wired in-game).
+`corner-tl` · `corner-tr` · `corner-bl` · `corner-br` · `banner` · `vignette` · `ground-trim` · `motif`
 
-## Rules
+Each slot ships `.png` (what CSS/JS `#279` loads) plus `.svg` source. Extra `rail-*` / `crest` SVGs are leftovers for sheets only.
 
-- Small files, `shape-rendering="crispEdges"`.
-- Transparent background — sit **behind / around** UI.
-- Replace = overwrite the same path. No `v2` names.
-- Regenerator: `python3 scripts/gen-season-pixel-art.py`
+Regenerate: `python3 scripts/gen-season-pixel-art.py`
+
+Preview: `preview.html`

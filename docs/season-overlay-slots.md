@@ -1,8 +1,10 @@
-# Season overlay slots — contract (art + CSS pair)
+# Season overlay slots — art contract
 
-**Art bot owns:** pixel packs under `assets/seasons/{pack}/` and wiring those files onto the slots below.  
-**CSS/story bot owns:** season calendar copy, extra tokens, motion — **do not rename these IDs**.  
-**Out of scope here:** gear-equip art, FOMO, Versus.
+**Aligned with CSS/story PR** [`docs/SEASON-ASSET-SLOTS.md`](https://github.com/brennyz/stickman-fighter/blob/cursor/season-overlays-09c7/docs/SEASON-ASSET-SLOTS.md) (#279).
+
+**Art bot owns:** pixel files under `assets/seasons/{pack}/`.  
+**CSS/story bot owns:** calendar, picker, flavor copy — **do not rename these slots**.  
+**Out of scope:** gear-equip art, FOMO, Versus.
 
 Live play URL stays [`speel.html`](https://brennyz.github.io/stickman-fighter/speel.html).
 
@@ -12,36 +14,40 @@ Live play URL stays [`speel.html`](https://brennyz.github.io/stickman-fighter/sp
 |-------|-------------|-----------------|
 | `jungle` | `assets/seasons/jungle/` | `?season=jungle` or `localStorage.sfSeason=jungle` |
 | `halloween` | `assets/seasons/halloween/` | October 1 – November 2, or `?season=halloween` |
+| `classic` | — | overlay off (`?season=none` / `classic`) |
 
-`document.body.dataset.season` is the switch. `?season=none` forces off.
+`document.body.dataset.season` and `html[data-season]` are the switch.
 
-## Slot IDs (stable)
+## Slot IDs (stable — match #279)
 
 Host: `#seasonOverlay` (not a `.screen`; `aria-hidden`; **`pointer-events: none`**).
 
-| DOM `id` | `data-season-slot` | CSS variable | File (per pack) | Safe zone |
-|----------|--------------------|--------------|-----------------|-----------|
-| `seasonSlotCornerTL` | `corner-tl` | `--season-art-corner-tl` | `corner-tl.svg` | Top-left bezel; beside title, never over tiles |
-| `seasonSlotCornerTR` | `corner-tr` | `--season-art-corner-tr` | `corner-tr.svg` | Top-right bezel |
-| `seasonSlotRailL` | `rail-l` | `--season-art-rail-l` | `rail-l.svg` | Left edge; **hidden below 560px** (Android) |
-| `seasonSlotRailR` | `rail-r` | `--season-art-rail-r` | `rail-r.svg` | Right edge; **hidden below 560px** |
-| `seasonSlotCornerBL` | `corner-bl` | `--season-art-corner-bl` | `corner-bl.svg` | Bottom-left corner hug; behind dock |
-| `seasonSlotCornerBR` | `corner-br` | `--season-art-corner-br` | `corner-br.svg` | Bottom-right corner hug; behind dock |
-| `seasonSlotCrest` | `crest` | `--season-art-crest` | `crest.svg` | Tiny top-center watermark; low opacity |
+| `data-season-slot` | CSS class | CSS variable | File | Safe zone |
+|--------------------|-----------|--------------|------|-----------|
+| `corner-tl` | `.season-art-tl` | `--season-art-corner-tl` | `corner-tl.png` | Top-left bezel |
+| `corner-tr` | `.season-art-tr` | `--season-art-corner-tr` | `corner-tr.png` | Top-right; **clear disc for pause** |
+| `corner-bl` | `.season-art-bl` | `--season-art-corner-bl` | `corner-bl.png` | Above `--season-safe-bottom` (joystick band) |
+| `corner-br` | `.season-art-br` | `--season-art-corner-br` | `corner-br.png` | Above attack-pad band |
+| `banner` | `.season-art-banner` | `--season-art-banner` | `banner.png` | Thin top strip; hidden on short phones |
+| `vignette` | `.season-vignette` | `--season-art-vignette` | `vignette.png` | Translucent corners only |
+| `ground-trim` | `.season-art-ground` | `--season-art-ground-trim` | `ground-trim.png` | Bottom moss/pumpkins **above** dock/pads |
+| `motif` | `.season-art-motif` | `--season-art-motif` | `motif.png` | Small emblem, low opacity |
 
-## Safety (must keep)
+SVG sources sit next to each PNG (same stem). Regenerator writes both.
 
-1. Host and every slot: `pointer-events: none` — never steal taps.
-2. Hidden during `body.is-playing` (combat HUD / pads stay clean).
+`window.__sfSeasonArtPresent` lists shipped files so #279 can set `--season-art-*` without 404s.
+
+## Safety
+
+1. Host and every slot: `pointer-events: none`.
+2. Hidden during `body.is-playing`.
 3. Visible only on `#menuScreen.active` or `#modeHubScreen.active`.
-4. Art stays in corners / thin rails — **not** on hub tiles, dock, lang bar, pause, or title text.
-5. `z-index` 21 = above `.screen` paint, below pause (50) / toasts / splash.
-6. `image-rendering: pixelated` + even CSS sizes (64 / 72) for retina.
+4. `--season-safe-bottom` (≥168px) keeps ground/BL/BR off Android pads and the meta dock.
+5. `image-rendering: pixelated` + 4× PNG (retina-safe chunky scale).
 
-## Preview
+## Preview / QA
 
-- Pack sheets: `assets/seasons/jungle/_sheet.svg`, `assets/seasons/halloween/_sheet.svg`
-- Interactive mock: `assets/seasons/preview.html`
-- In-game QA: `index.html?season=jungle` and `index.html?season=halloween`
-
-Regenerate art: `python3 scripts/gen-season-pixel-art.py`
+- `assets/seasons/preview.html`
+- `index.html?season=jungle` · `index.html?season=halloween`
+- `python3 scripts/gen-season-pixel-art.py`
+- `npm run smoke:season`

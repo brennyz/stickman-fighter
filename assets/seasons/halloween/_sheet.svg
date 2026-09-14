@@ -3,14 +3,16 @@
 <text x="24.0" y="45" fill="#9db1e3" font-size="5" text-anchor="middle" font-family="monospace">corner-tl</text>
 <image href="corner-tr.svg" x="52" y="4" width="40" height="40" style="image-rendering:pixelated"/>
 <text x="72.0" y="45" fill="#9db1e3" font-size="5" text-anchor="middle" font-family="monospace">corner-tr</text>
-<image href="rail-l.svg" x="100" y="4" width="40" height="40" style="image-rendering:pixelated"/>
-<text x="120.0" y="45" fill="#9db1e3" font-size="5" text-anchor="middle" font-family="monospace">rail-l</text>
-<image href="rail-r.svg" x="148" y="4" width="40" height="40" style="image-rendering:pixelated"/>
-<text x="168.0" y="45" fill="#9db1e3" font-size="5" text-anchor="middle" font-family="monospace">rail-r</text>
-<image href="corner-bl.svg" x="4" y="52" width="40" height="40" style="image-rendering:pixelated"/>
-<text x="24.0" y="93" fill="#9db1e3" font-size="5" text-anchor="middle" font-family="monospace">corner-bl</text>
-<image href="corner-br.svg" x="52" y="52" width="40" height="40" style="image-rendering:pixelated"/>
-<text x="72.0" y="93" fill="#9db1e3" font-size="5" text-anchor="middle" font-family="monospace">corner-br</text>
-<image href="crest.svg" x="100" y="52" width="40" height="40" style="image-rendering:pixelated"/>
-<text x="120.0" y="93" fill="#9db1e3" font-size="5" text-anchor="middle" font-family="monospace">crest</text>
+<image href="corner-bl.svg" x="100" y="4" width="40" height="40" style="image-rendering:pixelated"/>
+<text x="120.0" y="45" fill="#9db1e3" font-size="5" text-anchor="middle" font-family="monospace">corner-bl</text>
+<image href="corner-br.svg" x="148" y="4" width="40" height="40" style="image-rendering:pixelated"/>
+<text x="168.0" y="45" fill="#9db1e3" font-size="5" text-anchor="middle" font-family="monospace">corner-br</text>
+<image href="banner.svg" x="4" y="52" width="40" height="40" style="image-rendering:pixelated"/>
+<text x="24.0" y="93" fill="#9db1e3" font-size="5" text-anchor="middle" font-family="monospace">banner</text>
+<image href="vignette.svg" x="52" y="52" width="40" height="40" style="image-rendering:pixelated"/>
+<text x="72.0" y="93" fill="#9db1e3" font-size="5" text-anchor="middle" font-family="monospace">vignette</text>
+<image href="ground-trim.svg" x="100" y="52" width="40" height="40" style="image-rendering:pixelated"/>
+<text x="120.0" y="93" fill="#9db1e3" font-size="5" text-anchor="middle" font-family="monospace">ground-trim</text>
+<image href="motif.svg" x="148" y="52" width="40" height="40" style="image-rendering:pixelated"/>
+<text x="168.0" y="93" fill="#9db1e3" font-size="5" text-anchor="middle" font-family="monospace">motif</text>
 </svg>

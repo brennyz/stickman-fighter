@@ -1,8 +1,17 @@
 /* Season overlay — resolve pack token onto body[data-season].
-   Slots + art: docs/season-overlay-slots.md · styles/season-overlays.css
-   No FOMO, no gear, no Versus. Combat hides via CSS (body.is-playing). */
+   Slot contract matches CSS pair #279: docs/SEASON-ASSET-SLOTS.md
+   Art files: assets/seasons/<id>/<slot>.png
+   Combat hides via CSS (body.is-playing). No gear, no FOMO. */
 
 const SEASON_PACKS = { jungle: 1, halloween: 1 };
+const SEASON_ART_SLOTS = [
+  'corner-tl', 'corner-tr', 'corner-bl', 'corner-br',
+  'banner', 'vignette', 'ground-trim', 'motif',
+];
+const SEASON_ART_PRESENT = {
+  jungle: { 'corner-tl': 1, 'corner-tr': 1, 'corner-bl': 1, 'corner-br': 1, banner: 1, vignette: 1, 'ground-trim': 1, motif: 1 },
+  halloween: { 'corner-tl': 1, 'corner-tr': 1, 'corner-bl': 1, 'corner-br': 1, banner: 1, vignette: 1, 'ground-trim': 1, motif: 1 },
+};
 
 function calendarSeasonOverlay(now) {
   const d = now || new Date();
@@ -15,26 +24,47 @@ function calendarSeasonOverlay(now) {
 function resolveSeasonOverlay() {
   try {
     const q = new URLSearchParams(location.search).get('season');
-    if (q === 'none' || q === 'off' || q === '0') return '';
+    if (q === 'none' || q === 'off' || q === '0' || q === 'classic') return '';
     if (q && SEASON_PACKS[q]) return q;
   } catch (_) {}
   try {
     const stored = localStorage.getItem('sfSeason');
-    if (stored === 'none' || stored === '') return '';
+    if (stored === 'none' || stored === '' || stored === 'classic') return '';
     if (stored && SEASON_PACKS[stored]) return stored;
   } catch (_) {}
   return calendarSeasonOverlay();
 }
 
+function seasonArtUrl(sid, slot) {
+  if (!SEASON_ART_SLOTS.includes(slot)) return '';
+  if (!SEASON_ART_PRESENT[sid] || !SEASON_ART_PRESENT[sid][slot]) return '';
+  return 'assets/seasons/' + sid + '/' + slot + '.png';
+}
+
 function applySeasonOverlay() {
   const season = resolveSeasonOverlay();
   const body = typeof document !== 'undefined' ? document.body : null;
-  if (!body) return season;
-  if (season) body.setAttribute('data-season', season);
-  else body.removeAttribute('data-season');
-  body.classList.toggle('has-season-overlay', !!season);
+  const root = typeof document !== 'undefined' ? document.documentElement : null;
+  if (body) {
+    if (season) body.setAttribute('data-season', season);
+    else body.removeAttribute('data-season');
+    body.classList.toggle('has-season-overlay', !!season);
+  }
+  if (root) {
+    if (season) root.setAttribute('data-season', season);
+    else root.removeAttribute('data-season');
+    SEASON_ART_SLOTS.forEach((slot) => {
+      const url = season ? seasonArtUrl(season, slot) : '';
+      if (url) root.style.setProperty('--season-art-' + slot, 'url("' + url + '")');
+      else root.style.removeProperty('--season-art-' + slot);
+    });
+  }
   const host = document.getElementById('seasonOverlay');
-  if (host) host.setAttribute('data-season-pack', season || '');
+  if (host) {
+    host.setAttribute('data-season-pack', season || '');
+    host.setAttribute('aria-hidden', 'true');
+    host.style.pointerEvents = 'none';
+  }
   return season;
 }
 
@@ -44,5 +74,8 @@ try {
     resolve: resolveSeasonOverlay,
     apply: applySeasonOverlay,
     packs: Object.keys(SEASON_PACKS),
+    slots: SEASON_ART_SLOTS,
+    present: SEASON_ART_PRESENT,
   };
+  window.__sfSeasonArtPresent = SEASON_ART_PRESENT;
 } catch (_) {}

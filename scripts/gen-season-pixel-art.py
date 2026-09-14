@@ -2,10 +2,24 @@
 """Generate stickman-pixel seasonal overlay SVGs (integer pixels, merged runs)."""
 from __future__ import annotations
 
+import struct
+import zlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "assets" / "seasons"
+
+# CSS-pair contract (#279 / docs/SEASON-ASSET-SLOTS.md)
+CONTRACT_SLOTS = (
+    "corner-tl",
+    "corner-tr",
+    "corner-bl",
+    "corner-br",
+    "banner",
+    "vignette",
+    "ground-trim",
+    "motif",
+)
 
 JUNGLE = {
     "V": "#5a3818",
@@ -95,10 +109,53 @@ def svg_from_grid(grid: list[list[str]], palette: dict[str, str]) -> str:
     )
 
 
-def write(pack: str, name: str, grid: list[list[str]], palette: dict[str, str]) -> Path:
+def hex_rgba(hex_color: str, alpha: int = 255) -> tuple[int, int, int, int]:
+    h = hex_color.lstrip("#")
+    return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16), alpha
+
+
+def scale_grid(grid: list[list[str]], n: int) -> list[list[str]]:
+    out: list[list[str]] = []
+    for row in grid:
+        scaled = []
+        for ch in row:
+            scaled.extend([ch] * n)
+        for _ in range(n):
+            out.append(list(scaled))
+    return out
+
+
+def write_png(path: Path, grid: list[list[str]], palette: dict[str, str], scale: int = 4) -> None:
+    g = scale_grid(grid, scale)
+    h = len(g)
+    w = len(g[0]) if h else 0
+    raw = bytearray()
+    for row in g:
+        raw.append(0)
+        for ch in row:
+            if ch == "." or ch not in palette:
+                raw.extend((0, 0, 0, 0))
+            else:
+                raw.extend(hex_rgba(palette[ch]))
+
+    def chunk(tag: bytes, data: bytes) -> bytes:
+        crc = zlib.crc32(tag + data) & 0xFFFFFFFF
+        return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", crc)
+
+    ihdr = struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0)
+    png = b"\x89PNG\r\n\x1a\n"
+    png += chunk(b"IHDR", ihdr)
+    png += chunk(b"IDAT", zlib.compress(bytes(raw), 9))
+    png += chunk(b"IEND", b"")
+    path.write_bytes(png)
+
+
+def write(pack: str, name: str, grid: list[list[str]], palette: dict[str, str], png: bool = False) -> Path:
     dest = OUT / pack / f"{name}.svg"
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(svg_from_grid(grid, palette), encoding="utf-8")
+    if png:
+        write_png(OUT / pack / f"{name}.png", grid, palette, 4)
     return dest
 
 
@@ -331,6 +388,106 @@ def halloween_rail_r() -> list[list[str]]:
     return flip_h(halloween_rail_l())
 
 
+def jungle_banner() -> list[list[str]]:
+    g = blank(80, 16)
+    for x in range(80):
+        if x % 7 < 2:
+            plot(g, x, 0, "V")
+        if x % 11 == 0:
+            stamp(g, x, 1, LEAF_S)
+        if x % 13 == 3:
+            stamp(g, x, 4, LEAF_S)
+    stamp(g, 8, 2, LEAF)
+    stamp(g, 36, 1, LEAF)
+    stamp(g, 62, 3, LEAF)
+    return g
+
+
+def halloween_banner() -> list[list[str]]:
+    g = blank(80, 16)
+    for x in range(80):
+        plot(g, x, 0, "W" if x % 2 == 0 else "w")
+        if x % 6 == 0:
+            plot(g, x, 1, "w")
+        if x % 10 == 0:
+            for y in range(min(8, 16)):
+                plot(g, x, y, "w")
+    stamp(g, 18, 3, halloween_bat())
+    stamp(g, 52, 2, halloween_bat())
+    return g
+
+
+def jungle_ground() -> list[list[str]]:
+    g = blank(48, 16)
+    stamp(g, 2, 4, FERN)
+    stamp(g, 16, 6, LEAF_S)
+    stamp(g, 28, 3, FERN)
+    rect(g, 40, 12, 3, 2, "F")
+    plot(g, 40, 12, "O")
+    for x in range(48):
+        plot(g, x, 15, "D" if x % 3 else "M")
+    return g
+
+
+def halloween_ground() -> list[list[str]]:
+    g = blank(48, 16)
+    stamp(g, 2, 4, [
+        "....ss....",
+        "....SS....",
+        "..ppPPpp..",
+        ".pPPEEPPp.",
+        "pPEBBEEPPp",
+        "pPPPEEPPPp",
+        ".pBBBBBPp.",
+        "..ppPPpp..",
+    ])
+    stamp(g, 28, 5, [
+        "...ss...",
+        "...SS...",
+        ".ppPPpp.",
+        "pPPEEPPp",
+        "pEBBEEPp",
+        "pPPPPPPp",
+        ".pBBBBp.",
+        "..pPPp..",
+    ])
+    for x in range(48):
+        plot(g, x, 15, "S" if x % 4 else "s")
+    return g
+
+
+def jungle_vignette() -> list[list[str]]:
+    g = blank(64, 64)
+    for i in range(18):
+        for j in range(18 - i):
+            ch = "D" if i + j < 8 else "M"
+            plot(g, j, i, ch)
+            plot(g, 63 - j, i, ch)
+            plot(g, j, 63 - i, ch)
+            plot(g, 63 - j, 63 - i, ch)
+    return g
+
+
+def halloween_vignette() -> list[list[str]]:
+    g = blank(64, 64)
+    for i in range(16):
+        for j in range(16 - i):
+            ch = "B" if i + j < 7 else "A"
+            plot(g, j, i, ch)
+            plot(g, 63 - j, i, ch)
+            plot(g, j, 63 - i, ch)
+            plot(g, 63 - j, 63 - i, ch)
+    return g
+
+
+def jungle_motif() -> list[list[str]]:
+    return jungle_crest()
+
+
+def halloween_motif() -> list[list[str]]:
+    return halloween_crest()
+
+
 def write_sheet(pack: str, files: list[str], palette: dict[str, str], cell: int = 48) -> None:
     """Simple labeled sheet for PR preview (not used in-game)."""
     cols = 4
@@ -359,27 +516,38 @@ def write_sheet(pack: str, files: list[str], palette: dict[str, str], cell: int 
 
 
 def main() -> None:
-    write("jungle", "corner-tl", jungle_corner_tl(), JUNGLE)
-    write("jungle", "corner-tr", flip_h(jungle_corner_tl()), JUNGLE)
-    write("jungle", "rail-l", jungle_rail_l(), JUNGLE)
-    write("jungle", "rail-r", flip_h(jungle_rail_l()), JUNGLE)
-    write("jungle", "corner-bl", jungle_corner_bl(), JUNGLE)
-    write("jungle", "corner-br", flip_h(jungle_corner_bl()), JUNGLE)
-    write("jungle", "crest", jungle_crest(), JUNGLE)
-    write_sheet("jungle", ["corner-tl", "corner-tr", "rail-l", "rail-r", "corner-bl", "corner-br", "crest"], JUNGLE)
-
-    write("halloween", "corner-tl", halloween_corner_tl(), HALLOWEEN)
-    write("halloween", "corner-tr", halloween_corner_tr(), HALLOWEEN)
-    write("halloween", "rail-l", halloween_rail_l(), HALLOWEEN)
-    write("halloween", "rail-r", halloween_rail_r(), HALLOWEEN)
-    write("halloween", "corner-bl", halloween_corner_bl(), HALLOWEEN)
-    write("halloween", "corner-br", halloween_corner_br(), HALLOWEEN)
-    write("halloween", "crest", halloween_crest(), HALLOWEEN)
-    write_sheet(
-        "halloween",
-        ["corner-tl", "corner-tr", "rail-l", "rail-r", "corner-bl", "corner-br", "crest"],
-        HALLOWEEN,
-    )
+    jungle = {
+        "corner-tl": jungle_corner_tl(),
+        "corner-tr": flip_h(jungle_corner_tl()),
+        "corner-bl": jungle_corner_bl(),
+        "corner-br": flip_h(jungle_corner_bl()),
+        "banner": jungle_banner(),
+        "vignette": jungle_vignette(),
+        "ground-trim": jungle_ground(),
+        "motif": jungle_motif(),
+        "rail-l": jungle_rail_l(),
+        "rail-r": flip_h(jungle_rail_l()),
+        "crest": jungle_crest(),
+    }
+    halloween = {
+        "corner-tl": halloween_corner_tl(),
+        "corner-tr": halloween_corner_tr(),
+        "corner-bl": halloween_corner_bl(),
+        "corner-br": halloween_corner_br(),
+        "banner": halloween_banner(),
+        "vignette": halloween_vignette(),
+        "ground-trim": halloween_ground(),
+        "motif": halloween_motif(),
+        "rail-l": halloween_rail_l(),
+        "rail-r": halloween_rail_r(),
+        "crest": halloween_crest(),
+    }
+    for name, grid in jungle.items():
+        write("jungle", name, grid, JUNGLE, png=name in CONTRACT_SLOTS)
+    for name, grid in halloween.items():
+        write("halloween", name, grid, HALLOWEEN, png=name in CONTRACT_SLOTS)
+    write_sheet("jungle", list(CONTRACT_SLOTS), JUNGLE)
+    write_sheet("halloween", list(CONTRACT_SLOTS), HALLOWEEN)
     print("wrote seasonal pixel packs →", OUT)
 
 

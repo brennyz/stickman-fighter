@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Smoke: seasonal overlay slots, packs, and combat-safe CSS. */
+/** Smoke: seasonal overlay slots aligned with #279 + jungle/halloween packs. */
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -27,43 +27,45 @@ must(manifest.includes('src/ui/season-overlay.js'), 'manifest missing season-ove
 const slots = [
   ['seasonSlotCornerTL', 'corner-tl'],
   ['seasonSlotCornerTR', 'corner-tr'],
-  ['seasonSlotRailL', 'rail-l'],
-  ['seasonSlotRailR', 'rail-r'],
   ['seasonSlotCornerBL', 'corner-bl'],
   ['seasonSlotCornerBR', 'corner-br'],
-  ['seasonSlotCrest', 'crest'],
+  ['seasonSlotBanner', 'banner'],
+  ['seasonSlotGroundTrim', 'ground-trim'],
+  ['seasonSlotMotif', 'motif'],
 ];
 for (const [id, slot] of slots) {
   must(html.includes(`id="${id}"`), `missing #${id}`);
   must(html.includes(`data-season-slot="${slot}"`), `missing data-season-slot=${slot}`);
   must(css.includes(`--season-art-${slot}`), `css missing --season-art-${slot}`);
 }
+must(html.includes('data-season-slot="vignette"'), 'missing vignette slot');
+must(css.includes('--season-art-vignette'), 'css missing vignette token');
 
 const packs = ['jungle', 'halloween'];
-const files = ['corner-tl', 'corner-tr', 'rail-l', 'rail-r', 'corner-bl', 'corner-br', 'crest'];
+const files = ['corner-tl', 'corner-tr', 'corner-bl', 'corner-br', 'banner', 'vignette', 'ground-trim', 'motif'];
 for (const pack of packs) {
   for (const file of files) {
-    const rel = `assets/seasons/${pack}/${file}.svg`;
+    const rel = `assets/seasons/${pack}/${file}.png`;
     const abs = path.join(root, rel);
     must(fs.existsSync(abs), `missing ${rel}`);
-    const svg = fs.readFileSync(abs, 'utf8');
-    must(svg.includes('shape-rendering="crispEdges"'), `${rel} must be crisp pixel SVG`);
-    must(svg.includes('viewBox='), `${rel} missing viewBox`);
-    must(fs.statSync(abs).size < 12000, `${rel} too large for overlay pack`);
+    must(fs.statSync(abs).size < 8000, `${rel} too large for overlay pack`);
     must(sw.includes(`./${rel}`), `sw.js precache missing ${rel}`);
+    const svg = path.join(root, `assets/seasons/${pack}/${file}.svg`);
+    must(fs.existsSync(svg), `missing SVG source for ${pack}/${file}`);
   }
 }
 
 must(/pointer-events:\s*none\s*!important/.test(css), 'overlay must be pointer-events:none');
 must(/body\.is-playing #seasonOverlay/.test(css), 'must hide overlay during play');
-must(/max-width:\s*559px/.test(css), 'Android-first: hide rails on narrow viewports');
+must(/--season-safe-bottom/.test(css), 'must keep ground/corners above Android pads');
 must(/image-rendering:\s*pixelated/.test(css), 'pixelated rendering for retina-safe scale');
-must(js.includes("SEASON_PACKS") && js.includes('halloween') && js.includes('jungle'), 'JS must know both packs');
+must(js.includes('SEASON_ART_PRESENT') && js.includes('halloween') && js.includes('jungle'), 'JS must list both packs');
+must(js.includes('__sfSeasonArtPresent'), 'JS must export present map for CSS pair');
 must(js.includes("location.search") && js.includes('sfSeason'), 'JS must honor ?season= and localStorage');
-must(!/startGame\(|versusRoster|btnVersus/.test(js), 'season overlay JS must not touch Versus');
+must(!/startGame\(|versusRoster|btnVersus/.test(js), 'season overlay JS must not start Versus');
 
 const canvasIdx = html.indexOf('<canvas id="game"');
 const overlayIdx = html.indexOf('id="seasonOverlay"');
 must(overlayIdx !== -1 && canvasIdx !== -1 && overlayIdx < canvasIdx, '#seasonOverlay must stay a closed body sibling before #game');
 
-console.log('SMOKE_OK season overlays · 7 slots · jungle+halloween packs · play-safe');
+console.log('SMOKE_OK season overlays · 8 contract slots · jungle+halloween PNG · play-safe');

@@ -674,15 +674,16 @@
   </div>
 </div>
 
-<!-- Season pixel overlays — behind/around UI only. Contract: docs/season-overlay-slots.md -->
+<!-- Season pixel overlays — #279 slot contract. docs/season-overlay-slots.md -->
 <div id="seasonOverlay" class="season-overlay" aria-hidden="true" data-season-pack="">
-  <div id="seasonSlotCornerTL" class="season-slot season-slot-corner-tl" data-season-slot="corner-tl"></div>
-  <div id="seasonSlotCornerTR" class="season-slot season-slot-corner-tr" data-season-slot="corner-tr"></div>
-  <div id="seasonSlotRailL" class="season-slot season-slot-rail-l" data-season-slot="rail-l"></div>
-  <div id="seasonSlotRailR" class="season-slot season-slot-rail-r" data-season-slot="rail-r"></div>
-  <div id="seasonSlotCornerBL" class="season-slot season-slot-corner-bl" data-season-slot="corner-bl"></div>
-  <div id="seasonSlotCornerBR" class="season-slot season-slot-corner-br" data-season-slot="corner-br"></div>
-  <div id="seasonSlotCrest" class="season-slot season-slot-crest" data-season-slot="crest"></div>
+  <div class="season-vignette" data-season-slot="vignette"></div>
+  <div id="seasonSlotCornerTL" class="season-art-slot season-art-tl" data-season-slot="corner-tl"></div>
+  <div id="seasonSlotCornerTR" class="season-art-slot season-art-tr" data-season-slot="corner-tr"></div>
+  <div id="seasonSlotCornerBL" class="season-art-slot season-art-bl" data-season-slot="corner-bl"></div>
+  <div id="seasonSlotCornerBR" class="season-art-slot season-art-br" data-season-slot="corner-br"></div>
+  <div id="seasonSlotBanner" class="season-art-slot season-art-banner" data-season-slot="banner"></div>
+  <div id="seasonSlotGroundTrim" class="season-art-slot season-art-ground" data-season-slot="ground-trim"></div>
+  <div id="seasonSlotMotif" class="season-art-slot season-art-motif" data-season-slot="motif"></div>
 </div>
 
 <canvas id="game" aria-hidden="true"></canvas>
