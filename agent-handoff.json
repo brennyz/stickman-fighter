@@ -20,7 +20,7 @@
     "featureBranch": "cursor/i18n-en-de-nl-chrome-1c6f",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "i18n harden #273 — Collection/Settings leftover Dutch wired; EN/DE no NL chrome. Draft PR, not silent main.",
+    "note": "i18n coverage #273 only. Factcheck polish is #283 — do not fight strings; additive keys. Merge #273 then rebase #283.",
     "updated": "2026-09-14T16:50:00Z"
   },
   "githubSync": {
@@ -85,9 +85,27 @@
         "text": "scripts/github-sync-status.sh"
       }
     ],
-    "pendingMerge": []
+    "pendingMerge": [
+      {
+        "id": "pr-273",
+        "kind": "pr",
+        "text": "#273 EN/DE/NL chrome coverage — land first"
+      },
+      {
+        "id": "pr-283",
+        "kind": "pr",
+        "text": "#283 LANGUAGE FACTCHECK Z→A polish — rebase on top of #273, do not fight keys"
+      }
+    ]
   },
   "userWishlist": [
+    {
+      "id": "w-20260914T170700",
+      "from": "user",
+      "text": "Heads-up: Brendon added a separate LANGUAGE FACTCHECK agent (Z→A polish). Stay on EN/DE/NL scope coverage; avoid fighting their PR on the same strings. Prefer additive catalog keys and note conflicts in PR.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
     {
       "id": "w-20260914T165500",
       "from": "user",
@@ -626,6 +644,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:08:39Z",
+      "summary": "Parked on #273 coverage. Factcheck polish is #283 — no string fight; merge #273 then rebase #283."
+    },
+    {
       "at": "2026-09-14T17:06:51Z",
       "summary": "i18n harden #273: leftover Collection/Settings Dutch via t(); EN/DE no NL chrome. v1.18.165 / SW 375."
     },
@@ -720,10 +742,6 @@
     {
       "at": "2026-08-17T10:18:00Z",
       "summary": "main LIVE 33d89b6 v1.18.151 — pull-commando voor de pc klaar"
-    },
-    {
-      "at": "2026-08-17T10:03:24Z",
-      "summary": "LIVE gemerged #248–#255 naar main conflictloos · v1.18.151 / SW 361 — pull main op de pc"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

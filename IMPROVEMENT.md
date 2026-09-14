@@ -142,6 +142,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | Factcheck #283 owns Z→A polish. #273 stays coverage only; additive keys; merge #273 then rebase #283. |
 | 2026-09-14 | — | i18n harden #273: Collectie/Settings leftover Dutch via t(); EN/DE geen NL-markers. v1.18.165 / SW 375. Draft. |
 | 2026-09-14 | — | EN/DE/NL UI chrome: locale in scope, geen grote NL-blokken op EN/DE. v1.18.164 / SW 374. Draft. |
 | 2026-09-14 | — | #266 sprint: locale (VERLOREN, Tips-label, eilandkop) + stillere versie-banner + rest HOME. v1.18.163 / SW 373. Draft. |
