@@ -17,6 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles/main.css?v=376">
 <link rel="stylesheet" href="styles/seasons.css?v=376">
+<link rel="stylesheet" href="styles/season-overlays.css?v=376">
 
 
 
@@ -789,6 +790,18 @@
   <button class="btn mode-btn b-versus" id="pauseVsSwap" type="button" style="display:none;margin-bottom:8px"><span class="ico"><img src="assets/buttons/chrome/swap.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><div>Wissel kant<small>P1 ↔ P2 · zelfde score</small></div></button>
   <button class="btn mode-btn b-gray" id="pauseQuit"><span class="ico"><img src="assets/buttons/chrome/home.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><div>Stop &amp; hoofdmenu</div></button>
   </div>
+</div>
+
+<!-- Season pixel overlays — #279 slot contract. docs/season-overlay-slots.md -->
+<div id="seasonOverlay" class="season-overlay" aria-hidden="true" data-season-pack="">
+  <div class="season-vignette" data-season-slot="vignette"></div>
+  <div id="seasonSlotCornerTL" class="season-art-slot season-art-tl" data-season-slot="corner-tl"></div>
+  <div id="seasonSlotCornerTR" class="season-art-slot season-art-tr" data-season-slot="corner-tr"></div>
+  <div id="seasonSlotCornerBL" class="season-art-slot season-art-bl" data-season-slot="corner-bl"></div>
+  <div id="seasonSlotCornerBR" class="season-art-slot season-art-br" data-season-slot="corner-br"></div>
+  <div id="seasonSlotBanner" class="season-art-slot season-art-banner" data-season-slot="banner"></div>
+  <div id="seasonSlotGroundTrim" class="season-art-slot season-art-ground" data-season-slot="ground-trim"></div>
+  <div id="seasonSlotMotif" class="season-art-slot season-art-motif" data-season-slot="motif"></div>
 </div>
 
 <canvas id="game" aria-hidden="true"></canvas>

@@ -81,6 +81,8 @@ assets/
   ui/               ← overige UI-SVG (lock, check, saga chips als files)
   forest-floor/     ← scenery samples (bestaand)
   seasons/          ← pixel-art overlay slots (jungle/halloween/…); zie SEASON-OVERLAY.md
+    jungle/         ← vines / leaves / ferns — slot filenames only
+    halloween/      ← pumpkins / cobwebs / bats — same slot filenames
   gear/             ← 16×16 pixel armour / cosmetics (world drops)
 icons/              ← alleen PWA app-iconen (180/192/512 png)
 ```

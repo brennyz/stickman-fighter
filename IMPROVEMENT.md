@@ -143,6 +143,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | Season pixel overlays: jungle + halloween packs on documented slots; pointer-events none; hidden in combat. v1.18.164 / SW 374. |
 | 2026-09-14 | — | **LIVE main** mega-merge #293 `470bd4e` — listed PRs minus #279. v1.18.166 / SW 376. Pages ~1–3 min → speel.html. |
 | 2026-09-14 | — | Mega-merge coverage: DE gear/settings chrome, #269 lang/autosave union, smoke unions. Nog **v1.18.166 / SW v376**. Skip #279. Niet stil naar main. |
 | 2026-09-14 | — | Mega-merge stack (geen nieuwe features): #274+#286, #270, #271/#272/#275, #277+#278, #280+#285+#276+#287, #282+#284, #288, #292+#289+#290+#291 (Stick-Lighter…Echo-Whistle, geen mill/forge copy), #267+#269. Skip #279. **v1.18.166 / SW v376**. PR onto main. |
