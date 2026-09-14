@@ -49,8 +49,11 @@ async function getPuppeteer() {
 }
 
 async function run() {
+  // Own port: serve.py on :8787 blocks /hosting.json while keep-tunnel.sh runs (up to 120s),
+  // which stalls tunnelReady → bootGame → __sfBooted.
+  const port = Number(process.env.SF_GHOST_HP_PORT || 8797);
   let server = null;
-  try { server = await ensureSmokeServer(8787); } catch (_) {}
+  try { server = await ensureSmokeServer(port); } catch (_) {}
 
   const puppeteer = await getPuppeteer();
   const browser = await puppeteer.default.launch({
@@ -59,7 +62,7 @@ async function run() {
     args: ['--no-sandbox', '--disable-gpu', '--window-size=390,844'],
   });
   const page = await browser.newPage();
-  const base = process.argv[2] || (smokeBaseUrl(8787) + '?nosplash=1');
+  const base = process.argv[2] || (smokeBaseUrl(port) + '?nosplash=1');
   page.setDefaultNavigationTimeout(60000);
   await page.goto(base, { waitUntil: 'load', timeout: 60000 });
   try {
