@@ -22,11 +22,11 @@
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": "90182c8",
     "remoteMainHead": "90182c8",
-    "note": "LIVE main v1.18.163 / SW 373 after #266. #267 (v1.18.166 / SW 376): EN VERLOREN, NL no ROBOT WINS, result/streak/hub-arcade i18n, quiet HOME update. #269 owns upgrades/drawer/weapons-contrast. Wait «merge».",
-    "updated": "2026-09-14T16:20:00Z"
+    "note": "LIVE main v1.18.163 / SW 373. #267 ready (v1.18.166 / SW 376) but NO individual merge — wait Brendon mega-merge of all feature sets + conflict check. #269 owns upgrades/drawer/contrast.",
+    "updated": "2026-09-14T17:10:00Z"
   },
   "githubSync": {
-    "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
+    "policy": "GEEN individuele merges naar main. Feature-PRs blijven draft/ready. Alleen mergen als Brendon een mega-merge van alle feature-sets + conflict-check seint. Niet vragen om «merge» per PR. Niet stil pushen naar main.",
     "pcEqualsMain": false,
     "localHead": "3fe23473f49a8486c6b18d27bfc4e54cc6c1914c",
     "remoteMainHead": "68e5ccc0d34fd149e1c3c3d51d25e73253f25c73",
@@ -48,9 +48,9 @@
         "kind": "pr",
         "ref": "#267",
         "title": "EN-NL VERLOREN + no NL ROBOT WINS + quiet toasts",
-        "status": "ready-wait-merge",
+        "status": "ready-hold-mega-merge",
         "url": "https://github.com/brennyz/stickman-fighter/pull/267",
-        "note": "Merge-ready. Niet op main tot «merge»."
+        "note": "Ready/CLEAN. Niet individueel mergen — wacht mega-merge + conflict-check."
       },
       {
         "id": "pr-266",
@@ -82,6 +82,13 @@
     ]
   },
   "userWishlist": [
+    {
+      "id": "w-20260914T171000",
+      "from": "user",
+      "text": "Owner rule: NO individual merges. Keep #267 draft/ready. Do not merge to main until Brendon signals mega-merge of all feature sets + conflict check. Idle or harden only; no «please merge» spam.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
     {
       "id": "w-20260914T161000",
       "from": "user",
@@ -630,9 +637,13 @@
     "Eén thema per sessie waar mogelijk; d20 via scripts/roll-improvement-d20.sh.",
     "Commit niet health.json / hosting.json / LIVE-LINK.txt tenzij bewust deploy-doc.",
     "Na afloop: update codeTruth.appVersion en agent log-regel in IMPROVEMENT.md.",
-    "GitHub-sync: na wijzigingen vragen of we naar main moeten; pendingUpload in githubSync bijhouden tot origin/main gelijk is."
+    "GitHub-sync: GEEN individuele merges. Alleen mega-merge als Brendon dat seint (+ conflict-check). Geen «please merge» per PR. pendingUpload bijhouden tot origin/main gelijk is."
   ],
   "sessionLog": [
+    {
+      "at": "2026-09-14T17:11:55Z",
+      "summary": "Owner rule: geen individuele merges. #267 ready/CLEAN, hold tot mega-merge + conflict-check."
+    },
     {
       "at": "2026-09-14T16:21:32Z",
       "summary": "#267 merge-klaar: NL geen ROBOT WINS, VERLOREN, Hub/Arcade i18n, v1.18.166/SW376. Wacht «merge»."
@@ -728,10 +739,6 @@
     {
       "at": "2026-09-14T11:03:54Z",
       "summary": "Playtest P1: startscherm fold + NL hub, combat feedback/opener, trainLostTip · v1.18.153 / SW 363"
-    },
-    {
-      "at": "2026-08-17T14:31:25Z",
-      "summary": "Mega-merge op main: light-FX + versus-stubs + dawnblade · v1.18.152 / SW 362"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
