@@ -31,6 +31,8 @@ must(fs.existsSync(path.join(root, 'assets/ui/satan.svg')), 'satan.svg missing')
 must(fs.existsSync(path.join(root, 'assets/ui/satan-mark.svg')), 'satan-mark.svg missing');
 must(/width="160"/.test(satanSvg) && /height="200"/.test(satanSvg), 'satan.svg needs intrinsic width/height');
 must(/width="24"/.test(markSvg) && /height="24"/.test(markSvg), 'satan-mark.svg needs intrinsic width/height');
+must(!/[\x00-\x08\x0B\x0C\x0E-\x1F]/.test(satanSvg), 'satan.svg has XML-illegal control chars (Chrome rejects <img>)');
+must(!/[\x00-\x08\x0B\x0C\x0E-\x1F]/.test(markSvg), 'satan-mark.svg has XML-illegal control chars');
 
 must(/SATAN_SVG_URL = '\.\/assets\/ui\/satan\.svg'/.test(satan), 'SATAN_SVG_URL must use ./assets');
 must(/SATAN_MARK_URL = '\.\/assets\/ui\/satan-mark\.svg'/.test(satan), 'SATAN_MARK_URL must use ./assets');
