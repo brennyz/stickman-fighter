@@ -208,17 +208,63 @@ function useKbFightLegend() {
 }
 
 /** Combat floaters: spreid over lagen zodat BAM/KETS/schade niet op elkaar stapelen. */
-const FLOATER_LANE_H = 22;
-const FLOATER_LANE_W = 32;
-const FLOATER_CLUSTER_R = 88;
+const FLOATER_LANE_H = 30;
+const FLOATER_LANE_W = 40;
+const FLOATER_CLUSTER_R = 112;
+const FLOATER_MAX_LANES = 10;
+const FLOATER_MERGE_R = 58;
+const FLOATER_MERGE_LIFE = 0.68;
 
 function floaterLayerBase(layer) {
   switch (layer) {
-    case 'style': return { x: 0, y: -40, laneH: 20 };
-    case 'fx': return { x: 0, y: -58, laneH: 24 };
-    case 'hud': return { x: 0, y: 0, laneH: 28, clusterR: 160 };
+    case 'style': return { x: 0, y: -48, laneH: 24 };
+    case 'fx': return { x: 0, y: -70, laneH: 28 };
+    case 'hud': return { x: 0, y: 0, laneH: 32, clusterR: 176 };
     default: return { x: 0, y: 0 };
   }
+}
+
+/** Alleen pure −N chips (geen CRIT/XP/tekst) — display-merge, geen damage-formule. */
+function parseDmgFloaterTxt(txt) {
+  const s = String(txt == null ? '' : txt).trim();
+  if (!s) return null;
+  const minus = s.charAt(0);
+  if (minus !== '-' && minus !== '−') return null;
+  let n = 0;
+  for (let i = 1; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (c < 48 || c > 57) return null;
+    n = n * 10 + (c - 48);
+  }
+  return n > 0 ? n : null;
+}
+
+function tryMergeDmgFloater(game, x, y, txt, color, size, layer) {
+  layer = layer || 'dmg';
+  const add = parseDmgFloaterTxt(txt);
+  if (!add || !game || !game.floaters || !game.floaters.length) return false;
+  const r2 = FLOATER_MERGE_R * FLOATER_MERGE_R;
+  let best = null;
+  let bestD = r2 + 1;
+  for (const fl of game.floaters) {
+    if ((fl.layer || 'dmg') !== layer) continue;
+    if (!(fl.life > FLOATER_MERGE_LIFE)) continue;
+    if (color && fl.color && fl.color !== color) continue;
+    const other = parseDmgFloaterTxt(fl.txt);
+    if (!other) continue;
+    const dx = fl.x - x;
+    const dy = fl.y - y;
+    const d = dx * dx + dy * dy;
+    if (d > r2) continue;
+    if (d < bestD) { best = fl; bestD = d; }
+  }
+  if (!best) return false;
+  const cur = parseDmgFloaterTxt(best.txt) || 0;
+  best.txt = '-' + (cur + add);
+  best.life = Math.min(1.12, best.life + 0.2);
+  const nextSize = Math.max(best.size || 15, size || 15);
+  best.size = Math.min(nextSize + 1, 20);
+  return true;
 }
 
 function floaterTextHalfW(txt, size) {
@@ -238,7 +284,7 @@ function layoutFloaterPos(game, x, y, txt, size, layer) {
   const list = game && game.floaters ? game.floaters : [];
   const sameLayer = (fl) => (fl.layer || 'dmg') === layer;
 
-  for (let lane = 0; lane < 8; lane++) {
+  for (let lane = 0; lane < FLOATER_MAX_LANES; lane++) {
     const sign = lane <= 0 ? 0 : (lane % 2 === 1 ? -1 : 1);
     const spread = lane <= 0 ? 0 : Math.ceil(lane / 2) * FLOATER_LANE_W * sign;
     const ty = y - lane * laneH;
@@ -250,14 +296,14 @@ function layoutFloaterPos(game, x, y, txt, size, layer) {
       const dy = fl.y - ty;
       if (dx * dx + dy * dy > clusterR * clusterR) continue;
       const flHalf = floaterTextHalfW(fl.txt, fl.size);
-      if (Math.abs(dx) < halfW + flHalf + 6 && Math.abs(dy) < laneH * 0.85) {
+      if (Math.abs(dx) < halfW + flHalf + 10 && Math.abs(dy) < laneH * 0.95) {
         hit = true;
         break;
       }
     }
     if (!hit) return { x: tx, y: ty, lane, layer };
   }
-  const lane = list.filter(sameLayer).length % 8;
+  const lane = list.filter(sameLayer).length % FLOATER_MAX_LANES;
   return {
     x: x + Math.sin(lane * 0.9) * FLOATER_LANE_W * 1.4,
     y: y - lane * laneH,
@@ -274,9 +320,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.153';
+const APP_VERSION = '1.18.154';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 363;
+const SW_CACHE_REV = 364;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -4234,6 +4280,8 @@ const BUTTON_ICON_FALLBACKS = {
   collect: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#c792ff" stroke-width="2"><path d="M5 4.5h9.5L18.5 8v11.5H5z" fill="rgba(199,146,255,.18)"/></svg>',
   summons: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ffd75e" stroke-width="2"><path d="M4.5 10.5h15v8.2a1.5 1.5 0 0 1-1.5 1.5h-12a1.5 1.5 0 0 1-1.5-1.5z" fill="rgba(255,215,94,.22)"/><path d="M12 10.5v9.7"/></svg>',
   continue: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#7cf5ff" stroke-width="2"><path d="M5 12h12M13 8l4 4-4 4"/></svg>',
+  satan: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#2a0810" stroke="#ff3040" stroke-width="2" d="M6 20c-1.2-4-.8-8 1.2-10.2C9 8 11 7.4 12 7.5c1-.1 3 .5 4.8 2.3C18.8 12 19.2 16 18 20Z"/><circle cx="12" cy="10.2" r="3.4" fill="#8a2030" stroke="#ff3040"/><path d="M9.2 8.2L7.2 4.6M14.8 8.2L16.8 4.6" stroke="#ffd75e" stroke-width="2.1" fill="none"/></svg>',
+  'satan-mark': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#2a0810" stroke="#ff3040" stroke-width="2" d="M6 20c-1.2-4-.8-8 1.2-10.2C9 8 11 7.4 12 7.5c1-.1 3 .5 4.8 2.3C18.8 12 19.2 16 18 20Z"/><circle cx="12" cy="10.2" r="3.4" fill="#8a2030" stroke="#ff3040"/><path d="M9.2 8.2L7.2 4.6M14.8 8.2L16.8 4.6" stroke="#ffd75e" stroke-width="2.1" fill="none"/></svg>',
 };
 function buttonIconFallbackUri(src) {
   const base = (src || '').split('/').pop().replace(/\.svg.*$/, '');
@@ -4241,8 +4289,28 @@ function buttonIconFallbackUri(src) {
   if (!svg) return null;
   return 'data:image/svg+xml,' + encodeURIComponent(svg);
 }
+/** HEAT/SATAN + eiland-art zijn geen knop-iconen — WebKit SVG naturalWidth=0 gaf sf-icon-broken. */
+function skipButtonIconHarden(img) {
+  if (!img) return true;
+  try {
+    if (img.classList && (
+      img.classList.contains('adv-satan-portrait') ||
+      img.classList.contains('adv-satan-mark') ||
+      img.classList.contains('satan-portrait-art') ||
+      img.classList.contains('island-ico')
+    )) return true;
+  } catch (_) {}
+  const src = String(img.getAttribute('src') || img.src || '').toLowerCase();
+  if (src.indexOf('satan.svg') >= 0 || src.indexOf('satan-mark.svg') >= 0) return true;
+  if (src.indexOf('island-') >= 0) return true;
+  return false;
+}
 function repairBrokenButtonIcon(img) {
   if (!img || img.dataset.sfIconRepaired) return;
+  if (skipButtonIconHarden(img)) {
+    try { img.classList.remove('sf-icon-broken'); } catch (_) {}
+    return;
+  }
   img.dataset.sfIconRepaired = '1';
   const uri = buttonIconFallbackUri(img.getAttribute('src') || img.src);
   if (uri) {
@@ -4257,12 +4325,17 @@ function hardenButtonIcons(root) {
   try {
     const scope = root && root.querySelectorAll ? root : document;
     scope.querySelectorAll('img[src*="assets/buttons/"], img[src*="assets/ui/"]').forEach((img) => {
+      if (skipButtonIconHarden(img)) {
+        try { img.classList.remove('sf-icon-broken'); } catch (_) {}
+        return;
+      }
       if (img.dataset.sfIconHard) return;
       img.dataset.sfIconHard = '1';
       img.decoding = img.decoding || 'async';
       img.draggable = false;
       const check = () => {
         try {
+          if (skipButtonIconHarden(img)) return;
           if (img.complete && img.naturalWidth === 0) repairBrokenButtonIcon(img);
         } catch (_) {}
       };
@@ -10352,9 +10425,11 @@ const SATAN_SPECIES_ID = 'satan';
 /** Reflect + HP-tuning: ~85% van de duels wint Satan (speler sterft eerder). */
 const SATAN_HP_VS_PLAYER = 1.35;
 const SATAN_DIRECT_DMG_MUL = 0.55;
-/** Dikke SVG-portrait (UI + canvas). */
-const SATAN_SVG_URL = 'assets/ui/satan.svg';
-const SATAN_MARK_URL = 'assets/ui/satan-mark.svg';
+/** Dikke SVG-portrait (UI + canvas). `./` zodat Pages/SW dezelfde URL raken. */
+const SATAN_SVG_URL = './assets/ui/satan.svg';
+const SATAN_MARK_URL = './assets/ui/satan-mark.svg';
+/** Inline mark als satan.svg of satan-mark.svg niet laadt (geen broken-icon box). */
+const SATAN_MARK_FALLBACK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="#2a0810" stroke="#ff3040" stroke-width="2" d="M6 20c-1.2-4-.8-8 1.2-10.2C9 8 11 7.4 12 7.5c1-.1 3 .5 4.8 2.3C18.8 12 19.2 16 18 20Z"/><circle cx="12" cy="10.2" r="3.4" fill="#8a2030" stroke="#ff3040"/><path d="M9.2 8.2L7.2 4.6M14.8 8.2L16.8 4.6" stroke="#ffd75e" stroke-width="2.1" fill="none"/></svg>';
 /** Art-hoogte ≈ 2.35 × size → size ≈ 0.21 × min(W,H) ≈ half scherm. */
 const SATAN_SCREEN_FRAC = 0.21;
 const SATAN_SIZE_MIN = 88;
@@ -10441,15 +10516,33 @@ function drawSatanSvgArt(c, r, t, flash, telegraph) {
   return true;
 }
 
+function satanFallbackDataUri() {
+  return 'data:image/svg+xml,' + encodeURIComponent(SATAN_MARK_FALLBACK_SVG);
+}
+
+/** <img onerror> — mark eerst, daarna inline data-URI. Nooit sf-icon-broken. */
+function satanPortraitOnError(img) {
+  if (!img || img.dataset.sfSatanFb) return;
+  img.dataset.sfSatanFb = '1';
+  try { img.classList.remove('sf-icon-broken'); } catch (_) {}
+  const cur = String(img.getAttribute('src') || img.src || '');
+  if (cur.indexOf('satan-mark') < 0 && typeof SATAN_MARK_URL === 'string') {
+    img.src = SATAN_MARK_URL;
+    return;
+  }
+  img.src = satanFallbackDataUri();
+}
+
 function satanPortraitHtml(opts) {
   opts = opts || {};
   const compact = !!opts.compact;
-  const cls = compact ? 'adv-satan-mark' : 'adv-satan-portrait';
+  const cls = (compact ? 'adv-satan-mark' : 'adv-satan-portrait') + ' satan-portrait-art';
   const src = compact ? SATAN_MARK_URL : SATAN_SVG_URL;
   const wh = compact
     ? 'width="18" height="18"'
     : 'width="72" height="90"';
-  return `<img class="${cls}" src="${satanEscAttr(src)}" alt="" ${wh} decoding="async" draggable="false">`;
+  const fb = satanEscAttr(satanFallbackDataUri());
+  return `<img class="${cls}" src="${satanEscAttr(src)}" alt="" ${wh} decoding="async" draggable="false" data-fallback="${fb}" onerror="try{satanPortraitOnError(this)}catch(e){}">`;
 }
 
 function satanDiffId(diff) {
@@ -27665,6 +27758,7 @@ class Game {
     }
   }
   floater(x, y, txt, color, size, layer) {
+    if (typeof tryMergeDmgFloater === 'function' && tryMergeDmgFloater(this, x, y, txt, color, size, layer)) return;
     if (!perfFxBudgetAllow(this, 1)) return;
     if (perfFxRoom(this, 'floater') <= 0) return;
     const cap = fxCaps();

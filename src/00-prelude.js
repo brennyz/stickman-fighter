@@ -206,17 +206,63 @@ function useKbFightLegend() {
 }
 
 /** Combat floaters: spreid over lagen zodat BAM/KETS/schade niet op elkaar stapelen. */
-const FLOATER_LANE_H = 22;
-const FLOATER_LANE_W = 32;
-const FLOATER_CLUSTER_R = 88;
+const FLOATER_LANE_H = 30;
+const FLOATER_LANE_W = 40;
+const FLOATER_CLUSTER_R = 112;
+const FLOATER_MAX_LANES = 10;
+const FLOATER_MERGE_R = 58;
+const FLOATER_MERGE_LIFE = 0.68;
 
 function floaterLayerBase(layer) {
   switch (layer) {
-    case 'style': return { x: 0, y: -40, laneH: 20 };
-    case 'fx': return { x: 0, y: -58, laneH: 24 };
-    case 'hud': return { x: 0, y: 0, laneH: 28, clusterR: 160 };
+    case 'style': return { x: 0, y: -48, laneH: 24 };
+    case 'fx': return { x: 0, y: -70, laneH: 28 };
+    case 'hud': return { x: 0, y: 0, laneH: 32, clusterR: 176 };
     default: return { x: 0, y: 0 };
   }
+}
+
+/** Alleen pure −N chips (geen CRIT/XP/tekst) — display-merge, geen damage-formule. */
+function parseDmgFloaterTxt(txt) {
+  const s = String(txt == null ? '' : txt).trim();
+  if (!s) return null;
+  const minus = s.charAt(0);
+  if (minus !== '-' && minus !== '−') return null;
+  let n = 0;
+  for (let i = 1; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (c < 48 || c > 57) return null;
+    n = n * 10 + (c - 48);
+  }
+  return n > 0 ? n : null;
+}
+
+function tryMergeDmgFloater(game, x, y, txt, color, size, layer) {
+  layer = layer || 'dmg';
+  const add = parseDmgFloaterTxt(txt);
+  if (!add || !game || !game.floaters || !game.floaters.length) return false;
+  const r2 = FLOATER_MERGE_R * FLOATER_MERGE_R;
+  let best = null;
+  let bestD = r2 + 1;
+  for (const fl of game.floaters) {
+    if ((fl.layer || 'dmg') !== layer) continue;
+    if (!(fl.life > FLOATER_MERGE_LIFE)) continue;
+    if (color && fl.color && fl.color !== color) continue;
+    const other = parseDmgFloaterTxt(fl.txt);
+    if (!other) continue;
+    const dx = fl.x - x;
+    const dy = fl.y - y;
+    const d = dx * dx + dy * dy;
+    if (d > r2) continue;
+    if (d < bestD) { best = fl; bestD = d; }
+  }
+  if (!best) return false;
+  const cur = parseDmgFloaterTxt(best.txt) || 0;
+  best.txt = '-' + (cur + add);
+  best.life = Math.min(1.12, best.life + 0.2);
+  const nextSize = Math.max(best.size || 15, size || 15);
+  best.size = Math.min(nextSize + 1, 20);
+  return true;
 }
 
 function floaterTextHalfW(txt, size) {
@@ -236,7 +282,7 @@ function layoutFloaterPos(game, x, y, txt, size, layer) {
   const list = game && game.floaters ? game.floaters : [];
   const sameLayer = (fl) => (fl.layer || 'dmg') === layer;
 
-  for (let lane = 0; lane < 8; lane++) {
+  for (let lane = 0; lane < FLOATER_MAX_LANES; lane++) {
     const sign = lane <= 0 ? 0 : (lane % 2 === 1 ? -1 : 1);
     const spread = lane <= 0 ? 0 : Math.ceil(lane / 2) * FLOATER_LANE_W * sign;
     const ty = y - lane * laneH;
@@ -248,14 +294,14 @@ function layoutFloaterPos(game, x, y, txt, size, layer) {
       const dy = fl.y - ty;
       if (dx * dx + dy * dy > clusterR * clusterR) continue;
       const flHalf = floaterTextHalfW(fl.txt, fl.size);
-      if (Math.abs(dx) < halfW + flHalf + 6 && Math.abs(dy) < laneH * 0.85) {
+      if (Math.abs(dx) < halfW + flHalf + 10 && Math.abs(dy) < laneH * 0.95) {
         hit = true;
         break;
       }
     }
     if (!hit) return { x: tx, y: ty, lane, layer };
   }
-  const lane = list.filter(sameLayer).length % 8;
+  const lane = list.filter(sameLayer).length % FLOATER_MAX_LANES;
   return {
     x: x + Math.sin(lane * 0.9) * FLOATER_LANE_W * 1.4,
     y: y - lane * laneH,

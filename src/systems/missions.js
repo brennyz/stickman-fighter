@@ -1402,6 +1402,8 @@ const BUTTON_ICON_FALLBACKS = {
   collect: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#c792ff" stroke-width="2"><path d="M5 4.5h9.5L18.5 8v11.5H5z" fill="rgba(199,146,255,.18)"/></svg>',
   summons: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ffd75e" stroke-width="2"><path d="M4.5 10.5h15v8.2a1.5 1.5 0 0 1-1.5 1.5h-12a1.5 1.5 0 0 1-1.5-1.5z" fill="rgba(255,215,94,.22)"/><path d="M12 10.5v9.7"/></svg>',
   continue: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#7cf5ff" stroke-width="2"><path d="M5 12h12M13 8l4 4-4 4"/></svg>',
+  satan: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#2a0810" stroke="#ff3040" stroke-width="2" d="M6 20c-1.2-4-.8-8 1.2-10.2C9 8 11 7.4 12 7.5c1-.1 3 .5 4.8 2.3C18.8 12 19.2 16 18 20Z"/><circle cx="12" cy="10.2" r="3.4" fill="#8a2030" stroke="#ff3040"/><path d="M9.2 8.2L7.2 4.6M14.8 8.2L16.8 4.6" stroke="#ffd75e" stroke-width="2.1" fill="none"/></svg>',
+  'satan-mark': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#2a0810" stroke="#ff3040" stroke-width="2" d="M6 20c-1.2-4-.8-8 1.2-10.2C9 8 11 7.4 12 7.5c1-.1 3 .5 4.8 2.3C18.8 12 19.2 16 18 20Z"/><circle cx="12" cy="10.2" r="3.4" fill="#8a2030" stroke="#ff3040"/><path d="M9.2 8.2L7.2 4.6M14.8 8.2L16.8 4.6" stroke="#ffd75e" stroke-width="2.1" fill="none"/></svg>',
 };
 function buttonIconFallbackUri(src) {
   const base = (src || '').split('/').pop().replace(/\.svg.*$/, '');
@@ -1409,8 +1411,28 @@ function buttonIconFallbackUri(src) {
   if (!svg) return null;
   return 'data:image/svg+xml,' + encodeURIComponent(svg);
 }
+/** HEAT/SATAN + eiland-art zijn geen knop-iconen — WebKit SVG naturalWidth=0 gaf sf-icon-broken. */
+function skipButtonIconHarden(img) {
+  if (!img) return true;
+  try {
+    if (img.classList && (
+      img.classList.contains('adv-satan-portrait') ||
+      img.classList.contains('adv-satan-mark') ||
+      img.classList.contains('satan-portrait-art') ||
+      img.classList.contains('island-ico')
+    )) return true;
+  } catch (_) {}
+  const src = String(img.getAttribute('src') || img.src || '').toLowerCase();
+  if (src.indexOf('satan.svg') >= 0 || src.indexOf('satan-mark.svg') >= 0) return true;
+  if (src.indexOf('island-') >= 0) return true;
+  return false;
+}
 function repairBrokenButtonIcon(img) {
   if (!img || img.dataset.sfIconRepaired) return;
+  if (skipButtonIconHarden(img)) {
+    try { img.classList.remove('sf-icon-broken'); } catch (_) {}
+    return;
+  }
   img.dataset.sfIconRepaired = '1';
   const uri = buttonIconFallbackUri(img.getAttribute('src') || img.src);
   if (uri) {
@@ -1425,12 +1447,17 @@ function hardenButtonIcons(root) {
   try {
     const scope = root && root.querySelectorAll ? root : document;
     scope.querySelectorAll('img[src*="assets/buttons/"], img[src*="assets/ui/"]').forEach((img) => {
+      if (skipButtonIconHarden(img)) {
+        try { img.classList.remove('sf-icon-broken'); } catch (_) {}
+        return;
+      }
       if (img.dataset.sfIconHard) return;
       img.dataset.sfIconHard = '1';
       img.decoding = img.decoding || 'async';
       img.draggable = false;
       const check = () => {
         try {
+          if (skipButtonIconHarden(img)) return;
           if (img.complete && img.naturalWidth === 0) repairBrokenButtonIcon(img);
         } catch (_) {}
       };

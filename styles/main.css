@@ -702,6 +702,12 @@
     outline: 1px dashed rgba(255,107,107,.55);
     outline-offset: 1px;
   }
+  img.satan-portrait-art.sf-icon-broken,
+  img.adv-satan-portrait.sf-icon-broken,
+  img.adv-satan-mark.sf-icon-broken {
+    opacity: 1;
+    outline: none;
+  }
   .hub-tile-title { font-weight: 800; font-size: var(--type-tile); line-height: 1.15; }
   .hub-tile-sub { font-size: var(--type-caption); font-weight: 600; opacity: .78; line-height: 1.35; }
   .hub-tile-stat {
@@ -1697,8 +1703,8 @@
   .adv-heat.danger, .adv-heat.satan-ready { border-color:rgba(255,48,64,.55); background:rgba(255,48,64,.1); }
   .adv-heat-row { display:flex; align-items:flex-start; gap:10px; }
   .adv-heat-face { flex:0 0 auto; width:56px; height:70px; display:flex; align-items:center; justify-content:center;
-      border-radius:10px; background:rgba(26,10,16,.55); border:1px solid rgba(255,48,64,.35); overflow:hidden; }
-  .adv-heat-face.idle { width:28px; height:28px; border-radius:8px; }
+      border-radius:10px; background:rgba(26,10,16,.55) url("../assets/ui/satan-mark.svg") center/40px no-repeat; border:1px solid rgba(255,48,64,.35); overflow:hidden; }
+  .adv-heat-face.idle { width:28px; height:28px; border-radius:8px; background-size:16px; }
   .adv-heat-face .adv-satan-portrait { width:56px; height:70px; object-fit:contain; display:block; }
   .adv-heat-face .adv-satan-mark { width:18px; height:18px; display:block; }
   .adv-heat-body { flex:1 1 auto; min-width:0; }
@@ -1724,7 +1730,7 @@
   .adv-satan-card.ready { border-color:#ff3040; box-shadow:0 6px 0 rgba(0,0,0,.28), 0 0 18px rgba(255,48,64,.28); }
   .adv-satan-card.after-clear { border-color:rgba(255,215,94,.35); }
   .adv-satan-card-face { flex:0 0 auto; width:72px; height:90px; display:flex; align-items:center; justify-content:center;
-      border-radius:12px; background:rgba(0,0,0,.28); overflow:hidden; }
+      border-radius:12px; background:rgba(0,0,0,.28) url("../assets/ui/satan.svg") center/contain no-repeat; overflow:hidden; }
   .adv-satan-card-face .adv-satan-portrait { width:72px; height:90px; object-fit:contain; display:block; }
   .adv-satan-card-copy { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:4px; }
   .adv-satan-card-copy b { color:#ff3040; font-size:13px; letter-spacing:.04em; text-transform:uppercase; }

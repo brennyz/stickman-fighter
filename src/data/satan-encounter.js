@@ -9,9 +9,11 @@ const SATAN_SPECIES_ID = 'satan';
 /** Reflect + HP-tuning: ~85% van de duels wint Satan (speler sterft eerder). */
 const SATAN_HP_VS_PLAYER = 1.35;
 const SATAN_DIRECT_DMG_MUL = 0.55;
-/** Dikke SVG-portrait (UI + canvas). */
-const SATAN_SVG_URL = 'assets/ui/satan.svg';
-const SATAN_MARK_URL = 'assets/ui/satan-mark.svg';
+/** Dikke SVG-portrait (UI + canvas). `./` zodat Pages/SW dezelfde URL raken. */
+const SATAN_SVG_URL = './assets/ui/satan.svg';
+const SATAN_MARK_URL = './assets/ui/satan-mark.svg';
+/** Inline mark als satan.svg of satan-mark.svg niet laadt (geen broken-icon box). */
+const SATAN_MARK_FALLBACK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="#2a0810" stroke="#ff3040" stroke-width="2" d="M6 20c-1.2-4-.8-8 1.2-10.2C9 8 11 7.4 12 7.5c1-.1 3 .5 4.8 2.3C18.8 12 19.2 16 18 20Z"/><circle cx="12" cy="10.2" r="3.4" fill="#8a2030" stroke="#ff3040"/><path d="M9.2 8.2L7.2 4.6M14.8 8.2L16.8 4.6" stroke="#ffd75e" stroke-width="2.1" fill="none"/></svg>';
 /** Art-hoogte ≈ 2.35 × size → size ≈ 0.21 × min(W,H) ≈ half scherm. */
 const SATAN_SCREEN_FRAC = 0.21;
 const SATAN_SIZE_MIN = 88;
@@ -98,15 +100,33 @@ function drawSatanSvgArt(c, r, t, flash, telegraph) {
   return true;
 }
 
+function satanFallbackDataUri() {
+  return 'data:image/svg+xml,' + encodeURIComponent(SATAN_MARK_FALLBACK_SVG);
+}
+
+/** <img onerror> — mark eerst, daarna inline data-URI. Nooit sf-icon-broken. */
+function satanPortraitOnError(img) {
+  if (!img || img.dataset.sfSatanFb) return;
+  img.dataset.sfSatanFb = '1';
+  try { img.classList.remove('sf-icon-broken'); } catch (_) {}
+  const cur = String(img.getAttribute('src') || img.src || '');
+  if (cur.indexOf('satan-mark') < 0 && typeof SATAN_MARK_URL === 'string') {
+    img.src = SATAN_MARK_URL;
+    return;
+  }
+  img.src = satanFallbackDataUri();
+}
+
 function satanPortraitHtml(opts) {
   opts = opts || {};
   const compact = !!opts.compact;
-  const cls = compact ? 'adv-satan-mark' : 'adv-satan-portrait';
+  const cls = (compact ? 'adv-satan-mark' : 'adv-satan-portrait') + ' satan-portrait-art';
   const src = compact ? SATAN_MARK_URL : SATAN_SVG_URL;
   const wh = compact
     ? 'width="18" height="18"'
     : 'width="72" height="90"';
-  return `<img class="${cls}" src="${satanEscAttr(src)}" alt="" ${wh} decoding="async" draggable="false">`;
+  const fb = satanEscAttr(satanFallbackDataUri());
+  return `<img class="${cls}" src="${satanEscAttr(src)}" alt="" ${wh} decoding="async" draggable="false" data-fallback="${fb}" onerror="try{satanPortraitOnError(this)}catch(e){}">`;
 }
 
 function satanDiffId(diff) {

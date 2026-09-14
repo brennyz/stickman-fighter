@@ -34,7 +34,7 @@ async function run() {
   page.on('pageerror', (e) => pageErrors.push(String(e)));
 
   const base = process.argv[2] || smokeBaseUrl(8787);
-  await page.goto(base, { waitUntil: 'load', timeout: 30000 });
+  await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await page.waitForFunction(() => window.__sfBooted, { timeout: 20000 });
 
   const result = await page.evaluate(() => {
@@ -74,6 +74,44 @@ async function run() {
         }
         if (!info.innerHTML.includes('adv-satan-card') || !info.innerHTML.includes('satan.svg')) {
           throw new Error('levelIslandInfo missing Satan portrait card/svg');
+        }
+        if (!info.innerHTML.includes('satan-portrait-art')) {
+          throw new Error('Satan portrait missing satan-portrait-art class');
+        }
+        try { if (typeof hardenButtonIcons === 'function') hardenButtonIcons(info); } catch (e) {
+          throw new Error('hardenButtonIcons on island: ' + e);
+        }
+        const satanImgs = info.querySelectorAll('.adv-satan-portrait, .adv-satan-mark, .satan-portrait-art');
+        if (!satanImgs.length) throw new Error('no satan portrait imgs in island info');
+        satanImgs.forEach((img) => {
+          if (img.classList.contains('sf-icon-broken')) {
+            throw new Error('satan portrait marked sf-icon-broken');
+          }
+          if (img.dataset.sfIconHard) {
+            throw new Error('satan portrait should skip button-icon harden');
+          }
+        });
+        if (typeof skipButtonIconHarden === 'function' && !skipButtonIconHarden(satanImgs[0])) {
+          throw new Error('skipButtonIconHarden should skip satan portrait');
+        }
+        if (typeof parseDmgFloaterTxt === 'function') {
+          if (parseDmgFloaterTxt('-12') !== 12) throw new Error('parseDmgFloaterTxt -12');
+          if (parseDmgFloaterTxt('+12 XP') !== null) throw new Error('parseDmgFloaterTxt must ignore XP');
+        }
+        if (typeof tryMergeDmgFloater === 'function') {
+          const g2 = { floaters: [{ x: 200, y: 200, txt: '-8', size: 15, life: 1, color: '#ffe680', layer: 'dmg' }] };
+          if (!tryMergeDmgFloater(g2, 200, 200, '-5', '#ffe680', 15, 'dmg')) {
+            throw new Error('tryMergeDmgFloater should merge nearby -N');
+          }
+          if (g2.floaters[0].txt !== '-13') throw new Error('merge sum expected -13 got ' + g2.floaters[0].txt);
+        }
+        if (typeof layoutFloaterPos === 'function') {
+          const g3 = { floaters: [] };
+          const a = layoutFloaterPos(g3, 200, 200, '-8', 15, 'dmg');
+          g3.floaters.push({ x: a.x, y: a.y, txt: '-8', size: 15, life: 1, layer: 'dmg' });
+          const b = layoutFloaterPos(g3, 200, 200, '-8', 15, 'dmg');
+          const stacked = Math.abs(b.y - a.y) < 22 && Math.abs(b.x - a.x) < 12;
+          if (stacked) throw new Error('layoutFloaterPos stacked two -8 chips');
         }
       }
 

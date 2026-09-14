@@ -3188,6 +3188,7 @@ class Game {
     }
   }
   floater(x, y, txt, color, size, layer) {
+    if (typeof tryMergeDmgFloater === 'function' && tryMergeDmgFloater(this, x, y, txt, color, size, layer)) return;
     if (!perfFxBudgetAllow(this, 1)) return;
     if (perfFxRoom(this, 'floater') <= 0) return;
     const cap = fxCaps();
