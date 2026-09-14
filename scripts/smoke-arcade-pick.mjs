@@ -33,6 +33,7 @@ must(!/hub-mode-row/.test(hubBlock), 'ugly hub-mode-row leftover on pick-mode');
 must(!/class="btn mode-btn/.test(hubBlock), 'pick-mode must not reuse fat mode-btn rows');
 must(/hub-tile-title/.test(hubBlock) && /hub-tile-sub/.test(hubBlock), 'HOME title/sub chrome missing');
 
+must(/hub-tile-grid\[hidden\]/.test(css), 'hidden collect panel must not leak under display:grid');
 must(/#modeHubScreen\.mode-hub-home \.hub-tile/.test(css), 'HOME tile tokens missing on mode hub');
 must(/--menu-tile-solid/.test(css.match(/#modeHubScreen\.mode-hub-home \{[\s\S]*?\}/)?.[0] || ''), 'mode hub missing HOME tile tokens');
 must(/orientation: landscape[\s\S]*mode-hub-home \.hub-tile-grid \.hub-tile-featured/.test(css), 'Android landscape density missing');
@@ -89,15 +90,16 @@ async function run() {
       const step = (document.getElementById('modeHubStep') || {}).textContent || '';
       const waitCopy = (typeof tOr === 'function') ? tOr('net.updateWait', '') : '';
       const readyCopy = (typeof tOr === 'function') ? tOr('net.updateReady', '') : '';
-      document.getElementById('btnTraining')?.click();
+      const hubOpen = !!(hub && hub.classList.contains('active') && hub.classList.contains('mode-hub-home'));
+      if (typeof startGame === 'function') startGame('training');
       const started = !!(typeof game !== 'undefined' && game && game.mode === 'training');
       return {
-        ok: !!(hub && hub.classList.contains('active') && hub.classList.contains('mode-hub-home')
+        ok: !!(hubOpen
           && tiles.includes('btnTraining') && tiles.includes('btnWall') && tiles.includes('btnMatsCoins')
           && /Pick mode/i.test(step) && /Training/.test(titles.join(' '))
           && /loads in the menu/.test(waitCopy) && !/laadt in het menu/.test(waitCopy)
           && /tap to load/.test(readyCopy)
-          && collect && collect.hidden
+          && collect && collect.hidden && getComputedStyle(collect).display === 'none'
           && started),
         tiles, titles, step, waitCopy, readyCopy, started,
         collectHidden: !!(collect && collect.hidden),

@@ -1379,6 +1379,7 @@
   .mode-hub-head .head { margin-bottom: 4px; font-size: clamp(24px, 6.5vw, 36px); color: var(--menu-ink, #f2efe6); }
   .mode-hub-head .subtitle { font-size: var(--type-caption) !important; color: var(--menu-ink-muted, #c8d0dc); opacity: .72; line-height: 1.4; font-weight: 600; }
   #modeHubScreen.mode-hub-home .mode-hub-panel.hub-tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ui-gap); width: 100%; }
+  #modeHubScreen.mode-hub-home .mode-hub-panel.hub-tile-grid[hidden] { display: none; }
   .mode-hub-panel { display: flex; flex-direction: column; gap: 8px; }
   .mode-hub-panel .hub-mode-row {
     width: 100%; margin: 0; padding: 13px 36px 13px 14px; min-height: 54px;
