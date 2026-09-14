@@ -928,32 +928,7 @@ class Game {
         || (typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff));
       const heatDanger = failsNow === SATAN_DANGER_FAILS;
       persist();
-      if (gotMaster) {
-        const self = this;
-        setTimeout(() => {
-          try {
-            if (!gameUiTimerOk(self, { allowOver: true })) return;
-            UI.toast(t('toast.masterBuffGain'), 3800, { tone: 'ok' });
-          } catch (_) {}
-        }, 1500);
-      }
-      if (heatDanger) {
-        const self = this;
-        setTimeout(() => {
-          try {
-            if (!gameUiTimerOk(self, { allowOver: true })) return;
-            UI.toast(t('toast.satanHeatDanger'), 4200, { tone: 'danger' });
-          } catch (_) {}
-        }, gotMaster ? 3200 : 1500);
-      } else if (satanSoon) {
-        const self = this;
-        setTimeout(() => {
-          try {
-            if (!gameUiTimerOk(self, { allowOver: true })) return;
-            UI.toast(t('toast.satanComingNext'), 4200, { tone: 'danger' });
-          } catch (_) {}
-        }, gotMaster ? 3200 : 1500);
-      }
+      // Heat / master already land on the VERLOREN result tip — late toasts stuck on that screen.
       AudioSys.sfx('lose');
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
@@ -961,6 +936,17 @@ class Game {
     scheduleGameResult(this, win ? 1600 : 1400, () => UI.showResult(win, {
       titleKey: win ? 'result.advWin' : 'result.advLose',
       title: win ? t('result.advWin') : t('result.advLose'),
+      detailKey: win ? 'result.advDetailWin' : 'result.advDetailLose',
+      finishersN: this.runFinishers || 0,
+      streakN: this.sessionBestKillStreak || 0,
+      detailParams: {
+        lv, kills: this.kills, stars, combo: this.maxCombo || 0, finishers: '', streak: '',
+      },
+      keepLoot: !win,
+      diffLineKey: diff !== 'normal' ? 'result.advDiffLine' : '',
+      diffLineParams: diff !== 'normal' ? { diff: advDiffLabel(diff) } : undefined,
+      masterBuff: !!(masterBuffActive(lv, diff) && !win),
+      gambleRoll: this.gambleRoll || null,
       detail: (() => {
         const finishers = this.runFinishers ? t('result.finishersLine', { n: this.runFinishers }) : '';
         const streak = (this.sessionBestKillStreak || 0) >= 3
@@ -970,6 +956,10 @@ class Game {
           : t('result.advDetailLose', { lv, kills: this.kills, combo: this.maxCombo || 0, finishers, streak });
         if (diff !== 'normal') {
           base = t('result.advDiffLine', { diff: advDiffLabel(diff) }) + base;
+        }
+        if (!win) {
+          const keep = tOr('result.advLoseKeep', 'XP en loot van deze run blijven');
+          if (keep) base = keep + ' · ' + base;
         }
         if (masterBuffActive(lv, diff) && !win) base += t('result.masterBuffActive');
         if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
@@ -986,7 +976,7 @@ class Game {
         : (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
         ? t('result.starImproved', { stars, prev: prevStars })
         : t('result.pickupsHelp', { hint: starHintLine() })))) : (() => {
-        const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : 'start';
+        const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : tOr('result.wavesStart', 'begin');
         const failsNow = advFailCount(lv, diff);
         let heatTip = '';
         if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff)) {
@@ -1022,7 +1012,12 @@ class Game {
     this.killStreak = (this.killStreak || 0) + 1;
     const ks = this.killStreak;
     if ([3, 5, 8, 12].includes(ks)) {
-      const msgs = { 3: 'STREAK ×3', 5: 'ON FIRE!', 8: 'RAMPAGE!', 12: 'UNSTOPPABLE!' };
+      const msgs = {
+        3: tOr('combat.streak3', 'STREAK ×3'),
+        5: tOr('combat.streak5', 'ON FIRE!'),
+        8: tOr('combat.streak8', 'RAMPAGE!'),
+        12: tOr('combat.streak12', 'UNSTOPPABLE!'),
+      };
       try { this.floater(W / 2, 128, msgs[ks], ks >= 8 ? '#ff7a4d' : '#ffd75e', 17); } catch (_) {}
       try { AudioSys.sfx(ks >= 8 ? 'comboEpic' : 'combo'); } catch (_) {}
       if (!motionReduced() && !fxLite()) {
@@ -1678,6 +1673,8 @@ class Game {
     scheduleGameResult(this, 1400, () => UI.showResult(win, {
       titleKey: win ? 'result.trainWin' : 'result.trainLose',
       title: win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'),
+      detailKey: win ? 'result.trainDetailWin' : 'result.trainDetailLose',
+      detailParams: { p: this.roundsP, r: this.roundsR, combo: trainBest, wins: save.trainWins },
       detail: win
         ? tOr('result.trainDetailWin', 'RabbitRobot verslagen ({p}-{r}) · max combo ×{combo} · {wins}× gewonnen', {
           p: this.roundsP, r: this.roundsR, combo: trainBest, wins: save.trainWins,

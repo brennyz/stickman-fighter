@@ -44,10 +44,10 @@ must(/function meleeHitsTrainTarget\(/.test(fs.readFileSync(path.join(root, 'src
   'training capsule hurtbox helper missing');
 must(/meleeHitsTrainTarget\(hx, hy, r, tgt\)/.test(game), 'tryMelee must use training capsule vs robot');
 must(/advLose: 'VERLOREN'/.test(catalog), 'NL lose title must not say VERSLAGEN');
-must(/advLose: 'YOU LOST\.\.\.'/.test(catalog), 'EN lose title must not say DEFEATED');
+must(!/advLose: 'YOU LOST/.test(catalog), 'EN lose title must be VERLOREN, not YOU LOST');
 must(!/advLose: 'DEFEATED/.test(catalog), 'DEFEATED leftover in result.advLose');
 must(/lost: 'VERLOREN'/.test(catalog), 'NL banner.lost must say VERLOREN');
-must(/lost: 'YOU LOST\.\.\.'/.test(catalog), 'EN banner.lost must say YOU LOST');
+must(!/lost: 'YOU LOST/.test(catalog), 'EN banner.lost must be VERLOREN, not YOU LOST');
 
 must(/tOr\('combat\.trainLostTip'/.test(game), 'finishTraining must resolve combat.trainLostTip');
 must(/opener \? 1 :/.test(game), 'level 1-2 wave 1 spawn must be single-file');

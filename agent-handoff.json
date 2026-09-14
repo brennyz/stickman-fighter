@@ -841,6 +841,41 @@
       "text": "BUILDINGS UI (2 of 4): HOME tile + Buildings screen (5 factories, lock-by-world, collect, upgrade). Draft, no main.",
       "status": "done-in-code",
       "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T171000",
+      "from": "user",
+      "text": "Owner rule: NO individual merges. Keep #267 draft/ready. Do not merge to main until Brendon signals mega-merge of all feature sets + conflict check. Idle or harden only; no «please merge» spam.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T161000",
+      "from": "user",
+      "text": "Stay on #267. Tighten EN-NL (VERLOREN, no ROBOT WINS in NL, toast/tooltip match UI). Sticky toasts / version chip. Keep-loot i18n. Upgrades/drawer/weapons-contrast only if still open here — #269 owns that, do not duplicate. No merge without «merge».",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T160800",
+      "from": "user",
+      "text": "After #267: help or don't block. Upgrades inaccessible, drawer copy trim (keep features), weapons gray contrast. Prefer c4a6 new PR. Finish #267 merge-ready without scope-creep into Upgrades.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T155900",
+      "from": "user",
+      "text": "Ultra usage-sprint: #266 merged. Update #267 on main. EN-NL Hub/Adventure/combat/toasts; VERLOREN i.p.v. YOU LOST; sticky update-toast stiller/dismissible. No new PR. No merge without «merge». Leave #263/#256. Don't race #268.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T151200",
+      "from": "user",
+      "text": "ULTRA SPRINT: max polish. Don't race #266 unify. Take EN-NL + VERLOREN + sticky toast. No merge without «merge». speel.html, no versus/iOS/forbidden CSS.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
     }
   ],
   "agentRules": [

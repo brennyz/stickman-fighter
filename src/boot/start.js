@@ -17,6 +17,7 @@ function startGame(mode, opts) {
     return;
   }
   try { primePlayInput(false); } catch (_) {}
+  try { if (typeof UI !== 'undefined' && UI.clearToasts) UI.clearToasts(); } catch (_) {}
   window.__sfLoopErr = false;
   try { Input.releaseAll(); } catch (_) {}
   Input.dualMode = false;

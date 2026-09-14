@@ -490,12 +490,15 @@ function updateNetStatus(ev) {
         ? tOr('net.updateReady', 'Nieuwe versie klaar — tik om te laden')
         : 'Nieuwe versie klaar — tik om te laden');
     } else {
-      el.classList.add('sw-update-wait');
+      // Off-HOME: stay quiet. Keep i18n lookup so copy follows language when we return to HOME.
+      const waitCopy = (typeof tOr === 'function')
+        ? tOr('net.updateWait', 'Nieuwe versie — laadt in het menu')
+        : 'Nieuwe versie — laadt in het menu';
+      el.hidden = true;
+      showNetDismiss(el, false);
       if (el.removeAttribute) el.removeAttribute('role');
       if ('tabIndex' in el) el.tabIndex = -1;
-      setNetStatusText(el, (typeof tOr === 'function')
-        ? tOr('net.updateWait', 'Nieuwe versie — laadt in het menu')
-        : 'Nieuwe versie — laadt in het menu');
+      void waitCopy;
     }
   };
 

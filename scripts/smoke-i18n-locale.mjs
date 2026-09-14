@@ -54,6 +54,9 @@ if (!/id="netStatusDismiss"/.test(html)) fail('version banner missing dismiss co
 if (!/id="netStatusMsg"/.test(html)) fail('version banner missing msg span');
 if (!/__sfNetQuietUpdate/.test(loop)) fail('dismiss must quiet the update banner for the session');
 if (!/body\.is-playing #netStatus\.sw-update/.test(css)) fail('update banner must hide during play');
+if (!/Off-HOME: stay quiet/.test(loop) && !/el\.hidden = true;\s*showNetDismiss\(el, false\);/.test(loop)) {
+  fail('update banner must stay hidden off HOME hub');
+}
 if (!/id="sfTitleStart"/.test(html) || /id="sfTitleName"/.test(html)) fail('name field must stay off the title gate');
 
 if (!manifest.includes('src/i18n/catalog-de.js')) fail('manifest must load catalog-de.js');

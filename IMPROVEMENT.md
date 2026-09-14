@@ -143,6 +143,10 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | Owner: geen individuele merges. #267 blijft ready/CLEAN tot mega-merge + conflict-check. Geen «please merge». v1.18.166 / SW 376. |
+| 2026-09-14 | — | #267 EN-NL strak: resultaat-titels i18n (NL geen ROBOT WINS), detailKey + gamble bij taalwissel, streak-shouts NL, Hub/Arcade stats volgen taal. v1.18.166 / SW 376. #269 = upgrades/contrast. |
+| 2026-09-14 | — | #267 op main+#266: EN VERLOREN, keep-loot, geen sticky lose-toasts, update-banner alleen op HOME. v1.18.165 / SW 375. Wacht «merge». |
+| 2026-09-14 | — | #266 LIVE: locale (VERLOREN NL, Tips-label, eilandkop) + stillere versie-banner + HOME. v1.18.163 / SW 373. |
 | 2026-09-14 | — | Buildings UI (2/4): HOME-tegel + list/detail 5 factories, stub systems-API. v1.18.164 / SW 374. Draft, geen main. |
 | 2026-09-14 | — | Top-20 spawn FX: funny procedural SFX + light shudder (rarity×100+hp+dmg×5). v1.18.164 / SW 374. Draft. |
 | 2026-09-14 | — | W2 `sp.pixel` aliases → #282 provisional art/species IDs (geen pixel-redo). v1.18.165 / SW 375. Draft. |

@@ -1197,6 +1197,7 @@ const UI = {
           syncPlayLayer();
           return;
         }
+        try { this.clearToasts(); } catch (_) {}
         try { clearScreensForPlay(); } catch (_) {}
       } else {
         const target = document.getElementById(id);
@@ -2085,7 +2086,7 @@ const UI = {
           const u = base ? withShareRevParam(base, shareCacheRevFor(hosting)) : '';
           if (u) {
             playLinkEl.innerHTML =
-              `Deel speel.html (Pages): <a href="${u}" style="color:#7cf5ff;font-weight:800">${u.replace(/^https:\/\//, '')}</a>`;
+              `${tOr('settings.playLinkPages', 'Deel speel.html (Pages): ')}<a href="${u}" style="color:#7cf5ff;font-weight:800">${u.replace(/^https:\/\//, '')}</a>`;
           }
         }).catch(() => {});
       }
@@ -5031,19 +5032,44 @@ const UI = {
     if (state === 'menu' && game && !game.over) return;
     try {
     this.lastResult = data;
+    try { this.clearToasts(); } catch (_) {}
     const title = document.getElementById('resTitle');
     if (!title) throw new Error('result DOM missing');
     const titleKey = data.titleKey || (data.mode === 'training'
       ? (win ? 'result.trainWin' : 'result.trainLose')
       : (win ? 'result.advWin' : 'result.advLose'));
-    const painted = (typeof tOr === 'function')
-      ? tOr(titleKey, data.title || (win ? 'GEWONNEN!' : 'VERLOREN'))
-      : (data.title || (win ? 'GEWONNEN!' : 'VERLOREN'));
+    const titleFallback = data.mode === 'training'
+      ? (win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'))
+      : (win ? tOr('result.advWin', 'GEWONNEN!') : tOr('result.advLose', 'VERLOREN'));
+    // Never reuse a stale English title (ROBOT WINS / YOU LOST) when the UI is NL.
+    const painted = (typeof tOr === 'function') ? tOr(titleKey, titleFallback) : titleFallback;
     title.textContent = painted;
     data.titleKey = titleKey;
+    data.title = painted;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
     const detailEl = document.getElementById('resDetail');
-    if (detailEl) detailEl.textContent = data.detail;
+    if (detailEl) {
+      let detail = data.detail || '';
+      if (data.detailKey) {
+        const params = Object.assign({}, data.detailParams || {});
+        if (data.finishersN) params.finishers = tOr('result.finishersLine', '', { n: data.finishersN });
+        if (data.streakN >= 3) params.streak = tOr('result.streakLine', '', { n: data.streakN });
+        detail = tOr(data.detailKey, detail, params);
+        if (data.diffLineKey) detail = tOr(data.diffLineKey, '', data.diffLineParams || {}) + detail;
+        if (data.keepLoot) {
+          const keep = tOr('result.advLoseKeep', 'XP en loot van deze run blijven');
+          if (keep) detail = keep + ' · ' + detail;
+        }
+        if (data.masterBuff) detail += tOr('result.masterBuffActive', '');
+        if (data.gambleRoll && data.gambleRoll.outcome && data.gambleRoll.outcome !== 'neutral'
+          && typeof gambleOutcomeLabelFromKey === 'function') {
+          const gText = gambleOutcomeLabelFromKey(data.gambleRoll).replace(/^[^!]+!?\s*/, '').slice(0, 48);
+          if (gText) detail += tOr('result.gambleLine', '', { text: gText });
+        }
+      }
+      detailEl.textContent = detail;
+      data.detail = detail;
+    }
     const lootEl = document.getElementById('resLoot');
     if (lootEl) {
       const html = formatRunLootHtml(game && game.runLoot, data.mode);
@@ -5086,7 +5112,7 @@ const UI = {
       const label = again.querySelector('div');
       if (label) {
         if (data.mode === 'versus') label.innerHTML = t('result.rematch') + '<small>' + t('result.rematchSub') + '</small>';
-        else if (data.mode === 'training') label.innerHTML = t('result.again') + '<small>vs RabbitRobot</small>';
+        else if (data.mode === 'training') label.innerHTML = t('result.again') + '<small>' + tOr('result.trainAgainSub', 'vs RabbitRobot') + '</small>';
         else label.textContent = t('result.again');
       }
     }
