@@ -600,6 +600,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T13:37:43Z",
+      "summary": "Stale retest 13:05–13:25 was Pages v1.18.153. LIVE is already v1.18.159/SW369 (#259+#260): VERLOREN, satan.svg, floater clamp, hit-reg. Stay on #263 ghost-HP. No silent main."
+    },
+    {
       "at": "2026-09-14T13:36:11Z",
       "summary": "Training ghost-HP + goud-flash + RABBIT n/max (v1.18.160/SW370). Hit-reg ongemoeid. PR #263. Niet stil main."
     },
@@ -694,10 +698,6 @@
     {
       "at": "2026-08-17T09:08:04Z",
       "summary": "d7: Import undo via Backup; SAVE_KEY ongewijzigd"
-    },
-    {
-      "at": "2026-08-17T08:56:53Z",
-      "summary": "Zevende d20-worp geclaimd via CLI"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
