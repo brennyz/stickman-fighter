@@ -3,10 +3,10 @@
    See SEASON-OVERLAY.md. */
 
 :root {
-  --season-safe-top: max(var(--safe-top), 56px);
-  --season-safe-right: max(var(--safe-right), 72px);
-  --season-safe-bottom: max(var(--safe-bottom), 128px);
-  --season-safe-left: max(var(--safe-left), 12px);
+  --season-safe-top: max(var(--safe-top), 8px);
+  --season-safe-right: max(var(--safe-right), 8px);
+  --season-safe-bottom: max(var(--safe-bottom), 8px);
+  --season-safe-left: max(var(--safe-left), 8px);
   --season-inset-top: var(--season-safe-top);
   --season-inset-right: var(--season-safe-right);
   --season-inset-bottom: var(--season-safe-bottom);
@@ -129,8 +129,29 @@ html[data-season="classic"] .season-overlay {
   opacity: var(--season-vignette-alpha);
 }
 
+body.is-playing {
+  --season-safe-top: max(var(--safe-top), 64px);
+  --season-safe-right: max(var(--safe-right), 76px);
+  --season-safe-bottom: max(var(--safe-bottom), 132px);
+  --season-safe-left: max(var(--safe-left), 12px);
+}
+
 body.is-playing .season-vignette {
   opacity: var(--season-play-vignette);
+}
+
+/* Settings/hub: keep the card rail clear — no pumpkins on toggles */
+body:not(.is-playing) .season-corner-bl,
+body:not(.is-playing) .season-corner-br {
+  visibility: hidden;
+}
+
+body:not(.is-playing) .season-vignette {
+  opacity: calc(var(--season-vignette-alpha) * 0.5);
+}
+
+#seasonSwitchBar .dex-filter-btn {
+  white-space: nowrap;
 }
 
 .season-motif {

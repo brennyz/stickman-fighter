@@ -32,7 +32,8 @@ Classic = original screen (overlay hidden). Other seasons add a wash + corner de
 - Entire overlay: `pointer-events: none !important`
 - `z-index: 22` — above `.screen` (20), below toasts (40) and pause (50)
 - Reserved safe zones (CSS tokens): top / pause-right / combat-bottom / left
-- During `body.is-playing` vignette is weaker; combat center stays clear
+- During `body.is-playing` vignette is weaker and all four corners sit outside pause + combat pads
+- On menu/settings, bottom corners stay hidden so pumpkins/vines never cover toggles or HOME
 - No `display:none !important` on `.screen`, no canvas z-index fights
 
 See `SCREEN-VISIBILITY-FUNNEL.md` layer **D2**.
