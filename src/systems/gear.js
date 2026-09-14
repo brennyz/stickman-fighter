@@ -6,6 +6,10 @@
 const GEAR_DRAW_ORDER = ['back', 'legs', 'chest', 'head', 'hands', 'weapon', 'pet'];
 const GEAR_SLOT_DRAW_ORDER = ['back', 'legs', 'chest', 'head', 'hands'];
 const GEAR_UI_FILTERS = ['all', 'look', 'stat', 'lock', 'owned'];
+const GEAR_RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic', 'nightmare', 'hell'];
+const GEAR_RARITY_RANK = {
+  common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5, mythic: 6, nightmare: 7, hell: 8,
+};
 
 function _gearSlotIds() {
   return (typeof GEAR_SLOT_IDS !== 'undefined' && Array.isArray(GEAR_SLOT_IDS) && GEAR_SLOT_IDS.length === 5)
@@ -353,10 +357,25 @@ function drawGearHeroDoll(cv, saveObj) {
   cc.restore();
 }
 
-function gearFilterItems(items, filter, q) {
+function gearRaritiesInList(items) {
+  const seen = {};
+  const out = [];
+  for (const it of items || []) {
+    const r = it && it.rarity ? String(it.rarity) : '';
+    if (!r || seen[r]) continue;
+    seen[r] = true;
+    out.push(r);
+  }
+  out.sort((a, b) => (GEAR_RARITY_RANK[a] || 0) - (GEAR_RARITY_RANK[b] || 0));
+  return out;
+}
+
+function gearFilterItems(items, filter, q, rarity) {
   const needle = String(q || '').trim().toLowerCase();
   const want = filter || 'all';
+  const rar = (rarity && rarity !== 'all') ? String(rarity) : '';
   return (items || []).filter((it) => {
+    if (rar && String(it.rarity || '') !== rar) return false;
     const unlock = gearUnlockState(it);
     const look = !gearHasStats(it);
     if (want === 'look' && !look) return false;
@@ -366,9 +385,28 @@ function gearFilterItems(items, filter, q) {
     if (needle) {
       const name = String(gearItemName(it) || '').toLowerCase();
       const id = String(it.id || '').toLowerCase();
-      if (name.indexOf(needle) === -1 && id.indexOf(needle) === -1) return false;
+      const rr = String(it.rarity || '').toLowerCase();
+      if (name.indexOf(needle) === -1 && id.indexOf(needle) === -1 && rr.indexOf(needle) === -1) return false;
     }
     return true;
+  });
+}
+
+function gearSortItems(items, eq) {
+  const bag = eq || {};
+  return (items || []).slice().sort((a, b) => {
+    const aEq = !!(a && (bag[a.slotId] === a.id || bag[a.slot] === a.id));
+    const bEq = !!(b && (bag[b.slotId] === b.id || bag[b.slot] === b.id));
+    if (aEq !== bEq) return aEq ? -1 : 1;
+    const aOwn = gearOwned(a);
+    const bOwn = gearOwned(b);
+    if (aOwn !== bOwn) return aOwn ? -1 : 1;
+    const ar = GEAR_RARITY_RANK[a && a.rarity] || 0;
+    const br = GEAR_RARITY_RANK[b && b.rarity] || 0;
+    if (ar !== br) return br - ar;
+    const an = String(gearItemName(a) || a.id || '');
+    const bn = String(gearItemName(b) || b.id || '');
+    return an < bn ? -1 : (an > bn ? 1 : 0);
   });
 }
 

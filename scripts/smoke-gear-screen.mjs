@@ -30,7 +30,8 @@ must(/id="btnGear"/.test(html), 'missing Collection Character tile');
 must(/id="gearSlotList"/.test(html), 'missing #gearSlotList');
 must(/id="gearWeaponAside"/.test(html), 'missing weapon aside');
 must(/id="gearDollCanvas"/.test(html), 'missing stickman preview');
-must(/id="gearFilterBar"/.test(html) && /id="gearFilterQ"/.test(html), 'filter bar + search required for 131 catalog');
+must(/id="gearFilterBar"/.test(html) && /id="gearFilterQ"/.test(html), 'filter bar + search required for large catalog');
+must(/id="gearRarityBar"/.test(html) && /id="gearFilterCount"/.test(html), 'rarity bar + result count required');
 must(!/data-gear-slot="arms"/.test(html) && !/data-gear-slot="aura"/.test(html), 'legacy arms/aura slots must not be in HTML');
 must(/hub-tile-gear/.test(html), 'Character tile must use HOME hub-tile chrome');
 
@@ -55,6 +56,8 @@ must(/save\.equipment/.test(uiAdapt) && /ownedGear/.test(uiAdapt), 'v1 save.equi
 must(/needLvl/.test(uiAdapt) && /needTrain/.test(uiAdapt) && /needDex/.test(uiAdapt) && /needTime/.test(uiAdapt), 'v1 item lock fields missing');
 must(/GEAR_DRAW_ORDER = \['back', 'legs', 'chest', 'head', 'hands', 'weapon', 'pet'\]/.test(uiAdapt), 'draw-order must be back→legs→chest→head→hands→weapon→pet');
 must(/function drawGearHeroDoll/.test(uiAdapt), 'drawGearHeroDoll missing');
+must(/function gearSortItems/.test(uiAdapt) && /function gearRaritiesInList/.test(uiAdapt), 'large-catalog sort/rarity helpers missing');
+must(/gearFilterItems\(items, filter, q, rarity\)/.test(uiAdapt) || /function gearFilterItems\(items, filter, q, rarity\)/.test(uiAdapt), 'gearFilterItems must take rarity');
 must(/isCosmetic/.test(uiAdapt) && /hasStats/.test(uiAdapt), 'contract item flags missing');
 must(/\.gear-filter-btn/.test(css), 'filter chips CSS missing');
 must(!/\.screen\s*\{\s*display:\s*none\s*!important/.test(css), 'nuclear display:none forbidden');
@@ -128,6 +131,10 @@ async function run() {
 
       const chips = [...document.querySelectorAll('#gearFilterBar [data-gear-filter]')];
       if (chips.length < 5) return { ok: false, why: 'filter chips', n: chips.length };
+      const rarChips = [...document.querySelectorAll('#gearRarityBar [data-gear-rarity]')];
+      if (rarChips.length < 2) return { ok: false, why: 'rarity chips', n: rarChips.length };
+      const rarTooSmall = rarChips.filter((c) => c.getBoundingClientRect().height < 44);
+      if (rarTooSmall.length) return { ok: false, why: 'rarity touch <44', h: rarTooSmall[0].getBoundingClientRect().height };
       const q = document.getElementById('gearFilterQ');
       if (!q) return { ok: false, why: 'search missing' };
 
@@ -203,7 +210,44 @@ async function run() {
       }
 
       UI.gearFilterQ = '';
+      UI.gearRarity = 'rare';
+      UI.renderGear({ pickerOnly: true });
+      const rareCards = [...document.querySelectorAll('#gearPicker [data-gear-id]')];
+      if (!rareCards.length) return { ok: false, why: 'rare filter empty' };
+      if (rareCards.some((c) => c.getAttribute('data-rarity') !== 'rare')) {
+        return { ok: false, why: 'rare filter leaked other rarity' };
+      }
+      const countEl = document.getElementById('gearFilterCount');
+      if (!countEl || !/\d+\s*\/\s*\d+/.test(countEl.textContent || '')) {
+        return { ok: false, why: 'filter count missing', text: countEl && countEl.textContent };
+      }
+
+      const bulk = [];
+      for (let i = 0; i < 120; i++) {
+        bulk.push({
+          id: 'head_bulk_' + i, slotId: 'head', slot: 'head', kind: 'cosmetic',
+          isCosmetic: true, hasStats: false, rarity: (i % 3 === 0 ? 'epic' : 'common'), mods: null,
+        });
+      }
+      const epics = gearFilterItems(bulk, 'all', '', 'epic');
+      if (epics.length !== 40) return { ok: false, why: 'bulk rarity filter', n: epics.length };
+      const hit = gearFilterItems(bulk, 'all', 'head_bulk_99', 'all');
+      if (hit.length !== 1 || hit[0].id !== 'head_bulk_99') return { ok: false, why: 'bulk search', n: hit.length };
+      const sorted = gearSortItems(bulk, {});
+      if (!sorted.length || (GEAR_RARITY_RANK[sorted[0].rarity] || 0) < (GEAR_RARITY_RANK[sorted[sorted.length - 1].rarity] || 0)) {
+        return { ok: false, why: 'sort must put higher rarity first' };
+      }
+
+      UI.gearRarity = 'all';
       UI.renderGear();
+      const screenEl = document.getElementById('gearScreen');
+      if (!screenEl || screenEl.scrollHeight <= screenEl.clientHeight + 4) {
+        return {
+          ok: false, why: 'gear screen must page-scroll for large slot lists',
+          sh: screenEl && screenEl.scrollHeight, ch: screenEl && screenEl.clientHeight,
+        };
+      }
+
       const aside = document.getElementById('gearWeaponAside');
       if (!aside || !aside.textContent) return { ok: false, why: 'weapon aside empty' };
       const look = [...document.querySelectorAll('.gear-pill-vanity')];

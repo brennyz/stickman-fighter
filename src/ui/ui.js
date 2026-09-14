@@ -4032,7 +4032,8 @@ const UI = {
     }
   },
 
-  renderGear() {
+  renderGear(opts) {
+    const pickerOnly = !!(opts && opts.pickerOnly);
     const esc = (s) => String(s == null ? '' : s)
       .split('&').join('&amp;')
       .split('<').join('&lt;')
@@ -4047,11 +4048,13 @@ const UI = {
     if (!this.gearFilter || (typeof GEAR_UI_FILTERS !== 'undefined' && GEAR_UI_FILTERS.indexOf(this.gearFilter) < 0)) {
       this.gearFilter = 'all';
     }
+    if (!this.gearRarity) this.gearRarity = 'all';
     const pickSlot = this.gearSlotPick;
     const items = typeof listGearItems === 'function' ? listGearItems(pickSlot) : [];
-    const shown = typeof gearFilterItems === 'function'
-      ? gearFilterItems(items, this.gearFilter, this.gearFilterQ)
+    let shown = typeof gearFilterItems === 'function'
+      ? gearFilterItems(items, this.gearFilter, this.gearFilterQ, this.gearRarity)
       : items;
+    if (typeof gearSortItems === 'function') shown = gearSortItems(shown, eq);
     if (this.gearItemPick && !items.some((it) => it.id === this.gearItemPick)) this.gearItemPick = null;
     if (!this.gearItemPick) {
       this.gearItemPick = eq[pickSlot] || (items.find((it) => {
@@ -4071,7 +4074,7 @@ const UI = {
     };
 
     const sumEl = document.getElementById('gearSummary');
-    if (sumEl) {
+    if (!pickerOnly && sumEl) {
       const filled = slots.filter((s) => eq[s.id]).length;
       const statN = slots.reduce((n, s) => {
         const it = typeof gearItemById === 'function' ? gearItemById(eq[s.id]) : null;
@@ -4085,7 +4088,7 @@ const UI = {
         `<span class="gear-pill">${esc(tOr('gear.catalogN', '{n} items', { n: catalogN }))}</span>`;
     }
     const legend = document.getElementById('gearLegend');
-    if (legend) {
+    if (!pickerOnly && legend) {
       legend.innerHTML =
         `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))}</span>` +
         `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))}</span>` +
@@ -4093,7 +4096,7 @@ const UI = {
     }
 
     const slotList = document.getElementById('gearSlotList');
-    if (slotList) {
+    if (!pickerOnly && slotList) {
       slotList.innerHTML = '';
       for (const slot of slots) {
         const sid = slot.id;
@@ -4139,7 +4142,7 @@ const UI = {
     }
 
     const aside = document.getElementById('gearWeaponAside');
-    if (aside) {
+    if (!pickerOnly && aside) {
       const w = typeof weaponById === 'function' ? weaponById(save.weapon) : null;
       const wName = w && typeof weaponLabel === 'function' ? weaponLabel(w) : (save.weapon || '—');
       aside.innerHTML =
@@ -4148,9 +4151,9 @@ const UI = {
     }
 
     const cv = document.getElementById('gearDollCanvas');
-    if (cv && typeof drawGearHeroDoll === 'function') {
+    if (!pickerOnly && cv && typeof drawGearHeroDoll === 'function') {
       drawGearHeroDoll(cv, save);
-    } else if (cv && typeof Fighter === 'function') {
+    } else if (!pickerOnly && cv && typeof Fighter === 'function') {
       const cc = cv.getContext('2d');
       cc.clearRect(0, 0, cv.width, cv.height);
       const st = typeof styleById === 'function' ? styleById(save.style || 'classic') : { body: '#f2f5ff' };
@@ -4166,7 +4169,7 @@ const UI = {
     const detail = document.getElementById('gearDetail');
     const rawPicked = typeof gearItemById === 'function' ? gearItemById(this.gearItemPick) : null;
     const picked = (typeof contractGearItem === 'function' && rawPicked) ? contractGearItem(rawPicked) : rawPicked;
-    if (detail) {
+    if (!pickerOnly && detail) {
       if (!picked) {
         detail.innerHTML = `<div class="gear-detail-sub">${esc(tOr('gear.pickHint', 'Tik een slot, dan een item.'))}</div>`;
       } else {
@@ -4245,7 +4248,7 @@ const UI = {
               this.gearFilter = key;
               this._gearPickerScroll = 0;
               AudioSys.sfx('select');
-              this.renderGear();
+              this.renderGear({ pickerOnly: true });
             }, 'gearFilter/' + key, 'Filter mislukt');
           });
           filterBar.appendChild(chip);
@@ -4259,6 +4262,44 @@ const UI = {
         chip.textContent = labels[key] || key;
       }
     }
+
+    const rarBar = document.getElementById('gearRarityBar');
+    if (rarBar) {
+      const present = (typeof gearRaritiesInList === 'function') ? gearRaritiesInList(items) : [];
+      const keys = ['all'].concat(present);
+      if (this.gearRarity !== 'all' && present.indexOf(this.gearRarity) < 0) this.gearRarity = 'all';
+      const sig = keys.join(',');
+      if (!this._gearRarityBound || rarBar.getAttribute('data-rar-keys') !== sig) {
+        rarBar.innerHTML = '';
+        rarBar.setAttribute('data-rar-keys', sig);
+        for (const key of keys) {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'gear-filter-btn' + (key !== 'all' ? ' rar-' + key : '');
+          chip.setAttribute('data-gear-rarity', key);
+          chip.setAttribute('role', 'tab');
+          chip.textContent = key === 'all'
+            ? tOr('gear.filterRarityAll', 'Alle')
+            : tOr('gear.rar.' + key, key);
+          bindPress(chip, () => {
+            safeUiAction(() => {
+              this.gearRarity = key;
+              this._gearPickerScroll = 0;
+              AudioSys.sfx('select');
+              this.renderGear({ pickerOnly: true });
+            }, 'gearRarity/' + key, 'Rarity filter mislukt');
+          });
+          rarBar.appendChild(chip);
+        }
+        this._gearRarityBound = true;
+      }
+      for (const chip of rarBar.querySelectorAll('[data-gear-rarity]')) {
+        const key = chip.getAttribute('data-gear-rarity');
+        chip.classList.toggle('sel', key === this.gearRarity);
+        chip.setAttribute('aria-selected', key === this.gearRarity ? 'true' : 'false');
+      }
+    }
+
     const qEl = document.getElementById('gearFilterQ');
     if (qEl) {
       qEl.placeholder = tOr('gear.filterSearch', 'Zoek in {n}…', { n: items.length });
@@ -4268,20 +4309,36 @@ const UI = {
         qEl.addEventListener('input', () => {
           this.gearFilterQ = qEl.value || '';
           this._gearPickerScroll = 0;
-          this.renderGear();
+          if (this._gearSearchT) {
+            try { clearTimeout(this._gearSearchT); } catch (_) {}
+          }
+          this._gearSearchT = setTimeout(() => {
+            this._gearSearchT = null;
+            this.renderGear({ pickerOnly: true });
+          }, 160);
         });
       }
+    }
+
+    const countEl = document.getElementById('gearFilterCount');
+    if (countEl) {
+      countEl.textContent = tOr('gear.filterCount', '{shown}/{total} in {slot}', {
+        shown: shown.length,
+        total: items.length,
+        slot: gearSlotName(pickSlot),
+      });
     }
 
     const picker = document.getElementById('gearPicker');
     if (picker) {
       const keepScroll = this._gearPickerScroll || picker.scrollTop || 0;
       picker.innerHTML = '';
+      const frag = document.createDocumentFragment();
       if (!shown.length) {
         const empty = document.createElement('div');
         empty.className = 'gear-filter-empty';
         empty.textContent = tOr('gear.filterEmpty', 'Niets in deze filter');
-        picker.appendChild(empty);
+        frag.appendChild(empty);
       }
       for (const it of shown) {
         const unlock = gearUnlockState(it);
@@ -4293,14 +4350,19 @@ const UI = {
           + (unlock.unlocked ? '' : ' locked')
           + (equippedHere ? ' equipped' : '');
         el.setAttribute('data-gear-id', it.id);
+        el.setAttribute('data-rarity', it.rarity || '');
         el.setAttribute('aria-disabled', unlock.unlocked ? 'false' : 'true');
         const tint = (it.look && it.look.tint) || it.color || '#333c55';
+        const rar = it.rarity ? String(it.rarity) : '';
+        const rarPill = rar
+          ? `<span class="gear-pill gear-pill-rar rar-${esc(rar)}">${esc(tOr('gear.rar.' + rar, rar))}</span>`
+          : '';
         const meta = unlock.unlocked
           ? (gearHasStats(it) ? gearStatLine(it) : tOr('gear.vanityHint', 'Geen stats — alleen look'))
           : (unlock.label || tOr('gear.pillLock', 'LOCK'));
         el.innerHTML =
           `<span class="gear-card-swatch" style="background:${esc(tint)}"></span>` +
-          `<span class="gear-card-body"><span class="gear-card-name">${esc(gearItemName(it))} ${pillFor(it, unlock)}</span>` +
+          `<span class="gear-card-body"><span class="gear-card-name">${esc(gearItemName(it))} ${pillFor(it, unlock)} ${rarPill}</span>` +
           `<span class="gear-card-meta">${esc(meta)}${equippedHere ? ' · ' + esc(tOr('gear.wearing', 'aan')) : ''}</span></span>`;
         bindPress(el, () => {
           safeUiAction(() => {
@@ -4314,8 +4376,9 @@ const UI = {
             this.renderGear();
           }, 'gearPick/' + it.id, 'Item kiezen mislukt');
         });
-        picker.appendChild(el);
+        frag.appendChild(el);
       }
+      picker.appendChild(frag);
       picker.scrollTop = keepScroll;
     }
   },

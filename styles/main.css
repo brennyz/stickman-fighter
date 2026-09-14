@@ -2971,6 +2971,23 @@
     border-color: #ffd75e;
     background: linear-gradient(135deg, rgba(255, 215, 94, 0.16), transparent 50%), var(--menu-tile-solid-hi);
   }
+  .gear-rarity-bar .gear-filter-btn {
+    flex: 0 1 auto; min-width: 44px; padding: 8px 9px; font-size: 11px;
+  }
+  .gear-filter-count {
+    width: min(94vw, 420px); margin: 0 auto 8px;
+    font-size: 12px; font-weight: 700; color: var(--menu-ink-muted);
+    text-align: center;
+  }
+  .gear-pill-rar { text-transform: lowercase; }
+  .gear-pill-rar.rar-common { color: #c8d0dc; border-color: rgba(200, 208, 220, .45); }
+  .gear-pill-rar.rar-uncommon { color: #8fd98a; border-color: rgba(143, 217, 138, .45); }
+  .gear-pill-rar.rar-rare { color: #7eb6ff; border-color: rgba(126, 182, 255, .5); }
+  .gear-pill-rar.rar-epic { color: #c792ff; border-color: rgba(199, 146, 255, .5); }
+  .gear-pill-rar.rar-legendary { color: #ffd75e; border-color: rgba(255, 215, 94, .55); }
+  .gear-pill-rar.rar-mythic { color: #ff6b9d; border-color: rgba(255, 107, 157, .5); }
+  .gear-pill-rar.rar-nightmare { color: #c47aff; border-color: rgba(196, 122, 255, .5); }
+  .gear-pill-rar.rar-hell { color: #ff6a3d; border-color: rgba(255, 106, 61, .5); }
   .gear-filter-search-wrap {
     display: block; width: min(94vw, 420px); margin: 0 auto 8px;
   }
