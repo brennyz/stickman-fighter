@@ -19,7 +19,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 
 | Gebruiker vroeg | Versie | Commit | Waar in code |
 |-----------------|--------|--------|----------------|
-| **Buildings powers + timed loot (4/4)** | 1.18.164 | this branch | locked ids `stick_lighter` / `bamboo_boesa_boiler` / `echo_whistle_mill` · `src/data/buildings-powers.js` |
+| **Buildings powers + timed loot (4/4)** | 1.18.165 | this branch | binds #292 ids `stick_lighter`…`echo_whistle` · factories/wallet · `src/data/buildings-powers.js` |
 | **Asset / knop-stijl (leidend)** | docs | — | `ASSET-STYLE.md`, `assets/buttons/` |
 | Character select **deel 1** | 1.11.1 | `09b7dc2` | `index.html` `#charSelectScreen`, `game.js` charPickStep |
 | Character select **deel 2** | 1.11.2 | `7d236c1` | `#charIconRow`, `#btnCharSagaClash`, saga strip |

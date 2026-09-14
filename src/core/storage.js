@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.164';
+const APP_VERSION = '1.18.165';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 374;
+const SW_CACHE_REV = 375;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1612,11 +1612,22 @@ function sanitizeSave(s) {
   }
   out.vsPlayedIds = played.slice(0, 32);
 
-  if (typeof sanitizeBuildingsBag === 'function') {
+  if (typeof sanitizeBuildingSave === 'function') {
+    try { sanitizeBuildingSave(out); }
+    catch (_) {
+      out.buildings = (typeof emptyBuildingsBag === 'function')
+        ? emptyBuildingsBag()
+        : { schema: 1, factories: {}, wallet: {} };
+    }
+  } else if (typeof sanitizeBuildingsBag === 'function') {
     try { out.buildings = sanitizeBuildingsBag(out.buildings); }
-    catch (_) { out.buildings = (typeof emptyBuildingsBag === 'function') ? emptyBuildingsBag() : { schema: 1, lastTickAt: 0, byId: {} }; }
+    catch (_) {
+      out.buildings = (typeof emptyBuildingsBag === 'function')
+        ? emptyBuildingsBag()
+        : { schema: 1, factories: {}, wallet: {} };
+    }
   } else if (!out.buildings || typeof out.buildings !== 'object' || Array.isArray(out.buildings)) {
-    out.buildings = { schema: 1, lastTickAt: 0, byId: {} };
+    out.buildings = { schema: 1, factories: {}, wallet: {} };
   }
 
   const allowedKeys = new Set(Object.keys(DEFAULT_SAVE));

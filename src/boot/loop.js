@@ -366,13 +366,25 @@ function loop(now) {
 
 let _buildingTickWall = 0;
 let _buildingPersistWall = 0;
+function tickBuildingsNow(nowMs, opts) {
+  const now = Math.floor(Number(nowMs) || Date.now());
+  opts = opts || {};
+  if (typeof buildingTickAll === 'function') {
+    try { return !!buildingTickAll(typeof save !== 'undefined' ? save : null, now); }
+    catch (_) { /* fall through to powers wrapper */ }
+  }
+  if (typeof tickBuildingResources === 'function') {
+    const r = tickBuildingResources(now, { skipPersist: opts.skipPersist !== false });
+    return !!(r && (r.added > 0 || r.primed || r.rollback));
+  }
+  return false;
+}
 function maybeTickBuildings(nowMs) {
-  if (typeof tickBuildingResources !== 'function') return;
   const now = Math.floor(Number(nowMs) || Date.now());
   if (now - _buildingTickWall < 1000) return;
   _buildingTickWall = now;
-  const r = tickBuildingResources(now, { skipPersist: true });
-  if (r && (r.added > 0 || r.primed || r.rollback) && now - _buildingPersistWall > 15000) {
+  const changed = tickBuildingsNow(now, { skipPersist: true });
+  if (changed && now - _buildingPersistWall > 15000) {
     _buildingPersistWall = now;
     try { if (typeof persist === 'function') persist(); } catch (_) {}
   }
@@ -381,7 +393,7 @@ function maybeTickBuildings(nowMs) {
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     try {
-      if (typeof tickBuildingResources === 'function') tickBuildingResources(Date.now());
+      tickBuildingsNow(Date.now());
     } catch (_) {}
     // NIET cancelGambleStart — tab-blink / iPad audio-unlock killde dice→start
     if (state === 'play' && game && !game.over) {
@@ -397,7 +409,7 @@ document.addEventListener('visibilitychange', () => {
     }
   } else {
     try {
-      if (typeof tickBuildingResources === 'function') tickBuildingResources(Date.now());
+      tickBuildingsNow(Date.now());
     } catch (_) {}
     try { AudioSys.syncContextPower(); } catch (_) {}
     AudioSys.applyVolumes();
@@ -838,7 +850,7 @@ function bootGame() {
     save = sanitizeSave(save || Object.assign({}, DEFAULT_SAVE));
     const repairNotes = saveSanitizeNotes(beforeSave, save);
     persist();
-    try { if (typeof tickBuildingResources === 'function') tickBuildingResources(Date.now()); } catch (_) {}
+    try { tickBuildingsNow(Date.now()); } catch (_) {}
     if (repairNotes.length && !hadCorruptPrimary && !window.__sfRecoveredBackup) {
       userToast(toastT('toast.saveRepaired', { notes: repairNotes.slice(0, 2).join(' · ') }, 'Save gerepareerd: ' + repairNotes.slice(0, 2).join(' · ')), 4200, { tone: 'ok' });
     }

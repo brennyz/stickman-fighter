@@ -2,71 +2,67 @@
 
 Lane **4 of 4** (mega-merge batch). Android-first. No Versus. **Do not merge to `main`** until Brendon says «merge main».
 
-Keys the buildings **systems** bag (`save.buildings`, `BUILDINGS_SCHEMA = 1`) on the **locked factory ids**:
+Binds **against systems PR #292** (`docs/BUILDINGS.md`, `src/data/buildings.js`). This PR does **not** fork a second catalog. When systems is in the bundle we call `buildingTickAll` / `buildingCollect` / `sanitizeBuildingSave` / `buildingPowerRank`. When it is not (this branch lands first), the same schema/ids/rates/8h cap run locally.
 
-`stick_lighter` · `woodchip_glue` · `chipping_wood` · `bamboo_boesa_boiler` · `echo_whistle_mill`
+## Frozen ids (exact match #292)
 
-Kebab / longer pixel names (`stick-lighter`, `bamboo-boesa-boiler`, `echo-whistle-mill`) and the old dojo/forge labels alias in. If a systems catalog (`BUILDING_IDS` / `BUILDING_DEFS`) is already in the bundle, unknown ids still map by index.
+| `id` | Display | Island | Resource | Combat apply (rank 0–4 @ Lv 1/3/5/7/9) |
+|------|---------|--------|----------|----------------------------------------|
+| `stick_lighter` | Stick-Lighter Factory | 1 | `spark` | crit +1…5% · DMG from rank 2 |
+| `woodchip_glue` | Woodchip-Glue Factory | 2 | `glue` | shield/wave · incoming def from rank 2 |
+| `chipping_wood` | Chipping-Wood Factory | 3 | `chip` | DMG +2…12% · speed from rank 2 |
+| `bamboo_boesa` | Bamboo-Boesa Boiler | 4 | `steam` | +4…20 HP · adventure heal-between from rank 2 |
+| `echo_whistle` | Echo-Whistle Mill | 5 | `echo` | energy ×1.04…1.16 · technique from rank 2 |
 
-## Five factories
+`buildingPowerRank = floor((lvl − 1) / 2)` → **−1** unbuilt, **0…4** at Lv 1/3/5/7/9. Max level **10**.
 
-| Id | Name | Combat / adventure power | Resource |
-|----|------|--------------------------|----------|
-| `stick_lighter` | Stick-Lighter | Lv1 +1% crit · Lv3 +2% · Lv5 +3% crit +2% DMG | **embers** |
-| `woodchip_glue` | Woodchip-Glue | Lv1 +0.35s shield/wave · Lv3 +0.70s · Lv5 +1.00s and −4% incoming | **glue** |
-| `chipping_wood` | Chipping-Wood | Lv1 +2% DMG · Lv3 +4% · Lv5 +6% DMG +2% speed | **chips** |
-| `bamboo_boesa_boiler` | Bamboo-Boesa Boiler | Lv1 +4 HP · Lv3 +8 · Lv5 +12 HP +2% heal between adventure waves | **steam** |
-| `echo_whistle_mill` | Echo-Whistle Mill | Lv1 +4% energy · Lv3 +8% · Lv5 +10% energy +4% technique | **echoes** |
+Aliases in: `bamboo_boesa_boiler` / `echo_whistle_mill`, kebab pixel names, old dojo/forge bag keys, wallet `embers`/`chips`/`echoes` → `spark`/`chip`/`echo`.
 
-First-time bag (no `save.buildings` yet): **`stick_lighter` starts at Lv1**, others Lv0. Existing systems levels are never overwritten. Power tiers stop at Lv5; resource rate still scales through Lv10.
+## Save (`BUILDINGS_SCHEMA = 1`)
 
-Combat apply is the same shape as pets/styles (`applyBuildingPowersToPlayer` after pets). Caps: DMG ×1.12, crit +5%, HP +20, energy ×1.16, incoming def ≥0.92. Versus is not touched. Starter crit +1% is smaller than a style bonus.
-
-## Accrual rates (real time)
-
-`rate/hour = base + (level − 1) × step` when `level ≥ 1`, else `0`.
-
-| Building | Resource | Base /h | Extra /h per level | Pending cap | Stock cap |
-|----------|----------|---------|--------------------|-------------|-----------|
-| stick_lighter | embers | 10 | +3 | 4 hours of current rate | 200 |
-| woodchip_glue | glue | 8 | +3 | 4 hours | 160 |
-| chipping_wood | chips | 12 | +4 | 4 hours | 240 |
-| bamboo_boesa_boiler | steam | 16 | +5 | 4 hours | 320 |
-| echo_whistle_mill | echoes | 6 | +2 | 4 hours | 120 |
-
-Examples: `chipping_wood` Lv1 = 12/h, pending cap 48. Lv5 = 28/h, pending cap 112.
-
-- **Online:** `maybeTickBuildings` in the main loop (~1s), `Date.now()` (not fight `dt`).
-- **Offline / tab hidden:** delta on boot + `visibilitychange` (show/hide). Wall-clock clamp **48h**, then pending cap still applies.
-- Clock rollback: no refund; `lastTickAt` snaps to now.
-- **Collect:** `collectBuildingResource(id)` / `collectAllBuildingResources()` moves `floor(pending)` → `stock` (stock cap). Remainder stays in pending.
-
-## Save bag
-
-```json
-{
-  "buildings": {
-    "schema": 1,
-    "lastTickAt": 1720000000000,
-    "byId": {
-      "stick_lighter": { "level": 1, "pending": 3.25, "stock": 12, "lastCollectAt": 1720000100000 }
-    }
-  }
-}
+```js
+save.buildings = {
+  schema: 1,
+  factories: {
+    stick_lighter: { level: 3, lastTickAt: 1710000000000, stored: 12 },
+  },
+  wallet: { spark: 4, glue: 0, chip: 0, steam: 0, echo: 0 },
+};
 ```
 
-Also accepts systems-shaped `{ levels, pending, stock }` and flat `{ stick_lighter: { lv: 2 } }`. Sanitize never throws. Unknown ids / `__proto__` stripped.
+No starter auto-Lv1 (systems: missing / Lv0 = unbuilt). Versus untouched.
 
-## UI bind (HOME tile lane)
+Sanitize also accepts the previous powers bag `{ lastTickAt, byId: { id: { level, pending, stock } } }` and `{ levels, pending, stock }` — `pending` → hopper `stored`, `stock` → `wallet[resource]`.
 
-Stable:
+## Accrual (systems rates, 8h cap)
 
-- `BUILDING_FACTORY_IDS`, `buildingCatalogIds()`, `buildingState(id)`, `buildingsHudModel()`
-- `buildingTooltipModel(id)`, `collectBuildingResource(id)`, `collectAllBuildingResources()`
-- `tickBuildingResources(nowMs)`, `setBuildingLevel(id, lv)` (systems / tests)
-- `buildingPowerBonus()`, `applyBuildingPowersToPlayer(game, player)`
+Same curve as #292: start rate × `1.22^(level−1)`, rounded; hopper cap = **8 hours** × current rate.
 
-DOM convention: `[data-building-id="stick_lighter"]`. This PR does **not** add a HOME tile (that is the UI lane).
+| Building | Resource | Lv1 /h | Lv10 /h | Lv1 hopper cap |
+|----------|----------|--------|---------|----------------|
+| stick_lighter | spark | 8 | 48 | 64 |
+| woodchip_glue | glue | 6 | 36 | 48 |
+| chipping_wood | chip | 10 | 60 | 80 |
+| bamboo_boesa | steam | 7 | 42 | 56 |
+| echo_whistle | echo | 5 | 29 | 40 |
+
+- **Online:** `maybeTickBuildings` → `buildingTickAll` when present, else local integer-unit tick (~1s).
+- **Offline / tab hidden:** same helpers on boot + `visibilitychange`. Wall-clock clamp **8h**, then hopper cap.
+- Clock rollback: `lastTickAt` snaps to now; no refund.
+- **Collect:** `buildingCollect(id)` / `collectBuildingResource(id)` moves `floor(stored)` → `wallet[resourceId]`.
+
+Combat apply: `applyBuildingPowersToPlayer` after pets. Caps: DMG ×1.12, crit +5%, HP +20, energy ×1.16, incoming def ≥0.92. Starter (if systems builds Lv1 lighter later) is +1% crit only.
+
+## UI bind (HOME tile is another lane)
+
+Prefer systems names when mega-merged:
+
+- `BUILDING_IDS`, `buildingTooltipModel(id)`, `buildingWallet(res?)`, `buildingCanCollect(id)`
+- `buildingTickAll`, `buildingCollect`, `buildingBuild`, `buildingUpgrade`
+
+This PR still ships compat: `BUILDING_FACTORY_IDS`, `collectBuildingResource`, `tickBuildingResources`, `setBuildingLevel`, `buildingPowerBonus`, `applyBuildingPowersToPlayer`.
+
+DOM: `#buildingsScreen` `#buildingsWallet` `[data-factory-id="stick_lighter"]`.
 
 ## Verify
 
@@ -74,8 +70,8 @@ DOM convention: `[data-building-id="stick_lighter"]`. This PR does **not** add a
 npm run smoke:buildings-powers
 ```
 
-Expect: `5 factories · starter stick_lighter Lv1 · offline delta · caps · collect · powers`.
+Expect: `5 factories · #292 bag · spark/chip/echo · 8h cap · collect→wallet · powers`.
 
-Manual: `setBuildingLevel('chipping_wood', 5)` in a console, start Training — small DMG bump; RabbitRobot still plays. Close the tab 10+ minutes, reopen, `buildingState('stick_lighter').pending` went up. Collect once — stock rises, pending drops.
+Manual: `setBuildingLevel('chipping_wood', 5)` then Training — small DMG bump; RabbitRobot still plays. Close the tab 10+ minutes, reopen, `save.buildings.factories.stick_lighter.stored` went up if built. Collect once — `wallet.spark` rises, hopper drops.
 
-Not silent `main`.
+Not silent `main`. Sibling: systems **#292**, pixels **#289**. Mega-merge only.

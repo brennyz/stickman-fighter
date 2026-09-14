@@ -13,17 +13,17 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.164",
-    "swCache": "stickfighter-app-v374",
-    "gameJsQuery": "game.js?v=374",
-    "cssQuery": "styles/main.css?v=374",
+    "appVersion": "1.18.165",
+    "swCache": "stickfighter-app-v375",
+    "gameJsQuery": "game.js?v=375",
+    "cssQuery": "styles/main.css?v=375",
     "featureBranch": "cursor/buildings-powers-e21b",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": "68e5ccc",
     "remoteMainHead": "68e5ccc",
-    "note": "Draft #290 buildings powers + timed loot (4/4). Do not merge to main. Sibling pixel art #289. Versus untouched.",
-    "updated": "2026-09-14T17:25:00Z"
+    "note": "Draft #290 buildings powers bound to #292 schema/ids. Do not merge to main. Sibling systems #292, pixels #289.",
+    "updated": "2026-09-14T17:40:00Z"
   },
   "githubSync": {
     "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
@@ -97,10 +97,17 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260914T174000",
+      "from": "user",
+      "text": "Systems PR READY #292 — powers + timed resources against that schema/ids. Mega-merge only.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
       "id": "w-20260914T172508",
       "from": "user",
       "text": "Locked building ids: stick_lighter, woodchip_glue, chipping_wood, bamboo_boesa_boiler, echo_whistle_mill.",
-      "status": "open",
+      "status": "done-in-code",
       "updated": "2026-09-14"
     },
     {
@@ -634,6 +641,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:31:48Z",
+      "summary": "Bound buildings powers + timed loot to #292 factories/wallet schema (spark/chip/echo, 8h cap). Draft #290, mega-merge only."
+    },
+    {
       "at": "2026-09-14T17:25:08Z",
       "summary": "Locked factory ids now stick_lighter, woodchip_glue, chipping_wood, bamboo_boesa_boiler, echo_whistle_mill. Draft #290."
     },
@@ -728,10 +739,6 @@
     {
       "at": "2026-08-17T10:20:50Z",
       "summary": "pull-main script + GITHUB-PUSH bijwerken zodat de pc één commando kan pullen"
-    },
-    {
-      "at": "2026-08-17T10:18:00Z",
-      "summary": "main LIVE 33d89b6 v1.18.151 — pull-commando voor de pc klaar"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
