@@ -635,6 +635,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T16:54:05Z",
+      "summary": "Idle on #269 draft: playtest gaps already in code; hardened smoke:unify-ui + screenshots. No new PR. No merge."
+    },
+    {
       "at": "2026-09-14T16:24:32Z",
       "summary": "Scanner pack on #269: Upgrades HOME, autosave primary, Options not a dump, contrast, drawer trim, install/langs off HOME. v1.18.166/SW376. Draft. No merge."
     },
@@ -729,10 +733,6 @@
     {
       "at": "2026-08-17T10:20:50Z",
       "summary": "pull-main script + GITHUB-PUSH bijwerken zodat de pc één commando kan pullen"
-    },
-    {
-      "at": "2026-08-17T10:18:00Z",
-      "summary": "main LIVE 33d89b6 v1.18.151 — pull-commando voor de pc klaar"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
