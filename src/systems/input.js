@@ -263,12 +263,12 @@ function nearAnyTouchButton(buttons, x, y, extra) {
 }
 
 const TOUCH_BTN_META = {
-  punch: { label: '\u{1F44A}', color: '#e0533f' },
-  kick: { label: '\u{1F9B6}', color: '#3f8fe0' },
-  weapon: { label: '\u{1F52A}', color: '#9b59d0' },
-  special: { label: '\u{1F300}', color: '#3db8ff' },
+  punch: { label: '\u{1F44A}', color: '#e24a36' },
+  kick: { label: '\u{1F9B6}', color: '#2d8ae6' },
+  weapon: { label: '\u{1F52A}', color: '#a24ee0' },
+  special: { label: '\u{1F300}', color: '#2eb4f0' },
   subst: { label: '\u{1F4A8}', color: '#c9a66b' },
-  jump: { label: '\u2B06\uFE0F', color: '#43b25b' },
+  jump: { label: '\u2B06\uFE0F', color: '#2f9a4a' },
 };
 
 function touchBtn(id, x, y, rad) {

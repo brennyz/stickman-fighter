@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260914T164502",
+      "from": "user",
+      "text": "In-combat strike/hit ICONS UX ONLY (Android-first, no Versus/iOS): audit + improve punch/kick/weapon (and closely related combat HUD action prompts) for readability, size, contrast, meaning at ~390 width. Keep control scheme. No audio themes, i18n catalog, or move-bar aim tutorial.",
+      "status": "open",
+      "updated": "2026-09-14"
+    },
+    {
       "id": "w-20260914T151100",
       "from": "user",
       "text": "ULTRA SPRINT into #266 (draft, no merge): EN-NL consistency (YOU LOST→VERLOREN when NL, kill raw menu.tips / PICK AN ISLAND leftovers); quieter dismissible version toast; remaining screens HOME tiles; name field stays off.",

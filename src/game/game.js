@@ -21,13 +21,13 @@ function adventureTelegraphHud(m) {
     if (m.sp.type === 'tank') {
       return {
         label: (typeof t === 'function' ? t('hud.teleSlam') : 'SLAM — spring!'),
-        color: '#ff9a3d', frac: m.telegraphT / max, max,
+        color: '#ff9a3d', frac: m.telegraphT / max, max, icon: 'jump',
       };
     }
     if (m.sp.type === 'charge' || (m.sp.type === 'swim' && m.sp.art === 'shark')) {
       return {
         label: (typeof t === 'function' ? t('hud.teleCharge') : 'CHARGE — uit de weg!'),
-        color: '#ffdd66', frac: m.telegraphT / max, max,
+        color: '#ffdd66', frac: m.telegraphT / max, max, icon: 'jump',
       };
     }
   }
@@ -52,6 +52,9 @@ function drawTelegraphBar(c, game, tele, y) {
   c.fillStyle = 'rgba(0,0,0,.62)';
   game.rr(c, bx - 8, y - 20, barW + 16, 34, 10);
   c.fill();
+  if (tele.icon && typeof drawStrikeHudChip === 'function') {
+    drawStrikeHudChip(c, tele.icon, bx + 10, y - 2, 11);
+  }
   c.font = '900 15px sans-serif';
   c.textAlign = 'center';
   if (typeof fillHudText === 'function') {
@@ -5056,6 +5059,7 @@ class Game {
               frac: this.trainMeleeTelegraphT / (this.trainMeleeTelegraphMax || 0.32),
               color: '#ffb347',
               max: this.trainMeleeTelegraphMax || 0.32,
+              icon: this.trainTelegraphKind === 'kick' ? 'kick' : 'punch',
             }
             : null));
       if (tele) {
@@ -5064,6 +5068,9 @@ class Game {
         c.fillStyle = 'rgba(0,0,0,.4)';
         this.rr(c, bx - 4, 88, barW + 8, 22, 8);
         c.fill();
+        if (tele.icon && typeof drawStrikeHudChip === 'function') {
+          drawStrikeHudChip(c, tele.icon, bx + 12, 99, 10);
+        }
         c.font = '800 11px sans-serif';
         c.textAlign = 'center';
         fillHudText(c, tele.label, W / 2, 102, { fill: tele.color, strokeW: a11yHighContrast() ? 3 : 0 });
@@ -5076,14 +5083,19 @@ class Game {
       }
       if (this.trainMeleeTelegraphT > 0 && r.alive && !this.trainLaserTelegraph && !this.trainTelegraphT) {
         const dir = Math.sign(this.player.x - r.x) || -1;
+        const ix = r.x + dir * 28;
+        const iy = r.y - 28;
         c.save();
         c.globalAlpha = motionReduced() ? 0.38 : (0.3 + Math.sin(this.t * 22) * 0.15);
         c.strokeStyle = '#ffb347';
         c.lineWidth = 3;
         c.beginPath();
-        c.arc(r.x + dir * 28, r.y - 28, 22, 0, TAU);
+        c.arc(ix, iy, 22, 0, TAU);
         c.stroke();
         c.restore();
+        if (typeof drawStrikeHudChip === 'function') {
+          drawStrikeHudChip(c, this.trainTelegraphKind === 'kick' ? 'kick' : 'punch', ix, iy, 13);
+        }
       }
       if (this.trainTelegraphT > 0 && r.alive) {
         c.save();
@@ -5692,18 +5704,27 @@ class Game {
     c.translate(b.x, b.y + xf.dy);
     c.scale(xf.sx, xf.sy);
     if (b.id === 'special') this.drawSpecialBtnMeter(c, b, fighter, accent || '#3db8ff');
-    const heldA = opts.dual ? 0.85 : 0.85;
-    const idleA = opts.dual ? 0.42 : 0.45;
+    const strike = b.id === 'punch' || b.id === 'kick' || b.id === 'weapon';
+    const hi = typeof a11yHighContrast === 'function' && a11yHighContrast();
+    const heldA = hi ? 1 : 0.96;
+    const idleA = hi ? 0.94 : (opts.dual ? (strike ? 0.7 : 0.5) : (strike ? 0.84 : 0.64));
+    c.globalAlpha = hi ? 0.9 : 0.74;
+    c.fillStyle = 'rgba(6,10,22,.84)';
+    c.beginPath(); c.arc(0, 0, b.r, 0, TAU); c.fill();
     c.globalAlpha = idleA + (heldA - idleA) * (xf.p || 0);
     c.fillStyle = b.color;
-    c.beginPath(); c.arc(0, 0, b.r, 0, TAU); c.fill();
+    c.beginPath(); c.arc(0, 0, Math.max(5, b.r - 2.2), 0, TAU); c.fill();
+    c.globalAlpha = hi ? 0.98 : (strike ? 0.86 : 0.64);
+    c.strokeStyle = hi ? '#ffffff' : (strike ? '#e8f0ff' : (accent || 'rgba(232,240,255,.78)'));
+    c.lineWidth = hi ? 2.6 : (strike ? 2.2 : 1.8);
+    c.beginPath(); c.arc(0, 0, b.r - 1.15, 0, TAU); c.stroke();
     if (xf.p > 0.08) {
-      c.globalAlpha = (opts.dual ? 0.55 : 0.6) * xf.p;
+      c.globalAlpha = (opts.dual ? 0.6 : 0.72) * xf.p;
       c.strokeStyle = accent || '#fff';
-      c.lineWidth = opts.dual ? 2 : 2.5;
+      c.lineWidth = opts.dual ? 2 : 2.6;
       c.beginPath(); c.arc(0, 0, b.r + 3, 0, TAU); c.stroke();
     }
-    c.globalAlpha = opts.dual ? 0.9 : (0.85 + 0.15 * (xf.p || 0));
+    c.globalAlpha = 1;
     const jk = b.id === 'special'
       ? (fighter ? fighterTechniqueKind(fighter) : 'spiral_orb')
       : null;

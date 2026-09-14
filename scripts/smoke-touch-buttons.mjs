@@ -206,6 +206,50 @@ async function run() {
     Input.layout(realW, realH);
     const sweepBad = sweep.filter((s) => !s.ok).map((s) => s.label);
 
+    // Icon UX: punch/kick/weapon must draw distinct, high-ink glyphs (not empty/emoji fallback).
+    const iconAudit = {};
+    const iconFail = [];
+    if (typeof drawTouchBtnIcon !== 'function') {
+      iconFail.push('drawTouchBtnIcon missing');
+    } else {
+      const off = document.createElement('canvas');
+      off.width = 72;
+      off.height = 72;
+      const ctx = off.getContext('2d');
+      const finger = (id) => {
+        ctx.clearRect(0, 0, 72, 72);
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, 72, 72);
+        const drew = drawTouchBtnIcon(ctx, id, 36, 36, 28, 'spiral_orb');
+        const data = ctx.getImageData(0, 0, 72, 72).data;
+        let bright = 0;
+        let hash = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          const lum = data[i] + data[i + 1] + data[i + 2];
+          if (lum > 160 && data[i + 3] > 40) bright++;
+          hash = (hash * 33 + data[i] + data[i + 1] * 3 + data[i + 2] * 7) | 0;
+        }
+        return { drew: !!drew, bright, hash };
+      };
+      for (const id of ['punch', 'kick', 'weapon']) {
+        iconAudit[id] = finger(id);
+        if (!iconAudit[id].drew) iconFail.push(id + ':fallback');
+        if (iconAudit[id].bright < 90) iconFail.push(id + ':thin:' + iconAudit[id].bright);
+      }
+      if (iconAudit.punch.hash === iconAudit.kick.hash) iconFail.push('punch==kick');
+      if (iconAudit.punch.hash === iconAudit.weapon.hash) iconFail.push('punch==weapon');
+      if (iconAudit.kick.hash === iconAudit.weapon.hash) iconFail.push('kick==weapon');
+      if (typeof drawStrikeHudChip === 'function') {
+        ctx.clearRect(0, 0, 72, 72);
+        ctx.fillStyle = '#111';
+        ctx.fillRect(0, 0, 72, 72);
+        const chipOk = drawStrikeHudChip(ctx, 'punch', 36, 36, 16);
+        if (!chipOk) iconFail.push('chip:false');
+      } else {
+        iconFail.push('drawStrikeHudChip missing');
+      }
+    }
+
     const punchOk = punch.kind === 'punch' && !punch.threw;
     const kickOk = kick.kind === 'kick' && !kick.threw;
     // vuist weapon maps to punch; any started attack counts
@@ -219,6 +263,7 @@ async function run() {
       && offScreen.length === 0
       && overlaps.length === 0
       && sweepBad.length === 0
+      && iconFail.length === 0
       && errors.length === 0
       && g.player.rosterId === 'hero';
 
@@ -232,6 +277,8 @@ async function run() {
       punchOk,
       kickOk,
       weaponOk,
+      iconAudit,
+      iconFail,
       missingBtns,
       layout,
       tooSmall,
