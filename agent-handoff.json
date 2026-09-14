@@ -94,7 +94,7 @@
       "id": "w-20260914T172800",
       "from": "user",
       "text": "SCHEMA DELTA: bind UI to save.gear {schema,equipped,owned} + createdAt. Drop flat save.equipment/ownedGear. Hub tile Uitrusting. Use #280 helpers (gearGateState, gearEquipItem, …).",
-      "status": "active",
+      "status": "done-in-code",
       "updated": "2026-09-14"
     },
     {
@@ -642,6 +642,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:32:01Z",
+      "summary": "Schema delta: UI writes only save.gear {schema,equipped,owned} + createdAt; HOME tile Uitrusting."
+    },
+    {
       "at": "2026-09-14T17:28:12Z",
       "summary": "Gear picker scales: rarity chips, search/sort, shown/total, page-scroll for large catalogs."
     },
@@ -736,10 +740,6 @@
     {
       "at": "2026-08-17T14:01:21Z",
       "summary": "GitHub-sync: PC==main; wachtlijst + vraag-bij-upload; tracking nog lokaal"
-    },
-    {
-      "at": "2026-08-17T10:21:10Z",
-      "summary": "PC-pull geregeld: pull-main.sh + GITHUB-PUSH is nu pull-kaart; main LIVE"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
