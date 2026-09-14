@@ -13,7 +13,7 @@
 1. Export a **1024×1024** PNG master (opaque or with safe transparency).
 2. Keep the stickman silhouette inside the **adaptive icon safe zone** (~66% center).
 3. Avoid thin strokes at the edges — Play masks to circle / squircle.
-4. Optional: generate a dedicated **feature graphic** 1024×500 for the Play listing (store-listing agent).
+4. Feature graphic 1024×500: `npm run store:feature` → `docs/store/screenshots/play-feature-1024x500.png`
 5. Do not commit Play Console screenshots here — see `docs/store/` when that PR lands.
 
 ## Bubblewrap

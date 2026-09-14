@@ -1,5 +1,7 @@
 # Android APK / AAB — hoe we dit fixen
 
+**GO-volgorde (jij nu):** [`GO.md`](./GO.md) · `npm run android:go`
+
 **Geen** random online “APK maker” (onveilig + Play weigert vaak).  
 **Wel:** Google **Bubblewrap** = officiële wrapper die onze live PWA in een Android-app stopt (Trusted Web Activity).
 

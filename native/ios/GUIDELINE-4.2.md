@@ -42,7 +42,7 @@ Apple’s **4.2 Minimum Functionality** targets thin wrappers. Mitigate by shipp
 
 6. Local notification reminders (daily summons / missions) — no social chat  
 7. Status-bar / safe-area plugin wiring for notched iPads/iPhones  
-8. Controllers / Game Controller framework only if vs-mode needs it
+8. Controllers / Game Controller framework only if a later controller mode needs it
 
 ---
 

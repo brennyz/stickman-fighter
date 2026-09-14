@@ -19,6 +19,9 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 
 | Gebruiker vroeg | Versie | Commit | Waar in code |
 |-----------------|--------|--------|----------------|
+| Store / App Store-pad | docs | — | `npm run store:doctor`, `STORE-LAUNCH.md`, `native/ios/APPSTORE-CHECKLIST.md` |
+| Android / Play GO | docs | — | `npm run android:go`, `native/android/GO.md`, `docs/store/play-console-stappen.md` |
+| Grokbot Android-test | docs | — | `docs/GROKBOT-ANDROID-PROMPT.md` — plak PROMPT in Grokbot |
 | **Season overlays (jungle + halloween)** | 1.18.164 | — | `docs/season-overlay-slots.md`, `assets/seasons/`, `#seasonOverlay` |
 | **Buildings powers + timed loot (4/4)** | 1.18.165 | this branch | binds #292 ids `stick_lighter`…`echo_whistle` · factories/wallet · `src/data/buildings-powers.js` |
 | **Gear loadout (5 slots)** | 1.18.164 | this branch | `src/data/gear.js`, `docs/GEAR-SYSTEM.md`, `#gearScreen` |

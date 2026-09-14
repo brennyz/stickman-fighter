@@ -18,10 +18,27 @@ import { ensureSmokeServer, smokeBaseUrl } from './smoke-static-server.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const defaultOut = path.join(root, 'docs/store/screenshots');
+function allowedWriteDir(resolved) {
+  const allowed = [defaultOut, '/tmp', '/opt/cursor/artifacts'];
+  return allowed.some((dir) => resolved === dir || resolved.startsWith(dir + path.sep));
+}
 const outDir = process.env.OUT_DIR
   ? path.resolve(process.env.OUT_DIR)
   : defaultOut;
+if (!allowedWriteDir(outDir)) {
+  console.error('CAPTURE_FAIL OUT_DIR must be docs/store/screenshots, /tmp, or artifacts');
+  process.exit(1);
+}
 const puppeteerInstallDir = '/tmp/sf-store-shots-deps';
+
+function allowedShotUrl(url) {
+  try {
+    const u = new URL(url);
+    return u.protocol === 'http:' && (u.hostname === '127.0.0.1' || u.hostname === 'localhost');
+  } catch {
+    return false;
+  }
+}
 
 const VIEWPORTS = [
   // Google Play phone landscape (16:9)
@@ -38,7 +55,7 @@ const SCENES = [
   { id: '01-menu', label: 'main menu', setup: setupMenu },
   { id: '02-levels', label: 'level select', setup: setupLevels },
   { id: '03-adventure', label: 'adventure fight', setup: setupAdventure },
-  { id: '04-versus-ready', label: 'versus / char path', setup: setupVersusReady },
+  { id: '04-arcade-hub', label: 'arcade / training hub', setup: setupArcadeHub },
 ];
 
 const chrome = [
@@ -141,26 +158,19 @@ async function setupAdventure(page) {
   await sleep(400);
 }
 
-async function setupVersusReady(page) {
+async function setupArcadeHub(page) {
   await page.evaluate(() => {
     try {
       if (typeof recoverToMenu === 'function') recoverToMenu({ force: true });
     } catch (_) {}
     if (typeof UI !== 'undefined' && UI.safeOpen) {
-      const modeHub = document.getElementById('modeHubScreen');
-      if (modeHub) {
-        UI.safeOpen('modeHubScreen', () => {});
-        return;
-      }
-      const vs = document.getElementById('charScreen') || document.getElementById('versusScreen');
-      if (vs) {
-        document.querySelectorAll('.screen').forEach((s) => s.classList.remove('active'));
-        vs.classList.add('active');
-        return;
-      }
+      UI.safeOpen('modeHubScreen', () => {
+        if (typeof UI.renderModeHub === 'function') UI.renderModeHub();
+      });
+      return;
     }
     document.querySelectorAll('.screen').forEach((s) => s.classList.remove('active'));
-    document.getElementById('menuScreen')?.classList.add('active');
+    document.getElementById('modeHubScreen')?.classList.add('active');
   });
   await sleep(500);
 }
@@ -201,6 +211,10 @@ async function run() {
   } catch (_) {}
 
   const base = process.argv[2] || smokeBaseUrl(8787, '/index.html');
+  if (!allowedShotUrl(base)) {
+    console.error('CAPTURE_FAIL URL must be http://127.0.0.1 or http://localhost');
+    process.exit(1);
+  }
   const puppeteer = await getPuppeteer();
   const browser = await puppeteer.default.launch({
     executablePath: chrome,

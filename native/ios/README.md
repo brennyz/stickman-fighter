@@ -106,6 +106,7 @@ Detail notes: [`GUIDELINE-4.2.md`](./GUIDELINE-4.2.md).
 | File | Purpose |
 |------|---------|
 | `README.md` | This guide |
+| `APPSTORE-CHECKLIST.md` | Wat App Store-deploy inhoudt (geld, Mac, 4.2, TestFlight) |
 | `GUIDELINE-4.2.md` | 4.2 checklist for review notes |
 | `capacitor.config.example.ts` | TS stub: hosted vs www |
 | `capacitor.config.hosted.example.json` | JSON example — Option A |

@@ -143,6 +143,9 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | Grokbot-prompt voor Android playtest + optimaliseren: `docs/GROKBOT-ANDROID-PROMPT.md`. |
+| 2026-09-10 | — | Store doctor: website ís het spel; Play/App Store optioneel, niet verplicht. |
+| 2026-09-10 | — | Store doctor (`npm run store:doctor`) + App Store-checklist: wat jij moet doen vóór deploy (Developer €99, Mac/Xcode, 4.2, TestFlight). Listing zonder versus. |
 | 2026-09-14 | — | MERGE MAIN #266 → v1.18.163 / SW 373. Daarna: welcome alleen HOME, technique-banners + summons i18n. v1.18.164 / SW 374. Draft. |
 | 2026-09-14 | — | Training ghost-HP + goud-flash + RABBIT n/max. Hit-reg ongemoeid. v1.18.160 / SW 370. |
 | 2026-09-14 | — | Season pixel overlays: jungle + halloween packs on documented slots; pointer-events none; hidden in combat. v1.18.164 / SW 374. |
