@@ -22,8 +22,8 @@
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": "197890b9c30ec3371d7d2c2d0cc177151ad995b3",
     "remoteMainHead": "197890b9c30ec3371d7d2c2d0cc177151ad995b3",
-    "note": "Mega-merge v1.18.152 / SW 362 — light-FX + versus-stubs + dawnblade. speel.html na Pages.",
-    "updated": "2026-08-17T14:01:21Z"
+    "note": "This lane (#260 toast/title-gate) is MERGED. #261 already closed; #262 closed 2026-09-14 (coach: feel belongs to #259). No fourth PR. Wait «merge main». Do not silent-push main.",
+    "updated": "2026-09-14T13:32:00Z"
   },
   "githubSync": {
     "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
@@ -90,6 +90,13 @@
     "pendingMerge": []
   },
   "userWishlist": [
+    {
+      "id": "w-20260914T133100",
+      "from": "user",
+      "text": "Coach ~13:31: STOP extra PRs. Keep #260 only. Close/abandon #261 and #262 (hit-feel/ghost-HP belongs to #259). No fourth PR. Wait for «merge main».",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
     {
       "id": "w-20260914T130500",
       "from": "user",
@@ -565,6 +572,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T13:32:10Z",
+      "summary": "Coach 13:31: #262 gesloten. #261 was al dicht. #260 al op main. Geen nieuwe PR. Wacht op merge main."
+    },
+    {
       "at": "2026-09-14T13:12:14Z",
       "summary": "Coach 13:05: #260 title-gate SPELEN-eerst + leftover i18n (v1.18.157/SW367). #261 closed as #259 dup. Geen main-merge."
     },
@@ -659,10 +670,6 @@
     {
       "at": "2026-08-17T07:17:45Z",
       "summary": "Derde d20-worp geclaimd via CLI"
-    },
-    {
-      "at": "2026-08-17T07:16:06Z",
-      "summary": "d20 code health: spook-Kets UI weg, live balk blijft — klaar voor super-merge"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
