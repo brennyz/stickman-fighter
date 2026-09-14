@@ -95,6 +95,9 @@ if (/Laatst opgeslagen:/.test(ui)) fail('settings save stamp still hardcodes Dut
 if (/Cosmetisch metgezel/.test(ui) || /Nog niet uitgekomen/.test(ui)) fail('egg pet chrome still hardcodes Dutch');
 if (!/ui\.dexSummary/.test(ui) || !/ui\.dexAllTypes/.test(ui)) fail('dex chrome must use t()');
 if (!/ui\.saveExportContains/.test(ui)) fail('settings export must use t()');
+const missions = fs.readFileSync(path.join(root, 'src/systems/missions.js'), 'utf8');
+if (/boek \$\{dexCountFromSave/.test(missions) || /\$\{[^}]+\} prestaties/.test(missions)) fail('save export summary still hardcodes Dutch');
+if (/Volgende prestatie/.test(missions)) fail('dex next achievement still hardcodes Dutch');
 if (!/pets\.crackEgg/.test(ui)) fail('egg crack must use pets.crackEgg');
 if (!/egg\.dailyReady/.test(fs.readFileSync(path.join(root, 'src/data/egg-pets.js'), 'utf8'))) {
   fail('egg daily status must use egg.* keys');

@@ -877,6 +877,15 @@ function seedNlGameStrings() {
     errPetBuy: 'Pet kopen mislukt',
     errEggCrack: 'Ei openen mislukt',
     errEggPick: 'Ei-pet kiezen mislukt',
+    saveExportAch: ' · {n} prestaties',
+    dexNextAch: 'Volgende prestatie · {name}',
+    dexNextWeapon: 'Volgende wapen · {name}',
+    dexChipRarities: 'rariteiten',
+    dexChipSpecies: 'soorten',
+    dexChipKills: 'kills',
+    dexHintSpecies: '{cur}/{need} soorten',
+    dexHintRarities: '{cur}/{need} rariteiten',
+    dexHintKillsBook: '{cur}/{need} kills in boek',
   });
   if (!I18N.nl.egg) I18N.nl.egg = {};
   Object.assign(I18N.nl.egg, {
@@ -1829,6 +1838,15 @@ const CATALOG_EN = {
     errPetBuy: 'Could not buy pet',
     errEggCrack: 'Could not open egg',
     errEggPick: 'Could not pick egg pet',
+    saveExportAch: ' · {n} achievements',
+    dexNextAch: 'Next achievement · {name}',
+    dexNextWeapon: 'Next weapon · {name}',
+    dexChipRarities: 'rarities',
+    dexChipSpecies: 'species',
+    dexChipKills: 'kills',
+    dexHintSpecies: '{cur}/{need} species',
+    dexHintRarities: '{cur}/{need} rarities',
+    dexHintKillsBook: '{cur}/{need} kills in book',
   },
   fighter: {
     energyEmpty: 'Energy not full!', subst: 'Substitution!', dash: 'Dash!',

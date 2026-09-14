@@ -298,7 +298,7 @@ Promise.resolve().then(() => {
   const CHROME_NS = ['ui', 'hud', 'combat', 'toast', 'missionsUi', 'menu', 'hub', 'settings', 'pause', 'result', 'banner', 'net', 'modes', 'common', 'back', 'pets', 'dex', 'egg'];
   const DUTCH_MARK = /(Avontuur|Verzameld|Collectie|Vandaag|Uitrusten|Overslaan|Instellingen|Missies|Monsterboek|Gooi &|Laatste modus|Verse versie|Spiraal Orb|Bliksemprik|Leegteblik|Eigen vechters|Terug naar menu|Getemd ·|Temmen:|Kies een eiland|Dagelijkse kist|Muur Slopen|Verder spelen|Dag-ei|Cosmetisch metgezel|Alle types|Alle biomen|Export bevat|Laatst opgeslagen|Nog niet uitgekomen|Nog niet verslagen|Gratis Pull|Gratis arcade|Verschijnt in avontuur)/;
   /** Retired Versus / 2P chrome — DE may omit; t() falls back to EN, never NL. */
-  const RETIRED_VS = /^(menu\.versus|hub\.versus|hub\.fightersLocal|hub\.vsRecord|modes\.versus|pause\.vs|result\.vs|banner\.round|combat\.vs|toast\.char|hud\.(roundWinner|roundSkip|matchPoint|vsTot|vsFatality|p1Line|p2Line|hintDual|nextRound|spawnP1|spawnP2|spawnGrace|decisiveRound|timeHpWin|roundInfo))/;
+  const RETIRED_VS = /^(menu\.versus|hub\.versus|hub\.fightersLocal|hub\.vsRecord|modes\.versus|pause\.vs|result\.vs|banner\.(round|p1Round|p2Round|timeHpVs)|combat\.vs|toast\.(char|vs)|hud\.(roundWinner|roundSkip|matchPoint|vsTot|vsFatality|p1Line|p2Line|hintDual|nextRound|spawnP1|spawnP2|spawnGrace|decisiveRound|timeHpWin|roundInfo|hpLead))/;
   const I18N = ctx.__sfI18N || ctx.I18N;
   if (!I18N || !I18N.nl || !I18N.en || !I18N.de) {
     console.error('SMOKE_FAIL I18N tables missing after boot');

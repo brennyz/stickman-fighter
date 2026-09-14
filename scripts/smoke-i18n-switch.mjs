@@ -41,7 +41,8 @@ async function run() {
   await page.waitForFunction(() => window.__sfBooted, { timeout: 45000 });
 
   const result = await page.evaluate(() => {
-    const DUTCH = /(Avontuur|Collectie|Instellingen|Wapens|Vandaag|Verzameld|Uitrusten|Dag-ei|muur |× vandaag)/;
+    const DUTCH = /(Avontuur|Collectie|Instellingen|Wapens|Vandaag|Verzameld|Uitrusten|Dag-ei|muur |× vandaag|Alle types|Alle biomen|Export bevat|Laatst opgeslagen|Cosmetisch metgezel|Nog niet uitgekomen|Volgende prestatie|prestaties|soorten in monsterboek)/;
+    function txt(id) { return (document.getElementById(id) || {}).textContent || ''; }
     function snap(lang) {
       if (typeof setLang === 'function') setLang(lang);
       else if (typeof save !== 'undefined') {
@@ -49,29 +50,39 @@ async function run() {
         if (typeof persist === 'function') persist();
         if (typeof applyLang === 'function') applyLang();
       }
+      try { if (UI.renderDex) UI.renderDex(); } catch (_) {}
+      try { if (UI.renderPets) UI.renderPets(); } catch (_) {}
+      try { if (UI.renderSettings) UI.renderSettings(); } catch (_) {}
       const adv = (document.querySelector('.hub-tile-adventure .hub-tile-title') || {}).textContent || '';
       const collect = (document.querySelector('.hub-tile-collect .hub-tile-title') || {}).textContent || '';
       const help = (document.getElementById('btnHelp') || {}).title || (document.getElementById('btnHelp') || {}).textContent || '';
-      const weapons = (document.getElementById('weaponScreenHead') || {}).textContent || '';
-      const settings = (document.getElementById('settingsHead') || {}).textContent || '';
+      const weapons = txt('weaponScreenHead');
+      const settings = txt('settingsHead');
+      const dexSum = txt('dexSummary');
+      const dexTypes = txt('dexTypeFilterBar');
+      const eggBtn = txt('eggCrackBtn');
+      const exportHint = txt('saveExportHint');
       const tAdv = typeof t === 'function' ? t('menu.adventure') : '';
       const tHud = typeof t === 'function' ? t('hud.levelWave', { n: 1, wv: 1, total: 3 }) : '';
-      return { lang, adv, collect, help, weapons, settings, tAdv, tHud };
+      const leftover = [adv, collect, weapons, settings, dexSum, dexTypes, eggBtn, exportHint].join(' ');
+      return { lang, adv, collect, help, weapons, settings, dexSum, dexTypes, eggBtn, exportHint, tAdv, tHud, leftover };
     }
     const en = snap('en');
     const de = snap('de');
     const nl = snap('nl');
     const enOk = /Adventure/i.test(en.adv) && /Collection/i.test(en.collect)
       && /Weapons/i.test(en.weapons) && /Settings|Options/i.test(en.settings)
-      && /Tips/i.test(en.help) && !DUTCH.test([en.adv, en.collect, en.weapons, en.settings].join(' '))
-      && /Wave/.test(en.tHud) && !/Golf/.test(en.tHud);
+      && /Tips/i.test(en.help) && !DUTCH.test(en.leftover)
+      && /Wave/.test(en.tHud) && !/Golf/.test(en.tHud)
+      && /Book|All types|All biomes/i.test(en.dexSum + ' ' + en.dexTypes);
     const deOk = /Abenteuer/i.test(de.adv) && /Sammlung/i.test(de.collect)
       && /Waffen/i.test(de.weapons) && /Einstellungen/i.test(de.settings)
-      && /Tipp/i.test(de.help) && !DUTCH.test([de.adv, de.collect, de.weapons, de.settings].join(' '))
-      && /Welle/.test(de.tHud) && !/Golf/.test(de.tHud) && !/Vandaag/.test(de.tHud);
+      && /Tipp/i.test(de.help) && !DUTCH.test(de.leftover)
+      && /Welle/.test(de.tHud) && !/Golf/.test(de.tHud) && !/Vandaag/.test(de.tHud)
+      && /Buch|Alle Typen|Alle Biome/i.test(de.dexSum + ' ' + de.dexTypes);
     const nlOk = /Avontuur/.test(nl.adv) && /Collectie/.test(nl.collect)
       && /Wapens/.test(nl.weapons) && /Instellingen/.test(nl.settings)
-      && /Tips/.test(nl.help);
+      && /Tips/.test(nl.help) && /Boek|Alle types/.test(nl.dexSum + ' ' + nl.dexTypes);
     return { ok: !!(enOk && deOk && nlOk), en, de, nl, enOk, deOk, nlOk };
   });
 
