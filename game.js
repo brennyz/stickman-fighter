@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.164';
+const APP_VERSION = '1.18.165';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 374;
+const SW_CACHE_REV = 375;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -9327,8 +9327,8 @@ function toastVersusRetired() {
 /* ====================== MONSTER CATALOG W2 (editor) ==================== */
 /**
  * Data-driven family table — expands into SPECIES + UNLOCK_AT.
- * Pixel partner fills art slots in docs/MONSTER-ART-SLOTS.md
- * (`pixelStatus: 'stub'` until canvas/pixel art lands).
+ * Pixel partner: reuse #282 maps via SPECIES[id].pixel (MONSTER_PIXEL_ALIAS).
+ * Unique `art` stays for biome/waves; stubs only if pixel maps are absent.
  *
  * Do not edit SPECIES by hand for wave-2 beasts — add a family row here.
  */
@@ -9387,6 +9387,83 @@ const WILD_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_
 const CRYPT_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].biome === 'crypt'));
 const SCRAP_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].biome === 'scrap'));
 const CATALOG_SEA_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].biome === 'sea'));
+
+/**
+ * #282 provisional pixel IDs (art families + flagship SPECIES keys).
+ * W2 keeps unique `art` for biome/waves; `sp.pixel` aliases these so
+ * `monsterPixelKey` (pixel PR) can tint existing maps — no art redo.
+ * See MONSTER-PIXEL-MAP.md on cursor/monster-pixel-art-6c6b / PR #282.
+ */
+const MONSTER_PIXEL_PROVISIONAL = {
+  art: [
+    'slime', 'bat', 'hedgehog', 'ghost', 'can', 'fox', 'golem', 'dragon', 'shark', 'octo',
+    'cow', 'pig', 'chicken', 'sheep', 'horse', 'goat', 'duck', 'rooster', 'donkey', 'goose',
+    'elephant', 'lion', 'tiger', 'giraffe', 'hippo', 'rhino', 'gorilla', 'zebra', 'bear', 'croc',
+    'kangaroo', 'panda', 'flamingo', 'camel',
+  ],
+  species: [
+    'holkoe', 'razendzwijn', 'kipophol', 'razendeschaap', 'holpaard', 'kopstootgeit',
+    'kwakophol', 'haanophol', 'koppigeezel', 'gansophol', 'reuzenolifant', 'razendeleeuw',
+    'razendetijger', 'langegiraffe', 'razendnijlpaard', 'razendeneushoorn', 'woestegorilla',
+    'razendezebra', 'razendebeer', 'razendekrokodil', 'razendekangoeroe', 'woestepanda',
+    'razendeflamingo', 'razendekameel', 'voidsly', 'frostbub', 'lavablob', 'voidkonijn',
+    'omegadrake', 'levihaai', 'voidocto',
+  ],
+};
+const MONSTER_PIXEL_PROVISIONAL_SET = new Set([
+  ...MONSTER_PIXEL_PROVISIONAL.art,
+  ...MONSTER_PIXEL_PROVISIONAL.species,
+]);
+
+/** Closest #282 map per W2 art. `high` = mythic / nightmare / hell flagship. */
+const MONSTER_PIXEL_ALIAS = {
+  wolf: { pixel: 'fox', high: 'voidkonijn' },
+  owl: { pixel: 'bat' },
+  frog: { pixel: 'slime', high: 'voidsly' },
+  snake: { pixel: 'croc', high: 'razendekrokodil' },
+  boar: { pixel: 'pig', high: 'razendzwijn' },
+  raven: { pixel: 'bat' },
+  moose: { pixel: 'cow', high: 'holkoe' },
+  beaver: { pixel: 'pig' },
+  badger: { pixel: 'hedgehog' },
+  stag: { pixel: 'horse', high: 'holpaard' },
+  lynx: { pixel: 'tiger', high: 'razendetijger' },
+  mole: { pixel: 'slime', high: 'frostbub' },
+  skeleton: { pixel: 'ghost' },
+  mummy: { pixel: 'golem' },
+  beetle: { pixel: 'hedgehog' },
+  wasp: { pixel: 'bat' },
+  spider: { pixel: 'octo' },
+  wisp: { pixel: 'ghost' },
+  gargoyle: { pixel: 'dragon', high: 'omegadrake' },
+  lich: { pixel: 'ghost' },
+  drone: { pixel: 'can' },
+  bot: { pixel: 'can' },
+  scrapdog: { pixel: 'fox', high: 'voidkonijn' },
+  cog: { pixel: 'can' },
+  turret: { pixel: 'can' },
+  rivet: { pixel: 'golem' },
+  junkbat: { pixel: 'bat' },
+  piston: { pixel: 'golem' },
+  penguin: { pixel: 'duck', high: 'kwakophol' },
+  yeti: { pixel: 'bear', high: 'razendebeer' },
+  walrus: { pixel: 'hippo', high: 'razendnijlpaard' },
+  seal: { pixel: 'duck' },
+  crab: { pixel: 'hedgehog' },
+  turtle: { pixel: 'golem' },
+  squid: { pixel: 'octo', high: 'voidocto' },
+  ray: { pixel: 'shark', high: 'levihaai' },
+};
+
+function catalogPixelFor(art, rarity) {
+  const a = MONSTER_PIXEL_ALIAS[art];
+  if (!a) return null;
+  const order = (typeof rarityOf === 'function')
+    ? rarityOf(rarity).order
+    : ({ mythic: 5, nightmare: 6, hell: 7 }[rarity] || 0);
+  const id = (order >= 5 && a.high) ? a.high : a.pixel;
+  return (id && MONSTER_PIXEL_PROVISIONAL_SET.has(id)) ? id : (a.pixel || null);
+}
 
 function catalogColors(pairs) {
   return pairs.map((p) => ({ c1: p[0], c2: p[1] }));
@@ -9533,12 +9610,14 @@ function expandMonsterCatalog(families) {
       }
       const col = (fam.colors && fam.colors[i]) || { c1: '#888', c2: '#444' };
       const b = fam.base || {};
+      const pixelId = catalogPixelFor(fam.art, step.rarity);
       species[id] = {
         name,
         art: fam.art,
         artSlot: fam.art,
         catalog: 'w2',
         biome: slot.biome || fam.biome || 'classic',
+        pixel: pixelId || undefined,
         pixelStatus: slot.pixelStatus || 'stub',
         size: Math.round((b.size || 18) + step.size),
         hp: Math.round((b.hp || 40) * step.hp),
@@ -9565,6 +9644,7 @@ function listMonsterArtSlots() {
     const used = (typeof SPECIES !== 'undefined')
       ? Object.keys(SPECIES).filter((spId) => SPECIES[spId].art === id)
       : [];
+    const alias = MONSTER_PIXEL_ALIAS[id] || {};
     return {
       art: id,
       biome: s.biome,
@@ -9572,6 +9652,8 @@ function listMonsterArtSlots() {
       shape: s.shape,
       priority: s.priority,
       pixelStatus: s.pixelStatus,
+      pixel: alias.pixel || null,
+      pixelHigh: alias.high || null,
       species: used,
       count: used.length,
     };

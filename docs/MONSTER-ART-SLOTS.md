@@ -2,7 +2,41 @@
 
 A **separate** cloud agent owns pixel art. This file is the contract.
 
-Live game draws **stub silhouettes** (`pixelStatus: 'stub'`) until you replace them.
+## Reuse #282 pixels — do not redo
+
+PR **#282** (`MONSTER-PIXEL-MAP.md`) already shipped 34 art-family maps + 31 flagship species maps. Combat resolves:
+
+`sp.pixel` → `sp.id` → `sp.art` → canvas stub
+
+W2 catalog species keep unique `art` IDs (biome / woods-crypt-scrap waves) but set **`SPECIES[id].pixel`** to a provisional ID from that map. Tint uses each species `c1`/`c2`. **No new SVGs required** for this roster double.
+
+Aliases live in `src/data/monster-catalog.js` → `MONSTER_PIXEL_ALIAS`.
+
+| W2 `art` | `.pixel` (common–legendary) | `.pixel` mythic+ |
+|----------|-----------------------------|------------------|
+| wolf | `fox` | `voidkonijn` |
+| owl, raven, wasp, junkbat | `bat` | — |
+| frog, mole | `slime` | `voidsly` / `frostbub` |
+| snake | `croc` | `razendekrokodil` |
+| boar, beaver | `pig` | `razendzwijn` |
+| moose | `cow` | `holkoe` |
+| badger, beetle, crab | `hedgehog` | — |
+| stag | `horse` | `holpaard` |
+| lynx | `tiger` | `razendetijger` |
+| skeleton, wisp, lich | `ghost` | — |
+| mummy, rivet, piston, turtle | `golem` | — |
+| gargoyle | `dragon` | `omegadrake` |
+| drone, bot, cog, turret | `can` | — |
+| scrapdog | `fox` | `voidkonijn` |
+| penguin, seal | `duck` | `kwakophol` |
+| yeti | `bear` | `razendebeer` |
+| walrus | `hippo` | `razendnijlpaard` |
+| squid, spider | `octo` | `voidocto` |
+| ray | `shark` | `levihaai` |
+
+Optional unique pixels later: keep the W2 `art` ID, draw a new map, then drop `.pixel` (or point it at the new art key). Until then, **reuse the strings above**.
+
+Live game draws **stub silhouettes** only when #282 maps are not loaded (`pixelStatus: 'stub'`).
 
 ## Where to edit
 

@@ -141,6 +141,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | W2 `sp.pixel` aliases → #282 provisional art/species IDs (geen pixel-redo). v1.18.165 / SW 375. Draft. |
 | 2026-09-14 | — | Monster catalog W2: +288 soorten (36 art slots × 8 rarities), woods/crypt/scrap golven, stub silhouetten, `docs/MONSTER-ART-SLOTS.md` voor pixel-partner. v1.18.164 / SW 374. Draft. |
 | 2026-09-14 | — | #266 sprint: locale (VERLOREN, Tips-label, eilandkop) + stillere versie-banner + rest HOME. v1.18.163 / SW 373. Draft. |
 | 2026-09-14 | — | Start polish + unify HOME-tegels (Avontuur/Training/Collect/Settings/pauze). Naamveld weg. #265 folded. v1.18.162 / SW 372. #263 geparkeerd. |

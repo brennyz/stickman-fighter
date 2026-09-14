@@ -40,7 +40,15 @@ const ctx = {
   console,
 };
 vm.createContext(ctx);
-vm.runInContext(catalog + '\nthis.__out = expandMonsterCatalog(MONSTER_FAMILIES_W2); this.__slots = MONSTER_ART_SLOTS; this.__arts = Object.keys(MONSTER_ART_SLOTS);', ctx);
+vm.runInContext(
+  catalog +
+  '\nthis.__out = expandMonsterCatalog(MONSTER_FAMILIES_W2);' +
+  '\nthis.__slots = MONSTER_ART_SLOTS;' +
+  '\nthis.__arts = Object.keys(MONSTER_ART_SLOTS);' +
+  '\nthis.__alias = MONSTER_PIXEL_ALIAS;' +
+  '\nthis.__prov = MONSTER_PIXEL_PROVISIONAL_SET;',
+  ctx
+);
 
 const out = ctx.__out;
 const arts = ctx.__arts;
@@ -64,6 +72,22 @@ for (const art of arts) {
 }
 if (stub < 30) fail('expected stub placeholders for pixel partner');
 
+const prov = ctx.__prov;
+const alias = ctx.__alias;
+if (!prov || prov.size < 60) fail('provisional pixel set missing');
+for (const art of arts) {
+  const a = alias[art];
+  if (!a || !a.pixel) fail('W2 art missing pixel alias: ' + art);
+  if (!prov.has(a.pixel)) fail('alias not in #282 map: ' + art + ' → ' + a.pixel);
+  if (a.high && !prov.has(a.high)) fail('high alias not in #282 map: ' + art + ' → ' + a.high);
+}
+let missingPixel = 0;
+for (const id of ids) {
+  const px = out.species[id].pixel;
+  if (!px || !prov.has(px)) missingPixel++;
+}
+if (missingPixel) fail('species missing #282 pixel alias: ' + missingPixel);
+
 if (!game.includes('Object.assign(SPECIES, MONSTER_CATALOG_W2_EXPANDED.species')) {
   fail('SPECIES merge missing');
 }
@@ -82,5 +106,7 @@ console.log(JSON.stringify({
   newSpecies: out.speciesCount,
   artSlots: arts.length,
   stubSlots: stub,
+  pixelAliased: ids.length - missingPixel,
+  provisionalIds: prov.size,
 }, null, 2));
 console.log('SMOKE_OK monster-catalog');
