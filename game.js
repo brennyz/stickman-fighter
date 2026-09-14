@@ -2,7 +2,7 @@
 /* --- src/00-prelude.js --- */
 'use strict';
 /* =========================================================================
-   STICKMAN FIGHTER — Monster Arena
+   STICKMAN FIGHTER
    Stickman-vechtgame voor iPad (touch) en desktop (toetsenbord).
    Modi: Avontuur, Training, Versus 2P, Muur, Mats (coinrun).
    Audio (sfx + bgm) is procedureel via Web Audio — rechtenvrij.
@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.163';
+const APP_VERSION = '1.18.165';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 373;
+const SW_CACHE_REV = 375;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1953,6 +1953,7 @@ const I18N = {
     net: {
       updateReady: 'Nieuwe versie klaar — tik om te laden',
       updateWait: 'Nieuwe versie — laadt in het menu',
+      dismiss: 'Sluiten',
       offlinePlay: 'Offline — speelt uit cache · save blijft hier',
       offlinePlayHint: 'Offline — uit cache · icoon in de lade = altijd spelen',
       offlineMenu: 'Offline — menu & save uit cache',
@@ -1973,7 +1974,7 @@ const I18N = {
       titleName: 'Naam — hoeft niet', titleNamePh: 'Bijnaam (optioneel)',
       titleNote: 'Geen account — je save blijft op deze telefoon',
       titleGreet: 'Hoi, {name}',
-      splash0: 'Laden…', splash1: 'Pixelmap…', splash2: 'Arena…', splash3: 'Klaar',
+      splash0: 'Laden…', splash1: 'Laden…', splash2: 'Laden…', splash3: 'Klaar',
     },
     hub: {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
@@ -2027,6 +2028,11 @@ const I18N = {
       syncHint: 'Zet de backup gelijk aan je huidige voortgang.',
       freshHint: 'Menu reageert niet? Tik hier voor de nieuwste versie.',
       hosting: 'Speel-link', copyLink: 'Kopieer speel-link', openLink: 'Open speel-link',
+      playLinkOk: '✓ Speel-link — deel met vrienden (Android)',
+      playLinkPages: 'Deel speel.html (Pages): ',
+      shareHintAndroid: 'Deel deze link met vrienden. Op Android: Chrome → App installeren.',
+      masteryHead: 'Top stijl-meesterschap',
+      masteryTiers: 'Tiers: Leerling → Virtuoos (3) → Meester (10) → Legende (25)',
       savePort: 'Voortgang kopiëren', exportSave: 'Kopieer save', importSave: 'Laad save',
       importSaveFile: 'Bestand kiezen',
       savePortDesc: 'Kopieer je voortgang (bestand + klembord). Laden: kies een bestand of plak hier — 1× kijken, 2× laden. Je huidige save gaat naar backup.',
@@ -2067,6 +2073,7 @@ const I18N = {
     net: {
       updateReady: 'New version ready — tap to load',
       updateWait: 'New version — loads in the menu',
+      dismiss: 'Dismiss',
       offlinePlay: 'Offline — playing from cache · save stays here',
       offlinePlayHint: 'Offline — from cache · home-screen icon = always play',
       offlineMenu: 'Offline — menu & save from cache',
@@ -2087,7 +2094,7 @@ const I18N = {
       titleName: 'Name — optional', titleNamePh: 'Nickname (optional)',
       titleNote: 'No account — your save stays on this phone',
       titleGreet: 'Hi, {name}',
-      splash0: 'Loading…', splash1: 'Pixel map…', splash2: 'Arena…', splash3: 'Ready',
+      splash0: 'Loading…', splash1: 'Loading…', splash2: 'Loading…', splash3: 'Ready',
     },
     hub: {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -2141,6 +2148,11 @@ const I18N = {
       syncHint: 'Set the backup equal to your current progress.',
       freshHint: 'Menu stuck? Tap here for the newest version.',
       hosting: 'Play link', copyLink: 'Copy play link', openLink: 'Open play link',
+      playLinkOk: '✓ Play link — share with friends (Android)',
+      playLinkPages: 'Share speel.html (Pages): ',
+      shareHintAndroid: 'Share this link with friends. On Android: Chrome → Install app.',
+      masteryHead: 'Top style mastery',
+      masteryTiers: 'Tiers: Pupil → Virtuoso (3) → Master (10) → Legend (25)',
       savePort: 'Copy progress', exportSave: 'Copy save', importSave: 'Load save',
       importSaveFile: 'Choose file',
       savePortDesc: 'Copy your progress (file + clipboard). Load: pick a file or paste here — 1× preview, 2× load. Current save goes to backup.',
@@ -2189,7 +2201,7 @@ const I18N = {
       titleName: 'Name — muss nicht', titleNamePh: 'Spitzname (optional)',
       titleNote: 'Kein Konto — dein Save bleibt auf diesem Handy',
       titleGreet: 'Hi, {name}',
-      splash0: 'Laden…', splash1: 'Pixelmap…', splash2: 'Arena…', splash3: 'Fertig',
+      splash0: 'Laden…', splash1: 'Laden…', splash2: 'Laden…', splash3: 'Fertig',
     },
     hub: {
       step: 'Schritt 2 · Modus wählen', solo: 'SOLO', collection: 'SAMMLUNG',
@@ -2273,7 +2285,7 @@ const I18N = {
       titleName: 'Nom — pas obligatoire', titleNamePh: 'Surnom (optionnel)',
       titleNote: 'Pas de compte — ta sauvegarde reste sur ce téléphone',
       titleGreet: 'Salut, {name}',
-      splash0: 'Chargement…', splash1: 'Pixelmap…', splash2: 'Arène…', splash3: 'Prêt',
+      splash0: 'Chargement…', splash1: 'Chargement…', splash2: 'Chargement…', splash3: 'Prêt',
     },
     hub: {
       step: 'Étape 2 · Choisir le mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -2357,7 +2369,7 @@ const I18N = {
       titleName: 'Nombre — no hace falta', titleNamePh: 'Apodo (opcional)',
       titleNote: 'Sin cuenta — tu partida se queda en este teléfono',
       titleGreet: 'Hola, {name}',
-      splash0: 'Cargando…', splash1: 'Pixelmap…', splash2: 'Arena…', splash3: 'Listo',
+      splash0: 'Cargando…', splash1: 'Cargando…', splash2: 'Cargando…', splash3: 'Listo',
     },
     hub: {
       step: 'Paso 2 · Elige modo', solo: 'SOLO', collection: 'COLECCIÓN',
@@ -2524,8 +2536,10 @@ function setTitle(id, key, params) {
 function applyLangStaticScreens() {
   if (!canApplyDomI18n()) return;
   if (document.documentElement) document.documentElement.lang = getLang();
-  const net = document.getElementById('netStatus');
-  if (net) net.textContent = t('common.offline');
+  const netMsg = document.getElementById('netStatusMsg') || document.getElementById('netStatus');
+  if (netMsg) netMsg.textContent = t('common.offline');
+  const netX = document.getElementById('netStatusDismiss');
+  if (netX) netX.setAttribute('aria-label', tOr('net.dismiss', 'Sluiten'));
 
   setText('menuLangLbl', 'settings.lang');
   setText('pressStartLine', 'menu.pressStart');
@@ -2860,6 +2874,9 @@ function applyLang() {
     else if (active === 'dexScreen' && typeof UI.renderDex === 'function') UI.renderDex();
     else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'modeHubScreen') UI.renderModeHub();
+    else if (active === 'resultScreen' && UI.lastResult && typeof UI.showResult === 'function') {
+      try { UI.showResult(!!UI.lastResult.win, UI.lastResult); } catch (_) {}
+    }
     UI.syncBackLabels();
   }
   try { if (typeof syncTitleGateCopy === 'function') syncTitleGateCopy(); } catch (_) {}
@@ -11832,6 +11849,8 @@ function seedNlGameStrings() {
     satanAfterClear: 'Adventure gehaald — hitte blijft: 10× falen op één level → Satan (~half scherm, reflect) → Tide-pet',
     trainComboRecord: 'Combo-trainer: ×{n}{rec}',
     trainComboNewRec: ' — nieuw record!',
+    trainDetailWin: 'RabbitRobot verslagen ({p}-{r}) · max combo ×{combo} · {wins}× gewonnen',
+    trainDetailLose: 'RabbitRobot was te sterk ({p}-{r}) · max combo ×{combo}',
     trainStyleUnlock: 'Nieuwe stijl vrij: Energie gloed — Instellingen → Stijl!',
     trainStyleMore: 'Unlock stijlen door meer train-wins!',
     trainLossTip: 'Spring tijdens LIGHTNING PIERCE — robot mist · spring oor-lasers',
@@ -12253,7 +12272,7 @@ function seedNlGameStrings() {
     'Joystick ring pixel art',
     'Laadscherm / splash strip',
   ];
-  I18N.nl.menu.tips = [
+  I18N.nl.menu.tipList = [
     'Kies een tegel — Avontuur · Arcade · 2P · Collectie',
     '5 eilanden — baas Lv 10/20/30/40/50 opent volgend eiland',
     'Skill gate — max wapen per eiland in avontuur',
@@ -12757,10 +12776,12 @@ const CATALOG_EN = {
   },
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SHIELD' },
   result: {
-    advWin: 'VICTORY!', advLose: 'YOU LOST...', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+    advWin: 'VICTORY!', advLose: 'VERLOREN', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
     advLoseKeep: 'XP and loot from this run stay',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'start',
+    trainDetailWin: 'RabbitRobot down ({p}-{r}) · max combo ×{combo} · {wins}× won',
+    trainDetailLose: 'RabbitRobot was too strong ({p}-{r}) · max combo ×{combo}',
     vsP1Win: 'PLAYER 1 WINS!', vsP2Win: 'PLAYER 2 WINS!', wallRecord: 'NEW RECORD!', wallTime: "TIME'S UP!",
     matsRecord: 'NEW RECORD!', matsDone: 'Well done!',
     perfectRun: 'Perfect run — keep HP high!',
@@ -12849,7 +12870,7 @@ const CATALOG_EN = {
     ranchWave: 'FARM RAMPAGE', safariWave: 'ZOO BREAKOUT',
     emberWave: 'EMBER WAVE · 2.0', painWave: 'PAIN WAVE · 3.0',
     waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
-    fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'YOU LOST...', spiral_orbTriple: 'TRIPLE SPIRAL ORB!', spiral_orbDual: 'DUAL SPIRAL ORB!',
+    fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'VERLOREN', spiral_orbTriple: 'TRIPLE SPIRAL ORB!', spiral_orbDual: 'DUAL SPIRAL ORB!',
     round: 'ROUND {n}', roundDecisive: 'ROUND {n} · decisive round', roundMatchPoint: 'ROUND {n} · match point',
     roundWon: 'ROUND WON!', roundLost: 'ROUND LOST',
     p1RoundWin: 'P1 WINS ROUND!', p2RoundWin: 'P2 WINS ROUND!',
@@ -13134,7 +13155,7 @@ const CATALOG_EN = {
     charPickNow1: 'P1',
     charPickNow2: 'P2',
     charIpadTip: '',
-    levelHead: 'Pick an island',
+    levelHead: 'Choose an island',
     levelSub: 'Normal → Nightmare 2.0 → Hell 3.0 · heat meter · 9× = danger! · 10× = Satan',
     diff: { normal: 'Normal', nightmare: 'Nightmare', hell: 'Hell' },
     diffTipNormal: 'Standard adventure · model 1.0',
@@ -13383,7 +13404,7 @@ const CATALOG_EN = {
     active: 'Pet · active', tamed: 'Pet · tamed', buy: 'Pet · buy {cost} PC',
     killsNeed: 'Pet · {need} kills', killsProgress: 'Pet · {cur}/{need} kills',
   },
-  menu: { tips: [
+  menu: { tipList: [
     'Pick a tile — Adventure · Arcade · 2P · Collection',
     '5 islands — boss Lv 10/20/30/40/50 opens next island',
     'Skill gate — max weapon per island in adventure',
@@ -14019,7 +14040,7 @@ function i18nList(key) {
 }
 
 function menuTipAt(i) {
-  const tips = i18nList('menu.tips');
+  const tips = i18nList('menu.tipList');
   if (!tips.length) return '';
   return tips[((i % tips.length) + tips.length) % tips.length];
 }
@@ -23385,16 +23406,7 @@ function paintSplashStripCanvas(cv, t, opts) {
     drawSplashStick(w * 0.72 + stroll * 0.6, -1, '#c09098', compact ? 0.9 : 1.05);
   }
 
-  // Soft caption bar (non-compact)
-  if (!compact) {
-    const capH = hero ? 22 : 14;
-    c.fillStyle = P ? P.captionBg : 'rgba(18,22,26,.55)';
-    c.fillRect(0, h - capH, w, capH);
-    c.fillStyle = P ? P.captionFg : 'rgba(220,214,200,.82)';
-    c.font = hero ? 'bold 13px monospace' : 'bold 9px monospace';
-    c.textAlign = 'left';
-    c.fillText('MONSTER ARENA', 10, h - (hero ? 7 : 4));
-  }
+  // Splash strip stays picture-only — title + SPELEN already say what this is.
 
   c.imageSmoothingEnabled = prev;
 }
@@ -25719,6 +25731,7 @@ class Game {
     }
     // Resultaat-scherm altijd tonen (Volgende level / Opnieuw) — niet stil naar menu
     scheduleGameResult(this, win ? 1600 : 1400, () => UI.showResult(win, {
+      titleKey: win ? 'result.advWin' : 'result.advLose',
       title: win ? t('result.advWin') : t('result.advLose'),
       detail: (() => {
         const finishers = this.runFinishers ? t('result.finishersLine', { n: this.runFinishers }) : '';
@@ -26404,9 +26417,15 @@ class Game {
       : onceResultTip('training', 'loss', tOr('combat.trainLostTip', tOr('combat.trainLossTip', 'Spring tijdens LIGHTNING PIERCE — robot mist · spring oor-lasers')))
         || tOr('combat.trainTipDefault', 'Tip: spring lasers · energy vol → Spiral Orb');
     scheduleGameResult(this, 1400, () => UI.showResult(win, {
+      titleKey: win ? 'result.trainWin' : 'result.trainLose',
       title: win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'),
-      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · max combo ×${trainBest}` +
-        (win ? ` · ${save.trainWins}x gewonnen` : ''),
+      detail: win
+        ? tOr('result.trainDetailWin', 'RabbitRobot verslagen ({p}-{r}) · max combo ×{combo} · {wins}× gewonnen', {
+          p: this.roundsP, r: this.roundsR, combo: trainBest, wins: save.trainWins,
+        })
+        : tOr('result.trainDetailLose', 'RabbitRobot was te sterk ({p}-{r}) · max combo ×{combo}', {
+          p: this.roundsP, r: this.roundsR, combo: trainBest,
+        }),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
     }));
@@ -26647,6 +26666,7 @@ class Game {
     if (this.matchFatality) tip = t('result.vsFatalityRematchTip');
     else if (close) tip = t('result.vsCloseRematchTip');
     scheduleGameResult(this, 1200, () => UI.showResult(p1Win, {
+      titleKey: p1Win ? 'result.vsP1Win' : 'result.vsP2Win',
       title: p1Win ? t('result.vsP1Win') : t('result.vsP2Win'),
       detail: `${vsRosterName(this.p1Pick) || 'P1'} vs ${vsRosterName(this.p2Pick) || 'P2'} · ${this.roundsP1}-${this.roundsP2}` +
         ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : '') +
@@ -26824,6 +26844,7 @@ class Game {
       else if (paceDelta != null && paceDelta >= 3) tip = t('result.wallGoodPace');
     }
     scheduleGameResult(this, 1200, () => UI.showResult(true, {
+      titleKey: isRecord ? 'result.wallRecord' : 'result.wallTime',
       title: isRecord ? t('result.wallRecord') : t('result.wallTime'),
       detail: t('result.wallDetail', {
         score: this.score, pace, best, combo: this.maxCombo || 0,
@@ -26933,6 +26954,7 @@ class Game {
     this.banner(t('banner.bonusDone'), 1.4, '#7cfc8a', 40);
     const wallet = petCoinsBalance();
     scheduleGameResult(this, 1200, () => UI.showResult(true, {
+      titleKey: isRecord ? 'result.matsRecord' : 'result.matsDone',
       title: isRecord ? t('result.matsRecord') : t('result.matsDone'),
       detail: t('result.matsDetail', {
         n, best,
@@ -32648,7 +32670,7 @@ const UI = {
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const verLine = document.getElementById('menuVerLine');
-    if (verLine) verLine.textContent = 'v' + APP_VERSION + ' · arcade · SW v' + SW_CACHE_REV;
+    if (verLine) verLine.textContent = 'v' + APP_VERSION;
     const missEl = document.getElementById('menuDailyHint');
     const hubHintEl = document.getElementById('menuHubHint');
     const dailyLine = dailyStatusLine();
@@ -32683,7 +32705,7 @@ const UI = {
     const playLinkEl = document.getElementById('menuPlayLink');
     if (playLinkEl) {
       if (location.hostname.endsWith('.github.io')) {
-        playLinkEl.textContent = '✓ Speel-link — deel met vrienden (Android)';
+        playLinkEl.textContent = tOr('settings.playLinkOk', '✓ Speel-link — deel met vrienden (Android)');
       } else if (!playLinkEl.dataset.loaded) {
         playLinkEl.dataset.loaded = '1';
         loadHostingBundle().then(({ hosting }) => {
@@ -32691,7 +32713,7 @@ const UI = {
           const u = base ? withShareRevParam(base, shareCacheRevFor(hosting)) : '';
           if (u) {
             playLinkEl.innerHTML =
-              `Deel speel.html (Pages): <a href="${u}" style="color:#7cf5ff;font-weight:800">${u.replace(/^https:\/\//, '')}</a>`;
+              `${tOr('settings.playLinkPages', 'Deel speel.html (Pages): ')}<a href="${u}" style="color:#7cf5ff;font-weight:800">${u.replace(/^https:\/\//, '')}</a>`;
           }
         }).catch(() => {});
       }
@@ -33459,7 +33481,7 @@ const UI = {
       })
       .catch(() => {
         linkEl.textContent = 'https://brennyz.github.io/stickman-fighter/speel.html';
-        if (hintEl) hintEl.textContent = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
+        if (hintEl) hintEl.textContent = tOr('settings.shareHintAndroid', 'Deel deze link met vrienden. Op Android: Chrome → App installeren.');
       });
   },
 
@@ -33788,12 +33810,14 @@ const UI = {
         mastEl.innerHTML = '';
       } else {
         mastEl.style.display = 'block';
-        mastEl.innerHTML = '<div style="font-size:12px;opacity:.85;margin-bottom:6px">Top stijl-meesterschap</div>' +
+        mastEl.innerHTML = '<div style="font-size:12px;opacity:.85;margin-bottom:6px">' +
+          tOr('settings.masteryHead', 'Top stijl-meesterschap') + '</div>' +
           top.map(e =>
             `<span class="rar-pill" style="color:${e.tier.color};border-color:${e.tier.color};margin:2px 4px 2px 0">` +
             `${e.name} · ${e.tier.name} · ${e.finishers}×</span>`
           ).join('') +
-          '<div style="font-size:11px;opacity:.65;margin-top:6px">Tiers: Leerling → Virtuoos (3) → Meester (10) → Legende (25)</div>';
+          '<div style="font-size:11px;opacity:.65;margin-top:6px">' +
+          tOr('settings.masteryTiers', 'Tiers: Leerling → Virtuoos (3) → Meester (10) → Legende (25)') + '</div>';
       }
     }
     const previewId = this.weaponPreviewId || save.weapon || 'vuist';
@@ -35055,7 +35079,14 @@ const UI = {
     try { this.clearToasts(); } catch (_) {}
     const title = document.getElementById('resTitle');
     if (!title) throw new Error('result DOM missing');
-    title.textContent = data.title;
+    const titleKey = data.titleKey || (data.mode === 'training'
+      ? (win ? 'result.trainWin' : 'result.trainLose')
+      : (win ? 'result.advWin' : 'result.advLose'));
+    const painted = (typeof tOr === 'function')
+      ? tOr(titleKey, data.title || (win ? 'GEWONNEN!' : 'VERLOREN'))
+      : (data.title || (win ? 'GEWONNEN!' : 'VERLOREN'));
+    title.textContent = painted;
+    data.titleKey = titleKey;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
     const detailEl = document.getElementById('resDetail');
     if (detailEl) detailEl.textContent = data.detail;
@@ -36033,7 +36064,7 @@ function paintMenuHeroCanvas(t) {
   }
 
   let map = { roadY: Hs * 0.82 };
-  const drawOne = (fn, ctx) => fn(ctx, Ws, Hs, t, { lite, caption: true }) || map;
+  const drawOne = (fn, ctx) => fn(ctx, Ws, Hs, t, { lite, caption: false }) || map;
 
   if (N >= 2 && aTo > 0.02 && fromIdx !== toIdx) {
     const buf = ensureMenuVistaBuf(Ws, Hs);
@@ -36052,7 +36083,7 @@ function paintMenuHeroCanvas(t) {
   } else if (N >= 1) {
     map = drawOne(VISTAS[fromIdx], c);
   } else if (typeof drawLandwegPixelmap === 'function') {
-    map = drawLandwegPixelmap(c, Ws, Hs, t, { lite, caption: true, groundY: Hs * 0.58 }) || map;
+    map = drawLandwegPixelmap(c, Ws, Hs, t, { lite, caption: false, groundY: Hs * 0.58 }) || map;
     map.roadY = (map.groundY || Hs * 0.58) + 8;
   } else {
     const sky = c.createLinearGradient(0, 0, 0, Hs);
@@ -36250,6 +36281,22 @@ function netUpdateOnHub() {
   }
 }
 
+function netStatusMsgEl(el) {
+  return (el && el.querySelector && el.querySelector('#netStatusMsg')) || el;
+}
+
+function setNetStatusText(el, text) {
+  const msg = netStatusMsgEl(el);
+  if (msg) msg.textContent = text;
+}
+
+function showNetDismiss(el, on) {
+  const x = document.getElementById('netStatusDismiss');
+  if (!x) return;
+  x.hidden = !on;
+  x.setAttribute('aria-label', (typeof tOr === 'function') ? tOr('net.dismiss', 'Sluiten') : 'Sluiten');
+}
+
 function updateNetStatus(ev) {
   const el = document.getElementById('netStatus');
   if (!el) return;
@@ -36257,30 +36304,40 @@ function updateNetStatus(ev) {
   const swReady = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
   const standalone = isStandalonePwa();
   const swUpdate = !!window.__sfSwUpdateReady;
+  const playing = !!(document.body && document.body.classList.contains('is-playing'));
   try {
     document.body.classList.toggle('sf-offline', off);
     document.body.classList.toggle('sf-sw-ready', swReady);
-    document.body.classList.toggle('sf-sw-update', swUpdate);
+    document.body.classList.toggle('sf-sw-update', swUpdate && !playing);
   } catch (_) {}
 
   const paintUpdateBanner = () => {
+    if (playing || window.__sfNetQuietUpdate) {
+      el.hidden = true;
+      showNetDismiss(el, false);
+      return;
+    }
     const onHub = netUpdateOnHub();
     el.hidden = false;
     el.classList.remove('online-flash', 'sw-pending', 'offline-ready', 'sw-update', 'sw-update-wait');
+    showNetDismiss(el, true);
     if (onHub) {
       el.classList.add('sw-update');
       el.setAttribute('role', 'button');
       if ('tabIndex' in el) el.tabIndex = 0;
-      el.textContent = (typeof tOr === 'function')
+      setNetStatusText(el, (typeof tOr === 'function')
         ? tOr('net.updateReady', 'Nieuwe versie klaar — tik om te laden')
-        : 'Nieuwe versie klaar — tik om te laden';
+        : 'Nieuwe versie klaar — tik om te laden');
     } else {
-      el.classList.add('sw-update-wait');
-      if (el.removeAttribute) el.removeAttribute('role');
-      if ('tabIndex' in el) el.tabIndex = -1;
-      el.textContent = (typeof tOr === 'function')
+      // Off-HOME: stay quiet. Keep i18n lookup so copy follows language when we return to HOME.
+      const waitCopy = (typeof tOr === 'function')
         ? tOr('net.updateWait', 'Nieuwe versie — laadt in het menu')
         : 'Nieuwe versie — laadt in het menu';
+      el.hidden = true;
+      showNetDismiss(el, false);
+      if (el.removeAttribute) el.removeAttribute('role');
+      if ('tabIndex' in el) el.tabIndex = -1;
+      void waitCopy;
     }
   };
 
@@ -36291,18 +36348,19 @@ function updateNetStatus(ev) {
 
   el.removeAttribute && el.removeAttribute('role');
   if ('tabIndex' in el) el.tabIndex = -1;
+  showNetDismiss(el, false);
 
   if (off) {
     el.hidden = false;
     el.classList.remove('online-flash', 'sw-pending', 'sw-update', 'sw-update-wait');
     if (state === 'play') {
-      el.textContent = standalone
+      setNetStatusText(el, standalone
         ? (typeof tOr === 'function' ? tOr('net.offlinePlay', 'Offline — speelt uit cache · save blijft hier') : 'Offline — speelt uit cache · save blijft hier')
-        : (typeof tOr === 'function' ? tOr('net.offlinePlayHint', 'Offline — uit cache · icoon in de lade = altijd spelen') : 'Offline — uit cache · icoon in de lade = altijd spelen');
+        : (typeof tOr === 'function' ? tOr('net.offlinePlayHint', 'Offline — uit cache · icoon in de lade = altijd spelen') : 'Offline — uit cache · icoon in de lade = altijd spelen'));
     } else {
-      el.textContent = swReady
+      setNetStatusText(el, swReady
         ? (typeof tOr === 'function' ? tOr('net.offlineMenu', 'Offline — menu & save uit cache') : 'Offline — menu & save uit cache')
-        : (typeof tOr === 'function' ? tOr('net.offlineNeedOnce', 'Offline — open 1× online, daarna speelt het zonder net') : 'Offline — open 1× online, daarna speelt het zonder net');
+        : (typeof tOr === 'function' ? tOr('net.offlineNeedOnce', 'Offline — open 1× online, daarna speelt het zonder net') : 'Offline — open 1× online, daarna speelt het zonder net'));
     }
     return;
   }
@@ -36310,7 +36368,7 @@ function updateNetStatus(ev) {
     el.hidden = false;
     el.classList.remove('sw-pending', 'sw-update', 'sw-update-wait');
     el.classList.add('online-flash');
-    el.textContent = (typeof tOr === 'function') ? tOr('net.backOnline', 'Weer online') : 'Weer online';
+    setNetStatusText(el, (typeof tOr === 'function') ? tOr('net.backOnline', 'Weer online') : 'Weer online');
     if ('serviceWorker' in navigator) {
       try { navigator.serviceWorker.ready.then((reg) => reg.update()); } catch (_) {}
     }
@@ -36318,7 +36376,7 @@ function updateNetStatus(ev) {
       if (navigator.onLine && !window.__sfSwUpdateReady) {
         el.hidden = true;
         el.classList.remove('online-flash');
-        el.textContent = '';
+        setNetStatusText(el, '');
       }
     }, 2200);
     return;
@@ -36327,7 +36385,7 @@ function updateNetStatus(ev) {
     el.hidden = false;
     el.classList.add('sw-pending');
     el.classList.remove('online-flash', 'sw-update', 'sw-update-wait', 'offline-ready');
-    el.textContent = (typeof tOr === 'function') ? tOr('net.cacheLoading', 'Cache laden… — daarna ook offline') : 'Cache laden… — daarna ook offline';
+    setNetStatusText(el, (typeof tOr === 'function') ? tOr('net.cacheLoading', 'Cache laden… — daarna ook offline') : 'Cache laden… — daarna ook offline');
     return;
   }
   if (swReady && 'caches' in window && !window.__sfOfflineReadyShown) {
@@ -36344,19 +36402,19 @@ function updateNetStatus(ev) {
         el2.hidden = false;
         el2.classList.remove('sw-pending', 'sw-update', 'sw-update-wait');
         el2.classList.add('offline-ready');
-        el2.textContent = (typeof tOr === 'function') ? tOr('net.offlineReady', 'Klaar voor offline — save blijft hier') : 'Klaar voor offline — save blijft hier';
+        setNetStatusText(el2, (typeof tOr === 'function') ? tOr('net.offlineReady', 'Klaar voor offline — save blijft hier') : 'Klaar voor offline — save blijft hier');
         setTimeout(() => {
           if (!window.__sfSwUpdateReady && navigator.onLine && el2.classList.contains('offline-ready')) {
             el2.hidden = true;
             el2.classList.remove('offline-ready');
-            el2.textContent = '';
+            setNetStatusText(el2, '');
           }
         }, 3200);
     }).catch(() => {});
   }
   el.hidden = true;
   el.classList.remove('online-flash', 'sw-pending', 'sw-update', 'sw-update-wait', 'offline-ready');
-  el.textContent = '';
+  setNetStatusText(el, '');
 }
 window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
@@ -36387,7 +36445,21 @@ function wireNetStatusTap() {
     if (!netUpdateOnHub()) return;
     safeAsync(runVersionUpdateWithSavePrompt(), 'swUpdateTap', t('versionUpdate.fail'));
   };
-  el.addEventListener('click', run);
+  el.addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'netStatusDismiss') return;
+    run();
+  });
+  const dismiss = document.getElementById('netStatusDismiss');
+  if (dismiss && !dismiss.dataset.sfNetDismiss) {
+    dismiss.dataset.sfNetDismiss = '1';
+    dismiss.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.__sfNetQuietUpdate = true;
+      el.hidden = true;
+      showNetDismiss(el, false);
+    });
+  }
   el.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); run(); }
   });
@@ -36440,17 +36512,10 @@ function shouldSkipTitleGate() {
 
 function syncTitleGateCopy() {
   const greet = document.getElementById('sfTitleGreet');
-  const nameLbl = document.getElementById('sfTitleNameLbl');
-  const nameInp = document.getElementById('sfTitleName');
   const note = document.getElementById('sfTitleNote');
   const startLbl = document.getElementById('sfTitleStartLbl');
   const contLbl = document.getElementById('sfTitleContinueLbl');
   const tag = (typeof save !== 'undefined' && save && save.playerTag) ? String(save.playerTag) : '';
-  if (nameLbl) nameLbl.textContent = typeof t === 'function' ? t('menu.titleName') : 'Hoe heet je?';
-  if (nameInp) {
-    nameInp.placeholder = typeof t === 'function' ? t('menu.titleNamePh') : 'Jouw naam';
-    if (!nameInp.value && tag) nameInp.value = tag;
-  }
   if (note) note.textContent = typeof t === 'function' ? t('menu.titleNote') : 'Geen account — je save blijft op deze telefoon';
   if (startLbl) {
     startLbl.innerHTML = (typeof t === 'function' ? t('menu.startGame') : 'SPELEN') +
@@ -36463,20 +36528,15 @@ function syncTitleGateCopy() {
       '<small>' + (modeName || (typeof t === 'function' ? t('menu.startSub') : 'Laatste modus')) + '</small>';
   }
   if (greet) {
-    const live = (nameInp && nameInp.value.trim()) || tag;
-    greet.textContent = live && typeof t === 'function'
-      ? t('menu.titleGreet', { name: live })
-      : (live ? ('Hoi, ' + live) : '');
-    greet.hidden = !live;
+    greet.textContent = tag && typeof t === 'function'
+      ? t('menu.titleGreet', { name: tag })
+      : (tag ? ('Hoi, ' + tag) : '');
+    greet.hidden = !tag;
   }
 }
 
 function saveTitlePlayerTag() {
-  const inp = document.getElementById('sfTitleName');
-  if (!inp || typeof save === 'undefined' || !save) return;
-  const tag = typeof sanitizePlayerTag === 'function' ? sanitizePlayerTag(inp.value) : String(inp.value || '').trim().slice(0, 16);
-  save.playerTag = tag;
-  try { persist(); } catch (_) {}
+  /* Name field removed from title-gate — keep any existing save.playerTag. */
 }
 
 function enterHubFromTitle(opts) {
@@ -36508,7 +36568,6 @@ function wireTitleGate() {
   window.__sfTitleWired = true;
   const start = document.getElementById('sfTitleStart');
   const cont = document.getElementById('sfTitleContinue');
-  const nameInp = document.getElementById('sfTitleName');
   const go = (resume) => {
     try { enterHubFromTitle({ resume: !!resume }); } catch (_) { dismissSplashOverlay(); }
   };
@@ -36516,12 +36575,6 @@ function wireTitleGate() {
   else if (start) start.addEventListener('click', () => go(false));
   if (cont && typeof bindPress === 'function') bindPress(cont, () => go(true));
   else if (cont) cont.addEventListener('click', () => go(true));
-  if (nameInp) {
-    nameInp.addEventListener('input', () => { try { syncTitleGateCopy(); } catch (_) {} });
-    nameInp.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); go(false); }
-    });
-  }
 }
 
 function runTitleArenaLoop() {
@@ -36575,8 +36628,8 @@ function runSplashIntro() {
   let finished = false;
   const labels = [
     (typeof tOr === 'function' ? tOr('menu.splash0', 'Laden…') : 'Laden…'),
-    (typeof tOr === 'function' ? tOr('menu.splash1', 'Pixelmap…') : 'Pixelmap…'),
-    (typeof tOr === 'function' ? tOr('menu.splash2', 'Arena…') : 'Arena…'),
+    (typeof tOr === 'function' ? tOr('menu.splash1', 'Laden…') : 'Laden…'),
+    (typeof tOr === 'function' ? tOr('menu.splash2', 'Laden…') : 'Laden…'),
     (typeof tOr === 'function' ? tOr('menu.splash3', 'Klaar') : 'Klaar'),
   ];
 

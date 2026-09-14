@@ -903,6 +903,7 @@ class Game {
     }
     // Resultaat-scherm altijd tonen (Volgende level / Opnieuw) — niet stil naar menu
     scheduleGameResult(this, win ? 1600 : 1400, () => UI.showResult(win, {
+      titleKey: win ? 'result.advWin' : 'result.advLose',
       title: win ? t('result.advWin') : t('result.advLose'),
       detail: (() => {
         const finishers = this.runFinishers ? t('result.finishersLine', { n: this.runFinishers }) : '';
@@ -1588,9 +1589,15 @@ class Game {
       : onceResultTip('training', 'loss', tOr('combat.trainLostTip', tOr('combat.trainLossTip', 'Spring tijdens LIGHTNING PIERCE — robot mist · spring oor-lasers')))
         || tOr('combat.trainTipDefault', 'Tip: spring lasers · energy vol → Spiral Orb');
     scheduleGameResult(this, 1400, () => UI.showResult(win, {
+      titleKey: win ? 'result.trainWin' : 'result.trainLose',
       title: win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'),
-      detail: `RabbitRobot ${win ? 'verslagen' : 'was te sterk'} (${this.roundsP}-${this.roundsR}) · max combo ×${trainBest}` +
-        (win ? ` · ${save.trainWins}x gewonnen` : ''),
+      detail: win
+        ? tOr('result.trainDetailWin', 'RabbitRobot verslagen ({p}-{r}) · max combo ×{combo} · {wins}× gewonnen', {
+          p: this.roundsP, r: this.roundsR, combo: trainBest, wins: save.trainWins,
+        })
+        : tOr('result.trainDetailLose', 'RabbitRobot was te sterk ({p}-{r}) · max combo ×{combo}', {
+          p: this.roundsP, r: this.roundsR, combo: trainBest,
+        }),
       xp: this.sessionXP, mode: 'training', win,
       tip: trainTip,
     }));
@@ -1831,6 +1838,7 @@ class Game {
     if (this.matchFatality) tip = t('result.vsFatalityRematchTip');
     else if (close) tip = t('result.vsCloseRematchTip');
     scheduleGameResult(this, 1200, () => UI.showResult(p1Win, {
+      titleKey: p1Win ? 'result.vsP1Win' : 'result.vsP2Win',
       title: p1Win ? t('result.vsP1Win') : t('result.vsP2Win'),
       detail: `${vsRosterName(this.p1Pick) || 'P1'} vs ${vsRosterName(this.p2Pick) || 'P2'} · ${this.roundsP1}-${this.roundsP2}` +
         ((this.vsRoundLog || []).length ? ` · ${this.vsRoundLog.map((w, i) => `R${i + 1} ${w === 'p1' ? 'P1' : 'P2'}`).join(' · ')}` : '') +
@@ -2008,6 +2016,7 @@ class Game {
       else if (paceDelta != null && paceDelta >= 3) tip = t('result.wallGoodPace');
     }
     scheduleGameResult(this, 1200, () => UI.showResult(true, {
+      titleKey: isRecord ? 'result.wallRecord' : 'result.wallTime',
       title: isRecord ? t('result.wallRecord') : t('result.wallTime'),
       detail: t('result.wallDetail', {
         score: this.score, pace, best, combo: this.maxCombo || 0,
@@ -2117,6 +2126,7 @@ class Game {
     this.banner(t('banner.bonusDone'), 1.4, '#7cfc8a', 40);
     const wallet = petCoinsBalance();
     scheduleGameResult(this, 1200, () => UI.showResult(true, {
+      titleKey: isRecord ? 'result.matsRecord' : 'result.matsDone',
       title: isRecord ? t('result.matsRecord') : t('result.matsDone'),
       detail: t('result.matsDetail', {
         n, best,

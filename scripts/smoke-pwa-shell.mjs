@@ -64,8 +64,8 @@ const css = fs.readFileSync(path.join(root, 'styles/main.css'), 'utf8');
 must(/#netStatus\.sw-update[^}]*pointer-events:\s*auto/.test(css),
   'tappable update banner needs pointer-events:auto (base #netStatus is none)');
 must(/#netStatus\.sw-update-wait/.test(css), 'css missing sw-update-wait');
-must(/body\.is-playing\.sf-sw-update #netStatus/.test(css),
-  'update banner during play must lift above fight pads');
+must(/body\.is-playing #netStatus\.sw-update/.test(css),
+  'update banner during play must hide so it does not crowd the HUD');
 
 must(/id="installCacheStatus"/.test(index), 'install screen must show cache-ready line');
 must(!/Sluit Safari/.test(index), 'install done-copy must not assume Safari');

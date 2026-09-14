@@ -191,7 +191,7 @@ function paintMenuHeroCanvas(t) {
   }
 
   let map = { roadY: Hs * 0.82 };
-  const drawOne = (fn, ctx) => fn(ctx, Ws, Hs, t, { lite, caption: true }) || map;
+  const drawOne = (fn, ctx) => fn(ctx, Ws, Hs, t, { lite, caption: false }) || map;
 
   if (N >= 2 && aTo > 0.02 && fromIdx !== toIdx) {
     const buf = ensureMenuVistaBuf(Ws, Hs);
@@ -210,7 +210,7 @@ function paintMenuHeroCanvas(t) {
   } else if (N >= 1) {
     map = drawOne(VISTAS[fromIdx], c);
   } else if (typeof drawLandwegPixelmap === 'function') {
-    map = drawLandwegPixelmap(c, Ws, Hs, t, { lite, caption: true, groundY: Hs * 0.58 }) || map;
+    map = drawLandwegPixelmap(c, Ws, Hs, t, { lite, caption: false, groundY: Hs * 0.58 }) || map;
     map.roadY = (map.groundY || Hs * 0.58) + 8;
   } else {
     const sky = c.createLinearGradient(0, 0, 0, Hs);
@@ -408,6 +408,22 @@ function netUpdateOnHub() {
   }
 }
 
+function netStatusMsgEl(el) {
+  return (el && el.querySelector && el.querySelector('#netStatusMsg')) || el;
+}
+
+function setNetStatusText(el, text) {
+  const msg = netStatusMsgEl(el);
+  if (msg) msg.textContent = text;
+}
+
+function showNetDismiss(el, on) {
+  const x = document.getElementById('netStatusDismiss');
+  if (!x) return;
+  x.hidden = !on;
+  x.setAttribute('aria-label', (typeof tOr === 'function') ? tOr('net.dismiss', 'Sluiten') : 'Sluiten');
+}
+
 function updateNetStatus(ev) {
   const el = document.getElementById('netStatus');
   if (!el) return;
@@ -415,30 +431,40 @@ function updateNetStatus(ev) {
   const swReady = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
   const standalone = isStandalonePwa();
   const swUpdate = !!window.__sfSwUpdateReady;
+  const playing = !!(document.body && document.body.classList.contains('is-playing'));
   try {
     document.body.classList.toggle('sf-offline', off);
     document.body.classList.toggle('sf-sw-ready', swReady);
-    document.body.classList.toggle('sf-sw-update', swUpdate);
+    document.body.classList.toggle('sf-sw-update', swUpdate && !playing);
   } catch (_) {}
 
   const paintUpdateBanner = () => {
+    if (playing || window.__sfNetQuietUpdate) {
+      el.hidden = true;
+      showNetDismiss(el, false);
+      return;
+    }
     const onHub = netUpdateOnHub();
     el.hidden = false;
     el.classList.remove('online-flash', 'sw-pending', 'offline-ready', 'sw-update', 'sw-update-wait');
+    showNetDismiss(el, true);
     if (onHub) {
       el.classList.add('sw-update');
       el.setAttribute('role', 'button');
       if ('tabIndex' in el) el.tabIndex = 0;
-      el.textContent = (typeof tOr === 'function')
+      setNetStatusText(el, (typeof tOr === 'function')
         ? tOr('net.updateReady', 'Nieuwe versie klaar — tik om te laden')
-        : 'Nieuwe versie klaar — tik om te laden';
+        : 'Nieuwe versie klaar — tik om te laden');
     } else {
-      el.classList.add('sw-update-wait');
-      if (el.removeAttribute) el.removeAttribute('role');
-      if ('tabIndex' in el) el.tabIndex = -1;
-      el.textContent = (typeof tOr === 'function')
+      // Off-HOME: stay quiet. Keep i18n lookup so copy follows language when we return to HOME.
+      const waitCopy = (typeof tOr === 'function')
         ? tOr('net.updateWait', 'Nieuwe versie — laadt in het menu')
         : 'Nieuwe versie — laadt in het menu';
+      el.hidden = true;
+      showNetDismiss(el, false);
+      if (el.removeAttribute) el.removeAttribute('role');
+      if ('tabIndex' in el) el.tabIndex = -1;
+      void waitCopy;
     }
   };
 
@@ -449,18 +475,19 @@ function updateNetStatus(ev) {
 
   el.removeAttribute && el.removeAttribute('role');
   if ('tabIndex' in el) el.tabIndex = -1;
+  showNetDismiss(el, false);
 
   if (off) {
     el.hidden = false;
     el.classList.remove('online-flash', 'sw-pending', 'sw-update', 'sw-update-wait');
     if (state === 'play') {
-      el.textContent = standalone
+      setNetStatusText(el, standalone
         ? (typeof tOr === 'function' ? tOr('net.offlinePlay', 'Offline — speelt uit cache · save blijft hier') : 'Offline — speelt uit cache · save blijft hier')
-        : (typeof tOr === 'function' ? tOr('net.offlinePlayHint', 'Offline — uit cache · icoon in de lade = altijd spelen') : 'Offline — uit cache · icoon in de lade = altijd spelen');
+        : (typeof tOr === 'function' ? tOr('net.offlinePlayHint', 'Offline — uit cache · icoon in de lade = altijd spelen') : 'Offline — uit cache · icoon in de lade = altijd spelen'));
     } else {
-      el.textContent = swReady
+      setNetStatusText(el, swReady
         ? (typeof tOr === 'function' ? tOr('net.offlineMenu', 'Offline — menu & save uit cache') : 'Offline — menu & save uit cache')
-        : (typeof tOr === 'function' ? tOr('net.offlineNeedOnce', 'Offline — open 1× online, daarna speelt het zonder net') : 'Offline — open 1× online, daarna speelt het zonder net');
+        : (typeof tOr === 'function' ? tOr('net.offlineNeedOnce', 'Offline — open 1× online, daarna speelt het zonder net') : 'Offline — open 1× online, daarna speelt het zonder net'));
     }
     return;
   }
@@ -468,7 +495,7 @@ function updateNetStatus(ev) {
     el.hidden = false;
     el.classList.remove('sw-pending', 'sw-update', 'sw-update-wait');
     el.classList.add('online-flash');
-    el.textContent = (typeof tOr === 'function') ? tOr('net.backOnline', 'Weer online') : 'Weer online';
+    setNetStatusText(el, (typeof tOr === 'function') ? tOr('net.backOnline', 'Weer online') : 'Weer online');
     if ('serviceWorker' in navigator) {
       try { navigator.serviceWorker.ready.then((reg) => reg.update()); } catch (_) {}
     }
@@ -476,7 +503,7 @@ function updateNetStatus(ev) {
       if (navigator.onLine && !window.__sfSwUpdateReady) {
         el.hidden = true;
         el.classList.remove('online-flash');
-        el.textContent = '';
+        setNetStatusText(el, '');
       }
     }, 2200);
     return;
@@ -485,7 +512,7 @@ function updateNetStatus(ev) {
     el.hidden = false;
     el.classList.add('sw-pending');
     el.classList.remove('online-flash', 'sw-update', 'sw-update-wait', 'offline-ready');
-    el.textContent = (typeof tOr === 'function') ? tOr('net.cacheLoading', 'Cache laden… — daarna ook offline') : 'Cache laden… — daarna ook offline';
+    setNetStatusText(el, (typeof tOr === 'function') ? tOr('net.cacheLoading', 'Cache laden… — daarna ook offline') : 'Cache laden… — daarna ook offline');
     return;
   }
   if (swReady && 'caches' in window && !window.__sfOfflineReadyShown) {
@@ -502,19 +529,19 @@ function updateNetStatus(ev) {
         el2.hidden = false;
         el2.classList.remove('sw-pending', 'sw-update', 'sw-update-wait');
         el2.classList.add('offline-ready');
-        el2.textContent = (typeof tOr === 'function') ? tOr('net.offlineReady', 'Klaar voor offline — save blijft hier') : 'Klaar voor offline — save blijft hier';
+        setNetStatusText(el2, (typeof tOr === 'function') ? tOr('net.offlineReady', 'Klaar voor offline — save blijft hier') : 'Klaar voor offline — save blijft hier');
         setTimeout(() => {
           if (!window.__sfSwUpdateReady && navigator.onLine && el2.classList.contains('offline-ready')) {
             el2.hidden = true;
             el2.classList.remove('offline-ready');
-            el2.textContent = '';
+            setNetStatusText(el2, '');
           }
         }, 3200);
     }).catch(() => {});
   }
   el.hidden = true;
   el.classList.remove('online-flash', 'sw-pending', 'sw-update', 'sw-update-wait', 'offline-ready');
-  el.textContent = '';
+  setNetStatusText(el, '');
 }
 window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
@@ -545,7 +572,21 @@ function wireNetStatusTap() {
     if (!netUpdateOnHub()) return;
     safeAsync(runVersionUpdateWithSavePrompt(), 'swUpdateTap', t('versionUpdate.fail'));
   };
-  el.addEventListener('click', run);
+  el.addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'netStatusDismiss') return;
+    run();
+  });
+  const dismiss = document.getElementById('netStatusDismiss');
+  if (dismiss && !dismiss.dataset.sfNetDismiss) {
+    dismiss.dataset.sfNetDismiss = '1';
+    dismiss.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.__sfNetQuietUpdate = true;
+      el.hidden = true;
+      showNetDismiss(el, false);
+    });
+  }
   el.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); run(); }
   });
@@ -598,17 +639,10 @@ function shouldSkipTitleGate() {
 
 function syncTitleGateCopy() {
   const greet = document.getElementById('sfTitleGreet');
-  const nameLbl = document.getElementById('sfTitleNameLbl');
-  const nameInp = document.getElementById('sfTitleName');
   const note = document.getElementById('sfTitleNote');
   const startLbl = document.getElementById('sfTitleStartLbl');
   const contLbl = document.getElementById('sfTitleContinueLbl');
   const tag = (typeof save !== 'undefined' && save && save.playerTag) ? String(save.playerTag) : '';
-  if (nameLbl) nameLbl.textContent = typeof t === 'function' ? t('menu.titleName') : 'Hoe heet je?';
-  if (nameInp) {
-    nameInp.placeholder = typeof t === 'function' ? t('menu.titleNamePh') : 'Jouw naam';
-    if (!nameInp.value && tag) nameInp.value = tag;
-  }
   if (note) note.textContent = typeof t === 'function' ? t('menu.titleNote') : 'Geen account — je save blijft op deze telefoon';
   if (startLbl) {
     startLbl.innerHTML = (typeof t === 'function' ? t('menu.startGame') : 'SPELEN') +
@@ -621,20 +655,15 @@ function syncTitleGateCopy() {
       '<small>' + (modeName || (typeof t === 'function' ? t('menu.startSub') : 'Laatste modus')) + '</small>';
   }
   if (greet) {
-    const live = (nameInp && nameInp.value.trim()) || tag;
-    greet.textContent = live && typeof t === 'function'
-      ? t('menu.titleGreet', { name: live })
-      : (live ? ('Hoi, ' + live) : '');
-    greet.hidden = !live;
+    greet.textContent = tag && typeof t === 'function'
+      ? t('menu.titleGreet', { name: tag })
+      : (tag ? ('Hoi, ' + tag) : '');
+    greet.hidden = !tag;
   }
 }
 
 function saveTitlePlayerTag() {
-  const inp = document.getElementById('sfTitleName');
-  if (!inp || typeof save === 'undefined' || !save) return;
-  const tag = typeof sanitizePlayerTag === 'function' ? sanitizePlayerTag(inp.value) : String(inp.value || '').trim().slice(0, 16);
-  save.playerTag = tag;
-  try { persist(); } catch (_) {}
+  /* Name field removed from title-gate — keep any existing save.playerTag. */
 }
 
 function enterHubFromTitle(opts) {
@@ -666,7 +695,6 @@ function wireTitleGate() {
   window.__sfTitleWired = true;
   const start = document.getElementById('sfTitleStart');
   const cont = document.getElementById('sfTitleContinue');
-  const nameInp = document.getElementById('sfTitleName');
   const go = (resume) => {
     try { enterHubFromTitle({ resume: !!resume }); } catch (_) { dismissSplashOverlay(); }
   };
@@ -674,12 +702,6 @@ function wireTitleGate() {
   else if (start) start.addEventListener('click', () => go(false));
   if (cont && typeof bindPress === 'function') bindPress(cont, () => go(true));
   else if (cont) cont.addEventListener('click', () => go(true));
-  if (nameInp) {
-    nameInp.addEventListener('input', () => { try { syncTitleGateCopy(); } catch (_) {} });
-    nameInp.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); go(false); }
-    });
-  }
 }
 
 function runTitleArenaLoop() {
@@ -733,8 +755,8 @@ function runSplashIntro() {
   let finished = false;
   const labels = [
     (typeof tOr === 'function' ? tOr('menu.splash0', 'Laden…') : 'Laden…'),
-    (typeof tOr === 'function' ? tOr('menu.splash1', 'Pixelmap…') : 'Pixelmap…'),
-    (typeof tOr === 'function' ? tOr('menu.splash2', 'Arena…') : 'Arena…'),
+    (typeof tOr === 'function' ? tOr('menu.splash1', 'Laden…') : 'Laden…'),
+    (typeof tOr === 'function' ? tOr('menu.splash2', 'Laden…') : 'Laden…'),
     (typeof tOr === 'function' ? tOr('menu.splash3', 'Klaar') : 'Klaar'),
   ];
 

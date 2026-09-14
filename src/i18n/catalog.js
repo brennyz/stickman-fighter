@@ -89,6 +89,8 @@ function seedNlGameStrings() {
     satanAfterClear: 'Adventure gehaald — hitte blijft: 10× falen op één level → Satan (~half scherm, reflect) → Tide-pet',
     trainComboRecord: 'Combo-trainer: ×{n}{rec}',
     trainComboNewRec: ' — nieuw record!',
+    trainDetailWin: 'RabbitRobot verslagen ({p}-{r}) · max combo ×{combo} · {wins}× gewonnen',
+    trainDetailLose: 'RabbitRobot was te sterk ({p}-{r}) · max combo ×{combo}',
     trainStyleUnlock: 'Nieuwe stijl vrij: Energie gloed — Instellingen → Stijl!',
     trainStyleMore: 'Unlock stijlen door meer train-wins!',
     trainLossTip: 'Spring tijdens LIGHTNING PIERCE — robot mist · spring oor-lasers',
@@ -510,7 +512,7 @@ function seedNlGameStrings() {
     'Joystick ring pixel art',
     'Laadscherm / splash strip',
   ];
-  I18N.nl.menu.tips = [
+  I18N.nl.menu.tipList = [
     'Kies een tegel — Avontuur · Arcade · 2P · Collectie',
     '5 eilanden — baas Lv 10/20/30/40/50 opent volgend eiland',
     'Skill gate — max wapen per eiland in avontuur',
@@ -1014,10 +1016,12 @@ const CATALOG_EN = {
   },
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SHIELD' },
   result: {
-    advWin: 'VICTORY!', advLose: 'YOU LOST...', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+    advWin: 'VICTORY!', advLose: 'VERLOREN', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
     advLoseKeep: 'XP and loot from this run stay',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'start',
+    trainDetailWin: 'RabbitRobot down ({p}-{r}) · max combo ×{combo} · {wins}× won',
+    trainDetailLose: 'RabbitRobot was too strong ({p}-{r}) · max combo ×{combo}',
     vsP1Win: 'PLAYER 1 WINS!', vsP2Win: 'PLAYER 2 WINS!', wallRecord: 'NEW RECORD!', wallTime: "TIME'S UP!",
     matsRecord: 'NEW RECORD!', matsDone: 'Well done!',
     perfectRun: 'Perfect run — keep HP high!',
@@ -1106,7 +1110,7 @@ const CATALOG_EN = {
     ranchWave: 'FARM RAMPAGE', safariWave: 'ZOO BREAKOUT',
     emberWave: 'EMBER WAVE · 2.0', painWave: 'PAIN WAVE · 3.0',
     waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
-    fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'YOU LOST...', spiral_orbTriple: 'TRIPLE SPIRAL ORB!', spiral_orbDual: 'DUAL SPIRAL ORB!',
+    fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'VERLOREN', spiral_orbTriple: 'TRIPLE SPIRAL ORB!', spiral_orbDual: 'DUAL SPIRAL ORB!',
     round: 'ROUND {n}', roundDecisive: 'ROUND {n} · decisive round', roundMatchPoint: 'ROUND {n} · match point',
     roundWon: 'ROUND WON!', roundLost: 'ROUND LOST',
     p1RoundWin: 'P1 WINS ROUND!', p2RoundWin: 'P2 WINS ROUND!',
@@ -1391,7 +1395,7 @@ const CATALOG_EN = {
     charPickNow1: 'P1',
     charPickNow2: 'P2',
     charIpadTip: '',
-    levelHead: 'Pick an island',
+    levelHead: 'Choose an island',
     levelSub: 'Normal → Nightmare 2.0 → Hell 3.0 · heat meter · 9× = danger! · 10× = Satan',
     diff: { normal: 'Normal', nightmare: 'Nightmare', hell: 'Hell' },
     diffTipNormal: 'Standard adventure · model 1.0',
@@ -1640,7 +1644,7 @@ const CATALOG_EN = {
     active: 'Pet · active', tamed: 'Pet · tamed', buy: 'Pet · buy {cost} PC',
     killsNeed: 'Pet · {need} kills', killsProgress: 'Pet · {cur}/{need} kills',
   },
-  menu: { tips: [
+  menu: { tipList: [
     'Pick a tile — Adventure · Arcade · 2P · Collection',
     '5 islands — boss Lv 10/20/30/40/50 opens next island',
     'Skill gate — max weapon per island in adventure',
@@ -2276,7 +2280,7 @@ function i18nList(key) {
 }
 
 function menuTipAt(i) {
-  const tips = i18nList('menu.tips');
+  const tips = i18nList('menu.tipList');
   if (!tips.length) return '';
   return tips[((i % tips.length) + tips.length) % tips.length];
 }

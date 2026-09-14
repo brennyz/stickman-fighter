@@ -1998,16 +1998,7 @@ function paintSplashStripCanvas(cv, t, opts) {
     drawSplashStick(w * 0.72 + stroll * 0.6, -1, '#c09098', compact ? 0.9 : 1.05);
   }
 
-  // Soft caption bar (non-compact)
-  if (!compact) {
-    const capH = hero ? 22 : 14;
-    c.fillStyle = P ? P.captionBg : 'rgba(18,22,26,.55)';
-    c.fillRect(0, h - capH, w, capH);
-    c.fillStyle = P ? P.captionFg : 'rgba(220,214,200,.82)';
-    c.font = hero ? 'bold 13px monospace' : 'bold 9px monospace';
-    c.textAlign = 'left';
-    c.fillText('MONSTER ARENA', 10, h - (hero ? 7 : 4));
-  }
+  // Splash strip stays picture-only — title + SPELEN already say what this is.
 
   c.imageSmoothingEnabled = prev;
 }

@@ -1,3 +1,5 @@
+| 2026-09-14 | **locale + toast** | #266: NL VERLOREN, geen raw menu.tips / PICK AN ISLAND; versie-banner stiller + wegklik; rest HOME. **v1.18.163 / SW v373**. |
+| 2026-09-14 | **unify polish** | Start: geen naamveld, SPELEN-first; alle schermen HOME-tegels. #265 folded. **v1.18.162 / SW v372**. |
 | 2026-09-14 | **arcade pick** | STEP 2 pick-mode = HOME hub-tegels; chrome/toasts volgen game-taal. **v1.18.161 / SW v371**. |
 | 2026-09-14 | **merge main** | #259 P1 landing + #260 toast/title-gate. Hit-reg ongemoeid. **v1.18.159 / SW v369**. |
 | 2026-09-14 | **train hit-reg** | Training: capsule-hurtbox + face-naar-robot zodat W/joy-up J/K/L/U RabbitRobot raken; floaters niet links clippen; resultaat VERLOREN / YOU LOST. **v1.18.158 / SW v368**. |
@@ -138,7 +140,9 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-| 2026-09-14 | — | EN-NL + VERLOREN: keep-loot regel, geen late heat/master-toasts op resultaat, train Again-sub i18n. Niet unify (#266). v1.18.163 / SW 373. Wacht «merge». |
+| 2026-09-14 | — | #267 op main+#266: EN VERLOREN, keep-loot, geen sticky lose-toasts, update-banner alleen op HOME. v1.18.165 / SW 375. Wacht «merge». |
+| 2026-09-14 | — | #266 LIVE: locale (VERLOREN NL, Tips-label, eilandkop) + stillere versie-banner + HOME. v1.18.163 / SW 373. |
+| 2026-09-14 | — | Start polish + unify HOME-tegels (Avontuur/Training/Collect/Settings/pauze). Naamveld weg. #265 folded. v1.18.162 / SW 372. #263 geparkeerd. |
 | 2026-09-14 | — | Arcade pick-mode = HOME hub-tegels; net/SW-banner volgt game-taal. v1.18.161 / SW 371. #263 geparkeerd. |
 | 2026-09-14 | — | MERGE MAIN: #259 + #260 → v1.18.159 / SW 369. Hit-reg gehouden. #261 closed. #256 store-draft overgeslagen. |
 | 2026-09-14 | — | Training hit-reg: capsule + face-naar-robot; floater left-clamp; YOU LOST/VERLOREN. v1.18.158 / SW 368. |

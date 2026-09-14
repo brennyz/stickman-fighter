@@ -1,7 +1,7 @@
 {
-  "name": "Stickman Fighter — Monster Arena",
+  "name": "Stickman Fighter",
   "short_name": "Stickman",
-  "description": "Stickman ninja arena — Rasengan, monsters, 2 spelers touch, RabbitRobot training. Werkt op Android, iPad en desktop.",
+  "description": "Stickman vechtspel — Avontuur, Training en kisten. Android en PC.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

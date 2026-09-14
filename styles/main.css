@@ -18,6 +18,12 @@
     --type-tile: clamp(14px, 3.8vw, 18px);
     --type-caption: clamp(10px, 2.7vw, 13px);
     --touch-min: 44px;
+    --menu-tile-solid: #162033;
+    --menu-tile-solid-hi: #1c2940;
+    --menu-ink: #f2efe6;
+    --menu-ink-muted: #c8d0dc;
+    --menu-edge: rgba(255, 255, 255, 0.16);
+    --menu-accent: #7cf5aa;
   }
   /* Canvas achter UI; geen hits in menu (anders vangt iPad alle tikken) */
   #game { position:fixed; left:0; top:0; width:100%; height:100%; height:100dvh; display:block; touch-action:none;
@@ -2376,18 +2382,27 @@
       background:linear-gradient(180deg,#ff5a8a,#a82050); justify-content:center; min-height:54px; }
   #btnCharFight:disabled { opacity:.35; filter:grayscale(.4); cursor:not-allowed; }
 
-  #netStatus { position:fixed; left:50%; bottom:max(12px, env(safe-area-inset-bottom)); transform:translateX(-50%);
-      z-index:35; max-width:92vw; padding:8px 14px; border-radius:999px; font-size:12px; font-weight:800;
-      text-align:center; color:#ffe8a8; background:rgba(40,20,10,.88); border:1px solid rgba(255,120,60,.45);
-      box-shadow:0 6px 20px rgba(0,0,0,.4); pointer-events:none; }
-  body.is-playing.sf-offline #netStatus,
-  body.is-playing.sf-sw-update #netStatus { bottom:max(108px, calc(env(safe-area-inset-bottom) + 92px)); font-size:11px; }
+  #netStatus { position:fixed; left:50%; top:max(10px, calc(env(safe-area-inset-top) + 6px)); bottom:auto;
+      transform:translateX(-50%); z-index:36; max-width:min(88vw, 360px);
+      padding:6px 8px 6px 12px; border-radius:14px; font-size:11px; font-weight:700;
+      text-align:left; color:var(--menu-ink); background:var(--menu-tile-solid);
+      border:1px solid var(--menu-edge); box-shadow:0 4px 0 rgba(0,0,0,.28);
+      pointer-events:auto; display:flex; align-items:center; gap:8px; }
+  #netStatusMsg { flex:1; min-width:0; line-height:1.35; }
+  #netStatus .net-dismiss {
+      flex:0 0 auto; width:28px; height:28px; min-height:28px; padding:0; margin:0;
+      border:1px solid var(--menu-edge); border-radius:10px; background:var(--menu-tile-solid-hi);
+      color:var(--menu-ink); font-size:16px; font-weight:800; line-height:1; cursor:pointer;
+      pointer-events:auto; touch-action:manipulation; }
+  #netStatus .net-dismiss[hidden] { display:none !important; }
+  body.is-playing #netStatus.sw-update,
+  body.is-playing #netStatus.sw-update-wait { display:none !important; }
+  body.is-playing.sf-offline #netStatus { top:auto; bottom:max(108px, calc(env(safe-area-inset-bottom) + 92px)); font-size:11px; }
   #netStatus.online-flash { color:#d8ffe8; background:rgba(12,40,28,.9); border-color:rgba(80,220,140,.5); }
-  #netStatus.sw-pending { color:#cfe0ff; background:rgba(20,28,55,.92); border-color:rgba(124,245,255,.35); }
-  #netStatus.sw-update { color:#2a1a00; background:rgba(255,215,94,.95); border-color:rgba(255,180,60,.8);
-      cursor:pointer; font-weight:800; pointer-events:auto; touch-action:manipulation; z-index:90; }
-  #netStatus.sw-update-wait { color:#ffe8a8; background:rgba(40,24,8,.9); border-color:rgba(255,180,80,.4);
-      pointer-events:none; }
+  #netStatus.sw-pending { color:var(--menu-ink-muted); }
+  #netStatus.sw-update { color:var(--menu-ink); background:var(--menu-tile-solid-hi);
+      border-color:rgba(255,215,94,.45); cursor:pointer; touch-action:manipulation; }
+  #netStatus.sw-update-wait { color:var(--menu-ink-muted); pointer-events:auto; }
   #netStatus.offline-ready { color:#d8ffe8; background:rgba(12,40,28,.88); border-color:rgba(80,220,140,.45); }
   #netStatus[hidden] { display:none !important; }
 
@@ -2428,6 +2443,131 @@
   body.high-contrast .level-roll-outcome { color: #e8f0ff; font-weight: 800; }
   body.high-contrast .level-roll-flash-card { border-width: 3px; border-color: #ffd75e; }
   body.high-contrast .hub-tile { border-width: 2px; }
+
+  /* —— Unify: Adventure / Training / Collect / Settings / pause use HOME tiles —— */
+  .mode-btn,
+  .sf-splash .sf-title-start,
+  .sf-splash .sf-title-continue {
+    background: var(--menu-tile-solid);
+    color: var(--menu-ink);
+    border: 1px solid var(--menu-edge);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  .mode-btn small,
+  .sf-splash .sf-title-start small,
+  .sf-splash .sf-title-continue small {
+    color: var(--menu-ink-muted);
+    opacity: .82;
+    font-weight: 600;
+  }
+  .mode-btn .ico {
+    background: #0c1422;
+    box-shadow: none;
+  }
+  .b-adventure { background: linear-gradient(135deg, rgba(78, 207, 106, 0.18), transparent 45%), var(--menu-tile-solid); color: var(--menu-ink); }
+  .b-continue  { background: linear-gradient(135deg, rgba(255, 215, 94, 0.18), transparent 45%), var(--menu-tile-solid); color: var(--menu-ink); }
+  .b-training  { background: linear-gradient(135deg, rgba(90, 140, 255, 0.18), transparent 45%), var(--menu-tile-solid); color: var(--menu-ink); }
+  .b-versus    { background: linear-gradient(135deg, rgba(255, 90, 138, 0.16), transparent 45%), var(--menu-tile-solid); color: var(--menu-ink); }
+  .b-wall      { background: linear-gradient(135deg, rgba(255, 167, 81, 0.16), transparent 45%), var(--menu-tile-solid); color: var(--menu-ink); }
+  .b-weapons   { background: linear-gradient(135deg, rgba(176, 106, 224, 0.18), transparent 42%), var(--menu-tile-solid); color: var(--menu-ink); }
+  .b-dex       { background: linear-gradient(135deg, rgba(240, 196, 90, 0.16), transparent 45%), var(--menu-tile-solid); color: var(--menu-ink); }
+  .b-style     { background: linear-gradient(135deg, rgba(90, 208, 200, 0.16), transparent 45%), var(--menu-tile-solid); color: var(--menu-ink); }
+  .b-skills    { background: linear-gradient(135deg, rgba(154, 108, 255, 0.16), transparent 45%), var(--menu-tile-solid); color: var(--menu-ink); }
+  .b-gray      { background: var(--menu-tile-solid-hi); color: var(--menu-ink); }
+  .b-install   { background: linear-gradient(135deg, rgba(61, 214, 200, 0.16), transparent 45%), var(--menu-tile-solid); color: var(--menu-ink); }
+  .b-install.done { background: var(--menu-tile-solid-hi); color: var(--menu-ink-muted); }
+  .island-tab,
+  .diff-tab {
+    background: var(--menu-tile-solid);
+    border-color: var(--menu-edge);
+    color: var(--menu-ink);
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+  .island-tab.active,
+  .diff-tab.active {
+    background: linear-gradient(135deg, rgba(255, 215, 94, 0.16), transparent 50%), var(--menu-tile-solid-hi);
+  }
+  .settings-card,
+  .settings-fold,
+  .island-info,
+  .pause-audio-vol {
+    background: var(--menu-tile-solid);
+    border: 1px solid var(--menu-edge);
+    color: var(--menu-ink);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  .settings-fold .settings-fold-body {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+  .tog,
+  .back-btn {
+    background: var(--menu-tile-solid-hi);
+    color: var(--menu-ink);
+    border: 1px solid var(--menu-edge);
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+  .style-card {
+    background: var(--menu-tile-solid);
+    border-color: var(--menu-edge);
+    color: var(--menu-ink);
+  }
+  .style-card.sel {
+    border-color: #ffd75e;
+    background: linear-gradient(135deg, rgba(255, 215, 94, 0.16), transparent 50%), var(--menu-tile-solid-hi);
+  }
+  .dex-filter-btn {
+    background: var(--menu-tile-solid);
+    border-color: var(--menu-edge);
+    color: var(--menu-ink);
+  }
+  #resultScreen .mode-btn,
+  #pauseScreen .mode-btn {
+    background: var(--menu-tile-solid);
+    color: var(--menu-ink);
+  }
+  #resultScreen .b-adventure,
+  #pauseScreen .b-adventure {
+    background: linear-gradient(135deg, rgba(78, 207, 106, 0.18), transparent 45%), var(--menu-tile-solid);
+  }
+  #resultScreen .b-training {
+    background: linear-gradient(135deg, rgba(90, 140, 255, 0.18), transparent 45%), var(--menu-tile-solid);
+  }
+  #resultScreen .b-gray,
+  #pauseScreen .b-gray {
+    background: var(--menu-tile-solid-hi);
+  }
+  .summon-pull-btn {
+    background: linear-gradient(135deg, rgba(255, 215, 94, 0.2), transparent 45%), var(--menu-tile-solid);
+    color: var(--menu-ink);
+    border: 1px solid var(--menu-edge);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  .summon-pull-btn div { color: var(--menu-ink); }
+  .summon-pull-btn small { color: var(--menu-ink-muted); font-weight: 600; }
+  .summon-pull-btn:not(:disabled):active { box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35); }
+  .mission-card,
+  .mission-today-plan,
+  .mission-ach-spotlight,
+  .help-island-card,
+  .version-update-card {
+    background: var(--menu-tile-solid);
+    border: 1px solid var(--menu-edge);
+    color: var(--menu-ink);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  .mission-card .claim-btn,
+  .mission-card .mission-play-btn {
+    background: var(--menu-tile-solid-hi);
+    color: var(--menu-ink);
+  }
+  .mission-card .claim-btn small { color: var(--menu-ink-muted); }
+  .mission-flow-pill {
+    background: var(--menu-tile-solid);
+    border-color: var(--menu-edge);
+    color: var(--menu-ink);
+  }
 
   @media (pointer: coarse) {
     .char-grid { grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:14px; }
@@ -2518,6 +2658,9 @@
     #modeHubScreen.mode-hub-home .mode-hub-head { margin-bottom: 6px; }
     #modeHubScreen.mode-hub-home .mode-hub-head .head { font-size: clamp(18px, 4.5vw, 24px); }
     #modeHubScreen.mode-hub-home .mode-hub-step { margin-bottom: 4px; }
+    .island-tab, .diff-tab { min-height: 44px; padding: 6px 6px; }
+    #pauseScreen .mode-btn, #resultScreen .mode-btn { min-height: 44px; margin: 4px 0; }
+    .settings-card { padding: 10px 12px; margin: 6px 0; }
     .char-saga-bar button { min-height: 40px; padding: 6px 10px; }
     .menu-landing-footer { padding-top: 2px; padding-bottom: max(6px, env(safe-area-inset-bottom)); }
     #menuScreen.menu-video-overhaul .menu-utility-row { margin-top: 6px; gap: 6px; }

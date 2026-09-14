@@ -9,6 +9,7 @@ const I18N = {
     net: {
       updateReady: 'Nieuwe versie klaar — tik om te laden',
       updateWait: 'Nieuwe versie — laadt in het menu',
+      dismiss: 'Sluiten',
       offlinePlay: 'Offline — speelt uit cache · save blijft hier',
       offlinePlayHint: 'Offline — uit cache · icoon in de lade = altijd spelen',
       offlineMenu: 'Offline — menu & save uit cache',
@@ -29,7 +30,7 @@ const I18N = {
       titleName: 'Naam — hoeft niet', titleNamePh: 'Bijnaam (optioneel)',
       titleNote: 'Geen account — je save blijft op deze telefoon',
       titleGreet: 'Hoi, {name}',
-      splash0: 'Laden…', splash1: 'Pixelmap…', splash2: 'Arena…', splash3: 'Klaar',
+      splash0: 'Laden…', splash1: 'Laden…', splash2: 'Laden…', splash3: 'Klaar',
     },
     hub: {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
@@ -83,6 +84,11 @@ const I18N = {
       syncHint: 'Zet de backup gelijk aan je huidige voortgang.',
       freshHint: 'Menu reageert niet? Tik hier voor de nieuwste versie.',
       hosting: 'Speel-link', copyLink: 'Kopieer speel-link', openLink: 'Open speel-link',
+      playLinkOk: '✓ Speel-link — deel met vrienden (Android)',
+      playLinkPages: 'Deel speel.html (Pages): ',
+      shareHintAndroid: 'Deel deze link met vrienden. Op Android: Chrome → App installeren.',
+      masteryHead: 'Top stijl-meesterschap',
+      masteryTiers: 'Tiers: Leerling → Virtuoos (3) → Meester (10) → Legende (25)',
       savePort: 'Voortgang kopiëren', exportSave: 'Kopieer save', importSave: 'Laad save',
       importSaveFile: 'Bestand kiezen',
       savePortDesc: 'Kopieer je voortgang (bestand + klembord). Laden: kies een bestand of plak hier — 1× kijken, 2× laden. Je huidige save gaat naar backup.',
@@ -123,6 +129,7 @@ const I18N = {
     net: {
       updateReady: 'New version ready — tap to load',
       updateWait: 'New version — loads in the menu',
+      dismiss: 'Dismiss',
       offlinePlay: 'Offline — playing from cache · save stays here',
       offlinePlayHint: 'Offline — from cache · home-screen icon = always play',
       offlineMenu: 'Offline — menu & save from cache',
@@ -143,7 +150,7 @@ const I18N = {
       titleName: 'Name — optional', titleNamePh: 'Nickname (optional)',
       titleNote: 'No account — your save stays on this phone',
       titleGreet: 'Hi, {name}',
-      splash0: 'Loading…', splash1: 'Pixel map…', splash2: 'Arena…', splash3: 'Ready',
+      splash0: 'Loading…', splash1: 'Loading…', splash2: 'Loading…', splash3: 'Ready',
     },
     hub: {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -197,6 +204,11 @@ const I18N = {
       syncHint: 'Set the backup equal to your current progress.',
       freshHint: 'Menu stuck? Tap here for the newest version.',
       hosting: 'Play link', copyLink: 'Copy play link', openLink: 'Open play link',
+      playLinkOk: '✓ Play link — share with friends (Android)',
+      playLinkPages: 'Share speel.html (Pages): ',
+      shareHintAndroid: 'Share this link with friends. On Android: Chrome → Install app.',
+      masteryHead: 'Top style mastery',
+      masteryTiers: 'Tiers: Pupil → Virtuoso (3) → Master (10) → Legend (25)',
       savePort: 'Copy progress', exportSave: 'Copy save', importSave: 'Load save',
       importSaveFile: 'Choose file',
       savePortDesc: 'Copy your progress (file + clipboard). Load: pick a file or paste here — 1× preview, 2× load. Current save goes to backup.',
@@ -245,7 +257,7 @@ const I18N = {
       titleName: 'Name — muss nicht', titleNamePh: 'Spitzname (optional)',
       titleNote: 'Kein Konto — dein Save bleibt auf diesem Handy',
       titleGreet: 'Hi, {name}',
-      splash0: 'Laden…', splash1: 'Pixelmap…', splash2: 'Arena…', splash3: 'Fertig',
+      splash0: 'Laden…', splash1: 'Laden…', splash2: 'Laden…', splash3: 'Fertig',
     },
     hub: {
       step: 'Schritt 2 · Modus wählen', solo: 'SOLO', collection: 'SAMMLUNG',
@@ -329,7 +341,7 @@ const I18N = {
       titleName: 'Nom — pas obligatoire', titleNamePh: 'Surnom (optionnel)',
       titleNote: 'Pas de compte — ta sauvegarde reste sur ce téléphone',
       titleGreet: 'Salut, {name}',
-      splash0: 'Chargement…', splash1: 'Pixelmap…', splash2: 'Arène…', splash3: 'Prêt',
+      splash0: 'Chargement…', splash1: 'Chargement…', splash2: 'Chargement…', splash3: 'Prêt',
     },
     hub: {
       step: 'Étape 2 · Choisir le mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -413,7 +425,7 @@ const I18N = {
       titleName: 'Nombre — no hace falta', titleNamePh: 'Apodo (opcional)',
       titleNote: 'Sin cuenta — tu partida se queda en este teléfono',
       titleGreet: 'Hola, {name}',
-      splash0: 'Cargando…', splash1: 'Pixelmap…', splash2: 'Arena…', splash3: 'Listo',
+      splash0: 'Cargando…', splash1: 'Cargando…', splash2: 'Cargando…', splash3: 'Listo',
     },
     hub: {
       step: 'Paso 2 · Elige modo', solo: 'SOLO', collection: 'COLECCIÓN',
@@ -580,8 +592,10 @@ function setTitle(id, key, params) {
 function applyLangStaticScreens() {
   if (!canApplyDomI18n()) return;
   if (document.documentElement) document.documentElement.lang = getLang();
-  const net = document.getElementById('netStatus');
-  if (net) net.textContent = t('common.offline');
+  const netMsg = document.getElementById('netStatusMsg') || document.getElementById('netStatus');
+  if (netMsg) netMsg.textContent = t('common.offline');
+  const netX = document.getElementById('netStatusDismiss');
+  if (netX) netX.setAttribute('aria-label', tOr('net.dismiss', 'Sluiten'));
 
   setText('menuLangLbl', 'settings.lang');
   setText('pressStartLine', 'menu.pressStart');
@@ -916,6 +930,9 @@ function applyLang() {
     else if (active === 'dexScreen' && typeof UI.renderDex === 'function') UI.renderDex();
     else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'modeHubScreen') UI.renderModeHub();
+    else if (active === 'resultScreen' && UI.lastResult && typeof UI.showResult === 'function') {
+      try { UI.showResult(!!UI.lastResult.win, UI.lastResult); } catch (_) {}
+    }
     UI.syncBackLabels();
   }
   try { if (typeof syncTitleGateCopy === 'function') syncTitleGateCopy(); } catch (_) {}

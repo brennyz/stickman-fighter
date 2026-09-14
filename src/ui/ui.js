@@ -2005,7 +2005,7 @@ const UI = {
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const verLine = document.getElementById('menuVerLine');
-    if (verLine) verLine.textContent = 'v' + APP_VERSION + ' · arcade · SW v' + SW_CACHE_REV;
+    if (verLine) verLine.textContent = 'v' + APP_VERSION;
     const missEl = document.getElementById('menuDailyHint');
     const hubHintEl = document.getElementById('menuHubHint');
     const dailyLine = dailyStatusLine();
@@ -2040,7 +2040,7 @@ const UI = {
     const playLinkEl = document.getElementById('menuPlayLink');
     if (playLinkEl) {
       if (location.hostname.endsWith('.github.io')) {
-        playLinkEl.textContent = '✓ Speel-link — deel met vrienden (Android)';
+        playLinkEl.textContent = tOr('settings.playLinkOk', '✓ Speel-link — deel met vrienden (Android)');
       } else if (!playLinkEl.dataset.loaded) {
         playLinkEl.dataset.loaded = '1';
         loadHostingBundle().then(({ hosting }) => {
@@ -2048,7 +2048,7 @@ const UI = {
           const u = base ? withShareRevParam(base, shareCacheRevFor(hosting)) : '';
           if (u) {
             playLinkEl.innerHTML =
-              `Deel speel.html (Pages): <a href="${u}" style="color:#7cf5ff;font-weight:800">${u.replace(/^https:\/\//, '')}</a>`;
+              `${tOr('settings.playLinkPages', 'Deel speel.html (Pages): ')}<a href="${u}" style="color:#7cf5ff;font-weight:800">${u.replace(/^https:\/\//, '')}</a>`;
           }
         }).catch(() => {});
       }
@@ -2816,7 +2816,7 @@ const UI = {
       })
       .catch(() => {
         linkEl.textContent = 'https://brennyz.github.io/stickman-fighter/speel.html';
-        if (hintEl) hintEl.textContent = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
+        if (hintEl) hintEl.textContent = tOr('settings.shareHintAndroid', 'Deel deze link met vrienden. Op Android: Chrome → App installeren.');
       });
   },
 
@@ -3145,12 +3145,14 @@ const UI = {
         mastEl.innerHTML = '';
       } else {
         mastEl.style.display = 'block';
-        mastEl.innerHTML = '<div style="font-size:12px;opacity:.85;margin-bottom:6px">Top stijl-meesterschap</div>' +
+        mastEl.innerHTML = '<div style="font-size:12px;opacity:.85;margin-bottom:6px">' +
+          tOr('settings.masteryHead', 'Top stijl-meesterschap') + '</div>' +
           top.map(e =>
             `<span class="rar-pill" style="color:${e.tier.color};border-color:${e.tier.color};margin:2px 4px 2px 0">` +
             `${e.name} · ${e.tier.name} · ${e.finishers}×</span>`
           ).join('') +
-          '<div style="font-size:11px;opacity:.65;margin-top:6px">Tiers: Leerling → Virtuoos (3) → Meester (10) → Legende (25)</div>';
+          '<div style="font-size:11px;opacity:.65;margin-top:6px">' +
+          tOr('settings.masteryTiers', 'Tiers: Leerling → Virtuoos (3) → Meester (10) → Legende (25)') + '</div>';
       }
     }
     const previewId = this.weaponPreviewId || save.weapon || 'vuist';
@@ -4412,7 +4414,14 @@ const UI = {
     try { this.clearToasts(); } catch (_) {}
     const title = document.getElementById('resTitle');
     if (!title) throw new Error('result DOM missing');
-    title.textContent = data.title;
+    const titleKey = data.titleKey || (data.mode === 'training'
+      ? (win ? 'result.trainWin' : 'result.trainLose')
+      : (win ? 'result.advWin' : 'result.advLose'));
+    const painted = (typeof tOr === 'function')
+      ? tOr(titleKey, data.title || (win ? 'GEWONNEN!' : 'VERLOREN'))
+      : (data.title || (win ? 'GEWONNEN!' : 'VERLOREN'));
+    title.textContent = painted;
+    data.titleKey = titleKey;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
     const detailEl = document.getElementById('resDetail');
     if (detailEl) detailEl.textContent = data.detail;
