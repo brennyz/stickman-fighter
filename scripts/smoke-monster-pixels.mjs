@@ -17,6 +17,13 @@ const NEED_ART = [
   'elephant', 'lion', 'tiger', 'giraffe', 'hippo', 'rhino', 'gorilla', 'zebra', 'bear', 'croc',
   'kangaroo', 'panda', 'flamingo', 'camel',
 ];
+const NEED_P1 = [
+  'wolf', 'owl', 'frog', 'snake', 'boar',
+  'skeleton', 'mummy', 'beetle', 'wasp', 'spider',
+  'drone', 'bot', 'scrapdog',
+  'penguin', 'yeti',
+  'crab', 'turtle', 'squid',
+];
 const NEED_SP = [
   'holkoe', 'razendzwijn', 'kipophol', 'razendeschaap', 'holpaard', 'kopstootgeit',
   'kwakophol', 'haanophol', 'koppigeezel', 'gansophol',
@@ -34,7 +41,9 @@ function fail(why) {
 const ctx = { console };
 vm.createContext(ctx);
 vm.runInContext(
-  fs.readFileSync(mapsPath, 'utf8') + '\n' + fs.readFileSync(paintPath, 'utf8') + '\nthis.MONSTER_PIXEL_ART=MONSTER_PIXEL_ART;this.MONSTER_PIXEL_SPECIES=MONSTER_PIXEL_SPECIES;this.drawMonsterPixelArt=drawMonsterPixelArt;\n',
+  fs.readFileSync(mapsPath, 'utf8') + '\n' + fs.readFileSync(paintPath, 'utf8') +
+  '\nthis.MONSTER_ART_SLOTS={' + NEED_P1.map((id) => id + ':{pixelStatus:"pixel"}').join(',') + '};' +
+  '\nthis.MONSTER_PIXEL_ART=MONSTER_PIXEL_ART;this.MONSTER_PIXEL_SPECIES=MONSTER_PIXEL_SPECIES;this.drawMonsterPixelArt=drawMonsterPixelArt;\n',
   ctx,
   { filename: 'monster-pixels.js' }
 );
@@ -43,7 +52,7 @@ const art = ctx.MONSTER_PIXEL_ART;
 const species = ctx.MONSTER_PIXEL_SPECIES;
 if (!art || !species) fail('maps missing');
 
-for (const id of NEED_ART) {
+for (const id of NEED_ART.concat(NEED_P1)) {
   if (typeof art[id] !== 'string') fail('missing art map ' + id);
   if (art[id].length !== 32 * 32) fail('art size ' + id + ' ' + art[id].length);
   for (const ch of art[id]) if (!CHARSET.has(ch)) fail('bad char ' + ch + ' in art ' + id);
@@ -83,6 +92,9 @@ if (!artOnly) fail('draw elephant art fallback false');
 
 const miss = ctx.drawMonsterPixelArt(stub, { art: 'nope-pixel' }, 20, 0, false, false);
 if (miss) fail('unknown art should fallback');
+
+const wolfPaint = ctx.drawMonsterPixelArt(stub, { art: 'wolf', pixel: 'fox', c1: '#8a8478', c2: '#3a3830' }, 22, 0.2, false, false);
+if (!wolfPaint) fail('draw wolf art returned false');
 
 if (!fs.existsSync(path.join(dir, 'preview.html'))) fail('preview.html missing');
 if (!fs.existsSync(path.join(root, 'MONSTER-PIXEL-MAP.md'))) fail('MONSTER-PIXEL-MAP.md missing');

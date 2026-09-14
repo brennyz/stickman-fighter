@@ -8,6 +8,17 @@ const MONSTER_PIXEL_FILE = {
 
 function monsterPixelKey(sp) {
   if (!sp) return null;
+  const art = sp.art;
+  if (
+    art &&
+    typeof MONSTER_ART_SLOTS !== 'undefined' &&
+    MONSTER_ART_SLOTS[art] &&
+    MONSTER_ART_SLOTS[art].pixelStatus === 'pixel' &&
+    typeof MONSTER_PIXEL_ART !== 'undefined' &&
+    MONSTER_PIXEL_ART[art]
+  ) {
+    return { kind: 'art', id: art, map: MONSTER_PIXEL_ART[art] };
+  }
   const pixel = sp.pixel;
   if (pixel && typeof MONSTER_PIXEL_SPECIES !== 'undefined' && MONSTER_PIXEL_SPECIES[pixel]) {
     return { kind: 'species', id: pixel, map: MONSTER_PIXEL_SPECIES[pixel] };
@@ -19,7 +30,6 @@ function monsterPixelKey(sp) {
   if (sid && typeof MONSTER_PIXEL_SPECIES !== 'undefined' && MONSTER_PIXEL_SPECIES[sid]) {
     return { kind: 'species', id: sid, map: MONSTER_PIXEL_SPECIES[sid] };
   }
-  const art = sp.art;
   if (art && typeof MONSTER_PIXEL_ART !== 'undefined' && MONSTER_PIXEL_ART[art]) {
     return { kind: 'art', id: art, map: MONSTER_PIXEL_ART[art] };
   }

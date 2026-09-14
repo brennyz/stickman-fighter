@@ -2974,6 +2974,9 @@ const UI = {
         else if (trait === 'elite') cls += ' trait-elite';
         else if (trait === 'ranch') cls += ' trait-ranch';
         else if (trait === 'safari') cls += ' trait-safari';
+        else if (trait === 'woods') cls += ' trait-woods';
+        else if (trait === 'crypt') cls += ' trait-crypt';
+        else if (trait === 'scrap') cls += ' trait-scrap';
         else if (trait === 'tide') cls += ' trait-tide';
         else if (trait === 'ember') cls += ' trait-ember';
         else if (trait === 'pain') cls += ' trait-pain';
@@ -3579,7 +3582,7 @@ const UI = {
         : '';
       sumEl.style.display = 'block';
       const biomeTot = typeof dexBiomeTotals === 'function' ? dexBiomeTotals() : {};
-      const biomeChips = ['farm', 'zoo', 'sea'].map((b) => {
+      const biomeChips = ['farm', 'zoo', 'sea', 'wild', 'crypt', 'scrap', 'frost'].map((b) => {
         const tot = biomeTot[b] || 0;
         if (!tot) return '';
         const n = typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered(b) : 0;
@@ -3588,7 +3591,7 @@ const UI = {
       }).filter(Boolean).join(' ');
       sumEl.innerHTML =
         `Boek <b>${dexCount()}/${SPECIES_ORDER.length}</b> · kills <b>${kills}</b> · bonus max HP <b>+${totalHp}</b>` +
-        ` · rariteiten <b>${dexRarityTierCount()}/6</b>` +
+        ` · rariteiten <b>${dexRarityTierCount()}/${Object.keys(RARITIES).length}</b>` +
         `<div class="dex-mini-row">${dexMiniStat('HP', totalHp, SPECIES_ORDER.length * 25, '#6ee06e')}` +
         `${dexMiniStat('Kills', kills, 150, '#ffd75e')}</div>` +
         (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '') +
@@ -3627,7 +3630,7 @@ const UI = {
         `<button type="button" class="dex-filter-btn${cur === id ? ' active' : ''}" data-dex-biome-filter="${id}">${label}</button>`;
       const tot = typeof dexBiomeTotals === 'function' ? dexBiomeTotals() : {};
       const lab = (typeof DEX_BIOME_LABEL !== 'undefined') ? DEX_BIOME_LABEL : {};
-      const order = ['farm', 'zoo', 'sea', 'classic', 'secret'];
+      const order = ['farm', 'zoo', 'sea', 'wild', 'crypt', 'scrap', 'frost', 'classic', 'secret'];
       return mk('all', 'Alle biomen') +
         order.map((b) => {
           const nTot = tot[b] || 0;

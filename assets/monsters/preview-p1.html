@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>P1 monster pixels — Stickman Fighter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; font: 14px/1.4 ui-sans-serif, system-ui; background: #151b33; color: #e8f0ff; }
+  h1 { font-size: 1.15rem; margin: 14px 18px 4px; }
+  p { margin: 0 18px 12px; color: #9db1e3; }
+  section { padding: 4px 14px 16px; }
+  h2 { font-size: .9rem; color: #ffd75e; margin: 12px 4px 8px; }
+  .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  figure { margin: 0; background: #1a2030; border: 1px solid #333c55; border-radius: 10px; padding: 6px; text-align: center; }
+  .zoom, .combat { image-rendering: pixelated; background: #0e1220; border-radius: 6px; padding: 8px; }
+  .zoom img { width: 96px; height: 96px; image-rendering: pixelated; }
+  .combat img { width: 44px; height: 44px; image-rendering: pixelated; }
+  figcaption { margin-top: 4px; font-weight: 700; font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>P1 W2 art slots (18)</h1>
+<p>Nieuwe IDs · 32×32 · één art per familie · tint c1/c2 · speel.html blijft share URL</p>
+<section>
+<div class="grid" id="sheet"></div>
+<h2>Combat size — wild / crypt</h2>
+<div class="row" id="rowA"></div>
+<h2>Combat size — scrap / frost / sea</h2>
+<div class="row" id="rowB"></div>
+</section>
+<script>
+const P1 = ['wolf','owl','frog','snake','boar','skeleton','mummy','beetle','wasp','spider','drone','bot','scrapdog','penguin','yeti','crab','turtle','squid'];
+const fig = (id, cls, w) => `<figure><div class="${cls}"><img src="art-${id}.svg" alt="${id}" width="${w}" height="${w}"></div><figcaption>${id}</figcaption></figure>`;
+document.getElementById('sheet').innerHTML = P1.map((id) => fig(id, 'zoom', 96)).join('');
+document.getElementById('rowA').innerHTML = P1.slice(0, 10).map((id) => fig(id, 'combat', 44)).join('');
+document.getElementById('rowB').innerHTML = P1.slice(10).map((id) => fig(id, 'combat', 44)).join('');
+</script>
+</body>
+</html>
