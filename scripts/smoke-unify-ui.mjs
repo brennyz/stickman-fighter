@@ -49,6 +49,19 @@ if (!/id="sfTitleStart"/.test(html) || /id="sfTitleName"/.test(html)) {
   fail('title gate must be SPELEN-first without a name field');
 }
 if (!/id="btnUpgradesHome"/.test(html)) fail('Upgrades must have a HOME tile on start');
+if (!/id="settingsSaveAutoCard"/.test(html)) fail('settings auto-save primary missing');
+if (!/id="settingsHelpFold"/.test(html)) fail('settings help fold missing');
+const menuChunk = html.slice(html.indexOf('id="menuScreen"'), html.indexOf('id="modeHubScreen"'));
+if (/id="btnInstallApp"/.test(menuChunk)) fail('install CTA must not sit on HOME');
+if (/menu-lang-wrap/.test(menuChunk) && !/menu-sr-only[\s\S]*menuLangBar/.test(menuChunk)) {
+  fail('5-lang switcher must leave visible HOME');
+}
+if (/id="btnVerseVersie"/.test(menuChunk) && menuChunk.indexOf('menu-sr-only') < 0) {
+  fail('Fresh version must not be a visible HOME dock button');
+}
+if (!/id="togMusic"/.test(menuChunk) || !/id="btnMissions"/.test(menuChunk) || !/id="btnSettings"/.test(menuChunk) || !/id="btnHelp"/.test(menuChunk)) {
+  fail('HOME drawer must keep Music, Missions, Settings, Tips');
+}
 if (!/id="btnUpgrades"/.test(html)) fail('Upgrades collect tile missing');
 if (/\.card\s*\{[^}]*background:rgba\(255,255,255,\.06\)/.test(css)) {
   fail('weapon/collection cards still use low-contrast gray wash');

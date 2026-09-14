@@ -1964,7 +1964,7 @@ const UI = {
         `<span style="color:${st.accent}">${styleLabel(st)}</span></span>` +
         `<span style="display:block;margin-top:3px;opacity:.82;font-size:11px">${adventureProgressLine()}</span>` +
         `<span class="prof-xp" aria-hidden="true"><span style="width:${pct}%"></span></span>` +
-        `<span class="prof-foot">${save.xp}/${need} XP${missAlert ? ' · ' + t('ui.menuMissionReady') : ''}</span>`;
+        `<span class="prof-foot">${save.xp}/${need} XP · ${tOr('menu.saveSync', 'save OK')}${missAlert ? ' · ' + t('ui.menuMissionReady') : ''}</span>`;
       profileEl.classList.toggle('has-alert', missAlert);
     }
     const statsEl = document.getElementById('menuStats');
@@ -4188,67 +4188,29 @@ const UI = {
   renderSettings() {
     renderLangSwitch();
     const verEl = document.getElementById('setAppVersion');
-    if (verEl) {
-      const fps = Perf.emaMs > 0 ? Math.round(1000 / Perf.emaMs) : 0;
-      const perfNote = save.liteFx
-        ? 'Lite FX'
-        : (Perf.tier >= 2 ? `adaptief zwaar · ~${fps} fps` : Perf.tier >= 1 ? `adaptief · ~${fps} fps` : `vloeiend · ~${fps} fps`);
-      verEl.textContent = `v${APP_VERSION} · SW v${SW_CACHE_REV} · ${perfNote}`;
-    }
-    const perfEl = document.getElementById('setPerfLine');
-    if (perfEl) {
-      const p = perfFxSummary();
-      perfEl.textContent = formatPerfStripLine(p);
-    }
+    if (verEl) verEl.textContent = 'v' + APP_VERSION;
     const healthEl = document.getElementById('saveHealthLine');
     if (healthEl) {
       const h = saveHealthSummary();
-      const sizeLine = (h.primaryBytes || h.backupBytes)
-        ? ` · ~${formatSaveBytes(h.primaryBytes || h.backupBytes)}`
-        : '';
-      let statusPrimary = h.primaryCorrupt
-        ? `${SVG_WARN_ICON} Hoofd-save corrupt`
-        : (h.primaryValid ? `${SVG_CHECK_MINI} Save OK` : (h.primaryOk ? `${SVG_WARN_ICON} Save onleesbaar` : `${SVG_WARN_ICON} Geen primary save`));
-      if (h.drift && h.backupOk) {
-        statusPrimary += h.driftDetail
-          ? ` · ${h.driftDetail} — tik Herstel backup`
-          : ' · hoofd/backup verschillen — tik Herstel backup';
-      }
-      if (h.backupCorrupt && h.backupOk === false && h.primaryValid) {
-        statusPrimary += ' · backup corrupt (hoofd OK)';
-      }
-      let healthHtml =
-        `<b>Lv ${h.lvl}</b> · unlock ${h.unlocked} · boek ${h.dex} · kills ${h.kills}` +
-        (h.summons ? ` · ✦ ${h.summons} summon` : '') +
-        (h.pets ? ` · pet ${h.pets}` : '') +
-        (h.eggs ? ` · ei ${h.eggs}` : '') +
-        `${sizeLine}<br>` +
-        statusPrimary +
-        (h.backupOk ? ` · ${SVG_CHECK_MINI} Backup (Lv ${h.backupLvl})` : ` · ${SVG_WARN_ICON} Geen backup`);
-      if (h.drift && h.backupOk) {
-        healthHtml += `<br><span style="opacity:.85;color:#ffd75e">Drift: ${h.driftDetail || 'hoofd ≠ backup'} — Herstel backup óf Sync backup</span>`;
-      }
-      if (h.saveAgeDays != null && h.saveAgeDays >= 14) {
-        healthHtml += `<br><span style="opacity:.75;color:#ffb0b8">Laatste save ${h.saveAgeDays} dagen geleden — export als vangnet</span>`;
-      }
-      if (h.stampAt) {
-        let stampLabel = '';
-        try {
-          const d = new Date(h.stampAt);
-          if (!Number.isNaN(d.getTime())) {
-            stampLabel = d.toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
-          }
-        } catch (_) {}
-        if (stampLabel) {
-          healthHtml += `<br><span style="opacity:.7">Laatst opgeslagen: ${stampLabel}</span>`;
-        }
-      }
-      healthEl.innerHTML = healthHtml +
-        `<br><span style="opacity:.75">Export schema v${h.exportSchema || SAVE_EXPORT_SCHEMA} · keys vast: ${SAVE_KEY} + backup (niet hernoemen)</span>`;
+      const lvl = h.lvl != null ? h.lvl : '?';
+      healthEl.textContent = h.primaryCorrupt
+        ? t('settings.saveAutoBad', { lvl })
+        : t('settings.saveAutoLine', { lvl });
+    }
+    const detail = document.getElementById('saveHealthDetail');
+    if (detail) {
+      const h = saveHealthSummary();
+      const bits = [];
+      if (h.primaryCorrupt) bits.push(t('settings.saveOfflineBad'));
+      else if (h.primaryValid) bits.push(t('settings.saveOfflineOk'));
+      if (h.backupOk) bits.push(t('settings.saveOfflineBackup', { lvl: h.backupLvl }));
+      if (h.drift && h.backupOk) bits.push(t('settings.saveOfflineDrift'));
+      if (h.primaryBytes) bits.push('~' + formatSaveBytes(h.primaryBytes));
+      detail.textContent = bits.join(' · ');
     }
     const exportHint = document.getElementById('saveExportHint');
     if (exportHint) {
-      exportHint.textContent = `Export bevat: ${saveExportSummaryLine()} · key ${SAVE_KEY}`;
+      exportHint.textContent = saveExportSummaryLine();
     }
     bindSavePortPreview();
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };

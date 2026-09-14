@@ -1,3 +1,4 @@
+| 2026-09-14 | **scanner UI pack** | #269: Upgrades HOME 1-tap; auto-save primair; Options geen debug-dump; wapen/upgrade/settings HOME-tegels; lade 4 knoppen; install+talen uit HOME. **v1.18.166 / SW v376**. |
 | 2026-09-14 | **upgrades + contrast** | Upgrades HOME-tegel op start; lade-labels kort (App/Vers); wapenkaarten leesbaar. **v1.18.165 / SW v375**. |
 | 2026-09-14 | **locale + toast** | #266: NL VERLOREN, geen raw menu.tips / PICK AN ISLAND; versie-banner stiller + wegklik; rest HOME. **v1.18.163 / SW v373**. |
 | 2026-09-14 | **unify polish** | Start: geen naamveld, SPELEN-first; alle schermen HOME-tegels. #265 folded. **v1.18.162 / SW v372**. |
@@ -141,6 +142,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | Scanner pack #269: Upgrades HOME 1-tap; auto-save primair; Options geen dump; contrast + back-bar; lade 4 knoppen; install/talen uit HOME. v1.18.166 / SW 376. Draft. Niet mergen. |
 | 2026-09-14 | — | Upgrades HOME-tegel op start + collect featured; lade App/Vers; wapenkaarten contrast. v1.18.165 / SW 375. Draft. #263 parked. |
 | 2026-09-14 | — | #266 sprint: locale (VERLOREN, Tips-label, eilandkop) + stillere versie-banner + rest HOME. v1.18.163 / SW 373. Draft. |
 | 2026-09-14 | — | Start polish + unify HOME-tegels (Avontuur/Training/Collect/Settings/pauze). Naamveld weg. #265 folded. v1.18.162 / SW 372. #263 geparkeerd. |

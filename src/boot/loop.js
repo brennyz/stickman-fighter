@@ -898,8 +898,9 @@ function bootGame() {
     try {
       const hub = document.querySelector('[data-hub]');
       if (hub && !hub.dataset.sfPressBound) {
-        userToast(toastT('toast.staleCacheMenu', null, 'Oude cache — menu reageert niet. Tik «Verse versie» in de dock.'), 6500, { tone: 'danger' });
+        userToast(toastT('toast.staleCacheMenu', null, 'Oude cache — menu reageert niet. Tik «Verse versie» onder Opties → Hulp.'), 6500, { tone: 'danger' });
         document.getElementById('btnVerseVersie')?.classList.add('sw-update');
+        document.getElementById('btnSettings')?.classList.add('sw-update');
       }
     } catch (_) {}
   }, 900);

@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.165';
+const APP_VERSION = '1.18.166';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 375;
+const SW_CACHE_REV = 376;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1969,7 +1969,7 @@ const I18N = {
       summons: 'Summons', summonsSub: 'Dagelijkse kist · wapen & pet',
       options: 'Opties', tips: 'Tips', fresh: 'Vers', install: 'App', installSub: 'Lade',
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
-      choosePath: 'KIES JE PAD', lastPlayed: 'LAATST', playHere: 'SPEEL',
+      choosePath: 'KIES JE PAD', lastPlayed: 'LAATST', playHere: 'SPEEL', saveSync: 'save OK',
       startGame: 'SPELEN', startSub: 'Start het gevecht',
       titleName: 'Naam — hoeft niet', titleNamePh: 'Bijnaam (optioneel)',
       titleNote: 'Geen account — je save blijft op deze telefoon',
@@ -2008,7 +2008,7 @@ const I18N = {
     result: { again: 'Opnieuw', next: 'Volgend level', menu: 'Hoofdmenu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Zelfde vechters',
       xp: '+{xp} XP verdiend · nu Lv {lvl} ({cur}/{need} XP)' },
     settings: {
-      title: 'Instellingen', sub: 'Geluid, trilling & HUD — opgeslagen op dit apparaat',
+      title: 'Instellingen', sub: 'Geluid & HUD — save gaat automatisch mee',
       lang: 'Taal', music: 'Muziek', sfx: 'Effecten', shake: 'Schermschok', haptics: 'Trillen',
       comboHud: 'Combo-HUD', bigTouch: 'Grote knoppen',
       kbLegend: 'Toetsenbord-hulp', showTouchPads: 'Touch-knoppen altijd',
@@ -2021,13 +2021,26 @@ const I18N = {
       sfxSamplesOn: 'Geluidseffecten: geladen',
       sfxSamplesLoad: 'Geluidseffecten: laden…',
       sfxSamplesOff: 'Geluidseffecten: offline',
-      syncBackup: 'Backup bijwerken', freshCache: 'Vers', clearSave: 'Nieuwe start (dubbel tikken)',
+      saveAuto: 'Save gaat automatisch mee',
+      saveAutoLine: 'Lv {lvl} · OK op dit apparaat',
+      saveAutoBad: 'Lv {lvl} · check — open Bestand / offline',
+      saveAutoHint: 'Online-save blijft vanzelf bij deze speel-link. Geen extra knop.',
+      saveOfflineFold: 'Bestand / offline',
+      saveOfflineTitle: 'Los pad — alleen als je een bestand wilt',
+      saveOfflineOk: 'Bestandskopie klaar',
+      saveOfflineBad: 'Hoofd-save check',
+      saveOfflineBackup: 'Backup Lv {lvl}',
+      saveOfflineDrift: 'Hoofd en backup verschillen',
+      helpFold: 'Hulp',
+      helpTitle: 'Vast op een oude versie?',
+      helpDesc: 'Leegt de cache en laadt opnieuw. Alleen nodig als het spel niet meekomt.',
+      syncBackup: 'Backup bijwerken', freshCache: 'Verse versie', clearSave: 'Nieuwe start (dubbel tikken)',
       syncHint: 'Zet de backup gelijk aan je huidige voortgang.',
       freshHint: 'Menu reageert niet? Tik hier voor de nieuwste versie.',
       hosting: 'Speel-link', copyLink: 'Kopieer speel-link', openLink: 'Open speel-link',
-      savePort: 'Voortgang kopiëren', exportSave: 'Kopieer save', importSave: 'Laad save',
+      savePort: 'Bestand / offline', exportSave: 'Kopieer save', importSave: 'Laad save',
       importSaveFile: 'Bestand kiezen',
-      savePortDesc: 'Kopieer je voortgang (bestand + klembord). Laden: kies een bestand of plak hier — 1× kijken, 2× laden. Je huidige save gaat naar backup.',
+      savePortDesc: 'Gewone save blijft automatisch. Dit pad is alleen voor een ander apparaat of een bestand. Laden: bestand of plakken — 1× kijken, 2× laden.',
       savePortPlaceholder: 'Plak je save hier, of kies een bestand',
       privacy: 'Privacy',
       ageHint: 'Cartoon-gevecht · tiener+ · geen chat',
@@ -2081,7 +2094,7 @@ const I18N = {
       summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
       options: 'Options', tips: 'Tips', fresh: 'Fresh', install: 'App', installSub: 'Home',
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
-      choosePath: 'CHOOSE YOUR PATH', lastPlayed: 'LAST', playHere: 'PLAY',
+      choosePath: 'CHOOSE YOUR PATH', lastPlayed: 'LAST', playHere: 'PLAY', saveSync: 'save OK',
       startGame: 'PLAY', startSub: 'Start the fight',
       titleName: 'Name — optional', titleNamePh: 'Nickname (optional)',
       titleNote: 'No account — your save stays on this phone',
@@ -2120,7 +2133,7 @@ const I18N = {
     result: { again: 'Again', next: 'Next level', menu: 'Main menu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Same fighters',
       xp: '+{xp} XP earned · now Lv {lvl} ({cur}/{need} XP)' },
     settings: {
-      title: 'Settings', sub: 'Sound, haptics & HUD — saved on this device',
+      title: 'Settings', sub: 'Sound & HUD — save stays with you automatically',
       lang: 'Language', music: 'Music', sfx: 'Effects', shake: 'Screen shake', haptics: 'Haptics',
       comboHud: 'Combo HUD', bigTouch: 'Big buttons',
       kbLegend: 'Keyboard help', showTouchPads: 'Always show touch pads',
@@ -2133,13 +2146,26 @@ const I18N = {
       sfxSamplesOn: 'Sound effects: loaded',
       sfxSamplesLoad: 'Sound effects: loading…',
       sfxSamplesOff: 'Sound effects: offline',
-      syncBackup: 'Update backup', freshCache: 'Fresh', clearSave: 'New start (tap twice)',
+      saveAuto: 'Save stays with you automatically',
+      saveAutoLine: 'Lv {lvl} · OK on this device',
+      saveAutoBad: 'Lv {lvl} · check — open File / offline',
+      saveAutoHint: 'Online save stays with this play link automatically. No extra button.',
+      saveOfflineFold: 'File / offline',
+      saveOfflineTitle: 'Separate path — only if you want a file',
+      saveOfflineOk: 'File copy ready',
+      saveOfflineBad: 'Main save check',
+      saveOfflineBackup: 'Backup Lv {lvl}',
+      saveOfflineDrift: 'Main and backup differ',
+      helpFold: 'Help',
+      helpTitle: 'Stuck on an old version?',
+      helpDesc: 'Clears the cache and reloads. Only needed if the game does not catch up.',
+      syncBackup: 'Update backup', freshCache: 'Fresh version', clearSave: 'New start (tap twice)',
       syncHint: 'Set the backup equal to your current progress.',
       freshHint: 'Menu stuck? Tap here for the newest version.',
       hosting: 'Play link', copyLink: 'Copy play link', openLink: 'Open play link',
-      savePort: 'Copy progress', exportSave: 'Copy save', importSave: 'Load save',
+      savePort: 'File / offline', exportSave: 'Copy save', importSave: 'Load save',
       importSaveFile: 'Choose file',
-      savePortDesc: 'Copy your progress (file + clipboard). Load: pick a file or paste here — 1× preview, 2× load. Current save goes to backup.',
+      savePortDesc: 'Normal save stays automatic. This path is only for another device or a file. Load: pick a file or paste — 1× preview, 2× load.',
       savePortPlaceholder: 'Paste your save here, or choose a file',
       privacy: 'Privacy',
       ageHint: 'Cartoon combat · teens+ · no chat',
@@ -2180,7 +2206,7 @@ const I18N = {
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch', music: 'Musik', missions: 'Missionen',
       options: 'Optionen', tips: 'Tipps', fresh: 'Neu', install: 'App', installSub: 'Home',
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
-      choosePath: 'WÄHLE DEINEN WEG', lastPlayed: 'ZULETZT', playHere: 'SPIEL',
+      choosePath: 'WÄHLE DEINEN WEG', lastPlayed: 'ZULETZT', playHere: 'SPIEL', saveSync: 'save OK',
       startGame: 'SPIELEN', startSub: 'Starte den Kampf',
       titleName: 'Name — muss nicht', titleNamePh: 'Spitzname (optional)',
       titleNote: 'Kein Konto — dein Save bleibt auf diesem Handy',
@@ -2215,7 +2241,7 @@ const I18N = {
     result: { again: 'Nochmal', next: 'Nächstes Level', menu: 'Hauptmenü', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Gleiche Kämpfer',
       xp: '+{xp} XP · jetzt Lv {lvl} ({cur}/{need} XP)' },
     settings: {
-      title: 'Einstellungen', sub: 'Sound, Vibration & HUD — auf diesem Gerät gespeichert',
+      title: 'Einstellungen', sub: 'Sound & HUD — Save läuft automatisch mit',
       lang: 'Sprache', music: 'Musik', sfx: 'Effekte', shake: 'Bildschirmshake', haptics: 'Vibration',
       comboHud: 'Combo-HUD', bigTouch: 'Große Tasten',
       kbLegend: 'Tastatur-Hilfe', showTouchPads: 'Touch-Tasten immer',
@@ -2225,10 +2251,23 @@ const I18N = {
       syncHint: 'Backup auf deinen aktuellen Stand setzen.',
       freshHint: 'Menü hängt? Tippe hier für die neueste Version.',
       hosting: 'Spiel-Link', copyLink: 'Link kopieren', openLink: 'Link öffnen',
-      savePort: 'Fortschritt kopieren', exportSave: 'Save kopieren', importSave: 'Save laden',
+      savePort: 'Datei / offline', exportSave: 'Save kopieren', importSave: 'Save laden',
       importSaveFile: 'Datei wählen',
-      savePortDesc: 'Kopiere deinen Fortschritt (Datei + Zwischenablage). Laden: Datei oder hier einfügen — 1× Vorschau, 2× laden.',
+      savePortDesc: 'Der normale Save bleibt automatisch. Dieser Weg ist nur für ein anderes Gerät oder eine Datei.',
       savePortPlaceholder: 'Save hier einfügen oder Datei wählen',
+      saveAuto: 'Save läuft automatisch mit',
+      saveAutoLine: 'Lv {lvl} · OK auf diesem Gerät',
+      saveAutoBad: 'Lv {lvl} · prüfen — Datei / offline öffnen',
+      saveAutoHint: 'Online-Save bleibt automatisch bei diesem Spiel-Link. Kein Extra-Knopf.',
+      saveOfflineFold: 'Datei / offline',
+      saveOfflineTitle: 'Extra-Weg — nur wenn du eine Datei willst',
+      saveOfflineOk: 'Datei-Kopie bereit',
+      saveOfflineBad: 'Haupt-Save prüfen',
+      saveOfflineBackup: 'Backup Lv {lvl}',
+      saveOfflineDrift: 'Haupt und Backup unterscheiden sich',
+      helpFold: 'Hilfe',
+      helpTitle: 'Alte Version fest?',
+      helpDesc: 'Leert den Cache und lädt neu. Nur nötig wenn das Spiel nicht mitkommt.',
       privacy: 'Datenschutz',
       ageHint: 'Cartoon-Kampf · ab Teenager · kein Chat',
       installAge: 'Cartoon-Stockfigur-Kämpfe · Teenager+ · kein Chat.',
@@ -2261,7 +2300,7 @@ const I18N = {
       collect: 'Collection', collectSub: 'Armes · style · bestiaire', music: 'Musique', missions: 'Missions',
       options: 'Options', tips: 'Astuces', fresh: 'Neuf', install: 'App', installSub: 'Home',
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
-      choosePath: 'CHOISIS TON CHEMIN', lastPlayed: 'DERNIER', playHere: 'JOUER',
+      choosePath: 'CHOISIS TON CHEMIN', lastPlayed: 'DERNIER', playHere: 'JOUER', saveSync: 'save OK',
       startGame: 'JOUER', startSub: 'Lance le combat',
       titleName: 'Nom — pas obligatoire', titleNamePh: 'Surnom (optionnel)',
       titleNote: 'Pas de compte — ta sauvegarde reste sur ce téléphone',
@@ -2296,7 +2335,7 @@ const I18N = {
     result: { again: 'Rejouer', next: 'Niveau suivant', menu: 'Menu principal', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Mêmes combattants',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
-      title: 'Options', sub: 'Son, vibrations & HUD — sauvegardé sur cet appareil',
+      title: 'Options', sub: 'Son & HUD — la save suit automatiquement',
       lang: 'Langue', music: 'Musique', sfx: 'Effets', shake: 'Secousse écran', haptics: 'Vibration',
       comboHud: 'HUD combo', bigTouch: 'Gros boutons',
       kbLegend: 'Aide clavier', showTouchPads: 'Toujours boutons tactile',
@@ -2306,10 +2345,23 @@ const I18N = {
       syncHint: 'Aligner la backup sur ta progression actuelle.',
       freshHint: 'Menu bloqué ? Tape ici pour la dernière version.',
       hosting: 'Lien de jeu', copyLink: 'Copier le lien', openLink: 'Ouvrir le lien',
-      savePort: 'Copier la progression', exportSave: 'Copier la save', importSave: 'Charger la save',
+      savePort: 'Fichier / hors ligne', exportSave: 'Copier la save', importSave: 'Charger la save',
       importSaveFile: 'Choisir fichier',
-      savePortDesc: 'Copie ta progression (fichier + presse-papiers). Charger : fichier ou coller ici — 1× aperçu, 2× charger.',
+      savePortDesc: 'La save normale reste automatique. Ce chemin est seulement pour un autre appareil ou un fichier.',
       savePortPlaceholder: 'Colle ta save ici, ou choisis un fichier',
+      saveAuto: 'La save suit automatiquement',
+      saveAutoLine: 'Nv {lvl} · OK sur cet appareil',
+      saveAutoBad: 'Nv {lvl} · vérifie — ouvre Fichier / hors ligne',
+      saveAutoHint: 'La save en ligne reste avec ce lien, sans bouton extra.',
+      saveOfflineFold: 'Fichier / hors ligne',
+      saveOfflineTitle: 'Chemin à part — seulement si tu veux un fichier',
+      saveOfflineOk: 'Copie fichier prête',
+      saveOfflineBad: 'Save principale à vérifier',
+      saveOfflineBackup: 'Backup nv {lvl}',
+      saveOfflineDrift: 'Principale et backup différent',
+      helpFold: 'Aide',
+      helpTitle: 'Bloqué sur une vieille version ?',
+      helpDesc: 'Vide le cache et recharge. Seulement si le jeu ne suit pas.',
       privacy: 'Confidentialité',
       ageHint: 'Combat cartoon · ados+ · pas de chat',
       installAge: 'Combats stickman cartoon · ados+ · pas de chat.',
@@ -2342,7 +2394,7 @@ const I18N = {
       collect: 'Colección', collectSub: 'Armas · estilo · bestiario', music: 'Música', missions: 'Misiones',
       options: 'Opciones', tips: 'Consejos', fresh: 'Nueva', install: 'App', installSub: 'Home',
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
-      choosePath: 'ELIGE TU CAMINO', lastPlayed: 'ÚLTIMO', playHere: 'JUEGA',
+      choosePath: 'ELIGE TU CAMINO', lastPlayed: 'ÚLTIMO', playHere: 'JUEGA', saveSync: 'save OK',
       startGame: 'JUGAR', startSub: 'Empieza el combate',
       titleName: 'Nombre — no hace falta', titleNamePh: 'Apodo (opcional)',
       titleNote: 'Sin cuenta — tu partida se queda en este teléfono',
@@ -2377,7 +2429,7 @@ const I18N = {
     result: { again: 'Otra vez', next: 'Siguiente nivel', menu: 'Menú principal', menuArcade: 'Arcade', rematch: 'Revancha', rematchSub: 'Mismos luchadores',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
-      title: 'Opciones', sub: 'Sonido, vibración y HUD — guardado en este dispositivo',
+      title: 'Opciones', sub: 'Sonido y HUD — el save va automático',
       lang: 'Idioma', music: 'Música', sfx: 'Efectos', shake: 'Sacudida pantalla', haptics: 'Vibración',
       comboHud: 'HUD combo', bigTouch: 'Botones grandes',
       kbLegend: 'Ayuda de teclado', showTouchPads: 'Siempre botones táctiles',
@@ -2387,10 +2439,23 @@ const I18N = {
       syncHint: 'Iguala la copia a tu progreso actual.',
       freshHint: '¿Menú atascado? Toca aquí para la versión nueva.',
       hosting: 'Enlace para jugar', copyLink: 'Copiar enlace', openLink: 'Abrir enlace',
-      savePort: 'Copiar progreso', exportSave: 'Copiar save', importSave: 'Cargar save',
+      savePort: 'Archivo / sin red', exportSave: 'Copiar save', importSave: 'Cargar save',
       importSaveFile: 'Elegir archivo',
-      savePortDesc: 'Copia tu progreso (archivo + portapapeles). Cargar: elige un archivo o pega aquí — 1× vista, 2× cargar.',
+      savePortDesc: 'El save normal sigue automático. Este camino es solo para otro aparato o un archivo.',
       savePortPlaceholder: 'Pega tu save aquí, o elige un archivo',
+      saveAuto: 'El save va automático',
+      saveAutoLine: 'Nv {lvl} · OK en este aparato',
+      saveAutoBad: 'Nv {lvl} · revisa — abre Archivo / sin red',
+      saveAutoHint: 'El save online se queda con este enlace, sin botón extra.',
+      saveOfflineFold: 'Archivo / sin red',
+      saveOfflineTitle: 'Camino aparte — solo si quieres un archivo',
+      saveOfflineOk: 'Copia de archivo lista',
+      saveOfflineBad: 'Save principal a revisar',
+      saveOfflineBackup: 'Backup nv {lvl}',
+      saveOfflineDrift: 'Principal y backup no coinciden',
+      helpFold: 'Ayuda',
+      helpTitle: '¿Atascado en una versión vieja?',
+      helpDesc: 'Vacía la caché y recarga. Solo si el juego no se pone al día.',
       privacy: 'Privacidad',
       ageHint: 'Combate cartoon · teens+ · sin chat',
       installAge: 'Combates stickman cartoon · teens+ · sin chat.',
@@ -2624,10 +2689,15 @@ function applyLangStaticScreens() {
   if (savePortDesc) savePortDesc.textContent = t('settings.savePortDesc');
   const savePortText = document.getElementById('savePortText');
   if (savePortText) savePortText.placeholder = t('settings.savePortPlaceholder');
+  setText('settingsSaveAutoTitle', 'settings.saveAuto');
+  setText('settingsSaveAutoHint', 'settings.saveAutoHint');
   setText('settingsShareFoldSum', 'settings.hosting');
   setText('settingsShareTitle', 'settings.hosting');
-  setText('settingsSaveFoldSum', 'settings.savePort');
-  setText('settingsSaveTitle', 'settings.savePort');
+  setText('settingsSaveFoldSum', 'settings.saveOfflineFold');
+  setText('settingsSaveTitle', 'settings.saveOfflineTitle');
+  setText('settingsHelpFoldSum', 'settings.helpFold');
+  setText('settingsHelpTitle', 'settings.helpTitle');
+  setText('settingsHelpDesc', 'settings.helpDesc');
   setText('settingsSyncHint', 'settings.syncHint');
   setText('settingsFreshHint', 'settings.freshHint');
 
@@ -12066,7 +12136,7 @@ function seedNlGameStrings() {
     saveCorruptOverwritten: 'Corrupte hoofd-save overschreven — export blijft je vangnet bij URL-wissel',
     saveRestoredAfterLoad: 'Save hersteld uit backup na laadfout',
     saveLoadFailedFresh: 'Save kon niet geladen worden — nieuwe voortgang gestart (export backup als je die had)',
-    staleCacheMenu: 'Oude cache — menu reageert niet. Tik «Verse versie» in de dock.',
+    staleCacheMenu: 'Oude cache — menu reageert niet. Tik «Verse versie» onder Opties → Hulp.',
   });
   if (!I18N.nl.gamble) I18N.nl.gamble = {};
   Object.assign(I18N.nl.gamble, {
@@ -12903,7 +12973,7 @@ const CATALOG_EN = {
     saveCorruptOverwritten: 'Corrupt main save overwritten — export stays your safety net',
     saveRestoredAfterLoad: 'Save restored from backup after a load error',
     saveLoadFailedFresh: 'Save could not load — started fresh (export a backup if you had one)',
-    staleCacheMenu: 'Stale cache — menu not responding. Tap «Fresh version» in the dock.',
+    staleCacheMenu: 'Stale cache — menu not responding. Tap «Fresh version» under Options → Help.',
     backupRestored: 'Backup restored — save + backup in sync',
     backupFailed: 'Backup restore failed — export save if you have one',
     syncConfirm: 'Sync overwrites backup with main save — tap again',
@@ -32611,7 +32681,7 @@ const UI = {
         `<span style="color:${st.accent}">${styleLabel(st)}</span></span>` +
         `<span style="display:block;margin-top:3px;opacity:.82;font-size:11px">${adventureProgressLine()}</span>` +
         `<span class="prof-xp" aria-hidden="true"><span style="width:${pct}%"></span></span>` +
-        `<span class="prof-foot">${save.xp}/${need} XP${missAlert ? ' · ' + t('ui.menuMissionReady') : ''}</span>`;
+        `<span class="prof-foot">${save.xp}/${need} XP · ${tOr('menu.saveSync', 'save OK')}${missAlert ? ' · ' + t('ui.menuMissionReady') : ''}</span>`;
       profileEl.classList.toggle('has-alert', missAlert);
     }
     const statsEl = document.getElementById('menuStats');
@@ -34835,67 +34905,29 @@ const UI = {
   renderSettings() {
     renderLangSwitch();
     const verEl = document.getElementById('setAppVersion');
-    if (verEl) {
-      const fps = Perf.emaMs > 0 ? Math.round(1000 / Perf.emaMs) : 0;
-      const perfNote = save.liteFx
-        ? 'Lite FX'
-        : (Perf.tier >= 2 ? `adaptief zwaar · ~${fps} fps` : Perf.tier >= 1 ? `adaptief · ~${fps} fps` : `vloeiend · ~${fps} fps`);
-      verEl.textContent = `v${APP_VERSION} · SW v${SW_CACHE_REV} · ${perfNote}`;
-    }
-    const perfEl = document.getElementById('setPerfLine');
-    if (perfEl) {
-      const p = perfFxSummary();
-      perfEl.textContent = formatPerfStripLine(p);
-    }
+    if (verEl) verEl.textContent = 'v' + APP_VERSION;
     const healthEl = document.getElementById('saveHealthLine');
     if (healthEl) {
       const h = saveHealthSummary();
-      const sizeLine = (h.primaryBytes || h.backupBytes)
-        ? ` · ~${formatSaveBytes(h.primaryBytes || h.backupBytes)}`
-        : '';
-      let statusPrimary = h.primaryCorrupt
-        ? `${SVG_WARN_ICON} Hoofd-save corrupt`
-        : (h.primaryValid ? `${SVG_CHECK_MINI} Save OK` : (h.primaryOk ? `${SVG_WARN_ICON} Save onleesbaar` : `${SVG_WARN_ICON} Geen primary save`));
-      if (h.drift && h.backupOk) {
-        statusPrimary += h.driftDetail
-          ? ` · ${h.driftDetail} — tik Herstel backup`
-          : ' · hoofd/backup verschillen — tik Herstel backup';
-      }
-      if (h.backupCorrupt && h.backupOk === false && h.primaryValid) {
-        statusPrimary += ' · backup corrupt (hoofd OK)';
-      }
-      let healthHtml =
-        `<b>Lv ${h.lvl}</b> · unlock ${h.unlocked} · boek ${h.dex} · kills ${h.kills}` +
-        (h.summons ? ` · ✦ ${h.summons} summon` : '') +
-        (h.pets ? ` · pet ${h.pets}` : '') +
-        (h.eggs ? ` · ei ${h.eggs}` : '') +
-        `${sizeLine}<br>` +
-        statusPrimary +
-        (h.backupOk ? ` · ${SVG_CHECK_MINI} Backup (Lv ${h.backupLvl})` : ` · ${SVG_WARN_ICON} Geen backup`);
-      if (h.drift && h.backupOk) {
-        healthHtml += `<br><span style="opacity:.85;color:#ffd75e">Drift: ${h.driftDetail || 'hoofd ≠ backup'} — Herstel backup óf Sync backup</span>`;
-      }
-      if (h.saveAgeDays != null && h.saveAgeDays >= 14) {
-        healthHtml += `<br><span style="opacity:.75;color:#ffb0b8">Laatste save ${h.saveAgeDays} dagen geleden — export als vangnet</span>`;
-      }
-      if (h.stampAt) {
-        let stampLabel = '';
-        try {
-          const d = new Date(h.stampAt);
-          if (!Number.isNaN(d.getTime())) {
-            stampLabel = d.toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
-          }
-        } catch (_) {}
-        if (stampLabel) {
-          healthHtml += `<br><span style="opacity:.7">Laatst opgeslagen: ${stampLabel}</span>`;
-        }
-      }
-      healthEl.innerHTML = healthHtml +
-        `<br><span style="opacity:.75">Export schema v${h.exportSchema || SAVE_EXPORT_SCHEMA} · keys vast: ${SAVE_KEY} + backup (niet hernoemen)</span>`;
+      const lvl = h.lvl != null ? h.lvl : '?';
+      healthEl.textContent = h.primaryCorrupt
+        ? t('settings.saveAutoBad', { lvl })
+        : t('settings.saveAutoLine', { lvl });
+    }
+    const detail = document.getElementById('saveHealthDetail');
+    if (detail) {
+      const h = saveHealthSummary();
+      const bits = [];
+      if (h.primaryCorrupt) bits.push(t('settings.saveOfflineBad'));
+      else if (h.primaryValid) bits.push(t('settings.saveOfflineOk'));
+      if (h.backupOk) bits.push(t('settings.saveOfflineBackup', { lvl: h.backupLvl }));
+      if (h.drift && h.backupOk) bits.push(t('settings.saveOfflineDrift'));
+      if (h.primaryBytes) bits.push('~' + formatSaveBytes(h.primaryBytes));
+      detail.textContent = bits.join(' · ');
     }
     const exportHint = document.getElementById('saveExportHint');
     if (exportHint) {
-      exportHint.textContent = `Export bevat: ${saveExportSummaryLine()} · key ${SAVE_KEY}`;
+      exportHint.textContent = saveExportSummaryLine();
     }
     bindSavePortPreview();
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
@@ -36758,8 +36790,9 @@ function bootGame() {
     try {
       const hub = document.querySelector('[data-hub]');
       if (hub && !hub.dataset.sfPressBound) {
-        userToast(toastT('toast.staleCacheMenu', null, 'Oude cache — menu reageert niet. Tik «Verse versie» in de dock.'), 6500, { tone: 'danger' });
+        userToast(toastT('toast.staleCacheMenu', null, 'Oude cache — menu reageert niet. Tik «Verse versie» onder Opties → Hulp.'), 6500, { tone: 'danger' });
         document.getElementById('btnVerseVersie')?.classList.add('sw-update');
+        document.getElementById('btnSettings')?.classList.add('sw-update');
       }
     } catch (_) {}
   }, 900);

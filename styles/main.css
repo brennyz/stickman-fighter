@@ -46,7 +46,8 @@
         linear-gradient(180deg, #151b33 0%, #0a0d18 70%);
       color:#fff; z-index:20; pointer-events:auto; touch-action:pan-y; overscroll-behavior:contain; }
   .screen:has(.sub-home-bar) {
-    scroll-padding-bottom: max(88px, calc(env(safe-area-inset-bottom) + 76px));
+    padding-bottom: max(100px, calc(env(safe-area-inset-bottom) + 88px));
+    scroll-padding-bottom: max(100px, calc(env(safe-area-inset-bottom) + 88px));
   }
   .screen button, .screen .btn, .screen .lvl, .screen .char-card, .screen .hub-tile,
   .screen .island-tab, .screen .tog, .screen .wrow, .screen .style-card,
@@ -1306,7 +1307,8 @@
   }
   .menu-dock .btn.tog:active { box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); transform: none; }
   .menu-dock .tog .tog-ico { margin: 0; width: 1.25em; height: 1.25em; }
-  #btnVerseVersie.sw-update { box-shadow: 0 0 0 2px rgba(255,215,94,.85), inset 0 0 0 1px rgba(255,255,255,.12); color: #ffd75e; }
+  #btnVerseVersie.sw-update,
+  #btnSettings.sw-update { box-shadow: 0 0 0 2px rgba(255,215,94,.85), inset 0 0 0 1px rgba(255,255,255,.12); color: #ffd75e; }
   .menu-landing-footer .btn.b-install { width: 100%; margin: 8px 0 0; padding: 10px 14px; font-size: 14px; min-height: 44px; }
   .menu-landing-footer .btn.b-install.done { display: none; }
   .menu-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
@@ -1706,10 +1708,10 @@
       display:inline-flex; align-items:center; gap:6px; }
   body.big-touch .back-btn { padding:14px 22px; font-size:18px; min-height:52px; left:12px; }
   body.big-touch .back-btn .back-btn-ico { width: 20px; height: 20px; }
-  .sub-home-bar { position:sticky; bottom:0; width:var(--ui-rail-wide); margin-top:18px;
-    padding:8px 0 max(14px, env(safe-area-inset-bottom)); z-index:3; flex-shrink:0;
+  .sub-home-bar { position:sticky; bottom:0; width:var(--ui-rail-wide); margin-top:24px;
+    padding:12px 0 max(16px, env(safe-area-inset-bottom)); z-index:8; flex-shrink:0;
     display:flex; justify-content:center; align-items:center;
-    background:linear-gradient(180deg, transparent, rgba(10,13,24,.94) 38%); }
+    background:linear-gradient(180deg, transparent, #0a0d18 28%); }
   .sub-home-bar .sub-home-btn { width:auto; max-width:min(88vw,420px); min-width:min(52vw,240px);
     min-height:48px; padding:10px 22px; font-size:clamp(14px, 3.6vw, 16px); font-weight:800; justify-content:center; }
   body.big-touch .sub-home-bar .sub-home-btn { min-height:54px; padding:12px 26px; font-size:17px; }
@@ -2154,8 +2156,8 @@
   .card.rar-hell { background:rgba(255,106,61,.12); box-shadow:inset 0 0 18px rgba(255,106,61,.18); }
   .card.rar-epic { background:rgba(176,106,224,.08); }
   .weapon-zone-pill { letter-spacing:.02em; }
-  .settings-card { width:min(92vw,480px); background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
-      border-radius:16px; padding:16px 18px; margin:10px 0; color:#d5e0ff; font-size:15px; }
+  .settings-card { width:min(92vw,480px); background:var(--menu-tile-solid); border:1px solid var(--menu-edge);
+      border-radius:16px; padding:16px 18px; margin:10px 0; color:var(--menu-ink); font-size:15px; }
   .settings-card label { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:8px 0; flex-wrap:wrap; }
   .settings-card input[type=range] { flex:1; min-width:120px; accent-color:#ffd75e; }
   .pause-audio-vol { width:min(92vw,400px); margin:0 auto 10px; padding:10px 14px 6px;
@@ -2687,6 +2689,12 @@
   .skill-group-head { width:min(92vw,480px); font-size:12px; font-weight:900; color:#ffd75e;
     letter-spacing:.06em; text-transform:uppercase; margin:14px 0 8px; }
   .upgrade-screen.active { overflow:hidden; }
+  .upgrade-screen .sub-home-bar {
+    position: relative;
+    width: 100%;
+    margin-top: 8px;
+    background: var(--menu-tile-solid);
+  }
   .upgrade-screen .upgrade-tab-bar { width:min(92vw,520px); margin:0 auto 10px; flex:0 0 auto; }
   .upgrade-tab-badge { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px;
     padding:0 5px; margin-left:6px; border-radius:999px; font-size:10px; font-weight:900; color:#2a1a00;
@@ -2697,7 +2705,7 @@
   .upgrade-list { width:100%; display:flex; flex-direction:column; align-items:center; padding-bottom:12px; }
   .skill-card { flex-wrap:wrap; align-items:flex-start; }
   .skill-card .skill-card-body { flex:1 1 180px; min-width:0; }
-  .skill-card.claimable { border-color:rgba(255,215,94,.55) !important; background:rgba(255,215,94,.06); }
+  .skill-card.claimable { border-color:rgba(255,215,94,.55) !important; background:linear-gradient(135deg, rgba(255,215,94,.16), transparent 50%), var(--menu-tile-solid-hi); color:var(--menu-ink); }
   .skill-card.claimed { opacity:.88; }
   .skill-card .claim-btn { width:100%; margin-top:10px; justify-content:center; flex:1 1 100%;
     background:var(--menu-tile-solid-hi); color:var(--menu-ink); border:1px solid var(--menu-edge);
@@ -2713,7 +2721,8 @@
       inset 0 0 0 1px rgba(200,160,255,.22);
     background:
       radial-gradient(ellipse at 12% 18%, rgba(180,120,255,.18), transparent 46%),
-      rgba(255,255,255,.04);
+      var(--menu-tile-solid);
+    color: var(--menu-ink);
   }
   .upgrade-polish-card.claimable {
     box-shadow:

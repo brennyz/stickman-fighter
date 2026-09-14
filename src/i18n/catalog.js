@@ -330,7 +330,7 @@ function seedNlGameStrings() {
     saveCorruptOverwritten: 'Corrupte hoofd-save overschreven — export blijft je vangnet bij URL-wissel',
     saveRestoredAfterLoad: 'Save hersteld uit backup na laadfout',
     saveLoadFailedFresh: 'Save kon niet geladen worden — nieuwe voortgang gestart (export backup als je die had)',
-    staleCacheMenu: 'Oude cache — menu reageert niet. Tik «Verse versie» in de dock.',
+    staleCacheMenu: 'Oude cache — menu reageert niet. Tik «Verse versie» onder Opties → Hulp.',
   });
   if (!I18N.nl.gamble) I18N.nl.gamble = {};
   Object.assign(I18N.nl.gamble, {
@@ -1167,7 +1167,7 @@ const CATALOG_EN = {
     saveCorruptOverwritten: 'Corrupt main save overwritten — export stays your safety net',
     saveRestoredAfterLoad: 'Save restored from backup after a load error',
     saveLoadFailedFresh: 'Save could not load — started fresh (export a backup if you had one)',
-    staleCacheMenu: 'Stale cache — menu not responding. Tap «Fresh version» in the dock.',
+    staleCacheMenu: 'Stale cache — menu not responding. Tap «Fresh version» under Options → Help.',
     backupRestored: 'Backup restored — save + backup in sync',
     backupFailed: 'Backup restore failed — export save if you have one',
     syncConfirm: 'Sync overwrites backup with main save — tap again',
