@@ -1,46 +1,79 @@
 /* ======================== EQUIP LOOK DRAW ============================== */
 function lookPx(v) {
-  return typeof lookSnap === 'function' ? lookSnap(v) : Math.round(v);
+  return typeof lookSnap === 'function' ? lookSnap(v) : (Number.isFinite(v) ? Math.round(v) : 0);
+}
+
+function lookBoneOk(p) {
+  return !!(p && Number.isFinite(p.x) && Number.isFinite(p.y));
+}
+
+function lookUseShadow() {
+  if (typeof motionReduced === 'function' && motionReduced()) return false;
+  if (typeof fxLite === 'function' && fxLite()) return false;
+  return true;
+}
+
+function lookShadow(c, color, blur) {
+  if (!c || !lookUseShadow()) return;
+  const cap = (typeof IS_TOUCH !== 'undefined' && IS_TOUCH) ? 5 : 12;
+  c.shadowColor = color;
+  c.shadowBlur = Math.min(Math.max(0, blur || 0), cap);
 }
 
 function lookAnchor(bones, slot, look) {
   if (!bones) return { x: 0, y: 0 };
   const key = (look && look.anchor) || slot;
-  if (key === 'head') return bones.head || { x: 0, y: 0 };
-  if (key === 'hand') return bones.hand || bones.shoulder || { x: 0, y: 0 };
-  if (key === 'shoulder' || key === 'chest' || key === 'back') return bones.shoulder || { x: 0, y: 0 };
-  if (key === 'hip' || key === 'legs') return bones.hip || { x: 0, y: 0 };
-  if (key === 'trinket') return bones.head || bones.shoulder || { x: 0, y: 0 };
-  return bones.head || { x: 0, y: 0 };
+  let p = null;
+  if (key === 'head') p = bones.head;
+  else if (key === 'hand') p = bones.hand || bones.shoulder;
+  else if (key === 'shoulder' || key === 'chest' || key === 'back') p = bones.shoulder;
+  else if (key === 'hip' || key === 'legs') p = bones.hip;
+  else if (key === 'trinket') p = bones.head || bones.shoulder;
+  else p = bones.head;
+  return lookBoneOk(p) ? p : (lookBoneOk(bones.head) ? bones.head : { x: 0, y: 0 });
 }
 
 function drawEquipLayer(c, looks, layer, bones, fighter) {
   if (!c || !looks || !looks.length) return;
-  const rows = typeof looksOnLayer === 'function' ? looksOnLayer(looks, layer) : looks.filter((l) => l.layer === layer);
-  for (const look of rows) drawEquipPiece(c, look, bones, fighter);
+  const want = typeof canonEquipLayer === 'function' ? canonEquipLayer(layer, layer) : layer;
+  const rows = typeof looksOnLayer === 'function' ? looksOnLayer(looks, want) : looks.filter((l) => l.layer === want);
+  for (const look of rows) {
+    try { drawEquipPiece(c, look, bones, fighter); } catch (_) { /* one piece must not stall combat */ }
+  }
+}
+
+function safeDrawEquipLayer(c, looks, layer, bones, fighter) {
+  if (!c || !looks || !looks.length) return;
+  try { drawEquipLayer(c, looks, layer, bones, fighter); } catch (_) {}
 }
 
 function drawEquipLooks(c, looks, bones, fighter, opts) {
   const layers = (opts && opts.layers) || EQUIP_LOOK_LAYERS;
-  for (const layer of layers) drawEquipLayer(c, looks, layer, bones, fighter);
+  for (const layer of layers) safeDrawEquipLayer(c, looks, layer, bones, fighter);
 }
 
 function drawEquipPiece(c, look, bones, fighter) {
-  if (!c || !look) return;
-  const fn = EQUIP_LOOK_DRAW[look.kind];
-  if (!fn) return;
+  if (!c || !look || typeof look.kind !== 'string') return;
+  const fn = Object.prototype.hasOwnProperty.call(EQUIP_LOOK_DRAW, look.kind) ? EQUIP_LOOK_DRAW[look.kind] : null;
+  if (typeof fn !== 'function') return;
   const anchor = lookAnchor(bones, look.slot, look);
+  if (!lookBoneOk(anchor)) return;
   const x = lookPx(anchor.x + (look.ox || 0));
   const y = lookPx(anchor.y + (look.oy || 0));
-  const sc = look.scale || 1;
+  const sc = Number.isFinite(look.scale) && look.scale > 0 ? look.scale : 1;
   c.save();
-  if (look.rot) {
-    c.translate(x, y);
-    c.rotate(look.rot);
-    c.translate(-x, -y);
+  try {
+    if (look.rot) {
+      c.translate(x, y);
+      c.rotate(look.rot);
+      c.translate(-x, -y);
+    }
+    fn(c, look, x, y, sc, bones, fighter);
+  } catch (_) {
+    /* isolate bad piece / Android canvas quirk */
+  } finally {
+    c.restore();
   }
-  fn(c, look, x, y, sc, bones, fighter);
-  c.restore();
 }
 
 function drawLookBandana(c, look, x, y, sc) {
@@ -64,8 +97,7 @@ function drawLookBandana(c, look, x, y, sc) {
     c.fillStyle = look.plate;
     const pw = 9.2 * sc, ph = 4.4 * sc;
     c.beginPath();
-    if (c.roundRect) c.roundRect(x - pw / 2, y0 + 0.4, pw, ph, 1.4);
-    else c.rect(x - pw / 2, y0 + 0.4, pw, ph);
+    c.rect(x - pw / 2, y0 + 0.4, pw, ph);
     c.fill();
     c.strokeStyle = 'rgba(0,0,0,.22)';
     c.lineWidth = 0.8;
@@ -178,8 +210,8 @@ function drawLookHelmet(c, look, x, y, sc) {
 }
 
 function drawLookCoat(c, look, x, y, sc, bones) {
-  const sh = bones && bones.shoulder ? bones.shoulder : { x, y };
-  const hip = bones && bones.hip ? bones.hip : { x, y: y + 32 };
+  const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
+  const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y: y + 32 };
   const flare = 17 * sc;
   c.fillStyle = look.fill || look.color;
   c.beginPath();
@@ -202,8 +234,8 @@ function drawLookCoat(c, look, x, y, sc, bones) {
 }
 
 function drawLookCape(c, look, x, y, sc, bones) {
-  const sh = bones && bones.shoulder ? bones.shoulder : { x, y };
-  const hip = bones && bones.hip ? bones.hip : { x, y: y + 32 };
+  const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
+  const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y: y + 32 };
   c.fillStyle = look.fill || look.color;
   c.beginPath();
   c.moveTo(sh.x - 12 * sc, sh.y - 4);
@@ -216,8 +248,8 @@ function drawLookCape(c, look, x, y, sc, bones) {
 }
 
 function drawLookVest(c, look, x, y, sc, bones) {
-  const sh = bones && bones.shoulder ? bones.shoulder : { x, y };
-  const hip = bones && bones.hip ? bones.hip : { x, y: y + 32 };
+  const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
+  const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y: y + 32 };
   c.fillStyle = look.fill || look.color;
   c.beginPath();
   c.moveTo(lookPx(sh.x - 13 * sc), lookPx(sh.y - 3));
@@ -237,7 +269,7 @@ function drawLookVest(c, look, x, y, sc, bones) {
 
 function drawLookChestplate(c, look, x, y, sc, bones) {
   drawLookVest(c, look, x, y, sc, bones);
-  const sh = bones && bones.shoulder ? bones.shoulder : { x, y };
+  const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
   c.fillStyle = look.accent || '#dfe8ff';
   c.globalAlpha = 0.45;
   c.fillRect(lookPx(sh.x - 6 * sc), lookPx(sh.y + 2), 12 * sc, 4 * sc);
@@ -245,17 +277,25 @@ function drawLookChestplate(c, look, x, y, sc, bones) {
 }
 
 function drawLookWrap(c, look, x, y, sc, bones) {
-  const hip = bones && bones.hip ? bones.hip : { x, y };
+  const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y };
   c.fillStyle = look.fill || look.color;
   c.globalAlpha = 0.8;
   c.beginPath();
-  c.ellipse(hip.x, hip.y + 10 * sc, 15 * sc, 5.2 * sc, 0, 0, TAU);
+  if (typeof c.ellipse === 'function') {
+    c.ellipse(hip.x, hip.y + 10 * sc, 15 * sc, 5.2 * sc, 0, 0, TAU);
+  } else {
+    c.save();
+    c.translate(hip.x, hip.y + 10 * sc);
+    c.scale(15 * sc, 5.2 * sc);
+    c.arc(0, 0, 1, 0, TAU);
+    c.restore();
+  }
   c.fill();
   c.globalAlpha = 1;
 }
 
 function drawLookGreaves(c, look, x, y, sc, bones) {
-  const hip = bones && bones.hip ? bones.hip : { x, y };
+  const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y };
   c.fillStyle = look.color;
   c.fillRect(lookPx(hip.x - 14 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
   c.fillRect(lookPx(hip.x + 7 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
@@ -307,10 +347,8 @@ function drawLookCrystal(c, look, x, y, sc) {
 }
 
 function drawLookGlow(c, look, x, y, sc, bones, fighter) {
-  const t = fighter && fighter.animT ? fighter.animT : 0;
-  const lite = typeof motionReduced === 'function' && motionReduced();
-  c.shadowColor = look.accent || look.color;
-  c.shadowBlur = lite ? 8 : (10 + Math.sin(t * 5) * 3);
+  const t = fighter && Number.isFinite(fighter.animT) ? fighter.animT : 0;
+  lookShadow(c, look.accent || look.color, 10 + Math.sin(t * 5) * 3);
   c.strokeStyle = look.accent || look.color;
   c.lineWidth = 2;
   c.beginPath();
@@ -320,13 +358,13 @@ function drawLookGlow(c, look, x, y, sc, bones, fighter) {
 
 function drawLookLightning(c, look, x, y, sc, bones, fighter) {
   if (typeof motionReduced === 'function' && motionReduced()) return;
-  const t = fighter && fighter.animT ? fighter.animT : 0;
+  if (typeof fxLite === 'function' && fxLite()) return;
+  const t = fighter && Number.isFinite(fighter.animT) ? fighter.animT : 0;
   const pulse = Math.sin(t * 14) * 0.5 + 0.5;
   const cyber = look.styleId === 'cyber';
   if (pulse <= 0.32 && !cyber) return;
   c.strokeStyle = cyber ? '#7cf5ff' : (look.accent || '#6fd7ff');
-  c.shadowColor = cyber ? '#4ecf6a' : '#7cf5ff';
-  c.shadowBlur = cyber ? 10 : 6;
+  lookShadow(c, cyber ? '#4ecf6a' : '#7cf5ff', cyber ? 10 : 6);
   c.lineWidth = cyber ? 2 : 1.4;
   c.globalAlpha = 0.55 + pulse * 0.35;
   const lx = x + (cyber ? 14 : -12) * sc;
@@ -358,19 +396,25 @@ function drawLookCharm(c, look, x, y, sc) {
 }
 
 function drawEquipLookPreview(c, styleId, gear) {
-  const st = typeof styleById === 'function' ? styleById(styleId) : { id: 'classic', body: '#f2f5ff' };
-  const f = new Fighter({
-    isPlayer: true, x: 0, y: 0, color: st.body || '#f2f5ff', style: st, scale: 1,
-    gear: gear || null,
-  });
-  f.animT = 0.4;
-  f.draw(c);
-  return f;
+  if (!c) return null;
+  try {
+    const st = typeof styleById === 'function' ? styleById(styleId) : { id: 'classic', body: '#f2f5ff' };
+    const f = new Fighter({
+      isPlayer: true, x: 0, y: 0, color: st.body || '#f2f5ff', style: st, scale: 1,
+      gear: gear || null,
+    });
+    f.animT = 0.4;
+    f.draw(c);
+    return f;
+  } catch (_) {
+    return null;
+  }
 }
 
 if (typeof EquipLookApi !== 'undefined') {
   EquipLookApi.drawPreview = drawEquipLookPreview;
   EquipLookApi.drawLayer = drawEquipLayer;
+  EquipLookApi.safeDrawLayer = safeDrawEquipLayer;
 }
 
 const EQUIP_LOOK_DRAW = {

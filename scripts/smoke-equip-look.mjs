@@ -254,6 +254,46 @@ if (!merged.some((l) => l.kind === 'helmet')) fail('gear head should appear');
 if (merged.some((l) => l.kind === 'bandana')) fail('gear head should replace style bandana');
 
 if (api.snap(3.4) !== 3 || api.snap(3.6) !== 4) fail('lookSnap rounding');
+if (api.snap(NaN) !== 0 || api.snap(Infinity) !== 0) fail('lookSnap must treat non-finite as 0');
+
+if (api.resolve(null).length) fail('resolve(null) must be empty');
+if (api.resolve({}).length) fail('resolve({}) without style must be empty');
+const fromId = api.resolve({ isPlayer: true, style: 'leaf_band' });
+if (!fromId.some((l) => l.kind === 'bandana')) fail('style id string must resolve leaf_band');
+
+if (api.forGear([]).length) fail('array gear must be ignored');
+if (api.forGear('helmet').length) fail('string gear must be ignored');
+if (api.forGear({ junk: { kind: 'helmet', color: '#ccc' } }).length) fail('unknown gear keys must not spawn pieces');
+if (api.forGear({ constructor: { kind: 'helmet' } }).length) fail('constructor key must not spawn pieces');
+
+const clamped = api.forGear({
+  head: { kind: 'helmet', ox: 999, oy: -999, scale: 50, layer: 'NOPE', color: '#ccc' },
+});
+if (!clamped.length) fail('clamped helmet should still resolve');
+if (Math.abs(clamped[0].ox) > 48 || Math.abs(clamped[0].oy) > 48) fail('ox/oy must clamp');
+if (clamped[0].scale > 1.75) fail('scale must clamp');
+if (!api.layers.includes(clamped[0].layer)) fail('unknown layer must canon to a real layer');
+
+if (api.canonSlot && api.canonSlot('helmet') !== 'head') fail('helmet alias');
+if (api.canonSlot && api.canonSlot('nope') != null) fail('unknown slot must be null');
+if (api.canonLayer && api.canonLayer('behind', 'front') !== 'under') fail('behind → under');
+if (api.canonLayer && !api.layers.includes(api.canonLayer('NOPE', 'head'))) fail('bad layer fallback');
+
+const flooded = api.forGear({
+  head: { kind: 'helmet', color: '#aaa' },
+  chest: { kind: 'chestplate', color: '#aaa' },
+  legs: { kind: 'greaves', color: '#aaa' },
+  back: { kind: 'cape', color: '#aaa' },
+  trinket: { kind: 'charm', color: '#aaa' },
+  hat: { kind: 'helmet', color: '#bbb' },
+});
+if (flooded.length > (api.max || 8)) fail('gear piece cap');
+
+try {
+  api.resolve({ isPlayer: true, style: { id: 'leaf_band', bandana: 12, accent: { x: 1 } }, gear: { head: { kind: 9, ox: 'nope' } } });
+} catch (e) {
+  fail('bad colors/kind must not throw: ' + e.message);
+}
 
 if (typeof api.drawPreview !== 'function') fail('drawPreview missing');
 const rec = recordingContext();

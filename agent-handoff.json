@@ -93,8 +93,8 @@
     {
       "id": "w-20260914T164800",
       "from": "user",
-      "text": "EQUIP LOOK fine-tune ONLY. Third lane after gear systems/UI/art — how worn armour/cosmetics sit on the stickman (menu + combat): layer order, offsets, scale, color, pixel alignment. Data-driven offsets per item. No economy/aim/audio/i18n. No Versus.",
-      "status": "active",
+      "text": "EQUIP LOOK fine-tune ONLY. Third lane after gear systems/UI/art — how worn armour/cosmetics sit on the stickman (menu + combat): layer order, offsets, scale, color, pixel alignment. Data-driven offsets per item. No economy/aim/audio/i18n. No Versus. Harden pass: Android edge cases, offsets/layers robustness, no regressions, same PR.",
+      "status": "done-in-code",
       "updated": "2026-09-14"
     },
     {
@@ -621,6 +621,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T16:58:40Z",
+      "summary": "Harden equip-look: clamp offsets/layers, isolate piece draw, Android shadow/roundRect, junk-gear ignore. v1.18.165/SW375. Same PR #276."
+    },
+    {
       "at": "2026-09-14T15:17:48Z",
       "summary": "#266 sprint: NL VERLOREN, Tips-label i.p.v. menu.tips, stillere versie-banner, rest HOME. v1.18.163/SW373. Draft."
     },
@@ -715,10 +719,6 @@
     {
       "at": "2026-08-17T10:03:24Z",
       "summary": "LIVE gemerged #248–#255 naar main conflictloos · v1.18.151 / SW 361 — pull main op de pc"
-    },
-    {
-      "at": "2026-08-17T10:02:29Z",
-      "summary": "LIVE merge van d8–d14 stack naar main (conflictloos FF)"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

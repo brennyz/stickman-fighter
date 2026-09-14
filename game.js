@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.164';
+const APP_VERSION = '1.18.165';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 374;
+const SW_CACHE_REV = 375;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -6516,6 +6516,18 @@ function applyStyleToSpec(fighter, spec) {
  */
 const EQUIP_LOOK_SLOTS = ['head', 'chest', 'legs', 'back', 'trinket'];
 const EQUIP_LOOK_LAYERS = ['under', 'body', 'legs', 'head', 'over', 'front'];
+const EQUIP_LOOK_MAX = 8;
+const EQUIP_LOOK_OX_MAX = 48;
+const EQUIP_LOOK_SCALE_MIN = 0.35;
+const EQUIP_LOOK_SCALE_MAX = 1.75;
+
+const EQUIP_LAYER_ALIAS = {
+  behind: 'under', underbody: 'under',
+  torso: 'body', bodyover: 'body',
+  shin: 'legs', boots: 'legs',
+  headover: 'over', overlay: 'over', aura: 'over',
+  fg: 'front', foreground: 'front',
+};
 
 const EQUIP_SLOT_ALIAS = {
   helmet: 'head', hat: 'head', bandana: 'head', visor: 'head',
@@ -6624,7 +6636,16 @@ function canonEquipSlot(slot) {
   if (!slot) return null;
   const key = String(slot).toLowerCase();
   if (EQUIP_LOOK_SLOTS.includes(key)) return key;
-  return EQUIP_SLOT_ALIAS[key] || key;
+  const aliased = EQUIP_SLOT_ALIAS[key];
+  return aliased || null;
+}
+
+function canonEquipLayer(layer, fallback) {
+  const fb = fallback && EQUIP_LOOK_LAYERS.includes(fallback) ? fallback : 'front';
+  if (!layer) return fb;
+  const key = String(layer).toLowerCase();
+  if (EQUIP_LOOK_LAYERS.includes(key)) return key;
+  return EQUIP_LAYER_ALIAS[key] || fb;
 }
 
 function lookSnap(v) {
@@ -6633,30 +6654,55 @@ function lookSnap(v) {
   return Math.round(n);
 }
 
+function lookNum(v, fallback, min, max) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return fallback;
+  if (min != null && n < min) return min;
+  if (max != null && n > max) return max;
+  return n;
+}
+
+function lookColor(v, fallback) {
+  if (typeof v !== 'string') return fallback;
+  const s = v.trim();
+  if (!s || s.length > 48 || /[\n\r<>]/.test(s)) return fallback;
+  return s;
+}
+
+function isPlainGear(gear) {
+  return !!gear && typeof gear === 'object' && !Array.isArray(gear);
+}
+
 function hydrateEquipLook(piece, style) {
-  if (!piece || !piece.kind) return null;
+  if (!piece || typeof piece.kind !== 'string' || !piece.kind) return null;
+  if (piece.kind === '__proto__' || piece.kind === 'constructor' || piece.kind === 'prototype') return null;
   const defaults = EQUIP_LOOK_DEFAULTS[piece.kind] || { slot: 'trinket', layer: 'front', ox: 0, oy: 0, scale: 1 };
-  const st = style || {};
+  const st = style && typeof style === 'object' ? style : {};
+  const slot = canonEquipSlot(piece.slot || defaults.slot) || defaults.slot || 'trinket';
   return {
-    id: piece.id || (st.id ? st.id + ':' + piece.kind : piece.kind),
+    id: typeof piece.id === 'string' ? piece.id : (st.id ? st.id + ':' + piece.kind : piece.kind),
     kind: piece.kind,
-    slot: canonEquipSlot(piece.slot || defaults.slot),
-    layer: piece.layer || defaults.layer,
-    anchor: piece.anchor || defaults.anchor || null,
-    ox: piece.ox != null ? piece.ox : defaults.ox,
-    oy: piece.oy != null ? piece.oy : defaults.oy,
-    scale: piece.scale != null ? piece.scale : defaults.scale,
-    rot: piece.rot || 0,
-    color: piece.color || st.bandana || st.accent || '#8fa3d9',
-    accent: piece.accent || st.accent || '#7cf5ff',
-    plate: piece.plate || st.plate || null,
-    fill: piece.fill || null,
+    slot: EQUIP_LOOK_SLOTS.includes(slot) ? slot : 'trinket',
+    layer: canonEquipLayer(piece.layer || defaults.layer, defaults.layer),
+    anchor: typeof piece.anchor === 'string' ? piece.anchor : (defaults.anchor || null),
+    ox: lookNum(piece.ox != null ? piece.ox : defaults.ox, 0, -EQUIP_LOOK_OX_MAX, EQUIP_LOOK_OX_MAX),
+    oy: lookNum(piece.oy != null ? piece.oy : defaults.oy, 0, -EQUIP_LOOK_OX_MAX, EQUIP_LOOK_OX_MAX),
+    scale: lookNum(piece.scale != null ? piece.scale : defaults.scale, 1, EQUIP_LOOK_SCALE_MIN, EQUIP_LOOK_SCALE_MAX),
+    rot: lookNum(piece.rot, 0, -3, 3),
+    color: lookColor(piece.color, lookColor(st.bandana, lookColor(st.accent, '#8fa3d9'))),
+    accent: lookColor(piece.accent, lookColor(st.accent, '#7cf5ff')),
+    plate: lookColor(piece.plate, lookColor(st.plate, null)),
+    fill: lookColor(piece.fill, null),
     styleId: st.id || piece.styleId || null,
   };
 }
 
 function looksForStyle(st) {
   if (!st) return [];
+  if (typeof st === 'string') {
+    st = typeof styleById === 'function' ? styleById(st) : { id: st };
+  }
+  if (!st || typeof st !== 'object') return [];
   const rows = EQUIP_LOOK_BY_STYLE[st.id];
   if (Array.isArray(rows)) return rows.map((p) => hydrateEquipLook(p, st)).filter(Boolean);
   return looksFromStyleFlags(st);
@@ -6680,7 +6726,8 @@ function looksFromStyleFlags(st) {
 }
 
 function registerEquipLook(id, def) {
-  if (!id || !def) return;
+  if (typeof id !== 'string' || !id || !def || typeof def !== 'object') return;
+  if (id === '__proto__' || id === 'constructor' || id === 'prototype') return;
   EQUIP_LOOK[id] = def;
 }
 
@@ -6703,53 +6750,55 @@ function lookForItemId(id, slot, src) {
 }
 
 function looksForGear(gear) {
-  if (!gear || typeof gear !== 'object') return [];
+  if (!isPlainGear(gear)) return [];
   const out = [];
   const seen = new Set();
   const visit = (slotKey, val) => {
-    if (val == null || val === false) return;
+    if (val == null || val === false || out.length >= EQUIP_LOOK_MAX) return;
     const slot = canonEquipSlot(slotKey);
+    if (!slot || !EQUIP_LOOK_SLOTS.includes(slot)) return;
     if (typeof val === 'string') {
-      lookForItemId(val, slot).forEach((l) => out.push(l));
+      lookForItemId(val, slot).forEach((l) => { if (out.length < EQUIP_LOOK_MAX) out.push(l); });
       return;
     }
-    if (typeof val !== 'object') return;
+    if (typeof val !== 'object' || Array.isArray(val)) return;
     if (val.look && val.look.kind) {
-      out.push(hydrateEquipLook(Object.assign({ id: val.id, slot: val.slot || slot }, val.look), val));
+      const piece = hydrateEquipLook(Object.assign({ id: val.id, slot: val.slot || slot }, val.look), val);
+      if (piece) out.push(piece);
       return;
     }
     if (val.kind) {
-      out.push(hydrateEquipLook(Object.assign({ slot }, val), val));
+      const piece = hydrateEquipLook(Object.assign({ slot }, val), val);
+      if (piece) out.push(piece);
       return;
     }
-    if (val.id) lookForItemId(val.id, slot, val).forEach((l) => out.push(l));
+    if (val.id) lookForItemId(val.id, slot, val).forEach((l) => { if (out.length < EQUIP_LOOK_MAX) out.push(l); });
   };
-  for (const slot of EQUIP_LOOK_SLOTS) {
-    if (gear[slot] != null) {
-      seen.add(slot);
-      visit(slot, gear[slot]);
-    }
-  }
-  for (const key of Object.keys(gear)) {
+  const keys = EQUIP_LOOK_SLOTS.concat(Object.keys(EQUIP_SLOT_ALIAS));
+  for (const key of keys) {
+    if (!Object.prototype.hasOwnProperty.call(gear, key)) continue;
     const slot = canonEquipSlot(key);
-    if (seen.has(slot) || seen.has(key)) continue;
-    if (key === 'id' || key === 'look') continue;
-    visit(key, gear[key]);
+    if (!slot || seen.has(slot)) continue;
+    seen.add(slot);
+    visit(slot, gear[key]);
+    if (out.length >= EQUIP_LOOK_MAX) break;
   }
   return out.filter(Boolean);
 }
 
 function resolveFighterLooks(fighter) {
   if (!fighter) return [];
-  const styleLooks = looksForStyle(fighter.style);
+  let styleLooks = [];
+  try { styleLooks = looksForStyle(fighter.style) || []; } catch (_) { styleLooks = []; }
   let gear = fighter.gear;
-  if (gear == null && fighter.isPlayer && typeof save !== 'undefined' && save && save.gear) {
+  if (!isPlainGear(gear) && fighter.isPlayer && typeof save !== 'undefined' && save && isPlainGear(save.gear)) {
     gear = save.gear;
   }
-  const gearLooks = looksForGear(gear);
-  if (!gearLooks.length) return styleLooks;
+  let gearLooks = [];
+  try { gearLooks = looksForGear(gear) || []; } catch (_) { gearLooks = []; }
+  if (!gearLooks.length) return styleLooks.slice(0, EQUIP_LOOK_MAX);
   const blocked = new Set(gearLooks.map((l) => l.slot).filter(Boolean));
-  return styleLooks.filter((l) => !blocked.has(l.slot)).concat(gearLooks);
+  return styleLooks.filter((l) => !blocked.has(l.slot)).concat(gearLooks).slice(0, EQUIP_LOOK_MAX);
 }
 
 function looksOnLayer(looks, layer) {
@@ -6759,8 +6808,9 @@ function looksOnLayer(looks, layer) {
 
 /** Menu-card camera: leave crown room so bandana / ears / topknot do not clip. */
 function applyEquipLookPreview(cc, w, h) {
-  const width = w || 80;
-  const height = h || 86;
+  if (!cc || typeof cc.translate !== 'function') return;
+  const width = Number.isFinite(w) && w > 0 ? w : 80;
+  const height = Number.isFinite(h) && h > 0 ? h : 86;
   cc.translate(width * 0.5, height * 0.87);
   cc.scale(0.78, 0.78);
 }
@@ -6774,6 +6824,9 @@ const EquipLookApi = {
   register: registerEquipLook,
   snap: lookSnap,
   preview: applyEquipLookPreview,
+  canonSlot: canonEquipSlot,
+  canonLayer: canonEquipLayer,
+  max: EQUIP_LOOK_MAX,
 };
 
 if (typeof globalThis !== 'undefined') globalThis.EquipLookApi = EquipLookApi;
@@ -18646,47 +18699,80 @@ function drawPixelJoyKnob(c, cx, cy, r, color, alpha) {
 /* --- src/render/equip-look.js --- */
 /* ======================== EQUIP LOOK DRAW ============================== */
 function lookPx(v) {
-  return typeof lookSnap === 'function' ? lookSnap(v) : Math.round(v);
+  return typeof lookSnap === 'function' ? lookSnap(v) : (Number.isFinite(v) ? Math.round(v) : 0);
+}
+
+function lookBoneOk(p) {
+  return !!(p && Number.isFinite(p.x) && Number.isFinite(p.y));
+}
+
+function lookUseShadow() {
+  if (typeof motionReduced === 'function' && motionReduced()) return false;
+  if (typeof fxLite === 'function' && fxLite()) return false;
+  return true;
+}
+
+function lookShadow(c, color, blur) {
+  if (!c || !lookUseShadow()) return;
+  const cap = (typeof IS_TOUCH !== 'undefined' && IS_TOUCH) ? 5 : 12;
+  c.shadowColor = color;
+  c.shadowBlur = Math.min(Math.max(0, blur || 0), cap);
 }
 
 function lookAnchor(bones, slot, look) {
   if (!bones) return { x: 0, y: 0 };
   const key = (look && look.anchor) || slot;
-  if (key === 'head') return bones.head || { x: 0, y: 0 };
-  if (key === 'hand') return bones.hand || bones.shoulder || { x: 0, y: 0 };
-  if (key === 'shoulder' || key === 'chest' || key === 'back') return bones.shoulder || { x: 0, y: 0 };
-  if (key === 'hip' || key === 'legs') return bones.hip || { x: 0, y: 0 };
-  if (key === 'trinket') return bones.head || bones.shoulder || { x: 0, y: 0 };
-  return bones.head || { x: 0, y: 0 };
+  let p = null;
+  if (key === 'head') p = bones.head;
+  else if (key === 'hand') p = bones.hand || bones.shoulder;
+  else if (key === 'shoulder' || key === 'chest' || key === 'back') p = bones.shoulder;
+  else if (key === 'hip' || key === 'legs') p = bones.hip;
+  else if (key === 'trinket') p = bones.head || bones.shoulder;
+  else p = bones.head;
+  return lookBoneOk(p) ? p : (lookBoneOk(bones.head) ? bones.head : { x: 0, y: 0 });
 }
 
 function drawEquipLayer(c, looks, layer, bones, fighter) {
   if (!c || !looks || !looks.length) return;
-  const rows = typeof looksOnLayer === 'function' ? looksOnLayer(looks, layer) : looks.filter((l) => l.layer === layer);
-  for (const look of rows) drawEquipPiece(c, look, bones, fighter);
+  const want = typeof canonEquipLayer === 'function' ? canonEquipLayer(layer, layer) : layer;
+  const rows = typeof looksOnLayer === 'function' ? looksOnLayer(looks, want) : looks.filter((l) => l.layer === want);
+  for (const look of rows) {
+    try { drawEquipPiece(c, look, bones, fighter); } catch (_) { /* one piece must not stall combat */ }
+  }
+}
+
+function safeDrawEquipLayer(c, looks, layer, bones, fighter) {
+  if (!c || !looks || !looks.length) return;
+  try { drawEquipLayer(c, looks, layer, bones, fighter); } catch (_) {}
 }
 
 function drawEquipLooks(c, looks, bones, fighter, opts) {
   const layers = (opts && opts.layers) || EQUIP_LOOK_LAYERS;
-  for (const layer of layers) drawEquipLayer(c, looks, layer, bones, fighter);
+  for (const layer of layers) safeDrawEquipLayer(c, looks, layer, bones, fighter);
 }
 
 function drawEquipPiece(c, look, bones, fighter) {
-  if (!c || !look) return;
-  const fn = EQUIP_LOOK_DRAW[look.kind];
-  if (!fn) return;
+  if (!c || !look || typeof look.kind !== 'string') return;
+  const fn = Object.prototype.hasOwnProperty.call(EQUIP_LOOK_DRAW, look.kind) ? EQUIP_LOOK_DRAW[look.kind] : null;
+  if (typeof fn !== 'function') return;
   const anchor = lookAnchor(bones, look.slot, look);
+  if (!lookBoneOk(anchor)) return;
   const x = lookPx(anchor.x + (look.ox || 0));
   const y = lookPx(anchor.y + (look.oy || 0));
-  const sc = look.scale || 1;
+  const sc = Number.isFinite(look.scale) && look.scale > 0 ? look.scale : 1;
   c.save();
-  if (look.rot) {
-    c.translate(x, y);
-    c.rotate(look.rot);
-    c.translate(-x, -y);
+  try {
+    if (look.rot) {
+      c.translate(x, y);
+      c.rotate(look.rot);
+      c.translate(-x, -y);
+    }
+    fn(c, look, x, y, sc, bones, fighter);
+  } catch (_) {
+    /* isolate bad piece / Android canvas quirk */
+  } finally {
+    c.restore();
   }
-  fn(c, look, x, y, sc, bones, fighter);
-  c.restore();
 }
 
 function drawLookBandana(c, look, x, y, sc) {
@@ -18710,8 +18796,7 @@ function drawLookBandana(c, look, x, y, sc) {
     c.fillStyle = look.plate;
     const pw = 9.2 * sc, ph = 4.4 * sc;
     c.beginPath();
-    if (c.roundRect) c.roundRect(x - pw / 2, y0 + 0.4, pw, ph, 1.4);
-    else c.rect(x - pw / 2, y0 + 0.4, pw, ph);
+    c.rect(x - pw / 2, y0 + 0.4, pw, ph);
     c.fill();
     c.strokeStyle = 'rgba(0,0,0,.22)';
     c.lineWidth = 0.8;
@@ -18824,8 +18909,8 @@ function drawLookHelmet(c, look, x, y, sc) {
 }
 
 function drawLookCoat(c, look, x, y, sc, bones) {
-  const sh = bones && bones.shoulder ? bones.shoulder : { x, y };
-  const hip = bones && bones.hip ? bones.hip : { x, y: y + 32 };
+  const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
+  const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y: y + 32 };
   const flare = 17 * sc;
   c.fillStyle = look.fill || look.color;
   c.beginPath();
@@ -18848,8 +18933,8 @@ function drawLookCoat(c, look, x, y, sc, bones) {
 }
 
 function drawLookCape(c, look, x, y, sc, bones) {
-  const sh = bones && bones.shoulder ? bones.shoulder : { x, y };
-  const hip = bones && bones.hip ? bones.hip : { x, y: y + 32 };
+  const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
+  const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y: y + 32 };
   c.fillStyle = look.fill || look.color;
   c.beginPath();
   c.moveTo(sh.x - 12 * sc, sh.y - 4);
@@ -18862,8 +18947,8 @@ function drawLookCape(c, look, x, y, sc, bones) {
 }
 
 function drawLookVest(c, look, x, y, sc, bones) {
-  const sh = bones && bones.shoulder ? bones.shoulder : { x, y };
-  const hip = bones && bones.hip ? bones.hip : { x, y: y + 32 };
+  const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
+  const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y: y + 32 };
   c.fillStyle = look.fill || look.color;
   c.beginPath();
   c.moveTo(lookPx(sh.x - 13 * sc), lookPx(sh.y - 3));
@@ -18883,7 +18968,7 @@ function drawLookVest(c, look, x, y, sc, bones) {
 
 function drawLookChestplate(c, look, x, y, sc, bones) {
   drawLookVest(c, look, x, y, sc, bones);
-  const sh = bones && bones.shoulder ? bones.shoulder : { x, y };
+  const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
   c.fillStyle = look.accent || '#dfe8ff';
   c.globalAlpha = 0.45;
   c.fillRect(lookPx(sh.x - 6 * sc), lookPx(sh.y + 2), 12 * sc, 4 * sc);
@@ -18891,17 +18976,25 @@ function drawLookChestplate(c, look, x, y, sc, bones) {
 }
 
 function drawLookWrap(c, look, x, y, sc, bones) {
-  const hip = bones && bones.hip ? bones.hip : { x, y };
+  const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y };
   c.fillStyle = look.fill || look.color;
   c.globalAlpha = 0.8;
   c.beginPath();
-  c.ellipse(hip.x, hip.y + 10 * sc, 15 * sc, 5.2 * sc, 0, 0, TAU);
+  if (typeof c.ellipse === 'function') {
+    c.ellipse(hip.x, hip.y + 10 * sc, 15 * sc, 5.2 * sc, 0, 0, TAU);
+  } else {
+    c.save();
+    c.translate(hip.x, hip.y + 10 * sc);
+    c.scale(15 * sc, 5.2 * sc);
+    c.arc(0, 0, 1, 0, TAU);
+    c.restore();
+  }
   c.fill();
   c.globalAlpha = 1;
 }
 
 function drawLookGreaves(c, look, x, y, sc, bones) {
-  const hip = bones && bones.hip ? bones.hip : { x, y };
+  const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y };
   c.fillStyle = look.color;
   c.fillRect(lookPx(hip.x - 14 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
   c.fillRect(lookPx(hip.x + 7 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
@@ -18953,10 +19046,8 @@ function drawLookCrystal(c, look, x, y, sc) {
 }
 
 function drawLookGlow(c, look, x, y, sc, bones, fighter) {
-  const t = fighter && fighter.animT ? fighter.animT : 0;
-  const lite = typeof motionReduced === 'function' && motionReduced();
-  c.shadowColor = look.accent || look.color;
-  c.shadowBlur = lite ? 8 : (10 + Math.sin(t * 5) * 3);
+  const t = fighter && Number.isFinite(fighter.animT) ? fighter.animT : 0;
+  lookShadow(c, look.accent || look.color, 10 + Math.sin(t * 5) * 3);
   c.strokeStyle = look.accent || look.color;
   c.lineWidth = 2;
   c.beginPath();
@@ -18966,13 +19057,13 @@ function drawLookGlow(c, look, x, y, sc, bones, fighter) {
 
 function drawLookLightning(c, look, x, y, sc, bones, fighter) {
   if (typeof motionReduced === 'function' && motionReduced()) return;
-  const t = fighter && fighter.animT ? fighter.animT : 0;
+  if (typeof fxLite === 'function' && fxLite()) return;
+  const t = fighter && Number.isFinite(fighter.animT) ? fighter.animT : 0;
   const pulse = Math.sin(t * 14) * 0.5 + 0.5;
   const cyber = look.styleId === 'cyber';
   if (pulse <= 0.32 && !cyber) return;
   c.strokeStyle = cyber ? '#7cf5ff' : (look.accent || '#6fd7ff');
-  c.shadowColor = cyber ? '#4ecf6a' : '#7cf5ff';
-  c.shadowBlur = cyber ? 10 : 6;
+  lookShadow(c, cyber ? '#4ecf6a' : '#7cf5ff', cyber ? 10 : 6);
   c.lineWidth = cyber ? 2 : 1.4;
   c.globalAlpha = 0.55 + pulse * 0.35;
   const lx = x + (cyber ? 14 : -12) * sc;
@@ -19004,19 +19095,25 @@ function drawLookCharm(c, look, x, y, sc) {
 }
 
 function drawEquipLookPreview(c, styleId, gear) {
-  const st = typeof styleById === 'function' ? styleById(styleId) : { id: 'classic', body: '#f2f5ff' };
-  const f = new Fighter({
-    isPlayer: true, x: 0, y: 0, color: st.body || '#f2f5ff', style: st, scale: 1,
-    gear: gear || null,
-  });
-  f.animT = 0.4;
-  f.draw(c);
-  return f;
+  if (!c) return null;
+  try {
+    const st = typeof styleById === 'function' ? styleById(styleId) : { id: 'classic', body: '#f2f5ff' };
+    const f = new Fighter({
+      isPlayer: true, x: 0, y: 0, color: st.body || '#f2f5ff', style: st, scale: 1,
+      gear: gear || null,
+    });
+    f.animT = 0.4;
+    f.draw(c);
+    return f;
+  } catch (_) {
+    return null;
+  }
 }
 
 if (typeof EquipLookApi !== 'undefined') {
   EquipLookApi.drawPreview = drawEquipLookPreview;
   EquipLookApi.drawLayer = drawEquipLayer;
+  EquipLookApi.safeDrawLayer = safeDrawEquipLayer;
 }
 
 const EQUIP_LOOK_DRAW = {
@@ -20563,9 +20660,18 @@ class Fighter {
       lean: P.lean,
       animT: this.animT,
     };
-    const looks = (this.isPlayer && typeof resolveFighterLooks === 'function')
-      ? resolveFighterLooks(this)
-      : [];
+    let looks = [];
+    if (this.isPlayer && typeof resolveFighterLooks === 'function') {
+      try { looks = resolveFighterLooks(this) || []; } catch (_) { looks = []; }
+    }
+    if (!Array.isArray(looks)) looks = [];
+    const paintLook = (layer) => {
+      if (!looks.length) return;
+      if (typeof safeDrawEquipLayer === 'function') safeDrawEquipLayer(c, looks, layer, bones, this);
+      else if (typeof drawEquipLayer === 'function') {
+        try { drawEquipLayer(c, looks, layer, bones, this); } catch (_) {}
+      }
+    };
 
     // achterste ledematen (donkerder)
     c.save();
@@ -20574,16 +20680,14 @@ class Fighter {
     drawLimb(shX, shY, P.arms[0][0], P.arms[0][1], armL, armL);
     c.restore();
 
-    if (looks.length && typeof drawEquipLayer === 'function') drawEquipLayer(c, looks, 'under', bones, this);
+    paintLook('under');
 
     // romp
     c.beginPath(); c.moveTo(hipX, hipY); c.lineTo(shX, shY); c.stroke();
     // voorste been
     drawLimb(hipX, hipY, P.legs[1][0], P.legs[1][1], legL, legL);
-    if (looks.length && typeof drawEquipLayer === 'function') {
-      drawEquipLayer(c, looks, 'body', bones, this);
-      drawEquipLayer(c, looks, 'legs', bones, this);
-    }
+    paintLook('body');
+    paintLook('legs');
     // hoofd
     if (this.bald) {
       c.fillStyle = '#ffe8c8';
@@ -20606,11 +20710,11 @@ class Fighter {
         c.fillRect(shX - 16, shY - 2, 6, 18);
       }
     }
-    if (looks.length && typeof drawEquipLayer === 'function') {
-      drawEquipLayer(c, looks, 'head', bones, this);
-      drawEquipLayer(c, looks, 'over', bones, this);
+    if (looks.length) {
+      paintLook('head');
+      paintLook('over');
     } else if (this.isPlayer && this.style) {
-      this.drawStyleExtras(c, headX, headY - 9, shX, shY, hipX, hipY);
+      try { this.drawStyleExtras(c, headX, headY - 9, shX, shY, hipX, hipY); } catch (_) {}
     }
     if (this.isRobot) this.drawRobotHead(c, headX, headY - 9);
 
@@ -20692,7 +20796,7 @@ class Fighter {
       }
     }
     bones.hand = { x: hx, y: hy };
-    if (looks.length && typeof drawEquipLayer === 'function') drawEquipLayer(c, looks, 'front', bones, this);
+    paintLook('front');
     c.restore();
 
     // afterimages (substitutie)
@@ -20717,14 +20821,16 @@ class Fighter {
 
   drawStyleExtras(c, hx, hy, shX, shY, hipX, hipY) {
     if (typeof drawEquipLooks !== 'function' || typeof resolveFighterLooks !== 'function') return;
-    const bones = {
-      head: { x: hx, y: hy },
-      shoulder: { x: shX, y: shY },
-      hip: { x: hipX, y: hipY },
-      hand: null,
-      animT: this.animT,
-    };
-    drawEquipLooks(c, resolveFighterLooks(this), bones, this);
+    try {
+      const bones = {
+        head: { x: hx, y: hy },
+        shoulder: { x: shX, y: shY },
+        hip: { x: hipX, y: hipY },
+        hand: null,
+        animT: this.animT,
+      };
+      drawEquipLooks(c, resolveFighterLooks(this), bones, this);
+    } catch (_) {}
   }
 
   drawRobotHead(c, hx, hy) {
@@ -31298,6 +31404,20 @@ function itemUpgradeCardParts(cat, id, color) {
   };
 }
 
+function drawStyleLookPreview(cc, st, w, h) {
+  if (!cc || !st) return;
+  try {
+    if (typeof applyEquipLookPreview === 'function') applyEquipLookPreview(cc, w, h);
+    else {
+      cc.translate((w || 80) * 0.5, (h || 86) * 0.87);
+      cc.scale(0.78, 0.78);
+    }
+    const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9 });
+    preview.animT = 0.4;
+    preview.draw(cc);
+  } catch (_) { /* one card must not blank the style grid on Android */ }
+}
+
 function drawUpgradeItemIcon(cat, id, cv) {
   if (!cv) return;
   const cc = cv.getContext('2d');
@@ -31324,11 +31444,7 @@ function drawUpgradeItemIcon(cat, id, cv) {
     drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
   } else if (cat === 'style') {
     const st = styleById(id);
-    if (typeof applyEquipLookPreview === 'function') applyEquipLookPreview(cc, 64, 64);
-    else { cc.translate(32, 56); cc.scale(0.72, 0.72); }
-    const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9 });
-    preview.animT = 0.4;
-    preview.draw(cc);
+    drawStyleLookPreview(cc, st, 64, 64);
   }
 }
 
@@ -35220,11 +35336,7 @@ const UI = {
       const cv = document.createElement('canvas');
       cv.width = 80; cv.height = 86;
       const cc = cv.getContext('2d');
-      if (typeof applyEquipLookPreview === 'function') applyEquipLookPreview(cc, 80, 86);
-      else { cc.translate(40, 75); cc.scale(0.78, 0.78); }
-      const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9 });
-      preview.animT = 0.4;
-      preview.draw(cc);
+      drawStyleLookPreview(cc, st, 80, 86);
       el.appendChild(cv);
       const cap = document.createElement('div');
       cap.style.fontSize = '13px';

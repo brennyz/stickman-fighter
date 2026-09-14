@@ -51,6 +51,20 @@ function itemUpgradeCardParts(cat, id, color) {
   };
 }
 
+function drawStyleLookPreview(cc, st, w, h) {
+  if (!cc || !st) return;
+  try {
+    if (typeof applyEquipLookPreview === 'function') applyEquipLookPreview(cc, w, h);
+    else {
+      cc.translate((w || 80) * 0.5, (h || 86) * 0.87);
+      cc.scale(0.78, 0.78);
+    }
+    const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9 });
+    preview.animT = 0.4;
+    preview.draw(cc);
+  } catch (_) { /* one card must not blank the style grid on Android */ }
+}
+
 function drawUpgradeItemIcon(cat, id, cv) {
   if (!cv) return;
   const cc = cv.getContext('2d');
@@ -77,11 +91,7 @@ function drawUpgradeItemIcon(cat, id, cv) {
     drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
   } else if (cat === 'style') {
     const st = styleById(id);
-    if (typeof applyEquipLookPreview === 'function') applyEquipLookPreview(cc, 64, 64);
-    else { cc.translate(32, 56); cc.scale(0.72, 0.72); }
-    const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9 });
-    preview.animT = 0.4;
-    preview.draw(cc);
+    drawStyleLookPreview(cc, st, 64, 64);
   }
 }
 
@@ -3973,11 +3983,7 @@ const UI = {
       const cv = document.createElement('canvas');
       cv.width = 80; cv.height = 86;
       const cc = cv.getContext('2d');
-      if (typeof applyEquipLookPreview === 'function') applyEquipLookPreview(cc, 80, 86);
-      else { cc.translate(40, 75); cc.scale(0.78, 0.78); }
-      const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9 });
-      preview.animT = 0.4;
-      preview.draw(cc);
+      drawStyleLookPreview(cc, st, 80, 86);
       el.appendChild(cv);
       const cap = document.createElement('div');
       cap.style.fontSize = '13px';

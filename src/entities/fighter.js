@@ -739,9 +739,18 @@ class Fighter {
       lean: P.lean,
       animT: this.animT,
     };
-    const looks = (this.isPlayer && typeof resolveFighterLooks === 'function')
-      ? resolveFighterLooks(this)
-      : [];
+    let looks = [];
+    if (this.isPlayer && typeof resolveFighterLooks === 'function') {
+      try { looks = resolveFighterLooks(this) || []; } catch (_) { looks = []; }
+    }
+    if (!Array.isArray(looks)) looks = [];
+    const paintLook = (layer) => {
+      if (!looks.length) return;
+      if (typeof safeDrawEquipLayer === 'function') safeDrawEquipLayer(c, looks, layer, bones, this);
+      else if (typeof drawEquipLayer === 'function') {
+        try { drawEquipLayer(c, looks, layer, bones, this); } catch (_) {}
+      }
+    };
 
     // achterste ledematen (donkerder)
     c.save();
@@ -750,16 +759,14 @@ class Fighter {
     drawLimb(shX, shY, P.arms[0][0], P.arms[0][1], armL, armL);
     c.restore();
 
-    if (looks.length && typeof drawEquipLayer === 'function') drawEquipLayer(c, looks, 'under', bones, this);
+    paintLook('under');
 
     // romp
     c.beginPath(); c.moveTo(hipX, hipY); c.lineTo(shX, shY); c.stroke();
     // voorste been
     drawLimb(hipX, hipY, P.legs[1][0], P.legs[1][1], legL, legL);
-    if (looks.length && typeof drawEquipLayer === 'function') {
-      drawEquipLayer(c, looks, 'body', bones, this);
-      drawEquipLayer(c, looks, 'legs', bones, this);
-    }
+    paintLook('body');
+    paintLook('legs');
     // hoofd
     if (this.bald) {
       c.fillStyle = '#ffe8c8';
@@ -782,11 +789,11 @@ class Fighter {
         c.fillRect(shX - 16, shY - 2, 6, 18);
       }
     }
-    if (looks.length && typeof drawEquipLayer === 'function') {
-      drawEquipLayer(c, looks, 'head', bones, this);
-      drawEquipLayer(c, looks, 'over', bones, this);
+    if (looks.length) {
+      paintLook('head');
+      paintLook('over');
     } else if (this.isPlayer && this.style) {
-      this.drawStyleExtras(c, headX, headY - 9, shX, shY, hipX, hipY);
+      try { this.drawStyleExtras(c, headX, headY - 9, shX, shY, hipX, hipY); } catch (_) {}
     }
     if (this.isRobot) this.drawRobotHead(c, headX, headY - 9);
 
@@ -868,7 +875,7 @@ class Fighter {
       }
     }
     bones.hand = { x: hx, y: hy };
-    if (looks.length && typeof drawEquipLayer === 'function') drawEquipLayer(c, looks, 'front', bones, this);
+    paintLook('front');
     c.restore();
 
     // afterimages (substitutie)
@@ -893,14 +900,16 @@ class Fighter {
 
   drawStyleExtras(c, hx, hy, shX, shY, hipX, hipY) {
     if (typeof drawEquipLooks !== 'function' || typeof resolveFighterLooks !== 'function') return;
-    const bones = {
-      head: { x: hx, y: hy },
-      shoulder: { x: shX, y: shY },
-      hip: { x: hipX, y: hipY },
-      hand: null,
-      animT: this.animT,
-    };
-    drawEquipLooks(c, resolveFighterLooks(this), bones, this);
+    try {
+      const bones = {
+        head: { x: hx, y: hy },
+        shoulder: { x: shX, y: shY },
+        hip: { x: hipX, y: hipY },
+        hand: null,
+        animT: this.animT,
+      };
+      drawEquipLooks(c, resolveFighterLooks(this), bones, this);
+    } catch (_) {}
   }
 
   drawRobotHead(c, hx, hy) {
