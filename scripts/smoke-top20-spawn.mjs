@@ -40,9 +40,11 @@ async function run() {
   await page.waitForFunction(() => window.__sfBooted, { timeout: 25000 });
 
   const result = await page.evaluate(() => {
-    const need = ['speciesPowerScore', 'speciesTop20Ranked', 'isTop20StrongestSpecies',
-      'triggerTop20SpawnFx', 'spawnTop20ForTest', 'Monster'];
-    const missing = need.filter((n) => typeof globalThis[n] !== 'function');
+    const needFn = {
+      speciesPowerScore, speciesTop20Ranked, isTop20StrongestSpecies,
+      triggerTop20SpawnFx, spawnTop20ForTest, Monster,
+    };
+    const missing = Object.keys(needFn).filter((n) => typeof needFn[n] !== 'function');
     if (missing.length) return { ok: false, why: 'missing:' + missing.join(',') };
 
     const ids = speciesTop20Ranked();
