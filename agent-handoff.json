@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260914T102555",
+      "from": "user",
+      "text": "prompt voor grokbot om het spel te testen en te optimaliseren",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
       "id": "w-20260910T201014",
       "from": "user",
       "text": "Fix security issues",
@@ -558,6 +565,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T10:25:55Z",
+      "summary": "Grokbot-prompt voor Android test + optimaliseren (docs/GROKBOT-ANDROID-PROMPT.md)"
+    },
+    {
       "at": "2026-09-10T20:10:14Z",
       "summary": "security harden store scripts: html-pad, geen shell-inject, git secret-check"
     },
@@ -652,10 +663,6 @@
     {
       "at": "2026-08-17T08:04:39Z",
       "summary": "d13 missies: Dagbonus-copy, geen dubbele toast — klaar voor super-merge"
-    },
-    {
-      "at": "2026-08-17T07:17:45Z",
-      "summary": "Derde d20-worp geclaimd via CLI"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

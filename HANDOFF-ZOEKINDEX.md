@@ -28,6 +28,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 | speel.html delen | 1.12.2+ | `0a63376`+ | `speel.html`, `resolveSharePlayUrl` |
 | Store / App Store-pad | docs | — | `npm run store:doctor`, `STORE-LAUNCH.md`, `native/ios/APPSTORE-CHECKLIST.md` |
 | Android / Play GO | docs | — | `npm run android:go`, `native/android/GO.md`, `docs/store/play-console-stappen.md` |
+| Grokbot Android-test | docs | — | `docs/GROKBOT-ANDROID-PROMPT.md` — plak PROMPT in Grokbot |
 | Agent handoff docs | — | `4de8d95`+ | `agent-handoff.json`, `AGENTS.md` |
 
 ## d20 (Ralph bag)
