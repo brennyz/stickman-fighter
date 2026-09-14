@@ -1,16 +1,13 @@
 # Season pixel-art slots
 
-Partner drop folder. Jungle + Halloween PNGs are live (hand-pixel, not AI). Winter/summer stay CSS hooks.
-
-See **`SEASON-OVERLAY.md`** for sizes, safe zones, and the `--season-art-*` uncomment step.
+Coordinator pack (targets **#277** `--season-art-*` / `data-season-slot` hooks):
 
 ```
 assets/seasons/
-  classic/      (usually empty — overlay hidden)
-  jungle/       vignette · motif · corner-tl/tr/bl/br · banner  ← PNGs + tokens on
-  halloween/    same slots  ← PNGs + tokens on
-  winter/       hook
-  summer/       hook
+  season-jungle-corner-tl.png … corner-tr/bl/br.png  (96×96)
+  season-jungle-banner.png                           (≤320×64)
+  season-halloween-corner-tl.png … corner-tr/bl/br.png
+  season-halloween-banner.png
 ```
 
-Filenames are the `data-season-slot` values: `vignette.png`, `motif.png`, `corner-tl.png`, `corner-tr.png`, `corner-bl.png`, `corner-br.png`, `banner.png`.
+Overlay CSS stays in #277 (`#seasonOverlay`, `pointer-events: none`). Winter/summer stay hooks.

@@ -1,4 +1,4 @@
-| 2026-09-14 | **season pixels** | Jungle + Halloween PNGs on #277 slots (`corner-*.png` etc.) + `--season-art-*` uncommented. Art-only. **v1.18.165 / SW v375**. |
+| 2026-09-14 | **season pixels** | Coordinator 10 PNGs (`season-jungle-corner-tl.png` …) wired to #277 `--season-art-*`. 96×96 corners, banners ≤320×64. **v1.18.166 / SW v376**. |
 | 2026-09-14 | **season overlay** | CSS + story seizoenen: classic / jungle / halloween + winter/zomer-hooks. Auto-kalender, persist, i18n blurbs, art-slots. Geen PNGs/audio/Versus. **v1.18.164 / SW v374**. |
 | 2026-09-14 | **locale + toast** | #266: NL VERLOREN, geen raw menu.tips / PICK AN ISLAND; versie-banner stiller + wegklik; rest HOME. **v1.18.163 / SW v373**. |
 | 2026-09-14 | **unify polish** | Start: geen naamveld, SPELEN-first; alle schermen HOME-tegels. #265 folded. **v1.18.162 / SW v372**. |
