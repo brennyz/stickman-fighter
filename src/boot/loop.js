@@ -839,6 +839,7 @@ function bootGame() {
   safeCall(syncPlayLayer, 'syncPlay');
   safeCall(resize, 'resize');
   safeCall(() => initLang(), 'i18n');
+  safeCall(() => { if (typeof initSeasonTheme === 'function') initSeasonTheme(); }, 'season');
   safeCall(() => UI.renderMenu(), 'menu');
   safeCall(ensureDaily, 'daily');
   safeCall(checkAchievements, 'ach');
@@ -916,6 +917,12 @@ function bootGame() {
     get state() { return state; },
     get swRev() { return SW_CACHE_REV; },
     startGame, save, Game, UI, recoverToMenu, syncPlayLayer,
+    season: (typeof seasonSnapshot === 'function') ? {
+      get id() { return currentSeasonId(); },
+      get pref() { return currentSeasonPref(); },
+      snapshot: seasonSnapshot,
+      setPref: typeof setSeasonPref === 'function' ? setSeasonPref : null,
+    } : null,
     enterHub: enterHubFromTitle,
     debug: typeof sfDebugScreen === 'function' ? sfDebugScreen : null,
     fixPlayLayer: () => (typeof sfDebugScreen === 'function' ? sfDebugScreen({ fix: true }) : null),

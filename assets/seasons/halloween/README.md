@@ -1,0 +1,1 @@
+Drop halloween PNGs here: `vignette.png`, `motif.png`, `corner-tl.png`, `corner-tr.png`, `corner-bl.png`, `corner-br.png`, `banner.png`. Then uncomment `--season-art-*` in `styles/seasons.css`. See `SEASON-OVERLAY.md`.

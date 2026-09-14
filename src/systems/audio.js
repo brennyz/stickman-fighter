@@ -20,6 +20,14 @@ const AudioSys = {
   _sampleCount: 0,
   _samplesReady: false,
 
+  /** Overlay season id for a future audio pass — no stems here. */
+  seasonId() {
+    try {
+      if (typeof currentSeasonId === 'function') return currentSeasonId();
+    } catch (_) {}
+    return 'classic';
+  },
+
   init() {
     try {
       if (this.ctx) {
