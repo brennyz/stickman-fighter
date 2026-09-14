@@ -22,8 +22,8 @@
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": "90182c8",
     "remoteMainHead": "90182c8",
-    "note": "LIVE main v1.18.163. #269: settings auto-save primary + offline fold, no version dump. #263 parked.",
-    "updated": "2026-09-14T16:11:03Z"
+    "note": "LIVE main v1.18.163. #269 scanner pack draft v1.18.166/SW376. No merge until «merge main». #263 parked.",
+    "updated": "2026-09-14T16:25:00Z"
   },
   "githubSync": {
     "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
@@ -94,14 +94,14 @@
       "id": "w-20260914T161500",
       "from": "user",
       "text": "Full UI/UX scanner package into #269 (no merge): P0 Upgrades HOME 1-tap + online autosave PRIMARY/Options strip; P1 weapons contrast + HOME cards + back-to-menu overlap; P2 drawer trim, install+5 langs off HOME, NL/EN. Acceptance: HOME Upgrades tile; sync status visible; Options not a debug dump.",
-      "status": "active",
+      "status": "done-in-code",
       "updated": "2026-09-14"
     },
     {
       "id": "w-20260914T160900",
       "from": "user",
       "text": "Add to #269: Options cleanup — drop version clutter (keep Verse versie useful, not noisy). Save model: auto/online PRIMARY; offline/local a separate explicit path, not equal choices. Keep upgrades HOME, drawer trim, weapon contrast.",
-      "status": "active",
+      "status": "done-in-code",
       "updated": "2026-09-14"
     },
     {
@@ -635,6 +635,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T16:24:32Z",
+      "summary": "Scanner pack on #269: Upgrades HOME, autosave primary, Options not a dump, contrast, drawer trim, install/langs off HOME. v1.18.166/SW376. Draft. No merge."
+    },
+    {
       "at": "2026-09-14T16:09:35Z",
       "summary": "#266 LIVE. New #269: upgrades HOME tile, App/Vers labels, weapon contrast. v1.18.165/SW375. Draft. #263 parked."
     },
@@ -729,10 +733,6 @@
     {
       "at": "2026-08-17T10:18:00Z",
       "summary": "main LIVE 33d89b6 v1.18.151 — pull-commando voor de pc klaar"
-    },
-    {
-      "at": "2026-08-17T10:03:24Z",
-      "summary": "LIVE gemerged #248–#255 naar main conflictloos · v1.18.151 / SW 361 — pull main op de pc"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
