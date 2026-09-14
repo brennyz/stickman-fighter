@@ -43,6 +43,8 @@ must(/tOr\('combat\.trainLostTip'/.test(game), 'finishTraining must resolve comb
 must(/opener \? 1 :/.test(game), 'level 1-2 wave 1 spawn must be single-file');
 must(/this\.player\.energy = 45/.test(game), 'opener should start with readable energy');
 must(/invulnT = Math\.max\(this\.player\.invulnT \|\| 0, 1\.35\)/.test(game), 'early adventure spawn grace missing');
+must(/satanPending && !this\.satanActive/.test(game) || /!this\.satanPending && !this\.satanActive/.test(game),
+  'opener grace must skip Satan');
 
 must(/n === 1 \? 2 : 3/.test(monsters), 'level 1 wave 1 must cap at 2 enemies');
 must(/waves\[1\]\.slice\(0, 4\)/.test(monsters), 'level 1 wave 2 must cap at 4 enemies');

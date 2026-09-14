@@ -155,11 +155,7 @@ class Game {
       applyPetBonusesToPlayer(this, this.player);
       spawnGamePet(this);
       spawnGameEggPet(this);
-      if (mode === 'adventure') {
-        this.player.energy = 45;
-        const openerLv = opts.level || 1;
-        if (openerLv <= 3) this.player.invulnT = Math.max(this.player.invulnT || 0, 1.35);
-      }
+      if (mode === 'adventure') this.player.energy = 45;
     }
 
     if (mode === 'adventure') {
@@ -319,6 +315,10 @@ class Game {
       if (typeof playFightBgm === 'function') playFightBgm(this.level.boss ? 'boss' : 'battle');
       else AudioSys.play(this.level.boss ? 'boss' : 'battle');
     } catch (_) {}
+    // Spawn grace only for a normal opener — never during Satan (reflect must land).
+    if (this.player && n <= 3 && !this.satanPending && !this.satanActive) {
+      this.player.invulnT = Math.max(this.player.invulnT || 0, 1.35);
+    }
   }
 
   maybeRollMasterSword() {
@@ -1133,6 +1133,7 @@ class Game {
       this.satanPending = false;
       this.satanDelayT = 0;
       this.satanActive = true;
+      if (this.player) this.player.invulnT = 0;
       markSatanEncounterStarted(this.level.n, this.advDiff);
       this.spawnQueue = [];
       this.monsters = this.monsters.filter((m) => m && m.satanBoss);
