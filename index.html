@@ -139,6 +139,12 @@
               <span class="hub-tile-sub">Wapens · figuur · boek</span>
               <span class="hub-tile-stat" data-hub-stat="collect">0/126</span>
             </button>
+            <button type="button" class="hub-tile hub-tile-buildings" id="btnBuildings" data-hub="buildings" aria-label="Fabrieken">
+              <span class="hub-tile-ico"><img src="assets/buttons/hub/buildings.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
+              <span class="hub-tile-title">Fabrieken</span>
+              <span class="hub-tile-sub">Werken · oogst · upgrade</span>
+              <span class="hub-tile-stat" data-hub-stat="buildings">5 werken</span>
+            </button>
             <button type="button" class="hub-tile hub-tile-summon" id="btnSummons" data-hub="summon" aria-label="Summons">
               <span class="hub-tile-ico"><img src="assets/buttons/hub/summons.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
               <span class="hub-tile-title">Summons</span>
@@ -345,6 +351,25 @@
   <button type="button" class="btn mode-btn b-gray big-touch" id="btnGambleSkip" style="width:min(86vw,420px);justify-content:center;margin-top:10px">
     <span class="ico"><img src="assets/buttons/chrome/skip.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><div id="gambleSkipLbl">Overslaan<small>Geen gok — geen extra baas of buff</small></div>
   </button>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><img src="assets/buttons/chrome/home.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><span class="sub-home-label">Terug naar menu</span></button></div>
+</div>
+
+<div id="buildingsScreen" class="screen buildings-screen">
+  <button class="btn back-btn" data-back type="button"><img class="back-btn-ico" src="assets/buttons/chrome/back.svg" alt="" width="18" height="18" decoding="async" draggable="false"> Menu</button>
+  <h2 class="head" id="buildingsScreenHead">Fabrieken</h2>
+  <div class="subtitle" id="buildingsScreenSub">Vijf werken · oogst op tijd · upgrade</div>
+  <p class="buildings-api-note" id="buildingsApiNote" hidden></p>
+  <div class="statbar" id="buildingsWallet" style="margin-bottom:10px"></div>
+  <div class="buildings-body">
+    <div id="buildingsDetail" class="buildings-detail" aria-live="polite"></div>
+    <div id="buildingsList" class="buildings-list" role="list" aria-label="Fabrieken">
+      <div class="step-card building-stub-card" data-factory-id="stick_lighter" hidden></div>
+      <div class="step-card building-stub-card" data-factory-id="woodchip_glue" hidden></div>
+      <div class="step-card building-stub-card" data-factory-id="chipping_wood" hidden></div>
+      <div class="step-card building-stub-card" data-factory-id="bamboo_boesa" hidden></div>
+      <div class="step-card building-stub-card" data-factory-id="echo_whistle" hidden></div>
+    </div>
+  </div>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><img src="assets/buttons/chrome/home.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><span class="sub-home-label">Terug naar menu</span></button></div>
 </div>
 
@@ -643,21 +668,6 @@
       <div>Dag-ei openen<small>Gratis arcade-pull</small></div>
     </button>
     <div id="eggList"></div>
-  </div>
-  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><img src="assets/buttons/chrome/home.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><span class="sub-home-label">Terug naar menu</span></button></div>
-</div>
-
-<div id="buildingsScreen" class="screen">
-  <button class="btn back-btn" data-back type="button"><img class="back-btn-ico" src="assets/buttons/chrome/back.svg" alt="" width="18" height="18" decoding="async" draggable="false"> Terug</button>
-  <h2 class="head" id="buildingsScreenHead">Fabrieken</h2>
-  <div class="subtitle" id="buildingsScreenSub">Eiland-fabrieken · levels · timed resources — stub voor UI/art/powers</div>
-  <div class="statbar" id="buildingsWallet" style="margin-bottom:10px"></div>
-  <div id="buildingsList" style="width:min(92vw,520px)">
-    <div class="step-card building-stub-card" data-factory-id="stick_lighter"></div>
-    <div class="step-card building-stub-card" data-factory-id="woodchip_glue"></div>
-    <div class="step-card building-stub-card" data-factory-id="chipping_wood"></div>
-    <div class="step-card building-stub-card" data-factory-id="bamboo_boesa"></div>
-    <div class="step-card building-stub-card" data-factory-id="echo_whistle"></div>
   </div>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><img src="assets/buttons/chrome/home.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><span class="sub-home-label">Terug naar menu</span></button></div>
 </div>

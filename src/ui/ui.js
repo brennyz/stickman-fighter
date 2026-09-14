@@ -868,6 +868,13 @@ function hubTileStatLine(hub) {
         w: weaponUnlockedCount(), total: WEAPONS.length,
         pets: petTamedCount(), coins: petCoinsBalance(),
       }) + ` ${SVG_COIN_ICON}`;
+    case 'buildings': {
+      try {
+        return (typeof buildingsHubStat === 'function') ? buildingsHubStat() : t('buildings.hubStatIdle');
+      } catch (_) {
+        return t('buildings.hubStatIdle');
+      }
+    }
     case 'summon': {
       try {
         ensureChestDaily();
@@ -1339,6 +1346,12 @@ const UI = {
         this.show('menuScreen');
         return;
       }
+      if (active === 'buildingsScreen') {
+        try { this.stopBuildingsTick(); } catch (_) {}
+        this.renderMenu();
+        this.show('menuScreen');
+        return;
+      }
       if (active === 'levelScreen') {
         bumpLevelHoldGen();
         try { cancelGambleStart(); } catch (_) {}
@@ -1565,6 +1578,7 @@ const UI = {
       state = 'menu';
       window.__sfLoopErr = false;
       try { this.clearSummonRevealTimers(); } catch (_) {}
+      try { this.stopBuildingsTick(); } catch (_) {}
       this._chestPullBusy = false;
       try { Input.releaseAll(); } catch (_) {}
       Input.dualMode = false;

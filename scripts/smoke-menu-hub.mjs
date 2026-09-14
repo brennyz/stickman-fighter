@@ -42,7 +42,7 @@ must(/body\.is-playing #menuScreen \.menu-stage/.test(css), 'missing play-safe s
 must(/sf-icon-broken/.test(css), 'missing broken-icon CSS');
 must(/function hardenButtonIcons/.test(fs.readFileSync(path.join(root, 'src/systems/missions.js'), 'utf8')), 'missing hardenButtonIcons');
 
-const hub = ['adventure', 'arcade', 'collect', 'summons', 'continue'];
+const hub = ['adventure', 'arcade', 'buildings', 'collect', 'summons', 'continue'];
 const modes = ['training', 'wall', 'mats', 'weapons', 'pets', 'style', 'skills', 'upgrades', 'dex', 'gear'];
 const chrome = [
   'music', 'missions', 'settings', 'help', 'refresh', 'install', 'home',

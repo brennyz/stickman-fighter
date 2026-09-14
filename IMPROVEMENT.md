@@ -143,6 +143,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | Buildings UI (2/4): HOME-tegel + list/detail 5 factories, stub systems-API. v1.18.164 / SW 374. Draft, geen main. |
 | 2026-09-14 | — | Top-20 spawn FX: funny procedural SFX + light shudder (rarity×100+hp+dmg×5). v1.18.164 / SW 374. Draft. |
 | 2026-09-14 | — | W2 `sp.pixel` aliases → #282 provisional art/species IDs (geen pixel-redo). v1.18.165 / SW 375. Draft. |
 | 2026-09-14 | — | Monster catalog W2: +288 soorten (36 art slots × 8 rarities), woods/crypt/scrap golven, stub silhouetten, `docs/MONSTER-ART-SLOTS.md` voor pixel-partner. v1.18.164 / SW 374. Draft. |
