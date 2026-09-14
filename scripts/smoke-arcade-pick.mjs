@@ -46,6 +46,9 @@ must(/updateWait: 'New version — loads in the menu'/.test(i18n), 'EN net.updat
 must(/tOr\('net\.updateWait'/.test(loop), 'SW wait banner must follow game language');
 must(/tOr\('net\.updateReady'/.test(loop), 'SW ready banner must follow game language');
 must(/tOr\('hub\.loadFail'/.test(ui), 'hub load fail toast must be i18n');
+must(/setTitle\('togMusic', 'menu\.music'\)/.test(i18n), 'dock tooltips must follow game language');
+must(/setTitle\('btnVerseVersie', 'settings\.freshHint'\)/.test(i18n), 'fresh-version tooltip must follow game language');
+must(/updateNetStatus\(\)/.test(i18n), 'lang switch must refresh SW/offline chrome');
 must(!/data-hub="versus"/.test(html), 'versus stays retired');
 
 const chrome = ['/usr/local/bin/google-chrome', '/usr/bin/google-chrome'].find((p) => fs.existsSync(p));
@@ -93,15 +96,19 @@ async function run() {
       const hubOpen = !!(hub && hub.classList.contains('active') && hub.classList.contains('mode-hub-home'));
       if (typeof startGame === 'function') startGame('training');
       const started = !!(typeof game !== 'undefined' && game && game.mode === 'training');
+      const musicTip = (document.getElementById('togMusic') || {}).title || '';
+      const freshTip = (document.getElementById('btnVerseVersie') || {}).title || '';
       return {
         ok: !!(hubOpen
           && tiles.includes('btnTraining') && tiles.includes('btnWall') && tiles.includes('btnMatsCoins')
           && /Pick mode/i.test(step) && /Training/.test(titles.join(' '))
           && /loads in the menu/.test(waitCopy) && !/laadt in het menu/.test(waitCopy)
           && /tap to load/.test(readyCopy)
+          && /Music/i.test(musicTip) && !/Muziek/.test(musicTip)
+          && /newest version/i.test(freshTip) && !/Oude cache/.test(freshTip)
           && collect && collect.hidden && getComputedStyle(collect).display === 'none'
           && started),
-        tiles, titles, step, waitCopy, readyCopy, started,
+        tiles, titles, step, waitCopy, readyCopy, started, musicTip, freshTip,
         collectHidden: !!(collect && collect.hidden),
       };
     } catch (e) {

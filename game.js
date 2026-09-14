@@ -2552,6 +2552,11 @@ function applyLangStaticScreens() {
       el.appendChild(document.createTextNode(label));
     } else el.textContent = label;
   }
+  setTitle('togMusic', 'menu.music');
+  setTitle('btnMissions', 'menu.missions');
+  setTitle('btnSettings', 'settings.title');
+  setTitle('btnHelp', 'menu.tips');
+  setTitle('btnVerseVersie', 'settings.freshHint');
 
   const installLbl = document.getElementById('btnInstallLabel');
   if (installLbl) installLbl.innerHTML = t('menu.install') + '<small>' + t('menu.installSub') + '</small>';
@@ -2843,6 +2848,7 @@ function applyLang() {
     UI.syncBackLabels();
   }
   try { if (typeof syncTitleGateCopy === 'function') syncTitleGateCopy(); } catch (_) {}
+  try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
 }
 
 function initLang() {
