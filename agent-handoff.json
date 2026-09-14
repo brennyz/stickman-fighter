@@ -111,7 +111,8 @@
       "from": "user",
       "text": "Vul P1 art-slots uit editor draft PR #284 (docs/MONSTER-ART-SLOTS.md). Nieuwe IDs — niet herschilderen van classic/farm/zoo/sea/tide/satan of #282 set. Exact: wolf, owl, frog, snake, boar, skeleton, mummy, beetle, wasp, spider, drone, bot, scrapdog, penguin, yeti, crab, turtle, squid.",
       "status": "done-in-code",
-      "updated": "2026-09-14"
+      "updated": "2026-09-14",
+      "notes": "Superseded by editor pivot: alias-first onto #282. Unique P1 drawers abandoned. All 36 W2 arts aliased."
     },
     {
       "id": "w-20260914T151100",

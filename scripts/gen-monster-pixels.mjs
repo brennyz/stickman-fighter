@@ -75,33 +75,47 @@ const FAMILY_PREVIEW = {
   panda: { B: '#e8eef8', D: '#1a1a2a' },
   flamingo: { B: '#ff9ad5', D: '#c04590' },
   camel: { B: '#d4a574', D: '#8a6030' },
-  wolf: { B: '#8a8478', D: '#3a3830' },
-  owl: { B: '#c98850', D: '#6b4a28' },
-  frog: { B: '#5ad06a', D: '#2e8f3c' },
-  snake: { B: '#43b25b', D: '#1e4a28' },
-  boar: { B: '#9a917f', D: '#4a4038' },
-  skeleton: { B: '#dfe8ff', D: '#6a7080' },
-  mummy: { B: '#e8c98a', D: '#8a6030' },
-  beetle: { B: '#43b25b', D: '#1e4a28' },
-  wasp: { B: '#ffe259', D: '#c97a20' },
-  spider: { B: '#6b5344', D: '#3a2820' },
-  drone: { B: '#9fb2c8', D: '#5f7189' },
-  bot: { B: '#9fb2c8', D: '#5f7189' },
-  scrapdog: { B: '#b86a4a', D: '#6a3820' },
-  penguin: { B: '#505868', D: '#202830' },
-  yeti: { B: '#dfe8ff', D: '#6a7080' },
-  crab: { B: '#ff7043', D: '#8a2020' },
-  turtle: { B: '#43b25b', D: '#1e4a28' },
-  squid: { B: '#c47aff', D: '#5a2080' },
 };
 
-const P1_ART_IDS = [
-  'wolf', 'owl', 'frog', 'snake', 'boar',
-  'skeleton', 'mummy', 'beetle', 'wasp', 'spider',
-  'drone', 'bot', 'scrapdog',
-  'penguin', 'yeti',
-  'crab', 'turtle', 'squid',
-];
+/** W2 catalog art → #282 map (first-paint aliases). Keep in sync with MONSTER_PIXEL_ALIAS. */
+const W2_PIXEL_ALIAS = {
+  wolf: { pixel: 'fox', high: 'voidkonijn' },
+  owl: { pixel: 'bat' },
+  frog: { pixel: 'slime', high: 'voidsly' },
+  snake: { pixel: 'croc', high: 'razendekrokodil' },
+  boar: { pixel: 'pig', high: 'razendzwijn' },
+  raven: { pixel: 'bat' },
+  moose: { pixel: 'cow', high: 'holkoe' },
+  beaver: { pixel: 'pig' },
+  badger: { pixel: 'hedgehog' },
+  stag: { pixel: 'horse', high: 'holpaard' },
+  lynx: { pixel: 'tiger', high: 'razendetijger' },
+  mole: { pixel: 'slime', high: 'frostbub' },
+  skeleton: { pixel: 'ghost' },
+  mummy: { pixel: 'golem' },
+  beetle: { pixel: 'hedgehog' },
+  wasp: { pixel: 'bat' },
+  spider: { pixel: 'octo' },
+  wisp: { pixel: 'ghost' },
+  gargoyle: { pixel: 'dragon', high: 'omegadrake' },
+  lich: { pixel: 'ghost' },
+  drone: { pixel: 'can' },
+  bot: { pixel: 'can' },
+  scrapdog: { pixel: 'fox', high: 'voidkonijn' },
+  cog: { pixel: 'can' },
+  turret: { pixel: 'can' },
+  rivet: { pixel: 'golem' },
+  junkbat: { pixel: 'bat' },
+  piston: { pixel: 'golem' },
+  penguin: { pixel: 'duck', high: 'kwakophol' },
+  yeti: { pixel: 'bear', high: 'razendebeer' },
+  walrus: { pixel: 'hippo', high: 'razendnijlpaard' },
+  seal: { pixel: 'duck' },
+  crab: { pixel: 'hedgehog' },
+  turtle: { pixel: 'golem' },
+  squid: { pixel: 'octo', high: 'voidocto' },
+  ray: { pixel: 'shark', high: 'levihaai' },
+};
 
 function grid() {
   return Array.from({ length: N }, () => Array(N).fill(CH.empty));
@@ -647,313 +661,6 @@ function artCamel() {
   return outline(g);
 }
 
-/* ---------- P1 W2 slots (unique IDs — not classic/farm/zoo/sea redo) ---------- */
-
-function artWolf() {
-  const g = grid();
-  fillEllipse(g, 16, 18, 8, 6, CH.body);
-  fillEllipse(g, 8, 14, 5, 4, CH.body);
-  fillTri(g, 4, 15, 1, 16, 5, 18, CH.dark);
-  fillTri(g, 6, 11, 5, 6, 9, 12, CH.dark);
-  fillTri(g, 10, 11, 12, 6, 13, 12, CH.body);
-  fillEllipse(g, 25, 14, 4, 5, CH.dark);
-  fillRect(g, 11, 23, 2, 5, CH.dark);
-  fillRect(g, 15, 23, 2, 5, CH.dark);
-  fillRect(g, 19, 23, 2, 4, CH.dark);
-  fillRect(g, 22, 23, 2, 4, CH.dark);
-  eyes(g, 7, 13, 1);
-  set(g, 3, 17, CH.pink);
-  return outline(g);
-}
-
-function artOwl() {
-  const g = grid();
-  fillTri(g, 4, 16, 12, 10, 12, 20, CH.dark);
-  fillTri(g, 28, 16, 20, 10, 20, 20, CH.dark);
-  fillEllipse(g, 16, 18, 6, 7, CH.body);
-  fillEllipse(g, 16, 11, 7, 6, CH.body);
-  fillTri(g, 10, 8, 9, 3, 13, 8, CH.dark);
-  fillTri(g, 22, 8, 23, 3, 19, 8, CH.dark);
-  eyes(g, 13, 11, 2);
-  eyes(g, 19, 11, 2);
-  fillTri(g, 15, 13, 16, 16, 17, 13, CH.orange);
-  return outline(g);
-}
-
-function artFrog() {
-  const g = grid();
-  fillEllipse(g, 16, 18, 10, 7, CH.body);
-  fillEllipse(g, 10, 12, 3, 3, CH.body);
-  fillEllipse(g, 20, 12, 3, 3, CH.body);
-  eyes(g, 10, 11, 2);
-  eyes(g, 20, 11, 2);
-  fillRect(g, 11, 18, 8, 1, CH.dark);
-  fillEllipse(g, 6, 22, 4, 3, CH.dark);
-  fillEllipse(g, 26, 22, 4, 3, CH.dark);
-  fillRect(g, 4, 24, 4, 2, CH.dark);
-  fillRect(g, 24, 24, 4, 2, CH.dark);
-  set(g, 13, 16, CH.hi);
-  return outline(g);
-}
-
-function artSnake() {
-  const g = grid();
-  fillEllipse(g, 7, 12, 4, 3, CH.body);
-  fillEllipse(g, 12, 16, 4, 3, CH.body);
-  fillEllipse(g, 18, 20, 5, 3, CH.body);
-  fillEllipse(g, 24, 16, 4, 3, CH.body);
-  fillEllipse(g, 27, 12, 3, 2, CH.dark);
-  eyes(g, 6, 11, 1);
-  set(g, 3, 13, CH.pink);
-  set(g, 2, 12, CH.pink);
-  set(g, 2, 14, CH.pink);
-  return outline(g);
-}
-
-function artBoar() {
-  const g = grid();
-  fillEllipse(g, 17, 18, 9, 7, CH.body);
-  fillEllipse(g, 8, 17, 5, 4, CH.dark);
-  fillTri(g, 4, 18, 2, 21, 6, 19, CH.accent);
-  fillTri(g, 5, 19, 3, 22, 7, 20, CH.accent);
-  fillEllipse(g, 4, 17, 3, 2, CH.pink);
-  fillTri(g, 10, 13, 9, 9, 13, 14, CH.dark);
-  eyes(g, 8, 15, 1);
-  fillRect(g, 12, 24, 2, 4, CH.dark);
-  fillRect(g, 16, 24, 2, 4, CH.dark);
-  fillRect(g, 21, 24, 2, 3, CH.dark);
-  fillRect(g, 24, 24, 2, 3, CH.dark);
-  fillEllipse(g, 26, 16, 2, 2, CH.dark);
-  return outline(g);
-}
-
-function artSkeleton() {
-  const g = grid();
-  fillEllipse(g, 16, 9, 5, 5, CH.body);
-  eyes(g, 14, 9, 1);
-  eyes(g, 18, 9, 1);
-  fillRect(g, 15, 12, 2, 1, CH.dark);
-  fillRect(g, 14, 13, 4, 1, CH.ink);
-  fillRect(g, 15, 14, 2, 8, CH.body);
-  fillRect(g, 11, 16, 10, 1, CH.dark);
-  fillRect(g, 11, 18, 10, 1, CH.dark);
-  fillRect(g, 12, 20, 8, 1, CH.dark);
-  fillRect(g, 8, 16, 3, 1, CH.body);
-  fillRect(g, 21, 16, 3, 1, CH.body);
-  fillRect(g, 7, 17, 1, 5, CH.dark);
-  fillRect(g, 24, 17, 1, 5, CH.dark);
-  fillRect(g, 13, 22, 6, 2, CH.body);
-  fillRect(g, 13, 24, 2, 5, CH.dark);
-  fillRect(g, 17, 24, 2, 5, CH.dark);
-  return outline(g);
-}
-
-function artMummy() {
-  const g = grid();
-  fillRect(g, 10, 12, 12, 12, CH.body);
-  fillEllipse(g, 16, 8, 5, 5, CH.body);
-  fillRect(g, 10, 14, 12, 1, CH.dark);
-  fillRect(g, 10, 17, 12, 1, CH.dark);
-  fillRect(g, 10, 20, 12, 1, CH.dark);
-  fillRect(g, 7, 15, 3, 1, CH.accent);
-  fillRect(g, 22, 18, 3, 1, CH.accent);
-  eyes(g, 14, 8, 1);
-  eyes(g, 18, 8, 1);
-  fillRect(g, 6, 14, 4, 3, CH.body);
-  fillRect(g, 22, 14, 4, 3, CH.body);
-  fillRect(g, 12, 24, 3, 4, CH.dark);
-  fillRect(g, 17, 24, 3, 4, CH.dark);
-  return outline(g);
-}
-
-function artBeetle() {
-  const g = grid();
-  fillEllipse(g, 17, 16, 9, 8, CH.dark);
-  fillEllipse(g, 17, 17, 7, 6, CH.body);
-  fillRect(g, 17, 11, 1, 12, CH.ink);
-  fillTri(g, 8, 14, 3, 10, 10, 16, CH.dark);
-  fillEllipse(g, 8, 16, 3, 3, CH.body);
-  eyes(g, 7, 15, 1);
-  for (const x of [11, 16, 21]) {
-    fillRect(g, x, 23, 1, 4, CH.ink);
-    fillRect(g, x + 3, 23, 1, 4, CH.ink);
-  }
-  return outline(g);
-}
-
-function artWasp() {
-  const g = grid();
-  fillEllipse(g, 12, 10, 6, 3, CH.hi);
-  fillEllipse(g, 20, 10, 6, 3, CH.hi);
-  fillEllipse(g, 16, 15, 4, 3, CH.body);
-  fillEllipse(g, 22, 18, 5, 4, CH.body);
-  fillRect(g, 19, 16, 7, 1, CH.ink);
-  fillRect(g, 19, 18, 7, 1, CH.ink);
-  fillRect(g, 19, 20, 7, 1, CH.ink);
-  fillEllipse(g, 10, 15, 3, 3, CH.dark);
-  eyes(g, 9, 14, 1);
-  fillTri(g, 26, 18, 31, 19, 26, 20, CH.ink);
-  fillRect(g, 13, 18, 1, 4, CH.ink);
-  fillRect(g, 16, 18, 1, 4, CH.ink);
-  return outline(g);
-}
-
-function artSpider() {
-  const g = grid();
-  fillEllipse(g, 20, 16, 6, 5, CH.body);
-  fillEllipse(g, 12, 16, 4, 4, CH.dark);
-  eyes(g, 10, 15, 1);
-  set(g, 11, 14, CH.eye);
-  set(g, 13, 14, CH.eye);
-  for (let i = 0; i < 4; i++) {
-    const y = 10 + i * 4;
-    fillRect(g, 4, y, 6, 1, CH.ink);
-    fillRect(g, 22, y, 6, 1, CH.ink);
-  }
-  set(g, 9, 18, CH.pink);
-  return outline(g);
-}
-
-function artDrone() {
-  const g = grid();
-  fillEllipse(g, 8, 10, 5, 2, CH.hi);
-  fillEllipse(g, 24, 10, 5, 2, CH.hi);
-  fillRect(g, 7, 10, 2, 2, CH.ink);
-  fillRect(g, 23, 10, 2, 2, CH.ink);
-  fillRect(g, 10, 12, 4, 1, CH.dark);
-  fillRect(g, 18, 12, 4, 1, CH.dark);
-  fillRect(g, 12, 12, 8, 8, CH.body);
-  fillRect(g, 13, 11, 6, 1, CH.body);
-  fillRect(g, 13, 20, 6, 1, CH.body);
-  fillEllipse(g, 16, 16, 2, 2, CH.ink);
-  fillEllipse(g, 16, 16, 1, 1, CH.orange);
-  fillRect(g, 16, 7, 1, 4, CH.dark);
-  set(g, 16, 6, CH.orange);
-  return outline(g);
-}
-
-function artBot() {
-  const g = grid();
-  fillRect(g, 11, 6, 10, 7, CH.body);
-  fillRect(g, 12, 8, 8, 3, CH.ink);
-  set(g, 14, 9, CH.orange);
-  set(g, 17, 9, CH.orange);
-  fillRect(g, 15, 3, 2, 3, CH.dark);
-  set(g, 16, 2, CH.orange);
-  fillRect(g, 10, 13, 12, 10, CH.body);
-  fillRect(g, 13, 15, 6, 4, CH.dark);
-  set(g, 16, 17, CH.orange);
-  fillRect(g, 6, 14, 4, 3, CH.dark);
-  fillRect(g, 22, 14, 4, 3, CH.dark);
-  fillRect(g, 12, 23, 3, 5, CH.dark);
-  fillRect(g, 17, 23, 3, 5, CH.dark);
-  return outline(g);
-}
-
-function artScrapdog() {
-  const g = grid();
-  fillRect(g, 10, 15, 14, 8, CH.body);
-  fillRect(g, 5, 13, 7, 6, CH.dark);
-  fillRect(g, 3, 17, 4, 2, CH.ink);
-  fillTri(g, 7, 13, 6, 8, 10, 13, CH.dark);
-  fillTri(g, 10, 13, 12, 8, 12, 14, CH.body);
-  set(g, 13, 17, CH.accent);
-  set(g, 17, 17, CH.accent);
-  set(g, 21, 17, CH.accent);
-  eyes(g, 7, 14, 1);
-  set(g, 7, 14, CH.orange);
-  fillRect(g, 24, 16, 3, 2, CH.dark);
-  fillRect(g, 27, 14, 2, 2, CH.ink);
-  fillRect(g, 28, 12, 2, 2, CH.dark);
-  fillRect(g, 11, 23, 2, 5, CH.ink);
-  fillRect(g, 15, 23, 2, 5, CH.ink);
-  fillRect(g, 19, 23, 2, 4, CH.ink);
-  fillRect(g, 22, 23, 2, 4, CH.ink);
-  return outline(g);
-}
-
-function artPenguin() {
-  const g = grid();
-  fillEllipse(g, 16, 16, 6, 9, CH.dark);
-  fillEllipse(g, 16, 18, 4, 6, CH.accent);
-  fillEllipse(g, 16, 9, 5, 4, CH.dark);
-  fillEllipse(g, 16, 10, 3, 2, CH.accent);
-  eyes(g, 14, 8, 1);
-  eyes(g, 18, 8, 1);
-  fillTri(g, 14, 10, 16, 13, 18, 10, CH.orange);
-  fillEllipse(g, 10, 16, 3, 2, CH.dark);
-  fillEllipse(g, 22, 16, 3, 2, CH.dark);
-  fillRect(g, 13, 25, 3, 2, CH.orange);
-  fillRect(g, 17, 25, 3, 2, CH.orange);
-  return outline(g);
-}
-
-function artYeti() {
-  const g = grid();
-  fillEllipse(g, 16, 16, 10, 9, CH.body);
-  fillEllipse(g, 16, 8, 6, 5, CH.body);
-  fillEllipse(g, 11, 6, 2, 2, CH.body);
-  fillEllipse(g, 21, 6, 2, 2, CH.body);
-  eyes(g, 14, 8, 1);
-  eyes(g, 18, 8, 1);
-  fillEllipse(g, 16, 11, 2, 1, CH.pink);
-  fillEllipse(g, 5, 16, 4, 6, CH.body);
-  fillEllipse(g, 27, 16, 4, 6, CH.body);
-  fillEllipse(g, 4, 21, 3, 2, CH.accent);
-  fillEllipse(g, 28, 21, 3, 2, CH.accent);
-  fillRect(g, 12, 24, 3, 4, CH.dark);
-  fillRect(g, 18, 24, 3, 4, CH.dark);
-  return outline(g);
-}
-
-function artCrab() {
-  const g = grid();
-  fillEllipse(g, 16, 16, 8, 6, CH.body);
-  fillEllipse(g, 6, 12, 4, 3, CH.dark);
-  fillEllipse(g, 26, 12, 4, 3, CH.dark);
-  fillTri(g, 3, 12, 1, 10, 5, 14, CH.dark);
-  fillTri(g, 29, 12, 31, 10, 27, 14, CH.dark);
-  eyes(g, 13, 13, 1);
-  eyes(g, 19, 13, 1);
-  fillRect(g, 13, 10, 1, 3, CH.ink);
-  fillRect(g, 19, 10, 1, 3, CH.ink);
-  for (const x of [8, 12, 20, 24]) {
-    fillRect(g, x, 21, 2, 4, CH.ink);
-  }
-  return outline(g);
-}
-
-function artTurtle() {
-  const g = grid();
-  fillEllipse(g, 17, 16, 10, 8, CH.dark);
-  fillEllipse(g, 17, 16, 8, 6, CH.body);
-  fillRect(g, 16, 11, 2, 10, CH.ink);
-  fillRect(g, 11, 16, 12, 1, CH.ink);
-  set(g, 13, 13, CH.ink);
-  set(g, 21, 13, CH.ink);
-  set(g, 13, 19, CH.ink);
-  set(g, 21, 19, CH.ink);
-  fillEllipse(g, 6, 16, 4, 3, CH.body);
-  eyes(g, 5, 15, 1);
-  fillEllipse(g, 10, 22, 4, 2, CH.dark);
-  fillEllipse(g, 22, 22, 4, 2, CH.dark);
-  fillEllipse(g, 26, 14, 3, 2, CH.dark);
-  return outline(g);
-}
-
-function artSquid() {
-  const g = grid();
-  fillEllipse(g, 12, 12, 6, 8, CH.body);
-  fillTri(g, 12, 4, 8, 10, 16, 10, CH.dark);
-  eyes(g, 10, 12, 2);
-  set(g, 9, 12, CH.pink);
-  for (let i = 0; i < 5; i++) {
-    fillRect(g, 14 + i * 2, 18, 2, 6 + (i % 3), CH.dark);
-    set(g, 14 + i * 2, 24 + (i % 3), CH.pink);
-  }
-  return outline(g);
-}
-
 const ART_BUILDERS = {
   slime: artSlime,
   bat: artBat,
@@ -989,24 +696,6 @@ const ART_BUILDERS = {
   panda: artPanda,
   flamingo: artFlamingo,
   camel: artCamel,
-  wolf: artWolf,
-  owl: artOwl,
-  frog: artFrog,
-  snake: artSnake,
-  boar: artBoar,
-  skeleton: artSkeleton,
-  mummy: artMummy,
-  beetle: artBeetle,
-  wasp: artWasp,
-  spider: artSpider,
-  drone: artDrone,
-  bot: artBot,
-  scrapdog: artScrapdog,
-  penguin: artPenguin,
-  yeti: artYeti,
-  crab: artCrab,
-  turtle: artTurtle,
-  squid: artSquid,
 };
 
 /** Flagship species — family sprite + a readable extra mark. */
@@ -1108,16 +797,14 @@ function emitJs(artMaps, speciesMaps) {
 }
 
 function emitPreview(artMaps, speciesMaps) {
-  const card = (id, file, art, kind) =>
-    `<figure data-id="${id}" data-kind="${kind}" data-art="${art}"><div class="zoom"><img src="${file}" alt="${id}" width="96" height="96"></div><figcaption>${id}<small>${kind} · ${art}</small></figcaption></figure>`;
-  const combat = (id) =>
-    `<figure data-id="${id}" data-kind="combat" data-art="${id}"><div class="combat"><img src="art-${id}.svg" alt="${id} combat" width="44" height="44"></div><figcaption>${id}<small>combat ~44px</small></figcaption></figure>`;
-  const p1Set = new Set(P1_ART_IDS);
-  const p1Cards = P1_ART_IDS.filter((id) => artMaps[id]).map((id) => card(id, `art-${id}.svg`, id, 'p1'));
-  const classicCards = Object.keys(artMaps).filter((id) => !p1Set.has(id)).map((id) => card(id, `art-${id}.svg`, id, 'art'));
-  const spCards = Object.entries(SPECIES_VARIANTS).map(([id, spec]) => card(id, `sp-${id}.svg`, spec.art, 'species'));
-  const combatA = P1_ART_IDS.slice(0, 9).map(combat);
-  const combatB = P1_ART_IDS.slice(9).map(combat);
+  const cards = [];
+  const add = (id, file, art, kind) => {
+    cards.push(`<figure data-id="${id}" data-kind="${kind}" data-art="${art}"><div class="zoom"><img src="${file}" alt="${id}" width="96" height="96"></div><figcaption>${id}<small>${kind} · ${art}</small></figcaption></figure>`);
+  };
+  for (const id of Object.keys(artMaps)) add(id, `art-${id}.svg`, id, 'art');
+  for (const [id, spec] of Object.entries(SPECIES_VARIANTS)) add(id, `sp-${id}.svg`, spec.art, 'species');
+  const aliasRows = Object.entries(W2_PIXEL_ALIAS).map(([art, a]) =>
+    `<tr><td><code>${art}</code></td><td><code>${a.pixel}</code></td><td>${a.high ? `<code>${a.high}</code>` : '—'}</td></tr>`).join('');
   return `<!doctype html>
 <html lang="nl">
 <head>
@@ -1132,9 +819,8 @@ function emitPreview(artMaps, speciesMaps) {
   section { padding: 8px 16px 24px; }
   h2 { font-size: .95rem; color: #ffd75e; margin: 18px 4px 8px; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; }
-  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
   figure { margin: 0; background: #1a2030; border: 1px solid #333c55; border-radius: 10px; padding: 8px; text-align: center; }
-  .zoom, .combat { image-rendering: pixelated; background:
+  .zoom { image-rendering: pixelated; background:
     linear-gradient(45deg,#20283c 25%,transparent 25%),
     linear-gradient(-45deg,#20283c 25%,transparent 25%),
     linear-gradient(45deg,transparent 75%,#20283c 75%),
@@ -1142,28 +828,26 @@ function emitPreview(artMaps, speciesMaps) {
     background-size: 12px 12px; background-position: 0 0,0 6px,6px -6px,-6px 0;
     border-radius: 6px; padding: 8px; }
   .zoom img { width: 96px; height: 96px; image-rendering: pixelated; }
-  .combat { background-color: #0e1220; }
-  .combat img { width: 44px; height: 44px; image-rendering: pixelated; }
   figcaption { margin-top: 6px; font-weight: 700; }
   figcaption small { display: block; font-weight: 500; color: #9db1e3; }
+  table { border-collapse: collapse; margin: 8px 4px 16px; font-size: 13px; }
+  th, td { border: 1px solid #333c55; padding: 4px 8px; text-align: left; }
+  th { color: #ffd75e; }
 </style>
 </head>
 <body>
 <h1>Monster pixel set</h1>
-<p>32×32 stickman-pixel sprites. Combat tints <code>B</code>/<code>D</code> with each species <code>c1</code>/<code>c2</code>.
-P1 W2 slots from <code>docs/MONSTER-ART-SLOTS.md</code> are unique IDs (not a redo of classic/farm/zoo/#282).
+<p>32×32 stickman-pixel sprites for the doubled farm/zoo roster plus classic families.
+Combat tints <code>B</code>/<code>D</code> with each species <code>c1</code>/<code>c2</code>.
+W2 woods/crypt/scrap/frost/sea species reuse these maps via <code>sp.pixel</code> aliases (no unique P1 drawers yet).
 Share URL stays <code>speel.html</code>.</p>
 <section>
-<h2>P1 W2 art slots (${p1Cards.length})</h2>
-<div class="grid">${p1Cards.join('')}</div>
-<h2>P1 combat size (wild / crypt)</h2>
-<div class="row">${combatA.join('')}</div>
-<h2>P1 combat size (scrap / frost / sea)</h2>
-<div class="row">${combatB.join('')}</div>
-<h2>Classic / farm / zoo art (${classicCards.length})</h2>
-<div class="grid">${classicCards.join('')}</div>
-<h2>Flagship species slots (${spCards.length})</h2>
-<div class="grid">${spCards.join('')}</div>
+<h2>Art-family slots (${Object.keys(artMaps).length})</h2>
+<div class="grid">${cards.filter((_, i) => i < Object.keys(artMaps).length).join('')}</div>
+<h2>Flagship species slots (${Object.keys(speciesMaps).length})</h2>
+<div class="grid">${cards.filter((_, i) => i >= Object.keys(artMaps).length).join('')}</div>
+<h2>W2 catalog aliases → #282 maps</h2>
+<table><thead><tr><th>W2 art</th><th>.pixel</th><th>mythic+</th></tr></thead><tbody>${aliasRows}</tbody></table>
 </section>
 </body>
 </html>`;
@@ -1174,42 +858,44 @@ function emitMapping(artMaps, speciesMaps) {
     `| \`${id}\` | art | \`assets/monsters/art-${id}.svg\` | all SPECIES with \`art:'${id}'\` without a species pixel |`);
   const spRows = Object.entries(SPECIES_VARIANTS).map(([id, spec]) =>
     `| \`${id}\` | species | \`assets/monsters/sp-${id}.svg\` | \`${id}\` (art \`${spec.art}\`) |`);
-  const p1Rows = P1_ART_IDS.filter((id) => artMaps[id]).map((id) =>
-    `| \`${id}\` | art | \`assets/monsters/art-${id}.svg\` | W2 P1 family — 8 rarities share this map (tint c1/c2) |`);
+  const aliasRows = Object.entries(W2_PIXEL_ALIAS).map(([art, a]) =>
+    `| \`${art}\` | \`${a.pixel}\` | ${a.high ? `\`${a.high}\`` : '—'} |`);
   return `# Monster pixel ID map
 
-Contract: \`docs/MONSTER-ART-SLOTS.md\` + PR #284 catalog. \`sp.art\` is the stable ID.
-Eight rarities share one art; tint uses species \`c1\`/\`c2\`. Flagships = common look per family.
+#282 farm/zoo/classic maps plus **W2 catalog aliases** (PR #284). First paint reuses existing maps — unique P1 silhouettes are optional later.
 
 Editor: [Monster editor double roster](https://cursor.com/agents/bc-43a25a67-7182-5f4f-ab63-6412cd05e154)
 
 Resolution order in combat / dex:
 
-1. Dedicated W2 map when \`MONSTER_ART_SLOTS[sp.art].pixelStatus === 'pixel'\` (P1)
-2. \`sp.pixel\` if it names a species or art map (P2/P3 aliases + #282 flagships)
+1. Dedicated W2 map when \`MONSTER_ART_SLOTS[sp.art].pixelStatus === 'pixel'\` (none yet)
+2. \`sp.pixel\` if it names a species or art map (W2 aliases + #282 flagships)
 3. \`sp.id\` species map (flagship)
 4. \`sp.art\` family map
 5. canvas stub / \`drawBeastArt\` / \`drawMonsterArt\` fallback
 
 Preview: [assets/monsters/preview.html](assets/monsters/preview.html)
 
-## P1 W2 slots (new IDs — not a #282 redo)
+## W2 art → #282 pixel alias
 
-| art | kind | file | wires to |
-|-----|------|------|----------|
-${p1Rows.join('\n')}
+Every W2 \`art\` ID points at an existing map via \`SPECIES[id].pixel\`. Mythic+ may use \`high\`. No blank stub if the alias map is loaded.
 
-## #282 slots (classic / farm / zoo / sea + flagships)
+| W2 art | .pixel (common–legendary) | .pixel mythic+ |
+|--------|---------------------------|----------------|
+${aliasRows.join('\n')}
+
+## #282 slots
 
 | provisionalId | kind | file | wires to |
 |---------------|------|------|----------|
-${artRows.filter((row) => !P1_ART_IDS.some((id) => row.includes('\`' + id + '\`'))).join('\n')}
+${artRows.join('\n')}
 ${spRows.join('\n')}
 
 ## Coverage
 
-- **${Object.keys(artMaps).length} art families** — #282 (34) + W2 P1 (18).
+- **${Object.keys(artMaps).length} art families** — farm (10) + zoo (14) + classic/sea (10).
 - **${Object.keys(speciesMaps).length} flagship species** — farm/zoo commons + a few mythic/void variants.
+- **36 W2 art IDs** aliased onto the maps above (see table). Unique drawers later: keep the W2 \`art\` ID, add a map, set \`pixelStatus='pixel'\`.
 - Files are 32×32 crisp SVG (RLE rects), typically 1–3 KB.
 - Combat paint is from JS maps (no Image decode) so a missing SVG never blanks a fighter.
 
@@ -1217,7 +903,6 @@ ${spRows.join('\n')}
 
 - Change hitboxes / \`sp.size\` / AI here.
 - Point share URL at this preview — players stay on \`speel.html\`.
-- Repaint classic/farm/zoo/sea/tide/satan or the #282 set for this pass.
 `;
 }
 
@@ -1237,6 +922,14 @@ function main() {
   }
   for (const [id, spec] of Object.entries(SPECIES_VARIANTS)) {
     fs.writeFileSync(path.join(outDir, `sp-${id}.svg`), svgFromMap(speciesMaps[id], palFor(spec.art)));
+  }
+
+  const keepSvg = new Set([
+    ...Object.keys(artMaps).map((id) => `art-${id}.svg`),
+    ...Object.keys(SPECIES_VARIANTS).map((id) => `sp-${id}.svg`),
+  ]);
+  for (const f of fs.readdirSync(outDir)) {
+    if (f.endsWith('.svg') && !keepSvg.has(f)) fs.unlinkSync(path.join(outDir, f));
   }
 
   fs.writeFileSync(jsOut, emitJs(artMaps, speciesMaps));

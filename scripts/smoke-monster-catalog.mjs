@@ -63,28 +63,14 @@ const clash = ids.filter((id) => existing.has(id));
 if (clash.length) fail('id collision with live SPECIES: ' + clash.join(','));
 if (existing.size < 200) fail('failed to parse existing SPECIES: ' + existing.size);
 
-const P1 = [
-  'wolf', 'owl', 'frog', 'snake', 'boar',
-  'skeleton', 'mummy', 'beetle', 'wasp', 'spider',
-  'drone', 'bot', 'scrapdog',
-  'penguin', 'yeti',
-  'crab', 'turtle', 'squid',
-];
-const P1_SET = new Set(P1);
 let stub = 0;
-let pixelReady = 0;
 for (const art of arts) {
   if (!slotsDoc.includes('`' + art + '`') && !slotsDoc.includes('| `' + art + '`')) {
     fail('art slot not documented: ' + art);
   }
-  if (ctx.__slots[art].pixelStatus === 'pixel') pixelReady++;
   if (ctx.__slots[art].pixelStatus === 'stub') stub++;
 }
-if (pixelReady !== 18) fail('expected 18 P1 pixel slots, got ' + pixelReady);
-if (stub !== 18) fail('expected 18 remaining stub slots, got ' + stub);
-for (const art of P1) {
-  if (!ctx.__slots[art] || ctx.__slots[art].pixelStatus !== 'pixel') fail('P1 not pixel: ' + art);
-}
+if (stub < 30) fail('expected stub placeholders for pixel partner');
 
 const prov = ctx.__prov;
 const alias = ctx.__alias;
@@ -97,14 +83,10 @@ for (const art of arts) {
 }
 let missingPixel = 0;
 for (const id of ids) {
-  const sp = out.species[id];
-  if (P1_SET.has(sp.art)) {
-    if (sp.pixel !== sp.art) missingPixel++;
-    continue;
-  }
-  if (!sp.pixel || !prov.has(sp.pixel)) missingPixel++;
+  const px = out.species[id].pixel;
+  if (!px || !prov.has(px)) missingPixel++;
 }
-if (missingPixel) fail('species missing pixel key: ' + missingPixel);
+if (missingPixel) fail('species missing #282 pixel alias: ' + missingPixel);
 
 if (!game.includes('drawMonsterPixelArt')) fail('game.js missing drawMonsterPixelArt');
 if (!game.includes('MONSTER_PIXEL_ART')) fail('game.js missing MONSTER_PIXEL_ART');

@@ -1,8 +1,8 @@
 /* ====================== MONSTER CATALOG W2 (editor) ==================== */
 /**
  * Data-driven family table — expands into SPECIES + UNLOCK_AT.
- * Pixel partner: P1 slots have dedicated maps (pixelStatus='pixel').
- * P2/P3 reuse #282 maps via SPECIES[id].pixel (MONSTER_PIXEL_ALIAS).
+ * Pixel partner: reuse #282 maps via SPECIES[id].pixel (MONSTER_PIXEL_ALIAS).
+ * Unique `art` stays for biome/waves; stubs only if pixel maps are absent.
  *
  * Do not edit SPECIES by hand for wave-2 beasts — add a family row here.
  */
@@ -19,11 +19,11 @@ const MONSTER_CATALOG_RARITIES = [
 
 /** Art slot registry — one ID per silhouette. Pixel partner owns these. */
 const MONSTER_ART_SLOTS = {
-  wolf:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'pixel', blurb: 'Tanden eerst, vragen later.' },
-  owl:       { biome: 'wild',  type: 'fly',    shape: 'flyer',   priority: 1, pixelStatus: 'pixel', blurb: 'Draait de kop, dan jij.' },
-  frog:      { biome: 'wild',  type: 'hop',    shape: 'hopper',  priority: 1, pixelStatus: 'pixel', blurb: 'Eén sprong, twee problemen.' },
-  snake:     { biome: 'wild',  type: 'charge', shape: 'swimmer', priority: 1, pixelStatus: 'pixel', blurb: 'Geen benen, wél tempo.' },
-  boar:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'pixel', blurb: 'Slagtanden als bumper.' },
+  wolf:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Tanden eerst, vragen later.' },
+  owl:       { biome: 'wild',  type: 'fly',    shape: 'flyer',   priority: 1, pixelStatus: 'stub', blurb: 'Draait de kop, dan jij.' },
+  frog:      { biome: 'wild',  type: 'hop',    shape: 'hopper',  priority: 1, pixelStatus: 'stub', blurb: 'Eén sprong, twee problemen.' },
+  snake:     { biome: 'wild',  type: 'charge', shape: 'swimmer', priority: 1, pixelStatus: 'stub', blurb: 'Geen benen, wél tempo.' },
+  boar:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Slagtanden als bumper.' },
   raven:     { biome: 'wild',  type: 'fly',    shape: 'flyer',   priority: 2, pixelStatus: 'stub', blurb: 'Krast alsof hij gelijk heeft.' },
   moose:     { biome: 'wild',  type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'stub', blurb: 'Gewei breder dan je plan.' },
   beaver:    { biome: 'wild',  type: 'tank',   shape: 'quad',    priority: 2, pixelStatus: 'stub', blurb: 'Bouwt een dam van jouw combo.' },
@@ -31,29 +31,29 @@ const MONSTER_ART_SLOTS = {
   stag:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 2, pixelStatus: 'stub', blurb: 'Woud-koning met piek-gewei.' },
   lynx:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 2, pixelStatus: 'stub', blurb: 'Pluimoor, scherpe mening.' },
   mole:      { biome: 'wild',  type: 'hop',    shape: 'hopper',  priority: 3, pixelStatus: 'stub', blurb: 'Komt van onder. Altijd.' },
-  skeleton:  { biome: 'crypt', type: 'charge', shape: 'undead',  priority: 1, pixelStatus: 'pixel', blurb: 'Rammelt, maar raakt wél.' },
-  mummy:     { biome: 'crypt', type: 'tank',   shape: 'undead',  priority: 1, pixelStatus: 'pixel', blurb: 'Verband als pantser.' },
-  beetle:    { biome: 'crypt', type: 'hop',    shape: 'insect',  priority: 1, pixelStatus: 'pixel', blurb: 'Schild-kever, weinig praat.' },
-  wasp:      { biome: 'crypt', type: 'fly',    shape: 'insect',  priority: 1, pixelStatus: 'pixel', blurb: 'Angel eerst, excuses nooit.' },
-  spider:    { biome: 'crypt', type: 'shoot',  shape: 'insect',  priority: 1, pixelStatus: 'pixel', blurb: 'Web + afstand = irritant.' },
+  skeleton:  { biome: 'crypt', type: 'charge', shape: 'undead',  priority: 1, pixelStatus: 'stub', blurb: 'Rammelt, maar raakt wél.' },
+  mummy:     { biome: 'crypt', type: 'tank',   shape: 'undead',  priority: 1, pixelStatus: 'stub', blurb: 'Verband als pantser.' },
+  beetle:    { biome: 'crypt', type: 'hop',    shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Schild-kever, weinig praat.' },
+  wasp:      { biome: 'crypt', type: 'fly',    shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Angel eerst, excuses nooit.' },
+  spider:    { biome: 'crypt', type: 'shoot',  shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Web + afstand = irritant.' },
   wisp:      { biome: 'crypt', type: 'shoot',  shape: 'shooter', priority: 2, pixelStatus: 'stub', blurb: 'Dwaallicht met slechte bedoelingen.' },
   gargoyle:  { biome: 'crypt', type: 'fly',    shape: 'flyer',   priority: 2, pixelStatus: 'stub', blurb: 'Steen die dacht dat hij kon vliegen.' },
   lich:      { biome: 'crypt', type: 'shoot',  shape: 'undead',  priority: 2, pixelStatus: 'stub', blurb: 'Te veel botten, te veel magie.' },
-  drone:     { biome: 'scrap', type: 'fly',    shape: 'mech',    priority: 1, pixelStatus: 'pixel', blurb: 'Zoemt, mikt, piept.' },
-  bot:       { biome: 'scrap', type: 'shoot',  shape: 'mech',    priority: 1, pixelStatus: 'pixel', blurb: 'Blik met een laser-mening.' },
-  scrapdog:  { biome: 'scrap', type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'pixel', blurb: 'Roest-hond. Kwispelt met ketting.' },
+  drone:     { biome: 'scrap', type: 'fly',    shape: 'mech',    priority: 1, pixelStatus: 'stub', blurb: 'Zoemt, mikt, piept.' },
+  bot:       { biome: 'scrap', type: 'shoot',  shape: 'mech',    priority: 1, pixelStatus: 'stub', blurb: 'Blik met een laser-mening.' },
+  scrapdog:  { biome: 'scrap', type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Roest-hond. Kwispelt met ketting.' },
   cog:       { biome: 'scrap', type: 'hop',    shape: 'mech',    priority: 2, pixelStatus: 'stub', blurb: 'Tandwiel dat terugbijt.' },
   turret:    { biome: 'scrap', type: 'shoot',  shape: 'shooter', priority: 2, pixelStatus: 'stub', blurb: 'Blijft staan. Jij beweegt.' },
   rivet:     { biome: 'scrap', type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'stub', blurb: 'Klinknagels en slechte ideeën.' },
   junkbat:   { biome: 'scrap', type: 'fly',    shape: 'flyer',   priority: 3, pixelStatus: 'stub', blurb: 'Vleermuis van sloopafval.' },
   piston:    { biome: 'scrap', type: 'charge', shape: 'mech',    priority: 2, pixelStatus: 'stub', blurb: 'Hydrauliek met een deadline.' },
-  penguin:   { biome: 'frost', type: 'hop',    shape: 'hopper',  priority: 1, pixelStatus: 'pixel', blurb: 'Waddelt. Tot hij sprint.' },
-  yeti:      { biome: 'frost', type: 'tank',   shape: 'tank',    priority: 1, pixelStatus: 'pixel', blurb: 'Sneeuwman die terugslaat.' },
+  penguin:   { biome: 'frost', type: 'hop',    shape: 'hopper',  priority: 1, pixelStatus: 'stub', blurb: 'Waddelt. Tot hij sprint.' },
+  yeti:      { biome: 'frost', type: 'tank',   shape: 'tank',    priority: 1, pixelStatus: 'stub', blurb: 'Sneeuwman die terugslaat.' },
   walrus:    { biome: 'frost', type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'stub', blurb: 'Slagtand-zee. Zwaar.' },
   seal:      { biome: 'frost', type: 'hop',    shape: 'hopper',  priority: 3, pixelStatus: 'stub', blurb: 'Glibbert uit je timing.' },
-  crab:      { biome: 'sea',   type: 'swim',   shape: 'insect',  priority: 1, pixelStatus: 'pixel', blurb: 'Schaar links, schaar rechts.' },
-  turtle:    { biome: 'sea',   type: 'swim',   shape: 'tank',    priority: 1, pixelStatus: 'pixel', blurb: 'Schild. Daarna nog een schild.' },
-  squid:     { biome: 'sea',   type: 'swim',   shape: 'swimmer', priority: 1, pixelStatus: 'pixel', blurb: 'Armen genoeg voor iedereen.' },
+  crab:      { biome: 'sea',   type: 'swim',   shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Schaar links, schaar rechts.' },
+  turtle:    { biome: 'sea',   type: 'swim',   shape: 'tank',    priority: 1, pixelStatus: 'stub', blurb: 'Schild. Daarna nog een schild.' },
+  squid:     { biome: 'sea',   type: 'swim',   shape: 'swimmer', priority: 1, pixelStatus: 'stub', blurb: 'Armen genoeg voor iedereen.' },
   ray:       { biome: 'sea',   type: 'swim',   shape: 'swimmer', priority: 2, pixelStatus: 'stub', blurb: 'Glijdt alsof water optioneel is.' },
 };
 
@@ -130,8 +130,6 @@ const MONSTER_PIXEL_ALIAS = {
 };
 
 function catalogPixelFor(art, rarity) {
-  const slot = MONSTER_ART_SLOTS[art];
-  if (slot && slot.pixelStatus === 'pixel') return art;
   const a = MONSTER_PIXEL_ALIAS[art];
   if (!a) return null;
   const order = (typeof rarityOf === 'function')

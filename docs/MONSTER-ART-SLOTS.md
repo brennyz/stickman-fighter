@@ -36,7 +36,7 @@ Aliases live in `src/data/monster-catalog.js` → `MONSTER_PIXEL_ALIAS`.
 
 Optional unique pixels later: keep the W2 `art` ID, draw a new map, then drop `.pixel` (or point it at the new art key). Until then, **reuse the strings above**.
 
-P1 slots now have dedicated maps (`pixelStatus: 'pixel'`). Live game draws **stub silhouettes** only for remaining P2/P3 (`pixelStatus: 'stub'`).
+Live game draws **stub silhouettes** only when #282 maps are not loaded (`pixelStatus: 'stub'`). First paint uses `sp.pixel` aliases onto the #282 set.
 
 ## Where to edit
 
@@ -51,10 +51,10 @@ Do **not** invent new `art` strings in `SPECIES` by hand. Add a family row; the 
 
 ## How to fill pixels
 
-P1 is filled via `scripts/gen-monster-pixels.mjs` → `MONSTER_PIXEL_ART` + `assets/monsters/art-<id>.svg`. Stubs stay fallback.
+First paint: keep aliases (`MONSTER_PIXEL_ALIAS`). Unique silhouettes later:
 
-1. Pick a remaining **P2/P3** slot from the table.
-2. Add a builder in `scripts/gen-monster-pixels.mjs` (or a drawer in `src/render/catalog-art.js`).
+1. Pick a **P1** slot from the table (priority `1` first).
+2. Implement a real drawer in `scripts/gen-monster-pixels.mjs` (or `src/render/catalog-art.js`).
 3. Set `MONSTER_ART_SLOTS[id].pixelStatus = 'pixel'`.
 4. Keep the stub path as fallback (`default` / try/catch).
 5. Rebuild: `npm run pixels && npm run build` — do not edit `game.js` directly.

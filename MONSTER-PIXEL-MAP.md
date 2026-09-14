@@ -1,44 +1,63 @@
 # Monster pixel ID map
 
-Contract: `docs/MONSTER-ART-SLOTS.md` + PR #284 catalog. `sp.art` is the stable ID.
-Eight rarities share one art; tint uses species `c1`/`c2`. Flagships = common look per family.
+#282 farm/zoo/classic maps plus **W2 catalog aliases** (PR #284). First paint reuses existing maps — unique P1 silhouettes are optional later.
 
 Editor: [Monster editor double roster](https://cursor.com/agents/bc-43a25a67-7182-5f4f-ab63-6412cd05e154)
 
 Resolution order in combat / dex:
 
-1. Dedicated W2 map when `MONSTER_ART_SLOTS[sp.art].pixelStatus === 'pixel'` (P1)
-2. `sp.pixel` if it names a species or art map (P2/P3 aliases + #282 flagships)
+1. Dedicated W2 map when `MONSTER_ART_SLOTS[sp.art].pixelStatus === 'pixel'` (none yet)
+2. `sp.pixel` if it names a species or art map (W2 aliases + #282 flagships)
 3. `sp.id` species map (flagship)
 4. `sp.art` family map
 5. canvas stub / `drawBeastArt` / `drawMonsterArt` fallback
 
 Preview: [assets/monsters/preview.html](assets/monsters/preview.html)
 
-## P1 W2 slots (new IDs — not a #282 redo)
+## W2 art → #282 pixel alias
 
-| art | kind | file | wires to |
-|-----|------|------|----------|
-| `wolf` | art | `assets/monsters/art-wolf.svg` | W2 P1 family — 8 rarities share this map (tint c1/c2) |
-| `owl` | art | `assets/monsters/art-owl.svg` | W2 P1 family — 8 rarities share this map (tint c1/c2) |
-| `frog` | art | `assets/monsters/art-frog.svg` | W2 P1 family — 8 rarities share this map (tint c1/c2) |
-| `snake` | art | `assets/monsters/art-snake.svg` | W2 P1 family — 8 rarities share this map (tint c1/c2) |
-| `boar` | art | `assets/monsters/art-boar.svg` | W2 P1 family — 8 rarities share this map (tint c1/c2) |
-| `skeleton` | art | `assets/monsters/art-skeleton.svg` | W2 P1 family — 8 rarities share this map (tint c1/c2) |
-| `mummy` | art | `assets/monsters/art-mummy.svg` | W2 P1 family — 8 rarities share this map (tint c1/c2) |
-| `beetle` | art | `assets/monsters/art-beetle.svg` | W2 P1 family — 8 rarities share this map (tint c1/c2) |
-| `wasp` | art | `assets/monsters/art-wasp.svg` | W2 P1 family — 8 rarities share this map (tint c1/c2) |
-| `spider` | art | `assets/monsters/art-spider.svg` | W2 P1 family — 8 rarities share this map (tint c1/c2) |
-| `drone` | art | `assets/monsters/art-drone.svg` | W2 P1 family — 8 rarities share this map (tint c1/c2) |
-| `bot` | art | `assets/monsters/art-bot.svg` | W2 P1 family — 8 rarities share this map (tint c1/c2) |
-| `scrapdog` | art | `assets/monsters/art-scrapdog.svg` | W2 P1 family — 8 rarities share this map (tint c1/c2) |
-| `penguin` | art | `assets/monsters/art-penguin.svg` | W2 P1 family — 8 rarities share this map (tint c1/c2) |
-| `yeti` | art | `assets/monsters/art-yeti.svg` | W2 P1 family — 8 rarities share this map (tint c1/c2) |
-| `crab` | art | `assets/monsters/art-crab.svg` | W2 P1 family — 8 rarities share this map (tint c1/c2) |
-| `turtle` | art | `assets/monsters/art-turtle.svg` | W2 P1 family — 8 rarities share this map (tint c1/c2) |
-| `squid` | art | `assets/monsters/art-squid.svg` | W2 P1 family — 8 rarities share this map (tint c1/c2) |
+Every W2 `art` ID points at an existing map via `SPECIES[id].pixel`. Mythic+ may use `high`. No blank stub if the alias map is loaded.
 
-## #282 slots (classic / farm / zoo / sea + flagships)
+| W2 art | .pixel (common–legendary) | .pixel mythic+ |
+|--------|---------------------------|----------------|
+| `wolf` | `fox` | `voidkonijn` |
+| `owl` | `bat` | — |
+| `frog` | `slime` | `voidsly` |
+| `snake` | `croc` | `razendekrokodil` |
+| `boar` | `pig` | `razendzwijn` |
+| `raven` | `bat` | — |
+| `moose` | `cow` | `holkoe` |
+| `beaver` | `pig` | — |
+| `badger` | `hedgehog` | — |
+| `stag` | `horse` | `holpaard` |
+| `lynx` | `tiger` | `razendetijger` |
+| `mole` | `slime` | `frostbub` |
+| `skeleton` | `ghost` | — |
+| `mummy` | `golem` | — |
+| `beetle` | `hedgehog` | — |
+| `wasp` | `bat` | — |
+| `spider` | `octo` | — |
+| `wisp` | `ghost` | — |
+| `gargoyle` | `dragon` | `omegadrake` |
+| `lich` | `ghost` | — |
+| `drone` | `can` | — |
+| `bot` | `can` | — |
+| `scrapdog` | `fox` | `voidkonijn` |
+| `cog` | `can` | — |
+| `turret` | `can` | — |
+| `rivet` | `golem` | — |
+| `junkbat` | `bat` | — |
+| `piston` | `golem` | — |
+| `penguin` | `duck` | `kwakophol` |
+| `yeti` | `bear` | `razendebeer` |
+| `walrus` | `hippo` | `razendnijlpaard` |
+| `seal` | `duck` | — |
+| `crab` | `hedgehog` | — |
+| `turtle` | `golem` | — |
+| `squid` | `octo` | `voidocto` |
+| `ray` | `shark` | `levihaai` |
+
+## #282 slots
 
 | provisionalId | kind | file | wires to |
 |---------------|------|------|----------|
@@ -110,8 +129,9 @@ Preview: [assets/monsters/preview.html](assets/monsters/preview.html)
 
 ## Coverage
 
-- **52 art families** — #282 (34) + W2 P1 (18).
+- **34 art families** — farm (10) + zoo (14) + classic/sea (10).
 - **31 flagship species** — farm/zoo commons + a few mythic/void variants.
+- **36 W2 art IDs** aliased onto the maps above (see table). Unique drawers later: keep the W2 `art` ID, add a map, set `pixelStatus='pixel'`.
 - Files are 32×32 crisp SVG (RLE rects), typically 1–3 KB.
 - Combat paint is from JS maps (no Image decode) so a missing SVG never blanks a fighter.
 
@@ -119,4 +139,3 @@ Preview: [assets/monsters/preview.html](assets/monsters/preview.html)
 
 - Change hitboxes / `sp.size` / AI here.
 - Point share URL at this preview — players stay on `speel.html`.
-- Repaint classic/farm/zoo/sea/tide/satan or the #282 set for this pass.

@@ -1,4 +1,4 @@
-| 2026-09-14 | **P1 pixels** | W2 P1 art-slots (18 IDs) filled: unique 32×32 maps, `pixelStatus=pixel`. Merged catalog #284 + pixels #282. **v1.18.166 / SW v376**. |
+| 2026-09-14 | **alias-first** | W2 catalog merged; all 36 art IDs alias onto #282 maps. Unique P1 drawers abandoned (editor pivot). **v1.18.166 / SW v376**. |
 | 2026-09-14 | **monster W2** | Catalog expander +288 soorten, 36 art-slot IDs, woods/crypt/scrap spawns, stub art. **v1.18.165 / SW v375**. |
 | 2026-09-14 | **monster pixels** | 32×32 stickman-pixel set for doubled farm/zoo roster (34 art + 31 flagship). Wired via `drawMonsterPixelArt`. **v1.18.164 / SW v374**. |
 | 2026-09-14 | **locale + toast** | #266: NL VERLOREN, geen raw menu.tips / PICK AN ISLAND; versie-banner stiller + wegklik; rest HOME. **v1.18.163 / SW v373**. |
