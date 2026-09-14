@@ -2062,7 +2062,8 @@ const UI = {
           persist();
         }
       }
-      if (this._fomoRitualHide) this.hideFomoRitual();
+      if (typeof fomoRitualHubReady === 'function' && !fomoRitualHubReady()) this.hideFomoRitual();
+      else if (this._fomoRitualHide) this.hideFomoRitual();
       else if (this._fomoRitualForce || (typeof fomoRitualPending === 'function' && fomoRitualPending())) {
         this.showFomoRitual(!!this._fomoRitualForce);
       } else {

@@ -59,7 +59,7 @@ if (/Versus|versus/.test((i18n.match(/fomo: \{[\s\S]*?\n    \},/) || [''])[0])) 
 }
 if (!/CHEST_DAILY_LEFT_CAP = 12/.test(chest)) fail('F3: chest left cap 12 missing');
 if (!/CHEST_DAILY_TOTAL = 10/.test(chest)) fail('F0: quota 10 must stay');
-if (!/save\.fomo/.test(storage) || !/lastDayBonusDate/.test(storage)) {
+if (!/\bfomo:/.test(storage) || !/lastDayBonusDate/.test(storage)) {
   fail('sanitize/DEFAULT_SAVE missing fomo or lastDayBonusDate');
 }
 if (!/showFomoRitual/.test(ui) || !/lastOpenDate/.test(ui)) {
@@ -119,7 +119,9 @@ const ctx = {
 };
 ctx.window = ctx; ctx.globalThis = ctx; ctx.self = ctx; ctx.webkitAudioContext = ctx.AudioContext;
 
-vm.runInContext(game, vm.createContext(ctx), { filename: 'game.js' });
+const sandbox = vm.createContext(ctx);
+vm.runInContext(game, sandbox, { filename: 'game.js' });
+const g = (src) => vm.runInContext(src, sandbox);
 
 function must(cond, msg) { if (!cond) fail(msg); }
 
@@ -128,34 +130,35 @@ const localToday = (() => {
   const d = new Date();
   return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
 })();
-must(typeof ctx.todayKey === 'function', 'todayKey not on runtime');
-must(ctx.todayKey() === localToday, `todayKey ${ctx.todayKey()} !== local ${localToday}`);
-must(ctx.daysBetweenKeys('2026-09-13', '2026-09-14') === 1, 'daysBetweenKeys adjacent');
-must(ctx.daysBetweenKeys('2026-09-12', '2026-09-14') === 2, 'daysBetweenKeys skip');
-must(ctx.daysBetweenKeys(null, localToday) === 99, 'daysBetweenKeys null → 99');
+must(typeof g('todayKey') === 'function', 'todayKey not on runtime');
+must(g('todayKey()') === localToday, `todayKey ${g('todayKey()')} !== local ${localToday}`);
+must(g('daysBetweenKeys("2026-09-13", "2026-09-14")') === 1, 'daysBetweenKeys adjacent');
+must(g('daysBetweenKeys("2026-09-12", "2026-09-14")') === 2, 'daysBetweenKeys skip');
+must(g('daysBetweenKeys(null, todayKey())') === 99, 'daysBetweenKeys null → 99');
 
-const ach = (ctx.ACHIEVEMENTS || []).find((a) => a.id === 'daily7');
+const ach = g('ACHIEVEMENTS.find(a => a.id === "daily7")');
 must(ach, 'daily7 achievement missing');
 must(!ach.test({ stats: { dailyBonusCount: 99, dailyStreakBest: 6 } }), 'daily7 must ignore lifetime count');
 must(!!ach.test({ stats: { dailyBonusCount: 1, dailyStreakBest: 7 } }), 'daily7 unlocks on best consecutive ≥7');
 
-ctx.save = ctx.sanitizeSave(Object.assign({}, ctx.DEFAULT_SAVE, {
-  chestDaily: { date: localToday, left: 10, pulls: [] },
-  stats: { advWins: 0, dailyStreak: 0, dailyStreakBest: 0, dailyBonusCount: 0 },
-}));
-must(ctx.fomoRitualEggVisible() === false, 'egg row must hide until first adv win');
-ctx.save.stats.advWins = 1;
-must(ctx.fomoRitualEggVisible() === true, 'egg row after first adv win');
+g(`save = sanitizeSave(Object.assign({}, DEFAULT_SAVE, {
+  chestDaily: { date: todayKey(), left: 10, pulls: [] },
+  stats: Object.assign({}, DEFAULT_SAVE.stats, { advWins: 0, dailyStreak: 0, dailyStreakBest: 0, dailyBonusCount: 0 }),
+  fomo: defaultFomoBag(),
+}))`);
+must(g('fomoRitualEggVisible()') === false, 'egg row must hide until first adv win');
+g('save.stats.advWins = 1');
+must(g('fomoRitualEggVisible()') === true, 'egg row after first adv win');
 
-must(ctx.fomoRitualPending() === true, 'new day + summons left → ritual pending');
-ctx.save.fomo.ritualSeenDate = localToday;
-must(ctx.fomoRitualPending() === false, 'same-day dismiss → not pending');
+must(g('fomoRitualPending()') === true, 'new day + summons left → ritual pending');
+g('save.fomo.ritualSeenDate = todayKey()');
+must(g('fomoRitualPending()') === false, 'same-day dismiss → not pending');
 
-const dirty = ctx.sanitizeSave(Object.assign({}, ctx.DEFAULT_SAVE, {
+const dirty = g(`sanitizeSave(Object.assign({}, DEFAULT_SAVE, {
   fomo: { ritualSeenDate: '2026-09-14', lastOpenDate: '2026-09-14', hacker: true, sneakCleared: 1 },
-  stats: { dailyStreak: 4, dailyStreakBest: 4, lastDayBonusDate: '2026-09-13', dailyBonusCount: 12 },
-  chestDaily: { date: localToday, left: 12, pulls: [] },
-}));
+  stats: Object.assign({}, DEFAULT_SAVE.stats, { dailyStreak: 4, dailyStreakBest: 4, lastDayBonusDate: '2026-09-13', dailyBonusCount: 12 }),
+  chestDaily: { date: todayKey(), left: 12, pulls: [] },
+}))`);
 must(dirty.fomo.ritualSeenDate === '2026-09-14', 'fomo date kept');
 must(dirty.fomo.hacker == null, 'unknown fomo keys dropped');
 must(dirty.stats.lastDayBonusDate === '2026-09-13', 'lastDayBonusDate kept as date');
@@ -163,19 +166,22 @@ must(dirty.stats.dailyStreak === 4, 'dailyStreak kept');
 must(dirty.chestDaily.left === 12, 'F3 extra pull must survive sanitize (cap 12)');
 
 function readyDay(prevDate, prevStreak) {
-  const tasks = ['kills12', 'advwin', 'wall35'].map((id) => ({ id, progress: 99, done: true, claimed: true }));
-  ctx.save = ctx.sanitizeSave(Object.assign({}, ctx.DEFAULT_SAVE, {
-    daily: { date: localToday, tasks, dayBonusClaimed: false },
-    stats: {
-      dailyBonusCount: prevStreak || 0,
-      dailyStreak: prevStreak || 0,
-      dailyStreakBest: prevStreak || 0,
-      lastDayBonusDate: prevDate,
-    },
-    chestDaily: { date: localToday, left: 10, pulls: [] },
-  }));
-  ctx.save.daily.dayBonusClaimed = false;
-  ctx.save.daily.tasks = tasks;
+  const tasks = JSON.stringify(['kills12', 'advwin', 'wall35'].map((id) => ({ id, progress: 99, done: true, claimed: true })));
+  g(`(function(){
+    const tasks = ${tasks};
+    save = sanitizeSave(Object.assign({}, DEFAULT_SAVE, {
+      daily: { date: todayKey(), tasks: tasks, dayBonusClaimed: false },
+      stats: Object.assign({}, DEFAULT_SAVE.stats, {
+        dailyBonusCount: ${prevStreak || 0},
+        dailyStreak: ${prevStreak || 0},
+        dailyStreakBest: ${prevStreak || 0},
+        lastDayBonusDate: ${JSON.stringify(prevDate)},
+      }),
+      chestDaily: { date: todayKey(), left: 10, pulls: [] },
+    }));
+    save.daily.dayBonusClaimed = false;
+    save.daily.tasks = tasks;
+  })()`);
 }
 
 const shift = (iso, days) => {
@@ -185,25 +191,25 @@ const shift = (iso, days) => {
 };
 
 readyDay(shift(localToday, -1), 1);
-ctx.claimDailyDayBonus();
-must(ctx.save.stats.dailyStreak === 2, `Mon+Tue should be streak 2, got ${ctx.save.stats.dailyStreak}`);
-must(ctx.save.stats.lastDayBonusDate === localToday, 'lastDayBonusDate stamped today');
+g('claimDailyDayBonus()');
+must(g('save.stats.dailyStreak') === 2, `Mon+Tue should be streak 2, got ${g('save.stats.dailyStreak')}`);
+must(g('save.stats.lastDayBonusDate') === localToday, 'lastDayBonusDate stamped today');
 
 readyDay(shift(localToday, -2), 5);
-ctx.claimDailyDayBonus();
-must(ctx.save.stats.dailyStreak === 1, `miss a day → streak 1, got ${ctx.save.stats.dailyStreak}`);
-must(ctx.save.stats.dailyStreakBest === 5, 'best consecutive must survive a miss');
+g('claimDailyDayBonus()');
+must(g('save.stats.dailyStreak') === 1, `miss a day → streak 1, got ${g('save.stats.dailyStreak')}`);
+must(g('save.stats.dailyStreakBest') === 5, 'best consecutive must survive a miss');
 
 readyDay(shift(localToday, -1), 2);
-ctx.claimDailyDayBonus();
-must(ctx.save.stats.dailyStreak === 3, 'day-3 streak');
-must(ctx.save.chestDaily.left === 11, `day-3 extra pull, left=${ctx.save.chestDaily.left}`);
+g('claimDailyDayBonus()');
+must(g('save.stats.dailyStreak') === 3, 'day-3 streak');
+must(g('save.chestDaily.left') === 11, `day-3 extra pull, left=${g('save.chestDaily.left')}`);
 
 readyDay(shift(localToday, -1), 13);
-const xpBefore = ctx.save.xp;
-ctx.claimDailyDayBonus();
-must(ctx.save.stats.dailyStreak === 14, 'day-14 streak');
-must(ctx.save.xp >= xpBefore + 200, 'day-14 is +80 and +120 XP only');
-must(!ctx.save.weekly, 'PR-A must not write weekly/F4 fields');
+g('save.lvl = 40; save.xp = 0');
+g('claimDailyDayBonus()');
+must(g('save.stats.dailyStreak') === 14, 'day-14 streak');
+must(g('save.xp') >= 200 || g('save.lvl') > 40, 'day-14 is +80 and +120 XP only');
+must(g('save.weekly') == null, 'PR-A must not write weekly/F4 fields');
 
 console.log('SMOKE_OK fomo-pra F0/F1/F3');

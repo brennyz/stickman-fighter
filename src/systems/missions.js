@@ -172,6 +172,14 @@ function fomoRitualEggVisible() {
   return !!(save && save.stats && (save.stats.advWins || 0) >= 1);
 }
 
+function fomoRitualHubReady() {
+  try {
+    const splash = document.getElementById('sfSplash');
+    if (splash && !splash.classList.contains('is-done')) return false;
+  } catch (_) {}
+  return true;
+}
+
 function fomoRitualPending() {
   if (typeof save === 'undefined' || !save) return false;
   ensureFomo();
