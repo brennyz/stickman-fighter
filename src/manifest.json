@@ -23,6 +23,7 @@
   "src/i18n/catalog-de.js",
   "src/i18n/catalog-locales.js",
   "src/systems/audio-samples.js",
+  "src/systems/audio-themes.js",
   "src/systems/audio.js",
   "src/systems/input.js",
   "src/systems/fighter-move.js",

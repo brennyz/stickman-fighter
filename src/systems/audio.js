@@ -20,6 +20,26 @@ const AudioSys = {
   _sampleCount: 0,
   _samplesReady: false,
 
+  /** Same contract as season overlay #277. Do not call getEffectiveAudioTheme. */
+  seasonId() {
+    try {
+      if (typeof currentSeasonId === 'function') return currentSeasonId();
+    } catch (_) {}
+    try {
+      const root = typeof document !== 'undefined' && document.documentElement;
+      const raw = root && root.dataset && (root.dataset.seasonAudio || root.dataset.season);
+      if (raw) {
+        const id = String(raw).toLowerCase().trim();
+        if (id === 'default' || id === 'auto') return 'classic';
+        if (id === 'fire-bamboo' || id === 'fire-bamboo-boesa') return 'fire-bamboo-boesa';
+        const ids = (typeof SEASON_AUDIO_IDS !== 'undefined' && SEASON_AUDIO_IDS)
+          || ['classic', 'jungle', 'halloween', 'winter', 'summer'];
+        if (ids.includes(id) || id === 'fire-bamboo-boesa') return id;
+      }
+    } catch (_) {}
+    return 'classic';
+  },
+
   init() {
     try {
       if (this.ctx) {
@@ -102,14 +122,28 @@ const AudioSys = {
       || name === 'jump' || name === 'land' || name === 'dash' || name === 'block'
       || name === 'shuriken' || (name && name.charAt(0) === 'w');
     const rateJitter = spammy ? (0.95 + Math.random() * 0.1) : (0.88 + Math.random() * 0.24);
-    const rate = (cfg.rate || 1) * rateJitter;
+    const themeRate = (typeof audioThemeSfxRate === 'function') ? audioThemeSfxRate() : 1;
+    const rate = (cfg.rate || 1) * rateJitter * themeRate;
     src.playbackRate.value = rate;
     const dur = Math.min(buf.duration / rate, spammy ? 1.4 : 2.8);
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + dur);
     src.connect(g);
-    g.connect(this._sfxDest());
+    const filt = (typeof audioThemeSfxFilter === 'function') ? audioThemeSfxFilter() : null;
+    if (filt && this.ctx.createBiquadFilter) {
+      try {
+        const f = this.ctx.createBiquadFilter();
+        f.type = filt.type || 'lowpass';
+        f.frequency.value = filt.freq || 4000;
+        g.connect(f);
+        f.connect(this._sfxDest());
+      } catch (_) {
+        g.connect(this._sfxDest());
+      }
+    } else {
+      g.connect(this._sfxDest());
+    }
     src.start(t);
     src.stop(t + dur + 0.02);
     return true;
@@ -314,7 +348,8 @@ const AudioSys = {
     const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
     const v = (n) => n * (lite ? 0.72 : 0.88);
     const d = (n) => n * (lite ? 0.78 : 0.9);
-    const P = () => this._pitchVar();
+    const themePitch = (typeof audioThemeSfxPitch === 'function') ? audioThemeSfxPitch() : 1;
+    const P = () => this._pitchVar() * themePitch;
     const T = (f0, f1, dur, ty, vol, w) => { const p = P(); this.tone(f0 * p, f1 * p, d(dur), ty, v(vol), null, w); };
     const D = (f0, f1, dur, ty, vol, w, c) => this.detuneTone(f0 * P(), f1 * P(), d(dur), ty, v(vol), c, null, w);
     const E = (f0, f1, dur, ty, vol, w, dl, dc) => this.echoTone(f0 * P(), f1 * P(), d(dur), ty, v(vol), dl, dc, null, w);
@@ -910,6 +945,7 @@ const AudioSys = {
         T(480, 660, 0.06, 'sine', 0.11, now);
         break;
     }
+    try { if (typeof playAudioThemeSfxAccent === 'function') playAudioThemeSfxAccent(this, name); } catch (_) {}
   },
 
   /* --------- Muziek: procedurele chiptune-sequencer (rechtenvrij) ------- */
@@ -917,11 +953,36 @@ const AudioSys = {
     if (!name || !SONGS[name]) return;
     this.desiredSong = name;
     if (!this.ctx || !save.music) { this.applyVolumes(); return; }
-    if (this.song && this.song.id === name) { this.applyVolumes(); return; }
-    this.song = Object.assign({ id: name }, SONGS[name]);
+    const theme = (typeof getEffectiveAudioTheme === 'function')
+      ? getEffectiveAudioTheme()
+      : ((typeof getAudioTheme === 'function') ? getAudioTheme() : 'classic');
+    if (this.song && this.song.id === name && (this.song.audioTheme || 'classic') === theme) {
+      this.applyVolumes();
+      return;
+    }
+    const swapping = !!(this.song && this.song.audioTheme && this.song.audioTheme !== theme);
+    if (swapping && this.musicGain) {
+      try { this._setGain(this.musicGain, 0.001, 0.03); } catch (_) {}
+    }
+    const src = (theme === 'classic' || typeof resolveThemedSong !== 'function')
+      ? SONGS[name]
+      : resolveThemedSong(name);
+    if (!src) return;
+    this.song = Object.assign({ id: name, audioTheme: theme }, src);
     this.step = 0; this.bar = 0;
-    this.nextTime = this.ctx.currentTime + 0.06;
+    this.nextTime = this.ctx.currentTime + (swapping ? 0.09 : 0.06);
     this.applyVolumes();
+  },
+
+  /** Soft restart of the current track after a theme switch (avoids hard click). */
+  replayForTheme() {
+    const name = this.desiredSong || this.currentSongId();
+    if (!name || !SONGS[name]) return;
+    if (this.musicGain) {
+      try { this._setGain(this.musicGain, 0.001, 0.03); } catch (_) {}
+    }
+    this.song = null;
+    this.play(name);
   },
   stop() { this.song = null; this.desiredSong = null; this.setCombatHeat(0); this.applyVolumes(); },
   setMusicOn(on) {
@@ -968,7 +1029,10 @@ const AudioSys = {
         this.noise(0.025, 0.12, 5200, true, mg, t + 0.008);
       }
     }
-    if (s.hat.includes(i)) this.noise(0.03, 0.14, 6500, true, mg, t);
+    if (s.hat.includes(i)) {
+      const hatF = (typeof audioThemeHatFreq === 'function') ? audioThemeHatFreq() : 6500;
+      this.noise(0.03, 0.14, hatF, true, mg, t);
+    }
     const b = s.bass[i];
     if (b != null) {
       this.tone(midi(b), midi(b), spb * 1.7, 'triangle', 0.4, mg, t);
@@ -979,7 +1043,8 @@ const AudioSys = {
     if (L != null) {
       const heat = this._combatHeat || 0;
       const lv = 0.12 + heat * 0.055;
-      this.tone(midi(L), midi(L) * 0.995, spb * 1.6, 'square', lv, mg, t);
+      const leadType = (typeof audioThemeLeadType === 'function') ? audioThemeLeadType() : 'square';
+      this.tone(midi(L), midi(L) * 0.995, spb * 1.6, leadType, lv, mg, t);
       if (!lite && i % 2 === 0) this.tone(midi(L + 7), midi(L + 7) * 0.998, spb * 1.1, 'triangle', 0.05 + heat * 0.03, mg, t + spb * 0.12);
     }
     if ((isFightBgmId(s.id)) && heat > 0.35 && !lite && i === 8 && bar % 2 === 0) {
@@ -1116,6 +1181,7 @@ const AudioSys = {
       if (i === 0 || i === 8) this.tone(midi(72), midi(76), spb * 1.4, 'sine', 0.09, mg, t);
       if (i === 4) this.tone(midi(79), midi(72), spb * 1.1, 'triangle', 0.07, mg, t);
     }
+    try { if (typeof scheduleAudioThemeStep === 'function') scheduleAudioThemeStep(this, i, bar, t, spb); } catch (_) {}
   },
 };
 
@@ -1424,6 +1490,36 @@ const SONGS = {
       [79,null,83,86, null,83,79,null, 81,null,79,76, 74,null,76,79],
     ],
   },
+  /** Halloween menu — Carpenter-ish A-minor ostinato (recognizable spooky theme). */
+  halloweenMenu: {
+    bpm: 88,
+    kick: [0], snare: [], hat: [4, 12],
+    bass: [45,null,null,null, 45,null,48,null, 45,null,null,null, 43,null,41,null],
+    lead: [
+      [69,69,69,69, 72,72,74,74, 69,69,69,69, 72,72,74,76],
+      [69,null,69,null, 72,null,74,null, 69,null,67,null, 65,null,64,null],
+    ],
+  },
+  /** Halloween fight — same ostinato, tighter drums. */
+  halloweenBattle: {
+    bpm: 118,
+    kick: [0, 8], snare: [4, 12], hat: [2, 6, 10, 14],
+    bass: [45,45,null,45, 48,null,45,null, 41,41,null,43, 45,null,43,null],
+    lead: [
+      [69,69,null,69, 72,72,74,null, 69,null,67,null, 65,null,64,67],
+      [69,null,72,74, null,72,69,null, 65,null,67,69, null,64,65,67],
+    ],
+  },
+  /** Halloween boss — heavier / slower menace. */
+  halloweenBoss: {
+    bpm: 100,
+    kick: [0, 4, 8, 12], snare: [4, 12], hat: [4, 12],
+    bass: [33,33,null,33, 36,null,33,null, 31,31,null,29, 33,null,31,null],
+    lead: [
+      [57,57,57,57, 60,60,62,62, 57,57,55,null, 53,null,52,null],
+      [57,null,60,62, null,60,57,null, 53,null,55,57, null,52,53,55],
+    ],
+  },
 };
 
 const MENU_BGM_TRACKS = ['menu', 'menu2', 'menu3', 'menuArcade', 'menuHero', 'menuDream'];
@@ -1537,6 +1633,7 @@ const SONG_LABELS = {
   wall: 'Muur', training: 'Training', coinrun: 'Mats',
   summonReveal: 'Kist', summonPulse: 'Kist Pulse', summonMystic: 'Kist Mystiek',
   summonEpic: 'Kist Epic', summonJackpot: 'Kist Jackpot',
+  halloweenMenu: 'Halloween', halloweenBattle: 'Halloween gevecht', halloweenBoss: 'Halloween baas',
 };
 function songLabel(id) {
   if (!id) return '';

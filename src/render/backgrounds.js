@@ -351,7 +351,10 @@ function drawLandwegFightDecor(c, ground, scroll, t, dX, dSpan) {
 
 function drawBackground(c, themeName, t, ground, scroll, stageFx) {
   scroll = scroll || 0;
-  const th = THEMES[themeName] || THEMES.veld;
+  const baseTh = THEMES[themeName] || THEMES.veld;
+  const th = (typeof resolveAudioThemePalette === 'function')
+    ? resolveAudioThemePalette(baseTh)
+    : baseTh;
   const g = c.createLinearGradient(0, 0, 0, ground);
   g.addColorStop(0, th.sky1); g.addColorStop(1, th.sky2);
   c.fillStyle = g; c.fillRect(0, 0, W, ground);
@@ -643,5 +646,8 @@ function drawBackground(c, themeName, t, ground, scroll, stageFx) {
       }
     }
   }
+  try {
+    if (typeof drawAudioThemeScenery === 'function') drawAudioThemeScenery(c, t, ground, scroll);
+  } catch (_) {}
 }
 

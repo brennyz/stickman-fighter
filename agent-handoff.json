@@ -675,6 +675,30 @@
       "text": "FOMO PR-A ONLY: F0 local todayKey + F1 first-open ritual sheet + F3 consecutive streak. Spec docs/FOMO-GAPS.md (#274). No F2/F4/F5/F6/F7, no Versus, no gear/audio/season.",
       "status": "done-in-code",
       "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T170727",
+      "from": "user",
+      "text": "Season expansion: Halloween/spooky BGM; switch pack on #277 season ids; keep classic; audio-only.",
+      "status": "done-in-code",
+      "notes": "Shipped on #270 v1.18.166. Halloween ostinato + overlay BGM switch. No CSS overlays.",
+      "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T170300",
+      "from": "user",
+      "text": "Season expansion: Halloween/spooky BGM + switch pack when #277 season overlay id is halloween/jungle/etc. Wire html[data-season-audio], AudioSys.seasonId(), sf-season-change. Keep classic usable. No season CSS/UI (integrate with #277). Audio-only.",
+      "status": "done-in-code",
+      "notes": "Shipped on #270 v1.18.166. Player chips classic/jungle/fire-bamboo/halloween. Overlay classic keeps player pack.",
+      "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T164100",
+      "from": "user",
+      "text": "Audio themes only (separate i18n agent): keep classic pack; add jungle + fire-bamboo-boesa BGM/SFX + light scenery tint; persist; Settings/pause switcher. No Versus, no i18n, no combat icons/tutorials. Entry speel.html.",
+      "status": "done-in-code",
+      "notes": "Harden #270: soft BGM replay, sidecar persist, classic raw SONGS, no stacked SFX. v1.18.165. Extended with seasonal BGM.",
+      "updated": "2026-09-14"
     }
   ],
   "agentRules": [

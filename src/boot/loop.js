@@ -114,6 +114,7 @@ function drawMenuBackdrop(c, t) {
   }
   c.restore();
   c.globalAlpha = 1;
+  try { if (typeof drawAudioThemeMenuWash === 'function') drawAudioThemeMenuWash(c); } catch (_) {}
 }
 
 let _menuVistaBufA = null;
@@ -839,6 +840,10 @@ function bootGame() {
   safeCall(syncPlayLayer, 'syncPlay');
   safeCall(resize, 'resize');
   safeCall(() => initLang(), 'i18n');
+  safeCall(() => {
+    if (typeof initAudioThemeFromStorage === 'function') initAudioThemeFromStorage();
+    else if (typeof applyAudioThemeDom === 'function') applyAudioThemeDom();
+  }, 'audioTheme');
   safeCall(() => UI.renderMenu(), 'menu');
   safeCall(ensureDaily, 'daily');
   safeCall(checkAchievements, 'ach');

@@ -143,6 +143,9 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | Seasonal BGM #270: Halloween ostinato + #277 hooks (`data-season-audio`, `AudioSys.seasonId`, `sf-season-change`). Geen season-UI. v1.18.166 / SW 376. |
+| 2026-09-14 | — | Audio harden #270: soft replay, sidecar, geen stacked SFX, classic raw SONGS. v1.18.165 / SW 375. |
+| 2026-09-14 | — | Audio themes: classic pack blijft; Jungle + Vuur-bamboe/Boesa BGM/SFX + lichte scenery-tint; save.audioTheme persist; switch Instellingen + Pauze. v1.18.164 / SW 374. i18n aparte agent. |
 | 2026-09-14 | — | FOMO PR-A: F0 local todayKey, F1 ritual sheet, F3 consecutive streak. Spec `docs/FOMO-GAPS.md`. v1.18.164 / SW 374. Draft. |
 | 2026-09-14 | — | FOMO spec harden (#274): Cursor-executable F0–F13 briefs, PR-A/B split, dud/hit + gates pinned. No gameplay. |
 | 2026-09-14 | — | FOMO/retention design audit: `docs/FOMO-GAPS.md` (P0 clock+ritual+pity+streak · P1 weekly/shard/NM sneak). No gameplay. v1.18.163 / SW 373. |

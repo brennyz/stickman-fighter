@@ -482,6 +482,8 @@
     <label>Effecten <span id="setSfxVolLbl">100%</span>
       <input type="range" id="setSfxVol" min="0" max="100" value="100">
     </label>
+    <div style="font-weight:900;color:#7cf5ff;margin:10px 0 6px" id="setAudioThemeLbl">Sfeer / soundtrack</div>
+    <div id="audioThemeBar" class="dex-filter-bar audio-theme-bar" role="group" aria-label="Soundtrack thema"></div>
     <div id="settingsAudioStatus" class="pause-audio-hint" style="margin:4px 0 10px" aria-live="polite">Volume — sync met pauze</div>
     <button type="button" class="btn tog" id="setShake"><span class="tog-ico"><img src="assets/buttons/chrome/shake.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Schermschok</button>
     <button type="button" class="btn tog" id="setHaptics"><span class="tog-ico"><img src="assets/buttons/chrome/haptics.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Trillen</button>
@@ -675,6 +677,8 @@
       <input type="range" id="pauseSfxVol" min="0" max="100" value="100">
     </label>
     <div id="pauseAudioStatus" class="pause-audio-hint" aria-live="polite">Volume in pauze — sliders sync met Instellingen</div>
+    <div id="pauseAudioThemeLbl" class="pause-audio-hint" style="margin-top:8px">Sfeer / soundtrack</div>
+    <div id="pauseAudioThemeBar" class="dex-filter-bar audio-theme-bar" role="group" aria-label="Soundtrack thema"></div>
     <div class="pause-audio-quick" role="group" aria-label="Snelle audio">
       <button type="button" class="btn tog" id="pauseAudioMuteAll">Alles uit</button>
       <button type="button" class="btn tog" id="pauseAudioRestore">Standaard</button>

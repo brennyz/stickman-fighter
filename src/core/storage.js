@@ -20,7 +20,9 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
     nightmare: { unlocked: 1, stars: {}, fails: {}, masterBuff: null, satanAt: {} },
     hell: { unlocked: 1, stars: {}, fails: {}, masterBuff: null, satanAt: {} },
   },
-  bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
+  bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic',
+  /** classic | jungle | fire-bamboo-boesa | halloween — player pack; #277 overlay may override BGM */
+  audioTheme: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   /** null/undefined = auto via IS_TOUCH; true = force pads; false = force keyboard */
   showTouchPads: null,
@@ -1340,6 +1342,9 @@ function sanitizeSave(s) {
   })();
   out.music = out.music !== false;
   out.sfx = out.sfx !== false;
+  out.audioTheme = (typeof normalizeAudioTheme === 'function')
+    ? normalizeAudioTheme(out.audioTheme)
+    : (['classic', 'jungle', 'fire-bamboo-boesa', 'halloween'].includes(out.audioTheme) ? out.audioTheme : 'classic');
   out.shake = out.shake !== false;
   out.haptics = out.haptics !== false;
   out.comboHud = out.comboHud !== false;
