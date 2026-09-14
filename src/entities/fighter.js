@@ -134,6 +134,10 @@ class Fighter {
     if (this.attack && this.attack.kind === 'weapon' && this.attack.move) {
       this.attack.moveIdx = this.weaponComboIdx;
     }
+    // Training: face the robot so jump-strafe / W+J still swings forward.
+    if (game && game.mode === 'training' && this.isPlayer && game.robot && game.robot.alive) {
+      this.face = game.robot.x >= this.x ? 1 : -1;
+    }
     this._aimAtAttack = fighterAimNorm(this);
     if (this.isRobot && kind === 'special') this.attack.windup = 0.58;
     this.blocking = false;

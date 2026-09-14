@@ -86,8 +86,61 @@ async function run() {
       const lossTip = typeof t === 'function' ? t('combat.trainLossTip') : '';
       const noDuckLie = !/duck/i.test(lossTip);
 
+      // P1 hit-reg: close J/K must chip robot HP (W-aim / facing away used to whiff).
+      function armHitReg() {
+        g.phase = 'fight';
+        g.phaseT = 2;
+        g.inputLocked = false;
+        g.over = false;
+        g.trainDummyGrace = 3;
+        g.trainLaserTelegraph = 0;
+        g.trainLaserCd = 99;
+        g.player.onGround = true;
+        g.player.y = g.ground;
+        g.player.vy = 0;
+        g.player.vx = 0;
+        g.player.attack = null;
+        g.player.hurtT = 0;
+        g.player.invulnT = 0;
+        g.player.alive = true;
+        g.robot.y = g.ground;
+        g.robot.vy = 0;
+        g.robot.vx = 0;
+        g.robot.attack = null;
+        g.robot.hurtT = 0;
+        g.robot.blocking = false;
+        g.robot.blockT = 0;
+        g.robot.alive = true;
+        g.robot.invulnT = 0;
+      }
+      function swing(kind, opts) {
+        opts = opts || {};
+        armHitReg();
+        g.robot.hp = g.robot.maxhp = 200;
+        g.player.x = g.robot.x - (opts.dist != null ? opts.dist : 88);
+        g.player.face = opts.face != null ? opts.face : 1;
+        if (typeof Input !== 'undefined' && Input.keys) {
+          Input.keys.w = !!opts.up;
+          Input.keys.arrowup = !!opts.up;
+        }
+        const hp0 = g.robot.hp;
+        g.player.startAttack(kind, g);
+        for (let i = 0; i < 28; i++) g.update(1 / 60);
+        if (typeof Input !== 'undefined' && Input.keys) {
+          Input.keys.w = false;
+          Input.keys.arrowup = false;
+        }
+        return { dmg: hp0 - g.robot.hp, face: g.player.face };
+      }
+      const punchClose = swing('punch');
+      const kickClose = swing('kick');
+      const punchBack = swing('punch', { face: -1 });
+      const punchUp = swing('punch', { up: true });
+      const punchFar = swing('punch', { dist: 240 });
+      const hitRegOk = punchClose.dmg > 0 && kickClose.dmg > 0 && punchBack.dmg > 0 && punchUp.dmg > 0 && punchFar.dmg <= 0;
+
       return {
-        ok: laserCancelled && sawTele && teleLeqRemain && teleMaxOk && fired && barCleared && noDuckLie,
+        ok: laserCancelled && sawTele && teleLeqRemain && teleMaxOk && fired && barCleared && noDuckLie && hitRegOk,
         laserCancelled,
         sawTele,
         teleLeqRemain,
@@ -95,6 +148,12 @@ async function run() {
         fired,
         barCleared,
         noDuckLie,
+        hitRegOk,
+        punchClose,
+        kickClose,
+        punchBack,
+        punchUp,
+        punchFar,
         trainTelegraphT: g.trainTelegraphT,
       };
     } catch (e) {

@@ -130,6 +130,23 @@ function meleeHitPoint(f, spec) {
   return { hx, hy, aim };
 }
 
+/**
+ * Training 1v1 hurtbox: capsule from hips to rabbit ears.
+ * W/joy-up (jump) tilts meleeHitPoint over the old chest circle → silent 100% HP.
+ * Versus/adventure fighter circles stay unchanged.
+ */
+function meleeHitsTrainTarget(hx, hy, r, tgt) {
+  if (!tgt) return false;
+  const s = tgt.scale || 1;
+  const yTop = tgt.y - 102 * s;
+  const yBot = tgt.y - 6 * s;
+  const py = hy < yTop ? yTop : (hy > yBot ? yBot : hy);
+  const rad = (r || 30) + 42 * s;
+  const dx = hx - tgt.x;
+  const dy = hy - py;
+  return dx * dx + dy * dy <= rad * rad;
+}
+
 function canThrowShuriken(f, game) {
   if (!f || f._shurikenCd > 0) return false;
   if (f._boomerOut) return false;

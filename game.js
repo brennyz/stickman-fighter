@@ -281,6 +281,9 @@ function layoutFloaterPos(game, x, y, txt, size, layer) {
   x += base.x;
   y += base.y;
   const halfW = floaterTextHalfW(txt, size);
+  const ww = (typeof W === 'number' && W > 0) ? W : 800;
+  const minX = halfW + 10;
+  const maxX = Math.max(minX, ww - halfW - 10);
   const list = game && game.floaters ? game.floaters : [];
   const sameLayer = (fl) => (fl.layer || 'dmg') === layer;
 
@@ -288,7 +291,7 @@ function layoutFloaterPos(game, x, y, txt, size, layer) {
     const sign = lane <= 0 ? 0 : (lane % 2 === 1 ? -1 : 1);
     const spread = lane <= 0 ? 0 : Math.ceil(lane / 2) * FLOATER_LANE_W * sign;
     const ty = y - lane * laneH;
-    const tx = x + spread;
+    const tx = clamp(x + spread, minX, maxX);
     let hit = false;
     for (const fl of list) {
       if (fl.life <= 0.2 || !sameLayer(fl)) continue;
@@ -305,7 +308,7 @@ function layoutFloaterPos(game, x, y, txt, size, layer) {
   }
   const lane = list.filter(sameLayer).length % FLOATER_MAX_LANES;
   return {
-    x: x + Math.sin(lane * 0.9) * FLOATER_LANE_W * 1.4,
+    x: clamp(x + Math.sin(lane * 0.9) * FLOATER_LANE_W * 1.4, minX, maxX),
     y: y - lane * laneH,
     lane,
     layer,
@@ -320,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.157';
+const APP_VERSION = '1.18.158';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 367;
+const SW_CACHE_REV = 368;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -11656,7 +11659,7 @@ function seedNlGameStrings() {
     fight: 'VECHT!',
     levelClear: 'LEVEL {n} KLAAR!',
     won: 'GEWONNEN!',
-    lost: 'VERSLAGEN...',
+    lost: 'VERLOREN',
     spiral_orbTriple: 'TRIPLE SPIRAL ORB!',
     spiral_orbDual: 'DUAL SPIRAL ORB!',
     round: 'RONDE {n}',
@@ -11686,7 +11689,7 @@ function seedNlGameStrings() {
   });
   if (!I18N.nl.result) I18N.nl.result = {};
   Object.assign(I18N.nl.result, {
-    advWin: 'GEWONNEN!', advLose: 'VERSLAGEN...', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
     vsP1Win: 'SPELER 1 WINT!', vsP2Win: 'SPELER 2 WINT!', wallRecord: 'NIEUW RECORD!', wallTime: 'TIJD IS OM!',
     matsRecord: 'RECORD!', matsDone: 'Goed gedaan!',
     perfectRun: 'Perfecte run — hou je HP hoog!',
@@ -12583,7 +12586,7 @@ const CATALOG_EN = {
   },
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SHIELD' },
   result: {
-    advWin: 'VICTORY!', advLose: 'DEFEATED...', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+    advWin: 'VICTORY!', advLose: 'YOU LOST...', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
     vsP1Win: 'PLAYER 1 WINS!', vsP2Win: 'PLAYER 2 WINS!', wallRecord: 'NEW RECORD!', wallTime: "TIME'S UP!",
     matsRecord: 'NEW RECORD!', matsDone: 'Well done!',
     perfectRun: 'Perfect run — keep HP high!',
@@ -12672,7 +12675,7 @@ const CATALOG_EN = {
     ranchWave: 'FARM RAMPAGE', safariWave: 'ZOO BREAKOUT',
     emberWave: 'EMBER WAVE · 2.0', painWave: 'PAIN WAVE · 3.0',
     waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
-    fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'DEFEATED...', spiral_orbTriple: 'TRIPLE SPIRAL ORB!', spiral_orbDual: 'DUAL SPIRAL ORB!',
+    fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'YOU LOST...', spiral_orbTriple: 'TRIPLE SPIRAL ORB!', spiral_orbDual: 'DUAL SPIRAL ORB!',
     round: 'ROUND {n}', roundDecisive: 'ROUND {n} · decisive round', roundMatchPoint: 'ROUND {n} · match point',
     roundWon: 'ROUND WON!', roundLost: 'ROUND LOST',
     p1RoundWin: 'P1 WINS ROUND!', p2RoundWin: 'P2 WINS ROUND!',
@@ -13444,7 +13447,7 @@ const CATALOG_DE = {
     tome: { name: 'Buchmeister', hint: 'Hälfte des Buches', tooltip: 'Monsterbuch auf dem Rücken.', bonus: '+4 max HP · Buchweisheit' },
   },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'BESIEGT...', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
     vsP1Win: 'SPIELER 1 GEWINNT!', vsP2Win: 'SPIELER 2 GEWINNT!', wallRecord: 'NEUER REKORD!', wallTime: 'ZEIT UM!',
     matsRecord: 'NEUER REKORD!', matsDone: 'Gut gemacht!',
   },
@@ -15800,6 +15803,23 @@ function meleeHitPoint(f, spec) {
   const moveOff = (spec && spec.moveHitY) || 0;
   const hy = f.y - 48 + clamp(aim.ny, -1, 0.65) * 88 + moveOff;
   return { hx, hy, aim };
+}
+
+/**
+ * Training 1v1 hurtbox: capsule from hips to rabbit ears.
+ * W/joy-up (jump) tilts meleeHitPoint over the old chest circle → silent 100% HP.
+ * Versus/adventure fighter circles stay unchanged.
+ */
+function meleeHitsTrainTarget(hx, hy, r, tgt) {
+  if (!tgt) return false;
+  const s = tgt.scale || 1;
+  const yTop = tgt.y - 102 * s;
+  const yBot = tgt.y - 6 * s;
+  const py = hy < yTop ? yTop : (hy > yBot ? yBot : hy);
+  const rad = (r || 30) + 42 * s;
+  const dx = hx - tgt.x;
+  const dy = hy - py;
+  return dx * dx + dy * dy <= rad * rad;
 }
 
 function canThrowShuriken(f, game) {
@@ -19077,6 +19097,10 @@ class Fighter {
     this.attack = Object.assign({ t: 0, hasHit: false, fired: false }, this.attackSpec(kind));
     if (this.attack && this.attack.kind === 'weapon' && this.attack.move) {
       this.attack.moveIdx = this.weaponComboIdx;
+    }
+    // Training: face the robot so jump-strafe / W+J still swings forward.
+    if (game && game.mode === 'training' && this.isPlayer && game.robot && game.robot.alive) {
+      this.face = game.robot.x >= this.x ? 1 : -1;
     }
     this._aimAtAttack = fighterAimNorm(this);
     if (this.isRobot && kind === 'special') this.attack.windup = 0.58;
@@ -27224,10 +27248,14 @@ class Game {
     }
     for (const tgt of targets) {
       if (!tgt.alive) continue;
-      if ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2) {
+      const connected = (this.mode === 'training' && typeof meleeHitsTrainTarget === 'function')
+        ? meleeHitsTrainTarget(hx, hy, r, tgt)
+        : ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2);
+      if (connected) {
         const hitRoll = rollHitDamage(f, spec, 1);
         const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
         const counter = isCounterHitWindow(tgt);
+        const finisher = spec.kind === 'weapon' && typeof isWeaponFinisher === 'function' && isWeaponFinisher(f, spec);
         const dmg = tgt.takeDamage(hitRoll.dmg, kbHit, this, {
           unblockable: spec.unblockable, attacker: f, kind: spec.kind,
         });
@@ -27595,7 +27623,10 @@ class Game {
         }
         if (this.robot && this.robot.alive && !(p.hitSet && p.hitSet.has(this.robot))) {
           const rb = this.robot;
-          if (projHitsTarget(p, rb.bodyX, rb.bodyY, rb.bodyR)) {
+          const projHit = (this.mode === 'training' && typeof meleeHitsTrainTarget === 'function')
+            ? meleeHitsTrainTarget(p.x, p.y, p.r || 16, rb)
+            : projHitsTarget(p, rb.bodyX, rb.bodyY, rb.bodyR);
+          if (projHit) {
             const hit = resolveProjHit(p);
             const d = rb.takeDamage(hit.dmg, projKnockDir(p, rb.x) * 300 * (p.kbMul || 1), this);
             this.floater(rb.x, rb.y - 115, '-' + d, '#ffe680', 16);

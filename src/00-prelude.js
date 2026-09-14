@@ -279,6 +279,9 @@ function layoutFloaterPos(game, x, y, txt, size, layer) {
   x += base.x;
   y += base.y;
   const halfW = floaterTextHalfW(txt, size);
+  const ww = (typeof W === 'number' && W > 0) ? W : 800;
+  const minX = halfW + 10;
+  const maxX = Math.max(minX, ww - halfW - 10);
   const list = game && game.floaters ? game.floaters : [];
   const sameLayer = (fl) => (fl.layer || 'dmg') === layer;
 
@@ -286,7 +289,7 @@ function layoutFloaterPos(game, x, y, txt, size, layer) {
     const sign = lane <= 0 ? 0 : (lane % 2 === 1 ? -1 : 1);
     const spread = lane <= 0 ? 0 : Math.ceil(lane / 2) * FLOATER_LANE_W * sign;
     const ty = y - lane * laneH;
-    const tx = x + spread;
+    const tx = clamp(x + spread, minX, maxX);
     let hit = false;
     for (const fl of list) {
       if (fl.life <= 0.2 || !sameLayer(fl)) continue;
@@ -303,7 +306,7 @@ function layoutFloaterPos(game, x, y, txt, size, layer) {
   }
   const lane = list.filter(sameLayer).length % FLOATER_MAX_LANES;
   return {
-    x: x + Math.sin(lane * 0.9) * FLOATER_LANE_W * 1.4,
+    x: clamp(x + Math.sin(lane * 0.9) * FLOATER_LANE_W * 1.4, minX, maxX),
     y: y - lane * laneH,
     lane,
     layer,

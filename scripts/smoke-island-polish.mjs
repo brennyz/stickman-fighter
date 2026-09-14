@@ -47,6 +47,7 @@ must(/satan:/.test(missions) && /'satan-mark':/.test(missions), 'BUTTON_ICON_FAL
 
 must(/FLOATER_LANE_H = 30/.test(prelude), 'floater lane height should be 30');
 must(/FLOATER_LANE_W = 40/.test(prelude), 'floater lane width should be 40');
+must(/clamp\(x \+ spread, minX, maxX\)/.test(prelude), 'floater lanes must stay on-screen (no left clip)');
 must(/function tryMergeDmgFloater\(/.test(prelude), 'tryMergeDmgFloater missing');
 must(/function parseDmgFloaterTxt\(/.test(prelude), 'parseDmgFloaterTxt missing');
 must(/tryMergeDmgFloater\(this,/.test(game), 'Game.floater must try merge first');

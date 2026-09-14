@@ -2650,10 +2650,14 @@ class Game {
     }
     for (const tgt of targets) {
       if (!tgt.alive) continue;
-      if ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2) {
+      const connected = (this.mode === 'training' && typeof meleeHitsTrainTarget === 'function')
+        ? meleeHitsTrainTarget(hx, hy, r, tgt)
+        : ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2);
+      if (connected) {
         const hitRoll = rollHitDamage(f, spec, 1);
         const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
         const counter = isCounterHitWindow(tgt);
+        const finisher = spec.kind === 'weapon' && typeof isWeaponFinisher === 'function' && isWeaponFinisher(f, spec);
         const dmg = tgt.takeDamage(hitRoll.dmg, kbHit, this, {
           unblockable: spec.unblockable, attacker: f, kind: spec.kind,
         });
@@ -3021,7 +3025,10 @@ class Game {
         }
         if (this.robot && this.robot.alive && !(p.hitSet && p.hitSet.has(this.robot))) {
           const rb = this.robot;
-          if (projHitsTarget(p, rb.bodyX, rb.bodyY, rb.bodyR)) {
+          const projHit = (this.mode === 'training' && typeof meleeHitsTrainTarget === 'function')
+            ? meleeHitsTrainTarget(p.x, p.y, p.r || 16, rb)
+            : projHitsTarget(p, rb.bodyX, rb.bodyY, rb.bodyR);
+          if (projHit) {
             const hit = resolveProjHit(p);
             const d = rb.takeDamage(hit.dmg, projKnockDir(p, rb.x) * 300 * (p.kbMul || 1), this);
             this.floater(rb.x, rb.y - 115, '-' + d, '#ffe680', 16);

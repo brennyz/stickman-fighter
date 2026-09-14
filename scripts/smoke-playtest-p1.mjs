@@ -38,6 +38,16 @@ must(/tOr\('combat\.protected'/.test(fighter), 'i-frames must say protected, not
 must(!/Energy niet vol!/.test(fighter), 'hardcoded Energy niet vol! should be gone');
 must(!/game\.floater\([^)]*'MISS!'/.test(fighter), 'hardcoded MISS! floater should be gone');
 must(/trainWins >= 3 \? 0\.22/.test(fighter), 'training robot block rate should be gentler at first');
+must(/game\.mode === 'training' && this\.isPlayer && game\.robot/.test(fighter), 'training attacks must face the robot');
+
+must(/function meleeHitsTrainTarget\(/.test(fs.readFileSync(path.join(root, 'src/systems/input.js'), 'utf8')),
+  'training capsule hurtbox helper missing');
+must(/meleeHitsTrainTarget\(hx, hy, r, tgt\)/.test(game), 'tryMelee must use training capsule vs robot');
+must(/advLose: 'VERLOREN'/.test(catalog), 'NL lose title must not say VERSLAGEN');
+must(/advLose: 'YOU LOST\.\.\.'/.test(catalog), 'EN lose title must not say DEFEATED');
+must(!/advLose: 'DEFEATED/.test(catalog), 'DEFEATED leftover in result.advLose');
+must(/lost: 'VERLOREN'/.test(catalog), 'NL banner.lost must say VERLOREN');
+must(/lost: 'YOU LOST\.\.\.'/.test(catalog), 'EN banner.lost must say YOU LOST');
 
 must(/tOr\('combat\.trainLostTip'/.test(game), 'finishTraining must resolve combat.trainLostTip');
 must(/opener \? 1 :/.test(game), 'level 1-2 wave 1 spawn must be single-file');
