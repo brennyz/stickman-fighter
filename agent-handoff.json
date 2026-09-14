@@ -94,7 +94,7 @@
       "id": "w-20260914T121200",
       "from": "user",
       "text": "Verbeter de game, toast, UI/UX, alles (2026-09-14). Complementary to merged #257 — not a start-screen/opener/training rewrite. Toast queue + de-dupe + tap-dismiss + a11y; i18n leftover hardcoded toasts; Android-readable toast/UI. Do not touch Versus/nuclear CSS/share-URL/iOS/secrets.",
-      "status": "active",
+      "status": "done-in-code",
       "updated": "2026-09-14"
     },
     {
@@ -544,6 +544,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T12:27:53Z",
+      "summary": "Toast/UI polish: queue + tap-dismiss + leftover i18n + Android-leesbare notices · v1.18.154 / SW 364"
+    },
+    {
       "at": "2026-09-14T11:03:54Z",
       "summary": "Playtest P1: startscherm fold + NL hub, combat feedback/opener, trainLostTip · v1.18.153 / SW 363"
     },
@@ -638,10 +642,6 @@
     {
       "at": "2026-08-17T06:33:20Z",
       "summary": "Director-protocol ontvangen — d20-claim via CLI, niet mergen"
-    },
-    {
-      "at": "2026-08-16T08:27:26Z",
-      "summary": "LIVE gemerged naar main: mobiel slaan + d12 dex · v1.18.143 / SW 353 — Verse versie op telefoon"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
